@@ -30,6 +30,8 @@
 
 #include <sys/uio.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -86,6 +88,7 @@ enum virtio_console_be_type {
 	VIRTIO_CONSOLE_BE_TTY,
 	VIRTIO_CONSOLE_BE_PTY,
 	VIRTIO_CONSOLE_BE_FILE,
+	VIRTIO_CONSOLE_BE_SOCKET,
 	VIRTIO_CONSOLE_BE_MAX,
 	VIRTIO_CONSOLE_BE_INVALID = VIRTIO_CONSOLE_BE_MAX
 };
@@ -111,6 +114,7 @@ struct virtio_console_backend {
 	bool				open;
 	enum virtio_console_be_type	be_type;
 	int				pts_fd;	/* only valid for PTY */
+	const char 			*portpath;
 };
 
 struct virtio_console {
@@ -172,7 +176,8 @@ static const char *virtio_console_be_table[VIRTIO_CONSOLE_BE_MAX] = {
 	[VIRTIO_CONSOLE_BE_STDIO]	= "stdio",
 	[VIRTIO_CONSOLE_BE_TTY]		= "tty",
 	[VIRTIO_CONSOLE_BE_PTY]		= "pty",
-	[VIRTIO_CONSOLE_BE_FILE]	= "file"
+	[VIRTIO_CONSOLE_BE_FILE]	= "file",
+	[VIRTIO_CONSOLE_BE_SOCKET]	= "socket"
 };
 
 static struct termios virtio_console_saved_tio;
@@ -562,11 +567,87 @@ virtio_console_open_backend(const char *path,
 		if (fd < 0)
 			WPRINTF(("vtcon: open failed: %s\n", path));
 		break;
+	case VIRTIO_CONSOLE_BE_SOCKET:
+		fd = socket(AF_UNIX, SOCK_STREAM, 0);
+		if (fd < 0)
+			WPRINTF(("vtcon: socket open failed: %s\n", path));
+		break;
 	default:
 		WPRINTF(("not supported backend %d!\n", be_type));
 	}
 
 	return fd;
+}
+
+static int
+make_socket_non_blocking(int fd)
+{
+	int flags, s;
+
+	flags = fcntl(fd, F_GETFL, 0);
+	if (flags == -1) {
+		WPRINTF(("fcntl get failed =%d\n", errno));
+		return -1;
+	}
+
+	flags |= O_NONBLOCK;
+	s = fcntl(fd, F_SETFL, flags);
+	if (s == -1) {
+		WPRINTF(("fcntl set failed =%d\n", errno));
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+virtio_console_accept_new_connection(int fd __attribute__((unused)),
+					enum ev_type t __attribute__((unused)), void *arg)
+{
+
+	int accepted_fd;
+	int close_true;
+	uint32_t len;
+	struct sockaddr_un addr;
+	struct virtio_console_backend *be = arg;
+
+	memset(&addr, 0, sizeof(addr));
+	addr.sun_family = AF_UNIX;
+	strcpy(addr.sun_path, be->portpath);
+
+	len = sizeof(addr);
+	accepted_fd = accept(be->fd, (struct sockaddr *)&addr, &len);
+	if (accepted_fd == -1) {
+		WPRINTF(("accept error= %d, addr.sun_path=%s\n", errno, addr.sun_path));
+		return;
+	} else {
+		/* close the fd associated with listening socket
+		 * and reuse it for accepted socket.
+		 */
+		close_true = 1;
+		setsockopt(be->fd, SOL_SOCKET, SO_REUSEADDR, &close_true, sizeof(int));
+		close(be->fd);
+		be->fd = accepted_fd;
+	}
+
+	if (be->evp) {
+		/* close the event associated with listening socket
+		 * and reuse it for accepted socket.
+		 */
+		mevent_delete(be->evp);
+	}
+
+	be->evp = mevent_add(be->fd, EVF_READ, virtio_console_backend_read, be,
+				virtio_console_teardown_backend, be);
+	if (be->evp == NULL) {
+		WPRINTF(("accepted fd mevent_add failed\n"));
+		return;
+	}
+
+	if (make_socket_non_blocking(be->fd) == -1) {
+		WPRINTF(("accepted fd non-blocking failed\n"));
+		return;
+	}
 }
 
 static int
@@ -576,6 +657,7 @@ virtio_console_config_backend(struct virtio_console_backend *be)
 	char *pts_name = NULL;
 	int slave_fd = -1;
 	struct termios tio, saved_tio;
+	struct sockaddr_un addr;
 
 	if (!be || be->fd == -1)
 		return -1;
@@ -626,6 +708,39 @@ virtio_console_config_backend(struct virtio_console_backend *be)
 			atexit(virtio_console_restore_stdio);
 		}
 		break;
+	case VIRTIO_CONSOLE_BE_SOCKET:
+		if (be->portpath == NULL) {
+			WPRINTF(("vtcon: portpath is NULL\n"));
+			return -1;
+		}
+
+		memset(&addr, 0, sizeof(addr));
+		addr.sun_family = AF_UNIX;
+		strcpy(addr.sun_path, be->portpath);
+
+		unlink(be->portpath);
+		if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+			WPRINTF(("Bind Error = %d\n", errno));
+			return -1;
+		}
+
+		if (listen(fd, 64) == -1) {
+			WPRINTF(("Listen Error= %d\n", errno));
+			return -1;
+		}
+
+		if (make_socket_non_blocking(fd) == -1) {
+			WPRINTF(("Backend config: fcntl Error\n"));
+			return -1;
+		}
+
+		be->evp = mevent_add(fd, EVF_READ, virtio_console_accept_new_connection, be,
+					NULL, NULL);
+		if (be->evp == NULL) {
+			WPRINTF(("Socket Accept mevent_add failed\n"));
+			return -1;
+		}
+
 	default:
 		break; /* nothing to do */
 	}
@@ -656,6 +771,7 @@ virtio_console_add_backend(struct virtio_console *console,
 
 	be->fd = fd;
 	be->be_type = be_type;
+	be->portpath = path;
 
 	if (virtio_console_config_backend(be) < 0) {
 		WPRINTF(("vtcon: virtio_console_config_backend failed\n"));
@@ -936,7 +1052,8 @@ virtio_console_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			portpath = opt;
 			if (portpath == NULL
 				&& be_type != VIRTIO_CONSOLE_BE_STDIO
-				&& be_type != VIRTIO_CONSOLE_BE_PTY) {
+				&& be_type != VIRTIO_CONSOLE_BE_PTY
+				&& be_type != VIRTIO_CONSOLE_BE_SOCKET) {
 				WPRINTF(("vtcon: portpath missing for %s\n",
 					portname));
 				return -1;
