@@ -34,6 +34,9 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <linux/input.h>
 
 #include "vmmapi.h"
 #include "acpi.h"
@@ -42,10 +45,13 @@
 #include "irq.h"
 #include "lpc.h"
 
+#define POWER_BUTTON_EVENT	116
 static pthread_mutex_t pm_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct mevent *power_button;
 static sig_t old_power_handler;
 
+static struct mevent *input_evt0;
+static int pwrbtn_fd = -1;
 /*
  * Reset Control register at I/O port 0xcf9.  Bit 2 forces a system
  * reset when it transitions from 0 to 1.  Bit 1 selects the type of
@@ -224,6 +230,20 @@ power_button_handler(int signal, enum ev_type type, void *arg)
 	pthread_mutex_unlock(&pm_lock);
 }
 
+static void
+input_event0_handler(int fd, enum ev_type type, void *arg)
+{
+	struct input_event ev;
+	int rc;
+
+	rc = read(fd, &ev, sizeof(ev));
+	if (rc < 0 || rc != sizeof(ev))
+		return;
+
+	if (ev.code == POWER_BUTTON_EVENT && ev.value == 1)
+		power_button_handler(fd, type, arg);
+}
+
 /*
  * Power Management 1 Control Register
  *
@@ -295,9 +315,25 @@ smi_cmd_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	case ACPI_ENABLE:
 		pm1_control |= PM1_SCI_EN;
 		if (power_button == NULL) {
+
+			/*
+			 * TODO: For the SIGTERM, IOC mediator also needs to
+			 * support it, and SIGTERM handler needs to be written
+			 * as one common interface for both APCI power button
+			 * and IOC mediator in future.
+			 */
 			power_button = mevent_add(SIGTERM, EVF_SIGNAL,
 				power_button_handler, ctx, NULL, NULL);
 			old_power_handler = signal(SIGTERM, SIG_IGN);
+		}
+		if (input_evt0 == NULL) {
+			pwrbtn_fd = open("/dev/input/event0", O_RDONLY);
+			if (pwrbtn_fd < 0)
+				fprintf(stderr, "open input event0 error=%d\n",
+						errno);
+			else
+				input_evt0 = mevent_add(pwrbtn_fd, EVF_READ,
+					input_event0_handler, ctx, NULL, NULL);
 		}
 		break;
 	case ACPI_DISABLE:
@@ -306,6 +342,11 @@ smi_cmd_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 			mevent_delete(power_button);
 			power_button = NULL;
 			signal(SIGTERM, old_power_handler);
+		}
+		if (input_evt0 != NULL) {
+			mevent_delete_close(input_evt0);
+			input_evt0 = NULL;
+			pwrbtn_fd = -1;
 		}
 		break;
 	}
