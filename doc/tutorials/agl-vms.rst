@@ -217,11 +217,10 @@ Service OS
       linux
       /EFI/org.clearlinux/kernel-org.clearlinux.iot-lts2018-sos.4.19.0-19
 
-      options pci_devices_ignore=(0:18:1) console=tty0 console=ttyS0 i915.nuclear_pageflip=1
-      root=/dev/sda3
-      rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.tsd_init=7 i915.tsd_delay=2000
-      i915.avail_planes_per_pipe=0x00000F i915.domain_plane_owners=0x022211110000
-      i915.enable_guc_loading=0 i915.enable_guc_submission=0 i915.enable_preemption=1 i915.context_priority_mode=2 i915.enable_gvt=1 i915.enable_initial_modeset=1 i915.enable_guc=0 hvlog=2M@0x1FE00000
+      options pci_devices_ignore=(0:18:1) console=tty0 console=ttyS0
+      root=/dev/sda3 rw rootwait ignore_loglevel no_timer_check consoleblank=0
+      i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x00000F i915.domain_plane_owners=0x022211110000
+      i915.enable_gvt=1 i915.enable_guc=0 hvlog=2M@0x1FE00000
 
 #. Set a longer timeout::
 

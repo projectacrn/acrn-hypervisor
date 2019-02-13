@@ -173,7 +173,7 @@ You can download latest Service OS kernel from
                 insmod gzio
                 insmod part_gpt
                 insmod ext2
-                linux  /boot/acrn/org.clearlinux.iot-lts2018-sos.4.19.0-22  pci_devices_ignore=(0:18:1)  console=tty0 console=ttyS0 i915.nuclear_pageflip=1 root=PARTUUID=<UUID of rootfs partition> rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.tsd_init=7 i915.tsd_delay=2000 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_guc_loading=0 i915.enable_guc_submission=0 i915.enable_preemption=1 i915.context_priority_mode=2 i915.enable_gvt=1 i915.enable_initial_modeset=1 hvlog=2M@0x1FE00000
+                linux  /boot/acrn/org.clearlinux.iot-lts2018-sos.4.19.0-22  pci_devices_ignore=(0:18:1) console=tty0 console=ttyS0 root=PARTUUID=<UUID of rootfs partition> rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_gvt=1 i915.enable_guc=0 hvlog=2M@0x1FE00000
         }
 
    .. note::

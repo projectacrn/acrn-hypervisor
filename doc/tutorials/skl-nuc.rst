@@ -90,7 +90,7 @@ Please follow the :ref:`getting-started-apl-nuc`, with the following changes:
       # vim /mnt/loader/entries/acrn.conf
       title The ACRN Service OS
       linux   /EFI/org.clearlinux/kernel-org.clearlinux.pk414-sos.4.14.68-99
-      options pci_devices_ignore=(0:18:1) console=tty0 console=ttyS2 i915.nuclear_pageflip=1 root=/dev/nvme0n1p3 rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.tsd_init=7 i915.tsd_delay=2000 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_guc_loading=0 i915.enable_guc_submission=0 i915.enable_preemption=1 i915.context_priority_mode=2 i915.enable_gvt=1 i915.enable_initial_modeset=0 i915.enable_guc=0 hvlog=2M@0x1FE00000
+      options pci_devices_ignore=(0:18:1) console=tty0 console=ttyS2 root=/dev/nvme0n1p3 rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_gvt=1 i915.enable_guc=0 hvlog=2M@0x1FE00000
 
 #. Don't Enable weston service (skip this step found in the NUC's getting
    started guide).
