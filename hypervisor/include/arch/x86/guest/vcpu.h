@@ -71,14 +71,14 @@
 /*
  * VCPU related APIs
  */
-#define ACRN_REQUEST_EXCP		0U
-#define ACRN_REQUEST_EVENT		1U
-#define ACRN_REQUEST_EXTINT		2U
-#define ACRN_REQUEST_NMI		3U
-#define ACRN_REQUEST_EOI_EXIT_UPDATE	4U
-#define ACRN_REQUEST_EPT_FLUSH		5U
-#define ACRN_REQUEST_TRP_FAULT		6U
-#define ACRN_REQUEST_VPID_FLUSH		7U /* flush vpid tlb */
+#define ACRN_REQUEST_EXCP			0U
+#define ACRN_REQUEST_EVENT			1U
+#define ACRN_REQUEST_EXTINT			2U
+#define ACRN_REQUEST_NMI			3U
+#define ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE	4U
+#define ACRN_REQUEST_EPT_FLUSH			5U
+#define ACRN_REQUEST_TRP_FAULT			6U
+#define ACRN_REQUEST_VPID_FLUSH			7U /* flush vpid tlb */
 
 #define save_segment(seg, SEG_NAME)				\
 {								\
@@ -503,14 +503,14 @@ void vcpu_set_guest_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val);
 void vcpu_set_vmcs_eoi_exit(struct acrn_vcpu *vcpu);
 
 /**
- * @brief reset eoi_exit_bitmap
+ * @brief reset all eoi_exit_bitmaps
  *
  * @param[in] vcpu pointer to vcpu data structure
  *
  * @return void
  */
 
-void vcpu_reset_eoi_exit_all(struct acrn_vcpu *vcpu);
+void vcpu_reset_eoi_exit_bitmaps(struct acrn_vcpu *vcpu);
 
 /**
  * @brief set eoi_exit_bitmap bit
@@ -520,9 +520,20 @@ void vcpu_reset_eoi_exit_all(struct acrn_vcpu *vcpu);
  * @param[in] vcpu pointer to vcpu data structure
  * @param[in] vector
  *
- * @return void 
+ * @return void
  */
-void vcpu_set_eoi_exit(struct acrn_vcpu *vcpu, uint32_t vector);
+void vcpu_set_eoi_exit_bitmap(struct acrn_vcpu *vcpu, uint32_t vector);
+/**
+ * @brief clear eoi_exit_bitmap bit
+ *
+ * Clear corresponding bit of vector in eoi_exit_bitmap
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ * @param[in] vector
+ *
+ * @return void
+ */
+void vcpu_clear_eoi_exit_bitmap(struct acrn_vcpu *vcpu, uint32_t vector);
 /**
  * @brief set all the vcpu registers
  *

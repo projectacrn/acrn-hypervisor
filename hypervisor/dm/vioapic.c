@@ -175,66 +175,6 @@ vioapic_set_irqline_lock(const struct acrn_vm *vm, uint32_t irqline, uint32_t op
 	spinlock_release(&(vioapic->mtx));
 }
 
-/*
- * Generate eoi_exit_bitmap and request each VCPU to update VMCS fields
- * To be called with vioapic->mtx
- * @pre vioapic != NULL
- */
-static void
-vioapic_update_eoi_exit(const struct acrn_vioapic *vioapic)
-{
-	struct acrn_vcpu *vcpu;
-	union ioapic_rte rte;
-	uint64_t mask;
-	uint32_t vector, delmode, dest;
-	uint32_t pin, pincount;
-	uint16_t vcpu_id;
-	bool level, phys;
-
-	dev_dbg(ACRN_DBG_IOAPIC, "%s", __func__);
-
-	/* clear old bitmap to generate new bitmap */
-	foreach_vcpu(vcpu_id, vioapic->vm, vcpu) {
-		spinlock_obtain(&(vcpu->arch.lock));
-		vcpu_reset_eoi_exit_all(vcpu);
-	}
-
-	/* go through RTEs and set corresponding bits of eoi_exit_bitmap */
-	pincount = vioapic_pincount(vioapic->vm);
-	for (pin = 0U; pin < pincount; pin++) {
-		rte = vioapic->rtbl[pin];
-
-		level = (rte.bits.trigger_mode == IOAPIC_RTE_TRGRMODE_LEVEL);
-		vector = rte.bits.vector;
-
-		if (level && ((vector >= 0x20U) && (vector < NR_MAX_VECTOR))) {
-			/* if level-trigger and vector is valid */
-			delmode = (uint32_t)rte.bits.delivery_mode;
-
-			if ((delmode != IOAPIC_RTE_DELMODE_FIXED) && (delmode != IOAPIC_RTE_DELMODE_LOPRI)) {
-				dev_dbg(ACRN_DBG_IOAPIC,
-					"Ignoring level trigger-mode for delivery-mode 0x%x", delmode);
-			} else {
-				dest = (uint32_t)rte.bits.dest_field;
-				phys = (rte.bits.dest_mode == IOAPIC_RTE_DESTMODE_PHY);
-				vlapic_calc_dest(vioapic->vm, &mask, dest, phys, false);
-				
-				for (vcpu_id = ffs64(mask); vcpu_id != INVALID_BIT_INDEX; vcpu_id = ffs64(mask)) {
-					vcpu = vcpu_from_vid(vioapic->vm, vcpu_id);
-					vcpu_set_eoi_exit(vcpu, vector);
-					bitmap_clear_nolock(vcpu_id, &mask);
-				}
-			}
-		}
-	}
-
-	/* make request if eoi_exit_bitmap changed */
-	foreach_vcpu(vcpu_id, vioapic->vm, vcpu) {
-		spinlock_release(&(vcpu->arch.lock));
-		vcpu_make_request(vcpu, ACRN_REQUEST_EOI_EXIT_UPDATE);
-	}
-}
-
 static uint32_t
 vioapic_indirect_read(const struct acrn_vioapic *vioapic, uint32_t addr)
 {
@@ -377,17 +317,6 @@ static void vioapic_indirect_write(struct acrn_vioapic *vioapic, uint32_t addr, 
 			vioapic->rtbl[pin] = new;
 			dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: redir table entry %#lx",
 				pin, vioapic->rtbl[pin].full);
-			/*
-			 * If "Trigger Mode" or "Delivery Mode" or "Vector"
-			 * in the redirection table entry have changed then
-			 * rendezvous all the vcpus to update their vlapic
-			 * trigger-mode registers.
-			 */
-			if ((changed.bits.vector != 0UL) || (changed.bits.delivery_mode != 0UL)
-				       || (changed.bits.trigger_mode != 0UL) || (changed.bits.dest_field != 0UL)) {
-				dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: recalculate vlapic trigger-mode reg",	pin);
-				vioapic_update_eoi_exit(vioapic);
-			}
 
 			/*
 			 * Generate an interrupt if the following conditions are met:
