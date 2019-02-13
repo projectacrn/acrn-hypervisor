@@ -351,6 +351,8 @@ static void pci_read_cap(struct pci_pdev *pdev)
 				pdev->msix.table_offset = table_info & ~PCIM_MSIX_BIR_MASK;
 				pdev->msix.table_count = (msgctrl & PCIM_MSIXCTRL_TABLE_SIZE) + 1U;
 
+				ASSERT(pdev->msix.table_count <= CONFIG_MAX_MSIX_TABLE_NUM);
+
 				/* Copy MSIX capability struct into buffer */
 				for (idx = 0U; idx < len; idx++) {
 					pdev->msix.cap[idx] = (uint8_t)pci_pdev_read_cfg(pdev->bdf, offset + idx, 1U);
