@@ -149,13 +149,23 @@ void vcpu_set_vmcs_eoi_exit(struct acrn_vcpu *vcpu)
  * called with vcpu->arch.lock held
  * @pre vcpu != NULL && vector <= 255U
  */
-void vcpu_set_eoi_exit(struct acrn_vcpu *vcpu, uint32_t vector)
+void vcpu_set_eoi_exit_bitmap(struct acrn_vcpu *vcpu, uint32_t vector)
 {
 	pr_dbg("%s", __func__);
 
-	if (bitmap_test_and_set_nolock((uint16_t)(vector & 0x3fU),
+	if (!bitmap_test_and_set_nolock((uint16_t)(vector & 0x3fU),
 			&(vcpu->arch.eoi_exit_bitmap[(vector & 0xffU) >> 6U]))) {
-		pr_warn("Duplicated vector %u vcpu%u", vector, vcpu->vcpu_id);
+		vcpu_make_request(vcpu, ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE);
+	}
+}
+
+void vcpu_clear_eoi_exit_bitmap(struct acrn_vcpu *vcpu, uint32_t vector)
+{
+	pr_dbg("%s", __func__);
+
+	if (bitmap_test_and_clear_nolock((uint16_t)(vector & 0x3fU),
+			&(vcpu->arch.eoi_exit_bitmap[(vector & 0xffU) >> 6U]))) {
+		vcpu_make_request(vcpu, ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE);
 	}
 }
 
@@ -163,11 +173,12 @@ void vcpu_set_eoi_exit(struct acrn_vcpu *vcpu, uint32_t vector)
  * Reset all eoi_exit_bitmaps
  * called with vcpu->arch.lock held
  */
-void vcpu_reset_eoi_exit_all(struct acrn_vcpu *vcpu)
+void vcpu_reset_eoi_exit_bitmaps(struct acrn_vcpu *vcpu)
 {
 	pr_dbg("%s", __func__);
 
 	memset((void *)(vcpu->arch.eoi_exit_bitmap), 0U, sizeof(vcpu->arch.eoi_exit_bitmap));
+	vcpu_make_request(vcpu, ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE);
 }
 
 struct acrn_vcpu *get_ever_run_vcpu(uint16_t pcpu_id)

@@ -454,7 +454,7 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 			flush_vpid_single(arch->vpid);
 		}
 
-		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EOI_EXIT_UPDATE, pending_req_bits)) {
+		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE, pending_req_bits)) {
 			vcpu_set_vmcs_eoi_exit(vcpu);
 		}
 

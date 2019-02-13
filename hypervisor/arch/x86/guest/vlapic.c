@@ -466,9 +466,13 @@ vlapic_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 	lapic = &(vlapic->apic_page);
 	tmrptr = &lapic->tmr[0];
 	if (level) {
-		bitmap32_set_lock((uint16_t)(vector & 0x1fU), &tmrptr[vector >> 5U].v);
+		if (!bitmap32_test_and_set_lock((uint16_t)(vector & 0x1fU), &tmrptr[vector >> 5U].v)) {
+			vcpu_set_eoi_exit_bitmap(vlapic->vcpu, vector);
+		}
 	} else {
-		bitmap32_clear_lock((uint16_t)(vector & 0x1fU), &tmrptr[vector >> 5U].v);
+		if (bitmap32_test_and_clear_lock((uint16_t)(vector & 0x1fU), &tmrptr[vector >> 5U].v)) {
+			vcpu_clear_eoi_exit_bitmap(vlapic->vcpu, vector);
+		}
 	}
 }
 
@@ -485,6 +489,8 @@ vlapic_reset_tmr(struct acrn_vlapic *vlapic)
 	for (i = 0; i < 8; i++) {
 		lapic->tmr[i].v = 0U;
 	}
+
+	vcpu_reset_eoi_exit_bitmaps(vlapic->vcpu);
 }
 
 /*
