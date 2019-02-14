@@ -436,6 +436,52 @@ static int acrnctl_do_stop(int argc, char *argv[])
 	return 0;
 }
 
+/* Function: Delete runC configuration */
+static inline int del_runC(char *argv)
+{
+	char cmd[128];
+	char cmd_out[256];
+	char runc_path[128];
+
+	/* The configuration added by launch_uos script */
+	if (snprintf(runc_path, sizeof(runc_path), "%s/runc/%s",
+			ACRN_CONF_PATH_ADD, argv) >= sizeof(runc_path)) {
+		printf("ERROR: runC path %s is truncated\n", runc_path);
+		return -1;
+	}
+	if (access(runc_path, F_OK) != 0)
+		return 0;
+
+	/* Check if there is a container */
+	if (snprintf(cmd, sizeof(cmd), "runc list | grep %s",
+				argv) >= sizeof(cmd)) {
+		printf("ERROR: runc cmd: %s is truncated\n", cmd);
+		return -1;
+	}
+	shell_cmd(cmd, cmd_out, sizeof(cmd_out));
+	if (strstr(cmd_out, argv) != NULL) {
+		/* If the container is still running stop it by runc pause */
+		if (strstr(cmd_out, "stopped") == NULL) {
+			printf("Pls stop the runC before del it !!\n");
+			return -1;
+		}
+		if (snprintf(cmd, sizeof(cmd), "runc delete %s",
+				argv) >= sizeof(cmd)) {
+			printf("ERROR: del container: %s trancated!", cmd);
+			return -1;
+		}
+		system(cmd);
+		if (snprintf(cmd, sizeof(cmd), "rm -f %s/runc/%s -rf",
+				ACRN_CONF_PATH_ADD, argv) >= sizeof(cmd)) {
+			printf("ERROR: delete cmd: %s trancated!\n", cmd);
+			return -1;
+		}
+		system(cmd);
+	}
+
+	return 0;
+}
+
 /* command: delete */
 static int acrnctl_do_del(int argc, char *argv[])
 {
@@ -466,6 +512,10 @@ static int acrnctl_do_del(int argc, char *argv[])
 			return -1;
 		}
 		system(cmd);
+		if (del_runC(argv[i]) < 0) {
+			printf("ERROR: del runC failed!\n");
+			return -1;
+		}
 	}
 
 	return 0;
