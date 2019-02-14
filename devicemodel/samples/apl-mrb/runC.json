@@ -224,7 +224,7 @@
 		}
 	},
 	"root": {
-		"path": "rootfs",
+		"path": "../rootfs",
 		"readonly": false
 	},
 	"hostname": "runc",
