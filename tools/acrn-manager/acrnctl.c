@@ -159,7 +159,7 @@ static inline int _get_vmname(const char *src, char *vmname, int max_len_vmname)
 	return 0;
 }
 
-#define MAX_FILE_SIZE   (4096 * 4)
+#define MAX_FILE_SIZE   (4096 * 5)
 #define FILE_NAME_LENGTH	128
 
 #define TMP_FILE_SUFFIX		".acrnctl"
@@ -175,7 +175,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 	char fname[FILE_NAME_LENGTH + sizeof(TMP_FILE_SUFFIX)];
 	char cmd[128];
 	char args[128];
-	int p, i, len_cmd_out = 0;
+	int p, i, len_cmd_out = 0, c_flag = 0;
 	char cmd_out[256];
 	char vmname[128];
 	size_t len = sizeof(cmd_out);
@@ -193,6 +193,21 @@ static int acrnctl_do_add(int argc, char *argv[])
 			printf("Too many optional args: %s\n", args);
 			return -1;
 		}
+
+		/*
+		 * If there's "-C" parameter in acrnctl add command
+		 * check if the SoS support runC container at first, then
+		 * strip "-C" and set the flag.
+		*/
+		if (strncmp(argv[i], "-C", 2) == 0) {
+			if (access("/sbin/runc", F_OK) != 0) {
+				printf("runC command not supproted\n");
+				return -1;
+			}
+                        c_flag = 1;
+                        continue;
+                }
+
 		p += snprintf(&args[p], sizeof(args) - p, " %s", argv[i]);
 	}
 	args[p] = ' ';
@@ -352,6 +367,9 @@ static int acrnctl_do_add(int argc, char *argv[])
 	}
 	system(cmd);
 
+	/* If c_flag have been seted, add stripped "-C" to args file */
+	if (c_flag)
+		strncpy(args + p + 1, "-C", 2);
 	if (snprintf(cmd, sizeof(cmd), "echo %s >%s/%s.args", args,
 		 ACRN_CONF_PATH_ADD, vmname) >= sizeof(cmd)) {
 		printf("ERROR: cmd is truncated\n");
