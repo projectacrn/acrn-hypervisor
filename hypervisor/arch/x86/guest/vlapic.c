@@ -982,11 +982,7 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
 	default:
 		return -EINVAL;
 	}
-	if (vector < 16U) {
-		vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
-	} else {
-		vlapic_fire_lvt(vlapic, lvt);
-	}
+	vlapic_fire_lvt(vlapic, lvt);
 	return 0;
 }
 
