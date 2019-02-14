@@ -7,9 +7,7 @@
 			"gid": 0
 		},
 		"args": [
-			"/usr/share/acrn/samples/apl-mrb/launch_uos.sh",
-			"-V",
-			"2"
+			"sh"
 		],
 		"env": [
 			"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
