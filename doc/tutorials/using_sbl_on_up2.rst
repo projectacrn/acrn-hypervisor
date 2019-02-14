@@ -96,7 +96,7 @@ An example of the configuration file ``uos.json``:
        "PartitionMountPoints" : [ { "disk" : "clearlinux.img", "partition" : 1, "mount" : "/boot" },
            		          { "disk" : "clearlinux.img", "partition" : 2, "mount" : "/" } ],
        "Version": 27230,
-       "Bundles": ["kernel-iot-lts2018", "openssh-server", "software-defined-cockpit", "os-core", "os-core-update"]
+       "Bundles": ["kernel-iot-lts2018", "openssh-server", "x11-server", "os-core", "os-core-update"]
    }
 
 .. note::
