@@ -32,6 +32,8 @@ ARCH_ASFLAGS :=
 ARCH_ARFLAGS :=
 ARCH_LDFLAGS :=
 
+PROFILING ?= 1
+
 .PHONY: default
 default: all
 
@@ -239,7 +241,10 @@ endif
 
 C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
 ifneq ($(CONFIG_RELEASE),y)
-CFLAGS += -DHV_DEBUG -DPROFILING_ON -fno-omit-frame-pointer
+CFLAGS += -DHV_DEBUG -fno-omit-frame-pointer
+ifeq ($(PROFILING), 1)
+CFLAGS += -DPROFILING_ON
+endif
 endif
 S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(S_SRCS))
 
