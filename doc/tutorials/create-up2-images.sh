@@ -148,7 +148,7 @@ cleanup() {
 }
 
 # Default values
-SOS_BASE_BUNDLE_LIST="service-os os-core-update openssh-server software-defined-cockpit"
+SOS_BASE_BUNDLE_LIST="service-os os-core-update openssh-server x11-server"
 SOS_BUNDLE_APPEND=""
 LAAG_BUNDLE_APPEND=""
 SOS_ROOTFS_SIZE=3584
