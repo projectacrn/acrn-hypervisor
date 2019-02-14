@@ -58,10 +58,201 @@ for ACRN real time support will continue.
 Fixed Issues
 ************
 
+- :acrn-issue:`1775` - [APL UP2]ACRN debugging tool - acrntrace cannot be used in SOS
+- :acrn-issue:`1776` - [APL UP2]ACRN debugging tool - acrnlog cannot be used in SOS
+- :acrn-issue:`1796` - APL NUC fails to reboot sometimes
+- :acrn-issue:`2043` - Fix incorrect vm_id captured when sampling PMU data
+- :acrn-issue:`2086` - enable/disable snoop control bit per vm
+- :acrn-issue:`2157` - Profiling: fix the profiling tool crash by page faults
+- :acrn-issue:`2168` - Modify Makefile to save debug files
+- :acrn-issue:`2200` - Won't build using ubuntu 16.04 LTS and binutils 2.26.1
+- :acrn-issue:`2237` - Don't export two dma_bufs for the same importer in sos kernel
+- :acrn-issue:`2257` - Profiling code clean up
+- :acrn-issue:`2277` - [APLNUC]Launch UOS with 5G memory will hang 2 minutes
+- :acrn-issue:`2298` - Hardcodes path to iasl
+- :acrn-issue:`2341` - vm exit trace position is not correct
+- :acrn-issue:`2349` - SOS failed boot up with RELOC config enabled.
+- :acrn-issue:`2355` - Switch the default up-notification vector from 0xF7 to 0xF3
+- :acrn-issue:`2356` - fail to start UOS on the renamed device name of VHM module
+- :acrn-issue:`2371` - kconfig oldconfig doesn't work correctly
+- :acrn-issue:`2389` - Need to add the dependency of $(LIB_FLAGS)
+- :acrn-issue:`2410` - Launch UOS will occur page fault error when use the hypervisor build on Ubuntu
+- :acrn-issue:`2427` - Remove redundant apicv code from legacy vInterrupt inject path
 
 Known Issues
 ************
 
+:acrn-issue:`1319` - SD card pass-through: UOS can't see SD card after UOS reboot.
+   SD card could not be found after UOS reboot in pass-through mode.
+
+   **Impact:** There is no SD card after UOS reboot.
+
+   **Workaround:** None. The issue will be fixed in the next release.
+
+:acrn-issue:`1773` - USB Mediator: Can't find all devices when multiple usb devices connected[Reproduce rate:60%]
+   After booting UOS with multiple USB devices plugged in, there's a 60% chance that
+   one or more devices are not discovered.
+
+   **Impact:** Cannot use multiple USB devices at same time.
+
+   **Workaround:** Unplug and plug-in the unrecognized device after booting.
+
+:acrn-issue:`1774` - UOS can't stop by command: acrnctl stop [vm name] in SOS
+   After launching UOS in SOS by "acrnctl start" command, UOS VM failed
+   to be stopped by "acrnctl stop" command.
+
+   **Impact:** Can't stop UOS in SOS.
+
+   **Workaround:** None. The issue will be fixed in the next release.
+
+:acrn-issue:`1780` - Some video formats cannot be played in SOS
+   Video files with these encodings are not supported in the SOS:
+   H265_10bits, VP8, VP9, VP9_10bits, H265.720p.
+
+   **Impact:** Cannot play those formats of videos in SOS.
+
+   **Workaround:** None. The issues will be fixed in the next release.
+
+:acrn-issue:`1782` - UOS failed to get IP address with the pass-through network card
+   After a network card is pass-through to UOS, it fails to get an IP address in UOS.
+
+   **Impact:** Cannot use network in UOS.
+
+   **Workaround:** None. The issues will be fixed in the next release.
+
+:acrn-issue:`1991` - Input is useless in UART Console for corner case
+   Input is useless in UART Console for a corner case,
+   demonstrated with these steps:
+
+   1) Boot to SOS
+
+   2) ssh into the SOS.
+
+   3) use "./launch_UOS.sh" to boot UOS.
+
+   4) On the host, use "minicom -s dev/ttyUSB0".
+
+   5) Use "sos_console 0" to launch SOS.
+
+   **Impact:** Failed to use UART for input in corner case.
+
+   **Workaround:** Enter other keys before typing :kbd:`Enter`.
+
+:acrn-issue:`1996` - There is an error log when using "acrnd&" to boot UOS
+   An error log is printed when starting acrnd as a background job
+   (``acrnd&``) to boot UOS. The UOS still boots up
+   normally, but prints: “Failed to open the socket(sos-lcs) to query the reason for the wake-up.
+   Activating all vms when acrnd & to boot uos."
+
+   **Impact:** UOS boots normally, but prints an error log message.
+
+   **Workaround:** None.
+
+:acrn-issue:`2267` - [APLUP2][LaaG]LaaG can't detect 4k monitor 
+   After launching UOS on APL UP2 , 4k monitor cannot be detected.
+
+   **Impact:** UOS can't display on a 4k monitor.
+
+   **Workaround:** Use a monitor with less than 4k resolution.
+
+:acrn-issue:`2276` - OVMF failed to launch UOS on UP2.
+   UP2 failed to launch UOS using OVMF as virtual bootloader with acrn-dm. 
+
+   **Impact:** UOS cannot boot up using OVMF
+
+   **Workaround:** Use VSBL as virtual bootloader
+
+:acrn-issue:`2278` - [KBLNUC] Cx/Px is not supported on KBLNUC
+   C states/P states is not supported on KBL NUC.
+
+   **Impact:** Power Management states related operations cannot be using in SOS/UOS on KBLNUC
+
+   **Workaround:** None 
+
+:acrn-issue:`2279` - [APLNUC]After exiting UOS with mediator Usb_KeyBoard and Mouse, SOS cannot use the 
+   Usb_KeyBoard and Mouse
+   After exiting UOS with mediator Usb_KeyBoard and Mouse, SOS cannot use the Usb_KeyBoard and Mouse.
+   Reproduce Steps as below:
+
+   1) Insert USB keyboard and mouse in standard A port（USB3.0 port）
+
+   2) Boot UOS by sharing the USB keyboard and mouse in cmd line:
+
+      ``-s n,xhci,1-1:1-2:1-3:1-4:2-1:2-2:2-3:2-4 \``
+
+   3) UOS access USB keyboard and mouse.
+
+   4) Exit UOS.
+
+   5) SOS access USB keyboard and mouse. 
+
+   **Impact:** SOS cannot use USB keyboard and mouse in such case.
+
+   **Workaround:** Unplug and plug-in the USB keyboard and mouse after exiting UOS.
+
+:acrn-issue:`2338` - [UP2]Lost 2G memory in SOS when using SBL as bootloader on UP2.
+      After using SBL as bootloader to boot UP2, SOS only has 2G memory with 4G physical memory bank.
+
+   **Impact:** lost 2G memory in SOS.
+
+   **Workaround:** Modify SBL Memory setting file "CfgData_Ext_Up2.dlt", see details in issue comments.
+
+:acrn-issue:`2522` - [NUC7i7BNH]After starting ias in SOS, there is no display 
+      On NUC7i7BNH, after starting IAS in SOS, there is no display if the monitor is 
+      connected with a TPC to VGA connector. 
+
+   **Impact:** Special model [NUC7i7BNH] has no display in SOS.
+
+   **Workaround:** None.
+
+:acrn-issue:`2523` - UOS monitor does not display when using IAS
+      There is no UOS display after starting IAS weston.
+
+   **Impact:** Cannot use ias weston in UOS.
+
+   **Workaround:** 
+      1) Use weston instead of IAS weston: ``swupd install x11-server``
+      2) Use acrn-kernel to rebuild SOS kernel to replace integrated kernel. To confirm "DRM_FBDEV_EMULATION" related configs in kernel_config_sos should as below:
+
+                .. code-block:: bash
+              
+                             CONFIG_DRM_KMS_FB_HELPER=y
+                             CONFIG_DRM_FBDEV_EMULATION=y
+                             CONFIG_DRM_FBDEV_OVERALLOC=100
+
+    The issues will be fixed in the next release.
+
+:acrn-issue:`2524` - [UP2][SBL] Launching UOS hang while weston is running in SOS
+    When using weston in SOS, it will hang during the UOS launch.
+
+   **Impact:** launching UOS hang, and then no display in UOS.
+
+   **Workaround:** Use acrn-kernel to rebuild SOS kernel to replace the
+   integrated kernel. Confirm "DRM_FBDEV_EMULATION" related 
+   configs in kernel_config_sos are as below:
+
+                .. code-block:: bash
+              
+                             CONFIG_DRM_KMS_FB_HELPER=y
+                             CONFIG_DRM_FBDEV_EMULATION=y
+                             CONFIG_DRM_FBDEV_OVERALLOC=100
+
+    The issues will be fixed in the next release.
+
+:acrn-issue:`2527` - [KBLNUC][HV]System will crash when run crashme (SOS/UOS)
+    System will crash after a few minutes running stress test crashme tool in SOS/UOS.
+
+   **Impact:** System may crash in some stress situation. 
+
+   **Workaround:** None
+
+:acrn-issue:`2528` - [APLUP2] SBL (built by SBL latest code) failed to boot ACRN hypervisor
+    SBL built by latest slimbootloader code (HEAD->ad42a2bd6e4a6364358b9c712cb54e821ee7ee42) failed to boot acrn hypervisor.
+
+   **Impact:** UP2 with SBL cannot boot acrn hypervisor. 
+
+   **Workaround:** Use SBL built by earlier slimbootloader code (commit id:edc112328cf3e414523162dd75dc3614e42579fe).
+   This folder version can boot acrn hypervisor normally.
 
 .. comment
    Use the syntax:
