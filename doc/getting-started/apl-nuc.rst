@@ -121,11 +121,11 @@ partition. Follow these steps:
 
       $ sudo ls -1 /boot/EFI/org.clearlinux
       bootloaderx64.efi
-      kernel-org.clearlinux.native.4.20.2-683
-      kernel-org.clearlinux.iot-lts2018-sos.4.19.13-1901141830
-      kernel-org.clearlinux.iot-lts2018.4.19.13-1901141830
-      kernel-org.clearlinux.pk414-sos.4.14.74-115
+      kernel-org.clearlinux.iot-lts2018.4.19.19-8
+      kernel-org.clearlinux.iot-lts2018-sos.4.19.19-8
+      kernel-org.clearlinux.native.4.20.7-694
       loaderx64.efi
+
 
    .. note::
       On Clear Linux OS, the EFI System Partion (e.g.: ``/dev/sda1``) is mounted under ``/boot`` by default
@@ -232,7 +232,13 @@ partition. Follow these steps:
    (``root=PARTUUID=<UUID of rootfs partition>``) in the ``options`` section, and
    add the ``hugepagesz=1G hugepages=2`` at end of the ``options`` section.
 
-   Use ``blkid`` to find out what your ``/dev/sda3`` ``PARTUUID`` value is.
+   Use ``blkid`` to find out what your ``/dev/sda3`` ``PARTUUID`` value is. Here
+   is a handy one-line command to do that:
+
+   .. code-block:: none
+
+      # sed -i "s/<UUID of rootfs partition>/`blkid -s PARTUUID -o value \
+                     /dev/sda3`/g" /boot/loader/entries/acrn.conf
 
    .. note::
       It is also possible to use the device name directly, e.g. ``root=/dev/sda3``
@@ -254,9 +260,9 @@ partition. Follow these steps:
       :caption: ACRN Service OS Boot Menu
 
       => The ACRN Service OS
-      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-4.19.13-1901141830)
-      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-sos-4.19.13-1901141830)
-      Clear Linux OS for Intel Architecture (Clear-linux-native.4.20.2-683)
+      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-4.19.19-8)
+      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-sos-4.19.19-8)
+      Clear Linux OS for Intel Architecture (Clear-linux-native.4.20.7-694)
       EFI Default Loader
       Reboot Into Firmware Interface
 
