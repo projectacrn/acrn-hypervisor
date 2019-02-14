@@ -794,6 +794,13 @@ vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
 
 		switch (mode) {
 		case APIC_LVT_DM_FIXED:
+			if (vec < 16U) {
+				vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
+				dev_dbg(ACRN_DBG_LAPIC,
+					"vlapic ignoring interrupt to vector %u", vec);
+				break;
+			}
+
 			if (vlapic_accept_intr(vlapic, vec, false)) {
 				vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 			}
@@ -1021,11 +1028,7 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
 		}
 
 		if (ret == 0) {
-			if (vector < 16U) {
-				vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
-			} else {
-				vlapic_fire_lvt(vlapic, lvt);
-			}
+			vlapic_fire_lvt(vlapic, lvt);
 		}
 	}
 	return ret;
