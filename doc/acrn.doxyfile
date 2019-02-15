@@ -815,9 +815,7 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/arch/x86/guest/trusty.c \
                           ../devicemodel/include/virtio.h \
                           ../hypervisor/include/arch/x86/ioapic.h \
-                          ../hypervisor/include/arch/x86/irq.h \
                           ../hypervisor/include/arch/x86/lapic.h \
-                          ../hypervisor/include/common/irq.h \
                           ../hypervisor/include/lib/crypto/crypto_api.h \
                           ../devicemodel/include/virtio_kernel.h \
                           ../devicemodel/include/vhost.h \

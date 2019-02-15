@@ -9,8 +9,7 @@
 
 #include <hypervisor.h>
 #include <schedule.h>
-#include <common/irq.h>
-#include <arch/x86/irq.h>
+#include <irq.h>
 #include <sbuf.h>
 #include <gdt.h>
 #include <timer.h>
