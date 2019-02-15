@@ -16,6 +16,7 @@
 #include <cpu_caps.h>
 #include <errno.h>
 #include <logmsg.h>
+#include <vmcs.h>
 
 /* TODO: add more capability per requirement */
 /* APICv features */

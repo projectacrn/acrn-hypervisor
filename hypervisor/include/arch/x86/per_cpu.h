@@ -7,15 +7,13 @@
 #ifndef PER_CPU_H
 #define PER_CPU_H
 
-#include <hypervisor.h>
-#include <schedule.h>
-#include <irq.h>
+#include <types.h>
 #include <sbuf.h>
-#include <gdt.h>
-#include <timer.h>
-#include <logmsg.h>
+#include <irq.h>
 #include <instr_emul.h>
 #include <profiling.h>
+#include <logmsg.h>
+#include <gdt.h>
 #include <security.h>
 
 struct per_cpu_region {
