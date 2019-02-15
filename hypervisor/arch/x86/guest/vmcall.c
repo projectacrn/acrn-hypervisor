@@ -197,16 +197,15 @@ int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 		(hypcall_id != HC_SAVE_RESTORE_SWORLD_CTX)) {
 		vcpu_inject_ud(vcpu);
 		pr_err("hypercall %d is only allowed from SOS_VM!\n", hypcall_id);
-	        ret = -EACCES;
 	} else if (!is_hypercall_from_ring0()) {
 		pr_err("hypercall is only allowed from RING-0!\n");
 	        ret = -EACCES;
+		vcpu_set_gpreg(vcpu, CPU_REG_RAX, (uint64_t)ret);
 	} else {
 		/* Dispatch the hypercall handler */
 		ret = dispatch_hypercall(vcpu);
+		vcpu_set_gpreg(vcpu, CPU_REG_RAX, (uint64_t)ret);
 	}
-
-	vcpu_set_gpreg(vcpu, CPU_REG_RAX, (uint64_t)ret);
 
 	TRACE_2L(TRACE_VMEXIT_VMCALL, vm->vm_id, hypcall_id);
 
