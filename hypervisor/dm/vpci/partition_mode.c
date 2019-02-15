@@ -34,27 +34,6 @@
 #include "pci_priv.h"
 
 
-/**
- * @pre tmp != NULL
- */
-static struct pci_vdev *partition_mode_find_vdev(const struct acrn_vpci *vpci, union pci_bdf vbdf)
-{
-	struct pci_vdev *vdev, *tmp;
-	uint32_t i;
-
-	vdev = NULL;
-	for (i = 0U; i < vpci->pci_vdev_cnt; i++) {
-		tmp = (struct pci_vdev *)&(vpci->pci_vdevs[i]);
-
-		if (bdf_is_equal(&(tmp->vbdf), &vbdf)) {
-			vdev = tmp;
-			break;
-		}
-	}
-
-	return vdev;
-}
-
 static inline bool is_valid_bar_type(const struct pci_bar *bar)
 {
 	return (bar->type == PCIBAR_MEM32) || (bar->type == PCIBAR_MEM64);
@@ -160,7 +139,7 @@ static void partition_mode_vpci_deinit(const struct acrn_vm *vm)
 static void partition_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
-	struct pci_vdev *vdev = partition_mode_find_vdev(vpci, vbdf);
+	struct pci_vdev *vdev = pci_find_vdev_by_vbdf(vpci, vbdf);
 
 	if ((vdev != NULL) && (vdev->ops != NULL)
 			&& (vdev->ops->cfgread != NULL)) {
@@ -171,7 +150,7 @@ static void partition_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf vbdf,
 static void partition_mode_cfgwrite(struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
-	struct pci_vdev *vdev = partition_mode_find_vdev(vpci, vbdf);
+	struct pci_vdev *vdev = pci_find_vdev_by_vbdf(vpci, vbdf);
 
 	if ((vdev != NULL) && (vdev->ops != NULL)
 			&& (vdev->ops->cfgwrite != NULL)) {
