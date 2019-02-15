@@ -83,6 +83,9 @@
 #define CR4_SMAP                (1UL<<21U)
 #define CR4_PKE                 (1UL<<22U)	/* Protect-key-enable */
 
+#define RFLAGS_C (1U<<0U)
+#define RFLAGS_Z (1U<<6U)
+#define RFLAGS_AC (1U<<18U)
 
 /*
  * Entries in the Interrupt Descriptor Table (IDT)
@@ -540,6 +543,23 @@ static inline void stac(void)
 static inline void clac(void)
 {
 	asm volatile ("clac" : : : "memory");
+}
+
+/* Save rflags register and set AC bit */
+static inline void stac_save(uint64_t *p_rflags)
+{
+	CPU_RFLAGS_SAVE(p_rflags);
+	asm volatile ("stac" : : : "memory");
+}
+
+/* Restore AC bit saved in p_rflags */
+static inline void ac_restore(uint64_t *p_rflags)
+{
+	if (*p_rflags & RFLAGS_AC) {
+		stac();
+	} else {
+		clac();
+	}
 }
 
 #else /* ASSEMBLER defined */
