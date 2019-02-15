@@ -51,6 +51,21 @@ int32_t hcall_sos_offline_cpu(struct acrn_vm *vm, uint64_t lapicid);
  */
 int32_t hcall_get_api_version(struct acrn_vm *vm, uint64_t param);
 
+
+/**
+ * @brief Get basic platform information.
+ *
+ * The function returns basic hardware or configuration information
+ * for the current platform.
+ *
+ * @param vm Pointer to VM data structure.
+ * @param param GPA pointer to struct hc_platform_info.
+ *
+ * @pre Pointer vm shall point to SOS_VM
+ * @return 0 on success, -1 in case of error.
+ */
+int32_t hcall_get_platform_info(struct acrn_vm *vm, uint64_t param);
+
 /**
  * @brief create virtual machine
  *

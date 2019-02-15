@@ -28,6 +28,7 @@
 #define HC_GET_API_VERSION          BASE_HC_ID(HC_ID, HC_ID_GEN_BASE + 0x00UL)
 #define HC_SOS_OFFLINE_CPU          BASE_HC_ID(HC_ID, HC_ID_GEN_BASE + 0x01UL)
 #define HC_SET_CALLBACK_VECTOR      BASE_HC_ID(HC_ID, HC_ID_GEN_BASE + 0x02UL)
+#define HC_GET_PLATFORM_INFO        BASE_HC_ID(HC_ID, HC_ID_GEN_BASE + 0x03UL)
 
 /* VM management */
 #define HC_ID_VM_BASE               0x10UL
@@ -279,6 +280,25 @@ struct hc_api_version {
 
 	/** hypervisor api minor version */
 	uint32_t minor_version;
+} __aligned(8);
+
+/**
+ * Hypervisor API, return it for HC_GET_PLATFORM_INFO hypercall
+ */
+struct hc_platform_info {
+	/** Hardware Information */
+	/** Physical CPU number */
+	uint16_t cpu_num;
+
+	/** Align the size of version & hardware info to 128Bytes. */
+	uint8_t reserved0[126];
+
+	/** Configuration Information */
+	/** Maximum vCPU number for one VM. */
+	uint16_t max_vcpus_per_vm;
+
+	/** Align the size of Configuration info to 128Bytes. */
+	uint8_t reserved1[126];
 } __aligned(8);
 
 /**
