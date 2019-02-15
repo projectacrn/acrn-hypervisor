@@ -81,4 +81,8 @@ void populate_msi_struct(struct pci_vdev *vdev);
 
 void add_vdev_handler(struct pci_vdev *vdev, const struct pci_vdev_ops *ops);
 
+struct pci_vdev *pci_find_vdev_by_vbdf(const struct acrn_vpci *vpci, union pci_bdf vbdf);
+
+struct pci_vdev *pci_find_vdev_by_pbdf(const struct acrn_vpci *vpci, union pci_bdf pbdf);
+
 #endif /* PCI_PRIV_H_ */
