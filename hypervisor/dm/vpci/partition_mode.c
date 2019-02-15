@@ -67,13 +67,13 @@ static inline bool is_valid_bar(const struct pci_bar *bar)
 	return (is_valid_bar_type(bar) && is_valid_bar_size(bar));
 }
 
-static void partition_mode_pdev_init(struct pci_vdev *vdev)
+static void partition_mode_pdev_init(struct pci_vdev *vdev, union pci_bdf pbdf)
 {
 	struct pci_pdev *pdev_ref;
 	uint32_t idx;
 	struct pci_bar *pbar, *vbar;
 
-	pdev_ref = find_pci_pdev(vdev->pbdf);
+	pdev_ref = find_pci_pdev(pbdf);
 	if (pdev_ref != NULL) {
 		vdev->pdev = pdev_ref;
 
@@ -107,10 +107,9 @@ static int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 		ptdev_config = vm_config->pci_ptdevs + i;
 		vdev->vpci = vpci;
 		vdev->vbdf.value = ptdev_config->vbdf.value;
-		vdev->pbdf.value = ptdev_config->pbdf.value;
 
 		if (vdev->vbdf.value != 0U) {
-			partition_mode_pdev_init(vdev);
+			partition_mode_pdev_init(vdev, ptdev_config->pbdf);
 			vdev->ops = &pci_ops_vdev_pt;
 		} else {
 			vdev->ops = &pci_ops_vdev_hostbridge;

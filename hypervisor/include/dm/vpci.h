@@ -91,9 +91,6 @@ struct pci_vdev {
 	/* The bus/device/function triple of the virtual PCI device. */
 	union pci_bdf vbdf;
 
-	/* The bus/device/function triple of the physical PCI device. */
-	union pci_bdf pbdf;
-
 	struct pci_pdev *pdev;
 
 	union pci_cfgdata cfgdata;
