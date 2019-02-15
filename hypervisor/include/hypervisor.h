@@ -36,18 +36,4 @@
 #include <hv_arch.h>
 #include <hv_debug.h>
 
-#ifndef ASSEMBLER
-/* gpa --> hpa -->hva */
-static inline void *gpa2hva(struct acrn_vm *vm, uint64_t x)
-{
-	return hpa2hva(gpa2hpa(vm, x));
-}
-
-static inline uint64_t hva2gpa(struct acrn_vm *vm, void *x)
-{
-	return (is_sos_vm(vm)) ? sos_vm_hpa2gpa(hva2hpa(x)) : INVALID_GPA;
-}
-
-#endif	/* !ASSEMBLER */
-
 #endif /* HYPERVISOR_H */
