@@ -34,26 +34,6 @@
 
 
 /**
- * @pre tmp != NULL
- */
-static struct pci_vdev *sharing_mode_find_vdev(const struct acrn_vpci *vpci, union pci_bdf pbdf)
-{
-	struct pci_vdev *vdev, *tmp;
-	uint32_t i;
-
-	vdev = NULL;
-	for (i = 0U; i < vpci->pci_vdev_cnt; i++) {
-		tmp = (struct pci_vdev *)&(vpci->pci_vdevs[i]);
-		if ((tmp->pdev != NULL) && bdf_is_equal((union pci_bdf *)&(tmp->pdev->bdf), &pbdf)) {
-			vdev = tmp;
-			break;
-		}
-	}
-
-	return vdev;
-}
-
-/**
  * @pre vpci != NULL
  */
 static struct pci_vdev *sharing_mode_find_vdev_sos(union pci_bdf pbdf)
@@ -65,7 +45,7 @@ static struct pci_vdev *sharing_mode_find_vdev_sos(union pci_bdf pbdf)
 	vm = get_sos_vm();
 	if (vm != NULL) {
 		vpci = &vm->vpci;
-		vdev = sharing_mode_find_vdev(vpci, pbdf);
+		vdev = pci_find_vdev_by_pbdf(vpci, pbdf);
 	}
 
 	return vdev;
