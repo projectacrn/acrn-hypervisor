@@ -7,6 +7,9 @@
 #ifndef ARCH_IRQ_H
 #define ARCH_IRQ_H
 
+#include <acrn_common.h>
+#include <util.h>
+
 /**
  * @file arch/x86/irq.h
  *

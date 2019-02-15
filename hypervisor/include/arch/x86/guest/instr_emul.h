@@ -30,6 +30,8 @@
 #ifndef INSTR_EMUL_H
 #define INSTR_EMUL_H
 
+#include <vcpu.h>
+
 struct instr_emul_vie_op {
 	uint8_t		op_type;	/* type of operation (e.g. MOV) */
 	uint16_t	op_flags;
