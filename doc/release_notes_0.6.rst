@@ -111,27 +111,23 @@ Known Issues
 
    **Impact:** Cannot play those formats of videos in SOS.
 
-   **Workaround:** None. The issues will be fixed in the next release.
+   **Workaround:** None. The issue will be fixed in the next release.
 
 :acrn-issue:`1782` - UOS failed to get IP address with the pass-through network card
    After a network card is pass-through to UOS, it fails to get an IP address in UOS.
 
    **Impact:** Cannot use network in UOS.
 
-   **Workaround:** None. The issues will be fixed in the next release.
+   **Workaround:** None. The issue will be fixed in the next release.
 
 :acrn-issue:`1991` - Input is useless in UART Console for corner case
    Input is useless in UART Console for a corner case,
    demonstrated with these steps:
 
    1) Boot to SOS
-
    2) ssh into the SOS.
-
    3) use "./launch_UOS.sh" to boot UOS.
-
    4) On the host, use "minicom -s dev/ttyUSB0".
-
    5) Use "sos_console 0" to launch SOS.
 
    **Impact:** Failed to use UART for input in corner case.
@@ -169,12 +165,11 @@ Known Issues
 
    **Workaround:** None 
 
-:acrn-issue:`2279` - [APLNUC]After exiting UOS with mediator Usb_KeyBoard and Mouse, SOS cannot use the 
-   Usb_KeyBoard and Mouse
+:acrn-issue:`2279` - [APLNUC]After exiting UOS with mediator Usb_KeyBoard and Mouse, SOS cannot use the Usb_KeyBoard and Mouse
    After exiting UOS with mediator Usb_KeyBoard and Mouse, SOS cannot use the Usb_KeyBoard and Mouse.
    Reproduce Steps as below:
 
-   1) Insert USB keyboard and mouse in standard A port（USB3.0 port）
+   1) Insert USB keyboard and mouse in standard A port (USB3.0 port)
 
    2) Boot UOS by sharing the USB keyboard and mouse in cmd line:
 
@@ -191,39 +186,40 @@ Known Issues
    **Workaround:** Unplug and plug-in the USB keyboard and mouse after exiting UOS.
 
 :acrn-issue:`2338` - [UP2]Lost 2G memory in SOS when using SBL as bootloader on UP2.
-      After using SBL as bootloader to boot UP2, SOS only has 2G memory with 4G physical memory bank.
+   After using SBL as bootloader to boot UP2, SOS only has 2G memory with 4G physical memory bank.
 
    **Impact:** lost 2G memory in SOS.
 
    **Workaround:** Modify SBL Memory setting file "CfgData_Ext_Up2.dlt", see details in issue comments.
 
 :acrn-issue:`2522` - [NUC7i7BNH]After starting ias in SOS, there is no display 
-      On NUC7i7BNH, after starting IAS in SOS, there is no display if the monitor is 
-      connected with a TPC to VGA connector. 
+   On NUC7i7BNH, after starting IAS in SOS, there is no display if the monitor is 
+   connected with a TPC to VGA connector. 
 
    **Impact:** Special model [NUC7i7BNH] has no display in SOS.
 
    **Workaround:** None.
 
 :acrn-issue:`2523` - UOS monitor does not display when using IAS
-      There is no UOS display after starting IAS weston.
+   There is no UOS display after starting IAS weston.
 
    **Impact:** Cannot use ias weston in UOS.
 
    **Workaround:** 
-      1) Use weston instead of IAS weston: ``swupd install x11-server``
-      2) Use acrn-kernel to rebuild SOS kernel to replace integrated kernel. To confirm "DRM_FBDEV_EMULATION" related configs in kernel_config_sos should as below:
 
-                .. code-block:: bash
-              
-                             CONFIG_DRM_KMS_FB_HELPER=y
-                             CONFIG_DRM_FBDEV_EMULATION=y
-                             CONFIG_DRM_FBDEV_OVERALLOC=100
+   1) Use weston instead of IAS weston: ``swupd install x11-server``
+   2) Use acrn-kernel to rebuild SOS kernel to replace integrated kernel. To confirm "DRM_FBDEV_EMULATION" related configs in kernel_config_sos should as below:
 
-    The issues will be fixed in the next release.
+      .. code-block:: bash
+
+         CONFIG_DRM_KMS_FB_HELPER=y
+         CONFIG_DRM_FBDEV_EMULATION=y
+         CONFIG_DRM_FBDEV_OVERALLOC=100
+
+   The issue will be fixed in the next release.
 
 :acrn-issue:`2524` - [UP2][SBL] Launching UOS hang while weston is running in SOS
-    When using weston in SOS, it will hang during the UOS launch.
+   When using weston in SOS, it will hang during the UOS launch.
 
    **Impact:** launching UOS hang, and then no display in UOS.
 
@@ -231,23 +227,23 @@ Known Issues
    integrated kernel. Confirm "DRM_FBDEV_EMULATION" related 
    configs in kernel_config_sos are as below:
 
-                .. code-block:: bash
-              
-                             CONFIG_DRM_KMS_FB_HELPER=y
-                             CONFIG_DRM_FBDEV_EMULATION=y
-                             CONFIG_DRM_FBDEV_OVERALLOC=100
+   .. code-block:: bash
 
-    The issues will be fixed in the next release.
+      CONFIG_DRM_KMS_FB_HELPER=y
+      CONFIG_DRM_FBDEV_EMULATION=y
+      CONFIG_DRM_FBDEV_OVERALLOC=100
+
+   The issue will be fixed in the next release.
 
 :acrn-issue:`2527` - [KBLNUC][HV]System will crash when run crashme (SOS/UOS)
-    System will crash after a few minutes running stress test crashme tool in SOS/UOS.
+   System will crash after a few minutes running stress test crashme tool in SOS/UOS.
 
    **Impact:** System may crash in some stress situation. 
 
    **Workaround:** None
 
 :acrn-issue:`2528` - [APLUP2] SBL (built by SBL latest code) failed to boot ACRN hypervisor
-    SBL built by latest slimbootloader code (HEAD->ad42a2bd6e4a6364358b9c712cb54e821ee7ee42) failed to boot acrn hypervisor.
+   SBL built by latest slimbootloader code (HEAD->ad42a2bd6e4a6364358b9c712cb54e821ee7ee42) failed to boot acrn hypervisor.
 
    **Impact:** UP2 with SBL cannot boot acrn hypervisor. 
 
