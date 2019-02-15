@@ -40,6 +40,10 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 		ret = hcall_get_api_version(vm, param1);
 		break;
 
+	case HC_GET_PLATFORM_INFO:
+		ret = hcall_get_platform_info(vm, param1);
+		break;
+
 	case HC_SET_CALLBACK_VECTOR:
 		ret = hcall_set_callback_vector(vm, param1);
 
