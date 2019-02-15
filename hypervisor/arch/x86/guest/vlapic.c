@@ -1758,6 +1758,7 @@ vlapic_reset(struct acrn_vlapic *vlapic)
 
 	lapic->icr_timer.v = 0U;
 	lapic->dcr_timer.v = 0U;
+	vlapic_dcr_write_handler(vlapic);
 	vlapic_reset_timer(vlapic);
 
 	vlapic->svr_last = lapic->svr.v;
@@ -1809,6 +1810,7 @@ void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs)
 	lapic->icr_timer = regs->icr_timer;
 	lapic->ccr_timer = regs->ccr_timer;
 	lapic->dcr_timer = regs->dcr_timer;
+	vlapic_dcr_write_handler(vlapic);
 }
 
 static uint64_t
