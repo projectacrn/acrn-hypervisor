@@ -1336,9 +1336,6 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 		portsc &= XHCI_PS_PED | XHCI_PS_PLS_MASK |
 			     XHCI_PS_SPEED_MASK | XHCI_PS_PIC_MASK;
 
-		if (XHCI_DEVINST_PTR(xdev, port))
-			p->portsc |= XHCI_PS_CCS;
-
 		portsc |= (value &
 			      ~(XHCI_PS_OCA |
 				XHCI_PS_PR  |
