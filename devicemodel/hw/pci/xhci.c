@@ -508,6 +508,34 @@ static struct pci_xhci_option_elem xhci_option_table[] = {
 	{"cap", pci_xhci_parse_extcap}
 };
 
+static inline uint32_t pci_xhci_access_portsc(struct pci_xhci_vdev *xdev,
+		uint32_t portnum, uint32_t value, int read)
+{
+	if (!xdev || !xdev->portregs) {
+		UPRINTF(LDBG, "fail to set portsc (port %d)\r\n", portnum);
+		return 0;
+	}
+
+	if (read)
+		return xdev->portregs[portnum].portsc;
+
+	xdev->portregs[portnum].portsc = value;
+	return 0;
+}
+
+static void pci_xhci_set_portsc(struct pci_xhci_vdev *xdev, uint32_t portnum,
+		uint32_t value)
+{
+	UPRINTF(LDBG, "set portsc (port %d) %08x\r\n", portnum, value);
+	pci_xhci_access_portsc(xdev, portnum, value, 0);
+}
+
+static uint32_t pci_xhci_get_portsc(struct pci_xhci_vdev *xdev,
+		uint32_t portnum)
+{
+	return pci_xhci_access_portsc(xdev, portnum, 0, 1);
+}
+
 static int
 pci_xhci_get_free_vport(struct pci_xhci_vdev *xdev,
 		struct usb_native_devinfo *di)
@@ -1113,19 +1141,21 @@ pci_xhci_change_port(struct pci_xhci_vdev *xdev, int port, int usb_speed,
 {
 	int speed, error;
 	struct xhci_trb evtrb;
-	struct pci_xhci_portregs *reg;
+	uint32_t value;
 
 	assert(xdev != NULL);
 
-	reg = XHCI_PORTREG_PTR(xdev, port);
 	if (conn == 0) {
-		reg->portsc &= ~(XHCI_PS_CCS | XHCI_PS_PED);
-		reg->portsc |= (XHCI_PS_CSC |
-				XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET));
+		value = pci_xhci_get_portsc(xdev, port);
+		value &= ~(XHCI_PS_CCS | XHCI_PS_PED);
+		value |= (XHCI_PS_CSC | XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET));
+		pci_xhci_set_portsc(xdev, port, value);
+
 	} else {
 		speed = pci_xhci_convert_speed(usb_speed);
-		reg->portsc = XHCI_PS_CCS | XHCI_PS_PP | XHCI_PS_CSC;
-		reg->portsc |= XHCI_PS_SPEED_SET(speed);
+		value = XHCI_PS_CCS | XHCI_PS_PP | XHCI_PS_CSC;
+		value |= XHCI_PS_SPEED_SET(speed);
+		pci_xhci_set_portsc(xdev, port, value);
 	}
 
 	if (!need_intr)
@@ -1148,7 +1178,8 @@ pci_xhci_change_port(struct pci_xhci_vdev *xdev, int port, int usb_speed,
 	if (error != XHCI_TRB_ERROR_SUCCESS)
 		UPRINTF(LWRN, "fail to report port change\r\n");
 
-	UPRINTF(LDBG, "%s: port %d:%08X\r\n", __func__, port, reg->portsc);
+	UPRINTF(LDBG, "%s: portsc (port %d) to %08x\r\n", __func__, port,
+			pci_xhci_get_portsc(xdev, port));
 	return (error == XHCI_TRB_ERROR_SUCCESS) ? 0 : -1;
 }
 
@@ -1258,6 +1289,7 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 	struct pci_xhci_portregs *p;
 	int port;
 	uint32_t oldpls, newpls;
+	uint32_t portsc;
 
 	if (xdev->portregs == NULL)
 		return;
@@ -1282,6 +1314,7 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 	}
 
 	p = XHCI_PORTREG_PTR(xdev, port);
+	portsc = pci_xhci_get_portsc(xdev, port);
 	switch (offset) {
 	case 0:
 		/* port reset or warm reset */
@@ -1290,23 +1323,23 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 			break;
 		}
 
-		if ((p->portsc & XHCI_PS_PP) == 0) {
+		if ((portsc & XHCI_PS_PP) == 0) {
 			UPRINTF(LWRN, "portregs_write to unpowered "
 				 "port %d\r\n", port);
 			break;
 		}
 
 		/* Port status and control register  */
-		oldpls = XHCI_PS_PLS_GET(p->portsc);
+		oldpls = XHCI_PS_PLS_GET(portsc);
 		newpls = XHCI_PS_PLS_GET(value);
 
-		p->portsc &= XHCI_PS_PED | XHCI_PS_PLS_MASK |
+		portsc &= XHCI_PS_PED | XHCI_PS_PLS_MASK |
 			     XHCI_PS_SPEED_MASK | XHCI_PS_PIC_MASK;
 
 		if (XHCI_DEVINST_PTR(xdev, port))
 			p->portsc |= XHCI_PS_CCS;
 
-		p->portsc |= (value &
+		portsc |= (value &
 			      ~(XHCI_PS_OCA |
 				XHCI_PS_PR  |
 				XHCI_PS_PED |
@@ -1316,7 +1349,7 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 				XHCI_PS_LWS | XHCI_PS_DR | XHCI_PS_WPR));
 
 		/* clear control bits */
-		p->portsc &= ~(value &
+		portsc &= ~(value &
 			       (XHCI_PS_CSC |
 				XHCI_PS_PEC |
 				XHCI_PS_WRC |
@@ -1330,16 +1363,18 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 		if (value & XHCI_PS_PED)
 			UPRINTF(LDBG, "Disable port %d request\r\n", port);
 
-		if (!(value & XHCI_PS_LWS))
+		if (!(value & XHCI_PS_LWS)) {
+			pci_xhci_set_portsc(xdev, port, portsc);
 			break;
+		}
 
 		UPRINTF(LDBG, "Port new PLS: %d\r\n", newpls);
 		switch (newpls) {
 		case 0: /* U0 */
 		case 3: /* U3 */
 			if (oldpls != newpls) {
-				p->portsc &= ~XHCI_PS_PLS_MASK;
-				p->portsc |= XHCI_PS_PLS_SET(newpls);
+				portsc &= ~XHCI_PS_PLS_MASK;
+				portsc |= XHCI_PS_PLS_SET(newpls);
 
 				/*
 				 * TODO:
@@ -1347,8 +1382,9 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 				 * consistent with xHCI spec.
 				 */
 				if (newpls == 0)
-					p->portsc |= XHCI_PS_PLC;
+					portsc |= XHCI_PS_PLC;
 
+				pci_xhci_set_portsc(xdev, port, portsc);
 				if (oldpls != 0 && newpls == 0) {
 					pci_xhci_set_evtrb(&evtrb, port,
 					    XHCI_TRB_ERROR_SUCCESS,
@@ -3610,17 +3646,16 @@ pci_xhci_read(struct vmctx *ctx,
 static void
 pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 {
-	struct pci_xhci_portregs *port;
 	struct xhci_trb evtrb;
 	struct usb_native_devinfo *di;
 	int speed, error;
 	int index;
+	uint32_t portsc;
 
 	assert(portn <= XHCI_MAX_DEVS);
 
 	UPRINTF(LINF, "reset port %d\r\n", portn);
 
-	port = XHCI_PORTREG_PTR(xdev, portn);
 	index = pci_xhci_get_native_port_index_by_vport(xdev, portn);
 	if (index < 0) {
 		UPRINTF(LWRN, "fail to reset port %d\r\n", portn);
@@ -3628,15 +3663,17 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 	}
 	di = &xdev->native_ports[index].info;
 
+	portsc = pci_xhci_get_portsc(xdev, portn);
 	speed = pci_xhci_convert_speed(di->speed);
-	port->portsc &= ~(XHCI_PS_PLS_MASK | XHCI_PS_PR | XHCI_PS_PRC);
-	port->portsc |= XHCI_PS_PED | XHCI_PS_SPEED_SET(speed);
+	portsc &= ~(XHCI_PS_PLS_MASK | XHCI_PS_PR | XHCI_PS_PRC);
+	portsc |= XHCI_PS_PED | XHCI_PS_SPEED_SET(speed);
 
 	if (warm && di->bcd >= 0x300)
-		port->portsc |= XHCI_PS_WRC;
+		portsc |= XHCI_PS_WRC;
 
-	if ((port->portsc & XHCI_PS_PRC) == 0) {
-		port->portsc |= XHCI_PS_PRC;
+	if ((portsc & XHCI_PS_PRC) == 0) {
+		portsc |= XHCI_PS_PRC;
+		pci_xhci_set_portsc(xdev, portn, portsc);
 
 		pci_xhci_set_evtrb(&evtrb, portn,
 		     XHCI_TRB_ERROR_SUCCESS,
@@ -3645,14 +3682,15 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 		if (error != XHCI_TRB_ERROR_SUCCESS)
 			UPRINTF(LWRN, "reset port insert event "
 				"failed\n");
-	}
+	} else
+		pci_xhci_set_portsc(xdev, portn, portsc);
 }
 
 static void
 pci_xhci_init_port(struct pci_xhci_vdev *xdev, int portn)
 {
-	XHCI_PORTREG_PTR(xdev, portn)->portsc =
-		XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET) | XHCI_PS_PP;
+	pci_xhci_set_portsc(xdev, portn, XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET)
+			| XHCI_PS_PP);
 }
 
 static int
@@ -3662,11 +3700,11 @@ pci_xhci_dev_intr(struct usb_hci *hci, int epctx)
 	struct xhci_dev_ctx	*dev_ctx;
 	struct xhci_trb		evtrb;
 	struct pci_xhci_vdev	*xdev;
-	struct pci_xhci_portregs *p;
 	struct xhci_endp_ctx	*ep_ctx;
 	int	error = 0;
 	int	dir_in;
 	int	epid;
+	uint32_t portsc;
 
 	dir_in = epctx & 0x80;
 	epid = epctx & ~0x80;
@@ -3685,16 +3723,19 @@ pci_xhci_dev_intr(struct usb_hci *hci, int epctx)
 	    dev->dev_ctx == NULL)
 		return 0;
 
-	p = XHCI_PORTREG_PTR(xdev, hci->hci_port);
+	portsc = pci_xhci_get_portsc(xdev, hci->hci_port);
 
 	/* raise event if link U3 (suspended) state */
-	if (XHCI_PS_PLS_GET(p->portsc) == 3) {
-		p->portsc &= ~XHCI_PS_PLS_MASK;
-		p->portsc |= XHCI_PS_PLS_SET(UPS_PORT_LS_RESUME);
-		if ((p->portsc & XHCI_PS_PLC) != 0)
+	if (XHCI_PS_PLS_GET(portsc) == 3) {
+		portsc &= ~XHCI_PS_PLS_MASK;
+		portsc |= XHCI_PS_PLS_SET(UPS_PORT_LS_RESUME);
+		if ((portsc & XHCI_PS_PLC) != 0) {
+			pci_xhci_set_portsc(xdev, hci->hci_port, portsc);
 			return 0;
+		}
 
-		p->portsc |= XHCI_PS_PLC;
+		portsc |= XHCI_PS_PLC;
+		pci_xhci_set_portsc(xdev, hci->hci_port, portsc);
 
 		pci_xhci_set_evtrb(&evtrb, hci->hci_port,
 				   XHCI_TRB_ERROR_SUCCESS,
