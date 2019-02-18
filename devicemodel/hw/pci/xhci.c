@@ -255,11 +255,16 @@ struct pci_xhci_rtsregs {
 };
 
 /* this is used to describe the VBus Drop state */
-enum pci_xhci_vbdp_state {
-	S3_VBDP_NONE = 0,
-	S3_VBDP_START,
-	S3_VBDP_END
+enum pci_xhci_vbdp_shift {
+	S3_VBDP_SHIFT_CSS,
+	S3_VBDP_SHIFT_DIS_SLOT,
+	S3_VBDP_SHIFT_CONN,
 };
+
+#define S3_VBDP_NONE		0
+#define S3_VBDP_CSS		(1 << S3_VBDP_SHIFT_CSS)
+#define S3_VBDP_DIS_SLOT	(1 << S3_VBDP_SHIFT_DIS_SLOT)
+#define S3_VBDP_CONN		(1 << S3_VBDP_SHIFT_CONN)
 
 struct pci_xhci_excap_ptr {
 	uint8_t cap_id;
@@ -541,7 +546,8 @@ pci_xhci_get_free_vport(struct pci_xhci_vdev *xdev,
 		struct usb_native_devinfo *di)
 {
 	int ports, porte;
-	int i, j, k;
+	int i, j, found = false;
+	uint8_t mask = (S3_VBDP_CSS | S3_VBDP_DIS_SLOT | S3_VBDP_CONN);
 
 	assert(xdev);
 	assert(di);
@@ -554,18 +560,36 @@ pci_xhci_get_free_vport(struct pci_xhci_vdev *xdev,
 	porte = ports + (XHCI_MAX_DEVS / 2);
 
 	for (i = ports; i <= porte; i++) {
-		for (j = 0; j < XHCI_MAX_VIRT_PORTS; j++) {
-			if (xdev->native_ports[j].vport == i)
+		for (j = 0; j < XHCI_MAX_VIRT_PORTS; j++)
+			if (xdev->native_ports[j].vport == i) {
+				found = true;
 				break;
+			}
 
-			k = xdev->vbdp_dev_num;
-			if (k > 0 && xdev->vbdp_devs[j].state == S3_VBDP_START
-					&& xdev->vbdp_devs[j].vport == i)
-				break;
+		if (found) {
+			found = false;
+			continue;
 		}
-		if (j >= XHCI_MAX_VIRT_PORTS)
+
+		if (xdev->vbdp_dev_num <= 0)
 			return i;
+
+		for (j = 0; j < XHCI_MAX_VIRT_PORTS; j++)
+			if (xdev->vbdp_devs[j].vport == i &&
+					(xdev->vbdp_devs[j].state & mask)) {
+				found = true;
+				break;
+			}
+
+		if (found) {
+			found = false;
+			continue;
+		}
+
+		return i;
 	}
+
+
 	return -1;
 }
 
@@ -728,7 +752,6 @@ pci_xhci_unassign_hub_ports(struct pci_xhci_vdev *xdev,
 	return 0;
 }
 
-
 static void *
 xhci_vbdp_thread(void *data)
 {
@@ -736,6 +759,7 @@ xhci_vbdp_thread(void *data)
 	int speed;
 	struct pci_xhci_vdev *xdev;
 	struct pci_xhci_native_port *p;
+	uint8_t mask = (S3_VBDP_DIS_SLOT | S3_VBDP_CONN);
 
 	xdev = data;
 	assert(xdev);
@@ -743,28 +767,41 @@ xhci_vbdp_thread(void *data)
 	while (xdev->vbdp_polling) {
 
 		sem_wait(&xdev->vbdp_sem);
+		UPRINTF(LINF, "vbdp: thread triggered once\r\n");
 		for (i = 0; i < XHCI_MAX_VIRT_PORTS; ++i)
-			if (xdev->vbdp_devs[i].state == S3_VBDP_END) {
-				xdev->vbdp_devs[i].state = S3_VBDP_NONE;
+			if ((xdev->vbdp_devs[i].state & mask) == mask)
+				/* FIXME: if an USB device is disconnected
+				 * after suspending is done, this condition
+				 * will never hit. Need to provide a proper
+				 * solution to fix it in near future.
+				 */
 				break;
-			}
 
-		if (i >= XHCI_MAX_VIRT_PORTS)
+		if (i >= XHCI_MAX_VIRT_PORTS) {
+			UPRINTF(LINF, "vbdp: fail to find proper state\r\n");
 			continue;
+		}
 
 		j = pci_xhci_get_native_port_index_by_path(xdev,
 				&xdev->vbdp_devs[i].path);
-		if (j < 0)
+		if (j < 0) {
+			UPRINTF(LINF, "vbdp: fail to find proper device\r\n");
 			continue;
+		}
 
 		p = &xdev->native_ports[j];
-		if (p->state != VPORT_CONNECTED)
+		if (p->state != VPORT_CONNECTED) {
+			UPRINTF(LINF, "vbdp: device is not connected\r\n");
 			continue;
+		}
 
 		speed = pci_xhci_convert_speed(p->info.speed);
 		pci_xhci_connect_port(xdev, p->vport, speed, 1);
 		UPRINTF(LINF, "change portsc for %d-%s\r\n", p->info.path.bus,
 				usb_dev_path(&p->info.path));
+
+		xdev->vbdp_devs[i].state = S3_VBDP_NONE;
+		xdev->vbdp_dev_num--;
 	}
 	return NULL;
 }
@@ -813,13 +850,11 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 			di->pid, di->path.bus, usb_dev_path(&di->path));
 
 	for (i = 0; xdev->vbdp_dev_num && i < XHCI_MAX_VIRT_PORTS; ++i) {
-		if (xdev->vbdp_devs[i].state != S3_VBDP_START)
-			continue;
-
 		if (!usb_dev_path_cmp(&di->path, &xdev->vbdp_devs[i].path))
 			continue;
 
 		s3_conn = 1;
+		xdev->vbdp_devs[i].state |= S3_VBDP_CONN;
 		vport = xdev->vbdp_devs[i].vport;
 		UPRINTF(LINF, "Skip and cache connect event for %d-%s\r\n",
 				di->path.bus, usb_dev_path(&di->path));
@@ -847,8 +882,10 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	/* we will report connecting event in xhci_vbdp_thread for
 	 * device that hasn't complete the S3 process
 	 */
-	if (s3_conn)
+	if (s3_conn) {
+		sem_post(&xdev->vbdp_sem);
 		return 0;
+	}
 
 	/* Trigger port change event for the arriving device */
 	if (pci_xhci_connect_port(xdev, vport, di->speed, 1))
@@ -871,6 +908,7 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	int index;
 	int rc;
 	int i;
+	uint8_t mask;
 
 	assert(hci_data);
 	assert(dev_data);
@@ -925,20 +963,21 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 			break;
 
 	for (i = 0; xdev->vbdp_dev_num && i < XHCI_MAX_VIRT_PORTS; ++i) {
-		if (xdev->vbdp_devs[i].state != S3_VBDP_START)
-			continue;
-
 		if (!usb_dev_path_cmp(&xdev->vbdp_devs[i].path, &di->path))
 			continue;
 
-		/*
-		 * we do nothing here for device that is in the middle of
-		 * S3 resuming process.
-		 */
-		UPRINTF(LINF, "disconnect device %d-%s on vport %d with "
-				"state %d and return.\r\n", di->path.bus,
-				usb_dev_path(&di->path), vport, state);
-		return 0;
+		mask = (S3_VBDP_DIS_SLOT | S3_VBDP_CSS);
+		if (xdev->vbdp_devs[i].state & mask) {
+			/*
+			 * we do nothing here for device that is in the middle
+			 * of S3 resuming process.
+			 */
+			UPRINTF(LINF, "disconnect device %d-%s on vport %d "
+					"with state %d and return.\r\n",
+					di->path.bus, usb_dev_path(&di->path),
+					vport, state);
+			return 0;
+		}
 	}
 
 	assert(state == VPORT_EMULATED || state == VPORT_CONNECTED);
@@ -1116,6 +1155,9 @@ pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de, bool full)
 
 	if (full)
 		free(de);
+
+	UPRINTF(LINF, "%s: deinit %d-%s mode %d\r\n", __func__,
+			ud->info.path.bus, usb_dev_path(&ud->info.path), full);
 }
 
 static inline int
@@ -1260,6 +1302,27 @@ pci_xhci_usbcmd_write(struct pci_xhci_vdev *xdev, uint32_t cmd)
 	}
 
 	if (cmd & XHCI_CMD_CSS) {
+		/*
+		 * Here gives a simple introduction for the following code.
+		 * On some platforms, the USB VBus will drop after suspending,
+		 * and re-enumerate during subsequent resuming process. Hence
+		 * the DM emulation is divided into two parts:
+		 *
+		 * Suspending: if the following code is executed, it means UOS
+		 * started the xHCI suspending process and trapped here. The DM
+		 * will save the states of current connected devices and clear
+		 * the PORTSC for those devices, which will emulate a
+		 * 'disconnect' state in UOS.
+		 *
+		 * Resuming: The SOS will do re-emulate for the connected
+		 * devices and report a connect event to DM. At the same time
+		 * the DM will receive disable slot cmd from UOS for the
+		 * 'virtually disconnected' devices. After those things
+		 * completed, DM will emulate a connect event to trigger UOS
+		 * do re-emulate for those devices although they are always
+		 * connected physically.
+		 */
+
 		/* TODO: should think about what happen if system S3 fail
 		 * and under that situation, the vbdp_devs and se_dev_num
 		 * should also need to be cleared
@@ -1274,7 +1337,7 @@ pci_xhci_usbcmd_write(struct pci_xhci_vdev *xdev, uint32_t cmd)
 				j = xdev->vbdp_dev_num;
 				xdev->vbdp_devs[j].path = p->info.path;
 				xdev->vbdp_devs[j].vport = p->vport;
-				xdev->vbdp_devs[j].state = S3_VBDP_START;
+				xdev->vbdp_devs[j].state |= S3_VBDP_CSS;
 				xdev->vbdp_dev_num++;
 
 				/* clear PORTSC register */
@@ -1283,10 +1346,22 @@ pci_xhci_usbcmd_write(struct pci_xhci_vdev *xdev, uint32_t cmd)
 				/* clear other information for this device*/
 				p->vport = 0;
 				p->state = VPORT_ASSIGNED;
-				UPRINTF(LINF, "s3: save %d-%s state\r\n",
+				UPRINTF(LINF, "s3: save %d-%s state: %08x\r\n",
 						p->info.path.bus,
-						usb_dev_path(&p->info.path));
+						usb_dev_path(&p->info.path),
+						xdev->vbdp_devs[j].state);
 			}
+		}
+
+		for (i = 0; i < XHCI_MAX_DEVS; ++i) {
+			if (!xdev->devices[i])
+				continue;
+
+			/* Unbind all connected native USB devices to avoid
+			 * dead-loop poll in libusb service during S3 resume
+			 * which impact UOS S3 resume latency.
+			 */
+			pci_xhci_dev_destroy(xdev->devices[i], false);
 		}
 	}
 
@@ -1802,7 +1877,7 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 	struct usb_native_devinfo *di = NULL;
 	struct usb_devpath *path;
 	uint32_t cmderr;
-	int i, j, index;
+	int i, j;
 
 	UPRINTF(LINF, "pci_xhci disable slot %u\r\n", slot);
 
@@ -1842,27 +1917,13 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 		xdev->slot_allocated[slot] = false;
 
 		di = &udev->info;
-		index = pci_xhci_get_native_port_index_by_path(xdev, &di->path);
-		if (index < 0) {
-			/*
-			 * one possible reason for failing to find the device is
-			 * it is plugged out during the resuming process. we
-			 * should give the xhci_vbdp_thread an opportunity to
-			 * try.
-			 */
-			sem_post(&xdev->vbdp_sem);
-			cmderr = XHCI_TRB_ERROR_SLOT_NOT_ON;
-			goto done;
-		}
-
 		for (j = 0; j < XHCI_MAX_VIRT_PORTS; ++j) {
 			path = &xdev->vbdp_devs[j].path;
 
 			if (!usb_dev_path_cmp(path, &di->path))
 				continue;
 
-			xdev->vbdp_devs[j].state = S3_VBDP_END;
-			xdev->vbdp_dev_num--;
+			xdev->vbdp_devs[j].state |= S3_VBDP_DIS_SLOT;
 			sem_post(&xdev->vbdp_sem);
 			UPRINTF(LINF, "signal device %d-%s to connect\r\n",
 					di->path.bus, usb_dev_path(&di->path));
