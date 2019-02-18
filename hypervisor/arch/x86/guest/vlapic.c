@@ -101,6 +101,14 @@ static void vlapic_timer_expired(void *data);
 
 static inline bool is_x2apic_enabled(const struct acrn_vlapic *vlapic);
 
+static inline bool vlapic_enabled(const struct acrn_vlapic *vlapic)
+{
+	const struct lapic_regs *lapic = &(vlapic->apic_page);
+
+	return (((vlapic->msr_apicbase & APICBASE_ENABLED) != 0UL) &&
+			((lapic->svr.v & APIC_SVR_ENABLE) != 0U));
+}
+
 static struct acrn_vlapic *
 vm_lapic_from_vcpu_id(struct acrn_vm *vm, uint16_t vcpu_id)
 {
@@ -1877,22 +1885,6 @@ vlapic_receive_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 			}
 		}
 	}
-}
-
-bool
-vlapic_enabled(const struct acrn_vlapic *vlapic)
-{
-	bool ret;
-	const struct lapic_regs *lapic = &(vlapic->apic_page);
-
-	if (((vlapic->msr_apicbase & APICBASE_ENABLED) != 0UL) &&
-			((lapic->svr.v & APIC_SVR_ENABLE) != 0U)) {
-		ret = true;
-	} else {
-	        ret = false;
-	}
-
-	return ret;
 }
 
 /*
