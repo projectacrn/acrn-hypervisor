@@ -6,8 +6,18 @@
 
 #define pr_prefix		"iommu: "
 
-#include <hypervisor.h>
+#include <types.h>
+#include <bits.h>
+#include <errno.h>
+#include <spinlock.h>
+#include <page.h>
+#include <pgtable.h>
+#include <irq.h>
+#include <io.h>
+#include <mmu.h>
+#include <lapic.h>
 #include <vtd.h>
+#include <logmsg.h>
 
 #define DBG_IOMMU 0
 
@@ -17,7 +27,6 @@
 #else
 #define ACRN_DBG_IOMMU 6U
 #endif
-
 #define LEVEL_WIDTH 9U
 
 #define ROOT_ENTRY_LOWER_PRESENT_POS        (0U)

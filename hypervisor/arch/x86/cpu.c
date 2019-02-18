@@ -4,15 +4,25 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
-#include <acpi.h>
-#include <schedule.h>
-#include <version.h>
-#include <trampoline.h>
+#include <types.h>
+#include <atomic.h>
+#include <bits.h>
+#include <page.h>
 #include <e820.h>
+#include <mmu.h>
+#include <lapic.h>
+#include <per_cpu.h>
+#include <cpufeatures.h>
 #include <cpu_caps.h>
-#include <security.h>
+#include <acpi.h>
+#include <ioapic.h>
+#include <trampoline.h>
+#include <cpuid.h>
+#include <version.h>
+#include <vmx.h>
+#include <vm.h>
 #include <ld_sym.h>
+#include <logmsg.h>
 
 struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 static uint16_t phys_cpu_num = 0U;

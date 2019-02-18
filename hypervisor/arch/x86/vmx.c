@@ -6,8 +6,9 @@
  * this file contains pure vmx operations
  */
 
-#include <hypervisor.h>
-#include <cpu.h>
+#include <types.h>
+#include <per_cpu.h>
+#include <pgtable.h>
 
 /**
  * @pre addr != NULL && addr is 4KB-aligned

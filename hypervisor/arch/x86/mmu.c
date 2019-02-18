@@ -27,10 +27,18 @@
  * $FreeBSD$
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <atomic.h>
+#include <page.h>
+#include <pgtable.h>
+#include <cpu_caps.h>
+#include <mmu.h>
+#include <vmx.h>
 #include <reloc.h>
-#include <e820.h>
+#include <vcpu.h>
+#include <vm.h>
 #include <ld_sym.h>
+#include <logmsg.h>
 
 static void *ppt_mmu_pml4_addr;
 static uint8_t sanitized_page[PAGE_SIZE] __aligned(PAGE_SIZE);

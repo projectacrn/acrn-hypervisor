@@ -4,9 +4,16 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <errno.h>
+#include <spinlock.h>
 #include <ioapic.h>
+#include <irq.h>
+#include <pgtable.h>
+#include <io.h>
+#include <mmu.h>
 #include <acpi.h>
+#include <logmsg.h>
 
 #define	IOAPIC_MAX_PIN		240U
 #define IOAPIC_INVALID_ID	0xFFU

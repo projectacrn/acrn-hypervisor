@@ -4,7 +4,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <bits.h>
+#include <msr.h>
+#include <cpu.h>
+#include <per_cpu.h>
+#include <cpu_caps.h>
+#include <lapic.h>
 
 union lapic_base_msr {
 	uint64_t value;

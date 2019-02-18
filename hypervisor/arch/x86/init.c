@@ -4,10 +4,15 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <types.h>
 #include <init.h>
-#include <hypervisor.h>
-#include <schedule.h>
+#include <console.h>
+#include <per_cpu.h>
+#include <profiling.h>
 #include <vtd.h>
+#include <vmx.h>
+#include <vm.h>
+#include <logmsg.h>
 
 /* Push sp magic to top of stack for call trace */
 #define SWITCH_TO(rsp, to)                                              \

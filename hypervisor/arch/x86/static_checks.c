@@ -3,8 +3,13 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include <hypervisor.h>
+
+#include <types.h>
+#include <util.h>
 #include <boot_context.h>
+#include <acrn_common.h>
+#include <vcpu.h>
+#include <trusty.h>
 
 #define CAT__(A,B) A ## B
 #define CAT_(A,B) CAT__(A,B)

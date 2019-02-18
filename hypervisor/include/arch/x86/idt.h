@@ -26,7 +26,7 @@ union idt_64_descriptor {
 			uint32_t value;
 			struct {
 				uint32_t offset_15_0:16;
-				uint32_t segment_sel:16;
+				uint32_t seg_sel:16;
 			} bits;
 		} low32;
 		union {
