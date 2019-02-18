@@ -1054,22 +1054,27 @@ errout:
 }
 
 void
-usb_dev_deinit(void *pdata)
+usb_dev_deinit(void *pdata, bool full)
 {
 	int rc = 0;
 	struct usb_dev *udev;
 
 	udev = pdata;
-	if (udev) {
-		if (udev->handle) {
-			rc = usb_dev_native_toggle_if_drivers(udev, 1);
-			if (rc)
-				UPRINTF(LWRN, "fail to attach if drv rc:%d\r\n",
-						rc);
-			libusb_close(udev->handle);
-		}
+	if (!udev)
+		return;
+
+	if (!udev->handle)
+		goto out;
+
+	rc = usb_dev_native_toggle_if_drivers(udev, 1);
+	if (rc)
+		UPRINTF(LWRN, "fail to attach if drv rc:%d\r\n", rc);
+
+	libusb_close(udev->handle);
+	udev->handle = NULL;
+out:
+	if (full)
 		free(udev);
-	}
 }
 
 int
