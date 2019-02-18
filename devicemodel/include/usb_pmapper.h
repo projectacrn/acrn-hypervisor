@@ -114,7 +114,7 @@ int usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 		void *hci_data, int log_level);
 void usb_dev_sys_deinit(void);
 void *usb_dev_init(void *pdata, char *opt);
-void usb_dev_deinit(void *pdata);
+void usb_dev_deinit(void *pdata, bool full);
 int usb_dev_info(void *pdata, int type, void *value, int size);
 int usb_dev_request(void *pdata, struct usb_data_xfer *xfer);
 int usb_dev_reset(void *pdata);

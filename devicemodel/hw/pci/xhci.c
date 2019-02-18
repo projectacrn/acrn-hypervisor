@@ -489,7 +489,7 @@ static int pci_xhci_disconnect_port(struct pci_xhci_vdev *xdev, int port,
 		int need_intr);
 static struct pci_xhci_dev_emu *pci_xhci_dev_create(struct pci_xhci_vdev *
 		xdev, void *dev_data);
-static void pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de);
+static void pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de, bool full);
 static void pci_xhci_set_evtrb(struct xhci_trb *evtrb, uint64_t port,
 		uint32_t errcode, uint32_t evtype);
 static int pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
@@ -1072,7 +1072,7 @@ pci_xhci_dev_create(struct pci_xhci_vdev *xdev, void *dev_data)
 
 errout:
 	if (ud)
-		ue->ue_deinit(ud);
+		ue->ue_deinit(ud, true);
 
 	free(ue);
 	free(de);
@@ -1080,28 +1080,42 @@ errout:
 }
 
 static void
-pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de)
+pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de, bool full)
 {
+	/*
+	 * When full == false, it means the destroy operation is partial and
+	 * the pci_xhci_dev_emu is not released. Except that, the partial
+	 * destroy also unbind the usbfs with the native USB device.
+	 * When full == true, this function will release all the resources
+	 * and do the unbind operation mentioned above.
+	 */
 	struct usb_devemu *ue;
 	struct usb_dev *ud;
 
-	if (de) {
-		ue = de->dev_ue;
-		ud = de->dev_instance;
-		if (ue) {
-			if (ue->ue_devtype == USB_DEV_PORT_MAPPER) {
-				assert(ue->ue_deinit);
-				if (ue->ue_deinit)
-					ue->ue_deinit(ud);
-			}
-		} else
-			return;
+	if (!de)
+		return;
 
-		if (ue->ue_devtype == USB_DEV_PORT_MAPPER)
-			free(ue);
+	/* FIXME: will merge usb_dev and usb_devemu into one data structure */
+	ue = de->dev_ue;
+	ud = de->dev_instance;
+	if (ue) {
+		if (ue->ue_devtype == USB_DEV_PORT_MAPPER) {
 
-		free(de);
+			assert(ue->ue_deinit);
+			ue->ue_deinit(ud, full);
+
+			if (full)
+				de->dev_instance = NULL;
+		}
 	}
+
+	if (ue && ue->ue_devtype == USB_DEV_PORT_MAPPER && full) {
+		free(ue);
+		de->dev_ue = NULL;
+	}
+
+	if (full)
+		free(de);
 }
 
 static inline int
@@ -1857,7 +1871,7 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 				slot, di->path.bus, usb_dev_path(&di->path));
 
 		/* release all the resource allocated for virtual device */
-		pci_xhci_dev_destroy(dev);
+		pci_xhci_dev_destroy(dev, true);
 	} else
 		UPRINTF(LWRN, "invalid slot %d\r\n", slot);
 
@@ -4233,7 +4247,7 @@ pci_xhci_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		de = xdev->devices[i];
 		if (de) {
 			xdev->devices[i] = NULL;
-			pci_xhci_dev_destroy(de);
+			pci_xhci_dev_destroy(de, true);
 			xdev->ndevices--;
 		}
 	}

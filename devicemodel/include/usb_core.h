@@ -116,7 +116,7 @@ struct usb_devemu {
 	int	(*ue_reset)(void *sc);
 	int	(*ue_remove)(void *sc);
 	int	(*ue_stop)(void *sc);
-	void	(*ue_deinit)(void *pdata);
+	void	(*ue_deinit)(void *pdata, bool full);
 };
 #define	USB_EMUL_SET(x)	DATA_SET(usb_emu_set, x)
 
