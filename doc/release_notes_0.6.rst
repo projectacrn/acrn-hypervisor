@@ -202,6 +202,13 @@ Known Issues
 
    **Workaround:** Modify SBL Memory setting file "CfgData_Ext_Up2.dlt", see details in issue comments.
 
+:acrn-issue:`2516` - [UP2][SBL] System hang with DP monitor connected
+      For UP2, system will occur crash when DP monitor is connected. It will be triggered immediately by running command "cat /sys/kernel/debug/dri/0/i915_display_info" in SOS.
+
+   **Impact:** Cannot use DP monitor.
+
+   **Workaround:** Remove enable_initial_modeset for UP2 platform. You can apply :acrn-commit:`4b53ed67` to rebuild UP2 images.
+
 :acrn-issue:`2522` - [NUC7i7BNH]After starting ias in SOS, there is no display 
    On NUC7i7BNH, after starting IAS in SOS, there is no display if the monitor is 
    connected with a TPC to VGA connector. 
