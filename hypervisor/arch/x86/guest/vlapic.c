@@ -137,23 +137,6 @@ static uint16_t vm_apicid2vcpu_id(struct acrn_vm *vm, uint32_t lapicid)
 /*
  * @pre vlapic != NULL
  */
-static uint64_t
-vm_active_cpus(const struct acrn_vm *vm)
-{
-	uint64_t dmask = 0UL;
-	uint16_t i;
-	const struct acrn_vcpu *vcpu;
-
-	foreach_vcpu(i, vm, vcpu) {
-		bitmap_set_nolock(vcpu->vcpu_id, &dmask);
-	}
-
-	return dmask;
-}
-
-/*
- * @pre vlapic != NULL
- */
 uint32_t
 vlapic_get_apicid(const struct acrn_vlapic *vlapic)
 {

@@ -14,6 +14,7 @@
 #ifndef ASSEMBLER
 
 #include <types.h>
+#include <bits.h>
 #include <spinlock.h>
 #include <acrn_common.h>
 #include <bsp_extern.h>
@@ -210,6 +211,22 @@ struct acrn_vm_config {
 #endif
 
 } __aligned(8);
+
+/*
+ * @pre vlapic != NULL
+ */
+static inline uint64_t vm_active_cpus(const struct acrn_vm *vm)
+{
+	uint64_t dmask = 0UL;
+	uint16_t i;
+	const struct acrn_vcpu *vcpu;
+
+	foreach_vcpu(i, vm, vcpu) {
+		bitmap_set_nolock(vcpu->vcpu_id, &dmask);
+	}
+
+	return dmask;
+}
 
 /*
  * @pre vcpu_id < CONFIG_MAX_VCPUS_PER_VM
