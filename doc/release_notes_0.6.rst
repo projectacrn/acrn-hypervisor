@@ -55,6 +55,16 @@ for ACRN real time support will continue.
 * An `ACRN brochure update (English and Chinese)
   <https://projectacrn.org/#code-docs>`_
 
+- :acrn-issue:`888`  - Security: Service OS Support for Platform Security Discovery
+- :acrn-issue:`1498` - add watchdog MSI and INTR support in DM
+- :acrn-issue:`2056` - Enable SMAP in hypervisor
+- :acrn-issue:`2288` - Display interface - MIPI support
+- :acrn-issue:`2343` - Rework TMR and EOI_EXIT_BITMAP updating logic
+- :acrn-issue:`2344` - Add UP2 ACRN SBL binary to E2E build
+- :acrn-issue:`2358` - Remove the flooding kernel message from vhm for memory setup
+- :acrn-issue:`2395` - change DISCARD to synchronous mode
+- :acrn-issue:`2351` - Enable post-launched hybrid mode
+
 Fixed Issues
 ************
 
