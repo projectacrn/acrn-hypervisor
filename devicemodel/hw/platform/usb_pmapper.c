@@ -592,9 +592,10 @@ usb_dev_native_toggle_if_drivers(struct usb_dev *udev, int attach)
 
 	c = config->bConfigurationValue;
 	for (i = 0; i < config->bNumInterfaces; i++) {
-		if (attach == 1)
+		if (attach == 1) {
+			usb_dev_native_toggle_if(udev, 0);
 			r = libusb_attach_kernel_driver(udev->handle, i);
-		else {
+		} else {
 			if (libusb_kernel_driver_active(udev->handle, i) == 1)
 				r = libusb_detach_kernel_driver(udev->handle,
 						i);
