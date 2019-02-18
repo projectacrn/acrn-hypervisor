@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
 #include <e820.h>
 
 const struct e820_entry ve820_entry[E820_MAX_ENTRIES] = {

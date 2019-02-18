@@ -4,7 +4,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <errno.h>
+#include <bits.h>
+#include <atomic.h>
+#include <irq.h>
+#include <cpu.h>
+#include <per_cpu.h>
+#include <lapic.h>
 
 static uint32_t notification_irq = IRQ_INVALID;
 

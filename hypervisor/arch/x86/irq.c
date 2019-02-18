@@ -4,9 +4,20 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
-#include <softirq.h>
+#include <types.h>
+#include <errno.h>
+#include <bits.h>
+#include <spinlock.h>
+#include <per_cpu.h>
+#include <io.h>
+#include <irq.h>
+#include <idt.h>
 #include <ioapic.h>
+#include <lapic.h>
+#include <softirq.h>
+#include <bsp_extern.h>
+#include <dump.h>
+#include <logmsg.h>
 
 static spinlock_t exception_spinlock = { .head = 0U, .tail = 0U, };
 static spinlock_t irq_alloc_spinlock = { .head = 0U, .tail = 0U, };

@@ -4,7 +4,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <rtl.h>
+#include <acrn_common.h>
+#include <host_pm.h>
+#include <cpu_caps.h>
 
 /* The table includes cpu px info of Intel A3960 SoC */
 static const struct cpu_px_data px_a3960[] = {

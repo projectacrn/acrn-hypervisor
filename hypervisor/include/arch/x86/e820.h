@@ -6,6 +6,7 @@
 
 #ifndef E820_H
 #define E820_H
+#include <types.h>
 
 /* E820 memory types */
 #define E820_TYPE_RAM		1U	/* EFI 1, 2, 3, 4, 5, 6, 7 */

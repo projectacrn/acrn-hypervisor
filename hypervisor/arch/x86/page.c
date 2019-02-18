@@ -3,7 +3,13 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include <hypervisor.h>
+#include <types.h>
+#include <rtl.h>
+#include <pgtable.h>
+#include <page.h>
+#include <mmu.h>
+#include <vm.h>
+#include <trusty.h>
 
 static struct page ppt_pml4_pages[PML4_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
 static struct page ppt_pdpt_pages[PDPT_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];

@@ -3,7 +3,13 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include <hypervisor.h>
+
+#include <types.h>
+#include <util.h>
+#include <acrn_hv_defs.h>
+#include <page.h>
+#include <mmu.h>
+#include <logmsg.h>
 
 #define ACRN_DBG_MMU	6U
 

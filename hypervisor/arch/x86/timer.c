@@ -4,8 +4,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <errno.h>
+#include <io.h>
+#include <cpuid.h>
+#include <cpu_caps.h>
 #include <softirq.h>
+#include <trace.h>
 
 #define MAX_TIMER_ACTIONS	32U
 #define CAL_MS			10U

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <vm.h>
 
 struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[3] = {
 	{

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <vm.h>
 #include <partition_config.h>
 
 #define INIT_VM_CONFIG(idx)	\

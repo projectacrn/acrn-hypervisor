@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
-#include <reloc.h>
-#include <multiboot.h>
+#include <types.h>
+#include <acrn_hv_defs.h>
+#include <page.h>
 #include <e820.h>
+#include <mmu.h>
+#include <multiboot.h>
+#include <logmsg.h>
 
 /*
  * e820.c contains the related e820 operations; like HV to get memory info for its MMU setup;
