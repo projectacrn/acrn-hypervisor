@@ -39,6 +39,39 @@ struct telemd_data_t {
 };
 #endif
 
+static int crashlog_check_space(void)
+{
+	struct sender_t *crashlog = get_sender_by_name("crashlog");
+	int quota;
+	size_t dsize;
+	int cfg_size;
+
+
+	if (!crashlog)
+		return -1;
+
+	if (cfg_atoi(crashlog->spacequota, crashlog->spacequota_len,
+		     &quota) == -1)
+		return -1;
+
+	if (!space_available(crashlog->outdir, quota))
+		return -1;
+
+	if (dir_size(crashlog->outdir, crashlog->outdir_len, &dsize) == -1) {
+		LOGE("failed to check outdir size\n");
+		return -1;
+	}
+
+	if (cfg_atoi(crashlog->foldersize, crashlog->foldersize_len,
+		     &cfg_size) == -1)
+		return -1;
+
+	if (dsize/MB >= (size_t)cfg_size)
+		return -1;
+
+	return 0;
+}
+
 static int cal_log_filepath(char **out, const struct log_t *log,
 				const char *srcname, const char *desdir)
 {
@@ -273,26 +306,14 @@ send_nologs:
 static void crashlog_get_log(struct log_t *log, void *data)
 {
 
-	struct sender_t *crashlog;
 	unsigned long long start, end;
 	int spent;
-	int quota;
 	int res;
 	char *des;
 	char *desdir = (char *)data;
 
-	crashlog = get_sender_by_name("crashlog");
-	if (!crashlog)
+	if (crashlog_check_space() == -1)
 		return;
-
-	if (cfg_atoi(crashlog->spacequota, crashlog->spacequota_len,
-		     &quota) == -1)
-		return;
-
-	if (!space_available(crashlog->outdir, quota)) {
-		hist_raise_infoerror("SPACE_FULL", 10);
-		return;
-	}
 
 	start = get_uptime();
 	if (is_ac_filefmt(log->path)) {
@@ -746,16 +767,11 @@ static void crashlog_send_crash(struct event_t *e)
 	char *data0;
 	char *data1;
 	char *data2;
-	int quota;
 	size_t d0len;
 	size_t d1len;
 	size_t d2len;
 	char *trfile = NULL;
-	struct sender_t *crashlog = get_sender_by_name("crashlog");
 	struct crash_t *rcrash = (struct crash_t *)e->private;
-
-	if (!crashlog)
-		return;
 
 	if (!strcmp(rcrash->trigger->type, "dir")) {
 		if (asprintf(&trfile, "%s/%s", rcrash->trigger->path,
@@ -785,13 +801,8 @@ static void crashlog_send_crash(struct event_t *e)
 	}
 
 	/* check space before collecting logs */
-	if (cfg_atoi(crashlog->spacequota, crashlog->spacequota_len,
-		     &quota) == -1)
-		goto free_key;
-
-	if (!space_available(crashlog->outdir, quota)) {
-		hist_raise_infoerror("SPACE_FULL", 10);
-		hist_raise_event("CRASH", crash->name, NULL, "", key);
+	if (crashlog_check_space() == -1) {
+		hist_raise_event("CRASH", crash->name, "SPACE_FULL", "", key);
 		goto free_key;
 	}
 
@@ -869,6 +880,13 @@ static void crashlog_send_info(struct event_t *e)
 	}
 
 	if (to_collect_logs(info)) {
+		/* check space before collecting logs */
+		if (crashlog_check_space() == -1) {
+			hist_raise_event("INFO", info->name, "SPACE_FULL", "",
+					 key);
+			goto free_key;
+		}
+
 		e->dir = generate_log_dir(MODE_STATS, key);
 		if (e->dir == NULL) {
 			LOGE("generate crashlog dir failed\n");
@@ -931,7 +949,6 @@ static void crashlog_send_reboot(void)
 static int crashlog_new_vmevent(const char *line_to_sync,
 				size_t len, const struct vm_t *vm)
 {
-	struct sender_t *crashlog;
 	char event[ANDROID_WORD_LEN];
 	char longtime[ANDROID_WORD_LEN];
 	char type[ANDROID_WORD_LEN];
@@ -942,7 +959,6 @@ static int crashlog_new_vmevent(const char *line_to_sync,
 	char *log;
 	int ret = VMEVT_HANDLED;
 	int res;
-	int quota;
 	int cnt;
 	char *dir;
 
@@ -966,25 +982,17 @@ static int crashlog_new_vmevent(const char *line_to_sync,
 		return ret;
 	}
 
-	crashlog = get_sender_by_name("crashlog");
-	if (!crashlog)
-		return ret;
-
-	if (cfg_atoi(crashlog->spacequota, crashlog->spacequota_len,
-		     &quota) == -1)
-		return ret;
-
-	if (!space_available(crashlog->outdir, quota)) {
-		hist_raise_infoerror("SPACE_FULL", 10);
-		return ret;
-	}
-
 	key = generate_event_id("SOS", 3, (const char *)vmkey,
 				strnlen(vmkey, ANDROID_WORD_LEN), KEY_SHORT);
 	if (key == NULL) {
 		LOGE("generate event id failed, error (%s)\n",
 		     strerror(errno));
 		return VMEVT_DEFER;
+	}
+
+	if (crashlog_check_space() == -1) {
+		hist_raise_event(vm->name, type, "SPACE_FULL", "", key);
+		goto free_key;
 	}
 
 	dir = generate_log_dir(MODE_VMEVENT, key);

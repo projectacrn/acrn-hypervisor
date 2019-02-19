@@ -126,38 +126,6 @@ static void watchdog_init(int timeout)
 	}
 }
 
-static int check_folder_space(struct sender_t *sender)
-{
-	size_t dsize;
-	int cfg_size;
-
-	if (dir_size(sender->outdir, sender->outdir_len, &dsize) == -1) {
-		LOGE("failed to check outdir size, drop ev\n");
-		return -1;
-	}
-
-	if (cfg_atoi(sender->foldersize, sender->foldersize_len,
-		     &cfg_size) == -1)
-		return -1;
-
-	if (dsize/MB >= (size_t)cfg_size) {
-		if (sender->suspending)
-			return -1;
-
-		LOGW("suspend (%s), since (%s: %ldM) meets quota (%dM)\n",
-		     sender->name, sender->outdir, dsize/MB, cfg_size);
-		sender->suspending = 1;
-		return -1;
-	}
-
-	if (!sender->suspending)
-		return 0;
-
-	LOGW("resume (%s), %s: left space %ldM for storage\n",
-	     sender->name, sender->outdir, cfg_size - dsize/MB);
-	return 0;
-}
-
 /**
  * Process each event in event queue.
  * Note that currently event handler is single threaded.
@@ -189,9 +157,6 @@ static void *event_handle(void *unused __attribute__((unused)))
 
 		for_each_sender(id, sender, conf) {
 			if (!sender)
-				continue;
-
-			if (check_folder_space(sender) == -1)
 				continue;
 
 			if (sender->send)
