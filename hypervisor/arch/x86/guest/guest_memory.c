@@ -206,7 +206,7 @@ static int32_t local_gva2gpa_pae(struct acrn_vcpu *vcpu, struct page_walk_info *
 	uint64_t addr;
 	int32_t ret = -EFAULT;
 
-	addr = pw_info->top_entry & 0xFFFFFFF0U;
+	addr = get_pae_pdpt_addr(pw_info->top_entry);
 	base = (uint64_t *)gpa2hva(vcpu->vm, addr);
 	if (base != NULL) {
 		index = (gva >> 30U) & 0x3UL;
