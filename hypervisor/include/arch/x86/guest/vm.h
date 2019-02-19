@@ -298,7 +298,7 @@ typedef int32_t (*vm_sw_loader_t)(struct acrn_vm *vm);
 extern vm_sw_loader_t vm_sw_loader;
 
 #ifdef CONFIG_PARTITION_MODE
-uint16_t get_vm_pcpu_nums(struct acrn_vm_config *vm_config);
+uint16_t get_vm_pcpu_nums(const struct acrn_vm_config *vm_config);
 void vrtc_init(struct acrn_vm *vm);
 #endif
 

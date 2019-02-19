@@ -67,7 +67,7 @@ struct acrn_vuart {
 };
 
 #ifdef CONFIG_PARTITION_MODE
-extern int8_t vuart_vmid;
+extern uint16_t vuart_vmid;
 #endif /* CONFIG_PARTITION_MODE */
 
 struct acrn_vuart *vm_vuart(struct acrn_vm *vm);

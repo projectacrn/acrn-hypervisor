@@ -106,7 +106,7 @@ static inline uint16_t get_vm_bsp_pcpu_id(const struct acrn_vm_config *vm_config
 /**
  * @pre vm_config != NULL
  */
-uint16_t get_vm_pcpu_nums(struct acrn_vm_config *vm_config)
+uint16_t get_vm_pcpu_nums(const struct acrn_vm_config *vm_config)
 {
 	uint16_t i, host_pcpu_num, pcpu_num = 0U;
 	uint64_t cpu_bitmap = vm_config->pcpu_bitmap;
@@ -315,7 +315,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
 			vm_config->memory.start_hpa, 0UL, vm_config->memory.size,
 			EPT_RWX|EPT_WB);
-		init_vm_boot_info(vm);
+		(void)init_vm_boot_info(vm);
 #endif
 	}
 
@@ -549,7 +549,7 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 
 	if (err == 0) {
 #ifdef CONFIG_PARTITION_MODE
-		mptable_build(vm);
+		(void)mptable_build(vm);
 #endif
 
 		for (i = 0U; i < get_pcpu_nums(); i++) {

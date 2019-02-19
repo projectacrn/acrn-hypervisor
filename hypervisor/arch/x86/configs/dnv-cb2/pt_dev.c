@@ -5,8 +5,9 @@
  */
 
 #include <vm.h>
+#include <partition_config.h>
 
-struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[3] = {
+struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[VM0_CONFIG_PCI_PTDEV_NUM] = {
 	{
 		.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
 		.pbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
@@ -21,7 +22,7 @@ struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[3] = {
 	},
 };
 
-struct acrn_vm_pci_ptdev_config vm1_pci_ptdevs[3] = {
+struct acrn_vm_pci_ptdev_config vm1_pci_ptdevs[VM1_CONFIG_PCI_PTDEV_NUM] = {
 	{
 		.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
 		.pbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
