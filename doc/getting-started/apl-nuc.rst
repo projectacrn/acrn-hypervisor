@@ -42,10 +42,10 @@ complete this setup.
    Please refer to the ACRN :ref:`release_notes` for the Clear Linux OS
    version number tested with a specific ACRN release.  Adjust the
    instruction below to reference the appropriate version number of Clear
-   Linux OS (we use version 27230 as an example).
+   Linux OS (we use version 27960 as an example).
 
 #. Download the compressed Clear Linux OS installer image from
-   https://download.clearlinux.org/releases/27230/clear/clear-27230-installer.img.xz
+   https://download.clearlinux.org/releases/27960/clear/clear-27960-installer.img.xz
    and follow the `Clear Linux OS installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
    as a starting point for installing Clear Linux OS onto your platform.  Follow the recommended
@@ -76,16 +76,16 @@ complete this setup.
    .. note::
       The Clear Linux OS installer will automatically check for updates and install the
       latest version available on your system. If you wish to use a specific version
-      (such as 27230), you can achieve that after the installation has completed using
-      ``sudo swupd verify --fix --picky -m 27230``
+      (such as 27960), you can achieve that after the installation has completed using
+      ``sudo swupd verify --fix --picky -m 27960``
 
 #. If you have an older version of Clear Linux OS already installed
    on your hardware, use this command to upgrade Clear Linux OS
-   to version 27230 (or newer):
+   to version 27960 (or newer):
 
    .. code-block:: none
 
-      $ sudo swupd update -m 27230     # or newer version
+      $ sudo swupd update -m 27960     # or newer version
 
 #. Use the ``sudo swupd bundle-add`` command and add these Clear Linux OS bundles:
 
@@ -121,10 +121,9 @@ partition. Follow these steps:
 
       $ sudo ls -1 /boot/EFI/org.clearlinux
       bootloaderx64.efi
-      kernel-org.clearlinux.native.4.20.2-683
-      kernel-org.clearlinux.iot-lts2018-sos.4.19.13-1901141830
-      kernel-org.clearlinux.iot-lts2018.4.19.13-1901141830
-      kernel-org.clearlinux.pk414-sos.4.14.74-115
+      kernel-org.clearlinux.native.4.20.11-702
+      kernel-org.clearlinux.iot-lts2018-sos.4.19.23-19
+      kernel-org.clearlinux.iot-lts2018.4.19.23-19
       loaderx64.efi
 
    .. note::
@@ -232,7 +231,13 @@ partition. Follow these steps:
    (``root=PARTUUID=<UUID of rootfs partition>``) in the ``options`` section, and
    add the ``hugepagesz=1G hugepages=2`` at end of the ``options`` section.
 
-   Use ``blkid`` to find out what your ``/dev/sda3`` ``PARTUUID`` value is.
+   Use ``blkid`` to find out what your ``/dev/sda3`` ``PARTUUID`` value is. Here
+   is a handy one-line command to do that:
+
+   .. code-block:: none
+
+      # sed -i "s/<UUID of rootfs partition>/`blkid -s PARTUUID -o value \
+                     /dev/sda3`/g" /boot/loader/entries/acrn.conf
 
    .. note::
       It is also possible to use the device name directly, e.g. ``root=/dev/sda3``
@@ -254,9 +259,9 @@ partition. Follow these steps:
       :caption: ACRN Service OS Boot Menu
 
       => The ACRN Service OS
-      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-4.19.13-1901141830)
-      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-sos-4.19.13-1901141830)
-      Clear Linux OS for Intel Architecture (Clear-linux-native.4.20.2-683)
+      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-4.19.23-19)
+      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-sos-4.19.23-19)
+      Clear Linux OS for Intel Architecture (Clear-linux-native.4.20.11-702)
       EFI Default Loader
       Reboot Into Firmware Interface
 
@@ -295,14 +300,14 @@ Set up Reference UOS
 ====================
 
 #. On your platform, download the pre-built reference Clear Linux OS UOS
-   image version 27230 (or newer) into your (root) home directory:
+   image version 27960 (or newer) into your (root) home directory:
 
    .. code-block:: none
 
       $ cd ~
       $ mkdir uos
       $ cd uos
-      $ curl https://download.clearlinux.org/releases/27230/clear/clear-27230-kvm.img.xz -o uos.img.xz
+      $ curl https://download.clearlinux.org/releases/27960/clear/clear-27960-kvm.img.xz -o uos.img.xz
 
    .. note::
       In case you want to use or try out a newer version of Clear Linux OS as the UOS, you can
