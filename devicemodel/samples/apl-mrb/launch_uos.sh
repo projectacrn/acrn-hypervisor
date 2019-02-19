@@ -391,6 +391,8 @@ echo "-V 5 means just launching 1 alios UOS"
 echo "-V 6 means auto check android/linux/alios UOS; if exist, launch it"
 }
 
+echo "dm_run: start UOS" > /dev/kmsg
+
 launch_type=1
 debug=0
 
