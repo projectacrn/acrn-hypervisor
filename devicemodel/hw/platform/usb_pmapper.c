@@ -755,7 +755,7 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 	int rc = 0, epid;
 	uint8_t type;
 	int blk_start, data_size, blk_count;
-	int retries = 3, i, buf_idx;
+	int retries = 3, i, j, buf_idx;
 	struct usb_data_xfer_block *b;
 	static const char * const type_str[] = {"CTRL", "ISO", "BULK", "INT"};
 	static const char * const dir_str[] = {"OUT", "IN"};
@@ -810,11 +810,12 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 			data_size, dir_str[dir], type_str[type]);
 
 	if (!dir) {
-		for (i = 0, buf_idx = 0; i < blk_count; i++) {
+		for (i = 0, j = 0, buf_idx = 0; j < blk_count; ++i) {
 			b = &xfer->data[(blk_start + i) % USB_MAX_XFER_BLOCKS];
 			if (b->buf) {
 				memcpy(&req->buffer[buf_idx], b->buf, b->blen);
 				buf_idx += b->blen;
+				j++;
 			}
 		}
 	}
