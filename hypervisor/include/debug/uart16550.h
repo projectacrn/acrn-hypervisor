@@ -109,5 +109,8 @@
 void uart16550_init(void);
 char uart16550_getc(void);
 size_t uart16550_puts(const char *buf, uint32_t len);
+void uart16550_set_property(bool enabled, bool port_mapped, uint64_t base_addr);
+bool is_pci_dbg_uart(union pci_bdf bdf_value);
+bool is_dbg_uart_enabled(void);
 
 #endif /* !UART16550_H */

@@ -31,7 +31,7 @@
 #include <hypervisor.h>
 #include <ioapic.h>
 
-#include "uart16550.h"
+#include <uart16550.h>
 
 static uint32_t vuart_com_irq =  CONFIG_COM_IRQ;
 static uint16_t vuart_com_base = CONFIG_COM_BASE;

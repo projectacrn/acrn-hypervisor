@@ -4,8 +4,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <errno.h>
 #include <multiboot.h>
+#include <pgtable.h>
+#include <dbg_cmd.h>
+#include <logmsg.h>
 
 #define ACRN_DBG_PARSE		6
 

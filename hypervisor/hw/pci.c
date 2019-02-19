@@ -30,6 +30,7 @@
  */
 
 #include <hypervisor.h>
+#include <uart16550.h>
 #include <pci.h>
 
 static spinlock_t pci_device_lock;

@@ -5,7 +5,7 @@
  */
 
 #include <hypervisor.h>
-#include "uart16550.h"
+#include <uart16550.h>
 
 #define MAX_BDF_LEN 8
 

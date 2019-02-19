@@ -5,7 +5,8 @@
  */
 
 #include <hypervisor.h>
-#include "uart16550.h"
+#include <shell.h>
+#include <uart16550.h>
 
 struct hv_timer console_timer;
 
