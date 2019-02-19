@@ -132,7 +132,6 @@ struct sender_t {
 	void (*send)(struct event_t *);
 	char		*log_vmrecordid;
 	int		sw_updated; /* each sender has their own record */
-	int		suspending; /* drop all events while suspending */
 };
 
 struct conf_t {
