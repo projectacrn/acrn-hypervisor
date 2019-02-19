@@ -887,15 +887,14 @@ vlapic_process_eoi(struct acrn_vlapic *vlapic)
 		i--;
 		bitpos = (uint32_t)fls32(isrptr[i].v);
 		if (bitpos != INVALID_BIT_INDEX) {
-			if (vlapic->isrvec_stk_top == 0U) {
-				panic("invalid vlapic isrvec_stk_top %u",
-					vlapic->isrvec_stk_top);
-			}
 			isrptr[i].v &= ~(1U << bitpos);
 			vector = (i * 32U) + bitpos;
 			dev_dbg(ACRN_DBG_LAPIC, "EOI vector %u", vector);
 			vlapic_dump_isr(vlapic, "vlapic_process_eoi");
-			vlapic->isrvec_stk_top--;
+			if (vlapic->isrvec_stk_top != 0U) {
+				vlapic->isrvec_stk_top--;
+			}
+
 			vlapic_update_ppr(vlapic);
 			if ((tmrptr[i].v & (1U << bitpos)) != 0U) {
 				/* hook to vIOAPIC */
