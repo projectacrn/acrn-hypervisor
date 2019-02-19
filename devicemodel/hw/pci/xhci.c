@@ -508,35 +508,6 @@ static struct pci_xhci_option_elem xhci_option_table[] = {
 	{"cap", pci_xhci_parse_extcap}
 };
 
-
-static void pci_xhci_reset_role(void)
-{
-	int fd, rc;
-
-	fd = open(XHCI_NATIVE_DRD_SWITCH_PATH, O_WRONLY);
-	if (fd < 0) {
-		UPRINTF(LFTL, "drd native interface open failed\r\n");
-		return;
-	}
-
-	UPRINTF(LWRN, "write device in the CRS trap\r\n");
-	rc = write(fd, "host", 4);
-	if (rc != 4)
-		UPRINTF(LFTL, "drd 1 native interface write failure %d\r\n", rc);
-
-	rc = fsync(fd);
-	if (rc)
-		UPRINTF(LFTL, "drd 2 native interface write failure %d\r\n", rc);
-
-	usleep(100000);
-
-	rc = write(fd, "device", 6);
-	if (rc != 6)
-		UPRINTF(LFTL, "drd 3 native interface write failure %d\r\n", rc);
-
-	close(fd);
-}
-
 static int
 pci_xhci_get_free_vport(struct pci_xhci_vdev *xdev,
 		struct usb_native_devinfo *di)
@@ -1277,15 +1248,6 @@ pci_xhci_usbcmd_write(struct pci_xhci_vdev *xdev, uint32_t cmd)
 	if (cmd & XHCI_CMD_CRS)
 		if (xdev->pid == XHCI_PCI_DEVICE_ID_INTEL_APL &&
 				xdev->vid == XHCI_PCI_VENDOR_ID_INTEL)
-			/* This is a workaround for xDCI passthru. The DRD
-			 * role switching is the precondition for the xDCI
-			 * to work properly. And theoritically, this reset
-			 * operation is not neccessary. But currently, due
-			 * to some unknown reason, this operation could help
-			 * xDCI works better.
-			 */
-			pci_xhci_reset_role();
-
 	cmd &= ~(XHCI_CMD_CSS | XHCI_CMD_CRS);
 	return cmd;
 }
