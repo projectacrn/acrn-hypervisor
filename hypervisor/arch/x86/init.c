@@ -10,6 +10,7 @@
 #include <per_cpu.h>
 #include <profiling.h>
 #include <vtd.h>
+#include <shell.h>
 #include <vmx.h>
 #include <vm.h>
 #include <logmsg.h>

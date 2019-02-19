@@ -13,6 +13,7 @@
 #define	MULTIBOOT_INFO_HAS_MMAP		0x00000040U
 #define	MULTIBOOT_INFO_HAS_DRIVES	0x00000080U
 
+struct acrn_vm;
 struct multiboot_info {
 	uint32_t               mi_flags;
 
