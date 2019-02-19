@@ -64,7 +64,6 @@
 #include "atomic.h"
 #include "vmcfg_config.h"
 #include "vmcfg.h"
-#include "tpm.h"
 #include "virtio.h"
 
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
@@ -163,7 +162,6 @@ usage(int code)
 		"       --ptdev_no_reset: disable reset check for ptdev\n"
 		"       --debugexit: enable debug exit function\n"
 		"       --intr_monitor: enable interrupt storm monitor\n"
-		"       --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET\n"
 		"............its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)\n",
 		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "");
@@ -471,8 +469,6 @@ vm_init_vdevs(struct vmctx *ctx)
 	if (ret < 0)
 		goto pci_fail;
 
-	init_vtpm2(ctx);
-
 	return 0;
 
 pci_fail:
@@ -507,7 +503,6 @@ vm_deinit_vdevs(struct vmctx *ctx)
 	atkbdc_deinit(ctx);
 	pci_irq_deinit(ctx);
 	ioapic_deinit();
-	deinit_vtpm2(ctx);
 }
 
 static void
@@ -694,7 +689,6 @@ enum {
 	CMD_OPT_VMCFG,
 	CMD_OPT_DUMP,
 	CMD_OPT_INTR_MONITOR,
-	CMD_OPT_VTPM2,
 };
 
 static struct option long_options[] = {
@@ -732,7 +726,6 @@ static struct option long_options[] = {
 		CMD_OPT_PTDEV_NO_RESET},
 	{"debugexit",		no_argument,		0, CMD_OPT_DEBUGEXIT},
 	{"intr_monitor",	required_argument,	0, CMD_OPT_INTR_MONITOR},
-	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
 	{0,			0,			0,  0  },
 };
 
@@ -875,12 +868,6 @@ dm_run(int argc, char *argv[])
 			break;
 		case CMD_OPT_DEBUGEXIT:
 			debugexit_enabled = true;
-			break;
-		case CMD_OPT_VTPM2:
-			if (acrn_parse_vtpm2(optarg) != 0) {
-				errx(EX_USAGE, "invalid vtpm2 param %s", optarg);
-				exit(1);
-			}
 			break;
 		case CMD_OPT_INTR_MONITOR:
 			if (acrn_parse_intr_monitor(optarg) != 0) {
