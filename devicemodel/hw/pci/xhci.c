@@ -408,6 +408,7 @@ struct pci_xhci_vdev {
 	sem_t		vbdp_sem;
 	bool		vbdp_polling;
 	int		vbdp_dev_num;
+	int		vbdp_delay;
 	struct pci_xhci_vbdp_dev_state vbdp_devs[XHCI_MAX_VIRT_PORTS];
 
 	/*
@@ -780,6 +781,21 @@ xhci_vbdp_thread(void *data)
 		if (i >= XHCI_MAX_VIRT_PORTS) {
 			UPRINTF(LINF, "vbdp: fail to find proper state\r\n");
 			continue;
+		}
+
+		if (xdev->vbdp_delay == 1) {
+			xdev->vbdp_delay = 0;
+			/* FIXME: Delay 2s for virtual USB re-enumeration stage
+			 * during UOS S3 resume. This is one workaround for
+			 * improving UOS S3 resume latency, it need to be
+			 * optimization instead of delay.
+			 *
+			 * And the delay time can be tune which is depend on how
+			 * fast UOS S3 resume, it should be as short as possible
+			 * to make virtual USB device ready immediately after
+			 * UOS screen turn.
+			 */
+			usleep(2000000);
 		}
 
 		j = pci_xhci_get_native_port_index_by_path(xdev,
@@ -1327,6 +1343,7 @@ pci_xhci_usbcmd_write(struct pci_xhci_vdev *xdev, uint32_t cmd)
 		 * and under that situation, the vbdp_devs and se_dev_num
 		 * should also need to be cleared
 		 */
+		xdev->vbdp_delay = 1;
 		xdev->vbdp_dev_num = 0;
 		memset(xdev->vbdp_devs, 0, sizeof(xdev->vbdp_devs));
 
@@ -4273,6 +4290,7 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pthread_mutex_init(&xdev->mtx, NULL);
 
 	/* create vbdp_thread */
+	xdev->vbdp_delay = 0;
 	xdev->vbdp_polling = true;
 	sem_init(&xdev->vbdp_sem, 0, 0);
 	error = pthread_create(&xdev->vbdp_thread, NULL, xhci_vbdp_thread,
