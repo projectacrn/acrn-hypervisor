@@ -7,7 +7,7 @@
 #include <hypervisor.h>
 #include <e820.h>
 
-const struct e820_entry ve820_entry[NUM_E820_ENTRIES] = {
+const struct e820_entry ve820_entry[E820_MAX_ENTRIES] = {
 	{	/* 0 to mptable */
 		.baseaddr =  0x0U,
 		.length   =  0xEFFFFU,

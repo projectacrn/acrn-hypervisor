@@ -281,15 +281,6 @@ typedef int32_t (*vm_sw_loader_t)(struct acrn_vm *vm);
 extern vm_sw_loader_t vm_sw_loader;
 
 #ifdef CONFIG_PARTITION_MODE
-/*
- * Default e820 mem map:
- *
- * Assumption is every VM launched by ACRN in partition mode uses 2G of RAM.
- * there is reserved memory of 64K for MPtable and PCI hole of 512MB
- */
-#define NUM_E820_ENTRIES        5U
-extern const struct e820_entry ve820_entry[NUM_E820_ENTRIES];
-
 uint16_t get_vm_pcpu_nums(struct acrn_vm_config *vm_config);
 void vrtc_init(struct acrn_vm *vm);
 #endif
