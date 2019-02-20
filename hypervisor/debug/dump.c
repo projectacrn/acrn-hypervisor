@@ -4,8 +4,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <per_cpu.h>
+#include <mmu.h>
+#include <vcpu.h>
+#include <vmx.h>
+#include <vm.h>
 #include <init.h>
+#include <logmsg.h>
 
 #define CALL_TRACE_HIERARCHY_MAX    20U
 #define DUMP_STACK_SIZE 0x200U

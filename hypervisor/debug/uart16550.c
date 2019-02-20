@@ -4,8 +4,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include  <types.h>
+#include <spinlock.h>
+#include <pci.h>
+#include <pgtable.h>
 #include <uart16550.h>
+#include <io.h>
+#include <mmu.h>
 
 #define MAX_BDF_LEN 8
 

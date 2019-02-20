@@ -5,7 +5,16 @@
  */
 #ifdef PROFILING_ON
 
-#include <hypervisor.h>
+#include <types.h>
+#include <errno.h>
+#include <irq.h>
+#include <per_cpu.h>
+#include <pgtable.h>
+#include <vmx.h>
+#include <cpuid.h>
+#include <vm.h>
+#include <sprintf.h>
+#include <logmsg.h>
 
 #define ACRN_DBG_PROFILING		5U
 #define ACRN_ERR_PROFILING		3U

@@ -4,11 +4,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
-#include <schedule.h>
-#include <hypercall.h>
-#include <version.h>
-#include <reloc.h>
+#include <types.h>
+#include <errno.h>
+#include <profiling.h>
+#include <sbuf.h>
+#include <npk_log.h>
+#include <vm.h>
+#include <logmsg.h>
 
 #ifdef PROFILING_ON
 /**

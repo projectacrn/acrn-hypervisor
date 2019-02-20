@@ -3,7 +3,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <atomic.h>
+#include <acrn_hv_defs.h>
+#include <io.h>
+#include <per_cpu.h>
+#include <mmu.h>
+#include <logmsg.h>
 
 static int32_t npk_log_setup_ref;
 static bool npk_log_enabled;

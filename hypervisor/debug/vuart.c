@@ -28,10 +28,13 @@
  * $FreeBSD$
  */
 
-#include <hypervisor.h>
-#include <ioapic.h>
-
+#include <types.h>
+#include <pci.h>
 #include <uart16550.h>
+#include <console.h>
+#include <vuart.h>
+#include <vm.h>
+#include <logmsg.h>
 
 static uint32_t vuart_com_irq =  CONFIG_COM_IRQ;
 static uint16_t vuart_com_base = CONFIG_COM_BASE;

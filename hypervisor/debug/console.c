@@ -4,9 +4,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
-#include <shell.h>
+#include <types.h>
+#include <pci.h>
 #include <uart16550.h>
+#include <shell.h>
+#include <timer.h>
+#include <vuart.h>
+#include <logmsg.h>
 
 struct hv_timer console_timer;
 

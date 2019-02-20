@@ -29,6 +29,8 @@
 
 #ifndef VUART_H
 #define VUART_H
+#include <types.h>
+#include <spinlock.h>
 
 #define RX_BUF_SIZE		256U
 #define TX_BUF_SIZE		8192U

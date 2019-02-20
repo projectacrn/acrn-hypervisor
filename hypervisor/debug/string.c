@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <rtl.h>
 
 /*
  * Convert a string to a long integer - decimal support only.

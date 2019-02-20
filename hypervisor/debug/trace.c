@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <per_cpu.h>
 
 #define TRACE_CUSTOM			0xFCU
 #define TRACE_FUNC_ENTER		0xFDU

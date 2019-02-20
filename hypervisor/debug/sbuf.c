@@ -9,7 +9,12 @@
  *
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <rtl.h>
+#include <errno.h>
+#include <sbuf.h>
+#include <cpu.h>
+#include <per_cpu.h>
 
 static inline bool sbuf_is_empty(const struct shared_buf *sbuf)
 {
