@@ -126,7 +126,7 @@ uint16_t get_vm_pcpu_nums(struct acrn_vm_config *vm_config)
  */
 static void create_prelaunched_vm_e820(struct acrn_vm *vm)
 {
-	vm->e820_entry_num = NUM_E820_ENTRIES;
+	vm->e820_entry_num = E820_MAX_ENTRIES;
 	vm->e820_entries = (struct e820_entry *)ve820_entry;
 }
 #endif

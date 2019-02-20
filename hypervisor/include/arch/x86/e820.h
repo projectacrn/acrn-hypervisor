@@ -33,6 +33,8 @@ struct e820_mem_params {
 	uint64_t total_mem_size;
 };
 
+extern const struct e820_entry ve820_entry[E820_MAX_ENTRIES];
+
 /* HV read multiboot header to get e820 entries info and calc total RAM info */
 void init_e820(void);
 
