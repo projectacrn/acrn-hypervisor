@@ -4,9 +4,21 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
-#include <ioapic.h>
+#include <types.h>
+#include <errno.h>
+#include <bits.h>
+#include <page.h>
 #include "shell_priv.h"
+#include <irq.h>
+#include <console.h>
+#include <per_cpu.h>
+#include <vmx.h>
+#include <cpuid.h>
+#include <ioapic.h>
+#include <ptdev.h>
+#include <vm.h>
+#include <sprintf.h>
+#include <logmsg.h>
 
 #define TEMP_STR_SIZE		60U
 #define MAX_STR_SIZE		256U

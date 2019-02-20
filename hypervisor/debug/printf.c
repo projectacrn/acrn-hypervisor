@@ -4,7 +4,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <rtl.h>
+#include <util.h>
+#include <sprintf.h>
+#include <console.h>
 
 static void
 charout(size_t cmd, const char *s_arg, uint32_t sz_arg, struct snprint_param *param)

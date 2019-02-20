@@ -4,8 +4,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <rtl.h>
+#include <pci.h>
 #include <uart16550.h>
+#include <vuart.h>
 
 #define MAX_PORT			0x10000  /* port 0 - 64K */
 #define DEFAULT_UART_PORT	0x3F8

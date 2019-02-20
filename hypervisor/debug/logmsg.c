@@ -4,8 +4,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <atomic.h>
+#include <sprintf.h>
+#include <spinlock.h>
 #include <per_cpu.h>
+#include <npk_log.h>
+#include <logmsg.h>
+
 /* buf size should be identical to the size in hvlog option, which is
  * transfered to SOS:
  * bsp/uefi/clearlinux/acrn.conf: hvlog=2M@0x1FE00000
