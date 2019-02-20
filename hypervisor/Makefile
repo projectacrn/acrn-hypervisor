@@ -140,6 +140,8 @@ C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/ve820.c
 C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/pt_dev.c
 endif
 
+C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/board.c
+
 C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_parse.c
 S_SRCS += arch/x86/idt.S
