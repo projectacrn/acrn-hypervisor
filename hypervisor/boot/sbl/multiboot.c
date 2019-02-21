@@ -6,12 +6,9 @@
 
 #include <hypervisor.h>
 #include <multiboot.h>
-#include <e820.h>
 #include <zeropage.h>
 #include <sbl_seed_parse.h>
 #include <abl_seed_parse.h>
-
-#define BOOT_ARGS_LOAD_ADDR				0x24EFC000
 
 #define ACRN_DBG_BOOT	6U
 
@@ -49,10 +46,11 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 				vm->sw.kernel_type = VM_LINUX_GUEST;
 				vm->sw.kernel_info.kernel_src_addr = hpa2hva((uint64_t)mods[0].mm_mod_start);
 				vm->sw.kernel_info.kernel_size = mods[0].mm_mod_end - mods[0].mm_mod_start;
-				vm->sw.kernel_info.kernel_load_addr = (void *)(16 * 1024 * 1024UL);
+				vm->sw.kernel_info.kernel_load_addr = (void *)(MEM_1M * 16U);
 				vm->sw.linux_info.bootargs_src_addr = (void *)vm_config->os_config.bootargs;
 				vm->sw.linux_info.bootargs_size = strnlen_s(vm_config->os_config.bootargs, MEM_2K);
-				vm->sw.linux_info.bootargs_load_addr = (void *)(vm_config->memory.size - 8*1024UL);
+				vm->sw.linux_info.bootargs_load_addr =
+					vm->sw.kernel_info.kernel_load_addr - (MEM_1K * 8U);
 				clac();
 				ret = 0;
 			}
@@ -110,7 +108,7 @@ static void parse_other_modules(struct acrn_vm *vm, const struct multiboot_modul
 			if (copy_once != 0) {
 				copy_once = 0;
 				(void)strncpy_s(load_addr, MEM_2K, (const char *)vm->sw.linux_info.bootargs_src_addr,
-						vm->sw.linux_info.bootargs_size);
+					vm->sw.linux_info.bootargs_size);
 				vm->sw.linux_info.bootargs_src_addr = load_addr;
 			}
 
@@ -119,7 +117,10 @@ static void parse_other_modules(struct acrn_vm *vm, const struct multiboot_modul
 
 		} else if (strncmp("RAMDISK", start, type_len) == 0) {
 			vm->sw.linux_info.ramdisk_src_addr = mod_addr;
-			vm->sw.linux_info.ramdisk_load_addr = (void *)(uint64_t)mods[i].mm_mod_start;
+			vm->sw.linux_info.ramdisk_load_addr = vm->sw.kernel_info.kernel_load_addr +
+				vm->sw.kernel_info.kernel_size;
+			vm->sw.linux_info.ramdisk_load_addr =
+				(void *)round_page_up((uint64_t)vm->sw.linux_info.ramdisk_load_addr);
 			vm->sw.linux_info.ramdisk_size = mod_size;
 		} else {
 			pr_warn("not support mod, cmd: %s", start);
@@ -240,10 +241,12 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 				} else {
 					vm->sw.linux_info.bootargs_src_addr = hpa2hva((uint64_t)mods[0].mm_string);
 					vm->sw.linux_info.bootargs_size =
-							strnlen_s(hpa2hva((uint64_t)mods[0].mm_string), MEM_2K);
+						strnlen_s(hpa2hva((uint64_t)mods[0].mm_string), MEM_2K);
 				}
 
-				vm->sw.linux_info.bootargs_load_addr = (void *)BOOT_ARGS_LOAD_ADDR;
+				/* Kernel bootarg and zero page are right before the kernel image */
+				vm->sw.linux_info.bootargs_load_addr =
+					vm->sw.kernel_info.kernel_load_addr - (MEM_1K * 8U);
 
 				if (mbi->mi_mods_count > 1U) {
 					/*parse other modules, like firmware /ramdisk */
