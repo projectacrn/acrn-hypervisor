@@ -1,11 +1,12 @@
 T := $(CURDIR)
 OUT_DIR ?= $(shell mkdir -p $(T)/build;cd $(T)/build;pwd)
+RELEASE ?= 0
 
 .PHONY: all acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge
 ifeq ($(RELEASE),0)
 all: acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge
 else
-all: acrnlog acrn-manager acrntrace acrnbridge
+all: acrn-manager acrnbridge
 endif
 
 acrn-crashlog:
@@ -35,7 +36,7 @@ clean:
 ifeq ($(RELEASE),0)
 install: acrn-crashlog-install acrnlog-install acrn-manager-install acrntrace-install acrnbridge-install
 else
-install: acrnlog-install acrn-manager-install acrntrace-install acrnbridge-install
+install: acrn-manager-install acrnbridge-install
 endif
 
 acrn-crashlog-install:
