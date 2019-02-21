@@ -14,52 +14,6 @@
 
 #define MAX_BOOT_PARAMS_LEN 64U
 
-#ifdef CONFIG_PARTITION_MODE
-int32_t init_vm_boot_info(struct acrn_vm *vm)
-{
-	struct multiboot_module *mods = NULL;
-	struct multiboot_info *mbi = NULL;
-	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-	int32_t ret = -EINVAL;
-
-	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC) {
-		panic("no multiboot info found");
-	} else {
-		mbi = hpa2hva((uint64_t)boot_regs[1]);
-		if (mbi != NULL) {
-			stac();
-			dev_dbg(ACRN_DBG_BOOT, "Multiboot detected, flag=0x%x", mbi->mi_flags);
-			if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
-				clac();
-				panic("no kernel info found");
-			} else {
-				dev_dbg(ACRN_DBG_BOOT, "mod counts=%d\n", mbi->mi_mods_count);
-
-				/* mod[0] is for kernel&cmdline, other mod for ramdisk/firmware info*/
-				mods = (struct multiboot_module *)(uint64_t)mbi->mi_mods_addr;
-
-				dev_dbg(ACRN_DBG_BOOT, "mod0 start=0x%x, end=0x%x",
-					mods[0].mm_mod_start, mods[0].mm_mod_end);
-				dev_dbg(ACRN_DBG_BOOT, "cmd addr=0x%x, str=%s",
-					mods[0].mm_string, (char *)(uint64_t)mods[0].mm_string);
-
-				vm->sw.kernel_type = VM_LINUX_GUEST;
-				vm->sw.kernel_info.kernel_src_addr = hpa2hva((uint64_t)mods[0].mm_mod_start);
-				vm->sw.kernel_info.kernel_size = mods[0].mm_mod_end - mods[0].mm_mod_start;
-				vm->sw.kernel_info.kernel_load_addr = (void *)(MEM_1M * 16U);
-				vm->sw.linux_info.bootargs_src_addr = (void *)vm_config->os_config.bootargs;
-				vm->sw.linux_info.bootargs_size = strnlen_s(vm_config->os_config.bootargs, MEM_2K);
-				vm->sw.linux_info.bootargs_load_addr =
-					vm->sw.kernel_info.kernel_load_addr - (MEM_1K * 8U);
-				clac();
-				ret = 0;
-			}
-		}
-	}
-	return ret;
-}
-
-#else
 /* There are two sources for sos_vm kernel cmdline:
  * - cmdline from sbl. mbi->cmdline
  * - cmdline from acrn stitching tool. mod[0].mm_string
@@ -189,59 +143,70 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 				vm->sw.kernel_type = VM_LINUX_GUEST;
 				vm->sw.kernel_info.kernel_src_addr = hpa2hva((uint64_t)mods[0].mm_mod_start);
 				vm->sw.kernel_info.kernel_size = mods[0].mm_mod_end - mods[0].mm_mod_start;
-				vm->sw.kernel_info.kernel_load_addr =
-					(void *)hva2gpa(vm, get_kernel_load_addr(vm->sw.kernel_info.kernel_src_addr));
 
-				/*
-				 * If there is cmdline from mbi->mi_cmdline, merge it with
-				 * mods[0].mm_string
-				 */
-				if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
-					char *cmd_src, *cmd_dst;
-					uint32_t off = 0U;
-					bool status = false;
-					char buf[MAX_BOOT_PARAMS_LEN];
+				struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
-					cmd_dst = kernel_cmdline;
-					cmd_src = (char *)hpa2hva((uint64_t)mbi->mi_cmdline);
+				if (vm_config->type == PRE_LAUNCHED_VM) {
+					vm->sw.kernel_info.kernel_load_addr = (void *)(MEM_1M * 16U);
+					vm->sw.linux_info.bootargs_src_addr = (void *)vm_config->os_config.bootargs;
+					vm->sw.linux_info.bootargs_size =
+						strnlen_s(vm_config->os_config.bootargs, MEM_2K);
+				} else {
+					vm->sw.kernel_info.kernel_load_addr = (void *)hva2gpa(vm,
+						get_kernel_load_addr(vm->sw.kernel_info.kernel_src_addr));
 
-					(void)memset(buf, 0U, sizeof(buf));
 					/*
-					 * The seed passing interface is different for ABL and SBL,
-					 * so here first try to get seed from SBL, if fail then try
-					 * ABL.
+					 * If there is cmdline from mbi->mi_cmdline, merge it with
+					 * mods[0].mm_string
 					 */
-					status = sbl_seed_parse(vm, cmd_src, buf, sizeof(buf));
-					if (!status) {
-						status = abl_seed_parse(vm, cmd_src, buf, sizeof(buf));
-					}
+					if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
+						char *cmd_src, *cmd_dst;
+						uint32_t off = 0U;
+						bool status = false;
+						char buf[MAX_BOOT_PARAMS_LEN];
 
-					if (status) {
+						cmd_dst = kernel_cmdline;
+						cmd_src = (char *)hpa2hva((uint64_t)mbi->mi_cmdline);
+
+						(void)memset(buf, 0U, sizeof(buf));
 						/*
-						 * append the seed argument to kernel cmdline
+						 * The seed passing interface is different for ABL and SBL,
+						 * so here first try to get seed from SBL, if fail then try
+						 * ABL.
 						 */
-						(void)strncpy_s(cmd_dst, MEM_2K, buf, MAX_BOOT_PARAMS_LEN);
-						off = strnlen_s(cmd_dst, MEM_2K);
-					}
+						status = sbl_seed_parse(vm, cmd_src, buf, sizeof(buf));
+						if (!status) {
+							status = abl_seed_parse(vm, cmd_src, buf, sizeof(buf));
+						}
 
-					cmd_dst += off;
-					(void)strncpy_s(cmd_dst, MEM_2K - off, (const char *)cmd_src,
-						strnlen_s(cmd_src, MEM_2K - off));
-					off = strnlen_s(cmd_dst, MEM_2K - off);
-					cmd_dst[off] = ' ';	/* insert space */
-					off += 1U;
+						if (status) {
+							/*
+							 * append the seed argument to kernel cmdline
+							 */
+							(void)strncpy_s(cmd_dst, MEM_2K, buf, MAX_BOOT_PARAMS_LEN);
+							off = strnlen_s(cmd_dst, MEM_2K);
+						}
 
-					cmd_dst += off;
-					cmd_src = (char *)hpa2hva((uint64_t)mods[0].mm_string);
-					(void)strncpy_s(cmd_dst, MEM_2K - off, cmd_src,
+						cmd_dst += off;
+						(void)strncpy_s(cmd_dst, MEM_2K - off, (const char *)cmd_src,
+							strnlen_s(cmd_src, MEM_2K - off));
+						off = strnlen_s(cmd_dst, MEM_2K - off);
+						cmd_dst[off] = ' ';	/* insert space */
+						off += 1U;
+
+						cmd_dst += off;
+						cmd_src = (char *)hpa2hva((uint64_t)mods[0].mm_string);
+						(void)strncpy_s(cmd_dst, MEM_2K - off, cmd_src,
 							strnlen_s(cmd_src, MEM_2K - off));
 
-					vm->sw.linux_info.bootargs_src_addr = kernel_cmdline;
-					vm->sw.linux_info.bootargs_size = strnlen_s(kernel_cmdline, MEM_2K);
-				} else {
-					vm->sw.linux_info.bootargs_src_addr = hpa2hva((uint64_t)mods[0].mm_string);
-					vm->sw.linux_info.bootargs_size =
-						strnlen_s(hpa2hva((uint64_t)mods[0].mm_string), MEM_2K);
+						vm->sw.linux_info.bootargs_src_addr = kernel_cmdline;
+						vm->sw.linux_info.bootargs_size = strnlen_s(kernel_cmdline, MEM_2K);
+					} else {
+						vm->sw.linux_info.bootargs_src_addr =
+							hpa2hva((uint64_t)mods[0].mm_string);
+						vm->sw.linux_info.bootargs_size =
+							strnlen_s(hpa2hva((uint64_t)mods[0].mm_string), MEM_2K);
+					}
 				}
 
 				/* Kernel bootarg and zero page are right before the kernel image */
@@ -259,4 +224,3 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 	}
 	return ret;
 }
-#endif
