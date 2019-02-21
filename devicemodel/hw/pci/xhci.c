@@ -1245,9 +1245,6 @@ pci_xhci_usbcmd_write(struct pci_xhci_vdev *xdev, uint32_t cmd)
 		}
 	}
 
-	if (cmd & XHCI_CMD_CRS)
-		if (xdev->pid == XHCI_PCI_DEVICE_ID_INTEL_APL &&
-				xdev->vid == XHCI_PCI_VENDOR_ID_INTEL)
 	cmd &= ~(XHCI_CMD_CSS | XHCI_CMD_CRS);
 	return cmd;
 }
