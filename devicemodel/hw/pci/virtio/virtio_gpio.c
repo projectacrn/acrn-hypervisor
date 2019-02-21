@@ -481,14 +481,14 @@ static struct virtio_ops virtio_gpio_ops = {
 
 };
 
-static void
+static int
 virtio_gpio_proc(struct virtio_gpio *gpio, struct iovec *iov, int n)
 {
 	struct virtio_gpio_data *data;
 	struct virtio_gpio_request *req;
 	struct virtio_gpio_response *rsp;
 	struct gpio_line *line;
-	int i, len;
+	int i, len, rc;
 
 	if (n == 1) { /* provide gpio names for front-end driver */
 		data = iov[0].iov_base;
@@ -510,6 +510,7 @@ virtio_gpio_proc(struct virtio_gpio *gpio, struct iovec *iov, int n)
 				strncpy(data[i].name, line->name,
 						sizeof(data[0].name) - 1);
 		}
+		rc = gpio->nvline;
 	} else if (n == 2) { /* handle gpio operations requests */
 		req = iov[0].iov_base;
 		len = iov[0].iov_len;
@@ -520,8 +521,13 @@ virtio_gpio_proc(struct virtio_gpio *gpio, struct iovec *iov, int n)
 		assert(len == sizeof(*rsp));
 
 		gpio_request_handler(gpio, req, rsp);
-	} else
+		rc = sizeof(*rsp);
+	} else {
 		DPRINTF("virtio gpio: number of buffer error %d\n", n);
+		rc = 0;
+	}
+
+	return rc;
 }
 
 static void
@@ -530,18 +536,18 @@ virtio_gpio_notify(void *vdev, struct virtio_vq_info *vq)
 	struct iovec iov[2];
 	struct virtio_gpio *gpio;
 	uint16_t idx;
-	int n;
+	int n, len;
 
 	gpio = (struct virtio_gpio *)vdev;
 	if (vq_has_descs(vq)) {
 		n = vq_getchain(vq, &idx, iov, 2, NULL);
 		assert(n < 3);
 
-		virtio_gpio_proc(gpio, iov, n);
+		len = virtio_gpio_proc(gpio, iov, n);
 		/*
 		 * Release this chain and handle more
 		 */
-		vq_relchain(vq, idx, 1);
+		vq_relchain(vq, idx, len);
 
 	}
 }
