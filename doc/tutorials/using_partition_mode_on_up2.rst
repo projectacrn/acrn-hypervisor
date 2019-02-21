@@ -13,7 +13,7 @@ privileged VMs as shown in :numref:`two-priv-vms`:
 .. figure:: images/partition_mode_up2.png
    :align: center
    :name: two-priv-vms
-   
+
    Two privileged VMs running in partition mode
 
 Prerequisites
@@ -21,7 +21,8 @@ Prerequisites
 
 In this tutorial two Linux privileged VMs are started by the ACRN hypervisor.
 To set up the Linux root filesystems for each VM, follow the Clear Linux OS
-`bare metal installation guide <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install#bare-metal-install>`_
+`bare metal installation guide
+<https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install#bare-metal-install>`_
 to install Clear Linux OS on a **SATA disk** and a **USB flash disk** prior the setup,
 as the two privileged VMs will mount the root filesystems via the SATA controller
 and the USB controller respectively.
@@ -39,7 +40,7 @@ Build kernel and modules for partition mode UOS
      ...
      $ cd acrn-kernel
      $ cp kernel_config_uos .config
-     
+
      $ make olddefconfig
      scripts/kconfig/conf  --olddefconfig Kconfig
      #
@@ -56,14 +57,14 @@ Build kernel and modules for partition mode UOS
 #. Current ACRN partition mode implementation requires a multi-boot capable
    bootloader to boot both ACRN hypervisor and the bootable kernel image
    built from the previous step. You could install Ubuntu OS to the UP2 board
-   by following
-   `this Ubuntu tutorial <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop>`_.
+   by following `this Ubuntu tutorial
+   <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop>`_.
    The Ubuntu installer creates 3 disk partitions on the on-board eMMC memory.
    By default, the GRUB bootloader is installed on the ESP (EFI System Partition)
    partition, which will be used to bootstrap the partition mode ACRN hypervisor.
 
 #. After installing the Ubuntu OS, power off the UP2 board, attach the SATA disk
-   and the USB flash disk to the board. Power on the board and make sure 
+   and the USB flash disk to the board. Power on the board and make sure
    it boots the Ubuntu OS from the eMMC, then copy the loadable kernel modules
    built in Step 1 to the ``/lib/modules/`` folder on both the mounted SATA
    disk and USB disk. For example, assuming the SATA disk and USB flash disk
@@ -77,7 +78,7 @@ Build kernel and modules for partition mode UOS
      $ sudo mount /dev/sda3 /mnt
      $ sudo cp -r <kernel-modules-folder-built-in-step1>/lib/modules/* /mnt/lib/modules
      $ sudo umount /mnt
-     
+
      # Mount the Clear Linux OS root filesystem on the USB flash disk
      $ sudo mount /dev/sdb3 /mnt
      $ sudo cp -r <path-to-kernel-module-folder-built-in-step1>/lib/modules/* /mnt/lib/modules
@@ -275,7 +276,7 @@ Enable partition mode in ACRN hypervisor
    filesystem, you may optionally edit the ``root=`` parameter specified
    in the ``VMx_CONFIG_OS_BOOTARGS`` MACRO, to instruct the Linux kernel to
    mount the right disk partition:
-   
+
    .. code-block:: none
      :emphasize-lines: 12-14
      :caption: hypervisor/arch/x86/configs/up2/partition_config.h
@@ -297,7 +298,8 @@ Enable partition mode in ACRN hypervisor
 
    .. note::
 
-      The root device for VM1 is also /dev/sda3 since the USB controller is the only one seen in that VM.
+      The root device for VM1 is also ``/dev/sda3`` since the USB
+      controller is the only one seen in that VM.
 
 #. Build the ACRN hypervisor and copy the artifact ``acrn.32.out`` to the
    ``/boot`` directory:
@@ -387,11 +389,11 @@ and press :kbd:`CTRL+Space` keys to return to the ACRN serial console.
   [  OK  ] Listening on Journal Socket (/dev/log).
   ...
   clr-932c8a3012ec4dc6af53790b7afbf6ba login: root
-  Password: 
+  Password:
   root@clr-932c8a3012ec4dc6af53790b7afbf6ba ~ # lspci
   00:00.0 Host bridge: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series Host Bridge (rev 0b)
   00:01.0 SATA controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series SATA AHCI Controller (rev 0b)
-  root@clr-932c8a3012ec4dc6af53790b7afbf6ba ~ # 
+  root@clr-932c8a3012ec4dc6af53790b7afbf6ba ~ #
 
    ---Entering ACRN SHELL---
   ACRN:\>sos_console 1
@@ -403,7 +405,7 @@ and press :kbd:`CTRL+Space` keys to return to the ACRN serial console.
   [    1.628438] usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
   ...
   clr-2e8082cd4fc24d57a3c2d3db43368d36 login: root
-  Password: 
+  Password:
   root@clr-2e8082cd4fc24d57a3c2d3db43368d36 ~ # lspci
   00:00.0 Host bridge: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series Host Bridge (rev 0b)
   00:01.0 USB controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series USB xHCI (rev 0b)
