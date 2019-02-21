@@ -87,6 +87,7 @@ SRCS += hw/platform/acpi/acpi.c
 SRCS += hw/platform/acpi/acpi_pm.c
 SRCS += hw/platform/rpmb/rpmb_sim.c
 SRCS += hw/platform/rpmb/rpmb_backend.c
+SRCS += hw/platform/rpmb/att_keybox.c
 SRCS += hw/platform/tpm/tpm_emulator.c
 SRCS += hw/platform/tpm/tpm_crb.c
 SRCS += hw/platform/tpm/tpm.c
