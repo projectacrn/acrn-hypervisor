@@ -51,6 +51,139 @@ struct history_entry {
 char *history_file;
 static int current_lines;
 
+#define EVENT_COUNT_FILE_NAME "all_events"
+
+static char *all_events_cnt;
+static size_t all_events_size;
+
+static int event_count_file_path(char *path, size_t size)
+{
+	struct sender_t *crashlog = get_sender_by_name("crashlog");
+	int res;
+
+	if (!crashlog || !path || !size)
+		return -1;
+
+	res = snprintf(path, size, "%s/%s", crashlog->outdir,
+		       EVENT_COUNT_FILE_NAME);
+	if (s_not_expect(res, size))
+		return -1;
+
+	return 0;
+}
+
+static void update_event_count_file(struct history_entry *entry)
+{
+	char path[PATH_MAX];
+	char line[MAXLINESIZE];
+	char *update_line;
+	char *all_events_new;
+	int len;
+
+	if (!entry->event)
+		return;
+
+	if (entry->type)
+		len = snprintf(line, sizeof(line), "%s-%s: ", entry->event,
+			       entry->type);
+	else
+		len = snprintf(line, sizeof(line), "%s: ", entry->event);
+
+	if (s_not_expect(len, sizeof(line)))
+		return;
+
+	update_line = strstr(all_events_cnt, line);
+	if (!update_line) {
+		*(char *)(mempcpy(line + len, "1\n", 2)) = '\0';
+		len += 2;
+		all_events_new = realloc(all_events_cnt, all_events_size +
+					 len + 1);
+		if (!all_events_new)
+			return;
+
+		*(char *)(mempcpy(all_events_new + all_events_size,
+				  line, len)) = '\0';
+		all_events_cnt = all_events_new;
+		all_events_size += len;
+	} else {
+		char *s = strstr(update_line, ": ");
+		char *e = strchr(update_line, '\n');
+		const char *fmt = "%*[: ]%[[0-9]*]";
+		char num_str[16];
+		int num;
+		char *ne;
+		char *replace;
+
+		if (!s || !e)
+			return;
+
+		if (str_split_ere(s, e - s, fmt, strlen(fmt), num_str,
+				  sizeof(num_str)) != 1)
+			return;
+
+		if (cfg_atoi(num_str, strnlen(num_str, sizeof(num_str)),
+			     &num) == -1)
+			return;
+
+		if (strspn(num_str, "9") == strnlen(num_str, sizeof(num_str))) {
+			all_events_new = realloc(all_events_cnt,
+						 all_events_size + 1 + 1);
+			if (!all_events_new)
+				return;
+
+			ne = all_events_new + (e - all_events_cnt);
+			memmove(ne + 1, ne,
+				all_events_cnt + all_events_size - e + 1);
+			replace = all_events_new + (s - all_events_cnt) + 2;
+
+			all_events_cnt = all_events_new;
+			all_events_size++;
+		} else {
+			replace = s + 2;
+		}
+
+		len = snprintf(num_str, sizeof(num_str), "%u", num + 1);
+		if (s_not_expect(len, sizeof(num_str)))
+			return;
+
+		memcpy(replace, num_str, len);
+	}
+
+	if (event_count_file_path(path, sizeof(path)) == -1)
+		return;
+
+	if (overwrite_file(path, all_events_cnt)) {
+		LOGE("failed to write %s, %s\n", path,
+		     strerror(errno));
+		return;
+	}
+	return;
+}
+
+static int init_event_count_file(void)
+{
+	char path[PATH_MAX];
+
+	if (event_count_file_path(path, sizeof(path)) == -1)
+		return -1;
+
+	if (!file_exists(path)) {
+		if (overwrite_file(path, "Total:\n")) {
+			LOGE("failed to prepare %s, %s\n", path,
+			     strerror(errno));
+			return -1;
+		}
+	}
+
+	if (read_file(path, &all_events_size,
+		      (void *)&all_events_cnt) == -1) {
+		LOGE("failed to read %s, %s\n", path,
+		     strerror(errno));
+		return -1;
+	}
+	return 0;
+}
+
 static int entry_to_history_line(struct history_entry *entry,
 				char *newline, size_t size)
 {
@@ -137,6 +270,8 @@ void hist_raise_event(const char *event, const char *type, const char *log,
 	crashlog = get_sender_by_name("crashlog");
 	if (!crashlog)
 		return;
+
+	update_event_count_file(&entry);
 
 	if (cfg_atoi(crashlog->maxlines, crashlog->maxlines_len,
 		     &maxlines) == -1)
@@ -267,6 +402,9 @@ int prepare_history(void)
 	crashlog = get_sender_by_name("crashlog");
 	if (!crashlog)
 		return 0;
+
+	if (init_event_count_file() == -1)
+		return -1;
 
 	if (!history_file) {
 		ret = asprintf(&history_file, "%s/%s", crashlog->outdir,

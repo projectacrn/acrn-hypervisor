@@ -283,9 +283,9 @@ int str_split_ere(const char *str, size_t slen,
 
 	va_start(v, flen);
 	/* supports %[regex..] and %*[regex..] */
-	exp_s = fmt;
-	while (str_off < flen && *exp_s) {
-		exp_e = exp_end(fmt, flen, exp_s);
+	exp_s = _fmt;
+	while (str_off < slen && *exp_s) {
+		exp_e = exp_end(_fmt, flen, exp_s);
 		if (!exp_e) {
 			LOGE("invalid exp - failed to find the end of exp\n");
 			goto out;
@@ -304,7 +304,8 @@ int str_split_ere(const char *str, size_t slen,
 			sreqsize = va_arg(v, size_t);
 		}
 
-		if (reg_match(str + str_off, reg, sreq, sreqsize, &off) == -1) {
+		if (reg_match(_str + str_off, reg, sreq, sreqsize,
+			      &off) == -1) {
 			LOGE("failed to match reg\n");
 			free(reg);
 			goto out;
