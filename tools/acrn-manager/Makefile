@@ -1,6 +1,7 @@
 T := $(CURDIR)
 OUT_DIR ?= $(shell mkdir -p $(T)/build;cd $(T)/build;pwd)
 CC ?= gcc
+RELEASE ?= 0
 
 MANAGER_CFLAGS := -g -O0 -std=gnu11
 MANAGER_CFLAGS += -D_GNU_SOURCE
@@ -50,7 +51,11 @@ MANAGER_LDFLAGS += -lacrn-mngr
 MANAGER_LDFLAGS += $(LDFLAGS)
 
 .PHONY: all
+ifeq ($(RELEASE),0)
 all: $(OUT_DIR)/libacrn-mngr.a $(OUT_DIR)/acrn_mngr.h $(OUT_DIR)/acrnctl $(OUT_DIR)/acrnd
+else
+all: $(OUT_DIR)/libacrn-mngr.a $(OUT_DIR)/acrn_mngr.h $(OUT_DIR)/acrnd
+endif
 
 $(OUT_DIR)/libacrn-mngr.a: acrn_mngr.c acrn_mngr.h
 	$(CC) $(MANAGER_CFLAGS) -c acrn_mngr.c -o $(OUT_DIR)/acrn_mngr.o
@@ -83,12 +88,14 @@ ifneq ($(OUT_DIR),.)
 endif
 
 .PHONY: install
-install: $(OUT_DIR)/acrnctl $(OUT_DIR)/acrn_mngr.h $(OUT_DIR)/libacrn-mngr.a
+install:
 	install -d $(DESTDIR)/usr/bin
 	install -d $(DESTDIR)/usr/lib/systemd/system
 	install -d $(DESTDIR)/usr/lib64/
 	install -d $(DESTDIR)/usr/include/acrn
+ifeq ($(RELEASE),0)
 	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/acrnctl
+endif
 	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/acrnd
 	install -t $(DESTDIR)/usr/lib64/ $(OUT_DIR)/libacrn-mngr.a
 	install -t $(DESTDIR)/usr/include/acrn $(OUT_DIR)/acrn_mngr.h
