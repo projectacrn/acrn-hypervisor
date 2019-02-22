@@ -93,6 +93,10 @@ void npk_log_setup(struct hv_npk_log_param *param)
 				for (i = 0U; i < phys_cpu_num; i++) {
 					per_cpu(npk_log_ref, i) = 0U;
 				}
+				hv_access_memory_region_update(base,
+					phys_cpu_num * (HV_NPK_LOG_REF_MASK
+					+ 1U) * sizeof(struct npk_chan));
+
 			}
 			param->res = HV_NPK_LOG_RES_OK;
 			npk_log_enabled = 1;
