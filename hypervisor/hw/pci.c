@@ -407,7 +407,7 @@ struct pci_pdev *find_pci_pdev(union pci_bdf pbdf)
 	uint32_t i;
 
 	for (i = 0U; i < num_pci_pdev; i++) {
-		if (pci_pdev_array[i].bdf.value == pbdf.value) {
+		if (bdf_is_equal(&pci_pdev_array[i].bdf, &pbdf)) {
 			pdev = &pci_pdev_array[i];
 			break;
 		}

@@ -34,17 +34,18 @@
 
 static struct pci_vdev *partition_mode_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf)
 {
-	struct pci_vdev *vdev = NULL;
+	struct pci_vdev *vdev, *tmp;
 	struct acrn_vm_config *vm_config = get_vm_config(vpci->vm->vm_id);
 	int32_t i;
 
+	vdev = NULL;
 	for (i = 0; i < vm_config->pci_ptdev_num; i++) {
-		vdev = &vpci->vm->pci_vdevs[i];
+		tmp = &vpci->vm->pci_vdevs[i];
 
-		if (vdev->vbdf.value == vbdf.value) {
+		if (bdf_is_equal(&(tmp->vbdf), &vbdf)) {
+			vdev = tmp;
 			break;
 		}
-		vdev = NULL;
 	}
 
 	return vdev;
