@@ -156,20 +156,6 @@ bool vlapic_find_deliverable_intr(const struct acrn_vlapic *vlapic, uint32_t *ve
 void vlapic_get_deliverable_intr(struct acrn_vlapic *vlapic, uint32_t vector);
 
 /**
- * @brief Send notification vector to target pCPU.
- *
- * If APICv Posted-Interrupt is enabled and target pCPU is in non-root mode,
- * pCPU will sync pending virtual interrupts from PIR to vIRR automatically,
- * without VM exit.
- * If pCPU in root-mode, virtual interrupt will be injected in next VM entry.
- *
- * @param[in] dest_pcpu_id Target CPU ID.
- *
- * @return None
- */
-void vlapic_post_intr(uint16_t dest_pcpu_id);
-
-/**
  * @brief Get physical address to PIR description.
  *
  * If APICv Posted-interrupt is supported, this address will be configured

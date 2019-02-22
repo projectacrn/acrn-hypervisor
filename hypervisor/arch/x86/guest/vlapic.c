@@ -90,6 +90,8 @@ static inline void vlapic_dump_isr(__unused const struct acrn_vlapic *vlapic, __
 static int32_t
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector);
 
+static void apicv_post_intr(uint16_t dest_pcpu_id);
+
 /*
  * Post an interrupt to the vcpu running on 'hostcpu'. This will use a
  * hardware assist if available (e.g. Posted Interrupt) or fall back to
@@ -522,7 +524,7 @@ vlapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 			 *    it to vCPU in next vmentry.
 			 */
 			bitmap_set_lock(ACRN_REQUEST_EVENT, &vlapic->vcpu->arch.pending_req);
-			vlapic_post_intr(vlapic->vcpu->pcpu_id);
+			apicv_post_intr(vlapic->vcpu->pcpu_id);
 			ret = false;
 		} else {
 			ret = (pending_intr != 0);
@@ -555,7 +557,7 @@ vlapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
  *
  * @return None
  */
-void vlapic_post_intr(uint16_t dest_pcpu_id)
+static void apicv_post_intr(uint16_t dest_pcpu_id)
 {
 	send_single_ipi(dest_pcpu_id, VECTOR_POSTED_INTR);
 }
