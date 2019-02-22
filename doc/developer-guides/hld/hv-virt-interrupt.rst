@@ -106,9 +106,6 @@ These APIs will finish by making a request for *ACRN_REQUEST_EVENT.*
 .. doxygenfunction:: vlapic_intr_msi
   :project: Project ACRN
 
-.. doxygenfunction:: vlapic_post_intr
-  :project: Project ACRN
-
 .. doxygenfunction:: apicv_get_pir_desc_paddr
   :project: Project ACRN
 
