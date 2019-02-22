@@ -35,13 +35,16 @@ static struct pci_vdev sharing_mode_vdev_array[CONFIG_MAX_PCI_DEV_NUM];
 
 struct pci_vdev *sharing_mode_find_vdev(union pci_bdf pbdf)
 {
-	struct pci_vdev *vdev = NULL;
+	struct pci_vdev *vdev, *tmp;
 	uint32_t i;
 
+	vdev = NULL;
 	/* SOS_VM uses phys BDF */
 	for (i = 0U; i < num_pci_vdev; i++) {
-		if (sharing_mode_vdev_array[i].pdev->bdf.value == pbdf.value) {
-			vdev = &sharing_mode_vdev_array[i];
+		tmp = &sharing_mode_vdev_array[i];
+		if ((tmp->pdev != NULL) && bdf_is_equal((union pci_bdf*)&(tmp->pdev->bdf), &pbdf)) {
+			vdev = tmp;
+			break;
 		}
 	}
 
