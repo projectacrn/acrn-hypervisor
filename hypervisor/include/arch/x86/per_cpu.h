@@ -10,10 +10,13 @@
 #include <types.h>
 #include <sbuf.h>
 #include <irq.h>
+#include <page.h>
+#include <timer.h>
 #include <instr_emul.h>
 #include <profiling.h>
 #include <logmsg.h>
 #include <gdt.h>
+#include <schedule.h>
 #include <security.h>
 
 struct per_cpu_region {
@@ -36,7 +39,6 @@ struct per_cpu_region {
 	struct per_cpu_timers cpu_timers;
 	struct sched_context sched_ctx;
 	struct sched_object idle;
-	struct instr_emul_ctxt g_inst_ctxt;
 	struct host_gdt gdt;
 	struct tss_64 tss;
 	enum pcpu_boot_state boot_state;

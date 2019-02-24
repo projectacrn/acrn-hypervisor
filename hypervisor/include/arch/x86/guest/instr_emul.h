@@ -32,8 +32,9 @@
 
 #include <types.h>
 #include <cpu.h>
-#include <vcpu.h>
+#include <guest_memory.h>
 
+struct acrn_vcpu;
 struct instr_emul_vie_op {
 	uint8_t		op_type;	/* type of operation (e.g. MOV) */
 	uint16_t	op_flags;
@@ -94,10 +95,9 @@ struct vm_guest_paging {
 struct instr_emul_ctxt {
 	struct instr_emul_vie vie;
 	struct vm_guest_paging paging;
-	struct acrn_vcpu *vcpu;
 };
 
-int32_t emulate_instruction(const struct acrn_vcpu *vcpu);
+int32_t emulate_instruction(struct acrn_vcpu *vcpu);
 int32_t decode_instruction(struct acrn_vcpu *vcpu);
 
 #endif

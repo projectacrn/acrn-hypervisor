@@ -12,11 +12,13 @@
  #include <pgtable.h>
  #include <host_pm.h>
  #include <trampoline.h>
+ #include <msr.h>
  #include <vmx.h>
  #include <console.h>
  #include <ioapic.h>
  #include <vtd.h>
  #include <lapic.h>
+ #include <vcpu.h>
 
 struct cpu_context cpu_ctx;
 

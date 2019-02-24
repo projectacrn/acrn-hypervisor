@@ -53,7 +53,7 @@ emulate_pio_complete(struct acrn_vcpu *vcpu, const struct io_request *io_req)
  * either a previous call to emulate_io() returning 0 or the corresponding VHM
  * request transferring to the COMPLETE state.
  */
-static void emulate_mmio_complete(const struct acrn_vcpu *vcpu, const struct io_request *io_req)
+static void emulate_mmio_complete(struct acrn_vcpu *vcpu, const struct io_request *io_req)
 {
 	const struct mmio_request *mmio_req = &io_req->reqs.mmio;
 

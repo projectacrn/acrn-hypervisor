@@ -7,6 +7,7 @@
  */
 
 #include <types.h>
+#include <msr.h>
 #include <per_cpu.h>
 #include <pgtable.h>
 
