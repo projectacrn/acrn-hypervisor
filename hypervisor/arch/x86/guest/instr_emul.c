@@ -478,10 +478,10 @@ static void vm_get_seg_desc(enum cpu_reg_name seg, struct seg_desc *desc)
 	desc->access = exec_vmread32(tdesc.access_field);
 }
 
-static void get_guest_paging_info(struct acrn_vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
-						uint32_t csar)
+static void get_guest_paging_info(struct acrn_vcpu *vcpu, uint32_t csar)
 {
 	uint8_t cpl;
+	struct instr_emul_ctxt *emul_ctxt = &vcpu->inst_ctxt;
 
 	cpl = (uint8_t)((csar >> 5U) & 3U);
 	emul_ctxt->paging.cr3 = exec_vmread(VMX_GUEST_CR3);
@@ -1629,10 +1629,9 @@ static int32_t emulate_bittest(struct acrn_vcpu *vcpu, const struct instr_emul_v
 	return ret;
 }
 
-static int32_t vmm_emulate_instruction(struct instr_emul_ctxt *ctxt)
+static int32_t vmm_emulate_instruction(struct acrn_vcpu *vcpu)
 {
-	struct instr_emul_vie *vie = &ctxt->vie;
-	struct acrn_vcpu *vcpu = ctxt->vcpu;
+	struct instr_emul_vie *vie = &vcpu->inst_ctxt.vie;
 	int32_t error;
 
 	if (vie->decoded != 0U) {
@@ -2242,10 +2241,10 @@ static int32_t local_decode_instruction(enum vm_cpu_mode cpu_mode,
 }
 
 /* for instruction MOVS/STO, check the gva gotten from DI/SI. */
-static int32_t instr_check_di(struct acrn_vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt)
+static int32_t instr_check_di(struct acrn_vcpu *vcpu)
 {
 	int32_t ret;
-	struct instr_emul_vie *vie = &emul_ctxt->vie;
+	struct instr_emul_vie *vie = &vcpu->inst_ctxt.vie;
 	uint64_t gva;
 
 	ret = get_gva_di_check(vcpu, vie, vie->addrsize, &gva);
@@ -2259,14 +2258,13 @@ static int32_t instr_check_di(struct acrn_vcpu *vcpu, struct instr_emul_ctxt *em
 	return ret;
 }
 
-static int32_t instr_check_gva(struct acrn_vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
-		enum vm_cpu_mode cpu_mode)
+static int32_t instr_check_gva(struct acrn_vcpu *vcpu, enum vm_cpu_mode cpu_mode)
 {
 	int32_t ret = 0;
 	uint64_t base, segbase, idx, gva, gpa;
 	uint32_t err_code;
 	enum cpu_reg_name seg;
-	struct instr_emul_vie *vie = &emul_ctxt->vie;
+	struct instr_emul_vie *vie = &vcpu->inst_ctxt.vie;
 
 	base = 0UL;
 	if (vie->base_register != CPU_REG_LAST) {
@@ -2351,51 +2349,44 @@ int32_t decode_instruction(struct acrn_vcpu *vcpu)
 	int32_t retval;
 	enum vm_cpu_mode cpu_mode;
 
-	emul_ctxt = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
-	if (emul_ctxt == NULL) {
-		pr_err("%s: Failed to get emul_ctxt", __func__);
-		retval = -1;
+	emul_ctxt = &vcpu->inst_ctxt;
+	retval = vie_init(&emul_ctxt->vie, vcpu);
+	if (retval < 0) {
+		if (retval != -EFAULT) {
+			pr_err("init vie failed @ 0x%016llx:", vcpu_get_rip(vcpu));
+		}
 	} else {
-		emul_ctxt->vcpu = vcpu;
 
-		retval = vie_init(&emul_ctxt->vie, vcpu);
-		if (retval < 0) {
-			if (retval != -EFAULT) {
-				pr_err("init vie failed @ 0x%016llx:", vcpu_get_rip(vcpu));
-			}
+		csar = exec_vmread32(VMX_GUEST_CS_ATTR);
+		get_guest_paging_info(vcpu, csar);
+		cpu_mode = get_vcpu_mode(vcpu);
+
+		retval = local_decode_instruction(cpu_mode, seg_desc_def32(csar), &emul_ctxt->vie);
+
+		if (retval != 0) {
+			pr_err("decode instruction failed @ 0x%016llx:", vcpu_get_rip(vcpu));
+			vcpu_inject_ud(vcpu);
+			retval = -EFAULT;
 		} else {
-
-			csar = exec_vmread32(VMX_GUEST_CS_ATTR);
-			get_guest_paging_info(vcpu, emul_ctxt, csar);
-			cpu_mode = get_vcpu_mode(vcpu);
-
-			retval = local_decode_instruction(cpu_mode, seg_desc_def32(csar), &emul_ctxt->vie);
-
-			if (retval != 0) {
-				pr_err("decode instruction failed @ 0x%016llx:", vcpu_get_rip(vcpu));
-				vcpu_inject_ud(vcpu);
-				retval = -EFAULT;
+			/*
+			 * We do operand check in instruction decode phase and
+			 * inject exception accordingly. In late instruction
+			 * emulation, it will always success.
+			 *
+			 * We only need to do dst check for movs. For other instructions,
+			 * they always has one register and one mmio which trigger EPT
+			 * by access mmio. With VMX enabled, the related check is done
+			 * by VMX itself before hit EPT violation.
+			 *
+			 */
+			if ((emul_ctxt->vie.op.op_flags & VIE_OP_F_CHECK_GVA_DI) != 0U) {
+				retval = instr_check_di(vcpu);
 			} else {
-				/*
-				 * We do operand check in instruction decode phase and
-				 * inject exception accordingly. In late instruction
-				 * emulation, it will always sucess.
-				 *
-				 * We only need to do dst check for movs. For other instructions,
-				 * they always has one register and one mmio which trigger EPT
-				 * by access mmio. With VMX enabled, the related check is done
-				 * by VMX itself before hit EPT violation.
-				 *
-				 */
-				if ((emul_ctxt->vie.op.op_flags & VIE_OP_F_CHECK_GVA_DI) != 0U) {
-					retval = instr_check_di(vcpu, emul_ctxt);
-				} else {
-					retval = instr_check_gva(vcpu, emul_ctxt, cpu_mode);
-				}
+				retval = instr_check_gva(vcpu, cpu_mode);
+			}
 
-				if (retval >= 0) {
-					retval = (int32_t)(emul_ctxt->vie.opsize);
-				}
+			if (retval >= 0) {
+				retval = (int32_t)(emul_ctxt->vie.opsize);
 			}
 		}
 	}
@@ -2403,17 +2394,7 @@ int32_t decode_instruction(struct acrn_vcpu *vcpu)
 	return retval;
 }
 
-int32_t emulate_instruction(const struct acrn_vcpu *vcpu)
+int32_t emulate_instruction(struct acrn_vcpu *vcpu)
 {
-	struct instr_emul_ctxt *ctxt = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
-	int32_t ret;
-
-	if (ctxt == NULL) {
-		pr_err("%s: Failed to get instr_emul_ctxt", __func__);
-		ret = -1;
-	} else {
-		ret = vmm_emulate_instruction(ctxt);
-	}
-
-	return ret;
+	return vmm_emulate_instruction(vcpu);
 }

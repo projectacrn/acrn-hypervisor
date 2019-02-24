@@ -7,6 +7,8 @@
 #include <types.h>
 #include <errno.h>
 #include <io.h>
+#include <msr.h>
+#include <apicreg.h>
 #include <cpuid.h>
 #include <cpu_caps.h>
 #include <softirq.h>

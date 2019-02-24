@@ -60,6 +60,7 @@
 #include <io_req.h>
 #include <msr.h>
 #include <cpu.h>
+#include <instr_emul.h>
 
 /**
  * @brief vcpu
@@ -326,6 +327,7 @@ struct acrn_vcpu {
 	bool launched; /* Whether the vcpu is launched on target pcpu */
 	uint32_t running; /* vcpu is picked up and run? */
 
+	struct instr_emul_ctxt inst_ctxt;
 	struct io_request req; /* used by io/ept emulation */
 
 	uint64_t reg_cached;
