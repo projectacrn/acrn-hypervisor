@@ -33,6 +33,7 @@
 #include "vmmapi.h"
 #include "sw_load.h"
 #include "dm.h"
+#include "pci_core.h"
 
 int with_bootargs;
 static char bootargs[STR_LEN];
@@ -56,7 +57,8 @@ static char bootargs[STR_LEN];
  * 3:        lowmem -     bff_fffff   (reserved)   0xc00_00000-lowmem
  * 4:   0xc00_00000 -     dff_fffff   PCI hole     512MB
  * 5:   0xe00_00000 -     fff_fffff   (reserved)   512MB
- * 6:   1_000_00000 -     highmem     RAM          highmem-4G
+ * 6:   1_000_00000 -     1_400_00000 PCI hole     1G
+ * 7:   1_400_00000 -     highmem     RAM          highmem-5G
  */
 const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 	{	/* 0 to mptable/smbios/acpi */
@@ -89,8 +91,14 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 		.type     =  E820_TYPE_RESERVED
 	},
 
+	{	/* 4G to 5G */
+		.baseaddr =  PCI_EMUL_MEMBASE64,
+		.length   =  PCI_EMUL_MEMLIMIT64 - PCI_EMUL_MEMBASE64,
+		.type     =  E820_TYPE_RESERVED
+	},
+
 	{
-		.baseaddr =  0x100000000,
+		.baseaddr =  PCI_EMUL_MEMLIMIT64,
 		.length   =  0x000100000,
 		.type     =  E820_TYPE_RESERVED
 	},
