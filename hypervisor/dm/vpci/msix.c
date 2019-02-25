@@ -27,7 +27,15 @@
  * $FreeBSD$
  */
 
-#include <hypervisor.h>
+#include <vm.h>
+#include <errno.h>
+#include <ptdev.h>
+#include <assign.h>
+#include <vpci.h>
+#include <io.h>
+#include <ept.h>
+#include <mmu.h>
+#include <logmsg.h>
 #include "pci_priv.h"
 
 static inline bool msixcap_access(const struct pci_vdev *vdev, uint32_t offset)

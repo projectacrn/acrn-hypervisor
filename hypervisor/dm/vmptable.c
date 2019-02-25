@@ -4,7 +4,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <vm.h>
+#include <per_cpu.h>
+#include <mptable.h>
+#include <default_acpi_info.h>
 
 static struct mptable_info mptable_template = {
 			.mpfp = {

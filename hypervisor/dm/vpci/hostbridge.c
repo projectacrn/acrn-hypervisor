@@ -34,7 +34,9 @@
 * Series Host Bridge (rev 0b)
 */
 
-#include <hypervisor.h>
+#include <vm.h>
+#include <errno.h>
+#include <pci.h>
 #include "pci_priv.h"
 
 static int32_t vdev_hostbridge_init(struct pci_vdev *vdev)

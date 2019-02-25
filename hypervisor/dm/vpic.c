@@ -27,7 +27,10 @@
 
 #define pr_prefix	"vpic: "
 
-#include <hypervisor.h>
+#include <vm.h>
+#include <irq.h>
+#include <assign.h>
+#include <logmsg.h>
 
 #define ACRN_DBG_PIC	6U
 

@@ -27,7 +27,9 @@
  * $FreeBSD$
  */
 
-#include <hypervisor.h>
+#include <vm.h>
+#include <errno.h>
+#include <logmsg.h>
 #include "pci_priv.h"
 
 static uint32_t num_pci_vdev;
