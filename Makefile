@@ -54,11 +54,11 @@ ifeq ($(FIRMWARE),uefi)
 endif
 
 sbl-hypervisor:
-	@mkdir -p $(HV_OUT)-sbl/apl-mrb $(HV_OUT)-sbl/up2
+	@mkdir -p $(HV_OUT)-sbl/apl-mrb $(HV_OUT)-sbl/apl-up2
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE) clean
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE)
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/up2 BOARD=up2 FIRMWARE=sbl RELEASE=$(RELEASE) clean
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/up2 BOARD=up2 FIRMWARE=sbl RELEASE=$(RELEASE)
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl RELEASE=$(RELEASE) clean
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl RELEASE=$(RELEASE)
 
 devicemodel: tools
 	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) clean
@@ -99,11 +99,11 @@ endif
 
 sbl-hypervisor-install:
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE) install
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/up2 BOARD=up2 FIRMWARE=sbl RELEASE=$(RELEASE) install
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl RELEASE=$(RELEASE) install
 
 sbl-hypervisor-install-debug:
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE) install-debug
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/up2 BOARD=up2 FIRMWARE=sbl RELEASE=$(RELEASE) install-debug
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl RELEASE=$(RELEASE) install-debug
 
 devicemodel-install:
 	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) install
