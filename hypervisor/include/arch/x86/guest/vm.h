@@ -146,10 +146,9 @@ struct acrn_vm {
 	uint32_t vcpuid_entry_nr, vcpuid_level, vcpuid_xlevel;
 	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
 	struct acrn_vpci vpci;
+
 #ifdef CONFIG_PARTITION_MODE
 	struct mptable_info mptable;
-	struct pci_vdev pci_vdevs[CONFIG_MAX_PCI_DEV_NUM];
-	/* the valid number of pci_vdevs[] is vm_config->pci_ptdev_num */
 	uint8_t vrtc_offset;
 #endif
 
