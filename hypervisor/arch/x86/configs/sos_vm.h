@@ -3,6 +3,13 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
+
+/*
+ * This is a template of sos_vm.h and is linked to ./$(CONFIG_BOARD)/sos_vm.h,
+ * If you need a board specific sos_vm.h, make a copy in ./$(CONFIG_BOARD)/
+ * and replace the original symbol link.
+ */
+
 #ifndef SOS_VM_CONFIG_H
 #define SOS_VM_CONFIG_H
 
