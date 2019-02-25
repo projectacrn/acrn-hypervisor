@@ -522,7 +522,7 @@ static struct smbios_template_entry smbios_template[] = {
 	{ NULL, NULL, NULL }
 };
 
-static uint64_t guest_lomem, guest_himem;
+static uint64_t guest_lomem, guest_himem, guest_highmem_base;
 static uint16_t type16_handle;
 
 static int
@@ -709,7 +709,7 @@ smbios_type19_initializer(struct smbios_structure *template_entry,
 		    curaddr, endaddr, n, size);
 		type19 = (struct smbios_table_type19 *)curaddr;
 		type19->arrayhand = type16_handle;
-		type19->xsaddr = 4*GB;
+		type19->xsaddr = guest_highmem_base;
 		type19->xeaddr = guest_himem;
 	}
 
@@ -767,6 +767,7 @@ smbios_build(struct vmctx *ctx)
 
 	guest_lomem = vm_get_lowmem_size(ctx);
 	guest_himem = vm_get_highmem_size(ctx);
+	guest_highmem_base = ctx->highmem_gpa_base;
 
 	startaddr = paddr_guest2host(ctx, SMBIOS_BASE, SMBIOS_MAX_LENGTH);
 	if (startaddr == NULL) {

@@ -523,10 +523,10 @@ vhost_set_mem_table(struct vhost_dev *vdev)
 	}
 
 	if (ctx->highmem > 0) {
-		mem->regions[nregions].guest_phys_addr = 4*GB;
+		mem->regions[nregions].guest_phys_addr = ctx->highmem_gpa_base;
 		mem->regions[nregions].memory_size = ctx->highmem;
 		mem->regions[nregions].userspace_addr =
-			(uintptr_t)(ctx->baseaddr + 4*GB);
+			(uintptr_t)(ctx->baseaddr + ctx->highmem_gpa_base);
 		DPRINTF("[%d][0x%llx -> 0x%llx, 0x%llx]\n",
 			nregions,
 			mem->regions[nregions].guest_phys_addr,

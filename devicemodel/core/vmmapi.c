@@ -45,6 +45,7 @@
 #include "mevent.h"
 
 #include "dm.h"
+#include "pci_core.h"
 
 #define MAP_NOCORE 0
 #define MAP_ALIGNED_SUPER 0
@@ -129,6 +130,7 @@ vm_create(const char *name, uint64_t req_buf)
 
 	ctx->fd = devfd;
 	ctx->lowmem_limit = 2 * GB;
+	ctx->highmem_gpa_base = PCI_EMUL_MEMLIMIT64;
 	ctx->name = (char *)(ctx + 1);
 	strncpy(ctx->name, name, strnlen(name, PATH_MAX) + 1);
 
@@ -327,7 +329,8 @@ vm_unsetup_memory(struct vmctx *ctx)
 	 */
 	bzero((void *)ctx->baseaddr, ctx->lowmem);
 	if (ctx->highmem > 0) {
-		bzero((void *)(ctx->baseaddr + 4 * GB), ctx->highmem);
+		bzero((void *)(ctx->baseaddr + ctx->highmem_gpa_base),
+			ctx->highmem);
 	}
 
 	hugetlb_unsetup_memory(ctx);
@@ -351,10 +354,10 @@ vm_map_gpa(struct vmctx *ctx, vm_paddr_t gaddr, size_t len)
 	}
 
 	if (ctx->highmem > 0) {
-		if (gaddr >= 4*GB) {
-			if (gaddr < 4*GB + ctx->highmem &&
+		if (gaddr >= ctx->highmem_gpa_base) {
+			if (gaddr < ctx->highmem_gpa_base + ctx->highmem &&
 			    len <= ctx->highmem &&
-			    gaddr + len <= 4*GB + ctx->highmem)
+			    gaddr + len <= ctx->highmem_gpa_base + ctx->highmem)
 				return (ctx->baseaddr + gaddr);
 		}
 	}

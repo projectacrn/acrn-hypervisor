@@ -38,6 +38,9 @@
 #define	PCI_BARMAX	PCIR_MAX_BAR_0	/* BAR registers in a Type 0 header */
 #define	PCI_BDF(b, d, f) (((b & 0xFF) << 8) | ((d & 0x1F) << 3) | ((f & 0x7)))
 
+#define	PCI_EMUL_MEMBASE64	0x100000000UL
+#define	PCI_EMUL_MEMLIMIT64	0x140000000UL
+
 struct vmctx;
 struct pci_vdev;
 struct memory_region;

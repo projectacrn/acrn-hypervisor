@@ -652,14 +652,7 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 	ctx->highmem =
 		ALIGN_DOWN(ctx->highmem, hugetlb_priv[HUGETLB_LV1].pg_size);
 
-	/*
-	 * High BIOS resides right below 4GB.
-	 * Therefore, at least 4GB of memory space is needed.
-	 */
-	if (ctx->biosmem > 0 || ctx->highmem > 0)
-		total_size = 4 * GB + ctx->highmem;
-	else
-		total_size = ctx->lowmem;
+	total_size = ctx->highmem_gpa_base + ctx->highmem;
 
 	/* check & set hugetlb level memory size for lowmem/biosmem/highmem */
 	lowmem = ctx->lowmem;
@@ -735,7 +728,8 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 	}
 
 	/* mmap highmem */
-	if (mmap_hugetlbfs(ctx, 4 * GB, get_highmem_param, adj_highmem_param) < 0) {
+	if (mmap_hugetlbfs(ctx, ctx->highmem_gpa_base,
+				get_highmem_param, adj_highmem_param) < 0) {
 		perror("highmem mmap failed");
 		goto err;
 	}
@@ -772,8 +766,9 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 
 	/* map ept for highmem */
 	if (ctx->highmem > 0) {
-		if (vm_map_memseg_vma(ctx, ctx->highmem, 4 * GB,
-			(uint64_t)(ctx->baseaddr + 4 * GB), PROT_ALL) < 0)
+		if (vm_map_memseg_vma(ctx, ctx->highmem, ctx->highmem_gpa_base,
+			(uint64_t)(ctx->baseaddr + ctx->highmem_gpa_base),
+			PROT_ALL) < 0)
 			goto err;
 	}
 
