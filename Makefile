@@ -19,7 +19,7 @@ endif
 undefine PLATFORM
 
 ifndef BOARD
-$(error BOARD must be set (apl-mrb, apl-nuc, dnv-cb2, nuc6cayh)
+$(error BOARD must be set (apl-mrb, apl-nuc, apl-up2, dnv-cb2, kbl-nuc-i7, nuc6cayh, nuc7i7bnh)
 endif
 
 ifeq ($(BOARD),apl-nuc)
