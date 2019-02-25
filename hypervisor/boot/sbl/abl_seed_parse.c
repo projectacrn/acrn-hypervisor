@@ -22,7 +22,11 @@ struct dev_sec_info {
 	struct abl_seed_info seed_list[ABL_SEED_LIST_MAX];
 };
 
-static const char *dev_sec_info_arg = "dev_sec_info.param_addr=";
+static const char *abl_seed_arg[] = {
+		"ABL.svnseed=",
+		"dev_sec_info.param_addr=",
+		NULL
+};
 
 static void parse_seed_list_abl(void *param_addr)
 {
@@ -103,13 +107,18 @@ bool abl_seed_parse(struct acrn_vm *vm, char *cmdline, char *out_arg, uint32_t o
 	char *arg, *arg_end;
 	char *param;
 	void *param_addr;
-	uint32_t len;
+	uint32_t len, i;
 	bool parse_success = false;
 
 	if (cmdline != NULL) {
 
-		len = strnlen_s(dev_sec_info_arg, MEM_1K);
-		arg = strstr_s((const char *)cmdline, MEM_2K, dev_sec_info_arg, len);
+		for(i = 0U; abl_seed_arg[i] != NULL; i++) {
+			len = strnlen_s(abl_seed_arg[i], MEM_1K);
+			arg = strstr_s((const char *)cmdline, MEM_2K, abl_seed_arg[i], len);
+			if (arg != NULL) {
+				break;
+			}
+		}
 
 		if (arg != NULL) {
 			param = arg + len;
@@ -129,7 +138,7 @@ bool abl_seed_parse(struct acrn_vm *vm, char *cmdline, char *out_arg, uint32_t o
 				/* Convert the param_addr to SOS GPA and copy to caller */
 				if (out_arg != NULL) {
 					snprintf(out_arg, out_len, "%s0x%X ",
-							dev_sec_info_arg, hva2gpa(vm, param_addr));
+							abl_seed_arg[i], hva2gpa(vm, param_addr));
 				}
 
 				parse_success = true;
