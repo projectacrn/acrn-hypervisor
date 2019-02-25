@@ -33,15 +33,18 @@
 #include <logmsg.h>
 #include "pci_priv.h"
 
-static struct pci_vdev *partition_mode_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf)
+
+/**
+ * @pre tmp != NULL
+ */
+static struct pci_vdev *partition_mode_find_vdev(const struct acrn_vpci *vpci, union pci_bdf vbdf)
 {
 	struct pci_vdev *vdev, *tmp;
-	struct acrn_vm_config *vm_config = get_vm_config(vpci->vm->vm_id);
-	int32_t i;
+	uint32_t i;
 
 	vdev = NULL;
-	for (i = 0; i < vm_config->pci_ptdev_num; i++) {
-		tmp = &vpci->vm->pci_vdevs[i];
+	for (i = 0U; i < vpci->pci_vdev_cnt; i++) {
+		tmp = (struct pci_vdev *)&(vpci->pci_vdevs[i]);
 
 		if (bdf_is_equal(&(tmp->vbdf), &vbdf)) {
 			vdev = tmp;
@@ -95,18 +98,27 @@ static void partition_mode_pdev_init(struct pci_vdev *vdev, union pci_bdf pbdf)
 	}
 }
 
+/**
+ * @pre vm != NULL
+ * @pre vm->vpci->pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
+ * @pre vm_config != NULL
+ * @pre vdev != NULL
+ * @pre ptdev_config != NULL
+ */
 static int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 {
-	const struct acrn_vpci *vpci = &vm->vpci;
+	struct acrn_vpci *vpci = (struct acrn_vpci *)&(vm->vpci);
 	struct pci_vdev *vdev;
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	struct acrn_vm_pci_ptdev_config *ptdev_config;
-	int32_t i;
+	uint32_t i;
 
-	for (i = 0; i < vm_config->pci_ptdev_num; i++) {
-		vdev = (struct pci_vdev *)&vm->pci_vdevs[i];
-		ptdev_config = vm_config->pci_ptdevs + i;
+	vpci->pci_vdev_cnt = vm_config->pci_ptdev_num;
+
+	for (i = 0U; i < vpci->pci_vdev_cnt; i++) {
+		vdev = &vpci->pci_vdevs[i];
 		vdev->vpci = vpci;
+		ptdev_config = &vm_config->pci_ptdevs[i];
 		vdev->vbdf.value = ptdev_config->vbdf.value;
 
 		if (vdev->vbdf.value != 0U) {
@@ -127,14 +139,16 @@ static int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 	return 0;
 }
 
+/**
+ * @pre vdev != NULL
+ */
 static void partition_mode_vpci_deinit(const struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
-	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-	int32_t i;
+	uint32_t i;
 
-	for (i = 0; i < vm_config->pci_ptdev_num; i++) {
-		vdev = (struct pci_vdev *)&vm->pci_vdevs[i];
+	for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
+		vdev = (struct pci_vdev *) &(vm->vpci.pci_vdevs[i]);
 		if ((vdev->ops != NULL) && (vdev->ops->deinit != NULL)) {
 			if (vdev->ops->deinit(vdev) != 0) {
 				pr_err("vdev->ops->deinit failed!");

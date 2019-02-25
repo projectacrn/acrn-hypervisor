@@ -119,11 +119,12 @@ struct vpci_ops {
 		uint32_t bytes, uint32_t val);
 };
 
-
 struct acrn_vpci {
 	struct acrn_vm *vm;
 	struct pci_addr_info addr_info;
 	const struct vpci_ops *ops;
+	uint32_t pci_vdev_cnt;
+	struct pci_vdev pci_vdevs[CONFIG_MAX_PCI_DEV_NUM];
 };
 
 #ifdef CONFIG_PARTITION_MODE
