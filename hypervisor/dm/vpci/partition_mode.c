@@ -29,7 +29,8 @@
 
 /* Virtual PCI device related operations (read/write, etc) */
 
-#include <hypervisor.h>
+#include <vm.h>
+#include <logmsg.h>
 #include "pci_priv.h"
 
 static struct pci_vdev *partition_mode_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf)

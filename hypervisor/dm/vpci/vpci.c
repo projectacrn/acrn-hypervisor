@@ -27,7 +27,7 @@
 * $FreeBSD$
 */
 
-#include <hypervisor.h>
+#include <vm.h>
 #include "pci_priv.h"
 
 static void pci_cfg_clear_cache(struct pci_addr_info *pi)

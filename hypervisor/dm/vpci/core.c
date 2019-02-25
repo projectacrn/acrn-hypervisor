@@ -27,7 +27,7 @@
  * $FreeBSD$
  */
 
-#include <hypervisor.h>
+#include <vm.h>
 #include "pci_priv.h"
 
 uint32_t pci_vdev_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes)

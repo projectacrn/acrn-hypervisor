@@ -27,7 +27,11 @@
  * $FreeBSD$
  */
 
-#include <hypervisor.h>
+#include <vm.h>
+#include <errno.h>
+#include <ptdev.h>
+#include <assign.h>
+#include <vpci.h>
 #include "pci_priv.h"
 
 static inline bool msicap_access(const struct pci_vdev *vdev, uint32_t offset)
