@@ -95,9 +95,8 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
 	int32_t ret = 0;
 	uint16_t cur;
 
-	if (vcpu->vm->sw.io_shared_page != NULL) {
-		ASSERT(get_vhm_req_state(vcpu->vm, vcpu->vcpu_id) == REQ_STATE_FREE,
-			"VHM request buffer is busy");
+	if ((vcpu->vm->sw.io_shared_page != NULL)
+		 && (get_vhm_req_state(vcpu->vm, vcpu->vcpu_id) == REQ_STATE_FREE)) {
 
 		req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
 		cur = vcpu->vcpu_id;
