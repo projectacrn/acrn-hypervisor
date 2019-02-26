@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <vm.h>
+#include <errno.h>
 #include <hypercall.h>
+#include <logmsg.h>
 
 #define ACRN_DBG_TRUSTY_HYCALL 6U
 

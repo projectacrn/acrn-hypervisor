@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <bits.h>
+#include <cpu.h>
+#include <per_cpu.h>
 #include <softirq.h>
-
 
 static softirq_handler softirq_handlers[NR_SOFTIRQS];
 

@@ -4,10 +4,15 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <vm.h>
 #include <e820.h>
 #include <zeropage.h>
 #include <boot_context.h>
+#include <ept.h>
+#include <mmu.h>
+#include <errno.h>
+#include <sprintf.h>
+#include <logmsg.h>
 
 static void prepare_bsp_gdt(struct acrn_vm *vm)
 {

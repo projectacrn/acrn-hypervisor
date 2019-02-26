@@ -4,12 +4,20 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <vm.h>
+#include <vmcs.h>
 #include <schedule.h>
 #include <hypercall.h>
 #include <version.h>
 #include <reloc.h>
 #include <vtd.h>
+#include <per_cpu.h>
+#include <lapic.h>
+#include <assign.h>
+#include <ept.h>
+#include <mmu.h>
+#include <errno.h>
+#include <logmsg.h>
 
 #define ACRN_DBG_HYCALL	6U
 
