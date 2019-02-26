@@ -11,6 +11,7 @@ Hypervisor high-level design
    hv-cpu-virt
    Memory management <hv-memmgt>
    I/O Emulation <hv-io-emulation>
+   IOC Virtualization <hv-ioc-virt>
    Physical Interrupt <hv-interrupt>
    Timer <hv-timer>
    Virtual Interrupt <hv-virt-interrupt>
