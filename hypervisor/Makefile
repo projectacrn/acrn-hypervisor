@@ -212,7 +212,7 @@ C_SRCS += hw/pci.c
 
 C_SRCS += dm/vpic.c
 C_SRCS += dm/vioapic.c
-C_SRCS += dm/vpci/core.c
+C_SRCS += dm/vpci/vdev.c
 C_SRCS += dm/vpci/vpci.c
 ifeq ($(CONFIG_PARTITION_MODE),y)
 C_SRCS += dm/vmptable.c
