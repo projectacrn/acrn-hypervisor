@@ -42,7 +42,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <pthread.h>
-
+#include <errno.h>
 #include "dm.h"
 #include "pci_core.h"
 #include "virtio.h"
@@ -52,10 +52,15 @@
 #include "rpmb.h"
 #include "rpmb_sim.h"
 #include "rpmb_backend.h"
+#include "att_keybox.h"
 
-#define VIRTIO_RPMB_RINGSZ	64
-#define VIRTIO_RPMB_MAXSEGS	5
-#define ADDR_NOT_PRESENT	-2
+#define VIRTIO_RPMB_RINGSZ			64
+#define VIRTIO_RPMB_MAXSEGS			5
+#define ERROR_ADDRESS_OUT_OF_RANGE	-2
+#define BLOCK_BARA_BASE_ADDRESS		1
+#define BLOCK_BARA_SIGNATURE		"BARA"
+#define SIGNATURE_LENGTH			(sizeof(BLOCK_BARA_SIGNATURE) - 1)
+#define ATTKB_PRESENT_FLAG_BIT		0x1
 
 static const char PHYSICAL_RPMB_STR[] = "physical_rpmb";
 static int virtio_rpmb_debug = 1;
@@ -130,14 +135,14 @@ rpmb_check_response(const char *cmd_str, enum rpmb_response response_type,
 	for (i = 0; i < frame_cnt; i++) {
 		if (swap16(frames[i].req_resp) != response_type) {
 			DPRINTF(("%s: Bad response type, 0x%x, expected 0x%x\n",
-				cmd_str, swap16(frames[i].req_resp), response_type));
+					cmd_str, swap16(frames[i].req_resp), response_type));
 			return -1;
 		}
 
 		if (swap16(frames[i].result) != RPMB_RES_OK) {
 			if (swap16(frames[i].result) == RPMB_RES_ADDR_FAILURE) {
 				DPRINTF(("%s: Addr failure, %u\n", cmd_str, swap16(frames[i].addr)));
-				return ADDR_NOT_PRESENT;
+				return ERROR_ADDRESS_OUT_OF_RANGE;
 			}
 			DPRINTF(("%s: Bad result, 0x%x\n", cmd_str, swap16(frames[i].result)));
 			return -1;
@@ -198,19 +203,14 @@ rpmb_get_counter(__u8 mode, __u8 *key, __u32 *counter, __u16 *result)
 	iseq.h.num_of_cmds = 2;
 
 	if (mode == RPMB_PHY_MODE) {
-		/* open rpmb device.*/
 		fd = open(RPMB_PHY_PATH_NAME, O_RDWR | O_NONBLOCK);
 		if (fd < 0) {
 			DPRINTF(("failed to open %s.\n", RPMB_PHY_PATH_NAME));
 			return fd;
 		}
 
-		/* send ioctl cmd.*/
 		rc = ioctl(fd, RPMB_IOC_SEQ_CMD, &iseq);
-
-		/* close rpmb device.*/
 		close(fd);
-
 		if (rc) {
 			DPRINTF(("get counter for physical rpmb failed.\n"));
 			return rc;
@@ -229,14 +229,103 @@ rpmb_get_counter(__u8 mode, __u8 *key, __u32 *counter, __u16 *result)
 		return -1;
 	}
 
-	rc = rpmb_check_mac(key, &frame_out, 1);
-	if (rc) {
-		DPRINTF(("rpmb counter check mac failed.\n"));
-		return rc;
+	/*In PHY RPMB MODE, DM doesn't have real RPMB key,
+	 *so no necessary to check the mac in the response.
+	 */
+	if (mode != RPMB_PHY_MODE) {
+		rc = rpmb_check_mac(key, &frame_out, 1);
+		if (rc) {
+			DPRINTF(("rpmb counter check mac failed.\n"));
+			return rc;
+		}
 	}
 
 	*counter = swap32(frame_out.write_counter);
 	DPRINTF(("rpmb counter value: 0x%x.\n", *counter));
+
+	return rc;
+}
+
+static int
+rpmb_write_block(__u8 mode, __u8 *key, __u16 addr, void *buf, __u32 count)
+{
+	int rc;
+	int fd;
+	__u32 i;
+	__u32 write_counter;
+	__u16 result;
+	struct {
+		struct rpmb_ioc_seq_cmd h;
+		struct rpmb_ioc_cmd cmd[3];
+	} iseq = {};
+	struct rpmb_frame frame_write;
+	struct rpmb_frame frame_rel[count];
+	struct rpmb_frame frame_read;
+
+	if (!buf || count == 0) {
+		DPRINTF(("%s:buf or count is invalid!\n", __func__));
+		return -ENOBUFS;
+	}
+
+	rc = rpmb_get_counter(mode, key, &write_counter, &result);
+	if (rc) {
+		DPRINTF(("%s: virtio_rpmb_get_counter failed\n", __func__));
+		return rc;
+	}
+
+	frame_write.addr = swap16(addr);
+	frame_write.req_resp = swap16(RPMB_REQ_RESULT_READ);
+	frame_write.write_counter = swap32(write_counter);
+
+	for (i = 0; i < count; i++) {
+		memset(&frame_rel[i], 0, sizeof(frame_rel[i]));
+		memcpy(frame_rel[i].data, buf + i * sizeof(frame_rel[i].data), sizeof(frame_rel[i].data));
+		frame_rel[i].write_counter = swap32(write_counter);
+		frame_rel[i].addr = swap16(addr);
+		frame_rel[i].block_count = swap16(count);
+		frame_rel[i].req_resp = swap16(RPMB_REQ_DATA_WRITE);
+	}
+
+	iseq.cmd[0].flags = RPMB_F_WRITE | RPMB_F_REL_WRITE;
+	iseq.cmd[0].nframes = count;
+	iseq.cmd[0].frames_ptr = (__aligned_u64)(intptr_t)(frame_rel);
+	iseq.cmd[1].flags = RPMB_F_WRITE;
+	iseq.cmd[1].nframes = 1;
+	iseq.cmd[1].frames_ptr = (__aligned_u64)(intptr_t)(&frame_write);
+	iseq.cmd[2].flags = 0;
+	iseq.cmd[2].nframes = 1;
+	iseq.cmd[2].frames_ptr = (__aligned_u64)(intptr_t)(&frame_read);
+	iseq.h.num_of_cmds = 3;
+
+	if (mode == RPMB_PHY_MODE) {
+		fd = open(RPMB_PHY_PATH_NAME, O_RDWR | O_NONBLOCK);
+		if (fd < 0) {
+			DPRINTF(("failed to open %s for read blocks.\n", RPMB_PHY_PATH_NAME));
+			return fd;
+		}
+
+		rc = ioctl(fd, RPMB_IOC_SEQ_CMD, &iseq);
+		close(fd);
+		if (rc) {
+			DPRINTF(("read blocks for physical rpmb failed.\n"));
+			return rc;
+		}
+
+		/*In PHY RPMB MODE, DM doesn't have real RPMB key,
+		 *so no necessary to check the mac in the response.
+		 */
+		rc = rpmb_check_response("write blocks", RPMB_RESP_DATA_WRITE,
+								&frame_read, 1, NULL, NULL, &addr);
+	} else {
+		rc = rpmb_sim_send(&iseq);
+		if (rc) {
+			DPRINTF(("read blocks for simulated rpmb failed.\n"));
+			return rc;
+		}
+
+		rc = rpmb_check_response("write blocks", RPMB_RESP_DATA_WRITE,
+								&frame_read, 1, key, NULL, &addr);
+	}
 
 	return rc;
 }
@@ -272,19 +361,14 @@ rpmb_read_block(__u8 mode, __u8 *key, __u16 addr, void *buf, __u32 count)
 	iseq.h.num_of_cmds = 2;
 
 	if (mode == RPMB_PHY_MODE) {
-		/* open rpmb device.*/
 		fd = open(RPMB_PHY_PATH_NAME, O_RDWR | O_NONBLOCK);
 		if (fd < 0) {
 			DPRINTF(("failed to open %s for read blocks.\n", RPMB_PHY_PATH_NAME));
 			return fd;
 		}
 
-		/* send ioctl cmd.*/
 		rc = ioctl(fd, RPMB_IOC_SEQ_CMD, &iseq);
-
-		/* close rpmb device.*/
 		close(fd);
-
 		if (rc) {
 			DPRINTF(("read blocks for physical rpmb failed.\n"));
 			return rc;
@@ -335,7 +419,7 @@ rpmb_search_size(__u8 mode, __u8 *key, __u16 hint)
 		case 0:
 			low = curr + 1;
 			break;
-		case ADDR_NOT_PRESENT:
+		case ERROR_ADDRESS_OUT_OF_RANGE:
 			high = curr - 1;
 			break;
 		default:
@@ -356,6 +440,116 @@ __u16
 rpmb_get_blocks(void)
 {
 	return rpmb_block_count;
+}
+
+static int
+rpmb_read_bara(__u8 mode, __u8 *key, rpmb_block_t *block_table)
+{
+	int ret;
+
+	ret = rpmb_read_block(mode, key, BLOCK_BARA_BASE_ADDRESS, block_table, 1);
+	if (ret) {
+		DPRINTF(("rpmb read block table fail!\n"));
+	}
+
+	return ret;
+}
+
+static void
+rpmb_bara_init(rpmb_block_t *block_table, uint16_t size)
+{
+	memcpy(block_table->signature, BLOCK_BARA_SIGNATURE, SIGNATURE_LENGTH);
+	block_table->length = RPMB_BLOCK_SIZE;
+	block_table->revision = 0;
+	block_table->flag |= ATTKB_PRESENT_FLAG_BIT;
+	block_table->attkb_addr = BLOCK_BARA_BASE_ADDRESS + 1;
+	block_table->attkb_size = size;
+	block_table->attkb_svn = 0;
+}
+
+/* Read RPMB BARA block from RPMB to check if AttKB exists or not.
+ * If does NOT exist, DM will send cmd to CSE via HECI to get AttKB size
+ * and AttKB. Both AttKB and BARA block will be written to specified RPMB address.
+ */
+static int
+rpmb_keybox_retrieve(__u8 mode, __u8 *key)
+{
+	int ret;
+	uint32_t i;
+	uint32_t block_num;
+	rpmb_block_t *block_table;
+	uint8_t *attkb = NULL;
+	uint16_t kb_size;
+	uint32_t kb_buf_size = 0;
+
+	block_table = malloc(sizeof(rpmb_block_t));
+	if (!block_table) {
+		DPRINTF(("%s: block table malloc fail!\n", __func__));
+		return -ENOMEM;
+	}
+
+	memset(block_table, 0, sizeof(rpmb_block_t));
+	/* read block table */
+	ret = rpmb_read_bara(mode, key, block_table);
+	if (ret) {
+		DPRINTF(("get block table fail!\n"));
+		goto out;
+	}
+
+	if (memcmp(BLOCK_BARA_SIGNATURE, block_table->signature, SIGNATURE_LENGTH) || !(block_table->flag & ATTKB_PRESENT_FLAG_BIT)) {
+		kb_size = get_attkb_size();
+		if (kb_size == 0) {
+			DPRINTF(("rpmb get_attkb_size fail!\n"));
+			ret = -1;
+			goto out;
+		}
+
+		if (kb_size % RPMB_BLOCK_SIZE) {
+			kb_buf_size = (kb_size / RPMB_BLOCK_SIZE + 1) * RPMB_BLOCK_SIZE;
+		} else {
+			kb_buf_size = kb_size;
+		}
+
+		attkb = (uint8_t *)malloc(kb_buf_size);
+		if (!attkb) {
+			DPRINTF(("%s: attkb malloc fail!\n", __func__));
+			ret = -ENOMEM;
+			goto out;
+		}
+
+		memset(attkb, 0, kb_buf_size);
+		ret = read_attkb(attkb, kb_size);
+		if (ret == 0) {
+			DPRINTF(("failed to read attkb"));
+			ret = -1;
+			goto out;
+		}
+
+		rpmb_bara_init(block_table, kb_size);
+		block_num = (kb_size - 1) / RPMB_BLOCK_SIZE + 1;
+		for (i = 0; i < block_num; i++) {
+			ret = rpmb_write_block(mode, key, block_table->attkb_addr + i, attkb + i * RPMB_BLOCK_SIZE, 1);
+			if (ret) {
+				DPRINTF(("rpmb write key box fail!\n"));
+				goto out;
+			}
+		}
+
+		ret = rpmb_write_block(mode, key, BLOCK_BARA_BASE_ADDRESS, block_table, 1);
+		if (ret) {
+			DPRINTF(("rpmb write block table fail!\n"));
+			goto out;
+		}
+	}
+
+out:
+	if (attkb) {
+		memset(attkb, 0, kb_buf_size);
+		free(attkb);
+	}
+
+	free(block_table);
+	return ret;
 }
 
 static int
@@ -545,6 +739,10 @@ virtio_rpmb_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		DPRINTF(("RPMB in physical mode!\n"));
 		rpmb_mode_init(RPMB_PHY_MODE);
 		rpmb_block_count = rpmb_search_size(RPMB_PHY_MODE, key, 0);
+		rc = rpmb_keybox_retrieve(RPMB_PHY_MODE, key);
+		if (rc < 0) {
+			DPRINTF(("rpmb_keybox_retrieve failed!\n"));
+		}
 	} else {
 		DPRINTF(("RPMB in simulated mode!\n"));
 		rc = rpmb_sim_key_init(key);
