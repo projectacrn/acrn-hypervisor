@@ -35,6 +35,7 @@
 #include "pci_core.h"
 #include "virtio.h"
 #include "timer.h"
+#include <atomic.h>
 
 /*
  * Functions for dealing with generalized "virtual devices" as
@@ -611,6 +612,9 @@ vq_endchains(struct virtio_vq_info *vq, int used_all_avail)
 	 * In any case, though, if NOTIFY_ON_EMPTY is set and the
 	 * entire avail was processed, we need to interrupt always.
 	 */
+
+	atomic_thread_fence();
+
 	base = vq->base;
 	old_idx = vq->save_used;
 	vq->save_used = new_idx = vq->used->idx;
