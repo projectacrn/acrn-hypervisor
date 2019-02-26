@@ -14,13 +14,22 @@
 /* size of the low MMIO address space: 2GB */
 #define PLATFORM_LO_MMIO_SIZE	0x80000000UL
 
+/* size of the high MMIO address space: 1GB */
+#define PLATFORM_HI_MMIO_SIZE	0x40000000UL
+
 #define PML4_PAGE_NUM(size)	1UL
 #define PDPT_PAGE_NUM(size)	(((size) + PML4E_SIZE - 1UL) >> PML4E_SHIFT)
 #define PD_PAGE_NUM(size)	(((size) + PDPTE_SIZE - 1UL) >> PDPTE_SHIFT)
 #define PT_PAGE_NUM(size)	(((size) + PDE_SIZE - 1UL) >> PDE_SHIFT)
 
-/* The size of the guest physical address space, covered by the EPT page table of a VM */
-#define EPT_ADDRESS_SPACE(size)	(((size) != 0UL) ? ((size) + PLATFORM_LO_MMIO_SIZE) : 0UL)
+/*
+ * The size of the guest physical address space, covered by the EPT page table of a VM.
+ * With the assumptions:
+ * - The GPA of DRAM & MMIO are contiguous.
+ * - Guest OS won't re-program device MMIO bars to the address not covered by
+ *   this EPT_ADDRESS_SPACE.
+ */
+#define EPT_ADDRESS_SPACE(size)	(((size) != 0UL) ? ((size) + PLATFORM_LO_MMIO_SIZE + PLATFORM_HI_MMIO_SIZE) : 0UL)
 
 #define TRUSTY_PML4_PAGE_NUM(size)	(1UL)
 #define TRUSTY_PDPT_PAGE_NUM(size)	(1UL)
