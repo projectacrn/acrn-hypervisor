@@ -104,15 +104,15 @@ static void parse_seed_list_abl(void *param_addr)
  */
 bool abl_seed_parse(struct acrn_vm *vm, char *cmdline, char *out_arg, uint32_t out_len)
 {
-	char *arg, *arg_end;
+	char *arg = NULL, *arg_end;
 	char *param;
 	void *param_addr;
-	uint32_t len, i;
+	uint32_t len = 0U, i;
 	bool parse_success = false;
 
 	if (cmdline != NULL) {
 
-		for(i = 0U; abl_seed_arg[i] != NULL; i++) {
+		for (i = 0U; abl_seed_arg[i] != NULL; i++) {
 			len = strnlen_s(abl_seed_arg[i], MEM_1K);
 			arg = strstr_s((const char *)cmdline, MEM_2K, abl_seed_arg[i], len);
 			if (arg != NULL) {
