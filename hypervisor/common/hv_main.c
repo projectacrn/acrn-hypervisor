@@ -4,9 +4,15 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <vm.h>
+#include <vmcs.h>
+#include <vmexit.h>
+#include <irq.h>
 #include <schedule.h>
 #include <softirq.h>
+#include <profiling.h>
+#include <trace.h>
+#include <logmsg.h>
 
 void vcpu_thread(struct sched_object *obj)
 {

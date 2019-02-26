@@ -3,7 +3,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <vm.h>
+#include <irq.h>
+#include <errno.h>
+#include <atomic.h>
+#include <logmsg.h>
 
 #define ACRN_DBG_IOREQUEST	6U
 

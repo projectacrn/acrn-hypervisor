@@ -4,8 +4,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <rtl.h>
+#include <list.h>
+#include <bits.h>
+#include <cpu.h>
+#include <per_cpu.h>
+#include <lapic.h>
 #include <schedule.h>
+#include <sprintf.h>
 
 static uint64_t pcpu_used_bitmap;
 

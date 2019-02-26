@@ -3,8 +3,8 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
-#include <hypervisor.h>
+#include <types.h>
+#include <logmsg.h>
 
 void __stack_chk_fail(void)
 {

@@ -4,9 +4,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <vm.h>
 #include <softirq.h>
 #include <ptdev.h>
+#include <irq.h>
+#include <atomic.h>
+#include <logmsg.h>
 
 #define PTIRQ_BITMAP_ARRAY_SIZE	INT_DIV_ROUNDUP(CONFIG_MAX_PT_IRQ_ENTRIES, 64U)
 struct ptirq_remapping_info ptirq_entries[CONFIG_MAX_PT_IRQ_ENTRIES];
