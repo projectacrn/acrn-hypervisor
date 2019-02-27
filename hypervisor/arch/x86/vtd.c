@@ -208,6 +208,7 @@ static struct dmar_drhd_rt dmar_drhd_units[CONFIG_MAX_IOMMU_NUM];
 static bool iommu_page_walk_coherent = true;
 static struct iommu_domain *fallback_iommu_domain;
 static uint32_t qi_status = 0U;
+static struct dmar_info *platform_dmar_info = NULL;
 
 /* Domain id 0 is reserved in some cases per VT-d */
 #define MAX_DOMAIN_NUM (CONFIG_MAX_VM_NUM + 1)
@@ -221,28 +222,18 @@ static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit);
 static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus, uint8_t devfun);
 static int32_t register_hrhd_units(void)
 {
-	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *drhd_rt;
 	uint32_t i;
 	int32_t ret = 0;
 
-	if ((info == NULL) || (info->drhd_count == 0U)) {
-		pr_fatal("%s: can't find dmar info\n", __func__);
-		ret = -ENODEV;
-	} else if (info->drhd_count > CONFIG_MAX_IOMMU_NUM) {
-		pr_fatal("%s: dmar count(%d) beyond the limitation(%d)\n",
-				__func__, info->drhd_count, CONFIG_MAX_IOMMU_NUM);
-		ret = -EINVAL;
-	} else {
-		for (i = 0U; i < info->drhd_count; i++) {
-			drhd_rt = &dmar_drhd_units[i];
-			drhd_rt->index = i;
-			drhd_rt->drhd = &info->drhd_units[i];
-			drhd_rt->dmar_irq = IRQ_INVALID;
-			ret = dmar_register_hrhd(drhd_rt);
-			if (ret != 0) {
-				break;
-			}
+	for (i = 0U; i < platform_dmar_info->drhd_count; i++) {
+		drhd_rt = &dmar_drhd_units[i];
+		drhd_rt->index = i;
+		drhd_rt->drhd = &platform_dmar_info->drhd_units[i];
+		drhd_rt->dmar_irq = IRQ_INVALID;
+		ret = dmar_register_hrhd(drhd_rt);
+		if (ret != 0) {
+			break;
 		}
 	}
 
@@ -544,34 +535,29 @@ static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 
 static struct dmar_drhd_rt *ioapic_to_dmaru(uint16_t ioapic_id, union pci_bdf *sid)
 {
-	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *dmar_unit = NULL;
 	uint32_t i, j;
 	bool found = false;
 
-	if (info == NULL) {
-		pr_fatal("%s: can't find dmar info\n", __func__);
-	} else {
-		for (j = 0U; j < info->drhd_count; j++) {
-			dmar_unit = &dmar_drhd_units[j];
-			for (i = 0U; i < dmar_unit->drhd->dev_cnt; i++) {
-				if ((dmar_unit->drhd->devices[i].type == ACPI_DMAR_SCOPE_TYPE_IOAPIC) &&
-						(dmar_unit->drhd->devices[i].id == ioapic_id)) {
-					sid->bits.f = pci_func((uint8_t)dmar_unit->drhd->devices[i].devfun);
-					sid->bits.d = pci_slot((uint8_t)dmar_unit->drhd->devices[i].devfun);
-					sid->bits.b = dmar_unit->drhd->devices[i].bus;
-					found = true;
-					break;
-				}
-			}
-			if (found) {
+	for (j = 0U; j < platform_dmar_info->drhd_count; j++) {
+		dmar_unit = &dmar_drhd_units[j];
+		for (i = 0U; i < dmar_unit->drhd->dev_cnt; i++) {
+			if ((dmar_unit->drhd->devices[i].type == ACPI_DMAR_SCOPE_TYPE_IOAPIC) &&
+					(dmar_unit->drhd->devices[i].id == ioapic_id)) {
+				sid->bits.f = pci_func((uint8_t)dmar_unit->drhd->devices[i].devfun);
+				sid->bits.d = pci_slot((uint8_t)dmar_unit->drhd->devices[i].devfun);
+				sid->bits.b = dmar_unit->drhd->devices[i].bus;
+				found = true;
 				break;
 			}
 		}
-
-		if (j == info->drhd_count) {
-			dmar_unit = NULL;
+		if (found) {
+			break;
 		}
+	}
+
+	if (j == platform_dmar_info->drhd_count) {
+		dmar_unit = NULL;
 	}
 
 	return dmar_unit;
@@ -579,37 +565,32 @@ static struct dmar_drhd_rt *ioapic_to_dmaru(uint16_t ioapic_id, union pci_bdf *s
 
 static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus, uint8_t devfun)
 {
-	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *dmar_unit = NULL;
 	uint32_t i, j;
 
-	if (info == NULL) {
-		pr_fatal("%s: can't find dmar info\n", __func__);
-	} else {
-		for (j = 0U; j < info->drhd_count; j++) {
-			dmar_unit = &dmar_drhd_units[j];
+	for (j = 0U; j < platform_dmar_info->drhd_count; j++) {
+		dmar_unit = &dmar_drhd_units[j];
 
-			if (dmar_unit->drhd->segment != segment) {
-				continue;
-			}
+		if (dmar_unit->drhd->segment != segment) {
+			continue;
+		}
 
-			for (i = 0U; i < dmar_unit->drhd->dev_cnt; i++) {
-				if ((dmar_unit->drhd->devices[i].bus == bus) &&
-						(dmar_unit->drhd->devices[i].devfun == devfun)) {
-					break;
-				}
-			}
-
-			/* found exact one or the one which has the same segment number with INCLUDE_PCI_ALL set */
-			if ((i != dmar_unit->drhd->dev_cnt) || ((dmar_unit->drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK) != 0U)) {
+		for (i = 0U; i < dmar_unit->drhd->dev_cnt; i++) {
+			if ((dmar_unit->drhd->devices[i].bus == bus) &&
+					(dmar_unit->drhd->devices[i].devfun == devfun)) {
 				break;
 			}
 		}
 
-		/* not found */
-		if (j == info->drhd_count) {
-			dmar_unit = NULL;
+		/* found exact one or the one which has the same segment number with INCLUDE_PCI_ALL set */
+		if ((i != dmar_unit->drhd->dev_cnt) || ((dmar_unit->drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK) != 0U)) {
+			break;
 		}
+	}
+
+	/* not found */
+	if (j == platform_dmar_info->drhd_count) {
+		dmar_unit = NULL;
 	}
 
 	return dmar_unit;
@@ -1229,21 +1210,16 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t s
  */
 static void do_action_for_iommus(void (*action)(struct dmar_drhd_rt *))
 {
-	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *dmar_unit;
 	uint32_t i;
 
-	if (info != NULL) {
-		for (i = 0U; i < info->drhd_count; i++) {
-			dmar_unit = &dmar_drhd_units[i];
-			if (!dmar_unit->drhd->ignore) {
-				action(dmar_unit);
-			} else {
-				dev_dbg(ACRN_DBG_IOMMU, "ignore dmar_unit @0x%x", dmar_unit->drhd->reg_base_addr);
-			}
+	for (i = 0U; i < platform_dmar_info->drhd_count; i++) {
+		dmar_unit = &dmar_drhd_units[i];
+		if (!dmar_unit->drhd->ignore) {
+			action(dmar_unit);
+		} else {
+			dev_dbg(ACRN_DBG_IOMMU, "ignore dmar_unit @0x%x", dmar_unit->drhd->reg_base_addr);
 		}
-	} else {
-		pr_fatal("%s: can't find dmar info\n", __func__);
 	}
 }
 
@@ -1351,11 +1327,21 @@ int32_t init_iommu(void)
 {
 	int32_t ret = 0;
 
-	ret = register_hrhd_units();
-	if (ret == 0) {
-		do_action_for_iommus(dmar_prepare);
-	}
+	platform_dmar_info = get_dmar_info();
 
+	if ((platform_dmar_info == NULL) || (platform_dmar_info->drhd_count == 0U)) {
+		pr_fatal("%s: can't find dmar info\n", __func__);
+		ret = -ENODEV;
+	} else if (platform_dmar_info->drhd_count > CONFIG_MAX_IOMMU_NUM) {
+		pr_fatal("%s: dmar count(%d) beyond the limitation(%d)\n",
+				__func__, platform_dmar_info->drhd_count, CONFIG_MAX_IOMMU_NUM);
+		ret = -EINVAL;
+	} else {
+		ret = register_hrhd_units();
+		if (ret == 0) {
+			do_action_for_iommus(dmar_prepare);
+		}
+	}
 	return ret;
 }
 

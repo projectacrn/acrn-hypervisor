@@ -130,6 +130,10 @@ static struct dmar_info sbl_dmar_info = {
 	.drhd_units = drhd_info_array,
 };
 
+/**
+ * @post return != NULL
+ * @post return->drhd_count > 0U
+ */
 struct dmar_info *get_dmar_info(void)
 {
 	return &sbl_dmar_info;

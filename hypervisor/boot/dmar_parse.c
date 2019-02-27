@@ -306,6 +306,7 @@ static int32_t parse_dmar_table(void)
 
 /**
  * @post return != NULL
+ * @post return->drhd_count > 0U
  */
 struct dmar_info *get_dmar_info(void)
 {
