@@ -12,6 +12,7 @@ Developer Guides
    GVT-g-kernel-options
    trusty
    l1tf
+   VBSK-analysis
    modularity
    ../api/index
    ../reference/kconfig/index
