@@ -10,6 +10,7 @@
 
 #define	NEED_RESCHEDULE		(1U)
 #define	NEED_OFFLINE		(2U)
+#define	NEED_SHUTDOWN_VM	(3U)
 
 #define DEL_MODE_INIT		(1U)
 #define DEL_MODE_IPI		(2U)
@@ -50,6 +51,8 @@ void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode);
 bool need_reschedule(uint16_t pcpu_id);
 void make_pcpu_offline(uint16_t pcpu_id);
 int32_t need_offline(uint16_t pcpu_id);
+void make_shutdown_vm_request(uint16_t pcpu_id);
+bool need_shutdown_vm(uint16_t pcpu_id);
 
 void schedule(void);
 void run_sched_thread(struct sched_object *obj);
