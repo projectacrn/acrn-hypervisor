@@ -249,7 +249,7 @@ embedded development through an open source platform. In this
 section, we'll focus on two major components:
 
 * one is the basic idea of
-  secure world and unsecure world isolation (so called one-vm,
+  secure world and insecure world isolation (so called one-vm,
   two-worlds), 
 * the other one is the secure storage virtualization in ACRN.
 
