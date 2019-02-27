@@ -151,7 +151,7 @@ acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:
   -s 5,virtio-console,@pty:pty_port \
   -s 6,virtio-hyper_dmabuf \
   -s 8,wdt-i6300esb \
-  -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img,discard \
+  -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img \
   -s 4,virtio-net,$tap $boot_image_option \
   -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
   -s 9,passthru,0/15/1 \
@@ -352,7 +352,7 @@ echo "dm_run: after passthru dev preparing" > /dev/kmsg
 
  acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
    -s 9,virtio-net,$tap \
-   -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img,discard \
+   -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img \
    -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
    -s 8,passthru,0/15/1 \
    -s 13,virtio-rpmb \
@@ -426,7 +426,7 @@ if [ ! -b "/dev/mmcblk1p3" ]; then
 fi
 
 mkdir -p /data
-mount -o discard /dev/mmcblk1p3 /data
+mount /dev/mmcblk1p3 /data
 
 if [ $launch_type == 6 ]; then
 	if [ -f "/data/android/android.img" ]; then
