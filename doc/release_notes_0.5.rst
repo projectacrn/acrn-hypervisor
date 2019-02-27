@@ -36,7 +36,7 @@ Version 0.5 new features
 
 **OVMF support initial patches merged in ACRN**: 
 To support booting Windows as a Guest OS, we are
-using Opensource Virtual Machine Firmware (OVMF). 
+using Open source Virtual Machine Firmware (OVMF). 
 Initial patches to support OVMF have been merged in ACRN hypervisor. 
 More patches for ACRN and patches upstreaming to OVMF work will be continuing.
 
@@ -44,7 +44,7 @@ More patches for ACRN and patches upstreaming to OVMF work will be continuing.
 This release enables serial port debugging on UP2 boards during SOS and UOS boot.
 
 **One E2E binary to support all UEFI platform**: 
-ACRN can support both ApolloLake (APL) and KabbyLake (KBL) NUCs.
+ACRN can support both Apollo Lake (APL) and Kaby Lake (KBL) NUCs.
 Instead of having separate builds, this release offers community
 developers a single end-to-end reference build that supports both
 UEFI hardware platforms, configured with a new boot parameter.
@@ -52,7 +52,7 @@ See :ref:`getting_started` for more information.
 
 **APL UP2 board with SBL firmware**: With this 0.5 release, ACRN
 now supports APL UP2 board with slim Bootloader (SBL) firmware.
-Slim Bootloader is a modern, flexible, light-weither, open source 
+Slim Bootloader is a modern, flexible, light-weight, open source 
 reference boot loader with key benefits such as being fast, small, 
 customizable, and secure. An end-to-end reference build with 
 ACRN hypervisor, Clear Linux OS as SOS, and Clear Linux OS as UOS has been 

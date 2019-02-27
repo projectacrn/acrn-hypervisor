@@ -88,7 +88,7 @@ In the current configuration, we will set
 ``i915.enable_initial_modeset=1`` in SOS and
 ``i915.enable_initial_modeset=0`` in UOS.
 
-This parmeter is not used on UEFI platforms.
+This parameter is not used on UEFI platforms.
 
 i915.avail_planes_per_pipe and i915.domain_plane_owners
 *******************************************************

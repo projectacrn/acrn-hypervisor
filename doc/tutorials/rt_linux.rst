@@ -4,7 +4,7 @@ Using PREEMPT_RT-Linux for real-time UOS
 ########################################
 
 The ACRN project uses various techniques to support a User OS (UOS)
-runing as virtual machine (VM) with real-time characteristics, also
+running as virtual machine (VM) with real-time characteristics, also
 called a "Privileged VM" in ACRN terminology. Some of these techniques
 include device passthrough and cache allocation technology (CAT), as
 shown in :numref:`rt-linux-arch`.
@@ -44,9 +44,9 @@ system on Intel KBL NUC with a SATA SSD as ``/dev/sda`` and an NVME SSD as
 1. Follow the :ref:`set-up-CL` instructions in the
    :ref:`getting-started-apl-nuc` to:
 
-   a. Install ClearLinux (version 26800 or higher) onto the NVMe
-   #. Install ClearLinux (version 26800 or higher) onto the SATA SSD
-   #. Set up ClearLinux on the SATA SSD as the Service OS (SOS) following
+   a. Install Clear Linux (version 26800 or higher) onto the NVMe
+   #. Install Clear Linux (version 26800 or higher) onto the SATA SSD
+   #. Set up Clear Linux on the SATA SSD as the Service OS (SOS) following
       the :ref:`add-acrn-to-efi` instructions in the same guide.
 
 #. Patch and build the Real-Time kernel
