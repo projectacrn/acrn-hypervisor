@@ -141,6 +141,39 @@ static void create_prelaunched_vm_e820(struct acrn_vm *vm)
 	vm->e820_entry_num = E820_MAX_ENTRIES;
 	vm->e820_entries = (struct e820_entry *)ve820_entry;
 }
+
+/**
+ * @pre vm != NULL && vm_config != NULL
+ */
+static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_vm_config *vm_config)
+{
+	uint64_t base_hpa = vm_config->memory.start_hpa;
+	uint32_t i;
+
+	for (i = 0U; i < vm->e820_entry_num; i++) {
+		struct e820_entry *entry = &(vm->e820_entries[i]);
+
+		if (entry->length == 0UL) {
+			break;
+		}
+
+		/* Do EPT mapping for GPAs that are backed by physical memory */
+		if (entry->type == E820_TYPE_RAM) {
+			ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, entry->baseaddr,
+				entry->length, EPT_RWX | EPT_WB);
+
+			base_hpa += entry->length;
+		}
+
+		/* GPAs under 1MB are always backed by physical memory */
+		if ((entry->type != E820_TYPE_RAM) && (entry->baseaddr < (uint64_t)MEM_1M)) {
+			ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, entry->baseaddr,
+				entry->length, EPT_RWX | EPT_UNCACHED);
+
+			base_hpa += entry->length;
+		}
+	}
+}
 #endif
 
 /**
@@ -324,9 +357,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 			&vm_config->GUID[0], sizeof(vm_config->GUID));
 #ifdef CONFIG_PARTITION_MODE
 		create_prelaunched_vm_e820(vm);
-		ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-			vm_config->memory.start_hpa, 0UL, vm_config->memory.size,
-			EPT_RWX|EPT_WB);
+		prepare_prelaunched_vm_memmap(vm, vm_config);
 		(void)init_vm_boot_info(vm);
 #endif
 	}
