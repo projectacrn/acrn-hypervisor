@@ -5,6 +5,7 @@
  */
 
 #include <vm.h>
+#include <vm_reset.h>
 #include <vmcs.h>
 #include <vmexit.h>
 #include <irq.h>
@@ -88,6 +89,8 @@ void default_idle(__unused struct sched_object *obj)
 			schedule();
 		} else if (need_offline(pcpu_id) != 0) {
 			cpu_dead();
+		} else if (need_shutdown_vm(pcpu_id)) {
+			shutdown_vm_from_idle(pcpu_id);
 		} else {
 			CPU_IRQ_ENABLE();
 			cpu_do_idle();
