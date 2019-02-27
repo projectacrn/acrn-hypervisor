@@ -186,8 +186,8 @@ struct native_gpio_chip {
 };
 
 struct virtio_gpio {
-	pthread_mutex_t	mtx;
 	struct virtio_base	base;
+	pthread_mutex_t	mtx;
 	struct virtio_vq_info	queues[VIRTIO_GPIO_MAXQ];
 	struct native_gpio_chip	chips[VIRTIO_GPIO_MAX_CHIPS];
 	uint32_t		nchip;
