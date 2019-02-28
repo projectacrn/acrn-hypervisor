@@ -957,12 +957,12 @@ vlapic_set_error(struct acrn_vlapic *vlapic, uint32_t mask)
 	}
 }
 /*
- * @pre vector <= 255
+ * @pre APIC_LVT_TIMER <= lvt_index <= APIC_LVT_MAX
  */
 static int32_t
-vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
+vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t lvt_index)
 {
-	uint32_t lvt;
+	uint32_t lvt, vec, mode;
 	int32_t ret = 0;
 	struct acrn_vcpu *vcpu = vlapic->vcpu;
 
@@ -972,7 +972,7 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
 		 * LINT[1:0] pins are configured as INTR and NMI pins,
 		 * respectively.
 		 */
-		switch (vector) {
+		switch (lvt_index) {
 		case APIC_LVT_LINT0:
 			vcpu_inject_extint(vcpu);
 			break;
@@ -989,7 +989,7 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
 		}
 	} else {
 
-		switch (vector) {
+		switch (lvt_index) {
 		case APIC_LVT_LINT0:
 			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_LINT0_LVT);
 			break;
@@ -1020,7 +1020,9 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
 		}
 
 		if (ret == 0) {
-			if (vector < 16U) {
+			vec = lvt & APIC_LVT_VECTOR;
+			mode = lvt & APIC_LVT_DM;
+			if ((mode == APIC_LVT_DM_FIXED) && (vec < 16U)) {
 				vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
 			} else {
 				vlapic_fire_lvt(vlapic, lvt);
@@ -1922,15 +1924,15 @@ vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level)
  * @param[in] vm           Pointer to VM data structure
  * @param[in] vcpu_id_arg  ID of vCPU, BROADCAST_CPU_ID means triggering
  *			   interrupt to all vCPUs.
- * @param[in] vector       Vector to be fired.
+ * @param[in] lvt_index    The index which LVT would be to be fired.
  *
  * @retval 0 on success.
- * @retval -EINVAL on error that vcpu_id_arg or vector is invalid.
+ * @retval -EINVAL on error that vcpu_id_arg or vector of the LVT is invalid.
  *
  * @pre vm != NULL
  */
 int32_t
-vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
+vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t lvt_index)
 {
 	struct acrn_vlapic *vlapic;
 	uint64_t dmask = 0UL;
@@ -1949,7 +1951,7 @@ vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
 		for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
 			if ((dmask & (1UL << vcpu_id)) != 0UL) {
 				vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
-				error = vlapic_trigger_lvt(vlapic, vector);
+				error = vlapic_trigger_lvt(vlapic, lvt_index);
 				if (error != 0) {
 					break;
 				}
