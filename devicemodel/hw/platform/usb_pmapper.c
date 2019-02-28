@@ -597,7 +597,7 @@ usb_dev_native_toggle_if_drivers(struct usb_dev *udev, int attach)
 		return -1;
 	}
 
-	UPRINTF(LDBG, "%s driver\r\n", attach == 1 ?  "attach" : "detach");
+	UPRINTF(LINF, "%s driver\r\n", attach == 1 ?  "attach" : "detach");
 
 	c = config->bConfigurationValue;
 	for (i = 0; i < config->bNumInterfaces; i++) {
