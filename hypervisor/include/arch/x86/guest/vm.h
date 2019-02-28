@@ -244,10 +244,7 @@ uint16_t get_vm_pcpu_nums(const struct acrn_vm_config *vm_config);
 void vrtc_init(struct acrn_vm *vm);
 #endif
 
-static inline bool is_lapic_pt(const struct acrn_vm *vm)
-{
-	return ((vm_configs[vm->vm_id].guest_flags & LAPIC_PASSTHROUGH) != 0U);
-}
+bool is_lapic_pt(const struct acrn_vm *vm);
 
 #endif /* !ASSEMBLER */
 
