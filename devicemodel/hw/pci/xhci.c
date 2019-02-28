@@ -1891,10 +1891,11 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 {
 	struct pci_xhci_dev_emu *dev;
 	struct usb_dev *udev;
-	struct usb_native_devinfo *di = NULL;
+	struct usb_native_devinfo di;
 	struct usb_devpath *path;
 	uint32_t cmderr;
 	int i, j;
+	bool partial_destroy = false;
 
 	UPRINTF(LINF, "pci_xhci disable slot %u\r\n", slot);
 
@@ -1933,23 +1934,31 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 		xdev->slots[slot] = NULL;
 		xdev->slot_allocated[slot] = false;
 
-		di = &udev->info;
+		di = udev->info;
 		for (j = 0; j < XHCI_MAX_VIRT_PORTS; ++j) {
 			path = &xdev->vbdp_devs[j].path;
 
-			if (!usb_dev_path_cmp(path, &di->path))
+			if (!usb_dev_path_cmp(path, &di.path))
 				continue;
 
 			xdev->vbdp_devs[j].state |= S3_VBDP_DIS_SLOT;
-			sem_post(&xdev->vbdp_sem);
-			UPRINTF(LINF, "signal device %d-%s to connect\r\n",
-					di->path.bus, usb_dev_path(&di->path));
+			partial_destroy = true;
 		}
 		UPRINTF(LINF, "disable slot %d for native device %d-%s\r\n",
-				slot, di->path.bus, usb_dev_path(&di->path));
+				slot, di.path.bus, usb_dev_path(&di.path));
 
 		/* release all the resource allocated for virtual device */
 		pci_xhci_dev_destroy(dev, true);
+
+		/* For devices connected before suspending, it is necessary
+		 * to signal the xhci_vbdp_thread to prepare the subsequent
+		 * connect event.
+		 */
+		if (partial_destroy) {
+			sem_post(&xdev->vbdp_sem);
+			UPRINTF(LINF, "signal device %d-%s to connect\r\n",
+					di.path.bus, usb_dev_path(&di.path));
+		}
 	} else
 		UPRINTF(LWRN, "invalid slot %d\r\n", slot);
 
