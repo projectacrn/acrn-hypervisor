@@ -44,14 +44,17 @@
 #include "mevent.h"
 #include "irq.h"
 #include "lpc.h"
+#include "monitor.h"
 
 #define POWER_BUTTON_EVENT	116
+#define POWER_BUTTON_NAME	"power_button"
 static pthread_mutex_t pm_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct mevent *power_button;
 static sig_t old_power_handler;
 
 static struct mevent *input_evt0;
 static int pwrbtn_fd = -1;
+static bool monitor_run;
 /*
  * Reset Control register at I/O port 0xcf9.  Bit 2 forces a system
  * reset when it transitions from 0 to 1.  Bit 1 selects the type of
@@ -217,17 +220,21 @@ INOUT_PORT(pm1_status, PM1A_EVT_ADDR, IOPORT_F_INOUT, pm1_status_handler);
 INOUT_PORT(pm1_enable, PM1A_EVT_ADDR + 2, IOPORT_F_INOUT, pm1_enable_handler);
 
 static void
-power_button_handler(int signal, enum ev_type type, void *arg)
+power_button_press_emulation(struct vmctx *ctx)
 {
-	struct vmctx *ctx;
-
-	ctx = arg;
 	pthread_mutex_lock(&pm_lock);
 	if (!(pm1_status & PM1_PWRBTN_STS)) {
 		pm1_status |= PM1_PWRBTN_STS;
 		sci_update(ctx);
 	}
 	pthread_mutex_unlock(&pm_lock);
+}
+
+static void
+power_button_handler(int signal, enum ev_type type, void *arg)
+{
+	if (arg)
+		power_button_press_emulation(arg);
 }
 
 static void
@@ -241,7 +248,7 @@ input_event0_handler(int fd, enum ev_type type, void *arg)
 		return;
 
 	if (ev.code == POWER_BUTTON_EVENT && ev.value == 1)
-		power_button_handler(fd, type, arg);
+		power_button_press_emulation(arg);
 }
 
 /*
@@ -297,6 +304,31 @@ pm1_control_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 INOUT_PORT(pm1_control, PM1A_CNT_ADDR, IOPORT_F_INOUT, pm1_control_handler);
 SYSRES_IO(PM1A_EVT_ADDR, 8);
 
+static int
+vm_stop_handler(void *arg)
+{
+	if (!arg)
+		return -EINVAL;
+
+	power_button_press_emulation(arg);
+	return 0;
+}
+
+static int
+vm_suspend_handler(void *arg)
+{
+	/*
+	 * Invoke vm_stop_handler directly in here since suspend of UOS is
+	 * set by UOS power button setting.
+	 */
+	return vm_stop_handler(arg);
+}
+
+static struct monitor_vm_ops vm_ops = {
+	.stop = vm_stop_handler,
+	.suspend = vm_suspend_handler,
+};
+
 /*
  * ACPI SMI Command Register
  *
@@ -314,6 +346,11 @@ smi_cmd_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	switch (*eax) {
 	case ACPI_ENABLE:
 		pm1_control |= PM1_SCI_EN;
+		/*
+		 * FIXME: ACPI_ENABLE/ACPI_DISABLE only impacts SCI_EN via SMI
+		 * command register, not impact power button emulation. so need
+		 * to remove all power button emulation from here.
+		 */
 		if (power_button == NULL) {
 
 			/*
@@ -327,6 +364,10 @@ smi_cmd_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 			old_power_handler = signal(SIGTERM, SIG_IGN);
 		}
 		if (input_evt0 == NULL) {
+			/*
+			 * FIXME: check /sys/bus/acpi/devices/LNXPWRBN\:00/input to
+			 * get input event node instead hardcode in here.
+			 */
 			pwrbtn_fd = open("/dev/input/event0", O_RDONLY);
 			if (pwrbtn_fd < 0)
 				fprintf(stderr, "open input event0 error=%d\n",
@@ -334,6 +375,19 @@ smi_cmd_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 			else
 				input_evt0 = mevent_add(pwrbtn_fd, EVF_READ,
 					input_event0_handler, ctx, NULL, NULL);
+		}
+
+		/*
+		 * Suspend or shutdown UOS by acrnctl suspend and
+		 * stop command.
+		 */
+		if (monitor_run == false) {
+			if (monitor_register_vm_ops(&vm_ops, ctx,
+						POWER_BUTTON_NAME) < 0)
+				fprintf(stderr,
+				"failed to register vm ops for power button\n");
+			else
+				monitor_run = true;
 		}
 		break;
 	case ACPI_DISABLE:
