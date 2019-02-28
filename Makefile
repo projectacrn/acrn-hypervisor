@@ -2,25 +2,7 @@
 # global helper variables
 T := $(CURDIR)
 
-# PLATFORM is now deprecated, just reserve for compatability
-ifdef PLATFORM
-$(warning PLATFORM is deprecated, pls use BOARD instead)
-endif
-PLATFORM ?= uefi
-
-# Backward-compatibility for PLATFORM=(sbl|uefi)
-# * PLATFORM=sbl is equivalent to BOARD=apl-mrb
-# * PLATFORM=uefi is equivalent to BOARD=apl-nuc (i.e. NUC6CAYH)
-ifeq ($(PLATFORM),sbl)
 BOARD ?= apl-mrb
-else ifeq ($(PLATFORM),uefi)
-BOARD ?= apl-nuc
-endif
-undefine PLATFORM
-
-ifndef BOARD
-$(error BOARD must be set (apl-mrb, apl-nuc, apl-up2, dnv-cb2, kbl-nuc-i7, nuc6cayh, nuc7i7bnh)
-endif
 
 ifeq ($(BOARD),apl-nuc)
 FIRMWARE ?= uefi
