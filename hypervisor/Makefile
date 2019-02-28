@@ -133,10 +133,7 @@ C_SRCS += arch/x86/init.c
 
 # configuration component
 C_SRCS += arch/x86/configs/vm_config.c
-ifeq ($(CONFIG_SHARING_MODE),y)
-C_SRCS += arch/x86/configs/sharing_config.c
-else ifeq ($(CONFIG_PARTITION_MODE),y)
-C_SRCS += arch/x86/configs/partition_config.c
+ifeq ($(CONFIG_PARTITION_MODE),y)
 C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/ve820.c
 C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/pt_dev.c
 endif

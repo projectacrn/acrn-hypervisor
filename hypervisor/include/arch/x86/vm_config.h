@@ -64,16 +64,7 @@ struct acrn_vm_config {
 #endif
 } __aligned(8);
 
-extern struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM];
-
-/*
- * @pre vm_id < CONFIG_MAX_VM_NUM
- */
-static inline struct acrn_vm_config *get_vm_config(uint16_t vm_id)
-{
-	return &vm_configs[vm_id];
-}
-
+struct acrn_vm_config *get_vm_config(uint16_t vm_id);
 int32_t sanitize_vm_config(void);
 
 #endif /* VM_CONFIG_H_ */
