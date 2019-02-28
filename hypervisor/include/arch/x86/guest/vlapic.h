@@ -189,14 +189,14 @@ void vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level);
  * @param[in] vm           Pointer to VM data structure
  * @param[in] vcpu_id_arg  ID of vCPU, BROADCAST_CPU_ID means triggering
  *			   interrupt to all vCPUs.
- * @param[in] vector       Vector to be fired.
+ * @param[in] lvt_index    The index which LVT would to be fired.
  *
  * @retval 0 on success.
- * @retval -EINVAL on error that vcpu_id_arg or vector is invalid.
+ * @retval -EINVAL on error that vcpu_id_arg or vector of the LVT is invalid.
  *
  * @pre vm != NULL
  */
-int32_t vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector);
+int32_t vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t lvt_index);
 
 /**
  * @brief Inject MSI to target VM.
