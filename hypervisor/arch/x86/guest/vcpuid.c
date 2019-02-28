@@ -345,6 +345,9 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 			/*mask vmx to guest os */
 			*ecx &= ~CPUID_ECX_VMX;
 
+			/* set Hypervisor Present Bit */
+			*ecx |= CPUID_ECX_HV;
+
 			/*no xsave support for guest if it is not enabled on host*/
 			if ((*ecx & CPUID_ECX_OSXSAVE) == 0U) {
 				*ecx &= ~CPUID_ECX_XSAVE;
