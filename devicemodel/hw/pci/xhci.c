@@ -958,21 +958,6 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	state = xdev->native_ports[index].state;
 	vport = xdev->native_ports[index].vport;
 
-	if (state == VPORT_CONNECTED && vport > 0) {
-		/*
-		 * When this place is reached, it means the physical
-		 * USB device is disconnected before the emulation
-		 * procedure is started. The related states should be
-		 * cleared for future connecting.
-		 */
-		UPRINTF(LFTL, "disconnect VPORT_CONNECTED device: "
-				"%d-%s vport %d\r\n", di->path.bus,
-				usb_dev_path(&di->path), vport);
-		pci_xhci_disconnect_port(xdev, vport, 0);
-		xdev->native_ports[index].state = VPORT_ASSIGNED;
-		return 0;
-	}
-
 	edev = xdev->devices[vport];
 	for (slot = 1; slot < XHCI_MAX_SLOTS; ++slot)
 		if (xdev->slots[slot] == edev)
@@ -994,6 +979,21 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 					vport, state);
 			return 0;
 		}
+	}
+
+	if (state == VPORT_CONNECTED && vport > 0) {
+		/*
+		 * When this place is reached, it means the physical
+		 * USB device is disconnected before the emulation
+		 * procedure is started. The related states should be
+		 * cleared for future connecting.
+		 */
+		UPRINTF(LFTL, "disconnect VPORT_CONNECTED device: "
+				"%d-%s vport %d\r\n", di->path.bus,
+				usb_dev_path(&di->path), vport);
+		pci_xhci_disconnect_port(xdev, vport, 0);
+		xdev->native_ports[index].state = VPORT_ASSIGNED;
+		return 0;
 	}
 
 	assert(state == VPORT_EMULATED || state == VPORT_CONNECTED);
