@@ -1183,7 +1183,7 @@ usb_dev_native_sys_conn_cb(struct libusb_context *ctx, struct libusb_device
 	struct usb_native_devinfo di;
 	bool ret;
 
-	UPRINTF(LDBG, "connect event\r\n");
+	UPRINTF(LINF, "connect event\r\n");
 
 	if (!ctx || !ldev) {
 		UPRINTF(LFTL, "connect callback fails!\n");
@@ -1207,7 +1207,7 @@ usb_dev_native_sys_disconn_cb(struct libusb_context *ctx, struct libusb_device
 	struct usb_native_devinfo di;
 	bool ret;
 
-	UPRINTF(LDBG, "disconnect event\r\n");
+	UPRINTF(LINF, "disconnect event\r\n");
 
 	if (!ctx || !ldev) {
 		UPRINTF(LFTL, "disconnect callback fails!\n");
