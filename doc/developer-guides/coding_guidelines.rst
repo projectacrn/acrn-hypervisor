@@ -1332,72 +1332,7 @@ Compliant example::
            printf("count: %d \n", i);
 
 
-ST-14: A space shall exist between the expression and the control keywords
-==========================================================================
-
-A space shall exist between the expression and the control keywords, including
-if, switch, while, and for.
-
-Compliant example::
-
-    uint32_t showcase;
-    
-    if (showcase == 0U) {
-        showcase = 32U;
-    }
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       uint32_t showcase;
-       
-       if(showcase == 0U){
-           showcase = 32U;
-       }
-
-
-ST-15: A space shall exist after the semicolon in a for expression
-==================================================================
-
-Compliant example::
-
-    uint32_t i;
-    
-    for (i = 0U; i < 5U; i++) {
-        printf("count: %d \n", i);
-    }
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       uint32_t i;
-       
-       for (i = 0U;i < 5U;i++) {
-           printf("count: %d \n", i);
-       }
-
-
-ST-16: A space shall exist around binary operators and assignment operators
-===========================================================================
-
-Compliant example::
-
-    uint32_t showcase = 32U;
-    
-    showcase = showcase * 2U;
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       uint32_t showcase=32U;
-       
-       showcase=showcase*2U;
-
-
-ST-17: Infinite loop shall not exist
+ST-14: Infinite loop shall not exist
 ====================================
 
 Every path in the iteration loop shall have the chance to exit.
@@ -1431,7 +1366,7 @@ Compliant example::
        }
 
 
-ST-18:  ++ or -- operation shall be used with restrictions
+ST-15:  ++ or -- operation shall be used with restrictions
 ==========================================================
 
 Only the following cases shall be allowed:
@@ -1456,7 +1391,7 @@ Compliant example::
        showcase_test = showcase++;
 
 
-ST-19: Array indexing shall be in-bounds
+ST-16: Array indexing shall be in-bounds
 ========================================
 
 An array index value shall be between zero (for the first element) and the array
@@ -1478,7 +1413,7 @@ Compliant example::
        char showcase = showcase_array[10];
 
 
-ST-20: The else statement shall not be empty if it is following an else if
+ST-17: The else statement shall not be empty if it is following an else if
 ==========================================================================
 
 Either a non-null statement or a comment shall be included in the else
@@ -1511,7 +1446,7 @@ Compliant example::
        }
 
 
-ST-21: A switch statement shall have the default statement
+ST-18: A switch statement shall have the default statement
 ==========================================================
 
 This is to guarantee that the developers have considered all of the possible
@@ -1549,7 +1484,7 @@ Compliant example::
        }
 
 
-ST-22: Every switch clause shall be terminated with a break statement
+ST-19: Every switch clause shall be terminated with a break statement
 =====================================================================
 
 Falling through a case shall not be allowed.
@@ -1587,7 +1522,7 @@ Compliant example::
        }
 
 
-ST-23: The comma operator shall not be used
+ST-20: The comma operator shall not be used
 ===========================================
 
 Compliant example::
@@ -1608,7 +1543,7 @@ Compliant example::
        showcase_a++, showcase_b++;
 
 
-ST-24: The for loop counter shall not be changed inside the loop body
+ST-21: The for loop counter shall not be changed inside the loop body
 =====================================================================
 
 Compliant example::
@@ -2785,5 +2720,394 @@ Compliant example::
    Non-compliant example::
 
        #define _Bool bool
+
+
+Coding Style
+************
+
+General
+=======
+
+GN-01: Each line shall contain at most 120 characters
+-----------------------------------------------------
+
+No more than 120 characters shall be on a line, with tab stops every 8
+characters. Statements longer than this limit shall be broken into multiple
+lines with proper alignment.
+
+Compliant example::
+
+    cpuid(CPUID_EXTEND_FEATURE, &unused,
+        &boot_cpu_data.cpuid_leaves[FEAT_7_0_EBX],
+        &boot_cpu_data.cpuid_leaves[FEAT_7_0_ECX],
+        &boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX]);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       cpuid(CPUID_EXTEND_FEATURE, &unused, &boot_cpu_data.cpuid_leaves[FEAT_7_0_EBX], &boot_cpu_data.cpuid_leaves[FEAT_7_0_ECX], &boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX]);
+
+
+GN-02: Each line shall only contain one statement
+-------------------------------------------------
+
+Compliant example::
+
+    if (condition) {
+        do_a();
+    } else {
+        do_b();
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       if (condition) { do_a();} else {do_b();}
+
+
+
+Indentation
+===========
+
+IT-01: Tabs shall be used for code indentation
+----------------------------------------------
+
+Spaces are allowed only for indenting comments or aligning statements that span
+multiple lines.
+
+Compliant example::
+
+    if (condition) {
+        do_a();
+    } else {
+        do_b();
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       if (condition) {
+         do_a();
+       } else {
+         do_b();
+       }
+
+
+IT-02: Tabs shall be 8 characters wide
+--------------------------------------
+
+A tab character shall be considered 8-character wide when limiting the line
+width.
+
+
+
+Whitespaces
+===========
+
+WS-01: Trailing whitespaces shall not be allowed at the end of lines
+--------------------------------------------------------------------
+
+This rule applies to both spaces and tabs at the end of a line.
+
+Compliant example::
+
+    uint32_t a;
+    uint32_t b;
+    uint32_t c;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       /*
+        * The example here uses the char ␣ to stand for the space at the end of the line
+        * in order to highlight the non-compliant part.
+        */
+       uint32_t a;␣␣␣␣
+       uint32_t b;␣␣␣␣
+       uint32_t c;␣␣␣␣
+
+
+WS-02: A single space shall exist between non-function-like keywords and opening brackets
+-----------------------------------------------------------------------------------------
+
+A single space shall exist between a non-function-like keyword and the opening
+bracket (either a brace or a parenthesis) that follows. This rule applies to the
+keywords 'if', 'else', 'for', 'do', 'while', 'switch' and 'return'.
+
+Compliant example::
+
+    uint32_t showcase;
+    
+    if (showcase == 0U) {
+        showcase = 32U;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase;
+       
+       if(showcase == 0U){
+           showcase = 32U;
+       }
+
+
+WS-03: Space shall not exist between the function identifier and the following open-parenthesis
+-----------------------------------------------------------------------------------------------
+
+Compliant example::
+
+    size_t entry_size = sizeof(struct vcpuid_entry);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       size_t entry_size = sizeof (struct vcpuid_entry);
+
+
+WS-04: Space shall not exist right after opening brackets and right before closing ones
+---------------------------------------------------------------------------------------
+
+Brackets in this rule refer to parenthesis, braces and squared brackets.
+
+Compliant example::
+
+    size_t entry_size = sizeof(struct vcpuid_entry);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       size_t entry_size = sizeof( struct vcpuid_entry );
+
+
+WS-05: The '*' characters used for pointers shall be right before the function or variable identifiers
+------------------------------------------------------------------------------------------------------
+
+The following cases shall be covered:
+
+a) For declaration of variables of a pointer type, the '*' character shall be
+   right before the variable identifier with no space in between.
+b) For functions whose return value is of a pointer type, the '*' character
+   shall be right before the function identifyer with no spaces in between in the
+   function prototype.
+
+Compliant example::
+
+    uint32_t *showcase_ptr;
+    uint32_t *showcase_func(void);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t* showcase_ptr;
+       uint32_t* showcase_func(void);
+
+
+WS-06: A single space shall exist around binary and ternary operators
+---------------------------------------------------------------------
+
+This rule applies to all binary arithmetic, bit-wise, logical, relational,
+equality and assignment operators, as well as the ternary conditional operator.
+
+Compliant example::
+
+    uint32_t showcase = 32U;
+    
+    showcase = showcase * 2U;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase=32U;
+       
+       showcase=showcase*2U;
+
+
+WS-07: Space shall not exist after unary operator
+-------------------------------------------------
+
+There shall be no space between a unary operator and its operand. This rule
+applies to member accesses, prefix or postfix increments and decrements, address
+and indirection operators.
+
+Compliant example::
+
+    int *x;
+    int y = y + *x;
+    int a = b->member;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       int * x;
+       int y = y + * x;
+       int a = b ->member;
+
+
+WS-08: A single space shall exist right after semicolons in for-loop headers
+----------------------------------------------------------------------------
+
+A single space shall exist right after semicolons that separete the different
+expressions in for-loop headers.
+
+Compliant example::
+
+    uint32_t i;
+    
+    for (i = 0U; i < 5U; i++) {
+        printf("count: %d \n", i);
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t i;
+       
+       for (i = 0U;i < 5U;i++) {
+           printf("count: %d \n", i);
+       }
+
+
+
+Braces
+======
+
+BC-01: Braces after if/switch/for/do/while shall be in the same line
+--------------------------------------------------------------------
+
+The statement after if/switch/for/do/while shall always be a compound statement
+with its opening brace in the same line as the keyword.
+
+Compliant example::
+
+    uint32_t numerator = 32U;
+    uint32_t denominator = 0U;
+    uint32_t quotient;
+    
+    if (denominator != 0U) {
+        quotient = numerator / denominator;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t numerator = 32U;
+       uint32_t denominator = 0U;
+       uint32_t quotient;
+       
+       if (denominator != 0U)
+       {
+           quotient = numerator / denominator;
+       }
+
+
+BC-02: A function body shall start with a line containing a single opening brace
+--------------------------------------------------------------------------------
+
+Compliant example::
+
+    uint32_t func_showcase(uint32_t param)
+    {
+        return param;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t func_showcase(uint32_t param) {
+           return param;
+       }
+
+
+
+Alignment
+=========
+
+AL-01: A 'switch' statement and its subordinate 'case' shall be aligned
+-----------------------------------------------------------------------
+
+Compliant example::
+
+    switch(suffix) {
+    case 'u':
+        do_something();
+        break;
+    default:
+        do_something_else();
+        break;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       switch(suffix) {
+           case 'u':
+               do_something();
+               break;
+           default:
+               do_something_else();
+               break;
+       }
+
+
+AL-02: Function parameters shall be aligned
+-------------------------------------------
+
+When function call parameters are not in single line, the parameters shall be
+aligned only with tabs. Mixed-use of spaces and tabs shall not be allowed. The
+number of tabs could be decided by the developers based on each case and it
+shall be the same for one case.
+
+Compliant example::
+
+    uint32_t showcase;
+    
+    showcase = func(param_1,
+            param_2,
+            param_3);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase;
+       
+       showcase = func(param_1,
+                  param_2,
+                     param_3);
+
+
+
+Comments
+========
+
+CM-01:  '//' shall not be used for single-line comments
+-------------------------------------------------------
+
+'/\*  \*/' shall be used to replace '//' for single-line comments.
+
+Compliant example::
+
+    /* This is a comment */
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       // This is a comment
 
 
