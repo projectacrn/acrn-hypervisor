@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
 
 void TRACE_2L(__unused uint32_t evid, __unused uint64_t e, __unused uint64_t f) {}
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
 
 void init_logmsg(__unused uint32_t flags) {}
 void do_logmsg(__unused uint32_t severity, __unused const char *fmt, ...) {}

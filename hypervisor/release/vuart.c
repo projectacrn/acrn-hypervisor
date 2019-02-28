@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <vm.h>
 
 void vuart_init(__unused struct acrn_vm *vm) {}
 

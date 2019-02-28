@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <pci.h>
 
 size_t console_write(__unused const char *str, __unused size_t len)
 {
