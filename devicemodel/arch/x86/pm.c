@@ -137,10 +137,30 @@ static uint16_t pm1_enable, pm1_status;
 #define	PM1_SLPBTN_EN		0x0200
 #define	PM1_RTC_EN		0x0400
 
+/*
+ * Power Management 1 Control Register
+ *
+ * This is mostly unimplemented except that we wish to handle writes that
+ * set SPL_EN to handle S5 (soft power off).
+ */
+static uint16_t pm1_control;
+
+#define	PM1_SCI_EN	0x0001
+#define	PM1_SLP_TYP	0x1c00
+#define	PM1_SLP_EN	0x2000
+#define	PM1_ALWAYS_ZERO	0xc003
+
 static void
 sci_update(struct vmctx *ctx)
 {
 	int need_sci;
+
+	/*
+	 * Followed ACPI spec, should trigger SMI if SCI_EN is zero.
+	 * Return directly due to ACRN do not support SMI so far.
+	 */
+	if (!(pm1_control & PM1_SCI_EN))
+		return;
 
 	/* See if the SCI should be active or not. */
 	need_sci = 0;
@@ -250,19 +270,6 @@ input_event0_handler(int fd, enum ev_type type, void *arg)
 	if (ev.code == POWER_BUTTON_EVENT && ev.value == 1)
 		power_button_press_emulation(arg);
 }
-
-/*
- * Power Management 1 Control Register
- *
- * This is mostly unimplemented except that we wish to handle writes that
- * set SPL_EN to handle S5 (soft power off).
- */
-static uint16_t pm1_control;
-
-#define	PM1_SCI_EN	0x0001
-#define	PM1_SLP_TYP	0x1c00
-#define	PM1_SLP_EN	0x2000
-#define	PM1_ALWAYS_ZERO	0xc003
 
 static int
 pm1_control_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
