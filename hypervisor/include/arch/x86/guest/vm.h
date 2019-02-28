@@ -28,14 +28,13 @@
 #include <vpci.h>
 #include <cpu_caps.h>
 #include <e820.h>
+#include <vm_config.h>
 
 #ifdef CONFIG_PARTITION_MODE
 #include <mptable.h>
 #endif
 
 #define INVALID_VM_ID 0xffffU
-
-#define PLUG_CPU(n)		(1U << (n))
 
 struct vm_hw_info {
 	/* vcpu array of this VM */
@@ -159,59 +158,6 @@ struct acrn_vm {
 	uint64_t intr_inject_delay_delta; /* delay of intr injection */
 } __aligned(PAGE_SIZE);
 
-#define MAX_BOOTARGS_SIZE	1024U
-#define MAX_CONFIG_NAME_SIZE	32U
-
-/*
- * PRE_LAUNCHED_VM is launched by ACRN hypervisor, with LAPIC_PT;
- * SOS_VM is launched by ACRN hypervisor, without LAPIC_PT;
- * NORMAL_VM is launched by ACRN devicemodel, with/without LAPIC_PT depends on usecases.
- */
-enum acrn_vm_type {
-	UNDEFINED_VM = 0,
-	PRE_LAUNCHED_VM,
-	SOS_VM,
-	NORMAL_VM	/* Post-launched VM */
-};
-
-struct acrn_vm_mem_config {
-	uint64_t start_hpa;	/* the start HPA of VM memory configuration, for pre-launched VMs only */
-	uint64_t size;		/* VM memory size configuration */
-};
-
-struct acrn_vm_os_config {
-	char name[MAX_CONFIG_NAME_SIZE];		/* OS name, useful for debug */
-	char bootargs[MAX_BOOTARGS_SIZE];		/* boot args/cmdline */
-} __aligned(8);
-
-struct acrn_vm_pci_ptdev_config {
-	union pci_bdf vbdf;				/* virtual BDF of PCI PT device */
-	union pci_bdf pbdf;				/* physical BDF of PCI PT device */
-} __aligned(8);
-
-struct acrn_vm_config {
-	enum acrn_vm_type type;				/* specify the type of VM */
-	char name[MAX_CONFIG_NAME_SIZE];		/* VM name identifier, useful for debug. */
-	uint8_t GUID[16];				/* GUID of the VM */
-	uint64_t pcpu_bitmap;				/* from pcpu bitmap, we could know VM core number */
-	uint64_t guest_flags;				/* VM flags that we want to configure for guest
-							 * Now we have two flags:
-							 *	SECURE_WORLD_ENABLED
-							 *	LAPIC_PASSTHROUGH
-							 * We could add more guest flags in future;
-							 */
-	struct acrn_vm_mem_config memory;		/* memory configuration of VM */
-	uint16_t pci_ptdev_num;				/* indicate how many PCI PT devices in VM */
-	struct acrn_vm_pci_ptdev_config *pci_ptdevs;	/* point to PCI PT devices BDF list */
-	struct acrn_vm_os_config os_config;		/* OS information the VM */
-
-#ifdef CONFIG_PARTITION_MODE
-	bool			vm_vuart;
-#endif
-
-	uint16_t clos;		/* if guest_flags has CAT_ENABLED, then VM use this CLOS */
-} __aligned(8);
-
 /*
  * @pre vlapic != NULL
  */
@@ -283,10 +229,6 @@ int32_t reset_vm(struct acrn_vm *vm);
 int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
 void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config);
 void launch_vms(uint16_t pcpu_id);
-int32_t sanitize_vm_config(void);
-
-extern struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM];
-
 bool is_sos_vm(const struct acrn_vm *vm);
 uint16_t find_free_vm_id(void);
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
@@ -301,14 +243,6 @@ extern vm_sw_loader_t vm_sw_loader;
 uint16_t get_vm_pcpu_nums(const struct acrn_vm_config *vm_config);
 void vrtc_init(struct acrn_vm *vm);
 #endif
-
-/*
- * @pre vm_id < CONFIG_MAX_VM_NUM
- */
-static inline struct acrn_vm_config *get_vm_config(uint16_t vm_id)
-{
-	return &vm_configs[vm_id];
-}
 
 static inline bool is_lapic_pt(const struct acrn_vm *vm)
 {
