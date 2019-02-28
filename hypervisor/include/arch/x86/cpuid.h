@@ -41,6 +41,7 @@
 #define CPUID_ECX_XSAVE         (1U<<26U)
 #define CPUID_ECX_OSXSAVE       (1U<<27U)
 #define CPUID_ECX_AVX           (1U<<28U)
+#define CPUID_ECX_HV            (1U<<31U)
 #define CPUID_EDX_FPU           (1U<<0U)
 #define CPUID_EDX_VME           (1U<<1U)
 #define CPUID_EDX_DE            (1U<<2U)
