@@ -793,7 +793,7 @@ vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
 
 		switch (mode) {
 		case APIC_LVT_DM_FIXED:
-			if (vlapic_accept_intr(vlapic, vec, false)) {
+			if (vlapic_accept_intr(vlapic, vec, LAPIC_TRIG_EDGE)) {
 				vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 			}
 			break;
@@ -944,7 +944,7 @@ vlapic_process_eoi(struct acrn_vlapic *vlapic)
 static void
 vlapic_set_error(struct acrn_vlapic *vlapic, uint32_t mask)
 {
-	uint32_t lvt;
+	uint32_t lvt, vec;
 
 	vlapic->esr_pending |= mask;
 	if (vlapic->esr_firing == 0) {
@@ -952,7 +952,14 @@ vlapic_set_error(struct acrn_vlapic *vlapic, uint32_t mask)
 
 		/* The error LVT always uses the fixed delivery mode. */
 		lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_ERROR_LVT);
-		vlapic_fire_lvt(vlapic, lvt | APIC_LVT_DM_FIXED);
+		if ((lvt & APIC_LVT_M) == 0U) {
+			vec = lvt & APIC_LVT_VECTOR;
+			if (vec >= 16U) {
+				if (vlapic_accept_intr(vlapic, vec, LAPIC_TRIG_EDGE)) {
+					vcpu_make_request(vlapic->vcpu, ACRN_REQUEST_EVENT);
+				}
+			}
+		}
 		vlapic->esr_firing = 0;
 	}
 }
