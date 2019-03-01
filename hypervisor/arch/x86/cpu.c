@@ -10,6 +10,7 @@
 #include <page.h>
 #include <e820.h>
 #include <mmu.h>
+#include <vtd.h>
 #include <lapic.h>
 #include <per_cpu.h>
 #include <cpufeatures.h>
@@ -213,6 +214,12 @@ void init_cpu_post(uint16_t pcpu_id)
 		setup_notification();
 		setup_posted_intr_notification();
 		init_pci_pdev_list();
+
+		if (init_iommu() != 0) {
+			panic("failed to initialize iommu!");
+		}
+
+		ptdev_init();
 
 		/* Start all secondary cores */
 		startup_paddr = prepare_trampoline();
