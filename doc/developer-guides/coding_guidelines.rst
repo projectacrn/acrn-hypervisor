@@ -2732,11 +2732,9 @@ Compliant example::
 Coding Style
 ************
 
-General
-=======
 
-GN-01: Each line shall contain at most 120 characters
------------------------------------------------------
+CS-01: Each line shall contain at most 120 characters
+=====================================================
 
 No more than 120 characters shall be on a line, with tab stops every 8
 characters. Statements longer than this limit shall be broken into multiple
@@ -2756,8 +2754,8 @@ Compliant example::
        cpuid(CPUID_EXTEND_FEATURE, &unused, &boot_cpu_data.cpuid_leaves[FEAT_7_0_EBX], &boot_cpu_data.cpuid_leaves[FEAT_7_0_ECX], &boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX]);
 
 
-GN-02: Each line shall only contain one statement
--------------------------------------------------
+CS-02: Each line shall only contain one statement
+=================================================
 
 Compliant example::
 
@@ -2775,11 +2773,9 @@ Compliant example::
 
 
 
-Indentation
-===========
 
-IT-01: Tabs shall be used for code indentation
-----------------------------------------------
+CS-03: Tabs shall be used for code indentation
+==============================================
 
 Spaces are allowed only for indenting comments or aligning statements that span
 multiple lines.
@@ -2803,19 +2799,17 @@ Compliant example::
        }
 
 
-IT-02: Tabs shall be 8 characters wide
---------------------------------------
+CS-04: Tabs shall be 8 characters wide
+======================================
 
 A tab character shall be considered 8-character wide when limiting the line
 width.
 
 
 
-Whitespaces
-===========
 
-WS-01: Trailing whitespaces shall not be allowed at the end of lines
---------------------------------------------------------------------
+CS-05: Trailing whitespaces shall not be allowed at the end of lines
+====================================================================
 
 This rule applies to both spaces and tabs at the end of a line.
 
@@ -2838,8 +2832,8 @@ Compliant example::
        uint32_t c;␣␣␣␣
 
 
-WS-02: A single space shall exist between non-function-like keywords and opening brackets
------------------------------------------------------------------------------------------
+CS-06: A single space shall exist between non-function-like keywords and opening brackets
+=========================================================================================
 
 A single space shall exist between a non-function-like keyword and the opening
 bracket (either a brace or a parenthesis) that follows. This rule applies to the
@@ -2864,8 +2858,8 @@ Compliant example::
        }
 
 
-WS-03: Space shall not exist between the function identifier and the following open-parenthesis
------------------------------------------------------------------------------------------------
+CS-07: Space shall not exist between the function identifier and the following open-parenthesis
+===============================================================================================
 
 Compliant example::
 
@@ -2878,8 +2872,8 @@ Compliant example::
        size_t entry_size = sizeof (struct vcpuid_entry);
 
 
-WS-04: Space shall not exist right after opening brackets and right before closing ones
----------------------------------------------------------------------------------------
+CS-08: Space shall not exist right after opening brackets and right before closing ones
+=======================================================================================
 
 Brackets in this rule refer to parenthesis, braces and squared brackets.
 
@@ -2894,8 +2888,8 @@ Compliant example::
        size_t entry_size = sizeof( struct vcpuid_entry );
 
 
-WS-05: The '*' characters used for pointers shall be right before the function or variable identifiers
-------------------------------------------------------------------------------------------------------
+CS-09: The '*' characters used for pointers shall be right before the function or variable identifiers
+======================================================================================================
 
 The following cases shall be covered:
 
@@ -2918,8 +2912,8 @@ Compliant example::
        uint32_t* showcase_func(void);
 
 
-WS-06: A single space shall exist around binary and ternary operators
----------------------------------------------------------------------
+CS-10: A single space shall exist around binary and ternary operators
+=====================================================================
 
 This rule applies to all binary arithmetic, bit-wise, logical, relational,
 equality and assignment operators, as well as the ternary conditional operator.
@@ -2939,8 +2933,8 @@ Compliant example::
        showcase=showcase*2U;
 
 
-WS-07: Space shall not exist after unary operator
--------------------------------------------------
+CS-11: Space shall not exist after unary operator
+=================================================
 
 There shall be no space between a unary operator and its operand. This rule
 applies to member accesses, prefix or postfix increments and decrements, address
@@ -2961,8 +2955,8 @@ Compliant example::
        int a = b ->member;
 
 
-WS-08: A single space shall exist right after semicolons in for-loop headers
-----------------------------------------------------------------------------
+CS-12: A single space shall exist right after semicolons in for-loop headers
+============================================================================
 
 A single space shall exist right after semicolons that separete the different
 expressions in for-loop headers.
@@ -2987,11 +2981,9 @@ Compliant example::
 
 
 
-Braces
-======
 
-BC-01: Braces after if/switch/for/do/while shall be in the same line
---------------------------------------------------------------------
+CS-13: Braces after if/switch/for/do/while shall be in the same line
+====================================================================
 
 The statement after if/switch/for/do/while shall always be a compound statement
 with its opening brace in the same line as the keyword.
@@ -3020,8 +3012,8 @@ Compliant example::
        }
 
 
-BC-02: A function body shall start with a line containing a single opening brace
---------------------------------------------------------------------------------
+CS-14: A function body shall start with a line containing a single opening brace
+================================================================================
 
 Compliant example::
 
@@ -3040,11 +3032,9 @@ Compliant example::
 
 
 
-Alignment
-=========
 
-AL-01: A 'switch' statement and its subordinate 'case' shall be aligned
------------------------------------------------------------------------
+CS-15: A 'switch' statement and its subordinate 'case' shall be aligned
+=======================================================================
 
 Compliant example::
 
@@ -3071,8 +3061,8 @@ Compliant example::
        }
 
 
-AL-02: Function parameters shall be aligned
--------------------------------------------
+CS-16: Function parameters shall be aligned
+===========================================
 
 When function call parameters are not in single line, the parameters shall be
 aligned only with tabs. Mixed-use of spaces and tabs shall not be allowed. The
@@ -3099,11 +3089,9 @@ Compliant example::
 
 
 
-Comments
-========
 
-CM-01:  '//' shall not be used for single-line comments
--------------------------------------------------------
+CS-17:  '//' shall not be used for single-line comments
+=======================================================
 
 '/\*  \*/' shall be used to replace '//' for single-line comments.
 
