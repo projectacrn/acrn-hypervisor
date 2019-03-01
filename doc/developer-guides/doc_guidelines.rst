@@ -16,10 +16,10 @@ web browser. This same ``.rst`` content is also fed into the
 You can read details about `reStructuredText`_
 and about `Sphinx extensions`_ from their respective websites.
 
-.. _Sphinx extensions: http://www.sphinx-doc.org/en/stable/contents.html
+.. _Sphinx extensions: https://www.sphinx-doc.org/en/stable/contents.html
 .. _reStructuredText: http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
-.. _Sphinx Inline Markup:  http://sphinx-doc.org/markup/inline.html#inline-markup
-.. _Project ACRN documentation:  http://projectacrn.github.io
+.. _Sphinx Inline Markup: https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html 
+.. _Project ACRN documentation:  https://projectacrn.github.io
 
 This document provides a quick reference for commonly used reST and
 Sphinx-defined directives and roles used to create the documentation

@@ -56,7 +56,7 @@ Here is the hardware used for the demo development:
        * `Specifications
          <https://www.intel.com/content/dam/support/us/en/documents/mini-pcs/nuc-kits/NUC7i7DN_TechProdSpec.pdf>`_,
        * `Tested components and peripherals
-         <http://compatibleproducts.intel.com/ProductDetails?EPMID=130392>`_,
+         <http://compatibleproducts.intel.com/ProductDetails?prodSearch=True&searchTerm=NUC7i7DNHE#>`_,
        * 16GB RAM, and
        * 250GB SSD
    * - eDP display
