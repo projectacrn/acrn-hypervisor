@@ -37,7 +37,7 @@
 
 #define	PM1A_EVT_ADDR		0x400
 
-#define	IO_PMTMR		0x408	/* 4-byte i/o port for the timer */
+#define	IO_PMTMR		0x0	/* PM Timer is disabled in ACPI */
 
 /* All dynamic table entry no. */
 #define NHLT_ENTRY_NO		8
