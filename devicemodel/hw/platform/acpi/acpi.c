@@ -374,7 +374,7 @@ basl_fwrite_fadt(FILE *fp, struct vmctx *ctx)
 	EFPRINTF(fp, "[0001]\t\tPM1 Event Block Length : 04\n");
 	EFPRINTF(fp, "[0001]\t\tPM1 Control Block Length : 02\n");
 	EFPRINTF(fp, "[0001]\t\tPM2 Control Block Length : 00\n");
-	EFPRINTF(fp, "[0001]\t\tPM Timer Block Length : 04\n");
+	EFPRINTF(fp, "[0001]\t\tPM Timer Block Length : 00\n");
 	EFPRINTF(fp, "[0001]\t\tGPE0 Block Length : 00\n");
 	EFPRINTF(fp, "[0001]\t\tGPE1 Block Length : 00\n");
 	EFPRINTF(fp, "[0001]\t\tGPE1 Base Offset : 00\n");
