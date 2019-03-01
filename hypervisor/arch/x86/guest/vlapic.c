@@ -1032,6 +1032,69 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t lvt_index)
 	return ret;
 }
 
+static inline void set_dest_mask_phys(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest)
+{
+	uint16_t vcpu_id;
+
+	vcpu_id = vm_apicid2vcpu_id(vm, dest);
+	if (vcpu_id < vm->hw.created_vcpus) {
+		bitmap_set_nolock(vcpu_id, dmask);
+	}
+}
+
+/*
+ * This function tells if a vlapic belongs to the destination.
+ * If yes, return true, else reture false.
+ *
+ * @pre vlapic != NULL
+ */
+static inline bool is_dest_field_matched(const struct acrn_vlapic *vlapic, uint32_t dest)
+{
+	uint32_t logical_id, cluster_id, dest_logical_id, dest_cluster_id;
+	uint32_t ldr = vlapic->apic_page.ldr.v;
+	bool ret = false;
+
+	if (is_x2apic_enabled(vlapic)) {
+		logical_id = ldr & 0xFFFFU;
+		cluster_id = (ldr >> 16U) & 0xFFFFU;
+		dest_logical_id = dest & 0xFFFFU;
+		dest_cluster_id = (dest >> 16U) & 0xFFFFU;
+		if ((cluster_id == dest_cluster_id) && ((logical_id & dest_logical_id) != 0U)) {
+			ret = true;
+		}
+	} else {
+		uint32_t dfr = vlapic->apic_page.dfr.v;
+		if ((dfr & APIC_DFR_MODEL_MASK) == APIC_DFR_MODEL_FLAT) {
+			/*
+			 * In the "Flat Model" the MDA is interpreted as an 8-bit wide
+			 * bitmask. This model is available in the xAPIC mode only.
+			 */
+			logical_id = ldr >> 24U;
+			dest_logical_id = dest & 0xffU;
+			if ((logical_id & dest_logical_id) != 0U) {
+				ret = true;
+			}
+		} else if ((dfr & APIC_DFR_MODEL_MASK) == APIC_DFR_MODEL_CLUSTER) {
+			/*
+			 * In the "Cluster Model" the MDA is used to identify a
+			 * specific cluster and a set of APICs in that cluster.
+			 */
+			logical_id = (ldr >> 24U) & 0xfU;
+			cluster_id = ldr >> 28U;
+			dest_logical_id = dest & 0xfU;
+			dest_cluster_id = (dest >> 4U) & 0xfU;
+			if ((cluster_id == dest_cluster_id) && ((logical_id & dest_logical_id) != 0U)) {
+				ret = true;
+			}
+		} else {
+			/* Guest has configured a bad logical model for this vcpu. */
+			dev_dbg(ACRN_DBG_LAPIC,	"vlapic has bad logical model %x", dfr);
+		}
+	}
+
+	return ret;
+}
+
 /*
  * This function populates 'dmask' with the set of vcpus that match the
  * addressing specified by the (dest, phys, lowprio) tuple.
@@ -1039,159 +1102,81 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t lvt_index)
 void
 vlapic_calc_dest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, bool lowprio)
 {
-	struct acrn_vlapic *vlapic;
-	struct acrn_vlapic *target = NULL;
-	uint32_t dfr, ldr, ldest, cluster;
-	uint32_t mda_flat_ldest, mda_cluster_ldest, mda_ldest, mda_cluster_id;
-	uint64_t amask;
+	struct acrn_vlapic *vlapic, *lowprio_dest = NULL;
+	struct acrn_vcpu *vcpu;
 	uint16_t vcpu_id;
 
+	*dmask = 0UL;
 	if (dest == 0xffU) {
-		/*
-		 * Broadcast in both logical and physical modes.
-		 */
+		/* Broadcast in both logical and physical modes. */
 		*dmask = vm_active_cpus(vm);
 	} else if (phys) {
-		/*
-		 * Physical mode: destination is LAPIC ID.
-		 */
-		*dmask = 0UL;
-		vcpu_id = vm_apicid2vcpu_id(vm, dest);
-		if (vcpu_id < vm->hw.created_vcpus) {
-			bitmap_set_nolock(vcpu_id, dmask);
-		}
+		/* Physical mode: "dest" is local APIC ID. */
+		set_dest_mask_phys(vm, dmask, dest);
 	} else {
 		/*
-		 * Logical mode: match each APIC that has a bit set
-		 * in its LDR that matches a bit in the ldest.
+		 * Logical mode: "dest" is message destination addr
+		 * to be compared with the logical APIC ID in LDR.
 		 */
-		*dmask = 0UL;
-		amask = vm_active_cpus(vm);
-		for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
-			if ((amask & (1UL << vcpu_id)) != 0UL) {
-				vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
+		foreach_vcpu(vcpu_id, vm, vcpu) {
+			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
+			if (!is_dest_field_matched(vlapic, dest)) {
+				continue;
+			}
 
-				if (is_x2apic_enabled(vlapic)){
-					ldr = vlapic->apic_page.ldr.v;
-					ldest = ldr & 0xFFFFU;
-
-					mda_cluster_id = (dest >> 16U) & 0xFFFFU;
-					mda_ldest = dest & 0xFFFFU;
-					if (mda_cluster_id != ((ldr >> 16U) & 0xFFFFU)) {
-						continue;
-					}
-				} else {
-					/*
-					 * In the "Flat Model" the MDA is interpreted as an 8-bit wide
-					 * bitmask. This model is only available in the xAPIC mode.
-					 */
-					mda_flat_ldest = dest & 0xffU;
-
-					/*
-					 * In the "Cluster Model" the MDA is used to identify a
-					 * specific cluster and a set of APICs in that cluster.
-					 */
-					mda_cluster_id = (dest >> 4U) & 0xfU;
-					mda_cluster_ldest = dest & 0xfU;
-
-					dfr = vlapic->apic_page.dfr.v;
-					ldr = vlapic->apic_page.ldr.v;
-
-					if ((dfr & APIC_DFR_MODEL_MASK) ==
-							APIC_DFR_MODEL_FLAT) {
-						ldest = ldr >> 24U;
-						mda_ldest = mda_flat_ldest;
-					} else if ((dfr & APIC_DFR_MODEL_MASK) ==
-							APIC_DFR_MODEL_CLUSTER) {
-
-						cluster = ldr >> 28U;
-						ldest = (ldr >> 24U) & 0xfU;
-
-						if (cluster != mda_cluster_id) {
-							continue;
-						}
-						mda_ldest = mda_cluster_ldest;
-					} else {
-						/*
-						 * Guest has configured a bad logical
-						 * model for this vcpu - skip it.
-						 */
-						dev_dbg(ACRN_DBG_LAPIC,
-								"CANNOT deliver interrupt");
-						dev_dbg(ACRN_DBG_LAPIC,
-								"vlapic has bad logical model %x", dfr);
-						continue;
-					}
+			if (lowprio) {
+				/*
+				 * for lowprio delivery mode, the lowest-priority one
+				 * among all "dest" matched processors accepts the intr.
+				 */
+				if (lowprio_dest == NULL) {
+					lowprio_dest = vlapic;
+				} else if (lowprio_dest->apic_page.ppr.v > vlapic->apic_page.ppr.v) {
+					lowprio_dest = vlapic;
 				}
-				if ((mda_ldest & ldest) != 0U) {
-					if (lowprio) {
-						if (target == NULL) {
-							target = vlapic;
-						} else if (target->apic_page.ppr.v >
-								vlapic->apic_page.ppr.v) {
-							target = vlapic;
-						} else {
-							/* target is the dest */
-						}
-					} else {
-						bitmap_set_nolock(vcpu_id, dmask);
-					}
-				}
+			} else {
+				bitmap_set_nolock(vcpu_id, dmask);
 			}
 		}
 
-		if (lowprio && (target != NULL)) {
-			bitmap_set_nolock(target->vcpu->vcpu_id, dmask);
+		if (lowprio && (lowprio_dest != NULL)) {
+			bitmap_set_nolock(lowprio_dest->vcpu->vcpu_id, dmask);
 		}
 	}
 }
 
 /*
- * This function populates 'dmask' with the set of vcpus that is the possible destination
- * when lapic is passthru.
+ * This function populates 'dmask' with the set of "possible" destination vcpu when lapic is passthru.
+ * Hardware will handle the real delivery mode among all "possible" dest processors:
+ * deliver to the lowprio one for lowprio mode.
+ *
+ * @pre is_x2apic_enabled(vlapic) == true
  */
 void
 vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys)
 {
 	struct acrn_vlapic *vlapic;
 	struct acrn_vcpu *vcpu;
-	uint32_t ldr, logical_id, dest_logical_id, dest_cluster_id;
 	uint16_t vcpu_id;
 
+	*dmask = 0UL;
 	if (dest == 0xffU) {
-		/*
-		 * Broadcast in both logical and physical modes.
-		 */
+		/* Broadcast in both logical and physical modes. */
 		*dmask = vm_active_cpus(vm);
 	} else if (phys) {
-		/*
-		 * Physical mode: destination is LAPIC ID.
-		 */
-		*dmask = 0UL;
-		vcpu_id = vm_apicid2vcpu_id(vm, dest);
-		if (vcpu_id < vm->hw.created_vcpus) {
-			bitmap_set_nolock(vcpu_id, dmask);
-		}
-		dev_dbg(ACRN_DBG_LAPICPT, "%s: phys destmod, dmask: 0x%016llx", __func__, *dmask);
+		/* Physical mode: "dest" is local APIC ID. */
+		set_dest_mask_phys(vm, dmask, dest);
 	} else {
 		/*
-		 * Logical mode: match each APIC that has a bit set
-		 * in its LDR that matches a bit in the ldest.
+		 * Logical mode: "dest" is message destination addr
+		 * to be compared with the logical APIC ID in LDR.
 		 */
 		foreach_vcpu(vcpu_id, vm, vcpu) {
 			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
-
-			ldr = vlapic->apic_page.ldr.v;
-			logical_id = ldr & 0xFFFFU;
-
-			dest_cluster_id = (dest >> 16U) & 0xFFFFU;
-			dest_logical_id = dest & 0xFFFFU;
-			if (dest_cluster_id != ((ldr >> 16U) & 0xFFFFU)) {
+			if (!is_dest_field_matched(vlapic, dest)) {
 				continue;
 			}
-			if ((dest_logical_id & logical_id) != 0U) {
-				bitmap_set_nolock(vcpu_id, dmask);
-			}
+			bitmap_set_nolock(vcpu_id, dmask);
 		}
 		dev_dbg(ACRN_DBG_LAPICPT, "%s: logical destmod, dmask: 0x%016llx", __func__, *dmask);
 	}
