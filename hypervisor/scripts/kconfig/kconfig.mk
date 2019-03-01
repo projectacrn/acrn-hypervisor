@@ -29,13 +29,6 @@ override RELEASE := n
 endif
 endif
 
-OVERWRITTEN := ""
-ifeq ($(FIRMWARE),sbl)
-OVERWRITTEN += "PLATFORM_SBL=y"
-else ifeq ($(FIRMWARE),uefi)
-OVERWRITTEN += "PLATFORM_UEFI=y"
-endif
-
 -include $(HV_OBJDIR)/$(HV_CONFIG_MK)
 ifeq ($(shell [ $(HV_OBJDIR)/$(HV_CONFIG) -nt $(HV_OBJDIR)/$(HV_CONFIG_MK) ] && echo 1),1)
 # config.mk may be outdated if .config has been overwritten. To update config.mk
@@ -93,7 +86,7 @@ oldconfig: $(KCONFIG_DEPS)
 	@BOARD=$(TARGET_BOARD) \
 	 python3 $(KCONFIG_DIR)/silentoldconfig.py Kconfig \
 		$(HV_OBJDIR)/$(HV_CONFIG) \
-		RELEASE=$(RELEASE) $(OVERWRITTEN)
+		RELEASE=$(RELEASE)
 
 # Minimize the current .config. This target can be used to generate a defconfig
 # for future use.

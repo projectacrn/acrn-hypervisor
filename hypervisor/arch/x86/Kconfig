@@ -1,23 +1,4 @@
 choice
-	prompt "Type of boot firmware (BIOS) on the target platform"
-	default PLATFORM_SBL
-	help
-	  The boot firmware (BIOS) used on the target board.
-
-config PLATFORM_UEFI
-	bool "UEFI"
-	select EFI_STUB
-	help
-	  Select this if the target board uses UEFI.
-
-config PLATFORM_SBL
-	bool "SBL"
-	help
-	  Select this if the target board uses Slim Bootloader.
-
-endchoice
-
-choice
 	prompt "Hypervisor mode"
 	default SHARING_MODE
 	help
@@ -32,7 +13,6 @@ config SHARING_MODE
 
 config PARTITION_MODE
 	bool "Partition mode"
-	depends on PLATFORM_SBL
 	help
 	  In partition mode, every VM owns part of the physical resources
 	  exclusively and runs with minimal interference from the others. The VM
@@ -70,8 +50,7 @@ config MAX_VM_NUM
 config MAX_VCPUS_PER_VM
 	int "Maximum number of VCPUs per VM"
 	range 1 8
-	default 4 if PLATFORM_SBL
-	default 8 if PLATFORM_UEFI
+	default 8
 	help
 	  The maximum number of virtual CPUs the hypervisor can support in a
 	  single VM.
@@ -228,8 +207,7 @@ config LOW_RAM_SIZE
 
 config HV_RAM_START
 	hex "2M-aligned Start physical address of the RAM region used by the hypervisor"
-	default 0x6e000000 if PLATFORM_SBL
-	default 0x00400000 if PLATFORM_UEFI
+	default 0x00400000
 	help
 	  A 64-bit integer indicating the base physical address where the
 	  hypervisor should be loaded. If RELOC is disabled, the bootloader
@@ -243,8 +221,7 @@ config HV_RAM_START
 
 config HV_RAM_SIZE
 	hex "Size of the RAM region used by the hypervisor"
-	default 0x08000000 if PLATFORM_SBL
-	default 0x0b800000 if PLATFORM_UEFI
+	default 0x0b800000
 	help
 	  A 64-bit integer indicating the size of RAM used by the hypervisor.
 	  It is ensured at link time that the footprint of the hypervisor
@@ -252,24 +229,21 @@ config HV_RAM_SIZE
 
 config PLATFORM_RAM_SIZE
 	hex "Size of the physical platform RAM"
-	default 0x200000000 if PLATFORM_SBL
-	default 0x400000000 if PLATFORM_UEFI
+	default 0x400000000
 	help
 	  A 64-bit integer indicating the size of the physical platform RAM
 	  (MMIO not included).
 
 config SOS_RAM_SIZE
 	hex "Size of the Service OS (SOS) RAM"
-	default 0x200000000 if PLATFORM_SBL
-	default 0x400000000 if PLATFORM_UEFI
+	default 0x400000000
 	help
 	  A 64-bit integer indicating the size of the Service OS RAM (MMIO not
 	  included).
 
  config UOS_RAM_SIZE
 	hex "Size of the User OS (UOS) RAM"
-	default 0x100000000 if PLATFORM_SBL
-	default 0x200000000 if PLATFORM_UEFI
+	default 0x200000000
 	help
 	  A 64-bit integer indicating the size of the User OS RAM (MMIO not
 	  included). Now we assume each UOS uses same amount of RAM size.
@@ -285,8 +259,7 @@ config CONSTANT_ACPI
 
 config DMAR_PARSE_ENABLED
 	bool "Enable ACPI DMA Remapping tables parsing"
-	default n if PLATFORM_SBL
-	default y if PLATFORM_UEFI
+	default y
 	help
 	  Whether to parse the ACPI DMA Remapping tables at runtime.
 
@@ -327,8 +300,7 @@ config MAX_IR_ENTRIES
 
 config IOMMU_BUS_NUM
 	hex "Highest PCI bus ID used during IOMMU initialization"
-	default 0x10 if PLATFORM_SBL
-	default 0x100 if PLATFORM_UEFI
+	default 0x100
 	help
 	  Any BDF with a bus ID smaller than this number is mapped to
 	  the IOMMU domain of the first VM.

@@ -296,7 +296,7 @@ endif
 .PHONY: all
 all: lib $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
-ifeq ($(CONFIG_PLATFORM_SBL),y)
+ifeq ($(FIRMWARE),sbl)
 install: lib $(HV_OBJDIR)/$(HV_FILE).32.out
 ifeq ($(BOARD),apl-up2)
 	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).apl-up2.sbl
