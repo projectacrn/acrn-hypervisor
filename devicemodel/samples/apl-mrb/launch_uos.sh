@@ -465,7 +465,7 @@ echo "'#runc exec <vmname> bash' to login the container bash"
 exit
 }
 
-while getopts "V:M:hd:C" opt
+while getopts "V:M:hdC" opt
 do
 	case $opt in
 		V) launch_type=$[$OPTARG]
