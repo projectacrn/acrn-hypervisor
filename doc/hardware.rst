@@ -29,7 +29,7 @@ up ACRN on the NUC.
    https://www.anandtech.com/show/12295/intel-nuc6cayh-arches-canyon-apollo-lake-ucff-pc-review
 
 .. _Amazon:
-   https://www.amazon.com/s/ref=nb_sb_noss_2?url=search-alias%3Daps&field-keywords=NUC6CAYH
+   https://www.amazon.com/s?k=NUC6CAYH
 
 .. _SimplyNUC:
    https://www.simplynuc.com/?s=NUC6CAYH&post_type=product
@@ -61,7 +61,7 @@ also apply to KBL NUCs.
 UP Squared board
 ****************
 
-The `UP Squared board <http://www.up-board.org/upsquared/>`_ (UP2) is
+The `UP Squared board <http://www.up-board.org/upsquared/specifications/>`_ (UP2) is
 an x86 maker board based on the Intel Apollo Lake platform. The UP boards
 are used in IoT, industrial automation, digital signage, and more.
 

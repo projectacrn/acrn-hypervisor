@@ -13,7 +13,8 @@ Hardware setup
 Two Apollo Lake Intel platforms, described in :ref:`hardware`, are currently
 supported for ACRN development:
 
-- The `UP Squared board <http://www.up-board.org/upsquared/>`_ (UP2) is also
+- The `UP Squared board
+  <https://www.up-board.org/upsquared/specifications/>`_ (UP2) is also
   known to work and its setup is described in :ref:`getting-started-up2`.
 
 Firmware update on the NUC
