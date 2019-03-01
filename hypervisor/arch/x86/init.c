@@ -47,16 +47,6 @@ static void init_debug_post(uint16_t pcpu_id)
 	profiling_setup();
 }
 
-/*TODO: move into pass-thru module */
-static void init_passthru(void)
-{
-	if (init_iommu() != 0) {
-		panic("failed to initialize iommu!");
-	}
-
-	ptdev_init();
-}
-
 /*TODO: move into guest-vcpu module */
 static void enter_guest_mode(uint16_t pcpu_id)
 {
@@ -80,8 +70,6 @@ static void init_primary_cpu_post(void)
 	init_cpu_post(BOOT_CPU_ID);
 
 	init_debug_post(BOOT_CPU_ID);
-
-	init_passthru();
 
 	enter_guest_mode(BOOT_CPU_ID);
 }
