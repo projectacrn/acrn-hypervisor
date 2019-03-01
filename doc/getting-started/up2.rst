@@ -6,7 +6,7 @@ Getting started guide for UP2 board
 Hardware setup
 **************
 
-The `UP Squared board <http://www.up-board.org/upsquared/>`_ (UP2) is
+The `UP Squared board <http://www.up-board.org/upsquared/specifications/>`_ (UP2) is
 an x86 maker board based on the Intel Apollo Lake platform. The UP boards
 are used in IoT applications, industrial automation, digital signage, and more.
 

@@ -393,7 +393,7 @@ should obey these following rules (and more):
 Detailed configurations and policies are out of scope in this article.
 Good references for OS system security hardening and enhancement
 include: `AGL security
-<http://docs.automotivelinux.org/docs/architecture/en/dev/reference/security/01-overview.html>`_
+<http://docs.automotivelinux.org/master/docs/architecture/en/dev/reference/security/part-2/0_Abstract.html>`_
 and `Android security
 <https://source.android.com/security/>`_
 
