@@ -121,12 +121,11 @@ int32_t general_sw_loader(struct acrn_vm *vm)
 	}
 
 	sw_kernel->kernel_entry_addr = (void *)((uint64_t)sw_kernel->kernel_load_addr + kernel_entry_offset);
-	if (is_vcpu_bsp(vcpu)) {
-		/* Set VCPU entry point to kernel entry */
-		vcpu_set_rip(vcpu, (uint64_t)sw_kernel->kernel_entry_addr);
-		pr_info("%s, VM %hu VCPU %hu Entry: 0x%016llx ", __func__, vm->vm_id, vcpu->vcpu_id,
-			sw_kernel->kernel_entry_addr);
-	}
+
+	/* Set VCPU entry point to kernel entry */
+	vcpu_set_rip(vcpu, (uint64_t)sw_kernel->kernel_entry_addr);
+	pr_info("%s, VM %hu VCPU %hu Entry: 0x%016llx ", __func__, vm->vm_id, vcpu->vcpu_id,
+		sw_kernel->kernel_entry_addr);
 
 	/* Copy the guest kernel image to its run-time location */
 	(void)copy_to_gpa(vm, sw_kernel->kernel_src_addr,
