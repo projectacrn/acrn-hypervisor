@@ -2456,9 +2456,14 @@ static void vlapic_x2apic_self_ipi_handler(struct acrn_vlapic *vlapic)
 	struct acrn_vcpu *target_vcpu;
 
 	lapic = &(vlapic->apic_page);
-	vector = lapic->self_ipi.v & 0xFFU;
+	vector = lapic->self_ipi.v & APIC_VECTOR_MASK;
 	target_vcpu = vlapic->vcpu;
-	vlapic_set_intr(target_vcpu, vector, LAPIC_TRIG_EDGE);
+	if (vector < 16U) {
+		vlapic_set_error(vlapic, APIC_ESR_SEND_ILLEGAL_VECTOR);
+		dev_dbg(ACRN_DBG_LAPIC, "Ignoring invalid IPI %u", vector);
+	} else {
+		vlapic_set_intr(target_vcpu, vector, LAPIC_TRIG_EDGE);
+	}
 }
 
 int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
