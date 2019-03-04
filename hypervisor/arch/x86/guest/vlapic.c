@@ -793,9 +793,7 @@ vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
 
 		switch (mode) {
 		case APIC_LVT_DM_FIXED:
-			if (vlapic_accept_intr(vlapic, vec, LAPIC_TRIG_EDGE)) {
-				vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
-			}
+			vlapic_set_intr(vcpu, vec, LAPIC_TRIG_EDGE);
 			break;
 		case APIC_LVT_DM_NMI:
 			vcpu_inject_nmi(vcpu);
@@ -969,7 +967,7 @@ vlapic_set_error(struct acrn_vlapic *vlapic, uint32_t mask)
 static int32_t
 vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t lvt_index)
 {
-	uint32_t lvt, vec, mode;
+	uint32_t lvt;
 	int32_t ret = 0;
 	struct acrn_vcpu *vcpu = vlapic->vcpu;
 
@@ -1027,13 +1025,7 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t lvt_index)
 		}
 
 		if (ret == 0) {
-			vec = lvt & APIC_LVT_VECTOR;
-			mode = lvt & APIC_LVT_DM;
-			if ((mode == APIC_LVT_DM_FIXED) && (vec < 16U)) {
-				vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
-			} else {
-				vlapic_fire_lvt(vlapic, lvt);
-			}
+			vlapic_fire_lvt(vlapic, lvt);
 		}
 	}
 	return ret;
