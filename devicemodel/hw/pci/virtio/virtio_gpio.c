@@ -62,6 +62,37 @@
  *   +------------------+
  */
 
+/*
+ *  GPIO IRQ virtualization architecture
+ *
+ *               SOS                                         UOS
+ *  +-------------------------------+
+ *  |      virtio GPIO mediator     |
+ *  | +-------------------------+   |
+ *  | |     GPIO IRQ chip       |   | IRQ chip
+ *  | | +-------------------+   |   | virtqueue
+ *  | | |Enable, Disable    +<--|---|-----------+
+ *  | | |Mask, Unmask, Ack  |   |   |           |
+ *  | | +-------------------+   |   | IRQ event |
+ *  | | +--------------+        |   | virtqueue |
+ *  | | | Generate IRQ +--------|---|--------+  |
+ *  | | +--------------+        |   |        |  |
+ *  | +-------------------------+   |        |  |
+ *  |   ^    ^    ^    ^            |        |  |
+ *  +---|----|----|----|------------+        |  |
+ * -----|----|----|----|---------------------+--+-------------------------------
+ *    +-+----+----+----+-+                   |  | +------------+  +------------+
+ *    | gpiolib framework|                   |  | |IRQ consumer|  |IRQ consumer|
+ *    +------------------+                   |  | +------------+  +------------+
+ *                                           |  | +----------------------------+
+ *                                           |  | |   UOS gpiolib framework    |
+ *                                           |  | +----------------------------+
+ *                                           |  | +----------------------+
+ *                                           |  +-+   UOS virtio GPIO    |
+ *                                           +--->|   IRQ chip           |
+ *                                                +----------------------+
+ */
+
 static int gpio_debug;
 static FILE *dbg_file;
 #define VIRTIO_GPIO_LOG_INIT do {					\
@@ -93,7 +124,7 @@ static FILE *dbg_file;
 #define VIRTIO_GPIO_MAX_CHIPS	8
 
 /* Virtio GPIO virtqueue numbers*/
-#define VIRTIO_GPIO_MAXQ	1
+#define VIRTIO_GPIO_MAXQ	3
 
 /* Virtio GPIO capabilities */
 #define VIRTIO_GPIO_F_CHIP	1
@@ -164,6 +195,13 @@ struct virtio_gpio_config {
 	uint16_t	base;	/* base number */
 	uint16_t	ngpio;	/* number of gpios */
 } __attribute__((packed));
+
+struct virtio_gpio_irq_request {
+	uint8_t action;
+	uint8_t pin;
+	uint8_t mode;
+} __attribute__((packed));
+
 
 struct gpio_line {
 	char	name[32];		/* native gpio name */
@@ -749,6 +787,51 @@ native_gpio_init(struct virtio_gpio *gpio, char *opts)
 	free(b);
 	return ln == 0 ? -1 : 0;
 }
+static void
+virtio_gpio_irq_proc(struct virtio_gpio *gpio, struct iovec *iov, uint16_t flag)
+{
+	struct virtio_gpio_irq_request *req;
+	int len;
+
+	req = iov[0].iov_base;
+	len = iov[0].iov_len;
+	assert(len == sizeof(*req));
+	if (req->pin >= gpio->nvline) {
+		DPRINTF("virtio gpio, invalid IRQ pin %d, ignore action %d\n",
+			req->pin, req->action);
+		return;
+	}
+
+	/* implement in next patch */
+}
+
+static void
+virtio_irq_evt_notify(void *vdev, struct virtio_vq_info *vq)
+{
+	/* The front-end driver does not make a kick, just avoid warning */
+	DPRINTF("%s", "virtio gpio irq_evt_notify\n");
+}
+
+static void
+virtio_irq_notify(void *vdev, struct virtio_vq_info *vq)
+{
+	struct iovec iov[1];
+	struct virtio_gpio *gpio;
+	uint16_t idx, flag;
+	int n;
+
+	gpio = (struct virtio_gpio *)vdev;
+	if (vq_has_descs(vq)) {
+		n = vq_getchain(vq, &idx, iov, 1, &flag);
+		assert(n == 1);
+
+		virtio_gpio_irq_proc(gpio, iov, flag);
+		/*
+		 * Release this chain and handle more
+		 */
+		vq_relchain(vq, idx, 1);
+	}
+}
 
 static int
 virtio_gpio_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
@@ -813,6 +896,10 @@ virtio_gpio_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	gpio->base.mtx = &gpio->mtx;
 	gpio->queues[0].qsize = 64;
 	gpio->queues[0].notify = virtio_gpio_notify;
+	gpio->queues[1].qsize = 64;
+	gpio->queues[1].notify = virtio_irq_notify;
+	gpio->queues[2].qsize = 64;
+	gpio->queues[2].notify = virtio_irq_evt_notify;
 
 	/* initialize config space */
 	pci_set_cfgdata16(dev, PCIR_DEVICE, VIRTIO_DEV_GPIO);
