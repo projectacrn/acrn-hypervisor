@@ -34,13 +34,13 @@ static void uefi_init(void)
 	}
 }
 
-const struct uefi_context *get_efi_ctx(void)
+const struct uefi_context *get_uefi_ctx(void)
 {
 	uefi_init();
 	return &uefi_ctx;
 }
 
-const struct lapic_regs *get_efi_lapic_regs(void)
+const struct lapic_regs *get_uefi_lapic_regs(void)
 {
 	uefi_init();
 	return &uefi_lapic_regs;
@@ -80,6 +80,7 @@ static struct firmware_operations firmware_uefi_ops = {
 	.get_ap_trampoline = uefi_get_ap_trampoline,
 	.get_rsdp = uefi_get_rsdp,
 	.init_irq = uefi_init_irq,
+	.init_vm_boot_info = uefi_init_vm_boot_info,
 };
 
 struct firmware_operations* uefi_get_firmware_operations(void)

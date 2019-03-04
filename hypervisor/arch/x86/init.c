@@ -14,6 +14,7 @@
 #include <vmx.h>
 #include <vm.h>
 #include <logmsg.h>
+#include <firmware.h>
 
 /* Push sp magic to top of stack for call trace */
 #define SWITCH_TO(rsp, to)                                              \

@@ -111,7 +111,7 @@ static void *get_kernel_load_addr(void *kernel_src_addr)
  * @pre vm != NULL
  * @pre is_sos_vm(vm) == true
  */
-int32_t init_vm_boot_info(struct acrn_vm *vm)
+int32_t sbl_init_vm_boot_info(struct acrn_vm *vm)
 {
 	struct multiboot_module *mods = NULL;
 	struct multiboot_info *mbi = NULL;

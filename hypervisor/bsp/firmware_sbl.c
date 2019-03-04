@@ -36,6 +36,7 @@ static struct firmware_operations firmware_sbl_ops = {
 	.get_ap_trampoline = sbl_get_ap_trampoline,
 	.get_rsdp = sbl_get_rsdp,
 	.init_irq = sbl_init_irq,
+	.init_vm_boot_info = sbl_init_vm_boot_info,
 };
 
 struct firmware_operations* sbl_get_firmware_operations(void)

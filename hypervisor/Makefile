@@ -232,15 +232,10 @@ C_SRCS += bsp/firmware_uefi.c
 C_SRCS += bsp/cmdline.c
 C_SRCS += bsp/const_dmar.c
 
-ifeq ($(CONFIG_PLATFORM_UEFI),y)
 C_SRCS += boot/uefi/uefi_boot.c
-else
-ifeq ($(CONFIG_PLATFORM_SBL),y)
 C_SRCS += boot/sbl/multiboot.c
 C_SRCS += boot/sbl/sbl_seed_parse.c
 C_SRCS += boot/sbl/abl_seed_parse.c
-endif
-endif
 
 # retpoline support
 ifeq (true, $(shell [ $(GCC_MAJOR) -eq 7 ] && [ $(GCC_MINOR) -ge 3 ] && echo true))

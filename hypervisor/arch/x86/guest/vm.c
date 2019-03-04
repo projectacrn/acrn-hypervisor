@@ -23,6 +23,7 @@
 #include <mmu.h>
 #include <logmsg.h>
 #include <cat.h>
+#include <firmware.h>
 
 vm_sw_loader_t vm_sw_loader;
 
@@ -329,7 +330,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		create_sos_vm_e820(vm);
 		prepare_sos_vm_memmap(vm);
 
-		status = init_vm_boot_info(vm);
+		status = firmware_init_vm_boot_info(vm);
 		if (status == 0) {
 			init_fallback_iommu_domain(vm->iommu, vm->vm_id, vm->arch_vm.nworld_eptp);
 		} else {
@@ -358,7 +359,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 #ifdef CONFIG_PARTITION_MODE
 		create_prelaunched_vm_e820(vm);
 		prepare_prelaunched_vm_memmap(vm, vm_config);
-		(void)init_vm_boot_info(vm);
+		(void)firmware_init_vm_boot_info(vm);
 #endif
 	}
 

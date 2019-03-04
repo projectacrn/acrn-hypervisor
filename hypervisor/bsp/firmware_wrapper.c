@@ -9,6 +9,7 @@
 #include <firmware.h>
 #include <firmware_sbl.h>
 #include <firmware_uefi.h>
+#include "platform_acpi_info.h"
 
 static struct firmware_operations *firmware_ops;
 
@@ -76,4 +77,10 @@ void *firmware_get_rsdp(void)
 void firmware_init_irq(void)
 {
 	return firmware_ops->init_irq();
+}
+
+/* @pre: firmware_ops->init_vm_boot_info != NULL */
+int32_t firmware_init_vm_boot_info(struct acrn_vm *vm)
+{
+	return firmware_ops->init_vm_boot_info(vm);
 }
