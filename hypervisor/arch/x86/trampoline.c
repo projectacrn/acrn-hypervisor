@@ -9,7 +9,7 @@
 #include <per_cpu.h>
 #include <trampoline.h>
 #include <reloc.h>
-#include <bsp_extern.h>
+#include <firmware.h>
 #include <ld_sym.h>
 
 static uint64_t trampoline_start16_paddr;
@@ -110,7 +110,7 @@ uint64_t prepare_trampoline(void)
 	uint64_t size, dest_pa, i;
 
 	size = (uint64_t)(&ld_trampoline_end - &ld_trampoline_start);
-	dest_pa = bsp_get_ap_trampoline();
+	dest_pa = firmware_get_ap_trampoline();
 
 	pr_dbg("trampoline code: %llx size %x", dest_pa, size);
 

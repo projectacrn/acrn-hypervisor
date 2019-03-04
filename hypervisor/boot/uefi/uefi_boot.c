@@ -9,19 +9,6 @@
 #include <boot_context.h>
 #include <uefi.h>
 
-static void efi_spurious_handler(int32_t vector)
-{
-	if (get_cpu_id() == BOOT_CPU_ID) {
-		struct acrn_vcpu *vcpu = per_cpu(vcpu, BOOT_CPU_ID);
-
-		if (vcpu != NULL) {
-			vlapic_set_intr(vcpu, vector, LAPIC_TRIG_EDGE);
-		} else {
-			pr_err("%s vcpu or vlapic is not ready, interrupt lost\n", __func__);
-		}
-	}
-}
-
 static int32_t uefi_sw_loader(struct acrn_vm *vm)
 {
 	int32_t ret = 0;
@@ -56,7 +43,6 @@ static int32_t uefi_sw_loader(struct acrn_vm *vm)
 int32_t init_vm_boot_info(__unused struct acrn_vm *vm)
 {
 	vm_sw_loader = uefi_sw_loader;
-	spurious_handler = (spurious_handler_t)efi_spurious_handler;
 
 	return 0;
 }
