@@ -175,18 +175,11 @@ static inline uint64_t vm_active_cpus(const struct acrn_vm *vm)
 
 /*
  * @pre vcpu_id < CONFIG_MAX_VCPUS_PER_VM
+ * @pre &(vm->hw.vcpu_array[vcpu_id])->state != VCPU_OFFLINE
  */
 static inline struct acrn_vcpu *vcpu_from_vid(struct acrn_vm *vm, uint16_t vcpu_id)
 {
-	uint16_t i;
-	struct acrn_vcpu *vcpu;
-
-	foreach_vcpu(i, vm, vcpu) {
-		if (vcpu->vcpu_id == vcpu_id) {
-			break;
-		}
-	}
-	return vcpu;
+	return &(vm->hw.vcpu_array[vcpu_id]);
 }
 
 static inline struct acrn_vcpu *vcpu_from_pid(struct acrn_vm *vm, uint16_t pcpu_id)
@@ -196,21 +189,6 @@ static inline struct acrn_vcpu *vcpu_from_pid(struct acrn_vm *vm, uint16_t pcpu_
 
 	foreach_vcpu(i, vm, vcpu) {
 		if (vcpu->pcpu_id == pcpu_id) {
-			target_vcpu = vcpu;
-			break;
-		}
-	}
-
-	return target_vcpu;
-}
-
-static inline struct acrn_vcpu *get_primary_vcpu(struct acrn_vm *vm)
-{
-	uint16_t i;
-	struct acrn_vcpu *vcpu, *target_vcpu = NULL;
-
-	foreach_vcpu(i, vm, vcpu) {
-		if (is_vcpu_bsp(vcpu)) {
 			target_vcpu = vcpu;
 			break;
 		}

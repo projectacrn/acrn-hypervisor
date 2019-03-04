@@ -192,7 +192,7 @@ static int32_t vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
 
 	/* check if there is valid interrupt from vPIC, if yes just inject it */
 	/* PIC only connect with primary CPU */
-	primary = get_primary_vcpu(vm);
+	primary = vcpu_from_vid(vm, BOOT_CPU_ID);
 	if (vcpu == primary) {
 
 		vpic_pending_intr(vcpu->vm, &vector);
