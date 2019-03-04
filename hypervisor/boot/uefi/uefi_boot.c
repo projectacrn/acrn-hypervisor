@@ -25,7 +25,8 @@ static void efi_spurious_handler(int32_t vector)
 static int32_t uefi_sw_loader(struct acrn_vm *vm)
 {
 	int32_t ret = 0;
-	struct acrn_vcpu *vcpu = get_primary_vcpu(vm);
+	/* get primary vcpu */
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
 	struct acrn_vcpu_regs *vcpu_regs = &boot_context;
 	const struct efi_context *efi_ctx = get_efi_ctx();
 	const struct lapic_regs *uefi_lapic_regs = get_efi_lapic_regs();

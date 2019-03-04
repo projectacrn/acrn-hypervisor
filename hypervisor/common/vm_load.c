@@ -102,7 +102,8 @@ int32_t general_sw_loader(struct acrn_vm *vm)
 	struct zero_page *zeropage;
 	struct sw_linux *linux_info = &(vm->sw.linux_info);
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
-	struct acrn_vcpu *vcpu = get_primary_vcpu(vm);
+	/* get primary vcpu */
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
 	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
 
 	pr_dbg("Loading guest to run-time location");
