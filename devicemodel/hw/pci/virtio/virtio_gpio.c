@@ -212,6 +212,7 @@ struct gpio_line {
 	int	dir;			/* gpio direction */
 	bool	busy;			/* gpio line request by kernel */
 	struct native_gpio_chip	*chip;	/* parent gpio chip */
+	struct gpio_irq_desc	*irq;	/* connect to irq descriptor */
 };
 
 struct native_gpio_chip {
@@ -223,6 +224,24 @@ struct native_gpio_chip {
 	struct gpio_line	*lines;	/* gpio lines in the chip */
 };
 
+struct gpio_irq_desc {
+	struct gpio_line	*gpio;	/* connect to gpio line */
+	struct mevent		*mevt;	/* mevent for event report */
+	int			fd;	/* read event */
+	int			pin;	/* pin number */
+	bool			mask;	/* mask and unmask */
+	uint8_t			level;	/* level value */
+	uint64_t		mode;		/* interrupt trigger mode */
+	void			*data;		/* virtio gpio instance */
+};
+
+struct gpio_irq_chip {
+	pthread_mutex_t		intr_mtx;
+	struct gpio_irq_desc	descs[VIRTIO_GPIO_MAX_VLINES];
+	uint64_t		intr_pending;	/* pending interrupts */
+	uint64_t		intr_service;	/* service interrupts */
+};
+
 struct virtio_gpio {
 	struct virtio_base	base;
 	pthread_mutex_t	mtx;
@@ -232,6 +251,7 @@ struct virtio_gpio {
 	struct gpio_line	*vlines[VIRTIO_GPIO_MAX_VLINES];
 	uint32_t		nvline;
 	struct virtio_gpio_config	config;
+	struct gpio_irq_chip		irq_chip;
 };
 
 static void print_gpio_info(struct virtio_gpio *gpio);
@@ -833,6 +853,53 @@ virtio_irq_notify(void *vdev, struct virtio_vq_info *vq)
 	}
 }
 
+static void
+gpio_irq_deinit(struct virtio_gpio *gpio)
+{
+	struct gpio_irq_chip *chip;
+	struct gpio_irq_desc *desc;
+	int i;
+
+	chip = &gpio->irq_chip;
+	pthread_mutex_destroy(&chip->intr_mtx);
+	for (i = 0; i < gpio->nvline; i++) {
+		desc = &chip->descs[i];
+		if (desc->mevt) {
+			mevent_delete(desc->mevt);
+			desc->mevt = NULL;
+
+		/* desc fd will be closed by mevent teardown */
+		}
+	}
+}
+
+static int
+gpio_irq_init(struct virtio_gpio *gpio)
+{
+	struct gpio_irq_chip *chip;
+	struct gpio_irq_desc *desc;
+	struct gpio_line *line;
+	int i, rc;
+
+	chip = &gpio->irq_chip;
+	rc = pthread_mutex_init(&chip->intr_mtx, NULL);
+	if (rc) {
+		DPRINTF("IRQ pthread_mutex_init failed with error %d!\n", rc);
+		return -1;
+	}
+	for (i = 0; i < gpio->nvline; i++) {
+		desc = &chip->descs[i];
+		line = gpio->vlines[i];
+		desc->pin = i;
+		desc->fd = -1;
+		desc->mevt = NULL;
+		desc->data = gpio;
+		desc->gpio = line;
+		line->irq = desc;
+	}
+	return 0;
+}
+
 static int
 virtio_gpio_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
@@ -863,6 +930,12 @@ virtio_gpio_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (rc) {
 		DPRINTF("%s", "virtio gpio: failed to initialize gpio\n");
 		goto gpio_fail;
+	}
+
+	rc = gpio_irq_init(gpio);
+	if (rc) {
+		DPRINTF("%s", "virtio gpio: failed to initialize gpio irq\n");
+		goto irq_fail;
 	}
 
 	/* init mutex attribute properly to avoid deadlock */
@@ -927,6 +1000,9 @@ fail:
 	pthread_mutex_destroy(&gpio->mtx);
 
 mtx_fail:
+	gpio_irq_deinit(gpio);
+
+irq_fail:
 	for (i = 0; i < gpio->nchip; i++)
 		native_gpio_close_chip(&gpio->chips[i]);
 
@@ -950,6 +1026,7 @@ virtio_gpio_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	gpio = (struct virtio_gpio *)dev->arg;
 	if (gpio) {
 		pthread_mutex_destroy(&gpio->mtx);
+		gpio_irq_deinit(gpio);
 		for (i = 0; i < gpio->nchip; i++)
 			native_gpio_close_chip(&gpio->chips[i]);
 		free(gpio);
