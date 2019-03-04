@@ -17,7 +17,6 @@
 #include <bits.h>
 #include <spinlock.h>
 #include <acrn_common.h>
-#include <firmware.h>
 #include <vcpu.h>
 #include <vioapic.h>
 #include <vpic.h>

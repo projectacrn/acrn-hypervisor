@@ -13,6 +13,7 @@ struct firmware_operations {
 	uint64_t (*get_ap_trampoline)(void);
 	void *(*get_rsdp)(void);
 	void (*init_irq)(void);
+	int32_t (*init_vm_boot_info)(struct acrn_vm *vm);
 };
 
 void init_firmware_operations(void);
@@ -20,6 +21,7 @@ void init_firmware(void);
 uint64_t firmware_get_ap_trampoline(void);
 void *firmware_get_rsdp(void);
 void firmware_init_irq(void);
+int32_t firmware_init_vm_boot_info(struct acrn_vm *vm);
 
 #ifndef CONFIG_CONSTANT_ACPI
 void acpi_fixup(void);
