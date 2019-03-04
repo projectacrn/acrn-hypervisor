@@ -62,8 +62,8 @@ static void enter_guest_mode(uint16_t pcpu_id)
 
 static void init_primary_cpu_post(void)
 {
-	/* Perform any necessary BSP initialization */
-	init_bsp();
+	/* Perform any necessary firmware initialization */
+	init_firmware();
 
 	init_debug_pre();
 

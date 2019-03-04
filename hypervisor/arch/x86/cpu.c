@@ -25,6 +25,7 @@
 #include <ld_sym.h>
 #include <logmsg.h>
 #include <cat.h>
+#include <firmware.h>
 
 struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 static uint16_t phys_cpu_num = 0U;
@@ -111,6 +112,8 @@ void init_cpu_pre(uint16_t pcpu_id_args)
 		 * limit which is required for initializing paging.
 		 */
 		init_cpu_capabilities();
+
+		init_firmware_operations();
 
 		init_cpu_model_name();
 

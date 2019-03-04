@@ -15,7 +15,7 @@
 #include <ioapic.h>
 #include <lapic.h>
 #include <softirq.h>
-#include <bsp_extern.h>
+#include <firmware.h>
 #include <dump.h>
 #include <logmsg.h>
 
@@ -480,5 +480,5 @@ void interrupt_init(uint16_t pcpu_id)
 	init_lapic(pcpu_id);
 	init_default_irqs(pcpu_id);
 
-	bsp_init_irq();
+	firmware_init_irq();
 }

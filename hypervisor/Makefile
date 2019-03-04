@@ -226,15 +226,16 @@ C_SRCS += dm/vpci/msi.c
 C_SRCS += dm/vpci/msix.c
 endif
 
+C_SRCS += bsp/firmware_wrapper.c
+C_SRCS += bsp/firmware_sbl.c
+C_SRCS += bsp/firmware_uefi.c
+C_SRCS += bsp/cmdline.c
+C_SRCS += bsp/const_dmar.c
+
 ifeq ($(CONFIG_PLATFORM_UEFI),y)
-INCLUDE_PATH += bsp/include/uefi
-C_SRCS += bsp/uefi/uefi.c
-C_SRCS += bsp/uefi/cmdline.c
 C_SRCS += boot/uefi/uefi_boot.c
 else
 ifeq ($(CONFIG_PLATFORM_SBL),y)
-C_SRCS += bsp/sbl/sbl.c
-C_SRCS += bsp/sbl/const_dmar.c
 C_SRCS += boot/sbl/multiboot.c
 C_SRCS += boot/sbl/sbl_seed_parse.c
 C_SRCS += boot/sbl/abl_seed_parse.c

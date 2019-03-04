@@ -1,0 +1,28 @@
+/*
+ * Copyright (C) 2019 Intel Corporation. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#ifndef FIRMWARE_H
+
+#define FIRMWARE_H
+
+struct firmware_operations {
+	void (*init)(void);
+	uint64_t (*get_ap_trampoline)(void);
+	void *(*get_rsdp)(void);
+	void (*init_irq)(void);
+};
+
+void init_firmware_operations(void);
+void init_firmware(void);
+uint64_t firmware_get_ap_trampoline(void);
+void *firmware_get_rsdp(void);
+void firmware_init_irq(void);
+
+#ifndef CONFIG_CONSTANT_ACPI
+void acpi_fixup(void);
+#endif
+
+#endif /* end of include guard: FIRMWARE_H */
