@@ -89,6 +89,7 @@ uint8_t trusty_enabled;
 char *mac_seed;
 bool stdio_in_use;
 bool lapic_pt;
+bool skip_pci_mem64bar_workaround = false;
 
 static int virtio_msix = 1;
 static bool debugexit_enabled;
@@ -859,6 +860,7 @@ dm_run(int argc, char *argv[])
 				errx(EX_USAGE, "invalid ovmf param %s", optarg);
 				exit(1);
 			}
+			skip_pci_mem64bar_workaround = true;
 			break;
 		case CMD_OPT_PART_INFO:
 			if (acrn_parse_guest_part_info(optarg) != 0) {
