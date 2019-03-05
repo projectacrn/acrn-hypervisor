@@ -141,21 +141,6 @@ struct dmar_drhd_rt {
 	uint32_t fault_state[IOMMU_FAULT_REGISTER_STATE_NUM]; /* 32bit registers */
 };
 
-struct dmar_root_entry {
-	uint64_t lower;
-	uint64_t upper;
-};
-
-struct dmar_context_entry {
-	uint64_t lower;
-	uint64_t upper;
-};
-
-struct dmar_qi_desc {
-	uint64_t lower;
-	uint64_t upper;
-};
-
 struct context_table {
 	struct page buses[CONFIG_IOMMU_BUS_NUM];
 };
@@ -596,21 +581,21 @@ static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus, uint8
 	return dmar_unit;
 }
 
-static void dmar_issue_qi_request(struct dmar_drhd_rt *dmar_unit, struct dmar_qi_desc invalidate_desc)
+static void dmar_issue_qi_request(struct dmar_drhd_rt *dmar_unit, struct dmar_entry invalidate_desc)
 {
-	struct dmar_qi_desc *invalidate_desc_ptr;
+	struct dmar_entry *invalidate_desc_ptr;
 	__unused uint64_t start;
 
-	invalidate_desc_ptr = (struct dmar_qi_desc *)(dmar_unit->qi_queue + dmar_unit->qi_tail);
+	invalidate_desc_ptr = (struct dmar_entry *)(dmar_unit->qi_queue + dmar_unit->qi_tail);
 
-	invalidate_desc_ptr->upper = invalidate_desc.upper;
-	invalidate_desc_ptr->lower = invalidate_desc.lower;
+	invalidate_desc_ptr->hi_64 = invalidate_desc.hi_64;
+	invalidate_desc_ptr->lo_64 = invalidate_desc.lo_64;
 	dmar_unit->qi_tail = (dmar_unit->qi_tail + DMAR_QI_INV_ENTRY_SIZE) % DMAR_INVALIDATION_QUEUE_SIZE;
 
 	invalidate_desc_ptr++;
 
-	invalidate_desc_ptr->upper = hva2hpa(&qi_status);
-	invalidate_desc_ptr->lower = DMAR_INV_WAIT_DESC_LOWER;
+	invalidate_desc_ptr->hi_64 = hva2hpa(&qi_status);
+	invalidate_desc_ptr->lo_64 = DMAR_INV_WAIT_DESC_LOWER;
 	dmar_unit->qi_tail = (dmar_unit->qi_tail + DMAR_QI_INV_ENTRY_SIZE) % DMAR_INVALIDATION_QUEUE_SIZE;
 
 	qi_status = DMAR_INV_STATUS_INCOMPLETE;
@@ -637,27 +622,27 @@ static void dmar_issue_qi_request(struct dmar_drhd_rt *dmar_unit, struct dmar_qi
 static void dmar_invalid_context_cache(struct dmar_drhd_rt *dmar_unit,
 	uint16_t did, uint16_t sid, uint8_t fm, enum dmar_cirg_type cirg)
 {
-	struct dmar_qi_desc invalidate_desc;
+	struct dmar_entry invalidate_desc;
 
-	invalidate_desc.upper = 0UL;
-	invalidate_desc.lower = DMAR_INV_CONTEXT_CACHE_DESC;
+	invalidate_desc.hi_64 = 0UL;
+	invalidate_desc.lo_64 = DMAR_INV_CONTEXT_CACHE_DESC;
 	switch (cirg) {
 	case DMAR_CIRG_GLOBAL:
-		invalidate_desc.lower |= DMA_CONTEXT_GLOBAL_INVL;
+		invalidate_desc.lo_64 |= DMA_CONTEXT_GLOBAL_INVL;
 		break;
 	case DMAR_CIRG_DOMAIN:
-		invalidate_desc.lower |= DMA_CONTEXT_DOMAIN_INVL | dma_ccmd_did(did);
+		invalidate_desc.lo_64 |= DMA_CONTEXT_DOMAIN_INVL | dma_ccmd_did(did);
 		break;
 	case DMAR_CIRG_DEVICE:
-		invalidate_desc.lower |= DMA_CCMD_DEVICE_INVL | dma_ccmd_did(did) | dma_ccmd_sid(sid) | dma_ccmd_fm(fm);
+		invalidate_desc.lo_64 |= DMA_CCMD_DEVICE_INVL | dma_ccmd_did(did) | dma_ccmd_sid(sid) | dma_ccmd_fm(fm);
 		break;
 	default:
-		invalidate_desc.lower = 0UL;
+		invalidate_desc.lo_64 = 0UL;
 		pr_err("unknown CIRG type");
 		break;
 	}
 
-	if (invalidate_desc.lower != 0UL) {
+	if (invalidate_desc.lo_64 != 0UL) {
 		spinlock_obtain(&(dmar_unit->lock));
 
 		dmar_issue_qi_request(dmar_unit, invalidate_desc);
@@ -677,34 +662,34 @@ static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_unit, uint16_t did, uin
 	/* set Drain Reads & Drain Writes,
 	 * if hardware doesn't support it, will be ignored by hardware
 	 */
-	struct dmar_qi_desc invalidate_desc;
+	struct dmar_entry invalidate_desc;
 	uint64_t addr = 0UL;
 
-	invalidate_desc.upper = 0UL;
+	invalidate_desc.hi_64 = 0UL;
 
-	invalidate_desc.lower = DMA_IOTLB_DR | DMA_IOTLB_DW | DMAR_INV_IOTLB_DESC;
+	invalidate_desc.lo_64 = DMA_IOTLB_DR | DMA_IOTLB_DW | DMAR_INV_IOTLB_DESC;
 
 	switch (iirg) {
 	case DMAR_IIRG_GLOBAL:
-		invalidate_desc.lower |= DMA_IOTLB_GLOBAL_INVL;
+		invalidate_desc.lo_64 |= DMA_IOTLB_GLOBAL_INVL;
 		break;
 	case DMAR_IIRG_DOMAIN:
-		invalidate_desc.lower |= DMA_IOTLB_DOMAIN_INVL | dma_iotlb_did(did);
+		invalidate_desc.lo_64 |= DMA_IOTLB_DOMAIN_INVL | dma_iotlb_did(did);
 		break;
 	case DMAR_IIRG_PAGE:
-		invalidate_desc.lower |= DMA_IOTLB_PAGE_INVL | dma_iotlb_did(did);
+		invalidate_desc.lo_64 |= DMA_IOTLB_PAGE_INVL | dma_iotlb_did(did);
 		addr = address | dma_iotlb_invl_addr_am(am);
 		if (hint) {
 			addr |= DMA_IOTLB_INVL_ADDR_IH_UNMODIFIED;
 		}
-		invalidate_desc.upper |= addr;
+		invalidate_desc.hi_64 |= addr;
 		break;
 	default:
-		invalidate_desc.lower = 0UL;
+		invalidate_desc.lo_64 = 0UL;
 		pr_err("unknown IIRG type");
 	}
 
-	if (invalidate_desc.lower != 0UL) {
+	if (invalidate_desc.lo_64 != 0UL) {
 		spinlock_obtain(&(dmar_unit->lock));
 
 		dmar_issue_qi_request(dmar_unit, invalidate_desc);
@@ -753,18 +738,18 @@ static void dmar_set_intr_remap_table(struct dmar_drhd_rt *dmar_unit)
 static void dmar_invalid_iec(struct dmar_drhd_rt *dmar_unit, uint16_t intr_index,
 				uint8_t index_mask, bool is_global)
 {
-	struct dmar_qi_desc invalidate_desc;
+	struct dmar_entry invalidate_desc;
 
-	invalidate_desc.upper = 0UL;
-	invalidate_desc.lower = DMAR_INV_IEC_DESC;
+	invalidate_desc.hi_64 = 0UL;
+	invalidate_desc.lo_64 = DMAR_INV_IEC_DESC;
 
 	if (is_global) {
-		invalidate_desc.lower |= DMAR_IEC_GLOBAL_INVL;
+		invalidate_desc.lo_64 |= DMAR_IEC_GLOBAL_INVL;
 	} else {
-		invalidate_desc.lower |= DMAR_IECI_INDEXED | dma_iec_index(intr_index, index_mask);
+		invalidate_desc.lo_64 |= DMAR_IECI_INDEXED | dma_iec_index(intr_index, index_mask);
 	}
 
-	if (invalidate_desc.lower != 0UL) {
+	if (invalidate_desc.lo_64 != 0UL) {
 		spinlock_obtain(&(dmar_unit->lock));
 
 		dmar_issue_qi_request(dmar_unit, invalidate_desc);
@@ -899,7 +884,7 @@ static void dmar_fault_handler(uint32_t irq, void *data)
 	uint32_t fsr;
 	uint32_t index;
 	uint32_t record_reg_offset;
-	uint64_t record[2];
+	struct dmar_entry fault_record;
 	int32_t loop = 0;
 
 	dev_dbg(ACRN_DBG_IOMMU, "%s: irq = %d", __func__, irq);
@@ -920,17 +905,17 @@ static void dmar_fault_handler(uint32_t irq, void *data)
 		}
 
 		/* read 128-bit fault recording register */
-		record[0] = iommu_read64(dmar_unit, record_reg_offset);
-		record[1] = iommu_read64(dmar_unit, record_reg_offset + 8U);
+		fault_record.lo_64 = iommu_read64(dmar_unit, record_reg_offset);
+		fault_record.hi_64 = iommu_read64(dmar_unit, record_reg_offset + 8U);
 
 		dev_dbg(ACRN_DBG_IOMMU, "%s: record[%d] @0x%x:  0x%llx, 0x%llx",
-			__func__, index, record_reg_offset, record[0], record[1]);
+			__func__, index, record_reg_offset, fault_record.lo_64, fault_record.hi_64);
 
-		fault_record_analysis(record[0], record[1]);
+		fault_record_analysis(fault_record.lo_64, fault_record.hi_64);
 
 		/* write to clear */
-		iommu_write64(dmar_unit, record_reg_offset, record[0]);
-		iommu_write64(dmar_unit, record_reg_offset + 8U, record[1]);
+		iommu_write64(dmar_unit, record_reg_offset, fault_record.lo_64);
+		iommu_write64(dmar_unit, record_reg_offset + 8U, fault_record.hi_64);
 
 #ifdef DMAR_FAULT_LOOP_MAX
 		if (loop > DMAR_FAULT_LOOP_MAX) {
@@ -1049,13 +1034,13 @@ static void dmar_resume(struct dmar_drhd_rt *dmar_unit)
 static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
-	struct dmar_root_entry *root_table;
+	struct dmar_entry *root_table;
 	uint64_t context_table_addr;
-	struct dmar_context_entry *context;
-	struct dmar_root_entry *root_entry;
-	struct dmar_context_entry *context_entry;
-	uint64_t upper;
-	uint64_t lower = 0UL;
+	struct dmar_entry *context;
+	struct dmar_entry *root_entry;
+	struct dmar_entry *context_entry;
+	uint64_t hi_64;
+	uint64_t lo_64 = 0UL;
 	int32_t ret = 0;
 
 	dmar_unit = device_to_dmaru(segment, bus, devfun);
@@ -1074,11 +1059,11 @@ static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, u
 			dev_dbg(ACRN_DBG_IOMMU, "vm=%d add %x:%x no snoop control!", domain->vm_id, bus, devfun);
 		}
 
-		root_table = (struct dmar_root_entry *)hpa2hva(dmar_unit->root_table_addr);
+		root_table = (struct dmar_entry *)hpa2hva(dmar_unit->root_table_addr);
 
 		root_entry = root_table + bus;
 
-		if (dmar_get_bitslice(root_entry->lower,
+		if (dmar_get_bitslice(root_entry->lo_64,
 					ROOT_ENTRY_LOWER_PRESENT_MASK,
 					ROOT_ENTRY_LOWER_PRESENT_POS) == 0UL) {
 			/* create context table for the bus if not present */
@@ -1086,36 +1071,36 @@ static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, u
 
 			context_table_addr = context_table_addr >> PAGE_SHIFT;
 
-			lower = dmar_set_bitslice(lower,
+			lo_64 = dmar_set_bitslice(lo_64,
 					ROOT_ENTRY_LOWER_CTP_MASK, ROOT_ENTRY_LOWER_CTP_POS, context_table_addr);
-			lower = dmar_set_bitslice(lower,
+			lo_64 = dmar_set_bitslice(lo_64,
 					ROOT_ENTRY_LOWER_PRESENT_MASK, ROOT_ENTRY_LOWER_PRESENT_POS, 1UL);
 
-			root_entry->upper = 0UL;
-			root_entry->lower = lower;
-			iommu_flush_cache(dmar_unit, root_entry, sizeof(struct dmar_root_entry));
+			root_entry->hi_64 = 0UL;
+			root_entry->lo_64 = lo_64;
+			iommu_flush_cache(dmar_unit, root_entry, sizeof(struct dmar_entry));
 		} else {
-			context_table_addr = dmar_get_bitslice(root_entry->lower,
+			context_table_addr = dmar_get_bitslice(root_entry->lo_64,
 					ROOT_ENTRY_LOWER_CTP_MASK, ROOT_ENTRY_LOWER_CTP_POS);
 		}
 
 		context_table_addr = context_table_addr << PAGE_SHIFT;
 
-		context = (struct dmar_context_entry *)hpa2hva(context_table_addr);
+		context = (struct dmar_entry *)hpa2hva(context_table_addr);
 		context_entry = context + devfun;
 
 		if (context_entry == NULL) {
 			pr_err("dmar context entry is invalid");
 			ret = -EINVAL;
-		} else if (dmar_get_bitslice(context_entry->lower, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS) != 0UL) {
+		} else if (dmar_get_bitslice(context_entry->lo_64, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS) != 0UL) {
 			/* the context entry should not be present */
-			pr_err("%s: context entry@0x%llx (Lower:%x) ", __func__, context_entry, context_entry->lower);
+			pr_err("%s: context entry@0x%llx (Lower:%x) ", __func__, context_entry, context_entry->lo_64);
 			pr_err("already present for %x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
 			ret = -EBUSY;
 		} else {
 			/* setup context entry for the devfun */
-			upper = 0UL;
-			lower = 0UL;
+			hi_64 = 0UL;
+			lo_64 = 0UL;
 			if (domain->is_host) {
 				if (iommu_ecap_pt(dmar_unit->ecap) != 0U) {
 					/* When the Translation-type (T) field indicates
@@ -1123,9 +1108,9 @@ static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, u
 					 * programmed to indicate the largest AGAW value
 					 * supported by hardware.
 					 */
-					upper = dmar_set_bitslice(upper,
+					hi_64 = dmar_set_bitslice(hi_64,
 							CTX_ENTRY_UPPER_AW_MASK, CTX_ENTRY_UPPER_AW_POS, dmar_unit->cap_msagaw);
-					lower = dmar_set_bitslice(lower,
+					lo_64 = dmar_set_bitslice(lo_64,
 							CTX_ENTRY_LOWER_TT_MASK, CTX_ENTRY_LOWER_TT_POS, DMAR_CTX_TT_PASSTHROUGH);
 				} else {
 					pr_err("dmaru[%d] doesn't support trans passthrough", dmar_unit->index);
@@ -1133,22 +1118,22 @@ static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, u
 				}
 			} else {
 				/* TODO: add Device TLB support */
-				upper = dmar_set_bitslice(upper,
+				hi_64 = dmar_set_bitslice(hi_64,
 						CTX_ENTRY_UPPER_AW_MASK, CTX_ENTRY_UPPER_AW_POS, (uint64_t)width_to_agaw(domain->addr_width));
-				lower = dmar_set_bitslice(lower,
+				lo_64 = dmar_set_bitslice(lo_64,
 						CTX_ENTRY_LOWER_TT_MASK, CTX_ENTRY_LOWER_TT_POS, DMAR_CTX_TT_UNTRANSLATED);
 			}
 
 			if (ret == 0) {
-				upper = dmar_set_bitslice(upper,
+				hi_64 = dmar_set_bitslice(hi_64,
 						CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS, (uint64_t)vmid_to_domainid(domain->vm_id));
-				lower = dmar_set_bitslice(lower,
+				lo_64 = dmar_set_bitslice(lo_64,
 						CTX_ENTRY_LOWER_SLPTPTR_MASK, CTX_ENTRY_LOWER_SLPTPTR_POS, domain->trans_table_ptr >> PAGE_SHIFT);
-				lower = dmar_set_bitslice(lower, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS, 1UL);
+				lo_64 = dmar_set_bitslice(lo_64, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS, 1UL);
 
-				context_entry->upper = upper;
-				context_entry->lower = lower;
-				iommu_flush_cache(dmar_unit, context_entry, sizeof(struct dmar_context_entry));
+				context_entry->hi_64 = hi_64;
+				context_entry->lo_64 = lo_64;
+				iommu_flush_cache(dmar_unit, context_entry, sizeof(struct dmar_entry));
 			}
 		}
 	}
@@ -1159,11 +1144,11 @@ static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, u
 static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
-	struct dmar_root_entry *root_table;
+	struct dmar_entry *root_table;
 	uint64_t context_table_addr;
-	struct dmar_context_entry *context;
-	struct dmar_root_entry *root_entry;
-	struct dmar_context_entry *context_entry;
+	struct dmar_entry *context;
+	struct dmar_entry *root_entry;
+	struct dmar_entry *context_entry;
 	int32_t ret = 0;
 
 	dmar_unit = device_to_dmaru(segment, bus, devfun);
@@ -1171,30 +1156,30 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t s
 		pr_err("no dmar unit found for device: %x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
 		ret = -EINVAL;
 	} else {
-		root_table = (struct dmar_root_entry *)hpa2hva(dmar_unit->root_table_addr);
+		root_table = (struct dmar_entry *)hpa2hva(dmar_unit->root_table_addr);
 		root_entry = root_table + bus;
 
 		if (root_entry == NULL) {
 			pr_err("dmar root table entry is invalid\n");
 			ret = -EINVAL;
 		} else {
-			context_table_addr = dmar_get_bitslice(root_entry->lower,  ROOT_ENTRY_LOWER_CTP_MASK, ROOT_ENTRY_LOWER_CTP_POS);
+			context_table_addr = dmar_get_bitslice(root_entry->lo_64,  ROOT_ENTRY_LOWER_CTP_MASK, ROOT_ENTRY_LOWER_CTP_POS);
 			context_table_addr = context_table_addr << PAGE_SHIFT;
-			context = (struct dmar_context_entry *)hpa2hva(context_table_addr);
+			context = (struct dmar_entry *)hpa2hva(context_table_addr);
 
 			context_entry = context + devfun;
 
 			if (context_entry == NULL) {
 				pr_err("dmar context entry is invalid");
 				ret = -EINVAL;
-			} else if ((uint16_t)dmar_get_bitslice(context_entry->upper, CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS) != vmid_to_domainid(domain->vm_id)) {
+			} else if ((uint16_t)dmar_get_bitslice(context_entry->hi_64, CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS) != vmid_to_domainid(domain->vm_id)) {
 				pr_err("%s: domain id mismatch", __func__);
 				ret = -EPERM;
 			} else {
 				/* clear the present bit first */
-				context_entry->lower = 0UL;
-				context_entry->upper = 0UL;
-				iommu_flush_cache(dmar_unit, context_entry, sizeof(struct dmar_context_entry));
+				context_entry->lo_64 = 0UL;
+				context_entry->hi_64 = 0UL;
+				iommu_flush_cache(dmar_unit, context_entry, sizeof(struct dmar_entry));
 
 				dmar_invalid_context_cache_global(dmar_unit);
 				dmar_invalid_iotlb_global(dmar_unit);
@@ -1404,8 +1389,8 @@ int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, 
 		irte.bits.fpd = 0x0UL;
 		ir_table = (union dmar_ir_entry *)hpa2hva(dmar_unit->ir_table_addr);
 		ir_entry = ir_table + index;
-		ir_entry->entry.upper = irte.entry.upper;
-		ir_entry->entry.lower = irte.entry.lower;
+		ir_entry->entry.hi_64 = irte.entry.hi_64;
+		ir_entry->entry.lo_64 = irte.entry.lo_64;
 
 		iommu_flush_cache(dmar_unit, ir_entry, sizeof(union dmar_ir_entry));
 		dmar_invalid_iec_global(dmar_unit);

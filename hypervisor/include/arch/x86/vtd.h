@@ -489,11 +489,13 @@ struct dmar_info {
 	struct dmar_drhd *drhd_units;
 };
 
+struct dmar_entry {
+	uint64_t lo_64;
+	uint64_t hi_64;
+};
+
 union dmar_ir_entry {
-	struct {
-		uint64_t lower;
-		uint64_t upper;
-	} entry;
+	struct dmar_entry entry;
 	struct {
 		uint64_t present:1;
 		uint64_t fpd:1;

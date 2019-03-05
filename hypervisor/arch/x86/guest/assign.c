@@ -101,8 +101,8 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *
 	dest_mask = calculate_logical_dest_mask(pdmask);
 
 	/* Using phys_irq as index in the corresponding IOMMU */
-	irte.entry.lower = 0UL;
-	irte.entry.upper = 0UL;
+	irte.entry.lo_64 = 0UL;
+	irte.entry.hi_64 = 0UL;
 	irte.bits.vector = vector;
 	irte.bits.delivery_mode = delmode;
 	irte.bits.dest_mode = MSI_ADDR_DESTMODE_LOGICAL;
@@ -197,8 +197,8 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 		vector = irq_to_vector(phys_irq);
 		dest_mask = calculate_logical_dest_mask(pdmask);
 
-		irte.entry.lower = 0UL;
-		irte.entry.upper = 0UL;
+		irte.entry.lo_64 = 0UL;
+		irte.entry.hi_64 = 0UL;
 		irte.bits.vector = vector;
 		irte.bits.delivery_mode = delmode;
 		irte.bits.dest_mode = IOAPIC_RTE_DESTMODE_LOGICAL;
