@@ -1372,12 +1372,30 @@ virtio_gpio_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	VIRTIO_GPIO_LOG_DEINIT;
 }
 
+static void
+virtio_gpio_write_dsdt(struct pci_vdev *dev)
+{
+	dsdt_line("");
+	dsdt_line("Device (AGPI)");
+	dsdt_line("{");
+	dsdt_line("    Name (_ADR, 0x%04X%04X)", dev->slot, dev->func);
+	dsdt_line("    Name (_DDN, \"Virtio GPIO Controller \")");
+	dsdt_line("    Name (_UID, One)");
+	dsdt_line("    Name (LINK, \"\\\\_SB_.PCI0.AGPI\")");
+	dsdt_line("    Method (_CRS, 0, NotSerialized)");
+	dsdt_line("    {");
+	dsdt_line("    }");
+	dsdt_line("}");
+	dsdt_line("");
+}
+
 struct pci_vdev_ops pci_ops_virtio_gpio = {
 	.class_name	= "virtio-gpio",
 	.vdev_init	= virtio_gpio_init,
 	.vdev_deinit	= virtio_gpio_deinit,
 	.vdev_barwrite	= virtio_pci_write,
 	.vdev_barread	= virtio_pci_read,
+	.vdev_write_dsdt	= virtio_gpio_write_dsdt,
 };
 
 static void
