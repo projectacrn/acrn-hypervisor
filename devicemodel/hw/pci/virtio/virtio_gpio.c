@@ -117,6 +117,8 @@ static FILE *dbg_file;
 	}								\
 } while (0)
 
+#define BIT(x) (1 << (x))
+
 /* Virtio GPIO supports maximum number of virtual gpio */
 #define VIRTIO_GPIO_MAX_VLINES	64
 
@@ -129,6 +131,14 @@ static FILE *dbg_file;
 /* Virtio GPIO capabilities */
 #define VIRTIO_GPIO_F_CHIP	1
 #define VIRTIO_GPIO_S_HOSTCAPS	VIRTIO_GPIO_F_CHIP
+
+#define IRQ_TYPE_NONE		0
+#define IRQ_TYPE_EDGE_RISING	(1 << 0)
+#define IRQ_TYPE_EDGE_FALLING	(1 << 1)
+#define IRQ_TYPE_LEVEL_HIGH	(1 << 2)
+#define IRQ_TYPE_LEVEL_LOW	(1 << 3)
+#define IRQ_TYPE_EDGE_BOTH	(IRQ_TYPE_EDGE_FALLING | IRQ_TYPE_EDGE_RISING)
+#define IRQ_TYPE_LEVEL_MASK	(IRQ_TYPE_LEVEL_LOW | IRQ_TYPE_LEVEL_HIGH)
 
 /* make virtio gpio mediator a singleton mode */
 static bool virtio_gpio_is_active;
@@ -169,6 +179,16 @@ enum virtio_gpio_request_command {
 	GPIO_REQ_SET_CONFIG		= 5,
 
 	GPIO_REQ_MAX
+};
+
+enum gpio_irq_action {
+	IRQ_ACTION_ENABLE   = 0,
+	IRQ_ACTION_DISABLE,
+	IRQ_ACTION_ACK,
+	IRQ_ACTION_MASK,
+	IRQ_ACTION_UNMASK,
+
+	IRQ_ACTION_MAX
 };
 
 struct virtio_gpio_request {
@@ -807,10 +827,255 @@ native_gpio_init(struct virtio_gpio *gpio, char *opts)
 	free(b);
 	return ln == 0 ? -1 : 0;
 }
+
+static void
+gpio_irq_deliver_intr(struct virtio_gpio *gpio, uint64_t mask)
+{
+	struct virtio_vq_info *vq;
+	struct iovec iov[1];
+	uint16_t idx;
+	uint64_t *data;
+
+	vq = &gpio->queues[2];
+	if (vq_has_descs(vq) && mask) {
+		vq_getchain(vq, &idx, iov, 1, NULL);
+		data = iov[0].iov_base;
+		assert(sizeof(*data) == iov[0].iov_len);
+
+		*data = mask;
+
+		/*
+		 * Release this chain and handle more
+		 */
+		vq_relchain(vq, idx, sizeof(*data));
+
+		/* Generate interrupt if appropriate. */
+		vq_endchains(vq, 1);
+
+	} else
+		DPRINTF("virtio gpio failed to send an IRQ, mask %lu", mask);
+}
+
+static void
+gpio_irq_generate_intr(struct virtio_gpio *gpio, int pin)
+{
+	struct gpio_irq_chip *chip;
+	struct gpio_irq_desc *desc;
+
+	chip = &gpio->irq_chip;
+	desc = &chip->descs[pin];
+
+	/* Ignore interrupt until it is unmasked */
+	if (desc->mask)
+		return;
+
+	pthread_mutex_lock(&chip->intr_mtx);
+
+	/* set it to pending mask */
+	chip->intr_pending |= BIT(pin);
+
+	/*
+	 * if all interrupts in service are acknowledged, then send pending
+	 * interrupts.
+	 */
+	if (!chip->intr_service) {
+		chip->intr_service = chip->intr_pending;
+		chip->intr_pending = 0;
+
+		/* deliver interrupt */
+		gpio_irq_deliver_intr(gpio, chip->intr_service);
+	}
+	pthread_mutex_unlock(&chip->intr_mtx);
+}
+
+static void
+gpio_irq_set_pin_state(int fd __attribute__((unused)),
+		enum ev_type t __attribute__((unused)),
+		void *arg)
+{
+	struct gpioevent_data data;
+	struct virtio_gpio *gpio;
+	struct gpio_irq_desc *desc;
+	int last_level, err;
+
+	assert(arg != NULL);
+	desc = (struct gpio_irq_desc *) arg;
+	gpio = (struct virtio_gpio *) desc->data;
+	last_level = desc->level;
+
+	/* get pin state */
+	memset(&data, 0, sizeof(data));
+	err = read(desc->fd, &data, sizeof(data));
+	if (err != sizeof(data)) {
+		DPRINTF("virtio gpio, gpio mevent read error %s, len %d\n",
+				strerror(errno), err);
+		return;
+	}
+
+	if (data.id == GPIOEVENT_EVENT_RISING_EDGE) {
+
+		/* pin level is high */
+		desc->level = 1;
+
+		/* jitter protection */
+		if (((desc->mode & IRQ_TYPE_EDGE_RISING) && (last_level == 0))
+				|| (desc->mode & IRQ_TYPE_LEVEL_HIGH)) {
+			gpio_irq_generate_intr(gpio, desc->pin);
+		}
+	} else if (data.id == GPIOEVENT_EVENT_FALLING_EDGE) {
+
+		/* pin level is low */
+		desc->level = 0;
+
+		/* jitter protection */
+		if (((desc->mode & IRQ_TYPE_EDGE_FALLING) && (last_level == 1))
+				|| (desc->mode & IRQ_TYPE_LEVEL_LOW)) {
+			gpio_irq_generate_intr(gpio, desc->pin);
+		}
+	} else
+		DPRINTF("virtio gpio, undefined GPIO event id %d\n", data.id);
+}
+
+static void
+gpio_irq_disable(struct gpio_irq_chip *chip, unsigned int pin)
+{
+	struct gpio_irq_desc *desc;
+
+	if (pin >= VIRTIO_GPIO_MAX_VLINES) {
+		DPRINTF(" gpio irq disable pin %d is invalid\n", pin);
+		return;
+	}
+	desc = &chip->descs[pin];
+	DPRINTF("disable IRQ pin %d <-> native chip %s, GPIO %d\n",
+		pin, desc->gpio->chip->dev_name, desc->gpio->offset);
+
+	/* Release the mevent, mevent teardown handles IRQ desc reset */
+	if (desc->mevt) {
+		mevent_delete(desc->mevt);
+		desc->mevt = NULL;
+	}
+}
+
+static void
+gpio_irq_teardown(void *param)
+{
+	struct gpio_irq_desc *desc;
+
+	DPRINTF("%s", "virtio gpio tear down\n");
+	assert(param != NULL);
+	desc = (struct gpio_irq_desc *) param;
+	desc->mask = false;
+	desc->mode = IRQ_TYPE_NONE;
+	if (desc->fd > -1) {
+		close(desc->fd);
+		desc->fd = -1;
+	}
+}
+
+static void
+gpio_irq_enable(struct virtio_gpio *gpio, unsigned int pin,
+		uint64_t mode)
+{
+	struct gpioevent_request req;
+	struct gpio_line *line;
+	struct gpio_irq_chip *chip;
+	struct gpio_irq_desc *desc;
+	int err;
+
+	chip = &gpio->irq_chip;
+	desc = &chip->descs[pin];
+	line = desc->gpio;
+	DPRINTF("enable IRQ pin %d, mode %lu <-> chip %s, GPIO %d\n",
+		pin, mode, desc->gpio->chip->dev_name, desc->gpio->offset);
+
+	/*
+	 * Front-end should set the gpio direction to input before
+	 * enable one gpio to irq, so get the gpio value directly
+	 * no need to set it to input direction.
+	 */
+	desc->level = gpio_get_value(gpio, pin);
+
+	/* Release the GPIO line before enable it for IRQ */
+	native_gpio_close_line(line);
+
+	memset(&req, 0, sizeof(req));
+	if (mode & IRQ_TYPE_EDGE_RISING)
+		req.eventflags |= GPIOEVENT_REQUEST_RISING_EDGE;
+	if (mode & IRQ_TYPE_EDGE_FALLING)
+		req.eventflags |= GPIOEVENT_REQUEST_FALLING_EDGE;
+
+	/*
+	 * For level tigger, detect rising and fallling edges to
+	 * update the IRQ level value, the value is used to check
+	 * the level IRQ is active.
+	 */
+	if (mode & IRQ_TYPE_LEVEL_MASK)
+		req.eventflags |= GPIOEVENT_REQUEST_BOTH_EDGES;
+	if (!req.eventflags) {
+		DPRINTF("failed to enable pin %d to IRQ with invalid flags\n",
+				pin);
+		return;
+	}
+
+	desc->mode = mode;
+	req.lineoffset = line->offset;
+	strncpy(req.consumer_label, "acrn_dm_irq",
+			sizeof(req.consumer_label) - 1);
+	err = ioctl(line->chip->fd, GPIO_GET_LINEEVENT_IOCTL, &req);
+	if (err < 0) {
+		DPRINTF("ioctl GPIO_GET_LINEEVENT_IOCTL error %s\n",
+				strerror(errno));
+		goto error;
+	}
+
+	desc->fd = req.fd;
+	desc->mevt = mevent_add(desc->fd, EVF_READ,
+			gpio_irq_set_pin_state, desc,
+			gpio_irq_teardown, desc);
+	if (!desc->mevt) {
+		DPRINTF("failed to enable IRQ pin %d, mevent add error\n",
+				pin);
+		goto error;
+	}
+
+	return;
+error:
+	gpio_irq_disable(chip, pin);
+}
+
+static bool
+gpio_irq_has_pending_intr(struct gpio_irq_desc *desc)
+{
+	bool level_high, level_low;
+
+	/*
+	 * For level trigger mode, check the pin mode and level value
+	 * to resend an interrupt.
+	 */
+	if (desc->mode & IRQ_TYPE_LEVEL_MASK) {
+		level_high = desc->mode & IRQ_TYPE_LEVEL_HIGH;
+		level_low = desc->mode & IRQ_TYPE_LEVEL_LOW;
+		if ((level_high && desc->level == 1) ||
+				(level_low && desc->level == 0))
+			return true;
+	}
+	return false;
+}
+
+static void
+gpio_irq_clear_intr(struct gpio_irq_chip *chip, int pin)
+{
+	pthread_mutex_lock(&chip->intr_mtx);
+	chip->intr_service &= ~BIT(pin);
+	pthread_mutex_unlock(&chip->intr_mtx);
+}
+
 static void
 virtio_gpio_irq_proc(struct virtio_gpio *gpio, struct iovec *iov, uint16_t flag)
 {
 	struct virtio_gpio_irq_request *req;
+	struct gpio_irq_chip *chip;
+	struct gpio_irq_desc *desc;
 	int len;
 
 	req = iov[0].iov_base;
@@ -822,7 +1087,42 @@ virtio_gpio_irq_proc(struct virtio_gpio *gpio, struct iovec *iov, uint16_t flag)
 		return;
 	}
 
-	/* implement in next patch */
+	chip = &gpio->irq_chip;
+	desc = &chip->descs[req->pin];
+	switch (req->action) {
+	case IRQ_ACTION_ENABLE:
+		/*
+		 * TODO: need to notify the FE driver
+		 *       if gpio_irq_enable failure.
+		 */
+		gpio_irq_enable(gpio, req->pin, req->mode);
+		break;
+	case IRQ_ACTION_DISABLE:
+		gpio_irq_disable(chip, req->pin);
+
+		/* reopen the GPIO */
+		native_gpio_open_line(desc->gpio, 0, 0);
+		break;
+	case IRQ_ACTION_ACK:
+		/*
+		 * For level trigger, we need to check the level value
+		 * for next interrupt.
+		 */
+		gpio_irq_clear_intr(chip, req->pin);
+		if (gpio_irq_has_pending_intr(desc))
+			gpio_irq_generate_intr(gpio, req->pin);
+		break;
+	case IRQ_ACTION_MASK:
+		desc->mask = true;
+		break;
+	case IRQ_ACTION_UNMASK:
+		desc->mask = false;
+		if (gpio_irq_has_pending_intr(desc))
+			gpio_irq_generate_intr(gpio, req->pin);
+		break;
+	default:
+		DPRINTF("virtio gpio, unknown IRQ action %d\n", req->action);
+	}
 }
 
 static void
@@ -850,6 +1150,9 @@ virtio_irq_notify(void *vdev, struct virtio_vq_info *vq)
 		 * Release this chain and handle more
 		 */
 		vq_relchain(vq, idx, 1);
+
+		/* Generate interrupt if appropriate. */
+		vq_endchains(vq, 1);
 	}
 }
 
