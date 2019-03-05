@@ -231,7 +231,6 @@ INCLUDE_PATH += bsp/include/uefi
 C_SRCS += bsp/uefi/uefi.c
 C_SRCS += bsp/uefi/cmdline.c
 C_SRCS += boot/uefi/uefi_boot.c
-TEMPLATE_ACPI_INFO_HEADER := bsp/include/uefi/platform_acpi_info.h
 else
 ifeq ($(CONFIG_PLATFORM_SBL),y)
 C_SRCS += bsp/sbl/sbl.c
@@ -239,7 +238,6 @@ C_SRCS += bsp/sbl/const_dmar.c
 C_SRCS += boot/sbl/multiboot.c
 C_SRCS += boot/sbl/sbl_seed_parse.c
 C_SRCS += boot/sbl/abl_seed_parse.c
-TEMPLATE_ACPI_INFO_HEADER := bsp/include/sbl/platform_acpi_info.h
 endif
 endif
 
@@ -266,7 +264,9 @@ DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 VERSION := $(HV_OBJDIR)/include/version.h
 
 # Create platform_acpi_info.h
-SOURCE_ACPI_INFO_HEADER := bsp/include/$(CONFIG_BOARD)_acpi_info.h
+TEMPLATE_ACPI_INFO_HEADER := arch/x86/configs/platform_acpi_info.h
+BOARDTEMPLATE_ACPI_INFO_HEADER := arch/x86/configs/$(CONFIG_BOARD)/platform_acpi_info.h
+SOURCE_ACPI_INFO_HEADER := arch/x86/configs/$(CONFIG_BOARD)/$(CONFIG_BOARD)_acpi_info.h
 TARGET_ACPI_INFO_HEADER := $(HV_OBJDIR)/include/platform_acpi_info.h
 
 $(TARGET_ACPI_INFO_HEADER): $(HV_OBJDIR)/$(HV_CONFIG)
@@ -282,11 +282,16 @@ ifdef CONFIG_ENFORCE_VALIDATED_ACPI_INFO
 	 echo "If you want to build the hypervisor with the template ACPI info," && \
 	 echo "unset ENFORCE_VALIDATED_ACPI_INFO using 'make menuconfig'." && \
 	 false
-else
+else ifeq (,$(wildcard $(BOARDTEMPLATE_ACPI_INFO_HEADER)))
 	@echo "" && \
 	 echo "Using the template at $(TEMPLATE_ACPI_INFO_HEADER) instead" && \
 	 echo "**********************************"
 	@cp $(TEMPLATE_ACPI_INFO_HEADER) $(TARGET_ACPI_INFO_HEADER)
+else
+	@echo "" && \
+	 echo "Using the template at $(BOARDTEMPLATE_ACPI_INFO_HEADER) instead" && \
+	 echo "**********************************"
+	@cp $(BOARDTEMPLATE_ACPI_INFO_HEADER) $(TARGET_ACPI_INFO_HEADER)
 endif
 else
 	@cp $(SOURCE_ACPI_INFO_HEADER) $(TARGET_ACPI_INFO_HEADER)
