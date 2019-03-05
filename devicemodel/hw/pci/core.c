@@ -88,6 +88,8 @@ static uint64_t pci_emul_iobase;
 static uint64_t pci_emul_membase32;
 static uint64_t pci_emul_membase64;
 
+extern bool skip_pci_mem64bar_workaround;
+
 #define	PCI_EMUL_IOBASE		0x2000
 #define	PCI_EMUL_IOLIMIT	0x10000
 
@@ -694,6 +696,22 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 		lobits = PCIM_BAR_IO_SPACE;
 		break;
 	case PCIBAR_MEM64:
+		/*
+		 * FIXME
+		 * Some drivers do not work well if the 64-bit BAR is allocated
+		 * above 4GB. Allow for this by allocating small requests under
+		 * 4GB unless then allocation size is larger than some arbitrary
+		 * number (32MB currently). If guest booted by ovmf, then skip the
+		 * workaround.
+		 */
+		if (!skip_pci_mem64bar_workaround && (size <= 32 * 1024 * 1024)) {
+			baseptr = &pci_emul_membase32;
+			limit = PCI_EMUL_MEMLIMIT32;
+			mask = PCIM_BAR_MEM_BASE;
+			lobits = PCIM_BAR_MEM_SPACE | PCIM_BAR_MEM_64;
+			break;
+		}
+
 		/*
 		 * XXX special case for device requiring peer-peer DMA
 		 */
