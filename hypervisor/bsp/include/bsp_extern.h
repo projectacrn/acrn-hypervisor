@@ -18,9 +18,6 @@
 #ifndef BSP_EXTERN_H
 #define BSP_EXTERN_H
 
-#include "default_acpi_info.h"
-#include "platform_acpi_info.h"
-
 /* BSP Interfaces */
 void init_bsp(void);
 uint64_t bsp_get_ap_trampoline(void);

@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-/* This is a template header file for platform ACPI info definition,
- * we should use a user space tool running on target to generate this file.
+/* This is a template header file for apl-mrb platform ACPI info definition,
+ * we should use a user space tool running on target to generate apl-mrb
+ * specific acpi info file named as apl-mrb_acpi_info.h
+ * and put it in hypervisor/arch/x86/configs/apl-mrb/.
  */
 #ifndef PLATFORM_ACPI_INFO_H
 #define PLATFORM_ACPI_INFO_H

@@ -6,6 +6,7 @@
 
 #include <hypervisor.h>
 #include <vtd.h>
+#include <platform_acpi_info.h>
 
 #ifndef CONFIG_DMAR_PARSE_ENABLED
 
