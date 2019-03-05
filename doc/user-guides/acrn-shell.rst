@@ -12,32 +12,35 @@ The ACRN hypervisor shell supports the following commands:
    * - Command (and parameters)
      - Description
    * - help
-     - Displays information about supported hypervisor shell commands
+     - Display information about supported hypervisor shell commands
    * - vm_list
-     - Lists all VMs, displaying VM Name, VM ID, and VM State (ON=running)
+     - List all VMs, displaying the VM name, ID, and state ("Started"=running)
    * - vcpu_list
-     - Lists all VCPUs in all VMs
-   * - vcpu_dumpreg <vm_id, vcpu_id>
-     - Dumps registers for a specific VCPU
-   * - dumpmem <hva, length>
-     - Dumps host memory, starting a given address, and for
-       a given length (in bytes)
+     - List all vCPUs in all VMs
+   * - vcpu_dumpreg <vm_id> <vcpu_id>
+     - Dump registers for a specific vCPU
+   * - dumpmem <hva> <length>
+     - Dump host memory, starting at a given address, and for a given length
+       (in bytes)
    * - sos_console
-     - Switches to the SOS's console
+     - Switch to the SOS's console. Use [Ctrl+Spacebar] to return to the ACRN
+       shell console
    * - int
-     - Lists interrupt information per CPU
+     - List interrupt information per CPU
    * - pt
-     - Shows pass-through device information
-   * - reboot
-     - Triggers a system reboot (immediately)
+     - Show pass-through device information
+   * - vioapic <vm_id>
+     - Show virtual IOAPIC (vIOAPIC) information for a specific VM
    * - dump_ioapic
-     - Shows native ioapic information
-   * - vmexit
-     - Shows vmexit profiling
-   * - logdump <pcpu_id>
-     - Dumps the log buffer for the physical CPU
-   * - loglevel [console_loglevel] [mem_loglevel]
-     - Get (when no parameters are given)  or Set loglevel [0 (none) - 6 (verbose)] for the console and optionally
-       for memory
+     - Show native IOAPIC information
+   * - loglevel <console_loglevel> <mem_loglevel> <npk_logevel>
+     - * If no parameters are given, the command will return the level of
+         logging for respectively the console, memory and npk
+       * Give (up to) three parameters between ``0`` (none) and ``6`` (verbose)
+         to set the loglevel for the console, memory, and npk (in
+         that order). If less than three parameters are given, the
+         loglevels for the remaining areas will not be changed
    * - cpuid <leaf> [subleaf]
-     - Displays the CPUID leaf [subleaf], in hexadecimal
+     - Display the CPUID leaf [subleaf], in hexadecimal
+   * - reboot
+     - Trigger a system reboot (immediately)
