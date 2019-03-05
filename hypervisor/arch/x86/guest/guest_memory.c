@@ -215,7 +215,9 @@ static int32_t local_gva2gpa_pae(struct acrn_vcpu *vcpu, struct page_walk_info *
 	base = (uint64_t *)gpa2hva(vcpu->vm, addr);
 	if (base != NULL) {
 		index = (gva >> 30U) & 0x3UL;
+		stac();
 		entry = base[index];
+		clac();
 
 		if ((entry & PAGE_PRESENT) != 0U) {
 			pw_info->level = 2U;
