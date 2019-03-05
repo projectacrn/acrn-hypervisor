@@ -71,13 +71,12 @@ static inline void pci_vdev_write_cfg_u32(struct pci_vdev *vdev, uint32_t offset
 extern const struct vpci_ops partition_mode_vpci_ops;
 #else
 extern const struct vpci_ops sharing_mode_vpci_ops;
+extern const struct pci_vdev_ops pci_ops_vdev_msi;
 extern const struct pci_vdev_ops pci_ops_vdev_msix;
 #endif
 
 uint32_t pci_vdev_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
 void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
-
-void populate_msi_struct(struct pci_vdev *vdev);
 
 void add_vdev_handler(struct pci_vdev *vdev, const struct pci_vdev_ops *ops);
 

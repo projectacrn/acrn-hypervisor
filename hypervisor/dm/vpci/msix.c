@@ -319,7 +319,7 @@ static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *
 	return ret;
 }
 
-static int32_t vmsix_init(struct pci_vdev *vdev)
+static int32_t vmsix_init_helper(struct pci_vdev *vdev)
 {
 	uint32_t i;
 	uint64_t addr_hi, addr_lo;
@@ -361,7 +361,7 @@ static int32_t vmsix_init(struct pci_vdev *vdev)
 			 */
 
 			/* The higher boundary of the 4KB aligned address range for MSI-X table */
-			addr_hi = msix->mmio_gpa + msix->table_offset + msix->table_count * MSIX_TABLE_ENTRY_SIZE;
+			addr_hi = msix->mmio_gpa + msix->table_offset + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
 			addr_hi = round_page_up(addr_hi);
 
 			/* The lower boundary of the 4KB aligned address range for MSI-X table */
@@ -378,6 +378,24 @@ static int32_t vmsix_init(struct pci_vdev *vdev)
 		pr_err("%s, MSI-X device (%x) invalid table BIR %d", __func__, vdev->pdev->bdf.value, msix->table_bar);
 		vdev->msix.capoff = 0U;
 	    ret = -EIO;
+	}
+
+	return ret;
+}
+
+static int32_t vmsix_init(struct pci_vdev *vdev)
+{
+	struct pci_pdev *pdev = vdev->pdev;
+	int32_t ret = 0;
+
+	if (pdev->msix.capoff != 0U) {
+		vdev->msix.capoff = pdev->msix.capoff;
+		vdev->msix.caplen = pdev->msix.caplen;
+
+		(void)memcpy_s((void *)&vdev->cfgdata.data_8[pdev->msix.capoff], pdev->msix.caplen,
+			(void *)&pdev->msix.cap[0U], pdev->msix.caplen);
+
+		ret = vmsix_init_helper(vdev);
 	}
 
 	return ret;
