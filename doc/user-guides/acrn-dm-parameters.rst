@@ -263,8 +263,9 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
      - Open Virtual Machine Firmware (OVMF) is an EDK II based project to enable
        UEFI support for Virtual Machines.
 
-       ACRN currently does not support off-the-shelf OVMF builds targeted for
-       QEMU and KVM. This feature is still under development.
+       ACRN does not support off-the-shelf OVMF builds targeted for QEMU and
+       KVM. Compatible OVMF images are included in the source tree, under
+       ``devicemodel/bios/``.
 
        usage::
 
