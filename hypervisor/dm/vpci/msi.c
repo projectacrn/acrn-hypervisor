@@ -34,6 +34,8 @@
 #include <vpci.h>
 #include "pci_priv.h"
 
+static int32_t vmsi_init(struct pci_vdev *vdev);
+
 static inline bool msicap_access(const struct pci_vdev *vdev, uint32_t offset)
 {
 	bool ret;
@@ -166,7 +168,8 @@ static int32_t vmsi_deinit(struct pci_vdev *vdev)
 	return 0;
 }
 
-static const struct pci_vdev_ops pci_ops_vdev_msi = {
+const struct pci_vdev_ops pci_ops_vdev_msi = {
+	.init = vmsi_init,
 	.deinit = vmsi_deinit,
 	.cfgwrite = vmsi_cfgwrite,
 	.cfgread = vmsi_cfgread,
@@ -187,7 +190,7 @@ static void buf_write32(uint8_t buf[], uint32_t val)
 	buf[3] = (uint8_t)((val >> 24U) & 0xFFU);
 }
 
-void populate_msi_struct(struct pci_vdev *vdev)
+static int32_t vmsi_init(struct pci_vdev *vdev)
 {
 	struct pci_pdev *pdev = vdev->pdev;
 	uint32_t val;
@@ -196,9 +199,6 @@ void populate_msi_struct(struct pci_vdev *vdev)
 	if (pdev->msi.capoff != 0U) {
 		vdev->msi.capoff = pdev->msi.capoff;
 		vdev->msi.caplen = pdev->msi.caplen;
-
-		/* Assign MSI handler for configuration read and write */
-		add_vdev_handler(vdev, &pci_ops_vdev_msi);
 
 		(void)memcpy_s((void *)&vdev->cfgdata.data_8[pdev->msi.capoff], pdev->msi.caplen,
 			(void *)&pdev->msi.cap[0U], pdev->msi.caplen);
@@ -210,15 +210,6 @@ void populate_msi_struct(struct pci_vdev *vdev)
 		buf_write32(&vdev->cfgdata.data_8[pdev->msi.capoff], val);
 	}
 
-	if (pdev->msix.capoff != 0U) {
-		vdev->msix.capoff = pdev->msix.capoff;
-		vdev->msix.caplen = pdev->msix.caplen;
-
-		/* Assign MSI-X handler for configuration read and write */
-		add_vdev_handler(vdev, &pci_ops_vdev_msix);
-
-		(void)memcpy_s((void *)&vdev->cfgdata.data_8[pdev->msix.capoff], pdev->msix.caplen,
-			(void *)&pdev->msix.cap[0U], pdev->msix.caplen);
-	}
+	return 0;
 }
 

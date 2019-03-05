@@ -137,7 +137,11 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *cb_data)
 
 	vdev = alloc_pci_vdev(vm, pdev);
 	if (vdev != NULL) {
-		populate_msi_struct(vdev);
+		/* Assign MSI handler for configuration read and write */
+		add_vdev_handler(vdev, &pci_ops_vdev_msi);
+
+		/* Assign MSI-X handler for configuration read and write */
+		add_vdev_handler(vdev, &pci_ops_vdev_msix);
 	}
 }
 
