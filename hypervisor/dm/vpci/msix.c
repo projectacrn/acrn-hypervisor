@@ -60,7 +60,7 @@ static int32_t vmsix_remap_entry(const struct pci_vdev *vdev, uint32_t index, bo
 {
 	struct msix_table_entry *pentry;
 	struct ptirq_msi_info info;
-	uint64_t hva;
+	void *hva;
 	int32_t ret;
 
 	info.is_msix = 1;
@@ -70,7 +70,7 @@ static int32_t vmsix_remap_entry(const struct pci_vdev *vdev, uint32_t index, bo
 	ret = ptirq_msix_remap(vdev->vpci->vm, vdev->vbdf.value, (uint16_t)index, &info);
 	if (ret == 0) {
 		/* Write the table entry to the physical structure */
-		hva = vdev->msix.mmio_hva + vdev->msix.table_offset;
+		hva = hpa2hva(vdev->msix.mmio_hpa + vdev->msix.table_offset);
 		pentry = (struct msix_table_entry *)hva + index;
 
 		/*
@@ -280,7 +280,7 @@ static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *
 	struct pci_vdev *vdev;
 	int32_t ret = 0;
 	uint64_t offset;
-	uint64_t hva;
+	void *hva;
 
 	vdev = (struct pci_vdev *)handler_private_data;
 	offset = mmio->address - vdev->msix.mmio_gpa;
@@ -288,13 +288,13 @@ static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *
 	if (msixtable_access(vdev, (uint32_t)offset)) {
 		vmsix_table_rw(vdev, mmio, (uint32_t)offset);
 	} else {
-		hva = vdev->msix.mmio_hva + offset;
+		hva = hpa2hva(vdev->msix.mmio_hpa + offset);
 
 		/* Only DWORD and QWORD are permitted */
 		if ((mmio->size != 4U) && (mmio->size != 8U)) {
 			pr_err("%s, Only DWORD and QWORD are permitted", __func__);
 			ret = -EINVAL;
-		} else {
+		} else if (hva != NULL) {
 			stac();
 			/* MSI-X PBA and Capability Table could be in the same range */
 			if (mmio->direction == REQUEST_READ) {
@@ -319,7 +319,7 @@ static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *
 	return ret;
 }
 
-static int32_t vmsix_init(struct pci_vdev *vdev)
+static int32_t vmsix_init_helper(struct pci_vdev *vdev)
 {
 	uint32_t i;
 	uint64_t addr_hi, addr_lo;
@@ -342,7 +342,7 @@ static int32_t vmsix_init(struct pci_vdev *vdev)
 
 		bar = &pdev->bar[msix->table_bar];
 		if (bar != NULL) {
-			vdev->msix.mmio_hva = (uint64_t)hpa2hva(bar->base);
+			vdev->msix.mmio_hpa = bar->base;
 			vdev->msix.mmio_gpa = sos_vm_hpa2gpa(bar->base);
 			vdev->msix.mmio_size = bar->size;
 		}
@@ -361,7 +361,7 @@ static int32_t vmsix_init(struct pci_vdev *vdev)
 			 */
 
 			/* The higher boundary of the 4KB aligned address range for MSI-X table */
-			addr_hi = msix->mmio_gpa + msix->table_offset + msix->table_count * MSIX_TABLE_ENTRY_SIZE;
+			addr_hi = msix->mmio_gpa + msix->table_offset + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
 			addr_hi = round_page_up(addr_hi);
 
 			/* The lower boundary of the 4KB aligned address range for MSI-X table */
@@ -378,6 +378,24 @@ static int32_t vmsix_init(struct pci_vdev *vdev)
 		pr_err("%s, MSI-X device (%x) invalid table BIR %d", __func__, vdev->pdev->bdf.value, msix->table_bar);
 		vdev->msix.capoff = 0U;
 	    ret = -EIO;
+	}
+
+	return ret;
+}
+
+static int32_t vmsix_init(struct pci_vdev *vdev)
+{
+	struct pci_pdev *pdev = vdev->pdev;
+	int32_t ret = 0;
+
+	if (pdev->msix.capoff != 0U) {
+		vdev->msix.capoff = pdev->msix.capoff;
+		vdev->msix.caplen = pdev->msix.caplen;
+
+		(void)memcpy_s((void *)&vdev->cfgdata.data_8[pdev->msix.capoff], pdev->msix.caplen,
+			(void *)&pdev->msix.cap[0U], pdev->msix.caplen);
+
+		ret = vmsix_init_helper(vdev);
 	}
 
 	return ret;
