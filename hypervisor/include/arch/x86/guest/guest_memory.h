@@ -36,8 +36,6 @@ enum vm_paging_mode get_vcpu_paging_mode(struct acrn_vcpu *vcpu);
 /* gpa --> hpa -->hva */
 void *gpa2hva(struct acrn_vm *vm, uint64_t x);
 
-uint64_t hva2gpa(struct acrn_vm *vm, void *x);
-
 /**
  * @brief Data transfering between hypervisor and VM
  *

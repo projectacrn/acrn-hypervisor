@@ -5,7 +5,12 @@
  */
 
 #ifdef CONFIG_DMAR_PARSE_ENABLED
-#include <hypervisor.h>
+#include <types.h>
+#include <logmsg.h>
+#include <host_pm.h>
+#include <io.h>
+#include <spinlock.h>
+#include <mem_mgt.h>
 #include "pci.h"
 #include "vtd.h"
 #include "acpi_priv.h"

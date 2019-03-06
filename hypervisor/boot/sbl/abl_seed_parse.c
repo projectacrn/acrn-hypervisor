@@ -4,8 +4,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <errno.h>
+#include <sprintf.h>
+#include <vm.h>
+#include <mmu.h>
+#include <logmsg.h>
 #include <abl_seed_parse.h>
+#include <ept.h>
 
 #define ABL_SEED_LEN 32U
 struct abl_seed_info {
@@ -92,7 +98,6 @@ static void parse_seed_list_abl(void *param_addr)
  *       original address is HPA.
  *
  * input:
- *    vm            pointer to vm structure
  *    cmdline       pointer to cmdline string
  *    out_len       the max len of out_arg
  *
@@ -102,7 +107,7 @@ static void parse_seed_list_abl(void *param_addr)
  * return value:
  *    true if parse successfully, otherwise false.
  */
-bool abl_seed_parse(struct acrn_vm *vm, char *cmdline, char *out_arg, uint32_t out_len)
+bool abl_seed_parse(char *cmdline, char *out_arg, uint32_t out_len)
 {
 	char *arg = NULL, *arg_end;
 	char *param;
@@ -138,7 +143,7 @@ bool abl_seed_parse(struct acrn_vm *vm, char *cmdline, char *out_arg, uint32_t o
 				/* Convert the param_addr to SOS GPA and copy to caller */
 				if (out_arg != NULL) {
 					snprintf(out_arg, out_len, "%s0x%X ",
-							abl_seed_arg[i], hva2gpa(vm, param_addr));
+							abl_seed_arg[i], sos_vm_hpa2gpa(hva2hpa(param_addr)));
 				}
 
 				parse_success = true;
