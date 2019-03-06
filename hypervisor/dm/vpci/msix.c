@@ -38,13 +38,22 @@
 #include <logmsg.h>
 #include "pci_priv.h"
 
+/**
+ * @pre vdev != NULL
+ */
+static inline bool has_msix_cap(const struct pci_vdev *vdev)
+{
+	return (vdev->msix.capoff != 0U);
+}
+
+/**
+ * @pre vdev != NULL
+ */
 static inline bool msixcap_access(const struct pci_vdev *vdev, uint32_t offset)
 {
-	bool ret;
+	bool ret = false;
 
-	if (vdev->msix.capoff == 0U) {
-		ret = false;
-	} else {
+	if (has_msix_cap(vdev)) {
 		ret = in_range(offset, vdev->msix.capoff, vdev->msix.caplen);
 	}
 
@@ -383,15 +392,18 @@ static int32_t vmsix_init_helper(struct pci_vdev *vdev)
 	return ret;
 }
 
+/**
+ * @pre vdev != NULL
+ */
 int32_t vmsix_init(struct pci_vdev *vdev)
 {
 	struct pci_pdev *pdev = vdev->pdev;
 	int32_t ret = 0;
 
-	if (pdev->msix.capoff != 0U) {
-		vdev->msix.capoff = pdev->msix.capoff;
-		vdev->msix.caplen = pdev->msix.caplen;
+	vdev->msix.capoff = pdev->msix.capoff;
+	vdev->msix.caplen = pdev->msix.caplen;
 
+	if (has_msix_cap(vdev)) {
 		(void)memcpy_s((void *)&vdev->cfgdata.data_8[pdev->msix.capoff], pdev->msix.caplen,
 			(void *)&pdev->msix.cap[0U], pdev->msix.caplen);
 
@@ -401,12 +413,19 @@ int32_t vmsix_init(struct pci_vdev *vdev)
 	return ret;
 }
 
+/**
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ */
 int32_t vmsix_deinit(struct pci_vdev *vdev)
 {
-	vdev->msix.intercepted_size = 0U;
+	if (has_msix_cap(vdev)) {
+		vdev->msix.intercepted_size = 0U;
 
-	if (vdev->msix.table_count != 0U) {
-		ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, vdev->msix.table_count);
+		if (vdev->msix.table_count != 0U) {
+			ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, vdev->msix.table_count);
+		}
 	}
 
 	return 0;
