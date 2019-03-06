@@ -58,7 +58,7 @@ static int32_t vdev_pt_init_validate(struct pci_vdev *vdev)
 	return 0;
 }
 
-static int32_t vdev_pt_init(struct pci_vdev *vdev)
+int32_t vdev_pt_init(struct pci_vdev *vdev)
 {
 	int32_t ret;
 	struct acrn_vm *vm = vdev->vpci->vm;
@@ -91,7 +91,7 @@ static int32_t vdev_pt_init(struct pci_vdev *vdev)
 	return ret;
 }
 
-static int32_t vdev_pt_deinit(struct pci_vdev *vdev)
+int32_t vdev_pt_deinit(struct pci_vdev *vdev)
 {
 	int32_t ret;
 	struct acrn_vm *vm = vdev->vpci->vm;
@@ -102,7 +102,7 @@ static int32_t vdev_pt_deinit(struct pci_vdev *vdev)
 	return ret;
 }
 
-static int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset,
+int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
 {
 	/* Assumption: access needed to be aligned on 1/2/4 bytes */
@@ -181,7 +181,7 @@ static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 	pci_vdev_write_cfg_u32(vdev, offset, new_bar);
 }
 
-static int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
+int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t val)
 {
 	/* Assumption: access needed to be aligned on 1/2/4 bytes */
