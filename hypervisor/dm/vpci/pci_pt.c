@@ -42,33 +42,31 @@ static inline uint32_t pci_bar_base(uint32_t bar)
 	return bar & PCIM_BAR_MEM_BASE;
 }
 
-static int32_t vdev_pt_init_validate(struct pci_vdev *vdev)
+static int32_t validate(const struct pci_vdev *vdev)
 {
 	uint32_t idx;
+	int32_t ret = 0;
 
 	for (idx = 0U; idx < PCI_BAR_COUNT; idx++) {
 		if ((vdev->bar[idx].base != 0x0UL)
 			|| ((vdev->bar[idx].size & 0xFFFUL) != 0x0UL)
 			|| ((vdev->bar[idx].type != PCIBAR_MEM32)
 			&& (vdev->bar[idx].type != PCIBAR_NONE))) {
-			return -EINVAL;
+			ret = -EINVAL;
+			break;
 		}
 	}
 
-	return 0;
+	return ret;
 }
 
-int32_t vdev_pt_init(struct pci_vdev *vdev)
+void vdev_pt_init(struct pci_vdev *vdev)
 {
 	int32_t ret;
 	struct acrn_vm *vm = vdev->vpci->vm;
 	uint16_t pci_command;
 
-	ret = vdev_pt_init_validate(vdev);
-	if (ret != 0) {
-		pr_err("Error, invalid bar defined");
-		return ret;
-	}
+	ASSERT(validate(vdev) == 0, "Error, invalid bar defined");
 
 	/* Create an iommu domain for target VM if not created */
 	if (vm->iommu == NULL) {
@@ -82,24 +80,26 @@ int32_t vdev_pt_init(struct pci_vdev *vdev)
 
 	ret = assign_iommu_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
 		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
+	if (ret != 0) {
+		panic("failed to assign iommu device!");
+	}
 
 	pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
 	/* Disable INTX */
 	pci_command |= 0x400U;
 	pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
-
-	return ret;
 }
 
-int32_t vdev_pt_deinit(const struct pci_vdev *vdev)
+void vdev_pt_deinit(const struct pci_vdev *vdev)
 {
 	int32_t ret;
 	struct acrn_vm *vm = vdev->vpci->vm;
 
 	ret = unassign_iommu_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
 		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
-
-	return ret;
+	if (ret != 0) {
+		panic("failed to unassign iommu device!");
+	}
 }
 
 int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset,
@@ -199,11 +199,4 @@ int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 
 	return 0;
 }
-
-const struct pci_vdev_ops pci_ops_vdev_pt = {
-	.init = vdev_pt_init,
-	.deinit = vdev_pt_deinit,
-	.cfgwrite = vdev_pt_cfgwrite,
-	.cfgread = vdev_pt_cfgread,
-};
 

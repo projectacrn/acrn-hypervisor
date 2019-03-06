@@ -32,18 +32,6 @@
 
 #include <pci.h>
 
-struct pci_vdev;
-struct pci_vdev_ops {
-	int32_t (*init)(struct pci_vdev *vdev);
-
-	int32_t (*deinit)(const struct pci_vdev *vdev);
-
-	int32_t (*cfgwrite)(struct pci_vdev *vdev, uint32_t offset,
-		uint32_t bytes, uint32_t val);
-
-	int32_t (*cfgread)(const struct pci_vdev *vdev, uint32_t offset,
-		uint32_t bytes, uint32_t *val);
-};
 
 struct msix_table_entry {
 	uint64_t	addr;
@@ -77,10 +65,6 @@ union pci_cfgdata {
 };
 
 struct pci_vdev {
-#ifdef CONFIG_PARTITION_MODE
-	const struct pci_vdev_ops *ops;
-#endif
-
 	const struct acrn_vpci *vpci;
 	/* The bus/device/function triple of the virtual PCI device. */
 	union pci_bdf vbdf;
@@ -120,11 +104,6 @@ struct acrn_vpci {
 	uint32_t pci_vdev_cnt;
 	struct pci_vdev pci_vdevs[CONFIG_MAX_PCI_DEV_NUM];
 };
-
-#ifdef CONFIG_PARTITION_MODE
-extern const struct pci_vdev_ops pci_ops_vdev_hostbridge;
-extern const struct pci_vdev_ops pci_ops_vdev_pt;
-#endif
 
 void vpci_init(struct acrn_vm *vm);
 void vpci_cleanup(const struct acrn_vm *vm);
