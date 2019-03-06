@@ -1460,7 +1460,6 @@ static void pmu_passthru_pmi_handler(__unused uint32_t irq, __unused void *data)
 
 	msr_write(MSR_IA32_EXT_APIC_LVT_PMI, VECTOR_PMI|LAPIC_LVT_MASK);
 	vlapic_set_local_intr(vcpu->vm, vcpu->vcpu_id, APIC_LVT_PMC);
-	msr_write(MSR_IA32_EXT_APIC_LVT_PMI, VECTOR_PMI);
 }
 
 void profiling_setup(void)
