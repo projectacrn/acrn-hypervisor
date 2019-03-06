@@ -88,19 +88,9 @@ struct pci_addr_info {
 	bool cached_enable;
 };
 
-struct vpci_ops {
-	int32_t (*init)(const struct acrn_vm *vm);
-	void (*deinit)(const struct acrn_vm *vm);
-	void (*cfgread)(struct acrn_vpci *vpci, union pci_bdf vbdf, uint32_t offset,
-		uint32_t bytes, uint32_t *val);
-	void (*cfgwrite)(struct acrn_vpci *vpci, union pci_bdf vbdf, uint32_t offset,
-		uint32_t bytes, uint32_t val);
-};
-
 struct acrn_vpci {
 	struct acrn_vm *vm;
 	struct pci_addr_info addr_info;
-	const struct vpci_ops *ops;
 	uint32_t pci_vdev_cnt;
 	struct pci_vdev pci_vdevs[CONFIG_MAX_PCI_DEV_NUM];
 };

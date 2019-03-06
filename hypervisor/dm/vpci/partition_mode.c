@@ -172,10 +172,3 @@ void partition_mode_cfgwrite(struct acrn_vpci *vpci, union pci_bdf vbdf,
 		}
 	}
 }
-
-const struct vpci_ops partition_mode_vpci_ops = {
-	.init = partition_mode_vpci_init,
-	.deinit = partition_mode_vpci_deinit,
-	.cfgread = partition_mode_cfgread,
-	.cfgwrite = partition_mode_cfgwrite,
-};
