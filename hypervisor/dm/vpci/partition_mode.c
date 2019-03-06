@@ -33,6 +33,7 @@
 #include <logmsg.h>
 #include "pci_priv.h"
 
+
 static inline bool is_hostbridge(const struct pci_vdev *vdev)
 {
 	return (vdev->vbdf.value == 0U);
@@ -54,6 +55,9 @@ static inline bool is_valid_bar(const struct pci_bar *bar)
 	return (is_valid_bar_type(bar) && is_valid_bar_size(bar));
 }
 
+/**
+ * @pre vdev != NULL
+ */
 static void partition_mode_pdev_init(struct pci_vdev *vdev, union pci_bdf pbdf)
 {
 	struct pci_pdev *pdev;
@@ -61,32 +65,31 @@ static void partition_mode_pdev_init(struct pci_vdev *vdev, union pci_bdf pbdf)
 	struct pci_bar *pbar, *vbar;
 
 	pdev = find_pci_pdev(pbdf);
-	if (pdev != NULL) {
-		vdev->pdev = pdev;
+	ASSERT(pdev != NULL, "pdev is NULL");
 
-		/* Sanity checking for vbar */
-		for (idx = 0U; idx < (uint32_t)PCI_BAR_COUNT; idx++) {
-			pbar = &vdev->pdev->bar[idx];
-			vbar = &vdev->bar[idx];
+	vdev->pdev = pdev;
 
-			if (is_valid_bar(pbar)) {
-				vbar->size = (pbar->size < 0x1000U) ? 0x1000U : pbar->size;
-				vbar->type = PCIBAR_MEM32;
-			} else {
-				/* Mark this vbar as invalid */
-				vbar->size = 0UL;
-				vbar->type = PCIBAR_NONE;
-			}
+	/* Sanity checking for vbar */
+	for (idx = 0U; idx < (uint32_t)PCI_BAR_COUNT; idx++) {
+		pbar = &vdev->pdev->bar[idx];
+		vbar = &vdev->bar[idx];
+
+		if (is_valid_bar(pbar)) {
+			vbar->size = (pbar->size < 0x1000U) ? 0x1000U : pbar->size;
+			vbar->type = PCIBAR_MEM32;
+		} else {
+			/* Mark this vbar as invalid */
+			vbar->size = 0UL;
+			vbar->type = PCIBAR_NONE;
 		}
 	}
+
+	vdev_pt_init(vdev);
 }
 
 /**
  * @pre vm != NULL
- * @pre vm->vpci->pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
- * @pre vm_config != NULL
- * @pre vdev != NULL
- * @pre ptdev_config != NULL
+ * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  */
 static int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 {
@@ -105,17 +108,9 @@ static int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 		vdev->vbdf.value = ptdev_config->vbdf.value;
 
 		if (is_hostbridge(vdev)) {
-			vdev->ops = &pci_ops_vdev_hostbridge;
+			vdev_hostbridge_init(vdev);
 		} else {
 			partition_mode_pdev_init(vdev, ptdev_config->pbdf);
-			vdev->ops = &pci_ops_vdev_pt;
-		}
-
-		if (vdev->ops->init != NULL) {
-			if (vdev->ops->init(vdev) != 0) {
-				pr_err("%s() failed at PCI device (vbdf %x)!", __func__,
-					vdev->vbdf);
-			}
 		}
 	}
 
@@ -123,7 +118,8 @@ static int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 }
 
 /**
- * @pre vdev != NULL
+ * @pre vm != NULL
+ * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  */
 static void partition_mode_vpci_deinit(const struct acrn_vm *vm)
 {
@@ -132,10 +128,11 @@ static void partition_mode_vpci_deinit(const struct acrn_vm *vm)
 
 	for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
 		vdev = (struct pci_vdev *) &(vm->vpci.pci_vdevs[i]);
-		if ((vdev->ops != NULL) && (vdev->ops->deinit != NULL)) {
-			if (vdev->ops->deinit(vdev) != 0) {
-				pr_err("vdev->ops->deinit failed!");
-			}
+
+		if (is_hostbridge(vdev)) {
+			vdev_hostbridge_deinit(vdev);
+		} else {
+			vdev_pt_deinit(vdev);
 		}
 	}
 }
@@ -145,9 +142,16 @@ static void partition_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf vbdf,
 {
 	struct pci_vdev *vdev = pci_find_vdev_by_vbdf(vpci, vbdf);
 
-	if ((vdev != NULL) && (vdev->ops != NULL)
-			&& (vdev->ops->cfgread != NULL)) {
-		(void)vdev->ops->cfgread(vdev, offset, bytes, val);
+	if (vdev != NULL) {
+		if (is_hostbridge(vdev)) {
+			if (vdev_hostbridge_cfgread(vdev, offset, bytes, val) != 0) {
+				pr_err("vdev_hostbridge_cfgread failed!");
+			}
+		} else {
+			if (vdev_pt_cfgread(vdev, offset, bytes, val) != 0) {
+				pr_err("vdev_pt_cfgread failed!");
+			}
+		}
 	}
 }
 
@@ -156,9 +160,16 @@ static void partition_mode_cfgwrite(struct acrn_vpci *vpci, union pci_bdf vbdf,
 {
 	struct pci_vdev *vdev = pci_find_vdev_by_vbdf(vpci, vbdf);
 
-	if ((vdev != NULL) && (vdev->ops != NULL)
-			&& (vdev->ops->cfgwrite != NULL)) {
-		(void)vdev->ops->cfgwrite(vdev, offset, bytes, val);
+	if (vdev != NULL) {
+		if (is_hostbridge(vdev)) {
+			if (vdev_hostbridge_cfgwrite(vdev, offset, bytes, val) != 0) {
+				pr_err("vdev_hostbridge_cfgwrite failed!");
+			}
+		} else {
+			if (vdev_pt_cfgwrite(vdev, offset, bytes, val) != 0){
+				pr_err("vdev_pt_cfgwrite failed!");
+			}
+		}
 	}
 }
 

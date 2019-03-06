@@ -39,7 +39,7 @@
 #include <pci.h>
 #include "pci_priv.h"
 
-int32_t vdev_hostbridge_init(struct pci_vdev *vdev)
+void vdev_hostbridge_init(struct pci_vdev *vdev)
 {
 	/* PCI config space */
 	pci_vdev_write_cfg_u16(vdev, PCIR_VENDOR, (uint16_t)0x8086U);
@@ -82,13 +82,10 @@ int32_t vdev_hostbridge_init(struct pci_vdev *vdev)
 	pci_vdev_write_cfg_u8(vdev, 0xf5U, (uint8_t)0xfU);
 	pci_vdev_write_cfg_u8(vdev, 0xf6U, (uint8_t)0x1cU);
 	pci_vdev_write_cfg_u8(vdev, 0xf7U, (uint8_t)0x1U);
-
-	return 0;
 }
 
-int32_t vdev_hostbridge_deinit(__unused const struct pci_vdev *vdev)
+void vdev_hostbridge_deinit(__unused const struct pci_vdev *vdev)
 {
-	return 0;
 }
 
 int32_t vdev_hostbridge_cfgread(const struct pci_vdev *vdev, uint32_t offset,
@@ -119,11 +116,3 @@ int32_t vdev_hostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 
 	return 0;
 }
-
-const struct pci_vdev_ops pci_ops_vdev_hostbridge = {
-	.init = vdev_hostbridge_init,
-	.deinit = vdev_hostbridge_deinit,
-	.cfgwrite = vdev_hostbridge_cfgwrite,
-	.cfgread = vdev_hostbridge_cfgread,
-};
-
