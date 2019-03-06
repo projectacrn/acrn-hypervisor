@@ -33,31 +33,19 @@
 #include "pci_priv.h"
 
 
-/**
- * @pre vpci != NULL
- */
 static struct pci_vdev *sharing_mode_find_vdev_sos(union pci_bdf pbdf)
 {
 	struct acrn_vm *vm;
-	struct acrn_vpci *vpci;
-	struct pci_vdev *vdev = NULL;
 
 	vm = get_sos_vm();
-	if (vm != NULL) {
-		vpci = &vm->vpci;
-		vdev = pci_find_vdev_by_pbdf(vpci, pbdf);
-	}
 
-	return vdev;
+	return pci_find_vdev_by_pbdf(&vm->vpci, pbdf);
 }
-
 
 static void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	struct pci_vdev *vdev;
-	bool handled = false;
-	uint32_t i;
 
 	vdev = sharing_mode_find_vdev_sos(bdf);
 
@@ -65,16 +53,10 @@ static void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf 
 	if ((vdev == NULL) || ((bytes != 1U) && (bytes != 2U) && (bytes != 4U))) {
 		*val = ~0U;
 	} else {
-		for (i = 0U; (i < vdev->nr_ops) && (!handled); i++) {
-			if (vdev->ops[i].cfgread != NULL) {
-				if (vdev->ops[i].cfgread(vdev, offset, bytes, val) == 0) {
-					handled = true;
-				}
-			}
-		}
-
-		/* Not handled by any handlers, passthru to physical device */
-		if (!handled) {
+		if ((vmsi_cfgread(vdev, offset, bytes, val) != 0)
+			&& (vmsix_cfgread(vdev, offset, bytes, val) != 0)
+			) {
+			/* Not handled by any handlers, passthru to physical device */
 			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
 		}
 	}
@@ -84,22 +66,14 @@ static void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	struct pci_vdev *vdev;
-	bool handled = false;
-	uint32_t i;
 
 	if ((bytes == 1U) || (bytes == 2U) || (bytes == 4U)) {
 		vdev = sharing_mode_find_vdev_sos(bdf);
 		if (vdev != NULL) {
-			for (i = 0U; (i < vdev->nr_ops) && (!handled); i++) {
-				if (vdev->ops[i].cfgwrite != NULL) {
-					if (vdev->ops[i].cfgwrite(vdev, offset, bytes, val) == 0) {
-						handled = true;
-					}
-				}
-			}
-
-			/* Not handled by any handlers, passthru to physical device */
-			if (!handled) {
+			if ((vmsi_cfgwrite(vdev, offset, bytes, val) != 0)
+				&& (vmsix_cfgwrite(vdev, offset, bytes, val) != 0)
+				) {
+				/* Not handled by any handlers, passthru to physical device */
 				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
 			}
 		}
@@ -107,15 +81,14 @@ static void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf
 }
 
 /**
+ * @pre pdev != NULL
  * @pre vm != NULL
- * @pre pdev_ref != NULL
- * @pre vm->vpci->pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
- * @pre vdev != NULL
+ * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  */
-static struct pci_vdev *alloc_pci_vdev(const struct acrn_vm *vm, struct pci_pdev *pdev_ref)
+static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
 {
 	struct pci_vdev *vdev = NULL;
-	struct acrn_vpci *vpci = (struct acrn_vpci *)&(vm->vpci);
+	struct acrn_vpci *vpci = &(((struct acrn_vm *)vm)->vpci);
 
 	if (vpci->pci_vdev_cnt < CONFIG_MAX_PCI_DEV_NUM) {
 		vdev = &vpci->pci_vdevs[vpci->pci_vdev_cnt];
@@ -123,35 +96,17 @@ static struct pci_vdev *alloc_pci_vdev(const struct acrn_vm *vm, struct pci_pdev
 
 		vdev->vpci = vpci;
 		/* vbdf equals to pbdf otherwise remapped */
-		vdev->vbdf = pdev_ref->bdf;
-		vdev->pdev = pdev_ref;
-	}
+		vdev->vbdf = pdev->bdf;
+		vdev->pdev = pdev;
 
-	return vdev;
-}
+		vmsi_init(vdev);
 
-static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *cb_data)
-{
-	const struct acrn_vm *vm = (const struct acrn_vm *)cb_data;
-	struct pci_vdev *vdev;
-
-	vdev = alloc_pci_vdev(vm, pdev);
-	if (vdev != NULL) {
-		/* Assign MSI handler for configuration read and write */
-		add_vdev_handler(vdev, &pci_ops_vdev_msi);
-
-		/* Assign MSI-X handler for configuration read and write */
-		add_vdev_handler(vdev, &pci_ops_vdev_msix);
+		vmsix_init(vdev);
 	}
 }
 
-/**
- * @pre vdev != NULL
- */
 static int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
 {
-	struct pci_vdev *vdev;
-	uint32_t i, j;
 	int32_t ret = -ENODEV;
 
 	/*
@@ -161,15 +116,6 @@ static int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
 	if (is_sos_vm(vm)) {
 		/* Build up vdev array for sos_vm */
 		pci_pdev_foreach(init_vdev_for_pdev, vm);
-
-		for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
-			vdev = (struct pci_vdev *)&(vm->vpci.pci_vdevs[i]);
-			for (j = 0U; j < vdev->nr_ops; j++) {
-				if (vdev->ops[j].init != NULL) {
-					(void)vdev->ops[j].init(vdev);
-				}
-			}
-		}
 		ret = 0;
 	}
 
@@ -177,32 +123,22 @@ static int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
 }
 
 /**
- * @pre vdev != NULL
+ * @pre vm != NULL
+ * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  */
 static void sharing_mode_vpci_deinit(const struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
-	uint32_t i, j;
+	uint32_t i;
 
 	if (is_sos_vm(vm)) {
 		for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
 			vdev = (struct pci_vdev *)&(vm->vpci.pci_vdevs[i]);
-			for (j = 0U; j < vdev->nr_ops; j++) {
-				if (vdev->ops[j].deinit != NULL) {
-					(void)vdev->ops[j].deinit(vdev);
-				}
-			}
-		}
-	}
-}
 
-void add_vdev_handler(struct pci_vdev *vdev, const struct pci_vdev_ops *ops)
-{
-	if (vdev->nr_ops >= (MAX_VPCI_DEV_OPS - 1U)) {
-		pr_err("%s, adding too many handlers", __func__);
-	} else {
-		vdev->ops[vdev->nr_ops] = *ops;
-		vdev->nr_ops++;
+			vmsi_deinit(vdev);
+
+			vmsix_deinit(vdev);
+		}
 	}
 }
 

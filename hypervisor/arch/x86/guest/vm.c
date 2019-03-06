@@ -110,6 +110,8 @@ struct acrn_vm *get_vm_from_vmid(uint16_t vm_id)
 /* return a pointer to the virtual machine structure of SOS VM */
 struct acrn_vm *get_sos_vm(void)
 {
+	ASSERT(sos_vm_ptr != NULL, "sos_vm_ptr is NULL");
+
 	return sos_vm_ptr;
 }
 
