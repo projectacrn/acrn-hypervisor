@@ -42,7 +42,7 @@ static struct pci_vdev *sharing_mode_find_vdev_sos(union pci_bdf pbdf)
 	return pci_find_vdev_by_pbdf(&vm->vpci, pbdf);
 }
 
-static void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
+void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	struct pci_vdev *vdev;
@@ -62,7 +62,7 @@ static void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf 
 	}
 }
 
-static void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
+void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	struct pci_vdev *vdev;
@@ -105,7 +105,7 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
 	}
 }
 
-static int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
+int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
 {
 	int32_t ret = -ENODEV;
 
@@ -126,7 +126,7 @@ static int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
  * @pre vm != NULL
  * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  */
-static void sharing_mode_vpci_deinit(const struct acrn_vm *vm)
+void sharing_mode_vpci_deinit(const struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
 	uint32_t i;
