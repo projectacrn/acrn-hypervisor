@@ -35,13 +35,22 @@
 #include "pci_priv.h"
 
 
+/**
+ * @pre vdev != NULL
+ */
+static inline bool has_msi_cap(const struct pci_vdev *vdev)
+{
+	return (vdev->msi.capoff != 0U);
+}
+
+/**
+ * @pre vdev != NULL
+ */
 static inline bool msicap_access(const struct pci_vdev *vdev, uint32_t offset)
 {
-	bool ret;
+	bool ret = false;
 
-	if (vdev->msi.capoff == 0U) {
-		ret = 0;
-	} else {
+	if (has_msi_cap(vdev)) {
 		ret = in_range(offset, vdev->msi.capoff, vdev->msi.caplen);
 	}
 
@@ -160,7 +169,7 @@ int32_t vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, ui
 
 int32_t vmsi_deinit(struct pci_vdev *vdev)
 {
-	if (vdev->msi.capoff != 0U) {
+	if (has_msi_cap(vdev)) {
 		ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, 1U);
 	}
 
@@ -194,11 +203,10 @@ int32_t vmsi_init(struct pci_vdev *vdev)
 	struct pci_pdev *pdev = vdev->pdev;
 	uint32_t val;
 
-	/* Copy MSI/MSI-X capability struct into virtual device */
-	if (pdev->msi.capoff != 0U) {
-		vdev->msi.capoff = pdev->msi.capoff;
-		vdev->msi.caplen = pdev->msi.caplen;
+	vdev->msi.capoff = pdev->msi.capoff;
+	vdev->msi.caplen = pdev->msi.caplen;
 
+	if (has_msi_cap(vdev)) {
 		(void)memcpy_s((void *)&vdev->cfgdata.data_8[pdev->msi.capoff], pdev->msi.caplen,
 			(void *)&pdev->msi.cap[0U], pdev->msi.caplen);
 

@@ -152,15 +152,13 @@ static int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
 	uint32_t i, j;
-	int32_t ret;
+	int32_t ret = -ENODEV;
 
 	/*
 	 * Only set up IO bitmap for SOS.
 	 * IO/MMIO requests from non-sos_vm guests will be injected to device model.
 	 */
-	if (!is_sos_vm(vm)) {
-		ret = -ENODEV;
-	} else {
+	if (is_sos_vm(vm)) {
 		/* Build up vdev array for sos_vm */
 		pci_pdev_foreach(init_vdev_for_pdev, vm);
 
