@@ -175,7 +175,7 @@ config COM_BASE
 	  Base address of the vuart port.
 
 config COM_IRQ
-	hex "IRQ of the vuart port"
+	int "IRQ of the vuart port"
 	depends on !RELEASE
 	default 4
 	help
