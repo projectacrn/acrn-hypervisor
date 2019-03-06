@@ -6,14 +6,13 @@
  */
 
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include "dm_kmsg.h"
 
 int  fd_kmsg;
-char dm_buf[DM_BUF];
 
 static int open_kmsg(void);
 static int close_kmsg(void);
@@ -49,21 +48,26 @@ static int close_kmsg(void)
 
 void write_kmsg(const char *fmt, ...)
 {
-	int write_cnt;
+	int write_cnt, len;
 	va_list args;
+	char *dm_buf;
 
 	va_start(args, fmt);
-	vsnprintf(dm_buf, DM_BUF, fmt, args);
+	len = vasprintf(&dm_buf, fmt, args);
 	va_end(args);
+	if (len == -1) {
+		return;
+	}
 
 	open_kmsg();
 
 	/* write the fmt to the /dev/kmsg */
-	write_cnt = write(fd_kmsg, dm_buf, strlen(dm_buf));
+	write_cnt = write(fd_kmsg, dm_buf, len);
 	if (write_cnt < 0) {
 		perror(KMSG_FMT"write_kmsg");
 	}
 
 	close_kmsg();
+	free(dm_buf);
 	return;
 }
