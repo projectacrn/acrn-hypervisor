@@ -156,7 +156,7 @@ static int32_t vmsix_remap_one_entry(const struct pci_vdev *vdev, uint32_t index
 	return ret;
 }
 
-static int32_t vmsix_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
+int32_t vmsix_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	int32_t ret;
 	/* For PIO access, we emulate Capability Structures only */
@@ -171,7 +171,7 @@ static int32_t vmsix_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint3
 	return ret;
 }
 
-static int32_t vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
+int32_t vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	uint32_t msgctrl;
 	int32_t ret;
@@ -383,7 +383,7 @@ static int32_t vmsix_init_helper(struct pci_vdev *vdev)
 	return ret;
 }
 
-static int32_t vmsix_init(struct pci_vdev *vdev)
+int32_t vmsix_init(struct pci_vdev *vdev)
 {
 	struct pci_pdev *pdev = vdev->pdev;
 	int32_t ret = 0;
@@ -401,7 +401,7 @@ static int32_t vmsix_init(struct pci_vdev *vdev)
 	return ret;
 }
 
-static int32_t vmsix_deinit(struct pci_vdev *vdev)
+int32_t vmsix_deinit(struct pci_vdev *vdev)
 {
 	vdev->msix.intercepted_size = 0U;
 
