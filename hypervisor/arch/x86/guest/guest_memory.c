@@ -437,8 +437,3 @@ void *gpa2hva(struct acrn_vm *vm, uint64_t x)
 {
 	return hpa2hva(gpa2hpa(vm, x));
 }
-
-uint64_t hva2gpa(struct acrn_vm *vm, void *x)
-{
-	return (is_sos_vm(vm)) ? sos_vm_hpa2gpa(hva2hpa(x)) : INVALID_GPA;
-}

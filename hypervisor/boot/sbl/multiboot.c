@@ -152,8 +152,8 @@ int32_t sbl_init_vm_boot_info(struct acrn_vm *vm)
 					vm->sw.linux_info.bootargs_size =
 						strnlen_s(vm_config->os_config.bootargs, MEM_2K);
 				} else {
-					vm->sw.kernel_info.kernel_load_addr = (void *)hva2gpa(vm,
-						get_kernel_load_addr(vm->sw.kernel_info.kernel_src_addr));
+					vm->sw.kernel_info.kernel_load_addr =
+						get_kernel_load_addr(vm->sw.kernel_info.kernel_src_addr);
 
 					/*
 					 * If there is cmdline from mbi->mi_cmdline, merge it with
@@ -174,9 +174,9 @@ int32_t sbl_init_vm_boot_info(struct acrn_vm *vm)
 						 * so here first try to get seed from SBL, if fail then try
 						 * ABL.
 						 */
-						status = sbl_seed_parse(vm, cmd_src, buf, sizeof(buf));
+						status = sbl_seed_parse(is_sos_vm(vm), cmd_src, buf, sizeof(buf));
 						if (!status) {
-							status = abl_seed_parse(vm, cmd_src, buf, sizeof(buf));
+							status = abl_seed_parse(cmd_src, buf, sizeof(buf));
 						}
 
 						if (status) {

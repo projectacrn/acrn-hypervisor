@@ -4,8 +4,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <errno.h>
+#include <sprintf.h>
+#include <vm.h>
+#include <mmu.h>
+#include <logmsg.h>
 #include <sbl_seed_parse.h>
+#include <ept.h>
 
 #define SEED_ENTRY_TYPE_SVNSEED         0x1U
 /* #define SEED_ENTRY_TYPE_RPMBSEED        0x2U */
@@ -119,7 +125,7 @@ static void parse_seed_list_sbl(struct seed_list_hob *seed_hob)
  *       original address is HPA.
  *
  * input:
- *    vm            pointer to vm structure
+ *    vm_is_sos     Boolean to check if vm is sos
  *    cmdline       pointer to cmdline string
  *    out_len       the max len of out_arg
  *
@@ -129,7 +135,7 @@ static void parse_seed_list_sbl(struct seed_list_hob *seed_hob)
  * return value:
  *    true if parse successfully, otherwise false.
  */
-bool sbl_seed_parse(struct acrn_vm *vm, char *cmdline, char *out_arg, uint32_t out_len)
+bool sbl_seed_parse(bool vm_is_sos, char *cmdline, char *out_arg, uint32_t out_len)
 {
 	char *arg, *arg_end;
 	char *param;
@@ -138,7 +144,7 @@ bool sbl_seed_parse(struct acrn_vm *vm, char *cmdline, char *out_arg, uint32_t o
 	uint32_t len;
 	bool parse_success = false;
 
-	if (is_sos_vm(vm) && (cmdline != NULL)) {
+	if (vm_is_sos && (cmdline != NULL)) {
 		len = strnlen_s(boot_params_arg, MEM_1K);
 		arg = strstr_s((const char *)cmdline, MEM_2K, boot_params_arg, len);
 
@@ -168,7 +174,7 @@ bool sbl_seed_parse(struct acrn_vm *vm, char *cmdline, char *out_arg, uint32_t o
 				/* Convert the param_addr to SOS GPA and copy to caller */
 				if (out_arg != NULL) {
 					snprintf(out_arg, out_len, "%s0x%X ",
-						boot_params_arg, hva2gpa(vm, param_addr));
+						boot_params_arg, sos_vm_hpa2gpa(hva2hpa(param_addr)));
 				}
 
 				parse_success = true;
