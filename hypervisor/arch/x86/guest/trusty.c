@@ -16,6 +16,7 @@
 #include <vmx.h>
 #include <security.h>
 #include <logmsg.h>
+#include <seed.h>
 
 #define TRUSTY_VERSION   1U
 #define TRUSTY_VERSION_2 2U
@@ -29,13 +30,6 @@ struct trusty_mem {
 
 	/* The left memory is for trusty's code/data/heap/stack */
 } __aligned(PAGE_SIZE);
-
-static struct trusty_key_info g_key_info = {
-	.size_of_this_struct = sizeof(g_key_info),
-	.version = 0U,
-	.platform = 3U,
-	.num_seeds = 1U
-};
 
 /**
  * @defgroup trusty_apis Trusty APIs
@@ -317,95 +311,40 @@ void switch_world(struct acrn_vcpu *vcpu, int32_t next_world)
 	arch->cur_context = next_world;
 }
 
-static inline uint32_t get_max_svn_index(void)
-{
-	uint32_t i, max_svn_idx = 0U;
-
-	for (i = 1U; i < g_key_info.num_seeds; i++) {
-		if (g_key_info.dseed_list[i].cse_svn > g_key_info.dseed_list[i - 1U].cse_svn) {
-			max_svn_idx = i;
-		}
-	}
-
-	return max_svn_idx;
-}
-
-static bool derive_aek(uint8_t *attkb_key)
-{
-	bool ret = true;
-	const int8_t salt[] = "Attestation Keybox Encryption Key";
-	const uint8_t *ikm;
-	uint32_t ikm_len;
-	uint32_t max_svn_idx;
-
-	if ((attkb_key == NULL) || (g_key_info.num_seeds == 0U) ||
-			(g_key_info.num_seeds > BOOTLOADER_SEED_MAX_ENTRIES)) {
-		ret = false;
-	} else {
-		max_svn_idx = get_max_svn_index();
-		ikm = g_key_info.dseed_list[max_svn_idx].seed;
-		/* only the low 32 bits of seed are valid */
-		ikm_len = 32U;
-
-		if (hmac_sha256(attkb_key, ikm, ikm_len,
-				(const uint8_t *)salt, sizeof(salt)) != 1) {
-			pr_err("%s: failed to derive key!\n", __func__);
-			ret = false;
-		}
-	}
-
-	return ret;
-}
-
 /* Put key_info and trusty_startup_param in the first Page of Trusty
  * runtime memory
  */
-static bool setup_trusty_info(struct acrn_vcpu *vcpu,
-			uint32_t mem_size, uint64_t mem_base_hpa)
+static bool setup_trusty_info(struct acrn_vcpu *vcpu, uint32_t mem_size, uint64_t mem_base_hpa, uint8_t *rkey)
 {
 	bool ret = true;
-	uint32_t i;
 	struct trusty_mem *mem;
-	struct trusty_key_info *key_info;
+	struct trusty_key_info key_info;
+	struct trusty_startup_param startup_param;
 
-	mem = (struct trusty_mem *)(hpa2hva(mem_base_hpa));
+	(void)memset(&key_info, 0U, sizeof(key_info));
 
-	stac();
-	/* copy key_info to the first page of trusty memory */
-	(void)memcpy_s(&mem->first_page.key_info, sizeof(g_key_info),
-			&g_key_info, sizeof(g_key_info));
+	key_info.size_of_this_struct = sizeof(struct trusty_key_info);
+	key_info.version = 0U;
+	key_info.platform = 3U;
 
-	(void)memset(&mem->first_page.key_info.dseed_list, 0U,
-			sizeof(mem->first_page.key_info.dseed_list));
-	/* Derive dvseed from dseed for Trusty */
-	key_info = &mem->first_page.key_info;
-	for (i = 0U; i < g_key_info.num_seeds; i++) {
-		if (hkdf_sha256(key_info->dseed_list[i].seed,
-				BUP_MKHI_BOOTLOADER_SEED_LEN,
-				g_key_info.dseed_list[i].seed,
-				BUP_MKHI_BOOTLOADER_SEED_LEN,
-				NULL, 0U,
-				vcpu->vm->GUID, sizeof(vcpu->vm->GUID)) == 0) {
-			(void)memset(key_info, 0U, sizeof(struct trusty_key_info));
-			pr_err("%s: derive dvseed failed!", __func__);
-			ret = false;
-			break;
-		}
-		key_info->dseed_list[i].cse_svn = g_key_info.dseed_list[i].cse_svn;
+	if (rkey != NULL) {
+		(void)memcpy_s(key_info.rpmb_key, 64U, rkey, 64U);
+		(void)memset(rkey, 0U, 64U);
 	}
 
+	/* Derive dvseed from dseed for Trusty */
+	ret = derive_virtual_seed(&key_info.dseed_list[0U], &key_info.num_seeds,
+				  NULL, 0U,
+				  vcpu->vm->GUID, sizeof(vcpu->vm->GUID));
 	if (ret == true) {
-		/* Derive decryption key of attestation keybox from dseed */
-		if (!derive_aek(key_info->attkb_enc_key)) {
-			(void)memset(key_info, 0U, sizeof(struct trusty_key_info));
-			pr_err("%s: derive key of att keybox failed!", __func__);
-			ret = false;
-		} else {
+		/* Derive encryption key of attestation keybox from dseed */
+		ret = derive_attkb_enc_key(key_info.attkb_enc_key);
+		if (ret == true) {
 			/* Prepare trusty startup param */
-			mem->first_page.startup_param.size_of_this_struct = sizeof(struct trusty_startup_param);
-			mem->first_page.startup_param.mem_size = mem_size;
-			mem->first_page.startup_param.tsc_per_ms = CYCLES_PER_MS;
-			mem->first_page.startup_param.trusty_mem_base = TRUSTY_EPT_REBASE_GPA;
+			startup_param.size_of_this_struct = sizeof(struct trusty_startup_param);
+			startup_param.mem_size = mem_size;
+			startup_param.tsc_per_ms = CYCLES_PER_MS;
+			startup_param.trusty_mem_base = TRUSTY_EPT_REBASE_GPA;
 
 			/* According to trusty boot protocol, it will use RDI as the
 			 * address(GPA) of startup_param on boot. Currently, the startup_param
@@ -413,10 +352,19 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu,
 			 */
 			vcpu->arch.contexts[SECURE_WORLD].run_ctx.guest_cpu_regs.regs.rdi
 				= (uint64_t)TRUSTY_EPT_REBASE_GPA + sizeof(struct trusty_key_info);
+
+			stac();
+			mem = (struct trusty_mem *)(hpa2hva(mem_base_hpa));
+			(void)memcpy_s(&mem->first_page.key_info, sizeof(struct trusty_key_info),
+				       &key_info, sizeof(key_info));
+			(void)memcpy_s(&mem->first_page.startup_param, sizeof(struct trusty_startup_param),
+				       &startup_param, sizeof(startup_param));
+			clac();
 		}
 	}
 
-	clac();
+	(void)memset(&key_info, 0U, sizeof(key_info));
+
 	return ret;
 }
 
@@ -428,7 +376,8 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu,
 static bool init_secure_world_env(struct acrn_vcpu *vcpu,
 				uint64_t entry_gpa,
 				uint64_t base_hpa,
-				uint32_t size)
+				uint32_t size,
+				uint8_t *rpmb_key)
 {
 	uint32_t i;
 
@@ -445,15 +394,16 @@ static bool init_secure_world_env(struct acrn_vcpu *vcpu,
 		vcpu->arch.contexts[SECURE_WORLD].world_msrs[i] = vcpu->arch.guest_msrs[i];
 	}
 
-	return setup_trusty_info(vcpu, size, base_hpa);
+	return setup_trusty_info(vcpu, size, base_hpa, rpmb_key);
 }
 
-bool initialize_trusty(struct acrn_vcpu *vcpu, const struct trusty_boot_param *boot_param)
+bool initialize_trusty(struct acrn_vcpu *vcpu, struct trusty_boot_param *boot_param)
 {
 	bool ret = true;
 	uint64_t trusty_entry_gpa, trusty_base_gpa, trusty_base_hpa;
 	uint32_t trusty_mem_size;
 	struct acrn_vm *vm = vcpu->vm;
+	uint8_t *rpmb_key = NULL;
 
 	switch (boot_param->version) {
 	case TRUSTY_VERSION_2:
@@ -461,9 +411,7 @@ bool initialize_trusty(struct acrn_vcpu *vcpu, const struct trusty_boot_param *b
 			(((uint64_t)boot_param->entry_point_high) << 32U);
 		trusty_base_gpa = ((uint64_t)boot_param->base_addr) |
 			(((uint64_t)boot_param->base_addr_high) << 32U);
-
-		/* copy rpmb_key from OSloader */
-		(void)memcpy_s(&g_key_info.rpmb_key[0][0], 64U, &boot_param->rpmb_key[0], 64U);
+		rpmb_key = boot_param->rpmb_key;
 		break;
 	case TRUSTY_VERSION:
 		trusty_entry_gpa = (uint64_t)boot_param->entry_point;
@@ -495,7 +443,7 @@ bool initialize_trusty(struct acrn_vcpu *vcpu, const struct trusty_boot_param *b
 			/* init secure world environment */
 			if (init_secure_world_env(vcpu,
 				(trusty_entry_gpa - trusty_base_gpa) + TRUSTY_EPT_REBASE_GPA,
-				trusty_base_hpa, trusty_mem_size)) {
+				trusty_base_hpa, trusty_mem_size, rpmb_key)) {
 
 				/* switch to Secure World */
 				vcpu->arch.cur_context = SECURE_WORLD;
@@ -506,23 +454,6 @@ bool initialize_trusty(struct acrn_vcpu *vcpu, const struct trusty_boot_param *b
 	}
 
 	return ret;
-}
-
-void trusty_set_dseed(const void *dseed, uint8_t dseed_num)
-{
-	/* Use fake seed if input param is invalid */
-	if ((dseed == NULL) || (dseed_num == 0U) ||
-		(dseed_num > BOOTLOADER_SEED_MAX_ENTRIES)) {
-
-		g_key_info.num_seeds = 1U;
-		(void)memset(&g_key_info.dseed_list[0].seed, 0xA5U,
-			sizeof(g_key_info.dseed_list[0].seed));
-	} else {
-		g_key_info.num_seeds = dseed_num;
-		(void)memcpy_s(&g_key_info.dseed_list,
-				sizeof(struct seed_info) * dseed_num,
-				dseed, sizeof(struct seed_info) * dseed_num);
-	}
 }
 
 void save_sworld_context(struct acrn_vcpu *vcpu)

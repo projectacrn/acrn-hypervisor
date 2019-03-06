@@ -15,6 +15,7 @@
 #include <vm.h>
 #include <logmsg.h>
 #include <firmware.h>
+#include <seed.h>
 
 /* Push sp magic to top of stack for call trace */
 #define SWITCH_TO(rsp, to)                                              \
@@ -69,6 +70,8 @@ static void init_primary_cpu_post(void)
 	init_debug_pre();
 
 	init_cpu_post(BOOT_CPU_ID);
+
+	init_seed();
 
 	init_debug_post(BOOT_CPU_ID);
 

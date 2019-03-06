@@ -131,6 +131,10 @@ C_SRCS += boot/reloc.c
 # initilization component
 C_SRCS += arch/x86/init.c
 
+C_SRCS += arch/x86/seed/seed.c
+C_SRCS += arch/x86/seed/seed_abl.c
+C_SRCS += arch/x86/seed/seed_sbl.c
+
 # configuration component
 C_SRCS += arch/x86/configs/vm_config.c
 ifeq ($(CONFIG_PARTITION_MODE),y)
@@ -234,8 +238,6 @@ C_SRCS += bsp/const_dmar.c
 
 C_SRCS += boot/uefi/uefi_boot.c
 C_SRCS += boot/sbl/multiboot.c
-C_SRCS += boot/sbl/sbl_seed_parse.c
-C_SRCS += boot/sbl/abl_seed_parse.c
 
 # retpoline support
 ifeq (true, $(shell [ $(GCC_MAJOR) -eq 7 ] && [ $(GCC_MINOR) -ge 3 ] && echo true))

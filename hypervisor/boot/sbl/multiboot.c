@@ -7,8 +7,7 @@
 #include <hypervisor.h>
 #include <multiboot.h>
 #include <zeropage.h>
-#include <sbl_seed_parse.h>
-#include <abl_seed_parse.h>
+#include <seed.h>
 
 #define ACRN_DBG_BOOT	6U
 
@@ -162,30 +161,16 @@ int32_t sbl_init_vm_boot_info(struct acrn_vm *vm)
 					if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
 						char *cmd_src, *cmd_dst;
 						uint32_t off = 0U;
-						bool status = false;
-						char buf[MAX_BOOT_PARAMS_LEN];
 
 						cmd_dst = kernel_cmdline;
 						cmd_src = (char *)hpa2hva((uint64_t)mbi->mi_cmdline);
 
-						(void)memset(buf, 0U, sizeof(buf));
 						/*
-						 * The seed passing interface is different for ABL and SBL,
-						 * so here first try to get seed from SBL, if fail then try
-						 * ABL.
+						 * Append seed argument for SOS
 						 */
-						status = sbl_seed_parse(is_sos_vm(vm), cmd_src, buf, sizeof(buf));
-						if (!status) {
-							status = abl_seed_parse(cmd_src, buf, sizeof(buf));
-						}
+						append_seed_arg(cmd_dst, is_sos_vm(vm));
 
-						if (status) {
-							/*
-							 * append the seed argument to kernel cmdline
-							 */
-							(void)strncpy_s(cmd_dst, MEM_2K, buf, MAX_BOOT_PARAMS_LEN);
-							off = strnlen_s(cmd_dst, MEM_2K);
-						}
+						off = strnlen_s(cmd_dst, MEM_2K);
 
 						cmd_dst += off;
 						(void)strncpy_s(cmd_dst, MEM_2K - off, (const char *)cmd_src,
