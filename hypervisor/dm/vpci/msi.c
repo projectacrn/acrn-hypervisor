@@ -167,21 +167,12 @@ int32_t vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, ui
 	return ret;
 }
 
-int32_t vmsi_deinit(const struct pci_vdev *vdev)
+void vmsi_deinit(const struct pci_vdev *vdev)
 {
 	if (has_msi_cap(vdev)) {
 		ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, 1U);
 	}
-
-	return 0;
 }
-
-const struct pci_vdev_ops pci_ops_vdev_msi = {
-	.init = vmsi_init,
-	.deinit = vmsi_deinit,
-	.cfgwrite = vmsi_cfgwrite,
-	.cfgread = vmsi_cfgread,
-};
 
 /* Read a uint32_t from buffer (little endian) */
 static uint32_t buf_read32(const uint8_t buf[])
@@ -198,7 +189,7 @@ static void buf_write32(uint8_t buf[], uint32_t val)
 	buf[3] = (uint8_t)((val >> 24U) & 0xFFU);
 }
 
-int32_t vmsi_init(struct pci_vdev *vdev)
+void vmsi_init(struct pci_vdev *vdev)
 {
 	struct pci_pdev *pdev = vdev->pdev;
 	uint32_t val;
@@ -216,7 +207,5 @@ int32_t vmsi_init(struct pci_vdev *vdev)
 
 		buf_write32(&vdev->cfgdata.data_8[pdev->msi.capoff], val);
 	}
-
-	return 0;
 }
 
