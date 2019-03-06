@@ -34,7 +34,6 @@
 #include <vpci.h>
 #include "pci_priv.h"
 
-static int32_t vmsi_init(struct pci_vdev *vdev);
 
 static inline bool msicap_access(const struct pci_vdev *vdev, uint32_t offset)
 {
@@ -107,7 +106,7 @@ static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
 	return ret;
 }
 
-static int32_t vmsi_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
+int32_t vmsi_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	int32_t ret;
 	/* For PIO access, we emulate Capability Structures only */
@@ -121,7 +120,7 @@ static int32_t vmsi_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32
 	return ret;
 }
 
-static int32_t vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
+int32_t vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	bool message_changed = false;
 	bool enable;
@@ -159,7 +158,7 @@ static int32_t vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t by
 	return ret;
 }
 
-static int32_t vmsi_deinit(struct pci_vdev *vdev)
+int32_t vmsi_deinit(struct pci_vdev *vdev)
 {
 	if (vdev->msi.capoff != 0U) {
 		ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, 1U);
@@ -190,7 +189,7 @@ static void buf_write32(uint8_t buf[], uint32_t val)
 	buf[3] = (uint8_t)((val >> 24U) & 0xFFU);
 }
 
-static int32_t vmsi_init(struct pci_vdev *vdev)
+int32_t vmsi_init(struct pci_vdev *vdev)
 {
 	struct pci_pdev *pdev = vdev->pdev;
 	uint32_t val;
