@@ -131,10 +131,9 @@ struct trusty_startup_param {
 };
 
 void switch_world(struct acrn_vcpu *vcpu, int32_t next_world);
-bool initialize_trusty(struct acrn_vcpu *vcpu, const struct trusty_boot_param *boot_param);
+bool initialize_trusty(struct acrn_vcpu *vcpu, struct trusty_boot_param *boot_param);
 void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem);
 void save_sworld_context(struct acrn_vcpu *vcpu);
 void restore_sworld_context(struct acrn_vcpu *vcpu);
-void trusty_set_dseed(const void *dseed, uint8_t dseed_num);
 
 #endif /* TRUSTY_H_ */
