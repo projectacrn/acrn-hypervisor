@@ -33,6 +33,10 @@
 #include <logmsg.h>
 #include "pci_priv.h"
 
+static inline bool is_hostbridge(const struct pci_vdev *vdev)
+{
+	return (vdev->vbdf.value == 0U);
+}
 
 static inline bool is_valid_bar_type(const struct pci_bar *bar)
 {
@@ -52,13 +56,13 @@ static inline bool is_valid_bar(const struct pci_bar *bar)
 
 static void partition_mode_pdev_init(struct pci_vdev *vdev, union pci_bdf pbdf)
 {
-	struct pci_pdev *pdev_ref;
+	struct pci_pdev *pdev;
 	uint32_t idx;
 	struct pci_bar *pbar, *vbar;
 
-	pdev_ref = find_pci_pdev(pbdf);
-	if (pdev_ref != NULL) {
-		vdev->pdev = pdev_ref;
+	pdev = find_pci_pdev(pbdf);
+	if (pdev != NULL) {
+		vdev->pdev = pdev;
 
 		/* Sanity checking for vbar */
 		for (idx = 0U; idx < (uint32_t)PCI_BAR_COUNT; idx++) {
@@ -100,11 +104,11 @@ static int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 		ptdev_config = &vm_config->pci_ptdevs[i];
 		vdev->vbdf.value = ptdev_config->vbdf.value;
 
-		if (vdev->vbdf.value != 0U) {
+		if (is_hostbridge(vdev)) {
+			vdev->ops = &pci_ops_vdev_hostbridge;
+		} else {
 			partition_mode_pdev_init(vdev, ptdev_config->pbdf);
 			vdev->ops = &pci_ops_vdev_pt;
-		} else {
-			vdev->ops = &pci_ops_vdev_hostbridge;
 		}
 
 		if (vdev->ops->init != NULL) {
