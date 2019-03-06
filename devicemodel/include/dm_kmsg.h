@@ -8,7 +8,6 @@
 #ifndef _DM_KMSG_H_
 #define _DM_KMSG_H_
 
-#define DM_BUF    4096
 #define KERN_NODE "/dev/kmsg"
 #define KMSG_FMT  "dm_run:"
 
