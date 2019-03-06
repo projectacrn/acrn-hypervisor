@@ -714,6 +714,13 @@ vlapic_lvt_write_handler(struct acrn_vlapic *vlapic, uint32_t offset)
 	*lvtptr = val;
 	idx = lvt_off_to_idx(offset);
 	atomic_store32(&vlapic->lvt_last[idx], val);
+
+#if defined(HV_DEBUG) && !defined(PROFILING_ON)
+	if ((offset == APIC_OFFSET_PERF_LVT) &&
+			(val == APIC_LVT_DM_NMI)) {
+		msr_write(MSR_IA32_EXT_APIC_LVT_PMI, VECTOR_PMI);
+	}
+#endif
 }
 
 static void
