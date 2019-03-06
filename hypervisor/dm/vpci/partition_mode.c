@@ -91,7 +91,7 @@ static void partition_mode_pdev_init(struct pci_vdev *vdev, union pci_bdf pbdf)
  * @pre vm != NULL
  * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  */
-static int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
+int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 {
 	struct acrn_vpci *vpci = (struct acrn_vpci *)&(vm->vpci);
 	struct pci_vdev *vdev;
@@ -121,7 +121,7 @@ static int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
  * @pre vm != NULL
  * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  */
-static void partition_mode_vpci_deinit(const struct acrn_vm *vm)
+void partition_mode_vpci_deinit(const struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
 	uint32_t i;
@@ -137,7 +137,7 @@ static void partition_mode_vpci_deinit(const struct acrn_vm *vm)
 	}
 }
 
-static void partition_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf vbdf,
+void partition_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	struct pci_vdev *vdev = pci_find_vdev_by_vbdf(vpci, vbdf);
@@ -155,7 +155,7 @@ static void partition_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf vbdf,
 	}
 }
 
-static void partition_mode_cfgwrite(struct acrn_vpci *vpci, union pci_bdf vbdf,
+void partition_mode_cfgwrite(struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	struct pci_vdev *vdev = pci_find_vdev_by_vbdf(vpci, vbdf);
