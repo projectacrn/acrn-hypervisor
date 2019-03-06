@@ -142,13 +142,6 @@ void sharing_mode_vpci_deinit(const struct acrn_vm *vm)
 	}
 }
 
-const struct vpci_ops sharing_mode_vpci_ops = {
-	.init = sharing_mode_vpci_init,
-	.deinit = sharing_mode_vpci_deinit,
-	.cfgread = sharing_mode_cfgread,
-	.cfgwrite = sharing_mode_cfgwrite,
-};
-
 void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
 {
 	struct pci_vdev *vdev;

@@ -75,9 +75,11 @@ static uint32_t pci_cfgdata_io_read(struct acrn_vm *vm, uint16_t addr, size_t by
 	uint32_t val = ~0U;
 
 	if (pi->cached_enable) {
-		if ((vpci->ops != NULL) && (vpci->ops->cfgread != NULL)) {
-			vpci->ops->cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
-		}
+#ifdef CONFIG_PARTITION_MODE
+		partition_mode_cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
+#else
+		sharing_mode_cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
+#endif
 		pci_cfg_clear_cache(pi);
 	}
 
@@ -91,9 +93,11 @@ static void pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes
 	uint16_t offset = addr - PCI_CONFIG_DATA;
 
 	if (pi->cached_enable) {
-		if ((vpci->ops != NULL) && (vpci->ops->cfgwrite != NULL)) {
-			vpci->ops->cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
-		}
+#ifdef CONFIG_PARTITION_MODE
+		partition_mode_cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
+#else
+		sharing_mode_cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
+#endif
 		pci_cfg_clear_cache(pi);
 	}
 }
@@ -101,6 +105,7 @@ static void pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes
 void vpci_init(struct acrn_vm *vm)
 {
 	struct acrn_vpci *vpci = &vm->vpci;
+	int32_t ret;
 
 	struct vm_io_range pci_cfgaddr_range = {
 		.flags = IO_ATTR_RW,
@@ -117,12 +122,12 @@ void vpci_init(struct acrn_vm *vm)
 	vpci->vm = vm;
 
 #ifdef CONFIG_PARTITION_MODE
-	vpci->ops = &partition_mode_vpci_ops;
+	ret = partition_mode_vpci_init(vm);
 #else
-	vpci->ops = &sharing_mode_vpci_ops;
+	ret = sharing_mode_vpci_init(vm);
 #endif
 
-	if ((vpci->ops->init != NULL) && (vpci->ops->init(vm) == 0)) {
+	if (ret == 0) {
 		/*
 		 * SOS: intercept port CF8 only.
 		 * UOS or partition mode: register handler for CF8 only and I/O requests to CF9/CFA/CFB are
@@ -139,9 +144,9 @@ void vpci_init(struct acrn_vm *vm)
 
 void vpci_cleanup(const struct acrn_vm *vm)
 {
-	const struct acrn_vpci *vpci = &vm->vpci;
-
-	if ((vpci->ops != NULL) && (vpci->ops->deinit != NULL)) {
-		vpci->ops->deinit(vm);
-	}
+#ifdef CONFIG_PARTITION_MODE
+	partition_mode_vpci_deinit(vm);
+#else
+	sharing_mode_vpci_deinit(vm);
+#endif
 }
