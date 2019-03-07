@@ -320,21 +320,21 @@ int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	struct acrn_set_vcpu_regs vcpu_regs;
 	struct acrn_vcpu *vcpu;
-	int32_t ret;
+	int32_t ret = -1;
 
-	if ((target_vm == NULL) || (param == 0U) || is_sos_vm(target_vm) || (target_vm->state == VM_STARTED)) {
-		/* Only allow setup init ctx while target_vm is inactive */
-	        ret = -1;
-	} else if (copy_from_gpa(vm, &vcpu_regs, param, sizeof(vcpu_regs)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-	        ret = -1;
-	} else if (vcpu_regs.vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
-		pr_err("%s: invalid vcpu_id for set_vcpu_regs\n", __func__);
-		ret = -1;
-	} else {
-		vcpu = vcpu_from_vid(target_vm, vcpu_regs.vcpu_id);
-		set_vcpu_regs(vcpu, &(vcpu_regs.vcpu_regs));
-		ret = 0;
+	/* Only allow setup init ctx while target_vm is inactive */
+	if ((target_vm != NULL) && (param != 0U) && (!is_sos_vm(target_vm)) && (target_vm->state != VM_STARTED)) {
+		if (copy_from_gpa(vm, &vcpu_regs, param, sizeof(vcpu_regs)) != 0) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+		} else if (vcpu_regs.vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
+			pr_err("%s: invalid vcpu_id for set_vcpu_regs\n", __func__);
+		} else {
+			vcpu = vcpu_from_vid(target_vm, vcpu_regs.vcpu_id);
+			if (vcpu->state != VCPU_OFFLINE) {
+				set_vcpu_regs(vcpu, &(vcpu_regs.vcpu_regs));
+				ret = 0;
+			}
+		}
 	}
 
 	return ret;
@@ -533,26 +533,24 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 {
 	struct acrn_vcpu *vcpu;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
-	int32_t ret;
+	int32_t ret = -EINVAL;
 
 	/* make sure we have set req_buf */
-	if ((target_vm == NULL) || (target_vm->sw.io_shared_page == NULL)) {
-		pr_err("%p %s, invalid parameter\n", target_vm, __func__);
-	        ret = -EINVAL;
-	} else {
+	if ((target_vm != NULL) && (target_vm->sw.io_shared_page != NULL)) {
 		dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
 			vmid, vcpu_id);
 
 		if (vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
 			pr_err("%s, failed to get VCPU %d context from VM %d\n",
 				__func__, vcpu_id, target_vm->vm_id);
-			ret = -EINVAL;
 		} else {
 			vcpu = vcpu_from_vid(target_vm, vcpu_id);
-			if (!vcpu->vm->sw.is_completion_polling) {
-				resume_vcpu(vcpu);
+			if (vcpu->state != VCPU_OFFLINE) {
+				if (!vcpu->vm->sw.is_completion_polling) {
+					resume_vcpu(vcpu);
+				}
+				ret = 0;
 			}
-			ret = 0;
 		}
 	}
 
