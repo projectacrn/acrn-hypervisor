@@ -67,6 +67,21 @@ static void pci_cfgaddr_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes
 	}
 }
 
+static inline bool vpci_is_valid_access_offset(uint32_t offset, uint32_t bytes)
+{
+	return ((offset & (bytes - 1U)) == 0U);
+}
+
+static inline bool vpci_is_valid_access_byte(uint32_t bytes)
+{
+	return ((bytes == 1U) || (bytes == 2U) || (bytes == 4U));
+}
+
+static inline bool vpci_is_valid_access(uint32_t offset, uint32_t bytes)
+{
+	return (vpci_is_valid_access_byte(bytes) && vpci_is_valid_access_offset(offset, bytes));
+}
+
 static uint32_t pci_cfgdata_io_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
 {
 	struct acrn_vpci *vpci = &vm->vpci;
@@ -75,11 +90,13 @@ static uint32_t pci_cfgdata_io_read(struct acrn_vm *vm, uint16_t addr, size_t by
 	uint32_t val = ~0U;
 
 	if (pi->cached_enable) {
+		if (vpci_is_valid_access(pi->cached_reg + offset, bytes)) {
 #ifdef CONFIG_PARTITION_MODE
-		partition_mode_cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
+			partition_mode_cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
 #else
-		sharing_mode_cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
+			sharing_mode_cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
 #endif
+		}
 		pci_cfg_clear_cache(pi);
 	}
 
@@ -93,11 +110,13 @@ static void pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes
 	uint16_t offset = addr - PCI_CONFIG_DATA;
 
 	if (pi->cached_enable) {
+		if (vpci_is_valid_access(pi->cached_reg + offset, bytes)) {
 #ifdef CONFIG_PARTITION_MODE
-		partition_mode_cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
+			partition_mode_cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
 #else
-		sharing_mode_cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
+			sharing_mode_cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
 #endif
+		}
 		pci_cfg_clear_cache(pi);
 	}
 }

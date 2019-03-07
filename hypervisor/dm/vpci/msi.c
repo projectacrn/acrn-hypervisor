@@ -118,6 +118,7 @@ static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
 int32_t vmsi_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	int32_t ret;
+
 	/* For PIO access, we emulate Capability Structures only */
 	if (msicap_access(vdev, offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
