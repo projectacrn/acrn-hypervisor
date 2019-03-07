@@ -9,6 +9,8 @@
 #include <errno.h>
 #include <acrn_common.h>
 #include <page.h>
+#include <logmsg.h>
+#include <cat.h>
 #ifndef CONFIG_PARTITION_MODE
 #include <sos_vm.h>
 
@@ -119,6 +121,16 @@ int32_t sanitize_vm_config(void)
 			/* Nothing to do for a UNDEFINED_VM, break directly. */
 			break;
 		}
+
+		if ((vm_config->guest_flags & CLOS_REQUIRED) != 0U) {
+			if (cat_cap_info.support && (vm_config->clos <= cat_cap_info.clos_max)) {
+					cat_cap_info.enabled = true;
+			} else {
+				pr_err("%s set wrong CLOS or CAT is not supported\n", __func__);
+				ret = -EINVAL;
+			}
+		}
+
 		if (ret != 0) {
 			break;
 		}
