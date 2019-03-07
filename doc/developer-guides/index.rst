@@ -32,3 +32,4 @@ project.
    coding_guidelines
    doc_guidelines
    graphviz
+   sw_design_guidelines
