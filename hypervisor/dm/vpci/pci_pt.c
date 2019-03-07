@@ -105,14 +105,15 @@ void vdev_pt_deinit(const struct pci_vdev *vdev)
 int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
 {
+	int32_t ret = -ENODEV;
+
 	/* PCI BARs is emulated */
 	if (pci_bar_access(offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
-	} else {
-		*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+		ret = 0;
 	}
 
-	return 0;
+	return ret;
 }
 
 static void vdev_pt_remap_bar(struct pci_vdev *vdev, uint32_t idx,
@@ -178,14 +179,14 @@ static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t val)
 {
+	int32_t ret = -ENODEV;
+
 	/* PCI BARs are emulated */
 	if (pci_bar_access(offset)) {
 		vdev_pt_cfgwrite_bar(vdev, offset, bytes, val);
-	} else {
-		/* Write directly to physical device's config space */
-		pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+		ret = 0;
 	}
 
-	return 0;
+	return ret;
 }
 

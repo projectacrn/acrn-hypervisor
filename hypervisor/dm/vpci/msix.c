@@ -167,14 +167,12 @@ static int32_t vmsix_remap_one_entry(const struct pci_vdev *vdev, uint32_t index
 
 int32_t vmsix_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
-	int32_t ret;
+	int32_t ret = -ENODEV;
 	/* For PIO access, we emulate Capability Structures only */
 
 	if (msixcap_access(vdev, offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
 	    ret = 0;
-	} else {
-		ret = -ENODEV;
 	}
 
 	return ret;
@@ -183,7 +181,7 @@ int32_t vmsix_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t byt
 int32_t vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	uint32_t msgctrl;
-	int32_t ret;
+	int32_t ret = -ENODEV;
 
 	/* Writing MSI-X Capability Structure */
 	if (msixcap_access(vdev, offset)) {
@@ -207,8 +205,6 @@ int32_t vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, u
 			}
 		}
 		ret = 0;
-	} else {
-		ret = -ENODEV;
 	}
 
 	return ret;
