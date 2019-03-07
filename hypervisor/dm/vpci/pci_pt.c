@@ -105,12 +105,6 @@ void vdev_pt_deinit(const struct pci_vdev *vdev)
 int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
 {
-	/* Assumption: access needed to be aligned on 1/2/4 bytes */
-	if ((offset & (bytes - 1U)) != 0U) {
-		*val = 0xFFFFFFFFU;
-		return -EINVAL;
-	}
-
 	/* PCI BARs is emulated */
 	if (pci_bar_access(offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
@@ -184,11 +178,6 @@ static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t val)
 {
-	/* Assumption: access needed to be aligned on 1/2/4 bytes */
-	if ((offset & (bytes - 1U)) != 0U) {
-		return -EINVAL;
-	}
-
 	/* PCI BARs are emulated */
 	if (pci_bar_access(offset)) {
 		vdev_pt_cfgwrite_bar(vdev, offset, bytes, val);

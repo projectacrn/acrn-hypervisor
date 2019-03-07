@@ -50,7 +50,7 @@ void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 	vdev = sharing_mode_find_vdev_sos(bdf);
 
 	/* vdev == NULL: Could be hit for PCI enumeration from guests */
-	if ((vdev == NULL) || ((bytes != 1U) && (bytes != 2U) && (bytes != 4U))) {
+	if (vdev == NULL) {
 		*val = ~0U;
 	} else {
 		if ((vmsi_cfgread(vdev, offset, bytes, val) != 0)
@@ -67,15 +67,13 @@ void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 {
 	struct pci_vdev *vdev;
 
-	if ((bytes == 1U) || (bytes == 2U) || (bytes == 4U)) {
-		vdev = sharing_mode_find_vdev_sos(bdf);
-		if (vdev != NULL) {
-			if ((vmsi_cfgwrite(vdev, offset, bytes, val) != 0)
-				&& (vmsix_cfgwrite(vdev, offset, bytes, val) != 0)
-				) {
-				/* Not handled by any handlers, passthru to physical device */
-				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
-			}
+	vdev = sharing_mode_find_vdev_sos(bdf);
+	if (vdev != NULL) {
+		if ((vmsi_cfgwrite(vdev, offset, bytes, val) != 0)
+			&& (vmsix_cfgwrite(vdev, offset, bytes, val) != 0)
+			) {
+			/* Not handled by any handlers, passthru to physical device */
+			pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
 		}
 	}
 }
