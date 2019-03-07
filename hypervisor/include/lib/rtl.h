@@ -43,34 +43,4 @@ uint64_t strtoul_hex(const char *nptr);
 char *strstr_s(const char *str1, size_t maxlen1,
 			const char *str2, size_t maxlen2);
 
-/**
- * Frequency of TSC in KHz (where 1KHz = 1000Hz). Only valid after
- * calibrate_tsc() returns.
- */
-extern uint32_t tsc_khz;
-
-static inline uint64_t us_to_ticks(uint32_t us)
-{
-	return (((uint64_t)us * (uint64_t)tsc_khz) / 1000UL);
-}
-
-#define CYCLES_PER_MS	us_to_ticks(1000U)
-
-static inline uint64_t ticks_to_us(uint64_t ticks)
-{
-	return (ticks * 1000UL) / (uint64_t)tsc_khz;
-}
-
-static inline uint64_t ticks_to_ms(uint64_t ticks)
-{
-	return ticks / (uint64_t)tsc_khz;
-}
-
-static inline uint64_t rdtsc(void)
-{
-	uint32_t lo, hi;
-
-	asm volatile("rdtsc" : "=a" (lo), "=d" (hi));
-	return ((uint64_t)hi << 32U) | lo;
-}
 #endif /* RTL_H */

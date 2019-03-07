@@ -45,3 +45,17 @@ Interfaces Design
 .. doxygenfunction:: calibrate_tsc
    :project: Project ACRN
 
+.. doxygenfunction:: us_to_ticks
+   :project: Project ACRN
+
+.. doxygenfunction:: ticks_to_us
+   :project: Project ACRN
+
+.. doxygenfunction:: ticks_to_ms
+   :project: Project ACRN
+
+.. doxygenfunction:: rdtsc
+   :project: Project ACRN
+
+.. doxygenfunction:: get_tsc_khz
+   :project: Project ACRN
