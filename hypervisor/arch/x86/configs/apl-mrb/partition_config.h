@@ -20,6 +20,7 @@
 #define VM0_CONFIG_OS_BOOTARGS			"root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
 						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
 						consoleblank=0 tsc=reliable xapic_phys"
+#define VM0_CONFIG_HIDE_MTRR			false
 
 #define	VM1_CONFIGURED
 
@@ -34,6 +35,7 @@
 #define VM1_CONFIG_OS_BOOTARGS			"root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
 						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
 						consoleblank=0 tsc=reliable xapic_phys"
+#define VM1_CONFIG_HIDE_MTRR			false
 
 #define VM0_CONFIG_PCI_PTDEV_NUM		2U
 #define VM1_CONFIG_PCI_PTDEV_NUM		3U

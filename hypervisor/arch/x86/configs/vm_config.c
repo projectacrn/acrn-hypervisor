@@ -27,6 +27,21 @@ static struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE) 
 			.name = SOS_VM_CONFIG_OS_NAME,
 		},
 	},
+	{
+#ifdef VM1_CONFIG_HIDE_MTRR
+		.hide_mtrr = VM1_CONFIG_HIDE_MTRR,
+#endif
+	},
+	{
+#ifdef VM2_CONFIG_HIDE_MTRR
+		.hide_mtrr = VM2_CONFIG_HIDE_MTRR,
+#endif
+	},
+	{
+#ifdef VM3_CONFIG_HIDE_MTRR
+		.hide_mtrr = VM3_CONFIG_HIDE_MTRR,
+#endif
+	},
 };
 #else
 #include <partition_config.h>
@@ -48,6 +63,7 @@ static struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE) 
 		.vm_vuart = true,	\
 		.pci_ptdev_num = VM##idx##_CONFIG_PCI_PTDEV_NUM,	\
 		.pci_ptdevs = vm##idx##_pci_ptdevs,	\
+		.hide_mtrr = VM##idx##_CONFIG_HIDE_MTRR,	\
 	}
 
 static struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE) = {

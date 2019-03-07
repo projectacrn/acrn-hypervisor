@@ -113,6 +113,8 @@ struct vm_arch {
 	struct acrn_vpic vpic;      /* Virtual PIC */
 	struct vm_io_handler_desc emul_pio[EMUL_PIO_IDX_MAX];
 
+	bool hide_mtrr;
+
 	/* reference to virtual platform to come here (as needed) */
 } __aligned(PAGE_SIZE);
 

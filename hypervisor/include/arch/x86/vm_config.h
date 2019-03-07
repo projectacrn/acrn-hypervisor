@@ -58,6 +58,7 @@ struct acrn_vm_config {
 	struct acrn_vm_pci_ptdev_config *pci_ptdevs;	/* point to PCI PT devices BDF list */
 	struct acrn_vm_os_config os_config;		/* OS information the VM */
 	uint16_t clos;					/* if guest_flags has CAT_ENABLED, then VM use this CLOS */
+	bool hide_mtrr;					/* if the guest doesn't need MTRR, just hide it */
 
 #ifdef CONFIG_PARTITION_MODE
 	bool			vm_vuart;
