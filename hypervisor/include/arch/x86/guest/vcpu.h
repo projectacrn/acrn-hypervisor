@@ -260,9 +260,7 @@ struct acrn_vcpu_arch {
 	/* per vcpu lapic */
 	struct acrn_vlapic vlapic;
 
-#ifdef CONFIG_MTRR_ENABLED
 	struct acrn_vmtrr vmtrr;
-#endif
 
 	int32_t cur_context;
 	struct cpu_context contexts[NR_WORLD];

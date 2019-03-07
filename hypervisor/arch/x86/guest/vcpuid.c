@@ -322,10 +322,10 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 			*ebx &= ~APIC_ID_MASK;
 			*ebx |= (apicid <<  APIC_ID_SHIFT);
 
-#ifndef CONFIG_MTRR_ENABLED
-			/* mask mtrr */
-			*edx &= ~CPUID_EDX_MTRR;
-#endif
+			if (vm_hide_mtrr(vcpu->vm)) {
+				/* mask mtrr */
+				*edx &= ~CPUID_EDX_MTRR;
+			}
 
 			/* mask Debug Store feature */
 			*ecx &= ~(CPUID_ECX_DTES64 | CPUID_ECX_DS_CPL);

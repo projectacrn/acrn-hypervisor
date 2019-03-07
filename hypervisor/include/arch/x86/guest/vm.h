@@ -159,6 +159,11 @@ struct acrn_vm {
 	uint64_t intr_inject_delay_delta; /* delay of intr injection */
 } __aligned(PAGE_SIZE);
 
+static inline bool vm_hide_mtrr(const struct acrn_vm *vm)
+{
+	return vm->arch_vm.hide_mtrr;
+}
+
 /*
  * @pre vlapic != NULL
  */

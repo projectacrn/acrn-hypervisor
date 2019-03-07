@@ -311,10 +311,6 @@ config UEFI_OS_LOADER_NAME
 	depends on PLATFORM_UEFI
 	default "\\EFI\\org.clearlinux\\bootloaderx64.efi"
 
-config MTRR_ENABLED
-	bool "Memory Type Range Registers (MTRR) enabled"
-	default y
-
 config RELOC
 	bool "Enable hypervisor relocation"
 	default y

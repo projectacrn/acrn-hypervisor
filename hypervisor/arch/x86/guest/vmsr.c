@@ -407,11 +407,11 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_MTRR_FIX4K_F0000:
 	case MSR_IA32_MTRR_FIX4K_F8000:
 	{
-#ifdef CONFIG_MTRR_ENABLED
-		v = read_vmtrr(vcpu, msr);
-#else
-		err = -EACCES;
-#endif
+		if (!vm_hide_mtrr(vcpu->vm)) {
+			v = read_vmtrr(vcpu, msr);
+		} else {
+			err = -EACCES;
+		}
 		break;
 	}
 	case MSR_IA32_BIOS_SIGN_ID:
@@ -549,11 +549,11 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_MTRR_FIX4K_F0000:
 	case MSR_IA32_MTRR_FIX4K_F8000:
 	{
-#ifdef CONFIG_MTRR_ENABLED
-		write_vmtrr(vcpu, msr, v);
-#else
-		err = -EACCES;
-#endif
+		if (!vm_hide_mtrr(vcpu->vm)) {
+			write_vmtrr(vcpu, msr, v);
+		} else {
+			err = -EACCES;
+		}
 		break;
 	}
 	case MSR_IA32_BIOS_SIGN_ID:

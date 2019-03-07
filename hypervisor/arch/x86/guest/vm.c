@@ -363,6 +363,8 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 	}
 
 	if (status == 0) {
+		vm->arch_vm.hide_mtrr = vm_config->hide_mtrr;
+
 		enable_iommu();
 
 		INIT_LIST_HEAD(&vm->softirq_dev_entry_list);
