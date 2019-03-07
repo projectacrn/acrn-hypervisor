@@ -751,6 +751,12 @@ static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv)
 	}
 
 	vcpu = vcpu_from_vid(vm, vcpu_id);
+	if (vcpu->state == VCPU_OFFLINE) {
+		shell_puts("vcpu is offline\r\n");
+		status = -EINVAL;
+		goto out;
+	}
+
 	dump.vcpu = vcpu;
 	dump.str = shell_log_buf;
 	dump.str_max = SHELL_LOG_BUF_SIZE;
