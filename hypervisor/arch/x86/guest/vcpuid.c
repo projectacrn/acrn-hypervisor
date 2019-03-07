@@ -139,7 +139,7 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 			cpuid_subleaf(leaf, subleaf, &entry->eax, &entry->ebx, &entry->ecx, &entry->edx);
 		} else {
 			/* Use the tsc to derive the emulated 0x16U cpuid. */
-			entry->eax = (uint32_t) (tsc_khz / 1000U);
+			entry->eax = (uint32_t) (get_tsc_khz() / 1000U);
 			entry->ebx = entry->eax;
 			/* Bus frequency: hard coded to 100M */
 			entry->ecx = 100U;
@@ -178,7 +178,7 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 	 * EBX, ECX, EDX: RESERVED (reserved fields are set to zero).
 	 */
 	case 0x40000010U:
-		entry->eax = tsc_khz;
+		entry->eax = get_tsc_khz();
 		entry->ebx = 0U;
 		entry->ecx = 0U;
 		entry->edx = 0U;

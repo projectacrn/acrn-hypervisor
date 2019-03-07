@@ -16,7 +16,15 @@
 #define CAL_MS			10U
 #define MIN_TIMER_PERIOD_US	500U
 
-uint32_t tsc_khz = 0U;
+static uint32_t tsc_khz = 0U;
+
+uint64_t rdtsc(void)
+{
+	uint32_t lo, hi;
+
+	asm volatile("rdtsc" : "=a" (lo), "=d" (hi));
+	return ((uint64_t)hi << 32U) | lo;
+}
 
 static void run_timer(const struct hv_timer *timer)
 {
@@ -282,4 +290,29 @@ void calibrate_tsc(void)
 	}
 	tsc_khz = (uint32_t)(tsc_hz / 1000UL);
 	printf("%s, tsc_khz=%lu\n", __func__, tsc_khz);
+}
+
+uint32_t get_tsc_khz(void)
+{
+	return tsc_khz;
+}
+
+/**
+ * Frequency of TSC in KHz (where 1KHz = 1000Hz). Only valid after
+ * calibrate_tsc() returns.
+ */
+
+uint64_t us_to_ticks(uint32_t us)
+{
+	return (((uint64_t)us * (uint64_t)tsc_khz) / 1000UL);
+}
+
+uint64_t ticks_to_us(uint64_t ticks)
+{
+	return (ticks * 1000UL) / (uint64_t)tsc_khz;
+}
+
+uint64_t ticks_to_ms(uint64_t ticks)
+{
+	return ticks / (uint64_t)tsc_khz;
 }
