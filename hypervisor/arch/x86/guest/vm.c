@@ -449,18 +449,19 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 
 		ptdev_release_all_entries(vm);
 
-		/* Free EPT allocated resources assigned to VM */
-		destroy_ept(vm);
+		vpci_cleanup(vm);
 
 		/* Free iommu */
 		if (vm->iommu != NULL) {
 			destroy_iommu_domain(vm->iommu);
 		}
 
+		/* Free EPT allocated resources assigned to VM */
+		destroy_ept(vm);
+
 		/* Free vm id */
 		free_vm_id(vm);
 
-		vpci_cleanup(vm);
 		ret = 0;
 	} else {
 	        ret = -EINVAL;
