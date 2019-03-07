@@ -45,14 +45,12 @@ static struct pci_vdev *sharing_mode_find_vdev_sos(union pci_bdf pbdf)
 void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
-	struct pci_vdev *vdev;
+	struct pci_vdev *vdev = sharing_mode_find_vdev_sos(bdf);
 
-	vdev = sharing_mode_find_vdev_sos(bdf);
+	*val = ~0U;
 
 	/* vdev == NULL: Could be hit for PCI enumeration from guests */
-	if (vdev == NULL) {
-		*val = ~0U;
-	} else {
+	if (vdev != NULL) {
 		if ((vmsi_cfgread(vdev, offset, bytes, val) != 0)
 			&& (vmsix_cfgread(vdev, offset, bytes, val) != 0)
 			) {
@@ -65,9 +63,8 @@ void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
-	struct pci_vdev *vdev;
+	struct pci_vdev *vdev = sharing_mode_find_vdev_sos(bdf);
 
-	vdev = sharing_mode_find_vdev_sos(bdf);
 	if (vdev != NULL) {
 		if ((vmsi_cfgwrite(vdev, offset, bytes, val) != 0)
 			&& (vmsix_cfgwrite(vdev, offset, bytes, val) != 0)

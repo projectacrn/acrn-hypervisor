@@ -149,7 +149,8 @@ void partition_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf vbdf,
 			}
 		} else {
 			if (vdev_pt_cfgread(vdev, offset, bytes, val) != 0) {
-				pr_err("vdev_pt_cfgread failed!");
+				/* Not handled by any handlers, passthru to physical device */
+				*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
 			}
 		}
 	}
@@ -167,7 +168,8 @@ void partition_mode_cfgwrite(struct acrn_vpci *vpci, union pci_bdf vbdf,
 			}
 		} else {
 			if (vdev_pt_cfgwrite(vdev, offset, bytes, val) != 0){
-				pr_err("vdev_pt_cfgwrite failed!");
+				/* Not handled by any handlers, passthru to physical device */
+				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
 			}
 		}
 	}
