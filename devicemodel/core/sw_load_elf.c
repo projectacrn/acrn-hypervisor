@@ -136,6 +136,7 @@ static int load_elf32(struct vmctx *ctx, FILE *fp, void *buf)
 					ctx->lowmem) {
 				fprintf(stderr,
 					"No enough memory to load elf file\n");
+				free(elf32_phdr_bk);
 				return -1;
 			}
 
