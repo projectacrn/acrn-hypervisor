@@ -1870,7 +1870,6 @@ pci_xhci_cmd_reset_device(struct pci_xhci_vdev *xdev, uint32_t slot)
 	else {
 		dev->dev_slotstate = XHCI_ST_DEFAULT;
 
-		dev->hci.hci_address = 0;
 		dev_ctx = pci_xhci_get_dev_ctx(xdev, slot);
 		if (!dev_ctx) {
 			cmderr = XHCI_TRB_ERROR_SLOT_NOT_ON;
