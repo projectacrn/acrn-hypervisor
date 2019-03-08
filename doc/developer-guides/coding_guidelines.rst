@@ -1,5 +1,9 @@
 .. _coding_guidelines:
 
+.. This document is being generated with a python script.
+.. If you would like to update this document, please contact Shiqing.
+.. Shiqing Gao <shiqing.gao@intel.com>
+
 Coding Guidelines
 #################
 
