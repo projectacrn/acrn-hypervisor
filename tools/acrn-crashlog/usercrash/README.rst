@@ -72,8 +72,8 @@ Usage
 
    You need to be ``root`` to use the ``debugger``.
 
-Souce Code
-**********
+Source Code
+***********
 
 - client.c : This file is the implementation for client of ``usercrash``, which
   is responsible for delivering the ``usercrash`` event to the server, and

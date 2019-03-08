@@ -10,7 +10,7 @@ Purpose of this Document
 ========================
 
 This high-level design (HLD) document describes the usage requirements
-and high level design for Intel® Graphics Virtualization Technology for
+and high level design for Intel |reg| Graphics Virtualization Technology for
 shared virtual :term:`GPU` technology (:term:`GVT-g`) on Apollo Lake-I
 SoCs.
 
@@ -26,10 +26,10 @@ Audience
 ========
 
 This document is for developers, validation teams, architects and
-maintainers of Intel® GVT-g for the Apollo Lake SoCs.
+maintainers of Intel |reg| GVT-g for the Apollo Lake SoCs.
 
 The reader should have some familiarity with the basic concepts of
-system virtualization and Intel® processor graphics.
+system virtualization and Intel processor graphics.
 
 Reference Documents
 ===================
@@ -45,19 +45,19 @@ The following documents were used as references for this specification:
 Background
 **********
 
-Intel® GVT-g is an enabling technology in emerging graphics
+Intel GVT-g is an enabling technology in emerging graphics
 virtualization scenarios. It adopts a full GPU virtualization approach
 based on mediated pass-through technology, to achieve good performance,
 scalability and secure isolation among Virtual Machines (VMs). A virtual
 GPU (vGPU), with full GPU features, is presented to each VM so that a
 native graphics driver can run directly inside a VM.
 
-Intel® GVT-g technology for Apollo Lake (APL) has been implemented in
+Intel GVT-g technology for Apollo Lake (APL) has been implemented in
 open source hypervisors or Virtual Machine Monitors (VMMs):
 
--  Intel® GVT-g for ACRN, also known as, "AcrnGT"
--  Intel® GVT-g for KVM, also known as, "KVMGT"
--  Intel® GVT-g for Xen, also known as, "XenGT"
+-  Intel GVT-g for ACRN, also known as, "AcrnGT"
+-  Intel GVT-g for KVM, also known as, "KVMGT"
+-  Intel GVT-g for Xen, also known as, "XenGT"
 
 The core vGPU device model is released under BSD/MIT dual license, so it
 can be reused in other proprietary hypervisors.
@@ -119,7 +119,7 @@ virtualization technology. It has been used in commercial virtualization
 productions, for example, VMware*, PCoIP*, and Microsoft* RemoteFx*.
 It is a natural path when researchers study a new type of
 I/O virtualization usage, for example, when GPGPU computing in VM was
-initially proposed. Intel® GVT-s is based on this approach.
+initially proposed. Intel GVT-s is based on this approach.
 
 The architecture of API forwarding is shown in :numref:`api-forwarding`:
 
@@ -170,7 +170,7 @@ capability among VMs. Only one VM at a time can use the hardware
 acceleration capability of the GPU, which is a major limitation of this
 technique.  However, it is still a good approach to enable graphics
 virtualization usages on Intel server platforms, as an intermediate
-solution. Intel® GVT-d uses this mechanism.
+solution. Intel GVT-d uses this mechanism.
 
 .. figure:: images/APL_GVT-g-pass-through.png
    :width: 400px
@@ -189,7 +189,7 @@ with each VF directly assignable to a VM.
 Mediated Pass-Through
 *********************
 
-Intel® GVT-g achieves full GPU virtualization using a "mediated
+Intel GVT-g achieves full GPU virtualization using a "mediated
 pass-through" technique.
 
 Concept

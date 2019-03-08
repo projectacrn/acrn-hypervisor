@@ -42,10 +42,10 @@ Please follow the :ref:`getting-started-apl-nuc`, with the following changes:
 
    Clear Linux OS will update to the latest version during installation.
    Run this command (as root) to roll back to version 25130, using the
-   ``–x`` switch to ignore version mismatch::
+   ``-x`` switch to ignore version mismatch::
 
       # swupd verify -x --fix --picky -m 25130
-      # swupd autoupdate -–disable
+      # swupd autoupdate --disable
       # reboot
 
 #. Add the ACRN hypervisor to the EFI Partition

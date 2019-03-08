@@ -38,7 +38,7 @@ Because the resulting probed physical address is not a true translation of
 the virtual address, the resulting address is not constrained by various
 memory range checks or nested translations. Specifically:
 
-* Intel® SGX protected memory checks are not applied.
+* Intel |reg| SGX protected memory checks are not applied.
 * Extended Page Table (EPT) guest physical to host physical address
   translation is not applied.
 * SMM protected memory checks are not applied.
@@ -46,7 +46,7 @@ memory range checks or nested translations. Specifically:
 The following CVE entries are related to the L1TF:
 
 =============  =================  ==============================
-CVE-2018-3615  L1 Terminal Fault  Intel® SGX related aspects
+CVE-2018-3615  L1 Terminal Fault  Intel SGX related aspects
 CVE-2018-3620  L1 Terminal Fault  OS, SMM related aspects
 CVE-2018-3646  L1 Terminal Fault  Virtualization related aspects
 =============  =================  ==============================
@@ -64,7 +64,7 @@ Malicious user space is not a concern to ACRN hypervisor, because
 every guest runs in VMX non-root. It is responsibility of guest kernel
 to protect itself from malicious user space attack.
 
-Intel® SGX/SMM related attacks are mitigated by using latest microcode.
+Intel SGX/SMM related attacks are mitigated by using latest microcode.
 There is no additional action in ACRN hypervisor.
 
 Guest -> hypervisor Attack
@@ -77,7 +77,7 @@ PTEs (with present bit cleared, or reserved bit set) pointing to valid
 host PFNs, a malicious guest may use those EPT PTEs to construct an attack.
 
 A special aspect of L1TF in the context of virtualization is symmetric
-multi threading (SMT), e.g. Intel® Hyper-Threading Technology.
+multi threading (SMT), e.g. Intel |reg| Hyper-Threading Technology.
 Logical processors on the affected physical cores share the L1 Data Cache
 (L1D). This fact could make more variants of L1TF-based attack, e.g.
 a malicious guest running on one logical processor can attack the data which
@@ -113,7 +113,7 @@ breaking the security model as expected by Android guest.
 Affected Processors
 ===================
 
-L1TF affects a range of Intel processors, but Intel ATOM® processors
+L1TF affects a range of Intel processors, but Intel Atom |reg|  processors
 (including Apollo Lake) are immune to it. Currently ACRN hypervisor
 supports only Apollo Lake. Support for other core-based platforms is
 planned, so we still need a mitigation plan in ACRN.
@@ -127,7 +127,7 @@ Please refer to `Intel Analysis of L1TF`_ for more details.
 L1TF Mitigation in ACRN
 ***********************
 
-Use the latest microcode, which mitigates SMM and Intel® SGX cases
+Use the latest microcode, which mitigates SMM and Intel SGX cases
 while also providing necessary capability for VMM to use for further
 mitigation.
 

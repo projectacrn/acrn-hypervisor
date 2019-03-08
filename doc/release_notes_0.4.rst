@@ -117,7 +117,7 @@ Known Issues
    **Workaround:** Power off and boot again. The issues will be fixed in the next release.
 
 :acrn-issue:`1986` - UOS will hang once watchdog reset triggered
-   If Launching UOS with “-s 8,wdt-i6300esb”, UOS will hang if the watchdog reset is triggered.
+   If Launching UOS with "-s 8,wdt-i6300esb", UOS will hang if the watchdog reset is triggered.
 
    **Impact:** UOS cannot self-recover after a watchdog reset is triggered.
 
@@ -151,7 +151,7 @@ Known Issues
 :acrn-issue:`1996` - There is an error log when using "acrnd&" to boot UOS
    An error log is printed when starting acrnd as a background job
    (``acrnd&``) to boot UOS. The UOS still boots up
-   normally, but prints: “Failed to open the socket(sos-lcs) to query the reason for the wake-up.
+   normally, but prints: "Failed to open the socket(sos-lcs) to query the reason for the wake-up.
    Activating all vms when acrnd & to boot uos."
 
    **Impact:** UOS boots normally, but prints an error log message.
@@ -273,7 +273,7 @@ release in Nov 2018 (click on the CommitID link to see details):
 - :acrn-commit:`06b2ab55` Update using_ubuntu_as_sos.rst
 - :acrn-commit:`e4941b22` Update using_ubuntu_as_sos.rst
 - :acrn-commit:`65f21a77` Update the version of Ubuntu to 18.04
-- :acrn-commit:`abfa1c16` update the length of ＊
+- :acrn-commit:`abfa1c16` update the length of *
 - :acrn-commit:`1664ba5f` Update using_ubuntu_as_sos.rst
 - :acrn-commit:`f3527c63` Update using_ubuntu_as_sos.rst
 - :acrn-commit:`e4b616d5` Update using_ubuntu_as_sos.rst

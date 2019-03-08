@@ -113,7 +113,7 @@ follows::
    -s <slot>,xhci,[bus1-port1,bus2-port2],cap=platform
 
 - *cap*: cap means virtual xHCI capability. This parameter
-       indicates virtual xHCI should emulate the named platform’s xHCI
+       indicates virtual xHCI should emulate the named platform's xHCI
        capabilities.
 
 A simple example::

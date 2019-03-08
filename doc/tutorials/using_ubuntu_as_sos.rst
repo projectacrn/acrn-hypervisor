@@ -16,10 +16,10 @@ Ubuntu 18.04.1 LTS was used throughout this document, other older versions such 
 16.04 works too.
 
 * Download Ubuntu 18.04 from the `Ubuntu 18.04.1 LTS (Bionic Beaver) page
-  <http://releases.ubuntu.com/18.04.1/>`_ and select the `ubuntu-18.04.1-desktop-amd64.iso 
+  <http://releases.ubuntu.com/18.04.1/>`_ and select the `ubuntu-18.04.1-desktop-amd64.iso
   <http://releases.ubuntu.com/18.04.1/ubuntu-18.04.1-desktop-amd64.iso>`_ image.
 
-* Follow Ubuntu's `online instructions <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop?_ga=2.114179015.1954550575.1530817291-1278304647.1523530035>`_
+* Follow Ubuntu's `online instructions <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop>`_
   to install it on your device.
 
 .. note::
@@ -83,7 +83,7 @@ the source code, build it, and install it on your device.
    #. Add the ACRN hypervisor and Service OS kernel to it (as ``root``)
 
       .. code-block:: none
-         
+
          ls /boot/efi/EFI/ubuntu/
 
       You should see the following output:
@@ -102,28 +102,28 @@ the source code, build it, and install it on your device.
    #. Configure the EFI firmware to boot the ACRN hypervisor by default
 
       .. code-block:: none
-      
+
          # For SATA
          sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 \
                 -L "ACRN Hypervisor" -u "bootloader=\EFI\ubuntu\grubx64.efi"
          # For NVMe
          sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/nvme0n1 -p 1 \
-                -L "ACRN Hypervisor" -u "bootloader=\EFI\ubuntu\grubx64.efi"        
-         
+                -L "ACRN Hypervisor" -u "bootloader=\EFI\ubuntu\grubx64.efi"
+
    #. Verify that the "ACRN Hypervisor" is added and make sure it will be booted first
-      
-      .. code-block:: none   
-         
+
+      .. code-block:: none
+
          sudo efibootmgr -v
 
    #. You can change the boot order at any time using ``efibootmgr -o XXX,XXX,XXX``
-      
-     .. code-block:: none   
-         
-        sudo efibootmgr -o xxx,xxx,xxx 
+
+     .. code-block:: none
+
+        sudo efibootmgr -o xxx,xxx,xxx
 
    .. note::
-      By default, the “ACRN Hypervisor” you have just added should be
+      By default, the "ACRN Hypervisor" you have just added should be
       the first one to boot. Verify this by using ``efibootmgr -v`` or
       by entering the EFI firmware at boot (using :kbd:`F10`)
 
@@ -183,7 +183,7 @@ You can download latest Service OS kernel from
    .. note::
         You will also need to adjust the kernel name if you used a different
         RPM file as the source of your Service OS kernel.
-   
+
    .. note::
         The command line for the kernel in /etc/grub.d/40_custom should be all
         as a single line, not as multiple lines. Otherwise the kernel will fail to boot
@@ -192,7 +192,7 @@ You can download latest Service OS kernel from
      There are a couple of lines to be modified, as shown below.
 
      .. code-block:: none
-        
+
         #GRUB_TIMEOUT_STYLE=hidden
         #GRUB_HIDDEN_TIMEOUT=0
         GRUB_HIDDEN_TIMEOUT_QUIET=false
@@ -204,20 +204,20 @@ You can download latest Service OS kernel from
         sudo update-grub
 
 #. Reboot the system
-   
-   Reboot system. You should see the Grub menu with the new “ACRN ubuntu SOS”
+
+   Reboot system. You should see the Grub menu with the new "ACRN ubuntu SOS"
    entry. Select it and proceed to booting the platform. The system will start
    the Ubuntu Desktop and you can now log in (as before).
 
    .. note::
        If you don't see the Grub menu after rebooting the system (and you're
        not booting into the ACRN hypervisor), you'll need to enter the
-       EFI firmware at boot (using :kbd:`F10`) and manually select ``ACRN Hypervisor``. 
-        
+       EFI firmware at boot (using :kbd:`F10`) and manually select ``ACRN Hypervisor``.
+
    .. note::
-       If you see a black screen on the first-time reboot after installing the ACRN Hypervisor, 
+       If you see a black screen on the first-time reboot after installing the ACRN Hypervisor,
        wait a few moments and the Ubuntu desktop will be displayed.
-        
+
    To check if the hypervisor is effectively running, check ``dmesg``. The
    typical output of a successful installation will look like this:
 
@@ -243,7 +243,7 @@ For the User OS, we are using the same `Clear Linux OS`_ release version as the 
 * Download the "kernel-iot-lts2018" kernel
 
   .. code-block:: none
-  
+
      sudo mkdir ~/uos-kernel-build
      cd ~/uos-kernel-build
      wget https://download.clearlinux.org/releases/26440/clear/x86_64/os/Packages/linux-iot-lts2018-4.19.0-22.x86_64.rpm
@@ -274,7 +274,7 @@ For the User OS, we are using the same `Clear Linux OS`_ release version as the 
      sudo cp /usr/bin/iasl /usr/sbin/iasl
 
 * Adjust ``launch_uos.sh``
- 
+
   You need to adjust the ``/usr/share/acrn/samples/nuc/launch_uos.sh`` script
   to match your installation. These are the couple of lines you need to modify:
 
@@ -282,9 +282,9 @@ For the User OS, we are using the same `Clear Linux OS`_ release version as the 
 
      -s 3,virtio-blk,~/clear-26440-kvm.img
      -k /lib/modules/kernel/default-iot-lts2018
-        
+
   .. note::
-      The image of UOS can be stored in other directories instead of ``~/``, 
+      The image of UOS can be stored in other directories instead of ``~/``,
       and please remember to modify the directory of image in ``launch_uos.sh`` too.
 
 Start the User OS (UOS)
@@ -299,7 +299,7 @@ You are now all set to start the User OS (UOS)
 **Congratulations**, you are now watching the User OS booting up!
 
 
-Enabling network sharing 
+Enabling network sharing
 ************************
 
 After booting up the SOS and UOS, network sharing must be enabled to give network
@@ -308,15 +308,15 @@ script example shows how to set this up (verified in Ubuntu 16.04 and 18.04 as t
 
 
  .. code-block:: none
-  
+
     #!/bin/bash
     #setup bridge for uos network
     br=$(brctl show | grep acrn-br0)
     br=${br-:0:6}
     ip tuntap add dev acrn_tap0 mode tap
-    
+
     taps=$(ifconfig | grep acrn_ | awk '{print $1}')
-  
+
     # if bridge not existed
     if [ "$br"x != "acrn-br0"x ]; then
     #setup bridge for uos network
@@ -332,7 +332,7 @@ script example shows how to set this up (verified in Ubuntu 16.04 and 18.04 as t
         ip link set dev $tap up
       done
     fi
-  
+
     brctl addif acrn-br0 acrn_tap0
     ip link set dev acrn_tap0 up
 
@@ -346,5 +346,5 @@ Enabling USB keyboard and mouse
 Please refer to :ref:`getting-started-apl-nuc` for enabling the
 USB keyboard and mouse for the UOS.
 
- 
+
 .. _Clear Linux OS: https://clearlinux.org

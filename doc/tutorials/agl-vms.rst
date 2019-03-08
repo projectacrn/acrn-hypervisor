@@ -132,9 +132,9 @@ Service OS
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`_
    as a starting point for installing Clear Linux OS onto your platform.
    Follow the recommended options for choosing an Automatic installation
-   type, and using the platform’s storage as the target device for
+   type, and using the platform's storage as the target device for
    installation (overwriting the existing data and creating three
-   partitions on the platform’s storage drive).
+   partitions on the platform's storage drive).
 
 #. After installation is complete, boot into Clear Linux OS, login as
    root, and set a password.

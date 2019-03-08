@@ -126,7 +126,7 @@ functions of that layer as well as the layers below.
 References
 **********
 
-.. [IEC_61508-3] IEC 61508-3:2010, Functional safety of electrical/electronic/programmable electronic safety-related systems – Part 3: Software requirements
+.. [IEC_61508-3] IEC 61508-3:2010, Functional safety of electrical/electronic/programmable electronic safety-related systems - Part 3: Software requirements
 
 .. [ISO_26262-6] ISO 26262-6:2011, Road vehicles - Functional safety - Part 6: Product development at the software level
 

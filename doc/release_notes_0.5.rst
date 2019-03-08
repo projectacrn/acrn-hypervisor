@@ -191,7 +191,7 @@ Known Issues
 :acrn-issue:`1996` - There is an error log when using "acrnd&" to boot UOS
    An error log is printed when starting acrnd as a background job
    (``acrnd&``) to boot UOS. The UOS still boots up
-   normally, but prints: “Failed to open the socket(sos-lcs) to query the reason for the wake-up.
+   normally, but prints: "Failed to open the socket(sos-lcs) to query the reason for the wake-up.
    Activating all vms when acrnd & to boot uos."
 
    **Impact:** UOS boots normally, but prints an error log message.
@@ -231,7 +231,7 @@ Known Issues
    After exiting UOS with mediator Usb_KeyBoard and Mouse, SOS cannot use the Usb_KeyBoard and Mouse.
    Reproduce Steps as below:
 
-   1) Insert USB keyboard and mouse in standard A port（USB3.0 port）
+   1) Insert USB keyboard and mouse in standard A port (USB3.0 port)
 
    2) Boot UOS by sharing the USB keyboard and mouse in cmd line:
    -s n,xhci,1-1:1-2:1-3:1-4:2-1:2-2:2-3:2-4 \
@@ -407,7 +407,7 @@ release in Dec 2018 (click on the CommitID link to see details):
 - :acrn-commit:`2c6c383e` hv: string: fix MISRA-C violations related to break
 - :acrn-commit:`b319e654` HV: fix bug adapt uart mmio to bdf for HV cmdline
 - :acrn-commit:`23c2166a` HV: change serial PCI cfg to bus:dev.func format
-- :acrn-commit:`1caf58f2` hv:clean io_request.c misra violations
+- :acrn-commit:`1caf58f2` hv:clean io_request.c MISRA violations
 - :acrn-commit:`530388db` hv: irq: fix MISRA-C violations in irq.c and idt.h
 - :acrn-commit:`08cf8f64` hv: lapic: fix MISRA-C violation of potential numeric overflow
 - :acrn-commit:`83ebd432` hv: ptdev: fix MISRA-C violations
@@ -542,7 +542,7 @@ release in Dec 2018 (click on the CommitID link to see details):
 - :acrn-commit:`6bfbf166` Doc: Update some statements
 - :acrn-commit:`85b30685` Doc: define swap partition with 1G
 - :acrn-commit:`fae136c2` doc: remove "software-defined-cockpit"
-- :acrn-commit:`33b87064` Doc: Update the doc of "Build UOS from ClearLinux"
+- :acrn-commit:`33b87064` Doc: Update the doc of "Build UOS from Clear Linux"
 - :acrn-commit:`8b83cadd` doc: update the layout of the doc
 - :acrn-commit:`71bf586e` doc: upload tutorial of 'Build UOS from Clear Linux'
 - :acrn-commit:`bc5b27a7` tools: acrnctl: increase STOP_TIMEOUT to 30s when reset VM
