@@ -834,7 +834,8 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	ptdev = calloc(1, sizeof(struct passthru_dev));
 	if (ptdev == NULL) {
 		warnx("%s: calloc FAIL!", __func__);
-		return -ENOMEM;
+		error = -ENOMEM;
+		goto done;
 	}
 
 	ptdev->phys_bdf = PCI_BDF(bus, slot, func);
@@ -844,7 +845,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	error = pciaccess_init();
 	if (error < 0)
-		return error;
+		goto done;
 
 	error = -ENODEV;
 	iter = pci_slot_match_iterator_create(NULL);
@@ -859,7 +860,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	if (error < 0) {
 		warnx("No physical PCI device %x:%x.%x!", bus, slot, func);
-		return -ENODEV;
+		goto done;
 	}
 
 	pci_device_probe(ptdev->phys_dev);
@@ -919,7 +920,9 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	error = 0;		/* success */
 done:
 	if (error) {
-		free(ptdev);
+		if (ptdev != NULL) {
+			free(ptdev);
+		}
 		vm_unassign_ptdev(ctx, bus, slot, func);
 	}
 	return error;
