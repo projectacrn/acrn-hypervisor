@@ -136,7 +136,7 @@ void vcpu_set_vmcs_eoi_exit(struct acrn_vcpu *vcpu)
 	pr_dbg("%s", __func__);
 
 	spinlock_obtain(&(vcpu->arch.lock));
-	if (is_apicv_intr_delivery_supported()) {
+	if (is_apicv_advanced_feature_supported()) {
 		exec_vmwrite64(VMX_EOI_EXIT0_FULL, vcpu->arch.eoi_exit_bitmap[0]);
 		exec_vmwrite64(VMX_EOI_EXIT1_FULL, vcpu->arch.eoi_exit_bitmap[1]);
 		exec_vmwrite64(VMX_EOI_EXIT2_FULL, vcpu->arch.eoi_exit_bitmap[2]);

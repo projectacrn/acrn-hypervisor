@@ -483,7 +483,7 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 			 * Here to sync the pending interrupts to irr and update rvi if
 			 * needed. And then try to handle vmcs event injection.
 			 */
-			if (is_apicv_intr_delivery_supported() &&
+			if (is_apicv_advanced_feature_supported() &&
 				bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT, pending_req_bits)) {
 				vlapic = vcpu_vlapic(vcpu);
 				vlapic_apicv_inject_pir(vlapic);
@@ -518,7 +518,7 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		 */
 		if (arch->irq_window_enabled != 1U) {
 			if (bitmap_test(ACRN_REQUEST_EXTINT, pending_req_bits) ||
-				(!is_apicv_intr_delivery_supported() && vcpu_pending_request(vcpu))) {
+				(!is_apicv_advanced_feature_supported() && vcpu_pending_request(vcpu))) {
 				tmp = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
 				tmp |= VMX_PROCBASED_CTLS_IRQ_WIN;
 				exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, tmp);
@@ -564,7 +564,7 @@ static inline int32_t acrn_inject_pending_vector(struct acrn_vcpu *vcpu, uint64_
 				 * the virtual interrupt injection conditions are satified,
 				 * then inject through vmcs.
 				 */
-				if ((!is_apicv_intr_delivery_supported()) &&
+				if ((!is_apicv_advanced_feature_supported()) &&
 					(bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT,
 								pending_req_bits))) {
 					ret = vcpu_inject_vlapic_int(vcpu);
