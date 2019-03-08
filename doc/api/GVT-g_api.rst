@@ -9,7 +9,7 @@ named XenGT, and over ACRN it is named AcrnGT. GVT-g can exports multiple
 virtual GPU (vGPU) instances for virtual machine system (VM). A VM could be
 assigned one vGPU instance. The guest OS graphic driver needs minor
 modification to drive the vGPU adapter in a VM. Every vGPU instance will adopt
-the full HW GPU’s accelerate capability for 3D render and display.
+the full HW GPU's accelerate capability for 3D render and display.
 
 In the following document, AcrnGT refers to the glue layer between ACRN
 hypervisor and GVT-g core device model. It works as the agent of

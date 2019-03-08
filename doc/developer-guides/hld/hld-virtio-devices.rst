@@ -275,7 +275,7 @@ The architecture of ACRN VBS-K is shown in
 :numref:`kernel-virtio-framework` below.
 
 Generally VBS-K provides acceleration towards performance critical
-devices emulated by VBS-U modules by handling the “data plane” of the
+devices emulated by VBS-U modules by handling the "data plane" of the
 devices directly in the kernel. When VBS-K is enabled for certain
 devices, the kernel-land vring service API helpers, instead of the
 user-land helpers, are used to access the virtqueues shared by the FE

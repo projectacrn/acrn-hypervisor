@@ -138,7 +138,7 @@ Boot Sequence
 *************
 
 In :numref:`boot-flow` we show a verified Boot Sequence with UEFI
-on an Intel |reg| Architecture platform NUC (see :ref:`hardware`).
+on an Intel Architecture platform NUC (see :ref:`hardware`).
 
 .. graphviz:: images/boot-flow.dot
    :name: boot-flow

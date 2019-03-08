@@ -61,7 +61,7 @@ complete this setup.
    #.  Name the host "clr-sos-guest"
    #.  Add an administrative user "clear" with "sudoers" privilege
    #.  Add these additional bundles "editors", "user-basic", "desktop-autostart", "network-basic"
-   #.  For network, choose “DHCP”
+   #.  For network, choose "DHCP"
 
 #. After installation is complete, boot into Clear Linux OS, login as
    **clear**, and set a password.

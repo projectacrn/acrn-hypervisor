@@ -15,7 +15,7 @@ please visit `<https://slimbootloader.github.io/how-tos/boot-acrn.html>`_.
 .. image:: images/sbl_boot_flow_UP2.png
    :align: center
 
-We show a verified Boot Sequence with SBL on an Intel® Architecture platform UP2,
+We show a verified Boot Sequence with SBL on an Intel Architecture platform UP2,
 and the boot process proceeds as follows:
 
 #. SBL verifies and boots the ACRN hypervisor and Service OS kernel
@@ -162,7 +162,7 @@ which is also in the directory ``~/acrn-hypervisor/doc/tutorials/``.
       | up2_laag.img                 | This is the root filesystem image for the SOS.    |
       |                              | It has an integrated kernel and userspace.        |
       +------------------------------+---------------------------------------------------+
-      | flash_LaaG.json              | Configuration file for Intel® Platform Flash Tool |
+      | flash_LaaG.json              | Configuration file for Intel Platform Flash Tool  |
       |                              | to flash SOS image + hypervisor/SOS boot image +  |
       |                              | SOS userland                                      |
       +------------------------------+---------------------------------------------------+
@@ -173,7 +173,7 @@ which is also in the directory ``~/acrn-hypervisor/doc/tutorials/``.
 Download and install flash tool
 *******************************
 
-#. Download Intel® Platform Flash Tool Lite from
+#. Download Intel Platform Flash Tool Lite from
    `<https://github.com/projectceladon/tools/tree/master/platform_flash_tool_lite/latest/>`_.
 
 #. For Ubuntu host, install `platformflashtoollite_5.8.9.0_linux_x86_64.deb
@@ -203,7 +203,7 @@ SOS and LaaG Installation
       both HW and SW flow control are turned off.
 
 #. When you see following console log, please press any key to enter
-   shell command：
+   shell command:
 
    .. code-block:: none
 
@@ -245,7 +245,7 @@ SOS and LaaG Installation
 
        Shell> exit
 
-       …
+       ...
 
         40E0 |  175118 ms |     158 ms | Kernel setup
         40F0 |  175144 ms |      26 ms | FSP ReadyToBoot/EndOfFirmware notify

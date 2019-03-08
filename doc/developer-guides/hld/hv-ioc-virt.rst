@@ -154,7 +154,7 @@ char devices and UART DM immediately.
    data comes from a raw channel, the data will be passed forward. Before
    transmitting to the virtual UART interface, all data needs to be
    packed with an address header and link header.
--  For Rx direction, the data comeis from the UOS. The IOC mediator receives link
+-  For Rx direction, the data comes from the UOS. The IOC mediator receives link
    data from the virtual UART interface. The data will be unpacked by Core
    thread, and then forwarded to Rx queue, similar to how the Tx direction flow
    is done except that the heartbeat and RTC are only used by the IOC
@@ -456,7 +456,7 @@ the SoC.
 
    System control - Heartbeat
 
-Heartbeate frame definiton is shown here:
+Heartbeat frame definition is shown here:
 
 .. figure:: images/ioc-image6.png
    :width: 900px

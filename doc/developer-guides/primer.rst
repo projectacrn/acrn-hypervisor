@@ -448,7 +448,7 @@ MMIO range mapping may be added.
 Graphic mediation
 *****************
 
-Intel |reg| Graphics Virtualization Technology –g (Intel |reg| GVT-g)
+Intel |reg| Graphics Virtualization Technology -g (Intel |reg| GVT-g)
 provides GPU sharing capability to multiple VMs by using a mediated
 pass-through technique. This allows a VM to access performance critical
 I/O resources (usually partitioned) directly, without intervention from

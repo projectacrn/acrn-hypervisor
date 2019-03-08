@@ -96,7 +96,7 @@ Bluetooth
 ACRN hypervisor supports bluetooth controller passthrough to a single
 Guest OS (IVI).
 
-GPU  – Preemption
+GPU  - Preemption
 ==================
 GPU Preemption is one typical automotive use case which requires the
 system to preempt GPU resources occupied by lower priority workloads.
@@ -104,7 +104,7 @@ This is done to ensure performance of the most critical workload can be
 achieved. Three different schedulers for the GPU are involved: i915 UOS
 scheduler, Mediator GVT scheduler, and i915 SOS scheduler.
 
-GPU – display surface sharing via Hyper DMA
+GPU - display surface sharing via Hyper DMA
 ============================================
 Surface sharing is one typical automotive use case which requires
 that the SOS accesses an individual surface or a set of surfaces
@@ -161,7 +161,7 @@ Known Issues
    issue will be fixed in the next release.
 
 
-:acrn-issue:`1319` - SD card pass-through: UOS can’t see SD card after UOS reboot.
+:acrn-issue:`1319` - SD card pass-through: UOS can't see SD card after UOS reboot.
    SD card could not be found after UOS reboot in pass-through mode.
    **Impact:** There is no SD card after UOS reboot.
    **Workaround:** None. The issue will be fixed in the next release.

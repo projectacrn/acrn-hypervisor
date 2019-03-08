@@ -23,7 +23,7 @@ accelerate the development and adoption of a fully open software stack
 for the connected car. With Linux at its core, AGL is developing an open 
 platform from the ground up that can serve as the de facto industry 
 standard to enable rapid development of new features and technologies.
-For more information about AGL, please visit `AGL’s official website
+For more information about AGL, please visit `AGL's official website
 <https://www.automotivelinux.org/>`_.
 
 Steps for using AGL as the UOS

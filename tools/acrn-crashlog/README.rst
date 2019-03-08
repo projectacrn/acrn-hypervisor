@@ -83,19 +83,16 @@ Then it will show:
    '/etc/systemd/system.conf.d/40-watchdog.conf'
    '/usr/share/acrn/crashlog/80-coredump.conf' ->
    '/etc/sysctl.d/80-coredump.conf'
-   Created symlink /etc/systemd/system/hprobe.timer → /dev/null.
-   Created symlink /etc/systemd/system/telemd-update-trigger.service →
-   /dev/null.
-   Created symlink /etc/systemd/system/pstore-clean.service → /dev/null.
-   Created symlink /etc/systemd/system/pstore-probe.service → /dev/null.
-   Created symlink /etc/systemd/system/oops-probe.service → /dev/null.
-   Created symlink /etc/systemd/system/klogscanner.service → /dev/null.
-   Created symlink /etc/systemd/system/journal-probe.service → /dev/null.
-   Created symlink /etc/systemd/system/bert-probe.service → /dev/null.
-   Created symlink /etc/systemd/system/multi-user.target.wants/acrnprobe.service
-   → /usr/lib/systemd/system/acrnprobe.service.
-   Created symlink /etc/systemd/system/multi-user.target.wants/usercrash.service
-   → /usr/lib/systemd/system/usercrash.service.
+   Created symlink /etc/systemd/system/hprobe.timer -> /dev/null.
+   Created symlink /etc/systemd/system/telemd-update-trigger.service -> /dev/null.
+   Created symlink /etc/systemd/system/pstore-clean.service -> /dev/null.
+   Created symlink /etc/systemd/system/pstore-probe.service -> /dev/null.
+   Created symlink /etc/systemd/system/oops-probe.service -> /dev/null.
+   Created symlink /etc/systemd/system/klogscanner.service -> /dev/null.
+   Created symlink /etc/systemd/system/journal-probe.service -> /dev/null.
+   Created symlink /etc/systemd/system/bert-probe.service -> /dev/null.
+   Created symlink /etc/systemd/system/multi-user.target.wants/acrnprobe.service -> /usr/lib/systemd/system/acrnprobe.service.
+   Created symlink /etc/systemd/system/multi-user.target.wants/usercrash.service -> /usr/lib/systemd/system/usercrash.service.
    *** Please reboot your system. ***
 
 Follow the hints to reboot the system:

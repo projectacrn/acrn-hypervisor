@@ -147,7 +147,7 @@ Known Issues
 :acrn-issue:`1996` - There is an error log when using "acrnd&" to boot UOS
    An error log is printed when starting acrnd as a background job
    (``acrnd&``) to boot UOS. The UOS still boots up
-   normally, but prints: “Failed to open the socket(sos-lcs) to query the reason for the wake-up.
+   normally, but prints: "Failed to open the socket(sos-lcs) to query the reason for the wake-up.
    Activating all vms when acrnd & to boot uos."
 
    **Impact:** UOS boots normally, but prints an error log message.
