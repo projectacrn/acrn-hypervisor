@@ -513,12 +513,12 @@ vlapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 	if ((lapic->svr.v & APIC_SVR_ENABLE) == 0U) {
 		dev_dbg(ACRN_DBG_LAPIC, "vlapic is software disabled, ignoring interrupt %u", vector);
 		ret = false;
-	} else if (is_apicv_intr_delivery_supported()) {
+	} else if (is_apicv_advanced_feature_supported()) {
 		pending_intr = apicv_set_intr_ready(vlapic, vector);
 
 		vlapic_set_tmr(vlapic, vector, level);
 
-		if ((pending_intr != 0) && (is_apicv_posted_intr_supported()) && (get_cpu_id() != vlapic->vcpu->pcpu_id)) {
+		if ((pending_intr != 0) && (get_cpu_id() != vlapic->vcpu->pcpu_id)) {
 			/*
 			 * Send interrupt to vCPU via posted interrupt way:
 			 * 1. If target vCPU is in non-root mode(running),

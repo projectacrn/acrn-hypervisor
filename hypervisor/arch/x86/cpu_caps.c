@@ -20,12 +20,17 @@
 
 /* TODO: add more capability per requirement */
 /* APICv features */
-#define VAPIC_FEATURE_VIRT_ACCESS		(1U << 0U)
-#define VAPIC_FEATURE_VIRT_REG			(1U << 1U)
-#define VAPIC_FEATURE_INTR_DELIVERY		(1U << 2U)
-#define VAPIC_FEATURE_TPR_SHADOW		(1U << 3U)
-#define VAPIC_FEATURE_POST_INTR			(1U << 4U)
-#define VAPIC_FEATURE_VX2APIC_MODE		(1U << 5U)
+#define VAPIC_FEATURE_VIRT_ACCESS	(1U << 0U)
+#define VAPIC_FEATURE_VIRT_REG		(1U << 1U)
+#define VAPIC_FEATURE_INTR_DELIVERY	(1U << 2U)
+#define VAPIC_FEATURE_TPR_SHADOW	(1U << 3U)
+#define VAPIC_FEATURE_POST_INTR		(1U << 4U)
+#define VAPIC_FEATURE_VX2APIC_MODE	(1U << 5U)
+
+/* BASIC features: must supported by the physical platform and will enabled by default */
+#define APICV_BASIC_FEATURE	(VAPIC_FEATURE_TPR_SHADOW | VAPIC_FEATURE_VIRT_ACCESS | VAPIC_FEATURE_VX2APIC_MODE)
+/* ADVANCED features: enable them by default if the physical platform support them all, otherwise, disable them all */
+#define APICV_ADVANCED_FEATURE	(VAPIC_FEATURE_VIRT_REG | VAPIC_FEATURE_INTR_DELIVERY | VAPIC_FEATURE_POST_INTR)
 
 static struct cpu_capability {
 	uint8_t apicv_features;
@@ -252,24 +257,14 @@ static bool is_ept_supported(void)
 	return (cpu_caps.ept_features != 0U);
 }
 
-static bool is_apicv_supported(void)
+static inline bool is_apicv_basic_feature_supported(void)
 {
-	return (cpu_caps.apicv_features != 0U);
+	return ((cpu_caps.apicv_features & APICV_BASIC_FEATURE) == APICV_BASIC_FEATURE);
 }
 
-bool is_apicv_reg_virtualization_supported(void)
+bool is_apicv_advanced_feature_supported(void)
 {
-	return ((cpu_caps.apicv_features & VAPIC_FEATURE_VIRT_REG) != 0U);
-}
-
-bool is_apicv_intr_delivery_supported(void)
-{
-	return ((cpu_caps.apicv_features & VAPIC_FEATURE_INTR_DELIVERY) != 0U);
-}
-
-bool is_apicv_posted_intr_supported(void)
-{
-	return ((cpu_caps.apicv_features & VAPIC_FEATURE_POST_INTR) != 0U);
+	return ((cpu_caps.apicv_features & APICV_ADVANCED_FEATURE) == APICV_ADVANCED_FEATURE);
 }
 
 bool cpu_has_vmx_ept_cap(uint32_t bit_mask)
@@ -397,7 +392,7 @@ int32_t detect_hardware_support(void)
 	} else if (!is_ept_supported()) {
 		pr_fatal("%s, EPT not supported\n", __func__);
 		ret = -ENODEV;
-	} else if (!is_apicv_supported()) {
+	} else if (!is_apicv_basic_feature_supported()) {
 		pr_fatal("%s, APICV not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (boot_cpu_data.cpuid_level < 0x15U) {

@@ -291,7 +291,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	/* enable external interrupt VM Exit */
 	value32 = check_vmx_ctrl(MSR_IA32_VMX_PINBASED_CTLS, VMX_PINBASED_CTLS_IRQ_EXIT);
 
-	if (is_apicv_posted_intr_supported()) {
+	if (is_apicv_advanced_feature_supported()) {
 		value32 |= VMX_PINBASED_CTLS_POST_IRQ;
 	}
 
@@ -340,7 +340,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 		value32 &= ~VMX_PROCBASED_CTLS2_VPID;
 	}
 
-	if (is_apicv_intr_delivery_supported()) {
+	if (is_apicv_advanced_feature_supported()) {
 		value32 |= VMX_PROCBASED_CTLS2_VIRQ;
 	} else {
 		/*
@@ -372,7 +372,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	value64 = vlapic_apicv_get_apic_page_addr(vcpu_vlapic(vcpu));
 	exec_vmwrite64(VMX_VIRTUAL_APIC_PAGE_ADDR_FULL, value64);
 
-	if (is_apicv_intr_delivery_supported()) {
+	if (is_apicv_advanced_feature_supported()) {
 		/* Disable all EOI VMEXIT by default and
 		 * clear RVI and SVI.
 		 */
@@ -382,10 +382,8 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 		exec_vmwrite64(VMX_EOI_EXIT3_FULL, 0UL);
 
 		exec_vmwrite16(VMX_GUEST_INTR_STATUS, 0U);
-		if (is_apicv_posted_intr_supported()) {
-			exec_vmwrite16(VMX_POSTED_INTR_VECTOR, VECTOR_POSTED_INTR);
-			exec_vmwrite64(VMX_PIR_DESC_ADDR_FULL, apicv_get_pir_desc_paddr(vcpu));
-		}
+		exec_vmwrite16(VMX_POSTED_INTR_VECTOR, VECTOR_POSTED_INTR);
+		exec_vmwrite64(VMX_PIR_DESC_ADDR_FULL, apicv_get_pir_desc_paddr(vcpu));
 	}
 
 	/* Load EPTP execution control
@@ -587,7 +585,7 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 
 		value32 = exec_vmread32(VMX_PIN_VM_EXEC_CONTROLS);
 		value32 &= ~VMX_PINBASED_CTLS_IRQ_EXIT;
-		if (is_apicv_posted_intr_supported()) {
+		if (is_apicv_advanced_feature_supported()) {
 			value32 &= ~VMX_PINBASED_CTLS_POST_IRQ;
 		}
 		exec_vmwrite32(VMX_PIN_VM_EXEC_CONTROLS, value32);
@@ -604,7 +602,7 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 
 		value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS2);
 		value32 &= ~VMX_PROCBASED_CTLS2_VAPIC_REGS;
-		if (is_apicv_intr_delivery_supported()) {
+		if (is_apicv_advanced_feature_supported()) {
 			value32 &= ~VMX_PROCBASED_CTLS2_VIRQ;
 		}
 		exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS2, value32);

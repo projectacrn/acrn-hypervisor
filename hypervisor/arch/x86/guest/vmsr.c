@@ -622,7 +622,7 @@ void update_msr_bitmap_x2apic_apicv(const struct acrn_vcpu *vcpu)
 	 * TPR is virtualized even when register virtualization is not
 	 * supported
 	 */
-	if (is_apicv_reg_virtualization_supported()) {
+	if (is_apicv_advanced_feature_supported()) {
 		intercept_x2apic_msrs(msr_bitmap, INTERCEPT_WRITE);
 		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_CUR_COUNT, INTERCEPT_READ);
 		/*
