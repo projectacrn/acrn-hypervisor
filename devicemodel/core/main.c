@@ -53,7 +53,6 @@
 #include "pci_core.h"
 #include "irq.h"
 #include "lpc.h"
-#include "smbiostbl.h"
 #include "rtc.h"
 #include "pit.h"
 #include "hpet.h"
@@ -973,10 +972,6 @@ dm_run(int argc, char *argv[])
 				goto vm_fail;
 			}
 		}
-
-		error = smbios_build(ctx);
-		if (error)
-			goto vm_fail;
 
 		if (acpi) {
 			error = acpi_build(ctx, guest_ncpus);
