@@ -857,6 +857,11 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 
 	} else {
 		UPRINTF(LFTL, "%s: wrong endpoint type %d\r\n", __func__, type);
+		if (req->buffer)
+			free(req->buffer);
+		if (req->libusb_xfer)
+			libusb_free_transfer(req->libusb_xfer);
+		free(req);
 		xfer->status = USB_ERR_INVAL;
 	}
 
