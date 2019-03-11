@@ -2812,8 +2812,8 @@ width.
 
 
 
-CS-05: Trailing whitespaces shall not be allowed at the end of lines
-====================================================================
+CS-05: Trailing whitespace shall not be allowed at the end of lines
+===================================================================
 
 This rule applies to both spaces and tabs at the end of a line.
 
@@ -2900,7 +2900,7 @@ The following cases shall be covered:
 a) For declaration of variables of a pointer type, the '*' character shall be
    right before the variable identifier with no space in between.
 b) For functions whose return value is of a pointer type, the '*' character
-   shall be right before the function identifyer with no spaces in between in the
+   shall be right before the function identifier with no spaces in between in the
    function prototype.
 
 Compliant example::
@@ -2962,7 +2962,7 @@ Compliant example::
 CS-12: A single space shall exist right after semicolons in for-loop headers
 ============================================================================
 
-A single space shall exist right after semicolons that separete the different
+A single space shall exist right after semicolons that separate the different
 expressions in for-loop headers.
 
 Compliant example::
