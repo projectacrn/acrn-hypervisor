@@ -466,7 +466,13 @@ uart_write(struct uart_vdev *uart, int offset, uint8_t value)
 		/*
 		 * Apply mask so that bits 4-7 are 0
 		 * Also enables bits 0-3 only if they're 1
+		 *
+		 * Set uart->thre_int_pending to true if (uart->ier & IER_ETXRDY) changes
+		 * from 0 to 1 in order trigger one tx interrupt as expect.
 		 */
+		if (((uart->ier & IER_ETXRDY) == 0) && ((value & IER_ETXRDY) != 0)) {
+			uart->thre_int_pending = true;
+		}
 		uart->ier = value & 0x0F;
 		break;
 	case REG_FCR:
