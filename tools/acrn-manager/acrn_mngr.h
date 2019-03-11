@@ -10,6 +10,7 @@
 #include <acrn_common.h>
 
 #define MNGR_MSG_MAGIC   0x67736d206d6d76	/* that is char[8] "mngr msg", on X86 */
+#define PATH_LEN	128
 
 struct mngr_msg {
 	unsigned long long magic;	/* Make sure you get a mngr_msg */

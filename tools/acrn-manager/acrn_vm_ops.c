@@ -127,7 +127,7 @@ static void _scan_alive_vm(void)
 	DIR *dir;
 	struct dirent *entry;
 	struct vmmngr_struct *vm;
-	char name[128];
+	char name[PATH_LEN];
 	int pid;
 	int ret;
 
@@ -224,8 +224,8 @@ static void _scan_added_vm(void)
 	DIR *dir;
 	struct dirent *entry;
 	struct vmmngr_struct *vm;
-	char name[128];
-	char suffix[128];
+	char name[PATH_LEN];
+	char suffix[PATH_LEN];
 	int ret;
 
 	ret = check_dir(ACRN_CONF_PATH);
@@ -375,7 +375,7 @@ int list_vm()
 
 int start_vm(const char *vmname)
 {
-	char cmd[128];
+	char cmd[PATH_LEN + sizeof(ACRN_CONF_PATH_ADD) * 2 + MAX_VM_OS_NAME_LEN * 2];
 
 	if (snprintf(cmd, sizeof(cmd), "bash %s/%s.sh $(cat %s/%s.args)",
 			ACRN_CONF_PATH_ADD, vmname, ACRN_CONF_PATH_ADD, vmname) >= sizeof(cmd)) {

@@ -100,7 +100,7 @@ static int find_acrn_dm;
 static int write_tmp_file(int fd, int n, char *word[])
 {
 	int len, ret, i = 0;
-	char buf[128];
+	char buf[PATH_LEN];
 
 	if (!n)
 		return 0;
@@ -165,7 +165,6 @@ static inline int _get_vmname(const char *src, char *vmname, int max_len_vmname)
 }
 
 #define MAX_FILE_SIZE   (4096 * 5)
-#define FILE_NAME_LENGTH	128
 
 #define TMP_FILE_SUFFIX		".acrnctl"
 
@@ -177,16 +176,16 @@ static int acrnctl_do_add(int argc, char *argv[])
 	char *word[MAX_WORD], *line;
 	char *word_p = NULL, *line_p = NULL;
 	int n_word;
-	char fname[FILE_NAME_LENGTH + sizeof(TMP_FILE_SUFFIX)];
-	char cmd[128];
-	char args[128];
+	char fname[PATH_LEN + sizeof(TMP_FILE_SUFFIX)];
+	char cmd[PATH_LEN];
+	char args[PATH_LEN];
 	int p, i, len_cmd_out = 0, c_flag = 0;
-	char cmd_out[256];
-	char vmname[128];
+	char cmd_out[PATH_LEN * 2];
+	char vmname[PATH_LEN];
 	size_t len = sizeof(cmd_out);
 
-	if (strnlen(argv[1], FILE_NAME_LENGTH) == FILE_NAME_LENGTH) {
-		printf("File name too long (maximum len %d)\n", FILE_NAME_LENGTH);
+	if (strnlen(argv[1], PATH_LEN) == PATH_LEN) {
+		printf("File name too long (maximum len %d)\n", PATH_LEN);
 		return -1;
 	}
 
@@ -441,9 +440,9 @@ static int acrnctl_do_stop(int argc, char *argv[])
 /* Function: Delete runC configuration */
 static inline int del_runC(char *argv)
 {
-	char cmd[128];
-	char cmd_out[256];
-	char runc_path[128];
+	char cmd[PATH_LEN];
+	char cmd_out[PATH_LEN * 2];
+	char runc_path[PATH_LEN];
 
 	/* The configuration added by launch_uos script */
 	if (snprintf(runc_path, sizeof(runc_path), "%s/runc/%s",
@@ -489,7 +488,7 @@ static int acrnctl_do_del(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
 	int i;
-	char cmd[128];
+	char cmd[PATH_LEN];
 
 	for (i = 1; i < argc; i++) {
 		s = vmmngr_find(argv[i]);
