@@ -301,16 +301,6 @@ config GPU_SBDF
 	  00:02.0 in DRHD segment 0, this SBDF would be (0 << 16) | (0 << 8) |
 	  (2 << 3) | (0 << 0), i.e. 0x00000010.
 
-config EFI_STUB
-	bool "Enable EFI stub"
-	depends on PLATFORM_UEFI
-	default y
-
-config UEFI_OS_LOADER_NAME
-	string "UEFI OS loader name"
-	depends on PLATFORM_UEFI
-	default "\\EFI\\org.clearlinux\\bootloaderx64.efi"
-
 config MTRR_ENABLED
 	bool "Memory Type Range Registers (MTRR) enabled"
 	default y
