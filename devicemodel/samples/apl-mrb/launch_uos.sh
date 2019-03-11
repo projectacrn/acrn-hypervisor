@@ -87,6 +87,8 @@ echo "8086 5aaa" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:15.1" > /sys/bus/pci/devices/0000:00:15.1/driver/unbind
 echo "0000:00:15.1" > /sys/bus/pci/drivers/pci-stub/bind
 
+echo 100 > /sys/bus/usb/drivers/usb-storage/module/parameters/delay_use
+
 boot_ipu_option=""
 if [ $ipu_passthrough == 1 ];then
     # for ipu passthrough - ipu device 0:3.0
@@ -273,6 +275,8 @@ fi
 
 # WA for USB role switch hang issue, disable runtime PM of xHCI device
 echo on > /sys/devices/pci0000:00/0000:00:15.0/power/control
+
+echo 100 > /sys/bus/usb/drivers/usb-storage/module/parameters/delay_use
 
 boot_ipu_option=""
 if [ $ipu_passthrough == 1 ];then
