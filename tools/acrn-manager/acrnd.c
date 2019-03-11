@@ -40,6 +40,7 @@ static pthread_mutex_t work_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static pthread_mutex_t acrnd_stop_mutex = PTHREAD_MUTEX_INITIALIZER;
 static unsigned int acrnd_stop_timeout;
+static unsigned char platform_has_hw_ioc;
 
 static int sigterm = 0; /* Exit acrnd when recevied SIGTERM and stop all vms */
 #define VMS_STOP_TIMEOUT 20 /* Wait VMS_STOP_TIMEOUT sec to stop all vms */
@@ -246,7 +247,7 @@ static int active_all_vms(void)
 	struct vmmngr_struct *vm;
 	int ret = 0;
 	pid_t pid;
-	unsigned reason;
+	unsigned reason = 0;
 
 	vmmngr_update();
 
@@ -258,7 +259,9 @@ static int active_all_vms(void)
 				acrnd_run_vm(vm->name);
 			break;
 		case VM_SUSPENDED:
-			reason = get_sos_wakeup_reason();
+			if (platform_has_hw_ioc) {
+				reason = get_sos_wakeup_reason();
+			}
 			ret += resume_vm(vm->name, reason);
 			break;
 		default:
@@ -304,6 +307,8 @@ static int wakeup_suspended_vms(unsigned wakeup_reason)
 #define SOS_LCS_SOCK		"sos-lcs"
 #define DEFAULT_TIMEOUT	2U
 #define ACRND_NAME		"acrnd"
+#define HW_IOC_PATH             "/dev/cbc-early-signals"
+
 static int acrnd_fd = -1;
 
 unsigned get_sos_wakeup_reason(void)
@@ -579,14 +584,16 @@ void handle_acrnd_resume(struct mngr_msg *msg, int client_fd, void *param)
 {
 	struct mngr_msg ack;
 	struct stat st;
-	int wakeup_reason;
+	int wakeup_reason = 0;
 
 	ack.msgid = msg->msgid;
 	ack.timestamp = msg->timestamp;
 	ack.data.err = -1;
 
 	/* acrnd get wakeup_reason from sos lcs */
-	wakeup_reason = get_sos_wakeup_reason();
+	if (platform_has_hw_ioc) {
+		wakeup_reason = get_sos_wakeup_reason();
+	}
 
 	if (wakeup_reason & CBC_WK_RSN_RTC) {
 		printf("Resumed UOS, by RTC timer, reason(%x)!\n", wakeup_reason);
@@ -629,11 +636,13 @@ static void handle_on_exit(void)
 
 int init_vm(void)
 {
-	unsigned int wakeup_reason;
+	unsigned int wakeup_reason = 0;
 	int ret;
 
 	/* init all UOSs, according wakeup_reason */
-	wakeup_reason = get_sos_wakeup_reason();
+	if (platform_has_hw_ioc) {
+		wakeup_reason = get_sos_wakeup_reason();
+	}
 
 	if (wakeup_reason & CBC_WK_RSN_RTC) {
 		printf("Loading timer list to set vms wakeup time\n");
@@ -672,7 +681,13 @@ int main(int argc, char *argv[])
 			 printf("Ingrone unknown opt: %c\n", opt);
 		}
 	}
-
+	
+	if (!access(HW_IOC_PATH, F_OK)) {
+		platform_has_hw_ioc = 1;
+	} else {
+		platform_has_hw_ioc = 0;
+	}
+	
 	/* create listening thread */
 	acrnd_fd = mngr_open_un(ACRND_NAME, MNGR_SERVER);
 	if (acrnd_fd < 0) {
