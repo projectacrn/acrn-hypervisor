@@ -764,6 +764,7 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		devname = vtopts = strdup(opts);
 		if (!devname) {
 			WPRINTF(("virtio_net: strdup returns NULL\n"));
+			free(net);
 			return -1;
 		}
 
@@ -777,6 +778,7 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 					net->config.mac);
 				if (err != 0) {
 					free(devname);
+					free(net);
 					return err;
 				}
 				mac_provided = 1;
@@ -805,6 +807,7 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	if (!devname) {
 		WPRINTF(("virtio_net: devname NULL\n"));
+		free(net);
 		return -1;
 	}
 
