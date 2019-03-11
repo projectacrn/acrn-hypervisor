@@ -85,6 +85,11 @@ static int check_name(const char *name)
 	if (!strcmp(name, "nothing"))
 		return -1;
 
+	if (strnlen(name, MAX_VM_OS_NAME_LEN) >= MAX_VM_OS_NAME_LEN) {
+		printf("(%s) size exceed MAX_VM_OS_NAME_LEN:%u\n", name,MAX_VM_OS_NAME_LEN);
+		return -1;
+	}
+
 	return 0;
 }
 
