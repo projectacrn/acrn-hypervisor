@@ -40,7 +40,6 @@ static int check_dir(const char *path)
 #define MNGR_SOCK_FMT		"/run/acrn/mngr/%s.%d.socket"
 #define MNGR_MAX_HANDLER	8
 #define MNGR_MAX_CLIENT		4
-#define PATH_LEN	128
 
 #define CLIENT_BUF_LEN  4096
 
