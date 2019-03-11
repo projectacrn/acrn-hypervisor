@@ -4142,8 +4142,8 @@ errout:
 			for (i = 1; i <= XHCI_MAX_DEVS && xdev->devices[i]; i++)
 				free(xdev->devices[i]);
 			xdev->ndevices = 0;
-			xdev->devices = NULL;
 			free(xdev->devices);
+			xdev->devices = NULL;
 		}
 		if (xdev->slots) {
 			free(xdev->slots);
@@ -4301,7 +4301,21 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 done:
 	if (error) {
 		UPRINTF(LFTL, "%s fail, error=%d\n", __func__, error);
-		free(xdev);
+		if (xdev) {
+			if (xdev->devices) {
+				free(xdev->devices);
+				xdev->devices = NULL;
+			}
+			if (xdev->slots) {
+				free(xdev->slots);
+				xdev->slots = NULL;
+			}
+			if (xdev->portregs) {
+				free(xdev->portregs);
+				xdev->portregs = NULL;
+			}
+			free(xdev);
+		}
 	}
 
 	return error;
