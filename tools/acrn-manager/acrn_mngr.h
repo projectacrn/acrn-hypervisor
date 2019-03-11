@@ -7,9 +7,9 @@
 #define ACRN_MANAGER_H
 
 #include <stdlib.h>
+#include <acrn_common.h>
 
 #define MNGR_MSG_MAGIC   0x67736d206d6d76	/* that is char[8] "mngr msg", on X86 */
-#define VMNAME_LEN	16
 
 struct mngr_msg {
 	unsigned long long magic;	/* Make sure you get a mngr_msg */
@@ -28,7 +28,7 @@ struct mngr_msg {
 
 		/* req of ACRND_TIMER */
 		struct req_acrnd_timer {
-			char name[VMNAME_LEN];
+			char name[MAX_VM_OS_NAME_LEN];
 			time_t t;
 		} acrnd_timer;
 
@@ -52,7 +52,7 @@ struct mngr_msg {
 
 		/* req of RTC_TIMER */
 		struct req_rtc_timer {
-			char vmname[VMNAME_LEN];
+			char vmname[MAX_VM_OS_NAME_LEN];
 			time_t t;
 		} rtc_timer;
 

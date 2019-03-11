@@ -7,14 +7,14 @@
 #define _ACRNCTL_H_
 
 #include <sys/queue.h>
+#include <acrn_common.h>
+#include "acrn_mngr.h"
 
 #define ACRN_CONF_PATH		"/usr/share/acrn/conf"
 #define ACRN_CONF_PATH_ADD	ACRN_CONF_PATH "/add"
 #define ACRN_CONF_TIMER_LIST	ACRN_CONF_PATH "/timer_list"
 
 #define ACRN_DM_SOCK_PATH	"/run/acrn/mngr"
-
-#define MAX_NAME_LEN            (32)
 
 enum vm_state {
 	VM_STATE_UNKNOWN = 0,
@@ -36,7 +36,7 @@ struct vmmngr_struct *vmmngr_find(const char *vmname);
 
 /* Per-vm vm managerment struct */
 struct vmmngr_struct {
-	char name[MAX_NAME_LEN];
+	char name[MAX_VM_OS_NAME_LEN];
 	unsigned long state;
 	unsigned long state_tmp;
 	unsigned long update;   /* update count, remove a vm if no update for it */

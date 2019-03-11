@@ -23,7 +23,7 @@
 /* acrnd worker timer */
 
 struct work_arg {
-	char name[VMNAME_LEN];
+	char name[MAX_VM_OS_NAME_LEN];
 };
 
 struct acrnd_work {
@@ -356,7 +356,7 @@ static void handle_timer_req(struct mngr_msg *msg, int client_fd, void *param)
 	}
 
 	strncpy(arg.name, msg->data.acrnd_timer.name, sizeof(arg.name) - 1);
-	if (sizeof(arg.name) - 1 < strnlen(msg->data.acrnd_timer.name, VMNAME_LEN)) {
+	if (sizeof(arg.name) - 1 < strnlen(msg->data.acrnd_timer.name, MAX_VM_OS_NAME_LEN)) {
 		perror("timer name was truncated\n");
 		goto reply_ack;
 	}
