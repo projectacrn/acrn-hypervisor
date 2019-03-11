@@ -266,7 +266,7 @@ adjust_schedule_policy(int policy, int prio)
 		return;
 	}
 
-	cg_task_fd = open("/sys/fs/cgroup/cpu/task", O_RDWR);
+	cg_task_fd = open("/sys/fs/cgroup/cpu/tasks", O_RDWR);
 	if (cg_task_fd > 0) {
 		written = write(cg_task_fd, tid_str, strnlen(tid_str, MAXLOGNAME));
 		if (written < 0) {
