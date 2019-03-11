@@ -37,7 +37,7 @@
 #include "stdlib.h"
 #include "boot.h"
 #include "acrn_common.h"
-#include "uefi.h"
+#include "firmware_uefi.h"
 #include "MpService.h"
 
 EFI_SYSTEM_TABLE *sys_table;
@@ -88,7 +88,7 @@ enable_disable_all_ap(BOOLEAN enable)
 }
 
 static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
-			struct multiboot_info *mbi, struct efi_context *efi_ctx)
+			struct multiboot_info *mbi, struct uefi_context *efi_ctx)
 {
 	hv_func hf;
 
@@ -243,7 +243,7 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 	EFI_STATUS err;
 	struct multiboot_mmap *mmap;
 	struct multiboot_info *mbi;
-	struct efi_context *efi_ctx;
+	struct uefi_context *efi_ctx;
 	struct acpi_table_rsdp *rsdp = NULL;
 	int32_t i;
 	EFI_CONFIGURATION_TABLE *config_table;
@@ -336,6 +336,7 @@ static inline EFI_STATUS isspace(CHAR8 ch)
     return ((uint8_t)ch <= ' ');
 }
 
+#define DEFAULT_UEFI_OS_LOADER_NAME "\\EFI\\org.clearlinux\\bootloaderx64.efi"
 /**
  * efi_main - The entry point for the OS loader image.
  * @image: firmware-allocated handle that identifies the image
@@ -401,7 +402,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 		 * bootloader name to be used. Fall back to the default bootloader
 		 * as specified in config.h
 		 */
-		bootloader_name = ch8_2_ch16(CONFIG_UEFI_OS_LOADER_NAME);
+		bootloader_name = ch8_2_ch16(DEFAULT_UEFI_OS_LOADER_NAME);
 	}
 
 	section = ".hv";
