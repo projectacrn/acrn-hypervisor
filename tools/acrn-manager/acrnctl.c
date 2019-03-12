@@ -181,7 +181,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 	size_t len = sizeof(cmd_out);
 
 	if (strnlen(argv[1], FILE_NAME_LENGTH) == FILE_NAME_LENGTH) {
-		printf("file name too long: %s\n", argv[1]);
+		printf("File name too long (maximum len %d)\n", FILE_NAME_LENGTH);
 		return -1;
 	}
 
@@ -190,7 +190,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 	for (i = 2; i < argc; i++) {
 		if (p >= sizeof(args) - 1) {
 			args[sizeof(args) - 1] = 0;
-			printf("Too many optional args: %s\n", args);
+			printf("Too many input options\n");
 			return -1;
 		}
 		p += snprintf(&args[p], sizeof(args) - p, " %s", argv[i]);
@@ -243,7 +243,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 		word_p = NULL;
 		n_word = 0;
 		word[n_word] = strtok_r(line, " ", &word_p);
-		while (word[n_word]) {
+		while ((n_word < (MAX_WORD-1)) && word[n_word]) {
 			n_word++;
 			word[n_word] = strtok_r(NULL, " ", &word_p);
 		}
@@ -256,9 +256,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 	}
 
 	if (!find_acrn_dm) {
-		printf
-		    ("Don't see 'acrn-dm' in %s, maybe it is in another script, "
-		     "this is no supported for now\n", argv[1]);
+		printf("No 'acrn-dm' found in %s, expecting 'acrn-dm' command to get vmname.\n", argv[1]);
 		ret = -1;
 		goto no_acrn_dm;
 	}
@@ -315,8 +313,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 		/* Properly null-terminate cmd_out */
 		cmd_out[len - 1] = '\0';
 
-		printf("%s can't reach acrn-dm, "
-		       "please try again when you make sure it can launch an UOS\n"
+		printf("No executable acrn-dm found: %s, ,please make sure it can launch an UOS\n"
 		       "result:\n%s\n", argv[1], cmd_out);
 		goto get_vmname;
 	}
