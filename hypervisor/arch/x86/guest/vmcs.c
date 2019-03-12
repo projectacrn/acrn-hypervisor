@@ -345,13 +345,12 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	} else {
 		/*
 		 * This field exists only on processors that support
-		 * the 1-setting  of the "use TPR shadow"
-		 * VM-execution control.
+		 * the 1-setting of the "use TPR shadow" VM-execution control.
 		 *
-		 * Set up TPR threshold for virtual interrupt delivery
+		 * Set up TPR threshold for virtual interrupt delivery not support
 		 * - pg 2904 24.6.8
 		 */
-		exec_vmwrite32(VMX_TPR_THRESHOLD, 0U);
+		exec_vmwrite32(VMX_TPR_THRESHOLD, 0xFU);
 	}
 
 	if (cpu_has_cap(X86_FEATURE_OSXSAVE)) {

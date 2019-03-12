@@ -2513,8 +2513,8 @@ int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
 	return handled;
 }
 
-int32_t tpr_below_threshold_vmexit_handler(__unused struct acrn_vcpu *vcpu)
+int32_t tpr_below_threshold_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	pr_err("Unhandled %s.", __func__);
+	vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 	return 0;
 }
