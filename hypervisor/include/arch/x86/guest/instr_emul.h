@@ -88,7 +88,6 @@ struct instr_emul_vie {
 struct vm_guest_paging {
 	uint64_t	cr3;
 	uint8_t		cpl;
-	enum vm_cpu_mode cpu_mode;
 	enum vm_paging_mode paging_mode;
 };
 

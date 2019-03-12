@@ -486,7 +486,6 @@ static void get_guest_paging_info(struct acrn_vcpu *vcpu, struct instr_emul_ctxt
 	cpl = (uint8_t)((csar >> 5U) & 3U);
 	emul_ctxt->paging.cr3 = exec_vmread(VMX_GUEST_CR3);
 	emul_ctxt->paging.cpl = cpl;
-	emul_ctxt->paging.cpu_mode = get_vcpu_mode(vcpu);
 	emul_ctxt->paging.paging_mode = get_vcpu_paging_mode(vcpu);
 }
 
