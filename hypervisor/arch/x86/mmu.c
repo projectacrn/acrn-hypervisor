@@ -204,8 +204,8 @@ void enable_paging(void)
 	CPU_CR_READ(cr0, &tmp64);
 	CPU_CR_WRITE(cr0, tmp64 | CR0_WP);
 
-	CPU_CR_WRITE(cr3, hva2hpa(ppt_mmu_pml4_addr));
-
+	/* HPA->HVA is 1:1 mapping at this moment, simply treat ppt_mmu_pml4_addr as HPA. */
+	CPU_CR_WRITE(cr3, ppt_mmu_pml4_addr);
 }
 
 void enable_smep(void)
@@ -293,6 +293,9 @@ void init_paging(void)
 	/*
 	 * set the paging-structure entries' U/S flag to supervisor-mode for hypervisor owned memroy.
 	 * (exclude the memory reserve for trusty)
+	 *
+	 * Before the new PML4 take effect in enable_paging(), HPA->HVA is always 1:1 mapping,
+	 * simply treat the return value of get_hv_image_base() as HPA.
 	 */
 	hv_hpa = get_hv_image_base();
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, hv_hpa & PDE_MASK,

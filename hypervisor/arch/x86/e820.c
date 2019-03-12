@@ -111,11 +111,18 @@ void init_e820(void)
 	uint32_t i;
 
 	if (boot_regs[0] == MULTIBOOT_INFO_MAGIC) {
-		struct multiboot_info *mbi = (struct multiboot_info *)(hpa2hva((uint64_t)boot_regs[1]));
+		/*
+		 * Before installing new PML4 table in enable_paging(), HPA->HVA is always 1:1 mapping
+		 * and hpa2hva() can't be used to do the conversion. Here we simply treat boot_reg[1] as HPA.
+		 */
+		uint64_t hpa = (uint64_t)boot_regs[1];
+		struct multiboot_info *mbi = (struct multiboot_info *)hpa;
 
 		pr_info("Multiboot info detected\n");
 		if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MMAP) != 0U) {
-			struct multiboot_mmap *mmap = (struct multiboot_mmap *)hpa2hva((uint64_t)mbi->mi_mmap_addr);
+			/* HPA->HVA is always 1:1 mapping at this moment */
+			hpa = (uint64_t)mbi->mi_mmap_addr;
+			struct multiboot_mmap *mmap = (struct multiboot_mmap *)hpa;
 
 			e820_entries_count = mbi->mi_mmap_length / sizeof(struct multiboot_mmap);
 			if (e820_entries_count > E820_MAX_ENTRIES) {

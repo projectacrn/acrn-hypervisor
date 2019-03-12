@@ -49,7 +49,7 @@ uint64_t get_hv_image_delta(void)
 	return addr;
 }
 
-/* get the actual Hypervisor load address */
+/* get the actual Hypervisor load address (HVA) */
 uint64_t get_hv_image_base(void)
 {
 	return (get_hv_image_delta() + CONFIG_HV_RAM_START);
