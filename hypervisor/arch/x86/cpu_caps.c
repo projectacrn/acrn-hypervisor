@@ -141,36 +141,30 @@ static void detect_apicv_cap(void)
 	uint64_t msr_val;
 
 	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
-	/* must support TPR shadow */
 	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS_TPR_SHADOW)) {
 		features |= VAPIC_FEATURE_TPR_SHADOW;
-
-		msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
-		/* must support APICV access */
-		if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC)) {
-			features |= VAPIC_FEATURE_VIRT_ACCESS;
-			if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS)) {
-				features |= VAPIC_FEATURE_VIRT_REG;
-
-				if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VX2APIC)) {
-					features |= VAPIC_FEATURE_VX2APIC_MODE;
-				}
-
-				if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VIRQ)) {
-					features |= VAPIC_FEATURE_INTR_DELIVERY;
-
-					msr_val = msr_read(MSR_IA32_VMX_PINBASED_CTLS);
-					if (is_ctrl_setting_allowed(msr_val, VMX_PINBASED_CTLS_POST_IRQ)) {
-						features |= VAPIC_FEATURE_POST_INTR;
-					}
-				}
-				cpu_caps.apicv_features = features;
-			} else {
-				/* platform may only support APICV access */
-				cpu_caps.apicv_features = features;
-			}
-		}
 	}
+
+	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC)) {
+		features |= VAPIC_FEATURE_VIRT_ACCESS;
+	}
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VX2APIC)) {
+		features |= VAPIC_FEATURE_VX2APIC_MODE;
+	}
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS)) {
+		features |= VAPIC_FEATURE_VIRT_REG;
+	}
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VIRQ)) {
+		features |= VAPIC_FEATURE_INTR_DELIVERY;
+	}
+
+	msr_val = msr_read(MSR_IA32_VMX_PINBASED_CTLS);
+	if (is_ctrl_setting_allowed(msr_val, VMX_PINBASED_CTLS_POST_IRQ)) {
+		features |= VAPIC_FEATURE_POST_INTR;
+	}
+
+	cpu_caps.apicv_features = features;
 }
 
 static void detect_vmx_mmu_cap(void)
