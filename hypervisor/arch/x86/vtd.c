@@ -959,6 +959,11 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t s
 		return -EINVAL;
 	}
 
+	if (dmar_unit->drhd->ignore) {
+		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
+		return -EINVAL;
+	}
+
 	root_table = (struct dmar_root_entry *)hpa2hva(dmar_unit->root_table_addr);
 	root_entry = root_table + bus;
 
@@ -1057,6 +1062,11 @@ int32_t assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t de
 
 	/* TODO: check if the device assigned */
 
+	if ((uint16_t)bus >= CONFIG_IOMMU_BUS_NUM) {
+		pr_err("bus 0x%x out of range", bus);
+		return -EINVAL;
+	}
+
 	if (vm0_domain != NULL) {
 		status = remove_iommu_device(vm0_domain, 0U, bus, devfun);
 		if (status != 0) {
@@ -1070,6 +1080,11 @@ int32_t assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t de
 int32_t unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	int32_t status = 0;
+
+	if ((uint16_t)bus >= CONFIG_IOMMU_BUS_NUM) {
+		pr_err("bus 0x%x out of range", bus);
+		return -EINVAL;
+	}
 
 	/* TODO: check if the device assigned */
 	status = remove_iommu_device(domain, 0U, bus, devfun);
