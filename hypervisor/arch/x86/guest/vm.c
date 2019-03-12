@@ -187,7 +187,7 @@ static void create_sos_vm_e820(struct acrn_vm *vm)
 	uint32_t i;
 	uint64_t entry_start;
 	uint64_t entry_end;
-	uint64_t hv_start_pa = get_hv_image_base();
+	uint64_t hv_start_pa = hva2hpa((void *)(get_hv_image_base()));
 	uint64_t hv_end_pa  = hv_start_pa + CONFIG_HV_RAM_SIZE;
 	uint32_t entries_count = get_e820_entries_count();
 	struct e820_entry *entry, new_entry = {0};
@@ -301,7 +301,7 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	/* unmap hypervisor itself for safety
 	 * will cause EPT violation if sos accesses hv memory
 	 */
-	hv_hpa = get_hv_image_base();
+	hv_hpa = hva2hpa((void *)(get_hv_image_base()));
 	ept_mr_del(vm, pml4_page, hv_hpa, CONFIG_HV_RAM_SIZE);
 }
 

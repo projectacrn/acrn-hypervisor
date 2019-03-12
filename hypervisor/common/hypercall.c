@@ -571,7 +571,7 @@ static int32_t add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_v
 			__func__, vm->vm_id, region->sos_vm_gpa);
 		ret = -EINVAL;
 	} else {
-		base_paddr = get_hv_image_base();
+		base_paddr = hva2hpa((void *)(get_hv_image_base()));
 		if (((hpa <= base_paddr) && ((hpa + region->size) > base_paddr)) ||
 				((hpa >= base_paddr) && (hpa < (base_paddr + CONFIG_HV_RAM_SIZE)))) {
 			pr_err("%s: overlap the HV memory region.", __func__);
@@ -719,7 +719,7 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 		dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x",
 				vm->vm_id, wp->gpa, hpa);
 
-		base_paddr = get_hv_image_base();
+		base_paddr = hva2hpa((void *)(get_hv_image_base()));
 		if (((hpa <= base_paddr) && ((hpa + PAGE_SIZE) > base_paddr)) ||
 				((hpa >= base_paddr) &&
 				(hpa < (base_paddr + CONFIG_HV_RAM_SIZE)))) {
