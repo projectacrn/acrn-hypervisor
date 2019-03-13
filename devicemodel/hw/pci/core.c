@@ -104,6 +104,7 @@ static void pci_lintr_route(struct pci_vdev *dev);
 static void pci_lintr_update(struct pci_vdev *dev);
 static void pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot,
 		      int func, int coff, int bytes, uint32_t *val);
+static void pci_emul_free_msixcap(struct pci_vdev *pdi);
 
 static inline void
 CFGWRITE(struct pci_vdev *dev, int coff, uint32_t val, int bytes)
@@ -924,6 +925,7 @@ pci_emul_deinit(struct vmctx *ctx, struct pci_vdev_ops *ops, int bus, int slot,
 	if (fi->fi_devi) {
 		pci_lintr_release(fi->fi_devi);
 		pci_emul_free_bars(fi->fi_devi);
+		pci_emul_free_msixcap(fi->fi_devi);
 		free(fi->fi_devi);
 	}
 }
@@ -1029,6 +1031,16 @@ pci_emul_add_msixcap(struct pci_vdev *dev, int msgnum, int barnum)
 	return (pci_emul_add_capability(dev, (u_char *)&msixcap,
 					sizeof(msixcap)));
 }
+
+static void
+pci_emul_free_msixcap(struct pci_vdev *pdi)
+{
+	if (pdi->msix.table) {
+		free(pdi->msix.table);
+		pdi->msix.table = NULL;
+	}
+}
+
 
 void
 msixcap_cfgwrite(struct pci_vdev *dev, int capoff, int offset,
