@@ -7,8 +7,8 @@ if [ -e "/dev/acrn_hsm" ]; then
 offline_path="/sys/class/acrn/acrn_hsm"
 fi
 
-kernel_version=$(uname -r | awk -F. '{ printf("%d.%d", $1,$2) }')
-
+kernel_version=$(uname -r)
+audio_module="/usr/lib/modules/$kernel_version/kernel/sound/soc/intel/boards/snd-soc-sst_bxt_sos_tdf8532.ko"
 ipu_passthrough=0
 
 # Check the device file of /dev/vbs_ipu to determine the IPU mode
@@ -17,9 +17,16 @@ ipu_passthrough=1
 fi
 
 # use the modprobe to force loading snd-soc-skl/sst_bxt_bdf8532
+if [ ! -e $(audio_module)]; then
 modprobe -q snd-soc-skl
 modprobe -q snd-soc-sst_bxt_tdf8532
+else
 
+modprobe -q snd_soc_skl
+modprobe -q snd_soc_tdf8532
+modprobe -q snd_soc_sst_bxt_sos_tdf8532
+modprobe -q snd_soc_skl_virtio_be
+fi
 audio_passthrough=0
 
 # Check the device file of /dev/vbs_k_audio to determine the audio mode
