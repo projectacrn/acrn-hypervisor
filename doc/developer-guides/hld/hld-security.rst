@@ -825,10 +825,10 @@ configuration.
 
 To save page tables and share the mappings for non-secure world address
 space, the hypervisor relocates the Secure World's GPA to a very high
-position: 512G-513G. Hence, the PML4 for Trusty World are separated from
-non-secure World. PDPT/PD/PT for low memory (<512G) are shared in both
+position: 511G-512G. Hence, the PML4 for Trusty World are separated from
+non-secure World. PDPT/PD/PT for low memory (<511G) are shared in both
 Trusty World's EPT and non-secure World's EPT. PDPT/PD/PT for high
-memory (>=512G) are valid for Trusty World's EPT only.
+memory (>=511G) are valid for Trusty World's EPT only.
 
 .. figure:: images/security-image8.png
    :width: 900px
