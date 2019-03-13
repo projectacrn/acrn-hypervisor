@@ -262,9 +262,18 @@ pci_gvt_deinit(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 	int ret;
 	struct pci_gvt *gvt = pi->arg;
 
+	if (gvt && gvt->host_config) {
+		/* Free the allocated host_config */
+		free(gvt->host_config);
+		gvt->host_config = NULL;
+	}
+
 	ret = gvt_destroy_instance(gvt);
 	if (ret)
 		WPRINTF(("GVT: %s: failed: errno=%d\n", __func__, ret));
+
+	free(gvt);
+	pi->arg = NULL;
 }
 
 struct pci_vdev_ops pci_ops_gvt = {
