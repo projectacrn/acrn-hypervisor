@@ -1155,6 +1155,9 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t s
 	if (dmar_unit == NULL) {
 		pr_err("no dmar unit found for device: %x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
 		ret = -EINVAL;
+	} else if (dmar_unit->drhd->ignore) {
+		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
+		ret = -EINVAL;
 	} else {
 		root_table = (struct dmar_entry *)hpa2hva(dmar_unit->root_table_addr);
 		root_entry = root_table + bus;
@@ -1257,15 +1260,20 @@ void destroy_iommu_domain(struct iommu_domain *domain)
 int32_t assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	int32_t status = 0;
+	uint16_t bus_local = bus;
 
 	/* TODO: check if the device assigned */
 
-	if (fallback_iommu_domain != NULL) {
-		status = remove_iommu_device(fallback_iommu_domain, 0U, bus, devfun);
-	}
+	if (bus_local < CONFIG_IOMMU_BUS_NUM) {
+		if (fallback_iommu_domain != NULL) {
+			status = remove_iommu_device(fallback_iommu_domain, 0U, bus, devfun);
+		}
 
-	if (status == 0) {
-		status = add_iommu_device(domain, 0U, bus, devfun);
+		if (status == 0) {
+			status = add_iommu_device(domain, 0U, bus, devfun);
+		}
+	} else {
+		status = -EINVAL;
 	}
 
 	return status;
@@ -1274,12 +1282,18 @@ int32_t assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t de
 int32_t unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	int32_t status = 0;
+	uint16_t bus_local = bus;
 
 	/* TODO: check if the device assigned */
-	status = remove_iommu_device(domain, 0U, bus, devfun);
 
-	if ((status == 0) && (fallback_iommu_domain != NULL)) {
-		status = add_iommu_device(fallback_iommu_domain, 0U, bus, devfun);
+	if (bus_local < CONFIG_IOMMU_BUS_NUM) {
+		status = remove_iommu_device(domain, 0U, bus, devfun);
+
+		if ((status == 0) && (fallback_iommu_domain != NULL)) {
+			status = add_iommu_device(fallback_iommu_domain, 0U, bus, devfun);
+		}
+	} else {
+		status = -EINVAL;
 	}
 
 	return status;
