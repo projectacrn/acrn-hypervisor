@@ -1059,10 +1059,11 @@ void destroy_iommu_domain(struct iommu_domain *domain)
 int32_t assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	int32_t status = 0;
+	uint16_t local_bus = bus;
 
 	/* TODO: check if the device assigned */
 
-	if ((uint16_t)bus >= CONFIG_IOMMU_BUS_NUM) {
+	if (local_bus >= CONFIG_IOMMU_BUS_NUM) {
 		pr_err("bus 0x%x out of range", bus);
 		return -EINVAL;
 	}
@@ -1080,8 +1081,9 @@ int32_t assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t de
 int32_t unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	int32_t status = 0;
+	uint16_t local_bus = bus;
 
-	if ((uint16_t)bus >= CONFIG_IOMMU_BUS_NUM) {
+	if (local_bus >= CONFIG_IOMMU_BUS_NUM) {
 		pr_err("bus 0x%x out of range", bus);
 		return -EINVAL;
 	}
