@@ -857,6 +857,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			break;
 		}
 	}
+	pci_iterator_destroy(iter);
 
 	if (error < 0) {
 		warnx("No physical PCI device %x:%x.%x!", bus, slot, func);
