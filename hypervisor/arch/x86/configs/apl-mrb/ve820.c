@@ -5,8 +5,10 @@
  */
 
 #include <e820.h>
+#include <vm.h>
 
-const struct e820_entry ve820_entry[E820_MAX_ENTRIES] = {
+#define VE820_ENTRIES_APL_MRB  5U
+static const struct e820_entry ve820_entry[VE820_ENTRIES_APL_MRB] = {
 	{	/* usable RAM under 1MB */
 		.baseaddr = 0x0UL,
 		.length   = 0xF0000UL,		/* 960KB */
@@ -37,3 +39,12 @@ const struct e820_entry ve820_entry[E820_MAX_ENTRIES] = {
 		.type     = E820_TYPE_RESERVED
 	},
 };
+
+/**
+ * @pre vm != NULL
+ */
+void create_prelaunched_vm_e820(struct acrn_vm *vm)
+{
+	vm->e820_entry_num = VE820_ENTRIES_APL_MRB;
+	vm->e820_entries = (struct e820_entry *)ve820_entry;
+}

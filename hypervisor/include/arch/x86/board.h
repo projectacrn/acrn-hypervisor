@@ -8,6 +8,9 @@
 
 #include <types.h>
 
+/* forward declarations */
+struct acrn_vm;
+
 struct platform_clos_info {
 	uint32_t clos_mask;
 	uint32_t msr_index;
@@ -15,5 +18,8 @@ struct platform_clos_info {
 
 extern struct platform_clos_info platform_clos_array[];
 extern uint16_t platform_clos_num;
+
+/* board specific functions */
+void create_prelaunched_vm_e820(struct acrn_vm *vm);
 
 #endif /* BOARD_H */

@@ -24,6 +24,7 @@
 #include <logmsg.h>
 #include <cat.h>
 #include <firmware.h>
+#include <board.h>
 
 vm_sw_loader_t vm_sw_loader;
 
@@ -145,15 +146,7 @@ uint16_t get_vm_pcpu_nums(const struct acrn_vm_config *vm_config)
 	}
 	return pcpu_num;
 }
-
-/**
- * @pre vm != NULL
- */
-static void create_prelaunched_vm_e820(struct acrn_vm *vm)
-{
-	vm->e820_entry_num = E820_MAX_ENTRIES;
-	vm->e820_entries = (struct e820_entry *)ve820_entry;
-}
+#endif
 
 /**
  * @pre vm != NULL && vm_config != NULL
@@ -187,7 +180,6 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 		}
 	}
 }
-#endif
 
 /**
  * before boot sos_vm(service OS), call it to hide the HV RAM entry in e820 table from sos_vm
@@ -368,11 +360,12 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 
 		(void)memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
 			&vm_config->GUID[0], sizeof(vm_config->GUID));
-#ifdef CONFIG_PARTITION_MODE
-		create_prelaunched_vm_e820(vm);
-		prepare_prelaunched_vm_memmap(vm, vm_config);
-		(void)firmware_init_vm_boot_info(vm);
-#endif
+
+		 if (vm_config->type == PRE_LAUNCHED_VM) {
+			create_prelaunched_vm_e820(vm);
+			prepare_prelaunched_vm_memmap(vm, vm_config);
+			(void)firmware_init_vm_boot_info(vm);
+		 }
 	}
 
 	if (status == 0) {
