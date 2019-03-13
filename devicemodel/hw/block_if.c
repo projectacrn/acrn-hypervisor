@@ -759,8 +759,18 @@ blockif_open(const char *optstr, const char *ident)
 		pthread_setname_np(bc->btid[i], tname);
 	}
 
+	/* free strdup memory */
+	if (nopt) {
+		free(nopt);
+		nopt = NULL;
+	}
+
 	return bc;
 err:
+	/* handle failure case: free strdup memory*/
+	if (nopt)
+		free(nopt);
+
 	if (fd >= 0)
 		close(fd);
 	return NULL;
