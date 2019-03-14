@@ -81,3 +81,69 @@ HV_RAM_SIZE is changed to 240M
     hex "Size of the RAM region used by the hypervisor"
     default 0x07800000 if PLATFORM_SBL
     default 0x0f000000 if PLATFORM_UEFI
+
+How to modify the default display output for a UOS?
+******************************************************************************
+
+Apollo Lake HW has three pipes and each pipe can have three or four planes which help to
+display the overlay video. The hardware can support up to 3 monitors simultaneously.
+Some parameters are available to control how display monitors are assigned between the
+SOS and UOS, simplifying the assignment policy and providing configuration 
+flexibility for the pipes and planes in various IOT scenarios
+
+* i915.avail_planes_per_pipe: for controlling the planes
+* i915.domain_plane_owners: for controlling the domain mapping for each plane
+
+Refer to :ref:`GVT-g-kernel-options` for detailed parameter descriptions.
+
+Currently, pipe A is assigned to SOS and pipes B and C are assigned to UOS,
+which uses the below parameter:
+
+* SOS:
+
+.. code-block:: bash
+
+  i915.avail_planes_per_pipe=0x01010F
+  i915.domain_plane_owners=0x011111110000
+
+* UOS:
+
+.. code-block:: bash
+
+  i915.avail_planes_per_pipe=0x0070F00
+
+If pipes A and B are assigned to UOS, while pipe C is assigned to SOS,
+the below parameters can be used:
+
+
+* SOS:
+
+.. code-block:: bash
+
+  i915.avail_planes_per_pipe=0x070101
+  i915.domain_plane_owners=0x000011111111
+
+* UOS:
+
+.. code-block:: bash
+
+  i915.avail_planes_per_pipe=0x000F0F
+
+Why does ACRN need to be know how much RAM the system has?
+************************************************************
+
+Configuring ACRN at compile time with the system RAM size is
+a tradeoff between flexibility and functionality certification. 
+For server virtualization, one binary is typically used for all platforms
+with flexible configuration options given at run time. 
+But, for IoT applications, the image is typically configured and built
+for a particular product platform and optimized product use. 
+
+Important features for ACRN include functional safety (FuSa) and
+real-time behavior. FuSa requires a static allocation policy to avoid
+the potential of dynamic allocation failures. Real-time applications
+similarly benefit from static memory allocation. This is why ACRN
+removed all "malloc" like code, and why it needs to pre-identify
+the size of all buffers and structures used in the Virtual Memory
+Manager. For this reason, knowing the available RAM size at compile
+time is necessary to statically allocate memory usage.
