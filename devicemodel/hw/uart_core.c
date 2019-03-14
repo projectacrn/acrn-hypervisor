@@ -368,19 +368,6 @@ uart_intr_reason(struct uart_vdev *uart)
 		return IIR_NOPEND;
 }
 
-static void
-uart_reset(struct uart_vdev *uart)
-{
-	uint16_t divisor;
-
-	divisor = DEFAULT_RCLK / DEFAULT_BAUD / 16;
-	uart->dll = divisor;
-	uart->dlh = divisor >> 16;
-	uart->msr = modem_status(uart->mcr);
-
-	rxfifo_reset(uart, 1);	/* no fifo until enabled by software */
-}
-
 /*
  * Toggle the COM port's intr pin depending on whether or not we have an
  * interrupt condition to report to the processor.
@@ -396,6 +383,24 @@ uart_toggle_intr(struct uart_vdev *uart)
 		(*uart->intr_deassert)(uart->arg);
 	else
 		(*uart->intr_assert)(uart->arg);
+}
+
+static void
+uart_reset(struct uart_vdev *uart)
+{
+	uint16_t divisor;
+
+	divisor = DEFAULT_RCLK / DEFAULT_BAUD / 16;
+	uart->dll = divisor;
+	uart->dlh = divisor >> 16;
+	uart->msr = modem_status(uart->mcr);
+
+	rxfifo_reset(uart, 1);	/* no fifo until enabled by software */
+
+	/* set the right reset state here */
+	uart->ier = 0;
+	uart->thre_int_pending = true;
+	uart_toggle_intr(uart);
 }
 
 static void
@@ -454,12 +459,17 @@ uart_write(struct uart_vdev *uart, int offset, uint8_t value)
 
 	switch (offset) {
 	case REG_DATA:
+		/* THRE INT is cleared after writing data into THR register */
+		uart->thre_int_pending = false;
+		uart_toggle_intr(uart);
 		if (uart->mcr & MCR_LOOPBACK) {
 			if (rxfifo_putchar(uart, value) != 0)
 				uart->lsr |= LSR_OE;
 		} else if (uart->tty.opened) {
 			ttywrite(&uart->tty, value);
 		} /* else drop on floor */
+
+		/* We view the transmission is completed immediately */
 		uart->thre_int_pending = true;
 		break;
 	case REG_IER:
@@ -580,10 +590,14 @@ uart_read(struct uart_vdev *uart, int offset)
 		intr_reason = uart_intr_reason(uart);
 
 		/*
-		 * Deal with side effects of reading the IIR register
+		 * Reading the IIR register clears the THRE INT.
 		 */
-		if (intr_reason == IIR_TXRDY)
+		if (intr_reason == IIR_TXRDY) {
 			uart->thre_int_pending = false;
+			uart_toggle_intr(uart);
+		}
+		/* THRE INT is re-generated since the THR register is always empty in here */
+		uart->thre_int_pending = true;
 
 		iir |= intr_reason;
 
