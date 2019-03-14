@@ -162,6 +162,7 @@ struct usb_data_xfer_block {
 struct usb_data_xfer {
 	uint64_t magic;
 	struct usb_data_xfer_block data[USB_MAX_XFER_BLOCKS];
+	struct usb_dev_req *requests[USB_MAX_XFER_BLOCKS];
 	struct usb_device_request *ureq;	/* setup ctl request */
 	int	ndata;				/* # of data items */
 	int	head;
