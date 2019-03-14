@@ -111,10 +111,6 @@ struct acrn_vlapic {
 } __aligned(PAGE_SIZE);
 
 
-/* APIC write handlers */
-void vlapic_set_cr8(struct acrn_vlapic *vlapic, uint64_t val);
-uint64_t vlapic_get_cr8(const struct acrn_vlapic *vlapic);
-
 /**
  * @brief virtual LAPIC
  *

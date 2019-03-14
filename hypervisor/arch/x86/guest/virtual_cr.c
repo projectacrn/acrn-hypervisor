@@ -417,24 +417,6 @@ int32_t cr_access_vmexit_handler(struct acrn_vcpu *vcpu)
 		/* mov to cr4 */
 		vcpu_set_cr4(vcpu, reg);
 		break;
-	case 0x08UL:
-		/* mov to cr8 */
-		/* According to SDM 6.15 "Exception and interrupt Reference":
-		 *
-		 * set reserved bit in CR8 causes GP to guest
-		 */
-		if ((reg & ~0xFUL) != 0UL) {
-			pr_dbg("Invalid cr8 write operation from guest");
-			vcpu_inject_gp(vcpu, 0U);
-			break;
-		}
-		vlapic_set_cr8(vcpu_vlapic(vcpu), reg);
-		break;
-	case 0x18UL:
-		/* mov from cr8 */
-		reg = vlapic_get_cr8(vcpu_vlapic(vcpu));
-		vcpu_set_gpreg(vcpu, idx, reg);
-		break;
 	default:
 		ASSERT(false, "Unhandled CR access");
 		ret = -EINVAL;

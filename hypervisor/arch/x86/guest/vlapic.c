@@ -1182,51 +1182,6 @@ vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bo
 }
 
 static void
-vlapic_set_tpr(struct acrn_vlapic *vlapic, uint32_t val)
-{
-	struct lapic_regs *lapic = &(vlapic->apic_page);
-
-	if (lapic->tpr.v != val) {
-		dev_dbg(ACRN_DBG_LAPIC,
-			"vlapic TPR changed from %#x to %#x", lapic->tpr, val);
-		lapic->tpr.v = val;
-		vlapic_update_ppr(vlapic);
-	}
-}
-
-static uint32_t
-vlapic_get_tpr(const struct acrn_vlapic *vlapic)
-{
-	const struct lapic_regs *lapic = &(vlapic->apic_page);
-
-	return lapic->tpr.v;
-}
-
-void
-vlapic_set_cr8(struct acrn_vlapic *vlapic, uint64_t val)
-{
-	uint32_t tpr;
-
-	if ((val & ~0xfUL) != 0U) {
-		struct acrn_vcpu *vcpu = vlapic->vcpu;
-		vcpu_inject_gp(vcpu, 0U);
-	} else {
-		/* It is safe to narrow val as the higher 60 bits are 0s. */
-		tpr = (uint32_t)val << 4U;
-		vlapic_set_tpr(vlapic, tpr);
-	}
-}
-
-uint64_t
-vlapic_get_cr8(const struct acrn_vlapic *vlapic)
-{
-	uint32_t tpr;
-
-	tpr = vlapic_get_tpr(vlapic);
-	return ((uint64_t)tpr >> 4UL);
-}
-
-static void
 vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode,
 				uint32_t icr_low, uint16_t vcpu_id)
 {
@@ -1523,9 +1478,6 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg, uint64_t *data)
 		case APIC_OFFSET_VER:
 			*data = lapic->version.v;
 			break;
-		case APIC_OFFSET_TPR:
-			*data = vlapic_get_tpr(vlapic);
-		break;
 		case APIC_OFFSET_APR:
 			*data = lapic->apr.v;
 			break;
@@ -1643,9 +1595,6 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_t data)
 		switch (offset) {
 		case APIC_OFFSET_ID:
 			/* Force APIC ID as read only */
-			break;
-		case APIC_OFFSET_TPR:
-			vlapic_set_tpr(vlapic, data32 & 0xffU);
 			break;
 		case APIC_OFFSET_EOI:
 			vlapic_process_eoi(vlapic);
