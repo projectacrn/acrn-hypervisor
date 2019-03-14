@@ -46,7 +46,7 @@ create_sos_images() {
         return 1
     }
 
-    SOS_BOOTARGS_DEBUG=sos_rootfs/usr/share/acrn/samples/up2/sos_bootargs_debug.txt
+    SOS_BOOTARGS_DEBUG=sos_rootfs/usr/share/acrn/samples/apl-up2/sos_bootargs_debug.txt
 
     if [[ ! ${ACRN_SBL} || ! -f ${ACRN_SBL} ]]
     then
@@ -55,7 +55,7 @@ create_sos_images() {
 
     if [ ${ACRN_HV_CODE_PATH} ]
     then
-        SOS_BOOTARGS_DEBUG=${ACRN_HV_CODE_PATH}/devicemodel/samples/up2/sos_bootargs_debug.txt
+        SOS_BOOTARGS_DEBUG=${ACRN_HV_CODE_PATH}/devicemodel/samples/apl-up2/sos_bootargs_debug.txt
 
         make -C ${ACRN_HV_CODE_PATH} clean || return 1
         make -C ${ACRN_HV_CODE_PATH} hypervisor BOARD=apl-up2 FIRMWARE=sbl || return 1
