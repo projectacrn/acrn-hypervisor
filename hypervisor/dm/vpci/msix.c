@@ -376,11 +376,8 @@ static int32_t vmsix_init_helper(struct pci_vdev *vdev)
 			/* The lower boundary of the 4KB aligned address range for MSI-X table */
 			addr_lo = round_page_down(msix->mmio_gpa + msix->table_offset);
 
-			msix->intercepted_gpa = addr_lo;
-			msix->intercepted_size = addr_hi - addr_lo;
-
 			(void)register_mmio_emulation_handler(vdev->vpci->vm, vmsix_table_mmio_access_handler,
-				msix->intercepted_gpa, msix->intercepted_gpa + msix->intercepted_size, vdev);
+				addr_lo, addr_hi, vdev);
 		}
 		ret = 0;
 	} else {
@@ -421,8 +418,6 @@ int32_t vmsix_init(struct pci_vdev *vdev)
 int32_t vmsix_deinit(struct pci_vdev *vdev)
 {
 	if (has_msix_cap(vdev)) {
-		vdev->msix.intercepted_size = 0U;
-
 		if (vdev->msix.table_count != 0U) {
 			ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, vdev->msix.table_count);
 		}
