@@ -2280,11 +2280,16 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 		      struct xhci_trb *trb)
 {
 	struct pci_xhci_dev_emu	*dev;
-	struct pci_xhci_dev_ep *devep;
+	struct pci_xhci_dev_ep	*devep;
 	struct xhci_dev_ctx	*dev_ctx;
 	struct xhci_endp_ctx	*ep_ctx;
+	struct usb_data_xfer	*xfer;
+	struct usb_dev		*udev;
+	struct usb_dev_req	*r;
+	struct usb_native_devinfo *info = NULL;
 	uint32_t	cmderr, epid;
 	uint32_t	type;
+	int		i;
 
 	epid = XHCI_TRB_3_EP_GET(trb->dwTrb3);
 
@@ -2322,10 +2327,30 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 	/* FIXME: Currently nothing to do when Stop Endpoint Command is
 	 * received. Will refine it strictly according to xHCI spec.
 	 */
-	if (type == XHCI_TRB_TYPE_STOP_EP)
-		goto done;
+	if (type == XHCI_TRB_TYPE_STOP_EP) {
+		udev = dev->dev_instance;
+		if (!udev)
+			goto done;
+
+		info = &udev->info;
+		if (!(info->vid == 0x18d1 && info->pid == 0x2d01))
+			goto done;
+	}
 
 	devep = &dev->eps[epid];
+	xfer = devep->ep_xfer;
+	if (!xfer)
+		goto done;
+
+	if (info && info->vid == 0x18d1 && info->pid == 0x2d01) {
+		for (i = 0; i < USB_MAX_XFER_BLOCKS; i++) {
+			r = xfer->requests[i];
+			if (r && r->libusb_xfer)
+				/* let usb_dev_comp_req to free the memory */
+				libusb_cancel_transfer(r->libusb_xfer);
+		}
+	}
+
 	if (devep->ep_xfer != NULL)
 		USB_DATA_XFER_RESET(devep->ep_xfer);
 
