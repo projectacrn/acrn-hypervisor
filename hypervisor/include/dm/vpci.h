@@ -36,7 +36,7 @@ struct pci_vdev;
 struct pci_vdev_ops {
 	int32_t (*init)(struct pci_vdev *vdev);
 
-	int32_t (*deinit)(struct pci_vdev *vdev);
+	int32_t (*deinit)(const struct pci_vdev *vdev);
 
 	int32_t (*cfgwrite)(struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t val);

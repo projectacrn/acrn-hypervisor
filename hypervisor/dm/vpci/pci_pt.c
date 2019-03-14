@@ -91,7 +91,7 @@ int32_t vdev_pt_init(struct pci_vdev *vdev)
 	return ret;
 }
 
-int32_t vdev_pt_deinit(struct pci_vdev *vdev)
+int32_t vdev_pt_deinit(const struct pci_vdev *vdev)
 {
 	int32_t ret;
 	struct acrn_vm *vm = vdev->vpci->vm;

@@ -86,7 +86,7 @@ int32_t vdev_hostbridge_init(struct pci_vdev *vdev)
 	return 0;
 }
 
-int32_t vdev_hostbridge_deinit(__unused struct pci_vdev *vdev)
+int32_t vdev_hostbridge_deinit(__unused const struct pci_vdev *vdev)
 {
 	return 0;
 }

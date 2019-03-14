@@ -72,12 +72,12 @@ extern const struct vpci_ops partition_mode_vpci_ops;
 int32_t vdev_hostbridge_init(struct pci_vdev *vdev);
 int32_t vdev_hostbridge_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vdev_hostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
-int32_t vdev_hostbridge_deinit(__unused struct pci_vdev *vdev);
+int32_t vdev_hostbridge_deinit(__unused const struct pci_vdev *vdev);
 
 int32_t vdev_pt_init(struct pci_vdev *vdev);
 int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
-int32_t vdev_pt_deinit(struct pci_vdev *vdev);
+int32_t vdev_pt_deinit(const struct pci_vdev *vdev);
 
 #else
 extern const struct vpci_ops sharing_mode_vpci_ops;
@@ -87,12 +87,12 @@ extern const struct pci_vdev_ops pci_ops_vdev_msix;
 int32_t vmsi_init(struct pci_vdev *vdev);
 int32_t vmsi_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
-int32_t vmsi_deinit(struct pci_vdev *vdev);
+int32_t vmsi_deinit(const struct pci_vdev *vdev);
 
 int32_t vmsix_init(struct pci_vdev *vdev);
 int32_t vmsix_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
-int32_t vmsix_deinit(struct pci_vdev *vdev);
+int32_t vmsix_deinit(const struct pci_vdev *vdev);
 #endif
 
 uint32_t pci_vdev_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
