@@ -2776,8 +2776,6 @@ Compliant example::
        if (condition) { do_a();} else {do_b();}
 
 
-
-
 CS-03: Tabs shall be used for code indentation
 ==============================================
 
@@ -2808,8 +2806,6 @@ CS-04: Tabs shall be 8 characters wide
 
 A tab character shall be considered 8-character wide when limiting the line
 width.
-
-
 
 
 CS-05: Trailing whitespace shall not be allowed at the end of lines
@@ -2984,8 +2980,6 @@ Compliant example::
        }
 
 
-
-
 CS-13: Braces after if/switch/for/do/while shall be in the same line
 ====================================================================
 
@@ -3033,8 +3027,6 @@ Compliant example::
        uint32_t func_showcase(uint32_t param) {
                return param;
        }
-
-
 
 
 CS-15: A 'switch' statement and its subordinate 'case' shall be aligned
@@ -3092,8 +3084,6 @@ Compliant example::
                      param_3);
 
 
-
-
 CS-17:  '//' shall not be used for single-line comments
 =======================================================
 
@@ -3108,5 +3098,160 @@ Compliant example::
    Non-compliant example::
 
        // This is a comment
+
+
+Naming Convention
+*****************
+
+
+NC-01: Object-like MACRO shall be named with full upper case
+============================================================
+
+Compliant example::
+
+    #define MAX_CONFIG_NAME_SIZE        32U
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       #define max_config_name_size        32U
+
+
+NC-02: Mixed-use of lower case and upper case in function-like MACRO shall not be allowed
+=========================================================================================
+
+Function-like MACRO shall be named with either full lower case or full upper
+case. Mixed-use of lower case and upper case shall not be allowed.
+
+Compliant example::
+
+    #define max(x, y)        ((x) < (y)) ? (y) : (x)
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       #define Max(x, y)        ((x) < (y)) ? (y) : (x)
+
+
+NC-03: Data structures exposed to external components shall be named with prefix 'acrn'
+=======================================================================================
+
+The data structure types include struct, union, and enum.
+This rule applies to the data structure with all the following properties:
+
+a) The data structure is used by multiple modules;
+b) The corresponding resource is exposed to external components, such as SOS or
+   UOS;
+c) The name meaning is simplistic or common, such as vcpu or vm.
+
+Compliant example::
+
+    struct acrn_vcpu {
+            ...
+    };
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       struct vcpu {
+               ...
+       };
+
+
+NC-04: Data structures only used by hypervisor shall be named with prefix 'hv'
+==============================================================================
+
+The data structure types include struct, union, and enum.
+This rule applies to the data structure with all the following properties:
+
+a) The data structure is used by multiple modules;
+b) The corresponding resource is only used by hypervisor;
+c) The name meaning is simplistic or common, such as timer.
+
+Compliant example::
+
+    struct hv_timer {
+            ...
+    };
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       struct timer {
+               ...
+       };
+
+
+NC-05: Data structures only used by one module shall be named with the module name as prefix
+============================================================================================
+
+The data structure types include struct, union, and enum.
+This rule applies to the data structure with all the following properties:
+
+a) The data structure is only used by one module;
+b) The name meaning is simplistic or common, such as context.
+
+Compliant example::
+
+    struct instr_emul_ctxt {
+            ...
+    };
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       struct ctxt {
+               ...
+       };
+
+
+NC-06: Data structures related to hardware resource shall be named with the resource name as suffix
+===================================================================================================
+
+The data structure types include struct, union, and enum.
+For example:
+
+a) The data structure related to register shall be named with suffix 'reg';
+b) The data structure related to segment selector shall be named with suffix
+   'sel'.
+
+Compliant example::
+
+    struct lapic_reg {
+            ...
+    };
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       struct lapic {
+               ...
+       };
+
+
+NC-07: Function pointer shall be named with suffix 'fn'
+=======================================================
+
+Compliant example::
+
+    struct firmware_operations firmware_sbl_ops = {
+            .init = sbl_init_fn,
+            .get_rsdp = sbl_get_rsdp_fn,
+    };
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       struct firmware_operations firmware_sbl_ops = {
+               .init = sbl_init,
+               .get_rsdp = sbl_get_rsdp,
+       };
 
 
