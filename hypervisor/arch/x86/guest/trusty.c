@@ -158,18 +158,16 @@ static void save_world_ctx(struct acrn_vcpu *vcpu, struct ext_context *ext_ctx)
 {
 	uint32_t i;
 
-	/* cache on-demand run_context for efer/rflags/rsp/rip */
+	/* cache on-demand run_context for efer/rflags/rsp/rip/cr0/cr4 */
 	(void)vcpu_get_efer(vcpu);
 	(void)vcpu_get_rflags(vcpu);
 	(void)vcpu_get_rsp(vcpu);
 	(void)vcpu_get_rip(vcpu);
+	(void)vcpu_get_cr0(vcpu);
+	(void)vcpu_get_cr4(vcpu);
 
 	/* VMCS GUEST field */
 	ext_ctx->tsc_offset = exec_vmread(VMX_TSC_OFFSET_FULL);
-	ext_ctx->vmx_cr0 = exec_vmread(VMX_GUEST_CR0);
-	ext_ctx->vmx_cr4 = exec_vmread(VMX_GUEST_CR4);
-	ext_ctx->vmx_cr0_read_shadow = exec_vmread(VMX_CR0_READ_SHADOW);
-	ext_ctx->vmx_cr4_read_shadow = exec_vmread(VMX_CR4_READ_SHADOW);
 	ext_ctx->cr3 = exec_vmread(VMX_GUEST_CR3);
 	ext_ctx->dr7 = exec_vmread(VMX_GUEST_DR7);
 	ext_ctx->ia32_debugctl = exec_vmread64(VMX_GUEST_IA32_DEBUGCTL_FULL);
@@ -219,20 +217,18 @@ static void load_world_ctx(struct acrn_vcpu *vcpu, const struct ext_context *ext
 {
 	uint32_t i;
 
-	/* mark to update on-demand run_context for efer/rflags/rsp */
+	/* mark to update on-demand run_context for efer/rflags/rsp/rip/cr0/cr4 */
 	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
 	bitmap_set_lock(CPU_REG_RFLAGS, &vcpu->reg_updated);
 	bitmap_set_lock(CPU_REG_RSP, &vcpu->reg_updated);
 	bitmap_set_lock(CPU_REG_RIP, &vcpu->reg_updated);
+	bitmap_set_lock(CPU_REG_CR0, &vcpu->reg_updated);
+	bitmap_set_lock(CPU_REG_CR4, &vcpu->reg_updated);
 
 	/* VMCS Execution field */
 	exec_vmwrite64(VMX_TSC_OFFSET_FULL, ext_ctx->tsc_offset);
 
 	/* VMCS GUEST field */
-	exec_vmwrite(VMX_GUEST_CR0, ext_ctx->vmx_cr0);
-	exec_vmwrite(VMX_GUEST_CR4, ext_ctx->vmx_cr4);
-	exec_vmwrite(VMX_CR0_READ_SHADOW, ext_ctx->vmx_cr0_read_shadow);
-	exec_vmwrite(VMX_CR4_READ_SHADOW, ext_ctx->vmx_cr4_read_shadow);
 	exec_vmwrite(VMX_GUEST_CR3, ext_ctx->cr3);
 	exec_vmwrite(VMX_GUEST_DR7, ext_ctx->dr7);
 	exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL, ext_ctx->ia32_debugctl);
