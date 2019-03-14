@@ -632,10 +632,11 @@ void update_msr_bitmap_x2apic_apicv(const struct acrn_vcpu *vcpu)
 		 * writes to them are virtualized with Register Virtualization
 		 * Refer to Section 29.1 in Intel SDM Vol. 3
 		 */
-		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_TPR, INTERCEPT_DISABLE);
 		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_EOI, INTERCEPT_READ);
 		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_SELF_IPI, INTERCEPT_READ);
 	}
+
+	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_TPR, INTERCEPT_DISABLE);
 }
 
 /*
