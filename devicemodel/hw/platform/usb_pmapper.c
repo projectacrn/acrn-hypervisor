@@ -263,7 +263,7 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 		block = &xfer->data[idx % USB_MAX_XFER_BLOCKS];
 
 		/* Link TRB need to be skipped */
-		if (!block->buf || !block->blen) {
+		if (!block->buf) {
 			/* FIXME: should change hard coded USB_MAX_XFER_BLOCKS
 			 * to dynamically mechanism to avoid dead loop.
 			 */
@@ -353,9 +353,16 @@ usb_dev_alloc_req(struct usb_dev *udev, struct usb_data_xfer *xfer, int in,
 	if (!req->libusb_xfer)
 		goto errout;
 
-	if (size)
-		req->buffer = malloc(size);
 
+	/* According to C99: 'If size is 0, then malloc() returns either NULL,
+	 * or a unique pointer value that can later be successfully passed to
+	 * free().' So at this place, the size is set to 1 to avoid potential
+	 * risk.
+	 */
+	if (size == 0)
+		size = 1;
+
+	req->buffer = malloc(size);
 	if (!req->buffer)
 		goto errout;
 
@@ -393,7 +400,8 @@ usb_dev_prepare_xfer(struct usb_data_xfer *xfer, int *count, int *size)
 			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 			continue;
 		}
-		if (block->buf && block->blen > 0) {
+
+		if (block->buf) {
 			if (!found) {
 				found = 1;
 				first = idx;
@@ -765,6 +773,9 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 	xfer->status = USB_ERR_NORMAL_COMPLETION;
 
 	blk_start = usb_dev_prepare_xfer(xfer, &blk_count, &data_size);
+	if (blk_count <= 0)
+		goto done;
+
 	if (blk_start < 0)
 		goto done;
 
@@ -776,9 +787,6 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 		xfer->status = USB_ERR_IOERROR;
 		goto done;
 	}
-
-	if (data_size <= 0)
-		goto done;
 
 	/* TODO:
 	 * need to check performance effect of 'type == USB_ENDPOINT_ISOC'.
