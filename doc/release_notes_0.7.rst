@@ -83,8 +83,6 @@ New Features Details
 - :acrn-issue:`2448` - Adding support for socket as a backend for Virtio-Console
 - :acrn-issue:`2462` - Enable cache QOS with CAT
 - :acrn-issue:`2496` - VTD/IOMMU Modulization
-- :acrn-issue:`2553` - Disable vTPM feature on ACRN GP2.0(apl_sdc_stable)
-- :acrn-issue:`2595` - Update vsbl to v1.2
 
 Fixed Issues Details
 ********************
