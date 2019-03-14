@@ -171,7 +171,7 @@ struct run_context {
 };
 
 /*
- * extended context does not save/restore during vm exity/entry, it's mainly
+ * extended context does not save/restore during vm exit/entry, it's mainly
  * used in trusty world switch
  */
 struct ext_context {
@@ -202,11 +202,6 @@ struct ext_context {
 
 	uint64_t dr7;
 	uint64_t tsc_offset;
-
-	uint64_t vmx_cr0;
-	uint64_t vmx_cr4;
-	uint64_t vmx_cr0_read_shadow;
-	uint64_t vmx_cr4_read_shadow;
 
 	/* The 512 bytes area to save the FPU/MMX/SSE states for the guest */
 	uint64_t
