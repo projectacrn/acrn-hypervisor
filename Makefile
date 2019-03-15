@@ -2,7 +2,7 @@
 # global helper variables
 T := $(CURDIR)
 
-BOARD ?= apl-mrb
+BOARD ?= apl-nuc
 
 ifeq ($(BOARD),apl-nuc)
 FIRMWARE ?= uefi
