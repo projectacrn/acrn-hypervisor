@@ -18,17 +18,17 @@
 static bool serial_port_mapped = true;
 static bool uart_enabled = true;
 static uint64_t uart_base_address = CONFIG_SERIAL_PIO_BASE;
-static char pci_bdf_info[MAX_BDF_LEN];
+static char pci_bdf_info[MAX_BDF_LEN + 1U];
 #elif defined(CONFIG_SERIAL_PCI_BDF)
 static bool serial_port_mapped;
 static bool uart_enabled = true;
 static uint64_t uart_base_address;
-static char pci_bdf_info[MAX_BDF_LEN] = CONFIG_SERIAL_PCI_BDF;
+static char pci_bdf_info[MAX_BDF_LEN + 1U] = CONFIG_SERIAL_PCI_BDF;
 #else
 static bool serial_port_mapped;
 static bool uart_enabled;
 static uint64_t uart_base_address;
-static char pci_bdf_info[MAX_BDF_LEN];
+static char pci_bdf_info[MAX_BDF_LEN + 1U];
 #endif
 
 typedef uint32_t uart_reg_t;
@@ -224,7 +224,7 @@ void uart16550_set_property(bool enabled, bool port_mapped, uint64_t base_addr)
 		uart_base_address = base_addr;
 	} else {
 		const char *bdf = (const char *)base_addr;
-		strncpy_s(pci_bdf_info, MAX_BDF_LEN, bdf, MAX_BDF_LEN);
+		strncpy_s(pci_bdf_info, MAX_BDF_LEN + 1U, bdf, MAX_BDF_LEN);
 	}
 }
 
