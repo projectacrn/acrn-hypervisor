@@ -355,7 +355,7 @@ static int32_t shell_process_cmd(const char *p_input_line)
 	/* Copy the input line INTo an argument string to become part of the
 	 * argument vector.
 	 */
-	(void)strncpy_s(&cmd_argv_str[0], SHELL_CMD_MAX_LEN, p_input_line, SHELL_CMD_MAX_LEN);
+	(void)strncpy_s(&cmd_argv_str[0], SHELL_CMD_MAX_LEN + 1U, p_input_line, SHELL_CMD_MAX_LEN);
 	cmd_argv_str[SHELL_CMD_MAX_LEN] = 0;
 
 	/* Build the argv vector from the string. The first argument in the

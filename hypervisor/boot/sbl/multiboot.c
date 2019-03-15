@@ -18,7 +18,7 @@
  * - cmdline from acrn stitching tool. mod[0].mm_string
  * We need to merge them together
  */
-static char kernel_cmdline[MEM_2K];
+static char kernel_cmdline[MEM_2K + 1U];
 
 /* now modules support: FIRMWARE & RAMDISK & SeedList */
 static void parse_other_modules(struct acrn_vm *vm, const struct multiboot_module *mods, uint32_t mods_count)
@@ -60,7 +60,8 @@ static void parse_other_modules(struct acrn_vm *vm, const struct multiboot_modul
 			/*copy boot args to load addr, set src=load addr*/
 			if (copy_once != 0) {
 				copy_once = 0;
-				(void)strncpy_s(load_addr, MEM_2K, (const char *)vm->sw.linux_info.bootargs_src_addr,
+				(void)strncpy_s(load_addr, MEM_2K + 1U,
+					(const char *)vm->sw.linux_info.bootargs_src_addr,
 					vm->sw.linux_info.bootargs_size);
 				vm->sw.linux_info.bootargs_src_addr = load_addr;
 			}
@@ -169,11 +170,10 @@ int32_t sbl_init_vm_boot_info(struct acrn_vm *vm)
 						 * Append seed argument for SOS
 						 */
 						append_seed_arg(cmd_dst, is_sos_vm(vm));
-
 						off = strnlen_s(cmd_dst, MEM_2K);
 
 						cmd_dst += off;
-						(void)strncpy_s(cmd_dst, MEM_2K - off, (const char *)cmd_src,
+						(void)strncpy_s(cmd_dst, MEM_2K + 1U - off, (const char *)cmd_src,
 							strnlen_s(cmd_src, MEM_2K - off));
 						off = strnlen_s(cmd_dst, MEM_2K - off);
 						cmd_dst[off] = ' ';	/* insert space */
@@ -181,7 +181,7 @@ int32_t sbl_init_vm_boot_info(struct acrn_vm *vm)
 
 						cmd_dst += off;
 						cmd_src = (char *)hpa2hva((uint64_t)mods[0].mm_string);
-						(void)strncpy_s(cmd_dst, MEM_2K - off, cmd_src,
+						(void)strncpy_s(cmd_dst, MEM_2K + 1U - off, cmd_src,
 							strnlen_s(cmd_src, MEM_2K - off));
 
 						vm->sw.linux_info.bootargs_src_addr = kernel_cmdline;
