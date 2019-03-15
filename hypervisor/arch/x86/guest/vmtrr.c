@@ -12,8 +12,6 @@
 #include <vm.h>
 #include <logmsg.h>
 
-#ifdef CONFIG_MTRR_ENABLED
-
 #define MTRR_FIXED_RANGE_ALL_WB (MTRR_MEM_TYPE_WB \
 					| (MTRR_MEM_TYPE_WB << 8U) \
 					| (MTRR_MEM_TYPE_WB << 16U) \
@@ -266,5 +264,3 @@ uint64_t read_vmtrr(const struct acrn_vcpu *vcpu, uint32_t msr)
 
 	return ret;
 }
-
-#endif /* CONFIG_MTRR_ENABLED */
