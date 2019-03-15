@@ -108,7 +108,7 @@ int32_t sanitize_vm_config(void)
 		case SOS_VM:
 			/* Deduct pcpus of PRE_LAUNCHED_VMs */
 			sos_pcpu_bitmap ^= pre_launch_pcpu_bitmap;
-			if ((sos_pcpu_bitmap == 0U) || ((vm_config->guest_flags & LAPIC_PASSTHROUGH) != 0U)) {
+			if ((sos_pcpu_bitmap == 0U) || ((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)) {
 				ret = -EINVAL;
 			} else {
 				vm_config->pcpu_bitmap = sos_pcpu_bitmap;
@@ -122,7 +122,7 @@ int32_t sanitize_vm_config(void)
 			break;
 		}
 
-		if ((vm_config->guest_flags & CLOS_REQUIRED) != 0U) {
+		if ((vm_config->guest_flags & GUEST_FLAG_CLOS_REQUIRED) != 0U) {
 			if (cat_cap_info.support && (vm_config->clos <= cat_cap_info.clos_max)) {
 					cat_cap_info.enabled = true;
 			} else {

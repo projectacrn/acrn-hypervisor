@@ -68,7 +68,7 @@ bool is_lapic_pt(const struct acrn_vm *vm)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
-	return ((vm_config->guest_flags & LAPIC_PASSTHROUGH) != 0U);
+	return ((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U);
 }
 
 /**
@@ -78,7 +78,7 @@ bool vm_hide_mtrr(const struct acrn_vm *vm)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
-	return ((vm_config->guest_flags & HIDE_MTRR) != 0U);
+	return ((vm_config->guest_flags & GUEST_FLAG_HIDE_MTRR) != 0U);
 }
 
 /**
@@ -349,7 +349,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 
 	} else {
 		/* For PRE_LAUNCHED_VM and NORMAL_VM */
-		if ((vm_config->guest_flags & SECURE_WORLD_ENABLED) != 0U) {
+		if ((vm_config->guest_flags & GUEST_FLAG_SECURE_WORLD_ENABLED) != 0U) {
 			vm->sworld_control.flag.supported = 1U;
 		}
 		if (vm->sworld_control.flag.supported != 0UL) {
@@ -419,7 +419,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		/* Populate return VM handle */
 		*rtn_vm = vm;
 		vm->sw.io_shared_page = NULL;
-		if ((vm_config->guest_flags & IO_COMPLETION_POLLING) != 0U) {
+		if ((vm_config->guest_flags & GUEST_FLAG_IO_COMPLETION_POLLING) != 0U) {
 			/* enable IO completion polling mode per its guest flags in vm_config. */
 			vm->sw.is_completion_polling = true;
 		}
