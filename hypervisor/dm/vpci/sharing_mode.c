@@ -251,6 +251,8 @@ void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, 
 
 			if (vm != NULL) {
 				vdev->vpci = &vm->vpci;
+				/* vbdf equals to pbdf in sos */
+				vdev->vbdf.value = vdev->pdev->bdf.value;
 			}
 		}
 	}
