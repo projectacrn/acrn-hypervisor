@@ -211,34 +211,45 @@ add_e820_entry(struct e820_entry *e820, int len, uint64_t start,
 uint32_t
 acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 {
-	uint32_t k;
+	uint32_t removed = 0, k;
 
 	memcpy(e820, e820_default_entries, sizeof(e820_default_entries));
 
-	if (ctx->lowmem > 0) {
-		e820[LOWRAM_E820_ENTRIES].length = ctx->lowmem -
-				e820[LOWRAM_E820_ENTRIES].baseaddr;
-		e820[LOWRAM_E820_ENTRIES+1].baseaddr = ctx->lowmem;
-		e820[LOWRAM_E820_ENTRIES+1].length =
+	assert(ctx->lowmem > e820[LOWRAM_E820_ENTRY].baseaddr);
+	e820[LOWRAM_E820_ENTRY].length = ctx->lowmem -
+			e820[LOWRAM_E820_ENTRY].baseaddr;
+
+	/* remove [lowmem, lowmem_limit) if it's empty */
+	if (ctx->lowmem_limit > ctx->lowmem) {
+		e820[LOWRAM_E820_ENTRY+1].baseaddr = ctx->lowmem;
+		e820[LOWRAM_E820_ENTRY+1].length =
 			ctx->lowmem_limit - ctx->lowmem;
+	} else {
+		memmove(&e820[LOWRAM_E820_ENTRY+1], &e820[LOWRAM_E820_ENTRY+2],
+				sizeof(e820[LOWRAM_E820_ENTRY+2]) *
+				(NUM_E820_ENTRIES - (LOWRAM_E820_ENTRY+2)));
+		removed++;
 	}
 
+	/* remove [5GB, highmem) if it's empty */
 	if (ctx->highmem > 0) {
-		e820[HIGHRAM_E820_ENTRIES].type = E820_TYPE_RAM;
-		e820[HIGHRAM_E820_ENTRIES].length = ctx->highmem;
+		e820[HIGHRAM_E820_ENTRY - removed].type = E820_TYPE_RAM;
+		e820[HIGHRAM_E820_ENTRY - removed].length = ctx->highmem;
+	} else {
+		removed++;
 	}
 
 	printf("SW_LOAD: build e820 %d entries to addr: %p\r\n",
-			NUM_E820_ENTRIES, (void *)e820);
+			NUM_E820_ENTRIES - removed, (void *)e820);
 
-	for (k = 0; k < NUM_E820_ENTRIES; k++)
+	for (k = 0; k < NUM_E820_ENTRIES - removed; k++)
 		printf("SW_LOAD: entry[%d]: addr 0x%016lx, size 0x%016lx, "
 				" type 0x%x\r\n",
 				k, e820[k].baseaddr,
 				e820[k].length,
 				e820[k].type);
 
-	return  NUM_E820_ENTRIES;
+	return (NUM_E820_ENTRIES - removed);
 }
 
 int
