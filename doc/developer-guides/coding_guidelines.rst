@@ -2665,8 +2665,8 @@ ID-07: Name defined by developers shall not start with underscore
 =================================================================
 
 All names starting with one or two underscores are reserved for use by the
-compiler and standard libraries to eliminate potential conflicts with user-
-defined names.
+compiler and standard libraries to eliminate potential conflicts with
+user-defined names.
 
 Compliant example::
 
@@ -3254,4 +3254,59 @@ Compliant example::
                .get_rsdp = sbl_get_rsdp,
        };
 
+
+Implementation-specific Behaviors
+*********************************
+
+
+IB-01: All characters in an identifier are significant initial characters
+=========================================================================
+
+The number of significant initial characters in an identifier is
+implementation-defined, according to J.3.3 item 2 in C99. For ACRN hypervisor,
+all characters in an identifier are significant initial characters.
+
+IB-02: The number of bits in a byte is 8
+========================================
+
+The number of bits in a byte is implementation-defined, according to J.3.4 item
+1 in C99. For ACRN hypervisor, the number of bits in a byte is 8.
+
+IB-03: The values of the members of the execution character set depends on ASCII Table
+======================================================================================
+
+The values of the members of the execution character set is
+implementation-defined, according to J.3.4 item 2 in C99. For ACRN hypervisor,
+characters are encoded in ASCII. This rule applies to the source code that is
+being compiled. Non-ASCII characters are allowed in comments, such as the author
+name.
+
+IB-04:  'plain' char is equivalent to signed char
+=================================================
+
+The underlying type of 'plain' char is implementation-defined, according to
+J.3.4 item 5 in C99. For ACRN hypervisor, 'plain' char is equivalent to signed
+char.
+
+IB-05: Signed integers are represented in two's complement
+==========================================================
+
+Whether signed integer types are represented using sign and magnitude, two's
+complement, or ones' complement is implementation-defined, according to J.3.5
+item 2 in C99. For ACRN hypervisor, signed integers are represented in two's
+complement.
+
+IB-06: The integer type compatible with each enumerated type is case by case
+============================================================================
+
+The integer type compatible with each enumerated type is implementation-defined,
+according to J.3.9 item 6 in C99. For ACRN hypervisor, if the enum has no
+negative underlying values, unsigned int is used; otherwise, int is used.
+
+IB-07: The number of bytes in an object is specified
+====================================================
+
+The number of bytes in an object is implementation-defined, according to J.3.13
+item 2 in C99. For ACRN hypervisor, char is 1 byte, short is 2 bytes, int is 4
+bytes, long is 8 bytes, and long long is not used.
 
