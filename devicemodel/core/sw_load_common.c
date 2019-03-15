@@ -50,57 +50,56 @@ static char bootargs[STR_LEN];
  *   map[0]:0~ctx->lowmem_limit & map[2]:4G~ctx->highmem for RAM
  *   ctx->highmem = request_memory_size - ctx->lowmem_limit
  *
- *             Begin      End         Type         Length
- * 0:             0 -     0xef000     RAM          0xEF000
- * 1	    0xef000 -	  0x100000    (reserved)   0x11000
- * 2       0x100000 -	  lowmem      RAM          lowmem - 0x100000
- * 3:        lowmem -     bff_fffff   (reserved)   0xc00_00000-lowmem
- * 4:   0xc00_00000 -     dff_fffff   PCI hole     512MB
- * 5:   0xe00_00000 -     fff_fffff   (reserved)   512MB
- * 6:   1_000_00000 -     1_400_00000 PCI hole     1G
- * 7:   1_400_00000 -     highmem     RAM          highmem-5G
+ *             Begin    Limit       Type            Length
+ * 0:              0 -  0xA0000     RAM             0xA0000
+ * 1:        0xA0000 -  0x100000    (reserved)      0x60000
+ * 2:       0x100000 -  lowmem      RAM             lowmem - 1MB
+ * 3:         lowmem -  0x80000000  (reserved)      2GB - lowmem
+ * 4:     0x80000000 -  0x100000000 PCI hole, MMIO  2GB
+ * 5:    0x100000000 -  0x140000000 PCI hole        1GB
+ * 6:    0x140000000 -  highmem     RAM             highmem - 5GB
  */
 const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
-	{	/* 0 to mptable/smbios/acpi */
-		.baseaddr =  0x00000000,
-		.length   =  0xEF000,
-		.type     =  E820_TYPE_RAM
+	{	/* 0 to video memory */
+		.baseaddr = 0x00000000,
+		.length   = 0xA0000,
+		.type     = E820_TYPE_RAM
 	},
 
-	{	/* guest_cfg_addr/mptable/smbios/acpi to lowmem */
-		.baseaddr = 0xEF000,
-		.length	  = 0x11000,
-		.type	  = E820_TYPE_RESERVED
+	{	/* video memory, ROM (used for e820/mptable/smbios/acpi) */
+		.baseaddr = 0xA0000,
+		.length   = 0x60000,
+		.type     = E820_TYPE_RESERVED
 	},
 
-	{	/* lowmem to lowmem_limit*/
-		.baseaddr =  0x100000,
-		.length   =  0x48f00000,
-		.type     =  E820_TYPE_RAM
+	{	/* 1MB to lowmem */
+		.baseaddr = 0x100000,
+		.length   = 0x48f00000,
+		.type     = E820_TYPE_RAM
 	},
 
-	{	/* lowmem to lowmem_limit*/
-		.baseaddr =  0x49000000,
-		.length   =  0x77000000,
-		.type     =  E820_TYPE_RESERVED
+	{	/* lowmem to lowmem_limit */
+		.baseaddr = 0x49000000,
+		.length   = 0x37000000,
+		.type     = E820_TYPE_RESERVED
 	},
 
-	{	/* lowmem_limit to 4G */
-		.baseaddr =  0xe0000000,
-		.length   =  0x20000000,
-		.type     =  E820_TYPE_RESERVED
+	{	/* lowmem_limit to 4GB */
+		.baseaddr = 0x80000000,
+		.length   = 0x80000000,
+		.type     = E820_TYPE_RESERVED
 	},
 
-	{	/* 4G to 5G */
-		.baseaddr =  PCI_EMUL_MEMBASE64,
-		.length   =  PCI_EMUL_MEMLIMIT64 - PCI_EMUL_MEMBASE64,
-		.type     =  E820_TYPE_RESERVED
+	{	/* 4GB to 5GB */
+		.baseaddr = PCI_EMUL_MEMBASE64,
+		.length   = PCI_EMUL_MEMLIMIT64 - PCI_EMUL_MEMBASE64,
+		.type     = E820_TYPE_RESERVED
 	},
 
-	{
-		.baseaddr =  PCI_EMUL_MEMLIMIT64,
-		.length   =  0x000100000,
-		.type     =  E820_TYPE_RESERVED
+	{	/* 5GB to highmem */
+		.baseaddr = PCI_EMUL_MEMLIMIT64,
+		.length   = 0x000100000,
+		.type     = E820_TYPE_RESERVED
 	},
 };
 
