@@ -541,7 +541,7 @@ vm_set_ptdev_msix_info(struct vmctx *ctx, struct ic_ptdev_irq *ptirq)
 }
 
 int
-vm_reset_ptdev_msix_info(struct vmctx *ctx, uint16_t virt_bdf,
+vm_reset_ptdev_msix_info(struct vmctx *ctx, uint16_t virt_bdf, uint16_t phys_bdf,
 			 int vector_count)
 {
 	struct ic_ptdev_irq ptirq;
@@ -549,6 +549,7 @@ vm_reset_ptdev_msix_info(struct vmctx *ctx, uint16_t virt_bdf,
 	bzero(&ptirq, sizeof(ptirq));
 	ptirq.type = IRQ_MSIX;
 	ptirq.virt_bdf = virt_bdf;
+	ptirq.phys_bdf = phys_bdf;
 	ptirq.msix.vector_cnt = vector_count;
 
 	return ioctl(ctx->fd, IC_RESET_PTDEV_INTR_INFO, &ptirq);
