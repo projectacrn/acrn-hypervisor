@@ -274,10 +274,6 @@ config GPU_SBDF
 	  00:02.0 in DRHD segment 0, this SBDF would be (0 << 16) | (0 << 8) |
 	  (2 << 3) | (0 << 0), i.e. 0x00000010.
 
-config MTRR_ENABLED
-	bool "Memory Type Range Registers (MTRR) enabled"
-	default y
-
 config RELOC
 	bool "Enable hypervisor relocation"
 	default y

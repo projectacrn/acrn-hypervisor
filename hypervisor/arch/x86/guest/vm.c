@@ -72,6 +72,16 @@ bool is_lapic_pt(const struct acrn_vm *vm)
 }
 
 /**
+ * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
+ */
+bool vm_hide_mtrr(const struct acrn_vm *vm)
+{
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+
+	return ((vm_config->guest_flags & HIDE_MTRR) != 0U);
+}
+
+/**
  * @brief Initialize the I/O bitmap for \p vm
  *
  * @param vm The VM whose I/O bitmap is to be initialized

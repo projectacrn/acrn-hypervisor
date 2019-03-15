@@ -391,9 +391,9 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 	/* Create per vcpu vlapic */
 	vlapic_create(vcpu);
 
-#ifdef CONFIG_MTRR_ENABLED
-	init_vmtrr(vcpu);
-#endif
+	if (!vm_hide_mtrr(vm)) {
+		init_vmtrr(vcpu);
+	}
 
 	spinlock_init(&(vcpu->arch.lock));
 
