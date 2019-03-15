@@ -57,7 +57,7 @@ struct acrn_vm_config {
 	uint16_t pci_ptdev_num;				/* indicate how many PCI PT devices in VM */
 	struct acrn_vm_pci_ptdev_config *pci_ptdevs;	/* point to PCI PT devices BDF list */
 	struct acrn_vm_os_config os_config;		/* OS information the VM */
-	uint16_t clos;					/* if guest_flags has CAT_ENABLED, then VM use this CLOS */
+	uint16_t clos;					/* if guest_flags has CLOS_REQUIRED, then VM use this CLOS */
 
 #ifdef CONFIG_PARTITION_MODE
 	bool			vm_vuart;
