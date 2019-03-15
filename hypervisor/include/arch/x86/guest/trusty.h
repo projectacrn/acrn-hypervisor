@@ -7,11 +7,10 @@
 #ifndef TRUSTY_H_
 #define TRUSTY_H_
 #include <acrn_hv_defs.h>
+#include <seed.h>
 
-#define BOOTLOADER_SEED_MAX_ENTRIES     10U
 #define RPMB_MAX_PARTITION_NUMBER       6U
 #define MMC_PROD_NAME_WITH_PSN_LEN      15U
-#define BUP_MKHI_BOOTLOADER_SEED_LEN    64U
 
 #define TRUSTY_RAM_SIZE	(16UL * 1024UL * 1024UL)	/* 16 MB for now */
 
@@ -22,14 +21,6 @@
 
 struct acrn_vcpu;
 struct acrn_vm;
-
-/* Structure of seed info */
-struct seed_info {
-	uint8_t cse_svn;
-	uint8_t bios_svn;
-	uint8_t padding[2];
-	uint8_t seed[BUP_MKHI_BOOTLOADER_SEED_LEN];
-};
 
 /* Structure of key info */
 struct trusty_key_info {

@@ -7,6 +7,18 @@
 #ifndef SEED_H_
 #define SEED_H_
 
+#define BOOTLOADER_SEED_MAX_ENTRIES     10U
+#define BUP_MKHI_BOOTLOADER_SEED_LEN    64U
+
+/* Structure of seed info */
+struct seed_info {
+	uint8_t cse_svn;
+	uint8_t bios_svn;
+	uint8_t padding[2];
+	uint8_t seed[BUP_MKHI_BOOTLOADER_SEED_LEN];
+};
+
+/* Structure of physical seed */
 struct physical_seed {
 	struct seed_info seed_list[BOOTLOADER_SEED_MAX_ENTRIES];
 	uint32_t num_seeds;
