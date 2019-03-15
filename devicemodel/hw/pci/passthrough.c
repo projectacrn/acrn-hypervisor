@@ -508,7 +508,7 @@ deinit_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev)
 	if (ptdev->msix.ptirq_allocated) {
 		printf("ptdev reset msix: 0x%x-%x, vector_cnt=%d.\n",
 				virt_bdf, ptdev->phys_bdf, vector_cnt);
-		vm_reset_ptdev_msix_info(ctx, virt_bdf, vector_cnt);
+		vm_reset_ptdev_msix_info(ctx, virt_bdf, ptdev->phys_bdf, vector_cnt);
 		ptdev->msix.ptirq_allocated = false;
 	}
 
@@ -909,8 +909,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		deinit_msix_table(ctx, ptdev);
 	else if(ptdev->msi.capoff != 0) {
 		/* Currently only support 1 vector */
-		printf("ptdev reset msi: 0x%x-%x\n", virt_bdf, ptdev->phys_bdf);
-		vm_reset_ptdev_msix_info(ctx, virt_bdf, 1);
+		vm_reset_ptdev_msix_info(ctx, virt_bdf, ptdev->phys_bdf, 1);
 	}
 
 	printf("vm_reset_ptdev_intx:0x%x-%x, ioapic virpin=%d.\n",
