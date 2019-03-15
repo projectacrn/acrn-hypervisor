@@ -53,7 +53,10 @@
  */
 
 /* ovmf real entry is reset vector, which is (OVMF_TOP - 16) */
-#define	OVMF_TOP(ctx)		(4*GB)
+#define OVMF_TOP(ctx)		(4*GB)
+
+/* located in the ROM area */
+#define OVMF_E820_BASE		0x000EF000UL
 
 static char ovmf_path[STR_LEN];
 static size_t ovmf_size;
@@ -130,6 +133,11 @@ int
 acrn_sw_load_ovmf(struct vmctx *ctx)
 {
 	int ret;
+	struct {
+		char signature[4];
+		uint32_t nentries;
+		struct e820_entry map[];
+	} __attribute__((packed)) *e820;
 
 	init_cmos_vrpmb(ctx);
 
@@ -137,6 +145,14 @@ acrn_sw_load_ovmf(struct vmctx *ctx)
 
 	if (ret)
 		return ret;
+
+	e820 = paddr_guest2host(ctx, OVMF_E820_BASE,
+			e820_default_entries[LOWRAM_E820_ENTRY].baseaddr -
+			OVMF_E820_BASE);
+	assert(e820 != NULL);
+
+	strncpy(e820->signature, "820", sizeof(e820->signature));
+	e820->nentries = acrn_create_e820_table(ctx, e820->map);
 
 	printf("SW_LOAD: ovmf_entry 0x%lx\n", OVMF_TOP(ctx) - 16);
 
