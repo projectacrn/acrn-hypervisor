@@ -4,7 +4,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <cpu.h>
+#include <pgtable.h>
+#include <rtl.h>
+#include <logmsg.h>
 #include <seed.h>
 #include "seed_sbl.h"
 

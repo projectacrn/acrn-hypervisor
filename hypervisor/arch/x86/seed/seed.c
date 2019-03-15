@@ -3,8 +3,14 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
-#include <hypervisor.h>
+#include <types.h>
+#include <cpu.h>
+#include <pgtable.h>
+#include <rtl.h>
+#include <mmu.h>
+#include <sprintf.h>
+#include <ept.h>
+#include <logmsg.h>
 #include <multiboot.h>
 #include <crypto_api.h>
 #include <seed.h>
