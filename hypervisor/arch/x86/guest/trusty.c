@@ -219,7 +219,7 @@ static void load_world_ctx(struct acrn_vcpu *vcpu, const struct ext_context *ext
 {
 	uint32_t i;
 
-	/* mark to update on-demand run_context for efer/rflags/rsp */
+	/* mark to update on-demand run_context for efer/rflags/rsp/rip */
 	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
 	bitmap_set_lock(CPU_REG_RFLAGS, &vcpu->reg_updated);
 	bitmap_set_lock(CPU_REG_RSP, &vcpu->reg_updated);

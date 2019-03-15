@@ -171,7 +171,7 @@ struct run_context {
 };
 
 /*
- * extended context does not save/restore during vm exity/entry, it's mainly
+ * extended context does not save/restore during vm exit/entry, it's mainly
  * used in trusty world switch
  */
 struct ext_context {
