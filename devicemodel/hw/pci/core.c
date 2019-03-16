@@ -1346,12 +1346,13 @@ init_pci(struct vmctx *ctx)
 
 	/*
 	 * The guest physical memory map looks like the following:
-	 * [0,		    lowmem)		guest system memory
-	 * [lowmem,	    lowmem_limit)	memory hole (may be absent)
-	 * [lowmem_limit,   0xE0000000)		PCI hole (32-bit BAR allocation)
-	 * [0xE0000000,	    0xF0000000)		PCI extended config window
-	 * [0xF0000000,	    4GB)		LAPIC, IOAPIC, HPET, firmware
-	 * [4GB,	    4GB + highmem)
+	 * [0,              lowmem)         guest system memory
+	 * [lowmem,         lowmem_limit)   memory hole (may be absent)
+	 * [lowmem_limit,   0xE0000000)     PCI hole (32-bit BAR allocation)
+	 * [0xE0000000,     0xF0000000)     PCI extended config window
+	 * [0xF0000000,     4GB)            LAPIC, IOAPIC, HPET, firmware
+	 * [4GB,            5GB)            PCI hole (64-bit BAR allocation)
+	 * [5GB,            5GB + highmem)  guest system memory
 	 */
 
 	/*
@@ -1360,10 +1361,20 @@ init_pci(struct vmctx *ctx)
 	 */
 	lowmem = vm_get_lowmem_size(ctx);
 	bzero(&mr, sizeof(struct mem_range));
-	mr.name = "PCI hole";
+	mr.name = "PCI hole (32-bit)";
 	mr.flags = MEM_F_RW;
 	mr.base = lowmem;
 	mr.size = (4ULL * 1024 * 1024 * 1024) - lowmem;
+	mr.handler = pci_emul_fallback_handler;
+	error = register_mem_fallback(&mr);
+	assert(error == 0);
+
+	/* ditto for the 64-bit PCI host aperture */
+	bzero(&mr, sizeof(struct mem_range));
+	mr.name = "PCI hole (64-bit)";
+	mr.flags = MEM_F_RW;
+	mr.base = PCI_EMUL_MEMBASE64;
+	mr.size = PCI_EMUL_MEMLIMIT64 - PCI_EMUL_MEMBASE64;
 	mr.handler = pci_emul_fallback_handler;
 	error = register_mem_fallback(&mr);
 	assert(error == 0);
@@ -1425,9 +1436,16 @@ deinit_pci(struct vmctx *ctx)
 	/* Release PCI hole space */
 	lowmem = vm_get_lowmem_size(ctx);
 	bzero(&mr, sizeof(struct mem_range));
-	mr.name = "PCI hole";
+	mr.name = "PCI hole (32-bit)";
 	mr.base = lowmem;
 	mr.size = (4ULL * 1024 * 1024 * 1024) - lowmem;
+	unregister_mem_fallback(&mr);
+
+	/* ditto for the 64-bit PCI host aperture */
+	bzero(&mr, sizeof(struct mem_range));
+	mr.name = "PCI hole (64-bit)";
+	mr.base = PCI_EMUL_MEMBASE64;
+	mr.size = PCI_EMUL_MEMLIMIT64 - PCI_EMUL_MEMBASE64;
 	unregister_mem_fallback(&mr);
 
 	for (bus = 0; bus < MAXBUSES; bus++) {
