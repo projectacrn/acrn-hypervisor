@@ -37,11 +37,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include <pthread.h>
 
 #include "vmm.h"
 #include "mem.h"
 #include "tree.h"
+
+#define MEMNAMESZ (80)
 
 struct mmio_rb_range {
 	RB_ENTRY(mmio_rb_range)	mr_link;	/* RB tree links */
@@ -51,10 +54,8 @@ struct mmio_rb_range {
 	bool			enabled;
 };
 
-struct mmio_rb_tree;
-RB_PROTOTYPE(mmio_rb_tree, mmio_rb_range, mr_link, mmio_rb_range_compare);
-
-RB_HEAD(mmio_rb_tree, mmio_rb_range) mmio_rb_root, mmio_rb_fallback;
+static RB_HEAD(mmio_rb_tree, mmio_rb_range) mmio_rb_root, mmio_rb_fallback;
+RB_PROTOTYPE_STATIC(mmio_rb_tree, mmio_rb_range, mr_link, mmio_rb_range_compare);
 
 /*
  * Per-VM cache. Since most accesses from a vCPU will be to
@@ -128,7 +129,7 @@ mmio_rb_dump(struct mmio_rb_tree *rbt)
 }
 #endif
 
-RB_GENERATE(mmio_rb_tree, mmio_rb_range, mr_link, mmio_rb_range_compare);
+RB_GENERATE_STATIC(mmio_rb_tree, mmio_rb_range, mr_link, mmio_rb_range_compare);
 
 static int
 mem_read(void *ctx, int vcpu, uint64_t gpa, uint64_t *rval, int size, void *arg)
@@ -196,33 +197,6 @@ emulate_mem(struct vmctx *ctx, struct mmio_request *mmio_req)
 	return err;
 }
 
-static int
-register_mem_int(struct mmio_rb_tree *rbt, struct mem_range *memp)
-{
-	struct mmio_rb_range *entry, *mrp;
-	int err;
-
-	err = 0;
-
-	mrp = malloc(sizeof(struct mmio_rb_range));
-
-	if (mrp != NULL) {
-		mrp->mr_param = *memp;
-		mrp->mr_base = memp->base;
-		mrp->mr_end = memp->base + memp->size - 1;
-		mrp->enabled = true;
-		pthread_rwlock_wrlock(&mmio_rwlock);
-		if (mmio_rb_lookup(rbt, memp->base, &entry) != 0)
-			err = mmio_rb_add(rbt, mrp);
-		pthread_rwlock_unlock(&mmio_rwlock);
-		if (err)
-			free(mrp);
-	} else
-		err = -1;
-
-	return err;
-}
-
 int
 disable_mem(struct mem_range *memp)
 {
@@ -285,6 +259,33 @@ enable_mem(struct mem_range *memp)
 	return 0;
 }
 
+static int
+register_mem_int(struct mmio_rb_tree *rbt, struct mem_range *memp)
+{
+	struct mmio_rb_range *entry, *mrp;
+	int err;
+
+	err = 0;
+
+	mrp = malloc(sizeof(struct mmio_rb_range));
+
+	if (mrp != NULL) {
+		mrp->mr_param = *memp;
+		mrp->mr_base = memp->base;
+		mrp->mr_end = memp->base + memp->size - 1;
+		mrp->enabled = true;
+		pthread_rwlock_wrlock(&mmio_rwlock);
+		if (mmio_rb_lookup(rbt, memp->base, &entry) != 0)
+			err = mmio_rb_add(rbt, mrp);
+		pthread_rwlock_unlock(&mmio_rwlock);
+		if (err)
+			free(mrp);
+	} else
+		err = -1;
+
+	return err;
+}
+
 int
 register_mem(struct mem_range *memp)
 {
@@ -297,25 +298,28 @@ register_mem_fallback(struct mem_range *memp)
 	return register_mem_int(&mmio_rb_fallback, memp);
 }
 
-int
-unregister_mem_fallback(struct mem_range *memp)
+static int
+unregister_mem_int(struct mmio_rb_tree *rbt, struct mem_range *memp)
 {
 	struct mem_range *mr;
 	struct mmio_rb_range *entry = NULL;
 	int err;
 
 	pthread_rwlock_wrlock(&mmio_rwlock);
-	err = mmio_rb_lookup(&mmio_rb_fallback, memp->base, &entry);
+	err = mmio_rb_lookup(rbt, memp->base, &entry);
 	if (err == 0) {
 		mr = &entry->mr_param;
-		assert(mr->name == memp->name);
-		assert(mr->base == memp->base && mr->size == memp->size);
-		assert((mr->flags & MEM_F_IMMUTABLE) == 0);
-		RB_REMOVE(mmio_rb_tree, &mmio_rb_fallback, entry);
+		if (strncmp(mr->name, memp->name, MEMNAMESZ)) {
+			err = -1;
+		} else {
+			assert(mr->base == memp->base && mr->size == memp->size);
+			assert((mr->flags & MEM_F_IMMUTABLE) == 0);
+			RB_REMOVE(mmio_rb_tree, rbt, entry);
 
-		/* flush Per-VM cache */
-		if (mmio_hint == entry)
-			mmio_hint = NULL;
+			/* flush Per-VM cache */
+			if (mmio_hint == entry)
+				mmio_hint = NULL;
+		}
 	}
 	pthread_rwlock_unlock(&mmio_rwlock);
 
@@ -328,29 +332,13 @@ unregister_mem_fallback(struct mem_range *memp)
 int
 unregister_mem(struct mem_range *memp)
 {
-	struct mem_range *mr;
-	struct mmio_rb_range *entry = NULL;
-	int err;
+	return unregister_mem_int(&mmio_rb_root, memp);
+}
 
-	pthread_rwlock_wrlock(&mmio_rwlock);
-	err = mmio_rb_lookup(&mmio_rb_root, memp->base, &entry);
-	if (err == 0) {
-		mr = &entry->mr_param;
-		assert(mr->name == memp->name);
-		assert(mr->base == memp->base && mr->size == memp->size);
-		assert((mr->flags & MEM_F_IMMUTABLE) == 0);
-		RB_REMOVE(mmio_rb_tree, &mmio_rb_root, entry);
-
-		/* flush Per-VM cache */
-		if (mmio_hint == entry)
-			mmio_hint = NULL;
-	}
-	pthread_rwlock_unlock(&mmio_rwlock);
-
-	if (entry)
-		free(entry);
-
-	return err;
+int
+unregister_mem_fallback(struct mem_range *memp)
+{
+	return unregister_mem_int(&mmio_rb_fallback, memp);
 }
 
 void
