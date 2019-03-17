@@ -454,24 +454,24 @@ struct virtio_vq_info {
  *
  * @param vq Pointer to struct virtio_vq_info.
  *
- * @return 0 on not ready and 1 on ready.
+ * @return false on not ready and true on ready.
  */
-static inline int
+static inline bool
 vq_ring_ready(struct virtio_vq_info *vq)
 {
-	return (vq->flags & VQ_ALLOC);
+	return ((vq->flags & VQ_ALLOC) == VQ_ALLOC);
 }
 
 /**
  * @brief Are there "available" descriptors?
  *
- * This does not count how many, just returns 1 if there is any.
+ * This does not count how many, just returns true if there is any.
  *
  * @param vq Pointer to struct virtio_vq_info.
  *
- * @return 0 on no available and 1 on available.
+ * @return false on not available and true on available.
  */
-static inline int
+static inline bool
 vq_has_descs(struct virtio_vq_info *vq)
 {
 	return (vq_ring_ready(vq) && vq->last_avail !=
