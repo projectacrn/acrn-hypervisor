@@ -295,9 +295,10 @@ virtio_net_tx_stop(struct virtio_net *net)
 {
 	void *jval;
 
+	pthread_mutex_lock(&net->tx_mtx);
 	net->closing = 1;
-
 	pthread_cond_broadcast(&net->tx_cond);
+	pthread_mutex_unlock(&net->tx_mtx);
 
 	pthread_join(net->tx_tid, &jval);
 }
