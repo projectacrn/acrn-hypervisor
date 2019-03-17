@@ -201,7 +201,7 @@ virtio_blk_done(struct blockif_req *br, int err)
 	 */
 	pthread_mutex_lock(&blk->mtx);
 	vq_relchain(&blk->vq, io->idx, 1);
-	vq_endchains(&blk->vq, 0);
+	vq_endchains(&blk->vq, !vq_has_descs(&blk->vq));
 	pthread_mutex_unlock(&blk->mtx);
 }
 
