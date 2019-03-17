@@ -265,7 +265,12 @@ static void tpm_crb_request_deliver(void *arg)
 			break;
 		}
 
-		ret = pthread_cond_wait(&tpm_vdev->request_cond, &tpm_vdev->request_mutex);
+		while (!ret &&
+		       tpm_vdev->crb_regs.regs.ctrl_start == CRB_CTRL_CMD_COMPLETED) {
+			ret = pthread_cond_wait(
+					&tpm_vdev->request_cond, &tpm_vdev->request_mutex);
+		}
+
 		if (ret) {
 			DPRINTF("ERROR: Failed to wait condition(%d)\n", ret);
 			break;
@@ -312,6 +317,11 @@ static void crb_reg_write(struct tpm_crb_vdev *tpm_vdev, uint64_t addr, int size
 			(tpm_vdev->crb_regs.regs.ctrl_sts.tpmIdle != 1) &&
 			(get_active_locality(tpm_vdev) == target_loc)) {
 
+			if (pthread_mutex_lock(&tpm_vdev->request_mutex)) {
+				DPRINTF("ERROR: Failed to acquire mutex lock\n");
+				break;
+			}
+
 			tpm_vdev->crb_regs.regs.ctrl_start = CRB_CTRL_START_CMD;
 			cmd_size = MIN(get_tpm_cmd_size(tpm_vdev->data_buffer),
 					TPM_CRB_DATA_BUFFER_SIZE);
@@ -321,11 +331,6 @@ static void crb_reg_write(struct tpm_crb_vdev *tpm_vdev, uint64_t addr, int size
 			tpm_vdev->cmd.in_len = cmd_size;
 			tpm_vdev->cmd.out = &tpm_vdev->data_buffer[0];
 			tpm_vdev->cmd.out_len = TPM_CRB_DATA_BUFFER_SIZE;
-
-			if (pthread_mutex_lock(&tpm_vdev->request_mutex)) {
-				DPRINTF("ERROR: Failed to acquire mutex lock\n");
-				break;
-			}
 
 			if (pthread_cond_signal(&tpm_vdev->request_cond)) {
 				DPRINTF("ERROR: Failed to wait condition\n");

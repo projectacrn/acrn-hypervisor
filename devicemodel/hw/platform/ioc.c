@@ -1390,7 +1390,7 @@ ioc_tx_thread(void *arg)
 	for (;;) {
 		pthread_mutex_lock(&ioc->tx_mtx);
 		while (SIMPLEQ_EMPTY(&ioc->tx_qhead)) {
-			err =  pthread_cond_wait(&ioc->tx_cond, &ioc->tx_mtx);
+			err = pthread_cond_wait(&ioc->tx_cond, &ioc->tx_mtx);
 			assert(err == 0);
 			if (ioc->closing)
 				goto exit;

@@ -1556,11 +1556,10 @@ out:
 	vq_relchain(vq, idx, tlen);
 	DPRINTF("TX: release OUT-vq idx[%d]\n", idx);
 
-	if (vmei->rx_need_sched) {
-		pthread_mutex_lock(&vmei->rx_mutex);
+	pthread_mutex_lock(&vmei->rx_mutex);
+	if (vmei->rx_need_sched)
 		pthread_cond_signal(&vmei->rx_cond);
-		pthread_mutex_unlock(&vmei->rx_mutex);
-	}
+	pthread_mutex_unlock(&vmei->rx_mutex);
 
 	return;
 
@@ -1617,20 +1616,34 @@ static void *vmei_tx_thread(void *param)
 {
 	struct virtio_mei *vmei = param;
 	struct timespec max_wait = {0, 0};
-	int err;
+	int err, pending_cnt = 0;
 
 	pthread_mutex_lock(&vmei->tx_mutex);
-	err = pthread_cond_wait(&vmei->tx_cond, &vmei->tx_mutex);
-	assert(err == 0);
-	if (err)
-		goto out;
 
 	while (vmei->status != VMEI_STST_DEINIT) {
 		struct vmei_me_client *me;
 		struct vmei_host_client *e;
 		ssize_t len;
-		int pending_cnt = 0;
-		int send_ready  = 0;
+		int send_ready;
+
+		if (pending_cnt == 0) {
+			err = pthread_cond_wait(&vmei->tx_cond,
+						&vmei->tx_mutex);
+			assert(err == 0);
+			if (err)
+				goto out;
+		} else {
+			max_wait.tv_sec = time(NULL) + 2;
+			max_wait.tv_nsec = 0;
+			err = pthread_cond_timedwait(&vmei->tx_cond,
+						     &vmei->tx_mutex,
+						     &max_wait);
+			assert(err == 0 || err == ETIMEDOUT);
+			if (err && err != ETIMEDOUT)
+				goto out;
+
+			pending_cnt = 0;
+		}
 
 		pthread_mutex_lock(&vmei->list_mutex);
 		LIST_FOREACH(me, &vmei->active_clients, list) {
@@ -1660,21 +1673,8 @@ static void *vmei_tx_thread(void *param)
 		}
 unlock:
 		pthread_mutex_unlock(&vmei->list_mutex);
-
-		if (pending_cnt == 0) {
-			err = pthread_cond_wait(&vmei->tx_cond,
-						&vmei->tx_mutex);
-		} else {
-			max_wait.tv_sec = time(NULL) + 2;
-			max_wait.tv_nsec = 0;
-			err = pthread_cond_timedwait(&vmei->tx_cond,
-						     &vmei->tx_mutex,
-						     &max_wait);
-		}
-
-		if (vmei->status == VMEI_STST_DEINIT)
-			goto out;
 	}
+
 out:
 	pthread_mutex_unlock(&vmei->tx_mutex);
 	pthread_exit(NULL);
@@ -1869,33 +1869,33 @@ found:
 /*
  * Thread which will handle processing of RX desc
  */
-
 static void *vmei_rx_thread(void *param)
 {
 	struct virtio_mei *vmei = param;
-	struct virtio_vq_info *vq;
+	struct virtio_vq_info *vq = &vmei->vqs[VMEI_RXQ];
 	int err;
-
-	vq = &vmei->vqs[VMEI_RXQ];
 
 	/*
 	 * Let us wait till the rx queue pointers get initialised &
 	 * first tx signaled
 	 */
 	pthread_mutex_lock(&vmei->rx_mutex);
-	err = pthread_cond_wait(&vmei->rx_cond, &vmei->rx_mutex);
-	assert(err == 0);
-	if (err)
-		goto out;
+
+	while (vmei->status != VMEI_STST_DEINIT && !vq_ring_ready(vq)) {
+		err = pthread_cond_wait(&vmei->rx_cond, &vmei->rx_mutex);
+		assert(err == 0);
+		if (err)
+			goto out;
+	}
 
 	while (vmei->status != VMEI_STST_DEINIT) {
 		/* note - rx mutex is locked here */
-		while (vq_ring_ready(vq)) {
+		while (!vmei->rx_need_sched || !vq_has_descs(vq)) {
 			vq_clear_used_ring_flags(&vmei->base, vq);
 			mb();
-			if (vq_has_descs(vq) &&
-			    vmei->rx_need_sched &&
-			    vmei->status != VMEI_STS_RESET)
+			if (vmei->rx_need_sched &&
+			    vmei->status != VMEI_STS_RESET &&
+			    vq_has_descs(vq))
 				break;
 
 			err = pthread_cond_wait(&vmei->rx_cond,
@@ -1904,15 +1904,17 @@ static void *vmei_rx_thread(void *param)
 			if (err || vmei->status == VMEI_STST_DEINIT)
 				goto out;
 		}
+
 		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
 
 		do {
 			vmei->rx_need_sched = vmei_proc_rx(vmei, vq);
-		} while (vq_has_descs(vq) && vmei->rx_need_sched);
+		} while (vmei->rx_need_sched && vq_has_descs(vq));
 
-		if (!vq_has_descs(vq))
-			vq_endchains(vq, 1);
+		/* at least one avail ring element has been processed */
+		vq_endchains(vq, !vq_has_descs(vq));
 	}
+
 out:
 	pthread_mutex_unlock(&vmei->rx_mutex);
 	pthread_exit(NULL);

@@ -304,27 +304,38 @@ virtio_rnd_get_entropy(void *param)
 	struct virtio_vq_info *vq = &rnd->vq;
 	struct iovec iov;
 	uint16_t idx;
-	int len, error;
+	int ret;
+	ssize_t len;
 
 	for (;;) {
 		pthread_mutex_lock(&rnd->rx_mtx);
 		rnd->in_progress = 0;
-		error = pthread_cond_wait(&rnd->rx_cond, &rnd->rx_mtx);
-		assert(error == 0);
+
+		/*
+		 * Checking the avail ring here serves two purposes:
+		 *  - avoid vring processing due to spurious wakeups
+		 *  - catch missing notifications before acquiring rx_mtx
+		 */
+		while (!vq_has_descs(vq)) {
+			ret = pthread_cond_wait(&rnd->rx_cond, &rnd->rx_mtx);
+			assert(ret == 0);
+		}
 
 		rnd->in_progress = 1;
 		pthread_mutex_unlock(&rnd->rx_mtx);
 
-		while(vq_has_descs(vq)) {
-			vq_getchain(vq, &idx, &iov, 1, NULL);
+		do {
+			ret = vq_getchain(vq, &idx, &iov, 1, NULL);
+			assert(ret > 0);
 
 			len = read(rnd->fd, iov.iov_base, iov.iov_len);
 			assert(len > 0);
 
 			/* release this chain and handle more */
 			vq_relchain(vq, idx, len);
-		}
+		} while (vq_has_descs(vq));
 
+		/* at least one avail ring element has been processed */
 		vq_endchains(vq, 1);
 	}
 }
