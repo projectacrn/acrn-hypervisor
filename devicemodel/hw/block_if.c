@@ -925,8 +925,9 @@ blockif_close(struct blockif_ctxt *bc)
 	 */
 	pthread_mutex_lock(&bc->mtx);
 	bc->closing = 1;
-	pthread_mutex_unlock(&bc->mtx);
 	pthread_cond_broadcast(&bc->cond);
+	pthread_mutex_unlock(&bc->mtx);
+
 	for (i = 0; i < BLOCKIF_NUMTHR; i++)
 		pthread_join(bc->btid[i], &jval);
 
