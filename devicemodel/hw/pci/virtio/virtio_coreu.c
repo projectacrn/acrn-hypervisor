@@ -163,29 +163,39 @@ virtio_coreu_thread(void *param)
 	struct coreu_msg *msg;
 
 	for (;;) {
+		ret = 0;
 		pthread_mutex_lock(&vcoreu->rx_mtx);
-		ret = pthread_cond_wait(&vcoreu->rx_cond, &vcoreu->rx_mtx);
+
+		/*
+		 * Checking the avail ring here serves two purposes:
+		 *  - avoid vring processing due to spurious wakeups
+		 *  - catch missing notifications before acquiring rx_mtx
+		 */
+		while (!ret && !vq_has_descs(rvq))
+			ret = pthread_cond_wait(&vcoreu->rx_cond, &vcoreu->rx_mtx);
+
 		pthread_mutex_unlock(&vcoreu->rx_mtx);
 
 		if (ret)
 			break;
 
-		while(vq_has_descs(rvq)) {
-			vq_getchain(rvq, &idx, &iov, 1, NULL);
+		do {
+			ret = vq_getchain(rvq, &idx, &iov, 1, NULL);
+			assert(ret > 0);
 
 			msg = (struct coreu_msg *)(iov.iov_base);
 
 			ret = send_and_receive(vcoreu->fd, msg);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				close(vcoreu->fd);
 				vcoreu->fd = -1;
 			}
 
 			/* release this chain and handle more */
 			vq_relchain(rvq, idx, sizeof(struct coreu_msg));
-		}
+		} while (vq_has_descs(rvq));
 
+		/* at least one avail ring element has been processed */
 		vq_endchains(rvq, 1);
 	}
 
