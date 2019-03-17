@@ -304,10 +304,13 @@ virtio_vq_init(struct virtio_base *base, uint32_t pfn)
 	/* ... and the last page(s) are the used ring. */
 	vq->used = (struct vring_used *)vb;
 
-	/* Mark queue as allocated, and start at 0 when we use it. */
-	vq->flags = VQ_ALLOC;
+	/* Start at 0 when we use it. */
 	vq->last_avail = 0;
 	vq->save_used = 0;
+
+	/* Mark queue as allocated after initialization is complete. */
+	mb();
+	vq->flags = VQ_ALLOC;
 }
 
 /*
@@ -346,13 +349,16 @@ virtio_vq_enable(struct virtio_base *base)
 	vb = paddr_guest2host(base->dev->vmctx, phys, size);
 	vq->used = (struct vring_used *)vb;
 
-	/* Mark queue as allocated, and start at 0 when we use it. */
-	vq->flags = VQ_ALLOC;
+	/* Start at 0 when we use it. */
 	vq->last_avail = 0;
 	vq->save_used = 0;
 
 	/* Mark queue as enabled. */
 	vq->enabled = true;
+
+	/* Mark queue as allocated after initialization is complete. */
+	mb();
+	vq->flags = VQ_ALLOC;
 }
 
 /*
