@@ -428,9 +428,10 @@ usb_dev_err_convert(int err)
 	switch (err) {
 	case LIBUSB_ERROR_TIMEOUT: return USB_ERR_TIMEOUT;
 	case LIBUSB_ERROR_PIPE: return USB_ERR_STALLED;
-	case LIBUSB_ERROR_NO_DEVICE: return USB_ERR_INVAL;
+	case LIBUSB_ERROR_NO_DEVICE: return USB_ERR_IOERROR;
 	case LIBUSB_ERROR_BUSY: return USB_ERR_IN_USE;
-	case LIBUSB_ERROR_OVERFLOW: return USB_ERR_TOO_DEEP;
+	case LIBUSB_ERROR_OVERFLOW: return USB_ERR_BAD_BUFSIZE;
+	case LIBUSB_ERROR_IO: return USB_ERR_IOERROR;
 	default:
 		break; /* add more when required */
 	}
