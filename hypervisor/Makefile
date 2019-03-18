@@ -215,6 +215,7 @@ endif
 C_SRCS += hw/pci.c
 
 C_SRCS += dm/vpic.c
+C_SRCS += dm/vrtc.c
 C_SRCS += dm/vioapic.c
 C_SRCS += dm/vpci/vdev.c
 C_SRCS += dm/vpci/vpci.c
@@ -223,7 +224,6 @@ C_SRCS += dm/vmptable.c
 C_SRCS += dm/vpci/partition_mode.c
 C_SRCS += dm/vpci/hostbridge.c
 C_SRCS += dm/vpci/pci_pt.c
-C_SRCS += dm/vrtc.c
 else
 C_SRCS += dm/vpci/sharing_mode.c
 C_SRCS += dm/vpci/msi.c

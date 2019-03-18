@@ -407,8 +407,8 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		if (vm_config->vm_vuart && is_dbg_uart_enabled()) {
 			vuart_init(vm);
 		}
-		vrtc_init(vm);
 #endif
+		vrtc_init(vm);
 
 		vpci_init(vm);
 
