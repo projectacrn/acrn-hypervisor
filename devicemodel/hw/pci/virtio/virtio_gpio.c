@@ -254,6 +254,7 @@ struct gpio_irq_desc {
 	uint8_t			level;	/* level value */
 	uint64_t		mode;		/* interrupt trigger mode */
 	void			*data;		/* virtio gpio instance */
+	uint64_t		intr_stat;	/* interrupts count */
 };
 
 struct gpio_irq_chip {
@@ -261,6 +262,7 @@ struct gpio_irq_chip {
 	struct gpio_irq_desc	descs[VIRTIO_GPIO_MAX_VLINES];
 	uint64_t		intr_pending;	/* pending interrupts */
 	uint64_t		intr_service;	/* service interrupts */
+	uint64_t		intr_stat;	/* all interrupts count */
 };
 
 struct virtio_gpio {
@@ -278,6 +280,8 @@ struct virtio_gpio {
 static void print_gpio_info(struct virtio_gpio *gpio);
 static void print_virtio_gpio_info(struct virtio_gpio_request *req,
 		struct virtio_gpio_response *rsp, bool in);
+static void print_intr_statistics(struct gpio_irq_chip *chip);
+static void record_intr_statistics(struct gpio_irq_chip *chip, uint64_t mask);
 
 static void
 native_gpio_update_line_info(struct gpio_line *line)
@@ -868,6 +872,9 @@ gpio_irq_deliver_intr(struct virtio_gpio *gpio, uint64_t mask)
 		/* Generate interrupt if appropriate. */
 		vq_endchains(vq, 1);
 
+		/* interrupt statistics */
+		record_intr_statistics(&gpio->irq_chip, mask);
+
 	} else
 		DPRINTF("virtio gpio failed to send an IRQ, mask %lu", mask);
 }
@@ -1117,12 +1124,16 @@ virtio_gpio_irq_proc(struct virtio_gpio *gpio, struct iovec *iov, uint16_t flag)
 		 *       if gpio_irq_enable failure.
 		 */
 		gpio_irq_enable(gpio, req->pin, req->mode);
+
+		/* print IRQ statistics */
+		print_intr_statistics(chip);
 		break;
 	case IRQ_ACTION_DISABLE:
 		gpio_irq_disable(chip, req->pin);
 
-		/* reopen the GPIO */
-		native_gpio_open_line(desc->gpio, 0, 0);
+
+		/* print IRQ statistics */
+		print_intr_statistics(chip);
 		break;
 	case IRQ_ACTION_ACK:
 		/*
@@ -1433,6 +1444,37 @@ print_virtio_gpio_info(struct virtio_gpio_request *req,
 				rsp->err,
 				item,
 				rsp->data);
+}
+
+static void
+record_intr_statistics(struct gpio_irq_chip *chip, uint64_t mask)
+{
+	struct gpio_irq_desc *desc;
+	int i;
+
+	for (i = 0; i < VIRTIO_GPIO_MAX_VLINES; i++) {
+		desc = &chip->descs[i];
+		if (mask & BIT(desc->pin))
+			desc->intr_stat++;
+	}
+	chip->intr_stat++;
+}
+
+static void
+print_intr_statistics(struct gpio_irq_chip *chip)
+{
+	struct gpio_irq_desc *desc;
+	int i;
+
+	DPRINTF("virtio gpio generated interrupts %lu\n", chip->intr_stat);
+	for (i = 0; i < VIRTIO_GPIO_MAX_VLINES; i++) {
+		desc = &chip->descs[i];
+		if (!desc->gpio || desc->intr_stat == 0)
+			continue;
+		DPRINTF("Chip %s GPIO %d generated interrupts %lu\n",
+				desc->gpio->chip->dev_name, desc->gpio->offset,
+				desc->intr_stat);
+	}
 }
 
 DEFINE_PCI_DEVTYPE(pci_ops_virtio_gpio);
