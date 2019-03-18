@@ -468,25 +468,6 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 
 			arch->inject_event_pending = false;
 		} else {
-			/*
-			 * From SDM Vol3 26.3.2.5:
-			 * Once the virtual interrupt is recognized, it will be delivered
-			 * in VMX non-root operation immediately after VM entry(including
-			 * any specified event injection) completes.
-			 *
-			 * So the hardware can handle vmcs event injection and
-			 * evaluation/delivery of apicv virtual interrupts in one time
-			 * vm-entry.
-			 *
-			 * Here to sync the pending interrupts to irr and update rvi if
-			 * needed. And then try to handle vmcs event injection.
-			 */
-			if (is_apicv_advanced_feature_supported() &&
-				bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT, pending_req_bits)) {
-				vlapic = vcpu_vlapic(vcpu);
-				vlapic_apicv_inject_pir(vlapic);
-			}
-
 			/* SDM Vol 3 - table 6-2, inject high priority exception before
 			 * maskable hardware interrupt */
 			if (vcpu_inject_hi_exception(vcpu) == 0) {
@@ -499,6 +480,25 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 					ret = acrn_inject_pending_vector(vcpu, pending_req_bits);
 				}
 			}
+		}
+
+		/*
+		 * From SDM Vol3 26.3.2.5:
+		 * Once the virtual interrupt is recognized, it will be delivered
+		 * in VMX non-root operation immediately after VM entry(including
+		 * any specified event injection) completes.
+		 *
+		 * So the hardware can handle vmcs event injection and
+		 * evaluation/delivery of apicv virtual interrupts in one time
+		 * vm-entry.
+		 *
+		 * Here to sync the pending interrupts to irr and update rvi if
+		 * needed. And then try to handle vmcs event injection.
+		 */
+		if (is_apicv_advanced_feature_supported() &&
+			bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT, pending_req_bits)) {
+			vlapic = vcpu_vlapic(vcpu);
+			vlapic_apicv_inject_pir(vlapic);
 		}
 
 		/*
