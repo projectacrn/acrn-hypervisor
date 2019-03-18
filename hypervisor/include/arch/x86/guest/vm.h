@@ -148,8 +148,8 @@ struct acrn_vm {
 
 #ifdef CONFIG_PARTITION_MODE
 	struct mptable_info mptable;
-	uint8_t vrtc_offset;
 #endif
+	uint8_t vrtc_offset;
 
 	spinlock_t softirq_dev_lock;
 	struct list_head softirq_dev_entry_list;
@@ -217,8 +217,8 @@ extern vm_sw_loader_t vm_sw_loader;
 
 #ifdef CONFIG_PARTITION_MODE
 uint16_t get_vm_pcpu_nums(const struct acrn_vm_config *vm_config);
-void vrtc_init(struct acrn_vm *vm);
 #endif
+void vrtc_init(struct acrn_vm *vm);
 
 bool is_lapic_pt(const struct acrn_vm *vm);
 bool vm_hide_mtrr(const struct acrn_vm *vm);
