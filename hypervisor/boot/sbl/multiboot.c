@@ -82,6 +82,48 @@ static void parse_other_modules(struct acrn_vm *vm, const struct multiboot_modul
 	}
 }
 
+/**
+ * @pre vm != NULL && cmdline != NULL && cmdstr != NULL
+ */
+static void merge_cmdline(const struct acrn_vm *vm, const char *cmdline, const char *cmdstr)
+{
+	char *cmd_dst = kernel_cmdline;
+	uint32_t cmdline_len, cmdstr_len;
+	uint32_t dst_avail; /* available room for cmd_dst[] */
+	uint32_t dst_len; /* the actual number of characters that are copied */
+
+	/*
+	 * Append seed argument for SOS
+	 * seed_arg string ends with a white space and '\0', so no aditional delimiter is needed
+	 */
+	append_seed_arg(cmd_dst, is_sos_vm(vm));
+	dst_len = strnlen_s(cmd_dst, MEM_2K);
+	dst_avail = MEM_2K + 1U - dst_len;
+	cmd_dst += dst_len;
+
+	cmdline_len = strnlen_s(cmdline, MEM_2K);
+	cmdstr_len = strnlen_s(cmdstr, MEM_2K);
+
+	/* reserve one character for the delimiter between 2 strings (one white space) */
+	if ((cmdline_len + cmdstr_len + 1U) >= dst_avail) {
+		panic("Multiboot bootarg string too long");
+	} else {
+		/* copy mbi->mi_cmdline */
+		(void)strncpy_s(cmd_dst, dst_avail, cmdline, cmdline_len);
+		dst_len = strnlen_s(cmd_dst, dst_avail);
+		dst_avail -= dst_len;
+		cmd_dst += dst_len;
+
+		/* overwrite '\0' with a white space */
+		(void)strncpy_s(cmd_dst, dst_avail, " ", 1U);
+		dst_avail -= 1U;
+		cmd_dst += 1U;
+
+		/* copy mods[].mm_string */
+		(void)strncpy_s(cmd_dst, dst_avail, cmdstr, cmdstr_len);
+	}
+}
+
 static void *get_kernel_load_addr(void *kernel_src_addr)
 {
 	struct zero_page *zeropage;
@@ -155,34 +197,13 @@ int32_t sbl_init_vm_boot_info(struct acrn_vm *vm)
 					vm->sw.kernel_info.kernel_load_addr =
 						get_kernel_load_addr(vm->sw.kernel_info.kernel_src_addr);
 
-					/*
-					 * If there is cmdline from mbi->mi_cmdline, merge it with
-					 * mods[0].mm_string
-					 */
 					if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
-						char *cmd_src, *cmd_dst;
-						uint32_t off = 0U;
-
-						cmd_dst = kernel_cmdline;
-						cmd_src = (char *)hpa2hva((uint64_t)mbi->mi_cmdline);
-
 						/*
-						 * Append seed argument for SOS
+						 * If there is cmdline from mbi->mi_cmdline, merge it with
+						 * mods[0].mm_string
 						 */
-						append_seed_arg(cmd_dst, is_sos_vm(vm));
-						off = strnlen_s(cmd_dst, MEM_2K);
-
-						cmd_dst += off;
-						(void)strncpy_s(cmd_dst, MEM_2K + 1U - off, (const char *)cmd_src,
-							strnlen_s(cmd_src, MEM_2K - off));
-						off = strnlen_s(cmd_dst, MEM_2K - off);
-						cmd_dst[off] = ' ';	/* insert space */
-						off += 1U;
-
-						cmd_dst += off;
-						cmd_src = (char *)hpa2hva((uint64_t)mods[0].mm_string);
-						(void)strncpy_s(cmd_dst, MEM_2K + 1U - off, cmd_src,
-							strnlen_s(cmd_src, MEM_2K - off));
+						merge_cmdline(vm, hpa2hva((uint64_t)mbi->mi_cmdline),
+								hpa2hva((uint64_t)mods[0].mm_string));
 
 						vm->sw.linux_info.bootargs_src_addr = kernel_cmdline;
 						vm->sw.linux_info.bootargs_size = strnlen_s(kernel_cmdline, MEM_2K);
