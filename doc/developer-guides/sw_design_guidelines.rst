@@ -77,27 +77,11 @@ below:
 Architecture Level
 ==================
 
-Fulfillment to FuSa Standards
------------------------------
+Functional Safety Consideration
+-------------------------------
 
-The fulfillment matrix of error detection and error handling on architecture
-level to FuSa Standards [IEC_61508-7]_ in ACRN hypervisor is shown in
-:numref:`fulfillment_matrix_arch_level` below.
-
-.. table:: Fulfillment to FuSa Standards on Architecture Level
-   :align: center
-   :widths: auto
-   :name: fulfillment_matrix_arch_level
-
-   +-----------------------+---------------+----------+--------------------------------------+
-   | Technique/Measure     | Ref in        | SIL3     | Company Solution                     |
-   |                       | IEC 61508-7   |          |                                      |
-   +=======================+===============+==========+======================================+
-   | Failure assertion     | C.3.3         | R        | This technique will be used.         |
-   | programming           |               |          | Plan to do range check in hypercalls |
-   |                       |               |          | and HW capability checks.            |
-   +-----------------------+---------------+----------+--------------------------------------+
-
+The hypervisor will do range check in hypercalls and HW capability checks
+according to Table A.2 of FuSa Standards [IEC_61508-3_2010]_ .
 
 Error Handling Methods
 ----------------------
@@ -243,28 +227,12 @@ Here is the sample codes for error checking before calling ``vcpu_from_vid``:
 Module Level
 ============
 
-Fulfillment to FuSa Standards
------------------------------
+Functional Safety Consideration
+-------------------------------
 
-The fulfillment matrix of error detection and error handling on a module level
-to FuSa Standards [IEC_61508-7]_ in ACRN hypervisor is shown in
-:numref:`fulfillment_matrix_module_level` below.
-
-.. table:: Fulfillment to FuSa Standards on Module Level
-   :align: center
-   :widths: auto
-   :name: fulfillment_matrix_module_level
-
-   +-----------------------+---------------+----------+---------------------------------------------------+
-   | Technique/Measure     | Ref in        | SIL3     | Company Solution                                  |
-   |                       | IEC 61508-7   |          |                                                   |
-   +=======================+===============+==========+===================================================+
-   | Design and coding     | C.2.6         | HR       | This technique will be used for internal functions|
-   | standards             | Table B.1     |          | of the hypervisor. Plan to use data verification, |
-   |                       |               |          | with explicit specification of pre-conditions and |
-   |                       |               |          | post-conditions for functions.                    |
-   +-----------------------+---------------+----------+---------------------------------------------------+
-
+Data verification, and explicit specification of pre-conditions and post-conditions
+are applied for internal functions of the hypervisor according to Table A.4 of
+FuSa Standards [IEC_61508-3_2010]_ .
 
 Error Handling Methods
 ----------------------
@@ -485,5 +453,4 @@ not NULL. If the VM called ``partition_mode_vpci_deinit`` twice, it may be NULL.
 References
 **********
 
-.. [IEC_61508-7] IEC 61508-7:2010, Functional safety of electrical/electronic/programmable electronic safety-related systems - Part 7: Overview of techniques and measures
-
+.. [IEC_61508-3_2010] IEC 61508-3:2010, Functional safety of electrical/electronic/programmable electronic safety-related systems - Part 3: Software requirements
