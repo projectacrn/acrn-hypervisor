@@ -250,6 +250,7 @@ struct gpio_irq_desc {
 	int			fd;	/* read event */
 	int			pin;	/* pin number */
 	bool			mask;	/* mask and unmask */
+	bool			deinit;	/* deinit state */
 	uint8_t			level;	/* level value */
 	uint64_t		mode;		/* interrupt trigger mode */
 	void			*data;		/* virtio gpio instance */
@@ -401,17 +402,32 @@ gpio_get_value(struct virtio_gpio *gpio, unsigned int offset)
 {
 	struct gpio_line *line;
 	struct gpiohandle_data data;
-	int rc;
+	int rc, fd;
 
 	line = gpio->vlines[offset];
-	if (line->busy || line->fd < 0) {
-		DPRINTF("failed to get gpio%d value, busy:%d, fd:%d\n",
-				offset, line->busy, line->fd);
+	if (line->busy) {
+		DPRINTF("failed to get gpio %d value, it is busy\n", offset);
 		return -1;
 	}
 
+	fd = line->fd;
+	if (fd < 0) {
+
+		/*
+		 * if the GPIO line has configured as IRQ mode, then can't use
+		 * gpio line fd to get its value, instead, use IRQ fd to get
+		 * the value.
+		 */
+		if (line->irq->fd < 0) {
+			DPRINTF("failed to get gpio %d value, fd is invalid\n",
+				offset);
+			return -1;
+		}
+		fd = line->irq->fd;
+	}
+
 	memset(&data, 0, sizeof(data));
-	rc = ioctl(line->fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &data);
+	rc = ioctl(fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &data);
 	if (rc < 0) {
 		DPRINTF("ioctl GPIOHANDLE_GET_LINE_VALUES_IOCTL error %s\n",
 				strerror(errno));
@@ -951,6 +967,7 @@ gpio_irq_disable(struct gpio_irq_chip *chip, unsigned int pin)
 
 	/* Release the mevent, mevent teardown handles IRQ desc reset */
 	if (desc->mevt) {
+		desc->deinit = false;
 		mevent_delete(desc->mevt);
 		desc->mevt = NULL;
 	}
@@ -970,6 +987,10 @@ gpio_irq_teardown(void *param)
 		close(desc->fd);
 		desc->fd = -1;
 	}
+
+	/* if deinit is not set, switch the pin to GPIO mode */
+	if (!desc->deinit)
+		native_gpio_open_line(desc->gpio, 0, 0);
 }
 
 static void
@@ -1168,6 +1189,7 @@ gpio_irq_deinit(struct virtio_gpio *gpio)
 	for (i = 0; i < gpio->nvline; i++) {
 		desc = &chip->descs[i];
 		if (desc->mevt) {
+			desc->deinit = true;
 			mevent_delete(desc->mevt);
 			desc->mevt = NULL;
 
