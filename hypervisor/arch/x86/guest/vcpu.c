@@ -432,6 +432,19 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 	if (bitmap_test_and_clear_lock(CPU_REG_RFLAGS, &vcpu->reg_updated))
 		exec_vmwrite(VMX_GUEST_RFLAGS, ctx->rflags);
 
+	/*
+	 * Currently, updating CR0/CR4 here is only designed for world
+	 * switching. There should no other module request updating
+	 * CR0/CR4 here.
+	 */
+	if (bitmap_test_and_clear_lock(CPU_REG_CR0, &vcpu->reg_updated)) {
+		vcpu_set_cr0(vcpu, ctx->cr0);
+	}
+
+	if (bitmap_test_and_clear_lock(CPU_REG_CR4, &vcpu->reg_updated)) {
+		vcpu_set_cr4(vcpu, ctx->cr4);
+	}
+
 	/* If this VCPU is not already launched, launch it */
 	if (!vcpu->launched) {
 		pr_info("VM %d Starting VCPU %hu",
