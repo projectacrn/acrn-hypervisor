@@ -658,4 +658,5 @@ void update_msr_bitmap_x2apic_passthru(const struct acrn_vcpu *vcpu)
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_LDR, INTERCEPT_READ);
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_ICR, INTERCEPT_WRITE);
 	enable_msr_interception(msr_bitmap, MSR_IA32_TSC_DEADLINE, INTERCEPT_DISABLE);
+	enable_msr_interception(msr_bitmap, MSR_IA32_TSC_ADJUST, INTERCEPT_DISABLE);
 }
