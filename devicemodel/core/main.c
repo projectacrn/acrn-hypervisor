@@ -252,37 +252,6 @@ high_bios_size(void)
 	return roundup2(size, 2 * MB);
 }
 
-static void
-adjust_schedule_policy(int policy, int prio)
-{
-	char tid_str[MAXLOGNAME];
-	ssize_t written;
-	int error, cg_task_fd;
-	struct sched_param sched_param;
-
-	error = snprintf(tid_str, MAXLOGNAME, "%ld", syscall(SYS_gettid));
-	if (error >= MAXLOGNAME) {
-		fprintf(stderr, "tid string overflow\r\n");
-		return;
-	}
-
-	cg_task_fd = open("/sys/fs/cgroup/cpu/tasks", O_RDWR);
-	if (cg_task_fd > 0) {
-		written = write(cg_task_fd, tid_str, strnlen(tid_str, MAXLOGNAME));
-		if (written < 0) {
-			fprintf(stderr, "can't add thread%s to cgroup\r\n", tid_str);
-		}
-	} else {
-		fprintf(stderr, "can't open cgroup task file\r\n");
-	}
-
-	sched_param.sched_priority = prio;
-	error = pthread_setschedparam(pthread_self(), policy, &sched_param);
-	if (error != 0) {
-		fprintf(stderr, "set vm_loop to SCHED_FIFO failed\r\n");
-	}
-}
-
 static void *
 start_thread(void *param)
 {
@@ -295,8 +264,6 @@ start_thread(void *param)
 
 	snprintf(tname, sizeof(tname), "vcpu %d", vcpu);
 	pthread_setname_np(mtp->mt_thr, tname);
-
-	adjust_schedule_policy(SCHED_FIFO, 10);
 
 	vm_loop(mtp->mt_ctx);
 
