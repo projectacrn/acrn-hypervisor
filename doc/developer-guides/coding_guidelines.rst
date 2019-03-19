@@ -3310,3 +3310,47 @@ The number of bytes in an object is implementation-defined, according to J.3.13
 item 2 in C99. For ACRN hypervisor, char is 1 byte, short is 2 bytes, int is 4
 bytes, long is 8 bytes, and long long is not used.
 
+Language Extensions
+*******************
+
+
+LE-01: Use of inline Assembly language in C Code is allowed
+===========================================================
+
+This feature refers to section 6.45 in GCC 7.3 Manual.
+
+LE-02: Use of type attribute 'aligned' is allowed
+=================================================
+
+This feature refers to section 6.33.1 in GCC 7.3 Manual.
+
+LE-03: Use of type attribute 'packed' is allowed
+================================================
+
+This feature refers to section 6.33.1 in GCC 7.3 Manual.
+
+LE-04: Use of builtin-type '__builtin_va_list' is allowed
+=========================================================
+
+This feature refers to section 6.20 in GCC 7.3 Manual.
+
+LE-05: Use of builtin-function '__builtin_va_arg' is allowed
+============================================================
+
+This feature refers to section 6.20 in GCC 7.3 Manual.
+
+LE-06: Use of builtin-function '__builtin_va_start' is allowed
+==============================================================
+
+This feature refers to section 6.20 in GCC 7.3 Manual.
+
+LE-07: Use of builtin-function '__builtin_va_end' is allowed
+============================================================
+
+This feature refers to section 6.20 in GCC 7.3 Manual.
+
+LE-08: Use of builtin-function '__builtin_offsetof' is allowed
+==============================================================
+
+This feature refers to section 6.51 in GCC 7.3 Manual.
+
