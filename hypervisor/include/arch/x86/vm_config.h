@@ -10,8 +10,7 @@
 #include <types.h>
 #include <pci.h>
 #include <multiboot.h>
-
-#define MAX_CONFIG_NAME_SIZE	32U
+#include <acrn_common.h>
 
 #define PLUG_CPU(n)		(1U << (n))
 
@@ -33,7 +32,7 @@ struct acrn_vm_mem_config {
 };
 
 struct acrn_vm_os_config {
-	char name[MAX_CONFIG_NAME_SIZE];		/* OS name, useful for debug */
+	char name[MAX_VM_OS_NAME_LEN];			/* OS name, useful for debug */
 	char bootargs[MAX_BOOTARGS_SIZE];		/* boot args/cmdline */
 } __aligned(8);
 
@@ -44,7 +43,7 @@ struct acrn_vm_pci_ptdev_config {
 
 struct acrn_vm_config {
 	enum acrn_vm_type type;				/* specify the type of VM */
-	char name[MAX_CONFIG_NAME_SIZE];		/* VM name identifier, useful for debug. */
+	char name[MAX_VM_OS_NAME_LEN];			/* VM name identifier, useful for debug. */
 	uint8_t GUID[16];				/* GUID of the VM */
 	uint64_t pcpu_bitmap;				/* from pcpu bitmap, we could know VM core number */
 	uint64_t guest_flags;				/* VM flags that we want to configure for guest
