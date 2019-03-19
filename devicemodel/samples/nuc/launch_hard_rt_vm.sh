@@ -17,7 +17,7 @@ echo "8086 9d03" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:17.0" > /sys/bus/pci/devices/0000:00:17.0/driver/unbind
 echo "0000:00:17.0" > /sys/bus/pci/drivers/pci-stub/bind
 
-/usr/bin/acrn-dm -m $mem_size -c $1 \
+/usr/bin/acrn-dm -A -m $mem_size -c $1 \
   -k /root/rt_uos_kernel \
    --lapic_pt \
    --virtio_poll 1000000 \
