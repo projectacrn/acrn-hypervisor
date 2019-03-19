@@ -124,6 +124,13 @@ void send_dest_ipi_mask(uint32_t dest_mask, uint32_t vector);
  */
 void send_single_ipi(uint16_t pcpu_id, uint32_t vector);
 
+/**
+ * @brief Send an INIT signal to a single pCPU
+ *
+ * @param[in] pcpu_id The id of destination physical cpu
+ */
+void send_single_init(uint16_t pcpu_id);
+
 void suspend_lapic(void);
 void resume_lapic(void);
 
