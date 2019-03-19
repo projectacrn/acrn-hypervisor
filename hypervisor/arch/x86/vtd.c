@@ -98,9 +98,6 @@ static inline uint64_t dmar_set_bitslice(uint64_t var, uint64_t mask, uint32_t p
 #define DMAR_IR_ENABLE_EIM_SHIFT	11UL
 #define DMAR_IR_ENABLE_EIM		(1UL << DMAR_IR_ENABLE_EIM_SHIFT)
 
-#define DMAR_IECI_INDEXED		1U
-#define DMAR_IEC_GLOBAL_INVL		0U
-
 enum dmar_cirg_type {
 	DMAR_CIRG_RESERVED = 0,
 	DMAR_CIRG_GLOBAL,
@@ -634,7 +631,7 @@ static void dmar_invalid_context_cache(struct dmar_drhd_rt *dmar_unit,
 		invalidate_desc.lo_64 |= DMA_CONTEXT_DOMAIN_INVL | dma_ccmd_did(did);
 		break;
 	case DMAR_CIRG_DEVICE:
-		invalidate_desc.lo_64 |= DMA_CCMD_DEVICE_INVL | dma_ccmd_did(did) | dma_ccmd_sid(sid) | dma_ccmd_fm(fm);
+		invalidate_desc.lo_64 |= DMA_CONTEXT_DEVICE_INVL | dma_ccmd_did(did) | dma_ccmd_sid(sid) | dma_ccmd_fm(fm);
 		break;
 	default:
 		invalidate_desc.lo_64 = 0UL;
@@ -992,6 +989,7 @@ static void dmar_enable(struct dmar_drhd_rt *dmar_unit)
 	dev_dbg(ACRN_DBG_IOMMU, "enable dmar uint [0x%x]", dmar_unit->drhd->reg_base_addr);
 	dmar_invalid_context_cache_global(dmar_unit);
 	dmar_invalid_iotlb_global(dmar_unit);
+	dmar_invalid_iec_global(dmar_unit);
 	dmar_enable_translation(dmar_unit);
 }
 
@@ -1009,6 +1007,7 @@ static void dmar_suspend(struct dmar_drhd_rt *dmar_unit)
 
 	dmar_invalid_context_cache_global(dmar_unit);
 	dmar_invalid_iotlb_global(dmar_unit);
+	dmar_invalid_iec_global(dmar_unit);
 
 	dmar_disable(dmar_unit);
 
@@ -1149,6 +1148,7 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t s
 	struct dmar_entry *context;
 	struct dmar_entry *root_entry;
 	struct dmar_entry *context_entry;
+	union pci_bdf sid;
 	int32_t ret = 0;
 
 	dmar_unit = device_to_dmaru(segment, bus, devfun);
@@ -1184,8 +1184,11 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t s
 				context_entry->hi_64 = 0UL;
 				iommu_flush_cache(dmar_unit, context_entry, sizeof(struct dmar_entry));
 
-				dmar_invalid_context_cache_global(dmar_unit);
-				dmar_invalid_iotlb_global(dmar_unit);
+				sid.bits.b = bus;
+				sid.bits.d = pci_slot(devfun);
+				sid.bits.f = pci_func(devfun);
+				dmar_invalid_context_cache(dmar_unit, vmid_to_domainid(domain->vm_id), sid.value, 0U, DMAR_CIRG_DEVICE);
+				dmar_invalid_iotlb(dmar_unit, vmid_to_domainid(domain->vm_id), 0UL, 0U, false, DMAR_IIRG_DOMAIN);
 			}
 		}
 	}
@@ -1407,7 +1410,7 @@ int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, 
 		ir_entry->entry.lo_64 = irte.entry.lo_64;
 
 		iommu_flush_cache(dmar_unit, ir_entry, sizeof(union dmar_ir_entry));
-		dmar_invalid_iec_global(dmar_unit);
+		dmar_invalid_iec(dmar_unit, index, 0U, false);
 	}
 	return ret;
 }
@@ -1438,6 +1441,6 @@ void dmar_free_irte(struct intr_source intr_src, uint16_t index)
 		ir_entry->bits.present = 0x0UL;
 
 		iommu_flush_cache(dmar_unit, ir_entry, sizeof(union dmar_ir_entry));
-		dmar_invalid_iec_global(dmar_unit);
+		dmar_invalid_iec(dmar_unit, index, 0U, false);
 	}
 }
