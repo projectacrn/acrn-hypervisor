@@ -302,10 +302,18 @@ static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu)
 					 * set to 10b as it is necessary to set both bits
 					 * to use AVX instructions.
 					 */
-					if (((val64 >> 1U) & 0x3UL) == 0x2UL) {
+					if ((val64 & (XCR0_SSE | XCR0_AVX)) == XCR0_AVX) {
 						vcpu_inject_gp(vcpu, 0U);
 					} else {
-						write_xcr(0, val64);
+						/*
+						 * SDM Vol.1 13-4, XCR0[4:3] are associated with MPX state,
+						 * Guest should not set these two bits without MPX support.
+						 */
+						if ((val64 & (XCR0_BNDREGS | XCR0_BNDCSR)) != 0UL) {
+							vcpu_inject_gp(vcpu, 0U);
+						} else {
+							write_xcr(0, val64);
+						}
 					}
 				}
 			}
