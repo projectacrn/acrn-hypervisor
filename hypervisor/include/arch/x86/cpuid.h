@@ -76,6 +76,8 @@
 #define CPUID_EBX_TSC_ADJ       (1U<<1U)
 /* CPUID.07H:EBX.SGX */
 #define CPUID_EBX_SGX           (1U<<2U)
+/* CPUID.07H:EBX.MPX */
+#define CPUID_EBX_MPX           (1U<<14U)
 /* CPUID.07H:ECX.SGX_LC*/
 #define CPUID_ECX_SGX_LC        (1U<<30U)
 /* CPUID.07H:EDX.IBRS_IBPB*/
@@ -94,6 +96,10 @@
 #define CPUID_EBX_PROC_TRC      (1U<<25U)
 /* CPUID.01H:ECX.PCID*/
 #define CPUID_ECX_PCID          (1U<<17U)
+/* CPUID.0DH.EAX.XCR0_BNDREGS */
+#define CPUID_EAX_XCR0_BNDREGS	(1U<<3U)
+/* CPUID.0DH.EAX.XCR0_BNDCSR */
+#define CPUID_EAX_XCR0_BNDCSR	(1U<<4U)
 
 /* CPUID source operands */
 #define CPUID_VENDORSTRING      0U

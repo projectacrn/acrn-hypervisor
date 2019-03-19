@@ -83,6 +83,14 @@
 #define CR4_SMAP                (1UL<<21U)
 #define CR4_PKE                 (1UL<<22U)	/* Protect-key-enable */
 
+/* XCR0_SSE */
+#define XCR0_SSE		(1U<<1U)
+/* XCR0_AVX */
+#define XCR0_AVX		(1U<<2U)
+/* XCR0_BNDREGS */
+#define XCR0_BNDREGS		(1U<<3U)
+/* XCR0_BNDCSR */
+#define XCR0_BNDCSR		(1U<<4U)
 
 /*
  * Entries in the Interrupt Descriptor Table (IDT)

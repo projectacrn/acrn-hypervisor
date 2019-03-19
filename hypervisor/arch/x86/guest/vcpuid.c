@@ -122,6 +122,9 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 			entry->ebx &= ~CPUID_EBX_SGX;
 			entry->ecx &= ~CPUID_ECX_SGX_LC;
 
+			/* mask MPX */
+			entry->ebx &= ~CPUID_EBX_MPX;
+
 			/* mask Intel Processor Trace, since 14h is disabled */
 			entry->ebx &= ~CPUID_EBX_PROC_TRC;
 		} else {
@@ -414,6 +417,13 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 				*edx = 0U;
 			} else {
 				cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
+				if (subleaf == 0U) {
+					/* SDM Vol.1 17-2, On processors that do not support Intel MPX,
+					 * CPUID.(EAX=0DH,ECX=0):EAX[3] and
+					 * CPUID.(EAX=0DH,ECX=0):EAX[4] will both be 0 */
+					*eax &= ~ CPUID_EAX_XCR0_BNDREGS;
+					*eax &= ~ CPUID_EAX_XCR0_BNDCSR;
+				}
 			}
 			break;
 
