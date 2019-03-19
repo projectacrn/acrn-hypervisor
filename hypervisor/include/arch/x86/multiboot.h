@@ -14,6 +14,9 @@
 #define	MULTIBOOT_INFO_HAS_DRIVES	0x00000080U
 #define	MULTIBOOT_INFO_HAS_LOADER_NAME	0x00000200U
 
+/* maximum lengt of the guest OS' command line parameter string */
+#define MAX_BOOTARGS_SIZE		2048U
+
 struct acrn_vm;
 struct multiboot_info {
 	uint32_t               mi_flags;

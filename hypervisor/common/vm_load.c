@@ -10,6 +10,7 @@
 #include <boot_context.h>
 #include <ept.h>
 #include <mmu.h>
+#include <multiboot.h>
 #include <errno.h>
 #include <sprintf.h>
 #include <logmsg.h>
@@ -146,7 +147,7 @@ int32_t general_sw_loader(struct acrn_vm *vm)
 		/* Copy Guest OS bootargs to its load location */
 		(void)copy_to_gpa(vm, linux_info->bootargs_src_addr,
 			(uint64_t)linux_info->bootargs_load_addr,
-			(strnlen_s((char *)linux_info->bootargs_src_addr, MEM_2K - 1U) + 1U));
+			(strnlen_s((char *)linux_info->bootargs_src_addr, MAX_BOOTARGS_SIZE) + 1U));
 
 		/* add "hugepagesz=1G hugepages=x" to cmdline for 1G hugepage
 		 * reserving. Current strategy is "total_mem_size in Giga -

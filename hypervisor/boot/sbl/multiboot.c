@@ -18,7 +18,7 @@
  * - cmdline from acrn stitching tool. mod[0].mm_string
  * We need to merge them together
  */
-static char kernel_cmdline[MEM_2K + 1U];
+static char kernel_cmdline[MAX_BOOTARGS_SIZE + 1U];
 
 /* now modules support: FIRMWARE & RAMDISK & SeedList */
 static void parse_other_modules(struct acrn_vm *vm, const struct multiboot_module *mods, uint32_t mods_count)
@@ -60,14 +60,14 @@ static void parse_other_modules(struct acrn_vm *vm, const struct multiboot_modul
 			/*copy boot args to load addr, set src=load addr*/
 			if (copy_once != 0) {
 				copy_once = 0;
-				(void)strncpy_s(load_addr, MEM_2K + 1U,
+				(void)strncpy_s(load_addr, MAX_BOOTARGS_SIZE + 1U,
 					(const char *)vm->sw.linux_info.bootargs_src_addr,
 					vm->sw.linux_info.bootargs_size);
 				vm->sw.linux_info.bootargs_src_addr = load_addr;
 			}
 
 			(void)strncpy_s(load_addr + args_size, 100U, dyn_bootargs, 100U);
-			vm->sw.linux_info.bootargs_size = strnlen_s(load_addr, MEM_2K);
+			vm->sw.linux_info.bootargs_size = strnlen_s(load_addr, MAX_BOOTARGS_SIZE);
 
 		} else if (strncmp("RAMDISK", start, type_len) == 0) {
 			vm->sw.linux_info.ramdisk_src_addr = mod_addr;
@@ -97,12 +97,12 @@ static void merge_cmdline(const struct acrn_vm *vm, const char *cmdline, const c
 	 * seed_arg string ends with a white space and '\0', so no aditional delimiter is needed
 	 */
 	append_seed_arg(cmd_dst, is_sos_vm(vm));
-	dst_len = strnlen_s(cmd_dst, MEM_2K);
-	dst_avail = MEM_2K + 1U - dst_len;
+	dst_len = strnlen_s(cmd_dst, MAX_BOOTARGS_SIZE);
+	dst_avail = MAX_BOOTARGS_SIZE + 1U - dst_len;
 	cmd_dst += dst_len;
 
-	cmdline_len = strnlen_s(cmdline, MEM_2K);
-	cmdstr_len = strnlen_s(cmdstr, MEM_2K);
+	cmdline_len = strnlen_s(cmdline, MAX_BOOTARGS_SIZE);
+	cmdstr_len = strnlen_s(cmdstr, MAX_BOOTARGS_SIZE);
 
 	/* reserve one character for the delimiter between 2 strings (one white space) */
 	if ((cmdline_len + cmdstr_len + 1U) >= dst_avail) {
@@ -192,7 +192,7 @@ int32_t sbl_init_vm_boot_info(struct acrn_vm *vm)
 					vm->sw.kernel_info.kernel_load_addr = (void *)(MEM_1M * 16U);
 					vm->sw.linux_info.bootargs_src_addr = (void *)vm_config->os_config.bootargs;
 					vm->sw.linux_info.bootargs_size =
-						strnlen_s(vm_config->os_config.bootargs, MEM_2K);
+						strnlen_s(vm_config->os_config.bootargs, MAX_BOOTARGS_SIZE);
 				} else {
 					vm->sw.kernel_info.kernel_load_addr =
 						get_kernel_load_addr(vm->sw.kernel_info.kernel_src_addr);
@@ -206,12 +206,14 @@ int32_t sbl_init_vm_boot_info(struct acrn_vm *vm)
 								hpa2hva((uint64_t)mods[0].mm_string));
 
 						vm->sw.linux_info.bootargs_src_addr = kernel_cmdline;
-						vm->sw.linux_info.bootargs_size = strnlen_s(kernel_cmdline, MEM_2K);
+						vm->sw.linux_info.bootargs_size =
+							strnlen_s(kernel_cmdline, MAX_BOOTARGS_SIZE);
 					} else {
 						vm->sw.linux_info.bootargs_src_addr =
 							hpa2hva((uint64_t)mods[0].mm_string);
 						vm->sw.linux_info.bootargs_size =
-							strnlen_s(hpa2hva((uint64_t)mods[0].mm_string), MEM_2K);
+							strnlen_s(hpa2hva((uint64_t)mods[0].mm_string),
+							MAX_BOOTARGS_SIZE);
 					}
 				}
 

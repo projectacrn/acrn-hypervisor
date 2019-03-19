@@ -9,8 +9,8 @@
 
 #include <types.h>
 #include <pci.h>
+#include <multiboot.h>
 
-#define MAX_BOOTARGS_SIZE	1024U
 #define MAX_CONFIG_NAME_SIZE	32U
 
 #define PLUG_CPU(n)		(1U << (n))
