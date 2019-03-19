@@ -268,3 +268,23 @@ void send_single_ipi(uint16_t pcpu_id, uint32_t vector)
 		pr_err("pcpu_id %d not in active!", pcpu_id);
 	}
 }
+
+/**
+ * @pre pcpu_id < CONFIG_MAX_PCPU_NUM
+ * @pre target pCPU must be in active state
+ *
+ * @return None
+ */
+void send_single_init(uint16_t pcpu_id)
+{
+	union apic_icr icr;
+
+	if (is_pcpu_active(pcpu_id)) {
+		icr.value_32.hi_32 = per_cpu(lapic_id, pcpu_id);
+		icr.value_32.lo_32 = (INTR_LAPIC_ICR_PHYSICAL << 11U) | (INTR_LAPIC_ICR_INIT << 8U);
+
+		msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
+	} else {
+		ASSERT(false, "pCPU%u not in active", pcpu_id);
+	}
+}
