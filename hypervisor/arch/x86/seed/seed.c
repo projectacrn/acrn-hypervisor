@@ -59,7 +59,7 @@ static uint32_t parse_seed_arg(void)
 	if (cmd_src != NULL) {
 		for (i = 0U; seed_arg[i].str != NULL; i++) {
 			len = strnlen_s(seed_arg[i].str, MEM_1K);
-			arg = strstr_s((const char *)cmd_src, MEM_2K, seed_arg[i].str, len);
+			arg = strstr_s((const char *)cmd_src, MAX_BOOTARGS_SIZE, seed_arg[i].str, len);
 			if (arg != NULL) {
 				arg += len;
 				seed_arg[i].addr = strtoul_hex(arg);
@@ -71,7 +71,8 @@ static uint32_t parse_seed_arg(void)
 				 */
 				arg_end = strchr(arg, ' ');
 				arg -= len;
-				len = (arg_end != NULL) ? (uint32_t)(arg_end - arg) : strnlen_s(arg, MEM_2K);
+				len = (arg_end != NULL) ? (uint32_t)(arg_end - arg) :
+					strnlen_s(arg, MAX_BOOTARGS_SIZE);
 				(void)memset((void *)arg, (char)' ', len);
 				break;
 			}
@@ -120,7 +121,7 @@ void append_seed_arg(char *cmd_dst, bool vm_is_sos)
 					boot_params->p_platform_info = sos_vm_hpa2gpa(boot_params->p_platform_info);
 				}
 
-				(void)strncpy_s(cmd_dst, MEM_2K, buf, strnlen_s(buf, MEM_1K));
+				(void)strncpy_s(cmd_dst, MAX_BOOTARGS_SIZE, buf, strnlen_s(buf, MEM_1K));
 
 				break;
 			}
