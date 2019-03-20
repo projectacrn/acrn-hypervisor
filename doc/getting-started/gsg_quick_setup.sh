@@ -12,7 +12,7 @@ function print_help()
 {
 echo "Usage:"
 echo "Launch this script as: sudo $0 -t 28100"
-echo "-t to specify clear linux version for upgrading"
+echo -e "\t-t to specify clear linux version for upgrading"
 echo "-p to specify a proxy server"
 echo "-m to use swupd mirror url"
 echo "-u to upgrade uos, if you just upgrade sos using this script, you'd better to manually reboot sos then continue to use this function."
