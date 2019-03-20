@@ -401,7 +401,7 @@ static void vlapic_icrtmr_write_handler(struct acrn_vlapic *vlapic)
 	}
 }
 
-static uint64_t vlapic_get_tsc_deadline_msr(const struct acrn_vlapic *vlapic)
+uint64_t vlapic_get_tsc_deadline_msr(const struct acrn_vlapic *vlapic)
 {
 	uint64_t ret;
 	if (!vlapic_lvtt_tsc_deadline(vlapic)) {
@@ -415,8 +415,7 @@ static uint64_t vlapic_get_tsc_deadline_msr(const struct acrn_vlapic *vlapic)
 
 }
 
-static void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic,
-			uint64_t val_arg)
+void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic, uint64_t val_arg)
 {
 	struct hv_timer *timer;
 	uint64_t val = val_arg;
@@ -1754,17 +1753,13 @@ void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs)
 	vlapic_dcr_write_handler(vlapic);
 }
 
-static uint64_t
-vlapic_get_apicbase(const struct acrn_vlapic *vlapic)
+uint64_t vlapic_get_apicbase(const struct acrn_vlapic *vlapic)
 {
-
 	return vlapic->msr_apicbase;
 }
 
-static int32_t
-vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
+int32_t vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 {
-
 	int32_t ret = 0;
 	uint64_t changed;
 	changed = vlapic->msr_apicbase ^ new;
@@ -2046,8 +2041,7 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 	return ret;
 }
 
-static int32_t vlapic_x2apic_access(struct acrn_vcpu *vcpu, uint32_t msr, bool write,
-								uint64_t *val)
+int32_t vlapic_x2apic_read(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val)
 {
 	struct acrn_vlapic *vlapic;
 	uint32_t offset;
@@ -2061,30 +2055,19 @@ static int32_t vlapic_x2apic_access(struct acrn_vcpu *vcpu, uint32_t msr, bool w
 	if (is_x2apic_enabled(vlapic)) {
 		if (is_lapic_pt(vcpu->vm)) {
 			switch (msr) {
-				case MSR_IA32_EXT_APIC_ICR:
-					error = vlapic_x2apic_pt_icr_access(vcpu->vm, *val);
-					break;
-				case MSR_IA32_EXT_APIC_LDR:
-				case MSR_IA32_EXT_XAPICID:
-					if (!write) {
-						offset = x2apic_msr_to_regoff(msr);
-						error = vlapic_read(vlapic, offset, val);
-					}
-					break;
-				default:
-					pr_err("%s: unexpected MSR[0x%x] access with lapic_pt", __func__, msr);
-					break;
+			case MSR_IA32_EXT_APIC_LDR:
+			case MSR_IA32_EXT_XAPICID:
+				offset = x2apic_msr_to_regoff(msr);
+				error = vlapic_read(vlapic, offset, val);
+				break;
+			default:
+				pr_err("%s: unexpected MSR[0x%x] read with lapic_pt", __func__, msr);
+				break;
 			}
 		} else {
-			offset = x2apic_msr_to_regoff(msr);
-			if (write) {
-				if (!is_x2apic_read_only_msr(msr)) {
-					error = vlapic_write(vlapic, offset, *val);
-				}
-			} else {
-				if (!is_x2apic_write_only_msr(msr)) {
-					error = vlapic_read(vlapic, offset, val);
-				}
+			if (!is_x2apic_write_only_msr(msr)) {
+				offset = x2apic_msr_to_regoff(msr);
+				error = vlapic_read(vlapic, offset, val);
 			}
 		}
 	}
@@ -2092,68 +2075,35 @@ static int32_t vlapic_x2apic_access(struct acrn_vcpu *vcpu, uint32_t msr, bool w
 	return error;
 }
 
-int32_t
-vlapic_rdmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *rval)
+int32_t vlapic_x2apic_write(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val)
 {
-	int32_t error = 0;
 	struct acrn_vlapic *vlapic;
+	uint32_t offset;
+	int32_t error = -1;
 
-	dev_dbg(ACRN_DBG_LAPIC, "cpu[%hu] rdmsr: %x", vcpu->vcpu_id, msr);
+	/*
+	 * If vLAPIC is in xAPIC mode and guest tries to access x2APIC MSRs
+	 * inject a GP to guest
+	 */
 	vlapic = vcpu_vlapic(vcpu);
-
-	switch (msr) {
-	case MSR_IA32_APIC_BASE:
-		*rval = vlapic_get_apicbase(vlapic);
-		break;
-
-	case MSR_IA32_TSC_DEADLINE:
-		*rval = vlapic_get_tsc_deadline_msr(vlapic);
-		break;
-
-	default:
-		if (is_x2apic_msr(msr)) {
-			error = vlapic_x2apic_access(vcpu, msr, false, rval);
+	if (is_x2apic_enabled(vlapic)) {
+		if (is_lapic_pt(vcpu->vm)) {
+			switch (msr) {
+			case MSR_IA32_EXT_APIC_ICR:
+				error = vlapic_x2apic_pt_icr_access(vcpu->vm, val);
+				break;
+			default:
+				pr_err("%s: unexpected MSR[0x%x] write with lapic_pt", __func__, msr);
+				break;
+			}
 		} else {
-			error = -1;
-			dev_dbg(ACRN_DBG_LAPIC,
-				"Invalid vlapic msr 0x%x access\n", msr);
+			if (!is_x2apic_read_only_msr(msr)) {
+				offset = x2apic_msr_to_regoff(msr);
+				error = vlapic_write(vlapic, offset, val);
+			}
 		}
-		break;
 	}
 
-	return error;
-}
-
-int32_t
-vlapic_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval)
-{
-	int32_t error = 0;
-	struct acrn_vlapic *vlapic;
-
-	vlapic = vcpu_vlapic(vcpu);
-
-	switch (msr) {
-	case MSR_IA32_APIC_BASE:
-		error = vlapic_set_apicbase(vlapic, wval);
-		break;
-
-	case MSR_IA32_TSC_DEADLINE:
-		vlapic_set_tsc_deadline_msr(vlapic, wval);
-		break;
-
-	default:
-		if (is_x2apic_msr(msr)) {
-			error = vlapic_x2apic_access(vcpu, msr, true, &wval);
-		} else {
-			error = -1;
-			dev_dbg(ACRN_DBG_LAPIC,
-				"Invalid vlapic msr 0x%x access\n", msr);
-		}
-		break;
-	}
-
-	dev_dbg(ACRN_DBG_LAPIC, "cpu[%hu] wrmsr: %x wval=%#x",
-		vcpu->vcpu_id, msr, wval);
 	return error;
 }
 

@@ -165,8 +165,12 @@ void vlapic_get_deliverable_intr(struct acrn_vlapic *vlapic, uint32_t vector);
  */
 uint64_t apicv_get_pir_desc_paddr(struct acrn_vcpu *vcpu);
 
-int32_t vlapic_rdmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *rval);
-int32_t vlapic_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval);
+uint64_t vlapic_get_tsc_deadline_msr(const struct acrn_vlapic *vlapic);
+void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic, uint64_t val_arg);
+uint64_t vlapic_get_apicbase(const struct acrn_vlapic *vlapic);
+int32_t vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new);
+int32_t vlapic_x2apic_read(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val);
+int32_t vlapic_x2apic_write(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val);
 
 /*
  * Signals to the LAPIC that an interrupt at 'vector' needs to be generated
