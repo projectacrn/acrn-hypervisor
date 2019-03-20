@@ -82,7 +82,7 @@ if [[ $? -eq 0 ]]; then
     echo "Add default boot to ACRN"
     echo "default acrn" >> /mnt/loader/loader.conf
 
-    echo "Get latest sos file from EFI org.clearlinux: "
+    echo "Getting latest Service OS kernel version: "
     new_kernel=`ls /mnt/EFI/org.clearlinux/*sos* -tl | grep kernel | head -n1 | awk -F'/' '{print $5}'`
     echo "Get current sos kernel from acrn.conf file: "
     cur_kernel=`cat /mnt/loader/entries/acrn.conf | sed -n 2p | cut -d'/' -f4`
