@@ -104,31 +104,6 @@ static bool is_guest_irq_enabled(struct acrn_vcpu *vcpu)
 	return status;
 }
 
-/*
- * This function is only for case that APICv/VID is not supported.
- */
-static bool vcpu_pending_request(struct acrn_vcpu *vcpu)
-{
-	struct acrn_vlapic *vlapic;
-	uint32_t vector = 0U;
-	bool pending = false;
-
-	if (!is_apicv_advanced_feature_supported()) {
-		/* Query vLapic to get vector to inject */
-		vlapic = vcpu_vlapic(vcpu);
-
-		/* check and raise request if we have a deliverable irq in LAPIC IRR */
-		if (vlapic_find_deliverable_intr(vlapic, &vector)) {
-			/* we have pending IRR */
-			vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
-		}
-
-		pending = vcpu->arch.pending_req != 0UL;
-	}
-
-	return pending;
-}
-
 void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid)
 {
 	bitmap_set_lock(eventid, &vcpu->arch.pending_req);
@@ -480,7 +455,7 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		 */
 		if (arch->irq_window_enabled != 1U) {
 			if (bitmap_test(ACRN_REQUEST_EXTINT, pending_req_bits) ||
-				vcpu_pending_request(vcpu)) {
+				vlapic_has_pending_delivery_intr(vcpu)) {
 				tmp = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
 				tmp |= VMX_PROCBASED_CTLS_IRQ_WIN;
 				exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, tmp);

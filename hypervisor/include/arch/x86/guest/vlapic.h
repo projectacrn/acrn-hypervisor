@@ -119,23 +119,8 @@ void vlapic_set_apicv_ops(void);
  * @{
  */
 
-
-/**
- * @brief Find a deliverable virtual interrupts for vLAPIC in irr.
- *
- * @param[in]    vlapic Pointer to target vLAPIC data structure
- * @param[inout] vecptr Pointer to vector buffer and will be filled
- *               with eligible vector if any.
- *
- * @retval false There is no deliverable pending vector.
- * @retval true There is deliverable vector.
- *
- * @remark The vector does not automatically transition to the ISR as a
- *	   result of calling this function.
- */
-bool vlapic_find_deliverable_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr);
-
 bool vlapic_inject_intr(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected);
+bool vlapic_has_pending_delivery_intr(struct acrn_vcpu *vcpu);
 
 /**
  * @brief Get physical address to PIR description.
