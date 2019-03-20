@@ -1351,7 +1351,7 @@ static inline uint32_t vlapic_find_highest_irr(const struct acrn_vlapic *vlapic)
  *	   result of calling this function.
  *	   This function is only for case that APICv/VID is NOT supported.
  */
-bool vlapic_find_deliverable_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
+static bool vlapic_find_deliverable_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
 {
 	const struct lapic_regs *lapic = &(vlapic->apic_page);
 	uint32_t vec;
@@ -2311,6 +2311,30 @@ bool vlapic_inject_intr(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool
 	return apicv_ops->inject_intr(vlapic, guest_irq_enabled, injected);
 }
 
+static bool apicv_basic_has_pending_delivery_intr(struct acrn_vcpu *vcpu)
+{
+	uint32_t vector;
+	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
+
+	/* check and raise request if we have a deliverable irq in LAPIC IRR */
+	if (vlapic_find_deliverable_intr(vlapic, &vector)) {
+		/* we have pending IRR */
+		vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
+	}
+
+	return vcpu->arch.pending_req != 0UL;
+}
+
+static bool apicv_advanced_has_pending_delivery_intr(__unused struct acrn_vcpu *vcpu)
+{
+	return false;
+}
+
+bool vlapic_has_pending_delivery_intr(struct acrn_vcpu *vcpu)
+{
+	return apicv_ops->has_pending_delivery_intr(vcpu);
+}
+
 int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int32_t err = 0;
@@ -2503,11 +2527,13 @@ int32_t tpr_below_threshold_vmexit_handler(struct acrn_vcpu *vcpu)
 static const struct acrn_apicv_ops apicv_basic_ops = {
 	.accept_intr = apicv_basic_accept_intr,
 	.inject_intr = apicv_basic_inject_intr,
+	.has_pending_delivery_intr = apicv_basic_has_pending_delivery_intr,
 };
 
 static const struct acrn_apicv_ops apicv_advanced_ops = {
 	.accept_intr = apicv_advanced_accept_intr,
 	.inject_intr = apicv_advanced_inject_intr,
+	.has_pending_delivery_intr = apicv_advanced_has_pending_delivery_intr,
 };
 
 /*

@@ -94,9 +94,6 @@ an interrupt, for example:
 
 These APIs will finish by making a request for *ACRN_REQUEST_EVENT.*
 
-.. doxygenfunction:: vlapic_find_deliverable_intr
-  :project: Project ACRN
-
 .. doxygenfunction:: vlapic_set_local_intr
   :project: Project ACRN
 

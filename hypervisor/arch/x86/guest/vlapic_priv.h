@@ -85,6 +85,7 @@
 struct acrn_apicv_ops {
 	void (*accept_intr)(struct acrn_vlapic *vlapic, uint32_t vector, bool level);
 	bool (*inject_intr)(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected);
+	bool (*has_pending_delivery_intr)(struct acrn_vcpu *vcpu);
 };
 
 #endif /* VLAPIC_PRIV_H */
