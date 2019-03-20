@@ -388,7 +388,7 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	switch (msr) {
 	case MSR_IA32_TSC_DEADLINE:
 	{
-		err = vlapic_rdmsr(vcpu, msr, &v);
+		v = vlapic_get_tsc_deadline_msr(vcpu_vlapic(vcpu));
 		break;
 	}
 	case MSR_IA32_TSC_ADJUST:
@@ -435,7 +435,7 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_APIC_BASE:
 	{
 		/* Read APIC base */
-		err = vlapic_rdmsr(vcpu, msr, &v);
+		v = vlapic_get_apicbase(vcpu_vlapic(vcpu));
 		break;
 	}
 	case MSR_IA32_FEATURE_CONTROL:
@@ -446,7 +446,7 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	default:
 	{
 		if (is_x2apic_msr(msr)) {
-			err = vlapic_rdmsr(vcpu, msr, &v);
+			err = vlapic_x2apic_read(vcpu, msr, &v);
 		} else {
 			pr_warn("%s(): vm%d vcpu%d reading MSR %lx not supported",
 				__func__, vcpu->vm->vm_id, vcpu->vcpu_id, msr);
@@ -526,7 +526,7 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	switch (msr) {
 	case MSR_IA32_TSC_DEADLINE:
 	{
-		err = vlapic_wrmsr(vcpu, msr, v);
+		vlapic_set_tsc_deadline_msr(vcpu_vlapic(vcpu), v);
 		break;
 	}
 	case MSR_IA32_TSC_ADJUST:
@@ -586,7 +586,7 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 	case MSR_IA32_APIC_BASE:
 	{
-		err = vlapic_wrmsr(vcpu, msr, v);
+		err = vlapic_set_apicbase(vcpu_vlapic(vcpu), v);
 		break;
 	}
 	case MSR_IA32_FEATURE_CONTROL:
@@ -597,7 +597,7 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	default:
 	{
 		if (is_x2apic_msr(msr)) {
-			err = vlapic_wrmsr(vcpu, msr, v);
+			err = vlapic_x2apic_write(vcpu, msr, v);
 		} else {
 			pr_warn("%s(): vm%d vcpu%d writing MSR %lx not supported",
 				__func__, vcpu->vm->vm_id, vcpu->vcpu_id, msr);
