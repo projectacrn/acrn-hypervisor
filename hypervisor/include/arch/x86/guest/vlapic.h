@@ -110,6 +110,7 @@ struct acrn_vlapic {
 	uint32_t	lvt_last[VLAPIC_MAXLVT_INDEX + 1];
 } __aligned(PAGE_SIZE);
 
+void vlapic_set_apicv_ops(void);
 
 /**
  * @brief virtual LAPIC

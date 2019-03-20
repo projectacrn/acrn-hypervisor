@@ -82,4 +82,8 @@
 #define APIC_OFFSET_TIMER_DCR	0x3E0U	/* Timer's Divide Configuration	*/
 #define APIC_OFFSET_SELF_IPI    0x3F0U  /* Self IPI Register */
 
+struct acrn_apicv_ops {
+	void (*accept_intr)(struct acrn_vlapic *vlapic, uint32_t vector, bool level);
+};
+
 #endif /* VLAPIC_PRIV_H */
