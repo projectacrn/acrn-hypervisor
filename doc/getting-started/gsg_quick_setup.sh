@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2018 Intel Corporation.
+# Copyright (C) 2019 Intel Corporation.
 # SPDX-License-Identifier: BSD-3-Clause
 # This script is aim to setup or upgrade sos & uos automatically.
 
