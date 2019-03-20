@@ -183,7 +183,7 @@ do
 done
 
 # -t opt is must
-if [[ -z $1 ]]; then
+if [[ -z $1 || $EUID -ne 0 ]]; then
     print_help
 fi
 
