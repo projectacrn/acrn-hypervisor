@@ -8,6 +8,7 @@
 
 #define FIRMWARE_H
 
+struct acrn_vm;
 struct firmware_operations {
 	void (*init)(void);
 	uint64_t (*get_ap_trampoline)(void);
