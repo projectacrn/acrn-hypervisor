@@ -561,14 +561,10 @@ static inline bool pat_mem_type_invalid(uint64_t x)
 
 static inline bool is_x2apic_msr(uint32_t msr)
 {
-	bool ret = false;
 	/*
 	 * if msr is in the range of x2APIC MSRs
 	 */
-	if ((msr >= MSR_IA32_EXT_XAPICID) && (msr <= MSR_IA32_EXT_APIC_SELF_IPI)) {
-		ret = true;
-	}
-	return ret;
+	return ((msr >= 0x800U) && (msr < 0x900U));
 }
 
 static inline bool is_x2apic_read_only_msr(uint32_t msr)
