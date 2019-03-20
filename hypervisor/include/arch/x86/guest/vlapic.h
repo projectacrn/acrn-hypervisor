@@ -135,22 +135,7 @@ void vlapic_set_apicv_ops(void);
  */
 bool vlapic_find_deliverable_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr);
 
-/**
- * @brief Get a deliverable virtual interrupt from irr to isr.
- *
- * Transition 'vector' from IRR to ISR. This function is called with the
- * vector returned by 'vlapic_find_deliverable_intr()' when the guest is able to
- * accept this interrupt (i.e. RFLAGS.IF = 1 and no conditions exist that
- * block interrupt delivery).
- *
- * @param[in] vlapic Pointer to target vLAPIC data structure
- * @param[in] vector Target virtual interrupt vector
- *
- * @return None
- *
- * @pre vlapic != NULL
- */
-void vlapic_get_deliverable_intr(struct acrn_vlapic *vlapic, uint32_t vector);
+bool vlapic_inject_intr(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected);
 
 /**
  * @brief Get physical address to PIR description.
@@ -231,7 +216,6 @@ void vlapic_reset(struct acrn_vlapic *vlapic);
 void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs);
 uint64_t vlapic_apicv_get_apic_access_addr(void);
 uint64_t vlapic_apicv_get_apic_page_addr(struct acrn_vlapic *vlapic);
-void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic);
 int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t veoi_vmexit_handler(struct acrn_vcpu *vcpu);
