@@ -1,44 +1,97 @@
 #!/bin/bash
 # Copyright (C) 2019 Intel Corporation.
 # SPDX-License-Identifier: BSD-3-Clause
-# This script is aim to setup or upgrade sos & uos automatically.
+#
+# This script is aim to quick setup sos and uos automatically.
+# You can also use this to upgrade sos with a specified clear linux version.
+# Also you should know that system may have boot problems once the script is running failed
+# since it will modify various system parameters with full root access.
+#
+# Usages:
+#   Upgrade sos to 28100
+#     sudo <script> -t 28100
+#   Upgrade sos to 28100 with specified proxy server
+#     sudo <script> -t 28100 -p <your proxy server>:<port>
+#   Upgrade uos to 28100 with specified proxy server
+#     sudo <script> -t 28100 -p <your proxy server>:<port> -u
+#   Upgrade uos to 28100 without downloading uos image, you should put uos image in /root directory previously.
+#     sudo <script> -t 28100 -u -s
 
-# switch for download uos function
-skip_download_uos=0
-# turn on if you need to setup uos
-upgrade_uos=0
 
 function print_help()
 {
 echo "Usage:"
 echo "Launch this script as: sudo $0 -t 28100"
 echo -e "\t-t to specify clear linux version for upgrading"
-echo "-p to specify a proxy server"
-echo "-m to use swupd mirror url"
-echo "-u to upgrade uos, if you just upgrade sos using this script, you'd better to manually reboot sos then continue to use this function."
-echo "-s, skip downloading uos; if enabled, you have to download uos img firstly before upgrading, default is off"
+echo -e "\t-p to specify a proxy server"
+echo -e "\t-m to use swupd mirror url"
+echo -e "\t-u to upgrade UOS."
+echo -e "\t-s, skip downloading uos; if enabled, you have to download uos img firstly before upgrading, default is off"
 exit 1
 }
 
+# switch for download uos function
+skip_download_uos=0
+# turn on if you need to setup uos
+upgrade_uos=0
+
+# acrn.conf path
+acrn_conf_path=/usr/share/acrn/samples/nuc/acrn.conf
+# acrn.efi path
+acrn_efi_path=/usr/lib/acrn/acrn.efi
+
 function upgrade_sos()
 {
-# setup mirror, proxy env if specified parameters to p & m opt.
-swupd mirror -u
+# setup mirror and proxy url while specified with m and p options
 if [[ -n $mirror ]]; then
-    echo "Add swupd mirror..."
+    echo "Setting swupd mirror to: $mirror"
     swupd mirror -s $mirror
 fi
-unset https_proxy
 if [[ -n $proxy ]]; then
-    echo "Add proxy..."
+    echo "Setting proxy to: $proxy"
     export https_proxy=$proxy
 fi
-echo "disable auto update..."
+
+# get partitions
+type_efi=EFI\ System
+partition_number=`fdisk -l | grep "$type_efi" | awk -F' ' '{print $1}' | wc -l`
+if [ $partition_number != "1" ]; then
+    echo "Multiple partitions detected."
+    c=0
+    for i in `fdisk -l | grep "$type_efi" | awk -F' ' '{print $1}'`; do
+        if [[ ! -z $efi_partition ]]; then break; fi
+        c=$((c+1))
+        echo "$c. $i"
+        while true; do
+            read -p "Do you wish to setup on this partition ? (Y/N)" yn
+            case $yn in
+                [Yy]* ) efi_partition=$i; break;;
+                [Nn]* ) break;;
+                * ) echo "Please input yes or no.";;
+            esac
+        done
+    done
+else
+    efi_partition=`fdisk -l | grep "$type_efi" | awk -F' ' '{print $1}'`
+fi
+
+if [[ -z $efi_partition ]]; then echo "You didn't choose a partition, please try it again."; exit 1; fi
+efi_mount_point=`findmnt $efi_partition -n | cut -d' ' -f1`
+root_partition=`echo $efi_partition | sed 's/[0-9]$/3/g'`
+partition=`echo $efi_partition | sed 's/[0-9]$//g'`
+# unmount efi partition if it's already mounted
+if [[ -n $efi_mount_point ]]; then
+    echo "Unmount EFI partition: $efi_mount_point..."
+    umount $efi_mount_point
+fi
+
+echo "Disable auto update..."
 swupd autoupdate --disable
 
 # Compare with current clear linux and skip upgrade sos if get the same version.
-if [[ $(echo -e `swupd info` | cut -d' ' -f3) -eq $target_version ]]; then
-    echo "Specified to the same clear linux version, continue to setup sos env."
+source /etc/os-release
+if [[ $VERSION_ID -eq $target_version ]]; then
+    echo "Specify with the same clear linux version, continue to setup sos..."
 else
     echo "Upgrade clear linux version to : $target_version ..."
     swupd verify --fix --picky -m $target_version
@@ -49,16 +102,24 @@ if [[ $? -eq 0 ]]; then
     echo "Add service-os kernel-iot-lts2018 bundle"
     swupd bundle-add service-os kernel-iot-lts2018
 
-    echo "mount /dev/sda1 to /mnt"
-    mount /dev/sda1 /mnt
-
+    mount $efi_partition /mnt
     echo "Add /mnt/EFI/acrn folder"
     mkdir -p /mnt/EFI/acrn
-    echo "Copy /usr/share/acrn/samples/nuc/acrn.conf /mnt/loader/entries/"
-    cp -r /usr/share/acrn/samples/nuc/acrn.conf /mnt/loader/entries/
-    echo "Copy acrn.efi to /mnt/EFI/acrn"
-    cp -r /usr/lib/acrn/acrn.efi /mnt/EFI/acrn/
-
+    echo "Copy $acrn_conf_path /mnt/loader/entries/"
+    if [[ ! -f $acrn_conf_path ]]; then
+        echo "Missing acrn.conf file in folder: $acrn_conf_path"
+        umount /mnt && sync
+        exit 1
+    fi
+    cp -r $acrn_conf_path /mnt/loader/entries/
+    if [[ $? -ne 0 ]]; then echo "You didn't choose an right EFI partition." && exit 1; fi
+    echo "Copy $acrn_efi_path to /mnt/EFI/acrn"
+    if [[ ! -f $acrn_efi_path ]]; then
+        echo "Missing acrn.efi file in folder: $acrn_efi_path"
+        umount /mnt && sync
+        exit 1
+    fi
+    cp -r $acrn_efi_path /mnt/EFI/acrn/
     echo "Check ACRN efi boot event"
     check_acrn_bootefi=`efibootmgr | grep ACRN`
     if [[ "$check_arcn_bootefi" -ge "ACRN" ]]; then
@@ -73,22 +134,22 @@ if [[ $? -eq 0 ]]; then
     fi
 
     echo "Add new ACRN efi boot event"
-    efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN"
+    efibootmgr -c -l "\EFI\acrn\acrn.efi" -d $partition -p 1 -L "ACRN"
 
     echo "Create loader.conf"
-    rm /mnt/loader/loader.conf && touch /mnt/loader/loader.conf
+    mv /mnt/loader/loader.conf /mnt/loader/loader.conf.bck && touch /mnt/loader/loader.conf
     echo "Add default boot wait time"
     echo "timeout 5" > /mnt/loader/loader.conf
     echo "Add default boot to ACRN"
     echo "default acrn" >> /mnt/loader/loader.conf
 
-    echo "Getting latest Service OS kernel version: "
     new_kernel=`ls /mnt/EFI/org.clearlinux/*sos* -tl | grep kernel | head -n1 | awk -F'/' '{print $5}'`
-    echo "Get current sos kernel from acrn.conf file: "
+    echo "Getting latest Service OS kernel version: $new_kernel"
     cur_kernel=`cat /mnt/loader/entries/acrn.conf | sed -n 2p | cut -d'/' -f4`
+    echo "Getting current Service OS kernel version: $cur_kernel"
 
-    echo "Replace root uuid from acrn.conf"
-    sed -i "s/<UUID of rootfs partition>/`blkid -s PARTUUID -o value /dev/sda3`/g" /mnt/loader/entries/acrn.conf
+    echo "Replacing root partition uuid in acrn.conf"
+    sed -i "s/<UUID of rootfs partition>/`blkid -s PARTUUID -o value $root_partition`/g" /mnt/loader/entries/acrn.conf
 
     if [[ "$cur_kernel" == "$new_kernel" ]]; then
         echo "No need to replace kernel conf info"
@@ -97,68 +158,77 @@ if [[ $? -eq 0 ]]; then
         sed -i "s/$cur_kernel/$new_kernel/g" /mnt/loader/entries/acrn.conf
     fi
 
-    echo "Sos process done!"
-    echo " ***** Please reboot device to test on new sos. *****"
+    echo "Service OS setup done!"
+    echo "Rebooting Service OS to taking effect changes."
 else
     echo -e "Fail to upgrade sos $target_clearlinux from mirror url."
 fi
 
-echo "Init swupd mirror & proxy"
-swupd mirror -u
-unset https_proxy
 umount /mnt
+sync
+reboot
 }
 
 function upgrade_uos()
 {
-# Add proxy if you need to download uos img automatically.
+# UOS download link
+uos_image_link="https://download.clearlinux.org/releases/$target_version/clear/clear-$target_version-kvm.img.xz"
+
+# Set proxy if needed.
 if [[ -n $proxy ]]; then
-    echo "Add proxy..."
+    echo "Setting proxy to: $proxy"
     export https_proxy=$proxy
 fi
 
+if [[ ! -z `findmnt /mnt -n` ]]; then umount /mnt; fi
+
 # Do upgrade uos process.
 if [[ $skip_download_uos == 1 ]]; then
-    uos_img_xz_path=$(find ~/ -name clear-$target_version-kvm.img.xz)
-    uos_img_path=$(find ~/ -name clear-$target_version-kvm.img)
-    if [[ ! -f $uos_img_xz_path ]] && [[ ! -f $uos_img_path ]]; then
-        echo "You should download uos clear-$target_version-kvm.img.xz file firstly." && exit
+    uos_img_xz=$(find ~/ -name clear-$target_version-kvm.img.xz)
+    uos_img=$(find ~/ -name clear-$target_version-kvm.img)
+    if [[ ! -f $uos_img_xz ]] && [[ ! -f $uos_img ]]; then
+        echo "You should download uos clear-$target_version-kvm.img.xz file firstly." && exit 1
     fi
-    if [[ -f $uos_img_xz_path ]]; then
-        echo "get uos xz file in: $uos_img_xz_path"
-        unxz $uos_img_xz_path
-        uos_img_path=$(find ~/ -name clear-$target_version-kvm.img)
+    if [[ -f $uos_img_xz ]]; then
+        echo "Unxz uos file: $uos_img_xz"
+        unxz $uos_img_xz
+        uos_img=`echo $uos_img_xz | sed 's/.xz$//g'`
     fi
-    echo "get uos img file in: $uos_img_path"
+    echo "get uos img file: $uos_img"
     if [[ $? -eq 0 ]]; then
-        losetup -f -P --show $uos_img_path
+        uos_partition=`losetup -f -P --show $uos_img`p3
     else
         echo "fail to losetup uos img, please check uos img status" && exit 1
     fi
-    mount /dev/loop0p3 /mnt
+    mount $uos_partition /mnt
     cp -r /usr/lib/modules/"`readlink /usr/lib/kernel/default-iot-lts2018 | awk -F '2018.' '{print $2}'`.iot-lts2018" /mnt/lib/modules
-    umount /mnt
-    sync
 else
     cd ~
-    curl https://download.clearlinux.org/releases/$target_version/clear/clear-$target_version-kvm.img.xz -o clear-$target_version-kvm.img.xz
+    echo "Downloading UOS image: $uos_image_link"
+    curl $uos_image_link -o clear-$target_version-kvm.img.xz
+    uos_img=clear-$target_version-kvm.img
+    if [[ -f $uos_img ]] && [[ -f $uos_img.xz ]]; then echo "Moving $uos_img to $uos_img.old."; mv $uos_img $uos_img.old; fi
     if [[ $? -eq 0 ]]; then
+        echo "Unxz UOS image: clear-$target_version-kvm.img.xz"
         unxz clear-$target_version-kvm.img.xz
     fi
     if [[ $? -eq 0 ]]; then
-        losetup -f -P --show clear-$target_version-kvm.img
+        uos_partition=`losetup -f -P --show $uos_img`p3
+    else
+        echo "Missing UOS file: $uos_img, please check if UOS is exist." && exit 1
     fi
-    mount /dev/loop0p3 /mnt
+    mount $uos_partition /mnt
     cp -r /usr/lib/modules/"`readlink /usr/lib/kernel/default-iot-lts2018 | awk -F '2018.' '{print $2}'`.iot-lts2018" /mnt/lib/modules
-    umount /mnt
-    sync
 fi
-uos_img_path=$(find ~/ -name clear-$target_version-kvm.img)
+umount /mnt
+losetup -D
+sync
+
 cp -r /usr/share/acrn/samples/nuc/launch_uos.sh ~/
-sed -i "s/\(virtio-blk.*\)\/home\/clear\/uos\/uos.img/\1$(echo $uos_img_path | sed "s/\//\\\\\//g")/" ~/launch_uos.sh
-echo "Upgrade uos done..."
+sed -i "s/\(virtio-blk.*\)\/home\/clear\/uos\/uos.img/\1$(echo $uos_img | sed "s/\//\\\\\//g")/" ~/launch_uos.sh
+echo "Upgrade UOS done..."
 echo "Now you can run below command to start UOS..."
-echo "# cd ~/ && ./launch_uos.sh -V 1"
+echo "# cd ~/ && ./launch_uos.sh"
 }
 
 # Set script options.
@@ -193,14 +263,14 @@ if [[ `echo $target_version | awk '{print length($0)}'` -ne 5 ]]; then
 fi
 
 if [[ $upgrade_uos == 1 ]]; then
-    echo "Start upgrading uos to: $target_version ..."
+    echo "Upgrading UOS to: $target_version ..."
     upgrade_uos
     exit
 fi
 
-# Exit script if you specified an newer clear linux ver.
+# Exit script if you specified an newer clear linux version.
 if [[ $(echo -e `swupd info` | cut -d' ' -f3) -gt $target_version ]]; then
-    echo -e 'No need to upgrade sos.' && exit
+    echo -e 'No need to upgrade Service OS.' && exit
 else
     upgrade_sos
     exit
