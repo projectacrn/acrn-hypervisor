@@ -212,54 +212,6 @@ static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	/* MSR 0x400 ... 0x473, not in this array */
 };
 
-#define NUM_X2APIC_MSRS	44U
-static const uint32_t x2apic_msrs[NUM_X2APIC_MSRS] = {
-	MSR_IA32_EXT_XAPICID,
-	MSR_IA32_EXT_APIC_VERSION,
-	MSR_IA32_EXT_APIC_TPR,
-	MSR_IA32_EXT_APIC_PPR,
-	MSR_IA32_EXT_APIC_EOI,
-	MSR_IA32_EXT_APIC_LDR,
-	MSR_IA32_EXT_APIC_SIVR,
-	MSR_IA32_EXT_APIC_ISR0,
-	MSR_IA32_EXT_APIC_ISR1,
-	MSR_IA32_EXT_APIC_ISR2,
-	MSR_IA32_EXT_APIC_ISR3,
-	MSR_IA32_EXT_APIC_ISR4,
-	MSR_IA32_EXT_APIC_ISR5,
-	MSR_IA32_EXT_APIC_ISR6,
-	MSR_IA32_EXT_APIC_ISR7,
-	MSR_IA32_EXT_APIC_TMR0,
-	MSR_IA32_EXT_APIC_TMR1,
-	MSR_IA32_EXT_APIC_TMR2,
-	MSR_IA32_EXT_APIC_TMR3,
-	MSR_IA32_EXT_APIC_TMR4,
-	MSR_IA32_EXT_APIC_TMR5,
-	MSR_IA32_EXT_APIC_TMR6,
-	MSR_IA32_EXT_APIC_TMR7,
-	MSR_IA32_EXT_APIC_IRR0,
-	MSR_IA32_EXT_APIC_IRR1,
-	MSR_IA32_EXT_APIC_IRR2,
-	MSR_IA32_EXT_APIC_IRR3,
-	MSR_IA32_EXT_APIC_IRR4,
-	MSR_IA32_EXT_APIC_IRR5,
-	MSR_IA32_EXT_APIC_IRR6,
-	MSR_IA32_EXT_APIC_IRR7,
-	MSR_IA32_EXT_APIC_ESR,
-	MSR_IA32_EXT_APIC_LVT_CMCI,
-	MSR_IA32_EXT_APIC_ICR,
-	MSR_IA32_EXT_APIC_LVT_TIMER,
-	MSR_IA32_EXT_APIC_LVT_THERMAL,
-	MSR_IA32_EXT_APIC_LVT_PMI,
-	MSR_IA32_EXT_APIC_LVT_LINT0,
-	MSR_IA32_EXT_APIC_LVT_LINT1,
-	MSR_IA32_EXT_APIC_LVT_ERROR,
-	MSR_IA32_EXT_APIC_INIT_COUNT,
-	MSR_IA32_EXT_APIC_CUR_COUNT,
-	MSR_IA32_EXT_APIC_DIV_CONF,
-	MSR_IA32_EXT_APIC_SELF_IPI,
-};
-
 /* emulated_guest_msrs[] shares same indexes with array vcpu->arch->guest_msrs[] */
 uint32_t vmsr_get_guest_msr_index(uint32_t msr)
 {
@@ -314,18 +266,14 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg, uint32_t 
 
 /*
  * Enable read and write msr interception for x2APIC MSRs
- * MSRs that are not supported in the x2APIC range of MSRs,
- * i.e. anything other than the ones below and between
- * 0x802 and 0x83F, are not intercepted
  */
-
 static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, uint32_t mode)
 {
 	uint8_t *msr_bitmap = msr_bitmap_arg;
-	uint32_t i;
+	uint32_t msr;
 
-	for (i = 0U; i < NUM_X2APIC_MSRS; i++) {
-		enable_msr_interception(msr_bitmap, x2apic_msrs[i], mode);
+	for (msr = 0x800U; msr < 0x900U; msr++) {
+		enable_msr_interception(msr_bitmap, msr, mode);
 	}
 }
 
@@ -646,8 +594,8 @@ void update_msr_bitmap_x2apic_apicv(const struct acrn_vcpu *vcpu)
 		 * writes to them are virtualized with Register Virtualization
 		 * Refer to Section 29.1 in Intel SDM Vol. 3
 		 */
-		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_EOI, INTERCEPT_READ);
-		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_SELF_IPI, INTERCEPT_READ);
+		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_EOI, INTERCEPT_DISABLE);
+		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_SELF_IPI, INTERCEPT_DISABLE);
 	}
 
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_TPR, INTERCEPT_DISABLE);
@@ -661,14 +609,9 @@ void update_msr_bitmap_x2apic_apicv(const struct acrn_vcpu *vcpu)
  */
 void update_msr_bitmap_x2apic_passthru(const struct acrn_vcpu *vcpu)
 {
-	uint32_t msr;
-	uint8_t *msr_bitmap;
+	uint8_t *msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
 
-	msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
-	for (msr = MSR_IA32_EXT_XAPICID;
-			msr <= MSR_IA32_EXT_APIC_SELF_IPI; msr++) {
-		enable_msr_interception(msr_bitmap, msr, INTERCEPT_DISABLE);
-	}
+	intercept_x2apic_msrs(msr_bitmap, INTERCEPT_DISABLE);
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_XAPICID, INTERCEPT_READ);
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_LDR, INTERCEPT_READ);
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_ICR, INTERCEPT_WRITE);

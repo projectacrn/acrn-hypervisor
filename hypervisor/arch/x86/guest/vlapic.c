@@ -1226,12 +1226,10 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode,
 	return;
 }
 
-static int32_t
-vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
+static void vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 {
 	uint16_t vcpu_id;
 	bool phys;
-	int32_t ret = 0;
 	uint64_t dmask = 0UL;
 	uint32_t icr_low, icr_high, dest;
 	uint32_t vec, mode, shorthand;
@@ -1313,8 +1311,6 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 			}
 		}
 	}
-
-	return ret;	/* handled completely in the kernel */
 }
 
 static inline uint32_t vlapic_find_highest_irr(const struct acrn_vlapic *vlapic)
@@ -1467,15 +1463,16 @@ vlapic_svr_write_handler(struct acrn_vlapic *vlapic)
 	}
 }
 
-static int32_t
-vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg, uint64_t *data)
+static int32_t vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg, uint64_t *data)
 {
+	int32_t ret = 0;
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 	uint32_t i;
 	uint32_t offset = offset_arg;
+	*data = 0ULL;
 
 	if (offset > sizeof(*lapic)) {
-		*data = 0UL;
+		ret = -EACCES;
 	} else {
 
 		offset &= ~0x3UL;
@@ -1485,9 +1482,6 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg, uint64_t *data)
 			break;
 		case APIC_OFFSET_VER:
 			*data = lapic->version.v;
-			break;
-		case APIC_OFFSET_APR:
-			*data = lapic->apr.v;
 			break;
 		case APIC_OFFSET_PPR:
 			*data = lapic->ppr.v;
@@ -1576,31 +1570,28 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg, uint64_t *data)
 		case APIC_OFFSET_TIMER_DCR:
 			*data = lapic->dcr_timer.v;
 			break;
-		case APIC_OFFSET_RRR:
 		default:
-			*data = 0UL;
+			ret = -EACCES;
 			break;
 		}
 	}
 
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic read offset %#x, data %#llx", offset, *data);
-	return 0;
+	return ret;
 }
 
-static int32_t
-vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_t data)
+static int32_t vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_t data)
 {
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 	uint32_t *regptr;
 	uint32_t data32 = (uint32_t)data;
-	int32_t retval;
+	int32_t ret = 0;
 
 	ASSERT(((offset & 0xfU) == 0U) && (offset < PAGE_SIZE),
 		"%s: invalid offset %#x", __func__, offset);
 
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic write offset %#x, data %#lx", offset, data);
 
-	retval = 0;
 	if (offset <= sizeof(*lapic)) {
 		switch (offset) {
 		case APIC_OFFSET_ID:
@@ -1626,7 +1617,7 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_t data)
 				lapic->icr_hi.v = (uint32_t)(data >> 32U);
 			}
 			lapic->icr_lo.v = data32;
-			retval = vlapic_icrlo_write_handler(vlapic);
+			vlapic_icrlo_write_handler(vlapic);
 			break;
 		case APIC_OFFSET_ICR_HI:
 			lapic->icr_hi.v = data32;
@@ -1659,19 +1650,6 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_t data)
 			vlapic_esr_write_handler(vlapic);
 			break;
 
-		case APIC_OFFSET_VER:
-		case APIC_OFFSET_APR:
-		case APIC_OFFSET_PPR:
-		case APIC_OFFSET_RRR:
-			break;
-	/*The following cases fall to the default one:
-	 *	APIC_OFFSET_ISR0 ... APIC_OFFSET_ISR7
-	 *	APIC_OFFSET_TMR0 ... APIC_OFFSET_TMR7
-	 *	APIC_OFFSET_IRR0 ... APIC_OFFSET_IRR7
-	 */
-		case APIC_OFFSET_TIMER_CCR:
-			break;
-
 		case APIC_OFFSET_SELF_IPI:
 			if (is_x2apic_enabled(vlapic)) {
 				lapic->self_ipi.v = data32;
@@ -1681,13 +1659,15 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_t data)
 			/* falls through */
 
 		default:
-			retval = -EACCES;
+			ret = -EACCES;
 			/* Read only */
 			break;
 		}
+	} else {
+		ret = -EACCES;
 	}
 
-	return retval;
+	return ret;
 }
 
 void
@@ -2362,14 +2342,11 @@ int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 	if (err >= 0) {
 		if (access_type == 1UL) {
 			if (emulate_instruction(vcpu) == 0) {
-				err = vlapic_write(vlapic, offset, mmio->value);
+				(void)vlapic_write(vlapic, offset, mmio->value);
 			}
 		} else if (access_type == 0UL) {
-			err = vlapic_read(vlapic, offset, &mmio->value);
-			if (err >= 0) {
-				err = emulate_instruction(vcpu);
-			}
-
+			(void)vlapic_read(vlapic, offset, &mmio->value);
+			err = emulate_instruction(vcpu);
 		} else {
 			pr_err("Unhandled APIC access type: %lu\n", access_type);
 			err = -EINVAL;
@@ -2443,9 +2420,6 @@ int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
 	case APIC_OFFSET_ID:
 		/* Force APIC ID as read only */
 		break;
-	case APIC_OFFSET_EOI:
-		vlapic_process_eoi(vlapic);
-		break;
 	case APIC_OFFSET_LDR:
 		vlapic_ldr_write_handler(vlapic);
 		break;
@@ -2459,7 +2433,7 @@ int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
 		vlapic_esr_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_ICR_LOW:
-		err = vlapic_icrlo_write_handler(vlapic);
+		vlapic_icrlo_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_CMCI_LVT:
 	case APIC_OFFSET_TIMER_LVT:
