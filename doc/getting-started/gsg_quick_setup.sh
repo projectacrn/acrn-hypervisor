@@ -11,7 +11,7 @@ upgrade_uos=0
 function print_help()
 {
 echo "Usage:"
-echo "Launch this script as: ./flash.sh -t 28100"
+echo "Launch this script as: sudo $0 -t 28100"
 echo "-t to specify clear linux version for upgrading"
 echo "-p to specify a proxy server"
 echo "-m to use swupd mirror url"
