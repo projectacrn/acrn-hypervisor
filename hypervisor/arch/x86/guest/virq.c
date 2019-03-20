@@ -147,35 +147,6 @@ void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid)
 }
 
 /*
- * This function is only for case that APICv/VID is not supported.
- *
- * @retval true when INT is injected to guest.
- * @retval false when there is no eligible pending vector.
- */
-static bool vcpu_inject_vlapic_int(struct acrn_vcpu *vcpu)
-{
-	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
-	uint32_t vector = 0U;
-	bool injected = false;
-
-	if (vlapic_find_deliverable_intr(vlapic, &vector)) {
-		/*
-		 * From the Intel SDM, Volume 3, 6.3.2 Section "Maskable
-		 * Hardware Interrupts":
-		 * - maskable interrupt vectors [16,255] can be delivered
-		 *   through the local APIC.
-		 */
-		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID | vector);
-		vlapic_get_deliverable_intr(vlapic, vector);
-		injected = true;
-	}
-
-	vlapic_update_tpr_threshold(vlapic);
-
-	return injected;
-}
-
-/*
  * @retval true when INT is injected to guest.
  * @retval false when otherwise
  */
@@ -529,7 +500,6 @@ static inline bool acrn_inject_pending_intr(struct acrn_vcpu *vcpu,
 		uint64_t *pending_req_bits, bool injected)
 {
 	bool ret = injected;
-	struct acrn_vlapic *vlapic;
 	bool guest_irq_enabled = is_guest_irq_enabled(vcpu);
 
 	if (guest_irq_enabled && (!ret)) {
@@ -541,27 +511,7 @@ static inline bool acrn_inject_pending_intr(struct acrn_vcpu *vcpu,
 	}
 
 	if (bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT, pending_req_bits)) {
-		/*
-		 * From SDM Vol3 26.3.2.5:
-		 * Once the virtual interrupt is recognized, it will be delivered
-		 * in VMX non-root operation immediately after VM entry(including
-		 * any specified event injection) completes.
-		 *
-		 * So the hardware can handle vmcs event injection and
-		 * evaluation/delivery of apicv virtual interrupts in one time
-		 * vm-entry.
-		 *
-		 * Here to sync the pending interrupts to irr and update rvi if
-		 * needed. And then try to handle vmcs event injection.
-		 */
-		if (is_apicv_advanced_feature_supported()) {
-			vlapic = vcpu_vlapic(vcpu);
-			vlapic_apicv_inject_pir(vlapic);
-		} else {
-			if (guest_irq_enabled && (!ret)) {
-				ret = vcpu_inject_vlapic_int(vcpu);
-			}
-		}
+		ret = vlapic_inject_intr(vcpu_vlapic(vcpu), guest_irq_enabled, ret);
 	}
 
 	return ret;

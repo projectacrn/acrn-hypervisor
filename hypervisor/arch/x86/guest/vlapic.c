@@ -1385,8 +1385,7 @@ bool vlapic_find_deliverable_intr(const struct acrn_vlapic *vlapic, uint32_t *ve
  *
  * @pre vlapic != NULL
  */
-void
-vlapic_get_deliverable_intr(struct acrn_vlapic *vlapic, uint32_t vector)
+static void vlapic_get_deliverable_intr(struct acrn_vlapic *vlapic, uint32_t vector)
 {
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 	struct lapic_reg *irrptr, *isrptr;
@@ -2204,13 +2203,29 @@ vlapic_apicv_get_apic_page_addr(struct acrn_vlapic *vlapic)
 	return hva2hpa(&(vlapic->apic_page));
 }
 
+static bool apicv_basic_inject_intr(struct acrn_vlapic *vlapic,
+		bool guest_irq_enabled, bool injected)
+{
+	uint32_t vector = 0U;
+	bool ret = injected;
+	if (guest_irq_enabled && (!injected)) {
+		if (vlapic_find_deliverable_intr(vlapic, &vector)) {
+			exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID | vector);
+			vlapic_get_deliverable_intr(vlapic, vector);
+			ret = true;
+		}
+	}
+
+	vlapic_update_tpr_threshold(vlapic);
+
+	return ret;
+}
+
 /*
  * Transfer the pending interrupts in the PIR descriptor to the IRR
  * in the virtual APIC page.
  */
-
-void
-vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
+static void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 {
 	struct vlapic_pir_desc *pir_desc;
 	struct lapic_regs *lapic;
@@ -2270,6 +2285,32 @@ vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 			}
 		}
 	}
+}
+
+static bool apicv_advanced_inject_intr(struct acrn_vlapic *vlapic,
+		__unused bool guest_irq_enabled, bool injected)
+{
+	/*
+	 * From SDM Vol3 26.3.2.5:
+	 * Once the virtual interrupt is recognized, it will be delivered
+	 * in VMX non-root operation immediately after VM entry(including
+	 * any specified event injection) completes.
+	 *
+	 * So the hardware can handle vmcs event injection and
+	 * evaluation/delivery of apicv virtual interrupts in one time
+	 * vm-entry.
+	 *
+	 * Here to sync the pending interrupts to irr and update rvi if
+	 * needed. And then try to handle vmcs event injection.
+	 */
+	vlapic_apicv_inject_pir(vlapic);
+
+	return injected;
+}
+
+bool vlapic_inject_intr(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected)
+{
+	return apicv_ops->inject_intr(vlapic, guest_irq_enabled, injected);
 }
 
 int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
@@ -2463,10 +2504,12 @@ int32_t tpr_below_threshold_vmexit_handler(struct acrn_vcpu *vcpu)
 
 static const struct acrn_apicv_ops apicv_basic_ops = {
 	.accept_intr = apicv_basic_accept_intr,
+	.inject_intr = apicv_basic_inject_intr,
 };
 
 static const struct acrn_apicv_ops apicv_advanced_ops = {
 	.accept_intr = apicv_advanced_accept_intr,
+	.inject_intr = apicv_advanced_inject_intr,
 };
 
 /*
