@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Intel Corporation.
 # SPDX-License-Identifier: BSD-3-Clause
 #
-# This script is aim to quick setup sos and uos automatically.
+# This script provides a quick and automatic setup of the SOS or UOS.
 # You can also use this to upgrade sos with a specified clear linux version.
 # Also you should know that system may have boot problems once the script is running failed
 # since it will modify various system parameters with full root access.
