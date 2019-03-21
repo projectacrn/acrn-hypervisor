@@ -29,7 +29,7 @@
 
 #include <vm.h>
 #include <logmsg.h>
-#include "pci_priv.h"
+#include "vpci_priv.h"
 
 
 static struct pci_vdev *sharing_mode_find_vdev_sos(union pci_bdf pbdf)

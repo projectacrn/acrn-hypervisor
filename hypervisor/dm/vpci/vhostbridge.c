@@ -37,7 +37,7 @@
 #include <vm.h>
 #include <errno.h>
 #include <pci.h>
-#include "pci_priv.h"
+#include "vpci_priv.h"
 
 void vdev_hostbridge_init(struct pci_vdev *vdev)
 {
