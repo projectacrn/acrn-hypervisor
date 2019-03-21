@@ -227,7 +227,7 @@ sync
 cp -r /usr/share/acrn/samples/nuc/launch_uos.sh ~/
 sed -i "s/\(virtio-blk.*\)\/home\/clear\/uos\/uos.img/\1$(echo $uos_img | sed "s/\//\\\\\//g")/" ~/launch_uos.sh
 echo "Upgrade UOS done..."
-echo "Now you can run below command to start UOS..."
+echo "Now you can run this command to start UOS..."
 echo "# cd ~/ && ./launch_uos.sh"
 }
 
