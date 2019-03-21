@@ -210,9 +210,13 @@ int32_t vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, u
 	return ret;
 }
 
-static void vmsix_table_rw(struct pci_vdev *vdev, struct mmio_request *mmio, uint32_t offset)
+/**
+ * @pre vdev != NULL
+ * @pre mmio != NULL
+ */
+static void vmsix_table_rw(const struct pci_vdev *vdev, struct mmio_request *mmio, uint32_t offset)
 {
-	struct msix_table_entry *entry;
+	const struct msix_table_entry *entry;
 	uint32_t vector_control, entry_offset, table_offset, index;
 	bool message_changed = false;
 	bool unmasked;

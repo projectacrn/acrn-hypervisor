@@ -93,20 +93,6 @@ struct acrn_vpci {
 	struct pci_vdev pci_vdevs[CONFIG_MAX_PCI_DEV_NUM];
 };
 
-int32_t partition_mode_vpci_init(const struct acrn_vm *vm);
-void partition_mode_cfgread(const struct acrn_vpci *vpci, union pci_bdf vbdf,
-	uint32_t offset, uint32_t bytes, uint32_t *val);
-void partition_mode_cfgwrite(const struct acrn_vpci *vpci, union pci_bdf vbdf,
-	uint32_t offset, uint32_t bytes, uint32_t val);
-void partition_mode_vpci_deinit(const struct acrn_vm *vm);
-
-int32_t sharing_mode_vpci_init(const struct acrn_vm *vm);
-void sharing_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf bdf,
-	uint32_t offset, uint32_t bytes, uint32_t *val);
-void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
-	uint32_t offset, uint32_t bytes, uint32_t val);
-void sharing_mode_vpci_deinit(const struct acrn_vm *vm);
-
 void vpci_init(struct acrn_vm *vm);
 void vpci_cleanup(const struct acrn_vm *vm);
 void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);

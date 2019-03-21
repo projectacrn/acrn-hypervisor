@@ -32,6 +32,9 @@
 #include <logmsg.h>
 #include "vpci_priv.h"
 
+/**
+ * @pre pi != NULL
+ */
 static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 {
 	pi->cached_bdf.value = 0xFFFFU;
@@ -238,5 +241,314 @@ void vpci_cleanup(const struct acrn_vm *vm)
 	default:
 		/* Nothing to do for other vm types */
 		break;
+	}
+}
+
+/**
+ * @pre vdev != NULL
+ */
+static inline bool is_hostbridge(const struct pci_vdev *vdev)
+{
+	return (vdev->vbdf.value == 0U);
+}
+
+/**
+ * @pre bar != NULL
+ */
+static inline bool is_valid_bar_type(const struct pci_bar *bar)
+{
+	return (bar->type == PCIBAR_MEM32) || (bar->type == PCIBAR_MEM64);
+}
+
+/**
+ * @pre bar != NULL
+ */
+static inline bool is_valid_bar_size(const struct pci_bar *bar)
+{
+	return (bar->size > 0UL) && (bar->size <= 0xffffffffU);
+}
+
+/**
+ * Only MMIO is supported and bar size cannot be greater than 4GB
+ * @pre bar != NULL
+ */
+static inline bool is_valid_bar(const struct pci_bar *bar)
+{
+	return (is_valid_bar_type(bar) && is_valid_bar_size(bar));
+}
+
+/**
+ * @pre vdev != NULL
+ */
+static void partition_mode_pdev_init(struct pci_vdev *vdev, union pci_bdf pbdf)
+{
+	struct pci_pdev *pdev;
+	uint32_t idx;
+	struct pci_bar *pbar, *vbar;
+
+	pdev = find_pci_pdev(pbdf);
+	ASSERT(pdev != NULL, "pdev is NULL");
+
+	vdev->pdev = pdev;
+
+	/* Sanity checking for vbar */
+	for (idx = 0U; idx < (uint32_t)PCI_BAR_COUNT; idx++) {
+		pbar = &vdev->pdev->bar[idx];
+		vbar = &vdev->bar[idx];
+
+		if (is_valid_bar(pbar)) {
+			vbar->size = (pbar->size < 0x1000U) ? 0x1000U : pbar->size;
+			vbar->type = PCIBAR_MEM32;
+		} else {
+			/* Mark this vbar as invalid */
+			vbar->size = 0UL;
+			vbar->type = PCIBAR_NONE;
+		}
+	}
+
+	vdev_pt_init(vdev);
+}
+
+/**
+ * @pre vm != NULL
+ * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
+ */
+int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
+{
+	struct acrn_vpci *vpci = (struct acrn_vpci *)&(vm->vpci);
+	struct pci_vdev *vdev;
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+	struct acrn_vm_pci_ptdev_config *ptdev_config;
+	uint32_t i;
+
+	vpci->pci_vdev_cnt = vm_config->pci_ptdev_num;
+
+	for (i = 0U; i < vpci->pci_vdev_cnt; i++) {
+		vdev = &vpci->pci_vdevs[i];
+		vdev->vpci = vpci;
+		ptdev_config = &vm_config->pci_ptdevs[i];
+		vdev->vbdf.value = ptdev_config->vbdf.value;
+
+		if (is_hostbridge(vdev)) {
+			vdev_hostbridge_init(vdev);
+		} else {
+			partition_mode_pdev_init(vdev, ptdev_config->pbdf);
+		}
+	}
+
+	return 0;
+}
+
+/**
+ * @pre vm != NULL
+ * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
+ */
+void partition_mode_vpci_deinit(const struct acrn_vm *vm)
+{
+	struct pci_vdev *vdev;
+	uint32_t i;
+
+	for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
+		vdev = (struct pci_vdev *) &(vm->vpci.pci_vdevs[i]);
+
+		if (is_hostbridge(vdev)) {
+			vdev_hostbridge_deinit(vdev);
+		} else {
+			vdev_pt_deinit(vdev);
+		}
+	}
+}
+
+/**
+ * @pre vpci != NULL
+ */
+void partition_mode_cfgread(const struct acrn_vpci *vpci, union pci_bdf vbdf,
+	uint32_t offset, uint32_t bytes, uint32_t *val)
+{
+	struct pci_vdev *vdev = pci_find_vdev_by_vbdf(vpci, vbdf);
+
+	if (vdev != NULL) {
+		if (is_hostbridge(vdev)) {
+			(void)vdev_hostbridge_cfgread(vdev, offset, bytes, val);
+		} else {
+			if (vdev_pt_cfgread(vdev, offset, bytes, val) != 0) {
+				/* Not handled by any handlers, passthru to physical device */
+				*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+			}
+		}
+	}
+}
+
+/**
+ * @pre vpci != NULL
+ */
+void partition_mode_cfgwrite(const struct acrn_vpci *vpci, union pci_bdf vbdf,
+	uint32_t offset, uint32_t bytes, uint32_t val)
+{
+	struct pci_vdev *vdev = pci_find_vdev_by_vbdf(vpci, vbdf);
+
+	if (vdev != NULL) {
+		if (is_hostbridge(vdev)) {
+			(void)vdev_hostbridge_cfgwrite(vdev, offset, bytes, val);
+		} else {
+			if (vdev_pt_cfgwrite(vdev, offset, bytes, val) != 0){
+				/* Not handled by any handlers, passthru to physical device */
+				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+			}
+		}
+	}
+}
+
+static struct pci_vdev *sharing_mode_find_vdev_sos(union pci_bdf pbdf)
+{
+	struct acrn_vm *vm;
+
+	vm = get_sos_vm();
+
+	return pci_find_vdev_by_pbdf(&vm->vpci, pbdf);
+}
+
+/**
+ * @pre vpci != NULL
+ */
+void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
+	uint32_t offset, uint32_t bytes, uint32_t *val)
+{
+	struct pci_vdev *vdev = sharing_mode_find_vdev_sos(bdf);
+
+	*val = ~0U;
+
+	/* vdev == NULL: Could be hit for PCI enumeration from guests */
+	if (vdev != NULL) {
+		if ((vmsi_cfgread(vdev, offset, bytes, val) != 0)
+			&& (vmsix_cfgread(vdev, offset, bytes, val) != 0)
+			) {
+			/* Not handled by any handlers, passthru to physical device */
+			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+		}
+	}
+}
+
+/**
+ * @pre vpci != NULL
+ */
+void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
+	uint32_t offset, uint32_t bytes, uint32_t val)
+{
+	struct pci_vdev *vdev = sharing_mode_find_vdev_sos(bdf);
+
+	if (vdev != NULL) {
+		if ((vmsi_cfgwrite(vdev, offset, bytes, val) != 0)
+			&& (vmsix_cfgwrite(vdev, offset, bytes, val) != 0)
+			) {
+			/* Not handled by any handlers, passthru to physical device */
+			pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+		}
+	}
+}
+
+/**
+ * @pre pdev != NULL
+ * @pre vm != NULL
+ * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
+ */
+static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
+{
+	struct pci_vdev *vdev = NULL;
+	struct acrn_vpci *vpci = &(((struct acrn_vm *)vm)->vpci);
+
+	if (vpci->pci_vdev_cnt < CONFIG_MAX_PCI_DEV_NUM) {
+		vdev = &vpci->pci_vdevs[vpci->pci_vdev_cnt];
+		vpci->pci_vdev_cnt++;
+
+		vdev->vpci = vpci;
+		/* vbdf equals to pbdf otherwise remapped */
+		vdev->vbdf = pdev->bdf;
+		vdev->pdev = pdev;
+
+		vmsi_init(vdev);
+
+		vmsix_init(vdev);
+	}
+}
+
+
+/**
+ * @pre vm != NULL
+ * @pre is_sos_vm(vm) == true
+ */
+int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
+{
+	/* Build up vdev array for sos_vm */
+	pci_pdev_foreach(init_vdev_for_pdev, vm);
+
+	return 0;
+}
+
+/**
+ * @pre vm != NULL
+ * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
+ * @pre is_sos_vm(vm) == true
+ */
+void sharing_mode_vpci_deinit(const struct acrn_vm *vm)
+{
+	struct pci_vdev *vdev;
+	uint32_t i;
+
+	for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
+		vdev = (struct pci_vdev *)&(vm->vpci.pci_vdevs[i]);
+
+		vmsi_deinit(vdev);
+
+		vmsix_deinit(vdev);
+	}
+}
+
+/**
+ * @pre target_vm != NULL
+ */
+void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
+{
+	struct pci_vdev *vdev;
+	union pci_bdf bdf;
+
+	bdf.value = pbdf;
+	vdev = sharing_mode_find_vdev_sos(bdf);
+	if (vdev == NULL) {
+		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
+			target_vm->vm_id, vbdf, pbdf);
+	} else {
+		/* UOS may do BDF mapping */
+		vdev->vpci = (struct acrn_vpci *)&(target_vm->vpci);
+		vdev->vbdf.value = vbdf;
+		vdev->pdev->bdf.value = pbdf;
+	}
+}
+
+/**
+ * @pre target_vm != NULL
+ */
+void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
+{
+	struct pci_vdev *vdev;
+	struct acrn_vm *vm;
+	union pci_bdf bdf;
+
+	bdf.value = pbdf;
+	vdev = sharing_mode_find_vdev_sos(bdf);
+	if (vdev == NULL) {
+		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
+			target_vm->vm_id, vbdf, pbdf);
+	} else {
+		/* Return this PCI device to SOS */
+		if (vdev->vpci->vm == target_vm) {
+			vm = get_sos_vm();
+
+			if (vm != NULL) {
+				vdev->vpci = &vm->vpci;
+				/* vbdf equals to pbdf in sos */
+				vdev->vbdf.value = vdev->pdev->bdf.value;
+			}
+		}
 	}
 }
