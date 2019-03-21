@@ -93,7 +93,7 @@ source /etc/os-release
 if [[ $VERSION_ID -eq $target_version ]]; then
     echo "Clear Linux version $target_version is already installed. Continuing to setup SOS..."
 else
-    echo "Upgrade clear linux version to : $target_version ..."
+    echo "Upgrading Clear Linux version from $VERSION_ID to $target_version ..."
     swupd verify --fix --picky -m $target_version
 fi
 
