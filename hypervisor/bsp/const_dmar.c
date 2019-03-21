@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
 #include <vtd.h>
 #include <platform_acpi_info.h>
 

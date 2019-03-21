@@ -6,7 +6,14 @@
 
 /* this is for UEFI platform */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <acrn_common.h>
+#include <pgtable.h>
+#include <logmsg.h>
+#include <rtl.h>
+#include <vlapic.h>
+#include <lapic.h>
+#include <per_cpu.h>
 #include <multiboot.h>
 #include <boot_context.h>
 #include <firmware_uefi.h>

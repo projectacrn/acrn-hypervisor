@@ -6,7 +6,9 @@
 
 /* this is for both SBL and ABL platform */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <e820.h>
+#include <cpu.h>
 #include <firmware_sbl.h>
 
 static void sbl_init(void)
