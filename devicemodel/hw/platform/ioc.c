@@ -100,7 +100,7 @@ typedef void* (*ioc_work)(void *arg);
  * IOC mediator and virtual UART communication channel path,
  * comes from DM command line parameters.
  */
-static char virtual_uart_path[32];
+static char virtual_uart_path[32 + MAX_VM_OS_NAME_LEN];
 
 /*
  * To activate CBC signal channel(/dev/cbc-signals).
