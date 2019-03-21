@@ -28,6 +28,8 @@
 */
 
 #include <vm.h>
+#include <errno.h>
+#include <logmsg.h>
 #include "pci_priv.h"
 
 static void pci_cfg_clear_cache(struct pci_addr_info *pi)
@@ -37,6 +39,9 @@ static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 	pi->cached_enable = false;
 }
 
+/**
+ * @pre vm != NULL
+ */
 static uint32_t pci_cfgaddr_io_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
 {
 	uint32_t val = ~0U;
@@ -55,6 +60,9 @@ static uint32_t pci_cfgaddr_io_read(struct acrn_vm *vm, uint16_t addr, size_t by
 	return val;
 }
 
+/**
+ * @pre vm != NULL
+ */
 static void pci_cfgaddr_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
 {
 	struct acrn_vpci *vpci = &vm->vpci;
@@ -82,20 +90,36 @@ static inline bool vpci_is_valid_access(uint32_t offset, uint32_t bytes)
 	return (vpci_is_valid_access_byte(bytes) && vpci_is_valid_access_offset(offset, bytes));
 }
 
+/**
+ * @pre vm != NULL
+ * @pre vm->vm_id < CONFIG_MAX_VM_NUM
+ * @pre (get_vm_config(vm->vm_id)->type == PRE_LAUNCHED_VM) || (get_vm_config(vm->vm_id)->type == SOS_VM)
+ */
 static uint32_t pci_cfgdata_io_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
 {
 	struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 	uint16_t offset = addr - PCI_CONFIG_DATA;
 	uint32_t val = ~0U;
+	struct acrn_vm_config *vm_config;
 
 	if (pi->cached_enable) {
 		if (vpci_is_valid_access(pi->cached_reg + offset, bytes)) {
-#ifdef CONFIG_PARTITION_MODE
-			partition_mode_cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
-#else
-			sharing_mode_cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
-#endif
+			vm_config = get_vm_config(vm->vm_id);
+
+			switch (vm_config->type) {
+			case PRE_LAUNCHED_VM:
+				partition_mode_cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
+				break;
+
+			case SOS_VM:
+				sharing_mode_cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
+				break;
+
+			default:
+				ASSERT(false, "Error, pci_cfgdata_io_read should only be called for PRE_LAUNCHED_VM and SOS_VM");
+				break;
+			}
 		}
 		pci_cfg_clear_cache(pi);
 	}
@@ -103,28 +127,49 @@ static uint32_t pci_cfgdata_io_read(struct acrn_vm *vm, uint16_t addr, size_t by
 	return val;
 }
 
+/**
+ * @pre vm != NULL
+ * @pre vm->vm_id < CONFIG_MAX_VM_NUM
+ * @pre (get_vm_config(vm->vm_id)->type == PRE_LAUNCHED_VM) || (get_vm_config(vm->vm_id)->type == SOS_VM)
+ */
 static void pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
 {
 	struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 	uint16_t offset = addr - PCI_CONFIG_DATA;
+	struct acrn_vm_config *vm_config;
+
 
 	if (pi->cached_enable) {
 		if (vpci_is_valid_access(pi->cached_reg + offset, bytes)) {
-#ifdef CONFIG_PARTITION_MODE
-			partition_mode_cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
-#else
-			sharing_mode_cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
-#endif
+			vm_config = get_vm_config(vm->vm_id);
+
+			switch (vm_config->type) {
+			case PRE_LAUNCHED_VM:
+				partition_mode_cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
+				break;
+
+			case SOS_VM:
+				sharing_mode_cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
+				break;
+
+			default:
+				ASSERT(false, "Error, pci_cfgdata_io_write should only be called for PRE_LAUNCHED_VM and SOS_VM");
+				break;
+			}
 		}
 		pci_cfg_clear_cache(pi);
 	}
 }
 
+/**
+ * @pre vm != NULL
+ * @pre vm->vm_id < CONFIG_MAX_VM_NUM
+ */
 void vpci_init(struct acrn_vm *vm)
 {
 	struct acrn_vpci *vpci = &vm->vpci;
-	int32_t ret;
+	int32_t ret = -EINVAL;
 
 	struct vm_io_range pci_cfgaddr_range = {
 		.flags = IO_ATTR_RW,
@@ -138,13 +183,24 @@ void vpci_init(struct acrn_vm *vm)
 		.len = 4U
 	};
 
+	struct acrn_vm_config *vm_config;
+
 	vpci->vm = vm;
 
-#ifdef CONFIG_PARTITION_MODE
-	ret = partition_mode_vpci_init(vm);
-#else
-	ret = sharing_mode_vpci_init(vm);
-#endif
+	vm_config = get_vm_config(vm->vm_id);
+	switch (vm_config->type) {
+	case PRE_LAUNCHED_VM:
+		ret = partition_mode_vpci_init(vm);
+		break;
+
+	case SOS_VM:
+		ret = sharing_mode_vpci_init(vm);
+		break;
+
+	default:
+		/* Nothing to do for other vm types */
+		break;
+	}
 
 	if (ret == 0) {
 		/*
@@ -161,11 +217,26 @@ void vpci_init(struct acrn_vm *vm)
 	}
 }
 
+/**
+ * @pre vm != NULL
+ * @pre vm->vm_id < CONFIG_MAX_VM_NUM
+ */
 void vpci_cleanup(const struct acrn_vm *vm)
 {
-#ifdef CONFIG_PARTITION_MODE
-	partition_mode_vpci_deinit(vm);
-#else
-	sharing_mode_vpci_deinit(vm);
-#endif
+	struct acrn_vm_config *vm_config;
+
+	vm_config = get_vm_config(vm->vm_id);
+	switch (vm_config->type) {
+	case PRE_LAUNCHED_VM:
+		partition_mode_vpci_deinit(vm);
+		break;
+
+	case SOS_VM:
+		sharing_mode_vpci_deinit(vm);
+		break;
+
+	default:
+		/* Nothing to do for other vm types */
+		break;
+	}
 }

@@ -42,6 +42,10 @@ static inline uint32_t pci_bar_base(uint32_t bar)
 	return bar & PCIM_BAR_MEM_BASE;
 }
 
+#if defined(HV_DEBUG)
+/**
+ * @pre vdev != NULL
+ */
 static int32_t validate(const struct pci_vdev *vdev)
 {
 	uint32_t idx;
@@ -59,7 +63,13 @@ static int32_t validate(const struct pci_vdev *vdev)
 
 	return ret;
 }
+#endif
 
+/**
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ */
 void vdev_pt_init(struct pci_vdev *vdev)
 {
 	int32_t ret;
@@ -90,6 +100,11 @@ void vdev_pt_init(struct pci_vdev *vdev)
 	pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
 }
 
+/**
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ */
 void vdev_pt_deinit(const struct pci_vdev *vdev)
 {
 	int32_t ret;
@@ -102,6 +117,9 @@ void vdev_pt_deinit(const struct pci_vdev *vdev)
 	}
 }
 
+/**
+ * @pre vdev != NULL
+ */
 int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
 {
@@ -116,7 +134,12 @@ int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset,
 	return ret;
 }
 
-static void vdev_pt_remap_bar(struct pci_vdev *vdev, uint32_t idx,
+/**
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ */
+static void vdev_pt_remap_bar(const struct pci_vdev *vdev, uint32_t idx,
 	uint32_t new_base)
 {
 	struct acrn_vm *vm = vdev->vpci->vm;
@@ -137,6 +160,9 @@ static void vdev_pt_remap_bar(struct pci_vdev *vdev, uint32_t idx,
 	}
 }
 
+/**
+ * @pre vdev != NULL
+ */
 static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t new_bar_uos)
 {
@@ -176,6 +202,9 @@ static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 	pci_vdev_write_cfg_u32(vdev, offset, new_bar);
 }
 
+/**
+ * @pre vdev != NULL
+ */
 int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t val)
 {

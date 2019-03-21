@@ -28,7 +28,6 @@
  */
 
 #include <vm.h>
-#include <errno.h>
 #include <logmsg.h>
 #include "pci_priv.h"
 
@@ -100,40 +99,35 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
 	}
 }
 
+
+/**
+ * @pre vm != NULL
+ * @pre is_sos_vm(vm) == true
+ */
 int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
 {
-	int32_t ret = -ENODEV;
+	/* Build up vdev array for sos_vm */
+	pci_pdev_foreach(init_vdev_for_pdev, vm);
 
-	/*
-	 * Only set up IO bitmap for SOS.
-	 * IO/MMIO requests from non-sos_vm guests will be injected to device model.
-	 */
-	if (is_sos_vm(vm)) {
-		/* Build up vdev array for sos_vm */
-		pci_pdev_foreach(init_vdev_for_pdev, vm);
-		ret = 0;
-	}
-
-	return ret;
+	return 0;
 }
 
 /**
  * @pre vm != NULL
  * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
+ * @pre is_sos_vm(vm) == true
  */
 void sharing_mode_vpci_deinit(const struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
 	uint32_t i;
 
-	if (is_sos_vm(vm)) {
-		for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
-			vdev = (struct pci_vdev *)&(vm->vpci.pci_vdevs[i]);
+	for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
+		vdev = (struct pci_vdev *)&(vm->vpci.pci_vdevs[i]);
 
-			vmsi_deinit(vdev);
+		vmsi_deinit(vdev);
 
-			vmsix_deinit(vdev);
-		}
+		vmsix_deinit(vdev);
 	}
 }
 

@@ -137,7 +137,10 @@ void partition_mode_vpci_deinit(const struct acrn_vm *vm)
 	}
 }
 
-void partition_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf vbdf,
+/**
+ * @pre vpci != NULL
+ */
+void partition_mode_cfgread(const struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	struct pci_vdev *vdev = pci_find_vdev_by_vbdf(vpci, vbdf);
@@ -156,7 +159,10 @@ void partition_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf vbdf,
 	}
 }
 
-void partition_mode_cfgwrite(struct acrn_vpci *vpci, union pci_bdf vbdf,
+/**
+ * @pre vpci != NULL
+ */
+void partition_mode_cfgwrite(const struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	struct pci_vdev *vdev = pci_find_vdev_by_vbdf(vpci, vbdf);

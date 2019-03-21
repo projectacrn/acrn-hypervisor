@@ -67,7 +67,6 @@ static inline void pci_vdev_write_cfg_u32(struct pci_vdev *vdev, uint32_t offset
 	vdev->cfgdata.data_32[offset >> 2U] = val;
 }
 
-#ifdef CONFIG_PARTITION_MODE
 void vdev_hostbridge_init(struct pci_vdev *vdev);
 int32_t vdev_hostbridge_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vdev_hostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
@@ -78,7 +77,6 @@ int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t b
 int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 void vdev_pt_deinit(const struct pci_vdev *vdev);
 
-#else
 void vmsi_init(struct pci_vdev *vdev);
 int32_t vmsi_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
@@ -87,7 +85,6 @@ void vmsix_init(struct pci_vdev *vdev);
 int32_t vmsix_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 void vmsix_deinit(const struct pci_vdev *vdev);
-#endif
 
 uint32_t pci_vdev_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
 void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
