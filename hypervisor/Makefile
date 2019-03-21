@@ -220,14 +220,13 @@ C_SRCS += dm/vpci/vdev.c
 C_SRCS += dm/vpci/vpci.c
 ifeq ($(CONFIG_PARTITION_MODE),y)
 C_SRCS += dm/vmptable.c
+endif
 C_SRCS += dm/vpci/partition_mode.c
 C_SRCS += dm/vpci/hostbridge.c
 C_SRCS += dm/vpci/pci_pt.c
-else
 C_SRCS += dm/vpci/sharing_mode.c
 C_SRCS += dm/vpci/msi.c
 C_SRCS += dm/vpci/msix.c
-endif
 
 C_SRCS += bsp/firmware_wrapper.c
 C_SRCS += bsp/firmware_sbl.c

@@ -279,6 +279,10 @@ static void vmsix_table_rw(struct pci_vdev *vdev, struct mmio_request *mmio, uin
 
 }
 
+/**
+ * @pre io_req != NULL
+ * @pre handler_private_data != NULL
+ */
 static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
 {
 	struct mmio_request *mmio = &io_req->reqs.mmio;

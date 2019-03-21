@@ -76,10 +76,8 @@ struct pci_vdev {
 	/* The bar info of the virtual PCI device. */
 	struct pci_bar bar[PCI_BAR_COUNT];
 
-#ifndef CONFIG_PARTITION_MODE
 	struct pci_msi msi;
 	struct pci_msix msix;
-#endif
 };
 
 struct pci_addr_info {
@@ -96,9 +94,9 @@ struct acrn_vpci {
 };
 
 int32_t partition_mode_vpci_init(const struct acrn_vm *vm);
-void partition_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf vbdf,
+void partition_mode_cfgread(const struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val);
-void partition_mode_cfgwrite(struct acrn_vpci *vpci, union pci_bdf vbdf,
+void partition_mode_cfgwrite(const struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t val);
 void partition_mode_vpci_deinit(const struct acrn_vm *vm);
 
