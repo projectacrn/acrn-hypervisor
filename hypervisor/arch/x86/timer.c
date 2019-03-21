@@ -318,3 +318,16 @@ uint64_t ticks_to_ms(uint64_t ticks)
 {
 	return ticks / (uint64_t)tsc_khz;
 }
+
+void udelay(uint32_t us)
+{
+	uint64_t dest_tsc, delta_tsc;
+
+	/* Calculate number of ticks to wait */
+	delta_tsc = us_to_ticks(us);
+	dest_tsc = rdtsc() + delta_tsc;
+
+	/* Loop until time expired */
+	while (rdtsc() < dest_tsc) {
+	}
+}

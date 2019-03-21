@@ -30,7 +30,6 @@ static inline bool is_space(char c)
 }
 
 /* Function prototypes */
-void udelay(uint32_t us);
 int32_t strcmp(const char *s1_arg, const char *s2_arg);
 int32_t strncmp(const char *s1_arg, const char *s2_arg, size_t n_arg);
 char *strncpy_s(char *d_arg, size_t dmax, const char *s_arg, size_t slen_arg);

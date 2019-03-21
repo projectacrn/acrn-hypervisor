@@ -49,6 +49,8 @@ struct hv_timer {
 
 #define CYCLES_PER_MS	us_to_ticks(1000U)
 
+void udelay(uint32_t us);
+
 /**
  * @brief convert us to ticks.
  *
