@@ -35,7 +35,7 @@
 #include <ept.h>
 #include <mmu.h>
 #include <logmsg.h>
-#include "pci_priv.h"
+#include "vpci_priv.h"
 
 static inline uint32_t pci_bar_base(uint32_t bar)
 {

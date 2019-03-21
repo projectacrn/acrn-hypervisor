@@ -30,7 +30,7 @@
 #include <vm.h>
 #include <errno.h>
 #include <logmsg.h>
-#include "pci_priv.h"
+#include "vpci_priv.h"
 
 static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 {

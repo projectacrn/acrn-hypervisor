@@ -32,7 +32,7 @@
 #include <ptdev.h>
 #include <assign.h>
 #include <vpci.h>
-#include "pci_priv.h"
+#include "vpci_priv.h"
 
 
 /**

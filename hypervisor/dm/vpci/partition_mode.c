@@ -31,7 +31,7 @@
 
 #include <vm.h>
 #include <logmsg.h>
-#include "pci_priv.h"
+#include "vpci_priv.h"
 
 
 static inline bool is_hostbridge(const struct pci_vdev *vdev)
