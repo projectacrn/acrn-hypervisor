@@ -91,7 +91,7 @@ swupd autoupdate --disable
 # Compare with current clear linux and skip upgrade sos if get the same version.
 source /etc/os-release
 if [[ $VERSION_ID -eq $target_version ]]; then
-    echo "Specify with the same clear linux version, continue to setup sos..."
+    echo "Clear Linux version $target_version is already installed. Continuing to setup SOS..."
 else
     echo "Upgrade clear linux version to : $target_version ..."
     swupd verify --fix --picky -m $target_version
