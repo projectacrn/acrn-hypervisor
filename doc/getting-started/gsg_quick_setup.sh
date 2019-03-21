@@ -268,7 +268,7 @@ if [[ $upgrade_uos == 1 ]]; then
     exit
 fi
 
-# Exit script if you specified an newer clear linux version.
+# Exit script if you specified an older clear linux version.
 if [[ $(echo -e `swupd info` | cut -d' ' -f3) -gt $target_version ]]; then
     echo -e 'No need to upgrade Service OS.' && exit
 else
