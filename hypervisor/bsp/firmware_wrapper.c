@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
 #include <multiboot.h>
+#include <vm.h>
+#include <types.h>
+#include <pgtable.h>
 #include <firmware.h>
 #include <firmware_sbl.h>
 #include <firmware_uefi.h>
