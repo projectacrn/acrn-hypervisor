@@ -70,7 +70,7 @@ static int32_t validate(const struct pci_vdev *vdev)
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-void vdev_pt_init(struct pci_vdev *vdev)
+void vdev_pt_init(const struct pci_vdev *vdev)
 {
 	int32_t ret;
 	struct acrn_vm *vm = vdev->vpci->vm;

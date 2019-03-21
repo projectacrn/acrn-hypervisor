@@ -27,8 +27,8 @@
 * $FreeBSD$
 */
 
-#ifndef PCI_PRIV_H_
-#define PCI_PRIV_H_
+#ifndef VPCI_PRIV_H_
+#define VPCI_PRIV_H_
 
 #include <pci.h>
 
@@ -72,7 +72,7 @@ int32_t vdev_hostbridge_cfgread(const struct pci_vdev *vdev, uint32_t offset, ui
 int32_t vdev_hostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 void vdev_hostbridge_deinit(__unused const struct pci_vdev *vdev);
 
-void vdev_pt_init(struct pci_vdev *vdev);
+void vdev_pt_init(const struct pci_vdev *vdev);
 int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 void vdev_pt_deinit(const struct pci_vdev *vdev);
@@ -93,4 +93,18 @@ struct pci_vdev *pci_find_vdev_by_vbdf(const struct acrn_vpci *vpci, union pci_b
 
 struct pci_vdev *pci_find_vdev_by_pbdf(const struct acrn_vpci *vpci, union pci_bdf pbdf);
 
-#endif /* PCI_PRIV_H_ */
+int32_t partition_mode_vpci_init(const struct acrn_vm *vm);
+void partition_mode_cfgread(const struct acrn_vpci *vpci, union pci_bdf vbdf,
+	uint32_t offset, uint32_t bytes, uint32_t *val);
+void partition_mode_cfgwrite(const struct acrn_vpci *vpci, union pci_bdf vbdf,
+	uint32_t offset, uint32_t bytes, uint32_t val);
+void partition_mode_vpci_deinit(const struct acrn_vm *vm);
+
+int32_t sharing_mode_vpci_init(const struct acrn_vm *vm);
+void sharing_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf bdf,
+	uint32_t offset, uint32_t bytes, uint32_t *val);
+void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
+	uint32_t offset, uint32_t bytes, uint32_t val);
+void sharing_mode_vpci_deinit(const struct acrn_vm *vm);
+
+#endif /* VPCI_PRIV_H_ */
