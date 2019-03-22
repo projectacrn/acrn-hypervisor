@@ -67,6 +67,8 @@ Currently, all UOSes share the same priority.
 This is a Service OS only parameters, and does
 not work in the User OS.
 
+.. _i915-enable-initial-modeset:
+
 i915.enable_initial_modeset
 ***************************
 
@@ -89,6 +91,8 @@ In the current configuration, we will set
 ``i915.enable_initial_modeset=0`` in UOS.
 
 This parameter is not used on UEFI platforms.
+
+.. _i915-avail-planes-owners:
 
 i915.avail_planes_per_pipe and i915.domain_plane_owners
 *******************************************************
