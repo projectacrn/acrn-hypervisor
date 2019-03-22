@@ -306,7 +306,7 @@ Enable partition mode in ACRN hypervisor
 
    .. code-block:: none
 
-     $ make PLATFORM=sbl
+     $ make BOARD=apl-up2
      ...
      $ sudo cp build/acrn.32.out /boot
 

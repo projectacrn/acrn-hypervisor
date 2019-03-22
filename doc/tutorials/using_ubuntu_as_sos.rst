@@ -67,7 +67,7 @@ the source code, build it, and install it on your device.
    .. code-block:: none
 
       cd ~/acrn-hypervisor
-      make PLATFORM=uefi
+      make
       sudo make install
 
    For more details, please refer to the :ref:`getting-started-building`.
