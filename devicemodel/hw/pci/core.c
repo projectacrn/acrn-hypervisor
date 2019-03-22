@@ -93,7 +93,6 @@ extern bool skip_pci_mem64bar_workaround;
 #define	PCI_EMUL_IOBASE		0x2000
 #define	PCI_EMUL_IOLIMIT	0x10000
 
-#define	PCI_EMUL_ECFG_BASE	0xE0000000		    /* 3.5GB */
 #define	PCI_EMUL_ECFG_SIZE	(MAXBUSES * 1024 * 1024)    /* 1MB per bus */
 SYSRES_MEM(PCI_EMUL_ECFG_BASE, PCI_EMUL_ECFG_SIZE);
 
@@ -1236,12 +1235,6 @@ pci_emul_ecfg_handler(struct vmctx *ctx, int vcpu, int dir, uint64_t addr,
 		*val = ~0UL;
 	pci_cfgrw(ctx, vcpu, in, bus, slot, func, coff, bytes, (uint32_t *)val);
 	return 0;
-}
-
-uint64_t
-pci_ecfg_base(void)
-{
-	return PCI_EMUL_ECFG_BASE;
 }
 
 #define	BUSIO_ROUNDUP		32

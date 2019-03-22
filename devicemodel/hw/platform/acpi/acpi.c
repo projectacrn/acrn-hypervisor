@@ -603,7 +603,7 @@ basl_fwrite_mcfg(FILE *fp, struct vmctx *ctx)
 	EFPRINTF(fp, "[0008]\t\tReserved : 0\n");
 	EFPRINTF(fp, "\n");
 
-	EFPRINTF(fp, "[0008]\t\tBase Address : %016lX\n", pci_ecfg_base());
+	EFPRINTF(fp, "[0008]\t\tBase Address : %016lX\n", PCI_EMUL_ECFG_BASE);
 	EFPRINTF(fp, "[0002]\t\tSegment Group: 0000\n");
 	EFPRINTF(fp, "[0001]\t\tStart Bus: 00\n");
 	EFPRINTF(fp, "[0001]\t\tEnd Bus: FF\n");

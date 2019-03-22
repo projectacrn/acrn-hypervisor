@@ -55,8 +55,8 @@ static char bootargs[STR_LEN];
  * 1:        0xA0000 -  0x100000    (reserved)      0x60000
  * 2:       0x100000 -  lowmem      RAM             lowmem - 1MB
  * 3:         lowmem -  0x80000000  (reserved)      2GB - lowmem
- * 4:     0x80000000 -  0x100000000 PCI hole, MMIO  2GB
- * 5:    0x100000000 -  0x140000000 PCI hole        1GB
+ * 4:     0xE0000000 -  0x100000000 MCFG, MMIO      512MB
+ * 5:    0x100000000 -  0x140000000 64-bit PCI hole 1GB
  * 6:    0x140000000 -  highmem     RAM             highmem - 5GB
  */
 const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
@@ -84,9 +84,9 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 		.type     = E820_TYPE_RESERVED
 	},
 
-	{	/* lowmem_limit to 4GB */
-		.baseaddr = 0x80000000,
-		.length   = 0x80000000,
+	{	/* ECFG_BASE to 4GB */
+		.baseaddr = PCI_EMUL_ECFG_BASE,
+		.length   = (4 * GB) - PCI_EMUL_ECFG_BASE,
 		.type     = E820_TYPE_RESERVED
 	},
 

@@ -38,8 +38,10 @@
 #define	PCI_BARMAX	PCIR_MAX_BAR_0	/* BAR registers in a Type 0 header */
 #define	PCI_BDF(b, d, f) (((b & 0xFF) << 8) | ((d & 0x1F) << 3) | ((f & 0x7)))
 
-#define	PCI_EMUL_MEMBASE64	0x100000000UL
-#define	PCI_EMUL_MEMLIMIT64	0x140000000UL
+#define	PCI_EMUL_ECFG_BASE	0xE0000000UL	/* 3.5GB */
+
+#define	PCI_EMUL_MEMBASE64	0x100000000UL	/* 4GB */
+#define	PCI_EMUL_MEMLIMIT64	0x140000000UL	/* 5GB */
 
 struct vmctx;
 struct pci_vdev;
@@ -310,7 +312,6 @@ uint64_t pci_emul_msix_tread(struct pci_vdev *pi, uint64_t offset, int size);
 int	pci_count_lintr(int bus);
 void	pci_walk_lintr(int bus, pci_lintr_cb cb, void *arg);
 void	pci_write_dsdt(void);
-uint64_t pci_ecfg_base(void);
 int	pci_bus_configured(int bus);
 int	emulate_pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus,
 			  int slot, int func, int reg, int bytes, int *value);
