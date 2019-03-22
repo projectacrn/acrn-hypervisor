@@ -328,9 +328,9 @@ static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, uint32_t mode)
 
 static void init_msr_area(struct acrn_vcpu *vcpu)
 {
-	vcpu->arch.msr_area.guest[MSR_AREA_TSC_AUX].msr_num = MSR_IA32_TSC_AUX;
+	vcpu->arch.msr_area.guest[MSR_AREA_TSC_AUX].msr_index = MSR_IA32_TSC_AUX;
 	vcpu->arch.msr_area.guest[MSR_AREA_TSC_AUX].value = vcpu->vcpu_id;
-	vcpu->arch.msr_area.host[MSR_AREA_TSC_AUX].msr_num = MSR_IA32_TSC_AUX;
+	vcpu->arch.msr_area.host[MSR_AREA_TSC_AUX].msr_index = MSR_IA32_TSC_AUX;
 	vcpu->arch.msr_area.host[MSR_AREA_TSC_AUX].value = vcpu->pcpu_id;
 }
 

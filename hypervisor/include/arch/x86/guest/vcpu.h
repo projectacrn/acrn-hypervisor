@@ -235,7 +235,7 @@ struct cpu_context {
 
 /* Intel SDM 24.8.2, the address must be 16-byte aligned */
 struct msr_store_entry {
-	uint32_t msr_num;
+	uint32_t msr_index;
 	uint32_t reserved;
 	uint64_t value;
 } __aligned(16);
