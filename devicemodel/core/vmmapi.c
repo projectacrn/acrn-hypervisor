@@ -136,16 +136,16 @@ vm_create(const char *name, uint64_t req_buf)
 
 	/* Set trusty enable flag */
 	if (trusty_enabled)
-		create_vm.vm_flag |= SECURE_WORLD_ENABLED;
+		create_vm.vm_flag |= GUEST_FLAG_SECURE_WORLD_ENABLED;
 	else
-		create_vm.vm_flag &= (~SECURE_WORLD_ENABLED);
+		create_vm.vm_flag &= (~GUEST_FLAG_SECURE_WORLD_ENABLED);
 
 	if (lapic_pt) {
-		create_vm.vm_flag |= LAPIC_PASSTHROUGH;
-		create_vm.vm_flag |= IOREQ_COMPLETION_POLLING;
+		create_vm.vm_flag |= GUEST_FLAG_LAPIC_PASSTHROUGH;
+		create_vm.vm_flag |= GUEST_FLAG_IO_COMPLETION_POLLING;
 	} else {
-		create_vm.vm_flag &= (~LAPIC_PASSTHROUGH);
-		create_vm.vm_flag &= (~IOREQ_COMPLETION_POLLING);
+		create_vm.vm_flag &= (~GUEST_FLAG_LAPIC_PASSTHROUGH);
+		create_vm.vm_flag &= (~GUEST_FLAG_IO_COMPLETION_POLLING);
 	}
 
 	create_vm.req_buf = req_buf;
@@ -463,7 +463,7 @@ vm_set_gsi_irq(struct vmctx *ctx, int gsi, uint32_t operation)
 	uint64_t *req =  (uint64_t *)&op;
 
 	op.op = operation;
-	op.nr_gsi = (uint32_t)gsi;
+	op.gsi = (uint32_t)gsi;
 
 	return ioctl(ctx->fd, IC_SET_IRQLINE, *req);
 }
