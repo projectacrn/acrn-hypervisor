@@ -130,7 +130,7 @@ static void profiling_enable_pmu(void)
 			(void)memcpy_s(ss->vmexit_msr_list, size, vcpu->arch.msr_area.host, size);
 			ss->vmexit_msr_cnt = MAX_HV_MSR_LIST_NUM;
 
-			ss->vmexit_msr_list[MAX_HV_MSR_LIST_NUM].msr_num = MSR_IA32_DEBUGCTL;
+			ss->vmexit_msr_list[MAX_HV_MSR_LIST_NUM].msr_index = MSR_IA32_DEBUGCTL;
 			ss->vmexit_msr_list[MAX_HV_MSR_LIST_NUM].value = ss->guest_debugctl_value & VALID_DEBUGCTL_BIT_MASK;
 			ss->vmexit_msr_cnt++;
 
