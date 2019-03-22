@@ -142,4 +142,6 @@ do_cpuid(u_int ax, u_int *p)
 	  (w)[7] = (uint8_t)((v) >> 56);    \
 } while (0)
 
+#define __packed       __attribute__((packed))
+
 #endif

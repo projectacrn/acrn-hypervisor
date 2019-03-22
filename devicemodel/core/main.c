@@ -327,11 +327,11 @@ vmexit_inout(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 	int error;
 	int bytes, port, in;
 
-	port = vhm_req->reqs.pio_request.address;
-	bytes = vhm_req->reqs.pio_request.size;
-	in = (vhm_req->reqs.pio_request.direction == REQUEST_READ);
+	port = vhm_req->reqs.pio.address;
+	bytes = vhm_req->reqs.pio.size;
+	in = (vhm_req->reqs.pio.direction == REQUEST_READ);
 
-	error = emulate_inout(ctx, pvcpu, &vhm_req->reqs.pio_request);
+	error = emulate_inout(ctx, pvcpu, &vhm_req->reqs.pio);
 	if (error) {
 		fprintf(stderr, "Unhandled %s%c 0x%04x\n",
 				in ? "in" : "out",
@@ -339,7 +339,7 @@ vmexit_inout(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 				port);
 
 		if (in) {
-			vhm_req->reqs.pio_request.value = VHM_REQ_PIO_INVAL;
+			vhm_req->reqs.pio.value = VHM_REQ_PIO_INVAL;
 		}
 	}
 }
@@ -350,20 +350,20 @@ vmexit_mmio_emul(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 	int err;
 
 	stats.vmexit_mmio_emul++;
-	err = emulate_mem(ctx, &vhm_req->reqs.mmio_request);
+	err = emulate_mem(ctx, &vhm_req->reqs.mmio);
 
 	if (err) {
 		if (err == -ESRCH)
 			fprintf(stderr, "Unhandled memory access to 0x%lx\n",
-				vhm_req->reqs.mmio_request.address);
+				vhm_req->reqs.mmio.address);
 
 		fprintf(stderr, "Failed to emulate instruction [");
 		fprintf(stderr, "mmio address 0x%lx, size %ld",
-				vhm_req->reqs.mmio_request.address,
-				vhm_req->reqs.mmio_request.size);
+				vhm_req->reqs.mmio.address,
+				vhm_req->reqs.mmio.size);
 
-		if (vhm_req->reqs.mmio_request.direction == REQUEST_READ) {
-			vhm_req->reqs.mmio_request.value = VHM_REQ_MMIO_INVAL;
+		if (vhm_req->reqs.mmio.direction == REQUEST_READ) {
+			vhm_req->reqs.mmio.value = VHM_REQ_MMIO_INVAL;
 		}
 	}
 }
@@ -371,24 +371,24 @@ vmexit_mmio_emul(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 static void
 vmexit_pci_emul(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 {
-	int err, in = (vhm_req->reqs.pci_request.direction == REQUEST_READ);
+	int err, in = (vhm_req->reqs.pci.direction == REQUEST_READ);
 
 	err = emulate_pci_cfgrw(ctx, *pvcpu, in,
-			vhm_req->reqs.pci_request.bus,
-			vhm_req->reqs.pci_request.dev,
-			vhm_req->reqs.pci_request.func,
-			vhm_req->reqs.pci_request.reg,
-			vhm_req->reqs.pci_request.size,
-			&vhm_req->reqs.pci_request.value);
+			vhm_req->reqs.pci.bus,
+			vhm_req->reqs.pci.dev,
+			vhm_req->reqs.pci.func,
+			vhm_req->reqs.pci.reg,
+			vhm_req->reqs.pci.size,
+			&vhm_req->reqs.pci.value);
 	if (err) {
 		fprintf(stderr, "Unhandled pci cfg rw at %x:%x.%x reg 0x%x\n",
-			vhm_req->reqs.pci_request.bus,
-			vhm_req->reqs.pci_request.dev,
-			vhm_req->reqs.pci_request.func,
-			vhm_req->reqs.pci_request.reg);
+			vhm_req->reqs.pci.bus,
+			vhm_req->reqs.pci.dev,
+			vhm_req->reqs.pci.func,
+			vhm_req->reqs.pci.reg);
 
 		if (in) {
-			vhm_req->reqs.pio_request.value = VHM_REQ_PIO_INVAL;
+			vhm_req->reqs.pio.value = VHM_REQ_PIO_INVAL;
 		}
 	}
 }
