@@ -56,6 +56,8 @@
 
 /* TODO: We may need to get this addr from guest ACPI instead of hardcode here */
 #define RT_VM_PM1A_CNT_ADDR	0x404U
+#define RT_VM_PM1A_SLP_TYP	0x1c00U
+#define RT_VM_PM1A_SLP_EN	0x2000U
 
 /**
  * @brief Hypercall
