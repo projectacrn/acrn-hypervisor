@@ -547,10 +547,21 @@ void pause_vm(struct acrn_vm *vm)
 	struct acrn_vcpu *vcpu = NULL;
 
 	if (vm->state != VM_PAUSED) {
-		vm->state = VM_PAUSED;
+		if (is_rt_vm(vm)) {
+			/* Only when RTVM is powering off by itself, we can pause vcpu */
+			if (vm->state == VM_POWERING_OFF) {
+				foreach_vcpu(i, vm, vcpu) {
+					pause_vcpu(vcpu, VCPU_ZOMBIE);
+				}
 
-		foreach_vcpu(i, vm, vcpu) {
-			pause_vcpu(vcpu, VCPU_ZOMBIE);
+				vm->state = VM_PAUSED;
+			}
+		} else {
+			foreach_vcpu(i, vm, vcpu) {
+				pause_vcpu(vcpu, VCPU_ZOMBIE);
+			}
+
+			vm->state = VM_PAUSED;
 		}
 	}
 }
