@@ -105,13 +105,26 @@ static struct sched_object *get_next_sched_obj(struct sched_context *ctx)
 	return obj;
 }
 
-void make_reschedule_request(uint16_t pcpu_id)
+/**
+ * @pre delmode == DEL_MODE_IPI || delmode == DEL_MODE_INIT
+ */
+void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
 	bitmap_set_lock(NEED_RESCHEDULE, &ctx->flags);
 	if (get_cpu_id() != pcpu_id) {
-		send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
+		switch (delmode) {
+		case DEL_MODE_IPI:
+			send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
+			break;
+		case DEL_MODE_INIT:
+			send_single_init(pcpu_id);
+			break;
+		default:
+			ASSERT(false, "Unknown delivery mode %u for pCPU%u", delmode, pcpu_id);
+			break;
+		}
 	}
 }
 
