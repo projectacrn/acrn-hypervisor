@@ -54,6 +54,9 @@
 #define GUEST_FLAG_HIDE_MTRR			(1UL << 4U)  	/* Whether hide MTRR from VM */
 #define GUEST_FLAG_RT				(1UL << 5U)     /* Whether the vm is RT-VM */
 
+/* TODO: We may need to get this addr from guest ACPI instead of hardcode here */
+#define RT_VM_PM1A_CNT_ADDR	0x404U
+
 /**
  * @brief Hypercall
  *

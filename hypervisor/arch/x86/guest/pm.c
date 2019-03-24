@@ -213,3 +213,28 @@ void register_pm1ab_handler(struct acrn_vm *vm)
 	register_gas_io_handler(vm, PM1A_CNT_PIO_IDX, &(sx_data->pm1a_cnt));
 	register_gas_io_handler(vm, PM1B_CNT_PIO_IDX, &(sx_data->pm1b_cnt));
 }
+
+static bool rt_vm_pm1a_io_read(__unused struct acrn_vm *vm, __unused struct acrn_vcpu *vcpu,
+						 __unused uint16_t addr, __unused size_t width)
+{
+	return false;
+}
+
+static bool rt_vm_pm1a_io_write(__unused struct acrn_vm *vm, __unused uint16_t addr,
+							__unused size_t width, __unused uint32_t v)
+{
+	/* TODO: Check if the vm is trying to powering off itself */
+	return false;
+}
+
+void register_rt_vm_pm1a_ctl_handler(struct acrn_vm *vm)
+{
+	struct vm_io_range io_range;
+
+	io_range.flags = IO_ATTR_RW;
+	io_range.base = RT_VM_PM1A_CNT_ADDR;
+	io_range.len = 1U;
+
+	register_pio_emulation_handler(vm, RT_VM_PM1A_CNT_PIO_IDX, &io_range,
+					&rt_vm_pm1a_io_read, &rt_vm_pm1a_io_write);
+}
