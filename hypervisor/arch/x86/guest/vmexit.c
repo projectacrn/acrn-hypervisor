@@ -28,6 +28,7 @@ static int32_t unhandled_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t undefined_vmexit_handler(struct acrn_vcpu *vcpu);
+static int32_t init_signal_vmexit_handler(__unused struct acrn_vcpu *vcpu);
 
 /* VM Dispatch table for Exit condition handling */
 static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
@@ -38,7 +39,7 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_TRIPLE_FAULT] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_INIT_SIGNAL] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = init_signal_vmexit_handler},
 	[VMX_EXIT_REASON_STARTUP_IPI] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_IO_SMI] = {
@@ -341,5 +342,23 @@ static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu)
 static int32_t undefined_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	vcpu_inject_ud(vcpu);
+	return 0;
+}
+
+/*
+ * This handler is only triggered by INIT signal when poweroff from inside of RTVM
+ */
+static int32_t init_signal_vmexit_handler(__unused struct acrn_vcpu *vcpu)
+{
+	/*
+	 * Intel SDM Volume 3, 25.2:
+	 *   INIT signals. INIT signals cause VM exits. A logical processer performs none
+	 *   of the operations normally associated with these events. Such exits do not modify
+	 *   register state or clear pending events as they would outside of VMX operation (If
+	 *   a logical processor is the wait-for-SIPI state, INIT signals are blocked. They do
+	 *   not cause VM exits in this case).
+	 *
+	 * So, it is safe to ignore the signal and reture here.
+	 */
 	return 0;
 }
