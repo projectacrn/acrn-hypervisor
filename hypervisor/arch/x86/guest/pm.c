@@ -220,10 +220,16 @@ static bool rt_vm_pm1a_io_read(__unused struct acrn_vm *vm, __unused struct acrn
 	return false;
 }
 
-static bool rt_vm_pm1a_io_write(__unused struct acrn_vm *vm, __unused uint16_t addr,
-							__unused size_t width, __unused uint32_t v)
+static bool rt_vm_pm1a_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint32_t v)
 {
-	/* TODO: Check if the vm is trying to powering off itself */
+	if ((addr != RT_VM_PM1A_CNT_ADDR) || (width != 2U)) {
+		pr_dbg("Invalid address (0x%x) or width (0x%x)", addr, width);
+	} else {
+		if (((v & RT_VM_PM1A_SLP_EN) && (((v & RT_VM_PM1A_SLP_TYP) >> 10U) == 5U)) != 0U) {
+			vm->state = VM_POWERING_OFF;
+		}
+	}
+
 	return false;
 }
 
