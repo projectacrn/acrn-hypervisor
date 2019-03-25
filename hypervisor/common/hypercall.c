@@ -665,20 +665,19 @@ int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, uint64_t param)
 	struct set_regions regions;
 	struct vm_memory_region mr;
 	struct acrn_vm *target_vm;
+	uint16_t target_vm_id;
 	uint32_t idx;
-	int32_t ret = 0;
+	int32_t ret = -EFAULT;
 
 
 	(void)memset((void *)&regions, 0U, sizeof(regions));
 
-	if (copy_from_gpa(vm, &regions, param, sizeof(regions)) != 0) {
-		pr_err("%s: Unable copy param from vm\n", __func__);
-	        ret = -EFAULT;
-	} else {
+	if (copy_from_gpa(vm, &regions, param, sizeof(regions)) == 0) {
 		target_vm = get_vm_from_vmid(regions.vmid);
-		if ((target_vm == NULL) || is_sos_vm(target_vm)) {
+		target_vm_id = target_vm->vm_id;
+		if ((target_vm_id >= CONFIG_MAX_VM_NUM) || (get_vm_config(target_vm_id)->type != NORMAL_VM)
+			|| (target_vm->state == VM_STATE_INVALID)) {
 			pr_err("%p %s:target_vm is invalid or Targeting to service vm", target_vm, __func__);
-		        ret = -EFAULT;
 		} else {
 			idx = 0U;
 			while (idx < regions.mr_num) {
