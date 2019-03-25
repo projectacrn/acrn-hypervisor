@@ -1575,6 +1575,47 @@ Compliant example::
        }
 
 
+ST-22:  'goto' statement shall not be used
+==========================================
+
+Compliant example::
+
+    uint32_t showcase(uint32_t param)
+    {
+            uint32_t ret;
+    
+            if (param < 10U) {
+                    ret = 10U;
+            } else {
+                    ret = param;
+                    /* do something */
+            }
+    
+            return ret;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase(uint32_t param)
+       {
+               uint32_t ret;
+       
+               if (param < 10U) {
+                       ret = 10U;
+                       goto done;
+               } else {
+                       ret = param;
+               }
+       
+               /* do something */
+       
+       done:
+               return ret;
+       }
+
+
 
 Expressions
 ***********
@@ -3240,18 +3281,18 @@ NC-07: Function pointer shall be named with suffix 'fn'
 
 Compliant example::
 
-    struct firmware_operations firmware_sbl_ops = {
-            .init = sbl_init_fn,
-            .get_rsdp = sbl_get_rsdp_fn,
+    struct firmware_operations {
+            void (*init_fn)(void);
+            void *(*get_rsdp_fn)(void);
     };
 
 .. rst-class:: non-compliant-code
 
    Non-compliant example::
 
-       struct firmware_operations firmware_sbl_ops = {
-               .init = sbl_init,
-               .get_rsdp = sbl_get_rsdp,
+       struct firmware_operations {
+               void (*init)(void);
+               void *(*get_rsdp)(void);
        };
 
 
