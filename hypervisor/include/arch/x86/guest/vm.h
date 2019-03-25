@@ -85,7 +85,7 @@ struct vm_pm_info {
 #define VM_MONO_GUEST       0x01
 /* Enumerated type for VM states */
 enum vm_state {
-	VM_STATE_UNKNOWN = 0,
+	VM_STATE_INVALID = 0,
 	VM_CREATED,	/* VM created / awaiting start (boot) */
 	VM_STARTED,	/* VM started (booted) */
 	VM_PAUSED,	/* VM paused */

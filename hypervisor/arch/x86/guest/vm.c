@@ -448,6 +448,8 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 
 	/* Only allow shutdown paused vm */
 	if (vm->state == VM_PAUSED) {
+		vm->state = VM_STATE_INVALID;
+
 		foreach_vcpu(i, vm, vcpu) {
 			reset_vcpu(vcpu);
 			offline_vcpu(vcpu);
