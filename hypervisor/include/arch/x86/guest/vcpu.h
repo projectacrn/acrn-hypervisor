@@ -242,7 +242,6 @@ struct msr_store_entry {
 
 enum {
 	MSR_AREA_TSC_AUX = 0,
-	MSR_AREA_IA32_MISC_ENABLE,
 	MSR_AREA_COUNT,
 };
 
