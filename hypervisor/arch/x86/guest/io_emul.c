@@ -17,6 +17,11 @@
 #include <trace.h>
 #include <logmsg.h>
 
+#define MMIO_DEFAULT_VALUE_SIZE_1	(0xFFUL)
+#define MMIO_DEFAULT_VALUE_SIZE_2	(0xFFFFUL)
+#define MMIO_DEFAULT_VALUE_SIZE_4	(0xFFFFFFFFUL)
+#define MMIO_DEFAULT_VALUE_SIZE_8	(0xFFFFFFFFFFFFFFFFUL)
+
 /**
  * @brief General complete-work for port I/O emulation
  *
@@ -62,18 +67,6 @@ static void emulate_mmio_complete(struct acrn_vcpu *vcpu, const struct io_reques
 		(void)emulate_instruction(vcpu);
 	}
 }
-
-#ifdef CONFIG_PARTITION_MODE
-static void io_instr_dest_handler(struct io_request *io_req)
-{
-	struct pio_request *pio_req = &io_req->reqs.pio;
-
-	if (pio_req->direction == REQUEST_READ) {
-		pio_req->value = 0xFFFFFFFFU;
-	}
-}
-
-#else
 
 static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
@@ -183,7 +176,57 @@ static void dm_emulate_io_complete(struct acrn_vcpu *vcpu)
 		}
 	}
 }
-#endif
+
+/**
+ * @pre width < 8U
+ */
+static bool pio_default_read(__unused struct acrn_vm *vm, struct acrn_vcpu *vcpu,
+	__unused uint16_t addr, size_t width)
+{
+	struct pio_request *pio_req = &vcpu->req.reqs.pio;
+
+	pio_req->value = (uint32_t)((1UL << (width * 8U)) - 1UL);
+
+	return true;
+}
+
+static bool pio_default_write(__unused struct acrn_vm *vm, __unused uint16_t addr,
+	__unused size_t width, __unused uint32_t v)
+{
+	return true; /* ignore write */
+}
+
+/**
+ * @pre (io_req->reqs.mmio.size == 1U) || (io_req->reqs.mmio.size == 2U) ||
+ *      (io_req->reqs.mmio.size == 4U) || (io_req->reqs.mmio.size == 8U)
+ */
+static int32_t mmio_default_access_handler(struct io_request *io_req,
+	__unused void *handler_private_data)
+{
+	struct mmio_request *mmio = &io_req->reqs.mmio;
+
+	if (mmio->direction == REQUEST_READ) {
+		switch (mmio->size) {
+		case 1U:
+			mmio->value = MMIO_DEFAULT_VALUE_SIZE_1;
+			break;
+		case 2U:
+			mmio->value = MMIO_DEFAULT_VALUE_SIZE_2;
+			break;
+		case 4U:
+			mmio->value = MMIO_DEFAULT_VALUE_SIZE_4;
+			break;
+		case 8U:
+			mmio->value = MMIO_DEFAULT_VALUE_SIZE_8;
+			break;
+		default:
+			/* This case is unreachable, this is guaranteed by the design. */
+			break;
+		}
+	}
+
+	return 0;
+}
 
 /**
  * Try handling the given request by any port I/O handler registered in the
@@ -204,6 +247,8 @@ hv_emulate_pio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	struct acrn_vm *vm = vcpu->vm;
 	struct pio_request *pio_req = &io_req->reqs.pio;
 	struct vm_io_handler_desc *handler;
+	io_read_fn_t io_read = vm->arch_vm.default_io_read;
+	io_write_fn_t io_write = vm->arch_vm.default_io_write;
 
 	port = (uint16_t)pio_req->address;
 	size = (uint16_t)pio_req->size;
@@ -215,33 +260,29 @@ hv_emulate_pio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 			continue;
 		}
 
-		status = 0;
-
-		if (pio_req->direction == REQUEST_WRITE) {
-			if (handler->io_write != NULL) {
-				if (!(handler->io_write(vm, port, size, pio_req->value))) {
-					/*
-					 * If io_write return false, it indicates that we need continue
-					 * to emulate in DM.
-					 */
-					status = -ENODEV;
-				}
-			}
-			pr_dbg("IO write on port %04x, data %08x", port, pio_req->value);
-		} else {
-			if (handler->io_read != NULL) {
-				if (!(handler->io_read(vm, vcpu, port, size))) {
-					/*
-					 * If io_read return false, it indicates that we need continue
-					 * to emulate in DM.
-					 */
-					status = -ENODEV;
-				}
-			}
-			pr_dbg("IO read on port %04x, data %08x", port, pio_req->value);
+		if (handler->io_read != NULL) {
+			io_read = handler->io_read;
+		}
+		if (handler->io_write != NULL) {
+			io_write = handler->io_write;
 		}
 		break;
 	}
+
+	if ((pio_req->direction == REQUEST_WRITE) && (io_write != NULL)) {
+		if (io_write(vm, port, size, pio_req->value)) {
+			status = 0;
+		}
+	} else if ((pio_req->direction == REQUEST_READ) && (io_read != NULL)) {
+		if (io_read(vm, vcpu, port, size)) {
+			status = 0;
+		}
+	} else {
+		/* do nothing */
+	}
+
+	pr_dbg("IO %s on port %04x, data %08x",
+		(pio_req->direction == REQUEST_READ) ? "read" : "write", port, pio_req->value);
 
 	return status;
 }
@@ -264,6 +305,8 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	uint64_t address, size;
 	struct mmio_request *mmio_req = &io_req->reqs.mmio;
 	struct mem_io_node *mmio_handler = NULL;
+	hv_mem_io_handler_t read_write = vcpu->vm->default_read_write;
+	void *handler_private_data = NULL;
 
 	address = mmio_req->address;
 	size = mmio_req->size;
@@ -283,9 +326,9 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 			status = -EIO;
 			emulation_done = true;
 		} else {
-			/* Handle this MMIO operation */
 			if (mmio_handler->read_write != NULL) {
-				status = mmio_handler->read_write(io_req, mmio_handler->handler_private_data);
+				read_write = mmio_handler->read_write;
+				handler_private_data = mmio_handler->handler_private_data;
 				emulation_done = true;
 			}
 		}
@@ -293,6 +336,10 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 		if (emulation_done) {
 			break;
 		}
+	}
+
+	if ((status == -ENODEV) && (read_write != NULL)) {
+		status = read_write(io_req, handler_private_data);
 	}
 
 	return status;
@@ -303,6 +350,10 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
  *
  * Handle an I/O request by either invoking a hypervisor-internal handler or
  * deliver to VHM.
+ *
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
+ * @pre vcpu->vm->vm_id < CONFIG_MAX_VM_NUM
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
  * @param io_req The I/O request holding the details of the MMIO access
@@ -317,6 +368,9 @@ static int32_t
 emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
 	int32_t status;
+	struct acrn_vm_config *vm_config;
+
+	vm_config = get_vm_config(vcpu->vm->vm_id);
 
 	switch (io_req->type) {
 	case REQ_PORTIO:
@@ -338,16 +392,7 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 		break;
 	}
 
-	if (status == -ENODEV) {
-#ifdef CONFIG_PARTITION_MODE
-		/*
-		 * No handler from HV side, return all FFs on read
-		 * and discard writes.
-		 */
-		io_instr_dest_handler(io_req);
-		status = 0;
-
-#else
+	if ((status == -ENODEV) && (vm_config->type == NORMAL_VM)) {
 		/*
 		 * No handler from HV side, search from VHM in Dom0
 		 *
@@ -366,7 +411,6 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 				pio_req->direction, io_req->type,
 				pio_req->address, pio_req->size);
 		}
-#endif
 	}
 
 	return status;
@@ -600,4 +644,25 @@ int32_t register_mmio_emulation_handler(struct acrn_vm *vm,
 
 	/* Return status to caller */
 	return status;
+}
+
+/**
+ * @brief Register port I/O default handler
+ *
+ * @param vm      The VM to which the port I/O handlers are registered
+ */
+void register_pio_default_emulation_handler(struct acrn_vm *vm)
+{
+	vm->arch_vm.default_io_read = pio_default_read;
+	vm->arch_vm.default_io_write = pio_default_write;
+}
+
+/**
+ * @brief Register MMIO default handler
+ *
+ * @param vm The VM to which the MMIO handler is registered
+ */
+void register_mmio_default_emulation_handler(struct acrn_vm *vm)
+{
+	vm->default_read_write = mmio_default_access_handler;
 }
