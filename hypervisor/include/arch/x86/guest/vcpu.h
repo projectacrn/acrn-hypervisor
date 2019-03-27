@@ -377,6 +377,8 @@ uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg);
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] reg register of the vcpu
  * @param[in] val the value set the register of the vcpu
+ *
+ * @return None
  */
 void vcpu_set_gpreg(struct acrn_vcpu *vcpu, uint32_t reg, uint64_t val);
 
@@ -398,6 +400,8 @@ uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] val the value set RIP
+ *
+ * @return None
  */
 void vcpu_set_rip(struct acrn_vcpu *vcpu, uint64_t val);
 
@@ -419,6 +423,8 @@ uint64_t vcpu_get_rsp(struct acrn_vcpu *vcpu);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] val the value set RSP
+ *
+ * @return None
  */
 void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val);
 
@@ -440,6 +446,8 @@ uint64_t vcpu_get_efer(struct acrn_vcpu *vcpu);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] val the value set EFER
+ *
+ * @return None
  */
 void vcpu_set_efer(struct acrn_vcpu *vcpu, uint64_t val);
 
@@ -461,6 +469,8 @@ uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] val the value set RFLAGS
+ *
+ * @return None
  */
 void vcpu_set_rflags(struct acrn_vcpu *vcpu, uint64_t val);
 
@@ -485,6 +495,7 @@ uint64_t vcpu_get_guest_msr(const struct acrn_vcpu *vcpu, uint32_t msr);
  * @param[in] msr the guest MSR
  * @param[in] val the value to set the target MSR
  *
+ * @return None
  */
 void vcpu_set_guest_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val);
 
@@ -493,7 +504,7 @@ void vcpu_set_guest_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val);
  *
  * @param[in] vcpu pointer to vcpu data structure
  *
- * @return void
+ * @return None
  */
 void vcpu_set_vmcs_eoi_exit(struct acrn_vcpu *vcpu);
 
@@ -502,7 +513,7 @@ void vcpu_set_vmcs_eoi_exit(struct acrn_vcpu *vcpu);
  *
  * @param[in] vcpu pointer to vcpu data structure
  *
- * @return void
+ * @return None
  */
 
 void vcpu_reset_eoi_exit_bitmaps(struct acrn_vcpu *vcpu);
@@ -515,7 +526,7 @@ void vcpu_reset_eoi_exit_bitmaps(struct acrn_vcpu *vcpu);
  * @param[in] vcpu pointer to vcpu data structure
  * @param[in] vector
  *
- * @return void
+ * @return None
  */
 void vcpu_set_eoi_exit_bitmap(struct acrn_vcpu *vcpu, uint32_t vector);
 /**
@@ -526,7 +537,7 @@ void vcpu_set_eoi_exit_bitmap(struct acrn_vcpu *vcpu, uint32_t vector);
  * @param[in] vcpu pointer to vcpu data structure
  * @param[in] vector
  *
- * @return void
+ * @return None
  */
 void vcpu_clear_eoi_exit_bitmap(struct acrn_vcpu *vcpu, uint32_t vector);
 /**
@@ -536,6 +547,8 @@ void vcpu_clear_eoi_exit_bitmap(struct acrn_vcpu *vcpu, uint32_t vector);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] vcpu_regs all the registers' value
+ *
+ * @return None
  */
 void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
 
@@ -545,6 +558,8 @@ void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
  * Reset target vCPU's all registers in run_context to initial values.
  *
  * @param[inout] vcpu pointer to vcpu data structure
+ *
+ * @return None
  */
 void reset_vcpu_regs(struct acrn_vcpu *vcpu);
 
@@ -555,6 +570,8 @@ void reset_vcpu_regs(struct acrn_vcpu *vcpu);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] entry the entry value for AP
+ *
+ * @return None
  */
 void set_ap_entry(struct acrn_vcpu *vcpu, uint64_t entry);
 
@@ -611,6 +628,8 @@ int32_t shutdown_vcpu(struct acrn_vcpu *vcpu);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  * @pre vcpu != NULL
+ *
+ * @return None
  */
 void offline_vcpu(struct acrn_vcpu *vcpu);
 
@@ -620,6 +639,8 @@ void offline_vcpu(struct acrn_vcpu *vcpu);
  * Reset all fields in a vCPU instance, the vCPU state is reset to VCPU_INIT.
  *
  * @param[inout] vcpu pointer to vcpu data structure
+ *
+ * @return None
  */
 void reset_vcpu(struct acrn_vcpu *vcpu);
 
@@ -630,6 +651,8 @@ void reset_vcpu(struct acrn_vcpu *vcpu);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] new_state the state to set vcpu
+ *
+ * @return None
  */
 void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state);
 
@@ -639,6 +662,8 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state);
  * Change a vCPU state to VCPU_RUNNING, and make a reschedule request for it.
  *
  * @param[inout] vcpu pointer to vcpu data structure
+ *
+ * @return None
  */
 void resume_vcpu(struct acrn_vcpu *vcpu);
 
@@ -648,6 +673,8 @@ void resume_vcpu(struct acrn_vcpu *vcpu);
  * Adds a vCPU into the run queue and make a reschedule request for it. It sets the vCPU state to VCPU_RUNNING.
  *
  * @param[inout] vcpu pointer to vcpu data structure
+ *
+ * @return None
  */
 void schedule_vcpu(struct acrn_vcpu *vcpu);
 
@@ -658,6 +685,9 @@ void schedule_vcpu(struct acrn_vcpu *vcpu);
  *
  * @param[inout] vm pointer to vm data structure
  * @param[in] pcpu_id which the vcpu will be mapped
+ *
+ * @retval 0 on success
+ * @retval -EINVAL if the vCPU ID is invalid
  */
 int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
 
@@ -668,6 +698,8 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
  *
  * @param[in] vm pointer to vm data structure
  * @param[in] vdmask virtual destination cpu mask
+ *
+ * @return The physical destination CPU mask
  */
 uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask);
 
