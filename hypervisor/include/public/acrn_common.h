@@ -52,6 +52,7 @@
 #define GUEST_FLAG_IO_COMPLETION_POLLING	(1UL << 2U)  	/* Whether need hypervisor poll IO completion */
 #define GUEST_FLAG_CLOS_REQUIRED		(1UL << 3U)     /* Whether CLOS is required */
 #define GUEST_FLAG_HIDE_MTRR			(1UL << 4U)  	/* Whether hide MTRR from VM */
+#define GUEST_FLAG_RT				(1UL << 5U)     /* Whether the vm is RT-VM */
 
 /**
  * @brief Hypercall
