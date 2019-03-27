@@ -142,6 +142,7 @@ vm_create(const char *name, uint64_t req_buf)
 
 	if (lapic_pt) {
 		create_vm.vm_flag |= GUEST_FLAG_LAPIC_PASSTHROUGH;
+		create_vm.vm_flag |= GUEST_FLAG_RT;
 		create_vm.vm_flag |= GUEST_FLAG_IO_COMPLETION_POLLING;
 	} else {
 		create_vm.vm_flag &= (~GUEST_FLAG_LAPIC_PASSTHROUGH);
