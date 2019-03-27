@@ -3141,6 +3141,100 @@ Compliant example::
        // This is a comment
 
 
+CS-18: Function information shall be documented with doxygen-style comments
+===========================================================================
+
+Some detailed rules are listed below to illustrate the comments format for each
+function:
+
+1) The comments block shall start with '/\*\*' (slash-asterisk-asterisk) in a
+   single line.
+2) The comments block shall end with ' \*/' (space-asterisk-slash) in a single
+   line.
+3) Other than the first line and the last line, every line inside the comments
+   block shall start with ' \*' (space-asterisk). It also applies to the line which
+   is used to separate different paragraphs. We'll call it a blank line for
+   simplicity.
+4) For each function, the information shall be documented with the following
+   order: brief description, detailed description, parameters description,
+   pre-conditions, post-conditions, return value description, and comments
+   explaining the actual return values. We'll call each block of information a
+   paragraph for simplicity. A paragraph may be removed from the list if it is not
+   applicable for that function.
+5) Each line shall only contain the description for one parameter, or one
+   pre-condition, or one post-condition, or one actual return value. We'll call
+   each of these an element for simplicity.
+6) A blank line shall separate different paragraphs. Inside each paragraph, a
+   blank line is not required to separate each element.
+7) The brief description of the function shall be documented with the format
+   '@brief <brief description>'.
+8) No specific format is required for the detailed description of the function.
+9) The description of the function parameter shall be documented with the format
+   '@param <parameter name> <parameter description>'.
+10) The pre-condition of the function shall be documented with the format '@pre
+    <pre-condition description>'.
+11) The post-condition of the function shall be documented with the format
+    '@post <post-condition description>'.
+12) The brief description of the function return value shall be documented with
+    the format '@return <brief description of return value>'.
+13) A void-returning function shall be documented with the format '@return
+    None'.
+14) The comments explaining the actual return values shall be documented with
+    the format '@retval <return value> <return value explanation>'.
+15) If the description of one element needs to span multiple lines, each line
+    shall be aligned to the start of the description in the first line for that
+    element.
+16) The comments block shall appear immediately before the function
+    definition/declaration in the C source file or header file.
+
+Compliant example::
+
+    /**
+     * @brief Brief description of the function.
+     *
+     * Detailed description of the function. Detailed description of the function. Detailed description of the
+     * function. Detailed description of the function.
+     *
+     * @param param_1 Parameter description for param_1.
+     * @param param_2 Parameter description for param_2.
+     * @param param_3 Parameter description for param_3. Parameter description for param_3. Parameter description
+     *                for param_3. Parameter description for param_3. Parameter description for param_3. Parameter
+     *                description for param_3.
+     *
+     * @pre param_1 != NULL
+     * @pre param_2 <= 255U
+     *
+     * @post retval <= 0
+     *
+     * @return Brief description of the return value.
+     *
+     * @retval 0 Success to handle specific case.
+     * @retval -EINVAL Fail to handle specific case because the argument is invalid.
+     * @retval -EBUSY Fail to handle specific case because the target is busy.
+     *
+     */
+    int32_t func_showcase(uint32_t *param_1, uint32_t param_2, uint32_t param_3);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       /* Brief description of the function.
+       Detailed description of the function. Detailed description of the function. Detailed description of the
+       function. Detailed description of the function.
+       
+       @param param_1 Parameter description for param_1. @param param_2 Parameter description for param_2.
+       @param param_3 Parameter description for param_3. Parameter description for param_3. Parameter description
+       for param_3. Parameter description for param_3. Parameter description for param_3. Parameter
+       description for param_3.
+       
+       pre-conditions: param_1 != NULL, param_2 <= 255U
+       post-conditions: retval <= 0
+       
+       Brief description of the return value. */
+       int32_t func_showcase(uint32_t *param_1, uint32_t param_2, uint32_t param_3);
+
+
 Naming Convention
 *****************
 
