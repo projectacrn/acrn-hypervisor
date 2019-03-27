@@ -101,6 +101,10 @@ int32_t sanitize_vm_config(void)
 		case PRE_LAUNCHED_VM:
 			if (vm_config->pcpu_bitmap == 0U) {
 				ret = -EINVAL;
+			/* GUEST_FLAG_RT must be set if we have GUEST_FLAG_LAPIC_PASSTHROUGH set in guest_flags */
+			} else if (((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)
+					&& ((vm_config->guest_flags & GUEST_FLAG_RT) == 0U)) {
+				ret = -EINVAL;
 			} else {
 				pre_launch_pcpu_bitmap |= vm_config->pcpu_bitmap;
 			}

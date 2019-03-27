@@ -136,19 +136,26 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 			vm_config->guest_flags |= cv.vm_flag;
 			(void)memcpy_s(&vm_config->GUID[0], 16U, &cv.GUID[0], 16U);
 
-			ret = create_vm(vm_id, vm_config, &target_vm);
-			if (ret != 0) {
-				dev_dbg(ACRN_DBG_HYCALL, "HCALL: Create VM failed");
-				cv.vmid = ACRN_INVALID_VMID;
+			/* GUEST_FLAG_RT must be set if we have GUEST_FLAG_LAPIC_PASSTHROUGH set in guest_flags */
+			if (((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)
+				&& ((vm_config->guest_flags & GUEST_FLAG_RT) == 0U)) {
+				pr_err("Wrong guest flags 0x%llx\n", vm_config->guest_flags);
 				ret = -1;
 			} else {
-				cv.vmid = target_vm->vm_id;
-				ret = 0;
-			}
+				ret = create_vm(vm_id, vm_config, &target_vm);
+				if (ret != 0) {
+					dev_dbg(ACRN_DBG_HYCALL, "HCALL: Create VM failed");
+					cv.vmid = ACRN_INVALID_VMID;
+					ret = -1;
+				} else {
+					cv.vmid = target_vm->vm_id;
+					ret = 0;
+				}
 
-			if (copy_to_gpa(vm, &cv.vmid, param, sizeof(cv.vmid)) != 0) {
-				pr_err("%s: Unable copy param to vm\n", __func__);
-				ret = -1;
+				if (copy_to_gpa(vm, &cv.vmid, param, sizeof(cv.vmid)) != 0) {
+					pr_err("%s: Unable copy param to vm\n", __func__);
+					ret = -1;
+				}
 			}
 		}
 	} else {

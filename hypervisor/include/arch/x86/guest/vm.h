@@ -221,6 +221,7 @@ uint16_t get_vm_pcpu_nums(const struct acrn_vm_config *vm_config);
 void vrtc_init(struct acrn_vm *vm);
 
 bool is_lapic_pt(const struct acrn_vm *vm);
+bool is_rt_vm(const struct acrn_vm *vm);
 bool vm_hide_mtrr(const struct acrn_vm *vm);
 
 #endif /* !ASSEMBLER */
