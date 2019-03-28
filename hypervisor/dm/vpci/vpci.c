@@ -66,7 +66,7 @@ static uint32_t pci_cfgaddr_io_read(struct acrn_vm *vm, uint16_t addr, size_t by
 /**
  * @pre vm != NULL
  */
-static void pci_cfgaddr_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
+static bool pci_cfgaddr_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
 {
 	struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
@@ -76,6 +76,8 @@ static void pci_cfgaddr_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes
 		pi->cached_reg = val & PCI_REGMAX;
 		pi->cached_enable = ((val & PCI_CFG_ENABLE) == PCI_CFG_ENABLE);
 	}
+
+	return true;
 }
 
 static inline bool vpci_is_valid_access_offset(uint32_t offset, uint32_t bytes)
@@ -135,7 +137,7 @@ static uint32_t pci_cfgdata_io_read(struct acrn_vm *vm, uint16_t addr, size_t by
  * @pre vm->vm_id < CONFIG_MAX_VM_NUM
  * @pre (get_vm_config(vm->vm_id)->type == PRE_LAUNCHED_VM) || (get_vm_config(vm->vm_id)->type == SOS_VM)
  */
-static void pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
+static bool pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
 {
 	struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
@@ -163,6 +165,8 @@ static void pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes
 		}
 		pci_cfg_clear_cache(pi);
 	}
+
+	return true;
 }
 
 /**

@@ -142,7 +142,7 @@ static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t 
 	resume_vm_from_s3(vm, guest_wakeup_vec32);	/* jump back to vm */
 }
 
-static void pm1ab_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint32_t v)
+static bool pm1ab_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint32_t v)
 {
 	static uint32_t pm1a_cnt_ready = 0U;
 	bool to_write = true;
@@ -179,6 +179,8 @@ static void pm1ab_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint
 	if (to_write) {
 		pio_write(v, addr, width);
 	}
+
+	return true;
 }
 
 static void register_gas_io_handler(struct acrn_vm *vm, uint32_t pio_idx, const struct acpi_generic_address *gas)

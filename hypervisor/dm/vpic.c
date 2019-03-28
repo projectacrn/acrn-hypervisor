@@ -739,7 +739,7 @@ static uint32_t vpic_master_io_read(struct acrn_vm *vm, uint16_t addr, size_t wi
 	return val;
 }
 
-static void vpic_master_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
+static bool vpic_master_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
 				uint32_t v)
 {
 	uint32_t val = v;
@@ -748,6 +748,8 @@ static void vpic_master_io_write(struct acrn_vm *vm, uint16_t addr, size_t width
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
 				__func__, addr, width, val);
 	}
+
+	return true;
 }
 
 static int32_t vpic_slave_handler(struct acrn_vm *vm, bool in, uint16_t port,
@@ -782,7 +784,7 @@ static uint32_t vpic_slave_io_read(struct acrn_vm *vm, uint16_t addr, size_t wid
 	return val;
 }
 
-static void vpic_slave_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
+static bool vpic_slave_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
 				uint32_t v)
 {
 	uint32_t val = v;
@@ -791,6 +793,8 @@ static void vpic_slave_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
 				__func__, addr, width, val);
 	}
+
+	return true;
 }
 
 static int32_t vpic_elc_handler(struct acrn_vm *vm, bool in, uint16_t port, size_t bytes,
@@ -849,7 +853,7 @@ static uint32_t vpic_elc_io_read(struct acrn_vm *vm, uint16_t addr, size_t width
 	return val;
 }
 
-static void vpic_elc_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
+static bool vpic_elc_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
 				uint32_t v)
 {
 	uint32_t val = v;
@@ -858,6 +862,8 @@ static void vpic_elc_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
 				__func__, addr, width, val);
 	}
+
+	return true;
 }
 
 static void vpic_register_io_handler(struct acrn_vm *vm)

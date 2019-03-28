@@ -52,7 +52,7 @@ typedef
 uint32_t (*io_read_fn_t)(struct acrn_vm *vm, uint16_t port, size_t size);
 
 typedef
-void (*io_write_fn_t)(struct acrn_vm *vm, uint16_t port, size_t size, uint32_t val);
+bool (*io_write_fn_t)(struct acrn_vm *vm, uint16_t port, size_t size, uint32_t val);
 
 /**
  * @brief Describes a single IO handler description entry.
