@@ -161,7 +161,7 @@ static void vuart_toggle_intr(const struct acrn_vuart *vu)
 	vioapic_set_irqline_lock(vu->vm, vuart_com_irq, operation);
 }
 
-static void vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
+static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 			__unused size_t width, uint32_t value)
 {
 	uint16_t offset = offset_arg;
@@ -244,6 +244,8 @@ static void vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 done:
 	vuart_toggle_intr(vu);
 	vuart_unlock(vu);
+
+	return true;
 }
 
 static uint32_t vuart_read(struct acrn_vm *vm, uint16_t offset_arg,

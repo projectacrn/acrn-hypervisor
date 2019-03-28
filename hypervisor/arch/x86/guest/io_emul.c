@@ -217,7 +217,13 @@ hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
 
 		if (pio_req->direction == REQUEST_WRITE) {
 			if (handler->io_write != NULL) {
-				handler->io_write(vm, port, size, pio_req->value);
+				if (!(handler->io_write(vm, port, size, pio_req->value))) {
+					/*
+					 * If io_write return false, it indicates that we need continue
+					 * to emulate in DM.
+					 */
+					status = -ENODEV;
+				}
 			}
 			pr_dbg("IO write on port %04x, data %08x", port, pio_req->value);
 		} else {

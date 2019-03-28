@@ -58,16 +58,14 @@ static uint32_t vrtc_read(struct acrn_vm *vm, uint16_t addr, __unused size_t wid
 	return reg;
 }
 
-static void vrtc_write(struct acrn_vm *vm, uint16_t addr, size_t width,
+static bool vrtc_write(struct acrn_vm *vm, uint16_t addr, size_t width,
 			uint32_t value)
 {
-
-	if (width != 1U)
-		return;
-
-	if (addr == CMOS_ADDR_PORT) {
+	if ((width == 1U) && (addr == CMOS_ADDR_PORT)) {
 		vm->vrtc_offset = value & 0x7FU;
 	}
+
+	return true;
 }
 
 void vrtc_init(struct acrn_vm *vm)
