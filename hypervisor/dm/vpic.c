@@ -728,15 +728,16 @@ static int32_t vpic_master_handler(struct acrn_vm *vm, bool in, uint16_t port,
 	return ret;
 }
 
-static uint32_t vpic_master_io_read(struct acrn_vm *vm, uint16_t addr, size_t width)
+static bool vpic_master_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 {
-	uint32_t val = 0U;
+	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	if (vpic_master_handler(vm, true, addr, width, &val) < 0) {
+	if (vpic_master_handler(vm, true, addr, width, &pio_req->value) < 0) {
 		pr_err("pic master read port 0x%x width=%d failed\n",
 				addr, width);
 	}
-	return val;
+
+	return true;
 }
 
 static bool vpic_master_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
@@ -773,15 +774,15 @@ static int32_t vpic_slave_handler(struct acrn_vm *vm, bool in, uint16_t port,
 	return ret;
 }
 
-static uint32_t vpic_slave_io_read(struct acrn_vm *vm, uint16_t addr, size_t width)
+static bool vpic_slave_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 {
-	uint32_t val = 0U;
+	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	if (vpic_slave_handler(vm, true, addr, width, &val) < 0) {
+	if (vpic_slave_handler(vm, true, addr, width, &pio_req->value) < 0) {
 		pr_err("pic slave read port 0x%x width=%d failed\n",
 				addr, width);
 	}
-	return val;
+	return true;
 }
 
 static bool vpic_slave_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
@@ -843,14 +844,15 @@ static int32_t vpic_elc_handler(struct acrn_vm *vm, bool in, uint16_t port, size
 	return ret;
 }
 
-static uint32_t vpic_elc_io_read(struct acrn_vm *vm, uint16_t addr, size_t width)
+static bool vpic_elc_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 {
-	uint32_t val = 0U;
+	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	if (vpic_elc_handler(vm, true, addr, width, &val) < 0) {
+	if (vpic_elc_handler(vm, true, addr, width, &pio_req->value) < 0) {
 		pr_err("pic elc read port 0x%x width=%d failed", addr, width);
 	}
-	return val;
+
+	return true;
 }
 
 static bool vpic_elc_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,

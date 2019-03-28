@@ -196,7 +196,7 @@ static void dm_emulate_io_complete(struct acrn_vcpu *vcpu)
  * @retval -EIO The request spans multiple devices and cannot be emulated.
  */
 static int32_t
-hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
+hv_emulate_pio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
 	int32_t status = -ENODEV;
 	uint16_t port, size;
@@ -215,6 +215,8 @@ hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
 			continue;
 		}
 
+		status = 0;
+
 		if (pio_req->direction == REQUEST_WRITE) {
 			if (handler->io_write != NULL) {
 				if (!(handler->io_write(vm, port, size, pio_req->value))) {
@@ -228,11 +230,16 @@ hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
 			pr_dbg("IO write on port %04x, data %08x", port, pio_req->value);
 		} else {
 			if (handler->io_read != NULL) {
-				pio_req->value = handler->io_read(vm, port, size);
+				if (!(handler->io_read(vm, vcpu, port, size))) {
+					/*
+					 * If io_read return false, it indicates that we need continue
+					 * to emulate in DM.
+					 */
+					status = -ENODEV;
+				}
 			}
 			pr_dbg("IO read on port %04x, data %08x", port, pio_req->value);
 		}
-		status = 0;
 		break;
 	}
 

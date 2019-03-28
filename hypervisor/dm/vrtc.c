@@ -43,19 +43,20 @@ static uint8_t cmos_get_reg_val(uint8_t addr)
 	return reg;
 }
 
-static uint32_t vrtc_read(struct acrn_vm *vm, uint16_t addr, __unused size_t width)
+static bool vrtc_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, __unused size_t width)
 {
-	uint8_t reg;
 	uint8_t offset;
+	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
 	offset = vm->vrtc_offset;
 
 	if (addr == CMOS_ADDR_PORT) {
-		return vm->vrtc_offset;
+		pio_req->value = vm->vrtc_offset;
+	} else {
+		pio_req->value = cmos_get_reg_val(offset);
 	}
 
-	reg = cmos_get_reg_val(offset);
-	return reg;
+	return true;
 }
 
 static bool vrtc_write(struct acrn_vm *vm, uint16_t addr, size_t width,
