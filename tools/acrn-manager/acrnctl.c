@@ -422,13 +422,14 @@ static int acrnctl_do_stop(int argc, char *argv[])
 	s = vmmngr_find(argv[1]);
 	if (!s) {
 		printf("can't find %s\n", argv[1]);
+		return -1;
 	}
 	if (s->state == VM_CREATED) {
 		printf("%s is already (%s)\n", argv[1],state_str[s->state]);
+		return -1;
 	}
-	stop_vm(argv[1]);
+	return stop_vm(argv[1]);
 
-	return 0;
 }
 
 /* Function: Delete runC configuration */
@@ -486,9 +487,11 @@ static int acrnctl_do_del(int argc, char *argv[])
 	s = vmmngr_find(argv[1]);
 	if (!s) {
 		printf("can't find %s\n", argv[1]);
+		return -1;
 	}
 	if (s->state != VM_CREATED) {
 		printf("can't delete %s(%s)\n", argv[1],state_str[s->state]);
+		return -1;
 	}
 	if (snprintf(cmd, sizeof(cmd), "rm -f %s/%s.sh",ACRN_CONF_PATH_ADD, argv[1]) >= sizeof(cmd)) {
 		printf("WARN: cmd is truncated\n");
@@ -523,39 +526,42 @@ static int acrnctl_do_start(int argc, char *argv[])
 		return -1;
 	}
 
-	start_vm(argv[1]);
+	return start_vm(argv[1]);
 
-	return 0;
 }
 
 static int acrnctl_do_pause(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
+	int ret = -1;
 
 	s = vmmngr_find(argv[1]);
 	if (!s) {
 		printf("Can't find vm %s\n", argv[1]);
+		return ret;
 	}
 
 	/* Send pause cmd to arcn-dm only when vm is in VM_STARTED */
 	switch (s->state) {
 		case VM_STARTED:
-			pause_vm(argv[1]);
+			ret = pause_vm(argv[1]);
 			break;
 		default:
 			printf("%s current state %s, can't pause\n",argv[1], state_str[s->state]);
 	}
 
-	return 0;
+	return ret;
 }
 
 static int acrnctl_do_continue(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
+	int ret = -1;
 
 	s = vmmngr_find(argv[1]);
 	if (!s) {
 		printf("Can't find vm %s\n", argv[1]);
+		return ret;
 	}
 
 	/* Per current implemention, we can't know if vm is in paused
@@ -564,45 +570,48 @@ static int acrnctl_do_continue(int argc, char *argv[])
 	   paused */
 	switch (s->state) {
 		case VM_STARTED:
-			continue_vm(argv[1]);
+			ret = continue_vm(argv[1]);
 			break;
 		default:
 			printf("%s current state %s, can't continue\n",argv[1], state_str[s->state]);
 	}
 
-	return 0;
+	return ret;
 }
 
 static int acrnctl_do_suspend(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
+	int ret = -1;
 
 	s = vmmngr_find(argv[1]);
 	if (!s) {
 		printf("Can't find vm %s\n", argv[1]);
+		return ret;
 	}
 
 	/* Only send suspend cmd to acrn-dm now when VM_STARTED */
 	switch (s->state) {
 		case VM_STARTED:
-			suspend_vm(argv[1]);
+			ret = suspend_vm(argv[1]);
 			break;
 		default:
 			printf("%s current state %s, can't suspend\n",argv[1], state_str[s->state]);
 	}
 
-	return 0;
+	return ret;
 }
 
 static int acrnctl_do_resume(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
 	unsigned reason = CBC_WK_RSN_BTN;
+	int ret = -1;
 
 	s = vmmngr_find(argv[1]);
 	if (!s) {
 		printf("Can't find vm %s\n", argv[1]);
-		return -1;
+		return ret;
 	}
 
 	if (argc == 3) {
@@ -613,14 +622,14 @@ static int acrnctl_do_resume(int argc, char *argv[])
 
 	switch (s->state) {
 		case VM_SUSPENDED:
-			resume_vm(argv[1], reason);
+			ret = resume_vm(argv[1], reason);
 			printf("resume %s reason(0x%x\n", argv[1], reason);
 			break;
 		default:
 			printf("%s current state %s, can't resume\n",argv[1], state_str[s->state]);
 	}
 
-	return 0;
+	return ret;
 }
 
 static int wait_vm_stop(const char * vmname, unsigned int timeout)
@@ -652,26 +661,31 @@ static int wait_vm_stop(const char * vmname, unsigned int timeout)
 static int acrnctl_do_reset(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
+	int ret = -1;
 
 	s = vmmngr_find(argv[1]);
 	if (!s) {
 		printf("Can't find vm %s\n", argv[1]);
+		return ret;
 	}
 
 	switch(s->state) {
 		case VM_STARTED:
 		case VM_SUSPENDED:
-			stop_vm(argv[1]);
+			ret = stop_vm(argv[1]);
+			if (ret != 0) {
+				break;
+			}
 			if (wait_vm_stop(argv[1], STOP_TIMEOUT)) {
 				printf("Failed to stop %s in %u sec, reset failed\n",argv[1], STOP_TIMEOUT);
-				return -1;
+				break;
 			}
-			start_vm(argv[1]);
+			ret = start_vm(argv[1]);
 			break;
 		default:
 			printf("%s current state: %s, can't reset\n",argv[1], state_str[s->state]);
 	}
-	return 0;
+	return ret;
 }
 
 /* Default args validation function */
