@@ -43,13 +43,14 @@ static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 }
 
 /**
- * @pre vm != NULL
+ * @pre vm != NULL && vcpu != NULL
  */
-static uint32_t pci_cfgaddr_io_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
+static bool pci_cfgaddr_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
 {
 	uint32_t val = ~0U;
 	struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
+	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
 	if ((addr == (uint16_t)PCI_CONFIG_ADDR) && (bytes == 4U)) {
 		val = (uint32_t)pi->cached_bdf.value;
@@ -60,7 +61,9 @@ static uint32_t pci_cfgaddr_io_read(struct acrn_vm *vm, uint16_t addr, size_t by
 		}
 	}
 
-	return val;
+	pio_req->value = val;
+
+	return true;
 }
 
 /**
@@ -96,17 +99,18 @@ static inline bool vpci_is_valid_access(uint32_t offset, uint32_t bytes)
 }
 
 /**
- * @pre vm != NULL
+ * @pre vm != NULL && vcpu != NULL
  * @pre vm->vm_id < CONFIG_MAX_VM_NUM
  * @pre (get_vm_config(vm->vm_id)->type == PRE_LAUNCHED_VM) || (get_vm_config(vm->vm_id)->type == SOS_VM)
  */
-static uint32_t pci_cfgdata_io_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
+static bool pci_cfgdata_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
 {
 	struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 	uint16_t offset = addr - PCI_CONFIG_DATA;
 	uint32_t val = ~0U;
 	struct acrn_vm_config *vm_config;
+	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
 	if (pi->cached_enable) {
 		if (vpci_is_valid_access(pi->cached_reg + offset, bytes)) {
@@ -129,7 +133,9 @@ static uint32_t pci_cfgdata_io_read(struct acrn_vm *vm, uint16_t addr, size_t by
 		pci_cfg_clear_cache(pi);
 	}
 
-	return val;
+	pio_req->value = val;
+
+	return true;
 }
 
 /**

@@ -121,9 +121,13 @@ static inline uint8_t get_slp_typx(uint32_t pm1_cnt)
 	return (uint8_t)((pm1_cnt & 0x1fffU) >> BIT_SLP_TYPx);
 }
 
-static uint32_t pm1ab_io_read(__unused struct acrn_vm *vm, uint16_t addr, size_t width)
+static bool pm1ab_io_read(__unused struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 {
-	return pio_read(addr, width);
+	struct pio_request *pio_req = &vcpu->req.reqs.pio;
+
+	pio_req->value = pio_read(addr, width);
+
+	return true;
 }
 
 static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
