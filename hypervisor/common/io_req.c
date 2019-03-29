@@ -23,11 +23,9 @@ static void fire_vhm_interrupt(void)
 	struct acrn_vcpu *vcpu;
 
 	sos_vm = get_sos_vm();
-	if (sos_vm != NULL) {
-		vcpu = vcpu_from_vid(sos_vm, BOOT_CPU_ID);
+	vcpu = vcpu_from_vid(sos_vm, BOOT_CPU_ID);
 
-		vlapic_set_intr(vcpu, acrn_vhm_vector, LAPIC_TRIG_EDGE);
-	}
+	vlapic_set_intr(vcpu, acrn_vhm_vector, LAPIC_TRIG_EDGE);
 }
 
 #if defined(HV_DEBUG)

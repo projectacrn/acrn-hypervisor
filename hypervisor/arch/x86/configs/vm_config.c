@@ -53,6 +53,7 @@ static struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE) 
 
 /*
  * @pre vm_id < CONFIG_MAX_VM_NUM
+ * @post return != NULL 
  */
 struct acrn_vm_config *get_vm_config(uint16_t vm_id)
 {
