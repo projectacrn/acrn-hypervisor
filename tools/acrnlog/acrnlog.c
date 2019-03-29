@@ -24,7 +24,7 @@
 				"Try reducing polling interval"
 
 /* Count of /dev/acrn_hvlog_cur_xxx */
-static unsigned int dev_cnt;
+static int cur_cnt,last_cnt;
 static unsigned long interval = DEFAULT_POLL_INTERVAL;
 
 /* this is for log file */
@@ -83,9 +83,8 @@ struct hvlog_dev {
 
 size_t write_log_file(struct hvlog_file * log, const char *buf, size_t len);
 
-static int get_dev_cnt(void)
+static int get_dev_cnt(char *prefix)
 {
-	char prefix[32] = "acrn_hvlog_cur_"; /* acrnlog dev prefix */
 	struct dirent *pdir;
 	int cnt = 0;
 	char *ret;
@@ -354,8 +353,8 @@ static void *cur_read_func(void *arg)
 	char warn_msg[LOG_MSG_SIZE] = {0};
 
 	while (1) {
-		hvlog_dev_read_msg(cur, dev_cnt);
-		msg = get_min_seq_msg(cur, dev_cnt);
+		hvlog_dev_read_msg(cur, cur_cnt);
+		msg = get_min_seq_msg(cur, cur_cnt);
 		if (!msg) {
 			usleep(interval);
 			continue;
@@ -502,27 +501,32 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	dev_cnt = get_dev_cnt();
-	if (dev_cnt == 0) {
+	cur_cnt = get_dev_cnt("acrn_hvlog_cur_");
+	last_cnt = get_dev_cnt("acrn_hvlog_last_");
+
+	if (cur_cnt == 0) {
 		printf("Failed to find acrn hvlog devices, please check whether module acrn_hvlog is inserted\n");
 		return -1;
-	}
+	} else if (cur_cnt == -1)
+		return -1;
 
-	cur = calloc(dev_cnt, sizeof(struct hvlog_data));
+	cur = calloc(cur_cnt, sizeof(struct hvlog_data));
 	if (!cur) {
 		printf("Failed to allocate buf for cur log buf\n");
 		return -1;
 	}
 
-	last = calloc(dev_cnt, sizeof(struct hvlog_data));
-	if (!last) {
-		printf("Failed to allocate buf for last log buf\n");
-		free(cur);
-		return -1;
+	if (last_cnt) {
+		last = calloc(cur_cnt, sizeof(struct hvlog_data));
+		if (!last) {
+			printf("Failed to allocate buf for last log buf\n");
+			free(cur);
+			return -1;
+		}
 	}
 
 	num_cur = 0;
-	for (i = 0; i < dev_cnt; i++) {
+	for (i = 0; i < cur_cnt; i++) {
 		if (snprintf(name, sizeof(name), "/dev/acrn_hvlog_cur_%d", i) >= sizeof(name)) {
 			printf("ERROR: cur hvlog path is truncated\n");
 			return -1;
@@ -536,17 +540,19 @@ int main(int argc, char *argv[])
 	}
 
 	num_last = 0;
-	for (i = 0; i < dev_cnt; i++) {
-		if (snprintf(name, sizeof(name), "/dev/acrn_hvlog_last_%d", i) >= sizeof(name)) {
-			printf("ERROR: last hvlog path is truncated\n");
-			return -1;
+	if (last_cnt) {
+		for (i = 0; i < cur_cnt; i++) {
+			if (snprintf(name, sizeof(name), "/dev/acrn_hvlog_last_%d", i) >= sizeof(name)) {
+				printf("ERROR: last hvlog path is truncated\n");
+				return -1;
+			}
+			last[i].dev = hvlog_open_dev(name);
+			if (!last[i].dev)
+				perror(name);
+			else
+				num_last++;
+			last[i].msg = NULL;
 		}
-		last[i].dev = hvlog_open_dev(name);
-		if (!last[i].dev)
-			perror(name);
-		else
-			num_last++;
-		last[i].msg = NULL;
 	}
 
 	printf("open cur:%d last:%d\n", num_cur, num_last);
@@ -562,8 +568,8 @@ int main(int argc, char *argv[])
 
 	if (num_last) {
 		while (1) {
-			hvlog_dev_read_msg(last, dev_cnt);
-			msg = get_min_seq_msg(last, dev_cnt);
+			hvlog_dev_read_msg(last, cur_cnt);
+			msg = get_min_seq_msg(last, cur_cnt);
 			if (!msg)
 				break;
 			write_log_file(&last_log, msg->raw, msg->len);
@@ -573,13 +579,17 @@ int main(int argc, char *argv[])
 	if (cur_thread)
 		pthread_join(cur_thread, NULL);
 
-	for (i = 0; i < dev_cnt; i++) {
+	for (i = 0; i < cur_cnt; i++) {
 		hvlog_close_dev(cur[i].dev);
+	}
+
+	for (i = 0; i < last_cnt; i++) {
 		hvlog_close_dev(last[i].dev);
 	}
 
 	free(cur);
-	free(last);
+	if (last_cnt)
+		free(last);
 
 	return 0;
 }
