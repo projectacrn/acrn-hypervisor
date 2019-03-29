@@ -604,7 +604,7 @@ static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv)
 
 	for (idx = 0U; idx < CONFIG_MAX_VM_NUM; idx++) {
 		vm = get_vm_from_vmid(idx);
-		if (vm == NULL) {
+		if (!is_valid_vm(vm)) {
 			continue;
 		}
 		foreach_vcpu(i, vm, vcpu) {
@@ -754,7 +754,7 @@ static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv)
 	vcpu_id = (uint16_t)strtol_deci(argv[2]);
 
 	vm = get_vm_from_vmid(vm_id);
-	if (vm == NULL) {
+	if (!is_valid_vm(vm)) {
 		shell_puts("No vm found in the input <vm_id, vcpu_id>\r\n");
 		status = -EINVAL;
 		goto out;
@@ -852,13 +852,13 @@ static int32_t shell_to_sos_console(__unused int32_t argc, __unused char **argv)
 #endif
 	/* Get the virtual device node */
 	vm = get_vm_from_vmid(vm_id);
-	if (vm == NULL) {
+	if (!is_valid_vm(vm)) {
 		return -EINVAL;
 	}
 
 #ifdef CONFIG_PARTITION_MODE
 	vm_config = get_vm_config(vm_id);
-	if (vm_config != NULL && vm_config->vm_vuart == false) {
+	if (!vm_config->vm_vuart) {
 		snprintf(temp_str, TEMP_STR_SIZE, "No vUART configured for vm%d\n", vm_id);
 		shell_puts(temp_str);
 		return 0;
@@ -1072,7 +1072,7 @@ static void get_vioapic_info(char *str_arg, size_t str_max, uint16_t vmid)
 	struct acrn_vm *vm = get_vm_from_vmid(vmid);
 	uint32_t pin, pincount;
 
-	if (vm == NULL) {
+	if (!is_valid_vm(vm)) {
 		len = snprintf(str, size, "\r\nvm is not exist for vmid %hu", vmid);
 		if (len >= size) {
 			goto overflow;

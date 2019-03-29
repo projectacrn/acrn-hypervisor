@@ -390,7 +390,7 @@ struct acrn_vuart *vuart_console_active(void)
 	vm = get_sos_vm();
 #endif
 
-	if (vm != NULL) {
+	if (is_valid_vm(vm)) {
 		struct acrn_vuart *vu = vm_vuart(vm);
 
 		if (vu->active) {

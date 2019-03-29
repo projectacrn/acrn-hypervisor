@@ -881,7 +881,7 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 
 	for (j = 0U; j < CONFIG_MAX_VM_NUM; j++) {
 		tmp_vm = get_vm_from_vmid(j);
-		if (tmp_vm == NULL) {
+		if (!is_valid_vm(tmp_vm)) {
 			break;
 		}
 		vm_info_list.num_vms++;

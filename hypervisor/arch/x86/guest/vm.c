@@ -48,18 +48,24 @@ uint16_t find_free_vm_id(void)
 	return (vm_config->type == UNDEFINED_VM) ? id : INVALID_VM_ID;
 }
 
+/**
+ * @pre vm != NULL && vm->vmid < CONFIG_MAX_VM_NUM
+ */
 static inline void free_vm_id(const struct acrn_vm *vm)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
-	if (vm_config != NULL) {
-		vm_config->type = UNDEFINED_VM;
-	}
+	vm_config->type = UNDEFINED_VM;
+}
+
+bool is_valid_vm(const struct acrn_vm *vm)
+{
+	return (vm != NULL) && (vm->state != VM_STATE_INVALID);
 }
 
 bool is_sos_vm(const struct acrn_vm *vm)
 {
-	return (vm != NULL) && (vm == sos_vm_ptr);
+	return (vm != NULL)  && (get_vm_config(vm->vm_id)->type == SOS_VM);
 }
 
 /**
@@ -447,7 +453,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		}
 	}
 
-	if (need_cleanup && (vm != NULL)) {
+	if (need_cleanup && is_valid_vm(vm)) {
 		if (vm->arch_vm.nworld_eptp != NULL) {
 			(void)memset(vm->arch_vm.nworld_eptp, 0U, PAGE_SIZE);
 		}

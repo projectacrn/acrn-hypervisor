@@ -209,6 +209,7 @@ int32_t reset_vm(struct acrn_vm *vm);
 int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
 void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config);
 void launch_vms(uint16_t pcpu_id);
+bool is_valid_vm(const struct acrn_vm *vm);
 bool is_sos_vm(const struct acrn_vm *vm);
 uint16_t find_free_vm_id(void);
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
