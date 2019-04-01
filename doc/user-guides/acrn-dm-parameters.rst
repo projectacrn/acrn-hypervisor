@@ -269,9 +269,9 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
        usage::
 
-          --ovmf <path to OVMF.fd>
+          --ovmf /usr/share/acrn/bios/OVMF.fd
 
-       uses ``OVMF.fd`` as the OVMF image
+       uses ``/usr/share/acrn/bios/OVMF.fd`` as the OVMF image
 
    * - :kbd:`--virtio_poll <poll_interval>`
      - Enable virtio poll mode with poll interval xxx ns.
