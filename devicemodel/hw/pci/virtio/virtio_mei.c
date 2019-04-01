@@ -502,17 +502,14 @@ vmei_del_me_client(struct vmei_me_client *mclient)
 static void
 vmei_me_client_destroy_host_clients(struct vmei_me_client *mclient)
 {
-	struct vmei_host_client *e, *n;
+	struct vmei_host_client *e;
 
 	pthread_mutex_lock(&mclient->list_mutex);
-	e = LIST_FIRST(&mclient->connections);
-	while (e) {
-		n = LIST_NEXT(e, list);
+	LIST_FOREACH(e, &mclient->connections, list) {
 		vmei_host_client_put(e);
-		e = n;
 	}
-	pthread_mutex_unlock(&mclient->list_mutex);
 	LIST_INIT(&mclient->connections);
+	pthread_mutex_unlock(&mclient->list_mutex);
 }
 
 static void
@@ -645,14 +642,11 @@ vmei_find_host_client(struct virtio_mei *vmei,
 
 static void vmei_free_me_clients(struct virtio_mei *vmei)
 {
-	struct vmei_me_client *e, *n;
+	struct vmei_me_client *e;
 
 	pthread_mutex_lock(&vmei->list_mutex);
-	e = LIST_FIRST(&vmei->active_clients);
-	while (e) {
-		n = LIST_NEXT(e, list);
+	LIST_FOREACH(e, &vmei->active_clients, list) {
 		vmei_me_client_put(e);
-		e = n;
 	}
 	LIST_INIT(&vmei->active_clients);
 	pthread_mutex_unlock(&vmei->list_mutex);
