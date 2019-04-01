@@ -543,6 +543,7 @@ vmei_me_client_create(struct virtio_mei *vmei, uint8_t client_id,
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&mclient->list_mutex, &attr);
 	pthread_mutexattr_destroy(&attr);
+	LIST_INIT(&mclient->connections);
 
 	mclient->vmei = vmei;
 	mclient->client_id = client_id;
@@ -1589,8 +1590,9 @@ vmei_notify_tx(void *data, struct virtio_vq_info *vq)
 	vq->used->flags |= VRING_USED_F_NO_NOTIFY;
 	pthread_mutex_unlock(&vmei->tx_mutex);
 
-	while (vq_has_descs(vq))
+	do {
 		vmei_proc_tx(vmei, vq);
+	} while (vq_has_descs(vq));
 
 	vq_endchains(vq, 1);
 
@@ -2295,6 +2297,15 @@ init:
 	virtio_set_io_bar(&vmei->base, 0);
 
 	/*
+	 * init clients
+	 */
+	pthread_mutexattr_init(&attr);
+	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&vmei->list_mutex, &attr);
+	pthread_mutexattr_destroy(&attr);
+	LIST_INIT(&vmei->active_clients);
+
+	/*
 	 * tx stuff, thread, mutex, cond
 	 */
 	pthread_mutex_init(&vmei->tx_mutex, NULL);
@@ -2313,15 +2324,6 @@ init:
 		       vmei_rx_thread, (void *)vmei);
 	snprintf(tname, sizeof(tname), "vmei-%d:%d rx", dev->slot, dev->func);
 	pthread_setname_np(vmei->rx_thread, tname);
-
-	/*
-	 * init clients
-	 */
-	pthread_mutexattr_init(&attr);
-	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&vmei->list_mutex, &attr);
-	pthread_mutexattr_destroy(&attr);
-	LIST_INIT(&vmei->active_clients);
 
 	/*
 	 * start mei backend
