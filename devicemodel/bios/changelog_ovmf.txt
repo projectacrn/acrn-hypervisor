@@ -1,0 +1,22 @@
+OVMF release v0.8
+
+- Remove QemuFwCfg/QemuFwCfgS3Lib
+- Use ACRN E820 map to query system memory size
+- Support 64-bit PCI host aperture via ACRN E820
+- Remove debug code in release build
+- Take out unnecessary OVMF drivers
+- Revert "Enable MP support"
+- Use CPUID 0x40000010 to determine tsc frequency
+
+OVMF release v0.7
+
+- Change system timer from 8254 to HPET
+- Fix UEFI console UI issue
+- Enable MP support
+- Install ACRN DM's ACPI tables
+- Remove Bhyve ACPI tables
+- fix backspace issue in UEFI shell
+- clear CD bit in SEC
+- Revert "workaround: disable CR0.CD"
+- workaround: disable CR0.CD
+- boots Clear Linux (1 vcpu)
