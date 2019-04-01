@@ -154,6 +154,9 @@ SRCS += arch/x86/pm.c
 SRCS += vmcfg/vmcfg.c
 SRCS += vmcfg/apl-mrb/vm1/vm1.c
 
+# log
+SRCS += log/log.c
+
 OBJS := $(patsubst %.c,$(DM_OBJDIR)/%.o,$(SRCS))
 
 VERSION_H := $(DM_OBJDIR)/include/version.h
