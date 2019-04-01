@@ -222,12 +222,16 @@ static bool rt_vm_pm1a_io_read(__unused struct acrn_vm *vm, __unused struct acrn
 	return false;
 }
 
+/*
+ * retval true means that we complete the emulation in HV and no need to re-inject the request to DM.
+ * retval false means that we should re-inject the request to DM.
+ */
 static bool rt_vm_pm1a_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint32_t v)
 {
-	if ((addr != RT_VM_PM1A_CNT_ADDR) || (width != 2U)) {
+	if (width != 2U) {
 		pr_dbg("Invalid address (0x%x) or width (0x%x)", addr, width);
 	} else {
-		if (((v & RT_VM_PM1A_SLP_EN) && (((v & RT_VM_PM1A_SLP_TYP) >> 10U) == 5U)) != 0U) {
+		if (((v & VIRTUAL_PM1A_SLP_EN) && (((v & VIRTUAL_PM1A_SLP_TYP) >> 10U) == 5U)) != 0U) {
 			vm->state = VM_POWERING_OFF;
 		}
 	}
@@ -240,9 +244,9 @@ void register_rt_vm_pm1a_ctl_handler(struct acrn_vm *vm)
 	struct vm_io_range io_range;
 
 	io_range.flags = IO_ATTR_RW;
-	io_range.base = RT_VM_PM1A_CNT_ADDR;
+	io_range.base = VIRTUAL_PM1A_CNT_ADDR;
 	io_range.len = 1U;
 
-	register_pio_emulation_handler(vm, RT_VM_PM1A_CNT_PIO_IDX, &io_range,
+	register_pio_emulation_handler(vm, VIRTUAL_PM1A_CNT_PIO_IDX, &io_range,
 					&rt_vm_pm1a_io_read, &rt_vm_pm1a_io_write);
 }
