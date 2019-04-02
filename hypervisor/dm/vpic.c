@@ -433,8 +433,7 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t leve
 
 		lvl_trigger = ((vpic->i8259[pin >> 3U].elc & (1U << (pin & 0x7U))) != 0U);
 
-		if (((old_lvl == 0U) && (level == 1U)) ||
-				((level == 1U) && (lvl_trigger == true))) {
+		if (((old_lvl == 0U) && (level == 1U)) || ((level == 1U) && lvl_trigger)) {
 			/* raising edge or level */
 			dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: asserted\n", pin);
 			i8259->request |= (uint8_t)(1U << (pin & 0x7U));
@@ -576,8 +575,8 @@ static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint32_t pin)
 		i8259->request &= ~(uint8_t)(1U << pin);
 	}
 
-	if (i8259->aeoi == true) {
-		if (i8259->rotate == true) {
+	if (i8259->aeoi) {
+		if (i8259->rotate) {
 			i8259->lowprio = pin;
 		}
 	} else {
