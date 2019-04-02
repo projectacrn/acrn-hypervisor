@@ -326,6 +326,8 @@ static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *
 				}
 			}
 			clac();
+		} else {
+			/* No other state currently, do nothing */
 		}
 	}
 

@@ -177,6 +177,8 @@ static bool pm1ab_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint
 			}
 
 			to_write = false;
+		} else {
+			/* No other state currently, do nothing */
 		}
 	}
 
