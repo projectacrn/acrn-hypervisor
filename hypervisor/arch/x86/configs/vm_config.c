@@ -11,11 +11,7 @@
 #include <page.h>
 #include <logmsg.h>
 #include <cat.h>
-#ifndef CONFIG_PARTITION_MODE
 #include <vm_configurations.h>
-#else
-#include <partition_config.h>
-#endif
 
 #define INIT_VM_CONFIG(idx)	\
 	{		\
