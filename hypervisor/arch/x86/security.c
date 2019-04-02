@@ -66,6 +66,8 @@ bool check_cpu_security_cap(void)
 		} else if ((!cpu_has_cap(X86_FEATURE_IBRS_IBPB)) &&
 			(!cpu_has_cap(X86_FEATURE_STIBP))) {
 			ret = false;
+		} else {
+			/* No other state currently, do nothing */
 		}
 	} else {
 		ret = false;

@@ -64,6 +64,8 @@ static inline int32_t npk_write(const char *value, void *addr, size_t sz)
 	} else if (sz >= 1U) {
 		mmio_write8(*(uint8_t *)value, addr);
 		ret = 1;
+	} else {
+		/* No other state currently, do nothing */
 	}
 
 	return ret;

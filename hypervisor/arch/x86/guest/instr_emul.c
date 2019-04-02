@@ -430,6 +430,8 @@ static uint64_t vm_get_register(const struct acrn_vcpu *vcpu, enum cpu_reg_name 
 		} else {
 			reg_val = (uint64_t)exec_vmread16(field);
 		}
+	} else {
+		/* No other state currently, do nothing */
 	}
 
 	return reg_val;
@@ -457,6 +459,8 @@ static void vm_set_register(struct acrn_vcpu *vcpu, enum cpu_reg_name reg,
 		} else {
 			exec_vmwrite16(field, (uint16_t)val);
 		}
+	} else {
+		/* No other state currently, do nothing */
 	}
 }
 

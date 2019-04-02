@@ -330,6 +330,8 @@ static int32_t check_vmx_mmu_cap(void)
 	} else if (!cpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE)) {
 		pr_fatal("%s, ept not support 1GB large page\n", __func__);
 		ret = -ENODEV;
+	} else {
+		/* No other state currently, do nothing */
 	}
 
 	return ret;

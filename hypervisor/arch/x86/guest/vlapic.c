@@ -1132,6 +1132,8 @@ vlapic_calc_dest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, 
 					lowprio_dest = vlapic;
 				} else if (lowprio_dest->apic_page.ppr.v > vlapic->apic_page.ppr.v) {
 					lowprio_dest = vlapic;
+				} else {
+					/* No other state currently, do nothing */
 				}
 			} else {
 				bitmap_set_nolock(vcpu_id, dmask);
@@ -1782,6 +1784,8 @@ vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 			"NOT support to change APIC_BASE MSR from %#lx to %#lx",
 			vlapic->msr_apicbase, new);
 		ret = -1;
+	} else {
+		/* No other state currently, do nothing */
 	}
 
 	return ret;

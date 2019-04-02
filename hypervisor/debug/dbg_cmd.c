@@ -67,6 +67,8 @@ bool handle_dbg_cmd(const char *cmd, int32_t len)
 			uart16550_set_property(true, false, (uint64_t)(cmd+tmp));
 		} else if (i == IDX_SET_VUART) {
 			vuart_set_property(cmd+tmp);
+		} else {
+			/* No other state currently, do nothing */
 		}
 	}
 
