@@ -1,4 +1,18 @@
 choice
+	prompt "ACRN Scenario"
+	default SDC
+	help
+	  Select the scenario name to load corresponding VM configuration.
+
+config SDC
+	bool "Software Defined Cockpit"
+	help
+	  SDC (Software Defined Cockpit) is a typical scenario that ACRN supported.
+	  SDC will have one pre-launched SOS VM and one post-launched NORMAL VM.
+
+endchoice
+
+choice
 	prompt "Hypervisor mode"
 	default SHARING_MODE
 	help

@@ -12,24 +12,10 @@
 #include <logmsg.h>
 #include <cat.h>
 #ifndef CONFIG_PARTITION_MODE
-#include <sos_vm.h>
-
-static struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE) = {
-	{
-		.type = SOS_VM,
-		.name = SOS_VM_CONFIG_NAME,
-		.guest_flags = SOS_VM_CONFIG_GUEST_FLAGS,
-		.memory = {
-			.start_hpa = 0x0UL,
-			.size = CONFIG_SOS_RAM_SIZE,
-		},
-		.os_config = {
-			.name = SOS_VM_CONFIG_OS_NAME,
-		},
-	},
-};
+#include <vm_configurations.h>
 #else
 #include <partition_config.h>
+#endif
 
 #define INIT_VM_CONFIG(idx)	\
 	{		\
@@ -67,7 +53,6 @@ static struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE) 
 	INIT_VM_CONFIG(3),
 #endif
 };
-#endif
 
 /*
  * @pre vm_id < CONFIG_MAX_VM_NUM
