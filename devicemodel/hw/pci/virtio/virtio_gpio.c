@@ -24,6 +24,7 @@
 #include "pci_core.h"
 #include "mevent.h"
 #include "virtio.h"
+#include "gpio_dm.h"
 
 /*
  *  GPIO virtualization architecture
@@ -143,6 +144,10 @@ static FILE *dbg_file;
 /* make virtio gpio mediator a singleton mode */
 static bool virtio_gpio_is_active;
 
+/* GPIO PIO space */
+#define GPIO_PIO_SIZE	(VIRTIO_GPIO_MAX_VLINES * 4)
+static uint64_t gpio_pio_start;
+
 /* Uses the same packed config format as generic pinconf. */
 #define PIN_CONF_UNPACKED(p) ((unsigned long) p & 0xffUL)
 enum pin_config_param {
@@ -231,6 +236,8 @@ struct gpio_line {
 	int	fd;			/* native gpio line fd */
 	int	dir;			/* gpio direction */
 	bool	busy;			/* gpio line request by kernel */
+	int	value;			/* gpio value */
+	uint64_t		config;	/* gpio configuration */
 	struct native_gpio_chip	*chip;	/* parent gpio chip */
 	struct gpio_irq_desc	*irq;	/* connect to irq descriptor */
 };
@@ -282,6 +289,8 @@ static void print_virtio_gpio_info(struct virtio_gpio_request *req,
 		struct virtio_gpio_response *rsp, bool in);
 static void print_intr_statistics(struct gpio_irq_chip *chip);
 static void record_intr_statistics(struct gpio_irq_chip *chip, uint64_t mask);
+static void gpio_pio_write(struct virtio_gpio *gpio, int n, uint64_t reg);
+static uint32_t gpio_pio_read(struct virtio_gpio *gpio, int n);
 
 static void
 native_gpio_update_line_info(struct gpio_line *line)
@@ -371,6 +380,15 @@ native_gpio_open_line(struct gpio_line *line, unsigned int flags,
 		return -1;
 	}
 
+	if (flags) {
+		line->config = flags;
+		if (flags & GPIOHANDLE_REQUEST_OUTPUT) {
+			line->dir = 0;
+			line->value = value;
+		} else if (flags & GPIOHANDLE_REQUEST_INPUT)
+			line->dir = 1;
+	}
+
 	line->fd = req.fd;
 	return rc;
 }
@@ -398,6 +416,7 @@ gpio_set_value(struct virtio_gpio *gpio, unsigned int offset,
 				strerror(errno));
 		return -1;
 	}
+	line->value = value;
 	return 0;
 }
 
@@ -556,13 +575,40 @@ static void virtio_gpio_reset(void *vdev)
 }
 
 static int
+virtio_gpio_cfgwrite(void *vdev, int offset, int size, uint32_t value)
+{
+	int cfg_size;
+
+	cfg_size = sizeof(struct virtio_gpio_config);
+	offset -= cfg_size;
+	if (offset < 0 || offset >= GPIO_PIO_SIZE) {
+		DPRINTF("virtio_gpio: write to invalid reg %d\n", offset);
+		return -1;
+	}
+
+	gpio_pio_write((struct virtio_gpio *)vdev, offset >> 2, value);
+	return 0;
+}
+
+static int
 virtio_gpio_cfgread(void *vdev, int offset, int size, uint32_t *retval)
 {
 	struct virtio_gpio *gpio = vdev;
 	void *ptr;
+	int cfg_size;
+	uint32_t reg;
 
-	ptr = (uint8_t *)&gpio->config + offset;
-	memcpy(retval, ptr, size);
+	cfg_size = sizeof(struct virtio_gpio_config);
+	if (offset < 0 || offset >= cfg_size + GPIO_PIO_SIZE) {
+		DPRINTF("virtio_gpio: read from invalid reg %d\n", offset);
+		return -1;
+	} else if (offset < cfg_size) {
+		ptr = (uint8_t *)&gpio->config + offset;
+		memcpy(retval, ptr, size);
+	} else {
+		reg = gpio_pio_read(gpio, (offset - cfg_size) >> 2);
+		memcpy(retval, &reg, size);
+	}
 	return 0;
 }
 
@@ -573,7 +619,7 @@ static struct virtio_ops virtio_gpio_ops = {
 	virtio_gpio_reset,		/* reset */
 	NULL,				/* device-wide qnotify */
 	virtio_gpio_cfgread,		/* read virtio config */
-	NULL,				/* write virtio config */
+	virtio_gpio_cfgwrite,		/* write virtio config */
 	NULL,				/* apply negotiated features */
 	NULL,				/* called on guest set status */
 
@@ -1323,8 +1369,14 @@ virtio_gpio_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		goto fail;
 	}
 
+	/* Allocate PIO space for GPIO */
+	virtio_gpio_ops.cfgsize += GPIO_PIO_SIZE;
+
 	/* use BAR 0 to map config regs in IO space */
 	virtio_set_io_bar(&gpio->base, 0);
+
+	gpio_pio_start = dev->bar[0].addr + VIRTIO_PCI_CONFIG_OFF(1) +
+		sizeof(struct virtio_gpio_config);
 
 	virtio_gpio_is_active = true;
 
@@ -1387,6 +1439,92 @@ virtio_gpio_write_dsdt(struct pci_vdev *dev)
 	dsdt_line("    }");
 	dsdt_line("}");
 	dsdt_line("");
+	dsdt_line("Scope (_SB)");
+	dsdt_line("{");
+	dsdt_line("    Method (%s, 2, Serialized)", PIO_GPIO_CM_SET);
+	dsdt_line("    {");
+	dsdt_line("        Local0 = (0x%08x + (Arg0 << 2))", gpio_pio_start);
+	dsdt_line("        OperationRegion (GPOR, SystemIO, Local0, 0x04)");
+	dsdt_line("        Field (GPOR, DWordAcc, NoLock, Preserve)");
+	dsdt_line("        {");
+	dsdt_line("            TEMP,	2");
+	dsdt_line("        }");
+	dsdt_line("        TEMP = Arg1");
+	dsdt_line("    }");
+	dsdt_line("");
+	dsdt_line("    Method (%s, 1, Serialized)", PIO_GPIO_CM_GET);
+	dsdt_line("    {");
+	dsdt_line("        Local0 = (0x%08x + (Arg0 << 2))", gpio_pio_start);
+	dsdt_line("        OperationRegion (GPOR, SystemIO, Local0, 0x04)");
+	dsdt_line("        Field (GPOR, DWordAcc, NoLock, Preserve)");
+	dsdt_line("        {");
+	dsdt_line("            TEMP,    1,");
+	dsdt_line("        }");
+	dsdt_line("        Return (TEMP)");
+	dsdt_line("    }");
+	dsdt_line("}");
+}
+
+static void
+gpio_pio_write(struct virtio_gpio *gpio, int n, uint64_t reg)
+{
+	struct gpio_line *line;
+	int value, dir, mode;
+	uint16_t config;
+
+	if (n >= gpio->nvline) {
+		DPRINTF("pio write is invalid, n %d, nvline %d\n",
+				n, gpio->nvline);
+		return;
+	}
+
+	line = gpio->vlines[n];
+	value = reg & PIO_GPIO_VALUE_MASK;
+	dir = (reg & PIO_GPIO_DIR_MASK) >> PIO_GPIO_DIR_OFFSET;
+	mode = (reg & PIO_GPIO_MODE_MASK) >> PIO_GPIO_MODE_OFFSET;
+	config = (reg & PIO_GPIO_CONFIG_MASK) >> PIO_GPIO_CONFIG_OFFSET;
+
+	/* 0 means GPIO, 1 means IRQ */
+	if (mode == 1) {
+		DPRINTF("pio write failure, gpio %d is in IRQ mode\n", n);
+		return;
+	}
+
+	DPRINTF("pio write n %d, reg 0x%lX, val %d, dir %d, mod %d, cfg 0x%x\n",
+			n, reg, value, dir, mode, config);
+
+	if (config != line->config)
+		gpio_set_config(gpio, n, config);
+
+	/* 0 means output, 1 means input */
+	if (dir != line->dir || ((dir == 0) && (value != line->value)))
+		dir == 0 ? gpio_set_direction_output(gpio, n, value) :
+			gpio_set_direction_input(gpio, n);
+
+}
+
+static uint32_t
+gpio_pio_read(struct virtio_gpio *gpio, int n)
+{
+	struct gpio_line *line;
+	uint32_t reg = 0;
+
+	if (n >= gpio->nvline) {
+		DPRINTF("pio read is invalid, n %d, nvline %d\n",
+				n, gpio->nvline);
+		return 0xFFFFFFFF;
+	}
+
+	line = gpio->vlines[n];
+	reg = line->value;
+	reg |= ((line->dir << PIO_GPIO_DIR_OFFSET) & PIO_GPIO_DIR_MASK);
+	reg |= ((line->config << PIO_GPIO_CONFIG_OFFSET) &
+		PIO_GPIO_CONFIG_MASK);
+	if (line->irq->fd > 0)
+		reg |= 1 << PIO_GPIO_MODE_OFFSET;
+
+	DPRINTF("pio read n %d, reg 0x%X\n", n, reg);
+	return reg;
 }
 
 struct pci_vdev_ops pci_ops_virtio_gpio = {
