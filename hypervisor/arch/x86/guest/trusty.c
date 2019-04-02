@@ -312,7 +312,7 @@ void switch_world(struct acrn_vcpu *vcpu, int32_t next_world)
  */
 static bool setup_trusty_info(struct acrn_vcpu *vcpu, uint32_t mem_size, uint64_t mem_base_hpa, uint8_t *rkey)
 {
-	bool ret = true;
+	bool success = false;
 	struct trusty_mem *mem;
 	struct trusty_key_info key_info;
 	struct trusty_startup_param startup_param;
@@ -329,13 +329,11 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu, uint32_t mem_size, uint64_
 	}
 
 	/* Derive dvseed from dseed for Trusty */
-	ret = derive_virtual_seed(&key_info.dseed_list[0U], &key_info.num_seeds,
+	if (derive_virtual_seed(&key_info.dseed_list[0U], &key_info.num_seeds,
 				  NULL, 0U,
-				  vcpu->vm->GUID, sizeof(vcpu->vm->GUID));
-	if (ret == true) {
+				  vcpu->vm->GUID, sizeof(vcpu->vm->GUID))) {
 		/* Derive encryption key of attestation keybox from dseed */
-		ret = derive_attkb_enc_key(key_info.attkb_enc_key);
-		if (ret == true) {
+		if (derive_attkb_enc_key(key_info.attkb_enc_key)) {
 			/* Prepare trusty startup param */
 			startup_param.size_of_this_struct = sizeof(struct trusty_startup_param);
 			startup_param.mem_size = mem_size;
@@ -356,12 +354,13 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu, uint32_t mem_size, uint64_
 			(void)memcpy_s(&mem->first_page.startup_param, sizeof(struct trusty_startup_param),
 				       &startup_param, sizeof(startup_param));
 			clac();
+			success = true;
 		}
 	}
 
 	(void)memset(&key_info, 0U, sizeof(key_info));
 
-	return ret;
+	return success;
 }
 
 /* Secure World will reuse environment of UOS_Loder since they are
@@ -395,7 +394,7 @@ static bool init_secure_world_env(struct acrn_vcpu *vcpu,
 
 bool initialize_trusty(struct acrn_vcpu *vcpu, struct trusty_boot_param *boot_param)
 {
-	bool ret = true;
+	bool success = true;
 	uint64_t trusty_entry_gpa, trusty_base_gpa, trusty_base_hpa;
 	uint32_t trusty_mem_size;
 	struct acrn_vm *vm = vcpu->vm;
@@ -415,15 +414,15 @@ bool initialize_trusty(struct acrn_vcpu *vcpu, struct trusty_boot_param *boot_pa
 		break;
 	default:
 		pr_err("%s: Version(%u) not supported!\n", __func__, boot_param->version);
-		ret = false;
+		success = false;
 		break;
 	}
 
-	if (ret == true) {
+	if (success) {
 		if ((vm->sworld_control.flag.supported == 0UL)
 				|| (vm->arch_vm.sworld_eptp != NULL)) {
 			pr_err("Sworld is not supported or Sworld eptp is not NULL");
-			ret = false;
+			success = false;
 		} else {
 			trusty_mem_size = boot_param->mem_size;
 			create_secure_world_ept(vm, trusty_base_gpa, trusty_mem_size,
@@ -444,12 +443,12 @@ bool initialize_trusty(struct acrn_vcpu *vcpu, struct trusty_boot_param *boot_pa
 				/* switch to Secure World */
 				vcpu->arch.cur_context = SECURE_WORLD;
 			} else {
-				ret = false;
+				success = false;
 			}
 		}
 	}
 
-	return ret;
+	return success;
 }
 
 void save_sworld_context(struct acrn_vcpu *vcpu)
