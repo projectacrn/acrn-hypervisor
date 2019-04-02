@@ -837,7 +837,7 @@ static int32_t shell_dumpmem(int32_t argc, char **argv)
 static int32_t shell_to_sos_console(__unused int32_t argc, __unused char **argv)
 {
 	char temp_str[TEMP_STR_SIZE];
-	uint16_t guest_no = 0U;
+	uint16_t vm_id = 0U;
 
 	struct acrn_vm *vm;
 	struct acrn_vuart *vu;
@@ -845,21 +845,21 @@ static int32_t shell_to_sos_console(__unused int32_t argc, __unused char **argv)
 	struct acrn_vm_config *vm_config;
 
 	if (argc == 2U) {
-		guest_no = sanitize_vmid(strtol_deci(argv[1]));
+		vm_id = sanitize_vmid(strtol_deci(argv[1]));
 	}
 
-	vuart_vmid = guest_no;
+	vuart_vmid = vm_id;
 #endif
 	/* Get the virtual device node */
-	vm = get_vm_from_vmid(guest_no);
+	vm = get_vm_from_vmid(vm_id);
 	if (vm == NULL) {
 		return -EINVAL;
 	}
 
 #ifdef CONFIG_PARTITION_MODE
-	vm_config = get_vm_config(guest_no);
+	vm_config = get_vm_config(vm_id);
 	if (vm_config != NULL && vm_config->vm_vuart == false) {
-		snprintf(temp_str, TEMP_STR_SIZE, "No vUART configured for vm%d\n", guest_no);
+		snprintf(temp_str, TEMP_STR_SIZE, "No vUART configured for vm%d\n", vm_id);
 		shell_puts(temp_str);
 		return 0;
 	}
@@ -871,9 +871,7 @@ static int32_t shell_to_sos_console(__unused int32_t argc, __unused char **argv)
 	 */
 	vu->active = true;
 	/* Output that switching to SOS shell */
-	snprintf(temp_str, TEMP_STR_SIZE,
-			"\r\n----- Entering Guest %d Shell -----\r\n",
-			guest_no);
+	snprintf(temp_str, TEMP_STR_SIZE, "\r\n----- Entering Guest %d Shell -----\r\n", vm_id);
 
 	shell_puts(temp_str);
 
