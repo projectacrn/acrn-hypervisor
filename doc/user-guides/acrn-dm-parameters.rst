@@ -318,6 +318,15 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
    * - :kbd:`--lapic_pt`
      - This option is to create a VM with lapic pass-through.
        With this option, a VM is created with LAPIC_PASSTHROUGH and
-       IOREQ_COMPLETION_POLLING mode. This kind of VM is generally for realtime scenarios.
+       IOREQ_COMPLETION_POLLING mode. This kind of VM is generally for hard realtime scenarios.
+
+       By default, DM will create VM without this option.
+
+   * - :kbd:`--rtvm`
+     - This option is to create a VM with realtime attribute.
+       With this option, a VM is created with GUEST_FLAG_RT and GUEST_FLAG_IOREQ_COMPLETION_POLLING
+       mode. This kind of VM is generally for soft realtime scenarios (without lapic_pt) or hard
+       realtime scenarios (with lapic_pt). This kind of VM can't be interfered by SOS during runtime.
+       It can only be poweroff from inside of itself.
 
        By default, DM will create VM without this option.
