@@ -19,6 +19,7 @@
 		.name = VM##idx##_CONFIG_NAME,	\
 		.pcpu_bitmap = VM##idx##_CONFIG_PCPU_BITMAP,	\
 		.guest_flags = VM##idx##_CONFIG_FLAGS,	\
+		.clos = VM##idx##_CONFIG_CLOS,	\
 		.memory = {	\
 			.start_hpa = VM##idx##_CONFIG_MEM_START_HPA,	\
 			.size = VM##idx##_CONFIG_MEM_SIZE,	\
