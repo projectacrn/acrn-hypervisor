@@ -58,9 +58,7 @@ struct acrn_vm_config {
 	struct acrn_vm_os_config os_config;		/* OS information the VM */
 	uint16_t clos;					/* if guest_flags has GUEST_FLAG_CLOS_REQUIRED, then VM use this CLOS */
 
-#ifdef CONFIG_PARTITION_MODE
 	bool			vm_vuart;
-#endif
 } __aligned(8);
 
 struct acrn_vm_config *get_vm_config(uint16_t vm_id);
