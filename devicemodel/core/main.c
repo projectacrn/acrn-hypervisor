@@ -88,6 +88,7 @@ uint8_t trusty_enabled;
 char *mac_seed;
 bool stdio_in_use;
 bool lapic_pt;
+bool is_rtvm;
 bool skip_pci_mem64bar_workaround = false;
 
 static int virtio_msix = 1;
@@ -172,7 +173,8 @@ usage(int code)
 		"            its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)\n"
 		"       --virtio_poll: enable virtio poll mode with poll interval with ns\n"
 		"       --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET\n"
-		"       --lapic_pt: enable local apic passthrough\n",
+		"       --lapic_pt: enable local apic passthrough\n"
+		"       --rtvm: indicate that the guest is rtvm\n",
 		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "");
@@ -708,6 +710,7 @@ enum {
 	CMD_OPT_INTR_MONITOR,
 	CMD_OPT_VTPM2,
 	CMD_OPT_LAPIC_PT,
+	CMD_OPT_RTVM,
 };
 
 static struct option long_options[] = {
@@ -747,6 +750,7 @@ static struct option long_options[] = {
 	{"intr_monitor",	required_argument,	0, CMD_OPT_INTR_MONITOR},
 	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
 	{"lapic_pt",		no_argument,		0, CMD_OPT_LAPIC_PT},
+	{"rtvm",		no_argument,		0, CMD_OPT_RTVM},
 	{0,			0,			0,  0  },
 };
 
@@ -893,6 +897,9 @@ dm_run(int argc, char *argv[])
 			break;
 		case CMD_OPT_LAPIC_PT:
 			lapic_pt = true;
+			break;
+		case CMD_OPT_RTVM:
+			is_rtvm = true;
 			break;
 		case CMD_OPT_VTPM2:
 			if (acrn_parse_vtpm2(optarg) != 0) {

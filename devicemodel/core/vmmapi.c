@@ -149,6 +149,11 @@ vm_create(const char *name, uint64_t req_buf)
 		create_vm.vm_flag &= (~GUEST_FLAG_IO_COMPLETION_POLLING);
 	}
 
+	if (is_rtvm) {
+		create_vm.vm_flag |= GUEST_FLAG_RT;
+		create_vm.vm_flag |= GUEST_FLAG_IO_COMPLETION_POLLING;
+	}
+
 	create_vm.req_buf = req_buf;
 	while (retry > 0) {
 		error = ioctl(ctx->fd, IC_CREATE_VM, &create_vm);
