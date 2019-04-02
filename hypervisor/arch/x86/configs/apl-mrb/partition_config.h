@@ -35,7 +35,7 @@
 						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
 						consoleblank=0 tsc=reliable xapic_phys"
 
-#define VM0_CONFIG_PCI_PTDEV_NUM		2U
+#define VM0_CONFIG_PCI_PTDEV_NUM		3U
 #define VM1_CONFIG_PCI_PTDEV_NUM		3U
 
 extern struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[VM0_CONFIG_PCI_PTDEV_NUM];
