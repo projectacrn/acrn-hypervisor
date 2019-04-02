@@ -952,12 +952,14 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t pa
 		if (irq.type == IRQ_INTX) {
 			ret = ptirq_add_intx_remapping(target_vm, irq.is.intx.virt_pin,
 					irq.is.intx.phys_pin, irq.is.intx.pic_pin);
-		} else if ((irq.type == IRQ_MSI) || (irq.type == IRQ_MSIX)) {
+		} else if (((irq.type == IRQ_MSI) || (irq.type == IRQ_MSIX)) &&
+				(irq.is.msix.vector_cnt <= CONFIG_MAX_MSIX_TABLE_NUM)) {
 			ret = ptirq_add_msix_remapping(target_vm,
 					irq.virt_bdf, irq.phys_bdf,
 					irq.is.msix.vector_cnt);
 		} else {
-			pr_err("%s: Invalid irq type: %u\n", __func__, irq.type);
+			pr_err("%s: Invalid irq type: %u or MSIX vector count: %u\n",
+					__func__, irq.type, irq.is.msix.vector_cnt);
 			ret = -1;
 		}
 	}
@@ -993,7 +995,8 @@ hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 			ptirq_remove_intx_remapping(target_vm,
 					irq.is.intx.virt_pin,
 					irq.is.intx.pic_pin);
-		} else if ((irq.type == IRQ_MSI) || (irq.type == IRQ_MSIX)) {
+		} else if (((irq.type == IRQ_MSI) || (irq.type == IRQ_MSIX)) &&
+				(irq.is.msix.vector_cnt <= CONFIG_MAX_MSIX_TABLE_NUM)) {
 
 			/*
 			 * Inform vPCI about the interupt info changes
@@ -1007,7 +1010,8 @@ hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 					irq.virt_bdf,
 					irq.is.msix.vector_cnt);
 		} else {
-			pr_err("%s: Invalid irq type: %u\n", __func__, irq.type);
+			pr_err("%s: Invalid irq type: %u or MSIX vector count: %u\n",
+					__func__, irq.type, irq.is.msix.vector_cnt);
 			ret = -1;
 		}
 	} else {
