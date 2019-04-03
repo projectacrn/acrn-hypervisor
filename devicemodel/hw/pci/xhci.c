@@ -892,7 +892,7 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	}
 
 	edev = xdev->devices[vport];
-	for (slot = 1; slot < XHCI_MAX_SLOTS; ++slot)
+	for (slot = 1; slot <= XHCI_MAX_SLOTS; ++slot)
 		if (xdev->slots[slot] == edev)
 			break;
 
@@ -1056,6 +1056,8 @@ pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de)
 {
 	struct usb_devemu *ue;
 	struct usb_dev *ud;
+	struct pci_xhci_dev_ep *vdep;
+	int i;
 
 	if (de) {
 		ue = de->dev_ue;
@@ -1071,6 +1073,18 @@ pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de)
 
 		if (ue->ue_devtype == USB_DEV_PORT_MAPPER)
 			free(ue);
+
+		for (i = 1; i < XHCI_MAX_ENDPOINTS; i++) {
+			vdep = &de->eps[i];
+			if (vdep->ep_xfer) {
+				if (vdep->ep_xfer->ureq) {
+					free(vdep->ep_xfer->ureq);
+					vdep->ep_xfer->ureq = NULL;
+				}
+				free(vdep->ep_xfer);
+				vdep->ep_xfer = NULL;
+			}
+		}
 
 		free(de);
 	}
@@ -3962,7 +3976,7 @@ pci_xhci_parse_opts(struct pci_xhci_vdev *xdev, char *opts)
 
 	/* allocate neccessary resources during parsing*/
 	xdev->devices = calloc(XHCI_MAX_DEVS + 1, sizeof(*xdev->devices));
-	xdev->slots = calloc(XHCI_MAX_SLOTS, sizeof(*xdev->slots));
+	xdev->slots = calloc(XHCI_MAX_SLOTS + 1, sizeof(*xdev->slots));
 	xdev->portregs = calloc(XHCI_MAX_DEVS + 1, sizeof(*xdev->portregs));
 	if (!xdev->devices || !xdev->slots || !xdev->portregs) {
 		rc = -2;

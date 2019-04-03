@@ -102,6 +102,8 @@ struct usb_dev_sys_ctx_info {
 	usb_dev_sys_cb notify_cb;
 	usb_dev_sys_cb intr_cb;
 
+	libusb_device **devlist;
+
 	/*
 	 * private data from HCD layer
 	 */
