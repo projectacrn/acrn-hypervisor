@@ -93,7 +93,7 @@ static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
 		info.vmsi_data.full = 0U;
 	}
 
-	ret = ptirq_msix_remap(vm, vdev->vbdf.value, 0U, &info);
+	ret = ptirq_msix_remap(vm, vdev->vbdf.value, pbdf.value, 0U, &info);
 	if (ret == 0) {
 		/* Update MSI Capability structure to physical device */
 		pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR, 0x4U, (uint32_t)info.pmsi_addr.full);

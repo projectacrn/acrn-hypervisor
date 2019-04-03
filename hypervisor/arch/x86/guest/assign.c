@@ -579,8 +579,8 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpin_src)
  * entry_nr = 0 means first vector
  * user must provide bdf and entry_nr
  */
-int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
-		uint16_t entry_nr, struct ptirq_msi_info *info)
+int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
+				uint16_t entry_nr, struct ptirq_msi_info *info)
 {
 	struct ptirq_remapping_info *entry;
 	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
@@ -597,8 +597,8 @@ int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
 	entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_MSI, &virt_sid, vm);
 	if (entry == NULL) {
 		/* SOS_VM we add mapping dynamically */
-		if (is_sos_vm(vm)) {
-			entry = add_msix_remapping(vm, virt_bdf, virt_bdf, entry_nr);
+		if (is_sos_vm(vm) || is_prelaunched_vm(vm)) {
+			entry = add_msix_remapping(vm, virt_bdf, phys_bdf, entry_nr);
 			if (entry == NULL) {
 				pr_err("dev-assign: msi entry exist in others");
 			}

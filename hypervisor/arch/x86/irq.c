@@ -380,28 +380,6 @@ void dispatch_exception(struct intr_excp_ctx *ctx)
 	cpu_dead();
 }
 
-#ifdef CONFIG_PARTITION_MODE
-void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx)
-{
-	uint8_t vr = ctx->vector;
-	struct acrn_vcpu *vcpu;
-
-	/*
-	 * There is no vector and APIC ID remapping for VMs in
-	 * ACRN partition mode. Device interrupts are injected with the same
-	 * vector into vLAPIC of vCPU running on the pCPU. Vectors used for
-	 * HV services are handled by HV using dispatch_interrupt.
-	 */
-	vcpu = per_cpu(vcpu, get_cpu_id());
-	if (vr < VECTOR_FIXED_START) {
-		send_lapic_eoi();
-		vlapic_set_intr(vcpu, vr, LAPIC_TRIG_EDGE);
-	} else {
-		dispatch_interrupt(ctx);
-	}
-}
-#endif
-
 static void init_irq_descs(void)
 {
 	uint32_t i;
