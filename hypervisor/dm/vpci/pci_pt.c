@@ -31,7 +31,6 @@
 
 #include <vm.h>
 #include <errno.h>
-#include <vtd.h>
 #include <ept.h>
 #include <mmu.h>
 #include <logmsg.h>
@@ -40,81 +39,6 @@
 static inline uint32_t pci_bar_base(uint32_t bar)
 {
 	return bar & PCIM_BAR_MEM_BASE;
-}
-
-#if defined(HV_DEBUG)
-/**
- * @pre vdev != NULL
- */
-static int32_t validate(const struct pci_vdev *vdev)
-{
-	uint32_t idx;
-	int32_t ret = 0;
-
-	for (idx = 0U; idx < PCI_BAR_COUNT; idx++) {
-		if ((vdev->bar[idx].base != 0x0UL)
-			|| ((vdev->bar[idx].size & 0xFFFUL) != 0x0UL)
-			|| ((vdev->bar[idx].type != PCIBAR_MEM32)
-			&& (vdev->bar[idx].type != PCIBAR_NONE))) {
-			ret = -EINVAL;
-			break;
-		}
-	}
-
-	return ret;
-}
-#endif
-
-/**
- * @pre vdev != NULL
- * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
- */
-void vdev_pt_init(const struct pci_vdev *vdev)
-{
-	int32_t ret;
-	struct acrn_vm *vm = vdev->vpci->vm;
-	uint16_t pci_command;
-
-	ASSERT(validate(vdev) == 0, "Error, invalid bar defined");
-
-	/* Create an iommu domain for target VM if not created */
-	if (vm->iommu == NULL) {
-		if (vm->arch_vm.nworld_eptp == 0UL) {
-			vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info);
-			sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);
-		}
-		vm->iommu = create_iommu_domain(vm->vm_id,
-			hva2hpa(vm->arch_vm.nworld_eptp), 48U);
-	}
-
-	ret = assign_iommu_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
-		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
-	if (ret != 0) {
-		panic("failed to assign iommu device!");
-	}
-
-	pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
-	/* Disable INTX */
-	pci_command |= 0x400U;
-	pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
-}
-
-/**
- * @pre vdev != NULL
- * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
- */
-void vdev_pt_deinit(const struct pci_vdev *vdev)
-{
-	int32_t ret;
-	struct acrn_vm *vm = vdev->vpci->vm;
-
-	ret = unassign_iommu_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
-		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
-	if (ret != 0) {
-		panic("failed to unassign iommu device!");
-	}
 }
 
 /**
@@ -135,11 +59,123 @@ int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset,
 }
 
 /**
+* @pre vdev != NULL
+* @pre vdev->pdev != NULL
+* @pre vdev->pdev->msix.table_bar < (PCI_BAR_COUNT - 1U)
+*/
+void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
+{
+	uint32_t i;
+	uint64_t addr_hi, addr_lo;
+	struct pci_msix *msix = &vdev->msix;
+	struct pci_pdev *pdev = vdev->pdev;
+	struct pci_bar *bar;
+	struct acrn_vm *vm = vdev->vpci->vm;
+	struct acrn_vm_config *vm_config;
+
+	vm_config = get_vm_config(vm->vm_id);
+
+	ASSERT(vdev->pdev->msix.table_bar < (PCI_BAR_COUNT - 1U), "msix->table_bar out of range");
+
+
+	/* Mask all table entries */
+	for (i = 0U; i < msix->table_count; i++) {
+		msix->tables[i].vector_control = PCIM_MSIX_VCTRL_MASK;
+		msix->tables[i].addr = 0U;
+		msix->tables[i].data = 0U;
+	}
+
+	bar = &pdev->bar[msix->table_bar];
+	if (bar != NULL) {
+		vdev->msix.mmio_hpa = bar->base;
+		if (vm_config->type == PRE_LAUNCHED_VM) {
+			vdev->msix.mmio_gpa = vdev->bar[msix->table_bar].base;
+		} else {
+			vdev->msix.mmio_gpa = sos_vm_hpa2gpa(bar->base);
+		}
+		vdev->msix.mmio_size = bar->size;
+	}
+
+
+	/*
+	 *    For SOS:
+	 *    --------
+	 *    MSI-X Table BAR Contains:
+	 *    Other Info + Tables + PBA	        Ohter info already mapped into EPT (since SOS)
+	 *    					Tables are handled by HV MMIO handler (4k adjusted up and down)
+	 *    						and remaps interrupts
+	 *    					PBA already mapped into EPT (since SOS)
+	 *
+	 *    Other Info + Tables		Other info already mapped into EPT (since SOS)
+	 *					Tables are handled by HV MMIO handler (4k adjusted up and down)
+	 *						and remaps interrupts
+	 *
+	 *    Tables				Tables are handled by HV MMIO handler (4k adjusted up and down)
+	 *    						and remaps interrupts
+	 *
+	 *    For UOS (launched by DM):
+	 *    -------------------------
+	 *    MSI-X Table BAR Contains:
+	 *    Other Info + Tables + PBA		Other info  mapped into EPT (4k adjusted) by DM
+	 *    					Tables are handled by DM MMIO handler (4k adjusted up and down) and SOS writes to tables,
+	 *    						intercepted by HV MMIO handler and HV remaps interrupts
+	 *    					PBA already mapped into EPT by DM
+	 *
+	 *    Other Info + Tables		Other info mapped into EPT by DM
+	 *    					Tables are handled by DM MMIO handler (4k adjusted up and down) and SOS writes to tables,
+	 *    						intercepted by HV MMIO handler and HV remaps interrupts.
+	 *
+	 *    Tables				Tables are handled by DM MMIO handler (4k adjusted up and down) and SOS writes to tables,
+	 *    						intercepted by HV MMIO handler and HV remaps interrupts.
+	 *
+	 *    For Pre-launched VMs (no SOS/DM):
+	 *    --------------------------------
+	 *    MSI-X Table BAR Contains:
+	 *    All 3 cases:			Writes to MMIO region in MSI-X Table BAR handled by HV MMIO handler
+	 *    					If the offset falls within the MSI-X table [offset, offset+tables_size), HV remaps
+	 *    						interrupts.
+	 *    					Else, HV writes/reads to/from the corresponding HPA
+	 */
+
+
+	if (msix->mmio_gpa != 0U) {
+		if (vm_config->type == PRE_LAUNCHED_VM) {
+			addr_hi = vdev->msix.mmio_gpa + vdev->msix.mmio_size;
+			addr_lo = vdev->msix.mmio_gpa;
+		} else {
+			/*
+			* PCI Spec: a BAR may also map other usable address space that is not associated
+			* with MSI-X structures, but it must not share any naturally aligned 4 KB
+			* address range with one where either MSI-X structure resides.
+			* The MSI-X Table and MSI-X PBA are permitted to co-reside within a naturally
+			* aligned 4 KB address range.
+			*
+			* If PBA or others reside in the same BAR with MSI-X Table, devicemodel could
+			* emulate them and maps these memory range at the 4KB boundary. Here, we should
+			* make sure only intercept the minimum number of 4K pages needed for MSI-X table.
+			*/
+
+			/* The higher boundary of the 4KB aligned address range for MSI-X table */
+			addr_hi = msix->mmio_gpa + msix->table_offset + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
+			addr_hi = round_page_up(addr_hi);
+
+			/* The lower boundary of the 4KB aligned address range for MSI-X table */
+			addr_lo = round_page_down(msix->mmio_gpa + msix->table_offset);
+		}
+
+		(void)register_mmio_emulation_handler(vdev->vpci->vm, vmsix_table_mmio_access_handler,
+			addr_lo, addr_hi, vdev);
+	}
+}
+
+/**
+ * @brief Remaps guest BARs other than MSI-x Table BAR
+ * This API is invoked upon guest re-programming PCI BAR with MMIO region
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-static void vdev_pt_remap_bar(const struct pci_vdev *vdev, uint32_t idx,
+static void vdev_pt_remap_generic_bar(const struct pci_vdev *vdev, uint32_t idx,
 	uint32_t new_base)
 {
 	struct acrn_vm *vm = vdev->vpci->vm;
@@ -169,6 +205,7 @@ static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t idx;
 	uint32_t new_bar, mask;
 	bool bar_update_normal;
+	bool is_msix_table_bar;
 
 	if ((bytes != 4U) || ((offset & 0x3U) != 0U)) {
 		return;
@@ -185,12 +222,18 @@ static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 
 	case PCIBAR_MEM32:
 		bar_update_normal = (new_bar_uos != (uint32_t)~0U);
+		is_msix_table_bar = (has_msix_cap(vdev) && (idx == vdev->msix.table_bar));
 		new_bar = new_bar_uos & mask;
 		if (bar_update_normal) {
-			vdev_pt_remap_bar(vdev, idx,
-				pci_bar_base(new_bar));
+			if (is_msix_table_bar) {
+				vdev->bar[idx].base = pci_bar_base(new_bar);
+				vdev_pt_remap_msix_table_bar(vdev);
+			} else {
+				vdev_pt_remap_generic_bar(vdev, idx,
+					pci_bar_base(new_bar));
 
-			vdev->bar[idx].base = pci_bar_base(new_bar);
+				vdev->bar[idx].base = pci_bar_base(new_bar);
+			}
 		}
 		break;
 
@@ -218,4 +261,3 @@ int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 
 	return ret;
 }
-
