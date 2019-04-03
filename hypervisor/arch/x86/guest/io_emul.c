@@ -22,6 +22,21 @@
 #define MMIO_DEFAULT_VALUE_SIZE_4	(0xFFFFFFFFUL)
 #define MMIO_DEFAULT_VALUE_SIZE_8	(0xFFFFFFFFFFFFFFFFUL)
 
+void arch_fire_vhm_interrupt(void)
+{
+	/*
+	 * use vLAPIC to inject vector to SOS vcpu 0 if vlapic is enabled
+	 * otherwise, send IPI hardcoded to BOOT_CPU_ID
+	 */
+	struct acrn_vm *sos_vm;
+	struct acrn_vcpu *vcpu;
+
+	sos_vm = get_sos_vm();
+	vcpu = vcpu_from_vid(sos_vm, BOOT_CPU_ID);
+
+	vlapic_set_intr(vcpu, get_vhm_notification_vector(), LAPIC_TRIG_EDGE);
+}
+
 /**
  * @brief General complete-work for port I/O emulation
  *

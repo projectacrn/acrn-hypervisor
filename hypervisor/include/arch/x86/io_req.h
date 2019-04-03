@@ -211,8 +211,14 @@ void set_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id, uint32_t state);
  * @param vector vector for HV callback VHM
  * @return None
  */
-void set_vhm_vector(uint32_t vector);
+void set_vhm_notification_vector(uint32_t vector);
 
+/**
+ * @brief Get the vector for HV callback VHM
+ *
+ * @return vector for HV callbakc VH
+ */
+uint32_t get_vhm_notification_vector(void);
 /**
  * @}
  */

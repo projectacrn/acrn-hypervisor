@@ -97,4 +97,12 @@ void register_pio_default_emulation_handler(struct acrn_vm *vm);
  * @param vm The VM to which the MMIO handler is registered
  */
 void register_mmio_default_emulation_handler(struct acrn_vm *vm);
+
+/**
+ * @brief Fire VHM interrupt to SOS
+ *
+ * @return None
+ */
+void arch_fire_vhm_interrupt(void);
+
 #endif /* IO_EMUL_H */

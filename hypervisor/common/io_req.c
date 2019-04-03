@@ -11,22 +11,7 @@
 
 #define ACRN_DBG_IOREQUEST	6U
 
-static uint32_t acrn_vhm_vector = VECTOR_HYPERVISOR_CALLBACK_VHM;
-
-static void fire_vhm_interrupt(void)
-{
-	/*
-	 * use vLAPIC to inject vector to SOS vcpu 0 if vlapic is enabled
-	 * otherwise, send IPI hardcoded to BOOT_CPU_ID
-	 */
-	struct acrn_vm *sos_vm;
-	struct acrn_vcpu *vcpu;
-
-	sos_vm = get_sos_vm();
-	vcpu = vcpu_from_vid(sos_vm, BOOT_CPU_ID);
-
-	vlapic_set_intr(vcpu, acrn_vhm_vector, LAPIC_TRIG_EDGE);
-}
+static uint32_t acrn_vhm_notification_vector = VECTOR_HYPERVISOR_CALLBACK_VHM;
 
 #if defined(HV_DEBUG)
 static void acrn_print_request(uint16_t vcpu_id, const struct vhm_request *req)
@@ -137,7 +122,7 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
 #endif
 
 		/* signal VHM */
-		fire_vhm_interrupt();
+		arch_fire_vhm_interrupt();
 
 		/* Polling completion of the request in polling mode */
 		if (is_polling) {
@@ -199,7 +184,12 @@ void set_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id, uint32_t state)
 	}
 }
 
-void set_vhm_vector(uint32_t vector)
+void set_vhm_notification_vector(uint32_t vector)
 {
-	acrn_vhm_vector = vector;
+	acrn_vhm_notification_vector = vector;
+}
+
+uint32_t get_vhm_notification_vector(void)
+{
+	return acrn_vhm_notification_vector;
 }
