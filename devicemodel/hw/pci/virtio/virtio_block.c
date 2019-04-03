@@ -51,6 +51,7 @@
 
 /* Capability bits */
 #define	VIRTIO_BLK_F_SEG_MAX	(1 << 2)	/* Maximum request segments */
+#define	VIRTIO_BLK_F_RO		(1 << 5)	/* Device is read-only */
 #define	VIRTIO_BLK_F_BLK_SIZE	(1 << 6)	/* cfg block size valid */
 #define	VIRTIO_BLK_F_FLUSH	(1 << 9)	/* Cache flush support */
 #define	VIRTIO_BLK_F_TOPOLOGY	(1 << 10)	/* Optimal I/O alignment */
@@ -249,6 +250,12 @@ virtio_blk_proc(struct virtio_blk *blk, struct virtio_vq_info *vq)
 	writeop = ((type == VBH_OP_WRITE) ||
 			(type == VBH_OP_DISCARD));
 
+	if (writeop && blockif_is_ro(blk->bc)) {
+		WPRINTF(("Cannot write to a read-only storage!\n"));
+		virtio_blk_done(&io->req, EROFS);
+		return;
+	}
+
 	iolen = 0;
 	for (i = 1; i < n; i++) {
 		/*
@@ -334,6 +341,9 @@ virtio_blk_get_caps(struct virtio_blk *blk, bool wb)
 
 	if (blockif_candiscard(blk->bc))
 		caps |= VIRTIO_BLK_F_DISCARD;
+
+	if (blockif_is_ro(blk->bc))
+		caps |= VIRTIO_BLK_F_RO;
 
 	return caps;
 }
