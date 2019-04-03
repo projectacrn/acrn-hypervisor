@@ -219,6 +219,73 @@ void set_vhm_notification_vector(uint32_t vector);
  * @return vector for HV callbakc VH
  */
 uint32_t get_vhm_notification_vector(void);
+
+/**
+ * @brief Emulate \p io_req for \p vcpu
+ *
+ * Handle an I/O request by either invoking a hypervisor-internal handler or
+ * deliver to VHM.
+ *
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
+ * @pre vcpu->vm->vm_id < CONFIG_MAX_VM_NUM
+ *
+ * @param vcpu The virtual CPU that triggers the MMIO access
+ * @param io_req The I/O request holding the details of the MMIO access
+ *
+ * @retval 0 Successfully emulated by registered handlers.
+ * @retval IOREQ_PENDING The I/O request is delivered to VHM.
+ * @retval -EIO The request spans multiple devices and cannot be emulated.
+ * @retval -EINVAL \p io_req has an invalid type.
+ * @retval <0 on other errors during emulation.
+ */
+int32_t emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req);
+
+/**
+ * @brief Register a port I/O handler
+ *
+ * @param vm      The VM to which the port I/O handlers are registered
+ * @param pio_idx The emulated port io index
+ * @param range   The emulated port io range
+ * @param io_read_fn_ptr The handler for emulating reads from the given range
+ * @param io_write_fn_ptr The handler for emulating writes to the given range
+ * @pre pio_idx < EMUL_PIO_IDX_MAX
+ */
+void   register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
+		const struct vm_io_range *range, io_read_fn_t io_read_fn_ptr, io_write_fn_t io_write_fn_ptr);
+
+/**
+ * @brief Register a MMIO handler
+ *
+ * This API registers a MMIO handler to \p vm before it is launched.
+ *
+ * @param vm The VM to which the MMIO handler is registered
+ * @param read_write The handler for emulating accesses to the given range
+ * @param start The base address of the range \p read_write can emulate
+ * @param end The end of the range (exclusive) \p read_write can emulate
+ * @param handler_private_data Handler-specific data which will be passed to \p read_write when called
+ *
+ * @retval 0 Registration succeeds
+ * @retval -EINVAL \p read_write is NULL, \p end is not larger than \p start or \p vm has been launched
+ */
+int32_t register_mmio_emulation_handler(struct acrn_vm *vm,
+	hv_mem_io_handler_t read_write, uint64_t start,
+	uint64_t end, void *handler_private_data);
+
+/**
+ * @brief Register port I/O default handler
+ *
+ * @param vm      The VM to which the port I/O handlers are registered
+ */
+void register_pio_default_emulation_handler(struct acrn_vm *vm);
+
+/**
+ * @brief Register MMIO default handler
+ *
+ * @param vm The VM to which the MMIO handler is registered
+ */
+void register_mmio_default_emulation_handler(struct acrn_vm *vm);
+
 /**
  * @}
  */
