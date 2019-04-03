@@ -67,21 +67,29 @@ static inline void pci_vdev_write_cfg_u32(struct pci_vdev *vdev, uint32_t offset
 	vdev->cfgdata.data_32[offset >> 2U] = val;
 }
 
+/**
+ * @pre vdev != NULL
+ */
+static inline bool has_msix_cap(const struct pci_vdev *vdev)
+{
+	return (vdev->msix.capoff != 0U);
+}
+
 void vdev_hostbridge_init(struct pci_vdev *vdev);
 int32_t vdev_hostbridge_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vdev_hostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 void vdev_hostbridge_deinit(__unused const struct pci_vdev *vdev);
 
-void vdev_pt_init(const struct pci_vdev *vdev);
 int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
-void vdev_pt_deinit(const struct pci_vdev *vdev);
 
 void vmsi_init(struct pci_vdev *vdev);
 int32_t vmsi_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 void vmsi_deinit(const struct pci_vdev *vdev);
 void vmsix_init(struct pci_vdev *vdev);
+void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev);
+int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *handler_private_data);
 int32_t vmsix_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 void vmsix_deinit(const struct pci_vdev *vdev);

@@ -28,6 +28,8 @@
 */
 
 #include <vm.h>
+#include <vtd.h>
+#include <mmu.h>
 #include <errno.h>
 #include <logmsg.h>
 #include "vpci_priv.h"
@@ -289,12 +291,63 @@ static inline bool is_valid_bar(const struct pci_bar *bar)
 
 /**
  * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ */
+static void assign_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
+{
+	int32_t ret;
+	struct acrn_vm *vm = vdev->vpci->vm;
+
+	/* Create an iommu domain for target VM if not created */
+	if (vm->iommu == NULL) {
+		if (vm->arch_vm.nworld_eptp == 0UL) {
+			vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info);
+			sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);
+		}
+		vm->iommu = create_iommu_domain(vm->vm_id,
+			hva2hpa(vm->arch_vm.nworld_eptp), 48U);
+	}
+
+	ret = assign_iommu_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
+		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
+	if (ret != 0) {
+		panic("failed to assign iommu device!");
+	}
+}
+
+/**
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ */
+static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
+{
+	int32_t ret;
+	struct acrn_vm *vm = vdev->vpci->vm;
+
+	ret = unassign_iommu_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
+		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
+	if (ret != 0) {
+		/*
+		 *TODO
+		 * panic needs to be removed here
+		 * Currently unassign_iommu_device can fail for multiple reasons
+		 * Once all the reasons and methods to avoid them can be made sure
+		 * panic here is not necessary.
+		 */
+		panic("failed to unassign iommu device!");
+	}
+}
+/**
+ * @pre vdev != NULL
  */
 static void partition_mode_pdev_init(struct pci_vdev *vdev, union pci_bdf pbdf)
 {
 	struct pci_pdev *pdev;
 	uint32_t idx;
 	struct pci_bar *pbar, *vbar;
+	uint16_t pci_command;
 
 	pdev = find_pci_pdev(pbdf);
 	ASSERT(pdev != NULL, "pdev is NULL");
@@ -316,7 +369,12 @@ static void partition_mode_pdev_init(struct pci_vdev *vdev, union pci_bdf pbdf)
 		}
 	}
 
-	vdev_pt_init(vdev);
+	pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
+	/* Disable INTX */
+	pci_command |= 0x400U;
+	pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
+
+	assign_vdev_pt_iommu_domain(vdev);
 }
 
 /**
@@ -343,6 +401,10 @@ int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 			vdev_hostbridge_init(vdev);
 		} else {
 			partition_mode_pdev_init(vdev, ptdev_config->pbdf);
+
+			vmsi_init(vdev);
+
+			vmsix_init(vdev);
 		}
 	}
 
@@ -364,7 +426,11 @@ void partition_mode_vpci_deinit(const struct acrn_vm *vm)
 		if (is_hostbridge(vdev)) {
 			vdev_hostbridge_deinit(vdev);
 		} else {
-			vdev_pt_deinit(vdev);
+			remove_vdev_pt_iommu_domain(vdev);
+
+			vmsi_deinit(vdev);
+
+			vmsix_deinit(vdev);
 		}
 	}
 }
@@ -381,7 +447,10 @@ void partition_mode_cfgread(const struct acrn_vpci *vpci, union pci_bdf vbdf,
 		if (is_hostbridge(vdev)) {
 			(void)vdev_hostbridge_cfgread(vdev, offset, bytes, val);
 		} else {
-			if (vdev_pt_cfgread(vdev, offset, bytes, val) != 0) {
+			if ((vdev_pt_cfgread(vdev, offset, bytes, val) != 0)
+				&& (vmsi_cfgread(vdev, offset, bytes, val) != 0)
+				&& (vmsix_cfgread(vdev, offset, bytes, val) != 0)
+				) {
 				/* Not handled by any handlers, passthru to physical device */
 				*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
 			}
@@ -401,7 +470,10 @@ void partition_mode_cfgwrite(const struct acrn_vpci *vpci, union pci_bdf vbdf,
 		if (is_hostbridge(vdev)) {
 			(void)vdev_hostbridge_cfgwrite(vdev, offset, bytes, val);
 		} else {
-			if (vdev_pt_cfgwrite(vdev, offset, bytes, val) != 0){
+			if ((vdev_pt_cfgwrite(vdev, offset, bytes, val) != 0)
+				&& (vmsi_cfgwrite(vdev, offset, bytes, val) != 0)
+				&& (vmsix_cfgwrite(vdev, offset, bytes, val) != 0)
+				) {
 				/* Not handled by any handlers, passthru to physical device */
 				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
 			}
@@ -479,6 +551,10 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
 		vmsi_init(vdev);
 
 		vmsix_init(vdev);
+
+		if (has_msix_cap(vdev)) {
+			vdev_pt_remap_msix_table_bar(vdev);
+		}
 	}
 }
 

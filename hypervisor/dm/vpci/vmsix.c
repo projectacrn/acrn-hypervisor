@@ -38,13 +38,6 @@
 #include <logmsg.h>
 #include "vpci_priv.h"
 
-/**
- * @pre vdev != NULL
- */
-static inline bool has_msix_cap(const struct pci_vdev *vdev)
-{
-	return (vdev->msix.capoff != 0U);
-}
 
 /**
  * @pre vdev != NULL
@@ -287,7 +280,7 @@ static void vmsix_table_rw(const struct pci_vdev *vdev, struct mmio_request *mmi
  * @pre io_req != NULL
  * @pre handler_private_data != NULL
  */
-static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
+int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
 {
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	struct pci_vdev *vdev;
@@ -334,65 +327,6 @@ static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *
 	return ret;
 }
 
-
-/**
-* @pre vdev != NULL
-* @pre vdev->pdev != NULL
-* @pre vdev->pdev->msix.table_bar < (PCI_BAR_COUNT - 1U)
-*/
-static void vmsix_init_helper(struct pci_vdev *vdev)
-{
-	uint32_t i;
-	uint64_t addr_hi, addr_lo;
-	struct pci_msix *msix = &vdev->msix;
-	struct pci_pdev *pdev = vdev->pdev;
-	struct pci_bar *bar;
-
-	ASSERT(vdev->pdev->msix.table_bar < (PCI_BAR_COUNT - 1U), "msix->table_bar out of range");
-
-	msix->table_bar = pdev->msix.table_bar;
-	msix->table_offset = pdev->msix.table_offset;
-	msix->table_count = pdev->msix.table_count;
-
-	/* Mask all table entries */
-	for (i = 0U; i < msix->table_count; i++) {
-		msix->tables[i].vector_control = PCIM_MSIX_VCTRL_MASK;
-		msix->tables[i].addr = 0U;
-		msix->tables[i].data = 0U;
-	}
-
-	bar = &pdev->bar[msix->table_bar];
-	if (bar != NULL) {
-		vdev->msix.mmio_hpa = bar->base;
-		vdev->msix.mmio_gpa = sos_vm_hpa2gpa(bar->base);
-		vdev->msix.mmio_size = bar->size;
-	}
-
-	if (msix->mmio_gpa != 0U) {
-		/*
-			* PCI Spec: a BAR may also map other usable address space that is not associated
-			* with MSI-X structures, but it must not share any naturally aligned 4 KB
-			* address range with one where either MSI-X structure resides.
-			* The MSI-X Table and MSI-X PBA are permitted to co-reside within a naturally
-			* aligned 4 KB address range.
-			*
-			* If PBA or others reside in the same BAR with MSI-X Table, devicemodel could
-			* emulate them and maps these memory range at the 4KB boundary. Here, we should
-			* make sure only intercept the minimum number of 4K pages needed for MSI-X table.
-			*/
-
-		/* The higher boundary of the 4KB aligned address range for MSI-X table */
-		addr_hi = msix->mmio_gpa + msix->table_offset + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
-		addr_hi = round_page_up(addr_hi);
-
-		/* The lower boundary of the 4KB aligned address range for MSI-X table */
-		addr_lo = round_page_down(msix->mmio_gpa + msix->table_offset);
-
-		(void)register_mmio_emulation_handler(vdev->vpci->vm, vmsix_table_mmio_access_handler,
-			addr_lo, addr_hi, vdev);
-	}
-}
-
 /**
  * @pre vdev != NULL
  */
@@ -402,12 +336,13 @@ void vmsix_init(struct pci_vdev *vdev)
 
 	vdev->msix.capoff = pdev->msix.capoff;
 	vdev->msix.caplen = pdev->msix.caplen;
+	vdev->msix.table_bar = pdev->msix.table_bar;
+	vdev->msix.table_offset = pdev->msix.table_offset;
+	vdev->msix.table_count = pdev->msix.table_count;
 
 	if (has_msix_cap(vdev)) {
 		(void)memcpy_s((void *)&vdev->cfgdata.data_8[pdev->msix.capoff], pdev->msix.caplen,
 			(void *)&pdev->msix.cap[0U], pdev->msix.caplen);
-
-		vmsix_init_helper(vdev);
 	}
 }
 

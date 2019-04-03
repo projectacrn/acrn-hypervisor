@@ -592,7 +592,8 @@ void register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
 /**
  * @brief Register a MMIO handler
  *
- * This API registers a MMIO handler to \p vm before it is launched.
+ * This API registers a MMIO handler to \p vm before it is Started
+ * For Pre-launched VMs, this API can be called after it is Started
  *
  * @param vm The VM to which the MMIO handler is registered
  * @param read_write The handler for emulating accesses to the given range
@@ -610,9 +611,7 @@ int32_t register_mmio_emulation_handler(struct acrn_vm *vm,
 	int32_t status = -EINVAL;
 	struct mem_io_node *mmio_node;
 
-	if ((vm->hw.created_vcpus > 0U) && (vm->hw.vcpu_array[0].launched)) {
-		pr_err("register mmio handler after vm launched");
-	} else {
+	if (is_prelaunched_vm(vm) || (vm->state != VM_STARTED)) {
 		/* Ensure both a read/write handler and range check function exist */
 		if ((read_write != NULL) && (end > start)) {
 			if (vm->emul_mmio_regions >= CONFIG_MAX_EMULATED_MMIO_REGIONS) {
@@ -640,6 +639,8 @@ int32_t register_mmio_emulation_handler(struct acrn_vm *vm,
 				status = 0;
 			}
 		}
+	} else {
+		pr_err("register mmio handler after VM is Started");
 	}
 
 	/* Return status to caller */
