@@ -262,14 +262,14 @@ hv_emulate_pio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	struct acrn_vm *vm = vcpu->vm;
 	struct pio_request *pio_req = &io_req->reqs.pio;
 	struct vm_io_handler_desc *handler;
-	io_read_fn_t io_read = vm->arch_vm.default_io_read;
-	io_write_fn_t io_write = vm->arch_vm.default_io_write;
+	io_read_fn_t io_read = vm->default_io_read;
+	io_write_fn_t io_write = vm->default_io_write;
 
 	port = (uint16_t)pio_req->address;
 	size = (uint16_t)pio_req->size;
 
 	for (idx = 0U; idx < EMUL_PIO_IDX_MAX; idx++) {
-		handler = &(vm->arch_vm.emul_pio[idx]);
+		handler = &(vm->emul_pio[idx]);
 
 		if ((port < handler->port_start) || (port >= handler->port_end)) {
 			continue;
@@ -598,10 +598,10 @@ void register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
 	if (is_sos_vm(vm)) {
 		deny_guest_pio_access(vm, range->base, range->len);
 	}
-	vm->arch_vm.emul_pio[pio_idx].port_start = range->base;
-	vm->arch_vm.emul_pio[pio_idx].port_end = range->base + range->len;
-	vm->arch_vm.emul_pio[pio_idx].io_read = io_read_fn_ptr;
-	vm->arch_vm.emul_pio[pio_idx].io_write = io_write_fn_ptr;
+	vm->emul_pio[pio_idx].port_start = range->base;
+	vm->emul_pio[pio_idx].port_end = range->base + range->len;
+	vm->emul_pio[pio_idx].io_read = io_read_fn_ptr;
+	vm->emul_pio[pio_idx].io_write = io_write_fn_ptr;
 }
 
 /**
@@ -669,8 +669,8 @@ int32_t register_mmio_emulation_handler(struct acrn_vm *vm,
  */
 void register_pio_default_emulation_handler(struct acrn_vm *vm)
 {
-	vm->arch_vm.default_io_read = pio_default_read;
-	vm->arch_vm.default_io_write = pio_default_write;
+	vm->default_io_read = pio_default_read;
+	vm->default_io_write = pio_default_write;
 }
 
 /**
