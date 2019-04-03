@@ -125,21 +125,22 @@ internal_scan(struct libusb_device ***list, int list_sz, int depth,
 }
 
 static int
-usb_dev_scan_dev()
+usb_dev_scan_dev(struct libusb_device ***devlist)
 {
 	int num_devs;
-	struct libusb_device **devlist;
 	int8_t visit[USB_MAX_DEVICES];
 
 	if (!g_ctx.libusb_ctx)
 		return -1;
 
-	num_devs = libusb_get_device_list(g_ctx.libusb_ctx, &devlist);
-	if (num_devs < 0)
+	num_devs = libusb_get_device_list(g_ctx.libusb_ctx, devlist);
+	if (num_devs < 0) {
+		*devlist = NULL;
 		return -1;
+	}
 
 	memset(visit, 0, sizeof(visit));
-	internal_scan(&devlist, num_devs, 1, visit, USB_MAX_DEVICES);
+	internal_scan(devlist, num_devs, 1, visit, USB_MAX_DEVICES);
 	return num_devs;
 }
 
@@ -1215,7 +1216,7 @@ usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 	g_ctx.notify_cb    = notify_cb;
 	g_ctx.intr_cb      = intr_cb;
 
-	num_devs = usb_dev_scan_dev();
+	num_devs = usb_dev_scan_dev(&g_ctx.devlist);
 	UPRINTF(LINF, "found %d devices before Guest OS booted\r\n", num_devs);
 
 	native_conn_evt    = LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED;
@@ -1260,10 +1261,15 @@ usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 	return 0;
 
 errout:
-	if (g_ctx.libusb_ctx)
-		libusb_exit(g_ctx.libusb_ctx);
+	if (g_ctx.devlist) {
+		libusb_free_device_list(g_ctx.devlist, 1);
+		g_ctx.devlist = NULL;
+	}
 
-	g_ctx.libusb_ctx = NULL;
+	if (g_ctx.libusb_ctx) {
+		libusb_exit(g_ctx.libusb_ctx);
+		g_ctx.libusb_ctx = NULL;
+	}
 	return -1;
 }
 
@@ -1280,6 +1286,11 @@ usb_dev_sys_deinit(void)
 
 	g_ctx.thread_exit = 1;
 	pthread_join(g_ctx.thread, NULL);
+
+	if (g_ctx.devlist) {
+		libusb_free_device_list(g_ctx.devlist, 1);
+		g_ctx.devlist = NULL;
+	}
 
 	libusb_exit(g_ctx.libusb_ctx);
 	g_ctx.libusb_ctx = NULL;
