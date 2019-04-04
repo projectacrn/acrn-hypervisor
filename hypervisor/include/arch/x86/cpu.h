@@ -322,25 +322,17 @@ static inline void asm_hlt(void)
 	asm volatile ("hlt");
 }
 
-#ifdef CONFIG_PARTITION_MODE
-#define CPU_IRQ_DISABLE()
-#else
 /* Disables interrupts on the current CPU */
 #define CPU_IRQ_DISABLE()                                   \
 {                                                           \
 	asm volatile ("cli\n" : : : "cc");                  \
 }
-#endif
 
-#ifdef CONFIG_PARTITION_MODE
-#define CPU_IRQ_ENABLE()
-#else
 /* Enables interrupts on the current CPU */
 #define CPU_IRQ_ENABLE()                                    \
 {                                                           \
 	asm volatile ("sti\n" : : : "cc");                  \
 }
-#endif
 
 /* This macro writes the stack pointer. */
 static inline void cpu_sp_write(uint64_t *stack_ptr)
