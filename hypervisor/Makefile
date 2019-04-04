@@ -147,7 +147,11 @@ C_SRCS += arch/x86/seed/seed_sbl.c
 C_SRCS += arch/x86/configs/vm_config.c
 C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/ve820.c
 C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/board.c
+C_SRCS += scenarios/$(SCENARIO_NAME)/vm_configurations.c
+ifneq (,$(wildcard scenarios/$(SCENARIO_NAME)/pt_dev.c))
 C_SRCS += scenarios/$(SCENARIO_NAME)/pt_dev.c
+endif
+
 
 C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_parse.c
