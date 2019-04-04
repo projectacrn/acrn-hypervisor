@@ -306,7 +306,7 @@ Intel GVT-g (AcrnGT) Parameters
 
 This table gives an overview of all the Intel GVT-g parameters that are
 available to tweak the behavior of the graphics sharing (Intel GVT-g, aka
-AcrnGT) capabilities in ACRN. The `GVT-g-kernel-options-details`_
+AcrnGT) capabilities in ACRN. The `GVT-g-kernel-options`_
 section below has more details on a few select parameters.
 
 .. list-table::
@@ -412,7 +412,7 @@ section below has more details on a few select parameters.
 
          i915.enable_fbc=1
 
-.. _GVT-g-kernel-options-details:
+.. _GVT-g-kernel-options:
 
 GVT-g (AcrnGT) Kernel Options details
 =====================================
