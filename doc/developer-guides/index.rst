@@ -8,9 +8,7 @@ Developer Guides
 
    hld/index
    primer
-   kernel-parameters
    GVT-g-porting
-   GVT-g-kernel-options
    trusty
    l1tf
    VBSK-analysis
