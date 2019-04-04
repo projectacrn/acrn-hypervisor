@@ -77,6 +77,7 @@ publish:
 	cp -r $(BUILDDIR)/html/* $(PUBLISHDIR)
 	cp scripts/publish-README.md $(PUBLISHDIR)/../README.md
 	cp scripts/publish-index.html $(PUBLISHDIR)/../index.html
+	cp scripts/publish-robots.txt $(PUBLISHDIR)/../robots.txt
 	cd $(PUBLISHDIR)/..; git add -A; git commit -s -m "publish $(RELEASE)"; git push origin master;
 
 
