@@ -57,15 +57,6 @@ config RELEASE
 	  console and hypervisor shell are available only in non-release
 	  (i.e. debug) builds. Assertions are not effective in release builds.
 
-config MAX_VM_NUM
-	int "Maximum number of VM"
-	range 1 8
-	default 4
-	help
-	  The maximum number of virtual machines (VMs) the hypervisor can
-	  support.  This is customizable per the use cases of the build. For
-	  general-purpose builds the maximum of physical cores can be used.
-
 config MAX_VCPUS_PER_VM
 	int "Maximum number of VCPUs per VM"
 	range 1 8

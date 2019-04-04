@@ -18,6 +18,7 @@
 #include <lapic.h>
 #include <vtd.h>
 #include <logmsg.h>
+#include <vm_configurations.h>
 
 #define DBG_IOMMU 0
 
