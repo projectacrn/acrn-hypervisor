@@ -149,11 +149,6 @@ static uint16_t pm1_enable, pm1_status;
  */
 static uint16_t pm1_control;
 
-#define	PM1_SCI_EN	0x0001
-#define	PM1_SLP_TYP	0x1c00
-#define	PM1_SLP_EN	0x2000
-#define	PM1_ALWAYS_ZERO	0xc003
-
 static void
 sci_update(struct vmctx *ctx)
 {
@@ -163,7 +158,7 @@ sci_update(struct vmctx *ctx)
 	 * Followed ACPI spec, should trigger SMI if SCI_EN is zero.
 	 * Return directly due to ACRN do not support SMI so far.
 	 */
-	if (!(pm1_control & PM1_SCI_EN))
+	if (!(pm1_control & VIRTUAL_PM1A_SCI_EN))
 		return;
 
 	/* See if the SCI should be active or not. */
@@ -296,20 +291,20 @@ pm1_control_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		 * to zero in pm1_control.  Always preserve SCI_EN as OSPM
 		 * can never change it.
 		 */
-		pm1_control = (pm1_control & PM1_SCI_EN) |
-		    (*eax & ~(PM1_SLP_EN | PM1_ALWAYS_ZERO));
+		pm1_control = (pm1_control & VIRTUAL_PM1A_SCI_EN) |
+		    (*eax & ~(VIRTUAL_PM1A_SLP_EN | VIRTUAL_PM1A_ALWAYS_ZERO));
 
 		/*
 		 * If SLP_EN is set, check for S5.  ACRN-DM's _S5_ method
 		 * says that '5' should be stored in SLP_TYP for S5.
 		 */
-		if (*eax & PM1_SLP_EN) {
-			if ((pm1_control & PM1_SLP_TYP) >> 10 == 5) {
+		if (*eax & VIRTUAL_PM1A_SLP_EN) {
+			if ((pm1_control & VIRTUAL_PM1A_SLP_TYP) >> 10 == 5) {
 				error = vm_suspend(ctx, VM_SUSPEND_POWEROFF);
 				assert(error == 0 || errno == EALREADY);
 			}
 
-			if ((pm1_control & PM1_SLP_TYP) >> 10 == 3) {
+			if ((pm1_control & VIRTUAL_PM1A_SLP_TYP) >> 10 == 3) {
 				error = vm_suspend(ctx, VM_SUSPEND_SUSPEND);
 				assert(error == 0 || errno == EALREADY);
 			}
@@ -317,7 +312,7 @@ pm1_control_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	}
 	return 0;
 }
-INOUT_PORT(pm1_control, PM1A_CNT_ADDR, IOPORT_F_INOUT, pm1_control_handler);
+INOUT_PORT(pm1_control, VIRTUAL_PM1A_CNT_ADDR, IOPORT_F_INOUT, pm1_control_handler);
 SYSRES_IO(PM1A_EVT_ADDR, 8);
 
 static int
@@ -464,7 +459,7 @@ smi_cmd_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	pthread_mutex_lock(&pm_lock);
 	switch (*eax) {
 	case ACPI_ENABLE:
-		pm1_control |= PM1_SCI_EN;
+		pm1_control |= VIRTUAL_PM1A_SCI_EN;
 		/*
 		 * FIXME: ACPI_ENABLE/ACPI_DISABLE only impacts SCI_EN via SMI
 		 * command register, not impact power button emulation. so need
@@ -507,7 +502,7 @@ smi_cmd_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		}
 		break;
 	case ACPI_DISABLE:
-		pm1_control &= ~PM1_SCI_EN;
+		pm1_control &= ~VIRTUAL_PM1A_SCI_EN;
 		if (power_button != NULL) {
 			mevent_delete(power_button);
 			power_button = NULL;

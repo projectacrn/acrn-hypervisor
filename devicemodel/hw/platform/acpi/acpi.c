@@ -364,7 +364,7 @@ basl_fwrite_fadt(FILE *fp, struct vmctx *ctx)
 	    PM1A_EVT_ADDR);
 	EFPRINTF(fp, "[0004]\t\tPM1B Event Block Address : 00000000\n");
 	EFPRINTF(fp, "[0004]\t\tPM1A Control Block Address : %08X\n",
-	    PM1A_CNT_ADDR);
+	    VIRTUAL_PM1A_CNT_ADDR);
 	EFPRINTF(fp, "[0004]\t\tPM1B Control Block Address : 00000000\n");
 	EFPRINTF(fp, "[0004]\t\tPM2 Control Block Address : 00000000\n");
 	EFPRINTF(fp, "[0004]\t\tPM Timer Block Address : %08X\n",
@@ -466,7 +466,7 @@ basl_fwrite_fadt(FILE *fp, struct vmctx *ctx)
 	EFPRINTF(fp, "[0001]\t\tBit Offset : 00\n");
 	EFPRINTF(fp, "[0001]\t\tEncoded Access Width : 02 [Word Access:16]\n");
 	EFPRINTF(fp, "[0008]\t\tAddress : 00000000%08X\n",
-	    PM1A_CNT_ADDR);
+	    VIRTUAL_PM1A_CNT_ADDR);
 	EFPRINTF(fp, "\n");
 
 	EFPRINTF(fp,
