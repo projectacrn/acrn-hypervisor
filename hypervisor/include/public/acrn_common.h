@@ -55,9 +55,11 @@
 #define GUEST_FLAG_RT				(1UL << 5U)     /* Whether the vm is RT-VM */
 
 /* TODO: We may need to get this addr from guest ACPI instead of hardcode here */
-#define VIRTUAL_PM1A_CNT_ADDR	0x404U
-#define VIRTUAL_PM1A_SLP_TYP	0x1c00U
-#define VIRTUAL_PM1A_SLP_EN	0x2000U
+#define VIRTUAL_PM1A_CNT_ADDR		0x404U
+#define	VIRTUAL_PM1A_SCI_EN		0x0001
+#define VIRTUAL_PM1A_SLP_TYP		0x1c00U
+#define VIRTUAL_PM1A_SLP_EN		0x2000U
+#define	VIRTUAL_PM1A_ALWAYS_ZERO	0xc003
 
 /**
  * @brief Hypercall
