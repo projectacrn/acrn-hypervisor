@@ -6,11 +6,11 @@ ACRN Kernel Parameters
 Generic kernel parameters
 *************************
 
-A number of kernel parameters control the behaviour of ACRN-based systems. Some
+A number of kernel parameters control the behavior of ACRN-based systems. Some
 are applicable to the Service OS (SOS) kernel, others to the User OS (UOS)
 kernel, and some are applicable to both.
 
-This section focusses on generic parameters from the Linux kernel which are
+This section focuses on generic parameters from the Linux kernel which are
 relevant for configuring or debugging ACRN-based systems.
 
 .. list-table::
@@ -301,13 +301,13 @@ relevant for configuring or debugging ACRN-based systems.
          intel_iommu=off
 
 
-`Intel GVT-g`_ (AcrnGT) Parameters
-**********************************
+Intel GVT-g (AcrnGT) Parameters
+*******************************
 
-This table gives an overview of all the `Intel GVT-g`_ parameters that are
-available to tweak the behaviour of the graphics sharing (`Intel GVT-g`_, aka
-AcrnGT) capabilities in ACRN. `GVT-g-kernel-options`_ has more details on a
-few select parameters.
+This table gives an overview of all the Intel GVT-g parameters that are
+available to tweak the behavior of the graphics sharing (Intel GVT-g, aka
+AcrnGT) capabilities in ACRN. The `GVT-g-kernel-options-details`_
+section below has more details on a few select parameters.
 
 .. list-table::
    :header-rows: 1
@@ -412,10 +412,10 @@ few select parameters.
 
          i915.enable_fbc=1
 
-.. _GVT-g-kernel-options:
+.. _GVT-g-kernel-options-details:
 
-GVT-g (AcrnGT) Kernel Options
-*****************************
+GVT-g (AcrnGT) Kernel Options details
+=====================================
 
 This section provides additional information and details on the kernel command
 line options that are related to AcrnGT.
@@ -658,5 +658,3 @@ the guest i915 triggering a hangcheck and lead to a guest GPU reset.
 This reset is unnecessary so we use ``i915.enable_hangcheck=0`` to
 disable this timeout check and prevent guest from triggering unnecessary
 GPU resets.
-
-.. _Intel GVT-g: https://www.collinsdictionary.com/dictionary/english/focusses
