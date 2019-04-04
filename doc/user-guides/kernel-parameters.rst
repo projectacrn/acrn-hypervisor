@@ -209,16 +209,15 @@ relevant for configuring or debugging ACRN-based systems.
 
    * - memmap
      - SOS
-     - ::
-
-         memmap=0x400000$0x6da00000
-
      - Mark specific memory as reserved.
 
        ``memmap=nn[KMG]$ss[KMG]``
          Region of memory to be reserved is from ``ss`` to ``ss+nn``,
          using ``K``, ``M``, and ``G`` representing Kilobytes, Megabytes, and
          Gigabytes, respectively.
+     - ::
+
+         memmap=0x400000$0x6da00000
 
    * - ramoops.mem_address
        ramoops.mem_size
