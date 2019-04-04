@@ -30,13 +30,10 @@
    font-weight: bold;
 }
 
-/* tweak doc version selection
+/* tweak doc version selection */
 .rst-versions {
    position: static;
-   border-top: none;
-   padding: 0px;
 }
-*/
 
 .rst-versions .rst-current-version {
    padding: 5px;
