@@ -145,26 +145,6 @@ static inline uint16_t get_vm_bsp_pcpu_id(const struct acrn_vm_config *vm_config
 	return (cpu_id < get_pcpu_nums()) ? cpu_id : INVALID_CPU_ID;
 }
 
-#ifdef CONFIG_PARTITION_MODE
-/**
- * @pre vm_config != NULL
- */
-uint16_t get_vm_pcpu_nums(const struct acrn_vm_config *vm_config)
-{
-	uint16_t i, host_pcpu_num, pcpu_num = 0U;
-	uint64_t cpu_bitmap = vm_config->pcpu_bitmap;
-
-	host_pcpu_num = get_pcpu_nums();
-
-	for (i = 0U; i < host_pcpu_num ; i++) {
-		if (bitmap_test(i, &cpu_bitmap)) {
-			pcpu_num++;
-		}
-	}
-	return pcpu_num;
-}
-#endif
-
 /**
  * @pre vm != NULL && vm_config != NULL
  */
@@ -635,9 +615,9 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 	err = create_vm(vm_id, vm_config, &vm);
 
 	if (err == 0) {
-#ifdef CONFIG_PARTITION_MODE
-		(void)mptable_build(vm);
-#endif
+		if (is_prelaunched_vm(vm)) {
+			(void)mptable_build(vm);
+		}
 
 		for (i = 0U; i < get_pcpu_nums(); i++) {
 			if (bitmap_test(i, &vm_config->pcpu_bitmap)) {

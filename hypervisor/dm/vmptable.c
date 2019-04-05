@@ -57,7 +57,7 @@ static struct mptable_info mptable_template = {
 
 static struct proc_entry proc_entry_template = {
 	.type = MPCT_ENTRY_PROCESSOR,
-	.apic_version = LAPIC_VERSION,
+	.apic_version = LAPIC_VERSION_NUM,
 	.cpu_flags = PROCENTRY_FLAG_EN,
 	.cpu_signature = MPEP_SIG,
 	.feature_flags = MPEP_FEATURES
@@ -78,7 +78,9 @@ static uint8_t mpt_compute_checksum(void *base, size_t len)
 }
 
 /**
- * @pre vm_config != NULL
+ * @pre vm != NULL
+ * @pre vm->vm_id < CONFIG_MAX_VM_NUM
+ * @pre vm_configs[vm->vm_id].mptable != NULL
  */
 int32_t mptable_build(struct acrn_vm *vm)
 {
@@ -90,11 +92,12 @@ int32_t mptable_build(struct acrn_vm *vm)
 	uint16_t	i;
 	uint16_t	vcpu_num;
 	uint64_t	pcpu_bitmap = 0U;
-	struct mptable_info *mptable = &vm->mptable;
+	struct mptable_info *mptable;
 	struct acrn_vm_config *vm_config;
 
 	vm_config = get_vm_config(vm->vm_id);
-	vcpu_num = get_vm_pcpu_nums(vm_config);
+	mptable = vm_config->mptable;
+	vcpu_num = vm_config->cpu_num;
 	pcpu_bitmap = vm_config->pcpu_bitmap;
 	(void *)memcpy_s((void *)mptable, sizeof(struct mptable_info),
 		(const void *)&mptable_template, sizeof(struct mptable_info));

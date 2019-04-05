@@ -228,9 +228,7 @@ C_SRCS += dm/vioapic.c
 C_SRCS += dm/io_req.c
 C_SRCS += dm/vpci/vdev.c
 C_SRCS += dm/vpci/vpci.c
-ifeq ($(CONFIG_PARTITION_MODE),y)
 C_SRCS += dm/vmptable.c
-endif
 C_SRCS += dm/vpci/vhostbridge.c
 C_SRCS += dm/vpci/pci_pt.c
 C_SRCS += dm/vpci/vmsi.c

@@ -33,7 +33,7 @@
  */
 #define	MPTABLE_MAX_LENGTH	65536U
 
-#define LAPIC_VERSION		16U
+#define LAPIC_VERSION_NUM	16U
 
 #define MP_SPECREV		4U
 #define MPFP_SIG		"_MP_"
