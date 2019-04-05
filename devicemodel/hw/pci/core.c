@@ -542,25 +542,25 @@ register_bar(struct pci_vdev *dev, int idx)
 }
 
 /* Are we decoding i/o port accesses for the emulated pci device? */
-static int
+static bool
 porten(struct pci_vdev *dev)
 {
 	uint16_t cmd;
 
 	cmd = pci_get_cfgdata16(dev, PCIR_COMMAND);
 
-	return (cmd & PCIM_CMD_PORTEN);
+	return (cmd & PCIM_CMD_PORTEN) != 0;
 }
 
 /* Are we decoding memory accesses for the emulated pci device? */
-static int
+static bool
 memen(struct pci_vdev *dev)
 {
 	uint16_t cmd;
 
 	cmd = pci_get_cfgdata16(dev, PCIR_COMMAND);
 
-	return (cmd & PCIM_CMD_MEMEN);
+	return (cmd & PCIM_CMD_MEMEN) != 0;
 }
 
 /*
@@ -570,9 +570,9 @@ memen(struct pci_vdev *dev)
  * the address range decoded by the BAR register.
  */
 static void
-update_bar_address(struct  pci_vdev *dev, uint64_t addr, int idx, int type)
+update_bar_address(struct pci_vdev *dev, uint64_t addr, int idx, int type)
 {
-	int decode;
+	bool decode;
 
 	if (dev->bar[idx].type == PCIBAR_IO)
 		decode = porten(dev);
@@ -671,7 +671,7 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 		lobits = PCIM_BAR_MEM_SPACE | PCIM_BAR_MEM_32;
 		break;
 	default:
-		printf("pci_emul_alloc_base: invalid bar type %d\n", type);
+		printf("%s: invalid bar type %d\n", __func__, type);
 		assert(0);
 	}
 
@@ -703,7 +703,8 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 void
 pci_emul_free_bars(struct pci_vdev *pdi)
 {
-	int i, enabled;
+	int i;
+	bool enabled;
 
 	for (i = 0; i < PCI_BARMAX; i++) {
 		if ((pdi->bar[i].type != PCIBAR_NONE) &&
