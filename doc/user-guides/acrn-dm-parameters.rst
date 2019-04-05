@@ -215,13 +215,13 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        in UOS. Any physical USB device attached on 1-2 (bus 1, port 2) or
        2-2 (bus 2, port 2) will be detected by UOS and be used as expected. To
        determine which bus and port a USB device is attached, you could run
-       `lsusb -t` in SOS.
+       ``lsusb -t`` in SOS.
 
        ::
 
          -s 9,virtio-blk,/root/test.img
 
-       This add virtual block in PCI slot 9 and use "/root/test.img" as the
+       This add virtual block in PCI slot 9 and use ``/root/test.img`` as the
        disk image
 
    * - :kbd:`-U, --uuid <uuid>`
@@ -234,7 +234,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
          -u "42795636-1d31-6512-7432-087d33b34756"
 
-       set the newly created VM's UUID to "42795636-1d31-6512-7432-087d33b34756"
+       set the newly created VM's UUID to ``42795636-1d31-6512-7432-087d33b34756``
 
    * - :kbd:`-v, --version`
      - Show Device Model version
@@ -284,7 +284,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
    * - :kbd:`--vmcfg <sub-options>`
      - It's an experimental option for built-in VM configuration. The
-       sub-options could be 'list' or <vm_idx>.
+       sub-options could be ``list`` or ``vm_idx``.
 
        - ``--vmcfg list`` shows indexes of all VMs with built-in configuration.
        - ``--vmcfg <vm_idx>`` launches UOS with selected config.
@@ -316,17 +316,20 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        disable it.
 
    * - :kbd:`--lapic_pt`
-     - This option is to create a VM with lapic pass-through.
-       With this option, a VM is created with LAPIC_PASSTHROUGH and
-       IOREQ_COMPLETION_POLLING mode. This kind of VM is generally for hard realtime scenarios.
+     - This option is to create a VM with the local APIC (LAPIC) passed-through.
+       With this option, a VM is created with ``LAPIC_PASSTHROUGH`` and
+       ``IO_COMPLETION_POLLING`` mode. This option is typically used for hard
+       realtime scenarios.
 
-       By default, DM will create VM without this option.
+       By default, this option is not enabled.
 
    * - :kbd:`--rtvm`
-     - This option is to create a VM with realtime attribute.
-       With this option, a VM is created with GUEST_FLAG_RT and GUEST_FLAG_IOREQ_COMPLETION_POLLING
-       mode. This kind of VM is generally for soft realtime scenarios (without lapic_pt) or hard
-       realtime scenarios (with lapic_pt). This kind of VM can't be interfered by SOS during runtime.
-       It can only be poweroff from inside of itself.
+     - This option is used to create a VM with realtime attributes.
+       With this option, a VM is created with ``GUEST_FLAG_RT`` and
+       ``GUEST_FLAG_IO_COMPLETION_POLLING`` mode. This kind of VM is
+       generally used for soft realtime scenarios (without ``--lapic_pt``) or
+       hard realtime scenarios (with ``--lapic_pt``). With ``GUEST_FLAG_RT``,
+       the Service OS (SOS) cannot interfere with this kind of VM when it is
+       running. It can only be powered off from inside the VM itself.
 
-       By default, DM will create VM without this option.
+       By default, this option is not enabled.
