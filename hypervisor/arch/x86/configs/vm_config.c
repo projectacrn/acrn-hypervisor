@@ -91,6 +91,8 @@ bool sanitize_vm_config(void)
 			} else if (((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)
 					&& ((vm_config->guest_flags & GUEST_FLAG_RT) == 0U)) {
 				ret = false;
+			} else if (vm_config->mptable == NULL) {
+				ret = false;
 			} else {
 				pre_launch_pcpu_bitmap |= vm_config->pcpu_bitmap;
 			}

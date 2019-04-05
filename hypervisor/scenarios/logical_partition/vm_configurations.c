@@ -11,6 +11,8 @@
 extern struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[VM0_CONFIG_PCI_PTDEV_NUM];
 extern struct acrn_vm_pci_ptdev_config vm1_pci_ptdevs[VM1_CONFIG_PCI_PTDEV_NUM];
 
+static struct mptable_info vm_mptables[CONFIG_MAX_VM_NUM];
+
 struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	{	/* VM0 */
 		.type = PRE_LAUNCHED_VM,
@@ -19,6 +21,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			 0x81U, 0x09U, 0xf2U, 0x01U, 0xebU, 0xd6U, 0x1aU, 0x5eU},
 			/* 26c5e0d8-8f8a-47d8-8109-f201ebd61a5e */
 		.pcpu_bitmap = VM0_CONFIG_PCPU_BITMAP,
+		.cpu_num = VM0_CONFIG_NUM_CPUS,
 		.guest_flags = GUEST_FLAG_IO_COMPLETION_POLLING,
 		.clos = 0U,
 		.memory = {
@@ -37,6 +40,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.vm_vuart = true,
 		.pci_ptdev_num = VM0_CONFIG_PCI_PTDEV_NUM,
 		.pci_ptdevs = vm0_pci_ptdevs,
+		.mptable = &vm_mptables[0],
 	},
 	{	/* VM1 */
 		.type = PRE_LAUNCHED_VM,
@@ -45,6 +49,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			 0xbcU, 0x58U, 0x76U, 0x05U, 0x83U, 0x7fU, 0x93U, 0x5eU},
 			/* dd87ce08-66f9-473d-bc58-7605837f935e */
 		.pcpu_bitmap = VM1_CONFIG_PCPU_BITMAP,
+		.cpu_num = VM1_CONFIG_NUM_CPUS,
 		.guest_flags = GUEST_FLAG_IO_COMPLETION_POLLING,
 		.clos = 0U,
 		.memory = {
@@ -63,5 +68,6 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.vm_vuart = true,
 		.pci_ptdev_num = VM1_CONFIG_PCI_PTDEV_NUM,
 		.pci_ptdevs = vm1_pci_ptdevs,
+		.mptable = &vm_mptables[1],
 	},
 };

@@ -11,6 +11,7 @@
 #include <pci.h>
 #include <multiboot.h>
 #include <acrn_common.h>
+#include <mptable.h>
 #include <vm_configurations.h>
 
 #define PLUG_CPU(n)		(1U << (n))
@@ -47,6 +48,7 @@ struct acrn_vm_config {
 	char name[MAX_VM_OS_NAME_LEN];			/* VM name identifier, useful for debug. */
 	const uint8_t uuid[16];				/* UUID of the VM */
 	uint64_t pcpu_bitmap;				/* from pcpu bitmap, we could know VM core number */
+	uint16_t cpu_num;				/* Number of vCPUs for the VM */
 	uint64_t guest_flags;				/* VM flags that we want to configure for guest
 							 * Now we have two flags:
 							 *	GUEST_FLAG_SECURE_WORLD_ENABLED
@@ -60,6 +62,7 @@ struct acrn_vm_config {
 	uint16_t clos;					/* if guest_flags has GUEST_FLAG_CLOS_REQUIRED, then VM use this CLOS */
 
 	bool			vm_vuart;
+	struct mptable_info	*mptable;		/* Pointer to mptable struct if VM type is pre-launched */
 } __aligned(8);
 
 struct acrn_vm_config *get_vm_config(uint16_t vm_id);

@@ -29,10 +29,6 @@
 #include <e820.h>
 #include <vm_config.h>
 
-#ifdef CONFIG_PARTITION_MODE
-#include <mptable.h>
-#endif
-
 #define INVALID_VM_ID 0xffffU
 
 struct vm_hw_info {
@@ -151,9 +147,6 @@ struct acrn_vm {
 	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
 	struct acrn_vpci vpci;
 
-#ifdef CONFIG_PARTITION_MODE
-	struct mptable_info mptable;
-#endif
 	uint8_t vrtc_offset;
 
 	spinlock_t softirq_dev_lock;
@@ -222,9 +215,6 @@ int32_t general_sw_loader(struct acrn_vm *vm);
 typedef int32_t (*vm_sw_loader_t)(struct acrn_vm *vm);
 extern vm_sw_loader_t vm_sw_loader;
 
-#ifdef CONFIG_PARTITION_MODE
-uint16_t get_vm_pcpu_nums(const struct acrn_vm_config *vm_config);
-#endif
 void vrtc_init(struct acrn_vm *vm);
 
 bool is_lapic_pt(const struct acrn_vm *vm);
