@@ -20,7 +20,7 @@
 #include <vcpu.h>
 #include <vioapic.h>
 #include <vpic.h>
-#include <io_emul.h>
+#include <vmx_io.h>
 #include <vuart.h>
 #include <trusty.h>
 #include <vcpuid.h>
