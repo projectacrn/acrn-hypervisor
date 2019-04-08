@@ -1684,6 +1684,43 @@ write_dsdt_urt1(struct pci_vdev *dev)
 }
 
 static void
+write_dsdt_sdc(struct pci_vdev *dev)
+{
+	printf("write SDC-%x:%x.%x in dsdt for SDC @ 00:1b.0\n",
+	       dev->bus,
+	       dev->slot,
+	       dev->func);
+	dsdt_line("Device (SDC)");
+	dsdt_line("{");
+	dsdt_line("    Name (_ADR, 0x%04X%04X)", dev->slot, dev->func);
+	dsdt_line("    Name (_DDN, \"Intel(R) SD Card Controller\")");
+	dsdt_line("    Name (_UID, One)");
+	dsdt_line("    Method (_CRS, 0, NotSerialized)");
+	dsdt_line("    {");
+	dsdt_line("        Name (RBUF, ResourceTemplate ()");
+	dsdt_line("        {");
+	dsdt_line("            GpioInt (Edge, ActiveBoth, SharedAndWake, "
+					"PullNone, 0, ");
+	dsdt_line("			\"\\\\_SB_.PCI0.AGPI\", 0, ResourceConsumer, ,");
+	dsdt_line("                    )");
+	dsdt_line("                    {   // Pin list");
+	dsdt_line("                        0");
+	dsdt_line("                    }");
+	dsdt_line("            GpioIo (Exclusive, PullDefault, 0x0000, "
+					"0x0000, IoRestrictionInputOnly,");
+	dsdt_line("                    \"\\\\_SB._PCI0.AGPI\", 0x00, "
+					"ResourceConsumer, ,");
+	dsdt_line("                    )");
+	dsdt_line("                    {   // Pin list");
+	dsdt_line("                        0");
+	dsdt_line("                    }");
+	dsdt_line("        })");
+	dsdt_line("        Return (RBUF)");
+	dsdt_line("    }");
+	dsdt_line("}");
+}
+
+static void
 passthru_write_dsdt(struct pci_vdev *dev)
 {
 	struct passthru_dev *ptdev = (struct passthru_dev *) dev->arg;
@@ -1712,6 +1749,9 @@ passthru_write_dsdt(struct pci_vdev *dev)
 	else if (device == 0x5abc)
 		/* URT1 @ 00:18.0 for bluetooth*/
 		write_dsdt_urt1(dev);
+	else if (device == 0x5aca)
+		/* SDC @ 00:1b.0 */
+		write_dsdt_sdc(dev);
 
 }
 
