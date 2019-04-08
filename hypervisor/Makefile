@@ -212,7 +212,6 @@ C_SRCS += common/hypercall.c
 C_SRCS += common/trusty_hypercall.c
 C_SRCS += common/schedule.c
 C_SRCS += common/vm_load.c
-C_SRCS += common/io_req.c
 C_SRCS += common/ptdev.c
 C_SRCS += common/static_checks.c
 
@@ -225,6 +224,7 @@ C_SRCS += hw/pci.c
 C_SRCS += dm/vpic.c
 C_SRCS += dm/vrtc.c
 C_SRCS += dm/vioapic.c
+C_SRCS += dm/io_req.c
 C_SRCS += dm/vpci/vdev.c
 C_SRCS += dm/vpci/vpci.c
 ifeq ($(CONFIG_PARTITION_MODE),y)

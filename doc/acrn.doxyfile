@@ -803,7 +803,7 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/arch/x86/guest/vlapic.h \
                           ../hypervisor/include/dm/vioapic.h \
                           ../hypervisor/include/dm/vpic.h \
-                          ../hypervisor/include/arch/x86/io_req.h \
+                          ../hypervisor/include/dm/io_req.h \
                           ../hypervisor/include/arch/x86/guest/io_emul.h \
                           ../hypervisor/include/arch/x86/guest/assign.h \
                           ../hypervisor/include/common/hypercall.h \
