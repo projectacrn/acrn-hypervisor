@@ -14,7 +14,7 @@ The ACRN hypervisor shell supports the following commands:
    * - help
      - Display information about supported hypervisor shell commands
    * - vm_list
-     - List all VMs, displaying the VM name, ID, and state ("Started"=running)
+     - List all VMs, displaying the VM UUID, ID, name, and state ("Started"=running)
    * - vcpu_list
      - List all vCPUs in all VMs
    * - vcpu_dumpreg <vm_id> <vcpu_id>

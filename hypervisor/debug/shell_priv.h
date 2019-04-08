@@ -40,7 +40,7 @@ struct shell {
 
 #define SHELL_CMD_VM_LIST		"vm_list"
 #define SHELL_CMD_VM_LIST_PARAM		NULL
-#define SHELL_CMD_VM_LIST_HELP		"List all VMs, displaying the VM name, ID, and state"
+#define SHELL_CMD_VM_LIST_HELP		"List all VMs, displaying the VM UUID, ID, name and state"
 
 #define SHELL_CMD_VCPU_LIST		"vcpu_list"
 #define SHELL_CMD_VCPU_LIST_PARAM	NULL
