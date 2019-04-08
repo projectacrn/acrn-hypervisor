@@ -316,20 +316,20 @@ Setting up AGLs
 
         # create a unique tap device for each VM
         tap=tap2
-        tap_exist=$(ip a | grep acrn_"$tap" | awk '{print $1}')
+        tap_exist=$(ip a | grep "$tap" | awk '{print $1}')
         if [ "$tap_exist"x != "x" ]; then
-          echo "tap device existed, reuse acrn_$tap"
+          echo "tap device existed, reuse $tap"
         else
-          ip tuntap add dev acrn_$tap mode tap
+          ip tuntap add dev $tap mode tap
         fi
 
         # if acrn-br0 exists, add VM's unique tap device under it
         br_exist=$(ip a | grep acrn-br0 | awk '{print $1}')
         if [ "$br_exist"x != "x" -a "$tap_exist"x = "x" ]; then
           echo "acrn-br0 bridge aleady exists, adding new tap device to it..."
-          ip link set acrn_"$tap" master acrn-br0
-          ip link set dev acrn_"$tap" down
-          ip link set dev acrn_"$tap" up
+          ip link set "$tap" master acrn-br0
+          ip link set dev "$tap" down
+          ip link set dev "$tap" up
         fi
 
         #for memsize setting
@@ -385,11 +385,11 @@ Setting up AGLs
         # create a unique tap device for each VM
         tap=tap1
 
-        tap_exist=$(ip a | grep acrn_"$tap" | awk '{print $1}')
+        tap_exist=$(ip a | grep "$tap" | awk '{print $1}')
         if [ "$tap_exist"x != "x" ]; then
-          echo "tap device existed, reuse acrn_$tap"
+          echo "tap device existed, reuse $tap"
         else
-          ip tuntap add dev acrn_$tap mode tap
+          ip tuntap add dev $tap mode tap
         fi
 
 
@@ -398,9 +398,9 @@ Setting up AGLs
         br_exist=$(ip a | grep acrn-br0 | awk '{print $1}')
         if [ "$br_exist"x != "x" -a "$tap_exist"x = "x" ]; then
           echo "acrn-br0 bridge aleady exists, adding new tap device to it..."
-          ip link set acrn_"$tap" master acrn-br0
-          ip link set dev acrn_"$tap" down
-          ip link set dev acrn_"$tap" up
+          ip link set "$tap" master acrn-br0
+          ip link set dev "$tap" down
+          ip link set dev "$tap" up
         fi
 
         #for memsize setting
