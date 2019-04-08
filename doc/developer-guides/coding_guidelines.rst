@@ -1024,135 +1024,7 @@ Compliant example::
        }
 
 
-
-Statements
-**********
-
-ST-01: sizeof operator shall not be performed on an array function parameter
-============================================================================
-
-When an array is used as the function parameter, the array address is passed.
-Thus, the return value of the sizeof operation is the pointer size rather than
-the array size.
-
-Compliant example::
-
-    #define SHOWCASE_SIZE 32U
-    
-    void showcase(uint32_t array_source[SHOWCASE_SIZE])
-    {
-            uint32_t num_bytes = SHOWCASE_SIZE * sizeof(uint32_t);
-    
-            printf("num_bytes %d \n", num_bytes);
-    }
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       #define SHOWCASE_SIZE 32U
-       
-       void showcase(uint32_t array_source[SHOWCASE_SIZE])
-       {
-               uint32_t num_bytes = sizeof(array_source);
-       
-               printf("num_bytes %d \n", num_bytes);
-       }
-
-
-ST-02: Argument of strlen shall end with a null character
-=========================================================
-
-Compliant example::
-
-    uint32_t size;
-    char showcase[3] = {'0', '1', '\0'};
-    
-    size = strlen(showcase);
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       uint32_t size;
-       char showcase[2] = {'0', '1'};
-       
-       size = strlen(showcase);
-
-
-ST-03: Two strings shall not be copied to each other if they have memory overlap
-================================================================================
-
-Compliant example::
-
-    char *str_source = "showcase";
-    char str_destination[32];
-    
-    (void)strncpy(str_destination, str_source, 8U);
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       char *str_source = "showcase";
-       char *str_destination = &str_source[1];
-       
-       (void)strncpy(str_destination, str_source, 8U);
-
-
-ST-04: memcpy shall not be performed on objects with overlapping memory
-=======================================================================
-
-Compliant example::
-
-    char *str_source = "showcase";
-    char str_destination[32];
-    
-    (void)memcpy(str_destination, str_source, 8U);
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       char str_source[32];
-       char *str_destination = &str_source[1];
-       
-       (void)memcpy(str_destination, str_source, 8U);
-
-
-ST-05: Assignment shall not be performed between variables with overlapping storage
-===================================================================================
-
-Compliant example::
-
-    union union_showcase
-    {
-            uint8_t data_8[4];
-            uint16_t data_16[2];
-    };
-    
-    union union_showcase showcase;
-    
-    showcase.data_16[0] = 0U;
-    showcase.data_8[3] = (uint8_t)showcase.data_16[0];
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       union union_showcase
-       {
-               uint8_t data_8[4];
-               uint16_t data_16[2];
-       };
-       
-       union union_showcase showcase;
-       
-       showcase.data_16[0] = 0U;
-       showcase.data_8[0] = (uint8_t)showcase.data_16[0];
-
-
-ST-06: The array size shall be valid if the array is function input parameter
+FN-18: The array size shall be valid if the array is function input parameter
 =============================================================================
 
 This is to guarantee that the destination array has sufficient space for the
@@ -1179,101 +1051,11 @@ Compliant example::
        }
 
 
-ST-07: The destination object shall have sufficient space for operation
-=======================================================================
 
-The destination object shall have sufficient space for operation, such as copy,
-move, compare and concatenate. Otherwise, data corruption may occur.
+Statements
+**********
 
-Compliant example::
-
-    uint32_t array_source[32];
-    uint32_t array_destination[32];
-    
-    (void)memcpy(array_destination, array_source, 32U);
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       uint32_t array_source[32];
-       uint32_t array_destination[16];
-       
-       (void)memcpy(array_destination, array_source, 32U);
-
-
-ST-08: The size param to memcpy/memset shall be valid
-=====================================================
-
-The size param shall not be larger than either the source size or destination
-size. Otherwise, data corruption may occur.
-
-Compliant example::
-
-    #define SHOWCASE_BYTES (32U * sizeof(uint32_t))
-    
-    uint32_t array_source[32];
-    
-    (void)memset(array_source, 0U, SHOWCASE_BYTES);
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       #define SHOWCASE_BYTES (32U * sizeof(uint32_t))
-       
-       uint32_t array_source[32];
-       
-       (void)memset(array_source, 0U, 2U * SHOWCASE_BYTES);
-
-
-ST-09: The denominator of a divide shall not be zero
-====================================================
-
-The denominator of a divide shall be checked before use.
-
-Compliant example::
-
-    uint32_t numerator = 32U;
-    uint32_t denominator = 0U;
-    
-    if (denominator != 0U) {
-            uint32_t quotient = numerator / denominator;
-    }
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       uint32_t numerator = 32U;
-       uint32_t denominator = 0U;
-       
-       uint32_t quotient = numerator / denominator;
-
-
-ST-10: A NULL pointer shall not be dereferenced
-===============================================
-
-A pointer shall be checked before use.
-
-Compliant example::
-
-    uint32_t *showcase_ptr = NULL;
-    
-    if (showcase_ptr != NULL) {
-            uint32_t showcase = *showcase_ptr;
-    }
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       uint32_t *showcase_ptr = NULL;
-       
-       uint32_t showcase = *showcase_ptr;
-
-
-ST-11: The condition of a selection or iteration statement shall not be constant
+ST-01: The condition of a selection or iteration statement shall not be constant
 ================================================================================
 
 The condition of a selection or iteration statement shall not be constant with
@@ -1301,26 +1083,7 @@ Compliant example::
        }
 
 
-ST-12: A string literal shall not be modified
-=============================================
-
-Compliant example::
-
-    const char *showcase = "showcase";
-    
-    printf("%s \n", showcase);
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       char *showcase = "showcase";
-       
-       showcase[0] = 'S';
-       printf("%s \n", showcase);
-
-
-ST-13: The loop body shall be enclosed with brackets
+ST-02: The loop body shall be enclosed with brackets
 ====================================================
 
 Compliant example::
@@ -1341,7 +1104,7 @@ Compliant example::
                printf("count: %d \n", i);
 
 
-ST-14: Infinite loop shall not exist
+ST-03: Infinite loop shall not exist
 ====================================
 
 Every path in the iteration loop shall have the chance to exit.
@@ -1375,54 +1138,7 @@ Compliant example::
        }
 
 
-ST-15:  ++ or -- operation shall be used with restrictions
-==========================================================
-
-Only the following cases shall be allowed:
-
-a) ++ or -- operation shall be allowed if it is used alone in the expression;
-b) ++ or -- operation shall be allowed if it is used as the third expression of
-   a for loop.
-
-Compliant example::
-
-    uint32_t showcase = 0U;
-    
-    showcase++;
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       uint32_t showcase = 0U;
-       uint32_t showcase_test;
-       
-       showcase_test = showcase++;
-
-
-ST-16: Array indexing shall be in-bounds
-========================================
-
-An array index value shall be between zero (for the first element) and the array
-size minus one (for the last element). Out-of-bound array references are an
-undefined behavior and shall be avoided.
-
-Compliant example::
-
-    char showcase_array[4] = {'s', 'h', 'o', 'w'};
-    
-    char showcase = showcase_array[0];
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       char showcase_array[4] = {'s', 'h', 'o', 'w'};
-       
-       char showcase = showcase_array[10];
-
-
-ST-17: The else statement shall not be empty if it is following an else if
+ST-04: The else statement shall not be empty if it is following an else if
 ==========================================================================
 
 Either a non-null statement or a comment shall be included in the else
@@ -1455,7 +1171,7 @@ Compliant example::
        }
 
 
-ST-18: A switch statement shall have the default statement
+ST-05: A switch statement shall have the default statement
 ==========================================================
 
 This is to guarantee that the developers have considered all of the possible
@@ -1493,7 +1209,7 @@ Compliant example::
        }
 
 
-ST-19: Every switch clause shall be terminated with a break statement
+ST-06: Every switch clause shall be terminated with a break statement
 =====================================================================
 
 Falling through a case shall not be allowed.
@@ -1531,28 +1247,7 @@ Compliant example::
        }
 
 
-ST-20: The comma operator shall not be used
-===========================================
-
-Compliant example::
-
-    uint32_t showcase_a = 10U;
-    uint32_t showcase_b = 20U;
-    
-    showcase_a++;
-    showcase_b++;
-
-.. rst-class:: non-compliant-code
-
-   Non-compliant example::
-
-       uint32_t showcase_a = 10U;
-       uint32_t showcase_b = 20U;
-       
-       showcase_a++, showcase_b++;
-
-
-ST-21: The for loop counter shall not be changed inside the loop body
+ST-07: The for loop counter shall not be changed inside the loop body
 =====================================================================
 
 Compliant example::
@@ -1575,7 +1270,7 @@ Compliant example::
        }
 
 
-ST-22:  'goto' statement shall not be used
+ST-08:  'goto' statement shall not be used
 ==========================================
 
 Compliant example::
@@ -1803,6 +1498,311 @@ Compliant example::
                func_showcase();
                printf("*showcase_ptr_global %d \n", *showcase_ptr_global);
        }
+
+
+EP-09: sizeof operator shall not be performed on an array function parameter
+============================================================================
+
+When an array is used as the function parameter, the array address is passed.
+Thus, the return value of the sizeof operation is the pointer size rather than
+the array size.
+
+Compliant example::
+
+    #define SHOWCASE_SIZE 32U
+    
+    void showcase(uint32_t array_source[SHOWCASE_SIZE])
+    {
+            uint32_t num_bytes = SHOWCASE_SIZE * sizeof(uint32_t);
+    
+            printf("num_bytes %d \n", num_bytes);
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       #define SHOWCASE_SIZE 32U
+       
+       void showcase(uint32_t array_source[SHOWCASE_SIZE])
+       {
+               uint32_t num_bytes = sizeof(array_source);
+       
+               printf("num_bytes %d \n", num_bytes);
+       }
+
+
+EP-10: Argument of strlen shall end with a null character
+=========================================================
+
+Compliant example::
+
+    uint32_t size;
+    char showcase[3] = {'0', '1', '\0'};
+    
+    size = strlen(showcase);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t size;
+       char showcase[2] = {'0', '1'};
+       
+       size = strlen(showcase);
+
+
+EP-11: Two strings shall not be copied to each other if they have memory overlap
+================================================================================
+
+Compliant example::
+
+    char *str_source = "showcase";
+    char str_destination[32];
+    
+    (void)strncpy(str_destination, str_source, 8U);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       char *str_source = "showcase";
+       char *str_destination = &str_source[1];
+       
+       (void)strncpy(str_destination, str_source, 8U);
+
+
+EP-12: memcpy shall not be performed on objects with overlapping memory
+=======================================================================
+
+Compliant example::
+
+    char *str_source = "showcase";
+    char str_destination[32];
+    
+    (void)memcpy(str_destination, str_source, 8U);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       char str_source[32];
+       char *str_destination = &str_source[1];
+       
+       (void)memcpy(str_destination, str_source, 8U);
+
+
+EP-13: Assignment shall not be performed between variables with overlapping storage
+===================================================================================
+
+Compliant example::
+
+    union union_showcase
+    {
+            uint8_t data_8[4];
+            uint16_t data_16[2];
+    };
+    
+    union union_showcase showcase;
+    
+    showcase.data_16[0] = 0U;
+    showcase.data_8[3] = (uint8_t)showcase.data_16[0];
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       union union_showcase
+       {
+               uint8_t data_8[4];
+               uint16_t data_16[2];
+       };
+       
+       union union_showcase showcase;
+       
+       showcase.data_16[0] = 0U;
+       showcase.data_8[0] = (uint8_t)showcase.data_16[0];
+
+
+EP-14: The destination object shall have sufficient space for operation
+=======================================================================
+
+The destination object shall have sufficient space for operation, such as copy,
+move, compare and concatenate. Otherwise, data corruption may occur.
+
+Compliant example::
+
+    uint32_t array_source[32];
+    uint32_t array_destination[32];
+    
+    (void)memcpy(array_destination, array_source, 32U);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t array_source[32];
+       uint32_t array_destination[16];
+       
+       (void)memcpy(array_destination, array_source, 32U);
+
+
+EP-15: The size param to memcpy/memset shall be valid
+=====================================================
+
+The size param shall not be larger than either the source size or destination
+size. Otherwise, data corruption may occur.
+
+Compliant example::
+
+    #define SHOWCASE_BYTES (32U * sizeof(uint32_t))
+    
+    uint32_t array_source[32];
+    
+    (void)memset(array_source, 0U, SHOWCASE_BYTES);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       #define SHOWCASE_BYTES (32U * sizeof(uint32_t))
+       
+       uint32_t array_source[32];
+       
+       (void)memset(array_source, 0U, 2U * SHOWCASE_BYTES);
+
+
+EP-16: The denominator of a divide shall not be zero
+====================================================
+
+The denominator of a divide shall be checked before use.
+
+Compliant example::
+
+    uint32_t numerator = 32U;
+    uint32_t denominator = 0U;
+    
+    if (denominator != 0U) {
+            uint32_t quotient = numerator / denominator;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t numerator = 32U;
+       uint32_t denominator = 0U;
+       
+       uint32_t quotient = numerator / denominator;
+
+
+EP-17: A NULL pointer shall not be dereferenced
+===============================================
+
+A pointer shall be checked before use.
+
+Compliant example::
+
+    uint32_t *showcase_ptr = NULL;
+    
+    if (showcase_ptr != NULL) {
+            uint32_t showcase = *showcase_ptr;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t *showcase_ptr = NULL;
+       
+       uint32_t showcase = *showcase_ptr;
+
+
+EP-18: A string literal shall not be modified
+=============================================
+
+Compliant example::
+
+    const char *showcase = "showcase";
+    
+    printf("%s \n", showcase);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       char *showcase = "showcase";
+       
+       showcase[0] = 'S';
+       printf("%s \n", showcase);
+
+
+EP-19:  ++ or -- operation shall be used with restrictions
+==========================================================
+
+Only the following cases shall be allowed:
+
+a) ++ or -- operation shall be allowed if it is used alone in the expression;
+b) ++ or -- operation shall be allowed if it is used as the third expression of
+   a for loop.
+
+Compliant example::
+
+    uint32_t showcase = 0U;
+    
+    showcase++;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase = 0U;
+       uint32_t showcase_test;
+       
+       showcase_test = showcase++;
+
+
+EP-20: Array indexing shall be in-bounds
+========================================
+
+An array index value shall be between zero (for the first element) and the array
+size minus one (for the last element). Out-of-bound array references are an
+undefined behavior and shall be avoided.
+
+Compliant example::
+
+    char showcase_array[4] = {'s', 'h', 'o', 'w'};
+    
+    char showcase = showcase_array[0];
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       char showcase_array[4] = {'s', 'h', 'o', 'w'};
+       
+       char showcase = showcase_array[10];
+
+
+EP-21: The comma operator shall not be used
+===========================================
+
+Compliant example::
+
+    uint32_t showcase_a = 10U;
+    uint32_t showcase_b = 20U;
+    
+    showcase_a++;
+    showcase_b++;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase_a = 10U;
+       uint32_t showcase_b = 20U;
+       
+       showcase_a++, showcase_b++;
 
 
 
