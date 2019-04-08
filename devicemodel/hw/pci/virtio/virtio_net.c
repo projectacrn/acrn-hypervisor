@@ -674,7 +674,7 @@ virtio_net_tap_setup(struct virtio_net *net, char *devname)
 	int vhost_fd = -1;
 	int rc;
 
-	rc = snprintf(tbuf, IFNAMSIZ, "acrn_%s", devname);
+	rc = snprintf(tbuf, IFNAMSIZ, "%s", devname);
 	if (rc < 0 || rc >= IFNAMSIZ) /* give warning if error or truncation happens */
 		WPRINTF(("Fail to set tap device name %s\n", tbuf));
 

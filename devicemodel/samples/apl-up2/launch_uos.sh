@@ -46,20 +46,20 @@ mac_seed=${mac:9:8}-${vm_name}
 
 # create a unique tap device for each VM
 tap=tap_$6
-tap_exist=$(ip a | grep acrn_"$tap" | awk '{print $1}')
+tap_exist=$(ip a | grep "$tap" | awk '{print $1}')
 if [ "$tap_exist"x != "x" ]; then
-  echo "tap device existed, reuse acrn_$tap"
+  echo "tap device existed, reuse $tap"
 else
-  ip tuntap add dev acrn_$tap mode tap
+  ip tuntap add dev $tap mode tap
 fi
 
 # if acrn-br0 exists, add VM's unique tap device under it
 br_exist=$(ip a | grep acrn-br0 | awk '{print $1}')
 if [ "$br_exist"x != "x" -a "$tap_exist"x = "x" ]; then
   echo "acrn-br0 bridge aleady exists, adding new tap device to it..."
-  ip link set acrn_"$tap" master acrn-br0
-  ip link set dev acrn_"$tap" down
-  ip link set dev acrn_"$tap" up
+  ip link set "$tap" master acrn-br0
+  ip link set dev "$tap" down
+  ip link set dev "$tap" up
 fi
 
 #check if the vm is running or not
@@ -182,20 +182,20 @@ mac_seed=${mac:9:8}-${vm_name}
 
 # create a unique tap device for each VM
 tap=tap_$6
-tap_exist=$(ip a | grep acrn_"$tap" | awk '{print $1}')
+tap_exist=$(ip a | grep "$tap" | awk '{print $1}')
 if [ "$tap_exist"x != "x" ]; then
-  echo "tap device existed, reuse acrn_$tap"
+  echo "tap device existed, reuse $tap"
 else
-  ip tuntap add dev acrn_$tap mode tap
+  ip tuntap add dev $tap mode tap
 fi
 
 # if acrn-br0 exists, add VM's unique tap device under it
 br_exist=$(ip a | grep acrn-br0 | awk '{print $1}')
 if [ "$br_exist"x != "x" -a "$tap_exist"x = "x" ]; then
   echo "acrn-br0 bridge aleady exists, adding new tap device to it..."
-  ip link set acrn_"$tap" master acrn-br0
-  ip link set dev acrn_"$tap" down
-  ip link set dev acrn_"$tap" up
+  ip link set "$tap" master acrn-br0
+  ip link set dev "$tap" down
+  ip link set dev "$tap" up
 fi
 
 #Use MMC name + serial for ADB serial no., same as native android
