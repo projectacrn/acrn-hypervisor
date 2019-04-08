@@ -12,7 +12,7 @@
 #include <vcpu.h>
 #include <vm.h>
 #include <vmexit.h>
-#include <io_emul.h>
+#include <vmx_io.h>
 #include <ept.h>
 #include <vtd.h>
 #include <vcpuid.h>

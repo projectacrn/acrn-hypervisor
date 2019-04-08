@@ -15,7 +15,7 @@
 #include <msr.h>
 #include <io.h>
 #include <io_req.h>
-#include <io_emul.h>
+#include <vmx_io.h>
 #include <ioapic.h>
 #include <vmtrr.h>
 #include <timer.h>
