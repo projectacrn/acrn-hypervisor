@@ -561,8 +561,8 @@ static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv)
 	uint16_t vm_id;
 	char state[32];
 
-	shell_puts("\r\nVM NAME\t\t\t\tVM ID\t\tVM STATE"
-		"\r\n=======\t\t\t\t=====\t\t========\r\n");
+	shell_puts("\r\nVM_UUID                          VM_ID VM_NAME                          VM_STATE"
+		   "\r\n================================ ===== ================================ ========\r\n");
 
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm = get_vm_from_vmid(vm_id);
@@ -581,8 +581,14 @@ static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv)
 			break;
 		}
 		vm_config = get_vm_config(vm_id);
-		if (vm_config->type != UNDEFINED_VM) {
-			snprintf(temp_str, MAX_STR_SIZE, "%-34s%-14d%-8s\r\n", vm_config->name, vm_id, state);
+		if (is_valid_vm(vm)) {
+			int8_t i;
+
+			for (i = 0; i < 16; i++) {
+				snprintf(temp_str + 2 * i, 3U, "%02x", vm->uuid[i]);
+			}
+			snprintf(temp_str + 32, MAX_STR_SIZE - 32U, "   %-3d %-32s %-8s\r\n",
+				vm_id, vm_config->name, state);
 
 			/* Output information for this task */
 			shell_puts(temp_str);
