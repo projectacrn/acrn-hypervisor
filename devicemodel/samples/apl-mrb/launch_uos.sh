@@ -18,8 +18,8 @@ fi
 
 # use the modprobe to force loading snd-soc-skl/sst_bxt_bdf8532
 if [ ! -e $(audio_module)]; then
-modprobe -q snd-soc-skl
-modprobe -q snd-soc-sst_bxt_tdf8532
+modprobe -q snd_soc_skl
+modprobe -q snd_soc_sst_bxt_tdf8532
 else
 
 modprobe -q snd_soc_skl
