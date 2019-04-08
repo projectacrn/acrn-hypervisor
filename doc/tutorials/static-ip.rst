@@ -14,7 +14,7 @@ ACRN Network Setup
 
 The ACRN Service OS is based on `Clear Linux OS`_ and it uses `systemd-networkd`_
 to set up the Service OS networking. A few files are responsible for setting up the
-ACRN bridge (``acrn-br0``), the TAP device (``acrn_tap0``), and how these are all
+ACRN bridge (``acrn-br0``), the TAP device (``tap0``), and how these are all
 connected. Those files are installed in ``/usr/lib/systemd/network``
 on the target device and can also be found under ``tools/acrnbridge`` in the source code.
 

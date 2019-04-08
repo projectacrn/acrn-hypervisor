@@ -293,7 +293,7 @@ ACRN Network Bridge
 ===================
 
 ACRN bridge has been setup as a part of systemd services for device communication. The default
-bridge creates ``acrn_br0`` which is the bridge and ``acrn_tap0`` as an initial setup. The files can be
+bridge creates ``acrn_br0`` which is the bridge and ``tap0`` as an initial setup. The files can be
 found in ``/usr/lib/systemd/network``. No additional setup is needed since systemd-networkd is
 automatically enabled after a system restart.
 

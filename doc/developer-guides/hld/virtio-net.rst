@@ -428,7 +428,7 @@ You can check the files with prefix 50- in the SOS
 
 - `50-acrn.netdev <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/tools/acrnbridge/acrn.netdev>`__
 - `50-acrn.network <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/tools/acrnbridge/acrn.network>`__
-- `50-acrn_tap0.netdev <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/tools/acrnbridge/acrn_tap0.netdev>`__
+- `50-tap0.netdev <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/tools/acrnbridge/tap0.netdev>`__
 - `50-eth.network <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/tools/acrnbridge/eth.network>`__
 
 When the SOS is started, run ``ifconfig`` to show the devices created by
@@ -445,7 +445,7 @@ this systemd configuration:
       collisions:0 txqueuelen:1000
       RX bytes:100457754 (95.8 Mb) TX bytes:83481244 (79.6 Mb)
 
-   acrn_tap0 Link encap:Ethernet HWaddr F6:A7:7E:52:50:C6
+   tap0 Link encap:Ethernet HWaddr F6:A7:7E:52:50:C6
       UP BROADCAST MULTICAST MTU:1500 Metric:1
       RX packets:0 errors:0 dropped:0 overruns:0 frame:0
       TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
@@ -476,7 +476,7 @@ Run ``brctl show`` to see the bridge ``acrn-br0`` and attached devices:
 
    bridge name   bridge id STP       enabled   interfaces
 
-   acrn-br0      8000.b25041fef7a3   no        acrn_tap0
+   acrn-br0      8000.b25041fef7a3   no        tap0
                                                enp3s0
 
 Add a pci slot to the device model acrn-dm command line (mac address is
