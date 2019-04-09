@@ -89,12 +89,17 @@ noted above.  For example, add the following code into function
 
    shell_cmd_help added information
 
+Once you have instrumented the code, you need to rebuild the hypervisor and
+install it on your platform. Refer to :ref:`getting-started-building` and
+:ref:`getting-started-apl-nuc` for detailed instructions on how to do that.
+
 We set console log level to 5, and mem log level to 2 through the
 command::
 
    loglevel 5 2
 
-Then we input "help" into the ACRN console, and find the log as follows.
+Then we input ``help`` into the ACRN console (this is the command that we have
+just instrumented with additional log information), and check the log as follows.
 
 .. figure:: images/debug_image23.png
    :align: center
@@ -105,26 +110,11 @@ Then we use the command, on the ACRN console::
 
    sos_console
 
-to switch to the SOS console the use the commands::
-
-   systemctl enable acrnlog
-   reboot
-
-to enable the mem log and reboot the SOS.
-
-Next we set the console and mem log levels with::
-
-   loglevel 5 2
-
-and run the command::
-
-   help
-
-Finally we get into the SOS and use the command::
+to switch to the SOS console. Then we use the command::
 
    cat /tmp/acrnlog/acrnlog_cur.0
 
-on the console, and we'll see the following log:
+and we will see the following log:
 
 .. figure:: images/debug_image24.png
    :align: center
@@ -214,16 +204,9 @@ shown in the following example:
       inserted trace information
 
 4. After we have inserted the trace code addition, we need to rebuild
-   the acrn-hypervisor in the ``acrn-hypervisor`` directory::
-
-      # make PLATFORM=uefi
-
-   and replace the existing ``acrn.efi`` with the new one we just
-   built in the ``build/hypervisor/`` folder::
-
-      # mount /dev/sda1 /mnt && mkdir -p /mnt/EFI/acrn
-      # mv /mnt/EFI/acrn/acrn.efi /mnt/EFI/acrn/acrn.efi.old
-      # cp build/hypervisor/acrn.efi /mnt/EFI/acrn/
+   the ACRN hypervisor and install it on the platform. Refer to
+   :ref:`getting-started-building` and :ref:`getting-started-apl-nuc` for
+   detailed instructions on how to do that.
 
 5. Now we can use the following command in the SOS console
    to generate acrntrace data into the current directory::
