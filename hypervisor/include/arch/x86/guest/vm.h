@@ -213,7 +213,7 @@ void launch_vms(uint16_t pcpu_id);
 bool is_valid_vm(const struct acrn_vm *vm);
 bool is_sos_vm(const struct acrn_vm *vm);
 bool is_prelaunched_vm(const struct acrn_vm *vm);
-uint16_t find_free_vm_id(void);
+uint16_t get_vmid_by_uuid(const uint8_t *uuid);
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
 struct acrn_vm *get_sos_vm(void);
 

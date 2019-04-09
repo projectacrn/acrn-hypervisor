@@ -45,7 +45,7 @@ struct acrn_vm_pci_ptdev_config {
 struct acrn_vm_config {
 	enum acrn_vm_type type;				/* specify the type of VM */
 	char name[MAX_VM_OS_NAME_LEN];			/* VM name identifier, useful for debug. */
-	uint8_t uuid[16];				/* UUID of the VM */
+	const uint8_t uuid[16];				/* UUID of the VM */
 	uint64_t pcpu_bitmap;				/* from pcpu bitmap, we could know VM core number */
 	uint64_t guest_flags;				/* VM flags that we want to configure for guest
 							 * Now we have two flags:
@@ -63,6 +63,7 @@ struct acrn_vm_config {
 } __aligned(8);
 
 struct acrn_vm_config *get_vm_config(uint16_t vm_id);
+bool vm_has_matched_uuid(uint16_t vmid, const uint8_t *uuid);
 bool sanitize_vm_config(void);
 
 extern struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM];

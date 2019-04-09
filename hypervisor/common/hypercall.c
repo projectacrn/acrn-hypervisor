@@ -126,15 +126,10 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 
 	(void)memset((void *)&cv, 0U, sizeof(cv));
 	if (copy_from_gpa(vm, &cv, param, sizeof(cv)) == 0) {
-		/* check whether there is a free vm id for use */
-		/* TODO: pass vm id from DM to make vm_id static */
-		vm_id = find_free_vm_id();
+		vm_id = get_vmid_by_uuid(&cv.uuid[0]);
 		if (vm_id < CONFIG_MAX_VM_NUM) {
 			vm_config = get_vm_config(vm_id);
-			/* TODO: set by DM */
-			vm_config->type = NORMAL_VM;
 			vm_config->guest_flags |= cv.vm_flag;
-			(void)memcpy_s(&vm_config->uuid[0], 16U, &cv.uuid[0], 16U);
 
 			/* GUEST_FLAG_RT must be set if we have GUEST_FLAG_LAPIC_PASSTHROUGH set in guest_flags */
 			if (((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)

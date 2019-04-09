@@ -34,28 +34,17 @@ static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE);
 
 static struct acrn_vm *sos_vm_ptr = NULL;
 
-uint16_t find_free_vm_id(void)
+uint16_t get_vmid_by_uuid(const uint8_t *uuid)
 {
-	uint16_t id;
-	struct acrn_vm_config *vm_config;
+	uint16_t vm_id = 0U;
 
-	for (id = 0U; id < CONFIG_MAX_VM_NUM; id++) {
-		vm_config = get_vm_config(id);
-		if (vm_config->type == UNDEFINED_VM) {
+	while (!vm_has_matched_uuid(vm_id, uuid)) {
+		vm_id++;
+		if (vm_id == CONFIG_MAX_VM_NUM) {
 			break;
 		}
 	}
-	return (vm_config->type == UNDEFINED_VM) ? id : INVALID_VM_ID;
-}
-
-/**
- * @pre vm != NULL && vm->vmid < CONFIG_MAX_VM_NUM
- */
-static inline void free_vm_id(const struct acrn_vm *vm)
-{
-	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-
-	vm_config->type = UNDEFINED_VM;
+	return vm_id;
 }
 
 bool is_valid_vm(const struct acrn_vm *vm)
@@ -363,6 +352,9 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		register_mmio_default_emulation_handler(vm);
 	}
 
+	(void)memcpy_s(&vm->uuid[0], sizeof(vm->uuid),
+		&vm_config->uuid[0], sizeof(vm_config->uuid));
+
 	if (is_sos_vm(vm)) {
 		/* Only for SOS_VM */
 		create_sos_vm_e820(vm);
@@ -391,9 +383,6 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 			/* if VM name is not configured, specify with VM ID */
 			snprintf(vm_config->name, 16, "ACRN VM_%d", vm_id);
 		}
-
-		(void)memcpy_s(&vm->uuid[0], sizeof(vm->uuid),
-			&vm_config->uuid[0], sizeof(vm_config->uuid));
 
 		 if (vm_config->type == PRE_LAUNCHED_VM) {
 			create_prelaunched_vm_e820(vm);
@@ -469,7 +458,6 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		if (vm->arch_vm.nworld_eptp != NULL) {
 			(void)memset(vm->arch_vm.nworld_eptp, 0U, PAGE_SIZE);
 		}
-		free_vm_id(vm);
 	}
 	return status;
 }
@@ -505,9 +493,6 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 
 		/* Free EPT allocated resources assigned to VM */
 		destroy_ept(vm);
-
-		/* Free vm id */
-		free_vm_id(vm);
 
 		ret = 0;
 	} else {

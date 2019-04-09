@@ -7,7 +7,6 @@
 #include <vm_config.h>
 #include <errno.h>
 #include <acrn_common.h>
-#include <page.h>
 #include <logmsg.h>
 #include <cat.h>
 
@@ -18,6 +17,50 @@
 struct acrn_vm_config *get_vm_config(uint16_t vm_id)
 {
 	return &vm_configs[vm_id];
+}
+
+static inline bool uuid_is_equal(const uint8_t *uuid1, const uint8_t *uuid2)
+{
+	uint64_t uuid1_h = *(uint64_t *)uuid1;
+	uint64_t uuid1_l = *(uint64_t *)(uuid1 + 8);
+	uint64_t uuid2_h = *(uint64_t *)uuid2;
+	uint64_t uuid2_l = *(uint64_t *)(uuid2 + 8);
+
+	return ((uuid1_h == uuid2_h) && (uuid1_l == uuid2_l));
+}
+
+/**
+ * return true if the input uuid is configured in VM
+ *
+ * @pre vmid < CONFIG_MAX_VM_NUM
+ */
+bool vm_has_matched_uuid(uint16_t vmid, const uint8_t *uuid)
+{
+	struct acrn_vm_config *vm_config = get_vm_config(vmid);
+
+	return (uuid_is_equal(&vm_config->uuid[0], uuid));
+}
+
+/**
+ * return true if no UUID collision is found in vm configs array start from vm_configs[vm_id]
+ *
+ * @pre vm_id < CONFIG_MAX_VM_NUM
+ */
+static bool check_vm_uuid_collision(uint16_t vm_id)
+{
+	uint16_t i;
+	bool ret = true;
+	struct acrn_vm_config *start_config = get_vm_config(vm_id);
+	struct acrn_vm_config *following_config;
+
+	for (i = vm_id + 1U; i < CONFIG_MAX_VM_NUM; i++) {
+		following_config = get_vm_config(i);
+		if (uuid_is_equal(&start_config->uuid[0], &following_config->uuid[0])) {
+			ret = false;
+			break;
+		}
+	}
+	return ret;
 }
 
 /**
@@ -62,7 +105,7 @@ bool sanitize_vm_config(void)
 			}
 			break;
 		case NORMAL_VM:
-			ret = false;
+			/* Nothing to do here for a NORMAL_VM, break directly. */
 			break;
 		default:
 			/* Nothing to do for a UNDEFINED_VM, break directly. */
@@ -78,6 +121,10 @@ bool sanitize_vm_config(void)
 			}
 		}
 
+		if (ret) {
+			/* make sure no identical UUID in following VM configurations */
+			ret = check_vm_uuid_collision(vm_id);
+		}
 		if (!ret) {
 			break;
 		}
