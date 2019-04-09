@@ -629,14 +629,17 @@ static int parse_uptime(xmlNodePtr cur, struct sender_t *sender)
 		else if (name_is(cur, "eventhours"))
 			res = load_cur_content(cur, uptime, eventhours);
 
-		if (res)
+		if (res) {
+			free(uptime);
 			return -1;
+		}
 
 		cur = cur->next;
 	}
 	res = asprintf(&uptime->path, "%s/uptime", sender->outdir);
 	if (res < 0) {
 		LOGE("build string failed\n");
+		free(uptime);
 		return -1;
 	}
 	sender->uptime = uptime;
