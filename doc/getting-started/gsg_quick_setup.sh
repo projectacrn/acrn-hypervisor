@@ -5,15 +5,6 @@
 # This script provides a quick and automatic setup of the SOS or UOS.
 # You should run this script with root privilege since it will modify various system parameters.
 #
-# Note:
-# This script is using /dev/sda1 as default EFI System Partition (ESP).
-# The ESP may be different based on your hardware.
-# It will typically be something like /dev/mmcblk0p1 on platforms that have an on-board eMMC
-# Or /dev/nvme0n1p1 if your system has a non-volatile storage media attached via a PCI Express (PCIe) bus (NVMe).
-# You should edit it to the right ESP before running this script.
-# For example, you should change 'efi_partition' as following if you are using NVMe:
-# efi_partition=/dev/nvme0n1p1
-#
 # Usages:
 #   Upgrade SOS to 28100 without reboot, it's highly recommended so that you can check configurations after upgrade SOS.
 #     sudo <script> -s 28100 -d
@@ -30,10 +21,16 @@ function print_help()
     echo "Launch this script as: sudo $0 -s 28100"
     echo -e "\t-s to upgrade SOS"
     echo -e "\t-u to upgrade UOS"
-    echo -e "\t-p to specify a proxy server"
+    echo -e "\t-p to specify a proxy server (HTTPS)"
     echo -e "\t-m to use swupd mirror url"
     echo -e "\t-k to skip downloading UOS; if enabled, you have to download UOS img firstly before upgrading, default is off"
     echo -e "\t-d to disable reboot device so that you can check the configurations after upgrading SOS"
+    echo -e "\t-e to specify EFI System Partition (ESP), default: /dev/sda1"
+    echo -e "\n\t<Note>:"
+    echo -e "\tThis script is using /dev/sda1 as default EFI System Partition (ESP)."
+    echo -e "\tThe ESP may be different based on your hardware and then you should specify it directly with '-e' option."
+    echo -e "\tIt will typically be something like /dev/mmcblk0p1 on platforms that have an on-board eMMC"
+    echo -e "\tOr /dev/nvme0n1p1 if your system has a non-volatile storage media attached via a PCI Express (PCIe) bus (NVMe)."
     exit 1
 }
 
@@ -61,10 +58,8 @@ function upgrade_sos()
     [[ -n $mirror ]] && echo "Setting swupd mirror to: $mirror" && swupd mirror -s $mirror
     [[ -n $proxy ]] && echo "Setting proxy to: $proxy" && export https_proxy=$proxy
 
-    # You should set EFI path before upgrading SOS.
-    efi_partition=/dev/sda1
     # Check EFI path exists.
-    [[ ! -b $efi_partition ]] && echo "Please choose the right EFI path firstly." && exit 1
+    [[ ! -b $efi_partition ]] && echo "Please set the right EFI System partition firstly." && exit 1
     efi_mount_point=`findmnt $efi_partition -n | cut -d' ' -f1`
     root_partition=`echo $efi_partition | sed 's/1$/3/g'`
     partition=`echo $efi_partition | sed 's/1$//g;s/p$//g'`
@@ -219,7 +214,7 @@ function upgrade_uos()
 }
 
 # Set script options.
-while getopts "s:u:p:m:kdh" opt
+while getopts "s:u:p:m:e:kdh" opt
 do
         case "$opt" in
                 s) sos_ver="$OPTARG"
@@ -229,6 +224,8 @@ do
                 p) proxy="$OPTARG"
                         ;;
                 m) mirror="$OPTARG"
+                        ;;
+                e) efi_partition="$OPTARG"
                         ;;
                 k) skip_download_uos=1
                         ;;
@@ -244,5 +241,6 @@ done
 # Check args
 [[ $EUID -ne 0 ]] && echo "You have to run script as root." && exit 1
 [[ -z $1 ]] && print_help
+[[ -z $efi_partition ]] && efi_partition=/dev/sda1 || echo "Setting EFI System partition to: $efi_partition..."
 [[ -n $sos_ver && -n $uos_ver ]] && echo "You should select upgrading SOS or UOS" && exit 1
 [[ -n $uos_ver ]] && upgrade_uos || upgrade_sos
