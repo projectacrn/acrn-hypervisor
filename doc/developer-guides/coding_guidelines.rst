@@ -1051,6 +1051,37 @@ Compliant example::
        }
 
 
+FN-19: Recursion shall not be used in function calls
+====================================================
+
+Compliant example::
+
+    uint32_t func_showcase(uint32_t param) {
+            uint32_t mult = 1;
+            uint32_t i;
+    
+            for (i = param; i > 0U; i--) {
+                    mult = mult * i;
+            }
+            
+            return mult;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t func_showcase(uint32_t param) {
+               uint32_t mult = 1;
+       
+               if (param > 0U) {
+                       mult = param * func_showcase(param - 1);
+               }
+               
+               return mult;
+       }
+
+
 
 Statements
 **********
