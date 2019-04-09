@@ -686,12 +686,12 @@ static ssize_t _file_read_key_value(char *value, const size_t limit,
 		return -errno;
 	if (!key) {
 		errno = EINVAL;
-		return -errno;
+		goto unmap;
 	}
 
 	if (op != 'l' && op != 'r') {
 		errno = EINVAL;
-		return -errno;
+		goto unmap;
 	}
 
 	if (op == 'l')
