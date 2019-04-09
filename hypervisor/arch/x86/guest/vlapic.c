@@ -166,21 +166,16 @@ vlapic_build_id(const struct acrn_vlapic *vlapic)
 	const struct acrn_vcpu *vcpu = vlapic->vcpu;
 	uint32_t vlapic_id, lapic_regs_id;
 
-#ifdef CONFIG_PARTITION_MODE
-	/*
-	 * Partition mode UOS is forced to use physical mode in xAPIC
-	 * Hence ACRN needs to maintain physical APIC ids for partition
-	 * mode.
-	 */
-	vlapic_id = per_cpu(lapic_id, vcpu->pcpu_id);
-#else
 	if (is_sos_vm(vcpu->vm)) {
-		/* Get APIC ID sequence format from cpu_storage */
+		/*
+		 * For SOS_VM type, pLAPIC IDs need to be used because
+		 * host ACPI tables are passthru to SOS.
+		 * Get APIC ID sequence format from cpu_storage
+		 */
 		vlapic_id = per_cpu(lapic_id, vcpu->vcpu_id);
 	} else {
 		vlapic_id = (uint32_t)vcpu->vcpu_id;
 	}
-#endif
 
 	if (is_x2apic_enabled(vlapic)) {
 		lapic_regs_id = vlapic_id;
