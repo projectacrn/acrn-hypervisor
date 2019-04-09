@@ -23,9 +23,9 @@ struct acrn_vm_config *get_vm_config(uint16_t vm_id)
 /**
  * @pre vm_config != NULL
  */
-int32_t sanitize_vm_config(void)
+bool sanitize_vm_config(void)
 {
-	int32_t ret = 0;
+	bool ret = true;
 	uint16_t vm_id;
 	uint64_t sos_pcpu_bitmap, pre_launch_pcpu_bitmap;
 	struct acrn_vm_config *vm_config;
@@ -43,11 +43,11 @@ int32_t sanitize_vm_config(void)
 		switch (vm_config->type) {
 		case PRE_LAUNCHED_VM:
 			if (vm_config->pcpu_bitmap == 0U) {
-				ret = -EINVAL;
+				ret = false;
 			/* GUEST_FLAG_RT must be set if we have GUEST_FLAG_LAPIC_PASSTHROUGH set in guest_flags */
 			} else if (((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)
 					&& ((vm_config->guest_flags & GUEST_FLAG_RT) == 0U)) {
-				ret = -EINVAL;
+				ret = false;
 			} else {
 				pre_launch_pcpu_bitmap |= vm_config->pcpu_bitmap;
 			}
@@ -56,13 +56,13 @@ int32_t sanitize_vm_config(void)
 			/* Deduct pcpus of PRE_LAUNCHED_VMs */
 			sos_pcpu_bitmap ^= pre_launch_pcpu_bitmap;
 			if ((sos_pcpu_bitmap == 0U) || ((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)) {
-				ret = -EINVAL;
+				ret = false;
 			} else {
 				vm_config->pcpu_bitmap = sos_pcpu_bitmap;
 			}
 			break;
 		case NORMAL_VM:
-			ret = -EINVAL;
+			ret = false;
 			break;
 		default:
 			/* Nothing to do for a UNDEFINED_VM, break directly. */
@@ -74,11 +74,11 @@ int32_t sanitize_vm_config(void)
 					cat_cap_info.enabled = true;
 			} else {
 				pr_err("%s set wrong CLOS or CAT is not supported\n", __func__);
-				ret = -EINVAL;
+				ret = false;
 			}
 		}
 
-		if (ret != 0) {
+		if (!ret) {
 			break;
 		}
 	}
