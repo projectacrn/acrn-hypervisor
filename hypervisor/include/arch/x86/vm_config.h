@@ -63,7 +63,7 @@ struct acrn_vm_config {
 } __aligned(8);
 
 struct acrn_vm_config *get_vm_config(uint16_t vm_id);
-int32_t sanitize_vm_config(void);
+bool sanitize_vm_config(void);
 
 extern struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM];
 

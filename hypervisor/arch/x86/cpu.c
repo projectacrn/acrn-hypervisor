@@ -198,7 +198,7 @@ void init_cpu_post(uint16_t pcpu_id)
 			panic("hardware not support!");
 		}
 
-		if (sanitize_vm_config() != 0) {
+		if (!sanitize_vm_config()) {
 			panic("VM Configuration Error!");
 		}
 
