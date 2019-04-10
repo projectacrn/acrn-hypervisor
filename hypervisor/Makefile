@@ -113,6 +113,7 @@ INCLUDE_PATH += include/arch/x86/guest
 INCLUDE_PATH += include/debug
 INCLUDE_PATH += include/public
 INCLUDE_PATH += include/dm
+INCLUDE_PATH += include/hw
 INCLUDE_PATH += bsp/include
 INCLUDE_PATH += boot/include
 INCLUDE_PATH += $(HV_OBJDIR)/include
