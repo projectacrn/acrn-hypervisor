@@ -34,6 +34,9 @@ up ACRN on the NUC.
 .. _SimplyNUC:
    https://www.simplynuc.com/?s=NUC6CAYH&post_type=product
 
+
+.. _intel-kaby-lake-nuc:
+
 Intel Kaby Lake NUC
 *********************
 
