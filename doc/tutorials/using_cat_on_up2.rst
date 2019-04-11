@@ -20,7 +20,7 @@ so that the VM will not evict the masked cache lines, as shown in :numref:
 CAT Support on ACRN
 *******************
 
-As described at `Intel (R) 64 and IA-32 Architectures Software Developer’s Manual
+As described at `Intel (R) 64 and IA-32 Architectures Software Developer's Manual
 <https://software.intel.com/en-us/download/intel-64-and-ia-32-architectures-sdm-combined-volumes-3a-3b-3c-and-3d-system-programming-guide>`_,
 chapter 17.19, volume 3. There are 3 steps to use CAT:
 
@@ -86,7 +86,7 @@ for the HV shell (refer to :ref:`getting-started-up2` for setup instructions).
 
    .. code-block:: none
 
-      ACRN:\>wrmsr   –p1   0xc8f    0x100000000
+      ACRN:\>wrmsr   -p1   0xc8f    0x100000000
 
 Configure CAT for VM with VM Configuration
 ##########################################

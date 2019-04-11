@@ -231,7 +231,7 @@ The ``acrnprobe`` detects all critical events on the platform and collects
 specific information for debug purpose. These information would be saved as
 logs, and the log path would be delivered to telemetrics-client as a record if
 the telemetrics-client existed on the system.
-For more detail on arcnprobe, please refer :ref:`acrnprobe_doc`.
+For more detail on acrnprobe, please refer :ref:`acrnprobe_doc`.
 
 usercrash
 =========

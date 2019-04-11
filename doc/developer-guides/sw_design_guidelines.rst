@@ -536,7 +536,7 @@ The module level configuration design rules are shown below:
 
 6. In order to guarantee that the function pointer in the operations data
    structure is dereferenced after it has been instantiated, the pre-condition
-   shall be added for the function which deferences the function pointer,
+   shall be added for the function which dereferences the function pointer,
    instead of checking the pointer for NULL.
 
 .. note:: The third rule shall be double checked during code review.
