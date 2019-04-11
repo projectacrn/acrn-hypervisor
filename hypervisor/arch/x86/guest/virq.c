@@ -212,6 +212,7 @@ int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector_arg, uint32
 			} else {
 				arch->exception_info.error = 0U;
 			}
+			vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 		}
 	}
 
@@ -220,25 +221,28 @@ int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector_arg, uint32
 
 static void vcpu_inject_exception(struct acrn_vcpu *vcpu, uint32_t vector)
 {
-	if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
-		exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
-				vcpu->arch.exception_info.error);
-	}
+	if (bitmap_test_and_clear_lock(ACRN_REQUEST_EXCP, &vcpu->arch.pending_req)) {
+	
+		if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
+			exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
+					vcpu->arch.exception_info.error);
+		}
 
-	exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
-			(exception_type[vector] << 8U) | (vector & 0xFFU));
+		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
+				(exception_type[vector] << 8U) | (vector & 0xFFU));
 
-	vcpu->arch.exception_info.exception = VECTOR_INVALID;
+		vcpu->arch.exception_info.exception = VECTOR_INVALID;
 
-	/* retain rip for exception injection */
-	vcpu_retain_rip(vcpu);
+		/* retain rip for exception injection */
+		vcpu_retain_rip(vcpu);
 
-	/* SDM 17.3.1.1 For any fault-class exception except a debug exception generated in response to an
-	 * instruction breakpoint, the value pushed for RF is 1.
-	 * #DB is treated as Trap in get_exception_type, so RF will not be set for instruction breakpoint.
-	 */
-	if (get_exception_type(vector) == EXCEPTION_FAULT) {
-		vcpu_set_rflags(vcpu, vcpu_get_rflags(vcpu) | HV_ARCH_VCPU_RFLAGS_RF);
+		/* SDM 17.3.1.1 For any fault-class exception except a debug exception generated in response to an
+		 * instruction breakpoint, the value pushed for RF is 1.
+		 * #DB is treated as Trap in get_exception_type, so RF will not be set for instruction breakpoint.
+		 */
+		if (get_exception_type(vector) == EXCEPTION_FAULT) {
+			vcpu_set_rflags(vcpu, vcpu_get_rflags(vcpu) | HV_ARCH_VCPU_RFLAGS_RF);
+		}
 	}
 }
 
@@ -285,7 +289,6 @@ void vcpu_inject_nmi(struct acrn_vcpu *vcpu)
 void vcpu_inject_gp(struct acrn_vcpu *vcpu, uint32_t err_code)
 {
 	(void)vcpu_queue_exception(vcpu, IDT_GP, err_code);
-	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 
 /* Inject page fault exception(#PF) to guest */
@@ -293,28 +296,24 @@ void vcpu_inject_pf(struct acrn_vcpu *vcpu, uint64_t addr, uint32_t err_code)
 {
 	vcpu_set_cr2(vcpu, addr);
 	(void)vcpu_queue_exception(vcpu, IDT_PF, err_code);
-	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 
 /* Inject invalid opcode exception(#UD) to guest */
 void vcpu_inject_ud(struct acrn_vcpu *vcpu)
 {
 	(void)vcpu_queue_exception(vcpu, IDT_UD, 0);
-	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 
 /* Inject alignment check exception(#AC) to guest */
 void vcpu_inject_ac(struct acrn_vcpu *vcpu)
 {
 	(void)vcpu_queue_exception(vcpu, IDT_AC, 0);
-	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 
 /* Inject stack fault exception(#SS) to guest */
 void vcpu_inject_ss(struct acrn_vcpu *vcpu)
 {
 	(void)vcpu_queue_exception(vcpu, IDT_SS, 0);
-	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 
 int32_t interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu)
