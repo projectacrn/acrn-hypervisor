@@ -92,6 +92,8 @@ apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector);
 
 static void apicv_post_intr(uint16_t dest_pcpu_id);
 
+static void vlapic_x2apic_self_ipi_handler(struct acrn_vlapic *vlapic);
+
 /*
  * Post an interrupt to the vcpu running on 'hostcpu'. This will use a
  * hardware assist if available (e.g. Posted Interrupt) or fall back to
@@ -1530,6 +1532,9 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg, uint64_t *data)
 			break;
 		case APIC_OFFSET_ICR_LOW:
 			*data = lapic->icr_lo.v;
+			if (is_x2apic_enabled(vlapic)) {
+				*data |= ((uint64_t)lapic->icr_hi.v) << 32U;
+			}
 			break;
 		case APIC_OFFSET_ICR_HI:
 			*data = lapic->icr_hi.v;
@@ -1568,8 +1573,7 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg, uint64_t *data)
 		}
 	}
 
-	dev_dbg(ACRN_DBG_LAPIC,
-			"vlapic read offset %#x, data %#lx", offset, *data);
+	dev_dbg(ACRN_DBG_LAPIC, "vlapic read offset %#x, data %#llx", offset, *data);
 	return 0;
 }
 
@@ -1610,10 +1614,8 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_t data)
 		case APIC_OFFSET_ICR_LOW:
 			if (is_x2apic_enabled(vlapic)) {
 				lapic->icr_hi.v = (uint32_t)(data >> 32U);
-				lapic->icr_lo.v = data32;
-			} else {
-				lapic->icr_lo.v = data32;
 			}
+			lapic->icr_lo.v = data32;
 			retval = vlapic_icrlo_write_handler(vlapic);
 			break;
 		case APIC_OFFSET_ICR_HI:
@@ -1643,7 +1645,6 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_t data)
 			lapic->dcr_timer.v = data32;
 			vlapic_dcr_write_handler(vlapic);
 			break;
-
 		case APIC_OFFSET_ESR:
 			vlapic_esr_write_handler(vlapic);
 			break;
@@ -1660,7 +1661,17 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_t data)
 	 */
 		case APIC_OFFSET_TIMER_CCR:
 			break;
+
+		case APIC_OFFSET_SELF_IPI:
+			if (is_x2apic_enabled(vlapic)) {
+				lapic->self_ipi.v = data32;
+				vlapic_x2apic_self_ipi_handler(vlapic);
+				break;
+			}
+			/* falls through */
+
 		default:
+			retval = -EACCES;
 			/* Read only */
 			break;
 		}
@@ -2344,14 +2355,13 @@ static void vlapic_x2apic_self_ipi_handler(struct acrn_vlapic *vlapic)
 int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	uint64_t qual;
-	int32_t error, handled;
+	int32_t err = 0;
 	uint32_t offset;
 	struct acrn_vlapic *vlapic = NULL;
 
 	qual = vcpu->arch.exit_qualification;
 	offset = (uint32_t)(qual & 0xFFFUL);
 
-	handled = 1;
 	vcpu_retain_rip(vcpu);
 	vlapic = vcpu_vlapic(vcpu);
 
@@ -2375,10 +2385,7 @@ int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
 		vlapic_esr_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_ICR_LOW:
-		error = vlapic_icrlo_write_handler(vlapic);
-		if (error != 0) {
-			handled = 0;
-		}
+		err = vlapic_icrlo_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_CMCI_LVT:
 	case APIC_OFFSET_TIMER_LVT:
@@ -2398,17 +2405,18 @@ int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
 	case APIC_OFFSET_SELF_IPI:
 		if (is_x2apic_enabled(vlapic)) {
 			vlapic_x2apic_self_ipi_handler(vlapic);
+			break;
 		}
-		break;
+		/* falls through */
 	default:
-		handled = 0;
+		err = -EACCES;
 		pr_err("Unhandled APIC-Write, offset:0x%x", offset);
 		break;
 	}
 
 	TRACE_2L(TRACE_VMEXIT_APICV_WRITE, offset, 0UL);
 
-	return handled;
+	return err;
 }
 
 int32_t tpr_below_threshold_vmexit_handler(__unused struct acrn_vcpu *vcpu)
