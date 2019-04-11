@@ -115,7 +115,7 @@ int32_t mptable_build(struct acrn_vm *vm)
 
 		(void *)memcpy_s((void *)(mptable->proc_entry_array + i), sizeof(struct proc_entry),
 			(const void *)&proc_entry_template, sizeof(struct proc_entry));
-		mptable->proc_entry_array[i].apic_id = per_cpu(lapic_id, pcpu_id);
+		mptable->proc_entry_array[i].apic_id = (uint8_t) i;
 		if (i == 0) {
 			mptable->proc_entry_array[i].cpu_flags |= PROCENTRY_FLAG_BP;
 		}

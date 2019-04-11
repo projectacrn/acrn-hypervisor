@@ -433,42 +433,6 @@ struct pci_xhci_option_elem {
 };
 
 static int xhci_in_use;
-
-/* map USB errors to XHCI */
-static const int xhci_usb_errors[USB_ERR_MAX] = {
-	[USB_ERR_NORMAL_COMPLETION]	= XHCI_TRB_ERROR_SUCCESS,
-	[USB_ERR_PENDING_REQUESTS]	= XHCI_TRB_ERROR_RESOURCE,
-	[USB_ERR_NOT_STARTED]		= XHCI_TRB_ERROR_ENDP_NOT_ON,
-	[USB_ERR_INVAL]			= XHCI_TRB_ERROR_INVALID,
-	[USB_ERR_NOMEM]			= XHCI_TRB_ERROR_RESOURCE,
-	[USB_ERR_CANCELLED]		= XHCI_TRB_ERROR_STOPPED,
-	[USB_ERR_BAD_ADDRESS]		= XHCI_TRB_ERROR_PARAMETER,
-	[USB_ERR_BAD_BUFSIZE]		= XHCI_TRB_ERROR_PARAMETER,
-	[USB_ERR_BAD_FLAG]		= XHCI_TRB_ERROR_PARAMETER,
-	[USB_ERR_NO_CALLBACK]		= XHCI_TRB_ERROR_STALL,
-	[USB_ERR_IN_USE]		= XHCI_TRB_ERROR_RESOURCE,
-	[USB_ERR_NO_ADDR]		= XHCI_TRB_ERROR_RESOURCE,
-	[USB_ERR_NO_PIPE]               = XHCI_TRB_ERROR_RESOURCE,
-	[USB_ERR_ZERO_NFRAMES]          = XHCI_TRB_ERROR_UNDEFINED,
-	[USB_ERR_ZERO_MAXP]             = XHCI_TRB_ERROR_UNDEFINED,
-	[USB_ERR_SET_ADDR_FAILED]       = XHCI_TRB_ERROR_RESOURCE,
-	[USB_ERR_NO_POWER]              = XHCI_TRB_ERROR_ENDP_NOT_ON,
-	[USB_ERR_TOO_DEEP]              = XHCI_TRB_ERROR_RESOURCE,
-	[USB_ERR_IOERROR]               = XHCI_TRB_ERROR_TRB,
-	[USB_ERR_NOT_CONFIGURED]        = XHCI_TRB_ERROR_ENDP_NOT_ON,
-	[USB_ERR_TIMEOUT]               = XHCI_TRB_ERROR_CMD_ABORTED,
-	[USB_ERR_SHORT_XFER]            = XHCI_TRB_ERROR_SHORT_PKT,
-	[USB_ERR_STALLED]               = XHCI_TRB_ERROR_STALL,
-	[USB_ERR_INTERRUPTED]           = XHCI_TRB_ERROR_CMD_ABORTED,
-	[USB_ERR_DMA_LOAD_FAILED]       = XHCI_TRB_ERROR_DATA_BUF,
-	[USB_ERR_BAD_CONTEXT]           = XHCI_TRB_ERROR_TRB,
-	[USB_ERR_NO_ROOT_HUB]           = XHCI_TRB_ERROR_UNDEFINED,
-	[USB_ERR_NO_INTR_THREAD]        = XHCI_TRB_ERROR_UNDEFINED,
-	[USB_ERR_NOT_LOCKED]            = XHCI_TRB_ERROR_UNDEFINED,
-};
-#define	USB_TO_XHCI_ERR(e)	((e) < USB_ERR_MAX ? xhci_usb_errors[(e)] : \
-				XHCI_TRB_ERROR_INVALID)
-
 static int pci_xhci_insert_event(struct pci_xhci_vdev *xdev,
 				 struct xhci_trb *evtrb, int do_intr);
 static void pci_xhci_dump_trb(struct xhci_trb *trb);
@@ -1870,7 +1834,6 @@ pci_xhci_cmd_reset_device(struct pci_xhci_vdev *xdev, uint32_t slot)
 	else {
 		dev->dev_slotstate = XHCI_ST_DEFAULT;
 
-		dev->hci.hci_address = 0;
 		dev_ctx = pci_xhci_get_dev_ctx(xdev, slot);
 		if (!dev_ctx) {
 			cmderr = XHCI_TRB_ERROR_SLOT_NOT_ON;
@@ -2983,14 +2946,9 @@ retry:
 		goto errout;
 	}
 
-	err = USB_TO_XHCI_ERR(err);
-	if (err == XHCI_TRB_ERROR_SUCCESS ||
-			err == XHCI_TRB_ERROR_SHORT_PKT ||
-			err == XHCI_TRB_ERROR_STALL) {
-		err = pci_xhci_xfer_complete(xdev, xfer, slot, epid, &do_intr);
-		if (err != XHCI_TRB_ERROR_SUCCESS)
-			do_retry = 0;
-	}
+	err = pci_xhci_xfer_complete(xdev, xfer, slot, epid, &do_intr);
+	if (err != XHCI_TRB_ERROR_SUCCESS)
+		do_retry = 0;
 
 errout:
 	if (err == XHCI_TRB_ERROR_EV_RING_FULL)

@@ -428,9 +428,10 @@ usb_dev_err_convert(int err)
 	switch (err) {
 	case LIBUSB_ERROR_TIMEOUT: return USB_ERR_TIMEOUT;
 	case LIBUSB_ERROR_PIPE: return USB_ERR_STALLED;
-	case LIBUSB_ERROR_NO_DEVICE: return USB_ERR_INVAL;
+	case LIBUSB_ERROR_NO_DEVICE: return USB_ERR_IOERROR;
 	case LIBUSB_ERROR_BUSY: return USB_ERR_IN_USE;
-	case LIBUSB_ERROR_OVERFLOW: return USB_ERR_TOO_DEEP;
+	case LIBUSB_ERROR_OVERFLOW: return USB_ERR_BAD_BUFSIZE;
+	case LIBUSB_ERROR_IO: return USB_ERR_IOERROR;
 	default:
 		break; /* add more when required */
 	}
@@ -755,7 +756,7 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 	int rc = 0, epid;
 	uint8_t type;
 	int blk_start, data_size, blk_count;
-	int retries = 3, i, buf_idx;
+	int retries = 3, i, j, buf_idx;
 	struct usb_data_xfer_block *b;
 	static const char * const type_str[] = {"CTRL", "ISO", "BULK", "INT"};
 	static const char * const dir_str[] = {"OUT", "IN"};
@@ -810,11 +811,12 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 			data_size, dir_str[dir], type_str[type]);
 
 	if (!dir) {
-		for (i = 0, buf_idx = 0; i < blk_count; i++) {
+		for (i = 0, j = 0, buf_idx = 0; j < blk_count; ++i) {
 			b = &xfer->data[(blk_start + i) % USB_MAX_XFER_BLOCKS];
 			if (b->buf) {
 				memcpy(&req->buffer[buf_idx], b->buf, b->blen);
 				buf_idx += b->blen;
+				j++;
 			}
 		}
 	}

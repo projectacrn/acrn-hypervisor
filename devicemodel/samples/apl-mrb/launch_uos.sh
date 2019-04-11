@@ -87,6 +87,8 @@ echo "8086 5aaa" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:15.1" > /sys/bus/pci/devices/0000:00:15.1/driver/unbind
 echo "0000:00:15.1" > /sys/bus/pci/drivers/pci-stub/bind
 
+echo 100 > /sys/bus/usb/drivers/usb-storage/module/parameters/delay_use
+
 boot_ipu_option=""
 if [ $ipu_passthrough == 1 ];then
     # for ipu passthrough - ipu device 0:3.0
@@ -176,6 +178,8 @@ acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:
   -i /run/acrn/ioc_$vm_name,0x20 \
   -l com2,/run/acrn/ioc_$vm_name \
   -B "root=/dev/vda2 rw rootwait maxcpus=$2 nohpet console=hvc0 \
+  snd_soc_skl_virtio_fe.domain_id=1 \
+  snd_soc_skl_virtio_fe.domain_name="GuestOS" \
   console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
   consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$4 i915.enable_guc_loading=0 \
   i915.enable_hangcheck=0 i915.nuclear_pageflip=1 \
@@ -274,6 +278,8 @@ fi
 # WA for USB role switch hang issue, disable runtime PM of xHCI device
 echo on > /sys/devices/pci0000:00/0000:00:15.0/power/control
 
+echo 100 > /sys/bus/usb/drivers/usb-storage/module/parameters/delay_use
+
 boot_ipu_option=""
 if [ $ipu_passthrough == 1 ];then
     # for ipu passthrough - ipu device 0:3.0
@@ -323,6 +329,8 @@ fi
 
 kernel_cmdline_generic="maxcpus=$2 nohpet tsc=reliable intel_iommu=off \
    androidboot.serialno=$ser \
+   snd_soc_skl_virtio_fe.domain_id=1 \
+   snd_soc_skl_virtio_fe.domain_name="GuestOS" \
    i915.enable_rc6=1 i915.enable_fbc=1 i915.enable_guc_loading=0 i915.avail_planes_per_pipe=$4 \
    i915.enable_hangcheck=0 use_nuclear_flip=1 i915.enable_guc_submission=0 i915.enable_guc=0"
 
