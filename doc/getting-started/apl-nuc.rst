@@ -17,6 +17,26 @@ supported for ACRN development:
   <https://www.up-board.org/upsquared/specifications/>`_ (UP2) is also
   known to work and its setup is described in :ref:`getting-started-up2`.
 
+- A serial console can be enabled on :ref:`Kaby Lake NUC
+  <intel-kaby-lake-nuc>` (KBL). The following figure shows the KBL's serial port header
+  we'll be using as documented in the `NUC7i5DN
+  <https://www.intel.com/content/dam/support/us/en/documents/boardsandkits/NUC7i5DN_TechProdSpec.pdf>`_.
+
+.. image:: images/KBL-serial-port-header.png
+
+
+Connecting to the serial port
+=============================
+
+You can just ignore this section if command line is not needed via the serial console.
+Or you have to prepare these cables to enable the serial port.
+
+.. image:: images/KBL-serial-port-header-to-RS232-cable.jpg
+   :target: https://www.amazon.com/dp/B07BV1W6N8/ref=cm_sw_r_cp_ep_dp_wYm0BbABD5AK6
+
+.. image:: images/RS232-to-USB-to-Host-cable.png
+
+
 Firmware update on the NUC
 ==========================
 
@@ -24,6 +44,7 @@ You may need to update to the latest UEFI firmware for the NUC hardware.
 Follow these `BIOS Update Instructions
 <https://www.intel.com/content/www/us/en/support/articles/000005636.html>`__
 for downloading and flashing an updated BIOS for the NUC.
+
 
 Software setup
 **************
@@ -183,6 +204,13 @@ partition. Follow these steps:
       #. ``uart=bdf@<BDF value>``:  this sets the PCI serial port based on its BDF.
          For example, use ``bdf@0:18.1`` for a BDF of 0:18.1 ttyS1.
       #. ``uart=port@<port address>``: this sets the serial port address
+
+      .. note::
+         
+         ``uart=port@<port address>`` is required if you want to enable the serial console.
+         You should run ``dmesg |grep ttyS0`` to get port address from the output, and then
+         set the ``uart`` parameter as ``uart=port@0x3f8``
+         
    #. ``vuart=ttySn@irqN``: this tells the hypervisor which virtual serial device SOS
       will use and its IRQ number. This is used to avoid conflict with SOS passthrough  
       devices' interrupt. If UART is set to ttyS1, and its native IRQ is 5, you'd better
@@ -195,8 +223,8 @@ partition. Follow these steps:
    .. code-block:: none
 
       $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
-            -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=disabled"
-
+            -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=port@0x3f8"
+            
 #. Create a boot entry for the ACRN Service OS by copying a provided ``acrn.conf``
    and editing it to account for the kernel versions noted in a previous step.
 
