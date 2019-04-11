@@ -15,10 +15,17 @@
 #include <dirent.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <limits.h>
 #include "mevent.h"
 #include "acrnctl.h"
 #include "acrn_mngr.h"
 #include "ioc.h"
+
+#define ACRND_NAME		"acrnd"
+#define SOS_LCS_SOCK		"sos-lcs"
+#define HW_IOC_PATH		"/dev/cbc-early-signals"
+#define VMS_STOP_TIMEOUT	20U /* Time to wait VMs to stop */
+#define SOCK_TIMEOUT		2U
 
 /* acrnd worker timer */
 
@@ -43,7 +50,11 @@ static unsigned int acrnd_stop_timeout;
 static unsigned char platform_has_hw_ioc;
 
 static int sigterm = 0; /* Exit acrnd when recevied SIGTERM and stop all vms */
-#define VMS_STOP_TIMEOUT 20 /* Wait VMS_STOP_TIMEOUT sec to stop all vms */
+
+static int logfile = 1;
+#ifdef MNGR_DEBUG
+static int autostart_delay = 0;
+#endif
 
 /* acrnd_add_work(), add a worker function.
  * @func, the worker function, will be called with work_mutex hold.
@@ -222,8 +233,6 @@ static int load_timer_list(void)
 	return ret;
 }
 
-static int logfile = 1;
-
 static void acrnd_run_vm(char *name)
 {
 	/*If do not use logfile, then output to stdout,
@@ -304,11 +313,6 @@ static int wakeup_suspended_vms(unsigned wakeup_reason)
 	return ret ? -1 : 0;
 }
 
-#define SOS_LCS_SOCK		"sos-lcs"
-#define DEFAULT_TIMEOUT	2U
-#define ACRND_NAME		"acrnd"
-#define HW_IOC_PATH             "/dev/cbc-early-signals"
-
 static int acrnd_fd = -1;
 
 unsigned get_sos_wakeup_reason(void)
@@ -328,7 +332,7 @@ unsigned get_sos_wakeup_reason(void)
 	req.msgid = WAKEUP_REASON;
 	req.timestamp = time(NULL);
 
-	if (mngr_send_msg(client_fd, &req, &ack, DEFAULT_TIMEOUT) <= 0)
+	if (mngr_send_msg(client_fd, &req, &ack, SOCK_TIMEOUT) <= 0)
 		fprintf(stderr, "Failed to get wakeup_reason from SOS, err(%d)\n", ret);
 	else
 		ret = ack.data.reason;
@@ -393,7 +397,7 @@ static int set_sos_timer(time_t due_time)
 
  RETRY:
 	ret =
-	    mngr_send_msg(client_fd, &req, &ack, DEFAULT_TIMEOUT);
+	    mngr_send_msg(client_fd, &req, &ack, SOCK_TIMEOUT);
 	while (ret <= 0 && retry < 5) {
 		printf("Fail to set sos wakeup timer(err:%d), retry %d...\n",
 		       ret, retry++);
@@ -639,6 +643,11 @@ int init_vm(void)
 	unsigned int wakeup_reason = 0;
 	int ret;
 
+#ifdef MNGR_DEBUG
+	printf("VM auto-start in %ds. \"systemctl stop acrnd\" to interrupt the auto-start.\n", autostart_delay);
+	sleep(autostart_delay);
+#endif
+
 	/* init all UOSs, according wakeup_reason */
 	if (platform_has_hw_ioc) {
 		wakeup_reason = get_sos_wakeup_reason();
@@ -666,21 +675,63 @@ static void sigterm_handler(int signo)
 	sigterm = 1;
 }
 
-static const char optString[] = "t";
+static const char optString[] = "td:h";
 
-int main(int argc, char *argv[])
+static void display_usage(void)
 {
-	int opt, ret;
+	printf("acrnd - Deamon for ACRN VM Management\n"
+	       "[Usage] acrnd [-t] [-d delay] [-h]\n\n"
+	       "[Options]\n"
+	       "\t-h: print this message\n"
+	       "\t-t: print messages to stdout\n"
+#ifdef MNGR_DEBUG
+	       "\t-d: delay time of auto start, <0-60> in second.\n"
+#endif
+	       "\n");
+}
+
+static int parse_opt(int argc, char *argv[])
+{
+	int opt, ret = 0;
 
 	while ((opt = getopt(argc, argv, optString)) != -1) {
 		switch (opt) {
 		case 't':
-			 logfile = 0;
-			 break;
+			logfile = 0;
+			break;
+#ifdef MNGR_DEBUG
+		case 'd':
+			ret = strtol(optarg, NULL, 10);
+			if ((errno == ERANGE && (ret == LONG_MAX || ret == LONG_MIN))
+				|| (errno != 0 && ret == 0)
+				|| (ret < 0 || ret > 60)) {
+				printf("'-d' invalid parameter: %s\n", optarg);
+				return -EINVAL;
+			}
+
+			autostart_delay = ret;
+			ret = 0;
+			break;
+#endif
+		case 'h':
+			display_usage();
+			ret = -EINVAL;
+			break;
 		default:
-			 printf("Ingrone unknown opt: %c\n", opt);
+			printf("Ingrone unknown opt: %c\n", opt);
+			ret = -EINVAL;
 		}
 	}
+
+	return ret;
+}
+
+int main(int argc, char *argv[])
+{
+	int ret;
+
+	if (parse_opt(argc, argv))
+		return -1;
 	
 	if (!access(HW_IOC_PATH, F_OK)) {
 		platform_has_hw_ioc = 1;
