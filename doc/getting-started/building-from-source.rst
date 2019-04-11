@@ -9,7 +9,7 @@ source, follow these steps.
 Install build tools and dependencies
 ************************************
 
-ARCN development is supported on popular Linux distributions,
+ACRN development is supported on popular Linux distributions,
 each with their own way to install development tools:
 
   .. note::

@@ -56,7 +56,7 @@ the LPC bus. In the current implementation, two channel LPC UARTs are I/O mapped
 the traditional COM port addresses of 0x3F8 and 0x2F8. These are defined in
 global variable ``uart_lres``.
 
-There are two options needed for configuring the UART in the ``arcn-dm``
+There are two options needed for configuring the UART in the ``acrn-dm``
 command line. First, the LPC is defined as a PCI device::
 
    -s 1:0,lpc
@@ -78,7 +78,7 @@ command line, for example::
    -l com1,/dev/pts/1
 
 
-When arcn-dm starts, ``pci_lpc_init`` is called as the callback of the
+When acrn-dm starts, ``pci_lpc_init`` is called as the callback of the
 ``vdev_init`` of the PCI device given on the acrn-dm command line.
 Later, ``lpc_init`` is called in ``pci_lpc_init``. ``lpc_init`` iterates
 on the available UART instances defined on the command line and

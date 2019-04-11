@@ -540,7 +540,7 @@ initial release in March 2018 (click on the CommitID link to see details):
 - :acrn-commit:`ba1b034` fix MISRA-C 243S
 - :acrn-commit:`9af35ba` DM:monitor: add monitor_register_vm_ops()
 - :acrn-commit:`eada59c` DM: adapt dm-monitor and acrnctl to use the helpers
-- :acrn-commit:`53ecd93` Tools: acrn-manager: add definitions of message sturcts
+- :acrn-commit:`53ecd93` Tools: acrn-manager: add definitions of message structs
 - :acrn-commit:`7d7cf30` Tools: acrn-manager: add lib with IPC helpers
 - :acrn-commit:`c001911` dm: virtio: support virtio 1.0 PCI configuration access capability
 - :acrn-commit:`b25a30f` dm: add default handling in pci_emul_capwrite

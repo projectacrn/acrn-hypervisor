@@ -82,7 +82,7 @@ New Features Details
 - :acrn-issue:`2431` - VPCI code cleanup
 - :acrn-issue:`2448` - Adding support for socket as a backend for Virtio-Console
 - :acrn-issue:`2462` - Enable cache QOS with CAT
-- :acrn-issue:`2496` - VTD/IOMMU Modulization
+- :acrn-issue:`2496` - VTD/IOMMU Modularization
 
 Fixed Issues Details
 ********************
@@ -93,7 +93,7 @@ Fixed Issues Details
 - :acrn-issue:`1782` - UOS failed to get ip with the pass-throughed network card
 - :acrn-issue:`1999` - [APLNUC][KBLNUC][APLUP2]UOS reset fails with acrnctl reset command
 - :acrn-issue:`2276` - OVMF failed to launch UOS on UP2
-- :acrn-issue:`2298` - Hardcodes path to iasl
+- :acrn-issue:`2298` - Hard codes path to iasl
 - :acrn-issue:`2316` - Tools don't respect CFLAGS/LDFLAGS from environment
 - :acrn-issue:`2338` - [UP2]Lost 2G memory in SOS when using SBL as bootloader on UP2
 - :acrn-issue:`2370` - Doesn't use parallel make in subbuilds
@@ -297,7 +297,7 @@ release in Feb 2019 (click on the CommitID link to see details):
 - :acrn-commit:`56afe97e` - doc: fix broken external links
 - :acrn-commit:`e263b554` - HV: Fix modularization vm config code lost CAT code
 - :acrn-commit:`703b366c` - dm: use power button acpi device to find its input event
-- :acrn-commit:`8a324060` - ACRN: dm: Fix luanch UOS script "-d" parameter fail issue
+- :acrn-commit:`8a324060` - ACRN: dm: Fix launch UOS script "-d" parameter fail issue
 - :acrn-commit:`06118998` - OVMF release v0.7
 - :acrn-commit:`6794660e` - HV: use the common functions defined in vdev.c to reduce duplicate code
 - :acrn-commit:`be3fbaa4` - HV: add generic vdev functions to vdev.c
@@ -324,7 +324,7 @@ release in Feb 2019 (click on the CommitID link to see details):
 - :acrn-commit:`e38ff18b` - hv:cleanup header files for release folder
 - :acrn-commit:`33ecdd73` - Makefile: undefine _FORTIFY_SOURCE prior using it
 - :acrn-commit:`3b2784ec` - HV: CAT: support config CAT from acrn_vm_config
-- :acrn-commit:`43ee5590` - HV: CAT: capability enumaration
+- :acrn-commit:`43ee5590` - HV: CAT: capability enumeration
 - :acrn-commit:`cf524e68` - HV: CAT: add platform specified info for CLOS
 - :acrn-commit:`ae34fdd8` - doc: fix misspellings
 - :acrn-commit:`a9482f46` - tweak GSG
@@ -364,11 +364,11 @@ release in Feb 2019 (click on the CommitID link to see details):
 - :acrn-commit:`02ae775b` - hv: pae: fix a issue of loading pdptrs when handle cr4
 - :acrn-commit:`25385241` - hv: pae: fix bug when calculate PDPT address
 - :acrn-commit:`21ae3e74` - DM: virtio-gpio: add print log
-- :acrn-commit:`6b0643b5` - DM: virtio-gpio: implementation of gpio opearations
+- :acrn-commit:`6b0643b5` - DM: virtio-gpio: implementation of gpio operations
 - :acrn-commit:`77e17b5d` - DM: virtio-gpio: gpio initialization.
 - :acrn-commit:`57029315` - DM: virtio-gpio: virtio framework implementation.
 - :acrn-commit:`5300e911` - config: enable parsing dmar table dynamically on UP2
-- :acrn-commit:`8e8ed07d` - dm: implement power button for power managerment
+- :acrn-commit:`8e8ed07d` - dm: implement power button for power management
 - :acrn-commit:`b24a8a0f` - hv:cleanup header file for guest folder
 - :acrn-commit:`75f6cab5` - hv:cleanup header file for per_cpu.h
 - :acrn-commit:`c093638b` - hv:merge two header files to one with the same name

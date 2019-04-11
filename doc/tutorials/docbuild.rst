@@ -5,7 +5,7 @@ ACRN documentation generation
 
 These instructions will walk you through generating the Project ACRN's
 documentation and publishing it to https://projectacrn.github.io.
-You can also use these instructions to generate the ARCN documentation
+You can also use these instructions to generate the ACRN documentation
 on your local system.
 
 Documentation overview

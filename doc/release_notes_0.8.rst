@@ -276,7 +276,7 @@ release in Feb 2019 (click on the CommitID link to see details):
 - :acrn-commit:`83a98acb` - DM: virtio-gpio: support reading value from IRQ descriptor
 - :acrn-commit:`d34b3ebd` - DM: virtio-gpio: emulate GPIO IRQ controller
 - :acrn-commit:`92a0a399` - DM: virtio-gpio: GPIO IRQ initialization.
-- :acrn-commit:`9480af8d` - DM: virtio-gpio: setup two virqueues for gpio irq
+- :acrn-commit:`9480af8d` - DM: virtio-gpio: setup two virtqueues for gpio irq
 - :acrn-commit:`e381aef2` - hv: seed: remove unused seed parsing source files
 - :acrn-commit:`0947fbab` - HV: Fix a compiler warning in firmware.h
 - :acrn-commit:`071ce15e` - dm: build E820 map for OVMF

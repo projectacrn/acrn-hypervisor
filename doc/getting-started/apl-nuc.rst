@@ -54,7 +54,7 @@ Software setup
 Set up a Clear Linux Operating System
 =====================================
 
-Currently, an installable version of ARCN does not exist. Therefore, you
+Currently, an installable version of ACRN does not exist. Therefore, you
 need to setup a base Clear Linux OS and you'll build and bootstrap ACRN
 on your platform. You'll need a network connection for your platform to
 complete this setup.
