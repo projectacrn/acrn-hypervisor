@@ -111,7 +111,7 @@ struct profiling_vcpu_pcpu_map {
 
 struct profiling_vm_info {
 	uint16_t vm_id_num;
-	uint8_t guid[16];
+	uint8_t uuid[16];
 	char vm_name[16];
 	uint16_t num_vcpus;
 	struct profiling_vcpu_pcpu_map cpu_map[CONFIG_MAX_VCPUS_PER_VM];

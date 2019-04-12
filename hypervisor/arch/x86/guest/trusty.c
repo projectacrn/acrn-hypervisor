@@ -331,7 +331,7 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu, uint32_t mem_size, uint64_
 	/* Derive dvseed from dseed for Trusty */
 	if (derive_virtual_seed(&key_info.dseed_list[0U], &key_info.num_seeds,
 				  NULL, 0U,
-				  vcpu->vm->GUID, sizeof(vcpu->vm->GUID))) {
+				  vcpu->vm->uuid, sizeof(vcpu->vm->uuid))) {
 		/* Derive encryption key of attestation keybox from dseed */
 		if (derive_attkb_enc_key(key_info.attkb_enc_key)) {
 			/* Prepare trusty startup param */

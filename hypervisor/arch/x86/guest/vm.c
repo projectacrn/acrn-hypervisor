@@ -392,8 +392,8 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 			snprintf(vm_config->name, 16, "ACRN VM_%d", vm_id);
 		}
 
-		(void)memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
-			&vm_config->GUID[0], sizeof(vm_config->GUID));
+		(void)memcpy_s(&vm->uuid[0], sizeof(vm->uuid),
+			&vm_config->uuid[0], sizeof(vm_config->uuid));
 
 		 if (vm_config->type == PRE_LAUNCHED_VM) {
 			create_prelaunched_vm_e820(vm);
