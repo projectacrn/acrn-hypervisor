@@ -3485,38 +3485,28 @@ LE-01: Use of inline Assembly language in C Code is allowed
 
 This feature refers to section 6.45 in GCC 7.3 Manual.
 
-LE-02: Use of type attribute 'aligned' is allowed
-=================================================
-
-This feature refers to section 6.33.1 in GCC 7.3 Manual.
-
-LE-03: Use of type attribute 'packed' is allowed
-================================================
-
-This feature refers to section 6.33.1 in GCC 7.3 Manual.
-
-LE-04: Use of builtin-type '__builtin_va_list' is allowed
+LE-02: Use of builtin-type '__builtin_va_list' is allowed
 =========================================================
 
 This feature refers to section 6.20 in GCC 7.3 Manual.
 
-LE-05: Use of builtin-function '__builtin_va_arg' is allowed
-============================================================
+LE-03: Use of extended type attribute is allowed
+================================================
 
-This feature refers to section 6.20 in GCC 7.3 Manual.
+This rule applies to the following type attributes:
 
-LE-06: Use of builtin-function '__builtin_va_start' is allowed
-==============================================================
+a) 'aligned', refers to section 6.33.1 in GCC 7.3 Manual.
+b) 'packed', refers to section 6.33.1 in GCC 7.3 Manual.
+c) 'unused', refers to section 6.33.1 in GCC 7.3 Manual.
+d) 'section', refers to section 6.32.1 in GCC 7.3 Manual.
 
-This feature refers to section 6.20 in GCC 7.3 Manual.
+LE-04: Use of extended builtin-function is allowed
+==================================================
 
-LE-07: Use of builtin-function '__builtin_va_end' is allowed
-============================================================
+This rule applies to the following builtin-functions:
 
-This feature refers to section 6.20 in GCC 7.3 Manual.
-
-LE-08: Use of builtin-function '__builtin_offsetof' is allowed
-==============================================================
-
-This feature refers to section 6.51 in GCC 7.3 Manual.
+a) '__builtin_va_arg', refers to section 6.20 in GCC 7.3 Manual.
+b) '__builtin_va_start', refers to section 6.20 in GCC 7.3 Manual.
+c) '__builtin_va_end', refers to section 6.20 in GCC 7.3 Manual.
+d) '__builtin_offsetof', refers to section 6.51 in GCC 7.3 Manual.
 
