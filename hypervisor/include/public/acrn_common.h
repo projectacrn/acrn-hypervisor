@@ -351,8 +351,8 @@ struct acrn_create_vm {
 	/** Reserved */
 	uint16_t reserved1;
 
-	/** the GUID of this VM */
-	uint8_t	 GUID[16];
+	/** the UUID of this VM */
+	uint8_t	 uuid[16];
 
 	/* VM flag bits from Guest OS, now used
 	 *  GUEST_FLAG_SECURE_WORLD_ENABLED          (1UL<<0)

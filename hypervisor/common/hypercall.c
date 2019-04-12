@@ -134,7 +134,7 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 			/* TODO: set by DM */
 			vm_config->type = NORMAL_VM;
 			vm_config->guest_flags |= cv.vm_flag;
-			(void)memcpy_s(&vm_config->GUID[0], 16U, &cv.GUID[0], 16U);
+			(void)memcpy_s(&vm_config->uuid[0], 16U, &cv.uuid[0], 16U);
 
 			/* GUEST_FLAG_RT must be set if we have GUEST_FLAG_LAPIC_PASSTHROUGH set in guest_flags */
 			if (((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)

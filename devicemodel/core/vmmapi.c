@@ -126,7 +126,7 @@ vm_create(const char *name, uint64_t req_buf)
 	uuid_copy(ctx->vm_uuid, vm_uuid);
 
 	/* Pass uuid as parameter of create vm*/
-	uuid_copy(create_vm.GUID, vm_uuid);
+	uuid_copy(create_vm.uuid, vm_uuid);
 
 	ctx->fd = devfd;
 	ctx->lowmem_limit = 2 * GB;

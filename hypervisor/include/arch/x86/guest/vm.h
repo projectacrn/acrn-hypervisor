@@ -137,7 +137,7 @@ struct acrn_vm {
 	io_read_fn_t default_io_read;
 	io_write_fn_t default_io_write;
 
-	uint8_t GUID[16];
+	uint8_t uuid[16];
 	struct secure_world_control sworld_control;
 
 	/* Secure World's snapshot

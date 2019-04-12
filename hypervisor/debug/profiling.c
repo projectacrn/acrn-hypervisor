@@ -888,8 +888,8 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 		vm_idx++;
 
 		vm_info_list.vm_list[vm_idx].vm_id_num = tmp_vm->vm_id;
-		(void)memcpy_s((void *)vm_info_list.vm_list[vm_idx].guid,
-			16U, tmp_vm->GUID, 16U);
+		(void)memcpy_s((void *)vm_info_list.vm_list[vm_idx].uuid,
+			16U, tmp_vm->uuid, 16U);
 		snprintf(vm_info_list.vm_list[vm_idx].vm_name, 16U, "vm_%d",
 				tmp_vm->vm_id, 16U);
 		vm_info_list.vm_list[vm_idx].num_vcpus = 0;
