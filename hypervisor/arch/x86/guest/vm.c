@@ -34,6 +34,8 @@ static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE);
 
 static struct acrn_vm *sos_vm_ptr = NULL;
 
+static struct e820_entry sos_ve820[E820_MAX_ENTRIES];
+
 uint16_t get_vmid_by_uuid(const uint8_t *uuid)
 {
 	uint16_t vm_id = 0U;
@@ -190,7 +192,7 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 /**
  * before boot sos_vm(service OS), call it to hide the HV RAM entry in e820 table from sos_vm
  *
- * @pre vm != NULL && entry != NULL && p_e820_mem != NULL
+ * @pre vm != NULL && entry != NULL
  */
 static void create_sos_vm_e820(struct acrn_vm *vm)
 {
@@ -201,14 +203,17 @@ static void create_sos_vm_e820(struct acrn_vm *vm)
 	uint64_t hv_end_pa  = hv_start_pa + CONFIG_HV_RAM_SIZE;
 	uint32_t entries_count = get_e820_entries_count();
 	struct e820_entry *entry, new_entry = {0};
-	struct e820_entry *p_e820 = (struct e820_entry *)get_e820_entry();
-	struct e820_mem_params *p_e820_mem = (struct e820_mem_params *)get_e820_mem_info();
+	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 	/* hypervisor mem need be filter out from e820 table
 	 * it's hv itself + other hv reserved mem like vgt etc
 	 */
+	(void)memcpy_s((void *)sos_ve820, entries_count * sizeof(struct e820_entry),
+		(const void *)get_e820_entry(), entries_count * sizeof(struct e820_entry));
+
 	for (i = 0U; i < entries_count; i++) {
-		entry = p_e820 + i;
+		entry = &sos_ve820[i];
 		entry_start = entry->baseaddr;
 		entry_end = entry->baseaddr + entry->length;
 
@@ -250,16 +255,15 @@ static void create_sos_vm_e820(struct acrn_vm *vm)
 	if (new_entry.length > 0UL) {
 		entries_count++;
 		ASSERT(entries_count <= E820_MAX_ENTRIES, "e820 entry overflow");
-		entry = p_e820 + entries_count - 1;
+		entry = &sos_ve820[entries_count - 1U];
 		entry->baseaddr = new_entry.baseaddr;
 		entry->length = new_entry.length;
 		entry->type = new_entry.type;
 	}
 
-	p_e820_mem->total_mem_size -= CONFIG_HV_RAM_SIZE;
-
 	vm->e820_entry_num = entries_count;
-	vm->e820_entries = p_e820;
+	vm->e820_entries = sos_ve820;
+	vm_config->memory.size = p_e820_mem_info->total_mem_size - CONFIG_HV_RAM_SIZE;
 }
 
 /**
