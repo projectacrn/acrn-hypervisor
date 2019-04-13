@@ -101,14 +101,14 @@ struct pci_vdev *pci_find_vdev_by_vbdf(const struct acrn_vpci *vpci, union pci_b
 
 struct pci_vdev *pci_find_vdev_by_pbdf(const struct acrn_vpci *vpci, union pci_bdf pbdf);
 
-int32_t partition_mode_vpci_init(const struct acrn_vm *vm);
+int32_t partition_mode_vpci_init(struct acrn_vm *vm);
 void partition_mode_cfgread(const struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val);
 void partition_mode_cfgwrite(const struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t val);
 void partition_mode_vpci_deinit(const struct acrn_vm *vm);
 
-int32_t sharing_mode_vpci_init(const struct acrn_vm *vm);
+int32_t sharing_mode_vpci_init(struct acrn_vm *vm);
 void sharing_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val);
 void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf bdf,

@@ -306,9 +306,6 @@ deinitialization:
 .. doxygenfunction:: init_iommu
    :project: Project ACRN
 
-.. doxygenfunction:: init_fallback_iommu_domain
-   :project: Project ACRN
-
 runtime
 =======
 
@@ -326,9 +323,5 @@ The following API are provided during runtime:
 .. doxygenfunction:: resume_iommu
    :project: Project ACRN
 
-.. doxygenfunction:: assign_pt_device
+.. doxygenfunction:: move_pt_device
    :project: Project ACRN
-
-.. doxygenfunction:: unassign_pt_device
-   :project: Project ACRN
-

@@ -189,7 +189,6 @@ bool iommu_snoop_supported(const struct iommu_domain *iommu)
 
 static struct dmar_drhd_rt dmar_drhd_units[CONFIG_MAX_IOMMU_NUM];
 static bool iommu_page_walk_coherent = true;
-static struct iommu_domain *fallback_iommu_domain;
 static uint32_t qi_status = 0U;
 static struct dmar_info *platform_dmar_info = NULL;
 
@@ -1158,7 +1157,6 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t s
 		ret = -EINVAL;
 	} else if (dmar_unit->drhd->ignore) {
 		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
-		ret = -EINVAL;
 	} else {
 		root_table = (struct dmar_entry *)hpa2hva(dmar_unit->root_table_addr);
 		root_entry = root_table + bus;
@@ -1261,7 +1259,11 @@ void destroy_iommu_domain(struct iommu_domain *domain)
 	(void)memset(domain, 0U, sizeof(*domain));
 }
 
-int32_t assign_pt_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
+/*
+ * @pre (from_domain != NULL) || (to_domain != NULL)
+ */
+
+int32_t move_pt_device(const struct iommu_domain *from_domain, struct iommu_domain *to_domain, uint8_t bus, uint8_t devfun)
 {
 	int32_t status = 0;
 	uint16_t bus_local = bus;
@@ -1269,32 +1271,12 @@ int32_t assign_pt_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfu
 	/* TODO: check if the device assigned */
 
 	if (bus_local < CONFIG_IOMMU_BUS_NUM) {
-		if (fallback_iommu_domain != NULL) {
-			status = remove_iommu_device(fallback_iommu_domain, 0U, bus, devfun);
+		if (from_domain != NULL) {
+			status = remove_iommu_device(from_domain, 0U, bus, devfun);
 		}
 
-		if (status == 0) {
-			status = add_iommu_device(domain, 0U, bus, devfun);
-		}
-	} else {
-		status = -EINVAL;
-	}
-
-	return status;
-}
-
-int32_t unassign_pt_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
-{
-	int32_t status = 0;
-	uint16_t bus_local = bus;
-
-	/* TODO: check if the device assigned */
-
-	if (bus_local < CONFIG_IOMMU_BUS_NUM) {
-		status = remove_iommu_device(domain, 0U, bus, devfun);
-
-		if ((status == 0) && (fallback_iommu_domain != NULL)) {
-			status = add_iommu_device(fallback_iommu_domain, 0U, bus, devfun);
+		if ((status == 0) && (to_domain != NULL)) {
+			status = add_iommu_device(to_domain, 0U, bus, devfun);
 		}
 	} else {
 		status = -EINVAL;
@@ -1346,28 +1328,6 @@ int32_t init_iommu(void)
 		}
 	}
 	return ret;
-}
-
-void init_fallback_iommu_domain(struct iommu_domain *iommu_dmn, uint16_t vm_id, void *eptp)
-{
-	uint16_t bus;
-	uint16_t devfun;
-
-	iommu_dmn = create_iommu_domain(vm_id, hva2hpa(eptp), 48U);
-
-	fallback_iommu_domain = (struct iommu_domain *) iommu_dmn;
-	if (fallback_iommu_domain == NULL) {
-		pr_err("fallback_iommu_domain is NULL\n");
-	} else {
-		for (bus = 0U; bus < CONFIG_IOMMU_BUS_NUM; bus++) {
-			for (devfun = 0U; devfun <= 255U; devfun++) {
-				if (add_iommu_device(fallback_iommu_domain, 0U, (uint8_t)bus, (uint8_t)devfun) != 0) {
-					/* the panic only occurs before fallback_iommu_domain starts running in sharing mode */
-					panic("Failed to add %x:%x.%x to fallback_iommu_domain domain", bus, pci_slot(devfun), pci_func(devfun));
-				}
-			}
-		}
-	}
 }
 
 int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, uint16_t index)
