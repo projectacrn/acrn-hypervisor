@@ -105,7 +105,7 @@ int32_t general_sw_loader(struct acrn_vm *vm)
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
 	/* get primary vcpu */
 	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
-	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
+	const struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 	pr_dbg("Loading guest to run-time location");
 
@@ -157,9 +157,9 @@ int32_t general_sw_loader(struct acrn_vm *vm)
 			int32_t reserving_1g_pages;
 
 #ifdef CONFIG_REMAIN_1G_PAGES
-			reserving_1g_pages = (p_e820_mem_info->total_mem_size >> 30U) - CONFIG_REMAIN_1G_PAGES;
+			reserving_1g_pages = (vm_config->memory.size >> 30U) - CONFIG_REMAIN_1G_PAGES;
 #else
-			reserving_1g_pages = (p_e820_mem_info->total_mem_size >> 30U) - 3;
+			reserving_1g_pages = (vm_config->memory.size >> 30U) - 3U;
 #endif
 			if (reserving_1g_pages > 0) {
 				snprintf(dyn_bootargs, 100U, " hugepagesz=1G hugepages=%d", reserving_1g_pages);
