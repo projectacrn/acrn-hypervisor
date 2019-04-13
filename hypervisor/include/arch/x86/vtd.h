@@ -541,9 +541,11 @@ struct iommu_domain;
 /**
  * @brief Assign a device specified by bus & devfun to a iommu domain.
  *
- * Remove the device from the fallback iommu domain (if present), and add it to the specific domain.
+ * Remove the device from the from_domain (if non-NULL), and add it to the to_domain (if non-NULL).
+ * API silently fails to add/remove devices to/from domains that are under "Ignored" DMAR units. 
  *
- * @param[in]    domain iommu domain the device is assigned to
+ * @param[in]    from_domain iommu domain from which the device is removed from
+ * @param[in]    to_domain iommu domain to which the device is assgined to
  * @param[in]    bus the 8-bit bus number of the device
  * @param[in]    devfun the 8-bit device(5-bit):function(3-bit) of the device
  *
@@ -553,24 +555,7 @@ struct iommu_domain;
  * @pre domain != NULL
  *
  */
-int32_t assign_pt_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun);
-
-/**
- * @brief Unassign a device specified by bus & devfun from a iommu domain .
- *
- * Remove the device from the specific domain, and then add it to the fallback iommu domain (if present).
- *
- * @param[in]    domain iommu domain the device is assigned to
- * @param[in]    bus the 8-bit bus number of the device
- * @param[in]    devfun the 8-bit device(5-bit):function(3-bit) of the device
- *
- * @retval 0 on success.
- * @retval 1 fail to unassign the device
- *
- * @pre domain != NULL
- *
- */
-int32_t unassign_pt_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun);
+int32_t move_pt_device(const struct iommu_domain *from_domain, struct iommu_domain *to_domain, uint8_t bus, uint8_t devfun);
 
 /**
  * @brief Create a iommu domain for a VM specified by vm_id.
@@ -648,23 +633,6 @@ void resume_iommu(void);
  *
  */
 int32_t init_iommu(void);
-
-/**
- * @brief Init fallback iommu domain of iommu.
- *
- * Create fallback iommu domain using the Normal World's EPT table of fallback iommu as address translation table.
- * All PCI devices are added to the fallback iommu domain when creating it.
- *
- * @param[in] iommu_dmn pointer to fallback iommu domain
- * @param[in] vm_id ID of the VM for which iommu_domain needs to be created
- * @param[in] eptp EPT hieararchy table
- *
- * @pre iommu shall point to fallback iommu domain
- *
- * @remark to reduce boot time & memory cost, a config IOMMU_INIT_BUS_LIMIT, which limit the bus number.
- *
- */
-void init_fallback_iommu_domain(struct iommu_domain *iommu_dmn, uint16_t vm_id, void *eptp);
 
 /**
  * @brief check the iommu if support cache snoop.

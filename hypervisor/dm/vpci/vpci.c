@@ -293,23 +293,14 @@ static inline bool is_valid_bar(const struct pci_bar *bar)
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
+ * @pre vdev->vpci->vm->iommu != NULL
  */
 static void assign_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 {
 	int32_t ret;
 	struct acrn_vm *vm = vdev->vpci->vm;
 
-	/* Create an iommu domain for target VM if not created */
-	if (vm->iommu == NULL) {
-		if (vm->arch_vm.nworld_eptp == 0UL) {
-			vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info);
-			sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);
-		}
-		vm->iommu = create_iommu_domain(vm->vm_id,
-			hva2hpa(vm->arch_vm.nworld_eptp), 48U);
-	}
-
-	ret = assign_pt_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
+	ret = move_pt_device(NULL, vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
 		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
 	if (ret != 0) {
 		panic("failed to assign iommu device!");
@@ -320,13 +311,14 @@ static void assign_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
+ * @pre vdev->vpci->vm->iommu != NULL
  */
 static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 {
 	int32_t ret;
 	struct acrn_vm *vm = vdev->vpci->vm;
 
-	ret = unassign_pt_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
+	ret = move_pt_device(vm->iommu, NULL, (uint8_t)vdev->pdev->bdf.bits.b,
 		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
 	if (ret != 0) {
 		/*
@@ -380,8 +372,10 @@ static void partition_mode_pdev_init(struct pci_vdev *vdev, union pci_bdf pbdf)
 /**
  * @pre vm != NULL
  * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
+ * @pre vm->iommu == NULL
+ * @pre vm->arch_vm.nworld_eptp != NULL
  */
-int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
+int32_t partition_mode_vpci_init(struct acrn_vm *vm)
 {
 	struct acrn_vpci *vpci = (struct acrn_vpci *)&(vm->vpci);
 	struct pci_vdev *vdev;
@@ -389,8 +383,10 @@ int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 	struct acrn_vm_pci_ptdev_config *ptdev_config;
 	uint32_t i;
 
-	vpci->pci_vdev_cnt = vm_config->pci_ptdev_num;
+	vm->iommu = create_iommu_domain(vm->vm_id,
+			hva2hpa(vm->arch_vm.nworld_eptp), 48U);
 
+	vpci->pci_vdev_cnt = vm_config->pci_ptdev_num;
 	for (i = 0U; i < vpci->pci_vdev_cnt; i++) {
 		vdev = &vpci->pci_vdevs[i];
 		vdev->vpci = vpci;
@@ -555,6 +551,8 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
 		if (has_msix_cap(vdev)) {
 			vdev_pt_remap_msix_table_bar(vdev);
 		}
+
+		assign_vdev_pt_iommu_domain(vdev);
 	}
 }
 
@@ -562,9 +560,14 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
 /**
  * @pre vm != NULL
  * @pre is_sos_vm(vm) == true
+ * @pre vm->iommu == NULL
+ * @pre vm->arch_vm.nworld_eptp != NULL
  */
-int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
+int32_t sharing_mode_vpci_init(struct acrn_vm *vm)
 {
+	vm->iommu = create_iommu_domain(vm->vm_id,
+			hva2hpa(vm->arch_vm.nworld_eptp), 48U);
+
 	/* Build up vdev array for sos_vm */
 	pci_pdev_foreach(init_vdev_for_pdev, vm);
 
@@ -583,6 +586,8 @@ void sharing_mode_vpci_deinit(const struct acrn_vm *vm)
 
 	for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
 		vdev = (struct pci_vdev *)&(vm->vpci.pci_vdevs[i]);
+
+		remove_vdev_pt_iommu_domain(vdev);
 
 		vmsi_deinit(vdev);
 
