@@ -965,12 +965,11 @@ gpio_irq_set_pin_state(int fd __attribute__((unused)),
 	struct gpioevent_data data;
 	struct virtio_gpio *gpio;
 	struct gpio_irq_desc *desc;
-	int last_level, err;
+	int err;
 
 	assert(arg != NULL);
 	desc = (struct gpio_irq_desc *) arg;
 	gpio = (struct virtio_gpio *) desc->data;
-	last_level = desc->level;
 
 	/* get pin state */
 	memset(&data, 0, sizeof(data));
@@ -987,7 +986,7 @@ gpio_irq_set_pin_state(int fd __attribute__((unused)),
 		desc->level = 1;
 
 		/* jitter protection */
-		if (((desc->mode & IRQ_TYPE_EDGE_RISING) && (last_level == 0))
+		if ((desc->mode & IRQ_TYPE_EDGE_RISING)
 				|| (desc->mode & IRQ_TYPE_LEVEL_HIGH)) {
 			gpio_irq_generate_intr(gpio, desc->pin);
 		}
@@ -997,7 +996,7 @@ gpio_irq_set_pin_state(int fd __attribute__((unused)),
 		desc->level = 0;
 
 		/* jitter protection */
-		if (((desc->mode & IRQ_TYPE_EDGE_FALLING) && (last_level == 1))
+		if ((desc->mode & IRQ_TYPE_EDGE_FALLING)
 				|| (desc->mode & IRQ_TYPE_LEVEL_LOW)) {
 			gpio_irq_generate_intr(gpio, desc->pin);
 		}
