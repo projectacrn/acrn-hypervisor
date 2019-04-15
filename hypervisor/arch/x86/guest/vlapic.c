@@ -1094,14 +1094,15 @@ static inline bool is_dest_field_matched(const struct acrn_vlapic *vlapic, uint3
  * addressing specified by the (dest, phys, lowprio) tuple.
  */
 void
-vlapic_calc_dest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, bool lowprio)
+vlapic_calc_dest(struct acrn_vm *vm, uint64_t *dmask, bool is_broadcast,
+		uint32_t dest, bool phys, bool lowprio)
 {
 	struct acrn_vlapic *vlapic, *lowprio_dest = NULL;
 	struct acrn_vcpu *vcpu;
 	uint16_t vcpu_id;
 
 	*dmask = 0UL;
-	if (dest == 0xffU) {
+	if (is_broadcast) {
 		/* Broadcast in both logical and physical modes. */
 		*dmask = vm_active_cpus(vm);
 	} else if (phys) {
@@ -1149,14 +1150,15 @@ vlapic_calc_dest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, 
  * @pre is_x2apic_enabled(vlapic) == true
  */
 void
-vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys)
+vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, bool is_broadcast,
+		uint32_t dest, bool phys)
 {
 	struct acrn_vlapic *vlapic;
 	struct acrn_vcpu *vcpu;
 	uint16_t vcpu_id;
 
 	*dmask = 0UL;
-	if (dest == 0xffU) {
+	if (is_broadcast) {
 		/* Broadcast in both logical and physical modes. */
 		*dmask = vm_active_cpus(vm);
 	} else if (phys) {
@@ -1227,7 +1229,7 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode,
 static void vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 {
 	uint16_t vcpu_id;
-	bool phys;
+	bool phys = false, is_broadcast = false;
 	uint64_t dmask = 0UL;
 	uint32_t icr_low, icr_high, dest;
 	uint32_t vec, mode, shorthand;
@@ -1241,8 +1243,10 @@ static void vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 	icr_high = lapic->icr_hi.v;
 	if (is_x2apic_enabled(vlapic)) {
 		dest = icr_high;
+		is_broadcast = (dest == 0xffffffffU);
 	} else {
 		dest = icr_high >> APIC_ID_SHIFT;
+		is_broadcast = (dest == 0xffU);
 	}
 	vec = icr_low & APIC_VECTOR_MASK;
 	mode = icr_low & APIC_DELMODE_MASK;
@@ -1264,7 +1268,7 @@ static void vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 
 		switch (shorthand) {
 		case APIC_DEST_DESTFLD:
-			vlapic_calc_dest(vlapic->vm, &dmask, dest, phys, false);
+			vlapic_calc_dest(vlapic->vm, &dmask, is_broadcast, dest, phys, false);
 			break;
 		case APIC_DEST_SELF:
 			bitmap_set_nolock(vlapic->vcpu->vcpu_id, &dmask);
@@ -1802,7 +1806,7 @@ vlapic_receive_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 		 * all interrupts originating from the ioapic or MSI specify the
 		 * 'dest' in the legacy xAPIC format.
 		 */
-		vlapic_calc_dest(vm, &dmask, dest, phys, lowprio);
+		vlapic_calc_dest(vm, &dmask, false, dest, phys, lowprio);
 
 		for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
 			struct acrn_vlapic *vlapic;

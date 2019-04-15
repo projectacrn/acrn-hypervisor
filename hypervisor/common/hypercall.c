@@ -432,7 +432,7 @@ static void inject_msi_lapic_pt(struct acrn_vm *vm, const struct acrn_msi_entry 
 		 * the delivery mode of vmsi will be forwarded to ICR delievry field
 		 * and handled by hardware.
 		 */
-		vlapic_calc_dest_lapic_pt(vm, &vdmask, vdest, phys);
+		vlapic_calc_dest_lapic_pt(vm, &vdmask, false, vdest, phys);
 		dev_dbg(ACRN_DBG_LAPICPT, "%s: vcpu destination mask 0x%016llx", __func__, vdmask);
 
 		vcpu_id = ffs64(vdmask);

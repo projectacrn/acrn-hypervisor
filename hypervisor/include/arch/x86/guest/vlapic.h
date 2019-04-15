@@ -206,8 +206,10 @@ int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t veoi_vmexit_handler(struct acrn_vcpu *vcpu);
 void vlapic_update_tpr_threshold(const struct acrn_vlapic *vlapic);
 int32_t tpr_below_threshold_vmexit_handler(struct acrn_vcpu *vcpu);
-void vlapic_calc_dest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, bool lowprio);
-void vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
+void vlapic_calc_dest(struct acrn_vm *vm, uint64_t *dmask, bool is_broadcast,
+		uint32_t dest, bool phys, bool lowprio);
+void vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, bool is_broadcast,
+		uint32_t dest, bool phys);
 
 /**
  * @}
