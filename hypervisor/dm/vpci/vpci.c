@@ -309,7 +309,7 @@ static void assign_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 			hva2hpa(vm->arch_vm.nworld_eptp), 48U);
 	}
 
-	ret = assign_iommu_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
+	ret = assign_pt_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
 		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
 	if (ret != 0) {
 		panic("failed to assign iommu device!");
@@ -326,13 +326,13 @@ static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 	int32_t ret;
 	struct acrn_vm *vm = vdev->vpci->vm;
 
-	ret = unassign_iommu_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
+	ret = unassign_pt_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
 		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
 	if (ret != 0) {
 		/*
 		 *TODO
 		 * panic needs to be removed here
-		 * Currently unassign_iommu_device can fail for multiple reasons
+		 * Currently unassign_pt_device can fail for multiple reasons
 		 * Once all the reasons and methods to avoid them can be made sure
 		 * panic here is not necessary.
 		 */
