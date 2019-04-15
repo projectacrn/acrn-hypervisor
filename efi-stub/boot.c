@@ -247,6 +247,8 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 	struct acpi_table_rsdp *rsdp = NULL;
 	int32_t i;
 	EFI_CONFIGURATION_TABLE *config_table;
+	char *uefi_boot_loader_name;
+	const char loader_name[BOOT_LOADER_NAME_SIZE] = UEFI_BOOT_LOADER_NAME;
 
 	err = allocate_pool(EfiLoaderData, EFI_BOOT_MEM_SIZE, (VOID *)&addr);
 	if (err != EFI_SUCCESS) {
@@ -258,6 +260,9 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 	mmap = MBOOT_MMAP_PTR(addr);
 	mbi = MBOOT_INFO_PTR(addr);
 	efi_ctx = BOOT_CTX_PTR(addr);
+
+	uefi_boot_loader_name = BOOT_LOADER_NAME_PTR(addr);
+	memcpy(uefi_boot_loader_name, loader_name, BOOT_LOADER_NAME_SIZE);
 
 	/* reserve secondary memory region for CPU trampoline code */
 	err = emalloc_reserved_mem(&addr, CONFIG_LOW_RAM_SIZE, MEM_ADDR_1MB);
@@ -301,6 +306,12 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 
 	mbi->mi_flags |= MULTIBOOT_INFO_HAS_DRIVES;
 	mbi->mi_drives_addr = (UINT32)(UINTN)efi_ctx;
+
+	/* Set boot loader name in the multiboot header of UEFI, this name is used by hypervisor;
+	 * The host physical start address of boot loader name is stored in multiboot header.
+	 */
+	mbi->mi_flags |= MULTIBOOT_INFO_HAS_LOADER_NAME;
+	mbi->mi_loader_name = (UINT32)uefi_boot_loader_name;
 
 	asm volatile ("pushf\n\t"
 		      "pop %0\n\t"
