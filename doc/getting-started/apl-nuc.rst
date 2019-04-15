@@ -3,38 +3,42 @@
 Getting started guide for Intel NUC
 ###################################
 
-The Intel |reg| NUC (NUC6CAYH) is the primary tested
-platform for ACRN development, and its setup is described below.
+The Intel |reg| NUC is the primary tested platform for ACRN development,
+and its setup is described below.
 
 
 Hardware setup
 **************
 
-Two Apollo Lake Intel platforms, described in :ref:`hardware`, are currently
-supported for ACRN development:
+Intel Apollo Lake NUC (APL) and Intel Kaby Lake NUC (KBL),
+described in :ref:`hardware`, are currently supported for ACRN development:
 
-- The `UP Squared board
-  <https://www.up-board.org/upsquared/specifications/>`_ (UP2) is also
-  known to work and its setup is described in :ref:`getting-started-up2`.
-
-- A serial console can be enabled on :ref:`Kaby Lake NUC
-  <intel-kaby-lake-nuc>` (KBL). The following figure shows the KBL's serial port header
-  we'll be using as documented in the `NUC7i5DN
-  <https://www.intel.com/content/dam/support/us/en/documents/boardsandkits/NUC7i5DN_TechProdSpec.pdf>`_.
-
-.. image:: images/KBL-serial-port-header.png
+- We can enable the serial console on `KBL
+  <https://www.amazon.com/dp/B07D5HHMSB/ref=cm_sw_r_cp_ep_dp_hXm0BbBV0CER3>`__
+  (NUC7i5DNHE), but this is not supported on APL (NUC6CAYH).
 
 
 Connecting to the serial port
 =============================
 
-You can just ignore this section if command line is not needed via the serial console.
-Or you have to prepare these cables to enable the serial port.
+If you don't need a serial console you can ignore this section. If you're
+using a KBL NUC and you need a serial console, you'll need to prepare
+an RS232 cable to connect to the KBL NUC serial port header, as shown
+below:
 
-.. image:: images/KBL-serial-port-header-to-RS232-cable.jpg
-   :target: https://www.amazon.com/dp/B07BV1W6N8/ref=cm_sw_r_cp_ep_dp_wYm0BbABD5AK6
+.. figure:: images/KBL-serial-port-header.png
+   :align: center
 
-.. image:: images/RS232-to-USB-to-Host-cable.png
+   You can refer to the `'Technical Product Specification'
+   <https://www.intel.com/content/dam/support/us/en/documents/boardsandkits/NUC7i5DN_TechProdSpec.pdf>`__
+   for details
+
+
+.. figure:: images/KBL-serial-port-header-to-RS232-cable.jpg
+   :align: center
+
+   KBL serial port header to RS232 `cable
+   <https://www.amazon.com/dp/B07BV1W6N8/ref=cm_sw_r_cp_ep_dp_wYm0BbABD5AK6>`_
 
 
 Firmware update on the NUC
@@ -384,19 +388,26 @@ partition. Follow these steps:
       #. ``uart=port@<port address>``: this sets the serial port address
 
       .. note::
-         
+
          ``uart=port@<port address>`` is required if you want to enable the serial console.
          You should run ``dmesg |grep ttyS0`` to get port address from the output, and then
-         set the ``uart`` parameter as ``uart=port@0x3f8``
-         
+         add the ``uart`` parameter into the ``efibootmgr`` command.
+
    #. ``vuart=ttySn@irqN``: this tells the hypervisor which virtual serial device SOS
-      will use and its IRQ number. This is used to avoid conflict with SOS passthrough  
+      will use and its IRQ number. This is used to avoid conflict with SOS passthrough
       devices' interrupt. If UART is set to ttyS1, and its native IRQ is 5, you'd better
       set ``vuart=ttyS1@irq5`` (Use 'dmesg | grep tty' to get IRQ information).
       Also set ``console=ttyS1`` in ``acrn.conf`` to match the SOS boot args.
 
    Here is a more complete example of how to configure the EFI firmware to load the ACRN
    hypervisor and set these parameters.
+
+   .. code-block:: none
+
+      $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
+            -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=disabled"
+
+   And also here is the example of how to enable a serial console for KBL NUC.
 
    .. code-block:: none
 
