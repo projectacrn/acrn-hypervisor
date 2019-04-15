@@ -15,44 +15,31 @@
 
 static struct firmware_operations *firmware_ops;
 
-static bool is_firmware_sbl(void)
-{
-	bool ret = false;
-	struct multiboot_info *mbi = NULL;
-	size_t i;
-	const char *sbl_candidates[] = {
-		"Slim BootLoader",
-		"Intel IOTG/TSD ABL",
-	};
-
-	mbi = (struct multiboot_info *)hpa2hva((uint64_t)boot_regs[1]);
-	if (mbi != NULL) {
-		if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_LOADER_NAME) != 0U) {
-			for (i = 0; i < sizeof(sbl_candidates); i++) {
-				if (strcmp(hpa2hva(mbi->mi_loader_name), sbl_candidates[i]) == 0) {
-					ret = true;
-					break;
-				}
-			}
-		}
-	}
-
-	return ret;
-}
-
 /**
  * @pre: this function is called during detect mode which is very early stage,
  * other exported interfaces should not be called beforehand.
  */
 void init_firmware_operations(void)
 {
-	if (is_firmware_sbl()) {
-		firmware_ops = sbl_get_firmware_operations();
-	} else {
-		firmware_ops = uefi_get_firmware_operations();
+
+	struct multiboot_info *mbi;
+	uint32_t i;
+
+	const struct firmware_candidates fw_candidates[NUM_FIRMWARE_SUPPORTING] = {
+		{"Slim BootLoader", 15U, sbl_get_firmware_operations},
+		{"Intel IOTG/TSD ABL", 18U, sbl_get_firmware_operations},
+		{"ACRN UEFI loader", 16U, uefi_get_firmware_operations},
+		{"GRUB", 4U, sbl_get_firmware_operations},
+	};
+
+	mbi = (struct multiboot_info *)hpa2hva((uint64_t)boot_regs[1]);
+	for (i = 0U; i < NUM_FIRMWARE_SUPPORTING; i++) {
+		if (strncmp(hpa2hva(mbi->mi_loader_name), fw_candidates[i].name, fw_candidates[i].name_sz) == 0) {
+			firmware_ops = fw_candidates[i].ops();
+			break;
+		}
 	}
 }
-
 
 /* @pre: firmware_ops->init != NULL */
 void init_firmware(void)
