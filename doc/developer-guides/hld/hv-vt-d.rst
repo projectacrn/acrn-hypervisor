@@ -326,9 +326,9 @@ The following API are provided during runtime:
 .. doxygenfunction:: resume_iommu
    :project: Project ACRN
 
-.. doxygenfunction:: assign_iommu_device
+.. doxygenfunction:: assign_pt_device
    :project: Project ACRN
 
-.. doxygenfunction:: unassign_iommu_device
+.. doxygenfunction:: unassign_pt_device
    :project: Project ACRN
 

@@ -863,7 +863,7 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 			}
 		}
 		if (bdf_valid && iommu_valid) {
-			ret = assign_iommu_device(target_vm->iommu,
+			ret = assign_pt_device(target_vm->iommu,
 				(uint8_t)(bdf >> 8U), (uint8_t)(bdf & 0xffU));
 		}
 	} else {
@@ -907,7 +907,7 @@ int32_t hcall_deassign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 		}
 
 		if (bdf_valid) {
-			ret = unassign_iommu_device(target_vm->iommu,
+			ret = unassign_pt_device(target_vm->iommu,
 				(uint8_t)(bdf >> 8U), (uint8_t)(bdf & 0xffU));
 		}
 	}

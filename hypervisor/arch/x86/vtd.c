@@ -1261,7 +1261,7 @@ void destroy_iommu_domain(struct iommu_domain *domain)
 	(void)memset(domain, 0U, sizeof(*domain));
 }
 
-int32_t assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
+int32_t assign_pt_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	int32_t status = 0;
 	uint16_t bus_local = bus;
@@ -1283,7 +1283,7 @@ int32_t assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t de
 	return status;
 }
 
-int32_t unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
+int32_t unassign_pt_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	int32_t status = 0;
 	uint16_t bus_local = bus;

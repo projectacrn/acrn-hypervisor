@@ -553,7 +553,7 @@ struct iommu_domain;
  * @pre domain != NULL
  *
  */
-int32_t assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun);
+int32_t assign_pt_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun);
 
 /**
  * @brief Unassign a device specified by bus & devfun from a iommu domain .
@@ -570,7 +570,7 @@ int32_t assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t de
  * @pre domain != NULL
  *
  */
-int32_t unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun);
+int32_t unassign_pt_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun);
 
 /**
  * @brief Create a iommu domain for a VM specified by vm_id.
