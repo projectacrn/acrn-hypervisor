@@ -8,6 +8,8 @@
 
 #define FIRMWARE_H
 
+#define NUM_FIRMWARE_SUPPORTING 4U
+
 struct acrn_vm;
 struct firmware_operations {
 	void (*init)(void);
@@ -15,6 +17,12 @@ struct firmware_operations {
 	void *(*get_rsdp)(void);
 	void (*init_irq)(void);
 	int32_t (*init_vm_boot_info)(struct acrn_vm *vm);
+};
+
+struct firmware_candidates {
+	const char name[20];
+	size_t name_sz;
+	struct firmware_operations *(*ops)(void);
 };
 
 void init_firmware_operations(void);
