@@ -37,7 +37,7 @@ static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv);
 static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv);
 static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv);
 static int32_t shell_dumpmem(int32_t argc, char **argv);
-static int32_t shell_to_sos_console(int32_t argc, char **argv);
+static int32_t shell_to_vm_console(int32_t argc, char **argv);
 static int32_t shell_show_cpu_int(__unused int32_t argc, __unused char **argv);
 static int32_t shell_show_ptdev_info(__unused int32_t argc, __unused char **argv);
 static int32_t shell_show_vioapic_info(int32_t argc, char **argv);
@@ -80,10 +80,10 @@ static struct shell_cmd shell_cmds[] = {
 		.fcn		= shell_dumpmem,
 	},
 	{
-		.str		= SHELL_CMD_SOS_CONSOLE,
-		.cmd_param	= SHELL_CMD_SOS_CONSOLE_PARAM,
-		.help_str	= SHELL_CMD_SOS_CONSOLE_HELP,
-		.fcn		= shell_to_sos_console,
+		.str		= SHELL_CMD_VM_CONSOLE,
+		.cmd_param	= SHELL_CMD_VM_CONSOLE_PARAM,
+		.help_str	= SHELL_CMD_VM_CONSOLE_HELP,
+		.fcn		= shell_to_vm_console,
 	},
 	{
 		.str		= SHELL_CMD_INTERRUPT,
@@ -842,7 +842,7 @@ static int32_t shell_dumpmem(int32_t argc, char **argv)
 	return 0;
 }
 
-static int32_t shell_to_sos_console(__unused int32_t argc, __unused char **argv)
+static int32_t shell_to_vm_console(__unused int32_t argc, __unused char **argv)
 {
 	char temp_str[TEMP_STR_SIZE];
 	uint16_t vm_id = 0U;

@@ -55,9 +55,9 @@ struct shell {
 #define SHELL_CMD_DUMPMEM_HELP		"Dump host memory, starting at a given address, and for a given length (in "\
 					"bytes)"
 
-#define SHELL_CMD_SOS_CONSOLE		"sos_console"
-#define SHELL_CMD_SOS_CONSOLE_PARAM	NULL
-#define SHELL_CMD_SOS_CONSOLE_HELP	"Switch to the SOS's console. Use [Ctrl+Spacebar] to return to the ACRN shell "\
+#define SHELL_CMD_VM_CONSOLE		"vm_console"
+#define SHELL_CMD_VM_CONSOLE_PARAM	"<vm id>"
+#define SHELL_CMD_VM_CONSOLE_HELP	"Switch to the VM's console. Use [Ctrl+Spacebar] to return to the ACRN shell "\
 					"console"
 
 #define SHELL_CMD_INTERRUPT		"int"
