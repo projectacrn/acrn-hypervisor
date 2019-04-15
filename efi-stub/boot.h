@@ -57,6 +57,8 @@
 #define MSR_IA32_SYSENTER_ESP               0x00000175  /* ESP for sysenter */
 #define MSR_IA32_SYSENTER_EIP               0x00000176  /* EIP for sysenter */
 
+#define UEFI_BOOT_LOADER_NAME "ACRN UEFI loader"
+
 /* Read MSR */
 #define CPU_MSR_READ(reg, msr_val_ptr)                      \
 {                                                           \
@@ -77,15 +79,17 @@ typedef void(*hv_func)(int32_t, struct multiboot_info*);
 #define MBOOT_MMAP_SIZE (sizeof(struct multiboot_mmap) * MBOOT_MMAP_NUMS)
 #define MBOOT_INFO_SIZE (sizeof(struct multiboot_info))
 #define BOOT_CTX_SIZE  (sizeof(struct uefi_context))
+#define BOOT_LOADER_NAME_SIZE 17U
 #define EFI_BOOT_MEM_SIZE \
-	(MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE + BOOT_CTX_SIZE)
+	(MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE + BOOT_CTX_SIZE + BOOT_LOADER_NAME_SIZE)
 #define MBOOT_MMAP_PTR(addr) \
 	((struct multiboot_mmap *)((VOID *)(addr)))
 #define MBOOT_INFO_PTR(addr)  \
 	((struct multiboot_info *)((VOID *)(addr) + MBOOT_MMAP_SIZE))
 #define BOOT_CTX_PTR(addr)	\
 	((struct uefi_context *)((VOID *)(addr) + MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE))
-
+#define BOOT_LOADER_NAME_PTR(addr)	\
+	((char *)((VOID *)(addr) + MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE + BOOT_CTX_SIZE))
 
 struct efi_info {
 	UINT32 efi_loader_signature;
