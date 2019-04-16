@@ -447,6 +447,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 {
 	uint16_t i;
 	struct acrn_vcpu *vcpu = NULL;
+	struct acrn_vm_config *vm_config = NULL;
 	int32_t ret;
 
 	pause_vm(vm);
@@ -459,6 +460,9 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 			reset_vcpu(vcpu);
 			offline_vcpu(vcpu);
 		}
+
+		vm_config = get_vm_config(vm->vm_id);
+		vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
 
 		ptdev_release_all_entries(vm);
 
