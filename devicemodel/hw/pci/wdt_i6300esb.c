@@ -136,9 +136,13 @@ wdt_expired_handler(void *arg, uint64_t nexp)
 			wdt_timeout = 1;
 
 			/* watchdog timer out, set the uos to reboot */
+#ifdef DM_DEBUG
 			vm_set_suspend_mode(VM_SUSPEND_SYSTEM_RESET);
 			/* Notify vm thread to handle VM_SUSPEND_SYSTEM_RESET request */
 			notify_vmloop_thread();
+#else
+			vm_set_suspend_mode(VM_SUSPEND_FULL_RESET);
+#endif
 			mevent_notify();
 		} else {
 			/* if not need reboot, just loop timer */

@@ -322,12 +322,14 @@ delete_cpu(struct vmctx *ctx, int vcpu)
 	return CPU_EMPTY(&cpumask);
 }
 
+#ifdef DM_DEBUG
 void
 notify_vmloop_thread(void)
 {
 	pthread_kill(mt_vmm_info[0].mt_thr, SIGCONT);
 	return;
 }
+#endif
 
 static void
 vmexit_inout(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
