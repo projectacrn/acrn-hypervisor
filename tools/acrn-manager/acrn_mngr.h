@@ -9,8 +9,15 @@
 #include <stdlib.h>
 #include <acrn_common.h>
 
-#define MNGR_MSG_MAGIC   0x67736d206d6d76	/* that is char[8] "mngr msg", on X86 */
-#define PATH_LEN	128
+#define MNGR_MSG_MAGIC	0x67736d206d6d76	/* that is char[8] "mngr msg", on X86 */
+#define PATH_LEN		128
+
+#define ACRN_CONF_PATH			"/usr/share/acrn/conf"
+#define ACRN_CONF_PATH_ADD		ACRN_CONF_PATH "/add"
+#define ACRN_CONF_TIMER_LIST	ACRN_CONF_PATH "/timer_list"
+
+#define ACRN_DM_BASE_PATH	"/run/acrn"
+#define ACRN_DM_SOCK_PATH	"/run/acrn/mngr"
 
 struct mngr_msg {
 	unsigned long long magic;	/* Make sure you get a mngr_msg */
@@ -110,11 +117,14 @@ enum sos_lcs_msgid {
 #define MNGR_SERVER	1	/* create a server fd, which you can add handlers onto it */
 #define MNGR_CLIENT	0	/* create a client, just send req and read ack */
 
+#define CHK_CREAT 1		/* create a directory, if not exist */
+#define CHK_ONLY  0		/* check if the directory exist only */
+
 /**
  * @brief create a descripter for vm management IPC
  *
- * @param name: refer to a sock file under /run/acrn/mngr/[name].[pid].socket
- * @param flags: MNGR_SERVER to create a server, MNGR_CLIENT to create a client
+ * @param name refer to a sock file under /run/acrn/mngr/[name].[pid].socket
+ * @param flags MNGR_SERVER to create a server, MNGR_CLIENT to create a client
  *
  * @return descripter ID (> 1024) on success, errno (< 0) on error.
  */
@@ -123,17 +133,17 @@ int mngr_open_un(const char *name, int flags);
 /**
  * @brief close descripter and release the resouces
  *
- * @param desc: descripter to be closed
+ * @param desc descripter to be closed
  */
 void mngr_close(int desc);
 
 /**
  * @brief add a handler for message specified by msg
  *
- * @param desc: descripter to register handler to
- * @param id: id of message to handle
- * @param cb: handler callback
- * @param param: param for the callback
+ * @param desc descripter to register handler to
+ * @param id id of message to handle
+ * @param cb handler callback
+ * @param param param for the callback
  * @return 0 on success, errno on error
  */
 int mngr_add_handler(int desc, unsigned id,
@@ -143,13 +153,22 @@ int mngr_add_handler(int desc, unsigned id,
 /**
  * @brief send a message and wait for ack
  *
- * @param desc: descripter created using mngr_open_un
- * @param req: pointer to message to send
- * @param ack: pointer to ack struct, NULL if no ack required
- * @param timeout: time to wait for ack, zero to blocking waiting
+ * @param desc descripter created using mngr_open_un
+ * @param req pointer to message to send
+ * @param ack pointer to ack struct, NULL if no ack required
+ * @param timeout time to wait for ack, zero to blocking waiting
  * @return len of ack messsage (0 if ack is NULL) on succes, errno on error
  */
 int mngr_send_msg(int desc, struct mngr_msg *req, struct mngr_msg *ack,
 		  unsigned timeout);
+
+/**
+ * @brief check @path existence and create or report error accoding to the flag
+ *
+ * @param path path to check
+ * @param flags CHK_CREAT to create directory, CHK_ONLY check directory only
+ * @return 0 on success, -1 on error
+ */
+int check_dir(const char *path, int flags);
 
 #endif				/* ACRN_MANAGER_H */

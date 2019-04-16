@@ -18,24 +18,31 @@
 #include "acrn_mngr.h"
 
 /* helpers */
-/* Check if @path is a directory, and create if not exist */
-static int check_dir(const char *path)
+/* Check if @path exists and if is a directory, if not existence, create or warn according to the flag */
+int check_dir(const char *path, int flags)
 {
-	struct stat st;
+        struct stat st;
 
-	if (stat(path, &st)) {
-		if (mkdir(path, 0666)) {
-			perror(path);
-			return -1;
-		}
-		return 0;
-	}
+        if (stat(path, &st)) {
+                if (flags) {
+                        if (mkdir(path, 0666)) {
+                                perror(path);
+                                return -1;
+                        }
+                        return 0;
+                } else {
+                        printf("%s doesn't exist!\n", path);
+                        return -1;
+                }
+        }
 
-	if (S_ISDIR(st.st_mode))
-		return 0;
+        if (S_ISDIR(st.st_mode))
+                return 0;
 
-	return -1;
+        fprintf(stderr, "%s exist, and not a directory!\n", path);
+        return -1;
 }
+
 
 #define MNGR_SOCK_FMT		"/run/acrn/mngr/%s.%d.socket"
 #define MNGR_MAX_HANDLER	8
@@ -489,8 +496,8 @@ static void close_client(struct mngr_fd *mfd)
 
 int mngr_open_un(const char *name, int flags)
 {
-	check_dir("/run/acrn");
-	check_dir("/run/acrn/mngr");
+	check_dir(ACRN_DM_BASE_PATH, CHK_ONLY);
+	check_dir(ACRN_DM_SOCK_PATH, CHK_ONLY);
 
 	if (!name) {
 		printf("%s: No socket name configured\n", __func__);

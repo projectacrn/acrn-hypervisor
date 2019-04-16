@@ -27,26 +27,6 @@ const char *state_str[] = {
 	[VM_UNTRACKED] = "untracked",
 };
 
-/* Check if @path is a directory, and create if not exist */
-static int check_dir(const char *path)
-{
-	struct stat st;
-
-	if (stat(path, &st)) {
-		if (mkdir(path, 0666)) {
-			perror(path);
-			return -1;
-		}
-		return 0;
-	}
-
-	if (S_ISDIR(st.st_mode))
-		return 0;
-
-	fprintf(stderr, "%s exist, and not a directory!\n", path);
-	return -1;
-}
-
 /* List head of all vm */
 static pthread_mutex_t vmmngr_mutex = PTHREAD_MUTEX_INITIALIZER;
 struct vmmngr_list_struct vmmngr_head = { NULL };
@@ -131,7 +111,7 @@ static void _scan_alive_vm(void)
 	int pid;
 	int ret;
 
-	ret = check_dir(ACRN_DM_SOCK_PATH);
+	ret = check_dir(ACRN_DM_SOCK_PATH, CHK_ONLY);
 	if (ret) {
 		printf("%s: Failed to check directory %s, err: %d\n", __func__, ACRN_DM_SOCK_PATH, ret);
 		return;
@@ -228,13 +208,13 @@ static void _scan_added_vm(void)
 	char suffix[PATH_LEN];
 	int ret;
 
-	ret = check_dir(ACRN_CONF_PATH);
+	ret = check_dir(ACRN_CONF_PATH, CHK_ONLY);
 	if (ret) {
 		printf("%s: Failed to check directory %s, err: %d\n", __func__, ACRN_CONF_PATH, ret);
 		return;
 	}
 
-	ret = check_dir(ACRN_CONF_PATH_ADD);
+	ret = check_dir(ACRN_CONF_PATH_ADD, CHK_ONLY);
 	if (ret) {
 		printf("%s: Failed to check directory %s, err: %d\n", __func__, ACRN_CONF_PATH_ADD, ret);
 		return;

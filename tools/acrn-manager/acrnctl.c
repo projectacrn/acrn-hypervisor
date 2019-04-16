@@ -86,7 +86,7 @@ static int check_name(const char *name)
 		return -1;
 
 	if (strnlen(name, MAX_VM_OS_NAME_LEN) >= MAX_VM_OS_NAME_LEN) {
-		printf("(%s) size exceed MAX_VM_OS_NAME_LEN:%u\n", name,MAX_VM_OS_NAME_LEN);
+		printf("(%s) size exceed MAX_VM_OS_NAME_LEN:%u\n", name, MAX_VM_OS_NAME_LEN);
 		return -1;
 	}
 
@@ -425,7 +425,7 @@ static int acrnctl_do_stop(int argc, char *argv[])
 		return -1;
 	}
 	if (s->state == VM_CREATED) {
-		printf("%s is already (%s)\n", argv[1],state_str[s->state]);
+		printf("%s is already (%s)\n", argv[1], state_str[s->state]);
 		return -1;
 	}
 	return stop_vm(argv[1]);
@@ -490,15 +490,15 @@ static int acrnctl_do_del(int argc, char *argv[])
 		return -1;
 	}
 	if (s->state != VM_CREATED) {
-		printf("can't delete %s(%s)\n", argv[1],state_str[s->state]);
+		printf("can't delete %s(%s)\n", argv[1], state_str[s->state]);
 		return -1;
 	}
-	if (snprintf(cmd, sizeof(cmd), "rm -f %s/%s.sh",ACRN_CONF_PATH_ADD, argv[1]) >= sizeof(cmd)) {
+	if (snprintf(cmd, sizeof(cmd), "rm -f %s/%s.sh", ACRN_CONF_PATH_ADD, argv[1]) >= sizeof(cmd)) {
 		printf("WARN: cmd is truncated\n");
 		return -1;
 	}
 	system(cmd);
-	if (snprintf(cmd, sizeof(cmd), "rm -f %s/%s.args",ACRN_CONF_PATH_ADD, argv[1]) >= sizeof(cmd)) {
+	if (snprintf(cmd, sizeof(cmd), "rm -f %s/%s.args", ACRN_CONF_PATH_ADD, argv[1]) >= sizeof(cmd)) {
 		printf("WARN: cmd is truncated\n");
 		return -1;
 	}
@@ -547,7 +547,7 @@ static int acrnctl_do_pause(int argc, char *argv[])
 			ret = pause_vm(argv[1]);
 			break;
 		default:
-			printf("%s current state %s, can't pause\n",argv[1], state_str[s->state]);
+			printf("%s current state %s, can't pause\n", argv[1], state_str[s->state]);
 	}
 
 	return ret;
@@ -573,7 +573,7 @@ static int acrnctl_do_continue(int argc, char *argv[])
 			ret = continue_vm(argv[1]);
 			break;
 		default:
-			printf("%s current state %s, can't continue\n",argv[1], state_str[s->state]);
+			printf("%s current state %s, can't continue\n", argv[1], state_str[s->state]);
 	}
 
 	return ret;
@@ -596,7 +596,7 @@ static int acrnctl_do_suspend(int argc, char *argv[])
 			ret = suspend_vm(argv[1]);
 			break;
 		default:
-			printf("%s current state %s, can't suspend\n",argv[1], state_str[s->state]);
+			printf("%s current state %s, can't suspend\n", argv[1], state_str[s->state]);
 	}
 
 	return ret;
@@ -626,7 +626,7 @@ static int acrnctl_do_resume(int argc, char *argv[])
 			printf("resume %s reason(0x%x\n", argv[1], reason);
 			break;
 		default:
-			printf("%s current state %s, can't resume\n",argv[1], state_str[s->state]);
+			printf("%s current state %s, can't resume\n", argv[1], state_str[s->state]);
 	}
 
 	return ret;
@@ -677,13 +677,13 @@ static int acrnctl_do_reset(int argc, char *argv[])
 				break;
 			}
 			if (wait_vm_stop(argv[1], STOP_TIMEOUT)) {
-				printf("Failed to stop %s in %u sec, reset failed\n",argv[1], STOP_TIMEOUT);
+				printf("Failed to stop %s in %u sec, reset failed\n", argv[1], STOP_TIMEOUT);
 				break;
 			}
 			ret = start_vm(argv[1]);
 			break;
 		default:
-			printf("%s current state: %s, can't reset\n",argv[1], state_str[s->state]);
+			printf("%s current state: %s, can't reset\n", argv[1], state_str[s->state]);
 	}
 	return ret;
 }

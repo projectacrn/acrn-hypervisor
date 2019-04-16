@@ -670,7 +670,7 @@ static const char optString[] = "t";
 
 int main(int argc, char *argv[])
 {
-	int opt;
+	int opt, ret;
 
 	while ((opt = getopt(argc, argv, optString)) != -1) {
 		switch (opt) {
@@ -688,6 +688,18 @@ int main(int argc, char *argv[])
 		platform_has_hw_ioc = 0;
 	}
 	
+	ret = check_dir(ACRN_DM_BASE_PATH, CHK_CREAT);
+	if (ret) {
+		fprintf(stderr, "%s %d\r\n", __FUNCTION__, __LINE__);
+		return -1;
+	}
+
+	ret = check_dir(ACRN_DM_SOCK_PATH, CHK_CREAT);
+	if (ret) {
+		fprintf(stderr, "%s %d\r\n", __FUNCTION__, __LINE__);
+		return -1;
+	}
+
 	/* create listening thread */
 	acrnd_fd = mngr_open_un(ACRND_NAME, MNGR_SERVER);
 	if (acrnd_fd < 0) {

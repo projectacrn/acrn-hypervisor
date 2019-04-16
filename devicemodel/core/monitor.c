@@ -225,28 +225,6 @@ int acrn_parse_intr_monitor(const char *opt)
 	return 0;
 }
 
-
-/* helpers */
-/* Check if @path is a directory, and create if not exist */
-static int check_dir(const char *path)
-{
-	struct stat st;
-
-	if (stat(path, &st)) {
-		if (mkdir(path, 0666)) {
-			perror(path);
-			return -1;
-		}
-		return 0;
-	}
-
-	if (S_ISDIR(st.st_mode))
-		return 0;
-
-	fprintf(stderr, "%s exist, and not a directory!\n", path);
-	return -1;
-}
-
 struct vm_ops {
 	char name[16];
 	void *arg;
@@ -426,13 +404,13 @@ int monitor_init(struct vmctx *ctx)
 	int ret;
 	char path[128] = {};
 
-	ret = check_dir("/run/acrn/");
+	ret = check_dir(ACRN_DM_BASE_PATH, CHK_CREAT);
 	if (ret) {
 		fprintf(stderr, "%s %d\r\n", __FUNCTION__, __LINE__);
 		goto dir_err;
 	}
 
-	ret = check_dir("/run/acrn/mngr");
+	ret = check_dir(ACRN_DM_SOCK_PATH, CHK_CREAT);
 	if (ret) {
 		fprintf(stderr, "%s %d\r\n", __FUNCTION__, __LINE__);
 		goto dir_err;
