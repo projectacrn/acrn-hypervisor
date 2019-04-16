@@ -10,12 +10,6 @@
 #include <acrn_common.h>
 #include "acrn_mngr.h"
 
-#define ACRN_CONF_PATH		"/usr/share/acrn/conf"
-#define ACRN_CONF_PATH_ADD	ACRN_CONF_PATH "/add"
-#define ACRN_CONF_TIMER_LIST	ACRN_CONF_PATH "/timer_list"
-
-#define ACRN_DM_SOCK_PATH	"/run/acrn/mngr"
-
 enum vm_state {
 	VM_STATE_UNKNOWN = 0,
 	VM_CREATED,		/* VM created / awaiting start (boot) */
