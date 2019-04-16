@@ -157,7 +157,9 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 		if ((vm_id < CONFIG_MAX_VM_NUM)
 			&& (!is_valid_vm(get_vm_from_vmid(vm_id)))) {
 			vm_config = get_vm_config(vm_id);
-			vm_config->guest_flags |= cv.vm_flag;
+
+			/* Filter out the bits should not set by DM and then assign it to guest_flags */
+			vm_config->guest_flags |= (cv.vm_flag & DM_OWNED_GUEST_FLAG_MASK);
 
 			/* GUEST_FLAG_RT must be set if we have GUEST_FLAG_LAPIC_PASSTHROUGH set in guest_flags */
 			if (((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)

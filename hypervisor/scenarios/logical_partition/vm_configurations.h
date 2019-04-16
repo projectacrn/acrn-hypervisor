@@ -7,6 +7,9 @@
 #ifndef VM_CONFIGURATIONS_H
 #define VM_CONFIGURATIONS_H
 
+/* Bits mask of guest flags that can be programmed by device model. Other bits are set by hypervisor only */
+#define DM_OWNED_GUEST_FLAG_MASK	0UL
+
 #define CONFIG_MAX_VM_NUM	2U
 
 /* The VM CONFIGs like:
