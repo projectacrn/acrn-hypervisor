@@ -100,7 +100,9 @@ int	vm_attach_ioreq_client(struct vmctx *ctx);
 int	vm_notify_request_done(struct vmctx *ctx, int vcpu);
 void	vm_clear_ioreq(struct vmctx *ctx);
 void	vm_set_suspend_mode(enum vm_suspend_how how);
+#ifdef DM_DEBUG
 void	notify_vmloop_thread(void);
+#endif
 int	vm_get_suspend_mode(void);
 void	vm_destroy(struct vmctx *ctx);
 int	vm_parse_memsize(const char *optarg, size_t *memsize);

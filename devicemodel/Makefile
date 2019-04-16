@@ -9,6 +9,7 @@ DM_BUILD_VERSION ?=
 DM_BUILD_TAG ?=
 
 CC ?= gcc
+RELEASE ?= 0
 
 CFLAGS := -g -O0 -std=gnu11
 CFLAGS += -D_GNU_SOURCE
@@ -41,6 +42,10 @@ else
 CFLAGS += -fstack-protector
 endif
 endif
+endif
+
+ifeq ($(RELEASE),0)
+CFLAGS += -DDM_DEBUG
 endif
 
 LDFLAGS += -Wl,-z,noexecstack

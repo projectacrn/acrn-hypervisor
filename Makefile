@@ -58,8 +58,8 @@ sbl-hypervisor:
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE)
 
 devicemodel: tools
-	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) clean
-	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) DM_BUILD_VERSION=$(BUILD_VERSION) DM_BUILD_TAG=$(BUILD_TAG)
+	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) RELEASE=$(RELEASE) clean
+	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) DM_BUILD_VERSION=$(BUILD_VERSION) DM_BUILD_TAG=$(BUILD_TAG) RELEASE=$(RELEASE)
 
 tools:
 	mkdir -p $(TOOLS_OUT)
