@@ -26,7 +26,6 @@
  * $FreeBSD$
  */
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -45,7 +44,6 @@ static struct {
 	int		flags;
 	inout_func_t	handler;
 	void		*arg;
-	bool		enabled;
 } inout_handlers[MAX_IOPORTS];
 
 static int
@@ -115,11 +113,6 @@ emulate_inout(struct vmctx *ctx, int *pvcpu, struct pio_request *pio_request)
 		if (!(flags & IOPORT_F_OUT))
 			return -1;
 	}
-
-	if (inout_handlers[port].enabled == false) {
-		return -1;
-	}
-
 	retval = handler(ctx, *pvcpu, in, port, bytes,
 		(uint32_t *)&(pio_request->value), arg);
 	return retval;
@@ -149,42 +142,6 @@ init_inout(void)
 }
 
 int
-disable_inout(struct inout_port *iop)
-{
-	int i;
-
-	if (!VERIFY_IOPORT(iop->port, iop->size)) {
-		printf("invalid input: port:0x%x, size:%d",
-				iop->port, iop->size);
-		return -1;
-	}
-
-	for (i = iop->port; i < iop->port + iop->size; i++) {
-		inout_handlers[i].enabled = false;
-	}
-
-	return 0;
-}
-
-int
-enable_inout(struct inout_port *iop)
-{
-	int i;
-
-	if (!VERIFY_IOPORT(iop->port, iop->size)) {
-		printf("invalid input: port:0x%x, size:%d",
-				iop->port, iop->size);
-		return -1;
-	}
-
-	for (i = iop->port; i < iop->port + iop->size; i++) {
-		inout_handlers[i].enabled = true;
-	}
-
-	return 0;
-}
-
-int
 register_inout(struct inout_port *iop)
 {
 	int i;
@@ -211,7 +168,6 @@ register_inout(struct inout_port *iop)
 		inout_handlers[i].flags = iop->flags;
 		inout_handlers[i].handler = iop->handler;
 		inout_handlers[i].arg = iop->arg;
-		inout_handlers[i].enabled = true;
 	}
 
 	return 0;
