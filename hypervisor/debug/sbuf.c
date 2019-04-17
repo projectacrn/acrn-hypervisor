@@ -121,3 +121,14 @@ int32_t sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva)
 
 	return 0;
 }
+
+void sbuf_reset(uint16_t pcpu_id)
+{
+	uint32_t sbuf_id;
+
+	if (pcpu_id < get_pcpu_nums()) {
+		for (sbuf_id = 0U; sbuf_id < ACRN_SBUF_ID_MAX; sbuf_id++) {
+			per_cpu(sbuf, pcpu_id)[sbuf_id] = 0U;
+		}
+	}
+}
