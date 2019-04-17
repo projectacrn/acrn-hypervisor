@@ -112,16 +112,15 @@ void ptirq_release_entry(struct ptirq_remapping_info *entry)
 {
 	uint64_t rflags;
 
-	/*
-	 * remove entry from softirq list
-	 * is required before calling ptirq_release_entry.
-	 */
 	spinlock_irqsave_obtain(&entry->vm->softirq_dev_lock, &rflags);
 	list_del_init(&entry->softirq_node);
+	del_timer(&entry->intr_delay_timer);
 	spinlock_irqrestore_release(&entry->vm->softirq_dev_lock, rflags);
-	atomic_clear32(&entry->active, ACTIVE_FLAG);
+
 	bitmap_clear_nolock((entry->ptdev_entry_id) & 0x3FU,
 		&ptirq_entry_bitmaps[((entry->ptdev_entry_id) & 0x3FU) >> 6U]);
+
+	(void)memset((void *)entry, 0U, sizeof(struct ptirq_remapping_info));
 }
 
 /* interrupt context */
@@ -176,18 +175,8 @@ int32_t ptirq_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_i
 
 void ptirq_deactivate_entry(struct ptirq_remapping_info *entry)
 {
-	uint64_t rflags;
-
 	atomic_clear32(&entry->active, ACTIVE_FLAG);
-
 	free_irq(entry->allocated_pirq);
-	entry->allocated_pirq = IRQ_INVALID;
-
-	/* remove from softirq list if added */
-	spinlock_irqsave_obtain(&entry->vm->softirq_dev_lock, &rflags);
-	list_del_init(&entry->softirq_node);
-	del_timer(&entry->intr_delay_timer);
-	spinlock_irqrestore_release(&entry->vm->softirq_dev_lock, rflags);
 }
 
 void ptdev_init(void)
@@ -207,8 +196,9 @@ void ptdev_release_all_entries(const struct acrn_vm *vm)
 	/* VM already down */
 	for (idx = 0U; idx < CONFIG_MAX_PT_IRQ_ENTRIES; idx++) {
 		entry = &ptirq_entries[idx];
-		if (entry->vm == vm) {
+		if ((entry->vm == vm) && is_entry_active(entry)) {
 			spinlock_obtain(&ptdev_lock);
+			ptirq_deactivate_entry(entry);
 			ptirq_release_entry(entry);
 			spinlock_release(&ptdev_lock);
 		}
