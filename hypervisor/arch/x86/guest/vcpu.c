@@ -582,6 +582,8 @@ void reset_vcpu(struct acrn_vcpu *vcpu)
 	vlapic = vcpu_vlapic(vcpu);
 	vlapic_reset(vlapic);
 
+	sbuf_reset(vcpu->pcpu_id);
+
 	reset_vcpu_regs(vcpu);
 }
 
