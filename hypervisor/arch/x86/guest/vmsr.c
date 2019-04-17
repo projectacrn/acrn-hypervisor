@@ -44,6 +44,9 @@ static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 	MSR_IA32_APIC_BASE,
 	MSR_IA32_PERF_CTL,
 	MSR_IA32_FEATURE_CONTROL,
+
+	MSR_IA32_MCG_CAP,
+	MSR_IA32_MCG_STATUS,
 };
 
 #define NUM_MTRR_MSRS	13U
@@ -443,6 +446,12 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		v = MSR_IA32_FEATURE_CONTROL_LOCK;
 		break;
 	}
+	case MSR_IA32_MCG_CAP:
+	case MSR_IA32_MCG_STATUS:
+	{
+		v = 0U;
+		break;
+	}
 	default:
 	{
 		if (is_x2apic_msr(msr)) {
@@ -589,6 +598,8 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		err = vlapic_set_apicbase(vcpu_vlapic(vcpu), v);
 		break;
 	}
+	case MSR_IA32_MCG_CAP:
+	case MSR_IA32_MCG_STATUS:
 	case MSR_IA32_FEATURE_CONTROL:
 	{
 		err = -EACCES;

@@ -366,9 +366,6 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 				}
 			}
 
-			/* mask Machine Check Exception */
-			*edx &= ~CPUID_EDX_MCE;
-
 			/* mask Debug Store feature */
 			*edx &= ~CPUID_EDX_DTES;
 
