@@ -174,6 +174,8 @@ static int32_t vcpu_inject_vlapic_int(struct acrn_vcpu *vcpu)
 		}
 	}
 
+	vlapic_update_tpr_threshold(vlapic);
+
 	return ret;
 }
 
