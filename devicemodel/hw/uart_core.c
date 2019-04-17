@@ -434,6 +434,9 @@ uart_write(struct uart_vdev *uart, int offset, uint8_t value)
 		uart->thre_int_pending = true;
 		break;
 	case REG_IER:
+		if (((uart->ier & IER_ETXRDY) == 0) &&
+				((value & IER_ETXRDY) != 0))
+			uart->thre_int_pending = true;
 		/*
 		 * Apply mask so that bits 4-7 are 0
 		 * Also enables bits 0-3 only if they're 1
@@ -553,12 +556,8 @@ uart_read(struct uart_vdev *uart, int offset)
 		/*
 		 * Reading the IIR register clears the THRE INT.
 		 */
-		if (intr_reason == IIR_TXRDY) {
+		if (intr_reason == IIR_TXRDY)
 			uart->thre_int_pending = false;
-			uart_toggle_intr(uart);
-		}
-		/* THRE INT is re-generated since the THR register is always empty in here */
-		uart->thre_int_pending = true;
 
 		iir |= intr_reason;
 
