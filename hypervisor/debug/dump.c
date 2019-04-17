@@ -252,6 +252,7 @@ void asm_assert(int32_t line, const char *file, const char *txt)
 void dump_intr_excp_frame(const struct intr_excp_ctx *ctx)
 {
 	const char *name = "Not defined";
+	uint64_t cr2_val;
 
 	pr_acrnlog("\n\n================================================");
 	pr_acrnlog("================================\n=\n");
@@ -278,6 +279,8 @@ void dump_intr_excp_frame(const struct intr_excp_ctx *ctx)
 			ctx->rflags, ctx->gp_regs.r14, ctx->gp_regs.r15);
 	pr_acrnlog("= ERRCODE=0x%016llX   CS=0x%016llX   SS=0x%016llX\n",
 			ctx->error_code, ctx->cs, ctx->ss);
+	asm volatile ("movq %%cr2, %0" : "=r" (cr2_val));
+	pr_acrnlog("= CR2=0x%016llX", cr2_val);
 	pr_acrnlog("\r\n");
 
 	pr_acrnlog("=====================================================");
