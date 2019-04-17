@@ -150,15 +150,15 @@ config SERIAL_PIO_BASE
 
 config COM_BASE
 	hex "Base address of the vuart port"
-	depends on !RELEASE
-	default 0x3f8
+	default 0 if RELEASE
+	default 0x3f8 if !RELEASE
 	help
 	  Base address of the vuart port.
 
 config COM_IRQ
 	int "IRQ of the vuart port"
-	depends on !RELEASE
-	default 4
+	default 0 if RELEASE
+	default 4 if !RELEASE
 	help
 	  IRQ of the vuart port.
 

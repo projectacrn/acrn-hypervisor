@@ -7,6 +7,7 @@
 #include <vm_config.h>
 #include <vm_configurations.h>
 #include <acrn_common.h>
+#include <vuart.h>
 
 extern struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[VM0_CONFIG_PCI_PTDEV_NUM];
 extern struct acrn_vm_pci_ptdev_config vm1_pci_ptdevs[VM1_CONFIG_PCI_PTDEV_NUM];
@@ -37,6 +38,18 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 				consoleblank=0 tsc=reliable xapic_phys"
 		},
 		.vm_vuart = true,
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM2_BASE,
+			.irq = COM2_IRQ,
+			.t_vuart.vm_id = 1U,
+			.t_vuart.vuart_id = 1U,
+		},
 		.pci_ptdev_num = VM0_CONFIG_PCI_PTDEV_NUM,
 		.pci_ptdevs = vm0_pci_ptdevs,
 		.mptable = &vm_mptables[0],
@@ -65,6 +78,18 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 				consoleblank=0 tsc=reliable xapic_phys"
 		},
 		.vm_vuart = true,
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM2_BASE,
+			.irq = COM2_IRQ,
+			.t_vuart.vm_id = 0U,
+			.t_vuart.vuart_id = 1U,
+		},
 		.pci_ptdev_num = VM1_CONFIG_PCI_PTDEV_NUM,
 		.pci_ptdevs = vm1_pci_ptdevs,
 		.mptable = &vm_mptables[1],
