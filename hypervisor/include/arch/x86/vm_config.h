@@ -15,6 +15,7 @@
 #include <vm_configurations.h>
 
 #define PLUG_CPU(n)		(1U << (n))
+#define MAX_VUART_NUM_PER_VM	2U
 
 /*
  * PRE_LAUNCHED_VM is launched by ACRN hypervisor, with LAPIC_PT;
@@ -32,6 +33,32 @@ struct acrn_vm_mem_config {
 	uint64_t start_hpa;	/* the start HPA of VM memory configuration, for pre-launched VMs only */
 	uint64_t size;		/* VM memory size configuration */
 };
+
+struct target_vuart {
+	uint8_t vm_id;		/* target VM id */
+	uint8_t vuart_id;	/* target vuart index in a VM */
+};
+
+enum vuart_type {
+	VUART_LEGACY_PIO = 0,	/* legacy PIO vuart */
+	VUART_PCI,		/* PCI vuart, may removed */
+};
+
+union vuart_addr {
+	uint16_t port_base;		/* addr for legacy type */
+	struct {			/* addr for pci type */
+		uint8_t f : 3;		/* BITs 0-2 */
+		uint8_t d : 5;		/* BITs 3-7 */
+		uint8_t b;		/* BITs 8-15 */
+	} bdf;
+};
+
+struct vuart_config {
+	enum vuart_type type;		/* legacy PIO or PCI  */
+	union vuart_addr addr;		/* port addr if in legacy type, or bdf addr if in pci type */
+	uint16_t irq;
+	struct target_vuart t_vuart;	/* target vuart */
+} __aligned(8);
 
 struct acrn_vm_os_config {
 	char name[MAX_VM_OS_NAME_LEN];			/* OS name, useful for debug */
@@ -62,6 +89,7 @@ struct acrn_vm_config {
 	uint16_t clos;					/* if guest_flags has GUEST_FLAG_CLOS_REQUIRED, then VM use this CLOS */
 
 	bool			vm_vuart;
+	struct vuart_config vuart[MAX_VUART_NUM_PER_VM];/* vuart configuration for VM */
 	struct mptable_info	*mptable;		/* Pointer to mptable struct if VM type is pre-launched */
 } __aligned(8);
 

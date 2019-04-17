@@ -35,6 +35,17 @@
 #define RX_BUF_SIZE		256U
 #define TX_BUF_SIZE		8192U
 
+#define COM1_BASE		0x3F8U
+#define COM2_BASE		0x2F8U
+#define COM3_BASE		0x3E8U
+#define COM4_BASE		0x2E8U
+#define INVALID_COM_BASE	0U
+
+#define COM1_IRQ		4U
+#define COM2_IRQ		3U
+#define COM3_IRQ		6U
+#define COM4_IRQ		7U
+
 struct fifo {
 	char *buf;
 	uint32_t rindex;	/* index to read from */
