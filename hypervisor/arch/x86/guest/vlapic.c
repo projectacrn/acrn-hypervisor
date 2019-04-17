@@ -1316,6 +1316,28 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 	return ret;	/* handled completely in the kernel */
 }
 
+static inline uint32_t vlapic_find_highest_irr(const struct acrn_vlapic *vlapic)
+{
+	const struct lapic_regs *lapic = &(vlapic->apic_page);
+	uint32_t i, val, bitpos, vec = 0U;
+	const struct lapic_reg *irrptr;
+
+	irrptr = &lapic->irr[0];
+
+	/* i ranges effectively from 7 to 1 */
+	for (i = 8U; i > 1U; ) {
+		i--;
+		val = atomic_load32(&irrptr[i].v);
+		if (val != 0U) {
+			bitpos = (uint32_t)fls32(val);
+			vec = (i * 32U) + bitpos;
+			break;
+		}
+	}
+
+	return vec;
+}
+
 /**
  * @brief Find a deliverable virtual interrupts for vLAPIC in irr.
  *
@@ -1330,32 +1352,20 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
  *	   result of calling this function.
  *	   This function is only for case that APICv/VID is NOT supported.
  */
-bool
-vlapic_find_deliverable_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
+bool vlapic_find_deliverable_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
 {
 	const struct lapic_regs *lapic = &(vlapic->apic_page);
-	uint32_t i, vector, val, bitpos;
-	const struct lapic_reg *irrptr;
+	uint32_t vec;
 	bool ret = false;
 
-	irrptr = &lapic->irr[0];
-
-	/* i ranges effectively from 7 to 0 */
-	for (i = 8U; i > 0U; ) {
-		i--;
-		val = atomic_load32(&irrptr[i].v);
-		bitpos = (uint32_t)fls32(val);
-		if (bitpos != INVALID_BIT_INDEX) {
-			vector = (i * 32U) + bitpos;
-			if (prio(vector) > prio(lapic->ppr.v)) {
-				if (vecptr != NULL) {
-					*vecptr = vector;
-				}
-				ret = true;
-			}
-			break;
+	vec = vlapic_find_highest_irr(vlapic);
+	if (prio(vec) > prio(lapic->ppr.v)) {
+		ret = true;
+		if (vecptr != NULL) {
+			*vecptr = vec;
 		}
 	}
+
 	return ret;
 }
 
@@ -2419,8 +2429,35 @@ int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
 	return err;
 }
 
-int32_t tpr_below_threshold_vmexit_handler(__unused struct acrn_vcpu *vcpu)
+/*
+ * TPR threshold (32 bits). Bits 3:0 of this field determine the threshold
+ * below which bits 7:4 of VTPR (see Section 29.1.1) cannot fall.
+ */
+void vlapic_update_tpr_threshold(const struct acrn_vlapic *vlapic)
 {
-	pr_err("Unhandled %s.", __func__);
+	uint32_t irr, tpr, threshold;
+
+	tpr = vlapic->apic_page.tpr.v;
+	tpr = ((tpr & 0xf0U) >> 4U);
+	irr = vlapic_find_highest_irr(vlapic);
+	irr >>= 4U;
+	threshold = (irr > tpr) ? 0U : irr;
+
+	exec_vmwrite32(VMX_TPR_THRESHOLD, threshold);
+}
+
+int32_t tpr_below_threshold_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
+
+	vlapic_update_ppr(vlapic);
+	/*
+	 * Once we come here, the vTPR must small than IRR.
+	 * set TPR threshold to 0 to bypass VM-Execution Control Fields check
+	 * since vcpu_inject_vlapic_int will update TPR threshold aright.
+	 */
+	exec_vmwrite32(VMX_TPR_THRESHOLD, 0U);
+	vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
+
 	return 0;
 }
