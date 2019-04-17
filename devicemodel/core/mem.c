@@ -60,7 +60,7 @@ RB_PROTOTYPE_STATIC(mmio_rb_tree, mmio_rb_range, mr_link, mmio_rb_range_compare)
  * consecutive addresses in a range, it makes sense to cache the
  * result of a lookup.
  */
-static struct mmio_rb_range	*mmio_hint;
+static struct mmio_rb_range	*mmio_hint __aligned(sizeof(struct mmio_rb_range *));
 
 static pthread_rwlock_t mmio_rwlock;
 
@@ -156,16 +156,18 @@ emulate_mem(struct vmctx *ctx, struct mmio_request *mmio_req)
 {
 	uint64_t paddr = mmio_req->address;
 	int size = mmio_req->size;
-	struct mmio_rb_range *entry = NULL;
+	struct mmio_rb_range *hint, *entry = NULL;
 	int err;
 
 	pthread_rwlock_rdlock(&mmio_rwlock);
+
 	/*
 	 * First check the per-VM cache
 	 */
-	if (mmio_hint && paddr >= mmio_hint->mr_base &&
-			paddr <= mmio_hint->mr_end)
-		entry = mmio_hint;
+	hint = mmio_hint;
+
+	if (hint && paddr >= hint->mr_base && paddr <= hint->mr_end)
+		entry = hint;
 	else if (mmio_rb_lookup(&mmio_rb_root, paddr, &entry) == 0)
 		/* Update the per-VM cache */
 		mmio_hint = entry;
