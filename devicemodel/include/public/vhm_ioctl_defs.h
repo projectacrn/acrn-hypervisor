@@ -64,6 +64,7 @@
 /* General */
 #define IC_ID_GEN_BASE                  0x0UL
 #define IC_GET_API_VERSION             _IC_ID(IC_ID, IC_ID_GEN_BASE + 0x00)
+#define IC_GET_PLATFORM_INFO           _IC_ID(IC_ID, IC_ID_GEN_BASE + 0x03)
 
 /* VM management */
 #define IC_ID_VM_BASE                  0x10UL
@@ -204,6 +205,25 @@ struct api_version {
 	/** minor version of VHM API */
 	uint32_t minor_version;
 };
+
+/**
+ * @brief data structure to track VHM platform information
+ */
+struct platform_info {
+	/** Hardware Information */
+	/** Physical CPU number */
+	uint16_t cpu_num;
+
+	/** Align the size of version & hardware info to 128Bytes. */
+	uint8_t reserved0[126];
+
+	/** Configuration Information */
+	/** Maximum vCPU number for one VM. */
+	uint16_t max_vcpus_per_vm;
+
+	/** Align the size of Configuration info to 128Bytes. */
+	uint8_t reserved1[126];
+} __aligned(8);
 
 struct acrn_ioeventfd {
 #define ACRN_IOEVENTFD_FLAG_PIO		0x01
