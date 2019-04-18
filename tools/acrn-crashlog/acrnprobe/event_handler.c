@@ -17,6 +17,7 @@
 #include "log_sys.h"
 #include "event_handler.h"
 #include "startupreason.h"
+#include "android_events.h"
 
 /* Watchdog timeout in second*/
 #define WDT_TIMEOUT 300
@@ -135,6 +136,7 @@ static void *event_handle(void *unused __attribute__((unused)))
 	int id;
 	struct sender_t *sender;
 	struct event_t *e;
+	struct vm_event_t *vme;
 
 	while ((e = event_dequeue())) {
 		/* here we only handle internal event */
@@ -173,6 +175,13 @@ static void *event_handle(void *unused __attribute__((unused)))
 					break;
 		}
 
+		if (e->event_type == VM) {
+			vme = (struct vm_event_t *)e->private;
+			if (vme->vm_msg)
+				free(vme->vm_msg);
+			if (vme)
+				free(vme);
+		}
 		if ((e->dir))
 			free(e->dir);
 		free(e);

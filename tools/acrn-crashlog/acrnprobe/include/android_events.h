@@ -11,7 +11,12 @@ extern char *loop_dev;
 
 #define VMEVT_HANDLED 0
 #define VMEVT_DEFER -1
-#define VMEVT_MISSLOG -2
+
+struct vm_event_t {
+	char *vm_msg;
+	size_t vm_msg_len;
+	const struct vm_t *vm;
+};
 
 #define ANDROID_LOGS_DIR "/logs/"
 #define IGN_SPACES "%*[[[:space:]]*]"

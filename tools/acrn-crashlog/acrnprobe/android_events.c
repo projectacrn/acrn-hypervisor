@@ -130,11 +130,13 @@ static int get_vms_history(const struct sender_t *sender)
 			vm->datafs = NULL;
 			continue;
 		}
+
+		e2fs_close(vm->datafs);
+		vm->datafs = NULL;
+
 		if (!size) {
 			LOGE("empty vm_history from (%s).\n", vm->name);
 			vm->history_data = NULL;
-			e2fs_close(vm->datafs);
-			vm->datafs = NULL;
 			continue;
 		}
 
@@ -153,7 +155,15 @@ static int get_vms_history(const struct sender_t *sender)
 	return 0;
 }
 
-static void sync_lines_stage1(struct sender_t *sender)
+/**
+ * There are 2 stages in vm events sync.
+ * Stage1: detect new vm events and record them into log_vmrecordid file.
+ * Stage2: push the recorded events to event_queue, the senders will do
+ *         the corresponding process.
+ *
+ * The design reason is giving UOS some time to get log stored.
+ */
+static void detect_new_events(struct sender_t *sender)
 {
 	int id;
 	struct vm_t *vm;
@@ -170,7 +180,7 @@ static void sync_lines_stage1(struct sender_t *sender)
 
 		data = vm->history_data;
 		data_size = vm->history_size[sender->id];
-		last_key = &vm->last_synced_line_key[sender->id][0];
+		last_key = &vm->last_evt_detected[sender->id][0];
 		if (*last_key) {
 			start = strstr(data, last_key);
 			if (start == NULL) {
@@ -201,12 +211,12 @@ static void sync_lines_stage1(struct sender_t *sender)
 			if (len == -1)
 				break;
 
+			start = strchr(line_to_sync, '\n');
 			if (str_split_ere(line_to_sync, len + 1, vm_format,
 					  strlen(vm_format), vmkey,
 					  sizeof(vmkey)) != 1) {
 				LOGE("get an invalid line from (%s), skip\n",
 				     vm->name);
-				start = strchr(line_to_sync, '\n');
 				continue;
 			}
 
@@ -215,12 +225,11 @@ static void sync_lines_stage1(struct sender_t *sender)
 			     !strcmp(vmkey, "00000000000000000000")) {
 				LOGE("invalid key (%s) from (%s)\n",
 				     vmkey, vm->name);
-				start = strchr(line_to_sync, '\n');
 				continue;
 			}
 
 			LOGD("stage1 %s\n", vmkey);
-			*(char *)(mempcpy(vm->last_synced_line_key[sender->id],
+			*(char *)(mempcpy(vm->last_evt_detected[sender->id],
 					  vmkey, ANDROID_EVT_KEY_LEN)) = '\0';
 			if (vmrecord_new(&sender->vmrecord, vm->name,
 					  vmkey) == -1)
@@ -239,7 +248,7 @@ static char *next_record(const struct mm_file_t *file, const char *fstart,
 	return get_line(tag, tlen, file->begin, file->size, fstart, len);
 }
 
-static void sync_lines_stage2(struct sender_t *sender,
+static void fire_detected_events(struct sender_t *sender,
 			int (*fn)(const char*, size_t, const struct vm_t *))
 {
 	struct mm_file_t *recos;
@@ -298,10 +307,7 @@ static void sync_lines_stage2(struct sender_t *sender,
 		res = fn(hist_line, len + 1, vm);
 		if (res == VMEVT_HANDLED)
 			vmrecord_mark(&sender->vmrecord, vmkey,
-				      strnlen(vmkey, sizeof(vmkey)), SUCCESS);
-		else if (res == VMEVT_MISSLOG)
-			vmrecord_mark(&sender->vmrecord, vmkey,
-				      strnlen(vmkey, sizeof(vmkey)), MISS_LOG);
+				      strnlen(vmkey, sizeof(vmkey)), ON_GOING);
 	}
 
 out:
@@ -310,7 +316,7 @@ out:
 }
 
 /* This function only for initialization */
-static void get_last_line_synced(struct sender_t *sender)
+static void get_last_evt_detected(struct sender_t *sender)
 {
 	int id;
 	struct vm_t *vm;
@@ -322,7 +328,7 @@ static void get_last_line_synced(struct sender_t *sender)
 			continue;
 
 		/* generally only exec for each vm once */
-		if (vm->last_synced_line_key[sender->id][0])
+		if (vm->last_evt_detected[sender->id][0])
 			continue;
 
 		if (vmrecord_last(&sender->vmrecord, vm->name, vm->name_len,
@@ -335,7 +341,7 @@ static void get_last_line_synced(struct sender_t *sender)
 			continue;
 		}
 
-		*(char *)(mempcpy(vm->last_synced_line_key[sender->id], vmkey,
+		*(char *)(mempcpy(vm->last_evt_detected[sender->id], vmkey,
 				  ANDROID_EVT_KEY_LEN)) = '\0';
 
 	}
@@ -358,6 +364,11 @@ static char *setup_loop_dev(void)
 	}
 
 	devnr = loopdev_num_get_free();
+	if (devnr < 0) {
+		LOGE("failed to get free loop device\n");
+		return NULL;
+	}
+
 	for (i = 0; i < devnr; i++) {
 		res = snprintf(loop_dev_tmp, ARRAY_SIZE(loop_dev_tmp),
 			       "/dev/loop%d", i);
@@ -419,21 +430,21 @@ void refresh_vm_history(struct sender_t *sender,
 		return;
 	}
 
-	get_last_line_synced(sender);
+	get_last_evt_detected(sender);
 	get_vms_history(sender);
 
-	sync_lines_stage2(sender, fn);
-	sync_lines_stage1(sender);
+	/* read events from vmrecords and mark them as ongoing */
+	fire_detected_events(sender, fn);
+
+	/* add events to vmrecords */
+	detect_new_events(sender);
+
 	for_each_vm(id, vm, conf) {
 		if (!vm)
 			continue;
 		if (vm->history_data) {
 			free(vm->history_data);
 			vm->history_data = NULL;
-		}
-		if (vm->datafs) {
-			e2fs_close(vm->datafs);
-			vm->datafs = NULL;
 		}
 	}
 }

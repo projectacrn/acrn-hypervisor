@@ -586,8 +586,7 @@ static void telemd_send_reboot(void)
 	free(class);
 }
 
-static int telemd_new_vmevent(const char *line_to_sync,
-				size_t len, const struct vm_t *vm)
+static void telemd_send_vmevent(struct event_t *e)
 {
 	char event[ANDROID_WORD_LEN];
 	char longtime[ANDROID_WORD_LEN];
@@ -603,26 +602,20 @@ static int telemd_new_vmevent(const char *line_to_sync,
 	int i;
 	uint32_t severity;
 	int res;
-	int ret = VMEVT_HANDLED;
+	struct vm_event_t *vme;
 
-	/* VM events in history_event look like this:
-	 *
-	 * "CRASH   xxxxxxxxxxxxxxxxxxxx  2017-11-11/03:12:59  JAVACRASH
-	 * /data/logs/crashlog0_xxxxxxxxxxxxxxxxxxxx"
-	 * "REBOOT  xxxxxxxxxxxxxxxxxxxx  2011-11-11/11:20:51  POWER-ON
-	 * 0000:00:00"
-	 */
 	const char * const vm_format =
 		ANDROID_ENEVT_FMT ANDROID_KEY_FMT ANDROID_LONGTIME_FMT
 		ANDROID_TYPE_FMT ANDROID_LINE_REST_FMT;
 
-	res = str_split_ere(line_to_sync, len, vm_format, strlen(vm_format),
-			    event, sizeof(event), vmkey, sizeof(vmkey),
-			    longtime, sizeof(longtime),
+	vme = (struct vm_event_t *)e->private;
+	res = str_split_ere(vme->vm_msg, vme->vm_msg_len, vm_format,
+			    strlen(vm_format), event, sizeof(event),
+			    vmkey, sizeof(vmkey), longtime, sizeof(longtime),
 			    type, sizeof(type), rest, sizeof(rest));
 	if (res != 5) {
-		LOGE("get an invalid line from (%s), skip\n", vm->name);
-		return VMEVT_HANDLED;
+		LOGE("get an invalid line from (%s), skip\n", vme->vm->name);
+		return;
 	}
 
 	if (strcmp(event, "CRASH") == 0)
@@ -633,30 +626,18 @@ static int telemd_new_vmevent(const char *line_to_sync,
 	/* if line contains log, fill vmlogpath */
 	log = strstr(rest, ANDROID_LOGS_DIR);
 	if (log) {
-		struct sender_t *crashlog = get_sender_by_name("crashlog");
 		const char *logf;
-		size_t logflen;
-		int res;
 
-		if (!crashlog)
-			return VMEVT_HANDLED;
-
+		if (!e->dir)
+			return;
 		logf = log + sizeof(ANDROID_LOGS_DIR) - 1;
-		logflen = &rest[0] + strnlen(rest, PATH_MAX) - logf;
-		res = find_file(crashlog->outdir, crashlog->outdir_len, logf,
-				logflen, 1, &vmlogpath, 1);
-		if (res == -1) {
-			LOGE("failed to find (%s) in (%s)\n",
-			     logf, crashlog->outdir);
-			return VMEVT_DEFER;
-		} else if (res == 0)
-			return VMEVT_DEFER;
+		if (asprintf(&vmlogpath, "%s/%s", e->dir, logf) == -1)
+			return;
 	}
 
-	res = asprintf(&class, "%s/%s/%s", vm->name, event, type);
+	res = asprintf(&class, "%s/%s/%s", vme->vm->name, event, type);
 	if (res < 0) {
 		LOGE("compute string failed, out of memory\n");
-		ret = VMEVT_DEFER;
 		goto free_vmlogpath;
 	}
 
@@ -664,15 +645,12 @@ static int telemd_new_vmevent(const char *line_to_sync,
 		  KEY_LONG);
 	if (eventid == NULL) {
 		LOGE("generate eventid failed, error (%s)\n", strerror(errno));
-		ret = VMEVT_DEFER;
 		goto free_class;
 	}
 
 	if (!vmlogpath) {
-		res = telemd_send_data("no logs", eventid, severity, class);
-		if (res == -1)
-			ret = VMEVT_DEFER;
-
+		telemd_send_data("vm event doesn't contain logs", eventid,
+				 severity, class);
 		goto free;
 	}
 
@@ -682,33 +660,15 @@ static int telemd_new_vmevent(const char *line_to_sync,
 		for (i = 0; i < count; i++) {
 			if (!strstr(files[i], "/.") &&
 			    !strstr(files[i], "/..")) {
-				res = telemd_send_data(files[i], eventid,
-						       severity, class);
-				if (res == -1)
-					ret = VMEVT_DEFER;
+				telemd_send_data(files[i], eventid, severity,
+						 class);
 			}
-		}
-	} else if (count == 2) {
-		char *content;
-
-		res = asprintf(&content, "no logs under (%s)", vmlogpath);
-		if (res > 0) {
-			res = telemd_send_data(content, eventid, severity,
-					       class);
-			if (res == -1)
-				ret = VMEVT_DEFER;
-			free(content);
-		} else {
-			LOGE("compute string failed, out of memory\n");
-			ret = VMEVT_DEFER;
 		}
 	} else if (count < 0) {
 		LOGE("lsdir (%s) failed, error (%s)\n", vmlogpath,
 		     strerror(-count));
-		ret = VMEVT_DEFER;
 	} else {
 		LOGE("get (%d) files in (%s) ???\n", count, vmlogpath);
-		ret = VMEVT_DEFER;
 	}
 
 	while (count > 0)
@@ -722,7 +682,7 @@ free_vmlogpath:
 	if (vmlogpath)
 		free(vmlogpath);
 
-	return ret;
+	return;
 }
 
 static void telemd_send(struct event_t *e)
@@ -751,8 +711,7 @@ static void telemd_send(struct event_t *e)
 		telemd_send_reboot();
 		break;
 	case VM:
-		refresh_vm_history(get_sender_by_name("telemd"),
-				   telemd_new_vmevent);
+		telemd_send_vmevent(e);
 		break;
 	default:
 		LOGE("unsupoorted event type %d\n", e->event_type);
@@ -946,8 +905,7 @@ static void crashlog_send_reboot(void)
 	free(key);
 }
 
-static int crashlog_new_vmevent(const char *line_to_sync,
-				size_t len, const struct vm_t *vm)
+static void crashlog_send_vmevent(struct event_t *e)
 {
 	char event[ANDROID_WORD_LEN];
 	char longtime[ANDROID_WORD_LEN];
@@ -957,29 +915,28 @@ static int crashlog_new_vmevent(const char *line_to_sync,
 	char *vmlogpath = NULL;
 	char *key;
 	char *log;
-	int ret = VMEVT_HANDLED;
 	int res;
 	int cnt;
-	char *dir;
+	ext2_filsys datafs;
+	struct sender_t *crashlog = get_sender_by_name("crashlog");
+	struct vm_event_t *vme;
+	enum vmrecord_mark_t mark = SUCCESS;
 
-	/* VM events in history_event like this:
-	 *
-	 * "CRASH   xxxxxxxxxxxxxxxxxxxx  2017-11-11/03:12:59  JAVACRASH
-	 * /data/logs/crashlog0_xxxxxxxxxxxxxxxxxxxx"
-	 * "REBOOT  xxxxxxxxxxxxxxxxxxxx  2011-11-11/11:20:51  POWER-ON
-	 * 0000:00:00"
-	 */
 	const char * const vm_format =
 		ANDROID_ENEVT_FMT ANDROID_KEY_FMT ANDROID_LONGTIME_FMT
 		ANDROID_TYPE_FMT ANDROID_LINE_REST_FMT;
 
-	res = str_split_ere(line_to_sync, len, vm_format, strlen(vm_format),
-			    event, sizeof(event), vmkey, sizeof(vmkey),
-			    longtime, sizeof(longtime),
+	if (!crashlog)
+		return;
+
+	vme = (struct vm_event_t *)e->private;
+	res = str_split_ere(vme->vm_msg, vme->vm_msg_len, vm_format,
+			    strlen(vm_format), event, sizeof(event),
+			    vmkey, sizeof(vmkey), longtime, sizeof(longtime),
 			    type, sizeof(type), rest, sizeof(rest));
 	if (res != 5) {
-		LOGE("get an invalid line from (%s), skip\n", vm->name);
-		return ret;
+		LOGE("get an invalid line from (%s), skip\n", vme->vm->name);
+		return;
 	}
 
 	key = generate_event_id("SOS", 3, (const char *)vmkey,
@@ -987,64 +944,72 @@ static int crashlog_new_vmevent(const char *line_to_sync,
 	if (key == NULL) {
 		LOGE("generate event id failed, error (%s)\n",
 		     strerror(errno));
-		return VMEVT_DEFER;
+		mark = WAITING_SYNC;
+		goto mark_record;
 	}
 
 	if (crashlog_check_space() == -1) {
-		hist_raise_event(vm->name, type, "SPACE_FULL", "", key);
+		hist_raise_event(vme->vm->name, type, "SPACE_FULL", "", key);
 		goto free_key;
 	}
 
-	dir = generate_log_dir(MODE_VMEVENT, key);
-	if (dir == NULL) {
+	e->dir = generate_log_dir(MODE_VMEVENT, key);
+	if (e->dir == NULL) {
 		LOGE("generate crashlog dir failed\n");
-		ret = VMEVT_DEFER;
+		mark = WAITING_SYNC;
 		goto free_key;
 	}
 
-	generate_crashfile(dir, event, strnlen(event, ANDROID_WORD_LEN),
+	generate_crashfile(e->dir, event, strnlen(event, ANDROID_WORD_LEN),
 			   key, SHORT_KEY_LENGTH,
 			   type, strnlen(type, ANDROID_WORD_LEN),
-			   vm->name, vm->name_len,
+			   vme->vm->name, vme->vm->name_len,
 			   vmkey, strnlen(vmkey, ANDROID_WORD_LEN), NULL, 0);
 
-	/* if line contains log, we need dump each file in the logdir
-	 */
-	log = strstr(rest, "/logs/");
-	if (log) {
-		vmlogpath = log + 1;
-		res = e2fs_dump_dir_by_dpath(vm->datafs, vmlogpath, dir, &cnt);
-		if (res == -1) {
-			if (cnt) {
-				LOGE("dump (%s) abort at (%d)\n", vmlogpath,
-				     cnt);
-				ret = VMEVT_DEFER;
-			} else {
-				LOGW("(%s) is missing\n", vmlogpath);
-				ret = VMEVT_MISSLOG; /* missing logdir */
-			}
-			if (remove_r(dir) == -1)
-				LOGE("failed to remove %s (%d)\n", dir, -errno);
-			goto free_dir;
-		}
-		if (cnt == 1) {
-			LOGW("(%s) is empty, will sync it in the next loop\n",
-			     vmlogpath);
-			ret = VMEVT_DEFER;
-			if (remove_r(dir) == -1)
-				LOGE("failed to remove %s (%d)\n", dir, -errno);
-			goto free_dir;
-		}
+	log = strstr(rest, ANDROID_LOGS_DIR);
+	if (!log)
+		goto raise_e;
+
+	/* if line contains log, we need dump each file in the logdir */
+	vmlogpath = log + 1;
+
+	if (e2fs_open(loop_dev, &datafs) == -1) {
+		mark = WAITING_SYNC;
+		goto free_key;
 	}
 
-	hist_raise_event(vm->name, type, dir, "", key);
+	res = e2fs_dump_dir_by_dpath(datafs, vmlogpath, e->dir, &cnt);
+	e2fs_close(datafs);
+	if (res == -1) {
+		if (cnt) {
+			LOGE("dump (%s) abort at (%d)\n", vmlogpath, cnt);
+			mark = WAITING_SYNC;
+		} else {
+			LOGW("(%s) doesn't exsit\n", vmlogpath);
+			mark = MISS_LOG;
+		}
+	}
+	if (cnt == 1) {
+		LOGW("%s is empty, will sync it in the next loop\n", vmlogpath);
+		mark = WAITING_SYNC;
+	}
+	if (res == -1 || cnt == -1) {
+		if (remove_r(e->dir) == -1)
+			LOGE("failed to remove %s, %s\n", e->dir,
+			     strerror(errno));
+		free(e->dir);
+		e->dir = NULL;
+		goto free_key;
+	}
 
-free_dir:
-	free(dir);
+raise_e:
+	hist_raise_event(vme->vm->name, type, e->dir, "", key);
 free_key:
 	free(key);
-
-	return ret;
+mark_record:
+	vmrecord_open_mark(&crashlog->vmrecord, vmkey,
+			    strnlen(vmkey, sizeof(vmkey)), mark);
+	return;
 }
 
 static void crashlog_send(struct event_t *e)
@@ -1073,8 +1038,7 @@ static void crashlog_send(struct event_t *e)
 		crashlog_send_reboot();
 		break;
 	case VM:
-		refresh_vm_history(get_sender_by_name("crashlog"),
-				   crashlog_new_vmevent);
+		crashlog_send_vmevent(e);
 		break;
 	default:
 		LOGE("unsupoorted event type %d\n", e->event_type);
@@ -1083,7 +1047,6 @@ static void crashlog_send(struct event_t *e)
 
 int init_sender(void)
 {
-	int ret;
 	int id;
 	int fd;
 	struct sender_t *sender;
@@ -1093,25 +1056,16 @@ int init_sender(void)
 		if (!sender)
 			continue;
 
-		ret = asprintf(&sender->vmrecord.path, "%s/VM_eventsID.log",
-			       sender->outdir);
-		if (ret < 0) {
-			LOGE("compute string failed, out of memory\n");
-			return -ENOMEM;
-		}
-		pthread_mutex_init(&sender->vmrecord.mtx, NULL);
-
 		if (!directory_exists(sender->outdir))
 			if (mkdir_p(sender->outdir) < 0) {
 				LOGE("mkdir (%s) failed, error (%s)\n",
 				     sender->outdir, strerror(errno));
-				return -errno;
+				return -1;
 			}
 
-		ret = init_properties(sender);
-		if (ret) {
+		if (init_properties(sender)) {
 			LOGE("init sender failed\n");
-			exit(-1);
+			return -1;
 		}
 
 		/* touch uptime file, to add inotify */
@@ -1121,16 +1075,23 @@ int init_sender(void)
 			if (fd < 0) {
 				LOGE("failed to open (%s), error (%s)\n",
 				     uptime->path, strerror(errno));
-				return -errno;
+				return -1;
 			}
 			close(fd);
 		}
 
 		if (!strcmp(sender->name, "crashlog")) {
 			sender->send = crashlog_send;
-			ret = prepare_history();
-			if (ret)
+			if (prepare_history())
 				return -1;
+			if (asprintf(&sender->vmrecord.path,
+				     "%s/VM_eventsID.log",
+				       sender->outdir) == -1) {
+				LOGE("failed to asprintf\n");
+				return -1;
+			}
+			pthread_mutex_init(&sender->vmrecord.mtx, NULL);
+
 #ifdef HAVE_TELEMETRICS_CLIENT
 		} else if (!strcmp(sender->name, "telemd")) {
 			sender->send = telemd_send;
