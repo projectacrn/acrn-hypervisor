@@ -48,7 +48,7 @@ struct vm_t {
 	ext2_filsys	datafs;
 	unsigned long	history_size[SENDER_MAX];
 	char		*history_data;
-	char		last_synced_line_key[SENDER_MAX][SHORT_KEY_LENGTH + 1];
+	char		last_evt_detected[SENDER_MAX][SHORT_KEY_LENGTH + 1];
 };
 
 struct log_t {

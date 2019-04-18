@@ -23,6 +23,7 @@
 #include "startupreason.h"
 #include "probeutils.h"
 #include "log_sys.h"
+#include "android_events.h"
 
 #define POLLING_TIMER_SIG 0xCEAC
 
@@ -174,16 +175,40 @@ static struct polling_job_t {
 	void (*fn)(union sigval v);
 } vm_job;
 
+static int create_vm_event(const char *msg, size_t len, const struct vm_t *vm)
+{
+	struct vm_event_t *vme = malloc(sizeof(*vme));
+	struct event_t *e;
+
+	if (!vme)
+		return VMEVT_DEFER;
+
+	vme->vm_msg = strndup(msg, len);
+	if (!vme->vm_msg) {
+		free(vme);
+		return VMEVT_DEFER;
+	}
+
+	vme->vm_msg_len = len;
+	vme->vm = vm;
+
+	e = create_event(VM, "polling", (void *)vme, 0, NULL, 0);
+	if (e) {
+		event_enqueue(e);
+		return VMEVT_HANDLED;
+	}
+
+	free(vme->vm_msg);
+	free(vme);
+	return VMEVT_DEFER;
+}
+
 /**
  * Callback thread of a polling job.
  */
 static void polling_vm(union sigval v __attribute__((unused)))
 {
-
-	struct event_t *e = create_event(VM, "polling", NULL, 0, NULL, 0);
-
-	if (e)
-		event_enqueue(e);
+	refresh_vm_history(get_sender_by_name("crashlog"), create_vm_event);
 }
 
 /**
