@@ -596,7 +596,8 @@ void register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
 /**
  * @brief Register a MMIO handler
  *
- * This API registers a MMIO handler to \p vm before it is launched.
+ * This API registers a MMIO handler to \p vm before it is Started
+ * For Pre-launched VMs, this API can be called after it is Started
  *
  * @param vm The VM to which the MMIO handler is registered
  * @param read_write The handler for emulating accesses to the given range
@@ -604,50 +605,40 @@ void register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
  * @param end The end of the range (exclusive) \p read_write can emulate
  * @param handler_private_data Handler-specific data which will be passed to \p read_write when called
  *
- * @retval 0 Registration succeeds
- * @retval -EINVAL \p read_write is NULL, \p end is not larger than \p start or \p vm has been launched
+ * @return None
  */
-int32_t register_mmio_emulation_handler(struct acrn_vm *vm,
+void register_mmio_emulation_handler(struct acrn_vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
 	uint64_t end, void *handler_private_data)
 {
-	int32_t status = -EINVAL;
 	struct mem_io_node *mmio_node;
 
-	if ((vm->hw.created_vcpus > 0U) && (vm->hw.vcpu_array[0].launched)) {
-		pr_err("register mmio handler after vm launched");
-	} else {
-		/* Ensure both a read/write handler and range check function exist */
-		if ((read_write != NULL) && (end > start)) {
-			if (vm->emul_mmio_regions >= CONFIG_MAX_EMULATED_MMIO_REGIONS) {
-				pr_err("the emulated mmio region is out of range");
-			} else {
-				mmio_node = &(vm->emul_mmio[vm->emul_mmio_regions]);
-				/* Fill in information for this node */
-				mmio_node->read_write = read_write;
-				mmio_node->handler_private_data = handler_private_data;
-				mmio_node->range_start = start;
-				mmio_node->range_end = end;
+	/* Ensure both a read/write handler and range check function exist */
+	if ((read_write != NULL) && (end > start)) {
+		if (vm->emul_mmio_regions >= CONFIG_MAX_EMULATED_MMIO_REGIONS) {
+			pr_err("the emulated mmio region is out of range");
+		} else {
+			mmio_node = &(vm->emul_mmio[vm->emul_mmio_regions]);
+			/* Fill in information for this node */
+			mmio_node->read_write = read_write;
+			mmio_node->handler_private_data = handler_private_data;
+			mmio_node->range_start = start;
+			mmio_node->range_end = end;
 
-				(vm->emul_mmio_regions)++;
+			(vm->emul_mmio_regions)++;
 
-				/*
-				 * SOS would map all its memory at beginning, so we
-				 * should unmap it. But UOS will not, so we shouldn't
-				 * need to unmap it.
-				 */
-				if (is_sos_vm(vm)) {
-					ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp, start, end - start);
-				}
-
-				/* Return success */
-				status = 0;
+			/*
+			 * SOS would map all its memory at beginning, so we
+			 * should unmap it. But UOS will not, so we shouldn't
+			 * need to unmap it.
+			 */
+			if (is_sos_vm(vm)) {
+				ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp, start, end - start);
 			}
+
 		}
 	}
 
-	/* Return status to caller */
-	return status;
 }
 
 /**

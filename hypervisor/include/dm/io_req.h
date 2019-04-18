@@ -265,10 +265,9 @@ void   register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
  * @param end The end of the range (exclusive) \p read_write can emulate
  * @param handler_private_data Handler-specific data which will be passed to \p read_write when called
  *
- * @retval 0 Registration succeeds
- * @retval -EINVAL \p read_write is NULL, \p end is not larger than \p start or \p vm has been launched
+ * @return None
  */
-int32_t register_mmio_emulation_handler(struct acrn_vm *vm,
+void register_mmio_emulation_handler(struct acrn_vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
 	uint64_t end, void *handler_private_data);
 

@@ -163,7 +163,7 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 			addr_lo = round_page_down(msix->mmio_gpa + msix->table_offset);
 		}
 
-		(void)register_mmio_emulation_handler(vdev->vpci->vm, vmsix_table_mmio_access_handler,
+		register_mmio_emulation_handler(vdev->vpci->vm, vmsix_table_mmio_access_handler,
 			addr_lo, addr_hi, vdev);
 	}
 }
