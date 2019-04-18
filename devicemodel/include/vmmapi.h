@@ -143,6 +143,7 @@ int	vm_set_vcpu_regs(struct vmctx *ctx, struct acrn_set_vcpu_regs *cpu_regs);
 
 int	vm_get_cpu_state(struct vmctx *ctx, void *state_buf);
 int	vm_intr_monitor(struct vmctx *ctx, void *intr_buf);
+void	vm_set_watchdog_bite(void);
 void	vm_stop_watchdog(struct vmctx *ctx);
 void	vm_reset_watchdog(struct vmctx *ctx);
 

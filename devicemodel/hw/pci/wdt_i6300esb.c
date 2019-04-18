@@ -387,6 +387,12 @@ pci_wdt_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 }
 
+void
+vm_set_watchdog_bite(void)
+{
+	wdt_timeout = 1;
+}
+
 /* stop/reset watchdog will be invoked during guest enter/exit S3.
  * We stop watchdog timer when guest enter S3 to avoid watchdog trigger
  * guest reset when guest is in S3 state.
