@@ -1,5 +1,5 @@
 /*
- * ProjectAcrn 
+ * ProjectAcrn
  * Acrnctl
  *
  * Copyright (C) 2018 Intel Corporation. All rights reserved.
@@ -37,6 +37,10 @@
 #define SUSPEND_DESC   "Switch virtual machine to suspend state"
 #define RESUME_DESC    "Resume virtual machine from suspend state"
 #define RESET_DESC     "Stop and then start virtual machine VM_NAME"
+#define BLKRESCAN_DESC  "Rescan virtio-blk device attached to a virtual machine"
+
+#define VM_NAME (1)
+#define CMD_ARGS (2)
 
 #define STOP_TIMEOUT	30U
 
@@ -415,6 +419,26 @@ static int acrnctl_do_add(int argc, char *argv[])
 	return ret;
 }
 
+static int acrnctl_do_blkrescan(int argc, char *argv[])
+{
+	struct vmmngr_struct *s;
+
+	s = vmmngr_find(argv[VM_NAME]);
+	if (!s) {
+		printf("can't find %s\n", argv[VM_NAME]);
+		return -1;
+	}
+	if (s->state != VM_STARTED) {
+		printf("%s is in %s state but should be in %s state for blockrescan\n",
+			argv[VM_NAME], state_str[s->state], state_str[VM_STARTED]);
+		return -1;
+	}
+
+	blkrescan_vm(argv[VM_NAME], argv[CMD_ARGS]);
+
+	return 0;
+}
+
 static int acrnctl_do_stop(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
@@ -702,6 +726,18 @@ int df_valid_args(struct acrnctl_cmd *cmd, int argc, char *argv[])
 	return 0;
 }
 
+static int valid_blkrescan_args(struct acrnctl_cmd *cmd, int argc, char *argv[])
+{
+	char df_opt[] = "VM_NAME slot,newpath";
+
+	if (argc != 3 || !strcmp(argv[1], "help")) {
+		printf("acrnctl %s %s\n", cmd->cmd, df_opt);
+		return -1;
+	}
+
+	return 0;
+}
+
 static int valid_add_args(struct acrnctl_cmd *cmd, int argc, char *argv[])
 {
 	char df_opt[32] = "launch_scripts options";
@@ -747,6 +783,7 @@ struct acrnctl_cmd acmds[] = {
 	ACMD("suspend", acrnctl_do_suspend, SUSPEND_DESC, df_valid_args),
 	ACMD("resume", acrnctl_do_resume, RESUME_DESC, df_valid_args),
 	ACMD("reset", acrnctl_do_reset, RESET_DESC, df_valid_args),
+	ACMD("blkrescan", acrnctl_do_blkrescan, BLKRESCAN_DESC, valid_blkrescan_args),
 };
 
 #define NCMD	(sizeof(acmds)/sizeof(struct acrnctl_cmd))

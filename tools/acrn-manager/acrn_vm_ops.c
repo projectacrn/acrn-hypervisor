@@ -456,3 +456,22 @@ int resume_vm(const char *vmname, unsigned reason)
 
 	return ack.data.err;
 }
+
+int blkrescan_vm(const char *vmname, char *devargs)
+{
+	struct mngr_msg req;
+	struct mngr_msg ack;
+
+	req.magic = MNGR_MSG_MAGIC;
+	req.msgid = DM_BLKRESCAN;
+	req.timestamp = time(NULL);
+	strncpy(req.data.devargs, devargs, strlen(devargs)+1);
+
+	send_msg(vmname, &req, &ack);
+
+	if (ack.data.err) {
+		printf("Unable to rescan virtio-blk device in vm. errno(%d)\n", ack.data.err);
+	}
+
+	return ack.data.err;
+}
