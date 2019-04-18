@@ -567,31 +567,6 @@ static inline bool is_x2apic_msr(uint32_t msr)
 	return ((msr >= 0x800U) && (msr < 0x900U));
 }
 
-static inline bool is_x2apic_read_only_msr(uint32_t msr)
-{
-	bool ret = false;
-
-	if ((msr == MSR_IA32_EXT_XAPICID) ||
-		(msr == MSR_IA32_EXT_APIC_VERSION) ||
-		(msr == MSR_IA32_EXT_APIC_PPR) ||
-		(msr == MSR_IA32_EXT_APIC_LDR) ||
-		((msr >= MSR_IA32_EXT_APIC_ISR0) &&
-		(msr <= MSR_IA32_EXT_APIC_IRR7)) ||
-		(msr == MSR_IA32_EXT_APIC_CUR_COUNT)) {
-		ret = true;
-	}
-	return ret;
-}
-
-static inline bool is_x2apic_write_only_msr(uint32_t msr)
-{
-	bool ret = false;
-	if ((msr == MSR_IA32_EXT_APIC_EOI) || (msr == MSR_IA32_EXT_APIC_SELF_IPI)) {
-		ret = true;
-	}
-	return ret;
-}
-
 struct acrn_vcpu;
 
 void init_msr_emulation(struct acrn_vcpu *vcpu);

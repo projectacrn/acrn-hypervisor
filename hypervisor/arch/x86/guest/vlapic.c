@@ -2040,6 +2040,27 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 	return ret;
 }
 
+static bool apicv_basic_x2apic_read_msr_may_valid(uint32_t offset)
+{
+	return (offset != APIC_OFFSET_DFR) && (offset != APIC_OFFSET_ICR_HI);
+}
+
+static bool apicv_advanced_x2apic_read_msr_may_valid(uint32_t offset)
+{
+	return (offset == APIC_OFFSET_TIMER_CCR);
+}
+
+static bool apicv_basic_x2apic_write_msr_may_valid(uint32_t offset)
+{
+	return (offset != APIC_OFFSET_DFR) && (offset != APIC_OFFSET_ICR_HI);
+}
+
+static bool apicv_advanced_x2apic_write_msr_may_valid(uint32_t offset)
+{
+	return (offset != APIC_OFFSET_DFR) && (offset != APIC_OFFSET_ICR_HI) &&
+		(offset != APIC_OFFSET_EOI) && (offset != APIC_OFFSET_SELF_IPI);
+}
+
 int32_t vlapic_x2apic_read(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val)
 {
 	struct acrn_vlapic *vlapic;
@@ -2064,8 +2085,8 @@ int32_t vlapic_x2apic_read(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val)
 				break;
 			}
 		} else {
-			if (!is_x2apic_write_only_msr(msr)) {
-				offset = x2apic_msr_to_regoff(msr);
+			offset = x2apic_msr_to_regoff(msr);
+			if (apicv_ops->x2apic_read_msr_may_valid(offset)) {
 				error = vlapic_read(vlapic, offset, val);
 			}
 		}
@@ -2096,8 +2117,8 @@ int32_t vlapic_x2apic_write(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val)
 				break;
 			}
 		} else {
-			if (!is_x2apic_read_only_msr(msr)) {
-				offset = x2apic_msr_to_regoff(msr);
+			offset = x2apic_msr_to_regoff(msr);
+			if (apicv_ops->x2apic_write_msr_may_valid(offset)) {
 				error = vlapic_write(vlapic, offset, val);
 			}
 		}
@@ -2317,6 +2338,26 @@ bool vlapic_has_pending_delivery_intr(struct acrn_vcpu *vcpu)
 	return apicv_ops->has_pending_delivery_intr(vcpu);
 }
 
+static bool apicv_basic_apic_read_access_may_valid(__unused uint32_t offset)
+{
+	return true;
+}
+
+static bool apicv_advanced_apic_read_access_may_valid(uint32_t offset)
+{
+	return ((offset == APIC_OFFSET_CMCI_LVT) || (offset == APIC_OFFSET_TIMER_CCR));
+}
+
+static bool apicv_basic_apic_write_access_may_valid(uint32_t offset)
+{
+	return (offset != APIC_OFFSET_SELF_IPI);
+}
+
+static bool apicv_advanced_apic_write_access_may_valid(uint32_t offset)
+{
+	return (offset == APIC_OFFSET_CMCI_LVT);
+}
+
 int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int32_t err = 0;
@@ -2342,10 +2383,16 @@ int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 	if (err >= 0) {
 		if (access_type == 1UL) {
 			if (emulate_instruction(vcpu) == 0) {
-				(void)vlapic_write(vlapic, offset, mmio->value);
+				if (apicv_ops->apic_write_access_may_valid(offset)) {
+					(void)vlapic_write(vlapic, offset, mmio->value);
+				}
 			}
 		} else if (access_type == 0UL) {
-			(void)vlapic_read(vlapic, offset, &mmio->value);
+			if (apicv_ops->apic_read_access_may_valid(offset)) {
+				(void)vlapic_read(vlapic, offset, &mmio->value);
+			} else {
+				mmio->value = 0ULL;
+			}
 			err = emulate_instruction(vcpu);
 		} else {
 			pr_err("Unhandled APIC access type: %lu\n", access_type);
@@ -2504,12 +2551,20 @@ static const struct acrn_apicv_ops apicv_basic_ops = {
 	.accept_intr = apicv_basic_accept_intr,
 	.inject_intr = apicv_basic_inject_intr,
 	.has_pending_delivery_intr = apicv_basic_has_pending_delivery_intr,
+	.apic_read_access_may_valid = apicv_basic_apic_read_access_may_valid,
+	.apic_write_access_may_valid = apicv_basic_apic_write_access_may_valid,
+	.x2apic_read_msr_may_valid = apicv_basic_x2apic_read_msr_may_valid,
+	.x2apic_write_msr_may_valid = apicv_basic_x2apic_write_msr_may_valid,
 };
 
 static const struct acrn_apicv_ops apicv_advanced_ops = {
 	.accept_intr = apicv_advanced_accept_intr,
 	.inject_intr = apicv_advanced_inject_intr,
 	.has_pending_delivery_intr = apicv_advanced_has_pending_delivery_intr,
+	.apic_read_access_may_valid  = apicv_advanced_apic_read_access_may_valid,
+	.apic_write_access_may_valid  = apicv_advanced_apic_write_access_may_valid,
+	.x2apic_read_msr_may_valid  = apicv_advanced_x2apic_read_msr_may_valid,
+	.x2apic_write_msr_may_valid  = apicv_advanced_x2apic_write_msr_may_valid,
 };
 
 /*
