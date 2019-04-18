@@ -969,9 +969,7 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t pa
 	        ret = -1;
 	} else {
 		/* Inform vPCI about the interupt info changes */
-#ifndef CONFIG_PARTITION_MODE
 		vpci_set_ptdev_intr_info(target_vm, irq.virt_bdf, irq.phys_bdf);
-#endif
 
 		if (irq.type == IRQ_INTX) {
 			ret = ptirq_add_intx_remapping(target_vm, irq.is.intx.virt_pin,
@@ -1026,9 +1024,7 @@ hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 			 * Inform vPCI about the interupt info changes
 			 * TODO: Need to add bdf info for IRQ_INTX type in devicemodel
 			 */
-#ifndef CONFIG_PARTITION_MODE
 			vpci_reset_ptdev_intr_info(target_vm, irq.virt_bdf, irq.phys_bdf);
-#endif
 
 			ptirq_remove_msix_remapping(target_vm,
 					irq.virt_bdf,
