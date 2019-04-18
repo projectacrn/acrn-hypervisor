@@ -49,9 +49,12 @@ uint16_t get_vmid_by_uuid(const uint8_t *uuid)
 	return vm_id;
 }
 
+/**
+ * @pre vm != NULL
+ */
 bool is_valid_vm(const struct acrn_vm *vm)
 {
-	return (vm != NULL) && (vm->state != VM_STATE_INVALID);
+	return (vm->state != VM_STATE_INVALID);
 }
 
 bool is_sos_vm(const struct acrn_vm *vm)
