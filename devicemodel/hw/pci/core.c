@@ -2397,6 +2397,25 @@ pci_emul_dior(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 	return value;
 }
 
+struct pci_vdev*
+pci_get_vdev_info(int slot)
+{
+	struct businfo *bi;
+	struct slotinfo *si;
+	struct pci_vdev *dev = NULL;
+
+	bi = pci_businfo[0];
+	assert(bi != NULL);
+
+	si = &bi->slotinfo[slot];
+	if (si != NULL)
+		dev = si->si_funcs[0].fi_devi;
+	else
+		fprintf(stderr, "slot=%d is empty!\n", slot);
+
+	return dev;
+}
+
 struct pci_vdev_ops pci_dummy = {
 	.class_name	= "dummy",
 	.vdev_init	= pci_emul_dinit,

@@ -391,6 +391,35 @@ static void handle_query(struct mngr_msg *msg, int client_fd, void *param)
 	mngr_send_msg(client_fd, &ack, NULL, ACK_TIMEOUT);
 }
 
+static void handle_blkrescan(struct mngr_msg *msg, int client_fd, void *param)
+{
+	struct mngr_msg ack;
+	struct vm_ops *ops;
+	int ret = 0;
+	int count = 0;
+
+	ack.magic = MNGR_MSG_MAGIC;
+	ack.msgid = msg->msgid;
+	ack.timestamp = msg->timestamp;
+
+	wakeup_reason = msg->data.reason;
+
+	LIST_FOREACH(ops, &vm_ops_head, list) {
+		if (ops->ops->rescan) {
+			ret += ops->ops->rescan(ops->arg, msg->data.devargs);
+			count++;
+		}
+	}
+
+	if (!count) {
+		ack.data.err = -1;
+		fprintf(stderr, "No handler for id:%u\r\n", msg->msgid);
+	} else
+		ack.data.err = ret;
+
+	mngr_send_msg(client_fd, &ack, NULL, ACK_TIMEOUT);
+}
+
 static struct monitor_vm_ops pmc_ops = {
 	.stop       = NULL,
 	.resume     = vm_monitor_resume,
@@ -432,6 +461,7 @@ int monitor_init(struct vmctx *ctx)
 	ret += mngr_add_handler(monitor_fd, DM_PAUSE, handle_pause, NULL);
 	ret += mngr_add_handler(monitor_fd, DM_CONTINUE, handle_continue, NULL);
 	ret += mngr_add_handler(monitor_fd, DM_QUERY, handle_query, NULL);
+	ret += mngr_add_handler(monitor_fd, DM_BLKRESCAN, handle_blkrescan, NULL);
 
 	if (ret) {
 		pr_err("%s %d\r\n", __func__, __LINE__);

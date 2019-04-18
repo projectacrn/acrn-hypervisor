@@ -39,6 +39,7 @@
 #include "pci_core.h"
 #include "virtio.h"
 #include "block_if.h"
+#include "monitor.h"
 
 #define VIRTIO_BLK_RINGSZ	64
 #define VIRTIO_BLK_MAX_OPTS_LEN	256
@@ -131,6 +132,15 @@ static int virtio_blk_debug;
 #define DPRINTF(params) do { if (virtio_blk_debug) printf params; } while (0)
 #define WPRINTF(params) (printf params)
 
+/*
+ * Flag to indicate VM Monitor Rescan registration.
+ */
+static bool register_vm_monitor_blkrescan = false;
+
+static struct monitor_vm_ops virtio_blk_rescan_ops = {
+	.rescan	= vm_monitor_blkrescan,
+};
+
 struct virtio_blk_ioreq {
 	struct blockif_req req;
 	struct virtio_blk *blk;
@@ -146,6 +156,7 @@ struct virtio_blk {
 	pthread_mutex_t mtx;
 	struct virtio_vq_info vq;
 	struct virtio_blk_config cfg;
+	bool dummy_bctxt; /* Used in blockrescan. Indicate if the bctxt can be used */
 	struct blockif_ctxt *bc;
 	char ident[VIRTIO_BLK_BLK_ID_BYTES + 1];
 	struct virtio_blk_ioreq ios[VIRTIO_BLK_RINGSZ];
@@ -176,7 +187,9 @@ virtio_blk_reset(void *vdev)
 
 	DPRINTF(("virtio_blk: device reset requested !\n"));
 	virtio_reset_dev(&blk->base);
-	blockif_set_wce(blk->bc, blk->original_wce);
+	/* Reset virtio-blk device only on valid bctxt*/
+	if (!blk->dummy_bctxt)
+		blockif_set_wce(blk->bc, blk->original_wce);
 }
 
 static void
@@ -249,6 +262,12 @@ virtio_blk_proc(struct virtio_blk *blk, struct virtio_vq_info *vq)
 	type = vbh->type & ~VBH_FLAG_BARRIER;
 	writeop = ((type == VBH_OP_WRITE) ||
 			(type == VBH_OP_DISCARD));
+
+	if (blk->dummy_bctxt) {
+		WPRINTF(("Block context invalid: Operation cannot be permitted!\n"));
+		virtio_blk_done(&io->req, EPERM);
+		return;
+	}
 
 	if (writeop && blockif_is_ro(blk->bc)) {
 		WPRINTF(("Cannot write to a read-only storage!\n"));
@@ -348,18 +367,55 @@ virtio_blk_get_caps(struct virtio_blk *blk, bool wb)
 	return caps;
 }
 
+static void
+virtio_blk_update_config_space(struct virtio_blk *blk)
+{
+	off_t size = 0;
+	int sectsz = 0, sts = 0, sto = 0;
+
+	size = blockif_size(blk->bc);
+	sectsz = blockif_sectsz(blk->bc);
+	blockif_psectsz(blk->bc, &sts, &sto);
+
+	/* setup virtio block config space */
+	blk->cfg.capacity = size / DEV_BSIZE; /* 512-byte units */
+	blk->cfg.size_max = 0;	/* not negotiated */
+	blk->cfg.seg_max = BLOCKIF_IOV_MAX;
+	blk->cfg.geometry.cylinders = 0;	/* no geometry */
+	blk->cfg.geometry.heads = 0;
+	blk->cfg.geometry.sectors = 0;
+	blk->cfg.blk_size = sectsz;
+	blk->cfg.topology.physical_block_exp =
+	    (sts > sectsz) ? (ffsll(sts / sectsz) - 1) : 0;
+	blk->cfg.topology.alignment_offset =
+	    (sto != 0) ? ((sts - sto) / sectsz) : 0;
+	blk->cfg.topology.min_io_size = 0;
+	blk->cfg.writeback = blockif_get_wce(blk->bc);
+	blk->original_wce = blk->cfg.writeback; /* save for reset */
+	if (blockif_candiscard(blk->bc)) {
+		blk->cfg.max_discard_sectors = blockif_max_discard_sectors(blk->bc);
+		blk->cfg.max_discard_seg = blockif_max_discard_seg(blk->bc);
+		blk->cfg.discard_sector_alignment = blockif_discard_sector_alignment(blk->bc);
+	}
+	blk->base.device_caps =
+		virtio_blk_get_caps(blk, !!blk->cfg.writeback);
+}
 static int
 virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
+	bool dummy_bctxt;
 	char bident[16];
 	struct blockif_ctxt *bctxt;
 	MD5_CTX mdctx;
 	u_char digest[16];
 	struct virtio_blk *blk;
-	off_t size;
-	int i, sectsz, sts, sto;
+	int i;
 	pthread_mutexattr_t attr;
 	int rc;
+
+	bctxt = NULL;
+	/* Assume the bctxt is valid, until identified otherwise */
+	dummy_bctxt = false;
 
 	if (opts == NULL) {
 		printf("virtio_blk: backing device required\n");
@@ -373,15 +429,21 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 				dev->slot, dev->func) >= sizeof(bident)) {
 		WPRINTF(("bident error, please check slot and func\n"));
 	}
-	bctxt = blockif_open(opts, bident);
-	if (bctxt == NULL) {
-		perror("Could not open backing file");
-		return -1;
+
+	/*
+	 * If "nodisk" keyword is found in opts, this is not a valid backend
+	 * file. Skip blockif_open and set dummy bctxt in virtio_blk struct
+	 */
+	if (strstr(opts, "nodisk") != NULL) {
+		dummy_bctxt = true;
+	} else {
+		bctxt = blockif_open(opts, bident);
+		if (bctxt == NULL) {
+			perror("Could not open backing file");
+			return -1;
+		}
 	}
 
-	size = blockif_size(bctxt);
-	sectsz = blockif_sectsz(bctxt);
-	blockif_psectsz(bctxt, &sts, &sto);
 
 	blk = calloc(1, sizeof(struct virtio_blk));
 	if (!blk) {
@@ -390,6 +452,9 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	blk->bc = bctxt;
+	/* Update virtio-blk device struct of dummy ctxt*/
+	blk->dummy_bctxt = dummy_bctxt;
+
 	for (i = 0; i < VIRTIO_BLK_RINGSZ; i++) {
 		struct virtio_blk_ioreq *io = &blk->ios[i];
 
@@ -434,29 +499,9 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		WPRINTF(("virtio_blk: block ident too long\n"));
 	}
 
-	/* setup virtio block config space */
-	blk->cfg.capacity = size / DEV_BSIZE; /* 512-byte units */
-	blk->cfg.size_max = 0;	/* not negotiated */
-	blk->cfg.seg_max = BLOCKIF_IOV_MAX;
-	blk->cfg.geometry.cylinders = 0;	/* no geometry */
-	blk->cfg.geometry.heads = 0;
-	blk->cfg.geometry.sectors = 0;
-	blk->cfg.blk_size = sectsz;
-	blk->cfg.topology.physical_block_exp =
-	    (sts > sectsz) ? (ffsll(sts / sectsz) - 1) : 0;
-	blk->cfg.topology.alignment_offset =
-	    (sto != 0) ? ((sts - sto) / sectsz) : 0;
-	blk->cfg.topology.min_io_size = 0;
-	blk->cfg.topology.opt_io_size = 0;
-	blk->cfg.writeback = blockif_get_wce(blk->bc);
-	blk->original_wce = blk->cfg.writeback; /* save for reset */
-	if (blockif_candiscard(blk->bc)) {
-		blk->cfg.max_discard_sectors = blockif_max_discard_sectors(blk->bc);
-		blk->cfg.max_discard_seg = blockif_max_discard_seg(blk->bc);
-		blk->cfg.discard_sector_alignment = blockif_discard_sector_alignment(blk->bc);
-	}
-	blk->base.device_caps =
-		virtio_blk_get_caps(blk, !!blk->cfg.writeback);
+	/* Setup virtio block config space only for valid backend file*/
+	if (!blk->dummy_bctxt)
+		virtio_blk_update_config_space(blk);
 
 	/*
 	 * Should we move some of this into virtio.c?  Could
@@ -470,11 +515,25 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, VIRTIO_VENDOR);
 
 	if (virtio_interrupt_init(&blk->base, virtio_uses_msix())) {
-		blockif_close(blk->bc);
+		/* call close only for valid bctxt */
+		if (!blk->dummy_bctxt)
+			blockif_close(blk->bc);
 		free(blk);
 		return -1;
 	}
 	virtio_set_io_bar(&blk->base, 0);
+
+	/*
+	 * Register ops for virtio-blk Rescan
+	 */
+	if (register_vm_monitor_blkrescan == false) {
+
+		register_vm_monitor_blkrescan = true;
+		if (monitor_register_vm_ops(&virtio_blk_rescan_ops, ctx,
+						"virtio_blk_rescan") < 0)
+			fprintf(stderr, "Rescan registration to VM monitor failed\n");
+	}
+
 	return 0;
 }
 
@@ -487,11 +546,13 @@ virtio_blk_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (dev->arg) {
 		DPRINTF(("virtio_blk: deinit\n"));
 		blk = (struct virtio_blk *) dev->arg;
-		bctxt = blk->bc;
-		if (blockif_flush_all(bctxt))
-			WPRINTF(("vrito_blk:"
-				"Failed to flush before close\n"));
-		blockif_close(bctxt);
+		/* De-init virtio-blk device only on valid bctxt*/
+		if (!blk->dummy_bctxt) {
+			bctxt = blk->bc;
+			if (blockif_flush_all(bctxt))
+				WPRINTF(("vrito_blk: Failed to flush before close\n"));
+			blockif_close(bctxt);
+		}
 		free(blk);
 	}
 }
@@ -508,7 +569,9 @@ virtio_blk_cfgwrite(void *vdev, int offset, int size, uint32_t value)
 	if ((offset == offsetof(struct virtio_blk_config, writeback))
 		&& (size == 1)) {
 		memcpy(ptr, &value, size);
-		blockif_set_wce(blk->bc, blkcfg->writeback);
+		/* Update write cache enable only on valid bctxt*/
+		if (!blk->dummy_bctxt)
+			blockif_set_wce(blk->bc, blkcfg->writeback);
 		if (blkcfg->writeback)
 			blk->base.device_caps |= VIRTIO_BLK_F_FLUSH;
 		else
@@ -530,6 +593,134 @@ virtio_blk_cfgread(void *vdev, int offset, int size, uint32_t *retval)
 	ptr = (uint8_t *)&blk->cfg + offset;
 	memcpy(retval, ptr, size);
 	return 0;
+}
+
+/*
+ * The following operations are done as part of blk rescan,
+ * 1. Update the backing file for the virtio-blk device,
+ *    with valid file. Basically update the empty file (with dummy bctxt)
+ *    that was passed during VM launch.
+ * 2. Update virtio-blk device configurations that were ignored for dummy
+ *    backing file (dummy bctxt).
+ * 3. Update size associated with valid backing file in the config space.
+ * 4. Notify guest OS, of the new config change.
+ * 5. On this notification, guest will do the following.
+ *	(i). Update virtio-blk capacity.
+ *	(ii).Revalidate the disk.
+ *	(iii). Identify the newly plugged block device.
+ */
+
+/* Initiate Rescan of virtio-blk device */
+int
+virtio_blk_rescan(struct vmctx *ctx, struct pci_vdev *dev, char *newpath)
+{
+	int error = -1;
+	char bident[16];
+	struct blockif_ctxt *bctxt;
+	struct virtio_blk *blk = (struct virtio_blk *) dev->arg;
+
+	if (!blk) {
+		fprintf(stderr, "Invalid virtio_blk device!\n");
+		goto end;
+	}
+
+	/* validate inputs for virtio-blk blockrescan */
+	if (newpath == NULL) {
+		fprintf(stderr, "no path info available\n");
+		goto end;
+	}
+
+	if (strstr(newpath, "nodisk") != NULL) {
+		fprintf(stderr, "no valid backend file found\n");
+		goto end;
+	}
+
+	if (snprintf(bident, sizeof(bident), "%d:%d",
+				dev->slot, dev->func) >= sizeof(bident)) {
+		fprintf(stderr, "bident error, please check slot and func\n");
+		goto end;
+	}
+
+	/* If bctxt is valid, then return error. Current support is only when
+	 * user has passed empty file during VM launch and wants to update it.
+	 * If this is the case, blk->bc would be null.
+	 */
+	if (blk->bc) {
+		fprintf(stderr, "Replacing valid backend file not supported!\n");
+		goto end;
+	}
+
+	fprintf(stderr, "name=%s, Path=%s, ident=%s\n", dev->name, newpath, bident);
+	/* update the bctxt for the virtio-blk device */
+	bctxt = blockif_open(newpath, bident);
+	if (bctxt == NULL) {
+		fprintf(stderr, "Error opening backing file\n");
+		goto end;
+	}
+
+	blk->bc = bctxt;
+	blk->dummy_bctxt = false;
+
+	/* Update virtio-blk device configuration on valid file*/
+	virtio_blk_update_config_space(blk);
+
+	/* Notify guest of config change */
+	virtio_config_changed(dev->arg);
+
+	error = 0;
+end:
+	return error;
+}
+
+int
+vm_monitor_blkrescan(void *arg, char *devargs)
+{
+	char *str;
+	char *str_slot, *str_newpath;
+	int slot;
+	int error = 0;
+	struct pci_vdev *dev;
+	struct vmctx *ctx = (struct vmctx *)arg;
+
+	/*Extract slot,path and additional params from args*/
+	str = strdup(devargs);
+
+	str_slot = strsep(&str, ",");
+	str_newpath = strsep(&str, "");
+
+	if ((str_slot != NULL) && (str_newpath != NULL)) {
+		error = dm_strtoi(str_slot, &str_slot, 10, &slot);
+		if (error) {
+			fprintf(stderr, "Incorrect slot, error=0x%x!\n", error);
+			goto end;
+		}
+
+	} else {
+		fprintf(stderr, "Slot info or path not available!");
+		error = -1;
+		goto end;
+	}
+
+	dev = pci_get_vdev_info(slot);
+	if (dev == NULL) {
+		fprintf(stderr, "vdev info failed for Slot %d\n!", slot);
+		error = -1;
+		goto end;
+	}
+
+	if (strstr(dev->name, "virtio-blk") == NULL) {
+		error = -1;
+		fprintf(stderr, "virtio-blk only supports rescan: found %s at slot %d\n", dev->name, slot);
+	} else {
+		error = virtio_blk_rescan(ctx, dev, str_newpath);
+		if (error) {
+			fprintf(stderr, "virtio-blk rescan failed!");
+		}
+	}
+end:
+	if (str)
+		free(str);
+	return error;
 }
 
 struct pci_vdev_ops pci_ops_virtio_blk = {
