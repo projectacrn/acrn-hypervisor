@@ -107,14 +107,6 @@ config LOG_DESTINATION
 	  are 3 destinations available. Bit 0 represents the serial console, bit
 	  1 the SOS ACRN log and bit 2 NPK log. Effective only in debug builds.
 
-config CPU_UP_TIMEOUT
-	int "Timeout in ms when bringing up secondary CPUs"
-	range 100 200
-	default 100
-	help
-	  A 32-bit integer specifying the timeout in millisecond when waiting
-	  for secondary CPUs to start up.
-
 choice
 	prompt "Serial IO type"
 	depends on !RELEASE
