@@ -316,6 +316,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 
 	/*Disable VM_EXIT for CR3 access*/
 	value32 &= ~(VMX_PROCBASED_CTLS_CR3_LOAD | VMX_PROCBASED_CTLS_CR3_STORE);
+	value32 &= ~(VMX_PROCBASED_CTLS_CR8_LOAD | VMX_PROCBASED_CTLS_CR8_STORE);
 
 	/*
 	 * Disable VM_EXIT for invlpg execution.
@@ -330,9 +331,8 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	 * guest (optional)
 	 */
 	value32 = check_vmx_ctrl(MSR_IA32_VMX_PROCBASED_CTLS2,
-			 VMX_PROCBASED_CTLS2_VAPIC | VMX_PROCBASED_CTLS2_EPT |
-			 VMX_PROCBASED_CTLS2_RDTSCP | VMX_PROCBASED_CTLS2_UNRESTRICT |
-			 VMX_PROCBASED_CTLS2_VAPIC_REGS);
+			VMX_PROCBASED_CTLS2_VAPIC | VMX_PROCBASED_CTLS2_EPT |
+			VMX_PROCBASED_CTLS2_RDTSCP | VMX_PROCBASED_CTLS2_UNRESTRICT);
 
 	if (vcpu->arch.vpid != 0U) {
 		value32 |= VMX_PROCBASED_CTLS2_VPID;
@@ -342,6 +342,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 
 	if (is_apicv_advanced_feature_supported()) {
 		value32 |= VMX_PROCBASED_CTLS2_VIRQ;
+		value32 |= VMX_PROCBASED_CTLS2_VAPIC_REGS;
 	} else {
 		/*
 		 * This field exists only on processors that support
@@ -601,9 +602,10 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 		exec_vmwrite32(VMX_TPR_THRESHOLD, 0U);
 
 		value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS2);
-		value32 &= ~VMX_PROCBASED_CTLS2_VAPIC_REGS;
+		value32 &= ~VMX_PROCBASED_CTLS2_VAPIC;
 		if (is_apicv_advanced_feature_supported()) {
 			value32 &= ~VMX_PROCBASED_CTLS2_VIRQ;
+			value32 &= ~VMX_PROCBASED_CTLS2_VAPIC_REGS;
 		}
 		exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS2, value32);
 
