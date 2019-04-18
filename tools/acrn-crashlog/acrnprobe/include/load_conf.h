@@ -11,6 +11,7 @@
 #include <ext2fs/ext2fs.h>
 #include "event_queue.h"
 #include "probeutils.h"
+#include "vmrecord.h"
 
 #define CONTENT_MAX 10
 #define EXPRESSION_MAX 5
@@ -136,7 +137,7 @@ struct sender_t {
 	struct uptime_t *uptime;
 
 	void (*send)(struct event_t *);
-	char		*log_vmrecordid;
+	struct vmrecord_t vmrecord;
 	int		sw_updated; /* each sender has their own record */
 };
 

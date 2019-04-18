@@ -1093,12 +1093,13 @@ int init_sender(void)
 		if (!sender)
 			continue;
 
-		ret = asprintf(&sender->log_vmrecordid, "%s/VM_eventsID.log",
+		ret = asprintf(&sender->vmrecord.path, "%s/VM_eventsID.log",
 			       sender->outdir);
 		if (ret < 0) {
 			LOGE("compute string failed, out of memory\n");
 			return -ENOMEM;
 		}
+		pthread_mutex_init(&sender->vmrecord.mtx, NULL);
 
 		if (!directory_exists(sender->outdir))
 			if (mkdir_p(sender->outdir) < 0) {
