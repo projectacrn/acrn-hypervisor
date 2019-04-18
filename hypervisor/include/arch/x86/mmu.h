@@ -137,13 +137,6 @@ void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
 void hv_access_memory_region_update(uint64_t base, uint64_t size);
 
 /**
- * @brief VPID allocation
- *
- * @retval 0 VPID overflow
- * @retval >0 the valid VPID
- */
-uint16_t allocate_vpid(void);
-/**
  * @brief Specified signle VPID flush
  *
  * @param[in] vpid the specified VPID

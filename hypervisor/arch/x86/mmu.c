@@ -43,14 +43,6 @@
 static void *ppt_mmu_pml4_addr;
 static uint8_t sanitized_page[PAGE_SIZE] __aligned(PAGE_SIZE);
 
-/*
- * If the logical processor is in VMX non-root operation and
- * the "enable VPID" VM-execution control is 1, the current VPID
- * is the value of the VPID VM-execution control field in the VMCS.
- * (VM entry ensures that this value is never 0000H).
- */
-static uint16_t vmx_vpid_nr = VMX_MIN_NR_VPID;
-
 #define INVEPT_TYPE_SINGLE_CONTEXT      1UL
 #define INVEPT_TYPE_ALL_CONTEXTS        2UL
 #define VMFAIL_INVALID_EPT_VPID				\
@@ -117,25 +109,6 @@ static inline void local_invept(uint64_t type, struct invept_desc desc)
 	if (asm_invept(type, desc) != 0) {
 		pr_dbg("%s, failed. type = %llu, eptp = 0x%llx", __func__, type, desc.eptp);
 	}
-}
-
-uint16_t allocate_vpid(void)
-{
-	uint16_t vpid = atomic_xadd16(&vmx_vpid_nr, 1U);
-
-	/* TODO: vpid overflow */
-	if (vpid >= VMX_MAX_NR_VPID) {
-		pr_err("%s, vpid overflow\n", __func__);
-		/*
-		 * set vmx_vpid_nr to VMX_MAX_NR_VPID to disable vpid
-		 * since next atomic_xadd16 will always large than
-		 * VMX_MAX_NR_VPID.
-		 */
-		vmx_vpid_nr = VMX_MAX_NR_VPID;
-		vpid = 0U;
-	}
-
-	return vpid;
 }
 
 void flush_vpid_single(uint16_t vpid)
