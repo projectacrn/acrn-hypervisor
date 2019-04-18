@@ -84,15 +84,23 @@
 #define VIE_OP_TYPE_TEST	15U
 
 /* struct vie_op.op_flags */
-#define	VIE_OP_F_IMM		(1U << 0U)  /* 16/32-bit immediate operand */
-#define	VIE_OP_F_IMM8		(1U << 1U)  /* 8-bit immediate operand */
-#define	VIE_OP_F_MOFFSET	(1U << 2U)  /* 16/32/64-bit immediate moffset */
-#define	VIE_OP_F_NO_MODRM	(1U << 3U)
-#define	VIE_OP_F_CHECK_GVA_DI   (1U << 4U)  /* for movs, need to check DI */
+#define VIE_OP_F_IMM		(1U << 0U)  /* 16/32-bit immediate operand */
+#define VIE_OP_F_IMM8		(1U << 1U)  /* 8-bit immediate operand */
+#define VIE_OP_F_MOFFSET	(1U << 2U)  /* 16/32/64-bit immediate moffset */
+#define VIE_OP_F_NO_MODRM	(1U << 3U)
+#define VIE_OP_F_CHECK_GVA_DI	(1U << 4U)  /* for movs, need to check DI */
+/*
+ * The VIE_OP_F_BYTE_OP only set when the instruction support
+ * Encoding of Operand Size (w) Bit and the w bit of opcode is 0.
+ * according B.2 GENERAL-PURPOSE INSTRUCTION FORMATS AND ENCODINGS
+ * FOR NON-64-BIT MODES, Vol 2, Intel SDM.
+ */
+#define VIE_OP_F_BYTE_OP	(1U << 5U)  /* 8-bit operands. */
 
 static const struct instr_emul_vie_op two_byte_opcodes[256] = {
 	[0xB6] = {
 		.op_type = VIE_OP_TYPE_MOVZX,
+		.op_flags = VIE_OP_F_BYTE_OP,
 	},
 	[0xB7] = {
 		.op_type = VIE_OP_TYPE_MOVZX,
@@ -103,6 +111,7 @@ static const struct instr_emul_vie_op two_byte_opcodes[256] = {
 	},
 	[0xBE] = {
 		.op_type = VIE_OP_TYPE_MOVSX,
+		.op_flags = VIE_OP_F_BYTE_OP,
 	},
 };
 
@@ -121,12 +130,14 @@ static const struct instr_emul_vie_op one_byte_opcodes[256] = {
 	},
 	[0x88] = {
 		.op_type = VIE_OP_TYPE_MOV,
+		.op_flags = VIE_OP_F_BYTE_OP,
 	},
 	[0x89] = {
 		.op_type = VIE_OP_TYPE_MOV,
 	},
 	[0x8A] = {
 		.op_type = VIE_OP_TYPE_MOV,
+		.op_flags = VIE_OP_F_BYTE_OP,
 	},
 	[0x8B] = {
 		.op_type = VIE_OP_TYPE_MOV,
@@ -141,15 +152,15 @@ static const struct instr_emul_vie_op one_byte_opcodes[256] = {
 	},
 	[0xA4] = {
 		.op_type = VIE_OP_TYPE_MOVS,
-		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_CHECK_GVA_DI
+		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_CHECK_GVA_DI | VIE_OP_F_BYTE_OP,
 	},
 	[0xA5] = {
 		.op_type = VIE_OP_TYPE_MOVS,
-		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_CHECK_GVA_DI
+		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_CHECK_GVA_DI,
 	},
 	[0xAA] = {
 		.op_type = VIE_OP_TYPE_STOS,
-		.op_flags = VIE_OP_F_NO_MODRM
+		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_BYTE_OP,
 	},
 	[0xAB] = {
 		.op_type = VIE_OP_TYPE_STOS,
@@ -158,7 +169,7 @@ static const struct instr_emul_vie_op one_byte_opcodes[256] = {
 	[0xC6] = {
 		/* XXX Group 11 extended opcode - not just MOV */
 		.op_type = VIE_OP_TYPE_MOV,
-		.op_flags = VIE_OP_F_IMM8,
+		.op_flags = VIE_OP_F_IMM8 | VIE_OP_F_BYTE_OP,
 	},
 	[0xC7] = {
 		.op_type = VIE_OP_TYPE_MOV,
@@ -184,12 +195,14 @@ static const struct instr_emul_vie_op one_byte_opcodes[256] = {
 	},
 	[0x84] = {
 		.op_type = VIE_OP_TYPE_TEST,
+		.op_flags = VIE_OP_F_BYTE_OP,
 	},
 	[0x85] = {
 		.op_type = VIE_OP_TYPE_TEST,
 	},
 	[0x08] = {
 		.op_type = VIE_OP_TYPE_OR,
+		.op_flags = VIE_OP_F_BYTE_OP,
 	},
 	[0x09] = {
 		.op_type = VIE_OP_TYPE_OR,
@@ -1892,8 +1905,10 @@ static int32_t decode_opcode(struct instr_emul_vie *vie)
 			 * If w bit of opcode is 1, the operand size is decided
 			 * by prefix and default operand size attribute (handled
 			 * in decode_prefixes).
+			 * The VIE_OP_F_BYTE_OP only set when the instruction support
+			 * Encoding of Operand Size (w) Bit and the w bit of opcode is 0.
 			 */
-			if ((ret == 0) && ((vie->opcode & 0x1U) == 0U)) {
+			if ((ret == 0) && ((vie->op.op_flags & VIE_OP_F_BYTE_OP) != 0U)) {
 				vie->opsize = 1U;
 			}
 		}
