@@ -18,6 +18,7 @@
 #include "fsutils.h"
 #include "history.h"
 #include "loop.h"
+#include "vmrecord.h"
 
 #define VM_WARNING_LINES 2000
 
@@ -106,110 +107,6 @@ static char *next_vm_event(const char *cursor, const char *data,
 	return line_to_sync;
 }
 
-#define VMRECORD_HEAD_LINES 7
-#define VMRECORD_TAG_LEN 9
-#define VMRECORD_TAG_WAITING_SYNC	"      <=="
-#define VMRECORD_TAG_NOT_FOUND		"NOT_FOUND"
-#define VMRECORD_TAG_MISS_LOG		"MISS_LOGS"
-#define VMRECORD_TAG_SUCCESS		"         "
-static int generate_log_vmrecord(const char *path)
-{
-	const char * const head =
-		"/* DONT EDIT!\n"
-		" * This file records VM id synced or about to be synched,\n"
-		" * the tag \"<==\" indicates event waiting to sync.\n"
-		" * the tag \"NOT_FOUND\" indicates event not found in UOS.\n"
-		" * the tag \"MISS_LOGS\" indicates event miss logs in UOS.\n"
-		" */\n\n";
-
-	LOGD("Generate (%s)\n", path);
-	return overwrite_file(path, head);
-}
-
-enum stage1_refresh_type_t {
-	MM_ONLY,
-	MM_FILE
-};
-
-/**
- * There are 2 stages in vm events sync.
- * Stage1: record events to log_vmrecordid file.
- * Stage2: call sender's callback for each recorded events.
- *
- * The design reason is to give UOS some time to log to storage.
- */
-static int refresh_key_synced_stage1(const struct sender_t *sender,
-					struct vm_t *vm, const char *key,
-					size_t klen,
-					enum stage1_refresh_type_t type)
-{
-	char log_new[64];
-	char *log_vmrecordid;
-	int nlen;
-
-	log_vmrecordid = sender->log_vmrecordid;
-	/* the length of key must be 20, and its value can not be
-	 * 00000000000000000000.
-	 */
-	if ((klen == ANDROID_EVT_KEY_LEN) &&
-	    strcmp(key, "00000000000000000000")) {
-		memcpy(vm->last_synced_line_key[sender->id], key, klen);
-		vm->last_synced_line_key[sender->id][klen] = '\0';
-		if (type == MM_ONLY)
-			return 0;
-
-		/* create a log file, so we can locate
-		 * the right place in case of reboot
-		 */
-		if (!file_exists(log_vmrecordid))
-			generate_log_vmrecord(log_vmrecordid);
-
-		nlen = snprintf(log_new, sizeof(log_new), "%s %s %s\n",
-				vm->name, key,
-				VMRECORD_TAG_WAITING_SYNC);
-		if (s_not_expect(nlen, sizeof(log_new))) {
-			LOGE("failed to construct record, key (%s)\n", key);
-			return -1;
-		}
-
-		if (append_file(log_vmrecordid, log_new,
-				strnlen(log_new, 64)) < 0) {
-			LOGE("failed to add new record (%s) to (%s)\n",
-			     log_new, log_vmrecordid);
-			return -1;
-		}
-		return 0;
-	}
-
-	LOGE("try to record an invalid key (%s) for (%s)\n",
-	     key, vm->name);
-	return -1;
-}
-
-enum stage2_refresh_type_t {
-	SUCCESS,
-	NOT_FOUND,
-	MISS_LOG
-};
-
-static int refresh_key_synced_stage2(char *line, size_t len,
-					enum stage2_refresh_type_t type)
-{
-	/* re-mark symbol "<==" for synced key */
-	char *tag = line + len - VMRECORD_TAG_LEN;
-
-	if (type == SUCCESS)
-		memcpy(tag, VMRECORD_TAG_SUCCESS, VMRECORD_TAG_LEN);
-	else if (type == NOT_FOUND)
-		memcpy(tag, VMRECORD_TAG_NOT_FOUND, VMRECORD_TAG_LEN);
-	else if (type == MISS_LOG)
-		memcpy(tag, VMRECORD_TAG_MISS_LOG, VMRECORD_TAG_LEN);
-	else
-		return -1;
-
-	return 0;
-}
-
 static int get_vms_history(const struct sender_t *sender)
 {
 	struct vm_t *vm;
@@ -256,7 +153,7 @@ static int get_vms_history(const struct sender_t *sender)
 	return 0;
 }
 
-static void sync_lines_stage1(const struct sender_t *sender)
+static void sync_lines_stage1(struct sender_t *sender)
 {
 	int id;
 	struct vm_t *vm;
@@ -313,11 +210,21 @@ static void sync_lines_stage1(const struct sender_t *sender)
 				continue;
 			}
 
+			if ((strnlen(vmkey, sizeof(vmkey)) !=
+			     ANDROID_EVT_KEY_LEN) ||
+			     !strcmp(vmkey, "00000000000000000000")) {
+				LOGE("invalid key (%s) from (%s)\n",
+				     vmkey, vm->name);
+				start = strchr(line_to_sync, '\n');
+				continue;
+			}
+
 			LOGD("stage1 %s\n", vmkey);
-			refresh_key_synced_stage1(sender, vm, vmkey,
-						  strnlen(vmkey, sizeof(vmkey)),
-						  MM_FILE);
-			start = strchr(line_to_sync, '\n');
+			*(char *)(mempcpy(vm->last_synced_line_key[sender->id],
+					  vmkey, ANDROID_EVT_KEY_LEN)) = '\0';
+			if (vmrecord_new(&sender->vmrecord, vm->name,
+					  vmkey) == -1)
+				LOGE("failed to new vm record\n");
 		}
 	}
 
@@ -332,25 +239,28 @@ static char *next_record(const struct mm_file_t *file, const char *fstart,
 	return get_line(tag, tlen, file->begin, file->size, fstart, len);
 }
 
-static void sync_lines_stage2(const struct sender_t *sender,
+static void sync_lines_stage2(struct sender_t *sender,
 			int (*fn)(const char*, size_t, const struct vm_t *))
 {
 	struct mm_file_t *recos;
 	char *record;
 	size_t recolen;
 
-	recos = mmap_file(sender->log_vmrecordid);
+	pthread_mutex_lock(&sender->vmrecord.mtx);
+	recos = mmap_file(sender->vmrecord.path);
 	if (!recos) {
-		LOGE("mmap %s failed, strerror(%s)\n", sender->log_vmrecordid,
-						       strerror(errno));
+		LOGE("failed to mmap %s, %s\n", sender->vmrecord.path,
+						strerror(errno));
+		pthread_mutex_unlock(&sender->vmrecord.mtx);
 		return;
 	}
 	if (!recos->size ||
 	    mm_count_lines(recos) < VMRECORD_HEAD_LINES) {
-		LOGE("(%s) invalid\n", sender->log_vmrecordid);
+		LOGE("(%s) invalid\n", sender->vmrecord.path);
 		goto out;
 	}
 
+	sender->vmrecord.recos = recos;
 	for (record = next_record(recos, recos->begin, &recolen); record;
 	     record = next_record(recos, record + recolen, &recolen)) {
 		const char * const record_fmt =
@@ -380,33 +290,33 @@ static void sync_lines_stage2(const struct sender_t *sender,
 				     vm->history_size[sender->id],
 				     vm->history_data, &len);
 		if (!hist_line) {
-			LOGW("mark vmevent(%s) as not-found\n", vmkey);
-			refresh_key_synced_stage2(record, recolen, NOT_FOUND);
+			vmrecord_mark(&sender->vmrecord, vmkey,
+				      strnlen(vmkey, sizeof(vmkey)), NOT_FOUND);
 			continue;
 		}
 
 		res = fn(hist_line, len + 1, vm);
 		if (res == VMEVT_HANDLED)
-			refresh_key_synced_stage2(record, recolen, SUCCESS);
+			vmrecord_mark(&sender->vmrecord, vmkey,
+				      strnlen(vmkey, sizeof(vmkey)), SUCCESS);
 		else if (res == VMEVT_MISSLOG)
-			refresh_key_synced_stage2(record, recolen, MISS_LOG);
+			vmrecord_mark(&sender->vmrecord, vmkey,
+				      strnlen(vmkey, sizeof(vmkey)), MISS_LOG);
 	}
 
 out:
 	unmap_file(recos);
+	pthread_mutex_unlock(&sender->vmrecord.mtx);
 }
 
 /* This function only for initialization */
-static void get_last_line_synced(const struct sender_t *sender)
+static void get_last_line_synced(struct sender_t *sender)
 {
 	int id;
 	struct vm_t *vm;
 
 	for_each_vm(id, vm, conf) {
-		int ret;
-		char *p;
 		char vmkey[ANDROID_WORD_LEN];
-		char vm_name[32];
 
 		if (!vm)
 			continue;
@@ -415,38 +325,19 @@ static void get_last_line_synced(const struct sender_t *sender)
 		if (vm->last_synced_line_key[sender->id][0])
 			continue;
 
-		ret = snprintf(vm_name, sizeof(vm_name), "%s ", vm->name);
-		if (s_not_expect(ret, sizeof(vm_name)))
+		if (vmrecord_last(&sender->vmrecord, vm->name, vm->name_len,
+				  vmkey, sizeof(vmkey)) == -1)
 			continue;
 
-		ret = file_read_key_value_r(vmkey, sizeof(vmkey),
-					    sender->log_vmrecordid,
-					    vm_name, strnlen(vm_name, 32));
-		if (ret == -ENOENT) {
-			LOGD("(%s) does not exist, will generate it\n",
-			     sender->log_vmrecordid);
-			generate_log_vmrecord(sender->log_vmrecordid);
-			continue;
-		} else if (ret == -ENOMSG) {
-			LOGD("couldn't find any records with (%s)\n", vm->name);
-			continue;
-		} else if (ret < 0) {
-			LOGE("failed to search records in (%s), error (%s)\n",
-			     sender->log_vmrecordid, strerror(errno));
+		if (strnlen(vmkey, sizeof(vmkey)) != ANDROID_EVT_KEY_LEN) {
+			LOGE("get an invalid vm event (%s) in (%s)\n",
+			     vmkey, sender->vmrecord.path);
 			continue;
 		}
-		p = strchr(vmkey, ' ');
-		if (p)
-			*p = 0;
 
-		ret = refresh_key_synced_stage1(sender, vm, vmkey,
-						strnlen(vmkey, sizeof(vmkey)),
-						MM_ONLY);
-		if (ret < 0) {
-			LOGE("invalid vm event (%s) in (%s)\n",
-			     vmkey, sender->log_vmrecordid);
-			continue;
-		}
+		*(char *)(mempcpy(vm->last_synced_line_key[sender->id], vmkey,
+				  ANDROID_EVT_KEY_LEN)) = '\0';
+
 	}
 }
 
@@ -507,7 +398,7 @@ static char *setup_loop_dev(void)
  * Note that: fn should return VMEVT_HANDLED to indicate event has been handled.
  *	      fn will be called in a time loop if it returns VMEVT_DEFER.
  */
-void refresh_vm_history(const struct sender_t *sender,
+void refresh_vm_history(struct sender_t *sender,
 		int (*fn)(const char*, size_t, const struct vm_t *))
 {
 	struct vm_t *vm;
@@ -521,6 +412,11 @@ void refresh_vm_history(const struct sender_t *sender,
 		if (!loop_dev)
 			return;
 		LOGI("setup loop dev successful\n");
+	}
+
+	if (vmrecord_gen_ifnot_exists(&sender->vmrecord) == -1) {
+		LOGE("failed to create vmrecord\n");
+		return;
 	}
 
 	get_last_line_synced(sender);

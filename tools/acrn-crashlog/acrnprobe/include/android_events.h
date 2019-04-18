@@ -34,7 +34,7 @@ extern char *loop_dev;
 #define ANDROID_TYPE_FMT "%[[A-Z0-9_:-]{3,16}]" IGN_SPACES
 #define ANDROID_LINE_REST_FMT "%[[^\n]*]" IGN_RESTS
 
-void refresh_vm_history(const struct sender_t *sender,
+void refresh_vm_history(struct sender_t *sender,
 			int (*fn)(const char*, size_t, const struct vm_t *));
 
 #endif

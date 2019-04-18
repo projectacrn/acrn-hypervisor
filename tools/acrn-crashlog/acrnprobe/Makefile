@@ -37,7 +37,8 @@ $(BUILDDIR)/acrnprobe/bin/acrnprobe: $(BUILDDIR)/acrnprobe/obj/main.o \
 	$(BUILDDIR)/acrnprobe/obj/probeutils.o \
 	$(BUILDDIR)/acrnprobe/obj/history.o \
 	$(BUILDDIR)/acrnprobe/obj/android_events.o \
-	$(BUILDDIR)/acrnprobe/obj/loop.o
+	$(BUILDDIR)/acrnprobe/obj/loop.o \
+	$(BUILDDIR)/acrnprobe/obj/vmrecord.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 .PHONY: clean
