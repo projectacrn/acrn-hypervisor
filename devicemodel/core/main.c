@@ -678,8 +678,9 @@ num_vcpus_allowed(struct vmctx *ctx)
 static void
 sig_handler_term(int signo)
 {
-	printf("Receive SIGINT to terminate application...\n");
-	vm_set_suspend_mode(VM_SUSPEND_POWEROFF);
+	printf("Receive SIGINT to full reset application...\n");
+	vm_set_watchdog_bite();
+	vm_set_suspend_mode(VM_SUSPEND_FULL_RESET);
 	mevent_notify();
 }
 
