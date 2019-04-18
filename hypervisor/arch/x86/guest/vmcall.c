@@ -28,7 +28,10 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 	uint64_t param1 = vcpu_get_gpreg(vcpu, CPU_REG_RDI);
 	/* hypercall param2 from guest*/
 	uint64_t param2 = vcpu_get_gpreg(vcpu, CPU_REG_RSI);
-	int32_t ret;
+	/* in case hypercall param1 is a vm id */
+	uint16_t vm_id = (uint16_t)param1;
+	bool vmid_is_valid = (vm_id < CONFIG_MAX_VM_NUM) ? true : false;
+	int32_t ret = -1;
 
 	switch (hypcall_id) {
 	case HC_SOS_OFFLINE_CPU:
@@ -57,69 +60,89 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 
 	case HC_DESTROY_VM:
 		/* param1: vmid */
-		spinlock_obtain(&vmm_hypercall_lock);
-		ret = hcall_destroy_vm((uint16_t)param1);
-		spinlock_release(&vmm_hypercall_lock);
+		if (vmid_is_valid) {
+			spinlock_obtain(&vmm_hypercall_lock);
+			ret = hcall_destroy_vm(vm_id);
+			spinlock_release(&vmm_hypercall_lock);
+		}
 		break;
 
 	case HC_START_VM:
 		/* param1: vmid */
-		spinlock_obtain(&vmm_hypercall_lock);
-		ret = hcall_start_vm((uint16_t)param1);
-		spinlock_release(&vmm_hypercall_lock);
+		if (vmid_is_valid) {
+			spinlock_obtain(&vmm_hypercall_lock);
+			ret = hcall_start_vm(vm_id);
+			spinlock_release(&vmm_hypercall_lock);
+		}
 		break;
 
 	case HC_RESET_VM:
 		/* param1: vmid */
-		spinlock_obtain(&vmm_hypercall_lock);
-		ret = hcall_reset_vm((uint16_t)param1);
-		spinlock_release(&vmm_hypercall_lock);
+		if (vmid_is_valid) {
+			spinlock_obtain(&vmm_hypercall_lock);
+			ret = hcall_reset_vm(vm_id);
+			spinlock_release(&vmm_hypercall_lock);
+		}
 		break;
 
 	case HC_PAUSE_VM:
 		/* param1: vmid */
-		spinlock_obtain(&vmm_hypercall_lock);
-		ret = hcall_pause_vm((uint16_t)param1);
-		spinlock_release(&vmm_hypercall_lock);
+		if (vmid_is_valid) {
+			spinlock_obtain(&vmm_hypercall_lock);
+			ret = hcall_pause_vm(vm_id);
+			spinlock_release(&vmm_hypercall_lock);
+		}
 		break;
 
 	case HC_CREATE_VCPU:
 		/* param1: vmid */
-		spinlock_obtain(&vmm_hypercall_lock);
-		ret = hcall_create_vcpu(vm, (uint16_t)param1, param2);
-		spinlock_release(&vmm_hypercall_lock);
+		if (vmid_is_valid) {
+			spinlock_obtain(&vmm_hypercall_lock);
+			ret = hcall_create_vcpu(vm, vm_id, param2);
+			spinlock_release(&vmm_hypercall_lock);
+		}
 		break;
 
 	case HC_SET_VCPU_REGS:
 		/* param1: vmid */
-		spinlock_obtain(&vmm_hypercall_lock);
-		ret = hcall_set_vcpu_regs(vm, (uint16_t)param1, param2);
-		spinlock_release(&vmm_hypercall_lock);
+		if (vmid_is_valid) {
+			spinlock_obtain(&vmm_hypercall_lock);
+			ret = hcall_set_vcpu_regs(vm, vm_id, param2);
+			spinlock_release(&vmm_hypercall_lock);
+		}
 		break;
 
 	case HC_SET_IRQLINE:
 		/* param1: vmid */
-		ret = hcall_set_irqline(vm, (uint16_t)param1,
-				(struct acrn_irqline_ops *)&param2);
+		if (vmid_is_valid) {
+			ret = hcall_set_irqline(vm, vm_id,
+					(struct acrn_irqline_ops *)&param2);
+		}
 		break;
 
 	case HC_INJECT_MSI:
 		/* param1: vmid */
-		ret = hcall_inject_msi(vm, (uint16_t)param1, param2);
+		if (vmid_is_valid) {
+			ret = hcall_inject_msi(vm, vm_id, param2);
+		}
 		break;
 
 	case HC_SET_IOREQ_BUFFER:
 		/* param1: vmid */
-		spinlock_obtain(&vmm_hypercall_lock);
-		ret = hcall_set_ioreq_buffer(vm, (uint16_t)param1, param2);
-		spinlock_release(&vmm_hypercall_lock);
+		if (vmid_is_valid) {
+			spinlock_obtain(&vmm_hypercall_lock);
+			ret = hcall_set_ioreq_buffer(vm, vm_id, param2);
+			spinlock_release(&vmm_hypercall_lock);
+		}
 		break;
 
 	case HC_NOTIFY_REQUEST_FINISH:
 		/* param1: vmid
 		 * param2: vcpu_id */
-		ret = hcall_notify_ioreq_finish((uint16_t)param1,
-			(uint16_t)param2);
+		if (vmid_is_valid) {
+			ret = hcall_notify_ioreq_finish(vm_id,
+				(uint16_t)param2);
+		}
 		break;
 
 	case HC_VM_SET_MEMORY_REGIONS:
@@ -127,7 +150,10 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 		break;
 
 	case HC_VM_WRITE_PROTECT_PAGE:
-		ret = hcall_write_protect_page(vm, (uint16_t)param1, param2);
+		/* param1: vmid */
+		if (vmid_is_valid) {
+			ret = hcall_write_protect_page(vm, vm_id, param2);
+		}
 		break;
 
 	/*
@@ -140,27 +166,37 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 
 	case HC_VM_GPA2HPA:
 		/* param1: vmid */
-		ret = hcall_gpa_to_hpa(vm, (uint16_t)param1, param2);
+		if (vmid_is_valid) {
+			ret = hcall_gpa_to_hpa(vm, vm_id, param2);
+		}
 		break;
 
 	case HC_ASSIGN_PTDEV:
 		/* param1: vmid */
-		ret = hcall_assign_ptdev(vm, (uint16_t)param1, param2);
+		if (vmid_is_valid) {
+			ret = hcall_assign_ptdev(vm, vm_id, param2);
+		}
 		break;
 
 	case HC_DEASSIGN_PTDEV:
 		/* param1: vmid */
-		ret = hcall_deassign_ptdev(vm, (uint16_t)param1, param2);
+		if (vmid_is_valid) {
+			ret = hcall_deassign_ptdev(vm, vm_id, param2);
+		}
 		break;
 
 	case HC_SET_PTDEV_INTR_INFO:
 		/* param1: vmid */
-		ret = hcall_set_ptdev_intr_info(vm, (uint16_t)param1, param2);
+		if (vmid_is_valid) {
+			ret = hcall_set_ptdev_intr_info(vm, vm_id, param2);
+		}
 		break;
 
 	case HC_RESET_PTDEV_INTR_INFO:
 		/* param1: vmid */
-		ret = hcall_reset_ptdev_intr_info(vm, (uint16_t)param1, param2);
+		if (vmid_is_valid) {
+			ret = hcall_reset_ptdev_intr_info(vm, vm_id, param2);
+		}
 		break;
 
 	case HC_WORLD_SWITCH:
@@ -180,7 +216,10 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 		break;
 
 	case HC_VM_INTR_MONITOR:
-		ret = hcall_vm_intr_monitor(vm, (uint16_t)param1, param2);
+		/* param1: vmid */
+		if (vmid_is_valid) {
+			ret = hcall_vm_intr_monitor(vm, vm_id, param2);
+		}
 		break;
 
 	default:

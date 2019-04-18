@@ -428,11 +428,11 @@ struct acrn_vuart *vuart_console_active(void)
 
 	if (console_vmid < CONFIG_MAX_VM_NUM) {
 		vm = get_vm_from_vmid(console_vmid);
+		if (is_valid_vm(vm)) {
+			vu = vm_console_vuart(vm);
+		}
 	}
 
-	if (is_valid_vm(vm)) {
-		vu = vm_console_vuart(vm);
-	}
 	return (vu && vu->active) ? vu : NULL;
 }
 
