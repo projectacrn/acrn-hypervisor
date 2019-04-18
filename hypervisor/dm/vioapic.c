@@ -457,7 +457,7 @@ vioapic_init(struct acrn_vm *vm)
 
 	vioapic_reset(vm);
 
-	(void)register_mmio_emulation_handler(vm,
+	register_mmio_emulation_handler(vm,
 			vioapic_mmio_access_handler,
 			(uint64_t)VIOAPIC_BASE,
 			(uint64_t)VIOAPIC_BASE + VIOAPIC_SIZE,
