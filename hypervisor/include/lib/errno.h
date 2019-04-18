@@ -23,5 +23,7 @@
 #define ENODEV		19
 /** Indicates that argument is not valid. */
 #define EINVAL		22
+/** Indicates that timeout occurs. */
+#define ETIMEDOUT	110
 
 #endif /* ERRNO_H */
