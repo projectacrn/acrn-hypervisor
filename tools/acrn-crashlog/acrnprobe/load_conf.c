@@ -291,22 +291,6 @@ enum event_type_t get_conf_by_wd(int wd, void **private)
 
 }
 
-int sender_id(const struct sender_t *s)
-{
-	int id;
-	struct sender_t *sender;
-
-	for_each_sender(id, sender, conf) {
-		if (!sender)
-			continue;
-
-		if (s == sender)
-			return id;
-	}
-
-	return -1;
-}
-
 struct sender_t *get_sender_by_name(const char *name)
 {
 	int id;
@@ -724,6 +708,7 @@ static int parse_sender(xmlNodePtr cur, struct sender_t *sender)
 			} \
 			memset(mem, 0, sizeof(*mem)); \
 			conf.mem[id] = mem; \
+			mem->id = id; \
 			res = parse_##mem(node, mem); \
 			if (res) { \
 				free(mem); \

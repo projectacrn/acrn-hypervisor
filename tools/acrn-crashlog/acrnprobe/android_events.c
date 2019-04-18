@@ -145,20 +145,16 @@ static int refresh_key_synced_stage1(const struct sender_t *sender,
 {
 	char log_new[64];
 	char *log_vmrecordid;
-	int sid;
 	int nlen;
 
-	sid = sender_id(sender);
-	if (sid == -1)
-		return -1;
 	log_vmrecordid = sender->log_vmrecordid;
 	/* the length of key must be 20, and its value can not be
 	 * 00000000000000000000.
 	 */
 	if ((klen == ANDROID_EVT_KEY_LEN) &&
 	    strcmp(key, "00000000000000000000")) {
-		memcpy(vm->last_synced_line_key[sid], key, klen);
-		vm->last_synced_line_key[sid][klen] = '\0';
+		memcpy(vm->last_synced_line_key[sender->id], key, klen);
+		vm->last_synced_line_key[sender->id][klen] = '\0';
 		if (type == MM_ONLY)
 			return 0;
 
@@ -219,12 +215,7 @@ static int get_vms_history(const struct sender_t *sender)
 	struct vm_t *vm;
 	unsigned long size;
 	int ret;
-	int sid;
 	int id;
-
-	sid = sender_id(sender);
-	if (sid == -1)
-		return -1;
 
 	for_each_vm(id, vm, conf) {
 		if (!vm)
@@ -251,7 +242,7 @@ static int get_vms_history(const struct sender_t *sender)
 		}
 
 		/* warning large history file once */
-		if (size == vm->history_size[sid])
+		if (size == vm->history_size[sender->id])
 			continue;
 
 		ret = strcnt(vm->history_data, '\n');
@@ -259,7 +250,7 @@ static int get_vms_history(const struct sender_t *sender)
 			LOGW("File too large, (%d) lines in (%s) of (%s)\n",
 			     ret, android_histpath, vm->name);
 
-		vm->history_size[sid] = size;
+		vm->history_size[sender->id] = size;
 	}
 
 	return 0;
@@ -267,12 +258,8 @@ static int get_vms_history(const struct sender_t *sender)
 
 static void sync_lines_stage1(const struct sender_t *sender)
 {
-	int id, sid;
+	int id;
 	struct vm_t *vm;
-
-	sid = sender_id(sender);
-	if (sid == -1)
-		return;
 
 	for_each_vm(id, vm, conf) {
 		char *data;
@@ -285,8 +272,8 @@ static void sync_lines_stage1(const struct sender_t *sender)
 			continue;
 
 		data = vm->history_data;
-		data_size = vm->history_size[sid];
-		last_key = &vm->last_synced_line_key[sid][0];
+		data_size = vm->history_size[sender->id];
+		last_key = &vm->last_synced_line_key[sender->id][0];
 		if (*last_key) {
 			start = strstr(data, last_key);
 			if (start == NULL) {
@@ -351,11 +338,6 @@ static void sync_lines_stage2(const struct sender_t *sender,
 	struct mm_file_t *recos;
 	char *record;
 	size_t recolen;
-	int sid;
-
-	sid = sender_id(sender);
-	if (sid == -1)
-		return;
 
 	recos = mmap_file(sender->log_vmrecordid);
 	if (!recos) {
@@ -394,7 +376,8 @@ static void sync_lines_stage2(const struct sender_t *sender,
 			continue;
 
 		hist_line = get_line(vmkey, strnlen(vmkey, sizeof(vmkey)),
-				     vm->history_data, vm->history_size[sid],
+				     vm->history_data,
+				     vm->history_size[sender->id],
 				     vm->history_data, &len);
 		if (!hist_line) {
 			LOGW("mark vmevent(%s) as not-found\n", vmkey);
@@ -417,12 +400,7 @@ out:
 static void get_last_line_synced(const struct sender_t *sender)
 {
 	int id;
-	int sid;
 	struct vm_t *vm;
-
-	sid = sender_id(sender);
-	if (sid == -1)
-		return;
 
 	for_each_vm(id, vm, conf) {
 		int ret;
@@ -434,7 +412,7 @@ static void get_last_line_synced(const struct sender_t *sender)
 			continue;
 
 		/* generally only exec for each vm once */
-		if (vm->last_synced_line_key[sid][0])
+		if (vm->last_synced_line_key[sender->id][0])
 			continue;
 
 		ret = snprintf(vm_name, sizeof(vm_name), "%s ", vm->name);

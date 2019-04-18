@@ -24,6 +24,7 @@
 #define VM_EVENT_TYPE_MAX 20
 
 struct trigger_t {
+	int		id;
 	const char	*name;
 	size_t		name_len;
 	const char	*type;
@@ -33,6 +34,7 @@ struct trigger_t {
 };
 
 struct vm_t {
+	int		id;
 	const char	*name;
 	size_t		name_len;
 	const char	*channel;
@@ -49,6 +51,7 @@ struct vm_t {
 };
 
 struct log_t {
+	int		id;
 	const char	*name;
 	size_t		name_len;
 	const char	*type;
@@ -64,6 +67,7 @@ struct log_t {
 };
 
 struct crash_t {
+	int		id;
 	const char	*name;
 	size_t		name_len;
 	const char	*channel;
@@ -92,6 +96,7 @@ struct crash_t {
 };
 
 struct info_t {
+	int		id;
 	const char	*name;
 	size_t		name_len;
 	const char	*channel;
@@ -115,6 +120,7 @@ struct uptime_t {
 };
 
 struct sender_t {
+	int		id;
 	const char	*name;
 	size_t		name_len;
 	const char	*outdir;
@@ -239,7 +245,6 @@ int load_conf(const char *path);
 struct trigger_t *get_trigger_by_name(const char *name);
 struct log_t *get_log_by_name(const char *name);
 struct vm_t *get_vm_by_name(const char *name);
-int sender_id(const struct sender_t *sender);
 struct sender_t *get_sender_by_name(const char *name);
 enum event_type_t get_conf_by_wd(int wd, void **private);
 struct crash_t *get_crash_by_wd(int wd);
