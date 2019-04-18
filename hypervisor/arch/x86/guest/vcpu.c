@@ -380,7 +380,14 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 			vcpu->pcpu_id, vcpu->vm->vm_id, vcpu->vcpu_id,
 			is_vcpu_bsp(vcpu) ? "PRIMARY" : "SECONDARY");
 
-	vcpu->arch.vpid = allocate_vpid();
+	/*
+	 * If the logical processor is in VMX non-root operation and
+	 * the "enable VPID" VM-execution control is 1, the current VPID
+	 * is the value of the VPID VM-execution control field in the VMCS.
+	 *
+	 * This assignment guarantees a unique non-zero per vcpu vpid in runtime.
+	 */
+	vcpu->arch.vpid = 1U + (vm->vm_id * CONFIG_MAX_VCPUS_PER_VM) + vcpu->vcpu_id;
 
 	/* Initialize exception field in VCPU context */
 	vcpu->arch.exception_info.exception = VECTOR_INVALID;

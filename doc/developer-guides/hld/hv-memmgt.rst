@@ -477,9 +477,6 @@ Virtual MTRR
 
 VPID
 ----
-.. doxygenfunction:: allocate_vpid
-   :project: Project ACRN
-
 .. doxygenfunction:: flush_vpid_single
    :project: Project ACRN
 

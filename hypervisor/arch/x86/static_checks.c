@@ -16,6 +16,11 @@
 #define CTASSERT(expr) \
 typedef int32_t CAT_(CTA_DummyType,__LINE__)[(expr) ? 1 : -1]
 
+/* This is to make sure the 16 bits vpid won't overflow */
+#if ((CONFIG_MAX_VM_NUM * CONFIG_MAX_VCPUS_PER_VM) > 0xffffU)
+#error "VM number or VCPU number are too big"
+#endif
+
 /* Build time sanity checks to make sure hard-coded offset
 *  is matching the actual offset!
 */
