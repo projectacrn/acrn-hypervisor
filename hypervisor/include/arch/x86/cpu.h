@@ -259,7 +259,7 @@ void trampoline_start16(void);
 void load_cpu_state_data(void);
 void init_cpu_pre(uint16_t pcpu_id_args);
 void init_cpu_post(uint16_t pcpu_id);
-void start_cpus(void);
+bool start_cpus(uint64_t mask);
 void stop_cpus(void);
 void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
 

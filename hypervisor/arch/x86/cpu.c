@@ -30,6 +30,8 @@
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */
 
+#define AP_MASK			(((1UL << phys_cpu_num) - 1UL) & ~(1UL << 0U))
+
 struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 static uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
@@ -229,7 +231,9 @@ void init_cpu_post(uint16_t pcpu_id)
 
 		/* Start all secondary cores */
 		startup_paddr = prepare_trampoline();
-		start_cpus();
+		if (!start_cpus(AP_MASK)) {
+			panic("Failed to start all secondary cores!");
+		}
 
 		ASSERT(get_cpu_id() == BOOT_CPU_ID, "");
 	} else {
@@ -287,32 +291,45 @@ static void start_cpu(uint16_t pcpu_id)
 
 	/* Check to see if expected CPU is actually up */
 	if (!is_pcpu_active(pcpu_id)) {
-		/* Print error */
-		pr_fatal("Secondary CPUs failed to come up");
-
-		/* Error condition - loop endlessly for now */
-		do {
-		} while (1);
+		pr_fatal("Secondary CPU%hu failed to come up", pcpu_id);
+		cpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
 	}
 }
 
-void start_cpus(void)
+
+/**
+ * @brief Start all cpus if the bit is set in mask except itself
+ *
+ * @param[in] mask bits mask of cpus which should be started
+ *
+ * @return true if all cpus set in mask are started
+ * @return false if there are any cpus set in mask aren't started
+ */
+bool start_cpus(uint64_t mask)
 {
 	uint16_t i;
+	uint16_t pcpu_id = get_cpu_id();
+	uint64_t expected_start_mask = mask;
 
 	/* secondary cpu start up will wait for pcpu_sync -> 0UL */
 	atomic_store64(&pcpu_sync, 1UL);
 
-	for (i = 0U; i < phys_cpu_num; i++) {
-		if (get_cpu_id() == i) {
-			continue;
+	i = ffs64(expected_start_mask);
+	while (i != INVALID_BIT_INDEX) {
+		bitmap_clear_nolock(i, &expected_start_mask);
+
+		if (pcpu_id == i) {
+			continue; /* Avoid start itself */
 		}
 
 		start_cpu(i);
+		i = ffs64(expected_start_mask);
 	}
 
 	/* Trigger event to allow secondary CPUs to continue */
 	atomic_store64(&pcpu_sync, 0UL);
+
+	return ((pcpu_active_bitmap & mask) == mask);
 }
 
 void stop_cpus(void)

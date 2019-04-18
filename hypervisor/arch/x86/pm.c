@@ -20,6 +20,8 @@
  #include <lapic.h>
  #include <vcpu.h>
 
+#define AP_MASK		(((1UL << get_pcpu_nums()) - 1UL) & ~(1UL << 0U))
+
 struct cpu_context cpu_ctx;
 
 /* The values in this structure should come from host ACPI table */
@@ -186,5 +188,7 @@ void host_enter_s3(struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, u
 	clac();
 
 	/* online all APs again */
-	start_cpus();
+	if (!start_cpus(AP_MASK)) {
+		panic("Failed to start all APs!");
+	}
 }
