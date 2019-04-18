@@ -61,6 +61,15 @@ bool is_sos_vm(const struct acrn_vm *vm)
  * @pre vm != NULL
  * @pre vm->vmid < CONFIG_MAX_VM_NUM
  */
+bool is_normal_vm(const struct acrn_vm *vm)
+{
+	return (get_vm_config(vm->vm_id)->type == NORMAL_VM);
+}
+
+/**
+ * @pre vm != NULL
+ * @pre vm->vmid < CONFIG_MAX_VM_NUM
+ */
 bool is_prelaunched_vm(const struct acrn_vm *vm)
 {
 	struct acrn_vm_config *vm_config;
