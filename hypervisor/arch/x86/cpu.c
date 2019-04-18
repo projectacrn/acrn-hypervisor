@@ -27,6 +27,9 @@
 #include <cat.h>
 #include <firmware.h>
 
+#define CPU_UP_TIMEOUT		100U /* millisecond */
+#define CPU_DOWN_TIMEOUT	100U /* millisecond */
+
 struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 static uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
@@ -273,7 +276,7 @@ static void start_cpu(uint16_t pcpu_id)
 	/* Wait until the pcpu with pcpu_id is running and set the active bitmap or
 	 * configured time-out has expired
 	 */
-	timeout = (uint32_t)CONFIG_CPU_UP_TIMEOUT * 1000U;
+	timeout = CPU_UP_TIMEOUT * 1000U;
 	while (!is_pcpu_active(pcpu_id) && (timeout != 0U)) {
 		/* Delay 10us */
 		udelay(10U);
@@ -317,7 +320,6 @@ void stop_cpus(void)
 	uint16_t pcpu_id, expected_up;
 	uint32_t timeout;
 
-	timeout = (uint32_t)CONFIG_CPU_UP_TIMEOUT * 1000U;
 	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
 		if (get_cpu_id() == pcpu_id) {	/* avoid offline itself */
 			continue;
@@ -327,6 +329,7 @@ void stop_cpus(void)
 	}
 
 	expected_up = 1U;
+	timeout = CPU_DOWN_TIMEOUT * 1000U;
 	while ((atomic_load16(&up_count) != expected_up) && (timeout != 0U)) {
 		/* Delay 10us */
 		udelay(10U);
