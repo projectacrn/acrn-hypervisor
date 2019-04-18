@@ -456,9 +456,10 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 int32_t shutdown_vm(struct acrn_vm *vm)
 {
 	uint16_t i;
+	uint64_t mask = 0UL;
 	struct acrn_vcpu *vcpu = NULL;
 	struct acrn_vm_config *vm_config = NULL;
-	int32_t ret;
+	int32_t ret = 0;
 
 	pause_vm(vm);
 
@@ -469,6 +470,18 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 		foreach_vcpu(i, vm, vcpu) {
 			reset_vcpu(vcpu);
 			offline_vcpu(vcpu);
+
+			if (is_lapic_pt(vm)) {
+				bitmap_set_nolock(vcpu->pcpu_id, &mask);
+				make_pcpu_offline(vcpu->pcpu_id);
+			}
+		}
+
+		wait_pcpus_offline(mask);
+
+		if (is_lapic_pt(vm) && !start_cpus(mask)) {
+			pr_fatal("Failed to start all cpus in mask(0x%llx)", mask);
+			ret = -ETIMEDOUT;
 		}
 
 		vm_config = get_vm_config(vm->vm_id);

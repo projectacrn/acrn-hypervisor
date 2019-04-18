@@ -332,6 +332,17 @@ bool start_cpus(uint64_t mask)
 	return ((pcpu_active_bitmap & mask) == mask);
 }
 
+void wait_pcpus_offline(uint64_t mask)
+{
+	uint32_t timeout;
+
+	timeout = CPU_DOWN_TIMEOUT * 1000U;
+	while (((pcpu_active_bitmap & mask) != 0UL) && (timeout != 0U)) {
+		udelay(10U);
+		timeout -= 10U;
+	}
+}
+
 void stop_cpus(void)
 {
 	uint16_t pcpu_id, expected_up;
@@ -390,13 +401,14 @@ void cpu_dead(void)
 	int32_t halt = 1;
 	uint16_t pcpu_id = get_cpu_id();
 
-	if (bitmap_test_and_clear_lock(pcpu_id, &pcpu_active_bitmap)) {
+	if (bitmap_test(pcpu_id, &pcpu_active_bitmap)) {
 		/* clean up native stuff */
 		vmx_off();
 		cache_flush_invalidate_all();
 
 		/* Set state to show CPU is dead */
 		cpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
+		bitmap_clear_nolock(pcpu_id, &pcpu_active_bitmap);
 
 		/* Halt the CPU */
 		do {
