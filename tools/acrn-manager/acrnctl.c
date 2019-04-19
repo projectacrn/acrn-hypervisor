@@ -455,6 +455,7 @@ static inline int del_runC(char *argv)
 		return -1;
 	}
 	shell_cmd(cmd, cmd_out, sizeof(cmd_out));
+	cmd_out[PATH_LEN * 2 - 1] = '\0';
 	if (strstr(cmd_out, argv) != NULL) {
 		/* If the container is still running stop it by runc pause */
 		if (strstr(cmd_out, "stopped") == NULL) {
