@@ -31,9 +31,11 @@
 #define VUART_H
 #include <types.h>
 #include <spinlock.h>
+#include <vm_config.h>
 
 #define RX_BUF_SIZE		256U
 #define TX_BUF_SIZE		8192U
+#define INVAILD_VUART_IDX	0xFFU
 
 #define COM1_BASE		0x3F8U
 #define COM2_BASE		0x2F8U
@@ -68,27 +70,23 @@ struct acrn_vuart {
 
 	struct fifo rxfifo;
 	struct fifo txfifo;
-	uint16_t base;
-#ifdef CONFIG_PARTITION_MODE
+	uint16_t port_base;
+	uint32_t irq;
 	char vuart_rx_buf[RX_BUF_SIZE];
 	char vuart_tx_buf[TX_BUF_SIZE];
-#endif
 	bool thre_int_pending;	/* THRE interrupt pending */
 	bool active;
 	struct acrn_vm *vm;
 	spinlock_t lock;	/* protects all softc elements */
 };
 
-#ifdef CONFIG_PARTITION_MODE
-extern uint16_t vuart_vmid;
-#endif /* CONFIG_PARTITION_MODE */
-
-struct acrn_vuart *vm_vuart(struct acrn_vm *vm);
-void vuart_init(struct acrn_vm *vm);
+struct acrn_vuart *vm_console_vuart(struct acrn_vm *vm);
+void vuart_init(struct acrn_vm *vm, struct vuart_config *vu_config);
+void vuart_deinit(struct acrn_vm *vm);
 struct acrn_vuart *vuart_console_active(void);
 void vuart_console_tx_chars(struct acrn_vuart *vu);
 void vuart_console_rx_chars(struct acrn_vuart *vu);
 
-bool hv_used_dbg_intx(uint32_t intx_pin);
+bool is_vuart_intx(struct acrn_vm *vm, uint32_t intx_pin);
 void vuart_set_property(const char *vuart_info);
 #endif /* VUART_H */

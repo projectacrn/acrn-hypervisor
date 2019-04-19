@@ -12,6 +12,8 @@
 #define SHELL_CMD_MAX_LEN		100U
 #define SHELL_STRING_MAX_LEN		(PAGE_SIZE << 2U)
 
+extern int16_t console_vmid;
+
 /* Shell Command Function */
 typedef int32_t (*shell_cmd_fn_t)(int32_t argc, char **argv);
 

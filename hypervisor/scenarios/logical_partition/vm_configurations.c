@@ -38,7 +38,6 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 				no_timer_check ignore_loglevel log_buf_len=16M \
 				consoleblank=0 tsc=reliable xapic_phys"
 		},
-		.vm_vuart = true,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
@@ -78,7 +77,6 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 				no_timer_check ignore_loglevel log_buf_len=16M \
 				consoleblank=0 tsc=reliable xapic_phys"
 		},
-		.vm_vuart = true,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,

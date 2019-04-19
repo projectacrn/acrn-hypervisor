@@ -842,44 +842,32 @@ static int32_t shell_dumpmem(int32_t argc, char **argv)
 	return 0;
 }
 
-static int32_t shell_to_vm_console(__unused int32_t argc, __unused char **argv)
+static int32_t shell_to_vm_console(int32_t argc, char **argv)
 {
 	char temp_str[TEMP_STR_SIZE];
 	uint16_t vm_id = 0U;
 
 	struct acrn_vm *vm;
 	struct acrn_vuart *vu;
-#ifdef CONFIG_PARTITION_MODE
-	struct acrn_vm_config *vm_config;
 
 	if (argc == 2U) {
 		vm_id = sanitize_vmid(strtol_deci(argv[1]));
 	}
 
-	vuart_vmid = vm_id;
-#endif
 	/* Get the virtual device node */
 	vm = get_vm_from_vmid(vm_id);
 	if (!is_valid_vm(vm)) {
+		shell_puts("VM is not valid \n");
 		return -EINVAL;
 	}
-
-#ifdef CONFIG_PARTITION_MODE
-	vm_config = get_vm_config(vm_id);
-	if (!vm_config->vm_vuart) {
-		snprintf(temp_str, TEMP_STR_SIZE, "No vUART configured for vm%d\n", vm_id);
-		shell_puts(temp_str);
+	vu = vm_console_vuart(vm);
+	if (!vu->active) {
+		shell_puts("vuart console is not active \n");
 		return 0;
 	}
-#endif
-
-	vu = vm_vuart(vm);
-	/* UART is now owned by the SOS.
-	 * Indicate by toggling the flag.
-	 */
-	vu->active = true;
+	console_vmid = vm_id;
 	/* Output that switching to SOS shell */
-	snprintf(temp_str, TEMP_STR_SIZE, "\r\n----- Entering Guest %d Shell -----\r\n", vm_id);
+	snprintf(temp_str, TEMP_STR_SIZE, "\r\n----- Entering VM %d Shell -----\r\n", vm_id);
 
 	shell_puts(temp_str);
 

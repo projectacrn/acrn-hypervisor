@@ -39,18 +39,11 @@
 static uint32_t vuart_com_irq =  CONFIG_COM_IRQ;
 static uint16_t vuart_com_base = CONFIG_COM_BASE;
 
-#ifndef CONFIG_PARTITION_MODE
-static char vuart_rx_buf[RX_BUF_SIZE];
-static char vuart_tx_buf[TX_BUF_SIZE];
-#endif
-
 #define vuart_lock_init(vu)	spinlock_init(&((vu)->lock))
 #define vuart_lock(vu)		spinlock_obtain(&((vu)->lock))
 #define vuart_unlock(vu)	spinlock_release(&((vu)->lock))
 
-#ifdef CONFIG_PARTITION_MODE
-uint16_t vuart_vmid = 0xFFFFU;
-#endif
+uint16_t console_vmid = ACRN_INVALID_VMID;
 
 static inline void fifo_reset(struct fifo *fifo)
 {
@@ -92,13 +85,8 @@ static inline uint32_t fifo_numchars(const struct fifo *fifo)
 
 static inline void vuart_fifo_init(struct acrn_vuart *vu)
 {
-#ifdef CONFIG_PARTITION_MODE
 	vu->txfifo.buf = vu->vuart_tx_buf;
 	vu->rxfifo.buf = vu->vuart_rx_buf;
-#else
-	vu->txfifo.buf = vuart_tx_buf;
-	vu->rxfifo.buf = vuart_rx_buf;
-#endif
 	vu->txfifo.size = TX_BUF_SIZE;
 	vu->rxfifo.size = RX_BUF_SIZE;
 	fifo_reset(&(vu->txfifo));
@@ -125,9 +113,28 @@ static uint8_t vuart_intr_reason(const struct acrn_vuart *vu)
 	}
 }
 
-struct acrn_vuart *vm_vuart(struct acrn_vm *vm)
+struct acrn_vuart *find_vuart_by_port(struct acrn_vm *vm, uint16_t offset)
 {
-	return &(vm->vuart);
+	uint8_t i;
+	struct acrn_vuart *vu, *ret_vu = NULL;
+
+	/* TODO: support pci vuart find */
+	for (i = 0; i < MAX_VUART_NUM_PER_VM; i++) {
+		vu = &vm->vuart[i];
+		 if (vu->active == true && vu->port_base == (offset & ~0x7U)) {
+			ret_vu = vu;
+			break;
+		 }
+	}
+	return ret_vu;
+}
+
+/*
+ * @post return != NULL
+ */
+struct acrn_vuart *vm_console_vuart(struct acrn_vm *vm)
+{
+	return &vm->vuart[0];
 }
 
 /*
@@ -141,7 +148,7 @@ static void vuart_toggle_intr(const struct acrn_vuart *vu)
 	uint32_t operation;
 
 	intr_reason = vuart_intr_reason(vu);
-	vioapic_get_rte(vu->vm, vuart_com_irq, &rte);
+	vioapic_get_rte(vu->vm, vu->irq, &rte);
 
 	/* TODO:
 	 * Here should assert vuart irq according to CONFIG_COM_IRQ polarity.
@@ -157,18 +164,18 @@ static void vuart_toggle_intr(const struct acrn_vuart *vu)
 		operation = (intr_reason != IIR_NOPEND) ? GSI_SET_HIGH : GSI_SET_LOW;
 	}
 
-	vpic_set_irqline(vu->vm, vuart_com_irq, operation);
-	vioapic_set_irqline_lock(vu->vm, vuart_com_irq, operation);
+	vpic_set_irqline(vu->vm, vu->irq, operation);
+	vioapic_set_irqline_lock(vu->vm, vu->irq, operation);
 }
 
 static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 			__unused size_t width, uint32_t value)
 {
 	uint16_t offset = offset_arg;
-	struct acrn_vuart *vu = vm_vuart(vm);
+	struct acrn_vuart *vu = find_vuart_by_port(vm, offset);
 	uint8_t value_u8 = (uint8_t)value;
 
-	offset -= vu->base;
+	offset -= vu->port_base;
 	vuart_lock(vu);
 	/*
 	 * Take care of the special case DLAB accesses first
@@ -253,10 +260,10 @@ static bool vuart_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t offs
 {
 	uint16_t offset = offset_arg;
 	uint8_t iir, reg, intr_reason;
-	struct acrn_vuart *vu = vm_vuart(vm);
+	struct acrn_vuart *vu = find_vuart_by_port(vm, offset);
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	offset -= vu->base;
+	offset -= vu->port_base;
 	vuart_lock(vu);
 	/*
 	 * Take care of the special case DLAB accesses first
@@ -330,15 +337,33 @@ done:
 	return true;
 }
 
-static void vuart_register_io_handler(struct acrn_vm *vm)
+/*
+ * @pre: vuart_idx = 0 or 1
+ */
+static bool vuart_register_io_handler(struct acrn_vm *vm, uint16_t port_base, uint32_t vuart_idx)
 {
+	uint32_t pio_idx;
+	bool ret = true;
+
 	struct vm_io_range range = {
 		.flags = IO_ATTR_RW,
-		.base = vuart_com_base,
+		.base = port_base,
 		.len = 8U
 	};
-
-	register_pio_emulation_handler(vm, UART_PIO_IDX, &range, vuart_read, vuart_write);
+	switch (vuart_idx) {
+	case 0:
+		pio_idx = UART_PIO_IDX0;
+		break;
+	case 1:
+		pio_idx = UART_PIO_IDX1;
+		break;
+	default:
+		printf("Not support vuart index %d, will not register \n");
+		ret = false;
+	}
+	if (ret)
+		register_pio_emulation_handler(vm, pio_idx, &range, vuart_read, vuart_write);
+	return ret;
 }
 
 /**
@@ -367,7 +392,7 @@ void vuart_console_rx_chars(struct acrn_vuart *vu)
 
 	if (ch == GUEST_CONSOLE_TO_HV_SWITCH_KEY) {
 		/* Switch the console */
-		vu->active = false;
+		console_vmid = ACRN_INVALID_VMID;
 		printf("\r\n\r\n ---Entering ACRN SHELL---\r\n");
 	}
 	if (ch != -1) {
@@ -381,46 +406,79 @@ void vuart_console_rx_chars(struct acrn_vuart *vu)
 struct acrn_vuart *vuart_console_active(void)
 {
 	struct acrn_vm *vm = NULL;
+	struct acrn_vuart *vu = NULL;
 
-#ifdef CONFIG_PARTITION_MODE
-	if (vuart_vmid < CONFIG_MAX_VM_NUM) {
-		vm = get_vm_from_vmid(vuart_vmid);
+	if (console_vmid < CONFIG_MAX_VM_NUM) {
+		vm = get_vm_from_vmid(console_vmid);
 	}
-#else
-	vm = get_sos_vm();
-#endif
 
 	if (is_valid_vm(vm)) {
-		struct acrn_vuart *vu = vm_vuart(vm);
-
-		if (vu->active) {
-			return vu;
-		}
+		vu = vm_console_vuart(vm);
 	}
-	return NULL;
+	return (vu && vu->active) ? vu : NULL;
 }
 
-void vuart_init(struct acrn_vm *vm)
+static void vuart_setup(struct acrn_vm *vm,
+		struct vuart_config *vu_config, uint16_t vuart_idx)
 {
 	uint32_t divisor;
-	struct acrn_vuart *vu = vm_vuart(vm);
+	struct acrn_vuart *vu = &vm->vuart[vuart_idx];
 
 	/* Set baud rate*/
-	divisor = (UART_CLOCK_RATE / BAUD_9600) >> 4U;
-	vm->vuart.dll = (uint8_t)divisor;
-	vm->vuart.dlh = (uint8_t)(divisor >> 8U);
-
-	vm->vuart.active = false;
-	vm->vuart.base = vuart_com_base;
-	vm->vuart.vm = vm;
+	divisor = (UART_CLOCK_RATE / BAUD_115200) >> 4U;
+	vu->dll = (uint8_t)divisor;
+	vu->dlh = (uint8_t)(divisor >> 8U);
+	vu->vm = vm;
 	vuart_fifo_init(vu);
 	vuart_lock_init(vu);
-	vuart_register_io_handler(vm);
+	if (vu_config->type == VUART_LEGACY_PIO) {
+		vu->port_base = vu_config->addr.port_base;
+		vu->irq = vu_config->irq;
+		if (vuart_register_io_handler(vm, vu->port_base, vuart_idx)) {
+			vu->active = true;
+		}
+	} else {
+		/*TODO: add pci vuart support here*/
+		printf("PCI vuart is not support\n");
+	}
 }
 
-bool hv_used_dbg_intx(uint32_t intx_pin)
+bool is_vuart_intx(struct acrn_vm *vm, uint32_t intx_pin)
 {
-	return is_dbg_uart_enabled() && (intx_pin == vuart_com_irq);
+	uint8_t i;
+	bool ret = false;
+
+	for (i = 0; i < MAX_VUART_NUM_PER_VM; i++)
+		if (vm->vuart[i].active && vm->vuart[i].irq == intx_pin)
+			ret = true;
+	return ret;
+}
+
+void vuart_init(struct acrn_vm *vm, struct vuart_config *vu_config)
+{
+	uint8_t i;
+
+	for (i = 0; i < MAX_VUART_NUM_PER_VM; i++) {
+		vm->vuart[i].active = false;
+		/* This vuart is not exist */
+		if (vu_config[i].type == VUART_LEGACY_PIO &&
+				vu_config[i].addr.port_base == INVALID_COM_BASE)
+			continue;
+		vuart_setup(vm, &vu_config[i], i);
+	}
+}
+
+void vuart_deinit(struct acrn_vm *vm)
+{
+	uint8_t i;
+
+	/* reset console_vmid to switch back to hypervisor console */
+	if (console_vmid == vm->vm_id)
+		console_vmid = ACRN_INVALID_VMID;
+
+	for (i = 0; i < MAX_VUART_NUM_PER_VM; i++) {
+		vm->vuart[i].active = false;
+	}
 }
 
 /* vuart=ttySx@irqN, like vuart=ttyS1@irq6 head "vuart=ttyS" is parsed */
