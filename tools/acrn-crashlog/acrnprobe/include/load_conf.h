@@ -137,6 +137,7 @@ struct sender_t {
 
 	void (*send)(struct event_t *);
 	struct vmrecord_t vmrecord;
+	size_t		outdir_blocks_size;
 	int		sw_updated; /* each sender has their own record */
 };
 

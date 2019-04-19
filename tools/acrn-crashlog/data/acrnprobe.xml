@@ -17,7 +17,6 @@
 		<sender id="2" enable="true">
 			<name>telemd</name>
 			<outdir>/var/log/acrnprobe</outdir>
-			<foldersize>10</foldersize>
 			<uptime>
 				<name>UPTIME</name>
 				<frequency>5</frequency>
