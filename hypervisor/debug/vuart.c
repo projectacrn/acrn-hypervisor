@@ -168,14 +168,32 @@ static void vuart_toggle_intr(const struct acrn_vuart *vu)
 	vioapic_set_irqline_lock(vu->vm, vu->irq, operation);
 }
 
+static void vuart_write_to_target(struct acrn_vuart *vu, uint8_t value_u8)
+{
+	vuart_lock(vu);
+	if (vu->active) {
+		fifo_putchar(&vu->rxfifo, (char)value_u8);
+		vu->thre_int_pending = true;
+		vuart_toggle_intr(vu);
+	}
+	vuart_unlock(vu);
+}
+
 static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 			__unused size_t width, uint32_t value)
 {
 	uint16_t offset = offset_arg;
 	struct acrn_vuart *vu = find_vuart_by_port(vm, offset);
 	uint8_t value_u8 = (uint8_t)value;
+	struct acrn_vuart *target_vu = NULL;
 
 	offset -= vu->port_base;
+	target_vu = vu->target_vu;
+	if ((offset == UART16550_THR) && target_vu) {
+		vuart_write_to_target(target_vu, value_u8);
+		return true;
+	}
+
 	vuart_lock(vu);
 	/*
 	 * Take care of the special case DLAB accesses first
@@ -431,6 +449,7 @@ static void vuart_setup(struct acrn_vm *vm,
 	vu->vm = vm;
 	vuart_fifo_init(vu);
 	vuart_lock_init(vu);
+	vu->target_vu = NULL;
 	if (vu_config->type == VUART_LEGACY_PIO) {
 		vu->port_base = vu_config->addr.port_base;
 		vu->irq = vu_config->irq;
@@ -441,6 +460,49 @@ static void vuart_setup(struct acrn_vm *vm,
 		/*TODO: add pci vuart support here*/
 		printf("PCI vuart is not support\n");
 	}
+}
+
+static struct acrn_vuart *find_active_target_vuart(struct vuart_config *vu_config)
+{
+	struct acrn_vm *target_vm = NULL;
+	struct acrn_vuart *target_vu = NULL, *ret_vu = NULL;
+	uint16_t target_vmid, target_vuid;
+
+	target_vmid = vu_config->t_vuart.vm_id;
+	target_vuid = vu_config->t_vuart.vuart_id;
+	if (target_vmid < CONFIG_MAX_VM_NUM)
+		target_vm = get_vm_from_vmid(target_vmid);
+
+	if (target_vuid < MAX_VUART_NUM_PER_VM)
+		target_vu = &target_vm->vuart[target_vuid];
+
+	if (target_vu && target_vu->active) {
+		ret_vu = target_vu;
+	}
+	return ret_vu;
+}
+
+static void vuart_setup_connection(struct acrn_vm *vm,
+		struct vuart_config *vu_config, uint16_t vuart_idx)
+{
+	struct acrn_vuart *vu, *t_vu;
+
+	vu = &vm->vuart[vuart_idx];
+	if (vu->active) {
+		t_vu = find_active_target_vuart(vu_config);
+		if (t_vu && (t_vu->target_vu == NULL)) {
+			vu->target_vu = t_vu;
+			t_vu->target_vu = vu;
+		}
+	}
+}
+
+void vuart_deinit_connect(struct acrn_vuart *vu)
+{
+	struct acrn_vuart *t_vu = vu->target_vu;
+
+	t_vu->target_vu = NULL;
+	vu->target_vu = NULL;
 }
 
 bool is_vuart_intx(struct acrn_vm *vm, uint32_t intx_pin)
@@ -465,6 +527,13 @@ void vuart_init(struct acrn_vm *vm, struct vuart_config *vu_config)
 				vu_config[i].addr.port_base == INVALID_COM_BASE)
 			continue;
 		vuart_setup(vm, &vu_config[i], i);
+		/*
+		 * The first vuart is used for VM console.
+		 * The rest of vuarts are used for connection.
+		 */
+		if (i != 0) {
+			vuart_setup_connection(vm, &vu_config[i], i);
+		}
 	}
 }
 
@@ -478,6 +547,8 @@ void vuart_deinit(struct acrn_vm *vm)
 
 	for (i = 0; i < MAX_VUART_NUM_PER_VM; i++) {
 		vm->vuart[i].active = false;
+		if (vm->vuart[i].target_vu)
+			vuart_deinit_connect(&vm->vuart[i]);
 	}
 }
 

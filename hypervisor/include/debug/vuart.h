@@ -76,6 +76,7 @@ struct acrn_vuart {
 	char vuart_tx_buf[TX_BUF_SIZE];
 	bool thre_int_pending;	/* THRE interrupt pending */
 	bool active;
+	struct acrn_vuart *target_vu; /* Pointer to target vuart */
 	struct acrn_vm *vm;
 	spinlock_t lock;	/* protects all softc elements */
 };
