@@ -154,7 +154,8 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 	(void)memset((void *)&cv, 0U, sizeof(cv));
 	if (copy_from_gpa(vm, &cv, param, sizeof(cv)) == 0) {
 		vm_id = get_vmid_by_uuid(&cv.uuid[0]);
-		if (vm_id < CONFIG_MAX_VM_NUM) {
+		if ((vm_id < CONFIG_MAX_VM_NUM)
+			&& (!is_valid_vm(get_vm_from_vmid(vm_id)))) {
 			vm_config = get_vm_config(vm_id);
 			vm_config->guest_flags |= cv.vm_flag;
 
