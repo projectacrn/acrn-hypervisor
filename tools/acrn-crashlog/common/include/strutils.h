@@ -16,6 +16,7 @@ ssize_t strlinelen(const char *str, size_t size);
 char *strrstr(const char *s, const char *str);
 char *strtrim(char *str, size_t len);
 int strcnt(char *str, char c);
+char *strings_ind(char *strings, size_t size, int index, size_t *slen);
 int str_split_ere(const char *str, size_t slen,
 		const char *fmt, size_t flen, ...);
 #endif

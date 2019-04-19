@@ -125,38 +125,56 @@ static int crash_match_content(const struct crash_t *crash, const char *file)
 		crash_has_mightcontents(crash, file);
 }
 
-static ssize_t _get_data(const char *file, const struct crash_t *crash,
-			char **data, const int index)
+static int _get_data(const char *file, const struct crash_t *crash,
+			char **data, size_t *dsize, const int index)
 {
 	const char *search_key;
 	char *value;
 	char *end;
+	char *data_new;
 	ssize_t size;
 	const size_t max_size = 255;
 
 	search_key = crash->data[index];
 	if (!search_key)
-		return 0;
+		goto empty;
 
 	value = strrstr(file, search_key);
 	if (!value)
-		return 0;
+		goto empty;
 
 	end = strchr(value, '\n');
 	if (!end)
-		return 0;
+		goto empty;
 
 	size = MIN(max_size, (size_t)(end - value));
 	if (!size)
-		return 0;
+		goto empty;
 
-	*data = malloc(size + 1);
-	if (*data == NULL)
-		return -ENOMEM;
+	data_new = realloc(*data, *dsize + size + 1);
+	if (!data_new) {
+		LOGE("failed to realloc\n");
+		return -1;
+	}
 
-	strncpy(*data, value, size);
-	*(*data + size) = 0;
-	return size;
+	strncpy(data_new + *dsize, value, size);
+	*(data_new + *dsize + size) = 0;
+
+	*data = data_new;
+	*dsize += size;
+	return 0;
+empty:
+	data_new = realloc(*data, *dsize + 1);
+	if (!data_new) {
+		LOGE("failed to realloc\n");
+		return -1;
+	}
+
+	*(data_new + *dsize) = 0;
+
+	*data = data_new;
+	*dsize += 1;
+	return 0;
 }
 
 /**
@@ -165,48 +183,29 @@ static ssize_t _get_data(const char *file, const struct crash_t *crash,
  *
  * @param file Starting address of file cache.
  * @param crash Crash need checking.
- * @param[out] data0 Searched result, according to 'data0' configuread in crash.
- * @param[out] data1 Searched result, according to 'data1' configuread in crash.
- * @param[out] data2 Searched result, according to 'data2' configuread in crash.
+ * @param[out] data Searched result, according to 'data' configuread in crash.
  *
  * @return 0 if successful, or -1 if not.
  */
 static int get_data(const char *file, const struct crash_t *crash,
-			char **data0, size_t *d0len, char **data1,
-			size_t *d1len, char **data2, size_t *d2len)
+			char **r_data, size_t *r_dsize)
 {
-	ssize_t res;
+	char *data = NULL;
+	size_t dsize = 0;
+	int i;
 
 	/* to find strings which match conf words */
-	res = _get_data(file, crash, data0, 0);
-	if (res < 0)
-		goto fail;
-	*d0len = (size_t)res;
+	for (i = 0; i < DATA_MAX; i++) {
+		if (_get_data(file, crash, &data, &dsize, i) == -1)
+			goto fail;
+	}
 
-	res = _get_data(file, crash, data1, 1);
-	if (res < 0)
-		goto free_data0;
-	*d1len = (size_t)res;
-
-	res = _get_data(file, crash, data2, 2);
-	if (res < 0)
-		goto free_data1;
-	*d2len = (size_t)res;
-
+	*r_data = data;
+	*r_dsize = dsize;
 	return 0;
-free_data1:
-	if (*data1)
-		free(*data1);
-free_data0:
-	if (*data0)
-		free(*data0);
 fail:
-	*data0 = NULL;
-	*data1 = NULL;
-	*data2 = NULL;
-	*d0len = 0;
-	*d1len = 0;
-	*d2len = 0;
+	if (data)
+		free(data);
 	return -1;
 }
 
@@ -276,18 +275,14 @@ static struct crash_t *crash_find_matched_child(const struct crash_t *crash,
  *
  * @param rcrash Root crash obtained from channel.
  * @param rtrfile_fmt Path fmt of trigger file of root crash.
- * @param[out] data0 Searched result, according to 'data0' configuread in crash.
- * @param[out] data1 Searched result, according to 'data1' configuread in crash.
- * @param[out] data2 Searched result, according to 'data2' configuread in crash.
+ * @param[out] data Searched result, according to 'data' configuread in crash.
  *
  * @return a pointer to the calculated crash structure if successful,
  *	   or NULL if not.
  */
 static struct crash_t *crash_reclassify_by_content(const struct crash_t *rcrash,
 					const char *rtrfile_fmt,
-					char **data0, size_t *d0len,
-					char **data1, size_t *d1len,
-					char **data2, size_t *d2len)
+					char **data, size_t *dsize)
 {
 	int count;
 	const struct crash_t *crash;
@@ -298,15 +293,9 @@ static struct crash_t *crash_reclassify_by_content(const struct crash_t *rcrash,
 	unsigned long size;
 	int i;
 
-	if (!rcrash || !data0 || !d0len || !data1 || !d1len || !data2 || !d2len)
+	if (!rcrash || !data || !dsize)
 		return NULL;
 
-	*data0 = NULL;
-	*data1 = NULL;
-	*data2 = NULL;
-	*d0len = 0;
-	*d1len = 0;
-	*d2len = 0;
 	crash = rcrash;
 
 	while (1) {
@@ -339,8 +328,7 @@ static struct crash_t *crash_reclassify_by_content(const struct crash_t *rcrash,
 	if (!size)
 		goto free_files;
 
-	if (get_data(content, ret_crash, data0, d0len, data1, d1len,
-		       data2, d2len) == -1)
+	if (get_data(content, ret_crash, data, dsize) == -1)
 		LOGE("failed to get data\n");
 
 	free(content);

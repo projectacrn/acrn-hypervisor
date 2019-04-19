@@ -41,5 +41,6 @@ struct vm_event_t {
 
 void refresh_vm_history(struct sender_t *sender,
 			int (*fn)(const char*, size_t, const struct vm_t *));
-
+int android_event_analyze(const char *msg, size_t len, char **result,
+			size_t *rsize);
 #endif
