@@ -156,6 +156,39 @@ int strcnt(char *str, char c)
 	return cnt;
 }
 
+char *strings_ind(char *strings, size_t size, int index, size_t *slen)
+{
+	int i = 0;
+	size_t len;
+	char *start = strings;
+	char *str_tail;
+	size_t left;
+
+	if (!strings || !size)
+		return NULL;
+
+	str_tail = memchr((void *)strings, '\0', size);
+	if (!str_tail)
+		return NULL;
+
+	while (1) {
+		len = str_tail - start;
+		if (i++ == index)
+			break;
+		left = strings + size - str_tail - 1;
+		if (!left)
+			return NULL;
+		start = str_tail + 1;
+		str_tail = memchr((void *)start, '\0', left);
+		if (!str_tail)
+			break;
+	}
+
+	if (slen)
+		*slen = len;
+	return start;
+}
+
 static int reg_match(const char *str, const char *pattern,
 		char *matched_sub, size_t matched_space,
 		size_t *end_off)

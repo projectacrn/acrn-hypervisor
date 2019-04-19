@@ -448,3 +448,47 @@ void refresh_vm_history(struct sender_t *sender,
 		}
 	}
 }
+
+int android_event_analyze(const char *msg, size_t len, char **result,
+			size_t *rsize)
+{
+	char *data;
+	char *tail;
+	size_t data_len;
+	char event[ANDROID_WORD_LEN];
+	char longtime[ANDROID_WORD_LEN];
+	char type[ANDROID_WORD_LEN];
+	char rest[PATH_MAX];
+	char vmkey[ANDROID_WORD_LEN];
+	const char * const format =
+		ANDROID_ENEVT_FMT ANDROID_KEY_FMT ANDROID_LONGTIME_FMT
+		ANDROID_TYPE_FMT ANDROID_LINE_REST_FMT;
+
+	if (str_split_ere(msg, len, format, strlen(format), event,
+			  sizeof(event), vmkey, sizeof(vmkey), longtime,
+			  sizeof(longtime), type, sizeof(type), rest,
+			  sizeof(rest)) != 5) {
+		LOGE("try to analyze an invalid line (%s), skip\n", msg);
+		return -1;
+	}
+
+	data_len = strnlen(vmkey, sizeof(vmkey)) + 1;
+	data_len += strnlen(event, sizeof(event)) + 1;
+	data_len += strnlen(type, sizeof(type)) + 1;
+	data_len += strnlen(rest, sizeof(rest)) + 1;
+
+	data = malloc(data_len);
+	if (!data)
+		return -1;
+	tail = (char *)mempcpy(data, vmkey, strnlen(vmkey, sizeof(vmkey)));
+	*(tail++) = '\0';
+	tail = (char *)mempcpy(tail, event, strnlen(event, sizeof(event)));
+	*(tail++) = '\0';
+	tail = (char *)mempcpy(tail, type, strnlen(type, sizeof(type)));
+	*(tail++) = '\0';
+	*(char *)mempcpy(tail, rest, strnlen(rest, sizeof(rest))) = '\0';
+
+	*result = data;
+	*rsize = data_len;
+	return 0;
+}
