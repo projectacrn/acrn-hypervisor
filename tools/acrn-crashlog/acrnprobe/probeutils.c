@@ -368,35 +368,36 @@ void generate_crashfile(const char *dir,
  *
  * @param mode Mode for log storage.
  * @param hashkey Event id.
+ * @param[out] dir_len Length of generated dir.
  *
  * @return a pointer to generated path if successful, or NULL if not.
  */
-char *generate_log_dir(enum e_dir_mode mode, char *hashkey)
+char *generate_log_dir(enum e_dir_mode mode, char *hashkey, size_t *dir_len)
 {
 	char *path;
 	char dir[PATH_MAX];
 	unsigned int current;
-	int ret;
+	int len;
 
-	ret = reserve_log_folder(mode, dir, &current);
-	if (ret)
+	if (reserve_log_folder(mode, dir, &current))
 		return NULL;
 
-	ret = asprintf(&path, "%s%d_%s", dir, current, hashkey);
-	if (ret == -1) {
+	len = asprintf(&path, "%s%d_%s", dir, current, hashkey);
+	if (len == -1) {
 		LOGE("construct log path failed, out of memory\n");
 		hist_raise_infoerror("DIR CREATE", 10);
 		return NULL;
 	}
 
-	ret = mkdir(path, 0777);
-	if (ret == -1) {
+	if (mkdir(path, 0777) == -1) {
 		LOGE("Cannot create dir %s\n", path);
 		hist_raise_infoerror("DIR CREATE", 10);
 		free(path);
 		return NULL;
 	}
 
+	if (dir_len)
+		*dir_len = (size_t)len;
 	return path;
 }
 

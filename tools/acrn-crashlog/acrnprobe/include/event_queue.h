@@ -18,6 +18,8 @@ enum event_type_t {
 	UNKNOWN
 };
 
+extern const char *etype_str[];
+
 __extension__
 struct event_t {
 	int watchfd;
@@ -29,6 +31,7 @@ struct event_t {
 
 	/* dir to storage logs */
 	char *dir;
+	size_t dlen;
 	int len;
 	char path[0]; /* keep this at tail*/
 };

@@ -72,6 +72,8 @@ int vmrecord_mark(struct vmrecord_t *vmrecord, const char *vmkey,
 		memcpy(tag, VMRECORD_TAG_WAITING_SYNC, VMRECORD_TAG_LEN);
 	else if (type == ON_GOING)
 		memcpy(tag, VMRECORD_TAG_ON_GOING, VMRECORD_TAG_LEN);
+	else if (type == NO_RESRC)
+		memcpy(tag, VMRECORD_TAG_NO_RESOURCE, VMRECORD_TAG_LEN);
 	else
 		return -1;
 
