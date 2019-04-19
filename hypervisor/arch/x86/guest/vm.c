@@ -308,6 +308,7 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 
 /**
  * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL && rtn_vm != NULL
+ * @pre vm->state == VM_STATE_INVALID
  */
 int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm)
 {
