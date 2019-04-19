@@ -28,7 +28,7 @@
 #define VM0_CONFIG_MEM_SIZE			0x20000000UL
 #define VM0_CONFIG_OS_BOOTARG_ROOT		"root=/dev/sda3 "
 #define VM0_CONFIG_OS_BOOTARG_MAXCPUS		"maxcpus=2 "
-#define VM0_CONFIG_OS_BOOTARG_CONSOLE		"console=ttyS2 "
+#define VM0_CONFIG_OS_BOOTARG_CONSOLE		"console=ttyS0 "
 #define VM0_CONFIG_PCI_PTDEV_NUM		3U
 
 #define VM1_CONFIG_PCPU_BITMAP			(PLUG_CPU(1) | PLUG_CPU(3))
@@ -37,7 +37,7 @@
 #define VM1_CONFIG_MEM_SIZE			0x20000000UL
 #define VM1_CONFIG_OS_BOOTARG_ROOT		"root=/dev/sda3 "
 #define VM1_CONFIG_OS_BOOTARG_MAXCPUS		"maxcpus=2 "
-#define VM1_CONFIG_OS_BOOTARG_CONSOLE		"console=ttyS2 "
+#define VM1_CONFIG_OS_BOOTARG_CONSOLE		"console=ttyS0 "
 #define VM1_CONFIG_PCI_PTDEV_NUM		3U
 
 #endif /* VM_CONFIGURATIONS_H */

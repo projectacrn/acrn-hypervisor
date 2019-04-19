@@ -688,8 +688,8 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpi
 	 * entry already be held by others, return error.
 	 */
 
-	/* no remap for hypervisor owned intx */
-	if (is_sos_vm(vm) && hv_used_dbg_intx(virt_sid.intx_id.pin)) {
+	/* no remap for vuart intx */
+	if (is_vuart_intx(vm, virt_sid.intx_id.pin)) {
 		status = -ENODEV;
 	}
 

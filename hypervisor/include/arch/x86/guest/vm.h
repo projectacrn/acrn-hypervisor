@@ -120,7 +120,7 @@ struct acrn_vm {
 	struct e820_entry *e820_entries;
 	uint16_t vm_id;		    /* Virtual machine identifier */
 	enum vm_state state;	/* VM state */
-	struct acrn_vuart vuart;		/* Virtual UART */
+	struct acrn_vuart vuart[MAX_VUART_NUM_PER_VM];		/* Virtual UART */
 	enum vpic_wire_mode wire_mode;
 	struct iommu_domain *iommu;	/* iommu domain of this VM */
 	spinlock_t spinlock;	/* Spin-lock used to protect VM modifications */
