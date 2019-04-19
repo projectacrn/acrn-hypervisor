@@ -655,9 +655,10 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	        ret = -EINVAL;
 	} else {
 		gpa_end = region->gpa + region->size;
-		if (gpa_end > vm->arch_vm.ept_mem_ops.info->ept.top_address_space) {
+		if (gpa_end > target_vm->arch_vm.ept_mem_ops.info->ept.top_address_space) {
 				pr_err("%s, invalid gpa: 0x%llx, size: 0x%llx, top_address_space: 0x%llx", __func__,
-					region->gpa, region->size, vm->arch_vm.ept_mem_ops.info->ept.top_address_space);
+					region->gpa, region->size,
+					target_vm->arch_vm.ept_mem_ops.info->ept.top_address_space);
 				ret = 0;
 		} else {
 			dev_dbg(ACRN_DBG_HYCALL,
