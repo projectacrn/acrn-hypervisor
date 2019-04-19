@@ -43,7 +43,6 @@ static int crashlog_check_space(void)
 {
 	struct sender_t *crashlog = get_sender_by_name("crashlog");
 	int quota;
-	size_t dsize;
 	int cfg_size;
 
 
@@ -57,19 +56,34 @@ static int crashlog_check_space(void)
 	if (!space_available(crashlog->outdir, quota))
 		return -1;
 
-	if (dir_blocks_size(crashlog->outdir, crashlog->outdir_len,
-			    &dsize) == -1) {
-		LOGE("failed to check outdir size\n");
-		return -1;
-	}
-
 	if (cfg_atoi(crashlog->foldersize, crashlog->foldersize_len,
 		     &cfg_size) == -1)
 		return -1;
 
-	if (dsize/MB >= (size_t)cfg_size)
+	if (crashlog->outdir_blocks_size/MB >= (size_t)cfg_size) {
+		LOGD("the total blocks size (%zu) meets the quota (%zu)\n",
+		     crashlog->outdir_blocks_size/MB, (size_t)cfg_size);
+		return -1;
+	}
+	return 0;
+}
+
+static int log_grows(char *dir, size_t len)
+{
+	size_t add;
+	struct sender_t *crashlog = get_sender_by_name("crashlog");
+
+	if (!crashlog)
 		return -1;
 
+	if (dir_blocks_size(dir, len, &add) == -1) {
+		LOGE("failed to check outdir size\n");
+		return -1;
+	}
+
+	add += 4 * KB;
+	crashlog->outdir_blocks_size += add;
+	LOGD("log size + %zu = %zu\n", add, crashlog->outdir_blocks_size);
 	return 0;
 }
 
@@ -1127,6 +1141,8 @@ static void crashlog_send(struct event_t *e)
 	default:
 		LOGE("unsupoorted event type %d\n", e->event_type);
 	}
+	if (e->dir)
+		log_grows(e->dir, e->dlen);
 	if (eid)
 		free(eid);
 	if (result)
@@ -1179,6 +1195,12 @@ int init_sender(void)
 				return -1;
 			}
 			pthread_mutex_init(&sender->vmrecord.mtx, NULL);
+			if (dir_blocks_size(sender->outdir, sender->outdir_len,
+					    &sender->outdir_blocks_size)
+			    == -1) {
+				LOGE("failed to init outdir size\n");
+				return -1;
+			}
 
 #ifdef HAVE_TELEMETRICS_CLIENT
 		} else if (!strcmp(sender->name, "telemd")) {
