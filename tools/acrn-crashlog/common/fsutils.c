@@ -1085,11 +1085,12 @@ int find_file(const char *dir, size_t dlen, const char *target_file,
 	return -1;
 }
 
-static int _count_file_size(const char *pdir, struct dirent *dirp, void *arg)
+static int _count_file_blocks_size(const char *pdir, struct dirent *dirp,
+					void *arg)
 {
 	char file[PATH_MAX];
 	int res;
-	ssize_t fsize;
+	ssize_t fbsize;
 
 	if (dirp->d_type != DT_REG && dirp->d_type != DT_DIR)
 		return DIR_SUCCESS;
@@ -1098,22 +1099,22 @@ static int _count_file_size(const char *pdir, struct dirent *dirp, void *arg)
 	if (s_not_expect(res, sizeof(file)))
 		return DIR_ERROR;
 
-	fsize = get_file_size(file);
-	if (fsize < 0)
+	fbsize = get_file_blocks_size(file);
+	if (fbsize < 0)
 		return DIR_ERROR;
 
-	*(size_t *)arg += fsize;
+	*(size_t *)arg += fbsize;
 
 	return DIR_SUCCESS;
 }
 
-int dir_size(const char *dir, size_t dlen, size_t *size)
+int dir_blocks_size(const char *dir, size_t dlen, size_t *size)
 {
 	if (!dir || !dlen || !size)
 		return -1;
 
 	*size = 0;
-	if (dir_recursive(dir, dlen, -1, _count_file_size,
+	if (dir_recursive(dir, dlen, -1, _count_file_blocks_size,
 			  (void *)size) != DIR_SUCCESS) {
 		LOGE("failed to recursive dir (%s)\n", dir);
 		return -1;

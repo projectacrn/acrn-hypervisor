@@ -57,7 +57,8 @@ static int crashlog_check_space(void)
 	if (!space_available(crashlog->outdir, quota))
 		return -1;
 
-	if (dir_size(crashlog->outdir, crashlog->outdir_len, &dsize) == -1) {
+	if (dir_blocks_size(crashlog->outdir, crashlog->outdir_len,
+			    &dsize) == -1) {
 		LOGE("failed to check outdir size\n");
 		return -1;
 	}

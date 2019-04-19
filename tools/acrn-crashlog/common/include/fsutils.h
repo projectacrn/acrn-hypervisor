@@ -75,6 +75,19 @@ static inline ssize_t get_file_size(const char *filepath)
 	return info.st_size;
 }
 
+static inline ssize_t get_file_blocks_size(const char *filepath)
+{
+	struct stat info;
+
+	if (filepath == NULL)
+		return -ENOENT;
+
+	if (stat(filepath, &info) < 0)
+		return -errno;
+
+	return info.st_blocks * 512;
+}
+
 char *mm_get_line(struct mm_file_t *mfile, int line);
 int mkdir_p(const char *path);
 int remove_r(const char *dir);
@@ -114,7 +127,7 @@ int dir_contains(const char *dir, const char *filename, size_t flen, int exact);
 int lsdir(const char *dir, char *fullname[], int limit);
 int find_file(const char *dir, size_t dlen, const char *target_file,
 		size_t tflen, int depth, char *path[], int limit);
-int dir_size(const char *dir, size_t dlen, size_t *size);
+int dir_blocks_size(const char *dir, size_t dlen, size_t *size);
 int read_file(const char *path, unsigned long *size, void **data);
 int is_ac_filefmt(const char *file_fmt);
 int config_fmt_to_files(const char *file_fmt, char ***out);
