@@ -48,7 +48,7 @@ void generate_crashfile(const char *dir, const char *event, size_t elen,
 			const char *type, size_t tlen, const char *data0,
 			size_t d0len, const char *data1, size_t d1len,
 			const char *data2, size_t d2len);
-char *generate_log_dir(enum e_dir_mode mode, char *hashkey);
+char *generate_log_dir(enum e_dir_mode mode, char *hashkey, size_t *dlen);
 int is_boot_id_changed(void);
 
 #endif

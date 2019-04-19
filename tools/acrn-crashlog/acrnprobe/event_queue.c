@@ -9,6 +9,9 @@
 #include "event_queue.h"
 #include "log_sys.h"
 
+const char *etype_str[] = {"CRASH", "INFO", "UPTIME", "HEART_BEAT",
+					"REBOOT", "VM", "UNKNOWN"};
+
 static pthread_mutex_t eq_mtx = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t pcond = PTHREAD_COND_INITIALIZER;
 TAILQ_HEAD(, event_t) event_q;

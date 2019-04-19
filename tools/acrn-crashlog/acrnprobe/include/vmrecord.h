@@ -13,6 +13,7 @@
 #define VMRECORD_TAG_NOT_FOUND		"NOT_FOUND"
 #define VMRECORD_TAG_MISS_LOG		"MISS_LOGS"
 #define VMRECORD_TAG_ON_GOING		" ON_GOING"
+#define VMRECORD_TAG_NO_RESOURCE	"NO_RESORC"
 #define VMRECORD_TAG_SUCCESS		"         "
 
 enum vmrecord_mark_t {
@@ -20,6 +21,7 @@ enum vmrecord_mark_t {
 	NOT_FOUND,
 	WAITING_SYNC,
 	ON_GOING,
+	NO_RESRC,
 	MISS_LOG
 };
 

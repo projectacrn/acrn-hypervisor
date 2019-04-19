@@ -313,9 +313,6 @@ static void crashlog_get_log(struct log_t *log, void *data)
 	char *des;
 	char *desdir = (char *)data;
 
-	if (crashlog_check_space() == -1)
-		return;
-
 	start = get_uptime();
 	if (is_ac_filefmt(log->path)) {
 		int i;
@@ -720,9 +717,9 @@ static void telemd_send(struct event_t *e)
 }
 #endif
 
-static void crashlog_send_crash(struct event_t *e, char *data, size_t dlen)
+static void crashlog_send_crash(struct event_t *e, char *eid,
+				char *data, size_t dlen)
 {
-	char *key;
 	char *data0;
 	char *data1;
 	char *data2;
@@ -730,49 +727,30 @@ static void crashlog_send_crash(struct event_t *e, char *data, size_t dlen)
 	size_t d1len;
 	size_t d2len;
 	struct crash_t *crash = (struct crash_t *)e->private;
+	int id;
+	struct log_t *log;
 
-	key = generate_event_id("CRASH", 5, (const char *)crash->name,
-				crash->name_len, KEY_SHORT);
-	if (key == NULL) {
-		LOGE("failed to generate event id, error (%s)\n",
-		     strerror(errno));
+	hist_raise_event(etype_str[e->event_type], crash->name, e->dir, "",
+			 eid);
+	if (!e->dir)
 		return;
-	}
-
-	/* check space before collecting logs */
-	if (crashlog_check_space() == -1) {
-		hist_raise_event("CRASH", crash->name, "SPACE_FULL", "", key);
-		goto free_key;
-	}
 
 	data0 = strings_ind(data, dlen, 0, &d0len);
 	data1 = strings_ind(data, dlen, 1, &d1len);
 	data2 = strings_ind(data, dlen, 2, &d2len);
 	if (!data1 || !data1 || !data2)
-		goto free_key;
+		return;
 
-	if (to_collect_logs(crash) || !strcmp(e->channel, "inotify")) {
-		struct log_t *log;
-		int id;
+	generate_crashfile(e->dir, etype_str[e->event_type],
+			   strlen(etype_str[e->event_type]), eid,
+			   SHORT_KEY_LENGTH, crash->name, crash->name_len,
+			   data0, d0len, data1, d1len, data2, d2len);
 
-		e->dir = generate_log_dir(MODE_CRASH, key);
-		if (e->dir == NULL) {
-			LOGE("failed to generate crashlog dir\n");
-			goto free_key;
-		}
-
-		generate_crashfile(e->dir, "CRASH", 5, key, SHORT_KEY_LENGTH,
-				   crash->name, crash->name_len,
-				   data0, d0len, data1, d1len, data2, d2len);
-		for_each_log_collect(id, log, crash) {
-			if (!log)
-				continue;
-
-			log->get(log, (void *)e->dir);
-		}
-
+	for_each_log_collect(id, log, crash) {
+		if (!log)
+			continue;
+		log->get(log, (void *)e->dir);
 	}
-
 	if (!strcmp(e->channel, "inotify")) {
 		/* get the trigger file */
 		char *src;
@@ -780,14 +758,14 @@ static void crashlog_send_crash(struct event_t *e, char *data, size_t dlen)
 
 		if (asprintf(&des, "%s/%s", e->dir, e->path) == -1) {
 			LOGE("out of memory\n");
-			goto free_key;
+			return;
 		}
 
 		if (asprintf(&src, "%s/%s", crash->trigger->path,
 			     e->path) == -1) {
 			LOGE("out of memory\n");
 			free(des);
-			goto free_key;
+			return;
 		}
 
 		if (do_copy_tail(src, des, 0) < 0)
@@ -796,52 +774,22 @@ static void crashlog_send_crash(struct event_t *e, char *data, size_t dlen)
 		free(src);
 		free(des);
 	}
-
-	hist_raise_event("CRASH", crash->name, e->dir, "", key);
-
-free_key:
-	free(key);
 }
 
-static void crashlog_send_info(struct event_t *e)
+static void crashlog_send_info(struct event_t *e, char *eid)
 {
 	int id;
 	struct info_t *info = (struct info_t *)e->private;
 	struct log_t *log;
-	char *key = generate_event_id("INFO", 4, (const char *)info->name,
-				      info->name_len, KEY_SHORT);
 
-	if (key == NULL) {
-		LOGE("generate event id failed, error (%s)\n",
-		     strerror(errno));
+	hist_raise_event(etype_str[e->event_type], info->name, e->dir, "", eid);
+	if (!e->dir)
 		return;
+	for_each_log_collect(id, log, info) {
+		if (!log)
+			continue;
+		log->get(log, (void *)e->dir);
 	}
-
-	if (to_collect_logs(info)) {
-		/* check space before collecting logs */
-		if (crashlog_check_space() == -1) {
-			hist_raise_event("INFO", info->name, "SPACE_FULL", "",
-					 key);
-			goto free_key;
-		}
-
-		e->dir = generate_log_dir(MODE_STATS, key);
-		if (e->dir == NULL) {
-			LOGE("generate crashlog dir failed\n");
-			goto free_key;
-		}
-
-		for_each_log_collect(id, log, info) {
-			if (!log)
-				continue;
-			log->get(log, (void *)e->dir);
-		}
-	}
-
-	hist_raise_event("INFO", info->name, e->dir, "", key);
-
-free_key:
-	free(key);
 }
 
 static void crashlog_send_uptime(void)
@@ -849,7 +797,7 @@ static void crashlog_send_uptime(void)
 	hist_raise_uptime(NULL);
 }
 
-static void crashlog_send_reboot(void)
+static void crashlog_send_reboot(struct event_t *e, char *eid)
 {
 	char reason[REBOOT_REASON_SIZE];
 	char *key;
@@ -872,19 +820,11 @@ static void crashlog_send_reboot(void)
 	}
 
 	read_startupreason(reason, sizeof(reason));
-	key = generate_event_id("REBOOT", 6, (const char *)reason,
-				strnlen(reason, REBOOT_REASON_SIZE), KEY_SHORT);
-	if (key == NULL) {
-		LOGE("generate event id failed, error (%s)\n",
-		     strerror(errno));
-		return;
-	}
-
-	hist_raise_event("REBOOT", reason, NULL, "", key);
-	free(key);
+	hist_raise_event(etype_str[e->event_type], reason, NULL, "", eid);
 }
 
-static void crashlog_send_vmevent(struct event_t *e, char *data, size_t dlen)
+static void crashlog_send_vmevent(struct event_t *e, char *eid,
+				char *data, size_t dlen)
 {
 	char *vmkey;
 	char *event;
@@ -895,7 +835,6 @@ static void crashlog_send_vmevent(struct event_t *e, char *data, size_t dlen)
 	size_t tlen;
 	size_t rlen;
 	char *vmlogpath;
-	char *key;
 	char *log;
 	int res;
 	int cnt;
@@ -914,43 +853,25 @@ static void crashlog_send_vmevent(struct event_t *e, char *data, size_t dlen)
 	if (!vmkey || !event || !type || !rest)
 		return;
 
-	key = generate_event_id("SOS", 3, (const char *)vmkey,
-				strnlen(vmkey, ANDROID_WORD_LEN), KEY_SHORT);
-	if (key == NULL) {
-		LOGE("generate event id failed, error (%s)\n",
-		     strerror(errno));
-		mark = WAITING_SYNC;
+	hist_raise_event(vme->vm->name, type, e->dir, "", eid);
+
+	if (!e->dir)
 		goto mark_record;
-	}
 
-	if (crashlog_check_space() == -1) {
-		hist_raise_event(vme->vm->name, type, "SPACE_FULL", "", key);
-		goto free_key;
-	}
-
-	e->dir = generate_log_dir(MODE_VMEVENT, key);
-	if (e->dir == NULL) {
-		LOGE("generate crashlog dir failed\n");
-		mark = WAITING_SYNC;
-		goto free_key;
-	}
-
-	generate_crashfile(e->dir, event, strnlen(event, ANDROID_WORD_LEN),
-			   key, SHORT_KEY_LENGTH,
-			   type, strnlen(type, ANDROID_WORD_LEN),
-			   vme->vm->name, vme->vm->name_len,
-			   vmkey, strnlen(vmkey, ANDROID_WORD_LEN), NULL, 0);
+	generate_crashfile(e->dir, event, elen, eid, SHORT_KEY_LENGTH, type,
+			   tlen, vme->vm->name, vme->vm->name_len, vmkey, klen,
+			   NULL, 0);
 
 	log = strstr(rest, ANDROID_LOGS_DIR);
 	if (!log)
-		goto raise_e;
+		goto mark_record;
 
 	/* if line contains log, we need dump each file in the logdir */
 	vmlogpath = log + 1;
 
 	if (e2fs_open(loop_dev, &datafs) == -1) {
 		mark = WAITING_SYNC;
-		goto free_key;
+		goto mark_record;
 	}
 
 	res = e2fs_dump_dir_by_dpath(datafs, vmlogpath, e->dir, &cnt);
@@ -974,16 +895,10 @@ static void crashlog_send_vmevent(struct event_t *e, char *data, size_t dlen)
 			     strerror(errno));
 		free(e->dir);
 		e->dir = NULL;
-		goto free_key;
 	}
 
-raise_e:
-	hist_raise_event(vme->vm->name, type, e->dir, "", key);
-free_key:
-	free(key);
 mark_record:
-	vmrecord_open_mark(&crashlog->vmrecord, vmkey,
-			    strnlen(vmkey, sizeof(vmkey)), mark);
+	vmrecord_open_mark(&crashlog->vmrecord, vmkey, klen, mark);
 	return;
 }
 
@@ -1029,6 +944,97 @@ static int crashlog_event_analyze(struct event_t *e, char **result,
 	return 0;
 }
 
+static int crashlog_new_event(struct event_t *e, char *result, size_t rsize,
+				char **eid)
+{
+	char *key;
+	const char *e_subtype = NULL;
+	size_t e_subtype_len = 0;
+	struct crash_t *crash;
+	struct info_t *info;
+	struct vm_event_t *vme;
+	enum e_dir_mode mode;
+	int need_logs = 0;
+	struct sender_t *crashlog;
+	char *vmkey;
+	size_t vklen;
+	const char *estr = etype_str[e->event_type];
+	size_t eslen = strlen(etype_str[e->event_type]);
+
+	switch (e->event_type) {
+	case CRASH:
+		crash = (struct crash_t *)e->private;
+		e_subtype = crash->name;
+		e_subtype_len = crash->name_len;
+		if (to_collect_logs(crash) || !strcmp(e->channel, "inotify")) {
+			need_logs = 1;
+			mode = MODE_CRASH;
+		}
+		break;
+	case INFO:
+		info = (struct info_t *)e->private;
+		e_subtype = info->name;
+		e_subtype_len = info->name_len;
+		if (to_collect_logs(info) || !strcmp(e->channel, "inotify")) {
+			need_logs = 1;
+			mode = MODE_STATS;
+		}
+		break;
+	case UPTIME:
+		return 0;
+	case REBOOT:
+		break;
+	case VM:
+		vme = (struct vm_event_t *)e->private;
+		estr = vme->vm->name;
+		eslen = vme->vm->name_len;
+		e_subtype = strings_ind(result, rsize, 2, &e_subtype_len);
+		if (!e_subtype)
+			return -1;
+		need_logs = 1;
+		mode = MODE_VMEVENT;
+		break;
+	default:
+		break;
+	}
+
+	key = generate_event_id(estr, eslen, e_subtype, e_subtype_len,
+				KEY_SHORT);
+	if (!key) {
+		LOGE("failed to generate event id, %s\n", strerror(errno));
+		goto fail;
+	}
+
+	if (!need_logs) {
+		*eid = key;
+		return 0;
+	}
+
+	if (crashlog_check_space() == -1) {
+		hist_raise_event(estr, e_subtype, "SPACE_FULL", "", key);
+		free(key);
+		goto fail;
+	}
+
+	e->dir = generate_log_dir(mode, key, &e->dlen);
+	if (!e->dir) {
+		LOGE("failed to generate crashlog dir\n");
+		free(key);
+		goto fail;
+	}
+	*eid = key;
+	return 0;
+fail:
+	if (e->event_type == VM) {
+		crashlog = get_sender_by_name("crashlog");
+		vmkey = strings_ind(result, rsize, 0, &vklen);
+		if (!crashlog || !vmkey)
+			return -1;
+		vmrecord_open_mark(&crashlog->vmrecord, vmkey, vklen, NO_RESRC);
+	}
+	return -1;
+}
+
 static void crashlog_send(struct event_t *e)
 {
 
@@ -1036,9 +1042,16 @@ static void crashlog_send(struct event_t *e)
 	struct log_t *log;
 	size_t rsize = 0;
 	char *result = NULL;
+	char *eid = NULL;
 
 	if (crashlog_event_analyze(e, &result, &rsize) == -1) {
 		LOGE("failed to analyze event\n");
+		return;
+	}
+	if (crashlog_new_event(e, result, rsize, &eid) == -1) {
+		LOGE("failed to request resouce\n");
+		if (result)
+			free(result);
 		return;
 	}
 	for_each_log(id, log, conf) {
@@ -1049,23 +1062,25 @@ static void crashlog_send(struct event_t *e)
 	}
 	switch (e->event_type) {
 	case CRASH:
-		crashlog_send_crash(e, result, rsize);
+		crashlog_send_crash(e, eid, result, rsize);
 		break;
 	case INFO:
-		crashlog_send_info(e);
+		crashlog_send_info(e, eid);
 		break;
 	case UPTIME:
 		crashlog_send_uptime();
 		break;
 	case REBOOT:
-		crashlog_send_reboot();
+		crashlog_send_reboot(e, eid);
 		break;
 	case VM:
-		crashlog_send_vmevent(e, result, rsize);
+		crashlog_send_vmevent(e, eid, result, rsize);
 		break;
 	default:
 		LOGE("unsupoorted event type %d\n", e->event_type);
 	}
+	if (eid)
+		free(eid);
 	if (result)
 		free(result);
 }
