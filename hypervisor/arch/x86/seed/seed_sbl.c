@@ -62,21 +62,21 @@ bool parse_seed_sbl(uint64_t addr, struct physical_seed *phy_seed)
 {
 	uint8_t i;
 	uint8_t dseed_index = 0U;
-	struct image_boot_params *boot_params;
+	struct image_boot_params *boot_params = NULL;
 	struct seed_list_hob *seed_hob = NULL;
-	struct seed_entry *entry;
-	struct seed_info *seed_list;
+	struct seed_entry *entry = NULL;
+	struct seed_info *seed_list = NULL;
 	bool status = false;
 
 	stac();
 
 	boot_params = (struct image_boot_params *)hpa2hva(addr);
 
-	if ((boot_params != NULL) || (phy_seed != NULL)) {
+	if (boot_params != NULL) {
 		seed_hob = (struct seed_list_hob *)hpa2hva(boot_params->p_seed_list);
 	}
 
-	if (seed_hob != NULL) {
+	if ((seed_hob != NULL) && (phy_seed != NULL)) {
 		status = true;
 
 		seed_list = phy_seed->seed_list;
@@ -106,9 +106,9 @@ bool parse_seed_sbl(uint64_t addr, struct physical_seed *phy_seed)
 					/* erase original seed in seed entry */
 					(void)memset((void *)&entry->seed[0U], 0U, sizeof(struct seed_info));
 				}
-			}
 
-			entry = (struct seed_entry *)((uint8_t *)entry + entry->seed_entry_size);
+				entry = (struct seed_entry *)((uint8_t *)entry + entry->seed_entry_size);
+			}
 		}
 
 		if (status) {
