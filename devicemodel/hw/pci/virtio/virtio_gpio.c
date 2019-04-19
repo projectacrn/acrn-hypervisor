@@ -1571,13 +1571,14 @@ print_virtio_gpio_info(struct virtio_gpio_request *req,
 		struct virtio_gpio_response *rsp, bool in)
 {
 	const char *item;
-	const char *const cmd_map[] = {
+	const char *const cmd_map[GPIO_REQ_MAX + 1] = {
 		"GPIO_REQ_SET_VALUE",
 		"GPIO_REQ_GET_VALUE",
 		"GPIO_REQ_INPUT_DIRECTION",
 		"GPIO_REQ_OUTPUT_DIRECTION",
 		"GPIO_REQ_GET_DIRECTION",
 		"GPIO_REQ_SET_CONFIG",
+		"GPIO_REQ_MAX",
 	};
 
 	if (req->cmd == GPIO_REQ_SET_VALUE || req->cmd == GPIO_REQ_GET_VALUE)
