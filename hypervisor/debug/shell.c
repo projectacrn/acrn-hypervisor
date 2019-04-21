@@ -784,7 +784,7 @@ static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv)
 	dump.vcpu = vcpu;
 	dump.str = shell_log_buf;
 	dump.str_max = SHELL_LOG_BUF_SIZE;
-	if (vcpu->pcpu_id == get_cpu_id()) {
+	if (vcpu->pcpu_id == get_pcpu_id()) {
 		vcpu_dumpreg(&dump);
 	} else {
 		bitmap_set_nolock(vcpu->pcpu_id, &mask);
@@ -1296,7 +1296,7 @@ static int32_t shell_rdmsr(int32_t argc, char **argv)
 	uint64_t val = 0;
 	char str[MAX_STR_SIZE] = {0};
 
-	pcpu_id = get_cpu_id();
+	pcpu_id = get_pcpu_id();
 
 	switch (argc) {
 	case 3:
@@ -1332,7 +1332,7 @@ static int32_t shell_wrmsr(int32_t argc, char **argv)
 	uint32_t msr_index = 0;
 	uint64_t val = 0;
 
-	pcpu_id = get_cpu_id();
+	pcpu_id = get_pcpu_id();
 
 	switch (argc) {
 	case 4:

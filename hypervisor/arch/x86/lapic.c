@@ -181,7 +181,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 {
 	union apic_icr icr;
 	uint8_t shorthand;
-	struct cpuinfo_x86 *cpu_info = get_cpu_info();
+	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
 
 	icr.value = 0U;
 	icr.bits.destination_mode = INTR_LAPIC_ICR_PHYSICAL;

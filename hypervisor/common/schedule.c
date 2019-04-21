@@ -113,7 +113,7 @@ void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode)
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
 	bitmap_set_lock(NEED_RESCHEDULE, &ctx->flags);
-	if (get_cpu_id() != pcpu_id) {
+	if (get_pcpu_id() != pcpu_id) {
 		switch (delmode) {
 		case DEL_MODE_IPI:
 			send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
@@ -140,7 +140,7 @@ void make_pcpu_offline(uint16_t pcpu_id)
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
 	bitmap_set_lock(NEED_OFFLINE, &ctx->flags);
-	if (get_cpu_id() != pcpu_id) {
+	if (get_pcpu_id() != pcpu_id) {
 		send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
 	}
 }
@@ -168,7 +168,7 @@ static void prepare_switch(struct sched_object *prev, struct sched_object *next)
 
 void schedule(void)
 {
-	uint16_t pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_pcpu_id();
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 	struct sched_object *next = NULL;
 	struct sched_object *prev = ctx->curr_obj;
@@ -198,7 +198,7 @@ void run_sched_thread(struct sched_object *obj)
 
 void switch_to_idle(run_thread_t idle_thread)
 {
-	uint16_t pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_pcpu_id();
 	struct sched_object *idle = &per_cpu(idle, pcpu_id);
 	char idle_name[16];
 

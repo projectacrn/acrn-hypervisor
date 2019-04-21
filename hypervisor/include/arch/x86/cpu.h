@@ -256,12 +256,12 @@ enum pcpu_boot_state {
 void cpu_do_idle(void);
 void cpu_dead(void);
 void trampoline_start16(void);
-void load_cpu_state_data(void);
-void init_cpu_pre(uint16_t pcpu_id_args);
-void init_cpu_post(uint16_t pcpu_id);
-bool start_cpus(uint64_t mask);
+void load_pcpu_state_data(void);
+void init_pcpu_pre(uint16_t pcpu_id_args);
+void init_pcpu_post(uint16_t pcpu_id);
+bool start_pcpus(uint64_t mask);
 void wait_pcpus_offline(uint64_t mask);
-void stop_cpus(void);
+void stop_pcpus(void);
 void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
 
 #define CPU_SEG_READ(seg, result_ptr)						\
@@ -412,7 +412,7 @@ cpu_rdtscp_execute(uint64_t *timestamp_ptr, uint32_t *cpu_id_ptr)
  * Macro to get CPU ID
  * @pre: the return CPU ID would never equal or large than phys_cpu_num.
  */
-static inline uint16_t get_cpu_id(void)
+static inline uint16_t get_pcpu_id(void)
 {
 	uint32_t tsl, tsh, cpu_id;
 

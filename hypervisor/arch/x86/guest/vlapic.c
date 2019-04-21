@@ -528,7 +528,7 @@ static void apicv_advanced_accept_intr(struct acrn_vlapic *vlapic, uint32_t vect
 		 */
 		bitmap_set_lock(ACRN_REQUEST_EVENT, &vlapic->vcpu->arch.pending_req);
 
-		if (get_cpu_id() != vlapic->vcpu->pcpu_id) {
+		if (get_pcpu_id() != vlapic->vcpu->pcpu_id) {
 			apicv_post_intr(vlapic->vcpu->pcpu_id);
 		}
 	}

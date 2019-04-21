@@ -23,7 +23,7 @@ static void kick_notification(__unused uint32_t irq, __unused void *data)
 	/* Notification vector is used to kick taget cpu out of non-root mode.
 	 * And it also serves for smp call.
 	 */
-	uint16_t pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_pcpu_id();
 
 	if (bitmap_test(pcpu_id, &smp_call_mask)) {
 		struct smp_call_info_data *smp_call =

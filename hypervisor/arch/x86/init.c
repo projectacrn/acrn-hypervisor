@@ -62,14 +62,14 @@ static void enter_guest_mode(uint16_t pcpu_id)
 	cpu_dead();
 }
 
-static void init_primary_cpu_post(void)
+static void init_primary_pcpu_post(void)
 {
 	/* Perform any necessary firmware initialization */
 	init_firmware();
 
 	init_debug_pre();
 
-	init_cpu_post(BOOT_CPU_ID);
+	init_pcpu_post(BOOT_CPU_ID);
 
 	init_seed();
 
@@ -81,27 +81,27 @@ static void init_primary_cpu_post(void)
 /* NOTE: this function is using temp stack, and after SWITCH_TO(runtime_sp, to)
  * it will switch to runtime stack.
  */
-void init_primary_cpu(void)
+void init_primary_pcpu(void)
 {
 	uint64_t rsp;
 
-	init_cpu_pre(BOOT_CPU_ID);
+	init_pcpu_pre(BOOT_CPU_ID);
 
 	/* Switch to run-time stack */
 	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
 	rsp &= ~(CPU_STACK_ALIGN - 1UL);
-	SWITCH_TO(rsp, init_primary_cpu_post);
+	SWITCH_TO(rsp, init_primary_pcpu_post);
 }
 
-void init_secondary_cpu(void)
+void init_secondary_pcpu(void)
 {
 	uint16_t pcpu_id;
 
-	init_cpu_pre(INVALID_CPU_ID);
+	init_pcpu_pre(INVALID_CPU_ID);
 
-	pcpu_id = get_cpu_id();
+	pcpu_id = get_pcpu_id();
 
-	init_cpu_post(pcpu_id);
+	init_pcpu_post(pcpu_id);
 
 	init_debug_post(pcpu_id);
 

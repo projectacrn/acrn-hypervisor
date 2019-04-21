@@ -35,9 +35,9 @@ static void detect_ibrs(void)
 	 * should be set all the time instead of relying on retpoline
 	 */
 #ifndef CONFIG_RETPOLINE
-	if (cpu_has_cap(X86_FEATURE_IBRS_IBPB)) {
+	if (pcpu_has_cap(X86_FEATURE_IBRS_IBPB)) {
 		ibrs_type = IBRS_RAW;
-		if (cpu_has_cap(X86_FEATURE_STIBP)) {
+		if (pcpu_has_cap(X86_FEATURE_STIBP)) {
 			ibrs_type = IBRS_OPT;
 		}
 	}
@@ -56,15 +56,15 @@ bool check_cpu_security_cap(void)
 
 	detect_ibrs();
 
-	if (cpu_has_cap(X86_FEATURE_ARCH_CAP)) {
+	if (pcpu_has_cap(X86_FEATURE_ARCH_CAP)) {
 		x86_arch_capabilities = msr_read(MSR_IA32_ARCH_CAPABILITIES);
 		skip_l1dfl_vmentry = ((x86_arch_capabilities
 			& IA32_ARCH_CAP_SKIP_L1DFL_VMENTRY) != 0UL);
 
-		if ((!cpu_has_cap(X86_FEATURE_L1D_FLUSH)) && (!skip_l1dfl_vmentry)) {
+		if ((!pcpu_has_cap(X86_FEATURE_L1D_FLUSH)) && (!skip_l1dfl_vmentry)) {
 			ret = false;
-		} else if ((!cpu_has_cap(X86_FEATURE_IBRS_IBPB)) &&
-			(!cpu_has_cap(X86_FEATURE_STIBP))) {
+		} else if ((!pcpu_has_cap(X86_FEATURE_IBRS_IBPB)) &&
+			(!pcpu_has_cap(X86_FEATURE_STIBP))) {
 			ret = false;
 		} else {
 			/* No other state currently, do nothing */
@@ -84,7 +84,7 @@ void cpu_l1d_flush(void)
 	 *
 	 */
 	if (!skip_l1dfl_vmentry) {
-		if (cpu_has_cap(X86_FEATURE_L1D_FLUSH)) {
+		if (pcpu_has_cap(X86_FEATURE_L1D_FLUSH)) {
 			msr_write(MSR_IA32_FLUSH_CMD, IA32_L1D_FLUSH);
 		}
 	}

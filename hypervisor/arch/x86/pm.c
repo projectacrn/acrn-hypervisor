@@ -151,7 +151,7 @@ void host_enter_s3(struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, u
 
 	clac();
 	/* offline all APs */
-	stop_cpus();
+	stop_pcpus();
 
 	stac();
 	/* Save default main entry and we will restore it after
@@ -188,7 +188,7 @@ void host_enter_s3(struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, u
 	clac();
 
 	/* online all APs again */
-	if (!start_cpus(AP_MASK)) {
+	if (!start_pcpus(AP_MASK)) {
 		panic("Failed to start all APs!");
 	}
 }

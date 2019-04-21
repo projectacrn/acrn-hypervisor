@@ -479,7 +479,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 
 		wait_pcpus_offline(mask);
 
-		if (is_lapic_pt(vm) && !start_cpus(mask)) {
+		if (is_lapic_pt(vm) && !start_pcpus(mask)) {
 			pr_fatal("Failed to start all cpus in mask(0x%llx)", mask);
 			ret = -ETIMEDOUT;
 		}

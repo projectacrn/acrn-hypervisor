@@ -133,7 +133,7 @@ out:
 
 void npk_log_write(const char *buf, size_t buf_len)
 {
-	uint32_t cpu_id = get_cpu_id();
+	uint32_t cpu_id = get_pcpu_id();
 	struct npk_chan *channel = (struct npk_chan *)base;
 	const char *p = buf;
 	int32_t sz;

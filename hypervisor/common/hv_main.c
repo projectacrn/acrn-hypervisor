@@ -81,7 +81,7 @@ void vcpu_thread(struct sched_object *obj)
 
 void default_idle(__unused struct sched_object *obj)
 {
-	uint16_t pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_pcpu_id();
 
 	while (1) {
 		if (need_reschedule(pcpu_id)) {

@@ -22,7 +22,7 @@ int32_t init_cat_cap_info(void)
 	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
 	int32_t ret = 0;
 
-	if (cpu_has_cap(X86_FEATURE_CAT)) {
+	if (pcpu_has_cap(X86_FEATURE_CAT)) {
 		cpuid_subleaf(CPUID_RSD_ALLOCATION, 0, &eax, &ebx, &ecx, &edx);
 		/* If support L3 CAT, EBX[1] is set */
 		if ((ebx & 2U) != 0U) {
