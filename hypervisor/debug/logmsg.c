@@ -56,7 +56,7 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	timestamp = ticks_to_us(timestamp);
 
 	/* Get CPU ID */
-	pcpu_id = get_cpu_id();
+	pcpu_id = get_pcpu_id();
 	buffer = per_cpu(logbuf, pcpu_id);
 
 	(void)memset(buffer, 0U, LOG_MESSAGE_MAX_SIZE);

@@ -37,7 +37,7 @@ uint64_t local_gpa2hpa(struct acrn_vm *vm, uint64_t gpa, uint32_t *size)
 	const uint64_t *pgentry;
 	uint64_t pg_size = 0UL;
 	void *eptp;
-	struct acrn_vcpu *vcpu = vcpu_from_pid(vm, get_cpu_id());
+	struct acrn_vcpu *vcpu = vcpu_from_pid(vm, get_pcpu_id());
 
 	if ((vcpu != NULL) && (vcpu->arch.cur_context == SECURE_WORLD)) {
 		eptp = vm->arch_vm.sworld_eptp;

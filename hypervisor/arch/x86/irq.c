@@ -346,7 +346,7 @@ void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 	 */
 	if (irq < NR_IRQS) {
 		desc = &irq_desc_array[irq];
-		per_cpu(irq_count, get_cpu_id())[irq]++;
+		per_cpu(irq_count, get_pcpu_id())[irq]++;
 
 		if (vr == desc->vector &&
 			bitmap_test((uint16_t)(irq & 0x3FU), irq_alloc_bitmap + (irq >> 6U)) != 0U) {
@@ -365,7 +365,7 @@ void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 
 void dispatch_exception(struct intr_excp_ctx *ctx)
 {
-	uint16_t pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_pcpu_id();
 
 	/* Obtain lock to ensure exception dump doesn't get corrupted */
 	spinlock_obtain(&exception_spinlock);

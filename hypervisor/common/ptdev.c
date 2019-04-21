@@ -181,7 +181,7 @@ void ptirq_deactivate_entry(struct ptirq_remapping_info *entry)
 
 void ptdev_init(void)
 {
-	if (get_cpu_id() == BOOT_CPU_ID) {
+	if (get_pcpu_id() == BOOT_CPU_ID) {
 
 		spinlock_init(&ptdev_lock);
 		register_softirq(SOFTIRQ_PTDEV, ptirq_softirq);

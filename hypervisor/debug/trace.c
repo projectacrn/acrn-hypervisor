@@ -61,7 +61,7 @@ static inline void trace_put(uint16_t cpu_id, uint32_t evid, uint32_t n_data, st
 void TRACE_2L(uint32_t evid, uint64_t e, uint64_t f)
 {
 	struct trace_entry entry;
-	uint16_t cpu_id = get_cpu_id();
+	uint16_t cpu_id = get_pcpu_id();
 
 	if (!trace_check(cpu_id)) {
 		return;
@@ -75,7 +75,7 @@ void TRACE_2L(uint32_t evid, uint64_t e, uint64_t f)
 void TRACE_4I(uint32_t evid, uint32_t a, uint32_t b, uint32_t c, uint32_t d)
 {
 	struct trace_entry entry;
-	uint16_t cpu_id = get_cpu_id();
+	uint16_t cpu_id = get_pcpu_id();
 
 	if (!trace_check(cpu_id)) {
 		return;
@@ -91,7 +91,7 @@ void TRACE_4I(uint32_t evid, uint32_t a, uint32_t b, uint32_t c, uint32_t d)
 void TRACE_6C(uint32_t evid, uint8_t a1, uint8_t a2, uint8_t a3, uint8_t a4, uint8_t b1, uint8_t b2)
 {
 	struct trace_entry entry;
-	uint16_t cpu_id = get_cpu_id();
+	uint16_t cpu_id = get_pcpu_id();
 
 	if (!trace_check(cpu_id)) {
 		return;
@@ -113,7 +113,7 @@ void TRACE_6C(uint32_t evid, uint8_t a1, uint8_t a2, uint8_t a3, uint8_t a4, uin
 static inline void TRACE_16STR(uint32_t evid, const char name[])
 {
 	struct trace_entry entry;
-	uint16_t cpu_id = get_cpu_id();
+	uint16_t cpu_id = get_pcpu_id();
 	size_t len, i;
 
 	if (!trace_check(cpu_id)) {

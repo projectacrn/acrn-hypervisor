@@ -131,11 +131,11 @@ struct cpu_state_info *get_cpu_pm_state_info(void)
 	return &cpu_pm_state_info;
 }
 
-void load_cpu_state_data(void)
+void load_pcpu_state_data(void)
 {
 	int32_t tbl_idx;
 	const struct cpu_state_info *state_info;
-	struct cpuinfo_x86 *cpu_info = get_cpu_info();
+	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
 
 	(void)memset(&cpu_pm_state_info, 0U, sizeof(struct cpu_state_info));
 

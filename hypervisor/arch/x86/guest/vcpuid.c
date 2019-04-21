@@ -136,7 +136,7 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 		break;
 
 	case 0x16U:
-		cpu_info = get_cpu_info();
+		cpu_info = get_pcpu_info();
 		if (cpu_info->cpuid_level >= 0x16U) {
 			/* call the cpuid when 0x16 is supported */
 			cpuid_subleaf(leaf, subleaf, &entry->eax, &entry->ebx, &entry->ecx, &entry->edx);
@@ -199,7 +199,7 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 	struct vcpuid_entry entry;
 	uint32_t limit;
 	uint32_t i, j;
-	struct cpuinfo_x86 *cpu_info = get_cpu_info();
+	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
 
 	init_vcpuid_entry(0U, 0U, 0U, &entry);
 	if (cpu_info->cpuid_level < 0x16U) {
@@ -407,7 +407,7 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 			break;
 
 		case 0x0dU:
-			if (!cpu_has_cap(X86_FEATURE_OSXSAVE)) {
+			if (!pcpu_has_cap(X86_FEATURE_OSXSAVE)) {
 				*eax = 0U;
 				*ebx = 0U;
 				*ecx = 0U;

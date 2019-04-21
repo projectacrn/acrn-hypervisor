@@ -65,7 +65,7 @@ static void* uefi_get_rsdp(void)
 
 static void uefi_spurious_handler(int32_t vector)
 {
-	if (get_cpu_id() == BOOT_CPU_ID) {
+	if (get_pcpu_id() == BOOT_CPU_ID) {
 		struct acrn_vcpu *vcpu = per_cpu(vcpu, BOOT_CPU_ID);
 
 		if (vcpu != NULL) {

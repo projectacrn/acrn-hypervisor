@@ -100,7 +100,7 @@ int32_t add_timer(struct hv_timer *timer)
 			timer->period_in_cycle = max(timer->period_in_cycle, us_to_ticks(MIN_TIMER_PERIOD_US));
 		}
 
-		pcpu_id  = get_cpu_id();
+		pcpu_id  = get_pcpu_id();
 		cpu_timer = &per_cpu(cpu_timers, pcpu_id);
 
 		/* update the physical timer if we're on the timer_list head */
@@ -185,7 +185,7 @@ static void timer_softirq(uint16_t pcpu_id)
 
 void timer_init(void)
 {
-	uint16_t pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_pcpu_id();
 	int32_t retval = 0;
 
 	init_percpu_timer(pcpu_id);
@@ -260,7 +260,7 @@ static uint64_t pit_calibrate_tsc(uint32_t cal_ms_arg)
 static uint64_t native_calibrate_tsc(void)
 {
 	uint64_t tsc_hz = 0UL;
-	struct cpuinfo_x86 *cpu_info = get_cpu_info();
+	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
 
 	if (cpu_info->cpuid_level >= 0x15U) {
 		uint32_t eax_denominator, ebx_numerator, ecx_hz, reserved;

@@ -33,7 +33,7 @@
  * the macros involved are changed.
  */
 
-    .extern     init_secondary_cpu
+    .extern     init_secondary_pcpu
 
     .section     .trampoline_reset,"ax"
 
@@ -160,7 +160,7 @@ trampoline_start64:
     .align  8
     .global main_entry
 main_entry:
-    .quad   init_secondary_cpu /* default entry is AP start entry */
+    .quad   init_secondary_pcpu /* default entry is AP start entry */
 
     .global secondary_cpu_stack
 secondary_cpu_stack:

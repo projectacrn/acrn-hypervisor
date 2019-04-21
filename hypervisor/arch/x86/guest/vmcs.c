@@ -355,7 +355,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 		exec_vmwrite32(VMX_TPR_THRESHOLD, 0U);
 	}
 
-	if (cpu_has_cap(X86_FEATURE_OSXSAVE)) {
+	if (pcpu_has_cap(X86_FEATURE_OSXSAVE)) {
 		exec_vmwrite64(VMX_XSS_EXITING_BITMAP_FULL, 0UL);
 		value32 |= VMX_PROCBASED_CTLS2_XSVE_XRSTR;
 	}

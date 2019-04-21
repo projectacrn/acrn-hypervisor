@@ -29,12 +29,12 @@ void register_softirq(uint16_t nr, softirq_handler handler)
  */
 void fire_softirq(uint16_t nr)
 {
-	bitmap_set_lock(nr, &per_cpu(softirq_pending, get_cpu_id()));
+	bitmap_set_lock(nr, &per_cpu(softirq_pending, get_pcpu_id()));
 }
 
 void do_softirq(void)
 {
-	uint16_t cpu_id = get_cpu_id();
+	uint16_t cpu_id = get_pcpu_id();
 	volatile uint64_t *softirq_pending_bitmap =
 			&per_cpu(softirq_pending, cpu_id);
 	uint16_t nr = ffs64(*softirq_pending_bitmap);

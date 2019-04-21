@@ -41,10 +41,10 @@ static uint64_t startup_paddr = 0UL;
 /* physical cpu active bitmap, support up to 64 cpus */
 static uint64_t pcpu_active_bitmap = 0UL;
 
-static void cpu_xsave_init(void);
-static void set_current_cpu_id(uint16_t pcpu_id);
+static void pcpu_xsave_init(void);
+static void set_current_pcpu_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
-static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id);
+static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id);
 static uint64_t start_tsc __attribute__((__section__(".bss_noinit")));
 
 static void init_percpu_lapic_id(void)
@@ -67,7 +67,7 @@ static void init_percpu_lapic_id(void)
 	}
 }
 
-static void cpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
+static void pcpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
 {
 	/* Check if state is initializing */
 	if (state == PCPU_STATE_INITIALIZING) {
@@ -75,7 +75,7 @@ static void cpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
 		atomic_inc16(&up_count);
 
 		/* Save this CPU's logical ID to the TSC AUX MSR */
-		set_current_cpu_id(pcpu_id);
+		set_current_pcpu_id(pcpu_id);
 	}
 
 	/* If cpu is dead, decrement CPU up count */
@@ -102,7 +102,7 @@ uint64_t get_active_pcpu_bitmap(void)
 	return pcpu_active_bitmap;
 }
 
-void init_cpu_pre(uint16_t pcpu_id_args)
+void init_pcpu_pre(uint16_t pcpu_id_args)
 {
 	uint16_t pcpu_id = pcpu_id_args;
 	int32_t ret;
@@ -116,19 +116,19 @@ void init_cpu_pre(uint16_t pcpu_id_args)
 		/* Get CPU capabilities thru CPUID, including the physical address bit
 		 * limit which is required for initializing paging.
 		 */
-		init_cpu_capabilities();
+		init_pcpu_capabilities();
 
 		init_firmware_operations();
 
-		init_cpu_model_name();
+		init_pcpu_model_name();
 
-		load_cpu_state_data();
+		load_pcpu_state_data();
 
 		/* Initialize the hypervisor paging */
 		init_e820();
 		init_paging();
 
-		if (!cpu_has_cap(X86_FEATURE_X2APIC)) {
+		if (!pcpu_has_cap(X86_FEATURE_X2APIC)) {
 			panic("x2APIC is not present!");
 		}
 
@@ -154,7 +154,7 @@ void init_cpu_pre(uint16_t pcpu_id_args)
 
 		early_init_lapic();
 
-		pcpu_id = get_cpu_id_from_lapic_id(get_cur_lapic_id());
+		pcpu_id = get_pcpu_id_from_lapic_id(get_cur_lapic_id());
 		if (pcpu_id >= CONFIG_MAX_PCPU_NUM) {
 			panic("Invalid pCPU ID!");
 		}
@@ -163,10 +163,10 @@ void init_cpu_pre(uint16_t pcpu_id_args)
 	bitmap_set_nolock(pcpu_id, &pcpu_active_bitmap);
 
 	/* Set state for this CPU to initializing */
-	cpu_set_current_state(pcpu_id, PCPU_STATE_INITIALIZING);
+	pcpu_set_current_state(pcpu_id, PCPU_STATE_INITIALIZING);
 }
 
-void init_cpu_post(uint16_t pcpu_id)
+void init_pcpu_post(uint16_t pcpu_id)
 {
 #ifdef STACK_PROTECTOR
 	set_fs_base();
@@ -177,7 +177,7 @@ void init_cpu_post(uint16_t pcpu_id)
 
 	enable_smap();
 
-	cpu_xsave_init();
+	pcpu_xsave_init();
 
 	if (pcpu_id == BOOT_CPU_ID) {
 		/* Print Hypervisor Banner */
@@ -195,7 +195,7 @@ void init_cpu_post(uint16_t pcpu_id)
 		pr_acrnlog("API version %u.%u",
 				HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);
 
-		pr_acrnlog("Detect processor: %s", (get_cpu_info())->model_name);
+		pr_acrnlog("Detect processor: %s", (get_pcpu_info())->model_name);
 
 		pr_dbg("Core %hu is up", BOOT_CPU_ID);
 
@@ -231,11 +231,11 @@ void init_cpu_post(uint16_t pcpu_id)
 
 		/* Start all secondary cores */
 		startup_paddr = prepare_trampoline();
-		if (!start_cpus(AP_MASK)) {
+		if (!start_pcpus(AP_MASK)) {
 			panic("Failed to start all secondary cores!");
 		}
 
-		ASSERT(get_cpu_id() == BOOT_CPU_ID, "");
+		ASSERT(get_pcpu_id() == BOOT_CPU_ID, "");
 	} else {
 		pr_dbg("Core %hu is up", pcpu_id);
 
@@ -251,7 +251,7 @@ void init_cpu_post(uint16_t pcpu_id)
 	setup_clos(pcpu_id);
 }
 
-static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id)
+static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id)
 {
 	uint16_t i;
 	uint16_t pcpu_id = INVALID_CPU_ID;
@@ -266,7 +266,7 @@ static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id)
 	return pcpu_id;
 }
 
-static void start_cpu(uint16_t pcpu_id)
+static void start_pcpu(uint16_t pcpu_id)
 {
 	uint32_t timeout;
 
@@ -292,7 +292,7 @@ static void start_cpu(uint16_t pcpu_id)
 	/* Check to see if expected CPU is actually up */
 	if (!is_pcpu_active(pcpu_id)) {
 		pr_fatal("Secondary CPU%hu failed to come up", pcpu_id);
-		cpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
+		pcpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
 	}
 }
 
@@ -305,10 +305,10 @@ static void start_cpu(uint16_t pcpu_id)
  * @return true if all cpus set in mask are started
  * @return false if there are any cpus set in mask aren't started
  */
-bool start_cpus(uint64_t mask)
+bool start_pcpus(uint64_t mask)
 {
 	uint16_t i;
-	uint16_t pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_pcpu_id();
 	uint64_t expected_start_mask = mask;
 
 	/* secondary cpu start up will wait for pcpu_sync -> 0UL */
@@ -322,7 +322,7 @@ bool start_cpus(uint64_t mask)
 			continue; /* Avoid start itself */
 		}
 
-		start_cpu(i);
+		start_pcpu(i);
 		i = ffs64(expected_start_mask);
 	}
 
@@ -343,13 +343,13 @@ void wait_pcpus_offline(uint64_t mask)
 	}
 }
 
-void stop_cpus(void)
+void stop_pcpus(void)
 {
 	uint16_t pcpu_id;
 	uint64_t mask = 0UL;
 
 	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
-		if (get_cpu_id() == pcpu_id) {	/* avoid offline itself */
+		if (get_pcpu_id() == pcpu_id) {	/* avoid offline itself */
 			continue;
 		}
 
@@ -379,7 +379,7 @@ void cpu_dead(void)
 	 * us to modify the value using a JTAG probe and resume if needed.
 	 */
 	int32_t halt = 1;
-	uint16_t pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_pcpu_id();
 
 	if (bitmap_test(pcpu_id, &pcpu_active_bitmap)) {
 		/* clean up native stuff */
@@ -387,7 +387,7 @@ void cpu_dead(void)
 		cache_flush_invalidate_all();
 
 		/* Set state to show CPU is dead */
-		cpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
+		pcpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
 		bitmap_clear_nolock(pcpu_id, &pcpu_active_bitmap);
 
 		/* Halt the CPU */
@@ -399,7 +399,7 @@ void cpu_dead(void)
 	}
 }
 
-static void set_current_cpu_id(uint16_t pcpu_id)
+static void set_current_pcpu_id(uint16_t pcpu_id)
 {
 	/* Write TSC AUX register */
 	msr_write(MSR_IA32_TSC_AUX, (uint64_t) pcpu_id);
@@ -442,23 +442,23 @@ void wait_sync_change(uint64_t *sync, uint64_t wake_sync)
 	}
 }
 
-static void cpu_xsave_init(void)
+static void pcpu_xsave_init(void)
 {
 	uint64_t val64;
 	struct cpuinfo_x86 *cpu_info;
 
-	if (cpu_has_cap(X86_FEATURE_XSAVE)) {
+	if (pcpu_has_cap(X86_FEATURE_XSAVE)) {
 		CPU_CR_READ(cr4, &val64);
 		val64 |= CR4_OSXSAVE;
 		CPU_CR_WRITE(cr4, val64);
 
-		if (get_cpu_id() == BOOT_CPU_ID) {
+		if (get_pcpu_id() == BOOT_CPU_ID) {
 			uint32_t ecx, unused;
 			cpuid(CPUID_FEATURES, &unused, &unused, &ecx, &unused);
 
 			/* if set, update it */
 			if ((ecx & CPUID_ECX_OSXSAVE) != 0U) {
-				cpu_info = get_cpu_info();
+				cpu_info = get_pcpu_info();
 				cpu_info->cpuid_leaves[FEAT_1_ECX] |= CPUID_ECX_OSXSAVE;
 			}
 		}
@@ -478,7 +478,7 @@ void msr_write_pcpu(uint32_t msr_index, uint64_t value64, uint16_t pcpu_id)
 	struct msr_data_struct msr = {0};
 	uint64_t mask = 0UL;
 
-	if (pcpu_id == get_cpu_id()) {
+	if (pcpu_id == get_pcpu_id()) {
 		msr_write(msr_index, value64);
 	} else {
 		msr.msr_index = msr_index;
@@ -501,7 +501,7 @@ uint64_t msr_read_pcpu(uint32_t msr_index, uint16_t pcpu_id)
 	uint64_t mask = 0UL;
 	uint64_t ret = 0;
 
-	if (pcpu_id == get_cpu_id()) {
+	if (pcpu_id == get_pcpu_id()) {
 		ret = msr_read(msr_index);
 	} else {
 		msr.msr_index = msr_index;

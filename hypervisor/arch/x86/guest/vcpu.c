@@ -596,7 +596,7 @@ void reset_vcpu(struct acrn_vcpu *vcpu)
 
 void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 {
-	uint16_t pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_pcpu_id();
 
 	pr_dbg("vcpu%hu paused, new state: %d",
 		vcpu->vcpu_id, new_state);

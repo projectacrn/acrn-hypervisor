@@ -52,7 +52,7 @@
 #define CACHE_LINE_SIZE		64U
 
 /* IA32E Paging constants */
-#define IA32E_REF_MASK	((get_cpu_info())->physical_address_mask)
+#define IA32E_REF_MASK	((get_pcpu_info())->physical_address_mask)
 
 struct acrn_vcpu;
 static inline uint64_t round_page_up(uint64_t addr)

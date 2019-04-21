@@ -162,7 +162,7 @@ after:
     mov     %eax,%gs  // Was 32bit POC CLS
 
    /* continue with chipset level initialization */
-   call     init_primary_cpu
+   call     init_primary_pcpu
 
 loop:
     jmp loop
