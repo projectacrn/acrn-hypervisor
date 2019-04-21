@@ -345,44 +345,24 @@ void wait_pcpus_offline(uint64_t mask)
 
 void stop_cpus(void)
 {
-	uint16_t pcpu_id, expected_up;
-	uint32_t timeout;
+	uint16_t pcpu_id;
+	uint64_t mask = 0UL;
 
 	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
 		if (get_cpu_id() == pcpu_id) {	/* avoid offline itself */
 			continue;
 		}
 
+		bitmap_set_nolock(pcpu_id, &mask);
 		make_pcpu_offline(pcpu_id);
 	}
 
-	expected_up = 1U;
-	timeout = CPU_DOWN_TIMEOUT * 1000U;
-	while ((atomic_load16(&up_count) != expected_up) && (timeout != 0U)) {
-		/* Delay 10us */
-		udelay(10U);
-
-		/* Decrement timeout value */
-		timeout -= 10U;
-	}
-
-	if (atomic_load16(&up_count) != expected_up) {
-		pr_fatal("Can't make all APs offline");
-
-		/* if partial APs is down, it's not easy to recover
-		 * per our current implementation (need make up dead
-		 * APs one by one), just print error mesage and dead
-		 * loop here.
-		 *
-		 * FIXME:
-		 * We need to refine here to handle the AP offline
-		 * failure for release/debug version. Ideally, we should
-		 * define how to handle general unrecoverable error and
-		 * follow it here.
-		 */
-		do {
-		} while (1);
-	}
+	/**
+	 * Timeout never occurs here:
+	 *   If target cpu received a NMI and panic, it has called cpu_dead and make_pcpu_offline success.
+	 *   If target cpu is running, an IPI will be delivered to it and then call cpu_dead.
+	 */
+	wait_pcpus_offline(mask);
 }
 
 void cpu_do_idle(void)
