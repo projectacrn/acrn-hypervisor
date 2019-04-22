@@ -198,6 +198,9 @@ void ptdev_release_all_entries(const struct acrn_vm *vm)
 		entry = &ptirq_entries[idx];
 		if ((entry->vm == vm) && is_entry_active(entry)) {
 			spinlock_obtain(&ptdev_lock);
+			if (entry->release_cb != NULL) {
+				entry->release_cb(entry);
+			}
 			ptirq_deactivate_entry(entry);
 			ptirq_release_entry(entry);
 			spinlock_release(&ptdev_lock);

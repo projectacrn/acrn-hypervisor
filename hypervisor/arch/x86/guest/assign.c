@@ -74,6 +74,24 @@ static uint32_t calculate_logical_dest_mask(uint64_t pdmask)
 	return dest_mask;
 }
 
+/**
+ * @pre entry != NULL
+ */
+static void ptirq_free_irte(const struct ptirq_remapping_info *entry)
+{
+	struct intr_source intr_src;
+
+	if (entry->intr_type == PTDEV_INTR_MSI) {
+		intr_src.is_msi = true;
+		intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
+	} else {
+		intr_src.is_msi = false;
+		intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(entry->allocated_pirq);
+	}
+
+	dmar_free_irte(intr_src, (uint16_t)entry->allocated_pirq);
+}
+
 static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *info,
 		const struct ptirq_remapping_info *entry, uint32_t vector)
 {
@@ -270,6 +288,8 @@ static struct ptirq_remapping_info *add_msix_remapping(struct acrn_vm *vm,
 			if (entry != NULL) {
 				entry->phys_sid.value = phys_sid.value;
 				entry->virt_sid.value = virt_sid.value;
+				entry->release_cb = ptirq_free_irte;
+
 				/* update msi source and active entry */
 				if (ptirq_activate_entry(entry, IRQ_INVALID) < 0) {
 					ptirq_release_entry(entry);
@@ -355,6 +375,7 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 				if (entry != NULL) {
 					entry->phys_sid.value = phys_sid.value;
 					entry->virt_sid.value = virt_sid.value;
+					entry->release_cb = ptirq_free_irte;
 
 					/* activate entry */
 					if (ptirq_activate_entry(entry, phys_irq) < 0) {
