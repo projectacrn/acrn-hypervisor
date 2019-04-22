@@ -462,11 +462,11 @@ vlapic_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 	lapic = &(vlapic->apic_page);
 	tmrptr = &lapic->tmr[0];
 	if (level) {
-		if (!bitmap32_test_and_set_lock((uint16_t)(vector & 0x1fU), &tmrptr[vector >> 5U].v)) {
+		if (!bitmap32_test_and_set_lock((uint16_t)(vector & 0x1fU), &tmrptr[(vector & 0xffU) >> 5U].v)) {
 			vcpu_set_eoi_exit_bitmap(vlapic->vcpu, vector);
 		}
 	} else {
-		if (bitmap32_test_and_clear_lock((uint16_t)(vector & 0x1fU), &tmrptr[vector >> 5U].v)) {
+		if (bitmap32_test_and_clear_lock((uint16_t)(vector & 0x1fU), &tmrptr[(vector & 0xffU) >> 5U].v)) {
 			vcpu_clear_eoi_exit_bitmap(vlapic->vcpu, vector);
 		}
 	}
@@ -875,12 +875,10 @@ vlapic_update_ppr(struct acrn_vlapic *vlapic)
 		isrptr = &(vlapic->apic_page.isr[0]);
 		for (vector = 0U; vector < 256U; vector++) {
 			idx = vector >> 5U;
-			if ((isrptr[idx].v & (1U << (vector & 0x1fU)))
-									!= 0U) {
+			if (((isrptr[idx].v & (1U << (vector & 0x1fU))) != 0U)
+				&& (i < ISRVEC_STK_SIZE)) {
 				isrvec = (uint32_t)vlapic->isrvec_stk[i];
-				if ((i > vlapic->isrvec_stk_top) ||
-					((i < ISRVEC_STK_SIZE) &&
-					(isrvec != vector))) {
+				if ((i > vlapic->isrvec_stk_top) || (isrvec != vector)) {
 					dump_isrvec_stk(vlapic);
 					panic("ISR and isrvec_stk out of sync");
 				}
