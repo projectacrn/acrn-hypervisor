@@ -486,9 +486,9 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 		vm_config = get_vm_config(vm->vm_id);
 		vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
 
-		ptdev_release_all_entries(vm);
-
 		vpci_cleanup(vm);
+
+		ptdev_release_all_entries(vm);
 
 		/* Free iommu */
 		if (vm->iommu != NULL) {

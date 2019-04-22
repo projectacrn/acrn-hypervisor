@@ -120,6 +120,9 @@ struct ptirq_msi_info {
 	int32_t is_msix;	/* 0-MSI, 1-MSIX */
 };
 
+struct ptirq_remapping_info;
+typedef void (*ptirq_arch_release_fn_t)(const struct ptirq_remapping_info *entry);
+
 /* entry per each allocated irq/vector
  * it represents a pass-thru device's remapping data entry which collecting
  * information related with its vm and msi/intx mapping & interaction nodes
@@ -139,6 +142,7 @@ struct ptirq_remapping_info {
 
 	uint64_t intr_count;
 	struct hv_timer intr_delay_timer; /* used for delay intr injection */
+	ptirq_arch_release_fn_t release_cb;
 };
 
 extern struct ptirq_remapping_info ptirq_entries[CONFIG_MAX_PT_IRQ_ENTRIES];
