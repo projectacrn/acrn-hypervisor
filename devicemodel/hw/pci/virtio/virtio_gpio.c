@@ -291,6 +291,7 @@ static void print_intr_statistics(struct gpio_irq_chip *chip);
 static void record_intr_statistics(struct gpio_irq_chip *chip, uint64_t mask);
 static void gpio_pio_write(struct virtio_gpio *gpio, int n, uint64_t reg);
 static uint32_t gpio_pio_read(struct virtio_gpio *gpio, int n);
+static void native_gpio_close_line(struct gpio_line *line);
 
 static void
 native_gpio_update_line_info(struct gpio_line *line)
@@ -324,10 +325,14 @@ native_gpio_update_line_info(struct gpio_line *line)
 static void
 native_gpio_close_chip(struct native_gpio_chip *chip)
 {
+	int i;
 	if (chip) {
 		memset(chip->name, 0, sizeof(chip->name));
 		memset(chip->label, 0, sizeof(chip->label));
 		memset(chip->dev_name, 0, sizeof(chip->dev_name));
+		for (i = 0; i < chip->ngpio; i++) {
+			native_gpio_close_line(&chip->lines[i]);
+		}
 		if (chip->fd > 0) {
 			close(chip->fd);
 			chip->fd = -1;
