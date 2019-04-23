@@ -360,7 +360,7 @@ Switch between privileged VMs
 Connect the serial port on the UP2 board to the development workstation.
 If you set the BDF of the serial port right while building the ACRN hypervisor,
 you should see the output from the ACRN serial console as below.
-You could then log in to the privileged VMs by ``sos_console`` command,
+You could then log in to the privileged VMs by ``vm_console`` command,
 and press :kbd:`CTRL+Space` keys to return to the ACRN serial console.
 
 .. code-block:: console
@@ -379,7 +379,7 @@ and press :kbd:`CTRL+Space` keys to return to the ACRN serial console.
   [21885195us][cpu=0][sev=3][seq=34]:vlapic: Start Secondary VCPU1 for VM[1]...
   [21889889us][cpu=3][sev=3][seq=35]:vlapic: Start Secondary VCPU1 for VM[2]...
   ACRN:\>
-  ACRN:\>sos_console 0
+  ACRN:\>vm_console 0
 
   ----- Entering Guest 1 Shell -----
   [    1.997439] systemd[1]: Listening on Network Service Netlink Socket.
@@ -396,7 +396,7 @@ and press :kbd:`CTRL+Space` keys to return to the ACRN serial console.
   root@clr-932c8a3012ec4dc6af53790b7afbf6ba ~ #
 
    ---Entering ACRN SHELL---
-  ACRN:\>sos_console 1
+  ACRN:\>vm_console 1
 
   ----- Entering Guest 2 Shell -----
   [    1.490122] usb 1-4: new full-speed USB device number 2 using xhci_hcd

@@ -339,7 +339,7 @@ For details on how hypervisor console works, refer to
 :ref:`hv-console`.
 
 For a guest console in partition mode, ACRN provides an option to pass
-``vmid`` as an argument to ``sos_console``. vmid is same as the one
+``vmid`` as an argument to ``vm_console``. vmid is same as the one
 developer uses in the guest configuration.
 
 Guests w/o LAPIC pass-thru
