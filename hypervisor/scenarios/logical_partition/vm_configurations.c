@@ -22,7 +22,6 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* 26c5e0d8-8f8a-47d8-8109-f201ebd61a5e */
 		.pcpu_bitmap = VM0_CONFIG_PCPU_BITMAP,
 		.cpu_num = VM0_CONFIG_NUM_CPUS,
-		.guest_flags = GUEST_FLAG_IO_COMPLETION_POLLING,
 		.clos = 0U,
 		.memory = {
 			.start_hpa = VM0_CONFIG_MEM_START_HPA,
@@ -50,7 +49,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* dd87ce08-66f9-473d-bc58-7605837f935e */
 		.pcpu_bitmap = VM1_CONFIG_PCPU_BITMAP,
 		.cpu_num = VM1_CONFIG_NUM_CPUS,
-		.guest_flags = (GUEST_FLAG_RT | GUEST_FLAG_LAPIC_PASSTHROUGH | GUEST_FLAG_IO_COMPLETION_POLLING),
+		.guest_flags = (GUEST_FLAG_RT | GUEST_FLAG_LAPIC_PASSTHROUGH),
 		.clos = 0U,
 		.memory = {
 			.start_hpa = VM1_CONFIG_MEM_START_HPA,
