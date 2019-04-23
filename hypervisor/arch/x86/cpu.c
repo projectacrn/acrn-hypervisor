@@ -30,8 +30,6 @@
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */
 
-#define AP_MASK			(((1UL << phys_cpu_num) - 1UL) & ~(1UL << 0U))
-
 struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 static uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;

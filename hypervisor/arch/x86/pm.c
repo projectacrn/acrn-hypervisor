@@ -20,8 +20,6 @@
 #include <lapic.h>
 #include <vcpu.h>
 
-#define AP_MASK		(((1UL << get_pcpu_nums()) - 1UL) & ~(1UL << 0U))
-
 struct cpu_context cpu_ctx;
 
 /* The values in this structure should come from host ACPI table */

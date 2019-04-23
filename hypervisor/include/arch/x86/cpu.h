@@ -139,6 +139,8 @@
 
 #define	BUS_LOCK	"lock ; "
 
+#define AP_MASK			(((1UL << get_pcpu_nums()) - 1UL) & ~(1UL << 0U))
+
 /**
  *
  * Identifiers for architecturally defined registers.
