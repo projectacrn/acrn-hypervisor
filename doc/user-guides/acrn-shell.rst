@@ -22,8 +22,8 @@ The ACRN hypervisor shell supports the following commands:
    * - dumpmem <hva> <length>
      - Dump host memory, starting at a given address, and for a given length
        (in bytes)
-   * - sos_console
-     - Switch to the SOS's console. Use :kbd:`Ctrl+Spacebar` to return to the ACRN
+   * - vm_console
+     - Switch to the VM's console. Use :kbd:`Ctrl+Spacebar` to return to the ACRN
        shell console
    * - int
      - List interrupt information per CPU
@@ -129,10 +129,10 @@ pCPU number is 0x0000000000000004.
 
    acrn map information
 
-sos_console
+vm_console
 ===========
 
-The ``sos_console`` command switches the ACRN's console to become the SOS's console.
+The ``vm_console`` command switches the ACRN's console to become the VM's console.
 Use a :kbd:`Ctrl-Spacebar` to return to the ACRN shell console.
 
 vioapic

@@ -108,7 +108,7 @@ just instrumented with additional log information), and check the log as follows
 
 Then we use the command, on the ACRN console::
 
-   sos_console
+   vm_console
 
 to switch to the SOS console. Then we use the command::
 
