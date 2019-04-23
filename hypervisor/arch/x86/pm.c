@@ -3,22 +3,22 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
- #include <types.h>
- #include <acrn_common.h>
- #include <default_acpi_info.h>
- #include <platform_acpi_info.h>
- #include <per_cpu.h>
- #include <io.h>
- #include <pgtable.h>
- #include <host_pm.h>
- #include <trampoline.h>
- #include <msr.h>
- #include <vmx.h>
- #include <console.h>
- #include <ioapic.h>
- #include <vtd.h>
- #include <lapic.h>
- #include <vcpu.h>
+#include <types.h>
+#include <acrn_common.h>
+#include <default_acpi_info.h>
+#include <platform_acpi_info.h>
+#include <per_cpu.h>
+#include <io.h>
+#include <pgtable.h>
+#include <host_pm.h>
+#include <trampoline.h>
+#include <msr.h>
+#include <vmx.h>
+#include <console.h>
+#include <ioapic.h>
+#include <vtd.h>
+#include <lapic.h>
+#include <vcpu.h>
 
 #define AP_MASK		(((1UL << get_pcpu_nums()) - 1UL) & ~(1UL << 0U))
 
