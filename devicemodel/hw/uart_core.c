@@ -790,10 +790,12 @@ uart_reset_backend(struct uart_backend *be)
 			break;
 	}
 
-	error = mevent_enable(evp);
-	if (error) {
-		WPRINTF(("mevent_enable error\n"));
-		return -1;
+	if (evp) {
+		error = mevent_enable(evp);
+		if (error) {
+			WPRINTF(("mevent_enable error\n"));
+			return -1;
+		}
 	}
 
 	return 0;
@@ -821,13 +823,15 @@ uart_enable_backend(struct uart_backend *be, bool enable)
 		return -1;
 	}
 
-	if (enable)
-		error = mevent_enable(evp);
-	else
-		error = mevent_disable(evp);
-	if (error) {
-		WPRINTF(("mevent %s error\n", enable ? "enable" : "disable"));
-		return -1;
+	if (evp) {
+		if (enable)
+			error = mevent_enable(evp);
+		else
+			error = mevent_disable(evp);
+		if (error) {
+			WPRINTF(("mevent %s error\n", enable ? "enable" : "disable"));
+			return -1;
+		}
 	}
 
 	return 0;
@@ -909,11 +913,18 @@ uart_config_backend(struct uart_vdev *uart, struct uart_backend *be, long port)
 			atexit(uart_reset_stdio);
 		}
 		be->opened = true;
-		be->evp = mevent_add(fd, EVF_READ, uart_drain, uart,
-			uart_mevent_teardown, uart);
-		if (!be->evp) {
-			WPRINTF(("uart: mevent_add failed\n"));
-			return -1;
+		/*
+		 * When acrn-dm is started by acrnd as a background process,
+		 * STDIO is redirected to journal log file. In this case epoll
+		 * cannot be used on a regular file.
+		 */
+		if (isatty(fd)) {
+			be->evp = mevent_add(fd, EVF_READ, uart_drain, uart,
+				uart_mevent_teardown, uart);
+			if (!be->evp) {
+				WPRINTF(("uart: mevent_add failed\n"));
+				return -1;
+			}
 		}
 		break;
 	case UART_BE_SOCK:
