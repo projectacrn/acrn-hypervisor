@@ -170,7 +170,7 @@ gvt_create_instance(struct pci_gvt *gvt)
 	gvt->gvt_file = fopen(path, "w");
 	if (gvt->gvt_file == NULL) {
 		WPRINTF(("GVT: open %s failed\n", path));
-		return errno;
+		return -errno;
 	}
 
 	DPRINTF(("GVT: %s: domid=%d, low_gm_sz=%dMB, high_gm_sz=%dMB, "
@@ -189,10 +189,10 @@ gvt_create_instance(struct pci_gvt *gvt)
 	 */
 	if (fprintf(gvt->gvt_file, "%d,%u,%u,%u\n", guest_domid,
 			gvt_low_gm_sz, gvt_high_gm_sz, gvt_fence_sz) < 0)
-		ret = errno;
+		ret = -errno;
 
 	if (fclose(gvt->gvt_file) != 0)
-		return errno;
+		return -errno;
 
 	if (!ret)
 		gvt->instance_created = 1;
@@ -210,17 +210,17 @@ gvt_destroy_instance(struct pci_gvt *gvt)
 	gvt->gvt_file = fopen(path, "w");
 	if (gvt->gvt_file == NULL) {
 		WPRINTF(("gvt: error: open %s failed", path));
-		return errno;
+		return -errno;
 	}
 
 	/* -domid means we want the gvt driver to free the gvt instance
 	 * of Domain domid.
 	 **/
 	if (fprintf(gvt->gvt_file, "%d\n", -guest_domid) < 0)
-		ret = errno;
+		ret = -errno;
 
 	if (fclose(gvt->gvt_file) != 0)
-		return errno;
+		return -errno;
 
 	if (!ret)
 		gvt->instance_created = 0;
