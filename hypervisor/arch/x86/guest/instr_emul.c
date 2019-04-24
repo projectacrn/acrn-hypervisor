@@ -1084,9 +1084,11 @@ static int32_t emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie 
 	uint64_t rcx = 0U, rdi, rsi, rflags;
 	uint32_t err_code;
 	enum cpu_reg_name seg;
-	uint8_t repeat, opsize = vie->opsize;
+	uint8_t repeat, opsize;
 	bool is_mmio_write, done = false;
 
+	/* update the Memory Operand byte size if necessary */
+	opsize = ((vie->op.op_flags & VIE_OP_F_BYTE_OP) != 0U) ? 1U : vie->opsize;
 	is_mmio_write = (vcpu->req.reqs.mmio.direction == REQUEST_WRITE);
 
 	/*
@@ -1163,10 +1165,12 @@ static int32_t emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie 
 static int32_t emulate_stos(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	bool done = false;
-	uint8_t repeat, opsize = vie->opsize;
+	uint8_t repeat, opsize;
 	uint64_t val;
 	uint64_t rcx = 0U, rdi, rflags;
 
+	/* update the Memory Operand byte size if necessary */
+	opsize = ((vie->op.op_flags & VIE_OP_F_BYTE_OP) != 0U) ? 1U : vie->opsize;
 	repeat = vie->repz_present | vie->repnz_present;
 
 	if (repeat != 0U) {
@@ -1899,18 +1903,6 @@ static int32_t decode_opcode(struct instr_emul_vie *vie)
 			if (vie->op.op_type == VIE_OP_TYPE_TWO_BYTE) {
 				ret = decode_two_byte_opcode(vie);
 			}
-
-			/* Fixup the opsize according to opcode w bit:
-			 * If w bit of opcode is 0, the operand size is 1 byte
-			 * If w bit of opcode is 1, the operand size is decided
-			 * by prefix and default operand size attribute (handled
-			 * in decode_prefixes).
-			 * The VIE_OP_F_BYTE_OP only set when the instruction support
-			 * Encoding of Operand Size (w) Bit and the w bit of opcode is 0.
-			 */
-			if ((ret == 0) && ((vie->op.op_flags & VIE_OP_F_BYTE_OP) != 0U)) {
-				vie->opsize = 1U;
-			}
 		}
 	}
 
@@ -2405,7 +2397,9 @@ int32_t decode_instruction(struct acrn_vcpu *vcpu)
 			}
 
 			if (retval >= 0) {
-				retval = (int32_t)(emul_ctxt->vie.opsize);
+				/* return the Memory Operand byte size */
+				retval = ((emul_ctxt->vie.op.op_flags & VIE_OP_F_BYTE_OP) != 0U) ?
+						1 : (int32_t)emul_ctxt->vie.opsize;
 			}
 		}
 	}
