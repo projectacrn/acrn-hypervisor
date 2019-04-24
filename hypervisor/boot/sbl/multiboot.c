@@ -54,7 +54,7 @@ static void parse_other_modules(struct acrn_vm *vm, const struct multiboot_modul
 			static int32_t copy_once = 1;
 
 			start = end + 1; /*it is fw name for boot args */
-			snprintf(dyn_bootargs, 100U, " %s=0x%x@0x%x ", start, mod_size, mod_addr);
+			snprintf(dyn_bootargs, 100U, " %s=0x%x@0x%lx ", start, mod_size, mod_addr);
 			dev_dbg(ACRN_DBG_BOOT, "fw-%d: %s", i, dyn_bootargs);
 
 			/*copy boot args to load addr, set src=load addr*/
