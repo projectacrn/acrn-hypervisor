@@ -41,7 +41,8 @@ each with their own way to install development tools:
           python3 \
           python3-pip \
           libblkid-dev \
-          e2fslibs-dev
+          e2fslibs-dev \
+          pkg-config
      $ sudo pip3 install kconfiglib
 
   .. note::
@@ -56,6 +57,21 @@ each with their own way to install development tools:
         $ sudo apt install g++-7 -y
         $ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 \
                              --slave /usr/bin/g++ g++ /usr/bin/g++-7
+
+  .. note::
+     ACRN development requires ``binutils`` version 2.27 (or higher). You can
+     verify your version of ``binutils`` with the command ``apt show binutils``.
+     While Ubuntu 18.04 has a new version of ``binutils`` the default version on
+     Ubuntu 16.04 needs updating (see issue `#1133
+     <https://github.com/projectacrn/acrn-hypervisor/issues/1133>`_).
+
+     .. code-block:: none
+
+        $ wget https://mirrors.ocf.berkeley.edu/gnu/binutils/binutils-2.27.tar.gz
+        $ tar xzvf binutils-2.27 && cd binutils-2.27
+        $ ./configure
+        $ make
+        $ sudo make install
 
   .. note::
      Ubuntu 14.04 requires ``libsystemd-journal-dev`` instead of ``libsystemd-dev``
