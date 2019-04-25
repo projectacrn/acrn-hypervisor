@@ -66,6 +66,7 @@
 #include "vmcfg.h"
 #include "tpm.h"
 #include "virtio.h"
+#include "log.h"
 
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
 
@@ -140,7 +141,8 @@ usage(int code)
 		"       %*s [-s pci] [-U uuid] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]\n"
 		"       %*s [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]\n"
 		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
-		"       %*s [--vmcfg sub_options] [--dump vm_idx] [--ptdev_no_reset] [--debugexit] <vm>\n"
+		"       %*s [--vmcfg sub_options] [--dump vm_idx] [--ptdev_no_reset] [--debugexit] \n"
+		"       %*s [--logger-setting param_setting] <vm>\n"
 		"       -A: create ACPI tables\n"
 		"       -B: bootargs for kernel\n"
 		"       -c: # cpus (default 1)\n"
@@ -174,10 +176,12 @@ usage(int code)
 		"       --virtio_poll: enable virtio poll mode with poll interval with ns\n"
 		"       --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET\n"
 		"       --lapic_pt: enable local apic passthrough\n"
-		"       --rtvm: indicate that the guest is rtvm\n",
+		"       --rtvm: indicate that the guest is rtvm\n"
+		"       --logger_setting: params like console,level=4;kmsg,level=3\n",
 		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
-		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "");
+		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
+		(int)strnlen(progname, PATH_MAX), "");
 
 	exit(code);
 }
@@ -720,6 +724,7 @@ enum {
 	CMD_OPT_VTPM2,
 	CMD_OPT_LAPIC_PT,
 	CMD_OPT_RTVM,
+	CMD_OPT_LOGGER_SETTING,
 };
 
 static struct option long_options[] = {
@@ -760,6 +765,7 @@ static struct option long_options[] = {
 	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
 	{"lapic_pt",		no_argument,		0, CMD_OPT_LAPIC_PT},
 	{"rtvm",		no_argument,		0, CMD_OPT_RTVM},
+	{"logger_setting",	required_argument,	0, CMD_OPT_LOGGER_SETTING},
 	{0,			0,			0,  0  },
 };
 
@@ -919,6 +925,12 @@ dm_run(int argc, char *argv[])
 		case CMD_OPT_INTR_MONITOR:
 			if (acrn_parse_intr_monitor(optarg) != 0) {
 				errx(EX_USAGE, "invalid intr-monitor params %s", optarg);
+				exit(1);
+			}
+			break;
+		case CMD_OPT_LOGGER_SETTING:
+			if (init_logger_setting(optarg) != 0) {
+				errx(EX_USAGE, "invalid logger setting params %s", optarg);
 				exit(1);
 			}
 			break;
