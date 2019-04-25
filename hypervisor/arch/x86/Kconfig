@@ -17,28 +17,6 @@ config LOGICAL_PARTITION
 
 endchoice
 
-choice
-	prompt "Hypervisor mode"
-	default SHARING_MODE
-	help
-	  Select the usage mode of the hypervisor.
-
-config SHARING_MODE
-	bool "Sharing mode"
-	help
-	  In sharing mode, the first VM (called Service OS or SOS) is capable of
-	  managing the other VMs (called User OS or UOS) and trap/mediate their
-	  I/O accesses to physical devices.
-
-config PARTITION_MODE
-	bool "Partition mode"
-	help
-	  In partition mode, every VM owns part of the physical resources
-	  exclusively and runs with minimal interference from the others. The VM
-	  configurations are statically defined in the source.
-
-endchoice
-
 config BOARD
 	string "Target board"
 	help
