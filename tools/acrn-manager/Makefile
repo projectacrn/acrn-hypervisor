@@ -14,6 +14,7 @@ MANAGER_CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
 MANAGER_CFLAGS += -fpie -fpic
 #FIXME: remove me. work-around for system() calls, which will be removed
 MANAGER_CFLAGS += -Wno-format-truncation -Wno-unused-result
+MANAGER_CFLAGS += -Wno-stringop-truncation
 MANAGER_CFLAGS += $(CFLAGS)
 
 MANAGER_CFLAGS += -I../../devicemodel/include

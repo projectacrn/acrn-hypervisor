@@ -20,6 +20,7 @@ CFLAGS += -Werror
 CFLAGS += -O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
 CFLAGS += -fpie
+CFLAGS += -Wno-stringop-truncation -Wno-address-of-packed-member
 
 CFLAGS += -I$(BASEDIR)/include
 CFLAGS += -I$(BASEDIR)/include/public
