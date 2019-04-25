@@ -28,7 +28,7 @@ struct logger_ops {
 	void (*output)(const char *fmt, va_list args);
 };
 
-void init_logger_setting(const char *opt);
+int init_logger_setting(const char *opt);
 void output_log(uint8_t level, const char *fmt, ...);
 
 /*
