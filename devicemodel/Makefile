@@ -156,6 +156,7 @@ SRCS += vmcfg/apl-mrb/vm1/vm1.c
 
 # log
 SRCS += log/log.c
+SRCS += log/kmsg_logger.c
 
 OBJS := $(patsubst %.c,$(DM_OBJDIR)/%.o,$(SRCS))
 
