@@ -34,11 +34,6 @@ inside the hypervisor:
 
    Control flow of I/O emulation in the hypervisor
 
-:option:`CONFIG_PARTITION_MODE` is the only configuration option that affects the
-functionality of I/O emulation. With :option:`CONFIG_PARTITION_MODE` enabled,
-the hypervisor never sends I/O request to any VM. Unhandled I/O reads
-get all 1's and writes are silently dropped.
-
 I/O emulation does not rely on any calibration data.
 
 Trap Path
