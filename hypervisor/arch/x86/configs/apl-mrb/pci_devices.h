@@ -8,13 +8,8 @@
 #define PCI_DEVICES_H_
 
 #define HOST_BRIDGE		.pbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U}
-#define SATA_CONTROLLER		.pbdf.bits = {.b = 0x00U, .d = 0x12U, .f = 0x00U}
-#define USB_CONTROLLER		.pbdf.bits = {.b = 0x00U, .d = 0x15U, .f = 0x00U}
-
-#define STORAGE_CONTROLLER_0	SATA_CONTROLLER
-#define STORAGE_CONTROLLER_1	USB_CONTROLLER
-
+#define SATA_CONTROLLER_0	.pbdf.bits = {.b = 0x00U, .d = 0x12U, .f = 0x00U}
+#define USB_CONTROLLER_0	.pbdf.bits = {.b = 0x00U, .d = 0x15U, .f = 0x00U}
 #define ETHERNET_CONTROLLER_0	.pbdf.bits = {.b = 0x02U, .d = 0x00U, .f = 0x00U}
-#define ETHERNET_CONTROLLER_1
 
 #endif /* PCI_DEVICES_H_ */
