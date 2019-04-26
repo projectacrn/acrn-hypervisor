@@ -148,6 +148,8 @@ else
   GVT_args=''
 fi
 
+#logger_setting, format: logger_name,level; like following
+logger_setting="--logger_setting console,level=4;kmsg,level=3"
 
 acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 5,virtio-console,@pty:pty_port \
@@ -159,6 +161,7 @@ acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:
   -s 9,passthru,0/15/1 \
   $boot_cse_option \
   $intr_storm_monitor \
+  $logger_setting \
   $boot_ipu_option      \
   --mac_seed $mac_seed \
   -B "root=/dev/vda2 rw rootwait maxcpus=$2 nohpet console=hvc0 \
@@ -335,6 +338,9 @@ else
   GVT_args=''
 fi
 
+#logger_setting, format: logger_name,level; like following
+logger_setting="--logger_setting console,level=4;kmsg,level=3"
+
  acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
    -s 9,virtio-net,$tap \
    -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img \
@@ -346,6 +352,7 @@ fi
    $boot_audio_option \
    $boot_cse_option \
    $intr_storm_monitor \
+   $logger_setting \
    $boot_ipu_option      \
    --mac_seed $mac_seed \
    $boot_image_option \
