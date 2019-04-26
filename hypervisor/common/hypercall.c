@@ -206,7 +206,7 @@ int32_t hcall_destroy_vm(uint16_t vmid)
 	int32_t ret = -1;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (is_valid_vm(target_vm) && is_normal_vm(target_vm)) {
+	if (is_valid_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		/* TODO: check target_vm guest_flags */
 		ret = shutdown_vm(target_vm);
 	}
@@ -230,7 +230,7 @@ int32_t hcall_start_vm(uint16_t vmid)
 	int32_t ret = -1;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if ((is_valid_vm(target_vm)) && (is_normal_vm(target_vm)) && (target_vm->sw.io_shared_page != NULL)) {
+	if ((is_valid_vm(target_vm)) && (is_postlaunched_vm(target_vm)) && (target_vm->sw.io_shared_page != NULL)) {
 		/* TODO: check target_vm guest_flags */
 		start_vm(target_vm);
 		ret = 0;
@@ -255,7 +255,7 @@ int32_t hcall_pause_vm(uint16_t vmid)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	int32_t ret = -1;
 
-	if (is_valid_vm(target_vm) && is_normal_vm(target_vm)) {
+	if (is_valid_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		/* TODO: check target_vm guest_flags */
 		pause_vm(target_vm);
 		ret = 0;
@@ -286,7 +286,7 @@ int32_t hcall_create_vcpu(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct acrn_create_vcpu cv;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (is_valid_vm(target_vm) && is_normal_vm(target_vm) && (param != 0U)) {
+	if (is_valid_vm(target_vm) && is_postlaunched_vm(target_vm) && (param != 0U)) {
 		if (copy_from_gpa(vm, &cv, param, sizeof(cv)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else {
@@ -319,7 +319,7 @@ int32_t hcall_reset_vm(uint16_t vmid)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	int32_t ret = -1;
 
-	if (is_valid_vm(target_vm) && is_normal_vm(target_vm)) {
+	if (is_valid_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		/* TODO: check target_vm guest_flags */
 	        ret = reset_vm(target_vm);
 	}
@@ -348,7 +348,7 @@ int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	int32_t ret = -1;
 
 	/* Only allow setup init ctx while target_vm is inactive */
-	if ((is_valid_vm(target_vm)) && (param != 0U) && (is_normal_vm(target_vm)) && (target_vm->state != VM_STARTED)) {
+	if ((is_valid_vm(target_vm)) && (param != 0U) && (is_postlaunched_vm(target_vm)) && (target_vm->state != VM_STARTED)) {
 		if (copy_from_gpa(vm, &vcpu_regs, param, sizeof(vcpu_regs)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else if (vcpu_regs.vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
@@ -386,7 +386,7 @@ int32_t hcall_set_irqline(const struct acrn_vm *vm, uint16_t vmid,
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	int32_t ret = -1;
 
-	if (is_valid_vm(target_vm) && is_normal_vm(target_vm)) {
+	if (is_valid_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		if (ops->gsi < vioapic_pincount(vm)) {
 			if (ops->gsi < vpic_pincount()) {
 				/*
@@ -473,7 +473,7 @@ int32_t hcall_inject_msi(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct acrn_msi_entry msi;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (is_valid_vm(target_vm) && is_normal_vm(target_vm)) {
+	if (is_valid_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		(void)memset((void *)&msi, 0U, sizeof(msi));
 		if (copy_from_gpa(vm, &msi, param, sizeof(msi)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);
@@ -514,7 +514,7 @@ int32_t hcall_set_ioreq_buffer(struct acrn_vm *vm, uint16_t vmid, uint64_t param
 	int32_t ret = -1;
 
 	(void)memset((void *)&iobuf, 0U, sizeof(iobuf));
-	if (is_valid_vm(target_vm) && is_normal_vm(target_vm)) {
+	if (is_valid_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		if (copy_from_gpa(vm, &iobuf, param, sizeof(iobuf)) != 0) {
 			pr_err("%p %s: Unable copy param to vm\n", target_vm, __func__);
 	        } else {
@@ -557,7 +557,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 	int32_t ret = -1;
 
 	/* make sure we have set req_buf */
-	if ((is_valid_vm(target_vm)) && (is_normal_vm(target_vm)) && (target_vm->sw.io_shared_page != NULL)) {
+	if ((is_valid_vm(target_vm)) && (is_postlaunched_vm(target_vm)) && (target_vm->sw.io_shared_page != NULL)) {
 		dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
 			vmid, vcpu_id);
 
@@ -696,7 +696,7 @@ int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, uint64_t param)
 		if (regions.vmid < CONFIG_MAX_VM_NUM) {
 			target_vm = get_vm_from_vmid(regions.vmid);
 		}
-		if ((target_vm != NULL) && is_valid_vm(target_vm) && is_normal_vm(target_vm)) {
+		if ((target_vm != NULL) && is_valid_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 			idx = 0U;
 			while (idx < regions.mr_num) {
 				if (copy_from_gpa(vm, &mr, regions.regions_gpa + idx * sizeof(mr), sizeof(mr)) != 0) {
@@ -773,7 +773,7 @@ int32_t hcall_write_protect_page(struct acrn_vm *vm, uint16_t vmid, uint64_t wp_
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	int32_t ret = -1;
 
-	if (is_valid_vm(target_vm) && is_normal_vm(target_vm)) {
+	if (is_valid_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		(void)memset((void *)&wp, 0U, sizeof(wp));
 
 		if (copy_from_gpa(vm, &wp, wp_gpa, sizeof(wp)) != 0) {
@@ -846,7 +846,7 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	bool bdf_valid = true;
 	bool iommu_valid = true;
 
-	if (is_valid_vm(target_vm) && is_normal_vm(target_vm)) {
+	if (is_valid_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		if (param < 0x10000UL) {
 			bdf = (uint16_t) param;
 		} else {
@@ -906,7 +906,7 @@ int32_t hcall_deassign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	bool bdf_valid = true;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (is_valid_vm(target_vm) && is_normal_vm(target_vm)) {
+	if (is_valid_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		if (param < 0x10000UL) {
 			bdf = (uint16_t) param;
 		} else {
@@ -943,7 +943,7 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t pa
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	(void)memset((void *)&irq, 0U, sizeof(irq));
-	if (is_valid_vm(target_vm) && is_normal_vm(target_vm)) {
+	if (is_valid_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else {
@@ -985,7 +985,7 @@ hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct hc_ptdev_irq irq;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (is_valid_vm(target_vm) && is_normal_vm(target_vm)) {
+	if (is_valid_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		(void)memset((void *)&irq, 0U, sizeof(irq));
 
 		if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
@@ -1037,7 +1037,7 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, uint64_t cmd, uint64_t param)
 	if (target_vm_id < CONFIG_MAX_VM_NUM) {
 		target_vm = get_vm_from_vmid(target_vm_id);
 	}
-	if ((target_vm != NULL) && (is_valid_vm(target_vm)) && (is_normal_vm(target_vm))) {
+	if ((target_vm != NULL) && (is_valid_vm(target_vm)) && (is_postlaunched_vm(target_vm))) {
 		switch (cmd & PMCMD_TYPE_MASK) {
 		case PMCMD_GET_PX_CNT: {
 
@@ -1151,7 +1151,7 @@ int32_t hcall_vm_intr_monitor(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	uint64_t hpa;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (is_valid_vm(target_vm) && is_normal_vm(target_vm)) {
+	if (is_valid_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		/* the param for this hypercall is page aligned */
 		hpa = gpa2hpa(vm, param);
 		if (hpa != INVALID_HPA) {

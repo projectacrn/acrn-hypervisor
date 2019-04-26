@@ -20,13 +20,13 @@
 /*
  * PRE_LAUNCHED_VM is launched by ACRN hypervisor, with LAPIC_PT;
  * SOS_VM is launched by ACRN hypervisor, without LAPIC_PT;
- * NORMAL_VM is launched by ACRN devicemodel, with/without LAPIC_PT depends on usecases.
+ * POST_LAUNCHED_VM is launched by ACRN devicemodel, with/without LAPIC_PT depends on usecases.
  */
 enum acrn_vm_type {
 	UNDEFINED_VM = 0,
 	PRE_LAUNCHED_VM,
 	SOS_VM,
-	NORMAL_VM	/* Post-launched VM */
+	POST_LAUNCHED_VM	/* Launched by Devicemodel in SOS_VM */
 };
 
 struct acrn_vm_mem_config {

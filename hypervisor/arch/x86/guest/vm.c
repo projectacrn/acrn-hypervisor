@@ -66,9 +66,9 @@ bool is_sos_vm(const struct acrn_vm *vm)
  * @pre vm != NULL
  * @pre vm->vmid < CONFIG_MAX_VM_NUM
  */
-bool is_normal_vm(const struct acrn_vm *vm)
+bool is_postlaunched_vm(const struct acrn_vm *vm)
 {
-	return (get_vm_config(vm->vm_id)->type == NORMAL_VM);
+	return (get_vm_config(vm->vm_id)->type == POST_LAUNCHED_VM);
 }
 
 /**
@@ -363,7 +363,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		}
 
 	} else {
-		/* For PRE_LAUNCHED_VM and NORMAL_VM */
+		/* For PRE_LAUNCHED_VM and POST_LAUNCHED_VM */
 		if ((vm_config->guest_flags & GUEST_FLAG_SECURE_WORLD_ENABLED) != 0U) {
 			vm->sworld_control.flag.supported = 1U;
 		}
@@ -429,7 +429,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		/* Populate return VM handle */
 		*rtn_vm = vm;
 		vm->sw.io_shared_page = NULL;
-		if ((vm_config->type == NORMAL_VM) && (vm_config->guest_flags & GUEST_FLAG_IO_COMPLETION_POLLING) != 0U) {
+		if ((vm_config->type == POST_LAUNCHED_VM) && (vm_config->guest_flags & GUEST_FLAG_IO_COMPLETION_POLLING) != 0U) {
 			/* enable IO completion polling mode per its guest flags in vm_config. */
 			vm->sw.is_completion_polling = true;
 		}

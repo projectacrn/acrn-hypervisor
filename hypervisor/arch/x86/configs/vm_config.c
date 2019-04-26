@@ -106,8 +106,8 @@ bool sanitize_vm_config(void)
 				vm_config->pcpu_bitmap = sos_pcpu_bitmap;
 			}
 			break;
-		case NORMAL_VM:
-			/* Nothing to do here for a NORMAL_VM, break directly. */
+		case POST_LAUNCHED_VM:
+			/* Nothing to do here for a POST_LAUNCHED_VM, break directly. */
 			break;
 		default:
 			/* Nothing to do for a UNDEFINED_VM, break directly. */
