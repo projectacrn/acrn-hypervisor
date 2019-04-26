@@ -21,6 +21,9 @@ if [[ "$result" != "" ]]; then
   exit
 fi
 
+#logger_setting, format: logger_name,level; like following
+logger_setting="--logger_setting console,level=4;kmsg,level=3"
+
 #for memsize setting
 mem_size=2048M
 
@@ -30,6 +33,7 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 6,virtio-hyper_dmabuf \
   -s 3,virtio-blk,/home/clear/uos/uos.img \
   -s 4,virtio-net,tap0 \
+  $logger_setting \
   --mac_seed $mac_seed \
   -k /usr/lib/kernel/default-iot-lts2018 \
   -B "root=/dev/vda3 rw rootwait maxcpus=$2 nohpet console=tty0 console=hvc0 \
