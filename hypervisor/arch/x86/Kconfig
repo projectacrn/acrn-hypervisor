@@ -15,6 +15,13 @@ config LOGICAL_PARTITION
 	help
 	  This scenario will run two pre-launched VMs.
 
+config INDUSTRY 
+	bool "Industry VMs"
+	help
+	  This scenario is a typical scenario for industry usage with 3 VMs: 
+	  one pre-launched SOS VM, one post-launched Normal VM for HMI and one
+	  post-launched  RT VM for real-time control.
+
 endchoice
 
 config BOARD

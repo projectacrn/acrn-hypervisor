@@ -44,6 +44,8 @@ ifeq ($(CONFIG_SDC),y)
 SCENARIO_NAME := sdc
 else ifeq ($(CONFIG_LOGICAL_PARTITION),y)
 SCENARIO_NAME := logical_partition
+else ifeq ($(CONFIG_INDUSTRY),y)
+SCENARIO_NAME := industry
 endif
 
 LD_IN_TOOL = scripts/genld.sh
