@@ -46,6 +46,7 @@
 
 #include "dm.h"
 #include "pci_core.h"
+#include "log.h"
 
 #define MAP_NOCORE 0
 #define MAP_ALIGNED_SUPER 0
@@ -68,17 +69,17 @@ check_api(int fd)
 
 	error = ioctl(fd, IC_GET_API_VERSION, &api_version);
 	if (error) {
-		fprintf(stderr, "failed to get vhm api version\n");
+		pr_err("failed to get vhm api version\n");
 		return -1;
 	}
 
 	if (api_version.major_version != SUPPORT_VHM_API_VERSION_MAJOR ||
 		api_version.minor_version != SUPPORT_VHM_API_VERSION_MINOR) {
-		fprintf(stderr, "not support vhm api version\n");
+		pr_err("not support vhm api version\n");
 		return -1;
 	}
 
-	printf("VHM api version %d.%d\n", api_version.major_version,
+	pr_info("VHM api version %d.%d\n", api_version.major_version,
 			api_version.minor_version);
 
 	return 0;
@@ -108,7 +109,7 @@ vm_create(const char *name, uint64_t req_buf)
 		devfd = -1;
 	}
 	if (devfd == -1) {
-		fprintf(stderr, "Could not open /dev/acrn_vhm\n");
+		pr_err("Could not open /dev/acrn_vhm\n");
 		goto err;
 	}
 
@@ -164,7 +165,7 @@ vm_create(const char *name, uint64_t req_buf)
 	}
 
 	if (error) {
-		fprintf(stderr, "failed to create VM %s\n", ctx->name);
+		pr_err("failed to create VM %s\n", ctx->name);
 		goto err;
 	}
 
@@ -197,7 +198,7 @@ vm_attach_ioreq_client(struct vmctx *ctx)
 	error = ioctl(ctx->fd, IC_ATTACH_IOREQ_CLIENT, ctx->ioreq_client);
 
 	if (error) {
-		fprintf(stderr, "attach ioreq client return %d "
+		pr_err("attach ioreq client return %d "
 			"(1 = destroying, could be triggered by Power State "
 				"change, others = error)\n", error);
 		return error;
@@ -219,7 +220,7 @@ vm_notify_request_done(struct vmctx *ctx, int vcpu)
 	error = ioctl(ctx->fd, IC_NOTIFY_REQUEST_FINISH, &notify);
 
 	if (error) {
-		fprintf(stderr, "failed: notify request finish\n");
+		pr_err("failed: notify request finish\n");
 		return -1;
 	}
 
@@ -422,6 +423,7 @@ static int suspend_mode = VM_SUSPEND_NONE;
 void
 vm_set_suspend_mode(enum vm_suspend_how how)
 {
+	pr_notice("vm mode changed from %d to:%d", suspend_mode, how);
 	suspend_mode = how;
 }
 

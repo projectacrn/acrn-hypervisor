@@ -23,6 +23,7 @@
 #include "acrn_mngr.h"
 #include "pm.h"
 #include "vmmapi.h"
+#include "log.h"
 
 #define INTR_STORM_MONITOR_PERIOD	10 /* 10 seconds */
 #define INTR_STORM_THRESHOLD	100000 /* 10K times per second */
@@ -117,7 +118,7 @@ static void *intr_storm_monitor_thread(void *arg)
 		memset(hdr->buffer, 0, sizeof(uint64_t) * hdr->buf_cnt);
 		ret = vm_intr_monitor(ctx, hdr);
 		if (ret) {
-			DPRINTF("next get intr data failed, ret: %d\n", ret);
+			pr_err("next get intr data failed, ret: %d\n", ret);
 			intr_storm_monitor_pid = 0;
 			break;
 		}
@@ -147,7 +148,7 @@ static void *intr_storm_monitor_thread(void *arg)
 
 		/* storm detected, handle the intr abnormal status */
 		if (i < hdr->buf_cnt) {
-			DPRINTF("irq=%ld, delta=%ld\n", intr_cnt_buf[i], delta);
+			pr_notice("irq=%ld, delta=%ld\n", intr_cnt_buf[i], delta);
 
 			hdr->cmd = INTR_CMD_DELAY_INT;
 			hdr->buffer[0] = intr_monitor_setting.delay_time;
@@ -172,12 +173,12 @@ static void start_intr_storm_monitor(struct vmctx *ctx)
 	if (intr_monitor_setting.enable) {
 		int ret = pthread_create(&intr_storm_monitor_pid, NULL, intr_storm_monitor_thread, ctx);
 		if (ret) {
-			printf("failed %s %d\n", __func__, __LINE__);
+			pr_err("failed %s %d\n", __func__, __LINE__);
 			intr_storm_monitor_pid = 0;
 		}
 		pthread_setname_np(intr_storm_monitor_pid, "storm_monitor");
 
-		printf("start monitor interrupt data...\n");
+		pr_info("start monitor interrupt data...\n");
 	}
 }
 
@@ -210,9 +211,9 @@ int acrn_parse_intr_monitor(const char *opt)
 		(!dm_strtoui(cp + 1, &cp, 10, &period) && *cp == ',') &&
 		(!dm_strtoui(cp + 1, &cp, 10, &delay) && *cp == ',') &&
 		(!dm_strtoui(cp + 1, &cp, 10, &duration))) {
-		printf("interrupt storm monitor params: %d, %d, %d, %d\n", threshold, period, delay, duration);
+		pr_info("interrupt storm monitor params: %d, %d, %d, %d\n", threshold, period, delay, duration);
 	} else {
-		printf("%s: not correct, it should be like: --intr_monitor 10000,10,1,100, please check!\n", opt);
+		pr_err("%s: not correct, it should be like: --intr_monitor 10000,10,1,100, please check!\n", opt);
 		return -1;
 	}
 
@@ -263,7 +264,7 @@ int set_wakeup_timer(time_t t)
 	ret = mngr_send_msg(acrnd_fd, &req, &ack, 2);
 	mngr_close(acrnd_fd);
 	if (ret != sizeof(ack)) {
-		fprintf(stderr, "%s %d\r\n", __FUNCTION__, __LINE__);
+		pr_err("%s %d\r\n", __func__, __LINE__);
 		return -1;
 	}
 
@@ -279,13 +280,13 @@ int monitor_register_vm_ops(struct monitor_vm_ops *mops, void *arg,
 	struct vm_ops *ops;
 
 	if (!mops) {
-		fprintf(stderr, "%s %d\r\n", __FUNCTION__, __LINE__);
+		pr_err("%s %d\r\n", __func__, __LINE__);
 		return -1;
 	}
 
 	ops = calloc(1, sizeof(*ops));
 	if (!ops) {
-		perror("Alloc ops");
+		pr_err("Alloc ops");
 		return -1;
 	}
 
@@ -329,7 +330,7 @@ static void name(struct mngr_msg *msg, int client_fd, void *param)	\
 								\
 	if (!count) {						\
 		ack.data.err = -1;					\
-		fprintf(stderr, "No handler for id:%u\r\n", msg->msgid);	\
+		pr_err("No handler for id:%u\r\n", msg->msgid);	\
 	} else									\
 		ack.data.err = ret;							\
 										\
@@ -363,7 +364,7 @@ static void handle_resume(struct mngr_msg *msg, int client_fd, void *param)
 
 	if (!count) {
 		ack.data.err = -1;
-		fprintf(stderr, "No handler for id:%u\r\n", msg->msgid);
+		pr_err("No handler for id:%u\r\n", msg->msgid);
 	} else
 		ack.data.err = ret;
 
@@ -406,13 +407,13 @@ int monitor_init(struct vmctx *ctx)
 
 	ret = check_dir(ACRN_DM_BASE_PATH, CHK_CREAT);
 	if (ret) {
-		fprintf(stderr, "%s %d\r\n", __FUNCTION__, __LINE__);
+		pr_err("%s %d\r\n", __func__, __LINE__);
 		goto dir_err;
 	}
 
 	ret = check_dir(ACRN_DM_SOCK_PATH, CHK_CREAT);
 	if (ret) {
-		fprintf(stderr, "%s %d\r\n", __FUNCTION__, __LINE__);
+		pr_err("%s %d\r\n", __func__, __LINE__);
 		goto dir_err;
 	}
 
@@ -420,7 +421,7 @@ int monitor_init(struct vmctx *ctx)
 
 	monitor_fd = mngr_open_un(path, MNGR_SERVER);
 	if (monitor_fd < 0) {
-		fprintf(stderr, "%s %d\r\n", __FUNCTION__, __LINE__);
+		pr_err("%s %d\r\n", __func__, __LINE__);
 		goto server_err;
 	}
 
@@ -433,7 +434,7 @@ int monitor_init(struct vmctx *ctx)
 	ret += mngr_add_handler(monitor_fd, DM_QUERY, handle_query, NULL);
 
 	if (ret) {
-		fprintf(stderr, "%s %d\r\n", __FUNCTION__, __LINE__);
+		pr_err("%s %d\r\n", __func__, __LINE__);
 		goto handlers_err;
 	}
 

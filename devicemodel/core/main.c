@@ -947,51 +947,52 @@ dm_run(int argc, char *argv[])
 		usage(1);
 
 	if (!check_hugetlb_support()) {
-		fprintf(stderr, "check_hugetlb_support failed\n");
+		pr_err("check_hugetlb_support failed\n");
 		exit(1);
 	}
 
 	vmname = argv[0];
 	if (strnlen(vmname, MAX_VM_OS_NAME_LEN) >= MAX_VM_OS_NAME_LEN) {
-		fprintf(stderr, "vmname size exceed %u\n",MAX_VM_OS_NAME_LEN);
+		pr_err("vmname size exceed %u\n", MAX_VM_OS_NAME_LEN);
 		exit(1);
 	}
 
 	for (;;) {
+		pr_notice("vm_create: %s\n", vmname);
 		ctx = vm_create(vmname, (unsigned long)vhm_req_buf);
 		if (!ctx) {
-			perror("vm_open");
+			pr_err("vm_create failed");
 			exit(1);
 		}
 
 		if (guest_ncpus < 1) {
-			fprintf(stderr, "Invalid guest vCPUs (%d)\n",
-				guest_ncpus);
+			pr_err("Invalid guest vCPUs (%d)\n", guest_ncpus);
 			goto fail;
 		}
 
 		max_vcpus = num_vcpus_allowed(ctx);
 		if (guest_ncpus > max_vcpus) {
-			fprintf(stderr, "%d vCPUs requested but %d available\n",
+			pr_err("%d vCPUs requested but %d available\n",
 				guest_ncpus, max_vcpus);
 			goto fail;
 		}
 
+		pr_notice("vm_setup_memory: size=0x%lx\n", memsize);
 		err = vm_setup_memory(ctx, memsize);
 		if (err) {
-			fprintf(stderr, "Unable to setup memory (%d)\n", errno);
+			pr_err("Unable to setup memory (%d)\n", errno);
 			goto fail;
 		}
 
 		err = mevent_init();
 		if (err) {
-			fprintf(stderr, "Unable to initialize mevent (%d)\n",
-				errno);
+			pr_err("Unable to initialize mevent (%d)\n", errno);
 			goto mevent_fail;
 		}
 
+		pr_notice("vm_init_vdevs\n");
 		if (vm_init_vdevs(ctx) < 0) {
-			fprintf(stderr, "Unable to init vdev (%d)\n", errno);
+			pr_err("Unable to init vdev (%d)\n", errno);
 			goto dev_fail;
 		}
 
@@ -1007,13 +1008,18 @@ dm_run(int argc, char *argv[])
 
 		if (acpi) {
 			error = acpi_build(ctx, guest_ncpus);
-			if (error)
+			if (error) {
+				pr_err("acpi_build failed, error=%d\n", error);
 				goto vm_fail;
+			}
 		}
 
+		pr_notice("acrn_sw_load\n");
 		error = acrn_sw_load(ctx);
-		if (error)
+		if (error) {
+			pr_err("acrn_sw_load failed, error=%d\n", error);
 			goto vm_fail;
+		}
 
 		/*
 		 * Change the proc title to include the VM name.
@@ -1023,9 +1029,12 @@ dm_run(int argc, char *argv[])
 		/*
 		 * Add CPU 0
 		 */
+		pr_notice("add_cpu\n");
 		error = add_cpu(ctx, guest_ncpus);
-		if (error)
+		if (error) {
+			pr_err("add_cpu failed, error=%d\n", error);
 			goto vm_fail;
+		}
 
 		/* Make a copy for ctx */
 		_ctx = ctx;
