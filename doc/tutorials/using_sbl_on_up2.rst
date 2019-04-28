@@ -95,14 +95,14 @@ An example of the configuration file ``uos.json``:
                              { "disk" : "clearlinux.img", "partition" : 2, "type" : "ext4" } ],
        "PartitionMountPoints" : [ { "disk" : "clearlinux.img", "partition" : 1, "mount" : "/boot" },
            		          { "disk" : "clearlinux.img", "partition" : 2, "mount" : "/" } ],
-       "Version": 27230,
+       "Version": 29070,
        "Bundles": ["kernel-iot-lts2018", "openssh-server", "x11-server", "os-core", "os-core-update"]
    }
 
 .. note::
    To generate the image with a specified version, please modify
    the "Version" argument, ``"Version": 2****`` instead
-   of ``"Version": 27230`` for example.
+   of ``"Version": 29070`` for example.
 
 
 Build SOS and LaaG image:
@@ -111,7 +111,7 @@ Build SOS and LaaG image:
 
    $ sudo -s
    # chmod +x create-up2-images.sh
-   # ./create-up2-images.sh --images-type all --clearlinux-version 27230 --laag-json uos.json
+   # ./create-up2-images.sh --images-type all --clearlinux-version 29070 --laag-json uos.json
 
 .. note::
    You must have root privileges to run ``create-up2-images.sh``.
@@ -122,7 +122,7 @@ Build SOS and LaaG image:
 
 .. note::
    When building images, you can modify the ``--clearlinux-version`` argument
-   to a specific version (such as 26800). To generate the images of SOS only,
+   to a specific version (such as 29070). To generate the images of SOS only,
    modify the ``--images-type`` argument to ``sos``.
 
 This step will generate the images of SOS and LaaG:
