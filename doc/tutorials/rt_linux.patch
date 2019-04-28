@@ -1,0 +1,35 @@
+diff --git a/mm/swap.c b/mm/swap.c
+index 26fc9b5..d5067e5 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -654,13 +654,15 @@ void lru_add_drain(void)
+ 	put_cpu();
+ }
+ 
++#ifdef CONFIG_SMP
++
++static DEFINE_PER_CPU(struct work_struct, lru_add_drain_work);
++
+ static void lru_add_drain_per_cpu(struct work_struct *dummy)
+ {
+ 	lru_add_drain();
+ }
+ 
+-static DEFINE_PER_CPU(struct work_struct, lru_add_drain_work);
+-
+ /*
+  * Doesn't need any cpu hotplug locking because we do rely on per-cpu
+  * kworkers being shut down before our page_alloc_cpu_dead callback is
+@@ -703,6 +705,12 @@ void lru_add_drain_all(void)
+ 
+ 	mutex_unlock(&lock);
+ }
++#else
++void lru_add_drain_all(void)
++{
++	lru_add_drain();
++}
++#endif
+ 
+ /**
+  * release_pages - batched put_page()
