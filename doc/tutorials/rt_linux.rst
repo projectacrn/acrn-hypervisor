@@ -5,7 +5,7 @@ Using PREEMPT_RT-Linux for real-time UOS
 
 The ACRN project uses various techniques to support a User OS (UOS)
 running as virtual machine (VM) with real-time characteristics, also
-called a "Privileged VM" in ACRN terminology. Some of these techniques
+called a "RTVM" in ACRN terminology. Some of these techniques
 include device passthrough and cache allocation technology (CAT), as
 shown in :numref:`rt-linux-arch`.
 
@@ -28,9 +28,9 @@ event such as an interrupt within a defined time frame.
 
    Real-Time Linux (PREEMPT_RT) VM on ACRN
 
-The privileged VM exclusively owns its passthrough devices, so in
+The RTVM exclusively owns its passthrough devices, so in
 addition to the controller and file system used by the SOS, a dedicated
-storage controller and device are needed to host the privileged VM's
+storage controller and device are needed to host the RTVM's
 root filesystem. The two storage devices should be under different PCI
 controllers because the system can only pass through PCI-based devices
 to a guest OS. The Intel NUC7ixDNHE NUC (KBL) is a good platform to set
@@ -53,17 +53,16 @@ system on Intel KBL NUC with a SATA SSD as ``/dev/sda`` and an NVME SSD as
 
    a. Download Linux kernel real-time patch::
 
-         $ wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/4.19/patch-4.19.15-rt12.patch.xz
+         $ wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/4.19/patch-4.19.31-rt18.patch.xz
 
-   #. Sync the kernel code to acrn-2019w04.5-150000p::
+   #. Sync the kernel code to acrn-2019w17.4-160000p::
 
          $ git clone https://github.com/projectacrn/acrn-kernel.git
-         $ git checkout acrn-2019w04.5-150000p
+         $ git checkout acrn-2019w17.4-160000p
          $ cd acrn-kernel
-         $ xzcat ../patch-4.19.15-rt12.patch.xz | patch -p1
-
-      .. note:: This patch will report one conflict with ``base.c`` that
-         you can ignore.
+         $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/rt_linux.patch 
+         $ git apply rt_linux.patch 
+         $ xzcat ../patch-4.19.31-rt18.patch.xz | patch -p1
 
    #. Edit the ``kernel_config_uos`` config file: search for the keyword
       "NVME Support", delete ``# CONFIG_BLK_DEV_NVME is not set`` and add two lines under "NVME Support" to enable
@@ -82,7 +81,7 @@ system on Intel KBL NUC with a SATA SSD as ``/dev/sda`` and an NVME SSD as
 
    #. Copy the generated package to SOS::
 
-         $ scp linux-4.19.8-rt6+-x86.tar.gz <user name>@<SOS ip>:~/
+         $ scp linux-4.19.28-rt18-quilt-2e5dc0ac-dirty-x86.tar.gz <user name>@<SOS ip>:~/
 
 #. Configure the system on SOS
 
@@ -90,12 +89,12 @@ system on Intel KBL NUC with a SATA SSD as ``/dev/sda`` and an NVME SSD as
    a. Extract kernel boot and lib modules from the package::
 
          $ cd ~/
-         $ tar xzvf linux-4.19.8-rt6+-x86.tar.gz
+         $ tar xzvf linux-4.19.28-rt18-quilt-2e5dc0ac-dirty-x86.tar.gz
 
    #. Copy the extracted lib modules to NVME SSD::
 
          $ mount /dev/nvme0n1p3 /mnt
-         $ cp -r ~/lib/modules/4.19.8-rt6+ /mnt/lib/modules
+         $ cp -r ~/lib/modules/4.19.28-rt18-quilt-2e5dc0ac-dirty /mnt/lib/modules
 
    #. Edit and run the ``launch_hard_rt_vm.sh`` script to launch the UOS.
       A sample ``launch_hard_rt_vm.sh`` is included in the Clear Linux
@@ -104,7 +103,7 @@ system on Intel KBL NUC with a SATA SSD as ``/dev/sda`` and an NVME SSD as
 
       You'll need to modify two places:
 
-      1. Replace ``/root/rt_uos_kernel`` with ``~/boot/vmlinuz-4.19.8-rt6+``
+      1. Replace ``/root/rt_uos_kernel`` with ``~/boot/vmlinuz-4.19.28-rt18-quilt-2e5dc0ac-dirty``
       #. Replace ``root=/dev/sda3`` with ``root=/dev/nvme0n1p3``
 
    #. Run the launch script::
