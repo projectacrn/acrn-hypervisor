@@ -120,6 +120,8 @@ static uint8_t vuart_intr_reason(const struct acrn_vuart *vu)
 		ret = IIR_RXTOUT;
 	} else if (vu->thre_int_pending && ((vu->ier & IER_ETBEI) != 0U)) {
 		ret = IIR_TXRDY;
+	} else if((vu->msr & MSR_DELTA_MASK) != 0 && (vu->ier & IER_EMSC) != 0) {
+		ret = IIR_MLSC;
 	}
 	return ret;
 }
@@ -182,6 +184,34 @@ static void vuart_write_to_target(struct acrn_vuart *vu, uint8_t value_u8)
 	vuart_unlock(vu);
 }
 
+static uint8_t modem_status(uint8_t mcr)
+{
+	uint8_t msr;
+
+	if (mcr & MCR_LOOPBACK) {
+		/*
+		 * In the loopback mode certain bits from the MCR are
+		 * reflected back into MSR.
+		 */
+		msr = 0;
+		if (mcr & MCR_RTS)
+			msr |= MSR_CTS;
+		if (mcr & MCR_DTR)
+			msr |= MSR_DSR;
+		if (mcr & MCR_OUT1)
+			msr |= MSR_RI;
+		if (mcr & MCR_OUT2)
+			msr |= MSR_DCD;
+	} else {
+		/*
+		 * Always assert DCD and DSR so tty open doesn't block
+		 * even if CLOCAL is turned off.
+		 */
+		msr = MSR_DCD | MSR_DSR;
+	}
+	return msr;
+}
+
 static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 			__unused size_t width, uint32_t value)
 {
@@ -189,11 +219,14 @@ static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 	struct acrn_vuart *vu = find_vuart_by_port(vm, offset);
 	uint8_t value_u8 = (uint8_t)value;
 	struct acrn_vuart *target_vu = NULL;
+	uint8_t msr;
 
 	if (vu) {
 		offset -= vu->port_base;
 		target_vu = vu->target_vu;
-		if ((offset == UART16550_THR) && target_vu) {
+
+		if (!(vu->mcr & MCR_LOOPBACK) &&
+			(offset == UART16550_THR) && target_vu) {
 			vuart_write_to_target(target_vu, value_u8);
 		} else {
 			vuart_lock(vu);
@@ -207,7 +240,12 @@ static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 			} else {
 				switch (offset) {
 				case UART16550_THR:
-					fifo_putchar(&vu->txfifo, (char)value_u8);
+					if (vu->mcr & MCR_LOOPBACK) {
+						fifo_putchar(&vu->rxfifo, (char)value_u8);
+						vu->lsr |= LSR_OE;
+					} else {
+						fifo_putchar(&vu->txfifo, (char)value_u8);
+					}
 					vu->thre_int_pending = true;
 					break;
 				case UART16550_IER:
@@ -236,7 +274,28 @@ static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 					vu->lcr = value_u8;
 					break;
 				case UART16550_MCR:
-					/* ignore modem */
+					/* Apply mask so that bits 5-7 are 0 */
+					vu->mcr = value & 0x1F;
+					msr = modem_status(vu->mcr);
+					/*
+					 * Detect if there has been any change between the
+					 * previous and the new value of MSR. If there is
+					 * then assert the appropriate MSR delta bit.
+					 */
+					if ((msr & MSR_CTS) ^ (vu->msr & MSR_CTS))
+						vu->msr |= MSR_DCTS;
+					if ((msr & MSR_DSR) ^ (vu->msr & MSR_DSR))
+						vu->msr |= MSR_DDSR;
+					if ((msr & MSR_DCD) ^ (vu->msr & MSR_DCD))
+						vu->msr |= MSR_DDCD;
+					if ((vu->msr & MSR_RI) != 0 && (msr & MSR_RI) == 0)
+						vu->msr |= MSR_TERI;
+					/*
+					 * Update the value of MSR while retaining the delta
+					 * bits.
+					 */
+					vu->msr &= MSR_DELTA_MASK;
+					vu->msr |= msr;
 					break;
 				case UART16550_LSR:
 					/*
@@ -332,8 +391,11 @@ static bool vuart_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t offs
 				vu->lsr &= ~LSR_OE;
 				break;
 			case UART16550_MSR:
-				/* ignore modem I*/
-				reg = 0U;
+				/*
+				 * MSR delta bits are cleared on read
+				 */
+				reg = vu->msr;
+				vu->msr &= ~MSR_DELTA_MASK;
 				break;
 			case UART16550_SCR:
 				reg = vu->scr;

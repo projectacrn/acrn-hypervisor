@@ -36,6 +36,7 @@
 /* value definitions for IIR */
 #define IIR_FIFO_MASK		0xc0U /* set if FIFOs are enabled */
 #define IIR_RXTOUT		0x0cU
+#define IER_EMSC		0x08U
 #define IIR_RLS			0x06U
 #define IIR_RXRDY		0x04U
 #define IIR_TXRDY		0x02U
@@ -87,8 +88,28 @@
 #define LSR_DR		(1U << 0U)
 
 /* definition for MCR */
+#define MCR_PRESCALE	(1U << 7U) /* only available on 16650 up */
+#define MCR_LOOPBACK	(1U << 4U)
+#define MCR_IE		(1U << 3U)
+#define MCR_IENABLE	MCR_IE
+#define MCR_DRS		(1U << 2U)
 #define MCR_RTS		(1U << 1U) /* Request to Send */
 #define MCR_DTR		(1U << 0U) /* Data Terminal Ready */
+
+/* defifor MSR */
+#define MSR_DCD		(1U << 7U)
+#define MSR_RI		(1U << 6U)
+#define MSR_DSR		(1U << 5U)
+#define MSR_CTS		(1U << 4U)
+#define MSR_DDCD	(1U << 3U)
+#define MSR_TERI	(1U << 2U)
+#define MSR_DDSR	(1U << 1U)
+#define MSR_DCTS	(1U << 0U)
+
+#define MCR_OUT2	(1U << 3U)
+#define MCR_OUT1	(1U << 2U)
+
+#define MSR_DELTA_MASK	0x0FU
 
 /* definition for FCR */
 #define FCR_RX_MASK	0xc0U
