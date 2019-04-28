@@ -16,3 +16,4 @@ The following sections document the project's language-specific guidelines:
    :maxdepth: 1
 
    c_coding_guidelines
+   asm_coding_guidelines
