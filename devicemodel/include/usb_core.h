@@ -155,6 +155,7 @@ struct usb_data_xfer_block {
 	enum usb_xfer_blk_stat	processed; /* processed status */
 	void			*hci_data; /* HCI private reference */
 	int			ccs;
+	int			chained;
 	uint32_t		streamid;
 	uint64_t		trbnext;   /* next TRB guest address */
 };

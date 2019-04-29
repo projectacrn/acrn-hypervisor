@@ -2875,6 +2875,9 @@ retry:
 					XHCI_GADDR(xdev, trb->qwTrb0)),
 					trb->dwTrb2 & 0x1FFFF, (void *)addr,
 					ccs);
+
+			if (trb->dwTrb3 & XHCI_TRB_3_CHAIN_BIT)
+				xfer_block->chained = 1;
 			break;
 
 		case XHCI_TRB_TYPE_STATUS_STAGE:
