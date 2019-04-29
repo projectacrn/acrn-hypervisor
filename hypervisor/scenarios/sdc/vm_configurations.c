@@ -16,7 +16,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.uuid = {0xdbU, 0xbbU, 0xd4U, 0x34U, 0x7aU, 0x57U, 0x42U, 0x16U,	\
 			 0xa1U, 0x2cU, 0x22U, 0x01U, 0xf1U, 0xabU, 0x02U, 0x40U},
 			/* dbbbd434-7a57-4216-a12c-2201f1ab0240 */
-		.guest_flags = GUEST_FLAG_IO_COMPLETION_POLLING,
+		.guest_flags = 0UL,
 		.clos = 0U,
 		.memory = {
 			.start_hpa = 0UL,
