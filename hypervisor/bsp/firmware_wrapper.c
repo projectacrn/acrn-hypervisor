@@ -8,6 +8,7 @@
 #include <vm.h>
 #include <types.h>
 #include <pgtable.h>
+#include <acpi.h>
 #include <firmware.h>
 #include <firmware_sbl.h>
 #include <firmware_uefi.h>

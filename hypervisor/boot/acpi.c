@@ -349,6 +349,8 @@ void *get_dmar_table(void)
 /* FACP field offsets */
 #define OFFSET_FACS_ADDR	36U
 #define OFFSET_FACS_X_ADDR	132U
+#define OFFSET_PM1A_EVT         148U
+#define OFFSET_PM1A_CNT         172U
 
 /* FACS field offsets */
 #define OFFSET_FACS_SIGNATURE	0U
@@ -368,35 +370,54 @@ static inline uint64_t get_acpi_dt_qword(const uint8_t *dt_addr, uint32_t dt_off
 	return *(uint64_t *)(dt_addr + dt_offset);
 }
 
-static void *get_facs_table(void)
+struct packed_gas {
+	uint8_t 	space_id;
+	uint8_t 	bit_width;
+	uint8_t 	bit_offset;
+	uint8_t 	access_size;
+	uint64_t	address;
+} __attribute__((packed));
+
+/* get a GAS struct from given table and its offset.
+ * ACPI table stores packed gas, but it is not guaranteed that
+ * struct acpi_generic_address is packed, so do not use memcpy in function.
+ * @pre dt_addr != NULL && gas != NULL
+ */
+static inline void get_acpi_dt_gas(const uint8_t *dt_addr, uint32_t dt_offset, struct acpi_generic_address *gas)
 {
-	uint8_t *facp_addr, *facs_addr, *facs_x_addr;
+	struct packed_gas *dt_gas = (struct packed_gas *)(dt_addr + dt_offset);
+
+	gas->space_id = dt_gas->space_id;
+	gas->bit_width = dt_gas->bit_width;
+	gas->bit_offset = dt_gas->bit_offset;
+	gas->access_size = dt_gas->access_size;
+	gas->address = dt_gas->address;
+}
+
+/* @pre facp_addr != NULL */
+static void *get_facs_table(const uint8_t *facp_addr)
+{
+	uint8_t *facs_addr, *facs_x_addr;
 	uint32_t signature, length;
 
-	facp_addr = (uint8_t *)get_acpi_tbl(ACPI_SIG_FADT);
+	facs_addr = (uint8_t *)(uint64_t)get_acpi_dt_dword(facp_addr, OFFSET_FACS_ADDR);
 
-	if (facp_addr == NULL) {
-		facs_addr = NULL;
-	} else {
-		facs_addr = (uint8_t *)(uint64_t)get_acpi_dt_dword(facp_addr, OFFSET_FACS_ADDR);
+	facs_x_addr = (uint8_t *)get_acpi_dt_qword(facp_addr, OFFSET_FACS_X_ADDR);
 
-		facs_x_addr = (uint8_t *)get_acpi_dt_qword(facp_addr, OFFSET_FACS_X_ADDR);
+	if (facs_x_addr != NULL) {
+		facs_addr = facs_x_addr;
+	}
 
-		if (facs_x_addr != NULL) {
-			facs_addr = facs_x_addr;
-		}
+	if (facs_addr != NULL) {
+		signature = get_acpi_dt_dword(facs_addr, OFFSET_FACS_SIGNATURE);
 
-		if (facs_addr != NULL) {
-			signature = get_acpi_dt_dword(facs_addr, OFFSET_FACS_SIGNATURE);
+		if (signature != ACPI_SIG_FACS) {
+			facs_addr = NULL;
+		} else {
+			length = get_acpi_dt_dword(facs_addr, OFFSET_FACS_LENGTH);
 
-			if (signature != ACPI_SIG_FACS) {
+			if (length < 64U) {
 				facs_addr = NULL;
-			} else {
-				length = get_acpi_dt_dword(facs_addr, OFFSET_FACS_LENGTH);
-
-				if (length < 64U) {
-					facs_addr = NULL;
-				}
 			}
 		}
 	}
@@ -406,10 +427,25 @@ static void *get_facs_table(void)
 /* put all ACPI fix up code here */
 void acpi_fixup(void)
 {
-	void *facs_addr = get_facs_table();
+	uint8_t *facp_addr, *facs_addr;
+	struct acpi_generic_address pm1a_cnt, pm1a_evt;
+	struct pm_s_state_data *sx_data = get_host_sstate_data();
 
-	if (facs_addr != NULL) {
-		set_host_wake_vectors(facs_addr + OFFSET_WAKE_VECTOR_32, facs_addr + OFFSET_WAKE_VECTOR_64);
+	facp_addr = (uint8_t *)get_acpi_tbl(ACPI_SIG_FADT);
+
+	if (facp_addr != NULL) {
+		get_acpi_dt_gas(facp_addr, OFFSET_PM1A_EVT, &pm1a_evt);
+		get_acpi_dt_gas(facp_addr, OFFSET_PM1A_CNT, &pm1a_cnt);
+		(void)memcpy_s((void *)&sx_data->pm1a_evt, sizeof(struct acpi_generic_address),
+				(const void *)&pm1a_evt, sizeof(struct acpi_generic_address));
+		(void)memcpy_s((void *)&sx_data->pm1a_cnt, sizeof(struct acpi_generic_address),
+				(const void *)&pm1a_cnt, sizeof(struct acpi_generic_address));
+
+		facs_addr = (uint8_t *)get_facs_table(facp_addr);
+		if (facs_addr != NULL) {
+			sx_data->wake_vector_32 = (uint32_t *)(facs_addr + OFFSET_WAKE_VECTOR_32);
+			sx_data->wake_vector_64 = (uint64_t *)(facs_addr + OFFSET_WAKE_VECTOR_64);
+		}
 	}
 }
 #endif

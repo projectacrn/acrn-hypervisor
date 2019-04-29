@@ -100,15 +100,19 @@ void vm_setup_cpu_state(struct acrn_vm *vm)
  */
 int32_t vm_load_pm_s_state(struct acrn_vm *vm)
 {
-#ifdef ACPI_INFO_VALIDATED
-	vm->pm.sx_state_data = get_host_sstate_data();
-	pr_info("System S3/S5 is supported.");
-	return 0;
-#else
-	vm->pm.sx_state_data = NULL;
-	pr_err("System S3/S5 is NOT supported.");
-	return -1;
-#endif
+	int32_t ret;
+	struct pm_s_state_data *sx_data = get_host_sstate_data();
+
+	if ((sx_data->pm1a_evt.address == 0UL) || (sx_data->pm1a_cnt.address == 0UL)
+			|| (sx_data->wake_vector_32 == NULL)) {
+		pr_err("System S3/S5 is NOT supported.");
+		ret = -1;
+	} else {
+		pr_info("System S3/S5 is supported.");
+		vm->pm.sx_state_data = sx_data;
+		ret = 0;
+	}
+	return ret;
 }
 
 static inline uint32_t s3_enabled(uint32_t pm1_cnt)
