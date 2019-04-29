@@ -26,11 +26,15 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#include <hypervisor.h>
+#include <types.h>
+#include <rtl.h>
 #include <firmware.h>
 #include "acpi_priv.h"
 #include "acpi.h"
+#include <pgtable.h>
+#include <ioapic.h>
+#include <logmsg.h>
+#include <host_pm.h>
 
 #define ACPI_SIG_RSDP             "RSD PTR " /* Root System Description Ptr */
 #define ACPI_OEM_ID_SIZE           6

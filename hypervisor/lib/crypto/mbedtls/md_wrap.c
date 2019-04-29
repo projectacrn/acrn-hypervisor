@@ -24,7 +24,6 @@
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
-#include <hypervisor.h>
 #include "md_internal.h"
 #include "sha256.h"
 

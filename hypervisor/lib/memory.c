@@ -2,8 +2,13 @@
  * Copyright (C) 2018 Intel Corporation.
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
-#include <hypervisor.h>
+#include <types.h>
+#include <util.h>
+#include <bits.h>
+#include <spinlock.h>
+#include <page.h>
+#include <mem_mgt.h>
+#include <logmsg.h>
 
 /*
  * Memory pool declaration (block size = CONFIG_MALLOC_ALIGN)

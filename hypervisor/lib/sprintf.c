@@ -3,8 +3,10 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
-#include <hypervisor.h>
+#include <types.h>
+#include <rtl.h>
+#include <util.h>
+#include <sprintf.h>
 
 #ifndef NULL
 #define NULL ((void *) 0)

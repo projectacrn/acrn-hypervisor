@@ -2,8 +2,9 @@
  * Copyright (C) 2018 Intel Corporation.
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
-#include <hypervisor.h>
+#include <types.h>
+#include <rtl.h>
+#include <logmsg.h>
 
 static inline char hex_digit_value(char ch)
 {

@@ -6,6 +6,7 @@
 
 #ifndef ZEROPAGE_H
 #define ZEROPAGE_H
+#include <e820.h>
 
 struct zero_page {
 	uint8_t pad1[0x1e8];	/* 0x000 */

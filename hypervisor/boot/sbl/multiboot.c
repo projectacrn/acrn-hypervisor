@@ -3,11 +3,18 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
-#include <hypervisor.h>
+#include <types.h>
+#include <rtl.h>
+#include <errno.h>
+#include <sprintf.h>
 #include <multiboot.h>
+#include <pgtable.h>
+#include <guest_memory.h>
 #include <zeropage.h>
 #include <seed.h>
+#include <mmu.h>
+#include <vm.h>
+#include <logmsg.h>
 
 #define ACRN_DBG_BOOT	6U
 
