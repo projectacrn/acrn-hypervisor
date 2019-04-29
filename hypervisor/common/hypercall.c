@@ -991,6 +991,7 @@ hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 		if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else if (irq.type == IRQ_INTX) {
+			vpci_reset_ptdev_intr_info(target_vm, irq.virt_bdf, irq.phys_bdf);
 			ptirq_remove_intx_remapping(target_vm,
 					irq.is.intx.virt_pin,
 					irq.is.intx.pic_pin);

@@ -114,5 +114,6 @@ void sharing_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf bdf,
 void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t val);
 void sharing_mode_vpci_deinit(const struct acrn_vm *vm);
+void post_launched_vm_vpci_deinit(const struct acrn_vm *vm);
 
 #endif /* VPCI_PRIV_H_ */
