@@ -914,7 +914,10 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	printf("vm_reset_ptdev_intx:0x%x-%x, ioapic virpin=%d.\n",
 			virt_bdf, ptdev->phys_bdf, dev->lintr.ioapic_irq);
-	vm_reset_ptdev_intx_info(ctx, dev->lintr.ioapic_irq, false);
+
+	if (dev->lintr.pin != 0) {
+		vm_reset_ptdev_intx_info(ctx, virt_bdf, ptdev->phys_bdf, dev->lintr.ioapic_irq, false);
+	}
 
 	/* unmap the physical BAR in guest MMIO space */
 	for (i = 0; i <= PCI_BARMAX; i++) {

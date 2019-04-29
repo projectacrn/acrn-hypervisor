@@ -137,7 +137,8 @@ int	vm_reset_ptdev_msix_info(struct vmctx *ctx, uint16_t virt_bdf, uint16_t phys
 	int vector_count);
 int	vm_set_ptdev_intx_info(struct vmctx *ctx, uint16_t virt_bdf,
 	uint16_t phys_bdf, int virt_pin, int phys_pin, bool pic_pin);
-int	vm_reset_ptdev_intx_info(struct vmctx *ctx, int virt_pin, bool pic_pin);
+int	vm_reset_ptdev_intx_info(struct vmctx *ctx, uint16_t virt_bdf,
+	uint16_t phys_bdf, int virt_pin, bool pic_pin);
 
 int	vm_create_vcpu(struct vmctx *ctx, uint16_t vcpu_id);
 int	vm_set_vcpu_regs(struct vmctx *ctx, struct acrn_set_vcpu_regs *cpu_regs);
