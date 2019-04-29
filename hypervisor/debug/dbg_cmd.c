@@ -8,7 +8,6 @@
 #include <rtl.h>
 #include <pci.h>
 #include <uart16550.h>
-#include <vuart.h>
 
 #define MAX_PORT			0x10000  /* port 0 - 64K */
 #define DEFAULT_UART_PORT	0x3F8
@@ -19,19 +18,12 @@ static const char * const cmd_list[] = {
 	"uart=disabled",	/* to disable uart */
 	"uart=port@",		/* like uart=port@0x3F8 */
 	"uart=bdf@",	/*like: uart=bdf@0:18.2, it is for ttyS2 */
-
-	/* format: vuart=ttySx@irqN, like vuart=ttyS1@irq6; better to unify
-	 * uart & vuart & SOS console the same one, and irq same with the native.
-	 * ttySx range (0-3), irqN (0-255)
-	 */
-	"vuart=ttyS",
 };
 
 enum IDX_CMD_DBG {
 	IDX_DISABLE_UART,
 	IDX_PORT_UART,
 	IDX_PCI_UART,
-	IDX_SET_VUART,
 
 	IDX_MAX_CMD,
 };
@@ -65,8 +57,6 @@ bool handle_dbg_cmd(const char *cmd, int32_t len)
 
 		} else if (i == IDX_PCI_UART) {
 			uart16550_set_property(true, false, (uint64_t)(cmd+tmp));
-		} else if (i == IDX_SET_VUART) {
-			vuart_set_property(cmd+tmp);
 		} else {
 			/* No other state currently, do nothing */
 		}
