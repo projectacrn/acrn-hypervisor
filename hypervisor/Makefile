@@ -225,6 +225,7 @@ C_SRCS += hw/pci.c
 C_SRCS += dm/vpic.c
 C_SRCS += dm/vrtc.c
 C_SRCS += dm/vioapic.c
+C_SRCS += dm/vuart.c
 C_SRCS += dm/io_req.c
 C_SRCS += dm/vpci/vdev.c
 C_SRCS += dm/vpci/vpci.c
