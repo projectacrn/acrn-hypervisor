@@ -68,8 +68,8 @@ struct acrn_vuart {
 	uint8_t dll;		/* Baudrate divisor latch LSB */
 	uint8_t dlh;		/* Baudrate divisor latch MSB */
 
-	struct fifo rxfifo;
-	struct fifo txfifo;
+	struct vuart_fifo rxfifo;
+	struct vuart_fifo txfifo;
 	uint16_t port_base;
 	uint32_t irq;
 	char vuart_rx_buf[RX_BUF_SIZE];
@@ -89,5 +89,4 @@ char vuart_getchar(struct acrn_vuart *vu);
 void vuart_toggle_intr(const struct acrn_vuart *vu);
 
 bool is_vuart_intx(struct acrn_vm *vm, uint32_t intx_pin);
-void vuart_set_property(const char *vuart_info);
 #endif /* VUART_H */

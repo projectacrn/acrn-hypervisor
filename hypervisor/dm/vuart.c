@@ -36,9 +36,6 @@
 #include <vm.h>
 #include <logmsg.h>
 
-static uint32_t vuart_com_irq =  CONFIG_COM_IRQ;
-static uint16_t vuart_com_base = CONFIG_COM_BASE;
-
 #define vuart_lock_init(vu)	spinlock_init(&((vu)->lock))
 #define vuart_lock(vu)		spinlock_obtain(&((vu)->lock))
 #define vuart_unlock(vu)	spinlock_release(&((vu)->lock))
@@ -492,21 +489,5 @@ void vuart_deinit(struct acrn_vm *vm)
 		vm->vuart[i].active = false;
 		if (vm->vuart[i].target_vu)
 			vuart_deinit_connect(&vm->vuart[i]);
-	}
-}
-
-/* vuart=ttySx@irqN, like vuart=ttyS1@irq6 head "vuart=ttyS" is parsed */
-void vuart_set_property(const char *vuart_info)
-{
-	const uint16_t com_map[4] = {0x3f8, 0x2F8, 0x3E8, 0x2E8}; /* map to ttyS0-ttyS3 */
-	uint8_t com_idx;
-
-	com_idx = (uint8_t)(vuart_info[0] - '0');
-	if (com_idx < 4) {
-		vuart_com_base = com_map[com_idx];
-	}
-
-	if (strncmp(vuart_info + 1, "@irq", 4) == 0) {
-		vuart_com_irq = (uint8_t)strtol_deci(vuart_info + 5);
 	}
 }
