@@ -66,12 +66,6 @@ static struct pm_s_state_data host_pm_s_state = {
 	.wake_vector_64 = (uint64_t *)WAKE_VECTOR_64
 };
 
-void set_host_wake_vectors(void *vector_32, void *vector_64)
-{
-	host_pm_s_state.wake_vector_32 = (uint32_t *)vector_32;
-	host_pm_s_state.wake_vector_64 = (uint64_t *)vector_64;
-}
-
 struct pm_s_state_data *get_host_sstate_data(void)
 {
 	return &host_pm_s_state;

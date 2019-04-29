@@ -12,8 +12,6 @@
 #ifndef PLATFORM_ACPI_INFO_H
 #define PLATFORM_ACPI_INFO_H
 
-#define ACPI_INFO_VALIDATED
-
 /* pm sstate data */
 #define PM1A_EVT_ACCESS_SIZE	3U
 #define PM1A_EVT_ADDRESS	0x400UL
