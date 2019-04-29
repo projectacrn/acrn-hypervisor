@@ -79,7 +79,7 @@ struct usb_dev_req {
 	int     blk_count;
 
 	struct usb_data_xfer *xfer;
-	struct libusb_transfer *libusb_xfer;
+	struct libusb_transfer *trn;
 	struct usb_data_xfer_block *setup_blk;
 };
 
