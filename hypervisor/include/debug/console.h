@@ -7,8 +7,7 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-/* Switching key combinations for shell and uart console */
-#define GUEST_CONSOLE_TO_HV_SWITCH_KEY      0       /* CTRL + SPACE */
+#include <vuart.h>
 
 /** Initializes the console module.
  *
@@ -39,5 +38,6 @@ void console_setup_timer(void);
 
 void suspend_console(void);
 void resume_console(void);
+struct acrn_vuart *vm_console_vuart(struct acrn_vm *vm);
 
 #endif /* CONSOLE_H */
