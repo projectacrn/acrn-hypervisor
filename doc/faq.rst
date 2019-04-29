@@ -145,3 +145,39 @@ static memory allocation. This is why ACRN removed all ``malloc()``-type code,
 and why it needs to pre-identify the size of all buffers and structures used in
 the Virtual Memory Manager. For this reason, knowing the available RAM size at
 compile time is necessary to statically allocate memory usage.
+
+
+How to build ACRN on Fedora 29?
+*******************************
+
+There is a known issue when attempting to build ACRN on Fedora 29
+because of how ``gnu-efi`` is packaged in this Fedora release.
+(See the `ACRN GitHub issue
+<https://github.com/projectacrn/acrn-hypervisor/issues/2457>`_ 
+for more information.)  The following patch to ``/efi-stub/Makefile``
+fixes the problem on Fedora 29 development systems (but should
+not be used on other Linux distros)::
+
+   diff --git a/efi-stub/Makefile b/efi-stub/Makefile
+   index 5b87d49b..dfc64843 100644
+   --- a/efi-stub/Makefile
+   +++ b/efi-stub/Makefile
+   @@ -52,14 +52,14 @@ endif
+    # its tools and libraries in different folders. The next couple of
+    # variables will determine and set the right path for both the
+    # tools $(GNUEFI_DIR) and libraries $(LIBDIR)
+   -GNUEFI_DIR := $(shell find $(SYSROOT)/usr/lib* -name elf_$(ARCH)_efi.lds -type f | xargs dirname)
+   +GNUEFI_DIR := $(shell find $(SYSROOT)/usr/lib* -name elf_x64_efi.lds -type f | xargs dirname)
+   LIBDIR := $(subst gnuefi,,$(GNUEFI_DIR))
+   -CRT0 := $(GNUEFI_DIR)/crt0-efi-$(ARCH).o
+   -LDSCRIPT := $(GNUEFI_DIR)/elf_$(ARCH)_efi.lds
+   +CRT0 := $(GNUEFI_DIR)/crt0-efi-x64.o
+   +LDSCRIPT := $(GNUEFI_DIR)/elf_x64_efi.lds
+
+    INCDIR := $(SYSROOT)/usr/include
+
+   -CFLAGS=-I. -I.. -I../hypervisor/include/arch/x86/guest -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
+   +CFLAGS=-I. -I.. -I../hypervisor/include/arch/x86/guest -I$(INCDIR)/efi -I$(INCDIR)/efi/x64 \
+                    -I../hypervisor/include/public -I../hypervisor/include/lib -I../hypervisor/bsp/include/uefi \
+                    -DEFI_FUNCTION_WRAPPER -fPIC -fshort-wchar -ffreestanding \
+                    -Wall -I../fs/ -D$(ARCH) -O2 \
