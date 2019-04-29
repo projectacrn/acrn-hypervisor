@@ -28,10 +28,12 @@
  *
  * $FreeBSD$
  */
-
-#include <hypervisor.h>
-#include <uart16550.h>
+#include <types.h>
+#include <spinlock.h>
+#include <io.h>
 #include <pci.h>
+#include <uart16550.h>
+#include <logmsg.h>
 
 static spinlock_t pci_device_lock;
 static uint32_t num_pci_pdev;
