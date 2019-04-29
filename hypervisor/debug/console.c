@@ -11,10 +11,15 @@
 #include <timer.h>
 #include <vuart.h>
 #include <logmsg.h>
+#include <acrn_hv_defs.h>
+#include <vm.h>
 
 struct hv_timer console_timer;
 
 #define CONSOLE_KICK_TIMER_TIMEOUT  40UL /* timeout is 40ms*/
+/* Switching key combinations for shell and uart console */
+#define GUEST_CONSOLE_TO_HV_SWITCH_KEY      0       /* CTRL + SPACE */
+uint16_t console_vmid = ACRN_INVALID_VMID;
 
 void console_init(void)
 {
@@ -35,6 +40,67 @@ size_t console_write(const char *s, size_t len)
 char console_getc(void)
 {
 	return uart16550_getc();
+}
+
+/*
+ * @post return != NULL
+ */
+struct acrn_vuart *vm_console_vuart(struct acrn_vm *vm)
+{
+	return &vm->vuart[0];
+}
+
+/**
+ * @pre vu != NULL
+ * @pre vu->active == true
+ */
+void vuart_console_rx_chars(struct acrn_vuart *vu)
+{
+	char ch = -1;
+
+	/* Get data from physical uart */
+	ch = uart16550_getc();
+
+	if (ch == GUEST_CONSOLE_TO_HV_SWITCH_KEY) {
+		/* Switch the console */
+		console_vmid = ACRN_INVALID_VMID;
+		printf("\r\n\r\n ---Entering ACRN SHELL---\r\n");
+	}
+	if (ch != -1) {
+		vuart_putchar(vu, ch);
+		vuart_toggle_intr(vu);
+	}
+
+}
+
+/**
+ * @pre vu != NULL
+ */
+void vuart_console_tx_chars(struct acrn_vuart *vu)
+{
+	char c;
+
+	while ((c = vuart_getchar(vu)) != -1) {
+		printf("%c", c);
+	}
+}
+
+struct acrn_vuart *vuart_console_active(void)
+{
+	struct acrn_vm *vm = NULL;
+	struct acrn_vuart *vu = NULL;
+
+	if (console_vmid < CONFIG_MAX_VM_NUM) {
+		vm = get_vm_from_vmid(console_vmid);
+		if (is_valid_vm(vm)) {
+			vu = vm_console_vuart(vm);
+		} else {
+			/* Console vm is invalid, switch back to HV-Shell */
+			console_vmid = ACRN_INVALID_VMID;
+		}
+	}
+
+	return (vu && vu->active) ? vu : NULL;
 }
 
 static void console_timer_callback(__unused void *data)

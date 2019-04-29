@@ -43,8 +43,6 @@ static uint16_t vuart_com_base = CONFIG_COM_BASE;
 #define vuart_lock(vu)		spinlock_obtain(&((vu)->lock))
 #define vuart_unlock(vu)	spinlock_release(&((vu)->lock))
 
-uint16_t console_vmid = ACRN_INVALID_VMID;
-
 static inline void fifo_reset(struct fifo *fifo)
 {
 	fifo->rindex = 0U;
@@ -81,6 +79,23 @@ static inline char fifo_getchar(struct fifo *fifo)
 static inline uint32_t fifo_numchars(const struct fifo *fifo)
 {
 	return fifo->num;
+}
+
+void vuart_putchar(struct acrn_vuart *vu, char ch)
+{
+	vuart_lock(vu);
+	fifo_putchar(&vu->rxfifo, ch);
+	vuart_unlock(vu);
+}
+
+char vuart_getchar(struct acrn_vuart *vu)
+{
+	char c;
+
+	vuart_lock(vu);
+	c = fifo_getchar(&vu->txfifo);
+	vuart_unlock(vu);
+	return c;
 }
 
 static inline void vuart_fifo_init(struct acrn_vuart *vu)
@@ -130,18 +145,10 @@ struct acrn_vuart *find_vuart_by_port(struct acrn_vm *vm, uint16_t offset)
 }
 
 /*
- * @post return != NULL
- */
-struct acrn_vuart *vm_console_vuart(struct acrn_vm *vm)
-{
-	return &vm->vuart[0];
-}
-
-/*
  * Toggle the COM port's intr pin depending on whether or not we have an
  * interrupt condition to report to the processor.
  */
-static void vuart_toggle_intr(const struct acrn_vuart *vu)
+void vuart_toggle_intr(const struct acrn_vuart *vu)
 {
 	uint8_t intr_reason;
 	union ioapic_rte rte;
@@ -384,58 +391,6 @@ static bool vuart_register_io_handler(struct acrn_vm *vm, uint16_t port_base, ui
 	return ret;
 }
 
-/**
- * @pre vu != NULL
- */
-void vuart_console_tx_chars(struct acrn_vuart *vu)
-{
-	vuart_lock(vu);
-	while (fifo_numchars(&vu->txfifo) > 0U) {
-		printf("%c", fifo_getchar(&vu->txfifo));
-	}
-	vuart_unlock(vu);
-}
-
-/**
- * @pre vu != NULL
- * @pre vu->active == true
- */
-void vuart_console_rx_chars(struct acrn_vuart *vu)
-{
-	char ch = -1;
-
-	vuart_lock(vu);
-	/* Get data from physical uart */
-	ch = uart16550_getc();
-
-	if (ch == GUEST_CONSOLE_TO_HV_SWITCH_KEY) {
-		/* Switch the console */
-		console_vmid = ACRN_INVALID_VMID;
-		printf("\r\n\r\n ---Entering ACRN SHELL---\r\n");
-	}
-	if (ch != -1) {
-		fifo_putchar(&vu->rxfifo, ch);
-		vuart_toggle_intr(vu);
-	}
-
-	vuart_unlock(vu);
-}
-
-struct acrn_vuart *vuart_console_active(void)
-{
-	struct acrn_vm *vm = NULL;
-	struct acrn_vuart *vu = NULL;
-
-	if (console_vmid < CONFIG_MAX_VM_NUM) {
-		vm = get_vm_from_vmid(console_vmid);
-		if (is_valid_vm(vm)) {
-			vu = vm_console_vuart(vm);
-		}
-	}
-
-	return (vu && vu->active) ? vu : NULL;
-}
-
 static void vuart_setup(struct acrn_vm *vm,
 		struct vuart_config *vu_config, uint16_t vuart_idx)
 {
@@ -540,10 +495,6 @@ void vuart_init(struct acrn_vm *vm, struct vuart_config *vu_config)
 void vuart_deinit(struct acrn_vm *vm)
 {
 	uint8_t i;
-
-	/* reset console_vmid to switch back to hypervisor console */
-	if (console_vmid == vm->vm_id)
-		console_vmid = ACRN_INVALID_VMID;
 
 	for (i = 0; i < MAX_VUART_NUM_PER_VM; i++) {
 		vm->vuart[i].active = false;
