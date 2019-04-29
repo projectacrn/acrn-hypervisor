@@ -170,7 +170,7 @@ libusb_speed_to_usb_speed(int libusb_speed)
 }
 
 static void
-usb_dev_comp_req(struct libusb_transfer *trn)
+usb_dev_comp_cb(struct libusb_transfer *trn)
 {
 	struct usb_dev_req *r;
 	struct usb_data_xfer *xfer;
@@ -255,6 +255,7 @@ usb_dev_comp_req(struct libusb_transfer *trn)
 	done = trn->actual_length;
 
 	while (i < r->blk_count) {
+
 		if (trn->type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS) {
 			buf_idx = 0;
 			buf = libusb_get_iso_packet_buffer_simple(trn, j);
@@ -885,16 +886,16 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 
 	if (type == USB_ENDPOINT_BULK) {
 		libusb_fill_bulk_transfer(r->trn, udev->handle, epid,
-				r->buffer, data_size, usb_dev_comp_req, r, 0);
+				r->buffer, data_size, usb_dev_comp_cb, r, 0);
 
 	} else if (type == USB_ENDPOINT_INT) {
 		libusb_fill_interrupt_transfer(r->trn, udev->handle, epid,
-				r->buffer, data_size, usb_dev_comp_req, r, 0);
+				r->buffer, data_size, usb_dev_comp_cb, r, 0);
 
 	} else if (type == USB_ENDPOINT_ISOC) {
 		libusb_fill_iso_transfer(r->trn, udev->handle, epid,
 				r->buffer, data_size, framecnt,
-				usb_dev_comp_req, r, 0);
+				usb_dev_comp_cb, r, 0);
 
 	} else {
 		UPRINTF(LFTL, "%s: wrong endpoint type %d\r\n", __func__, type);
