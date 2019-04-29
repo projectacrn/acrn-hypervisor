@@ -48,7 +48,7 @@
 #define COM3_IRQ		6U
 #define COM4_IRQ		7U
 
-struct fifo {
+struct vuart_fifo {
 	char *buf;
 	uint32_t rindex;	/* index to read from */
 	uint32_t windex;	/* index to write to */

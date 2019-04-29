@@ -43,14 +43,14 @@ static uint16_t vuart_com_base = CONFIG_COM_BASE;
 #define vuart_lock(vu)		spinlock_obtain(&((vu)->lock))
 #define vuart_unlock(vu)	spinlock_release(&((vu)->lock))
 
-static inline void fifo_reset(struct fifo *fifo)
+static inline void fifo_reset(struct vuart_fifo *fifo)
 {
 	fifo->rindex = 0U;
 	fifo->windex = 0U;
 	fifo->num = 0U;
 }
 
-static inline void fifo_putchar(struct fifo *fifo, char ch)
+static inline void fifo_putchar(struct vuart_fifo *fifo, char ch)
 {
 	fifo->buf[fifo->windex] = ch;
 	if (fifo->num < fifo->size) {
@@ -62,21 +62,19 @@ static inline void fifo_putchar(struct fifo *fifo, char ch)
 	}
 }
 
-static inline char fifo_getchar(struct fifo *fifo)
+static inline char fifo_getchar(struct vuart_fifo *fifo)
 {
-	char c;
+	char c = -1;
 
 	if (fifo->num > 0U) {
 		c = fifo->buf[fifo->rindex];
 		fifo->rindex = (fifo->rindex + 1U) % fifo->size;
 		fifo->num--;
-		return c;
-	} else {
-		return -1;
 	}
+	return c;
 }
 
-static inline uint32_t fifo_numchars(const struct fifo *fifo)
+static inline uint32_t fifo_numchars(const struct vuart_fifo *fifo)
 {
 	return fifo->num;
 }
@@ -117,15 +115,16 @@ static inline void vuart_fifo_init(struct acrn_vuart *vu)
  */
 static uint8_t vuart_intr_reason(const struct acrn_vuart *vu)
 {
+	uint8_t ret = IIR_NOPEND;
+
 	if (((vu->lsr & LSR_OE) != 0U) && ((vu->ier & IER_ELSI) != 0U)) {
-		return IIR_RLS;
+		ret = IIR_RLS;
 	} else if ((fifo_numchars(&vu->rxfifo) > 0U) && ((vu->ier & IER_ERBFI) != 0U)) {
-		return IIR_RXTOUT;
+		ret = IIR_RXTOUT;
 	} else if (vu->thre_int_pending && ((vu->ier & IER_ETBEI) != 0U)) {
-		return IIR_TXRDY;
-	} else {
-		return IIR_NOPEND;
+		ret = IIR_TXRDY;
 	}
+	return ret;
 }
 
 struct acrn_vuart *find_vuart_by_port(struct acrn_vm *vm, uint16_t offset)
@@ -136,10 +135,10 @@ struct acrn_vuart *find_vuart_by_port(struct acrn_vm *vm, uint16_t offset)
 	/* TODO: support pci vuart find */
 	for (i = 0; i < MAX_VUART_NUM_PER_VM; i++) {
 		vu = &vm->vuart[i];
-		 if (vu->active == true && vu->port_base == (offset & ~0x7U)) {
+		if (vu->active == true && vu->port_base == (offset & ~0x7U)) {
 			ret_vu = vu;
 			break;
-		 }
+		}
 	}
 	return ret_vu;
 }
@@ -194,89 +193,82 @@ static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 	uint8_t value_u8 = (uint8_t)value;
 	struct acrn_vuart *target_vu = NULL;
 
-	offset -= vu->port_base;
-	target_vu = vu->target_vu;
-	if ((offset == UART16550_THR) && target_vu) {
-		vuart_write_to_target(target_vu, value_u8);
-		return true;
-	}
-
-	vuart_lock(vu);
-	/*
-	 * Take care of the special case DLAB accesses first
-	 */
-	if ((vu->lcr & LCR_DLAB) != 0U) {
-		if (offset == UART16550_DLL) {
-			vu->dll = value_u8;
-			goto done;
-		}
-
-		if (offset == UART16550_DLM) {
-			vu->dlh = value_u8;
-			goto done;
-		}
-	}
-
-	switch (offset) {
-	case UART16550_THR:
-		fifo_putchar(&vu->txfifo, (char)value_u8);
-		vu->thre_int_pending = true;
-		break;
-	case UART16550_IER:
-		/*
-		 * Apply mask so that bits 4-7 are 0
-		 * Also enables bits 0-3 only if they're 1
-		 */
-		vu->ier = value_u8 & 0x0FU;
-		break;
-	case UART16550_FCR:
-		/*
-		 * The FCR_ENABLE bit must be '1' for the programming
-		 * of other FCR bits to be effective.
-		 */
-		if ((value_u8 & FCR_FIFOE) == 0U) {
-			vu->fcr = 0U;
+	if (vu) {
+		offset -= vu->port_base;
+		target_vu = vu->target_vu;
+		if ((offset == UART16550_THR) && target_vu) {
+			vuart_write_to_target(target_vu, value_u8);
 		} else {
-			if ((value_u8 & FCR_RFR) != 0U) {
-				fifo_reset(&vu->rxfifo);
+			vuart_lock(vu);
+			/*
+			 * Take care of the special case DLAB accesses first
+			 */
+			if ((vu->lcr & LCR_DLAB) != 0U && offset == UART16550_DLL) {
+				vu->dll = value_u8;
+			} else if ((vu->lcr & LCR_DLAB) != 0U && offset == UART16550_DLM) {
+				vu->dlh = value_u8;
+			} else {
+				switch (offset) {
+				case UART16550_THR:
+					fifo_putchar(&vu->txfifo, (char)value_u8);
+					vu->thre_int_pending = true;
+					break;
+				case UART16550_IER:
+					/*
+					 * Apply mask so that bits 4-7 are 0
+					 * Also enables bits 0-3 only if they're 1
+					 */
+					vu->ier = value_u8 & 0x0FU;
+					break;
+				case UART16550_FCR:
+					/*
+					 * The FCR_ENABLE bit must be '1' for the programming
+					 * of other FCR bits to be effective.
+					 */
+					if ((value_u8 & FCR_FIFOE) == 0U) {
+						vu->fcr = 0U;
+					} else {
+						if ((value_u8 & FCR_RFR) != 0U) {
+							fifo_reset(&vu->rxfifo);
+						}
+
+						vu->fcr = value_u8 & (FCR_FIFOE | FCR_DMA | FCR_RX_MASK);
+					}
+					break;
+				case UART16550_LCR:
+					vu->lcr = value_u8;
+					break;
+				case UART16550_MCR:
+					/* ignore modem */
+					break;
+				case UART16550_LSR:
+					/*
+					 * Line status register is not meant to be written to
+					 * during normal operation.
+					 */
+					break;
+				case UART16550_MSR:
+					/*
+					 * As far as I can tell MSR is a read-only register.
+					 */
+					break;
+				case UART16550_SCR:
+					vu->scr = value_u8;
+					break;
+				default:
+					/*
+					 * For the offset that is not handled (either a read-only
+					 * register or an invalid register), ignore the write to it.
+					 * Gracefully return if prior case clauses have not been met.
+					 */
+					break;
+				}
 			}
 
-			vu->fcr = value_u8 & (FCR_FIFOE | FCR_DMA | FCR_RX_MASK);
+			vuart_toggle_intr(vu);
+			vuart_unlock(vu);
 		}
-		break;
-	case UART16550_LCR:
-		vu->lcr = value_u8;
-		break;
-	case UART16550_MCR:
-		/* ignore modem */
-		break;
-	case UART16550_LSR:
-		/*
-		 * Line status register is not meant to be written to
-		 * during normal operation.
-		 */
-		break;
-	case UART16550_MSR:
-		/*
-		 * As far as I can tell MSR is a read-only register.
-		 */
-		break;
-	case UART16550_SCR:
-		vu->scr = value_u8;
-		break;
-	default:
-		/*
-		 * For the offset that is not handled (either a read-only
-		 * register or an invalid register), ignore the write to it.
-		 * Gracefully return if prior case clauses have not been met.
-		 */
-		break;
 	}
-
-done:
-	vuart_toggle_intr(vu);
-	vuart_unlock(vu);
-
 	return true;
 }
 
@@ -288,76 +280,76 @@ static bool vuart_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t offs
 	struct acrn_vuart *vu = find_vuart_by_port(vm, offset);
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	offset -= vu->port_base;
-	vuart_lock(vu);
-	/*
-	 * Take care of the special case DLAB accesses first
-	 */
-	if ((vu->lcr & LCR_DLAB) != 0U) {
-		if (offset == UART16550_DLL) {
-			reg = vu->dll;
-			goto done;
-		}
-
-		if (offset == UART16550_DLM) {
-			reg = vu->dlh;
-			goto done;
-		}
-	}
-	switch (offset) {
-	case UART16550_RBR:
-		vu->lsr &= ~LSR_OE;
-		reg = (uint8_t)fifo_getchar(&vu->rxfifo);
-		break;
-	case UART16550_IER:
-		reg = vu->ier;
-		break;
-	case UART16550_IIR:
-		iir = ((vu->fcr & FCR_FIFOE) != 0U) ? IIR_FIFO_MASK : 0U;
-		intr_reason = vuart_intr_reason(vu);
+	if (vu) {
+		offset -= vu->port_base;
+		vuart_lock(vu);
 		/*
-		 * Deal with side effects of reading the IIR register
+		 * Take care of the special case DLAB accesses first
 		 */
-		if (intr_reason == IIR_TXRDY) {
-			vu->thre_int_pending = false;
-		}
-		iir |= intr_reason;
-		reg = iir;
-		break;
-	case UART16550_LCR:
-		reg = vu->lcr;
-		break;
-	case UART16550_MCR:
-		reg = vu->mcr;
-		break;
-	case UART16550_LSR:
-		/* Transmitter is always ready for more data */
-		vu->lsr |= LSR_TEMT | LSR_THRE;
-		/* Check for new receive data */
-		if (fifo_numchars(&vu->rxfifo) > 0U) {
-			vu->lsr |= LSR_DR;
+		if ((vu->lcr & LCR_DLAB) != 0U) {
+			if (offset == UART16550_DLL) {
+				reg = vu->dll;
+			} else if (offset == UART16550_DLM) {
+				reg = vu->dlh;
+			} else {
+				reg = 0U;
+			}
 		} else {
-			vu->lsr &= ~LSR_DR;
+			switch (offset) {
+			case UART16550_RBR:
+				vu->lsr &= ~LSR_OE;
+				reg = (uint8_t)fifo_getchar(&vu->rxfifo);
+				break;
+			case UART16550_IER:
+				reg = vu->ier;
+				break;
+			case UART16550_IIR:
+				iir = ((vu->fcr & FCR_FIFOE) != 0U) ? IIR_FIFO_MASK : 0U;
+				intr_reason = vuart_intr_reason(vu);
+				/*
+				 * Deal with side effects of reading the IIR register
+				 */
+				if (intr_reason == IIR_TXRDY) {
+					vu->thre_int_pending = false;
+				}
+				iir |= intr_reason;
+				reg = iir;
+				break;
+			case UART16550_LCR:
+				reg = vu->lcr;
+				break;
+			case UART16550_MCR:
+				reg = vu->mcr;
+				break;
+			case UART16550_LSR:
+				/* Transmitter is always ready for more data */
+				vu->lsr |= LSR_TEMT | LSR_THRE;
+				/* Check for new receive data */
+				if (fifo_numchars(&vu->rxfifo) > 0U) {
+					vu->lsr |= LSR_DR;
+				} else {
+					vu->lsr &= ~LSR_DR;
+				}
+				reg = vu->lsr;
+				/* The LSR_OE bit is cleared on LSR read */
+				vu->lsr &= ~LSR_OE;
+				break;
+			case UART16550_MSR:
+				/* ignore modem I*/
+				reg = 0U;
+				break;
+			case UART16550_SCR:
+				reg = vu->scr;
+				break;
+			default:
+				reg = 0xFFU;
+				break;
+			}
 		}
-		reg = vu->lsr;
-		/* The LSR_OE bit is cleared on LSR read */
-		vu->lsr &= ~LSR_OE;
-		break;
-	case UART16550_MSR:
-		/* ignore modem I*/
-		reg = 0U;
-		break;
-	case UART16550_SCR:
-		reg = vu->scr;
-		break;
-	default:
-		reg = 0xFFU;
-		break;
+		vuart_toggle_intr(vu);
+		pio_req->value = (uint32_t)reg;
+		vuart_unlock(vu);
 	}
-done:
-	vuart_toggle_intr(vu);
-	pio_req->value = (uint32_t)reg;
-	vuart_unlock(vu);
 
 	return true;
 }
