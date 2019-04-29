@@ -18,7 +18,11 @@
 #define USB_EP_PID(d) (USB_EP_ADDR(d) & USB_DIR_IN ? TOKEN_IN : TOKEN_OUT)
 #define USB_EP_TYPE(d) (USB_EP_ATTR(d) & 0x3)
 #define USB_EP_NR(d) (USB_EP_ADDR(d) & 0xF)
+#define USB_EP_MAXP(d) ((d)->wMaxPacketSize)
 #define USB_EP_ERR_TYPE 0xFF
+
+#define USB_EP_MAXP_SZ(m) ((m) & 0x7ff)
+#define USB_EP_MAXP_MT(m) (((m) >> 11) & 0x3)
 
 enum {
 	USB_INFO_VERSION,
@@ -32,6 +36,7 @@ enum {
 struct usb_dev_ep {
 	uint8_t pid;
 	uint8_t type;
+	uint16_t maxp;
 };
 
 struct usb_dev {

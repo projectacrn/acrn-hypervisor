@@ -19,8 +19,8 @@
 #define LOG_TAG "USBPM: "
 
 static struct usb_dev_sys_ctx_info g_ctx;
-static inline uint8_t usb_dev_get_ep_type(struct usb_dev *udev, int pid,
-		int epnum);
+static uint8_t usb_dev_get_ep_type(struct usb_dev *udev, int pid, int epnum);
+static uint16_t usb_dev_get_ep_maxp(struct usb_dev *udev, int pid, int epnum);
 
 static bool
 usb_get_native_devinfo(struct libusb_device *ldev,
@@ -480,6 +480,28 @@ usb_dev_get_ep_type(struct usb_dev *udev, int pid, int epnum)
 		return ep->type;
 }
 
+static inline void
+usb_dev_set_ep_maxp(struct usb_dev *udev, int pid, int epnum, uint16_t maxp)
+{
+	struct usb_dev_ep *ep;
+
+	ep = usb_dev_get_ep(udev, pid, epnum);
+	if (ep)
+		ep->maxp = maxp;
+}
+
+static inline uint16_t
+usb_dev_get_ep_maxp(struct usb_dev *udev, int pid, int epnum)
+{
+	struct usb_dev_ep *ep;
+
+	ep = usb_dev_get_ep(udev, pid, epnum);
+	if (!ep)
+		return 0;
+	else
+		return ep->maxp;
+}
+
 static void
 usb_dev_reset_ep(struct usb_dev *udev)
 {
@@ -515,6 +537,10 @@ usb_dev_update_ep(struct usb_dev *udev)
 					USB_EP_PID(desc),
 					USB_EP_NR(desc),
 					USB_EP_TYPE(desc));
+			usb_dev_set_ep_maxp(udev,
+					USB_EP_PID(desc),
+					USB_EP_NR(desc),
+					USB_EP_MAXP(desc));
 		}
 	}
 	libusb_free_config_descriptor(cfg);
