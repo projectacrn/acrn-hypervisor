@@ -37,6 +37,7 @@ struct cpuinfo_x86 {
 };
 
 bool has_monitor_cap(void);
+bool monitor_cap_buggy(void);
 bool is_apicv_advanced_feature_supported(void);
 bool pcpu_has_cap(uint32_t bit);
 bool pcpu_has_vmx_ept_cap(uint32_t bit_mask);

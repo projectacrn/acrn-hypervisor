@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <pgtable.h>
 #include <msr.h>
+#include <cpuid.h>
 #include <vcpu.h>
 #include <vm.h>
 #include <vmcs.h>
@@ -400,6 +401,11 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		v = 0U;
 		break;
 	}
+	case MSR_IA32_MISC_ENABLE:
+	{
+		v = vcpu_get_guest_msr(vcpu, MSR_IA32_MISC_ENABLE);
+		break;
+	}
 	default:
 	{
 		if (is_x2apic_msr(msr)) {
@@ -464,6 +470,53 @@ static void set_guest_tsc_adjust(struct acrn_vcpu *vcpu, uint64_t tsc_adjust)
 
 	/* IA32_TSC_ADJUST is supposed to carry the value it's written to */
 	vcpu_set_guest_msr(vcpu, MSR_IA32_TSC_ADJUST, tsc_adjust);
+}
+
+static void set_guest_ia32_misc_enalbe(struct acrn_vcpu *vcpu, uint64_t v)
+{
+	uint32_t eax, ebx = 0U, ecx = 0U, edx = 0U;
+	bool update_vmsr = true;
+	uint64_t msr_value;
+	/* According to SDM Vol4 2.1 & Vol 3A 4.1.4,
+	 * EFER.NXE should be cleared if guest disable XD in IA32_MISC_ENABLE
+	 */
+	if ((v & MSR_IA32_MISC_ENABLE_XD_DISABLE) != 0UL) {
+		vcpu_set_efer(vcpu, vcpu_get_efer(vcpu) & ~MSR_IA32_EFER_NXE_BIT);
+	}
+
+	/* Handle MISC_ENABLE_MONITOR_ENA
+	 * If has_monitor_cap() retrn true, this means the feature is enabed on host.
+	 * HV will use monitor/mwait.
+	 * - if guest try to set this bit, do nothing since it is already enabled
+	 * - if guest try to clear this bit, not allow to disable in physcial MSR,
+	 *   just clear the corresponding bit in vcpuid.
+	 * If has_monitor_cap() retrn false, this means the feature is not enabled on host.
+	 * HV will not use monitor/mwait. Allow guest to change the bit to physcial MSR
+	 */
+	if (((v ^ vcpu_get_guest_msr(vcpu, MSR_IA32_MISC_ENABLE)) & MSR_IA32_MISC_ENABLE_MONITOR_ENA) != 0UL) {
+		eax = 1U;
+		guest_cpuid(vcpu, &eax, &ebx, &ecx, &edx);
+		/* According to SDM Vol4 2.1 Table 2-2,
+		 * Writing this bit when the SSE3 feature flag is set to 0 may generate a #GP exception.
+		 */
+		if ((ecx & CPUID_ECX_SSE3) == 0U) {
+			vcpu_inject_gp(vcpu, 0U);
+			update_vmsr = false;
+		} else if ((!has_monitor_cap()) && (!monitor_cap_buggy())) {
+			msr_value = msr_read(MSR_IA32_MISC_ENABLE) & ~MSR_IA32_MISC_ENABLE_MONITOR_ENA;
+			msr_value |= v & MSR_IA32_MISC_ENABLE_MONITOR_ENA;
+			/* This will not change the return value of has_monitor_cap() since the feature values
+			 * are cached when platform init.
+			 */
+			msr_write(MSR_IA32_MISC_ENABLE, msr_value);
+		} else {
+			/* Not allow to change MISC_ENABLE_MONITOR_ENA in MSR */
+		}
+	}
+
+	if (update_vmsr) {
+		vcpu_set_guest_msr(vcpu, MSR_IA32_MISC_ENABLE, v);
+	}
 }
 
 int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
@@ -551,6 +604,11 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_FEATURE_CONTROL:
 	{
 		err = -EACCES;
+		break;
+	}
+	case MSR_IA32_MISC_ENABLE:
+	{
+		set_guest_ia32_misc_enalbe(vcpu, v);
 		break;
 	}
 	default:
