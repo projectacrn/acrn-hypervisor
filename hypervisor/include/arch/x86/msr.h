@@ -551,7 +551,17 @@
 #define PAT_MEM_TYPE_UCM			0x07UL	/* uncached minus */
 
 /* MISC_ENABLE bits: architectural */
-#define MSR_IA32_MISC_ENABLE_FAST_STRING	(1U << 0U)
+#define MSR_IA32_MISC_ENABLE_FAST_STRING	(1UL << 0U)
+#define MSR_IA32_MISC_ENABLE_TCC		(1UL << 3U)
+#define MSR_IA32_MISC_ENABLE_PMA		(1UL << 7U)
+#define MSR_IA32_MISC_ENABLE_BTS_UNAVAIL	(1UL << 11U)
+#define MSR_IA32_MISC_ENABLE_PEBS_UNAVAIL	(1UL << 12U)
+#define MSR_IA32_MISC_ENABLE_TM2_ENABLE		(1UL << 13U)
+#define MSR_IA32_MISC_ENABLE_EITS		(1UL << 16U)
+#define MSR_IA32_MISC_ENABLE_MONITOR_ENA	(1UL << 18U)
+#define MSR_IA32_MISC_ENABLE_LIMIT_CPUID	(1UL << 22U)
+#define MSR_IA32_MISC_ENABLE_xTPR		(1UL << 23U)
+#define MSR_IA32_MISC_ENABLE_XD_DISABLE		(1UL << 34U)
 
 #ifndef ASSEMBLER
 static inline bool pat_mem_type_invalid(uint64_t x)
@@ -623,18 +633,5 @@ void update_msr_bitmap_x2apic_passthru(const struct acrn_vcpu *vcpu);
 
 /* Flush L1 D-cache */
 #define IA32_L1D_FLUSH				(1UL << 0U)
-
-/* MSR_IA32_MISC_ENABLE */
-#define MISC_ENABLE_FAST_STRING			(1U << 0U)
-#define MISC_ENABLE_TCC				(1U << 3U)
-#define MISC_ENABLE_PMA				(1U << 7U)
-#define MISC_ENABLE_BTS_UNAVAIL			(1U << 11U)
-#define MISC_ENABLE_PEBS_UNAVAIL		(1U << 12U)
-#define MISC_ENABLE_TM2_ENABLE			(1U << 13U)
-#define MISC_ENABLE_EITS			(1U << 16U)
-#define MISC_ENABLE_MONITOR_ENA			(1U << 18U)
-#define MISC_ENABLE_LIMIT_CPUID			(1U << 22U)
-#define MISC_ENABLE_xTPR			(1U << 23U)
-#define MISC_ENABLE_XD				(1U << 34U)
 
 #endif /* MSR_H */
