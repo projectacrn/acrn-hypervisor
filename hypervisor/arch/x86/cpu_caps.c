@@ -77,9 +77,9 @@ bool has_monitor_cap(void)
 static inline bool is_fast_string_erms_supported_and_enabled(void)
 {
 	bool ret = false;
-	uint32_t misc_enable = (uint32_t)msr_read(MSR_IA32_MISC_ENABLE);
+	uint64_t misc_enable = msr_read(MSR_IA32_MISC_ENABLE);
 
-	if ((misc_enable & MSR_IA32_MISC_ENABLE_FAST_STRING) == 0U) {
+	if ((misc_enable & MSR_IA32_MISC_ENABLE_FAST_STRING) == 0UL) {
 		pr_fatal("%s, fast string is not enabled\n", __func__);
 	} else {
 		if (!pcpu_has_cap(X86_FEATURE_ERMS)) {
