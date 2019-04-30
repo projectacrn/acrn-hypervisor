@@ -152,7 +152,7 @@ static struct acpi_table_rsdp *get_rsdp(void)
 	struct acpi_table_rsdp *rsdp = NULL;
 	uint16_t *addr;
 
-	rsdp = (struct acpi_table_rsdp *)firmware_get_rsdp();
+	rsdp = (struct acpi_table_rsdp *)get_rsdp_ptr();
 	if (rsdp == NULL) {
 		/* EBDA is addressed by the 16 bit pointer at 0x40E */
 		addr = (uint16_t *)hpa2hva(0x40eUL);

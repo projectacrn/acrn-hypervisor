@@ -110,7 +110,7 @@ uint64_t prepare_trampoline(void)
 	uint64_t size, dest_pa, i;
 
 	size = (uint64_t)(&ld_trampoline_end - &ld_trampoline_start);
-	dest_pa = firmware_get_ap_trampoline();
+	dest_pa = get_ap_trampoline_buf();
 
 	pr_dbg("trampoline code: %llx size %x", dest_pa, size);
 

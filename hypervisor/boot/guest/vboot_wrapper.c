@@ -13,63 +13,64 @@
 #include <direct_boot.h>
 #include <deprivilege_boot.h>
 
-static struct firmware_operations *firmware_ops;
+static struct vboot_operations *vboot_ops;
 
 /**
  * @pre: this function is called during detect mode which is very early stage,
  * other exported interfaces should not be called beforehand.
  */
-void init_firmware_operations(void)
+void init_vboot_operations(void)
 {
 
 	struct multiboot_info *mbi;
 	uint32_t i;
 
-	const struct firmware_candidates fw_candidates[NUM_FIRMWARE_SUPPORTING] = {
-		{"Slim BootLoader", 15U, sbl_get_firmware_operations},
-		{"Intel IOTG/TSD ABL", 18U, sbl_get_firmware_operations},
-		{"ACRN UEFI loader", 16U, uefi_get_firmware_operations},
-		{"GRUB", 4U, sbl_get_firmware_operations},
+	const struct vboot_candidates vboot_candidates[NUM_VBOOT_SUPPORTING] = {
+		{"Slim BootLoader", 15U, get_direct_boot_ops},
+		{"Intel IOTG/TSD ABL", 18U, get_direct_boot_ops},
+		{"ACRN UEFI loader", 16U, get_deprivilege_boot_ops},
+		{"GRUB", 4U, get_direct_boot_ops},
 	};
 
 	mbi = (struct multiboot_info *)hpa2hva((uint64_t)boot_regs[1]);
-	for (i = 0U; i < NUM_FIRMWARE_SUPPORTING; i++) {
-		if (strncmp(hpa2hva(mbi->mi_loader_name), fw_candidates[i].name, fw_candidates[i].name_sz) == 0) {
-			firmware_ops = fw_candidates[i].ops();
+	for (i = 0U; i < NUM_VBOOT_SUPPORTING; i++) {
+		if (strncmp(hpa2hva(mbi->mi_loader_name), vboot_candidates[i].name,
+			vboot_candidates[i].name_sz) == 0) {
+			vboot_ops = vboot_candidates[i].ops();
 			break;
 		}
 	}
 }
 
-/* @pre: firmware_ops->init != NULL */
-void init_firmware(void)
+/* @pre: vboot_ops->init != NULL */
+void init_vboot(void)
 {
 #ifndef CONFIG_CONSTANT_ACPI
 	acpi_fixup();
 #endif
-	firmware_ops->init();
+	vboot_ops->init();
 }
 
-/* @pre: firmware_ops->get_ap_trampoline != NULL */
-uint64_t firmware_get_ap_trampoline(void)
+/* @pre: vboot_ops->get_ap_trampoline != NULL */
+uint64_t get_ap_trampoline_buf(void)
 {
-	return firmware_ops->get_ap_trampoline();
+	return vboot_ops->get_ap_trampoline();
 }
 
-/* @pre: firmware_ops->get_rsdp != NULL */
-void *firmware_get_rsdp(void)
+/* @pre: vboot_ops->get_rsdp != NULL */
+void *get_rsdp_ptr(void)
 {
-	return firmware_ops->get_rsdp();
+	return vboot_ops->get_rsdp();
 }
 
-/* @pre: firmware_ops->init_irq != NULL */
-void firmware_init_irq(void)
+/* @pre: vboot_ops->init_irq != NULL */
+void init_vboot_irq(void)
 {
-	return firmware_ops->init_irq();
+	return vboot_ops->init_irq();
 }
 
-/* @pre: firmware_ops->init_vm_boot_info != NULL */
-int32_t firmware_init_vm_boot_info(struct acrn_vm *vm)
+/* @pre: vboot_ops->init_vboot_info != NULL */
+int32_t init_vm_boot_info(struct acrn_vm *vm)
 {
-	return firmware_ops->init_vm_boot_info(vm);
+	return vboot_ops->init_vboot_info(vm);
 }

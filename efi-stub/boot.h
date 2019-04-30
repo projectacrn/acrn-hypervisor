@@ -78,7 +78,7 @@ typedef void(*hv_func)(int32_t, struct multiboot_info*);
 #define MBOOT_MMAP_NUMS        256
 #define MBOOT_MMAP_SIZE (sizeof(struct multiboot_mmap) * MBOOT_MMAP_NUMS)
 #define MBOOT_INFO_SIZE (sizeof(struct multiboot_info))
-#define BOOT_CTX_SIZE  (sizeof(struct uefi_context))
+#define BOOT_CTX_SIZE  (sizeof(struct depri_boot_context))
 #define BOOT_LOADER_NAME_SIZE 17U
 #define EFI_BOOT_MEM_SIZE \
 	(MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE + BOOT_CTX_SIZE + BOOT_LOADER_NAME_SIZE)
@@ -87,7 +87,7 @@ typedef void(*hv_func)(int32_t, struct multiboot_info*);
 #define MBOOT_INFO_PTR(addr)  \
 	((struct multiboot_info *)((VOID *)(addr) + MBOOT_MMAP_SIZE))
 #define BOOT_CTX_PTR(addr)	\
-	((struct uefi_context *)((VOID *)(addr) + MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE))
+	((struct depri_boot_context *)((VOID *)(addr) + MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE))
 #define BOOT_LOADER_NAME_PTR(addr)	\
 	((char *)((VOID *)(addr) + MBOOT_MMAP_SIZE + MBOOT_INFO_SIZE + BOOT_CTX_SIZE))
 

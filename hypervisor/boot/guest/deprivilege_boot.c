@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-/* this is for UEFI platform */
+/* this is for de-privilege guest vboot method */
 
 #include <types.h>
 #include <acrn_common.h>
@@ -17,52 +17,53 @@
 #include <multiboot.h>
 #include <deprivilege_boot.h>
 
-static struct uefi_context uefi_ctx;
-static struct lapic_regs uefi_lapic_regs;
+static struct depri_boot_context depri_boot_ctx;
+static struct lapic_regs depri_boot_lapic_regs;
 
-static void uefi_init(void)
+static void init_depri_boot(void)
 {
-	static bool uefi_initialized = false;
+	static bool depri_initialized = false;
 	struct multiboot_info *mbi = NULL;
 
-	if (!uefi_initialized) {
+	if (!depri_initialized) {
 		parse_hv_cmdline();
 
 		mbi = (struct multiboot_info *) hpa2hva(((uint64_t)(uint32_t)boot_regs[1]));
 		if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_DRIVES) == 0U) {
-			pr_err("no multiboot drivers for uefi found");
+			pr_err("no multiboot drivers for depri_boot found");
 		} else {
-			memcpy_s(&uefi_ctx, sizeof(struct uefi_context), hpa2hva((uint64_t)mbi->mi_drives_addr),
-					sizeof(struct uefi_context));
-			save_lapic(&uefi_lapic_regs);
+			memcpy_s(&depri_boot_ctx, sizeof(struct depri_boot_context),
+				hpa2hva((uint64_t)mbi->mi_drives_addr),
+					sizeof(struct depri_boot_context));
+			save_lapic(&depri_boot_lapic_regs);
 		}
-		uefi_initialized = true;
+		depri_initialized = true;
 	}
 }
 
-const struct uefi_context *get_uefi_ctx(void)
+const struct depri_boot_context *get_depri_boot_ctx(void)
 {
-	uefi_init();
-	return &uefi_ctx;
+	init_depri_boot();
+	return &depri_boot_ctx;
 }
 
-const struct lapic_regs *get_uefi_lapic_regs(void)
+const struct lapic_regs *get_depri_boot_lapic_regs(void)
 {
-	uefi_init();
-	return &uefi_lapic_regs;
+	init_depri_boot();
+	return &depri_boot_lapic_regs;
 }
 
-static uint64_t uefi_get_ap_trampoline(void)
+static uint64_t get_depri_boot_ap_trampoline(void)
 {
-	return (uint64_t)(uefi_ctx.ap_trampoline_buf);
+	return (uint64_t)(depri_boot_ctx.ap_trampoline_buf);
 }
 
-static void* uefi_get_rsdp(void)
+static void* get_depri_boot_rsdp(void)
 {
-	return hpa2hva((uint64_t)(uefi_ctx.rsdp));
+	return hpa2hva((uint64_t)(depri_boot_ctx.rsdp));
 }
 
-static void uefi_spurious_handler(int32_t vector)
+static void depri_boot_spurious_handler(int32_t vector)
 {
 	if (get_pcpu_id() == BOOT_CPU_ID) {
 		struct acrn_vcpu *vcpu = per_cpu(vcpu, BOOT_CPU_ID);
@@ -75,21 +76,21 @@ static void uefi_spurious_handler(int32_t vector)
 	}
 }
 
-static void uefi_init_irq(void)
+static void init_depri_boot_irq(void)
 {
-	spurious_handler = (spurious_handler_t)uefi_spurious_handler;
+	spurious_handler = (spurious_handler_t)depri_boot_spurious_handler;
 	/* we defer irq enabling till vlapic is ready */
 }
 
-static struct firmware_operations firmware_uefi_ops = {
-	.init = uefi_init,
-	.get_ap_trampoline = uefi_get_ap_trampoline,
-	.get_rsdp = uefi_get_rsdp,
-	.init_irq = uefi_init_irq,
-	.init_vm_boot_info = uefi_init_vm_boot_info,
+static struct vboot_operations depri_boot_ops = {
+	.init = init_depri_boot,
+	.get_ap_trampoline = get_depri_boot_ap_trampoline,
+	.get_rsdp = get_depri_boot_rsdp,
+	.init_irq = init_depri_boot_irq,
+	.init_vboot_info = init_depri_vboot_info,
 };
 
-struct firmware_operations* uefi_get_firmware_operations(void)
+struct vboot_operations* get_deprivilege_boot_ops(void)
 {
-	return &firmware_uefi_ops;
+	return &depri_boot_ops;
 }

@@ -21,7 +21,7 @@
 #define MAX_BOOT_PARAMS_LEN 64U
 
 /* There are two sources for sos_vm kernel cmdline:
- * - cmdline from sbl. mbi->cmdline
+ * - cmdline from direct boot mbi->cmdline
  * - cmdline from acrn stitching tool. mod[0].mm_string
  * We need to merge them together
  */
@@ -160,7 +160,7 @@ static void *get_kernel_load_addr(void *kernel_src_addr)
  * @pre vm != NULL
  * @pre is_sos_vm(vm) == true
  */
-int32_t sbl_init_vm_boot_info(struct acrn_vm *vm)
+int32_t init_direct_vboot_info(struct acrn_vm *vm)
 {
 	struct multiboot_module *mods = NULL;
 	struct multiboot_info *mbi = NULL;

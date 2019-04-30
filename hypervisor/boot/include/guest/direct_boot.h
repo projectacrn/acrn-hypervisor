@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef FIRMWARE_SBL_H
+#ifndef DIRECT_BOOT_H
 
-#define FIRMWARE_SBL_H
+#define DIRECT_BOOT_H
 
 #include <vboot.h>
 
-struct firmware_operations* sbl_get_firmware_operations(void);
-int32_t sbl_init_vm_boot_info(struct acrn_vm *vm);
+struct vboot_operations* get_direct_boot_ops(void);
+int32_t init_direct_vboot_info(struct acrn_vm *vm);
 
-#endif /* end of include guard: FIRMWARE_SBL_H */
+#endif /* end of include guard: DIRECT_BOOT_H */
