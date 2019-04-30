@@ -1177,7 +1177,6 @@ int32_t hcall_vm_intr_monitor(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 				}
 
 				status = 0;
-				pr_dbg("intr monitor:%d, cnt=%d", intr_hdr->cmd, intr_hdr->buf_cnt);
 			}
 			clac();
 		}

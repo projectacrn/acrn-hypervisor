@@ -94,7 +94,6 @@ bool parse_seed_sbl(uint64_t addr, struct physical_seed *phy_seed)
 					 */
 					if ((entry->index != dseed_index) ||
 					    (entry->index >= BOOTLOADER_SEED_MAX_ENTRIES)) {
-						pr_warn("%s: Invalid seed index.", __func__);
 						status = false;
 						break;
 					}

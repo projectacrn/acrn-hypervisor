@@ -247,17 +247,15 @@ static int32_t profiling_sbuf_put_variable(struct shared_buf *sbuf,
 	 * 5. return number of bytes of data put in buffer
 	 */
 
-	stac();
 	if ((sbuf == NULL) || (data == NULL)) {
-		clac();
 		return -EINVAL;
 	}
 
 	if (size == 0U) {
-		clac();
 		return 0;
 	}
 
+	stac();
 	if (sbuf->tail >= sbuf->head) {
 		remaining_space = sbuf->size - (sbuf->tail - sbuf->head);
 	} else {
