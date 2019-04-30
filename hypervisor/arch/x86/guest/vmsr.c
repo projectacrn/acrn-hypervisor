@@ -48,6 +48,7 @@ static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 
 	MSR_IA32_MCG_CAP,
 	MSR_IA32_MCG_STATUS,
+	MSR_IA32_MISC_ENABLE,
 };
 
 #define NUM_MTRR_MSRS	13U
