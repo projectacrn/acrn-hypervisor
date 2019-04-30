@@ -1832,6 +1832,30 @@ Compliant example::
        showcase_a++, showcase_b++;
 
 
+C-EP-22: Magic numbers shall be used with restrictions
+======================================================
+
+Only the following cases shall be allowed:
+
+a) The magic number is defined as a MACRO with a name clearly indicating its
+   meaning.
+b) The meaning of the magic number is clearly documented in the comments before
+   its usage.
+c) The meaning of the magic number is straightforward in the specific context.
+
+Compliant example::
+
+    #define APIC_ID_MASK 0xff000000U
+    
+    uint32_t showcase = APIC_ID_MASK;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase = 0xff000000U;
+
+
 
 Types
 *****
