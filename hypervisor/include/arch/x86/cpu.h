@@ -464,6 +464,21 @@ static inline void write_xcr(int32_t reg, uint64_t val)
 	asm volatile("xsetbv" : : "c" (reg), "a" ((uint32_t)val), "d" ((uint32_t)(val >> 32U)));
 }
 
+/*
+ * stac/clac pair is used to access guest's memory protected by SMAP,
+ * following below flow:
+ *
+ *	stac();
+ *	#access guest's memory.
+ *	clac();
+ *
+ * Notes:Avoid inserting another stac/clac pair between stac and clac,
+ *	As once clac after multiple stac will invalidate SMAP protection
+ *	and hence Page Fault crash.
+ *	Logging message to memory buffer will induce this case,
+ *	please disable SMAP temporlly or don't log messages to shared
+ *	memory buffer, if it is evitable for you for debug purpose.
+ */
 static inline void stac(void)
 {
 	asm volatile ("stac" : : : "memory");

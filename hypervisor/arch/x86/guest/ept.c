@@ -49,11 +49,8 @@ uint64_t local_gpa2hpa(struct acrn_vm *vm, uint64_t gpa, uint32_t *size)
 	if (pgentry != NULL) {
 		hpa = ((*pgentry & (~(pg_size - 1UL)))
 				| (gpa & (pg_size - 1UL)));
-		pr_dbg("GPA2HPA: 0x%llx->0x%llx", gpa, hpa);
-	} else {
-		pr_err("VM %d GPA2HPA: failed for gpa 0x%llx",
-				vm->vm_id, gpa);
 	}
+
 	/**
 	 * If specified parameter size is not NULL and
 	 * the HPA of parameter gpa is found, pg_size shall
