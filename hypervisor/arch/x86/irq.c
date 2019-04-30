@@ -458,5 +458,5 @@ void init_interrupt(uint16_t pcpu_id)
 	init_lapic(pcpu_id);
 	init_default_irqs(pcpu_id);
 
-	firmware_init_irq();
+	init_vboot_irq();
 }

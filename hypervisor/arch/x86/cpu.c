@@ -116,7 +116,7 @@ void init_pcpu_pre(uint16_t pcpu_id_args)
 		 */
 		init_pcpu_capabilities();
 
-		init_firmware_operations();
+		init_vboot_operations();
 
 		init_pcpu_model_name();
 

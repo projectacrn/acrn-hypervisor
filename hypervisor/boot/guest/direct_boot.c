@@ -4,44 +4,43 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-/* this is for both SBL and ABL platform */
+/* this is for direct guest_boot method */
 
 #include <types.h>
 #include <e820.h>
 #include <cpu.h>
 #include <direct_boot.h>
 
-static void sbl_init(void)
+static void init_direct_boot(void)
 {
 	/* nothing to do for now */
 }
 
-
 /* @post: return != 0UL */
-static uint64_t sbl_get_ap_trampoline(void)
+static uint64_t get_direct_boot_ap_trampoline(void)
 {
 	return e820_alloc_low_memory(CONFIG_LOW_RAM_SIZE);
 }
 
-static void* sbl_get_rsdp(void)
+static void* get_direct_boot_rsdp(void)
 {
 	return NULL;
 }
 
-static void sbl_init_irq(void)
+static void init_direct_boot_irq(void)
 {
 	CPU_IRQ_ENABLE();
 }
 
-static struct firmware_operations firmware_sbl_ops = {
-	.init = sbl_init,
-	.get_ap_trampoline = sbl_get_ap_trampoline,
-	.get_rsdp = sbl_get_rsdp,
-	.init_irq = sbl_init_irq,
-	.init_vm_boot_info = sbl_init_vm_boot_info,
+static struct vboot_operations direct_boot_ops = {
+	.init = init_direct_boot,
+	.get_ap_trampoline = get_direct_boot_ap_trampoline,
+	.get_rsdp = get_direct_boot_rsdp,
+	.init_irq = init_direct_boot_irq,
+	.init_vboot_info = init_direct_vboot_info,
 };
 
-struct firmware_operations* sbl_get_firmware_operations(void)
+struct vboot_operations* get_direct_boot_ops(void)
 {
-	return &firmware_sbl_ops;
+	return &direct_boot_ops;
 }

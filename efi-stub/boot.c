@@ -88,7 +88,7 @@ enable_disable_all_ap(BOOLEAN enable)
 }
 
 static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
-			struct multiboot_info *mbi, struct uefi_context *efi_ctx)
+			struct multiboot_info *mbi, struct depri_boot_context *efi_ctx)
 {
 	hv_func hf;
 
@@ -243,7 +243,7 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 	EFI_STATUS err;
 	struct multiboot_mmap *mmap;
 	struct multiboot_info *mbi;
-	struct uefi_context *efi_ctx;
+	struct depri_boot_context *efi_ctx;
 	struct acpi_table_rsdp *rsdp = NULL;
 	int32_t i;
 	EFI_CONFIGURATION_TABLE *config_table;
