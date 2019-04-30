@@ -9,7 +9,7 @@
 #include <per_cpu.h>
 #include <guest/vm.h>
 #include <boot_context.h>
-#include <firmware_uefi.h>
+#include <deprivilege_boot.h>
 
 static int32_t uefi_sw_loader(struct acrn_vm *vm)
 {

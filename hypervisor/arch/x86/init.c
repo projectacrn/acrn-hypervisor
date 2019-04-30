@@ -14,7 +14,7 @@
 #include <vmx.h>
 #include <vm.h>
 #include <logmsg.h>
-#include <firmware.h>
+#include <vboot.h>
 #include <seed.h>
 
 /* Push sp magic to top of stack for call trace */

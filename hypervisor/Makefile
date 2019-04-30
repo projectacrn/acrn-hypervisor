@@ -116,8 +116,8 @@ INCLUDE_PATH += include/debug
 INCLUDE_PATH += include/public
 INCLUDE_PATH += include/dm
 INCLUDE_PATH += include/hw
-INCLUDE_PATH += bsp/include
 INCLUDE_PATH += boot/include
+INCLUDE_PATH += boot/include/guest
 INCLUDE_PATH += $(HV_OBJDIR)/include
 INCLUDE_PATH += arch/x86/configs/$(CONFIG_BOARD)
 INCLUDE_PATH += scenarios/$(SCENARIO_NAME)
@@ -155,9 +155,15 @@ ifneq (,$(wildcard scenarios/$(SCENARIO_NAME)/pt_dev.c))
 C_SRCS += scenarios/$(SCENARIO_NAME)/pt_dev.c
 endif
 
-
 C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_parse.c
+C_SRCS += boot/cmdline.c
+C_SRCS += boot/guest/vboot_wrapper.c
+C_SRCS += boot/guest/deprivilege_boot.c
+C_SRCS += boot/guest/deprivilege_boot_info.c
+C_SRCS += boot/guest/direct_boot.c
+C_SRCS += boot/guest/direct_boot_info.c
+
 S_SRCS += arch/x86/idt.S
 C_SRCS += arch/x86/ioapic.c
 C_SRCS += arch/x86/lapic.c
@@ -237,14 +243,7 @@ C_SRCS += dm/vpci/pci_pt.c
 C_SRCS += dm/vpci/vmsi.c
 C_SRCS += dm/vpci/vmsix.c
 
-C_SRCS += bsp/firmware_wrapper.c
-C_SRCS += bsp/firmware_sbl.c
-C_SRCS += bsp/firmware_uefi.c
-C_SRCS += bsp/cmdline.c
 C_SRCS += bsp/const_dmar.c
-
-C_SRCS += boot/uefi/uefi_boot.c
-C_SRCS += boot/sbl/multiboot.c
 
 # retpoline support
 ifeq (true, $(shell [ $(GCC_MAJOR) -eq 7 ] && [ $(GCC_MINOR) -ge 3 ] && echo true))

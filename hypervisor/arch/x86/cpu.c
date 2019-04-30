@@ -25,7 +25,7 @@
 #include <ld_sym.h>
 #include <logmsg.h>
 #include <cat.h>
-#include <firmware.h>
+#include <vboot.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */

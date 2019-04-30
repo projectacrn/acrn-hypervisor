@@ -37,7 +37,7 @@
 #include "stdlib.h"
 #include "boot.h"
 #include "acrn_common.h"
-#include "firmware_uefi.h"
+#include "deprivilege_boot.h"
 #include "MpService.h"
 
 EFI_SYSTEM_TABLE *sys_table;
