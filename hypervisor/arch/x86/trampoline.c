@@ -9,7 +9,7 @@
 #include <per_cpu.h>
 #include <trampoline.h>
 #include <reloc.h>
-#include <firmware.h>
+#include <vboot.h>
 #include <ld_sym.h>
 
 static uint64_t trampoline_start16_paddr;

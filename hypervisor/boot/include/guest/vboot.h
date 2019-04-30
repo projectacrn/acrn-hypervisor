@@ -32,4 +32,6 @@ void *firmware_get_rsdp(void);
 void firmware_init_irq(void);
 int32_t firmware_init_vm_boot_info(struct acrn_vm *vm);
 
+int32_t parse_hv_cmdline(void);
+
 #endif /* end of include guard: FIRMWARE_H */

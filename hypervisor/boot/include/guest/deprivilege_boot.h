@@ -7,7 +7,7 @@
 
 #define FIRMWARE_UEFI_H
 
-#include <firmware.h>
+#include <vboot.h>
 
 struct uefi_context {
 	struct acrn_vcpu_regs vcpu_regs;

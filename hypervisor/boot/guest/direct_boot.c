@@ -9,7 +9,7 @@
 #include <types.h>
 #include <e820.h>
 #include <cpu.h>
-#include <firmware_sbl.h>
+#include <direct_boot.h>
 
 static void sbl_init(void)
 {
