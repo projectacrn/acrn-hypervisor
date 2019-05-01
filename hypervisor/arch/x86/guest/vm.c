@@ -59,7 +59,7 @@ bool is_valid_vm(const struct acrn_vm *vm)
 
 bool is_sos_vm(const struct acrn_vm *vm)
 {
-	return (vm != NULL)  && (get_vm_config(vm->vm_id)->type == SOS_VM);
+	return (vm != NULL)  && (get_vm_config(vm->vm_id)->load_order == SOS_VM);
 }
 
 /**
@@ -68,7 +68,7 @@ bool is_sos_vm(const struct acrn_vm *vm)
  */
 bool is_postlaunched_vm(const struct acrn_vm *vm)
 {
-	return (get_vm_config(vm->vm_id)->type == POST_LAUNCHED_VM);
+	return (get_vm_config(vm->vm_id)->load_order == POST_LAUNCHED_VM);
 }
 
 /**
@@ -80,7 +80,7 @@ bool is_prelaunched_vm(const struct acrn_vm *vm)
 	struct acrn_vm_config *vm_config;
 
 	vm_config = get_vm_config(vm->vm_id);
-	return (vm_config->type == PRE_LAUNCHED_VM);
+	return (vm_config->load_order == PRE_LAUNCHED_VM);
 }
 
 /**
@@ -344,7 +344,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 	sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);
 
 	/* Register default handlers for PIO & MMIO if it is SOS VM or Pre-launched VM */
-	if ((vm_config->type == SOS_VM) || (vm_config->type == PRE_LAUNCHED_VM)) {
+	if ((vm_config->load_order == SOS_VM) || (vm_config->load_order == PRE_LAUNCHED_VM)) {
 		register_pio_default_emulation_handler(vm);
 		register_mmio_default_emulation_handler(vm);
 	}
@@ -379,7 +379,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 			snprintf(vm_config->name, 16, "ACRN VM_%d", vm_id);
 		}
 
-		 if (vm_config->type == PRE_LAUNCHED_VM) {
+		 if (vm_config->load_order == PRE_LAUNCHED_VM) {
 			create_prelaunched_vm_e820(vm);
 			prepare_prelaunched_vm_memmap(vm, vm_config);
 			(void)firmware_init_vm_boot_info(vm);
@@ -429,7 +429,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		/* Populate return VM handle */
 		*rtn_vm = vm;
 		vm->sw.io_shared_page = NULL;
-		if ((vm_config->type == POST_LAUNCHED_VM) && (vm_config->guest_flags & GUEST_FLAG_IO_COMPLETION_POLLING) != 0U) {
+		if ((vm_config->load_order == POST_LAUNCHED_VM) && (vm_config->guest_flags & GUEST_FLAG_IO_COMPLETION_POLLING) != 0U) {
 			/* enable IO completion polling mode per its guest flags in vm_config. */
 			vm->sw.is_completion_polling = true;
 		}
@@ -678,8 +678,8 @@ void launch_vms(uint16_t pcpu_id)
 
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
-		if ((vm_config->type == SOS_VM) || (vm_config->type == PRE_LAUNCHED_VM)) {
-			if (vm_config->type == SOS_VM) {
+		if ((vm_config->load_order == SOS_VM) || (vm_config->load_order == PRE_LAUNCHED_VM)) {
+			if (vm_config->load_order == SOS_VM) {
 				sos_vm_ptr = &vm_array[vm_id];
 			}
 
