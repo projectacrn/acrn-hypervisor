@@ -545,7 +545,7 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 		break;
 	}
 
-	if ((status == -ENODEV) && (vm_config->type == POST_LAUNCHED_VM)) {
+	if ((status == -ENODEV) && (vm_config->load_order == POST_LAUNCHED_VM)) {
 		/*
 		 * No handler from HV side, search from VHM in Dom0
 		 *

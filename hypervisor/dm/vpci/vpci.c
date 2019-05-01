@@ -118,7 +118,7 @@ static bool pci_cfgdata_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint
 		if (vpci_is_valid_access(pi->cached_reg + offset, bytes)) {
 			vm_config = get_vm_config(vm->vm_id);
 
-			switch (vm_config->type) {
+			switch (vm_config->load_order) {
 			case PRE_LAUNCHED_VM:
 				partition_mode_cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
 				break;
@@ -157,7 +157,7 @@ static bool pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes
 		if (vpci_is_valid_access(pi->cached_reg + offset, bytes)) {
 			vm_config = get_vm_config(vm->vm_id);
 
-			switch (vm_config->type) {
+			switch (vm_config->load_order) {
 			case PRE_LAUNCHED_VM:
 				partition_mode_cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
 				break;
@@ -203,7 +203,7 @@ void vpci_init(struct acrn_vm *vm)
 	vpci->vm = vm;
 
 	vm_config = get_vm_config(vm->vm_id);
-	switch (vm_config->type) {
+	switch (vm_config->load_order) {
 	case PRE_LAUNCHED_VM:
 		ret = partition_mode_vpci_init(vm);
 		break;
@@ -241,7 +241,7 @@ void vpci_cleanup(const struct acrn_vm *vm)
 	struct acrn_vm_config *vm_config;
 
 	vm_config = get_vm_config(vm->vm_id);
-	switch (vm_config->type) {
+	switch (vm_config->load_order) {
 	case PRE_LAUNCHED_VM:
 		partition_mode_vpci_deinit(vm);
 		break;

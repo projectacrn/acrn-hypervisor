@@ -88,7 +88,7 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 	bar = &pdev->bar[msix->table_bar];
 	if (bar != NULL) {
 		vdev->msix.mmio_hpa = bar->base;
-		if (vm_config->type == PRE_LAUNCHED_VM) {
+		if (vm_config->load_order == PRE_LAUNCHED_VM) {
 			vdev->msix.mmio_gpa = vdev->bar[msix->table_bar].base;
 		} else {
 			vdev->msix.mmio_gpa = sos_vm_hpa2gpa(bar->base);
@@ -139,7 +139,7 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 
 
 	if (msix->mmio_gpa != 0U) {
-		if (vm_config->type == PRE_LAUNCHED_VM) {
+		if (vm_config->load_order == PRE_LAUNCHED_VM) {
 			addr_hi = vdev->msix.mmio_gpa + vdev->msix.mmio_size;
 			addr_lo = vdev->msix.mmio_gpa;
 		} else {

@@ -188,7 +188,7 @@ int32_t sbl_init_vm_boot_info(struct acrn_vm *vm)
 
 				struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
-				if (vm_config->type == PRE_LAUNCHED_VM) {
+				if (vm_config->load_order == PRE_LAUNCHED_VM) {
 					vm->sw.kernel_info.kernel_load_addr = (void *)(MEM_1M * 16U);
 					vm->sw.linux_info.bootargs_src_addr = (void *)vm_config->os_config.bootargs;
 					vm->sw.linux_info.bootargs_size =

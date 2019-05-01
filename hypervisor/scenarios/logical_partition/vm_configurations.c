@@ -16,7 +16,7 @@ static struct mptable_info vm_mptables[CONFIG_MAX_VM_NUM];
 
 struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	{	/* VM0 */
-		.type = PRE_LAUNCHED_VM,
+		.load_order = PRE_LAUNCHED_VM,
 		.name = "ACRN PRE-LAUNCHED VM0",
 		.uuid = {0x26U, 0xc5U, 0xe0U, 0xd8U, 0x8fU, 0x8aU, 0x47U, 0xd8U,	\
 			 0x81U, 0x09U, 0xf2U, 0x01U, 0xebU, 0xd6U, 0x1aU, 0x5eU},
@@ -54,7 +54,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.mptable = &vm_mptables[0],
 	},
 	{	/* VM1 */
-		.type = PRE_LAUNCHED_VM,
+		.load_order = PRE_LAUNCHED_VM,
 		.name = "ACRN PRE-LAUNCHED VM1",
 		.uuid = {0xddU, 0x87U, 0xceU, 0x08U, 0x66U, 0xf9U, 0x47U, 0x3dU,	\
 			 0xbcU, 0x58U, 0x76U, 0x05U, 0x83U, 0x7fU, 0x93U, 0x5eU},

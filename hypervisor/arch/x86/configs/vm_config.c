@@ -83,7 +83,7 @@ bool sanitize_vm_config(void)
 	 */
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
-		switch (vm_config->type) {
+		switch (vm_config->load_order) {
 		case PRE_LAUNCHED_VM:
 			if (vm_config->pcpu_bitmap == 0U) {
 				ret = false;

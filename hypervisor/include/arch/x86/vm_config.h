@@ -22,7 +22,7 @@
  * SOS_VM is launched by ACRN hypervisor, without LAPIC_PT;
  * POST_LAUNCHED_VM is launched by ACRN devicemodel, with/without LAPIC_PT depends on usecases.
  */
-enum acrn_vm_type {
+enum acrn_vm_load_order {
 	UNDEFINED_VM = 0,
 	PRE_LAUNCHED_VM,
 	SOS_VM,
@@ -71,7 +71,7 @@ struct acrn_vm_pci_ptdev_config {
 } __aligned(8);
 
 struct acrn_vm_config {
-	enum acrn_vm_type type;				/* specify the type of VM */
+	enum acrn_vm_load_order load_order;		/* specify the load order of VM */
 	char name[MAX_VM_OS_NAME_LEN];			/* VM name identifier, useful for debug. */
 	const uint8_t uuid[16];				/* UUID of the VM */
 	uint64_t pcpu_bitmap;				/* from pcpu bitmap, we could know VM core number */
