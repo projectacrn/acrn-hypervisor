@@ -795,6 +795,35 @@ To use the Virtio-blk device, use the following command:
          nohpet console=hvc0 no_timer_check ignore_loglevel \
          log_buf_len=16M consoleblank=0 tsc=reliable" vm1
 
+Virtio-blk also supports rescan feature. Virtio-blk rescan is helpful
+when the size/path of the Virtio-blk device's backing file (on the host)
+changes and the guest needs to refresh its internal data structures to
+pick up this change. Using rescan feature is simple, add Virtio-blk
+device with dummy backend using "**nodisk**" keyword instead of a backing
+file.
+
+To create a Virtio-blk device with dummy backend,
+use the following command:
+
+.. code-block:: bash
+
+   ./acrn-dm -A -m 1168M \
+      -s 0:0,hostbridge \
+      -s 1,virtio-blk,**nodisk** \
+      -k bzImage -B "root=/dev/vda rw rootwait noxsave maxcpus=0 \
+         nohpet console=hvc0 no_timer_check ignore_loglevel \
+         log_buf_len=16M consoleblank=0 tsc=reliable" vm1
+
+After VM launch, user can replace the dummy backend file with the
+actual file using acrnctl "blkrescan" cmd as shown below,
+
+.. code-block:: bash
+
+   acrnctl blkrescan vm1 1,actual_file.img
+
+Please refer to :ref:`acrnctl` for further details on
+``acrnctl blkrescan`` command.
+
 To verify the result, you should expect the user OS to boot
 successfully.
 

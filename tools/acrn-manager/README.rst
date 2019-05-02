@@ -32,6 +32,7 @@ You can see the available ``acrnctl`` commands by running:
      suspend
      resume
      reset
+     blkrescan
    Use acrnctl [cmd] help for details
 
 Here are some usage examples:
@@ -92,6 +93,27 @@ Use the ``stop`` command to stop one or more running VM:
 .. code-block:: none
 
    # acrnctl stop vm-yocto vm1-14:59:30 vm-android
+
+RESCAN BLOCK DEVICE
+===================
+
+Use the ``blkrescan`` command to trigger a rescan of
+virtio-blk device by guest VM, in order to revalidate and
+update the backend file.
+
+.. code-block:: none
+
+   # acrnctl blkrescan vmname slot,newfilepath
+   vmname:     Name of VM with dummy backend file attached to virtio-blk device.
+   slot:       Slot number of the virtio-blk device.
+   newfilepath: File path for the backend of virtio-blk device.
+
+   acrnctl blkrescan vm1 6,actual_file.img
+
+.. note:: blkrescan is only supported when VM is launched with
+   empty backend file (using **nodisk**) for virtio-blk device.
+   Replacing a valid backend file is not supported and will
+   result in error.
 
 .. _acrnd:
 
