@@ -220,8 +220,8 @@ void vpci_init(struct acrn_vm *vm)
 	if (ret == 0) {
 		/*
 		 * SOS: intercept port CF8 only.
-		 * UOS or partition mode: register handler for CF8 only and I/O requests to CF9/CFA/CFB are
-		 *      not handled by vpci.
+		 * UOS or pre-launched VM: register handler for CF8 only and I/O requests to CF9/CFA/CFB are
+		 * not handled by vpci.
 		 */
 		register_pio_emulation_handler(vm, PCI_CFGADDR_PIO_IDX, &pci_cfgaddr_range,
 			pci_cfgaddr_io_read, pci_cfgaddr_io_write);
