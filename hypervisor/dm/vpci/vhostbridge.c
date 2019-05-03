@@ -38,7 +38,7 @@
 #include <pci.h>
 #include "vpci_priv.h"
 
-void vdev_hostbridge_init(struct pci_vdev *vdev)
+void vhostbridge_init(struct pci_vdev *vdev)
 {
 	/* PCI config space */
 	pci_vdev_write_cfg_u16(vdev, PCIR_VENDOR, (uint16_t)0x8086U);
@@ -83,11 +83,11 @@ void vdev_hostbridge_init(struct pci_vdev *vdev)
 	pci_vdev_write_cfg_u8(vdev, 0xf7U, (uint8_t)0x1U);
 }
 
-void vdev_hostbridge_deinit(__unused const struct pci_vdev *vdev)
+void vhostbridge_deinit(__unused const struct pci_vdev *vdev)
 {
 }
 
-int32_t vdev_hostbridge_cfgread(const struct pci_vdev *vdev, uint32_t offset,
+int32_t vhostbridge_cfgread(const struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
 {
 	*val = pci_vdev_read_cfg(vdev, offset, bytes);
@@ -95,7 +95,7 @@ int32_t vdev_hostbridge_cfgread(const struct pci_vdev *vdev, uint32_t offset,
 	return 0;
 }
 
-int32_t vdev_hostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
+int32_t vhostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t val)
 {
 	if (!pci_bar_access(offset)) {
