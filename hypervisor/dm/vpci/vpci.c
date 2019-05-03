@@ -398,7 +398,7 @@ int32_t partition_mode_vpci_init(struct acrn_vm *vm)
 		vdev->vbdf.value = ptdev_config->vbdf.value;
 
 		if (is_hostbridge(vdev)) {
-			vdev_hostbridge_init(vdev);
+			vhostbridge_init(vdev);
 		} else {
 			partition_mode_pdev_init(vdev, ptdev_config->pbdf);
 
@@ -424,7 +424,7 @@ void partition_mode_vpci_deinit(const struct acrn_vm *vm)
 		vdev = (struct pci_vdev *) &(vm->vpci.pci_vdevs[i]);
 
 		if (is_hostbridge(vdev)) {
-			vdev_hostbridge_deinit(vdev);
+			vhostbridge_deinit(vdev);
 		} else {
 			remove_vdev_pt_iommu_domain(vdev);
 
@@ -445,7 +445,7 @@ void partition_mode_cfgread(const struct acrn_vpci *vpci, union pci_bdf vbdf,
 
 	if (vdev != NULL) {
 		if (is_hostbridge(vdev)) {
-			(void)vdev_hostbridge_cfgread(vdev, offset, bytes, val);
+			(void)vhostbridge_cfgread(vdev, offset, bytes, val);
 		} else {
 			if ((vdev_pt_cfgread(vdev, offset, bytes, val) != 0)
 				&& (vmsi_cfgread(vdev, offset, bytes, val) != 0)
@@ -468,7 +468,7 @@ void partition_mode_cfgwrite(const struct acrn_vpci *vpci, union pci_bdf vbdf,
 
 	if (vdev != NULL) {
 		if (is_hostbridge(vdev)) {
-			(void)vdev_hostbridge_cfgwrite(vdev, offset, bytes, val);
+			(void)vhostbridge_cfgwrite(vdev, offset, bytes, val);
 		} else {
 			if ((vdev_pt_cfgwrite(vdev, offset, bytes, val) != 0)
 				&& (vmsi_cfgwrite(vdev, offset, bytes, val) != 0)
