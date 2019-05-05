@@ -14,26 +14,27 @@ Intel Apollo Lake NUC (APL) and Intel Kaby Lake NUC (KBL),
 described in :ref:`hardware`, are currently supported for ACRN development:
 
 - We can enable the serial console on `KBL
-  <https://www.amazon.com/dp/B07D5HHMSB/ref=cm_sw_r_cp_ep_dp_hXm0BbBV0CER3>`__
-  (NUC7i5DNHE), but this is not supported on APL (NUC6CAYH).
+  <https://www.amazon.com/Intel-Business-Mini-Technology-BLKNUC7i7DNH1E/dp/B07CCQ8V4R>`__
+  (NUC7i7DN), but this is not supported on APL (NUC6CAYH).
 
 
 Connecting to the serial port
 =============================
 
-If you don't need a serial console you can ignore this section. If you're
-using a KBL NUC and you need a serial console, you'll need to prepare
-an RS232 cable to connect to the KBL NUC serial port header, as shown
-below:
+If you don't need a serial console you can ignore this section. 
+
+Neither the APL or KBL NUCs present an external serial port interface.
+However, the KBL NUC does have a serail port header you can
+expose with a serial DB9 header cable. You can build this cable yourself,
+referring to the `KBL NUC product specification
+<https://www.intel.com/content/dam/support/us/en/documents/mini-pcs/nuc-kits/NUC7i7DN_TechProdSpec.pdf>`__
+as shown below: 
+
 
 .. figure:: images/KBL-serial-port-header.png
    :align: center
 
-   KBL Serial port header details
-
-You can refer to the `'Technical Product Specification'
-<https://www.intel.com/content/dam/support/us/en/documents/boardsandkits/NUC7i5DN_TechProdSpec.pdf>`__
-for details
+   KBL serial port header details
 
 
 .. figure:: images/KBL-serial-port-header-to-RS232-cable.jpg
@@ -42,6 +43,20 @@ for details
    KBL `serial port header to RS232 cable
    <https://www.amazon.com/dp/B07BV1W6N8/ref=cm_sw_r_cp_ep_dp_wYm0BbABD5AK6>`_
 
+
+Or you can `purchase
+<https://www.amazon.com/dp/B07BV1W6N8/ref=cm_sw_r_cp_ep_dp_wYm0BbABD5AK6>`_
+such a cable.
+
+You'll also need an `RS232 DB9 female to USB cable
+<https://www.amazon.com/Adapter-Chipset-CableCreation-Converter-Register/dp/B0769DVQM1>`__,
+or an `RS232 DB9 female/female (NULL modem) cross-over cable
+<https://www.amazon.com/SF-Cable-Null-Modem-RS232/dp/B006W0I3BA>`__
+to connect to your host system.
+
+.. note::
+   If you want to use the RS232 DB9 female/female cable, please choose 
+   the ``cross-over`` type rather than ``straight-through`` type.
 
 Firmware update on the NUC
 ==========================
