@@ -18,8 +18,8 @@ config LOGICAL_PARTITION
 config INDUSTRY 
 	bool "Industry VMs"
 	help
-	  This scenario is a typical scenario for industry usage with 3 VMs: 
-	  one pre-launched SOS VM, one post-launched Normal VM for HMI and one
+	  This scenario is a typical scenario for industry usage with 4 VMs: 
+	  one pre-launched SOS VM, one post-launched Standard VM for HMI, one or two
 	  post-launched  RT VM for real-time control.
 
 endchoice
