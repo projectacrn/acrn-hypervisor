@@ -35,7 +35,7 @@ void arch_fire_vhm_interrupt(void)
 /**
  * @brief General complete-work for port I/O emulation
  *
- * @pre io_req->type == REQ_PORTIO
+ * @pre io_req->io_type == REQ_PORTIO
  *
  * @remark This function must be called when \p io_req is completed, after
  * either a previous call to emulate_io() returning 0 or the corresponding VHM
@@ -73,7 +73,7 @@ int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu)
 
 	exit_qual = vcpu->arch.exit_qualification;
 
-	io_req->type = REQ_PORTIO;
+	io_req->io_type = REQ_PORTIO;
 	pio_req->size = vm_exit_io_instruction_size(exit_qual) + 1UL;
 	pio_req->address = vm_exit_io_instruction_port_number(exit_qual);
 	if (vm_exit_io_instruction_access_direction(exit_qual) == 0UL) {
@@ -106,7 +106,7 @@ int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
 	/* Handle page fault from guest */
 	exit_qual = vcpu->arch.exit_qualification;
 
-	io_req->type = REQ_MMIO;
+	io_req->io_type = REQ_MMIO;
 
 	/* Specify if read or write operation */
 	if ((exit_qual & 0x2UL) != 0UL) {
@@ -116,7 +116,7 @@ int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
 
 		/* XXX: write access while EPT perm RX -> WP */
 		if ((exit_qual & 0x38UL) == 0x28UL) {
-			io_req->type = REQ_WP;
+			io_req->io_type = REQ_WP;
 		}
 	} else {
 		/* Read operation */

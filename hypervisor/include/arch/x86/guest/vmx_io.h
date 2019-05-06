@@ -46,7 +46,7 @@ int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu);
 /**
  * @brief General complete-work for port I/O emulation
  *
- * @pre io_req->type == REQ_PORTIO
+ * @pre io_req->io_type == REQ_PORTIO
  *
  * @remark This function must be called when \p io_req is completed, after
  * either a previous call to emulate_io() returning 0 or the corresponding VHM
