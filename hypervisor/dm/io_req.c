@@ -96,7 +96,7 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
 		stac();
 		vhm_req = &req_buf->req_queue[cur];
 		/* ACRN insert request to VHM and inject upcall */
-		vhm_req->type = io_req->type;
+		vhm_req->type = io_req->io_type;
 		(void)memcpy_s(&vhm_req->reqs, sizeof(union vhm_io_request),
 			&io_req->reqs, sizeof(union vhm_io_request));
 		if (vcpu->vm->sw.is_completion_polling) {
@@ -205,7 +205,7 @@ uint32_t get_vhm_notification_vector(void)
  * @param vcpu The virtual CPU that triggers the MMIO access
  * @param io_req The I/O request holding the details of the MMIO access
  *
- * @pre io_req->type == REQ_MMIO
+ * @pre io_req->io_type == REQ_MMIO
  *
  * @remark This function must be called when \p io_req is completed, after
  * either a previous call to emulate_io() returning 0 or the corresponding VHM
@@ -231,7 +231,7 @@ static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	stac();
 	vhm_req = &req_buf->req_queue[vcpu->vcpu_id];
 	if (io_req != NULL) {
-		switch (vcpu->req.type) {
+		switch (vcpu->req.io_type) {
 		case REQ_PORTIO:
 			io_req->reqs.pio.value = vhm_req->reqs.pio.value;
 			break;
@@ -252,7 +252,7 @@ static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 /**
  * @brief Complete-work of VHM requests for port I/O emulation
  *
- * @pre vcpu->req.type == REQ_PORTIO
+ * @pre vcpu->req.io_type == REQ_PORTIO
  *
  * @remark This function must be called after the VHM request corresponding to
  * \p vcpu being transferred to the COMPLETE state.
@@ -271,7 +271,7 @@ static void dm_emulate_pio_complete(struct acrn_vcpu *vcpu)
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
  *
- * @pre vcpu->req.type == REQ_MMIO
+ * @pre vcpu->req.io_type == REQ_MMIO
  *
  * @remark This function must be called after the VHM request corresponding to
  * \p vcpu being transferred to the COMPLETE state.
@@ -300,7 +300,7 @@ static void dm_emulate_io_complete(struct acrn_vcpu *vcpu)
 		if (vcpu->state == VCPU_ZOMBIE) {
 			complete_ioreq(vcpu, NULL);
 		} else {
-			switch (vcpu->req.type) {
+			switch (vcpu->req.io_type) {
 			case REQ_MMIO:
 				dm_emulate_mmio_complete(vcpu);
 				break;
@@ -385,7 +385,7 @@ static int32_t mmio_default_access_handler(struct io_request *io_req,
  * Try handling the given request by any port I/O handler registered in the
  * hypervisor.
  *
- * @pre io_req->type == REQ_PORTIO
+ * @pre io_req->io_type == REQ_PORTIO
  *
  * @retval 0 Successfully emulated by registered handlers.
  * @retval -ENODEV No proper handler found.
@@ -444,7 +444,7 @@ hv_emulate_pio(struct acrn_vcpu *vcpu, struct io_request *io_req)
  * Use registered MMIO handlers on the given request if it falls in the range of
  * any of them.
  *
- * @pre io_req->type == REQ_MMIO
+ * @pre io_req->io_type == REQ_MMIO
  *
  * @retval 0 Successfully emulated by registered handlers.
  * @retval -ENODEV No proper handler found.
@@ -514,7 +514,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
  * @retval 0 Successfully emulated by registered handlers.
  * @retval IOREQ_PENDING The I/O request is delivered to VHM.
  * @retval -EIO The request spans multiple devices and cannot be emulated.
- * @retval -EINVAL \p io_req has an invalid type.
+ * @retval -EINVAL \p io_req has an invalid io_type.
  * @retval <0 on other errors during emulation.
  */
 int32_t
@@ -525,7 +525,7 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 
 	vm_config = get_vm_config(vcpu->vm->vm_id);
 
-	switch (io_req->type) {
+	switch (io_req->io_type) {
 	case REQ_PORTIO:
 		status = hv_emulate_pio(vcpu, io_req);
 		if (status == 0) {
@@ -540,7 +540,7 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 		}
 		break;
 	default:
-		/* Unknown I/O request type */
+		/* Unknown I/O request io_type */
 		status = -EINVAL;
 		break;
 	}
@@ -560,9 +560,9 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 			 */
 			struct pio_request *pio_req = &io_req->reqs.pio;
 
-			pr_fatal("%s Err: access dir %d, type %d, "
+			pr_fatal("%s Err: access dir %d, io_type %d, "
 				"addr = 0x%llx, size=%lu", __func__,
-				pio_req->direction, io_req->type,
+				pio_req->direction, io_req->io_type,
 				pio_req->address, pio_req->size);
 		}
 	}

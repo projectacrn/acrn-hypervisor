@@ -27,7 +27,7 @@ struct io_request {
 	 *
 	 * Refer to vhm_request for detailed description of I/O request types.
 	 */
-	uint32_t type;
+	uint32_t io_type;
 
 	/**
 	 * @brief Details of this request in the same format as vhm_request.
