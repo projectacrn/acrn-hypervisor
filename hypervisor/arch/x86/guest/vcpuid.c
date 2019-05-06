@@ -280,7 +280,7 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 			if (result == 0) {
 				limit = entry.eax;
 				vm->vcpuid_xlevel = limit;
-				for (i = 0x80000001U; i <= limit; i++) {
+				for (i = 0x80000002U; i <= limit; i++) {
 					init_vcpuid_entry(i, 0U, 0U, &entry);
 					result = set_vcpuid_entry(vm, &entry);
 					if (result != 0) {
@@ -296,12 +296,13 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 
 static inline bool is_percpu_related(uint32_t leaf)
 {
-	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU));
+	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU) || (leaf == 0x80000001U));
 }
 
 static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
 	uint32_t apicid = vlapic_get_apicid(vcpu_vlapic(vcpu));
+	uint64_t guest_ia32_misc_enable = vcpu_get_guest_msr(vcpu, MSR_IA32_MISC_ENABLE);
 
 	cpuid(0x1U, eax, ebx, ecx, edx);
 	/* Patching initial APIC ID */
@@ -333,6 +334,11 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 
 	/* set Hypervisor Present Bit */
 	*ecx |= CPUID_ECX_HV;
+
+	/* if guest disabed monitor/mwait, clear cpuid.01h[3] */
+	if ((guest_ia32_misc_enable & MSR_IA32_MISC_ENABLE_MONITOR_ENA) == 0UL) {
+		*ecx &= ~CPUID_ECX_MONITOR;
+	}
 
 	/*no xsave support for guest if it is not enabled on host*/
 	if ((*ecx & CPUID_ECX_OSXSAVE) == 0U) {
@@ -413,6 +419,50 @@ static void guest_cpuid_0dh(__unused struct acrn_vcpu *vcpu, uint32_t *eax, uint
 	}
 }
 
+static void guest_cpuid_80000001h(const struct acrn_vcpu *vcpu,
+	uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
+{
+	const struct vcpuid_entry *entry_check = find_vcpuid_entry(vcpu, 0x80000000U, 0);
+	uint64_t guest_ia32_misc_enable = vcpu_get_guest_msr(vcpu, MSR_IA32_MISC_ENABLE);
+	uint32_t leaf = 0x80000001U;
+
+	if ((entry_check != NULL) && (entry_check->eax >= leaf)) {
+		cpuid(leaf, eax, ebx, ecx, edx);
+		/* SDM Vol4 2.1, XD Bit Disable of MSR_IA32_MISC_ENABLE
+		 * When set to 1, the Execute Disable Bit feature (XD Bit) is disabled and the XD Bit
+		 * extended feature flag will be clear (CPUID.80000001H: EDX[20]=0)
+		 */
+		if ((guest_ia32_misc_enable & MSR_IA32_MISC_ENABLE_XD_DISABLE) != 0UL) {
+			*edx = *edx & ~CPUID_EDX_XD_BIT_AVIL;
+		}
+	} else {
+		*eax = 0U;
+		*ebx = 0U;
+		*ecx = 0U;
+		*edx = 0U;
+	}
+}
+
+static void guest_limit_cpuid(const struct acrn_vcpu *vcpu, uint32_t leaf,
+	uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
+{
+	uint64_t guest_ia32_misc_enable = vcpu_get_guest_msr(vcpu, MSR_IA32_MISC_ENABLE);
+
+	if ((guest_ia32_misc_enable & MSR_IA32_MISC_ENABLE_LIMIT_CPUID) != 0UL) {
+		/* limit the leaf number to 2 */
+		if (leaf == 0U) {
+			*eax = 2U;
+		} else if (leaf > 2U) {
+			*eax = 0U;
+			*ebx = 0U;
+			*ecx = 0U;
+			*edx = 0U;
+		} else {
+			/* In this case, leaf is 1U, return the cpuid value get above */
+		}
+	}
+}
+
 void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
 	uint32_t leaf = *eax;
@@ -448,14 +498,20 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 			guest_cpuid_0dh(vcpu, eax, ebx, ecx, edx);
 			break;
 
+		case 0x80000001U:
+			guest_cpuid_80000001h(vcpu, eax, ebx, ecx, edx);
+			break;
+
 		default:
 			/*
 			 * In this switch statement, leaf shall either be 0x01U or 0x0bU
-			 * or 0x0dU. All the other cases have been handled properly
+			 * or 0x0dU or 0x80000001U. All the other cases have been handled properly
 			 * before this switch statement.
 			 * Gracefully return if prior case clauses have not been met.
 			 */
 			break;
 		}
 	}
+
+	guest_limit_cpuid(vcpu, leaf, eax, ebx, ecx, edx);
 }
