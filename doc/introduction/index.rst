@@ -130,7 +130,7 @@ In the automotive example we described above, the User OS is the central
 hub of vehicle control and in-vehicle entertainment. It provides support
 for radio and entertainment options, control of the vehicle climate
 control, and vehicle navigation displays. It also provides connectivity
-options for using USB, Bluetooth, and WiFi for third-party device
+options for using USB, Bluetooth, and Wi-Fi for third-party device
 interaction with the vehicle, such as Android Auto\* or Apple CarPlay*,
 and many other features.
 
