@@ -13,7 +13,16 @@
 #include <direct_boot.h>
 #include <deprivilege_boot.h>
 
+#define BOOTLOADER_NUM 4U
+#define BOOTLOADER_NAME_SIZE 20U
+
+struct vboot_bootloader_map {
+	const char bootloader_name[BOOTLOADER_NAME_SIZE];
+	enum vboot_mode mode;
+};
+
 static struct vboot_operations *vboot_ops;
+static enum vboot_mode sos_boot_mode;
 
 /**
  * @pre: this function is called during detect mode which is very early stage,
@@ -25,18 +34,25 @@ void init_vboot_operations(void)
 	struct multiboot_info *mbi;
 	uint32_t i;
 
-	const struct vboot_candidates vboot_candidates[NUM_VBOOT_SUPPORTING] = {
-		{"Slim BootLoader", 15U, get_direct_boot_ops},
-		{"Intel IOTG/TSD ABL", 18U, get_direct_boot_ops},
-		{"ACRN UEFI loader", 16U, get_deprivilege_boot_ops},
-		{"GRUB", 4U, get_direct_boot_ops},
+	const struct vboot_bootloader_map vboot_bootloader_maps[BOOTLOADER_NUM] = {
+		{"Slim BootLoader", DIRECT_BOOT_MODE},
+		{"Intel IOTG/TSD ABL", DIRECT_BOOT_MODE},
+		{"ACRN UEFI loader", DEPRI_BOOT_MODE},
+		{"GRUB", DIRECT_BOOT_MODE},
 	};
 
 	mbi = (struct multiboot_info *)hpa2hva((uint64_t)boot_regs[1]);
-	for (i = 0U; i < NUM_VBOOT_SUPPORTING; i++) {
-		if (strncmp(hpa2hva(mbi->mi_loader_name), vboot_candidates[i].name,
-			vboot_candidates[i].name_sz) == 0) {
-			vboot_ops = vboot_candidates[i].ops();
+	for (i = 0U; i < BOOTLOADER_NUM; i++) {
+		if (strncmp(hpa2hva(mbi->mi_loader_name), vboot_bootloader_maps[i].bootloader_name,
+			strnlen_s(vboot_bootloader_maps[i].bootloader_name, BOOTLOADER_NAME_SIZE)) == 0) {
+			/* Only support two vboot mode */
+			if (vboot_bootloader_maps[i].mode == DEPRI_BOOT_MODE) {
+				vboot_ops = get_deprivilege_boot_ops();
+				sos_boot_mode = DEPRI_BOOT_MODE;
+			} else {
+				vboot_ops = get_direct_boot_ops();
+				sos_boot_mode = DIRECT_BOOT_MODE;
+			}
 			break;
 		}
 	}
@@ -49,6 +65,12 @@ void init_vboot(void)
 	acpi_fixup();
 #endif
 	vboot_ops->init();
+}
+
+/* @pre: vboot_ops != NULL */
+enum vboot_mode get_sos_boot_mode(void)
+{
+	return sos_boot_mode;
 }
 
 /* @pre: vboot_ops->get_ap_trampoline != NULL */
