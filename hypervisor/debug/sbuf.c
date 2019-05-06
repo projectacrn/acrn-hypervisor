@@ -12,7 +12,6 @@
 #include <types.h>
 #include <rtl.h>
 #include <errno.h>
-#include <sbuf.h>
 #include <cpu.h>
 #include <per_cpu.h>
 

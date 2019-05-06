@@ -7,7 +7,6 @@
 #include <types.h>
 #include <errno.h>
 #include <bits.h>
-#include <page.h>
 #include "shell_priv.h"
 #include <irq.h>
 #include <console.h>

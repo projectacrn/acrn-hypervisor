@@ -9,7 +9,6 @@
 #include <cpu_caps.h>
 #include <cpufeatures.h>
 #include <cpuid.h>
-#include <msr.h>
 #include <errno.h>
 #include <logmsg.h>
 #include <cat.h>

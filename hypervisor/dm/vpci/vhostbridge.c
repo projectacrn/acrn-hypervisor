@@ -35,7 +35,6 @@
 */
 
 #include <vm.h>
-#include <errno.h>
 #include <pci.h>
 #include "vpci_priv.h"
 

@@ -11,7 +11,6 @@
 #include <firmware.h>
 #include <firmware_sbl.h>
 #include <firmware_uefi.h>
-#include "platform_acpi_info.h"
 
 static struct firmware_operations *firmware_ops;
 

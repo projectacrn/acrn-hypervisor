@@ -2,8 +2,6 @@
  * Copyright (C) <2018> Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include <vcpu.h>
-#include <spinlock.h>
 
 /* NOTE:
  *
