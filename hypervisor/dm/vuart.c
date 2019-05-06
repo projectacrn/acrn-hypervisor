@@ -218,6 +218,119 @@ static uint8_t get_modem_status(uint8_t mcr)
 	return msr;
 }
 
+static uint8_t update_modem_status(uint8_t new_msr, uint8_t old_msr)
+{
+	uint8_t update_msr = old_msr;
+	/*
+	 * Detect if there has been any change between the
+	 * previous and the new value of MSR. If there is
+	 * then assert the appropriate MSR delta bit.
+	 */
+	if (((new_msr & MSR_CTS) ^ (old_msr & MSR_CTS)) != 0U) {
+		update_msr |= MSR_DCTS;
+	}
+	if (((new_msr & MSR_DSR) ^ (old_msr & MSR_DSR)) != 0U) {
+		update_msr |= MSR_DDSR;
+	}
+	if (((new_msr & MSR_DCD) ^ (old_msr & MSR_DCD)) != 0U) {
+		update_msr |= MSR_DDCD;
+	}
+	if (((new_msr & MSR_RI) == 0U) && ((old_msr & MSR_RI) != 0U)) {
+		update_msr |= MSR_TERI;
+	}
+	update_msr &= MSR_DELTA_MASK;
+	update_msr |= new_msr;
+
+	return update_msr;
+}
+
+/*
+ * @pre: vu != NULL
+ */
+static void write_reg(struct acrn_vuart *vu, uint16_t reg, uint8_t value_u8)
+{
+	uint8_t msr;
+
+	vuart_lock(vu);
+	/*
+	 * Take care of the special case DLAB accesses first
+	 */
+	if (((vu->lcr & LCR_DLAB) != 0U) && (reg == UART16550_DLL)) {
+		vu->dll = value_u8;
+	} else if (((vu->lcr & LCR_DLAB) != 0U) && (reg == UART16550_DLM)) {
+		vu->dlh = value_u8;
+	} else {
+		switch (reg) {
+		case UART16550_THR:
+			if ((vu->mcr & MCR_LOOPBACK) != 0U) {
+				fifo_putchar(&vu->rxfifo, (char)value_u8);
+				vu->lsr |= LSR_OE;
+			} else {
+				fifo_putchar(&vu->txfifo, (char)value_u8);
+			}
+			vu->thre_int_pending = true;
+			break;
+		case UART16550_IER:
+			/*
+			 * Apply mask so that bits 4-7 are 0
+			 * Also enables bits 0-3 only if they're 1
+			 */
+			vu->ier = value_u8 & 0x0FU;
+			break;
+		case UART16550_FCR:
+			/*
+			 * The FCR_ENABLE bit must be '1' for the programming
+			 * of other FCR bits to be effective.
+			 */
+			if ((value_u8 & FCR_FIFOE) == 0U) {
+				vu->fcr = 0U;
+			} else {
+				if ((value_u8 & FCR_RFR) != 0U) {
+					fifo_reset(&vu->rxfifo);
+				}
+				vu->fcr = value_u8 & (FCR_FIFOE | FCR_DMA | FCR_RX_MASK);
+			}
+			break;
+		case UART16550_LCR:
+			vu->lcr = value_u8;
+			break;
+		case UART16550_MCR:
+			/* Apply mask so that bits 5-7 are 0 */
+			vu->mcr = value_u8 & 0x1FU;
+			msr = get_modem_status(vu->mcr);
+			/*
+			 * Update the value of MSR while retaining the delta
+			 * bits.
+			 */
+			vu->msr = update_modem_status(msr, vu->msr);
+			break;
+		case UART16550_LSR:
+			/*
+			 * Line status register is not meant to be written to
+			 * during normal operation.
+			 */
+			break;
+		case UART16550_MSR:
+			/*
+			 * As far as I can tell MSR is a read-only register.
+			 */
+			break;
+		case UART16550_SCR:
+			vu->scr = value_u8;
+			break;
+		default:
+			/*
+			 * For the reg that is not handled (either a read-only
+			 * register or an invalid register), ignore the write to it.
+			 * Gracefully return if prior case clauses have not been met.
+			 */
+			break;
+		}
+	}
+	vuart_toggle_intr(vu);
+	vuart_unlock(vu);
+}
+
 static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 			__unused size_t width, uint32_t value)
 {
@@ -225,7 +338,6 @@ static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 	struct acrn_vuart *vu = find_vuart_by_port(vm, offset);
 	uint8_t value_u8 = (uint8_t)value;
 	struct acrn_vuart *target_vu = NULL;
-	uint8_t msr;
 
 	if (vu != NULL) {
 		offset -= vu->port_base;
@@ -235,100 +347,7 @@ static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 			(offset == UART16550_THR) && (target_vu != NULL)) {
 			send_to_target(target_vu, value_u8);
 		} else {
-			vuart_lock(vu);
-			/*
-			 * Take care of the special case DLAB accesses first
-			 */
-			if ((vu->lcr & LCR_DLAB) != 0U && offset == UART16550_DLL) {
-				vu->dll = value_u8;
-			} else if ((vu->lcr & LCR_DLAB) != 0U && offset == UART16550_DLM) {
-				vu->dlh = value_u8;
-			} else {
-				switch (offset) {
-				case UART16550_THR:
-					if (vu->mcr & MCR_LOOPBACK) {
-						fifo_putchar(&vu->rxfifo, (char)value_u8);
-						vu->lsr |= LSR_OE;
-					} else {
-						fifo_putchar(&vu->txfifo, (char)value_u8);
-					}
-					vu->thre_int_pending = true;
-					break;
-				case UART16550_IER:
-					/*
-					 * Apply mask so that bits 4-7 are 0
-					 * Also enables bits 0-3 only if they're 1
-					 */
-					vu->ier = value_u8 & 0x0FU;
-					break;
-				case UART16550_FCR:
-					/*
-					 * The FCR_ENABLE bit must be '1' for the programming
-					 * of other FCR bits to be effective.
-					 */
-					if ((value_u8 & FCR_FIFOE) == 0U) {
-						vu->fcr = 0U;
-					} else {
-						if ((value_u8 & FCR_RFR) != 0U) {
-							fifo_reset(&vu->rxfifo);
-						}
-
-						vu->fcr = value_u8 & (FCR_FIFOE | FCR_DMA | FCR_RX_MASK);
-					}
-					break;
-				case UART16550_LCR:
-					vu->lcr = value_u8;
-					break;
-				case UART16550_MCR:
-					/* Apply mask so that bits 5-7 are 0 */
-					vu->mcr = value & 0x1F;
-					msr = get_modem_status(vu->mcr);
-					/*
-					 * Detect if there has been any change between the
-					 * previous and the new value of MSR. If there is
-					 * then assert the appropriate MSR delta bit.
-					 */
-					if ((msr & MSR_CTS) ^ (vu->msr & MSR_CTS))
-						vu->msr |= MSR_DCTS;
-					if ((msr & MSR_DSR) ^ (vu->msr & MSR_DSR))
-						vu->msr |= MSR_DDSR;
-					if ((msr & MSR_DCD) ^ (vu->msr & MSR_DCD))
-						vu->msr |= MSR_DDCD;
-					if ((vu->msr & MSR_RI) != 0 && (msr & MSR_RI) == 0)
-						vu->msr |= MSR_TERI;
-					/*
-					 * Update the value of MSR while retaining the delta
-					 * bits.
-					 */
-					vu->msr &= MSR_DELTA_MASK;
-					vu->msr |= msr;
-					break;
-				case UART16550_LSR:
-					/*
-					 * Line status register is not meant to be written to
-					 * during normal operation.
-					 */
-					break;
-				case UART16550_MSR:
-					/*
-					 * As far as I can tell MSR is a read-only register.
-					 */
-					break;
-				case UART16550_SCR:
-					vu->scr = value_u8;
-					break;
-				default:
-					/*
-					 * For the offset that is not handled (either a read-only
-					 * register or an invalid register), ignore the write to it.
-					 * Gracefully return if prior case clauses have not been met.
-					 */
-					break;
-				}
-			}
-
-			vuart_toggle_intr(vu);
-			vuart_unlock(vu);
+			write_reg(vu, offset, value_u8);
 		}
 	}
 	return true;
