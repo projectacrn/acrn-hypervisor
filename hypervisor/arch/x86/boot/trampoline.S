@@ -14,8 +14,6 @@
  * The real page table and gdt will be setup in C main entry.
  */
 
-#include        <spinlock.h>
-
 /* NOTE:
  *
  * MISRA C requires that all unsigned constants should have the suffix 'U'

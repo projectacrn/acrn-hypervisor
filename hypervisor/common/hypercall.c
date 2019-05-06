@@ -7,7 +7,6 @@
 #include <vm.h>
 #include <vmcs.h>
 #include <schedule.h>
-#include <hypercall.h>
 #include <version.h>
 #include <reloc.h>
 #include <vtd.h>

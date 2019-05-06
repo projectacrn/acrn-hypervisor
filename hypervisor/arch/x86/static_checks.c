@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <types.h>
 #include <util.h>
 #include <boot_context.h>
 #include <acrn_common.h>

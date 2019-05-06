@@ -12,7 +12,6 @@
 #include <pgtable.h>
 #include <host_pm.h>
 #include <trampoline.h>
-#include <msr.h>
 #include <vmx.h>
 #include <console.h>
 #include <ioapic.h>

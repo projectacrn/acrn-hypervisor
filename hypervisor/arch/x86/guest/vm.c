@@ -9,7 +9,6 @@
 #include <sprintf.h>
 #include <vm.h>
 #include <bits.h>
-#include <uart16550.h>
 #include <e820.h>
 #include <multiboot.h>
 #include <vtd.h>
@@ -22,7 +21,6 @@
 #include <pgtable.h>
 #include <mmu.h>
 #include <logmsg.h>
-#include <cat.h>
 #include <firmware.h>
 #include <board.h>
 

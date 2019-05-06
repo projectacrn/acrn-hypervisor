@@ -5,7 +5,6 @@
  */
 
 #include <vm_config.h>
-#include <vm_configurations.h>
 #include <pci_devices.h>
 
 struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[VM0_CONFIG_PCI_PTDEV_NUM] = {

@@ -6,6 +6,7 @@
 
 #ifndef UTIL_H
 #define UTIL_H
+#include <types.h>
 
 #define offsetof(st, m) __builtin_offsetof(st, m)
 #define va_start	__builtin_va_start

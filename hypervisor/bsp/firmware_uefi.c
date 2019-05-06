@@ -15,7 +15,6 @@
 #include <lapic.h>
 #include <per_cpu.h>
 #include <multiboot.h>
-#include <boot_context.h>
 #include <firmware_uefi.h>
 
 static struct uefi_context uefi_ctx;
