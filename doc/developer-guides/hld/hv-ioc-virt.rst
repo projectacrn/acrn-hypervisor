@@ -489,7 +489,7 @@ Heartbeat frame definition is shown here:
    command 1 to 7 following the related scenarios. For example: S3 case
    needs to be set at 7 to prevent from power gating the memory.
 -  The difference between halt and reboot is related if the power rail
-   that supplies to customer peripherals (such as Fan, HDMI-in, BT/WIFI,
+   that supplies to customer peripherals (such as Fan, HDMI-in, BT/Wi-Fi,
    M.2, and Ethernet) is reset.
 
 .. figure:: images/ioc-image8.png
