@@ -447,7 +447,7 @@ static inline void set_idt(struct host_idt_descriptor *idtd)
 		      [idtd] "m"(*idtd));
 }
 
-void interrupt_init(uint16_t pcpu_id)
+void init_interrupt(uint16_t pcpu_id)
 {
 	struct host_idt_descriptor *idtd = &HOST_IDTR;
 

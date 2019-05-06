@@ -484,7 +484,7 @@ related operations.
    void dispatch_interrupt(struct intr_excp_ctx *ctx)
       /*  To dispatch an interrupt, an action callback will be called if registered. */
 
-   void interrupt_init(uint16_t pcpu_id)
+   void init_interrupt(uint16_t pcpu_id)
       /*  To do interrupt initialization for a cpu, will be called for
        *  each physical cpu.
        */
