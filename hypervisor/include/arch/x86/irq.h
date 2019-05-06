@@ -237,7 +237,7 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu);
  *
  * @param[in]	pcpu_id The id of physical cpu to initialize
  */
-void interrupt_init(uint16_t pcpu_id);
+void init_interrupt(uint16_t pcpu_id);
 
 void cancel_event_injection(struct acrn_vcpu *vcpu);
 

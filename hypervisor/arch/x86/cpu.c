@@ -214,7 +214,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 		init_scheduler();
 
 		/* Initialize interrupts */
-		interrupt_init(BOOT_CPU_ID);
+		init_interrupt(BOOT_CPU_ID);
 
 		timer_init();
 		setup_notification();
@@ -238,7 +238,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 		pr_dbg("Core %hu is up", pcpu_id);
 
 		/* Initialize secondary processor interrupts. */
-		interrupt_init(pcpu_id);
+		init_interrupt(pcpu_id);
 
 		timer_init();
 
