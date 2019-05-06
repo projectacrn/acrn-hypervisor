@@ -112,7 +112,7 @@ static inline void vuart_fifo_init(struct acrn_vuart *vu)
  */
 static uint8_t vuart_intr_reason(const struct acrn_vuart *vu)
 {
-	uint8_t ret = IIR_NOPEND;
+	uint8_t ret;
 
 	if (((vu->lsr & LSR_OE) != 0U) && ((vu->ier & IER_ELSI) != 0U)) {
 		ret = IIR_RLS;
@@ -120,8 +120,10 @@ static uint8_t vuart_intr_reason(const struct acrn_vuart *vu)
 		ret = IIR_RXTOUT;
 	} else if (vu->thre_int_pending && ((vu->ier & IER_ETBEI) != 0U)) {
 		ret = IIR_TXRDY;
-	} else if((vu->msr & MSR_DELTA_MASK) != 0 && (vu->ier & IER_EMSC) != 0) {
+	} else if(((vu->msr & MSR_DELTA_MASK) != 0U) && ((vu->ier & IER_EMSC) != 0U)) {
 		ret = IIR_MLSC;
+	} else {
+		ret = IIR_NOPEND;
 	}
 	return ret;
 }
@@ -132,9 +134,9 @@ struct acrn_vuart *find_vuart_by_port(struct acrn_vm *vm, uint16_t offset)
 	struct acrn_vuart *vu, *ret_vu = NULL;
 
 	/* TODO: support pci vuart find */
-	for (i = 0; i < MAX_VUART_NUM_PER_VM; i++) {
+	for (i = 0U; i < MAX_VUART_NUM_PER_VM; i++) {
 		vu = &vm->vuart[i];
-		if (vu->active == true && vu->port_base == (offset & ~0x7U)) {
+		if ((vu->active) && (vu->port_base == (offset & ~0x7U))) {
 			ret_vu = vu;
 			break;
 		}
@@ -188,20 +190,24 @@ static uint8_t modem_status(uint8_t mcr)
 {
 	uint8_t msr;
 
-	if (mcr & MCR_LOOPBACK) {
+	if ((mcr & MCR_LOOPBACK) != 0U) {
 		/*
 		 * In the loopback mode certain bits from the MCR are
 		 * reflected back into MSR.
 		 */
-		msr = 0;
-		if (mcr & MCR_RTS)
+		msr = 0U;
+		if ((mcr & MCR_RTS) != 0U) {
 			msr |= MSR_CTS;
-		if (mcr & MCR_DTR)
+		}
+		if ((mcr & MCR_DTR) != 0U) {
 			msr |= MSR_DSR;
-		if (mcr & MCR_OUT1)
+		}
+		if ((mcr & MCR_OUT1) != 0U) {
 			msr |= MSR_RI;
-		if (mcr & MCR_OUT2)
+		}
+		if ((mcr & MCR_OUT2) != 0U) {
 			msr |= MSR_DCD;
+		}
 	} else {
 		/*
 		 * Always assert DCD and DSR so tty open doesn't block
@@ -221,12 +227,12 @@ static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 	struct acrn_vuart *target_vu = NULL;
 	uint8_t msr;
 
-	if (vu) {
+	if (vu != NULL) {
 		offset -= vu->port_base;
 		target_vu = vu->target_vu;
 
 		if (!(vu->mcr & MCR_LOOPBACK) &&
-			(offset == UART16550_THR) && target_vu) {
+			(offset == UART16550_THR) && (target_vu != NULL)) {
 			vuart_write_to_target(target_vu, value_u8);
 		} else {
 			vuart_lock(vu);
@@ -336,7 +342,7 @@ static bool vuart_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t offs
 	struct acrn_vuart *vu = find_vuart_by_port(vm, offset);
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	if (vu) {
+	if (vu != NULL) {
 		offset -= vu->port_base;
 		vuart_lock(vu);
 		/*
@@ -427,18 +433,19 @@ static bool vuart_register_io_handler(struct acrn_vm *vm, uint16_t port_base, ui
 		.len = 8U
 	};
 	switch (vuart_idx) {
-	case 0:
+	case 0U:
 		pio_idx = UART_PIO_IDX0;
 		break;
-	case 1:
+	case 1U:
 		pio_idx = UART_PIO_IDX1;
 		break;
 	default:
 		printf("Not support vuart index %d, will not register \n");
 		ret = false;
 	}
-	if (ret)
+	if (ret != 0U) {
 		register_pio_emulation_handler(vm, pio_idx, &range, vuart_read, vuart_write);
+	}
 	return ret;
 }
 
@@ -459,7 +466,7 @@ static void vuart_setup(struct acrn_vm *vm,
 	if (vu_config->type == VUART_LEGACY_PIO) {
 		vu->port_base = vu_config->addr.port_base;
 		vu->irq = vu_config->irq;
-		if (vuart_register_io_handler(vm, vu->port_base, vuart_idx)) {
+		if (vuart_register_io_handler(vm, vu->port_base, vuart_idx) != 0U) {
 			vu->active = true;
 		}
 	} else {
@@ -482,7 +489,7 @@ static struct acrn_vuart *find_active_target_vuart(struct vuart_config *vu_confi
 	if (target_vuid < MAX_VUART_NUM_PER_VM)
 		target_vu = &target_vm->vuart[target_vuid];
 
-	if (target_vu && target_vu->active) {
+	if ((target_vu != NULL) && (target_vu->active)) {
 		ret_vu = target_vu;
 	}
 	return ret_vu;
@@ -496,7 +503,7 @@ static void vuart_setup_connection(struct acrn_vm *vm,
 	vu = &vm->vuart[vuart_idx];
 	if (vu->active) {
 		t_vu = find_active_target_vuart(vu_config);
-		if (t_vu && (t_vu->target_vu == NULL)) {
+		if ((t_vu != NULL) && (t_vu->target_vu == NULL)) {
 			vu->target_vu = t_vu;
 			t_vu->target_vu = vu;
 		}
@@ -516,9 +523,11 @@ bool is_vuart_intx(struct acrn_vm *vm, uint32_t intx_pin)
 	uint8_t i;
 	bool ret = false;
 
-	for (i = 0; i < MAX_VUART_NUM_PER_VM; i++)
-		if (vm->vuart[i].active && vm->vuart[i].irq == intx_pin)
+	for (i = 0U; i < MAX_VUART_NUM_PER_VM; i++) {
+		if ((vm->vuart[i].active) && (vm->vuart[i].irq == intx_pin)) {
 			ret = true;
+		}
+	}
 	return ret;
 }
 
@@ -526,18 +535,19 @@ void vuart_init(struct acrn_vm *vm, struct vuart_config *vu_config)
 {
 	uint8_t i;
 
-	for (i = 0; i < MAX_VUART_NUM_PER_VM; i++) {
+	for (i = 0U; i < MAX_VUART_NUM_PER_VM; i++) {
 		vm->vuart[i].active = false;
 		/* This vuart is not exist */
-		if (vu_config[i].type == VUART_LEGACY_PIO &&
-				vu_config[i].addr.port_base == INVALID_COM_BASE)
+		if ((vu_config[i].type == VUART_LEGACY_PIO) &&
+				(vu_config[i].addr.port_base == INVALID_COM_BASE)) {
 			continue;
+		}
 		vuart_setup(vm, &vu_config[i], i);
 		/*
 		 * The first vuart is used for VM console.
 		 * The rest of vuarts are used for connection.
 		 */
-		if (i != 0) {
+		if (i != 0U) {
 			vuart_setup_connection(vm, &vu_config[i], i);
 		}
 	}
@@ -547,9 +557,10 @@ void vuart_deinit(struct acrn_vm *vm)
 {
 	uint8_t i;
 
-	for (i = 0; i < MAX_VUART_NUM_PER_VM; i++) {
+	for (i = 0U; i < MAX_VUART_NUM_PER_VM; i++) {
 		vm->vuart[i].active = false;
-		if (vm->vuart[i].target_vu)
+		if (vm->vuart[i].target_vu != NULL) {
 			vuart_deinit_connect(&vm->vuart[i]);
+		}
 	}
 }
