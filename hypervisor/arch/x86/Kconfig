@@ -235,15 +235,6 @@ config SOS_RAM_SIZE
 	  A 64-bit integer indicating the size of the User OS RAM (MMIO not
 	  included). Now we assume each UOS uses same amount of RAM size.
 
-config CONSTANT_ACPI
-	bool "The platform ACPI info is constant"
-	default n
-	help
-	  Whether constant ACPI tables shall be used. If selected, the built-in
-	  ACPI tables, usually generated on target platforms by an offline tool,
-	  will be used. If not a fixup subroutine will be invoked to update the
-	  built-in tables after parsing the real ACPI tables at runtime.
-
 config DMAR_PARSE_ENABLED
 	bool "Enable ACPI DMA Remapping tables parsing"
 	default y

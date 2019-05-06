@@ -336,8 +336,8 @@ void *get_dmar_table(void)
  *
  * The second type of table, the ACPI Data Table, could be parsed here.
  *
- * When ACRN go production, the platform ACPI data should be fixed. The
- * Kconfig of CONSTANT_ACPI will be set to yes, then this code is not needed.
+ * When ACRN go FuSa, the platform ACPI data should be fixed. The MACRO of
+ * CONFIG_CONSTANT_ACPI will be defined, then this code is not needed.
  */
 
 #define ACPI_SIG_FACS		0x53434146U	/* "FACS" */
