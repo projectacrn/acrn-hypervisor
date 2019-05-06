@@ -934,9 +934,9 @@ OS owns part of the devices with passthrough, as shown below:
      - Ethernet
      -
 
-   * - **WIFI**
+   * - **Wi-Fi**
      -
-     - WIFI
+     - Wi-Fi
 
    * - **Bluetooth**
      -
