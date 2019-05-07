@@ -35,6 +35,7 @@
 #include <ioapic.h>
 #include <logmsg.h>
 #include <host_pm.h>
+#include <acrn_common.h>
 
 #define ACPI_SIG_RSDP             "RSD PTR " /* Root System Description Ptr */
 #define ACPI_OEM_ID_SIZE           6
