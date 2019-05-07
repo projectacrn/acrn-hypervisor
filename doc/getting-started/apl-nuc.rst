@@ -24,7 +24,7 @@ Connecting to the serial port
 If you don't need a serial console you can ignore this section. 
 
 Neither the APL or KBL NUCs present an external serial port interface.
-However, the KBL NUC does have a serail port header you can
+However, the KBL NUC does have a serial port header you can
 expose with a serial DB9 header cable. You can build this cable yourself,
 referring to the `KBL NUC product specification
 <https://www.intel.com/content/dam/support/us/en/documents/mini-pcs/nuc-kits/NUC7i7DN_TechProdSpec.pdf>`__
@@ -75,10 +75,10 @@ Software setup
 Set up a Clear Linux Operating System
 =====================================
 
-Currently, an installable version of ACRN does not exist. Therefore, you
-need to setup a base Clear Linux OS and you'll build and bootstrap ACRN
-on your platform. You'll need a network connection for your platform to
-complete this setup.
+We begin by installing Clear Linux* as the development OS on the NUC.
+The Clear Linux release includes an ``acrn.efi`` hypervisor application
+that will be added to the EFI partition (by the quick setup script or
+manually, as described below).
 
 .. note::
 
@@ -93,8 +93,8 @@ complete this setup.
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
    as a starting point for installing Clear Linux OS onto your platform. Follow the recommended
    options for choosing an **Advanced options** installation type, and using the platform's
-   storage as the target device for installation (overwriting the existing data
-   and creating three partitions on the platform's storage drive).
+   storage as the target device for installation (overwriting the
+   existing data).
 
    When setting up Clear Linux on your NUC:
 
@@ -102,12 +102,13 @@ complete this setup.
    #.  With Clear Linux OS highlighted, select Enter.
    #.  From the Main Menu, select "Configure Media" and set
        "Auto Partition" to your desired hard disk.
-   #.  ``shift + A`` to the "Advanced options".
+   #.  Press :kbd:`A` to show the "Advanced options".
    #.  Select "Additional Bundle Selection" to add bundles for
        "desktop-autostart", "editors", "network-basic", "user-basic"
    #.  Select "User Manager" to add an administrative user "clear" and
        password.
    #.  Select "Assign Hostname" to set the hostname as "clr-sos-guest"
+   #.  Select Confirm to start installation.
 
 #. After installation is complete, boot into Clear Linux OS, login as
    **clear** (using the password you set earlier).
@@ -308,11 +309,13 @@ OS and started up a UOS VM.
 Manual setup ACRN guide
 =======================
 
-If you don't need the script to setup ACRN by manual, and then you should follow these steps
-after installation of Clear Linux and login system.
+Instead of using the quick setup script, you can also set up ACRN, SOS,
+and UOS manually following these steps:
 
+#. After installing Clear Linux on the NUC, login as the **clear** user
+   and open a terminal window.
 #. Clear Linux OS is set to automatically update itself. We recommend that you disable
-   this feature to have more control over when the updates happen. Use this command
+   this feature to have more control over when updates happen. Use this command
    to disable the autoupdate feature:
 
    .. code-block:: none
@@ -346,7 +349,7 @@ after installation of Clear Linux and login system.
       +--------------------+---------------------------------------------------+
       | Bundle             | Description                                       |
       +====================+===================================================+
-      | service-os         | Add the acrn hypervisor, the acrn devicemodel and |
+      | service-os         | Add the acrn hypervisor, acrn devicemodel, and    |
       |                    | Service OS kernel                                 |
       +--------------------+---------------------------------------------------+
       | kernel-iot-lts2018 | Run the Intel kernel "kernel-iot-lts2018"         |
@@ -374,7 +377,7 @@ partition. Follow these steps:
       loaderx64.efi
 
    .. note::
-      On Clear Linux OS, the EFI System Partion (e.g.: ``/dev/sda1``)
+      On Clear Linux OS, the EFI System Partition (e.g.: ``/dev/sda1``)
       is mounted under ``/boot`` by default
       The Clear Linux project releases updates often, sometimes
       twice a day, so make note of the specific kernel versions
