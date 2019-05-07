@@ -79,7 +79,7 @@ struct vm_pm_info {
 #define VM_MONO_GUEST       0x01
 /* Enumerated type for VM states */
 enum vm_state {
-	VM_STATE_INVALID = 0,
+	VM_POWERED_OFF = 0,
 	VM_CREATED,	/* VM created / awaiting start (boot) */
 	VM_STARTED,	/* VM started (booted) */
 	VM_POWERING_OFF,     /* RTVM only, it is trying to poweroff by itself */
@@ -201,7 +201,8 @@ int32_t reset_vm(struct acrn_vm *vm);
 int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
 void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config);
 void launch_vms(uint16_t pcpu_id);
-bool is_valid_vm(const struct acrn_vm *vm);
+bool is_poweroff_vm(const struct acrn_vm *vm);
+bool is_created_vm(const struct acrn_vm *vm);
 bool is_sos_vm(const struct acrn_vm *vm);
 bool is_postlaunched_vm(const struct acrn_vm *vm);
 bool is_prelaunched_vm(const struct acrn_vm *vm);
