@@ -50,9 +50,17 @@ uint16_t get_vmid_by_uuid(const uint8_t *uuid)
 /**
  * @pre vm != NULL
  */
-bool is_valid_vm(const struct acrn_vm *vm)
+bool is_poweroff_vm(const struct acrn_vm *vm)
 {
-	return (vm->state != VM_STATE_INVALID);
+	return (vm->state == VM_POWERED_OFF);
+}
+
+/**
+ * @pre vm != NULL
+ */
+bool is_created_vm(const struct acrn_vm *vm)
+{
+	return (vm->state == VM_CREATED);
 }
 
 bool is_sos_vm(const struct acrn_vm *vm)
@@ -322,7 +330,7 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 
 /**
  * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL && rtn_vm != NULL
- * @pre vm->state == VM_STATE_INVALID
+ * @pre vm->state == VM_POWERED_OFF
  */
 int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm)
 {
@@ -439,7 +447,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		}
 	}
 
-	if (need_cleanup && is_valid_vm(vm)) {
+	if (need_cleanup) {
 		if (vm->arch_vm.nworld_eptp != NULL) {
 			(void)memset(vm->arch_vm.nworld_eptp, 0U, PAGE_SIZE);
 		}
@@ -462,7 +470,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 
 	/* Only allow shutdown paused vm */
 	if (vm->state == VM_PAUSED) {
-		vm->state = VM_STATE_INVALID;
+		vm->state = VM_POWERED_OFF;
 
 		foreach_vcpu(i, vm, vcpu) {
 			reset_vcpu(vcpu);

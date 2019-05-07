@@ -575,12 +575,15 @@ static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv)
 		case VM_PAUSED:
 			(void)strncpy_s(state, 32U, "Paused", 32U);
 			break;
+		case VM_POWERED_OFF:
+			(void)strncpy_s(state, 32U, "Off", 32U);
+			break;
 		default:
 			(void)strncpy_s(state, 32U, "Unknown", 32U);
 			break;
 		}
 		vm_config = get_vm_config(vm_id);
-		if (is_valid_vm(vm)) {
+		if (!is_poweroff_vm(vm)) {
 			int8_t i;
 
 			for (i = 0; i < 16; i++) {
@@ -611,7 +614,7 @@ static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv)
 
 	for (idx = 0U; idx < CONFIG_MAX_VM_NUM; idx++) {
 		vm = get_vm_from_vmid(idx);
-		if (!is_valid_vm(vm)) {
+		if (is_poweroff_vm(vm)) {
 			continue;
 		}
 		foreach_vcpu(i, vm, vcpu) {
@@ -761,7 +764,7 @@ static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv)
 	vcpu_id = (uint16_t)strtol_deci(argv[2]);
 
 	vm = get_vm_from_vmid(vm_id);
-	if (!is_valid_vm(vm)) {
+	if (is_poweroff_vm(vm)) {
 		shell_puts("No vm found in the input <vm_id, vcpu_id>\r\n");
 		status = -EINVAL;
 		goto out;
@@ -855,7 +858,7 @@ static int32_t shell_to_vm_console(int32_t argc, char **argv)
 
 	/* Get the virtual device node */
 	vm = get_vm_from_vmid(vm_id);
-	if (!is_valid_vm(vm)) {
+	if (is_poweroff_vm(vm)) {
 		shell_puts("VM is not valid \n");
 		return -EINVAL;
 	}
@@ -1067,7 +1070,7 @@ static void get_vioapic_info(char *str_arg, size_t str_max, uint16_t vmid)
 	struct acrn_vm *vm = get_vm_from_vmid(vmid);
 	uint32_t pin, pincount;
 
-	if (!is_valid_vm(vm)) {
+	if (is_poweroff_vm(vm)) {
 		len = snprintf(str, size, "\r\nvm is not exist for vmid %hu", vmid);
 		if (len >= size) {
 			goto overflow;

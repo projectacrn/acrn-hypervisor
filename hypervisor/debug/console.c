@@ -92,7 +92,7 @@ struct acrn_vuart *vuart_console_active(void)
 
 	if (console_vmid < CONFIG_MAX_VM_NUM) {
 		vm = get_vm_from_vmid(console_vmid);
-		if (is_valid_vm(vm)) {
+		if (!is_poweroff_vm(vm)) {
 			vu = vm_console_vuart(vm);
 		} else {
 			/* Console vm is invalid, switch back to HV-Shell */
