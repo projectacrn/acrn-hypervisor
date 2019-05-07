@@ -7,7 +7,6 @@ This script defines the function to do the vm_exit analysis
 
 import csv
 import struct
-from config import TSC_FREQ
 
 TSC_BEGIN = 0
 TSC_END = 0
@@ -163,13 +162,13 @@ def generate_report(ofile, freq):
                 total_exit_time += TIME_IN_EXIT[event]
 
             print ("Total run time: %d cycles" % (rt_cycle))
-            print ("TSC Freq: %f MHz" % (freq))
+            print ("TSC Freq: %s MHz" % (freq))
             print ("Total run time: %d sec" % (rt_sec))
 
             f_csv.writerow(['Run time(cycles)', 'Run time(Sec)', 'Freq(MHz)'])
             f_csv.writerow(['%d' % (rt_cycle),
                             '%.3f' % (rt_sec),
-                            '%d' % (freq)])
+                            '%s' % (freq)])
 
             print ("%-28s\t%-12s\t%-12s\t%-24s\t%-16s" % ("Event", "NR_Exit",
                    "NR_Exit/Sec", "Time Consumed(cycles)", "Time percentage"))
@@ -200,11 +199,12 @@ def generate_report(ofile, freq):
     except IOError as err:
         print ("Output File Error: " + str(err))
 
-def analyze_vm_exit(ifile, ofile):
+def analyze_vm_exit(ifile, ofile, freq):
     """do the vm exits analysis
     Args:
         ifile: input trace data file
         ofile: output report file
+        freq: TSC frequency of the host where we capture the trace data
     Return:
         None
     """
@@ -214,4 +214,4 @@ def analyze_vm_exit(ifile, ofile):
 
     parse_trace_data(ifile)
     # save report to the output file
-    generate_report(ofile, TSC_FREQ)
+    generate_report(ofile, freq)

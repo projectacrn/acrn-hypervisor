@@ -7,7 +7,6 @@ This script defines the function to do the irq related analysis
 
 import csv
 import struct
-from config import TSC_FREQ
 
 TSC_BEGIN = 0
 TSC_END = 0
@@ -90,11 +89,12 @@ def generate_report(ofile, freq):
     except IOError as err:
         print ("Output File Error: " + str(err))
 
-def analyze_irq(ifile, ofile):
+def analyze_irq(ifile, ofile, freq):
     """do the vm exits analysis
     Args:
         ifile: input trace data file
         ofile: output report file
+        freq: TSC frequency of the host where we capture the trace data
     Return:
         None
     """
@@ -104,4 +104,4 @@ def analyze_irq(ifile, ofile):
 
     parse_trace(ifile)
     # save report to the output file
-    generate_report(ofile, TSC_FREQ)
+    generate_report(ofile, freq)

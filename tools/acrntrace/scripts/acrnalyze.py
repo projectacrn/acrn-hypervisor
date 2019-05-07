@@ -10,7 +10,6 @@ This is the main script of arnalyzer, which:
 import sys
 import getopt
 import os
-import config
 from vmexit_analyze import analyze_vm_exit
 from irq_analyze import analyze_irq
 
@@ -32,20 +31,21 @@ def usage():
     --irq: to generate irq related report
     ''')
 
-def do_analysis(ifile, ofile, analyzer):
+def do_analysis(ifile, ofile, analyzer, freq):
     """do the specific analysis
 
     Args:
         ifile: input trace data file
         ofile: output analysis report file
         analyzer: a function do the specific analysis
+        freq: TSC frequency of the host where we capture the trace data
     Returns:
         None
     Raises:
         NA
     """
     for alyer in analyzer:
-        alyer(ifile, ofile)
+        alyer(ifile, ofile, freq)
 
 def main(argv):
     """Main enterance function
@@ -59,6 +59,8 @@ def main(argv):
     """
     inputfile = ''
     outputfile = ''
+    # Default TSC frequency of MRB in MHz
+    freq = 1881.6
     opts_short = "hi:o:f:"
     opts_long = ["ifile=", "ofile=", "frequency=", "vm_exit", "irq"]
     analyzer = []
@@ -78,7 +80,7 @@ def main(argv):
         elif opt in ("-o", "--ofile"):
             outputfile = arg
         elif opt in ("-f", "--frequency"):
-            TSC_FREQ = arg
+            freq = arg
         elif opt == "--vm_exit":
             analyzer.append(analyze_vm_exit)
         elif opt == "--irq":
@@ -90,7 +92,7 @@ def main(argv):
     assert outputfile != '', "output file is required"
     assert analyzer != '', 'MUST contain one of analyzer: ''vm_exit'
 
-    do_analysis(inputfile, outputfile, analyzer)
+    do_analysis(inputfile, outputfile, analyzer, freq)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
