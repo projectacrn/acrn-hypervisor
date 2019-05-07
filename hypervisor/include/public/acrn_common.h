@@ -53,6 +53,7 @@
 #define GUEST_FLAG_CLOS_REQUIRED		(1UL << 3U)     /* Whether CLOS is required */
 #define GUEST_FLAG_HIDE_MTRR			(1UL << 4U)  	/* Whether hide MTRR from VM */
 #define GUEST_FLAG_RT				(1UL << 5U)     /* Whether the vm is RT-VM */
+#define GUEST_FLAG_HIGHEST_SEVERITY		(1UL << 6U)     /* Whether has the highest severity */
 
 /* TODO: We may need to get this addr from guest ACPI instead of hardcode here */
 #define VIRTUAL_PM1A_CNT_ADDR		0x404U
