@@ -31,22 +31,86 @@
 #define PAGE_CACHE_UC_MINUS	PAGE_PCD
 #define PAGE_CACHE_UC		(PAGE_PCD | PAGE_PWT)
 
+/**
+ * @defgroup ept_mem_access_right EPT Memory Access Right
+ *
+ * This is a group that includes EPT Memory Access Right Definitions.
+ *
+ * @{
+ */
+
+/**
+ * @brief EPT memory access right is read-only.
+ */
 #define EPT_RD			(1UL << 0U)
+
+/**
+ * @brief EPT memory access right is read/write.
+ */
 #define EPT_WR			(1UL << 1U)
+
+/**
+ * @brief EPT memory access right is executable.
+ */
 #define EPT_EXE			(1UL << 2U)
+
+/**
+ * @brief EPT memory access right is read/write and executable.
+ */
+#define EPT_RWX			(EPT_RD | EPT_WR | EPT_EXE)
+
+/**
+ * @}
+ */
+/* End of ept_mem_access_right */
+
+/**
+ * @defgroup ept_mem_type EPT Memory Type
+ *
+ * This is a group that includes EPT Memory Type Definitions.
+ *
+ * @{
+ */
+
+/**
+ * @brief EPT memory type is specified in bits 5:3 of the EPT paging-structure entry.
+ */
 #define EPT_MT_SHIFT		3U
+
+/**
+ * @brief EPT memory type is uncacheable.
+ */
 #define EPT_UNCACHED		(0UL << EPT_MT_SHIFT)
+
+/**
+ * @brief EPT memory type is write combining.
+ */
 #define EPT_WC			(1UL << EPT_MT_SHIFT)
+
+/**
+ * @brief EPT memory type is write through.
+ */
 #define EPT_WT			(4UL << EPT_MT_SHIFT)
+
+/**
+ * @brief EPT memory type is write protected.
+ */
 #define EPT_WP			(5UL << EPT_MT_SHIFT)
+
+/**
+ * @brief EPT memory type is write back.
+ */
 #define EPT_WB			(6UL << EPT_MT_SHIFT)
+
+/**
+ * @}
+ */
+/* End of ept_mem_type */
+
 #define EPT_MT_MASK		(7UL << EPT_MT_SHIFT)
 /* VTD: Second-Level Paging Entries: Snoop Control */
 #define EPT_SNOOP_CTRL		(1UL << 11U)
 #define EPT_VE			(1UL << 63U)
-
-#define EPT_RWX			(EPT_RD | EPT_WR | EPT_EXE)
-
 
 #define PML4E_SHIFT		39U
 #define PTRS_PER_PML4E		512UL

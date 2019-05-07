@@ -90,7 +90,6 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data);
 void init_default_irqs(uint16_t cpu_id);
 
 void dispatch_exception(struct intr_excp_ctx *ctx);
-void dispatch_interrupt(const struct intr_excp_ctx *ctx);
 
 void setup_notification(void);
 void setup_posted_intr_notification(void);
@@ -100,14 +99,6 @@ extern spurious_handler_t spurious_handler;
 
 uint32_t alloc_irq_num(uint32_t req_irq);
 uint32_t alloc_irq_vector(uint32_t irq);
-
-
-/**
- * @brief Get vector number of an interupt from irq number
- *
- * @param[in]	irq	The irq_num to convert
- */
-uint32_t irq_to_vector(uint32_t irq);
 
 /* RFLAGS */
 #define HV_ARCH_VCPU_RFLAGS_IF              (1UL<<9U)
@@ -219,15 +210,6 @@ int32_t interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu);
 
-/**
- * @brief Initialize the interrupt
- *
- * To do interrupt initialization for a cpu, will be called for each physical cpu.
- *
- * @param[in]	pcpu_id The id of physical cpu to initialize
- */
-void init_interrupt(uint16_t pcpu_id);
-
 void cancel_event_injection(struct acrn_vcpu *vcpu);
 
 extern uint64_t irq_alloc_bitmap[IRQ_ALLOC_BITMAP_SIZE];
@@ -254,6 +236,14 @@ struct irq_desc {
 	uint64_t ctx_cs;
 #endif
 };
+
+/**
+ * @defgroup phys_int_ext_apis Physical Interrupt External Interfaces
+ *
+ * This is a group that includes Physical Interrupt External Interfaces.
+ *
+ * @{
+ */
 
 /**
  * @brief Request an interrupt
@@ -295,6 +285,37 @@ void free_irq(uint32_t irq);
  */
 void set_irq_trigger_mode(uint32_t irq, bool is_level_triggered);
 
+/**
+ * @brief Get vector number of an interrupt from irq number
+ *
+ * @param[in]	irq	The irq_num to convert
+ *
+ * @return vector number
+ */
+uint32_t irq_to_vector(uint32_t irq);
+
+/**
+ * @brief Dispatch interrupt
+ *
+ * To dispatch an interrupt, an action callback will be called if registered.
+ *
+ * @param ctx Pointer to interrupt exception context
+ */
+void dispatch_interrupt(const struct intr_excp_ctx *ctx);
+
+/**
+ * @brief Initialize interrupt
+ *
+ * To do interrupt initialization for a cpu, will be called for each physical cpu.
+ *
+ * @param[in]	pcpu_id The id of physical cpu to initialize
+ */
+void init_interrupt(uint16_t pcpu_id);
+
+/**
+ * @}
+ */
+/* End of phys_int_ext_apis */
 
 /**
  * @}

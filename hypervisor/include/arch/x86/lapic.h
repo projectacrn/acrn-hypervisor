@@ -76,22 +76,67 @@ union apic_icr {
 };
 
 /**
- * @brief Save context of lapic
+ * @defgroup lapic_ext_apis LAPIC External Interfaces
+ *
+ * This is a group that includes LAPIC External Interfaces.
+ *
+ * @{
+ */
+
+/**
+ * @brief Save context of LAPIC
  *
  * @param[inout]	regs	Pointer to struct lapic_regs to hold the
- *				context of current lapic
+ *				context of current LAPIC
  */
 void save_lapic(struct lapic_regs *regs);
+
+/**
+ * @brief Enable LAPIC in x2APIC mode
+ *
+ * Enable LAPIC in x2APIC mode via MSR writes.
+ *
+ */
 void early_init_lapic(void);
+
+/**
+ * @brief Suspend LAPIC
+ *
+ * Suspend LAPIC by getting the APIC base addr and saving the registers.
+ */
+void suspend_lapic(void);
+
+/**
+ * @brief Resume LAPIC
+ *
+ * Resume LAPIC by setting the APIC base addr and restoring the registers.
+ */
+void resume_lapic(void);
+
+/**
+ * @brief Get the LAPIC ID
+ *
+ * Get the LAPIC ID via MSR read.
+ *
+ * @return LAPIC ID
+ */
+uint32_t get_cur_lapic_id(void);
+
+/**
+ * @}
+ */
+/* End of lapic_ext_apis */
+
 void init_lapic(uint16_t pcpu_id);
 void send_lapic_eoi(void);
 
 /**
- * @brief Get the lapic id
+ * @defgroup ipi_ext_apis IPI External Interfaces
  *
- * @return lapic id
+ * This is a group that includes IPI External Interfaces.
+ *
+ * @{
  */
-uint32_t get_cur_lapic_id(void);
 
 /**
  * @brief Send an SIPI to a specific cpu
@@ -125,6 +170,11 @@ void send_dest_ipi_mask(uint32_t dest_mask, uint32_t vector);
 void send_single_ipi(uint16_t pcpu_id, uint32_t vector);
 
 /**
+ * @}
+ */
+/* End of ipi_ext_apis */
+
+/**
  * @brief Send an INIT signal to a single pCPU
  *
  * @param[in] pcpu_id The id of destination physical cpu
@@ -132,8 +182,5 @@ void send_single_ipi(uint16_t pcpu_id, uint32_t vector);
  * @return None
  */
 void send_single_init(uint16_t pcpu_id);
-
-void suspend_lapic(void);
-void resume_lapic(void);
 
 #endif /* INTR_LAPIC_H */

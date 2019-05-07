@@ -26,9 +26,19 @@ int32_t init_ioapic_id_info(void);
 uint8_t ioapic_irq_to_ioapic_id(uint32_t irq);
 
 /**
+ * @defgroup ioapic_ext_apis IOAPIC External Interfaces
+ *
+ * This is a group that includes IOAPIC External Interfaces.
+ *
+ * @{
+ */
+
+/**
  * @brief Get irq num from pin num
  *
  * @param[in]	pin The pin number
+ *
+ * @return irq number
  */
 uint32_t ioapic_pin_to_irq(uint32_t pin);
 
@@ -54,8 +64,24 @@ void ioapic_set_rte(uint32_t irq, union ioapic_rte rte);
  */
 void ioapic_get_rte(uint32_t irq, union ioapic_rte *rte);
 
+/**
+ * @brief Suspend ioapic
+ *
+ * Suspend ioapic, mainly save the RTEs.
+ */
 void suspend_ioapic(void);
+
+/**
+ * @brief Resume ioapic
+ *
+ * Resume ioapic, mainly restore the RTEs.
+ */
 void resume_ioapic(void);
+
+/**
+ * @}
+ */
+/* End of ioapic_ext_apis */
 
 void ioapic_gsi_mask_irq(uint32_t irq);
 void ioapic_gsi_unmask_irq(uint32_t irq);

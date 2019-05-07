@@ -165,20 +165,6 @@ of physical memory management.
 
    Data Flow of Hypervisor Physical Memory Management
 
-Data Structure Design
-=====================
-
-The page tables operation type:
-
-.. code-block:: c
-
-   enum _page_table_type {
-
-      PTT_HOST = 0,           /* Operations for MMU page tables */
-      PTT_EPT  = 1,           /* Operations for EPT page tables */
-      PAGETABLE_TYPE_UNKNOWN, /* Page tables operation type is unknown */
-   };
-
 Interfaces Design
 =================
 
@@ -354,44 +340,18 @@ the memory virtualization unit.
 Data Structure Design
 =====================
 
-EPT Memory Type Data Definition:
+EPT Memory Type Definition:
 
-.. code-block:: c
-
-   /* EPT memory type is specified in bits 5:3 of the last EPT
-    * paging-structure entry */
-   #define EPT_MT_SHIFT 3U
-
-   /* EPT memory type is uncacheable  */
-   #define EPT_UNCACHED (0UL << EPT_MT_SHIFT)
-
-   /* EPT memory type is write combining  */
-   #define EPT_WC (1UL << EPT_MT_SHIFT)
-
-   /* EPT memory type is write through */
-   #define EPT_WT (4UL << EPT_MT_SHIFT)
-
-   /* EPT memory type is write protected  */
-   #define EPT_WP (5UL << EPT_MT_SHIFT)
-
-   /* EPT memory type is write back */
-   #define EPT_WB (6UL << EPT_MT_SHIFT)
+.. doxygengroup:: ept_mem_type
+   :project: Project ACRN
+   :content-only:
 
 EPT Memory Access Right Definition:
 
-.. code-block:: c
+.. doxygengroup:: ept_mem_access_right
+   :project: Project ACRN
+   :content-only:
 
-   /* EPT memory access right is read-only */
-   #define EPT_RD (1UL << 0U)
-
-   /* EPT memory access right is read/write */
-   #define EPT_WR (1UL << 1U)
-
-   /* EPT memory access right is executable */
-   #define EPT_EXE (1UL << 2U)
-
-   /* EPT memory access right is read/write and executable */
-   define EPT_RWX (EPT_RD | EPT_WR | EPT_EXE)
 
 Interfaces Design
 =================
