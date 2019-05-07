@@ -386,71 +386,29 @@ IOAPIC
 The following APIs are external interfaces for IOAPIC related
 operations.
 
-.. code-block:: c
+.. doxygengroup:: ioapic_ext_apis
+   :project: Project ACRN
+   :content-only:
 
-   void ioapic_get_rte(uint32_t irq, union ioapic_rte *rte)
-      /*   get the redirection table entry of an irq. */
-
-   void ioapic_set_rte(uint32_t irq, union ioapic_rte rte)
-      /*   Set the redirection table entry of an irq. */
-
-   uint32_t pin_to_irq(uint8_t pin)
-      /*   Get irq num from physical irq pin num */
-
-   void suspend_ioapic(void)
-      /*   Suspended ioapic, mainly save the RTEs. */
-
-   void resume_ioapic(void)
-      /*   Resume ioapic, mainly restore the RTEs. */
-
-   int get_ioapic_info(char *str_arg, int str_max_len)
-      /*   Dump information of ioapic for debug, such as irq num, pin,
-       *   RTE, vector, trigger mode etc. For debugging only.
-       */
 
 LAPIC
 =====
 
 The following APIs are external interfaces for LAPIC related operations.
 
-.. code-block:: c
+.. doxygengroup:: lapic_ext_apis
+   :project: Project ACRN
+   :content-only:
 
-   void write_lapic_reg32(uint32_t offset, uint32_t value)
-      /*   Write to lapic register. */
-
-   void early_init_lapic(void)
-      /*   To get the local apic base addr, map lapic registers and check the
-       *   xAPIC/x2APIC capability.
-       */
-
-   void save_lapic(struct lapic_regs *regs)
-      /*   Save context of lapic before entering s3. */
-
-   void restore_lapic(struct lapic_regs *regs)
-      /*   Restore context of lapic when resume from s3. */
-
-   void resume_lapic(void)
-      /*   Resume lapic by setting the apic base addr and restore the registers. */
-
-   uint8_t get_cur_lapic_id(void)
-      /*   Get the lapic id. */
 
 IPI
 ===
 
 The following APIs are external interfaces for IPI related operations.
 
-.. code-block:: c
-
-   void send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
-                         uint16_t dest_pcpu_id, uint64_t cpu_startup_start_address)
-      /*   Send an SIPI to a specific cpu, to notify the cpu to start booting. */
-
-   void send_dest_ipi(uint32_t dest, uint32_t vector, uint32_t dest_mode)
-      /*   Send an IPI to a specific cpu with dest mode specified. */
-
-   void send_single_ipi(uint16_t pcpu_id, uint32_t vector)
-      /*   Send an IPI to a specific cpu with physical dest mode. */
+.. doxygengroup:: ipi_ext_apis
+   :project: Project ACRN
+   :content-only:
 
 
 Physical Interrupt
@@ -459,32 +417,7 @@ Physical Interrupt
 The following APIs are external interfaces for physical interrupt
 related operations.
 
-.. code-block:: c
+.. doxygengroup:: phys_int_ext_apis
+   :project: Project ACRN
+   :content-only:
 
-   int32_t request_irq(uint32_t req_irq, irq_action_t action_fn, void *priv_data,
-                       uint32_t flags)
-      /*   Request interrupt num if not specified, and register irq action for the
-       *   specified/allocated irq.
-       */
-
-   void free_irq(uint32_t irq)
-      /*   Free irq num and unregister the irq action. */
-
-   void set_irq_trigger_mode(uint32_t irq, bool is_level_triggered)
-      /*   Set the irq trigger mode: edge-triggered or level-triggered */
-
-   uint32_t irq_to_vector(uint32_t irq)
-      /*  Convert irq num to vector */
-
-   void get_cpu_interrupt_info(char *str_arg, int str_max)
-      /*  To dump interrupt statistics info, such as irq num, vector,
-       *  irq count on each physical cpu.
-       */
-
-   void dispatch_interrupt(struct intr_excp_ctx *ctx)
-      /*  To dispatch an interrupt, an action callback will be called if registered. */
-
-   void init_interrupt(uint16_t pcpu_id)
-      /*  To do interrupt initialization for a cpu, will be called for
-       *  each physical cpu.
-       */

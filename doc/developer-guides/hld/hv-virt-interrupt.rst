@@ -45,12 +45,9 @@ requests such as flush EPT.
 
 The eventid supported for virtual interrupt injection includes:
 
-.. code-block:: c
-
-   #define ACRN_REQUEST_EXCP   0  /* request for exception injection */
-   #define ACRN_REQUEST_EVENT  1  /* vLAPIC event */
-   #define ACRN_REQUEST_EXTINT 2  /* external interrupt from vPIC */
-   #define ACRN_REQUEST_NMI    3  /* non-maskable interrupt */
+.. doxygengroup:: virt_int_injection
+   :project: Project ACRN
+   :content-only:
 
 
 The *vcpu_make_request* is necessary for a virtual interrupt

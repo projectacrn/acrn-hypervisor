@@ -72,14 +72,59 @@
 /*
  * VCPU related APIs
  */
+
+/**
+ * @defgroup virt_int_injection Event ID supported for virtual interrupt injection
+ *
+ * This is a group that includes Event ID supported for virtual interrupt injection.
+ *
+ * @{
+ */
+
+/**
+ * @brief Request for exception injection
+ */
 #define ACRN_REQUEST_EXCP			0U
+
+/**
+ * @brief Request for vLAPIC event
+ */
 #define ACRN_REQUEST_EVENT			1U
+
+/**
+ * @brief Request for external interrupt from vPIC
+ */
 #define ACRN_REQUEST_EXTINT			2U
+
+/**
+ * @brief Request for non-maskable interrupt
+ */
 #define ACRN_REQUEST_NMI			3U
+
+/**
+ * @brief Request for EOI exit bitmap update
+ */
 #define ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE	4U
+
+/**
+ * @brief Request for EPT flush
+ */
 #define ACRN_REQUEST_EPT_FLUSH			5U
+
+/**
+ * @brief Request for triple fault
+ */
 #define ACRN_REQUEST_TRP_FAULT			6U
-#define ACRN_REQUEST_VPID_FLUSH			7U /* flush vpid tlb */
+
+/**
+ * @brief Request for VPID TLB flush
+ */
+#define ACRN_REQUEST_VPID_FLUSH			7U
+
+/**
+ * @}
+ */
+/* End of virt_int_injection */
 
 #define save_segment(seg, SEG_NAME)				\
 {								\
