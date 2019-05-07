@@ -175,7 +175,7 @@ void vuart_toggle_intr(const struct acrn_vuart *vu)
 	vioapic_set_irqline_lock(vu->vm, vu->irq, operation);
 }
 
-static void vuart_write_to_target(struct acrn_vuart *vu, uint8_t value_u8)
+static void send_to_target(struct acrn_vuart *vu, uint8_t value_u8)
 {
 	vuart_lock(vu);
 	if (vu->active) {
@@ -186,7 +186,7 @@ static void vuart_write_to_target(struct acrn_vuart *vu, uint8_t value_u8)
 	vuart_unlock(vu);
 }
 
-static uint8_t modem_status(uint8_t mcr)
+static uint8_t get_modem_status(uint8_t mcr)
 {
 	uint8_t msr;
 
@@ -233,7 +233,7 @@ static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 
 		if (!(vu->mcr & MCR_LOOPBACK) &&
 			(offset == UART16550_THR) && (target_vu != NULL)) {
-			vuart_write_to_target(target_vu, value_u8);
+			send_to_target(target_vu, value_u8);
 		} else {
 			vuart_lock(vu);
 			/*
@@ -282,7 +282,7 @@ static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 				case UART16550_MCR:
 					/* Apply mask so that bits 5-7 are 0 */
 					vu->mcr = value & 0x1F;
-					msr = modem_status(vu->mcr);
+					msr = get_modem_status(vu->mcr);
 					/*
 					 * Detect if there has been any change between the
 					 * previous and the new value of MSR. If there is
