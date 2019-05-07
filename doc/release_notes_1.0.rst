@@ -4,13 +4,14 @@ ACRN v1.0 (May 2019)
 ####################
 
 We are pleased to announce the release of Project ACRN version 1.0,
-a major ACRN project milestone focused on automotive application use.
+a major ACRN project milestone focused on automotive software-defined
+cockpit (SDC) use cases.
 
 ACRN is a flexible, lightweight reference hypervisor, built with
-real-time and safety-criticality in mind, optimized to streamline embedded 
+real-time and safety-criticality in mind, optimized to streamline embedded
 development through an open source platform. Check out the :ref:`introduction` for more information.
-All project ACRN source code is maintained in the https://github.com/projectacrn/acrn-hypervisor 
-repository and includes folders for the ACRN hypervisor, the ACRN device 
+All project ACRN source code is maintained in the https://github.com/projectacrn/acrn-hypervisor
+repository and includes folders for the ACRN hypervisor, the ACRN device
 model, tools, and documentation. You can either download this source code as
 a zip or tar.gz file (see the `ACRN v1.0 GitHub release page
 <https://github.com/projectacrn/acrn-hypervisor/releases/tag/v1.0>`_)
@@ -20,10 +21,10 @@ or use Git clone and checkout commands::
    cd acrn-hypervisor
    git checkout v1.0
 
-The project’s online technical documentation is also tagged to correspond 
-with a specific release: generated v1.0 documents can be found at https://projectacrn.github.io/1.0/. 
+The project's online technical documentation is also tagged to correspond
+with a specific release: generated v1.0 documents can be found at https://projectacrn.github.io/1.0/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
-ACRN v1.0 requires Clear Linux OS version 29070 or newer. Please follow the 
+ACRN v1.0 requires Clear Linux* OS version 29070 or newer. Please follow the
 instructions in the :ref:`getting-started-apl-nuc`.
 
 Version 1.0 major features
@@ -39,7 +40,7 @@ APL UP2 board with SBL firmware
 ACRN supports APL UP2 board with Slim Bootloader (SBL) firmware.
 Slim Bootloader is a modern, flexible, light-weight,
 open source reference bootloader that is also  fast, small,
-customizable, and secure. An end-to-end reference build has been verified 
+customizable, and secure. An end-to-end reference build has been verified
 on UP2/SBL board using ACRN hypervisor, Clear Linux OS as SOS, and Clear
 Linux OS as UOS. See the :ref:`using-sbl-up2` for step-by-step instructions.
 
@@ -47,7 +48,7 @@ Enable post-launched RTVM support for real-time UOS in ACRN
 ===========================================================
 This release provides initial patches enabling a User OS (UOS) running as a
 virtual machine (VM) with real-time characteristics,
-also called a “post-launched RTVM”. We’ve published a tutorial
+also called a "post-launched RTVM". We've published a tutorial
 :ref:`rt_linux_setup`. More patches for ACRN real time support will continue.
 
 Enable cache QOS with CAT
@@ -61,14 +62,14 @@ values to certain MSRs using the ``wrmsr`` command on ACRN shell.
 
 Enable QoS based on runC container
 ==================================
-ACRN supports Device-Model QoS based on runC container to control 
+ACRN supports Device-Model QoS based on runC container to control
 the SOS resources (CPU, Storage, MEM, NET) by modifying the runC configuration file,
 configuration guide will be published in next release.
 
 S5 support for RTVM
 ===================
 ACRN supports a Real-time VM (RTVM) shutting itself down. A RTVM is a kind
-of VM that the SOS can’t interfere with at runtime, and as such, only the
+of VM that the SOS can't interfere with at runtime, and as such, only the
 RTVM can power itself off internally. All power-off requests external to the
 RTVM will be rejected to avoid any interference.
 
@@ -86,11 +87,11 @@ S3/S5 flow, following the ACPI spec.
 
 VT-x, VT-d
 ==========
-Based on Intel VT-x virtualization technology, ACRN emulates a virtual CPU 
+Based on Intel VT-x virtualization technology, ACRN emulates a virtual CPU
 with core partitioning. VT-d provides hardware support
-for isolating and restricting device accesses to only the owner of the 
-partition managing the device. It allows assigning I/O devices to a VM, 
-and extending the protection and isolation properties of VMs for 
+for isolating and restricting device accesses to only the owner of the
+partition managing the device. It allows assigning I/O devices to a VM,
+and extending the protection and isolation properties of VMs for
 I/O operations.
 
 PIC/IOAPIC/MSI/MSI-X/PCI/LAPIC
@@ -99,21 +100,21 @@ ACRN hypervisor supports virtualized APIC-V, EPT, IOAPIC, and LAPIC functionalit
 
 Ethernet
 ========
-ACRN hypervisor supports virtualized Ethernet functionality. The Ethernet 
-Mediator is executed in the Service OS and provides packet forwarding between 
+ACRN hypervisor supports virtualized Ethernet functionality. The Ethernet
+Mediator is executed in the Service OS and provides packet forwarding between
 the physical networking devices (Ethernet, Wi-Fi, etc.) and virtual devices in
-the Guest VMs (also called “User OS”). The HW platform physical connection can be shared
+the Guest VMs (also called "User OS"). The HW platform physical connection can be shared
 with Linux, Android by Service OS guests for regular (i.e. non-AVB) traffic.
 
 Mass Storage
 ============
-ACRN hypervisor supports virtualized non-volatile R/W storage for the Service 
-OS and Guest OS instances, supporting VM private storage and/or storage shared 
+ACRN hypervisor supports virtualized non-volatile R/W storage for the Service
+OS and Guest OS instances, supporting VM private storage and/or storage shared
 between Guest OS instances.
 
 USB (xDCI)
 ==========
-ACRN hypervisor supports pass-through of xDCI 
+ACRN hypervisor supports pass-through of xDCI
 controllers to a Guest OS from the platform.
 
 USB Mediator (xHCI)
@@ -130,7 +131,7 @@ provides access of third-party devices to the TCU (if applicable) provided conne
 
 IPU (MIPI CSI-2, HDMI-in)
 =========================
-ACRN hypervisor provide an IPU mediator to share with Guest OS. Altenatively, IPU
+ACRN hypervisor provide an IPU mediator to share with Guest OS. Alternatively, IPU
 can also be configured as pass-through to Guest OS without sharing.
 
 Bluetooth
@@ -140,24 +141,24 @@ OS (for example, for In-Vehicle Infotainment or IVI use cases).
 
 GVT-g for ACRN
 ==============
-GVT-g for ACRN (a.k.a AcrnGT) is a feature to enable GPU sharing Service OS 
-and User OS, so both can run GPU workload simultaneously. Direct display is 
-supported by AcrnGT, where the Service OS and User OS are each assigned to 
+GVT-g for ACRN (a.k.a AcrnGT) is a feature to enable GPU sharing Service OS
+and User OS, so both can run GPU workload simultaneously. Direct display is
+supported by AcrnGT, where the Service OS and User OS are each assigned to
 a different display. The display ports support eDP and HDMI. See :ref:`APL_GVT-g-hld`
 for more information.
 
 GPU - Preemption
 ================
-GPU Preemption is one typical automotive use case which requires the system 
-to preempt GPU resources occupied by lower priority workloads. This is done 
-to ensure performance of the most critical workload can be achieved. Three 
-different schedulers for the GPU are involved: i915 UOS scheduler, Mediator 
+GPU Preemption is one typical automotive use case which requires the system
+to preempt GPU resources occupied by lower priority workloads. This is done
+to ensure performance of the most critical workload can be achieved. Three
+different schedulers for the GPU are involved: i915 UOS scheduler, Mediator
 GVT scheduler, and i915 SOS scheduler.
 
 GPU - display surface sharing via Hyper DMA
 ===========================================
-Surface sharing is one typical automotive use case which requires that the 
-SOS accesses an individual surface or a set of surfaces from the UOS without 
+Surface sharing is one typical automotive use case which requires that the
+SOS accesses an individual surface or a set of surfaces from the UOS without
 having to access the entire frame buffer of the UOS. It leverages hyper_DMABUF,
 a Linux kernel driver running on multiple VMs and expands DMA-BUFFER sharing
 capability to inter-VM.
@@ -167,9 +168,9 @@ Virtio standard is supported
 Virtio framework is widely used in ACRN, allowing devices beyond network and
 storage to be shared to UOS in a standard way. Many mediators in ACRN follow
 the virtio spec. Virtio-based virtualization is called para-virtualization.
-Virtio is a virtualization standard for network and disk device drivers where 
-the guest’s device driver “knows” it is running in a virtual environment, and 
-cooperates with the hypervisor. The SOS and UOS can share physical LAN network 
+Virtio is a virtualization standard for network and disk device drivers where
+the guest's device driver "knows" it is running in a virtual environment, and
+cooperates with the hypervisor. The SOS and UOS can share physical LAN network
 and physical eMMC storage device. (See :ref:`virtio-hld` for more information.)
 
 Device pass-through support
@@ -178,15 +179,15 @@ Device pass-through to UOS supported with help of VT-d.
 
 GPIO virtualization
 ===================
-GPIO virtualization is supported as para-virtualization based on the Virtual 
+GPIO virtualization is supported as para-virtualization based on the Virtual
 I/O Device (VIRTIO) specification. The GPIO consumers of the Front-end are able
-to set or get GPIO values, directions, and configuration via one virtual GPIO 
-controller. In the Back-end, the GPIO command line in the launch script can be 
+to set or get GPIO values, directions, and configuration via one virtual GPIO
+controller. In the Back-end, the GPIO command line in the launch script can be
 modified to map native GPIO to UOS. (See :ref:`virtio-hld` for more information.)
 
 New ACRN tools
 ==============
-We’ve added a collection of support tools including ``acrnctl``, ``acrntrace``, ``acrnlog``,
+We've added a collection of support tools including ``acrnctl``, ``acrntrace``, ``acrnlog``,
 ``acrn-crashlog``, ``acrnprobe``. (See :ref:`tools` for details.)
 
 Document updates
@@ -200,7 +201,7 @@ We have many reference documents `available
 * :ref:`Using PREEMPT_RT-Linux for real-time UOS <rt_linux_setup>`
 * :ref:`Frequently Asked Questions <faq>`
 * :ref:`An introduction to Trusty and Security services on ACRN <trusty-security-services>`
-* A Wiki article about `Porting ClearLinux/ACRN to support Yocto/ACRN
+* A Wiki article about `Porting Clear Linux/ACRN to support Yocto Project/ACRN
   <https://github.com/projectacrn/acrn-hypervisor/wiki/Yocto-based-Service-OS-(SOS)-and-User-OS-(UOS)-on-ACRN>`_
 * An `ACRN brochure update (English and Chinese)
   <https://projectacrn.org/#code-docs>`_
@@ -251,7 +252,7 @@ New Features Details
 - :acrn-issue:`1711` - msix.c use MMIO read/write APIs to access MMIO registers
 - :acrn-issue:`1812` - export kdf_sha256 interface from crypto lib
 - :acrn-issue:`1815` - improve emulation of I/O port CF9
-- :acrn-issue:`1824` - implement “wbinvd” emulation
+- :acrn-issue:`1824` - implement "wbinvd" emulation
 - :acrn-issue:`1832` - Add OVMF booting support for booting as an alternative to vSBL.
 - :acrn-issue:`1882` - Extend the SOS CMA range from 64M to 128M
 - :acrn-issue:`1915` - Enable Audio Mediator
@@ -260,7 +261,7 @@ New Features Details
 - :acrn-issue:`2011` - support DISCARD command for virtio-blk
 - :acrn-issue:`2020` - DM: Enable QoS in ACRN, based on runC container
 - :acrn-issue:`2056` - Enable SMAP in hypervisor
-- :acrn-issue:`2170` - For UEFI based hardware platforms, one Clear Linux OS E2E build binary can be used for all platform’s installation
+- :acrn-issue:`2170` - For UEFI based hardware platforms, one Clear Linux OS E2E build binary can be used for all platform's installation
 - :acrn-issue:`2176` - Fix RTC issues in ACPI
 - :acrn-issue:`2319` - Add vHPET support
 - :acrn-issue:`2351` - Enable post-launched hybrid mode
@@ -293,8 +294,8 @@ Fixed Issues Details
 - :acrn-issue:`1126` - VPCI coding style and bugs fixes for partition mode
 - :acrn-issue:`1209` - specific PCI device failed to passthrough to UOS
 - :acrn-issue:`1268` - GPU hangs when running GfxBench Car Chase in SOS and UOS.
-- :acrn-issue:`1270` - SOS and UOS play video but don’t display video animation output on monitor.
-- :acrn-issue:`1319` - SD card pass-through: UOS can’t see SD card after UOS reboot.
+- :acrn-issue:`1270` - SOS and UOS play video but don't display video animation output on monitor.
+- :acrn-issue:`1319` - SD card pass-through: UOS can't see SD card after UOS reboot.
 - :acrn-issue:`1339` - SOS failed to boot with SSD+NVMe boot devices on KBL NUC
 - :acrn-issue:`1432` - SOS failed boot
 - :acrn-issue:`1774` - UOS cannot stop by command: acrnctl stop [vm name] in SOS
@@ -306,17 +307,17 @@ Fixed Issues Details
 - :acrn-issue:`1780` - Some video formats cannot be played in SOS.
 - :acrn-issue:`1781` - Can not recognize the SD card in the SOS
 - :acrn-issue:`1782` - UOS failed to get ip with the pass-throughed network card
-- :acrn-issue:`1792` - System hang and reboot after run “LaaG Forced GPU Reset: subtest error-state-capture-vebox” in UOS
-- :acrn-issue:`1794` - After SOS boots up, there’s no output on SOS screen
+- :acrn-issue:`1792` - System hang and reboot after run "LaaG Forced GPU Reset: subtest error-state-capture-vebox" in UOS
+- :acrn-issue:`1794` - After SOS boots up, there's no output on SOS screen
 - :acrn-issue:`1795` - SOS fails to get IP address
 - :acrn-issue:`1796` - APL NUC fails to reboot sometimes
 - :acrn-issue:`1825` - Need to clear memory region used by UOS before it exit
-- :acrn-issue:`1837` - ‘acrnctl list’ shows incomplete VM names
+- :acrn-issue:`1837` - 'acrnctl list' shows incomplete VM names
 - :acrn-issue:`1986` - UOS will hang once watchdog reset triggered
 - :acrn-issue:`1987` - UOS will have same MAC address after launching UOS with virio-net
-- :acrn-issue:`1996` - [APLNUC/KBLNUC/APLUP2]There is an error log when using “acrnd&” to boot UOS
+- :acrn-issue:`1996` - [APLNUC/KBLNUC/APLUP2]There is an error log when using "acrnd&" to boot UOS
 - :acrn-issue:`1999` - [APLNUC][KBLNUC][APLUP2]UOS reset fails with acrnctl reset command
-- :acrn-issue:`2000` - After launching UOS with Audio pass-through, Device (I2C0) doesn’t exist in UOS DSDT.dsl
+- :acrn-issue:`2000` - After launching UOS with Audio pass-through, Device (I2C0) doesn't exist in UOS DSDT.dsl
 - :acrn-issue:`2030` - UP2 fails to boot with uart=disabled for hypervisor
 - :acrn-issue:`2031` - UP2 serial port has no output
 - :acrn-issue:`2043` - Fix incorrect vm_id captured when sampling PMU data
@@ -325,21 +326,21 @@ Fixed Issues Details
 - :acrn-issue:`2133` - The system will hang up and print some error info after boot UOS
 - :acrn-issue:`2157` - Profiling: fix the profiling tool crash by page faults
 - :acrn-issue:`2168` - Modify Makefile to save debug files
-- :acrn-issue:`2200` - Won’t build using ubuntu 16.04 LTS and binutils 2.26.1
-- :acrn-issue:`2237` - Don’t export two dma_bufs for the same importer in sos kernel
+- :acrn-issue:`2200` - Won't build using ubuntu 16.04 LTS and binutils 2.26.1
+- :acrn-issue:`2237` - Don't export two dma_bufs for the same importer in sos kernel
 - :acrn-issue:`2257` - Profiling code clean up
 - :acrn-issue:`2276` - OVMF failed to launch UOS on UP2
 - :acrn-issue:`2277` - [APLNUC]Launch UOS with 5G memory will hang 2 minutes
 - :acrn-issue:`2298` - Hard codes path to iasl
 - :acrn-issue:`2298` - Hardcodes path to iasl
-- :acrn-issue:`2316` - Tools don’t respect CFLAGS/LDFLAGS from environment
+- :acrn-issue:`2316` - Tools don't respect CFLAGS/LDFLAGS from environment
 - :acrn-issue:`2338` - [UP2]Lost 2G memory in SOS when using SBL as bootloader on UP2
 - :acrn-issue:`2341` - vm exit trace position is not correct
 - :acrn-issue:`2349` - SOS failed boot up with RELOC config enabled.
 - :acrn-issue:`2355` - Switch the default up-notification vector from 0xF7 to 0xF3
 - :acrn-issue:`2356` - fail to start UOS on the renamed device name of VHM module
-- :acrn-issue:`2370` - Doesn’t use parallel make in subbuilds
-- :acrn-issue:`2371` - kconfig oldconfig doesn’t work correctly
+- :acrn-issue:`2370` - Doesn't use parallel make in subbuilds
+- :acrn-issue:`2371` - kconfig oldconfig doesn't work correctly
 - :acrn-issue:`2389` - Need to add the dependency of $(LIB_FLAGS)
 - :acrn-issue:`2410` - Launch UOS will occur page fault error when use the hypervisor build on Ubuntu
 - :acrn-issue:`2422` - [PATCH] profiling: fix the system freeze issue when running profiling tool
@@ -347,7 +348,7 @@ Fixed Issues Details
 - :acrn-issue:`2453` - Fix vHPET memory leak on device reset
 - :acrn-issue:`2455` - host call stack disappear when dumping
 - :acrn-issue:`2474` - Need to capture dropped sample info while profiling
-- :acrn-issue:`2490` - systemd virtualization detection doesn’t work
+- :acrn-issue:`2490` - systemd virtualization detection doesn't work
 - :acrn-issue:`2516` - [UP2][SBL] System hang with DP monitor connected
 - :acrn-issue:`2522` - Start ias in SOS, no display
 - :acrn-issue:`2523` - UOS monitor does not display when using ias
@@ -360,7 +361,7 @@ Fixed Issues Details
 - :acrn-issue:`2597` - Return PIPEDSL from HW register instead of cached memory for Guest VGPU
 - :acrn-issue:`2606` - HV crash during running VMM related Hypercall fuzzing test.
 - :acrn-issue:`2624` - Loading PCI devices with table_count > CONFIG_MAX_MSIX_TABLE_NUM leads to writing outside of struct.
-- :acrn-issue:`2643` - Ethernet pass-through, network card can’t get ip in uos
+- :acrn-issue:`2643` - Ethernet pass-through, network card can't get ip in uos
 - :acrn-issue:`2674` - VGPU needs the lock when updating ppggt/ggtt to avoid the race condition
 - :acrn-issue:`2695` - UOS powers off or suspend while pressing power key, UOS has no response
 - :acrn-issue:`2704` - Possible memory leak issues
@@ -371,7 +372,7 @@ Fixed Issues Details
 - :acrn-issue:`2829` - The ACRN hypervisor shell interactive help is rather terse
 - :acrn-issue:`2830` - Warning when building the hypervisor
 - :acrn-issue:`2851` - [APL/KBL/UP2][HV][LaaG]Uos cannot boot when acrnctl add Long_VMName of more than 26
-- :acrn-issue:`2870` - Use ‘sha512sum’ for validating all virtual bootloaders
+- :acrn-issue:`2870` - Use 'sha512sum' for validating all virtual bootloaders
 
 Known Issues
 ************
