@@ -53,6 +53,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.uuid = {0x49U, 0x5aU, 0xe2U, 0xe5U, 0x26U, 0x03U, 0x4dU, 0x64U,	\
 			 0xafU, 0x76U, 0xd4U, 0xbcU, 0x5aU, 0x8eU, 0xc0U, 0xe5U},
 			/* 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 */
+
+		/* The hard RTVM must be launched as VM2 */
+		.guest_flags = GUEST_FLAG_HIGHEST_SEVERITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = INVALID_COM_BASE,
