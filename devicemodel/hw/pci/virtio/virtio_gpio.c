@@ -620,7 +620,7 @@ virtio_gpio_cfgread(void *vdev, int offset, int size, uint32_t *retval)
 static struct virtio_ops virtio_gpio_ops = {
 	"virtio_gpio",			/* our name */
 	VIRTIO_GPIO_MAXQ,		/* we support VTGPIO_MAXQ virtqueues */
-	sizeof(struct virtio_gpio_config), /* config reg size */
+	0, 				/* config reg size */
 	virtio_gpio_reset,		/* reset */
 	NULL,				/* device-wide qnotify */
 	virtio_gpio_cfgread,		/* read virtio config */
@@ -1374,7 +1374,7 @@ virtio_gpio_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	/* Allocate PIO space for GPIO */
-	virtio_gpio_ops.cfgsize += GPIO_PIO_SIZE;
+	virtio_gpio_ops.cfgsize = sizeof(struct virtio_gpio_config) + GPIO_PIO_SIZE;
 
 	/* use BAR 0 to map config regs in IO space */
 	virtio_set_io_bar(&gpio->base, 0);
