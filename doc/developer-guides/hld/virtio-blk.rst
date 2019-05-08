@@ -63,8 +63,11 @@ Usage:
 
 The device model configuration command syntax for virtio-blk is::
 
-   -s <slot>,virtio-blk,<filepath>[,options]
+   -s <slot>,virtio-blk,[,b,]<filepath>[,options]
 
+- ``b``: when using ``vsbl`` as the virtual bootloader, use this
+  immediately after ``virtio-blk`` to specify it as a bootable
+  device and the bootable image location.
 - ``filepath`` is the path of a file or disk partition
 - ``options`` include:
 
