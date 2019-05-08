@@ -51,9 +51,8 @@ steps:
 
       # acrnlog -n 8 -s 4 &
 
-You can use ``get_loglevel`` and ``set_loglevel`` commands
-in the hypervisor shell (not the Service OS shell)
-to query and change the hypervisor log level.
+You can use ``loglevel`` command in the hypervisor shell (not the Service
+OS shell) to query and change the hypervisor log level.
 
 The ``mem_loglevel`` parameter controls the log to be saved using
 ``acrnlog``, while the ``console_loglevel`` parameter controls the log
@@ -62,11 +61,11 @@ can use these commands:
 
 .. code-block:: none
 
-   ACRN:\>get_loglevel
-   console_loglevel: 2, mem_loglevel: 4
-   ACRN:\>set_loglevel 2 5
-   ACRN:\>get_loglevel
-   console_loglevel: 2, mem_loglevel: 5
+   ACRN:\>loglevel
+   console_loglevel: 3, mem_loglevel: 5, npk_loglevel: 5
+   ACRN:\>loglevel 2 5
+   ACRN:\>loglevel
+   console_loglevel: 2, mem_loglevel: 5, npk_loglevel: 5
 
 
 Permanent log file changes
