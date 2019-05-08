@@ -5,8 +5,6 @@
  */
 
 #include <vm_config.h>
-#include <vm_configurations.h>
-#include <acrn_common.h>
 #include <vuart.h>
 
 struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
