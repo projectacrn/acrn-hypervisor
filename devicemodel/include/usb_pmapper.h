@@ -106,6 +106,8 @@ struct usb_dev_sys_ctx_info {
 	usb_dev_sys_cb disconn_cb;
 	usb_dev_sys_cb notify_cb;
 	usb_dev_sys_cb intr_cb;
+	usb_dev_sys_cb lock_ep_cb;
+	usb_dev_sys_cb unlock_ep_cb;
 
 	libusb_device **devlist;
 
@@ -118,6 +120,8 @@ struct usb_dev_sys_ctx_info {
 /* intialize the usb_dev subsystem and register callbacks for HCD layer */
 int usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 		usb_dev_sys_cb notify_cb, usb_dev_sys_cb intr_cb,
+		usb_dev_sys_cb lock_ep_cb,
+		usb_dev_sys_cb unlock_ep_cb,
 		void *hci_data, int log_level);
 void usb_dev_sys_deinit(void);
 void *usb_dev_init(void *pdata, char *opt);

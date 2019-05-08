@@ -201,6 +201,7 @@ struct pci_xhci_dev_ep {
 #define	ep_sctx_trbs	_ep_trb_rings._epu_sctx_trbs
 
 	struct usb_data_xfer *ep_xfer;	/* transfer chain */
+	pthread_mutex_t mtx;
 };
 
 /* device context base address array: maps slot->device context */
@@ -958,6 +959,42 @@ pci_xhci_usb_dev_intr_cb(void *hci_data, void *udev_data)
 	return 0;
 }
 
+static int
+pci_xhci_usb_dev_lock_ep_cb(void *hci_data, void *udev_data)
+{
+	struct pci_xhci_dev_emu *edev;
+	struct pci_xhci_dev_ep	*ep;
+	int			epid;
+
+	edev = hci_data;
+	epid = *((int *)udev_data);
+
+	if (edev && edev->xdev && epid > 0 && epid < 32) {
+		ep = &edev->eps[epid];
+		pthread_mutex_lock(&ep->mtx);
+	}
+
+	return 0;
+}
+
+static int
+pci_xhci_usb_dev_unlock_ep_cb(void *hci_data, void *udev_data)
+{
+	struct pci_xhci_dev_emu	*edev;
+	struct pci_xhci_dev_ep	*ep;
+	int			epid;
+
+	edev = hci_data;
+	epid = *((int *)udev_data);
+
+	if (edev && edev->xdev && epid > 0 && epid < 32) {
+		ep = &edev->eps[epid];
+		pthread_mutex_unlock(&ep->mtx);
+	}
+
+	return 0;
+}
+
 static struct pci_xhci_dev_emu*
 pci_xhci_dev_create(struct pci_xhci_vdev *xdev, void *dev_data)
 {
@@ -1473,7 +1510,7 @@ pci_xhci_get_dev_ctx(struct pci_xhci_vdev *xdev, uint32_t slot)
 	devctx_addr = xdev->opregs.dcbaa_p->dcba[slot];
 
 	if (devctx_addr == 0) {
-		UPRINTF(LDBG, "get_dev_ctx devctx_addr == 0\r\n");
+		UPRINTF(LDBG, "get_dev_ctx devctx_addr == 0 slot %d\r\n", slot);
 		return NULL;
 	}
 
@@ -1536,15 +1573,35 @@ pci_xhci_deassert_interrupt(struct pci_xhci_vdev *xdev)
 static int
 pci_xhci_init_ep(struct pci_xhci_dev_emu *dev, int epid)
 {
-	struct xhci_dev_ctx    *dev_ctx;
-	struct pci_xhci_dev_ep *devep;
-	struct xhci_endp_ctx   *ep_ctx;
-	uint32_t	pstreams;
-	int		i;
+	struct xhci_dev_ctx	*dev_ctx;
+	struct pci_xhci_dev_ep	*devep;
+	struct xhci_endp_ctx	*ep_ctx;
+	pthread_mutexattr_t	attr;
+	uint32_t		pstreams;
+	int			i, rc;
 
 	dev_ctx = dev->dev_ctx;
 	ep_ctx = &dev_ctx->ctx_ep[epid];
 	devep = &dev->eps[epid];
+
+	rc = pthread_mutexattr_init(&attr);
+	if (rc) {
+		UPRINTF(LFTL, "%s: mutexattr init failed %d\r\n", __func__, rc);
+		return -1;
+	}
+
+	rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	if (rc) {
+		UPRINTF(LFTL, "%s: mutexattr set failed %d\r\n", __func__, rc);
+		return -1;
+	}
+
+	rc = pthread_mutex_init(&devep->mtx, &attr);
+	if (rc) {
+		UPRINTF(LFTL, "%s: mutexlock init failed %d\r\n", __func__, rc);
+		return -1;
+	}
+
 	pstreams = XHCI_EPCTX_0_MAXP_STREAMS_GET(ep_ctx->dwEpCtx0);
 	if (pstreams > 0) {
 		UPRINTF(LDBG, "init_ep %d with pstreams %d\r\n",
@@ -1572,16 +1629,20 @@ pci_xhci_init_ep(struct pci_xhci_dev_emu *dev, int epid)
 	}
 
 	if (devep->ep_xfer == NULL) {
-		devep->ep_xfer = malloc(sizeof(struct usb_data_xfer));
+		devep->ep_xfer = calloc(1, sizeof(struct usb_data_xfer));
 		if (devep->ep_xfer) {
-			USB_DATA_XFER_INIT(devep->ep_xfer);
 			devep->ep_xfer->dev = (void *)dev;
 			devep->ep_xfer->epid = epid;
 			devep->ep_xfer->magic = USB_DROPPED_XFER_MAGIC;
 		} else
-			return -1;
+			goto errout;
 	}
+
 	return 0;
+
+errout:
+	pthread_mutex_destroy(&devep->mtx);
+	return -1;
 }
 
 static void
@@ -1592,12 +1653,13 @@ pci_xhci_disable_ep(struct pci_xhci_dev_emu *dev, int epid)
 	struct xhci_endp_ctx   *ep_ctx;
 
 	UPRINTF(LDBG, "pci_xhci disable_ep %d\r\n", epid);
-
 	dev_ctx = dev->dev_ctx;
 	ep_ctx = &dev_ctx->ctx_ep[epid];
 	ep_ctx->dwEpCtx0 = (ep_ctx->dwEpCtx0 & ~0x7) | XHCI_ST_EPCTX_DISABLED;
 
 	devep = &dev->eps[epid];
+	pthread_mutex_lock(&devep->mtx);
+
 	if (XHCI_EPCTX_0_MAXP_STREAMS_GET(ep_ctx->dwEpCtx0) > 0 &&
 		devep->ep_sctx_trbs != NULL)
 		free(devep->ep_sctx_trbs);
@@ -1608,7 +1670,8 @@ pci_xhci_disable_ep(struct pci_xhci_dev_emu *dev, int epid)
 		devep->ep_xfer = NULL;
 	}
 
-	memset(devep, 0, sizeof(struct pci_xhci_dev_ep));
+	pthread_mutex_unlock(&devep->mtx);
+	pthread_mutex_destroy(&devep->mtx);
 }
 
 /* reset device at slot and data structures related to it */
@@ -2143,11 +2206,14 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 		      struct xhci_trb *trb)
 {
 	struct pci_xhci_dev_emu	*dev;
-	struct pci_xhci_dev_ep *devep;
+	struct pci_xhci_dev_ep	*devep;
 	struct xhci_dev_ctx	*dev_ctx;
 	struct xhci_endp_ctx	*ep_ctx;
-	uint32_t	cmderr, epid;
-	uint32_t	type;
+	struct usb_data_xfer	*xfer;
+	struct usb_dev_req	*r;
+	uint32_t cmderr, epid;
+	uint32_t type;
+	int i;
 
 	epid = XHCI_TRB_3_EP_GET(trb->dwTrb3);
 
@@ -2182,15 +2248,20 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 		goto done;
 	}
 
-	/* FIXME: Currently nothing to do when Stop Endpoint Command is
-	 * received. Will refine it strictly according to xHCI spec.
-	 */
-	if (type == XHCI_TRB_TYPE_STOP_EP)
-		goto done;
-
 	devep = &dev->eps[epid];
-	if (devep->ep_xfer != NULL)
-		USB_DATA_XFER_RESET(devep->ep_xfer);
+	pthread_mutex_lock(&devep->mtx);
+
+	xfer = devep->ep_xfer;
+	for (i = 0; i < USB_MAX_XFER_BLOCKS; ++i) {
+		r = xfer->requests[i];
+		if (r && r->trn)
+			/* let usb_dev_comp_req to free the memory */
+			libusb_cancel_transfer(r->trn);
+	}
+	memset(xfer, 0, sizeof(*xfer));
+
+	if (devep->ep_xfer)
+		memset(devep->ep_xfer, 0, sizeof(*devep->ep_xfer));
 
 	ep_ctx->dwEpCtx0 = (ep_ctx->dwEpCtx0 & ~0x7) | XHCI_ST_EPCTX_STOPPED;
 
@@ -2200,6 +2271,7 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 	UPRINTF(LDBG, "reset ep[%u] %08x %08x %016lx %08x\r\n",
 		epid, ep_ctx->dwEpCtx0, ep_ctx->dwEpCtx1, ep_ctx->qwEpCtx2,
 		ep_ctx->dwEpCtx4);
+	pthread_mutex_unlock(&devep->mtx);
 
 done:
 	return cmderr;
@@ -2589,7 +2661,6 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 	int rem_len = 0;
 
 	dev_ctx = pci_xhci_get_dev_ctx(xdev, slot);
-
 	assert(dev_ctx != NULL);
 
 	ep_ctx = &dev_ctx->ctx_ep[epid];
@@ -2751,7 +2822,7 @@ pci_xhci_try_usb_xfer(struct pci_xhci_vdev *xdev,
 	do_intr = 0;
 
 	xfer = devep->ep_xfer;
-	USB_DATA_XFER_LOCK(xfer);
+	pthread_mutex_lock(&devep->mtx);
 
 	/* outstanding requests queued up */
 	if (dev->dev_ue->ue_data != NULL) {
@@ -2772,12 +2843,11 @@ pci_xhci_try_usb_xfer(struct pci_xhci_vdev *xdev,
 			if (err == XHCI_TRB_ERROR_SUCCESS && do_intr)
 				pci_xhci_assert_interrupt(xdev);
 
-			/* XXX should not do it if error? */
-			USB_DATA_XFER_RESET(xfer);
+			memset(xfer, 0, sizeof(*xfer));
 		}
 	}
 
-	USB_DATA_XFER_UNLOCK(xfer);
+	pthread_mutex_unlock(&devep->mtx);
 	return err;
 }
 
@@ -2806,7 +2876,7 @@ pci_xhci_handle_transfer(struct pci_xhci_vdev *xdev,
 					 XHCI_ST_EPCTX_RUNNING, 0x7, 0);
 
 	xfer = devep->ep_xfer;
-	USB_DATA_XFER_LOCK(xfer);
+	pthread_mutex_lock(&devep->mtx);
 
 	UPRINTF(LDBG, "handle_transfer slot %u\r\n", slot);
 
@@ -2991,23 +3061,19 @@ errout:
 		UPRINTF(LDBG, "[%d]: event ring full\r\n", __LINE__);
 
 	if (!do_retry)
-		USB_DATA_XFER_UNLOCK(xfer);
+		pthread_mutex_unlock(&devep->mtx);
 
 	if (do_intr)
 		pci_xhci_assert_interrupt(xdev);
 
 	if (do_retry) {
 		if (epid == 1)
-			USB_DATA_XFER_RESET(xfer);
+			memset(xfer, 0, sizeof(*xfer));
 
 		UPRINTF(LDBG, "[%d]: retry:continuing with next TRBs\r\n",
 			 __LINE__);
 		goto retry;
 	}
-
-	if (epid == 1)
-		USB_DATA_XFER_RESET(xfer);
-
 	return err;
 }
 
@@ -4116,6 +4182,8 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 				pci_xhci_native_usb_dev_disconn_cb,
 				pci_xhci_usb_dev_notify_cb,
 				pci_xhci_usb_dev_intr_cb,
+				pci_xhci_usb_dev_lock_ep_cb,
+				pci_xhci_usb_dev_unlock_ep_cb,
 				xdev, usb_get_log_level()) < 0) {
 		error = -3;
 		goto done;

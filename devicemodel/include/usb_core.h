@@ -163,6 +163,7 @@ struct usb_data_xfer_block {
 struct usb_data_xfer {
 	uint64_t magic;
 	struct usb_data_xfer_block data[USB_MAX_XFER_BLOCKS];
+	struct usb_dev_req *requests[USB_MAX_XFER_BLOCKS];
 	struct usb_device_request *ureq;	/* setup ctl request */
 	int	ndata;				/* # of data items */
 	int	head;
@@ -171,7 +172,6 @@ struct usb_data_xfer {
 	int     epid;		/* related endpoint id */
 	int     pid;		/* token id */
 	int	status;
-	pthread_mutex_t mtx;
 };
 
 struct usb_devpath {
@@ -206,28 +206,6 @@ enum USB_ERRCODE {
 ((x)->processed = ((x)->processed & 0xFF) | (e << 8))
 
 #define	USB_DATA_OK(x, i)	((x)->data[(i)].buf != NULL)
-
-#define	USB_DATA_XFER_INIT(x)	do {					   \
-		pthread_mutexattr_t attr;				   \
-		pthread_mutexattr_init(&attr);				   \
-		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE); \
-		memset((x), 0, sizeof(*(x)));				   \
-		pthread_mutex_init(&((x)->mtx), &attr);			   \
-	} while (0)
-
-#define	USB_DATA_XFER_RESET(x)	do {					\
-			pthread_mutex_lock(&((x)->mtx));		\
-			memset((x)->data, 0, sizeof((x)->data));	\
-			(x)->ndata = 0;					\
-			(x)->head = (x)->tail = 0;			\
-			pthread_mutex_unlock((&(x)->mtx));		\
-		} while (0)
-
-#define	USB_DATA_XFER_LOCK(x)	\
-	pthread_mutex_lock(&((x)->mtx))
-
-#define	USB_DATA_XFER_UNLOCK(x)	\
-	pthread_mutex_unlock(&((x)->mtx))
 
 #define LOG_TAG "USB: "
 #define LFTL 0
