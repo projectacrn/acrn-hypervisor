@@ -193,7 +193,6 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 	/* async transfer */
 	xfer = r->xfer;
 	assert(xfer);
-	assert(xfer->dev);
 
 	maxp = usb_dev_get_ep_maxp(r->udev, r->in, xfer->epid / 2);
 	if (trn->type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS) {
@@ -210,7 +209,6 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 			USB_MAX_XFER_BLOCKS, r->buf_length, trn->status);
 
 	/* lock for protecting the transfer */
-	USB_DATA_XFER_LOCK(xfer);
 	xfer->status = USB_ERR_NORMAL_COMPLETION;
 
 	switch (trn->status) {
@@ -228,7 +226,7 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 		goto stall_out;
 	case LIBUSB_TRANSFER_CANCELLED:
 		xfer->status = USB_ERR_IOERROR;
-		goto out;
+		goto cancel_out;
 	case LIBUSB_TRANSFER_TIMED_OUT:
 		xfer->status = USB_ERR_TIMEOUT;
 		goto out;
@@ -242,6 +240,7 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 		break;
 	}
 
+	g_ctx.lock_ep_cb(xfer->dev, &xfer->epid);
 	for (i = 0; i < trn->num_iso_packets; i++)
 		UPRINTF(LDBG, "iso_frame %d len %u act_len %u\n", i,
 				trn->iso_packet_desc[i].length,
@@ -313,12 +312,15 @@ out:
 	if (do_intr && g_ctx.intr_cb)
 		g_ctx.intr_cb(xfer->dev, NULL);
 
+cancel_out:
 	/* unlock and release memory */
-	USB_DATA_XFER_UNLOCK(xfer);
+	g_ctx.unlock_ep_cb(xfer->dev, &xfer->epid);
 	libusb_free_transfer(trn);
+
 	if (r && r->buffer)
 		free(r->buffer);
 
+	xfer->requests[r->blk_start] = NULL;
 	free(r);
 }
 
@@ -842,6 +844,7 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 	r->buf_length = data_size;
 	r->blk_start = blk_start;
 	r->blk_count = blk_count;
+	xfer->requests[blk_start] = r;
 	UPRINTF(LDBG, "%s: transfer_length %d ep%d-transfer (%d-%d %d) request"
 			"-%d (%d-%d %d) direction %s type %s\r\n", __func__,
 			data_size, epctx, xfer->head, (xfer->tail - 1) %
@@ -1227,6 +1230,7 @@ usb_dev_native_sys_disconn_cb(struct libusb_context *ctx, struct libusb_device
 int
 usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 		usb_dev_sys_cb notify_cb, usb_dev_sys_cb intr_cb,
+		usb_dev_sys_cb lock_ep_cb, usb_dev_sys_cb unlock_ep_cb,
 		void *hci_data, int log_level)
 {
 	libusb_hotplug_event native_conn_evt;
@@ -1257,6 +1261,8 @@ usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 	g_ctx.disconn_cb   = disconn_cb;
 	g_ctx.notify_cb    = notify_cb;
 	g_ctx.intr_cb      = intr_cb;
+	g_ctx.lock_ep_cb   = lock_ep_cb;
+	g_ctx.unlock_ep_cb = unlock_ep_cb;
 
 	num_devs = usb_dev_scan_dev(&g_ctx.devlist);
 	UPRINTF(LINF, "found %d devices before Guest OS booted\r\n", num_devs);
