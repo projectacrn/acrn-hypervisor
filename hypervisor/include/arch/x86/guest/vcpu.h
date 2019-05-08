@@ -50,7 +50,6 @@
 
 #ifndef ASSEMBLER
 
-#include <types.h>
 #include <acrn_common.h>
 #include <guest_memory.h>
 #include <virtual_cr.h>

@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <types.h>
 #include <acrn_common.h>
 #include <default_acpi_info.h>
 #include <platform_acpi_info.h>

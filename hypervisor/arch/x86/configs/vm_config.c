@@ -5,7 +5,6 @@
  */
 
 #include <vm_config.h>
-#include <acrn_common.h>
 #include <logmsg.h>
 #include <cat.h>
 
