@@ -15,7 +15,7 @@ mac_seed=${mac:9:8}-${vm_name}
 
 #check if the vm is running or not
 vm_ps=$(pgrep -a -f acrn-dm)
-result=$(echo $vm_ps | grep "${vm_name}")
+result=$(echo $vm_ps | grep -w "${vm_name}")
 if [[ "$result" != "" ]]; then
   echo "$vm_name is running, can't create twice!"
   exit
