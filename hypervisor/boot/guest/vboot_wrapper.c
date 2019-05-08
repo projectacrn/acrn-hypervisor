@@ -12,6 +12,7 @@
 #include <vboot.h>
 #include <direct_boot.h>
 #include <deprivilege_boot.h>
+#include <logmsg.h>
 
 #define BOOTLOADER_NUM 4U
 #define BOOTLOADER_NAME_SIZE 20U
@@ -42,18 +43,22 @@ void init_vboot_operations(void)
 	};
 
 	mbi = (struct multiboot_info *)hpa2hva((uint64_t)boot_regs[1]);
-	for (i = 0U; i < BOOTLOADER_NUM; i++) {
-		if (strncmp(hpa2hva(mbi->mi_loader_name), vboot_bootloader_maps[i].bootloader_name,
-			strnlen_s(vboot_bootloader_maps[i].bootloader_name, BOOTLOADER_NAME_SIZE)) == 0) {
-			/* Only support two vboot mode */
-			if (vboot_bootloader_maps[i].mode == DEPRI_BOOT_MODE) {
-				vboot_ops = get_deprivilege_boot_ops();
-				sos_boot_mode = DEPRI_BOOT_MODE;
-			} else {
-				vboot_ops = get_direct_boot_ops();
-				sos_boot_mode = DIRECT_BOOT_MODE;
+	if (mbi == NULL) {
+		panic("No multiboot info");
+	} else {
+		for (i = 0U; i < BOOTLOADER_NUM; i++) {
+			if (strncmp(hpa2hva(mbi->mi_loader_name), vboot_bootloader_maps[i].bootloader_name,
+				strnlen_s(vboot_bootloader_maps[i].bootloader_name, BOOTLOADER_NAME_SIZE)) == 0) {
+				/* Only support two vboot mode */
+				if (vboot_bootloader_maps[i].mode == DEPRI_BOOT_MODE) {
+					vboot_ops = get_deprivilege_boot_ops();
+					sos_boot_mode = DEPRI_BOOT_MODE;
+				} else {
+					vboot_ops = get_direct_boot_ops();
+					sos_boot_mode = DIRECT_BOOT_MODE;
+				}
+				break;
 			}
-			break;
 		}
 	}
 }

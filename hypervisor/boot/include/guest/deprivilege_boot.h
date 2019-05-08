@@ -12,7 +12,7 @@
 struct depri_boot_context {
 	struct acrn_vcpu_regs vcpu_regs;
 	void *rsdp;
-	void *ap_trampoline_buf;
+	uint64_t ap_trampoline_buf;
 } __packed;
 
 const struct depri_boot_context *get_depri_boot_ctx(void);

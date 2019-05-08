@@ -26,13 +26,13 @@ static void init_depri_boot(void)
 	struct multiboot_info *mbi = NULL;
 
 	if (!depri_initialized) {
-		parse_hv_cmdline();
+		(void)parse_hv_cmdline();
 
 		mbi = (struct multiboot_info *) hpa2hva(((uint64_t)(uint32_t)boot_regs[1]));
-		if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_DRIVES) == 0U) {
+		if ((mbi == NULL) || ((mbi->mi_flags & MULTIBOOT_INFO_HAS_DRIVES) == 0U)) {
 			pr_err("no multiboot drivers for depri_boot found");
 		} else {
-			memcpy_s(&depri_boot_ctx, sizeof(struct depri_boot_context),
+			(void)memcpy_s(&depri_boot_ctx, sizeof(struct depri_boot_context),
 				hpa2hva((uint64_t)mbi->mi_drives_addr),
 					sizeof(struct depri_boot_context));
 			save_lapic(&depri_boot_lapic_regs);
@@ -55,7 +55,7 @@ const struct lapic_regs *get_depri_boot_lapic_regs(void)
 
 static uint64_t get_depri_boot_ap_trampoline(void)
 {
-	return (uint64_t)(depri_boot_ctx.ap_trampoline_buf);
+	return depri_boot_ctx.ap_trampoline_buf;
 }
 
 static void* get_depri_boot_rsdp(void)
@@ -63,7 +63,7 @@ static void* get_depri_boot_rsdp(void)
 	return hpa2hva((uint64_t)(depri_boot_ctx.rsdp));
 }
 
-static void depri_boot_spurious_handler(int32_t vector)
+static void depri_boot_spurious_handler(uint32_t vector)
 {
 	if (get_pcpu_id() == BOOT_CPU_ID) {
 		struct acrn_vcpu *vcpu = per_cpu(vcpu, BOOT_CPU_ID);
