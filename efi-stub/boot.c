@@ -271,7 +271,7 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 	if (addr < 4096)
 		Print(L"Warning: CPU trampoline code buf occupied zero-page\n");
 
-	efi_ctx->ap_trampoline_buf = (void *)addr;
+	efi_ctx->ap_trampoline_buf = addr;
 
 	config_table = sys_table->ConfigurationTable;
 
