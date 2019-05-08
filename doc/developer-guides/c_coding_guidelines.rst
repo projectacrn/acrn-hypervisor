@@ -3441,6 +3441,74 @@ Compliant example::
        };
 
 
+C-NC-08: Function name shall be descriptive
+===========================================
+
+Function name shall be descriptive and clearly indicate the purpose of the
+function. Some detailed rules are listed below:
+
+1) If the function is doing actions, it shall be named with one of the following
+   formats:
+
+   a) <verb>_<nouns>, such as 'init_vmcs'.
+   b) <verb>_<adjective>_<nouns>, such as 'init_primary_pcpu'.
+2) If the function is doing checks, it shall be named with one of the following
+   formats:
+
+   a) is_<nouns>, such as 'is_space'.
+   b) is_<nouns>_<adjective>, such as 'is_pcpu_active'.
+3) If the function is doing conversions, it shall be named with one of the
+   following formats:
+
+   a) <nouns>_to_<nouns>, such as 'irq_to_vector'.
+   b) <nouns>2<nouns>, such as 'gva2gpa'.
+4) If the function is specific for one module and the name is not descriptive
+   enough with prior rules, it shall be named with the module name as prefix, such
+   as 'vie_read_mmio'.
+5) If the function is a wrapper of inline Assembly codes, it shall be named with
+   the format 'asm_<Assembly instruction mnemonic>', such as 'asm_pause'.
+6) <nouns> mentioned in prior rules may either be one noun or multiple nouns, as
+   long as it could clearly illustrate the object.
+
+Compliant example::
+
+    uint32_t init_vmcs(uint32_t param);
+    
+    uint32_t init_primary_pcpu(uint32_t param);
+    
+    bool is_space(uint32_t param);
+    
+    bool is_pcpu_active(uint32_t param);
+    
+    uint32_t vie_read_mmio(uint32_t param);
+    
+    uint32_t irq_to_vector(uint32_t param);
+    
+    uint32_t gva2gpa(uint32_t param);
+    
+    uint32_t asm_pause(uint32_t param);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t vmcs_init(uint32_t param);
+       
+       uint32_t primary_pcpu_init(uint32_t param);
+       
+       bool space(uint32_t param);
+       
+       bool pcpu_active(uint32_t param);
+       
+       uint32_t vie_mmio_read(uint32_t param);
+       
+       uint32_t from_irq_to_vector(uint32_t param);
+       
+       uint32_t get_gpa_based_on_gva(uint32_t param);
+       
+       uint32_t pause(uint32_t param);
+
+
 Implementation-specific Behaviors
 *********************************
 
