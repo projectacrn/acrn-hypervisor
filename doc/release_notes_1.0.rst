@@ -3,9 +3,16 @@
 ACRN v1.0 (May 2019)
 ####################
 
-We are pleased to announce the release of Project ACRN version 1.0,
-a major ACRN project milestone focused on automotive software-defined
-cockpit (SDC) use cases.
+We are pleased to announce the release of ACRN version 1.0, a key
+Project ACRN milestone focused on automotive Software-Defined Cockpit
+(SDC) use cases and introducing additional architecture enhancements for
+Industrial and IoT usages.
+
+This v1.0 release is a production-ready reference solution for SDC
+usages that require multiple VMs and rich I/O mediation for device
+sharing including GPU and USB devices. It also includes architectural
+enhancements for scaling into new usages including Industrial real-time
+support and diverse IoT workload consolidation.
 
 ACRN is a flexible, lightweight reference hypervisor, built with
 real-time and safety-criticality in mind, optimized to streamline embedded
@@ -32,8 +39,9 @@ Version 1.0 major features
 
 Hardware Support
 ================
-Apollo Lake NUC, Apollo Lake UP Squared (UP2) board and
-Kaby Lake NUC are supported. (See :ref:`hardware` for supported platform details.)
+ACRN supports multiple x86 platforms and has been tested with Apollo
+Lake and Kaby Lake NUCs, and the UP Squared board.
+(See :ref:`hardware` for supported platform details.)
 
 APL UP2 board with SBL firmware
 ===============================
