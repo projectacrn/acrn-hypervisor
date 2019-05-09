@@ -6,7 +6,7 @@ ACRN v1.0 (May 2019)
 We are pleased to announce the release of ACRN version 1.0, a key
 Project ACRN milestone focused on automotive Software-Defined Cockpit
 (SDC) use cases and introducing additional architecture enhancements for
-Industrial and IoT usages.
+more IOT usages, such as Industrial.
 
 This v1.0 release is a production-ready reference solution for SDC
 usages that require multiple VMs and rich I/O mediation for device
