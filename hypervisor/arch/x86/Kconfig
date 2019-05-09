@@ -147,15 +147,6 @@ config COM_IRQ
 	help
 	  IRQ of the vuart port.
 
-config MALLOC_ALIGN
-	int "Block size in the heap for malloc()"
-	range 8 32
-	default 16
-
-config HEAP_SIZE
-	hex "Capacity of the heap for malloc()"
-	default 0x100000
-
 config CONSOLE_LOGLEVEL_DEFAULT
 	int "Default loglevel on the serial console"
 	depends on !RELEASE
