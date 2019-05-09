@@ -38,6 +38,7 @@
 #include <sysexits.h>
 #include <stdbool.h>
 #include <getopt.h>
+#include <sys/ioctl.h>
 
 #include "vmmapi.h"
 #include "sw_load.h"
@@ -695,10 +696,20 @@ vm_loop(struct vmctx *ctx)
 static int
 num_vcpus_allowed(struct vmctx *ctx)
 {
-	/* TODO: add ioctl to get gerneric information including
-	 * virtual cpus, now hardcode
-	 */
-	return VM_MAXCPU;
+	int err;
+	uint16_t max_cpu;
+	struct platform_info info;
+
+	err = ioctl(ctx->fd, IC_GET_PLATFORM_INFO, &info);
+	if (err != 0) {
+		/* Use VM_MAXCPU as default */
+		max_cpu = VM_MAXCPU;
+		printf("Failed to get max vcpu from HV, use default: %d. errno(%d)\n", max_cpu, err);
+	} else {
+		max_cpu = info.max_vcpus_per_vm;
+	}
+
+	return max_cpu;
 }
 
 static void
