@@ -185,7 +185,6 @@ C_SRCS += arch/x86/vmx.c
 C_SRCS += arch/x86/cpu_state_tbl.c
 C_SRCS += arch/x86/pm.c
 S_SRCS += arch/x86/wakeup.S
-C_SRCS += arch/x86/static_checks.c
 C_SRCS += arch/x86/trampoline.c
 S_SRCS += arch/x86/sched.S
 C_SRCS += arch/x86/guest/vcpuid.c
@@ -224,8 +223,6 @@ C_SRCS += common/trusty_hypercall.c
 C_SRCS += common/schedule.c
 C_SRCS += common/vm_load.c
 C_SRCS += common/ptdev.c
-C_SRCS += common/static_checks.c
-
 ifdef STACK_PROTECTOR
 C_SRCS += common/stack_protector.c
 endif
@@ -263,6 +260,8 @@ ifneq ($(CONFIG_RELEASE),y)
 CFLAGS += -DHV_DEBUG -DPROFILING_ON -fno-omit-frame-pointer
 endif
 S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(S_SRCS))
+PRE_BUILD_SRCS += pre_build/static_checks.c
+PRE_BUILD_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(PRE_BUILD_SRCS))
 
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 VERSION := $(HV_OBJDIR)/include/version.h
@@ -302,7 +301,7 @@ else
 endif
 
 .PHONY: all
-all: lib $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
+all: pre_build lib $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
 ifeq ($(FIRMWARE),sbl)
 install: lib $(HV_OBJDIR)/$(HV_FILE).32.out
@@ -321,6 +320,9 @@ else
 	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)/usr/lib/acrn/$(HV_FILE).sbl.map
 endif
 endif
+
+.PHONY: pre_build
+pre_build: $(PRE_BUILD_OBJS)
 
 .PHONY: header
 header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
