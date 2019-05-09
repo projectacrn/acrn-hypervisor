@@ -9,6 +9,25 @@
 #include <logmsg.h>
 #include <per_cpu.h>
 #include <vm_reset.h>
+#include <default_acpi_info.h>
+#include <platform_acpi_info.h>
+
+/* host reset register defined in ACPI */
+static struct acpi_reset_reg host_reset_reg = {
+	.reg = {
+		.space_id = RESET_REGISTER_SPACE_ID,
+		.bit_width = RESET_REGISTER_BIT_WIDTH,
+		.bit_offset = RESET_REGISTER_BIT_OFFSET,
+		.access_size = RESET_REGISTER_ACCESS_SIZE,
+		.address = RESET_REGISTER_ADDRESS,
+	},
+	.val = RESET_REGISTER_VALUE
+};
+
+struct acpi_reset_reg *get_host_reset_reg_data(void)
+{
+	return &host_reset_reg;
+}
 
 /**
  * @pre vm != NULL
@@ -74,6 +93,7 @@ static bool handle_reset_reg_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, __
 		/*
 		 * - keyboard control/status register 0x64: ACRN doesn't expose kbd controller to the guest.
 		 * - reset control register 0xcf9: hide this from guests for now.
+		 * - FADT reset register: the read behavior is not defined in spec, keep it simple to return all '1'.
 		 */
 		vcpu->req.reqs.pio.value = ~0U;
 	}
@@ -131,6 +151,24 @@ static bool handle_cf9_write(struct acrn_vm *vm, __unused uint16_t addr, size_t 
 	return handle_common_reset_reg_write(vm, ((bytes == 1U) && ((val & 0x4U) == 0x4U) && ((val & 0xaU) != 0U)));
 }
 
+static bool handle_reset_reg_write(__unused struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
+{
+	if (bytes == 1U) {
+		if (val == host_reset_reg.val) {
+			/* ignore reset request */
+		} else {
+			/*
+			 * ACPI defines the reset value but doesn't specify the meaning of other values.
+			 * in the case the reset register (e.g. PIO 0xB2) has other purpose other than reset,
+			 * we can't ignore the write with other values.
+			 */
+			pio_write8((uint8_t)val, addr);
+		}
+	}
+
+	return true;
+}
+
 /**
  * @pre vm != NULL
  */
@@ -138,6 +176,8 @@ void register_reset_port_handler(struct acrn_vm *vm)
 {
 	/* Don't support SOS and pre-launched VM re-launch for now. */
 	if (!is_postlaunched_vm(vm) || is_rt_vm(vm)) {
+		struct acpi_generic_address *gas = &(host_reset_reg.reg);
+
 		struct vm_io_range io_range = {
 			.flags = IO_ATTR_RW,
 			.len = 1U
@@ -148,6 +188,23 @@ void register_reset_port_handler(struct acrn_vm *vm)
 
 		io_range.base = 0xcf9U;
 		register_pio_emulation_handler(vm, CF9_PIO_IDX, &io_range, handle_reset_reg_read, handle_cf9_write);
+
+		/*
+		 * - pre-launched VMs don't support ACPI;
+		 * - ACPI reset register is fixed at 0xcf9 for post-launched VMs;
+		 * - here is taking care of SOS only:
+		 *   Don't support MMIO or PCI based reset register for now.
+		 *   ACPI Spec: Register_Bit_Width must be 8 and Register_Bit_Offset must be 0.
+		 */
+		if (is_sos_vm(vm) &&
+			(gas->space_id == SPACE_SYSTEM_IO) &&
+			(gas->bit_width == 8U) && (gas->bit_offset == 0U) &&
+			(gas->address != 0xcf9U) && (gas->address != 0x64U)) {
+
+			io_range.base = (uint16_t)host_reset_reg.reg.address;
+			register_pio_emulation_handler(vm, PIO_RESET_REG_IDX, &io_range,
+					handle_reset_reg_read, handle_reset_reg_write);
+		}
 	}
 }
 

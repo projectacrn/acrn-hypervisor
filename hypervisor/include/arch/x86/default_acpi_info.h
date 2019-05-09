@@ -48,4 +48,9 @@
 #define S5_PKG_VAL_PM1B		0U
 #define S5_PKG_RESERVED		0U
 
+/* reset register */
+#define RESET_REGISTER_BIT_WIDTH	0x08U
+#define RESET_REGISTER_BIT_OFFSET	0U
+#define RESET_REGISTER_ACCESS_SIZE	0x01U
+
 #endif	/* DEFAULT_ACPI_INFO_H */

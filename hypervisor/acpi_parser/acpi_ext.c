@@ -35,6 +35,7 @@
 #include <logmsg.h>
 #include <host_pm.h>
 #include <acrn_common.h>
+#include <vm_reset.h>
 
 /* Per ACPI spec:
  * There are two fundamental types of ACPI tables:
@@ -56,6 +57,8 @@
 
 /* FACP field offsets */
 #define OFFSET_FACS_ADDR	36U
+#define OFFSET_RESET_REGISTER	116U
+#define OFFSET_RESET_VALUE	128U
 #define OFFSET_FACS_X_ADDR	132U
 #define OFFSET_PM1A_EVT         148U
 #define OFFSET_PM1A_CNT         172U
@@ -153,6 +156,15 @@ void acpi_fixup(void)
 		if (facs_addr != NULL) {
 			sx_data->wake_vector_32 = (uint32_t *)(facs_addr + OFFSET_WAKE_VECTOR_32);
 			sx_data->wake_vector_64 = (uint64_t *)(facs_addr + OFFSET_WAKE_VECTOR_64);
+		}
+
+		const struct acpi_table_header *table = (const struct acpi_table_header *)facp_addr;
+
+		if (table->revision >= 2U) {
+			struct acpi_reset_reg *rr_data = get_host_reset_reg_data();
+
+			get_acpi_dt_gas(facp_addr, OFFSET_RESET_REGISTER, &(rr_data->reg));
+			rr_data->val = *(facp_addr + OFFSET_RESET_VALUE);
 		}
 	}
 }
