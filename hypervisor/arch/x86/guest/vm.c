@@ -417,7 +417,9 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		/* Create virtual uart;*/
 		vuart_init(vm, vm_config->vuart);
 
-		vrtc_init(vm);
+		if (is_rt_vm(vm) || !is_postlaunched_vm(vm)) {
+			vrtc_init(vm);
+		}
 
 		vpci_init(vm);
 
