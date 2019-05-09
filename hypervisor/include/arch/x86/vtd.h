@@ -457,6 +457,9 @@ static inline uint16_t dma_frcd_up_sid(uint64_t up_sid)
 	return ((uint16_t)up_sid & 0xffffU);
 }
 
+#define MAX_DRHDS		4
+#define MAX_DRHD_DEVSCOPES	4
+
 #define DMAR_CONTEXT_TRANSLATION_TYPE_TRANSLATED 0x00U
 #define DMAR_CONTEXT_TRANSLATION_TYPE_RESERVED 0x01U
 #define DMAR_CONTEXT_TRANSLATION_TYPE_PASSED_THROUGH 0x02U
@@ -515,6 +518,10 @@ union dmar_ir_entry {
 };
 
 extern struct dmar_info *get_dmar_info(void);
+
+#ifdef CONFIG_DMAR_PARSE_ENABLED
+int32_t parse_dmar_table(struct dmar_info *plat_dmar_info);
+#endif
 
 /**
  * @file vtd.h

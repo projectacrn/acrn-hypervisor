@@ -68,7 +68,6 @@ struct acpi_dmar_device_scope {
 
 typedef int32_t (*dmar_iter_t)(struct acpi_dmar_header*, void*);
 
-static struct dmar_info dmar_info_parsed;
 static int32_t dmar_unit_cnt;
 
 static void
@@ -236,15 +235,9 @@ handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 	drhd->reg_base_addr = acpi_drhd->address;
 
 	dev_count = get_drhd_dev_scope_cnt(acpi_drhd);
+	ASSERT(dev_count <= MAX_DRHD_DEVSCOPES, "parsed dev_count > MAX_DRHD_DEVSCOPES");
+
 	drhd->dev_cnt = dev_count;
-	if (dev_count) {
-		drhd->devices =
-			calloc(dev_count, sizeof(struct dmar_dev_scope));
-		ASSERT(drhd->devices, "");
-	} else {
-		drhd->devices = NULL;
-		return 0;
-	}
 
 	remaining = acpi_drhd->header.length -
 			sizeof(struct acpi_dmar_hardware_unit);
@@ -281,20 +274,16 @@ handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 	return 0;
 }
 
-static int32_t parse_dmar_table(void)
+int32_t parse_dmar_table(struct dmar_info *plat_dmar_info)
 {
 	int32_t i;
 	struct acpi_dmar_hardware_unit *acpi_drhd;
 
 	/* find out how many dmar units */
 	dmar_iterate_tbl(drhd_count_iter, NULL);
+	ASSERT(dmar_unit_cnt <= MAX_DRHDS, "parsed dmar_unit_cnt > MAX_DRHDS");
 
-	/* alloc memory for dmar uint */
-	dmar_info_parsed.drhd_units =
-		calloc(dmar_unit_cnt, sizeof(struct dmar_drhd));
-	ASSERT(dmar_info_parsed.drhd_units, "");
-
-	dmar_info_parsed.drhd_count = dmar_unit_cnt;
+	plat_dmar_info->drhd_count = dmar_unit_cnt;
 
 	for (i = 0; i < dmar_unit_cnt; i++) {
 		acpi_drhd = drhd_find_by_index(i);
@@ -303,21 +292,10 @@ static int32_t parse_dmar_table(void)
 		if (acpi_drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK)
 			ASSERT((i+1) == dmar_unit_cnt,
 				"drhd with flags set should be the last one");
-		handle_one_drhd(acpi_drhd, &dmar_info_parsed.drhd_units[i]);
+		handle_one_drhd(acpi_drhd, &(plat_dmar_info->drhd_units[i]));
 	}
 
 	return 0;
 }
 
-/**
- * @post return != NULL
- * @post return->drhd_count > 0U
- */
-struct dmar_info *get_dmar_info(void)
-{
-	if (dmar_info_parsed.drhd_count == 0) {
-		parse_dmar_table();
-	}
-	return &dmar_info_parsed;
-}
 #endif
