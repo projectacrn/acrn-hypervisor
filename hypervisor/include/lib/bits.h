@@ -29,7 +29,8 @@
 
 #ifndef BITS_H
 #define BITS_H
-#include <cpu.h>
+#include <atomic.h>
+
 /**
  *
  * INVALID_BIT_INDEX means when input paramter is zero,

@@ -29,7 +29,9 @@
 
 #ifndef ATOMIC_H
 #define ATOMIC_H
-#include <cpu.h>
+#include <types.h>
+
+#define	BUS_LOCK	"lock ; "
 
 #define build_atomic_load(name, size, type)		\
 static inline type name(const volatile type *ptr)	\
