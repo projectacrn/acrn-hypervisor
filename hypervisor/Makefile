@@ -156,6 +156,7 @@ C_SRCS += scenarios/$(SCENARIO_NAME)/pt_dev.c
 endif
 
 C_SRCS += boot/acpi.c
+C_SRCS += boot/dmar_info.c
 C_SRCS += boot/dmar_parse.c
 C_SRCS += boot/cmdline.c
 C_SRCS += boot/guest/vboot_wrapper.c
@@ -242,8 +243,6 @@ C_SRCS += dm/vpci/vhostbridge.c
 C_SRCS += dm/vpci/pci_pt.c
 C_SRCS += dm/vpci/vmsi.c
 C_SRCS += dm/vpci/vmsix.c
-
-C_SRCS += bsp/const_dmar.c
 
 # retpoline support
 ifeq (true, $(shell [ $(GCC_MAJOR) -eq 7 ] && [ $(GCC_MINOR) -ge 3 ] && echo true))

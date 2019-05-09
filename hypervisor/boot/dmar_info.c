@@ -7,11 +7,6 @@
 #include <vtd.h>
 #include <platform_acpi_info.h>
 
-#ifndef CONFIG_DMAR_PARSE_ENABLED
-
-#define MAX_DRHDS		4
-#define MAX_DRHD_DEVSCOPES	4
-
 static struct dmar_dev_scope drhd0_dev_scope[MAX_DRHD_DEVSCOPES] = {
 	{
 		.bus = DRHD0_DEVSCOPE0_BUS,
@@ -125,7 +120,7 @@ static struct dmar_drhd drhd_info_array[MAX_DRHDS] = {
 	}
 };
 
-static struct dmar_info sbl_dmar_info = {
+static struct dmar_info plat_dmar_info = {
 	.drhd_count = DRHD_COUNT,
 	.drhd_units = drhd_info_array,
 };
@@ -136,6 +131,8 @@ static struct dmar_info sbl_dmar_info = {
  */
 struct dmar_info *get_dmar_info(void)
 {
-	return &sbl_dmar_info;
-}
+#ifdef CONFIG_DMAR_PARSE_ENABLED
+	parse_dmar_table(&plat_dmar_info);
 #endif
+	return &plat_dmar_info;
+}
