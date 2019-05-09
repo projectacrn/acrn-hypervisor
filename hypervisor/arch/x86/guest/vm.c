@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <sprintf.h>
 #include <vm.h>
+#include <vm_reset.h>
 #include <bits.h>
 #include <e820.h>
 #include <multiboot.h>
@@ -422,6 +423,8 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		}
 
 		vpci_init(vm);
+
+		register_reset_port_handler(vm);
 
 		/* vpic wire_mode default is INTR */
 		vm->wire_mode = VPIC_WIRE_INTR;

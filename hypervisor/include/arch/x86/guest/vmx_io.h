@@ -24,7 +24,9 @@
 #define PM1B_CNT_PIO_IDX		(PM1B_EVT_PIO_IDX + 1U)
 #define RTC_PIO_IDX			(PM1B_CNT_PIO_IDX + 1U)
 #define VIRTUAL_PM1A_CNT_PIO_IDX	(RTC_PIO_IDX + 1U)
-#define EMUL_PIO_IDX_MAX		(VIRTUAL_PM1A_CNT_PIO_IDX + 1U)
+#define KB_PIO_IDX			(VIRTUAL_PM1A_CNT_PIO_IDX + 1U)
+#define CF9_PIO_IDX			(KB_PIO_IDX + 1U)
+#define EMUL_PIO_IDX_MAX		(CF9_PIO_IDX + 1U)
 
 /**
  * @brief The handler of VM exits on I/O instructions

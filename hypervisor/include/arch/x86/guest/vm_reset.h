@@ -7,6 +7,7 @@
 #ifndef VM_RESET_H_
 #define VM_RESET_H_
 
+void register_reset_port_handler(struct acrn_vm *vm);
 void shutdown_vm_from_idle(uint16_t pcpu_id);
 
 #endif /* VM_RESET_H_ */
