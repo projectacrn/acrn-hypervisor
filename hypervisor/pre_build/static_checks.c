@@ -68,3 +68,4 @@ CTASSERT(CPU_CONTEXT_OFFSET_LDTR - CPU_CONTEXT_OFFSET_EXTCTX_START
 CTASSERT((sizeof(struct trusty_startup_param)
 		+ sizeof(struct trusty_key_info)) < 0x1000U);
 CTASSERT(NR_WORLD == 2);
+CTASSERT(sizeof(struct vhm_request) == (4096U/VHM_REQUEST_MAX));
