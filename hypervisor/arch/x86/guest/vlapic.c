@@ -2212,6 +2212,7 @@ static bool apicv_basic_inject_intr(struct acrn_vlapic *vlapic,
 	uint32_t vector = 0U;
 	bool ret = injected;
 	if (guest_irq_enabled && (!injected)) {
+		vlapic_update_ppr(vlapic);
 		if (vlapic_find_deliverable_intr(vlapic, &vector)) {
 			exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID | vector);
 			vlapic_get_deliverable_intr(vlapic, vector);
@@ -2320,6 +2321,8 @@ static bool apicv_basic_has_pending_delivery_intr(struct acrn_vcpu *vcpu)
 {
 	uint32_t vector;
 	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
+
+	vlapic_update_ppr(vlapic);
 
 	/* check and raise request if we have a deliverable irq in LAPIC IRR */
 	if (vlapic_find_deliverable_intr(vlapic, &vector)) {
@@ -2535,16 +2538,8 @@ void vlapic_update_tpr_threshold(const struct acrn_vlapic *vlapic)
 
 int32_t tpr_below_threshold_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
-
-	vlapic_update_ppr(vlapic);
-	/*
-	 * Once we come here, the vTPR must small than IRR.
-	 * set TPR threshold to 0 to bypass VM-Execution Control Fields check
-	 * since vcpu_inject_vlapic_int will update TPR threshold aright.
-	 */
-	exec_vmwrite32(VMX_TPR_THRESHOLD, 0U);
 	vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
+	vcpu_retain_rip(vcpu);
 
 	return 0;
 }
