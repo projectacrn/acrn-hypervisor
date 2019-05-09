@@ -12,6 +12,7 @@
 #include <vcpu.h>
 #include <vm.h>
 #include <vmexit.h>
+#include <vm_reset.h>
 #include <vmx_io.h>
 #include <ept.h>
 #include <vtd.h>
@@ -24,6 +25,7 @@
  */
 #define NR_VMX_EXIT_REASONS	65U
 
+static int32_t triple_fault_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t unhandled_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu);
@@ -37,7 +39,7 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_EXTERNAL_INTERRUPT] = {
 		.handler = external_interrupt_vmexit_handler},
 	[VMX_EXIT_REASON_TRIPLE_FAULT] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = triple_fault_vmexit_handler},
 	[VMX_EXIT_REASON_INIT_SIGNAL] = {
 		.handler = init_signal_vmexit_handler},
 	[VMX_EXIT_REASON_STARTUP_IPI] = {
@@ -245,6 +247,15 @@ static int32_t unhandled_vmexit_handler(struct acrn_vcpu *vcpu)
 			exec_vmread(VMX_EXIT_QUALIFICATION));
 
 	TRACE_2L(TRACE_VMEXIT_UNHANDLED, vcpu->arch.exit_reason, 0UL);
+
+	return 0;
+}
+
+static int32_t triple_fault_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	pr_fatal("VM%d: triple fault @ guest RIP 0x%016llx, exit qualification: 0x%016llx",
+		vcpu->vm->vm_id, exec_vmread(VMX_GUEST_RIP), exec_vmread(VMX_EXIT_QUALIFICATION));
+	triple_fault_shutdown_vm(vcpu->vm);
 
 	return 0;
 }

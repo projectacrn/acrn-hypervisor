@@ -11,6 +11,55 @@
 #include <vm_reset.h>
 
 /**
+ * @pre vm != NULL
+ */
+void triple_fault_shutdown_vm(struct acrn_vm *vm)
+{
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
+
+	if (is_postlaunched_vm(vm)) {
+		struct io_request *io_req = &vcpu->req;
+
+		/*
+		 * Hypervisor sets VM_POWERING_OFF to authenticate that the reboot request is
+		 * actually from the guest itself, not from external entities. (for example acrn-dm)
+		 */
+		if (is_rt_vm(vm)) {
+			vm->state = VM_POWERING_OFF;
+		}
+
+		/* Device model emulates PM1A for post-launched VMs */
+		io_req->io_type = REQ_PORTIO;
+		io_req->reqs.pio.direction = REQUEST_WRITE;
+		io_req->reqs.pio.address = VIRTUAL_PM1A_CNT_ADDR;
+		io_req->reqs.pio.size = 2ULL;
+		io_req->reqs.pio.value = (VIRTUAL_PM1A_SLP_EN | (5U << 10U));
+
+		/* Inject pm1a S5 request to SOS to shut down the guest */
+		(void)emulate_io(vcpu, io_req);
+	} else {
+		if (is_sos_vm(vm)) {
+			uint16_t vm_id;
+
+			/* Shut down all non real time post-launched VMs */
+			for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+				struct acrn_vm *pl_vm = get_vm_from_vmid(vm_id);
+
+				if (!is_poweroff_vm(pl_vm) && is_postlaunched_vm(pl_vm) && !is_rt_vm(pl_vm)) {
+					(void)shutdown_vm(pl_vm);
+				}
+			}
+		}
+
+		/* Either SOS or pre-launched VMs */
+		pause_vm(vm);
+
+		per_cpu(shutdown_vm_id, vcpu->pcpu_id) = vm->vm_id;
+		make_shutdown_vm_request(vcpu->pcpu_id);
+	}
+}
+
+/**
  * @pre vcpu != NULL && vm != NULL
  */
 static bool handle_reset_reg_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, __unused uint16_t addr,
