@@ -294,13 +294,132 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 	return result;
 }
 
+static inline bool is_percpu_related(uint32_t leaf)
+{
+	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU));
+}
+
+static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
+{
+	uint32_t apicid = vlapic_get_apicid(vcpu_vlapic(vcpu));
+
+	cpuid(0x1U, eax, ebx, ecx, edx);
+	/* Patching initial APIC ID */
+	*ebx &= ~APIC_ID_MASK;
+	*ebx |= (apicid <<  APIC_ID_SHIFT);
+
+	if (vm_hide_mtrr(vcpu->vm)) {
+		/* mask mtrr */
+		*edx &= ~CPUID_EDX_MTRR;
+	}
+
+	/* mask Debug Store feature */
+	*ecx &= ~(CPUID_ECX_DTES64 | CPUID_ECX_DS_CPL);
+
+	/* mask Safer Mode Extension */
+	*ecx &= ~CPUID_ECX_SMX;
+
+	/* mask PDCM: Perfmon and Debug Capability */
+	*ecx &= ~CPUID_ECX_PDCM;
+
+	/* mask SDBG for silicon debug */
+	*ecx &= ~CPUID_ECX_SDBG;
+
+	/* mask pcid */
+	*ecx &= ~CPUID_ECX_PCID;
+
+	/*mask vmx to guest os */
+	*ecx &= ~CPUID_ECX_VMX;
+
+	/* set Hypervisor Present Bit */
+	*ecx |= CPUID_ECX_HV;
+
+	/*no xsave support for guest if it is not enabled on host*/
+	if ((*ecx & CPUID_ECX_OSXSAVE) == 0U) {
+		*ecx &= ~CPUID_ECX_XSAVE;
+	}
+
+	*ecx &= ~CPUID_ECX_OSXSAVE;
+	if ((*ecx & CPUID_ECX_XSAVE) != 0U) {
+		uint64_t cr4;
+		/*read guest CR4*/
+		cr4 = exec_vmread(VMX_GUEST_CR4);
+		if ((cr4 & CR4_OSXSAVE) != 0UL) {
+			*ecx |= CPUID_ECX_OSXSAVE;
+		}
+	}
+
+	/* mask Debug Store feature */
+	*edx &= ~CPUID_EDX_DTES;
+}
+
+static void guest_cpuid_0bh(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
+{
+	uint32_t leaf = 0x0bU;
+	uint32_t subleaf = *ecx;
+
+	/* Patching X2APIC */
+	if (is_lapic_pt(vcpu->vm)) {
+		/* for VM with LAPIC_PT, eg. PRE_LAUNCHED_VM or POST_LAUNCHED_VM with LAPIC_PT*/
+		cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
+	} else if (is_sos_vm(vcpu->vm)) {
+		cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
+	} else {
+		*ecx = subleaf & 0xFFU;
+		*edx = vlapic_get_apicid(vcpu_vlapic(vcpu));
+		/* No HT emulation for UOS */
+		switch (subleaf) {
+		case 0U:
+			*eax = 0U;
+			*ebx = 1U;
+			*ecx |= (1U << 8U);
+		break;
+		case 1U:
+			if (vcpu->vm->hw.created_vcpus == 1U) {
+				*eax = 0U;
+			} else {
+				*eax = (uint32_t)fls32(vcpu->vm->hw.created_vcpus - 1U) + 1U;
+			}
+			*ebx = vcpu->vm->hw.created_vcpus;
+			*ecx |= (2U << 8U);
+		break;
+		default:
+			*eax = 0U;
+			*ebx = 0U;
+			*ecx |= (0U << 8U);
+		break;
+		}
+	}
+}
+
+static void guest_cpuid_0dh(__unused struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
+{
+	uint32_t subleaf = *ecx;
+
+	if (!pcpu_has_cap(X86_FEATURE_OSXSAVE)) {
+				*eax = 0U;
+				*ebx = 0U;
+				*ecx = 0U;
+				*edx = 0U;
+	} else {
+		cpuid_subleaf(0x0dU, subleaf, eax, ebx, ecx, edx);
+		if (subleaf == 0U) {
+			/* SDM Vol.1 17-2, On processors that do not support Intel MPX,
+			 * CPUID.(EAX=0DH,ECX=0):EAX[3] and
+			 * CPUID.(EAX=0DH,ECX=0):EAX[4] will both be 0 */
+			*eax &= ~ CPUID_EAX_XCR0_BNDREGS;
+			*eax &= ~ CPUID_EAX_XCR0_BNDCSR;
+		}
+	}
+}
+
 void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
 	uint32_t leaf = *eax;
 	uint32_t subleaf = *ecx;
 
 	/* vm related */
-	if ((leaf != 0x1U) && (leaf != 0xbU) && (leaf != 0xdU)) {
+	if (!is_percpu_related(leaf)) {
 		const struct vcpuid_entry *entry = find_vcpuid_entry(vcpu, leaf, subleaf);
 
 		if (entry != NULL) {
@@ -318,110 +437,15 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 		/* percpu related */
 		switch (leaf) {
 		case 0x01U:
-		{
-			cpuid(leaf, eax, ebx, ecx, edx);
-			uint32_t apicid = vlapic_get_apicid(vcpu_vlapic(vcpu));
-			/* Patching initial APIC ID */
-			*ebx &= ~APIC_ID_MASK;
-			*ebx |= (apicid <<  APIC_ID_SHIFT);
-
-			if (vm_hide_mtrr(vcpu->vm)) {
-				/* mask mtrr */
-				*edx &= ~CPUID_EDX_MTRR;
-			}
-
-			/* mask Debug Store feature */
-			*ecx &= ~(CPUID_ECX_DTES64 | CPUID_ECX_DS_CPL);
-
-			/* mask Safer Mode Extension */
-			*ecx &= ~CPUID_ECX_SMX;
-
-			/* mask PDCM: Perfmon and Debug Capability */
-			*ecx &= ~CPUID_ECX_PDCM;
-
-			/* mask SDBG for silicon debug */
-			*ecx &= ~CPUID_ECX_SDBG;
-
-			/* mask pcid */
-			*ecx &= ~CPUID_ECX_PCID;
-
-			/*mask vmx to guest os */
-			*ecx &= ~CPUID_ECX_VMX;
-
-			/* set Hypervisor Present Bit */
-			*ecx |= CPUID_ECX_HV;
-
-			/*no xsave support for guest if it is not enabled on host*/
-			if ((*ecx & CPUID_ECX_OSXSAVE) == 0U) {
-				*ecx &= ~CPUID_ECX_XSAVE;
-			}
-
-			*ecx &= ~CPUID_ECX_OSXSAVE;
-			if ((*ecx & CPUID_ECX_XSAVE) != 0U) {
-				uint64_t cr4;
-				/*read guest CR4*/
-				cr4 = exec_vmread(VMX_GUEST_CR4);
-				if ((cr4 & CR4_OSXSAVE) != 0UL) {
-					*ecx |= CPUID_ECX_OSXSAVE;
-				}
-			}
-
-			/* mask Debug Store feature */
-			*edx &= ~CPUID_EDX_DTES;
-
+			guest_cpuid_01h(vcpu, eax, ebx, ecx, edx);
 			break;
-		}
+
 		case 0x0bU:
-			/* Patching X2APIC */
-			if (is_lapic_pt(vcpu->vm)) {
-				/* for VM with LAPIC_PT, eg. PRE_LAUNCHED_VM or POST_LAUNCHED_VM with LAPIC_PT*/
-				cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
-			} else if (is_sos_vm(vcpu->vm)) {
-				cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
-			} else {
-				*ecx = subleaf & 0xFFU;
-				*edx = vlapic_get_apicid(vcpu_vlapic(vcpu));
-				/* No HT emulation for UOS */
-				switch (subleaf) {
-				case 0U:
-					*eax = 0U;
-					*ebx = 1U;
-					*ecx |= (1U << 8U);
-				break;
-				case 1U:
-					if (vcpu->vm->hw.created_vcpus == 1U) {
-						*eax = 0U;
-					} else {
-						*eax = (uint32_t)fls32(vcpu->vm->hw.created_vcpus - 1U) + 1U;
-					}
-					*ebx = vcpu->vm->hw.created_vcpus;
-					*ecx |= (2U << 8U);
-				break;
-				default:
-					*eax = 0U;
-					*ebx = 0U;
-					*ecx |= (0U << 8U);
-				break;
-				}
-			}
+			guest_cpuid_0bh(vcpu, eax, ebx, ecx, edx);
 			break;
 
 		case 0x0dU:
-			if (!pcpu_has_cap(X86_FEATURE_OSXSAVE)) {
-				*eax = 0U;
-				*ebx = 0U;
-				*ecx = 0U;
-				*edx = 0U;
-			} else {
-				cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
-				if (subleaf == 0U) {
-					/* SDM Vol.1 17-2, On processors that do not support Intel MPX,
-					 * CPUID.(EAX=0DH,ECX=0):EAX[3] and
-					 * CPUID.(EAX=0DH,ECX=0):EAX[4] will both be 0 */
-					*eax &= ~ CPUID_EAX_XCR0_BNDREGS;
-					*eax &= ~ CPUID_EAX_XCR0_BNDCSR;
-				}
-			}
+			guest_cpuid_0dh(vcpu, eax, ebx, ecx, edx);
 			break;
 
 		default:
