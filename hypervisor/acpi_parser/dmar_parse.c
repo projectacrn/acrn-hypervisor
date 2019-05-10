@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifdef CONFIG_DMAR_PARSE_ENABLED
 #include <types.h>
 #include <logmsg.h>
 #include <host_pm.h>
@@ -296,5 +295,3 @@ int32_t parse_dmar_table(struct dmar_info *plat_dmar_info)
 
 	return 0;
 }
-
-#endif
