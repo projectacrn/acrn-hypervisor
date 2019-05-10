@@ -465,7 +465,8 @@ int blkrescan_vm(const char *vmname, char *devargs)
 	req.magic = MNGR_MSG_MAGIC;
 	req.msgid = DM_BLKRESCAN;
 	req.timestamp = time(NULL);
-	strncpy(req.data.devargs, devargs, strlen(devargs)+1);
+	strncpy(req.data.devargs, devargs, PARAM_LEN - 1);
+	req.data.devargs[PARAM_LEN - 1] = '\0';
 
 	send_msg(vmname, &req, &ack);
 
