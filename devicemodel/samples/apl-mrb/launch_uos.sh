@@ -378,7 +378,16 @@ echo "dm_run: after passthru dev preparing" > /dev/kmsg
    -l com2,/run/acrn/ioc_$vm_name \
    $boot_image_option \
    --enable_trusty \
-   -B "$kernel_cmdline" $vm_name
+   -B "$kernel_cmdline" $vm_name &
+
+sleep 10
+ps -lLcA | grep acrngt_emulatio | awk -F' ' '{print $6}' | while read line; do cat /proc/$line/comm; renice -n -10 $line; done
+ps -lLcA | grep vcpu | awk -F' ' '{print $6}' | while read line; do cat /proc/$line/comm; renice -n -10 $line; done
+ps -lLcA | grep ioreq | awk -F' ' '{print $6}' | while read line; do cat /proc/$line/comm; renice -n -10 $line; done
+ps -lLcA | grep gvt | awk -F' ' '{print $6}' | while read line; do cat /proc/$line/comm; renice -n -10 $line; done
+
+wait
+
 }
 
 function launch_alios()
