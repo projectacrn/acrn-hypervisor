@@ -96,6 +96,7 @@
  * FOR NON-64-BIT MODES, Vol 2, Intel SDM.
  */
 #define VIE_OP_F_BYTE_OP	(1U << 5U)  /* 8-bit operands. */
+#define VIE_OP_F_WORD_OP	(1U << 6U)  /* 16-bit operands. */
 
 static const struct instr_emul_vie_op two_byte_opcodes[256] = {
 	[0xB6] = {
@@ -104,6 +105,7 @@ static const struct instr_emul_vie_op two_byte_opcodes[256] = {
 	},
 	[0xB7] = {
 		.op_type = VIE_OP_TYPE_MOVZX,
+		.op_flags = VIE_OP_F_WORD_OP,
 	},
 	[0xBA] = {
 		.op_type = VIE_OP_TYPE_BITTEST,
@@ -2398,8 +2400,13 @@ int32_t decode_instruction(struct acrn_vcpu *vcpu)
 
 			if (retval >= 0) {
 				/* return the Memory Operand byte size */
-				retval = ((emul_ctxt->vie.op.op_flags & VIE_OP_F_BYTE_OP) != 0U) ?
-						1 : (int32_t)emul_ctxt->vie.opsize;
+				if ((emul_ctxt->vie.op.op_flags & VIE_OP_F_BYTE_OP) != 0U) {
+					retval = 1;
+				} else if ((emul_ctxt->vie.op.op_flags & VIE_OP_F_WORD_OP) != 0U) {
+					retval = 2;
+				} else {
+					retval = (int32_t)emul_ctxt->vie.opsize;
+				}
 			}
 		}
 	}
