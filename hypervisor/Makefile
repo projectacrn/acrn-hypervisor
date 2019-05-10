@@ -156,9 +156,14 @@ ifneq (,$(wildcard scenarios/$(SCENARIO_NAME)/pt_dev.c))
 C_SRCS += scenarios/$(SCENARIO_NAME)/pt_dev.c
 endif
 
+# ACPI parsing component
+# This part should be isolated from FuSa Cert
+ifeq ($(CONFIG_DMAR_PARSE_ENABLED),y)
+C_SRCS += acpi_parser/dmar_parse.c
+endif
+
 C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_info.c
-C_SRCS += boot/dmar_parse.c
 C_SRCS += boot/cmdline.c
 C_SRCS += boot/guest/vboot_wrapper.c
 C_SRCS += boot/guest/deprivilege_boot.c
