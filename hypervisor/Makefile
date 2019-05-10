@@ -161,8 +161,9 @@ endif
 ifeq ($(CONFIG_DMAR_PARSE_ENABLED),y)
 C_SRCS += acpi_parser/dmar_parse.c
 endif
+C_SRCS += acpi_parser/acpi_ext.c
 
-C_SRCS += boot/acpi.c
+C_SRCS += boot/acpi_base.c
 C_SRCS += boot/dmar_info.c
 C_SRCS += boot/cmdline.c
 C_SRCS += boot/guest/vboot_wrapper.c
