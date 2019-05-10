@@ -29,7 +29,6 @@
 #include <types.h>
 #include <rtl.h>
 #include <vboot.h>
-#include "acpi_priv.h"
 #include "acpi.h"
 #include <pgtable.h>
 #include <ioapic.h>
@@ -41,7 +40,6 @@
 #define ACPI_OEM_ID_SIZE           6
 #define ACPI_SIG_MADT             "APIC" /* Multiple APIC Description Table */
 #define ACPI_SIG_FADT             "FACP" /* Fixed ACPI Description Table */
-#define ACPI_SIG_DMAR             "DMAR"
 #define RSDP_CHECKSUM_LENGTH       20
 #define ACPI_NAME_SIZE             4U
 #define ACPI_MADT_TYPE_LOCAL_APIC  0U
@@ -181,7 +179,7 @@ static bool probe_table(uint64_t address, const char *signature)
 	return ret;
 }
 
-static void *get_acpi_tbl(const char *signature)
+void *get_acpi_tbl(const char *signature)
 {
 	struct acpi_table_rsdp *rsdp;
 	struct acpi_table_rsdt *rsdt;
@@ -321,11 +319,6 @@ uint16_t parse_madt_ioapic(struct ioapic_info *ioapic_id_array)
 	ASSERT(madt != NULL, "fail to get madt");
 
 	return ioapic_parse_madt(madt, ioapic_id_array);
-}
-
-void *get_dmar_table(void)
-{
-	return get_acpi_tbl(ACPI_SIG_DMAR);
 }
 
 #ifndef CONFIG_CONSTANT_ACPI
