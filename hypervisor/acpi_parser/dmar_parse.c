@@ -11,7 +11,9 @@
 #include <spinlock.h>
 #include "pci.h"
 #include "vtd.h"
-#include "acpi_priv.h"
+#include "acpi.h"
+
+#define ACPI_SIG_DMAR             "DMAR"
 
 enum acpi_dmar_type {
 	ACPI_DMAR_TYPE_HARDWARE_UNIT        = 0,
@@ -67,6 +69,11 @@ struct acpi_dmar_device_scope {
 typedef int32_t (*dmar_iter_t)(struct acpi_dmar_header*, void*);
 
 static int32_t dmar_unit_cnt;
+
+static void *get_dmar_table(void)
+{
+	return get_acpi_tbl(ACPI_SIG_DMAR);
+}
 
 static void
 dmar_iterate_tbl(dmar_iter_t iter, void *arg)
