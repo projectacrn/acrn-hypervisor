@@ -253,6 +253,9 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        first, and trusty OS will then load and verify Android OS according to
        Android OS verification mechanism.
 
+       .. note::
+          vSBL is currently only supported on Apollo Lake processors.
+
        usage::
 
           --vsbl /usr/share/acrn/bios/VSBL.bin
