@@ -210,7 +210,7 @@ uint16_t get_vmid_by_uuid(const uint8_t *uuid);
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
 struct acrn_vm *get_sos_vm(void);
 
-int32_t general_sw_loader(struct acrn_vm *vm);
+int32_t direct_boot_sw_loader(struct acrn_vm *vm);
 
 typedef int32_t (*vm_sw_loader_t)(struct acrn_vm *vm);
 extern vm_sw_loader_t vm_sw_loader;

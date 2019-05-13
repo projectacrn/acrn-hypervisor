@@ -23,6 +23,7 @@
 #include <mmu.h>
 #include <logmsg.h>
 #include <vboot.h>
+#include <vboot_info.h>
 #include <board.h>
 
 vm_sw_loader_t vm_sw_loader;
@@ -666,10 +667,6 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 	}
 
 	if (err == 0) {
-		if (vm_sw_loader == NULL) {
-			vm_sw_loader = general_sw_loader;
-		}
-
 		(void )vm_sw_loader(vm);
 
 		/* start vm BSP automatically */

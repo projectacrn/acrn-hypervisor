@@ -168,9 +168,8 @@ C_SRCS += boot/dmar_info.c
 C_SRCS += boot/cmdline.c
 C_SRCS += boot/guest/vboot_wrapper.c
 C_SRCS += boot/guest/deprivilege_boot.c
-C_SRCS += boot/guest/deprivilege_boot_info.c
 C_SRCS += boot/guest/direct_boot.c
-C_SRCS += boot/guest/direct_boot_info.c
+C_SRCS += boot/guest/vboot_info.c
 
 S_SRCS += arch/x86/idt.S
 C_SRCS += arch/x86/ioapic.c
