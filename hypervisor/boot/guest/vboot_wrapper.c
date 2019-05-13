@@ -95,9 +95,3 @@ void init_vboot_irq(void)
 {
 	return vboot_ops->init_irq();
 }
-
-/* @pre: vboot_ops->init_vboot_info != NULL */
-int32_t init_vm_boot_info(struct acrn_vm *vm)
-{
-	return vboot_ops->init_vboot_info(vm);
-}

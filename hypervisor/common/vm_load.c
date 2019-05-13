@@ -97,7 +97,7 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 	return gpa;
 }
 
-int32_t general_sw_loader(struct acrn_vm *vm)
+int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 {
 	int32_t ret = 0;
 	char  dyn_bootargs[100] = {0};

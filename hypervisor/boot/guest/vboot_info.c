@@ -1,11 +1,15 @@
 /*
- * Copyright (C) 2018 Intel Corporation. All rights reserved.
+ * Copyright (C) 2019 Intel Corporation. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
+
 #include <types.h>
 #include <rtl.h>
 #include <errno.h>
+#include <per_cpu.h>
+#include <irq.h>
+#include <boot_context.h>
 #include <sprintf.h>
 #include <multiboot.h>
 #include <pgtable.h>
@@ -14,6 +18,7 @@
 #include <mmu.h>
 #include <vm.h>
 #include <logmsg.h>
+#include <deprivilege_boot.h>
 
 #define ACRN_DBG_BOOT	6U
 
@@ -150,16 +155,7 @@ static void *get_kernel_load_addr(void *kernel_src_addr)
 	return (void *)zeropage;
 }
 
-/**
- * @param[inout] vm pointer to a vm descriptor
- *
- * @retval 0 on success
- * @retval -EINVAL on invalid parameters
- *
- * @pre vm != NULL
- * @pre is_sos_vm(vm) == true
- */
-int32_t init_direct_vboot_info(struct acrn_vm *vm)
+static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
 {
 	struct multiboot_module *mods = NULL;
 	struct multiboot_info *mbi = NULL;
@@ -236,5 +232,72 @@ int32_t init_direct_vboot_info(struct acrn_vm *vm)
 			}
 		}
 	}
+	return ret;
+}
+
+static void depri_boot_spurious_handler(uint32_t vector)
+{
+	if (get_pcpu_id() == BOOT_CPU_ID) {
+		struct acrn_vcpu *vcpu = per_cpu(vcpu, BOOT_CPU_ID);
+
+		if (vcpu != NULL) {
+			vlapic_set_intr(vcpu, vector, LAPIC_TRIG_EDGE);
+		} else {
+			pr_err("%s vcpu or vlapic is not ready, interrupt lost\n", __func__);
+		}
+	}
+}
+
+static int32_t depri_boot_sw_loader(struct acrn_vm *vm)
+{
+	int32_t ret = 0;
+	/* get primary vcpu */
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
+	struct acrn_vcpu_regs *vcpu_regs = &boot_context;
+	const struct depri_boot_context *depri_boot_ctx = get_depri_boot_ctx();
+	const struct lapic_regs *depri_boot_lapic_regs = get_depri_boot_lapic_regs();
+
+	pr_dbg("Loading guest to run-time location");
+
+	vlapic_restore(vcpu_vlapic(vcpu), depri_boot_lapic_regs);
+
+	/* For UEFI platform, the bsp init regs come from two places:
+	 * 1. saved in depri_boot: gpregs, rip
+	 * 2. saved when HV started: other registers
+	 * We copy the info saved in depri_boot to boot_context and
+	 * init bsp with boot_context.
+	 */
+	memcpy_s(&(vcpu_regs->gprs), sizeof(struct acrn_gp_regs),
+		&(depri_boot_ctx->vcpu_regs.gprs), sizeof(struct acrn_gp_regs));
+
+	vcpu_regs->rip = depri_boot_ctx->vcpu_regs.rip;
+	set_vcpu_regs(vcpu, vcpu_regs);
+
+	/* defer irq enabling till vlapic is ready */
+	spurious_handler = depri_boot_spurious_handler;
+	CPU_IRQ_ENABLE();
+
+	return ret;
+}
+
+/**
+ * @param[inout] vm pointer to a vm descriptor
+ *
+ * @retval 0 on success
+ * @retval -EINVAL on invalid parameters
+ *
+ * @pre vm != NULL
+ */
+int32_t init_vm_boot_info(struct acrn_vm *vm)
+{
+	int32_t ret = 0;
+
+	if (is_sos_vm(vm) && (get_sos_boot_mode() == DEPRI_BOOT_MODE)) {
+		vm_sw_loader = depri_boot_sw_loader;
+	} else {
+		vm_sw_loader = direct_boot_sw_loader;
+		ret = init_general_vm_boot_info(vm);
+	}
+
 	return ret;
 }

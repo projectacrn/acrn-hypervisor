@@ -37,7 +37,6 @@ static struct vboot_operations direct_boot_ops = {
 	.get_ap_trampoline = get_direct_boot_ap_trampoline,
 	.get_rsdp = get_direct_boot_rsdp,
 	.init_irq = init_direct_boot_irq,
-	.init_vboot_info = init_direct_vboot_info,
 };
 
 struct vboot_operations* get_direct_boot_ops(void)
