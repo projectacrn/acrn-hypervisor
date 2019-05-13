@@ -519,7 +519,7 @@ union dmar_ir_entry {
 
 extern struct dmar_info *get_dmar_info(void);
 
-#ifdef CONFIG_DMAR_PARSE_ENABLED
+#ifdef CONFIG_ACPI_PARSE_ENABLED
 int32_t parse_dmar_table(struct dmar_info *plat_dmar_info);
 #endif
 

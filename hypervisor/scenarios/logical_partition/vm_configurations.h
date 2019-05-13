@@ -9,9 +9,6 @@
 
 #include <pci_devices.h>
 
-/* Use constant ACPI info which defined in platform_acpi_info.h instead of parsing it. */
-#define CONFIG_CONSTANT_ACPI
-
 /* Bits mask of guest flags that can be programmed by device model. Other bits are set by hypervisor only */
 #define DM_OWNED_GUEST_FLAG_MASK	0UL
 

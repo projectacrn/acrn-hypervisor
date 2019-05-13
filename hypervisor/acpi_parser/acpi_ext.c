@@ -36,7 +36,6 @@
 #include <host_pm.h>
 #include <acrn_common.h>
 
-#ifndef CONFIG_CONSTANT_ACPI
 /* Per ACPI spec:
  * There are two fundamental types of ACPI tables:
  *
@@ -49,8 +48,7 @@
  *
  * The second type of table, the ACPI Data Table, could be parsed here.
  *
- * When ACRN go FuSa, the platform ACPI data should be fixed. The MACRO of
- * CONFIG_CONSTANT_ACPI will be defined, then this code is not needed.
+ * When ACRN go FuSa, the platform ACPI data should be fixed and this file is not needed.
  */
 
 #define ACPI_SIG_FACS		0x53434146U	/* "FACS" */
@@ -158,4 +156,3 @@ void acpi_fixup(void)
 		}
 	}
 }
-#endif

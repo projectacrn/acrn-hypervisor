@@ -158,10 +158,10 @@ endif
 
 # ACPI parsing component
 # This part should be isolated from FuSa Cert
-ifeq ($(CONFIG_DMAR_PARSE_ENABLED),y)
+ifeq ($(CONFIG_ACPI_PARSE_ENABLED),y)
 C_SRCS += acpi_parser/dmar_parse.c
-endif
 C_SRCS += acpi_parser/acpi_ext.c
+endif
 
 C_SRCS += boot/acpi_base.c
 C_SRCS += boot/dmar_info.c
