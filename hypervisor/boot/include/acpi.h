@@ -36,7 +36,7 @@ struct ioapic_info;
 uint16_t parse_madt(uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM]);
 uint16_t parse_madt_ioapic(struct ioapic_info *ioapic_id_array);
 
-#ifndef CONFIG_CONSTANT_ACPI
+#ifndef CONFIG_ACPI_PARSE_ENABLED
 void acpi_fixup(void);
 #endif
 

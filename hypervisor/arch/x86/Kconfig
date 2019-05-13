@@ -226,15 +226,15 @@ config SOS_RAM_SIZE
 	  A 64-bit integer indicating the size of the User OS RAM (MMIO not
 	  included). Now we assume each UOS uses same amount of RAM size.
 
-config DMAR_PARSE_ENABLED
-	bool "Enable ACPI DMA Remapping tables parsing"
+config ACPI_PARSE_ENABLED
+	bool "Enable ACPI runtime parsing"
 	default y
 	help
-	  Whether to parse the ACPI DMA Remapping tables at runtime.
+	  Whether to parse the ACPI tables at runtime.
 
 config GPU_SBDF
 	hex "Segment, Bus, Device, and function of the GPU"
-	depends on DMAR_PARSE_ENABLED
+	depends on ACPI_PARSE_ENABLED
 	default 0x00000010
 	help
 	  A 32-bit integer encoding the segment, bus, device and function of the
