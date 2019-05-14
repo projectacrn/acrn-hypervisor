@@ -43,8 +43,10 @@ static inline uint32_t get_bar_base(uint32_t bar)
 
 /**
  * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
  */
-int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset,
+int32_t vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
 {
 	int32_t ret = -ENODEV;

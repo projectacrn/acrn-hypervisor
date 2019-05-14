@@ -38,6 +38,7 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm);
 static void deinit_prelaunched_vm_vpci(const struct acrn_vm *vm);
 static void deinit_postlaunched_vm_vpci(const struct acrn_vm *vm);
 
+static void read_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t *val);
 
 /**
  * @pre pi != NULL
@@ -106,9 +107,10 @@ static inline bool vpci_is_valid_access(uint32_t offset, uint32_t bytes)
 }
 
 /**
- * @pre vm != NULL && vcpu != NULL
+ * @pre vm != NULL
+ * @pre vcpu != NULL
  * @pre vm->vm_id < CONFIG_MAX_VM_NUM
- * @pre (get_vm_config(vm->vm_id)->type == PRE_LAUNCHED_VM) || (get_vm_config(vm->vm_id)->type == SOS_VM)
+ * @pre (get_vm_config(vm->vm_id)->load_order == PRE_LAUNCHED_VM) || (get_vm_config(vm->vm_id)->load_order == SOS_VM)
  */
 static bool pci_cfgdata_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
 {
@@ -125,11 +127,8 @@ static bool pci_cfgdata_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint
 
 			switch (vm_config->load_order) {
 			case PRE_LAUNCHED_VM:
-				partition_mode_cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
-				break;
-
 			case SOS_VM:
-				sharing_mode_cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
+				read_cfg(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
 				break;
 
 			default:
@@ -308,29 +307,6 @@ static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 /**
  * @pre vpci != NULL
  */
-void partition_mode_cfgread(const struct acrn_vpci *vpci, union pci_bdf vbdf,
-	uint32_t offset, uint32_t bytes, uint32_t *val)
-{
-	struct pci_vdev *vdev = pci_find_vdev_by_vbdf(vpci, vbdf);
-
-	if (vdev != NULL) {
-		if (is_hostbridge(vdev)) {
-			(void)vhostbridge_cfgread(vdev, offset, bytes, val);
-		} else {
-			if ((vdev_pt_cfgread(vdev, offset, bytes, val) != 0)
-				&& (vmsi_cfgread(vdev, offset, bytes, val) != 0)
-				&& (vmsix_cfgread(vdev, offset, bytes, val) != 0)
-				) {
-				/* Not handled by any handlers, passthru to physical device */
-				*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
-			}
-		}
-	}
-}
-
-/**
- * @pre vpci != NULL
- */
 void partition_mode_cfgwrite(const struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
@@ -362,22 +338,38 @@ static struct pci_vdev *find_vdev_for_sos(union pci_bdf bdf)
 
 /**
  * @pre vpci != NULL
+ * @pre vpci->vm != NULL
  */
-void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
+static struct pci_vdev *find_vdev(const struct acrn_vpci *vpci, union pci_bdf bdf)
+{
+	struct pci_vdev *vdev = NULL;
+
+	if (is_prelaunched_vm(vpci->vm)) {
+		vdev = pci_find_vdev_by_vbdf(vpci, bdf);
+	} else if (is_sos_vm(vpci->vm)){
+		vdev = find_vdev_for_sos(bdf);
+	}
+
+	return vdev;
+}
+
+/**
+ * @pre vpci != NULL
+ */
+static void read_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
-	struct pci_vdev *vdev = find_vdev_for_sos(bdf);
+	struct pci_vdev *vdev = find_vdev(vpci, bdf);
 
-	*val = ~0U;
-
-	/* vdev == NULL: Could be hit for PCI enumeration from guests */
 	if (vdev != NULL) {
-		if ((vmsi_cfgread(vdev, offset, bytes, val) != 0)
-			&& (vmsix_cfgread(vdev, offset, bytes, val) != 0)
+		if ((vhostbridge_read_cfg(vdev, offset, bytes, val) != 0)
+			&& (vdev_pt_read_cfg(vdev, offset, bytes, val) != 0)
+			&& (vmsi_read_cfg(vdev, offset, bytes, val) != 0)
+			&& (vmsix_read_cfg(vdev, offset, bytes, val) != 0)
 			) {
-			/* Not handled by any handlers, passthru to physical device */
-			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
-		}
+				/* Not handled by any handlers, passthru to physical device */
+				*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+			}
 	}
 }
 

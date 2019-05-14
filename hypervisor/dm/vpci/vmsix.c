@@ -158,7 +158,10 @@ static int32_t vmsix_remap_one_entry(const struct pci_vdev *vdev, uint32_t index
 	return ret;
 }
 
-int32_t vmsix_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
+/**
+ * @pre vdev != NULL
+ */
+int32_t vmsix_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	int32_t ret = -ENODEV;
 	/* For PIO access, we emulate Capability Structures only */

@@ -115,7 +115,10 @@ static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
 	return ret;
 }
 
-int32_t vmsi_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
+/**
+ * @pre vdev != NULL
+ */
+int32_t vmsi_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	int32_t ret = -ENODEV;
 
