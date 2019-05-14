@@ -6,6 +6,8 @@
 #ifndef	HOST_PM_H
 #define	HOST_PM_H
 
+#include <acrn_common.h>
+
 #define	BIT_SLP_TYPx	10U
 #define	BIT_SLP_EN	13U
 #define	BIT_WAK_STS	15U
