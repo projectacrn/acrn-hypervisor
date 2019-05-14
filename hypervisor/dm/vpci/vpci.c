@@ -34,6 +34,9 @@
 #include <logmsg.h>
 #include "vpci_priv.h"
 
+static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm);
+
+
 /**
  * @pre pi != NULL
  */
@@ -183,7 +186,6 @@ static bool pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes
  */
 void vpci_init(struct acrn_vm *vm)
 {
-	struct acrn_vpci *vpci = &vm->vpci;
 	int32_t ret = -EINVAL;
 
 	struct vm_io_range pci_cfgaddr_range = {
@@ -200,16 +202,16 @@ void vpci_init(struct acrn_vm *vm)
 
 	struct acrn_vm_config *vm_config;
 
-	vpci->vm = vm;
+	vm->vpci.vm = vm;
 
 	vm_config = get_vm_config(vm->vm_id);
 	switch (vm_config->load_order) {
 	case PRE_LAUNCHED_VM:
-		ret = partition_mode_vpci_init(vm);
-		break;
-
 	case SOS_VM:
-		ret = sharing_mode_vpci_init(vm);
+		vm->iommu = create_iommu_domain(vm->vm_id, hva2hpa(vm->arch_vm.nworld_eptp), 48U);
+		/* Build up vdev array for vm */
+		pci_pdev_foreach(init_vdev_for_pdev, vm);
+		ret = 0;
 		break;
 
 	default:
@@ -301,60 +303,6 @@ static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 		 */
 		panic("failed to unassign iommu device!");
 	}
-}
-/**
- * @pre vdev != NULL
- */
-static void partition_mode_pdev_init(struct pci_vdev *vdev, union pci_bdf pbdf)
-{
-	struct pci_pdev *pdev;
-
-	pdev = find_pci_pdev(pbdf);
-	ASSERT(pdev != NULL, "pdev is NULL");
-
-	vdev->pdev = pdev;
-
-	assign_vdev_pt_iommu_domain(vdev);
-}
-
-/**
- * @pre vm != NULL
- * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
- * @pre vm->iommu == NULL
- * @pre vm->arch_vm.nworld_eptp != NULL
- */
-int32_t partition_mode_vpci_init(struct acrn_vm *vm)
-{
-	struct acrn_vpci *vpci = (struct acrn_vpci *)&(vm->vpci);
-	struct pci_vdev *vdev;
-	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-	struct acrn_vm_pci_ptdev_config *ptdev_config;
-	uint32_t i;
-
-	vm->iommu = create_iommu_domain(vm->vm_id,
-			hva2hpa(vm->arch_vm.nworld_eptp), 48U);
-
-	vpci->pci_vdev_cnt = vm_config->pci_ptdev_num;
-	for (i = 0U; i < vpci->pci_vdev_cnt; i++) {
-		vdev = &vpci->pci_vdevs[i];
-		vdev->vpci = vpci;
-		ptdev_config = &vm_config->pci_ptdevs[i];
-		vdev->vbdf.value = ptdev_config->vbdf.value;
-
-		if (is_hostbridge(vdev)) {
-			vhostbridge_init(vdev);
-		} else {
-			partition_mode_pdev_init(vdev, ptdev_config->pbdf);
-
-			init_vdev_pt(vdev);
-
-			vmsi_init(vdev);
-
-			vmsix_init(vdev);
-		}
-	}
-
-	return 0;
 }
 
 /**
@@ -476,51 +424,76 @@ void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 }
 
 /**
+ * @pre vm_config != NULL
+ * @pre vm_config->pci_ptdev_num <= CONFIG_MAX_PCI_DEV_NUM
+ */
+static struct acrn_vm_pci_ptdev_config *find_ptdev_config_by_pbdf(const struct acrn_vm_config *vm_config,
+	union pci_bdf pbdf)
+{
+	struct acrn_vm_pci_ptdev_config *ptdev_config, *tmp;
+	uint16_t i;
+
+	ptdev_config = NULL;
+	for (i = 0U; i < vm_config->pci_ptdev_num; i++) {
+		tmp = &vm_config->pci_ptdevs[i];
+
+		if (bdf_is_equal(&tmp->pbdf, &pbdf)) {
+			ptdev_config = tmp;
+			break;
+		}
+	}
+
+	return ptdev_config;
+}
+
+/**
  * @pre pdev != NULL
  * @pre vm != NULL
  * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  */
 static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
 {
-	struct pci_vdev *vdev = NULL;
+	const struct acrn_vm_config *vm_config = get_vm_config(((struct acrn_vm *)vm)->vm_id);
 	struct acrn_vpci *vpci = &(((struct acrn_vm *)vm)->vpci);
+	struct acrn_vm_pci_ptdev_config *ptdev_config;
 
-	if (vpci->pci_vdev_cnt < CONFIG_MAX_PCI_DEV_NUM) {
+	ptdev_config = find_ptdev_config_by_pbdf(vm_config, pdev->bdf);
+
+	if (((is_prelaunched_vm(vm) && (ptdev_config != NULL)) || is_sos_vm(vm))
+		&& (vpci->pci_vdev_cnt < CONFIG_MAX_PCI_DEV_NUM)) {
+		struct pci_vdev *vdev;
+
 		vdev = &vpci->pci_vdevs[vpci->pci_vdev_cnt];
 		vpci->pci_vdev_cnt++;
 
 		vdev->vpci = vpci;
-		/* vbdf equals to pbdf otherwise remapped */
-		vdev->vbdf = pdev->bdf;
 		vdev->pdev = pdev;
 
-		vmsi_init(vdev);
+		if (ptdev_config != NULL) {
+			/* vbdf is defined in vm_config */
+			vdev->vbdf.value = ptdev_config->vbdf.value;
+		} else {
+			/* vbdf is not defined in vm_config, set it to equal to pbdf */
+			vdev->vbdf.value = pdev->bdf.value;
+		}
 
-		vmsix_init(vdev);
+		init_vhostbridge(vdev);
+		init_vdev_pt(vdev);
+		init_vmsi(vdev);
+		init_vmsix(vdev);
 
 		if (has_msix_cap(vdev)) {
 			vdev_pt_remap_msix_table_bar(vdev);
 		}
 
-		assign_vdev_pt_iommu_domain(vdev);
+		/*
+		 *  For pre-launched VM, the host bridge is fully virtualized and it does not have a physical
+		 * host bridge counterpart.
+		 */
+		if ((is_prelaunched_vm(vm) && !is_hostbridge(vdev)) || is_sos_vm(vm)) {
+			assign_vdev_pt_iommu_domain(vdev);
+		}
 	}
-}
-
-/**
- * @pre vm != NULL
- * @pre is_sos_vm(vm) == true
- * @pre vm->iommu == NULL
- * @pre vm->arch_vm.nworld_eptp != NULL
- */
-int32_t sharing_mode_vpci_init(struct acrn_vm *vm)
-{
-	vm->iommu = create_iommu_domain(vm->vm_id,
-			hva2hpa(vm->arch_vm.nworld_eptp), 48U);
-
-	/* Build up vdev array for sos_vm */
-	pci_pdev_foreach(init_vdev_for_pdev, vm);
-
-	return 0;
 }
 
 /**

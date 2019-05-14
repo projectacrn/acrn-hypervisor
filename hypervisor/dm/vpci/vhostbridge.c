@@ -45,7 +45,7 @@
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-void vhostbridge_init(struct pci_vdev *vdev)
+void init_vhostbridge(struct pci_vdev *vdev)
 {
 	if (is_hostbridge(vdev) && is_prelaunched_vm(vdev->vpci->vm)) {
 		/* PCI config space */
