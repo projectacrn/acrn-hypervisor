@@ -50,7 +50,7 @@ int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset,
 	int32_t ret = -ENODEV;
 
 	/* PCI BARs is emulated */
-	if (pci_bar_access(offset)) {
+	if (is_prelaunched_vm(vdev->vpci->vm) && pci_bar_access(offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
 		ret = 0;
 	}
@@ -254,7 +254,7 @@ int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 	int32_t ret = -ENODEV;
 
 	/* PCI BARs are emulated */
-	if (pci_bar_access(offset)) {
+	if (is_prelaunched_vm(vdev->vpci->vm) && pci_bar_access(offset)) {
 		vdev_pt_cfgwrite_bar(vdev, offset, bytes, val);
 		ret = 0;
 	}
