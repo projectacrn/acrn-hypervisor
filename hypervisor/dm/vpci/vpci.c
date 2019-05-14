@@ -37,8 +37,8 @@
 static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm);
 static void deinit_prelaunched_vm_vpci(const struct acrn_vm *vm);
 static void deinit_postlaunched_vm_vpci(const struct acrn_vm *vm);
-
 static void read_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t *val);
+static void write_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 
 /**
  * @pre pi != NULL
@@ -163,11 +163,8 @@ static bool pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes
 
 			switch (vm_config->load_order) {
 			case PRE_LAUNCHED_VM:
-				partition_mode_cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
-				break;
-
 			case SOS_VM:
-				sharing_mode_cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
+				write_cfg(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
 				break;
 
 			default:
@@ -304,29 +301,6 @@ static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 	}
 }
 
-/**
- * @pre vpci != NULL
- */
-void partition_mode_cfgwrite(const struct acrn_vpci *vpci, union pci_bdf vbdf,
-	uint32_t offset, uint32_t bytes, uint32_t val)
-{
-	struct pci_vdev *vdev = pci_find_vdev_by_vbdf(vpci, vbdf);
-
-	if (vdev != NULL) {
-		if (is_hostbridge(vdev)) {
-			(void)vhostbridge_cfgwrite(vdev, offset, bytes, val);
-		} else {
-			if ((vdev_pt_cfgwrite(vdev, offset, bytes, val) != 0)
-				&& (vmsi_cfgwrite(vdev, offset, bytes, val) != 0)
-				&& (vmsix_cfgwrite(vdev, offset, bytes, val) != 0)
-				) {
-				/* Not handled by any handlers, passthru to physical device */
-				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
-			}
-		}
-	}
-}
-
 static struct pci_vdev *find_vdev_for_sos(union pci_bdf bdf)
 {
 	struct acrn_vm *vm;
@@ -346,7 +320,7 @@ static struct pci_vdev *find_vdev(const struct acrn_vpci *vpci, union pci_bdf bd
 
 	if (is_prelaunched_vm(vpci->vm)) {
 		vdev = pci_find_vdev_by_vbdf(vpci, bdf);
-	} else if (is_sos_vm(vpci->vm)){
+	} else if (is_sos_vm(vpci->vm)) {
 		vdev = find_vdev_for_sos(bdf);
 	}
 
@@ -376,14 +350,16 @@ static void read_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf,
 /**
  * @pre vpci != NULL
  */
-void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
+static void write_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
-	struct pci_vdev *vdev = find_vdev_for_sos(bdf);
+	struct pci_vdev *vdev = find_vdev(vpci, bdf);
 
 	if (vdev != NULL) {
-		if ((vmsi_cfgwrite(vdev, offset, bytes, val) != 0)
-			&& (vmsix_cfgwrite(vdev, offset, bytes, val) != 0)
+		if ((vhostbridge_write_cfg(vdev, offset, bytes, val) != 0)
+			&& (vdev_pt_write_cfg(vdev, offset, bytes, val) != 0)
+			&& (vmsi_write_cfg(vdev, offset, bytes, val) != 0)
+			&& (vmsix_write_cfg(vdev, offset, bytes, val) != 0)
 			) {
 			/* Not handled by any handlers, passthru to physical device */
 			pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
