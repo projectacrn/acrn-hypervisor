@@ -92,7 +92,7 @@ void init_vhostbridge(struct pci_vdev *vdev)
 	}
 }
 
-void vhostbridge_deinit(__unused const struct pci_vdev *vdev)
+void deinit_vhostbridge(__unused const struct pci_vdev *vdev)
 {
 }
 

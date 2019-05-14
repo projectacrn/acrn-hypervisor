@@ -166,7 +166,7 @@ int32_t vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, ui
 	return ret;
 }
 
-void vmsi_deinit(const struct pci_vdev *vdev)
+void deinit_vmsi(const struct pci_vdev *vdev)
 {
 	if (has_msi_cap(vdev)) {
 		ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, 1U);

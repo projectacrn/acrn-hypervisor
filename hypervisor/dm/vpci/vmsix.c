@@ -351,7 +351,7 @@ void init_vmsix(struct pci_vdev *vdev)
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-void vmsix_deinit(const struct pci_vdev *vdev)
+void deinit_vmsix(const struct pci_vdev *vdev)
 {
 	if (has_msix_cap(vdev)) {
 		if (vdev->msix.table_count != 0U) {

@@ -35,6 +35,8 @@
 #include "vpci_priv.h"
 
 static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm);
+static void deinit_prelaunched_vm_vpci(const struct acrn_vm *vm);
+static void deinit_postlaunched_vm_vpci(const struct acrn_vm *vm);
 
 
 /**
@@ -245,15 +247,13 @@ void vpci_cleanup(const struct acrn_vm *vm)
 	vm_config = get_vm_config(vm->vm_id);
 	switch (vm_config->load_order) {
 	case PRE_LAUNCHED_VM:
-		partition_mode_vpci_deinit(vm);
-		break;
-
 	case SOS_VM:
-		sharing_mode_vpci_deinit(vm);
+		/* deinit function for both SOS and pre-launched VMs (consider sos also as pre-launched) */
+		deinit_prelaunched_vm_vpci(vm);
 		break;
 
 	case POST_LAUNCHED_VM:
-		post_launched_vm_vpci_deinit(vm);
+		deinit_postlaunched_vm_vpci(vm);
 		break;
 
 	default:
@@ -302,30 +302,6 @@ static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 		 * panic here is not necessary.
 		 */
 		panic("failed to unassign iommu device!");
-	}
-}
-
-/**
- * @pre vm != NULL
- * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
- */
-void partition_mode_vpci_deinit(const struct acrn_vm *vm)
-{
-	struct pci_vdev *vdev;
-	uint32_t i;
-
-	for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
-		vdev = (struct pci_vdev *) &(vm->vpci.pci_vdevs[i]);
-
-		if (is_hostbridge(vdev)) {
-			vhostbridge_deinit(vdev);
-		} else {
-			remove_vdev_pt_iommu_domain(vdev);
-
-			vmsi_deinit(vdev);
-
-			vmsix_deinit(vdev);
-		}
 	}
 }
 
@@ -499,21 +475,23 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
 /**
  * @pre vm != NULL
  * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
- * @pre is_sos_vm(vm) == true
+ * @pre is_sos_vm(vm) || is_prelaunched_vm(vm)
  */
-void sharing_mode_vpci_deinit(const struct acrn_vm *vm)
+static void deinit_prelaunched_vm_vpci(const struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
 	uint32_t i;
 
 	for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
-		vdev = (struct pci_vdev *)&(vm->vpci.pci_vdevs[i]);
+		vdev = (struct pci_vdev *) &(vm->vpci.pci_vdevs[i]);
 
-		remove_vdev_pt_iommu_domain(vdev);
+		deinit_vhostbridge(vdev);
+		deinit_vmsi(vdev);
+		deinit_vmsix(vdev);
 
-		vmsi_deinit(vdev);
-
-		vmsix_deinit(vdev);
+		if ((is_prelaunched_vm(vm) && !is_hostbridge(vdev)) || is_sos_vm(vm)) {
+			remove_vdev_pt_iommu_domain(vdev);
+		}
 	}
 }
 
@@ -522,7 +500,7 @@ void sharing_mode_vpci_deinit(const struct acrn_vm *vm)
  * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  * @pre is_postlaunched_vm(vm) == true
  */
-void post_launched_vm_vpci_deinit(const struct acrn_vm *vm)
+static void deinit_postlaunched_vm_vpci(const struct acrn_vm *vm)
 {
 	struct acrn_vm *sos_vm;
 	uint32_t i;
@@ -551,12 +529,13 @@ void post_launched_vm_vpci_deinit(const struct acrn_vm *vm)
 				panic("failed to assign iommu device!");
 			}
 
-			vmsi_deinit(vdev);
+			deinit_vmsi(vdev);
 
-			vmsix_deinit(vdev);
+			deinit_vmsix(vdev);
 
 			/* Move vdev pointers back to SOS*/
 			vdev->vpci = (struct acrn_vpci *) &sos_vm->vpci;
+
 			/* vbdf equals to pbdf in sos */
 			vdev->vbdf.value = vdev->pdev->bdf.value;
 		}
