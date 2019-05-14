@@ -262,14 +262,6 @@ void vpci_cleanup(const struct acrn_vm *vm)
 
 /**
  * @pre vdev != NULL
- */
-static inline bool is_hostbridge(const struct pci_vdev *vdev)
-{
-	return (vdev->vbdf.value == 0U);
-}
-
-/**
- * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  * @pre vdev->vpci->vm->iommu != NULL

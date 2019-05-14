@@ -75,6 +75,14 @@ static inline bool has_msix_cap(const struct pci_vdev *vdev)
 	return (vdev->msix.capoff != 0U);
 }
 
+/**
+ * @pre vdev != NULL
+ */
+static inline bool is_hostbridge(const struct pci_vdev *vdev)
+{
+	return (vdev->vbdf.value == 0U);
+}
+
 void vhostbridge_init(struct pci_vdev *vdev);
 int32_t vhostbridge_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vhostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
