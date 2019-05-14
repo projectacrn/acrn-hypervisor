@@ -36,7 +36,7 @@
 #include <logmsg.h>
 #include "vpci_priv.h"
 
-static inline uint32_t pci_bar_base(uint32_t bar)
+static inline uint32_t get_bar_base(uint32_t bar)
 {
 	return bar & PCIM_BAR_MEM_BASE;
 }
@@ -60,6 +60,8 @@ int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset,
 
 /**
 * @pre vdev != NULL
+* @pre vdev->vpci != NULL
+* @pre vdev->vpci->vm != NULL
 * @pre vdev->pdev != NULL
 * @pre vdev->pdev->msix.table_bar < (PCI_BAR_COUNT - 1U)
 */
@@ -75,7 +77,7 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 
 	vm_config = get_vm_config(vm->vm_id);
 
-	ASSERT(vdev->pdev->msix.table_bar < (PCI_BAR_COUNT - 1U), "msix->table_bar out of range");
+	ASSERT(vdev->pdev->msix.table_bar < (PCI_BAR_COUNT - 1U), "msix->table_bar is out of range");
 
 
 	/* Mask all table entries */
@@ -87,13 +89,13 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 
 	bar = &pdev->bar[msix->table_bar];
 	if (bar != NULL) {
-		vdev->msix.mmio_hpa = bar->base;
+		msix->mmio_hpa = bar->base;
 		if (vm_config->load_order == PRE_LAUNCHED_VM) {
-			vdev->msix.mmio_gpa = vdev->bar[msix->table_bar].base;
+			msix->mmio_gpa = vdev->bar[msix->table_bar].base;
 		} else {
-			vdev->msix.mmio_gpa = sos_vm_hpa2gpa(bar->base);
+			msix->mmio_gpa = sos_vm_hpa2gpa(bar->base);
 		}
-		vdev->msix.mmio_size = bar->size;
+		msix->mmio_size = bar->size;
 	}
 
 
@@ -101,7 +103,7 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 	 *    For SOS:
 	 *    --------
 	 *    MSI-X Table BAR Contains:
-	 *    Other Info + Tables + PBA	        Ohter info already mapped into EPT (since SOS)
+	 *    Other Info + Tables + PBA	        Other info already mapped into EPT (since SOS)
 	 *    					Tables are handled by HV MMIO handler (4k adjusted up and down)
 	 *    						and remaps interrupts
 	 *    					PBA already mapped into EPT (since SOS)
@@ -138,10 +140,10 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 	 */
 
 
-	if (msix->mmio_gpa != 0U) {
+	if (msix->mmio_gpa != 0UL) {
 		if (vm_config->load_order == PRE_LAUNCHED_VM) {
-			addr_hi = vdev->msix.mmio_gpa + vdev->msix.mmio_size;
-			addr_lo = vdev->msix.mmio_gpa;
+			addr_hi = msix->mmio_gpa + msix->mmio_size;
+			addr_lo = msix->mmio_gpa;
 		} else {
 			/*
 			* PCI Spec: a BAR may also map other usable address space that is not associated
@@ -226,13 +228,13 @@ static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 		new_bar = new_bar_uos & mask;
 		if (bar_update_normal) {
 			if (is_msix_table_bar) {
-				vdev->bar[idx].base = pci_bar_base(new_bar);
+				vdev->bar[idx].base = get_bar_base(new_bar);
 				vdev_pt_remap_msix_table_bar(vdev);
 			} else {
 				vdev_pt_remap_generic_bar(vdev, idx,
-					pci_bar_base(new_bar));
+					get_bar_base(new_bar));
 
-				vdev->bar[idx].base = pci_bar_base(new_bar);
+				vdev->bar[idx].base = get_bar_base(new_bar);
 			}
 		}
 		break;
