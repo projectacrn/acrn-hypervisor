@@ -261,3 +261,74 @@ int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 
 	return ret;
 }
+
+/**
+ * For bar emulation, currently only MMIO is supported and bar size cannot be greater than 4GB
+ * @pre bar != NULL
+ */
+static inline bool is_bar_supported(const struct pci_bar *bar)
+{
+	return (is_mmio_bar(bar) && is_valid_bar_size(bar));
+}
+
+/**
+ * PCI base address register (bar) virtualization:
+ *
+ * Virtualize the PCI bars (up to 6 bars at byte offset 0x10~0x24 for type 0 PCI device,
+ * 2 bars at byte offset 0x10-0x14 for type 1 PCI device) of the PCI configuration space
+ * header.
+ *
+ * pbar: bar for the physical PCI device (pci_pdev), the value of pbar (hpa) is assigned
+ * by platform firmware during boot. It is assumed a valid hpa is always assigned to a
+ * mmio pbar, hypervisor shall not change the value of a pbar.
+ *
+ * vbar: for each pci_pdev, it has a virtual PCI device (pci_vdev) counterpart. pci_vdev
+ * virtualizes all the bars (called vbars). a vbar can be initialized by hypervisor by
+ * assigning a gpa to it; if vbar has a value of 0 (unassigned), guest may assign
+ * and program a gpa to it. The guest only sees the vbars, it will not see and can
+ * never change the pbars.
+ *
+ * Hypervisor traps guest changes to the mmio vbar (gpa) to establish ept mapping
+ * between vbar(gpa) and pbar(hpa). pbar should always align on 4K boundary.
+ *
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ * @pre vdev->pdev != NULL
+ */
+void init_vdev_pt(struct pci_vdev *vdev)
+{
+	uint32_t idx;
+	struct pci_bar *pbar, *vbar;
+	uint16_t pci_command;
+
+	if (is_prelaunched_vm(vdev->vpci->vm)) {
+		for (idx = 0U; idx < (uint32_t)PCI_BAR_COUNT; idx++) {
+			pbar = &vdev->pdev->bar[idx];
+			vbar = &vdev->bar[idx];
+
+			if (is_bar_supported(pbar)) {
+				/**
+				 * If vbar->base is 0 (unassigned), Linux kernel will reprogram the vbar on
+				 * its bar size boundary, so in order to ensure the vbar allocated by guest
+				 * is 4k aligned, set its size to be 4K aligned.
+				 */
+				vbar->size = round_page_up(pbar->size);
+
+				/**
+				 * Only 32-bit bar is supported for now so both PCIBAR_MEM32 and PCIBAR_MEM64
+				 * are reported to guest as PCIBAR_MEM32
+				 */
+				vbar->type = PCIBAR_MEM32;
+			} else {
+				vbar->size = 0UL;
+				vbar->type = PCIBAR_NONE;
+			}
+		}
+
+		pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
+		/* Disable INTX */
+		pci_command |= 0x400U;
+		pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
+	}
+}
