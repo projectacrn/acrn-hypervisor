@@ -32,6 +32,29 @@ if [[ "$major_ver" -lt "2" ]] || \
     cse_passthrough=1
 fi
 
+# pci devices for passthru
+declare -A passthru_vpid
+declare -A passthru_bdf
+
+passthru_vpid=(
+["usb_xdci"]="8086 5aaa"
+["ipu"]="8086 5a88"
+["ipu_i2c"]="8086 5aac"
+["cse"]="8086 5a9a"
+["sd_card"]="8086 5acc"
+["audio"]="8086 5a98"
+["audio_codec"]="8086 5ab4"
+)
+passthru_bdf=(
+["usb_xdci"]="0000:00:15.1"
+["ipu"]="0000:00:03.0"
+["ipu_i2c"]="0000:00:16.0"
+["cse"]="0000:00:0f.0"
+["sd_card"]="0000:00:1c.0"
+["audio"]="0000:00:0e.0"
+["audio_codec"]="0000:00:17.0"
+)
+
 function launch_clearlinux()
 {
 if [ ! -f "/data/$5/$5.img" ]; then
@@ -72,27 +95,27 @@ fi
 
 #for VT-d device setting
 modprobe pci_stub
-echo "8086 5aaa" > /sys/bus/pci/drivers/pci-stub/new_id
-echo "0000:00:15.1" > /sys/bus/pci/devices/0000:00:15.1/driver/unbind
-echo "0000:00:15.1" > /sys/bus/pci/drivers/pci-stub/bind
+echo ${passthru_vpid["usb_xdci"]} > /sys/bus/pci/drivers/pci-stub/new_id
+echo ${passthru_bdf["usb_xdci"]} > /sys/bus/pci/devices/${passthru_bdf["usb_xdci"]}/driver/unbind
+echo ${passthru_bdf["usb_xdci"]} > /sys/bus/pci/drivers/pci-stub/bind
 
 boot_ipu_option=""
 if [ $ipu_passthrough == 1 ];then
     # for ipu passthrough - ipu device 0:3.0
-    if [ -d "/sys/bus/pci/devices/0000:00:03.0" ]; then
-        echo "8086 5a88" > /sys/bus/pci/drivers/pci-stub/new_id
-        echo "0000:00:03.0" > /sys/bus/pci/devices/0000:00:03.0/driver/unbind
-        echo "0000:00:03.0" > /sys/bus/pci/drivers/pci-stub/bind
+    if [ -d "/sys/bus/pci/devices/${passthru_bdf["ipu"]}" ]; then
+        echo ${passthru_vpid["ipu"]} > /sys/bus/pci/drivers/pci-stub/new_id
+        echo ${passthru_bdf["ipu"]} > /sys/bus/pci/devices/${passthru_bdf["ipu"]}/driver/unbind
+        echo ${passthru_bdf["ipu"]} > /sys/bus/pci/drivers/pci-stub/bind
         boot_ipu_option="$boot_ipu_option"" -s 12,passthru,0/3/0 "
     fi
 
-    # for ipu passthrough - ipu related i2c 0:16.0
-    # please use virtual slot 22 for i2c 0:16.0 to make sure that the i2c controller
+    # for ipu passthrough - ipu related i2c
+    # please use virtual slot 22 for i2c to make sure that the i2c controller
     # could get the same virtaul BDF as physical BDF
-    if [ -d "/sys/bus/pci/devices/0000:00:16.0" ]; then
-        echo "8086 5aac" > /sys/bus/pci/drivers/pci-stub/new_id
-        echo "0000:00:16.0" > /sys/bus/pci/devices/0000:00:16.0/driver/unbind
-        echo "0000:00:16.0" > /sys/bus/pci/drivers/pci-stub/bind
+    if [ -d "/sys/bus/pci/devices/${passthru_bdf["ipu_i2c"]}" ]; then
+        echo ${passthru_vpid["ipu_i2c"]} > /sys/bus/pci/drivers/pci-stub/new_id
+        echo ${passthru_bdf["ipu_i2c"]} > /sys/bus/pci/devices/${passthru_bdf["ipu_i2c"]}/driver/unbind
+        echo ${passthru_bdf["ipu_i2c"]} > /sys/bus/pci/drivers/pci-stub/bind
         boot_ipu_option="$boot_ipu_option"" -s 22,passthru,0/16/0 "
     fi
 else
@@ -101,18 +124,18 @@ fi
 
 boot_cse_option=""
 if [ $cse_passthrough == 1 ]; then
-    echo "8086 5a9a" > /sys/bus/pci/drivers/pci-stub/new_id
-    echo "0000:00:0f.0" > /sys/bus/pci/devices/0000:00:0f.0/driver/unbind
-    echo "0000:00:0f.0" > /sys/bus/pci/drivers/pci-stub/bind
+    echo ${passthru_vpid["cse"]} > /sys/bus/pci/drivers/pci-stub/new_id
+    echo ${passthru_bdf["cse"]} > /sys/bus/pci/devices/${passthru_bdf["cse"]}/driver/unbind
+    echo ${passthru_bdf["cse"]} > /sys/bus/pci/drivers/pci-stub/bind
     boot_cse_option="$boot_cse_option"" -s 15,passthru,0/0f/0 "
 else
     boot_cse_option="$boot_cse_option"" -s 15,virtio-heci,0/0f/0 "
 fi
 
-# for sd card passthrough - SDXC/MMC Host Controller 00:1c.0
-# echo "8086 5acc" > /sys/bus/pci/drivers/pci-stub/new_id
-# echo "0000:00:1c.0" > /sys/bus/pci/devices/0000:00:1c.0/driver/unbind
-# echo "0000:00:1c.0" > /sys/bus/pci/drivers/pci-stub/bind
+# for sd card passthrough - SDXC/MMC Host Controller
+# echo ${passthru_vpid["sd_card"]} > /sys/bus/pci/drivers/pci-stub/new_id
+# echo ${passthru_bdf["sd_card"]} > /sys/bus/pci/devices/${passthru_bdf["sd_card"]}/driver/unbind
+# echo ${passthru_bdf["sd_card"]} > /sys/bus/pci/drivers/pci-stub/bind
 
 #for memsize setting, total 8GB(>7.5GB) uos->6GB, 4GB(>3.5GB) uos->2GB
 memsize=`cat /proc/meminfo|head -n 1|awk '{print $2}'`
@@ -216,30 +239,30 @@ fi
 
 #for VT-d device setting
 modprobe pci_stub
-echo "8086 5aaa" > /sys/bus/pci/drivers/pci-stub/new_id
-echo "0000:00:15.1" > /sys/bus/pci/devices/0000:00:15.1/driver/unbind
-echo "0000:00:15.1" > /sys/bus/pci/drivers/pci-stub/bind
+echo ${passthru_vpid["usb_xdci"]} > /sys/bus/pci/drivers/pci-stub/new_id
+echo ${passthru_bdf["usb_xdci"]} > /sys/bus/pci/devices/${passthru_bdf["usb_xdci"]}/driver/unbind
+echo ${passthru_bdf["usb_xdci"]} > /sys/bus/pci/drivers/pci-stub/bind
 
 #for audio device
 boot_audio_option=""
 if [ $audio_passthrough == 1 ]; then
-    echo "8086 5a98" > /sys/bus/pci/drivers/pci-stub/new_id
-    echo "0000:00:0e.0" > /sys/bus/pci/devices/0000:00:0e.0/driver/unbind
-    echo "0000:00:0e.0" > /sys/bus/pci/drivers/pci-stub/bind
+    echo ${passthru_vpid["audio"]} > /sys/bus/pci/drivers/pci-stub/new_id
+    echo ${passthru_bdf["audio"]} > /sys/bus/pci/devices/${passthru_bdf["audio"]}/driver/unbind
+    echo ${passthru_bdf["audio"]} > /sys/bus/pci/drivers/pci-stub/bind
 
     #for audio codec
-    echo "8086 5ab4" > /sys/bus/pci/drivers/pci-stub/new_id
-    echo "0000:00:17.0" > /sys/bus/pci/devices/0000:00:17.0/driver/unbind
-    echo "0000:00:17.0" > /sys/bus/pci/drivers/pci-stub/bind
+    echo ${passthru_vpid["audio_codec"]} > /sys/bus/pci/drivers/pci-stub/new_id
+    echo ${passthru_bdf["audio_codec"]} > /sys/bus/pci/devices/${passthru_bdf["audio_codec"]}/driver/unbind
+    echo ${passthru_bdf["audio_codec"]} > /sys/bus/pci/drivers/pci-stub/bind
 
     boot_audio_option="-s 14,passthru,0/e/0,keep_gsi -s 23,passthru,0/17/0"
 else
     boot_audio_option="-s 14,virtio-audio"
 fi
 # # for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
-# echo "8086 5acc" > /sys/bus/pci/drivers/pci-stub/new_id
-# echo "0000:00:1c.0" > /sys/bus/pci/devices/0000:00:1c.0/driver/unbind
-# echo "0000:00:1c.0" > /sys/bus/pci/drivers/pci-stub/bind
+# echo ${passthru_vpid["sd_card"]} > /sys/bus/pci/drivers/pci-stub/new_id
+# echo ${passthru_bdf["sd_card"]} > /sys/bus/pci/devices/${passthru_bdf["sd_card"]}/driver/unbind
+# echo ${passthru_bdf["sd_card"]} > /sys/bus/pci/drivers/pci-stub/bind
 
 # Check if the NPK device/driver is present
 ls -d /sys/bus/pci/drivers/intel_th_pci/0000* 2>/dev/null 1>/dev/null
@@ -254,11 +277,11 @@ echo on > /sys/devices/pci0000:00/0000:00:15.0/power/control
 
 boot_ipu_option=""
 if [ $ipu_passthrough == 1 ];then
-    # for ipu passthrough - ipu device 0:3.0
-    if [ -d "/sys/bus/pci/devices/0000:00:03.0" ]; then
-        echo "8086 5a88" > /sys/bus/pci/drivers/pci-stub/new_id
-        echo "0000:00:03.0" > /sys/bus/pci/devices/0000:00:03.0/driver/unbind
-        echo "0000:00:03.0" > /sys/bus/pci/drivers/pci-stub/bind
+    # for ipu passthrough - ipu device
+    if [ -d "/sys/bus/pci/devices/${passthru_bdf["ipu"]}" ]; then
+        echo ${passthru_vpid["ipu"]} > /sys/bus/pci/drivers/pci-stub/new_id
+        echo ${passthru_bdf["ipu"]} > /sys/bus/pci/devices/${passthru_bdf["ipu"]}/driver/unbind
+        echo ${passthru_bdf["ipu"]} > /sys/bus/pci/drivers/pci-stub/bind
         boot_ipu_option="$boot_ipu_option"" -s 12,passthru,0/3/0 "
     fi
 
@@ -266,9 +289,9 @@ if [ $ipu_passthrough == 1 ];then
     # please use virtual slot 22 for i2c 0:16.0 to make sure that the i2c controller
     # could get the same virtaul BDF as physical BDF
     if [ -d "/sys/bus/pci/devices/0000:00:16.0" ]; then
-        echo "8086 5aac" > /sys/bus/pci/drivers/pci-stub/new_id
-        echo "0000:00:16.0" > /sys/bus/pci/devices/0000:00:16.0/driver/unbind
-        echo "0000:00:16.0" > /sys/bus/pci/drivers/pci-stub/bind
+        echo ${passthru_vpid["ipu_i2c"]} > /sys/bus/pci/drivers/pci-stub/new_id
+        echo ${passthru_bdf["ipu_i2c"]} > /sys/bus/pci/devices/${passthru_bdf["ipu_i2c"]}/driver/unbind
+        echo ${passthru_bdf["ipu_i2c"]} > /sys/bus/pci/drivers/pci-stub/bind
         boot_ipu_option="$boot_ipu_option"" -s 22,passthru,0/16/0 "
     fi
 else
@@ -277,9 +300,9 @@ fi
 
 boot_cse_option=""
 if [ $cse_passthrough == 1 ]; then
-    echo "8086 5a9a" > /sys/bus/pci/drivers/pci-stub/new_id
-    echo "0000:00:0f.0" > /sys/bus/pci/devices/0000:00:0f.0/driver/unbind
-    echo "0000:00:0f.0" > /sys/bus/pci/drivers/pci-stub/bind
+    echo ${passthru_vpid["cse"]} > /sys/bus/pci/drivers/pci-stub/new_id
+    echo ${passthru_bdf["cse"]} > /sys/bus/pci/devices/${passthru_bdf["cse"]}/driver/unbind
+    echo ${passthru_bdf["cse"]} > /sys/bus/pci/drivers/pci-stub/bind
     boot_cse_option="$boot_cse_option"" -s 15,passthru,0/0f/0 "
 else
     boot_cse_option="$boot_cse_option"" -s 15,virtio-heci,0/0f/0 "
