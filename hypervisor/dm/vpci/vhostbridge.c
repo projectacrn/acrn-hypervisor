@@ -102,7 +102,7 @@ void deinit_vhostbridge(__unused const struct pci_vdev *vdev)
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-int32_t vhostbridge_cfgread(const struct pci_vdev *vdev, uint32_t offset,
+int32_t vhostbridge_read_cfg(const struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
 {
 	int32_t ret = -ENODEV;
