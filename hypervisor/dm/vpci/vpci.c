@@ -51,7 +51,8 @@ static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 }
 
 /**
- * @pre vm != NULL && vcpu != NULL
+ * @pre vm != NULL
+ * @pre vcpu != NULL
  */
 static bool pci_cfgaddr_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
 {
@@ -147,7 +148,7 @@ static bool pci_cfgdata_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint
 /**
  * @pre vm != NULL
  * @pre vm->vm_id < CONFIG_MAX_VM_NUM
- * @pre (get_vm_config(vm->vm_id)->type == PRE_LAUNCHED_VM) || (get_vm_config(vm->vm_id)->type == SOS_VM)
+ * @pre (get_vm_config(vm->vm_id)->load_order == PRE_LAUNCHED_VM) || (get_vm_config(vm->vm_id)->load_order == SOS_VM)
  */
 static bool pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
 {

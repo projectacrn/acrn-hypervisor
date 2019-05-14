@@ -53,11 +53,20 @@ static inline bool msixcap_access(const struct pci_vdev *vdev, uint32_t offset)
 	return ret;
 }
 
+/**
+ * @pre vdev != NULL
+ */
 static inline bool msixtable_access(const struct pci_vdev *vdev, uint32_t offset)
 {
 	return in_range(offset, vdev->msix.table_offset, vdev->msix.table_count * MSIX_TABLE_ENTRY_SIZE);
 }
 
+/**
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ * @pre vdev->pdev != NULL
+ */
 static int32_t vmsix_remap_entry(const struct pci_vdev *vdev, uint32_t index, bool enable)
 {
 	struct msix_table_entry *pentry;
@@ -92,6 +101,10 @@ static int32_t vmsix_remap_entry(const struct pci_vdev *vdev, uint32_t index, bo
 	return ret;
 }
 
+/**
+ * @pre vdev != NULL
+ * @pre vdev->pdev != NULL
+ */
 static inline void enable_disable_msix(const struct pci_vdev *vdev, bool enable)
 {
 	uint32_t msgctrl;
@@ -105,7 +118,11 @@ static inline void enable_disable_msix(const struct pci_vdev *vdev, bool enable)
 	pci_pdev_write_cfg(vdev->pdev->bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U, msgctrl);
 }
 
-/* Do MSI-X remap for all MSI-X table entries in the target device */
+/**
+ * Do MSI-X remap for all MSI-X table entries in the target device
+ * @pre vdev != NULL
+ * @pre vdev->pdev != NULL
+ */
 static int32_t vmsix_remap(const struct pci_vdev *vdev, bool enable)
 {
 	uint32_t index;
@@ -132,7 +149,11 @@ static int32_t vmsix_remap(const struct pci_vdev *vdev, bool enable)
 	return ret;
 }
 
-/* Do MSI-X remap for one MSI-X table entry only */
+/**
+ * Do MSI-X remap for one MSI-X table entry only
+ * @pre vdev != NULL
+ * @pre vdev->pdev != NULL
+ */
 static int32_t vmsix_remap_one_entry(const struct pci_vdev *vdev, uint32_t index, bool enable)
 {
 	uint32_t msgctrl;
@@ -336,6 +357,7 @@ int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *handler
 
 /**
  * @pre vdev != NULL
+ * @pre vdev->pdev != NULL
  */
 void init_vmsix(struct pci_vdev *vdev)
 {
