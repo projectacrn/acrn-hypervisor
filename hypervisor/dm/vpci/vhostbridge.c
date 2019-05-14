@@ -121,7 +121,7 @@ int32_t vhostbridge_read_cfg(const struct pci_vdev *vdev, uint32_t offset,
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-int32_t vhostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
+int32_t vhostbridge_write_cfg(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t val)
 {
 	int32_t ret = -ENODEV;

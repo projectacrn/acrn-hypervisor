@@ -174,7 +174,11 @@ int32_t vmsix_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t by
 	return ret;
 }
 
-int32_t vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
+/**
+ * @pre vdev != NULL
+ * @pre vdev->pdev != NULL
+ */
+int32_t vmsix_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	uint32_t msgctrl;
 	int32_t ret = -ENODEV;

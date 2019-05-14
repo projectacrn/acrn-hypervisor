@@ -131,7 +131,10 @@ int32_t vmsi_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t byt
 	return ret;
 }
 
-int32_t vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
+/**
+ * @pre vdev != NULL
+ */
+int32_t vmsi_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	bool message_changed = false;
 	bool enable;

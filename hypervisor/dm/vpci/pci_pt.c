@@ -251,8 +251,10 @@ static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 
 /**
  * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
  */
-int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
+int32_t vdev_pt_write_cfg(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t val)
 {
 	int32_t ret = -ENODEV;
