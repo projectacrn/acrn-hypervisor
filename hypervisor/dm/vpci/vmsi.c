@@ -188,7 +188,7 @@ static void buf_write32(uint8_t buf[], uint32_t val)
 	buf[3] = (uint8_t)((val >> 24U) & 0xFFU);
 }
 
-void vmsi_init(struct pci_vdev *vdev)
+void init_vmsi(struct pci_vdev *vdev)
 {
 	struct pci_pdev *pdev = vdev->pdev;
 	uint32_t val;

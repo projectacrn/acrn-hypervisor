@@ -330,7 +330,7 @@ int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *handler
 /**
  * @pre vdev != NULL
  */
-void vmsix_init(struct pci_vdev *vdev)
+void init_vmsix(struct pci_vdev *vdev)
 {
 	struct pci_pdev *pdev = vdev->pdev;
 
