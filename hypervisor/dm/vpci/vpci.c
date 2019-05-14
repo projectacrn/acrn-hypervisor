@@ -269,31 +269,6 @@ static inline bool is_hostbridge(const struct pci_vdev *vdev)
 }
 
 /**
- * @pre bar != NULL
- */
-static inline bool is_valid_bar_type(const struct pci_bar *bar)
-{
-	return (bar->type == PCIBAR_MEM32) || (bar->type == PCIBAR_MEM64);
-}
-
-/**
- * @pre bar != NULL
- */
-static inline bool is_valid_bar_size(const struct pci_bar *bar)
-{
-	return (bar->size > 0UL) && (bar->size <= 0xffffffffU);
-}
-
-/**
- * Only MMIO is supported and bar size cannot be greater than 4GB
- * @pre bar != NULL
- */
-static inline bool is_valid_bar(const struct pci_bar *bar)
-{
-	return (is_valid_bar_type(bar) && is_valid_bar_size(bar));
-}
-
-/**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
@@ -341,34 +316,11 @@ static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 static void partition_mode_pdev_init(struct pci_vdev *vdev, union pci_bdf pbdf)
 {
 	struct pci_pdev *pdev;
-	uint32_t idx;
-	struct pci_bar *pbar, *vbar;
-	uint16_t pci_command;
 
 	pdev = find_pci_pdev(pbdf);
 	ASSERT(pdev != NULL, "pdev is NULL");
 
 	vdev->pdev = pdev;
-
-	/* Sanity checking for vbar */
-	for (idx = 0U; idx < (uint32_t)PCI_BAR_COUNT; idx++) {
-		pbar = &vdev->pdev->bar[idx];
-		vbar = &vdev->bar[idx];
-
-		if (is_valid_bar(pbar)) {
-			vbar->size = (pbar->size < 0x1000U) ? 0x1000U : pbar->size;
-			vbar->type = PCIBAR_MEM32;
-		} else {
-			/* Mark this vbar as invalid */
-			vbar->size = 0UL;
-			vbar->type = PCIBAR_NONE;
-		}
-	}
-
-	pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
-	/* Disable INTX */
-	pci_command |= 0x400U;
-	pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
 
 	assign_vdev_pt_iommu_domain(vdev);
 }
@@ -401,6 +353,8 @@ int32_t partition_mode_vpci_init(struct acrn_vm *vm)
 			vhostbridge_init(vdev);
 		} else {
 			partition_mode_pdev_init(vdev, ptdev_config->pbdf);
+
+			init_vdev_pt(vdev);
 
 			vmsi_init(vdev);
 
@@ -559,7 +513,6 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
 		assign_vdev_pt_iommu_domain(vdev);
 	}
 }
-
 
 /**
  * @pre vm != NULL

@@ -220,12 +220,29 @@ static inline uint8_t pci_devfn(uint16_t bdf)
 	return (uint8_t)(bdf & 0xFFU);
 }
 
-/*
- * @pre a != NULL && b != NULL
+/**
+ * @pre a != NULL
+ * @pre b != NULL
  */
 static inline bool bdf_is_equal(const union pci_bdf *a, const union pci_bdf *b)
 {
 	return (a->value == b->value);
+}
+
+/**
+ * @pre bar != NULL
+ */
+static inline bool is_mmio_bar(const struct pci_bar *bar)
+{
+	return (bar->type == PCIBAR_MEM32) || (bar->type == PCIBAR_MEM64);
+}
+
+/**
+ * @pre bar != NULL
+ */
+static inline bool is_valid_bar_size(const struct pci_bar *bar)
+{
+	return (bar->size > 0UL) && (bar->size <= 0xffffffffU);
 }
 
 uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes);

@@ -80,6 +80,7 @@ int32_t vhostbridge_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32
 int32_t vhostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 void vhostbridge_deinit(__unused const struct pci_vdev *vdev);
 
+void init_vdev_pt(struct pci_vdev *vdev);
 int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 
