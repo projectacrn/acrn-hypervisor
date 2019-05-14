@@ -22,7 +22,7 @@ The ACRN hypervisor shell supports the following commands:
    * - dumpmem <hva> <length>
      - Dump host memory, starting at a given address, and for a given length
        (in bytes)
-   * - vm_console
+   * - vm_console <vm_id>
      - Switch to the VM's console. Use :kbd:`Ctrl+Spacebar` to return to the ACRN
        shell console
    * - int
