@@ -1,6 +1,19 @@
 #!/bin/bash
 # This is an example of launch script for KBL NUC7i7DNH, may need to revise for other platform.
 
+# pci devices for passthru
+declare -A passthru_vpid
+declare -A passthru_bdf
+
+passthru_vpid=(
+["eth"]="8086 156f"
+["sata"]="8086 9d03"
+)
+passthru_bdf=(
+["eth"]="0000:00:1f.6"
+["sata"]="0000:00:17.0"
+)
+
 function launch_hard_rt_vm()
 {
 #for memsize setting
@@ -8,14 +21,14 @@ mem_size=1024M
 
 modprobe pci_stub
 # Ethernet pass-through
-#echo "8086 156f" > /sys/bus/pci/drivers/pci-stub/new_id
-#echo "0000:00:1f.6" > /sys/bus/pci/devices/0000:00:1f.6/driver/unbind
-#echo "0000:00:1f.6" > /sys/bus/pci/drivers/pci-stub/bind
+#echo ${passthru_vpid["eth"]} > /sys/bus/pci/drivers/pci-stub/new_id
+#echo ${passthru_bdf["eth"]} > /sys/bus/pci/devices/${passthru_bdf["eth"]}/driver/unbind
+#echo ${passthru_bdf["eth"]} > /sys/bus/pci/drivers/pci-stub/bind
 
 # SATA pass-through
-echo "8086 9d03" > /sys/bus/pci/drivers/pci-stub/new_id
-echo "0000:00:17.0" > /sys/bus/pci/devices/0000:00:17.0/driver/unbind
-echo "0000:00:17.0" > /sys/bus/pci/drivers/pci-stub/bind
+echo ${passthru_vpid["sata"]} > /sys/bus/pci/drivers/pci-stub/new_id
+echo ${passthru_bdf["sata"]} > /sys/bus/pci/devices/${passthru_bdf["sata"]}/driver/unbind
+echo ${passthru_bdf["sata"]} > /sys/bus/pci/drivers/pci-stub/bind
 
 /usr/bin/acrn-dm -A -m $mem_size -c $1 \
   -k /root/rt_uos_kernel \
