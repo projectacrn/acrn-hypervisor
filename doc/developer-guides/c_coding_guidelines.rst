@@ -3286,6 +3286,41 @@ Compliant example::
        int32_t func_showcase(uint32_t *param_1, uint32_t param_2, uint32_t param_3);
 
 
+C-CS-19: Legal entity shall be documented in every file
+=======================================================
+
+Legal entity shall be documented in a separate comments block at the start of
+every file.
+The following information shall be included:
+
+a) Copyright
+b) License (using an `SPDX-License-Identifier <https://spdx.org/licenses/>`_)
+
+Compliant example::
+
+    /* Legal entity shall be placed at the start of the file. */
+    -------------File Contents Start After This Line------------
+    
+    /*
+     * Copyright (C) 2019 Intel Corporation.
+     *
+     * SPDX-License-Identifier: BSD-3-Clause
+     */
+    
+    /* Coding or implementation related comments start after the legal entity. */
+    #include <types.h>
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       /* Neither copyright nor license information is included in the file. */
+       -------------------File Contents Start After This Line------------------
+       
+       /* Coding or implementation related comments start directly. */
+       #include <types.h>
+
+
 Naming Convention
 *****************
 
