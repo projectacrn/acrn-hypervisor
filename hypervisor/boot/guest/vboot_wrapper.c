@@ -66,7 +66,7 @@ void init_vboot_operations(void)
 /* @pre: vboot_ops->init != NULL */
 void init_vboot(void)
 {
-#ifndef CONFIG_ACPI_PARSE_ENABLED
+#ifdef CONFIG_ACPI_PARSE_ENABLED
 	acpi_fixup();
 #endif
 	vboot_ops->init();
