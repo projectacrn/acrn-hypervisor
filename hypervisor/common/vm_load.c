@@ -15,6 +15,8 @@
 #include <sprintf.h>
 #include <logmsg.h>
 
+#define NUM_REMAIN_1G_PAGES	3UL
+
 static void prepare_bsp_gdt(struct acrn_vm *vm)
 {
 	size_t gdt_len;
@@ -154,15 +156,11 @@ int32_t general_sw_loader(struct acrn_vm *vm)
 		 * remained 1G pages" for reserving.
 		 */
 		if (is_sos_vm(vm)) {
-			int32_t reserving_1g_pages;
+			int64_t reserving_1g_pages;
 
-#ifdef CONFIG_REMAIN_1G_PAGES
-			reserving_1g_pages = (vm_config->memory.size >> 30U) - CONFIG_REMAIN_1G_PAGES;
-#else
-			reserving_1g_pages = (vm_config->memory.size >> 30U) - 3U;
-#endif
+			reserving_1g_pages = (vm_config->memory.size >> 30U) - NUM_REMAIN_1G_PAGES;
 			if (reserving_1g_pages > 0) {
-				snprintf(dyn_bootargs, 100U, " hugepagesz=1G hugepages=%d", reserving_1g_pages);
+				snprintf(dyn_bootargs, 100U, " hugepagesz=1G hugepages=%lld", reserving_1g_pages);
 				(void)copy_to_gpa(vm, dyn_bootargs, ((uint64_t)linux_info->bootargs_load_addr
 					+ linux_info->bootargs_size),
 					(strnlen_s(dyn_bootargs, 99U) + 1U));
