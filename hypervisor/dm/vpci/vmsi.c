@@ -57,6 +57,12 @@ static inline bool msicap_access(const struct pci_vdev *vdev, uint32_t offset)
 	return ret;
 }
 
+/**
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ * @pre vdev->pdev != NULL
+ */
 static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
 {
 	struct ptirq_msi_info info;
@@ -172,6 +178,11 @@ int32_t vmsi_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, u
 	return ret;
 }
 
+/**
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ */
 void deinit_vmsi(const struct pci_vdev *vdev)
 {
 	if (has_msi_cap(vdev)) {
@@ -194,6 +205,10 @@ static void buf_write32(uint8_t buf[], uint32_t val)
 	buf[3] = (uint8_t)((val >> 24U) & 0xFFU);
 }
 
+/**
+ * @pre vdev != NULL
+ * @pre vdev->pdev != NULL
+ */
 void init_vmsi(struct pci_vdev *vdev)
 {
 	struct pci_pdev *pdev = vdev->pdev;

@@ -30,6 +30,9 @@
 #include <vm.h>
 #include "vpci_priv.h"
 
+/**
+ * @pre vdev != NULL
+ */
 uint32_t pci_vdev_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes)
 {
 	uint32_t val;
@@ -49,6 +52,9 @@ uint32_t pci_vdev_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_
 	return val;
 }
 
+/**
+ * @pre vdev != NULL
+ */
 void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	switch (bytes) {

@@ -37,31 +37,49 @@ static inline bool in_range(uint32_t value, uint32_t lower, uint32_t len)
 	return ((value >= lower) && (value < (lower + len)));
 }
 
+/**
+ * @pre vdev != NULL
+ */
 static inline uint8_t pci_vdev_read_cfg_u8(const struct pci_vdev *vdev, uint32_t offset)
 {
 	return vdev->cfgdata.data_8[offset];
 }
 
+/**
+ * @pre vdev != NULL
+ */
 static inline uint16_t pci_vdev_read_cfg_u16(const struct pci_vdev *vdev, uint32_t offset)
 {
 	return vdev->cfgdata.data_16[offset >> 1U];
 }
 
+/**
+ * @pre vdev != NULL
+ */
 static inline uint32_t pci_vdev_read_cfg_u32(const struct pci_vdev *vdev, uint32_t offset)
 {
 	return vdev->cfgdata.data_32[offset >> 2U];
 }
 
+/**
+ * @pre vdev != NULL
+ */
 static inline void pci_vdev_write_cfg_u8(struct pci_vdev *vdev, uint32_t offset, uint8_t val)
 {
 	vdev->cfgdata.data_8[offset] = val;
 }
 
+/**
+ * @pre vdev != NULL
+ */
 static inline void pci_vdev_write_cfg_u16(struct pci_vdev *vdev, uint32_t offset, uint16_t val)
 {
 	vdev->cfgdata.data_16[offset >> 1U] = val;
 }
 
+/**
+ * @pre vdev != NULL
+ */
 static inline void pci_vdev_write_cfg_u32(struct pci_vdev *vdev, uint32_t offset, uint32_t val)
 {
 	vdev->cfgdata.data_32[offset >> 2U] = val;
