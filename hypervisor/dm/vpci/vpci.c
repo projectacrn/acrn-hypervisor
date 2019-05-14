@@ -435,13 +435,13 @@ void partition_mode_cfgwrite(const struct acrn_vpci *vpci, union pci_bdf vbdf,
 	}
 }
 
-static struct pci_vdev *sharing_mode_find_vdev_sos(union pci_bdf pbdf)
+static struct pci_vdev *find_vdev_for_sos(union pci_bdf bdf)
 {
 	struct acrn_vm *vm;
 
 	vm = get_sos_vm();
 
-	return pci_find_vdev_by_pbdf(&vm->vpci, pbdf);
+	return pci_find_vdev_by_pbdf(&vm->vpci, bdf);
 }
 
 /**
@@ -450,7 +450,7 @@ static struct pci_vdev *sharing_mode_find_vdev_sos(union pci_bdf pbdf)
 void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
-	struct pci_vdev *vdev = sharing_mode_find_vdev_sos(bdf);
+	struct pci_vdev *vdev = find_vdev_for_sos(bdf);
 
 	*val = ~0U;
 
@@ -471,7 +471,7 @@ void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
-	struct pci_vdev *vdev = sharing_mode_find_vdev_sos(bdf);
+	struct pci_vdev *vdev = find_vdev_for_sos(bdf);
 
 	if (vdev != NULL) {
 		if ((vmsi_cfgwrite(vdev, offset, bytes, val) != 0)
@@ -607,7 +607,7 @@ void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, ui
 	union pci_bdf bdf;
 
 	bdf.value = pbdf;
-	vdev = sharing_mode_find_vdev_sos(bdf);
+	vdev = find_vdev_for_sos(bdf);
 	if (vdev == NULL) {
 		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
 			target_vm->vm_id, vbdf, pbdf);
@@ -629,7 +629,7 @@ void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, 
 	union pci_bdf bdf;
 
 	bdf.value = pbdf;
-	vdev = sharing_mode_find_vdev_sos(bdf);
+	vdev = find_vdev_for_sos(bdf);
 	if (vdev == NULL) {
 		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
 			target_vm->vm_id, vbdf, pbdf);
