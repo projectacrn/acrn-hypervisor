@@ -965,7 +965,7 @@ exception_inject:
 static int32_t emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	uint64_t src_gva, gpa, val = 0UL;
-	uint64_t rcx, rdi, rsi, rflags;
+	uint64_t rcx = 0UL, rdi, rsi, rflags;
 	uint32_t err_code;
 	enum cpu_reg_name seg;
 	int32_t error;

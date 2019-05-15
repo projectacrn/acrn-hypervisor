@@ -355,7 +355,7 @@ static int create_hugetlb_dirs(int level)
 	}
 
 	memset(tmp_path, '\0', MAX_PATH_LEN);
-	strncpy(tmp_path, path, MAX_PATH_LEN);
+	strncpy(tmp_path, path, MAX_PATH_LEN - 1);
 
 	if ((tmp_path[len - 1] != '/') && (len < MAX_PATH_LEN - 1))
 		tmp_path[len] = '/';

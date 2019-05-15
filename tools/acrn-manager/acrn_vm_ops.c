@@ -212,7 +212,7 @@ static inline int _get_vmname_suffix(const char *src,
 		name[max_len_name - 1] = '\0';
 	}
 
-	strncpy(suffix, p + 1, max_len_suffix);
+	strncpy(suffix, p + 1, max_len_suffix - 1);
 	if (strncmp(suffix, "sh", strlen("sh")))
 		return -1;
 

@@ -323,7 +323,8 @@ static int create_new_server(const char *name)
 		goto sock_err;
 	}
 	mfd->addr.sun_family = AF_UNIX;
-	strncpy(mfd->addr.sun_path, path, sizeof(mfd->addr.sun_path));
+	strncpy(mfd->addr.sun_path, path, sizeof(mfd->addr.sun_path) - 1);
+	mfd->addr.sun_path[sizeof(mfd->addr.sun_path) - 1] = 0;
 
 	ret = bind(mfd->fd, (struct sockaddr *)&mfd->addr, sizeof(mfd->addr));
 	if (ret < 0) {

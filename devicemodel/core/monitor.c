@@ -279,7 +279,8 @@ int set_wakeup_timer(time_t t)
 
 	req.data.rtc_timer.t = t;
 	strncpy(req.data.rtc_timer.vmname, vmname,
-			sizeof(req.data.rtc_timer.vmname));
+			sizeof(req.data.rtc_timer.vmname) - 1);
+	req.data.rtc_timer.vmname[sizeof(req.data.rtc_timer.vmname) - 1] = 0;
 
 	memset(&ack, 0, sizeof(struct mngr_msg));
 	ret = mngr_send_msg(acrnd_fd, &req, &ack, 2);

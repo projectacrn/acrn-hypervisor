@@ -144,7 +144,7 @@ static inline int _get_vmname(const char *src, char *vmname, int max_len_vmname)
 		vmname_p = src + strlen("acrnctl: ");
 
 		memset(vmname, 0, max_len_vmname);
-		strncpy(vmname, vmname_p, max_len_vmname);
+		strncpy(vmname, vmname_p, max_len_vmname - 1);
 		if(vmname[max_len_vmname - 1]) {
 			/* vmname is truncated */
 			printf("get vmname failed, vmname is truncated\n");
