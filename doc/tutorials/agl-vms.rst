@@ -129,7 +129,7 @@ Service OS
 #. Download the compressed Clear Linux OS installer image from
    https://download.clearlinux.org/releases/26200/clear/clear-26200-installer.img.xz
    and follow the `Clear Linux OS installation guide
-   <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`_
+   <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install-server>`_
    as a starting point for installing Clear Linux OS onto your platform.
    Follow the recommended options for choosing an Automatic installation
    type, and using the platform's storage as the target device for

@@ -22,7 +22,7 @@ Prerequisites
 In this tutorial two Linux privileged VMs are started by the ACRN hypervisor.
 To set up the Linux root filesystems for each VM, follow the Clear Linux OS
 `bare metal installation guide
-<https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install#bare-metal-install>`_
+<https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install#bare-metal-install-server>`_
 to install Clear Linux OS on a **SATA disk** and a **USB flash disk** prior the setup,
 as the two privileged VMs will mount the root filesystems via the SATA controller
 and the USB controller respectively.
