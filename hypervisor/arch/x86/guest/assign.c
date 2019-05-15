@@ -639,7 +639,7 @@ int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bd
 			info->pmsi_data.full = 0U;
 		} else {
 			/* build physical config MSI, update to info->pmsi_xxx */
-			if (is_lapic_pt(vm)) {
+			if (is_lapic_pt_enabled(vm)) {
 				/* for vm with lapic-pt, keep vector from guest */
 				ptirq_build_physical_msi(vm, info, entry, (uint32_t)info->vmsi_data.bits.vector);
 			} else {

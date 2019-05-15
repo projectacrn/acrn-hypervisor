@@ -365,10 +365,7 @@ static void guest_cpuid_0bh(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 	uint32_t subleaf = *ecx;
 
 	/* Patching X2APIC */
-	if (is_lapic_pt(vcpu->vm)) {
-		/* for VM with LAPIC_PT, eg. PRE_LAUNCHED_VM or POST_LAUNCHED_VM with LAPIC_PT*/
-		cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
-	} else if (is_sos_vm(vcpu->vm)) {
+	if (is_sos_vm(vcpu->vm)) {
 		cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
 	} else {
 		*ecx = subleaf & 0xFFU;

@@ -1768,7 +1768,7 @@ int32_t vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 	changed = vlapic->msr_apicbase ^ new;
 
 	if ((changed == APICBASE_X2APIC) && ((new & APICBASE_X2APIC) == APICBASE_X2APIC)) {
-			vlapic->msr_apicbase = new;
+			atomic_set64(&vlapic->msr_apicbase, changed);
 			vlapic_build_x2apic_id(vlapic);
 			switch_apicv_mode_x2apic(vlapic->vcpu);
 			ret = 0;
@@ -2075,7 +2075,7 @@ int32_t vlapic_x2apic_read(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val)
 	 */
 	vlapic = vcpu_vlapic(vcpu);
 	if (is_x2apic_enabled(vlapic)) {
-		if (is_lapic_pt(vcpu->vm)) {
+		if (is_lapic_pt_configured(vcpu->vm)) {
 			switch (msr) {
 			case MSR_IA32_EXT_APIC_LDR:
 			case MSR_IA32_EXT_XAPICID:
@@ -2109,7 +2109,7 @@ int32_t vlapic_x2apic_write(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val)
 	 */
 	vlapic = vcpu_vlapic(vcpu);
 	if (is_x2apic_enabled(vlapic)) {
-		if (is_lapic_pt(vcpu->vm)) {
+		if (is_lapic_pt_configured(vcpu->vm)) {
 			switch (msr) {
 			case MSR_IA32_EXT_APIC_ICR:
 				error = vlapic_x2apic_pt_icr_access(vcpu->vm, val);
@@ -2574,4 +2574,15 @@ void vlapic_set_apicv_ops(void)
 	} else {
 		apicv_ops = &apicv_basic_ops;
 	}
+}
+
+/**
+ * @pre vm != NULL 
+ * @pre vm->vmid < CONFIG_MAX_VM_NUM
+ */
+bool is_lapic_pt_enabled(struct acrn_vm *vm)
+{
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, 0U);
+
+	return ((is_x2apic_enabled(vcpu_vlapic(vcpu))) && (is_lapic_pt_configured(vm)));
 }
