@@ -12,7 +12,6 @@
 #include <irq.h>
 #include <page.h>
 #include <timer.h>
-#include <instr_emul.h>
 #include <profiling.h>
 #include <logmsg.h>
 #include <gdt.h>

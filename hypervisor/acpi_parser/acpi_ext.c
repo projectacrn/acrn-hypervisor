@@ -28,7 +28,6 @@
  */
 #include <types.h>
 #include <rtl.h>
-#include <vboot.h>
 #include "acpi.h"
 #include <pgtable.h>
 #include <ioapic.h>
