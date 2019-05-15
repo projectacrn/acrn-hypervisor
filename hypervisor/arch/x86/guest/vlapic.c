@@ -1201,6 +1201,7 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode,
 			target_vcpu->arch.nr_sipi = 1U;
 		}
 	} else if (mode == APIC_DELMODE_STARTUP) {
+		
 		/* Ignore SIPIs in any state other than wait-for-SIPI */
 		if ((target_vcpu->state == VCPU_INIT) &&
 			(target_vcpu->arch.nr_sipi != 0U)) {
@@ -1259,6 +1260,11 @@ static void vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 	} else if (((shorthand == APIC_DEST_SELF) || (shorthand == APIC_DEST_ALLISELF))
 			&& ((mode == APIC_DELMODE_NMI) || (mode == APIC_DELMODE_INIT)
 			|| (mode == APIC_DELMODE_STARTUP))) {
+
+#if		1
+			/* Start all secondary cores */
+			start_pcpus(AP_MASK);
+#endif
 			dev_dbg(ACRN_DBG_LAPIC, "Invalid ICR value");
 	} else {
 
@@ -1268,6 +1274,10 @@ static void vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 
 		switch (shorthand) {
 		case APIC_DEST_DESTFLD:
+#if		1
+			/* Start all secondary cores */
+			start_pcpus(AP_MASK);
+#endif
 			vlapic_calc_dest(vlapic->vm, &dmask, is_broadcast, dest, phys, false);
 			break;
 		case APIC_DEST_SELF:

@@ -232,11 +232,12 @@ void init_pcpu_post(uint16_t pcpu_id)
 		ptdev_init();
 
 		/* Start all secondary cores */
+#if 		0
 		startup_paddr = prepare_trampoline();
 		if (!start_pcpus(AP_MASK)) {
 			panic("Failed to start all secondary cores!");
 		}
-
+#endif
 		ASSERT(get_pcpu_id() == BOOT_CPU_ID, "");
 	} else {
 		pr_dbg("Core %hu is up", pcpu_id);
@@ -312,6 +313,14 @@ bool start_pcpus(uint64_t mask)
 	uint16_t i;
 	uint16_t pcpu_id = get_pcpu_id();
 	uint64_t expected_start_mask = mask;
+
+	if ((pcpu_active_bitmap & mask) == mask)
+		return 1;
+
+#if 1
+	if (startup_paddr == 0)
+		startup_paddr = prepare_trampoline();
+#endif
 
 	/* secondary cpu start up will wait for pcpu_sync -> 0UL */
 	atomic_store64(&pcpu_sync, 1UL);
