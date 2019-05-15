@@ -124,7 +124,8 @@ virtio_ipu_k_dev_set(struct vbs_dev_info *ipu_kdev,
 					uint64_t pio_len)
 {
 	/* init kdev */
-	strncpy(ipu_kdev->name, name, VBS_NAME_LEN);
+	strncpy(ipu_kdev->name, name, VBS_NAME_LEN - 1);
+	ipu_kdev->name[VBS_NAME_LEN - 1] = 0;
 	ipu_kdev->vmid = vmid;
 	ipu_kdev->nvq = nvq;
 	ipu_kdev->negotiated_features = feature;

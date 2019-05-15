@@ -216,7 +216,8 @@ virtio_rnd_kernel_dev_set(struct vbs_dev_info *kdev, const char *name,
 	/* FE driver has set VIRTIO_CONFIG_S_DRIVER_OK */
 
 	/* init kdev */
-	strncpy(kdev->name, name, VBS_NAME_LEN);
+	strncpy(kdev->name, name, VBS_NAME_LEN - 1);
+	kdev->name[VBS_NAME_LEN - 1] = 0;
 	kdev->vmid = vmid;
 	kdev->nvq = nvq;
 	kdev->negotiated_features = feature;

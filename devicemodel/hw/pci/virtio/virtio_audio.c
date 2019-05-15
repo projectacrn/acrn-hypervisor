@@ -120,7 +120,8 @@ virtio_audio_kernel_dev_set(struct vbs_dev_info *kdev, const char *name,
 			    uint64_t pio_len)
 {
 	/* init kdev */
-	strncpy(kdev->name, name, VBS_NAME_LEN);
+	strncpy(kdev->name, name, VBS_NAME_LEN - 1);
+	kdev->name[VBS_NAME_LEN - 1] = 0;
 	kdev->vmid = vmid;
 	kdev->nvq = nvq;
 	kdev->negotiated_features = feature;

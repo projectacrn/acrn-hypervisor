@@ -23,7 +23,7 @@
 /* acrnd worker timer */
 
 struct work_arg {
-	char name[VMNAME_LEN];
+	char name[VMNAME_LEN + 1];
 };
 
 struct acrnd_work {

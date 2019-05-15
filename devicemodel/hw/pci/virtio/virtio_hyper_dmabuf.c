@@ -115,7 +115,8 @@ virtio_hyper_dmabuf_k_dev_set(const char *name, int vmid, int nvq,
 			      uint64_t pio_len)
 {
 	/* init kdev */
-	strncpy(kdev.name, name, VBS_NAME_LEN);
+	strncpy(kdev.name, name, VBS_NAME_LEN - 1);
+	kdev.name[VBS_NAME_LEN - 1] = 0;
 	kdev.vmid = vmid;
 	kdev.nvq = nvq;
 	kdev.negotiated_features = feature;

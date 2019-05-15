@@ -85,7 +85,8 @@ int main(int argc, char *argv[])
 				 NULL)) != -1) {
 		switch (op) {
 		case 'c':
-			strncpy(cfg, optarg, PATH_MAX);
+			strncpy(cfg, optarg, PATH_MAX - 1);
+			cfg[PATH_MAX - 1] = 0;
 			break;
 		case 'h':
 			usage();
