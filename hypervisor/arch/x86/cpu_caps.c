@@ -9,7 +9,6 @@
 #include <page.h>
 #include <cpufeatures.h>
 #include <cpuid.h>
-#include <spinlock.h>
 #include <cpu.h>
 #include <per_cpu.h>
 #include <vmx.h>

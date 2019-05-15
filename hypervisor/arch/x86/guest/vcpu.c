@@ -135,19 +135,16 @@ void vcpu_set_vmcs_eoi_exit(struct acrn_vcpu *vcpu)
 {
 	pr_dbg("%s", __func__);
 
-	spinlock_obtain(&(vcpu->arch.lock));
 	if (is_apicv_advanced_feature_supported()) {
 		exec_vmwrite64(VMX_EOI_EXIT0_FULL, vcpu->arch.eoi_exit_bitmap[0]);
 		exec_vmwrite64(VMX_EOI_EXIT1_FULL, vcpu->arch.eoi_exit_bitmap[1]);
 		exec_vmwrite64(VMX_EOI_EXIT2_FULL, vcpu->arch.eoi_exit_bitmap[2]);
 		exec_vmwrite64(VMX_EOI_EXIT3_FULL, vcpu->arch.eoi_exit_bitmap[3]);
 	}
-	spinlock_release(&(vcpu->arch.lock));
 }
 
 /*
  * Set the eoi_exit_bitmap bit for specific vector
- * called with vcpu->arch.lock held
  * @pre vcpu != NULL && vector <= 255U
  */
 void vcpu_set_eoi_exit_bitmap(struct acrn_vcpu *vcpu, uint32_t vector)
@@ -172,7 +169,6 @@ void vcpu_clear_eoi_exit_bitmap(struct acrn_vcpu *vcpu, uint32_t vector)
 
 /*
  * Reset all eoi_exit_bitmaps
- * called with vcpu->arch.lock held
  */
 void vcpu_reset_eoi_exit_bitmaps(struct acrn_vcpu *vcpu)
 {
@@ -401,8 +397,6 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 	if (!vm_hide_mtrr(vm)) {
 		init_vmtrr(vcpu);
 	}
-
-	spinlock_init(&(vcpu->arch.lock));
 
 	/* Populate the return handle */
 	*rtn_vcpu_handle = vcpu;

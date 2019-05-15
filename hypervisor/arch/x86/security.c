@@ -7,7 +7,6 @@
 #include <types.h>
 #include <msr.h>
 #include <cpufeatures.h>
-#include <spinlock.h>
 #include <cpu.h>
 #include <per_cpu.h>
 #include <cpu_caps.h>
