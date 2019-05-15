@@ -575,7 +575,7 @@ void init_vmcs(struct acrn_vcpu *vcpu)
 void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
-	if (is_lapic_pt(vcpu->vm)) {
+	if (is_lapic_pt_configured(vcpu->vm)) {
 		dev_dbg(ACRN_DBG_LAPICPT, "%s: switching to x2apic and passthru", __func__);
 		/*
 		 * Disable external interrupt exiting and irq ack

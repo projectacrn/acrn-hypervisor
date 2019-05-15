@@ -595,7 +595,7 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 	if (atomic_load32(&vcpu->running) == 1U) {
 		remove_from_cpu_runqueue(&vcpu->sched_obj, vcpu->pcpu_id);
 
-		if (is_lapic_pt(vcpu->vm)) {
+		if (is_lapic_pt_enabled(vcpu->vm)) {
 			make_reschedule_request(vcpu->pcpu_id, DEL_MODE_INIT);
 		} else {
 			make_reschedule_request(vcpu->pcpu_id, DEL_MODE_IPI);

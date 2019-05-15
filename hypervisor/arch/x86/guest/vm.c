@@ -94,7 +94,7 @@ bool is_prelaunched_vm(const struct acrn_vm *vm)
 /**
  * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
  */
-bool is_lapic_pt(const struct acrn_vm *vm)
+bool is_lapic_pt_configured(const struct acrn_vm *vm)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
@@ -482,7 +482,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 			reset_vcpu(vcpu);
 			offline_vcpu(vcpu);
 
-			if (is_lapic_pt(vm)) {
+			if (is_lapic_pt_enabled(vm)) {
 				bitmap_set_nolock(vcpu->pcpu_id, &mask);
 				make_pcpu_offline(vcpu->pcpu_id);
 			}
@@ -490,7 +490,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 
 		wait_pcpus_offline(mask);
 
-		if (is_lapic_pt(vm) && !start_pcpus(mask)) {
+		if (is_lapic_pt_enabled(vm) && !start_pcpus(mask)) {
 			pr_fatal("Failed to start all cpus in mask(0x%llx)", mask);
 			ret = -ETIMEDOUT;
 		}

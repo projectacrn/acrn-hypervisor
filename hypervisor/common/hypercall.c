@@ -479,7 +479,7 @@ int32_t hcall_inject_msi(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else {
 			/* For target cpu with lapic pt, send ipi instead of injection via vlapic */
-			if (is_lapic_pt(target_vm)) {
+			if (is_lapic_pt_enabled(target_vm)) {
 				inject_msi_lapic_pt(target_vm, &msi);
 				ret = 0;
 			} else {

@@ -27,7 +27,7 @@ void vcpu_thread(struct sched_object *obj)
 			init_vmcs(vcpu);
 		}
 
-		if (!is_lapic_pt(vcpu->vm)) {
+		if (!is_lapic_pt_enabled(vcpu->vm)) {
 			/* handle pending softirq when irq enable*/
 			do_softirq();
 			CPU_IRQ_DISABLE();
@@ -64,7 +64,7 @@ void vcpu_thread(struct sched_object *obj)
 
 		profiling_pre_vmexit_handler(vcpu);
 
-		if (!is_lapic_pt(vcpu->vm)) {
+		if (!is_lapic_pt_enabled(vcpu->vm)) {
 			CPU_IRQ_ENABLE();
 		}
 		/* Dispatch handler */
