@@ -6,7 +6,6 @@
 
 #include <types.h>
 #include <logmsg.h>
-#include <host_pm.h>
 #include <io.h>
 #include <spinlock.h>
 #include "pci.h"

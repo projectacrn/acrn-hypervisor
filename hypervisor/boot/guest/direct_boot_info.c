@@ -9,7 +9,6 @@
 #include <sprintf.h>
 #include <multiboot.h>
 #include <pgtable.h>
-#include <guest_memory.h>
 #include <zeropage.h>
 #include <seed.h>
 #include <mmu.h>
