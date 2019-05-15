@@ -298,7 +298,6 @@ struct acrn_vcpu_arch {
 
 	/* EOI_EXIT_BITMAP buffer, for the bitmap update */
 	uint64_t eoi_exit_bitmap[EOI_EXIT_BITMAP_SIZE >> 6U];
-	spinlock_t lock;
 } __aligned(PAGE_SIZE);
 
 struct acrn_vm;
