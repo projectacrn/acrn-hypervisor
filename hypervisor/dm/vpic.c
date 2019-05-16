@@ -36,7 +36,7 @@
 
 static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t level);
 
-static inline struct acrn_vpic *vm_pic(const struct acrn_vm *vm)
+struct acrn_vpic *vm_pic(const struct acrn_vm *vm)
 {
 	return (struct acrn_vpic *)&(vm->arch_vm.vpic);
 }
@@ -453,21 +453,19 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t leve
 /**
  * @brief Set vPIC IRQ line status.
  *
- * @param[in] vm        Pointer to target VM
+ * @param[in] vpic      Pointer to virtual pic structure
  * @param[in] irqline   Target IRQ number
  * @param[in] operation action options:GSI_SET_HIGH/GSI_SET_LOW/
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
  * @return None
  */
-void vpic_set_irqline(const struct acrn_vm *vm, uint32_t irqline, uint32_t operation)
+void vpic_set_irqline(struct acrn_vpic *vpic, uint32_t irqline, uint32_t operation)
 {
-	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
 	uint32_t pin;
 
 	if (irqline < NR_VPIC_PINS_TOTAL) {
-		vpic = vm_pic(vm);
 		i8259 = &vpic->i8259[irqline >> 3U];
 		pin = irqline;
 
@@ -510,13 +508,9 @@ vpic_pincount(void)
  * @pre vm->vpic != NULL
  * @pre irqline < NR_VPIC_PINS_TOTAL
  */
-void vpic_get_irqline_trigger_mode(const struct acrn_vm *vm, uint32_t irqline,
+void vpic_get_irqline_trigger_mode(const struct acrn_vpic *vpic, uint32_t irqline,
 		enum vpic_trigger *trigger)
 {
-	struct acrn_vpic *vpic;
-
-	vpic = vm_pic(vm);
-
 	if ((vpic->i8259[irqline >> 3U].elc & (1U << (irqline & 0x7U))) != 0U) {
 		*trigger = LEVEL_TRIGGER;
 	} else {
@@ -527,19 +521,16 @@ void vpic_get_irqline_trigger_mode(const struct acrn_vm *vm, uint32_t irqline,
 /**
  * @brief Get pending virtual interrupts for vPIC.
  *
- * @param[in]    vm     Pointer to target VM
+ * @param[in]    vpic   Pointer to target VM's vpic table
  * @param[inout] vecptr Pointer to vector buffer and will be filled
  *			with eligible vector if any.
  *
  * @return None
  */
-void vpic_pending_intr(struct acrn_vm *vm, uint32_t *vecptr)
+void vpic_pending_intr(struct acrn_vpic *vpic, uint32_t *vecptr)
 {
-	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
 	uint32_t pin;
-
-	vpic = vm_pic(vm);
 
 	i8259 = &vpic->i8259[0];
 
@@ -594,12 +585,9 @@ static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint32_t pin)
  *
  * @pre vm != NULL
  */
-void vpic_intr_accepted(struct acrn_vm *vm, uint32_t vector)
+void vpic_intr_accepted(struct acrn_vpic *vpic, uint32_t vector)
 {
-	struct acrn_vpic *vpic;
 	uint32_t pin;
-
-	vpic = vm_pic(vm);
 
 	spinlock_obtain(&(vpic->lock));
 
@@ -706,14 +694,12 @@ static int32_t vpic_write(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 	return error;
 }
 
-static int32_t vpic_master_handler(struct acrn_vm *vm, bool in, uint16_t port,
+static int32_t vpic_master_handler(struct acrn_vpic *vpic, bool in, uint16_t port,
 		size_t bytes, uint32_t *eax)
 {
-	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
 	int32_t ret;
 
-	vpic = vm_pic(vm);
 	i8259 = &vpic->i8259[0];
 
 	if (bytes != 1U) {
@@ -731,7 +717,7 @@ static bool vpic_master_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint
 {
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	if (vpic_master_handler(vm, true, addr, width, &pio_req->value) < 0) {
+	if (vpic_master_handler(vm_pic(vm), true, addr, width, &pio_req->value) < 0) {
 		pr_err("pic master read port 0x%x width=%d failed\n",
 				addr, width);
 	}
@@ -744,7 +730,7 @@ static bool vpic_master_io_write(struct acrn_vm *vm, uint16_t addr, size_t width
 {
 	uint32_t val = v;
 
-	if (vpic_master_handler(vm, false, addr, width, &val) < 0) {
+	if (vpic_master_handler(vm_pic(vm), false, addr, width, &val) < 0) {
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
 				__func__, addr, width, val);
 	}
@@ -752,14 +738,12 @@ static bool vpic_master_io_write(struct acrn_vm *vm, uint16_t addr, size_t width
 	return true;
 }
 
-static int32_t vpic_slave_handler(struct acrn_vm *vm, bool in, uint16_t port,
+static int32_t vpic_slave_handler(struct acrn_vpic *vpic, bool in, uint16_t port,
 		size_t bytes, uint32_t *eax)
 {
-	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
 	int32_t ret;
 
-	vpic = vm_pic(vm);
 	i8259 = &vpic->i8259[1];
 
 	if (bytes != 1U) {
@@ -777,7 +761,7 @@ static bool vpic_slave_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint1
 {
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	if (vpic_slave_handler(vm, true, addr, width, &pio_req->value) < 0) {
+	if (vpic_slave_handler(vm_pic(vm), true, addr, width, &pio_req->value) < 0) {
 		pr_err("pic slave read port 0x%x width=%d failed\n",
 				addr, width);
 	}
@@ -789,7 +773,7 @@ static bool vpic_slave_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
 {
 	uint32_t val = v;
 
-	if (vpic_slave_handler(vm, false, addr, width, &val) < 0) {
+	if (vpic_slave_handler(vm_pic(vm), false, addr, width, &val) < 0) {
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
 				__func__, addr, width, val);
 	}
@@ -797,14 +781,12 @@ static bool vpic_slave_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
 	return true;
 }
 
-static int32_t vpic_elc_handler(struct acrn_vm *vm, bool in, uint16_t port, size_t bytes,
+static int32_t vpic_elc_handler(struct acrn_vpic *vpic, bool in, uint16_t port, size_t bytes,
 		uint32_t *eax)
 {
-	struct acrn_vpic *vpic;
 	bool is_master;
 	int32_t ret;
 
-	vpic = vm_pic(vm);
 	is_master = (port == IO_ELCR1);
 
 	if (bytes == 1U) {
@@ -847,7 +829,7 @@ static bool vpic_elc_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_
 {
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	if (vpic_elc_handler(vm, true, addr, width, &pio_req->value) < 0) {
+	if (vpic_elc_handler(vm_pic(vm), true, addr, width, &pio_req->value) < 0) {
 		pr_err("pic elc read port 0x%x width=%d failed", addr, width);
 	}
 
@@ -859,7 +841,7 @@ static bool vpic_elc_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
 {
 	uint32_t val = v;
 
-	if (vpic_elc_handler(vm, false, addr, width, &val) < 0) {
+	if (vpic_elc_handler(vm_pic(vm), false, addr, width, &val) < 0) {
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
 				__func__, addr, width, val);
 	}
@@ -897,9 +879,9 @@ void vpic_init(struct acrn_vm *vm)
 {
 	struct acrn_vpic *vpic = vm_pic(vm);
 	vpic_register_io_handler(vm);
-	vm->arch_vm.vpic.vm = vm;
-	vm->arch_vm.vpic.i8259[0].mask = 0xffU;
-	vm->arch_vm.vpic.i8259[1].mask = 0xffU;
+	vpic->vm = vm;
+	vpic->i8259[0].mask = 0xffU;
+	vpic->i8259[1].mask = 0xffU;
 
 	spinlock_init(&(vpic->lock));
 }
