@@ -139,14 +139,14 @@ static bool vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
 	primary = vcpu_from_vid(vm, BOOT_CPU_ID);
 	if (vcpu == primary) {
 
-		vpic_pending_intr(vcpu->vm, &vector);
+		vpic_pending_intr(vm_pic(vcpu->vm), &vector);
 		if (vector <= NR_MAX_VECTOR) {
 			dev_dbg(ACRN_DBG_INTR, "VPIC: to inject PIC vector %d\n",
 					vector & 0xFFU);
 			exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
 					VMX_INT_INFO_VALID |
 					(vector & 0xFFU));
-			vpic_intr_accepted(vcpu->vm, vector);
+			vpic_intr_accepted(vm_pic(vcpu->vm), vector);
 			ret = true;
 		}
 	}

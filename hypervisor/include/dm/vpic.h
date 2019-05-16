@@ -149,39 +149,40 @@ void vpic_init(struct acrn_vm *vm);
 /**
  * @brief Set vPIC IRQ line status.
  *
- * @param[in] vm        Pointer to target VM
+ * @param[in] vpic      Pointer to target VM's vpic table
  * @param[in] irqline   Target IRQ number
  * @param[in] operation action options:GSI_SET_HIGH/GSI_SET_LOW/
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
  * @return None
  */
-void vpic_set_irqline(const struct acrn_vm *vm, uint32_t irqline, uint32_t operation);
+void vpic_set_irqline(struct acrn_vpic *vpic, uint32_t irqline, uint32_t operation);
 
 /**
  * @brief Get pending virtual interrupts for vPIC.
  *
- * @param[in]    vm     Pointer to target VM
+ * @param[in]    vpic   Pointer to target VM's vpic table
  * @param[inout] vecptr Pointer to vector buffer and will be filled
  *			with eligible vector if any.
  *
  * @return None
  */
-void vpic_pending_intr(struct acrn_vm *vm, uint32_t *vecptr);
+void vpic_pending_intr(struct acrn_vpic *vpic, uint32_t *vecptr);
 
 /**
  * @brief Accept virtual interrupt for vPIC.
  *
- * @param[in] vm     Pointer to target VM
+ * @param[in] vpic     Pointer to target VM's vpic table
  * @param[in] vector Target virtual interrupt vector
  *
  * @return None
  *
  * @pre vm != NULL
  */
-void vpic_intr_accepted(struct acrn_vm *vm, uint32_t vector);
-void vpic_get_irqline_trigger_mode(const struct acrn_vm *vm, uint32_t irqline, enum vpic_trigger *trigger);
+void vpic_intr_accepted(struct acrn_vpic *vpic, uint32_t vector);
+void vpic_get_irqline_trigger_mode(const struct acrn_vpic *vpic, uint32_t irqline, enum vpic_trigger *trigger);
 uint32_t vpic_pincount(void);
+struct acrn_vpic *vm_pic(const struct acrn_vm *vm);
 
 /**
  * @}
