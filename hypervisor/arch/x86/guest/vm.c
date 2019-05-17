@@ -592,21 +592,6 @@ void pause_vm(struct acrn_vm *vm)
 }
 
 /**
- *  * @pre vm != NULL
- */
-void resume_vm(struct acrn_vm *vm)
-{
-	uint16_t i;
-	struct acrn_vcpu *vcpu = NULL;
-
-	foreach_vcpu(i, vm, vcpu) {
-		resume_vcpu(vcpu);
-	}
-
-	vm->state = VM_STARTED;
-}
-
-/**
  * @brief Resume vm from S3 state
  *
  * To resume vm after guest enter S3 state:
