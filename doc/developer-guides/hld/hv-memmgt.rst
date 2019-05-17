@@ -430,9 +430,6 @@ Data Transferring between hypervisor and VM
 .. doxygenfunction:: copy_from_gva
    :project: Project ACRN
 
-.. doxygenfunction:: copy_to_gva
-   :project: Project ACRN
-
 Address Space Translation
 -------------------------
 
