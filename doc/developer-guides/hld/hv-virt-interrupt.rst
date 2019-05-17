@@ -209,9 +209,6 @@ ACRN hypervisor implements virtual exception injection using these APIs:
 .. doxygenfunction:: vcpu_inject_ud
   :project: Project ACRN
 
-.. doxygenfunction:: vcpu_inject_ac
-  :project: Project ACRN
-
 .. doxygenfunction:: vcpu_inject_ss
   :project: Project ACRN
 
