@@ -618,8 +618,6 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
  */
 int32_t run_vcpu(struct acrn_vcpu *vcpu);
 
-int32_t shutdown_vcpu(struct acrn_vcpu *vcpu);
-
 /**
  * @brief unmap the vcpu with pcpu and free its vlapic
  *
