@@ -200,17 +200,6 @@ void vcpu_inject_pf(struct acrn_vcpu *vcpu, uint64_t addr, uint32_t err_code);
 void vcpu_inject_ud(struct acrn_vcpu *vcpu);
 
 /**
- * @brief Inject alignment check exeception(AC) to guest.
- *
- * @param[in] vcpu Pointer to vCPU.
- *
- * @return None
- *
- * @pre vcpu != NULL
- */
-void vcpu_inject_ac(struct acrn_vcpu *vcpu);
-
-/**
  * @brief Inject stack fault exeception(SS) to guest.
  *
  * @param[in] vcpu Pointer to vCPU.

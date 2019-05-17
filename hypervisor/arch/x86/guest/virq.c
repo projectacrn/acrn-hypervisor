@@ -304,12 +304,6 @@ void vcpu_inject_ud(struct acrn_vcpu *vcpu)
 	(void)vcpu_queue_exception(vcpu, IDT_UD, 0);
 }
 
-/* Inject alignment check exception(#AC) to guest */
-void vcpu_inject_ac(struct acrn_vcpu *vcpu)
-{
-	(void)vcpu_queue_exception(vcpu, IDT_AC, 0);
-}
-
 /* Inject stack fault exception(#SS) to guest */
 void vcpu_inject_ss(struct acrn_vcpu *vcpu)
 {
