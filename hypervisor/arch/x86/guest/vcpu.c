@@ -529,13 +529,6 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 	return status;
 }
 
-int32_t shutdown_vcpu(__unused struct acrn_vcpu *vcpu)
-{
-	/* TODO : Implement VCPU shutdown sequence */
-
-	return 0;
-}
-
 /*
  *  @pre vcpu != NULL
  */
