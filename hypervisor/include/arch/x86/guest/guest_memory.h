@@ -95,24 +95,6 @@ int32_t copy_to_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t gpa, uint32_t size
  */
 int32_t copy_from_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code, uint64_t *fault_addr);
-/**
- * @brief Copy data from HV address space to VM GVA space
- *
- * @param[in] vcpu The pointer that points to vcpu data structure
- * @param[in] h_ptr The pointer that points the start HV address
- *                   of HV memory region which data is stored in
- * @param[out] gva The start GVA address of GVA memory region which data
- *                will be copied into
- * @param[in] size The size (bytes) of GVA memory region which data will
- *                 be copied into
- * @param[out] err_code The page fault flags
- * @param[out] fault_addr The GVA address that causes a page fault
- */
-int32_t copy_to_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
-	uint32_t size, uint32_t *err_code, uint64_t *fault_addr);
-/**
- * @}
- */
 #endif	/* !ASSEMBLER */
 
 #endif /* GUEST_H*/
