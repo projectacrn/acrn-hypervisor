@@ -1301,11 +1301,6 @@ void enable_iommu(void)
 	do_action_for_iommus(dmar_enable);
 }
 
-void disable_iommu(void)
-{
-	do_action_for_iommus(dmar_disable);
-}
-
 void suspend_iommu(void)
 {
 	do_action_for_iommus(dmar_suspend);

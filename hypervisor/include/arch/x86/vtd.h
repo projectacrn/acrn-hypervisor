@@ -605,14 +605,6 @@ void destroy_iommu_domain(struct iommu_domain *domain);
 void enable_iommu(void);
 
 /**
- * @brief Disable translation of IOMMUs.
- *
- * Disable address translation of all IOMMUs, which are not ignored on the platform.
- *
- */
-void disable_iommu(void);
-
-/**
  * @brief Suspend IOMMUs.
  *
  * Suspend all IOMMUs, which are not ignored on the platform.
