@@ -15,11 +15,6 @@
 #include <cpu.h>
 #include <per_cpu.h>
 
-static inline bool sbuf_is_empty(const struct shared_buf *sbuf)
-{
-	return (sbuf->head == sbuf->tail);
-}
-
 uint32_t sbuf_next_ptr(uint32_t pos_arg,
 		uint32_t span, uint32_t scope)
 {
@@ -27,30 +22,6 @@ uint32_t sbuf_next_ptr(uint32_t pos_arg,
 	pos += span;
 	pos = (pos >= scope) ? (pos - scope) : pos;
 	return pos;
-}
-
-uint32_t sbuf_get(struct shared_buf *sbuf, uint8_t *data)
-{
-	const void *from;
-	uint32_t ele_size;
-
-	stac();
-	if (sbuf_is_empty(sbuf)) {
-		clac();
-		/* no data available */
-		return 0;
-	}
-
-	from = (void *)sbuf + SBUF_HEAD_SIZE + sbuf->head;
-
-	(void)memcpy_s((void *)data, sbuf->ele_size, from, sbuf->ele_size);
-
-	sbuf->head = sbuf_next_ptr(sbuf->head, sbuf->ele_size, sbuf->size);
-
-	ele_size = sbuf->ele_size;
-	clac();
-
-	return ele_size;
 }
 
 /**
