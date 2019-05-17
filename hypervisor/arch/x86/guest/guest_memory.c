@@ -426,12 +426,6 @@ int32_t copy_from_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
 	return copy_gva(vcpu, h_ptr, gva, size, err_code, fault_addr, 1);
 }
 
-int32_t copy_to_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
-	uint32_t size, uint32_t *err_code, uint64_t *fault_addr)
-{
-	return copy_gva(vcpu, h_ptr, gva, size, err_code, fault_addr, 0);
-}
-
 /* gpa --> hpa -->hva */
 void *gpa2hva(struct acrn_vm *vm, uint64_t x)
 {
