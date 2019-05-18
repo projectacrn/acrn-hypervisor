@@ -3,11 +3,19 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+/*
+*****************************************************
+NOTE: Any changes to this file may require rebuilding
+IOC daemon (cbc_lifecycle) as they share this common
+header file.
+*****************************************************
+*/
+
 #ifndef ACRN_MANAGER_H
 #define ACRN_MANAGER_H
 
 #include <stdlib.h>
-#include <acrn_common.h>
+#include "dm.h"
 
 #define MNGR_MSG_MAGIC	0x67736d206d6d76	/* that is char[8] "mngr msg", on X86 */
 #define PATH_LEN		128
@@ -43,7 +51,7 @@ struct mngr_msg {
 
 		/* req of ACRND_TIMER */
 		struct req_acrnd_timer {
-			char name[MAX_VM_OS_NAME_LEN];
+			char name[MAX_VMNAME_LEN];
 			time_t t;
 		} acrnd_timer;
 
@@ -67,7 +75,7 @@ struct mngr_msg {
 
 		/* req of RTC_TIMER */
 		struct req_rtc_timer {
-			char vmname[MAX_VM_OS_NAME_LEN];
+			char vmname[MAX_VMNAME_LEN];
 			time_t t;
 		} rtc_timer;
 
