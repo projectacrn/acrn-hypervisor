@@ -952,8 +952,8 @@ dm_run(int argc, char *argv[])
 	}
 
 	vmname = argv[0];
-	if (strnlen(vmname, MAX_VM_OS_NAME_LEN) >= MAX_VM_OS_NAME_LEN) {
-		pr_err("vmname size exceed %u\n", MAX_VM_OS_NAME_LEN);
+	if (strnlen(vmname, MAX_VMNAME_LEN) >= MAX_VMNAME_LEN) {
+		pr_err("vmname size exceed %u\n", MAX_VMNAME_LEN);
 		exit(1);
 	}
 

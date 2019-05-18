@@ -34,6 +34,8 @@
 #include "vmm.h"
 #include "dm_string.h"
 
+#define MAX_VMNAME_LEN	128U
+
 struct vmctx;
 extern int guest_ncpus;
 extern char *guest_uuid_str;

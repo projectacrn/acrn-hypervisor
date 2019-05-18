@@ -355,7 +355,7 @@ int list_vm()
 
 int start_vm(const char *vmname)
 {
-	char cmd[PATH_LEN + sizeof(ACRN_CONF_PATH_ADD) * 2 + MAX_VM_OS_NAME_LEN * 2];
+	char cmd[PATH_LEN + sizeof(ACRN_CONF_PATH_ADD) * 2 + MAX_VMNAME_LEN * 2];
 
 	if (snprintf(cmd, sizeof(cmd), "bash %s/%s.sh $(cat %s/%s.args)",
 			ACRN_CONF_PATH_ADD, vmname, ACRN_CONF_PATH_ADD, vmname) >= sizeof(cmd)) {

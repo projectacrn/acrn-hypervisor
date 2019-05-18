@@ -16,6 +16,7 @@
 
 #define PLUG_CPU(n)		(1U << (n))
 #define MAX_VUART_NUM_PER_VM	2U
+#define MAX_VM_OS_NAME_LEN	32U
 
 /*
  * PRE_LAUNCHED_VM is launched by ACRN hypervisor, with LAPIC_PT;
