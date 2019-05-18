@@ -36,7 +36,7 @@
 #include "pci_core.h"
 
 int with_bootargs;
-static char bootargs[STR_LEN];
+static char bootargs[BOOT_ARG_LEN];
 
 /*
  * Default e820 mem map:
@@ -106,9 +106,9 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 int
 acrn_parse_bootargs(char *arg)
 {
-	size_t len = strnlen(arg, STR_LEN);
+	size_t len = strnlen(arg, BOOT_ARG_LEN);
 
-	if (len < STR_LEN) {
+	if (len < BOOT_ARG_LEN) {
 		strncpy(bootargs, arg, len + 1);
 		with_bootargs = 1;
 		printf("SW_LOAD: get bootargs %s\n", bootargs);

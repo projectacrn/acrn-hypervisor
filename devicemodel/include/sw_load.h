@@ -29,6 +29,7 @@
 #define _CORE_SW_LOAD_
 
 #define STR_LEN 1024
+#define BOOT_ARG_LEN 2048
 
 /* E820 memory types */
 #define E820_TYPE_RAM           1   /* EFI 1, 2, 3, 4, 5, 6, 7 */
