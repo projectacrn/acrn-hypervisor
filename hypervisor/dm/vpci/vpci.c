@@ -415,6 +415,7 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
 
 		vdev->vpci = vpci;
 		vdev->pdev = pdev;
+		vdev->ptdev_config = ptdev_config;
 
 		if (ptdev_config != NULL) {
 			/* vbdf is defined in vm_config */
@@ -425,9 +426,15 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
 		}
 
 		init_vhostbridge(vdev);
-		init_vdev_pt(vdev);
 		init_vmsi(vdev);
 		init_vmsix(vdev);
+
+		/*
+		 * Here init_vdev_pt() needs to be called after init_vmsix() for the following reason:
+		 * init_vdev_pt() will indirectly call has_msix_cap(), which
+		 * requires init_vmsix() to be called first.
+		 */
+		init_vdev_pt(vdev);
 
 		if (has_msix_cap(vdev)) {
 			vdev_pt_remap_msix_table_bar(vdev);

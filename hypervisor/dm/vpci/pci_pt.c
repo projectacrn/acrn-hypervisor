@@ -311,6 +311,7 @@ void init_vdev_pt(struct pci_vdev *vdev)
 			pbar = &vdev->pdev->bar[idx];
 			vbar = &vdev->bar[idx];
 
+			vbar->base = 0UL;
 			if (is_bar_supported(pbar)) {
 				/**
 				 * If vbar->base is 0 (unassigned), Linux kernel will reprogram the vbar on
@@ -324,6 +325,11 @@ void init_vdev_pt(struct pci_vdev *vdev)
 				 * are reported to guest as PCIBAR_MEM32
 				 */
 				vbar->type = PCIBAR_MEM32;
+
+				/* Set the new vbar base */
+				if (vdev->ptdev_config->vbar[idx] != 0UL) {
+					vdev_pt_write_vbar(vdev, pci_bar_offset(idx), 4U, (uint32_t)(vdev->ptdev_config->vbar[idx]));
+				}
 			} else {
 				vbar->size = 0UL;
 				vbar->type = PCIBAR_NONE;
