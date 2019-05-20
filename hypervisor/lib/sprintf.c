@@ -105,8 +105,8 @@ static const char *get_flags(const char *s_arg, uint32_t *flags)
 		PRINT_FLAG_ALTERNATE_FORM,	/* # */
 		PRINT_FLAG_PAD_ZERO,	/* 0 */
 		PRINT_FLAG_LEFT_JUSTIFY,	/* - */
-		PRINT_FLAG_SIGN,	/* + */
-		PRINT_FLAG_SPACE	/* ' ' */
+		PRINT_FLAG_SPACE,	/* ' ' */
+		PRINT_FLAG_SIGN		/* + */
 	};
 	uint32_t i;
 	bool found;
