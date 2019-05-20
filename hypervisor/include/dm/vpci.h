@@ -78,6 +78,9 @@ struct pci_vdev {
 
 	struct pci_msi msi;
 	struct pci_msix msix;
+
+	/* Pointer to corresponding PCI PT device's vm_config */
+	struct acrn_vm_pci_ptdev_config *ptdev_config;
 };
 
 struct pci_addr_info {
