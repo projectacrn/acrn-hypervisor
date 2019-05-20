@@ -317,12 +317,14 @@ static struct pci_vdev *find_vdev_for_sos(union pci_bdf bdf)
  */
 static struct pci_vdev *find_vdev(const struct acrn_vpci *vpci, union pci_bdf bdf)
 {
-	struct pci_vdev *vdev = NULL;
+	struct pci_vdev *vdev;
 
 	if (is_prelaunched_vm(vpci->vm)) {
 		vdev = pci_find_vdev_by_vbdf(vpci, bdf);
 	} else if (is_sos_vm(vpci->vm)) {
 		vdev = find_vdev_for_sos(bdf);
+	} else {
+		vdev = NULL;
 	}
 
 	return vdev;
