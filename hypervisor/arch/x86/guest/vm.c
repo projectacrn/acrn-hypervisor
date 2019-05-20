@@ -210,28 +210,13 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 	}
 }
 
-/**
- * before boot sos_vm(service OS), call it to hide the HV RAM entry in e820 table from sos_vm
- *
- * @pre vm != NULL && entry != NULL
- */
-static void create_sos_vm_e820(struct acrn_vm *vm)
+static void filter_mem_from_sos_e820(struct acrn_vm *vm, uint64_t start_pa, uint64_t end_pa)
 {
 	uint32_t i;
 	uint64_t entry_start;
 	uint64_t entry_end;
-	uint64_t hv_start_pa = hva2hpa((void *)(get_hv_image_base()));
-	uint64_t hv_end_pa  = hv_start_pa + CONFIG_HV_RAM_SIZE;
-	uint32_t entries_count = get_e820_entries_count();
+	uint32_t entries_count = vm->e820_entry_num;
 	struct e820_entry *entry, new_entry = {0};
-	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
-	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-
-	/* hypervisor mem need be filter out from e820 table
-	 * it's hv itself + other hv reserved mem like vgt etc
-	 */
-	(void)memcpy_s((void *)sos_ve820, entries_count * sizeof(struct e820_entry),
-		(const void *)get_e820_entry(), entries_count * sizeof(struct e820_entry));
 
 	for (i = 0U; i < entries_count; i++) {
 		entry = &sos_ve820[i];
@@ -239,36 +224,36 @@ static void create_sos_vm_e820(struct acrn_vm *vm)
 		entry_end = entry->baseaddr + entry->length;
 
 		/* No need handle in these cases*/
-		if ((entry->type != E820_TYPE_RAM) || (entry_end <= hv_start_pa) || (entry_start >= hv_end_pa)) {
+		if ((entry->type != E820_TYPE_RAM) || (entry_end <= start_pa) || (entry_start >= end_pa)) {
 			continue;
 		}
 
-		/* filter out hv mem and adjust length of this entry*/
-		if ((entry_start < hv_start_pa) && (entry_end <= hv_end_pa)) {
-			entry->length = hv_start_pa - entry_start;
+		/* filter out the specific memory and adjust length of this entry*/
+		if ((entry_start < start_pa) && (entry_end <= end_pa)) {
+			entry->length = start_pa - entry_start;
 			continue;
 		}
 
-		/* filter out hv mem and need to create a new entry*/
-		if ((entry_start < hv_start_pa) && (entry_end > hv_end_pa)) {
-			entry->length = hv_start_pa - entry_start;
-			new_entry.baseaddr = hv_end_pa;
-			new_entry.length = entry_end - hv_end_pa;
+		/* filter out the specific memory and need to create a new entry*/
+		if ((entry_start < start_pa) && (entry_end > end_pa)) {
+			entry->length = start_pa - entry_start;
+			new_entry.baseaddr = end_pa;
+			new_entry.length = entry_end - end_pa;
 			new_entry.type = E820_TYPE_RAM;
 			continue;
 		}
 
-		/* This entry is within the range of hv mem
+		/* This entry is within the range of specific memory
 		 * change to E820_TYPE_RESERVED
 		 */
-		if ((entry_start >= hv_start_pa) && (entry_end <= hv_end_pa)) {
+		if ((entry_start >= start_pa) && (entry_end <= end_pa)) {
 			entry->type = E820_TYPE_RESERVED;
 			continue;
 		}
 
-		if ((entry_start >= hv_start_pa) && (entry_start < hv_end_pa) && (entry_end > hv_end_pa)) {
-			entry->baseaddr = hv_end_pa;
-			entry->length = entry_end - hv_end_pa;
+		if ((entry_start >= start_pa) && (entry_start < end_pa) && (entry_end > end_pa)) {
+			entry->baseaddr = end_pa;
+			entry->length = entry_end - end_pa;
 			continue;
 		}
 	}
@@ -280,11 +265,44 @@ static void create_sos_vm_e820(struct acrn_vm *vm)
 		entry->baseaddr = new_entry.baseaddr;
 		entry->length = new_entry.length;
 		entry->type = new_entry.type;
+		vm->e820_entry_num = entries_count;
 	}
+
+}
+
+/**
+ * before boot sos_vm(service OS), call it to hide HV and prelaunched VM memory in e820 table from sos_vm
+ *
+ * @pre vm != NULL
+ */
+static void create_sos_vm_e820(struct acrn_vm *vm)
+{
+	uint16_t vm_id;
+	uint64_t hv_start_pa = hva2hpa((void *)(get_hv_image_base()));
+	uint64_t hv_end_pa  = hv_start_pa + CONFIG_HV_RAM_SIZE;
+	uint32_t entries_count = get_e820_entries_count();
+	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
+	struct acrn_vm_config *sos_vm_config = get_vm_config(vm->vm_id);
+
+	(void)memcpy_s((void *)sos_ve820, entries_count * sizeof(struct e820_entry),
+			(const void *)get_e820_entry(), entries_count * sizeof(struct e820_entry));
 
 	vm->e820_entry_num = entries_count;
 	vm->e820_entries = sos_ve820;
-	vm_config->memory.size = p_e820_mem_info->total_mem_size - CONFIG_HV_RAM_SIZE;
+	/* filter out hv memory from e820 table */
+	filter_mem_from_sos_e820(vm, hv_start_pa, hv_end_pa);
+	sos_vm_config->memory.size = p_e820_mem_info->total_mem_size - CONFIG_HV_RAM_SIZE;
+
+	/* filter out prelaunched vm memory from e820 table */
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		struct acrn_vm_config *vm_config = get_vm_config(vm_id);
+
+		if (vm_config->load_order == PRE_LAUNCHED_VM) {
+			filter_mem_from_sos_e820(vm, vm_config->memory.start_hpa,
+					vm_config->memory.start_hpa + vm_config->memory.size);
+			sos_vm_config->memory.size -= vm_config->memory.size;
+		}
+	}
 }
 
 /**
@@ -297,9 +315,11 @@ static void create_sos_vm_e820(struct acrn_vm *vm)
  */
 static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 {
+	uint16_t vm_id;
 	uint32_t i;
 	uint64_t attr_uc = (EPT_RWX | EPT_UNCACHED);
 	uint64_t hv_hpa;
+	struct acrn_vm_config *vm_config;
 	uint64_t *pml4_page = (uint64_t *)vm->arch_vm.nworld_eptp;
 
 	const struct e820_entry *entry;
@@ -338,6 +358,13 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	 */
 	hv_hpa = hva2hpa((void *)(get_hv_image_base()));
 	ept_mr_del(vm, pml4_page, hv_hpa, CONFIG_HV_RAM_SIZE);
+	/* unmap prelaunch VM memory */
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm_config = get_vm_config(vm_id);
+		if (vm_config->load_order == PRE_LAUNCHED_VM) {
+			ept_mr_del(vm, pml4_page, vm_config->memory.start_hpa, vm_config->memory.size);
+		}
+	}
 }
 
 /**
