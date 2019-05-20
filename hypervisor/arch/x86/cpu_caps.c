@@ -214,9 +214,9 @@ void init_pcpu_capabilities(void)
 	cpuid(CPUID_FEATURES, &eax, &unused,
 		&boot_cpu_data.cpuid_leaves[FEAT_1_ECX],
 		&boot_cpu_data.cpuid_leaves[FEAT_1_EDX]);
-	family = (eax >> 8U) & 0xffU;
+	family = (eax >> 8U) & 0xfU;
 	if (family == 0xFU) {
-		family += (eax >> 20U) & 0xffU;
+		family += ((eax >> 20U) & 0xffU) << 4U;
 	}
 	boot_cpu_data.family = (uint8_t)family;
 
