@@ -36,8 +36,8 @@
 #include <logmsg.h>
 
 static spinlock_t pci_device_lock;
-static uint32_t num_pci_pdev;
-static struct pci_pdev pci_pdev_array[CONFIG_MAX_PCI_DEV_NUM];
+uint32_t num_pci_pdev;
+struct pci_pdev pci_pdev_array[CONFIG_MAX_PCI_DEV_NUM];
 
 static void init_pdev(uint16_t pbdf);
 
@@ -392,17 +392,6 @@ static void init_pdev(uint16_t pbdf)
 		num_pci_pdev++;
 	} else {
 		pr_err("%s, failed to alloc pci_pdev!\n", __func__);
-	}
-}
-
-void pci_pdev_foreach(pci_pdev_enumeration_cb cb_func, const void *ctx)
-{
-	uint32_t idx;
-
-	for (idx = 0U; idx < num_pci_pdev; idx++) {
-		if (cb_func != NULL) {
-			cb_func(&pci_pdev_array[idx], ctx);
-		}
 	}
 }
 

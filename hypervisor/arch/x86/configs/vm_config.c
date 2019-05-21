@@ -10,7 +10,7 @@
 
 /*
  * @pre vm_id < CONFIG_MAX_VM_NUM
- * @post return != NULL 
+ * @post return != NULL
  */
 struct acrn_vm_config *get_vm_config(uint16_t vm_id)
 {
