@@ -53,6 +53,7 @@ struct acrn_vioapic {
 	struct acrn_vm	*vm;
 	spinlock_t	mtx;
 	uint32_t	id;
+	bool		ready;
 	uint32_t	ioregsel;
 	union ioapic_rte rtbl[REDIR_ENTRIES_HW];
 	/* pin_state status bitmap: 1 - high, 0 - low */

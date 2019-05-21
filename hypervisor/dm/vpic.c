@@ -509,6 +509,7 @@ vpic_pincount(void)
 /**
  * @pre vm->vpic != NULL
  * @pre irqline < NR_VPIC_PINS_TOTAL
+ * @pre this function should be called after vpic_init()
  */
 void vpic_get_irqline_trigger_mode(const struct acrn_vm *vm, uint32_t irqline,
 		enum vpic_trigger *trigger)
@@ -531,6 +532,7 @@ void vpic_get_irqline_trigger_mode(const struct acrn_vm *vm, uint32_t irqline,
  * @param[inout] vecptr Pointer to vector buffer and will be filled
  *			with eligible vector if any.
  *
+ * @pre this function should be called after vpic_init()
  * @return None
  */
 void vpic_pending_intr(struct acrn_vm *vm, uint32_t *vecptr)
@@ -593,6 +595,7 @@ static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint32_t pin)
  * @return None
  *
  * @pre vm != NULL
+ * @pre this function should be called after vpic_init()
  */
 void vpic_intr_accepted(struct acrn_vm *vm, uint32_t vector)
 {
