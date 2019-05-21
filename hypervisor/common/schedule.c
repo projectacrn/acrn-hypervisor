@@ -126,40 +126,6 @@ bool need_reschedule(uint16_t pcpu_id)
 	return bitmap_test(NEED_RESCHEDULE, &ctx->flags);
 }
 
-void make_pcpu_offline(uint16_t pcpu_id)
-{
-	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
-
-	bitmap_set_lock(NEED_OFFLINE, &ctx->flags);
-	if (get_pcpu_id() != pcpu_id) {
-		send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
-	}
-}
-
-bool need_offline(uint16_t pcpu_id)
-{
-	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
-
-	return bitmap_test_and_clear_lock(NEED_OFFLINE, &ctx->flags);
-}
-
-void make_shutdown_vm_request(uint16_t pcpu_id)
-{
-	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
-
-	bitmap_set_lock(NEED_SHUTDOWN_VM, &ctx->flags);
-	if (get_pcpu_id() != pcpu_id) {
-		send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
-	}
-}
-
-bool need_shutdown_vm(uint16_t pcpu_id)
-{
-	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
-
-	return bitmap_test_and_clear_lock(NEED_SHUTDOWN_VM, &ctx->flags);
-}
-
 static void prepare_switch(struct sched_object *prev, struct sched_object *next)
 {
 	if ((prev != NULL) && (prev->prepare_switch_out != NULL)) {

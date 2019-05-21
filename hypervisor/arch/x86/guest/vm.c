@@ -7,6 +7,8 @@
 #include <types.h>
 #include <errno.h>
 #include <sprintf.h>
+#include <per_cpu.h>
+#include <lapic.h>
 #include <vm.h>
 #include <vm_reset.h>
 #include <bits.h>
@@ -877,4 +879,17 @@ bool has_rt_vm(void)
 	}
 
 	return ((vm_id == CONFIG_MAX_VM_NUM) ? false : true);
+}
+
+void make_shutdown_vm_request(uint16_t pcpu_id)
+{
+	bitmap_set_lock(NEED_SHUTDOWN_VM, &per_cpu(pcpu_flag, pcpu_id));
+	if (get_pcpu_id() != pcpu_id) {
+		send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
+	}
+}
+
+bool need_shutdown_vm(uint16_t pcpu_id)
+{
+	return bitmap_test_and_clear_lock(NEED_SHUTDOWN_VM, &per_cpu(pcpu_flag, pcpu_id));
 }
