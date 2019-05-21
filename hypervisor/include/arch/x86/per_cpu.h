@@ -42,6 +42,7 @@ struct per_cpu_region {
 	struct host_gdt gdt;
 	struct tss_64 tss;
 	enum pcpu_boot_state boot_state;
+	uint64_t pcpu_flag;
 	uint8_t mc_stack[CONFIG_STACK_SIZE] __aligned(16);
 	uint8_t df_stack[CONFIG_STACK_SIZE] __aligned(16);
 	uint8_t sf_stack[CONFIG_STACK_SIZE] __aligned(16);

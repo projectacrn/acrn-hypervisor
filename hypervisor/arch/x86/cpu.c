@@ -342,6 +342,19 @@ bool start_pcpus(uint64_t mask)
 	return ((pcpu_active_bitmap & mask) == mask);
 }
 
+void make_pcpu_offline(uint16_t pcpu_id)
+{
+	bitmap_set_lock(NEED_OFFLINE, &per_cpu(pcpu_flag, pcpu_id));
+	if (get_pcpu_id() != pcpu_id) {
+		send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
+	}
+}
+
+bool need_offline(uint16_t pcpu_id)
+{
+	return bitmap_test_and_clear_lock(NEED_OFFLINE, &per_cpu(pcpu_flag, pcpu_id));
+}
+
 void wait_pcpus_offline(uint64_t mask)
 {
 	uint32_t timeout;
