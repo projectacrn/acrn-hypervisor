@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <bits.h>
 #include <vm_config.h>
 #include <logmsg.h>
 #include <cat.h>
@@ -103,6 +104,7 @@ bool sanitize_vm_config(void)
 				ret = false;
 			} else {
 				vm_config->pcpu_bitmap = sos_pcpu_bitmap;
+				vm_config->vcpu_num = bitmap_weight(sos_pcpu_bitmap);
 			}
 			break;
 		case POST_LAUNCHED_VM:

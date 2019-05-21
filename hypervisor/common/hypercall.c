@@ -175,10 +175,11 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 				} else {
 					/* return a relative vm_id from SOS view */
 					cv.vmid = vmid_2_rel_vmid(vm->vm_id, vm_id);
+					cv.vcpu_num = vm_config->vcpu_num;
 					ret = 0;
 				}
 
-				if (copy_to_gpa(vm, &cv.vmid, param, sizeof(cv.vmid)) != 0) {
+				if (copy_to_gpa(vm, &cv, param, sizeof(cv)) != 0) {
 					pr_err("%s: Unable copy param to vm\n", __func__);
 					ret = -1;
 				}
