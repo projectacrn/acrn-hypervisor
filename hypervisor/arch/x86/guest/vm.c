@@ -477,7 +477,9 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 				register_pm1ab_handler(vm);
 			}
 		}
-		vpic_init(vm);
+		if (!is_lapic_pt_configured(vm)) {
+			vpic_init(vm);
+		}
 
 		/* Create virtual uart;*/
 		vuart_init(vm, vm_config->vuart);
@@ -495,7 +497,9 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		vm->wire_mode = VPIC_WIRE_INTR;
 
 		/* Init full emulated vIOAPIC instance */
-		vioapic_init(vm);
+		if (!is_lapic_pt_configured(vm)) {
+			vioapic_init(vm);
+		}
 
 		/* Intercept the virtual pm port for RTVM */
 		if (is_rt_vm(vm)) {

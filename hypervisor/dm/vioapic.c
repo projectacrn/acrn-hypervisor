@@ -124,6 +124,8 @@ vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint32_t pin, uint32_t level)
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
  * @pre irqline < vioapic_pincount(vm)
+ * @pre vm != NULL
+ * @pre vioapic->ready == true
  * @return None
  */
 void
@@ -166,6 +168,7 @@ vioapic_set_irqline_nolock(const struct acrn_vm *vm, uint32_t irqline, uint32_t 
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
  * @pre irqline < vioapic_pincount(vm)
+ * @pre vm != NULL
  *
  * @return None
  */
@@ -173,10 +176,11 @@ void
 vioapic_set_irqline_lock(const struct acrn_vm *vm, uint32_t irqline, uint32_t operation)
 {
 	struct acrn_vioapic *vioapic = vm_ioapic(vm);
-
-	spinlock_obtain(&(vioapic->mtx));
-	vioapic_set_irqline_nolock(vm, irqline, operation);
-	spinlock_release(&(vioapic->mtx));
+	if (vioapic->ready) {
+		spinlock_obtain(&(vioapic->mtx));
+		vioapic_set_irqline_nolock(vm, irqline, operation);
+		spinlock_release(&(vioapic->mtx));
+	}
 }
 
 static uint32_t
@@ -385,6 +389,10 @@ vioapic_mmio_rw(struct acrn_vioapic *vioapic, uint64_t gpa,
 	spinlock_release(&(vioapic->mtx));
 }
 
+/*
+ * @pre vm != NULL
+ * @pre vioapic->ready == true
+ */
 void
 vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector)
 {
@@ -460,6 +468,7 @@ vioapic_init(struct acrn_vm *vm)
 			(uint64_t)VIOAPIC_BASE,
 			(uint64_t)VIOAPIC_BASE + VIOAPIC_SIZE,
 			vm);
+	vm->arch_vm.vioapic.ready = true;
 }
 
 uint32_t
@@ -476,6 +485,10 @@ vioapic_pincount(const struct acrn_vm *vm)
 	return ret;
 }
 
+/*
+ * @pre handler_private_data != NULL
+ * @pre vioapic->ready == true
+ */
 int32_t vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
 {
 	struct acrn_vm *vm = (struct acrn_vm *)handler_private_data;
