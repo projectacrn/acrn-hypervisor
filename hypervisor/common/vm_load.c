@@ -53,13 +53,14 @@ static uint32_t create_zeropage_e820(struct zero_page *zp, const struct acrn_vm 
 static uint64_t create_zero_page(struct acrn_vm *vm)
 {
 	struct zero_page *zeropage;
-	struct sw_linux *linux_info = &(vm->sw.linux_info);
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
+	struct sw_module_info *bootargs_info = &(vm->sw.bootargs_info);
+	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
 	struct zero_page *hva;
 	uint64_t gpa, addr;
 
 	/* Set zeropage in Linux Guest RAM region just past boot args */
-	gpa = (uint64_t)linux_info->bootargs_load_addr + MEM_4K;
+	gpa = (uint64_t)bootargs_info->load_addr + MEM_4K;
 	hva = (struct zero_page *)gpa2hva(vm, gpa);
 	zeropage = hva;
 
@@ -73,16 +74,16 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 				&(hva->hdr), sizeof(hva->hdr));
 
 	/* See if kernel has a RAM disk */
-	if (linux_info->ramdisk_src_addr != NULL) {
+	if (ramdisk_info->src_addr != NULL) {
 		/* Copy ramdisk load_addr and size in zeropage header structure
 		 */
-		addr = (uint64_t)linux_info->ramdisk_load_addr;
+		addr = (uint64_t)ramdisk_info->load_addr;
 		zeropage->hdr.ramdisk_addr = (uint32_t)addr;
-		zeropage->hdr.ramdisk_size = (uint32_t)linux_info->ramdisk_size;
+		zeropage->hdr.ramdisk_size = (uint32_t)ramdisk_info->size;
 	}
 
 	/* Copy bootargs load_addr in zeropage header structure */
-	addr = (uint64_t)linux_info->bootargs_load_addr;
+	addr = (uint64_t)bootargs_info->load_addr;
 	zeropage->hdr.bootargs_addr = (uint32_t)addr;
 
 	/* set constant arguments in zero page */
@@ -103,8 +104,9 @@ int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 	char  dyn_bootargs[100] = {0};
 	uint32_t kernel_entry_offset;
 	struct zero_page *zeropage;
-	struct sw_linux *linux_info = &(vm->sw.linux_info);
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
+	struct sw_module_info *bootargs_info = &(vm->sw.bootargs_info);
+	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
 	/* get primary vcpu */
 	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
 	const struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
@@ -147,9 +149,9 @@ int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 		}
 
 		/* Copy Guest OS bootargs to its load location */
-		(void)copy_to_gpa(vm, linux_info->bootargs_src_addr,
-			(uint64_t)linux_info->bootargs_load_addr,
-			(strnlen_s((char *)linux_info->bootargs_src_addr, MAX_BOOTARGS_SIZE) + 1U));
+		(void)copy_to_gpa(vm, bootargs_info->src_addr,
+			(uint64_t)bootargs_info->load_addr,
+			(strnlen_s((char *)bootargs_info->src_addr, MAX_BOOTARGS_SIZE) + 1U));
 
 		/* add "hugepagesz=1G hugepages=x" to cmdline for 1G hugepage
 		 * reserving. Current strategy is "total_mem_size in Giga -
@@ -161,18 +163,18 @@ int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 			reserving_1g_pages = (vm_config->memory.size >> 30U) - NUM_REMAIN_1G_PAGES;
 			if (reserving_1g_pages > 0) {
 				snprintf(dyn_bootargs, 100U, " hugepagesz=1G hugepages=%lld", reserving_1g_pages);
-				(void)copy_to_gpa(vm, dyn_bootargs, ((uint64_t)linux_info->bootargs_load_addr
-					+ linux_info->bootargs_size),
+				(void)copy_to_gpa(vm, dyn_bootargs, ((uint64_t)bootargs_info->load_addr
+					+ bootargs_info->size),
 					(strnlen_s(dyn_bootargs, 99U) + 1U));
 			}
 		}
 
 		/* Check if a RAM disk is present with Linux guest */
-		if (linux_info->ramdisk_src_addr != NULL) {
+		if (ramdisk_info->src_addr != NULL) {
 			/* Copy RAM disk to its load location */
-			(void)copy_to_gpa(vm, linux_info->ramdisk_src_addr,
-				(uint64_t)linux_info->ramdisk_load_addr,
-				linux_info->ramdisk_size);
+			(void)copy_to_gpa(vm, ramdisk_info->src_addr,
+				(uint64_t)ramdisk_info->load_addr,
+				ramdisk_info->size);
 		}
 
 		/* Create Zeropage and copy Physical Base Address of Zeropage

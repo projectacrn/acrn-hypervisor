@@ -35,16 +35,11 @@ struct vm_hw_info {
 	uint16_t created_vcpus;	/* Number of created vcpus */
 } __aligned(PAGE_SIZE);
 
-struct sw_linux {
-	void *ramdisk_src_addr;		/* HVA */
-	void *ramdisk_load_addr;	/* GPA */
-	uint32_t ramdisk_size;
-	void *bootargs_src_addr;	/* HVA */
-	void *bootargs_load_addr;	/* GPA */
-	uint32_t bootargs_size;
-	void *dtb_src_addr;		/* HVA */
-	void *dtb_load_addr;		/* GPA */
-	uint32_t dtb_size;
+struct sw_module_info {
+	/* sw modules like ramdisk, bootargs, firmware, etc. */
+	void *src_addr;			/* HVA */
+	void *load_addr;		/* GPA */
+	uint32_t size;
 };
 
 struct sw_kernel_info {
@@ -58,8 +53,8 @@ struct vm_sw_info {
 	int32_t kernel_type;	/* Guest kernel type */
 	/* Kernel information (common for all guest types) */
 	struct sw_kernel_info kernel_info;
-	/* Additional information specific to Linux guests */
-	struct sw_linux linux_info;
+	struct sw_module_info bootargs_info;
+	struct sw_module_info ramdisk_info;
 	/* HVA to IO shared page */
 	void *io_shared_page;
 	/* If enable IO completion polling mode */

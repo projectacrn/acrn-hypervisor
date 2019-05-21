@@ -60,8 +60,8 @@ static void parse_other_modules(struct acrn_vm *vm, const struct multiboot_modul
 		type_len = end - start;
 		if (strncmp("FIRMWARE", start, type_len) == 0) {
 			char  dyn_bootargs[100] = {'\0'};
-			void *load_addr = gpa2hva(vm, (uint64_t)vm->sw.linux_info.bootargs_load_addr);
-			uint32_t args_size = vm->sw.linux_info.bootargs_size;
+			void *load_addr = gpa2hva(vm, (uint64_t)vm->sw.bootargs_info.load_addr);
+			uint32_t args_size = vm->sw.bootargs_info.size;
 			static int32_t copy_once = 1;
 
 			start = end + 1; /*it is fw name for boot args */
@@ -72,21 +72,21 @@ static void parse_other_modules(struct acrn_vm *vm, const struct multiboot_modul
 			if (copy_once != 0) {
 				copy_once = 0;
 				(void)strncpy_s(load_addr, MAX_BOOTARGS_SIZE + 1U,
-					(const char *)vm->sw.linux_info.bootargs_src_addr,
-					vm->sw.linux_info.bootargs_size);
-				vm->sw.linux_info.bootargs_src_addr = load_addr;
+					(const char *)vm->sw.bootargs_info.src_addr,
+					vm->sw.bootargs_info.size);
+				vm->sw.bootargs_info.src_addr = load_addr;
 			}
 
 			(void)strncpy_s(load_addr + args_size, 100U, dyn_bootargs, 100U);
-			vm->sw.linux_info.bootargs_size = strnlen_s(load_addr, MAX_BOOTARGS_SIZE);
+			vm->sw.bootargs_info.size = strnlen_s(load_addr, MAX_BOOTARGS_SIZE);
 
 		} else if (strncmp("RAMDISK", start, type_len) == 0) {
-			vm->sw.linux_info.ramdisk_src_addr = mod_addr;
-			vm->sw.linux_info.ramdisk_load_addr = vm->sw.kernel_info.kernel_load_addr +
+			vm->sw.ramdisk_info.src_addr = mod_addr;
+			vm->sw.ramdisk_info.load_addr = vm->sw.kernel_info.kernel_load_addr +
 				vm->sw.kernel_info.kernel_size;
-			vm->sw.linux_info.ramdisk_load_addr =
-				(void *)round_page_up((uint64_t)vm->sw.linux_info.ramdisk_load_addr);
-			vm->sw.linux_info.ramdisk_size = mod_size;
+			vm->sw.ramdisk_info.load_addr =
+				(void *)round_page_up((uint64_t)vm->sw.ramdisk_info.load_addr);
+			vm->sw.ramdisk_info.size = mod_size;
 		} else {
 			pr_warn("not support mod, cmd: %s", start);
 		}
@@ -192,8 +192,8 @@ static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
 
 				if (vm_config->load_order == PRE_LAUNCHED_VM) {
 					vm->sw.kernel_info.kernel_load_addr = (void *)(MEM_1M * 16U);
-					vm->sw.linux_info.bootargs_src_addr = (void *)vm_config->os_config.bootargs;
-					vm->sw.linux_info.bootargs_size =
+					vm->sw.bootargs_info.src_addr = (void *)vm_config->os_config.bootargs;
+					vm->sw.bootargs_info.size =
 						strnlen_s(vm_config->os_config.bootargs, MAX_BOOTARGS_SIZE);
 				} else {
 					vm->sw.kernel_info.kernel_load_addr =
@@ -207,20 +207,20 @@ static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
 						merge_cmdline(vm, hpa2hva((uint64_t)mbi->mi_cmdline),
 								hpa2hva((uint64_t)mods[0].mm_string));
 
-						vm->sw.linux_info.bootargs_src_addr = kernel_cmdline;
-						vm->sw.linux_info.bootargs_size =
+						vm->sw.bootargs_info.src_addr = kernel_cmdline;
+						vm->sw.bootargs_info.size =
 							strnlen_s(kernel_cmdline, MAX_BOOTARGS_SIZE);
 					} else {
-						vm->sw.linux_info.bootargs_src_addr =
+						vm->sw.bootargs_info.src_addr =
 							hpa2hva((uint64_t)mods[0].mm_string);
-						vm->sw.linux_info.bootargs_size =
+						vm->sw.bootargs_info.size =
 							strnlen_s(hpa2hva((uint64_t)mods[0].mm_string),
 							MAX_BOOTARGS_SIZE);
 					}
 				}
 
 				/* Kernel bootarg and zero page are right before the kernel image */
-				vm->sw.linux_info.bootargs_load_addr =
+				vm->sw.bootargs_info.load_addr =
 					vm->sw.kernel_info.kernel_load_addr - (MEM_1K * 8U);
 
 				if (mbi->mi_mods_count > 1U) {
