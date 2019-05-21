@@ -13,25 +13,39 @@
 
 int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 {
+	/* Note:
+	 * 1. We don't validate Px request from SOS_VM for now;
+	 * 2. Px request will be rejected if no VM Px data is set, even guest is running intel_pstate driver;
+	 * 3. The Pstate frequency varies from LFM to HFM and then TFM, but not all frequencies between
+	 *     LFM to TFM are mapped in ACPI table. For acpi-cpufreq driver, the target Px value in MSR
+	 *     PERF_CTL should be matched with control value of px_data which come from ACPI table,
+	 *     but for intel_pstate driver the target Px value could be any value that between LFM to HFM.
+	 *     HV has no idea what driver guest is running, so we just check the LFM/TFM range here.
+	 *     Only checking Px by indexing control value in px_data might lost the guest Px request.
+	 */
 	int32_t ret = -1;
 
 	if (is_sos_vm(vm)) {
 		ret = 0;
 	} else {
-		uint8_t i;
 		uint8_t px_cnt = vm->pm.px_cnt;
 		const struct cpu_px_data *px_data = vm->pm.px_data;
 
 		if ((px_cnt != 0U) && (px_data != NULL)) {
-			for (i = 0U; i < px_cnt; i++) {
-				if ((px_data + i)->control == (perf_ctl & 0xffffUL)) {
-					ret = 0;
-					break;
-				}
+			uint64_t px_target_val, max_px_ctl_val, min_px_ctl_val;
+
+			/* get max px control value, should be for p(0), i.e. TFM. */
+			max_px_ctl_val = ((px_data[0].control & 0xff00UL) >> 8U);
+
+			/* get min px control value, should be for p(px_cnt-1), i.e. LFM. */
+			min_px_ctl_val = ((px_data[px_cnt - 1].control & 0xff00UL) >> 8U);
+
+			px_target_val = ((perf_ctl & 0xff00UL) >> 8U);
+			if ((px_target_val <= max_px_ctl_val) && (px_target_val >= min_px_ctl_val)) {
+				ret = 0;
 			}
 		}
 	}
-
 	return ret;
 }
 
