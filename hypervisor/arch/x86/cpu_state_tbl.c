@@ -31,8 +31,8 @@ static const struct cpu_px_data px_a3960[] = {
 	{0x320UL, 0UL, 0xAUL, 0xAUL, 0x0800UL, 0x0800UL}  /* P16 */
 };
 
-/* The table includes cpu cx info of Intel A3960 SoC */
-static const struct cpu_cx_data cx_a3960[] = {
+/* The table includes cpu cx info of Intel Broxton SoC such as A39x0, J3455, N3350 */
+static const struct cpu_cx_data cx_bxt[] = {
 	{{SPACE_FFixedHW,  0x0U, 0U, 0U,     0UL}, 0x1U, 0x1U, 0x3E8UL}, /* C1 */
 	{{SPACE_SYSTEM_IO, 0x8U, 0U, 0U, 0x415UL}, 0x2U, 0x32U, 0x0AUL}, /* C2 */
 	{{SPACE_SYSTEM_IO, 0x8U, 0U, 0U, 0x419UL}, 0x3U, 0x96U, 0x0AUL}  /* C3 */
@@ -77,13 +77,6 @@ static const struct cpu_px_data px_n3350[] = {
 	{0x320UL, 0UL, 0xAUL, 0xAUL, 0x0800UL, 0x0800UL}  /* P4 */
 };
 
-/* The table includes cpu cx info of Intel J3455 SoC */
-static const struct cpu_cx_data cx_j3455[] = {
-	{{SPACE_FFixedHW, 0x1U, 0x2U, 0x1U, 0x01UL}, 0x1U, 0x1U, 0x3E8UL}, /* C1 */
-	{{SPACE_FFixedHW, 0x1U, 0x2U, 0x1U, 0x21UL}, 0x2U, 0x32U, 0x0AUL}, /* C2 */
-	{{SPACE_FFixedHW, 0x1U, 0x2U, 0x1U, 0x60UL}, 0x3U, 0x96U, 0x0AUL}  /* C3 */
-};
-
 /* The table includes cpu cx info of Intel i7-8650U SoC */
 static const struct cpu_px_data px_i78650[] = {
 	{0x835UL, 0x0UL, 0xAUL, 0xAUL, 0x2A00UL, 0x2A00UL}, /* P0 */
@@ -117,19 +110,19 @@ static const struct cpu_state_table {
 } cpu_state_tbl[] = {
 	{"Intel(R) Atom(TM) Processor A3960 @ 1.90GHz",
 		{(uint8_t)ARRAY_SIZE(px_a3960), px_a3960,
-		 (uint8_t)ARRAY_SIZE(cx_a3960), cx_a3960}
+		 (uint8_t)ARRAY_SIZE(cx_bxt), cx_bxt}
 	},
 	{"Intel(R) Atom(TM) Processor A3950 @ 1.60GHz",
 		{(uint8_t)ARRAY_SIZE(px_a3950), px_a3950,
-		 (uint8_t)ARRAY_SIZE(cx_a3960), cx_a3960} /* Cx is same as A3960 */
+		 (uint8_t)ARRAY_SIZE(cx_bxt), cx_bxt}
 	},
 	{"Intel(R) Celeron(R) CPU J3455 @ 1.50GHz",
 		{(uint8_t)ARRAY_SIZE(px_j3455), px_j3455,
-		 (uint8_t)ARRAY_SIZE(cx_j3455), cx_j3455}
+		 (uint8_t)ARRAY_SIZE(cx_bxt), cx_bxt}
 	},
 	{"Intel(R) Celeron(R) CPU N3350 @ 1.10GHz",
 		{(uint8_t)ARRAY_SIZE(px_n3350), px_n3350,
-		 (uint8_t)ARRAY_SIZE(cx_a3960), cx_a3960} /* Cx is same as A3960 */
+		 (uint8_t)ARRAY_SIZE(cx_bxt), cx_bxt}
 	},
 	{"Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz",
 		{(uint8_t)ARRAY_SIZE(px_i78650), px_i78650,
