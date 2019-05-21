@@ -179,7 +179,9 @@ struct pci_pdev {
 	struct pci_msix_cap msix;
 };
 
-typedef void (*pci_pdev_enumeration_cb)(struct pci_pdev *pdev, const void *data);
+extern uint32_t num_pci_pdev;
+extern struct pci_pdev pci_pdev_array[CONFIG_MAX_PCI_DEV_NUM];
+
 
 static inline uint32_t pci_bar_offset(uint32_t idx)
 {
@@ -249,7 +251,6 @@ uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes);
 void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 void enable_disable_pci_intx(union pci_bdf bdf, bool enable);
 
-void pci_pdev_foreach(pci_pdev_enumeration_cb cb, const void *ctx);
 struct pci_pdev *find_pci_pdev(union pci_bdf pbdf);
 void init_pci_pdev_list(void);
 

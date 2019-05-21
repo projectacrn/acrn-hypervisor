@@ -34,7 +34,7 @@
 #include <logmsg.h>
 #include "vpci_priv.h"
 
-static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm);
+static void init_vdevs(const struct acrn_vm *vm);
 static void deinit_prelaunched_vm_vpci(const struct acrn_vm *vm);
 static void deinit_postlaunched_vm_vpci(const struct acrn_vm *vm);
 static void read_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t *val);
@@ -208,8 +208,8 @@ void vpci_init(struct acrn_vm *vm)
 	case PRE_LAUNCHED_VM:
 	case SOS_VM:
 		vm->iommu = create_iommu_domain(vm->vm_id, hva2hpa(vm->arch_vm.nworld_eptp), 48U);
-		/* Build up vdev array for vm */
-		pci_pdev_foreach(init_vdev_for_pdev, vm);
+		/* Build up vdev list for vm */
+		init_vdevs(vm);
 		ret = 0;
 		break;
 
@@ -398,9 +398,9 @@ static struct acrn_vm_pci_ptdev_config *find_ptdev_config_by_pbdf(const struct a
  * @pre vm != NULL
  * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  */
-static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
+static void init_vdev_for_pdev(struct pci_pdev *pdev, const struct acrn_vm *vm)
 {
-	const struct acrn_vm_config *vm_config = get_vm_config(((struct acrn_vm *)vm)->vm_id);
+	const struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	struct acrn_vpci *vpci = &(((struct acrn_vm *)vm)->vpci);
 	struct acrn_vm_pci_ptdev_config *ptdev_config;
 
@@ -447,6 +447,18 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *vm)
 		if ((is_prelaunched_vm(vm) && !is_hostbridge(vdev)) || is_sos_vm(vm)) {
 			assign_vdev_pt_iommu_domain(vdev);
 		}
+	}
+}
+
+/**
+ * @pre vm != NULL
+ */
+static void init_vdevs(const struct acrn_vm *vm)
+{
+	uint32_t idx;
+
+	for (idx = 0U; idx < num_pci_pdev; idx++) {
+		init_vdev_for_pdev(&pci_pdev_array[idx], vm);
 	}
 }
 
@@ -561,6 +573,7 @@ void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, 
 			vm = get_sos_vm();
 
 			vdev->vpci = &vm->vpci;
+
 			/* vbdf equals to pbdf in sos */
 			vdev->vbdf.value = vdev->pdev->bdf.value;
 		}
