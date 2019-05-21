@@ -74,13 +74,8 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 	struct pci_msix *msix = &vdev->msix;
 	struct pci_pdev *pdev = vdev->pdev;
 	struct pci_bar *bar;
-	struct acrn_vm *vm = vdev->vpci->vm;
-	struct acrn_vm_config *vm_config;
-
-	vm_config = get_vm_config(vm->vm_id);
 
 	ASSERT(vdev->pdev->msix.table_bar < (PCI_BAR_COUNT - 1U), "msix->table_bar is out of range");
-
 
 	/* Mask all table entries */
 	for (i = 0U; i < msix->table_count; i++) {
@@ -92,14 +87,13 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 	bar = &pdev->bar[msix->table_bar];
 	if (bar != NULL) {
 		msix->mmio_hpa = bar->base;
-		if (vm_config->load_order == PRE_LAUNCHED_VM) {
+		if (is_prelaunched_vm(vdev->vpci->vm)) {
 			msix->mmio_gpa = vdev->bar[msix->table_bar].base;
 		} else {
 			msix->mmio_gpa = sos_vm_hpa2gpa(bar->base);
 		}
 		msix->mmio_size = bar->size;
 	}
-
 
 	/*
 	 *    For SOS:
@@ -143,7 +137,7 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 
 
 	if (msix->mmio_gpa != 0UL) {
-		if (vm_config->load_order == PRE_LAUNCHED_VM) {
+		if (is_prelaunched_vm(vdev->vpci->vm)) {
 			addr_hi = msix->mmio_gpa + msix->mmio_size;
 			addr_lo = msix->mmio_gpa;
 		} else {
