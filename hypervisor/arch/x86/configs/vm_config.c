@@ -108,7 +108,7 @@ bool sanitize_vm_config(void)
 			/* Nothing to do here for a POST_LAUNCHED_VM, break directly. */
 			break;
 		default:
-			/* Nothing to do for a UNDEFINED_VM, break directly. */
+			/* Nothing to do for a unknown VM, break directly. */
 			break;
 		}
 
