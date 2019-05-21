@@ -87,7 +87,7 @@ struct vm_isa_irq {
  *
  * Returns a pointer to the memory segment on success and MAP_FAILED otherwise.
  */
-struct	vmctx *vm_create(const char *name, uint64_t req_buf);
+struct	vmctx *vm_create(const char *name, uint64_t req_buf, int* vcpu_num);
 void	vm_pause(struct vmctx *ctx);
 void	vm_reset(struct vmctx *ctx);
 int	vm_create_ioreq_client(struct vmctx *ctx);

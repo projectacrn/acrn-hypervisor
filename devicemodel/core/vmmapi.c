@@ -87,7 +87,7 @@ check_api(int fd)
 static int devfd = -1;
 
 struct vmctx *
-vm_create(const char *name, uint64_t req_buf)
+vm_create(const char *name, uint64_t req_buf, int *vcpu_num)
 {
 	struct vmctx *ctx;
 	struct acrn_create_vm create_vm;
@@ -168,6 +168,7 @@ vm_create(const char *name, uint64_t req_buf)
 		goto err;
 	}
 
+	*vcpu_num = create_vm.vcpu_num;
 	ctx->vmid = create_vm.vmid;
 
 	return ctx;
