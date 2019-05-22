@@ -215,6 +215,7 @@ C_SRCS += arch/x86/guest/trusty.c
 C_SRCS += arch/x86/guest/vm_reset.c
 C_SRCS += arch/x86/cat.c
 C_SRCS += arch/x86/lib/memory.c
+C_SRCS += arch/x86/sgx.c
 C_SRCS += lib/string.c
 C_SRCS += lib/crypto/crypto_api.c
 C_SRCS += lib/crypto/mbedtls/hkdf.c
