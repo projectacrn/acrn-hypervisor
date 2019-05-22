@@ -509,15 +509,6 @@ vm_unmap_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
 }
 
 int
-vm_setup_ptdev_msi(struct vmctx *ctx, struct acrn_vm_pci_msix_remap *msi_remap)
-{
-	if (!msi_remap)
-		return -1;
-
-	return ioctl(ctx->fd, IC_VM_PCI_MSIX_REMAP, msi_remap);
-}
-
-int
 vm_set_ptdev_msix_info(struct vmctx *ctx, struct ic_ptdev_irq *ptirq)
 {
 	if (!ptirq)
