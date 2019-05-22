@@ -118,7 +118,6 @@ size_t	vm_get_lowmem_size(struct vmctx *ctx);
 size_t	vm_get_highmem_size(struct vmctx *ctx);
 int	vm_run(struct vmctx *ctx);
 int	vm_suspend(struct vmctx *ctx, enum vm_suspend_how how);
-int	vm_apicid2vcpu(struct vmctx *ctx, int apicid);
 int	vm_lapic_msi(struct vmctx *ctx, uint64_t addr, uint64_t msg);
 int	vm_set_gsi_irq(struct vmctx *ctx, int gsi, uint32_t operation);
 int	vm_assign_ptdev(struct vmctx *ctx, int bus, int slot, int func);

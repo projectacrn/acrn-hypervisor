@@ -431,16 +431,6 @@ vm_suspend(struct vmctx *ctx, enum vm_suspend_how how)
 }
 
 int
-vm_apicid2vcpu(struct vmctx *ctx, int apicid)
-{
-	/*
-	 * The apic id associated with the 'vcpu' has the same numerical value
-	 * as the 'vcpu' itself.
-	 */
-	return apicid;
-}
-
-int
 vm_lapic_msi(struct vmctx *ctx, uint64_t addr, uint64_t msg)
 {
 	struct acrn_msi_entry msi;
