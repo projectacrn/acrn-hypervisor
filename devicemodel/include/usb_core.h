@@ -251,7 +251,6 @@ static inline void usb_set_log_level(int level)	{ usb_log_level = level; }
 void usb_parse_log_level(char level);
 struct usb_devemu *usb_emu_finddev(char *name);
 int usb_native_is_bus_existed(uint8_t bus_num);
-int usb_native_is_ss_port(uint8_t bus_of_port);
 int usb_native_is_port_existed(uint8_t bus_num, uint8_t port_num);
 struct usb_data_xfer_block *usb_data_xfer_append(struct usb_data_xfer *xfer,
 						 void *buf,
