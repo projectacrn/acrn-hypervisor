@@ -41,7 +41,6 @@ struct gfx_ctx_image {
 };
 
 struct gfx_ctx *gc_init(int width, int height, void *fbaddr);
-void gc_resize(struct gfx_ctx *gc, int width, int height);
 struct gfx_ctx_image *gc_get_image(struct gfx_ctx *gc);
 
 #endif /* _GC_H_ */

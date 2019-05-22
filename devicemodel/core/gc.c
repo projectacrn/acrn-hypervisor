@@ -37,24 +37,6 @@ gc_init(int width, int height, void *fbaddr)
 	return gc;
 }
 
-void
-gc_resize(struct gfx_ctx *gc, int width, int height)
-{
-	struct gfx_ctx_image *gc_image;
-
-	gc_image = gc->gc_image;
-
-	gc_image->width = width;
-	gc_image->height = height;
-	if (!gc->raw) {
-		gc_image->data = realloc(gc_image->data,
-			   width * height * sizeof(uint32_t));
-		if (gc_image->data != NULL)
-			memset(gc_image->data, 0, width * height *
-			    sizeof(uint32_t));
-	}
-}
-
 struct gfx_ctx_image *
 gc_get_image(struct gfx_ctx *gc)
 {
