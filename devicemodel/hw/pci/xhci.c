@@ -4036,8 +4036,8 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	xdev->excap_ptr = excap_group_dft;
 
-	xdev->vid = XHCI_PCI_DEVICE_ID_DFLT;
-	xdev->pid = XHCI_PCI_VENDOR_ID_DFLT;
+	xdev->vid = XHCI_PCI_VENDOR_ID_DFLT;
+	xdev->pid = XHCI_PCI_DEVICE_ID_DFLT;
 
 	xdev->rtsregs.mfindex = 0;
 	clock_gettime(CLOCK_MONOTONIC, &xdev->mf_prev_time);
