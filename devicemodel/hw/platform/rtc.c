@@ -1007,18 +1007,6 @@ vrtc_set_time(struct vrtc *vrtc, time_t secs)
 	return error;
 }
 
-time_t
-vrtc_get_time(struct vrtc *vrtc)
-{
-	time_t basetime;
-	time_t t;
-
-	pthread_mutex_lock(&vrtc->mtx);
-	t = vrtc_curtime(vrtc, &basetime);
-	pthread_mutex_unlock(&vrtc->mtx);
-	return t;
-}
-
 void
 vrtc_reset(struct vrtc *vrtc)
 {
