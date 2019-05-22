@@ -938,6 +938,39 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	vm_unassign_ptdev(ctx, bus, slot, func);
 }
 
+static void
+passthru_update_bar_map(struct vmctx *ctx, struct pci_vdev *dev,
+	int idx, uint64_t orig_addr)
+{
+	struct passthru_dev *ptdev;
+
+	if (!dev->arg) {
+		warnx("%s: passthru_dev is NULL", __func__);
+		return;
+	}
+
+	ptdev = (struct passthru_dev *)dev->arg;
+
+	if (ptdev->bar[idx].size == 0 ||
+		idx == ptdev_msix_table_bar(ptdev) ||
+		ptdev->bar[idx].type == PCIBAR_IO)
+		return;
+
+	if (dev->bar[idx].addr + dev->bar[idx].size > PCI_EMUL_MEMLIMIT64 ||
+		orig_addr + dev->bar[idx].size > PCI_EMUL_MEMLIMIT64)
+		return;
+
+	vm_unmap_ptdev_mmio(ctx, ptdev->sel.bus,
+			ptdev->sel.dev, ptdev->sel.func,
+			orig_addr, ptdev->bar[idx].size,
+			ptdev->bar[idx].addr);
+
+	vm_map_ptdev_mmio(ctx, ptdev->sel.bus,
+			ptdev->sel.dev, ptdev->sel.func,
+			dev->bar[idx].addr, ptdev->bar[idx].size,
+			ptdev->bar[idx].addr);
+}
+
 /* bind pin info for pass-through device */
 static void
 passthru_bind_irq(struct vmctx *ctx, struct pci_vdev *dev)
@@ -1767,6 +1800,7 @@ struct pci_vdev_ops passthru = {
 	.vdev_barwrite		= passthru_write,
 	.vdev_barread		= passthru_read,
 	.vdev_phys_access	= passthru_bind_irq,
+	.vdev_update_bar_map	= passthru_update_bar_map,
 	.vdev_write_dsdt	= passthru_write_dsdt,
 };
 DEFINE_PCI_DEVTYPE(passthru);

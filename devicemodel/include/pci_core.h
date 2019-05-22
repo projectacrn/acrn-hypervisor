@@ -64,6 +64,11 @@ struct pci_vdev_ops {
 	/* ops related to physical resources */
 	void	(*vdev_phys_access)(struct vmctx *ctx, struct pci_vdev *dev);
 
+	/* update BAR map callback */
+	void	(*vdev_update_bar_map)(struct vmctx *ctx,
+				struct pci_vdev *dev, int idx,
+				uint64_t orig_addr);
+
 	/* config space read/write callbacks */
 	int	(*vdev_cfgwrite)(struct vmctx *ctx, int vcpu,
 			       struct pci_vdev *pi, int offset,
