@@ -89,7 +89,6 @@ struct vm_isa_irq {
  *
  * Returns a pointer to the memory segment on success and MAP_FAILED otherwise.
  */
-int	vm_get_device_fd(struct vmctx *ctx);
 struct	vmctx *vm_create(const char *name, uint64_t req_buf);
 void	vm_pause(struct vmctx *ctx);
 void	vm_reset(struct vmctx *ctx);
