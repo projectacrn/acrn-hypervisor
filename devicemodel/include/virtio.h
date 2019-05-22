@@ -207,6 +207,7 @@ enum {
 #define	VIRTIO_TYPE_HDCP	0xFFF9
 #define	VIRTIO_TYPE_COREU	0xFFF8
 #define	VIRTIO_TYPE_GPIO	0xFFF7
+#define	VIRTIO_TYPE_I2C		0xFFF6
 
 /*
  * PCI vendor/device IDs
@@ -230,6 +231,7 @@ enum {
 #define	VIRTIO_DEV_HDCP		0x8607
 #define	VIRTIO_DEV_COREU	0x8608
 #define	VIRTIO_DEV_GPIO		0x8609
+#define VIRTIO_DEV_I2C		0x860a
 
 /*
  * VIRTIO_CONFIG_S_NEEDS_RESET is not defined
