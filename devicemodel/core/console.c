@@ -55,13 +55,6 @@ console_get_image(void)
 }
 
 void
-console_refresh(void)
-{
-	if (console.fb_render_cb)
-		(*console.fb_render_cb)(console.gc, console.fb_arg);
-}
-
-void
 console_kbd_register(kbd_event_func_t event_cb, void *arg, int pri)
 {
 	if (pri > console.kbd_priority) {

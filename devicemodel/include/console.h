@@ -37,8 +37,6 @@ typedef void (*ptr_event_func_t)(uint8_t mask, int x, int y, void *arg);
 
 struct gfx_ctx_image *console_get_image(void);
 
-void	console_refresh(void);
-
 void	console_kbd_register(kbd_event_func_t event_cb, void *arg, int pri);
 void	console_kbd_unregister(void);
 void	console_key_event(int down, uint32_t keysym);
