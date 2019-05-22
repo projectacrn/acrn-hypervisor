@@ -106,7 +106,7 @@
  */
 #define	XHCI_PADDR_SZ		4096	/* paddr_guest2host max size */
 #define	XHCI_ERST_MAX		0	/* max 2^entries event ring seg tbl */
-#define	XHCI_CAPLEN		(4*8)	/* offset of op register space */
+#define	XHCI_CAPLEN		(8*8)	/* offset of op register space */
 #define	XHCI_HCCPRAMS2		0x1C	/* offset of HCCPARAMS2 register */
 #define	XHCI_PORTREGS_START	0x400
 #define	XHCI_DOORBELL_MAX	256
@@ -377,6 +377,7 @@ struct pci_xhci_vdev {
 	uint32_t	hccparams1;	/* capability parameters 1 */
 	uint32_t	dboff;		/* doorbell offset */
 	uint32_t	rtsoff;		/* runtime register space offset */
+	uint32_t	rtsend;
 	uint32_t	hccparams2;	/* capability parameters 2 */
 
 	uint32_t	excapoff;	/* ext-capability registers offset */
@@ -3332,7 +3333,7 @@ pci_xhci_write(struct vmctx *ctx,
 		pci_xhci_hostop_write(xdev, offset, value);
 	else if (offset < xdev->rtsoff)
 		pci_xhci_dbregs_write(xdev, offset, value);
-	else if (offset < xdev->excapoff)
+	else if (offset < xdev->rtsend)
 		pci_xhci_rtsregs_write(xdev, offset, value);
 	else if (offset < xdev->regsend)
 		pci_xhci_excap_write(xdev, offset, value);
@@ -3376,8 +3377,36 @@ pci_xhci_hostcap_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 		value = xdev->rtsoff;
 		break;
 
-	case XHCI_HCCPRAMS2:	/* 0x1C */
-		value = xdev->hccparams2;
+	case ACRN_XHCI_EXCAP1:
+		value = 0x02000402; /* USB 2.0 */
+		break;
+
+	case ACRN_XHCI_EXCAP1 + 4:
+		value = 0x20425355; /* "USB " */
+		break;
+
+	case ACRN_XHCI_EXCAP1 + 8:
+		value = (((XHCI_MAX_DEVS/2) << 8) | (XHCI_MAX_DEVS/2+1));
+		break;
+
+	case ACRN_XHCI_EXCAP1 + 12:
+		value = 0;
+		break;
+
+	case ACRN_XHCI_EXCAP2:
+		value = 0x03000002; /* USB 3.0 */
+		break;
+
+	case ACRN_XHCI_EXCAP2 + 4:
+		value = 0x20425355; /* "USB " */
+		break;
+
+	case ACRN_XHCI_EXCAP2 + 8:
+		value = (((XHCI_MAX_DEVS/2) << 8) | 1);
+		break;
+
+	case ACRN_XHCI_EXCAP2 + 12:
+		value = 0;
 		break;
 
 	default:
@@ -3477,11 +3506,11 @@ pci_xhci_rtsregs_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 
 		if (value >= 1)
 			xdev->rtsregs.mfindex += value;
-	} else if (offset >= 0x20) {
+	} else if (offset >= XHCI_RT_IR_BASE) {
 		int item;
 		uint32_t *p;
 
-		offset -= 0x20;
+		offset -= XHCI_RT_IR_BASE;
 		item = offset % 32;
 
 		assert(offset < sizeof(xdev->rtsregs.intrreg));
@@ -3551,7 +3580,7 @@ pci_xhci_read(struct vmctx *ctx,
 		value = pci_xhci_hostop_read(xdev, offset);
 	else if (offset < xdev->rtsoff)
 		value = pci_xhci_dbregs_read(xdev, offset);
-	else if (offset < xdev->excapoff)
+	else if (offset < xdev->rtsend)
 		value = pci_xhci_rtsregs_read(xdev, offset);
 	else if (offset < xdev->regsend)
 		value = pci_xhci_excap_read(xdev, offset);
@@ -3897,19 +3926,18 @@ pci_xhci_parse_extcap(struct pci_xhci_vdev *xdev, char *opts)
 	if (!strncmp(cap, "apl", 3)) {
 		xdev->excap_write = pci_xhci_apl_drdregs_write;
 		xdev->excap_ptr = excap_group_apl;
-		xdev->vid = XHCI_PCI_VENDOR_ID_INTEL;
-		xdev->pid = XHCI_PCI_DEVICE_ID_INTEL_APL;
+		xdev->vid = PCI_INTEL_APL_XHCI_VID;
+		xdev->pid = PCI_INTEL_APL_XHCI_PID;
 	} else
 		rc = -2;
 
 	if (((struct pci_xhci_excap *)(xdev->excap_ptr))->start
 			== EXCAP_GROUP_END) {
 		xdev->excap_write = NULL;
-		xdev->excap_ptr = excap_group_dft;
-		xdev->vid = XHCI_PCI_VENDOR_ID_DFLT;
-		xdev->pid = XHCI_PCI_DEVICE_ID_DFLT;
-		UPRINTF(LWRN, "Invalid xhci excap, force set "
-				"default excap\r\n");
+		xdev->excap_ptr = NULL;
+		xdev->vid = PCI_ACRN_XHCI_VID;
+		xdev->pid = PCI_ACRN_XHCI_PID;
+		UPRINTF(LWRN, "Invalid excap, set to ACRN excap\r\n");
 	}
 
 errout:
@@ -4034,10 +4062,10 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	xdev->usb2_port_start = (XHCI_MAX_DEVS/2) + 1;
 	xdev->usb3_port_start = 1;
 
-	xdev->excap_ptr = excap_group_dft;
-
-	xdev->vid = XHCI_PCI_VENDOR_ID_DFLT;
-	xdev->pid = XHCI_PCI_DEVICE_ID_DFLT;
+	xdev->vid = PCI_ACRN_XHCI_VID;
+	xdev->pid = PCI_ACRN_XHCI_PID;
+	xdev->excapoff = ACRN_XHCI_EXCAP1;
+	xdev->excap_ptr = NULL;
 
 	xdev->rtsregs.mfindex = 0;
 	clock_gettime(CLOCK_MONOTONIC, &xdev->mf_prev_time);
@@ -4083,6 +4111,7 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		(XHCI_MAX_SLOTS+1) * 32);
 	if (xdev->rtsoff & 0x1F)
 		xdev->rtsoff = (xdev->rtsoff + 0x1F) & ~0x1F;
+	xdev->rtsend = xdev->rtsoff + XHCI_RT_IR_BASE + sizeof(xdev->rtsregs);
 
 	UPRINTF(LDBG, "dboff: 0x%x, rtsoff: 0x%x\r\n", xdev->dboff,
 		 xdev->rtsoff);
@@ -4092,28 +4121,24 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	pci_xhci_reset(xdev);
 
-	/* xdev->excap_ptr should be assigned to global array in which
-	 * it need include two items at least and field start must be
-	 * ended by EXCAP_GROUP_END at last item.
-	 */
 	excap = xdev->excap_ptr;
-	if (!excap) {
-		error = -1;
-		goto done;
+	if (excap == NULL) {
+		xdev->regsend = xdev->rtsend;
+		xdev->excapoff = ACRN_XHCI_EXCAP1;
+	} else {
+		xdev->excapoff = excap->start;
+		while (excap && excap->start != EXCAP_GROUP_END) {
+			xdev->regsend = excap->end;
+			excap++;
+		}
 	}
-
-	xdev->excapoff = excap->start;
-
-	do {
-		xdev->regsend = excap->end;
-		excap++;
-	} while (excap && excap->start != EXCAP_GROUP_END);
 
 	/*
 	 * Set extended capabilities pointer to be after regsend;
 	 * value of excap field is 32-bit offset.
 	 */
-	xdev->hccparams1 |= XHCI_SET_HCCP1_XECP(XHCI_EXCAP_PTR);
+	xdev->hccparams1 |=
+		XHCI_SET_HCCP1_XECP(XHCI_XECP_OFF_SHIFT(xdev->excapoff));
 
 	pci_set_cfgdata16(dev, PCIR_DEVICE, xdev->pid);
 	pci_set_cfgdata16(dev, PCIR_VENDOR, xdev->vid);
