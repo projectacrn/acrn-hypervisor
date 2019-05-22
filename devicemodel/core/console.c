@@ -91,13 +91,6 @@ console_ptr_unregister()
 }
 
 void
-console_key_event(int down, uint32_t keysym)
-{
-	if (console.kbd_event_cb)
-		(*console.kbd_event_cb)(down, keysym, console.kbd_arg);
-}
-
-void
 console_ptr_event(uint8_t button, int x, int y)
 {
 	if (console.ptr_event_cb)
