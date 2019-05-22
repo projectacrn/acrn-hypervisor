@@ -132,50 +132,6 @@ usb_native_is_bus_existed(uint8_t bus_num)
 }
 
 int
-usb_native_is_ss_port(uint8_t bus_of_port)
-{
-	char buf[128];
-	char speed[8];
-	int rc, fd;
-	int usb2_speed_sz = sizeof(NATIVE_USB2_SPEED);
-	int usb3_speed_sz = sizeof(NATIVE_USB3_SPEED);
-
-	assert(usb_native_is_bus_existed(bus_of_port));
-	snprintf(buf, sizeof(buf), "%s/usb%d/speed", NATIVE_USBSYS_DEVDIR,
-			bus_of_port);
-	if (access(buf, R_OK)) {
-		UPRINTF(LWRN, "can't find speed file\r\n");
-		return 0;
-	}
-
-	fd = open(buf, O_RDONLY);
-	if (fd < 0) {
-		UPRINTF(LWRN, "fail to open maxchild file\r\n");
-		return 0;
-	}
-
-	rc = read(fd, &speed, sizeof(speed));
-	if (rc < 0) {
-		UPRINTF(LWRN, "fail to read speed file\r\n");
-		goto errout;
-	}
-
-	if (rc < usb2_speed_sz) {
-		UPRINTF(LWRN, "read invalid speed data\r\n");
-		goto errout;
-	}
-
-	if (strncmp(speed, NATIVE_USB3_SPEED, usb3_speed_sz))
-		goto errout;
-
-	close(fd);
-	return 1;
-errout:
-	close(fd);
-	return 0;
-}
-
-int
 usb_native_is_port_existed(uint8_t bus_num, uint8_t port_num)
 {
 	int native_port_cnt;
