@@ -35,8 +35,6 @@ typedef void (*fb_render_func_t)(struct gfx_ctx *gc, void *arg);
 typedef void (*kbd_event_func_t)(int down, uint32_t keysym, void *arg);
 typedef void (*ptr_event_func_t)(uint8_t mask, int x, int y, void *arg);
 
-void	console_init(int w, int h, void *fbaddr);
-
 struct gfx_ctx_image *console_get_image(void);
 
 void	console_fb_register(fb_render_func_t render_cb, void *arg);
