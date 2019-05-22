@@ -762,31 +762,6 @@ bool swtpm_get_tpm_established_flag(void)
 	return tpm_context.established_flag;
 }
 
-int swtpm_reset_tpm_established_flag(void)
-{
-	ptm_reset_est reset_est;
-	ptm_res res;
-
-	reset_est.u.req.loc = tpm_context.cur_locty_number;
-	if (swtpm_ctrlcmd(tpm_context.ctrl_chan_fd, CMD_RESET_TPMESTABLISHED,
-				&reset_est, sizeof(reset_est),
-				sizeof(reset_est), NULL, 0) < 0) {
-		printf("swtpm: Could not reset the establishment bit: %s",
-		strerror(errno));
-		return -1;
-	}
-
-	res = __builtin_bswap32(reset_est.u.resp.tpm_result);
-	if (res) {
-		printf("swtpm: TPM result for rest establixhed flag: 0x%x", res);
-		return -1;
-	}
-
-	tpm_context.established_flag_cached = 0;
-
-	return 0;
-}
-
 void swtpm_cancel_cmd(void)
 {
 	ptm_res res = 0;

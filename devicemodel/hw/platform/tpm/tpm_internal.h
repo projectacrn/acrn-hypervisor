@@ -36,9 +36,6 @@ void deinit_tpm_emulator(void);
 /* Send Ctrl channel command CMD_GET_TPMESTABLISHED to SWTPM */
 bool swtpm_get_tpm_established_flag(void);
 
-/* Send Ctrl channel command CMD_RESET_TPMESTABLISHED to SWTPM */
-int swtpm_reset_tpm_established_flag(void);
-
 /* Send TPM2 command request to SWTPM by using Cmd channel */
 int swtpm_handle_request(TPMCommBuffer *cmd);
 
