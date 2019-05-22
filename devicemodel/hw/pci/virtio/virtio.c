@@ -1177,30 +1177,6 @@ virtio_set_modern_bar(struct virtio_base *base, bool use_notify_pio)
 	return rc;
 }
 
-/**
- * @brief Indicate the device has experienced an error.
- *
- * This is called when the device has experienced an error from which it
- * cannot re-cover. DEVICE_NEEDS_RESET is set to the device status register
- * and a config change intr is sent to the guest driver.
- *
- * @param base Pointer to struct virtio_base.
- *
- * @return None
- */
-void
-virtio_dev_error(struct virtio_base *base)
-{
-	if (base->negotiated_caps & (1UL << VIRTIO_F_VERSION_1)) {
-		/* see 2.1.2. if DRIVER_OK is set, need to send
-		 * a device configuration change notification to the driver
-		 */
-		base->status |= VIRTIO_CONFIG_S_NEEDS_RESET;
-		if (base->status & VIRTIO_CONFIG_S_DRIVER_OK)
-			virtio_config_changed(base);
-	}
-}
-
 static struct cap_region {
 	uint64_t	cap_offset;	/* offset of capability region */
 	int		cap_size;	/* size of capability region */
