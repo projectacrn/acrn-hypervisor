@@ -594,9 +594,11 @@ memen(struct pci_vdev *dev)
  * the address range decoded by the BAR register.
  */
 static void
-update_bar_address(struct pci_vdev *dev, uint64_t addr, int idx, int type)
+update_bar_address(struct vmctx *ctx, struct pci_vdev *dev, uint64_t addr,
+	int idx, int type)
 {
 	bool decode;
+	uint64_t orig_addr = dev->bar[idx].addr;
 
 	if (dev->bar[idx].type == PCIBAR_IO)
 		decode = porten(dev);
@@ -625,6 +627,10 @@ update_bar_address(struct pci_vdev *dev, uint64_t addr, int idx, int type)
 
 	if (decode)
 		register_bar(dev, idx);
+
+	/* update bar mapping */
+	if (dev->dev_ops->vdev_update_bar_map)
+		dev->dev_ops->vdev_update_bar_map(ctx, dev, idx, orig_addr);
 }
 
 int
@@ -2136,7 +2142,7 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 				 * Register the new BAR value for interception
 				 */
 				if (addr != dev->bar[idx].addr) {
-					update_bar_address(dev, addr, idx,
+					update_bar_address(ctx, dev, addr, idx,
 							   PCIBAR_IO);
 				}
 				break;
@@ -2144,7 +2150,7 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 				addr = bar = *eax & mask;
 				bar |= PCIM_BAR_MEM_SPACE | PCIM_BAR_MEM_32;
 				if (addr != dev->bar[idx].addr) {
-					update_bar_address(dev, addr, idx,
+					update_bar_address(ctx, dev, addr, idx,
 							   PCIBAR_MEM32);
 				}
 				break;
@@ -2153,7 +2159,7 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 				bar |= PCIM_BAR_MEM_SPACE | PCIM_BAR_MEM_64 |
 				       PCIM_BAR_MEM_PREFETCH;
 				if (addr != (uint32_t)dev->bar[idx].addr) {
-					update_bar_address(dev, addr, idx,
+					update_bar_address(ctx, dev, addr, idx,
 							   PCIBAR_MEM64);
 				}
 				break;
@@ -2163,7 +2169,7 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 				addr = ((uint64_t)*eax << 32) & mask;
 				bar = addr >> 32;
 				if (bar != dev->bar[idx - 1].addr >> 32) {
-					update_bar_address(dev, addr, idx - 1,
+					update_bar_address(ctx, dev, addr, idx - 1,
 							   PCIBAR_MEMHI64);
 				}
 				break;
