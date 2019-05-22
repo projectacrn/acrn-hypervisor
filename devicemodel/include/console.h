@@ -39,7 +39,6 @@ struct gfx_ctx_image *console_get_image(void);
 
 void	console_kbd_register(kbd_event_func_t event_cb, void *arg, int pri);
 void	console_kbd_unregister(void);
-void	console_key_event(int down, uint32_t keysym);
 
 void	console_ptr_register(ptr_event_func_t event_cb, void *arg, int pri);
 void	console_ptr_unregister(void);
