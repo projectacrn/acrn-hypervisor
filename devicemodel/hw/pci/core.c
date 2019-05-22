@@ -595,15 +595,17 @@ memen(struct pci_vdev *dev)
  */
 static void
 update_bar_address(struct vmctx *ctx, struct pci_vdev *dev, uint64_t addr,
-	int idx, int type)
+	int idx, int type, bool ignore_reg_unreg)
 {
-	bool decode;
+	bool decode = false;
 	uint64_t orig_addr = dev->bar[idx].addr;
 
-	if (dev->bar[idx].type == PCIBAR_IO)
-		decode = porten(dev);
-	else
-		decode = memen(dev);
+	if (!ignore_reg_unreg) {
+		if (dev->bar[idx].type == PCIBAR_IO)
+			decode = porten(dev);
+		else
+			decode = memen(dev);
+	}
 
 	if (decode)
 		unregister_bar(dev, idx);
@@ -629,7 +631,7 @@ update_bar_address(struct vmctx *ctx, struct pci_vdev *dev, uint64_t addr,
 		register_bar(dev, idx);
 
 	/* update bar mapping */
-	if (dev->dev_ops->vdev_update_bar_map)
+	if (dev->dev_ops->vdev_update_bar_map && decode)
 		dev->dev_ops->vdev_update_bar_map(ctx, dev, idx, orig_addr);
 }
 
@@ -2048,6 +2050,7 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 	struct pci_vdev_ops *ops;
 	int idx, needcfg;
 	uint64_t addr, bar, mask;
+	bool decode, ignore_reg_unreg = false;
 
 	bi = pci_businfo[bus];
 	if (bi != NULL) {
@@ -2130,6 +2133,30 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 				return;
 			idx = (coff - PCIR_BAR(0)) / 4;
 			mask = ~(dev->bar[idx].size - 1);
+
+			if (dev->bar[idx].type == PCIBAR_IO)
+				decode = porten(dev);
+			else
+				decode = memen(dev);
+
+			/* Some driver does not disable the decode of BAR
+			 * register via the command register before sizing a
+			 * BAR. This will lead to a overlay of the BAR
+			 * addresses when trying to register the intermediate
+			 * BAR address via register_bar. A stateful variable
+			 * sizing is used to keep track of such kind of BAR
+			 * address changes and workaroud this violation.
+			 */
+			if (decode) {
+				if (!dev->bar[idx].sizing && (*eax == ~0U)) {
+					dev->bar[idx].sizing = true;
+					ignore_reg_unreg = true;
+				} else if (dev->bar[idx].sizing && (*eax != ~0U)) {
+					dev->bar[idx].sizing = false;
+					ignore_reg_unreg = true;
+				}
+			}
+
 			switch (dev->bar[idx].type) {
 			case PCIBAR_NONE:
 				dev->bar[idx].addr = bar = 0;
@@ -2143,7 +2170,8 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 				 */
 				if (addr != dev->bar[idx].addr) {
 					update_bar_address(ctx, dev, addr, idx,
-							   PCIBAR_IO);
+							   PCIBAR_IO,
+							   ignore_reg_unreg);
 				}
 				break;
 			case PCIBAR_MEM32:
@@ -2151,7 +2179,8 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 				bar |= PCIM_BAR_MEM_SPACE | PCIM_BAR_MEM_32;
 				if (addr != dev->bar[idx].addr) {
 					update_bar_address(ctx, dev, addr, idx,
-							   PCIBAR_MEM32);
+							   PCIBAR_MEM32,
+							   ignore_reg_unreg);
 				}
 				break;
 			case PCIBAR_MEM64:
@@ -2160,7 +2189,8 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 				       PCIM_BAR_MEM_PREFETCH;
 				if (addr != (uint32_t)dev->bar[idx].addr) {
 					update_bar_address(ctx, dev, addr, idx,
-							   PCIBAR_MEM64);
+							   PCIBAR_MEM64,
+							   ignore_reg_unreg);
 				}
 				break;
 			case PCIBAR_MEMHI64:
@@ -2170,7 +2200,8 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 				bar = addr >> 32;
 				if (bar != dev->bar[idx - 1].addr >> 32) {
 					update_bar_address(ctx, dev, addr, idx - 1,
-							   PCIBAR_MEMHI64);
+							   PCIBAR_MEMHI64,
+							   ignore_reg_unreg);
 				}
 				break;
 			default:
