@@ -416,7 +416,6 @@ struct pci_xhci_vdev {
 
 /* portregs and devices arrays are set up to start from idx=1 */
 #define	XHCI_PORTREG_PTR(x, n)	(&(x)->portregs[(n)])
-#define	XHCI_DEVINST_PTR(x, n)	((x)->devices[(n)])
 #define	XHCI_SLOTDEV_PTR(x, n)	((x)->slots[(n)])
 #define	XHCI_HALTED(xdev)	((xdev)->opregs.usbsts & XHCI_STS_HCH)
 #define	XHCI_GADDR(xdev, a)	paddr_guest2host((xdev)->dev->vmctx, (a), \
@@ -472,6 +471,18 @@ static struct pci_xhci_option_elem xhci_option_table[] = {
 	{"log", pci_xhci_parse_log_level},
 	{"cap", pci_xhci_parse_extcap}
 };
+
+static bool
+pci_xhci_is_vport_free(struct pci_xhci_vdev *xdev, int portnum)
+{
+	int i;
+
+	for (i = 0; i < XHCI_MAX_VIRT_PORTS; i++)
+		if (xdev->native_ports[i].vport == portnum)
+			return true;
+
+	return false;
+}
 
 static int
 pci_xhci_get_free_vport(struct pci_xhci_vdev *xdev,
@@ -1255,11 +1266,6 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 		return;
 	}
 
-	if (XHCI_DEVINST_PTR(xdev, port) == NULL) {
-		UPRINTF(LDBG, "portregs_write to unattached port %d\r\n",
-			port);
-	}
-
 	p = XHCI_PORTREG_PTR(xdev, port);
 	switch (offset) {
 	case 0:
@@ -1282,7 +1288,7 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 		p->portsc &= XHCI_PS_PED | XHCI_PS_PLS_MASK |
 			     XHCI_PS_SPEED_MASK | XHCI_PS_PIC_MASK;
 
-		if (XHCI_DEVINST_PTR(xdev, port))
+		if (pci_xhci_is_vport_free(xdev, port) == true)
 			p->portsc |= XHCI_PS_CCS;
 
 		p->portsc |= (value &
