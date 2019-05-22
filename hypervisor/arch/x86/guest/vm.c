@@ -25,6 +25,7 @@
 #include <vboot.h>
 #include <vboot_info.h>
 #include <board.h>
+#include <sgx.h>
 
 vm_sw_loader_t vm_sw_loader;
 
@@ -321,6 +322,7 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	uint64_t hv_hpa;
 	struct acrn_vm_config *vm_config;
 	uint64_t *pml4_page = (uint64_t *)vm->arch_vm.nworld_eptp;
+	struct epc_section* epc_secs;
 
 	const struct e820_entry *entry;
 	uint32_t entries_count = vm->e820_entry_num;
@@ -353,6 +355,15 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 		pr_dbg("BaseAddress: 0x%016llx length: 0x%016llx\n", entry->baseaddr, entry->length);
 	}
 
+	/* Unmap all platform EPC resource from SOS.
+	 * This part has already been marked as reserved by BIOS in E820
+	 * will cause EPT violation if sos accesses EPC resource.
+	 */
+	epc_secs = get_phys_epc();
+	for (i = 0U; (i < MAX_EPC_SECTIONS) && (epc_secs[i].size != 0UL); i++) {
+		ept_mr_del(vm, pml4_page, epc_secs[i].base, epc_secs[i].size);
+	}
+
 	/* unmap hypervisor itself for safety
 	 * will cause EPT violation if sos accesses hv memory
 	 */
@@ -363,6 +374,21 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 		vm_config = get_vm_config(vm_id);
 		if (vm_config->load_order == PRE_LAUNCHED_VM) {
 			ept_mr_del(vm, pml4_page, vm_config->memory.start_hpa, vm_config->memory.size);
+		}
+	}
+}
+
+/* Add EPT mapping of EPC reource for the VM */
+static void prepare_epc_vm_memmap(struct acrn_vm *vm)
+{
+	struct epc_map* vm_epc_maps;
+	uint32_t i;
+
+	if (is_vsgx_supported(vm->vm_id)) {
+		vm_epc_maps = get_epc_mapping(vm->vm_id);
+		for (i = 0U; (i < MAX_EPC_SECTIONS) && (vm_epc_maps[i].size != 0UL); i++) {
+			ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vm_epc_maps[i].hpa,
+				vm_epc_maps[i].gpa, vm_epc_maps[i].size, EPT_RWX | EPT_WB);
 		}
 	}
 }
@@ -432,6 +458,8 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 	}
 
 	if (status == 0) {
+		prepare_epc_vm_memmap(vm);
+
 		INIT_LIST_HEAD(&vm->softirq_dev_entry_list);
 		spinlock_init(&vm->softirq_dev_lock);
 		vm->intr_inject_delay_delta = 0UL;
