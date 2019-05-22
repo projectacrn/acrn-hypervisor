@@ -558,9 +558,6 @@ the virtio framework within DM will invoke them appropriately.
 .. doxygenfunction:: virtio_pci_write
    :project: Project ACRN
 
-.. doxygenfunction:: virtio_dev_error
-   :project: Project ACRN
-
 .. doxygenfunction:: virtio_interrupt_init
    :project: Project ACRN
 
@@ -574,12 +571,6 @@ the virtio framework within DM will invoke them appropriately.
    :project: Project ACRN
 
 .. doxygenfunction:: virtio_set_modern_bar
-   :project: Project ACRN
-
-.. doxygenfunction:: virtio_pci_modern_cfgread
-   :project: Project ACRN
-
-.. doxygenfunction:: virtio_pci_modern_cfgwrite
    :project: Project ACRN
 
 .. doxygenfunction:: virtio_config_changed

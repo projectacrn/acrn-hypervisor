@@ -275,13 +275,6 @@ mpt_build_ioint_entries(int_entry_ptr mpie, int id)
 		pci_walk_lintr(bus, mpt_generate_pci_int, &mpie);
 }
 
-void
-mptable_add_oemtbl(void *tbl, int tblsz)
-{
-	oem_tbl_start = tbl;
-	oem_tbl_size = tblsz;
-}
-
 int
 mptable_build(struct vmctx *ctx, int ncpu)
 {
