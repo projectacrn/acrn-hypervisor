@@ -32,6 +32,7 @@
 #include <sys/queue.h>
 
 #include <assert.h>
+#include <stdbool.h>
 #include "types.h"
 #include "pcireg.h"
 
@@ -104,6 +105,7 @@ struct pcibar {
 	enum pcibar_type	type;		/* io or memory */
 	uint64_t		size;
 	uint64_t		addr;
+	bool			sizing;
 };
 
 #define PI_NAMESZ	40
