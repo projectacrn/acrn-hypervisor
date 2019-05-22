@@ -851,36 +851,6 @@ vrtc_set_reg_a(struct vrtc *vrtc, uint8_t newval)
 }
 
 int
-vrtc_nvram_read(struct vrtc *vrtc, int offset, uint8_t *retval)
-{
-	time_t basetime;
-	time_t curtime;
-	uint8_t *ptr;
-
-	/*
-	 * Allow all offsets in the RTC to be read.
-	 */
-	if (offset < 0 || offset >= sizeof(struct rtcdev))
-		return -1;
-
-	pthread_mutex_lock(&vrtc->mtx);
-
-	/*
-	 * Update RTC date/time fields if necessary.
-	 */
-	if (offset < 10 || offset == RTC_CENTURY) {
-		curtime = vrtc_curtime(vrtc, &basetime);
-		secs_to_rtc(curtime, vrtc, 0);
-	}
-
-	ptr = (uint8_t *)(&vrtc->rtcdev);
-	*retval = ptr[offset];
-	pthread_mutex_unlock(&vrtc->mtx);
-
-	return 0;
-}
-
-int
 vrtc_nvram_write(struct vrtc *vrtc, int offset, uint8_t value)
 {
 	uint8_t *ptr;
