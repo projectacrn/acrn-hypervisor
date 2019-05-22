@@ -7,6 +7,7 @@
 #include <vm_config.h>
 #include <logmsg.h>
 #include <cat.h>
+#include <pgtable.h>
 
 /*
  * @pre vm_id < CONFIG_MAX_VM_NUM
@@ -89,6 +90,8 @@ bool sanitize_vm_config(void)
 			} else if (((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)
 					&& ((vm_config->guest_flags & GUEST_FLAG_RT) == 0U)) {
 				ret = false;
+			}else if (vm_config->epc.size != 0UL) {
+				ret = false;
 			} else {
 				pre_launch_pcpu_bitmap |= vm_config->pcpu_bitmap;
 			}
@@ -117,6 +120,10 @@ bool sanitize_vm_config(void)
 				pr_err("%s set wrong CLOS or CAT is not supported\n", __func__);
 				ret = false;
 			}
+		}
+
+		if (((vm_config->epc.size | vm_config->epc.base) & ~PAGE_MASK) != 0UL) {
+			ret = false;
 		}
 
 		if (ret) {
