@@ -30,9 +30,10 @@ echo ${passthru_vpid["sata"]} > /sys/bus/pci/drivers/pci-stub/new_id
 echo ${passthru_bdf["sata"]} > /sys/bus/pci/devices/${passthru_bdf["sata"]}/driver/unbind
 echo ${passthru_bdf["sata"]} > /sys/bus/pci/drivers/pci-stub/bind
 
-/usr/bin/acrn-dm -A -m $mem_size -c $1 \
+/usr/bin/acrn-dm -A -m $mem_size -c $1 -s 0:0,hostbridge \
   -k /root/rt_uos_kernel \
    --lapic_pt \
+   --rtvm \
    --virtio_poll 1000000 \
    -s 2,passthru,0/17/0 \
    -s 3,virtio-console,@stdio:stdio_port \
