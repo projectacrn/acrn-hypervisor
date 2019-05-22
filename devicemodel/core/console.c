@@ -55,13 +55,6 @@ console_get_image(void)
 }
 
 void
-console_fb_register(fb_render_func_t render_cb, void *arg)
-{
-	console.fb_render_cb = render_cb;
-	console.fb_arg = arg;
-}
-
-void
 console_refresh(void)
 {
 	if (console.fb_render_cb)
