@@ -214,9 +214,13 @@
 /* RW - doorbell stream ID */
 #define	XHCI_DB_SID_SET(x)	(((x) & 0xFFFF) << 16)
 
+/* XHCI runtime register IR base */
+#define	XHCI_RT_IR_BASE		0x20
+
 /* XHCI legacy support */
 #define	XHCI_XECP_ID(x)		((x) & 0xFF)
 #define	XHCI_XECP_NEXT(x)	(((x) >> 8) & 0xFF)
+#define	XHCI_XECP_OFF_SHIFT(x)	((x) >> 2)
 #define	XHCI_XECP_BIOS_SEM	0x0002
 #define	XHCI_XECP_OS_SEM	0x0003
 
@@ -229,6 +233,10 @@
 #define	XHCI_ID_USB_LOCAL_MEM	0x0006
 #define	XHCI_ID_DRD_INTEL	0x00C0
 
+/* ACRN xHCI excapability offset */
+#define ACRN_XHCI_EXCAP1	0x20
+#define ACRN_XHCI_EXCAP2	0x30
+
 /*
  * xHCI extended capability pointer in HCCPARAMS1.
  * The excap offset is calculated by left shift 2
@@ -240,15 +248,13 @@
 #define	EXCAP_GROUP_END		0xFFFF
 #define	EXCAP_GROUP_NULL	NULL
 
-/* xHCI PCI Vendor IDs */
-#define	XHCI_PCI_VENDOR_ID_INTEL	0x8086
+/* Intel xHCI IDs */
+#define PCI_INTEL_APL_XHCI_VID	0x8086
+#define PCI_INTEL_APL_XHCI_PID	0x5aa8
 
-/* xHCI PCI Device IDs */
-#define	XHCI_PCI_DEVICE_ID_INTEL_APL	0x5aa8
-
-/* Default xHCI PCI VID/PID */
-#define	XHCI_PCI_VENDOR_ID_DFLT		XHCI_PCI_VENDOR_ID_INTEL
-#define	XHCI_PCI_DEVICE_ID_DFLT		0x1e31
+/* ACRN xHCI iDs */
+#define PCI_ACRN_XHCI_VID	0x1234
+#define PCI_ACRN_XHCI_PID	0x1234
 
 /* Intel APL xHCI DRD Configuration registers */
 #define	XHCI_DRD_MUX_CFG0		0x0000
