@@ -378,12 +378,6 @@ vm_get_highmem_size(struct vmctx *ctx)
 	return ctx->highmem;
 }
 
-void *
-vm_create_devmem(struct vmctx *ctx, int segid, const char *name, size_t len)
-{
-	return MAP_FAILED;
-}
-
 int
 vm_run(struct vmctx *ctx)
 {
