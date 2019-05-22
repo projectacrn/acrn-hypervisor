@@ -13,6 +13,7 @@
 #include <vm.h>
 #include <vmcs.h>
 #include <vmx.h>
+#include <sgx.h>
 #include <guest_pm.h>
 #include <ucode.h>
 #include <trace.h>
@@ -49,6 +50,14 @@ static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 	MSR_IA32_MCG_CAP,
 	MSR_IA32_MCG_STATUS,
 	MSR_IA32_MISC_ENABLE,
+
+	/* Don't support SGX Launch Control yet, read only */
+	MSR_IA32_SGXLEPUBKEYHASH0,
+	MSR_IA32_SGXLEPUBKEYHASH1,
+	MSR_IA32_SGXLEPUBKEYHASH2,
+	MSR_IA32_SGXLEPUBKEYHASH3,
+	/* Read only */
+	MSR_IA32_SGX_SVN_STATUS,
 };
 
 #define NUM_MTRR_MSRS	13U
@@ -69,7 +78,7 @@ static const uint32_t mtrr_msrs[NUM_MTRR_MSRS] = {
 };
 
 /* Following MSRs are intercepted, but it throws GPs for any guest accesses */
-#define NUM_UNSUPPORTED_MSRS	104U
+#define NUM_UNSUPPORTED_MSRS	99U
 static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	/* Variable MTRRs are not supported */
 	MSR_IA32_MTRR_PHYSBASE_0,
@@ -115,15 +124,6 @@ static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	MSR_IA32_VMX_TRUE_EXIT_CTLS,
 	MSR_IA32_VMX_TRUE_ENTRY_CTLS,
 	MSR_IA32_VMX_VMFUNC,
-
-	/* SGX disabled: CPUID.12H.EAX[0], CPUID.07H.ECX[30] */
-	MSR_IA32_SGXLEPUBKEYHASH0,
-	MSR_IA32_SGXLEPUBKEYHASH1,
-	MSR_IA32_SGXLEPUBKEYHASH2,
-	MSR_IA32_SGXLEPUBKEYHASH3,
-
-	/* SGX disabled : CPUID.07H.EBX[2] */
-	MSR_IA32_SGX_SVN_STATUS,
 
 	/* MPX disabled: CPUID.07H.EBX[14] */
 	MSR_IA32_BNDCFGS,
@@ -399,6 +399,9 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_FEATURE_CONTROL:
 	{
 		v = MSR_IA32_FEATURE_CONTROL_LOCK;
+		if (is_vsgx_supported(vcpu->vm->vm_id)) {
+			v |= MSR_IA32_FEATURE_CONTROL_SGX_GE;
+		}
 		break;
 	}
 	case MSR_IA32_MCG_CAP:
@@ -410,6 +413,19 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_MISC_ENABLE:
 	{
 		v = vcpu_get_guest_msr(vcpu, MSR_IA32_MISC_ENABLE);
+		break;
+	}
+	case MSR_IA32_SGXLEPUBKEYHASH0:
+	case MSR_IA32_SGXLEPUBKEYHASH1:
+	case MSR_IA32_SGXLEPUBKEYHASH2:
+	case MSR_IA32_SGXLEPUBKEYHASH3:
+	case MSR_IA32_SGX_SVN_STATUS:
+	{
+		if (is_vsgx_supported(vcpu->vm->vm_id)) {
+			v = msr_read(msr);
+		} else {
+			err = -EACCES;
+		}
 		break;
 	}
 	default:
@@ -622,6 +638,11 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_MCG_CAP:
 	case MSR_IA32_MCG_STATUS:
 	case MSR_IA32_FEATURE_CONTROL:
+	case MSR_IA32_SGXLEPUBKEYHASH0:
+	case MSR_IA32_SGXLEPUBKEYHASH1:
+	case MSR_IA32_SGXLEPUBKEYHASH2:
+	case MSR_IA32_SGXLEPUBKEYHASH3:
+	case MSR_IA32_SGX_SVN_STATUS:
 	{
 		err = -EACCES;
 		break;
