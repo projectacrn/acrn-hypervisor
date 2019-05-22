@@ -38,15 +38,6 @@ gc_init(int width, int height, void *fbaddr)
 }
 
 void
-gc_set_fbaddr(struct gfx_ctx *gc, void *fbaddr)
-{
-	gc->raw = 1;
-	if (gc->gc_image->data && gc->gc_image->data != fbaddr)
-		free(gc->gc_image->data);
-	gc->gc_image->data = fbaddr;
-}
-
-void
 gc_resize(struct gfx_ctx *gc, int width, int height)
 {
 	struct gfx_ctx_image *gc_image;
