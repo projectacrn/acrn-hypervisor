@@ -89,10 +89,3 @@ console_ptr_unregister()
 	console.ptr_arg = NULL;
 	console.ptr_priority = 0;
 }
-
-void
-console_ptr_event(uint8_t button, int x, int y)
-{
-	if (console.ptr_event_cb)
-		(*console.ptr_event_cb)(button, x, y, console.ptr_arg);
-}

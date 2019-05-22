@@ -42,6 +42,5 @@ void	console_kbd_unregister(void);
 
 void	console_ptr_register(ptr_event_func_t event_cb, void *arg, int pri);
 void	console_ptr_unregister(void);
-void	console_ptr_event(uint8_t button, int x, int y);
 
 #endif /* _CONSOLE_H_ */
