@@ -280,12 +280,6 @@ vm_get_lowmem_limit(struct vmctx *ctx)
 	return ctx->lowmem_limit;
 }
 
-void
-vm_set_lowmem_limit(struct vmctx *ctx, uint32_t limit)
-{
-	ctx->lowmem_limit = limit;
-}
-
 int
 vm_map_memseg_vma(struct vmctx *ctx, size_t len, vm_paddr_t gpa,
 	uint64_t vma, int prot)

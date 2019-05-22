@@ -116,7 +116,6 @@ int	hugetlb_setup_memory(struct vmctx *ctx);
 void	hugetlb_unsetup_memory(struct vmctx *ctx);
 void	*vm_map_gpa(struct vmctx *ctx, vm_paddr_t gaddr, size_t len);
 uint32_t vm_get_lowmem_limit(struct vmctx *ctx);
-void	vm_set_lowmem_limit(struct vmctx *ctx, uint32_t limit);
 size_t	vm_get_lowmem_size(struct vmctx *ctx);
 size_t	vm_get_highmem_size(struct vmctx *ctx);
 int	vm_run(struct vmctx *ctx);
