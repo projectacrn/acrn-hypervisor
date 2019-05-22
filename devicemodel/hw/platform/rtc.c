@@ -1007,20 +1007,6 @@ vrtc_set_time(struct vrtc *vrtc, time_t secs)
 	return error;
 }
 
-void
-vrtc_reset(struct vrtc *vrtc)
-{
-	struct rtcdev *rtc;
-
-	pthread_mutex_lock(&vrtc->mtx);
-
-	rtc = &vrtc->rtcdev;
-	vrtc_set_reg_b(vrtc, rtc->reg_b & ~(RTCSB_ALL_INTRS | RTCSB_SQWE));
-	vrtc_set_reg_c(vrtc, 0);
-
-	pthread_mutex_unlock(&vrtc->mtx);
-}
-
 int
 vrtc_init(struct vmctx *ctx)
 {
