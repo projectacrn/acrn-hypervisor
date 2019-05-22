@@ -717,19 +717,6 @@ void virtio_pci_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		      int baridx, uint64_t offset, int size, uint64_t value);
 
 /**
- * @brief Indicate the device has experienced an error.
- *
- * This is called when the device has experienced an error from which it
- * cannot re-cover. DEVICE_NEEDS_RESET is set to the device status register
- * and a config change intr is sent to the guest driver.
- *
- * @param base Pointer to struct virtio_base.
- *
- * @return None
- */
-void virtio_dev_error(struct virtio_base *base);
-
-/**
  * @brief Set modern BAR (usually 4) to map PCI config registers.
  *
  * Set modern MMIO BAR (usually 4) to map virtio 1.0 capabilities and optional
