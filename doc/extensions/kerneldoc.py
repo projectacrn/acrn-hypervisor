@@ -37,7 +37,10 @@ import glob
 from docutils import nodes, statemachine
 from docutils.statemachine import ViewList
 from docutils.parsers.rst import directives, Directive
-from sphinx.ext.autodoc import AutodocReporter
+from sphinx.util.docutils import switch_source_input
+
+from sphinx.util import logging
+logger = logging.getLogger(__name__)
 
 __version__  = '1.0'
 
@@ -47,7 +50,7 @@ class KernelDocDirective(Directive):
     optional_arguments = 4
     option_spec = {
         'doc': directives.unchanged_required,
-        'functions': directives.unchanged_required,
+        'functions': directives.unchanged,
         'export': directives.unchanged,
         'internal': directives.unchanged,
     }
@@ -75,8 +78,12 @@ class KernelDocDirective(Directive):
         elif 'doc' in self.options:
             cmd += ['-function', str(self.options.get('doc'))]
         elif 'functions' in self.options:
-            for f in str(self.options.get('functions')).split():
-                cmd += ['-function', f]
+            functions = self.options.get('functions').split()
+            if functions:
+                for f in functions:
+                    cmd += ['-function', f]
+            else:
+                cmd += ['-no-doc-sections']
 
         for pattern in export_file_patterns:
             for f in glob.glob(env.config.kerneldoc_srctree + '/' + pattern):
@@ -86,7 +93,7 @@ class KernelDocDirective(Directive):
         cmd += [filename]
 
         try:
-            env.app.verbose('calling kernel-doc \'%s\'' % (" ".join(cmd)))
+            logger.verbose('calling kernel-doc \'%s\'' % (" ".join(cmd)))
 
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             out, err = p.communicate()
@@ -96,7 +103,7 @@ class KernelDocDirective(Directive):
             if p.returncode != 0:
                 sys.stderr.write(err)
 
-                env.app.warn('kernel-doc \'%s\' failed with return code %d' % (" ".join(cmd), p.returncode))
+                logger.warning('kernel-doc \'%s\' failed with return code %d' % (" ".join(cmd), p.returncode))
                 return [nodes.error(None, nodes.paragraph(text = "kernel-doc missing"))]
             elif env.config.kerneldoc_verbosity > 0:
                 sys.stderr.write(err)
@@ -118,17 +125,17 @@ class KernelDocDirective(Directive):
 
             node = nodes.section()
             buf = self.state.memo.title_styles, self.state.memo.section_level, self.state.memo.reporter
-            self.state.memo.reporter = AutodocReporter(result, self.state.memo.reporter)
             self.state.memo.title_styles, self.state.memo.section_level = [], 0
             try:
-                self.state.nested_parse(result, 0, node, match_titles=1)
+                with switch_source_input(self.state, result):
+                    self.state.nested_parse(result, 0, node, match_titles=1)
             finally:
                 self.state.memo.title_styles, self.state.memo.section_level, self.state.memo.reporter = buf
 
             return node.children
 
         except Exception as e:  # pylint: disable=W0703
-            env.app.warn('kernel-doc \'%s\' processing failed with: %s' %
+            logger.warning('kernel-doc \'%s\' processing failed with: %s' %
                          (" ".join(cmd), str(e)))
             return [nodes.error(None, nodes.paragraph(text = "kernel-doc missing"))]
 
