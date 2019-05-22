@@ -40,7 +40,6 @@ struct gfx_ctx_image {
 	uint32_t	*data;
 };
 
-struct gfx_ctx *gc_init(int width, int height, void *fbaddr);
 struct gfx_ctx_image *gc_get_image(struct gfx_ctx *gc);
 
 #endif /* _GC_H_ */
