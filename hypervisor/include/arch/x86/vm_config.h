@@ -13,6 +13,7 @@
 #include <acrn_common.h>
 #include <mptable.h>
 #include <vm_configurations.h>
+#include <sgx.h>
 
 #define PLUG_CPU(n)		(1U << (n))
 #define MAX_VUART_NUM_PER_VM	2U
@@ -84,6 +85,7 @@ struct acrn_vm_config {
 							 * We could add more guest flags in future;
 							 */
 	struct acrn_vm_mem_config memory;		/* memory configuration of VM */
+	struct epc_section epc;				/* EPC memory configuration of VM */
 	uint16_t pci_ptdev_num;				/* indicate how many PCI PT devices in VM */
 	struct acrn_vm_pci_ptdev_config *pci_ptdevs;	/* point to PCI PT devices BDF list */
 	struct acrn_vm_os_config os_config;		/* OS information the VM */
