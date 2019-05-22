@@ -44,12 +44,6 @@ static struct {
 	int			ptr_priority;
 } console;
 
-void
-console_init(int w, int h, void *fbaddr)
-{
-	console.gc = gc_init(w, h, fbaddr);
-}
-
 struct gfx_ctx_image *
 console_get_image(void)
 {
