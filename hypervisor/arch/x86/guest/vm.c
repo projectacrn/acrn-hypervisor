@@ -177,7 +177,7 @@ static inline uint16_t get_vm_bsp_pcpu_id(const struct acrn_vm_config *vm_config
 {
 	uint16_t cpu_id = INVALID_CPU_ID;
 
-	cpu_id = ffs64(vm_config->pcpu_bitmap);
+	cpu_id = ffs64(vm_config->vcpu_affinity[0]);
 
 	return (cpu_id < get_pcpu_nums()) ? cpu_id : INVALID_CPU_ID;
 }
@@ -724,18 +724,17 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 {
 	int32_t err = 0;
-	uint16_t i;
+	uint16_t i, pcpu_id;
 	struct acrn_vm *vm = NULL;
 
 	err = create_vm(vm_id, vm_config, &vm);
 
 	if (err == 0) {
-		for (i = 0U; i < get_pcpu_nums(); i++) {
-			if (bitmap_test(i, &vm_config->pcpu_bitmap)) {
-				err = prepare_vcpu(vm, i);
-				if (err != 0) {
-					break;
-				}
+		for (i = 0U; i < vm_config->vcpu_num; i++) {
+			pcpu_id = ffs64(vm_config->vcpu_affinity[i]);
+			err = prepare_vcpu(vm, pcpu_id);
+			if (err != 0) {
+				break;
 			}
 		}
 	}
