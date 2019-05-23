@@ -610,7 +610,7 @@ static uint64_t build_stack_frame(struct acrn_vcpu *vcpu)
 	frame->r13 = 0UL;
 	frame->r14 = 0UL;
 	frame->r15 = 0UL;
-	frame->rdi = (uint64_t)&vcpu->sched_obj;
+	frame->rdi = (uint64_t)&vcpu->thread_obj;
 
 	ret = &frame->rdi;
 
@@ -639,7 +639,7 @@ void reset_vcpu(struct acrn_vcpu *vcpu)
 		vcpu->arch.exception_info.exception = VECTOR_INVALID;
 		vcpu->arch.cur_context = NORMAL_WORLD;
 		vcpu->arch.irq_window_enabled = false;
-		vcpu->sched_obj.host_sp = build_stack_frame(vcpu);
+		vcpu->thread_obj.host_sp = build_stack_frame(vcpu);
 		(void)memset((void *)vcpu->arch.vmcs, 0U, PAGE_SIZE);
 
 		for (i = 0; i < NR_WORLD; i++) {
@@ -667,7 +667,7 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 	vcpu->state = new_state;
 
 	if (vcpu->running) {
-		remove_from_cpu_runqueue(&vcpu->sched_obj);
+		remove_from_cpu_runqueue(&vcpu->thread_obj);
 
 		if (is_lapic_pt_enabled(vcpu)) {
 			make_reschedule_request(vcpu->pcpu_id, DEL_MODE_INIT);
@@ -683,7 +683,7 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 			}
 		}
 	} else {
-		remove_from_cpu_runqueue(&vcpu->sched_obj);
+		remove_from_cpu_runqueue(&vcpu->thread_obj);
 		release_schedule_lock(vcpu->pcpu_id);
 	}
 }
@@ -696,15 +696,15 @@ void resume_vcpu(struct acrn_vcpu *vcpu)
 	vcpu->state = vcpu->prev_state;
 
 	if (vcpu->state == VCPU_RUNNING) {
-		add_to_cpu_runqueue(&vcpu->sched_obj, vcpu->pcpu_id);
+		add_to_cpu_runqueue(&vcpu->thread_obj, vcpu->pcpu_id);
 		make_reschedule_request(vcpu->pcpu_id, DEL_MODE_IPI);
 	}
 	release_schedule_lock(vcpu->pcpu_id);
 }
 
-static void context_switch_out(struct sched_object *prev)
+static void context_switch_out(struct thread_object *prev)
 {
-	struct acrn_vcpu *vcpu = list_entry(prev, struct acrn_vcpu, sched_obj);
+	struct acrn_vcpu *vcpu = list_entry(prev, struct acrn_vcpu, thread_obj);
 
 	vcpu->running = false;
 	/* do prev vcpu context switch out */
@@ -714,9 +714,9 @@ static void context_switch_out(struct sched_object *prev)
 	 */
 }
 
-static void context_switch_in(struct sched_object *next)
+static void context_switch_in(struct thread_object *next)
 {
-	struct acrn_vcpu *vcpu = list_entry(next, struct acrn_vcpu, sched_obj);
+	struct acrn_vcpu *vcpu = list_entry(next, struct acrn_vcpu, thread_obj);
 
 	vcpu->running = true;
 	/* FIXME:
@@ -733,7 +733,7 @@ void schedule_vcpu(struct acrn_vcpu *vcpu)
 	pr_dbg("vcpu%hu scheduled", vcpu->vcpu_id);
 
 	get_schedule_lock(vcpu->pcpu_id);
-	add_to_cpu_runqueue(&vcpu->sched_obj, vcpu->pcpu_id);
+	add_to_cpu_runqueue(&vcpu->thread_obj, vcpu->pcpu_id);
 	make_reschedule_request(vcpu->pcpu_id, DEL_MODE_IPI);
 	release_schedule_lock(vcpu->pcpu_id);
 }
@@ -747,13 +747,13 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 
 	ret = create_vcpu(pcpu_id, vm, &vcpu);
 	if (ret == 0) {
-		INIT_LIST_HEAD(&vcpu->sched_obj.run_list);
+		INIT_LIST_HEAD(&vcpu->thread_obj.run_list);
 		snprintf(thread_name, 16U, "vm%hu:vcpu%hu", vm->vm_id, vcpu->vcpu_id);
-		(void)strncpy_s(vcpu->sched_obj.name, 16U, thread_name, 16U);
-		vcpu->sched_obj.thread = vcpu_thread;
-		vcpu->sched_obj.host_sp = build_stack_frame(vcpu);
-		vcpu->sched_obj.prepare_switch_out = context_switch_out;
-		vcpu->sched_obj.prepare_switch_in = context_switch_in;
+		(void)strncpy_s(vcpu->thread_obj.name, 16U, thread_name, 16U);
+		vcpu->thread_obj.thread_entry = vcpu_thread;
+		vcpu->thread_obj.host_sp = build_stack_frame(vcpu);
+		vcpu->thread_obj.switch_out = context_switch_out;
+		vcpu->thread_obj.switch_in = context_switch_in;
 	}
 
 	return ret;

@@ -14,9 +14,9 @@
 #include <trace.h>
 #include <logmsg.h>
 
-void vcpu_thread(struct sched_object *obj)
+void vcpu_thread(struct thread_object *obj)
 {
-	struct acrn_vcpu *vcpu = list_entry(obj, struct acrn_vcpu, sched_obj);
+	struct acrn_vcpu *vcpu = list_entry(obj, struct acrn_vcpu, thread_obj);
 	uint32_t basic_exit_reason = 0U;
 	int32_t ret = 0;
 
@@ -77,7 +77,7 @@ void vcpu_thread(struct sched_object *obj)
 	} while (1);
 }
 
-void default_idle(__unused struct sched_object *obj)
+void default_idle(__unused struct thread_object *obj)
 {
 	uint16_t pcpu_id = get_pcpu_id();
 
