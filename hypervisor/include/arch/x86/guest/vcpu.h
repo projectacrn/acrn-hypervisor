@@ -297,6 +297,10 @@ struct msr_store_area {
 struct acrn_vcpu_arch {
 	/* vmcs region for this vcpu, MUST be 4KB-aligned */
 	uint8_t vmcs[PAGE_SIZE];
+
+	/* MSR bitmap region for this vcpu, MUST be 4-Kbyte aligned */
+	uint8_t msr_bitmap[PAGE_SIZE];
+
 	/* per vcpu lapic */
 	struct acrn_vlapic vlapic;
 

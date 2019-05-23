@@ -279,6 +279,9 @@ static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, uint32_t mode)
 	}
 }
 
+/**
+ * @pre vcpu != NULL
+ */
 static void init_msr_area(struct acrn_vcpu *vcpu)
 {
 	vcpu->arch.msr_area.guest[MSR_AREA_TSC_AUX].msr_index = MSR_IA32_TSC_AUX;
@@ -287,40 +290,39 @@ static void init_msr_area(struct acrn_vcpu *vcpu)
 	vcpu->arch.msr_area.host[MSR_AREA_TSC_AUX].value = vcpu->pcpu_id;
 }
 
+/**
+ * @pre vcpu != NULL
+ */
 void init_msr_emulation(struct acrn_vcpu *vcpu)
 {
+	uint8_t *msr_bitmap = vcpu->arch.msr_bitmap;
 	uint32_t msr, i;
-	uint8_t *msr_bitmap;
 	uint64_t value64;
 
-	if (is_vcpu_bsp(vcpu)) {
-		msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
-
-		for (i = 0U; i < NUM_GUEST_MSRS; i++) {
-			enable_msr_interception(msr_bitmap, emulated_guest_msrs[i], INTERCEPT_READ_WRITE);
-		}
-
-		for (i = 0U; i < NUM_MTRR_MSRS; i++) {
-			enable_msr_interception(msr_bitmap, mtrr_msrs[i], INTERCEPT_READ_WRITE);
-		}
-
-		intercept_x2apic_msrs(msr_bitmap, INTERCEPT_READ_WRITE);
-
-		for (i = 0U; i < NUM_UNSUPPORTED_MSRS; i++) {
-			enable_msr_interception(msr_bitmap, unsupported_msrs[i], INTERCEPT_READ_WRITE);
-		}
-
-		/* RDT-A disabled: CPUID.07H.EBX[12], CPUID.10H */
-		for (msr = MSR_IA32_L3_MASK_0; msr < MSR_IA32_BNDCFGS; msr++) {
-			enable_msr_interception(msr_bitmap, msr, INTERCEPT_READ_WRITE);
-		}
-
-		/* don't need to intercept rdmsr for these MSRs */
-		enable_msr_interception(msr_bitmap, MSR_IA32_TIME_STAMP_COUNTER, INTERCEPT_WRITE);
+	for (i = 0U; i < NUM_GUEST_MSRS; i++) {
+		enable_msr_interception(msr_bitmap, emulated_guest_msrs[i], INTERCEPT_READ_WRITE);
 	}
 
+	for (i = 0U; i < NUM_MTRR_MSRS; i++) {
+		enable_msr_interception(msr_bitmap, mtrr_msrs[i], INTERCEPT_READ_WRITE);
+	}
+
+	intercept_x2apic_msrs(msr_bitmap, INTERCEPT_READ_WRITE);
+
+	for (i = 0U; i < NUM_UNSUPPORTED_MSRS; i++) {
+		enable_msr_interception(msr_bitmap, unsupported_msrs[i], INTERCEPT_READ_WRITE);
+	}
+
+	/* RDT-A disabled: CPUID.07H.EBX[12], CPUID.10H */
+	for (msr = MSR_IA32_L3_MASK_0; msr < MSR_IA32_BNDCFGS; msr++) {
+		enable_msr_interception(msr_bitmap, msr, INTERCEPT_READ_WRITE);
+	}
+
+	/* don't need to intercept rdmsr for these MSRs */
+	enable_msr_interception(msr_bitmap, MSR_IA32_TIME_STAMP_COUNTER, INTERCEPT_WRITE);
+
 	/* Setup MSR bitmap - Intel SDM Vol3 24.6.9 */
-	value64 = hva2hpa(vcpu->vm->arch_vm.msr_bitmap);
+	value64 = hva2hpa(vcpu->arch.msr_bitmap);
 	exec_vmwrite64(VMX_MSR_BITMAP_FULL, value64);
 	pr_dbg("VMX_MSR_BITMAP: 0x%016llx ", value64);
 
@@ -328,6 +330,9 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 	init_msr_area(vcpu);
 }
 
+/**
+ * @pre vcpu != NULL
+ */
 int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int32_t err = 0;
@@ -436,6 +441,10 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
  * TSC, the logical processor also adds (or subtracts) value X from
  * the IA32_TSC_ADJUST MSR.
  */
+
+/**
+ * @pre vcpu != NULL
+ */
 static void set_guest_tsc(struct acrn_vcpu *vcpu, uint64_t guest_tsc)
 {
 	uint64_t tsc_delta, tsc_offset_delta, tsc_adjust;
@@ -458,6 +467,10 @@ static void set_guest_tsc(struct acrn_vcpu *vcpu, uint64_t guest_tsc)
  * MSR adds (or subtracts) value X from that MSR, the logical
  * processor also adds (or subtracts) value X from the TSC."
  */
+
+/**
+ * @pre vcpu != NULL
+ */
 static void set_guest_tsc_adjust(struct acrn_vcpu *vcpu, uint64_t tsc_adjust)
 {
 	uint64_t tsc_offset, tsc_adjust_delta;
@@ -473,6 +486,9 @@ static void set_guest_tsc_adjust(struct acrn_vcpu *vcpu, uint64_t tsc_adjust)
 	vcpu_set_guest_msr(vcpu, MSR_IA32_TSC_ADJUST, tsc_adjust);
 }
 
+/**
+ * @pre vcpu != NULL
+ */
 static void set_guest_ia32_misc_enalbe(struct acrn_vcpu *vcpu, uint64_t v)
 {
 	uint32_t eax, ebx = 0U, ecx = 0U, edx = 0U;
@@ -520,6 +536,9 @@ static void set_guest_ia32_misc_enalbe(struct acrn_vcpu *vcpu, uint64_t v)
 	}
 }
 
+/**
+ * @pre vcpu != NULL
+ */
 int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int32_t err = 0;
@@ -630,11 +649,14 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	return err;
 }
 
-void update_msr_bitmap_x2apic_apicv(const struct acrn_vcpu *vcpu)
+/**
+ * @pre vcpu != NULL
+ */
+void update_msr_bitmap_x2apic_apicv(struct acrn_vcpu *vcpu)
 {
 	uint8_t *msr_bitmap;
 
-	msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
+	msr_bitmap = vcpu->arch.msr_bitmap;
 	/*
 	 * For platforms that do not support register virtualization
 	 * all x2APIC MSRs need to intercepted. So no need to update
@@ -666,9 +688,13 @@ void update_msr_bitmap_x2apic_apicv(const struct acrn_vcpu *vcpu)
  * - XAPICID/LDR: Read to XAPICID/LDR need to be trapped to guarantee guest always see right vlapic_id.
  * - ICR: Write to ICR need to be trapped to avoid milicious IPI.
  */
-void update_msr_bitmap_x2apic_passthru(const struct acrn_vcpu *vcpu)
+
+/**
+ * @pre vcpu != NULL
+ */
+void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu)
 {
-	uint8_t *msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
+	uint8_t *msr_bitmap = vcpu->arch.msr_bitmap;
 
 	intercept_x2apic_msrs(msr_bitmap, INTERCEPT_DISABLE);
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_XAPICID, INTERCEPT_READ);
