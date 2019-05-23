@@ -89,8 +89,6 @@ enum vm_state {
 struct vm_arch {
 	/* I/O bitmaps A and B for this VM, MUST be 4-Kbyte aligned */
 	uint8_t io_bitmap[PAGE_SIZE*2];
-	/* MSR bitmap region for this VM, MUST be 4-Kbyte aligned */
-	uint8_t msr_bitmap[PAGE_SIZE];
 
 	uint64_t guest_init_pml4;/* Guest init pml4 */
 	/* EPT hierarchy for Normal World */
