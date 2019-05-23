@@ -11,7 +11,7 @@ DM_BUILD_TAG ?=
 CC ?= gcc
 RELEASE ?= 0
 
-CFLAGS := -g -O0 -std=gnu11
+CFLAGS := -O0 -std=gnu11
 CFLAGS += -D_GNU_SOURCE
 CFLAGS += -DNO_OPENSSL
 CFLAGS += -m64
@@ -45,7 +45,7 @@ endif
 endif
 
 ifeq ($(RELEASE),0)
-CFLAGS += -DDM_DEBUG
+CFLAGS += -DDM_DEBUG -g
 endif
 
 LDFLAGS += -Wl,-z,noexecstack
