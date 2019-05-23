@@ -187,7 +187,6 @@ static inline void wait_for_other_vm_shutdown(const struct acrn_vm *self_vm)
 static inline void enter_s5(const struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
 	wait_for_other_vm_shutdown(vm);
-	pr_err("yfwyfw: before enter s5");
 	host_enter_s5(vm->pm.sx_state_data, pm1a_cnt_val, pm1b_cnt_val);
 }
 

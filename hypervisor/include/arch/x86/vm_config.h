@@ -15,7 +15,7 @@
 #include <vm_configurations.h>
 #include <sgx.h>
 
-#define PLUG_CPU(n)		(1U << (n))
+#define AFFINITY_CPU(n)		(1U << (n))
 #define MAX_VUART_NUM_PER_VM	2U
 #define MAX_VM_OS_NAME_LEN	32U
 #define MAX_MOD_TAG_LEN		32U
@@ -95,8 +95,9 @@ struct acrn_vm_config {
 	enum acrn_vm_load_order load_order;		/* specify the load order of VM */
 	char name[MAX_VM_OS_NAME_LEN];			/* VM name identifier, useful for debug. */
 	const uint8_t uuid[16];				/* UUID of the VM */
-	uint64_t pcpu_bitmap;				/* from pcpu bitmap, we could know VM core number */
 	uint16_t vcpu_num;				/* Number of vCPUs for the VM */
+
+	uint64_t vcpu_affinity[CONFIG_MAX_VCPUS_PER_VM];/* bitmaps for vCPUs' affinity */
 	uint64_t guest_flags;				/* VM flags that we want to configure for guest
 							 * Now we have two flags:
 							 *	GUEST_FLAG_SECURE_WORLD_ENABLED
