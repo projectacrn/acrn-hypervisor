@@ -86,7 +86,7 @@ static int usercrashd_connect(int pid, int *usercrashd_socket,
 		return -1;
 	}
 	sockfd = socket_local_client(SOCKET_NAME, strlen(SOCKET_NAME),
-			SOCK_SEQPACKET);
+			SOCK_SEQPACKET | SOCK_CLOEXEC);
 	if (sockfd == -1) {
 		LOGE("failed to connect to usercrashd, error (%s)\n",
 			strerror(errno));
