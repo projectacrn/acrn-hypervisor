@@ -87,7 +87,7 @@ static void write_to_kmsg(const char *fmt, va_list args)
 	}
 }
 
-struct logger_ops logger_kmsg = {
+static struct logger_ops logger_kmsg = {
 	.name = "kmsg",
 	.is_enabled = is_kmsg_enabled,
 	.get_log_level = get_kmsg_log_level,

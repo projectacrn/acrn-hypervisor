@@ -118,7 +118,7 @@ static void write_to_console(const char *fmt, va_list args)
 	vprintf(fmt, args);
 }
 
-struct logger_ops logger_console = {
+static struct logger_ops logger_console = {
 	.name = "console",
 	.is_enabled = is_console_enabled,
 	.get_log_level = get_console_log_level,
