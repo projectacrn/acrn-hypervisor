@@ -247,7 +247,7 @@ struct acrn_vcpu {
 	volatile enum vcpu_state prev_state;
 	volatile enum vcpu_state state;	/* State of this VCPU */
 
-	struct sched_object sched_obj;
+	struct thread_object thread_obj;
 	bool launched; /* Whether the vcpu is launched on target pcpu */
 	volatile bool running; /* vcpu is picked up and run? */
 
@@ -286,8 +286,8 @@ vcpu_vlapic(struct acrn_vcpu *vcpu)
 	return &(vcpu->arch.vlapic);
 }
 
-void default_idle(__unused struct sched_object *obj);
-void vcpu_thread(struct sched_object *obj);
+void default_idle(__unused struct thread_object *obj);
+void vcpu_thread(struct thread_object *obj);
 
 int32_t vmx_vmrun(struct run_context *context, int32_t ops, int32_t ibrs);
 
