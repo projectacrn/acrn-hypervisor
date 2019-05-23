@@ -564,6 +564,8 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 
 		vpci_cleanup(vm);
 
+		vuart_deinit(vm);
+
 		ptdev_release_all_entries(vm);
 
 		/* Free iommu */
