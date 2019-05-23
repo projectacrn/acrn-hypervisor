@@ -267,44 +267,6 @@ int32_t hcall_pause_vm(uint16_t vmid)
 }
 
 /**
- * @brief create vcpu
- *
- * Create a vcpu based on parameter for a VM, it will allocate vcpu from
- * freed physical cpus, if there is no available pcpu, the function will
- * return -1.
- *
- * @param vm Pointer to VM data structure
- * @param vmid ID of the VM
- * @param param guest physical address. This gpa points to
- *              struct acrn_create_vcpu
- *
- * @pre Pointer vm shall point to SOS_VM
- * @return 0 on success, non-zero on error.
- */
-int32_t hcall_create_vcpu(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
-{
-	int32_t ret = -1;
-	uint16_t pcpu_id;
-	struct acrn_create_vcpu cv;
-	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
-
-	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm) && (param != 0U)) {
-		if (copy_from_gpa(vm, &cv, param, sizeof(cv)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
-		} else {
-			pcpu_id = allocate_pcpu();
-			if (pcpu_id == INVALID_CPU_ID) {
-				pr_err("%s: No physical available\n", __func__);
-			} else {
-				ret = prepare_vcpu(target_vm, pcpu_id);
-			}
-		}
-	}
-
-	return ret;
-}
-
-/**
  * @brief reset virtual machine
  *
  * Reset a virtual machine, it will make target VM rerun from

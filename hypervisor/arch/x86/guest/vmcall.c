@@ -96,12 +96,7 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 		break;
 
 	case HC_CREATE_VCPU:
-		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
-			spinlock_obtain(&vmm_hypercall_lock);
-			ret = hcall_create_vcpu(sos_vm, vm_id, param2);
-			spinlock_release(&vmm_hypercall_lock);
-		}
+		ret = 0;
 		break;
 
 	case HC_SET_VCPU_REGS:

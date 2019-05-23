@@ -366,9 +366,8 @@ struct acrn_create_vm {
 	uint8_t  reserved2[16];
 } __aligned(8);
 
-
 /**
- * @brief Info to create a VCPU
+ * @brief Info to create a VCPU (deprecated)
  *
  * the parameter for HC_CREATE_VCPU hypercall
  */

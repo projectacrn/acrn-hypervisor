@@ -135,23 +135,6 @@ int32_t hcall_start_vm(uint16_t vmid);
 int32_t hcall_pause_vm(uint16_t vmid);
 
 /**
- * @brief create vcpu
- *
- * Create a vcpu based on parameter for a VM, it will allocate vcpu from
- * freed physical cpus, if there is no available pcpu, the function will
- * return -1.
- *
- * @param vm Pointer to VM data structure
- * @param vmid ID of the VM
- * @param param guest physical address. This gpa points to
- *              struct acrn_create_vcpu
- *
- * @pre Pointer vm shall point to SOS_VM
- * @return 0 on success, non-zero on error.
- */
-int32_t hcall_create_vcpu(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
-
-/**
  * @brief set vcpu regs
  *
  * Set the vcpu regs. It will set the vcpu init regs from DM. Now,
