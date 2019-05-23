@@ -495,7 +495,7 @@ static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 		pr_fatal("%s: dmar unit doesn't support Extended Interrupt Mode!", __func__);
 		ret = -ENODEV;
 	} else {
-		if ((iommu_ecap_c(dmar_unit->ecap) == 0U) && (dmar_unit->drhd->ignore != 0U)) {
+		if ((iommu_ecap_c(dmar_unit->ecap) == 0U) && (!dmar_unit->drhd->ignore)) {
 			iommu_page_walk_coherent = false;
 		}
 
