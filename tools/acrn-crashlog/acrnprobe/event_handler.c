@@ -177,7 +177,7 @@ static void *event_handle(void *unused __attribute__((unused)))
 
 		if (e->event_type == VM) {
 			vme = (struct vm_event_t *)e->private;
-			if (vme->vm_msg)
+			if (vme && vme->vm_msg)
 				free(vme->vm_msg);
 			if (vme)
 				free(vme);
