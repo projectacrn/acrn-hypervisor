@@ -271,6 +271,9 @@ static void write_reg(struct acrn_vuart *vu, uint16_t reg, uint8_t value_u8)
 			vu->thre_int_pending = true;
 			break;
 		case UART16550_IER:
+			if (((vu->ier & IER_ETBEI) == 0U) && ((value_u8 & IER_ETBEI) != 0U)) {
+				vu->thre_int_pending = true;
+			}
 			/*
 			 * Apply mask so that bits 4-7 are 0
 			 * Also enables bits 0-3 only if they're 1
@@ -481,6 +484,9 @@ static void vuart_setup(struct acrn_vm *vm,
 	vu->vm = vm;
 	vuart_fifo_init(vu);
 	vuart_lock_init(vu);
+	vu->thre_int_pending = true;
+	vu->ier = 0U;
+	vuart_toggle_intr(vu);
 	vu->target_vu = NULL;
 	if (vu_config->type == VUART_LEGACY_PIO) {
 		vu->port_base = vu_config->addr.port_base;
