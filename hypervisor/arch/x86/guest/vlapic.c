@@ -2018,9 +2018,9 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 		ret = -1;
 	} else {
 		vcpu_id = vm_apicid2vcpu_id(vm, vapic_id);
-		target_vcpu = vcpu_from_vid(vm, vcpu_id);
+		if ((vcpu_id < vm->hw.created_vcpus) && (vm->hw.vcpu_array[vcpu_id].state != VCPU_OFFLINE)) {
+			target_vcpu = vcpu_from_vid(vm, vcpu_id);
 
-		if (target_vcpu != NULL) {
 			switch (mode) {
 			case APIC_DELMODE_INIT:
 				vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
