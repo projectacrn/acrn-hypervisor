@@ -150,10 +150,6 @@ SRCS += core/timer.c
 # arch
 SRCS += arch/x86/pm.c
 
-# vmcfg
-SRCS += vmcfg/vmcfg.c
-SRCS += vmcfg/apl-mrb/vm1/vm1.c
-
 # log
 SRCS += log/log.c
 SRCS += log/kmsg_logger.c
@@ -161,10 +157,9 @@ SRCS += log/kmsg_logger.c
 OBJS := $(patsubst %.c,$(DM_OBJDIR)/%.o,$(SRCS))
 
 VERSION_H := $(DM_OBJDIR)/include/version.h
-VMCFG_CONFIG_H := $(DM_OBJDIR)/include/vmcfg_config.h
 
 HEADERS := $(shell find $(BASEDIR) -name '*.h')
-HEADERS += $(VERSION_H) $(VMCFG_CONFIG_H)
+HEADERS += $(VERSION_H)
 
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 
@@ -178,9 +173,6 @@ BIOS_BIN := $(wildcard bios/*)
 
 all: $(DM_OBJDIR)/$(PROGRAM)
 	@echo -n ""
-
-$(VMCFG_CONFIG_H):
-	$(MAKE) -C $(BASEDIR)/vmcfg $@ BASEDIR=$(BASEDIR) DM_OBJDIR=$(DM_OBJDIR)
 
 $(DM_OBJDIR)/$(PROGRAM): $(OBJS)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LIBS)
@@ -224,7 +216,7 @@ $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(CFLAGS) -c $< -o $@
 
-install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-samples-mrb install-bios install-vmcfg install-samples-up2
+install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-samples-mrb install-bios install-samples-up2
 	install -D --mode=0755 $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)/usr/bin/$(PROGRAM)
 
 install-samples-up2: $(SAMPLES_UP2)
@@ -241,6 +233,3 @@ install-samples-mrb: $(SAMPLES_MRB)
 install-bios: $(BIOS_BIN)
 	install -d $(DESTDIR)/usr/share/acrn/bios
 	install -D --mode=0664 -t $(DESTDIR)/usr/share/acrn/bios $^
-
-install-vmcfg:
-	$(MAKE) -C $(BASEDIR)/vmcfg install DESTDIR=$(DESTDIR) BASEDIR=$(BASEDIR)
