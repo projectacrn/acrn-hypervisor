@@ -1,7 +1,0 @@
-mainmenu "VM Configuration"
-
-config VM_CFG
-	bool "Enable build-in VM configuration"
-	default n
-
-source "apl-mrb/vm1/Kconfig"
