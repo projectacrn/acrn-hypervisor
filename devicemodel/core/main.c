@@ -62,8 +62,6 @@
 #include "ioc.h"
 #include "pm.h"
 #include "atomic.h"
-#include "vmcfg_config.h"
-#include "vmcfg.h"
 #include "tpm.h"
 #include "virtio.h"
 #include "log.h"
@@ -748,8 +746,6 @@ static struct option long_options[] = {
 
 	/* Following cmd option only has long option */
 #ifdef CONFIG_VM_CFG
-	{"vmcfg",		required_argument,	0, CMD_OPT_VMCFG},
-	{"dump",		required_argument,	0, CMD_OPT_DUMP},
 #endif
 	{"vsbl",		required_argument,	0, CMD_OPT_VSBL},
 	{"ovmf",		required_argument,	0, CMD_OPT_OVMF},
@@ -772,7 +768,7 @@ static struct option long_options[] = {
 static char optstr[] = "hAWYvE:k:r:B:p:c:s:m:l:U:G:i:";
 
 int
-dm_run(int argc, char *argv[])
+main(int argc, char *argv[])
 {
 	int c, error, err;
 	int max_vcpus, mptgen;
@@ -1068,55 +1064,4 @@ mevent_fail:
 fail:
 	vm_destroy(ctx);
 	exit(0);
-}
-
-int main(int argc, char *argv[])
-{
-	int c;
-	int option_idx = 0;
-	int dm_options = 0, vmcfg = 0;
-	int index = -1;
-
-	while ((c = getopt_long(argc, argv, optstr, long_options,
-			&option_idx)) != -1) {
-		switch (c) {
-		case CMD_OPT_VMCFG:
-			vmcfg = 1;
-			dm_strtoi(optarg, NULL, 0, &index);
-			break;
-		case CMD_OPT_DUMP:
-			dm_strtoi(optarg, NULL, 0, &index);
-			vmcfg_dump(index, long_options, optstr);
-			return 0;
-		default:
-			dm_options++;
-		}
-	}
-
-	if (!vmcfg) {
-		optind = 0;
-		return dm_run(argc, argv);
-	}
-
-	if (dm_options)
-		fprintf(stderr, "Waring: --vmcfg override optional args\n");
-
-	if (index <= 0) {
-		vmcfg_list();
-		return -1;
-	}
-
-	if (index > num_args_buildin) {
-		fprintf(stderr, "Error: --vmcfg %d,  max index is %d\n",
-				index, num_args_buildin);
-		return -1;
-	}
-
-	optind = 0;
-	index--;
-	args_buildin[index]->argv[0] = argv[0];
-	if (args_buildin[index]->setup)
-		args_buildin[index]->setup();
-
-	return dm_run(args_buildin[index]->argc, args_buildin[index]->argv);
 }
