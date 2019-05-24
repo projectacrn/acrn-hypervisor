@@ -42,13 +42,6 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
      - Enable guest to write io port 0xf4 to exit guest. It's mainly used by
        guest unit test.
 
-   * - :kbd:`--dump <vm_idx>`
-     - The option dumps detailed configuration of a VM with built-in configurations.
-
-       Example::
-
-         --dump 1
-
    * - :kbd:`-E <elf image path>`
      - This option is to define a static elf binary which could be loaded by
        DM. DM will run elf as guest of ACRN.
@@ -284,18 +277,6 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
           --virtio_poll 1000000
 
        enable virtio poll mode with poll interval 1ms.
-
-   * - :kbd:`--vmcfg <sub-options>`
-     - It's an experimental option for built-in VM configuration. The
-       sub-options could be ``list`` or ``vm_idx``.
-
-       - ``--vmcfg list`` shows indexes of all VMs with built-in configuration.
-       - ``--vmcfg <vm_idx>`` launches UOS with selected config.
-
-       Examples::
-
-         --vmcfg list
-         --vmcfg 1
 
    * - :kbd:`--vtpm2 <sock_path>`
      - This option is to enable virtual TPM support. The sock_path is a mandatory
