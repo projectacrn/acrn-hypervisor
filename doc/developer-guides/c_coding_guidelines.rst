@@ -3501,7 +3501,13 @@ function. Some detailed rules are listed below:
    enough with prior rules, it shall be named with the module name as prefix, such
    as 'vie_read_mmio'.
 5) If the function is a wrapper of inline Assembly codes, it shall be named with
-   the format 'asm_<Assembly instruction mnemonic>', such as 'asm_pause'.
+   one of the following formats:
+
+   a) asm_<Assembly instruction mnemonic>, such as 'asm_pause'.
+   b) If the Assembly instruction mnemonic does not clearly indicate the
+      purpose of the function or the function includes multiple Assembly
+      instruction statements, the function shall be named with 'asm\_' as
+      prefix and apply the other non-assembly function naming rules.
 6) <nouns> mentioned in prior rules may either be one noun or multiple nouns, as
    long as it could clearly illustrate the object.
 
