@@ -9,6 +9,8 @@
 #include <mptable.h>
 #include <default_acpi_info.h>
 
+static struct mptable_info vm_mptables[CONFIG_MAX_VM_NUM];
+
 static struct mptable_info mptable_template = {
 			.mpfp = {
 				.signature = MPFP_SIG,
@@ -80,7 +82,6 @@ static uint8_t mpt_compute_checksum(void *base, size_t len)
 /**
  * @pre vm != NULL
  * @pre vm->vm_id < CONFIG_MAX_VM_NUM
- * @pre vm_configs[vm->vm_id].mptable != NULL
  */
 int32_t mptable_build(struct acrn_vm *vm)
 {
@@ -96,7 +97,7 @@ int32_t mptable_build(struct acrn_vm *vm)
 	struct acrn_vm_config *vm_config;
 
 	vm_config = get_vm_config(vm->vm_id);
-	mptable = vm_config->mptable;
+	mptable = &vm_mptables[vm->vm_id];
 	vcpu_num = vm_config->cpu_num;
 	pcpu_bitmap = vm_config->pcpu_bitmap;
 	(void *)memcpy_s((void *)mptable, sizeof(struct mptable_info),

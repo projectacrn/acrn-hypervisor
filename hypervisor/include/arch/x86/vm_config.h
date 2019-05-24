@@ -89,7 +89,6 @@ struct acrn_vm_config {
 	uint16_t clos;					/* if guest_flags has GUEST_FLAG_CLOS_REQUIRED, then VM use this CLOS */
 
 	struct vuart_config vuart[MAX_VUART_NUM_PER_VM];/* vuart configuration for VM */
-	struct mptable_info	*mptable;		/* Pointer to mptable struct if VM type is pre-launched */
 } __aligned(8);
 
 struct acrn_vm_config *get_vm_config(uint16_t vm_id);
