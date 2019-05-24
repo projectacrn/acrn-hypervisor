@@ -57,7 +57,7 @@ options:
                [-s pci] [-U uuid] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]
                [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]
                [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]
-               [--vmcfg sub_options] [--dump vm_idx] [--ptdev_no_reset] [--debugexit]
+               [--ptdev_no_reset] [--debugexit]
                [--lapic_pt] <vm>
        -A: create ACPI tables
        -B: bootargs for kernel
@@ -77,8 +77,6 @@ options:
        -W: force virtio to use single-vector MSI
        -Y: disable MPtable generation
        --mac_seed: set a platform unique string as a seed for generate mac address
-       --vmcfg: build-in VM configurations
-       --dump: show build-in VM configurations
        --vsbl: vsbl file path
        --ovmf: ovmf file path
        --part_info: guest partition info file path
