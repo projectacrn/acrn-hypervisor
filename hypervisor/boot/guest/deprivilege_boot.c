@@ -60,6 +60,7 @@ static uint64_t get_depri_boot_ap_trampoline(void)
 
 static void* get_depri_boot_rsdp(void)
 {
+	init_depri_boot();
 	return hpa2hva((uint64_t)(depri_boot_ctx.rsdp));
 }
 
