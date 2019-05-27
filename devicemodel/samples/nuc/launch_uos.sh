@@ -25,14 +25,30 @@ fi
 logger_setting="--logger_setting console,level=4;kmsg,level=3"
 
 #for memsize setting
-mem_size=2048M
+mem_size=4096M
+
+systemctl stop gdm.patch gdm
+
+echo "8086 8a5a" > /sys/bus/pci/drivers/pci-stub/new_id
+echo "0000:00:02.0" > /sys/bus/pci/devices/0000:00:02.0/driver/unbind
+echo "0000:00:02.0" > /sys/bus/pci/drivers/pci-stub/bind
+
+echo "8086 34ed" > /sys/bus/pci/drivers/pci-stub/new_id
+echo "0000:00:14.0" > /sys/bus/pci/devices/0000:00:14.0/driver/unbind
+echo "0000:00:14.0" > /sys/bus/pci/drivers/pci-stub/bind
+
+echo "8086 8a11" > /sys/bus/pci/drivers/pci-stub/new_id
+echo "0000:00:08.0" > /sys/bus/pci/devices/0000:00:08.0/driver/unbind
+echo "0000:00:08.0" > /sys/bus/pci/drivers/pci-stub/bind
 
 acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
-  -s 2,pci-gvt -G "$3" \
+  -s 2,passthru,0/2/0 \
   -s 5,virtio-console,@pty:pty_port \
   -s 6,virtio-hyper_dmabuf \
-  -s 3,virtio-blk,/home/clear/uos/uos.img \
+  -s 3,virtio-blk,/home/clear/clear-29200-kvm.img \
   -s 4,virtio-net,tap0 \
+  -s 7,passthru,0/14/0 \
+  -s 8,passthru,0/8/0 \
   $logger_setting \
   --mac_seed $mac_seed \
   -k /usr/lib/kernel/default-iot-lts2018 \
@@ -40,11 +56,11 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
   consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$4 \
   i915.enable_hangcheck=0 i915.nuclear_pageflip=1 i915.enable_guc_loading=0 \
-  i915.enable_guc_submission=0 i915.enable_guc=0" $vm_name
+  i915.enable_guc_submission=0 i915.enable_guc=0 i915.alpha_support=1 drm.debug=0x06" $vm_name
 }
 
 # offline SOS CPUs except BSP before launch UOS
-for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
+for i in `ls -d /sys/devices/system/cpu/cpu[2-99]`; do
         online=`cat $i/online`
         idx=`echo $i | tr -cd "[1-99]"`
         echo cpu$idx online=$online
