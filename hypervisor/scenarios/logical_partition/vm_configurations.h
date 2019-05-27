@@ -8,6 +8,7 @@
 #define VM_CONFIGURATIONS_H
 
 #include <pci_devices.h>
+#include <misc_cfg.h>
 
 /* Bits mask of guest flags that can be programmed by device model. Other bits are set by hypervisor only */
 #define DM_OWNED_GUEST_FLAG_MASK	0UL
@@ -28,7 +29,7 @@
 #define VM0_CONFIG_NUM_CPUS			2U
 #define VM0_CONFIG_MEM_START_HPA		0x100000000UL
 #define VM0_CONFIG_MEM_SIZE			0x20000000UL
-#define VM0_CONFIG_OS_BOOTARG_ROOT		"root=/dev/sda3 "
+#define VM0_CONFIG_OS_BOOTARG_ROOT		ROOTFS_0
 #define VM0_CONFIG_OS_BOOTARG_MAXCPUS		"maxcpus=2 "
 #define VM0_CONFIG_OS_BOOTARG_CONSOLE		"console=ttyS0 "
 
@@ -36,7 +37,7 @@
 #define VM1_CONFIG_NUM_CPUS			2U
 #define VM1_CONFIG_MEM_START_HPA		0x120000000UL
 #define VM1_CONFIG_MEM_SIZE			0x20000000UL
-#define VM1_CONFIG_OS_BOOTARG_ROOT		"root=/dev/sda3 "
+#define VM1_CONFIG_OS_BOOTARG_ROOT		ROOTFS_0
 #define VM1_CONFIG_OS_BOOTARG_MAXCPUS		"maxcpus=2 "
 #define VM1_CONFIG_OS_BOOTARG_CONSOLE		"console=ttyS0 "
 
