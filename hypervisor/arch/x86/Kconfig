@@ -68,7 +68,7 @@ config MAX_PT_IRQ_ENTRIES
 config MAX_IOMMU_NUM
 	int "Maximum number of IOMMU devices"
 	range 1 6
-	default 2
+	default 3
 	help
 	  The maximum number of physical IOMMUs the hypervisor can support.
 
@@ -207,14 +207,14 @@ config HV_RAM_SIZE
 
 config PLATFORM_RAM_SIZE
 	hex "Size of the physical platform RAM"
-	default 0x400000000
+	default 0x600000000
 	help
 	  A 64-bit integer indicating the size of the physical platform RAM
 	  (MMIO not included).
 
 config SOS_RAM_SIZE
 	hex "Size of the Service OS (SOS) RAM"
-	default 0x400000000
+	default 0x600000000
 	help
 	  A 64-bit integer indicating the size of the Service OS RAM (MMIO not
 	  included).
