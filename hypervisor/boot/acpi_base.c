@@ -143,22 +143,39 @@ found_rsdp(char *base, int32_t length)
 	return ret;
 }
 
+/* RSDP parsed from BIOS region should exist.
+ * If it is NULL, the hypervisor can't be booted
+ */
 static struct acpi_table_rsdp *get_rsdp(void)
 {
 	struct acpi_table_rsdp *rsdp = NULL;
-	uint16_t *addr;
 
-	rsdp = (struct acpi_table_rsdp *)get_rsdp_ptr();
-	if (rsdp == NULL) {
-		/* EBDA is addressed by the 16 bit pointer at 0x40E */
-		addr = (uint16_t *)hpa2hva(0x40eUL);
+	/* If acpi_rsdp is already parsed, it will be returned directly */
+	if (acpi_rsdp != NULL) {
+		rsdp = acpi_rsdp;
+	} else {
+		rsdp = (struct acpi_table_rsdp *)get_rsdp_ptr();
+		if (rsdp == NULL) {
+			uint16_t *addr;
 
-		rsdp = found_rsdp((char *)hpa2hva((uint64_t)(*addr) << 4U), 0x400);
+			/* EBDA is addressed by the 16 bit pointer at 0x40E */
+			addr = (uint16_t *)hpa2hva(0x40eUL);
+
+			rsdp = found_rsdp((char *)hpa2hva((uint64_t)(*addr) << 4U), 0x400);
+		}
 		if (rsdp == NULL) {
 			/* Check the upper memory BIOS space, 0xe0000 - 0xfffff. */
 			rsdp = found_rsdp((char *)hpa2hva(0xe0000UL), 0x20000);
 		}
+
+		if (rsdp == NULL)
+			panic("No RSDP is found");
+
+		/* After RSDP is parsed, it will be assigned to acpi_rsdp */
+		acpi_rsdp = rsdp;
 	}
+
+
 	return rsdp;
 }
 
@@ -185,7 +202,10 @@ void *get_acpi_tbl(const char *signature)
 	uint64_t addr = 0UL;
 	uint32_t i, count;
 
-	rsdp = acpi_rsdp;
+	/* the returned RSDP should always exist. Otherwise the hypervisor
+	 * can't be booted.
+	 */
+	rsdp = get_rsdp();
 
 	if ((rsdp->revision >= 2U) && (rsdp->xsdt_physical_address != 0UL)) {
 		/*
@@ -294,9 +314,10 @@ ioapic_parse_madt(void *madt, struct ioapic_info *ioapic_id_array)
 uint16_t parse_madt(uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 {
 	uint16_t ret = 0U;
+	struct acpi_table_rsdp *rsdp = NULL;
 
-	acpi_rsdp = get_rsdp();
-	if (acpi_rsdp != NULL) {
+	rsdp = get_rsdp();
+	if (rsdp != NULL) {
 		struct acpi_table_madt *madt = (struct acpi_table_madt *)get_acpi_tbl(ACPI_SIG_MADT);
 		if (madt != NULL) {
 			ret = local_parse_madt(madt, lapic_id_array);
@@ -308,13 +329,16 @@ uint16_t parse_madt(uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 
 uint16_t parse_madt_ioapic(struct ioapic_info *ioapic_id_array)
 {
-	void *madt;
+	uint16_t ret = 0U;
+	struct acpi_table_rsdp *rsdp = NULL;
 
-	acpi_rsdp = get_rsdp();
-	ASSERT(acpi_rsdp != NULL, "fail to get rsdp");
+	rsdp = get_rsdp();
+	if (rsdp != NULL) {
+		void *madt = get_acpi_tbl(ACPI_SIG_MADT);
+		if (madt != NULL) {
+			ret = ioapic_parse_madt(madt, ioapic_id_array);
+		}
+	}
 
-	madt = get_acpi_tbl(ACPI_SIG_MADT);
-	ASSERT(madt != NULL, "fail to get madt");
-
-	return ioapic_parse_madt(madt, ioapic_id_array);
+	return ret;
 }
