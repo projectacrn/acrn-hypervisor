@@ -31,7 +31,7 @@ echo ${passthru_bdf["sata"]} > /sys/bus/pci/devices/${passthru_bdf["sata"]}/driv
 echo ${passthru_bdf["sata"]} > /sys/bus/pci/drivers/pci-stub/bind
 
 /usr/bin/acrn-dm -A -m $mem_size -c $1 -s 0:0,hostbridge \
-  -k /root/rt_uos_kernel \
+  -k /usr/lib/kernel/default-iot-lts2018-preempt-rt \
    --lapic_pt \
    --rtvm \
    --virtio_poll 1000000 \
