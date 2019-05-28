@@ -43,13 +43,11 @@ static void init_depri_boot(void)
 
 const struct depri_boot_context *get_depri_boot_ctx(void)
 {
-	init_depri_boot();
 	return &depri_boot_ctx;
 }
 
 const struct lapic_regs *get_depri_boot_lapic_regs(void)
 {
-	init_depri_boot();
 	return &depri_boot_lapic_regs;
 }
 
