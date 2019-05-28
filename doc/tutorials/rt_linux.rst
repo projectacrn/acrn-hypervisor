@@ -44,71 +44,136 @@ system on Intel KBL NUC with a SATA SSD as ``/dev/sda`` and an NVME SSD as
 1. Follow the :ref:`set-up-CL` instructions in the
    :ref:`getting-started-apl-nuc` to:
 
-   a. Install Clear Linux (version 26800 or higher) onto the NVMe
-   #. Install Clear Linux (version 26800 or higher) onto the SATA SSD
+   a. Install Clear Linux (version 29400 or higher) onto the NVMe
+   #. Install Clear Linux (version 29400 or higher) onto the SATA SSD
    #. Set up Clear Linux on the SATA SSD as the Service OS (SOS) following
       the :ref:`add-acrn-to-efi` instructions in the same guide.
 
-#. Patch and build the Real-Time kernel
+#. Set up and launch a Real-Time Linux guest
 
-   a. Download Linux kernel real-time patch::
+   a. Add kernel-lts2018-preempt-rt bundle (as root)::
 
-         $ wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/4.19/patch-4.19.31-rt18.patch.xz
+         # swupd bundle-add kernel-lts2018-preempt-rt
 
-   #. Sync the kernel code to acrn-2019w17.4-160000p::
+   #. Copy preempt-rt module to NVMe disk::
 
-         $ git clone https://github.com/projectacrn/acrn-kernel.git
-         $ git checkout acrn-2019w17.4-160000p
-         $ cd acrn-kernel
-         $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/rt_linux.patch 
-         $ git apply rt_linux.patch 
-         $ xzcat ../patch-4.19.31-rt18.patch.xz | patch -p1
+         # mount /dev/nvme0n1p3 /mnt
+         # ls -l /usr/lib/modules/
+         4.19.31-6.iot-lts2018-preempt-rt/ 
+         4.19.36-48.iot-lts2018/           
+         4.19.36-48.iot-lts2018-sos/                    
+         5.0.14-753.native/
+         # cp -r /usr/lib/modules/4.19.31-6.iot-lts2018-preempt-rt /mnt/lib/modules/
+         # cd ~ && umount /mnt && sync
+   
+   #. Get your NVMe pass-through IDs (in our example they are ``[01:00.0]`` and ``[8086:f1a6]``)::
+         
+         # lspci -nn | grep SSD
+         01:00.0 Non-Volatile memory controller [0108]: Intel Corporation SSD Pro 7600p/760p/E 6100p Series [8086:f1a6] (rev 03)
 
-   #. Edit the ``kernel_config_uos`` config file: search for the keyword
-      "NVME Support", delete ``# CONFIG_BLK_DEV_NVME is not set`` and add two lines under "NVME Support" to enable
-      the NVME driver in RT kernel::
+   #. Modify ``launch_hard_rt_vm.sh`` script::
+         
+         # vim /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh        
+      
+         <Modify the passthru_bdf and passthru_vpid with your NVMe pass-through IDs>
+         
+         passthru_vpid=(
+         ["eth"]="8086 156f"
+         ["sata"]="8086 9d03"
+         )
+         passthru_bdf=(
+         ["eth"]="0000:00:1f.6"
+         ["sata"]="0000:00:17.0"
+         )
 
-         CONFIG_NVME_CORE=y
-         CONFIG_BLK_DEV_NVME=y
+         TO:
+         passthru_vpid=(
+         ["eth"]="8086 156f"
+         ["sata"]="8086 f1a6"
+         )
+         passthru_bdf=(
+         ["eth"]="0000:00:1f.6"
+         ["sata"]="0000:01:00.0"
+         )
 
-   #. Build the RT kernel::
+         <Modify NVMe pass-through id>
+         
+         -s 2,passthru,0/17/0 \
+      
+         TO:
+         -s 2,passthru,01/00/0 \
+      
+         <Modify rootfs to NVMe>
+         
+         -B "root=/dev/sda3 rw rootwait maxcpus=$1 nohpet console=hvc0 \
+      
+         TO:
+         -B "root=/dev/nvme0n1p3 rw rootwait maxcpus=$1 nohpet console=hvc0 \ 
 
-         $ cp kernel_config_uos .config
-         $ make targz-pkg
+#. Get IP address in real-time VM if you need it (There is no IP by default)
 
-      Choose "Fully Preemptible Kernel (RT)" when prompted, and
-      choose default for all the other options.
+   #. Method 1 ``virtio-net NIC``::
 
-   #. Copy the generated package to SOS::
+         # vim /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
+         
+         <add below line into acrn-dm boot args>
+         
+         -s 4,virtio-net,tap0 \
 
-         $ scp linux-4.19.28-rt18-quilt-2e5dc0ac-dirty-x86.tar.gz <user name>@<SOS ip>:~/
+   #. Method 2 ``pass-through NIC``::
+         
+         <Get your ethernet IDs first(in our example they are ``[00:1f.6]`` and ``[8086:15e3]``)>
+         
+         # lspci -nn | grep Eth
+         00:1f.6 Ethernet controller [0200]: Intel Corporation Ethernet Connection (5) I219-LM [8086:15e3]
 
-#. Configure the system on SOS
+         # vim /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
 
+         <Modify the passthru_bdf and passthru_vpid with your ethernet IDs>
+         
+         passthru_vpid=(
+         ["eth"]="8086 156f"
+         ["sata"]="8086 f1a6"
+         )
+         passthru_bdf=(
+         ["eth"]="0000:00:1f.6"
+         ["sata"]="0000:01:00.0"
+         )
 
-   a. Extract kernel boot and lib modules from the package::
+         TO:
+         passthru_vpid=(
+         ["eth"]="8086 15e3"
+         ["sata"]="8086 f1a6"
+         )
+         passthru_bdf=(
+         ["eth"]="0000:00:1f.6"
+         ["sata"]="0000:01:00.0"
+         )
 
-         $ cd ~/
-         $ tar xzvf linux-4.19.28-rt18-quilt-2e5dc0ac-dirty-x86.tar.gz
+         <Uncomment the following three lines>
+         
+         #echo ${passthru_vpid["eth"]} > /sys/bus/pci/drivers/pci-stub/new_id
+         #echo ${passthru_bdf["eth"]} > /sys/bus/pci/devices/${passthru_bdf["eth"]}/driver/unbind
+         #echo ${passthru_bdf["eth"]} > /sys/bus/pci/drivers/pci-stub/bind
 
-   #. Copy the extracted lib modules to NVME SSD::
+         TO:
+         echo ${passthru_vpid["eth"]} > /sys/bus/pci/drivers/pci-stub/new_id
+         echo ${passthru_bdf["eth"]} > /sys/bus/pci/devices/${passthru_bdf["eth"]}/driver/unbind
+         echo ${passthru_bdf["eth"]} > /sys/bus/pci/drivers/pci-stub/bind
 
-         $ mount /dev/nvme0n1p3 /mnt
-         $ cp -r ~/lib/modules/4.19.28-rt18-quilt-2e5dc0ac-dirty /mnt/lib/modules
+         <add below line into acrn-dm boot args,behind is your ethernet ID>
+         
+         -s 4,passthru,00/1f/6 \      
 
-   #. Edit and run the ``launch_hard_rt_vm.sh`` script to launch the UOS.
-      A sample ``launch_hard_rt_vm.sh`` is included in the Clear Linux
-      release, and is also available in the acrn-hypervisor/devicemodel
-      GitHub repo (in the samples folder).
+   .. note::
+      
+      method 1 will give both the Service VM and User VM network connectivity
 
-      You'll need to modify two places:
+      method 2 will give the User VM a network interface, the Service VM will loose it
 
-      1. Replace ``/root/rt_uos_kernel`` with ``~/boot/vmlinuz-4.19.28-rt18-quilt-2e5dc0ac-dirty``
-      #. Replace ``root=/dev/sda3`` with ``root=/dev/nvme0n1p3``
+#. Start the Real-Time Linux guest::
 
-   #. Run the launch script::
-
-         $ sudo ./launch_hard_rt_vm.sh
+      # sh /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
 
 #. At this point, you've successfully launched the real-time VM and
    Guest OS.  You can verify a preemptible kernel was loaded using
@@ -117,11 +182,12 @@ system on Intel KBL NUC with a SATA SSD as ``/dev/sda`` and an NVME SSD as
    .. code-block:: console
 
       root@rtvm-02 ~ # uname -a
-      Linux rtvm-02 4.19.8-rt6+ #1 SMP PREEMPT RT Tue Jan 22 04:17:40 UTC 2019 x86_64 GNU/Linux
+      Linux clr-de362ed3fd444586b99968b5ceb22275 4.19.31-6.iot-lts2018-preempt-rt #1 SMP PREEMPT Mon May 20 16:00:51 UTC 2019 x86_64 GNU/Linux
 
 #. Now you can run all kinds of performance tools to experience real-time
    performance. One popular tool is ``cyclictest``. You can install this
    tool and run it with::
 
       swupd bundle-add dev-utils
-      cyclictest -N -p80 -D300
+      cyclictest -N -p80 -D30 -M > log.txt
+      cat log.txt
