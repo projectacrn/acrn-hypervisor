@@ -64,9 +64,6 @@ static void enter_guest_mode(uint16_t pcpu_id)
 
 static void init_primary_pcpu_post(void)
 {
-	/* Perform any necessary guest vboot initialization */
-	init_vboot();
-
 	init_debug_pre();
 
 	init_pcpu_post(BOOT_CPU_ID);

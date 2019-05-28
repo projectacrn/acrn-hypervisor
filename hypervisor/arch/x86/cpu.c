@@ -119,8 +119,6 @@ void init_pcpu_pre(uint16_t pcpu_id_args)
 		 */
 		init_pcpu_capabilities();
 
-		init_vboot_operations();
-
 		init_pcpu_model_name();
 
 		load_pcpu_state_data();
@@ -134,6 +132,8 @@ void init_pcpu_pre(uint16_t pcpu_id_args)
 		}
 
 		early_init_lapic();
+
+		init_vboot();
 
 		if (!init_percpu_lapic_id()) {
 			panic("failed to init_percpu_lapic_id!");

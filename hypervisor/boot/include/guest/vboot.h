@@ -20,7 +20,6 @@ struct vboot_operations {
 	void (*init_irq)(void);
 };
 
-void init_vboot_operations(void);
 void init_vboot(void);
 void init_vboot_irq(void);
 uint64_t get_ap_trampoline_buf(void);

@@ -29,7 +29,7 @@ static enum vboot_mode sos_boot_mode;
  * @pre: this function is called during detect mode which is very early stage,
  * other exported interfaces should not be called beforehand.
  */
-void init_vboot_operations(void)
+void init_vboot(void)
 {
 
 	struct multiboot_info *mbi;
@@ -61,15 +61,16 @@ void init_vboot_operations(void)
 			}
 		}
 	}
-}
 
-/* @pre: vboot_ops->init != NULL */
-void init_vboot(void)
-{
+	/*
+	 * vboot_ops is mandatory and it will be initialized correctly.
+	 * The vboot_ops->init is called to assure that the boot env is
+	 * initialized before calling other vboot_ops interface.
+	 */
+	vboot_ops->init();
 #ifdef CONFIG_ACPI_PARSE_ENABLED
 	acpi_fixup();
 #endif
-	vboot_ops->init();
 }
 
 /* @pre: vboot_ops != NULL */
