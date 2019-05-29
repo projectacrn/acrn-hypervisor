@@ -499,11 +499,22 @@ virtio_console_backend_write(struct virtio_console_port *port, void *arg,
 
 	ret = writev(be->fd, iov, niov);
 	if (ret <= 0) {
-		/* backend cannot receive more data. For example when pts is
+		/* Case 1:backend cannot receive more data. For example when pts is
 		 * not connected to any client, its tty buffer will become full.
 		 * In this case we just drop data from guest hvc console.
+		 *
+		 * Case 2: Backend connection not yet setup. For example, when
+		 * virtio-console is used as console port with socket backend, guest
+		 * kernel tries to hook it up with hvc console and sets it up. It
+		 * doesn't check if a client is connected and can result in ENOTCONN
+		 * with virtio-console backend being reset. This will prevent
+		 * client connection at a later point. To avoid this, ignore
+		 * ENOTCONN error.
+		 *
+		 * PS: For Kata, the runtime first launches VM and then proxy which
+		 * acts as a client connects to this socket.
 		 */
-		if (ret == -1 && errno == EAGAIN)
+		if (ret == -1 && (errno == EAGAIN || errno == ENOTCONN))
 			return;
 
 		virtio_console_reset_backend(be);
