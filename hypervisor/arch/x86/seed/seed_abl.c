@@ -48,8 +48,6 @@ bool parse_seed_abl(uint64_t addr, struct physical_seed *phy_seed)
 	struct abl_svn_seed *abl_seed = (struct abl_svn_seed *)hpa2hva(addr);
 	bool status = false;
 
-	stac();
-
 	if ((phy_seed != NULL) && (abl_seed != NULL) &&
 	    (abl_seed->num_seeds >= 2U) && (abl_seed->num_seeds <= ABL_SEED_LIST_MAX)) {
 
@@ -89,8 +87,6 @@ bool parse_seed_abl(uint64_t addr, struct physical_seed *phy_seed)
 		phy_seed->num_seeds = abl_seed->num_seeds;
 		status = true;
 	}
-
-	clac();
 
 	return status;
 }

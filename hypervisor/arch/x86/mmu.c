@@ -288,14 +288,6 @@ void init_paging(void)
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_reserve_sworld_memory_base(),
 			TRUSTY_RAM_SIZE * (CONFIG_MAX_VM_NUM - 1U), PAGE_USER, 0UL, &ppt_mem_ops, MR_MODIFY);
 
-#ifdef CONFIG_ACPI_PARSE_ENABLED
-	for (i = 0U; i < entries_count; i++) {
-		entry = p_e820 + i;
-		if ((entry->type == E820_TYPE_ACPI_RECLAIM) || (entry->type == E820_TYPE_RESERVED)) {
-			hv_access_memory_region_update(entry->baseaddr, entry->length);
-		}
-	}
-#endif
 	/* Enable paging */
 	enable_paging();
 

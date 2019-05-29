@@ -176,10 +176,6 @@ void init_pcpu_post(uint16_t pcpu_id)
 #endif
 	load_gdtr_and_tr();
 
-	enable_smep();
-
-	enable_smap();
-
 	pcpu_xsave_init();
 
 	if (pcpu_id == BOOT_CPU_ID) {
@@ -256,6 +252,10 @@ void init_pcpu_post(uint16_t pcpu_id)
 	}
 
 	setup_clos(pcpu_id);
+
+	enable_smep();
+
+	enable_smap();
 }
 
 static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id)
