@@ -16,11 +16,13 @@ STACK_PROTECTOR := 1
 
 BASEDIR := $(shell pwd)
 HV_OBJDIR ?= $(CURDIR)/build
+HV_MODDIR ?= $(HV_OBJDIR)/modules
 HV_FILE := acrn
 SUB_MAKEFILES := $(wildcard */Makefile)
 
-LIB_DEBUG = $(HV_OBJDIR)/debug/libdebug.a
-LIB_RELEASE = $(HV_OBJDIR)/release/librelease.a
+LIB_MOD = $(HV_MODDIR)/lib_mod.a
+LIB_DEBUG = $(HV_MODDIR)/libdebug.a
+LIB_RELEASE = $(HV_MODDIR)/librelease.a
 
 # initialize the flags we used
 CFLAGS :=
@@ -136,6 +138,30 @@ export CFLAGS ASFLAGS ARFLAGS LDFLAGS ARCH_CFLAGS ARCH_ASFLAGS ARCH_ARFLAGS ARCH
 export HV_OBJDIR CONFIG_RELEASE INCLUDE_PATH
 export LIB_DEBUG LIB_RELEASE
 
+# library componment
+LIB_C_SRCS += lib/string.c
+LIB_C_SRCS += lib/crypto/crypto_api.c
+LIB_C_SRCS += lib/crypto/mbedtls/hkdf.c
+LIB_C_SRCS += lib/crypto/mbedtls/sha256.c
+LIB_C_SRCS += lib/crypto/mbedtls/md.c
+LIB_C_SRCS += lib/crypto/mbedtls/md_wrap.c
+LIB_C_SRCS += lib/sprintf.c
+LIB_C_SRCS += arch/x86/lib/memory.c
+ifdef STACK_PROTECTOR
+LIB_C_SRCS += lib/stack_protector.c
+endif
+# retpoline support
+ifeq (true, $(shell [ $(GCC_MAJOR) -eq 7 ] && [ $(GCC_MINOR) -ge 3 ] && echo true))
+CFLAGS += -mindirect-branch=thunk-extern -mindirect-branch-register
+CFLAGS += -DCONFIG_RETPOLINE
+LIB_S_SRCS += arch/x86/lib/retpoline-thunk.S
+else
+ifeq (true, $(shell [ $(GCC_MAJOR) -ge 8 ] && echo true))
+CFLAGS += -mindirect-branch=thunk-extern -mindirect-branch-register
+CFLAGS += -DCONFIG_RETPOLINE
+LIB_S_SRCS += arch/x86/lib/retpoline-thunk.S
+endif
+endif
 # boot component
 S_SRCS += arch/x86/boot/cpu_primary.S
 S_SRCS += arch/x86/boot/cpu_save_boot_ctx.S
@@ -216,15 +242,7 @@ S_SRCS += arch/x86/guest/vmx_asm.S
 C_SRCS += arch/x86/guest/trusty.c
 C_SRCS += arch/x86/guest/vm_reset.c
 C_SRCS += arch/x86/cat.c
-C_SRCS += arch/x86/lib/memory.c
 C_SRCS += arch/x86/sgx.c
-C_SRCS += lib/string.c
-C_SRCS += lib/crypto/crypto_api.c
-C_SRCS += lib/crypto/mbedtls/hkdf.c
-C_SRCS += lib/crypto/mbedtls/sha256.c
-C_SRCS += lib/crypto/mbedtls/md.c
-C_SRCS += lib/crypto/mbedtls/md_wrap.c
-C_SRCS += lib/sprintf.c
 C_SRCS += common/softirq.c
 C_SRCS += common/hv_main.c
 C_SRCS += common/hypercall.c
@@ -232,12 +250,7 @@ C_SRCS += common/trusty_hypercall.c
 C_SRCS += common/schedule.c
 C_SRCS += common/vm_load.c
 C_SRCS += common/ptdev.c
-ifdef STACK_PROTECTOR
-C_SRCS += lib/stack_protector.c
-endif
-
 C_SRCS += hw/pci.c
-
 C_SRCS += dm/vpic.c
 C_SRCS += dm/vrtc.c
 C_SRCS += dm/vioapic.c
@@ -251,19 +264,8 @@ C_SRCS += dm/vpci/pci_pt.c
 C_SRCS += dm/vpci/vmsi.c
 C_SRCS += dm/vpci/vmsix.c
 
-# retpoline support
-ifeq (true, $(shell [ $(GCC_MAJOR) -eq 7 ] && [ $(GCC_MINOR) -ge 3 ] && echo true))
-CFLAGS += -mindirect-branch=thunk-extern -mindirect-branch-register
-CFLAGS += -DCONFIG_RETPOLINE
-S_SRCS += arch/x86/lib/retpoline-thunk.S
-else
-ifeq (true, $(shell [ $(GCC_MAJOR) -ge 8 ] && echo true))
-CFLAGS += -mindirect-branch=thunk-extern -mindirect-branch-register
-CFLAGS += -DCONFIG_RETPOLINE
-S_SRCS += arch/x86/lib/retpoline-thunk.S
-endif
-endif
-
+LIB_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(LIB_C_SRCS))
+LIB_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(LIB_S_SRCS))
 C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
 ifneq ($(CONFIG_RELEASE),y)
 CFLAGS += -DHV_DEBUG -DPROFILING_ON -fno-omit-frame-pointer
@@ -271,6 +273,17 @@ endif
 S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(S_SRCS))
 PRE_BUILD_SRCS += pre_build/static_checks.c
 PRE_BUILD_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(PRE_BUILD_SRCS))
+
+MOD_DEPS += lib-mod
+MOD_DEPS += lib
+MODULES += $(LIB_MOD)
+ifeq ($(CONFIG_RELEASE),y)
+MODULES += $(LIB_RELEASE)
+else
+MODULES += $(LIB_DEBUG)
+endif
+HV_OBJS += $(C_OBJS)
+HV_OBJS += $(S_OBJS)
 
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 VERSION := $(HV_OBJDIR)/include/version.h
@@ -310,10 +323,10 @@ else
 endif
 
 .PHONY: all
-all: pre_build lib $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
+all: pre_build $(MOD_DEPS) $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
 ifeq ($(FIRMWARE),sbl)
-install: lib $(HV_OBJDIR)/$(HV_FILE).32.out
+install: $(MOD_DEPS) $(HV_OBJDIR)/$(HV_FILE).32.out
 ifeq ($(BOARD),apl-up2)
 	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).apl-up2.sbl
 else
@@ -336,6 +349,10 @@ pre_build: $(PRE_BUILD_OBJS)
 .PHONY: header
 header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
 
+.PHONY: lib-mod
+lib-mod: $(LIB_C_OBJS) $(LIB_S_OBJS)
+	$(AR) $(ARFLAGS) $(LIB_MOD) $(LIB_C_OBJS) $(LIB_S_OBJS)
+
 .PHONY: lib
 lib: $(SUB_MAKEFILES)
 
@@ -345,21 +362,16 @@ $(SUB_MAKEFILES): header
 		$(MAKE) -f $$Makefile MKFL_NAME=$$Makefile; \
 	done
 
-ifneq ($(CONFIG_RELEASE),y)
-LIB_FLAGS += $(LIB_DEBUG)
-else
-LIB_FLAGS += $(LIB_RELEASE)
-endif
-
 $(HV_OBJDIR)/$(HV_FILE).32.out: $(HV_OBJDIR)/$(HV_FILE).out
 	$(OBJCOPY) -S --section-alignment=0x1000 -O elf32-i386 $< $@
 
 $(HV_OBJDIR)/$(HV_FILE).bin: $(HV_OBJDIR)/$(HV_FILE).out
 	$(OBJCOPY) -O binary $< $(HV_OBJDIR)/$(HV_FILE).bin
 
-$(HV_OBJDIR)/$(HV_FILE).out: $(C_OBJS) $(S_OBJS) $(LIB_FLAGS)
+$(HV_OBJDIR)/$(HV_FILE).out: $(MODULES) $(HV_OBJS)
 	${BASH} ${LD_IN_TOOL} $(ARCH_LDSCRIPT_IN) $(ARCH_LDSCRIPT) ${HV_OBJDIR}/.config
-	$(CC) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) $^
+	$(CC) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) \
+		-Wl,--start-group $^ -Wl,--end-group
 
 $(LIB_FLAGS): lib
 
@@ -409,9 +421,9 @@ $(VERSION):
 -include $(S_OBJS:.o=.d)
 
 $(HV_OBJDIR)/%.o: %.c $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
-	[ ! -e $@ ] && mkdir -p $(dir $@); \
+	[ ! -e $@ ] && mkdir -p $(dir $@) && mkdir -p $(HV_MODDIR); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@ -MMD -MT $@
 
 $(HV_OBJDIR)/%.o: %.S $(HV_OBJDIR)/$(HV_CONFIG_H)
-	[ ! -e $@ ] && mkdir -p $(dir $@); \
+	[ ! -e $@ ] && mkdir -p $(dir $@) && mkdir -p $(HV_MODDIR); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. $(ASFLAGS) $(ARCH_ASFLAGS) -c $< -o $@ -MMD -MT $@
