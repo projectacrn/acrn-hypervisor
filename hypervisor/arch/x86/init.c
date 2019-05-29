@@ -66,9 +66,9 @@ static void init_primary_pcpu_post(void)
 {
 	init_debug_pre();
 
-	init_pcpu_post(BOOT_CPU_ID);
-
 	init_seed();
+
+	init_pcpu_post(BOOT_CPU_ID);
 
 	init_debug_post(BOOT_CPU_ID);
 

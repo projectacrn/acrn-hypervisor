@@ -45,8 +45,6 @@ static uint32_t parse_seed_arg(void)
 	uint32_t i = SEED_ARG_NUM - 1U;
 	uint32_t len;
 
-	stac();
-
 	if (boot_regs[0U] == MULTIBOOT_INFO_MAGIC) {
 		mbi = (struct multiboot_info *)hpa2hva((uint64_t)boot_regs[1U]);
 		if (mbi != NULL) {
@@ -78,8 +76,6 @@ static uint32_t parse_seed_arg(void)
 			}
 		}
 	}
-
-	clac();
 
 	return i;
 }

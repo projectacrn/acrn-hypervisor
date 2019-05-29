@@ -68,8 +68,6 @@ bool parse_seed_sbl(uint64_t addr, struct physical_seed *phy_seed)
 	struct seed_info *seed_list = NULL;
 	bool status = false;
 
-	stac();
-
 	boot_params = (struct image_boot_params *)hpa2hva(addr);
 
 	if (boot_params != NULL) {
@@ -114,8 +112,6 @@ bool parse_seed_sbl(uint64_t addr, struct physical_seed *phy_seed)
 			phy_seed->num_seeds = dseed_index;
 		}
 	}
-
-	clac();
 
 	return status;
 }
