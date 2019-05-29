@@ -1182,7 +1182,7 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t s
 
 			context_entry = context + devfun;
 
-			if (context_entry == NULL) {
+			if (context == NULL || context_entry == NULL) {
 				pr_err("dmar context entry is invalid");
 				ret = -EINVAL;
 			} else if ((uint16_t)dmar_get_bitslice(context_entry->hi_64, CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS) != vmid_to_domainid(domain->vm_id)) {
