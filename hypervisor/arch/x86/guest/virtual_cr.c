@@ -311,6 +311,7 @@ void init_cr0_cr4_host_mask(void)
 		cr0_host_owned_bits = ~(fixed0 ^ fixed1);
 		/* Add the bit hv wants to trap */
 		cr0_host_owned_bits |= CR0_TRAP_MASK;
+		cr0_host_owned_bits &= ~CR0_RESERVED_MASK;
 		/* CR0 clear PE/PG from always on bits due to "unrestructed guest" feature */
 		cr0_always_on_mask = fixed0 & (~(CR0_PE | CR0_PG));
 		cr0_always_off_mask = ~fixed1;
@@ -327,6 +328,7 @@ void init_cr0_cr4_host_mask(void)
 		cr4_host_owned_bits = ~(fixed0 ^ fixed1);
 		/* Add the bit hv wants to trap */
 		cr4_host_owned_bits |= CR4_TRAP_MASK;
+		cr4_host_owned_bits &= ~CR4_RESERVED_MASK;
 		cr4_always_on_mask = fixed0;
 		/* Record the bit fixed to 0 for CR4, including reserved bits */
 		cr4_always_off_mask = ~fixed1;
