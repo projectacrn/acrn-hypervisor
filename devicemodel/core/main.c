@@ -785,6 +785,13 @@ main(int argc, char *argv[])
 		fprintf(stderr, "cannot register handler for SIGHUP\n");
 	if (signal(SIGINT, sig_handler_term) == SIG_ERR)
 		fprintf(stderr, "cannot register handler for SIGINT\n");
+	/*
+	 * Ignore SIGPIPE signal and handle the error directly when write()
+	 * function fails. this will help us to catch the write failure rather
+	 * than crashing the UOS.
+	 */
+	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+		fprintf(stderr, "cannot register handler for SIGPIPE\n");
 
 	while ((c = getopt_long(argc, argv, optstr, long_options,
 			&option_idx)) != -1) {
