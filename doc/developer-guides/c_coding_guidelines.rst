@@ -3356,8 +3356,8 @@ Compliant example::
        #define Max(x, y)        ((x) < (y)) ? (y) : (x)
 
 
-C-NC-03: Data structures exposed to external components shall be named with prefix 'acrn'
-=========================================================================================
+C-NC-03: Data structures exposed to external components shall be named with prefix 'acrn\_'
+===========================================================================================
 
 The data structure types include struct, union, and enum.
 This rule applies to the data structure with all the following properties:
@@ -3382,8 +3382,8 @@ Compliant example::
        };
 
 
-C-NC-04: Data structures only used by hypervisor shall be named with prefix 'hv'
-================================================================================
+C-NC-04: Data structures only used by hypervisor shall be named with prefix 'hv\_'
+==================================================================================
 
 The data structure types include struct, union, and enum.
 This rule applies to the data structure with all the following properties:
