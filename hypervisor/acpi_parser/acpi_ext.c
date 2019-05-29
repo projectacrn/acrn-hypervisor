@@ -109,13 +109,16 @@ static void *get_facs_table(const uint8_t *facp_addr)
 {
 	uint8_t *facs_addr, *facs_x_addr;
 	uint32_t signature, length;
+	struct acpi_table_header *table = (struct acpi_table_header *)facp_addr;
 
 	facs_addr = (uint8_t *)(uint64_t)get_acpi_dt_dword(facp_addr, OFFSET_FACS_ADDR);
 
-	facs_x_addr = (uint8_t *)get_acpi_dt_qword(facp_addr, OFFSET_FACS_X_ADDR);
+	if (table->revision >= 2U) {
+		facs_x_addr = (uint8_t *)get_acpi_dt_qword(facp_addr, OFFSET_FACS_X_ADDR);
 
-	if (facs_x_addr != NULL) {
-		facs_addr = facs_x_addr;
+		if (facs_x_addr != NULL) {
+			facs_addr = facs_x_addr;
+		}
 	}
 
 	if (facs_addr != NULL) {
