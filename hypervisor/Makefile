@@ -162,11 +162,12 @@ CFLAGS += -DCONFIG_RETPOLINE
 LIB_S_SRCS += arch/x86/lib/retpoline-thunk.S
 endif
 endif
-# boot component
-S_SRCS += arch/x86/boot/cpu_primary.S
-S_SRCS += arch/x86/boot/cpu_save_boot_ctx.S
-S_SRCS += arch/x86/boot/trampoline.S
-C_SRCS += boot/reloc.c
+
+# platform boot component
+BOOT_S_SRCS += arch/x86/boot/cpu_primary.S
+BOOT_S_SRCS += arch/x86/boot/cpu_save_boot_ctx.S
+BOOT_S_SRCS += arch/x86/boot/trampoline.S
+BOOT_C_SRCS += boot/reloc.c
 
 # initilization component
 C_SRCS += arch/x86/init.c
@@ -266,6 +267,8 @@ C_SRCS += dm/vpci/vmsix.c
 
 LIB_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(LIB_C_SRCS))
 LIB_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(LIB_S_SRCS))
+BOOT_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(BOOT_C_SRCS))
+BOOT_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(BOOT_S_SRCS))
 C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
 ifneq ($(CONFIG_RELEASE),y)
 CFLAGS += -DHV_DEBUG -DPROFILING_ON -fno-omit-frame-pointer
@@ -275,8 +278,10 @@ PRE_BUILD_SRCS += pre_build/static_checks.c
 PRE_BUILD_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(PRE_BUILD_SRCS))
 
 MOD_DEPS += lib-mod
+MOD_DEPS += boot-mod
 MOD_DEPS += lib
 MODULES += $(LIB_MOD)
+MODULES += $(BOOT_MOD)
 ifeq ($(CONFIG_RELEASE),y)
 MODULES += $(LIB_RELEASE)
 else
@@ -349,9 +354,11 @@ pre_build: $(PRE_BUILD_OBJS)
 .PHONY: header
 header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
 
-.PHONY: lib-mod
+.PHONY: lib-mod boot-mod
 lib-mod: $(LIB_C_OBJS) $(LIB_S_OBJS)
 	$(AR) $(ARFLAGS) $(LIB_MOD) $(LIB_C_OBJS) $(LIB_S_OBJS)
+boot-mod: $(BOOT_S_OBJS) $(BOOT_C_OBJS)
+	$(AR) $(ARFLAGS) $(BOOT_MOD) $(BOOT_S_OBJS) $(BOOT_C_OBJS)
 
 .PHONY: lib
 lib: $(SUB_MAKEFILES)
