@@ -358,6 +358,7 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 		uint32_t phys_pin, bool pic_pin)
 {
 	struct ptirq_remapping_info *entry = NULL;
+	bool entry_is_updated = true;
 	uint32_t vpin_src = pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
 	DEFINE_IOAPIC_SID(phys_sid, phys_pin, 0U);
 	DEFINE_IOAPIC_SID(virt_sid, virt_pin, vpin_src);
@@ -398,9 +399,10 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 		} else {
 			/* The mapping has already been added to the VM. No action
 			 * required. */
+			entry_is_updated = false;
 		}
 
-		if (entry != NULL) {
+		if (entry != NULL && entry_is_updated == true) {
 			if (pic_pin) {
 				vm->arch_vm.vpic.vpin_to_pt_entry[virt_pin] = entry;
 			} else {
