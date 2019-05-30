@@ -74,7 +74,6 @@ static int32_t vmsix_remap_entry(const struct pci_vdev *vdev, uint32_t index, bo
 	void *hva;
 	int32_t ret;
 
-	info.is_msix = 1;
 	info.vmsi_addr.full = vdev->msix.tables[index].addr;
 	info.vmsi_data.full = (enable) ? vdev->msix.tables[index].data : 0U;
 

@@ -89,7 +89,6 @@ static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
 		addrhi = 0U;
 	}
 
-	info.is_msix = 0;
 	info.vmsi_addr.full = (uint64_t)addrlo | ((uint64_t)addrhi << 32U);
 
 	/* MSI is being enabled or disabled */
