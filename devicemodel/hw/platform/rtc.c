@@ -42,9 +42,11 @@
 #include "acpi.h"
 #include "lpc.h"
 
+#include "log.h"
+
 /* #define DEBUG_RTC */
 #ifdef DEBUG_RTC
-# define RTC_DEBUG(format, ...)      printf(format, ## __VA_ARGS__)
+# define RTC_DEBUG   pr_dbg
 #else
 # define RTC_DEBUG(format, ...)      do { } while (0)
 #endif
@@ -469,13 +471,13 @@ rtc_to_secs(struct vrtc *vrtc)
 	bzero(&ct, sizeof(struct clktime));
 	error = rtcget(rtc, rtc->sec, &ct.sec);
 	if (error || ct.sec < 0 || ct.sec > 59) {
-		RTC_DEBUG("Invalid RTC sec %#x/%d", rtc->sec, ct.sec);
+		RTC_DEBUG("Invalid RTC sec %#x/%d\n", rtc->sec, ct.sec);
 		goto fail;
 	}
 
 	error = rtcget(rtc, rtc->min, &ct.min);
 	if (error || ct.min < 0 || ct.min > 59) {
-		RTC_DEBUG("Invalid RTC min %#x/%d", rtc->min, ct.min);
+		RTC_DEBUG("Invalid RTC min %#x/%d\n", rtc->min, ct.min);
 		goto fail;
 	}
 
@@ -505,14 +507,14 @@ rtc_to_secs(struct vrtc *vrtc)
 			if (pm)
 				ct.hour += 12;
 		} else {
-			RTC_DEBUG("Invalid RTC 12-hour format %#x/%d",
+			RTC_DEBUG("Invalid RTC 12-hour format %#x/%d\n",
 					rtc->hour, ct.hour);
 			goto fail;
 		}
 	}
 
 	if (error || ct.hour < 0 || ct.hour > 23) {
-		RTC_DEBUG("Invalid RTC hour %#x/%d", rtc->hour, ct.hour);
+		RTC_DEBUG("Invalid RTC hour %#x/%d\n", rtc->hour, ct.hour);
 		goto fail;
 	}
 
@@ -526,36 +528,36 @@ rtc_to_secs(struct vrtc *vrtc)
 
 	error = rtcget(rtc, rtc->day_of_month, &ct.day);
 	if (error || ct.day < 1 || ct.day > 31) {
-		RTC_DEBUG("Invalid RTC mday %#x/%d", rtc->day_of_month,
+		RTC_DEBUG("Invalid RTC mday %#x/%d\n", rtc->day_of_month,
 				ct.day);
 		goto fail;
 	}
 
 	error = rtcget(rtc, rtc->month, &ct.mon);
 	if (error || ct.mon < 1 || ct.mon > 12) {
-		RTC_DEBUG("Invalid RTC month %#x/%d", rtc->month, ct.mon);
+		RTC_DEBUG("Invalid RTC month %#x/%d\n", rtc->month, ct.mon);
 		goto fail;
 	}
 
 	error = rtcget(rtc, rtc->year, &year);
 	if (error || year < 0 || year > 99) {
-		RTC_DEBUG("Invalid RTC year %#x/%d", rtc->year, year);
+		RTC_DEBUG("Invalid RTC year %#x/%d\n", rtc->year, year);
 		goto fail;
 	}
 
 	error = rtcget(rtc, rtc->century, &century);
 	ct.year = century * 100 + year;
 	if (error || ct.year < POSIX_BASE_YEAR) {
-		RTC_DEBUG("Invalid RTC century %#x/%d", rtc->century,
+		RTC_DEBUG("Invalid RTC century %#x/%d\n", rtc->century,
 				ct.year);
 		goto fail;
 	}
 
 	error = clk_ct_to_ts(&ct, &ts);
 	if (error || ts.tv_sec < 0) {
-		RTC_DEBUG("Invalid RTC clocktime.date %04d-%02d-%02d",
+		RTC_DEBUG("Invalid RTC clocktime.date %04d-%02d-%02d\n",
 				ct.year, ct.mon, ct.day);
-		RTC_DEBUG("Invalid RTC clocktime.time %02d:%02d:%02d",
+		RTC_DEBUG("Invalid RTC clocktime.time %02d:%02d:%02d\n",
 				ct.hour, ct.min, ct.sec);
 		goto fail;
 	}
@@ -565,7 +567,7 @@ fail:
 	 * Stop updating the RTC if the date/time fields programmed by
 	 * the guest are invalid.
 	 */
-	RTC_DEBUG("Invalid RTC date/time programming detected");
+	RTC_DEBUG("Invalid RTC date/time programming detected\n");
 	return VRTC_BROKEN_TIME;
 }
 
@@ -814,7 +816,7 @@ vrtc_set_reg_a(struct vrtc *vrtc, uint8_t newval)
 	oldfreq = vrtc_freq(vrtc);
 
 	if (divider_enabled(oldval) && !divider_enabled(newval)) {
-		RTC_DEBUG("RTC divider held in reset at %#lx/%#lx",
+		RTC_DEBUG("RTC divider held in reset at %#lx/%#lx\n",
 				vrtc->base_rtctime, vrtc->base_uptime);
 	} else if (!divider_enabled(oldval) && divider_enabled(newval)) {
 		/*
@@ -824,7 +826,7 @@ vrtc_set_reg_a(struct vrtc *vrtc, uint8_t newval)
 		 * while the dividers were disabled.
 		 */
 		vrtc->base_uptime = time(NULL);
-		RTC_DEBUG("RTC divider out of reset at %#lx/%#lx",
+		RTC_DEBUG("RTC divider out of reset at %#lx/%#lx\n",
 				vrtc->base_rtctime, vrtc->base_uptime);
 	} else {
 		/* NOTHING */
@@ -833,7 +835,7 @@ vrtc_set_reg_a(struct vrtc *vrtc, uint8_t newval)
 	vrtc->rtcdev.reg_a = newval;
 	changed = oldval ^ newval;
 	if (changed) {
-		RTC_DEBUG("RTC reg_a changed from %#x to %#x",
+		RTC_DEBUG("RTC reg_a changed from %#x to %#x\n",
 				oldval, newval);
 	}
 
@@ -861,14 +863,14 @@ vrtc_nvram_write(struct vrtc *vrtc, int offset, uint8_t value)
 	if (offset < offsetof(struct rtcdev, nvram[0]) ||
 			offset == RTC_CENTURY ||
 			offset >= sizeof(struct rtcdev)) {
-		RTC_DEBUG("RTC nvram write to invalid offset %d", offset);
+		RTC_DEBUG("RTC nvram write to invalid offset %d\n", offset);
 		return -1;
 	}
 
 	pthread_mutex_lock(&vrtc->mtx);
 	ptr = (uint8_t *)(&vrtc->rtcdev);
 	ptr[offset] = value;
-	RTC_DEBUG("RTC nvram write %#x to offset %#x", value, offset);
+	RTC_DEBUG("RTC nvram write %#x to offset %#x\n", value, offset);
 	pthread_mutex_unlock(&vrtc->mtx);
 
 	return 0;
@@ -1000,9 +1002,9 @@ vrtc_set_time(struct vrtc *vrtc, time_t secs)
 	pthread_mutex_unlock(&vrtc->mtx);
 
 	if (error)
-		RTC_DEBUG("Error %d setting RTC time to %#lx", error, secs);
+		RTC_DEBUG("Error %d setting RTC time to %#lx\n", error, secs);
 	else
-		RTC_DEBUG("RTC time set to %#lx", secs);
+		RTC_DEBUG("RTC time set to %#lx\n", secs);
 
 	return error;
 }
