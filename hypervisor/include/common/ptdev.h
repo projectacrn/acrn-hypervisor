@@ -117,7 +117,6 @@ struct ptirq_msi_info {
 	union msi_data_reg vmsi_data; /* virt msi_data */
 	union msi_addr_reg pmsi_addr; /* phys msi_addr */
 	union msi_data_reg pmsi_data; /* phys msi_data */
-	int32_t is_msix;	/* 0-MSI, 1-MSIX */
 };
 
 struct ptirq_remapping_info;
