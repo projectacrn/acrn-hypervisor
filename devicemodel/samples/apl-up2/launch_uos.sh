@@ -172,7 +172,7 @@ else
 fi
 
 #logger_setting, format: logger_name,level; like following
-logger_setting="--logger_setting console,level=4;kmsg,level=3"
+logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"
 
 acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 5,virtio-console,@pty:pty_port \
@@ -362,7 +362,7 @@ else
 fi
 
 #logger_setting, format: logger_name,level; like following
-logger_setting="--logger_setting console,level=4;kmsg,level=3"
+logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"
 
  acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
    -s 9,virtio-net,$tap \

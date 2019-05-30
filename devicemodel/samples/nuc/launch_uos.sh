@@ -22,7 +22,7 @@ if [[ "$result" != "" ]]; then
 fi
 
 #logger_setting, format: logger_name,level; like following
-logger_setting="--logger_setting console,level=4;kmsg,level=3"
+logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"
 
 #for memsize setting
 mem_size=2048M
