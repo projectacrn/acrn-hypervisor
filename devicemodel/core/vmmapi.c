@@ -411,7 +411,7 @@ static int suspend_mode = VM_SUSPEND_NONE;
 void
 vm_set_suspend_mode(enum vm_suspend_how how)
 {
-	pr_notice("vm mode changed from %d to:%d", suspend_mode, how);
+	pr_notice("vm mode changed from %d to %d\n", suspend_mode, how);
 	suspend_mode = how;
 }
 
