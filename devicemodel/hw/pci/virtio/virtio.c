@@ -86,6 +86,8 @@ virtio_poll_timer(void *arg, uint64_t nexp)
 
 	for (i = 0; i < base->vops->nvq; i++) {
 		vq = &base->queues[i];
+		if(!vq_ring_ready(vq))
+			continue;
 		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
 		/* TODO: call notify when necessary */
 		if (vq->notify)
