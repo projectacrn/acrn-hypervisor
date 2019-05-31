@@ -74,6 +74,17 @@ int init_logger_setting(const char *opt)
 	return error;
 }
 
+void deinit_loggers(void)
+{
+	struct logger_ops **pp_logger, *plogger;
+
+	FOR_EACH_LOGGER(pp_logger) {
+		plogger = *pp_logger;
+		if (plogger->deinit)
+			plogger->deinit();
+	}
+}
+
 void output_log(uint8_t level, const char *fmt, ...)
 {
 	va_list args;
