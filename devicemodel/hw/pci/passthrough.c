@@ -574,13 +574,22 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 
 		if (bartype != PCIBAR_IO) {
 			/* note here PAGE_MASK is 0xFFFFF000 */
-			if (((base | size) & ~PAGE_MASK) != 0) {
+			if ((base & ~PAGE_MASK) != 0) {
 				warnx("passthru device %x/%x/%x BAR %d: "
-				    "base %#lx or size %#lx not page aligned\n",
+				    "base %#lx not page aligned\n",
 				    ptdev->sel.bus, ptdev->sel.dev,
-				    ptdev->sel.func, i, base, size);
+				    ptdev->sel.func, i, base);
 				return -1;
 			}
+			/* roundup to PAGE_SIZE for bar size */
+			if ((size & ~PAGE_MASK) != 0) {
+				warnx("passthru device %x/%x/%x BAR %d: "
+					"size[%lx] is expanded to page aligned [%lx]\n",
+				    ptdev->sel.bus, ptdev->sel.dev,
+				    ptdev->sel.func, i, size, roundup2(size, PAGE_SIZE));
+				size = roundup2(size, PAGE_SIZE);
+			}
+
 		}
 
 		/* Cache information about the "real" BAR */
