@@ -22,8 +22,8 @@ static const struct e820_entry ve820_entry[VE820_ENTRIES_DNV_CB2] = {
 	},
 
 	{	/* lowmem */
-		.baseaddr = 0x200000UL,		/* 2MB */
-		.length   = 0x7FE00000UL,	/* 2046MB */
+		.baseaddr = 0x100000UL,		/* 1MB */
+		.length   = 0x7FF00000UL,	/* 2047MB */
 		.type     = E820_TYPE_RAM
 	},
 
