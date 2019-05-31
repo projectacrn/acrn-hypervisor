@@ -22,8 +22,8 @@ static const struct e820_entry ve820_entry[VE820_ENTRIES_KBL_NUC_i7] = {
 	},
 
 	{	/* lowmem */
-		.baseaddr = 0x200000UL,		/* 2MB */
-		.length   = 0x1FE00000UL,	/* 510MB */
+		.baseaddr = 0x100000UL,		/* 1MB */
+		.length   = 0x1FF00000UL,	/* 511MB */
 		.type     = E820_TYPE_RAM
 	},
 
