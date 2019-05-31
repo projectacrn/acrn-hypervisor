@@ -29,6 +29,7 @@ struct logger_ops {
 };
 
 int init_logger_setting(const char *opt);
+void deinit_loggers(void);
 void output_log(uint8_t level, const char *fmt, ...);
 
 /*

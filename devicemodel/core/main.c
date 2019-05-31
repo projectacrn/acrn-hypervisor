@@ -1073,5 +1073,6 @@ fail:
 	vm_destroy(ctx);
 create_fail:
 	uninit_hugetlb();
+	deinit_loggers();
 	exit(ret);
 }
