@@ -1181,15 +1181,14 @@ vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, bool is_broadcast
 }
 
 static void
-vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode,
-				uint32_t icr_low, uint16_t vcpu_id)
+vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode, uint32_t icr_low)
 {
 	if (mode == APIC_DELMODE_INIT) {
 		if ((icr_low & APIC_LEVEL_MASK) != APIC_LEVEL_DEASSERT) {
 
 			dev_dbg(ACRN_DBG_LAPIC,
-				"Sending INIT from VCPU %hu to %hu",
-				target_vcpu->vcpu_id, vcpu_id);
+				"Sending INIT to %hu",
+				target_vcpu->vcpu_id);
 
 			/* put target vcpu to INIT state and wait for SIPI */
 			pause_vcpu(target_vcpu, VCPU_PAUSED);
@@ -1206,8 +1205,8 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode,
 			(target_vcpu->arch.nr_sipi != 0U)) {
 
 			dev_dbg(ACRN_DBG_LAPIC,
-				"Sending SIPI from VCPU %hu to %hu with vector %u",
-				target_vcpu->vcpu_id, vcpu_id,
+				"Sending SIPI to %hu with vector %u",
+				 target_vcpu->vcpu_id,
 				(icr_low & APIC_VECTOR_MASK));
 
 			target_vcpu->arch.nr_sipi--;
@@ -1302,9 +1301,9 @@ static void vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 					dev_dbg(ACRN_DBG_LAPIC,
 						"vlapic send ipi nmi to vcpu_id %hu", vcpu_id);
 				} else if (mode == APIC_DELMODE_INIT) {
-					vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
+					vlapic_process_init_sipi(target_vcpu, mode, icr_low);
 				} else if (mode == APIC_DELMODE_STARTUP) {
-					vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
+					vlapic_process_init_sipi(target_vcpu, mode, icr_low);
 				} else if (mode == APIC_DELMODE_SMI) {
 					pr_info("vlapic: SMI IPI do not support\n");
 				} else {
@@ -2023,10 +2022,10 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 
 			switch (mode) {
 			case APIC_DELMODE_INIT:
-				vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
+				vlapic_process_init_sipi(target_vcpu, mode, icr_low);
 			break;
 			case APIC_DELMODE_STARTUP:
-				vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
+				vlapic_process_init_sipi(target_vcpu, mode, icr_low);
 			break;
 			default:
 				/* convert the dest from virtual apic_id to physical apic_id */
