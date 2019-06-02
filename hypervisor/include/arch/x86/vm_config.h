@@ -61,8 +61,13 @@ struct vuart_config {
 	struct target_vuart t_vuart;	/* target vuart */
 } __aligned(8);
 
+enum os_kernel_type {
+	KERNEL_BZIMAGE = 1,
+};
+
 struct acrn_vm_os_config {
 	char name[MAX_VM_OS_NAME_LEN];			/* OS name, useful for debug */
+	enum os_kernel_type kernel_type;		/* used for kernel specifc loading method */
 	char bootargs[MAX_BOOTARGS_SIZE];		/* boot args/cmdline */
 } __aligned(8);
 

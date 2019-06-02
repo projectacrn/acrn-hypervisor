@@ -180,12 +180,14 @@ int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 			ramdisk_info->size);
 	}
 
-	/* See if guest is a Linux guest */
-	if (vm->sw.kernel_type == VM_LINUX_GUEST) {
+	switch (vm->sw.kernel_type) {
+	case KERNEL_BZIMAGE:
 		prepare_loading_bzimage(vm, vcpu);
-	} else {
+		break;
+	default:
 		pr_err("%s, Loading VM SW failed", __func__);
 		ret = -EINVAL;
+		break;
 	}
 
 	if (ret == 0) {
