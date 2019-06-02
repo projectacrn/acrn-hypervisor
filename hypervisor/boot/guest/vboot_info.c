@@ -130,7 +130,7 @@ static void merge_cmdline(const struct acrn_vm *vm, const char *cmdline, const c
 		dst_avail -= 1U;
 		cmd_dst += 1U;
 
-		/* copy mods[].mm_string */
+		/* copy vm_config->os_config.bootargs */
 		(void)strncpy_s(cmd_dst, dst_avail, cmdstr, cmdstr_len);
 	}
 }
@@ -189,13 +189,11 @@ static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
 
 				dev_dbg(ACRN_DBG_BOOT, "mod counts=%d\n", mbi->mi_mods_count);
 
-				/* mod[0] is for kernel&cmdline, other mod for ramdisk/firmware info*/
+				/* mod[0] is for kernel, other mod for ramdisk/firmware info*/
 				mods = (struct multiboot_module *)hpa2hva((uint64_t)mbi->mi_mods_addr);
 
 				dev_dbg(ACRN_DBG_BOOT, "mod0 start=0x%x, end=0x%x",
 					mods[0].mm_mod_start, mods[0].mm_mod_end);
-				dev_dbg(ACRN_DBG_BOOT, "cmd addr=0x%x, str=%s", mods[0].mm_string,
-					(char *)(uint64_t)mods[0].mm_string);
 
 				vm->sw.kernel_type = vm_config->os_config.kernel_type;
 				vm->sw.kernel_info.kernel_src_addr = hpa2hva((uint64_t)mods[0].mm_mod_start);
@@ -210,20 +208,18 @@ static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
 					if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
 						/*
 						 * If there is cmdline from mbi->mi_cmdline, merge it with
-						 * mods[0].mm_string
+						 * vm_config->os_config.bootargs
 						 */
 						merge_cmdline(vm, hpa2hva((uint64_t)mbi->mi_cmdline),
-								hpa2hva((uint64_t)mods[0].mm_string));
+								vm_config->os_config.bootargs);
 
 						vm->sw.bootargs_info.src_addr = kernel_cmdline;
 						vm->sw.bootargs_info.size =
 							strnlen_s(kernel_cmdline, MAX_BOOTARGS_SIZE);
 					} else {
-						vm->sw.bootargs_info.src_addr =
-							hpa2hva((uint64_t)mods[0].mm_string);
+						vm->sw.bootargs_info.src_addr = vm_config->os_config.bootargs;
 						vm->sw.bootargs_info.size =
-							strnlen_s(hpa2hva((uint64_t)mods[0].mm_string),
-							MAX_BOOTARGS_SIZE);
+							strnlen_s(vm_config->os_config.bootargs, MAX_BOOTARGS_SIZE);
 					}
 				}
 
