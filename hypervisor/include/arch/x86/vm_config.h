@@ -18,6 +18,7 @@
 #define PLUG_CPU(n)		(1U << (n))
 #define MAX_VUART_NUM_PER_VM	2U
 #define MAX_VM_OS_NAME_LEN	32U
+#define MAX_MOD_TAG_LEN		32U
 
 /*
  * PRE_LAUNCHED_VM is launched by ACRN hypervisor, with LAPIC_PT;
@@ -68,6 +69,8 @@ enum os_kernel_type {
 struct acrn_vm_os_config {
 	char name[MAX_VM_OS_NAME_LEN];			/* OS name, useful for debug */
 	enum os_kernel_type kernel_type;		/* used for kernel specifc loading method */
+	char kernel_mod_tag[MAX_MOD_TAG_LEN];		/* multiboot module tag for kernel */
+	char ramdisk_mod_tag[MAX_MOD_TAG_LEN];		/* multiboot module tag for ramdisk */
 	char bootargs[MAX_BOOTARGS_SIZE];		/* boot args/cmdline */
 } __aligned(8);
 

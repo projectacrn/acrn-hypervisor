@@ -453,7 +453,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		 if (vm_config->load_order == PRE_LAUNCHED_VM) {
 			create_prelaunched_vm_e820(vm);
 			prepare_prelaunched_vm_memmap(vm, vm_config);
-			(void)init_vm_boot_info(vm);
+			status = init_vm_boot_info(vm);
 		 }
 	}
 

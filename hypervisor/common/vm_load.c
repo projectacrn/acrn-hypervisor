@@ -127,16 +127,11 @@ static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu)
 		vcpu_set_gpreg(vcpu, i, 0UL);
 	}
 
-	/* Copy Guest OS bootargs to its load location */
-	(void)copy_to_gpa(vm, bootargs_info->src_addr,
-		(uint64_t)bootargs_info->load_addr,
-		(strnlen_s((char *)bootargs_info->src_addr, MAX_BOOTARGS_SIZE) + 1U));
-
 	/* add "hugepagesz=1G hugepages=x" to cmdline for 1G hugepage
 	 * reserving. Current strategy is "total_mem_size in Giga -
 	 * remained 1G pages" for reserving.
 	 */
-	if (is_sos_vm(vm)) {
+	if (is_sos_vm(vm) && (bootargs_info->load_addr != NULL)) {
 		int64_t reserving_1g_pages;
 
 		reserving_1g_pages = (vm_config->memory.size >> 30U) - NUM_REMAIN_1G_PAGES;
@@ -159,6 +154,7 @@ int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 {
 	int32_t ret = 0;
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
+	struct sw_module_info *bootargs_info = &(vm->sw.bootargs_info);
 	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
 	/* get primary vcpu */
 	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
@@ -173,13 +169,18 @@ int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 		(uint64_t)sw_kernel->kernel_load_addr, sw_kernel->kernel_size);
 
 	/* Check if a RAM disk is present */
-	if (ramdisk_info->src_addr != NULL) {
+	if (ramdisk_info->size != 0U) {
 		/* Copy RAM disk to its load location */
 		(void)copy_to_gpa(vm, ramdisk_info->src_addr,
 			(uint64_t)ramdisk_info->load_addr,
 			ramdisk_info->size);
 	}
-
+	/* Copy Guest OS bootargs to its load location */
+	if (bootargs_info->size != 0U) {
+		(void)copy_to_gpa(vm, bootargs_info->src_addr,
+			(uint64_t)bootargs_info->load_addr,
+			(strnlen_s((char *)bootargs_info->src_addr, MAX_BOOTARGS_SIZE) + 1U));
+	}
 	switch (vm->sw.kernel_type) {
 	case KERNEL_BZIMAGE:
 		prepare_loading_bzimage(vm, vcpu);

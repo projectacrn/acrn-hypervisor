@@ -27,6 +27,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.os_config = {
 			.name = "ClearLinux",
 			.kernel_type = KERNEL_BZIMAGE,
+			.kernel_mod_tag = "Linux_bzImage",
 			.bootargs = VM0_CONFIG_OS_BOOTARG_CONSOLE	\
 				VM0_CONFIG_OS_BOOTARG_MAXCPUS		\
 				VM0_CONFIG_OS_BOOTARG_ROOT		\
@@ -66,6 +67,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.os_config = {
 			.name = "ClearLinux",
 			.kernel_type = KERNEL_BZIMAGE,
+			.kernel_mod_tag = "Linux_bzImage",
 			.bootargs = VM1_CONFIG_OS_BOOTARG_CONSOLE	\
 				VM1_CONFIG_OS_BOOTARG_MAXCPUS		\
 				VM1_CONFIG_OS_BOOTARG_ROOT		\
