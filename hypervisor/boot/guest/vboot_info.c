@@ -142,7 +142,7 @@ static void *get_kernel_load_addr(struct acrn_vm *vm)
 	struct zero_page *zeropage;
 
 	switch (sw_info->kernel_type) {
-	case VM_LINUX_GUEST:
+	case KERNEL_BZIMAGE:
 		/* According to the explaination for pref_address
 		 * in Documentation/x86/boot.txt, a relocating
 		 * bootloader should attempt to load kernel at pref_address
@@ -171,6 +171,7 @@ static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
 {
 	struct multiboot_module *mods = NULL;
 	struct multiboot_info *mbi = NULL;
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	int32_t ret = -EINVAL;
 
 	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC) {
@@ -196,12 +197,10 @@ static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
 				dev_dbg(ACRN_DBG_BOOT, "cmd addr=0x%x, str=%s", mods[0].mm_string,
 					(char *)(uint64_t)mods[0].mm_string);
 
-				vm->sw.kernel_type = VM_LINUX_GUEST;
+				vm->sw.kernel_type = vm_config->os_config.kernel_type;
 				vm->sw.kernel_info.kernel_src_addr = hpa2hva((uint64_t)mods[0].mm_mod_start);
 				vm->sw.kernel_info.kernel_size = mods[0].mm_mod_end - mods[0].mm_mod_start;
 				vm->sw.kernel_info.kernel_load_addr = get_kernel_load_addr(vm);
-
-				struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 				if (vm_config->load_order == PRE_LAUNCHED_VM) {
 					vm->sw.bootargs_info.src_addr = (void *)vm_config->os_config.bootargs;
