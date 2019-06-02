@@ -98,23 +98,15 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 	return gpa;
 }
 
-int32_t direct_boot_sw_loader(struct acrn_vm *vm)
+static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu)
 {
-	int32_t ret = 0;
+	uint32_t i;
 	char  dyn_bootargs[100] = {0};
 	uint32_t kernel_entry_offset;
 	struct zero_page *zeropage;
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
 	struct sw_module_info *bootargs_info = &(vm->sw.bootargs_info);
-	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
-	/* get primary vcpu */
-	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
 	const struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-
-	pr_dbg("Loading guest to run-time location");
-
-	prepare_bsp_gdt(vm);
-	set_vcpu_regs(vcpu, &boot_context);
 
 	/* calculate the kernel entry point */
 	zeropage = (struct zero_page *)sw_kernel->kernel_src_addr;
@@ -128,66 +120,79 @@ int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 
 	sw_kernel->kernel_entry_addr = (void *)((uint64_t)sw_kernel->kernel_load_addr + kernel_entry_offset);
 
-	/* Set VCPU entry point to kernel entry */
-	vcpu_set_rip(vcpu, (uint64_t)sw_kernel->kernel_entry_addr);
-	pr_info("%s, VM %hu VCPU %hu Entry: 0x%016llx ", __func__, vm->vm_id, vcpu->vcpu_id,
-		sw_kernel->kernel_entry_addr);
+	/* Documentation states: ebx=0, edi=0, ebp=0, esi=ptr to
+	 * zeropage
+	 */
+	for (i = 0U; i < NUM_GPRS; i++) {
+		vcpu_set_gpreg(vcpu, i, 0UL);
+	}
+
+	/* Copy Guest OS bootargs to its load location */
+	(void)copy_to_gpa(vm, bootargs_info->src_addr,
+		(uint64_t)bootargs_info->load_addr,
+		(strnlen_s((char *)bootargs_info->src_addr, MAX_BOOTARGS_SIZE) + 1U));
+
+	/* add "hugepagesz=1G hugepages=x" to cmdline for 1G hugepage
+	 * reserving. Current strategy is "total_mem_size in Giga -
+	 * remained 1G pages" for reserving.
+	 */
+	if (is_sos_vm(vm)) {
+		int64_t reserving_1g_pages;
+
+		reserving_1g_pages = (vm_config->memory.size >> 30U) - NUM_REMAIN_1G_PAGES;
+		if (reserving_1g_pages > 0) {
+			snprintf(dyn_bootargs, 100U, " hugepagesz=1G hugepages=%lld", reserving_1g_pages);
+			(void)copy_to_gpa(vm, dyn_bootargs, ((uint64_t)bootargs_info->load_addr
+				+ bootargs_info->size), (strnlen_s(dyn_bootargs, 99U) + 1U));
+		}
+	}
+
+	/* Create Zeropage and copy Physical Base Address of Zeropage
+	 * in RSI
+	 */
+	vcpu_set_gpreg(vcpu, CPU_REG_RSI, create_zero_page(vm));
+	pr_info("%s, RSI pointing to zero page for VM %d at GPA %X",
+			__func__, vm->vm_id, vcpu_get_gpreg(vcpu, CPU_REG_RSI));
+}
+
+int32_t direct_boot_sw_loader(struct acrn_vm *vm)
+{
+	int32_t ret = 0;
+	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
+	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
+	/* get primary vcpu */
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
+
+	pr_dbg("Loading guest to run-time location");
+
+	prepare_bsp_gdt(vm);
+	set_vcpu_regs(vcpu, &boot_context);
 
 	/* Copy the guest kernel image to its run-time location */
 	(void)copy_to_gpa(vm, sw_kernel->kernel_src_addr,
 		(uint64_t)sw_kernel->kernel_load_addr, sw_kernel->kernel_size);
 
+	/* Check if a RAM disk is present */
+	if (ramdisk_info->src_addr != NULL) {
+		/* Copy RAM disk to its load location */
+		(void)copy_to_gpa(vm, ramdisk_info->src_addr,
+			(uint64_t)ramdisk_info->load_addr,
+			ramdisk_info->size);
+	}
+
 	/* See if guest is a Linux guest */
 	if (vm->sw.kernel_type == VM_LINUX_GUEST) {
-		uint32_t i;
-
-		/* Documentation states: ebx=0, edi=0, ebp=0, esi=ptr to
-		 * zeropage
-		 */
-		for (i = 0U; i < NUM_GPRS; i++) {
-			vcpu_set_gpreg(vcpu, i, 0UL);
-		}
-
-		/* Copy Guest OS bootargs to its load location */
-		(void)copy_to_gpa(vm, bootargs_info->src_addr,
-			(uint64_t)bootargs_info->load_addr,
-			(strnlen_s((char *)bootargs_info->src_addr, MAX_BOOTARGS_SIZE) + 1U));
-
-		/* add "hugepagesz=1G hugepages=x" to cmdline for 1G hugepage
-		 * reserving. Current strategy is "total_mem_size in Giga -
-		 * remained 1G pages" for reserving.
-		 */
-		if (is_sos_vm(vm)) {
-			int64_t reserving_1g_pages;
-
-			reserving_1g_pages = (vm_config->memory.size >> 30U) - NUM_REMAIN_1G_PAGES;
-			if (reserving_1g_pages > 0) {
-				snprintf(dyn_bootargs, 100U, " hugepagesz=1G hugepages=%lld", reserving_1g_pages);
-				(void)copy_to_gpa(vm, dyn_bootargs, ((uint64_t)bootargs_info->load_addr
-					+ bootargs_info->size),
-					(strnlen_s(dyn_bootargs, 99U) + 1U));
-			}
-		}
-
-		/* Check if a RAM disk is present with Linux guest */
-		if (ramdisk_info->src_addr != NULL) {
-			/* Copy RAM disk to its load location */
-			(void)copy_to_gpa(vm, ramdisk_info->src_addr,
-				(uint64_t)ramdisk_info->load_addr,
-				ramdisk_info->size);
-		}
-
-		/* Create Zeropage and copy Physical Base Address of Zeropage
-		 * in RSI
-		 */
-		vcpu_set_gpreg(vcpu, CPU_REG_RSI, create_zero_page(vm));
-
-		pr_info("%s, RSI pointing to zero page for VM %d at GPA %X",
-				__func__, vm->vm_id, vcpu_get_gpreg(vcpu, CPU_REG_RSI));
-
+		prepare_loading_bzimage(vm, vcpu);
 	} else {
 		pr_err("%s, Loading VM SW failed", __func__);
 		ret = -EINVAL;
+	}
+
+	if (ret == 0) {
+		/* Set VCPU entry point to kernel entry */
+		vcpu_set_rip(vcpu, (uint64_t)sw_kernel->kernel_entry_addr);
+		pr_info("%s, VM %hu VCPU %hu Entry: 0x%016llx ", __func__, vm->vm_id, vcpu->vcpu_id,
+			sw_kernel->kernel_entry_addr);
 	}
 
 	return ret;
