@@ -22,6 +22,13 @@ config INDUSTRY
 	  one pre-launched SOS VM, one post-launched Standard VM for HMI, one or two
 	  post-launched  RT VM for real-time control.
 
+config HYBRID
+	bool "Hybrid VMs"
+	help
+	  This scenario is a typical scenario for hybrid usage with 3 VMs:
+	  one pre-launched VM, one pre-launched SOS VM and one post-launched Standard
+	  VM.
+
 endchoice
 
 config BOARD
