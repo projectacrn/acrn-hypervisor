@@ -10,6 +10,13 @@
 #define ROOTFS_0		"root=/dev/sda3 "
 #define ROOTFS_1		"root=/dev/mmcblk0p1 "
 
+#define SOS_ROOTFS		ROOTFS_0
 #define SOS_CONSOLE		"console=ttyS0 "
+
+#ifndef CONFIG_RELEASE
+#define SOS_BOOTARGS_DIFF	"hvlog=2M@0x1FE00000"
+#else
+#define SOS_BOOTARGS_DIFF	""
+#endif
 
 #endif /* MISC_CFG_H */
