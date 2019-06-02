@@ -64,6 +64,7 @@ struct vuart_config {
 
 enum os_kernel_type {
 	KERNEL_BZIMAGE = 1,
+	KERNEL_ZEPHYR,
 };
 
 struct acrn_vm_os_config {
@@ -72,6 +73,9 @@ struct acrn_vm_os_config {
 	char kernel_mod_tag[MAX_MOD_TAG_LEN];		/* multiboot module tag for kernel */
 	char ramdisk_mod_tag[MAX_MOD_TAG_LEN];		/* multiboot module tag for ramdisk */
 	char bootargs[MAX_BOOTARGS_SIZE];		/* boot args/cmdline */
+	uint64_t kernel_load_addr;
+	uint64_t kernel_entry_addr;
+	uint64_t kernel_ramdisk_addr;
 } __aligned(8);
 
 struct acrn_vm_pci_ptdev_config {
