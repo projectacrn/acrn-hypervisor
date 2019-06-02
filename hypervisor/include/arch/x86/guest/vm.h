@@ -27,8 +27,6 @@
 #include <e820.h>
 #include <vm_config.h>
 
-#define INVALID_VM_ID 0xffffU
-
 struct vm_hw_info {
 	/* vcpu array of this VM */
 	struct acrn_vcpu vcpu_array[CONFIG_MAX_VCPUS_PER_VM];
