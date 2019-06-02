@@ -50,7 +50,7 @@ struct sw_kernel_info {
 };
 
 struct vm_sw_info {
-	int32_t kernel_type;	/* Guest kernel type */
+	enum os_kernel_type kernel_type;	/* Guest kernel type */
 	/* Kernel information (common for all guest types) */
 	struct sw_kernel_info kernel_info;
 	struct sw_module_info bootargs_info;
@@ -69,9 +69,6 @@ struct vm_pm_info {
 	struct pm_s_state_data	*sx_state_data;	/* data for S3/S5 implementation */
 };
 
-/* VM guest types */
-#define VM_LINUX_GUEST      0x02
-#define VM_MONO_GUEST       0x01
 /* Enumerated type for VM states */
 enum vm_state {
 	VM_POWERED_OFF = 0,
