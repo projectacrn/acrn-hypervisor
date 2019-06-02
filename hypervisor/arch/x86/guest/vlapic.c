@@ -140,7 +140,6 @@ static uint16_t vm_apicid2vcpu_id(struct acrn_vm *vm, uint32_t lapicid)
 	}
 
 	if (cpu_id == INVALID_CPU_ID) {
-		cpu_id = get_pcpu_nums();
 		pr_err("%s: bad lapicid %lu", __func__, lapicid);
 	}
 
@@ -2006,7 +2005,7 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 	struct acrn_vcpu *target_vcpu;
 	bool phys;
 	uint32_t shorthand;
-	int32_t ret = 0;
+	int32_t ret = -1;
 
 	phys = ((icr_low & APIC_DESTMODE_LOG) == 0UL);
 	shorthand = icr_low & APIC_DEST_MASK;
@@ -2014,7 +2013,6 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 	if ((phys == false) || (shorthand  != APIC_DEST_DESTFLD)) {
 		pr_err("Logical destination mode or shorthands \
 				not supported in ICR forpartition mode\n");
-		ret = -1;
 	} else {
 		vcpu_id = vm_apicid2vcpu_id(vm, vapic_id);
 		if ((vcpu_id < vm->hw.created_vcpus) && (vm->hw.vcpu_array[vcpu_id].state != VCPU_OFFLINE)) {
@@ -2036,6 +2034,7 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 				msr_write(MSR_IA32_EXT_APIC_ICR, (((uint64_t)papic_id) << 32U) | icr_low);
 			break;
 			}
+			ret = 0;
 		}
 	}
 	return ret;
