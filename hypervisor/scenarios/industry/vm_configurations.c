@@ -23,6 +23,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.os_config = {
 			.name = "ACRN Service OS",
 			.kernel_type = KERNEL_BZIMAGE,
+			.kernel_mod_tag = "Linux_bzImage",
 			.bootargs = SOS_VM_BOOTARGS
 		},
 		.vuart[0] = {
