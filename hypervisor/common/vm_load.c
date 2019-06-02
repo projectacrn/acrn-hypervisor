@@ -150,6 +150,14 @@ static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu)
 			__func__, vm->vm_id, vcpu_get_gpreg(vcpu, CPU_REG_RSI));
 }
 
+static void prepare_loading_rawimage(struct acrn_vm *vm)
+{
+	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
+	const struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+
+	sw_kernel->kernel_entry_addr = (void *)vm_config->os_config.kernel_entry_addr;
+}
+
 int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 {
 	int32_t ret = 0;
@@ -184,6 +192,9 @@ int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 	switch (vm->sw.kernel_type) {
 	case KERNEL_BZIMAGE:
 		prepare_loading_bzimage(vm, vcpu);
+		break;
+	case KERNEL_ZEPHYR:
+		prepare_loading_rawimage(vm);
 		break;
 	default:
 		pr_err("%s, Loading VM SW failed", __func__);

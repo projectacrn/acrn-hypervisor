@@ -93,6 +93,7 @@ static void *get_kernel_load_addr(struct acrn_vm *vm)
 	void *load_addr = NULL;
 	struct vm_sw_info *sw_info = &vm->sw;
 	struct zero_page *zeropage;
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 	switch (sw_info->kernel_type) {
 	case KERNEL_BZIMAGE:
@@ -109,6 +110,9 @@ static void *get_kernel_load_addr(struct acrn_vm *vm)
 			zeropage = (struct zero_page *)zeropage->hdr.pref_addr;
 		}
 		load_addr = (void *)zeropage;
+		break;
+	case KERNEL_ZEPHYR:
+		load_addr = (void *)vm_config->os_config.kernel_load_addr;
 		break;
 	default:
 		pr_err("Unsupported Kernel type.");
