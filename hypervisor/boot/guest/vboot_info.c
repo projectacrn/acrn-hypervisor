@@ -135,24 +135,36 @@ static void merge_cmdline(const struct acrn_vm *vm, const char *cmdline, const c
 	}
 }
 
-static void *get_kernel_load_addr(void *kernel_src_addr)
+static void *get_kernel_load_addr(struct acrn_vm *vm)
 {
+	void *load_addr = NULL;
+	struct vm_sw_info *sw_info = &vm->sw;
 	struct zero_page *zeropage;
 
-	/* According to the explaination for pref_address
-	 * in Documentation/x86/boot.txt, a relocating
-	 * bootloader should attempt to load kernel at pref_address
-	 * if possible. A non-relocatable kernel will unconditionally
-	 * move itself and to run at this address, so no need to copy
-	 * kernel to perf_address by bootloader, if kernel is
-	 * non-relocatable.
-	 */
-	zeropage = (struct zero_page *)kernel_src_addr;
-	if (zeropage->hdr.relocatable_kernel != 0U) {
-		zeropage = (struct zero_page *)zeropage->hdr.pref_addr;
+	switch (sw_info->kernel_type) {
+	case VM_LINUX_GUEST:
+		/* According to the explaination for pref_address
+		 * in Documentation/x86/boot.txt, a relocating
+		 * bootloader should attempt to load kernel at pref_address
+		 * if possible. A non-relocatable kernel will unconditionally
+		 * move itself and to run at this address, so no need to copy
+		 * kernel to perf_address by bootloader, if kernel is
+		 * non-relocatable.
+		 */
+		zeropage = (struct zero_page *)sw_info->kernel_info.kernel_src_addr;
+		if (zeropage->hdr.relocatable_kernel != 0U) {
+			zeropage = (struct zero_page *)zeropage->hdr.pref_addr;
+		}
+		load_addr = (void *)zeropage;
+		break;
+	default:
+		pr_err("Unsupported Kernel type.");
+		break;
 	}
-
-	return (void *)zeropage;
+	if (load_addr == NULL) {
+		pr_err("Could not get kernel load addr of VM %d .", vm->vm_id);
+	}
+	return load_addr;
 }
 
 static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
@@ -187,18 +199,15 @@ static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
 				vm->sw.kernel_type = VM_LINUX_GUEST;
 				vm->sw.kernel_info.kernel_src_addr = hpa2hva((uint64_t)mods[0].mm_mod_start);
 				vm->sw.kernel_info.kernel_size = mods[0].mm_mod_end - mods[0].mm_mod_start;
+				vm->sw.kernel_info.kernel_load_addr = get_kernel_load_addr(vm);
 
 				struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 				if (vm_config->load_order == PRE_LAUNCHED_VM) {
-					vm->sw.kernel_info.kernel_load_addr = (void *)(MEM_1M * 16U);
 					vm->sw.bootargs_info.src_addr = (void *)vm_config->os_config.bootargs;
 					vm->sw.bootargs_info.size =
 						strnlen_s(vm_config->os_config.bootargs, MAX_BOOTARGS_SIZE);
 				} else {
-					vm->sw.kernel_info.kernel_load_addr =
-						get_kernel_load_addr(vm->sw.kernel_info.kernel_src_addr);
-
 					if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
 						/*
 						 * If there is cmdline from mbi->mi_cmdline, merge it with
@@ -228,7 +237,9 @@ static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
 					parse_other_modules(vm, mods + 1, mbi->mi_mods_count - 1);
 				}
 				clac();
-				ret = 0;
+				if (vm->sw.kernel_info.kernel_load_addr != NULL) {
+					ret = 0;
+				}
 			}
 		}
 	}
