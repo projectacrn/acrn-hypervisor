@@ -98,7 +98,7 @@ int32_t mptable_build(struct acrn_vm *vm)
 
 	vm_config = get_vm_config(vm->vm_id);
 	mptable = &vm_mptables[vm->vm_id];
-	vcpu_num = vm_config->cpu_num;
+	vcpu_num = vm->hw.created_vcpus;
 	pcpu_bitmap = vm_config->pcpu_bitmap;
 	(void *)memcpy_s((void *)mptable, sizeof(struct mptable_info),
 		(const void *)&mptable_template, sizeof(struct mptable_info));
