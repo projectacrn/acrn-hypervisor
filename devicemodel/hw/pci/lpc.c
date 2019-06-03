@@ -33,6 +33,7 @@
 #include <stdbool.h>
 #include <sys/errno.h>
 
+#include "dm.h"
 #include "vmmapi.h"
 #include "acpi.h"
 #include "inout.h"
@@ -262,20 +263,21 @@ pci_lpc_write_dsdt(struct pci_vdev *dev)
 		ldp->handler();
 	}
 
-	dsdt_line("");
-	dsdt_line("Device (PIC)");
-	dsdt_line("{");
-	dsdt_line("  Name (_HID, EisaId (\"PNP0000\"))");
-	dsdt_line("  Name (_CRS, ResourceTemplate ()");
-	dsdt_line("  {");
-	dsdt_indent(2);
-	dsdt_fixed_ioport(IO_ICU1, 2);
-	dsdt_fixed_ioport(IO_ICU2, 2);
-	dsdt_fixed_irq(2);
-	dsdt_unindent(2);
-	dsdt_line("  })");
-	dsdt_line("}");
-
+	if(!is_rtvm) {
+		dsdt_line("");
+		dsdt_line("Device (PIC)");
+		dsdt_line("{");
+		dsdt_line("  Name (_HID, EisaId (\"PNP0000\"))");
+		dsdt_line("  Name (_CRS, ResourceTemplate ()");
+		dsdt_line("  {");
+		dsdt_indent(2);
+		dsdt_fixed_ioport(IO_ICU1, 2);
+		dsdt_fixed_ioport(IO_ICU2, 2);
+		dsdt_fixed_irq(2);
+		dsdt_unindent(2);
+		dsdt_line("  })");
+		dsdt_line("}");
+	}
 	dsdt_line("");
 	dsdt_line("Device (TIMR)");
 	dsdt_line("{");

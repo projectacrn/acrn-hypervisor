@@ -1598,29 +1598,31 @@ pci_bus_write_dsdt(int bus)
 	dsdt_line("        ,, , AddressRangeMemory, TypeStatic)");
 	dsdt_line("    })");
 
-	count = pci_count_lintr(bus);
-	if (count != 0) {
-		dsdt_indent(2);
-		dsdt_line("Name (PPRT, Package ()");
-		dsdt_line("{");
-		pci_walk_lintr(bus, pci_pirq_prt_entry, NULL);
-		dsdt_line("})");
-		dsdt_line("Name (APRT, Package ()");
-		dsdt_line("{");
-		pci_walk_lintr(bus, pci_apic_prt_entry, NULL);
-		dsdt_line("})");
-		dsdt_line("Method (_PRT, 0, NotSerialized)");
-		dsdt_line("{");
-		dsdt_line("  If (PICM)");
-		dsdt_line("  {");
-		dsdt_line("    Return (APRT)");
-		dsdt_line("  }");
-		dsdt_line("  Else");
-		dsdt_line("  {");
-		dsdt_line("    Return (PPRT)");
-		dsdt_line("  }");
-		dsdt_line("}");
-		dsdt_unindent(2);
+	if (!is_rtvm) {
+		count = pci_count_lintr(bus);
+		if (count != 0) {
+			dsdt_indent(2);
+			dsdt_line("Name (PPRT, Package ()");
+			dsdt_line("{");
+			pci_walk_lintr(bus, pci_pirq_prt_entry, NULL);
+			dsdt_line("})");
+			dsdt_line("Name (APRT, Package ()");
+			dsdt_line("{");
+			pci_walk_lintr(bus, pci_apic_prt_entry, NULL);
+			dsdt_line("})");
+			dsdt_line("Method (_PRT, 0, NotSerialized)");
+			dsdt_line("{");
+			dsdt_line("  If (PICM)");
+			dsdt_line("  {");
+			dsdt_line("    Return (APRT)");
+			dsdt_line("  }");
+			dsdt_line("  Else");
+			dsdt_line("  {");
+			dsdt_line("    Return (PPRT)");
+			dsdt_line("  }");
+			dsdt_line("}");
+			dsdt_unindent(2);
+		}
 	}
 
 	dsdt_indent(2);
