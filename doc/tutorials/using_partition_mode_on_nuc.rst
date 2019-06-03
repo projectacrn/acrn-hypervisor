@@ -43,20 +43,20 @@ Update kernel image and modules of Pre-launched VM
 **************************************************
 #. On your development workstation, clone the ACRN kernel source tree, and build
    the Linux kernel image that will be used to boot the pre-launched VMs:
-   
+
    .. code-block:: none
 
       $ git clone https://github.com/projectacrn/acrn-kernel.git
-      Cloning into 'acrn-kernel'... 
-      ...  
-      $ cd acrn-kernel 
-      $ cp kernel_config_uos .config 
-      $ make olddefconfig 
-      scripts/kconfig/conf  --olddefconfig Kconfig 
-      # 
-      # configuration written to .config 
-      # 
-      $ make 
+      Cloning into 'acrn-kernel'...
+      ...
+      $ cd acrn-kernel
+      $ cp kernel_config_uos .config
+      $ make olddefconfig
+      scripts/kconfig/conf  --olddefconfig Kconfig
+      #
+      # configuration written to .config
+      #
+      $ make
       $ make modules_install INSTALL_MOD_PATH=out/
 
    The last two commands build the bootable kernel image as
@@ -108,7 +108,7 @@ Update ACRN hypervisor Image
    I/O addresses of the serial port. The NUC supports one serial port ttyS0.
    You'll need to connect the serial port to the development workstation, in
    order to access the ACRN serial console to switch between pre-launched VMs:
-   
+
    .. code-block:: none
 
       $ dmesg | grep ttyS0
@@ -129,7 +129,7 @@ Update ACRN hypervisor Image
       00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection I219-LM (rev 21)
               Subsystem: Intel Corporation Ethernet Connection I219-LM
 
-   .. note:: 
+   .. note::
 
       Double check PCI devices BDF defined in the
       ``hypervisor/arch/x86/configs/nuc7i7bnh/pci_devices.h``
@@ -150,16 +150,16 @@ Update ACRN hypervisor Image
    Configure the build options:
 
    .. code-block:: none
-   
+
       $ make defconfig BOARD=nuc7i7bnh
       $ make menuconfig
 
    Updates the following configure item:
 
-     *  Set ACRN Scenario as "Logical Partition VMs";
-     *  Set Maximum number of VCPUs per VM as "2";
-     *  Set Maximum number of PCPU as "4";
-     *  Clear/Disable “Enable hypervisor relocation”.
+   * Set ACRN Scenario as "Logical Partition VMs";
+   * Set Maximum number of VCPUs per VM as "2";
+   * Set Maximum number of PCPU as "4";
+   * Clear/Disable “Enable hypervisor relocation”.
 
    We recommend keeping the default values of items not mentioned above.
 
@@ -213,7 +213,7 @@ Update Ubuntu GRUB to Boot hypervisor and Load Kernel Image
               module /boot/bzImage
       }
 
-   .. note:: 
+   .. note::
 
       The kernel command line arguments used to boot the pre-launched VMs is
       located in header file
