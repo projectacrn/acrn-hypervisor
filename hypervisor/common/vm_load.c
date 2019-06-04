@@ -50,6 +50,9 @@ static uint32_t create_zeropage_e820(struct zero_page *zp, const struct acrn_vm 
 	return entry_num;
 }
 
+/**
+ * @pre vm != NULL
+ */
 static uint64_t create_zero_page(struct acrn_vm *vm)
 {
 	struct zero_page *zeropage;
@@ -98,6 +101,9 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 	return gpa;
 }
 
+/**
+ * @pre vm != NULL
+ */
 static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu)
 {
 	uint32_t i;
@@ -150,6 +156,9 @@ static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu)
 			__func__, vm->vm_id, vcpu_get_gpreg(vcpu, CPU_REG_RSI));
 }
 
+/**
+ * @pre vm != NULL
+ */
 static void prepare_loading_rawimage(struct acrn_vm *vm)
 {
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
@@ -158,6 +167,9 @@ static void prepare_loading_rawimage(struct acrn_vm *vm)
 	sw_kernel->kernel_entry_addr = (void *)vm_config->os_config.kernel_entry_addr;
 }
 
+/**
+ * @pre vm != NULL
+ */
 int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 {
 	int32_t ret = 0;
