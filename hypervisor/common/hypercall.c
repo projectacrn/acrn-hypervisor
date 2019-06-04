@@ -805,7 +805,14 @@ int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = -1;
 	struct vm_gpa2hpa v_gpa2hpa;
-	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
+	struct acrn_vm *target_vm;
+
+	if (vmid == 0U) {
+		/* Due to historical reason, the vmid from VHM might be hardcoded to 0 for SOS. */
+		target_vm = get_sos_vm();
+	} else {
+		target_vm = get_vm_from_vmid(vmid);
+	}
 
 	(void)memset((void *)&v_gpa2hpa, 0U, sizeof(v_gpa2hpa));
 	if (!is_poweroff_vm(target_vm) && (!is_prelaunched_vm(target_vm))
