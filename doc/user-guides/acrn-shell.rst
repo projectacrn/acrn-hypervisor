@@ -42,8 +42,6 @@ The ACRN hypervisor shell supports the following commands:
          loglevels for the remaining areas will not be changed
    * - cpuid <leaf> [subleaf]
      - Display the CPUID leaf [subleaf], in hexadecimal
-   * - reboot
-     - Trigger a system reboot (immediately)
    * - rdmsr [-p<pcpu_id>] <msr_index>
      - Read the Model-Specific Register (MSR) at index ``msr_index`` (in
        hexadecimal) for CPU ID ``pcpu_id``
