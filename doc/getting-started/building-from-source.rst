@@ -3,6 +3,50 @@
 Build ACRN from Source
 ######################
 
+Introduction
+************
+
+Following general embedded system programming model, ACRN hypervisor
+is designed to be customized per hardware platform and per usage scenario,
+rather than one binary for all platforms/all usage scenarios.
+
+Hypervisor binary is generated based on the platform configuration.
+Different platforms with different configurations shall be set up explicitly
+via Kconfig.
+Instruction can be found in :ref:`getting-started-hypervisor-configuration`.
+
+.. note::
+   A generic configuration named ``hypervisor/arch/x86/configs/generic.config``
+   is provided to help developers to try ACRN easily. This configuration
+   will likely work for most platforms, supported with limited features.
+   This configuration can be enabled by specifying ``BOARD=generic`` in make
+   command line.
+
+
+One binary for all platforms/all usage scenarios is not supported because
+dynamic parsing is restricted in ACRN hypervisor, for the following
+considerations:
+
+* **Meet functional safety requirements** Absence of dynamic objects is
+  required in functional safety standards. Implementation of the dynamic parsing
+  would introduce the dynamic objects more or less. Restricting the dynamic
+  parsing would help ACRN hypervisor meet functional safety requirements.
+
+* **Reduce complexity** ACRN is a lightweight reference hypervisor, built for
+  embedded IoT. Since the platforms for embedded system is changing frequently,
+  support of one binary for all platforms/all usage scenarios will become more
+  and more complex. Restricting the dynamic parsing would help reduce the
+  complexity of the hypervisor.
+
+* **Keep small footprint** Implementation of the dynamic parsing would introduce
+  hundreds or thousands of code. Restricting the dynamic parsing would help keep
+  Lines of Code (LOC) of the hypervisor in a desirable range (around 30K).
+
+* **Improve boot up time** Dynamic parsing at run time would increase the boot
+  up time. Restricting the dynamic parsing would help improve boot up time of
+  the hypervisor.
+
+
 If you would like to build the ACRN hypervisor, device model, and tools from
 source, follow these steps.
 
