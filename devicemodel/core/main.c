@@ -770,7 +770,7 @@ static char optstr[] = "hAWYvE:k:r:B:p:c:s:m:l:U:G:i:";
 int
 main(int argc, char *argv[])
 {
-	int c, error, err;
+	int c, error, ret=1;
 	int max_vcpus, mptgen;
 	struct vmctx *ctx;
 	size_t memsize;
@@ -949,14 +949,14 @@ main(int argc, char *argv[])
 	if (argc != 1)
 		usage(1);
 
-	if (!check_hugetlb_support()) {
-		pr_err("check_hugetlb_support failed\n");
-		exit(1);
-	}
-
 	vmname = argv[0];
 	if (strnlen(vmname, MAX_VMNAME_LEN) >= MAX_VMNAME_LEN) {
 		pr_err("vmname size exceed %u\n", MAX_VMNAME_LEN);
+		exit(1);
+	}
+
+	if (!init_hugetlb()) {
+		pr_err("init_hugetlb failed\n");
 		exit(1);
 	}
 
@@ -965,7 +965,7 @@ main(int argc, char *argv[])
 		ctx = vm_create(vmname, (unsigned long)vhm_req_buf);
 		if (!ctx) {
 			pr_err("vm_create failed");
-			exit(1);
+			goto create_fail;
 		}
 
 		if (guest_ncpus < 1) {
@@ -981,14 +981,14 @@ main(int argc, char *argv[])
 		}
 
 		pr_notice("vm_setup_memory: size=0x%lx\n", memsize);
-		err = vm_setup_memory(ctx, memsize);
-		if (err) {
+		error = vm_setup_memory(ctx, memsize);
+		if (error) {
 			pr_err("Unable to setup memory (%d)\n", errno);
 			goto fail;
 		}
 
-		err = mevent_init();
-		if (err) {
+		error = mevent_init();
+		if (error) {
 			pr_err("Unable to initialize mevent (%d)\n", errno);
 			goto mevent_fail;
 		}
@@ -1050,8 +1050,10 @@ main(int argc, char *argv[])
 		vm_pause(ctx);
 		delete_cpu(ctx, BSP);
 
-		if (vm_get_suspend_mode() != VM_SUSPEND_FULL_RESET)
+		if (vm_get_suspend_mode() != VM_SUSPEND_FULL_RESET){
+			ret = 0;
 			break;
+		}
 
 		vm_deinit_vdevs(ctx);
 		mevent_deinit();
@@ -1070,5 +1072,7 @@ mevent_fail:
 	vm_unsetup_memory(ctx);
 fail:
 	vm_destroy(ctx);
-	exit(0);
+create_fail:
+	uninit_hugetlb();
+	exit(ret);
 }

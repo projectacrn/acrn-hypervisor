@@ -40,6 +40,8 @@
 
 #include "vmmapi.h"
 
+extern char *vmname;
+
 #define HUGETLB_LV1		0
 #define HUGETLB_LV2		1
 #define HUGETLB_LV_MAX	2
@@ -139,7 +141,7 @@ static int open_hugetlbfs(struct vmctx *ctx, int level)
 
 	path = hugetlb_priv[level].node_path;
 	memset(path, '\0', MAX_PATH_LEN);
-	strncpy(path, hugetlb_priv[level].mount_path, MAX_PATH_LEN);
+	snprintf(path, MAX_PATH_LEN, "%s%s/", hugetlb_priv[level].mount_path, ctx->name);
 
 	len = strnlen(path, MAX_PATH_LEN);
 	/* UUID will use 32 bytes */
@@ -336,9 +338,29 @@ static size_t adj_biosmem_param(struct hugetlb_info *htlb,
 	return htlb->biosmem;
 }
 
+static int rm_hugetlb_dirs(int level)
+{
+	char path[MAX_PATH_LEN]={0};
+
+	if (level >= HUGETLB_LV_MAX) {
+		perror("exceed max hugetlb level");
+		return -EINVAL;
+	}
+
+	snprintf(path,MAX_PATH_LEN, "%s%s/",hugetlb_priv[level].mount_path,vmname);
+
+	if (access(path, F_OK) == 0) {
+		if (rmdir(path) < 0) {
+			perror("rmdir failed");
+			return -1;
+		}
+	}
+	return 0;
+}
+
 static int create_hugetlb_dirs(int level)
 {
-	char tmp_path[MAX_PATH_LEN], *path;
+	char path[MAX_PATH_LEN]={0};
 	int i;
 	size_t len;
 
@@ -347,30 +369,19 @@ static int create_hugetlb_dirs(int level)
 		return -EINVAL;
 	}
 
-	path = hugetlb_priv[level].mount_path;
+	snprintf(path,MAX_PATH_LEN, "%s%s/",hugetlb_priv[level].mount_path,vmname);
+
 	len = strnlen(path, MAX_PATH_LEN);
-	if (len == MAX_PATH_LEN || len == 0) {
-		perror("invalid path len");
-		return -EINVAL;
-	}
-
-	memset(tmp_path, '\0', MAX_PATH_LEN);
-	strncpy(tmp_path, path, MAX_PATH_LEN);
-
-	if ((tmp_path[len - 1] != '/') && (len < MAX_PATH_LEN - 1))
-		tmp_path[len] = '/';
-
-	len = strnlen(tmp_path, MAX_PATH_LEN);
 	for (i = 1; i < len; i++) {
-		if (tmp_path[i] == '/') {
-			tmp_path[i] = 0;
-			if (access(tmp_path, F_OK) != 0) {
-				if (mkdir(tmp_path, 0755) < 0) {
+		if (path[i] == '/') {
+			path[i] = 0;
+			if (access(path, F_OK) != 0) {
+				if (mkdir(path, 0755) < 0) {
 					perror("mkdir failed");
 					return -1;
 				}
 			}
-			tmp_path[i] = '/';
+			path[i] = '/';
 		}
 	}
 
@@ -380,6 +391,7 @@ static int create_hugetlb_dirs(int level)
 static int mount_hugetlbfs(int level)
 {
 	int ret;
+	char path[MAX_PATH_LEN];
 
 	if (level >= HUGETLB_LV_MAX) {
 		perror("exceed max hugetlb level");
@@ -389,8 +401,10 @@ static int mount_hugetlbfs(int level)
 	if (hugetlb_priv[level].mounted)
 		return 0;
 
+	snprintf(path, MAX_PATH_LEN, "%s%s", hugetlb_priv[level].mount_path,vmname);
+
 	/* only support x86 as HUGETLB level-1 2M page, level-2 1G page*/
-	ret = mount("none", hugetlb_priv[level].mount_path, "hugetlbfs",
+	ret = mount("none", path, "hugetlbfs",
 		0, hugetlb_priv[level].mount_opt);
 	if (ret == 0)
 		hugetlb_priv[level].mounted = true;
@@ -400,13 +414,18 @@ static int mount_hugetlbfs(int level)
 
 static void umount_hugetlbfs(int level)
 {
+	char path[MAX_PATH_LEN];
+	
 	if (level >= HUGETLB_LV_MAX) {
 		perror("exceed max hugetlb level");
 		return;
 	}
 
+	snprintf(path, MAX_PATH_LEN, "%s%s", hugetlb_priv[level].mount_path,vmname);
+
+
 	if (hugetlb_priv[level].mounted) {
-		umount(hugetlb_priv[level].mount_path);
+		umount(path);
 		hugetlb_priv[level].mounted = false;
 	}
 }
@@ -589,7 +608,8 @@ static bool hugetlb_reserve_pages(void)
 	return true;
 }
 
-bool check_hugetlb_support(void)
+
+bool init_hugetlb(void)
 {
 	int level;
 
@@ -615,6 +635,15 @@ bool check_hugetlb_support(void)
 	return true;
 }
 
+void uninit_hugetlb(void)
+{
+	int level;
+	for (level = HUGETLB_LV1; level < hugetlb_lv_max; level++) {
+		umount_hugetlbfs(level);
+		rm_hugetlb_dirs(level);
+	}
+}
+
 int hugetlb_setup_memory(struct vmctx *ctx)
 {
 	int level;
@@ -625,15 +654,6 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 		perror("vm requests 0 memory");
 		goto err;
 	}
-
-	/* for first time DM start UOS, hugetlbfs is already mounted by
-	 * check_hugetlb_support; but for reboot, here need re-mount
-	 * it as it already be umount by hugetlb_unsetup_memory
-	 * TODO: actually, correct reboot process should not change memory
-	 * layout, the setup_memory should be removed from reboot process
-	 */
-	for (level = HUGETLB_LV1; level < hugetlb_lv_max; level++)
-		mount_hugetlbfs(level);
 
 	/* open hugetlbfs and get pagesize for two level */
 	for (level = HUGETLB_LV1; level < hugetlb_lv_max; level++) {
@@ -781,7 +801,6 @@ err:
 	}
 	for (level = HUGETLB_LV1; level < hugetlb_lv_max; level++) {
 		close_hugetlbfs(level);
-		umount_hugetlbfs(level);
 	}
 	return -ENOMEM;
 }
@@ -798,6 +817,5 @@ void hugetlb_unsetup_memory(struct vmctx *ctx)
 
 	for (level = HUGETLB_LV1; level < hugetlb_lv_max; level++) {
 		close_hugetlbfs(level);
-		umount_hugetlbfs(level);
 	}
 }

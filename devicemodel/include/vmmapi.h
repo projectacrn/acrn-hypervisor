@@ -108,7 +108,8 @@ int	vm_map_memseg_vma(struct vmctx *ctx, size_t len, vm_paddr_t gpa,
 	uint64_t vma, int prot);
 int	vm_setup_memory(struct vmctx *ctx, size_t len);
 void	vm_unsetup_memory(struct vmctx *ctx);
-bool	check_hugetlb_support(void);
+bool	init_hugetlb(void);
+void	uninit_hugetlb(void);
 int	hugetlb_setup_memory(struct vmctx *ctx);
 void	hugetlb_unsetup_memory(struct vmctx *ctx);
 void	*vm_map_gpa(struct vmctx *ctx, vm_paddr_t gaddr, size_t len);
