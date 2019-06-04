@@ -425,7 +425,6 @@ static void guest_cpuid_0bh(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 		cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
 	} else {
 		*ecx = subleaf & 0xFFU;
-		*edx = vlapic_get_apicid(vcpu_vlapic(vcpu));
 		/* No HT emulation for UOS */
 		switch (subleaf) {
 		case 0U:
@@ -449,6 +448,7 @@ static void guest_cpuid_0bh(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 		break;
 		}
 	}
+	*edx = vlapic_get_apicid(vcpu_vlapic(vcpu));
 }
 
 static void guest_cpuid_0dh(__unused struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
