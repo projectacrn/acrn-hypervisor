@@ -213,6 +213,9 @@ static int32_t register_hrhd_units(void)
 		drhd_rt->index = i;
 		drhd_rt->drhd = &platform_dmar_info->drhd_units[i];
 		drhd_rt->dmar_irq = IRQ_INVALID;
+
+		hv_access_memory_region_update(drhd_rt->drhd->reg_base_addr, PAGE_SIZE);
+
 		ret = dmar_register_hrhd(drhd_rt);
 		if (ret != 0) {
 			break;
