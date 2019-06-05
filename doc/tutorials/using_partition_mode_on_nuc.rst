@@ -210,7 +210,7 @@ Update Ubuntu GRUB to Boot hypervisor and Load Kernel Image
 
               echo 'Loading hypervisor logical partition scenario ...'
               multiboot --quirk-modules-after-kernel /boot/acrn.32.out
-              module /boot/bzImage
+              module /boot/bzImage XXXXXX
       }
 
    .. note::
@@ -220,6 +220,9 @@ Update Ubuntu GRUB to Boot hypervisor and Load Kernel Image
       ``hypervisor/scenarios/logical_partition/vm_configurations.h`` and
       configured by ``VMx_CONFIG_OS_BOOTARG_*`` MACROs (where x is the VM id
       number and ``*`` are arguments).
+      The multiboot module param ``XXXXXX`` is the bzImage tag and must
+      exactly match the ``kernel_mod_tag`` configured in file
+      ``hypervisor/scenarios/logical_partition/vm_configurations.c``.
 
 #. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu
    visible when booting:
