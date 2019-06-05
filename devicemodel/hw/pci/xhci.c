@@ -2586,6 +2586,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 	uint32_t edtla;
 	uint32_t i;
 	int  err = XHCI_TRB_ERROR_SUCCESS;
+	int rem_len = 0;
 
 	dev_ctx = pci_xhci_get_dev_ctx(xdev, slot);
 
@@ -2626,11 +2627,12 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 		trbflags = trb->dwTrb3;
 
 		UPRINTF(LDBG, "xfer[%d] done?%u:%d trb %x %016lx %x "
-			 "(err %d) IOC?%d\r\n",
+			 "(err %d) IOC?%d, chained %d\r\n",
 			 i, xfer->data[i].processed, xfer->data[i].blen,
 			 XHCI_TRB_3_TYPE_GET(trbflags), evtrb.qwTrb0,
 			 trbflags, err,
-			 trb->dwTrb3 & XHCI_TRB_3_IOC_BIT ? 1 : 0);
+			 trb->dwTrb3 & XHCI_TRB_3_IOC_BIT ? 1 : 0,
+			 xfer->data[i].chained);
 
 		if (xfer->data[i].processed < USB_XFER_BLK_HANDLED) {
 			xfer->head = (int)i;
@@ -2643,6 +2645,21 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 		edtla += xfer->data[i].bdone;
 
 		trb->dwTrb3 = (trb->dwTrb3 & ~0x1) | (xfer->data[i].ccs);
+		if (xfer->data[i].chained == 1) {
+			rem_len += xfer->data[i].blen;
+			i = (i + 1) % USB_MAX_XFER_BLOCKS;
+
+			/* When the chained == 1, this 'continue' will delay
+			 * the IOC behavior which could decrease the number
+			 * of virtual interrupts. This could GREATLY improve
+			 * the performance especially under ISOCH scenario.
+			 */
+			continue;
+		} else
+			rem_len += xfer->data[i].blen;
+
+		if (rem_len > 0)
+			err = XHCI_TRB_ERROR_SHORT_PKT;
 
 		/* Only interrupt if IOC or short packet */
 		if (!(trb->dwTrb3 & XHCI_TRB_3_IOC_BIT) &&
@@ -2654,7 +2671,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 		}
 
 		evtrb.dwTrb2 = XHCI_TRB_2_ERROR_SET(err) |
-			XHCI_TRB_2_REM_SET(xfer->data[i].blen);
+			XHCI_TRB_2_REM_SET(rem_len);
 
 		evtrb.dwTrb3 = XHCI_TRB_3_TYPE_SET(XHCI_TRB_EVENT_TRANSFER) |
 			XHCI_TRB_3_SLOT_SET(slot) | XHCI_TRB_3_EP_SET(epid);
@@ -2675,6 +2692,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 			break;
 
 		i = (i + 1) % USB_MAX_XFER_BLOCKS;
+		rem_len = 0;
 	}
 
 	return err;
@@ -2782,6 +2800,7 @@ pci_xhci_handle_transfer(struct pci_xhci_vdev *xdev,
 	uint32_t	trbflags;
 	int		do_intr, err;
 	int		do_retry;
+	bool		is_isoch = false;
 
 	ep_ctx->dwEpCtx0 = FIELD_REPLACE(ep_ctx->dwEpCtx0,
 					 XHCI_ST_EPCTX_RUNNING, 0x7, 0);
@@ -2858,8 +2877,11 @@ retry:
 			xfer_block->processed = USB_XFER_BLK_HANDLED;
 			break;
 
-		case XHCI_TRB_TYPE_NORMAL:
 		case XHCI_TRB_TYPE_ISOCH:
+			is_isoch = true;
+			/* fall through */
+
+		case XHCI_TRB_TYPE_NORMAL:
 			if (setup_trb != NULL) {
 				UPRINTF(LWRN, "trb not supposed to be in "
 					 "ctl scope\r\n");
@@ -2930,6 +2952,10 @@ retry:
 					xfer_block->streamid,
 					xfer_block->trbnext, xfer_block->ccs);
 		}
+
+		if (is_isoch == true || XHCI_TRB_3_TYPE_GET(trbflags) ==
+				XHCI_TRB_TYPE_EVENT_DATA /* win10 needs it */)
+			continue;
 
 		/* handle current batch that requires interrupt on complete */
 		if (trbflags & XHCI_TRB_3_IOC_BIT) {
