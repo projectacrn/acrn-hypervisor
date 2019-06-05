@@ -115,6 +115,7 @@ struct virtio_console_backend {
 	enum virtio_console_be_type	be_type;
 	int				pts_fd;	/* only valid for PTY */
 	const char 			*portpath;
+	const char 			*socket_type;
 };
 
 struct virtio_console {
@@ -729,26 +730,44 @@ virtio_console_config_backend(struct virtio_console_backend *be)
 		addr.sun_family = AF_UNIX;
 		strcpy(addr.sun_path, be->portpath);
 
-		unlink(be->portpath);
-		if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-			WPRINTF(("Bind Error = %d\n", errno));
-			return -1;
-		}
-
-		if (listen(fd, 64) == -1) {
-			WPRINTF(("Listen Error= %d\n", errno));
-			return -1;
-		}
-
-		if (make_socket_non_blocking(fd) == -1) {
-			WPRINTF(("Backend config: fcntl Error\n"));
-			return -1;
-		}
-
-		be->evp = mevent_add(fd, EVF_READ, virtio_console_accept_new_connection, be,
-					NULL, NULL);
-		if (be->evp == NULL) {
-			WPRINTF(("Socket Accept mevent_add failed\n"));
+		if (be->socket_type == NULL || !strcmp(be->socket_type,"server")) {
+			unlink(be->portpath);
+			if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+				WPRINTF(("Bind Error = %d\n", errno));
+				return -1;
+			}
+			if (listen(fd, 64) == -1) {
+				WPRINTF(("Listen Error= %d\n", errno));
+				return -1;
+			}
+			if (make_socket_non_blocking(fd) == -1) {
+				WPRINTF(("Backend config: fcntl Error\n"));
+				return -1;
+			}
+			be->evp = mevent_add(fd, EVF_READ, virtio_console_accept_new_connection, be, NULL, NULL);
+			if (be->evp == NULL) {
+				WPRINTF(("Socket Accept mevent_add failed\n"));
+				return -1;
+			}
+		} else if (!strcmp(be->socket_type,"client")) {
+			if (access(be->portpath,0)) {
+				WPRINTF(("%s not exist\n", be->portpath));
+				return -1;
+			}
+			/*
+			 * When the VM reset, client will not able to connect to server.
+			 * But here only show some warning.
+			 * TODO: implement re-connect function
+			 */
+			if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+				WPRINTF(("vtcon: connect error[%d] \n", errno));
+			} else {
+				if (make_socket_non_blocking(fd) == -1) {
+					WPRINTF(("Backend config: fcntl Error\n"));
+				}
+			}
+		} else {
+			WPRINTF(("Socket type not exist\n"));
 			return -1;
 		}
 
@@ -780,11 +799,12 @@ virtio_console_add_backend(struct virtio_console *console, char *opts)
 	char *backend = NULL;
 	char *portname = NULL;
 	char *portpath = NULL;
+	char *socket_type = NULL;
 	char *opt;
 	enum virtio_console_be_type be_type = VIRTIO_CONSOLE_BE_INVALID;
 
 	/* virtio-console,[@]stdio|tty|pty|file:portname[=portpath]
-	 * [,[@]stdio|tty|pty|file:portname[=portpath]]
+	 * [,[@]stdio|tty|pty|file:portname[=portpath][:socket_type]]
 	 */
 	while ((opt = strsep(&opts, ",")) != NULL) {
 		backend = strsep(&opt, ":");
@@ -810,8 +830,14 @@ virtio_console_add_backend(struct virtio_console *console, char *opts)
 		}
 
 		if (opt != NULL) {
-			portname = strsep(&opt, "=");
-			portpath = opt;
+			if (be_type == VIRTIO_CONSOLE_BE_SOCKET) {
+				portname = strsep(&opt, "=");
+				portpath = strsep(&opt, ":");
+				socket_type = opt;
+			} else {
+				portname = strsep(&opt, "=");
+				portpath = opt;
+			}
 			if (portpath == NULL
 				&& be_type != VIRTIO_CONSOLE_BE_STDIO
 				&& be_type != VIRTIO_CONSOLE_BE_PTY
@@ -839,6 +865,7 @@ virtio_console_add_backend(struct virtio_console *console, char *opts)
 	be->fd = fd;
 	be->be_type = be_type;
 	be->portpath = portpath;
+	be->socket_type = socket_type;
 
 	if (virtio_console_config_backend(be) < 0) {
 		WPRINTF(("vtcon: virtio_console_config_backend failed\n"));
