@@ -1,3 +1,19 @@
+OVMF release v1.1
+
+- Cleanup unused and unsupported function of AcrnRtc
+- Remove SMBIOS support
+- Add ResetSystemLib for ACRN
+- Disable BhyveFwCtlLib
+- Disable COM2
+- Avoid connecting all system drivers
+- Speed up Ps2KeyboardDxe
+- Created new Rtc driver and optimized RtcInit and RtcGetTime
+- Initialize EmuVariable NV storage memory with varstore from ROM
+- Switch to BasePciLibPciExpress
+- Avoid exhaustive PCI bus scanning during PCI host bridge initialization
+- Add support for ACRN platform initialization
+- Add ACRN's Host Bridge Device ID
+
 OVMF release v0.8
 
 - Remove QemuFwCfg/QemuFwCfgS3Lib
