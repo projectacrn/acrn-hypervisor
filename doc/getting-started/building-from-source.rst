@@ -68,7 +68,7 @@ each with their own way to install development tools:
      .. code-block:: none
 
         $ wget https://mirrors.ocf.berkeley.edu/gnu/binutils/binutils-2.27.tar.gz
-        $ tar xzvf binutils-2.27 && cd binutils-2.27
+        $ tar xzvf binutils-2.27.tar.gz && cd binutils-2.27
         $ ./configure
         $ make
         $ sudo make install
