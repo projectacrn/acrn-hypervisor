@@ -327,8 +327,14 @@ Enable partition mode in ACRN hypervisor
 
              echo 'Loading partition mode hypervisor ...'
              multiboot /boot/acrn.32.out
-             module /boot/bzImage
+             module /boot/bzImage XXXXXX
      }
+
+   .. note::
+
+     The multiboot module param ``XXXXXX`` is the bzImage tag and must
+     exactly match the ``kernel_mod_tag`` configured in file
+     ``hypervisor/scenarios/logical_partition/vm_configurations.c``.
 
    Modify the ``/etc/default/grub`` file as follows to make the GRUB menu visible
    when booting:
