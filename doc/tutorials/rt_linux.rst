@@ -191,3 +191,44 @@ system on Intel KBL NUC with a SATA SSD as ``/dev/sda`` and an NVME SSD as
       swupd bundle-add dev-utils
       cyclictest -N -p80 -D30 -M > log.txt
       cat log.txt
+
+#. To achieve better real-time performance, the following is the recommended
+   BIOS setting. You may not see all the settings because some of them may be
+   hidden by different BIOS vendors.
+
+    .. table:: Recommended BIOS Settings
+      :widths: auto
+      :name: BIOS Settings
+
+      +--------------------+---------------------------------------------------+
+      | Item               | Setting                                           |
+      +====================+===================================================+
+      | VMX                | Enabled                                           |
+      +--------------------+---------------------------------------------------+
+      | VT-d               | Enabled                                           |
+      +--------------------+---------------------------------------------------+
+      | Hyper-Threading    | Disabled                                          |
+      +--------------------+---------------------------------------------------+
+      | Speed Step         | Disabled                                          |
+      +--------------------+---------------------------------------------------+
+      | Speed Shift        | Disabled                                          |
+      +--------------------+---------------------------------------------------+
+      | C-State            | Disabled                                          |
+      +--------------------+---------------------------------------------------+
+      | Voltage            | Disabled                                          |
+      | Optimization       |                                                   | 
+      +--------------------+---------------------------------------------------+
+      | GT RC6             | Disabled                                          |
+      +--------------------+---------------------------------------------------+
+      | Gfx Low Power Mode | Disabled                                          |
+      +--------------------+---------------------------------------------------+
+      | SA GV              | Disabled                                          |
+      +--------------------+---------------------------------------------------+
+      | Aggressive LPM     | Disabled                                          |
+      | Support            |                                                   |
+      +--------------------+---------------------------------------------------+
+      | ACPI S3 Support    | Disabled                                          |
+      +--------------------+---------------------------------------------------+
+      | Native ASPM        | Disabled                                          |
+      +--------------------+---------------------------------------------------+
+
