@@ -337,6 +337,7 @@ int32_t hcall_reset_vm(uint16_t vmid)
  * @param param guest physical address. This gpa points to
  *              struct acrn_vcpu_regs
  *
+ * @pre Pointer vm shall point to SOS_VM
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
@@ -407,6 +408,9 @@ int32_t hcall_set_irqline(const struct acrn_vm *vm, uint16_t vmid,
 	return ret;
 }
 
+/**
+ *@pre Pointer vm shall point to SOS_VM
+ */
 static void inject_msi_lapic_pt(struct acrn_vm *vm, const struct acrn_msi_entry *vmsi)
 {
 	union apic_icr icr;
@@ -578,7 +582,9 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 	return ret;
 }
 
-
+/**
+ *@pre Pointer vm shall point to SOS_VM
+ */
 static int32_t add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_vm,
 				    const struct vm_memory_region *region,uint64_t *pml4_page)
 {
