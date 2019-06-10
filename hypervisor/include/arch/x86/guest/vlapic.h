@@ -211,6 +211,7 @@ void vlapic_calc_dest(struct acrn_vm *vm, uint64_t *dmask, bool is_broadcast,
 void vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, bool is_broadcast,
 		uint32_t dest, bool phys);
 bool is_lapic_pt_enabled(struct acrn_vm *vm);
+bool is_x2apic_enabled(const struct acrn_vlapic *vlapic);
 /**
  * @}
  */
