@@ -84,6 +84,7 @@
 #define PCIM_BAR_MEM_64       0x04U
 #define PCIM_BAR_MEM_BASE     0xFFFFFFF0U
 #define PCIR_CAP_PTR          0x34U
+#define PCIR_CAP_PTR_CARDBUS  0x14U
 
 /* config registers for header type 1 (PCI-to-PCI bridge) devices */
 #define PCIR_PRIBUS_1         0x18U
