@@ -21,6 +21,8 @@ HV_FILE := acrn
 SUB_MAKEFILES := $(wildcard */Makefile)
 
 LIB_MOD = $(HV_MODDIR)/lib_mod.a
+BOOT_MOD = $(HV_MODDIR)/boot_mod.a
+HW_MOD = $(HV_MODDIR)/hw_mod.a
 LIB_DEBUG = $(HV_MODDIR)/libdebug.a
 LIB_RELEASE = $(HV_MODDIR)/librelease.a
 
@@ -169,6 +171,52 @@ BOOT_S_SRCS += arch/x86/boot/cpu_save_boot_ctx.S
 BOOT_S_SRCS += arch/x86/boot/trampoline.S
 BOOT_C_SRCS += boot/reloc.c
 
+# hardware management component
+HW_S_SRCS += arch/x86/idt.S
+HW_C_SRCS += arch/x86/ioapic.c
+HW_C_SRCS += arch/x86/lapic.c
+HW_C_SRCS += arch/x86/cpu.c
+HW_C_SRCS += arch/x86/cpu_caps.c
+HW_C_SRCS += arch/x86/security.c
+HW_C_SRCS += arch/x86/mmu.c
+HW_C_SRCS += arch/x86/e820.c
+HW_C_SRCS += arch/x86/pagetable.c
+HW_C_SRCS += arch/x86/page.c
+HW_C_SRCS += arch/x86/notify.c
+HW_C_SRCS += arch/x86/vtd.c
+HW_C_SRCS += arch/x86/gdt.c
+HW_C_SRCS += arch/x86/irq.c
+HW_C_SRCS += arch/x86/timer.c
+HW_C_SRCS += arch/x86/vmx.c
+HW_C_SRCS += arch/x86/cpu_state_tbl.c
+HW_C_SRCS += arch/x86/pm.c
+HW_S_SRCS += arch/x86/wakeup.S
+HW_C_SRCS += arch/x86/trampoline.c
+HW_S_SRCS += arch/x86/sched.S
+HW_C_SRCS += arch/x86/cat.c
+HW_C_SRCS += arch/x86/sgx.c
+HW_C_SRCS += common/softirq.c
+HW_C_SRCS += common/schedule.c
+HW_C_SRCS += hw/pci.c
+HW_C_SRCS += arch/x86/configs/vm_config.c
+HW_C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/board.c
+HW_C_SRCS += scenarios/$(SCENARIO_NAME)/vm_configurations.c
+ifneq (,$(wildcard scenarios/$(SCENARIO_NAME)/pt_dev.c))
+HW_C_SRCS += scenarios/$(SCENARIO_NAME)/pt_dev.c
+endif
+HW_C_SRCS += boot/acpi_base.c
+HW_C_SRCS += boot/dmar_info.c
+HW_C_SRCS += boot/cmdline.c
+# ACPI parsing component
+# This part should be isolated from FuSa Cert
+ifeq ($(CONFIG_ACPI_PARSE_ENABLED),y)
+HW_C_SRCS += acpi_parser/dmar_parse.c
+HW_C_SRCS += acpi_parser/acpi_ext.c
+endif
+HW_C_SRCS += boot/guest/vboot_wrapper.c
+HW_C_SRCS += boot/guest/deprivilege_boot.c
+HW_C_SRCS += boot/guest/direct_boot.c
+
 # initilization component
 C_SRCS += arch/x86/init.c
 
@@ -177,50 +225,10 @@ C_SRCS += arch/x86/seed/seed_abl.c
 C_SRCS += arch/x86/seed/seed_sbl.c
 
 # configuration component
-C_SRCS += arch/x86/configs/vm_config.c
 C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/ve820.c
-C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/board.c
-C_SRCS += scenarios/$(SCENARIO_NAME)/vm_configurations.c
-ifneq (,$(wildcard scenarios/$(SCENARIO_NAME)/pt_dev.c))
-C_SRCS += scenarios/$(SCENARIO_NAME)/pt_dev.c
-endif
 
-# ACPI parsing component
-# This part should be isolated from FuSa Cert
-ifeq ($(CONFIG_ACPI_PARSE_ENABLED),y)
-C_SRCS += acpi_parser/dmar_parse.c
-C_SRCS += acpi_parser/acpi_ext.c
-endif
-
-C_SRCS += boot/acpi_base.c
-C_SRCS += boot/dmar_info.c
-C_SRCS += boot/cmdline.c
-C_SRCS += boot/guest/vboot_wrapper.c
-C_SRCS += boot/guest/deprivilege_boot.c
-C_SRCS += boot/guest/direct_boot.c
 C_SRCS += boot/guest/vboot_info.c
 
-S_SRCS += arch/x86/idt.S
-C_SRCS += arch/x86/ioapic.c
-C_SRCS += arch/x86/lapic.c
-C_SRCS += arch/x86/cpu.c
-C_SRCS += arch/x86/cpu_caps.c
-C_SRCS += arch/x86/security.c
-C_SRCS += arch/x86/mmu.c
-C_SRCS += arch/x86/e820.c
-C_SRCS += arch/x86/pagetable.c
-C_SRCS += arch/x86/page.c
-C_SRCS += arch/x86/notify.c
-C_SRCS += arch/x86/vtd.c
-C_SRCS += arch/x86/gdt.c
-C_SRCS += arch/x86/irq.c
-C_SRCS += arch/x86/timer.c
-C_SRCS += arch/x86/vmx.c
-C_SRCS += arch/x86/cpu_state_tbl.c
-C_SRCS += arch/x86/pm.c
-S_SRCS += arch/x86/wakeup.S
-C_SRCS += arch/x86/trampoline.c
-S_SRCS += arch/x86/sched.S
 C_SRCS += arch/x86/guest/vcpuid.c
 C_SRCS += arch/x86/guest/vcpu.c
 C_SRCS += arch/x86/guest/vm.c
@@ -242,16 +250,11 @@ C_SRCS += arch/x86/guest/vmexit.c
 S_SRCS += arch/x86/guest/vmx_asm.S
 C_SRCS += arch/x86/guest/trusty.c
 C_SRCS += arch/x86/guest/vm_reset.c
-C_SRCS += arch/x86/cat.c
-C_SRCS += arch/x86/sgx.c
-C_SRCS += common/softirq.c
 C_SRCS += common/hv_main.c
 C_SRCS += common/hypercall.c
 C_SRCS += common/trusty_hypercall.c
-C_SRCS += common/schedule.c
 C_SRCS += common/vm_load.c
 C_SRCS += common/ptdev.c
-C_SRCS += hw/pci.c
 C_SRCS += dm/vpic.c
 C_SRCS += dm/vrtc.c
 C_SRCS += dm/vioapic.c
@@ -269,6 +272,8 @@ LIB_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(LIB_C_SRCS))
 LIB_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(LIB_S_SRCS))
 BOOT_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(BOOT_C_SRCS))
 BOOT_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(BOOT_S_SRCS))
+HW_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(HW_C_SRCS))
+HW_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(HW_S_SRCS))
 C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
 ifneq ($(CONFIG_RELEASE),y)
 CFLAGS += -DHV_DEBUG -DPROFILING_ON -fno-omit-frame-pointer
@@ -279,9 +284,11 @@ PRE_BUILD_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(PRE_BUILD_SRCS))
 
 MOD_DEPS += lib-mod
 MOD_DEPS += boot-mod
+MOD_DEPS += hw-mod
 MOD_DEPS += lib
 MODULES += $(LIB_MOD)
 MODULES += $(BOOT_MOD)
+MODULES += $(HW_MOD)
 ifeq ($(CONFIG_RELEASE),y)
 MODULES += $(LIB_RELEASE)
 else
@@ -354,11 +361,13 @@ pre_build: $(PRE_BUILD_OBJS)
 .PHONY: header
 header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
 
-.PHONY: lib-mod boot-mod
+.PHONY: lib-mod boot-mod hw-mod
 lib-mod: $(LIB_C_OBJS) $(LIB_S_OBJS)
 	$(AR) $(ARFLAGS) $(LIB_MOD) $(LIB_C_OBJS) $(LIB_S_OBJS)
 boot-mod: $(BOOT_S_OBJS) $(BOOT_C_OBJS)
 	$(AR) $(ARFLAGS) $(BOOT_MOD) $(BOOT_S_OBJS) $(BOOT_C_OBJS)
+hw-mod: $(HW_S_OBJS) $(HW_C_OBJS)
+	$(AR) $(ARFLAGS) $(HW_MOD) $(HW_S_OBJS) $(HW_C_OBJS)
 
 .PHONY: lib
 lib: $(SUB_MAKEFILES)
