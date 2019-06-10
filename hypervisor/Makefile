@@ -26,6 +26,7 @@ HW_MOD = $(HV_MODDIR)/hw_mod.a
 VP_BASE_MOD = $(HV_MODDIR)/vp_base_mod.a
 VP_DM_MOD = $(HV_MODDIR)/vp_dm_mod.a
 VP_TRUSTY_MOD = $(HV_MODDIR)/vp_trusty_mod.a
+VP_HCALL_MOD = $(HV_MODDIR)/vp_hcall_mod.a
 LIB_DEBUG = $(HV_MODDIR)/libdebug.a
 LIB_RELEASE = $(HV_MODDIR)/librelease.a
 
@@ -267,11 +268,12 @@ VP_TRUSTY_C_SRCS += arch/x86/seed/seed.c
 VP_TRUSTY_C_SRCS += arch/x86/seed/seed_abl.c
 VP_TRUSTY_C_SRCS += arch/x86/seed/seed_sbl.c
 
+# virtual platform hypercall
+VP_HCALL_C_SRCS += arch/x86/guest/vmcall.c
+VP_HCALL_C_SRCS += common/hypercall.c
+
 # initilization component
 C_SRCS += arch/x86/init.c
-
-C_SRCS += arch/x86/guest/vmcall.c
-C_SRCS += common/hypercall.c
 
 LIB_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(LIB_C_SRCS))
 LIB_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(LIB_S_SRCS))
@@ -283,6 +285,7 @@ VP_BASE_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_BASE_C_SRCS))
 VP_BASE_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(VP_BASE_S_SRCS))
 VP_DM_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_DM_C_SRCS))
 VP_TRUSTY_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_TRUSTY_C_SRCS))
+VP_HCALL_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_HCALL_C_SRCS))
 C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
 
 ifneq ($(CONFIG_RELEASE),y)
@@ -298,6 +301,7 @@ MOD_DEPS += hw-mod
 MOD_DEPS += vp-base-mod
 MOD_DEPS += vp-dm-mod
 MOD_DEPS += vp-trusty-mod
+MOD_DEPS += vp-hcall-mod
 MOD_DEPS += lib
 MODULES += $(LIB_MOD)
 MODULES += $(BOOT_MOD)
@@ -305,6 +309,7 @@ MODULES += $(HW_MOD)
 MODULES += $(VP_BASE_MOD)
 MODULES += $(VP_DM_MOD)
 MODULES += $(VP_TRUSTY_MOD)
+MODULES += $(VP_HCALL_MOD)
 ifeq ($(CONFIG_RELEASE),y)
 MODULES += $(LIB_RELEASE)
 else
@@ -377,7 +382,7 @@ pre_build: $(PRE_BUILD_OBJS)
 .PHONY: header
 header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
 
-.PHONY: lib-mod boot-mod hw-mod vp-base-mod vp-dm-mod vp-trusty-mod
+.PHONY: lib-mod boot-mod hw-mod vp-base-mod vp-dm-mod vp-trusty-mod vp-hcall-mod
 lib-mod: $(LIB_C_OBJS) $(LIB_S_OBJS)
 	$(AR) $(ARFLAGS) $(LIB_MOD) $(LIB_C_OBJS) $(LIB_S_OBJS)
 boot-mod: $(BOOT_S_OBJS) $(BOOT_C_OBJS)
@@ -390,7 +395,8 @@ vp-dm-mod: $(VP_DM_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_DM_MOD) $(VP_DM_C_OBJS)
 vp-trusty-mod: $(VP_TRUSTY_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_TRUSTY_MOD) $(VP_TRUSTY_C_OBJS)
-
+vp-hcall-mod: $(VP_HCALL_C_OBJS)
+	$(AR) $(ARFLAGS) $(VP_HCALL_MOD) $(VP_HCALL_C_OBJS)
 .PHONY: lib
 lib: $(SUB_MAKEFILES)
 
