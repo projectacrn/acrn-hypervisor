@@ -23,6 +23,7 @@ SUB_MAKEFILES := $(wildcard */Makefile)
 LIB_MOD = $(HV_MODDIR)/lib_mod.a
 BOOT_MOD = $(HV_MODDIR)/boot_mod.a
 HW_MOD = $(HV_MODDIR)/hw_mod.a
+VP_BASE_MOD = $(HV_MODDIR)/vp_base_mod.a
 LIB_DEBUG = $(HV_MODDIR)/libdebug.a
 LIB_RELEASE = $(HV_MODDIR)/librelease.a
 
@@ -217,6 +218,26 @@ HW_C_SRCS += boot/guest/vboot_wrapper.c
 HW_C_SRCS += boot/guest/deprivilege_boot.c
 HW_C_SRCS += boot/guest/direct_boot.c
 
+# virtual platform base component
+VP_BASE_C_SRCS += arch/x86/guest/vcpuid.c
+VP_BASE_C_SRCS += arch/x86/guest/vcpu.c
+VP_BASE_C_SRCS += arch/x86/guest/vm.c
+VP_BASE_C_SRCS += arch/x86/guest/vmtrr.c
+VP_BASE_C_SRCS += arch/x86/guest/guest_memory.c
+VP_BASE_C_SRCS += arch/x86/guest/vmsr.c
+VP_BASE_S_SRCS += arch/x86/guest/vmx_asm.S
+VP_BASE_C_SRCS += arch/x86/guest/vmcs.c
+VP_BASE_C_SRCS += arch/x86/guest/virq.c
+VP_BASE_C_SRCS += arch/x86/guest/virtual_cr.c
+VP_BASE_C_SRCS += arch/x86/guest/vmexit.c
+VP_BASE_C_SRCS += arch/x86/guest/ept.c
+VP_BASE_C_SRCS += arch/x86/guest/ucode.c
+VP_BASE_C_SRCS += boot/guest/vboot_info.c
+VP_BASE_C_SRCS += common/hv_main.c
+VP_BASE_C_SRCS += common/vm_load.c
+VP_BASE_C_SRCS += arch/x86/configs/vmptable.c
+VP_BASE_C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/ve820.c
+
 # initilization component
 C_SRCS += arch/x86/init.c
 
@@ -224,36 +245,17 @@ C_SRCS += arch/x86/seed/seed.c
 C_SRCS += arch/x86/seed/seed_abl.c
 C_SRCS += arch/x86/seed/seed_sbl.c
 
-# configuration component
-C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/ve820.c
 
-C_SRCS += boot/guest/vboot_info.c
-
-C_SRCS += arch/x86/guest/vcpuid.c
-C_SRCS += arch/x86/guest/vcpu.c
-C_SRCS += arch/x86/guest/vm.c
 C_SRCS += arch/x86/guest/vlapic.c
-C_SRCS += arch/x86/guest/vmtrr.c
-C_SRCS += arch/x86/guest/guest_memory.c
 C_SRCS += arch/x86/guest/vmcall.c
-C_SRCS += arch/x86/guest/vmsr.c
 C_SRCS += arch/x86/guest/instr_emul.c
-C_SRCS += arch/x86/guest/ucode.c
 C_SRCS += arch/x86/guest/pm.c
 C_SRCS += arch/x86/guest/assign.c
-C_SRCS += arch/x86/guest/ept.c
 C_SRCS += arch/x86/guest/vmx_io.c
-C_SRCS += arch/x86/guest/virq.c
-C_SRCS += arch/x86/guest/virtual_cr.c
-C_SRCS += arch/x86/guest/vmcs.c
-C_SRCS += arch/x86/guest/vmexit.c
-S_SRCS += arch/x86/guest/vmx_asm.S
 C_SRCS += arch/x86/guest/trusty.c
 C_SRCS += arch/x86/guest/vm_reset.c
-C_SRCS += common/hv_main.c
 C_SRCS += common/hypercall.c
 C_SRCS += common/trusty_hypercall.c
-C_SRCS += common/vm_load.c
 C_SRCS += common/ptdev.c
 C_SRCS += dm/vpic.c
 C_SRCS += dm/vrtc.c
@@ -262,7 +264,6 @@ C_SRCS += dm/vuart.c
 C_SRCS += dm/io_req.c
 C_SRCS += dm/vpci/vdev.c
 C_SRCS += dm/vpci/vpci.c
-C_SRCS += arch/x86/configs/vmptable.c
 C_SRCS += dm/vpci/vhostbridge.c
 C_SRCS += dm/vpci/pci_pt.c
 C_SRCS += dm/vpci/vmsi.c
@@ -274,6 +275,8 @@ BOOT_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(BOOT_C_SRCS))
 BOOT_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(BOOT_S_SRCS))
 HW_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(HW_C_SRCS))
 HW_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(HW_S_SRCS))
+VP_BASE_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_BASE_C_SRCS))
+VP_BASE_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(VP_BASE_S_SRCS))
 C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
 ifneq ($(CONFIG_RELEASE),y)
 CFLAGS += -DHV_DEBUG -DPROFILING_ON -fno-omit-frame-pointer
@@ -285,10 +288,12 @@ PRE_BUILD_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(PRE_BUILD_SRCS))
 MOD_DEPS += lib-mod
 MOD_DEPS += boot-mod
 MOD_DEPS += hw-mod
+MOD_DEPS += vp-base-mod
 MOD_DEPS += lib
 MODULES += $(LIB_MOD)
 MODULES += $(BOOT_MOD)
 MODULES += $(HW_MOD)
+MODULES += $(VP_BASE_MOD)
 ifeq ($(CONFIG_RELEASE),y)
 MODULES += $(LIB_RELEASE)
 else
@@ -361,14 +366,15 @@ pre_build: $(PRE_BUILD_OBJS)
 .PHONY: header
 header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
 
-.PHONY: lib-mod boot-mod hw-mod
+.PHONY: lib-mod boot-mod hw-mod vp-base-mod
 lib-mod: $(LIB_C_OBJS) $(LIB_S_OBJS)
 	$(AR) $(ARFLAGS) $(LIB_MOD) $(LIB_C_OBJS) $(LIB_S_OBJS)
 boot-mod: $(BOOT_S_OBJS) $(BOOT_C_OBJS)
 	$(AR) $(ARFLAGS) $(BOOT_MOD) $(BOOT_S_OBJS) $(BOOT_C_OBJS)
 hw-mod: $(HW_S_OBJS) $(HW_C_OBJS)
 	$(AR) $(ARFLAGS) $(HW_MOD) $(HW_S_OBJS) $(HW_C_OBJS)
-
+vp-base-mod: $(VP_BASE_S_OBJS) $(VP_BASE_C_OBJS)
+	$(AR) $(ARFLAGS) $(VP_BASE_MOD) $(VP_BASE_S_OBJS) $(VP_BASE_C_OBJS)
 .PHONY: lib
 lib: $(SUB_MAKEFILES)
 
