@@ -85,13 +85,20 @@
 #define CR4_PKE                 (1UL<<22U)	/* Protect-key-enable */
 
 /* XCR0_SSE */
-#define XCR0_SSE		(1U<<1U)
+#define XCR0_SSE		(1UL<<1U)
 /* XCR0_AVX */
-#define XCR0_AVX		(1U<<2U)
+#define XCR0_AVX		(1UL<<2U)
 /* XCR0_BNDREGS */
-#define XCR0_BNDREGS		(1U<<3U)
+#define XCR0_BNDREGS		(1UL<<3U)
 /* XCR0_BNDCSR */
-#define XCR0_BNDCSR		(1U<<4U)
+#define XCR0_BNDCSR		(1UL<<4U)
+/* According to SDM Vol1 13.3:
+ *   XCR0[63:10] and XCR0[8] are reserved. Executing the XSETBV instruction causes
+ *   a general-protection fault if ECX = 0 and any corresponding bit in EDX:EAX
+ *   is not 0.
+ */
+#define	XCR0_RESERVED_BITS	((~((1UL << 10U) - 1UL)) | (1UL << 8U))
+
 
 /*
  * Entries in the Interrupt Descriptor Table (IDT)

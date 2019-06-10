@@ -283,6 +283,14 @@ int32_t cpuid_vmexit_handler(struct acrn_vcpu *vcpu)
 /*
  * XSETBV instruction set's the XCR0 that is used to tell for which
  * components states can be saved on a context switch using xsave.
+ *
+ * According to SDM vol3 25.1.1:
+ * Invalid-opcode exception (UD) and faults based on privilege level (include
+ * virtual-8086 mode previleged instructions are not recognized) have higher
+ * priority than VM exit.
+ *
+ * We don't need to handle those case here because we depends on VMX to handle
+ * them.
  */
 static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu)
 {
@@ -307,6 +315,8 @@ static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu)
 
 				/* bit 0(x87 state) of XCR0 can't be cleared */
 				if ((val64 & 0x01UL) == 0UL) {
+					vcpu_inject_gp(vcpu, 0U);
+				} else if ((val64 & XCR0_RESERVED_BITS) != 0UL) {
 					vcpu_inject_gp(vcpu, 0U);
 				} else {
 					/*
