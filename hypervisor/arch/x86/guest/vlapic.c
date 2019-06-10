@@ -1763,6 +1763,7 @@ int32_t vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 	int32_t ret = 0;
 	uint64_t changed;
 	bool change_in_vlapic_mode = false;
+	struct acrn_vcpu *vcpu = vlapic->vcpu;
 
 
 	if (vlapic->msr_apicbase != new) {
@@ -1783,6 +1784,7 @@ int32_t vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 				vlapic->msr_apicbase = new;
 				vlapic_build_x2apic_id(vlapic);
 				switch_apicv_mode_x2apic(vlapic->vcpu);
+				update_vm_vlapic_state(vcpu->vm);
 			} else {
 				/*
 				 * TODO: Logic to check for Invalid transitions, Invalid State
