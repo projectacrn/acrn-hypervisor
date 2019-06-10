@@ -106,8 +106,6 @@ static void vlapic_set_error(struct acrn_vlapic *vlapic, uint32_t mask);
 
 static void vlapic_timer_expired(void *data);
 
-static inline bool is_x2apic_enabled(const struct acrn_vlapic *vlapic);
-
 static inline bool vlapic_enabled(const struct acrn_vlapic *vlapic)
 {
 	const struct lapic_regs *lapic = &(vlapic->apic_page);
@@ -1989,13 +1987,12 @@ static void vlapic_timer_expired(void *data)
 /*
  * @pre vm != NULL
  */
-static inline bool is_x2apic_enabled(const struct acrn_vlapic *vlapic)
+bool is_x2apic_enabled(const struct acrn_vlapic *vlapic)
 {
-	bool ret;
-	if ((vlapic_get_apicbase(vlapic) & APICBASE_X2APIC) == 0UL) {
-		ret = false;
-	} else {
-	        ret = true;
+	bool ret = false;
+
+	if ((vlapic_get_apicbase(vlapic) & APICBASE_LAPIC_MODE) == (APICBASE_X2APIC | APICBASE_XAPIC)) {
+		ret = true;
 	}
 
 	return ret;
