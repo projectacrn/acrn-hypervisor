@@ -19,9 +19,9 @@ static spinlock_t vmm_hypercall_lock = {
 	.tail = 0U,
 };
 
-static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
+static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 {
-	struct acrn_vm *vm = vcpu->vm;
+	struct acrn_vm *sos_vm = vcpu->vm;
 	/* hypercall ID from guest*/
 	uint64_t hypcall_id = vcpu_get_gpreg(vcpu, CPU_REG_R8);
 	/* hypercall param1 from guest*/
@@ -36,25 +36,25 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 	switch (hypcall_id) {
 	case HC_SOS_OFFLINE_CPU:
 		spinlock_obtain(&vmm_hypercall_lock);
-		ret = hcall_sos_offline_cpu(vm, param1);
+		ret = hcall_sos_offline_cpu(sos_vm, param1);
 		spinlock_release(&vmm_hypercall_lock);
 		break;
 	case HC_GET_API_VERSION:
-		ret = hcall_get_api_version(vm, param1);
+		ret = hcall_get_api_version(sos_vm, param1);
 		break;
 
 	case HC_GET_PLATFORM_INFO:
-		ret = hcall_get_platform_info(vm, param1);
+		ret = hcall_get_platform_info(sos_vm, param1);
 		break;
 
 	case HC_SET_CALLBACK_VECTOR:
-		ret = hcall_set_callback_vector(vm, param1);
+		ret = hcall_set_callback_vector(sos_vm, param1);
 
 		break;
 
 	case HC_CREATE_VM:
 		spinlock_obtain(&vmm_hypercall_lock);
-		ret = hcall_create_vm(vm, param1);
+		ret = hcall_create_vm(sos_vm, param1);
 		spinlock_release(&vmm_hypercall_lock);
 		break;
 
@@ -98,7 +98,7 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 		/* param1: vmid */
 		if (vmid_is_valid) {
 			spinlock_obtain(&vmm_hypercall_lock);
-			ret = hcall_create_vcpu(vm, vm_id, param2);
+			ret = hcall_create_vcpu(sos_vm, vm_id, param2);
 			spinlock_release(&vmm_hypercall_lock);
 		}
 		break;
@@ -107,7 +107,7 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 		/* param1: vmid */
 		if (vmid_is_valid) {
 			spinlock_obtain(&vmm_hypercall_lock);
-			ret = hcall_set_vcpu_regs(vm, vm_id, param2);
+			ret = hcall_set_vcpu_regs(sos_vm, vm_id, param2);
 			spinlock_release(&vmm_hypercall_lock);
 		}
 		break;
@@ -115,7 +115,7 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 	case HC_SET_IRQLINE:
 		/* param1: vmid */
 		if (vmid_is_valid) {
-			ret = hcall_set_irqline(vm, vm_id,
+			ret = hcall_set_irqline(sos_vm, vm_id,
 					(struct acrn_irqline_ops *)&param2);
 		}
 		break;
@@ -123,7 +123,7 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 	case HC_INJECT_MSI:
 		/* param1: vmid */
 		if (vmid_is_valid) {
-			ret = hcall_inject_msi(vm, vm_id, param2);
+			ret = hcall_inject_msi(sos_vm, vm_id, param2);
 		}
 		break;
 
@@ -131,7 +131,7 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 		/* param1: vmid */
 		if (vmid_is_valid) {
 			spinlock_obtain(&vmm_hypercall_lock);
-			ret = hcall_set_ioreq_buffer(vm, vm_id, param2);
+			ret = hcall_set_ioreq_buffer(sos_vm, vm_id, param2);
 			spinlock_release(&vmm_hypercall_lock);
 		}
 		break;
@@ -146,13 +146,13 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 		break;
 
 	case HC_VM_SET_MEMORY_REGIONS:
-		ret = hcall_set_vm_memory_regions(vm, param1);
+		ret = hcall_set_vm_memory_regions(sos_vm, param1);
 		break;
 
 	case HC_VM_WRITE_PROTECT_PAGE:
 		/* param1: vmid */
 		if (vmid_is_valid) {
-			ret = hcall_write_protect_page(vm, vm_id, param2);
+			ret = hcall_write_protect_page(sos_vm, vm_id, param2);
 		}
 		break;
 
@@ -167,63 +167,51 @@ static int32_t dispatch_hypercall(struct acrn_vcpu *vcpu)
 	case HC_VM_GPA2HPA:
 		/* param1: vmid */
 		if (vmid_is_valid) {
-			ret = hcall_gpa_to_hpa(vm, vm_id, param2);
+			ret = hcall_gpa_to_hpa(sos_vm, vm_id, param2);
 		}
 		break;
 
 	case HC_ASSIGN_PTDEV:
 		/* param1: vmid */
 		if (vmid_is_valid) {
-			ret = hcall_assign_ptdev(vm, vm_id, param2);
+			ret = hcall_assign_ptdev(sos_vm, vm_id, param2);
 		}
 		break;
 
 	case HC_DEASSIGN_PTDEV:
 		/* param1: vmid */
 		if (vmid_is_valid) {
-			ret = hcall_deassign_ptdev(vm, vm_id, param2);
+			ret = hcall_deassign_ptdev(sos_vm, vm_id, param2);
 		}
 		break;
 
 	case HC_SET_PTDEV_INTR_INFO:
 		/* param1: vmid */
 		if (vmid_is_valid) {
-			ret = hcall_set_ptdev_intr_info(vm, vm_id, param2);
+			ret = hcall_set_ptdev_intr_info(sos_vm, vm_id, param2);
 		}
 		break;
 
 	case HC_RESET_PTDEV_INTR_INFO:
 		/* param1: vmid */
 		if (vmid_is_valid) {
-			ret = hcall_reset_ptdev_intr_info(vm, vm_id, param2);
+			ret = hcall_reset_ptdev_intr_info(sos_vm, vm_id, param2);
 		}
 		break;
 
-	case HC_WORLD_SWITCH:
-		ret = hcall_world_switch(vcpu);
-		break;
-
-	case HC_INITIALIZE_TRUSTY:
-		ret = hcall_initialize_trusty(vcpu, param1);
-		break;
-
 	case HC_PM_GET_CPU_STATE:
-		ret = hcall_get_cpu_pm_state(vm, param1, param2);
-		break;
-
-	case HC_SAVE_RESTORE_SWORLD_CTX:
-		ret = hcall_save_restore_sworld_ctx(vcpu);
+		ret = hcall_get_cpu_pm_state(sos_vm, param1, param2);
 		break;
 
 	case HC_VM_INTR_MONITOR:
 		/* param1: vmid */
 		if (vmid_is_valid) {
-			ret = hcall_vm_intr_monitor(vm, vm_id, param2);
+			ret = hcall_vm_intr_monitor(sos_vm, vm_id, param2);
 		}
 		break;
 
 	default:
-		ret = hcall_debug(vm, param1, param2, hypcall_id);
+		ret = hcall_debug(sos_vm, param1, param2, hypcall_id);
 		break;
 	}
 
@@ -242,21 +230,27 @@ int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 	/* hypercall ID from guest*/
 	uint64_t hypcall_id = vcpu_get_gpreg(vcpu, CPU_REG_R8);
 
-	if (!is_sos_vm(vm) && (hypcall_id != HC_WORLD_SWITCH) &&
-		(hypcall_id != HC_INITIALIZE_TRUSTY) &&
-		(hypcall_id != HC_SAVE_RESTORE_SWORLD_CTX)) {
-		vcpu_inject_ud(vcpu);
-		pr_err("hypercall %d is only allowed from SOS_VM!\n", hypcall_id);
-	} else if (!is_hypercall_from_ring0()) {
+	if (!is_hypercall_from_ring0()) {
 		pr_err("hypercall is only allowed from RING-0!\n");
-	        ret = -EACCES;
-		vcpu_set_gpreg(vcpu, CPU_REG_RAX, (uint64_t)ret);
-	} else {
+		ret = -EACCES;
+	} else if (hypcall_id == HC_WORLD_SWITCH) {
+		ret = hcall_world_switch(vcpu);
+	} else if (hypcall_id == HC_INITIALIZE_TRUSTY) {
+		/* hypercall param1 from guest*/
+		uint64_t param1 = vcpu_get_gpreg(vcpu, CPU_REG_RDI);
+
+		ret = hcall_initialize_trusty(vcpu, param1);
+	} else if (hypcall_id == HC_SAVE_RESTORE_SWORLD_CTX) {
+		ret = hcall_save_restore_sworld_ctx(vcpu);
+	} else if (is_sos_vm(vm)) {
 		/* Dispatch the hypercall handler */
-		ret = dispatch_hypercall(vcpu);
-		vcpu_set_gpreg(vcpu, CPU_REG_RAX, (uint64_t)ret);
+		ret = dispatch_sos_hypercall(vcpu);
+	} else  {
+		pr_err("hypercall %d is only allowed from SOS_VM!\n", hypcall_id);
+		ret = -ENODEV;
 	}
 
+	vcpu_set_gpreg(vcpu, CPU_REG_RAX, (uint64_t)ret);
 	TRACE_2L(TRACE_VMEXIT_VMCALL, vm->vm_id, hypcall_id);
 
 	return 0;
