@@ -153,7 +153,7 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 	(void)memset((void *)&cv, 0U, sizeof(cv));
 	if (copy_from_gpa(vm, &cv, param, sizeof(cv)) == 0) {
 		vm_id = get_vmid_by_uuid(&cv.uuid[0]);
-		if ((vm_id < CONFIG_MAX_VM_NUM)
+		if ((vm_id > vm->vm_id) && (vm_id < CONFIG_MAX_VM_NUM)
 			&& (is_poweroff_vm(get_vm_from_vmid(vm_id)))) {
 			vm_config = get_vm_config(vm_id);
 
@@ -172,7 +172,8 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 					cv.vmid = ACRN_INVALID_VMID;
 					ret = -1;
 				} else {
-					cv.vmid = target_vm->vm_id;
+					/* return a relative vm_id from SOS view */
+					cv.vmid = vmid_2_rel_vmid(vm->vm_id, vm_id);
 					ret = 0;
 				}
 
@@ -699,8 +700,11 @@ int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, uint64_t param)
 	(void)memset((void *)&regions, 0U, sizeof(regions));
 
 	if (copy_from_gpa(vm, &regions, param, sizeof(regions)) == 0) {
-		if (regions.vmid < CONFIG_MAX_VM_NUM) {
-			target_vm = get_vm_from_vmid(regions.vmid);
+		/* the vmid in regions is a relative vm id, need to convert to absolute vm id */
+		uint16_t target_vmid = rel_vmid_2_vmid(vm->vm_id, regions.vmid);
+
+		if (target_vmid < CONFIG_MAX_VM_NUM) {
+			target_vm = get_vm_from_vmid(target_vmid);
 		}
 		if ((target_vm != NULL) && !is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 			idx = 0U;
@@ -1040,7 +1044,8 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, uint64_t cmd, uint64_t param)
 	struct acrn_vm *target_vm = NULL;
 	int32_t ret = -1;
 
-	target_vm_id = (uint16_t)((cmd & PMCMD_VMID_MASK) >> PMCMD_VMID_SHIFT);
+	/* the vmid in cmd is a relative vm id, need to convert to absolute vm id */
+	target_vm_id = rel_vmid_2_vmid(vm->vm_id, (uint16_t)((cmd & PMCMD_VMID_MASK) >> PMCMD_VMID_SHIFT));
 	if (target_vm_id < CONFIG_MAX_VM_NUM) {
 		target_vm = get_vm_from_vmid(target_vm_id);
 	}

@@ -180,6 +180,16 @@ static inline struct acrn_vcpu *vcpu_from_pid(struct acrn_vm *vm, uint16_t pcpu_
 	return target_vcpu;
 }
 
+/* Convert relative vm id to absolute vm id */
+static inline uint16_t rel_vmid_2_vmid(uint16_t sos_vmid, uint16_t rel_vmid) {
+	return (sos_vmid + rel_vmid);
+}
+
+/* Convert absolute vm id to relative vm id */
+static inline uint16_t vmid_2_rel_vmid(uint16_t sos_vmid, uint16_t vmid) {
+	return (vmid - sos_vmid);
+}
+
 int32_t shutdown_vm(struct acrn_vm *vm);
 void pause_vm(struct acrn_vm *vm);
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec);
