@@ -35,7 +35,9 @@ struct sched_control {
 	struct thread_object *thread_obj;
 };
 
+bool is_idle_thread(const struct thread_object *obj);
 uint16_t sched_get_pcpuid(const struct thread_object *obj);
+struct thread_object *sched_get_current(uint16_t pcpu_id);
 
 void init_scheduler(void);
 void switch_to_idle(thread_entry_t idle_thread);

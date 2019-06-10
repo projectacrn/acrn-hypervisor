@@ -14,6 +14,7 @@
 #include <vlapic.h>
 #include <lapic.h>
 #include <per_cpu.h>
+#include <guest/vm.h>
 #include <multiboot.h>
 #include <deprivilege_boot.h>
 

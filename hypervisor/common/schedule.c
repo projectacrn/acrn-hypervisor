@@ -13,6 +13,12 @@
 #include <schedule.h>
 #include <sprintf.h>
 
+bool is_idle_thread(const struct thread_object *obj)
+{
+	uint16_t pcpu_id = obj->pcpu_id;
+	return (obj == &per_cpu(idle, pcpu_id));
+}
+
 /**
  * @pre obj != NULL
  */
@@ -65,6 +71,12 @@ void remove_thread_obj(__unused struct thread_object *obj, uint16_t pcpu_id)
 static struct thread_object *get_next_sched_obj(const struct sched_control *ctl)
 {
 	return ctl->thread_obj == NULL ? &get_cpu_var(idle) : ctl->thread_obj;
+}
+
+struct thread_object *sched_get_current(uint16_t pcpu_id)
+{
+	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
+	return ctl->curr_obj;
 }
 
 /**
