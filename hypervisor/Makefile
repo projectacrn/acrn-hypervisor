@@ -233,7 +233,7 @@ C_SRCS += common/schedule.c
 C_SRCS += common/vm_load.c
 C_SRCS += common/ptdev.c
 ifdef STACK_PROTECTOR
-C_SRCS += common/stack_protector.c
+C_SRCS += lib/stack_protector.c
 endif
 
 C_SRCS += hw/pci.c
@@ -245,7 +245,7 @@ C_SRCS += dm/vuart.c
 C_SRCS += dm/io_req.c
 C_SRCS += dm/vpci/vdev.c
 C_SRCS += dm/vpci/vpci.c
-C_SRCS += dm/vmptable.c
+C_SRCS += arch/x86/configs/vmptable.c
 C_SRCS += dm/vpci/vhostbridge.c
 C_SRCS += dm/vpci/pci_pt.c
 C_SRCS += dm/vpci/vmsi.c
@@ -255,12 +255,12 @@ C_SRCS += dm/vpci/vmsix.c
 ifeq (true, $(shell [ $(GCC_MAJOR) -eq 7 ] && [ $(GCC_MINOR) -ge 3 ] && echo true))
 CFLAGS += -mindirect-branch=thunk-extern -mindirect-branch-register
 CFLAGS += -DCONFIG_RETPOLINE
-S_SRCS += arch/x86/retpoline-thunk.S
+S_SRCS += arch/x86/lib/retpoline-thunk.S
 else
 ifeq (true, $(shell [ $(GCC_MAJOR) -ge 8 ] && echo true))
 CFLAGS += -mindirect-branch=thunk-extern -mindirect-branch-register
 CFLAGS += -DCONFIG_RETPOLINE
-S_SRCS += arch/x86/retpoline-thunk.S
+S_SRCS += arch/x86/lib/retpoline-thunk.S
 endif
 endif
 
