@@ -29,6 +29,7 @@ VP_TRUSTY_MOD = $(HV_MODDIR)/vp_trusty_mod.a
 VP_HCALL_MOD = $(HV_MODDIR)/vp_hcall_mod.a
 LIB_DEBUG = $(HV_MODDIR)/libdebug.a
 LIB_RELEASE = $(HV_MODDIR)/librelease.a
+SYS_INIT_MOD = $(HV_MODDIR)/sys_init_mod.a
 
 # initialize the flags we used
 CFLAGS :=
@@ -272,8 +273,8 @@ VP_TRUSTY_C_SRCS += arch/x86/seed/seed_sbl.c
 VP_HCALL_C_SRCS += arch/x86/guest/vmcall.c
 VP_HCALL_C_SRCS += common/hypercall.c
 
-# initilization component
-C_SRCS += arch/x86/init.c
+# system initialization
+SYS_INIT_C_SRCS += arch/x86/init.c
 
 LIB_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(LIB_C_SRCS))
 LIB_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(LIB_S_SRCS))
@@ -286,12 +287,11 @@ VP_BASE_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(VP_BASE_S_SRCS))
 VP_DM_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_DM_C_SRCS))
 VP_TRUSTY_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_TRUSTY_C_SRCS))
 VP_HCALL_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_HCALL_C_SRCS))
-C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
+SYS_INIT_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(SYS_INIT_C_SRCS))
 
 ifneq ($(CONFIG_RELEASE),y)
 CFLAGS += -DHV_DEBUG -DPROFILING_ON -fno-omit-frame-pointer
 endif
-S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(S_SRCS))
 PRE_BUILD_SRCS += pre_build/static_checks.c
 PRE_BUILD_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(PRE_BUILD_SRCS))
 
@@ -303,6 +303,7 @@ MOD_DEPS += vp-dm-mod
 MOD_DEPS += vp-trusty-mod
 MOD_DEPS += vp-hcall-mod
 MOD_DEPS += lib
+MOD_DEPS += sys-init-mod
 MODULES += $(LIB_MOD)
 MODULES += $(BOOT_MOD)
 MODULES += $(HW_MOD)
@@ -315,8 +316,7 @@ MODULES += $(LIB_RELEASE)
 else
 MODULES += $(LIB_DEBUG)
 endif
-HV_OBJS += $(C_OBJS)
-HV_OBJS += $(S_OBJS)
+MODULES += $(SYS_INIT_MOD)
 
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 VERSION := $(HV_OBJDIR)/include/version.h
@@ -382,7 +382,7 @@ pre_build: $(PRE_BUILD_OBJS)
 .PHONY: header
 header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
 
-.PHONY: lib-mod boot-mod hw-mod vp-base-mod vp-dm-mod vp-trusty-mod vp-hcall-mod
+.PHONY: lib-mod boot-mod hw-mod vp-base-mod vp-dm-mod vp-trusty-mod vp-hcall-mod sys-init-mod
 lib-mod: $(LIB_C_OBJS) $(LIB_S_OBJS)
 	$(AR) $(ARFLAGS) $(LIB_MOD) $(LIB_C_OBJS) $(LIB_S_OBJS)
 boot-mod: $(BOOT_S_OBJS) $(BOOT_C_OBJS)
@@ -397,6 +397,9 @@ vp-trusty-mod: $(VP_TRUSTY_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_TRUSTY_MOD) $(VP_TRUSTY_C_OBJS)
 vp-hcall-mod: $(VP_HCALL_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_HCALL_MOD) $(VP_HCALL_C_OBJS)
+sys-init-mod: $(SYS_INIT_C_OBJS)
+	$(AR) $(ARFLAGS) $(SYS_INIT_MOD) $(SYS_INIT_C_OBJS)
+
 .PHONY: lib
 lib: $(SUB_MAKEFILES)
 
@@ -412,7 +415,7 @@ $(HV_OBJDIR)/$(HV_FILE).32.out: $(HV_OBJDIR)/$(HV_FILE).out
 $(HV_OBJDIR)/$(HV_FILE).bin: $(HV_OBJDIR)/$(HV_FILE).out
 	$(OBJCOPY) -O binary $< $(HV_OBJDIR)/$(HV_FILE).bin
 
-$(HV_OBJDIR)/$(HV_FILE).out: $(MODULES) $(HV_OBJS)
+$(HV_OBJDIR)/$(HV_FILE).out: $(MODULES)
 	${BASH} ${LD_IN_TOOL} $(ARCH_LDSCRIPT_IN) $(ARCH_LDSCRIPT) ${HV_OBJDIR}/.config
 	$(CC) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) \
 		-Wl,--start-group $^ -Wl,--end-group
@@ -421,16 +424,12 @@ $(LIB_FLAGS): lib
 
 .PHONY: clean
 clean:
-	rm -f $(C_OBJS)
-	rm -f $(S_OBJS)
 	rm -f $(VERSION)
 	rm -rf $(HV_OBJDIR)
 
 .PHONY: distclean
 distclean:
 	rm -f $(DISTCLEAN_OBJS)
-	rm -f $(C_OBJS)
-	rm -f $(S_OBJS)
 	rm -f $(VERSION)
 	rm -rf $(HV_OBJDIR)
 	rm -f tags TAGS cscope.files cscope.in.out cscope.out cscope.po.out GTAGS GPATH GRTAGS GSYMS
