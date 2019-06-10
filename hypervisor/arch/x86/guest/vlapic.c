@@ -1998,6 +1998,16 @@ bool is_x2apic_enabled(const struct acrn_vlapic *vlapic)
 	return ret;
 }
 
+bool is_xapic_enabled(const struct acrn_vlapic *vlapic)
+{
+	bool ret = false;
+	if ((vlapic_get_apicbase(vlapic) & APICBASE_LAPIC_MODE) == APICBASE_XAPIC) {
+	        ret = true;
+	}
+
+	return ret;
+}
+
 static inline  uint32_t x2apic_msr_to_regoff(uint32_t msr)
 {
 
