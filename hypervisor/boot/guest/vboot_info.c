@@ -270,7 +270,7 @@ static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
 static void depri_boot_spurious_handler(uint32_t vector)
 {
 	if (get_pcpu_id() == BOOT_CPU_ID) {
-		struct acrn_vcpu *vcpu = per_cpu(vcpu, BOOT_CPU_ID);
+		struct acrn_vcpu *vcpu = vcpu_from_vid(get_sos_vm(), BOOT_CPU_ID);
 
 		if (vcpu != NULL) {
 			vlapic_set_intr(vcpu, vector, LAPIC_TRIG_EDGE);

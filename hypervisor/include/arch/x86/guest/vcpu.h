@@ -538,6 +538,7 @@ static inline bool is_pae(struct acrn_vcpu *vcpu)
 	return (vcpu_get_cr4(vcpu) & CR4_PAE) != 0UL;
 }
 
+struct acrn_vcpu *get_running_vcpu(uint16_t pcpu_id);
 struct acrn_vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
 
 /**

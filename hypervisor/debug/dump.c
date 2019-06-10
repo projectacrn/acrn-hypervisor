@@ -183,9 +183,8 @@ static void show_guest_call_trace(struct acrn_vcpu *vcpu)
 
 static void dump_guest_context(uint16_t pcpu_id)
 {
-	struct acrn_vcpu *vcpu;
+	struct acrn_vcpu *vcpu = get_running_vcpu(pcpu_id);
 
-	vcpu = per_cpu(vcpu, pcpu_id);
 	if (vcpu != NULL) {
 		dump_guest_reg(vcpu);
 		dump_guest_stack(vcpu);
