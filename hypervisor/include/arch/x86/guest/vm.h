@@ -76,6 +76,13 @@ enum vm_state {
 	VM_PAUSED,	/* VM paused */
 };
 
+enum vm_vlapic_state {
+	VM_VLAPIC_DISABLED = 0U,
+	VM_VLAPIC_XAPIC,
+	VM_VLAPIC_X2APIC,
+	VM_VLAPIC_TRANSITION
+};
+
 struct vm_arch {
 	/* I/O bitmaps A and B for this VM, MUST be 4-Kbyte aligned */
 	uint8_t io_bitmap[PAGE_SIZE*2];
@@ -93,6 +100,7 @@ struct vm_arch {
 	void *tmp_pg_array;	/* Page array for tmp guest paging struct */
 	struct acrn_vioapic vioapic;	/* Virtual IOAPIC base address */
 	struct acrn_vpic vpic;      /* Virtual PIC */
+	enum vm_vlapic_state vlapic_state; /* Represents vLAPIC state across vCPUs*/
 
 	/* reference to virtual platform to come here (as needed) */
 } __aligned(PAGE_SIZE);
@@ -109,7 +117,7 @@ struct acrn_vm {
 	struct acrn_vuart vuart[MAX_VUART_NUM_PER_VM];		/* Virtual UART */
 	enum vpic_wire_mode wire_mode;
 	struct iommu_domain *iommu;	/* iommu domain of this VM */
-	spinlock_t spinlock;	/* Spin-lock used to protect VM modifications */
+	spinlock_t vm_lock;	/* Spin-lock used to protect VM modifications */
 
 	uint16_t emul_mmio_regions; /* Number of emulated mmio regions */
 	struct mem_io_node emul_mmio[CONFIG_MAX_EMULATED_MMIO_REGIONS];
@@ -218,6 +226,7 @@ bool is_lapic_pt_configured(const struct acrn_vm *vm);
 bool is_rt_vm(const struct acrn_vm *vm);
 bool is_highest_severity_vm(const struct acrn_vm *vm);
 bool vm_hide_mtrr(const struct acrn_vm *vm);
+void update_vm_vlapic_state(struct acrn_vm *vm);
 
 #endif /* !ASSEMBLER */
 
