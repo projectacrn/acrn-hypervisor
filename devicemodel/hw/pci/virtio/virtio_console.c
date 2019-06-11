@@ -625,7 +625,8 @@ virtio_console_accept_new_connection(int fd __attribute__((unused)),
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	strcpy(addr.sun_path, be->portpath);
+	strncpy(addr.sun_path, be->portpath, sizeof(addr.sun_path));
+	addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
 	len = sizeof(addr);
 	accepted_fd = accept(be->fd, (struct sockaddr *)&addr, &len);
@@ -728,7 +729,8 @@ virtio_console_config_backend(struct virtio_console_backend *be)
 
 		memset(&addr, 0, sizeof(addr));
 		addr.sun_family = AF_UNIX;
-		strcpy(addr.sun_path, be->portpath);
+		strncpy(addr.sun_path, be->portpath, sizeof(addr.sun_path));
+		addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
 		if (be->socket_type == NULL || !strcmp(be->socket_type,"server")) {
 			unlink(be->portpath);
