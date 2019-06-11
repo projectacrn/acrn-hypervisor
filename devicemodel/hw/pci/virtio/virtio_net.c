@@ -642,8 +642,10 @@ virtio_net_tap_open(char *devname)
 	memset(&ifr, 0, sizeof(ifr));
 	ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
 
-	if (*devname)
+	if (*devname) {
 		strncpy(ifr.ifr_name, devname, IFNAMSIZ);
+		ifr.ifr_name[IFNAMSIZ - 1] = '\0';
+	}
 
 	rc = ioctl(tunfd, TUNSETIFF, (void *)&ifr);
 	if (rc < 0) {
@@ -654,6 +656,7 @@ virtio_net_tap_open(char *devname)
 	}
 
 	strncpy(devname, ifr.ifr_name, IFNAMSIZ);
+	devname[IFNAMSIZ - 1] = '\0';
 	return tunfd;
 }
 
