@@ -217,6 +217,7 @@ virtio_rnd_kernel_dev_set(struct vbs_dev_info *kdev, const char *name,
 
 	/* init kdev */
 	strncpy(kdev->name, name, VBS_NAME_LEN);
+	kdev->name[VBS_NAME_LEN - 1] = '\0';
 	kdev->vmid = vmid;
 	kdev->nvq = nvq;
 	kdev->negotiated_features = feature;
