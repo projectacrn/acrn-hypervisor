@@ -227,7 +227,7 @@ bool is_rt_vm(const struct acrn_vm *vm);
 bool is_highest_severity_vm(const struct acrn_vm *vm);
 bool vm_hide_mtrr(const struct acrn_vm *vm);
 void update_vm_vlapic_state(struct acrn_vm *vm);
-
+enum vm_vlapic_state check_vm_vlapic_state(const struct acrn_vm *vm);
 #endif /* !ASSEMBLER */
 
 #endif /* VM_H_ */

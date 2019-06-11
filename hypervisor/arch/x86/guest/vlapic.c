@@ -2042,6 +2042,9 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 	if ((phys == false) || (shorthand  != APIC_DEST_DESTFLD)) {
 		pr_err("Logical destination mode or shorthands \
 				not supported in ICR forpartition mode\n");
+		/*
+		 * TODO: To support logical destination and shorthand modes
+		 */
 	} else {
 		vcpu_id = vm_apicid2vcpu_id(vm, vapic_id);
 		if ((vcpu_id < vm->hw.created_vcpus) && (vm->hw.vcpu_array[vcpu_id].state != VCPU_OFFLINE)) {
@@ -2056,11 +2059,13 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 			break;
 			default:
 				/* convert the dest from virtual apic_id to physical apic_id */
-				papic_id = per_cpu(lapic_id, target_vcpu->pcpu_id);
-				dev_dbg(ACRN_DBG_LAPICPT,
-					"%s vapic_id: 0x%08lx papic_id: 0x%08lx icr_low:0x%08lx",
-					 __func__, vapic_id, papic_id, icr_low);
-				msr_write(MSR_IA32_EXT_APIC_ICR, (((uint64_t)papic_id) << 32U) | icr_low);
+				if (is_x2apic_enabled(vcpu_vlapic(target_vcpu))) {
+					papic_id = per_cpu(lapic_id, target_vcpu->pcpu_id);
+					dev_dbg(ACRN_DBG_LAPICPT,
+						"%s vapic_id: 0x%08lx papic_id: 0x%08lx icr_low:0x%08lx",
+						 __func__, vapic_id, papic_id, icr_low);
+					msr_write(MSR_IA32_EXT_APIC_ICR, (((uint64_t)papic_id) << 32U) | icr_low);
+				}
 			break;
 			}
 			ret = 0;
@@ -2601,15 +2606,4 @@ void vlapic_set_apicv_ops(void)
 	} else {
 		apicv_ops = &apicv_basic_ops;
 	}
-}
-
-/**
- * @pre vm != NULL 
- * @pre vm->vmid < CONFIG_MAX_VM_NUM
- */
-bool is_lapic_pt_enabled(struct acrn_vm *vm)
-{
-	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, 0U);
-
-	return ((is_x2apic_enabled(vcpu_vlapic(vcpu))) && (is_lapic_pt_configured(vm)));
 }

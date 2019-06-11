@@ -559,7 +559,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 			reset_vcpu(vcpu);
 			offline_vcpu(vcpu);
 
-			if (is_lapic_pt_enabled(vm)) {
+			if (is_lapic_pt_enabled(vcpu)) {
 				bitmap_set_nolock(vcpu->pcpu_id, &mask);
 				make_pcpu_offline(vcpu->pcpu_id);
 			}
@@ -567,7 +567,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 
 		wait_pcpus_offline(mask);
 
-		if (is_lapic_pt_enabled(vm) && !start_pcpus(mask)) {
+		if (is_lapic_pt_configured(vm) && !start_pcpus(mask)) {
 			pr_fatal("Failed to start all cpus in mask(0x%llx)", mask);
 			ret = -ETIMEDOUT;
 		}
@@ -840,4 +840,17 @@ void update_vm_vlapic_state(struct acrn_vm *vm)
 
 	vm->arch_vm.vlapic_state = vlapic_state;
 	spinlock_release(&vm->vm_lock);
+}
+
+/*
+ * @brief Check state of vLAPICs of a VM
+ *
+ * @pre vm != NULL
+ */
+enum vm_vlapic_state check_vm_vlapic_state(const struct acrn_vm *vm)
+{
+	enum vm_vlapic_state vlapic_state;
+
+	vlapic_state = vm->arch_vm.vlapic_state;
+	return vlapic_state;
 }

@@ -595,7 +595,7 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 	if (atomic_load32(&vcpu->running) == 1U) {
 		remove_from_cpu_runqueue(&vcpu->sched_obj, vcpu->pcpu_id);
 
-		if (is_lapic_pt_enabled(vcpu->vm)) {
+		if (is_lapic_pt_enabled(vcpu)) {
 			make_reschedule_request(vcpu->pcpu_id, DEL_MODE_INIT);
 		} else {
 			make_reschedule_request(vcpu->pcpu_id, DEL_MODE_IPI);
@@ -737,4 +737,18 @@ uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask)
 	}
 
 	return dmask;
+}
+
+/*
+ * @brief Check if vCPU uses LAPIC in x2APIC mode and the VM, vCPU belongs to, is configured for
+ * LAPIC Pass-through
+ *
+ * @pre vcpu != NULL
+ *
+ *  @return true, if vCPU LAPIC is in x2APIC mode and VM, vCPU belongs to, is configured for
+ *  				LAPIC Pass-through
+ */
+bool is_lapic_pt_enabled(struct acrn_vcpu *vcpu)
+{
+	return ((is_x2apic_enabled(vcpu_vlapic(vcpu))) && (is_lapic_pt_configured(vcpu->vm)));
 }
