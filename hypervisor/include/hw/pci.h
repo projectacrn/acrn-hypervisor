@@ -49,6 +49,7 @@
 #define PCI_FUNCMAX           0x7U
 #define PCI_BAR_COUNT         0x6U
 #define PCI_REGMAX            0xFFU
+#define PCI_REGMASK           0xFCU
 
 /* I/O ports */
 #define PCI_CONFIG_ADDR       0xCF8U

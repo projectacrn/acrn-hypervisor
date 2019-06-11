@@ -85,7 +85,7 @@ static bool pci_cfgaddr_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes
 
 	if ((addr == (uint16_t)PCI_CONFIG_ADDR) && (bytes == 4U)) {
 		pi->cached_bdf.value = (uint16_t)(val >> 8U);
-		pi->cached_reg = val & PCI_REGMAX;
+		pi->cached_reg = val & PCI_REGMASK;
 		pi->cached_enable = ((val & PCI_CFG_ENABLE) == PCI_CFG_ENABLE);
 	}
 
