@@ -747,7 +747,7 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
  * @return The physical destination CPU mask
  */
 uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask);
-
+bool is_lapic_pt_enabled(struct acrn_vcpu *vcpu);
 /**
  * @}
  */
