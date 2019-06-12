@@ -7,7 +7,6 @@ Developer Guides
    :maxdepth: 1
 
    hld/index
-   primer
    GVT-g-porting
    trusty
    l1tf
