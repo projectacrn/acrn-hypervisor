@@ -6,49 +6,48 @@ Build ACRN from Source
 Introduction
 ************
 
-Following general embedded system programming model, ACRN hypervisor
-is designed to be customized per hardware platform and per usage scenario,
-rather than one binary for all platforms/all usage scenarios.
+Following a general embedded system programming model, the ACRN
+hypervisor is designed to be customized at build-time per hardware
+platform and per usage scenario, rather than one binary for all
+scenarios.
 
-Hypervisor binary is generated based on the platform configuration.
-Different platforms with different configurations shall be set up explicitly
-via Kconfig.
-Instruction can be found in :ref:`getting-started-hypervisor-configuration`.
+The hypervisor binary is generated based on Kconfig configuration
+settings.  Instruction about these settings can be found in
+:ref:`getting-started-hypervisor-configuration`.
 
 .. note::
    A generic configuration named ``hypervisor/arch/x86/configs/generic.config``
-   is provided to help developers to try ACRN easily. This configuration
-   will likely work for most platforms, supported with limited features.
-   This configuration can be enabled by specifying ``BOARD=generic`` in make
-   command line.
+   is provided to help developers try out ACRN more easily. This configuration
+   will likely work for most x86-based platforms, supported with limited features.
+   This configuration can be enabled by specifying ``BOARD=generic`` in
+   the make command line.
 
 
-One binary for all platforms/all usage scenarios is not supported because
-dynamic parsing is restricted in ACRN hypervisor, for the following
-considerations:
+A primary reason one binary for all platforms and all usage scenarios is
+not supported is because dynamic configuration parsing is restricted in
+ACRN hypervisor, for the following considerations:
 
-* **Meet functional safety requirements** Absence of dynamic objects is
-  required in functional safety standards. Implementation of the dynamic parsing
-  would introduce the dynamic objects more or less. Restricting the dynamic
-  parsing would help ACRN hypervisor meet functional safety requirements.
+* **Meeting functional safety requirements** Absence of dynamic objects is
+  required in functional safety standards. Implementation of dynamic parsing
+  would introduce dynamic objects. Avoiding use of dynamic
+  parsing would help the ACRN hypervisor meet functional safety requirements.
 
 * **Reduce complexity** ACRN is a lightweight reference hypervisor, built for
-  embedded IoT. Since the platforms for embedded system is changing frequently,
-  support of one binary for all platforms/all usage scenarios will become more
-  and more complex. Restricting the dynamic parsing would help reduce the
-  complexity of the hypervisor.
+  embedded IoT. As new platforms for embedded systems are rapidly introduced,
+  support for one binary would require more and more complexity in the
+  hypervisor, something we need to avoid.
 
-* **Keep small footprint** Implementation of the dynamic parsing would introduce
-  hundreds or thousands of code. Restricting the dynamic parsing would help keep
+* **Keep small footprint** Implementation of dynamic parsing would introduce
+  hundreds or thousands of code. Avoiding dynamic parsing would help keep
   Lines of Code (LOC) of the hypervisor in a desirable range (around 30K).
 
-* **Improve boot up time** Dynamic parsing at run time would increase the boot
-  up time. Restricting the dynamic parsing would help improve boot up time of
-  the hypervisor.
+* **Improve boot up time** Dynamic parsing at runtime would increase the boot
+  up time. Using build-time configuration and not dynamic parsing would help
+  improve boot up time of the hypervisor.
 
 
-If you would like to build the ACRN hypervisor, device model, and tools from
-source, follow these steps.
+You can build the ACRN hypervisor, device model, and tools from
+source, by following these steps.
 
 Install build tools and dependencies
 ************************************
@@ -195,7 +194,7 @@ The build results are found in the ``build`` directory.
 
 .. note::
    if you wish to use a different target folder for the build
-   artefacts, set the ``O`` (that is capital letter 'O') to the
+   artifacts, set the ``O`` (that is capital letter 'O') to the
    desired value. Example: ``make O=build-nuc BOARD=nuc6cayh``.
 
 Generating the documentation is described in details in the :ref:`acrn_doc`
