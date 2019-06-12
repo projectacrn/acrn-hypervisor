@@ -538,6 +538,17 @@ static inline bool is_pae(struct acrn_vcpu *vcpu)
 	return (vcpu_get_cr4(vcpu) & CR4_PAE) != 0UL;
 }
 
+static inline void save_fxstore_guest_area(struct ext_context *ext_ctx)
+{
+	asm volatile("fxsave (%0)"
+			: : "r" (ext_ctx->fxstore_guest_area) : "memory");
+}
+
+static inline void rstor_fxstore_guest_area(const struct ext_context *ext_ctx)
+{
+	asm volatile("fxrstor (%0)" : : "r" (ext_ctx->fxstore_guest_area));
+}
+
 struct acrn_vcpu *get_running_vcpu(uint16_t pcpu_id);
 struct acrn_vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
 

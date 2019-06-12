@@ -143,17 +143,6 @@ void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 	}
 }
 
-static inline void save_fxstore_guest_area(struct ext_context *ext_ctx)
-{
-	asm volatile("fxsave (%0)"
-			: : "r" (ext_ctx->fxstore_guest_area) : "memory");
-}
-
-static inline void rstor_fxstore_guest_area(const struct ext_context *ext_ctx)
-{
-	asm volatile("fxrstor (%0)" : : "r" (ext_ctx->fxstore_guest_area));
-}
-
 static void save_world_ctx(struct acrn_vcpu *vcpu, struct ext_context *ext_ctx)
 {
 	uint32_t i;

@@ -712,29 +712,42 @@ void resume_vcpu(struct acrn_vcpu *vcpu)
 	release_schedule_lock(pcpu_id);
 }
 
+/* TODO:
+ * Now we have switch_out and switch_in callbacks for each thread_object, and schedule
+ * will call them every thread switch. We can implement lazy context swtich , which
+ * only do context swtich when really need.
+ */
 static void context_switch_out(struct thread_object *prev)
 {
 	struct acrn_vcpu *vcpu = list_entry(prev, struct acrn_vcpu, thread_obj);
+	struct ext_context *ectx = &(vcpu->arch.contexts[vcpu->arch.cur_context].ext_ctx);
+
+	/* We don't flush TLB as we assume each vcpu has different vpid */
+	ectx->ia32_star = msr_read(MSR_IA32_STAR);
+	ectx->ia32_lstar = msr_read(MSR_IA32_LSTAR);
+	ectx->ia32_fmask = msr_read(MSR_IA32_FMASK);
+	ectx->ia32_kernel_gs_base = msr_read(MSR_IA32_KERNEL_GS_BASE);
+
+	save_fxstore_guest_area(ectx);
 
 	vcpu->running = false;
-	/* do prev vcpu context switch out */
-	/* For now, we don't need to invalid ept.
-	 * But if we have more than one vcpu on one pcpu,
-	 * we need add ept invalid operation here.
-	 */
 }
 
 static void context_switch_in(struct thread_object *next)
 {
 	struct acrn_vcpu *vcpu = list_entry(next, struct acrn_vcpu, thread_obj);
+	struct ext_context *ectx = &(vcpu->arch.contexts[vcpu->arch.cur_context].ext_ctx);
+
+	switch_vmcs(vcpu);
+
+	msr_write(MSR_IA32_STAR, ectx->ia32_star);
+	msr_write(MSR_IA32_LSTAR, ectx->ia32_lstar);
+	msr_write(MSR_IA32_FMASK, ectx->ia32_fmask);
+	msr_write(MSR_IA32_KERNEL_GS_BASE, ectx->ia32_kernel_gs_base);
+
+	rstor_fxstore_guest_area(ectx);
 
 	vcpu->running = true;
-	/* FIXME:
-	 * Now, we don't need to load new vcpu VMCS because
-	 * we only do switch between vcpu loop and idle loop.
-	 * If we have more than one vcpu on on pcpu, need to
-	 * add VMCS load operation here.
-	 */
 }
 
 void schedule_vcpu(struct acrn_vcpu *vcpu)
