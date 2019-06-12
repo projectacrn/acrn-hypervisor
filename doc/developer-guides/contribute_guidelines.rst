@@ -122,8 +122,7 @@ devicemodel, and doc folders) use::
 
     git clone https://github.com/projectacrn/acrn-hypervisor
 
-The project ACRN directory structure is described in the :ref:`primer`
-document. In addition to the ACRN hypervisor and device model itself,
+In addition to the ACRN hypervisor and device model itself,
 you'll also find the sources for technical documentation available from
 the `ACRN documentation site`_.  All of these are available for
 developers to contribute to and enhance.

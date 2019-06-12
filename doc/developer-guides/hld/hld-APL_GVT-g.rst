@@ -186,6 +186,8 @@ Single Root IO Virtualization (SR-IOV) implements I/O virtualization
 directly on a device. Multiple Virtual Functions (VFs) are implemented,
 with each VF directly assignable to a VM.
 
+.. _Graphic_mediation:
+
 Mediated Pass-Through
 *********************
 
