@@ -647,10 +647,10 @@ virtio_gpio_proc(struct virtio_gpio *gpio, struct iovec *iov, int n)
 			 * command line paremeter, then provide it to UOS,
 			 * otherwise provide the physical name of gpio to UOS.
 			 */
-			if (strlen(line->vname))
+			if (strnlen(line->vname, sizeof(line->vname)))
 				strncpy(data[i].name, line->vname,
 						sizeof(data[0].name) - 1);
-			else if (strlen(line->name))
+			else if (strnlen(line->name, sizeof(line->name)))
 				strncpy(data[i].name, line->name,
 						sizeof(data[0].name) - 1);
 		}
