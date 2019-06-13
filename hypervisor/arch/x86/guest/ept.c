@@ -30,21 +30,18 @@ void destroy_ept(struct acrn_vm *vm)
 	}
 }
 
-/* using return value INVALID_HPA as error code */
+/**
+ * @pre: vm != NULL.
+ */
 uint64_t local_gpa2hpa(struct acrn_vm *vm, uint64_t gpa, uint32_t *size)
 {
+	/* using return value INVALID_HPA as error code */
 	uint64_t hpa = INVALID_HPA;
 	const uint64_t *pgentry;
 	uint64_t pg_size = 0UL;
 	void *eptp;
-	struct acrn_vcpu *vcpu = vcpu_from_pid(vm, get_pcpu_id());
 
-	if ((vcpu != NULL) && (vcpu->arch.cur_context == SECURE_WORLD)) {
-		eptp = vm->arch_vm.sworld_eptp;
-	} else {
-		eptp = vm->arch_vm.nworld_eptp;
-	}
-
+	eptp = get_ept_entry(vm);
 	pgentry = lookup_address((uint64_t *)eptp, gpa, &pg_size, &vm->arch_vm.ept_mem_ops);
 	if (pgentry != NULL) {
 		hpa = ((*pgentry & (~(pg_size - 1UL)))
@@ -156,5 +153,65 @@ void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t 
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
+	}
+}
+
+/**
+ * @pre: vm != NULL.
+ */
+void *get_ept_entry(struct acrn_vm *vm)
+{
+	void *eptp;
+	struct acrn_vcpu *vcpu = vcpu_from_pid(vm, get_pcpu_id());
+
+	if ((vcpu != NULL) && (vcpu->arch.cur_context == SECURE_WORLD)) {
+		eptp = vm->arch_vm.sworld_eptp;
+	} else {
+		eptp = vm->arch_vm.nworld_eptp;
+	}
+
+	return eptp;
+}
+
+/**
+ * @pre vm != NULL && cb != NULL.
+ */
+void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
+{
+	const struct memory_ops *mem_ops = &vm->arch_vm.ept_mem_ops;
+	uint64_t *pml4e, *pdpte, *pde, *pte;
+	uint64_t i, j, k, m;
+
+	for (i = 0UL; i < PTRS_PER_PML4E; i++) {
+		pml4e = pml4e_offset((uint64_t *)get_ept_entry(vm), i << PML4E_SHIFT);
+		if (mem_ops->pgentry_present(*pml4e) == 0UL) {
+			continue;
+		}
+		for (j = 0UL; j < PTRS_PER_PDPTE; j++) {
+			pdpte = pdpte_offset(pml4e, j << PDPTE_SHIFT);
+			if (mem_ops->pgentry_present(*pdpte) == 0UL) {
+				continue;
+			}
+			if (pdpte_large(*pdpte) != 0UL) {
+				cb(pdpte, PDPTE_SIZE);
+				continue;
+			}
+			for (k = 0UL; k < PTRS_PER_PDE; k++) {
+				pde = pde_offset(pdpte, k << PDE_SHIFT);
+				if (mem_ops->pgentry_present(*pde) == 0UL) {
+					continue;
+				}
+				if (pde_large(*pde) != 0UL) {
+					cb(pde, PDE_SIZE);
+					continue;
+				}
+				for (m = 0UL; m < PTRS_PER_PTE; m++) {
+					pte = pte_offset(pde, m << PTE_SHIFT);
+					if (mem_ops->pgentry_present(*pte) != 0UL) {
+						cb(pte, PTE_SIZE);
+					}
+				}
+			}
+		}
 	}
 }
