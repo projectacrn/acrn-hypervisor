@@ -150,6 +150,18 @@ void flush_vpid_single(uint16_t vpid);
  * @return None
  */
 void flush_vpid_global(void);
+
+/**
+ * @brief Flush address space
+ *
+ * @param[in] addr the specified virtual address
+ *
+ * @param[in] size the specified size to flush
+ *
+ * @return None
+ */
+void flush_address_space(void *addr, uint64_t size);
+
 /**
  * @brief Guest-physical mappings and combined mappings invalidation
  *
