@@ -12,6 +12,10 @@ if [[ "$result" != "" ]]; then
   exit
 fi
 
+#add audio passthrough device
+echo "8086:9d71" > /sys/bus/pci/drivers/pci-stub/new_id
+echo "0000:00:1f.3" > /sys/bus/pci/drivers/pci-stub/bind
+
 #for memsize setting
 mem_size=2048M
 
@@ -19,6 +23,7 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 2,pci-gvt -G "$3" \
   -s 3,virtio-blk,./win10-ltsc.img \
   -s 4,virtio-net,tap0 \
+  -s 5,passthru,00/1f/3 \
   --ovmf ./OVMF.fd \
   $vm_name
 }
