@@ -19,6 +19,26 @@ bool is_idle_thread(const struct thread_object *obj)
 	return (obj == &per_cpu(idle, pcpu_id));
 }
 
+static inline bool is_blocked(const struct thread_object *obj)
+{
+	return obj->status == THREAD_STS_BLOCKED;
+}
+
+static inline bool is_runnable(const struct thread_object *obj)
+{
+	return obj->status == THREAD_STS_RUNNABLE;
+}
+
+static inline bool is_running(const struct thread_object *obj)
+{
+	return obj->status == THREAD_STS_RUNNING;
+}
+
+static inline void set_thread_status(struct thread_object *obj, enum thread_object_state status)
+{
+	obj->status = status;
+}
+
 /**
  * @pre obj != NULL
  */
@@ -128,6 +148,12 @@ void schedule(void)
 	next = get_next_sched_obj(ctl);
 	bitmap_clear_lock(NEED_RESCHEDULE, &ctl->flags);
 
+	/* Don't change prev object's status if it's not running */
+	if (is_running(prev)) {
+		set_thread_status(prev, THREAD_STS_RUNNABLE);
+	}
+	set_thread_status(next, THREAD_STS_RUNNING);
+
 	if (prev == next) {
 		release_schedule_lock(pcpu_id);
 	} else {
@@ -160,6 +186,7 @@ void switch_to_idle(thread_entry_t idle_thread)
 	idle->switch_out = NULL;
 	idle->switch_in = NULL;
 	get_cpu_var(sched_ctl).curr_obj = idle;
+	set_thread_status(idle, THREAD_STS_RUNNING);
 
 	run_sched_thread(idle);
 }
