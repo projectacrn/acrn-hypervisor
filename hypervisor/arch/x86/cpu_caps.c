@@ -386,6 +386,9 @@ int32_t detect_hardware_support(void)
 	} else if (!pcpu_has_cap(X86_FEATURE_MTRR)) {
 		pr_fatal("%s, MTRR not supported\n", __func__);
 		ret = -ENODEV;
+	} else if (!pcpu_has_cap(X86_FEATURE_CLFLUSHOPT)) {
+		pr_fatal("%s, CLFLUSHOPT not supported\n", __func__);
+		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_PAGE1GB)) {
 		pr_fatal("%s, not support 1GB page\n", __func__);
 		ret = -ENODEV;
