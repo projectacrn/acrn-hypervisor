@@ -47,7 +47,7 @@ struct pci_msi {
 
 /* MSI-X capability structure */
 struct pci_msix {
-	struct msix_table_entry tables[CONFIG_MAX_MSIX_TABLE_NUM];
+	struct msix_table_entry table_entries[CONFIG_MAX_MSIX_TABLE_NUM];
 	uint64_t  mmio_gpa;
 	uint64_t  mmio_hpa;
 	uint64_t  mmio_size;
