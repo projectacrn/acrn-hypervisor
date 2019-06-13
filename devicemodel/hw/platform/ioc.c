@@ -53,7 +53,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pty.h>
@@ -1329,7 +1328,6 @@ ioc_rx_thread(void *arg)
 	struct ioc_dev *ioc = (struct ioc_dev *) arg;
 	struct cbc_request *req = NULL;
 	struct cbc_pkt packet;
-	int err;
 
 	memset(&packet, 0, sizeof(packet));
 	packet.cfg = &ioc->rx_config;
@@ -1338,8 +1336,7 @@ ioc_rx_thread(void *arg)
 	for (;;) {
 		pthread_mutex_lock(&ioc->rx_mtx);
 		while (SIMPLEQ_EMPTY(&ioc->rx_qhead)) {
-			err = pthread_cond_wait(&ioc->rx_cond, &ioc->rx_mtx);
-			assert(err == 0);
+			pthread_cond_wait(&ioc->rx_cond, &ioc->rx_mtx);
 			if (ioc->closing)
 				goto exit;
 		}
@@ -1382,7 +1379,6 @@ ioc_tx_thread(void *arg)
 	struct ioc_dev *ioc = (struct ioc_dev *) arg;
 	struct cbc_request *req = NULL;
 	struct cbc_pkt packet;
-	int err;
 
 	memset(&packet, 0, sizeof(packet));
 	packet.cfg = &ioc->tx_config;
@@ -1391,8 +1387,7 @@ ioc_tx_thread(void *arg)
 	for (;;) {
 		pthread_mutex_lock(&ioc->tx_mtx);
 		while (SIMPLEQ_EMPTY(&ioc->tx_qhead)) {
-			err = pthread_cond_wait(&ioc->tx_cond, &ioc->tx_mtx);
-			assert(err == 0);
+			pthread_cond_wait(&ioc->tx_cond, &ioc->tx_mtx);
 			if (ioc->closing)
 				goto exit;
 		}
