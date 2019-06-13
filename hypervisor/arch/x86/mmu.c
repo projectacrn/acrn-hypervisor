@@ -294,3 +294,16 @@ void init_paging(void)
 	/* set ptep in sanitized_page point to itself */
 	sanitize_pte((uint64_t *)sanitized_page);
 }
+
+/*
+ * @pre: addr != NULL  && size != 0
+ */
+void flush_address_space(void *addr, uint64_t size)
+{
+	uint64_t n = 0UL;
+
+	while (n < size) {
+		clflushopt((char *)addr + n);
+		n += CACHE_LINE_SIZE;
+	}
+}
