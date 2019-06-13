@@ -13,6 +13,12 @@
 #define DEL_MODE_INIT		(1U)
 #define DEL_MODE_IPI		(2U)
 
+enum thread_object_state {
+	THREAD_STS_RUNNING = 1,
+	THREAD_STS_RUNNABLE,
+	THREAD_STS_BLOCKED
+};
+
 struct thread_object;
 typedef void (*thread_entry_t)(struct thread_object *obj);
 typedef void (*switch_t)(struct thread_object *obj);
@@ -21,6 +27,7 @@ struct thread_object {
 	uint16_t pcpu_id;
 	struct sched_control *sched_ctl;
 	thread_entry_t thread_entry;
+	volatile enum thread_object_state status;
 
 	uint64_t host_sp;
 	switch_t switch_out;
