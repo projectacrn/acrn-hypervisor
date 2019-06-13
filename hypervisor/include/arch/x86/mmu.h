@@ -169,6 +169,11 @@ static inline void clflush(volatile void *p)
 	asm volatile ("clflush (%0)" :: "r"(p));
 }
 
+static inline void clflushopt(volatile void *p)
+{
+	asm volatile ("clflushopt (%0)" :: "r"(p));
+}
+
 /* get PDPT address from CR3 vaule in PAE mode */
 static inline uint64_t get_pae_pdpt_addr(uint64_t cr3)
 {
