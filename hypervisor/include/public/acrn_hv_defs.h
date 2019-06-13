@@ -297,8 +297,11 @@ struct hc_platform_info {
 	/** Maximum vCPU number for one VM. */
 	uint16_t max_vcpus_per_vm;
 
+	/** Maximum Kata container number in SOS VM */
+	uint8_t max_kata_containers;
+
 	/** Align the size of Configuration info to 128Bytes. */
-	uint8_t reserved1[126];
+	uint8_t reserved1[125];
 } __aligned(8);
 
 /**

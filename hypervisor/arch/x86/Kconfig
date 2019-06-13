@@ -304,3 +304,8 @@ config ENFORCE_VALIDATED_ACPI_INFO
 config L1D_FLUSH_VMENTRY_ENABLED
 	bool "Enable L1 cache flush before VM entry"
 	default n
+
+config MAX_KATA_VM_NUM
+	int "Maximum number of Kata Containers in SOS"
+	range 0 1
+	default 0
