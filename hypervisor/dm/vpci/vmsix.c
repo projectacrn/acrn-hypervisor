@@ -74,8 +74,8 @@ static int32_t vmsix_remap_entry(const struct pci_vdev *vdev, uint32_t index, bo
 	void *hva;
 	int32_t ret;
 
-	info.vmsi_addr.full = vdev->msix.tables[index].addr;
-	info.vmsi_data.full = (enable) ? vdev->msix.tables[index].data : 0U;
+	info.vmsi_addr.full = vdev->msix.table_entries[index].addr;
+	info.vmsi_data.full = (enable) ? vdev->msix.table_entries[index].data : 0U;
 
 	ret = ptirq_msix_remap(vdev->vpci->vm, vdev->vbdf.value, vdev->pdev->bdf.value, (uint16_t)index, &info);
 	if (ret == 0) {
@@ -93,7 +93,7 @@ static int32_t vmsix_remap_entry(const struct pci_vdev *vdev, uint32_t index, bo
 		mmio_write32((uint32_t)(info.pmsi_addr.full >> 32U), (void *)((char *)&(pentry->addr) + 4U));
 
 		mmio_write32(info.pmsi_data.full, (void *)&(pentry->data));
-		mmio_write32(vdev->msix.tables[index].vector_control, (void *)&(pentry->vector_control));
+		mmio_write32(vdev->msix.table_entries[index].vector_control, (void *)&(pentry->vector_control));
 		clac();
 	}
 
@@ -246,7 +246,7 @@ static void vmsix_table_rw(const struct pci_vdev *vdev, struct mmio_request *mmi
 	index = table_offset / MSIX_TABLE_ENTRY_SIZE;
 
 	if (index < vdev->msix.table_count) {
-		entry = &vdev->msix.tables[index];
+		entry = &vdev->msix.table_entries[index];
 		entry_offset = table_offset % MSIX_TABLE_ENTRY_SIZE;
 
 		if (mmio->direction == REQUEST_READ) {

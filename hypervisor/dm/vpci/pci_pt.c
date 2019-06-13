@@ -79,9 +79,9 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 
 	/* Mask all table entries */
 	for (i = 0U; i < msix->table_count; i++) {
-		msix->tables[i].vector_control = PCIM_MSIX_VCTRL_MASK;
-		msix->tables[i].addr = 0U;
-		msix->tables[i].data = 0U;
+		msix->table_entries[i].vector_control = PCIM_MSIX_VCTRL_MASK;
+		msix->table_entries[i].addr = 0U;
+		msix->table_entries[i].data = 0U;
 	}
 
 	bar = &pdev->bar[msix->table_bar];
