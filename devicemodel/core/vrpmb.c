@@ -56,7 +56,10 @@ int get_vrpmb_key(uint8_t *out, size_t size)
 		return 0;
 	}
 
-	assert(size == RPMB_KEY_LEN);
+	if (size != RPMB_KEY_LEN) {
+		fprintf(stderr, "%s: Invalid input key size\n", __func__);
+		return 0;
+	}
 
 	if ( vrkey.initialized == false ) {
 		for (i = 0; i < DRNG_MAX_RETRIES; i++) {
