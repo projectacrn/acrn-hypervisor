@@ -9,7 +9,7 @@
 
 #include <misc_cfg.h>
 
-#define CONFIG_MAX_VM_NUM	2U
+#define CONFIG_MAX_VM_NUM		(2U + CONFIG_MAX_KATA_VM_NUM)
 
 /* Bits mask of guest flags that can be programmed by device model. Other bits are set by hypervisor only */
 #define DM_OWNED_GUEST_FLAG_MASK	(GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH | \

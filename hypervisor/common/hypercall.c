@@ -121,6 +121,7 @@ int32_t hcall_get_platform_info(struct acrn_vm *vm, uint64_t param)
 
 	platform_info.cpu_num = get_pcpu_nums();
 	platform_info.max_vcpus_per_vm = CONFIG_MAX_VCPUS_PER_VM;
+	platform_info.max_kata_containers = CONFIG_MAX_KATA_VM_NUM;
 	if (copy_to_gpa(vm, &platform_info, param, sizeof(platform_info)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		ret = -1;

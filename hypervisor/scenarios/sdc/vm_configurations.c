@@ -52,5 +52,21 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.addr.port_base = INVALID_COM_BASE,
 		}
 
-	}
+	},
+#if CONFIG_MAX_KATA_VM_NUM > 0
+	{
+		.load_order = POST_LAUNCHED_VM,
+		.uuid = {0xa7U, 0xadU, 0xa5U, 0x06U, 0x1aU, 0xb0U, 0x4bU, 0x6bU,	\
+			 0xa0U, 0xdaU, 0xe5U, 0x13U, 0xcaU, 0x9bU, 0x8cU, 0x2fU},
+			/* a7ada506-1ab0-4b6b-a0da-e513ca9b8c2f */
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		}
+	},
+#endif
 };
