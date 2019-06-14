@@ -77,8 +77,8 @@ function upgrade_sos()
 
     # Do the setups if previous process succeed.
     if [[ $? -eq 0 ]]; then
-        echo "Adding the service-os and kernel-iot-lts2018 bundles..."
-        swupd bundle-add service-os kernel-iot-lts2018 2>/dev/null
+        echo "Adding the service-os, kernel-iot-lts2018 and systemd-networkd-autostart bundles..."
+        swupd bundle-add service-os kernel-iot-lts2018 systemd-networkd-autostart 2>/dev/null
 
         mount $efi_partition /mnt
         echo "Add /mnt/EFI/acrn folder"
