@@ -552,7 +552,7 @@ request as shown below.
 
    * - ACRN_REQUEST_EPT_FLUSH
      - Request for EPT flush
-     - ept_mr_add, ept_mr_modify, ept_mr_del, or vmx_write_cr0 disable cache
+     - ept_add_mr, ept_modify_mr, ept_del_mr, or vmx_write_cr0 disable cache
      - invept
 
    * - ACRN_REQUEST_TRP_FAULT

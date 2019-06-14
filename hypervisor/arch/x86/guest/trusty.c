@@ -67,7 +67,7 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 	hpa = gpa2hpa(vm, gpa_orig);
 
 	/* Unmap gpa_orig~gpa_orig+size from guest normal world ept mapping */
-	ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp, gpa_orig, size);
+	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, gpa_orig, size);
 
 	/* Copy PDPT entries from Normal world to Secure world
 	 * Secure world can access Normal World's memory,
@@ -109,7 +109,7 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 	}
 
 	/* Map [gpa_rebased, gpa_rebased + size) to secure ept mapping */
-	ept_mr_add(vm, (uint64_t *)vm->arch_vm.sworld_eptp, hpa, gpa_rebased, size, EPT_RWX | EPT_WB);
+	ept_add_mr(vm, (uint64_t *)vm->arch_vm.sworld_eptp, hpa, gpa_rebased, size, EPT_RWX | EPT_WB);
 
 	/* Backup secure world info, will be used when destroy secure world and suspend UOS */
 	vm->sworld_control.sworld_memory.base_gpa_in_uos = gpa_orig;
@@ -131,13 +131,13 @@ void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 			clac();
 		}
 
-		ept_mr_del(vm, vm->arch_vm.sworld_eptp, gpa_uos, size);
+		ept_del_mr(vm, vm->arch_vm.sworld_eptp, gpa_uos, size);
 		/* sanitize trusty ept page-structures */
 		sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp);
 		vm->arch_vm.sworld_eptp = NULL;
 
 		/* Restore memory to guest normal world */
-		ept_mr_add(vm, vm->arch_vm.nworld_eptp, hpa, gpa_uos, size, EPT_RWX | EPT_WB);
+		ept_add_mr(vm, vm->arch_vm.nworld_eptp, hpa, gpa_uos, size, EPT_RWX | EPT_WB);
 	} else {
 		pr_err("sworld eptp is NULL, it's not created");
 	}

@@ -347,8 +347,8 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`5663dd7` hv: extend the decode_modrm
 - :acrn-commit:`3b6ccf0` HV: remove callbacks registration for APICv functions
 - :acrn-commit:`93c1b07` hv: mmu: remove old map_mem
-- :acrn-commit:`f3b825d` hv: trusty: use ept_mr_add to add memory region
-- :acrn-commit:`4bb8456` hv: ept: refine ept_mr_add base on mmu_add
+- :acrn-commit:`f3b825d` hv: trusty: use ept_add_mr to add memory region
+- :acrn-commit:`4bb8456` hv: ept: refine ept_add_mr base on mmu_add
 - :acrn-commit:`da57284` hv: ptdev: simplify struct ptdev_msi_info
 - :acrn-commit:`2371839` hv: ptdev: remove vector index from structure ptdev_msi_info
 - :acrn-commit:`d8cc29b` hv: ptdev: check whether phys_pin is valid in add_intx_remapping
@@ -727,7 +727,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`f4ca3cc` hv: instr_emul: fix 'Parameter indexing array too big at call'
 - :acrn-commit:`84d320d` HV:treewide:Fix type conversion in VMX, timer and MTTR module
 - :acrn-commit:`f7efd0f` hv: mmu: replace modify_mem with mmu_modify
-- :acrn-commit:`0a33c0d` hv: mmu: replace ept_update_mt with ept_mr_modify
+- :acrn-commit:`0a33c0d` hv: mmu: replace ept_update_mt with ept_modify_mr
 - :acrn-commit:`1991823` hv: mmu: revisit mmu modify page table attributes
 - :acrn-commit:`20c80ea` HV: bug fix on emulating msi message from guest
 - :acrn-commit:`9695d3b` tools: replace payload[0] of struct mngr_msg with an union

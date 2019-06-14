@@ -157,7 +157,7 @@ static void update_ept(struct acrn_vm *vm, uint64_t start,
 		break;
 	}
 
-	ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp, start, size, attr, EPT_MT_MASK);
+	ept_modify_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, start, size, attr, EPT_MT_MASK);
 }
 
 static void update_ept_mem_type(const struct acrn_vmtrr *vmtrr)

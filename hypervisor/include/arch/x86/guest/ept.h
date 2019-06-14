@@ -69,7 +69,7 @@ uint64_t sos_vm_hpa2gpa(uint64_t hpa);
  *
  * @return None
  */
-void ept_mr_add(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t hpa,
+void ept_add_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t hpa,
 		uint64_t gpa, uint64_t size, uint64_t prot_orig);
 /**
  * @brief Guest-physical memory page access right or memory type updating
@@ -86,7 +86,7 @@ void ept_mr_add(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t hpa,
  *
  * @return None
  */
-void ept_mr_modify(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
+void ept_modify_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
 		uint64_t size, uint64_t prot_set, uint64_t prot_clr);
 /**
  * @brief Guest-physical memory region unmapping
@@ -101,7 +101,7 @@ void ept_mr_modify(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
  *
  * @pre [gpa,gpa+size) has been mapped into host physical memory region
  */
-void ept_mr_del(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
+void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
 		uint64_t size);
 
 /**

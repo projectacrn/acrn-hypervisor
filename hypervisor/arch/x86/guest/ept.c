@@ -97,7 +97,7 @@ int32_t ept_misconfig_vmexit_handler(__unused struct acrn_vcpu *vcpu)
 	return status;
 }
 
-void ept_mr_add(struct acrn_vm *vm, uint64_t *pml4_page,
+void ept_add_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 	uint64_t hpa, uint64_t gpa, uint64_t size, uint64_t prot_orig)
 {
 	uint16_t i;
@@ -122,7 +122,7 @@ void ept_mr_add(struct acrn_vm *vm, uint64_t *pml4_page,
 	}
 }
 
-void ept_mr_modify(struct acrn_vm *vm, uint64_t *pml4_page,
+void ept_modify_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 		uint64_t gpa, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr)
 {
@@ -145,7 +145,7 @@ void ept_mr_modify(struct acrn_vm *vm, uint64_t *pml4_page,
 /**
  * @pre [gpa,gpa+size) has been mapped into host physical memory region
  */
-void ept_mr_del(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t size)
+void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t size)
 {
 	struct acrn_vcpu *vcpu;
 	uint16_t i;
