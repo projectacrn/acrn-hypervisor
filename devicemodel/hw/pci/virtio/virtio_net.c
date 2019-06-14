@@ -33,7 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
 #include <openssl/md5.h>
 #include <pthread.h>
 #include <sys/ioctl.h>
@@ -345,11 +344,17 @@ rx_iov_trim(struct iovec *iov, int *niov, int tlen)
 	struct iovec *riov;
 
 	/* XXX short-cut: assume first segment is >= tlen */
-	assert(iov[0].iov_len >= tlen);
+	if (iov[0].iov_len < tlen) {
+		WPRINTF(("vtnet: rx_iov_trim: iov_len=%lu, tlen=%d\n", iov[0].iov_len, tlen));
+		return NULL;
+	}
 
 	iov[0].iov_len -= tlen;
 	if (iov[0].iov_len == 0) {
-		assert(*niov > 1);
+		if (*niov <= 1) {
+			WPRINTF(("vtnet: rx_iov_trim: *niov=%d\n", *niov));
+			return NULL;
+		}
 		*niov -= 1;
 		riov = &iov[1];
 	} else {
@@ -373,7 +378,10 @@ virtio_net_tap_rx(struct virtio_net *net)
 	/*
 	 * Should never be called without a valid tap fd
 	 */
-	assert(net->tapfd != -1);
+	if (net->tapfd == -1) {
+		WPRINTF(("vtnet: tapfd == -1\n"));
+		return;
+	}
 
 	/*
 	 * But, will be called when the rx ring hasn't yet
@@ -410,14 +418,18 @@ virtio_net_tap_rx(struct virtio_net *net)
 		 * Get descriptor chain.
 		 */
 		n = vq_getchain(vq, &idx, iov, VIRTIO_NET_MAXSEGS, NULL);
-		assert(n >= 1 && n <= VIRTIO_NET_MAXSEGS);
-
+		if (n < 1 || n > VIRTIO_NET_MAXSEGS) {
+			WPRINTF(("vtnet: virtio_net_tap_rx: vq_getchain = %d\n", n));
+			return;
+		}
 		/*
 		 * Get a pointer to the rx header, and use the
 		 * data immediately following it for the packet buffer.
 		 */
 		vrx = iov[0].iov_base;
 		riov = rx_iov_trim(iov, &n, net->rx_vhdrlen);
+		if (riov == NULL)
+			return;
 
 		len = readv(net->tapfd, riov, n);
 
@@ -495,7 +507,10 @@ virtio_net_proctx(struct virtio_net *net, struct virtio_vq_info *vq)
 	 * up two lengths: packet length and transfer length.
 	 */
 	n = vq_getchain(vq, &idx, iov, VIRTIO_NET_MAXSEGS, NULL);
-	assert(n >= 1 && n <= VIRTIO_NET_MAXSEGS);
+	if (n < 1 || n > VIRTIO_NET_MAXSEGS) {
+		WPRINTF(("vtnet: virtio_net_proctx: vq_getchain = %d\n", n));
+		return;
+	}
 	plen = 0;
 	tlen = iov[0].iov_len;
 	for (i = 1; i < n; i++) {
@@ -537,7 +552,6 @@ virtio_net_tx_thread(void *param)
 {
 	struct virtio_net *net = param;
 	struct virtio_vq_info *vq = &net->queues[VIRTIO_NET_TXQ];
-	int error;
 
 	/*
 	 * Let us wait till the tx queue pointers get initialised &
@@ -545,10 +559,8 @@ virtio_net_tx_thread(void *param)
 	 */
 	pthread_mutex_lock(&net->tx_mtx);
 
-	while (!net->closing && !vq_ring_ready(vq)) {
-		error = pthread_cond_wait(&net->tx_cond, &net->tx_mtx);
-		assert(error == 0);
-	}
+	while (!net->closing && !vq_ring_ready(vq))
+		pthread_cond_wait(&net->tx_cond, &net->tx_mtx);
 
 	if (net->closing) {
 		WPRINTF(("vtnet tx thread closing...\n"));
@@ -572,8 +584,8 @@ virtio_net_tx_thread(void *param)
 			if (!net->resetting && vq_has_descs(vq))
 				break;
 
-			error = pthread_cond_wait(&net->tx_cond, &net->tx_mtx);
-			assert(error == 0);
+			pthread_cond_wait(&net->tx_cond, &net->tx_mtx);
+
 			if (net->closing) {
 				WPRINTF(("vtnet tx thread closing...\n"));
 				pthread_mutex_unlock(&net->tx_mtx);
@@ -899,7 +911,10 @@ virtio_net_cfgwrite(void *vdev, int offset, int size, uint32_t value)
 	void *ptr;
 
 	if (offset < 6) {
-		assert(offset + size <= 6);
+		if (offset + size > 6) {
+			DPRINTF(("vtnet: wrong params offset=%d, size=%d, ignore write mac address\n\r", offset, size));
+			return -1;
+		}
 		/*
 		 * The driver is allowed to change the MAC address
 		 */
