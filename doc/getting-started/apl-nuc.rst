@@ -161,7 +161,7 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
       Upgrading SOS...
       Disable auto update...
       Clear Linux version 28960 is already installed. Continuing to setup SOS...
-      Adding the service-os and kernel-iot-lts2018 bundles...
+      Adding the service-os, kernel-iot-lts2018 and systemd-networkd-autostart bundles...
         ...100%
         ...100%
         ...100%
@@ -340,21 +340,25 @@ and UOS manually following these steps:
 
    .. code-block:: none
 
-      $ sudo swupd bundle-add service-os kernel-iot-lts2018
+      $ sudo swupd bundle-add service-os kernel-iot-lts2018 systemd-networkd-autostart
 
    .. table:: Clear Linux OS bundles
       :widths: auto
       :name: CL-bundles
 
-      +--------------------+---------------------------------------------------+
-      | Bundle             | Description                                       |
-      +====================+===================================================+
-      | service-os         | Add the acrn hypervisor, acrn devicemodel, and    |
-      |                    | Service OS kernel                                 |
-      +--------------------+---------------------------------------------------+
-      | kernel-iot-lts2018 | Run the Intel kernel "kernel-iot-lts2018"         |
-      |                    | which is enterprise-style kernel with backports   |
-      +--------------------+---------------------------------------------------+
+      +----------------------------+-------------------------------------------+
+      | Bundle                     | Description                               |
+      +============================+===========================================+
+      | service-os                 | Add the acrn hypervisor, acrn             |
+      |                            | devicemodel, and Service OS kernel        |
+      +----------------------------+-------------------------------------------+
+      | kernel-iot-lts2018         | Run the Intel kernel "kernel-iot-lts2018" |
+      |                            | which is enterprise-style kernel with     |
+      |                            | backports                                 |
+      +----------------------------+-------------------------------------------+
+      | systemd-networkd-autostart | Enable systemd-networkd as the default    |
+      |                            | network manager                           |
+      +----------------------------+-------------------------------------------+
 
 
 .. _add-acrn-to-efi:
