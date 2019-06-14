@@ -4126,6 +4126,8 @@ errout:
 			free(xdev->portregs);
 			xdev->portregs = NULL;
 		}
+		if (rc < -2 && s)
+			free(s);
 		UPRINTF(LFTL, "fail to parse xHCI options, rc=%d\r\n", rc);
 
 		if (opts)
