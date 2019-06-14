@@ -71,9 +71,6 @@
 
 extern uint64_t audio_nhlt_len;
 
-/* TODO: Add support for IO BAR of PTDev */
-static int iofd = -1;
-
 /* reference count for libpciaccess init/deinit */
 static int pciaccess_ref_cnt;
 static pthread_mutex_t ref_cnt_mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -404,8 +401,6 @@ init_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev, uint64_t base)
 	uint16_t virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
 	struct ic_ptdev_irq ptirq;
 
-	assert(ptdev_msix_table_bar(ptdev) >= 0 && ptdev_msix_pba_bar(ptdev) >= 0);
-
 	b = ptdev->sel.bus;
 	s = ptdev->sel.dev;
 	f = ptdev->sel.func;
@@ -626,7 +621,11 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 		 */
 		if (bartype == PCIBAR_MEM64) {
 			i++;
-			assert(i <= PCI_BARMAX);
+			if (i > PCI_BARMAX) {
+				warnx("BAR count out of range\n");
+				return -1;
+			}
+
 			ptdev->bar[i].type = PCIBAR_MEMHI64;
 		}
 	}
@@ -1073,21 +1072,14 @@ passthru_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 	       uint64_t offset, int size, uint64_t value)
 {
 	struct passthru_dev *ptdev;
-	struct iodev_pio_req pio;
 
 	ptdev = dev->arg;
 
 	if (baridx == ptdev_msix_table_bar(ptdev)) {
 		msix_table_write(ptdev, offset, size, value);
 	} else {
-		assert(dev->bar[baridx].type == PCIBAR_IO);
-		bzero(&pio, sizeof(struct iodev_pio_req));
-		pio.access = IODEV_PIO_WRITE;
-		pio.port = ptdev->bar[baridx].addr + offset;
-		pio.width = size;
-		pio.val = value;
-
-		(void)ioctl(iofd, IODEV_PIO, &pio);
+		/* TODO: Add support for IO BAR of PTDev */
+		warnx("Passthru: PIO write not supported, ignored\n");
 	}
 }
 
@@ -1096,7 +1088,6 @@ passthru_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 	      uint64_t offset, int size)
 {
 	struct passthru_dev *ptdev;
-	struct iodev_pio_req pio;
 	uint64_t val;
 
 	ptdev = dev->arg;
@@ -1104,16 +1095,9 @@ passthru_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 	if (baridx == ptdev_msix_table_bar(ptdev)) {
 		val = msix_table_read(ptdev, offset, size);
 	} else {
-		assert(dev->bar[baridx].type == PCIBAR_IO);
-		bzero(&pio, sizeof(struct iodev_pio_req));
-		pio.access = IODEV_PIO_READ;
-		pio.port = ptdev->bar[baridx].addr + offset;
-		pio.width = size;
-		pio.val = 0;
-
-		(void)ioctl(iofd, IODEV_PIO, &pio);
-
-		val = pio.val;
+		/* TODO: Add support for IO BAR of PTDev */
+		warnx("Passthru: PIO read not supported\n");
+		val = (uint64_t)(-1);
 	}
 
 	return val;
