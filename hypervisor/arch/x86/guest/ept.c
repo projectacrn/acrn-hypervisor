@@ -157,6 +157,23 @@ void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t 
 }
 
 /**
+ * @pre pge != NULL && size > 0.
+ */
+void ept_flush_leaf_page(uint64_t *pge, uint64_t size)
+{
+	uint64_t hpa = INVALID_HPA;
+	void *hva = NULL;
+
+	if ((*pge & EPT_MT_MASK) != EPT_UNCACHED) {
+		hpa = (*pge & (~(size - 1UL)));
+		hva = hpa2hva(hpa);
+		stac();
+		flush_address_space(hva, size);
+		clac();
+	}
+}
+
+/**
  * @pre: vm != NULL.
  */
 void *get_ept_entry(struct acrn_vm *vm)
