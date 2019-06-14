@@ -40,7 +40,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
 #include <pthread.h>
 #include <errno.h>
 #include "dm.h"
@@ -432,7 +431,10 @@ rpmb_search_size(__u8 mode, __u8 *key, __u16 hint)
 			curr = curr + 1;
 		}
 	}
-	assert ((__u32)high + 1 == low);
+	if ((__u32)high + 1 != low) {
+		DPRINTF(("rpmb search size fail!\n"));
+		return 0;
+	}
 	return low;
 }
 
@@ -564,7 +566,10 @@ virtio_rpmb_seq_handler(struct virtio_rpmb *rpmb, struct iovec *iov,
 	int i;
 	int size;
 
-	assert(n >= 3 && n <= VIRTIO_RPMB_MAXSEGS);
+	if (n < 3 || n > VIRTIO_RPMB_MAXSEGS) {
+		DPRINTF(("found invalid args!!!\n"));
+		return -1;
+	}
 	if (!rpmb || !iov || !tlen) {
 		DPRINTF(("found invalid args!!!\n"));
 		return -1;
@@ -582,7 +587,10 @@ virtio_rpmb_seq_handler(struct virtio_rpmb *rpmb, struct iovec *iov,
 		DPRINTF(("fail to get seq data\n"));
 		return -1;
 	}
-	assert((n-2) == seq->num_of_cmds);
+	if ((n-2) != seq->num_of_cmds) {
+		DPRINTF(("found invalid command number!!!\n"));
+		return -1;
+	}
 	pdata = (void *)seq;
 
 	for (i = 2; i < n; i++) {
@@ -593,7 +601,10 @@ virtio_rpmb_seq_handler(struct virtio_rpmb *rpmb, struct iovec *iov,
 		}
 
 		size = (seq->cmds[i-2].nframes ? :1)* sizeof(struct rpmb_frame);
-		assert(size == iov[i].iov_len);
+		if (size != iov[i].iov_len) {
+			DPRINTF(("Invalid frame length!!!\n"));
+			return -1;
+		}
 		seq->cmds[i-2].frames =
 			(struct rpmb_frame *)(iov[i].iov_base);
 	}
@@ -621,14 +632,20 @@ virtio_rpmb_notify(void *base, struct virtio_vq_info *vq)
 
 	while (vq_has_descs(vq)) {
 		n = vq_getchain(vq, &idx, iov, VIRTIO_RPMB_MAXSEGS, NULL);
-		assert(n >= 3 && n <= VIRTIO_RPMB_MAXSEGS);
-
+		if (n < 3 || n > VIRTIO_RPMB_MAXSEGS) {
+			DPRINTF(("Invalid package number.\n"));
+			return;
+		}
 		ioc = (struct virtio_rpmb_ioctl_cmd *)(iov[0].iov_base);
-		assert(RPMB_IOC_SEQ_CMD == ioc->cmd);
-
+		if (RPMB_IOC_SEQ_CMD != ioc->cmd) {
+			DPRINTF(("found invalid command type.\n"));
+			return;
+		}
 		ioc->result = virtio_rpmb_seq_handler(rpmb, iov, n, &tlen);
-		assert(tlen > 0);
-
+		if (tlen <= 0) {
+			DPRINTF(("Invalid return length.\n"));
+			return;
+		}
 		/*
 		 * Release this chain and handle more
 		 */
