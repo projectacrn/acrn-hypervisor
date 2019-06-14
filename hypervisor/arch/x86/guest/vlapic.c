@@ -2171,11 +2171,11 @@ int32_t vlapic_create(struct acrn_vcpu *vcpu)
 			(uint64_t *)vcpu->vm->arch_vm.nworld_eptp;
 		/* only need unmap it from SOS as UOS never mapped it */
 		if (is_sos_vm(vcpu->vm)) {
-			ept_mr_del(vcpu->vm, pml4_page,
+			ept_del_mr(vcpu->vm, pml4_page,
 				DEFAULT_APIC_BASE, PAGE_SIZE);
 		}
 
-		ept_mr_add(vcpu->vm, pml4_page,
+		ept_add_mr(vcpu->vm, pml4_page,
 			vlapic_apicv_get_apic_access_addr(),
 			DEFAULT_APIC_BASE, PAGE_SIZE,
 			EPT_WR | EPT_RD | EPT_UNCACHED);

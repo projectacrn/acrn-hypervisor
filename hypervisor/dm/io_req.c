@@ -633,7 +633,7 @@ void register_mmio_emulation_handler(struct acrn_vm *vm,
 			 * need to unmap it.
 			 */
 			if (is_sos_vm(vm)) {
-				ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp, start, end - start);
+				ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, start, end - start);
 			}
 
 		}

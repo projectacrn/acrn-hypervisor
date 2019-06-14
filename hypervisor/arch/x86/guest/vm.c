@@ -195,7 +195,7 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 
 		/* Do EPT mapping for GPAs that are backed by physical memory */
 		if (entry->type == E820_TYPE_RAM) {
-			ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, entry->baseaddr,
+			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, entry->baseaddr,
 				entry->length, EPT_RWX | EPT_WB);
 
 			base_hpa += entry->length;
@@ -203,7 +203,7 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 
 		/* GPAs under 1MB are always backed by physical memory */
 		if ((entry->type != E820_TYPE_RAM) && (entry->baseaddr < (uint64_t)MEM_1M)) {
-			ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, entry->baseaddr,
+			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, entry->baseaddr,
 				entry->length, EPT_RWX | EPT_UNCACHED);
 
 			base_hpa += entry->length;
@@ -337,14 +337,14 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	}
 
 	/* create real ept map for all ranges with UC */
-	ept_mr_add(vm, pml4_page, p_e820_mem_info->mem_bottom, p_e820_mem_info->mem_bottom,
+	ept_add_mr(vm, pml4_page, p_e820_mem_info->mem_bottom, p_e820_mem_info->mem_bottom,
 			(p_e820_mem_info->mem_top - p_e820_mem_info->mem_bottom), attr_uc);
 
 	/* update ram entries to WB attr */
 	for (i = 0U; i < entries_count; i++) {
 		entry = p_e820 + i;
 		if (entry->type == E820_TYPE_RAM) {
-			ept_mr_modify(vm, pml4_page, entry->baseaddr, entry->length, EPT_WB, EPT_MT_MASK);
+			ept_modify_mr(vm, pml4_page, entry->baseaddr, entry->length, EPT_WB, EPT_MT_MASK);
 		}
 	}
 
@@ -361,19 +361,19 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	 */
 	epc_secs = get_phys_epc();
 	for (i = 0U; (i < MAX_EPC_SECTIONS) && (epc_secs[i].size != 0UL); i++) {
-		ept_mr_del(vm, pml4_page, epc_secs[i].base, epc_secs[i].size);
+		ept_del_mr(vm, pml4_page, epc_secs[i].base, epc_secs[i].size);
 	}
 
 	/* unmap hypervisor itself for safety
 	 * will cause EPT violation if sos accesses hv memory
 	 */
 	hv_hpa = hva2hpa((void *)(get_hv_image_base()));
-	ept_mr_del(vm, pml4_page, hv_hpa, CONFIG_HV_RAM_SIZE);
+	ept_del_mr(vm, pml4_page, hv_hpa, CONFIG_HV_RAM_SIZE);
 	/* unmap prelaunch VM memory */
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
 		if (vm_config->load_order == PRE_LAUNCHED_VM) {
-			ept_mr_del(vm, pml4_page, vm_config->memory.start_hpa, vm_config->memory.size);
+			ept_del_mr(vm, pml4_page, vm_config->memory.start_hpa, vm_config->memory.size);
 		}
 	}
 }
@@ -387,7 +387,7 @@ static void prepare_epc_vm_memmap(struct acrn_vm *vm)
 	if (is_vsgx_supported(vm->vm_id)) {
 		vm_epc_maps = get_epc_mapping(vm->vm_id);
 		for (i = 0U; (i < MAX_EPC_SECTIONS) && (vm_epc_maps[i].size != 0UL); i++) {
-			ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vm_epc_maps[i].hpa,
+			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vm_epc_maps[i].hpa,
 				vm_epc_maps[i].gpa, vm_epc_maps[i].size, EPT_RWX | EPT_WB);
 		}
 	}
@@ -456,7 +456,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		if (vm->sworld_control.flag.supported != 0UL) {
 			struct memory_ops *ept_mem_ops = &vm->arch_vm.ept_mem_ops;
 
-			ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
 				hva2hpa(ept_mem_ops->get_sworld_memory_base(ept_mem_ops->info)),
 				TRUSTY_EPT_REBASE_GPA, TRUSTY_RAM_SIZE, EPT_WB | EPT_RWX);
 		}

@@ -647,7 +647,7 @@ static int32_t add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_v
 				prot |= EPT_UNCACHED;
 			}
 			/* create gpa to hpa EPT mapping */
-			ept_mr_add(target_vm, pml4_page, hpa,
+			ept_add_mr(target_vm, pml4_page, hpa,
 					region->gpa, region->size, prot);
 			ret = 0;
 		}
@@ -687,7 +687,7 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 			if (region->type != MR_DEL) {
 				ret = add_vm_memory_region(vm, target_vm, region, pml4_page);
 			} else {
-				ept_mr_del(target_vm, pml4_page,
+				ept_del_mr(target_vm, pml4_page,
 						region->gpa, region->size);
 				ret = 0;
 			}
@@ -775,7 +775,7 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 			prot_set = (wp->set != 0U) ? 0UL : EPT_WR;
 			prot_clr = (wp->set != 0U) ? EPT_WR : 0UL;
 
-			ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+			ept_modify_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
 				wp->gpa, PAGE_SIZE, prot_set, prot_clr);
 			ret = 0;
 		}

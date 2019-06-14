@@ -402,13 +402,13 @@ Address Space Translation
 EPT
 ---
 
-.. doxygenfunction:: ept_mr_add
+.. doxygenfunction:: ept_add_mr
    :project: Project ACRN
 
-.. doxygenfunction:: ept_mr_del
+.. doxygenfunction:: ept_del_mr
    :project: Project ACRN
 
-.. doxygenfunction:: ept_mr_modify
+.. doxygenfunction:: ept_modify_mr
    :project: Project ACRN
 
 .. doxygenfunction:: destroy_ept

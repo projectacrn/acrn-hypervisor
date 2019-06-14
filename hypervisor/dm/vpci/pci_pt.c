@@ -179,14 +179,14 @@ static void vdev_pt_remap_generic_bar(const struct pci_vdev *vdev, uint32_t idx,
 	struct acrn_vm *vm = vdev->vpci->vm;
 
 	if (vdev->bar[idx].base != 0UL) {
-		ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
 			vdev->bar[idx].base,
 			vdev->bar[idx].size);
 	}
 
 	if (new_base != 0U) {
 		/* Map the physical BAR in the guest MMIO space */
-		ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+		ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
 			vdev->pdev->bar[idx].base, /* HPA */
 			new_base, /*GPA*/
 			vdev->bar[idx].size,
