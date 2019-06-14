@@ -2397,45 +2397,54 @@ static bool apicv_advanced_apic_write_access_may_valid(uint32_t offset)
 
 int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	int32_t err = 0;
-	uint32_t offset = 0U;
+	int32_t err;
+	uint32_t offset;
 	uint64_t qual, access_type;
 	struct acrn_vlapic *vlapic;
-	struct mmio_request *mmio = &vcpu->req.reqs.mmio;
+	struct mmio_request *mmio;
 
 	qual = vcpu->arch.exit_qualification;
 	access_type = apic_access_type(qual);
 
-	/*parse offset if linear access*/
-	if (access_type <= 3UL) {
-		offset = (uint32_t)apic_access_offset(qual);
-	}
-
-	vlapic = vcpu_vlapic(vcpu);
-
-	err = decode_instruction(vcpu);
-	/* apic access should already fetched instruction, decode_instruction
-	 * will not trigger #PF, so if it failed, just return error_no
+	/*
+	 * We only support linear access for a data read/write during instruction execution.
+	 * for other access types:
+	 * a) we don't support vLAPIC work in real mode;
+	 * 10 = guest-physical access during event delivery
+	 * 15 = guest-physical access for an instruction fetch or during instruction execution
+	 * b) we don't support fetch from APIC-access page since its memory type is UC;
+	 * 2 = linear access for an instruction fetch
+	 * c) we suppose the guest goes wrong when it will access the APIC-access page
+	 * when process event-delivery. According chap 26.5.1.2 VM Exits During Event Injection,
+	 * vol 3, sdm: If the “virtualize APIC accesses” VM-execution control is 1 and
+	 * event delivery generates an access to the APIC-access page, that access is treated as
+	 * described in Section 29.4 and may cause a VM exit.
+	 * 3 = linear access (read or write) during event delivery
 	 */
-	if (err >= 0) {
-		if (access_type == 1UL) {
-			if (emulate_instruction(vcpu) == 0) {
+	if (((access_type == TYPE_LINEAR_APIC_INST_READ) || (access_type == TYPE_LINEAR_APIC_INST_WRITE)) &&
+			(decode_instruction(vcpu) >= 0)) {
+		vlapic = vcpu_vlapic(vcpu);
+		offset = (uint32_t)apic_access_offset(qual);
+		mmio = &vcpu->req.reqs.mmio;
+		if (access_type == TYPE_LINEAR_APIC_INST_WRITE) {
+			err = emulate_instruction(vcpu);
+			if (err == 0) {
 				if (apicv_ops->apic_write_access_may_valid(offset)) {
 					(void)vlapic_write(vlapic, offset, mmio->value);
 				}
 			}
-		} else if (access_type == 0UL) {
+		} else {
 			if (apicv_ops->apic_read_access_may_valid(offset)) {
 				(void)vlapic_read(vlapic, offset, &mmio->value);
 			} else {
-				mmio->value = 0ULL;
+				mmio->value = 0UL;
 			}
 			err = emulate_instruction(vcpu);
-		} else {
-			pr_err("Unhandled APIC access type: %lu\n", access_type);
-			err = -EINVAL;
 		}
 		TRACE_2L(TRACE_VMEXIT_APICV_ACCESS, qual, (uint64_t)vlapic);
+	} else {
+		pr_err("%s, unhandled access type: %lu\n", __func__, access_type);
+		err = -EINVAL;
 	}
 
 	return err;
