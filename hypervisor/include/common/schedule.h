@@ -19,6 +19,11 @@ enum thread_object_state {
 	THREAD_STS_BLOCKED
 };
 
+enum sched_notify_mode {
+	SCHED_NOTIFY_INIT,
+	SCHED_NOTIFY_IPI
+};
+
 struct thread_object;
 typedef void (*thread_entry_t)(struct thread_object *obj);
 typedef void (*switch_t)(struct thread_object *obj);
@@ -28,6 +33,7 @@ struct thread_object {
 	struct sched_control *sched_ctl;
 	thread_entry_t thread_entry;
 	volatile enum thread_object_state status;
+	enum sched_notify_mode notify_mode;
 
 	uint64_t host_sp;
 	switch_t switch_out;
@@ -57,6 +63,8 @@ void remove_thread_obj(struct thread_object *obj, uint16_t pcpu_id);
 void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode);
 bool need_reschedule(uint16_t pcpu_id);
 
+void sleep_thread(struct thread_object *obj);
+void wake_thread(struct thread_object *obj);
 void schedule(void);
 void run_sched_thread(struct thread_object *obj);
 
