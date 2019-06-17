@@ -26,8 +26,6 @@
  * $FreeBSD$
  */
 
-#include <assert.h>
-
 #include "inout.h"
 #include "lpc.h"
 
@@ -35,9 +33,7 @@ static int
 post_data_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		  uint32_t *eax, void *arg)
 {
-	assert(in == 1);
-
-	if (bytes != 1)
+	if ((in != 1) || (bytes != 1))
 		return -1;
 
 	*eax = 0xff;		/* return some garbage */
