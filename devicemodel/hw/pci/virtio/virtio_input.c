@@ -14,7 +14,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
 #include <pthread.h>
 
 #include "dm.h"
@@ -251,7 +250,19 @@ virtio_input_notify_status_vq(void *vdev, struct virtio_vq_info *vq)
 
 	while (vq_has_descs(vq)) {
 		n = vq_getchain(vq, &idx, &iov, 1, NULL);
-		assert(n == 1);
+		if (n < 0) {
+			WPRINTF(("virtio_input: invalid descriptors\n"));
+			return;
+		}
+		if (n == 0) {
+			WPRINTF(("virtio_input: get no available descriptors\n"));
+			return;
+		}
+		if (n != 1) {
+			WPRINTF(("virtio_input: get wrong number of available descriptors\n"));
+			vq_relchain(vq, idx, sizeof(event)); /* Release the chain */
+			return;
+		}
 
 		if (vi->fd > 0) {
 			memcpy(&event, iov.iov_base, sizeof(event));
@@ -292,7 +303,10 @@ virtio_input_send_event(struct virtio_input *vi,
 		vi->event_queue = realloc(vi->event_queue,
 			vi->event_qsize *
 			sizeof(struct virtio_input_event_elem));
-		assert(vi->event_queue);
+		if (!vi->event_queue) {
+			WPRINTF(("virtio_input: realloc memory for vi->event_queue failed!\n"));
+			return;
+		}
 	}
 	vi->event_queue[vi->event_qindex].event = *event;
 	vi->event_qindex++;
@@ -310,7 +324,19 @@ virtio_input_send_event(struct virtio_input *vi,
 			goto out;
 		}
 		n = vq_getchain(vq, &idx, &iov, 1, NULL);
-		assert(n == 1);
+		if (n < 0) {
+			WPRINTF(("virtio-input: invalid descriptors\n"));
+			return;
+		}
+		if (n == 0) {
+			WPRINTF(("virtio-input: get no available desciptors\n"));
+			return;
+		}
+		if (n != 1) {
+			WPRINTF(("virtio_input: get wrong number of available descriptors\n"));
+			vq_relchain(vq, idx, sizeof(event)); /* Release the chain */
+			return;
+		}
 		vi->event_queue[i].iov = iov;
 		vi->event_queue[i].idx = idx;
 	}
