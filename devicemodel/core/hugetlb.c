@@ -36,7 +36,6 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <assert.h>
 
 #include "vmmapi.h"
 
@@ -267,7 +266,6 @@ static int mmap_hugetlbfs(struct vmctx *ctx, size_t offset,
 		pg_size = hugetlb_priv[level].pg_size;
 
 		while (len > 0) {
-			assert((offset & (pg_size - 1)) == 0);
 			ret = mmap_hugetlbfs_from_level(ctx, level, len, offset, skip);
 
 			if (ret < 0 && level > HUGETLB_LV1) {
@@ -297,7 +295,6 @@ static void get_lowmem_param(struct hugetlb_info *htlb,
 static size_t adj_lowmem_param(struct hugetlb_info *htlb,
 		struct hugetlb_info *htlb_prev, int adj_size)
 {
-	assert(htlb->lowmem >= adj_size);
 	htlb->lowmem -= adj_size;
 	htlb_prev->lowmem += adj_size;
 
@@ -314,7 +311,6 @@ static void get_highmem_param(struct hugetlb_info *htlb,
 static size_t adj_highmem_param(struct hugetlb_info *htlb,
 		struct hugetlb_info *htlb_prev, int adj_size)
 {
-	assert(htlb->highmem >= adj_size);
 	htlb->highmem -= adj_size;
 	htlb_prev->highmem += adj_size;
 
@@ -331,7 +327,6 @@ static void get_biosmem_param(struct hugetlb_info *htlb,
 static size_t adj_biosmem_param(struct hugetlb_info *htlb,
 		struct hugetlb_info *htlb_prev, int adj_size)
 {
-	assert(htlb->biosmem >= adj_size);
 	htlb->biosmem -= adj_size;
 	htlb_prev->biosmem += adj_size;
 
