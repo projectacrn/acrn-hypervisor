@@ -33,7 +33,6 @@
 #include <errno.h>
 #include <libgen.h>
 #include <unistd.h>
-#include <assert.h>
 #include <pthread.h>
 #include <sysexits.h>
 #include <stdbool.h>
@@ -654,10 +653,15 @@ vm_loop(struct vmctx *ctx)
 	int error;
 
 	ctx->ioreq_client = vm_create_ioreq_client(ctx);
-	assert(ctx->ioreq_client > 0);
+	if (ctx->ioreq_client <= 0) {
+		pr_err("%s, failed to create IOREQ.\n", __func__);
+		return;
+	}
 
-	error = vm_run(ctx);
-	assert(error == 0);
+	if (vm_run(ctx) != 0) {
+		pr_err("%s, failed to run VM.\n", __func__);
+		return;
+	}
 
 	while (1) {
 		int vcpu_id;
