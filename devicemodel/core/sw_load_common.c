@@ -121,8 +121,8 @@ acrn_parse_bootargs(char *arg)
 		with_bootargs = 1;
 		printf("SW_LOAD: get bootargs %s\n", bootargs);
 		return 0;
-	} else
-		return -1;
+	}
+	return -1;
 }
 
 char*
@@ -222,8 +222,6 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 	uint32_t removed = 0, k;
 
 	memcpy(e820, e820_default_entries, sizeof(e820_default_entries));
-
-	assert(ctx->lowmem > e820[LOWRAM_E820_ENTRY].baseaddr);
 	e820[LOWRAM_E820_ENTRY].length = ctx->lowmem -
 			e820[LOWRAM_E820_ENTRY].baseaddr;
 
