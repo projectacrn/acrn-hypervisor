@@ -792,7 +792,7 @@ virtio_console_get_be_type(const char *backend)
 }
 
 static int
-virtio_console_add_backend(struct virtio_console *console, char *opts)
+virtio_console_add_backend(struct virtio_console *console, char *opt)
 {
 	struct virtio_console_backend *be;
 	int error = 0, fd = -1;
@@ -801,54 +801,56 @@ virtio_console_add_backend(struct virtio_console *console, char *opts)
 	char *portname = NULL;
 	char *portpath = NULL;
 	char *socket_type = NULL;
-	char *opt;
 	enum virtio_console_be_type be_type = VIRTIO_CONSOLE_BE_INVALID;
 
-	/* virtio-console,[@]stdio|tty|pty|file:portname[=portpath]
-	 * [,[@]stdio|tty|pty|file:portname[=portpath][:socket_type]]
-	 */
-	while ((opt = strsep(&opts, ",")) != NULL) {
-		backend = strsep(&opt, ":");
+	backend = strsep(&opt, ":");
+	if (backend == NULL) {
+		WPRINTF(("vtcon: no backend is specified!\n"));
+		error = -1;
+		goto parse_fail;
+	}
 
-		if (backend == NULL) {
-			WPRINTF(("vtcon: no backend is specified!\n"));
+	if (backend[0] == '@') {
+		is_console = true;
+		backend++;
+	} else
+		is_console = false;
+
+	be_type = virtio_console_get_be_type(backend);
+	if (be_type == VIRTIO_CONSOLE_BE_INVALID) {
+		WPRINTF(("vtcon: invalid backend %s!\n",
+			backend));
+		error = -1;
+		goto parse_fail;
+	}
+
+	if (opt != NULL) {
+		if (be_type == VIRTIO_CONSOLE_BE_SOCKET) {
+			portname = strsep(&opt, "=");
+			portpath = strsep(&opt, ":");
+			socket_type = opt;
+		} else {
+			portname = strsep(&opt, "=");
+			portpath = opt;
+		}
+		if (portname == NULL) {
+			WPRINTF(("vtcon: portname missing \n"));
 			error = -1;
 			goto parse_fail;
 		}
-
-		if (backend[0] == '@') {
-			is_console = true;
-			backend++;
-		} else
-			is_console = false;
-
-		be_type = virtio_console_get_be_type(backend);
-		if (be_type == VIRTIO_CONSOLE_BE_INVALID) {
-			WPRINTF(("vtcon: invalid backend %s!\n",
-				backend));
+		if (portpath == NULL
+			&& be_type != VIRTIO_CONSOLE_BE_STDIO
+			&& be_type != VIRTIO_CONSOLE_BE_PTY
+			&& be_type != VIRTIO_CONSOLE_BE_SOCKET) {
+			WPRINTF(("vtcon: portpath missing for %s\n",
+				portname));
 			error = -1;
 			goto parse_fail;
 		}
-
-		if (opt != NULL) {
-			if (be_type == VIRTIO_CONSOLE_BE_SOCKET) {
-				portname = strsep(&opt, "=");
-				portpath = strsep(&opt, ":");
-				socket_type = opt;
-			} else {
-				portname = strsep(&opt, "=");
-				portpath = opt;
-			}
-			if (portpath == NULL
-				&& be_type != VIRTIO_CONSOLE_BE_STDIO
-				&& be_type != VIRTIO_CONSOLE_BE_PTY
-				&& be_type != VIRTIO_CONSOLE_BE_SOCKET) {
-				WPRINTF(("vtcon: portpath missing for %s\n",
-					portname));
-				error = -1;
-				goto parse_fail;
-			}
-		}
+	} else {
+		WPRINTF(("vtcon: please at least config portname\n"));
+		error = -1;
+		goto parse_fail;
 	}
 
 	be = calloc(1, sizeof(struct virtio_console_backend));
@@ -916,9 +918,22 @@ out:
 	}
 
 parse_fail:
-
-	WPRINTF(("vtcon: add port failed %s\n", portname));
 	return error;
+}
+
+static int
+virtio_console_add_backends(struct virtio_console *console, char *opts)
+{
+	char *opt;
+
+	/* virtio-console,[@]stdio|tty|pty|file:portname[=portpath]
+	 * [,[@]stdio|tty|pty|file:portname[=portpath][:socket_type]]
+	 */
+	while ((opt = strsep(&opts, ",")) != NULL) {
+		if (virtio_console_add_backend(console, opt))
+			return -1;
+	}
+	return 0;
 }
 
 static void
@@ -1102,7 +1117,7 @@ virtio_console_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	console->control_port.rxq = 3;
 	console->control_port.cb = virtio_console_control_tx;
 	console->control_port.enabled = true;
-	if (virtio_console_add_backend(console, opts) < 0) {
+	if (virtio_console_add_backends(console, opts) < 0) {
 		return -1;
 	}
 
