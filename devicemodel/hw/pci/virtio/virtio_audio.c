@@ -18,7 +18,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
 #include <pthread.h>
 #include <sysexits.h>
 
@@ -368,7 +367,11 @@ virtio_audio_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		virtio_audio_kernel_stop(virt_audio);
 		virtio_audio_kernel_reset(virt_audio);
 		virt_audio->vbs_k.kstatus = VIRTIO_DEV_INITIAL;
-		assert(virt_audio->vbs_k.audio_fd >= 0);
+		if (virt_audio->vbs_k.audio_fd < 0) {
+			WPRINTF(("virtio_audio: %s  doesn't open!\n",
+				vbs_k_audio_dev_path));
+			return;
+		}
 		close(virt_audio->vbs_k.audio_fd);
 		virt_audio->vbs_k.audio_fd = -1;
 	}
