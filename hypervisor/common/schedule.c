@@ -39,6 +39,24 @@ static inline void set_thread_status(struct thread_object *obj, enum thread_obje
 	obj->status = status;
 }
 
+void get_schedule_lock(uint16_t pcpu_id)
+{
+	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
+	spinlock_obtain(&ctl->scheduler_lock);
+}
+
+void release_schedule_lock(uint16_t pcpu_id)
+{
+	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
+	spinlock_release(&ctl->scheduler_lock);
+}
+
+static struct acrn_scheduler *get_scheduler(uint16_t pcpu_id)
+{
+	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
+	return ctl->scheduler;
+}
+
 /**
  * @pre obj != NULL
  */
@@ -55,37 +73,40 @@ void init_sched(uint16_t pcpu_id)
 	ctl->flags = 0UL;
 	ctl->curr_obj = NULL;
 	ctl->pcpu_id = pcpu_id;
+	ctl->scheduler = &sched_noop;
+	if (ctl->scheduler->init != NULL) {
+		ctl->scheduler->init(ctl);
+	}
 }
 
-void get_schedule_lock(uint16_t pcpu_id)
-{
-	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
-	spinlock_obtain(&ctl->scheduler_lock);
-}
-
-void release_schedule_lock(uint16_t pcpu_id)
-{
-	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
-	spinlock_release(&ctl->scheduler_lock);
-}
-
-void insert_thread_obj(struct thread_object *obj, uint16_t pcpu_id)
+void deinit_sched(uint16_t pcpu_id)
 {
 	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
 
-	ctl->thread_obj = obj;
+	if (ctl->scheduler->deinit != NULL) {
+		ctl->scheduler->deinit(ctl);
+	}
 }
 
-void remove_thread_obj(__unused struct thread_object *obj, uint16_t pcpu_id)
+void init_thread_data(struct thread_object *obj)
 {
-	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
-
-	ctl->thread_obj = NULL;
+	struct acrn_scheduler *scheduler = get_scheduler(obj->pcpu_id);
+	get_schedule_lock(obj->pcpu_id);
+	if (scheduler->init_data != NULL) {
+		scheduler->init_data(obj);
+	}
+	/* initial as BLOCKED status, so we can wake it up to run */
+	set_thread_status(obj, THREAD_STS_BLOCKED);
+	release_schedule_lock(obj->pcpu_id);
 }
 
-static struct thread_object *get_next_sched_obj(const struct sched_control *ctl)
+void deinit_thread_data(struct thread_object *obj)
 {
-	return ctl->thread_obj == NULL ? &get_cpu_var(idle) : ctl->thread_obj;
+	struct acrn_scheduler *scheduler = get_scheduler(obj->pcpu_id);
+
+	if (scheduler->deinit_data != NULL) {
+		scheduler->deinit_data(obj);
+	}
 }
 
 struct thread_object *sched_get_current(uint16_t pcpu_id)
@@ -142,11 +163,13 @@ void schedule(void)
 {
 	uint16_t pcpu_id = get_pcpu_id();
 	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
-	struct thread_object *next = NULL;
+	struct thread_object *next = &per_cpu(idle, pcpu_id);
 	struct thread_object *prev = ctl->curr_obj;
 
 	get_schedule_lock(pcpu_id);
-	next = get_next_sched_obj(ctl);
+	if (ctl->scheduler->pick_next != NULL) {
+		next = ctl->scheduler->pick_next(ctl);
+	}
 	bitmap_clear_lock(NEED_RESCHEDULE, &ctl->flags);
 
 	/* Don't change prev object's status if it's not running */
@@ -168,9 +191,12 @@ void schedule(void)
 void sleep_thread(struct thread_object *obj)
 {
 	uint16_t pcpu_id = obj->pcpu_id;
+	struct acrn_scheduler *scheduler = get_scheduler(pcpu_id);
 
 	get_schedule_lock(pcpu_id);
-	remove_thread_obj(obj, pcpu_id);
+	if (scheduler->sleep != NULL) {
+		scheduler->sleep(obj);
+	}
 	if (is_running(obj)) {
 		if (obj->notify_mode == SCHED_NOTIFY_INIT) {
 			make_reschedule_request(pcpu_id, DEL_MODE_INIT);
@@ -185,10 +211,14 @@ void sleep_thread(struct thread_object *obj)
 void wake_thread(struct thread_object *obj)
 {
 	uint16_t pcpu_id = obj->pcpu_id;
+	struct acrn_scheduler *scheduler;
 
 	get_schedule_lock(pcpu_id);
 	if (is_blocked(obj)) {
-		insert_thread_obj(obj, pcpu_id);
+		scheduler = get_scheduler(pcpu_id);
+		if (scheduler->wake != NULL) {
+			scheduler->wake(obj);
+		}
 		set_thread_status(obj, THREAD_STS_RUNNABLE);
 		make_reschedule_request(pcpu_id, DEL_MODE_IPI);
 	}
@@ -197,6 +227,7 @@ void wake_thread(struct thread_object *obj)
 
 void run_thread(struct thread_object *obj)
 {
+	init_thread_data(obj);
 	get_schedule_lock(obj->pcpu_id);
 	get_cpu_var(sched_ctl).curr_obj = obj;
 	set_thread_status(obj, THREAD_STS_RUNNING);
