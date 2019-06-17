@@ -409,6 +409,7 @@ void cpu_dead(void)
 	int32_t halt = 1;
 	uint16_t pcpu_id = get_pcpu_id();
 
+	deinit_sched(pcpu_id);
 	if (bitmap_test(pcpu_id, &pcpu_active_bitmap)) {
 		/* clean up native stuff */
 		vmx_off();

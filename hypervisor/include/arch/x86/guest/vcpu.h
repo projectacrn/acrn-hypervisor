@@ -634,7 +634,7 @@ void resume_vcpu(struct acrn_vcpu *vcpu);
  *
  * @return None
  */
-void schedule_vcpu(struct acrn_vcpu *vcpu);
+void launch_vcpu(struct acrn_vcpu *vcpu);
 
 /**
  * @brief create a vcpu for the vm and mapped to the pcpu.
