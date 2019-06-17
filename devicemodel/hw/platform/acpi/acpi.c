@@ -857,14 +857,13 @@ void
 dsdt_indent(int levels)
 {
 	dsdt_indent_level += levels;
-	assert(dsdt_indent_level >= 0);
 }
 
 void
 dsdt_unindent(int levels)
 {
-	assert(dsdt_indent_level >= levels);
-	dsdt_indent_level -= levels;
+	if (dsdt_indent_level >= levels)
+		dsdt_indent_level -= levels;
 }
 
 void
