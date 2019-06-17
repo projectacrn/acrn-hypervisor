@@ -170,7 +170,8 @@ acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:
   console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
   consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$4 i915.enable_guc_loading=0 \
   i915.enable_hangcheck=0 i915.nuclear_pageflip=1 \
-  i915.enable_guc_submission=0 i915.enable_guc=0" $vm_name
+  i915.enable_guc_submission=0 i915.enable_guc=0 \
+  processor.bm_check_disable=1" $vm_name
 }
 
 function launch_android()
@@ -322,7 +323,8 @@ kernel_cmdline_generic="maxcpus=$2 nohpet tsc=reliable intel_iommu=off \
    snd_soc_skl_virtio_fe.domain_id=1 \
    snd_soc_skl_virtio_fe.domain_name="GuestOS" \
    i915.enable_rc6=1 i915.enable_fbc=1 i915.enable_guc_loading=0 i915.avail_planes_per_pipe=$4 \
-   i915.enable_hangcheck=0 use_nuclear_flip=1 i915.enable_guc_submission=0 i915.enable_guc=0"
+   i915.enable_hangcheck=0 use_nuclear_flip=1 i915.enable_guc_submission=0 i915.enable_guc=0 \
+   processor.bm_check_disable=1"
 
 boot_dev_flag=",b"
 if [ $7 == 1 ];then
