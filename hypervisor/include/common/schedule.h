@@ -41,6 +41,7 @@ struct thread_object {
 };
 
 struct sched_control {
+	uint16_t pcpu_id;
 	uint64_t flags;
 	struct thread_object *curr_obj;
 	spinlock_t scheduler_lock;	/* to protect sched_control and thread_object */
