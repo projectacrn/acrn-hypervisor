@@ -28,7 +28,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 
 #include "dm.h"
 #include "vmmapi.h"
@@ -72,20 +71,19 @@ ovmf_image_size(void)
 int
 acrn_parse_ovmf(char *arg)
 {
-	int error;
+	int error = -1;
 	size_t len = strnlen(arg, STR_LEN);
 
 	if (len < STR_LEN) {
 		strncpy(ovmf_path, arg, len + 1);
-		error = check_image(ovmf_path, 2 * MB, &ovmf_size);
-		assert(!error);
-
-		ovmf_file_name = ovmf_path;
-		printf("SW_LOAD: get ovmf path %s, size 0x%lx\n",
-		       ovmf_path, ovmf_size);
-		return 0;
-	} else
-		return -1;
+		if (check_image(ovmf_path, 2 * MB, &ovmf_size) == 0) {
+			ovmf_file_name = ovmf_path;
+			printf("SW_LOAD: get ovmf path %s, size 0x%lx\n",
+						ovmf_path, ovmf_size);
+			error = 0;
+		}
+	}
+	return error;
 }
 
 static int
@@ -149,7 +147,8 @@ acrn_sw_load_ovmf(struct vmctx *ctx)
 	e820 = paddr_guest2host(ctx, OVMF_E820_BASE,
 			e820_default_entries[LOWRAM_E820_ENTRY].baseaddr -
 			OVMF_E820_BASE);
-	assert(e820 != NULL);
+	if (e820 == NULL)
+		return -1;
 
 	strncpy(e820->signature, "820", sizeof(e820->signature));
 	e820->nentries = acrn_create_e820_table(ctx, e820->map);
