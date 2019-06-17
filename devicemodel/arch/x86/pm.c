@@ -28,7 +28,6 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <stdio.h>
-#include <assert.h>
 #include <errno.h>
 #include <pthread.h>
 #include <signal.h>
@@ -69,7 +68,6 @@ static int
 reset_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	      uint32_t *eax, void *arg)
 {
-	int error;
 	static uint8_t reset_control;
 
 	if (bytes != 1)
@@ -81,14 +79,12 @@ reset_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 
 		if (*eax & 0x8) {
 			fprintf(stderr, "full reset\r\n");
-			error = vm_suspend(ctx, VM_SUSPEND_FULL_RESET);
-			assert(error ==0 || errno == EALREADY);
+			vm_suspend(ctx, VM_SUSPEND_FULL_RESET);
 			mevent_notify();
 			reset_control = 0;
 		} else if (*eax & 0x4) {
 			fprintf(stderr, "system reset\r\n");
-			error = vm_suspend(ctx, VM_SUSPEND_SYSTEM_RESET);
-			assert(error ==0 || errno == EALREADY);
+			vm_suspend(ctx, VM_SUSPEND_SYSTEM_RESET);
 			mevent_notify();
 		}
 	}
@@ -279,8 +275,6 @@ static int
 pm1_control_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		    uint32_t *eax, void *arg)
 {
-	int error;
-
 	if (bytes != 2)
 		return -1;
 	if (in)
@@ -300,13 +294,11 @@ pm1_control_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		 */
 		if (*eax & VIRTUAL_PM1A_SLP_EN) {
 			if ((pm1_control & VIRTUAL_PM1A_SLP_TYP) >> 10 == 5) {
-				error = vm_suspend(ctx, VM_SUSPEND_POWEROFF);
-				assert(error == 0 || errno == EALREADY);
+				vm_suspend(ctx, VM_SUSPEND_POWEROFF);
 			}
 
 			if ((pm1_control & VIRTUAL_PM1A_SLP_TYP) >> 10 == 3) {
-				error = vm_suspend(ctx, VM_SUSPEND_SUSPEND);
-				assert(error == 0 || errno == EALREADY);
+				vm_suspend(ctx, VM_SUSPEND_SUSPEND);
 			}
 		}
 	}
@@ -452,8 +444,7 @@ static int
 smi_cmd_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		uint32_t *eax, void *arg)
 {
-	assert(!in);
-	if (bytes != 1)
+	if (in || (bytes != 1))
 		return -1;
 
 	pthread_mutex_lock(&pm_lock);
