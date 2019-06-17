@@ -26,12 +26,12 @@
 
 #include <pthread.h>
 #include <string.h>
-#include <assert.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <errno.h>
 
 #include "vmmapi.h"
 #include "inout.h"
@@ -231,8 +231,6 @@ vrtc_curtime(struct vrtc *vrtc, time_t *basetime)
 	if (update_enabled(vrtc)) {
 		now = time(NULL);
 		delta = now - vrtc->base_uptime;
-		assert(delta >= 0);
-
 		secs = delta;
 		t += secs;
 		*basetime += secs;
@@ -308,21 +306,11 @@ clk_ts_to_ct(struct timespec *ts, struct clktime *ct)
 	rsec = rsec % 60;
 	ct->sec  = rsec;
 	ct->nsec = ts->tv_nsec;
-
-	assert(ct->year >= 0 && ct->year < 10000);
-	assert(ct->mon >= 1 && ct->mon <= 12);
-	assert(ct->day >= 1 && ct->day <= 31);
-	assert(ct->hour >= 0 && ct->hour <= 23);
-	assert(ct->min >= 0 && ct->min <= 59);
-	/* Not sure if this interface needs to handle leapseconds or not. */
-	assert(ct->sec >= 0 && ct->sec <= 60);
 }
 
 static inline uint8_t
 rtcset(struct rtcdev *rtc, int val)
 {
-	assert(val >= 0 && val < 100);
-
 	return ((rtc->reg_b & RTCSB_BIN) ? val : bin2bcd_data[val]);
 }
 
@@ -396,10 +384,9 @@ secs_to_rtc(time_t rtctime, struct vrtc *vrtc, int force_update)
 	struct rtcdev *rtc;
 	int hour;
 
-	if (rtctime < 0) {
-		assert(rtctime == VRTC_BROKEN_TIME);
+	if (rtctime < 0)
+		/*VRTC_BROKEN_TIME case*/
 		return;
-	}
 
 	/*
 	 * If the RTC is halted then the guest has "ownership" of the
@@ -413,13 +400,11 @@ secs_to_rtc(time_t rtctime, struct vrtc *vrtc, int force_update)
 	ts.tv_nsec = 0;
 	clk_ts_to_ct(&ts, &ct);
 
-	assert(ct.sec >= 0 && ct.sec <= 59);
-	assert(ct.min >= 0 && ct.min <= 59);
-	assert(ct.hour >= 0 && ct.hour <= 23);
-	assert(ct.dow >= 0 && ct.dow <= 6);
-	assert(ct.day >= 1 && ct.day <= 31);
-	assert(ct.mon >= 1 && ct.mon <= 12);
-	assert(ct.year >= POSIX_BASE_YEAR);
+	if ((ct.sec < 0 || ct.sec > 59) || (ct.min < 0 || ct.min > 59)
+			|| (ct.hour < 0 || ct.hour > 23) || (ct.dow < 0 || ct.dow > 6)
+			|| (ct.day < 1 || ct.day > 31) || (ct.mon < 1 || ct.mon > 12)
+			|| (ct.year < POSIX_BASE_YEAR))
+		return;
 
 	rtc = &vrtc->rtcdev;
 	rtc->sec = rtcset(rtc, ct.sec);
@@ -582,7 +567,7 @@ vrtc_start_timer(struct acrn_timer *timer, time_t sec, time_t nsec)
 	/*set the delay time it will be started when timer_setting*/
 	ts.it_value.tv_sec = sec;
 	ts.it_value.tv_nsec = nsec;
-	assert(acrn_timer_settime(timer, &ts) == 0);
+	acrn_timer_settime(timer, &ts);
 }
 
 static int
@@ -735,7 +720,6 @@ vrtc_set_reg_b(struct vrtc *vrtc, uint8_t newval)
 	struct rtcdev *rtc;
 	time_t oldfreq, newfreq, basetime;
 	time_t curtime, rtctime;
-	int error;
 	uint8_t oldval, changed;
 
 	rtc = &vrtc->rtcdev;
@@ -759,7 +743,8 @@ vrtc_set_reg_b(struct vrtc *vrtc, uint8_t newval)
 			}
 		} else {
 			curtime = vrtc_curtime(vrtc, &basetime);
-			assert(curtime == vrtc->base_rtctime);
+			if (curtime != vrtc->base_rtctime)
+				return -1;
 
 			/*
 			 * Force a refresh of the RTC date/time fields so
@@ -775,8 +760,8 @@ vrtc_set_reg_b(struct vrtc *vrtc, uint8_t newval)
 			rtctime = VRTC_BROKEN_TIME;
 			rtc->reg_b &= ~RTCSB_UINTR;
 		}
-		error = vrtc_time_update(vrtc, rtctime, basetime);
-		assert(error == 0);
+		if (vrtc_time_update(vrtc, rtctime, basetime) != 0)
+			return -1;
 	}
 
 	/*
@@ -981,8 +966,7 @@ vrtc_data_handler(struct vmctx *ctx, int vcpu, int in, int port,
 		if (offset == RTC_CENTURY && !rtc_halted(vrtc)) {
 			curtime = rtc_to_secs(vrtc);
 			error = vrtc_time_update(vrtc, curtime, time(NULL));
-			assert(!error);
-			if (curtime == VRTC_BROKEN_TIME && rtc_flag_broken_time)
+			if ((error != 0) || (curtime == VRTC_BROKEN_TIME && rtc_flag_broken_time))
 				error = -1;
 		}
 	}
@@ -1020,7 +1004,9 @@ vrtc_init(struct vmctx *ctx)
 	struct inout_port rtc_addr, rtc_data;
 
 	vrtc = calloc(1, sizeof(struct vrtc));
-	assert(vrtc != NULL);
+	if (vrtc == NULL)
+		return -ENOMEM;
+
 	vrtc->vm = ctx;
 	ctx->vrtc = vrtc;
 
@@ -1033,20 +1019,37 @@ vrtc_init(struct vmctx *ctx)
 	 * 0x5b/0x5c/0x5d - 64KB chunks above 4GB
 	 */
 	lomem = vm_get_lowmem_size(ctx);
-	assert(lomem >= 16 * MB);
+	if (lomem < 16 * MB) {
+		err = -EINVAL;
+		goto fail;
+	}
+
 	lomem = (lomem - 16 * MB) / (64 * KB);
-	err = vrtc_nvram_write(vrtc, RTC_LMEM_LSB, lomem);
-	assert(err == 0);
-	err = vrtc_nvram_write(vrtc, RTC_LMEM_MSB, lomem >> 8);
-	assert(err == 0);
+	if (vrtc_nvram_write(vrtc, RTC_LMEM_LSB, lomem) != 0) {
+		err = -EIO;
+		goto fail;
+	}
+
+	if (vrtc_nvram_write(vrtc, RTC_LMEM_MSB, lomem >> 8) != 0) {
+		err = -EIO;
+		goto fail;
+	}
 
 	himem = vm_get_highmem_size(ctx) / (64 * KB);
-	err = vrtc_nvram_write(vrtc, RTC_HMEM_LSB, himem);
-	assert(err == 0);
-	err = vrtc_nvram_write(vrtc, RTC_HMEM_SB, himem >> 8);
-	assert(err == 0);
-	err = vrtc_nvram_write(vrtc, RTC_HMEM_MSB, himem >> 16);
-	assert(err == 0);
+	if (vrtc_nvram_write(vrtc, RTC_HMEM_LSB, himem) != 0) {
+		err = -EIO;
+		goto fail;
+	}
+
+	if (vrtc_nvram_write(vrtc, RTC_HMEM_SB, himem >> 8) != 0) {
+		err = -EIO;
+		goto fail;
+	}
+
+	if (vrtc_nvram_write(vrtc, RTC_HMEM_MSB, himem >> 16) != 0) {
+		err = -EIO;
+		goto fail;
+	}
 
 	memset(&rtc_addr, 0, sizeof(struct inout_port));
 	memset(&rtc_data, 0, sizeof(struct inout_port));
@@ -1057,7 +1060,10 @@ vrtc_init(struct vmctx *ctx)
 	rtc_addr.flags = IOPORT_F_INOUT;
 	rtc_addr.handler = vrtc_addr_handler;
 	rtc_addr.arg = vrtc;
-	assert(register_inout(&rtc_addr) == 0);
+	if (register_inout(&rtc_addr) != 0) {
+		err = -EINVAL;
+		goto fail;
+	}
 
 	/*register io port handler for rtc data*/
 	rtc_data.name = "rtc";
@@ -1066,7 +1072,10 @@ vrtc_init(struct vmctx *ctx)
 	rtc_data.flags = IOPORT_F_INOUT;
 	rtc_data.handler = vrtc_data_handler;
 	rtc_data.arg = vrtc;
-	assert(register_inout(&rtc_data) == 0);
+	if (register_inout(&rtc_data) != 0) {
+		err = -EINVAL;
+		goto fail;
+	}
 
 	/* Allow dividers o keep time but disable everything else */
 	rtc = &vrtc->rtcdev;
@@ -1100,6 +1109,10 @@ vrtc_init(struct vmctx *ctx)
 	vrtc_start_timer(&vrtc->update_timer, 1, 0);
 
 	return 0;
+
+fail:
+	free(vrtc);
+	return err;
 }
 
 void
