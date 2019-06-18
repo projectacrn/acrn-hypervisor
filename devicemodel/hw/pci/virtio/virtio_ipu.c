@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
 #include <pthread.h>
 
 #include "dm.h"
@@ -374,8 +373,8 @@ virtio_ipu_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		virtio_ipu_k_stop(ipu);
 		virtio_ipu_k_reset(ipu);
 		ipu->vbs_k.ipu_kstatus = VIRTIO_DEV_INITIAL;
-		assert(ipu->vbs_k.ipu_fd >= 0);
-		close(ipu->vbs_k.ipu_fd);
+		if (ipu->vbs_k.ipu_fd >= 0)
+			close(ipu->vbs_k.ipu_fd);
 		ipu->vbs_k.ipu_fd = -1;
 	}
 	pthread_mutex_destroy(&ipu->mtx);
