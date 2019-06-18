@@ -854,3 +854,19 @@ enum vm_vlapic_state check_vm_vlapic_state(const struct acrn_vm *vm)
 	vlapic_state = vm->arch_vm.vlapic_state;
 	return vlapic_state;
 }
+
+/**
+ * if there is RT VM return true otherwise return false.
+ */
+bool has_rt_vm(void)
+{
+	uint16_t vm_id;
+
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		if (is_rt_vm(get_vm_from_vmid(vm_id))) {
+			break;
+		}
+	}
+
+	return ((vm_id == CONFIG_MAX_VM_NUM) ? false : true);
+}
