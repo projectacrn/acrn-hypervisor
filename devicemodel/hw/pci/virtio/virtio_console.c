@@ -39,7 +39,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
 #include <pthread.h>
 #include <termios.h>
 #include <limits.h>
@@ -272,14 +271,12 @@ virtio_console_add_port(struct virtio_console *console, const char *name,
 
 static void
 virtio_console_control_tx(struct virtio_console_port *port, void *arg,
-			  struct iovec *iov, int niov)
+			  struct iovec *iov, int niov __attribute__((unused)))
 {
 	struct virtio_console *console;
 	struct virtio_console_port *tmp;
 	struct virtio_console_control resp, *ctrl;
 	int i;
-
-	assert(niov == 1);
 
 	console = port->console;
 	ctrl = (struct virtio_console_control *)iov->iov_base;
@@ -363,8 +360,10 @@ virtio_console_control_send(struct virtio_console *console,
 		return;
 
 	n = vq_getchain(vq, &idx, &iov, 1, NULL);
-
-	assert(n == 1);
+	if (n < 1) {
+		WPRINTF(("vtcon: control_send vq_getchain error %d\n", n));
+		return;
+	}
 
 	memcpy(iov.iov_base, ctrl, sizeof(struct virtio_console_control));
 	if (payload != NULL && len > 0)

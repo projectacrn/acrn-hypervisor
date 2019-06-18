@@ -29,7 +29,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
@@ -167,7 +166,9 @@ rxfifo_reset(struct uart_vdev *uart, int size)
 {
 	struct fifo *fifo;
 
-	assert(size <= uart->rxfifo_size);
+	if (size > uart->rxfifo_size)
+		size = uart->rxfifo_size;
+
 	fifo = &uart->rxfifo;
 	fifo->rindex = 0;
 	fifo->windex = 0;
@@ -301,7 +302,6 @@ modem_status(uint8_t mcr)
 		 */
 		msr = MSR_DCD | MSR_DSR;
 	}
-	assert((msr & MSR_DELTA_MASK) == 0);
 
 	return msr;
 }
@@ -372,8 +372,6 @@ uart_drain(int fd, enum ev_type ev, void *arg)
 	int ch;
 
 	uart = arg;
-
-	assert(ev == EVF_READ);
 
 	/*
 	 * This routine is called in the context of the mevent thread
@@ -632,18 +630,17 @@ uart_init(uart_intr_func_t intr_assert, uart_intr_func_t intr_deassert,
 	struct uart_vdev *uart;
 
 	uart = calloc(1, sizeof(struct uart_vdev) + rxfifo_size);
+	if (uart) {
+		uart->arg = arg;
+		uart->rxfifo_size = rxfifo_size;
+		uart->intr_assert = intr_assert;
+		uart->intr_deassert = intr_deassert;
+		uart->rxfifo.buf = (uint8_t *)(uart + 1);
 
-	assert(uart != NULL);
+		pthread_mutex_init(&uart->mtx, NULL);
 
-	uart->arg = arg;
-	uart->rxfifo_size = rxfifo_size;
-	uart->intr_assert = intr_assert;
-	uart->intr_deassert = intr_deassert;
-	uart->rxfifo.buf = (uint8_t *)(uart + 1);
-
-	pthread_mutex_init(&uart->mtx, NULL);
-
-	uart_reset(uart);
+		uart_reset(uart);
+	}
 
 	return uart;
 }

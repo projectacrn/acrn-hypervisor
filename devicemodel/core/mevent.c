@@ -30,7 +30,6 @@
  * Micro event library for FreeBSD, designed for a single i/o thread
  * using EPOLL, and having events be persistent by default.
  */
-#include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -377,7 +376,6 @@ int
 mevent_init(void)
 {
 	epoll_fd = epoll_create1(0);
-	assert(epoll_fd >= 0);
 
 	if (epoll_fd >= 0)
 		return 0;
@@ -420,7 +418,10 @@ mevent_dispatch(void)
 	 * Add internal event handler for the pipe write fd
 	 */
 	pipev = mevent_add(mevent_pipefd[0], EVF_READ, mevent_pipe_read, NULL, NULL, NULL);
-	assert(pipev != NULL);
+	if (!pipev) {
+		fprintf(stderr, "pipefd mevent_add failed\n");
+		exit(0);
+	}
 
 	for (;;) {
 		int suspend_mode;
