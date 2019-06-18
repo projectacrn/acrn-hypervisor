@@ -30,6 +30,7 @@ static int32_t unhandled_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t undefined_vmexit_handler(struct acrn_vcpu *vcpu);
+static int32_t pause_vmexit_handler(__unused struct acrn_vcpu *vcpu);
 
 /* VM Dispatch table for Exit condition handling */
 static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
@@ -113,7 +114,7 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_MONITOR] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_PAUSE] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = pause_vmexit_handler},
 	[VMX_EXIT_REASON_ENTRY_FAILURE_MACHINE_CHECK] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_TPR_BELOW_THRESHOLD] = {
@@ -274,6 +275,12 @@ static int32_t triple_fault_vmexit_handler(struct acrn_vcpu *vcpu)
 		vcpu->vm->vm_id, exec_vmread(VMX_GUEST_RIP), exec_vmread(VMX_EXIT_QUALIFICATION));
 	triple_fault_shutdown_vm(vcpu);
 
+	return 0;
+}
+
+static int32_t pause_vmexit_handler(__unused struct acrn_vcpu *vcpu)
+{
+	yield_current();
 	return 0;
 }
 
