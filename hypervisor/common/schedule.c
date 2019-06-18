@@ -240,6 +240,11 @@ void kick_thread(const struct thread_object *obj)
 	release_schedule_lock(pcpu_id, rflag);
 }
 
+void yield_current(void)
+{
+	make_reschedule_request(get_pcpu_id(), DEL_MODE_IPI);
+}
+
 void run_thread(struct thread_object *obj)
 {
 	uint64_t rflag;
