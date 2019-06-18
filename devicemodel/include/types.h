@@ -3,6 +3,7 @@
 
 #include "macros.h"
 #include <stdint.h>
+#include <stdarg.h>
 #include <sched.h>
 #include <sys/types.h>
 
