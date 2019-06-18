@@ -28,7 +28,6 @@
  */
 
 #include <stdio.h>
-#include <assert.h>
 #include <stdbool.h>
 
 #include "inout.h"
@@ -63,9 +62,6 @@ cmos_io_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	static int buf_offset;
 	static int next_ops;  /* 0 for addr, 1 for data, in pair (addr,data)*/
 
-	assert(port == CMOS_ADDR || port == CMOS_DATA);
-	assert(bytes == 1);
-
 #ifdef CMOS_DEBUG
 	if (!dbg_file)
 		dbg_file = fopen("/tmp/cmos_log", "a+");
@@ -77,7 +73,6 @@ cmos_io_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	if (port == CMOS_ADDR) {
 
 		/* if port is addr, ops should be 0 */
-		assert(next_ops == 0 && !in);
 		if (next_ops != 0) {
 			next_ops = 0;
 			return -1;
@@ -88,7 +83,6 @@ cmos_io_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 
 	} else if (port == CMOS_DATA) {
 
-		assert(next_ops == 1);
 		if (next_ops != 1) {
 			next_ops = 0;
 			return -1;
