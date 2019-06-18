@@ -297,7 +297,8 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	 */
 	value32 = check_vmx_ctrl(MSR_IA32_VMX_PROCBASED_CTLS2,
 			VMX_PROCBASED_CTLS2_VAPIC | VMX_PROCBASED_CTLS2_EPT |
-			VMX_PROCBASED_CTLS2_RDTSCP | VMX_PROCBASED_CTLS2_UNRESTRICT);
+			VMX_PROCBASED_CTLS2_RDTSCP | VMX_PROCBASED_CTLS2_UNRESTRICT |
+			VMX_PROCBASED_CTLS2_PAUSE_LOOP);
 
 	if (vcpu->arch.vpid != 0U) {
 		value32 |= VMX_PROCBASED_CTLS2_VPID;
@@ -422,6 +423,10 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	exec_vmwrite(VMX_CR3_TARGET_1, 0UL);
 	exec_vmwrite(VMX_CR3_TARGET_2, 0UL);
 	exec_vmwrite(VMX_CR3_TARGET_3, 0UL);
+
+	/* Setup PAUSE-loop exiting - 24.6.13 */
+	exec_vmwrite(VMX_PLE_GAP, 128U);
+	exec_vmwrite(VMX_PLE_WINDOW, 4096U);
 }
 
 static void init_entry_ctrl(const struct acrn_vcpu *vcpu)
