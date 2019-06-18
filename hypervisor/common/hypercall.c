@@ -485,7 +485,7 @@ int32_t hcall_inject_msi(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 		} else {
 			/* For target cpu with lapic pt, send ipi instead of injection via vlapic */
 			if (is_lapic_pt_configured(target_vm)) {
-				enum vm_vlapic_state vlapic_state = check_vm_vlapic_state(vm);
+				enum vm_vlapic_state vlapic_state = check_vm_vlapic_state(target_vm);
 				if (vlapic_state == VM_VLAPIC_X2APIC) {
 					/*
 					 * All the vCPUs of VM are in x2APIC mode and LAPIC is PT
