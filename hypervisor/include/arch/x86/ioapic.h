@@ -13,9 +13,10 @@
 #define NR_LEGACY_PIN		NR_LEGACY_IRQ
 
 struct ioapic_info {
-	uint8_t id;
-	uint32_t addr;
-	uint32_t gsi_base;
+	uint8_t id;		/* IOAPIC ID as indicated in ACPI MADT */
+	uint32_t addr;		/* IOAPIC Register address */
+	uint32_t gsi_base;	/* Global System Interrupt where this IO-APIC's interrupt input start */
+	uint32_t nr_pins;	/* Number of Interrupt inputs as determined by Max. Redir Entry Register */
 };
 
 void ioapic_setup_irqs(void);
