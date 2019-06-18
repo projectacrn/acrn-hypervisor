@@ -42,11 +42,6 @@
  */
 
 
-/*
- * 16 priority levels with at most one vector injected per level.
- */
-#define	ISRVEC_STK_SIZE		(16U + 1U)
-
 #define VLAPIC_MAXLVT_INDEX	APIC_LVT_CMCI
 
 struct vlapic_pir_desc {
@@ -74,7 +69,7 @@ struct acrn_vlapic {
 	struct vlapic_pir_desc	pir_desc;
 
 	struct acrn_vm		*vm;
-	struct acrn_vcpu		*vcpu;
+	struct acrn_vcpu	*vcpu;
 
 	uint32_t		esr_pending;
 	int32_t			esr_firing;
@@ -82,21 +77,9 @@ struct acrn_vlapic {
 	struct vlapic_timer	vtimer;
 
 	/*
-	 * The 'isrvec_stk' is a stack of vectors injected by the local apic.
-	 * A vector is popped from the stack when the processor does an EOI.
-	 * The vector on the top of the stack is used to compute the
-	 * Processor Priority in conjunction with the TPR.
-	 *
-	 * Note: isrvec_stk_top is unsigned and always equal to the number of
-	 * vectors in the stack.
-	 *
-	 * Operations:
-	 *     init: isrvec_stk_top = 0;
-	 *     push: isrvec_stk_top++; isrvec_stk[isrvec_stk_top] = x;
-	 *     pop : isrvec_stk_top--;
+	 * isrv: vector number for the highest priority bit that is set in the ISR
 	 */
-	uint8_t		isrvec_stk[ISRVEC_STK_SIZE];
-	uint32_t	isrvec_stk_top;
+	uint32_t	isrv;
 
 	uint64_t	msr_apicbase;
 

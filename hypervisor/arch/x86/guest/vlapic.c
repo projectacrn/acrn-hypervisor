@@ -79,7 +79,7 @@ static inline void vlapic_dump_isr(const struct acrn_vlapic *vlapic, const char 
 	const struct lapic_reg *isrptr = &(vlapic->apic_page.isr[0]);
 
 	for (uint8_t i = 0U; i < 8U; i++) {
-		dev_dbg(ACRN_DBG_LAPIC, "%s isr%u 0x%08x", msg, i, isrptr[0].v);
+		dev_dbg(ACRN_DBG_LAPIC, "%s isr%u 0x%08x", msg, i, isrptr[i].v);
 	}
 }
 #else
@@ -200,6 +200,27 @@ static inline void vlapic_build_x2apic_id(struct acrn_vlapic *vlapic)
 	logical_id = lapic->id.v & LOGICAL_ID_MASK;
 	cluster_id = (lapic->id.v & CLUSTER_ID_MASK) >> 4U;
 	lapic->ldr.v = (cluster_id << 16U) | (1U << logical_id);
+}
+
+static inline uint32_t vlapic_find_isrv(const struct acrn_vlapic *vlapic)
+{
+	const struct lapic_regs *lapic = &(vlapic->apic_page);
+	uint32_t i, val, bitpos, isrv = 0U;
+	const struct lapic_reg *isrptr;
+
+	isrptr = &lapic->isr[0];
+
+	/* i ranges effectively from 7 to 1 */
+	for (i = 7U; i > 0U; i--) {
+		val = isrptr[i].v;
+		if (val != 0U) {
+			bitpos = (uint32_t)fls32(val);
+			isrv = (i << 5U) | bitpos;
+			break;
+		}
+	}
+
+	return isrv;
 }
 
 static void
@@ -807,22 +828,6 @@ vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
 	return;
 }
 
-static void
-dump_isrvec_stk(const struct acrn_vlapic *vlapic)
-{
-	uint32_t i;
-	const struct lapic_reg *isrptr;
-
-	isrptr = &(vlapic->apic_page.isr[0]);
-	for (i = 0U; i < 8U; i++) {
-		printf("ISR%u 0x%08x\n", i, isrptr[i].v);
-	}
-
-	for (i = 0U; i <= vlapic->isrvec_stk_top; i++) {
-		printf("isrvec_stk[%u] = %hhu\n", i, vlapic->isrvec_stk[i]);
-	}
-}
-
 /*
  * Algorithm adopted from section "Interrupt, Task and Processor Priority"
  * in Intel Architecture Manual Vol 3a.
@@ -830,68 +835,15 @@ dump_isrvec_stk(const struct acrn_vlapic *vlapic)
 static void
 vlapic_update_ppr(struct acrn_vlapic *vlapic)
 {
-	uint32_t top_isrvec;
-	uint32_t tpr, ppr;
+	uint32_t isrv, tpr, ppr;
 
-	/*
-	 * Note that the value on the stack at index 0 is always 0.
-	 *
-	 * This is a placeholder for the value of ISRV when none of the
-	 * bits is set in the ISRx registers.
-	 */
-	top_isrvec = (uint32_t)vlapic->isrvec_stk[vlapic->isrvec_stk_top];
+	isrv = vlapic->isrv;
 	tpr = vlapic->apic_page.tpr.v;
 
-	/* update ppr */
-	{
-		int32_t lastprio, curprio;
-		struct lapic_reg *isrptr;
-		uint32_t i, idx, vector;
-		uint32_t isrvec;
-
-		if ((vlapic->isrvec_stk_top == 0U) && (top_isrvec != 0U)) {
-			panic("isrvec_stk is corrupted: %u", top_isrvec);
-		}
-
-		/*
-		 * Make sure that the priority of the nested interrupts is
-		 * always increasing.
-		 */
-		lastprio = -1;
-		for (i = 1U; i <= vlapic->isrvec_stk_top; i++) {
-			isrvec = (uint32_t)vlapic->isrvec_stk[i];
-			curprio = (int32_t)prio(isrvec);
-			if (curprio <= lastprio) {
-				dump_isrvec_stk(vlapic);
-				panic("isrvec_stk does not satisfy invariant");
-			}
-			lastprio = curprio;
-		}
-
-		/*
-		 * Make sure that each bit set in the ISRx registers has a
-		 * corresponding entry on the isrvec stack.
-		 */
-		i = 1U;
-		isrptr = &(vlapic->apic_page.isr[0]);
-		for (vector = 0U; vector < 256U; vector++) {
-			idx = vector >> 5U;
-			if (((isrptr[idx].v & (1U << (vector & 0x1fU))) != 0U)
-				&& (i < ISRVEC_STK_SIZE)) {
-				isrvec = (uint32_t)vlapic->isrvec_stk[i];
-				if ((i > vlapic->isrvec_stk_top) || (isrvec != vector)) {
-					dump_isrvec_stk(vlapic);
-					panic("ISR and isrvec_stk out of sync");
-				}
-				i++;
-			}
-		}
-	}
-
-	if (prio(tpr) >= prio(top_isrvec)) {
+	if (prio(tpr) >= prio(isrv)) {
 		ppr = tpr;
 	} else {
-		ppr = top_isrvec & 0xf0U;
+		ppr = isrv & 0xf0U;
 	}
 
 	vlapic->apic_page.ppr.v = ppr;
@@ -908,26 +860,21 @@ vlapic_process_eoi(struct acrn_vlapic *vlapic)
 	isrptr = &lapic->isr[0];
 	tmrptr = &lapic->tmr[0];
 
-	/* i ranges effectively from 7 to 0 */
-	for (i = 8U; i > 0U; ) {
-		i--;
-		bitpos = (uint32_t)fls32(isrptr[i].v);
-		if (bitpos != INVALID_BIT_INDEX) {
-			if (vlapic->isrvec_stk_top == 0U) {
-				panic("invalid vlapic isrvec_stk_top %u",
-					vlapic->isrvec_stk_top);
-			}
-			isrptr[i].v &= ~(1U << bitpos);
-			vector = (i * 32U) + bitpos;
-			dev_dbg(ACRN_DBG_LAPIC, "EOI vector %u", vector);
-			vlapic_dump_isr(vlapic, "vlapic_process_eoi");
-			vlapic->isrvec_stk_top--;
-			vlapic_update_ppr(vlapic);
-			if ((tmrptr[i].v & (1U << bitpos)) != 0U) {
-				/* hook to vIOAPIC */
-				vioapic_process_eoi(vlapic->vm, vector);
-			}
-			break;
+	if (vlapic->isrv != 0U) {
+		vector = vlapic->isrv;
+		i = (vector >> 5U);
+		bitpos = (vector & 0x1fU);
+		isrptr[i].v &= ~(1U << bitpos);
+
+		dev_dbg(ACRN_DBG_LAPIC, "EOI vector %u", vector);
+		vlapic_dump_isr(vlapic, "vlapic_process_eoi");
+
+		vlapic->isrv = vlapic_find_isrv(vlapic);
+		vlapic_update_ppr(vlapic);
+
+		if ((tmrptr[i].v & (1U << bitpos)) != 0U) {
+			/* hook to vIOAPIC */
+			vioapic_process_eoi(vlapic->vm, vector);
 		}
 	}
 
@@ -1384,7 +1331,7 @@ static void vlapic_get_deliverable_intr(struct acrn_vlapic *vlapic, uint32_t vec
 {
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 	struct lapic_reg *irrptr, *isrptr;
-	uint32_t idx, stk_top;
+	uint32_t idx;
 
 	/*
 	 * clear the ready bit for vector being accepted in irr
@@ -1400,17 +1347,11 @@ static void vlapic_get_deliverable_intr(struct acrn_vlapic *vlapic, uint32_t vec
 	isrptr[idx].v |= 1U << (vector & 0x1fU);
 	vlapic_dump_isr(vlapic, "vlapic_get_deliverable_intr");
 
+	vlapic->isrv = vector;
+
 	/*
 	 * Update the PPR
 	 */
-	vlapic->isrvec_stk_top++;
-
-	stk_top = vlapic->isrvec_stk_top;
-	if (stk_top >= ISRVEC_STK_SIZE) {
-		panic("isrvec_stk_top overflow %u", stk_top);
-	}
-
-	vlapic->isrvec_stk[stk_top] = (uint8_t)vector;
 	vlapic_update_ppr(vlapic);
 }
 
@@ -1707,11 +1648,7 @@ vlapic_reset(struct acrn_vlapic *vlapic)
 		vlapic->lvt_last[i] = 0U;
 	}
 
-	for (i = 0U; i < ISRVEC_STK_SIZE; i++) {
-		vlapic->isrvec_stk[i] = 0U;
-	}
-
-	vlapic->isrvec_stk_top = 0U;
+	vlapic->isrv = 0U;
 }
 
 /**
