@@ -106,21 +106,8 @@ static bool is_guest_irq_enabled(struct acrn_vcpu *vcpu)
 
 void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid)
 {
-	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
-
 	bitmap_set_lock(eventid, &vcpu->arch.pending_req);
-	/*
-	 * if current hostcpu is not the target vcpu's hostcpu, we need
-	 * to invoke IPI to wake up target vcpu
-	 *
-	 * TODO: Here we just compare with cpuid, since cpuid currently is
-	 *  global under pCPU / vCPU 1:1 mapping. If later we enabled vcpu
-	 *  scheduling, we need change here to determine it target vcpu is
-	 *  VMX non-root or root mode
-	 */
-	if (get_pcpu_id() != pcpu_id) {
-		send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
-	}
+	kick_vcpu(vcpu);
 }
 
 /*
