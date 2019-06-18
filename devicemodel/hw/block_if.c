@@ -33,7 +33,6 @@
 #include <linux/falloc.h>
 #include <linux/fs.h>
 #include <errno.h>
-#include <assert.h>
 #include <err.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -98,7 +97,6 @@ struct blockif_elem {
 };
 
 struct blockif_ctxt {
-	int			magic;
 	int			fd;
 	int			isblk;
 	int			candiscard;
@@ -151,7 +149,6 @@ blockif_flush_cache(struct blockif_ctxt *bc)
 	int err;
 
 	err = 0;
-	assert(bc != NULL);
 	if (!bc->wce) {
 		if (fsync(bc->fd))
 			err = errno;
@@ -168,8 +165,10 @@ blockif_enqueue(struct blockif_ctxt *bc, struct blockif_req *breq,
 	int i;
 
 	be = TAILQ_FIRST(&bc->freeq);
-	assert(be != NULL);
-	assert(be->status == BST_FREE);
+	if (be == NULL || be->status != BST_FREE) {
+		WPRINTF(("%s: failed to get element from freeq\n", __func__));
+		return 0;
+	}
 	TAILQ_REMOVE(&bc->freeq, be, link);
 	be->req = breq;
 	be->op = op;
@@ -212,7 +211,6 @@ blockif_dequeue(struct blockif_ctxt *bc, pthread_t t, struct blockif_elem **bep)
 	TAILQ_FOREACH(be, &bc->pendq, link) {
 		if (be->status == BST_PEND)
 			break;
-		assert(be->status == BST_BLOCK);
 	}
 	if (be == NULL)
 		return 0;
@@ -721,7 +719,6 @@ blockif_open(const char *optstr, const char *ident)
 		bc->sub_file_start_lba = 0;
 	}
 
-	bc->magic = BLOCKIF_SIG;
 	bc->fd = fd;
 	bc->isblk = S_ISBLK(sbuf.st_mode);
 	bc->candiscard = candiscard;
@@ -809,28 +806,24 @@ blockif_request(struct blockif_ctxt *bc, struct blockif_req *breq,
 int
 blockif_read(struct blockif_ctxt *bc, struct blockif_req *breq)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	return blockif_request(bc, breq, BOP_READ);
 }
 
 int
 blockif_write(struct blockif_ctxt *bc, struct blockif_req *breq)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	return blockif_request(bc, breq, BOP_WRITE);
 }
 
 int
 blockif_flush(struct blockif_ctxt *bc, struct blockif_req *breq)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	return blockif_request(bc, breq, BOP_FLUSH);
 }
 
 int
 blockif_discard(struct blockif_ctxt *bc, struct blockif_req *breq)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	return blockif_request(bc, breq, BOP_DISCARD);
 }
 
@@ -838,8 +831,6 @@ int
 blockif_cancel(struct blockif_ctxt *bc, struct blockif_req *breq)
 {
 	struct blockif_elem *be;
-
-	assert(bc->magic == BLOCKIF_SIG);
 
 	pthread_mutex_lock(&bc->mtx);
 	/*
@@ -917,7 +908,6 @@ blockif_close(struct blockif_ctxt *bc)
 	void *jval;
 	int i;
 
-	assert(bc->magic == BLOCKIF_SIG);
 	sub_file_unlock(bc);
 
 	/*
@@ -936,7 +926,6 @@ blockif_close(struct blockif_ctxt *bc)
 	/*
 	 * Release resources
 	 */
-	bc->magic = 0;
 	close(bc->fd);
 	free(bc);
 
@@ -954,8 +943,6 @@ blockif_chs(struct blockif_ctxt *bc, uint16_t *c, uint8_t *h, uint8_t *s)
 	off_t hcyl;		/* cylinders times heads */
 	uint16_t secpt;		/* sectors per track */
 	uint8_t heads;
-
-	assert(bc->magic == BLOCKIF_SIG);
 
 	sectors = bc->size / bc->sectsz;
 
@@ -998,21 +985,18 @@ blockif_chs(struct blockif_ctxt *bc, uint16_t *c, uint8_t *h, uint8_t *s)
 off_t
 blockif_size(struct blockif_ctxt *bc)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	return bc->size;
 }
 
 int
 blockif_sectsz(struct blockif_ctxt *bc)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	return bc->sectsz;
 }
 
 void
 blockif_psectsz(struct blockif_ctxt *bc, int *size, int *off)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	*size = bc->psectsz;
 	*off = bc->psectoff;
 }
@@ -1020,56 +1004,48 @@ blockif_psectsz(struct blockif_ctxt *bc, int *size, int *off)
 int
 blockif_queuesz(struct blockif_ctxt *bc)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	return (BLOCKIF_MAXREQ - 1);
 }
 
 int
 blockif_is_ro(struct blockif_ctxt *bc)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	return bc->rdonly;
 }
 
 int
 blockif_candiscard(struct blockif_ctxt *bc)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	return bc->candiscard;
 }
 
 int
 blockif_max_discard_sectors(struct blockif_ctxt *bc)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	return bc->max_discard_sectors;
 }
 
 int
 blockif_max_discard_seg(struct blockif_ctxt *bc)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	return bc->max_discard_seg;
 }
 
 int
 blockif_discard_sector_alignment(struct blockif_ctxt *bc)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	return bc->discard_sector_alignment;
 }
 
 uint8_t
 blockif_get_wce(struct blockif_ctxt *bc)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	return bc->wce;
 }
 
 void
 blockif_set_wce(struct blockif_ctxt *bc, uint8_t wce)
 {
-	assert(bc->magic == BLOCKIF_SIG);
 	bc->wce = wce;
 }
 
@@ -1079,7 +1055,6 @@ blockif_flush_all(struct blockif_ctxt *bc)
 	int err;
 
 	err=0;
-	assert(bc->magic == BLOCKIF_SIG);
 	if (fsync(bc->fd))
 		err = errno;
 	return err;
