@@ -55,7 +55,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
 #include <pthread.h>
 #include <sysexits.h>
 #include <dlfcn.h>
@@ -312,17 +311,23 @@ virtio_hdcp_talk_to_daemon(void *param)
 		 *  - avoid vring processing due to spurious wakeups
 		 *  - catch missing notifications before acquiring rx_mtx
 		 */
-		while (!vq_has_descs(rvq)) {
-			ret = pthread_cond_wait(&vhdcp->rx_cond, &vhdcp->rx_mtx);
-			assert(ret == 0);
-		}
+		while (!vq_has_descs(rvq))
+			pthread_cond_wait(&vhdcp->rx_cond, &vhdcp->rx_mtx);
 
 		vhdcp->in_progress = 1;
 		pthread_mutex_unlock(&vhdcp->rx_mtx);
 
 		do {
 			ret = vq_getchain(rvq, &idx, &iov, 1, NULL);
-			assert(ret > 0);
+			if (ret < 1) {
+				pr_err("%s: fail to getchain!\n", __func__);
+				return NULL;
+			}
+			if (ret > 1) {
+				pr_warn("%s: invalid chain!\n", __func__);
+				vq_relchain(rvq, idx, 0);
+				continue;
+			}
 
 			msg = (struct SocketData*)(iov.iov_base);
 

@@ -60,7 +60,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
 #include <pthread.h>
 #include <sysexits.h>
 #include <dlfcn.h>
@@ -181,7 +180,15 @@ virtio_coreu_thread(void *param)
 
 		do {
 			ret = vq_getchain(rvq, &idx, &iov, 1, NULL);
-			assert(ret > 0);
+			if (ret < 1) {
+				pr_err("%s: fail to getchain!\n", __func__);
+				return NULL;
+			}
+			if (ret != 1) {
+				pr_warn("%s: invalid chain!\n", __func__);
+				vq_relchain(rvq, idx, 0);
+				continue;
+			}
 
 			msg = (struct coreu_msg *)(iov.iov_base);
 
