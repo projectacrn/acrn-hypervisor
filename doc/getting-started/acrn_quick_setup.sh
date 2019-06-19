@@ -72,7 +72,7 @@ function upgrade_sos()
         echo "Clear Linux version $sos_ver is already installed. Continuing to setup SOS..."
     else
         echo "Upgrading Clear Linux version from $VERSION_ID to $sos_ver ..."
-        swupd verify --fix --picky -m $sos_ver 2>/dev/null
+        swupd diagnose --fix --picky --version $sos_ver 2>/dev/null
     fi
 
     # Do the setups if previous process succeed.
@@ -146,7 +146,7 @@ function upgrade_sos()
     else
         echo "Fail to upgrade SOS to $sos_ver."
         echo "Please try upgrade SOS with this command:"
-        echo "swupd update -m $sos_ver"
+        echo "swupd update --version $sos_ver"
         exit 1
     fi
 
