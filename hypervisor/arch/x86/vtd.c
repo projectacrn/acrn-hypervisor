@@ -179,7 +179,7 @@ bool iommu_snoop_supported(const struct iommu_domain *iommu)
 	bool ret;
 
 	if ((iommu == NULL) || (iommu->iommu_snoop)) {
-		ret =  true;
+		ret =  false;
 	} else {
 		ret = false;
 	}
@@ -1244,7 +1244,7 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 		domain->trans_table_ptr = translation_table;
 		domain->addr_width = addr_width;
 		domain->is_tt_ept = true;
-		domain->iommu_snoop = true;
+		domain->iommu_snoop = false;
 
 		dev_dbg(ACRN_DBG_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
 			vmid_to_domainid(domain->vm_id), domain->vm_id, domain->trans_table_ptr);
