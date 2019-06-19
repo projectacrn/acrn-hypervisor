@@ -100,7 +100,7 @@ struct acrn_vuart *vuart_console_active(void)
 		}
 	}
 
-	return (vu && vu->active) ? vu : NULL;
+	return ((vu != NULL) && vu->active) ? vu : NULL;
 }
 
 static void console_timer_callback(__unused void *data)
