@@ -7,7 +7,6 @@
 
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <assert.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <fcntl.h>
@@ -292,6 +291,15 @@ static void record_intr_statistics(struct gpio_irq_chip *chip, uint64_t mask);
 static void gpio_pio_write(struct virtio_gpio *gpio, int n, uint64_t reg);
 static uint32_t gpio_pio_read(struct virtio_gpio *gpio, int n);
 static void native_gpio_close_line(struct gpio_line *line);
+
+static void
+virtio_gpio_abort(struct virtio_vq_info *vq, uint16_t idx)
+{
+	if (idx < vq->qsize) {
+		vq_relchain(vq, idx, 1);
+		vq_endchains(vq, 0);
+	}
+}
 
 static void
 native_gpio_update_line_info(struct gpio_line *line)
@@ -642,7 +650,10 @@ virtio_gpio_proc(struct virtio_gpio *gpio, struct iovec *iov, int n)
 	if (n == 1) { /* provide gpio names for front-end driver */
 		data = iov[0].iov_base;
 		len = iov[0].iov_len;
-		assert(len == gpio->nvline * sizeof(*data));
+		if (len != gpio->nvline * sizeof(*data)) {
+			DPRINTF("virtio gpio, invalid virtual gpio %d\n", len);
+			return 0;
+		}
 
 		for (i = 0; i < gpio->nvline; i++) {
 			line = gpio->vlines[i];
@@ -663,11 +674,17 @@ virtio_gpio_proc(struct virtio_gpio *gpio, struct iovec *iov, int n)
 	} else if (n == 2) { /* handle gpio operations requests */
 		req = iov[0].iov_base;
 		len = iov[0].iov_len;
-		assert(len == sizeof(*req));
+		if (len != sizeof(*req)) {
+			DPRINTF("virtio gpio, invalid req size %d\n", len);
+			return 0;
+		}
 
 		rsp = iov[1].iov_base;
 		len = iov[1].iov_len;
-		assert(len == sizeof(*rsp));
+		if (len != sizeof(*rsp)) {
+			DPRINTF("virtio gpio, invalid rsp size %d\n", len);
+			return 0;
+		}
 
 		gpio_request_handler(gpio, req, rsp);
 		rc = sizeof(*rsp);
@@ -687,10 +704,15 @@ virtio_gpio_notify(void *vdev, struct virtio_vq_info *vq)
 	uint16_t idx;
 	int n, len;
 
+	idx = vq->qsize;
 	gpio = (struct virtio_gpio *)vdev;
 	if (vq_has_descs(vq)) {
 		n = vq_getchain(vq, &idx, iov, 2, NULL);
-		assert(n < 3);
+		if (n >= 3) {
+			DPRINTF("virtio gpio, invalid chain number %d\n", n);
+			virtio_gpio_abort(vq, idx);
+			return;
+		}
 
 		len = virtio_gpio_proc(gpio, iov, n);
 		/*
@@ -908,10 +930,16 @@ gpio_irq_deliver_intr(struct virtio_gpio *gpio, uint64_t mask)
 	uint64_t *data;
 
 	vq = &gpio->queues[2];
+	idx = vq->qsize;
 	if (vq_has_descs(vq) && mask) {
 		vq_getchain(vq, &idx, iov, 1, NULL);
 		data = iov[0].iov_base;
-		assert(sizeof(*data) == iov[0].iov_len);
+		if (sizeof(*data) != iov[0].iov_len) {
+			DPRINTF("virtio gpio, invalid gpio data size %lu\n",
+					iov[0].iov_len);
+			virtio_gpio_abort(vq, idx);
+			return;
+		}
 
 		*data = mask;
 
@@ -972,7 +1000,6 @@ gpio_irq_set_pin_state(int fd __attribute__((unused)),
 	struct gpio_irq_desc *desc;
 	int err;
 
-	assert(arg != NULL);
 	desc = (struct gpio_irq_desc *) arg;
 	gpio = (struct virtio_gpio *) desc->data;
 
@@ -1036,7 +1063,6 @@ gpio_irq_teardown(void *param)
 	struct gpio_irq_desc *desc;
 
 	DPRINTF("%s", "virtio gpio tear down\n");
-	assert(param != NULL);
 	desc = (struct gpio_irq_desc *) param;
 	desc->mask = false;
 	desc->mode = IRQ_TYPE_NONE;
@@ -1158,7 +1184,11 @@ virtio_gpio_irq_proc(struct virtio_gpio *gpio, struct iovec *iov, uint16_t flag)
 
 	req = iov[0].iov_base;
 	len = iov[0].iov_len;
-	assert(len == sizeof(*req));
+	if (len != sizeof(*req)) {
+		DPRINTF("virtio gpio, invalid req size %d\n", len);
+		return;
+	}
+
 	if (req->pin >= gpio->nvline) {
 		DPRINTF("virtio gpio, invalid IRQ pin %d, ignore action %d\n",
 			req->pin, req->action);
@@ -1222,10 +1252,15 @@ virtio_irq_notify(void *vdev, struct virtio_vq_info *vq)
 	uint16_t idx, flag;
 	int n;
 
+	idx = vq->qsize;
 	gpio = (struct virtio_gpio *)vdev;
 	if (vq_has_descs(vq)) {
 		n = vq_getchain(vq, &idx, iov, 1, &flag);
-		assert(n == 1);
+		if (n != 1) {
+			DPRINTF("virtio gpio, invalid irq chain %d\n", n);
+			virtio_gpio_abort(vq, idx);
+			return;
+		}
 
 		virtio_gpio_irq_proc(gpio, iov, flag);
 		/*
