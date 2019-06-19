@@ -659,8 +659,12 @@ void pause_vm(struct acrn_vm *vm)
 
 	if (vm->state != VM_PAUSED) {
 		if (is_rt_vm(vm)) {
-			/* Only when RTVM is powering off by itself, we can pause vcpu */
-			if (vm->state == VM_POWERING_OFF) {
+			/**
+			 * For RTVM, we can only pause its vCPUs when it stays at following states:
+			 *  - It is powering off by itself
+			 *  - It is created but doesn't start
+			 */
+			if ((vm->state == VM_POWERING_OFF) || (vm->state == VM_CREATED)) {
 				foreach_vcpu(i, vm, vcpu) {
 					pause_vcpu(vcpu, VCPU_ZOMBIE);
 				}
