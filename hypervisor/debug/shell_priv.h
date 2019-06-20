@@ -40,6 +40,10 @@ struct shell {
 #define SHELL_CMD_HELP_PARAM		NULL
 #define SHELL_CMD_HELP_HELP		"Display information about supported hypervisor shell commands"
 
+#define SHELL_CMD_VERSION		"version"
+#define SHELL_CMD_VERSION_PARAM		NULL
+#define SHELL_CMD_VERSION_HELP		"Display the HV version information"
+
 #define SHELL_CMD_VM_LIST		"vm_list"
 #define SHELL_CMD_VM_LIST_PARAM		NULL
 #define SHELL_CMD_VM_LIST_HELP		"List all VMs, displaying the VM UUID, ID, name and state"
