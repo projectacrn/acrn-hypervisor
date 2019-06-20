@@ -18,6 +18,7 @@
 #include <vm.h>
 #include <sprintf.h>
 #include <logmsg.h>
+#include <version.h>
 
 #define TEMP_STR_SIZE		60U
 #define MAX_STR_SIZE		256U
@@ -32,6 +33,7 @@ static char shell_log_buf[SHELL_LOG_BUF_SIZE];
 #define SHELL_INPUT_LINE_OTHER(v)	(((v) + 1U) & 0x1U)
 
 static int32_t shell_cmd_help(__unused int32_t argc, __unused char **argv);
+static int32_t shell_version(__unused int32_t argc, __unused char **argv);
 static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv);
 static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv);
 static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv);
@@ -53,6 +55,12 @@ static struct shell_cmd shell_cmds[] = {
 		.cmd_param	= SHELL_CMD_HELP_PARAM,
 		.help_str	= SHELL_CMD_HELP_HELP,
 		.fcn		= shell_cmd_help,
+	},
+	{
+		.str		= SHELL_CMD_VERSION,
+		.cmd_param	= SHELL_CMD_VERSION_PARAM,
+		.help_str	= SHELL_CMD_VERSION_HELP,
+		.fcn		= shell_version,
 	},
 	{
 		.str		= SHELL_CMD_VM_LIST,
@@ -548,6 +556,21 @@ static int32_t shell_cmd_help(__unused int32_t argc, __unused char **argv)
 	}
 
 	shell_puts("\r\n");
+
+	return 0;
+}
+
+static int32_t shell_version(__unused int32_t argc, __unused char **argv)
+{
+	char temp_str[MAX_STR_SIZE];
+
+	snprintf(temp_str, MAX_STR_SIZE, "HV version %s-%s-%s %s (daily tag: %s) build by %s\r\n",
+			HV_FULL_VERSION, HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE, HV_DAILY_TAG, HV_BUILD_USER);
+	shell_puts(temp_str);
+
+	(void)memset((void *)temp_str, 0, MAX_STR_SIZE);
+	snprintf(temp_str, MAX_STR_SIZE, "API version %u.%u\r\n", HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);
+	shell_puts(temp_str);
 
 	return 0;
 }
