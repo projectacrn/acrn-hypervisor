@@ -40,6 +40,7 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	bool do_mem_log;
 	bool do_npk_log;
 	char *buffer;
+	struct thread_object *current;
 
 	do_console_log = (((logmsg_ctl.flags & LOG_FLAG_STDOUT) != 0U) && (severity <= console_loglevel));
 	do_mem_log = (((logmsg_ctl.flags & LOG_FLAG_MEMORY) != 0U) && (severity <= mem_loglevel));
@@ -58,11 +59,12 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	/* Get CPU ID */
 	pcpu_id = get_pcpu_id();
 	buffer = per_cpu(logbuf, pcpu_id);
+	current = sched_get_current(pcpu_id);
 
 	(void)memset(buffer, 0U, LOG_MESSAGE_MAX_SIZE);
 	/* Put time-stamp, CPU ID and severity into buffer */
-	snprintf(buffer, LOG_MESSAGE_MAX_SIZE, "[%luus][cpu=%hu][sev=%u][seq=%u]:",
-			timestamp, pcpu_id, severity, atomic_inc_return(&logmsg_ctl.seq));
+	snprintf(buffer, LOG_MESSAGE_MAX_SIZE, "[%luus][cpu=%hu][%s][sev=%u][seq=%u]:",
+			timestamp, pcpu_id, current->name, severity, atomic_inc_return(&logmsg_ctl.seq));
 
 	/* Put message into remaining portion of local buffer */
 	va_start(args, fmt);
