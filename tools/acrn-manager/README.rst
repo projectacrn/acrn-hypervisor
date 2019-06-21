@@ -14,7 +14,7 @@ on ``acrn-dm``. The daemon for acrn-manager is `acrnd`_.
 
 
 Usage
-*****
+=====
 
 You can see the available ``acrnctl`` commands by running:
 
@@ -47,6 +47,11 @@ script that will launch a UOS, for example ``launch_UOS.sh``:
 
    # acrnctl add launch_UOS.sh -U 1
    vm1-14:59:30 added
+
+If a ``-C`` option is also specified, the VM is launched in a runC
+container::
+
+   # acrnctl add launch_UOS.sh -C
 
 Note that the launch script must only launch one UOS instance.
 The VM name is important. ``acrnctl`` searches VMs by their
@@ -124,6 +129,24 @@ The ``acrnd`` daemon process provides a way for launching or resuming a UOS
 should the UOS shut down, either planned or unexpected. A UOS can ask ``acrnd``
 to set up a timer to make sure the UOS is running, even if the SOS is
 suspended or stopped.
+
+Usage
+=====
+
+You can see the available ``acrnd`` commands by running:
+
+.. code-block:: none
+
+   $ acrnd -h
+   acrnd - Deamon for ACRN VM Management
+   [Usage] acrnd [-t] [-d delay] [-h]
+   -h: print this message
+   -t: print messages to stdout
+
+Normally, ``acrnd`` runs silently (messages are directed to
+``/dev/null``).  Use the ``-t`` option to direct messages to stdout,
+useful for debugging.
+
 The ``acrnd`` daemon stores pending UOS work to ``/usr/share/acrn/conf/timer_list``
 and sets an RTC timer to wake up the SOS or bring the SOS back up again.
 When ``acrnd`` daemon is restarted, it restores the previously saved timer
