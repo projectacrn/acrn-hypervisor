@@ -20,7 +20,7 @@
 #include <sprintf.h>
 #include <cat.h>
 
-inline uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
+uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
 {
 	const struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
@@ -28,7 +28,7 @@ inline uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
 	return ctx->guest_cpu_regs.longs[reg];
 }
 
-inline void vcpu_set_gpreg(struct acrn_vcpu *vcpu, uint32_t reg, uint64_t val)
+void vcpu_set_gpreg(struct acrn_vcpu *vcpu, uint32_t reg, uint64_t val)
 {
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
@@ -36,7 +36,7 @@ inline void vcpu_set_gpreg(struct acrn_vcpu *vcpu, uint32_t reg, uint64_t val)
 	ctx->guest_cpu_regs.longs[reg] = val;
 }
 
-inline uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
+uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
@@ -47,13 +47,13 @@ inline uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
 	return ctx->rip;
 }
 
-inline void vcpu_set_rip(struct acrn_vcpu *vcpu, uint64_t val)
+void vcpu_set_rip(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.rip = val;
 	bitmap_set_lock(CPU_REG_RIP, &vcpu->reg_updated);
 }
 
-inline uint64_t vcpu_get_rsp(struct acrn_vcpu *vcpu)
+uint64_t vcpu_get_rsp(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
@@ -61,7 +61,7 @@ inline uint64_t vcpu_get_rsp(struct acrn_vcpu *vcpu)
 	return ctx->guest_cpu_regs.regs.rsp;
 }
 
-inline void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val)
+void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
@@ -70,7 +70,7 @@ inline void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val)
 	bitmap_set_lock(CPU_REG_RSP, &vcpu->reg_updated);
 }
 
-inline uint64_t vcpu_get_efer(struct acrn_vcpu *vcpu)
+uint64_t vcpu_get_efer(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
@@ -82,14 +82,14 @@ inline uint64_t vcpu_get_efer(struct acrn_vcpu *vcpu)
 	return ctx->ia32_efer;
 }
 
-inline void vcpu_set_efer(struct acrn_vcpu *vcpu, uint64_t val)
+void vcpu_set_efer(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.ia32_efer
 		= val;
 	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
 }
 
-inline uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu)
+uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
@@ -102,7 +102,7 @@ inline uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu)
 	return ctx->rflags;
 }
 
-inline void vcpu_set_rflags(struct acrn_vcpu *vcpu, uint64_t val)
+void vcpu_set_rflags(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.rflags =
 		val;
