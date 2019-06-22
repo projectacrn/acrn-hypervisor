@@ -13,6 +13,8 @@ The ACRN hypervisor shell supports the following commands:
      - Description
    * - help
      - Display information about supported hypervisor shell commands
+   * - version
+     - Display the HV version information
    * - vm_list
      - List all VMs, displaying the VM UUID, ID, name, and state ("Started"=running)
    * - vcpu_list
