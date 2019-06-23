@@ -773,9 +773,14 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 
 	/* map ept for biosmem */
 	if (ctx->biosmem > 0) {
+		/*
+		 * The High BIOS region can behave as RAM and be
+		 * modified by the boot firmware itself (e.g. OVMF
+		 * NV data storage region).
+		 */
 		if (vm_map_memseg_vma(ctx, ctx->biosmem, 4 * GB - ctx->biosmem,
 			(uint64_t)(ctx->baseaddr + 4 * GB - ctx->biosmem),
-			PROT_READ | PROT_EXEC) < 0)
+			PROT_ALL) < 0)
 		goto err;
 	}
 
