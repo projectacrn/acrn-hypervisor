@@ -734,6 +734,12 @@ int main(int argc, char *argv[])
 {
 	int ret;
 
+       if (getuid() != 0) {
+               printf("Please run acrnd with root privileges. Exiting.\n");
+               return -1;
+       }
+
+
 	if (parse_opt(argc, argv))
 		return -1;
 	
