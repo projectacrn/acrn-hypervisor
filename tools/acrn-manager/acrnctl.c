@@ -807,6 +807,11 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
+	if (getuid() != 0) {
+		printf("Please run acrnctl with root privileges. Exiting.\n");
+		return -1;
+	}
+
 	acrnctl_bin_path = argv[0];
 
 	/* first check acrnctl reserved operations */

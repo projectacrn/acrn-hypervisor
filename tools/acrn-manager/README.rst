@@ -35,6 +35,9 @@ You can see the available ``acrnctl`` commands by running:
      blkrescan
    Use acrnctl [cmd] help for details
 
+.. note::
+   You must run ``acrnctl`` with root privileges.
+
 Here are some usage examples:
 
 Add a VM
@@ -132,6 +135,9 @@ list and launches the UOSs at the right time.
 A ``systemd`` service file (``acrnd.service``) is installed by default that will
 start the ``acrnd`` daemon when the Service OS comes up.
 You can restart/stop acrnd service using ``systemctl``
+
+.. note::
+   You must run ``acrnd`` with root privileges.
 
 Build and Install
 *****************
