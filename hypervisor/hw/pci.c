@@ -212,57 +212,49 @@ static uint8_t pci_pdev_get_num_bars(uint8_t hdr_type)
 	return num_bars;
 }
 
-static enum pci_bar_type pci_pdev_read_bar_type(union pci_bdf bdf, uint8_t idx)
+/* Get the base address of the raw bar value (val) */
+static inline uint32_t pci_pdev_get_bar_base(uint32_t bar_val)
 {
-	uint32_t bar;
-	enum pci_bar_type type = PCIBAR_NONE;
+	uint32_t base;
+	union pci_bar_reg reg;
 
-	bar = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
-	if ((bar & PCIM_BAR_SPACE) == PCIM_BAR_IO_SPACE) {
-		type = PCIBAR_IO_SPACE;
+	/* set raw bar value */
+	reg.value = bar_val;
+
+	/* Extract base address portion from the raw bar value */
+	if (reg.bits.io.is_io != 0U) {
+		/* IO bar, BITS 31-2 = base address, 4-byte aligned */
+		base = (uint32_t)(reg.bits.io.base);
+		base <<= 2U;
 	} else {
-		switch (bar & PCIM_BAR_MEM_TYPE) {
-		case PCIM_BAR_MEM_32:
-		case PCIM_BAR_MEM_1MB:
-			type = PCIBAR_MEM32;
-			break;
-
-		case PCIM_BAR_MEM_64:
-			type = PCIBAR_MEM64;
-			break;
-
-		default:
-			/*no actions are required for other cases.*/
-			break;
-		}
+		/* MMIO bar, BITS 31-4 = base address, 16-byte aligned */
+		base = (uint32_t)(reg.bits.mem.base);
+		base <<= 4U;
 	}
 
-	return type;
+	return base;
 }
 
-static uint8_t pci_pdev_read_bar(union pci_bdf bdf, uint8_t idx, struct pci_bar *bar)
+/*
+ * @pre bar != NULL
+ */
+static uint32_t pci_pdev_read_bar(union pci_bdf bdf, uint8_t idx, struct pci_bar *bar)
 {
 	uint64_t base, size;
 	enum pci_bar_type type;
-	uint32_t bar_lo, bar_hi, val32;
-	uint32_t bar_base_mask;
+	uint32_t bar_lo, bar_hi, size_lo;
+
+	bar->reg.value = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
 
 	base = 0UL;
 	size = 0UL;
-	type = pci_pdev_read_bar_type(bdf, idx);
+	type = pci_get_bar_type(bar->reg.value);
 	bar_hi = 0U;
 
 	if (type != PCIBAR_NONE) {
-		if (type == PCIBAR_IO_SPACE) {
-			bar_base_mask = ~0x03U;
-		} else {
-			bar_base_mask = ~0x0fU;
-		}
-
 		bar_lo = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
 
-		/* Get the base address */
-		base = (uint64_t)bar_lo & bar_base_mask;
+		base = (uint64_t)pci_pdev_get_bar_base(bar_lo);
 
 		if (type == PCIBAR_MEM64) {
 			bar_hi = pci_pdev_read_cfg(bdf, pci_bar_offset(idx + 1U), 4U);
@@ -278,8 +270,8 @@ static uint8_t pci_pdev_read_bar(union pci_bdf bdf, uint8_t idx, struct pci_bar 
 			}
 
 			pci_pdev_write_cfg(bdf, pci_bar_offset(idx), 4U, ~0U);
-			val32 = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
-			size |= ((uint64_t)val32 & bar_base_mask);
+			size_lo = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
+			size |= (uint64_t)pci_pdev_get_bar_base(size_lo);
 
 			if (size != 0UL) {
 				size = size & ~(size - 1U);
@@ -306,10 +298,18 @@ static uint8_t pci_pdev_read_bar(union pci_bdf bdf, uint8_t idx, struct pci_bar 
  */
 static void pci_pdev_read_bars(union pci_bdf bdf, uint8_t nr_bars, struct pci_bar *bar)
 {
-	uint8_t	idx = 0U;
+	uint8_t idx = 0U;
+	uint32_t bar_step;
 
 	while (idx < nr_bars) {
-		idx += pci_pdev_read_bar(bdf, idx, &bar[idx]);
+		bar_step = pci_pdev_read_bar(bdf, idx, &bar[idx]);
+		if ((bar_step == 2U) && ((idx + 1U) < nr_bars)) {
+			/* Upper 32-bit of a 64-bit bar: */
+			bar[idx + 1U].is_64bit_high = true;
+			bar[idx + 1U].reg.value = pci_pdev_read_cfg(bdf, pci_bar_offset(idx + 1U), 4U);
+		}
+
+		idx += bar_step;
 	}
 }
 
@@ -398,6 +398,9 @@ static void pci_read_cap(struct pci_pdev *pdev, uint8_t hdr_type)
 	}
 }
 
+/*
+ * @pre pdev != NULL
+ */
 static void fill_pdev(uint16_t pbdf, struct pci_pdev *pdev)
 {
 	uint8_t  hdr_type;

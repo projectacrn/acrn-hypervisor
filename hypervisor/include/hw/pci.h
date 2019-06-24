@@ -146,10 +146,46 @@ enum pci_bar_type {
 	PCIBAR_MEM64,
 };
 
+/*
+ * Base Address Register for MMIO, pf=prefetchable, type=0 (32-bit), 1 (<=1MB), 2 (64-bit):
+ *  31                        4  3  2   1   0
+ *  +----------+--------------+-------------+
+ *  |    Base address         |pf| type | 0 |
+ *  +---------------------------------------+
+ *
+ * Base Address Register for IO (R=reserved):
+ *  31                              2   1   0
+ *  +----------+----------------------------+
+ *  |    Base address               | R | 1 |
+ *  +---------------------------------------+
+ */
+union pci_bar_reg {
+	uint32_t value;
+
+	/* Base address + flags portion */
+	union {
+		struct {
+			uint32_t is_io:1; /* 0 for memory */
+			uint32_t type:2;
+			uint32_t prefetchable:1;
+			uint32_t base:28; /* BITS 31-4 = base address, 16-byte aligned */
+		} mem;
+
+		struct {
+			uint32_t is_io:1; /* 1 for I/O */
+			uint32_t:1;
+			uint32_t base:30; /* BITS 31-2 = base address, 4-byte aligned */
+		} io;
+	} bits;
+};
+
 struct pci_bar {
 	uint64_t base;
+	/* Base Address Register */
+	union pci_bar_reg reg;
 	uint64_t size;
 	enum pci_bar_type type;
+	bool is_64bit_high; /* true if this is the upper 32-bit of a 64-bit bar */
 };
 
 /* Basic MSI capability info */
@@ -202,6 +238,32 @@ static inline bool pci_bar_access(uint32_t offset)
 	}
 
 	return ret;
+}
+
+static inline enum pci_bar_type pci_get_bar_type(uint32_t val)
+{
+	enum pci_bar_type type = PCIBAR_NONE;
+
+	if ((val & PCIM_BAR_SPACE) == PCIM_BAR_IO_SPACE) {
+		type = PCIBAR_IO_SPACE;
+	} else {
+		switch (val & PCIM_BAR_MEM_TYPE) {
+		case PCIM_BAR_MEM_32:
+		case PCIM_BAR_MEM_1MB:
+			type = PCIBAR_MEM32;
+			break;
+
+		case PCIM_BAR_MEM_64:
+			type = PCIBAR_MEM64;
+			break;
+
+		default:
+			/*no actions are required for other cases.*/
+			break;
+		}
+	}
+
+	return type;
 }
 
 static inline uint8_t pci_bus(uint16_t bdf)
