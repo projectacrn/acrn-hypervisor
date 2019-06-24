@@ -227,12 +227,12 @@ static inline uint32_t pci_bar_offset(uint32_t idx)
 	return PCIR_BARS + (idx << 2U);
 }
 
-static inline bool pci_bar_access(uint32_t offset)
+static inline bool is_bar_offset(uint32_t nr_bars, uint32_t offset)
 {
 	bool ret;
 
 	if ((offset >= pci_bar_offset(0U))
-		&& (offset < pci_bar_offset(PCI_BAR_COUNT))) {
+		&& (offset < pci_bar_offset(nr_bars))) {
 		ret = true;
 	} else {
 	    ret = false;

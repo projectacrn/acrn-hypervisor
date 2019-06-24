@@ -127,7 +127,7 @@ int32_t vhostbridge_write_cfg(struct pci_vdev *vdev, uint32_t offset,
 	int32_t ret = -ENODEV;
 
 	if (is_hostbridge(vdev) && is_prelaunched_vm(vdev->vpci->vm)) {
-		if (!pci_bar_access(offset)) {
+		if (!is_bar_offset(PCI_BAR_COUNT, offset)) {
 			pci_vdev_write_cfg(vdev, offset, bytes, val);
 		}
 
