@@ -47,8 +47,7 @@ int32_t vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t 
 {
 	int32_t ret = -ENODEV;
 
-	/* PCI BARs is emulated */
-	if (is_prelaunched_vm(vdev->vpci->vm) && pci_bar_access(offset)) {
+	if (is_prelaunched_vm(vdev->vpci->vm) && is_bar_offset(vdev->nr_bars, offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
 		ret = 0;
 	}
@@ -61,7 +60,7 @@ int32_t vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t 
 * @pre vdev->vpci != NULL
 * @pre vdev->vpci->vm != NULL
 * @pre vdev->pdev != NULL
-* @pre vdev->pdev->msix.table_bar < (PCI_BAR_COUNT - 1U)
+* @pre vdev->pdev->msix.table_bar < vdev->nr_bars
 */
 void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 {
@@ -71,7 +70,7 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 	struct pci_pdev *pdev = vdev->pdev;
 	struct pci_bar *bar;
 
-	ASSERT(vdev->pdev->msix.table_bar < (PCI_BAR_COUNT - 1U), "msix->table_bar is out of range");
+	ASSERT(vdev->pdev->msix.table_bar < vdev->nr_bars, "msix->table_bar is out of range");
 
 	/* Mask all table entries */
 	for (i = 0U; i < msix->table_count; i++) {
@@ -246,7 +245,8 @@ int32_t vdev_pt_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes
 	int32_t ret = -ENODEV;
 
 	/* bar write access must be 4 bytes and offset must also be 4 bytes aligned */
-	if (is_prelaunched_vm(vdev->vpci->vm) && pci_bar_access(offset) && (bytes == 4U) && ((offset & 0x3U) == 0U)) {
+	if (is_prelaunched_vm(vdev->vpci->vm) && is_bar_offset(vdev->nr_bars, offset)
+		&& (bytes == 4U) && ((offset & 0x3U) == 0U)) {
 		vdev_pt_write_vbar(vdev, offset, val);
 		ret = 0;
 	}
@@ -294,8 +294,12 @@ void init_vdev_pt(struct pci_vdev *vdev)
 	struct pci_bar *pbar, *vbar;
 	uint16_t pci_command;
 
+	vdev->nr_bars = vdev->pdev->nr_bars;
+
+	ASSERT(vdev->nr_bars > 0U, "vdev->nr_bars should be greater than 0!");
+
 	if (is_prelaunched_vm(vdev->vpci->vm)) {
-		for (idx = 0U; idx < (uint32_t)PCI_BAR_COUNT; idx++) {
+		for (idx = 0U; idx < vdev->nr_bars; idx++) {
 			pbar = &vdev->pdev->bar[idx];
 			vbar = &vdev->bar[idx];
 
