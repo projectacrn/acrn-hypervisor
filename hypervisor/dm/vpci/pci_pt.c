@@ -26,9 +26,6 @@
 *
 * $FreeBSD$
 */
-
-/* Passthrough PCI device related operations */
-
 #include <vm.h>
 #include <errno.h>
 #include <ept.h>
@@ -46,8 +43,7 @@ static inline uint32_t get_bar_base(uint32_t bar)
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-int32_t vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset,
-	uint32_t bytes, uint32_t *val)
+int32_t vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	int32_t ret = -ENODEV;
 
@@ -167,14 +163,14 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 }
 
 /**
- * @brief Remaps guest BARs other than MSI-x Table BAR
+ * @brief Remaps guest MMIO BARs other than MSI-x Table BAR
  * This API is invoked upon guest re-programming PCI BAR with MMIO region
+ * after a new vbar is set.
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-static void vdev_pt_remap_generic_bar(const struct pci_vdev *vdev, uint32_t idx,
-	uint32_t new_base)
+static void vdev_pt_remap_generic_mem_vbar(const struct pci_vdev *vdev, uint32_t idx, uint32_t new_base)
 {
 	struct acrn_vm *vm = vdev->vpci->vm;
 
@@ -196,64 +192,62 @@ static void vdev_pt_remap_generic_bar(const struct pci_vdev *vdev, uint32_t idx,
 
 /**
  * @pre vdev != NULL
+ * @pre (vdev->bar[idx].type == PCIBAR_NONE) || (vdev->bar[idx].type == PCIBAR_MEM32)
  */
-static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t new_bar_uos)
+static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t val)
 {
 	uint32_t idx;
 	uint32_t new_bar, mask;
 	bool bar_update_normal;
 	bool is_msix_table_bar;
 
-	/* Bar access must be 4 bytes aligned */
-	if ((bytes == 4U) && ((offset & 0x3U) == 0U)) {
-		new_bar = 0U;
-		idx = (offset - pci_bar_offset(0U)) >> 2U;
-		mask = ~(vdev->bar[idx].size - 1U);
+	new_bar = 0U;
+	idx = (offset - pci_bar_offset(0U)) >> 2U;
+	mask = ~(vdev->bar[idx].size - 1U);
 
-		switch (vdev->bar[idx].type) {
-		case PCIBAR_NONE:
-			vdev->bar[idx].base = 0UL;
-			break;
+	switch (vdev->bar[idx].type) {
+	case PCIBAR_NONE:
+		vdev->bar[idx].base = 0UL;
+		break;
 
-		case PCIBAR_MEM32:
-			bar_update_normal = (new_bar_uos != (uint32_t)~0U);
-			is_msix_table_bar = (has_msix_cap(vdev) && (idx == vdev->msix.table_bar));
-			new_bar = new_bar_uos & mask;
-			if (bar_update_normal) {
-				if (is_msix_table_bar) {
-					vdev->bar[idx].base = get_bar_base(new_bar);
-					vdev_pt_remap_msix_table_bar(vdev);
-				} else {
-					vdev_pt_remap_generic_bar(vdev, idx,
-						get_bar_base(new_bar));
+	case PCIBAR_MEM32:
+		bar_update_normal = (val != (uint32_t)~0U);
+		is_msix_table_bar = (has_msix_cap(vdev) && (idx == vdev->msix.table_bar));
+		new_bar = val & mask;
+		if (bar_update_normal) {
+			if (is_msix_table_bar) {
+				vdev->bar[idx].base = get_bar_base(new_bar);
+				vdev_pt_remap_msix_table_bar(vdev);
+			} else {
+				vdev_pt_remap_generic_mem_vbar(vdev, idx,
+					get_bar_base(new_bar));
 
-					vdev->bar[idx].base = get_bar_base(new_bar);
-				}
+				vdev->bar[idx].base = get_bar_base(new_bar);
 			}
-			break;
-
-		default:
-			pr_err("Unknown bar type, idx=%d", idx);
-			break;
 		}
+		break;
 
-		pci_vdev_write_cfg_u32(vdev, offset, new_bar);
+	default:
+		/* Should never reach here, init_vdev_pt() only sets vbar type to PCIBAR_NONE and PCIBAR_MEM32 */
+		break;
 	}
+
+	pci_vdev_write_cfg_u32(vdev, offset, new_bar);
 }
 
 /**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
+ * bar write access must be 4 bytes and offset must also be 4 bytes aligned, it will be dropped otherwise
  */
-int32_t vdev_pt_write_cfg(struct pci_vdev *vdev, uint32_t offset,
-	uint32_t bytes, uint32_t val)
+int32_t vdev_pt_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	int32_t ret = -ENODEV;
 
-	/* PCI BARs are emulated */
-	if (is_prelaunched_vm(vdev->vpci->vm) && pci_bar_access(offset)) {
-		vdev_pt_write_vbar(vdev, offset, bytes, val);
+	/* bar write access must be 4 bytes and offset must also be 4 bytes aligned */
+	if (is_prelaunched_vm(vdev->vpci->vm) && pci_bar_access(offset) && (bytes == 4U) && ((offset & 0x3U) == 0U)) {
+		vdev_pt_write_vbar(vdev, offset, val);
 		ret = 0;
 	}
 
@@ -322,7 +316,7 @@ void init_vdev_pt(struct pci_vdev *vdev)
 
 				/* Set the new vbar base */
 				if (vdev->ptdev_config->vbar[idx] != 0UL) {
-					vdev_pt_write_vbar(vdev, pci_bar_offset(idx), 4U, (uint32_t)(vdev->ptdev_config->vbar[idx]));
+					vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)(vdev->ptdev_config->vbar[idx]));
 				}
 			} else {
 				vbar->size = 0UL;
