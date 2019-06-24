@@ -187,21 +187,21 @@ void init_pci_pdev_list(void)
 	}
 }
 
-static uint8_t pci_pdev_get_num_bars(uint8_t hdr_type)
+static uint32_t pci_pdev_get_nr_bars(uint8_t hdr_type)
 {
-	uint8_t num_bars = (uint8_t)0U;
+	uint32_t nr_bars = 0U;
 
 	switch (hdr_type & PCIM_HDRTYPE) {
 	case PCIM_HDRTYPE_NORMAL:
-		num_bars = (uint8_t)6U;
+		nr_bars = 6U;
 		break;
 
 	case PCIM_HDRTYPE_BRIDGE:
-		num_bars = (uint8_t)2U;
+		nr_bars = 2U;
 		break;
 
 	case PCIM_HDRTYPE_CARDBUS:
-		num_bars = (uint8_t)1U;
+		nr_bars = 1U;
 		break;
 
 	default:
@@ -209,7 +209,7 @@ static uint8_t pci_pdev_get_num_bars(uint8_t hdr_type)
 		break;
 	}
 
-	return num_bars;
+	return nr_bars;
 }
 
 /* Get the base address of the raw bar value (val) */
@@ -238,7 +238,7 @@ static inline uint32_t pci_pdev_get_bar_base(uint32_t bar_val)
 /*
  * @pre bar != NULL
  */
-static uint32_t pci_pdev_read_bar(union pci_bdf bdf, uint8_t idx, struct pci_bar *bar)
+static uint32_t pci_pdev_read_bar(union pci_bdf bdf, uint32_t idx, struct pci_bar *bar)
 {
 	uint64_t base, size;
 	enum pci_bar_type type;
@@ -296,9 +296,9 @@ static uint32_t pci_pdev_read_bar(union pci_bdf bdf, uint8_t idx, struct pci_bar
 /*
  * @pre nr_bars <= PCI_BAR_COUNT
  */
-static void pci_pdev_read_bars(union pci_bdf bdf, uint8_t nr_bars, struct pci_bar *bar)
+static void pci_pdev_read_bars(union pci_bdf bdf, uint32_t nr_bars, struct pci_bar *bar)
 {
-	uint8_t idx = 0U;
+	uint32_t idx = 0U;
 	uint32_t bar_step;
 
 	while (idx < nr_bars) {
@@ -403,16 +403,15 @@ static void pci_read_cap(struct pci_pdev *pdev, uint8_t hdr_type)
  */
 static void fill_pdev(uint16_t pbdf, struct pci_pdev *pdev)
 {
-	uint8_t  hdr_type;
-	uint8_t  nr_bars;
+	uint8_t hdr_type;
 
 	pdev->bdf.value = pbdf;
 
 	hdr_type = (uint8_t)pci_pdev_read_cfg(pdev->bdf, PCIR_HDRTYPE, 1U);
 
-	nr_bars = pci_pdev_get_num_bars(hdr_type);
+	pdev->nr_bars = pci_pdev_get_nr_bars(hdr_type);
 
-	pci_pdev_read_bars(pdev->bdf, nr_bars, &pdev->bar[0]);
+	pci_pdev_read_bars(pdev->bdf, pdev->nr_bars, &pdev->bar[0]);
 
 	if ((pci_pdev_read_cfg(pdev->bdf, PCIR_STATUS, 2U) & PCIM_STATUS_CAPPRESENT) != 0U) {
 		pci_read_cap(pdev, hdr_type);
