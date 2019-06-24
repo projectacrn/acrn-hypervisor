@@ -679,14 +679,18 @@ static const char optString[] = "td:h";
 
 static void display_usage(void)
 {
-	printf("acrnd - Deamon for ACRN VM Management\n"
+	printf("acrnd - Daemon for ACRN VM Management\n"
+#ifdef MNGR_DEBUG
 	       "[Usage] acrnd [-t] [-d delay] [-h]\n\n"
+#else
+	       "[Usage] acrnd [-t] [-h]\n\n"
+#endif
 	       "[Options]\n"
-	       "\t-h: print this message\n"
 	       "\t-t: print messages to stdout\n"
 #ifdef MNGR_DEBUG
-	       "\t-d: delay time of auto start, <0-60> in second.\n"
+	       "\t-d: delay the autostarting of VMs, <0-60> in second\n"
 #endif
+	       "\t-h: print this message\n"
 	       "\n");
 }
 
@@ -718,7 +722,7 @@ static int parse_opt(int argc, char *argv[])
 			ret = -EINVAL;
 			break;
 		default:
-			printf("Ingrone unknown opt: %c\n", opt);
+			printf("Ignore unknown option: %c\n", opt);
 			ret = -EINVAL;
 		}
 	}

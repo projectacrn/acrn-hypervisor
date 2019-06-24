@@ -138,13 +138,15 @@ You can see the available ``acrnd`` commands by running:
 .. code-block:: none
 
    $ acrnd -h
-   acrnd - Deamon for ACRN VM Management
+   acrnd - Daemon for ACRN VM Management
    [Usage] acrnd [-t] [-d delay] [-h]
-   -h: print this message
    -t: print messages to stdout
+   -d: delay the autostarting of VMs, <0-60> in second (not available in the
+       ``RELEASE=1`` build)
+   -h: print this message
 
 Normally, ``acrnd`` runs silently (messages are directed to
-``/dev/null``).  Use the ``-t`` option to direct messages to stdout,
+``/dev/null``).  Use the ``-t`` option to direct messages to ``stdout``,
 useful for debugging.
 
 The ``acrnd`` daemon stores pending UOS work to ``/usr/share/acrn/conf/timer_list``
