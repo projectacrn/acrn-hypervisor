@@ -207,6 +207,7 @@ struct pci_msix_cap {
 
 struct pci_pdev {
 	/* The bar info of the physical PCI device. */
+	uint32_t nr_bars; /* 6 for normal device, 2 for bridge, 1 for cardbus */
 	struct pci_bar bar[PCI_BAR_COUNT];
 
 	/* The bus/device/function triple of the physical PCI device. */
