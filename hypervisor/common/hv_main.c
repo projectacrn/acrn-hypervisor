@@ -35,16 +35,17 @@ void vcpu_thread(struct sched_object *obj)
 			do_softirq();
 		}
 
+		/* Don't open interrupt window between here and vmentry */
+		if (need_reschedule(vcpu->pcpu_id)) {
+			schedule();
+			continue;
+		}
+
 		/* Check and process pending requests(including interrupt) */
 		ret = acrn_handle_pending_request(vcpu);
 		if (ret < 0) {
 			pr_fatal("vcpu handling pending request fail");
 			pause_vcpu(vcpu, VCPU_ZOMBIE);
-			continue;
-		}
-
-		if (need_reschedule(vcpu->pcpu_id)) {
-			schedule();
 			continue;
 		}
 
