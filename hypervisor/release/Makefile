@@ -21,5 +21,5 @@ clean:
 -include $(OBJS:.o=.d)
 
 $(HV_OBJDIR)/%.o: %.c
-	[ ! -e $@ ] && mkdir -p $(dir $@); \
+	[ ! -e $@ ] && mkdir -p $(dir $@) && mkdir -p $(HV_MODDIR); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@ -MMD -MT $@
