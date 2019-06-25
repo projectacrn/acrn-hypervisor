@@ -18,6 +18,7 @@
 #include <vm.h>
 #include <sprintf.h>
 #include <logmsg.h>
+#include <io.h>
 
 #define TEMP_STR_SIZE		60U
 #define MAX_STR_SIZE		256U
@@ -1266,10 +1267,25 @@ static int32_t shell_trigger_crash(int32_t argc, char **argv)
 {
 	char str[MAX_STR_SIZE] = {0};
 
+	uint8_t reboot_code = 0x0E;
+        uint8_t cf9;
+
+	snprintf(str, MAX_STR_SIZE, "trigger CF9 reboot...\r\n");
+	shell_puts(str);
+
+	cf9 = pio_read8(0xcf9) & ~reboot_code;
+        pio_write8(cf9|2, 0xcf9); /* Request hard reset */
+        udelay(50);
+        /* Actually do the reset */
+        pio_write8(cf9|reboot_code, 0xcf9);
+        udelay(50);
+
+
 	(void)argc;
 	(void)argv;
 	snprintf(str, MAX_STR_SIZE, "trigger crash, divide by 0 ...\r\n");
 	shell_puts(str);
+	
 
 	asm("movl $0x1, %eax");
 	asm("movl $0x0, %ecx");
