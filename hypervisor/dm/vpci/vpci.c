@@ -419,10 +419,10 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const struct acrn_vm *vm)
 
 		if (ptdev_config != NULL) {
 			/* vbdf is defined in vm_config */
-			vdev->vbdf.value = ptdev_config->vbdf.value;
+			vdev->bdf.value = ptdev_config->vbdf.value;
 		} else {
 			/* vbdf is not defined in vm_config, set it to equal to pbdf */
-			vdev->vbdf.value = pdev->bdf.value;
+			vdev->bdf.value = pdev->bdf.value;
 		}
 
 		init_vhostbridge(vdev);
@@ -523,7 +523,7 @@ static void deinit_postlaunched_vm_vpci(const struct acrn_vm *vm)
 			vdev->vpci = (struct acrn_vpci *) &sos_vm->vpci;
 
 			/* vbdf equals to pbdf in sos */
-			vdev->vbdf.value = vdev->pdev->bdf.value;
+			vdev->bdf.value = vdev->pdev->bdf.value;
 		}
 	}
 }
@@ -544,7 +544,7 @@ void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, ui
 	} else {
 		/* UOS may do BDF mapping */
 		vdev->vpci = (struct acrn_vpci *)&(target_vm->vpci);
-		vdev->vbdf.value = vbdf;
+		vdev->bdf.value = vbdf;
 		vdev->pdev->bdf.value = pbdf;
 	}
 }
@@ -571,7 +571,7 @@ void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, 
 			vdev->vpci = &vm->vpci;
 
 			/* vbdf equals to pbdf in sos */
-			vdev->vbdf.value = vdev->pdev->bdf.value;
+			vdev->bdf.value = vdev->pdev->bdf.value;
 		}
 	}
 }
