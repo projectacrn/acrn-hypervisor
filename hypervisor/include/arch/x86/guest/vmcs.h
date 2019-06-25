@@ -15,7 +15,12 @@
 #include <vmx.h>
 #include <vcpu.h>
 
-#define VMX_VMENTRY_FAIL	0x80000000U
+#define VMX_VMENTRY_FAIL                0x80000000U
+
+#define APIC_ACCESS_OFFSET              0xFFFUL   /* 11:0, offset within the APIC page */
+#define APIC_ACCESS_TYPE                0xF000UL  /* 15:12, access type */
+#define TYPE_LINEAR_APIC_INST_READ      (0UL << 12U)
+#define TYPE_LINEAR_APIC_INST_WRITE     (1UL << 12U)
 
 static inline uint32_t vmx_eoi_exit(uint32_t vector)
 {
@@ -34,12 +39,12 @@ static inline uint32_t vmx_eoi_exit(uint32_t vector)
  */
 static inline uint64_t apic_access_type(uint64_t qual)
 {
-	return ((qual >> 12U) & 0xFUL);
+	return (qual & APIC_ACCESS_TYPE);
 }
 
 static inline uint64_t apic_access_offset(uint64_t qual)
 {
-	return (qual & 0xFFFUL);
+	return (qual & APIC_ACCESS_OFFSET);
 }
 
 #define RFLAGS_C (1U<<0U)

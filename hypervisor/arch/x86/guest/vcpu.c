@@ -20,7 +20,7 @@
 #include <sprintf.h>
 #include <cat.h>
 
-inline uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
+uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
 {
 	const struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
@@ -28,7 +28,7 @@ inline uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
 	return ctx->guest_cpu_regs.longs[reg];
 }
 
-inline void vcpu_set_gpreg(struct acrn_vcpu *vcpu, uint32_t reg, uint64_t val)
+void vcpu_set_gpreg(struct acrn_vcpu *vcpu, uint32_t reg, uint64_t val)
 {
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
@@ -36,24 +36,24 @@ inline void vcpu_set_gpreg(struct acrn_vcpu *vcpu, uint32_t reg, uint64_t val)
 	ctx->guest_cpu_regs.longs[reg] = val;
 }
 
-inline uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
+uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	if (bitmap_test(CPU_REG_RIP, &vcpu->reg_updated) == 0 &&
+	if (!bitmap_test(CPU_REG_RIP, &vcpu->reg_updated) &&
 		bitmap_test_and_set_lock(CPU_REG_RIP, &vcpu->reg_cached) == 0)
 		ctx->rip = exec_vmread(VMX_GUEST_RIP);
 	return ctx->rip;
 }
 
-inline void vcpu_set_rip(struct acrn_vcpu *vcpu, uint64_t val)
+void vcpu_set_rip(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.rip = val;
 	bitmap_set_lock(CPU_REG_RIP, &vcpu->reg_updated);
 }
 
-inline uint64_t vcpu_get_rsp(struct acrn_vcpu *vcpu)
+uint64_t vcpu_get_rsp(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
@@ -61,7 +61,7 @@ inline uint64_t vcpu_get_rsp(struct acrn_vcpu *vcpu)
 	return ctx->guest_cpu_regs.regs.rsp;
 }
 
-inline void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val)
+void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
@@ -70,37 +70,39 @@ inline void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val)
 	bitmap_set_lock(CPU_REG_RSP, &vcpu->reg_updated);
 }
 
-inline uint64_t vcpu_get_efer(struct acrn_vcpu *vcpu)
+uint64_t vcpu_get_efer(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	if (bitmap_test(CPU_REG_EFER, &vcpu->reg_updated) == 0 &&
-		bitmap_test_and_set_lock(CPU_REG_EFER, &vcpu->reg_cached) == 0)
+	if (!bitmap_test(CPU_REG_EFER, &vcpu->reg_updated) &&
+		!bitmap_test_and_set_lock(CPU_REG_EFER, &vcpu->reg_cached)) {
 		ctx->ia32_efer = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
+	}
 	return ctx->ia32_efer;
 }
 
-inline void vcpu_set_efer(struct acrn_vcpu *vcpu, uint64_t val)
+void vcpu_set_efer(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.ia32_efer
 		= val;
 	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
 }
 
-inline uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu)
+uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	if (bitmap_test(CPU_REG_RFLAGS, &vcpu->reg_updated) == 0 &&
-		bitmap_test_and_set_lock(CPU_REG_RFLAGS,
-			&vcpu->reg_cached) == 0 && vcpu->launched)
+	if (!bitmap_test(CPU_REG_RFLAGS, &vcpu->reg_updated) &&
+		!bitmap_test_and_set_lock(CPU_REG_RFLAGS,
+			&vcpu->reg_cached) && vcpu->launched) {
 		ctx->rflags = exec_vmread(VMX_GUEST_RFLAGS);
+	}
 	return ctx->rflags;
 }
 
-inline void vcpu_set_rflags(struct acrn_vcpu *vcpu, uint64_t val)
+void vcpu_set_rflags(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.rflags =
 		val;
@@ -186,14 +188,14 @@ struct acrn_vcpu *get_ever_run_vcpu(uint16_t pcpu_id)
 static void set_vcpu_mode(struct acrn_vcpu *vcpu, uint32_t cs_attr, uint64_t ia32_efer,
 		uint64_t cr0)
 {
-	if (ia32_efer & MSR_IA32_EFER_LMA_BIT) {
-		if (cs_attr & 0x2000U) {
+	if ((ia32_efer & MSR_IA32_EFER_LMA_BIT) != 0UL) {
+		if ((cs_attr & 0x2000U) != 0U) {
 			/* CS.L = 1 */
 			vcpu->arch.cpu_mode = CPU_MODE_64BIT;
 		} else {
 			vcpu->arch.cpu_mode = CPU_MODE_COMPATIBILITY;
 		}
-	} else if (cr0 & CR0_PE) {
+	} else if ((cr0 & CR0_PE) != 0UL) {
 		vcpu->arch.cpu_mode = CPU_MODE_PROTECTED;
 	} else {
 		vcpu->arch.cpu_mode = CPU_MODE_REAL;
@@ -216,7 +218,7 @@ void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
 	 * If the set_vcpu_regs is used not only for vcpu state
 	 * initialization, this part of code needs be revised.
 	 */
-	if (vcpu_regs->cr0 & CR0_PE) {
+	if ((vcpu_regs->cr0 & CR0_PE) != 0UL) {
 		attr = PROTECTED_MODE_DATA_SEG_AR;
 		limit = PROTECTED_MODE_SEG_LIMIT;
 	} else {
@@ -451,7 +453,7 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 		pr_info("VM %d Starting VCPU %hu",
 				vcpu->vm->vm_id, vcpu->vcpu_id);
 
-		if (vcpu->arch.vpid)
+		if (vcpu->arch.vpid != 0U)
 			exec_vmwrite16(VMX_VPID, vcpu->arch.vpid);
 
 		/*
@@ -518,10 +520,11 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 
 	if (status != 0) {
 		/* refer to 64-ia32 spec section 24.9.1 volume#3 */
-		if (vcpu->arch.exit_reason & VMX_VMENTRY_FAIL)
+		if ((vcpu->arch.exit_reason & VMX_VMENTRY_FAIL) != 0U) {
 			pr_fatal("vmentry fail reason=%lx", vcpu->arch.exit_reason);
-		else
+		} else {
 			pr_fatal("vmexit fail err_inst=%x", exec_vmread32(VMX_INSTR_ERROR));
+		}
 
 		ASSERT(status == 0, "vm fail");
 	}

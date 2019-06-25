@@ -36,7 +36,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <stdbool.h>
 #include <elf.h>
 
@@ -95,19 +94,19 @@ struct multiboot_info {
 int
 acrn_parse_elf(char *arg)
 {
+	int err = -1;
 	size_t len = strnlen(arg, STR_LEN);
 	size_t elfsz;
 
 	if (len < STR_LEN) {
 		strncpy(elf_path, arg, len + 1);
-		assert(check_image(elf_path, 0, &elfsz) == 0);
-
-		elf_file_name = elf_path;
-
-		printf("SW_LOAD: get elf path %s\n", elf_path);
-		return 0;
-	} else
-		return -1;
+		if (check_image(elf_path, 0, &elfsz) == 0) {
+			elf_file_name = elf_path;
+			printf("SW_LOAD: get elf path %s\n", elf_path);
+			err = 0;
+		}
+	}
+	return err;
 }
 
 static int load_elf32(struct vmctx *ctx, FILE *fp, void *buf)

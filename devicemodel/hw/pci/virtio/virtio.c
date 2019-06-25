@@ -63,7 +63,10 @@ virtio_start_timer(struct acrn_timer *timer, time_t sec, time_t nsec)
 	/* set the delay time it will be started when timer_setting */
 	ts.it_value.tv_sec = sec;
 	ts.it_value.tv_nsec = nsec;
-	assert(acrn_timer_settime(timer, &ts) == 0);
+	if (acrn_timer_settime(timer, &ts) != 0) {
+		fprintf(stderr, "acrn timer set time failed\n");
+		return;
+	}
 }
 
 static void
@@ -127,7 +130,11 @@ virtio_linkup(struct virtio_base *base, struct virtio_ops *vops,
 	int i;
 
 	/* base and pci_virtio_dev addresses must match */
-	assert((void *)base == pci_virtio_dev);
+	if ((void *)base != pci_virtio_dev) {
+		fprintf(stderr,
+			"virtio_base and pci_virtio_dev addresses don't match!\n");
+		return;
+	}
 	base->vops = vops;
 	base->dev = dev;
 	dev->arg = base;
@@ -767,8 +774,6 @@ virtio_pci_legacy_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	uint32_t value;
 	int error;
 
-	/* XXX probably should do something better than just assert() */
-	assert(baridx == base->legacy_pio_bar_idx);
 
 	if (base->mtx)
 		pthread_mutex_lock(base->mtx);
@@ -881,8 +886,6 @@ virtio_pci_legacy_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	uint32_t newoff;
 	int error;
 
-	/* XXX probably should do something better than just assert() */
-	assert(baridx == base->legacy_pio_bar_idx);
 
 	if (base->mtx)
 		pthread_mutex_lock(base->mtx);
@@ -1073,35 +1076,59 @@ virtio_set_modern_mmio_bar(struct virtio_base *base, int barnum)
 	cap.offset = VIRTIO_CAP_COMMON_OFFSET;
 	cap.length = VIRTIO_CAP_COMMON_SIZE;
 	rc = pci_emul_add_capability(base->dev, (u_char *)&cap, sizeof(cap));
-	assert(rc == 0);
+	if (rc != 0) {
+		fprintf(stderr,
+			"pci emulation add common configuration capability failed\n");
+		return -1;
+	}
 
 	/* isr status capability */
 	cap.cfg_type = VIRTIO_PCI_CAP_ISR_CFG;
 	cap.offset = VIRTIO_CAP_ISR_OFFSET;
 	cap.length = VIRTIO_CAP_ISR_SIZE;
 	rc = pci_emul_add_capability(base->dev, (u_char *)&cap, sizeof(cap));
-	assert(rc == 0);
+	if (rc != 0) {
+		fprintf(stderr,
+			"pci emulation add isr status capability failed\n");
+		return -1;
+	}
 
 	/* device specific configuration capability */
 	cap.cfg_type = VIRTIO_PCI_CAP_DEVICE_CFG;
 	cap.offset = VIRTIO_CAP_DEVICE_OFFSET;
 	cap.length = VIRTIO_CAP_DEVICE_SIZE;
 	rc = pci_emul_add_capability(base->dev, (u_char *)&cap, sizeof(cap));
-	assert(rc == 0);
+	if (rc != 0) {
+		fprintf(stderr,
+			"pci emulation add device specific configuration capability failed\n");
+		return -1;
+	}
 
 	/* notification capability */
 	rc = pci_emul_add_capability(base->dev, (u_char *)&notify,
 		sizeof(notify));
-	assert(rc == 0);
+	if (rc != 0) {
+		fprintf(stderr,
+			"pci emulation add notification capability failed\n");
+		return -1;
+	}
 
 	/* pci alternative configuration access capability */
 	rc = pci_emul_add_capability(base->dev, (u_char *)&cfg, sizeof(cfg));
-	assert(rc == 0);
+	if (rc != 0) {
+		fprintf(stderr,
+			"pci emulation add alternative configuration access capability failed\n");
+		return -1;
+	}
 
 	/* allocate and register modern memory bar */
 	rc = pci_emul_alloc_bar(base->dev, barnum, PCIBAR_MEM64,
 				VIRTIO_MODERN_MEM_BAR_SIZE);
-	assert(rc == 0);
+	if (rc != 0) {
+		fprintf(stderr,
+			"allocate and register modern memory bar failed\n");
+		return -1;
+	}
 
 	base->cfg_coff = virtio_find_capability(base, VIRTIO_PCI_CAP_PCI_CFG);
 	if (base->cfg_coff < 0) {
@@ -1136,11 +1163,19 @@ virtio_set_modern_pio_bar(struct virtio_base *base, int barnum)
 	/* notification capability */
 	rc = pci_emul_add_capability(base->dev, (u_char *)&notify_pio,
 		sizeof(notify_pio));
-	assert(rc == 0);
+	if (rc != 0) {
+		fprintf(stderr,
+			"pci emulation add notification capability for virtio modern PIO BAR failed\n");
+		return -1;
+	}
 
 	/* allocate and register modern pio bar */
 	rc = pci_emul_alloc_bar(base->dev, barnum, PCIBAR_IO, 4);
-	assert(rc == 0);
+	if (rc != 0) {
+		fprintf(stderr,
+			"allocate and register modern pio bar failed\n");
+		return -1;
+	}
 
 	base->modern_pio_bar_idx = barnum;
 	return 0;
@@ -1582,7 +1617,6 @@ virtio_pci_modern_mmio_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	uint32_t value;
 	int capid;
 
-	assert(base->modern_mmio_bar_idx == baridx);
 
 	vops = base->vops;
 	name = vops->name;
@@ -1640,7 +1674,6 @@ virtio_pci_modern_mmio_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	const char *name;
 	int capid;
 
-	assert(base->modern_mmio_bar_idx == baridx);
 
 	vops = base->vops;
 	name = vops->name;
@@ -1690,9 +1723,6 @@ static uint32_t
 virtio_pci_modern_pio_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 			   int baridx, uint64_t offset, int size)
 {
-	struct virtio_base *base = dev->arg;
-
-	assert(base->modern_pio_bar_idx == baridx);
 	/* guest driver should not read notify pio */
 	return 0;
 }
@@ -1708,7 +1738,6 @@ virtio_pci_modern_pio_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	const char *name;
 	uint64_t idx;
 
-	assert(base->modern_pio_bar_idx == baridx);
 
 	vops = base->vops;
 	name = vops->name;

@@ -26,7 +26,6 @@
  */
 
 
-#include <assert.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -80,7 +79,9 @@ pirq_valid_irq(int reg)
 uint8_t
 pirq_read(int pin)
 {
-	assert(pin > 0 && pin <= nitems(pirqs));
+	if (pin <= 0 || pin > nitems(pirqs))
+		return PIRQ_DIS;
+
 	return pirqs[pin - 1].reg;
 }
 
@@ -89,7 +90,9 @@ pirq_write(struct vmctx *ctx, int pin, uint8_t val)
 {
 	struct pirq *pirq;
 
-	assert(pin > 0 && pin <= nitems(pirqs));
+	if (pin <= 0 || pin > nitems(pirqs))
+		return;
+
 	pirq = &pirqs[pin - 1];
 	pthread_mutex_lock(&pirq->lock);
 	if (pirq->reg != (val & (PIRQ_DIS | PIRQ_IRQ))) {
@@ -103,21 +106,18 @@ pirq_write(struct vmctx *ctx, int pin, uint8_t val)
 }
 
 void
-pci_irq_reserve(int irq)
-{
-	assert(irq >= 0 && irq < nitems(irq_counts));
-	assert(pirq_cold);
-	assert(irq_counts[irq] == 0 || irq_counts[irq] == IRQ_DISABLED);
-	irq_counts[irq] = IRQ_DISABLED;
+pci_irq_reserve(int irq) {
+	if ((irq >= 0 && irq < nitems(irq_counts)) && pirq_cold
+		&& (irq_counts[irq] == 0 || irq_counts[irq] == IRQ_DISABLED))
+		irq_counts[irq] = IRQ_DISABLED;
 }
 
 void
 pci_irq_use(int irq)
 {
-	assert(irq >= 0 && irq < nitems(irq_counts));
-	assert(pirq_cold);
-	assert(irq_counts[irq] != IRQ_DISABLED);
-	irq_counts[irq]++;
+	if ((irq >= 0 && irq < nitems(irq_counts)) && pirq_cold
+		&& (irq_counts[irq] != IRQ_DISABLED))
+		irq_counts[irq]++;
 }
 
 void
@@ -186,7 +186,9 @@ pirq_alloc_pin(struct pci_vdev *dev)
 				best_count = irq_counts[irq];
 			}
 		}
-		assert(best_irq >= 0);
+		if (best_irq < 0)
+			return -1;
+
 		irq_counts[best_irq]++;
 		pirqs[best_pin].reg = best_irq;
 	}
@@ -197,7 +199,9 @@ pirq_alloc_pin(struct pci_vdev *dev)
 int
 pirq_irq(int pin)
 {
-	assert(pin > 0 && pin <= nitems(pirqs));
+	if (pin <= 0 || pin > nitems(pirqs))
+		return 0xFF;
+
 	return (pirqs[pin - 1].reg & PIRQ_IRQ);
 }
 

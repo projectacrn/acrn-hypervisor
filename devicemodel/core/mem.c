@@ -35,7 +35,6 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
 #include <pthread.h>
 
@@ -178,7 +177,8 @@ emulate_mem(struct vmctx *ctx, struct mmio_request *mmio_req)
 
 	pthread_rwlock_unlock(&mmio_rwlock);
 
-	assert(entry != NULL);
+	if (entry == NULL)
+		return -EINVAL;
 
 	if (mmio_req->direction == REQUEST_READ)
 		err = mem_read(ctx, 0, paddr, (uint64_t *)&mmio_req->value,
@@ -196,7 +196,7 @@ register_mem_int(struct mmio_rb_tree *rbt, struct mem_range *memp)
 	struct mmio_rb_range *entry, *mrp;
 	int err;
 
-	err = 0;
+	err = -1;
 
 	mrp = malloc(sizeof(struct mmio_rb_range));
 
@@ -210,8 +210,7 @@ register_mem_int(struct mmio_rb_tree *rbt, struct mem_range *memp)
 		pthread_rwlock_unlock(&mmio_rwlock);
 		if (err)
 			free(mrp);
-	} else
-		err = -1;
+	}
 
 	return err;
 }
@@ -239,11 +238,11 @@ unregister_mem_int(struct mmio_rb_tree *rbt, struct mem_range *memp)
 	err = mmio_rb_lookup(rbt, memp->base, &entry);
 	if (err == 0) {
 		mr = &entry->mr_param;
-		if (strncmp(mr->name, memp->name, MEMNAMESZ)) {
+		if (strncmp(mr->name, memp->name, MEMNAMESZ)
+			|| (mr->base != memp->base) || (mr->size != memp->size)
+			|| ((mr->flags & MEM_F_IMMUTABLE) != 0)) {
 			err = -1;
 		} else {
-			assert(mr->base == memp->base && mr->size == memp->size);
-			assert((mr->flags & MEM_F_IMMUTABLE) == 0);
 			RB_REMOVE(mmio_rb_tree, rbt, entry);
 
 			/* flush Per-VM cache */

@@ -264,6 +264,11 @@ config MAX_IOAPIC_NUM
 	range 1 8
 	default 1
 
+config MAX_IOAPIC_LINES
+	int "Maximum number of interrupt lines per IOAPIC"
+	range 1 120
+	default 120
+
 config MAX_IR_ENTRIES
 	int "Maximum number of Interrupt Remapping Entries"
 	default 256

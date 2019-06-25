@@ -35,6 +35,7 @@
 #include <stdbool.h>
 #include "types.h"
 #include "pcireg.h"
+#include "log.h"
 
 #define	PCI_BARMAX	PCIR_MAX_BAR_0	/* BAR registers in a Type 0 header */
 #define	PCI_BDF(b, d, f) (((b & 0xFF) << 8) | ((d & 0x1F) << 3) | ((f & 0x7)))
@@ -311,7 +312,7 @@ int	pci_msix_table_bar(struct pci_vdev *pi);
 int	pci_msix_pba_bar(struct pci_vdev *pi);
 int	pci_msi_maxmsgnum(struct pci_vdev *pi);
 int	pci_parse_slot(char *opt);
-void	pci_populate_msicap(struct msicap *cap, int msgs, int nextptr);
+int	pci_populate_msicap(struct msicap *cap, int msgs, int nextptr);
 int	pci_emul_add_msixcap(struct pci_vdev *pi, int msgnum, int barnum);
 int	pci_emul_msix_twrite(struct pci_vdev *pi, uint64_t offset, int size,
 			     uint64_t value);
@@ -343,7 +344,10 @@ struct pci_vdev *pci_get_vdev_info(int slot);
 static inline void
 pci_set_cfgdata8(struct pci_vdev *dev, int offset, uint8_t val)
 {
-	assert(offset <= PCI_REGMAX);
+	if (offset > PCI_REGMAX) {
+		pr_err("%s: out of range of PCI config space!\n", __func__);
+		return;
+	}
 	*(uint8_t *)(dev->cfgdata + offset) = val;
 }
 
@@ -359,7 +363,10 @@ pci_set_cfgdata8(struct pci_vdev *dev, int offset, uint8_t val)
 static inline void
 pci_set_cfgdata16(struct pci_vdev *dev, int offset, uint16_t val)
 {
-	assert(offset <= (PCI_REGMAX - 1) && (offset & 1) == 0);
+	if ((offset > PCI_REGMAX - 1) || (offset & 1) != 0) {
+		pr_err("%s: out of range of PCI config space!\n", __func__);
+		return;
+	}
 	*(uint16_t *)(dev->cfgdata + offset) = val;
 }
 
@@ -375,7 +382,10 @@ pci_set_cfgdata16(struct pci_vdev *dev, int offset, uint16_t val)
 static inline void
 pci_set_cfgdata32(struct pci_vdev *dev, int offset, uint32_t val)
 {
-	assert(offset <= (PCI_REGMAX - 3) && (offset & 3) == 0);
+	if ((offset > PCI_REGMAX - 3) || (offset & 3) != 0) {
+		pr_err("%s: out of range of PCI config space!\n", __func__);
+		return;
+	}
 	*(uint32_t *)(dev->cfgdata + offset) = val;
 }
 
@@ -390,7 +400,10 @@ pci_set_cfgdata32(struct pci_vdev *dev, int offset, uint32_t val)
 static inline uint8_t
 pci_get_cfgdata8(struct pci_vdev *dev, int offset)
 {
-	assert(offset <= PCI_REGMAX);
+	if (offset > PCI_REGMAX) {
+		pr_err("%s: out of range of PCI config space!\n", __func__);
+		return 0xff;
+	}
 	return (*(uint8_t *)(dev->cfgdata + offset));
 }
 
@@ -405,7 +418,10 @@ pci_get_cfgdata8(struct pci_vdev *dev, int offset)
 static inline uint16_t
 pci_get_cfgdata16(struct pci_vdev *dev, int offset)
 {
-	assert(offset <= (PCI_REGMAX - 1) && (offset & 1) == 0);
+	if ((offset > PCI_REGMAX - 1) || (offset & 1) != 0) {
+		pr_err("%s: out of range of PCI config space!\n", __func__);
+		return 0xffff;
+	}
 	return (*(uint16_t *)(dev->cfgdata + offset));
 }
 
@@ -420,7 +436,10 @@ pci_get_cfgdata16(struct pci_vdev *dev, int offset)
 static inline uint32_t
 pci_get_cfgdata32(struct pci_vdev *dev, int offset)
 {
-	assert(offset <= (PCI_REGMAX - 3) && (offset & 3) == 0);
+	if ((offset > PCI_REGMAX - 3) || (offset & 3) != 0) {
+		pr_err("%s: out of range of PCI config space!\n", __func__);
+		return 0xffffffff;
+	}
 	return (*(uint32_t *)(dev->cfgdata + offset));
 }
 

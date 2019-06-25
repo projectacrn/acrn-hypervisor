@@ -25,7 +25,6 @@
  * SUCH DAMAGE.
  */
 
-#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,6 +34,7 @@
 #include "types.h"
 #include "atkbdc.h"
 #include "console.h"
+#include "log.h"
 
 /* mouse device commands */
 #define	PS2MC_RESET_DEV		0xff
@@ -152,8 +152,6 @@ fifo_get(struct ps2mouse_info *mouse, uint8_t *val)
 static void
 movement_reset(struct ps2mouse_info *mouse)
 {
-	/* assert(pthread_mutex_isowned_np(&mouse->mtx)); */
-
 	mouse->delta_x = 0;
 	mouse->delta_y = 0;
 }
@@ -171,8 +169,6 @@ static void
 movement_get(struct ps2mouse_info *mouse)
 {
 	uint8_t val0, val1, val2;
-
-/* assert(pthread_mutex_isowned_np(&mouse->mtx)); */
 
 	val0 = PS2M_DATA_AONE;
 	val0 |= mouse->status & (PS2M_DATA_LEFT_BUTTON |
@@ -220,7 +216,6 @@ movement_get(struct ps2mouse_info *mouse)
 static void
 ps2mouse_reset(struct ps2mouse_info *mouse)
 {
-/* assert(pthread_mutex_isowned_np(&mouse->mtx)); */
 	fifo_reset(mouse);
 	movement_reset(mouse);
 	mouse->status = PS2M_STS_ENABLE_DEV;
@@ -395,8 +390,10 @@ ps2mouse_init(struct atkbdc_base *base)
 	struct ps2mouse_info *mouse;
 
 	mouse = calloc(1, sizeof(struct ps2mouse_info));
-
-	assert(mouse != NULL);
+	if (!mouse) {
+		pr_err("%s: alloc memory fail!\n", __func__);
+		return NULL;
+	}
 
 	pthread_mutex_init(&mouse->mtx, NULL);
 	fifo_init(mouse);

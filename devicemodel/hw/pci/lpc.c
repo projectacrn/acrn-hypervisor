@@ -103,7 +103,10 @@ lpc_uart_intr_assert(void *arg)
 {
 	struct lpc_uart_vdev *lpc_uart = arg;
 
-	assert(lpc_uart->irq >= 0);
+	if (lpc_uart->irq < 0) {
+		pr_warn("%s: Invalid irq pin lpc_uart\n", __func__);
+		return;
+	}
 
 	if (lpc_bridge)
 		vm_set_gsi_irq(lpc_bridge->vmctx,
@@ -221,7 +224,8 @@ lpc_init(struct vmctx *ctx)
 		iop.arg = lpc_uart;
 
 		error = register_inout(&iop);
-		assert(error == 0);
+		if (error)
+			goto init_failed;
 		lpc_uart->enabled = 1;
 	}
 

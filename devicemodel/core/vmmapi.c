@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <assert.h>
 #include <string.h>
 #include <ctype.h>
 #include <fcntl.h>
@@ -98,8 +97,8 @@ vm_create(const char *name, uint64_t req_buf)
 
 	memset(&create_vm, 0, sizeof(struct acrn_create_vm));
 	ctx = calloc(1, sizeof(struct vmctx) + strnlen(name, PATH_MAX) + 1);
-	assert(ctx != NULL);
-	assert(devfd == -1);
+	if ((ctx == NULL) || (devfd != -1))
+		goto err;
 
 	if (stat("/dev/acrn_vhm", &tmp_st) == 0) {
 		devfd = open("/dev/acrn_vhm", O_RDWR|O_CLOEXEC);
@@ -174,7 +173,9 @@ vm_create(const char *name, uint64_t req_buf)
 	return ctx;
 
 err:
-	free(ctx);
+	if (ctx != NULL)
+		free(ctx);
+
 	return NULL;
 }
 

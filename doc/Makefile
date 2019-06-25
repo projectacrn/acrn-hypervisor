@@ -40,6 +40,7 @@ help:
 
 doxy:
 	$(Q)(cat acrn.doxyfile) | doxygen - > doc.log 2>&1
+	$(Q)find doxygen/xml/* | xargs sed -i 's/simplesect kind="pre"/simplesect kind="preconditions"/'
 
 content:
 	$(Q)scripts/extract_content.py . tools
@@ -50,7 +51,6 @@ kconfig:
 
 pullsource:
 	$(Q)scripts/pullsource.sh
-
 
 html: doxy content kconfig
 	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> doc.log 2>&1

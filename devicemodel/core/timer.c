@@ -7,7 +7,6 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <errno.h>
-#include <assert.h>
 #include <sys/timerfd.h>
 
 #include "vmmapi.h"
@@ -51,7 +50,9 @@ timer_handler(int fd __attribute__((unused)),
 		return;
 	}
 
-	assert(size > 0 && nexp > 0);
+	/* check the validity of timer expiration. */
+	if ((size == 0) || (nexp == 0))
+		return;
 
 	if ((cb = timer->callback) != NULL) {
 		(*cb)(timer->callback_param, nexp);

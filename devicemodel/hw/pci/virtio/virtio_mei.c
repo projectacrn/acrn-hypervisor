@@ -1490,7 +1490,15 @@ vmei_proc_tx(struct virtio_mei *vmei, struct virtio_vq_info *vq)
 	 * The first one is hdr, the second is for payload.
 	 */
 	n = vq_getchain(vq, &idx, iov, VMEI_TX_SEGS, NULL);
-	assert(n == 2);
+	if (n != VMEI_TX_SEGS) {
+		if (n == -1 || n == 0)
+			pr_err("%s: fail to getchain!\n", __func__);
+		else {
+			pr_warn("%s: invalid chain, desc number %d!\n", __func__, n);
+			vq_relchain(vq, idx, 0);
+		}
+		return;
+	}
 
 	hdr = (struct mei_msg_hdr *)iov[0].iov_base;
 	data = (uint8_t *)iov[1].iov_base;
@@ -1629,7 +1637,6 @@ static void *vmei_tx_thread(void *param)
 		if (pending_cnt == 0) {
 			err = pthread_cond_wait(&vmei->tx_cond,
 						&vmei->tx_mutex);
-			assert(err == 0);
 			if (err)
 				goto out;
 		} else {
@@ -1638,7 +1645,6 @@ static void *vmei_tx_thread(void *param)
 			err = pthread_cond_timedwait(&vmei->tx_cond,
 						     &vmei->tx_mutex,
 						     &max_wait);
-			assert(err == 0 || err == ETIMEDOUT);
 			if (err && err != ETIMEDOUT)
 				goto out;
 
@@ -1777,9 +1783,15 @@ vmei_proc_vclient_rx(struct vmei_host_client *hclient,
 	bool complete = true;
 
 	n = vq_getchain(vq, &idx, iov, VMEI_RX_SEGS, NULL);
-	assert(n == VMEI_RX_SEGS);
-	if (n != VMEI_RX_SEGS)
+	if (n != VMEI_RX_SEGS) {
+		if (n == -1)
+			pr_err("%s: fail to getchain!\n", __func__);
+		else {
+			pr_warn("%s: invalid chain, desc number %d!\n", __func__, n);
+			vq_relchain(vq, idx, 0);
+		}
 		return;
+	}
 
 	len = hclient->recv_offset - hclient->recv_handled;
 	HCL_DBG(hclient, "RX: DM->UOS: off=%d len=%d\n",
@@ -1883,7 +1895,6 @@ static void *vmei_rx_thread(void *param)
 
 	while (vmei->status != VMEI_STST_DEINIT && !vq_ring_ready(vq)) {
 		err = pthread_cond_wait(&vmei->rx_cond, &vmei->rx_mutex);
-		assert(err == 0);
 		if (err)
 			goto out;
 	}
@@ -1900,7 +1911,6 @@ static void *vmei_rx_thread(void *param)
 
 			err = pthread_cond_wait(&vmei->rx_cond,
 						&vmei->rx_mutex);
-			assert(err == 0);
 			if (err || vmei->status == VMEI_STST_DEINIT)
 				goto out;
 		}

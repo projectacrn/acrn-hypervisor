@@ -659,8 +659,12 @@ void pause_vm(struct acrn_vm *vm)
 
 	if (vm->state != VM_PAUSED) {
 		if (is_rt_vm(vm)) {
-			/* Only when RTVM is powering off by itself, we can pause vcpu */
-			if (vm->state == VM_POWERING_OFF) {
+			/**
+			 * For RTVM, we can only pause its vCPUs when it stays at following states:
+			 *  - It is powering off by itself
+			 *  - It is created but doesn't start
+			 */
+			if ((vm->state == VM_POWERING_OFF) || (vm->state == VM_CREATED)) {
 				foreach_vcpu(i, vm, vcpu) {
 					pause_vcpu(vcpu, VCPU_ZOMBIE);
 				}
@@ -853,4 +857,20 @@ enum vm_vlapic_state check_vm_vlapic_state(const struct acrn_vm *vm)
 
 	vlapic_state = vm->arch_vm.vlapic_state;
 	return vlapic_state;
+}
+
+/**
+ * if there is RT VM return true otherwise return false.
+ */
+bool has_rt_vm(void)
+{
+	uint16_t vm_id;
+
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		if (is_rt_vm(get_vm_from_vmid(vm_id))) {
+			break;
+		}
+	}
+
+	return ((vm_id == CONFIG_MAX_VM_NUM) ? false : true);
 }

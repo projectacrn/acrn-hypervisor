@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <stdbool.h>
 
 #include "vmmapi.h"
@@ -252,8 +251,6 @@ static void
 pci_wdt_bar_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		  int baridx, uint64_t offset, int size, uint64_t value)
 {
-	assert(baridx == 0);
-
 	DPRINTF("%s: addr = 0x%x, val = 0x%x, size=%d\n",
 		__func__, (int) offset, (int)value, size);
 
@@ -269,7 +266,8 @@ pci_wdt_bar_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 			}
 		}
 	} else if (offset == ESB_RELOAD_REG) {
-		assert(size == 2);
+		if (size != 2)
+			return;
 
 		if (value == ESB_UNLOCK1)
 			wdt_state.unlock_state = 1;
@@ -306,7 +304,6 @@ pci_wdt_bar_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 {
 	uint64_t ret = 0;
 
-	assert(baridx == 0);
 	DPRINTF("%s: addr = 0x%x, size=%d\n\r", __func__, (int) offset, size);
 
 	if (offset == ESB_GIS_REG) {
@@ -315,7 +312,8 @@ pci_wdt_bar_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 			ret |= ESB_WDT_INT_ACT;
 
 	} else if (offset == ESB_RELOAD_REG) {
-		assert(size == 2);
+		if (size != 2)
+			return 0;
 
 		DPRINTF("%s: timeout: %d\n\r", __func__, wdt_timeout);
 		if (wdt_timeout != 0)

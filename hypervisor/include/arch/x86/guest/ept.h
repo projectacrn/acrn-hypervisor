@@ -8,6 +8,8 @@
 #define EPT_H
 #include <types.h>
 
+typedef void (*pge_handler)(uint64_t *pgentry, uint64_t size);
+
 /**
  * Invalid HPA is defined for error checking,
  * according to SDM vol.3A 4.1.4, the maximum
@@ -103,6 +105,39 @@ void ept_modify_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
  */
 void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
 		uint64_t size);
+
+/**
+ * @brief Flush address space from the page entry
+ *
+ * @param[in] pge the pointer that points to the page entry
+ *
+ * @param[in] size the size of the page
+ *
+ * @return None
+ */
+void ept_flush_leaf_page(uint64_t *pge, uint64_t size);
+
+/**
+ * @brief Get EPT pointer of the vm
+ *
+ * @param[in] vm the pointer that points to VM data structure
+ *
+ * @retval If the current context of vm is SECURE_WORLD, return EPT pointer of
+ *            secure world, otherwise return EPT pointer of normal world.
+ */
+void *get_ept_entry(struct acrn_vm *vm);
+
+/**
+ * @brief Walking through EPT table
+ *
+ * @param[in] vm the pointer that points to VM data structure
+ * @param[in] cb the pointer that points to walk_ept_table callback, the callback
+ * 		will be invoked when getting a present page entry from EPT, and
+ *		the callback could get the page entry and page size parameters.
+ *
+ * @return None
+ */
+void walk_ept_table(struct acrn_vm *vm, pge_handler cb);
 
 /**
  * @brief EPT misconfiguration handling

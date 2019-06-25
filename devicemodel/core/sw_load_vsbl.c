@@ -28,7 +28,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <stdbool.h>
 
 #include "dm.h"
@@ -125,21 +124,19 @@ vsbl_set_bdf(int bnum, int snum, int fnum)
 int
 acrn_parse_guest_part_info(char *arg)
 {
-	int error;
+	int error = -1;
 	size_t len = strnlen(arg, STR_LEN);
 
 	if (len < STR_LEN) {
 		strncpy(guest_part_info_path, arg, len + 1);
-		error = check_image(guest_part_info_path, 0, &guest_part_info_size);
-		assert(!error);
-
-		with_guest_part_info = true;
-
-		printf("SW_LOAD: get partition blob path %s\n",
-			guest_part_info_path);
-		return 0;
-	} else
-		return -1;
+		if (check_image(guest_part_info_path, 0, &guest_part_info_size) == 0) {
+			with_guest_part_info = true;
+			printf("SW_LOAD: get partition blob path %s\n",
+						guest_part_info_path);
+			error = 0;
+		}
+	}
+	return error;
 }
 
 static int
@@ -194,21 +191,18 @@ acrn_prepare_guest_part_info(struct vmctx *ctx)
 int
 acrn_parse_vsbl(char *arg)
 {
-	int error;
+	int error = -1;
 	size_t len = strnlen(arg, STR_LEN);
 
 	if (len < STR_LEN) {
 		strncpy(vsbl_path, arg, len + 1);
-		error = check_image(vsbl_path, 8 * MB, &vsbl_size);
-		assert(!error);
-
-		vsbl_file_name = vsbl_path;
-
-		printf("SW_LOAD: get vsbl path %s\n",
-			vsbl_path);
-		return 0;
-	} else
-		return -1;
+		if (check_image(vsbl_path, 8 * MB, &vsbl_size) == 0) {
+			vsbl_file_name = vsbl_path;
+			printf("SW_LOAD: get vsbl path %s\n", vsbl_path);
+			error = 0;
+		}
+	}
+	return error;
 }
 
 static int

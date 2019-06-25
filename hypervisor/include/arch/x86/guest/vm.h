@@ -224,6 +224,7 @@ void vrtc_init(struct acrn_vm *vm);
 
 bool is_lapic_pt_configured(const struct acrn_vm *vm);
 bool is_rt_vm(const struct acrn_vm *vm);
+bool has_rt_vm(void);
 bool is_highest_severity_vm(const struct acrn_vm *vm);
 bool vm_hide_mtrr(const struct acrn_vm *vm);
 void update_vm_vlapic_state(struct acrn_vm *vm);

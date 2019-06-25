@@ -28,10 +28,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 
 #include "inout.h"
-
 SET_DECLARE(inout_port_set, struct inout_port);
 
 #define	MAX_IOPORTS	(1 << 16)
@@ -99,8 +97,9 @@ emulate_inout(struct vmctx *ctx, int *pvcpu, struct pio_request *pio_request)
 	in = (pio_request->direction == REQUEST_READ);
 	port = pio_request->address;
 
-	assert(port + bytes - 1 < MAX_IOPORTS);
-	assert(bytes == 1 || bytes == 2 || bytes == 4);
+	if ((port + bytes - 1 >= MAX_IOPORTS) ||
+		((bytes != 1) && (bytes != 2) && (bytes != 4)))
+		return -1;
 
 	handler = inout_handlers[port].handler;
 	flags = inout_handlers[port].flags;
@@ -133,7 +132,11 @@ init_inout(void)
 	 */
 	SET_FOREACH(iopp, inout_port_set) {
 		iop = *iopp;
-		assert(iop->port < MAX_IOPORTS);
+		if (iop->port >= MAX_IOPORTS) {
+			printf("%s: invalid port:0x%x", __func__, iop->port);
+			continue;
+		}
+
 		inout_handlers[iop->port].name = iop->name;
 		inout_handlers[iop->port].flags = iop->flags;
 		inout_handlers[iop->port].handler = iop->handler;
@@ -182,8 +185,6 @@ unregister_inout(struct inout_port *iop)
 				iop->port, iop->size);
 		return -1;
 	}
-
-	assert(inout_handlers[iop->port].name == iop->name);
 
 	register_default_iohandler(iop->port, iop->size);
 
