@@ -127,14 +127,12 @@ static uint64_t get_pbar_base(const struct pci_pdev *pdev, uint32_t idx)
 
 /**
  * @pre vdev != NULL
- * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  */
 int32_t vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	int32_t ret = -ENODEV;
 
-	if (is_prelaunched_vm(vdev->vpci->vm) && is_bar_offset(vdev->nr_bars, offset)) {
+	if (is_bar_offset(vdev->nr_bars, offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
 		ret = 0;
 	}
@@ -149,7 +147,7 @@ int32_t vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t 
 * @pre vdev->pdev != NULL
 * @pre vdev->pdev->msix.table_bar < vdev->nr_bars
 */
-void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
+static void vdev_pt_remap_msix_table_vbar(struct pci_vdev *vdev)
 {
 	uint32_t i;
 	struct pci_msix *msix = &vdev->msix;
@@ -315,7 +313,7 @@ static void vdev_pt_remap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 	is_msix_table_bar = (has_msix_cap(vdev) && (idx == vdev->msix.table_bar));
 
 	if (is_msix_table_bar) {
-		vdev_pt_remap_msix_table_bar(vdev);
+		vdev_pt_remap_msix_table_vbar(vdev);
 	} else {
 		vdev_pt_remap_generic_mem_vbar(vdev, idx);
 	}
@@ -403,17 +401,14 @@ static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t 
 
 /**
  * @pre vdev != NULL
- * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  * bar write access must be 4 bytes and offset must also be 4 bytes aligned, it will be dropped otherwise
  */
 int32_t vdev_pt_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	int32_t ret = -ENODEV;
 
-	/* bar write access must be 4 bytes and offset must also be 4 bytes aligned */
-	if (is_prelaunched_vm(vdev->vpci->vm) && is_bar_offset(vdev->nr_bars, offset)
-		&& (bytes == 4U) && ((offset & 0x3U) == 0U)) {
+	/* bar write access must be 4 bytes and offset must also be 4 bytes aligned*/
+	if (is_bar_offset(vdev->nr_bars, offset) && (bytes == 4U) && ((offset & 0x3U) == 0U)) {
 		vdev_pt_write_vbar(vdev, offset, val);
 		ret = 0;
 	}
@@ -457,50 +452,60 @@ void init_vdev_pt(struct pci_vdev *vdev)
 
 	ASSERT(vdev->nr_bars > 0U, "vdev->nr_bars should be greater than 0!");
 
-	if (is_prelaunched_vm(vdev->vpci->vm)) {
-		for (idx = 0U; idx < vdev->nr_bars; idx++) {
-			pbar = &vdev->pdev->bar[idx];
-			vbar = &vdev->bar[idx];
+	for (idx = 0U; idx < vdev->nr_bars; idx++) {
+		pbar = &vdev->pdev->bar[idx];
+		vbar = &vdev->bar[idx];
 
-			vbar->size = 0UL;
-			vbar->reg.value = pbar->reg.value;
-			vbar->is_64bit_high = pbar->is_64bit_high;
+		vbar->size = 0UL;
+		vbar->reg.value = pbar->reg.value;
+		vbar->is_64bit_high = pbar->is_64bit_high;
 
-			if (pbar->is_64bit_high) {
-				ASSERT(idx > 0U, "idx for upper 32-bit of the 64-bit bar should be greater than 0!");
+		if (pbar->is_64bit_high) {
+			ASSERT(idx > 0U, "idx for upper 32-bit of the 64-bit bar should be greater than 0!");
 
-				if (idx > 0U) {
-					/* For pre-launched VMs: vbar base is predefined in vm_config */
-					vbar_base = vdev->ptdev_config->vbar_base[idx - 1U];
-					/* Write the upper 32-bit of a 64-bit bar */
-					vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)(vbar_base >> 32U));
-				}
+			if (is_sos_vm(vdev->vpci->vm)) {
+				/* For SOS: vbar base (GPA) = pbar base (HPA) */
+				vbar_base = get_pbar_base(vdev->pdev, idx);
+			} else if (idx > 0U) {
+				/* For pre-launched VMs: vbar base is predefined in vm_config */
+				vbar_base = vdev->ptdev_config->vbar_base[idx - 1U];
 			} else {
-				enum pci_bar_type type = pci_get_bar_type(pbar->reg.value);
+				vbar_base = 0UL;
+			}
+			/* Write the upper 32-bit of a 64-bit bar */
+			vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)(vbar_base >> 32U));
+		} else {
+			enum pci_bar_type type = pci_get_bar_type(pbar->reg.value);
 
-				switch (type) {
-				case PCIBAR_MEM32:
-				case PCIBAR_MEM64:
-					/**
-					 * If vbar->base is 0 (unassigned), Linux kernel will reprogram the vbar on
-					 * its bar size boundary, so in order to ensure the MMIO vbar allocated by guest
-					 * is 4k aligned, set its size to be 4K aligned.
-					 */
-					vbar->size = round_page_up(pbar->size);
+			switch (type) {
+			case PCIBAR_MEM32:
+			case PCIBAR_MEM64:
+				/**
+				 * If vbar->base is 0 (unassigned), Linux kernel will reprogram the vbar on
+				 * its bar size boundary, so in order to ensure the MMIO vbar allocated by guest
+				 * is 4k aligned, set its size to be 4K aligned.
+				 */
+				vbar->size = round_page_up(pbar->size);
 
+				if (is_sos_vm(vdev->vpci->vm)) {
+					/* For SOS: vbar base (GPA) = pbar base (HPA) */
+					vbar_base = get_pbar_base(vdev->pdev, idx);
+				} else {
 					/* For pre-launched VMs: vbar base is predefined in vm_config */
 					vbar_base = vdev->ptdev_config->vbar_base[idx];
-					vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)vbar_base);
-					break;
-
-				default:
-					vbar->reg.value = 0x0U;
-					vbar->size = 0UL;
-					break;
 				}
+				vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)vbar_base);
+				break;
+
+			default:
+				vbar->reg.value = 0x0U;
+				vbar->size = 0UL;
+				break;
 			}
 		}
+	}
 
+	if (is_prelaunched_vm(vdev->vpci->vm)) {
 		pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
 
 		/* Disable INTX */
