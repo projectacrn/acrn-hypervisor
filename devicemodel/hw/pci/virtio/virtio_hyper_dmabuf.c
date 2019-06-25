@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
 #include <pthread.h>
 
 #include "dm.h"
@@ -343,8 +342,9 @@ virtio_hyper_dmabuf_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		virtio_hyper_dmabuf_k_stop();
 		virtio_hyper_dmabuf_k_reset();
 		kstatus = VIRTIO_DEV_INITIAL;
-		assert(vbs_k_hyper_dmabuf_fd >= 0);
-		close(vbs_k_hyper_dmabuf_fd);
+		if (vbs_k_hyper_dmabuf_fd >= 0) {
+			close(vbs_k_hyper_dmabuf_fd);
+		}
 		vbs_k_hyper_dmabuf_fd = -1;
 	}
 
