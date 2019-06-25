@@ -266,6 +266,19 @@ static inline enum pci_bar_type pci_get_bar_type(uint32_t val)
 	return type;
 }
 
+/**
+ * Given bar size and raw bar value, return bar base address by masking off its lower flag bits
+ * size/val: all in 64-bit values to accommodate 64-bit MMIO bar size masking
+ */
+static inline uint64_t pci_base_from_size_mask(uint64_t size, uint64_t val)
+{
+	uint64_t mask;
+
+	mask = ~(size - 1UL);
+
+	return (mask & val);
+}
+
 static inline uint8_t pci_bus(uint16_t bdf)
 {
 	return (uint8_t)((bdf >> 8U) & 0xFFU);

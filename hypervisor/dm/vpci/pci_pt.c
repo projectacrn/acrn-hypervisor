@@ -306,6 +306,22 @@ static void vdev_pt_remap_generic_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 }
 
 /**
+ * @pre vdev != NULL
+ */
+static void vdev_pt_remap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
+{
+	bool is_msix_table_bar;
+
+	is_msix_table_bar = (has_msix_cap(vdev) && (idx == vdev->msix.table_bar));
+
+	if (is_msix_table_bar) {
+		vdev_pt_remap_msix_table_bar(vdev);
+	} else {
+		vdev_pt_remap_generic_mem_vbar(vdev, idx);
+	}
+}
+
+/**
  * @brief Set the base address portion of the vbar base address register (32-bit)
  * base: bar value with flags portion masked off
  * @pre vbar != NULL
@@ -335,30 +351,26 @@ static void set_vbar_base(struct pci_bar *vbar, uint32_t base)
 static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t val)
 {
 	uint32_t idx;
-	uint32_t base, mask;
+	uint64_t base;
 	bool bar_update_normal;
-	bool is_msix_table_bar;
+	struct pci_bar *vbar;
 
-	base = 0U;
+	base = 0UL;
 	idx = (offset - pci_bar_offset(0U)) >> 2U;
-	mask = ~(vdev->bar[idx].size - 1U);
+	bar_update_normal = (val != (uint32_t)~0U);
+
+	vbar = &vdev->bar[idx];
 
 	switch (vdev->bar[idx].type) {
 	case PCIBAR_NONE:
 		break;
 
 	case PCIBAR_MEM32:
-		bar_update_normal = (val != (uint32_t)~0U);
-		is_msix_table_bar = (has_msix_cap(vdev) && (idx == vdev->msix.table_bar));
-		base = val & mask;
-		set_vbar_base(&vdev->bar[idx], base);
+		base = pci_base_from_size_mask(vbar->size, (uint64_t)val);
+		set_vbar_base(vbar, (uint32_t)base);
 
 		if (bar_update_normal) {
-			if (is_msix_table_bar) {
-				vdev_pt_remap_msix_table_bar(vdev);
-			} else {
-				vdev_pt_remap_generic_mem_vbar(vdev, idx);
-			}
+			vdev_pt_remap_mem_vbar(vdev, idx);
 		}
 		break;
 
@@ -368,7 +380,7 @@ static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t 
 	}
 
 	/* Write the vbar value to corresponding virtualized vbar reg */
-	pci_vdev_write_cfg_u32(vdev, offset, vdev->bar[idx].reg.value);
+	pci_vdev_write_cfg_u32(vdev, offset, vbar->reg.value);
 }
 
 /**
