@@ -116,7 +116,6 @@ int32_t vmsi_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, u
 void deinit_vmsi(const struct pci_vdev *vdev);
 
 void init_vmsix(struct pci_vdev *vdev);
-void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev);
 int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *handler_private_data);
 int32_t vmsix_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 int32_t vmsix_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);

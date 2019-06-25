@@ -436,10 +436,6 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const struct acrn_vm *vm)
 		 */
 		init_vdev_pt(vdev);
 
-		if (has_msix_cap(vdev)) {
-			vdev_pt_remap_msix_table_bar(vdev);
-		}
-
 		/*
 		 *  For pre-launched VM, the host bridge is fully virtualized and it does not have a physical
 		 * host bridge counterpart.
