@@ -83,7 +83,7 @@ struct pci_vdev *pci_find_vdev_by_vbdf(const struct acrn_vpci *vpci, union pci_b
 	for (i = 0U; i < vpci->pci_vdev_cnt; i++) {
 		tmp = (struct pci_vdev *)&(vpci->pci_vdevs[i]);
 
-		if (bdf_is_equal(&(tmp->vbdf), &vbdf)) {
+		if (bdf_is_equal(&(tmp->bdf), &vbdf)) {
 			vdev = tmp;
 			break;
 		}

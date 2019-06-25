@@ -67,7 +67,7 @@ union pci_cfgdata {
 struct pci_vdev {
 	const struct acrn_vpci *vpci;
 	/* The bus/device/function triple of the virtual PCI device. */
-	union pci_bdf vbdf;
+	union pci_bdf bdf;
 
 	struct pci_pdev *pdev;
 

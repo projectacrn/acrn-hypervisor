@@ -98,7 +98,7 @@ static inline bool has_msix_cap(const struct pci_vdev *vdev)
  */
 static inline bool is_hostbridge(const struct pci_vdev *vdev)
 {
-	return (vdev->vbdf.value == 0U);
+	return (vdev->bdf.value == 0U);
 }
 
 void init_vhostbridge(struct pci_vdev *vdev);

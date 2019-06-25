@@ -98,7 +98,7 @@ static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
 		info.vmsi_data.full = 0U;
 	}
 
-	ret = ptirq_msix_remap(vm, vdev->vbdf.value, pbdf.value, 0U, &info);
+	ret = ptirq_msix_remap(vm, vdev->bdf.value, pbdf.value, 0U, &info);
 	if (ret == 0) {
 		/* Update MSI Capability structure to physical device */
 		pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR, 0x4U, (uint32_t)info.pmsi_addr.full);
@@ -185,7 +185,7 @@ int32_t vmsi_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, u
 void deinit_vmsi(const struct pci_vdev *vdev)
 {
 	if (has_msi_cap(vdev)) {
-		ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, 1U);
+		ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->bdf.value, 1U);
 	}
 }
 
