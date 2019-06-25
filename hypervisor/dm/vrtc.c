@@ -34,8 +34,9 @@ static uint8_t cmos_get_reg_val(uint8_t addr)
 	spinlock_obtain(&cmos_lock);
 
 	/* Make sure an update isn't in progress */
-	while (cmos_update_in_progress() && tries--)
-	;
+	while (cmos_update_in_progress() && (tries != 0)) {
+		tries -= 1;
+	}
 
 	reg = cmos_read(addr);
 

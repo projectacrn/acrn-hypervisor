@@ -402,7 +402,7 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 			entry_is_updated = false;
 		}
 
-		if (entry != NULL && entry_is_updated) {
+		if ((entry != NULL) && entry_is_updated) {
 			if (pic_pin) {
 				vm->arch_vm.vpic.vpin_to_pt_entry[virt_pin] = entry;
 			} else {
