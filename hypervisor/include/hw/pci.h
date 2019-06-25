@@ -183,7 +183,6 @@ struct pci_bar {
 	/* Base Address Register */
 	union pci_bar_reg reg;
 	uint64_t size;
-	enum pci_bar_type type;
 	bool is_64bit_high; /* true if this is the upper 32-bit of a 64-bit bar */
 };
 
@@ -270,7 +269,7 @@ static inline enum pci_bar_type pci_get_bar_type(uint32_t val)
  * Given bar size and raw bar value, return bar base address by masking off its lower flag bits
  * size/val: all in 64-bit values to accommodate 64-bit MMIO bar size masking
  */
-static inline uint64_t pci_base_from_size_mask(uint64_t size, uint64_t val)
+static inline uint64_t git_size_masked_bar_base(uint64_t size, uint64_t val)
 {
 	uint64_t mask;
 
@@ -306,22 +305,6 @@ static inline uint8_t pci_devfn(uint16_t bdf)
 static inline bool bdf_is_equal(const union pci_bdf *a, const union pci_bdf *b)
 {
 	return (a->value == b->value);
-}
-
-/**
- * @pre bar != NULL
- */
-static inline bool is_mmio_bar(const struct pci_bar *bar)
-{
-	return (bar->type == PCIBAR_MEM32) || (bar->type == PCIBAR_MEM64);
-}
-
-/**
- * @pre bar != NULL
- */
-static inline bool is_valid_bar_size(const struct pci_bar *bar)
-{
-	return (bar->size > 0UL) && (bar->size <= 0xffffffffU);
 }
 
 uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes);

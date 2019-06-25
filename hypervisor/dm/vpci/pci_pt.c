@@ -346,7 +346,6 @@ static void set_vbar_base(struct pci_bar *vbar, uint32_t base)
 
 /**
  * @pre vdev != NULL
- * @pre (vdev->bar[idx].type == PCIBAR_NONE) || (vdev->bar[idx].type == PCIBAR_MEM32)
  */
 static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t val)
 {
@@ -361,22 +360,41 @@ static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t 
 
 	vbar = &vdev->bar[idx];
 
-	switch (vdev->bar[idx].type) {
-	case PCIBAR_NONE:
-		break;
+	if (vbar->is_64bit_high) {
+		if (idx > 0U) {
+			uint32_t prev_idx = idx - 1U;
 
-	case PCIBAR_MEM32:
-		base = pci_base_from_size_mask(vbar->size, (uint64_t)val);
-		set_vbar_base(vbar, (uint32_t)base);
+			base = git_size_masked_bar_base(vdev->bar[prev_idx].size, ((uint64_t)val) << 32U) >> 32U;
+			set_vbar_base(vbar, (uint32_t)base);
 
-		if (bar_update_normal) {
-			vdev_pt_remap_mem_vbar(vdev, idx);
+			if (bar_update_normal) {
+				vdev_pt_remap_mem_vbar(vdev, prev_idx);
+			}
+		} else {
+			ASSERT(false, "idx for upper 32-bit of the 64-bit bar should be greater than 0!");
 		}
-		break;
+	} else {
+		enum pci_bar_type type = pci_get_bar_type(vbar->reg.value);
 
-	default:
-		/* Should never reach here, init_vdev_pt() only sets vbar type to PCIBAR_NONE and PCIBAR_MEM32 */
-		break;
+		switch (type) {
+		case PCIBAR_MEM32:
+			base = git_size_masked_bar_base(vbar->size, (uint64_t)val);
+			set_vbar_base(vbar, (uint32_t)base);
+
+			if (bar_update_normal) {
+				vdev_pt_remap_mem_vbar(vdev, idx);
+			}
+			break;
+
+		case PCIBAR_MEM64:
+			base = git_size_masked_bar_base(vbar->size, (uint64_t)val);
+			set_vbar_base(vbar, (uint32_t)base);
+			break;
+
+		default:
+			/* Nothing to do */
+			break;
+		}
 	}
 
 	/* Write the vbar value to corresponding virtualized vbar reg */
@@ -401,15 +419,6 @@ int32_t vdev_pt_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes
 	}
 
 	return ret;
-}
-
-/**
- * For bar emulation, currently only MMIO is supported and bar size cannot be greater than 4GB
- * @pre bar != NULL
- */
-static inline bool is_bar_supported(const struct pci_bar *bar)
-{
-	return (is_mmio_bar(bar) && is_valid_bar_size(bar));
 }
 
 /**
@@ -453,40 +462,47 @@ void init_vdev_pt(struct pci_vdev *vdev)
 			pbar = &vdev->pdev->bar[idx];
 			vbar = &vdev->bar[idx];
 
-			if (is_bar_supported(pbar)) {
-				vbar->reg.value = pbar->reg.value;
-				vbar->reg.bits.mem.base = 0x0U; /* clear vbar base */
-				if (vbar->reg.bits.mem.type == 0x2U) {
-					/* Clear vbar 64-bit flag and set it to 32-bit */
-					vbar->reg.bits.mem.type = 0x0U;
+			vbar->size = 0UL;
+			vbar->reg.value = pbar->reg.value;
+			vbar->is_64bit_high = pbar->is_64bit_high;
+
+			if (pbar->is_64bit_high) {
+				ASSERT(idx > 0U, "idx for upper 32-bit of the 64-bit bar should be greater than 0!");
+
+				if (idx > 0U) {
+					/* For pre-launched VMs: vbar base is predefined in vm_config */
+					vbar_base = vdev->ptdev_config->vbar_base[idx - 1U];
+					/* Write the upper 32-bit of a 64-bit bar */
+					vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)(vbar_base >> 32U));
 				}
-
-				/**
-				 * If vbar->base is 0 (unassigned), Linux kernel will reprogram the vbar on
-				 * its bar size boundary, so in order to ensure the MMIO vbar allocated by guest
-				 * is 4k aligned, set its size to be 4K aligned.
-				 */
-				vbar->size = round_page_up(pbar->size);
-
-				/**
-				 * Only 32-bit bar is supported for now so both PCIBAR_MEM32 and PCIBAR_MEM64
-				 * are reported to guest as PCIBAR_MEM32
-				 */
-				vbar->type = PCIBAR_MEM32;
-
-				/* For pre-launched VMs: vbar base is predefined in vm_config */
-				vbar_base = vdev->ptdev_config->vbar_base[idx];
-
-				/* Set the new vbar base */
-				vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)vbar_base);
 			} else {
-				vbar->reg.value = 0x0U;
-				vbar->size = 0UL;
-				vbar->type = PCIBAR_NONE;
+				enum pci_bar_type type = pci_get_bar_type(pbar->reg.value);
+
+				switch (type) {
+				case PCIBAR_MEM32:
+				case PCIBAR_MEM64:
+					/**
+					 * If vbar->base is 0 (unassigned), Linux kernel will reprogram the vbar on
+					 * its bar size boundary, so in order to ensure the MMIO vbar allocated by guest
+					 * is 4k aligned, set its size to be 4K aligned.
+					 */
+					vbar->size = round_page_up(pbar->size);
+
+					/* For pre-launched VMs: vbar base is predefined in vm_config */
+					vbar_base = vdev->ptdev_config->vbar_base[idx];
+					vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)vbar_base);
+					break;
+
+				default:
+					vbar->reg.value = 0x0U;
+					vbar->size = 0UL;
+					break;
+				}
 			}
 		}
 
 		pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
+
 		/* Disable INTX */
 		pci_command |= 0x400U;
 		pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
