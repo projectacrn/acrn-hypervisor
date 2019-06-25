@@ -168,8 +168,9 @@ static struct acpi_table_rsdp *get_rsdp(void)
 			rsdp = found_rsdp((char *)hpa2hva(0xe0000UL), 0x20000);
 		}
 
-		if (rsdp == NULL)
+		if (rsdp == NULL) {
 			panic("No RSDP is found");
+		}
 
 		/* After RSDP is parsed, it will be assigned to acpi_rsdp */
 		acpi_rsdp = rsdp;

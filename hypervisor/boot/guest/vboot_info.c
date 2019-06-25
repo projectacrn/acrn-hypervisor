@@ -298,7 +298,7 @@ static int32_t depri_boot_sw_loader(struct acrn_vm *vm)
 	 * We copy the info saved in depri_boot to boot_context and
 	 * init bsp with boot_context.
 	 */
-	memcpy_s(&(vcpu_regs->gprs), sizeof(struct acrn_gp_regs),
+	(void)memcpy_s(&(vcpu_regs->gprs), sizeof(struct acrn_gp_regs),
 		&(depri_boot_ctx->vcpu_regs.gprs), sizeof(struct acrn_gp_regs));
 
 	vcpu_regs->rip = depri_boot_ctx->vcpu_regs.rip;

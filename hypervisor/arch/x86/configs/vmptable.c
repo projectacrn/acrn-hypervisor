@@ -100,7 +100,7 @@ int32_t mptable_build(struct acrn_vm *vm)
 	mptable = &vm_mptables[vm->vm_id];
 	vcpu_num = vm->hw.created_vcpus;
 	pcpu_bitmap = vm_config->pcpu_bitmap;
-	(void *)memcpy_s((void *)mptable, sizeof(struct mptable_info),
+	(void)memcpy_s((void *)mptable, sizeof(struct mptable_info),
 		(const void *)&mptable_template, sizeof(struct mptable_info));
 
 	mptable->mpch.entry_count = vcpu_num + MPE_NUM_BUSES + MPEII_NUM_LOCAL_IRQ;
@@ -117,17 +117,17 @@ int32_t mptable_build(struct acrn_vm *vm)
 	for (i = 0U; i < vcpu_num; i++) {
 		uint16_t pcpu_id = ffs64(pcpu_bitmap);
 
-		(void *)memcpy_s((void *)(mptable->proc_entry_array + i), sizeof(struct proc_entry),
+		(void)memcpy_s((void *)(mptable->proc_entry_array + i), sizeof(struct proc_entry),
 			(const void *)&proc_entry_template, sizeof(struct proc_entry));
 		mptable->proc_entry_array[i].apic_id = (uint8_t) i;
-		if (i == 0) {
+		if (i == 0U) {
 			mptable->proc_entry_array[i].cpu_flags |= PROCENTRY_FLAG_BP;
 		}
 		bitmap_clear_lock(pcpu_id, &pcpu_bitmap);
 	}
 
 	/* Copy mptable info into guest memory */
-	copy_to_gpa(vm, (void *)mptable, MPTABLE_BASE, mptable_length);
+	(void)copy_to_gpa(vm, (void *)mptable, MPTABLE_BASE, mptable_length);
 
 	startaddr = (char *)gpa2hva(vm, MPTABLE_BASE);
 	curraddr = startaddr;
