@@ -492,9 +492,6 @@ pci_xhci_get_free_vport(struct pci_xhci_vdev *xdev,
 	int ports, porte;
 	int i, j, k;
 
-	assert(xdev);
-	assert(di);
-
 	if (di->bcd < 0x300)
 		ports = xdev->usb2_port_start;
 	else
@@ -524,10 +521,6 @@ pci_xhci_set_native_port_assigned(struct pci_xhci_vdev *xdev,
 {
 	int i;
 
-	assert(xdev);
-	assert(info);
-	assert(xdev->native_ports);
-
 	for (i = 0; i < XHCI_MAX_VIRT_PORTS; i++)
 		if (xdev->native_ports[i].state == VPORT_FREE)
 			break;
@@ -547,9 +540,6 @@ pci_xhci_get_native_port_index_by_path(struct pci_xhci_vdev *xdev,
 {
 	int i;
 
-	assert(xdev);
-	assert(path);
-
 	for (i = 0; i < XHCI_MAX_VIRT_PORTS; i++)
 		if (usb_dev_path_cmp(&xdev->native_ports[i].info.path, path))
 			return i;
@@ -562,7 +552,6 @@ pci_xhci_get_native_port_index_by_vport(struct pci_xhci_vdev *xdev,
 {
 	int i;
 
-	assert(xdev);
 	for (i = 0; i < XHCI_MAX_VIRT_PORTS; i++)
 		if (xdev->native_ports[i].vport == vport)
 			return i;
@@ -575,10 +564,6 @@ pci_xhci_clr_native_port_assigned(struct pci_xhci_vdev *xdev,
 		struct usb_native_devinfo *info)
 {
 	int i;
-
-	assert(xdev);
-	assert(info);
-	assert(xdev->native_ports);
 
 	i = pci_xhci_get_native_port_index_by_path(xdev, &info->path);
 	if (i >= 0) {
@@ -687,8 +672,6 @@ xhci_vbdp_thread(void *data)
 	struct pci_xhci_native_port *p;
 
 	xdev = data;
-	assert(xdev);
-
 	while (xdev->vbdp_polling) {
 
 		sem_wait(&xdev->vbdp_sem);
@@ -730,12 +713,6 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	int s3_conn = 0;
 
 	xdev = hci_data;
-
-	assert(xdev);
-	assert(dev_data);
-	assert(xdev->devices);
-	assert(xdev->slots);
-
 	di = dev_data;
 
 	/* print physical information about new device */
@@ -821,12 +798,7 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	int rc;
 	int i;
 
-	assert(hci_data);
-	assert(dev_data);
-
 	xdev = hci_data;
-	assert(xdev->devices);
-
 	di = dev_data;
 	if (!pci_xhci_is_valid_portnum(ROOTHUB_PORT(di->path))) {
 		UPRINTF(LFTL, "invalid physical port %d\r\n",
@@ -890,7 +862,9 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 		return 0;
 	}
 
-	assert(state == VPORT_EMULATED || state == VPORT_CONNECTED);
+	if (!(state == VPORT_EMULATED || state == VPORT_CONNECTED))
+		UPRINTF(LFTL, "error: unexpected state %d\r\n", state);
+
 	xdev->native_ports[index].state = VPORT_ASSIGNED;
 	xdev->native_ports[index].vport = 0;
 
@@ -1003,9 +977,6 @@ pci_xhci_dev_create(struct pci_xhci_vdev *xdev, void *dev_data)
 	void *ud = NULL;
 	int rc;
 
-	assert(xdev);
-	assert(dev_data);
-
 	ue = calloc(1, sizeof(struct usb_devemu));
 	if (!ue)
 		return NULL;
@@ -1077,7 +1048,6 @@ pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de)
 		ud = de->dev_instance;
 		if (ue) {
 			if (ue->ue_devtype == USB_DEV_PORT_MAPPER) {
-				assert(ue->ue_deinit);
 				if (ue->ue_deinit)
 					ue->ue_deinit(ud);
 			}
@@ -1141,8 +1111,6 @@ pci_xhci_change_port(struct pci_xhci_vdev *xdev, int port, int usb_speed,
 	int speed, error;
 	struct xhci_trb evtrb;
 	struct pci_xhci_portregs *reg;
-
-	assert(xdev != NULL);
 
 	reg = XHCI_PORTREG_PTR(xdev, port);
 	if (conn == 0) {
@@ -1295,11 +1263,8 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 	UPRINTF(LDBG, "portregs wr offset 0x%lx, port %u: 0x%lx\r\n",
 		offset, port, value);
 
-	assert(port >= 0);
-
-	if (port > XHCI_MAX_DEVS) {
-		UPRINTF(LWRN, "portregs_write port %d > ndevices\r\n",
-			port);
+	if (port > XHCI_MAX_DEVS || port < 0) {
+		UPRINTF(LWRN, "portregs_write to bad port %d\r\n", port);
 		return;
 	}
 
@@ -1416,10 +1381,7 @@ pci_xhci_apl_drdregs_write(struct pci_xhci_vdev *xdev, uint64_t offset,
 	struct pci_xhci_excap *excap;
 	struct pci_xhci_excap_drd_apl *excap_drd;
 
-	assert(xdev);
-
 	excap = xdev->excap_ptr;
-
 	while (excap && excap->start != XHCI_APL_DRDCAP_BASE)
 		excap++;
 
@@ -1485,8 +1447,6 @@ pci_xhci_excap_write(struct pci_xhci_vdev *xdev, uint64_t offset,
 {
 	int rc = 0;
 
-	assert(xdev);
-
 	if (xdev->excap_ptr && xdev->excap_write)
 		rc = xdev->excap_write(xdev, offset, value);
 	else
@@ -1503,9 +1463,13 @@ pci_xhci_get_dev_ctx(struct pci_xhci_vdev *xdev, uint32_t slot)
 	uint64_t devctx_addr;
 	struct xhci_dev_ctx *devctx;
 
-	assert(slot > 0 && slot <= XHCI_MAX_SLOTS &&
-			xdev->slot_allocated[slot]);
-	assert(xdev->opregs.dcbaa_p != NULL);
+	if (slot <= 0 || slot > XHCI_MAX_SLOTS || !xdev->slot_allocated[slot] ||
+			!xdev->opregs.dcbaa_p) {
+		UPRINTF(LFTL, "invalid ctx: slot %d, alloc %d dcbaa %p\r\n",
+				slot, xdev->slot_allocated[slot],
+				xdev->opregs.dcbaa_p);
+		return NULL;
+	}
 
 	devctx_addr = xdev->opregs.dcbaa_p->dcba[slot];
 
@@ -1527,8 +1491,6 @@ pci_xhci_trb_next(struct pci_xhci_vdev *xdev,
 		  uint64_t *guestaddr)
 {
 	struct xhci_trb *next;
-
-	assert(curtrb != NULL);
 
 	if (XHCI_TRB_3_TYPE_GET(curtrb->dwTrb3) == XHCI_TRB_TYPE_LINK) {
 		if (guestaddr)
@@ -1606,7 +1568,6 @@ pci_xhci_init_ep(struct pci_xhci_dev_emu *dev, int epid)
 	if (pstreams > 0) {
 		UPRINTF(LDBG, "init_ep %d with pstreams %d\r\n",
 				epid, pstreams);
-		assert(devep->ep_sctx_trbs == NULL);
 
 		devep->ep_sctx = XHCI_GADDR(dev->xdev, ep_ctx->qwEpCtx2 &
 					    XHCI_EPCTX_2_TR_DQ_PTR_MASK);
@@ -1839,7 +1800,6 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 				XHCI_PS_CCS | XHCI_PS_PED | XHCI_PS_PP);
 
 		udev = dev->dev_instance;
-		assert(udev);
 
 		xdev->devices[i] = NULL;
 		xdev->slots[slot] = NULL;
@@ -2024,7 +1984,6 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 		dev_ctx->ctx_slot.dwSctx2, dev_ctx->ctx_slot.dwSctx3);
 
 	dev = XHCI_SLOTDEV_PTR(xdev, slot);
-	assert(dev != NULL);
 
 	dev->hci.hci_address = slot;
 	dev->dev_ctx = dev_ctx;
@@ -2225,7 +2184,6 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 	type = XHCI_TRB_3_TYPE_GET(trb->dwTrb3);
 
 	dev = XHCI_SLOTDEV_PTR(xdev, slot);
-	assert(dev != NULL);
 
 	if (type == XHCI_TRB_TYPE_STOP_EP &&
 	   (trb->dwTrb3 & XHCI_TRB_3_SUSP_EP_BIT) != 0) {
@@ -2239,7 +2197,6 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 	}
 
 	dev_ctx = dev->dev_ctx;
-	assert(dev_ctx != NULL);
 	ep_ctx = &dev_ctx->ctx_ep[epid];
 
 	if (type == XHCI_TRB_TYPE_RESET_EP &&
@@ -2326,8 +2283,6 @@ pci_xhci_cmd_set_tr(struct pci_xhci_vdev *xdev,
 	cmderr = XHCI_TRB_ERROR_SUCCESS;
 
 	dev = XHCI_SLOTDEV_PTR(xdev, slot);
-	assert(dev != NULL);
-
 	UPRINTF(LDBG, "set_tr: new-tr x%016lx, SCT %u DCS %u\r\n"
 		 "      stream-id %u, slot %u, epid %u, C %u\r\n",
 		 (trb->qwTrb0 & ~0xF),  (uint32_t)((trb->qwTrb0 >> 1) & 0x7),
@@ -2343,8 +2298,6 @@ pci_xhci_cmd_set_tr(struct pci_xhci_vdev *xdev,
 	}
 
 	dev_ctx = dev->dev_ctx;
-	assert(dev_ctx != NULL);
-
 	ep_ctx = &dev_ctx->ctx_ep[epid];
 	devep = &dev->eps[epid];
 
@@ -2366,7 +2319,6 @@ pci_xhci_cmd_set_tr(struct pci_xhci_vdev *xdev,
 		sctx = NULL;
 		cmderr = pci_xhci_find_stream(xdev, ep_ctx, streamid, &sctx);
 		if (sctx != NULL) {
-			assert(devep->ep_sctx != NULL);
 
 			devep->ep_sctx[streamid].qwSctx0 = trb->qwTrb0;
 			devep->ep_sctx_trbs[streamid].ringaddr =
@@ -2661,7 +2613,6 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 	int rem_len = 0;
 
 	dev_ctx = pci_xhci_get_dev_ctx(xdev, slot);
-	assert(dev_ctx != NULL);
 
 	ep_ctx = &dev_ctx->ctx_ep[epid];
 
@@ -3425,8 +3376,6 @@ pci_xhci_write(struct vmctx *ctx,
 
 	xdev = dev->arg;
 
-	assert(baridx == 0);
-
 	pthread_mutex_lock(&xdev->mtx);
 	if (offset < XHCI_CAPLEN)	/* read only registers */
 		UPRINTF(LWRN, "write RO-CAPs offset %ld\r\n", offset);
@@ -3614,8 +3563,6 @@ pci_xhci_rtsregs_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 		offset -= XHCI_RT_IR_BASE;
 		item = offset % 32;
 
-		assert(offset < sizeof(xdev->rtsregs.intrreg));
-
 		p = &xdev->rtsregs.intrreg.iman;
 		p += item / sizeof(uint32_t);
 		value = *p;
@@ -3633,8 +3580,6 @@ pci_xhci_excap_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 	uint32_t value = 0;
 	uint32_t off = offset;
 	struct pci_xhci_excap *excap;
-
-	assert(xdev);
 
 	excap = xdev->excap_ptr;
 
@@ -3671,8 +3616,6 @@ pci_xhci_read(struct vmctx *ctx,
 	uint32_t	value;
 
 	xdev = dev->arg;
-
-	assert(baridx == 0);
 
 	pthread_mutex_lock(&xdev->mtx);
 	if (offset < XHCI_CAPLEN)
@@ -3715,8 +3658,6 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 	struct usb_native_devinfo *di;
 	int speed, error;
 	int index;
-
-	assert(portn <= XHCI_MAX_DEVS);
 
 	UPRINTF(LINF, "reset port %d\r\n", portn);
 
@@ -3773,8 +3714,6 @@ pci_xhci_dev_intr(struct usb_hci *hci, int epctx)
 
 	/* HW endpoint contexts are 0-15; convert to epid based on dir */
 	epid = (epid * 2) + (dir_in ? 1 : 0);
-
-	assert(epid >= 1 && epid <= 31);
 
 	dev = hci->dev;
 	xdev = dev->xdev;
@@ -3850,8 +3789,6 @@ pci_xhci_parse_log_level(struct pci_xhci_vdev *xdev, char *opts)
 	char *s, *o;
 	int rc = 0;
 
-	assert(opts);
-
 	o = s = strdup(opts);
 	if (!(s && s[0] == 'l' && s[1] == 'o' && s[2] == 'g')) {
 		rc = -1;
@@ -3882,9 +3819,6 @@ pci_xhci_parse_bus_port(struct pci_xhci_vdev *xdev, char *opts)
 	int port, bus, index;
 	struct usb_devpath path;
 	struct usb_native_devinfo di;
-
-	assert(xdev);
-	assert(opts);
 
 	tstr = opts;
 	/* 'bus-port' format */
@@ -3932,9 +3866,6 @@ pci_xhci_parse_tablet(struct pci_xhci_vdev *xdev, char *opts)
 	struct pci_xhci_dev_emu *dev = NULL;
 	uint8_t port_u2, port_u3;
 	int rc = 0;
-
-	assert(xdev);
-	assert(opts);
 
 	if (strncmp(opts, "tablet", sizeof("tablet") - 1)) {
 		rc = -1;
@@ -4013,8 +3944,6 @@ pci_xhci_parse_extcap(struct pci_xhci_vdev *xdev, char *opts)
 	char *s, *o;
 	int rc = 0;
 
-	assert(opts);
-
 	cap = o = s = strdup(opts);
 
 	s = strchr(opts, '=');
@@ -4057,7 +3986,6 @@ pci_xhci_parse_opts(struct pci_xhci_vdev *xdev, char *opts)
 	int (*f)(struct pci_xhci_vdev *, char *);
 	int elem_cnt;
 
-	assert(xdev);
 	if (!opts) {
 		rc = -1;
 		goto errout;
@@ -4301,12 +4229,9 @@ pci_xhci_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	struct pci_xhci_vdev *xdev;
 	struct pci_xhci_dev_emu *de;
 
-	assert(dev);
 	xdev = dev->arg;
 
 	UPRINTF(LINF, "de-initialization\r\n");
-	assert(xdev);
-	assert(xdev->devices);
 
 	for (i = 1; i <= XHCI_MAX_DEVS; ++i) {
 		de = xdev->devices[i];

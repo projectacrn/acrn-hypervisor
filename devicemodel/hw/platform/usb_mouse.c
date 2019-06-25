@@ -328,8 +328,6 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 	data = NULL;
 	udata = NULL;
 
-	assert(xfer != NULL && xfer->head >= 0);
-
 	idx = xfer->head;
 	for (i = 0; i < xfer->ndata; i++) {
 		xfer->data[idx].bdone = 0;
@@ -701,8 +699,6 @@ umouse_data_handler(void *scarg, struct usb_data_xfer *xfer, int dir,
 	uint8_t *udata;
 	int len, i, idx;
 	int err;
-
-	assert(xfer != NULL && xfer->head >= 0);
 
 	UPRINTF(LDBG, "handle data - DIR=%s|EP=%d, blen %d\r\n",
 		dir ? "IN" : "OUT", epctx, xfer->data[0].blen);
