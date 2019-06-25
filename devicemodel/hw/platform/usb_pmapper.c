@@ -83,11 +83,7 @@ internal_scan(struct libusb_device ***list, int list_sz, int depth,
 	struct libusb_device **devlist;
 	struct usb_native_devinfo di;
 
-	assert(visit);
-	assert(list);
-	assert(visit_sz >= list_sz);
 	devlist = *list;
-
 	if (depth >= USB_MAX_TIERS) {
 		UPRINTF(LFTL, "max hub layers(7) reached, stop scan\r\n");
 		return;
@@ -183,16 +179,11 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 	uint16_t maxp;
 	uint8_t *buf;
 
-	assert(trn);
-
 	/* async request */
 	r = trn->user_data;
-	assert(r);
-	assert(r->udev);
 
 	/* async transfer */
 	xfer = r->xfer;
-	assert(xfer);
 
 	maxp = usb_dev_get_ep_maxp(r->udev, r->in, xfer->epid / 2);
 	if (trn->type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS) {
@@ -268,7 +259,8 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 				break;
 
 			block = &xfer->data[idx % USB_MAX_XFER_BLOCKS];
-			assert(block->processed);
+			if (block->processed == USB_XFER_BLK_FREE)
+				UPRINTF(LFTL, "error: found free block\r\n");
 
 			d = done;
 			if (d > block->blen)
@@ -370,7 +362,6 @@ usb_dev_prepare_xfer(struct usb_data_xfer *xfer, int *count, int *size)
 	int found, i, idx, c, s, first;
 	struct usb_data_xfer_block *block = NULL;
 
-	assert(xfer);
 	idx = xfer->head;
 	found = 0;
 	first = -1;
@@ -433,8 +424,6 @@ usb_dev_err_convert(int err)
 static inline struct usb_dev_ep *
 usb_dev_get_ep(struct usb_dev *udev, int pid, int ep)
 {
-	assert(udev);
-
 	if (ep < 0 || ep >= USB_NUM_ENDPOINT) {
 		UPRINTF(LWRN, "invalid ep %d\r\n", ep);
 		return NULL;
@@ -516,7 +505,6 @@ usb_dev_update_ep(struct usb_dev *udev)
 	const struct libusb_endpoint_descriptor *desc;
 	int i, j;
 
-	assert(udev);
 	if (libusb_get_active_config_descriptor(udev->info.priv_data, &cfg))
 		return;
 
@@ -545,10 +533,6 @@ usb_dev_native_toggle_if(struct usb_dev *udev, int claim)
 	struct usb_devpath *path;
 	uint8_t c, i;
 	int rc = 0, r;
-
-	assert(udev);
-	assert(udev->handle);
-	assert(claim == 1 || claim == 0);
 
 	path = &udev->info.path;
 	r = libusb_get_active_config_descriptor(udev->info.priv_data, &config);
@@ -596,10 +580,6 @@ usb_dev_native_toggle_if_drivers(struct usb_dev *udev, int attach)
 	uint8_t c, i;
 	int rc = 0, r;
 
-	assert(udev);
-	assert(udev->handle);
-	assert(attach == 1 || attach == 0);
-
 	path = &udev->info.path;
 	r = libusb_get_active_config_descriptor(udev->info.priv_data, &config);
 	if (r) {
@@ -641,9 +621,6 @@ usb_dev_set_config(struct usb_dev *udev, struct usb_data_xfer *xfer, int config)
 {
 	int rc = 0;
 	struct libusb_config_descriptor *cfg;
-
-	assert(udev);
-	assert(udev->handle);
 
 	/*
 	 * set configuration
@@ -693,10 +670,6 @@ static void
 usb_dev_set_if(struct usb_dev *udev, int iface, int alt, struct usb_data_xfer
 		*xfer)
 {
-	assert(udev);
-	assert(xfer);
-	assert(udev->handle);
-
 	if (iface >= USB_NUM_INTERFACE)
 		goto errout;
 
@@ -757,7 +730,6 @@ usb_dev_reset(void *pdata)
 	struct usb_dev *udev;
 
 	udev = pdata;
-	assert(udev);
 
 	UPRINTF(LDBG, "reset endpoints\n");
 	libusb_reset_device(udev->handle);
@@ -782,7 +754,6 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 	uint16_t maxp;
 
 	udev = pdata;
-	assert(udev);
 	xfer->status = USB_ERR_NORMAL_COMPLETION;
 
 	blk_start = usb_dev_prepare_xfer(xfer, &blk_count, &data_size);
@@ -934,9 +905,6 @@ usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
 
 	udev = pdata;
 
-	assert(xfer);
-	assert(udev);
-
 	xfer->status = USB_ERR_NORMAL_COMPLETION;
 	if (!udev->info.priv_data || !xfer->ureq) {
 		UPRINTF(LWRN, "invalid request\r\n");
@@ -1030,7 +998,6 @@ usb_dev_init(void *pdata, char *opt)
 	struct usb_native_devinfo *di;
 	int ver;
 
-	assert(pdata);
 	di = pdata;
 
 	libusb_get_device_descriptor(di->priv_data, &desc);
@@ -1121,8 +1088,6 @@ usb_dev_info(void *pdata, int type, void *value, int size)
 	void *pv;
 
 	udev = pdata;
-	assert(udev);
-	assert(value);
 
 	switch (type) {
 	case USB_INFO_VERSION:
@@ -1241,8 +1206,6 @@ usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 	int native_pid, native_vid, native_cls, rc;
 	int num_devs;
 
-	assert(conn_cb);
-	assert(disconn_cb);
 	usb_set_log_level(log_level);
 
 	if (g_ctx.libusb_ctx) {
