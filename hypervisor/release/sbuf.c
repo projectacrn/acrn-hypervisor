@@ -4,6 +4,4 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <types.h>
-
-void sbuf_reset(__unused uint16_t pcpu_id) {}
+void sbuf_reset(void) {}
