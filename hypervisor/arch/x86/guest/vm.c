@@ -26,6 +26,7 @@
 #include <vboot_info.h>
 #include <board.h>
 #include <sgx.h>
+#include <sbuf.h>
 
 vm_sw_loader_t vm_sw_loader;
 
@@ -574,6 +575,10 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 
 		vm_config = get_vm_config(vm->vm_id);
 		vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
+
+		if (is_sos_vm(vm)) {
+			sbuf_reset();
+		}
 
 		vpci_cleanup(vm);
 
