@@ -104,7 +104,7 @@ How to use ACRN-DM QoS
          },
 
    .. note:: For configuration details, refer to the `Open Containers configuration documentation
-             <https://github.com/opencontainers/runtime-spec/blob/master/config.md>`_.
+      <https://github.com/opencontainers/runtime-spec/blob/master/config.md>`_.
 
 #. Add the UOS by ``acrnctl add`` command:
 
@@ -112,8 +112,20 @@ How to use ACRN-DM QoS
 
       # acrnctl add launch_uos.sh -C
 
+   .. note:: You can download an `example launch_uos.sh script
+      <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/devicemodel/samples/nuc/launch_uos.sh>`_
+      that supports the ``-C``  (``run_container`` function) option.
+
 #. Start the UOS by ``acrnd``
 
    .. code-block:: none
 
       # acrnd -t
+
+#. After UOS boots, you may use ``runc list`` command to check the container status in SOS:
+
+   .. code-block:: none
+
+      # runc list
+      ID          PID         STATUS      BUNDLE                              CREATED                        OWNER
+      vm1         1686        running     /usr/share/acrn/conf/add/runc/vm1   2019-06-27T08:16:40.9039293Z   #0

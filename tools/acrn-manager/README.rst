@@ -41,17 +41,22 @@ Add a VM
 ========
 
 The ``add`` command lets you add a VM by specifying a
-script that will launch a UOS, for example ``launch_UOS.sh``:
+script that will launch a UOS, for example ``launch_uos.sh``:
 
 .. code-block:: none
 
-   # acrnctl add launch_UOS.sh -U 1
+   # acrnctl add launch_uos.sh -U 1
    vm1-14:59:30 added
 
 If a ``-C`` option is also specified, the VM is launched in a runC
 container::
 
-   # acrnctl add launch_UOS.sh -C
+   # acrnctl add launch_uos.sh -C
+
+.. note:: You can download an `example launch_uos.sh script
+   <https://raw.githubusercontent.com/projectacrn/acrnhypervisor/master/devicemodel/samples/nuc/launch_uos.sh>`_
+   that supports the ``-C``  (``run_container`` function) option. You may refer to :ref:`acrn-dm_qos`
+   for more details about this option.
 
 Note that the launch script must only launch one UOS instance.
 The VM name is important. ``acrnctl`` searches VMs by their
