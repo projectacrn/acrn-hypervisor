@@ -643,7 +643,7 @@ vm_loop(struct vmctx *ctx)
 		if (error)
 			break;
 
-		for (vcpu_id = 0; vcpu_id < 4; vcpu_id++) {
+		for (vcpu_id = 0; vcpu_id < guest_ncpus; vcpu_id++) {
 			vhm_req = &vhm_req_buf[vcpu_id];
 			if ((atomic_load(&vhm_req->processed) == REQ_STATE_PROCESSING)
 				&& (vhm_req->client == ctx->ioreq_client))
