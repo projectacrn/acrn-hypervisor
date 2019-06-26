@@ -319,7 +319,7 @@ int32_t interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu)
 	/* Disable interrupt-window exiting first.
 	 * acrn_handle_pending_request will continue handle for this vcpu
 	 */
-	vcpu->arch.irq_window_enabled = 0U;
+	vcpu->arch.irq_window_enabled = false;
 	value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
 	value32 &= ~(VMX_PROCBASED_CTLS_IRQ_WIN);
 	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
@@ -446,13 +446,13 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		 * an ExtInt or there is lapic interrupt and virtual interrupt
 		 * deliver is disabled.
 		 */
-		if (arch->irq_window_enabled != 1U) {
+		if (!arch->irq_window_enabled) {
 			if (bitmap_test(ACRN_REQUEST_EXTINT, pending_req_bits) ||
 				vlapic_has_pending_delivery_intr(vcpu)) {
 				tmp = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
 				tmp |= VMX_PROCBASED_CTLS_IRQ_WIN;
 				exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, tmp);
-				arch->irq_window_enabled = 1U;
+				arch->irq_window_enabled = true;
 			}
 		}
 	}

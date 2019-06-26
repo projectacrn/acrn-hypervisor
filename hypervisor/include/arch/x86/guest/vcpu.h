@@ -324,7 +324,7 @@ struct acrn_vcpu_arch {
 	} exception_info;
 
 	uint8_t lapic_mask;
-	uint32_t irq_window_enabled;
+	bool irq_window_enabled;
 	uint32_t nrexits;
 
 	/* VCPU context state information */

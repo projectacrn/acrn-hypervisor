@@ -42,8 +42,9 @@ uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
 	if (!bitmap_test(CPU_REG_RIP, &vcpu->reg_updated) &&
-		bitmap_test_and_set_lock(CPU_REG_RIP, &vcpu->reg_cached) == 0)
+		!bitmap_test_and_set_lock(CPU_REG_RIP, &vcpu->reg_cached)) {
 		ctx->rip = exec_vmread(VMX_GUEST_RIP);
+	}
 	return ctx->rip;
 }
 
@@ -176,7 +177,7 @@ void vcpu_reset_eoi_exit_bitmaps(struct acrn_vcpu *vcpu)
 {
 	pr_dbg("%s", __func__);
 
-	memset((void *)(vcpu->arch.eoi_exit_bitmap), 0U, sizeof(vcpu->arch.eoi_exit_bitmap));
+	(void)memset((void *)(vcpu->arch.eoi_exit_bitmap), 0U, sizeof(vcpu->arch.eoi_exit_bitmap));
 	vcpu_make_request(vcpu, ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE);
 }
 
@@ -260,8 +261,8 @@ void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
 	ectx->ldtr.attr = LDTR_AR;
 	ectx->tr.attr = TR_AR;
 
-	memcpy_s(&(ctx->guest_cpu_regs), sizeof(struct acrn_gp_regs),
-			&(vcpu_regs->gprs), sizeof(struct acrn_gp_regs));
+	(void)memcpy_s((void *)&(ctx->guest_cpu_regs), sizeof(struct acrn_gp_regs),
+			(void *)&(vcpu_regs->gprs), sizeof(struct acrn_gp_regs));
 
 	vcpu_set_rip(vcpu, vcpu_regs->rip);
 	vcpu_set_efer(vcpu, vcpu_regs->ia32_efer);
@@ -339,6 +340,7 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 {
 	struct acrn_vcpu *vcpu;
 	uint16_t vcpu_id;
+	int32_t ret;
 
 	pr_info("Creating VCPU working on PCPU%hu", pcpu_id);
 
@@ -423,17 +425,21 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 	uint64_t rip, ia32_efer, cr0;
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
-	int64_t status = 0;
+	int32_t status = 0;
 	int32_t ibrs_type = get_ibrs_type();
 
-	if (bitmap_test_and_clear_lock(CPU_REG_RIP, &vcpu->reg_updated))
+	if (bitmap_test_and_clear_lock(CPU_REG_RIP, &vcpu->reg_updated)) {
 		exec_vmwrite(VMX_GUEST_RIP, ctx->rip);
-	if (bitmap_test_and_clear_lock(CPU_REG_RSP, &vcpu->reg_updated))
+	}
+	if (bitmap_test_and_clear_lock(CPU_REG_RSP, &vcpu->reg_updated)) {
 		exec_vmwrite(VMX_GUEST_RSP, ctx->guest_cpu_regs.regs.rsp);
-	if (bitmap_test_and_clear_lock(CPU_REG_EFER, &vcpu->reg_updated))
+	}
+	if (bitmap_test_and_clear_lock(CPU_REG_EFER, &vcpu->reg_updated)) {
 		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, ctx->ia32_efer);
-	if (bitmap_test_and_clear_lock(CPU_REG_RFLAGS, &vcpu->reg_updated))
+	}
+	if (bitmap_test_and_clear_lock(CPU_REG_RFLAGS, &vcpu->reg_updated)) {
 		exec_vmwrite(VMX_GUEST_RFLAGS, ctx->rflags);
+	}
 
 	/*
 	 * Currently, updating CR0/CR4 here is only designed for world
@@ -566,12 +572,12 @@ void reset_vcpu(struct acrn_vcpu *vcpu)
 
 	vcpu->arch.exception_info.exception = VECTOR_INVALID;
 	vcpu->arch.cur_context = NORMAL_WORLD;
-	vcpu->arch.irq_window_enabled = 0;
+	vcpu->arch.irq_window_enabled = false;
 	vcpu->arch.inject_event_pending = false;
-	(void)memset(vcpu->arch.vmcs, 0U, PAGE_SIZE);
+	(void)memset((void *)vcpu->arch.vmcs, 0U, PAGE_SIZE);
 
 	for (i = 0; i < NR_WORLD; i++) {
-		(void)memset(&vcpu->arch.contexts[i], 0U,
+		(void)memset((void *)(&vcpu->arch.contexts[i]), 0U,
 			sizeof(struct run_context));
 	}
 	vcpu->arch.cur_context = NORMAL_WORLD;
@@ -605,8 +611,9 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 		release_schedule_lock(vcpu->pcpu_id);
 
 		if (vcpu->pcpu_id != pcpu_id) {
-			while (atomic_load32(&vcpu->running) == 1U)
+			while (atomic_load32(&vcpu->running) == 1U) {
 				asm_pause();
+			}
 		}
 	} else {
 		remove_from_cpu_runqueue(&vcpu->sched_obj, vcpu->pcpu_id);
