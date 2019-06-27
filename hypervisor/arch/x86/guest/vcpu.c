@@ -349,71 +349,73 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 	 * vm->hw.created_vcpus++;
 	 */
 	vcpu_id = atomic_xadd16(&vm->hw.created_vcpus, 1U);
-	if (vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
-		vm->hw.created_vcpus--;
+	if (vcpu_id < CONFIG_MAX_VCPUS_PER_VM) {
+		/* Allocate memory for VCPU */
+		vcpu = &(vm->hw.vcpu_array[vcpu_id]);
+		(void)memset((void *)vcpu, 0U, sizeof(struct acrn_vcpu));
+
+		/* Initialize CPU ID for this VCPU */
+		vcpu->vcpu_id = vcpu_id;
+		vcpu->pcpu_id = pcpu_id;
+		per_cpu(ever_run_vcpu, pcpu_id) = vcpu;
+
+		/* Initialize the parent VM reference */
+		vcpu->vm = vm;
+
+		/* Initialize the virtual ID for this VCPU */
+		/* FIXME:
+		 * We have assumption that we always destroys vcpus in one
+		 * shot (like when vm is destroyed). If we need to support
+		 * specific vcpu destroy on fly, this vcpu_id assignment
+		 * needs revise.
+		 */
+
+		per_cpu(vcpu, pcpu_id) = vcpu;
+
+		pr_info("PCPU%d is working as VM%d VCPU%d, Role: %s",
+				vcpu->pcpu_id, vcpu->vm->vm_id, vcpu->vcpu_id,
+				is_vcpu_bsp(vcpu) ? "PRIMARY" : "SECONDARY");
+
+		/*
+		 * If the logical processor is in VMX non-root operation and
+		 * the "enable VPID" VM-execution control is 1, the current VPID
+		 * is the value of the VPID VM-execution control field in the VMCS.
+		 *
+		 * This assignment guarantees a unique non-zero per vcpu vpid in runtime.
+		 */
+		vcpu->arch.vpid = 1U + (vm->vm_id * CONFIG_MAX_VCPUS_PER_VM) + vcpu->vcpu_id;
+
+		/* Initialize exception field in VCPU context */
+		vcpu->arch.exception_info.exception = VECTOR_INVALID;
+
+		/* Initialize cur context */
+		vcpu->arch.cur_context = NORMAL_WORLD;
+
+		/* Create per vcpu vlapic */
+		vlapic_create(vcpu);
+
+		if (!vm_hide_mtrr(vm)) {
+			init_vmtrr(vcpu);
+		}
+
+		/* Populate the return handle */
+		*rtn_vcpu_handle = vcpu;
+
+		vcpu->launched = false;
+		vcpu->running = 0U;
+		vcpu->arch.nr_sipi = 0U;
+		vcpu->state = VCPU_INIT;
+
+		reset_vcpu_regs(vcpu);
+		(void)memset((void *)&vcpu->req, 0U, sizeof(struct io_request));
+		ret = 0;
+	} else {
+		vm->hw.created_vcpus -= 1U;
 		pr_err("%s, vcpu id is invalid!\n", __func__);
-		return -EINVAL;
-	}
-	/* Allocate memory for VCPU */
-	vcpu = &(vm->hw.vcpu_array[vcpu_id]);
-	(void)memset((void *)vcpu, 0U, sizeof(struct acrn_vcpu));
-
-	/* Initialize CPU ID for this VCPU */
-	vcpu->vcpu_id = vcpu_id;
-	vcpu->pcpu_id = pcpu_id;
-	per_cpu(ever_run_vcpu, pcpu_id) = vcpu;
-
-	/* Initialize the parent VM reference */
-	vcpu->vm = vm;
-
-	/* Initialize the virtual ID for this VCPU */
-	/* FIXME:
-	 * We have assumption that we always destroys vcpus in one
-	 * shot (like when vm is destroyed). If we need to support
-	 * specific vcpu destroy on fly, this vcpu_id assignment
-	 * needs revise.
-	 */
-
-	per_cpu(vcpu, pcpu_id) = vcpu;
-
-	pr_info("PCPU%d is working as VM%d VCPU%d, Role: %s",
-			vcpu->pcpu_id, vcpu->vm->vm_id, vcpu->vcpu_id,
-			is_vcpu_bsp(vcpu) ? "PRIMARY" : "SECONDARY");
-
-	/*
-	 * If the logical processor is in VMX non-root operation and
-	 * the "enable VPID" VM-execution control is 1, the current VPID
-	 * is the value of the VPID VM-execution control field in the VMCS.
-	 *
-	 * This assignment guarantees a unique non-zero per vcpu vpid in runtime.
-	 */
-	vcpu->arch.vpid = 1U + (vm->vm_id * CONFIG_MAX_VCPUS_PER_VM) + vcpu->vcpu_id;
-
-	/* Initialize exception field in VCPU context */
-	vcpu->arch.exception_info.exception = VECTOR_INVALID;
-
-	/* Initialize cur context */
-	vcpu->arch.cur_context = NORMAL_WORLD;
-
-	/* Create per vcpu vlapic */
-	vlapic_create(vcpu);
-
-	if (!vm_hide_mtrr(vm)) {
-		init_vmtrr(vcpu);
+		ret = -EINVAL;
 	}
 
-	/* Populate the return handle */
-	*rtn_vcpu_handle = vcpu;
-
-	vcpu->launched = false;
-	vcpu->running = 0;
-	vcpu->arch.nr_sipi = 0;
-	vcpu->state = VCPU_INIT;
-
-	reset_vcpu_regs(vcpu);
-	(void)memset(&vcpu->req, 0U, sizeof(struct io_request));
-
-	return 0;
+	return ret;
 }
 
 /*
@@ -561,31 +563,30 @@ void reset_vcpu(struct acrn_vcpu *vcpu)
 	ASSERT(vcpu->state != VCPU_RUNNING,
 			"reset vcpu when it's running");
 
-	if (vcpu->state == VCPU_INIT)
-		return;
+	if (vcpu->state != VCPU_INIT) {
+		vcpu->state = VCPU_INIT;
 
-	vcpu->state = VCPU_INIT;
+		vcpu->launched = false;
+		vcpu->running = 0U;
+		vcpu->arch.nr_sipi = 0U;
 
-	vcpu->launched = false;
-	vcpu->running = 0;
-	vcpu->arch.nr_sipi = 0;
+		vcpu->arch.exception_info.exception = VECTOR_INVALID;
+		vcpu->arch.cur_context = NORMAL_WORLD;
+		vcpu->arch.irq_window_enabled = false;
+		vcpu->arch.inject_event_pending = false;
+		(void)memset((void *)vcpu->arch.vmcs, 0U, PAGE_SIZE);
 
-	vcpu->arch.exception_info.exception = VECTOR_INVALID;
-	vcpu->arch.cur_context = NORMAL_WORLD;
-	vcpu->arch.irq_window_enabled = false;
-	vcpu->arch.inject_event_pending = false;
-	(void)memset((void *)vcpu->arch.vmcs, 0U, PAGE_SIZE);
+		for (i = 0; i < NR_WORLD; i++) {
+			(void)memset((void *)(&vcpu->arch.contexts[i]), 0U,
+				sizeof(struct run_context));
+		}
+		vcpu->arch.cur_context = NORMAL_WORLD;
 
-	for (i = 0; i < NR_WORLD; i++) {
-		(void)memset((void *)(&vcpu->arch.contexts[i]), 0U,
-			sizeof(struct run_context));
+		vlapic = vcpu_vlapic(vcpu);
+		vlapic_reset(vlapic);
+
+		reset_vcpu_regs(vcpu);
 	}
-	vcpu->arch.cur_context = NORMAL_WORLD;
-
-	vlapic = vcpu_vlapic(vcpu);
-	vlapic_reset(vlapic);
-
-	reset_vcpu_regs(vcpu);
 }
 
 void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
@@ -699,34 +700,32 @@ static uint64_t build_stack_frame(struct acrn_vcpu *vcpu)
 /* help function for vcpu create */
 int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 {
-	int32_t ret = 0;
+	int32_t ret;
 	struct acrn_vcpu *vcpu = NULL;
 	char thread_name[16];
 	uint64_t orig_val, final_val;
 	struct acrn_vm_config *conf;
 
 	ret = create_vcpu(pcpu_id, vm, &vcpu);
-	if (ret != 0) {
-		return ret;
+	if (ret == 0) {
+		set_pcpu_used(pcpu_id);
+
+		/* Update CLOS for this CPU */
+		if (cat_cap_info.enabled) {
+			conf = get_vm_config(vm->vm_id);
+			orig_val = msr_read(MSR_IA32_PQR_ASSOC);
+			final_val = (orig_val & 0xffffffffUL) | (((uint64_t)conf->clos) << 32UL);
+			msr_write_pcpu(MSR_IA32_PQR_ASSOC, final_val, pcpu_id);
+		}
+
+		INIT_LIST_HEAD(&vcpu->sched_obj.run_list);
+		snprintf(thread_name, 16U, "vm%hu:vcpu%hu", vm->vm_id, vcpu->vcpu_id);
+		(void)strncpy_s(vcpu->sched_obj.name, 16U, thread_name, 16U);
+		vcpu->sched_obj.thread = vcpu_thread;
+		vcpu->sched_obj.host_sp = build_stack_frame(vcpu);
+		vcpu->sched_obj.prepare_switch_out = context_switch_out;
+		vcpu->sched_obj.prepare_switch_in = context_switch_in;
 	}
-
-	set_pcpu_used(pcpu_id);
-
-	/* Update CLOS for this CPU */
-	if (cat_cap_info.enabled) {
-		conf = get_vm_config(vm->vm_id);
-		orig_val = msr_read(MSR_IA32_PQR_ASSOC);
-		final_val = (orig_val & 0xffffffffUL) | (((uint64_t)conf->clos) << 32UL);
-		msr_write_pcpu(MSR_IA32_PQR_ASSOC, final_val, pcpu_id);
-	}
-
-	INIT_LIST_HEAD(&vcpu->sched_obj.run_list);
-	snprintf(thread_name, 16U, "vm%hu:vcpu%hu", vm->vm_id, vcpu->vcpu_id);
-	(void)strncpy_s(vcpu->sched_obj.name, 16U, thread_name, 16U);
-	vcpu->sched_obj.thread = vcpu_thread;
-	vcpu->sched_obj.host_sp = build_stack_frame(vcpu);
-	vcpu->sched_obj.prepare_switch_out = context_switch_out;
-	vcpu->sched_obj.prepare_switch_in = context_switch_in;
 
 	return ret;
 }
