@@ -33,11 +33,6 @@
 #include <logmsg.h>
 #include "vpci_priv.h"
 
-static inline uint32_t get_bar_base(uint32_t bar)
-{
-	return bar & PCIM_BAR_MEM_BASE;
-}
-
 /**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
@@ -215,13 +210,12 @@ static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t 
 		new_bar = val & mask;
 		if (bar_update_normal) {
 			if (is_msix_table_bar) {
-				vdev->bar[idx].base = get_bar_base(new_bar);
+				vdev->bar[idx].base = new_bar;
 				vdev_pt_remap_msix_table_bar(vdev);
 			} else {
-				vdev_pt_remap_generic_mem_vbar(vdev, idx,
-					get_bar_base(new_bar));
+				vdev_pt_remap_generic_mem_vbar(vdev, idx, new_bar);
 
-				vdev->bar[idx].base = get_bar_base(new_bar);
+				vdev->bar[idx].base = new_bar;
 			}
 		}
 		break;
