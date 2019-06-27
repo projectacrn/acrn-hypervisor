@@ -3245,6 +3245,7 @@ Compliant example::
      *
      * Detailed description of the function. Detailed description of the function. Detailed description of the
      * function. Detailed description of the function.
+     * Application Constraints: Detailed description of application constraint.
      *
      * @param param_1 Parameter description for param_1.
      * @param param_2 Parameter description for param_2.

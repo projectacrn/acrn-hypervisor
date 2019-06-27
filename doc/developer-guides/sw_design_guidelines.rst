@@ -64,7 +64,9 @@ below:
   All application constraints shall be guaranteed by external safety
   applications, such as Board Support Package, firmware, safety VM, or Hardware.
   The verification of application integration shall check whether the safety
-  application meets all application constraints.
+  application meets all application constraints. These constraints must be verified
+  during hypervisor validation test. It is optional to do error checking for
+  application constraints at hypervisor boot time.
 
   This design assumption applies to the following cases:
 
@@ -73,6 +75,12 @@ below:
 
   - Input data which is only specified by external safety application.
 
+.. note:: If input data can be specified by both a non-safety VM and a safety VM,
+   the application constraint isn't applicable to these data. Related error checking
+   and handling shall be done during hypervisor design.
+
+Refer to the :ref:`C Programming Language Coding Guidelines <c_coding_guidelines>`
+to document these design assumptions with doxygen-style comments.
 
 Architecture Level
 ==================
