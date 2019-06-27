@@ -104,6 +104,17 @@ static uint64_t pci_bar_2_bar_base(const struct pci_bar *pbars, uint32_t nr_bars
 }
 
 /**
+ * @brief get vbar's full base address in 64-bit
+ * For 64-bit MMIO bar, its lower 32-bits base address and upper 32-bits base are combined
+ * into one 64-bit base address
+ * @pre vdev != NULL
+ */
+static uint64_t get_vbar_base(const struct pci_vdev *vdev, uint32_t idx)
+{
+	return pci_bar_2_bar_base(&vdev->bar[0], vdev->nr_bars, idx);
+}
+
+/**
  * @brief get pbar's full address in 64-bit
  * For 64-bit MMIO bar, its lower 32-bits base address and upper 32-bits base are combined
  * into one 64-bit base address
@@ -158,9 +169,10 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 	pbar = &pdev->bar[msix->table_bar];
 	if (pbar != NULL) {
 		uint64_t pbar_base = get_pbar_base(pdev, msix->table_bar); /* pbar (hpa) */
+
 		msix->mmio_hpa = pbar_base;
 		if (is_prelaunched_vm(vdev->vpci->vm)) {
-			msix->mmio_gpa = vdev->bar[msix->table_bar].base;
+			msix->mmio_gpa = get_vbar_base(vdev, msix->table_bar);
 		} else {
 			msix->mmio_gpa = sos_vm_hpa2gpa(pbar_base);
 		}
@@ -250,9 +262,10 @@ static void vdev_pt_remap_generic_mem_vbar(const struct pci_vdev *vdev, uint32_t
 {
 	struct acrn_vm *vm = vdev->vpci->vm;
 
+	/* If the old vbar is mapped before, unmap it first */
 	if (vdev->bar[idx].base != 0UL) {
 		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-			vdev->bar[idx].base,
+			vdev->bar[idx].base,  /* GPA (old vbar) */
 			vdev->bar[idx].size);
 	}
 
