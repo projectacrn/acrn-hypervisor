@@ -34,6 +34,87 @@
 #include "vpci_priv.h"
 
 /**
+ * @brief get bar's full base address in 64-bit
+ * @pre idx < nr_bars
+ * For 64-bit MMIO bar, its lower 32-bits base address and upper 32-bits base are combined
+ * into one 64-bit base address
+ */
+static uint64_t pci_bar_2_bar_base(const struct pci_bar *pbars, uint32_t nr_bars, uint32_t idx)
+{
+	uint64_t base = 0UL;
+	uint64_t tmp;
+	const struct pci_bar *bar;
+
+	bar = &pbars[idx];
+
+	if (bar->is_64bit_high) {
+		ASSERT(idx > 0U, "idx for upper 32-bit of the 64-bit bar should be greater than 0!");
+		if (idx > 0U) {
+			const struct pci_bar *prev_bar = &pbars[idx - 1U];
+
+			/* Upper 32-bit of 64-bit bar (does not have flags portion) */
+			base = (uint64_t)(bar->reg.value);
+			base <<= 32U;
+
+			/* Lower 32-bit of a 64-bit bar (BITS 31-4 = base address, 16-byte aligned) */
+			tmp = (uint64_t)(prev_bar->reg.bits.mem.base);
+			tmp <<= 4U;
+
+			base |= tmp;
+		}
+	} else {
+		enum pci_bar_type type = pci_get_bar_type(bar->reg.value);
+
+		switch (type) {
+		case PCIBAR_IO_SPACE:
+			/* IO bar, BITS 31-2 = base address, 4-byte aligned */
+			base = (uint64_t)(bar->reg.bits.io.base);
+			base <<= 2U;
+			break;
+
+		case PCIBAR_MEM32:
+			base = (uint64_t)(bar->reg.bits.mem.base);
+			base <<= 4U;
+			break;
+
+		case PCIBAR_MEM64:
+			ASSERT((idx + 1U) < nr_bars, "idx for upper 32-bit of the 64-bit bar is out of range!");
+			if ((idx + 1U) < nr_bars) {
+				const struct pci_bar *next_bar = &pbars[idx + 1U];
+
+				/* Upper 32-bit of 64-bit bar */
+				base = (uint64_t)(next_bar->reg.value);
+				base <<= 32U;
+
+				/* Lower 32-bit of a 64-bit bar (BITS 31-4 = base address, 16-byte aligned) */
+				tmp = (uint64_t)(bar->reg.bits.mem.base);
+				tmp <<= 4U;
+
+				base |= tmp;
+			}
+			break;
+
+		default:
+			/* Nothing to do */
+			break;
+		}
+	}
+
+	return base;
+}
+
+/**
+ * @brief get pbar's full address in 64-bit
+ * For 64-bit MMIO bar, its lower 32-bits base address and upper 32-bits base are combined
+ * into one 64-bit base address
+ * @pre pdev != NULL
+ */
+static uint64_t get_pbar_base(const struct pci_pdev *pdev, uint32_t idx)
+{
+	return pci_bar_2_bar_base(&pdev->bar[0], pdev->nr_bars, idx);
+}
+
+/**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
@@ -63,7 +144,7 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 	uint64_t addr_hi, addr_lo;
 	struct pci_msix *msix = &vdev->msix;
 	struct pci_pdev *pdev = vdev->pdev;
-	struct pci_bar *bar;
+	struct pci_bar *pbar;
 
 	ASSERT(vdev->pdev->msix.table_bar < vdev->nr_bars, "msix->table_bar is out of range");
 
@@ -74,15 +155,16 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 		msix->table_entries[i].data = 0U;
 	}
 
-	bar = &pdev->bar[msix->table_bar];
-	if (bar != NULL) {
-		msix->mmio_hpa = bar->base;
+	pbar = &pdev->bar[msix->table_bar];
+	if (pbar != NULL) {
+		uint64_t pbar_base = get_pbar_base(pdev, msix->table_bar); /* pbar (hpa) */
+		msix->mmio_hpa = pbar_base;
 		if (is_prelaunched_vm(vdev->vpci->vm)) {
 			msix->mmio_gpa = vdev->bar[msix->table_bar].base;
 		} else {
-			msix->mmio_gpa = sos_vm_hpa2gpa(bar->base);
+			msix->mmio_gpa = sos_vm_hpa2gpa(pbar_base);
 		}
-		msix->mmio_size = bar->size;
+		msix->mmio_size = pbar->size;
 	}
 
 	/*
@@ -175,9 +257,11 @@ static void vdev_pt_remap_generic_mem_vbar(const struct pci_vdev *vdev, uint32_t
 	}
 
 	if (new_base != 0U) {
+		uint64_t pbar_base = get_pbar_base(vdev->pdev, idx); /* pbar (hpa) */
+
 		/* Map the physical BAR in the guest MMIO space */
 		ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-			vdev->pdev->bar[idx].base, /* HPA */
+			pbar_base, /* HPA (pbar) */
 			new_base, /*GPA*/
 			vdev->bar[idx].size,
 			EPT_WR | EPT_RD | EPT_UNCACHED);
