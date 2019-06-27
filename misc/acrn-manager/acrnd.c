@@ -289,7 +289,7 @@ static void stop_all_vms(void)
 	vmmngr_update();
 
 	LIST_FOREACH(vm, &vmmngr_head, list) {
-		err = stop_vm(vm->name);
+		err = stop_vm(vm->name, 0);
 		if (err != 0) {
 			fprintf(stderr, "Fail to send stop cmd to vm %s\n", vm->name);
 		} else {

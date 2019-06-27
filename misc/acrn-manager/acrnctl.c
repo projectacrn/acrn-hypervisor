@@ -442,6 +442,7 @@ static int acrnctl_do_blkrescan(int argc, char *argv[])
 static int acrnctl_do_stop(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
+	int force = 0;
 
 	s = vmmngr_find(argv[1]);
 	if (!s) {
@@ -452,7 +453,7 @@ static int acrnctl_do_stop(int argc, char *argv[])
 		printf("%s is already (%s)\n", argv[1], state_str[s->state]);
 		return -1;
 	}
-	return stop_vm(argv[1]);
+	return stop_vm(argv[1], force);
 
 }
 
@@ -697,7 +698,7 @@ static int acrnctl_do_reset(int argc, char *argv[])
 	switch(s->state) {
 		case VM_STARTED:
 		case VM_SUSPENDED:
-			ret = stop_vm(argv[1]);
+			ret = stop_vm(argv[1], 0);
 			if (ret != 0) {
 				break;
 			}
