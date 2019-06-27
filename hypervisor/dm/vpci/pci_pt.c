@@ -245,8 +245,12 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 			addr_lo = round_page_down(msix->mmio_gpa + msix->table_offset);
 		}
 
-		register_mmio_emulation_handler(vdev->vpci->vm, vmsix_table_mmio_access_handler,
-			addr_lo, addr_hi, vdev);
+		if (vdev->bar_base_mapped[msix->table_bar] != addr_lo) {
+			register_mmio_emulation_handler(vdev->vpci->vm, vmsix_table_mmio_access_handler,
+				addr_lo, addr_hi, vdev);
+			/* Remember the previously registered MMIO vbar base */
+			vdev->bar_base_mapped[msix->table_bar] = addr_lo;
+		}
 	}
 }
 
@@ -258,15 +262,16 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-static void vdev_pt_remap_generic_mem_vbar(const struct pci_vdev *vdev, uint32_t idx, uint32_t new_base)
+static void vdev_pt_remap_generic_mem_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t new_base)
 {
 	struct acrn_vm *vm = vdev->vpci->vm;
 
 	/* If the old vbar is mapped before, unmap it first */
-	if (vdev->bar[idx].base != 0UL) {
+	if (vdev->bar_base_mapped[idx] != 0UL) {
 		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-			vdev->bar[idx].base,  /* GPA (old vbar) */
+			vdev->bar_base_mapped[idx],  /* GPA (old vbar) */
 			vdev->bar[idx].size);
+		vdev->bar_base_mapped[idx] = 0UL;
 	}
 
 	if (new_base != 0U) {
@@ -278,6 +283,9 @@ static void vdev_pt_remap_generic_mem_vbar(const struct pci_vdev *vdev, uint32_t
 			new_base, /*GPA*/
 			vdev->bar[idx].size,
 			EPT_WR | EPT_RD | EPT_UNCACHED);
+
+		/* Remember the previously mapped MMIO vbar */
+		vdev->bar_base_mapped[idx] = (uint64_t)new_base;
 	}
 }
 
