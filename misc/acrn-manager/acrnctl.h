@@ -52,7 +52,7 @@ extern struct vmmngr_list_struct vmmngr_head;
 
 /* vm life cycle ops */
 int list_vm(void);
-int stop_vm(const char *vmname);
+int stop_vm(const char *vmname, int force);
 int start_vm(const char *vmname);
 int pause_vm(const char *vmname);
 int continue_vm(const char *vmname);

@@ -366,7 +366,7 @@ int start_vm(const char *vmname)
 	return system(cmd);
 }
 
-int stop_vm(const char *vmname)
+int stop_vm(const char *vmname, int force)
 {
 	struct mngr_msg req;
 	struct mngr_msg ack;
@@ -374,6 +374,7 @@ int stop_vm(const char *vmname)
 	req.magic = MNGR_MSG_MAGIC;
 	req.msgid = DM_STOP;
 	req.timestamp = time(NULL);
+	req.data.acrnd_stop.force = force;
 
 	send_msg(vmname, &req, &ack);
 	if (ack.data.err) {
