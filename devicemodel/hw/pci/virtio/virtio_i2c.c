@@ -16,6 +16,11 @@
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
+#include <sys/queue.h>
+#include <stdbool.h>
+#include <pthread.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "dm.h"
 #include "pci_core.h"
@@ -57,12 +62,24 @@ static int virtio_i2c_debug=0;
 	do { if (virtio_i2c_debug) printf(VIRTIO_I2C_PREF fmt, ##args); } while (0)
 #define WPRINTF(fmt, args...) printf(VIRTIO_I2C_PREF fmt, ##args)
 
+#define MAX_I2C_VDEV		128
+#define MAX_NATIVE_I2C_ADAPTER	16
+
+struct native_i2c_adapter {
+	int 		fd;
+	int 		bus;
+	bool 		i2cdev_enable[MAX_I2C_VDEV];
+};
+
 /*
  * Per-device struct
  */
 struct virtio_i2c {
 	struct virtio_base base;
 	pthread_mutex_t mtx;
+	struct native_i2c_adapter *native_adapter[MAX_NATIVE_I2C_ADAPTER];
+	int native_adapter_num;
+	uint16_t adapter_map[MAX_I2C_VDEV];
 	struct virtio_vq_info vq;
 	char ident[256];
 };
@@ -81,6 +98,177 @@ static struct virtio_ops virtio_i2c_ops = {
 	NULL,			/* apply negotiated features */
 	NULL,			/* called on guest set status */
 };
+
+static bool
+native_slave_access_ok(struct native_i2c_adapter *adapter, uint16_t addr)
+{
+	if (ioctl(adapter->fd, I2C_SLAVE, addr) < 0) {
+		if (errno == EBUSY) {
+			WPRINTF("i2c_core: slave device %x is busy!\n", addr);
+		} else {
+			WPRINTF("i2c_core: slave device %d is not exsit!\n", addr);
+		}
+		return false;
+	}
+	return true;
+}
+
+static struct native_i2c_adapter *
+native_adapter_create(int bus, uint16_t slave_addr[], int n_slave)
+{
+	int fd;
+	struct native_i2c_adapter *native_adapter;
+	char native_path[20];
+	int i;
+
+	if (bus < 0)
+		return NULL;
+
+	native_adapter = calloc(1, sizeof(struct native_i2c_adapter));
+	if (native_adapter == NULL) {
+		WPRINTF("i2c_core: failed to calloc struct virtio_i2c_vdev");
+		return NULL;
+	}
+
+	sprintf(native_path, "/dev/i2c-%d", bus);
+	fd = open(native_path, O_RDWR);
+	if (fd < 0) {
+		WPRINTF("virtio_i2c: failed to open %s\n", native_path);
+		return NULL;
+	}
+	native_adapter->fd = fd;
+	native_adapter->bus = bus;
+	for (i = 0; i < n_slave; i++) {
+		if (slave_addr[i]) {
+			if (native_slave_access_ok(native_adapter, slave_addr[i])) {
+				if (native_adapter->i2cdev_enable[slave_addr[i]]) {
+					WPRINTF("slave addr 0x%x repeat, not allowed.\n", slave_addr[i]);
+					goto fail;
+				}
+				native_adapter->i2cdev_enable[slave_addr[i]] = true;
+				DPRINTF("virtio_i2c: add slave 0x%x\n", slave_addr[i]);
+			} else {
+				goto fail;
+			}
+		}
+	}
+	return native_adapter;
+
+fail:
+	free(native_adapter);
+	return NULL;
+}
+
+static void
+native_adapter_remove(struct virtio_i2c *vi2c)
+{
+	int i;
+	struct native_i2c_adapter *native_adapter;
+
+	for (i = 0; i < MAX_NATIVE_I2C_ADAPTER; i++) {
+		native_adapter = vi2c->native_adapter[i];
+		if (native_adapter) {
+			if (native_adapter->fd > 0)
+				close(native_adapter->fd);
+			free(native_adapter);
+			vi2c->native_adapter[i] = NULL;
+		}
+	}
+}
+
+static int
+virtio_i2c_map(struct virtio_i2c *vi2c)
+{
+	int i, slave_addr;
+	struct native_i2c_adapter *native_adapter;
+
+	/*
+	 * Flatten the map for slave address and native adapter to the array:
+	 *
+	 * adapter_map[MAX_I2C_VDEV]:
+	 *
+	 * Native Adapter | adapter2 | none  | adapter1 | adapter3 | none | none| (val)
+	 *                |----------|-------|----------|----------|------|-----|
+	 * Slave Address  | addr 1   | none  | addr 2   | addr 3   | none | none| (idx)
+	 *                |<-----------------------MAX_I2C_VDEV---------------->|
+	 */
+	for (i = 0; i < vi2c->native_adapter_num; i++) {
+		native_adapter = vi2c->native_adapter[i];
+		for (slave_addr = 0; slave_addr < MAX_I2C_VDEV; slave_addr++) {
+			if (native_adapter->i2cdev_enable[slave_addr]) {
+				if (vi2c->adapter_map[slave_addr]) {
+					WPRINTF("slave addr %x repeat, not support!\n", slave_addr);
+					return -1;
+				}
+				/* As 0 is the initiate value, + 1 for index */
+				vi2c->adapter_map[slave_addr] = i + 1;
+				DPRINTF("slave:%d -> native adapter: %d \n",
+							slave_addr,
+							native_adapter->bus);
+			}
+		}
+	}
+	return 0;
+}
+
+static int
+virtio_i2c_parse(struct virtio_i2c *vi2c, char *optstr)
+{
+	char *cp, *t;
+	uint16_t slave_addr[MAX_I2C_VDEV];
+	int addr, bus, n_adapter, n_slave;
+
+	/*
+	 * virtio-i2c,<bus>:<slave_addr>[:<slave_addr>],
+	 * 	[<bus>:<slave_addr>[:<slave_addr>]]
+	 *
+	 * bus (dec): native adatper bus number.
+	 * 	e.g. 2 for /dev/i2c-2
+	 * slave_addr (hex): address for native slave device
+	 * 	e.g. 0x1C or 1C
+	 *
+	 * Note: slave address can not repeat.
+	 */
+	n_adapter = 0;
+	while (optstr != NULL) {
+		cp = strsep(&optstr, ",");
+		/*
+		 * <bus>:<slave_addr>[:<slave_addr>]...
+		 */
+		n_slave = 0;
+		bus = -1;
+		while (cp != NULL && *cp !='\0') {
+			if (*cp == ':')
+				cp++;
+			if (bus == -1) {
+				if (dm_strtoi(cp, &t, 10, &bus) || bus < 0)
+					return -1;
+			} else {
+				if (dm_strtoi(cp, &t, 16, &addr) || addr < 0)
+					return -1;
+				if (n_slave > MAX_I2C_VDEV) {
+					WPRINTF("too many devices, only support %d \n", MAX_I2C_VDEV);
+					return -1;
+				}
+				slave_addr[n_slave] = (uint16_t)(addr & (MAX_I2C_VDEV - 1));
+				DPRINTF("native i2c adapter %d:0x%x\n", bus, slave_addr[n_slave]);
+				n_slave++;
+			}
+			cp = t;
+		}
+		if (n_adapter > MAX_NATIVE_I2C_ADAPTER) {
+			WPRINTF("too many adapter, only support %d \n", MAX_NATIVE_I2C_ADAPTER);
+			return -1;
+		}
+		vi2c->native_adapter[n_adapter] = native_adapter_create(bus, slave_addr, n_slave);
+		if (!vi2c->native_adapter[n_adapter])
+			return -1;
+		n_adapter++;
+	}
+	vi2c->native_adapter_num = n_adapter;
+
+	return 0;
+}
 
 static void
 virtio_i2c_reset(void *vdev)
@@ -104,13 +292,21 @@ virtio_i2c_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	u_char digest[16];
 	struct virtio_i2c *vi2c;
 	pthread_mutexattr_t attr;
-	int rc;
+	int rc = -1;
 
 	vi2c = calloc(1, sizeof(struct virtio_i2c));
 	if (!vi2c) {
 		WPRINTF("calloc returns NULL\n");
 		return -ENOMEM;
 	}
+
+	if (virtio_i2c_parse(vi2c, opts)) {
+		WPRINTF("failed to parse parameters %s \n", opts);
+		goto mtx_fail;
+	}
+
+	if (virtio_i2c_map(vi2c))
+		goto mtx_fail;
 
 	/* init mutex attribute properly to avoid deadlock */
 	rc = pthread_mutexattr_init(&attr);
@@ -136,6 +332,7 @@ virtio_i2c_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	virtio_linkup(&vi2c->base, &virtio_i2c_ops, vi2c, dev, &vi2c->vq, BACKEND_VBSU);
 	vi2c->base.mtx = &vi2c->mtx;
 	vi2c->vq.qsize = 64;
+	vi2c->native_adapter_num = 0;
 
 	MD5_Init(&mdctx);
 	MD5_Update(&mdctx, "vi2c", strlen("vi2c"));
@@ -169,6 +366,7 @@ virtio_i2c_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 fail:
 	pthread_mutex_destroy(&vi2c->mtx);
 mtx_fail:
+	native_adapter_remove(vi2c);
 	free(vi2c);
 	return rc;
 }
@@ -181,6 +379,7 @@ virtio_i2c_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (dev->arg) {
 		DPRINTF("deinit\n");
 		vi2c = (struct virtio_i2c *) dev->arg;
+		native_adapter_remove(vi2c);
 		pthread_mutex_destroy(&vi2c->mtx);
 		free(vi2c);
 		dev->arg = NULL;
