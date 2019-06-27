@@ -29,7 +29,7 @@
 /* vm life cycle cmd description */
 #define LIST_DESC      "List all the virtual machines added"
 #define START_DESC     "Start virtual machine VM_NAME"
-#define STOP_DESC      "Stop virtual machine VM_NAME"
+#define STOP_DESC      "Stop virtual machine VM_NAME, [--force/-f, force to stop VM]"
 #define DEL_DESC       "Delete virtual machine VM_NAME"
 #define ADD_DESC       "Add one virtual machine with SCRIPTS and OPTIONS"
 #define PAUSE_DESC     "Block all vCPUs of virtual machine VM_NAME"
@@ -442,18 +442,34 @@ static int acrnctl_do_blkrescan(int argc, char *argv[])
 static int acrnctl_do_stop(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
-	int force = 0;
+	int i, force = 0;
+	const char *vmname = NULL;
 
-	s = vmmngr_find(argv[1]);
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--force") && strcmp(argv[i], "-f")) {
+			if (vmname == NULL)
+				vmname = argv[i];
+		} else {
+			force = 1;
+		}
+	}
+
+	if (!vmname) {
+		printf("Please give a VM name\n");
+		return -1;
+	}
+
+	s = vmmngr_find(vmname);
 	if (!s) {
-		printf("can't find %s\n", argv[1]);
+		printf("can't find %s\n", vmname);
 		return -1;
 	}
 	if (s->state == VM_CREATED) {
-		printf("%s is already (%s)\n", argv[1], state_str[s->state]);
+		printf("%s is already (%s)\n", vmname, state_str[s->state]);
 		return -1;
 	}
-	return stop_vm(argv[1], force);
+
+	return stop_vm(vmname, force);
 
 }
 
