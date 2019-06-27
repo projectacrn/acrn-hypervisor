@@ -337,10 +337,41 @@ static void name(struct mngr_msg *msg, int client_fd, void *param)	\
 	mngr_send_msg(client_fd, &ack, NULL, ACK_TIMEOUT);		\
 }
 
-DEFINE_HANDLER(handle_stop, stop);
 DEFINE_HANDLER(handle_suspend, suspend);
 DEFINE_HANDLER(handle_pause, pause);
 DEFINE_HANDLER(handle_continue, unpause);
+
+static void handle_stop(struct mngr_msg *msg, int client_fd, void *param)
+{
+	struct mngr_msg ack;
+	struct vm_ops *ops;
+	int ret = 0;
+	int count = 0;
+
+	ack.magic = MNGR_MSG_MAGIC;
+	ack.msgid = msg->msgid;
+	ack.timestamp = msg->timestamp;
+
+	if (msg->data.acrnd_stop.force) {
+		vm_set_suspend_mode(VM_SUSPEND_POWEROFF);
+		ack.data.err = 0;
+	} else {
+		LIST_FOREACH(ops, &vm_ops_head, list) {
+			if (ops->ops->stop) {
+				ret += ops->ops->stop(ops->arg);
+				count++;
+			}
+		}
+
+		if (!count) {
+			ack.data.err = -1;
+			pr_err("No handler for id:%u\r\n", msg->msgid);
+		} else
+			ack.data.err = ret;
+	}
+
+	mngr_send_msg(client_fd, &ack, NULL, ACK_TIMEOUT);
+}
 
 static void handle_resume(struct mngr_msg *msg, int client_fd, void *param)
 {
