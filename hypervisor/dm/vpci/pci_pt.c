@@ -269,17 +269,40 @@ static void vdev_pt_remap_generic_mem_vbar(const struct pci_vdev *vdev, uint32_t
 }
 
 /**
+ * @brief Set the base address portion of the vbar base address register (32-bit)
+ * base: bar value with flags portion masked off
+ * @pre vbar != NULL
+ */
+static void set_vbar_base(struct pci_bar *vbar, uint32_t base)
+{
+	union pci_bar_reg bar_reg;
+
+	bar_reg.value = base;
+
+	if (vbar->is_64bit_high) {
+		/* Upper 32-bit of a 64-bit bar does not have the flags portion */
+		vbar->reg.value = bar_reg.value;
+	} else if (vbar->reg.bits.io.is_io == 1U) {
+		/* IO bar, BITS 31-2 = base address, 4-byte aligned */
+		vbar->reg.bits.io.base = bar_reg.bits.io.base;
+	} else {
+		/* MMIO bar, BITS 31-4 = base address, 16-byte aligned */
+		vbar->reg.bits.mem.base = bar_reg.bits.mem.base;
+	}
+}
+
+/**
  * @pre vdev != NULL
  * @pre (vdev->bar[idx].type == PCIBAR_NONE) || (vdev->bar[idx].type == PCIBAR_MEM32)
  */
 static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t val)
 {
 	uint32_t idx;
-	uint32_t new_bar, mask;
+	uint32_t base, mask;
 	bool bar_update_normal;
 	bool is_msix_table_bar;
 
-	new_bar = 0U;
+	base = 0U;
 	idx = (offset - pci_bar_offset(0U)) >> 2U;
 	mask = ~(vdev->bar[idx].size - 1U);
 
@@ -291,15 +314,17 @@ static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t 
 	case PCIBAR_MEM32:
 		bar_update_normal = (val != (uint32_t)~0U);
 		is_msix_table_bar = (has_msix_cap(vdev) && (idx == vdev->msix.table_bar));
-		new_bar = val & mask;
+		base = val & mask;
+		set_vbar_base(&vdev->bar[idx], base);
+
 		if (bar_update_normal) {
 			if (is_msix_table_bar) {
-				vdev->bar[idx].base = new_bar;
+				vdev->bar[idx].base = base;
 				vdev_pt_remap_msix_table_bar(vdev);
 			} else {
-				vdev_pt_remap_generic_mem_vbar(vdev, idx, new_bar);
+				vdev_pt_remap_generic_mem_vbar(vdev, idx, base);
 
-				vdev->bar[idx].base = new_bar;
+				vdev->bar[idx].base = base;
 			}
 		}
 		break;
@@ -309,7 +334,8 @@ static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t 
 		break;
 	}
 
-	pci_vdev_write_cfg_u32(vdev, offset, new_bar);
+	/* Write the vbar value to corresponding virtualized vbar reg */
+	pci_vdev_write_cfg_u32(vdev, offset, vdev->bar[idx].reg.value);
 }
 
 /**
@@ -383,9 +409,16 @@ void init_vdev_pt(struct pci_vdev *vdev)
 
 			vbar->base = 0UL;
 			if (is_bar_supported(pbar)) {
+				vbar->reg.value = pbar->reg.value;
+				vbar->reg.bits.mem.base = 0x0U; /* clear vbar base */
+				if (vbar->reg.bits.mem.type == 0x2U) {
+					/* Clear vbar 64-bit flag and set it to 32-bit */
+					vbar->reg.bits.mem.type = 0x0U;
+				}
+
 				/**
 				 * If vbar->base is 0 (unassigned), Linux kernel will reprogram the vbar on
-				 * its bar size boundary, so in order to ensure the vbar allocated by guest
+				 * its bar size boundary, so in order to ensure the MMIO vbar allocated by guest
 				 * is 4k aligned, set its size to be 4K aligned.
 				 */
 				vbar->size = round_page_up(pbar->size);
@@ -401,6 +434,7 @@ void init_vdev_pt(struct pci_vdev *vdev)
 					vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)(vdev->ptdev_config->vbar[idx]));
 				}
 			} else {
+				vbar->reg.value = 0x0U;
 				vbar->size = 0UL;
 				vbar->type = PCIBAR_NONE;
 			}
