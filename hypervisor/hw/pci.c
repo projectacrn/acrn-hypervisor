@@ -286,7 +286,6 @@ static uint32_t pci_pdev_read_bar(union pci_bdf bdf, uint32_t idx, struct pci_ba
 		}
 	}
 
-	bar->base = base;
 	bar->size = size;
 	bar->type = type;
 
