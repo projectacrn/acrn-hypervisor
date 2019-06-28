@@ -262,30 +262,32 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-static void vdev_pt_remap_generic_mem_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t new_base)
+static void vdev_pt_remap_generic_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
 	struct acrn_vm *vm = vdev->vpci->vm;
+	uint64_t vbar_base = get_vbar_base(vdev, idx); /* vbar (gpa) */
 
 	/* If the old vbar is mapped before, unmap it first */
 	if (vdev->bar_base_mapped[idx] != 0UL) {
-		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-			vdev->bar_base_mapped[idx],  /* GPA (old vbar) */
+		ept_del_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
+			vdev->bar_base_mapped[idx], /* GPA (old vbar) */
 			vdev->bar[idx].size);
 		vdev->bar_base_mapped[idx] = 0UL;
 	}
 
-	if (new_base != 0U) {
+	/* If a new vbar is set (nonzero), set the EPT mapping accordingly */
+	if (vbar_base != 0UL) {
 		uint64_t pbar_base = get_pbar_base(vdev->pdev, idx); /* pbar (hpa) */
 
 		/* Map the physical BAR in the guest MMIO space */
-		ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+		ept_add_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
 			pbar_base, /* HPA (pbar) */
-			new_base, /*GPA*/
+			vbar_base, /* GPA (new vbar) */
 			vdev->bar[idx].size,
 			EPT_WR | EPT_RD | EPT_UNCACHED);
 
 		/* Remember the previously mapped MMIO vbar */
-		vdev->bar_base_mapped[idx] = (uint64_t)new_base;
+		vdev->bar_base_mapped[idx] = vbar_base;
 	}
 }
 
@@ -343,8 +345,7 @@ static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t 
 				vdev->bar[idx].base = base;
 				vdev_pt_remap_msix_table_bar(vdev);
 			} else {
-				vdev_pt_remap_generic_mem_vbar(vdev, idx, base);
-
+				vdev_pt_remap_generic_mem_vbar(vdev, idx);
 				vdev->bar[idx].base = base;
 			}
 		}
