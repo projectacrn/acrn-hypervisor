@@ -345,7 +345,6 @@ static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t 
 
 	switch (vdev->bar[idx].type) {
 	case PCIBAR_NONE:
-		vdev->bar[idx].base = 0UL;
 		break;
 
 	case PCIBAR_MEM32:
@@ -356,11 +355,9 @@ static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t 
 
 		if (bar_update_normal) {
 			if (is_msix_table_bar) {
-				vdev->bar[idx].base = base;
 				vdev_pt_remap_msix_table_bar(vdev);
 			} else {
 				vdev_pt_remap_generic_mem_vbar(vdev, idx);
-				vdev->bar[idx].base = base;
 			}
 		}
 		break;
@@ -444,7 +441,6 @@ void init_vdev_pt(struct pci_vdev *vdev)
 			pbar = &vdev->pdev->bar[idx];
 			vbar = &vdev->bar[idx];
 
-			vbar->base = 0UL;
 			if (is_bar_supported(pbar)) {
 				vbar->reg.value = pbar->reg.value;
 				vbar->reg.bits.mem.base = 0x0U; /* clear vbar base */

@@ -180,7 +180,6 @@ union pci_bar_reg {
 };
 
 struct pci_bar {
-	uint64_t base;
 	/* Base Address Register */
 	union pci_bar_reg reg;
 	uint64_t size;
