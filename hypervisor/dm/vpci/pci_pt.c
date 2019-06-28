@@ -152,7 +152,6 @@ int32_t vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t 
 void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 {
 	uint32_t i;
-	uint64_t addr_hi, addr_lo;
 	struct pci_msix *msix = &vdev->msix;
 	struct pci_pdev *pdev = vdev->pdev;
 	struct pci_bar *pbar;
@@ -221,6 +220,8 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 
 
 	if (msix->mmio_gpa != 0UL) {
+		uint64_t addr_hi, addr_lo;
+
 		if (is_prelaunched_vm(vdev->vpci->vm)) {
 			addr_hi = msix->mmio_gpa + msix->mmio_size;
 			addr_lo = msix->mmio_gpa;
@@ -265,13 +266,16 @@ void vdev_pt_remap_msix_table_bar(struct pci_vdev *vdev)
 static void vdev_pt_remap_generic_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
 	struct acrn_vm *vm = vdev->vpci->vm;
+	struct pci_bar *vbar;
 	uint64_t vbar_base = get_vbar_base(vdev, idx); /* vbar (gpa) */
+
+	vbar = &vdev->bar[idx];
 
 	/* If the old vbar is mapped before, unmap it first */
 	if (vdev->bar_base_mapped[idx] != 0UL) {
 		ept_del_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
 			vdev->bar_base_mapped[idx], /* GPA (old vbar) */
-			vdev->bar[idx].size);
+			vbar->size);
 		vdev->bar_base_mapped[idx] = 0UL;
 	}
 
@@ -283,7 +287,7 @@ static void vdev_pt_remap_generic_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 		ept_add_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
 			pbar_base, /* HPA (pbar) */
 			vbar_base, /* GPA (new vbar) */
-			vdev->bar[idx].size,
+			vbar->size,
 			EPT_WR | EPT_RD | EPT_UNCACHED);
 
 		/* Remember the previously mapped MMIO vbar */
@@ -419,6 +423,7 @@ void init_vdev_pt(struct pci_vdev *vdev)
 	uint32_t idx;
 	struct pci_bar *pbar, *vbar;
 	uint16_t pci_command;
+	uint64_t vbar_base;
 
 	vdev->nr_bars = vdev->pdev->nr_bars;
 
@@ -451,10 +456,11 @@ void init_vdev_pt(struct pci_vdev *vdev)
 				 */
 				vbar->type = PCIBAR_MEM32;
 
+				/* For pre-launched VMs: vbar base is predefined in vm_config */
+				vbar_base = vdev->ptdev_config->vbar_base[idx];
+
 				/* Set the new vbar base */
-				if (vdev->ptdev_config->vbar[idx] != 0UL) {
-					vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)(vdev->ptdev_config->vbar[idx]));
-				}
+				vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)vbar_base);
 			} else {
 				vbar->reg.value = 0x0U;
 				vbar->size = 0UL;

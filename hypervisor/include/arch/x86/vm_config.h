@@ -81,7 +81,7 @@ struct acrn_vm_os_config {
 struct acrn_vm_pci_ptdev_config {
 	union pci_bdf vbdf;				/* virtual BDF of PCI PT device */
 	union pci_bdf pbdf;				/* physical BDF of PCI PT device */
-	uint64_t vbar[PCI_BAR_COUNT];	/* vbar base address of PCI PT device */
+	uint64_t vbar_base[PCI_BAR_COUNT];	/* vbar base address of PCI PT device */
 } __aligned(8);
 
 struct acrn_vm_config {

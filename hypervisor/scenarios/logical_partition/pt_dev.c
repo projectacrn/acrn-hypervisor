@@ -14,15 +14,15 @@ struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[VM0_CONFIG_PCI_PTDEV_NUM] = {
 	},
 	{
 		.vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x00U},
-		.vbar[0] = 0xc0084000UL,
-		.vbar[1] = 0xc0086000UL,
-		.vbar[5] = 0xc0087000UL,
+		.vbar_base[0] = 0xc0084000UL,
+		.vbar_base[1] = 0xc0086000UL,
+		.vbar_base[5] = 0xc0087000UL,
 		VM0_STORAGE_CONTROLLER
 	},
 	{
 		.vbdf.bits = {.b = 0x00U, .d = 0x02U, .f = 0x00U},
-		.vbar[0] = 0xc0000000UL,
-		.vbar[3] = 0xc0080000UL,
+		.vbar_base[0] = 0xc0000000UL,
+		.vbar_base[3] = 0xc0080000UL,
 		VM0_NETWORK_CONTROLLER
 	},
 };
@@ -34,7 +34,7 @@ struct acrn_vm_pci_ptdev_config vm1_pci_ptdevs[VM1_CONFIG_PCI_PTDEV_NUM] = {
 	},
 	{
 		.vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x00U},
-		.vbar[0] = 0xc0000000UL,
+		.vbar_base[0] = 0xc0000000UL,
 		VM1_STORAGE_CONTROLLER
 	},
 #if defined(VM1_NETWORK_CONTROLLER)
