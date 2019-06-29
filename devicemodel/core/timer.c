@@ -115,6 +115,7 @@ int32_t
 acrn_timer_settime(struct acrn_timer *timer, const struct itimerspec *new_value)
 {
 	if (timer == NULL) {
+		errno = EINVAL;
 		return -1;
 	}
 
@@ -126,6 +127,7 @@ acrn_timer_settime_abs(struct acrn_timer *timer,
 		const struct itimerspec *new_value)
 {
 	if (timer == NULL) {
+		errno = EINVAL;
 		return -1;
 	}
 
@@ -136,6 +138,7 @@ int32_t
 acrn_timer_gettime(struct acrn_timer *timer, struct itimerspec *cur_value)
 {
 	if (timer == NULL) {
+		errno = EINVAL;
 		return -1;
 	}
 
