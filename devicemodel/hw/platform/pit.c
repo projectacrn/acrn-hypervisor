@@ -27,11 +27,13 @@
  */
 
 #include <pthread.h>
-#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <err.h>
+#include <sysexits.h>
+#include <string.h>
 
 #include "vmmapi.h"
 #include "timer.h"
@@ -46,18 +48,22 @@
 #define PERIODIC_MODE(mode)	\
 	((mode) == TIMER_RATEGEN || (mode) == TIMER_SQWAVE)
 
-#define	VPIT_LOCK()								\
-	do {										\
-		int err;								\
-		err = pthread_mutex_lock(&vpit_mtx);	\
-		assert(err == 0);						\
+#define	VPIT_LOCK()													\
+	do {															\
+		int err;													\
+		err = pthread_mutex_lock(&vpit_mtx);						\
+		if (err)													\
+			errx(EX_SOFTWARE, "pthread_mutex_lock returned %s",		\
+					strerror(err));									\
 	} while (0)
 
-#define	VPIT_UNLOCK()							\
-	do {										\
-		int err;								\
-		err = pthread_mutex_unlock(&vpit_mtx);	\
-		assert(err == 0);						\
+#define	VPIT_UNLOCK()												\
+	do {															\
+		int err;													\
+		err = pthread_mutex_unlock(&vpit_mtx);						\
+		if (err)													\
+			errx(EX_SOFTWARE, "pthread_mutex_unlock returned %s",	\
+					strerror(err));									\
 	} while (0)
 
 #define vpit_ts_to_ticks(ts)	ts_to_ticks(PIT_8254_FREQ, ts)
@@ -101,14 +107,12 @@ static uint64_t
 ticks_elapsed_since(const struct timespec *since)
 {
 	struct timespec ts;
-	int error;
 
-	error = clock_gettime(CLOCK_REALTIME, &ts);
-	assert(error == 0);
+	if (clock_gettime(CLOCK_REALTIME, &ts))
+		errx(EX_SOFTWARE, "clock_gettime returned: %s", strerror(errno));
 
-	if (timespeccmp(&ts, since, <=)) {
+	if (timespeccmp(&ts, since, <=))
 		return 0;
-	}
 
 	timespecsub(&ts, since);
 	return vpit_ts_to_ticks(&ts);
@@ -159,9 +163,7 @@ vpit_get_out(struct vpit *vpit, int channel, uint64_t delta_ticks)
 		out = (initval) ? 1 : (delta_ticks != c->initial);
 		break;
 	default:
-		printf("vpit invalid timer mode: %d\n", c->mode);
-		assert(0);
-		break;
+		errx(EX_SOFTWARE, "vpit invalid timer mode: %d", c->mode);
 	}
 
 	return out;
@@ -185,16 +187,20 @@ pit_cr_val(uint8_t cr[2])
 static void
 pit_load_ce(struct channel *c)
 {
-	int error;
-
 	/* no CR update in progress */
 	if (c->nullcnt && c->crbyte == 2) {
 		c->initial = pit_cr_val(c->cr);
 		c->nullcnt = false;
 		c->crbyte = 0;
-		error = clock_gettime(CLOCK_REALTIME, &c->start_ts);
-		assert(error == 0);
-		assert(c->initial > 0 && c->initial <= 0x10000);
+
+		if (clock_gettime(CLOCK_REALTIME, &c->start_ts))
+			errx(EX_SOFTWARE, "clock_gettime returned: %s", strerror(errno));
+
+		if (c->initial == 0 || c->initial > 0x10000) {
+			warnx("vpit invalid initial count: 0x%x - use 0x10000",
+					c->initial);
+			c->initial = 0x10000;
+		}
 	}
 }
 
@@ -220,7 +226,12 @@ vpit_timer_handler(union sigval s)
 
 	/* it's now safe to use the vpit pointer */
 	vpit = arg->vpit;
-	assert(vpit != NULL);
+
+	if (vpit == NULL) {
+		warnx("vpit is NULL");
+		goto done;
+	}
+
 	c = &vpit->channel[arg->channel_num];
 
 	/* generate a rising edge on OUT */
@@ -238,7 +249,6 @@ pit_timer_stop_cntr0(struct vpit *vpit, struct itimerspec *rem)
 {
 	struct channel *c;
 	bool active;
-	int error;
 
 	c = &vpit->channel[0];
 	active = pit_cntr0_timer_running(vpit);
@@ -247,18 +257,21 @@ pit_timer_stop_cntr0(struct vpit *vpit, struct itimerspec *rem)
 		vpit_timer_arg[c->timer_idx].active = false;
 
 		if (rem) {
-			error = timer_gettime(c->timer_id, rem);
-			assert(error == 0);
+			if (timer_gettime(c->timer_id, rem))
+				errx(EX_SOFTWARE,
+						"timer_gettime returned: %s", strerror(errno));
 		}
 
-		error = timer_delete(c->timer_id);
-		assert(error == 0);
+		if (timer_delete(c->timer_id))
+			errx(EX_SOFTWARE, "timer_delete returned: %s", strerror(errno));
 
-		if (++c->timer_idx == nitems(vpit_timer_arg)) {
+		if (++c->timer_idx == nitems(vpit_timer_arg))
 			c->timer_idx = 0;
-		}
 
-		assert(!pit_cntr0_timer_running(vpit));
+		if (pit_cntr0_timer_running(vpit)) {
+			warnx("vpit timer %d is still active", c->timer_idx);
+			vpit_timer_arg[c->timer_idx].active = false;
+		}
 	}
 
 	return active;
@@ -267,7 +280,6 @@ pit_timer_stop_cntr0(struct vpit *vpit, struct itimerspec *rem)
 static void
 pit_timer_start_cntr0(struct vpit *vpit)
 {
-	int error;
 	struct channel *c;
 	struct itimerspec ts = { 0 };
 	struct sigevent sigevt = { 0 };
@@ -289,7 +301,8 @@ pit_timer_start_cntr0(struct vpit *vpit)
 		 * always updated in the second half-cycle (before a rising
 		 * edge on OUT).
 		 */
-		assert(timespecisset(&ts.it_interval));
+		if (!timespecisset(&ts.it_interval))
+			warnx("vpit is in periodic mode but with a one-shot timer");
 
 		/* ts.it_value contains the remaining time until expiration */
 		vpit_ticks_to_ts(pit_cr_val(c->cr), &ts.it_interval);
@@ -307,10 +320,11 @@ pit_timer_start_cntr0(struct vpit *vpit)
 		vpit_ticks_to_ts(timer_ticks, &ts.it_value);
 
 		/* make it periodic if required */
-		if (PERIODIC_MODE(c->mode)) {
+		if (PERIODIC_MODE(c->mode))
 			ts.it_interval = ts.it_value;
-		} else {
-			assert(!timespecisset(&ts.it_interval));
+		else if (timespecisset(&ts.it_interval)) {
+			warnx("vpit is in aperiodic mode but with a periodic timer");
+			memset(&ts.it_interval, 0, sizeof(ts.it_interval));
 		}
 	}
 
@@ -318,22 +332,20 @@ pit_timer_start_cntr0(struct vpit *vpit)
 	sigevt.sigev_notify = SIGEV_THREAD;
 	sigevt.sigev_notify_function = vpit_timer_handler;
 
-	error = timer_create(CLOCK_REALTIME, &sigevt, &c->timer_id);
-	assert(error == 0);
+	if (timer_create(CLOCK_REALTIME, &sigevt, &c->timer_id))
+		errx(EX_SOFTWARE, "timer_create returned: %s", strerror(errno));
 
-	assert(!pit_cntr0_timer_running(vpit));
 	vpit_timer_arg[c->timer_idx].active = true;
 
 	/* arm the timer */
-	error = timer_settime(c->timer_id, 0, &ts, NULL);
-	assert(error == 0);
+	if (timer_settime(c->timer_id, 0, &ts, NULL))
+		errx(EX_SOFTWARE, "timer_settime returned: %s", strerror(errno));
 }
 
 static uint16_t
 pit_update_counter(struct vpit *vpit, struct channel *c, bool latch,
 		uint64_t *ticks_elapsed)
 {
-	int error;
 	uint16_t lval = 0;
 	uint64_t delta_ticks;
 
@@ -350,8 +362,8 @@ pit_update_counter(struct vpit *vpit, struct channel *c, bool latch,
 
 		c->initial = PIT_HZ_TO_TICKS(100);
 		delta_ticks = 0;
-		error = clock_gettime(CLOCK_REALTIME, &c->start_ts);
-		assert(error == 0);
+		if (clock_gettime(CLOCK_REALTIME, &c->start_ts))
+			errx(EX_SOFTWARE, "clock_gettime returned: %s", strerror(errno));
 	} else
 		delta_ticks = ticks_elapsed_since(&c->start_ts);
 
@@ -373,9 +385,7 @@ pit_update_counter(struct vpit *vpit, struct channel *c, bool latch,
 		break;
 	}
 	default:
-		printf("vpit invalid timer mode: %d\n", c->mode);
-		assert(0);
-		break;
+		errx(EX_SOFTWARE, "vpit invalid timer mode: %d", c->mode);
 	}
 
 	/* cannot latch a new value until the old one has been consumed */
@@ -512,14 +522,17 @@ vpit_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	int error = 0;
 
 	if (bytes != 1) {
-		printf("vpit invalid operation size: %d bytes\n", bytes);
-		return (-1);
+		warnx("vpit invalid operation size: %d bytes", bytes);
+		return -1;
 	}
 
 	val = *eax;
 
 	if (port == TIMER_MODE) {
-		assert(!in);
+		if (in) {
+			warnx("invalid in op @ io port 0x%x", port);
+			return -1;
+		}
 
 		VPIT_LOCK();
 		error = vpit_update_mode(vpit, val);
@@ -529,7 +542,11 @@ vpit_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	}
 
 	/* counter ports */
-	assert(port >= TIMER_CNTR0 && port <= TIMER_CNTR2);
+	if (port < TIMER_CNTR0 || port > TIMER_CNTR2) {
+		warnx("invalid %s op @ io port 0x%x", in ? "in" : "out", port);
+		return -1;
+	}
+
 	c = &vpit->channel[port - TIMER_CNTR0];
 
 	VPIT_LOCK();
@@ -678,31 +695,23 @@ void
 vpit_deinit(struct vmctx *ctx)
 {
 	struct vpit *vpit;
-	int i;
 
 	VPIT_LOCK();
 
 	vpit = ctx->vpit;
 
-	if (vpit == NULL) {
+	if (vpit == NULL)
 		goto done;
-	}
 
 	ctx->vpit = NULL;
-
 	pit_timer_stop_cntr0(vpit, NULL);
-
-	for (i = 0; i < nitems(vpit_timer_arg); i++) {
-		vpit_timer_arg[i].vpit = NULL;
-		assert(!vpit_timer_arg[i].active);
-	}
+	memset(vpit_timer_arg, 0, sizeof(vpit_timer_arg));
 
 done:
 	VPIT_UNLOCK();
 
-	if (vpit) {
+	if (vpit)
 		free(vpit);
-	}
 }
 
 INOUT_PORT(vpit_counter0, TIMER_CNTR0, IOPORT_F_INOUT, vpit_handler);
