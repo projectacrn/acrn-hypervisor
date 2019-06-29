@@ -806,8 +806,8 @@ main(int argc, char *argv[])
 		case 'p':
 			if (pincpu_parse(optarg) != 0) {
 				errx(EX_USAGE,
-				"invalid vcpu pinning configuration '%s'",
-				optarg);
+					"invalid vcpu pinning configuration '%s'",
+					optarg);
 			}
 			break;
 		case 'c':
@@ -836,8 +836,7 @@ main(int argc, char *argv[])
 			else
 				break;
 		case 'm':
-			error = vm_parse_memsize(optarg, &memsize);
-			if (error)
+			if (vm_parse_memsize(optarg, &memsize) != 0)
 				errx(EX_USAGE, "invalid memsize '%s'", optarg);
 			break;
 		case 'U':
@@ -866,25 +865,19 @@ main(int argc, char *argv[])
 				break;
 			break;
 		case 'G':
-			if (acrn_parse_gvtargs(optarg) != 0) {
+			if (acrn_parse_gvtargs(optarg) != 0)
 				errx(EX_USAGE, "invalid GVT param %s", optarg);
-				exit(1);
-			}
 			break;
 		case 'v':
 			print_version();
 			break;
 		case CMD_OPT_VSBL:
-			if (high_bios_size() == 0 && acrn_parse_vsbl(optarg) != 0) {
+			if (high_bios_size() == 0 && acrn_parse_vsbl(optarg) != 0)
 				errx(EX_USAGE, "invalid vsbl param %s", optarg);
-				exit(1);
-			}
 			break;
 		case CMD_OPT_OVMF:
-			if (!vsbl_file_name && acrn_parse_ovmf(optarg) != 0) {
+			if (!vsbl_file_name && acrn_parse_ovmf(optarg) != 0)
 				errx(EX_USAGE, "invalid ovmf param %s", optarg);
-				exit(1);
-			}
 			skip_pci_mem64bar_workaround = true;
 			break;
 		case CMD_OPT_PART_INFO:
@@ -892,7 +885,6 @@ main(int argc, char *argv[])
 				errx(EX_USAGE,
 					"invalid guest partition info param %s",
 					optarg);
-				exit(1);
 			}
 			break;
 		case CMD_OPT_TRUSTY_ENABLE:
@@ -903,7 +895,6 @@ main(int argc, char *argv[])
 				errx(EX_USAGE,
 					"invalid virtio poll interval %s",
 					optarg);
-				exit(1);
 			}
 			break;
 		case CMD_OPT_MAC_SEED:
@@ -923,22 +914,16 @@ main(int argc, char *argv[])
 			is_rtvm = true;
 			break;
 		case CMD_OPT_VTPM2:
-			if (acrn_parse_vtpm2(optarg) != 0) {
+			if (acrn_parse_vtpm2(optarg) != 0)
 				errx(EX_USAGE, "invalid vtpm2 param %s", optarg);
-				exit(1);
-			}
 			break;
 		case CMD_OPT_INTR_MONITOR:
-			if (acrn_parse_intr_monitor(optarg) != 0) {
+			if (acrn_parse_intr_monitor(optarg) != 0)
 				errx(EX_USAGE, "invalid intr-monitor params %s", optarg);
-				exit(1);
-			}
 			break;
 		case CMD_OPT_LOGGER_SETTING:
-			if (init_logger_setting(optarg) != 0) {
+			if (init_logger_setting(optarg) != 0)
 				errx(EX_USAGE, "invalid logger setting params %s", optarg);
-				exit(1);
-			}
 			break;
 		case 'h':
 			usage(0);
