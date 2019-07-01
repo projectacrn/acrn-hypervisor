@@ -264,11 +264,6 @@ struct ext_context {
 
 #define EOI_EXIT_BITMAP_SIZE	256U
 
-struct event_injection_info {
-	uint32_t intr_info;
-	uint32_t error_code;
-};
-
 struct cpu_context {
 	struct run_context run_ctx;
 	struct ext_context ext_ctx;
@@ -339,8 +334,6 @@ struct acrn_vcpu_arch {
 
 	/* interrupt injection information */
 	uint64_t pending_req;
-	bool inject_event_pending;
-	struct event_injection_info inject_info;
 
 	/* List of MSRS to be stored and loaded on VM exits or VM entries */
 	struct msr_store_area msr_area;

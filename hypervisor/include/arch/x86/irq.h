@@ -210,8 +210,6 @@ int32_t interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu);
 
-void cancel_event_injection(struct acrn_vcpu *vcpu);
-
 extern uint64_t irq_alloc_bitmap[IRQ_ALLOC_BITMAP_SIZE];
 
 typedef void (*irq_action_t)(uint32_t irq, void *priv_data);

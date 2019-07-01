@@ -365,8 +365,6 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 	bool injected = false;
 	int32_t ret = 0;
 	uint32_t tmp;
-	uint32_t intr_info;
-	uint32_t error_code;
 	struct acrn_vcpu_arch *arch = &vcpu->arch;
 	uint64_t *pending_req_bits = &arch->pending_req;
 
@@ -387,42 +385,28 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 			vcpu_set_vmcs_eoi_exit(vcpu);
 		}
 
-		/* handling cancelled event injection when vcpu is switched out */
-		if (arch->inject_event_pending) {
-			if ((arch->inject_info.intr_info & (EXCEPTION_ERROR_CODE_VALID << 8U)) != 0U) {
-				error_code = arch->inject_info.error_code;
-				exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE, error_code);
-			}
-
-			intr_info = arch->inject_info.intr_info;
-			exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, intr_info);
-
-			arch->inject_event_pending = false;
-			injected = true;
-		} else {
-			/* SDM Vol 3 - table 6-2, inject high priority exception before
-			 * maskable hardware interrupt */
-			injected = vcpu_inject_hi_exception(vcpu);
-			if (!injected) {
-				/* inject NMI before maskable hardware interrupt */
-				if (bitmap_test_and_clear_lock(ACRN_REQUEST_NMI, pending_req_bits)) {
-					/* Inject NMI vector = 2 */
-					exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
+		/* SDM Vol 3 - table 6-2, inject high priority exception before
+		 * maskable hardware interrupt */
+		injected = vcpu_inject_hi_exception(vcpu);
+		if (!injected) {
+			/* inject NMI before maskable hardware interrupt */
+			if (bitmap_test_and_clear_lock(ACRN_REQUEST_NMI, pending_req_bits)) {
+				/* Inject NMI vector = 2 */
+				exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
 						VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8U) | IDT_NMI);
+				injected = true;
+			} else {
+				/* handling pending vector injection:
+				 * there are many reason inject failed, we need re-inject again
+				 * here should take care
+				 * - SW exception (not maskable by IF)
+				 * - external interrupt, if IF clear, will keep in IDT_VEC_INFO_FIELD
+				 *   at next vm exit?
+				 */
+				if ((arch->idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
+					exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, arch->idt_vectoring_info);
+					arch->idt_vectoring_info = 0U;
 					injected = true;
-				} else {
-					/* handling pending vector injection:
-					 * there are many reason inject failed, we need re-inject again
-					 * here should take care
-					 * - SW exception (not maskable by IF)
-					 * - external interrupt, if IF clear, will keep in IDT_VEC_INFO_FIELD
-					 *   at next vm exit?
-					 */
-					if ((arch->idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
-						exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, arch->idt_vectoring_info);
-						arch->idt_vectoring_info = 0U;
-						injected = true;
-					}
 				}
 			}
 		}
@@ -483,31 +467,6 @@ static inline bool acrn_inject_pending_intr(struct acrn_vcpu *vcpu,
 	}
 
 	return ret;
-}
-
-void cancel_event_injection(struct acrn_vcpu *vcpu)
-{
-	uint32_t intinfo;
-
-	intinfo = exec_vmread32(VMX_ENTRY_INT_INFO_FIELD);
-
-	/*
-	 * If event is injected, we clear VMX_ENTRY_INT_INFO_FIELD,
-	 * save injection info, and mark inject event pending.
-	 * The event will be re-injected in next acrn_handle_pending_request
-	 * call.
-	 */
-	if ((intinfo & VMX_INT_INFO_VALID) != 0U) {
-		vcpu->arch.inject_event_pending = true;
-
-		if ((intinfo & (EXCEPTION_ERROR_CODE_VALID << 8U)) != 0U) {
-			vcpu->arch.inject_info.error_code =
-				exec_vmread32(VMX_ENTRY_EXCEPTION_ERROR_CODE);
-		}
-
-		vcpu->arch.inject_info.intr_info = intinfo;
-		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, 0U);
-	}
 }
 
 /*
