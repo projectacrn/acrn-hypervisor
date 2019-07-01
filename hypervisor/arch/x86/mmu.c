@@ -148,16 +148,16 @@ static inline uint64_t get_sanitized_page(void)
 	return hva2hpa(sanitized_page);
 }
 
-void sanitize_pte_entry(uint64_t *ptep)
+void sanitize_pte_entry(uint64_t *ptep, const struct memory_ops *mem_ops)
 {
-	set_pgentry(ptep, get_sanitized_page());
+	set_pgentry(ptep, get_sanitized_page(), mem_ops);
 }
 
-void sanitize_pte(uint64_t *pt_page)
+void sanitize_pte(uint64_t *pt_page, const struct memory_ops *mem_ops)
 {
 	uint64_t i;
 	for (i = 0UL; i < PTRS_PER_PTE; i++) {
-		sanitize_pte_entry(pt_page + i);
+		sanitize_pte_entry(pt_page + i, mem_ops);
 	}
 }
 
@@ -294,7 +294,7 @@ void init_paging(void)
 	enable_paging();
 
 	/* set ptep in sanitized_page point to itself */
-	sanitize_pte((uint64_t *)sanitized_page);
+	sanitize_pte((uint64_t *)sanitized_page, &ppt_mem_ops);
 }
 
 /*

@@ -429,9 +429,9 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 
 	init_ept_mem_ops(vm);
 	vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info);
-	sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);
+	sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp, &vm->arch_vm.ept_mem_ops);
 
-	/* Register default handlers for PIO & MMIO if it is SOS VM or Pre-launched VM */
+	/* Register default handlers for PIO & MMIO if it is, SOS VM or Pre-launched VM */
 	if ((vm_config->load_order == SOS_VM) || (vm_config->load_order == PRE_LAUNCHED_VM)) {
 		register_pio_default_emulation_handler(vm);
 		register_mmio_default_emulation_handler(vm);
