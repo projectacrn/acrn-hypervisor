@@ -102,8 +102,8 @@ enum _page_table_level {
 #define PAGE_SIZE_2M	MEM_2M
 #define PAGE_SIZE_1G	MEM_1G
 
-void sanitize_pte_entry(uint64_t *ptep);
-void sanitize_pte(uint64_t *pt_page);
+void sanitize_pte_entry(uint64_t *ptep, const struct memory_ops *mem_ops);
+void sanitize_pte(uint64_t *pt_page, const struct memory_ops *mem_ops);
 /**
  * @brief MMU paging enable
  *
@@ -171,7 +171,7 @@ static inline void cache_flush_invalidate_all(void)
 	asm volatile ("   wbinvd\n" : : : "memory");
 }
 
-static inline void clflush(volatile void *p)
+static inline void clflush(const volatile void *p)
 {
 	asm volatile ("clflush (%0)" :: "r"(p));
 }
