@@ -10,6 +10,7 @@
 #include <mmu.h>
 #include <vm.h>
 #include <trusty.h>
+#include <vtd.h>
 
 static struct page ppt_pml4_pages[PML4_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
 static struct page ppt_pdpt_pages[PDPT_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
@@ -27,6 +28,10 @@ static union pgtable_pages_info ppt_pages_info = {
 static inline uint64_t ppt_get_default_access_right(void)
 {
 	return (PAGE_PRESENT | PAGE_RW | PAGE_USER);
+}
+
+static inline void ppt_clflush_pagewalk(const void* etry __attribute__((unused)))
+{
 }
 
 static inline uint64_t ppt_pgentry_present(uint64_t pte)
@@ -62,6 +67,7 @@ const struct memory_ops ppt_mem_ops = {
 	.get_pml4_page = ppt_get_pml4_page,
 	.get_pdpt_page = ppt_get_pdpt_page,
 	.get_pd_page = ppt_get_pd_page,
+	.clflush_pagewalk = ppt_clflush_pagewalk,
 };
 
 static struct page sos_vm_pml4_pages[PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
@@ -105,6 +111,11 @@ static inline uint64_t ept_get_default_access_right(void)
 static inline uint64_t ept_pgentry_present(uint64_t pte)
 {
 	return pte & EPT_RWX;
+}
+
+static inline void ept_clflush_pagewalk(const void* etry)
+{
+	iommu_flush_cache(etry, sizeof(uint64_t));
 }
 
 static inline struct page *ept_get_pml4_page(const union pgtable_pages_info *info)
@@ -175,5 +186,5 @@ void init_ept_mem_ops(struct acrn_vm *vm)
 	vm->arch_vm.ept_mem_ops.get_pdpt_page = ept_get_pdpt_page;
 	vm->arch_vm.ept_mem_ops.get_pd_page = ept_get_pd_page;
 	vm->arch_vm.ept_mem_ops.get_pt_page = ept_get_pt_page;
-
+	vm->arch_vm.ept_mem_ops.clflush_pagewalk = ept_clflush_pagewalk;
 }

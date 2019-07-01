@@ -79,7 +79,7 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 	pml4_base = vm->arch_vm.ept_mem_ops.info->ept.sworld_pgtable_base;
 	(void)memset(pml4_base, 0U, PAGE_SIZE);
 	vm->arch_vm.sworld_eptp = pml4_base;
-	sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp);
+	sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp, &vm->arch_vm.ept_mem_ops);
 
 	/* The trusty memory is remapped to guest physical address
 	 * of gpa_rebased to gpa_rebased + size
@@ -88,7 +88,7 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 									TRUSTY_PML4_PAGE_NUM(TRUSTY_EPT_REBASE_GPA);
 	(void)memset(sub_table_addr, 0U, PAGE_SIZE);
 	sworld_pml4e = hva2hpa(sub_table_addr) | table_present;
-	set_pgentry((uint64_t *)pml4_base, sworld_pml4e);
+	set_pgentry((uint64_t *)pml4_base, sworld_pml4e, &vm->arch_vm.ept_mem_ops);
 
 	nworld_pml4e = get_pgentry((uint64_t *)vm->arch_vm.nworld_eptp);
 
@@ -102,7 +102,7 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 		pdpte = get_pgentry(src_pdpte_p);
 		if ((pdpte & table_present) != 0UL) {
 			pdpte &= ~EPT_EXE;
-			set_pgentry(dest_pdpte_p, pdpte);
+			set_pgentry(dest_pdpte_p, pdpte, &vm->arch_vm.ept_mem_ops);
 		}
 		src_pdpte_p++;
 		dest_pdpte_p++;
@@ -133,7 +133,7 @@ void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 
 		ept_del_mr(vm, vm->arch_vm.sworld_eptp, gpa_uos, size);
 		/* sanitize trusty ept page-structures */
-		sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp);
+		sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp, &vm->arch_vm.ept_mem_ops);
 		vm->arch_vm.sworld_eptp = NULL;
 
 		/* Restore memory to guest normal world */
