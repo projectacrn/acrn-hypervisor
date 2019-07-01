@@ -45,37 +45,37 @@ static void split_large_page(uint64_t *pte, enum _page_table_level level,
 
 	paddr = ref_paddr;
 	for (i = 0UL; i < PTRS_PER_PTE; i++) {
-		set_pgentry(pbase + i, paddr | ref_prot);
+		set_pgentry(pbase + i, paddr | ref_prot, mem_ops);
 		paddr += paddrinc;
 	}
 
 	ref_prot = mem_ops->get_default_access_right();
-	set_pgentry(pte, hva2hpa((void *)pbase) | ref_prot);
+	set_pgentry(pte, hva2hpa((void *)pbase) | ref_prot, mem_ops);
 
 	/* TODO: flush the TLB */
 }
 
 static inline void local_modify_or_del_pte(uint64_t *pte,
-		uint64_t prot_set, uint64_t prot_clr, uint32_t type)
+		uint64_t prot_set, uint64_t prot_clr, uint32_t type, const struct memory_ops *mem_ops)
 {
 	if (type == MR_MODIFY) {
 		uint64_t new_pte = *pte;
 		new_pte &= ~prot_clr;
 		new_pte |= prot_set;
-		set_pgentry(pte, new_pte);
+		set_pgentry(pte, new_pte, mem_ops);
 	} else {
-		sanitize_pte_entry(pte);
+		sanitize_pte_entry(pte, mem_ops);
 	}
 }
 
 /*
  * pgentry may means pml4e/pdpte/pde
  */
-static inline void construct_pgentry(uint64_t *pde, void *pd_page, uint64_t prot)
+static inline void construct_pgentry(uint64_t *pde, void *pd_page, uint64_t prot, const struct memory_ops *mem_ops)
 {
-	sanitize_pte((uint64_t *)pd_page);
+	sanitize_pte((uint64_t *)pd_page, mem_ops);
 
-	set_pgentry(pde, hva2hpa(pd_page) | prot);
+	set_pgentry(pde, hva2hpa(pd_page) | prot, mem_ops);
 }
 
 /*
@@ -106,7 +106,7 @@ static void modify_or_del_pte(const uint64_t *pde, uint64_t vaddr_start, uint64_
 				pr_warn("%s, vaddr: 0x%lx pte is not present.\n", __func__, vaddr);
 			}
 		} else {
-			local_modify_or_del_pte(pte, prot_set, prot_clr, type);
+			local_modify_or_del_pte(pte, prot_set, prot_clr, type, mem_ops);
 		}
 
 		vaddr += PTE_SIZE;
@@ -142,7 +142,7 @@ static void modify_or_del_pde(const uint64_t *pdpte, uint64_t vaddr_start, uint6
 				if ((vaddr_next > vaddr_end) || (!mem_aligned_check(vaddr, PDE_SIZE))) {
 					split_large_page(pde, IA32E_PD, vaddr, mem_ops);
 				} else {
-					local_modify_or_del_pte(pde, prot_set, prot_clr, type);
+					local_modify_or_del_pte(pde, prot_set, prot_clr, type, mem_ops);
 					if (vaddr_next < vaddr_end) {
 						vaddr = vaddr_next;
 						continue;
@@ -187,7 +187,7 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
 						(!mem_aligned_check(vaddr, PDPTE_SIZE))) {
 					split_large_page(pdpte, IA32E_PDPT, vaddr, mem_ops);
 				} else {
-					local_modify_or_del_pte(pdpte, prot_set, prot_clr, type);
+					local_modify_or_del_pte(pdpte, prot_set, prot_clr, type, mem_ops);
 					if (vaddr_next < vaddr_end) {
 						vaddr = vaddr_next;
 						continue;
@@ -261,7 +261,7 @@ static void add_pte(const uint64_t *pde, uint64_t paddr_start, uint64_t vaddr_st
 		if (mem_ops->pgentry_present(*pte) != 0UL) {
 			ASSERT(false, "invalid op, pte present");
 		} else {
-			set_pgentry(pte, paddr | prot);
+			set_pgentry(pte, paddr | prot, mem_ops);
 			paddr += PTE_SIZE;
 			vaddr += PTE_SIZE;
 
@@ -294,7 +294,7 @@ static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_
 			if (mem_aligned_check(paddr, PDE_SIZE) &&
 				mem_aligned_check(vaddr, PDE_SIZE) &&
 				(vaddr_next <= vaddr_end)) {
-				set_pgentry(pde, paddr | (prot | PAGE_PSE));
+				set_pgentry(pde, paddr | (prot | PAGE_PSE), mem_ops);
 				if (vaddr_next < vaddr_end) {
 					paddr += (vaddr_next - vaddr);
 					vaddr = vaddr_next;
@@ -303,7 +303,7 @@ static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_
 				break;	/* done */
 			} else {
 				void *pt_page = mem_ops->get_pt_page(mem_ops->info, vaddr);
-				construct_pgentry(pde, pt_page, mem_ops->get_default_access_right());
+				construct_pgentry(pde, pt_page, mem_ops->get_default_access_right(), mem_ops);
 			}
 		}
 		add_pte(pde, paddr, vaddr, vaddr_end, prot, mem_ops);
@@ -336,7 +336,7 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
 			if (mem_aligned_check(paddr, PDPTE_SIZE) &&
 				mem_aligned_check(vaddr, PDPTE_SIZE) &&
 				(vaddr_next <= vaddr_end)) {
-				set_pgentry(pdpte, paddr | (prot | PAGE_PSE));
+				set_pgentry(pdpte, paddr | (prot | PAGE_PSE), mem_ops);
 				if (vaddr_next < vaddr_end) {
 					paddr += (vaddr_next - vaddr);
 					vaddr = vaddr_next;
@@ -345,7 +345,7 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
 				break;	/* done */
 			} else {
 				void *pd_page = mem_ops->get_pd_page(mem_ops->info, vaddr);
-				construct_pgentry(pdpte, pd_page, mem_ops->get_default_access_right());
+				construct_pgentry(pdpte, pd_page, mem_ops->get_default_access_right(), mem_ops);
 			}
 		}
 		add_pde(pdpte, paddr, vaddr, vaddr_end, prot, mem_ops);
@@ -381,7 +381,7 @@ void mmu_add(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base, uint
 		pml4e = pml4e_offset(pml4_page, vaddr);
 		if (mem_ops->pgentry_present(*pml4e) == 0UL) {
 			void *pdpt_page = mem_ops->get_pdpt_page(mem_ops->info, vaddr);
-			construct_pgentry(pml4e, pdpt_page, mem_ops->get_default_access_right());
+			construct_pgentry(pml4e, pdpt_page, mem_ops->get_default_access_right(), mem_ops);
 		}
 		add_pdpte(pml4e, paddr, vaddr, vaddr_end, prot, mem_ops);
 
