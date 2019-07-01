@@ -64,6 +64,15 @@ static int virtio_i2c_debug=0;
 
 #define MAX_I2C_VDEV		128
 #define MAX_NATIVE_I2C_ADAPTER	16
+#define I2C_MSG_OK	0
+#define I2C_MSG_ERR	1
+#define I2C_NO_DEV	2
+
+struct virtio_i2c_hdr {
+	uint16_t addr;      /* slave address */
+	uint16_t flags;
+	uint16_t len;       /*msg length*/
+}__attribute__((packed));
 
 struct native_i2c_adapter {
 	int 		fd;
@@ -82,6 +91,11 @@ struct virtio_i2c {
 	uint16_t adapter_map[MAX_I2C_VDEV];
 	struct virtio_vq_info vq;
 	char ident[256];
+	pthread_t req_tid;
+	pthread_mutex_t req_mtx;
+	pthread_cond_t req_cond;
+	int in_process;
+	int closing;
 };
 
 static void virtio_i2c_reset(void *);
@@ -111,6 +125,53 @@ native_slave_access_ok(struct native_i2c_adapter *adapter, uint16_t addr)
 		return false;
 	}
 	return true;
+}
+
+static struct native_i2c_adapter *
+native_adapter_find(struct virtio_i2c *vi2c, uint16_t addr)
+{
+	int idx;
+
+	if (addr < MAX_I2C_VDEV && ((idx = vi2c->adapter_map[addr]) != 0)) {
+		return vi2c->native_adapter[idx - 1];
+	}
+	return NULL;
+}
+
+static uint8_t
+native_adapter_proc(struct virtio_i2c *vi2c, struct i2c_msg *msg)
+{
+	int ret;
+	uint16_t addr;
+	struct i2c_rdwr_ioctl_data work_queue;
+	struct native_i2c_adapter *adapter;
+	uint8_t status;
+
+	addr = msg->addr;
+	adapter = native_adapter_find(vi2c, addr);
+	if (!adapter)
+		return I2C_NO_DEV;
+
+	work_queue.nmsgs = 1;
+	work_queue.msgs = msg;
+
+	ret = ioctl(adapter->fd, I2C_RDWR, &work_queue);
+	if (ret < 0)
+		status = I2C_MSG_ERR;
+	else
+		status = I2C_MSG_OK;
+	if (msg->len)
+		DPRINTF("i2c_core: i2c msg: flags=0x%x, addr=0x%x, len=0x%x buf=%x\n",
+				msg->flags,
+				msg->addr,
+				msg->len,
+				msg->buf[0]);
+	else
+		DPRINTF("i2c_core: i2c msg: flags=0x%x, addr=0x%x, len=0x%x\n",
+				msg->flags,
+				msg->addr,
+				msg->len);
+	return status;
 }
 
 static struct native_i2c_adapter *
@@ -173,6 +234,68 @@ native_adapter_remove(struct virtio_i2c *vi2c)
 			free(native_adapter);
 			vi2c->native_adapter[i] = NULL;
 		}
+	}
+}
+
+static void
+virtio_i2c_req_stop(struct virtio_i2c *vi2c)
+{
+	void *jval;
+
+	pthread_mutex_lock(&vi2c->req_mtx);
+	vi2c->closing = 1;
+	pthread_cond_broadcast(&vi2c->req_cond);
+	pthread_mutex_unlock(&vi2c->req_mtx);
+	pthread_join(vi2c->req_tid, &jval);
+}
+
+static void *
+virtio_i2c_proc_thread(void *arg)
+{
+	struct virtio_i2c *vi2c = arg;
+	struct virtio_vq_info *vq = &vi2c->vq;
+	struct iovec iov[3];
+	uint16_t idx, flags[3];
+	struct virtio_i2c_hdr *hdr;
+	struct i2c_msg msg;
+	uint8_t *status;
+	int n;
+
+	for (;;) {
+		pthread_mutex_lock(&vi2c->req_mtx);
+
+		vi2c->in_process = 0;
+		while (!vq_has_descs(vq) && !vi2c->closing)
+			pthread_cond_wait(&vi2c->req_cond, &vi2c->req_mtx);
+
+		if (vi2c->closing) {
+			pthread_mutex_unlock(&vi2c->req_mtx);
+			return NULL;
+		}
+		vi2c->in_process = 1;
+		pthread_mutex_unlock(&vi2c->req_mtx);
+		do {
+			n = vq_getchain(vq, &idx, iov, 3, flags);
+			if (n < 2 || n > 3) {
+				WPRINTF("virtio_i2c_proc: failed to get iov from virtqueue\n");
+				continue;
+			}
+			hdr = iov[0].iov_base;
+			msg.addr = hdr->addr;
+			msg.flags = hdr->flags;
+			if (hdr->len) {
+				msg.buf = iov[1].iov_base;
+				msg.len = iov[1].iov_len;
+				status = iov[2].iov_base;
+			} else {
+				msg.buf = NULL;
+				msg.len = 0;
+				status = iov[1].iov_base;
+			}
+			*status = native_adapter_proc(vi2c, &msg);
+			vq_relchain(vq, idx, 1);
+		} while (vq_has_descs(vq));
+		vq_endchains(vq, 0);
 	}
 }
 
@@ -282,7 +405,15 @@ virtio_i2c_reset(void *vdev)
 static void
 virtio_i2c_notify(void *vdev, struct virtio_vq_info *vq)
 {
-	/* TODO: Add notify logic */
+	struct virtio_i2c *vi2c = vdev;
+
+	if (!vq_has_descs(vq))
+		return;
+
+	pthread_mutex_lock(&vi2c->req_mtx);
+	if (!vi2c->in_process)
+		pthread_cond_signal(&vi2c->req_cond);
+	pthread_mutex_unlock(&vi2c->req_mtx);
 }
 
 static int
@@ -361,6 +492,12 @@ virtio_i2c_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		goto fail;
 	}
 	virtio_set_io_bar(&vi2c->base, 0);
+	vi2c->in_process = 0;
+	vi2c->closing = 0;
+	pthread_mutex_init(&vi2c->req_mtx, NULL);
+	pthread_cond_init(&vi2c->req_cond, NULL);
+	pthread_create(&vi2c->req_tid, NULL, virtio_i2c_proc_thread, vi2c);
+	pthread_setname_np(vi2c->req_tid, "virtio-i2c");
 	return 0;
 
 fail:
@@ -379,7 +516,9 @@ virtio_i2c_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (dev->arg) {
 		DPRINTF("deinit\n");
 		vi2c = (struct virtio_i2c *) dev->arg;
+		virtio_i2c_req_stop(vi2c);
 		native_adapter_remove(vi2c);
+		pthread_mutex_destroy(&vi2c->req_mtx);
 		pthread_mutex_destroy(&vi2c->mtx);
 		free(vi2c);
 		dev->arg = NULL;
