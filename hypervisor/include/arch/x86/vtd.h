@@ -549,7 +549,7 @@ struct iommu_domain;
  * @brief Assign a device specified by bus & devfun to a iommu domain.
  *
  * Remove the device from the from_domain (if non-NULL), and add it to the to_domain (if non-NULL).
- * API silently fails to add/remove devices to/from domains that are under "Ignored" DMAR units. 
+ * API silently fails to add/remove devices to/from domains that are under "Ignored" DMAR units.
  *
  * @param[in]    from_domain iommu domain from which the device is removed from
  * @param[in]    to_domain iommu domain to which the device is assgined to
@@ -665,6 +665,18 @@ int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, 
  *
  */
 void dmar_free_irte(struct intr_source intr_src, uint16_t index);
+
+/**
+ * @brief Flash cacheline(s) for a specific address with specific size.
+ *
+ * Flash cacheline(s) for a specific address with specific size,
+ * if all IOMMUs active support page-walk coherency, cacheline(s) are not fluashed.
+ *
+ * @param[in] p the address of the buffer, whose cache need to be invalidated
+ * @param[in] size the size of the buffer
+ *
+ */
+void iommu_flush_cache(const void *p, uint32_t size);
 /**
   * @}
   */
