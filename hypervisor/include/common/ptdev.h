@@ -11,8 +11,6 @@
 #include <pci.h>
 #include <timer.h>
 
-#define ACTIVE_FLAG 0x1U /* any non zero should be okay */
-
 #define PTDEV_INTR_MSI		(1U << 0U)
 #define PTDEV_INTR_INTX		(1U << 1U)
 
@@ -133,7 +131,7 @@ struct ptirq_remapping_info {
 	union source_id phys_sid;
 	union source_id virt_sid;
 	struct acrn_vm *vm;
-	uint32_t active;	/* 1=active, 0=inactive and to free*/
+	bool active;	/* true=active, false=inactive*/
 	uint32_t allocated_pirq;
 	uint32_t polarity; /* 0=active high, 1=active low*/
 	struct list_head softirq_node;
@@ -144,10 +142,14 @@ struct ptirq_remapping_info {
 	ptirq_arch_release_fn_t release_cb;
 };
 
+static inline bool is_entry_active(const struct ptirq_remapping_info *entry)
+{
+	return entry->active;
+}
+
 extern struct ptirq_remapping_info ptirq_entries[CONFIG_MAX_PT_IRQ_ENTRIES];
 extern spinlock_t ptdev_lock;
 
-bool is_entry_active(const struct ptirq_remapping_info *entry);
 void ptirq_softirq(uint16_t pcpu_id);
 void ptdev_init(void);
 void ptdev_release_all_entries(const struct acrn_vm *vm);
