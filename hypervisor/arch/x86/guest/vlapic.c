@@ -1699,6 +1699,39 @@ uint64_t vlapic_get_apicbase(const struct acrn_vlapic *vlapic)
 	return vlapic->msr_apicbase;
 }
 
+static void ptapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, __unused bool level)
+{
+	pr_err("Invalid op %s, VM%u, vCPU%u, vector %u", __func__,
+			vlapic->vm->vm_id, vlapic->vcpu->vcpu_id, vector);
+}
+
+static bool ptapic_inject_intr(struct acrn_vlapic *vlapic,
+				__unused bool guest_irq_enabled, __unused bool injected)
+{
+	pr_err("Invalid op %s, VM%u, vCPU%u", __func__, vlapic->vm->vm_id, vlapic->vcpu->vcpu_id);
+	return injected;
+}
+
+static bool ptapic_has_pending_delivery_intr(__unused struct acrn_vcpu *vcpu)
+{
+	return false;
+}
+
+static bool ptapic_invalid(__unused uint32_t offset)
+{
+	return false;
+}
+
+static const struct acrn_apicv_ops ptapic_ops = {
+	.accept_intr = ptapic_accept_intr,
+	.inject_intr = ptapic_inject_intr,
+	.has_pending_delivery_intr = ptapic_has_pending_delivery_intr,
+	.apic_read_access_may_valid  = ptapic_invalid,
+	.apic_write_access_may_valid  = ptapic_invalid,
+	.x2apic_read_msr_may_valid  = ptapic_invalid,
+	.x2apic_write_msr_may_valid  = ptapic_invalid,
+};
+
 int32_t vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 {
 	int32_t ret = 0;
@@ -1722,6 +1755,9 @@ int32_t vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 		if (change_in_vlapic_mode) {
 			if ((new & APICBASE_LAPIC_MODE) ==
 						(APICBASE_XAPIC | APICBASE_X2APIC)) {
+				if (is_lapic_pt_configured(vcpu->vm)) {
+					vlapic_reset(vlapic, &ptapic_ops);
+				}
 				vlapic->msr_apicbase = new;
 				vlapic_build_x2apic_id(vlapic);
 				switch_apicv_mode_x2apic(vlapic->vcpu);
