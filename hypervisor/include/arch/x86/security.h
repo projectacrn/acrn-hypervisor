@@ -9,7 +9,7 @@
 
 /* type of speculation control
  * 0 - no speculation control support
- * 1 - raw IBRS + IPBP support
+ * 1 - raw IBRS + IBPB support
  * 2 - with STIBP optimization support
  */
 #define IBRS_NONE	0
