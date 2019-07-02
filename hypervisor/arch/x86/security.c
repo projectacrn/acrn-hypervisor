@@ -59,16 +59,16 @@ bool check_cpu_security_cap(void)
 		x86_arch_capabilities = msr_read(MSR_IA32_ARCH_CAPABILITIES);
 		skip_l1dfl_vmentry = ((x86_arch_capabilities
 			& IA32_ARCH_CAP_SKIP_L1DFL_VMENTRY) != 0UL);
+	}
 
-		if ((!pcpu_has_cap(X86_FEATURE_L1D_FLUSH)) && (!skip_l1dfl_vmentry)) {
-			ret = false;
-		} else if ((!pcpu_has_cap(X86_FEATURE_IBRS_IBPB)) &&
-			(!pcpu_has_cap(X86_FEATURE_STIBP))) {
-			ret = false;
-		} else {
-			/* No other state currently, do nothing */
-		}
-	} else {
+	if ((!pcpu_has_cap(X86_FEATURE_L1D_FLUSH)) && (!skip_l1dfl_vmentry)) {
+		/* Processor is affected by L1TF CPU vulnerability,
+		 * but no L1D_FLUSH command support.
+		 */
+		ret = false;
+	}
+
+	if ((!pcpu_has_cap(X86_FEATURE_IBRS_IBPB)) && (!pcpu_has_cap(X86_FEATURE_STIBP))) {
 		ret = false;
 	}
 
