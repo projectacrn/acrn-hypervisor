@@ -34,7 +34,6 @@
 struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 static uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
-static uint16_t up_count = 0U;
 static uint64_t startup_paddr = 0UL;
 
 /* physical cpu active bitmap, support up to 64 cpus */
@@ -72,16 +71,9 @@ static void pcpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
 {
 	/* Check if state is initializing */
 	if (state == PCPU_STATE_INITIALIZING) {
-		/* Increment CPU up count */
-		atomic_inc16(&up_count);
 
 		/* Save this CPU's logical ID to the TSC AUX MSR */
 		set_current_pcpu_id(pcpu_id);
-	}
-
-	/* If cpu is dead, decrement CPU up count */
-	if (state == PCPU_STATE_DEAD) {
-		atomic_dec16(&up_count);
 	}
 
 	/* Set state for the specified CPU */
