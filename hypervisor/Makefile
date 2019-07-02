@@ -295,15 +295,6 @@ endif
 PRE_BUILD_SRCS += pre_build/static_checks.c
 PRE_BUILD_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(PRE_BUILD_SRCS))
 
-MOD_DEPS += lib-mod
-MOD_DEPS += boot-mod
-MOD_DEPS += hw-mod
-MOD_DEPS += vp-base-mod
-MOD_DEPS += vp-dm-mod
-MOD_DEPS += vp-trusty-mod
-MOD_DEPS += vp-hcall-mod
-MOD_DEPS += lib
-MOD_DEPS += sys-init-mod
 MODULES += $(LIB_MOD)
 MODULES += $(BOOT_MOD)
 MODULES += $(HW_MOD)
@@ -356,10 +347,10 @@ else
 endif
 
 .PHONY: all
-all: pre_build $(MOD_DEPS) $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
+all: pre_build $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
 ifeq ($(FIRMWARE),sbl)
-install: $(MOD_DEPS) $(HV_OBJDIR)/$(HV_FILE).32.out
+install: $(HV_OBJDIR)/$(HV_FILE).32.out
 ifeq ($(BOARD),apl-up2)
 	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).apl-up2.sbl
 else
@@ -385,20 +376,43 @@ header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
 .PHONY: lib-mod boot-mod hw-mod vp-base-mod vp-dm-mod vp-trusty-mod vp-hcall-mod sys-init-mod
 lib-mod: $(LIB_C_OBJS) $(LIB_S_OBJS)
 	$(AR) $(ARFLAGS) $(LIB_MOD) $(LIB_C_OBJS) $(LIB_S_OBJS)
+
+$(LIB_MOD): lib-mod
+
 boot-mod: $(BOOT_S_OBJS) $(BOOT_C_OBJS)
 	$(AR) $(ARFLAGS) $(BOOT_MOD) $(BOOT_S_OBJS) $(BOOT_C_OBJS)
+
+$(BOOT_MOD): boot-mod
+
 hw-mod: $(HW_S_OBJS) $(HW_C_OBJS)
 	$(AR) $(ARFLAGS) $(HW_MOD) $(HW_S_OBJS) $(HW_C_OBJS)
+
+$(HW_MOD): hw-mod
+
 vp-base-mod: $(VP_BASE_S_OBJS) $(VP_BASE_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_BASE_MOD) $(VP_BASE_S_OBJS) $(VP_BASE_C_OBJS)
+
+$(VP_BASE_MOD): vp-base-mod
+
 vp-dm-mod: $(VP_DM_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_DM_MOD) $(VP_DM_C_OBJS)
+
+$(VP_DM_MOD): vp-dm-mod
+
 vp-trusty-mod: $(VP_TRUSTY_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_TRUSTY_MOD) $(VP_TRUSTY_C_OBJS)
+
+$(VP_TRUSTY_MOD): vp-trusty-mod
+
 vp-hcall-mod: $(VP_HCALL_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_HCALL_MOD) $(VP_HCALL_C_OBJS)
+
+$(VP_HCALL_MOD): vp-hcall-mod
+
 sys-init-mod: $(SYS_INIT_C_OBJS)
 	$(AR) $(ARFLAGS) $(SYS_INIT_MOD) $(SYS_INIT_C_OBJS)
+
+$(SYS_INIT_MOD): sys-init-mod
 
 .PHONY: lib
 lib: $(SUB_MAKEFILES)
@@ -408,6 +422,10 @@ $(SUB_MAKEFILES): header
 	for Makefile in $(SUB_MAKEFILES); do \
 		$(MAKE) -f $$Makefile MKFL_NAME=$$Makefile; \
 	done
+
+$(LIB_RELEASE): lib
+
+$(LIB_DEBUG): lib
 
 $(HV_OBJDIR)/$(HV_FILE).32.out: $(HV_OBJDIR)/$(HV_FILE).out
 	$(OBJCOPY) -S --section-alignment=0x1000 -O elf32-i386 $< $@
@@ -419,8 +437,6 @@ $(HV_OBJDIR)/$(HV_FILE).out: $(MODULES)
 	${BASH} ${LD_IN_TOOL} $(ARCH_LDSCRIPT_IN) $(ARCH_LDSCRIPT) ${HV_OBJDIR}/.config
 	$(CC) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) \
 		-Wl,--start-group $^ -Wl,--end-group
-
-$(LIB_FLAGS): lib
 
 .PHONY: clean
 clean:
