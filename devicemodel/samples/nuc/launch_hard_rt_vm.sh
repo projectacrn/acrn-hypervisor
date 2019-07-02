@@ -39,7 +39,7 @@ echo ${passthru_bdf["sata"]} > /sys/bus/pci/drivers/pci-stub/bind
    -s 3,virtio-console,@stdio:stdio_port \
   -B "root=/dev/sda3 rw rootwait maxcpus=$1 nohpet console=hvc0 \
   no_timer_check ignore_loglevel log_buf_len=16M \
-  consoleblank=0 tsc=reliable x2apic_phys noapic" hard_rtvm
+  consoleblank=0 tsc=reliable x2apic_phys" hard_rtvm
 }
 
 # offline SOS CPUs except BSP before launch UOS
