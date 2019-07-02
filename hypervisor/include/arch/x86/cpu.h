@@ -351,6 +351,12 @@ static inline void cpu_sp_write(uint64_t *stack_ptr)
 	asm volatile ("movq %0, %%rsp" : : "r"(rsp));
 }
 
+/* Synchronizes all write accesses to memory */
+static inline void cpu_write_memory_barrier(void)
+{
+	asm volatile ("sfence\n" : : : "memory");
+}
+
 /* Synchronizes all read and write accesses to/from memory */
 static inline void cpu_memory_barrier(void)
 {

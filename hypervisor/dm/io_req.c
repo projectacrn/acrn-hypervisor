@@ -6,7 +6,6 @@
 #include <vm.h>
 #include <irq.h>
 #include <errno.h>
-#include <atomic.h>
 #include <ept.h>
 #include <logmsg.h>
 
@@ -113,6 +112,9 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
 			pause_vcpu(vcpu, VCPU_PAUSED);
 		}
 
+		/* Before updating the vhm_req state, enforce all fill vhm_req operations done */
+		cpu_write_memory_barrier();
+
 		/* Must clear the signal before we mark req as pending
 		 * Once we mark it pending, VHM may process req and signal us
 		 * before we perform upcall.
@@ -168,7 +170,7 @@ uint32_t get_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id)
 	} else {
 		stac();
 		vhm_req = &req_buf->req_queue[vhm_req_id];
-		state = atomic_load32(&vhm_req->processed);
+		state = vhm_req->processed;
 		clac();
 	}
 
@@ -184,7 +186,13 @@ void set_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id, uint32_t state)
 	if (req_buf != NULL) {
 		stac();
 		vhm_req = &req_buf->req_queue[vhm_req_id];
-		atomic_store32(&vhm_req->processed, state);
+		/*
+		 * HV will only set processed to REQ_STATE_PENDING or REQ_STATE_FREE.
+		 * we don't need to sfence here is that even if the SOS/DM sees the previous state,
+		 * the only side effect is that it will defer the processing of the new IOReq.
+		 * It won't lead wrong processing.
+		 */
+		vhm_req->processed = state;
 		clac();
 	}
 }
@@ -245,7 +253,12 @@ static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 			break;
 		}
 	}
-	atomic_store32(&vhm_req->processed, REQ_STATE_FREE);
+
+	/*
+	 * Only HV will check whether processed is REQ_STATE_FREE on per-vCPU before inject a ioreq.
+	 * Only HV will set processed to REQ_STATE_FREE when ioreq is done.
+	 */
+	vhm_req->processed = REQ_STATE_FREE;
 	clac();
 }
 
