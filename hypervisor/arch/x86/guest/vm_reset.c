@@ -32,20 +32,12 @@ struct acpi_reset_reg *get_host_reset_reg_data(void)
 /**
  * @pre vm != NULL
  */
-void triple_fault_shutdown_vm(struct acrn_vm *vm)
+void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 {
-	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
+	struct acrn_vm *vm = vcpu->vm;
 
 	if (is_postlaunched_vm(vm)) {
 		struct io_request *io_req = &vcpu->req;
-
-		/*
-		 * Hypervisor sets VM_POWERING_OFF to authenticate that the reboot request is
-		 * actually from the guest itself, not from external entities. (for example acrn-dm)
-		 */
-		if (is_rt_vm(vm)) {
-			vm->state = VM_POWERING_OFF;
-		}
 
 		/* Device model emulates PM1A for post-launched VMs */
 		io_req->io_type = REQ_PORTIO;
@@ -258,9 +250,6 @@ void register_reset_port_handler(struct acrn_vm *vm)
 void shutdown_vm_from_idle(uint16_t pcpu_id)
 {
 	struct acrn_vm *vm = get_vm_from_vmid(per_cpu(shutdown_vm_id, pcpu_id));
-	const struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
 
-	if (vcpu->pcpu_id == pcpu_id) {
-		(void)shutdown_vm(vm);
-	}
+	(void)shutdown_vm(vm);
 }

@@ -16,7 +16,7 @@ struct acpi_reset_reg {
 
 void register_reset_port_handler(struct acrn_vm *vm);
 void shutdown_vm_from_idle(uint16_t pcpu_id);
-void triple_fault_shutdown_vm(struct acrn_vm *vm);
+void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu);
 struct acpi_reset_reg *get_host_reset_reg_data(void);
 
 #endif /* VM_RESET_H_ */
