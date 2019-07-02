@@ -14,6 +14,7 @@
 #include <logmsg.h>
 
 static bool skip_l1dfl_vmentry;
+static bool cpu_md_clear;
 static int32_t ibrs_type;
 
 static void detect_ibrs(void)
@@ -51,6 +52,7 @@ int32_t get_ibrs_type(void)
 bool check_cpu_security_cap(void)
 {
 	bool ret = true;
+	bool mds_no = false;
 	uint64_t x86_arch_capabilities;
 
 	detect_ibrs();
@@ -59,6 +61,8 @@ bool check_cpu_security_cap(void)
 		x86_arch_capabilities = msr_read(MSR_IA32_ARCH_CAPABILITIES);
 		skip_l1dfl_vmentry = ((x86_arch_capabilities
 			& IA32_ARCH_CAP_SKIP_L1DFL_VMENTRY) != 0UL);
+
+		mds_no = ((x86_arch_capabilities & IA32_ARCH_CAP_MDS_NO) != 0UL);
 	}
 
 	if ((!pcpu_has_cap(X86_FEATURE_L1D_FLUSH)) && (!skip_l1dfl_vmentry)) {
@@ -70,6 +74,25 @@ bool check_cpu_security_cap(void)
 
 	if ((!pcpu_has_cap(X86_FEATURE_IBRS_IBPB)) && (!pcpu_has_cap(X86_FEATURE_STIBP))) {
 		ret = false;
+	}
+
+	if (!mds_no) { /* Processor is affected by MDS vulnerability.*/
+		if (pcpu_has_cap(X86_FEATURE_MDS_CLEAR)) {
+			cpu_md_clear = true;
+#ifdef CONFIG_L1D_FLUSH_VMENTRY_ENABLED
+			if (!skip_l1dfl_vmentry) {
+				/* L1D cache flush will also overwrite CPU internal buffers,
+				 * additional MDS buffers clear operation is not required.
+				 */
+				cpu_md_clear = false;
+			}
+#endif
+		} else {
+			/* Processor is affected by MDS but no mitigation software
+			 * interface is enumerated, CPU microcode need to be udpated.
+			 */
+			ret = false;
+		}
 	}
 
 	return ret;
@@ -88,6 +111,44 @@ void cpu_l1d_flush(void)
 		}
 	}
 
+}
+
+/*
+ * VERW instruction (with microcode update) will overwrite
+ * CPU internal buffers.
+ */
+static inline void verw_buffer_overwriting(void)
+{
+	uint16_t ds = HOST_GDT_RING0_DATA_SEL;
+
+	asm volatile ("verw %[ds]" : : [ds] "m" (ds) : "cc");
+}
+
+/*
+ * On processors that enumerate MD_CLEAR:CPUID.(EAX=7H,ECX=0):EDX[MD_CLEAR=10],
+ * the VERW instruction or L1D_FLUSH command should be used to cause the
+ * processor to overwrite buffer values that are affected by MDS
+ * (Microarchitectural Data Sampling) vulnerabilities.
+ *
+ * The VERW instruction and L1D_FLUSH command will overwrite below buffer values:
+ *  - Store buffer value for the current logical processor on processors affected
+ *    by MSBDS (Microarchitectural Store Buffer Data Sampling).
+ *  - Fill buffer for all logical processors on the physical core for processors
+ *    affected by MFBDS (Microarchitectural Fill Buffer Data Sampling).
+ *  - Load port for all logical processors on the physical core for processors
+ *    affected by MLPDS(Microarchitectural Load Port Data Sampling).
+ *
+ * If processor is affected by L1TF vulnerability and the mitigation is enabled,
+ * L1D_FLUSH will overwrite internal buffers on processors affected by MDS, no
+ * additional buffer overwriting is required before VM entry. For other cases,
+ * VERW instruction is used to overwrite buffer values for processors affected
+ * by MDS.
+ */
+void cpu_internal_buffers_clear(void)
+{
+	if (cpu_md_clear) {
+		verw_buffer_overwriting();
+	}
 }
 
 #ifdef STACK_PROTECTOR
