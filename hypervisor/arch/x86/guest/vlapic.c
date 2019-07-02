@@ -88,7 +88,7 @@ static inline void vlapic_dump_irr(__unused const struct acrn_vlapic *vlapic, __
 static inline void vlapic_dump_isr(__unused const struct acrn_vlapic *vlapic, __unused const char *msg) {}
 #endif
 
-static const struct acrn_apicv_ops *apicv_ops;
+const struct acrn_apicv_ops *apicv_ops;
 
 static int32_t
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector);
@@ -565,7 +565,7 @@ static void vlapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, bool
 	if ((lapic->svr.v & APIC_SVR_ENABLE) == 0U) {
 		dev_dbg(ACRN_DBG_LAPIC, "vlapic is software disabled, ignoring interrupt %u", vector);
 	} else {
-		apicv_ops->accept_intr(vlapic, vector, level);
+		vlapic->ops->accept_intr(vlapic, vector, level);
 	}
 }
 
@@ -1609,8 +1609,11 @@ static int32_t vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_
 	return ret;
 }
 
+/*
+ * @pre vlapic != NULL && ops != NULL
+ */
 void
-vlapic_reset(struct acrn_vlapic *vlapic)
+vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops)
 {
 	uint32_t i;
 	struct lapic_regs *lapic;
@@ -1648,6 +1651,8 @@ vlapic_reset(struct acrn_vlapic *vlapic)
 	}
 
 	vlapic->isrv = 0U;
+
+	vlapic->ops = ops;
 }
 
 /**
@@ -1659,7 +1664,7 @@ vlapic_init(struct acrn_vlapic *vlapic)
 {
 	vlapic_init_timer(vlapic);
 
-	vlapic_reset(vlapic);
+	vlapic_reset(vlapic, apicv_ops);
 }
 
 void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs)
@@ -2056,7 +2061,7 @@ int32_t vlapic_x2apic_read(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *val)
 			}
 		} else {
 			offset = x2apic_msr_to_regoff(msr);
-			if (apicv_ops->x2apic_read_msr_may_valid(offset)) {
+			if (vlapic->ops->x2apic_read_msr_may_valid(offset)) {
 				error = vlapic_read(vlapic, offset, val);
 			}
 		}
@@ -2088,7 +2093,7 @@ int32_t vlapic_x2apic_write(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val)
 			}
 		} else {
 			offset = x2apic_msr_to_regoff(msr);
-			if (apicv_ops->x2apic_write_msr_may_valid(offset)) {
+			if (vlapic->ops->x2apic_write_msr_may_valid(offset)) {
 				error = vlapic_write(vlapic, offset, val);
 			}
 		}
@@ -2280,7 +2285,7 @@ static bool apicv_advanced_inject_intr(struct acrn_vlapic *vlapic,
 
 bool vlapic_inject_intr(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected)
 {
-	return apicv_ops->inject_intr(vlapic, guest_irq_enabled, injected);
+	return vlapic->ops->inject_intr(vlapic, guest_irq_enabled, injected);
 }
 
 static bool apicv_basic_has_pending_delivery_intr(struct acrn_vcpu *vcpu)
@@ -2306,7 +2311,8 @@ static bool apicv_advanced_has_pending_delivery_intr(__unused struct acrn_vcpu *
 
 bool vlapic_has_pending_delivery_intr(struct acrn_vcpu *vcpu)
 {
-	return apicv_ops->has_pending_delivery_intr(vcpu);
+	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
+	return vlapic->ops->has_pending_delivery_intr(vcpu);
 }
 
 static bool apicv_basic_apic_read_access_may_valid(__unused uint32_t offset)
@@ -2363,12 +2369,12 @@ int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 		if (access_type == TYPE_LINEAR_APIC_INST_WRITE) {
 			err = emulate_instruction(vcpu);
 			if (err == 0) {
-				if (apicv_ops->apic_write_access_may_valid(offset)) {
+				if (vlapic->ops->apic_write_access_may_valid(offset)) {
 					(void)vlapic_write(vlapic, offset, mmio->value);
 				}
 			}
 		} else {
-			if (apicv_ops->apic_read_access_may_valid(offset)) {
+			if (vlapic->ops->apic_read_access_may_valid(offset)) {
 				(void)vlapic_read(vlapic, offset, &mmio->value);
 			} else {
 				mmio->value = 0UL;
