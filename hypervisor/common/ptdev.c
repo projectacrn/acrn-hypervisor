@@ -8,18 +8,12 @@
 #include <softirq.h>
 #include <ptdev.h>
 #include <irq.h>
-#include <atomic.h>
 #include <logmsg.h>
 
 #define PTIRQ_BITMAP_ARRAY_SIZE	INT_DIV_ROUNDUP(CONFIG_MAX_PT_IRQ_ENTRIES, 64U)
 struct ptirq_remapping_info ptirq_entries[CONFIG_MAX_PT_IRQ_ENTRIES];
 static uint64_t ptirq_entry_bitmaps[PTIRQ_BITMAP_ARRAY_SIZE];
 spinlock_t ptdev_lock;
-
-bool is_entry_active(const struct ptirq_remapping_info *entry)
-{
-	return atomic_load32(&entry->active) == ACTIVE_FLAG;
-}
 
 static inline uint16_t ptirq_alloc_entry_id(void)
 {
@@ -100,7 +94,7 @@ struct ptirq_remapping_info *ptirq_alloc_entry(struct acrn_vm *vm, uint32_t intr
 
 		initialize_timer(&entry->intr_delay_timer, ptirq_intr_delay_callback, entry, 0UL, 0, 0UL);
 
-		atomic_clear32(&entry->active, ACTIVE_FLAG);
+		entry->active = false;
 	} else {
 		pr_err("Alloc ptdev irq entry failed");
 	}
@@ -167,7 +161,7 @@ int32_t ptirq_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_i
 		pr_err("request irq failed, please check!, phys-irq=%d", phys_irq);
 	} else {
 		entry->allocated_pirq = (uint32_t)retval;
-		atomic_set32(&entry->active, ACTIVE_FLAG);
+		entry->active = true;
 	}
 
 	return retval;
@@ -175,7 +169,7 @@ int32_t ptirq_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_i
 
 void ptirq_deactivate_entry(struct ptirq_remapping_info *entry)
 {
-	atomic_clear32(&entry->active, ACTIVE_FLAG);
+	entry->active = false;
 	free_irq(entry->allocated_pirq);
 }
 
