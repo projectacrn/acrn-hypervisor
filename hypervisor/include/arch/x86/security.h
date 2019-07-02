@@ -20,6 +20,7 @@
 int32_t get_ibrs_type(void);
 void cpu_l1d_flush(void);
 bool check_cpu_security_cap(void);
+void cpu_internal_buffers_clear(void);
 
 #ifdef STACK_PROTECTOR
 struct stack_canary {

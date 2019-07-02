@@ -485,6 +485,9 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 		cpu_l1d_flush();
 #endif
 
+		/*Mitigation for MDS vulnerability, overwrite CPU internal buffers */
+		cpu_internal_buffers_clear();
+
 		/* Launch the VM */
 		status = vmx_vmrun(ctx, VM_LAUNCH, ibrs_type);
 
@@ -506,6 +509,9 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 #ifdef CONFIG_L1D_FLUSH_VMENTRY_ENABLED
 		cpu_l1d_flush();
 #endif
+
+		/* Mitigation for MDS vulnerability, overwrite CPU internal buffers */
+		cpu_internal_buffers_clear();
 
 		/* Resume the VM */
 		status = vmx_vmrun(ctx, VM_RESUME, ibrs_type);
