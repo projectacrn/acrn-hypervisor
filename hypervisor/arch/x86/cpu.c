@@ -5,7 +5,6 @@
  */
 
 #include <types.h>
-#include <atomic.h>
 #include <bits.h>
 #include <page.h>
 #include <e820.h>
@@ -311,7 +310,8 @@ bool start_pcpus(uint64_t mask)
 	uint64_t expected_start_mask = mask;
 
 	/* secondary cpu start up will wait for pcpu_sync -> 0UL */
-	atomic_store64(&pcpu_sync, 1UL);
+	pcpu_sync = 1UL;
+	cpu_write_memory_barrier();
 
 	i = ffs64(expected_start_mask);
 	while (i != INVALID_BIT_INDEX) {
@@ -326,7 +326,7 @@ bool start_pcpus(uint64_t mask)
 	}
 
 	/* Trigger event to allow secondary CPUs to continue */
-	atomic_store64(&pcpu_sync, 0UL);
+	pcpu_sync = 0UL;
 
 	return ((pcpu_active_bitmap & mask) == mask);
 }
