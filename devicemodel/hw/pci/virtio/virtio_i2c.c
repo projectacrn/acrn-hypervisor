@@ -25,6 +25,7 @@
 #include "dm.h"
 #include "pci_core.h"
 #include "virtio.h"
+#include "acpi.h"
 
 /* I2c adapter virtualization architecture
  *
@@ -62,11 +63,32 @@ static int virtio_i2c_debug=0;
 	do { if (virtio_i2c_debug) printf(VIRTIO_I2C_PREF fmt, ##args); } while (0)
 #define WPRINTF(fmt, args...) printf(VIRTIO_I2C_PREF fmt, ##args)
 
+#define MAX_NODE_NAME_LEN	20
 #define MAX_I2C_VDEV		128
 #define MAX_NATIVE_I2C_ADAPTER	16
 #define I2C_MSG_OK	0
 #define I2C_MSG_ERR	1
 #define I2C_NO_DEV	2
+
+static int acpi_i2c_adapter_num = 0;
+static void acpi_add_i2c_adapter(struct pci_vdev *dev, int i2c_bus);
+static void acpi_add_cam1(struct pci_vdev *dev, int i2c_bus);
+static void acpi_add_cam2(struct pci_vdev *dev, int i2c_bus);
+static void acpi_add_hdac(struct pci_vdev *dev, int i2c_bus);
+static void acpi_add_default(struct pci_vdev *dev, int i2c_bus);
+
+struct acpi_node {
+	char node_name[MAX_NODE_NAME_LEN];
+	void (*add_node_fn)(struct pci_vdev *, int);
+};
+
+static struct acpi_node acpi_node_table[] = {
+/* cam1, cam2 and hdac is dump from MRB board */
+	{"cam1", acpi_add_cam1},
+	{"cam2", acpi_add_cam2},
+	{"hdac", acpi_add_hdac},
+	{"default", acpi_add_default},
+};
 
 struct virtio_i2c_hdr {
 	uint16_t addr;      /* slave address */
@@ -89,6 +111,7 @@ struct virtio_i2c {
 	struct native_i2c_adapter *native_adapter[MAX_NATIVE_I2C_ADAPTER];
 	int native_adapter_num;
 	uint16_t adapter_map[MAX_I2C_VDEV];
+	char acpi_nodes[MAX_I2C_VDEV][MAX_NODE_NAME_LEN];
 	struct virtio_vq_info vq;
 	char ident[256];
 	pthread_t req_tid;
@@ -112,6 +135,235 @@ static struct virtio_ops virtio_i2c_ops = {
 	NULL,			/* apply negotiated features */
 	NULL,			/* called on guest set status */
 };
+
+static void
+acpi_add_i2c_adapter(struct pci_vdev *dev, int i2c_bus)
+{
+	dsdt_line("Device (I2C%d)", i2c_bus);
+	dsdt_line("{");
+	dsdt_line("    Name (_ADR, 0x%04X%04X)", dev->slot, dev->func);
+	dsdt_line("    Name (_DDN, \"Intel(R) I2C Controller #%d\")", i2c_bus);
+	dsdt_line("    Name (_UID, One)");
+	dsdt_line("    Name (LINK, \"\\\\_SB.PCI%d.I2C%d\")", dev->bus, i2c_bus);
+	dsdt_line("    Name (RBUF, ResourceTemplate ()");
+	dsdt_line("    {");
+	dsdt_line("    })");
+	dsdt_line("    Name (IC0S, 0x00061A80)");
+	dsdt_line("    Name (_DSD, Package (0x02)");
+	dsdt_line("    {");
+	dsdt_line("        ToUUID (\"daffd814-6eba-4d8c-8a91-bc9bbf4aa301\")"
+				" ,");
+	dsdt_line("        Package (0x01)");
+	dsdt_line("        {");
+	dsdt_line("            Package (0x02)");
+	dsdt_line("            {");
+	dsdt_line("                \"clock-frequency\", ");
+	dsdt_line("                IC0S");
+	dsdt_line("            }");
+	dsdt_line("        }");
+	dsdt_line("    })");
+	dsdt_line("");
+	dsdt_line("}");
+}
+
+static void
+acpi_add_cam1(struct pci_vdev *dev, int i2c_bus)
+{
+	dsdt_line("Scope(I2C%d)", i2c_bus);
+	dsdt_line("{");
+	dsdt_line("    Device (CAM1)");
+	dsdt_line("    {");
+	dsdt_line("        Name (_ADR, Zero)  // _ADR: Address");
+	dsdt_line("        Name (_HID, \"ADV7481A\")  // _HID: Hardware ID");
+	dsdt_line("        Name (_CID, \"ADV7481A\")  // _CID: Compatible ID");
+	dsdt_line("        Name (_UID, One)  // _UID: Unique ID");
+	dsdt_line("        Method (_CRS, 0, Serialized)");
+	dsdt_line("        {");
+	dsdt_line("            Name (SBUF, ResourceTemplate ()");
+	dsdt_line("            {");
+	dsdt_line("                GpioIo (Exclusive, PullDefault, 0x0000, "
+					"0x0000, IoRestrictionInputOnly,");
+	dsdt_line("                    \"\\\\_SB.GPO0\", 0x00, "
+					"ResourceConsumer, ,");
+	dsdt_line("                    )");
+	dsdt_line("                    {   // Pin list");
+	dsdt_line("                        0x001E");
+	dsdt_line("                    }");
+	dsdt_line("                I2cSerialBusV2 (0x0070, "
+					"ControllerInitiated, 0x00061A80,");
+	dsdt_line("                    AddressingMode7Bit, "
+						"\"\\\\_SB.PCI%d.I2C%d\",",
+							dev->bus, i2c_bus);
+	dsdt_line("                    0x00, ResourceConsumer, , Exclusive,");
+	dsdt_line("                    )");
+	dsdt_line("            })");
+	dsdt_line("            Return (SBUF)");
+	dsdt_line("        }");
+	dsdt_line("        Method (_DSM, 4, NotSerialized)");
+	dsdt_line("        {");
+	dsdt_line("            If ((Arg0 == ToUUID ("
+				"\"377ba76a-f390-4aff-ab38-9b1bf33a3015\")))");
+	dsdt_line("            {");
+	dsdt_line("                Return (\"ADV7481A\")");
+	dsdt_line("            }");
+	dsdt_line("");
+	dsdt_line("            If ((Arg0 == ToUUID ("
+				"\"ea3b7bd8-e09b-4239-ad6e-ed525f3f26ab\")))");
+	dsdt_line("            {");
+	dsdt_line("                Return (0x40)");
+	dsdt_line("            }");
+	dsdt_line("");
+	dsdt_line("            If ((Arg0 == ToUUID ("
+				"\"8dbe2651-70c1-4c6f-ac87-a37cb46e4af6\")))");
+	dsdt_line("            {");
+	dsdt_line("                Return (0xFF)");
+	dsdt_line("            }");
+	dsdt_line("");
+	dsdt_line("            If ((Arg0 == ToUUID ("
+				"\"26257549-9271-4ca4-bb43-c4899d5a4881\")))");
+	dsdt_line("            {");
+	dsdt_line("                If (Arg2 == One)");
+	dsdt_line("                {");
+	dsdt_line("                    Return (0x02)");
+	dsdt_line("                }");
+	dsdt_line("                If (Arg2 == 0x02)");
+	dsdt_line("                {");
+	dsdt_line("                    Return (0x02001000)");
+	dsdt_line("                }");
+	dsdt_line("                If (Arg2 == 0x03)");
+	dsdt_line("                {");
+	dsdt_line("                    Return (0x02000E01)");
+	dsdt_line("                }");
+	dsdt_line("            }");
+	dsdt_line("            Return (Zero)");
+	dsdt_line("        }");
+	dsdt_line("    }");
+	dsdt_line("}");
+}
+
+static void
+acpi_add_cam2(struct pci_vdev *dev, int i2c_bus)
+{
+		dsdt_line("Scope(I2C%d)", i2c_bus);
+		dsdt_line("{");
+		dsdt_line("    Device (CAM2)");
+		dsdt_line("    {");
+		dsdt_line("        Name (_ADR, Zero)  // _ADR: Address");
+		dsdt_line("        Name (_HID, \"ADV7481B\")  // _HID: Hardware ID");
+		dsdt_line("        Name (_CID, \"ADV7481B\")  // _CID: Compatible ID");
+		dsdt_line("        Name (_UID, One)  // _UID: Unique ID");
+		dsdt_line("        Method (_CRS, 0, Serialized)");
+		dsdt_line("        {");
+		dsdt_line("            Name (SBUF, ResourceTemplate ()");
+		dsdt_line("            {");
+		dsdt_line("                GpioIo (Exclusive, PullDefault, 0x000, "
+						"0x0000, IoRestrictionInputOnly,");
+		dsdt_line("                    \"\\\\_SB.GPO0\", 0x00, "
+						"ResourceConsumer, ,");
+		dsdt_line("                    )");
+		dsdt_line("                    {   // Pin list");
+		dsdt_line("                        0x001E");
+		dsdt_line("                    }");
+		dsdt_line("                I2cSerialBusV2 (0x0071, "
+						"ControllerInitiated, 0x00061A80,");
+		dsdt_line("                    AddressingMode7Bit, "
+							"\"\\\\_SB.PCI%d.I2C%d\",",
+								dev->bus, i2c_bus);
+		dsdt_line("                    0x00, ResourceConsumer, , Exclusive,");
+		dsdt_line("                    )");
+		dsdt_line("            })");
+		dsdt_line("            Return (SBUF)");
+		dsdt_line("        }");
+		dsdt_line("        Method (_DSM, 4, NotSerialized) ");
+		dsdt_line("        {");
+		dsdt_line("            If ((Arg0 == ToUUID ("
+					"\"377ba76a-f390-4aff-ab38-9b1bf33a3015\")))");
+		dsdt_line("            {");
+		dsdt_line("                Return (\"ADV7481B\")");
+		dsdt_line("            }");
+		dsdt_line("");
+		dsdt_line("            If ((Arg0 == ToUUID ("
+					"\"ea3b7bd8-e09b-4239-ad6e-ed525f3f26ab\")))");
+		dsdt_line("            {");
+		dsdt_line("                Return (0x14)");
+		dsdt_line("            }");
+		dsdt_line("");
+		dsdt_line("            If ((Arg0 == ToUUID ("
+					"\"8dbe2651-70c1-4c6f-ac87-a37cb46e4af6\")))");
+		dsdt_line("            {");
+		dsdt_line("                Return (0xFF)");
+		dsdt_line("            }");
+		dsdt_line("");
+		dsdt_line("            If ((Arg0 == ToUUID ("
+					"\"26257549-9271-4ca4-bb43-c4899d5a4881\")))");
+		dsdt_line("            {");
+		dsdt_line("                If (Arg2 == One)");
+		dsdt_line("                {");
+		dsdt_line("                    Return (0x02)");
+		dsdt_line("                }");
+		dsdt_line("                If (Arg2 == 0x02)");
+		dsdt_line("                {");
+		dsdt_line("                    Return (0x02001000)");
+		dsdt_line("                }");
+		dsdt_line("                If (Arg2 == 0x03)");
+		dsdt_line("                {");
+		dsdt_line("                    Return (0x02000E01)");
+		dsdt_line("                }");
+		dsdt_line("            }");
+		dsdt_line("            Return (Zero)");
+		dsdt_line("        }");
+		dsdt_line("    }");
+		dsdt_line("");
+		dsdt_line("}");
+}
+
+static void
+acpi_add_hdac(struct pci_vdev *dev, int i2c_bus)
+{
+	dsdt_line("Scope(I2C%d)", i2c_bus);
+	dsdt_line("{");
+	dsdt_line("    Device (HDAC)");
+	dsdt_line("    {");
+	dsdt_line("        Name (_HID, \"INT34C3\")  // _HID: Hardware ID");
+	dsdt_line("        Name (_CID, \"INT34C3\")  // _CID: Compatible ID");
+	dsdt_line("        Name (_DDN, \"Intel(R) Smart Sound Technology "
+			"Audio Codec\")  // _DDN: DOS Device Name");
+	dsdt_line("        Name (_UID, One)  // _UID: Unique ID");
+	dsdt_line("        Method (_INI, 0, NotSerialized)");
+	dsdt_line("        {");
+	dsdt_line("        }");
+	dsdt_line("");
+	dsdt_line("        Method (_CRS, 0, NotSerialized)");
+	dsdt_line("        {");
+	dsdt_line("            Name (SBFB, ResourceTemplate ()");
+	dsdt_line("            {");
+	dsdt_line("                I2cSerialBusV2 (0x006C, "
+					"ControllerInitiated, 0x00061A80,");
+	dsdt_line("                    AddressingMode7Bit, "
+						"\"\\\\_SB.PCI%d.I2C%d\",",
+							dev->bus, i2c_bus);
+	dsdt_line("                    0x00, ResourceConsumer, , Exclusive,");
+	dsdt_line("                    )");
+	dsdt_line("            })");
+	dsdt_line("            Name (SBFI, ResourceTemplate ()");
+	dsdt_line("            {");
+	dsdt_line("            })");
+	dsdt_line("            Return (ConcatenateResTemplate (SBFB, SBFI))");
+	dsdt_line("        }");
+	dsdt_line("");
+	dsdt_line("        Method (_STA, 0, NotSerialized)  // _STA: Status");
+	dsdt_line("        {");
+	dsdt_line("            Return (0x0F)");
+	dsdt_line("        }");
+	dsdt_line("    }");
+	dsdt_line("}");
+}
+
+static void
+acpi_add_default(struct pci_vdev *dev, int i2c_bus)
+{
+	/* Add nothing */
+}
 
 static bool
 native_slave_access_ok(struct native_i2c_adapter *adapter, uint16_t addr)
@@ -337,18 +589,20 @@ virtio_i2c_map(struct virtio_i2c *vi2c)
 static int
 virtio_i2c_parse(struct virtio_i2c *vi2c, char *optstr)
 {
-	char *cp, *t;
+	char *cp, *t, *dsdt_str, *p;
 	uint16_t slave_addr[MAX_I2C_VDEV];
 	int addr, bus, n_adapter, n_slave;
 
 	/*
-	 * virtio-i2c,<bus>:<slave_addr>[:<slave_addr>],
-	 * 	[<bus>:<slave_addr>[:<slave_addr>]]
+	 * virtio-i2c,<bus>:<slave_addr[@<node>]>[:<slave_addr[@<node>]>],
+	 * 	[<bus>:<slave_addr[@<node>]>[:<slave_addr>[@<node>]]]
 	 *
 	 * bus (dec): native adatper bus number.
 	 * 	e.g. 2 for /dev/i2c-2
 	 * slave_addr (hex): address for native slave device
 	 * 	e.g. 0x1C or 1C
+	 * @<node>: node is the acpi node name defined in acpi_node_table[]
+	 * 	e.g. @cam1 means adding 'cam1' node to dsdt table.
 	 *
 	 * Note: slave address can not repeat.
 	 */
@@ -363,6 +617,7 @@ virtio_i2c_parse(struct virtio_i2c *vi2c, char *optstr)
 		while (cp != NULL && *cp !='\0') {
 			if (*cp == ':')
 				cp++;
+
 			if (bus == -1) {
 				if (dm_strtoi(cp, &t, 10, &bus) || bus < 0)
 					return -1;
@@ -374,7 +629,18 @@ virtio_i2c_parse(struct virtio_i2c *vi2c, char *optstr)
 					return -1;
 				}
 				slave_addr[n_slave] = (uint16_t)(addr & (MAX_I2C_VDEV - 1));
-				DPRINTF("native i2c adapter %d:0x%x\n", bus, slave_addr[n_slave]);
+				p = &vi2c->acpi_nodes[slave_addr[n_slave]][0];
+				if (t != NULL && *t == '@') {
+					t++;
+					dsdt_str = strsep(&t, ":,");
+					snprintf(p, MAX_NODE_NAME_LEN, "%s", dsdt_str);
+				} else {
+					snprintf(p, MAX_NODE_NAME_LEN, "default");
+				}
+				DPRINTF("native i2c adapter %d:0x%x (%s)\n",
+						bus,
+						slave_addr[n_slave],
+						p);
 				n_slave++;
 			}
 			cp = t;
@@ -391,6 +657,44 @@ virtio_i2c_parse(struct virtio_i2c *vi2c, char *optstr)
 	vi2c->native_adapter_num = n_adapter;
 
 	return 0;
+}
+
+static void
+virtio_i2c_dsdt(struct pci_vdev *dev)
+{
+	int i, j, node_num;
+	struct acpi_node *anode;
+	int i2c_bus;
+	int found;
+	struct virtio_i2c *vi2c = (struct virtio_i2c *) dev->arg;
+
+	/* i2c bus number in acpi start from 0 */
+	i2c_bus = acpi_i2c_adapter_num;
+	/* add i2c adapter */
+	acpi_add_i2c_adapter(dev, i2c_bus);
+	DPRINTF("add dsdt for i2c adapter %d\n", i2c_bus);
+
+	/* add slave devices */
+	node_num = sizeof(acpi_node_table) / sizeof(struct acpi_node);
+	for (i = 0; i < MAX_I2C_VDEV; i++) {
+		if (!native_adapter_find(vi2c, i))
+			continue;
+
+		found = 0;
+		for (j = 0; j < node_num; j++) {
+			anode = &acpi_node_table[j];
+			if (!strncmp(anode->node_name, vi2c->acpi_nodes[i], sizeof(anode->node_name))) {
+				found = 1;
+				if (anode->add_node_fn) {
+					anode->add_node_fn(dev, i2c_bus);
+					DPRINTF("add dsdt for %s \n", anode->node_name);
+				}
+			}
+		}
+		if (!found)
+			WPRINTF("cannot find acpi node info for %s \n", vi2c->acpi_nodes[i]);
+	}
+	acpi_i2c_adapter_num++;
 }
 
 static void
@@ -531,5 +835,6 @@ struct pci_vdev_ops pci_ops_virtio_i2c = {
 	.vdev_deinit		= virtio_i2c_deinit,
 	.vdev_barwrite		= virtio_pci_write,
 	.vdev_barread		= virtio_pci_read,
+	.vdev_write_dsdt	= virtio_i2c_dsdt,
 };
 DEFINE_PCI_DEVTYPE(pci_ops_virtio_i2c);
