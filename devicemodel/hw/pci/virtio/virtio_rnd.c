@@ -34,8 +34,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
 #include <pthread.h>
+#include <errno.h>
 
 #include "dm.h"
 #include "pci_core.h"
@@ -193,7 +193,6 @@ virtio_rnd_k_set_status(void *base, uint64_t status)
 static int
 virtio_rnd_kernel_init(struct virtio_rnd *rnd)
 {
-	assert(rnd->vbs_k.fd == 0);
 
 	rnd->vbs_k.fd = open("/dev/vbs_rng", O_RDWR);
 	if (rnd->vbs_k.fd < 0) {
@@ -305,7 +304,6 @@ virtio_rnd_get_entropy(void *param)
 	struct virtio_vq_info *vq = &rnd->vq;
 	struct iovec iov;
 	uint16_t idx;
-	int ret;
 	ssize_t len;
 
 	for (;;) {
@@ -317,20 +315,24 @@ virtio_rnd_get_entropy(void *param)
 		 *  - avoid vring processing due to spurious wakeups
 		 *  - catch missing notifications before acquiring rx_mtx
 		 */
-		while (!vq_has_descs(vq)) {
-			ret = pthread_cond_wait(&rnd->rx_cond, &rnd->rx_mtx);
-			assert(ret == 0);
-		}
+		while (!vq_has_descs(vq))
+			pthread_cond_wait(&rnd->rx_cond, &rnd->rx_mtx);
 
 		rnd->in_progress = 1;
 		pthread_mutex_unlock(&rnd->rx_mtx);
 
 		do {
-			ret = vq_getchain(vq, &idx, &iov, 1, NULL);
-			assert(ret > 0);
-
+			vq_getchain(vq, &idx, &iov, 1, NULL);
 			len = read(rnd->fd, iov.iov_base, iov.iov_len);
-			assert(len > 0);
+			if (len <= 0) {
+				vq_retchain(vq);
+				vq_endchains(vq, 0);
+
+				/* no data available */
+				if (len == -1 && errno == EAGAIN)
+					return NULL;
+				break;
+			}
 
 			/* release this chain and handle more */
 			vq_relchain(vq, idx, len);
@@ -384,7 +386,10 @@ virtio_rnd_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 * Should always be able to open /dev/random.
 	 */
 	fd = open("/dev/random", O_RDONLY);
-	assert(fd >= 0);
+	if (fd < 0) {
+		WPRINTF(("virtio_rnd: open failed: /dev/random \n"));
+		return -1;
+	}
 
 	rnd = calloc(1, sizeof(struct virtio_rnd));
 	if (!rnd) {
@@ -495,13 +500,16 @@ virtio_rnd_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		virtio_rnd_kernel_stop(rnd);
 		virtio_rnd_kernel_reset(rnd);
 		rnd->vbs_k.status = VIRTIO_DEV_INITIAL;
-		assert(rnd->vbs_k.fd >= 0);
-		close(rnd->vbs_k.fd);
-		rnd->vbs_k.fd = -1;
+		if (rnd->vbs_k.fd >= 0) {
+			close(rnd->vbs_k.fd);
+			rnd->vbs_k.fd = -1;
+		}
 	}
 
-	assert(rnd->fd >= 0);
-	close(rnd->fd);
+	if (rnd->fd >= 0) {
+		close(rnd->fd);
+		rnd->fd = -1;
+	}
 	DPRINTF(("%s: free struct virtio_rnd!\n", __func__));
 	free(rnd);
 }
