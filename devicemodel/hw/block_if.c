@@ -660,7 +660,7 @@ blockif_open(const char *optstr, const char *ident)
 		if (size < DEV_BSIZE || (size & (DEV_BSIZE - 1))) {
 			WPRINTF(("%s size not corret, should be multiple of %d\n",
 						nopt, DEV_BSIZE));
-			return 0;
+			goto err;
 		}
 		psectsz = sbuf.st_blksize;
 	}
