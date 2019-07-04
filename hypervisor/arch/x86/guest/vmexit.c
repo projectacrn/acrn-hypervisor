@@ -306,8 +306,8 @@ static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu)
 		if (idx >= NR_WORLD) {
 			ret = -1;
 		} else {
-			/* to access XCR0,'rcx' should be 0 */
-			if (vcpu_get_gpreg(vcpu, CPU_REG_RCX) != 0UL) {
+			/* to access XCR0,'ecx' should be 0 */
+			if ((vcpu_get_gpreg(vcpu, CPU_REG_RCX) & 0xffffffffUL) != 0UL) {
 				vcpu_inject_gp(vcpu, 0U);
 			} else {
 				val64 = (vcpu_get_gpreg(vcpu, CPU_REG_RAX) & 0xffffffffUL) |
