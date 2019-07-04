@@ -391,6 +391,7 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 			if (is_sos_vm(entry->vm)) {
 				entry->vm = vm;
 				entry->virt_sid.value = virt_sid.value;
+				entry->polarity = 0U;
 			} else {
 				pr_err("INTX pin%d already in vm%d with vpin%d, not able to add into vm%d with vpin%d",
 					phys_pin, entry->vm->vm_id, entry->virt_sid.intx_id.pin, vm->vm_id, virt_pin);
