@@ -139,7 +139,8 @@ static void write_to_disk(const char *fmt, va_list args)
 {
 	char buffer[DISK_LOG_MAX_LEN];
 	char *file_name = buffer;
-	int len1, len2;
+	char *buf;
+	int len;
 	int write_cnt;
 	struct timespec times = {0, 0};
 
@@ -155,11 +156,23 @@ static void write_to_disk(const char *fmt, va_list args)
 		}
 	}
 
-	clock_gettime(CLOCK_MONOTONIC, &times);
-	len1 = sprintf(buffer, "[%5lu.%06lu] ", times.tv_sec, times.tv_nsec / 1000);
-	len2 = vsnprintf(buffer + len1, MAX_ONE_LOG_SIZE, fmt, args);
+	len = vasprintf(&buf, fmt, args);
+	if (len < 0)
+		return;
 
-	write_cnt = write(disk_fd, buffer, len1 + len2);
+	clock_gettime(CLOCK_MONOTONIC, &times);
+	len = snprintf(buffer, DISK_LOG_MAX_LEN, "[%5lu.%06lu] ", times.tv_sec, times.tv_nsec / 1000);
+	if (len < 0 || len >= DISK_LOG_MAX_LEN) {
+		free(buf);
+		return;
+	}
+	len = strnlen(buffer, DISK_LOG_MAX_LEN);
+
+	strncpy(buffer + len, buf, DISK_LOG_MAX_LEN - len);
+	buffer[DISK_LOG_MAX_LEN - 1] = '\0';
+	free(buf);
+
+	write_cnt = write(disk_fd, buffer, strnlen(buffer, DISK_LOG_MAX_LEN));
 	if (write_cnt < 0) {
 		perror(DISK_PREFIX"write disk failed");
 		close(disk_fd);

@@ -69,17 +69,21 @@ static void deinit_kmsg(void)
 
 static void write_to_kmsg(const char *fmt, va_list args)
 {
+	char *buf;
 	char kmsg_buf[KMSG_MAX_LEN] = KMSG_PREFIX;
-	int len1, len2;
-	int write_cnt;
+	int len, write_cnt;
 
 	if (kmsg_fd < 0)
 		return;
 
-	len1 = strlen(KMSG_PREFIX);
-	len2 = vsnprintf(kmsg_buf + len1, MAX_ONE_LOG_SIZE, fmt, args);
+	len = vasprintf(&buf, fmt, args);
+	if (len < 0)
+		return;
+	strncpy(kmsg_buf + strlen(KMSG_PREFIX), buf, KMSG_MAX_LEN - strlen(KMSG_PREFIX));
+	kmsg_buf[KMSG_MAX_LEN - 1] = '\0';
+	free(buf);
 
-	write_cnt = write(kmsg_fd, kmsg_buf, len1 + len2);
+	write_cnt = write(kmsg_fd, kmsg_buf, strnlen(kmsg_buf, KMSG_MAX_LEN));
 	if (write_cnt < 0) {
 		perror(KMSG_PREFIX"write kmsg failed");
 		close(kmsg_fd);
