@@ -2291,7 +2291,8 @@ pci_emul_cfgdata(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 {
 	int coff;
 
-	assert(bytes == 1 || bytes == 2 || bytes == 4);
+	if ((bytes != 1) && (bytes != 2) && (bytes != 4))
+		return -1;
 
 	coff = cfgoff + (port - CONF1_DATA_PORT);
 	if (cfgenable) {

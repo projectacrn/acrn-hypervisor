@@ -8,7 +8,6 @@
 
 #include <pthread.h>
 #include <stdio.h>
-#include <assert.h>
 #include <string.h>
 #include <unistd.h>
 #include "usb.h"
