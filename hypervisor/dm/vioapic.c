@@ -326,6 +326,13 @@ static void vioapic_indirect_write(struct acrn_vioapic *vioapic, uint32_t addr, 
 			dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: redir table entry %#lx",
 				pin, vioapic->rtbl[pin].full);
 
+			/* remap for ptdev */
+			if ((new.bits.intr_mask == IOAPIC_RTE_MASK_CLR) || (last.bits.intr_mask  == IOAPIC_RTE_MASK_CLR)) {
+				/* VM enable intr */
+				/* NOTE: only support max 256 pin */
+				(void)ptirq_intx_pin_remap(vioapic->vm, pin, PTDEV_VPIN_IOAPIC);
+			}
+
 			/*
 			 * Generate an interrupt if the following conditions are met:
 			 * - pin is not masked
@@ -337,13 +344,6 @@ static void vioapic_indirect_write(struct acrn_vioapic *vioapic, uint32_t addr, 
 				vioapic_need_intr(vioapic, (uint16_t)pin)) {
 				dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: asserted at rtbl write", pin);
 				vioapic_generate_intr(vioapic, pin);
-			}
-
-			/* remap for ptdev */
-			if ((new.bits.intr_mask == IOAPIC_RTE_MASK_CLR) || (last.bits.intr_mask  == IOAPIC_RTE_MASK_CLR)) {
-				/* VM enable intr */
-				/* NOTE: only support max 256 pin */
-				(void)ptirq_intx_pin_remap(vioapic->vm, pin, PTDEV_VPIN_IOAPIC);
 			}
 		}
 	}
