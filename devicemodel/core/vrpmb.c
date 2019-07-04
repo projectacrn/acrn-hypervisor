@@ -28,7 +28,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 #include <openssl/rand.h>
 
 #include "types.h"

@@ -19,7 +19,6 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <assert.h>
 
 #include "vmmapi.h"
 #include "tpm_internal.h"
