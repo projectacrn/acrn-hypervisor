@@ -691,11 +691,10 @@ vlapic_get_lvtptr(struct acrn_vlapic *vlapic, uint32_t offset)
 static inline uint32_t
 vlapic_get_lvt(const struct acrn_vlapic *vlapic, uint32_t offset)
 {
-	uint32_t idx, val;
+	uint32_t idx;
 
 	idx = lvt_off_to_idx(offset);
-	val = atomic_load32(&vlapic->lvt_last[idx]);
-	return val;
+	return vlapic->lvt_last[idx];
 }
 
 static void
@@ -764,7 +763,7 @@ vlapic_lvt_write_handler(struct acrn_vlapic *vlapic, uint32_t offset)
 	if (error == false) {
 		*lvtptr = val;
 		idx = lvt_off_to_idx(offset);
-		atomic_store32(&vlapic->lvt_last[idx], val);
+		vlapic->lvt_last[idx] = val;
 	}
 }
 
@@ -864,7 +863,7 @@ vlapic_process_eoi(struct acrn_vlapic *vlapic)
 		vector = vlapic->isrv;
 		i = (vector >> 5U);
 		bitpos = (vector & 0x1fU);
-		isrptr[i].v &= ~(1U << bitpos);
+		bitmap32_clear_nolock((uint16_t)bitpos, &isrptr[i].v);
 
 		dev_dbg(ACRN_DBG_LAPIC, "EOI vector %u", vector);
 		vlapic_dump_isr(vlapic, "vlapic_process_eoi");
@@ -872,7 +871,7 @@ vlapic_process_eoi(struct acrn_vlapic *vlapic)
 		vlapic->isrv = vlapic_find_isrv(vlapic);
 		vlapic_update_ppr(vlapic);
 
-		if ((tmrptr[i].v & (1U << bitpos)) != 0U) {
+		if (bitmap32_test((uint16_t)bitpos, &tmrptr[i].v)) {
 			/* hook to vIOAPIC */
 			vioapic_process_eoi(vlapic->vm, vector);
 		}
@@ -1268,9 +1267,8 @@ static inline uint32_t vlapic_find_highest_irr(const struct acrn_vlapic *vlapic)
 	irrptr = &lapic->irr[0];
 
 	/* i ranges effectively from 7 to 1 */
-	for (i = 8U; i > 1U; ) {
-		i--;
-		val = atomic_load32(&irrptr[i].v);
+	for (i = 7U; i > 0U; i--) {
+		val = irrptr[i].v;
 		if (val != 0U) {
 			bitpos = (uint32_t)fls32(val);
 			vec = (i * 32U) + bitpos;
@@ -1340,11 +1338,12 @@ static void vlapic_get_deliverable_intr(struct acrn_vlapic *vlapic, uint32_t vec
 	idx = vector >> 5U;
 
 	irrptr = &lapic->irr[0];
-	atomic_clear32(&irrptr[idx].v, 1U << (vector & 0x1fU));
+	bitmap32_clear_lock((uint16_t)(vector & 0x1fU), &irrptr[idx].v);
+
 	vlapic_dump_irr(vlapic, "vlapic_get_deliverable_intr");
 
 	isrptr = &lapic->isr[0];
-	isrptr[idx].v |= 1U << (vector & 0x1fU);
+	bitmap32_set_nolock((uint16_t)(vector & 0x1fU), &isrptr[idx].v);
 	vlapic_dump_isr(vlapic, "vlapic_get_deliverable_intr");
 
 	vlapic->isrv = vector;
@@ -2140,16 +2139,14 @@ static int32_t
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
 {
 	struct vlapic_pir_desc *pir_desc;
-	uint64_t mask;
 	uint32_t idx;
 	int32_t notify;
 
 	pir_desc = &(vlapic->pir_desc);
 
 	idx = vector >> 6U;
-	mask = 1UL << (vector & 0x3fU);
 
-	atomic_set64(&pir_desc->pir[idx], mask);
+	bitmap_set_lock((uint16_t)(vector & 0x3fU), &pir_desc->pir[idx]);
 	notify = (atomic_cmpxchg64(&pir_desc->pending, 0UL, 1UL) == 0UL) ? 1 : 0;
 	return notify;
 }
@@ -2394,7 +2391,7 @@ int32_t veoi_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint32_t vector;
 	struct lapic_regs *lapic;
 	struct lapic_reg *tmrptr;
-	uint32_t idx, mask;
+	uint32_t idx;
 
 	vcpu_retain_rip(vcpu);
 
@@ -2404,9 +2401,8 @@ int32_t veoi_vmexit_handler(struct acrn_vcpu *vcpu)
 
 	tmrptr = &lapic->tmr[0];
 	idx = vector >> 5U;
-	mask = 1U << (vector & 0x1fU);
 
-	if ((tmrptr[idx].v & mask) != 0U) {
+	if (bitmap32_test((uint16_t)(vector & 0x1fU), &tmrptr[idx].v)) {
 		/* hook to vIOAPIC */
 		vioapic_process_eoi(vlapic->vm, vector);
 	}
