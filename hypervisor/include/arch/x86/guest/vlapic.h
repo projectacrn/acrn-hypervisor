@@ -64,6 +64,8 @@ struct acrn_vlapic {
 	 * to support APICv features:
 	 * - 'apic_page' MUST be 4KB aligned.
 	 * - 'pir_desc' MUST be 64 bytes aligned.
+	 * IRR, TMR and PIR could be accessed by other vCPUs when deliver
+	 * an interrupt to vLAPIC.
 	 */
 	struct lapic_regs	apic_page;
 	struct vlapic_pir_desc	pir_desc;
