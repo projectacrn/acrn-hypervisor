@@ -240,7 +240,7 @@ void send_dest_ipi_mask(uint32_t dest_mask, uint32_t vector)
 
 	pcpu_id = ffs64(mask);
 
-	while (pcpu_id != INVALID_BIT_INDEX) {
+	while (pcpu_id < CONFIG_MAX_PCPU_NUM) {
 		bitmap32_clear_nolock(pcpu_id, &mask);
 		if (is_pcpu_active(pcpu_id)) {
 			icr.value_32.hi_32 = per_cpu(lapic_id, pcpu_id);

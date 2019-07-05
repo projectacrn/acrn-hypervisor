@@ -66,7 +66,7 @@ static uint32_t calculate_logical_dest_mask(uint64_t pdmask)
 	uint16_t pcpu_id;
 
 	pcpu_id = ffs64(pcpu_mask);
-	while (pcpu_id != INVALID_BIT_INDEX) {
+	while (pcpu_id < CONFIG_MAX_PCPU_NUM) {
 		bitmap_clear_nolock(pcpu_id, &pcpu_mask);
 		dest_mask |= per_cpu(lapic_ldr, pcpu_id);
 		pcpu_id = ffs64(pcpu_mask);
