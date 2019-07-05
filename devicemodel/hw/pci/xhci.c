@@ -2684,7 +2684,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 		} else
 			rem_len += xfer->data[i].blen;
 
-		if (rem_len > 0)
+		if (err == XHCI_TRB_ERROR_SUCCESS && rem_len > 0)
 			err = XHCI_TRB_ERROR_SHORT_PKT;
 
 		/* Only interrupt if IOC or short packet */
