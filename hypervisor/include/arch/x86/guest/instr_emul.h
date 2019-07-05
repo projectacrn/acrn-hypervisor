@@ -86,15 +86,8 @@ struct instr_emul_vie {
 	uint64_t	dst_gpa;	/* saved dst operand gpa. Only for movs */
 };
 
-struct vm_guest_paging {
-	uint64_t	cr3;
-	uint8_t		cpl;
-	enum vm_paging_mode paging_mode;
-};
-
 struct instr_emul_ctxt {
 	struct instr_emul_vie vie;
-	struct vm_guest_paging paging;
 };
 
 int32_t emulate_instruction(struct acrn_vcpu *vcpu);

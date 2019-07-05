@@ -497,17 +497,6 @@ static void vm_get_seg_desc(enum cpu_reg_name seg, struct seg_desc *desc)
 	desc->access = exec_vmread32(tdesc.access_field);
 }
 
-static void get_guest_paging_info(struct acrn_vcpu *vcpu, uint32_t csar)
-{
-	uint8_t cpl;
-	struct instr_emul_ctxt *emul_ctxt = &vcpu->inst_ctxt;
-
-	cpl = (uint8_t)((csar >> 5U) & 3U);
-	emul_ctxt->paging.cr3 = exec_vmread(VMX_GUEST_CR3);
-	emul_ctxt->paging.cpl = cpl;
-	emul_ctxt->paging.paging_mode = get_vcpu_paging_mode(vcpu);
-}
-
 static int32_t vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
 {
 	int32_t ret = 0;
@@ -2371,7 +2360,6 @@ int32_t decode_instruction(struct acrn_vcpu *vcpu)
 	} else {
 
 		csar = exec_vmread32(VMX_GUEST_CS_ATTR);
-		get_guest_paging_info(vcpu, csar);
 		cpu_mode = get_vcpu_mode(vcpu);
 
 		retval = local_decode_instruction(cpu_mode, seg_desc_def32(csar), &emul_ctxt->vie);
