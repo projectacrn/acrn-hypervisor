@@ -472,7 +472,7 @@ static bool vuart_register_io_handler(struct acrn_vm *vm, uint16_t port_base, ui
 }
 
 static void vuart_setup(struct acrn_vm *vm,
-		struct vuart_config *vu_config, uint16_t vuart_idx)
+		const struct vuart_config *vu_config, uint16_t vuart_idx)
 {
 	uint32_t divisor;
 	struct acrn_vuart *vu = &vm->vuart[vuart_idx];
@@ -500,7 +500,7 @@ static void vuart_setup(struct acrn_vm *vm,
 	}
 }
 
-static struct acrn_vuart *find_active_target_vuart(struct vuart_config *vu_config)
+static struct acrn_vuart *find_active_target_vuart(const struct vuart_config *vu_config)
 {
 	struct acrn_vm *target_vm = NULL;
 	struct acrn_vuart *target_vu = NULL, *ret_vu = NULL;
@@ -523,7 +523,7 @@ static struct acrn_vuart *find_active_target_vuart(struct vuart_config *vu_confi
 }
 
 static void vuart_setup_connection(struct acrn_vm *vm,
-		struct vuart_config *vu_config, uint16_t vuart_idx)
+		const struct vuart_config *vu_config, uint16_t vuart_idx)
 {
 	struct acrn_vuart *vu, *t_vu;
 
@@ -545,7 +545,7 @@ static void vuart_deinit_connect(struct acrn_vuart *vu)
 	vu->target_vu = NULL;
 }
 
-bool is_vuart_intx(struct acrn_vm *vm, uint32_t intx_pin)
+bool is_vuart_intx(const struct acrn_vm *vm, uint32_t intx_pin)
 {
 	uint8_t i;
 	bool ret = false;
@@ -558,7 +558,7 @@ bool is_vuart_intx(struct acrn_vm *vm, uint32_t intx_pin)
 	return ret;
 }
 
-void vuart_init(struct acrn_vm *vm, struct vuart_config *vu_config)
+void vuart_init(struct acrn_vm *vm, const struct vuart_config *vu_config)
 {
 	uint8_t i;
 

@@ -81,12 +81,12 @@ struct acrn_vuart {
 	spinlock_t lock;	/* protects all softc elements */
 };
 
-void vuart_init(struct acrn_vm *vm, struct vuart_config *vu_config);
+void vuart_init(struct acrn_vm *vm, const struct vuart_config *vu_config);
 void vuart_deinit(struct acrn_vm *vm);
 
 void vuart_putchar(struct acrn_vuart *vu, char ch);
 char vuart_getchar(struct acrn_vuart *vu);
 void vuart_toggle_intr(const struct acrn_vuart *vu);
 
-bool is_vuart_intx(struct acrn_vm *vm, uint32_t intx_pin);
+bool is_vuart_intx(const struct acrn_vm *vm, uint32_t intx_pin);
 #endif /* VUART_H */
