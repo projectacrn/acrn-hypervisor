@@ -1321,6 +1321,7 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 			break;
 
 		UPRINTF(LDBG, "Port new PLS: %d\r\n", newpls);
+
 		switch (newpls) {
 		case 0: /* U0 */
 		case 3: /* U3 */
@@ -2215,10 +2216,10 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 			/* let usb_dev_comp_req to free the memory */
 			libusb_cancel_transfer(r->trn);
 	}
-	memset(xfer, 0, sizeof(*xfer));
 
-	if (devep->ep_xfer)
-		memset(devep->ep_xfer, 0, sizeof(*devep->ep_xfer));
+	xfer->ndata = 0;
+	xfer->head = 0;
+	xfer->tail = 0;
 
 	ep_ctx->dwEpCtx0 = (ep_ctx->dwEpCtx0 & ~0x7) | XHCI_ST_EPCTX_STOPPED;
 
