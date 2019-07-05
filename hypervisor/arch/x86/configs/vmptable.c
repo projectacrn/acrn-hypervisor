@@ -65,18 +65,18 @@ static struct proc_entry proc_entry_template = {
 	.feature_flags = MPEP_FEATURES
 };
 
-static uint8_t mpt_compute_checksum(void *base, size_t len)
+static uint8_t mpt_compute_checksum(const void *base, size_t len)
 {
-	uint8_t	*bytes;
-	uint8_t	sum;
-	size_t length = len;
+	uint8_t	sum = 0U;
+	size_t length;
+	const uint8_t *bytes = base;
 
-	for (bytes = base, sum = 0U; length > 0U; length--) {
+	for (length = len; length > 0U; length--) {
 		sum += *bytes;
 		bytes++;
 	}
 
-	return (256U - sum);
+	return (~sum) + 1U;
 }
 
 /**
@@ -92,6 +92,7 @@ int32_t mptable_build(struct acrn_vm *vm)
 	size_t		mptable_length;
 	uint16_t	i;
 	uint16_t	vcpu_num;
+	int32_t		ret = 0;
 	uint64_t	pcpu_bitmap = 0U;
 	struct mptable_info *mptable;
 	struct acrn_vm_config *vm_config;
@@ -110,35 +111,36 @@ int32_t mptable_build(struct acrn_vm *vm)
 			+ MPEII_NUM_LOCAL_IRQ * sizeof(struct int_entry);
 
 	mptable_length = sizeof(struct mpfps) + mptable->mpch.base_table_length;
-	if (mptable_length > MPTABLE_MAX_LENGTH) {
-		return -1;
-	}
+	if (mptable_length <= MPTABLE_MAX_LENGTH) {
+		for (i = 0U; i < vcpu_num; i++) {
+			uint16_t pcpu_id = ffs64(pcpu_bitmap);
 
-	for (i = 0U; i < vcpu_num; i++) {
-		uint16_t pcpu_id = ffs64(pcpu_bitmap);
-
-		(void)memcpy_s((void *)(mptable->proc_entry_array + i), sizeof(struct proc_entry),
-			(const void *)&proc_entry_template, sizeof(struct proc_entry));
-		mptable->proc_entry_array[i].apic_id = (uint8_t) i;
-		if (i == 0U) {
-			mptable->proc_entry_array[i].cpu_flags |= PROCENTRY_FLAG_BP;
+			(void)memcpy_s((void *)(mptable->proc_entry_array + i), sizeof(struct proc_entry),
+				(const void *)&proc_entry_template, sizeof(struct proc_entry));
+			mptable->proc_entry_array[i].apic_id = (uint8_t) i;
+			if (i == 0U) {
+				mptable->proc_entry_array[i].cpu_flags |= PROCENTRY_FLAG_BP;
+			}
+			bitmap_clear_lock(pcpu_id, &pcpu_bitmap);
 		}
-		bitmap_clear_lock(pcpu_id, &pcpu_bitmap);
+
+		/* Copy mptable info into guest memory */
+		(void)copy_to_gpa(vm, (void *)mptable, MPTABLE_BASE, mptable_length);
+
+		startaddr = (char *)gpa2hva(vm, MPTABLE_BASE);
+		curraddr = startaddr;
+		stac();
+		mpfp = (struct mpfps *)curraddr;
+		mpfp->checksum = mpt_compute_checksum(mpfp, sizeof(struct mpfps));
+		curraddr += sizeof(struct mpfps);
+
+		mpch = (struct mpcth *)curraddr;
+		mpch->checksum = mpt_compute_checksum(mpch, mpch->base_table_length);
+		clac();
+		ret = 0;
+	} else {
+		ret = -1;
 	}
 
-	/* Copy mptable info into guest memory */
-	(void)copy_to_gpa(vm, (void *)mptable, MPTABLE_BASE, mptable_length);
-
-	startaddr = (char *)gpa2hva(vm, MPTABLE_BASE);
-	curraddr = startaddr;
-	stac();
-	mpfp = (struct mpfps *)curraddr;
-	mpfp->checksum = mpt_compute_checksum(mpfp, sizeof(struct mpfps));
-	curraddr += sizeof(struct mpfps);
-
-	mpch = (struct mpcth *)curraddr;
-	mpch->checksum = mpt_compute_checksum(mpch, mpch->base_table_length);
-	clac();
-
-	return 0U;
+	return ret;
 }
