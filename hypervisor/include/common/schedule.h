@@ -28,11 +28,10 @@ struct sched_object {
 };
 
 struct sched_context {
-	spinlock_t runqueue_lock;
 	struct list_head runqueue;
 	uint64_t flags;
 	struct sched_object *curr_obj;
-	spinlock_t scheduler_lock;
+	spinlock_t scheduler_lock;	/* to protect sched_context and sched_object */
 };
 
 void init_scheduler(void);
@@ -45,7 +44,7 @@ uint16_t allocate_pcpu(void);
 void free_pcpu(uint16_t pcpu_id);
 
 void add_to_cpu_runqueue(struct sched_object *obj, uint16_t pcpu_id);
-void remove_from_cpu_runqueue(struct sched_object *obj, uint16_t pcpu_id);
+void remove_from_cpu_runqueue(struct sched_object *obj);
 
 void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode);
 bool need_reschedule(uint16_t pcpu_id);
