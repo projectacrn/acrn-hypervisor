@@ -95,9 +95,9 @@ logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"
 #for memsize setting
 mem_size=2048M
 
-acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
+acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge \
   -s 2,pci-gvt -G "$3" \
-  -s 5,virtio-console,@pty:pty_port \
+  -s 5,virtio-console,@stdio:stdio_port \
   -s 6,virtio-hyper_dmabuf \
   -s 3,virtio-blk,/home/clear/uos/uos.img \
   -s 4,virtio-net,tap0 \
