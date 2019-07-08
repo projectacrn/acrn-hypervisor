@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <profiling.h>
 #include <sbuf.h>
+#include <hypercall.h>
 #include <npk_log.h>
 #include <vm.h>
 #include <logmsg.h>

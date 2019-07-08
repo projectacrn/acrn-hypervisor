@@ -10,6 +10,7 @@
 #include <io.h>
 #include <logmsg.h>
 #include <platform_acpi_info.h>
+#include <guest_pm.h>
 
 int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 {

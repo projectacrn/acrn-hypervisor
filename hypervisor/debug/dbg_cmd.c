@@ -8,6 +8,7 @@
 #include <rtl.h>
 #include <pci.h>
 #include <uart16550.h>
+#include <dbg_cmd.h>
 
 #define MAX_PORT			0x10000  /* port 0 - 64K */
 #define DEFAULT_UART_PORT	0x3F8

@@ -5,6 +5,7 @@
  */
 
 #include <vm.h>
+#include <hypercall.h>
 #include <errno.h>
 #include <logmsg.h>
 

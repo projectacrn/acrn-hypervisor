@@ -19,6 +19,7 @@
 #include <sprintf.h>
 #include <logmsg.h>
 #include <version.h>
+#include <shell.h>
 
 #define TEMP_STR_SIZE		60U
 #define MAX_STR_SIZE		256U

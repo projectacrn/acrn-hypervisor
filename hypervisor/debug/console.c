@@ -13,6 +13,7 @@
 #include <logmsg.h>
 #include <acrn_hv_defs.h>
 #include <vm.h>
+#include <console.h>
 
 struct hv_timer console_timer;
 
@@ -54,7 +55,7 @@ struct acrn_vuart *vm_console_vuart(struct acrn_vm *vm)
  * @pre vu != NULL
  * @pre vu->active == true
  */
-void vuart_console_rx_chars(struct acrn_vuart *vu)
+static void vuart_console_rx_chars(struct acrn_vuart *vu)
 {
 	char ch = -1;
 
@@ -76,7 +77,7 @@ void vuart_console_rx_chars(struct acrn_vuart *vu)
 /**
  * @pre vu != NULL
  */
-void vuart_console_tx_chars(struct acrn_vuart *vu)
+static void vuart_console_tx_chars(struct acrn_vuart *vu)
 {
 	char c;
 
@@ -85,7 +86,7 @@ void vuart_console_tx_chars(struct acrn_vuart *vu)
 	}
 }
 
-struct acrn_vuart *vuart_console_active(void)
+static struct acrn_vuart *vuart_console_active(void)
 {
 	struct acrn_vm *vm = NULL;
 	struct acrn_vuart *vu = NULL;
