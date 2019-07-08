@@ -10,6 +10,7 @@
 #include <pgtable.h>
 #include <dbg_cmd.h>
 #include <logmsg.h>
+#include <vboot.h>
 
 #define ACRN_DBG_PARSE		6
 

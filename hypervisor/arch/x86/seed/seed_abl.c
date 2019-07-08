@@ -9,6 +9,7 @@
 #include <pgtable.h>
 #include <rtl.h>
 #include <seed.h>
+#include "seed_abl.h"
 
 #define ABL_SEED_LEN 32U
 struct abl_seed_info {

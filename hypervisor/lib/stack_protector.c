@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <logmsg.h>
+#include <security.h>
 
 void __stack_chk_fail(void)
 {

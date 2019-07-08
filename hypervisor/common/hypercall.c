@@ -15,6 +15,7 @@
 #include <assign.h>
 #include <ept.h>
 #include <mmu.h>
+#include <hypercall.h>
 #include <errno.h>
 #include <logmsg.h>
 

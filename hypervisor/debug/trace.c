@@ -6,6 +6,7 @@
 
 #include <types.h>
 #include <per_cpu.h>
+#include <trace.h>
 
 #define TRACE_CUSTOM			0xFCU
 #define TRACE_FUNC_ENTER		0xFDU

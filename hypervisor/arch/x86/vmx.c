@@ -10,6 +10,7 @@
 #include <msr.h>
 #include <per_cpu.h>
 #include <pgtable.h>
+#include <vmx.h>
 
 /**
  * @pre addr != NULL && addr is 4KB-aligned

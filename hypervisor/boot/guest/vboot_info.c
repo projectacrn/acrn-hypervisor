@@ -19,6 +19,7 @@
 #include <vm.h>
 #include <logmsg.h>
 #include <deprivilege_boot.h>
+#include <vboot_info.h>
 
 #define ACRN_DBG_BOOT	6U
 

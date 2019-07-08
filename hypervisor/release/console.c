@@ -6,6 +6,7 @@
 
 #include <types.h>
 #include <pci.h>
+#include <console.h>
 
 size_t console_write(__unused const char *str, __unused size_t len)
 {

@@ -128,7 +128,7 @@ static uint8_t vuart_intr_reason(const struct acrn_vuart *vu)
 	return ret;
 }
 
-struct acrn_vuart *find_vuart_by_port(struct acrn_vm *vm, uint16_t offset)
+static struct acrn_vuart *find_vuart_by_port(struct acrn_vm *vm, uint16_t offset)
 {
 	uint8_t i;
 	struct acrn_vuart *vu, *ret_vu = NULL;
@@ -537,7 +537,7 @@ static void vuart_setup_connection(struct acrn_vm *vm,
 	}
 }
 
-void vuart_deinit_connect(struct acrn_vuart *vu)
+static void vuart_deinit_connect(struct acrn_vuart *vu)
 {
 	struct acrn_vuart *t_vu = vu->target_vu;
 
