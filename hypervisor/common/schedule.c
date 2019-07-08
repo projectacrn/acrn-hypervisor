@@ -24,7 +24,6 @@ void init_scheduler(void)
 	for (i = 0U; i < pcpu_nums; i++) {
 		ctx = &per_cpu(sched_ctx, i);
 
-		spinlock_init(&ctx->runqueue_lock);
 		spinlock_init(&ctx->scheduler_lock);
 		INIT_LIST_HEAD(&ctx->runqueue);
 		ctx->flags = 0UL;
@@ -74,33 +73,25 @@ void add_to_cpu_runqueue(struct sched_object *obj, uint16_t pcpu_id)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
-	spinlock_obtain(&ctx->runqueue_lock);
 	if (list_empty(&obj->run_list)) {
 		list_add_tail(&obj->run_list, &ctx->runqueue);
 	}
-	spinlock_release(&ctx->runqueue_lock);
 }
 
-void remove_from_cpu_runqueue(struct sched_object *obj, uint16_t pcpu_id)
+void remove_from_cpu_runqueue(struct sched_object *obj)
 {
-	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
-
-	spinlock_obtain(&ctx->runqueue_lock);
 	list_del_init(&obj->run_list);
-	spinlock_release(&ctx->runqueue_lock);
 }
 
 static struct sched_object *get_next_sched_obj(struct sched_context *ctx)
 {
 	struct sched_object *obj = NULL;
 
-	spinlock_obtain(&ctx->runqueue_lock);
 	if (!list_empty(&ctx->runqueue)) {
 		obj = get_first_item(&ctx->runqueue, struct sched_object, run_list);
 	} else {
 		obj = &get_cpu_var(idle);
 	}
-	spinlock_release(&ctx->runqueue_lock);
 
 	return obj;
 }
