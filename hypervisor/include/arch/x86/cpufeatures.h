@@ -84,6 +84,7 @@
 #define X86_FEATURE_STIBP	((FEAT_7_0_EDX << 5U) + 27U)
 #define X86_FEATURE_L1D_FLUSH	((FEAT_7_0_EDX << 5U) + 28U)
 #define X86_FEATURE_ARCH_CAP	((FEAT_7_0_EDX << 5U) + 29U)
+#define X86_FEATURE_SSBD	((FEAT_7_0_EDX << 5U) + 31U)
 
 /* Intel-defined CPU features, CPUID level 0x80000001 (EDX)*/
 #define X86_FEATURE_NX		((FEAT_8000_0001_EDX << 5U) + 20U)

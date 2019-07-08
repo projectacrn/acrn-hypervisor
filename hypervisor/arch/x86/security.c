@@ -53,6 +53,7 @@ bool check_cpu_security_cap(void)
 {
 	bool ret = true;
 	bool mds_no = false;
+	bool ssb_no = false;
 	uint64_t x86_arch_capabilities;
 
 	detect_ibrs();
@@ -63,11 +64,21 @@ bool check_cpu_security_cap(void)
 			& IA32_ARCH_CAP_SKIP_L1DFL_VMENTRY) != 0UL);
 
 		mds_no = ((x86_arch_capabilities & IA32_ARCH_CAP_MDS_NO) != 0UL);
+
+		/* SSB_NO: Processor is not susceptble to Speculative Store Bypass(SSB) */
+		ssb_no = ((x86_arch_capabilities & IA32_ARCH_CAP_SSB_NO) != 0UL);
 	}
 
 	if ((!pcpu_has_cap(X86_FEATURE_L1D_FLUSH)) && (!skip_l1dfl_vmentry)) {
 		/* Processor is affected by L1TF CPU vulnerability,
 		 * but no L1D_FLUSH command support.
+		 */
+		ret = false;
+	}
+
+	if ((!pcpu_has_cap(X86_FEATURE_SSBD)) && (!ssb_no)) {
+		/* Processor is susceptble to Speculative Store Bypass(SSB),
+		 * but no support for Speculative Store Bypass Disable(SSBD).
 		 */
 		ret = false;
 	}
