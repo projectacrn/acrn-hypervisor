@@ -45,7 +45,7 @@ extern char *vmname;
 #define HUGETLB_LV2		1
 #define HUGETLB_LV_MAX	2
 
-#define MAX_PATH_LEN 128
+#define MAX_PATH_LEN 256
 
 #define HUGETLBFS_MAGIC       0x958458f6
 
@@ -410,7 +410,7 @@ static int mount_hugetlbfs(int level)
 static void umount_hugetlbfs(int level)
 {
 	char path[MAX_PATH_LEN];
-	
+
 	if (level >= HUGETLB_LV_MAX) {
 		perror("exceed max hugetlb level");
 		return;
