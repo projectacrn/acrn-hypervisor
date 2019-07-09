@@ -209,18 +209,53 @@ fail:
 	return -1;
 }
 
+static int crash_match_file(const struct crash_t *crash, const char *filename)
+{
+	size_t size;
+	void *cnt;
+
+	if (read_file(filename, &size, &cnt) == -1) {
+		LOGE("read %s failed, error (%s)\n", filename, strerror(errno));
+		return 0;
+	}
+	if (!size)
+		return 0;
+	if (crash_match_content(crash, cnt)) {
+		free(cnt);
+		return 1;
+	}
+	free(cnt);
+	return 0;
+}
+
+int crash_match_filefmt(const struct crash_t *crash, const char *filefmt)
+{
+	int count;
+	int i;
+	int ret = 0;
+	char **files;
+
+	count = config_fmt_to_files(filefmt, &files);
+	if (count <= 0)
+		return ret;
+	for (i = 0; i < count; i++) {
+		if (crash_match_file(crash, files[i])) {
+			ret = 1;
+			break;
+		}
+	}
+	for (i = 0; i < count; i++)
+		free(files[i]);
+	free(files);
+	return ret;
+}
+
 static struct crash_t *crash_find_matched_child(const struct crash_t *crash,
 						const char *rtrfmt)
 {
 	struct crash_t *child;
 	struct crash_t *matched_child = NULL;
-	int i;
-	int count;
-	int res;
 	const char *trfile_fmt;
-	char **trfiles;
-	void *content;
-	unsigned long size;
 
 	if (!crash)
 		return NULL;
@@ -234,33 +269,10 @@ static struct crash_t *crash_find_matched_child(const struct crash_t *crash,
 		else
 			trfile_fmt = child->trigger->path;
 
-		count = config_fmt_to_files(trfile_fmt, &trfiles);
-		if (count <= 0)
-			continue;
-
-		for (i = 0; i < count; i++) {
-			res = read_file(trfiles[i], &size, &content);
-			if (res == -1) {
-				LOGE("read %s failed, error (%s)\n",
-				     trfiles[i], strerror(errno));
-				continue;
-			}
-			if (!size)
-				continue;
-			if (crash_match_content(child, content)) {
-				free(content);
-				matched_child = child;
-				break;
-			}
-			free(content);
-		}
-
-		for (i = 0; i < count; i++)
-			free(trfiles[i]);
-		free(trfiles);
-
-		if (matched_child)
+		if (crash_match_filefmt(child, trfile_fmt)) {
+			matched_child = child;
 			break;
+		}
 	}
 
 	/* It returns the first matched crash */

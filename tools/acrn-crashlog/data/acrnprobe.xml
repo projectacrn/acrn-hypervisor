@@ -29,7 +29,7 @@
 		<trigger id="1" enable="true">
 			<name>t_pstore</name>
 			<type>node</type>
-			<path>/sys/fs/pstore/console-ramoops-0</path>
+			<path>/sys/fs/pstore/[*]</path>
 		</trigger>
 		<trigger id="2" enable="true">
 			<name>t_boot</name>
@@ -67,7 +67,8 @@
 		<log id="1" enable="true">
 			<name>pstore</name>
 			<type>node</type>
-			<path>/sys/fs/pstore/console-ramoops-0</path>
+			<deletesource>true</deletesource>
+			<path>/sys/fs/pstore/[*]</path>
 		</log>
 		<log id='2' enable='true'>
 			<name>kmsg</name>
@@ -159,6 +160,17 @@
 			<channel>inotify</channel>
 			<log id='1'>kmsg</log>
 			<log id='2'>syslog</log>
+		</crash>
+		<crash id='9' inherit='0' enable='true'>
+			<name>IPANIC</name>
+			<trigger>t_pstore</trigger>
+			<channel>oneshot</channel>
+			<mightcontent expression='1' id='1'>Kernel panic - not syncing:</mightcontent>
+			<mightcontent expression='1' id='2'>BUG: unable to handle kernel</mightcontent>
+			<data id='1'>kernel BUG at</data>
+			<data id='2'>EIP is at</data>
+			<data id='3'>Comm:</data>
+			<log id='1'>pstore</log>
 		</crash>
 	</crashes>
 

@@ -24,6 +24,7 @@
 #include "probeutils.h"
 #include "log_sys.h"
 #include "android_events.h"
+#include "crash_reclassify.h"
 
 #define POLLING_TIMER_SIG 0xCEAC
 
@@ -122,14 +123,16 @@ static void channel_oneshot(struct channel_t *cnl)
 		if (!crash->trigger)
 			continue;
 
-		if (!strcmp("file", crash->trigger->type)) {
-			if (file_exists(crash->trigger->path)) {
-				e = create_event(CRASH, cname, (void *)crash,
-						 0, crash->trigger->path,
-						 crash->trigger->path_len);
-				if (e)
-					event_enqueue(e);
-			}
+		if (!strcmp("file", crash->trigger->type) ||
+				!strcmp("node", crash->trigger->type)) {
+			if (!crash_match_filefmt(crash, crash->trigger->path))
+				continue;
+
+			e = create_event(CRASH, cname, (void *)crash,
+					 0, crash->trigger->path,
+					 crash->trigger->path_len);
+			if (e)
+				event_enqueue(e);
 		} else if (!strcmp("rebootreason", crash->trigger->type)) {
 			char rreason[REBOOT_REASON_SIZE];
 

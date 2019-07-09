@@ -31,12 +31,6 @@
 #define CRASH_SEVERITY 4
 #define INFO_SEVERITY 2
 
-struct telemd_data_t {
-	char *class;
-	char *srcdir;
-	char *eventid;
-	uint32_t severity;
-};
 #endif
 
 static int crashlog_check_space(void)
@@ -214,10 +208,13 @@ static void get_log_by_type(const char *despath, const struct log_t *log,
 			if (cfg_atoi(log->sizelimit, log->sizelimit_len,
 				     &size) == -1)
 				return;
-		get_log_node(despath, log->path, (size_t)(size * 1024 * 1024));
+		get_log_node(despath, srcpath, (size_t)(size * 1024 * 1024));
 	}
 	else if (!strcmp("cmd", log->type))
-		get_log_cmd(despath, log->path);
+		get_log_cmd(despath, srcpath);
+
+	if (log->deletesource && !strcmp("true", log->deletesource))
+		remove(srcpath);
 }
 #ifdef HAVE_TELEMETRICS_CLIENT
 static int telemd_send_data(char *payload, char *eventid, uint32_t severity,
@@ -264,56 +261,45 @@ fail:
 	return -1;
 }
 
-static void telemd_get_log(struct log_t *log, void *data)
+static void telemd_get_log(const char *dir, char *eventid,
+				uint32_t severity, char *class)
 {
-	const struct telemd_data_t *d = (struct telemd_data_t *)data;
-	char fpath[PATH_MAX];
+	char *files[512];
 	char *msg;
 	int count;
-	int len;
 	int i;
-	struct dirent **filelist;
-	struct ac_filter_data acfd = {log->name, log->name_len};
 
-	if (d->srcdir == NULL)
+	if (!dir)
 		goto send_nologs;
 
-	/* search file which use log->name as substring */
-	count = ac_scandir(d->srcdir, &filelist, filter_filename_substr,
-			   &acfd, NULL);
+	/* send logs */
+	count = lsdir(dir, files, ARRAY_SIZE(files));
 	if (count < 0) {
-		LOGE("error occurs when scanning (%s)\n", d->srcdir);
+		LOGE("lsdir (%s) failed, error (%s)\n", dir, strerror(-count));
 		return;
 	}
-	if (!count) {
-		LOGE("couldn't find any files with substr (%s) under (%s)\n",
-		     log->name, d->srcdir);
-		goto send_nologs;
+
+	if (count > 2) {
+		for (i = 0; i < count; i++) {
+			if (strstr(files[i], "/.") || strstr(files[i], "/.."))
+				continue;
+			telemd_send_data(files[i], eventid, severity, class);
+		}
+		while (count > 0)
+			free(files[--count]);
+		return;
+	} else if (count == 2) {
+		while (count > 0)
+			free(files[--count]);
 	}
-
-	for (i = 0; i < count; i++) {
-		len = snprintf(fpath, sizeof(fpath), "%s/%s", d->srcdir,
-			       filelist[i]->d_name);
-		free(filelist[i]);
-		if (s_not_expect(len, sizeof(fpath)))
-			LOGW("failed to generate path, event %s\n", d->eventid);
-		else
-			telemd_send_data(fpath, d->eventid,
-					 d->severity, d->class);
-	}
-
-	free(filelist);
-
-	return;
 
 send_nologs:
-	if (asprintf(&msg, "couldn't find logs with (%s), check probe's log.",
-		     log->name) == -1) {
+	if (asprintf(&msg, "no logs provided, check probe's log.") == -1) {
 		LOGE("failed to generate msg, out of memory\n");
 		return;
 	}
 
-	telemd_send_data(msg, d->eventid, d->severity, d->class);
+	telemd_send_data(msg, eventid, severity, class);
 	free(msg);
 }
 #endif
@@ -387,14 +373,8 @@ static void crashlog_get_log(struct log_t *log, void *data)
 static void telemd_send_crash(struct event_t *e, char *eventid)
 {
 	struct crash_t *crash;
-	struct log_t *log;
 	char *class;
-	int id;
 	int ret;
-	struct telemd_data_t data = {
-		.srcdir = e->dir,
-		.severity = CRASH_SEVERITY,
-	};
 
 	crash = (struct crash_t *)e->private;
 
@@ -404,68 +384,15 @@ static void telemd_send_crash(struct event_t *e, char *eventid)
 		return;
 	}
 
-	data.class = class;
-	data.eventid = eventid;
-
-	for_each_log_collect(id, log, crash) {
-		if (!log)
-			continue;
-
-		log->get(log, (void *)&data);
-	}
-	if (!strcmp(e->channel, "inotify")) {
-		char *des;
-		/* get the trigger file */
-		ret = asprintf(&des, "%s/%s", e->dir, e->path);
-		if (ret < 0) {
-			LOGE("compute string failed, out of memory\n");
-			goto free_class;
-		}
-
-		if (!file_exists(des)) {
-			/* find the original path */
-			char *ori;
-
-			ret = asprintf(&ori, "%s/%s", crash->trigger->path,
-				       e->path);
-			if (ret < 0) {
-				LOGE("compute string failed, out of memory\n");
-				free(des);
-				goto free_class;
-			}
-
-			LOGW("(%s) unavailable, try the original path (%s)\n",
-			     des, ori);
-			if (!file_exists(ori)) {
-				LOGE("original path (%s) is unavailable\n",
-				     ori);
-			} else {
-				telemd_send_data(ori, eventid, CRASH_SEVERITY,
-						 class);
-			}
-
-			free(ori);
-		} else {
-			telemd_send_data(des, eventid, CRASH_SEVERITY, class);
-		}
-
-		free(des);
-	}
-free_class:
+	telemd_get_log(e->dir, eventid, CRASH_SEVERITY, class);
 	free(class);
 }
 
 static void telemd_send_info(struct event_t *e, char *eventid)
 {
 	struct info_t *info;
-	struct log_t *log;
 	char *class;
-	int id;
 	int ret;
-	struct telemd_data_t data = {
-		.srcdir = e->dir,
-		.severity = INFO_SEVERITY,
-	};
 
 	info = (struct info_t *)e->private;
 	ret = asprintf(&class, "clearlinux/info/%s", info->name);
@@ -474,16 +401,7 @@ static void telemd_send_info(struct event_t *e, char *eventid)
 		return;
 	}
 
-	data.class = class;
-	data.eventid = eventid;
-
-	for_each_log_collect(id, log, info) {
-		if (!log)
-			continue;
-
-		log->get(log, (void *)&data);
-	}
-
+	telemd_get_log(e->dir, eventid, INFO_SEVERITY, class);
 	free(class);
 }
 
@@ -730,8 +648,6 @@ static int telemd_event_analyze(struct event_t *e, char **result,
 
 static void telemd_send(struct event_t *e)
 {
-	int id;
-	struct log_t *log;
 	size_t rsize;
 	char *result = NULL;
 	char *eid = NULL;
@@ -746,13 +662,6 @@ static void telemd_send(struct event_t *e)
 			free(result);
 		return;
 	}
-	for_each_log(id, log, conf) {
-		if (!log)
-			continue;
-
-		log->get = telemd_get_log;
-	}
-
 	switch (e->event_type) {
 	case CRASH:
 		telemd_send_crash(e, eid);
