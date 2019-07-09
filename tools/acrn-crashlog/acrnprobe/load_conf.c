@@ -71,6 +71,7 @@ static void print(void)
 			continue;
 		print_id_item(name, log, id);
 		print_id_item(type, log, id);
+		print_id_item(deletesource, log, id);
 		print_id_item(lines, log, id);
 		print_id_item(path, log, id);
 		print_id_item(sizelimit, log, id);
@@ -447,6 +448,8 @@ static int parse_log(xmlNodePtr cur, struct log_t *log)
 			res = load_cur_content(cur, log, name);
 		else if (name_is(cur, "type"))
 			res = load_cur_content(cur, log, type);
+		else if (name_is(cur, "deletesource"))
+			res = load_cur_content(cur, log, deletesource);
 		else if (name_is(cur, "path"))
 			res = load_cur_content(cur, log, path);
 		else if (name_is(cur, "lines"))

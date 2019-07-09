@@ -842,6 +842,8 @@ int filter_filename_startswith(const struct dirent *entry,
 	if (_D_EXACT_NAMLEN(entry) < d->len)
 		return -1;
 
+	if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
+		return -1;
 	return memcmp(entry->d_name, d->str, d->len);
 }
 
