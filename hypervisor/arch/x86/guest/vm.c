@@ -188,7 +188,7 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 	uint32_t i;
 
 	for (i = 0U; i < vm->e820_entry_num; i++) {
-		struct e820_entry *entry = &(vm->e820_entries[i]);
+		const struct e820_entry *entry = &(vm->e820_entries[i]);
 
 		if (entry->length == 0UL) {
 			break;
@@ -327,7 +327,7 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 
 	const struct e820_entry *entry;
 	uint32_t entries_count = vm->e820_entry_num;
-	struct e820_entry *p_e820 = vm->e820_entries;
+	const struct e820_entry *p_e820 = vm->e820_entries;
 	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
 
 	pr_dbg("sos_vm: bottom memory - 0x%llx, top memory - 0x%llx\n",

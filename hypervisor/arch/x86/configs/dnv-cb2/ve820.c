@@ -46,5 +46,5 @@ static const struct e820_entry ve820_entry[VE820_ENTRIES_DNV_CB2] = {
 void create_prelaunched_vm_e820(struct acrn_vm *vm)
 {
 	vm->e820_entry_num = VE820_ENTRIES_DNV_CB2;
-	vm->e820_entries = (struct e820_entry *)ve820_entry;
+	vm->e820_entries = ve820_entry;
 }
