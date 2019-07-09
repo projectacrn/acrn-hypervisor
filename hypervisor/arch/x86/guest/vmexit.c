@@ -224,9 +224,15 @@ int32_t vmexit_handler(struct acrn_vcpu *vcpu)
 			/* exit dispatch handling */
 			if (basic_exit_reason == VMX_EXIT_REASON_EXTERNAL_INTERRUPT) {
 				/* Handling external_interrupt should disable intr */
-				CPU_IRQ_DISABLE();
+				if (!is_lapic_pt_enabled(vcpu)) {
+					CPU_IRQ_DISABLE();
+				}
+
 				ret = dispatch->handler(vcpu);
-				CPU_IRQ_ENABLE();
+
+				if (!is_lapic_pt_enabled(vcpu)) {
+					CPU_IRQ_ENABLE();
+				}
 			} else {
 				ret = dispatch->handler(vcpu);
 			}

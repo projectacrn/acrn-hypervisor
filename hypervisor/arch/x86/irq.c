@@ -361,6 +361,8 @@ void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 	} else {
 		handle_spurious_interrupt(vr);
 	}
+
+	do_softirq();
 }
 
 void dispatch_exception(struct intr_excp_ctx *ctx)
