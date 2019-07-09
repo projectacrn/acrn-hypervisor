@@ -349,9 +349,9 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu, uint32_t mem_size, uint64_
 
 			stac();
 			mem = (struct trusty_mem *)(hpa2hva(mem_base_hpa));
-			(void)memcpy_s(&mem->first_page.key_info, sizeof(struct trusty_key_info),
+			(void)memcpy_s((void *)&mem->first_page.key_info, sizeof(struct trusty_key_info),
 				       &key_info, sizeof(key_info));
-			(void)memcpy_s(&mem->first_page.startup_param, sizeof(struct trusty_startup_param),
+			(void)memcpy_s((void *)&mem->first_page.startup_param, sizeof(struct trusty_startup_param),
 				       &startup_param, sizeof(startup_param));
 			clac();
 			success = true;

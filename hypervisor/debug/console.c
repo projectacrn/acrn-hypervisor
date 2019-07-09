@@ -79,10 +79,11 @@ static void vuart_console_rx_chars(struct acrn_vuart *vu)
  */
 static void vuart_console_tx_chars(struct acrn_vuart *vu)
 {
-	char c;
+	char c = vuart_getchar(vu);
 
-	while ((c = vuart_getchar(vu)) != -1) {
+	while(c != -1) {
 		printf("%c", c);
+		c = vuart_getchar(vu);
 	}
 }
 

@@ -43,7 +43,7 @@ int32_t parse_hv_cmdline(void)
 		while ((*end != ' ') && ((*end) != '\0'))
 			end++;
 
-		if (!handle_dbg_cmd(start, end - start)) {
+		if (!handle_dbg_cmd(start, (int32_t)(end - start))) {
 			/* if not handled by handle_dbg_cmd, it can be handled further */
 		}
 		start = end + 1;

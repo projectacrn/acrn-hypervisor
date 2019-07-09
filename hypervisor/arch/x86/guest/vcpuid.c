@@ -210,8 +210,8 @@ static int32_t set_vcpuid_sgx(struct acrn_vm *vm)
 		if (result == 0) {
 			init_vcpuid_entry(CPUID_SGX_LEAF, 1U, CPUID_CHECK_SUBLEAF, &entry);
 			/* MPX not present to guest */
-			entry.ecx &= ~XCR0_BNDREGS;
-			entry.ecx &= ~XCR0_BNDCSR;
+			entry.ecx &= (uint32_t) ~XCR0_BNDREGS;
+			entry.ecx &= (uint32_t) ~XCR0_BNDCSR;
 			result = set_vcpuid_entry(vm, &entry);
 		}
 		if (result == 0) {

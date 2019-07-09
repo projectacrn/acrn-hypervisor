@@ -82,7 +82,7 @@
 
 /* MP Floating Pointer Structure */
 struct mpfps {
-	uint8_t	signature[4];
+	char signature[4];
 	uint32_t pap;
 	uint8_t	length;
 	uint8_t	spec_rev;
@@ -96,12 +96,12 @@ struct mpfps {
 
 /* MP Configuration Table Header */
 struct mpcth {
-	uint8_t	signature[4];
+	char signature[4];
 	uint16_t base_table_length;
 	uint8_t	spec_rev;
 	uint8_t	checksum;
-	uint8_t	oem_id[8];
-	uint8_t	product_id[12];
+	char oem_id[8];
+	char product_id[12];
 	uint32_t oem_table_pointer;
 	uint16_t oem_table_size;
 	uint16_t entry_count;
@@ -125,7 +125,7 @@ struct proc_entry {
 struct bus_entry {
 	uint8_t	type;
 	uint8_t	bus_id;
-	uint8_t	bus_type[6];
+	char bus_type[6];
 } __packed;
 
 struct int_entry {

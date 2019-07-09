@@ -71,7 +71,7 @@ static uint32_t parse_seed_arg(void)
 				arg -= len;
 				len = (arg_end != NULL) ? (uint32_t)(arg_end - arg) :
 					strnlen_s(arg, MAX_BOOTARGS_SIZE);
-				(void)memset((void *)arg, (char)' ', len);
+				(void)memset((void *)arg, (uint8_t)' ', len);
 				break;
 			}
 		}

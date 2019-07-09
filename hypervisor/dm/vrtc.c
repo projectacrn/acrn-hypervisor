@@ -29,7 +29,7 @@ static bool cmos_update_in_progress(void)
 static uint8_t cmos_get_reg_val(uint8_t addr)
 {
 	uint8_t reg;
-	int32_t tries = 2000U;
+	int32_t tries = 2000;
 
 	spinlock_obtain(&cmos_lock);
 
