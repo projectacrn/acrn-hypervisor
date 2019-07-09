@@ -319,8 +319,7 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 		__func__,  get_pcpu_id());
 
 	if (collector == COLLECT_PROFILE_DATA) {
-		sbuf = (struct shared_buf *)
-				per_cpu(sbuf, get_pcpu_id())[ACRN_SEP];
+		sbuf = per_cpu(sbuf, get_pcpu_id())[ACRN_SEP];
 
 		if (sbuf == NULL) {
 			ss->samples_dropped++;
@@ -381,21 +380,18 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 			}
 
 			for (i = 0U; i < (((DATA_HEADER_SIZE - 1U) / SEP_BUF_ENTRY_SIZE) + 1U); i++) {
-				(void)sbuf_put((struct shared_buf *)sbuf,
-					(uint8_t *)&pkt_header + i * SEP_BUF_ENTRY_SIZE);
+				(void)sbuf_put(sbuf, (uint8_t *)&pkt_header + i * SEP_BUF_ENTRY_SIZE);
 			}
 
 			for (i = 0U; i < (((payload_size - 1U) / SEP_BUF_ENTRY_SIZE) + 1U); i++) {
-				(void)sbuf_put((struct shared_buf *)sbuf,
-					(uint8_t *)payload + i * SEP_BUF_ENTRY_SIZE);
+				(void)sbuf_put(sbuf, (uint8_t *)payload + i * SEP_BUF_ENTRY_SIZE);
 			}
 
 			ss->samples_logged++;
 		}
 	} else if (collector == COLLECT_POWER_DATA) {
 
-		sbuf = (struct shared_buf *)
-				per_cpu(sbuf, get_pcpu_id())[ACRN_SOCWATCH];
+		sbuf = per_cpu(sbuf, get_pcpu_id())[ACRN_SOCWATCH];
 
 		if (sbuf == NULL) {
 			dev_dbg(ACRN_DBG_PROFILING,
@@ -455,11 +451,11 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 			return 0;
 		}
 		/* copy header */
-		(void)profiling_sbuf_put_variable((struct shared_buf *)sbuf,
+		(void)profiling_sbuf_put_variable(sbuf,
 			(uint8_t *)&pkt_header, (uint32_t)DATA_HEADER_SIZE);
 
 		/* copy payload */
-		(void)profiling_sbuf_put_variable((struct shared_buf *)sbuf,
+		(void)profiling_sbuf_put_variable(sbuf,
 			(uint8_t *)payload, (uint32_t)payload_size);
 
 		spinlock_irqrestore_release(sw_lock, rflags);

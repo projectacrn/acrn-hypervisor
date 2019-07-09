@@ -85,7 +85,7 @@ int32_t sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva)
 		return -EINVAL;
 	}
 
-	per_cpu(sbuf, pcpu_id)[sbuf_id] = hva;
+	per_cpu(sbuf, pcpu_id)[sbuf_id] = (struct shared_buf *) hva;
 	pr_info("%s share sbuf for pCPU[%u] with sbuf_id[%u] setup successfully",
 			__func__, pcpu_id, sbuf_id);
 

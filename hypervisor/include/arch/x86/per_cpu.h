@@ -24,7 +24,7 @@ struct per_cpu_region {
 	uint8_t vmxon_region[PAGE_SIZE];
 	void *vmcs_run;
 #ifdef HV_DEBUG
-	uint64_t *sbuf[ACRN_SBUF_ID_MAX];
+	struct shared_buf *sbuf[ACRN_SBUF_ID_MAX];
 	char logbuf[LOG_MESSAGE_MAX_SIZE];
 	uint32_t npk_log_ref;
 #endif
