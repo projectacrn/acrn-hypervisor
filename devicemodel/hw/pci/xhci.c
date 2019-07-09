@@ -1323,8 +1323,8 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 		UPRINTF(LDBG, "Port new PLS: %d\r\n", newpls);
 
 		switch (newpls) {
-		case 0: /* U0 */
-		case 3: /* U3 */
+		case UPS_PORT_LS_U0:
+		case UPS_PORT_LS_U3:
 			if (oldpls != newpls) {
 				p->portsc &= ~XHCI_PS_PLS_MASK;
 				p->portsc |= XHCI_PS_PLS_SET(newpls);
@@ -1345,7 +1345,10 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 				}
 			}
 			break;
-
+		case UPS_PORT_LS_RESUME:
+			p->portsc &= ~XHCI_PS_PLS_MASK;
+			p->portsc |= XHCI_PS_PLS_SET(newpls);
+			break;
 		default:
 			UPRINTF(LWRN, "Unhandled change port %d PLS %u\r\n",
 				 port, newpls);
