@@ -85,10 +85,9 @@ static uint8_t mpt_compute_checksum(const void *base, size_t len)
  */
 int32_t mptable_build(struct acrn_vm *vm)
 {
-	char		*startaddr;
-	char		*curraddr;
 	struct mpcth	*mpch;
 	struct mpfps	*mpfp;
+	struct mptable_info *mpinfo;
 	size_t		mptable_length;
 	uint16_t	i;
 	uint16_t	vcpu_num;
@@ -127,14 +126,11 @@ int32_t mptable_build(struct acrn_vm *vm)
 		/* Copy mptable info into guest memory */
 		(void)copy_to_gpa(vm, (void *)mptable, MPTABLE_BASE, mptable_length);
 
-		startaddr = (char *)gpa2hva(vm, MPTABLE_BASE);
-		curraddr = startaddr;
+		mpinfo = (struct mptable_info *) gpa2hva(vm, MPTABLE_BASE);
 		stac();
-		mpfp = (struct mpfps *)curraddr;
+		mpfp = &mpinfo->mpfp;
 		mpfp->checksum = mpt_compute_checksum(mpfp, sizeof(struct mpfps));
-		curraddr += sizeof(struct mpfps);
-
-		mpch = (struct mpcth *)curraddr;
+		mpch = &mpinfo->mpch;
 		mpch->checksum = mpt_compute_checksum(mpch, mpch->base_table_length);
 		clac();
 		ret = 0;
