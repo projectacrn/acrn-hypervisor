@@ -104,10 +104,10 @@ int32_t mptable_build(struct acrn_vm *vm)
 		(const void *)&mptable_template, sizeof(struct mptable_info));
 
 	mptable->mpch.entry_count = vcpu_num + MPE_NUM_BUSES + MPEII_NUM_LOCAL_IRQ;
-	mptable->mpch.base_table_length = sizeof(struct mpcth)
-			+ vcpu_num * sizeof(struct proc_entry)
-			+ MPE_NUM_BUSES * sizeof(struct bus_entry)
-			+ MPEII_NUM_LOCAL_IRQ * sizeof(struct int_entry);
+	mptable->mpch.base_table_length = (uint16_t)sizeof(struct mpcth)
+			+ vcpu_num * (uint16_t)sizeof(struct proc_entry)
+			+ MPE_NUM_BUSES * (uint16_t)sizeof(struct bus_entry)
+			+ MPEII_NUM_LOCAL_IRQ * (uint16_t)sizeof(struct int_entry);
 
 	mptable_length = sizeof(struct mpfps) + mptable->mpch.base_table_length;
 	if (mptable_length > MPTABLE_MAX_LENGTH) {

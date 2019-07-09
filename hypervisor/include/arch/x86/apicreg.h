@@ -198,7 +198,7 @@ union ioapic_rte {
 		uint32_t hi_32;
 	} u;
 	struct {
-		uint64_t vector:8;
+		uint8_t vector:8;
 		uint64_t delivery_mode:3;
 		uint64_t dest_mode:1;
 		uint64_t delivery_status:1;
@@ -207,7 +207,7 @@ union ioapic_rte {
 		uint64_t trigger_mode:1;
 		uint64_t intr_mask:1;
 		uint64_t rsvd_1:39;
-		uint64_t dest_field:8;
+		uint8_t dest_field:8;
 	} bits __packed;
 	struct {
 		uint32_t vector:8;

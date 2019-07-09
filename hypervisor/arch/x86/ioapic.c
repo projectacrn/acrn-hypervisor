@@ -225,7 +225,7 @@ create_rte_for_gsi_irq(uint32_t irq, uint32_t vr)
 		rte.bits.intr_polarity = IOAPIC_RTE_INTPOL_AHI;
 
 		/* Dest field */
-		rte.bits.dest_field = ALL_CPUS_MASK;
+		rte.bits.dest_field = (uint8_t) ALL_CPUS_MASK;
 	}
 
 	return rte;

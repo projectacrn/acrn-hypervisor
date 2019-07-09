@@ -1382,7 +1382,7 @@ void profiling_pre_vmexit_handler(struct acrn_vcpu *vcpu)
 		get_cpu_var(profiling_info.vm_info).guest_cs
 			= exec_vmread64(VMX_GUEST_CS_SEL);
 
-		get_cpu_var(profiling_info.vm_info).guest_vm_id = (int32_t)vcpu->vm->vm_id;
+		get_cpu_var(profiling_info.vm_info).guest_vm_id = (int16_t)vcpu->vm->vm_id;
 	}
 }
 

@@ -875,8 +875,8 @@ static int32_t shell_to_vm_console(int32_t argc, char **argv)
 	struct acrn_vm *vm;
 	struct acrn_vuart *vu;
 
-	if (argc == 2U) {
-		vm_id = sanitize_vmid(strtol_deci(argv[1]));
+	if (argc == 2) {
+		vm_id = sanitize_vmid((uint16_t)strtol_deci(argv[1]));
 	}
 
 	/* Get the virtual device node */
