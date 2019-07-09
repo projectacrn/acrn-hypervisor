@@ -28,11 +28,7 @@ void vcpu_thread(struct sched_object *obj)
 		}
 
 		if (!is_lapic_pt_enabled(vcpu)) {
-			/* handle pending softirq when irq enable*/
-			do_softirq();
 			CPU_IRQ_DISABLE();
-			/* handle risk softirq when disabling irq*/
-			do_softirq();
 		}
 
 		/* Don't open interrupt window between here and vmentry */

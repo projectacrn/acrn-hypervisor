@@ -48,6 +48,7 @@ struct per_cpu_region {
 	uint8_t stack[CONFIG_STACK_SIZE] __aligned(16);
 	uint32_t lapic_id;
 	uint32_t lapic_ldr;
+	uint32_t softirq_servicing;
 	struct smp_call_info_data smp_call_info;
 #ifdef PROFILING_ON
 	struct profiling_info_wrapper profiling_info;
