@@ -34,7 +34,6 @@ void vcpu_thread(struct sched_object *obj)
 		/* Don't open interrupt window between here and vmentry */
 		if (need_reschedule(vcpu->pcpu_id)) {
 			schedule();
-			continue;
 		}
 
 		/* Check and process pending requests(including interrupt) */
@@ -42,7 +41,8 @@ void vcpu_thread(struct sched_object *obj)
 		if (ret < 0) {
 			pr_fatal("vcpu handling pending request fail");
 			pause_vcpu(vcpu, VCPU_ZOMBIE);
-			continue;
+			/* Fatal error happened (triple fault). Stop the vcpu running. */
+			schedule();
 		}
 
 		profiling_vmenter_handler(vcpu);
@@ -52,7 +52,8 @@ void vcpu_thread(struct sched_object *obj)
 		if (ret != 0) {
 			pr_fatal("vcpu resume failed");
 			pause_vcpu(vcpu, VCPU_ZOMBIE);
-			continue;
+			/* Fatal error happened (resume vcpu failed). Stop the vcpu running. */
+			schedule();
 		}
 		basic_exit_reason = vcpu->arch.exit_reason & 0xFFFFU;
 		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason, vcpu_get_rip(vcpu));
