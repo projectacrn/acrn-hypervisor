@@ -170,6 +170,7 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 	struct usb_dev_req *r;
 	struct usb_data_xfer *xfer;
 	struct usb_data_xfer_block *block;
+	struct usb_native_devinfo *info;
 	int do_intr = 0;
 	int i, j, idx, buf_idx, done;
 	int bstart, bcount;
@@ -180,6 +181,7 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 
 	/* async request */
 	r = trn->user_data;
+	info = &r->udev->info;
 
 	/* async transfer */
 	xfer = r->xfer;
@@ -192,11 +194,14 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 	}
 	bstart = r->blk_start;
 	bcount = r->blk_count;
-	UPRINTF(LDBG, "%s: actlen %d ep%d-xfr [%d-%d %d] rq-%d [%d-%d %d] st %d"
-			"\r\n", __func__, trn->actual_length, xfer->epid,
-			xfer->head, (xfer->tail - 1) % USB_MAX_XFER_BLOCKS,
-			xfer->ndata, r->seq, bstart, (bstart + bcount - 1) %
-			USB_MAX_XFER_BLOCKS, r->buf_length, trn->status);
+	UPRINTF(LDBG, "%s: %d-%s: actlen %d ep%d-xfr [%d-%d %d] rq-%d "
+			"[%d-%d %d] st %d\r\n", __func__, info->path.bus,
+			usb_dev_path(&info->path), trn->actual_length,
+			xfer->epid, xfer->head,
+			(xfer->tail - 1) % USB_MAX_XFER_BLOCKS,
+			xfer->ndata, r->seq, bstart,
+			(bstart + bcount - 1) % USB_MAX_XFER_BLOCKS,
+			r->buf_length, trn->status);
 
 	/* lock for protecting the transfer */
 	xfer->status = USB_ERR_NORMAL_COMPLETION;
@@ -742,6 +747,7 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 {
 	struct usb_dev *udev;
 	struct usb_dev_req *r;
+	struct usb_native_devinfo *info;
 	int rc = 0, epid;
 	uint8_t type;
 	int blk_start, data_size, blk_count;
@@ -753,6 +759,7 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 	uint16_t maxp;
 
 	udev = pdata;
+	info = &udev->info;
 	xfer->status = USB_ERR_NORMAL_COMPLETION;
 
 	blk_start = usb_dev_prepare_xfer(xfer, &blk_count, &data_size);
@@ -815,8 +822,9 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 	r->blk_start = blk_start;
 	r->blk_count = blk_count;
 	xfer->requests[blk_start] = r;
-	UPRINTF(LDBG, "%s: transfer_length %d ep%d-transfer (%d-%d %d) request"
-			"-%d (%d-%d %d) direction %s type %s\r\n", __func__,
+	UPRINTF(LDBG, "%s: %d-%s: explen %d ep%d-xfr [%d-%d %d] rq-%d "
+			"[%d-%d %d] dir %s type %s\r\n", __func__,
+			info->path.bus, usb_dev_path(&info->path),
 			data_size, epctx, xfer->head, (xfer->tail - 1) %
 			USB_MAX_XFER_BLOCKS, xfer->ndata, r->seq, blk_start,
 			(blk_start + blk_count - 1) % USB_MAX_XFER_BLOCKS,
