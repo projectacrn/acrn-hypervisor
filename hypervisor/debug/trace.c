@@ -49,8 +49,7 @@ static inline bool trace_check(uint16_t cpu_id)
 
 static inline void trace_put(uint16_t cpu_id, uint32_t evid, uint32_t n_data, struct trace_entry *entry)
 {
-	struct shared_buf *sbuf = (struct shared_buf *)
-				per_cpu(sbuf, cpu_id)[ACRN_TRACE];
+	struct shared_buf *sbuf = per_cpu(sbuf, cpu_id)[ACRN_TRACE];
 
 	entry->tsc = rdtsc();
 	entry->id = evid;
