@@ -17,18 +17,22 @@
 
 #define NUM_REMAIN_1G_PAGES	3UL
 
-static void prepare_bsp_gdt(struct acrn_vm *vm)
+/*
+ * We put the guest init gdt after kernel/bootarg/ramdisk images. Suppose this is a
+ * safe place for guest init gdt of guest whatever the configuration is used by guest.
+ */
+static uint64_t get_guest_gdt_base_gpa(const struct acrn_vm *vm)
 {
-	size_t gdt_len;
-	uint64_t gdt_base_hpa;
+	uint64_t new_guest_gdt_base_gpa, guest_kernel_end_gpa, guest_bootargs_end_gpa, guest_ramdisk_end_gpa;
 
-	gdt_base_hpa = gpa2hpa(vm, boot_context.gdt.base);
-	if (boot_context.gdt.base != gdt_base_hpa) {
-		gdt_len = ((size_t)boot_context.gdt.limit + 1U) / sizeof(uint8_t);
-		(void)copy_to_gpa(vm, hpa2hva(boot_context.gdt.base), boot_context.gdt.base, gdt_len);
-	}
+	guest_kernel_end_gpa = (uint64_t)vm->sw.kernel_info.kernel_load_addr + vm->sw.kernel_info.kernel_size;
+	guest_bootargs_end_gpa = (uint64_t)vm->sw.bootargs_info.load_addr + vm->sw.bootargs_info.size;
+	guest_ramdisk_end_gpa = (uint64_t)vm->sw.ramdisk_info.load_addr + vm->sw.ramdisk_info.size;
 
-	return;
+	new_guest_gdt_base_gpa = max(guest_kernel_end_gpa, max(guest_bootargs_end_gpa, guest_ramdisk_end_gpa));
+	new_guest_gdt_base_gpa = (new_guest_gdt_base_gpa + 7UL) & ~(8UL - 1UL);
+
+	return new_guest_gdt_base_gpa;
 }
 
 /**
@@ -181,8 +185,12 @@ int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 
 	pr_dbg("Loading guest to run-time location");
 
-	prepare_bsp_gdt(vm);
-	set_vcpu_regs(vcpu, &boot_context);
+	/*
+	 * TODO:
+	 *    - We need to initialize the guest bsp registers according to
+	 *      guest boot mode (real mode vs protect mode)
+	 */
+	init_vcpu_protect_mode_regs(vcpu, get_guest_gdt_base_gpa(vcpu->vm));
 
 	/* Copy the guest kernel image to its run-time location */
 	(void)copy_to_gpa(vm, sw_kernel->kernel_src_addr,
