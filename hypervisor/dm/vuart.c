@@ -37,8 +37,8 @@
 #include <logmsg.h>
 
 #define vuart_lock_init(vu)	spinlock_init(&((vu)->lock))
-#define vuart_lock(vu)		spinlock_obtain(&((vu)->lock))
-#define vuart_unlock(vu)	spinlock_release(&((vu)->lock))
+#define vuart_lock(vu, flags)	spinlock_irqsave_obtain(&((vu)->lock), &(flags))
+#define vuart_unlock(vu, flags)	spinlock_irqrestore_release(&((vu)->lock), (flags))
 
 static inline void fifo_reset(struct vuart_fifo *fifo)
 {
@@ -78,18 +78,21 @@ static inline uint32_t fifo_numchars(const struct vuart_fifo *fifo)
 
 void vuart_putchar(struct acrn_vuart *vu, char ch)
 {
-	vuart_lock(vu);
+	uint64_t rflags;
+
+	vuart_lock(vu, rflags);
 	fifo_putchar(&vu->rxfifo, ch);
-	vuart_unlock(vu);
+	vuart_unlock(vu, rflags);
 }
 
 char vuart_getchar(struct acrn_vuart *vu)
 {
+	uint64_t rflags;
 	char c;
 
-	vuart_lock(vu);
+	vuart_lock(vu, rflags);
 	c = fifo_getchar(&vu->txfifo);
-	vuart_unlock(vu);
+	vuart_unlock(vu, rflags);
 	return c;
 }
 
@@ -177,12 +180,14 @@ void vuart_toggle_intr(const struct acrn_vuart *vu)
 
 static void send_to_target(struct acrn_vuart *vu, uint8_t value_u8)
 {
-	vuart_lock(vu);
+	uint64_t rflags;
+
+	vuart_lock(vu, rflags);
 	if (vu->active) {
 		fifo_putchar(&vu->rxfifo, (char)value_u8);
 		vuart_toggle_intr(vu);
 	}
-	vuart_unlock(vu);
+	vuart_unlock(vu, rflags);
 }
 
 static uint8_t get_modem_status(uint8_t mcr)
@@ -249,8 +254,9 @@ static uint8_t update_modem_status(uint8_t new_msr, uint8_t old_msr)
 static void write_reg(struct acrn_vuart *vu, uint16_t reg, uint8_t value_u8)
 {
 	uint8_t msr;
+	uint64_t rflags;
 
-	vuart_lock(vu);
+	vuart_lock(vu, rflags);
 	/*
 	 * Take care of the special case DLAB accesses first
 	 */
@@ -330,7 +336,7 @@ static void write_reg(struct acrn_vuart *vu, uint16_t reg, uint8_t value_u8)
 		}
 	}
 	vuart_toggle_intr(vu);
-	vuart_unlock(vu);
+	vuart_unlock(vu, rflags);
 }
 
 static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
@@ -340,6 +346,7 @@ static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 	struct acrn_vuart *vu = find_vuart_by_port(vm, offset);
 	uint8_t value_u8 = (uint8_t)value;
 	struct acrn_vuart *target_vu = NULL;
+	uint64_t rflags;
 
 	if (vu != NULL) {
 		offset -= vu->port_base;
@@ -348,10 +355,10 @@ static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 		if (((vu->mcr & MCR_LOOPBACK) == 0U) &&
 			(offset == UART16550_THR) && (target_vu != NULL)) {
 			send_to_target(target_vu, value_u8);
-			vuart_lock(vu);
+			vuart_lock(vu, rflags);
 			vu->thre_int_pending = true;
 			vuart_toggle_intr(vu);
-			vuart_unlock(vu);
+			vuart_unlock(vu, rflags);
 		} else {
 			write_reg(vu, offset, value_u8);
 		}
@@ -366,10 +373,11 @@ static bool vuart_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t offs
 	uint8_t iir, reg, intr_reason;
 	struct acrn_vuart *vu = find_vuart_by_port(vm, offset);
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
+	uint64_t rflags;
 
 	if (vu != NULL) {
 		offset -= vu->port_base;
-		vuart_lock(vu);
+		vuart_lock(vu, rflags);
 		/*
 		 * Take care of the special case DLAB accesses first
 		 */
@@ -438,7 +446,7 @@ static bool vuart_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t offs
 		}
 		vuart_toggle_intr(vu);
 		pio_req->value = (uint32_t)reg;
-		vuart_unlock(vu);
+		vuart_unlock(vu, rflags);
 	}
 
 	return true;

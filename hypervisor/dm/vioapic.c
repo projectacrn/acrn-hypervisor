@@ -175,11 +175,12 @@ vioapic_set_irqline_nolock(const struct acrn_vm *vm, uint32_t irqline, uint32_t 
 void
 vioapic_set_irqline_lock(const struct acrn_vm *vm, uint32_t irqline, uint32_t operation)
 {
+	uint64_t rflags;
 	struct acrn_vioapic *vioapic = vm_ioapic(vm);
 	if (vioapic->ready) {
-		spinlock_obtain(&(vioapic->mtx));
+		spinlock_irqsave_obtain(&(vioapic->mtx), &rflags);
 		vioapic_set_irqline_nolock(vm, irqline, operation);
-		spinlock_release(&(vioapic->mtx));
+		spinlock_irqrestore_release(&(vioapic->mtx), rflags);
 	}
 }
 
@@ -245,8 +246,9 @@ static inline bool vioapic_need_intr(const struct acrn_vioapic *vioapic, uint16_
 }
 
 /*
- * Due to the race between vcpus, ensure to do spinlock_obtain(&(vioapic->mtx))
- * & spinlock_release(&(vioapic->mtx)) by caller.
+ * Due to the race between vcpus and vioapic->mtx could be accessed from softirq, ensure to do
+ * spinlock_irqsave_obtain(&(vioapic->mtx), &rflags) & spinlock_irqrestore_release(&(vioapic->mtx), rflags)
+ * by caller.
  */
 static void vioapic_indirect_write(struct acrn_vioapic *vioapic, uint32_t addr, uint32_t data)
 {
@@ -354,10 +356,11 @@ vioapic_mmio_rw(struct acrn_vioapic *vioapic, uint64_t gpa,
 		uint32_t *data, bool do_read)
 {
 	uint32_t offset;
+	uint64_t rflags;
 
 	offset = (uint32_t)(gpa - VIOAPIC_BASE);
 
-	spinlock_obtain(&(vioapic->mtx));
+	spinlock_irqsave_obtain(&(vioapic->mtx), &rflags);
 
 	/* The IOAPIC specification allows 32-bit wide accesses to the
 	 * IOAPIC_REGSEL (offset 0) and IOAPIC_WINDOW (offset 16) registers.
@@ -386,7 +389,7 @@ vioapic_mmio_rw(struct acrn_vioapic *vioapic, uint64_t gpa,
 		break;
 	}
 
-	spinlock_release(&(vioapic->mtx));
+	spinlock_irqrestore_release(&(vioapic->mtx), rflags);
 }
 
 /*
@@ -399,6 +402,7 @@ vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector)
 	struct acrn_vioapic *vioapic;
 	uint32_t pin, pincount = vioapic_pincount(vm);
 	union ioapic_rte rte;
+	uint64_t rflags;
 
 	if ((vector < VECTOR_DYNAMIC_START) || (vector > NR_MAX_VECTOR)) {
 		pr_err("vioapic_process_eoi: invalid vector %u", vector);
@@ -422,7 +426,7 @@ vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector)
 	 * XXX keep track of the pins associated with this vector instead
 	 * of iterating on every single pin each time.
 	 */
-	spinlock_obtain(&(vioapic->mtx));
+	spinlock_irqsave_obtain(&(vioapic->mtx), &rflags);
 	for (pin = 0U; pin < pincount; pin++) {
 		rte = vioapic->rtbl[pin];
 		if ((rte.bits.vector != vector) ||
@@ -437,7 +441,7 @@ vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector)
 			vioapic_generate_intr(vioapic, pin);
 		}
 	}
-	spinlock_release(&(vioapic->mtx));
+	spinlock_irqrestore_release(&(vioapic->mtx), rflags);
 }
 
 void
