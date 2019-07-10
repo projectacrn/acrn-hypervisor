@@ -20,6 +20,20 @@
 #include <sprintf.h>
 #include <cat.h>
 
+/* stack_frame is linked with the sequence of stack operation in arch_switch_to() */
+struct stack_frame {
+	uint64_t rdi;
+	uint64_t r15;
+	uint64_t r14;
+	uint64_t r13;
+	uint64_t r12;
+	uint64_t rbp;
+	uint64_t rbx;
+	uint64_t rflag;
+	uint64_t rip;
+	uint64_t maigc;
+};
+
 uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
 {
 	const struct run_context *ctx =
@@ -677,26 +691,32 @@ void schedule_vcpu(struct acrn_vcpu *vcpu)
 	release_schedule_lock(vcpu->pcpu_id);
 }
 
+/*
+* @pre (&vcpu->stack[CONFIG_STACK_SIZE] & (CPU_STACK_ALIGN - 1UL)) == 0
+*/
 static uint64_t build_stack_frame(struct acrn_vcpu *vcpu)
 {
-	uint64_t rsp = (uint64_t)&vcpu->stack[CONFIG_STACK_SIZE - 1];
-	uint64_t *sp;
+	uint64_t stacktop = (uint64_t)&vcpu->stack[CONFIG_STACK_SIZE];
+	struct stack_frame *frame;
+	uint64_t *ret;
 
-	rsp &= ~(CPU_STACK_ALIGN - 1UL);
-	sp = (uint64_t *)rsp;
+	frame = (struct stack_frame *)stacktop;
+	frame -= 1;
 
-	*sp-- = SP_BOTTOM_MAGIC;
-	*sp-- = (uint64_t)run_sched_thread; /*return address*/
-	*sp-- = 0UL; /* flag */
-	*sp-- = 0UL; /* rbx */
-	*sp-- = 0UL; /* rbp */
-	*sp-- = 0UL; /* r12 */
-	*sp-- = 0UL; /* r13 */
-	*sp-- = 0UL; /* r14 */
-	*sp-- = 0UL; /* r15 */
-	*sp = (uint64_t)&vcpu->sched_obj; /*rdi*/
+	frame->maigc = SP_BOTTOM_MAGIC;
+	frame->rip = (uint64_t)run_sched_thread; /*return address*/
+	frame->rflag = 0UL;
+	frame->rbx = 0UL;
+	frame->rbp = 0UL;
+	frame->r12 = 0UL;
+	frame->r13 = 0UL;
+	frame->r14 = 0UL;
+	frame->r15 = 0UL;
+	frame->rdi = (uint64_t)&vcpu->sched_obj;
 
-	return (uint64_t)sp;
+	ret = &frame->rdi;
+
+	return (uint64_t) ret;
 }
 
 /* help function for vcpu create */
