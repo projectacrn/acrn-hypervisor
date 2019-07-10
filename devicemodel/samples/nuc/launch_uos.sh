@@ -29,7 +29,9 @@ mem_size=4096M
 
 systemctl stop gdm.patch gdm
 
-echo "8086 8a5a" > /sys/bus/pci/drivers/pci-stub/new_id
+gpudevice=`cat /sys/bus/pci/devices/0000:00:02.0/device`
+
+echo "8086 $gpudevice" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:02.0" > /sys/bus/pci/devices/0000:00:02.0/driver/unbind
 echo "0000:00:02.0" > /sys/bus/pci/drivers/pci-stub/bind
 
@@ -56,7 +58,7 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
   consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$4 \
   i915.enable_hangcheck=0 i915.nuclear_pageflip=1 i915.enable_guc_loading=0 \
-  i915.enable_guc_submission=0 i915.enable_guc=0 i915.alpha_support=1 drm.debug=0x06" $vm_name
+  i915.enable_guc_submission=0 i915.enable_guc=0 i915.alpha_support=1 " $vm_name
 }
 
 # offline SOS CPUs except BSP before launch UOS
