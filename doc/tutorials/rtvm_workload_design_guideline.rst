@@ -19,7 +19,7 @@ Cache Allocation Technology, aka CAT) to RTVMs. For best real time performance o
 we recommend using dedicated (pass-thru) PCIe devices to avoid VM-Exit at run time.
 
 .. note::
-   The configuration space for pass-thru PCI devices is still emulated and the accessing it will
+   The configuration space for pass-thru PCI devices is still emulated and accessing it will
    trigger a VM-Exit.
 
 RTVM with virtio PMD (Polling Mode Driver) for I/O sharing
@@ -36,7 +36,7 @@ ACRN uses hypervisor emulated virtual UART (vUART) devices for inter-VM synchron
 logging output, or command send/receive.  Currently, the vUART only works in polling mode, but
 may be extended to support interrupt mode in a future release. In the meantime, for better RT
 behavior, the RT application using the vUART shall reserve a margin of CPU cycles to accommodate
-for the additional latency introduced by the VM-Exit to the vUART I/O registers (~2000--3000 cycles
+for the additional latency introduced by the VM-Exit to the vUART I/O registers (~2000-3000 cycles
 per register access).
 
 DM emulated device (Except PMD)
