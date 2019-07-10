@@ -604,6 +604,18 @@ void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
 void reset_vcpu_regs(struct acrn_vcpu *vcpu);
 
 /**
+ * @brief Initialize the protect mode vcpu registers
+ *
+ * Initialize vCPU's all registers in run_context to initial protece mode values.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] vgdt_base_gpa guest physical address of gdt for guest
+ *
+ * @return None
+ */
+void init_vcpu_protect_mode_regs(struct acrn_vcpu *vcpu, uint64_t vgdt_base_gpa);
+
+/**
  * @brief set the vCPU startup entry
  *
  * Set target vCPU's startup entry in run_context.
