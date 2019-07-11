@@ -55,6 +55,7 @@ struct e820_entry {
 
 extern const struct e820_entry e820_default_entries[NUM_E820_ENTRIES];
 extern int with_bootargs;
+extern bool writeback_nv_storage;
 
 size_t ovmf_image_size(void);
 
@@ -78,6 +79,7 @@ int acrn_sw_load_bzimage(struct vmctx *ctx);
 int acrn_sw_load_elf(struct vmctx *ctx);
 int acrn_sw_load_vsbl(struct vmctx *ctx);
 int acrn_sw_load_ovmf(struct vmctx *ctx);
+int acrn_writeback_ovmf_nvstorage(struct vmctx *ctx);
 int acrn_sw_load(struct vmctx *ctx);
 #endif
 

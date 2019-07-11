@@ -33,14 +33,12 @@
 #include <uuid/uuid.h>
 #include "types.h"
 #include "vmm.h"
+#include "macros.h"
 
 /*
  * API version for out-of-tree consumers for making compile time decisions.
  */
 #define	VMMAPI_VERSION	0103	/* 2 digit major followed by 2 digit minor */
-
-#define	MB	(1024 * 1024UL)
-#define	GB	(1024 * 1024 * 1024UL)
 
 #define ALIGN_UP(x, align)	(((x) + ((align)-1)) & ~((align)-1))
 #define ALIGN_DOWN(x, align)	((x) & ~((align)-1))
