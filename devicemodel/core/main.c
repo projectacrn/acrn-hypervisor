@@ -516,6 +516,12 @@ vrtc_fail:
 static void
 vm_deinit_vdevs(struct vmctx *ctx)
 {
+	/*
+	 * Write ovmf NV storage back to the original file from guest
+	 * memory before deinit operations.
+	 */
+	acrn_writeback_ovmf_nvstorage(ctx);
+
 	deinit_pci(ctx);
 	monitor_close();
 
@@ -535,6 +541,12 @@ vm_deinit_vdevs(struct vmctx *ctx)
 static void
 vm_reset_vdevs(struct vmctx *ctx)
 {
+	/*
+	 * Write ovmf NV storage back to the original file from guest
+	 * memory before deinit operations.
+	 */
+	acrn_writeback_ovmf_nvstorage(ctx);
+
 	/*
 	 * The current virtual devices doesn't define virtual
 	 * device reset function. So we call vdev deinit/init
