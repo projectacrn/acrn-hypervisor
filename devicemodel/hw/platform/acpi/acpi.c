@@ -844,6 +844,7 @@ dsdt_line(const char *fmt, ...)
 	return;
 
 err_exit:
+	va_end(ap);
 	dsdt_error = -1;
 }
 
