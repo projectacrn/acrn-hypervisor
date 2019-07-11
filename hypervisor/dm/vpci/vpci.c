@@ -330,6 +330,68 @@ static struct pci_vdev *find_vdev(const struct acrn_vpci *vpci, union pci_bdf bd
 	return vdev;
 }
 
+static void vpci_init_pt_dev(struct pci_vdev *vdev)
+{
+	init_vmsi(vdev);
+	init_vmsix(vdev);
+
+	/*
+	 * Here init_vdev_pt() needs to be called after init_vmsix() for the following reason:
+	 * init_vdev_pt() will indirectly call has_msix_cap(), which
+	 * requires init_vmsix() to be called first.
+	 */
+	init_vdev_pt(vdev);
+	assign_vdev_pt_iommu_domain(vdev);
+}
+
+static void vpci_deinit_pt_dev(struct pci_vdev *vdev)
+{
+	deinit_vmsi(vdev);
+	deinit_vmsix(vdev);
+	remove_vdev_pt_iommu_domain(vdev);
+}
+
+static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
+		uint32_t bytes, uint32_t val)
+{
+	if (vbar_access(vdev, offset, bytes)) {
+		(void)vdev_pt_write_cfg(vdev, offset, bytes, val);
+	} else if (msicap_access(vdev, offset)) {
+		(void)vmsi_write_cfg(vdev, offset, bytes, val);
+	} else if (msixcap_access(vdev, offset)) {
+		(void)vmsix_write_cfg(vdev, offset, bytes, val);
+	} else {
+		/* passthru to physical device */
+		pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+	}
+
+	return 0;
+}
+
+static int32_t vpci_read_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
+		uint32_t bytes, uint32_t *val)
+{
+	if (vbar_access(vdev, offset, bytes)) {
+		(void)vdev_pt_read_cfg(vdev, offset, bytes, val);
+	} else if (msicap_access(vdev, offset)) {
+		(void)vmsi_read_cfg(vdev, offset, bytes, val);
+	} else if (msixcap_access(vdev, offset)) {
+		(void)vmsix_read_cfg(vdev, offset, bytes, val);
+	} else {
+		/* passthru to physical device */
+		*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+	}
+
+	return 0;
+}
+
+static struct pci_vdev_ops pci_pt_dev_ops = {
+	.init_vdev	= vpci_init_pt_dev,
+	.deinit_vdev	= vpci_deinit_pt_dev,
+	.write_vdev_cfg	= vpci_write_pt_dev_cfg,
+	.read_vdev_cfg	= vpci_read_pt_dev_cfg,
+};
+
 /**
  * @pre vpci != NULL
  */
@@ -339,14 +401,7 @@ static void read_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf,
 	struct pci_vdev *vdev = find_vdev(vpci, bdf);
 
 	if (vdev != NULL) {
-		if ((vhostbridge_read_cfg(vdev, offset, bytes, val) != 0)
-			&& (vdev_pt_read_cfg(vdev, offset, bytes, val) != 0)
-			&& (vmsi_read_cfg(vdev, offset, bytes, val) != 0)
-			&& (vmsix_read_cfg(vdev, offset, bytes, val) != 0)
-			) {
-				/* Not handled by any handlers, passthru to physical device */
-				*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
-			}
+		vdev->vdev_ops->read_vdev_cfg(vdev, offset, bytes, val);
 	}
 }
 
@@ -359,14 +414,7 @@ static void write_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf,
 	struct pci_vdev *vdev = find_vdev(vpci, bdf);
 
 	if (vdev != NULL) {
-		if ((vhostbridge_write_cfg(vdev, offset, bytes, val) != 0)
-			&& (vdev_pt_write_cfg(vdev, offset, bytes, val) != 0)
-			&& (vmsi_write_cfg(vdev, offset, bytes, val) != 0)
-			&& (vmsix_write_cfg(vdev, offset, bytes, val) != 0)
-			) {
-			/* Not handled by any handlers, passthru to physical device */
-			pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
-		}
+		vdev->vdev_ops->write_vdev_cfg(vdev, offset, bytes, val);
 	}
 }
 
@@ -425,24 +473,8 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const struct acrn_vm *vm)
 			vdev->bdf.value = pdev->bdf.value;
 		}
 
-		init_vhostbridge(vdev);
-		init_vmsi(vdev);
-		init_vmsix(vdev);
-
-		/*
-		 * Here init_vdev_pt() needs to be called after init_vmsix() for the following reason:
-		 * init_vdev_pt() will indirectly call has_msix_cap(), which
-		 * requires init_vmsix() to be called first.
-		 */
-		init_vdev_pt(vdev);
-
-		/*
-		 *  For pre-launched VM, the host bridge is fully virtualized and it does not have a physical
-		 * host bridge counterpart.
-		 */
-		if ((is_prelaunched_vm(vm) && !is_hostbridge(vdev)) || is_sos_vm(vm)) {
-			assign_vdev_pt_iommu_domain(vdev);
-		}
+		vdev->vdev_ops = &pci_pt_dev_ops;
+		vdev->vdev_ops->init_vdev(vdev);
 	}
 }
 
@@ -471,13 +503,7 @@ static void deinit_prelaunched_vm_vpci(const struct acrn_vm *vm)
 	for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
 		vdev = (struct pci_vdev *) &(vm->vpci.pci_vdevs[i]);
 
-		deinit_vhostbridge(vdev);
-		deinit_vmsi(vdev);
-		deinit_vmsix(vdev);
-
-		if ((is_prelaunched_vm(vm) && !is_hostbridge(vdev)) || is_sos_vm(vm)) {
-			remove_vdev_pt_iommu_domain(vdev);
-		}
+		vdev->vdev_ops->deinit_vdev(vdev);
 	}
 }
 
