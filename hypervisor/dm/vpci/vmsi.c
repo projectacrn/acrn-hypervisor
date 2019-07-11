@@ -37,28 +37,6 @@
 
 /**
  * @pre vdev != NULL
- */
-static inline bool has_msi_cap(const struct pci_vdev *vdev)
-{
-	return (vdev->msi.capoff != 0U);
-}
-
-/**
- * @pre vdev != NULL
- */
-static inline bool msicap_access(const struct pci_vdev *vdev, uint32_t offset)
-{
-	bool ret = false;
-
-	if (has_msi_cap(vdev)) {
-		ret = in_range(offset, vdev->msi.capoff, vdev->msi.caplen);
-	}
-
-	return ret;
-}
-
-/**
- * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  * @pre vdev->pdev != NULL
