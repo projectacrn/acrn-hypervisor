@@ -21,10 +21,14 @@ void debug_log(const int level, const char *func, const int line, ...)
 
 	va_start(args, line);
 	fmt = va_arg(args, char *);
-	if (!fmt)
+	if (!fmt) {
+		va_end(args);
 		return;
-	if (vasprintf(&msg, fmt, args) == -1)
+	}
+	if (vasprintf(&msg, fmt, args) == -1) {
+		va_end(args);
 		return;
+	}
 	va_end(args);
 
 	if (asprintf(&head, "<%-20s%5d>: ", func, line) == -1) {
