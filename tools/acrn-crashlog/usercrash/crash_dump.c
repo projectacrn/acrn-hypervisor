@@ -36,11 +36,11 @@ static void loginfo(int fd, const char *fmt, ...)
 
 	va_start(ap, fmt);
 	len = vasprintf(&buf, fmt, ap);
+	va_end(ap);
 	if (len == -1) {
 		LOGE("write to buf failed\n");
 		return;
 	}
-	va_end(ap);
 
 	ret = write(fd, buf, len);
 	if (ret != len) {
