@@ -473,7 +473,12 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const struct acrn_vm *vm)
 			vdev->bdf.value = pdev->bdf.value;
 		}
 
-		vdev->vdev_ops = &pci_pt_dev_ops;
+		if (is_hostbridge(vdev)) {
+			vdev->vdev_ops = get_vhostbridge_ops();
+		} else {
+			vdev->vdev_ops = &pci_pt_dev_ops;
+		}
+
 		vdev->vdev_ops->init_vdev(vdev);
 	}
 }
