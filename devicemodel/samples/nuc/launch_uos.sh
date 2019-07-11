@@ -39,9 +39,9 @@ echo "8086 34ed" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:14.0" > /sys/bus/pci/devices/0000:00:14.0/driver/unbind
 echo "0000:00:14.0" > /sys/bus/pci/drivers/pci-stub/bind
 
-echo "8086 8a11" > /sys/bus/pci/drivers/pci-stub/new_id
-echo "0000:00:08.0" > /sys/bus/pci/devices/0000:00:08.0/driver/unbind
-echo "0000:00:08.0" > /sys/bus/pci/drivers/pci-stub/bind
+echo "8086 8a13" > /sys/bus/pci/drivers/pci-stub/new_id
+echo "0000:00:0d.0" > /sys/bus/pci/devices/0000:00:0d.0/driver/unbind
+echo "0000:00:0d.0" > /sys/bus/pci/drivers/pci-stub/bind
 
 acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 2,passthru,0/2/0 \
@@ -50,7 +50,7 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 3,virtio-blk,/home/clear/clear-29200-kvm.img \
   -s 4,virtio-net,tap0 \
   -s 7,passthru,0/14/0 \
-  -s 8,passthru,0/8/0 \
+  -s 8,passthru,0/d/0 \
   $logger_setting \
   --mac_seed $mac_seed \
   -k /usr/lib/kernel/default-iot-lts2018 \
