@@ -74,7 +74,7 @@ Build Celadon from source
 Steps for Using Celadon as User OS
 **********************************
 
-#. Follow :ref:`getting-started-apl-nuc` to boot the "ACRN Service OS"
+#. Follow :ref:`getting-started-apl-nuc` to boot the "ACRN Service OS" based on Clear Linux 29880.
 
 #. Prepare dependencies on your NUC::
 
@@ -85,7 +85,8 @@ Steps for Using Celadon as User OS
    # scp <cel_apl_gptimage.img from your host> ./android.img
    # sh launch_android.sh
 
-#. You will see the shell console after Celadon boots. Check the build info using the ``getprop`` command:
+#. You will see the shell console from the terminal and the Celadon GUI on the secondary monitor
+   after system boots. You can check the build info using the ``getprop`` command in shell console:
 
    .. code-block:: bash
 
@@ -94,3 +95,11 @@ Steps for Using Celadon as User OS
       [ro.bootimage.build.fingerprint]: [cel_apl/cel_apl/cel_apl:9/PPR2.181005.003.A1/rui06241613:userdebug/test-keys]
       [ro.build.fingerprint]: [cel_apl/cel_apl/cel_apl:9/PPR2.181005.003.A1/rui06241613:userdebug/test-keys]
       [ro.vendor.build.fingerprint]: [cel_apl/cel_apl/cel_apl:9/PPR2.181005.003.A1/rui06241613:userdebug/test-keys]
+
+   .. figure:: images/Celadon_home.png
+      :width: 700px
+      :align: center
+
+   .. figure:: images/Celadon_apps.png
+      :width: 700px
+      :align: center
