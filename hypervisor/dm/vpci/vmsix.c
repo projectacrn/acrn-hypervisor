@@ -38,21 +38,6 @@
 #include <logmsg.h>
 #include "vpci_priv.h"
 
-
-/**
- * @pre vdev != NULL
- */
-static inline bool msixcap_access(const struct pci_vdev *vdev, uint32_t offset)
-{
-	bool ret = false;
-
-	if (has_msix_cap(vdev)) {
-		ret = in_range(offset, vdev->msix.capoff, vdev->msix.caplen);
-	}
-
-	return ret;
-}
-
 /**
  * @pre vdev != NULL
  */
