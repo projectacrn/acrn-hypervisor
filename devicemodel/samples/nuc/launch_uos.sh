@@ -78,4 +78,4 @@ for i in `ls -d /sys/devices/system/cpu/cpu[2-99]`; do
         fi
 done
 
-launch_clear 1 2 "64 448 8" 0x070F00
+launch_clear 1 4 "64 448 8" 0x070F00
