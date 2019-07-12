@@ -85,10 +85,10 @@ manually, as described below).
    Please refer to the ACRN :ref:`release_notes` for the Clear Linux OS
    version number tested with a specific ACRN release.  Adjust the
    instruction below to reference the appropriate version number of Clear
-   Linux OS (we use version 28960 as an example).
+   Linux OS (we use version 30210 as an example).
 
 #. Download the compressed Clear Linux OS installer image from
-   https://download.clearlinux.org/releases/28960/clear/clear-28960-installer.img.xz
+   https://download.clearlinux.org/releases/30210/clear/clear-30210-live-server.img.xz
    and follow the `Clear Linux OS installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install-server>`_
    as a starting point for installing Clear Linux OS onto your platform. Follow the recommended
@@ -99,7 +99,12 @@ manually, as described below).
    When setting up Clear Linux on your NUC:
 
    #.  Launch the Clear Linux OS installer boot menu
-   #.  With Clear Linux OS highlighted, select Enter.
+   #.  With Clear Linux OS highlighted, select Enter
+   #.  Login with your root account, and new password
+   #.  Run the installer using the command::
+
+       $ clr-installer
+
    #.  From the Main Menu, select "Configure Media" and set
        "Auto Partition" to your desired hard disk.
    #.  Press :kbd:`A` to show the "Advanced options".
@@ -137,7 +142,7 @@ can see your current Clear Linux version with the command::
 
    $ cat /etc/os-release
 
-.. note:: In the following steps, we're using Clear Linux version 28960.  You should
+.. note:: In the following steps, we're using Clear Linux version 30210.  You should
    specify the Clear Linux version you want to use.
 
 Here are the steps to install Clear Linux on your NUC, set up the SOS
@@ -156,11 +161,11 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
       $ cd ~
       $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/getting-started/acrn_quick_setup.sh
 
-      $ sudo sh acrn_quick_setup.sh -s 28960
+      $ sudo sh acrn_quick_setup.sh -s 30210
       Password:
       Upgrading SOS...
       Disable auto update...
-      Clear Linux version 28960 is already installed. Continuing to setup SOS...
+      Clear Linux version 30210 is already installed. Continuing to setup SOS...
       Adding the service-os, kernel-iot-lts2018 and systemd-networkd-autostart bundles...
         ...100%
         ...100%
@@ -191,7 +196,7 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
       it using ``-e`` option.  For example, to set up the SOS on an NVMe
       SSD, you could specify::
 
-         sudo sh acrn_quick_setup.sh -s 28960 -e /dev/nvme0n1p1
+         sudo sh acrn_quick_setup.sh -s 30210 -e /dev/nvme0n1p1
 
    .. note::
       If you don't need to reboot automatically after setting up the SOS, you
@@ -213,10 +218,10 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
 
    .. code-block:: console
 
-      $ sudo sh acrn_quick_setup.sh -u 28960
+      $ sudo sh acrn_quick_setup.sh -u 30210
       Password:
       Upgrading UOS...
-      Downloading UOS image: https://download.clearlinux.org/releases/28960/clear/clear-28960-kvm.img.xz
+      Downloading UOS image: https://download.clearlinux.org/releases/30210/clear/clear-30210-kvm.img.xz
         % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                        Dload  Upload   Total   Spent    Left  Speed
        14  248M   14 35.4M    0     0   851k      0  0:04:57  0:00:42  0:04:15  293k
@@ -225,18 +230,18 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
 
    .. code-block:: console
 
-      Unxz UOS image: clear-28960-kvm.img.xz
-      Get UOS image: clear-28960-kvm.img
+      Unxz UOS image: clear-30210-kvm.img.xz
+      Get UOS image: clear-30210-kvm.img
       Upgrade UOS done...
       Now you can run this command to start UOS...
-      $ sudo /root/launch_uos_28960.sh
+      $ sudo /root/launch_uos_30210.sh
 
 #. Now you can launch the UOS using the customized launch_uos script
    (with sudo):
 
    .. code-block:: console
 
-      $ sudo /root/launch_uos_28960.sh
+      $ sudo /root/launch_uos_30210.sh
       Password:
       cpu1 online=0
       cpu2 online=0
@@ -296,7 +301,7 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
    .. code-block:: console
 
       # uname -r
-      4.19.34-45.iot-lts2018-sos
+      4.19.55-67.iot-lts2018-sos
       # ls /dev/acrn*
       /dev/acrn_hvlog_cur_0   /dev/acrn_hvlog_cur_2  /dev/acrn_trace_0  /dev/acrn_trace_2  /dev/acrn_vhm
       /dev/acrn_hvlog_cur_1   /dev/acrn_hvlog_cur_3  /dev/acrn_trace_1  /dev/acrn_trace_3
@@ -325,16 +330,16 @@ and UOS manually following these steps:
    .. note::
       The Clear Linux OS installer will automatically check for updates and install the
       latest version available on your system. If you wish to use a specific version
-      (such as 28960), you can achieve that after the installation has completed using
-      ``sudo swupd verify --fix --picky -m 28960``
+      (such as 30210), you can achieve that after the installation has completed using
+      ``sudo swupd verify --fix --picky -m 30210``
 
 #. If you have an older version of Clear Linux OS already installed
    on your hardware, use this command to upgrade Clear Linux OS
-   to version 28960 (or newer):
+   to version 30210 (or newer):
 
    .. code-block:: none
 
-      $ sudo swupd update -m 28960     # or newer version
+      $ sudo swupd update -m 30210     # or newer version
 
 #. Use the ``sudo swupd bundle-add`` command and add these Clear Linux OS bundles:
 
@@ -570,14 +575,14 @@ Set up Reference UOS
 ====================
 
 #. On your platform, download the pre-built reference Clear Linux OS UOS
-   image version 28960 (or newer) into your (root) home directory:
+   image version 30210 (or newer) into your (root) home directory:
 
    .. code-block:: none
 
       $ cd ~
       $ mkdir uos
       $ cd uos
-      $ curl https://download.clearlinux.org/releases/28960/clear/clear-28960-kvm.img.xz -o uos.img.xz
+      $ curl https://download.clearlinux.org/releases/30210/clear/clear-30210-kvm.img.xz -o uos.img.xz
 
    .. note::
       In case you want to use or try out a newer version of Clear Linux OS as the UOS, you can
