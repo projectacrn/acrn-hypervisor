@@ -362,7 +362,7 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 	 * vcpu->vcpu_id = vm->hw.created_vcpus;
 	 * vm->hw.created_vcpus++;
 	 */
-	vcpu_id = atomic_xadd16(&vm->hw.created_vcpus, 1U);
+	vcpu_id = vm->hw.created_vcpus;
 	if (vcpu_id < CONFIG_MAX_VCPUS_PER_VM) {
 		/* Allocate memory for VCPU */
 		vcpu = &(vm->hw.vcpu_array[vcpu_id]);
@@ -422,9 +422,9 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 
 		reset_vcpu_regs(vcpu);
 		(void)memset((void *)&vcpu->req, 0U, sizeof(struct io_request));
+		vm->hw.created_vcpus++;
 		ret = 0;
 	} else {
-		vm->hw.created_vcpus -= 1U;
 		pr_err("%s, vcpu id is invalid!\n", __func__);
 		ret = -EINVAL;
 	}
