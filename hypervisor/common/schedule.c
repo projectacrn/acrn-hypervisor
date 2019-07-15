@@ -136,7 +136,7 @@ void make_pcpu_offline(uint16_t pcpu_id)
 	}
 }
 
-int32_t need_offline(uint16_t pcpu_id)
+bool need_offline(uint16_t pcpu_id)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 

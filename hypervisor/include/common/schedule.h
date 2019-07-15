@@ -49,7 +49,7 @@ void remove_from_cpu_runqueue(struct sched_object *obj);
 void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode);
 bool need_reschedule(uint16_t pcpu_id);
 void make_pcpu_offline(uint16_t pcpu_id);
-int32_t need_offline(uint16_t pcpu_id);
+bool need_offline(uint16_t pcpu_id);
 void make_shutdown_vm_request(uint16_t pcpu_id);
 bool need_shutdown_vm(uint16_t pcpu_id);
 
