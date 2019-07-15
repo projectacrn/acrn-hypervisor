@@ -162,7 +162,8 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct multiboot_inf
 		vm->sw.bootargs_info.size = strnlen_s(bootargs, MAX_BOOTARGS_SIZE);
 	} else {
 		/* vm_config->load_order == SOS_VM */
-		if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
+		if (((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U)
+				&& (*(char *)hpa2hva(mbi->mi_cmdline) != 0)) {
 			/*
 			 * If there is cmdline from mbi->mi_cmdline, merge it with
 			 * vm_config->os_config.bootargs
