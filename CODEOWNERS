@@ -14,7 +14,7 @@
 
 /hypervisor/                             @anthonyzxu @dongyaozu
 /devicemodel/                            @anthonyzxu @dongyaozu
-/doc/                                    @dbkinder
+/doc/                                    @dbkinder @deb-intel
 /tools/acrn-crashlog/                    @dizhang417 @chengangc
 
-*.rst                                    @dbkinder
+*.rst                                    @dbkinder @deb-intel
