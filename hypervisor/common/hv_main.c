@@ -88,7 +88,7 @@ void default_idle(__unused struct sched_object *obj)
 	while (1) {
 		if (need_reschedule(pcpu_id)) {
 			schedule();
-		} else if (need_offline(pcpu_id) != 0) {
+		} else if (need_offline(pcpu_id)) {
 			cpu_dead();
 		} else if (need_shutdown_vm(pcpu_id)) {
 			shutdown_vm_from_idle(pcpu_id);
