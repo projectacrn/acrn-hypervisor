@@ -180,7 +180,6 @@ static void send_to_target(struct acrn_vuart *vu, uint8_t value_u8)
 	vuart_lock(vu);
 	if (vu->active) {
 		fifo_putchar(&vu->rxfifo, (char)value_u8);
-		vu->thre_int_pending = true;
 		vuart_toggle_intr(vu);
 	}
 	vuart_unlock(vu);
@@ -349,6 +348,10 @@ static bool vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 		if (((vu->mcr & MCR_LOOPBACK) == 0U) &&
 			(offset == UART16550_THR) && (target_vu != NULL)) {
 			send_to_target(target_vu, value_u8);
+			vuart_lock(vu);
+			vu->thre_int_pending = true;
+			vuart_toggle_intr(vu);
+			vuart_unlock(vu);
 		} else {
 			write_reg(vu, offset, value_u8);
 		}
