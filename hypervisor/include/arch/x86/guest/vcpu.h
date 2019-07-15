@@ -358,7 +358,7 @@ struct acrn_vcpu {
 
 	struct sched_object sched_obj;
 	bool launched; /* Whether the vcpu is launched on target pcpu */
-	uint32_t running; /* vcpu is picked up and run? */
+	bool running; /* vcpu is picked up and run? */
 
 	struct instr_emul_ctxt inst_ctxt;
 	struct io_request req; /* used by io/ept emulation */
