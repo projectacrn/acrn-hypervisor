@@ -18,6 +18,7 @@ BASEDIR := $(shell pwd)
 HV_OBJDIR ?= $(CURDIR)/build
 HV_FILE := acrn
 SUB_MAKEFILES := $(wildcard */Makefile)
+RELEASE ?= 0
 
 LIB_DEBUG = $(HV_OBJDIR)/debug/libdebug.a
 LIB_RELEASE = $(HV_OBJDIR)/release/librelease.a
@@ -88,6 +89,10 @@ ifeq (y, $(CONFIG_RELOC))
 LDFLAGS += -pie -z noreloc-overflow
 else
 LDFLAGS += -static
+endif
+
+ifeq ($(RELEASE),y)
+LDFLAGS += -s
 endif
 
 ARCH_CFLAGS += -gdwarf-2

@@ -52,6 +52,9 @@ LDFLAGS += -Wl,-z,noexecstack
 LDFLAGS += -Wl,-z,relro,-z,now
 LDFLAGS += -pie
 LDFLAGS += -L$(TOOLS_OUT)
+ifeq ($(RELEASE),1)
+LDFLAGS += -s
+endif
 
 LIBS = -lrt
 LIBS += -lpthread

@@ -47,6 +47,9 @@ LDFLAGS += -pie
 LDFLAGS += -L$(OUT_DIR)
 LDFLAGS +=  -lpthread
 LDFLAGS += -lacrn-mngr
+ifeq ($(RELEASE),1)
+LDFLAGS += -s
+endif
 
 .PHONY: all
 ifeq ($(RELEASE),0)
