@@ -51,7 +51,10 @@ endif
 
 ifeq ($(RELEASE),0)
 CFLAGS += -DDM_DEBUG
+else
+LDFLAGS += -s
 endif
+
 
 LDFLAGS += -Wl,-z,noexecstack
 LDFLAGS += -Wl,-z,relro,-z,now
