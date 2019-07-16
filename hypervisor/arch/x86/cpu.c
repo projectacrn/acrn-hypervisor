@@ -154,7 +154,7 @@ void init_pcpu_pre(uint16_t pcpu_id_args)
 		}
 	}
 
-	bitmap_set_nolock(pcpu_id, &pcpu_active_bitmap);
+	bitmap_set_lock(pcpu_id, &pcpu_active_bitmap);
 
 	/* Set state for this CPU to initializing */
 	pcpu_set_current_state(pcpu_id, PCPU_STATE_INITIALIZING);
@@ -387,7 +387,7 @@ void cpu_dead(void)
 
 		/* Set state to show CPU is dead */
 		pcpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
-		bitmap_clear_nolock(pcpu_id, &pcpu_active_bitmap);
+		bitmap_clear_lock(pcpu_id, &pcpu_active_bitmap);
 
 		/* Halt the CPU */
 		do {
