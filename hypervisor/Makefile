@@ -19,6 +19,7 @@ HV_OBJDIR ?= $(CURDIR)/build
 HV_MODDIR ?= $(HV_OBJDIR)/modules
 HV_FILE := acrn
 SUB_MAKEFILES := $(wildcard */Makefile)
+RELEASE ?= 0
 
 LIB_MOD = $(HV_MODDIR)/lib_mod.a
 BOOT_MOD = $(HV_MODDIR)/boot_mod.a
@@ -106,6 +107,10 @@ ifeq (y, $(CONFIG_RELOC))
 LDFLAGS += -pie -z noreloc-overflow
 else
 LDFLAGS += -static
+endif
+
+ifeq ($(RELEASE),y)
+LDFLAGS += -s
 endif
 
 ARCH_CFLAGS += -gdwarf-2
