@@ -7,6 +7,11 @@
 #include <vm_config.h>
 #include <pci_devices.h>
 
+/* The vbar_base info of pt devices is included in device MACROs which defined in
+ *           arch/x86/configs/$(CONFIG_BOARD)/pci_devices.h.
+ * The memory range of vBAR should exactly match with the e820 layout of VM.
+ */
+
 struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[VM0_CONFIG_PCI_PTDEV_NUM] = {
 	{
 		.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
@@ -14,15 +19,10 @@ struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[VM0_CONFIG_PCI_PTDEV_NUM] = {
 	},
 	{
 		.vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x00U},
-		.vbar_base[0] = 0xc0084000UL,
-		.vbar_base[1] = 0xc0086000UL,
-		.vbar_base[5] = 0xc0087000UL,
 		VM0_STORAGE_CONTROLLER
 	},
 	{
 		.vbdf.bits = {.b = 0x00U, .d = 0x02U, .f = 0x00U},
-		.vbar_base[0] = 0xc0000000UL,
-		.vbar_base[3] = 0xc0080000UL,
 		VM0_NETWORK_CONTROLLER
 	},
 };
@@ -34,7 +34,6 @@ struct acrn_vm_pci_ptdev_config vm1_pci_ptdevs[VM1_CONFIG_PCI_PTDEV_NUM] = {
 	},
 	{
 		.vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x00U},
-		.vbar_base[0] = 0xc0000000UL,
 		VM1_STORAGE_CONTROLLER
 	},
 #if defined(VM1_NETWORK_CONTROLLER)
