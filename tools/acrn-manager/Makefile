@@ -49,6 +49,8 @@ endif
 
 ifeq ($(RELEASE),0)
 MANAGER_CFLAGS += -g -DMNGR_DEBUG
+else
+MANAGER_LDFLAGS += -s
 endif
 
 MANAGER_LDFLAGS := -Wl,-z,noexecstack
