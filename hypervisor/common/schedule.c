@@ -112,7 +112,7 @@ void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
-	bitmap_set_nolock(NEED_RESCHEDULE, &ctx->flags);
+	bitmap_set_lock(NEED_RESCHEDULE, &ctx->flags);
 	if (get_pcpu_id() != pcpu_id) {
 		switch (delmode) {
 		case DEL_MODE_IPI:
@@ -192,7 +192,7 @@ void schedule(void)
 
 	get_schedule_lock(pcpu_id);
 	next = get_next_sched_obj(ctx);
-	bitmap_clear_nolock(NEED_RESCHEDULE, &ctx->flags);
+	bitmap_clear_lock(NEED_RESCHEDULE, &ctx->flags);
 
 	if (prev == next) {
 		release_schedule_lock(pcpu_id);
