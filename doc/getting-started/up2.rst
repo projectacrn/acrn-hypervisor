@@ -75,15 +75,15 @@ You will need to keep these in mind in a few places:
   .. code-block:: none
 
      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/mmcblk0 -p 1 -L "ACRN Hypervisor" \
-         -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=bdf@0:18.1 vuart=ttyS1@irq5"
+         -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=bdf@0:18.1"
 
 UP2 serial port setting
 =======================
 
 The serial port (ttyS1) in the 40-pin HAT connector is located at ``serial PCI BDF 0:18.1``.
 You can check this from the ``lspci`` output from the initial Clearlinux installation.
-Also you can use ``dmesg | grep tty`` to get its IRQ information for vuart setting; and update
-SOS bootargs ``console=ttyS1`` in acrn.conf to match with vuart setting.
+Also you can use ``dmesg | grep tty`` to get its IRQ information for console setting; and update
+SOS bootargs ``console=ttyS1`` in acrn.conf to match with console setting.
 
 .. code-block:: none
 
