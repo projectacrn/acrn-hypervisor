@@ -4,7 +4,8 @@ Using VxWorks* as User OS
 #########################
 
 `VxWorks`_\* is a real-time proprietary OS designed for use in embedded systems requiring real-time, deterministic
-performance. This tutorial describes how to run VxWorks as the User OS on the ACRN hypervisor.
+performance. This tutorial describes how to run VxWorks as the User OS on the ACRN hypervisor
+based on Clear Linux 29970 (ACRN tag v1.1).
 
 .. note:: You'll need to be a WindRiver* customer and have purchased VxWorks to follow this tutorial.
 

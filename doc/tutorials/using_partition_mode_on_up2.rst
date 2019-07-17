@@ -26,6 +26,7 @@ To set up the Linux root filesystems for each VM, follow the Clear Linux OS
 to install Clear Linux OS on a **SATA disk** and a **USB flash disk** prior the setup,
 as the two privileged VMs will mount the root filesystems via the SATA controller
 and the USB controller respectively.
+This tutorial is verified on a tagged ACRN v0.6.
 
 Build kernel and modules for partition mode UOS
 ***********************************************
@@ -148,7 +149,9 @@ Enable partition mode in ACRN hypervisor
    .. code-block:: none
 
      $ git clone https://github.com/projectacrn/acrn-hypervisor.git
-     $ cd acrn-hypervisor/hypervisor
+     $ cd acrn-hypervisor
+     $ git checkout v0.6
+     $ cd hypervisor
      $ make menuconfig
 
    Set the ``Hypervisor mode`` option to ``Partition mode``, and depending
