@@ -77,7 +77,7 @@ Update Kernel on KBL NUC
       linux /bzImage
       options console=tty0 console=ttyS0 root=/dev/sda3 rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x010101 i915.domain_plane_owners=0x011100001111 i915.enable_gvt=1 i915.enable_conformance_check=0 i915.enable_guc=0 hvlog=2M@0x1FE00000
 
-.. note:: Change ``/dev/sda3`` to your file system partition.
+   .. note:: Change ``/dev/sda3`` to your file system partition.
 
 #. ``reboot`` the Service OS and select ``The ACRNGT Service OS`` from the boot menu to apply
    the ACRN kernel and hypervisor updates.
@@ -98,10 +98,10 @@ Preparations
 
 .. note:: :kbd:`Win` + :kbd:`R` to open the Run window. Key in ``winver`` to get your working Windows version.
 
-* Download `windows 10 LTSC ISO
+* Download `Windows 10 LTSC ISO
   <https://software-download.microsoft.com/download/sg/17763.107.101029-1455.rs5_release_svc_refresh_CLIENT_LTSC_EVAL_x64FRE_en-us.iso>`_.
 
-* Download `virtio windows driver
+* Download `virtio Windows driver
   <https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.141-1/virtio-win-0.1.141.iso>`_
   to the Service OS in ``/root/img/virtio-win-0.1.141.iso``.
 
@@ -255,7 +255,7 @@ together with the script used to install Windows 10.
    .. figure:: images/windows_install_3.png
       :align: center
 
-#. Select :kbd:`ENTER` followed by any key press to be prompted to the windows installation screen.
+#. Select :kbd:`ENTER` followed by any key press to be prompted to the Windows installation screen.
 
    .. figure:: images/windows_install_4.png
       :align: center
