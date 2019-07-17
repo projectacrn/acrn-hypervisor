@@ -181,6 +181,10 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 
 	/* async request */
 	r = trn->user_data;
+	if (!r) {
+		UPRINTF(LFTL, "error: user context data not found on USB transfer\r\n");
+		goto free_transfer;
+	}
 	info = &r->udev->info;
 
 	/* async transfer */
@@ -311,13 +315,14 @@ out:
 cancel_out:
 	/* unlock and release memory */
 	g_ctx.unlock_ep_cb(xfer->dev, &xfer->epid);
-	libusb_free_transfer(trn);
 
 	if (r && r->buffer)
 		free(r->buffer);
 
 	xfer->requests[r->blk_start] = NULL;
 	free(r);
+free_transfer:
+	libusb_free_transfer(trn);
 }
 
 static struct usb_dev_req *
