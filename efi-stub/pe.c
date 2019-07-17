@@ -107,7 +107,8 @@ struct PeSectionHeader {
 } __attribute__((packed));
 
 
-EFI_STATUS get_pe_section(CHAR8 *base, char *section, UINTN *vaddr, UINTN *size)
+EFI_STATUS get_pe_section(CHAR8 *base, char *section_name,
+		UINTN section_name_len, UINTN *vaddr, UINTN *size)
 {
         struct PeSectionHeader *ph;
         struct DosFileHeader *dh;
@@ -132,7 +133,7 @@ EFI_STATUS get_pe_section(CHAR8 *base, char *section, UINTN *vaddr, UINTN *size)
 
         for (i = 0; i < pe->mNumberOfSections; i++) {
                 ph = (struct PeSectionHeader *)&base[offset];
-                if (CompareMem(ph->mName, section, strlen(section)) == 0) {
+                if (CompareMem(ph->mName, section_name, section_name_len) == 0) {
 			*vaddr = (UINTN)ph->mVirtualAddress;
                          *size = (UINTN)ph->mVirtualSize;
 			break;
