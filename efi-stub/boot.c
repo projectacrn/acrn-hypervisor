@@ -347,7 +347,7 @@ static inline EFI_STATUS isspace(CHAR8 ch)
     return ((uint8_t)ch <= ' ');
 }
 
-#define DEFAULT_UEFI_OS_LOADER_NAME "\\EFI\\org.clearlinux\\bootloaderx64.efi"
+#define DEFAULT_UEFI_OS_LOADER_NAME L"\\EFI\\org.clearlinux\\bootloaderx64.efi"
 /**
  * efi_main - The entry point for the OS loader image.
  * @image: firmware-allocated handle that identifies the image
@@ -392,13 +392,13 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 
 	/* convert the options to cmdline */
 	if (options_size > 0)
-		cmdline = ch16_2_ch8(options);
+		cmdline = ch16_2_ch8(options, StrnLen(options, options_size));
 
 	/* First check if we were given a bootloader name
 	 * E.g.: "bootloader=\EFI\org.clearlinux\bootloaderx64.efi"
 	 */
 	cmdline16 = StrDuplicate(options);
-	bootloader_name = strstr_16(cmdline16, bootloader_param);
+	bootloader_name = strstr_16(cmdline16, bootloader_param, StrLen(bootloader_param));
 	if (bootloader_name) {
 		bootloader_name = bootloader_name + StrLen(bootloader_param);
 		n = bootloader_name;
@@ -413,11 +413,11 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 		 * bootloader name to be used. Fall back to the default bootloader
 		 * as specified in config.h
 		 */
-		bootloader_name = ch8_2_ch16(DEFAULT_UEFI_OS_LOADER_NAME);
+		bootloader_name = DEFAULT_UEFI_OS_LOADER_NAME;
 	}
 
 	section = ".hv";
-	err = get_pe_section(info->ImageBase, section, &sec_addr, &sec_size);
+	err = get_pe_section(info->ImageBase, section, strlen(section), &sec_addr, &sec_size);
 	if (EFI_ERROR(err)) {
 		Print(L"Unable to locate section of ACRNHV %r ", err);
 		goto failed;

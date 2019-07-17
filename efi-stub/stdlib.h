@@ -73,11 +73,10 @@ static inline int32_t strlen(const char *str)
 	return len;
 }
 
-static inline CHAR16 *strstr_16(CHAR16 *haystack, CHAR16 *needle)
+static inline CHAR16 *strstr_16(CHAR16 *haystack, CHAR16 *needle, UINTN len)
 {
 	CHAR16 *p;
 	CHAR16 *word = NULL;
-	UINTN len = StrLen(needle);
 
 	if (!len)
 		return NULL;
@@ -94,28 +93,11 @@ static inline CHAR16 *strstr_16(CHAR16 *haystack, CHAR16 *needle)
 	return (CHAR16*)word;
 }
 
-static inline CHAR16 *ch8_2_ch16(char *str8)
+static inline char *ch16_2_ch8(CHAR16 *str16, UINTN len)
 {
-	UINTN len, i;
-	CHAR16 *str16;
-
-	len = strlen(str8);
-	str16 = AllocatePool((len + 1) * sizeof(CHAR16));
-
-	for (i = 0; i < len; i++)
-		str16[i] = str8[i];
-
-	str16[len] = 0;
-
-	return str16;
-}
-
-static inline char *ch16_2_ch8(CHAR16 *str16)
-{
-	UINTN len, i;
+	UINTN i;
 	char *str8;
 
-	len = StrLen(str16);
 	str8 = AllocatePool((len + 1) * sizeof(char));
 
 	for (i = 0; i < len; i++)
