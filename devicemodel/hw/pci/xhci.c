@@ -3718,6 +3718,8 @@ pci_xhci_dev_intr(struct usb_hci *hci, int epctx)
 
 	/* HW endpoint contexts are 0-15; convert to epid based on dir */
 	epid = (epid * 2) + (dir_in ? 1 : 0);
+	if (epid >= XHCI_MAX_ENDPOINTS)
+		return 0;
 
 	dev = hci->dev;
 	xdev = dev->xdev;
