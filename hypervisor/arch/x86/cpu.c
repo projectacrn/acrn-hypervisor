@@ -94,12 +94,13 @@ uint64_t get_active_pcpu_bitmap(void)
 	return pcpu_active_bitmap;
 }
 
-void init_pcpu_pre(uint16_t pcpu_id_args)
+void init_pcpu_pre(bool is_bsp)
 {
-	uint16_t pcpu_id = pcpu_id_args;
+	uint16_t pcpu_id;
 	int32_t ret;
 
-	if (pcpu_id == BOOT_CPU_ID) {
+	if (is_bsp) {
+		pcpu_id = BOOT_CPU_ID;
 		start_tsc = rdtsc();
 
 		/* Clear BSS */

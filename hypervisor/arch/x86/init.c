@@ -82,7 +82,7 @@ void init_primary_pcpu(void)
 {
 	uint64_t rsp;
 
-	init_pcpu_pre(BOOT_CPU_ID);
+	init_pcpu_pre(true);
 
 	/* Switch to run-time stack */
 	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
@@ -94,7 +94,7 @@ void init_secondary_pcpu(void)
 {
 	uint16_t pcpu_id;
 
-	init_pcpu_pre(INVALID_CPU_ID);
+	init_pcpu_pre(false);
 
 	pcpu_id = get_pcpu_id();
 
