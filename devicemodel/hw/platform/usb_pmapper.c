@@ -916,7 +916,6 @@ usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
 	int rc;
 
 	udev = pdata;
-
 	xfer->status = USB_ERR_NORMAL_COMPLETION;
 	if (!udev->info.priv_data || !xfer->ureq) {
 		UPRINTF(LWRN, "invalid request\r\n");
@@ -933,10 +932,10 @@ usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
 	blk = usb_dev_prepare_ctrl_xfer(xfer);
 	data = blk ? blk->buf : NULL;
 
-	UPRINTF(LDBG,
-		"urb: type 0x%x req 0x%x val 0x%x idx %d len %d data %d\n",
-		 request_type, request, value, index, len,
-		 blk ? blk->blen : 0);
+	UPRINTF(LDBG, "%d-%s: urb: type 0x%x req 0x%x val 0x%x idx %d len %d "
+			"data %d\r\n", udev->info.path.bus,
+			usb_dev_path(&udev->info.path), request_type, request,
+			value, index, len, blk ? blk->blen : 0);
 
 	/*
 	 * according to usb spec, control transfer may have no
@@ -996,8 +995,9 @@ usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
 	else
 		xfer->status = usb_dev_err_convert(rc);
 
-	UPRINTF(LDBG, "usb rc %d, blk %p, blen %u bdon %u\n", rc, blk,
-			blk ? blk->blen : 0, blk ? blk->bdone : 0);
+	UPRINTF(LDBG, "%d-%s: usb rc %d, blk %p, blen %u bdon %u\n",
+			udev->info.path.bus, usb_dev_path(&udev->info.path),
+			rc, blk, blk ? blk->blen : 0, blk ? blk->bdone : 0);
 out:
 	return xfer->status;
 }
