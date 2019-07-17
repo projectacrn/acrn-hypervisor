@@ -265,7 +265,7 @@ void cpu_do_idle(void);
 void cpu_dead(void);
 void trampoline_start16(void);
 void load_pcpu_state_data(void);
-void init_pcpu_pre(uint16_t pcpu_id_args);
+void init_pcpu_pre(bool is_bsp);
 void init_pcpu_post(uint16_t pcpu_id);
 bool start_pcpus(uint64_t mask);
 void wait_pcpus_offline(uint64_t mask);
