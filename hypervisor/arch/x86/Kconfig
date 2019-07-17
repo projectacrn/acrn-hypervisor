@@ -10,6 +10,12 @@ config SDC
 	  SDC (Software Defined Cockpit) is a typical scenario that ACRN supported.
 	  SDC will have one pre-launched SOS VM and one post-launched VM.
 
+config SDC2
+        bool "Software Defined Cockpit 2"
+        help
+          SDC2 (Software Defined Cockpit 2) is an extended scenario for automotive SDC system.
+          SDC2 will have one pre-launched SOS VM and up to three post-launched VM.
+
 config LOGICAL_PARTITION
 	bool "Logical Partition VMs"
 	help

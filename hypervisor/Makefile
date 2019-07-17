@@ -52,6 +52,8 @@ include scripts/kconfig/kconfig.mk
 #initialize scenarios name
 ifeq ($(CONFIG_SDC),y)
 SCENARIO_NAME := sdc
+else ifeq ($(CONFIG_SDC2),y)
+SCENARIO_NAME := sdc2
 else ifeq ($(CONFIG_LOGICAL_PARTITION),y)
 SCENARIO_NAME := logical_partition
 else ifeq ($(CONFIG_INDUSTRY),y)
