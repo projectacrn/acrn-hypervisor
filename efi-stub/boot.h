@@ -68,7 +68,7 @@
 	*msr_val_ptr = ((uint64_t)msrh << 32U) | msrl;           \
 }
 
-EFI_STATUS get_pe_section(CHAR8 *base, char *section, UINTN *vaddr, UINTN *size);
+EFI_STATUS get_pe_section(CHAR8 *base, char *section_name, UINTN section_name_len, UINTN *vaddr, UINTN *size);
 typedef void(*hv_func)(int32_t, struct multiboot_info*);
 
 /*
