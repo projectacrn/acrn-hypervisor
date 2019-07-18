@@ -415,21 +415,29 @@ static void print_hv_banner(void)
 	printf(boot_msg);
 }
 
+static
+inline void asm_monitor(const uint64_t *addr, uint64_t ecx, uint64_t edx)
+{
+	asm volatile("monitor\n" : : "a" (addr), "c" (ecx), "d" (edx));
+}
+
+static
+inline void asm_mwait(uint64_t eax, uint64_t ecx)
+{
+	asm volatile("mwait\n" : : "a" (eax), "c" (ecx));
+}
+
 /* wait until *sync == wake_sync */
 void wait_sync_change(uint64_t *sync, uint64_t wake_sync)
 {
 	if (has_monitor_cap()) {
 		/* Wait for the event to be set using monitor/mwait */
-		asm volatile ("1: cmpq      %%rbx,(%%rax)\n"
-			      "   je        2f\n"
-			      "   monitor\n"
-			      "   mwait\n"
-			      "   jmp       1b\n"
-			      "2:\n"
-			      :
-			      : "a" (sync), "d"(0), "c"(0),
-			      "b"(wake_sync)
-			      : "cc");
+		while (*((volatile uint64_t *)sync) != wake_sync) {
+			asm_monitor(sync, 0UL, 0UL);
+			if (*((volatile uint64_t *)sync) != wake_sync) {
+				asm_mwait(0UL, 0UL);
+			}
+		}
 	} else {
 		/* Wait for the event to be set using pause */
 		asm volatile ("1: cmpq      %%rbx,(%%rax)\n"
