@@ -9,7 +9,7 @@ Hardware setup
 The following Intel Kaby Lake NUCs are verified:
 
 .. csv-table::
-   :header: "Platform Model", "Bios Version", "Download Link"
+   :header: "Platform Model", "BIOS Version", "BIOS Download Link"
 
    "NUC7i7DNHE", "DNKBLi7v.86A.0052.2018.0808.1344", "`link <https://downloadcenter.intel.com/download/28886?v=t>`__"
    "NUC7i5DNHE", "DNKBLi5v.86A.0060.2018.1220.1536", "`link <https://downloadcenter.intel.com/download/28885?v=t>`__"
@@ -131,19 +131,18 @@ Pre-install drivers and re-generate Windows ISO
 #. Create a folder on the ``C:`` drive called ``Mount``, so you have a folder ``C:\Mount``
 
 #. Right click the downloaded ``virtio-win-0.1.141.iso`` and select ``Mount``. The ISO will be mounted to a drive;
-   in my case, it is ``D:``
+   for example, drive ``D:``
 
-#. Unzip the downloaded Windows graphics driver ``dch_win64_25.20.100.6444.exe`` to a folder,
-   in my case, it is unzipped to ``C:\Dev\Temp\wim\dch_win64_25.20.100.6444``
-
-   .. note:: We use ``7-zip`` to unzip this ``dch_win64_25.20.100.6444.exe`` driver.
+#. Use ``7-zip`` or similar utility to unzip the downloaded Windows graphics driver
+   ``dch_win64_25.20.100.6444.exe`` to a folder,
+   for example, to ``C:\Dev\Temp\wim\dch_win64_25.20.100.6444``
 
 #. Right click the downloaded Windows ISO, for example, ``windows10-17763-107-LTSC.iso``, select ``Mount``,
-   the ISO will be mounted to a drive; in my case, it is ``E:``
+   the ISO will be mounted to a drive; for example, drive ``E:``
 
-#. Copy ``E:\sources\boot.wim and E:\sources\install.wim`` to ``C:\WIM``
+#. Copy ``E:\sources\boot.wim`` and ``E:\sources\install.wim`` to ``C:\WIM``
 
-#. Depending on your Windows ISO image,  varying amounts of images may be  included in the ``WIM``.
+#. Depending on your Windows ISO image, more than one image may be included in the ``WIM``.
    Run ``dism /get-wiminfo /wimfile:C:\WIM\install.wim`` with administrator privileges.
    Select the ``Index`` you want. For ``windows10-17763-107-LTSC.iso``,
    there is only one ``Index``; it is ``1``
@@ -151,33 +150,64 @@ Pre-install drivers and re-generate Windows ISO
    .. figure:: images/install_wim_index.png
       :align: center
 
-#. Download the `Virtio-Inject.bat
-   <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/scripts/Virtio-Inject.bat>`_
-   to a folder in your Windows PC.
+#. Create a batch file named ``virtio-inject-boot.bat`` [1]_ to modify
+   ``boot.wim`` to inject drivers (using the mounted Windows ISO drive
+   (``D:``), image Index (``1``), and folder where the unzipped Windows
+   graphics drivers were placed, from the previous steps (update this
+   batch file as needed)::
 
-   .. note:: If ``virtio-win-0.1.141.iso`` is mounted to a different drive than ``D:``, you need to change the
-      ``driver:d`` in the script according to your case.
+      REM virt-inject-boot
+      Set IDX=1
 
-   .. note:: If you unzipped the Windows graphics driver to a different folder, you must change
-      ``c:\Dev\Temp\wim\dch_win64_25.20.100.6444`` according to your case.
+      REM Modify boot.wim file to inject drivers
+      dism /Mount-Wim /WimFile:C:\Wim\boot.wim /Index:%IDX% /MountDir:C:\mount
+      dism /image:C:\mount /Add-Driver "/driver:d:\balloon\w10\amd64\balloon.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:d:\NetKVM\w10\amd64\netkvm.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:d:\viorng\w10\amd64\viorng.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:d:\vioscsi\w10\amd64\vioscsi.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:d:\vioserial\w10\amd64\vioser.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:d:\viostor\w10\amd64\viostor.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:d:\vioinput\w10\amd64\vioinput.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\cui_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\HdBusExt.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\iigd_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\IntcDAud.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\msdk.inf"
+      dism /unmount-wim /mountdir:c:\mount /commit
 
-#. Open a command prompt as administrator and go to the folder in which you saved the above ``Virtio-Inject.bat``
-   and run ``Virtio-Inject.bat``. Make sure no errors occur during the script execution.
+   Run this ``virtio-inject-boot.bat`` script in a command prompt
+   running as administrator.  It may take 4-5 minutes to run, depending on
+   your Windows system performance.
 
-   .. note:: The execution of the script will take several minutes depending on your working Windows performance.
-      It will take about 8 minutes on a (KBL NUCi5 + 16G memory) Windows 10 machine.
+#. Similarly, create another batch file named
+   ``virtio-inject-install.bat`` [1]_ to modify ``install.wim`` to inject
+   drivers (and verify the ISO drive, image Index, and drivers folder)::
 
-   .. note:: You can split the script above into two parts; one injects drivers into ``boot.wim``,
-      and the other injects drivers into ``install.wim``. Execute them one at a time if you return
-      one of the following errors:
+      REM virt-inject-install
+      Set IDX=1
 
-      - *0xc1420113*: The user attempted to mount to a directory that already contained a mounted image.
-        This is not supported.
+      REM Modify install.wim to inject drivers
+      dism /Mount-Wim /WimFile:C:\WIM\install.wim /Index:%IDX% /MountDir:C:\mount
+      dism /image:C:\mount /Add-Driver "/driver:d:\balloon\w10\amd64\balloon.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:d:\NetKVM\w10\amd64\netkvm.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:d:\viorng\w10\amd64\viorng.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:d:\vioscsi\w10\amd64\vioscsi.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:d:\vioserial\w10\amd64\vioser.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:d:\viostor\w10\amd64\viostor.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:d:\vioinput\w10\amd64\vioinput.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\cui_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\HdBusExt.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\iigd_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\IntcDAud.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\msdk.inf"
+      dism /unmount-wim /mountdir:c:\mount /commit
 
-      - *0xc1420127*: The specified image in the specified wim is already mounted for read/write access.
+   Run this script in a command prompt running as administrator.  It may also
+   take 4-5 minutes to run, depending on your Windows system performance.
 
-#. ``C:\WIM\boot.wim`` and ``C:\WIM\install.wim`` will be updated after you have executed ``Virtio-Inject.bat``
-   successfully. The following drivers have been pre-installed into the image:
+
+#. After running these two scripts the files ``C:\WIM\boot.wim`` and ``C:\WIM\install.wim``
+   will be updated to install these drivers into the image:
 
    - Virtio-balloon
    - Virtio-net
@@ -188,7 +218,7 @@ Pre-install drivers and re-generate Windows ISO
    - Virtio-input
    - Windows graphics drivers
 
-#. Use 7-zip to unzip the downloaded Windows ISO to a folder; in my case, it is unzipped to
+#. Use 7-zip to unzip the downloaded Windows ISO to a folder; for example, into
    ``C:\Dev\Temp\wim\windows10-17763-107-LTSC``
 
 #. Delete ``C:\Dev\Temp\wim\windows10-17763-107-LTSC\sources\boot.wim`` and
@@ -197,17 +227,28 @@ Pre-install drivers and re-generate Windows ISO
 #. Copy ``C:\WIM\boot.wim`` and ``C:\WIM\install.wim`` to ``C:\Dev\Temp\wim\windows10-17763-107-LTSC\sources``
 
 #. Download and unzip `cdrtools-3.01.a23-bootcd.ru-mkisofs.7z
-   <http://reboot.pro/index.php?app=core&module=attach&section=attach&attach_id=15214>`_ to a folder; in my case,
-   it is unzipped to ``C:\Dev\Temp\wim\cdrtools-3.01.a23-bootcd.ru-mkisofs``
+   <http://reboot.pro/index.php?app=core&module=attach&section=attach&attach_id=15214>`_ to a folder;
+   for example, to ``C:\Dev\Temp\wim\cdrtools-3.01.a23-bootcd.ru-mkisofs``
 
-#. Download the `mkisofs_both_legacy_and_uefi.bat
-   <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/scripts/mkisofs_both_legacy_and_uefi.bat>`_
-   to a folder in your Windows PC.
+#. Create a batch file named ``mkisofs_both_legacy_and_uefi.bat``
+   containing (update folder names as needed to reflect where the
+   referenced files are located on your system, and ``inputdir``,
+   ``outputiso`` and ``mkisofs.exe`` path, downloaded by the previous
+   step)::
 
-   .. note:: Change these parameters to your case: ``inputdir``, ``outputiso``,
-      ``mkisofs.exe path``
+      set inputdir=C:\Dev\Temp\wim\windows10-17763-107-LTSC
+      set outputiso=C:\Dev\Temp\wim\mkisofs_iso\windows10-17763-107-LTSC-Virtio-Gfx.iso
+      set label="WIN10_17763_107_LTSC_VIRTIO_GFX"
+      set biosboot=boot/etfsboot.com
+      set efiboot=efi/microsoft/boot/efisys.bin
+      C:\Dev\Temp\wim\cdrtools-3.01.a23-bootcd.ru-mkisofs\mingw\mkisofs.exe \
+        -iso-level 4 -l -R -UDF -D -volid %label% -b %biosboot% -no-emul-boot \
+        -boot-load-size 8 -hide boot.catalog -eltorito-alt-boot \
+        -eltorito-platform efi -no-emul-boot -b %efiboot%  -o %outputiso% \
+        %inputdir%
 
-#. The ISO will be generated in ``outputiso`` to the location you specified in the script above.
+   Run this ``mkisofs_both_legacy_and_uefi.bat`` script. The resulting
+   ISO will be generated in ``outputiso`` location you specified.
 
 Create Raw Disk
 ---------------
@@ -220,9 +261,11 @@ Run these commands on the Service OS::
 
 Install Windows 10
 ------------------
-Currently, the ACRNGT OVMF GOP driver is not ready; thus, a special VGA version is used to install Windows 10
-on ACRN from scratch. The ``acrn.elf``, ``acrn-dm`` and ``OVMF`` binaries are included in the
-`tarball <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/install_by_vga_gsg.tar.gz>`_
+Currently, the ACRNGT OVMF GOP driver is not ready; thus, a special VGA
+version is used to install Windows 10 on ACRN from scratch. The
+``acrn.elf``, ``acrn-dm`` and ``OVMF`` binaries are included in the
+`tarball
+<https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/install_by_vga_gsg.tar.gz>`_
 together with the script used to install Windows 10.
 
 #. Uncompress ``install_by_vga_gsg.tar.gz`` to the Service OS::
@@ -372,4 +415,12 @@ Device configurations of acrn-dm command line
   to install the virtio Windows driver later. Make sure it points to your VirtIO ISO path.
 
 * *--ovmf /root/bios/OVMF.fd*:
-  Make sure it points to your OVMF binary path.
+  Make sure it points to your OVMF binary path
+
+References
+**********
+
+.. [1]
+   These virtio drivers injecting batch script are based on Derek Seaman's IT blog about
+   `injecting VirtIO Drivers into Windows
+   <https://www.derekseaman.com/2015/07/injecting-kvm-virtio-drivers-into-windows.html>`_.
