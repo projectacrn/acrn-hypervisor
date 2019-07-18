@@ -69,7 +69,7 @@ struct pci_vdev_ops {
        void    (*init_vdev)(struct pci_vdev *vdev);
        void    (*deinit_vdev)(struct pci_vdev *vdev);
        int32_t (*write_vdev_cfg)(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
-       int32_t (*read_vdev_cfg)(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
+       int32_t (*read_vdev_cfg)(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 };
 
 struct pci_vdev {
@@ -95,7 +95,7 @@ struct pci_vdev {
 	struct acrn_vm_pci_ptdev_config *ptdev_config;
 
 	/* Pointer to corressponding operations */
-	struct pci_vdev_ops *vdev_ops;
+	const struct pci_vdev_ops *vdev_ops;
 };
 
 struct pci_addr_info {
@@ -116,6 +116,6 @@ void vpci_cleanup(const struct acrn_vm *vm);
 void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
 void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
 
-struct pci_vdev_ops *get_vhostbridge_ops(void);
+const struct pci_vdev_ops *get_vhostbridge_ops(void);
 
 #endif /* VPCI_H_ */
