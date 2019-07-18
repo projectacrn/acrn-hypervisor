@@ -109,7 +109,9 @@ struct virtio_console_port {
 struct virtio_console_backend {
 	struct virtio_console_port	*port;
 	struct mevent			*evp;
+	struct mevent			*conn_evp;
 	int				fd;
+	int				server_fd;
 	bool				open;
 	enum virtio_console_be_type	be_type;
 	int				pts_fd;	/* only valid for PTY */
@@ -429,6 +431,19 @@ virtio_console_reset_backend(struct virtio_console_backend *be)
 }
 
 static void
+virtio_console_socket_clear(struct virtio_console_backend *be)
+{
+	if (be->conn_evp) {
+		mevent_delete(be->conn_evp);
+		be->conn_evp = NULL;
+	}
+	if (be->fd != -1) {
+		close(be->fd);
+		be->fd = -1;
+	}
+}
+
+static void
 virtio_console_backend_read(int fd __attribute__((unused)),
 			    enum ev_type t __attribute__((unused)),
 			    void *arg)
@@ -470,6 +485,11 @@ virtio_console_backend_read(int fd __attribute__((unused)),
 			if (len == -1 && errno == EAGAIN)
 				return;
 
+			/* when client uos reboot or shutdown,
+			 * be->fd will be closed, then the return
+			 * value of readv function will be 0 */
+			if (len == 0 || errno == ECONNRESET)
+				goto clear;
 			/* any other errors */
 			goto close;
 		}
@@ -478,11 +498,22 @@ virtio_console_backend_read(int fd __attribute__((unused)),
 	} while (vq_has_descs(vq));
 
 	vq_endchains(vq, 1);
+	return;
 
 close:
 	virtio_console_reset_backend(be);
 	WPRINTF(("vtcon: be read failed and close! len = %d, errno = %d\n",
 		len, errno));
+clear:
+	if (be->be_type == VIRTIO_CONSOLE_BE_SOCKET && (be->socket_type == NULL
+		|| !strcmp(be->socket_type,"server"))) {
+		virtio_console_socket_clear(be);
+	} else if (be->be_type == VIRTIO_CONSOLE_BE_SOCKET
+		&& !strcmp(be->socket_type,"client")) {
+		virtio_console_reset_backend(be);
+		WPRINTF(("vtcon: be read failed and close! len = %d, errno = %d\n",
+			len, errno));
+	}
 }
 
 static void
@@ -517,6 +548,13 @@ virtio_console_backend_write(struct virtio_console_port *port, void *arg,
 		if (ret == -1 && (errno == EAGAIN || errno == ENOTCONN))
 			return;
 
+		if (ret == -1 && errno == EBADF) {
+			if (be->be_type == VIRTIO_CONSOLE_BE_SOCKET && (be->socket_type == NULL
+				|| !strcmp(be->socket_type,"server"))) {
+				virtio_console_socket_clear(be);
+				return;
+			}
+		}
 		virtio_console_reset_backend(be);
 		WPRINTF(("vtcon: be write failed! errno = %d\n", errno));
 	}
@@ -617,7 +655,6 @@ virtio_console_accept_new_connection(int fd __attribute__((unused)),
 {
 
 	int accepted_fd;
-	int close_true;
 	uint32_t len;
 	struct sockaddr_un addr;
 	struct virtio_console_backend *be = arg;
@@ -628,30 +665,18 @@ virtio_console_accept_new_connection(int fd __attribute__((unused)),
 	addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
 	len = sizeof(addr);
-	accepted_fd = accept(be->fd, (struct sockaddr *)&addr, &len);
+	/* be->server_fd is kept for client uos reconnect again */
+	accepted_fd = accept(be->server_fd, (struct sockaddr *)&addr, &len);
 	if (accepted_fd == -1) {
 		WPRINTF(("accept error= %d, addr.sun_path=%s\n", errno, addr.sun_path));
 		return;
 	} else {
-		/* close the fd associated with listening socket
-		 * and reuse it for accepted socket.
-		 */
-		close_true = 1;
-		setsockopt(be->fd, SOL_SOCKET, SO_REUSEADDR, &close_true, sizeof(int));
-		close(be->fd);
 		be->fd = accepted_fd;
 	}
 
-	if (be->evp) {
-		/* close the event associated with listening socket
-		 * and reuse it for accepted socket.
-		 */
-		mevent_delete(be->evp);
-	}
-
-	be->evp = mevent_add(be->fd, EVF_READ, virtio_console_backend_read, be,
-				virtio_console_teardown_backend, be);
-	if (be->evp == NULL) {
+	be->conn_evp = mevent_add(be->fd, EVF_READ, virtio_console_backend_read, be,
+				NULL, NULL);
+	if (be->conn_evp == NULL) {
 		WPRINTF(("accepted fd mevent_add failed\n"));
 		return;
 	}
@@ -745,21 +770,11 @@ virtio_console_config_backend(struct virtio_console_backend *be)
 				WPRINTF(("Backend config: fcntl Error\n"));
 				return -1;
 			}
-			be->evp = mevent_add(fd, EVF_READ, virtio_console_accept_new_connection, be, NULL, NULL);
-			if (be->evp == NULL) {
-				WPRINTF(("Socket Accept mevent_add failed\n"));
-				return -1;
-			}
 		} else if (!strcmp(be->socket_type,"client")) {
 			if (access(be->portpath,0)) {
 				WPRINTF(("%s not exist\n", be->portpath));
 				return -1;
 			}
-			/*
-			 * When the VM reset, client will not able to connect to server.
-			 * But here only show some warning.
-			 * TODO: implement re-connect function
-			 */
 			if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
 				WPRINTF(("vtcon: connect error[%d] \n", errno));
 			} else {
@@ -866,6 +881,7 @@ virtio_console_add_backend(struct virtio_console *console, char *opt)
 	}
 
 	be->fd = fd;
+	be->server_fd = fd;
 	be->be_type = be_type;
 	be->portpath = portpath;
 	be->socket_type = socket_type;
@@ -885,17 +901,24 @@ virtio_console_add_backend(struct virtio_console *console, char *opt)
 	}
 
 	if (virtio_console_backend_can_read(be_type)) {
-		if (isatty(fd)) {
+		if (be->be_type == VIRTIO_CONSOLE_BE_SOCKET && (be->socket_type == NULL
+			|| !strcmp(be->socket_type,"server"))) {
+			be->evp = mevent_add(fd, EVF_READ,
+					virtio_console_accept_new_connection, be,
+					virtio_console_teardown_backend, be);
+		}
+		else if (isatty(fd) || (be->be_type == VIRTIO_CONSOLE_BE_SOCKET
+			&& !strcmp(be->socket_type,"client"))) {
 			be->evp = mevent_add(fd, EVF_READ,
 					virtio_console_backend_read, be,
 					virtio_console_teardown_backend, be);
-			if (be->evp == NULL) {
-				WPRINTF(("vtcon: mevent_add failed\n"));
-				error = -1;
-				goto out;
-			}
-			console->ref_count++;
 		}
+		if (be->evp == NULL) {
+			WPRINTF(("vtcon: mevent_add failed\n"));
+			error = -1;
+			goto out;
+		}
+		console->ref_count++;
 	}
 
 	virtio_console_open_port(be->port, true);
@@ -951,6 +974,15 @@ virtio_console_close_backend(struct virtio_console_backend *be)
 		break;
 	case VIRTIO_CONSOLE_BE_STDIO:
 		virtio_console_restore_stdio();
+		break;
+	case VIRTIO_CONSOLE_BE_SOCKET:
+		if (be->socket_type == NULL || !strcmp(be->socket_type,"server")) {
+			virtio_console_socket_clear(be);
+			if (be->server_fd > 0) {
+				close(be->server_fd);
+				be->server_fd = -1;
+			}
+		}
 		break;
 	default:
 		break;
