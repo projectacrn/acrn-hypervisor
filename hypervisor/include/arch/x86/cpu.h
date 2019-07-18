@@ -270,7 +270,7 @@ void init_pcpu_post(uint16_t pcpu_id);
 bool start_pcpus(uint64_t mask);
 void wait_pcpus_offline(uint64_t mask);
 void stop_pcpus(void);
-void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
+void wait_sync_change(volatile const uint64_t *sync, uint64_t wake_sync);
 
 #define CPU_SEG_READ(seg, result_ptr)						\
 {										\
