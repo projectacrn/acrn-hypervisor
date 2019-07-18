@@ -346,9 +346,9 @@ static void vpci_init_pt_dev(struct pci_vdev *vdev)
 
 static void vpci_deinit_pt_dev(struct pci_vdev *vdev)
 {
-	deinit_vmsi(vdev);
-	deinit_vmsix(vdev);
 	remove_vdev_pt_iommu_domain(vdev);
+	deinit_vmsix(vdev);
+	deinit_vmsi(vdev);
 }
 
 static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
@@ -368,7 +368,7 @@ static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 	return 0;
 }
 
-static int32_t vpci_read_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
+static int32_t vpci_read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t *val)
 {
 	if (vbar_access(vdev, offset, bytes)) {
@@ -385,7 +385,7 @@ static int32_t vpci_read_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 	return 0;
 }
 
-static struct pci_vdev_ops pci_pt_dev_ops = {
+static const struct pci_vdev_ops pci_pt_dev_ops = {
 	.init_vdev	= vpci_init_pt_dev,
 	.deinit_vdev	= vpci_deinit_pt_dev,
 	.write_vdev_cfg	= vpci_write_pt_dev_cfg,
