@@ -570,6 +570,34 @@ void offline_vcpu(struct acrn_vcpu *vcpu)
 	vcpu->state = VCPU_OFFLINE;
 }
 
+/*
+* @pre (&vcpu->stack[CONFIG_STACK_SIZE] & (CPU_STACK_ALIGN - 1UL)) == 0
+*/
+static uint64_t build_stack_frame(struct acrn_vcpu *vcpu)
+{
+	uint64_t stacktop = (uint64_t)&vcpu->stack[CONFIG_STACK_SIZE];
+	struct stack_frame *frame;
+	uint64_t *ret;
+
+	frame = (struct stack_frame *)stacktop;
+	frame -= 1;
+
+	frame->maigc = SP_BOTTOM_MAGIC;
+	frame->rip = (uint64_t)run_sched_thread; /*return address*/
+	frame->rflag = 0UL;
+	frame->rbx = 0UL;
+	frame->rbp = 0UL;
+	frame->r12 = 0UL;
+	frame->r13 = 0UL;
+	frame->r14 = 0UL;
+	frame->r15 = 0UL;
+	frame->rdi = (uint64_t)&vcpu->sched_obj;
+
+	ret = &frame->rdi;
+
+	return (uint64_t) ret;
+}
+
 /* NOTE:
  * vcpu should be paused before call this function.
  */
@@ -592,6 +620,7 @@ void reset_vcpu(struct acrn_vcpu *vcpu)
 		vcpu->arch.exception_info.exception = VECTOR_INVALID;
 		vcpu->arch.cur_context = NORMAL_WORLD;
 		vcpu->arch.irq_window_enabled = false;
+		vcpu->sched_obj.host_sp = build_stack_frame(vcpu);
 		(void)memset((void *)vcpu->arch.vmcs, 0U, PAGE_SIZE);
 
 		for (i = 0; i < NR_WORLD; i++) {
@@ -688,34 +717,6 @@ void schedule_vcpu(struct acrn_vcpu *vcpu)
 	add_to_cpu_runqueue(&vcpu->sched_obj, vcpu->pcpu_id);
 	make_reschedule_request(vcpu->pcpu_id, DEL_MODE_IPI);
 	release_schedule_lock(vcpu->pcpu_id);
-}
-
-/*
-* @pre (&vcpu->stack[CONFIG_STACK_SIZE] & (CPU_STACK_ALIGN - 1UL)) == 0
-*/
-static uint64_t build_stack_frame(struct acrn_vcpu *vcpu)
-{
-	uint64_t stacktop = (uint64_t)&vcpu->stack[CONFIG_STACK_SIZE];
-	struct stack_frame *frame;
-	uint64_t *ret;
-
-	frame = (struct stack_frame *)stacktop;
-	frame -= 1;
-
-	frame->maigc = SP_BOTTOM_MAGIC;
-	frame->rip = (uint64_t)run_sched_thread; /*return address*/
-	frame->rflag = 0UL;
-	frame->rbx = 0UL;
-	frame->rbp = 0UL;
-	frame->r12 = 0UL;
-	frame->r13 = 0UL;
-	frame->r14 = 0UL;
-	frame->r15 = 0UL;
-	frame->rdi = (uint64_t)&vcpu->sched_obj;
-
-	ret = &frame->rdi;
-
-	return (uint64_t) ret;
 }
 
 /* help function for vcpu create */
