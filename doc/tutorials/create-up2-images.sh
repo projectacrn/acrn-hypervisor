@@ -46,8 +46,6 @@ create_sos_images() {
         return 1
     }
 
-    SOS_BOOTARGS_DEBUG=sos_rootfs/usr/share/acrn/samples/apl-up2/sos_bootargs_debug.txt
-
     if [[ ! ${ACRN_SBL} || ! -f ${ACRN_SBL} ]]
     then
         ACRN_SBL=sos_rootfs/usr/lib/acrn/acrn.apl-up2.sbl
@@ -55,8 +53,6 @@ create_sos_images() {
 
     if [ ${ACRN_HV_CODE_PATH} ]
     then
-        SOS_BOOTARGS_DEBUG=${ACRN_HV_CODE_PATH}/devicemodel/samples/apl-up2/sos_bootargs_debug.txt
-
         make -C ${ACRN_HV_CODE_PATH} clean || return 1
         make -C ${ACRN_HV_CODE_PATH} hypervisor BOARD=apl-up2 FIRMWARE=sbl || return 1
         ACRN_SBL=${ACRN_HV_CODE_PATH}/build/hypervisor/acrn.32.out
@@ -70,19 +66,11 @@ create_sos_images() {
 
     echo "ACRN_SBL:"${ACRN_SBL}
 
-    if [ -f ${SOS_BOOTARGS_DEBUG} ] 
-    then
-        echo -n "CMDLINE: "
-        echo $(tr '\n' ' ' < $SOS_BOOTARGS_DEBUG) | tee tmp/cmdline
-    else                
-        echo "sos_bootargs_debug.txt is not found"
-        return 1        
-    fi
-
+    echo -n "Linux_bzImage" > tmp/linux.txt
     SOS_KERNEL=$(ls sos_rootfs/usr/lib/kernel/org.clearlinux.iot-lts2018-sos*)
     touch tmp/hv_cmdline
 
-    iasimage create -o iasImage -i 0x40300 -d tmp/bxt_dbg_priv_key.pem -p 4 tmp/hv_cmdline ${ACRN_SBL}  tmp/cmdline ${SOS_KERNEL} || 
+    iasimage create -o iasImage -i 0x40300 -d tmp/bxt_dbg_priv_key.pem -p 4 tmp/hv_cmdline ${ACRN_SBL} tmp/linux.txt ${SOS_KERNEL} || 
     {
         echo "stitch iasimage for sos_boot failed!"
         return 1
