@@ -437,16 +437,9 @@ void wait_sync_change(volatile const uint64_t *sync, uint64_t wake_sync)
 			}
 		}
 	} else {
-		/* Wait for the event to be set using pause */
-		asm volatile ("1: cmpq      %%rbx,(%%rax)\n"
-			      "   je        2f\n"
-			      "   pause\n"
-			      "   jmp       1b\n"
-			      "2:\n"
-			      :
-			      : "a" (sync), "d"(0), "c"(0),
-			      "b"(wake_sync)
-			      : "cc");
+		while ((*sync) != wake_sync) {
+			asm_pause();
+		}
 	}
 }
 
