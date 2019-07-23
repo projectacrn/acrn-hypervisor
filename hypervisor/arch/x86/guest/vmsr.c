@@ -635,8 +635,14 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		err = vlapic_set_apicbase(vcpu_vlapic(vcpu), v);
 		break;
 	}
-	case MSR_IA32_MCG_CAP:
 	case MSR_IA32_MCG_STATUS:
+	{
+		if (v != 0U) {
+			err = -EACCES;
+		}
+		break;
+	}
+	case MSR_IA32_MCG_CAP:
 	case MSR_IA32_FEATURE_CONTROL:
 	case MSR_IA32_SGXLEPUBKEYHASH0:
 	case MSR_IA32_SGXLEPUBKEYHASH1:
