@@ -332,15 +332,15 @@ static int32_t check_vmx_mmu_cap(void)
 	int32_t ret = 0;
 
 	if (!pcpu_has_vmx_ept_cap(VMX_EPT_INVEPT)) {
-		pr_fatal("%s, invept not supported\n", __func__);
+		printf("%s, invept not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (!pcpu_has_vmx_vpid_cap(VMX_VPID_INVVPID) ||
 		!pcpu_has_vmx_vpid_cap(VMX_VPID_INVVPID_SINGLE_CONTEXT) ||
 		!pcpu_has_vmx_vpid_cap(VMX_VPID_INVVPID_GLOBAL_CONTEXT)) {
-		pr_fatal("%s, invvpid not supported\n", __func__);
+		printf("%s, invvpid not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (!pcpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE)) {
-		pr_fatal("%s, ept not support 1GB large page\n", __func__);
+		printf("%s, ept not support 1GB large page\n", __func__);
 		ret = -ENODEV;
 	} else {
 		/* No other state currently, do nothing */
@@ -361,65 +361,65 @@ int32_t detect_hardware_support(void)
 
 	/* Long Mode (x86-64, 64-bit support) */
 	if (!pcpu_has_cap(X86_FEATURE_LM)) {
-		pr_fatal("%s, LM not supported\n", __func__);
+		printf("%s, LM not supported\n", __func__);
 		ret = -ENODEV;
 	} else if ((boot_cpu_data.phys_bits == 0U) ||
 		(boot_cpu_data.virt_bits == 0U)) {
-		pr_fatal("%s, can't detect Linear/Physical Address size\n", __func__);
+		printf("%s, can't detect Linear/Physical Address size\n", __func__);
 		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_TSC_DEADLINE)) {
 		/* lapic TSC deadline timer */
-		pr_fatal("%s, TSC deadline not supported\n", __func__);
+		printf("%s, TSC deadline not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_NX)) {
 		/* Execute Disable */
-		pr_fatal("%s, NX not supported\n", __func__);
+		printf("%s, NX not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_SMEP)) {
 		/* Supervisor-Mode Execution Prevention */
-		pr_fatal("%s, SMEP not supported\n", __func__);
+		printf("%s, SMEP not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_SMAP)) {
 		/* Supervisor-Mode Access Prevention */
-		pr_fatal("%s, SMAP not supported\n", __func__);
+		printf("%s, SMAP not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_MTRR)) {
-		pr_fatal("%s, MTRR not supported\n", __func__);
+		printf("%s, MTRR not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_CLFLUSHOPT)) {
-		pr_fatal("%s, CLFLUSHOPT not supported\n", __func__);
+		printf("%s, CLFLUSHOPT not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_PAGE1GB)) {
-		pr_fatal("%s, not support 1GB page\n", __func__);
+		printf("%s, not support 1GB page\n", __func__);
 		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_VMX)) {
-		pr_fatal("%s, vmx not supported\n", __func__);
+		printf("%s, vmx not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (!is_fast_string_erms_supported_and_enabled()) {
 		ret = -ENODEV;
 	} else if (!pcpu_has_vmx_unrestricted_guest_cap()) {
-		pr_fatal("%s, unrestricted guest not supported\n", __func__);
+		printf("%s, unrestricted guest not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (!is_ept_supported()) {
-		pr_fatal("%s, EPT not supported\n", __func__);
+		printf("%s, EPT not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (!is_apicv_basic_feature_supported()) {
-		pr_fatal("%s, APICV not supported\n", __func__);
+		printf("%s, APICV not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (boot_cpu_data.cpuid_level < 0x15U) {
-		pr_fatal("%s, required CPU feature not supported\n", __func__);
+		printf("%s, required CPU feature not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (is_vmx_disabled()) {
-		pr_fatal("%s, VMX can not be enabled\n", __func__);
+		printf("%s, VMX can not be enabled\n", __func__);
 		ret = -ENODEV;
 	} else if (get_pcpu_nums() > CONFIG_MAX_PCPU_NUM) {
-		pr_fatal("%s, pcpu number(%d) is out of range\n", __func__, get_pcpu_nums());
+		printf("%s, pcpu number(%d) is out of range\n", __func__, get_pcpu_nums());
+		ret = -ENODEV;
+	} else if (!pcpu_has_cap(X86_FEATURE_X2APIC)) {
+		printf("%s, x2APIC not supported\n", __func__);
 		ret = -ENODEV;
 	} else {
 		ret = check_vmx_mmu_cap();
-		if (ret == 0) {
-			pr_acrnlog("hardware support HV");
-		}
 	}
 
 	return ret;

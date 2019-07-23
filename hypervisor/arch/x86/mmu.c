@@ -235,6 +235,8 @@ void init_paging(void)
 	high64_max_ram = round_pde_up(p_e820_mem_info->mem_top);
 	if ((high64_max_ram > (CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)) ||
 			(high64_max_ram < (1UL << 32U))) {
+		printf("ERROR!!! high64_max_ram: 0x%llx, top address space: 0x%llx\n",
+			high64_max_ram, CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE);
 		panic("Please configure HV_ADDRESS_SPACE correctly!\n");
 	}
 
