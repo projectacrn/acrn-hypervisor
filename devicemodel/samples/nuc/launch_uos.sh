@@ -47,7 +47,7 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 2,passthru,0/2/0 \
   -s 5,virtio-console,@pty:pty_port \
   -s 6,virtio-hyper_dmabuf \
-  -s 3,virtio-blk,/home/clear/clear-29200-kvm.img \
+  -s 3,virtio-blk,/home/clear/uos/uos.img \
   -s 4,virtio-net,tap0 \
   -s 7,passthru,0/14/0 \
   -s 8,passthru,0/d/0 \
