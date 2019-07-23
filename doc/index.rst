@@ -30,7 +30,7 @@ Sections
    user-guides/index.rst
    developer-guides/index.rst
    tutorials/index.rst
-   release_notes.rst
+   release_notes/index.rst
    faq.rst
 
 Indices and Tables
