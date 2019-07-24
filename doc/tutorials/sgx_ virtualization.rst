@@ -19,7 +19,7 @@ ACRN SGX virtualization support can be divided into three parts:
 The image below shows the high-level design of SGX virtualization in ACRN. 
 
 .. figure:: images/sgx-1.png
-   :scale: 50%
+   :scale: 25%
    :align: left
 
    Figure 1: SGX Virtualization in ACRN
@@ -67,26 +67,30 @@ you must perform the following:
    a) Go to the Security page:
 
       .. figure:: images/sgx-2.jpg
+         :scale: 25%
          :align: left
 
    #) Enable SGX and configure the SGX Reserved Memory size as below: 
+
       * Intel Software Guard Extension (SGX) -> Enabled 
       * SGX Reserved Memory Size -> 128MB
 
       .. figure:: images/sgx-3.jpg
+         :scale: 25%
          :align: left
 
       .. note:: 
          Not all SGX Reserved Memory can be used as EPC. On KBL-NUC-i7,
          the SGX EPC size is 0x5d80000 (93.5MB) when the SGX Reserved Memory Size is set to 128MB. 
 
- #. Add the EPC config in the VM configuration:
-    Apply the patch to enable SGX support in UOS in the SDC scenario:
-       https://github.com/binbinwu1/acrn-hypervisor/commit/0153b2b9b9920b61780163f19c6f5318562215ef.patch
+#. Add the EPC config in the VM configuration:
+   Apply the patch to enable SGX support in UOS in the SDC scenario:
+   https://github.com/binbinwu1/acrn-hypervisor/commit/0153b2b9b9920b61780163f19c6f5318562215ef.patch
 
- #. Enable SGX in Guest:
-    * Refer to https://github.com/intel/linux-sgx on how to enable SGX in Linux Guest.
-    * Refer to https://software.intel.com/en-us/articles/getting-started-with-sgx-sdk-for-windows on how to enable SGX in Windows Guest.
+#. Enable SGX in Guest:
+
+   * Refer to https://github.com/intel/linux-sgx on how to enable SGX in Linux Guest.
+   * Refer to https://software.intel.com/en-us/articles/getting-started-with-sgx-sdk-for-windows on how to enable SGX in Windows Guest.
 
 SGX Capability Exposure
 ***********************
@@ -158,6 +162,7 @@ Enclave System Function Handling
 ********************************
 
 A new "Enable ENCLS exiting" control bit (bit 15) is defined in the secondary processor-based VM execution control.
+
 * 1-Setting of "Enable ENCLS exiting" enables ENCLS-exiting bitmap control, which is a new 64-bit ENCLS-exiting bitmap control field added to VMX VMCS (0202EH) to control VMEXIT on ENCLS leaf functions.
 * ACRN does not emulate ENCLS leaf functions and will not enable ENCLS exiting.
 
