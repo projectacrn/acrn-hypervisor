@@ -24,7 +24,7 @@ int32_t parse_hv_cmdline(void)
 		return -EINVAL;
 	}
 
-	mbi = (struct multiboot_info *)(hpa2hva((uint64_t)boot_regs[1]));
+	mbi = (struct multiboot_info *)(hpa2hva_early((uint64_t)boot_regs[1]));
 	dev_dbg(ACRN_DBG_PARSE, "Multiboot detected, flag=0x%x", mbi->mi_flags);
 
 	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) == 0U) {
@@ -32,7 +32,7 @@ int32_t parse_hv_cmdline(void)
 		return -EINVAL;
 	}
 
-	start = (char *)hpa2hva((uint64_t)mbi->mi_cmdline);
+	start = (char *)hpa2hva_early((uint64_t)mbi->mi_cmdline);
 	dev_dbg(ACRN_DBG_PARSE, "hv cmdline: %s", start);
 
 	do {

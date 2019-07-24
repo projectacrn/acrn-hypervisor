@@ -152,6 +152,29 @@
  *
  * @return The translated host-virtual address
  */
+static inline void *hpa2hva_early(uint64_t x)
+{
+	return (void *)x;
+}
+/**
+ * @brief Translate host-virtual address to host-physical address
+ *
+ * @param[in] x The specified host-virtual address
+ *
+ * @return The translated host-physical address
+ */
+static inline uint64_t hva2hpa_early(void *x)
+{
+	return (uint64_t)x;
+}
+
+/**
+ * @brief Translate host-physical address to host-virtual address
+ *
+ * @param[in] x The specified host-physical address
+ *
+ * @return The translated host-virtual address
+ */
 static inline void *hpa2hva(uint64_t x)
 {
 	return (void *)x;

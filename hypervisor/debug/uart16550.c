@@ -138,6 +138,7 @@ void uart16550_init(bool eraly_boot)
 	}
 
 	if (!eraly_boot && !uart.serial_port_mapped) {
+		uart.mmio_base_vaddr = hpa2hva(hva2hpa_early(uart.mmio_base_vaddr));
 		hv_access_memory_region_update((uint64_t)uart.mmio_base_vaddr, PDE_SIZE);
 		return;
 	}
@@ -146,7 +147,7 @@ void uart16550_init(bool eraly_boot)
 	if (!uart.serial_port_mapped) {
 		serial_pci_bdf.value = get_pci_bdf_value(pci_bdf_info);
 		uart.mmio_base_vaddr =
-			hpa2hva(pci_pdev_read_cfg(serial_pci_bdf, pci_bar_offset(0), 4U) & PCIM_BAR_MEM_BASE);
+			hpa2hva_early(pci_pdev_read_cfg(serial_pci_bdf, pci_bar_offset(0), 4U) & PCIM_BAR_MEM_BASE);
 	}
 
 	spinlock_init(&uart.rx_lock);
