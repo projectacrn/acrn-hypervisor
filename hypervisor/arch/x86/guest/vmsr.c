@@ -456,6 +456,10 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
  * IA32_TIME_STAMP_COUNTER MSR adds (or subtracts) value X from the
  * TSC, the logical processor also adds (or subtracts) value X from
  * the IA32_TSC_ADJUST MSR.
+ *
+ * So, here we should update VMCS.OFFSET and vAdjust accordingly.
+ *   - VMCS.OFFSET = vTSC - pTSC
+ *   - vAdjust += VMCS.OFFSET's delta
  */
 
 /**
@@ -479,9 +483,32 @@ static void set_guest_tsc(struct acrn_vcpu *vcpu, uint64_t guest_tsc)
 }
 
 /*
+ * The policy of vART is that software in native can run in VM too. And in native side,
+ * the relationship between the ART hardware and TSC is:
+ *
+ *   pTSC = (pART * M) / N + pAdjust
+ *
+ * The vART solution is:
+ *   - Present the ART capability to guest through CPUID leaf
+ *     15H for M/N which identical to the physical values.
+ *   - PT devices see the pART (vART = pART).
+ *   - Guest expect: vTSC = vART * M / N + vAdjust.
+ *   - VMCS.OFFSET = vTSC - pTSC = vAdjust - pAdjust.
+ *
+ * So to support vART, we should do the following:
+ *   1. if vAdjust and vTSC are changed by guest, we should change
+ *      VMCS.OFFSET accordingly.
+ *   2. Make the assumption that the pAjust is never touched by ACRN.
+ */
+
+/*
  * Intel SDM 17.17.3: "If an execution of WRMSR to the IA32_TSC_ADJUST
  * MSR adds (or subtracts) value X from that MSR, the logical
  * processor also adds (or subtracts) value X from the TSC."
+ *
+ * So, here we should update VMCS.OFFSET and vAdjust accordingly.
+ *   - VMCS.OFFSET += vAdjust's delta
+ *   - vAdjust = new vAdjust set by guest
  */
 
 /**
@@ -728,5 +755,4 @@ void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu)
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_LDR, INTERCEPT_READ);
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_ICR, INTERCEPT_WRITE);
 	enable_msr_interception(msr_bitmap, MSR_IA32_TSC_DEADLINE, INTERCEPT_DISABLE);
-	enable_msr_interception(msr_bitmap, MSR_IA32_TSC_ADJUST, INTERCEPT_DISABLE);
 }
