@@ -26,6 +26,7 @@
 #include <cat.h>
 #include <vboot.h>
 #include <sgx.h>
+#include <uart16550.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */
@@ -105,6 +106,14 @@ void init_pcpu_pre(bool is_bsp)
 
 		/* Clear BSS */
 		(void)memset(&ld_bss_start, 0U, (size_t)(&ld_bss_end - &ld_bss_start));
+
+		(void)parse_hv_cmdline();
+		/*
+		 * WARNNING: here assume that vaddr2paddr is identical mapping.
+		 * Enable UART as early as possible.
+		 * Then we could use printf for debugging on early boot stage.
+		 */
+		uart16550_init(true);
 
 		/* Get CPU capabilities thru CPUID, including the physical address bit
 		 * limit which is required for initializing paging.

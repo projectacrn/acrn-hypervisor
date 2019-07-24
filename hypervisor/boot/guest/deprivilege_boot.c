@@ -26,8 +26,6 @@ static void init_depri_boot(void)
 	struct multiboot_info *mbi = NULL;
 
 	if (!depri_initialized) {
-		(void)parse_hv_cmdline();
-
 		mbi = (struct multiboot_info *) hpa2hva(((uint64_t)(uint32_t)boot_regs[1]));
 		if ((mbi == NULL) || ((mbi->mi_flags & MULTIBOOT_INFO_HAS_DRIVES) == 0U)) {
 			pr_err("no multiboot drivers for depri_boot found");

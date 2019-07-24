@@ -24,7 +24,7 @@ uint16_t console_vmid = ACRN_INVALID_VMID;
 
 void console_init(void)
 {
-	uart16550_init();
+	uart16550_init(false);
 }
 
 void console_putc(const char *ch)
