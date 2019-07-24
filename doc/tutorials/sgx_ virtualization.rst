@@ -19,9 +19,10 @@ ACRN SGX virtualization support can be divided into three parts:
 The image below shows the high-level design of SGX virtualization in ACRN. 
 
 .. figure:: images/sgx-1.png
-   :align: center
+   :scale: 50%
+   :align: left
 
-   SGX Virtualization in ACRN
+   Figure 1: SGX Virtualization in ACRN
 
 
 Enable SGX support for Guest 
@@ -65,19 +66,19 @@ you must perform the following:
 
    a) Go to the Security page:
 
-      .. figure:: images/sgx-1.png
-         :align: center
+      .. figure:: images/sgx-2.jpg
+         :align: left
 
-   b) Enable SGX and configure the SGX Reserved Memory size as below: * Intel
-   Software Guard Extension (SGX) -> Enabled * SGX Reserved Memory Size ->
-   128MB
+   #) Enable SGX and configure the SGX Reserved Memory size as below: 
+      * Intel Software Guard Extension (SGX) -> Enabled 
+      * SGX Reserved Memory Size -> 128MB
 
-      .. figure:: images/sgx-2.png
-         :align: center
+      .. figure:: images/sgx-3.jpg
+         :align: left
 
       .. note:: 
-      Not all SGX Reserved Memory can be used as EPC. On KBL-NUC-i7,
-      the SGX EPC size is 0x5d80000 (93.5MB) when the SGX Reserved Memory Size is set to 128MB. 
+         Not all SGX Reserved Memory can be used as EPC. On KBL-NUC-i7,
+         the SGX EPC size is 0x5d80000 (93.5MB) when the SGX Reserved Memory Size is set to 128MB. 
 
  #. Add the EPC config in the VM configuration:
     Apply the patch to enable SGX support in UOS in the SDC scenario:
@@ -156,7 +157,7 @@ EPC Virtualization
 Enclave System Function Handling
 ********************************
 
-A*  new "Enable ENCLS exiting" control bit (bit 15) is defined in the secondary processor-based VM execution control.
+A new "Enable ENCLS exiting" control bit (bit 15) is defined in the secondary processor-based VM execution control.
 * 1-Setting of "Enable ENCLS exiting" enables ENCLS-exiting bitmap control, which is a new 64-bit ENCLS-exiting bitmap control field added to VMX VMCS (0202EH) to control VMEXIT on ENCLS leaf functions.
 * ACRN does not emulate ENCLS leaf functions and will not enable ENCLS exiting.
 
