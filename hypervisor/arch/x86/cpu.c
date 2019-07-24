@@ -109,7 +109,6 @@ void init_pcpu_pre(bool is_bsp)
 
 		(void)parse_hv_cmdline();
 		/*
-		 * WARNNING: here assume that vaddr2paddr is identical mapping.
 		 * Enable UART as early as possible.
 		 * Then we could use printf for debugging on early boot stage.
 		 */
@@ -131,6 +130,12 @@ void init_pcpu_pre(bool is_bsp)
 		/* Initialize the hypervisor paging */
 		init_e820();
 		init_paging();
+
+		/*
+		 * Need update uart_base_address here for vaddr2paddr mapping may changed
+		 * WARNNING: DO NOT CALL PRINTF BETWEEN ENABLE PAGING IN init_paging AND HERE!
+		 */
+		uart16550_init(false);
 
 		early_init_lapic();
 
