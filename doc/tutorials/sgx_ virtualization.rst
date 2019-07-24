@@ -19,7 +19,7 @@ ACRN SGX virtualization support can be divided into three parts:
 The image below shows the high-level design of SGX virtualization in ACRN. 
 
 .. figure:: images/sgx-1.png
-   :scale: 25%
+   :scale: 10%
    :align: left
 
    Figure 1: SGX Virtualization in ACRN
@@ -67,7 +67,7 @@ you must perform the following:
    a) Go to the Security page:
 
       .. figure:: images/sgx-2.jpg
-         :scale: 25%
+         :scale: 10%
          :align: left
 
    #) Enable SGX and configure the SGX Reserved Memory size as below: 
@@ -76,7 +76,7 @@ you must perform the following:
       * SGX Reserved Memory Size -> 128MB
 
       .. figure:: images/sgx-3.jpg
-         :scale: 25%
+         :scale: 10%
          :align: left
 
       .. note:: 
