@@ -131,9 +131,14 @@ static void uart16550_set_baud_rate(uint32_t baud_rate)
 	uart16550_write_reg(uart, temp_reg, UART16550_LCR);
 }
 
-void uart16550_init(void)
+void uart16550_init(bool eraly_boot)
 {
 	if (!uart.enabled) {
+		return;
+	}
+
+	if (!eraly_boot && !uart.serial_port_mapped) {
+		hv_access_memory_region_update((uint64_t)uart.mmio_base_vaddr, PDE_SIZE);
 		return;
 	}
 
@@ -142,10 +147,6 @@ void uart16550_init(void)
 		serial_pci_bdf.value = get_pci_bdf_value(pci_bdf_info);
 		uart.mmio_base_vaddr =
 			hpa2hva(pci_pdev_read_cfg(serial_pci_bdf, pci_bar_offset(0), 4U) & PCIM_BAR_MEM_BASE);
-	}
-
-	if (!uart.serial_port_mapped) {
-		hv_access_memory_region_update((uint64_t)uart.mmio_base_vaddr, PDE_SIZE);
 	}
 
 	spinlock_init(&uart.rx_lock);
