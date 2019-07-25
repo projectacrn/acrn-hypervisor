@@ -27,3 +27,5 @@ struct platform_clos_info platform_clos_array[4] = {
 };
 
 uint16_t platform_clos_num = (uint16_t)(sizeof(platform_clos_array)/sizeof(struct platform_clos_info));
+
+const struct cpu_state_table board_cpu_state_tbl;
