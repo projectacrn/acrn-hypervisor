@@ -233,19 +233,26 @@ int32_t strcmp(const char *s1_arg, const char *s2_arg)
 	return *str1 - *str2;
 }
 
+/**
+ * @pre n_arg > 0
+ */
 int32_t strncmp(const char *s1_arg, const char *s2_arg, size_t n_arg)
 {
 	const char *str1 = s1_arg;
 	const char *str2 = s2_arg;
 	size_t n = n_arg;
+	int32_t ret = 0;
 
-	while (((n - 1) != 0U) && ((*str1) != '\0') && ((*str2) != '\0') && ((*str1) == (*str2))) {
-		str1++;
-		str2++;
-		n--;
+	if (n > 0U) {
+		while (((n - 1) != 0U) && ((*str1) != '\0') && ((*str2) != '\0') && ((*str1) == (*str2))) {
+			str1++;
+			str2++;
+			n--;
+		}
+		ret = (int32_t) (*str1 - *str2);
 	}
 
-	return *str1 - *str2;
+	return ret;
 }
 
 /*
