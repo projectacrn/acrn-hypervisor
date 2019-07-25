@@ -619,7 +619,7 @@ virtio_console_open_backend(const char *path,
 	case VIRTIO_CONSOLE_BE_SOCKET:
 		fd = socket(AF_UNIX, SOCK_STREAM, 0);
 		if (fd < 0)
-			WPRINTF(("vtcon: socket open failed: %s\n", path));
+			WPRINTF(("vtcon: socket open failed \n"));
 		break;
 	default:
 		WPRINTF(("not supported backend %d!\n", be_type));
