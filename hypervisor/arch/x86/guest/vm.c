@@ -608,13 +608,13 @@ int32_t shutdown_vm(struct acrn_vm *vm)
  */
 void start_vm(struct acrn_vm *vm)
 {
-	struct acrn_vcpu *vcpu = NULL;
+	struct acrn_vcpu *bsp = NULL;
 
 	vm->state = VM_STARTED;
 
 	/* Only start BSP (vid = 0) and let BSP start other APs */
-	vcpu = vcpu_from_vid(vm, 0U);
-	schedule_vcpu(vcpu);
+	bsp = vcpu_from_vid(vm, BOOT_CPU_ID);
+	schedule_vcpu(bsp);
 }
 
 /**
@@ -702,7 +702,7 @@ void pause_vm(struct acrn_vm *vm)
  */
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 {
-	struct acrn_vcpu *bsp = vcpu_from_vid(vm, 0U);
+	struct acrn_vcpu *bsp = vcpu_from_vid(vm, BOOT_CPU_ID);
 
 	vm->state = VM_STARTED;
 
@@ -711,10 +711,11 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 	/* When SOS resume from S3, it will return to real mode
 	 * with entry set to wakeup_vec.
 	 */
-	set_ap_entry(bsp, wakeup_vec);
+	set_vcpu_startup_entry(bsp, wakeup_vec);
 
 	init_vmcs(bsp);
 	schedule_vcpu(bsp);
+	switch_to_idle(default_idle);
 }
 
 /**
