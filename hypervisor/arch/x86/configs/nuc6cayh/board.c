@@ -8,3 +8,4 @@
 
 struct platform_clos_info platform_clos_array[0];
 uint16_t platform_clos_num = 0;
+const struct cpu_state_table board_cpu_state_tbl;
