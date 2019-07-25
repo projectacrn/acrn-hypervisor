@@ -906,19 +906,25 @@ virtio_console_add_backend(struct virtio_console *console, char *opt)
 			be->evp = mevent_add(fd, EVF_READ,
 					virtio_console_accept_new_connection, be,
 					virtio_console_teardown_backend, be);
+			if (be->evp == NULL) {
+				WPRINTF(("vtcon: mevent_add failed\n"));
+				error = -1;
+				goto out;
+			}
+			console->ref_count++;
 		}
 		else if (isatty(fd) || (be->be_type == VIRTIO_CONSOLE_BE_SOCKET
 			&& !strcmp(be->socket_type,"client"))) {
 			be->evp = mevent_add(fd, EVF_READ,
 					virtio_console_backend_read, be,
 					virtio_console_teardown_backend, be);
+			if (be->evp == NULL) {
+				WPRINTF(("vtcon: mevent_add failed\n"));
+				error = -1;
+				goto out;
+			}
+			console->ref_count++;
 		}
-		if (be->evp == NULL) {
-			WPRINTF(("vtcon: mevent_add failed\n"));
-			error = -1;
-			goto out;
-		}
-		console->ref_count++;
 	}
 
 	virtio_console_open_port(be->port, true);
