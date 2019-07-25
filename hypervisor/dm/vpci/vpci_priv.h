@@ -104,9 +104,9 @@ static inline bool msixcap_access(const struct pci_vdev *vdev, uint32_t offset)
 /**
  * @pre vdev != NULL
  */
-static inline bool vbar_access(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes)
+static inline bool vbar_access(const struct pci_vdev *vdev, uint32_t offset)
 {
-	return (is_bar_offset(vdev->nr_bars, offset) && (bytes == 4U) && ((offset & 0x3U) == 0U));
+	return is_bar_offset(vdev->nr_bars, offset);
 }
 
 /**
@@ -114,7 +114,7 @@ static inline bool vbar_access(const struct pci_vdev *vdev, uint32_t offset, uin
  */
 static inline bool has_msi_cap(const struct pci_vdev *vdev)
 {
-        return (vdev->msi.capoff != 0U);
+	return (vdev->msi.capoff != 0U);
 }
 
 /**
@@ -122,7 +122,7 @@ static inline bool has_msi_cap(const struct pci_vdev *vdev)
  */
 static inline bool msicap_access(const struct pci_vdev *vdev, uint32_t offset)
 {
-       return (has_msi_cap(vdev) && in_range(offset, vdev->msi.capoff, vdev->msi.caplen));
+	return (has_msi_cap(vdev) && in_range(offset, vdev->msi.capoff, vdev->msi.caplen));
 }
 
 /**
