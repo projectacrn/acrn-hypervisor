@@ -1159,7 +1159,7 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode, uint32_t 
 				pr_err("Start Secondary VCPU%hu for VM[%d]...",
 					target_vcpu->vcpu_id,
 					target_vcpu->vm->vm_id);
-				set_ap_entry(target_vcpu, (icr_low & APIC_VECTOR_MASK) << 12U);
+				set_vcpu_startup_entry(target_vcpu, (icr_low & APIC_VECTOR_MASK) << 12U);
 				schedule_vcpu(target_vcpu);
 			}
 		}

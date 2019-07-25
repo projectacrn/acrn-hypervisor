@@ -168,6 +168,7 @@ static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t 
 static bool pm1ab_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint32_t v)
 {
 	static uint32_t pm1a_cnt_ready = 0U;
+	uint32_t pm1a_cnt_val;
 	bool to_write = true;
 
 	if (width == 2U) {
@@ -188,8 +189,9 @@ static bool pm1ab_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint
 			&& (val == vm->pm.sx_state_data->s3_pkg.val_pm1b) && (s3_enabled(v) != 0U)) {
 
 			if (pm1a_cnt_ready != 0U) {
-				enter_s3(vm, pm1a_cnt_ready, v);
+				pm1a_cnt_val = pm1a_cnt_ready;
 				pm1a_cnt_ready = 0U;
+				enter_s3(vm, pm1a_cnt_val, v);
 			} else {
 				/* the case broke ACPI spec */
 				pr_err("PM1B_CNT write error!");

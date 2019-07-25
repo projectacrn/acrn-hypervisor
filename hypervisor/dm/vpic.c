@@ -202,8 +202,8 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 		 */
 		i8259->intr_raised = true;
 		if (vpic->vm->wire_mode == VPIC_WIRE_INTR) {
-			struct acrn_vcpu *vcpu = vcpu_from_vid(vpic->vm, 0U);
-			vcpu_inject_extint(vcpu);
+			struct acrn_vcpu *bsp = vcpu_from_vid(vpic->vm, BOOT_CPU_ID);
+			vcpu_inject_extint(bsp);
 		} else {
 			/*
 			 * The input parameters here guarantee the return value of vlapic_set_local_intr is 0, means

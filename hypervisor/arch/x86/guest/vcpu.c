@@ -323,7 +323,7 @@ void reset_vcpu_regs(struct acrn_vcpu *vcpu)
 	set_vcpu_regs(vcpu, &realmode_init_regs);
 }
 
-void set_ap_entry(struct acrn_vcpu *vcpu, uint64_t entry)
+void set_vcpu_startup_entry(struct acrn_vcpu *vcpu, uint64_t entry)
 {
 	struct ext_context *ectx;
 

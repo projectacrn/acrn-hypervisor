@@ -604,16 +604,16 @@ void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
 void reset_vcpu_regs(struct acrn_vcpu *vcpu);
 
 /**
- * @brief set the vcpu AP entry
+ * @brief set the vCPU startup entry
  *
- * Set target vCPU's AP running entry in run_context.
+ * Set target vCPU's startup entry in run_context.
  *
- * @param[inout] vcpu pointer to vcpu data structure
- * @param[in] entry the entry value for AP
+ * @param[inout] vcpu pointer to vCPU data structure
+ * @param[in] entry startup entry for the vCPU
  *
  * @return None
  */
-void set_ap_entry(struct acrn_vcpu *vcpu, uint64_t entry);
+void set_vcpu_startup_entry(struct acrn_vcpu *vcpu, uint64_t entry);
 
 static inline bool is_long_mode(struct acrn_vcpu *vcpu)
 {
