@@ -168,51 +168,43 @@ static int32_t vmsix_remap_one_entry(const struct pci_vdev *vdev, uint32_t index
  */
 int32_t vmsix_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
-	int32_t ret = -ENODEV;
 	/* For PIO access, we emulate Capability Structures only */
+	*val = pci_vdev_read_cfg(vdev, offset, bytes);
 
-	if (msixcap_access(vdev, offset)) {
-		*val = pci_vdev_read_cfg(vdev, offset, bytes);
-	    ret = 0;
-	}
-
-	return ret;
+	return 0;
 }
 
 /**
+ * @brief Writing MSI-X Capability Structure
+ *
  * @pre vdev != NULL
  * @pre vdev->pdev != NULL
  */
 int32_t vmsix_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	uint32_t msgctrl;
-	int32_t ret = -ENODEV;
 
-	/* Writing MSI-X Capability Structure */
-	if (msixcap_access(vdev, offset)) {
-		msgctrl = pci_vdev_read_cfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
+	msgctrl = pci_vdev_read_cfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
 
-		/* Write to vdev */
-		pci_vdev_write_cfg(vdev, offset, bytes, val);
+	/* Write to vdev */
+	pci_vdev_write_cfg(vdev, offset, bytes, val);
 
-		/* Writing Message Control field? */
-		if ((offset - vdev->msix.capoff) == PCIR_MSIX_CTRL) {
-			if (((msgctrl ^ val) & PCIM_MSIXCTRL_MSIX_ENABLE) != 0U) {
-				if ((val & PCIM_MSIXCTRL_MSIX_ENABLE) != 0U) {
-					(void)vmsix_remap(vdev, true);
-				} else {
-					(void)vmsix_remap(vdev, false);
-				}
-			}
-
-			if (((msgctrl ^ val) & PCIM_MSIXCTRL_FUNCTION_MASK) != 0U) {
-				pci_pdev_write_cfg(vdev->pdev->bdf, offset, 2U, val);
+	/* Writing Message Control field? */
+	if ((offset - vdev->msix.capoff) == PCIR_MSIX_CTRL) {
+		if (((msgctrl ^ val) & PCIM_MSIXCTRL_MSIX_ENABLE) != 0U) {
+			if ((val & PCIM_MSIXCTRL_MSIX_ENABLE) != 0U) {
+				(void)vmsix_remap(vdev, true);
+			} else {
+				(void)vmsix_remap(vdev, false);
 			}
 		}
-		ret = 0;
+
+		if (((msgctrl ^ val) & PCIM_MSIXCTRL_FUNCTION_MASK) != 0U) {
+			pci_pdev_write_cfg(vdev->pdev->bdf, offset, 2U, val);
+		}
 	}
 
-	return ret;
+	return 0;
 }
 
 /**

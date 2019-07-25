@@ -354,7 +354,7 @@ static void vpci_deinit_pt_dev(struct pci_vdev *vdev)
 static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t val)
 {
-	if (vbar_access(vdev, offset, bytes)) {
+	if (vbar_access(vdev, offset)) {
 		(void)vdev_pt_write_cfg(vdev, offset, bytes, val);
 	} else if (msicap_access(vdev, offset)) {
 		(void)vmsi_write_cfg(vdev, offset, bytes, val);
@@ -371,7 +371,7 @@ static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 static int32_t vpci_read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t *val)
 {
-	if (vbar_access(vdev, offset, bytes)) {
+	if (vbar_access(vdev, offset)) {
 		(void)vdev_pt_read_cfg(vdev, offset, bytes, val);
 	} else if (msicap_access(vdev, offset)) {
 		(void)vmsi_read_cfg(vdev, offset, bytes, val);

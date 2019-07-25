@@ -103,18 +103,15 @@ static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
  */
 int32_t vmsi_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
-	int32_t ret = -ENODEV;
-
 	/* For PIO access, we emulate Capability Structures only */
-	if (msicap_access(vdev, offset)) {
-		*val = pci_vdev_read_cfg(vdev, offset, bytes);
-	    ret = 0;
-	}
+	*val = pci_vdev_read_cfg(vdev, offset, bytes);
 
-	return ret;
+	return 0;
 }
 
 /**
+ * @brief Writing MSI Capability Structure
+ *
  * @pre vdev != NULL
  */
 int32_t vmsi_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
@@ -122,37 +119,30 @@ int32_t vmsi_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, u
 	bool message_changed = false;
 	bool enable;
 	uint32_t msgctrl;
-	int32_t ret = -ENODEV;
 
-	/* Writing MSI Capability Structure */
-	if (msicap_access(vdev, offset)) {
+	/* Save msgctrl for comparison */
+	msgctrl = pci_vdev_read_cfg(vdev, vdev->msi.capoff + PCIR_MSI_CTRL, 2U);
 
-		/* Save msgctrl for comparison */
-		msgctrl = pci_vdev_read_cfg(vdev, vdev->msi.capoff + PCIR_MSI_CTRL, 2U);
-
-		/* Either Message Data or message Addr is being changed */
-		if (((offset - vdev->msi.capoff) >= PCIR_MSI_ADDR) && (val != pci_vdev_read_cfg(vdev, offset, bytes))) {
-			message_changed = true;
-		}
-
-		/* Write to vdev */
-		pci_vdev_write_cfg(vdev, offset, bytes, val);
-
-		/* Do remap if MSI Enable bit is being changed */
-		if (((offset - vdev->msi.capoff) == PCIR_MSI_CTRL) &&
-			(((msgctrl ^ val) & PCIM_MSICTRL_MSI_ENABLE) != 0U)) {
-			enable = ((val & PCIM_MSICTRL_MSI_ENABLE) != 0U);
-			(void)vmsi_remap(vdev, enable);
-		} else {
-			if (message_changed && ((msgctrl & PCIM_MSICTRL_MSI_ENABLE) != 0U)) {
-				(void)vmsi_remap(vdev, true);
-			}
-		}
-
-		ret = 0;
+	/* Either Message Data or message Addr is being changed */
+	if (((offset - vdev->msi.capoff) >= PCIR_MSI_ADDR) && (val != pci_vdev_read_cfg(vdev, offset, bytes))) {
+		message_changed = true;
 	}
 
-	return ret;
+	/* Write to vdev */
+	pci_vdev_write_cfg(vdev, offset, bytes, val);
+
+	/* Do remap if MSI Enable bit is being changed */
+	if (((offset - vdev->msi.capoff) == PCIR_MSI_CTRL) &&
+		(((msgctrl ^ val) & PCIM_MSICTRL_MSI_ENABLE) != 0U)) {
+		enable = ((val & PCIM_MSICTRL_MSI_ENABLE) != 0U);
+		(void)vmsi_remap(vdev, enable);
+	} else {
+		if (message_changed && ((msgctrl & PCIM_MSICTRL_MSI_ENABLE) != 0U)) {
+			(void)vmsi_remap(vdev, true);
+		}
+	}
+
+	return 0;
 }
 
 /**
