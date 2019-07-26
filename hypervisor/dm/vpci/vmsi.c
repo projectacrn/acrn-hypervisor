@@ -101,12 +101,10 @@ static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
 /**
  * @pre vdev != NULL
  */
-int32_t vmsi_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
+void vmsi_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	/* For PIO access, we emulate Capability Structures only */
 	*val = pci_vdev_read_cfg(vdev, offset, bytes);
-
-	return 0;
 }
 
 /**
@@ -114,7 +112,7 @@ int32_t vmsi_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t byt
  *
  * @pre vdev != NULL
  */
-int32_t vmsi_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
+void vmsi_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	bool message_changed = false;
 	bool enable;
@@ -141,8 +139,6 @@ int32_t vmsi_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, u
 			(void)vmsi_remap(vdev, true);
 		}
 	}
-
-	return 0;
 }
 
 /**
