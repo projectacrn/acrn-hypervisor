@@ -129,7 +129,7 @@ static uint64_t get_pbar_base(const struct pci_pdev *pdev, uint32_t idx)
 /**
  * @pre vdev != NULL
  */
-int32_t vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
+void vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	/* bar access must be 4 bytes and offset must also be 4 bytes aligned */
 	if ((bytes == 4U) && ((offset & 0x3U) == 0U)) {
@@ -137,8 +137,6 @@ int32_t vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t 
 	} else {
 		*val = ~0U;
 	}
-
-	return 0;
 }
 
 /**
@@ -440,14 +438,12 @@ static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t 
  * @pre vdev != NULL
  * bar write access must be 4 bytes and offset must also be 4 bytes aligned, it will be dropped otherwise
  */
-int32_t vdev_pt_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
+void vdev_pt_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	/* bar write access must be 4 bytes and offset must also be 4 bytes aligned */
 	if ((bytes == 4U) && ((offset & 0x3U) == 0U)) {
 		vdev_pt_write_vbar(vdev, offset, val);
 	}
-
-	return 0;
 }
 
 /**

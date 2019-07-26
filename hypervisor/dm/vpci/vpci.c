@@ -355,11 +355,11 @@ static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t val)
 {
 	if (vbar_access(vdev, offset)) {
-		(void)vdev_pt_write_cfg(vdev, offset, bytes, val);
+		vdev_pt_write_cfg(vdev, offset, bytes, val);
 	} else if (msicap_access(vdev, offset)) {
-		(void)vmsi_write_cfg(vdev, offset, bytes, val);
+		vmsi_write_cfg(vdev, offset, bytes, val);
 	} else if (msixcap_access(vdev, offset)) {
-		(void)vmsix_write_cfg(vdev, offset, bytes, val);
+		vmsix_write_cfg(vdev, offset, bytes, val);
 	} else {
 		/* passthru to physical device */
 		pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
@@ -372,11 +372,11 @@ static int32_t vpci_read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset
 		uint32_t bytes, uint32_t *val)
 {
 	if (vbar_access(vdev, offset)) {
-		(void)vdev_pt_read_cfg(vdev, offset, bytes, val);
+		vdev_pt_read_cfg(vdev, offset, bytes, val);
 	} else if (msicap_access(vdev, offset)) {
-		(void)vmsi_read_cfg(vdev, offset, bytes, val);
+		vmsi_read_cfg(vdev, offset, bytes, val);
 	} else if (msixcap_access(vdev, offset)) {
-		(void)vmsix_read_cfg(vdev, offset, bytes, val);
+		vmsix_read_cfg(vdev, offset, bytes, val);
 	} else {
 		/* passthru to physical device */
 		*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
