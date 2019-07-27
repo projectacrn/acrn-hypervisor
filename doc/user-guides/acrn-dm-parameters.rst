@@ -255,7 +255,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
        uses ``/usr/share/acrn/bios/VSBL.bin`` as the vSBL image
 
-   * - :kbd:`--ovmf <ovmf_file_path>`
+   * - :kbd:`--ovmf [w,]<ovmf_file_path>`
      - Open Virtual Machine Firmware (OVMF) is an EDK II based project to enable
        UEFI support for Virtual Machines.
 
@@ -268,6 +268,14 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
           --ovmf /usr/share/acrn/bios/OVMF.fd
 
        uses ``/usr/share/acrn/bios/OVMF.fd`` as the OVMF image
+
+       ACRN supports option "w" of OVMF. To preserve any change of OVMF NV data
+       store section, using this option to enable NV data store section writeback. 
+
+       usage::
+
+          --ovmf w,/usr/share/acrn/bios/OVMF.fd
+       
 
    * - :kbd:`--virtio_poll <poll_interval>`
      - Enable virtio poll mode with poll interval xxx ns.
