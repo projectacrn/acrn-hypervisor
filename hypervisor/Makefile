@@ -374,6 +374,11 @@ else
 endif
 endif
 
+ifeq ($(FIRMWARE),uefi)
+install: $(HV_OBJDIR)/$(HV_FILE).32.out
+	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).32.out
+endif
+
 .PHONY: pre_build
 pre_build: $(PRE_BUILD_OBJS)
 
