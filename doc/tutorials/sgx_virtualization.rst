@@ -106,7 +106,7 @@ enable SGX support in the BIOS and in ACRN:
      the SGX SDK and PSW packages.
    * **For a Windows Guest**, follow the guide at
      https://software.intel.com/en-us/articles/getting-started-with-sgx
-       -sdk-for-windows for enabling applications with Intel SGX using
+     -sdk-for-windows for enabling applications with Intel SGX using
      Microsoft* Visual Studio* 2015 on a 64-bit Microsoft Windows* OS.
 
 SGX Capability Exposure
