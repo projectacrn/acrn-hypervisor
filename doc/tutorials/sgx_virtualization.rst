@@ -3,12 +3,13 @@
 SGX Virtualization
 ##################
 
-SGX refers to Intel® Software Guard Extensions (Intel® SGX). This is a set of
-instructions that can be used by applications to set aside protected areas for
-select code and data in order to prevent direct attacks on executing code or
-data stored in memory. SGX allows an application to instantiate a protected
-container, referred to as an enclave, which is protected against external
-software access, including privileged malware.
+SGX refers to `Intel® Software Guard Extensions <https://software.intel.com/
+en-us/sgx>`_ (Intel® SGX). This is a set of instructions that can be used by
+applications to set aside protected areas for select code and data in order to
+prevent direct attacks on executing code or data stored in memory. SGX allows
+an application to instantiate a protected container, referred to as an
+enclave, which is protected against external software access, including
+privileged malware.
 
 
 High Level ACRN SGX Virtualization Design
@@ -95,19 +96,17 @@ enable SGX support in the BIOS and in ACRN:
    .. code-block:: bash
 
       $ cd <projectacrn base folder>
-      $ curl https://github.com/binbinwu1/acrn-hypervisor/commit \
-          /0153b2b9b9920b61780163f19c6f5318562215ef.patch | git apply
+      $ curl https://github.com/binbinwu1/acrn-hypervisor/commit/0153b2b9b9920b61780163f19c6f5318562215ef.patch | git apply
 
 #. Enable SGX in Guest:
-   Follow the relevant guide to build and install the SGX driver and the SGX SDK and PSW packages.
 
-   * **For a Linux Guest**, follow the instructions at
-     https://github.com/intel/linux-sgx to build and installthe SGX driver and
-     the SGX SDK and PSW packages.
-   * **For a Windows Guest**, follow the guide at
-     https://software.intel.com/en-us/articles/getting-started-with-sgx
-     -sdk-for-windows for enabling applications with Intel SGX using
-     Microsoft* Visual Studio* 2015 on a 64-bit Microsoft Windows* OS.
+   * **For a Linux Guest**, follow `these Linux SGX build instructions
+     <https://github.com/intel/linux-sgx>`_
+     to build and install the SGX driver and the SGX SDK and PSW packages.
+   * **For a Windows Guest**, follow `these Windows SGX build instructions
+     <https://software.intel.com/en-us/articles/getting-started-with-sgx-sdk-for-windows>`_
+     for enabling applications with Intel SGX using Microsoft* Visual Studio*
+     2015 on a 64-bit Microsoft Windows* OS.
 
 SGX Capability Exposure
 ***********************
