@@ -9,6 +9,10 @@
 
 #define CPUID_CHECK_SUBLEAF	(1U << 0U)
 #define MAX_VM_VCPUID_ENTRIES	64U
+
+/* Guest capability flags reported by CPUID */
+#define GUEST_CAPS_PRIVILEGE_VM	(1U << 0U)
+
 struct vcpuid_entry {
 	uint32_t eax;
 	uint32_t ebx;
