@@ -40,9 +40,9 @@ No Enclave in a Hypervisor
 --------------------------
 
 ACRN does not support running an enclave in a hypervisor since the whole
-hypervisor is currently unning in VMX root mode, ring 0, and an enclave must
-run in ring 3. SGX virtualization in ACRN provides the SGX capability to (non-
-SOS) VMs.
+hypervisor is currently running in VMX root mode, ring 0, and an enclave must
+run in ring 3. SGX virtualization in ACRN provides the SGX capability to (
+non-SOS) VMs.
 
 Enable SGX on Host
 ------------------
@@ -90,7 +90,8 @@ enable SGX support in the BIOS and in ACRN:
          the SGX EPC size is 0x5d80000 (93.5MB) when the SGX Reserved Memory
          Size is set to 128MB.
 
-#. Add the EPC config in the VM configuration:
+#. Add the EPC config in the VM configuration.
+
    Apply the patch to enable SGX support in UOS in the SDC scenario:
 
    .. code-block:: bash
@@ -100,10 +101,10 @@ enable SGX support in the BIOS and in ACRN:
 
 #. Enable SGX in Guest:
 
-   * **For a Linux Guest**, follow `these Linux SGX build instructions
+   * **For a Linux Guest**, follow these `Linux SGX build instructions
      <https://github.com/intel/linux-sgx>`_
      to build and install the SGX driver and the SGX SDK and PSW packages.
-   * **For a Windows Guest**, follow `these Windows SGX build instructions
+   * **For a Windows Guest**, follow these `Windows SGX build instructions
      <https://software.intel.com/en-us/articles/getting-started-with-sgx-sdk-for-windows>`_
      for enabling applications with Intel SGX using Microsoft* Visual Studio*
      2015 on a 64-bit Microsoft Windows* OS.
