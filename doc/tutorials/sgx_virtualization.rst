@@ -16,8 +16,8 @@ High Level ACRN SGX Virtualization Design
 
 ACRN SGX virtualization support can be divided into three parts:
 
-* SGX capability exposed to Guest EPC (Enclave Page Cache) management Enclave
-* System function handing
+* SGX capability exposed to Guest
+* EPC (Enclave Page Cache) management
 * Enclave System function handling
 
 The image below shows the high-level design of SGX virtualization in ACRN.
@@ -95,19 +95,25 @@ enable SGX support in the BIOS and in ACRN:
    .. code-block:: bash
 
       $ cd <projectacrn base folder>
-      $ curl https://github.com/binbinwu1/acrn-hypervisor/commit/
-        0153b2b9b9920b61780163f19c6f5318562215ef.patch | git apply
+      $ curl https://github.com/binbinwu1/acrn-hypervisor/commit \
+          /0153b2b9b9920b61780163f19c6f5318562215ef.patch | git apply
 
 #. Enable SGX in Guest:
+   Follow the relevant guide to build and install the SGX driver and the SGX SDK and PSW packages.
 
-   * Refer to https://github.com/intel/linux-sgx on how to enable SGX in Linux
-     Guest.
-   * Refer to https://software.intel.com/en-us/articles/
-     getting-started-with-sgx-sdk-for-windows on how to enable SGX in Windows
-     Guest.
+   * **For a Linux Guest**, follow the instructions at
+     https://github.com/intel/linux-sgx to build and installthe SGX driver and
+     the SGX SDK and PSW packages.
+   * **For a Windows Guest**, follow the guide at
+     https://software.intel.com/en-us/articles/getting-started-with-sgx
+       -sdk-for-windows for enabling applications with Intel SGX using
+     Microsoft* Visual Studio* 2015 on a 64-bit Microsoft Windows* OS.
 
 SGX Capability Exposure
 ***********************
+ACRN exposes SGX capability and EPC resource to a guest VM via CPUIDs and
+Processor Model-Specific Registers (MSRs), as explained in the following
+sections.
 
 CPUID Virtualization
 ====================
@@ -239,6 +245,8 @@ PAUSE exiting
 
 Future Development
 ******************
+Following are some currently unplanned areas of interest for future
+ACRN development around SGX virtualization.
 
 Launch Configuration support
 ============================
