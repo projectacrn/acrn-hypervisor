@@ -64,7 +64,7 @@ singlehtml: doxy content kconfig
 
 clean:
 	rm -fr $(BUILDDIR) doxygen
-	rm -fr tools
+	rm -fr misc
 	rm -fr reference/kconfig/*.rst
 
 # Copy material over to the GitHub pages staging repo
