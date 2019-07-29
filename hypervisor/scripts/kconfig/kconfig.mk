@@ -18,7 +18,7 @@ HV_DEFCONFIG := defconfig
 HV_CONFIG_H := include/config.h
 HV_CONFIG_MK := include/config.mk
 
-KCONFIG_DIR := $(BASEDIR)/../scripts/kconfig
+KCONFIG_DIR := $(BASEDIR)/../misc/acrn-config/kconfig
 
 # Backward-compatibility for RELEASE=(0|1)
 ifdef RELEASE

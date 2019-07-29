@@ -487,7 +487,7 @@ partition. Follow these steps:
    <https://github.com/projectacrn/acrn-hypervisor/blob/master/efi-stub/clearlinux/acrn.conf>`__
    as shown here:
 
-   .. literalinclude:: ../../efi-stub/clearlinux/acrn.conf
+   .. literalinclude:: ../../misc/efi-stub/clearlinux/acrn.conf
       :caption: efi-stub/clearlinux/acrn.conf
 
    On the platform, copy the ``acrn.conf`` file to the EFI partition we mounted earlier:

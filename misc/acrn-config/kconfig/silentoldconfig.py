@@ -9,7 +9,8 @@
 #     3. reconstruct .config with the given list of symbol-value pairs if there
 #        is any disagreement.
 
-import sys, os
+import sys
+import os
 
 # Kconfiglib: Copyright (c) 2011-2018, Ulf Magnusson
 # SPDX-License-Identifier: ISC

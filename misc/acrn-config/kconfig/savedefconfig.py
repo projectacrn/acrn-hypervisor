@@ -5,7 +5,8 @@
 # having the default values. The minimized config can act as a defconfig for
 # future use.
 
-import sys, os
+import sys
+import os
 
 # Kconfiglib: Copyright (c) 2011-2018, Ulf Magnusson
 # SPDX-License-Identifier: ISC

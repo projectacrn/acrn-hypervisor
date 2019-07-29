@@ -7,4 +7,4 @@ Tools
    :glob:
    :maxdepth: 1
 
-   ../tools/**
+   ../misc/**

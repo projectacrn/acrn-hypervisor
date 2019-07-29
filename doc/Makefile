@@ -43,7 +43,7 @@ doxy:
 	$(Q)find doxygen/xml/* | xargs sed -i 's/simplesect kind="pre"/simplesect kind="preconditions"/'
 
 content:
-	$(Q)scripts/extract_content.py . tools
+	$(Q)scripts/extract_content.py . misc
 
 kconfig:
 	$(Q)srctree=../hypervisor \

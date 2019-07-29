@@ -4,7 +4,8 @@
 # This script takes a Kconfig and a defconfig file, and expands it to a .config
 # with all default values listed explicitly.
 
-import sys, os
+import sys
+import os
 
 # Kconfiglib: Copyright (c) 2011-2018, Ulf Magnusson
 # SPDX-License-Identifier: ISC
