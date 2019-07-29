@@ -173,6 +173,20 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 	}
 
 	/*
+	 * Leaf 0x40000001 - ACRN extended information.
+	 * This leaf returns the extended information of ACRN hypervisor.
+	 *
+	 * EAX: Guest capability flags
+	 * EBX, ECX, EDX: RESERVED (reserved fields are set to zero).
+	 */
+	case 0x40000001U:
+		entry->eax = 0U;
+		entry->ebx = 0U;
+		entry->ecx = 0U;
+		entry->edx = 0U;
+		break;
+
+	/*
 	 * Leaf 0x40000010 - Timing Information.
 	 * This leaf returns the current TSC frequency and
 	 * current Bus frequency in kHz.
@@ -243,6 +257,15 @@ static int32_t set_vcpuid_extended_function(struct acrn_vm *vm)
 
 	init_vcpuid_entry(0x40000000U, 0U, 0U, &entry);
 	result = set_vcpuid_entry(vm, &entry);
+	if (result == 0) {
+		init_vcpuid_entry(0x40000001U, 0U, 0U, &entry);
+		/* EAX: Guest capability flags (e.g. whether it is a privilege VM) */
+		if (is_sos_vm(vm)) {
+			entry.eax |= GUEST_CAPS_PRIVILEGE_VM;
+		}
+		result = set_vcpuid_entry(vm, &entry);
+	}
+
 	if (result == 0) {
 		init_vcpuid_entry(0x40000010U, 0U, 0U, &entry);
 		result = set_vcpuid_entry(vm, &entry);
