@@ -45,7 +45,7 @@ ARCH_LDFLAGS :=
 .PHONY: default
 default: all
 
-include $(BASEDIR)/../scripts/deps.mk
+include $(BASEDIR)/../misc/acrn-config/library/deps.mk
 
 include scripts/kconfig/kconfig.mk
 

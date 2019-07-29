@@ -2,6 +2,7 @@ doc/doxygen
 doc/_build
 doc/tools
 doc/reference/kconfig/*.rst
+doc/misc
 build
 *.bak
 *.sav

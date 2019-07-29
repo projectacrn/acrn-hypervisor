@@ -16,7 +16,7 @@ The ACRN Service OS is based on `Clear Linux OS`_ and it uses `systemd-networkd`
 to set up the Service OS networking. A few files are responsible for setting up the
 ACRN bridge (``acrn-br0``), the TAP device (``tap0``), and how these are all
 connected. Those files are installed in ``/usr/lib/systemd/network``
-on the target device and can also be found under ``tools/acrnbridge`` in the source code.
+on the target device and can also be found under ``misc/acrnbridge`` in the source code.
 
 Setting up the static IP address
 ********************************
@@ -35,8 +35,8 @@ Modify the ``[Network]`` section in the
 ``/etc/systemd/network/50-eth.network`` file you just created.
 This is the content of the file used in ACRN by default.
 
-.. literalinclude:: ../../tools/acrnbridge/eth.network
-   :caption: tools/acrnbridge/eth.network
+.. literalinclude:: ../../misc/acrnbridge/eth.network
+   :caption: misc/acrnbridge/eth.network
    :emphasize-lines: 5
 
 Edit the file to remove the line highlighted above and add your network settings in

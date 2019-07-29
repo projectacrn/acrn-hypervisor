@@ -59,10 +59,10 @@ LDSCRIPT := $(GNUEFI_DIR)/elf_$(ARCH)_efi.lds
 
 INCDIR := $(SYSROOT)/usr/include
 
-CFLAGS=-I. -I.. -I../hypervisor/include/arch/x86/guest -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
-		-I../hypervisor/include/public -I../hypervisor/include/lib -I../hypervisor/boot/include/guest \
+CFLAGS=-I. -I.. -I../../hypervisor/include/arch/x86/guest -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
+		-I../../hypervisor/include/public -I../../hypervisor/include/lib -I../../hypervisor/boot/include/guest \
 		-DEFI_FUNCTION_WRAPPER -fPIC -fshort-wchar -ffreestanding \
-		-Wall -I../fs/ -D$(ARCH) -O2 -I../hypervisor/include/arch/x86 \
+		-Wall -I../fs/ -D$(ARCH) -O2 -I../../hypervisor/include/arch/x86 \
 		-include config.h
 
 CFLAGS += -mno-mmx -mno-sse -mno-sse2 -mno-80387 -mno-fp-ret-in-387
