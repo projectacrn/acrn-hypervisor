@@ -302,32 +302,13 @@ static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 	}
 }
 
-static struct pci_vdev *find_vdev_for_sos(union pci_bdf bdf)
-{
-	struct acrn_vm *vm;
-
-	vm = get_sos_vm();
-
-	return pci_find_vdev_by_pbdf(&vm->vpci, bdf);
-}
-
 /**
  * @pre vpci != NULL
  * @pre vpci->vm != NULL
  */
-static struct pci_vdev *find_vdev(const struct acrn_vpci *vpci, union pci_bdf bdf)
+static inline struct pci_vdev *find_vdev(const struct acrn_vpci *vpci, union pci_bdf bdf)
 {
-	struct pci_vdev *vdev;
-
-	if (is_prelaunched_vm(vpci->vm)) {
-		vdev = pci_find_vdev_by_vbdf(vpci, bdf);
-	} else if (is_sos_vm(vpci->vm)) {
-		vdev = find_vdev_for_sos(bdf);
-	} else {
-		vdev = NULL;
-	}
-
-	return vdev;
+	return pci_find_vdev_by_vbdf(vpci, bdf);
 }
 
 static void vpci_init_pt_dev(struct pci_vdev *vdev)
@@ -566,17 +547,16 @@ void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, ui
 {
 	struct pci_vdev *vdev;
 	union pci_bdf bdf;
+	struct acrn_vm *sos_vm = get_sos_vm();
 
 	bdf.value = pbdf;
-	vdev = find_vdev_for_sos(bdf);
-	if (vdev == NULL) {
+	vdev = pci_find_vdev_by_vbdf(&sos_vm->vpci, bdf);
+
+	if ((vdev == NULL) || (vdev->vpci->vm != sos_vm)) {
 		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
 			target_vm->vm_id, vbdf, pbdf);
 	} else {
-		/* UOS may do BDF mapping */
 		vdev->vpci = (struct acrn_vpci *)&(target_vm->vpci);
-		vdev->bdf.value = vbdf;
-		vdev->pdev->bdf.value = pbdf;
 	}
 }
 
@@ -586,23 +566,17 @@ void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, ui
 void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
 {
 	struct pci_vdev *vdev;
-	struct acrn_vm *vm;
 	union pci_bdf bdf;
+	struct acrn_vm *sos_vm = get_sos_vm();
 
 	bdf.value = pbdf;
-	vdev = find_vdev_for_sos(bdf);
-	if (vdev == NULL) {
+	vdev = pci_find_vdev_by_vbdf(&sos_vm->vpci, bdf);
+
+	if ((vdev == NULL) || (vdev->vpci->vm != target_vm)) {
 		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
 			target_vm->vm_id, vbdf, pbdf);
 	} else {
 		/* Return this PCI device to SOS */
-		if (vdev->vpci->vm == target_vm) {
-			vm = get_sos_vm();
-
-			vdev->vpci = &vm->vpci;
-
-			/* vbdf equals to pbdf in sos */
-			vdev->bdf.value = vdev->pdev->bdf.value;
-		}
+		vdev->vpci = &sos_vm->vpci;
 	}
 }
