@@ -1,8 +1,8 @@
 .. _using_windows_as_uos:
 
-Using Windows as Guest OS on ACRN
+Using Windows as Guest VM on ACRN
 #################################
-This tutorial describes how to launch Windows as the Guest OS on the ACRN hypervisor.
+This tutorial describes how to launch Windows as a Guest (WaaG) VM on the ACRN hypervisor.
 
 Hardware setup
 **************
@@ -14,13 +14,13 @@ The following Intel Kaby Lake NUCs are verified:
    "NUC7i7DNHE", "DNKBLi7v.86A.0052.2018.0808.1344", "`link <https://downloadcenter.intel.com/download/28886?v=t>`__"
    "NUC7i5DNHE", "DNKBLi5v.86A.0060.2018.1220.1536", "`link <https://downloadcenter.intel.com/download/28885?v=t>`__"
 
-ACRN Service OS Setup
+ACRN Service VM Setup
 *********************
 You may refer to the steps in :ref:`getting-started-apl-nuc` for
 Intel NUC to set up ACRN on the KBL NUC. After following the steps in that guide,
-you should be able to launch a Clear Linux UOS successfully.
+you should be able to launch the Service VM successfully.
 
-Setup for Using Windows as Guest OS
+Setup for Using Windows as Guest VM
 ***********************************
 All the patches to support WaaG have been upstreamed; you can download them
 from the acrn-hypervisor repository.
@@ -41,14 +41,14 @@ Build ACRN EFI Images
 
 #. Replace the ``acrn.efi`` and ``acrn-dm`` on your NUC:
 
-   a. Log in to the ACRN Service OS and then ``mount`` the EFI partition to ``/boot``
+   a. Log in to the ACRN Service VM and then ``mount`` the EFI partition to ``/boot``
    #. ``scp`` the ``acrn.efi`` and ``acrn-dm`` from your host::
 
       # scp <acrn.efi from your host> /boot/EFI/acrn/
       # scp <acrn-dm from your host> /usr/bin/
       # chmod +x /usr/bin/acrn-dm && sync
 
-Build Service OS Kernel
+Build Service VM Kernel
 =======================
 #. Follow the steps described at :ref:`getting-started-building` to set up the build environment.
 #. Follow the steps below to build the ACRN kernel::
@@ -73,13 +73,13 @@ Update Kernel on KBL NUC
 
    .. code-block:: none
 
-      title The ACRNGT Service OS
+      title The ACRNGT Service VM
       linux /bzImage
       options console=tty0 console=ttyS0 root=/dev/sda3 rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x010101 i915.domain_plane_owners=0x011100001111 i915.enable_gvt=1 i915.enable_conformance_check=0 i915.enable_guc=0 hvlog=2M@0x1FE00000
 
    .. note:: Change ``/dev/sda3`` to your file system partition.
 
-#. ``reboot`` the Service OS and select ``The ACRNGT Service OS`` from the boot menu to apply
+#. ``reboot`` the Service VM and select ``The ACRNGT Service VM`` from the boot menu to apply
    the ACRN kernel and hypervisor updates.
 
 Create Windows 10 Image
@@ -103,7 +103,7 @@ Preparations
 
 * Download `virtio Windows driver
   <https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.141-1/virtio-win-0.1.141.iso>`_
-  to the Service OS in ``/root/img/virtio-win-0.1.141.iso``.
+  to the Service VM in ``/root/img/virtio-win-0.1.141.iso``.
 
 * Download `Intel DCH Graphics Driver <https://downloadmirror.intel.com/28148/a08/dch_win64_25.20.100.6444.exe>`_.
 
@@ -252,7 +252,7 @@ Pre-install drivers and re-generate Windows ISO
 
 Create Raw Disk
 ---------------
-Run these commands on the Service OS::
+Run these commands on the Service VM::
 
    # swupd bundle-add kvm-host
    # mkdir /root/img
@@ -268,7 +268,7 @@ version is used to install Windows 10 on ACRN from scratch. The
 <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/install_by_vga_gsg.tar.gz>`_
 together with the script used to install Windows 10.
 
-#. Uncompress ``install_by_vga_gsg.tar.gz`` to the Service OS::
+#. Uncompress ``install_by_vga_gsg.tar.gz`` to the Service VM::
 
    # tar zxvf install_by_vga_gsg.tar.gz && cd install_by_vga_gsg
 
@@ -335,8 +335,12 @@ together with the script used to install Windows 10.
 
 Boot Windows with GVT-g on ACRN
 ===============================
-#. Launch the Windows Guest using the ``launch_igx-waag.sh``. You should see the WaaG desktop
-   coming up over the HDMI monitor (instead of the VNC).
+#. Modify the ``/usr/share/acrn/samples/nuc/launch_win.sh`` script to specify the Windows image generated above.
+
+#. Download `OVMF.fd <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/OVMF.fd>`_
+   binary to the directory in Service VM: ``/usr/share/acrn/samples/nuc/``.
+
+#. Run the ``launch_win.sh`` and you should see the WaaG desktop coming up over the HDMI monitor (instead of the VNC).
 
    .. note:: Use the following command to disable the GNOME Display Manager (GDM) if it is enabled::
 
@@ -345,9 +349,10 @@ Boot Windows with GVT-g on ACRN
    .. note:: You must connect two monitors to the KBL NUC in order to launch Windows with
       the default configurations above.
 
-   .. note:: The second monitor must include the Weston desktop. If you have set up Weston in the Service OS,
+   .. note:: The second monitor must include the Weston desktop. If you have set up Weston in the Service VM,
       follow the steps in :ref:`skl-nuc-gpu-passthrough` to set up Weston as
-      the desktop environment in SOS in order to experience Windows with the AcrnGT local display feature.
+      the desktop environment in Service VM in order to experience Windows with the AcrnGT local display feature.
+
 
 ACRN Windows verified feature list
 **********************************
@@ -398,11 +403,12 @@ Device configurations of acrn-dm command line
   This is for the network virtualization.
 
 * *-s 5,fbuf,tcp=0.0.0.0:5900,w=800,h=600*:
-  This will open a port 5900 on SOS which can be connected to via vncviewer.
+  This will open a port 5900 on Service VM which can be connected to via vncviewer.
 
 * *-s 6,virtio-input,/dev/input/event4*:
   This is to passthrough the mouse/keyboard to Windows via virtio.
-  Please change ``event4`` accordingly. You can use the following command to check the event node on your SOS::
+  Please change ``event4`` accordingly. You can use the following command to check
+  the event node on your Service VM::
 
    <To get the input event of mouse>
    # cat /proc/bus/input/devices | grep mouse
