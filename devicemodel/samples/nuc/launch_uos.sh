@@ -58,7 +58,7 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
   consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$4 \
   i915.enable_hangcheck=0 i915.nuclear_pageflip=1 i915.enable_guc_loading=0 \
-  i915.enable_guc_submission=0 i915.enable_guc=0 i915.alpha_support=1 " $vm_name
+  i915.enable_guc_submission=0 i915.enable_guc=0 i915.enable_fbc=0 i915.alpha_support=1 " $vm_name
 }
 
 # offline SOS CPUs except BSP before launch UOS
