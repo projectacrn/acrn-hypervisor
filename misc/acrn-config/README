@@ -1,0 +1,8 @@
+folder structure
+
+	Kconfig		: Select working scenario and target board, configure ACRN hypervisor capabilities and features.
+	target		: Get target board information under native Linux environment and generate board_info XML.
+	board_config	: Parse board_info XML and scenario XML to generate board related configuration files under hypervisor/arch/x86/configs/$(BOARD)/ folder.
+	scenario_config	: Parse board_info XML and scenario XML to generate scenario based VM configuration files under hypervisor/scenarios/$(SCENARIO)/ folder.
+	launch_config	: Parse board_info XML, scenario XML and devicemodel param XML to generate launch script for post-launched vm under devicesmodel/samples/$(BOARD)/ folder.
+	library		: The folder stores shared software modules or libs for acrn-config offline tool.
