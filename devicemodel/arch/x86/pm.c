@@ -51,6 +51,8 @@
 #define POWER_BUTTON_NAME	"power_button"
 #define POWER_BUTTON_ACPI_DRV	"/sys/bus/acpi/drivers/button/LNXPWRBN:00/"
 #define POWER_BUTTON_INPUT_DIR POWER_BUTTON_ACPI_DRV"input"
+#define POWER_BUTTON_PNP0C0C_DRV "/sys/bus/acpi/drivers/button/PNP0C0C:00/"
+#define POWER_BUTTON_PNP0C0C_DIR POWER_BUTTON_PNP0C0C_DRV"input"
 static pthread_mutex_t pm_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct mevent *power_button;
 static sig_t old_power_handler;
@@ -345,7 +347,7 @@ event_dir_filter(const struct dirent *dir)
 }
 
 static int
-open_power_button_input_device()
+open_power_button_input_device(const char *drv, const char *dir)
 {
 	struct dirent **input_dirs = NULL;
 	struct dirent **event_dirs = NULL;
@@ -355,24 +357,21 @@ open_power_button_input_device()
 	char name[256] = {0};
 	int rc, fd;
 
-	if (access(POWER_BUTTON_ACPI_DRV, F_OK) != 0) {
-		fprintf(stderr, "failed to detect power button driver\n");
+	if (access(drv, F_OK) != 0)
 		return -1;
-	}
-
 	/*
 	 * Scan path to get inputN
 	 * path is /sys/bus/acpi/drivers/button/LNXPWRBN:00/input
 	 */
-	ninput = scandir(POWER_BUTTON_INPUT_DIR, &input_dirs, input_dir_filter,
+	ninput = scandir(dir, &input_dirs, input_dir_filter,
 			alphasort);
 	if (ninput < 0) {
 		fprintf(stderr, "failed to scan power button %s\n",
-				POWER_BUTTON_INPUT_DIR);
+				dir);
 		goto err;
 	} else if (ninput == 1) {
 		rc = snprintf(path, sizeof(path), "%s/%s",
-				POWER_BUTTON_INPUT_DIR, input_dirs[0]->d_name);
+				dir, input_dirs[0]->d_name);
 		if (rc < 0 || rc >= sizeof(path)) {
 			fprintf(stderr, "failed to set power button path %d\n",
 					rc);
@@ -435,6 +434,25 @@ err:
 	return -1;
 }
 
+static int
+open_native_power_button()
+{
+	int fd;
+
+	/*
+	 * Open fixed power button firstly, if it can't be opened
+	 * try to open control method power button.
+	 */
+	fd = open_power_button_input_device(POWER_BUTTON_ACPI_DRV,
+			POWER_BUTTON_INPUT_DIR);
+	if (fd < 0)
+		return open_power_button_input_device(
+				POWER_BUTTON_PNP0C0C_DRV,
+				POWER_BUTTON_PNP0C0C_DIR);
+	else
+		return fd;
+}
+
 /*
  * ACPI SMI Command Register
  *
@@ -470,9 +488,9 @@ smi_cmd_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		}
 		if (input_evt0 == NULL) {
 
-			pwrbtn_fd = open_power_button_input_device();
+			pwrbtn_fd = open_native_power_button();
 			if (pwrbtn_fd < 0)
-				fprintf(stderr, "open input event0 error=%d\n",
+				fprintf(stderr, "open power button error=%d\n",
 						errno);
 			else
 				input_evt0 = mevent_add(pwrbtn_fd, EVF_READ,
