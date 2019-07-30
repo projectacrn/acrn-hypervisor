@@ -177,7 +177,7 @@ void init_pci_pdev_list(void)
 					secondary_bus = (uint8_t)pci_pdev_read_cfg(pbdf, PCIR_SECBUS_1, 1U);
 					if (bus_to_scan[secondary_bus] != BUS_SCAN_SKIP) {
 						pr_err("%s, bus %d may be downstream of different PCI bridges",
-							secondary_bus);
+							__func__, secondary_bus);
 					} else {
 						bus_to_scan[secondary_bus] = BUS_SCAN_PENDING;
 					}
