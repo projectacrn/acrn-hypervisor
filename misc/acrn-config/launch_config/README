@@ -1,0 +1,1 @@
+TODO: parse board_info XML, scenario XML and devicemodel param XML to generate launch script for post-launched vm under devicesmodel/samples/$(BOARD)/ folder

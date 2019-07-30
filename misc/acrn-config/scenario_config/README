@@ -1,0 +1,1 @@
+TODO: parse board_info XML and scenario XML to generate scenario based VM configuration files under hypervisor/scenarios/$(SCENARIO)/ folder
