@@ -1,0 +1,13 @@
+board_parser.py will collect all board related info and then generate a board info file for acrn-config host tool usage.
+
+usage: python3 board_parser.py <board_name> [--out board_info_file]
+
+board_name : the name of board that run ACRN hypervisor, like apl-up2/nuc7i7dnb. It will be used as name of the board configurations folder which created by acrn-config host tool.
+board_info_file : (optional) the name of board info file. if it is not specified, a name of <board_name>.xml will be generated under ./out/ folder by default.
+
+Please run this script under native Linux environment with root privilege.
+
+OS requirement:
+	Release:	Ubuntu 18.04+ or ClearLinux 30210+
+	Tools:		cpuid, rdmsr, lspci, dmidecode
+	kernel cmdline: "idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable"
