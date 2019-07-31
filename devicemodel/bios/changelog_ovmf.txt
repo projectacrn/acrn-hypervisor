@@ -1,3 +1,12 @@
+OVMF release v1.2
+
+- Add support for VRING_USED_F_NO_NOTIFY in virtio devices
+- Revert "Initialize EmuVariable NV storage memory with varstore from ROM"
+- Add AcrnEmuVariableFvbRuntimeDxe to support NV storage
+- Enable ahci driver.
+
+Secure boot is supported from this release onwards.
+
 OVMF release v1.1
 
 - Cleanup unused and unsupported function of AcrnRtc
