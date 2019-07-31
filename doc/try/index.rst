@@ -1,7 +1,7 @@
 .. _getting_started:
 
-Getting Started Guides
-######################
+Try using ACRN
+##############
 
 After reading the :ref:`introduction`, use these guides to get started
 using ACRN in a reference setup.  We'll show how to set up your
@@ -19,4 +19,3 @@ described in :ref:`hardware`. Follow the setup guides listed here:
 
    apl-nuc.rst
    up2.rst
-   building-from-source.rst
