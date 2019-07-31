@@ -92,7 +92,7 @@ ACRN support systems:
 
 
 .. _Introduction: https://projectacrn.github.io/latest/introduction/
-.. _Getting Started Guide: https://projectacrn.github.io/latest/getting_started/
+.. _Getting Started Guide: https://projectacrn.github.io/latest/getting-started/
 .. _Contribution Guide: https://projectacrn.github.io/latest/contribute.html
 .. _Project ACRN GitHub wiki: https://github.com/projectacrn/acrn-hypervisor/wiki
 .. _PGP Key: https://www.intel.com/content/www/us/en/security-center/pgp-public-key.html
