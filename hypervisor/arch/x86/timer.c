@@ -89,6 +89,7 @@ int32_t add_timer(struct hv_timer *timer)
 	struct per_cpu_timers *cpu_timer;
 	uint16_t pcpu_id;
 	int32_t ret = 0;
+	uint64_t rflags;
 
 	if ((timer == NULL) || (timer->func == NULL) || (timer->fire_tsc == 0UL)) {
 		ret = -EINVAL;
@@ -103,10 +104,12 @@ int32_t add_timer(struct hv_timer *timer)
 		pcpu_id  = get_pcpu_id();
 		cpu_timer = &per_cpu(cpu_timers, pcpu_id);
 
+		CPU_INT_ALL_DISABLE(&rflags);
 		/* update the physical timer if we're on the timer_list head */
 		if (local_add_timer(cpu_timer, timer)) {
 			update_physical_timer(cpu_timer);
 		}
+		CPU_INT_ALL_RESTORE(rflags);
 
 		TRACE_2L(TRACE_TIMER_ACTION_ADDED, timer->fire_tsc, 0UL);
 	}
@@ -117,9 +120,13 @@ int32_t add_timer(struct hv_timer *timer)
 
 void del_timer(struct hv_timer *timer)
 {
+	uint64_t rflags;
+
+	CPU_INT_ALL_DISABLE(&rflags);
 	if ((timer != NULL) && !list_empty(&timer->node)) {
 		list_del_init(&timer->node);
 	}
+	CPU_INT_ALL_RESTORE(rflags);
 }
 
 static void init_percpu_timer(uint16_t pcpu_id)
