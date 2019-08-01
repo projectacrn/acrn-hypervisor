@@ -311,8 +311,9 @@ breathe_default_members = ('members', 'undoc-members', 'content-only')
 # URLs must be relative to document root (with NO leading slash),
 # and without the html extension)
 html_redirect_pages = [
-   ('developer-guides/index', 'contribute/index'),
-   ('getting-started/index', 'try/index'),
-   ('user-guides/index', 'develop/index'),
+   ('developer-guides/index', 'contribute'),
+   ('getting-started/index', 'try'),
+   ('user-guides/index', 'develop'),
+   ('hardware', 'reference/hardware'),
    ('release_notes', 'release_notes/index')
    ]
