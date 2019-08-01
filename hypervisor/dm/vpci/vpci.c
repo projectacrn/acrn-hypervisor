@@ -186,8 +186,6 @@ static bool pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes
  */
 void vpci_init(struct acrn_vm *vm)
 {
-	int32_t ret = -EINVAL;
-
 	struct vm_io_range pci_cfgaddr_range = {
 		.flags = IO_ATTR_RW,
 		.base = PCI_CONFIG_ADDR,
@@ -203,23 +201,14 @@ void vpci_init(struct acrn_vm *vm)
 	struct acrn_vm_config *vm_config;
 
 	vm->vpci.vm = vm;
+	vm->iommu = create_iommu_domain(vm->vm_id, hva2hpa(vm->arch_vm.nworld_eptp), 48U);
+	/* Build up vdev list for vm */
+	vpci_init_vdevs(vm);
 
 	vm_config = get_vm_config(vm->vm_id);
 	switch (vm_config->load_order) {
 	case PRE_LAUNCHED_VM:
 	case SOS_VM:
-		vm->iommu = create_iommu_domain(vm->vm_id, hva2hpa(vm->arch_vm.nworld_eptp), 48U);
-		/* Build up vdev list for vm */
-		vpci_init_vdevs(vm);
-		ret = 0;
-		break;
-
-	default:
-		/* Nothing to do for other vm types */
-		break;
-	}
-
-	if (ret == 0) {
 		/*
 		 * SOS: intercept port CF8 only.
 		 * UOS or pre-launched VM: register handler for CF8 only and I/O requests to CF9/CFA/CFB are
@@ -231,6 +220,11 @@ void vpci_init(struct acrn_vm *vm)
 		/* Intercept and handle I/O ports CFC -- CFF */
 		register_pio_emulation_handler(vm, PCI_CFGDATA_PIO_IDX, &pci_cfgdata_range,
 			pci_cfgdata_io_read, pci_cfgdata_io_write);
+		break;
+
+	default:
+		/* Nothing to do for other vm types */
+		break;
 	}
 }
 
