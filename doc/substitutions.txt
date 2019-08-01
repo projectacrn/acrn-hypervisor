@@ -17,4 +17,6 @@
    :rtrim:
 .. |micro|  unicode:: U+000B5 .. MICRO SIGN
    :rtrim:
+.. |check|  unicode:: U+02714 .. HEAVY CHECK MARK
+   :rtrim:
 .. |oplus|  unicode:: U+02295 .. CIRCLED PLUS SIGN
