@@ -11,12 +11,14 @@ hypervisor and the `Clear Linux`_ Service OS and Guest OS on the Intel
 
 .. _Clear Linux: https://clearlinux.org
 
-ACRN development is currently supported on Apollo Lake Intel platforms,
-described in :ref:`hardware`. Follow the setup guides listed here:
+ACRN is supported on Apollo Lake and Kaby Lake Intel platforms,
+as described in :ref:`hardware`.
+
+Follow these getting started guides to give ACRN a try:
 
 .. toctree::
    :maxdepth: 1
 
-   ../getting-started/apl-nuc.rst
-   ../getting-started/up2.rst
-   ../getting-started/building-from-source.rst
+   getting-started/apl-nuc
+   getting-started/up2
+   getting-started/building-from-source
