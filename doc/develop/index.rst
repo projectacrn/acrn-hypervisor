@@ -6,11 +6,10 @@ Develop using ACRN
 .. toctree::
    :maxdepth: 1
 
-   building-from-source.rst
-   acrn-shell.rst
-   kernel-parameters.rst
-   acrn-dm-parameters.rst
-   tools.rst
+   ../user-guides/acrn-shell.rst
+   ../user-guides/kernel-parameters.rst
+   ../user-guides/acrn-dm-parameters.rst
+   ../user-guides/tools.rst
 
 Selecting OS as a User VM
 *************************

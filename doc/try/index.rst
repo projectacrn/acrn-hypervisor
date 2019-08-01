@@ -17,5 +17,6 @@ described in :ref:`hardware`. Follow the setup guides listed here:
 .. toctree::
    :maxdepth: 1
 
-   apl-nuc.rst
-   up2.rst
+   ../getting-started/apl-nuc.rst
+   ../getting-started/up2.rst
+   ../getting-started/building-from-source.rst

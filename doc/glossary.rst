@@ -23,8 +23,11 @@ Glossary of Terms
       A user mode device model application running in Service OS to provide
       device emulations in ACRN hypervisor.
 
-   aperture, Low GM
+   aperture
       CPU-visible graphics memory
+
+   low GM
+      see :term:`aperture`
 
    API
       Application Program Interface: A defined set of routines and protocols for
@@ -77,8 +80,11 @@ Glossary of Terms
    GVT-s
       Virtual shared graphics acceleration (multiple VMs to one physical GPU)
 
-   Hidden GM, High GM
+   Hidden GM
       Hidden or High graphics memory, not visible to the CPU.
+
+   High GM
+      See :term:`Hidden GM`
 
    I2C
       Inter-Integrated Circuit
@@ -113,7 +119,7 @@ Glossary of Terms
    OSPM
       Operating System Power Management
 
-   Pass-Through Devices
+   Pass-Through Device
       Physical devices (typically PCI) exclusively assigned to a guest.  In
       the Project ACRN architecture, pass-through devices are owned by the
       foreground OS.
@@ -126,6 +132,14 @@ Glossary of Terms
 
    PM
       Power Management
+
+   Pre-launched VM
+      Pre-launched VMs are started by the ACRN hypervisor before the
+      Service VM is launched. (See :term:`Post-launched VM`)
+
+   Post-Launched VM
+      Post-Launched VMs are launched and configured by the Service VM.
+      (See :term:`Pre-launched VM`)
 
    PTE
       Page Table Entry
@@ -144,11 +158,33 @@ Glossary of Terms
    RSE
       Rear Seat Entertainment
 
+   RTVM
+      Real-time VM.  A specially designed VM to run hard real-time or
+      soft real-time workloads (or application) much more efficiently
+      than the typical User VM through the use of pass-through interrupt
+      controller, polling-mode Virtio, Intel Cache Allocation Technology (CAT)
+      and I/O prioritization.  RTVMs are typically a :term:`pre-launched VM`.
+      A non-:term:`safety VM` with real-time requirements can a
+      :term:`post-launched VM`.
+
+   Safety VM
+      A special VM with dedicated hardware resources, running in
+      partition mode, and providing overall system health-monitoring
+      functionality.  Currently, a Safety VM is always a pre-launched User VM.
+
    SDC
       Software Defined Cockpit
 
+   Service VM
+      The Service VM is generally the first VM launched by ACRN and can
+      access hardware resources directly by running native drivers and
+      provides device sharing services to User VMs via the Device Model.
+
    SOS
-      Service OS, the privileged guest for ACRN hypervisor
+      Obsolete, see :term:`Service VM`
+
+   Service OS
+      Obsolete, see :term:`Service VM`
 
    UEFI
       Unified Extensible Firmare Interface. UEFI replaces the
@@ -157,9 +193,14 @@ Glossary of Terms
       important, support Secure Boot, checking the OS validity to ensure no
       malware has tampered with the boot process.
 
+   User VM
+      User Virtual Machine.
+
    UOS
-      User OS (also known as Guest OS), the unprivileged guest for ACRN
-      hypervisor
+      Obsolete, see :term:`User VM`
+
+   User OS
+      Obsolete, see :term:`User VM`
 
    vGPU
       Virtual GPU Instance, created by GVT-g and used by a VM
