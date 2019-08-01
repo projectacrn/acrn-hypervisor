@@ -91,8 +91,8 @@ struct pci_vdev {
 	struct pci_msi msi;
 	struct pci_msix msix;
 
-	/* Pointer to corresponding PCI PT device's vm_config */
-	struct acrn_vm_pci_ptdev_config *ptdev_config;
+	/* Pointer to corresponding PCI device's vm_config */
+	struct acrn_vm_pci_dev_config *pci_dev_config;
 
 	/* Pointer to corressponding operations */
 	const struct pci_vdev_ops *vdev_ops;
