@@ -231,8 +231,8 @@ kbd
 }
 
 .grid-item img {
-    margin-bottom: 1.1rem;
-    max-width: 75%;
+    max-width: 50%;
+    margin-bottom: 0.7rem;
 }
 
 
