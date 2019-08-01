@@ -290,7 +290,7 @@ The rules of error detection and error handling on a module level are shown in
    |                    |           | array size and non-null    |                           |                         |
    |                    |           | pointer.                   |                           |                         |
    +--------------------+-----------+----------------------------+---------------------------+-------------------------+
-   | Configuration data | Corrupted | No.                        | The bootloader initializes| 'vm_config->pci_ptdevs' |
+   | Configuration data | Corrupted | No.                        | The bootloader initializes| 'vm_config->pci_devs'   |
    | of the VM          | VM config | The related pre-conditions | hypervisor (including     | is configured           |
    |                    |           | are required.              | code, data, and bss) and  | statically.             |
    |                    |           | Note: VM configuration data| verifies the integrity of |                         |
@@ -328,19 +328,19 @@ a module level.
           struct acrn_vpci *vpci = (struct acrn_vpci *)&(vm->vpci);
           struct pci_vdev *vdev;
           struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-          struct acrn_vm_pci_ptdev_config *ptdev_config;
+          struct acrn_vm_pci_dev_config *pci_dev_config;
           uint32_t i;
 
-          vpci->pci_vdev_cnt = vm_config->pci_ptdev_num;
+          vpci->pci_vdev_cnt = vm_config->pci_dev_num;
 
           for (i = 0U; i < vpci->pci_vdev_cnt; i++) {
                   vdev = &vpci->pci_vdevs[i];
                   vdev->vpci = vpci;
-                  ptdev_config = &vm_config->pci_ptdevs[i];
-                  vdev->vbdf.value = ptdev_config->vbdf.value;
+                  pci_dev_config = &vm_config->pci_devs[i];
+                  vdev->vbdf.value = pci_dev_config->vbdf.value;
 
                   if (vdev->vbdf.value != 0U) {
-                          partition_mode_pdev_init(vdev, ptdev_config->pbdf);
+                          partition_mode_pdev_init(vdev, pci_dev_config->pbdf);
                           vdev->ops = &pci_ops_vdev_pt;
                   } else {
                           vdev->ops = &pci_ops_vdev_hostbridge;
@@ -367,7 +367,7 @@ pre-conditions and ``get_vm_config`` itself shall guarantee the post-condition.
   /**
    * @pre vm_id < CONFIG_MAX_VM_NUM
    * @post retval != NULL
-   * @post retval->pci_ptdev_num <= MAX_PCI_DEV_NUM
+   * @post retval->pci_dev_num <= MAX_PCI_DEV_NUM
    */
   struct acrn_vm_config *get_vm_config(uint16_t vm_id)
   {
@@ -398,9 +398,9 @@ Given the two reasons above, 'vdev' is always not NULL. So, the error checking
 codes are not required for 'vdev'.
 
 
-**Question_3: Is error checking required for 'ptdev_config'?**
+**Question_3: Is error checking required for 'pci_dev_config'?**
 
-No. 'ptdev_config' is getting data from the array 'pci_vdevs[]', which is the
+No. 'pci_dev_config' is getting data from the array 'pci_vdevs[]', which is the
 physical PCI device information coming from Board Support Package and firmware.
 For physical PCI device information, the related application constraints
 shall be defined in the design document or safety manual. For debug purpose,

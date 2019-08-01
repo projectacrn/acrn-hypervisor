@@ -420,25 +420,25 @@ static void write_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf,
 
 /**
  * @pre vm_config != NULL
- * @pre vm_config->pci_ptdev_num <= CONFIG_MAX_PCI_DEV_NUM
+ * @pre vm_config->pci_dev_num <= CONFIG_MAX_PCI_DEV_NUM
  */
-static struct acrn_vm_pci_ptdev_config *find_ptdev_config_by_pbdf(const struct acrn_vm_config *vm_config,
+static struct acrn_vm_pci_dev_config *find_pci_dev_config(const struct acrn_vm_config *vm_config,
 	union pci_bdf pbdf)
 {
-	struct acrn_vm_pci_ptdev_config *ptdev_config, *tmp;
+	struct acrn_vm_pci_dev_config *pci_dev_config, *tmp;
 	uint16_t i;
 
-	ptdev_config = NULL;
-	for (i = 0U; i < vm_config->pci_ptdev_num; i++) {
-		tmp = &vm_config->pci_ptdevs[i];
+	pci_dev_config = NULL;
+	for (i = 0U; i < vm_config->pci_dev_num; i++) {
+		tmp = &vm_config->pci_devs[i];
 
 		if (bdf_is_equal(&tmp->pbdf, &pbdf)) {
-			ptdev_config = tmp;
+			pci_dev_config = tmp;
 			break;
 		}
 	}
 
-	return ptdev_config;
+	return pci_dev_config;
 }
 
 /**
@@ -450,11 +450,11 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const struct acrn_vm *vm)
 {
 	const struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	struct acrn_vpci *vpci = &(((struct acrn_vm *)vm)->vpci);
-	struct acrn_vm_pci_ptdev_config *ptdev_config;
+	struct acrn_vm_pci_dev_config *pci_dev_config;
 
-	ptdev_config = find_ptdev_config_by_pbdf(vm_config, pdev->bdf);
+	pci_dev_config = find_pci_dev_config(vm_config, pdev->bdf);
 
-	if (((is_prelaunched_vm(vm) && (ptdev_config != NULL)) || is_sos_vm(vm))
+	if (((is_prelaunched_vm(vm) && (pci_dev_config != NULL)) || is_sos_vm(vm))
 		&& (vpci->pci_vdev_cnt < CONFIG_MAX_PCI_DEV_NUM)) {
 		struct pci_vdev *vdev;
 
@@ -463,11 +463,11 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const struct acrn_vm *vm)
 
 		vdev->vpci = vpci;
 		vdev->pdev = pdev;
-		vdev->ptdev_config = ptdev_config;
+		vdev->pci_dev_config = pci_dev_config;
 
-		if (ptdev_config != NULL) {
+		if (pci_dev_config != NULL) {
 			/* vbdf is defined in vm_config */
-			vdev->bdf.value = ptdev_config->vbdf.value;
+			vdev->bdf.value = pci_dev_config->vbdf.value;
 		} else {
 			/* vbdf is not defined in vm_config, set it to equal to pbdf */
 			vdev->bdf.value = pdev->bdf.value;

@@ -78,10 +78,10 @@ struct acrn_vm_os_config {
 	uint64_t kernel_ramdisk_addr;
 } __aligned(8);
 
-struct acrn_vm_pci_ptdev_config {
-	union pci_bdf vbdf;				/* virtual BDF of PCI PT device */
-	union pci_bdf pbdf;				/* physical BDF of PCI PT device */
-	uint64_t vbar_base[PCI_BAR_COUNT];	/* vbar base address of PCI PT device */
+struct acrn_vm_pci_dev_config {
+	union pci_bdf vbdf;				/* virtual BDF of PCI device */
+	union pci_bdf pbdf;				/* physical BDF of PCI device */
+	uint64_t vbar_base[PCI_BAR_COUNT];		/* vbar base address of PCI device */
 } __aligned(8);
 
 struct acrn_vm_config {
@@ -97,8 +97,8 @@ struct acrn_vm_config {
 							 */
 	struct acrn_vm_mem_config memory;		/* memory configuration of VM */
 	struct epc_section epc;				/* EPC memory configuration of VM */
-	uint16_t pci_ptdev_num;				/* indicate how many PCI PT devices in VM */
-	struct acrn_vm_pci_ptdev_config *pci_ptdevs;	/* point to PCI PT devices BDF list */
+	uint16_t pci_dev_num;				/* indicate how many PCI devices in VM */
+	struct acrn_vm_pci_dev_config *pci_devs;	/* point to PCI devices BDF list */
 	struct acrn_vm_os_config os_config;		/* OS information the VM */
 	uint16_t clos;					/* if guest_flags has GUEST_FLAG_CLOS_REQUIRED, then VM use this CLOS */
 

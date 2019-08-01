@@ -498,7 +498,7 @@ void init_vdev_pt(struct pci_vdev *vdev)
 				vbar_base = get_pbar_base(vdev->pdev, idx);
 			} else if (idx > 0U) {
 				/* For pre-launched VMs: vbar base is predefined in vm_config */
-				vbar_base = vdev->ptdev_config->vbar_base[idx - 1U];
+				vbar_base = vdev->pci_dev_config->vbar_base[idx - 1U];
 			} else {
 				vbar_base = 0UL;
 			}
@@ -522,7 +522,7 @@ void init_vdev_pt(struct pci_vdev *vdev)
 					vbar_base = get_pbar_base(vdev->pdev, idx);
 				} else {
 					/* For pre-launched VMs: vbar base is predefined in vm_config */
-					vbar_base = vdev->ptdev_config->vbar_base[idx];
+					vbar_base = vdev->pci_dev_config->vbar_base[idx];
 				}
 				vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)vbar_base);
 				break;
