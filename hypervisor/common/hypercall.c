@@ -874,7 +874,6 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	uint16_t bdf;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	bool bdf_valid = true;
-	bool iommu_valid = true;
 
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		if (param < 0x10000UL) {
@@ -888,24 +887,7 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 		        }
 	        }
 
-		/* create a iommu domain for target VM if not created */
-		if (bdf_valid && (target_vm->iommu == NULL)) {
-			if (target_vm->arch_vm.nworld_eptp == NULL) {
-				pr_err("%s, EPT of VM not set!\n",
-					__func__, target_vm->vm_id);
-				iommu_valid = false;
-			        ret = -EPERM;
-			} else {
-				/* TODO: how to get vm's address width? */
-				target_vm->iommu = create_iommu_domain(vmid,
-						hva2hpa(target_vm->arch_vm.nworld_eptp), 48U);
-				if (target_vm->iommu == NULL) {
-					iommu_valid = false;
-					ret = -ENODEV;
-				}
-			}
-		}
-		if (bdf_valid && iommu_valid) {
+		if (bdf_valid) {
 			ret = move_pt_device(vm->iommu, target_vm->iommu,
 				(uint8_t)(bdf >> 8U), (uint8_t)(bdf & 0xffU));
 		}

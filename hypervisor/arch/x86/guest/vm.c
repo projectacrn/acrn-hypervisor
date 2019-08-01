@@ -589,9 +589,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 		ptdev_release_all_entries(vm);
 
 		/* Free iommu */
-		if (vm->iommu != NULL) {
-			destroy_iommu_domain(vm->iommu);
-		}
+		destroy_iommu_domain(vm->iommu);
 
 		/* Free EPT allocated resources assigned to VM */
 		destroy_ept(vm);
