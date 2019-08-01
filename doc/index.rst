@@ -73,10 +73,11 @@ license.
    :maxdepth: 1
    :hidden:
 
-   learn/index
-   try/index
-   develop/index
-   contribute/index
+   Documentation Home <self>
+   learn
+   try
+   develop
+   contribute
    reference/index
    release_notes/index
    faq

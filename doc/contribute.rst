@@ -18,13 +18,13 @@ also find details about specific architecture topics.
 .. toctree::
    :maxdepth: 1
 
-   ../developer-guides/modularity
-   ../developer-guides/hld/index
-   ../developer-guides/sw_design_guidelines
-   ../developer-guides/GVT-g-porting
-   ../developer-guides/trusty
-   ../developer-guides/l1tf
-   ../developer-guides/VBSK-analysis
+   developer-guides/modularity
+   developer-guides/hld/index
+   developer-guides/sw_design_guidelines
+   developer-guides/GVT-g-porting
+   developer-guides/trusty
+   developer-guides/l1tf
+   developer-guides/VBSK-analysis
 
 
 Contributing Documents
@@ -39,8 +39,8 @@ the project.
 .. toctree::
    :maxdepth: 1
 
-   ../developer-guides/contribute_guidelines
-   ../developer-guides/coding_guidelines
-   ../developer-guides/doc_guidelines
-   ../developer-guides/graphviz
-   ../tutorials/docbuild.rst
+   developer-guides/contribute_guidelines
+   developer-guides/coding_guidelines
+   developer-guides/doc_guidelines
+   developer-guides/graphviz
+   tutorials/docbuild

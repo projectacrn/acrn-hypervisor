@@ -5,14 +5,14 @@
    max-width: none;
 }
 
-/* (temporarily) add an under development tagline to the bread crumb */
+/* (temporarily) add an under development tagline to the bread crumb
 .wy-breadcrumbs::after {
    content: " (Content reorganization in progress)";
    background-color: #FFFACD;
    color: red;
    font-weight: bold;
 }
-/* */
+*/
 
 /* pygments tweak for white-on-black console */
 
