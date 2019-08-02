@@ -218,10 +218,6 @@ struct pci_pdev {
 	struct pci_msix_cap msix;
 };
 
-extern uint32_t num_pci_pdev;
-extern struct pci_pdev pci_pdev_array[CONFIG_MAX_PCI_DEV_NUM];
-
-
 static inline uint32_t pci_bar_offset(uint32_t idx)
 {
 	return PCIR_BARS + (idx << 2U);
