@@ -26,7 +26,9 @@ def clos_info_parser():
 
 
 def gen_cat(config):
-    """Get CAT information"""
+    """Get CAT information
+    :param config: it is a file pointer of board information for writing to
+    """
     (cache_support, clos_max) = clos_info_parser()
 
     print("\n#include <board.h>", file=config)
@@ -48,7 +50,8 @@ def gen_cat(config):
             elif cache_support == "L3":
                 print("\t\t.msr_index = {0}U,".format(hex(0x00000C90+i_cnt)), file=config)
             else:
-                board_cfg_lib.print_red("The input of board_info.txt was corrupted!")
+                board_cfg_lib.print_red("The input of {} was corrupted!".format(
+                    board_cfg_lib.BOARD_INFO_FILE))
                 sys.exit(1)
             print("\t},", file=config)
 
@@ -61,7 +64,9 @@ def gen_cat(config):
 
 
 def gen_px_cx(config):
-    """Get Px/Cx and store them to board.c"""
+    """Get Px/Cx and store them to board.c
+    :param config: it is a file pointer of board information for writing to
+    """
     cpu_brand_lines = board_cfg_lib.get_info(
         board_cfg_lib.BOARD_INFO_FILE, "<CPU_BRAND>", "</CPU_BRAND>")
     cx_lines = board_cfg_lib.get_info(board_cfg_lib.BOARD_INFO_FILE, "<CX_INFO>", "</CX_INFO>")
@@ -92,7 +97,9 @@ def gen_px_cx(config):
 
 
 def generate_file(config):
-    """Start to generate board.c"""
+    """Start to generate board.c
+    :param config: it is a file pointer of board information for writing to
+    """
     print("{0}".format(board_cfg_lib.HEADER_LICENSE), file=config)
 
     # insert bios info into board.c
