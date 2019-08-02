@@ -137,22 +137,51 @@ and many other features.
 Boot Sequence
 *************
 
+ACRN supports two kinds of boots: **De-privilege boot mode** and **Direct
+boot mode**.
+
+De-privilege boot mode
+======================
+
+**De-privilege boot mode** is loaded by ``acrn.efi`` under a UEFI
+environment. The Service VM must be the first launched VM,  (i.e. VM0).
+
 In :numref:`boot-flow` we show a verified Boot Sequence with UEFI
 on an Intel Architecture platform NUC (see :ref:`hardware`).
 
 .. graphviz:: images/boot-flow.dot
    :name: boot-flow
    :align: center
-   :caption: ACRN Hypervisor Boot Flow
+   :caption: ACRN Hypervisor De-privilege boot mode Flow
 
 The Boot process proceeds as follows:
 
-#. UEFI verifies and boots the ACRN hypervisor and Service OS Bootloader
-#. UEFI (or Service OS Bootloader) verifies and boots Service OS kernel
-#. Service OS kernel verifies and loads ACRN Device Model and Virtual
+#. UEFI verifies and boots the ACRN hypervisor and Service VM Bootloader
+#. UEFI (or Service VM Bootloader) verifies and boots Service VM kernel
+#. Service VM kernel verifies and loads ACRN Device Model and Virtual
    bootloader through dm-verity
 #. Virtual bootloader starts the User-side verified boot process
 
+Direct boot mode
+================
+
+In :numref:`boot-flow-2` we show the **Direct boot mode** sequence:
+
+.. graphviz:: images/boot-flow-2.dot
+  :name: boot-flow-2
+  :align: center
+  :caption: ACRN Hypervisor Direct boot mode Boot Flow
+
+The Boot process proceeds as follows:
+
+#. UEFI boots GRUB
+#. GRUB boots the ACRN hypervisor and loads the VM kernels as Multi-boot
+   modules
+#. ACRN hypervisor verifies and boots kernels of the Pre-launched VM and
+   Service VM
+#. In the Service VM launch path, the Service VM kernel verifies and loads
+   the ACRN Device Model and Virtual bootloader through dm-verity
+#. Virtual bootloader starts the User-side verified boot process
 
 ACRN Hypervisor Architecture
 ****************************
