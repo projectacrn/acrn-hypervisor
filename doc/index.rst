@@ -17,7 +17,7 @@ through an open source platform.
    <ul class="grid">
        <li class="grid-item">
            <a href="learn.html">
-               <img alt="" src="_static/images/ACRNlogo.png"/>
+               <img alt="" src="_static/images/ACRNlogo80w.png"/>
                <h2>Learn about<br/>ACRN</h2>
            </a>
            <p>Overview, architecture,
