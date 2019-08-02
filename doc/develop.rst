@@ -19,6 +19,8 @@ Configuration Tutorials
    tutorials/sign_clear_linux_image
    tutorials/static-ip
    tutorials/debug
+   tutorials/using_partition_mode_on_nuc
+   tutorials/using_partition_mode_on_up2
 
 User VM Tutorials
 *****************
