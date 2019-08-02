@@ -8,17 +8,18 @@ import sys
 import shutil
 import argparse
 import subprocess
-import parser_lib
 import pci_dev
 import dmi
 import acpi
 import clos
+import misc
+import parser_lib
 
 OUTPUT = "./out/"
 PY_CACHE = "__pycache__"
 
 # This file store information which query from hw board
-BIN_LIST = ['cpuid', 'rdmsr', 'lspci', ' dmidecode']
+BIN_LIST = ['cpuid', 'rdmsr', 'lspci', ' dmidecode', 'blkid']
 PCI_IDS = ["/usr/share/hwdata/pci.ids", "/usr/share/misc/pci.ids"]
 
 CPU_VENDOR = "GenuineIntel"
@@ -57,7 +58,7 @@ def vendor_check():
             if len(line.split(':')) == 2:
                 if line.split(':')[0].strip() == "vendor_id":
                     vendor_name = line.split(':')[1].strip()
-                    return vendor_name != CPU_VENDOR
+                    return vendor_name == CPU_VENDOR
 
 
 def check_env():
@@ -66,7 +67,7 @@ def check_env():
         shutil.rmtree(PY_CACHE)
 
     # check cpu vendor id
-    if vendor_check():
+    if not vendor_check():
         parser_lib.print_red("Please run this tools on {}!".format(CPU_VENDOR))
         sys.exit(1)
 
@@ -90,7 +91,6 @@ def check_env():
             if int(version) < 20170122:
                 parser_lib.print_yel("Need CPUID version >= 20170122")
                 sys.exit(1)
-
 
     if not native_check():
         parser_lib.print_red("Please run this tools on natvie OS!")
@@ -135,6 +135,9 @@ if __name__ == '__main__':
 
     # Generate clos info
     clos.generate_info(BOARD_INFO)
+
+    # Generate misc info
+    misc.generate_info(BOARD_INFO)
 
     with open(BOARD_INFO, 'a+') as f:
         print("</acrn-config>", file=f)

@@ -11,8 +11,11 @@ CACHE_TYPE = {
     }
 
 
-def execute(cmd, reg):
-    """Execute the cmd"""
+def dump_cpuid_reg(cmd, reg):
+    """execute the cmd of cpuid, and return the register value by reg
+    :param cmd: command what can be executed in shell
+    :param reg: register name
+    """
     cache_t = ''
 
     res = parser_lib.cmd_excute(cmd)
@@ -55,7 +58,7 @@ def get_clos_info():
     clos_max = 0
     clos_cache = False
     cmd = "cpuid -r -l 0x10"
-    clos_cache = execute(cmd, "ebx")
+    clos_cache = dump_cpuid_reg(cmd, "ebx")
 
     if clos_cache == "L2":
         cmd = "cpuid -r -l 0x10 --subleaf 2"
@@ -66,16 +69,19 @@ def get_clos_info():
         parser_lib.print_yel("CLOS is not supported!")
         return (clos_cache, clos_max)
 
-    clos_max = execute(cmd, "edx")
+    clos_max = dump_cpuid_reg(cmd, "edx")
 
     return (clos_cache, clos_max)
 
+
 def generate_info(board_info):
-    """Generate clos information"""
+    """Generate clos information
+    :param board_info: this is the file which stores the hardware board information
+    """
     (clos_cache, clos_max) = get_clos_info()
 
-    with open(board_info, 'a+') as board_fp:
-        print("\t<CLOS_INFO>", file=board_fp)
-        print("\tclos supported by cache:{}".format(clos_cache), file=board_fp)
-        print("\tclos max:{}".format(clos_max), file=board_fp)
-        print("\t</CLOS_INFO>\n", file=board_fp)
+    with open(board_info, 'a+') as config:
+        print("\t<CLOS_INFO>", file=config)
+        print("\tclos supported by cache:{}".format(clos_cache), file=config)
+        print("\tclos max:{}".format(clos_max), file=config)
+        print("\t</CLOS_INFO>\n", file=config)

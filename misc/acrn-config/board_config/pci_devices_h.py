@@ -68,7 +68,12 @@ def parser_pci():
 
 
 def write_pbdf(i_cnt, bdf, subname, config):
-    """Parser and generate pbdf"""
+    """Parser and generate pbdf
+    :param i_cnt: the number of pci devices have the same PCI subname
+    :param bdf: it is a string what contains BDF
+    :param subname: it is a string belong to PIC subname
+    :param config: it is a file pointer of pci information for writing to
+    """
     # if there is only one host bridge, then will discard the index of suffix
     if i_cnt == 0 and subname.upper() == "HOST BRIDGE":
         tmp_sub_name = "_".join(subname.split()).upper()
@@ -84,7 +89,11 @@ def write_pbdf(i_cnt, bdf, subname, config):
 
 
 def write_vbar(bdf, pci_bar_dic, config):
-    """Parser and generate vbar"""
+    """Parser and generate vbar
+    :param bdf: it is a string what contains BDF
+    :param pci_bar_dic: it is a dictionary of pci vbar for those BDF
+    :param config: it is a file pointer of pci information for writing to
+    """
     tail = 0
     align = ' ' * 48
     if bdf in pci_bar_dic.keys():
@@ -110,7 +119,9 @@ def write_vbar(bdf, pci_bar_dic, config):
 
 
 def generate_file(config):
-    """Get PCI device and generate pci_devices.h"""
+    """Get PCI device and generate pci_devices.h
+    :param config: it is a file pointer of pci information for writing to
+    """
 
     # write the license into pci
     print("{0}".format(board_cfg_lib.HEADER_LICENSE), file=config)
