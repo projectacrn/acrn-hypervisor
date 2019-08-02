@@ -203,7 +203,13 @@ class PathDevFun:
 
 
 def walk_pci_bus(tmp_pdf, dmar_tbl, dmar_hw_list, n_cnt, drhd_cnt):
-    """Walk Pci bus"""
+    """Walk Pci bus
+    :param tmp_pdf: it is a class what contains path,device,function in dmar device scope region
+    :param dmar_tbl: it is a class to describe dmar which contains Device Scope and DRHD
+    :param dmar_hw_list: it is a class to describe hardware scope in DMAR table
+    :param n_cnt: the number of device in device scope
+    :param drhd_cnt: it is a counter to calculate the DRHD in DMAR table
+    """
     while n_cnt:
         scope_path = DevScopePath.from_address(dmar_tbl.path_offset)
         tmp_pdf.device = scope_path.device
@@ -223,7 +229,12 @@ def walk_pci_bus(tmp_pdf, dmar_tbl, dmar_hw_list, n_cnt, drhd_cnt):
 
 
 def walk_dev_scope(dmar_tbl, dmar_dev_list, dmar_hw_list, drhd_cnt):
-    """Walk device scope"""
+    """Walk device scope
+    :param dmar_tbl: it is a class to describe dmar which contains Device Scope and DRHD
+    :param dmar_dev_list: it is a class to describe device scope in DMAR table
+    :param dmar_hw_list: it is a class to describe DRHD in DMAR table
+    :param drhd_cnt: it is a counter to calculate the DRHD in DMAR table
+    """
     dmar_tbl.dev_scope_offset = dmar_tbl.sub_tbl_offset + ctypes.sizeof(DmarHwUnit)
     scope_end = dmar_tbl.dev_scope_offset + dmar_tbl.dmar_drhd.sub_header.length
     dmar_tbl.dev_scope_cnt = 0
@@ -259,7 +270,12 @@ def walk_dev_scope(dmar_tbl, dmar_dev_list, dmar_hw_list, drhd_cnt):
 
 
 def walk_dmar_table(dmar_tbl, dmar_hw_list, dmar_dev_list, sysnode):
-    """Walk dmar table and get information"""
+    """Walk dmar table and get information
+    :param dmar_tbl: it is a class to describe dmar which contains Device Scope and DRHD
+    :param dmar_hw_list: it is a class to describe hardware scope in DMAR table
+    :param dmar_dev_list: it is a class to describe device scope in DMAR table
+    :param sysnode: the system device node of acpi table, such as: /sys/firmware/acpi/tables/DMAR
+    """
     data = open(sysnode, 'rb').read()
     buf = ctypes.create_string_buffer(data, len(data))
     addr = ctypes.addressof(buf)
@@ -289,7 +305,7 @@ def walk_dmar_table(dmar_tbl, dmar_hw_list, dmar_dev_list, sysnode):
         dmar_hw_list.hw_flags_list.append(dmar_tbl.dmar_drhd.flags)
         dmar_hw_list.hw_address_list.append(dmar_tbl.dmar_drhd.address)
 
-        # in end of DRHD/sub tbl header is devscope
+        # in end of DRHD/sub tbl header is dev scope, then enumerate the device scope
         (dmar_tbl, dmar_dev_list, dmar_hw_list) = walk_dev_scope(
             dmar_tbl, dmar_dev_list, dmar_hw_list, drhd_cnt)
 
@@ -301,7 +317,10 @@ def walk_dmar_table(dmar_tbl, dmar_hw_list, dmar_dev_list, sysnode):
 
 
 def write_dmar_data(sysnode, config):
-    """Write the DMAR data to board info"""
+    """Write the DMAR data to board info
+    :param sysnode: the system device node of acpi table, such as: /sys/firmware/acpi/tables/DMAR
+    :param config: file pointer that opened for writing board information
+    """
 
     dmar_hw_list = DmarHwList()
     dmar_dev_list = DmarDevList()

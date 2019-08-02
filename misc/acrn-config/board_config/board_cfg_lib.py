@@ -28,7 +28,10 @@ HEADER_LICENSE = open_license() + "\n"
 
 
 def print_yel(msg, warn=False):
-    """Print the message with color of yellow"""
+    """Print the message with color of yellow
+    :param msg: the stings which will be output to STDOUT
+    :param warn: the condition if needs to be output the color of yellow with 'Warning'
+    """
     if warn:
         print("\033[1;33mWarning\033[0m:"+msg)
     else:
@@ -36,7 +39,10 @@ def print_yel(msg, warn=False):
 
 
 def print_red(msg, err=False):
-    """Print the message with color of red"""
+    """Print the message with color of red
+    :param msg: the stings which will be output to STDOUT
+    :param err: the condition if needs to be output the color of red with 'Error'
+    """
     if err:
         print("\033[1;31mError\033[0m:"+msg)
     else:
@@ -44,7 +50,9 @@ def print_red(msg, err=False):
 
 
 def get_board_name(board_info):
-    """Get board name"""
+    """Get board name from board.xml at fist line
+    :param board_info: it is a file what contains board information for script to read from
+    """
     with open(board_info, 'rt') as f_board:
         line = f_board.readline()
         if not "board=" in line:
@@ -56,7 +64,11 @@ def get_board_name(board_info):
 
 
 def get_info(board_info, msg_s, msg_e):
-    """Get information which specify by argument"""
+    """Get information which specify by argument
+    :param board_info: it is a file what contains board information for script to read from
+    :param msg_s: it is a pattern of key stings what start to match from board information
+    :param msg_e: it is a pattern of key stings what end to match from board information
+    """
     info_start = False
     info_end = False
     info_lines = []
@@ -93,7 +105,9 @@ def get_info(board_info, msg_s, msg_e):
 
 
 def handle_bios_info(config):
-    """Handle bios information"""
+    """Handle bios information
+    :param config: it is a file pointer of bios information for writing to
+    """
     bios_lines = get_info(BOARD_INFO_FILE, "<BIOS_INFO>", "</BIOS_INFO>")
     board_lines = get_info(BOARD_INFO_FILE, "<BASE_BOARD_INFO>", "</BASE_BOARD_INFO>")
     print("/*", file=config)
@@ -116,9 +130,9 @@ def handle_bios_info(config):
 
             i_cnt += 1
 
-            for mics_info in bios_board_info:
-                if mics_info == " ".join(line.split()[0:1]) or mics_info == \
-                        " ".join(line.split()[0:2]) or mics_info == " ".join(line.split()[0:3]):
+            for misc_info in bios_board_info:
+                if misc_info == " ".join(line.split()[0:1]) or misc_info == \
+                        " ".join(line.split()[0:2]) or misc_info == " ".join(line.split()[0:3]):
                     print(" * {0}".format(line.strip()), file=config)
 
     print(" */", file=config)

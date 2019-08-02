@@ -54,7 +54,10 @@ def prepare():
 
 
 def gen_patch(srcs_list, board_name):
-    """Generate patch and apply to local source code"""
+    """Generate patch and apply to local source code
+    :param srcs_list: it is a list what contains source files
+    :param board_name: board name
+    """
     changes = ' '.join(srcs_list)
     git_add = "git add {}".format(changes)
     subprocess.call(git_add, shell=True, stdout=subprocess.PIPE,
@@ -67,7 +70,9 @@ def gen_patch(srcs_list, board_name):
 
 
 def main(board_info_file):
-    """This is main function to start generate source code related with board"""
+    """This is main function to start generate source code related with board
+    :param board_info_file: it is a file what contains board information for script to read from
+    """
     board = ''
     config_srcs = []
     config_dirs = []
@@ -101,7 +106,7 @@ def main(board_info_file):
     with open(config_platform, 'w+') as config:
         acpi_platform_h.generate_file(config, ACRN_DEFAULT_PLATFORM)
 
-    # move changes to patch, and applay to the source code
+    # move changes to patch, and apply to the source code
     gen_patch(config_srcs, board)
 
     if board not in BOARD_NAMES:
@@ -131,7 +136,6 @@ if __name__ == '__main__':
         board_cfg_lib.print_red("{} is not exist!".format(BOARD_INFO_FILE))
         sys.exit(1)
 
-    # board_info.txt will be override
     board_cfg_lib.BOARD_INFO_FILE = BOARD_INFO_FILE
 
     main(BOARD_INFO_FILE)

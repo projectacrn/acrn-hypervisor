@@ -31,7 +31,12 @@ class OverridAccessSize():
 
 
 def multi_parser(line, s_line, pm_ac_sz, config):
-    """Multi parser the line"""
+    """Multi parser the line
+    :param line: it is a line read from default_acpi_info.h
+    :param s_line: it is a line read from board information file
+    :param pm_ac_sz: it is a class for access size which would be override
+    :param config: it is a file pointer to write acpi information
+    """
     addr = ['PM1A_EVT_ADDRESS', 'PM1B_EVT_ADDRESS', 'PM1A_CNT_ADDRESS', 'PM1B_CNT_ADDRESS']
     space_id = ['PM1A_EVT_SPACE_ID', 'PM1B_EVT_SPACE_ID', 'PM1A_CNT_SPACE_ID', 'PM1B_CNT_SPACE_ID']
 
@@ -71,7 +76,12 @@ def multi_parser(line, s_line, pm_ac_sz, config):
 
 
 def multi_info_parser(config, default_platform, msg_s, msg_e):
-    """Parser multi information"""
+    """Parser multi information
+    :param config: it is a file pointer to write acpi information
+    :param default_platform: it is the default_acpi_info.h in acrn-hypervisor
+    :param msg_s: it is a pattern of key stings what start to match from board information
+    :param msg_e: it is a pattern of key stings what end to match from board information
+    """
     write_direct = ['PM1A_EVT_ACCESS_SIZE', 'PM1A_EVT_ADDRESS', 'PM1A_CNT_ADDRESS']
 
     pm_ac_sz = OverridAccessSize()
@@ -99,7 +109,11 @@ def multi_info_parser(config, default_platform, msg_s, msg_e):
 
 
 def write_direct_info_parser(config, msg_s, msg_e):
-    """Direct to write"""
+    """Direct to write
+    :param config: it is a file pointer to write acpi information
+    :param msg_s: it is a pattern of key stings what start to match from board information
+    :param msg_e: it is a pattern of key stings what end to match from board information
+    """
     vector_lines = board_cfg_lib.get_info(board_cfg_lib.BOARD_INFO_FILE, msg_s, msg_e)
 
     for vector in vector_lines:
@@ -109,7 +123,9 @@ def write_direct_info_parser(config, msg_s, msg_e):
 
 
 def drhd_info_parser(config):
-    """Parser DRHD information"""
+    """Parser DRHD information
+    :param config: it is a file pointer to write acpi information
+    """
     prev_num = 0
 
     drhd_lines = board_cfg_lib.get_info(
@@ -133,7 +149,10 @@ def drhd_info_parser(config):
 
 
 def platform_info_parser(config, default_platform):
-    """Parser ACPI information"""
+    """Parser ACPI information
+    :param config: it is a file pointer to write acpi information
+    :param default_platform: it is the default_acpi_info.h in acrn-hypervisor
+    """
     print("\n/* pm sstate data */", file=config)
     multi_info_parser(config, default_platform, "<PM_INFO>", "</PM_INFO>")
     multi_info_parser(config, default_platform, "<S3_INFO>", "</S3_INFO>")
@@ -146,7 +165,10 @@ def platform_info_parser(config, default_platform):
 
 
 def generate_file(config, default_platform):
-    """write board_name_acpi_info.h"""
+    """write board_name_acpi_info.h
+    :param config: it is a file pointer to write acpi information
+    :param default_platform: it is the default_acpi_info.h in acrn-hypervisor
+    """
     print("{}".format(board_cfg_lib.HEADER_LICENSE), file=config)
 
     print("{}".format(PLATFORM_HEADER), file=config)
