@@ -171,42 +171,80 @@ each with their own way to install development tools:
      details.
 
 
-Build the hypervisor, device model and tools
-********************************************
+Get the ACRN hypervisor source code
+***********************************
 
 The `acrn-hypervisor <https://github.com/projectacrn/acrn-hypervisor/>`_
 repository has four main components in it:
 
 1. The ACRN hypervisor code located in the ``hypervisor`` directory
-#. The EFI stub code located in the ``efi-stub`` directory
+#. The EFI stub code located in the ``misc/efi-stub`` directory
 #. The ACRN devicemodel code located in the ``devicemodel`` directory
-#. The ACRN tools source code located in the ``tools`` directory
+#. The ACRN tools source code located in the ``misc/tools`` directory
 
-You can build all these components in one go as follows:
+Follow this step to get the acrn-hypervisor source code:
 
 .. code-block:: none
 
    $ git clone https://github.com/projectacrn/acrn-hypervisor
-   $ cd acrn-hypervisor
-   $ make
 
-The build results are found in the ``build`` directory.
 
-.. note::
-   if you wish to use a different target folder for the build
-   artifacts, set the ``O`` (that is capital letter 'O') to the
-   desired value. Example: ``make O=build-nuc BOARD=nuc6cayh``.
+Choose the ACRN scenario
+************************
 
-Generating the documentation is described in details in the :ref:`acrn_doc`
-tutorial.
+.. note:: Documentation about the new ACRN use-case scenarios is a
+   work-in-progress on the master branch as we work towards the v1.2
+   release.
 
-Follow the same instructions to boot and test the images you created
-from your build.
+Currently ACRN hypervisor defines these typical usage scenarios:
+
+SDC:
+   The SDC (Software Defined Cockpit) scenario defines a simple
+   automotive use-case where there is one pre-launched Service VM and one
+   post-launched User VM.
+
+SDC2:
+   SDC2 (Software Defined Cockpit 2) is an extended scenario for an
+   automotive SDC system.  SDC2 defined one pre-launched Service VM and up
+   to three post-launched VMs.
+
+LOGICAL_PARTITION:
+    This scenario defines two pre-launched VMs.
+
+INDUSTRY:
+   This is a typical scenario for industrial usage with up to four VMs:
+   one pre-launched Service VM, one post-launched Standard VM for Human
+   interaction (HMI), and one or two post-launched RT VMs for real-time
+   control.
+
+HYBRID:
+   This scenario defines a hybrid use-case with three VMs: one
+   pre-launched VM, one pre-launched Service VM, and one post-launched
+   Standard VM.
+
+You can select a build scenario by changing the default Kconfig name in
+the choice block of **ACRN Scenario** in ``arch/x86/Kconfig``. The
+corresponding VM configuration files in the corresponding
+``scenarios/$SCENARIO_NAME/`` folder.
+
+.. code-block:: none
+   :emphasize-lines: 7
+
+   $ cd  acrn-hypervisor/hypervisor
+   $ sudo vim arch/x86/Kconfig
+   # <Fill the scenario name into below and save>
+
+   choice
+                prompt "ACRN Scenario"
+                default SDC
+
+See the :ref:`hardware` document for information about the platform
+needs for each scenario.
 
 .. _getting-started-hypervisor-configuration:
 
-Configuring the hypervisor
-**************************
+Modify the hypervisor configuration
+***********************************
 
 The ACRN hypervisor leverages Kconfig to manage configurations, powered by
 Kconfiglib. A default configuration is generated based on the board you have
@@ -220,17 +258,13 @@ based on the platform selected, assuming that you are under the top-level
 directory of acrn-hypervisor. The configuration file, named ``.config``, can be
 found under the target folder of your build.
 
-   .. code-block:: none
+.. code-block:: none
 
-      $ cd hypervisor
-      $ make defconfig BOARD=nuc6cayh
+   $ make defconfig BOARD=nuc6cayh
 
 The BOARD specified is used to select a defconfig under
 ``arch/x86/configs/``. The other command-line based options (e.g. ``RELEASE``)
 take no effects when generating a defconfig.
-
-Modify the hypervisor configurations
-************************************
 
 To modify the hypervisor configurations, you can either edit ``.config``
 manually, or invoke a TUI-based menuconfig, powered by kconfiglib, by executing
@@ -239,24 +273,49 @@ are under the top-level directory of acrn-hypervisor, generate a default
 configuration file for UEFI, allow you to modify some configurations and build
 the hypervisor using the updated ``.config``.
 
-   .. code-block:: none
+.. code-block:: none
 
-      $ cd hypervisor
-      $ make defconfig BOARD=nuc6cayh
-      $ make menuconfig              # Modify the configurations per your needs
-      $ make                         # Build the hypervisor with the new .config
+   $ make menuconfig              # Modify the configurations per your needs
 
-   .. note::
-      Menuconfig is python3 only.
+.. note::
+   Menuconfig is python3 only.
 
 Refer to the help on menuconfig for a detailed guide on the interface.
 
-   .. code-block:: none
+.. code-block:: none
 
-      $ pydoc3 menuconfig
+   $ pydoc3 menuconfig
 
-Create a new default configuration
-**********************************
+Build the hypervisor, device model and tools
+********************************************
+
+Now you can build all these components in one go as follows:
+
+.. code-block:: none
+
+   $ cd ../                      # Enter top-level folder of acrn-hypervisor source
+   $ make FIRMWARE=uefi          # Build the UEFI hypervisor with the new .config
+
+The build results are found in the ``build`` directory.  You can specify
+use a different Output folder by setting the ``O`` make parameter,
+for example: ``make O=build-nuc BOARD=nuc6cayh``.
+
+If you only need the hypervisor, then use this command:
+
+.. code-block:: none
+
+   $ make clean                              # Remove files previously built
+   $ make FIRMWARE=uefi hypervisor           # This will only build the hypervisor
+
+You could also use ``FIRMWARE=sbl`` instead, to build the Intel SBL
+(`Slim bootloader
+<https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`_)
+hypervisor.
+
+Follow the same instructions to boot and test the images you created from your build.
+
+Save as default configuration
+*****************************
 
 Currently the ACRN hypervisor looks for default configurations under
 ``hypervisor/arch/x86/configs/<BOARD>.config``, where ``<BOARD>`` is the
@@ -277,4 +336,3 @@ example above) to 'BOARD=':
    .. code-block:: none
 
       $ make defconfig BOARD=xxx
-
