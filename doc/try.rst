@@ -23,5 +23,3 @@ Follow these getting started guides to give ACRN a try:
    getting-started/apl-nuc
    getting-started/up2
    getting-started/building-from-source
-   tutorials/using_partition_mode_on_nuc
-   tutorials/using_partition_mode_on_up2

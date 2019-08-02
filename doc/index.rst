@@ -16,7 +16,7 @@ through an open source platform.
 
    <ul class="grid">
        <li class="grid-item">
-           <a href="learn/index.html">
+           <a href="learn.html">
                <img alt="" src="_static/images/ACRNlogo.png"/>
                <h2>Learn about<br/>ACRN</h2>
            </a>
@@ -24,7 +24,7 @@ through an open source platform.
               features, and use-case scenarios</p>
        </li>
        <li class="grid-item">
-           <a href="try/index.rst">
+           <a href="try.html">
                <span class="grid-icon fa fa-map-signs"></span>
                <h2>Try using<br/>ACRN</h2>
            </a>
@@ -32,7 +32,7 @@ through an open source platform.
               samples</p>
        </li>
        <li class="grid-item">
-           <a href="develop/index.html">
+           <a href="develop.html">
                <span class="grid-icon fa fa-cogs"></span>
                <h2>Develop using<br/>ACRN</h2>
            </a>
@@ -40,7 +40,7 @@ through an open source platform.
               solutions</p>
        </li>
        <li class="grid-item">
-           <a href="contribute/index.html">
+           <a href="contribute.html">
                <span class="grid-icon fa fa-github"></span>
                <h2>Contribute to<br/>ACRN</h2>
            </a>
