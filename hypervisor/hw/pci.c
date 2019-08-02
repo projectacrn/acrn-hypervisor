@@ -37,8 +37,8 @@
 #include <pci_dev.h>
 
 static spinlock_t pci_device_lock;
-uint32_t num_pci_pdev;
-struct pci_pdev pci_pdev_array[CONFIG_MAX_PCI_DEV_NUM];
+static uint32_t num_pci_pdev;
+static struct pci_pdev pci_pdev_array[CONFIG_MAX_PCI_DEV_NUM];
 
 static void init_pdev(uint16_t pbdf);
 
