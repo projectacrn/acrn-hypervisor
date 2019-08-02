@@ -8,8 +8,8 @@ design principles, along with guidelines followed by the
 development team. With this information, you too can contribute to the
 project and submit code and documentation patches of your own.
 
-Design Documents
-****************
+Design Guides
+*************
 
 Read about ACRN's high-level design and architecture principles that led
 to the develoment of the ACRN hypervisor and its components.  You'll
@@ -27,8 +27,8 @@ also find details about specific architecture topics.
    developer-guides/VBSK-analysis
 
 
-Contributing Documents
-**********************
+Contributing Guides
+*******************
 
 As an open-source project, we welcome and encourage the community to
 submit patches for code, documentation, tests, and more, directly to the
@@ -44,3 +44,16 @@ the project.
    developer-guides/doc_guidelines
    developer-guides/graphviz
    tutorials/docbuild
+
+.. _tools:
+
+Tools
+*****
+
+.. toctree::
+   :glob:
+   :maxdepth: 1
+
+   misc/tools/acrn-crashlog/README
+   misc/tools/**
+   misc/acrn-manager/**

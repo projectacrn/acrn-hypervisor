@@ -6,9 +6,11 @@ Developer references
 .. toctree::
    :maxdepth: 1
 
-   hardware
    ../api/index
-   ../reference/kconfig/index
+   kconfig/index
+   ../user-guides/acrn-shell
+   ../user-guides/kernel-parameters
+   ../user-guides/acrn-dm-parameters
 
 * :ref:`glossary`
 * :ref:`genindex`

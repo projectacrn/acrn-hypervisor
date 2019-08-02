@@ -19,6 +19,9 @@ Follow these getting started guides to give ACRN a try:
 .. toctree::
    :maxdepth: 1
 
+   reference/hardware
    getting-started/apl-nuc
    getting-started/up2
    getting-started/building-from-source
+   tutorials/using_partition_mode_on_nuc
+   tutorials/using_partition_mode_on_up2

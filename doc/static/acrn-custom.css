@@ -223,6 +223,7 @@ kbd
             align-items: center;
     border: 1px solid #c6cbce;
     background-color: #2B978F;
+    border-radius: 30px;
     color: white;
 }
 
