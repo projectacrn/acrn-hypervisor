@@ -247,6 +247,7 @@ VP_BASE_C_SRCS += boot/guest/vboot_info.c
 VP_BASE_C_SRCS += common/hv_main.c
 VP_BASE_C_SRCS += common/vm_load.c
 VP_BASE_C_SRCS += arch/x86/configs/vmptable.c
+VP_BASE_C_SRCS += arch/x86/configs/pci_dev.c
 VP_BASE_C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/ve820.c
 
 # virtual platform device model

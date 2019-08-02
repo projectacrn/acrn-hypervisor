@@ -27,6 +27,7 @@
 #include <board.h>
 #include <sgx.h>
 #include <sbuf.h>
+#include <pci_dev.h>
 
 vm_sw_loader_t vm_sw_loader;
 
@@ -447,8 +448,9 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		status = init_vm_boot_info(vm);
 		if (status != 0) {
 			need_cleanup = true;
+		} else {
+			initialize_sos_pci_dev_config(vm_config);
 		}
-
 	} else {
 		/* For PRE_LAUNCHED_VM and POST_LAUNCHED_VM */
 		if ((vm_config->guest_flags & GUEST_FLAG_SECURE_WORLD_ENABLED) != 0U) {

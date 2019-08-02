@@ -130,6 +130,8 @@
 #define MSIX_CAPLEN           12U
 #define MSIX_TABLE_ENTRY_SIZE 16U
 
+#define HOST_BRIDGE_BDF		0U
+
 union pci_bdf {
 	uint16_t value;
 	struct {
