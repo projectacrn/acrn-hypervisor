@@ -1,5 +1,3 @@
-:orphan:
-
 .. _using_sdc2_mode_on_nuc:
 
 Launch Two User VMs on NUC using SDC2 Scenario

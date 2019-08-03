@@ -21,8 +21,7 @@ Configuration Tutorials
    tutorials/debug
    tutorials/using_partition_mode_on_nuc
    tutorials/using_partition_mode_on_up2
-
-..   tutorials/using_sdc2_mode_on_nuc
+   tutorials/using_sdc2_mode_on_nuc
 
 User VM Tutorials
 *****************
