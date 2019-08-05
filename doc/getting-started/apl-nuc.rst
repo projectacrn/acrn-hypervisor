@@ -17,6 +17,7 @@ described in :ref:`hardware`, are currently supported for ACRN development:
   <https://www.amazon.com/Intel-Business-Mini-Technology-BLKNUC7i7DNH1E/dp/B07CCQ8V4R>`__
   (NUC7i7DN), but this is not supported on APL (NUC6CAYH).
 
+.. _connect_serial_port:
 
 Connecting to the serial port
 =============================
