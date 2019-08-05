@@ -89,6 +89,8 @@ gvt_init_config(struct pci_gvt *gvt)
 	int ret;
 	char name[PATH_MAX];
 	uint8_t cap_ptr = 0;
+	uint8_t aperture_size_reg;
+	uint16_t aperture_size = 256;
 
 	snprintf(name, sizeof(name),
 		"/sys/bus/pci/devices/%04x:%02x:%02x.%x/config",
@@ -149,8 +151,33 @@ gvt_init_config(struct pci_gvt *gvt)
 	}
 
 	/* same as host, but guest only use partition of it by ballon */
+	aperture_size_reg = gvt->host_config[0x62];
+	switch(aperture_size_reg & 0b1111){
+		case 0b00000:
+			aperture_size = 128;
+			break;
+		case 0b00001:
+			aperture_size = 256;
+			break;
+		case 0b00011:
+			aperture_size = 512;
+			break;
+		case 0b00111:
+			aperture_size = 1024;
+			break;
+		case 0b01111:
+			aperture_size = 2048;
+			break;
+		case 0b11111:
+			aperture_size = 4096;
+			break;
+		default:
+			aperture_size = 256;
+			break;
+	}
+
 	ret = pci_emul_alloc_bar(gvt->gvt_pi, 2, PCIBAR_MEM32,
-		256 * 1024 * 1024);
+		aperture_size * 1024 * 1024);
 	if (ret != 0) {
 		fprintf(stderr,
 			"allocate gvt pci bar[2] failed\n");
