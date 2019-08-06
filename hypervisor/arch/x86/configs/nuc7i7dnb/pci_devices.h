@@ -20,7 +20,7 @@
 #define ETHERNET_CONTROLLER_0	.pbdf.bits = {.b = 0x00U, .d = 0x1fU, .f = 0x06U},	\
 				.vbar_base[0] = 0xdf200000UL
 
-#define NETWORK_CONTROLLER_0	.pbdf.bits = {.b = 0x10U, .d = 0x00U, .f = 0x00U},	\
+#define NETWORK_CONTROLLER_0	.pbdf.bits = {.b = 0x01U, .d = 0x00U, .f = 0x00U},	\
 				.vbar_base[0] = 0xdf100000UL
 
 #endif /* PCI_DEVICES_H_ */
