@@ -317,6 +317,8 @@ MODULES += $(LIB_DEBUG)
 endif
 MODULES += $(SYS_INIT_MOD)
 
+.PHONY: $(MODULES)
+
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 VERSION := $(HV_OBJDIR)/include/version.h
 
