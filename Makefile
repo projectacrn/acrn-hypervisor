@@ -4,12 +4,11 @@ T := $(CURDIR)
 
 BOARD ?= apl-nuc
 
-ifeq ($(BOARD),apl-nuc)
-FIRMWARE ?= uefi
-else ifeq ($(BOARD),nuc6cayh)
-FIRMWARE ?= uefi
+ifneq (,$(filter $(BOARD),apl-mrb))
+	FIRMWARE ?= sbl
+else
+	FIRMWARE ?= uefi
 endif
-FIRMWARE ?= sbl
 
 RELEASE ?= 0
 
