@@ -252,7 +252,7 @@ static uint16_t sanitize_vmid(uint16_t vmid)
 	char temp_str[TEMP_STR_SIZE];
 
 	if (vmid >= CONFIG_MAX_VM_NUM) {
-		snprintf(temp_str, MAX_STR_SIZE,
+		snprintf(temp_str, TEMP_STR_SIZE,
 			"VM ID given exceeds the MAX_VM_NUM(%u), using 0 instead\r\n",
 			CONFIG_MAX_VM_NUM);
 		shell_puts(temp_str);
