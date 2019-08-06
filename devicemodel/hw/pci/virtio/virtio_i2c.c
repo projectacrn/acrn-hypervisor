@@ -449,7 +449,7 @@ native_adapter_create(int bus, uint16_t slave_addr[], int n_slave)
 	fd = open(native_path, O_RDWR);
 	if (fd < 0) {
 		WPRINTF("virtio_i2c: failed to open %s\n", native_path);
-		return NULL;
+		goto fail;
 	}
 	native_adapter->fd = fd;
 	native_adapter->bus = bus;
