@@ -45,7 +45,7 @@
  */
 #define VM0_STORAGE_CONTROLLER			SATA_CONTROLLER_0
 #define VM0_NETWORK_CONTROLLER			ETHERNET_CONTROLLER_0
-#define VM0_CONFIG_PCI_PTDEV_NUM		3U
+#define VM0_CONFIG_PCI_DEV_NUM			3U
 
 #define VM1_STORAGE_CONTROLLER			USB_CONTROLLER_0
 #if defined(ETHERNET_CONTROLLER_1)
@@ -57,10 +57,10 @@
 #endif
 
 #if defined(VM1_NETWORK_CONTROLLER)
-#define VM1_CONFIG_PCI_PTDEV_NUM		3U
+#define VM1_CONFIG_PCI_DEV_NUM			3U
 #else
 /* no network controller could be assigned to VM1 */
-#define VM1_CONFIG_PCI_PTDEV_NUM		2U
+#define VM1_CONFIG_PCI_DEV_NUM			2U
 #endif
 
 #endif /* VM_CONFIGURATIONS_H */

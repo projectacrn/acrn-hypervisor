@@ -7,8 +7,8 @@
 #include <vm_config.h>
 #include <vuart.h>
 
-extern struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_PTDEV_NUM];
-extern struct acrn_vm_pci_dev_config vm1_pci_devs[VM1_CONFIG_PCI_PTDEV_NUM];
+extern struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM];
+extern struct acrn_vm_pci_dev_config vm1_pci_devs[VM1_CONFIG_PCI_DEV_NUM];
 
 struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	{	/* VM0 */
@@ -46,7 +46,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.t_vuart.vm_id = 1U,
 			.t_vuart.vuart_id = 1U,
 		},
-		.pci_dev_num = VM0_CONFIG_PCI_PTDEV_NUM,
+		.pci_dev_num = VM0_CONFIG_PCI_DEV_NUM,
 		.pci_devs = vm0_pci_devs,
 	},
 	{	/* VM1 */
@@ -85,7 +85,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.t_vuart.vm_id = 0U,
 			.t_vuart.vuart_id = 1U,
 		},
-		.pci_dev_num = VM1_CONFIG_PCI_PTDEV_NUM,
+		.pci_dev_num = VM1_CONFIG_PCI_DEV_NUM,
 		.pci_devs = vm1_pci_devs,
 	},
 };
