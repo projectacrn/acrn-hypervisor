@@ -700,7 +700,7 @@ virtio_input_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata8(dev, PCIR_CLASS, PCIC_INPUTDEV);
 	pci_set_cfgdata8(dev, PCIR_SUBCLASS, PCIS_INPUTDEV_OTHER);
 	pci_set_cfgdata16(dev, PCIR_SUBDEV_0, 0x1100);
-	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, VIRTIO_VENDOR);
+	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, ORACLE_VENDOR_ID);
 	pci_set_cfgdata16(dev, PCIR_REVID, 1);
 
 	if (virtio_interrupt_init(&vi->base, virtio_uses_msix())) {
