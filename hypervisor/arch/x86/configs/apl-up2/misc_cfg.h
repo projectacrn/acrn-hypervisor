@@ -7,10 +7,15 @@
 #ifndef MISC_CFG_H
 #define MISC_CFG_H
 
-#define ROOTFS_0		"root=/dev/sda3 "
+#define ROOTFS_0		"root=/dev/mmcblk0p3 "
 #define ROOTFS_1		"root=/dev/mmcblk0p1 "
 
+#if (FIRMWARE == uefi)
+#define SOS_ROOTFS              ROOTFS_0
+#else
 #define SOS_ROOTFS		ROOTFS_1
+#endif
+
 #define SOS_CONSOLE		"console=ttyS0 "
 
 #ifndef CONFIG_RELEASE
