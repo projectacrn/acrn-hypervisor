@@ -427,13 +427,13 @@ static void vpci_init_vdev(struct acrn_vpci *vpci, struct acrn_vm_pci_dev_config
 	vdev->pdev = dev_config->pdev;
 	vdev->pci_dev_config = dev_config;
 
-	if (dev_config->emu_type == PCI_DEV_TYPE_PTDEV) {
-		vdev->vdev_ops = &pci_pt_dev_ops;
-		ASSERT(dev_config->pdev != NULL,
-			"PCI PTDev %x:%x.%x is not present in the platform!",
-			dev_config->pbdf.b, dev_config->pbdf.d, dev_config->pbdf.f);
+	if (dev_config->vdev_ops != NULL) {
+		vdev->vdev_ops = dev_config->vdev_ops;
 	} else {
-		vdev->vdev_ops = get_vhostbridge_ops();
+		vdev->vdev_ops = &pci_pt_dev_ops;
+		ASSERT(dev_config->emu_type == PCI_DEV_TYPE_PTDEV,
+			"Only PCI_DEV_TYPE_PTDEV could not configure vdev_ops");
+		ASSERT(dev_config->pdev != NULL, "PCI PTDev is not present on platform!");
 	}
 
 	vdev->vdev_ops->init_vdev(vdev);

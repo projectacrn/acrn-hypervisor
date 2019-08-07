@@ -7,6 +7,7 @@
 #include <vm_config.h>
 #include <pci.h>
 #include <pci_dev.h>
+#include <vpci.h>
 
 /*
  * In theory, emulated PCI device doesn't need to bind to physical PCI device.
@@ -19,6 +20,7 @@ struct acrn_vm_pci_dev_config sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM] = {
 		.emu_type = PCI_DEV_TYPE_HVEMUL,
 		.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
 		.pbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
+		.vdev_ops = &vhostbridge_ops,
 	},
 };
 

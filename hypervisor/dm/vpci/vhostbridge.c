@@ -122,14 +122,9 @@ static int32_t vhostbridge_write_cfg(struct pci_vdev *vdev, uint32_t offset,
 	return 0;
 }
 
-static const struct pci_vdev_ops vhostbridge_ops = {
+const struct pci_vdev_ops vhostbridge_ops = {
 	.init_vdev	= init_vhostbridge,
 	.deinit_vdev	= deinit_vhostbridge,
 	.write_vdev_cfg	= vhostbridge_write_cfg,
 	.read_vdev_cfg	= vhostbridge_read_cfg,
 };
-
-const struct pci_vdev_ops *get_vhostbridge_ops(void)
-{
-	return &vhostbridge_ops;
-}

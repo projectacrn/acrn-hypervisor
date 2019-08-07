@@ -88,6 +88,7 @@ struct acrn_vm_pci_dev_config {
 	union pci_bdf pbdf;				/* physical BDF of PCI device */
 	uint64_t vbar_base[PCI_BAR_COUNT];		/* vbar base address of PCI device */
 	struct pci_pdev *pdev;				/* the physical PCI device if it's a PT device */
+	const struct pci_vdev_ops *vdev_ops;		/* operations for PCI CFG read/write */
 } __aligned(8);
 
 struct acrn_vm_config {
