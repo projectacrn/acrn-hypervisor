@@ -6,6 +6,7 @@
 
 #include <vm_config.h>
 #include <vuart.h>
+#include <pci_dev.h>
 
 struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	{
@@ -36,7 +37,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.vuart[1] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = INVALID_COM_BASE,
-		}
+		},
+		.pci_dev_num = SOS_EMULATED_PCI_DEV_NUM,
+		.pci_devs = sos_pci_devs,
 	},
 	{
 		.load_order = POST_LAUNCHED_VM,

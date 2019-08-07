@@ -12,7 +12,7 @@
  * The memory range of vBAR should exactly match with the e820 layout of VM.
  */
 
-struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_PTDEV_NUM] = {
+struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM] = {
 	{
 		.emu_type = PCI_DEV_TYPE_HVEMUL,
 		.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
@@ -29,7 +29,7 @@ struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_PTDEV_NUM] = {
 	},
 };
 
-struct acrn_vm_pci_dev_config vm1_pci_devs[VM1_CONFIG_PCI_PTDEV_NUM] = {
+struct acrn_vm_pci_dev_config vm1_pci_devs[VM1_CONFIG_PCI_DEV_NUM] = {
 	{
 		.emu_type = PCI_DEV_TYPE_HVEMUL,
 		.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},

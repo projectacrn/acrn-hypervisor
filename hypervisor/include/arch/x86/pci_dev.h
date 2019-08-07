@@ -7,11 +7,13 @@
 #ifndef PCI_DEV_H_
 #define PCI_DEV_H_
 
-#include <vpci.h>
+#include <vm_config.h>
 
-struct acrn_vm_config;
+#define SOS_EMULATED_PCI_DEV_NUM	1U
 
+extern struct acrn_vm_pci_dev_config sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM];
+
+struct pci_pdev;
 void fill_pci_dev_config(struct pci_pdev *pdev);
-void initialize_sos_pci_dev_config(struct acrn_vm_config *vm_config);
 
 #endif /* PCI_DEV_H_ */
