@@ -289,13 +289,13 @@ struct vm_switch_trace {
  */
 struct profiling_info_wrapper {
 	struct profiling_msr_ops_list *msr_node;
-	struct sep_state sep_state;
+	struct sep_state s_state;
 	struct guest_vm_info vm_info;
 	ipi_commands ipi_cmd;
-	struct pmu_sample pmu_sample;
-	struct vm_switch_trace vm_switch_trace;
+	struct pmu_sample p_sample;
+	struct vm_switch_trace vm_trace;
 	socwatch_state soc_state;
-	struct sw_msr_op_info sw_msr_op_info;
+	struct sw_msr_op_info sw_msr_info;
 	spinlock_t sw_lock;
 } __aligned(8);
 
