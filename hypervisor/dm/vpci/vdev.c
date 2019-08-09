@@ -74,7 +74,7 @@ void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, 
  * @pre vpci != NULL
  * @pre vpci->pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  */
-struct pci_vdev *pci_find_vdev_by_vbdf(const struct acrn_vpci *vpci, union pci_bdf vbdf)
+struct pci_vdev *pci_find_vdev(const struct acrn_vpci *vpci, union pci_bdf vbdf)
 {
 	struct pci_vdev *vdev, *tmp;
 	uint32_t i;
@@ -84,28 +84,6 @@ struct pci_vdev *pci_find_vdev_by_vbdf(const struct acrn_vpci *vpci, union pci_b
 		tmp = (struct pci_vdev *)&(vpci->pci_vdevs[i]);
 
 		if (bdf_is_equal(&(tmp->bdf), &vbdf)) {
-			vdev = tmp;
-			break;
-		}
-	}
-
-	return vdev;
-}
-
-/**
- * @pre vpci != NULL
- * @pre vpci->pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
- */
-struct pci_vdev *pci_find_vdev_by_pbdf(const struct acrn_vpci *vpci, union pci_bdf pbdf)
-{
-	struct pci_vdev *vdev, *tmp;
-	uint32_t i;
-
-	vdev = NULL;
-	for (i = 0U; i < vpci->pci_vdev_cnt; i++) {
-		tmp = (struct pci_vdev *)&(vpci->pci_vdevs[i]);
-
-		if ((tmp->pdev != NULL) && bdf_is_equal((union pci_bdf *)&(tmp->pdev->bdf), &pbdf)) {
 			vdev = tmp;
 			break;
 		}
