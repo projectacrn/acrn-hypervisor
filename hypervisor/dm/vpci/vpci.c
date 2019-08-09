@@ -303,7 +303,7 @@ static struct pci_vdev *find_vdev_for_sos(union pci_bdf bdf)
 
 	vm = get_sos_vm();
 
-	return pci_find_vdev_by_pbdf(&vm->vpci, bdf);
+	return pci_find_vdev(&vm->vpci, bdf);
 }
 
 /**
@@ -312,14 +312,10 @@ static struct pci_vdev *find_vdev_for_sos(union pci_bdf bdf)
  */
 static struct pci_vdev *find_vdev(const struct acrn_vpci *vpci, union pci_bdf bdf)
 {
-	struct pci_vdev *vdev;
+	struct pci_vdev *vdev = pci_find_vdev(vpci, bdf);
 
-	if (is_prelaunched_vm(vpci->vm)) {
-		vdev = pci_find_vdev_by_vbdf(vpci, bdf);
-	} else if (is_sos_vm(vpci->vm)) {
-		vdev = find_vdev_for_sos(bdf);
-	} else {
-		vdev = NULL;
+	if ((vdev != NULL) && (vdev->vpci != vpci)) {
+		vdev = vdev->new_owner;
 	}
 
 	return vdev;
@@ -479,7 +475,7 @@ static void deinit_postlaunched_vm_vpci(const struct acrn_vm *vm)
 {
 	struct acrn_vm *sos_vm;
 	uint32_t i;
-	struct pci_vdev *vdev;
+	struct pci_vdev *vdev, *target_vdev;
 	int32_t ret;
 	/* PCI resources
 	 * 1) IOMMU domain switch
@@ -498,21 +494,20 @@ static void deinit_postlaunched_vm_vpci(const struct acrn_vm *vm)
 		vdev = (struct pci_vdev *)&(sos_vm->vpci.pci_vdevs[i]);
 
 		if (vdev->vpci->vm == vm) {
-			ret = move_pt_device(vm->iommu, sos_vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
-					(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
+			target_vdev = vdev->new_owner;
+			ret = move_pt_device(vm->iommu, sos_vm->iommu, (uint8_t)target_vdev->pdev->bdf.bits.b,
+					(uint8_t)(target_vdev->pdev->bdf.value & 0xFFU));
 			if (ret != 0) {
 				panic("failed to assign iommu device!");
 			}
 
-			deinit_vmsi(vdev);
+			deinit_vmsi(target_vdev);
 
-			deinit_vmsix(vdev);
+			deinit_vmsix(target_vdev);
 
 			/* Move vdev pointers back to SOS*/
 			vdev->vpci = (struct acrn_vpci *) &sos_vm->vpci;
-
-			/* vbdf equals to pbdf in sos */
-			vdev->bdf.value = vdev->pdev->bdf.value;
+			vdev->new_owner = NULL;
 		}
 	}
 }
@@ -520,9 +515,10 @@ static void deinit_postlaunched_vm_vpci(const struct acrn_vm *vm)
 /**
  * @pre target_vm != NULL
  */
-void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
+void vpci_set_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
 {
-	struct pci_vdev *vdev;
+	struct pci_vdev *vdev, *target_vdev;
+	struct acrn_vpci *target_vpci;
 	union pci_bdf bdf;
 
 	bdf.value = pbdf;
@@ -531,10 +527,15 @@ void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, ui
 		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
 			target_vm->vm_id, vbdf, pbdf);
 	} else {
-		/* UOS may do BDF mapping */
-		vdev->vpci = (struct acrn_vpci *)&(target_vm->vpci);
-		vdev->bdf.value = vbdf;
-		vdev->pdev->bdf.value = pbdf;
+		target_vpci = &(target_vm->vpci);
+		vdev->vpci = target_vpci;
+
+		target_vdev = &target_vpci->pci_vdevs[target_vpci->pci_vdev_cnt];
+		target_vpci->pci_vdev_cnt++;
+		(void)memcpy_s((void *)target_vdev, sizeof(struct pci_vdev), (void *)vdev, sizeof(struct pci_vdev));
+		target_vdev->bdf.value = vbdf;
+
+		vdev->new_owner = target_vdev;
 	}
 }
 
@@ -558,9 +559,7 @@ void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, 
 			vm = get_sos_vm();
 
 			vdev->vpci = &vm->vpci;
-
-			/* vbdf equals to pbdf in sos */
-			vdev->bdf.value = vdev->pdev->bdf.value;
+			vdev->new_owner = NULL;
 		}
 	}
 }

@@ -41,9 +41,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.irq = COM2_IRQ,
 			.t_vuart.vm_id = 1U,
 			.t_vuart.vuart_id = 1U,
-		},
-		.pci_dev_num = SOS_EMULATED_PCI_DEV_NUM,
-		.pci_devs = sos_pci_devs,
+		}
 	},
 	{	/* VM1 */
 		.load_order = SOS_VM,
@@ -72,7 +70,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.vuart[1] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = INVALID_COM_BASE,
-		}
+		},
+		.pci_dev_num = SOS_EMULATED_PCI_DEV_NUM,
+		.pci_devs = sos_pci_devs,
 	},
 	{	/* VM2 */
 		.load_order = POST_LAUNCHED_VM,

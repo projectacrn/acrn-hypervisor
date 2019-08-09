@@ -143,8 +143,6 @@ void deinit_vmsix(const struct pci_vdev *vdev);
 uint32_t pci_vdev_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
 void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 
-struct pci_vdev *pci_find_vdev_by_vbdf(const struct acrn_vpci *vpci, union pci_bdf vbdf);
-
-struct pci_vdev *pci_find_vdev_by_pbdf(const struct acrn_vpci *vpci, union pci_bdf pbdf);
+struct pci_vdev *pci_find_vdev(const struct acrn_vpci *vpci, union pci_bdf vbdf);
 
 #endif /* VPCI_PRIV_H_ */
