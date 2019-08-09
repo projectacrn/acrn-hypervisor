@@ -110,14 +110,15 @@ static void reset_host(void)
 }
 
 /**
- * @pre vcpu != NULL && vm != NULL
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
  */
-static bool handle_reset_reg_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, __unused uint16_t addr,
+static bool handle_reset_reg_read(struct acrn_vcpu *vcpu, __unused uint16_t addr,
 		__unused size_t bytes)
 {
 	bool ret = true;
 
-	if (is_postlaunched_vm(vm)) {
+	if (is_postlaunched_vm(vcpu->vm)) {
 		/* re-inject to DM */
 		ret = false;
 	} else {
@@ -161,12 +162,13 @@ static bool handle_common_reset_reg_write(struct acrn_vm *vm, bool reset)
 }
 
 /**
- * @pre vm != NULL
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
  */
-static bool handle_kb_write(struct acrn_vm *vm, __unused uint16_t addr, size_t bytes, uint32_t val)
+static bool handle_kb_write(struct acrn_vcpu *vcpu, __unused uint16_t addr, size_t bytes, uint32_t val)
 {
 	/* ignore commands other than system reset */
-	return handle_common_reset_reg_write(vm, ((bytes == 1U) && (val == 0xfeU)));
+	return handle_common_reset_reg_write(vcpu->vm, ((bytes == 1U) && (val == 0xfeU)));
 }
 
 /*
@@ -178,19 +180,25 @@ static bool handle_kb_write(struct acrn_vm *vm, __unused uint16_t addr, size_t b
  *             0: will be dropped if system in S3/S4/S5.
  */
 /**
- * @pre vm != NULL
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
  */
-static bool handle_cf9_write(struct acrn_vm *vm, __unused uint16_t addr, size_t bytes, uint32_t val)
+static bool handle_cf9_write(struct acrn_vcpu *vcpu, __unused uint16_t addr, size_t bytes, uint32_t val)
 {
 	/* We don't differentiate among hard/soft/warm/cold reset */
-	return handle_common_reset_reg_write(vm, ((bytes == 1U) && ((val & 0x4U) == 0x4U) && ((val & 0xaU) != 0U)));
+	return handle_common_reset_reg_write(vcpu->vm,
+			((bytes == 1U) && ((val & 0x4U) == 0x4U) && ((val & 0xaU) != 0U)));
 }
 
-static bool handle_reset_reg_write(__unused struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
+/**
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
+ */
+static bool handle_reset_reg_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
 {
 	if (bytes == 1U) {
 		if (val == host_reset_reg.val) {
-			if (is_highest_severity_vm(vm)) {
+			if (is_highest_severity_vm(vcpu->vm)) {
 				reset_host();
 			} else {
 				/* ignore reset request */

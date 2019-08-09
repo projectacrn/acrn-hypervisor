@@ -52,13 +52,13 @@ static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 }
 
 /**
- * @pre vm != NULL
  * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
  */
-static bool pci_cfgaddr_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
+static bool pci_cfgaddr_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
 {
 	uint32_t val = ~0U;
-	struct acrn_vpci *vpci = &vm->vpci;
+	struct acrn_vpci *vpci = &vcpu->vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
@@ -77,11 +77,12 @@ static bool pci_cfgaddr_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint
 }
 
 /**
- * @pre vm != NULL
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
  */
-static bool pci_cfgaddr_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
+static bool pci_cfgaddr_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
 {
-	struct acrn_vpci *vpci = &vm->vpci;
+	struct acrn_vpci *vpci = &vcpu->vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 
 	if ((addr == (uint16_t)PCI_CONFIG_ADDR) && (bytes == 4U)) {
@@ -109,13 +110,15 @@ static inline bool vpci_is_valid_access(uint32_t offset, uint32_t bytes)
 }
 
 /**
- * @pre vm != NULL
  * @pre vcpu != NULL
- * @pre vm->vm_id < CONFIG_MAX_VM_NUM
- * @pre (get_vm_config(vm->vm_id)->load_order == PRE_LAUNCHED_VM) || (get_vm_config(vm->vm_id)->load_order == SOS_VM)
+ * @pre vcpu->vm != NULL
+ * @pre vcpu->vm->vm_id < CONFIG_MAX_VM_NUM
+ * @pre (get_vm_config(vcpu->vm->vm_id)->load_order == PRE_LAUNCHED_VM)
+ *	|| (get_vm_config(vcpu->vm->vm_id)->load_order == SOS_VM)
  */
-static bool pci_cfgdata_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
+static bool pci_cfgdata_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 	uint16_t offset = addr - PCI_CONFIG_DATA;
@@ -147,12 +150,15 @@ static bool pci_cfgdata_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint
 }
 
 /**
- * @pre vm != NULL
- * @pre vm->vm_id < CONFIG_MAX_VM_NUM
- * @pre (get_vm_config(vm->vm_id)->load_order == PRE_LAUNCHED_VM) || (get_vm_config(vm->vm_id)->load_order == SOS_VM)
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
+ * @pre vcpu->vm->vm_id < CONFIG_MAX_VM_NUM
+ * @pre (get_vm_config(vcpu->vm->vm_id)->load_order == PRE_LAUNCHED_VM)
+ *	|| (get_vm_config(vcpu->vm->vm_id)->load_order == SOS_VM)
  */
-static bool pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
+static bool pci_cfgdata_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 	uint16_t offset = addr - PCI_CONFIG_DATA;

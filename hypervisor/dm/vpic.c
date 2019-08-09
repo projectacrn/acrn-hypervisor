@@ -718,11 +718,15 @@ static int32_t vpic_master_handler(struct acrn_vpic *vpic, bool in, uint16_t por
 	return ret;
 }
 
-static bool vpic_master_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
+/**
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
+ */
+static bool vpic_master_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 {
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	if (vpic_master_handler(vm_pic(vm), true, addr, width, &pio_req->value) < 0) {
+	if (vpic_master_handler(vm_pic(vcpu->vm), true, addr, width, &pio_req->value) < 0) {
 		pr_err("pic master read port 0x%x width=%d failed\n",
 				addr, width);
 	}
@@ -730,12 +734,16 @@ static bool vpic_master_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint
 	return true;
 }
 
-static bool vpic_master_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
+/**
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
+ */
+static bool vpic_master_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 				uint32_t v)
 {
 	uint32_t val = v;
 
-	if (vpic_master_handler(vm_pic(vm), false, addr, width, &val) < 0) {
+	if (vpic_master_handler(vm_pic(vcpu->vm), false, addr, width, &val) < 0) {
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
 				__func__, addr, width, val);
 	}
@@ -762,23 +770,31 @@ static int32_t vpic_slave_handler(struct acrn_vpic *vpic, bool in, uint16_t port
 	return ret;
 }
 
-static bool vpic_slave_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
+/**
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
+ */
+static bool vpic_slave_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 {
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	if (vpic_slave_handler(vm_pic(vm), true, addr, width, &pio_req->value) < 0) {
+	if (vpic_slave_handler(vm_pic(vcpu->vm), true, addr, width, &pio_req->value) < 0) {
 		pr_err("pic slave read port 0x%x width=%d failed\n",
 				addr, width);
 	}
 	return true;
 }
 
-static bool vpic_slave_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
+/**
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
+ */
+static bool vpic_slave_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 				uint32_t v)
 {
 	uint32_t val = v;
 
-	if (vpic_slave_handler(vm_pic(vm), false, addr, width, &val) < 0) {
+	if (vpic_slave_handler(vm_pic(vcpu->vm), false, addr, width, &val) < 0) {
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
 				__func__, addr, width, val);
 	}
@@ -830,23 +846,31 @@ static int32_t vpic_elc_handler(struct acrn_vpic *vpic, bool in, uint16_t port, 
 	return ret;
 }
 
-static bool vpic_elc_io_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
+/**
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
+ */
+static bool vpic_elc_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 {
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	if (vpic_elc_handler(vm_pic(vm), true, addr, width, &pio_req->value) < 0) {
+	if (vpic_elc_handler(vm_pic(vcpu->vm), true, addr, width, &pio_req->value) < 0) {
 		pr_err("pic elc read port 0x%x width=%d failed", addr, width);
 	}
 
 	return true;
 }
 
-static bool vpic_elc_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
+/**
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
+ */
+static bool vpic_elc_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 				uint32_t v)
 {
 	uint32_t val = v;
 
-	if (vpic_elc_handler(vm_pic(vm), false, addr, width, &val) < 0) {
+	if (vpic_elc_handler(vm_pic(vcpu->vm), false, addr, width, &val) < 0) {
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
 				__func__, addr, width, val);
 	}
