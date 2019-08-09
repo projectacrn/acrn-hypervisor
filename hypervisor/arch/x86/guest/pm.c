@@ -140,7 +140,7 @@ static inline uint8_t get_slp_typx(uint32_t pm1_cnt)
 	return (uint8_t)((pm1_cnt & 0x1fffU) >> BIT_SLP_TYPx);
 }
 
-static bool pm1ab_io_read(__unused struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
+static bool pm1ab_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 {
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
@@ -165,11 +165,16 @@ static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t 
 	resume_vm_from_s3(vm, guest_wakeup_vec32);	/* jump back to vm */
 }
 
-static bool pm1ab_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint32_t v)
+/**
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
+ */
+static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, uint32_t v)
 {
 	static uint32_t pm1a_cnt_ready = 0U;
 	uint32_t pm1a_cnt_val;
 	bool to_write = true;
+	struct acrn_vm *vm = vcpu->vm;
 
 	if (width == 2U) {
 		uint8_t val = get_slp_typx(v);
@@ -237,7 +242,7 @@ void register_pm1ab_handler(struct acrn_vm *vm)
 	register_gas_io_handler(vm, PM1B_CNT_PIO_IDX, &(sx_data->pm1b_cnt));
 }
 
-static bool rt_vm_pm1a_io_read(__unused struct acrn_vm *vm, __unused struct acrn_vcpu *vcpu,
+static bool rt_vm_pm1a_io_read(__unused struct acrn_vcpu *vcpu,
 						 __unused uint16_t addr, __unused size_t width)
 {
 	return false;
@@ -247,13 +252,17 @@ static bool rt_vm_pm1a_io_read(__unused struct acrn_vm *vm, __unused struct acrn
  * retval true means that we complete the emulation in HV and no need to re-inject the request to DM.
  * retval false means that we should re-inject the request to DM.
  */
-static bool rt_vm_pm1a_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint32_t v)
+/**
+ * @pre vcpu != NULL
+ * @pre vcpu->vm != NULL
+ */
+static bool rt_vm_pm1a_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, uint32_t v)
 {
 	if (width != 2U) {
 		pr_dbg("Invalid address (0x%x) or width (0x%x)", addr, width);
 	} else {
 		if ((((v & VIRTUAL_PM1A_SLP_EN) != 0U) && (((v & VIRTUAL_PM1A_SLP_TYP) >> 10U) == 5U)) != 0U) {
-			vm->state = VM_POWERING_OFF;
+			vcpu->vm->state = VM_POWERING_OFF;
 		}
 	}
 
