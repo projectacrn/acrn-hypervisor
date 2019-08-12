@@ -34,23 +34,53 @@
 				CR4_OSXMMEXCPT | CR4_SMAP | CR4_PKE |        \
 				CR4_SMXE | CR4_UMIP)
 
+/* PAE PDPTE bits 1 ~ 2, 5 ~ 8 are always reserved */
+#define PAE_PDPTE_FIXED_RESVD_BITS	0x00000000000001E6UL
+
 static uint64_t cr0_always_on_mask;
 static uint64_t cr0_always_off_mask;
 static uint64_t cr4_always_on_mask;
 static uint64_t cr4_always_off_mask;
 
-static void load_pdptrs(const struct acrn_vcpu *vcpu)
+static int32_t load_pdptrs(const struct acrn_vcpu *vcpu)
 {
 	uint64_t guest_cr3 = exec_vmread(VMX_GUEST_CR3);
-	/* TODO: check whether guest cr3 is valid */
-	uint64_t *guest_cr3_hva = (uint64_t *)gpa2hva(vcpu->vm, get_pae_pdpt_addr(guest_cr3));
+	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
+	int32_t ret = 0;
+	uint64_t pdpte[4]; /* Total four PDPTE */
+	uint64_t rsvd_bits_mask;
+	uint8_t maxphyaddr;
+	int32_t	i;
 
-	stac();
-	exec_vmwrite64(VMX_GUEST_PDPTE0_FULL, get_pgentry(guest_cr3_hva + 0UL));
-	exec_vmwrite64(VMX_GUEST_PDPTE1_FULL, get_pgentry(guest_cr3_hva + 1UL));
-	exec_vmwrite64(VMX_GUEST_PDPTE2_FULL, get_pgentry(guest_cr3_hva + 2UL));
-	exec_vmwrite64(VMX_GUEST_PDPTE3_FULL, get_pgentry(guest_cr3_hva + 3UL));
-	clac();
+	/* check whether the address area pointed by the guest cr3
+	 * can be accessed or not
+	 */
+	if (copy_from_gpa(vcpu->vm, pdpte, get_pae_pdpt_addr(guest_cr3), sizeof(pdpte)) != 0) {
+		ret = -EFAULT;
+	} else {
+		/* Check if any of the PDPTEs sets both the P flag
+		 * and any reserved bit
+		 */
+		maxphyaddr = cpu_info->phys_bits;
+		/* reserved bits: 1~2, 5~8, maxphyaddr ~ 63 */
+		rsvd_bits_mask = (63U < maxphyaddr) ? 0UL : (((1UL << (63U - maxphyaddr + 1U)) - 1UL) << maxphyaddr);
+		rsvd_bits_mask |= PAE_PDPTE_FIXED_RESVD_BITS;
+		for (i = 0; i < 4; i++) {
+			if (((pdpte[i] & PAGE_PRESENT) != 0UL) && ((pdpte[i] & rsvd_bits_mask) != 0UL)) {
+				ret = -EFAULT;
+				break;
+			}
+		}
+	}
+
+	if (ret == 0) {
+		exec_vmwrite64(VMX_GUEST_PDPTE0_FULL, pdpte[0]);
+		exec_vmwrite64(VMX_GUEST_PDPTE1_FULL, pdpte[1]);
+		exec_vmwrite64(VMX_GUEST_PDPTE2_FULL, pdpte[2]);
+		exec_vmwrite64(VMX_GUEST_PDPTE3_FULL, pdpte[3]);
+	}
+
+	return ret;
 }
 
 static bool is_cr0_write_valid(struct acrn_vcpu *vcpu, uint64_t cr0)
@@ -113,6 +143,8 @@ static bool is_cr0_write_valid(struct acrn_vcpu *vcpu, uint64_t cr0)
  */
 static void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 {
+	bool err_found = false;
+
 	if (!is_cr0_write_valid(vcpu, cr0)) {
 		pr_dbg("Invalid cr0 write operation from guest");
 		vcpu_inject_gp(vcpu, 0U);
@@ -140,7 +172,10 @@ static void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 				vcpu_set_efer(vcpu, vcpu_get_efer(vcpu) | MSR_IA32_EFER_LMA_BIT);
 			} else if (is_pae(vcpu)) {
 				/* enabled PAE from paging disabled */
-				load_pdptrs(vcpu);
+				if (load_pdptrs(vcpu) != 0) {
+					err_found = true;
+					vcpu_inject_gp(vcpu, 0U);
+				}
 			} else {
 				/* do nothing */
 			}
@@ -158,48 +193,50 @@ static void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 			/* do nothing */
 		}
 
-		/* If CR0.CD or CR0.NW get cr0_changed_bits */
-		if ((cr0_changed_bits & (CR0_CD | CR0_NW)) != 0UL) {
-			/* No action if only CR0.NW is cr0_changed_bits */
-			if ((cr0_changed_bits & CR0_CD) != 0UL) {
-				if ((cr0_mask & CR0_CD) != 0UL) {
-					/*
-					 * When the guest requests to set CR0.CD, we don't allow
-					 * guest's CR0.CD to be actually set, instead, we write guest
-					 * IA32_PAT with all-UC entries to emulate the cache
-					 * disabled behavior
-					 */
-					exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, PAT_ALL_UC_VALUE);
-					if (!iommu_snoop_supported(vcpu->vm->iommu)) {
-						cache_flush_invalidate_all();
+		if (err_found == false) {
+			/* If CR0.CD or CR0.NW get cr0_changed_bits */
+			if ((cr0_changed_bits & (CR0_CD | CR0_NW)) != 0UL) {
+				/* No action if only CR0.NW is cr0_changed_bits */
+				if ((cr0_changed_bits & CR0_CD) != 0UL) {
+					if ((cr0_mask & CR0_CD) != 0UL) {
+						/*
+						 * When the guest requests to set CR0.CD, we don't allow
+						 * guest's CR0.CD to be actually set, instead, we write guest
+						 * IA32_PAT with all-UC entries to emulate the cache
+						 * disabled behavior
+						 */
+						exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, PAT_ALL_UC_VALUE);
+						if (!iommu_snoop_supported(vcpu->vm->iommu)) {
+							cache_flush_invalidate_all();
+						}
+					} else {
+						/* Restore IA32_PAT to enable cache again */
+						exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL,
+							vcpu_get_guest_msr(vcpu, MSR_IA32_PAT));
 					}
-				} else {
-					/* Restore IA32_PAT to enable cache again */
-					exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL,
-						vcpu_get_guest_msr(vcpu, MSR_IA32_PAT));
+					vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 				}
+			}
+
+			if ((cr0_changed_bits & (CR0_PG | CR0_WP)) != 0UL) {
 				vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 			}
+
+			/* CR0 has no always off bits, except the always on bits, and reserved
+			 * bits, allow to set according to guest.
+			 */
+			cr0_vmx = cr0_always_on_mask | cr0_mask;
+
+			/* Don't set CD or NW bit to guest */
+			cr0_vmx &= ~(CR0_CD | CR0_NW);
+			exec_vmwrite(VMX_GUEST_CR0, cr0_vmx & 0xFFFFFFFFUL);
+			exec_vmwrite(VMX_CR0_READ_SHADOW, cr0_mask & 0xFFFFFFFFUL);
+
+			/* clear read cache, next time read should from VMCS */
+			bitmap_clear_lock(CPU_REG_CR0, &vcpu->reg_cached);
+
+			pr_dbg("VMM: Try to write %016llx, allow to write 0x%016llx to CR0", cr0_mask, cr0_vmx);
 		}
-
-		if ((cr0_changed_bits & (CR0_PG | CR0_WP)) != 0UL) {
-			vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
-		}
-
-		/* CR0 has no always off bits, except the always on bits, and reserved
-		 * bits, allow to set according to guest.
-		 */
-		cr0_vmx = cr0_always_on_mask | cr0_mask;
-
-		/* Don't set CD or NW bit to guest */
-		cr0_vmx &= ~(CR0_CD | CR0_NW);
-		exec_vmwrite(VMX_GUEST_CR0, cr0_vmx & 0xFFFFFFFFUL);
-		exec_vmwrite(VMX_CR0_READ_SHADOW, cr0_mask & 0xFFFFFFFFUL);
-
-		/* clear read cache, next time read should from VMCS */
-		bitmap_clear_lock(CPU_REG_CR0, &vcpu->reg_cached);
-
-		pr_dbg("VMM: Try to write %016llx, allow to write 0x%016llx to CR0", cr0_mask, cr0_vmx);
 	}
 }
 
@@ -268,6 +305,8 @@ static bool is_cr4_write_valid(struct acrn_vcpu *vcpu, uint64_t cr4)
  */
 static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 {
+	bool err_found = false;
+
 	if (!is_cr4_write_valid(vcpu, cr4)) {
 		pr_dbg("Invalid cr4 write operation from guest");
 		vcpu_inject_gp(vcpu, 0U);
@@ -277,23 +316,29 @@ static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 
 		if (((cr4 ^ old_cr4) & (CR4_PGE | CR4_PSE | CR4_PAE | CR4_SMEP | CR4_SMAP | CR4_PKE)) != 0UL) {
 			if (((cr4 & CR4_PAE) != 0UL) && (is_paging_enabled(vcpu)) && (!is_long_mode(vcpu))) {
-				load_pdptrs(vcpu);
+				if (load_pdptrs(vcpu) != 0) {
+					err_found = true;
+					vcpu_inject_gp(vcpu, 0U);
+				}
 			}
-
-			vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
+			if (err_found == false) {
+				vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
+			}
 		}
 
-		/* Clear forced off bits */
-		cr4_shadow = cr4 & ~CR4_MCE;
+		if (err_found == false) {
+			/* Clear forced off bits */
+			cr4_shadow = cr4 & ~CR4_MCE;
 
-		cr4_vmx = cr4_always_on_mask | cr4_shadow;
-		exec_vmwrite(VMX_GUEST_CR4, cr4_vmx & 0xFFFFFFFFUL);
-		exec_vmwrite(VMX_CR4_READ_SHADOW, cr4_shadow & 0xFFFFFFFFUL);
+			cr4_vmx = cr4_always_on_mask | cr4_shadow;
+			exec_vmwrite(VMX_GUEST_CR4, cr4_vmx & 0xFFFFFFFFUL);
+			exec_vmwrite(VMX_CR4_READ_SHADOW, cr4_shadow & 0xFFFFFFFFUL);
 
-		/* clear read cache, next time read should from VMCS */
-		bitmap_clear_lock(CPU_REG_CR4, &vcpu->reg_cached);
+			/* clear read cache, next time read should from VMCS */
+			bitmap_clear_lock(CPU_REG_CR4, &vcpu->reg_cached);
 
-		pr_dbg("VMM: Try to write %016llx, allow to write 0x%016llx to CR4", cr4, cr4_vmx);
+			pr_dbg("VMM: Try to write %016llx, allow to write 0x%016llx to CR4", cr4, cr4_vmx);
+		}
 	}
 }
 
