@@ -238,101 +238,32 @@ corresponding VM configuration files in the corresponding
                 prompt "ACRN Scenario"
                 default SDC
 
+You can also change it directly from the command line(``xxx`` is your 
+scenario which you want to build )
+
+.. code-block:: none
+
+   $ cd  acrn-hypervisor/hypervisor
+   $ sed -i 's|default SDC|default xxx|' arch/x86/Kconfig
+
 See the :ref:`hardware` document for information about the platform
 needs for each scenario.
 
-.. _getting-started-hypervisor-configuration:
-
-Modify the hypervisor configuration
-***********************************
-
-The ACRN hypervisor leverages Kconfig to manage configurations, powered by
-Kconfiglib. A default configuration is generated based on the board you have
-selected via the ``BOARD=`` command line parameter. You can make further
-changes to that default configuration to adjust to your specific
-requirements.
-
-To generate hypervisor configurations, you need to build the hypervisor
-individually. The following steps generate a default but complete configuration,
-based on the platform selected, assuming that you are under the top-level
-directory of acrn-hypervisor. The configuration file, named ``.config``, can be
-found under the target folder of your build.
-
-.. code-block:: none
-
-   $ make defconfig BOARD=nuc6cayh
-
-The BOARD specified is used to select a defconfig under
-``arch/x86/configs/``. The other command-line based options (e.g. ``RELEASE``)
-take no effects when generating a defconfig.
-
-To modify the hypervisor configurations, you can either edit ``.config``
-manually, or invoke a TUI-based menuconfig, powered by kconfiglib, by executing
-``make menuconfig``. As an example, the following commands, assuming that you
-are under the top-level directory of acrn-hypervisor, generate a default
-configuration file for UEFI, allow you to modify some configurations and build
-the hypervisor using the updated ``.config``.
-
-.. code-block:: none
-
-   $ make menuconfig              # Modify the configurations per your needs
-
-.. note::
-   Menuconfig is python3 only.
-
-Refer to the help on menuconfig for a detailed guide on the interface.
-
-.. code-block:: none
-
-   $ pydoc3 menuconfig
 
 Build the hypervisor, device model and tools
 ********************************************
 
-Now you can build all these components in one go as follows:
+If you need the hypervisor, then use this command:
 
 .. code-block:: none
 
-   $ cd ../                      # Enter top-level folder of acrn-hypervisor source
-   $ make FIRMWARE=uefi          # Build the UEFI hypervisor with the new .config
+   $ cd ../                                            # build in acrn-hypervisor/
+   $ make clean                                        # Remove files previously built
+   $ make PLATFORM=uefi BOARD=kbl-nuc-i7 hypervisor    # This will build the hypervisor
 
-The build results are found in the ``build`` directory.  You can specify
-use a different Output folder by setting the ``O`` make parameter,
-for example: ``make O=build-nuc BOARD=nuc6cayh``.
-
-If you only need the hypervisor, then use this command:
-
-.. code-block:: none
-
-   $ make clean                              # Remove files previously built
-   $ make FIRMWARE=uefi hypervisor           # This will only build the hypervisor
-
-You could also use ``FIRMWARE=sbl`` instead, to build the Intel SBL
+The build results are found in the ``build`` directory.
 (`Slim bootloader
 <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`_)
 hypervisor.
 
 Follow the same instructions to boot and test the images you created from your build.
-
-Save as default configuration
-*****************************
-
-Currently the ACRN hypervisor looks for default configurations under
-``hypervisor/arch/x86/configs/<BOARD>.config``, where ``<BOARD>`` is the
-specified platform. The following steps allow you to create a defconfig for
-another platform based on a current one.
-
-   .. code-block:: none
-
-      $ cd hypervisor
-      $ make defconfig BOARD=nuc6cayh
-      $ make menuconfig         # Modify the configurations
-      $ make savedefconfig      # The minimized config reside at build/defconfig
-      $ cp build/defconfig arch/x86/configs/xxx.config
-
-Then you can re-use that configuration by passing the name (``xxx`` in the
-example above) to 'BOARD=':
-
-   .. code-block:: none
-
-      $ make defconfig BOARD=xxx
