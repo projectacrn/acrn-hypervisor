@@ -330,6 +330,36 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 	init_msr_area(vcpu);
 }
 
+static int32_t write_pat_msr(struct acrn_vcpu *vcpu, uint64_t value)
+{
+	uint32_t i;
+	uint64_t field;
+	int32_t ret = 0;
+
+	for (i = 0U; i < 8U; i++) {
+		field = (value >> (i * 8U)) & 0xffUL;
+		if (pat_mem_type_invalid(field) || ((PAT_FIELD_RSV_BITS & field) != 0UL)) {
+			pr_err("invalid guest IA32_PAT: 0x%016llx", value);
+			ret = -EINVAL;
+			break;
+		}
+	}
+
+	if (ret == 0) {
+		vcpu_set_guest_msr(vcpu, MSR_IA32_PAT, value);
+
+		/*
+		 * If context->cr0.CD is set, we defer any further requests to write
+		 * guest's IA32_PAT, until the time when guest's CR0.CD is being cleared
+		 */
+		if ((vcpu_get_cr0(vcpu) & CR0_CD) == 0UL) {
+			exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, value);
+		}
+	}
+
+	return ret;
+}
+
 /**
  * @pre vcpu != NULL
  */
@@ -387,7 +417,12 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 	case MSR_IA32_PAT:
 	{
-		v = vmx_rdmsr_pat(vcpu);
+		/*
+		 * note: if run_ctx->cr0.CD is set, the actual value in guest's
+		 * IA32_PAT MSR is PAT_ALL_UC_VALUE, which may be different from
+		 * the saved value guest_msrs[MSR_IA32_PAT]
+		 */
+		v = vcpu_get_guest_msr(vcpu, MSR_IA32_PAT);
 		break;
 	}
 	case MSR_IA32_APIC_BASE:
@@ -654,7 +689,7 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 	case MSR_IA32_PAT:
 	{
-		err = vmx_wrmsr_pat(vcpu, v);
+		err = write_pat_msr(vcpu, v);
 		break;
 	}
 	case MSR_IA32_APIC_BASE:
