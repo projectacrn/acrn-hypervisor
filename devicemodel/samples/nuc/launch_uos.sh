@@ -102,15 +102,21 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge \
   -s 3,virtio-blk,/home/clear/uos/uos.img \
   -s 4,virtio-net,tap0 \
   -s 7,virtio-rnd \
+  --ovmf ./OVMF.fd \
   $logger_setting \
   --mac_seed $mac_seed \
-  -k /usr/lib/kernel/default-iot-lts2018 \
-  -B "root=/dev/vda3 rw rootwait maxcpus=$2 nohpet console=tty0 console=hvc0 \
-  console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
-  consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$4 \
-  i915.enable_hangcheck=0 i915.nuclear_pageflip=1 i915.enable_guc_loading=0 \
-  i915.enable_guc_submission=0 i915.enable_guc=0" $vm_name
+  $vm_name
 }
+
+#add following cmdline to grub.cfg and update kernel
+#when launching LaaG by OVMF
+#rw rootwait maxcpus=1 nohpet console=tty0 console=hvc0
+#console=ttyS0 no_timer_check ignore_loglevel
+#log_buf_len=16M consoleblank=0
+#tsc=reliable i915.avail_planes_per_pipe="64 448 8"
+#i915.enable_hangcheck=0 i915.nuclear_pageflip=1
+#i915.enable_guc_loading=0
+#i915.enable_guc_submission=0 i915.enable_guc=0
 
 # offline SOS CPUs except BSP before launch UOS
 for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
