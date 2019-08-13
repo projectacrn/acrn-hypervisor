@@ -162,6 +162,11 @@ The Boot process proceeds as follows:
    bootloader through dm-verity
 #. Virtual bootloader starts the User-side verified boot process
 
+.. note::
+   To avoid hardware resources conflict with ACRN hypervisor, UEFI
+   services shall not use IOMMU. In addtion, currently we only support
+   UEFI timer with HPET MSI.
+
 Direct boot mode
 ================
 
