@@ -105,9 +105,9 @@ manually, as described below).
 
        $ clr-installer
 
-   #.  Select "Telemetry" to set Tab to highlight your choice.
    #.  From the Main Menu, select "Configure Media" and set
        "Auto Partition" to your desired hard disk.
+   #.  Select "Telemetry" to set Tab to highlight your choice.
    #.  Press :kbd:`A` to show the "Advanced options".
    #.  Select "Additional Bundle Selection" to add bundles for
        "desktop-autostart", "editors", "network-basic", "user-basic"
