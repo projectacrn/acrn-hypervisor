@@ -105,6 +105,7 @@ manually, as described below).
 
        $ clr-installer
 
+   #.  Select "Telemetry" to set Tab to highlight your choice.
    #.  From the Main Menu, select "Configure Media" and set
        "Auto Partition" to your desired hard disk.
    #.  Press :kbd:`A` to show the "Advanced options".
@@ -113,7 +114,6 @@ manually, as described below).
    #.  Select "User Manager" to add an administrative user "clear" and
        password.
    #.  Select "Assign Hostname" to set the hostname as "clr-sos-guest"
-   #.  Select "Telemetry" to set Tab to highlight your choice.
    #.  Select Confirm to start installation.
 
 #. After installation is complete, boot into Clear Linux OS, login as
