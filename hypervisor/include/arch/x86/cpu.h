@@ -270,6 +270,9 @@ void cpu_dead(void);
 void trampoline_start16(void);
 void load_pcpu_state_data(void);
 void init_pcpu_pre(bool is_bsp);
+/* The function should be called on the same CPU core as specified by pcpu_id,
+ * hereby, pcpu_id is actually the current physcial cpu id.
+ */
 void init_pcpu_post(uint16_t pcpu_id);
 bool start_pcpus(uint64_t mask);
 void wait_pcpus_offline(uint64_t mask);

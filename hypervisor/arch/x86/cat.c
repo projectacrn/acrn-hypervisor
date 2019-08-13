@@ -13,8 +13,11 @@
 #include <logmsg.h>
 #include <cat.h>
 #include <board.h>
+#include <vm_config.h>
+#include <msr.h>
 
 struct cat_hw_info cat_cap_info;
+const uint16_t hv_clos = 0U;
 
 int32_t init_cat_cap_info(void)
 {
@@ -67,5 +70,17 @@ void setup_clos(uint16_t pcpu_id)
 			val = (uint64_t)platform_clos_array[i].clos_mask;
 			msr_write_pcpu(msr_index, val, pcpu_id);
 		}
+		/* set hypervisor CAT clos */
+		msr_write_pcpu(MSR_IA32_PQR_ASSOC, clos2prq_msr(hv_clos), pcpu_id);
 	}
+}
+
+uint64_t clos2prq_msr(uint16_t clos)
+{
+	uint64_t prq_assoc;
+
+	prq_assoc = msr_read(MSR_IA32_PQR_ASSOC);
+	prq_assoc = (prq_assoc & 0xffffffffUL) | ((uint64_t)clos << 32U);
+
+	return prq_assoc;
 }

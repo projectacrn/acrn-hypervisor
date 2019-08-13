@@ -758,20 +758,10 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 	int32_t ret;
 	struct acrn_vcpu *vcpu = NULL;
 	char thread_name[16];
-	uint64_t orig_val, final_val;
-	struct acrn_vm_config *conf;
 
 	ret = create_vcpu(pcpu_id, vm, &vcpu);
 	if (ret == 0) {
 		set_pcpu_used(pcpu_id);
-
-		/* Update CLOS for this CPU */
-		if (cat_cap_info.enabled) {
-			conf = get_vm_config(vm->vm_id);
-			orig_val = msr_read(MSR_IA32_PQR_ASSOC);
-			final_val = (orig_val & 0xffffffffUL) | (((uint64_t)conf->clos) << 32UL);
-			msr_write_pcpu(MSR_IA32_PQR_ASSOC, final_val, pcpu_id);
-		}
 
 		INIT_LIST_HEAD(&vcpu->sched_obj.run_list);
 		snprintf(thread_name, 16U, "vm%hu:vcpu%hu", vm->vm_id, vcpu->vcpu_id);

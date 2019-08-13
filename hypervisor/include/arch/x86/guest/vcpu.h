@@ -281,12 +281,14 @@ struct msr_store_entry {
 
 enum {
 	MSR_AREA_TSC_AUX = 0,
+	MSR_AREA_IA32_PQR_ASSOC,
 	MSR_AREA_COUNT,
 };
 
 struct msr_store_area {
 	struct msr_store_entry guest[MSR_AREA_COUNT];
 	struct msr_store_entry host[MSR_AREA_COUNT];
+	uint32_t count;	/* actual count of entries to be loaded/restored during VMEntry/VMExit */
 };
 
 struct acrn_vcpu_arch {
