@@ -356,8 +356,8 @@ static bool vuart_write(struct acrn_vcpu *vcpu, uint16_t offset_arg,
 		offset -= vu->port_base;
 		target_vu = vu->target_vu;
 
-		if (((vu->mcr & MCR_LOOPBACK) == 0U) &&
-			(offset == UART16550_THR) && (target_vu != NULL)) {
+		if (((vu->mcr & MCR_LOOPBACK) == 0U) && ((vu->lcr & LCR_DLAB) == 0U)
+			&& (offset == UART16550_THR) && (target_vu != NULL)) {
 			send_to_target(target_vu, value_u8);
 			vuart_lock(vu, rflags);
 			vu->thre_int_pending = true;
