@@ -55,9 +55,6 @@ static inline uint64_t apic_access_offset(uint64_t qual)
 
 void init_vmcs(struct acrn_vcpu *vcpu);
 
-uint64_t vmx_rdmsr_pat(const struct acrn_vcpu *vcpu);
-int32_t vmx_wrmsr_pat(struct acrn_vcpu *vcpu, uint64_t value);
-
 void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu);
 
 static inline enum vm_cpu_mode get_vcpu_mode(const struct acrn_vcpu *vcpu)
