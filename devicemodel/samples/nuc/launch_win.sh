@@ -17,7 +17,7 @@ echo "8086:9d71" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:1f.3" > /sys/bus/pci/drivers/pci-stub/bind
 
 #for memsize setting
-mem_size=2048M
+mem_size=4096M
 
 acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 2,pci-gvt -G "$3" \
