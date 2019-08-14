@@ -573,8 +573,8 @@ static void vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	 * In 64-bit mode all segments except %fs and %gs have a segment
 	 * base address of 0.
 	 */
-	if (cpu_mode == CPU_MODE_64BIT && seg != CPU_REG_FS &&
-	    seg != CPU_REG_GS) {
+	if ((cpu_mode == CPU_MODE_64BIT) && (seg != CPU_REG_FS) &&
+	    (seg != CPU_REG_GS)) {
 		segbase = 0UL;
 	} else {
 		segbase = desc->base;

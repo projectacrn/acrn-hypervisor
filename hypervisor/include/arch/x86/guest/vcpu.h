@@ -454,7 +454,7 @@ void vcpu_set_rip(struct acrn_vcpu *vcpu, uint64_t val);
  *
  * @return the value of RSP.
  */
-uint64_t vcpu_get_rsp(struct acrn_vcpu *vcpu);
+uint64_t vcpu_get_rsp(const struct acrn_vcpu *vcpu);
 
 /**
  * @brief set vcpu RSP value
@@ -546,7 +546,7 @@ void vcpu_set_guest_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val);
  *
  * @return None
  */
-void vcpu_set_vmcs_eoi_exit(struct acrn_vcpu *vcpu);
+void vcpu_set_vmcs_eoi_exit(const struct acrn_vcpu *vcpu);
 
 /**
  * @brief reset all eoi_exit_bitmaps

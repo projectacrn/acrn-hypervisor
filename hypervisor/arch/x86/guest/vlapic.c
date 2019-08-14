@@ -2138,7 +2138,7 @@ int32_t vlapic_x2apic_write(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val)
 	return error;
 }
 
-int32_t vlapic_create(struct acrn_vcpu *vcpu)
+void vlapic_create(struct acrn_vcpu *vcpu)
 {
 	vcpu->arch.vlapic.vm = vcpu->vm;
 	vcpu->arch.vlapic.vcpu = vcpu;
@@ -2159,7 +2159,6 @@ int32_t vlapic_create(struct acrn_vcpu *vcpu)
 	}
 
 	vlapic_init(vcpu_vlapic(vcpu));
-	return 0;
 }
 
 /*

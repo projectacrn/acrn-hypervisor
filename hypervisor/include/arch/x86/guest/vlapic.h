@@ -184,7 +184,7 @@ void vlapic_receive_intr(struct acrn_vm *vm, bool level, uint32_t dest,
 		bool phys, uint32_t delmode, uint32_t vec, bool rh);
 
 uint32_t vlapic_get_apicid(const struct acrn_vlapic *vlapic);
-int32_t vlapic_create(struct acrn_vcpu *vcpu);
+void vlapic_create(struct acrn_vcpu *vcpu);
 /*
  *  @pre vcpu != NULL
  */
