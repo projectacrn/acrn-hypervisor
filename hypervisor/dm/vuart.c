@@ -161,8 +161,8 @@ void vuart_toggle_intr(const struct acrn_vuart *vu)
 	vioapic_get_rte(vu->vm, vu->irq, &rte);
 
 	/* TODO:
-	 * Here should assert vuart irq according to CONFIG_COM_IRQ polarity.
-	 * The best way is to get the polarity info from ACIP table.
+	 * Here should assert vuart irq according to vCOM1_IRQ polarity.
+	 * The best way is to get the polarity info from ACPI table.
 	 * Here we just get the info from vioapic configuration.
 	 * based on this, we can still have irq storm during guest
 	 * modify the vioapic setting, as it's only for debug uart,
