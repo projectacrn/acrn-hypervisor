@@ -88,6 +88,8 @@ for the HV shell (refer to :ref:`getting-started-up2` for setup instructions).
 
       ACRN:\>wrmsr   -p1   0xc8f    0x100000000
 
+.. _configure_cat_vm:
+
 Configure CAT for VM with VM Configuration
 ##########################################
 

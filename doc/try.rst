@@ -24,3 +24,4 @@ Follow these getting started guides to give ACRN a try:
    getting-started/up2
    getting-started/acrn_ootb
    getting-started/building-from-source
+   getting-started/rt_industry
