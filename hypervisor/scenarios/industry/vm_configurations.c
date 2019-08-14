@@ -46,7 +46,8 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* d2795438-25d6-11e8-864e-cb7a18b34643 */
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
-			.addr.port_base = INVALID_COM_BASE,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
 		},
 		.vuart[1] = {
 			.type = VUART_LEGACY_PIO,
@@ -64,7 +65,8 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.guest_flags = GUEST_FLAG_HIGHEST_SEVERITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
-			.addr.port_base = INVALID_COM_BASE,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
 		},
 		.vuart[1] = {
 			.type = VUART_LEGACY_PIO,
@@ -79,7 +81,8 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* 38158821-5208-4005-b72a-8a609e4190d0 */
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
-			.addr.port_base = INVALID_COM_BASE,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
 		},
 		.vuart[1] = {
 			.type = VUART_LEGACY_PIO,
