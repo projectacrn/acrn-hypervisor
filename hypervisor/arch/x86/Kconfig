@@ -146,20 +146,6 @@ config SERIAL_PIO_BASE
 	  The base address of the serial ports. This is logically 16-bit but used
 	  as a 64-bit integer.
 
-config COM_BASE
-	hex "Base address of the vuart port"
-	default 0 if RELEASE
-	default 0x3f8 if !RELEASE
-	help
-	  Base address of the vuart port.
-
-config COM_IRQ
-	int "IRQ of the vuart port"
-	default 0 if RELEASE
-	default 4 if !RELEASE
-	help
-	  IRQ of the vuart port.
-
 config CONSOLE_LOGLEVEL_DEFAULT
 	int "Default loglevel on the serial console"
 	depends on !RELEASE

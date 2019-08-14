@@ -31,8 +31,8 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		},
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
-			.addr.port_base = CONFIG_COM_BASE,
-			.irq = CONFIG_COM_IRQ,
+			.addr.port_base = SOS_COM1_BASE,
+			.irq = SOS_COM1_IRQ,
 		},
 		.vuart[1] = {
 			.type = VUART_LEGACY_PIO,
