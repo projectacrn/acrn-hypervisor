@@ -39,7 +39,7 @@ int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 			max_px_ctl_val = ((px_data[0].control & 0xff00UL) >> 8U);
 
 			/* get min px control value, should be for p(px_cnt-1), i.e. LFM. */
-			min_px_ctl_val = ((px_data[px_cnt - 1].control & 0xff00UL) >> 8U);
+			min_px_ctl_val = ((px_data[px_cnt - 1U].control & 0xff00UL) >> 8U);
 
 			px_target_val = ((perf_ctl & 0xff00UL) >> 8U);
 			if ((px_target_val <= max_px_ctl_val) && (px_target_val >= min_px_ctl_val)) {

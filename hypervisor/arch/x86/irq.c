@@ -348,8 +348,8 @@ void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 		desc = &irq_desc_array[irq];
 		per_cpu(irq_count, get_pcpu_id())[irq]++;
 
-		if (vr == desc->vector &&
-			bitmap_test((uint16_t)(irq & 0x3FU), irq_alloc_bitmap + (irq >> 6U)) != 0U) {
+		if ((vr == desc->vector) &&
+			bitmap_test((uint16_t)(irq & 0x3FU), irq_alloc_bitmap + (irq >> 6U))) {
 #ifdef PROFILING_ON
 			/* Saves ctx info into irq_desc */
 			desc->ctx_rip = ctx->rip;

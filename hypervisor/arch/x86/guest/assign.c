@@ -520,7 +520,7 @@ static void ptirq_handle_intx(struct acrn_vm *vm,
 
 void ptirq_softirq(uint16_t pcpu_id)
 {
-	struct acrn_vcpu *vcpu = (struct acrn_vcpu *)per_cpu(vcpu, pcpu_id);
+	struct acrn_vcpu *vcpu = per_cpu(vcpu, pcpu_id);
 	struct acrn_vm *vm = vcpu->vm;
 
 	while (1) {

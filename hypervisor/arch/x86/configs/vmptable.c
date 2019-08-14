@@ -69,7 +69,7 @@ static uint8_t mpt_compute_checksum(const void *base, size_t len)
 {
 	uint8_t	sum = 0U;
 	size_t length;
-	const uint8_t *bytes = base;
+	const uint8_t *bytes = (const uint8_t *)base;
 
 	for (length = len; length > 0U; length--) {
 		sum += *bytes;
@@ -109,7 +109,7 @@ int32_t mptable_build(struct acrn_vm *vm)
 			+ MPE_NUM_BUSES * (uint16_t)sizeof(struct bus_entry)
 			+ MPEII_NUM_LOCAL_IRQ * (uint16_t)sizeof(struct int_entry);
 
-	mptable_length = sizeof(struct mpfps) + mptable->mpch.base_table_length;
+	mptable_length = sizeof(struct mpfps) + (uint32_t)mptable->mpch.base_table_length;
 	if (mptable_length <= MPTABLE_MAX_LENGTH) {
 		for (i = 0U; i < vcpu_num; i++) {
 			uint16_t pcpu_id = ffs64(pcpu_bitmap);

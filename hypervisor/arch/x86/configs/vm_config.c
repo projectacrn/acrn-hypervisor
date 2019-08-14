@@ -20,10 +20,10 @@ struct acrn_vm_config *get_vm_config(uint16_t vm_id)
 
 static inline bool uuid_is_equal(const uint8_t *uuid1, const uint8_t *uuid2)
 {
-	uint64_t uuid1_h = *(uint64_t *)uuid1;
-	uint64_t uuid1_l = *(uint64_t *)(uuid1 + 8);
-	uint64_t uuid2_h = *(uint64_t *)uuid2;
-	uint64_t uuid2_l = *(uint64_t *)(uuid2 + 8);
+	uint64_t uuid1_h = *(const uint64_t *)uuid1;
+	uint64_t uuid1_l = *(const uint64_t *)(uuid1 + 8);
+	uint64_t uuid2_h = *(const uint64_t *)uuid2;
+	uint64_t uuid2_l = *(const uint64_t *)(uuid2 + 8);
 
 	return ((uuid1_h == uuid2_h) && (uuid1_l == uuid2_l));
 }
@@ -37,7 +37,7 @@ bool vm_has_matched_uuid(uint16_t vmid, const uint8_t *uuid)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vmid);
 
-	return (uuid_is_equal(&vm_config->uuid[0], uuid));
+	return (uuid_is_equal(vm_config->uuid, uuid));
 }
 
 /**

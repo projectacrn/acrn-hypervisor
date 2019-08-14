@@ -31,8 +31,8 @@ struct per_cpu_region {
 	uint64_t irq_count[NR_IRQS];
 	uint64_t softirq_pending;
 	uint64_t spurious;
-	void *vcpu;
-	void *ever_run_vcpu;
+	struct acrn_vcpu *vcpu;
+	struct acrn_vcpu *ever_run_vcpu;
 #ifdef STACK_PROTECTOR
 	struct stack_canary stk_canary;
 #endif
