@@ -267,6 +267,8 @@ Use the clr-installer to build the Service VM image.
 
   The ``service-os-industry.img`` will be generated at current directory.
 
+.. _deploy_ootb_service_vm:
+
 Step 3: Deploy the Service VM image
 ===================================
 
@@ -502,6 +504,9 @@ Step 2: Build a User VM Preempt-RT image
 
 
 The ``preempt-rt.img`` will be generated at the current directory.
+
+
+.. _deploy_ootb_rtvm:
 
 Step 3: Deploy the User VM Preempt-RT image
 ===========================================
