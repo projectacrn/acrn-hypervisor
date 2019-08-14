@@ -358,28 +358,12 @@ endif
 .PHONY: all
 all: pre_build $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
-ifeq ($(FIRMWARE),sbl)
 install: $(HV_OBJDIR)/$(HV_FILE).32.out
-ifeq ($(BOARD),apl-up2)
-	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).apl-up2.sbl
-else
-	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).sbl
-endif
+	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).32.out
 
 install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
-ifeq ($(BOARD),apl-up2)
-	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).apl-up2.sbl.out
-	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)/usr/lib/acrn/$(HV_FILE).apl-up2.sbl.map
-else
-	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).sbl.out
-	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)/usr/lib/acrn/$(HV_FILE).sbl.map
-endif
-endif
-
-ifeq ($(FIRMWARE),uefi)
-install: $(HV_OBJDIR)/$(HV_FILE).32.out
-	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).32.out
-endif
+	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).out
+	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).map
 
 .PHONY: pre_build
 pre_build: $(PRE_BUILD_OBJS)
