@@ -123,7 +123,7 @@ static void profiling_enable_pmu(void)
 
 	if (ss->guest_debugctl_value != 0U) {
 		/* Merge the msr vmexit loading list with HV */
-		if (ss->vmexit_msr_cnt == 0) {
+		if (ss->vmexit_msr_cnt == 0U) {
 			struct acrn_vcpu *vcpu = get_ever_run_vcpu(get_pcpu_id());
 
 			size = sizeof(struct msr_store_entry) * MAX_HV_MSR_LIST_NUM;
@@ -182,14 +182,14 @@ static void profiling_disable_pmu(void)
 		__func__,  get_pcpu_id());
 
 	if (ss != NULL) {
-		if (ss->vmexit_msr_cnt != 0) {
+		if (ss->vmexit_msr_cnt != 0U) {
 			/* Restore the msr exit loading list of HV */
 			struct acrn_vcpu *vcpu = get_ever_run_vcpu(get_pcpu_id());
 
 			exec_vmwrite64(VMX_EXIT_MSR_LOAD_ADDR_FULL, hva2hpa(vcpu->arch.msr_area.host));
 			exec_vmwrite32(VMX_EXIT_MSR_LOAD_COUNT, MAX_HV_MSR_LIST_NUM);
 
-			ss->vmexit_msr_cnt = 0;
+			ss->vmexit_msr_cnt = 0U;
 		}
 
 		group_id = ss->current_pmi_group_id;
@@ -1445,7 +1445,7 @@ void profiling_setup(void)
 	per_cpu(profiling_info.s_state, cpu).total_pmi_count = 0U;
 	per_cpu(profiling_info.s_state, cpu).total_vmexit_count = 0U;
 	per_cpu(profiling_info.s_state, cpu).pmu_state = PMU_INITIALIZED;
-	per_cpu(profiling_info.s_state, cpu).vmexit_msr_cnt = 0;
+	per_cpu(profiling_info.s_state, cpu).vmexit_msr_cnt = 0U;
 	per_cpu(profiling_info.s_state, cpu).samples_logged = 0U;
 	per_cpu(profiling_info.s_state, cpu).samples_dropped = 0U;
 	per_cpu(profiling_info.s_state, cpu).frozen_well = 0U;
