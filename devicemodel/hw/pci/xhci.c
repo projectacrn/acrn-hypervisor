@@ -418,7 +418,7 @@ struct pci_xhci_vdev {
 	 * hub ports and its child external hub ports.
 	 */
 	struct pci_xhci_native_port native_ports[XHCI_MAX_VIRT_PORTS];
-	struct timespec mf_prev_time;	/* previous time of accessing MFINDEX */
+	struct timespec init_time;
 };
 
 /* portregs and devices arrays are set up to start from idx=1 */
@@ -3614,9 +3614,9 @@ pci_xhci_rtsregs_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 
 	if (offset == XHCI_MFINDEX) {
 		clock_gettime(CLOCK_MONOTONIC, &t);
-		time_diff = (t.tv_sec - xdev->mf_prev_time.tv_sec) * 1000000
-			+ (t.tv_nsec - xdev->mf_prev_time.tv_nsec) / 1000;
-		xdev->mf_prev_time = t;
+		time_diff = (t.tv_sec - xdev->init_time.tv_sec) * 1000000
+			+ (t.tv_nsec - xdev->init_time.tv_nsec) / 1000;
+		xdev->init_time = t;
 		value = time_diff / 125;
 
 		if (value >= 1)
@@ -4166,7 +4166,7 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	xdev->excap_ptr = NULL;
 
 	xdev->rtsregs.mfindex = 0;
-	clock_gettime(CLOCK_MONOTONIC, &xdev->mf_prev_time);
+	clock_gettime(CLOCK_MONOTONIC, &xdev->init_time);
 
 	/* discover devices */
 	error = pci_xhci_parse_opts(xdev, opts);
