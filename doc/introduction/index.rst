@@ -24,16 +24,17 @@ ACRN High-Level Architecture
 ****************************
 
 The ACRN architecture has evolved since it's initial v0.1 release in
-July 2018. The new v2.0 architecture has flexibility to support
-partition mode, sharing mode and a mixed hybrid mode.  As shown in
-:numref:`V2-hl-arch`, hardware resources can be partitioned into two parts:
+July 2018. Beginning with the v1.1 release, the ACRN architecture has
+flexibility to support partition mode, sharing mode, and a mixed hybrid
+mode.  As shown in :numref:`V2-hl-arch`, hardware resources can be
+partitioned into two parts:
 
 .. figure:: images/ACRN-V2-high-level-arch.png
    :width: 700px
    :align: center
    :name: V2-hl-arch
 
-   ACRN V2.0 high-level architecture
+   ACRN high-level architecture
 
 Shown on the left of :numref:`V2-hl-arch`, resources are partitioned and
 used by a pre-launched user virtual machine (VM). Pre-launched here
@@ -87,7 +88,7 @@ Experience (IVE) solutions.
    :align: center
    :name: V2-SDC-scenario
 
-   ACRN V2.0 Automotive SDC scenario
+   ACRN Automotive SDC scenario
 
 As a reference implementation, ACRN provides the basis for embedded
 hypervisor vendors to build solutions with a reference I/O mediation
@@ -134,7 +135,7 @@ Post-Launched VMs.
    :align: center
    :name: V2-SDC-usage-arch
 
-   ACRN V2.0 SDC usage architecture overview
+   ACRN SDC usage architecture overview
 
 A block diagram of ACRN's SDC usage scenario is shown in
 :numref:`V2-SDC-usage-arch` above.
@@ -155,7 +156,7 @@ Industrial Workload Consolidation
    :align: center
    :name: V2-industrial-scenario
 
-   ACRN V2.0 Industrial Workload Consolidation scenario
+   ACRN Industrial Workload Consolidation scenario
 
 Supporting Workload consolidation for industrial applications is even
 more challenging. The ACRN hypervisor needs to run both safety-critical
@@ -184,7 +185,7 @@ real-time OS needs, such as VxWorks* or RT-Linux*.
    :align: center
    :name: V2-industry-usage-arch
 
-   ACRN V2.0 Industrial Usage Architecture Overview
+   ACRN Industrial Usage Architecture Overview
 
 :numref:`V2-industry-usage-arch` shows ACRN’s block diagram for an
 Industrial usage scenario:
