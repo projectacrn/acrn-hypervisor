@@ -14,6 +14,8 @@
 #define SOS_CONSOLE		"console=ttyS2 "
 #define SOS_COM1_BASE		0x3E8U
 #define SOS_COM1_IRQ		6U
+#define SOS_COM2_BASE		0x3F8U
+#define SOS_COM2_IRQ		10U
 
 #ifndef CONFIG_RELEASE
 #define BOOTARG_DEBUG		"hvlog=2M@0x6de00000 "	\
