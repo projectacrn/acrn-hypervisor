@@ -419,6 +419,7 @@ struct pci_xhci_vdev {
 	 */
 	struct pci_xhci_native_port native_ports[XHCI_MAX_VIRT_PORTS];
 	struct timespec init_time;
+	uint32_t	quirks;
 };
 
 /* portregs and devices arrays are set up to start from idx=1 */
@@ -2862,16 +2863,15 @@ pci_xhci_handle_transfer(struct pci_xhci_vdev *xdev,
 			 uint32_t ccs,
 			 uint32_t streamid)
 {
-	struct		xhci_trb *setup_trb;
-	struct		usb_xfer *xfer;
-	struct		xhci_block hcb;
-	struct		usb_block *xfer_block;
-	struct		usb_block *prev_block;
-	uint64_t	val;
-	uint32_t	trbflags;
-	int		do_intr, err;
-	int		do_retry;
-	bool		is_isoch = false;
+	struct xhci_trb		*setup_trb;
+	struct usb_xfer		*xfer;
+	struct xhci_block	hcb;
+	struct usb_block	*xfer_block;
+	struct usb_block	*prev_block;
+	uint64_t		val;
+	uint32_t		trbflags;
+	int			do_intr, err;
+	int			do_retry;
 
 	ep_ctx->dwEpCtx0 = FIELD_REPLACE(ep_ctx->dwEpCtx0,
 					 XHCI_ST_EPCTX_RUNNING, 0x7, 0);
@@ -2956,7 +2956,6 @@ retry:
 			break;
 
 		case XHCI_TRB_TYPE_ISOCH:
-			is_isoch = true;
 			/* fall through */
 
 		case XHCI_TRB_TYPE_NORMAL:
@@ -3043,8 +3042,14 @@ retry:
 					streamid, addr, ccs);
 		}
 
-		if (is_isoch == true || XHCI_TRB_3_TYPE_GET(trbflags) ==
-				XHCI_TRB_TYPE_EVENT_DATA /* win10 needs it */)
+		if (trbflags & XHCI_TRB_3_BEI_BIT)
+			continue;
+
+		if (xdev->quirks & XHCI_QUIRK_INTEL_ISOCH_NO_BEI)
+			continue;
+
+		/* win10 needs it */
+		if (XHCI_TRB_3_TYPE_GET(trbflags) == XHCI_TRB_TYPE_EVENT_DATA)
 			continue;
 
 		/* handle current batch that requires interrupt on complete */
@@ -4026,6 +4031,7 @@ pci_xhci_parse_extcap(struct pci_xhci_vdev *xdev, char *opts)
 	if (!strncmp(cap, "apl", 3)) {
 		xdev->excap_write = pci_xhci_apl_drdregs_write;
 		xdev->excap_ptr = excap_group_apl;
+		xdev->quirks |= XHCI_QUIRK_INTEL_ISOCH_NO_BEI;
 		xdev->vid = PCI_INTEL_APL_XHCI_VID;
 		xdev->pid = PCI_INTEL_APL_XHCI_PID;
 	} else
