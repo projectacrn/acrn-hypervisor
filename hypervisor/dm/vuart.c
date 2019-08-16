@@ -468,7 +468,6 @@ static bool vuart_register_io_handler(struct acrn_vm *vm, uint16_t port_base, ui
 	bool ret = true;
 
 	struct vm_io_range range = {
-		.flags = IO_ATTR_RW,
 		.base = port_base,
 		.len = 8U
 	};

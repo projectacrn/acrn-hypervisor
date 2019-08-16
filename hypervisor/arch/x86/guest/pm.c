@@ -222,7 +222,6 @@ static void register_gas_io_handler(struct acrn_vm *vm, uint32_t pio_idx, const 
 
 	if ((gas->address != 0UL) && (gas->space_id == SPACE_SYSTEM_IO)
 			&& (gas->access_size != 0U) && (gas->access_size <= 4U)) {
-		gas_io.flags = IO_ATTR_RW;
 		gas_io.base = (uint16_t)gas->address;
 		gas_io.len = io_len[gas->access_size];
 
@@ -273,7 +272,6 @@ void register_rt_vm_pm1a_ctl_handler(struct acrn_vm *vm)
 {
 	struct vm_io_range io_range;
 
-	io_range.flags = IO_ATTR_RW;
 	io_range.base = VIRTUAL_PM1A_CNT_ADDR;
 	io_range.len = 1U;
 

@@ -41,7 +41,6 @@ struct io_request {
 struct vm_io_range {
 	uint16_t base;		/**< IO port base */
 	uint16_t len;		/**< IO port range */
-	uint32_t flags;		/**< IO port attributes */
 };
 
 struct vm_io_handler_desc;
@@ -104,11 +103,6 @@ struct vm_io_handler_desc {
 	 */
 	io_write_fn_t io_write;
 };
-
-
-#define IO_ATTR_R               0U
-#define IO_ATTR_RW              1U
-#define IO_ATTR_NO_ACCESS       2U
 
 /* Typedef for MMIO handler and range check routine */
 struct mmio_request;

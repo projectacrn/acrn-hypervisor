@@ -82,7 +82,7 @@ static bool vrtc_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width,
 void vrtc_init(struct acrn_vm *vm)
 {
 	struct vm_io_range range = {
-	.flags = IO_ATTR_RW, .base = CMOS_ADDR_PORT, .len = 2U};
+	.base = CMOS_ADDR_PORT, .len = 2U};
 
 	/* Initializing the CMOS RAM offset to 0U */
 	vm->vrtc_offset = 0U;

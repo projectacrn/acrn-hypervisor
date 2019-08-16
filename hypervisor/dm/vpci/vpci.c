@@ -193,13 +193,11 @@ static bool pci_cfgdata_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t b
 void vpci_init(struct acrn_vm *vm)
 {
 	struct vm_io_range pci_cfgaddr_range = {
-		.flags = IO_ATTR_RW,
 		.base = PCI_CONFIG_ADDR,
 		.len = 1U
 	};
 
 	struct vm_io_range pci_cfgdata_range = {
-		.flags = IO_ATTR_RW,
 		.base = PCI_CONFIG_DATA,
 		.len = 4U
 	};

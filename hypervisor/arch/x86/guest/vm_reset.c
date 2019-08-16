@@ -226,7 +226,6 @@ void register_reset_port_handler(struct acrn_vm *vm)
 		struct acpi_generic_address *gas = &(host_reset_reg.reg);
 
 		struct vm_io_range io_range = {
-			.flags = IO_ATTR_RW,
 			.len = 1U
 		};
 
