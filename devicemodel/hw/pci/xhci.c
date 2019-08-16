@@ -94,6 +94,7 @@
 #include "usb_pmapper.h"
 #include "vmmapi.h"
 #include "dm_string.h"
+#include "timer.h"
 
 #undef LOG_TAG
 #define LOG_TAG			"xHCI: "
@@ -183,6 +184,13 @@ struct pci_xhci_trb_ring {
 	uint32_t ccs;			/* consumer cycle state */
 };
 
+struct xhci_ep_timer_data {
+	uint32_t slot;
+	uint8_t epnum;
+	uint8_t dir;
+	struct pci_xhci_dev_emu *dev;
+};
+
 /* device endpoint transfer/stream rings */
 struct pci_xhci_dev_ep {
 	union {
@@ -201,6 +209,8 @@ struct pci_xhci_dev_ep {
 #define	ep_sctx_trbs	_ep_trb_rings._epu_sctx_trbs
 
 	struct usb_xfer *ep_xfer;	/* transfer chain */
+	struct acrn_timer isoc_timer;
+	struct xhci_ep_timer_data timer_data;
 	pthread_mutex_t mtx;
 };
 
@@ -473,6 +483,7 @@ static int pci_xhci_parse_log_level(struct pci_xhci_vdev *xdev, char *opts);
 static int pci_xhci_parse_extcap(struct pci_xhci_vdev *xdev, char *opts);
 static int pci_xhci_convert_speed(int lspeed);
 static void pci_xhci_free_usb_xfer(struct usb_xfer *xfer);
+static void pci_xhci_isoc_handler(void *arg, uint64_t param);
 
 #define XHCI_OPT_MAX_LEN 32
 static struct pci_xhci_option_elem xhci_option_table[] = {
@@ -1588,7 +1599,7 @@ pci_xhci_free_usb_xfer(struct usb_xfer *xfer)
 }
 
 static int
-pci_xhci_init_ep(struct pci_xhci_dev_emu *dev, int epid)
+pci_xhci_init_ep(struct pci_xhci_dev_emu *dev, int epid, uint32_t slot)
 {
 	struct xhci_dev_ctx	*dev_ctx;
 	struct pci_xhci_dev_ep	*devep;
@@ -1650,9 +1661,26 @@ pci_xhci_init_ep(struct pci_xhci_dev_emu *dev, int epid)
 			goto errout;
 	}
 
+	devep->timer_data.dev = dev;
+	devep->timer_data.slot = slot;
+	devep->timer_data.epnum = epid;
+	devep->timer_data.dir = (epid & 0x1) ? TOKEN_IN : TOKEN_OUT;
+	devep->isoc_timer.clockid = CLOCK_MONOTONIC;
+	rc = acrn_timer_init(&devep->isoc_timer, pci_xhci_isoc_handler,
+			&devep->timer_data);
+	if (rc < 0) {
+		UPRINTF(LFTL, "ep%d: failed to create isoc timer\r\n", epid);
+		goto errout;
+	}
+
 	return 0;
 
 errout:
+	pci_xhci_free_usb_xfer(devep->ep_xfer);
+	devep->ep_xfer = NULL;
+	devep->timer_data.dev = NULL;
+	devep->timer_data.slot = 0;
+	devep->timer_data.epnum = 0;
 	pthread_mutex_destroy(&devep->mtx);
 	return -1;
 }
@@ -1680,6 +1708,11 @@ pci_xhci_disable_ep(struct pci_xhci_dev_emu *dev, int epid)
 		pci_xhci_free_usb_xfer(devep->ep_xfer);
 		devep->ep_xfer = NULL;
 	}
+
+	acrn_timer_deinit(&devep->isoc_timer);
+	devep->timer_data.dev = NULL;
+	devep->timer_data.slot = 0;
+	devep->timer_data.epnum = 0;
 
 	pthread_mutex_unlock(&devep->mtx);
 	pthread_mutex_destroy(&devep->mtx);
@@ -2055,7 +2088,7 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 	ep0_ctx->dwEpCtx0 = (ep0_ctx->dwEpCtx0 & ~0x7) |
 		XHCI_EPCTX_0_EPSTATE_SET(XHCI_ST_EPCTX_RUNNING);
 
-	if (pci_xhci_init_ep(dev, 1)) {
+	if (pci_xhci_init_ep(dev, 1, slot)) {
 		cmderr = XHCI_TRB_ERROR_INCOMPAT_DEV;
 		goto done;
 	}
@@ -2173,7 +2206,7 @@ pci_xhci_cmd_config_ep(struct pci_xhci_vdev *xdev,
 
 			memcpy(ep_ctx, iep_ctx, sizeof(struct xhci_endp_ctx));
 
-			if (pci_xhci_init_ep(dev, i)) {
+			if (pci_xhci_init_ep(dev, i, slot)) {
 				cmderr = XHCI_TRB_ERROR_RESOURCE;
 				goto error;
 			}
@@ -2868,6 +2901,7 @@ pci_xhci_handle_transfer(struct pci_xhci_vdev *xdev,
 	struct xhci_block	hcb;
 	struct usb_block	*xfer_block;
 	struct usb_block	*prev_block;
+	struct itimerspec	delay;
 	uint64_t		val;
 	uint32_t		trbflags;
 	int			do_intr, err;
@@ -2956,6 +2990,22 @@ retry:
 			break;
 
 		case XHCI_TRB_TYPE_ISOCH:
+			/* According to xHCI spec 4.10.3.1 and 4.14.2.1, the
+			 * condition for judging {under,over}run event is
+			 * 'empty ring'. But it didn't define how long the
+			 * 'empty' state takes to identify this scenario. As
+			 * an experience value, 100 ms (100 ESIT) is used to
+			 * decide whether the {under,over}run event should be
+			 * reported to the Guest OS.
+			 */
+			delay.it_interval.tv_sec = 0;
+			delay.it_interval.tv_nsec = 0;
+			delay.it_value.tv_sec = 0;
+			delay.it_value.tv_nsec = 100000000;
+			if (acrn_timer_settime(&devep->isoc_timer, &delay)) {
+				UPRINTF(LFTL, "isoc timer set time failed\n");
+				goto errout;
+			}
 			/* fall through */
 
 		case XHCI_TRB_TYPE_NORMAL:
@@ -4142,6 +4192,48 @@ errout:
 
 	free(s);
 	return xdev->ndevices;
+}
+
+static void
+pci_xhci_isoc_handler(void *arg, uint64_t param)
+{
+	struct xhci_ep_timer_data *pdata;
+	struct xhci_trb trb;
+	struct xhci_trb	trb_underrun = {
+		.qwTrb0 = 0,
+		.dwTrb2 = XHCI_TRB_2_ERROR_SET(XHCI_TRB_ERROR_RING_UNDERRUN),
+		.dwTrb3 = XHCI_TRB_3_TYPE_SET(XHCI_TRB_EVENT_TRANSFER)
+	};
+	struct xhci_trb	trb_overrun = {
+		.qwTrb0 = 0,
+		.dwTrb2 = XHCI_TRB_2_ERROR_SET(XHCI_TRB_ERROR_RING_OVERRUN),
+		.dwTrb3 = XHCI_TRB_3_TYPE_SET(XHCI_TRB_EVENT_TRANSFER)
+	};
+
+	pdata = arg;
+	if (pdata == NULL) {
+		UPRINTF(LFTL, "%s NULL arg\r\n", __func__);
+		return;
+	}
+
+	if (pdata->dir == TOKEN_OUT) {
+		trb_underrun.dwTrb3 |= (XHCI_TRB_3_SLOT_SET(pdata->slot) |
+				XHCI_TRB_3_EP_SET(pdata->epnum));
+		trb = trb_underrun;
+	} else {
+		trb_overrun.dwTrb3 |= (XHCI_TRB_3_SLOT_SET(pdata->slot) |
+				XHCI_TRB_3_EP_SET(pdata->epnum));
+		trb = trb_overrun;
+	}
+
+	if (!pdata->dev || !pdata->dev->xdev) {
+		UPRINTF(LFTL, "%s: error, {x,}dev == NULL\r\n", __func__);
+		return;
+	}
+
+	pci_xhci_insert_event(pdata->dev->xdev, &trb, 1);
+	UPRINTF(LINF, "send %srun to slot %d ep %d\r\n", pdata->dir == TOKEN_IN
+			? "under" : "over", pdata->slot, pdata->epnum);
 }
 
 static int
