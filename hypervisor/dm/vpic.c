@@ -881,17 +881,14 @@ static bool vpic_elc_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t widt
 static void vpic_register_io_handler(struct acrn_vm *vm)
 {
 	struct vm_io_range master_range = {
-		.flags = IO_ATTR_RW,
 		.base = 0x20U,
 		.len = 2U
 	};
 	struct vm_io_range slave_range = {
-		.flags = IO_ATTR_RW,
 		.base = 0xa0U,
 		.len = 2U
 	};
 	struct vm_io_range elcr_range = {
-		.flags = IO_ATTR_RW,
 		.base = 0x4d0U,
 		.len = 2U
 	};
