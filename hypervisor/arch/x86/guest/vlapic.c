@@ -1643,7 +1643,6 @@ static int32_t vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_
 void
 vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops)
 {
-	uint32_t i;
 	struct lapic_regs *lapic;
 
 	/*
@@ -1673,10 +1672,6 @@ vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops)
 	vlapic_reset_timer(vlapic);
 
 	vlapic->svr_last = lapic->svr.v;
-
-	for (i = 0U; i < (VLAPIC_MAXLVT_INDEX + 1U); i++) {
-		vlapic->lvt_last[i] = 0U;
-	}
 
 	vlapic->isrv = 0U;
 
