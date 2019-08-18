@@ -1300,9 +1300,6 @@ int32_t move_pt_device(const struct iommu_domain *from_domain, struct iommu_doma
 
 void enable_iommu(void)
 {
-	if (!iommu_page_walk_coherent) {
-		cache_flush_invalidate_all();
-	}
 	do_action_for_iommus(dmar_enable);
 }
 
