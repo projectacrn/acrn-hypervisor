@@ -8,7 +8,7 @@
 #define MISC_CFG_H
 
 #define ROOTFS_0		"root=/dev/sda3 "
-#define ROOTFS_1		"root=/dev/mmcblk0p1 "
+#define ROOTFS_1		"root=/dev/mmcblk0p3 "
 
 #define SOS_ROOTFS		ROOTFS_1
 #define SOS_CONSOLE		"console=ttyS0 "
