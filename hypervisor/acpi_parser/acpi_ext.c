@@ -35,7 +35,6 @@
 #include <host_pm.h>
 #include <acrn_common.h>
 #include <vcpu.h>
-#include <vm_reset.h>
 
 /* Per ACPI spec:
  * There are two fundamental types of ACPI tables:
