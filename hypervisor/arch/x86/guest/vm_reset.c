@@ -6,28 +6,12 @@
 
 #include <vm.h>
 #include <io.h>
+#include <host_pm.h>
 #include <logmsg.h>
 #include <per_cpu.h>
 #include <vm_reset.h>
 #include <default_acpi_info.h>
 #include <platform_acpi_info.h>
-
-/* host reset register defined in ACPI */
-static struct acpi_reset_reg host_reset_reg = {
-	.reg = {
-		.space_id = RESET_REGISTER_SPACE_ID,
-		.bit_width = RESET_REGISTER_BIT_WIDTH,
-		.bit_offset = RESET_REGISTER_BIT_OFFSET,
-		.access_size = RESET_REGISTER_ACCESS_SIZE,
-		.address = RESET_REGISTER_ADDRESS,
-	},
-	.val = RESET_REGISTER_VALUE
-};
-
-struct acpi_reset_reg *get_host_reset_reg_data(void)
-{
-	return &host_reset_reg;
-}
 
 /**
  * @pre vm != NULL
@@ -67,45 +51,6 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 
 		per_cpu(shutdown_vm_id, vcpu->pcpu_id) = vm->vm_id;
 		make_shutdown_vm_request(vcpu->pcpu_id);
-	}
-}
-
-static void reset_host(void)
-{
-	struct acpi_generic_address *gas = &(host_reset_reg.reg);
-
-
-	/* TODO: gracefully shut down all guests before doing host reset. */
-
-	/*
-	 * UEFI more likely sets the reset value as 0x6 (not 0xe) for 0xcf9 port.
-	 * This asserts PLTRST# to reset devices on the platform, but not the
-	 * SLP_S3#/4#/5# signals, which power down the systems. This might not be
-	 * enough for us.
-	 */
-	if ((gas->space_id == SPACE_SYSTEM_IO) &&
-		(gas->bit_width == 8U) && (gas->bit_offset == 0U) &&
-		(gas->address != 0U) && (gas->address != 0xcf9U)) {
-		pio_write8(host_reset_reg.val, (uint16_t)host_reset_reg.reg.address);
-	}
-
-	/*
-	 * Fall back
-	 * making sure bit 2 (RST_CPU) is '0', when the reset command is issued.
-	 */
-	pio_write8(0x2U, 0xcf9U);
-	pio_write8(0xeU, 0xcf9U);
-
-	/*
-	 * Fall back
-	 * keyboard controller might cause the INIT# being asserted,
-	 * and not power cycle the system.
-	 */
-	pio_write8(0xfeU, 0x64U);
-
-	pr_fatal("%s(): can't reset host.", __func__);
-	while (1) {
-		asm_pause();
 	}
 }
 
@@ -197,7 +142,9 @@ static bool handle_cf9_write(struct acrn_vcpu *vcpu, __unused uint16_t addr, siz
 static bool handle_reset_reg_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
 {
 	if (bytes == 1U) {
-		if (val == host_reset_reg.val) {
+		struct acpi_reset_reg *reset_reg = get_host_reset_reg_data();
+
+		if (val == reset_reg->val) {
 			if (is_highest_severity_vm(vcpu->vm)) {
 				reset_host();
 			} else {
@@ -223,7 +170,8 @@ void register_reset_port_handler(struct acrn_vm *vm)
 {
 	/* Don't support SOS and pre-launched VM re-launch for now. */
 	if (!is_postlaunched_vm(vm) || is_rt_vm(vm)) {
-		struct acpi_generic_address *gas = &(host_reset_reg.reg);
+		struct acpi_reset_reg *reset_reg = get_host_reset_reg_data();
+		struct acpi_generic_address *gas = &(reset_reg->reg);
 
 		struct vm_io_range io_range = {
 			.len = 1U
@@ -247,7 +195,7 @@ void register_reset_port_handler(struct acrn_vm *vm)
 			(gas->bit_width == 8U) && (gas->bit_offset == 0U) &&
 			(gas->address != 0xcf9U) && (gas->address != 0x64U)) {
 
-			io_range.base = (uint16_t)host_reset_reg.reg.address;
+			io_range.base = (uint16_t)reset_reg->reg.address;
 			register_pio_emulation_handler(vm, PIO_RESET_REG_IDX, &io_range,
 					handle_reset_reg_read, handle_reset_reg_write);
 		}
