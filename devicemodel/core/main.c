@@ -124,8 +124,6 @@ struct mt_vmm_info {
 	int		mt_vcpu;
 } mt_vmm_info[VM_MAXCPU];
 
-static cpuset_t *vcpumap[VM_MAXCPU] = { NULL };
-
 static struct vmctx *_ctx;
 
 static void
@@ -150,7 +148,6 @@ usage(int code)
 		"       -k: kernel image path\n"
 		"       -l: LPC device configuration\n"
 		"       -m: memory size in MB\n"
-		"       -p: pin 'vcpu' to 'hostcpu'\n"
 		"       -r: ramdisk image path\n"
 		"       -s: <slot,driver,configinfo> PCI slot config\n"
 		"       -U: uuid\n"
@@ -191,43 +188,6 @@ print_version(void)
 			DM_BUILD_VERSION, DM_DAILY_TAG, DM_BUILD_USER, DM_BUILD_TIME);
 
 	exit(0);
-}
-
-static int
-pincpu_parse(const char *opt)
-{
-	int vcpu, pcpu;
-	char *cp;
-
-	if (dm_strtoi(opt, &cp, 10, &vcpu) || *cp != ':' ||
-		dm_strtoi(cp + 1, &cp, 10, &pcpu)) {
-		fprintf(stderr, "invalid format: %s\n", opt);
-		return -1;
-	}
-
-	if (vcpu < 0 || vcpu >= VM_MAXCPU) {
-		fprintf(stderr, "vcpu '%d' outside valid range from 0 to %d\n",
-		    vcpu, VM_MAXCPU - 1);
-		return -1;
-	}
-
-	if (pcpu < 0 || pcpu >= CPU_SETSIZE) {
-		fprintf(stderr,
-			"hostcpu '%d' outside valid range from 0 to %d\n",
-			pcpu, CPU_SETSIZE - 1);
-		return -1;
-	}
-
-	if (vcpumap[vcpu] == NULL) {
-		vcpumap[vcpu] = malloc(sizeof(cpuset_t));
-		if (vcpumap[vcpu] == NULL) {
-			perror("malloc");
-			return -1;
-		}
-		CPU_ZERO(vcpumap[vcpu]);
-	}
-	CPU_SET(pcpu, vcpumap[vcpu]);
-	return 0;
 }
 
 /**
@@ -743,7 +703,6 @@ enum {
 
 static struct option long_options[] = {
 	{"acpi",		no_argument,		0, 'A' },
-	{"pincpu",		required_argument,	0, 'p' },
 	{"ncpus",		required_argument,	0, 'c' },
 	{"elf_file",		required_argument,	0, 'E' },
 	{"ioc_node",		required_argument,	0, 'i' },
@@ -814,13 +773,6 @@ main(int argc, char *argv[])
 		switch (c) {
 		case 'A':
 			acpi = 1;
-			break;
-		case 'p':
-			if (pincpu_parse(optarg) != 0) {
-				errx(EX_USAGE,
-					"invalid vcpu pinning configuration '%s'",
-					optarg);
-			}
 			break;
 		case 'c':
 			dm_strtoi(optarg, NULL, 0, &guest_ncpus);
