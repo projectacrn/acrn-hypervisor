@@ -9,35 +9,36 @@
 
 #include <vm_configurations.h>
 
-#define ACPI_OEM_ID_SIZE           6
 
-#define RSDP_CHECKSUM_LENGTH       20
-#define ACPI_NAME_SIZE             4U
-#define ACPI_MADT_TYPE_LOCAL_APIC  0U
-#define ACPI_MADT_TYPE_IOAPIC  1U
-#define ACPI_MADT_ENABLED          1U
-#define ACPI_OEM_TABLE_ID_SIZE     8
+#define ACPI_RSDP_CHECKSUM_LENGTH   20U
 
+#define ACPI_NAME_SIZE              4U
+#define ACPI_OEM_ID_SIZE            6U
+#define ACPI_OEM_TABLE_ID_SIZE      8U
+
+#define ACPI_MADT_TYPE_LOCAL_APIC   0U
+#define ACPI_MADT_TYPE_IOAPIC       1U
+#define ACPI_MADT_ENABLED           1U
 
 /* FACP field offsets */
-#define OFFSET_FACS_ADDR	36U
-#define OFFSET_RESET_REGISTER	116U
-#define OFFSET_RESET_VALUE	128U
-#define OFFSET_FACS_X_ADDR	132U
+#define OFFSET_FACS_ADDR        36U
+#define OFFSET_RESET_REGISTER   116U
+#define OFFSET_RESET_VALUE      128U
+#define OFFSET_FACS_X_ADDR      132U
 #define OFFSET_PM1A_EVT         148U
 #define OFFSET_PM1A_CNT         172U
 
 /* FACS field offsets */
-#define OFFSET_FACS_SIGNATURE	0U
-#define OFFSET_FACS_LENGTH	4U
-#define OFFSET_WAKE_VECTOR_32	12U
-#define OFFSET_WAKE_VECTOR_64	24U
+#define OFFSET_FACS_SIGNATURE    0U
+#define OFFSET_FACS_LENGTH       4U
+#define OFFSET_WAKE_VECTOR_32    12U
+#define OFFSET_WAKE_VECTOR_64    24U
 
-#define ACPI_SIG_FADT             "FACP" /* Fixed ACPI Description Table */
-#define ACPI_SIG_FACS              0x53434146U /* "FACS" */
-#define ACPI_SIG_RSDP             "RSD PTR " /* Root System Description Ptr */
-#define ACPI_SIG_MADT             "APIC" /* Multiple APIC Description Table */
-#define ACPI_SIG_DMAR             "DMAR"
+#define ACPI_SIG_FADT            "FACP" /* Fixed ACPI Description Table */
+#define ACPI_SIG_FACS             0x53434146U /* "FACS" */
+#define ACPI_SIG_RSDP            "RSD PTR " /* Root System Description Ptr */
+#define ACPI_SIG_MADT            "APIC" /* Multiple APIC Description Table */
+#define ACPI_SIG_DMAR            "DMAR"
 
 
 struct packed_gas {
