@@ -11,7 +11,6 @@
 #include <cpuid.h>
 #include <vcpu.h>
 #include <vm.h>
-#include <vmcs.h>
 #include <vmx.h>
 #include <sgx.h>
 #include <guest_pm.h>

@@ -378,6 +378,11 @@ static inline bool is_vcpu_bsp(const struct acrn_vcpu *vcpu)
 	return (vcpu->vcpu_id == BOOT_CPU_ID);
 }
 
+static inline enum vm_cpu_mode get_vcpu_mode(const struct acrn_vcpu *vcpu)
+{
+	return vcpu->arch.cpu_mode;
+}
+
 /* do not update Guest RIP for next VM Enter */
 static inline void vcpu_retain_rip(struct acrn_vcpu *vcpu)
 {

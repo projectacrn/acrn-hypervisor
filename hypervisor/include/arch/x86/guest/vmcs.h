@@ -12,7 +12,6 @@
 
 #ifndef ASSEMBLER
 #include <types.h>
-#include <vmx.h>
 #include <vcpu.h>
 
 #define VMX_VMENTRY_FAIL                0x80000000U
@@ -21,11 +20,6 @@
 #define APIC_ACCESS_TYPE                0xF000UL  /* 15:12, access type */
 #define TYPE_LINEAR_APIC_INST_READ      (0UL << 12U)
 #define TYPE_LINEAR_APIC_INST_WRITE     (1UL << 12U)
-
-static inline uint32_t vmx_eoi_exit(uint32_t vector)
-{
-	return (VMX_EOI_EXIT0_FULL + ((vector >> 6U) * 2U));
-}
 
 /* VM exit qulifications for APIC-access
  * Access type:
@@ -46,22 +40,9 @@ static inline uint64_t apic_access_offset(uint64_t qual)
 {
 	return (qual & APIC_ACCESS_OFFSET);
 }
-
-#define RFLAGS_C (1U<<0U)
-#define RFLAGS_Z (1U<<6U)
-#define RFLAGS_AC (1U<<18U)
-
-#define VMX_SUPPORT_UNRESTRICTED_GUEST (1U<<5U)
-
 void init_vmcs(struct acrn_vcpu *vcpu);
 
 void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu);
-
-static inline enum vm_cpu_mode get_vcpu_mode(const struct acrn_vcpu *vcpu)
-{
-	return vcpu->arch.cpu_mode;
-}
-
 #endif /* ASSEMBLER */
 
 #endif /* VMCS_H_ */
