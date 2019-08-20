@@ -160,14 +160,6 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
        ``seed_string=${mac:9:8}-${vm_name}``
 
-   * - :kbd:`-p, --pincpu <vcpu:hostcpu>`
-     - Pin host CPU to appointed vCPU:
-
-       - ``vcpu`` is the ID of the CPU seen by the UOS, and
-       - ``hostcpu`` is the physical CPU ID on the system.
-
-       Example: ``-p  "1:2"`` means pin the 2nd physical cpu to 1st vcpu in UOS
-
    * - :kbd:`--part_info <part_info_name>`
      - Set guest partition info path.
 
