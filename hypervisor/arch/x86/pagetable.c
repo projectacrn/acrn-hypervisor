@@ -249,7 +249,7 @@ static void add_pte(const uint64_t *pde, uint64_t paddr_start, uint64_t vaddr_st
 		uint64_t *pte = pt_page + index;
 
 		if (mem_ops->pgentry_present(*pte) != 0UL) {
-			ASSERT(false, "invalid op, pte present");
+			pr_fatal("%s, pte 0x%llx is already present!\n", __func__, vaddr);
 		} else {
 			set_pgentry(pte, paddr | prot, mem_ops);
 			paddr += PTE_SIZE;
@@ -280,23 +280,27 @@ static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_
 		uint64_t *pde = pd_page + index;
 		uint64_t vaddr_next = (vaddr & PDE_MASK) + PDE_SIZE;
 
-		if (mem_ops->pgentry_present(*pde) == 0UL) {
-			if (mem_aligned_check(paddr, PDE_SIZE) &&
-				mem_aligned_check(vaddr, PDE_SIZE) &&
-				(vaddr_next <= vaddr_end)) {
-				set_pgentry(pde, paddr | (prot | PAGE_PSE), mem_ops);
-				if (vaddr_next < vaddr_end) {
-					paddr += (vaddr_next - vaddr);
-					vaddr = vaddr_next;
-					continue;
+		if (pde_large(*pde) != 0UL) {
+			pr_fatal("%s, pde 0x%llx is already present!\n", __func__, vaddr);
+		} else {
+			if (mem_ops->pgentry_present(*pde) == 0UL) {
+				if (mem_aligned_check(paddr, PDE_SIZE) &&
+					mem_aligned_check(vaddr, PDE_SIZE) &&
+					(vaddr_next <= vaddr_end)) {
+					set_pgentry(pde, paddr | (prot | PAGE_PSE), mem_ops);
+					if (vaddr_next < vaddr_end) {
+						paddr += (vaddr_next - vaddr);
+						vaddr = vaddr_next;
+						continue;
+					}
+					break;	/* done */
+				} else {
+					void *pt_page = mem_ops->get_pt_page(mem_ops->info, vaddr);
+					construct_pgentry(pde, pt_page, mem_ops->get_default_access_right(), mem_ops);
 				}
-				break;	/* done */
-			} else {
-				void *pt_page = mem_ops->get_pt_page(mem_ops->info, vaddr);
-				construct_pgentry(pde, pt_page, mem_ops->get_default_access_right(), mem_ops);
 			}
+			add_pte(pde, paddr, vaddr, vaddr_end, prot, mem_ops);
 		}
-		add_pte(pde, paddr, vaddr, vaddr_end, prot, mem_ops);
 		if (vaddr_next >= vaddr_end) {
 			break;	/* done */
 		}
@@ -322,23 +326,27 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
 		uint64_t *pdpte = pdpt_page + index;
 		uint64_t vaddr_next = (vaddr & PDPTE_MASK) + PDPTE_SIZE;
 
-		if (mem_ops->pgentry_present(*pdpte) == 0UL) {
-			if (mem_aligned_check(paddr, PDPTE_SIZE) &&
-				mem_aligned_check(vaddr, PDPTE_SIZE) &&
-				(vaddr_next <= vaddr_end)) {
-				set_pgentry(pdpte, paddr | (prot | PAGE_PSE), mem_ops);
-				if (vaddr_next < vaddr_end) {
-					paddr += (vaddr_next - vaddr);
-					vaddr = vaddr_next;
-					continue;
+		if (pdpte_large(*pdpte) != 0UL) {
+			pr_fatal("%s, pdpte 0x%llx is already present!\n", __func__, vaddr);
+		} else {
+			if (mem_ops->pgentry_present(*pdpte) == 0UL) {
+				if (mem_aligned_check(paddr, PDPTE_SIZE) &&
+					mem_aligned_check(vaddr, PDPTE_SIZE) &&
+					(vaddr_next <= vaddr_end)) {
+					set_pgentry(pdpte, paddr | (prot | PAGE_PSE), mem_ops);
+					if (vaddr_next < vaddr_end) {
+						paddr += (vaddr_next - vaddr);
+						vaddr = vaddr_next;
+						continue;
+					}
+					break;	/* done */
+				} else {
+					void *pd_page = mem_ops->get_pd_page(mem_ops->info, vaddr);
+					construct_pgentry(pdpte, pd_page, mem_ops->get_default_access_right(), mem_ops);
 				}
-				break;	/* done */
-			} else {
-				void *pd_page = mem_ops->get_pd_page(mem_ops->info, vaddr);
-				construct_pgentry(pdpte, pd_page, mem_ops->get_default_access_right(), mem_ops);
 			}
+			add_pde(pdpte, paddr, vaddr, vaddr_end, prot, mem_ops);
 		}
-		add_pde(pdpte, paddr, vaddr, vaddr_end, prot, mem_ops);
 		if (vaddr_next >= vaddr_end) {
 			break;	/* done */
 		}
