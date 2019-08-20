@@ -51,23 +51,6 @@
  * When ACRN go FuSa, the platform ACPI data should be fixed and this file is not needed.
  */
 
-#define ACPI_SIG_FACS		0x53434146U	/* "FACS" */
-#define ACPI_SIG_FADT             "FACP" 	/* Fixed ACPI Description Table */
-
-/* FACP field offsets */
-#define OFFSET_FACS_ADDR	36U
-#define OFFSET_RESET_REGISTER	116U
-#define OFFSET_RESET_VALUE	128U
-#define OFFSET_FACS_X_ADDR	132U
-#define OFFSET_PM1A_EVT         148U
-#define OFFSET_PM1A_CNT         172U
-
-/* FACS field offsets */
-#define OFFSET_FACS_SIGNATURE	0U
-#define OFFSET_FACS_LENGTH	4U
-#define OFFSET_WAKE_VECTOR_32	12U
-#define OFFSET_WAKE_VECTOR_64	24U
-
 /* get a dword value from given table and its offset */
 static inline uint32_t get_acpi_dt_dword(const uint8_t *dt_addr, uint32_t dt_offset)
 {
@@ -79,14 +62,6 @@ static inline uint64_t get_acpi_dt_qword(const uint8_t *dt_addr, uint32_t dt_off
 {
 	return *(uint64_t *)(dt_addr + dt_offset);
 }
-
-struct packed_gas {
-	uint8_t 	space_id;
-	uint8_t 	bit_width;
-	uint8_t 	bit_offset;
-	uint8_t 	access_size;
-	uint64_t	address;
-} __attribute__((packed));
 
 /* get a GAS struct from given table and its offset.
  * ACPI table stores packed gas, but it is not guaranteed that

@@ -12,57 +12,10 @@
 #include "vtd.h"
 #include "acpi.h"
 
-#define ACPI_SIG_DMAR             "DMAR"
-
-enum acpi_dmar_type {
-	ACPI_DMAR_TYPE_HARDWARE_UNIT        = 0,
-	ACPI_DMAR_TYPE_RESERVED_MEMORY      = 1,
-	ACPI_DMAR_TYPE_ROOT_ATS             = 2,
-	ACPI_DMAR_TYPE_HARDWARE_AFFINITY    = 3,
-	ACPI_DMAR_TYPE_NAMESPACE            = 4,
-	ACPI_DMAR_TYPE_RESERVED             = 5
-};
-
-struct acpi_table_dmar {
-	/* Common ACPI table header */
-	struct acpi_table_header  header;
-	/* Host address Width */
-	uint8_t                   width;
-	uint8_t                   flags;
-	uint8_t                   reserved[10];
-};
-
-/* DMAR subtable header */
-struct acpi_dmar_header {
-	uint16_t                  type;
-	uint16_t                  length;
-};
-
-struct acpi_dmar_hardware_unit {
-	struct acpi_dmar_header   header;
-	uint8_t                   flags;
-	uint8_t                   reserved;
-	uint16_t                  segment;
-	/* register base address */
-	uint64_t                  address;
-};
 
 struct find_iter_args {
 	int32_t i;
 	struct acpi_dmar_hardware_unit *res;
-};
-
-struct acpi_dmar_pci_path {
-	uint8_t                   device;
-	uint8_t                   function;
-};
-
-struct acpi_dmar_device_scope {
-	uint8_t                   entry_type;
-	uint8_t                   length;
-	uint16_t                  reserved;
-	uint8_t                   enumeration_id;
-	uint8_t                   bus;
 };
 
 typedef int32_t (*dmar_iter_t)(struct acpi_dmar_header*, void*);
