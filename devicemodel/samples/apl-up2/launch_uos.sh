@@ -423,13 +423,13 @@ do
 	esac
 done
 
-if [ ! -b "/dev/mmcblk0p3" ]; then
-  echo "no /dev/mmcblk0p3 data partition, exit"
+if [ ! -b "/dev/mmcblk0p1" ]; then
+  echo "no /dev/mmcblk0p1 data partition, exit"
   exit
 fi
 
 mkdir -p /data
-mount /dev/mmcblk0p3 /data
+mount /dev/mmcblk0p1 /data
 
 if [ $launch_type == 6 ]; then
 	if [ -f "/data/android/android.img" ]; then
