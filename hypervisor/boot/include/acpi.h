@@ -46,7 +46,7 @@ struct packed_gas {
 	uint8_t 	bit_offset;
 	uint8_t 	access_size;
 	uint64_t	address;
-} __attribute__((packed));
+} __packed;
 
 struct acpi_table_header {
 	/* ASCII table signature */
@@ -67,7 +67,7 @@ struct acpi_table_header {
 	char                    asl_compiler_id[4];
 	/* ASL compiler version */
 	uint32_t                asl_compiler_revision;
-};
+} __packed;
 
 struct acpi_table_rsdp {
 	/* ACPI signature, contains "RSD PTR " */
@@ -88,7 +88,7 @@ struct acpi_table_rsdp {
 	uint8_t                 extended_checksum;
 	/* Reserved, must be zero */
 	uint8_t                 reserved[3];
-};
+} __packed;
 
 struct acpi_table_rsdt {
 	/* Common ACPI table header */
@@ -110,12 +110,12 @@ struct acpi_table_madt {
 	/* Physical address of local APIC */
 	uint32_t                     address;
 	uint32_t                     flags;
-};
+} __packed;
 
 struct acpi_subtable_header {
 	uint8_t                   type;
 	uint8_t                   length;
-};
+} __packed;
 
 struct acpi_madt_local_apic {
 	struct acpi_subtable_header    header;
@@ -124,7 +124,7 @@ struct acpi_madt_local_apic {
 	/* Processor's local APIC id */
 	uint8_t                        id;
 	uint32_t                       lapic_flags;
-};
+} __packed;
 
 struct acpi_madt_ioapic {
 	struct acpi_subtable_header    header;
@@ -133,7 +133,7 @@ struct acpi_madt_ioapic {
 	uint8_t				rsvd;
 	uint32_t			addr;
 	uint32_t			gsi_base;
-};
+} __packed;
 
 enum acpi_dmar_type {
 	ACPI_DMAR_TYPE_HARDWARE_UNIT        = 0,
@@ -151,13 +151,13 @@ struct acpi_table_dmar {
 	uint8_t                   width;
 	uint8_t                   flags;
 	uint8_t                   reserved[10];
-};
+} __packed;
 
 /* DMAR subtable header */
 struct acpi_dmar_header {
 	uint16_t                  type;
 	uint16_t                  length;
-};
+} __packed;
 
 struct acpi_dmar_hardware_unit {
 	struct acpi_dmar_header   header;
@@ -166,12 +166,12 @@ struct acpi_dmar_hardware_unit {
 	uint16_t                  segment;
 	/* register base address */
 	uint64_t                  address;
-};
+} __packed;
 
 struct acpi_dmar_pci_path {
 	uint8_t                   device;
 	uint8_t                   function;
-};
+} __packed;
 
 struct acpi_dmar_device_scope {
 	uint8_t                   entry_type;
@@ -179,7 +179,7 @@ struct acpi_dmar_device_scope {
 	uint16_t                  reserved;
 	uint8_t                   enumeration_id;
 	uint8_t                   bus;
-};
+} __packed;
 
 
 void *get_acpi_tbl(const char *signature);
