@@ -96,7 +96,7 @@ static void modify_or_del_pte(const uint64_t *pde, uint64_t vaddr_start, uint64_
 	for (; index < PTRS_PER_PTE; index++) {
 		uint64_t *pte = pt_page + index;
 
-		if (mem_ops->pgentry_present(*pte) == 0UL) {
+		if ((mem_ops->pgentry_present(*pte) == 0UL) && (type == MR_MODIFY)) {
 			ASSERT(false, "invalid op, pte not present");
 		} else {
 			local_modify_or_del_pte(pte, prot_set, prot_clr, type, mem_ops);
@@ -127,7 +127,7 @@ static void modify_or_del_pde(const uint64_t *pdpte, uint64_t vaddr_start, uint6
 		uint64_t *pde = pd_page + index;
 		uint64_t vaddr_next = (vaddr & PDE_MASK) + PDE_SIZE;
 
-		if (mem_ops->pgentry_present(*pde) == 0UL) {
+		if ((mem_ops->pgentry_present(*pde) == 0UL) && (type == MR_MODIFY)) {
 			ASSERT(false, "invalid op, pde not present");
 		} else {
 			if (pde_large(*pde) != 0UL) {
@@ -170,7 +170,7 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
 		uint64_t *pdpte = pdpt_page + index;
 		uint64_t vaddr_next = (vaddr & PDPTE_MASK) + PDPTE_SIZE;
 
-		if (mem_ops->pgentry_present(*pdpte) == 0UL) {
+		if ((mem_ops->pgentry_present(*pdpte) == 0UL) && (type == MR_MODIFY)) {
 			ASSERT(false, "invalid op, pdpte not present");
 		} else {
 			if (pdpte_large(*pdpte) != 0UL) {
@@ -222,7 +222,7 @@ void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
 	while (vaddr < vaddr_end) {
 		vaddr_next = (vaddr & PML4E_MASK) + PML4E_SIZE;
 		pml4e = pml4e_offset(pml4_page, vaddr);
-		if (mem_ops->pgentry_present(*pml4e) == 0UL) {
+		if ((mem_ops->pgentry_present(*pml4e) == 0UL) && (type == MR_MODIFY)) {
 			ASSERT(false, "invalid op, pml4e not present");
 		} else {
 			modify_or_del_pdpte(pml4e, vaddr, vaddr_end, prot_set, prot_clr, mem_ops, type);
