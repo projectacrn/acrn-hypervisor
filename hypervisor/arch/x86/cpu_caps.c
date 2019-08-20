@@ -323,8 +323,7 @@ static inline bool is_vmx_disabled(void)
 
 static inline bool pcpu_has_vmx_unrestricted_guest_cap(void)
 {
-	return ((msr_read(MSR_IA32_VMX_MISC) & VMX_SUPPORT_UNRESTRICTED_GUEST)
-									!= 0UL);
+	return ((msr_read(MSR_IA32_VMX_MISC) & MSR_IA32_MISC_UNRESTRICTED_GUEST) != 0UL);
 }
 
 static int32_t check_vmx_mmu_cap(void)

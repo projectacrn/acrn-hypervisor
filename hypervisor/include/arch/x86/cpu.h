@@ -127,6 +127,10 @@
 /*Bits in EFER special registers */
 #define EFER_LMA 0x00000400U    /* Long mode active (R) */
 
+#define RFLAGS_C (1U<<0U)
+#define RFLAGS_Z (1U<<6U)
+#define RFLAGS_AC (1U<<18U)
+
 /* CPU clock frequencies (FSB) */
 #define CPU_FSB_83KHZ           83200
 #define CPU_FSB_100KHZ          99840

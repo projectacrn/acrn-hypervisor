@@ -5,7 +5,7 @@
  */
 
 #include <vm.h>
-#include <vmcs.h>
+#include <vmx.h>
 #include <schedule.h>
 #include <version.h>
 #include <reloc.h>
