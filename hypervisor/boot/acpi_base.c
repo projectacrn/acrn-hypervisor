@@ -41,7 +41,8 @@ static struct acpi_table_rsdp *found_rsdp(char *base, int32_t length)
 {
 	struct acpi_table_rsdp *rsdp, *ret = NULL;
 	uint8_t *cp, sum;
-	int32_t ofs, idx;
+	int32_t ofs;
+	uint32_t idx;
 
 	/* search on 16-byte boundaries */
 	for (ofs = 0; ofs < length; ofs += 16) {
@@ -51,7 +52,7 @@ static struct acpi_table_rsdp *found_rsdp(char *base, int32_t length)
 		if (strncmp(rsdp->signature, ACPI_SIG_RSDP, strnlen_s(ACPI_SIG_RSDP, 8U)) == 0) {
 			cp = (uint8_t *)rsdp;
 			sum = 0U;
-			for (idx = 0; idx < RSDP_CHECKSUM_LENGTH; idx++) {
+			for (idx = 0; idx < ACPI_RSDP_CHECKSUM_LENGTH; idx++) {
 				sum += *(cp + idx);
 			}
 
