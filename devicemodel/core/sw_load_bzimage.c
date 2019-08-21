@@ -76,7 +76,8 @@ struct _zeropage {
 	uint8_t pad2[0x8];                      /* 0x1e9 */
 
 	struct	{
-		uint8_t hdr_pad1[0x1f];         /* 0x1f1 */
+		uint8_t setup_sects;		/* 0x1f1 */
+		uint8_t hdr_pad1[0x1e];         /* 0x1f2 */
 		uint8_t loader_type;            /* 0x210 */
 		uint8_t load_flags;             /* 0x211 */
 		uint8_t hdr_pad2[0x2];          /* 0x212 */
@@ -103,27 +104,17 @@ static size_t kernel_size;
 static int
 acrn_get_bzimage_setup_size(struct vmctx *ctx)
 {
-	uint32_t *tmp, location = 1024, setup_sectors;
-	int size = -1;
+	struct _zeropage *kernel_load = (struct _zeropage *)
+		(ctx->baseaddr + KERNEL_LOAD_OFF(ctx));
 
-	tmp = (uint32_t *)(ctx->baseaddr + KERNEL_LOAD_OFF(ctx)) + 1024/4;
-	while (*tmp != SETUP_SIG && location < 0x8000) {
-		tmp++;
-		location += 4;
+	/* For backwards compatibility, if the setup_sects field
+	 * is 0, the real value is 4.
+	 */
+	if (kernel_load->hdr.setup_sects == 0) {
+		kernel_load->hdr.setup_sects = 4;
 	}
 
-	/* setup size must be at least 1024 bytes and small than 0x8000 */
-	if (location < 0x8000 && location > 1024) {
-		setup_sectors = (location + 511) / 512;
-		size = setup_sectors*512;
-		printf("SW_LOAD: found setup sig @ 0x%08x, "
-				"setup_size is 0x%08x\n",
-				location, size);
-	} else
-		printf("SW_LOAD ERR: could not get setup "
-				"size in kernel %s\n",
-				kernel_path);
-	return size;
+	return (kernel_load->hdr.setup_sects + 1) * 512;
 }
 
 int
