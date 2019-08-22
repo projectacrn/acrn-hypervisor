@@ -962,6 +962,11 @@ usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
 
 	blk = usb_dev_prepare_ctrl_xfer(xfer);
 	data = blk ? blk->buf : NULL;
+	if (data == NULL) {
+		xfer->status = USB_ERR_IOERROR;
+		UPRINTF(LFTL, "%s unexpected NULL data\r\n", __func__);
+		goto out;
+	}
 
 	UPRINTF(LDBG, "%d-%s: urb: type 0x%x req 0x%x val 0x%x idx %d len %d "
 			"data %d\r\n", udev->info.path.bus,
