@@ -46,4 +46,12 @@ static inline uint8_t calculate_sum8(const void *buf, uint32_t length)
 	return sum;
 }
 
+/**
+ * @pre buf != NULL
+ */
+static inline uint8_t calculate_checksum8(const void *buf, uint32_t len)
+{
+	return (uint8_t)(0x100U - calculate_sum8(buf, len));
+}
+
 #endif /* UTIL_H */

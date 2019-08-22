@@ -11,6 +11,7 @@
 
 
 #define ACPI_RSDP_CHECKSUM_LENGTH   20U
+#define ACPI_RSDP_XCHECKSUM_LENGTH  36U
 
 #define ACPI_NAME_SIZE              4U
 #define ACPI_OEM_ID_SIZE            6U
@@ -19,6 +20,7 @@
 #define ACPI_MADT_TYPE_LOCAL_APIC   0U
 #define ACPI_MADT_TYPE_IOAPIC       1U
 #define ACPI_MADT_ENABLED           1U
+#define ACPI_MADT_TYPE_LOCAL_APIC_NMI 4U
 
 /* FACP field offsets */
 #define OFFSET_FACS_ADDR        36U
@@ -37,6 +39,7 @@
 #define ACPI_SIG_FADT            "FACP" /* Fixed ACPI Description Table */
 #define ACPI_SIG_FACS             0x53434146U /* "FACS" */
 #define ACPI_SIG_RSDP            "RSD PTR " /* Root System Description Ptr */
+#define ACPI_SIG_XSDT            "XSDT"      /* Extended  System Description Table */
 #define ACPI_SIG_MADT            "APIC" /* Multiple APIC Description Table */
 #define ACPI_SIG_DMAR            "DMAR"
 
@@ -127,13 +130,20 @@ struct acpi_madt_local_apic {
 	uint32_t                       lapic_flags;
 } __packed;
 
+struct acpi_madt_local_apic_nmi {
+	struct acpi_subtable_header    header;
+	uint8_t                   processor_id;
+	uint16_t                  flags;
+	uint8_t                   lint;
+} __packed;
+
 struct acpi_madt_ioapic {
 	struct acpi_subtable_header    header;
 	/* IOAPIC id */
-	uint8_t				id;
-	uint8_t				rsvd;
-	uint32_t			addr;
-	uint32_t			gsi_base;
+	uint8_t   id;
+	uint8_t   rsvd;
+	uint32_t  addr;
+	uint32_t  gsi_base;
 } __packed;
 
 enum acpi_dmar_type {
