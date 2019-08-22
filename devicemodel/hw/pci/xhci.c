@@ -3614,13 +3614,16 @@ pci_xhci_rtsregs_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 
 	if (offset == XHCI_MFINDEX) {
 		clock_gettime(CLOCK_MONOTONIC, &t);
-		time_diff = (t.tv_sec - xdev->init_time.tv_sec) * 1000000
-			+ (t.tv_nsec - xdev->init_time.tv_nsec) / 1000;
-		xdev->init_time = t;
-		value = time_diff / 125;
+		/*
+		 * let delta seconds be ds, delta nanoseconds be dns,
+		 * the following calculation is derived from:
+		 *
+		 *     ds * 1000000 / 125 + dns / 1000 / 125
+		 */
+		time_diff = (t.tv_sec - xdev->init_time.tv_sec) * 8000
+			+ (t.tv_nsec - xdev->init_time.tv_nsec) / 125000;
 
-		if (value >= 1)
-			xdev->rtsregs.mfindex += value;
+		value = XHCI_MFINDEX_GET(time_diff);
 	} else if (offset >= XHCI_RT_IR_BASE) {
 		int item;
 		uint32_t *p;
