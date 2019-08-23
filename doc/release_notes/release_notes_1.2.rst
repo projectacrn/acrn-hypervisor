@@ -145,6 +145,24 @@ Known Issues
 
 -----
 
+:acrn-issue:`3609` - Sometimes fail to boot os while repeating the cold boot operation
+
+   **Workaround:** Please refer the PR information in this git issue
+
+-----
+
+:acrn-issue:`3610` - LaaG hang while run some workloads loop with zephyr idle
+
+   **Workaround:** Revert commit ``bbb891728d82834ec450f6a61792f715f4ec3013`` from the kernel
+
+-----
+
+:acrn-issue:`3611` - OVMF launch UOS fail for Hybrid and industry scenario
+
+   **Workaround:** Please refer the PR information in this git issue
+
+-----
+
 
 Change Log
 **********
@@ -159,6 +177,9 @@ release in June 2019 (click on the CommitID link to see details):
 
    git log --pretty=format:'- :acrn-commit:`%h` - %s' --after="2019-06-21"
 
+- :acrn-commit:`2dbc8f03` - doc: remove references to 2.0 in intro
+- :acrn-commit:`2d61e512` - doc: Release Notes v1.2
+- :acrn-commit:`f33886d9` - doc: add new scenario-based intro
 - :acrn-commit:`5b3b8efe` - doc: incorporate new scenario-based hardware doc
 - :acrn-commit:`0b9257df` - doc: update Getting started guide for Intel NUC software setup
 - :acrn-commit:`39aa209d` - doc: update Getting started guide for Intel NUC software setup
