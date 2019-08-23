@@ -34,32 +34,22 @@
 #include <ioapic.h>
 #include <logmsg.h>
 #include <acrn_common.h>
+#include <util.h>
 
 static struct acpi_table_rsdp *acpi_rsdp;
 
 static struct acpi_table_rsdp *found_rsdp(char *base, int32_t length)
 {
 	struct acpi_table_rsdp *rsdp, *ret = NULL;
-	uint8_t *cp, sum;
 	int32_t ofs;
-	uint32_t idx;
 
 	/* search on 16-byte boundaries */
 	for (ofs = 0; ofs < length; ofs += 16) {
 		rsdp = (struct acpi_table_rsdp *)(base + ofs);
 
 		/* compare signature, validate checksum */
-		if (strncmp(rsdp->signature, ACPI_SIG_RSDP, strnlen_s(ACPI_SIG_RSDP, 8U)) == 0) {
-			cp = (uint8_t *)rsdp;
-			sum = 0U;
-			for (idx = 0; idx < ACPI_RSDP_CHECKSUM_LENGTH; idx++) {
-				sum += *(cp + idx);
-			}
-
-			if (sum != 0U) {
-				continue;
-			}
-
+		if ((strncmp(rsdp->signature, ACPI_SIG_RSDP, strnlen_s(ACPI_SIG_RSDP, sizeof(rsdp->signature))) == 0)
+			&& (calculate_sum8(rsdp, ACPI_RSDP_CHECKSUM_LENGTH) == 0U)) {
 			ret = rsdp;
 			break;
 		}
@@ -112,7 +102,7 @@ static bool probe_table(uint64_t address, const char *signature)
 	bool ret;
 
 	if (strncmp(table->signature, signature, ACPI_NAME_SIZE) != 0) {
-	        ret = false;
+		ret = false;
 	} else {
 		ret = true;
 	}
@@ -245,6 +235,7 @@ uint16_t parse_madt(uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 	rsdp = get_rsdp();
 	if (rsdp != NULL) {
 		struct acpi_table_madt *madt = (struct acpi_table_madt *)get_acpi_tbl(ACPI_SIG_MADT);
+
 		if (madt != NULL) {
 			ret = local_parse_madt(madt, lapic_id_array);
 		}
@@ -261,6 +252,7 @@ uint16_t parse_madt_ioapic(struct ioapic_info *ioapic_id_array)
 	rsdp = get_rsdp();
 	if (rsdp != NULL) {
 		void *madt = get_acpi_tbl(ACPI_SIG_MADT);
+
 		if (madt != NULL) {
 			ret = ioapic_parse_madt(madt, ioapic_id_array);
 		}

@@ -31,4 +31,19 @@ static inline bool mem_aligned_check(uint64_t value, uint64_t req_align)
 	return ((value & (req_align - 1UL)) == 0UL);
 }
 
+/**
+ * @pre buf != NULL
+ */
+static inline uint8_t calculate_sum8(const void *buf, uint32_t length)
+{
+	uint32_t i;
+	uint8_t sum = 0U;
+
+	for (i = 0U; i < length; i++) {
+		sum += *((const uint8_t *)buf + i);
+	}
+
+	return sum;
+}
+
 #endif /* UTIL_H */
