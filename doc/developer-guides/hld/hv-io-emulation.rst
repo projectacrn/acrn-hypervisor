@@ -116,7 +116,7 @@ buffer on VM creation, otherwise I/O accesses from UOS cannot be
 emulated by SOS, and all I/O accesses not handled by the I/O handlers in
 the hypervisor will be dropped (reads get all 1's).
 
-Refer to Section 4.4.1 for the details of I/O requests and the
+Refer to the following sections for details on I/O requests and the
 initialization of the I/O request buffer.
 
 Types of I/O Requests
@@ -267,8 +267,7 @@ External Interfaces
 
 The following structures represent an I/O request. *struct vhm_request*
 is the main structure and the others are detailed representations of I/O
-requests of different kinds. Refer to Section 4.4.4 for the usage of
-*struct pci_request*.
+requests of different kinds.
 
 .. doxygenstruct:: mmio_request
    :project: Project ACRN
@@ -285,7 +284,7 @@ requests of different kinds. Refer to Section 4.4.4 for the usage of
 .. doxygenstruct:: vhm_request
    :project: Project ACRN
 
-For hypercalls related to I/O emulation, refer to Section 3.11.4.
+For hypercalls related to I/O emulation, refer to `I/O Emulation in the Hypervisor`_.
 
 .. _io-handler-init:
 

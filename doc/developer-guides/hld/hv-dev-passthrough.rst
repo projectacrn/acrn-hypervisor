@@ -131,6 +131,8 @@ model.
   this, device model is linked with lib pci access to access physical PCI
   device.
 
+.. _interrupt-remapping:
+
 Interrupt Remapping
 *******************
 

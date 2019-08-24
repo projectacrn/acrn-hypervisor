@@ -484,9 +484,9 @@ A bitmap in the vCPU structure lists the different requests:
 
 
 ACRN provides the function *vcpu_make_request* to make different
-requests, set the bitmap of corresponding request, and notify the target vCPU
-through IPI if necessary (when the target vCPU is not currently running). See
-section 3.5.5 for details.
+requests, set the bitmap of the corresponding request, and notify the target
+vCPU through the IPI if necessary (when the target vCPU is not currently
+running). See :ref:`vcpu-request-interrupt-injection` for details.
 
 .. code-block:: c
 
@@ -579,8 +579,8 @@ entry control and exit control, as shown in the table below.
 The table briefly shows how each field got configured.
 The guest state field is critical for a guest CPU start to run
 based on different CPU modes. One structure *boot_ctx* is used to pass
-the necessary initialized guest state to VMX,
-used only for the BSP of a guest.
+the necessary initialized guest state to VMX, used only for the BSP of a
+guest.
 
 For a guest vCPU's state initialization:
 
@@ -879,9 +879,9 @@ exit reason for reading or writing these MSRs is respectively
 *VMX_EXIT_REASON_RDMSR* or *VMX_EXIT_REASON_WRMSR* and the vm exit
 handler is *rdmsr_vmexit_handler* or *wrmsr_vmexit_handler*.
 
-This table shows the predefined MSRs ACRN will trap
-for all the guests. For the MSRs whose bitmap are not set in the
-MSR bitmap, guest access will be pass-through directly:
+This table shows the predefined MSRs ACRN will trap for all the guests. For
+the MSRs whose bitmap are not set in the MSR bitmap, guest access will be
+pass-through directly:
 
 .. list-table::
    :widths: 33 33 33

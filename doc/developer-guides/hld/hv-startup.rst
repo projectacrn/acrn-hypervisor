@@ -95,7 +95,7 @@ Memory
    interrupt stack table (IST) which are different across physical
    processors. LDT is disabled.
 
-Refer to section 3.5.2 for a detailed description of interrupt-related
+Refer to :ref:`physical-interrupt-initialization` for a detailed description of interrupt-related
 initial states, including IDT and physical PICs.
 
 After BSP detects that all APs are up, BSP will start creating the first

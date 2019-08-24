@@ -257,6 +257,8 @@ as address translation table when creating SOS_VM as Service OS. And all
 PCI devices on the platform are added to SOS_VM domain. Then enable DMAR
 translation for DMAR unit(s) if they are not marked as ignored.
 
+.. _device-assignment:
+
 Device assignment
 *****************
 
