@@ -36,11 +36,11 @@ framework. There are 3 major subsystems in SOS:
    -  VHM driver notifies HV on the completion through hypercall
    -  DM injects VIRQ to UOS frontend device through hypercall
 
--  VHM: Virtio and HV service Module is a kernel module in SOS as a
-   middle layer to support DM. Refer to chapter 5.4 for details
+-  VHM: Virtio and Hypervisor Service Module is a kernel module in SOS as a
+   middle layer to support DM. Refer to :ref:`virtio-APIs` for details
 
-This chapter introduces how the acrn-dm application is configured and
-walks through the DM overall flow.  We'll then elaborate on device,
+This section introduces how the acrn-dm application is configured and
+walks through the DM overall flow. We'll then elaborate on device,
 ISA, and PCI emulation.
 
 Configuration
@@ -140,8 +140,8 @@ DM Initialization
    allocated by DM for a specific VM in user space. This buffer is
    shared between DM, VHM and HV. **Set I/O Request buffer** calls
    an ioctl executing a hypercall to share this unique page buffer
-   with VHM and HV. Please refer to chapter 3.4 and 4.4 for more
-   details.
+   with VHM and HV.  Refer to :ref:`hld-io-emulation` and
+   :ref:`IO-emulation-in-sos` for more details.
 
 -  **Memory Setup**: UOS memory is allocated from SOS
    memory. This section of memory will use SOS hugetlbfs to allocate
@@ -158,11 +158,11 @@ DM Initialization
    API and PIO handler by *register_inout()* API or INOUT_PORT()
    macro.
 
--  **PCI Init**: PCI initialization scans PCI bus/slot/function to
+-  **PCI Init**: PCI initialization scans the PCI bus/slot/function to
    identify each configured PCI device on the acrn-dm command line
    and initializes their configuration space by calling their
-   dedicated vdev_init() function. For more detail of DM PCI
-   emulation please refer to section 4.6.
+   dedicated vdev_init() function. For more details on the DM PCI
+   emulation, refer to `PCI Emulation`_.
 
 -  **ACPI Build**: If there is "-A" option in acrn-dm command line, DM
    will build ACPI table into its VM's F-Segment (0xf2400). This
@@ -295,6 +295,8 @@ VHM ioctl interfaces
 .. note:: Reference API docs for General interface, VM Management,
    IRQ and Interrupts, Device Model management, Guest Memory management,
    PCI assignment, and Power management
+
+.. _IO-emulation-in-sos:
 
 I/O Emulation in SOS
 ********************

@@ -14,9 +14,10 @@ management, which includes:
 A guest VM never owns any physical interrupts. All interrupts received by
 Guest OS come from a virtual interrupt injected by vLAPIC, vIOAPIC or
 vPIC. Such virtual interrupts are triggered either from a pass-through
-device or from I/O mediators in SOS via hypercalls. Section 3.8.6
-introduces how the hypervisor manages the mapping between physical and
-virtual interrupts for pass-through devices.
+device or from I/O mediators in SOS via hypercalls. The
+:ref:`interrupt-remapping` section discusses how the hypervisor manages
+the mapping between physical and virtual interrupts for pass-through
+devices.
 
 Emulation for devices is inside SOS user space device model, i.e.,
 acrn-dm. However for performance consideration: vLAPIC, vIOAPIC, and vPIC
@@ -32,6 +33,8 @@ options to guest Linux affects whether it uses PIC or IOAPIC:
 -  **Kernel boot param with vPIC**: add "maxcpu=0" Guest OS will use PIC
 -  **Kernel boot param with vIOAPIC**: add "maxcpu=1" (as long as not "0")
    Guest OS will use IOAPIC. And Keep IOAPIC pin2 as source of PIC.
+
+.. _vcpu-request-interrupt-injection:
 
 vCPU Request for Interrupt Injection
 ************************************
@@ -213,6 +216,8 @@ ACRN hypervisor uses the *vcpu_inject_gp/vcpu_inject_pf* functions
 to queue exception request, and follows SDM vol3 - 6.15, Table 6-5 to
 generate double fault if the condition is met.
 
+.. _virt-interrupt-injection:
+
 Virtual Interrupt Injection
 ***************************
 
@@ -223,7 +228,7 @@ devices.
    directly. Whenever there is a device's physical interrupt, the
    corresponding virtual interrupts are injected to SOS via
    vLAPIC/vIOAPIC. SOS does not use vPIC and does not have emulated
-   devices. See section 3.8.5 Device assignment.
+   devices. See :ref:`device-assignment`.
 
 -  **For UOS assigned devices**: only PCI devices could be assigned to
    UOS. Virtual interrupt injection follows the same way as SOS. A

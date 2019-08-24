@@ -33,7 +33,7 @@ synchronize access by the producer and consumer.
 sbuf APIs
 =========
 
-.. note:: reference APIs defined in hypervisor/include/debug/sbuf.h
+The sbuf APIs are defined in ``hypervisor/include/debug/sbuf.h``
 
 
 ACRN Trace
@@ -67,8 +67,8 @@ up:
 Trace APIs
 ==========
 
-.. note:: reference APIs defined in hypervisor/include/debug/trace.h
-   for trace_entry struct and functions.
+See ``hypervisor/include/debug/trace.h``
+for trace_entry struct and function APIs.
 
 
 SOS Trace Module
@@ -92,8 +92,10 @@ ACRNTrace application includes a binary to retrieve trace data from
 Sbuf, and Python scripts to convert trace data from raw format into
 readable text, and do analysis.
 
-Figure 2.2 shows the sequence of trace initialization and trace data
-collection. With a debug build, trace components are initialized at boot
+.. note:: There was no Figure showing the sequence of trace
+   initialization and trace data collection.
+
+With a debug build, trace components are initialized at boot
 time. After initialization, HV writes trace event date into sbuf
 until sbuf is full, which can happen easily if the ACRNTrace app is not
 consuming trace data from Sbuf on SOS user space.
@@ -103,7 +105,6 @@ created to periodically read RAW trace data from sbuf and write to a
 file.
 
 .. note:: figure is missing
-
    Figure 2.2 Sequence of trace init and trace data collection
 
 These are the Python scripts provided:

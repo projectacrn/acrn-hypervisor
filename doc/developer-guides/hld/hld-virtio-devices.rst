@@ -398,6 +398,8 @@ The workflow can be summarized as:
 6. irqfd related logic inject an interrupt through vhm interrupt API.
 7. interrupt is delivered to UOS FE driver through hypervisor.
 
+.. _virtio-APIs:
+
 Virtio APIs
 ***********
 

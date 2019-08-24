@@ -64,9 +64,9 @@ default assigned to SOS. Any interrupts received by Guest VM (SOS or
 UOS) device drivers are virtual interrupts injected by HV (via vLAPIC).
 HV manages a Host-to-Guest mapping. When a native IRQ/interrupt occurs,
 HV decides whether this IRQ/interrupt should be forwarded to a VM and
-which VM to forward to (if any). Refer to section 3.7.6 for virtual
-interrupt injection and section 3.9.6 for the management of interrupt
-remapping.
+which VM to forward to (if any). Refer to
+:ref:`virt-interrupt-injection` and :ref:`interrupt-remapping` for
+more information.
 
 HV does not own any exceptions. Guest VMCS are configured so no VM Exit
 happens, with some exceptions such as #INT3 and #MC.  This is to
@@ -87,6 +87,8 @@ sources:
 -  PCI MSI/MSI-X vectors
 -  Inter CPU IPI
 -  LAPIC timer
+
+.. _physical-interrupt-initialization:
 
 Physical Interrupt Initialization
 *********************************
@@ -356,8 +358,7 @@ IPI Management
 The only purpose of IPI use in HV is to kick a vCPU out of non-root mode
 and enter to HV mode. This requires I/O request and virtual interrupt
 injection be distributed to different IPI vectors. The I/O request uses
-IPI vector 0xF4 upcall (refer to Chapter 5.4). The virtual interrupt
-injection uses IPI vector 0xF0.
+IPI vector 0xF4 upcall. The virtual interrupt injection uses IPI vector 0xF0.
 
 0xF4 upcall
    A Guest vCPU VM Exit exits due to EPT violation or IO instruction trap.
