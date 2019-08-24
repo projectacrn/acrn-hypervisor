@@ -200,7 +200,7 @@ struct pci_xhci_dev_ep {
 #define	ep_ccs		_ep_trb_rings._epu_trb.ccs
 #define	ep_sctx_trbs	_ep_trb_rings._epu_sctx_trbs
 
-	struct usb_data_xfer *ep_xfer;	/* transfer chain */
+	struct usb_xfer *ep_xfer;	/* transfer chain */
 	pthread_mutex_t mtx;
 };
 
@@ -458,7 +458,7 @@ static void pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de);
 static void pci_xhci_set_evtrb(struct xhci_trb *evtrb, uint64_t port,
 		uint32_t errcode, uint32_t evtype);
 static int pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
-		struct usb_data_xfer *xfer, uint32_t slot, uint32_t epid,
+		struct usb_xfer *xfer, uint32_t slot, uint32_t epid,
 		int *do_intr);
 static inline int pci_xhci_is_valid_portnum(int n);
 static int pci_xhci_parse_tablet(struct pci_xhci_vdev *xdev, char *opts);
@@ -893,7 +893,7 @@ static int
 pci_xhci_usb_dev_notify_cb(void *hci_data, void *udev_data)
 {
 	int slot, epid, intr, rc;
-	struct usb_data_xfer *xfer;
+	struct usb_xfer *xfer;
 	struct pci_xhci_dev_emu *edev;
 	struct pci_xhci_vdev *xdev;
 
@@ -1594,7 +1594,7 @@ pci_xhci_init_ep(struct pci_xhci_dev_emu *dev, int epid)
 	}
 
 	if (devep->ep_xfer == NULL) {
-		devep->ep_xfer = calloc(1, sizeof(struct usb_data_xfer));
+		devep->ep_xfer = calloc(1, sizeof(struct usb_xfer));
 		if (devep->ep_xfer) {
 			devep->ep_xfer->dev = (void *)dev;
 			devep->ep_xfer->epid = epid;
@@ -2172,7 +2172,7 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 	struct pci_xhci_dev_ep	*devep;
 	struct xhci_dev_ctx	*dev_ctx;
 	struct xhci_endp_ctx	*ep_ctx;
-	struct usb_data_xfer	*xfer;
+	struct usb_xfer	*xfer;
 	struct usb_dev_req	*r;
 	uint32_t cmderr, epid;
 	uint32_t type;
@@ -2600,11 +2600,8 @@ pci_xhci_dump_trb(struct xhci_trb *trb)
 }
 
 static int
-pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
-		       struct usb_data_xfer *xfer,
-		       uint32_t slot,
-		       uint32_t epid,
-		       int *do_intr)
+pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
+		uint32_t slot, uint32_t epid, int *do_intr)
 {
 	struct xhci_dev_ctx	*dev_ctx;
 	struct xhci_endp_ctx	*ep_ctx;
@@ -2654,18 +2651,18 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 
 		UPRINTF(LDBG, "xfer[%d] done?%u:%d trb %x %016lx %x "
 			 "(err %d) IOC?%d, chained %d\r\n",
-			 i, xfer->data[i].processed, xfer->data[i].blen,
+			 i, xfer->data[i].stat, xfer->data[i].blen,
 			 XHCI_TRB_3_TYPE_GET(trbflags), evtrb.qwTrb0,
 			 trbflags, err,
 			 trb->dwTrb3 & XHCI_TRB_3_IOC_BIT ? 1 : 0,
 			 xfer->data[i].chained);
 
-		if (xfer->data[i].processed < USB_XFER_BLK_HANDLED) {
+		if (xfer->data[i].stat < USB_BLOCK_HANDLED) {
 			xfer->head = (int)i;
 			break;
 		}
 
-		xfer->data[i].processed = USB_XFER_BLK_FREE;
+		xfer->data[i].stat = USB_BLOCK_FREE;
 		xfer->ndata--;
 		xfer->head = (xfer->head + 1) % USB_MAX_XFER_BLOCKS;
 		edtla += xfer->data[i].bdone;
@@ -2766,7 +2763,7 @@ pci_xhci_try_usb_xfer(struct pci_xhci_vdev *xdev,
 		      uint32_t slot,
 		      uint32_t epid)
 {
-	struct usb_data_xfer *xfer;
+	struct usb_xfer *xfer;
 	int		err;
 	int		do_intr;
 
@@ -2818,9 +2815,9 @@ pci_xhci_handle_transfer(struct pci_xhci_vdev *xdev,
 			 uint32_t ccs,
 			 uint32_t streamid)
 {
-	struct xhci_trb *setup_trb;
-	struct usb_data_xfer *xfer;
-	struct usb_data_xfer_block *xfer_block;
+	struct		xhci_trb *setup_trb;
+	struct		usb_xfer *xfer;
+	struct		usb_block *xfer_block;
 	uint64_t	val;
 	uint32_t	trbflags;
 	int		do_intr, err;
@@ -2862,13 +2859,13 @@ retry:
 			if (trb->dwTrb3 & XHCI_TRB_3_TC_BIT)
 				ccs ^= 0x1;
 
-			xfer_block = usb_data_xfer_append(xfer, NULL, 0,
+			xfer_block = usb_block_append(xfer, NULL, 0,
 							  (void *)addr, ccs);
 			if (!xfer_block) {
 				err = XHCI_TRB_ERROR_STALL;
 				goto errout;
 			}
-			xfer_block->processed = USB_XFER_BLK_FREE;
+			xfer_block->stat = USB_BLOCK_FREE;
 			break;
 
 		case XHCI_TRB_TYPE_SETUP_STAGE:
@@ -2891,7 +2888,7 @@ retry:
 			memcpy(xfer->ureq, &val,
 			       sizeof(struct usb_device_request));
 
-			xfer_block = usb_data_xfer_append(xfer, NULL, 0,
+			xfer_block = usb_block_append(xfer, NULL, 0,
 							  (void *)addr, ccs);
 			if (!xfer_block) {
 				free(xfer->ureq);
@@ -2899,7 +2896,7 @@ retry:
 				err = XHCI_TRB_ERROR_STALL;
 				goto errout;
 			}
-			xfer_block->processed = USB_XFER_BLK_HANDLED;
+			xfer_block->stat = USB_BLOCK_HANDLED;
 			break;
 
 		case XHCI_TRB_TYPE_ISOCH:
@@ -2916,7 +2913,7 @@ retry:
 			/* fall through */
 
 		case XHCI_TRB_TYPE_DATA_STAGE:
-			xfer_block = usb_data_xfer_append(xfer,
+			xfer_block = usb_block_append(xfer,
 					(void *)(trbflags & XHCI_TRB_3_IDT_BIT ?
 					&trb->qwTrb0 :
 					XHCI_GADDR(xdev, trb->qwTrb0)),
@@ -2928,29 +2925,29 @@ retry:
 			break;
 
 		case XHCI_TRB_TYPE_STATUS_STAGE:
-			xfer_block = usb_data_xfer_append(xfer, NULL, 0,
+			xfer_block = usb_block_append(xfer, NULL, 0,
 							  (void *)addr, ccs);
 			break;
 
 		case XHCI_TRB_TYPE_NOOP:
-			xfer_block = usb_data_xfer_append(xfer, NULL, 0,
+			xfer_block = usb_block_append(xfer, NULL, 0,
 							  (void *)addr, ccs);
 			if (!xfer_block) {
 				err = XHCI_TRB_ERROR_STALL;
 				goto errout;
 			}
-			xfer_block->processed = USB_XFER_BLK_HANDLED;
+			xfer_block->stat = USB_BLOCK_HANDLED;
 			break;
 
 		case XHCI_TRB_TYPE_EVENT_DATA:
-			xfer_block = usb_data_xfer_append(xfer, NULL, 0,
+			xfer_block = usb_block_append(xfer, NULL, 0,
 							  (void *)addr, ccs);
 			if (!xfer_block) {
 				err = XHCI_TRB_ERROR_TRB;
 				goto errout;
 			}
 			if ((epid > 1) && (trbflags & XHCI_TRB_3_IOC_BIT))
-				xfer_block->processed = USB_XFER_BLK_HANDLED;
+				xfer_block->stat = USB_BLOCK_HANDLED;
 			break;
 
 		default:

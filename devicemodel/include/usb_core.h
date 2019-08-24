@@ -78,10 +78,10 @@ enum usb_dev_type {
 	USB_DEV_PORT_MAPPER
 };
 
-enum usb_xfer_blk_stat {
-	USB_XFER_BLK_FREE = 0,
-	USB_XFER_BLK_HANDLING,
-	USB_XFER_BLK_HANDLED
+enum usb_block_stat {
+	USB_BLOCK_FREE = 0,
+	USB_BLOCK_HANDLING,
+	USB_BLOCK_HANDLED
 };
 
 enum usb_native_devtype {
@@ -96,7 +96,7 @@ enum usb_native_devtype {
 
 struct usb_hci;
 struct usb_device_request;
-struct usb_data_xfer;
+struct usb_xfer;
 
 /* Device emulation handlers */
 struct usb_devemu {
@@ -109,8 +109,8 @@ struct usb_devemu {
 	void	*(*ue_init)(void *pdata, char *opt);
 
 	/* handlers */
-	int	(*ue_request)(void *sc, struct usb_data_xfer *xfer);
-	int	(*ue_data)(void *sc, struct usb_data_xfer *xfer, int dir,
+	int	(*ue_request)(void *sc, struct usb_xfer *xfer);
+	int	(*ue_data)(void *sc, struct usb_xfer *xfer, int dir,
 			   int epctx);
 	int	(*ue_info)(void *sc, int type, void *value, int size);
 	int	(*ue_reset)(void *sc);
@@ -148,11 +148,11 @@ struct usb_hci {
  * The device handler is to update blen to reflect on the residual size
  * of the buffer, i.e. len(buf) - len(consumed).
  */
-struct usb_data_xfer_block {
+struct usb_block {
 	void			*buf;	   /* IN or OUT pointer */
 	int			blen;	   /* in:len(buf), out:len(remaining) */
 	int			bdone;	   /* bytes transferred */
-	enum usb_xfer_blk_stat	processed; /* processed status */
+	enum usb_block_stat	stat;      /* processed status */
 	void			*hci_data; /* HCI private reference */
 	int			ccs;
 	int			chained;
@@ -160,9 +160,9 @@ struct usb_data_xfer_block {
 	uint64_t		trbnext;   /* next TRB guest address */
 };
 
-struct usb_data_xfer {
+struct usb_xfer {
 	uint64_t magic;
-	struct usb_data_xfer_block data[USB_MAX_XFER_BLOCKS];
+	struct usb_block data[USB_MAX_XFER_BLOCKS];
 	struct usb_dev_req *requests[USB_MAX_XFER_BLOCKS];
 	struct usb_device_request *ureq;	/* setup ctl request */
 	int	ndata;				/* # of data items */
@@ -201,9 +201,9 @@ enum USB_ERRCODE {
 	USB_SHORT
 };
 
-#define	USB_DATA_GET_ERRCODE(x)		((x)->processed >> 8)
+#define	USB_DATA_GET_ERRCODE(x)		((x)->stat >> 8)
 #define	USB_DATA_SET_ERRCODE(x, e) \
-((x)->processed = ((x)->processed & 0xFF) | (e << 8))
+((x)->stat = ((x)->stat & 0xFF) | (e << 8))
 
 #define	USB_DATA_OK(x, i)	((x)->data[(i)].buf != NULL)
 
@@ -231,11 +231,8 @@ void usb_parse_log_level(char level);
 struct usb_devemu *usb_emu_finddev(char *name);
 int usb_native_is_bus_existed(uint8_t bus_num);
 int usb_native_is_port_existed(uint8_t bus_num, uint8_t port_num);
-struct usb_data_xfer_block *usb_data_xfer_append(struct usb_data_xfer *xfer,
-						 void *buf,
-						 int blen,
-						 void *hci_data,
-						 int ccs);
+struct usb_block *usb_block_append(struct usb_xfer *xfer, void *buf, int blen,
+		void *hci_data, int ccs);
 int usb_get_hub_port_num(struct usb_devpath *path);
 char *usb_dev_path(struct usb_devpath *path);
 bool usb_dev_path_cmp(struct usb_devpath *p1, struct usb_devpath *p2);
