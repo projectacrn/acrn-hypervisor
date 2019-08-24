@@ -168,8 +168,8 @@ static void
 usb_dev_comp_cb(struct libusb_transfer *trn)
 {
 	struct usb_dev_req *r;
-	struct usb_data_xfer *xfer;
-	struct usb_data_xfer_block *block;
+	struct usb_xfer *xfer;
+	struct usb_block *block;
 	struct usb_native_devinfo *info;
 	int do_intr = 0;
 	int i, j, idx, buf_idx, done;
@@ -267,7 +267,7 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 				break;
 
 			block = &xfer->data[idx % USB_MAX_XFER_BLOCKS];
-			if (block->processed == USB_XFER_BLK_FREE)
+			if (block->stat == USB_BLOCK_FREE)
 				UPRINTF(LFTL, "error: found free block\r\n");
 
 			d = done;
@@ -288,7 +288,7 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 			done -= d;
 			block->blen -= d;
 			block->bdone = d;
-			block->processed = USB_XFER_BLK_HANDLED;
+			block->stat = USB_BLOCK_HANDLED;
 			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 			i++;
 
@@ -299,7 +299,7 @@ stall_out:
 	if (is_stalled) {
 		for (i = 0, idx = r->blk_start; i < r->blk_count; ++i) {
 			block = &xfer->data[idx % USB_MAX_XFER_BLOCKS];
-			block->processed = USB_XFER_BLK_HANDLED;
+			block->stat = USB_BLOCK_HANDLED;
 		}
 	}
 
@@ -326,7 +326,7 @@ free_transfer:
 }
 
 static struct usb_dev_req *
-usb_dev_alloc_req(struct usb_dev *udev, struct usb_data_xfer *xfer, int in,
+usb_dev_alloc_req(struct usb_dev *udev, struct usb_xfer *xfer, int in,
 		size_t size, size_t count)
 {
 	struct usb_dev_req *req;
@@ -366,10 +366,10 @@ errout:
 }
 
 static int
-usb_dev_prepare_xfer(struct usb_data_xfer *xfer, int *count, int *size)
+usb_dev_prepare_xfer(struct usb_xfer *xfer, int *count, int *size)
 {
 	int found, i, idx, c, s, first;
-	struct usb_data_xfer_block *block = NULL;
+	struct usb_block *block = NULL;
 
 	idx = xfer->head;
 	found = 0;
@@ -381,8 +381,8 @@ usb_dev_prepare_xfer(struct usb_data_xfer *xfer, int *count, int *size)
 	for (i = 0; i < xfer->ndata; i++) {
 		block = &xfer->data[idx];
 
-		if (block->processed == USB_XFER_BLK_HANDLED ||
-				block->processed == USB_XFER_BLK_HANDLING) {
+		if (block->stat == USB_BLOCK_HANDLED ||
+				block->stat == USB_BLOCK_HANDLING) {
 			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 			continue;
 		}
@@ -398,14 +398,14 @@ usb_dev_prepare_xfer(struct usb_data_xfer *xfer, int *count, int *size)
 			 * 1. LINK trb is in the middle of trbs.
 			 * 2. LINK trb is a single trb.
 			 */
-			block->processed = USB_XFER_BLK_HANDLED;
+			block->stat = USB_BLOCK_HANDLED;
 			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 			continue;
 		} else if (found) {
 			UPRINTF(LWRN, "find a NULL data. %d total %d\n",
 				i, xfer->ndata);
 		}
-		block->processed = USB_XFER_BLK_HANDLING;
+		block->stat = USB_BLOCK_HANDLING;
 		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 	}
 
@@ -626,7 +626,7 @@ usb_dev_native_toggle_if_drivers(struct usb_dev *udev, int attach)
 }
 
 static void
-usb_dev_set_config(struct usb_dev *udev, struct usb_data_xfer *xfer, int config)
+usb_dev_set_config(struct usb_dev *udev, struct usb_xfer *xfer, int config)
 {
 	int rc = 0;
 	struct libusb_config_descriptor *cfg;
@@ -676,7 +676,7 @@ err2:
 }
 
 static void
-usb_dev_set_if(struct usb_dev *udev, int iface, int alt, struct usb_data_xfer
+usb_dev_set_if(struct usb_dev *udev, int iface, int alt, struct usb_xfer
 		*xfer)
 {
 	if (iface >= USB_NUM_INTERFACE)
@@ -706,12 +706,12 @@ errout:
 			alt);
 }
 
-static struct usb_data_xfer_block *
-usb_dev_prepare_ctrl_xfer(struct usb_data_xfer *xfer)
+static struct usb_block *
+usb_dev_prepare_ctrl_xfer(struct usb_xfer *xfer)
 {
 	int i, idx;
-	struct usb_data_xfer_block *ret = NULL;
-	struct usb_data_xfer_block *blk = NULL;
+	struct usb_block *ret = NULL;
+	struct usb_block *blk = NULL;
 
 	idx = xfer->head;
 
@@ -721,13 +721,13 @@ usb_dev_prepare_ctrl_xfer(struct usb_data_xfer *xfer)
 	for (i = 0; i < xfer->ndata; i++) {
 		/*
 		 * find out the data block and set every
-		 * block to be processed
+		 * block to be USB_BLOCK_HANDLED
 		 */
 		blk = &xfer->data[idx];
 		if (blk->blen > 0 && !ret)
 			ret = blk;
 
-		blk->processed = USB_XFER_BLK_HANDLED;
+		blk->stat = USB_BLOCK_HANDLED;
 		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 	}
 	return ret;
@@ -748,7 +748,7 @@ usb_dev_reset(void *pdata)
 }
 
 int
-usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
+usb_dev_data(void *pdata, struct usb_xfer *xfer, int dir, int epctx)
 {
 	struct usb_dev *udev;
 	struct usb_dev_req *r;
@@ -757,7 +757,7 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 	uint8_t type;
 	int blk_start, data_size, blk_count;
 	int i, j, idx, buf_idx;
-	struct usb_data_xfer_block *b;
+	struct usb_block *b;
 	static const char * const type_str[] = {"CTRL", "ISO", "BULK", "INT"};
 	static const char * const dir_str[] = {"OUT", "IN"};
 	int framelen = 0, framecnt = 0;
@@ -933,7 +933,7 @@ clear_uas_desc(struct usb_dev *udev, uint8_t *data, uint32_t len)
 }
 
 int
-usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
+usb_dev_request(void *pdata, struct usb_xfer *xfer)
 {
 	struct usb_dev *udev;
 	uint8_t  request_type;
@@ -941,7 +941,7 @@ usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
 	uint16_t value;
 	uint16_t index;
 	uint16_t len;
-	struct usb_data_xfer_block *blk;
+	struct usb_block *blk;
 	uint8_t *data;
 	int rc;
 	bool need_chk_uas = false;
