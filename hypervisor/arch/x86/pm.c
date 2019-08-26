@@ -208,6 +208,11 @@ void reset_host(void)
 	/* TODO: gracefully shut down all guests before doing host reset. */
 
 	/*
+	 * Assumption:
+	 * The platform we are running must support at least one of reset method:
+	 *   - ACPI reset
+	 *   - 0xcf9 reset
+	 *
 	 * UEFI more likely sets the reset value as 0x6 (not 0xe) for 0xcf9 port.
 	 * This asserts PLTRST# to reset devices on the platform, but not the
 	 * SLP_S3#/4#/5# signals, which power down the systems. This might not be
@@ -217,21 +222,12 @@ void reset_host(void)
 		(gas->bit_width == 8U) && (gas->bit_offset == 0U) &&
 		(gas->address != 0U) && (gas->address != 0xcf9U)) {
 		pio_write8(host_reset_reg.val, (uint16_t)host_reset_reg.reg.address);
+	} else {
+		/* making sure bit 2 (RST_CPU) is '0', when the reset command is issued. */
+		pio_write8(0x2U, 0xcf9U);
+		udelay(50U);
+		pio_write8(0xeU, 0xcf9U);
 	}
-
-	/*
-	 * Fall back
-	 * making sure bit 2 (RST_CPU) is '0', when the reset command is issued.
-	 */
-	pio_write8(0x2U, 0xcf9U);
-	pio_write8(0xeU, 0xcf9U);
-
-	/*
-	 * Fall back
-	 * keyboard controller might cause the INIT# being asserted,
-	 * and not power cycle the system.
-	 */
-	pio_write8(0xfeU, 0x64U);
 
 	pr_fatal("%s(): can't reset host.", __func__);
 	while (1) {
