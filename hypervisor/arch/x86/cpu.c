@@ -367,9 +367,34 @@ void stop_pcpus(void)
 	wait_pcpus_offline(mask);
 }
 
+static
+inline void asm_monitor(const uint64_t *addr, uint64_t ecx, uint64_t edx)
+{
+	asm volatile("monitor\n" : : "a" (addr), "c" (ecx), "d" (edx));
+}
+
+static
+inline void asm_mwait(uint64_t eax, uint64_t ecx)
+{
+	asm volatile("mwait\n" : : "a" (eax), "c" (ecx));
+}
+
 void cpu_do_idle(void)
 {
-	asm_pause();
+	uint16_t pcpu_id = get_pcpu_id();
+	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
+
+	if (ctx->mwait_flags) {
+		CPU_IRQ_DISABLE();
+		asm_monitor(&ctx->flags, 0UL, 0UL);
+		if (!bitmap_test(NEED_RESCHEDULE, &ctx->flags))
+			asm_mwait(0x60UL, 1UL);
+		CPU_IRQ_ENABLE();
+	} else {
+		CPU_IRQ_ENABLE();
+		asm_pause();
+		CPU_IRQ_DISABLE();
+	}
 }
 
 /**
@@ -413,18 +438,6 @@ static void print_hv_banner(void)
 
 	/* Print the boot message */
 	printf(boot_msg);
-}
-
-static
-inline void asm_monitor(const uint64_t *addr, uint64_t ecx, uint64_t edx)
-{
-	asm volatile("monitor\n" : : "a" (addr), "c" (ecx), "d" (edx));
-}
-
-static
-inline void asm_mwait(uint64_t eax, uint64_t ecx)
-{
-	asm volatile("mwait\n" : : "a" (eax), "c" (ecx));
 }
 
 /* wait until *sync == wake_sync */

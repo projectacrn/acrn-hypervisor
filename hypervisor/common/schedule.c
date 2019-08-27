@@ -12,6 +12,12 @@
 #include <lapic.h>
 #include <schedule.h>
 #include <sprintf.h>
+#include <cpuid.h>
+#include <cpu_caps.h>
+
+#define CPUID_MWAIT_LEAF                5
+#define CPUID5_ECX_EXTENSIONS_SUPPORTED 0x1
+#define CPUID5_ECX_INTERRUPT_BREAK      0x2
 
 static uint64_t pcpu_used_bitmap;
 
@@ -20,7 +26,19 @@ void init_scheduler(void)
 	struct sched_context *ctx;
 	uint32_t i;
 	uint16_t pcpu_nums = get_pcpu_nums();
+	uint32_t mwait_flag = 0;
 
+	if (has_monitor_cap()) {
+		uint32_t eax, ebx, ecx, edx;
+
+		mwait_flag = 1;
+		cpuid(CPUID_MWAIT_LEAF, &eax, &ebx, &ecx, &edx);
+		if (!(ecx & CPUID5_ECX_EXTENSIONS_SUPPORTED) ||
+			!(ecx & CPUID5_ECX_INTERRUPT_BREAK) ||
+			!edx) {
+			mwait_flag = 0;
+		}
+	}
 	for (i = 0U; i < pcpu_nums; i++) {
 		ctx = &per_cpu(sched_ctx, i);
 
@@ -29,6 +47,7 @@ void init_scheduler(void)
 		INIT_LIST_HEAD(&ctx->runqueue);
 		ctx->flags = 0UL;
 		ctx->curr_obj = NULL;
+		ctx->mwait_flags = mwait_flag;
 	}
 }
 

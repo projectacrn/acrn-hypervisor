@@ -92,9 +92,7 @@ void default_idle(__unused struct sched_object *obj)
 		} else if (need_shutdown_vm(pcpu_id)) {
 			shutdown_vm_from_idle(pcpu_id);
 		} else {
-			CPU_IRQ_ENABLE();
 			cpu_do_idle();
-			CPU_IRQ_DISABLE();
 		}
 	}
 }

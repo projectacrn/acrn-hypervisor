@@ -28,12 +28,14 @@ struct sched_object {
 };
 
 struct sched_context {
+	uint64_t flags;
+	uint64_t mwait_flags;
+	uint64_t rserved[6];
 	spinlock_t runqueue_lock;
 	struct list_head runqueue;
-	uint64_t flags;
 	struct sched_object *curr_obj;
 	spinlock_t scheduler_lock;
-};
+} __aligned(64);
 
 void init_scheduler(void);
 void switch_to_idle(run_thread_t idle_thread);
