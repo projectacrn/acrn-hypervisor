@@ -1554,19 +1554,66 @@ pci_xhci_deassert_interrupt(struct pci_xhci_vdev *xdev)
 static struct usb_xfer *
 pci_xhci_alloc_usb_xfer(struct pci_xhci_dev_emu *dev, int epid)
 {
-	int i;
 	struct usb_xfer *xfer;
+	struct xhci_dev_ctx *dev_ctx;
+	struct xhci_endp_ctx *ep_ctx;
+	int dir, max_blk_cnt, i = 0;
+	uint8_t type;
+
+	if (!dev)
+		return NULL;
+
+	dev_ctx = dev->dev_ctx;
+	ep_ctx = &dev_ctx->ctx_ep[epid];
+	type = XHCI_EPCTX_1_EPTYPE_GET(ep_ctx->dwEpCtx1);
+
+	/* TODO:
+	 * The following code is still not perfect, due to fixed values are
+	 * not flexible and the overflow risk is still existed. Will try to
+	 * find a dynamic way could work both for Linux and Windows.
+	 */
+	switch (type) {
+	case XHCI_EPTYPE_CTRL:
+	case XHCI_EPTYPE_INT_IN:
+	case XHCI_EPTYPE_INT_OUT:
+		max_blk_cnt = 128;
+		break;
+	case XHCI_EPTYPE_BULK_IN:
+	case XHCI_EPTYPE_BULK_OUT:
+		max_blk_cnt = 1024;
+		break;
+	case XHCI_EPTYPE_ISOC_IN:
+	case XHCI_EPTYPE_ISOC_OUT:
+		max_blk_cnt = 2048;
+		break;
+	default:
+		UPRINTF(LFTL, "err: unexpected epid %d type %d dir %d\r\n",
+				epid, type, dir);
+		return NULL;
+	}
 
 	xfer = calloc(1, sizeof(struct usb_xfer));
 	if (!xfer)
 		return NULL;
 
-	for (i = 0; i < USB_MAX_XFER_BLOCKS; ++i) {
+	xfer->reqs = calloc(max_blk_cnt, sizeof(struct usb_dev_req *));
+	if (!xfer->reqs)
+		goto fail;
+
+	xfer->data = calloc(max_blk_cnt, sizeof(struct usb_block));
+	if (!xfer->data)
+		goto fail;
+
+	for (i = 0; i < max_blk_cnt; ++i) {
 		xfer->data[i].hcb = calloc(1, sizeof(struct xhci_block));
 		if (!xfer->data[i].hcb)
 			goto fail;
 	}
 
+	UPRINTF(LINF, "allocate %d blocks for epid %d type %d dir %d\r\n",
+			max_blk_cnt, epid, type, dir);
+
+	xfer->max_blk_cnt = max_blk_cnt;
 	xfer->dev = (void *)dev;
 	xfer->epid = epid;
 	return xfer;
@@ -1574,6 +1621,9 @@ pci_xhci_alloc_usb_xfer(struct pci_xhci_dev_emu *dev, int epid)
 fail:
 	for (; i >= 0; i--)
 		free(xfer->data[i].hcb);
+
+	free(xfer->data);
+	free(xfer->reqs);
 	free(xfer);
 	return NULL;
 }
@@ -1586,15 +1636,12 @@ pci_xhci_free_usb_xfer(struct usb_xfer *xfer)
 	if (!xfer)
 		return;
 
-	for (i = 0; i < USB_MAX_XFER_BLOCKS; ++i) {
+	for (i = 0; i < xfer->max_blk_cnt; i++)
 		free(xfer->data[i].hcb);
-		xfer->data[i].hcb = NULL;
-	}
 
-	if (xfer->ureq) {
-		free(xfer->ureq);
-		xfer->ureq = NULL;
-	}
+	free(xfer->data);
+	free(xfer->reqs);
+	free(xfer->ureq);
 	free(xfer);
 }
 
@@ -2292,8 +2339,8 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 	pthread_mutex_lock(&devep->mtx);
 
 	xfer = devep->ep_xfer;
-	for (i = 0; i < USB_MAX_XFER_BLOCKS; ++i) {
-		r = xfer->requests[i];
+	for (i = 0; i < xfer->max_blk_cnt; ++i) {
+		r = xfer->reqs[i];
 		if (r && r->trn)
 			/* let usb_dev_comp_req to free the memory */
 			libusb_cancel_transfer(r->trn);
@@ -2744,13 +2791,13 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
 
 		xfer->data[i].stat = USB_BLOCK_FREE;
 		xfer->ndata--;
-		xfer->head = index_inc(xfer->head, USB_MAX_XFER_BLOCKS);
+		xfer->head = index_inc(xfer->head, xfer->max_blk_cnt);
 		edtla += xfer->data[i].bdone;
 
 		trb->dwTrb3 = (trb->dwTrb3 & ~0x1) | (hcb->ccs);
 		if (xfer->data[i].type == USB_DATA_PART) {
 			rem_len += xfer->data[i].blen;
-			i = index_inc(i, USB_MAX_XFER_BLOCKS);
+			i = index_inc(i, xfer->max_blk_cnt);
 
 			/* This 'continue' will delay the IOC behavior which
 			 * could decrease the number of virtual interrupts.
@@ -2769,7 +2816,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
 		    !((err == XHCI_TRB_ERROR_SHORT_PKT) &&
 		      (trb->dwTrb3 & XHCI_TRB_3_ISP_BIT))) {
 
-			i = index_inc(i, USB_MAX_XFER_BLOCKS);
+			i = index_inc(i, xfer->max_blk_cnt);
 			continue;
 		}
 
@@ -2794,7 +2841,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
 		if (err != XHCI_TRB_ERROR_SUCCESS)
 			break;
 
-		i = index_inc(i, USB_MAX_XFER_BLOCKS);
+		i = index_inc(i, xfer->max_blk_cnt);
 		rem_len = 0;
 	}
 

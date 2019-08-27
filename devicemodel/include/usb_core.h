@@ -42,8 +42,6 @@
  * By default, the native xhci driver use two segments which contain 2 * 256
  * trbs, so 1024 is enough currently.
  */
-#define	USB_MAX_XFER_BLOCKS	1024
-
 #define	USB_XFER_OUT		0
 #define	USB_XFER_IN		1
 
@@ -164,9 +162,8 @@ struct usb_block {
 };
 
 struct usb_xfer {
-	uint64_t magic;
-	struct usb_block data[USB_MAX_XFER_BLOCKS];
-	struct usb_dev_req *requests[USB_MAX_XFER_BLOCKS];
+	struct usb_block *data;
+	struct usb_dev_req **reqs;
 	struct usb_device_request *ureq;	/* setup ctl request */
 	int	ndata;				/* # of data items */
 	int	head;
@@ -174,6 +171,7 @@ struct usb_xfer {
 	void    *dev;		/* struct pci_xhci_dev_emu *dev */
 	int     epid;		/* related endpoint id */
 	int     pid;		/* token id */
+	int	max_blk_cnt;
 	int	status;
 };
 
