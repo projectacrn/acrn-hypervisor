@@ -190,6 +190,15 @@ struct xhci_endp_ctx {
 	volatile uint32_t	dwEpCtx7;
 };
 
+#define XHCI_EPTYPE_INVALID	0
+#define XHCI_EPTYPE_ISOC_OUT	1
+#define XHCI_EPTYPE_BULK_OUT	2
+#define XHCI_EPTYPE_INT_OUT	3
+#define XHCI_EPTYPE_CTRL	4
+#define XHCI_EPTYPE_ISOC_IN	5
+#define XHCI_EPTYPE_BULK_IN	6
+#define XHCI_EPTYPE_INT_IN	7
+
 struct xhci_input_ctx {
 #define	XHCI_INCTX_NON_CTRL_MASK	0xFFFFFFFCU
 	volatile uint32_t	dwInCtx0;
