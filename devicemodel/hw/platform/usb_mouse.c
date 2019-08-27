@@ -336,7 +336,7 @@ umouse_request(void *scarg, struct usb_xfer *xfer)
 		}
 
 		xfer->data[idx].stat = USB_BLOCK_HANDLED;
-		idx = index_inc(idx, USB_MAX_XFER_BLOCKS);
+		idx = index_inc(idx, xfer->max_blk_cnt);
 	}
 
 	err = USB_ERR_NORMAL_COMPLETION;
@@ -716,7 +716,7 @@ umouse_data_handler(void *scarg, struct usb_xfer *xfer, int dir,
 
 		data->stat = USB_BLOCK_HANDLED;
 		data = NULL;
-		idx = index_inc(idx, USB_MAX_XFER_BLOCKS);
+		idx = index_inc(idx, xfer->max_blk_cnt);
 	}
 	if (!data)
 		goto done;

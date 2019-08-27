@@ -106,7 +106,7 @@ usb_block_append(struct usb_xfer *xfer, void *buf, int blen, void *hcb,
 {
 	struct usb_block *xb;
 
-	if (xfer->ndata >= USB_MAX_XFER_BLOCKS)
+	if (xfer->ndata >= xfer->max_blk_cnt)
 		return NULL;
 
 	if (hcb == NULL)
@@ -120,7 +120,7 @@ usb_block_append(struct usb_xfer *xfer, void *buf, int blen, void *hcb,
 	xb->bdone = 0;
 	xb->type = USB_DATA_NONE;
 	xfer->ndata++;
-	xfer->tail = index_inc(xfer->tail, USB_MAX_XFER_BLOCKS);
+	xfer->tail = index_inc(xfer->tail, xfer->max_blk_cnt);
 	return xb;
 }
 

@@ -18,7 +18,6 @@
 #define LOG_TAG "USBPM: "
 
 static struct usb_dev_sys_ctx_info g_ctx;
-static uint8_t usb_dev_get_ep_type(struct usb_dev *udev, int pid, int epnum);
 static uint16_t usb_dev_get_ep_maxp(struct usb_dev *udev, int pid, int epnum);
 
 static bool
@@ -246,8 +245,8 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 	idx = r->blk_head;
 	buf_idx = 0;
 	done = trn->actual_length;
-	while (index_valid(r->blk_head, r->blk_tail, USB_MAX_XFER_BLOCKS, idx))
-	{
+
+	while (index_valid(r->blk_head, r->blk_tail, xfer->max_blk_cnt, idx)) {
 		if (trn->type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS) {
 			buf_idx = 0;
 			buf = libusb_get_iso_packet_buffer_simple(trn, i);
@@ -281,7 +280,7 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 			block->blen -= d;
 			block->bdone = d;
 			block->stat = USB_BLOCK_HANDLED;
-			idx = index_inc(idx, USB_MAX_XFER_BLOCKS);
+			idx = index_inc(idx, xfer->max_blk_cnt);
 
 		} while (block->type == USB_DATA_PART);
 	}
@@ -290,10 +289,10 @@ stall_out:
 	if (is_stalled) {
 		idx = r->blk_head;
 		while (index_valid(r->blk_head, r->blk_tail,
-					USB_MAX_XFER_BLOCKS, idx)) {
+					xfer->max_blk_cnt, idx)) {
 			block = &xfer->data[idx];
 			block->stat = USB_BLOCK_HANDLED;
-			idx = index_inc(idx, USB_MAX_XFER_BLOCKS);
+			idx = index_inc(idx, xfer->max_blk_cnt);
 		}
 	}
 
@@ -313,7 +312,7 @@ cancel_out:
 	if (r && r->buffer)
 		free(r->buffer);
 
-	xfer->requests[r->blk_head] = NULL;
+	xfer->reqs[r->blk_head] = NULL;
 	free(r);
 free_transfer:
 	libusb_free_transfer(trn);
@@ -368,11 +367,11 @@ usb_dev_prepare_xfer(struct usb_xfer *xfer, int *head, int *tail)
 	idx = xfer->head;
 	first = -1;
 	size = 0;
-	if (idx < 0 || idx >= USB_MAX_XFER_BLOCKS)
+	if (idx < 0 || idx >= xfer->max_blk_cnt)
 		return -1;
 
 	for (i = 0; i < xfer->ndata;
-		i++, idx = index_inc(idx, USB_MAX_XFER_BLOCKS)) {
+		i++, idx = index_inc(idx, xfer->max_blk_cnt)) {
 		block = &xfer->data[idx];
 		if (block->stat == USB_BLOCK_HANDLED ||
 				block->stat == USB_BLOCK_HANDLING)
@@ -701,7 +700,7 @@ usb_dev_prepare_ctrl_xfer(struct usb_xfer *xfer)
 
 	idx = xfer->head;
 
-	if (idx < 0 || idx >= USB_MAX_XFER_BLOCKS)
+	if (idx < 0 || idx >= xfer->max_blk_cnt)
 		return NULL;
 
 	for (i = 0; i < xfer->ndata; i++) {
@@ -714,7 +713,7 @@ usb_dev_prepare_ctrl_xfer(struct usb_xfer *xfer)
 			ret = blk;
 
 		blk->stat = USB_BLOCK_HANDLED;
-		idx = index_inc(idx, USB_MAX_XFER_BLOCKS);
+		idx = index_inc(idx, xfer->max_blk_cnt);
 	}
 	return ret;
 }
@@ -776,8 +775,8 @@ usb_dev_data(void *pdata, struct usb_xfer *xfer, int dir, int epctx)
 		UPRINTF(LDBG, "iso maxp %u framelen %d\r\n", maxp, framelen);
 
 		for (idx = head;
-			index_valid(head, tail, USB_MAX_XFER_BLOCKS, idx);
-			idx = index_inc(idx, USB_MAX_XFER_BLOCKS)) {
+			index_valid(head, tail, xfer->max_blk_cnt, idx);
+			idx = index_inc(idx, xfer->max_blk_cnt)) {
 
 			if (xfer->data[idx].blen > framelen)
 				UPRINTF(LFTL, "err framelen %d\r\n", framelen);
@@ -804,7 +803,7 @@ usb_dev_data(void *pdata, struct usb_xfer *xfer, int dir, int epctx)
 	r->buf_size = size;
 	r->blk_head = head;
 	r->blk_tail = tail;
-	xfer->requests[head] = r;
+	xfer->reqs[head] = r;
 	UPRINTF(LDBG, "%s: %d-%s: explen %d ep%d-xfr [%d-%d %d] rq-%d "
 			"[%d-%d %d] dir %s type %s\r\n", __func__,
 			info->path.bus, usb_dev_path(&info->path), size, epctx,
@@ -814,8 +813,8 @@ usb_dev_data(void *pdata, struct usb_xfer *xfer, int dir, int epctx)
 
 	if (!dir) {
 		for (idx = head, buf_idx = 0;
-			index_valid(head, tail, USB_MAX_XFER_BLOCKS, idx);
-			idx = index_inc(idx, USB_MAX_XFER_BLOCKS)) {
+				index_valid(head, tail, xfer->max_blk_cnt, idx);
+				idx = index_inc(idx, xfer->max_blk_cnt)) {
 			b = &xfer->data[idx];
 			if (b->type == USB_DATA_PART ||
 					b->type == USB_DATA_FULL) {
@@ -827,8 +826,8 @@ usb_dev_data(void *pdata, struct usb_xfer *xfer, int dir, int epctx)
 
 	if (type == USB_ENDPOINT_ISOC) {
 		for (i = 0, idx = head;
-			index_valid(head, tail, USB_MAX_XFER_BLOCKS, idx);
-			idx = index_inc(idx, USB_MAX_XFER_BLOCKS)) {
+				index_valid(head, tail, xfer->max_blk_cnt, idx);
+				idx = index_inc(idx, xfer->max_blk_cnt)) {
 			int len = xfer->data[idx].blen;
 
 			if (xfer->data[idx].type == USB_DATA_NONE) {
