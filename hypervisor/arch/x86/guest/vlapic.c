@@ -427,7 +427,9 @@ static void vlapic_icrtmr_write_handler(struct acrn_vlapic *vlapic)
 uint64_t vlapic_get_tsc_deadline_msr(const struct acrn_vlapic *vlapic)
 {
 	uint64_t ret;
-	if (!vlapic_lvtt_tsc_deadline(vlapic)) {
+	if (is_lapic_pt_enabled(vlapic->vcpu)) {
+		ret = msr_read(MSR_IA32_TSC_DEADLINE) + exec_vmread64(VMX_TSC_OFFSET_FULL);
+	} else if (!vlapic_lvtt_tsc_deadline(vlapic)) {
 		ret = 0UL;
 	} else {
 		ret = (vlapic->vtimer.timer.fire_tsc == 0UL) ? 0UL :
@@ -443,7 +445,11 @@ void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic, uint64_t val_arg)
 	struct hv_timer *timer;
 	uint64_t val = val_arg;
 
-	if (vlapic_lvtt_tsc_deadline(vlapic)) {
+	if (is_lapic_pt_enabled(vlapic->vcpu)) {
+		vcpu_set_guest_msr(vlapic->vcpu, MSR_IA32_TSC_DEADLINE, val);
+		val -= exec_vmread64(VMX_TSC_OFFSET_FULL);
+		msr_write(MSR_IA32_TSC_DEADLINE, val);
+	} else if (vlapic_lvtt_tsc_deadline(vlapic)) {
 		vcpu_set_guest_msr(vlapic->vcpu, MSR_IA32_TSC_DEADLINE, val);
 
 		timer = &vlapic->vtimer.timer;
@@ -461,6 +467,8 @@ void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic, uint64_t val_arg)
 		} else {
 			timer->fire_tsc = 0UL;
 		}
+	} else {
+		/* No action required */
 	}
 }
 
