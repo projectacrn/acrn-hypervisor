@@ -186,7 +186,7 @@ static inline void *hpa2hva(uint64_t x)
  *
  * @return The translated host-physical address
  */
-static inline uint64_t hva2hpa(void *x)
+static inline uint64_t hva2hpa(const void *x)
 {
 	return (uint64_t)x;
 }
