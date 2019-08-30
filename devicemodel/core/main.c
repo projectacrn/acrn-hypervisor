@@ -77,7 +77,6 @@ typedef void (*vmexit_handler_t)(struct vmctx *,
 
 char *vmname;
 
-int guest_ncpus;
 char *guest_uuid_str;
 char *vsbl_file_name;
 char *ovmf_file_name;
@@ -90,6 +89,7 @@ bool lapic_pt;
 bool is_rtvm;
 bool skip_pci_mem64bar_workaround = false;
 
+static int guest_ncpus;
 static int virtio_msix = 1;
 static bool debugexit_enabled;
 static char mac_seed_str[50];
@@ -132,7 +132,7 @@ static void
 usage(int code)
 {
 	fprintf(stderr,
-		"Usage: %s [-hAWYv] [-B bootargs] [-c vcpus] [-E elf_image_path]\n"
+		"Usage: %s [-hAWYv] [-B bootargs] [-E elf_image_path]\n"
 		"       %*s [-G GVT_args] [-i ioc_mediator_parameters] [-k kernel_image_path]\n"
 		"       %*s [-l lpc] [-m mem] [-r ramdisk_image_path]\n"
 		"       %*s [-s pci] [-U uuid] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]\n"
@@ -143,7 +143,6 @@ usage(int code)
 		"       %*s [--pm_by_vuart vuart_node] <vm>\n"
 		"       -A: create ACPI tables\n"
 		"       -B: bootargs for kernel\n"
-		"       -c: # cpus (default 1)\n"
 		"       -E: elf image path\n"
 		"       -G: GVT args: low_gm_size, high_gm_size, fence_sz\n"
 		"       -h: help\n"
@@ -247,12 +246,12 @@ start_thread(void *param)
 }
 
 static int
-add_cpu(struct vmctx *ctx, int guest_ncpus)
+add_cpu(struct vmctx *ctx, int vcpu_num)
 {
 	int i;
 	int error;
 
-	for (i = 0; i < guest_ncpus; i++) {
+	for (i = 0; i < vcpu_num; i++) {
 		error = vm_create_vcpu(ctx, (uint16_t)i);
 		if (error != 0) {
 			fprintf(stderr, "ERROR: could not create VCPU %d\n", i);
@@ -735,7 +734,6 @@ enum {
 
 static struct option long_options[] = {
 	{"acpi",		no_argument,		0, 'A' },
-	{"ncpus",		required_argument,	0, 'c' },
 	{"elf_file",		required_argument,	0, 'E' },
 	{"ioc_node",		required_argument,	0, 'i' },
 	{"lpc",			required_argument,	0, 'l' },
@@ -774,7 +772,7 @@ static struct option long_options[] = {
 	{0,			0,			0,  0  },
 };
 
-static char optstr[] = "hAWYvE:k:r:B:p:c:s:m:l:U:G:i:";
+static char optstr[] = "hAWYvE:k:r:B:p:s:m:l:U:G:i:";
 
 int
 main(int argc, char *argv[])
@@ -786,7 +784,6 @@ main(int argc, char *argv[])
 	int option_idx = 0;
 
 	progname = basename(argv[0]);
-	guest_ncpus = 1;
 	memsize = 256 * MB;
 	mptgen = 1;
 
@@ -807,9 +804,6 @@ main(int argc, char *argv[])
 		switch (c) {
 		case 'A':
 			acpi = 1;
-			break;
-		case 'c':
-			dm_strtoi(optarg, NULL, 0, &guest_ncpus);
 			break;
 		case 'E':
 			if (acrn_parse_elf(optarg) != 0)
