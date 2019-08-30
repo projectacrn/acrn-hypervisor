@@ -35,7 +35,7 @@ pm_channel="--pm_notify_channel uart "
 pm_by_vuart="--pm_by_vuart tty,/dev/ttyS1"
 
 
-/usr/bin/acrn-dm -A -m $mem_size -c $1 -s 0:0,hostbridge \
+/usr/bin/acrn-dm -A -m $mem_size -s 0:0,hostbridge \
   -k /usr/lib/kernel/default-iot-lts2018-preempt-rt \
    --lapic_pt \
    --rtvm \
@@ -59,4 +59,4 @@ for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         fi
 done
 
-launch_hard_rt_vm 1
+launch_hard_rt_vm

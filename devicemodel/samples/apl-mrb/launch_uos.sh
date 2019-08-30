@@ -72,8 +72,8 @@ passthru_bdf=(
 
 function launch_clearlinux()
 {
-if [ ! -f "/data/$5/$5.img" ]; then
-  echo "no /data/$5/$5.img, exit"
+if [ ! -f "/data/$4/$4.img" ]; then
+  echo "no /data/$4/$4.img, exit"
   exit
 fi
 
@@ -83,7 +83,7 @@ vm_name=vm$1
 mac_seed=${mac:9:8}-${vm_name}
 
 # create a unique tap device for each VM
-tap=tap_$6
+tap=tap_$5
 tap_exist=$(ip a | grep "$tap" | awk '{print $1}')
 if [ "$tap_exist"x != "x" ]; then
   echo "tap device existed, reuse $tap"
@@ -169,7 +169,7 @@ if [ "$setup_mem" != "" ];then
 fi
 
 boot_dev_flag=",b"
-if [ $7 == 1 ];then
+if [ $6 == 1 ];then
   boot_image_option="--vsbl /usr/share/acrn/bios/VSBL_debug.bin"
 else
   boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"
@@ -181,7 +181,7 @@ intr_storm_monitor="--intr_monitor 10000,10,1,100"
 
 acrn-dm --help 2>&1 | grep 'GVT args'
 if [ $? == 0 ];then
-  GVT_args=$3
+  GVT_args=$2
   boot_GVT_option=" -s 0:2:0,pci-gvt -G "
 else
   boot_GVT_option=''
@@ -189,11 +189,11 @@ else
 fi
 
 
-acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
+acrn-dm -A -m $mem_size $boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 5,virtio-console,@pty:pty_port \
   -s 6,virtio-hyper_dmabuf \
   -s 8,wdt-i6300esb \
-  -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img \
+  -s 3,virtio-blk$boot_dev_flag,/data/$4/$4.img \
   -s 4,virtio-net,$tap $boot_image_option \
   -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
   -s 9,passthru,0/15/1 \
@@ -205,19 +205,19 @@ acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:
   -i /run/acrn/ioc_$vm_name,0x20 \
   -l com2,/run/acrn/ioc_$vm_name \
   --pm_notify_channel ioc \
-  -B "root=/dev/vda2 rw rootwait maxcpus=$2 nohpet console=hvc0 \
+  -B "root=/dev/vda2 rw rootwait nohpet console=hvc0 \
   snd_soc_skl_virtio_fe.domain_id=1 \
   snd_soc_skl_virtio_fe.domain_name="GuestOS" \
   console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
-  consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$4 i915.enable_guc_loading=0 \
+  consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$3 i915.enable_guc_loading=0 \
   i915.enable_hangcheck=0 i915.nuclear_pageflip=1 \
   i915.enable_guc_submission=0 i915.enable_guc=0" $vm_name
 }
 
 function launch_android()
 {
-if [ ! -f "/data/$5/$5.img" ]; then
-  echo "no /data/$5/$5.img, exit"
+if [ ! -f "/data/$4/$4.img" ]; then
+  echo "no /data/$4/$4.img, exit"
   exit
 fi
 
@@ -227,7 +227,7 @@ vm_name=vm$1
 mac_seed=${mac:9:8}-${vm_name}
 
 # create a unique tap device for each VM
-tap=tap_$6
+tap=tap_$5
 tap_exist=$(ip a | grep "$tap" | awk '{print $1}')
 if [ "$tap_exist"x != "x" ]; then
   echo "tap device existed, reuse $tap"
@@ -355,15 +355,15 @@ if [ "$setup_mem" != "" ];then
     mem_size=$setup_mem
 fi
 
-kernel_cmdline_generic="maxcpus=$2 nohpet tsc=reliable intel_iommu=off \
+kernel_cmdline_generic="nohpet tsc=reliable intel_iommu=off \
    androidboot.serialno=$ser \
    snd_soc_skl_virtio_fe.domain_id=1 \
    snd_soc_skl_virtio_fe.domain_name="GuestOS" \
-   i915.enable_rc6=1 i915.enable_fbc=1 i915.enable_guc_loading=0 i915.avail_planes_per_pipe=$4 \
+   i915.enable_rc6=1 i915.enable_fbc=1 i915.enable_guc_loading=0 i915.avail_planes_per_pipe=$3 \
    i915.enable_hangcheck=0 use_nuclear_flip=1 i915.enable_guc_submission=0 i915.enable_guc=0"
 
 boot_dev_flag=",b"
-if [ $7 == 1 ];then
+if [ $6 == 1 ];then
   boot_image_option="--vsbl /usr/share/acrn/bios/VSBL_debug.bin"
 else
   boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"
@@ -389,16 +389,16 @@ intr_storm_monitor="--intr_monitor 10000,10,1,100"
 
 acrn-dm --help 2>&1 | grep 'GVT args'
 if [ $? == 0 ];then
-  GVT_args=$3
+  GVT_args=$2
   boot_GVT_option=" -s 2,pci-gvt -G "
 else
   boot_GVT_option=''
   GVT_args=''
 fi
 
- acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
+ acrn-dm -A -m $mem_size $boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
    -s 9,virtio-net,$tap \
-   -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img \
+   -s 3,virtio-blk$boot_dev_flag,/data/$4/$4.img \
    -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
    -s 8,passthru,0/15/1 \
    -s 13,virtio-rpmb \
@@ -576,23 +576,23 @@ done
 
 case $launch_type in
 	1) echo "Launch clearlinux UOS"
-		launch_clearlinux 1 3 "64 448 8" 0x070F00 clearlinux "LaaG" $debug
+		launch_clearlinux 1 "64 448 8" 0x070F00 clearlinux "LaaG" $debug
 		;;
 	2) echo "Launch android UOS"
-		launch_android 1 3 "64 448 8" 0x070F00 android "AaaG" $debug
+		launch_android 1 "64 448 8" 0x070F00 android "AaaG" $debug
 		;;
 	3) echo "Launch clearlinux UOS + android UOS"
-		launch_android 1 2 "64 448 4" 0x00000C android "AaaG" $debug &
+		launch_android 1 "64 448 4" 0x00000C android "AaaG" $debug &
 		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux "LaaG" $debug
+		launch_clearlinux 2 "64 448 4" 0x070F00 clearlinux "LaaG" $debug
 		;;
 	4) echo "Launch two clearlinux UOSs"
-		launch_clearlinux 1 1 "64 448 4" 0x00000C clearlinux "L1aaG" $debug &
+		launch_clearlinux 1 "64 448 4" 0x00000C clearlinux "L1aaG" $debug &
 		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux_dup "L2aaG" $debug
+		launch_clearlinux 2 "64 448 4" 0x070F00 clearlinux_dup "L2aaG" $debug
 		;;
 	5) echo "Launch alios UOS"
-		launch_alios 1 3 "64 448 8" 0x070F00 alios "AliaaG" $debug
+		launch_alios 1 "64 448 8" 0x070F00 alios "AliaaG" $debug
 		;;
 esac
 

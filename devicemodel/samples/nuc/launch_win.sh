@@ -19,8 +19,8 @@ echo "0000:00:1f.3" > /sys/bus/pci/drivers/pci-stub/bind
 #for memsize setting
 mem_size=4096M
 
-acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
-  -s 2,pci-gvt -G "$3" \
+acrn-dm -A -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
+  -s 2,pci-gvt -G "$2" \
   -s 3,virtio-blk,./win10-ltsc.img \
   -s 4,virtio-net,tap0 \
   -s 5,passthru,00/1f/3 \
@@ -45,4 +45,4 @@ for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         fi
 done
 
-launch_win 1 1 "64 448 8"
+launch_win 1 "64 448 8"
