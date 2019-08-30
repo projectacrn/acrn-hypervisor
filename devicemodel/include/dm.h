@@ -37,7 +37,6 @@
 #define MAX_VMNAME_LEN	128U
 
 struct vmctx;
-extern int guest_ncpus;
 extern char *guest_uuid_str;
 extern uint8_t trusty_enabled;
 extern char *vsbl_file_name;
