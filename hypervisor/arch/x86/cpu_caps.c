@@ -241,6 +241,11 @@ void init_pcpu_capabilities(void)
 			&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_EDX]);
 	}
 
+	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_INVA_TSC) {
+		cpuid(CPUID_EXTEND_INVA_TSC, &eax, &unused, &unused,
+			&boot_cpu_data.cpuid_leaves[FEAT_8000_0007_EDX]);
+	}
+
 	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_ADDRESS_SIZE) {
 		cpuid(CPUID_EXTEND_ADDRESS_SIZE, &eax,
 			&boot_cpu_data.cpuid_leaves[FEAT_8000_0008_EBX],
@@ -365,6 +370,10 @@ int32_t detect_hardware_support(void)
 	} else if ((boot_cpu_data.phys_bits == 0U) ||
 		(boot_cpu_data.virt_bits == 0U)) {
 		printf("%s, can't detect Linear/Physical Address size\n", __func__);
+		ret = -ENODEV;
+	} else if (!pcpu_has_cap(X86_FEATURE_INVA_TSC)) {
+		/* check invariant TSC */
+		printf("%s, invariant TSC not supported\n", __func__);
 		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_TSC_DEADLINE)) {
 		/* lapic TSC deadline timer */
