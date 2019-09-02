@@ -420,7 +420,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	err = get_pe_section(info->ImageBase, section, strlen(section), &sec_addr, &sec_size);
 	if (EFI_ERROR(err)) {
 		Print(L"Unable to locate section of ACRNHV %r ", err);
-		goto failed;
+		goto free_args;
 	}
 
 	/* without relocateion enabled, hypervisor binary need to reside in
@@ -436,14 +436,14 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	err = emalloc_fixed_addr(&hv_hpa, CONFIG_HV_RAM_SIZE, CONFIG_HV_RAM_START);
 #endif
 	if (err != EFI_SUCCESS)
-		goto failed;
+		goto free_args;
 
 	memcpy((char *)hv_hpa, info->ImageBase + sec_addr, sec_size);
 
 	/* load hypervisor and begin to run on it */
 	err = switch_to_guest_mode(image, hv_hpa);
 	if (err != EFI_SUCCESS)
-		goto failed;
+		goto free_args;
 
 	/*
 	 * enable all AP here will reset all APs,
@@ -456,7 +456,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	if (!path)
 		goto free_args;
 
-	FreePool(bootloader_name);
+	FreePool(cmdline16);
 
 	err = uefi_call_wrapper(boot->LoadImage, 6, FALSE, image,
 		path, NULL, 0, &bootloader_image);
@@ -476,7 +476,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	return EFI_SUCCESS;
 
 free_args:
-	FreePool(bootloader_name);
+	FreePool(cmdline16);
 failed:
 	/*
 	 * We need to be careful not to trash 'err' here. If we fail
