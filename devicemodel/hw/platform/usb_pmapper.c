@@ -962,11 +962,6 @@ usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
 
 	blk = usb_dev_prepare_ctrl_xfer(xfer);
 	data = blk ? blk->buf : NULL;
-	if (data == NULL) {
-		xfer->status = USB_ERR_IOERROR;
-		UPRINTF(LFTL, "%s unexpected NULL data\r\n", __func__);
-		goto out;
-	}
 
 	UPRINTF(LDBG, "%d-%s: urb: type 0x%x req 0x%x val 0x%x idx %d len %d "
 			"data %d\r\n", udev->info.path.bus,
@@ -1016,6 +1011,13 @@ usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
 
 	}
 
+	/* (data == NULL && len == 0) is okey to libusb_control_transfer */
+	if (data == NULL && len) {
+		xfer->status = USB_ERR_IOERROR;
+		UPRINTF(LFTL, "%s unexpected NULL data\r\n", __func__);
+		goto out;
+	}
+
 	/* send it to physical device */
 	/* FIXME: In the process of implementation of USB isochronouse transfer,
 	 * the timeout time is not enough for Plantronics headset. So this
@@ -1029,7 +1031,7 @@ usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
 	 * supported and the following code is used as a workaround now.
 	 * UAS will be implemented in future.
 	 */
-	if (need_chk_uas)
+	if (need_chk_uas && data)
 		clear_uas_desc(udev, data, rc);
 
 	if (rc >= 0 && blk) {
