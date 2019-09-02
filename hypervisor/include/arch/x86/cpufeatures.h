@@ -91,4 +91,7 @@
 #define X86_FEATURE_PAGE1GB	((FEAT_8000_0001_EDX << 5U) + 26U)
 #define X86_FEATURE_LM		((FEAT_8000_0001_EDX << 5U) + 29U)
 
+/* Intel-defined CPU features, CPUID level 0x80000007 (EDX)*/
+#define X86_FEATURE_INVA_TSC	((FEAT_8000_0007_EDX << 5U) + 8U)
+
 #endif /* CPUFEATURES_H */
