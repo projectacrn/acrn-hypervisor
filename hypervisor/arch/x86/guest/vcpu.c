@@ -30,7 +30,7 @@ struct stack_frame {
 	uint64_t rbx;
 	uint64_t rflag;
 	uint64_t rip;
-	uint64_t maigc;
+	uint64_t magic;
 };
 
 uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
@@ -615,7 +615,7 @@ static uint64_t build_stack_frame(struct acrn_vcpu *vcpu)
 	frame = (struct stack_frame *)stacktop;
 	frame -= 1;
 
-	frame->maigc = SP_BOTTOM_MAGIC;
+	frame->magic = SP_BOTTOM_MAGIC;
 	frame->rip = (uint64_t)run_sched_thread; /*return address*/
 	frame->rflag = 0UL;
 	frame->rbx = 0UL;

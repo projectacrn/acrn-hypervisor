@@ -18,7 +18,6 @@
 /* maximum lengt of the guest OS' command line parameter string */
 #define MAX_BOOTARGS_SIZE		2048U
 
-struct acrn_vm;
 struct multiboot_info {
 	uint32_t               mi_flags;
 
