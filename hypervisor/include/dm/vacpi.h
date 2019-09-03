@@ -46,7 +46,7 @@
 #define ACPI_ASL_COMPILER_ID  "INTL"
 #define ACPI_ASL_COMPILER_VERSION  0x20190802U
 
-
+struct acrn_vm;
 struct acpi_table_info {
 	struct acpi_table_rsdp rsdp;
 	struct acpi_table_xsdt xsdt;

@@ -20,7 +20,7 @@
 #include <cpuid.h>
 #include <version.h>
 #include <vmx.h>
-#include <vm.h>
+#include <msr.h>
 #include <ld_sym.h>
 #include <logmsg.h>
 #include <cat.h>

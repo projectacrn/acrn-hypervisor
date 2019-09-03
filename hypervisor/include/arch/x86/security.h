@@ -28,7 +28,6 @@ struct stack_canary {
 	uint8_t reserved[40];
 	uint64_t canary;
 };
-void __stack_chk_fail(void);
 void set_fs_base(void);
 #endif
 
