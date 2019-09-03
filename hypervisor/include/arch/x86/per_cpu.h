@@ -51,6 +51,7 @@ struct per_cpu_region {
 	uint32_t lapic_ldr;
 	uint32_t softirq_servicing;
 	struct smp_call_info_data smp_call_info;
+	struct list_head softirq_dev_entry_list;
 #ifdef PROFILING_ON
 	struct profiling_info_wrapper profiling_info;
 #endif

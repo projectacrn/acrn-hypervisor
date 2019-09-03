@@ -154,7 +154,7 @@ void ptirq_softirq(uint16_t pcpu_id);
 void ptdev_init(void);
 void ptdev_release_all_entries(const struct acrn_vm *vm);
 
-struct ptirq_remapping_info *ptirq_dequeue_softirq(struct acrn_vm *vm);
+struct ptirq_remapping_info *ptirq_dequeue_softirq(uint16_t pcpu_id);
 struct ptirq_remapping_info *ptirq_alloc_entry(struct acrn_vm *vm, uint32_t intr_type);
 void ptirq_release_entry(struct ptirq_remapping_info *entry);
 int32_t ptirq_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_irq);

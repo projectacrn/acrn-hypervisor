@@ -143,8 +143,6 @@ struct acrn_vm {
 
 	uint8_t vrtc_offset;
 
-	spinlock_t softirq_dev_lock;
-	struct list_head softirq_dev_entry_list;
 	uint64_t intr_inject_delay_delta; /* delay of intr injection */
 } __aligned(PAGE_SIZE);
 

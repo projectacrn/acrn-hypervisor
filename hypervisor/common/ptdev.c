@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <per_cpu.h>
 #include <vm.h>
 #include <softirq.h>
 #include <ptdev.h>
@@ -34,13 +35,13 @@ static void ptirq_enqueue_softirq(struct ptirq_remapping_info *entry)
 	uint64_t rflags;
 
 	/* enqueue request in order, SOFTIRQ_PTDEV will pickup */
-	spinlock_irqsave_obtain(&entry->vm->softirq_dev_lock, &rflags);
+	CPU_INT_ALL_DISABLE(&rflags);
 
 	/* avoid adding recursively */
 	list_del(&entry->softirq_node);
 	/* TODO: assert if entry already in list */
-	list_add_tail(&entry->softirq_node, &entry->vm->softirq_dev_entry_list);
-	spinlock_irqrestore_release(&entry->vm->softirq_dev_lock, rflags);
+	list_add_tail(&entry->softirq_node, &get_cpu_var(softirq_dev_entry_list));
+	CPU_INT_ALL_RESTORE(rflags);
 	fire_softirq(SOFTIRQ_PTDEV);
 }
 
@@ -51,15 +52,15 @@ static void ptirq_intr_delay_callback(void *data)
 	ptirq_enqueue_softirq(entry);
 }
 
-struct ptirq_remapping_info *ptirq_dequeue_softirq(struct acrn_vm *vm)
+struct ptirq_remapping_info *ptirq_dequeue_softirq(uint16_t pcpu_id)
 {
 	uint64_t rflags;
 	struct ptirq_remapping_info *entry = NULL;
 
-	spinlock_irqsave_obtain(&vm->softirq_dev_lock, &rflags);
+	CPU_INT_ALL_DISABLE(&rflags);
 
-	while (!list_empty(&vm->softirq_dev_entry_list)) {
-		entry = get_first_item(&vm->softirq_dev_entry_list, struct ptirq_remapping_info, softirq_node);
+	while (!list_empty(&get_cpu_var(softirq_dev_entry_list))) {
+		entry = get_first_item(&per_cpu(softirq_dev_entry_list, pcpu_id), struct ptirq_remapping_info, softirq_node);
 
 		list_del_init(&entry->softirq_node);
 
@@ -73,7 +74,7 @@ struct ptirq_remapping_info *ptirq_dequeue_softirq(struct acrn_vm *vm)
 		}
 	}
 
-	spinlock_irqrestore_release(&vm->softirq_dev_lock, rflags);
+	CPU_INT_ALL_RESTORE(rflags);
 	return entry;
 }
 
@@ -106,10 +107,10 @@ void ptirq_release_entry(struct ptirq_remapping_info *entry)
 {
 	uint64_t rflags;
 
-	spinlock_irqsave_obtain(&entry->vm->softirq_dev_lock, &rflags);
+	CPU_INT_ALL_DISABLE(&rflags);
 	list_del_init(&entry->softirq_node);
 	del_timer(&entry->intr_delay_timer);
-	spinlock_irqrestore_release(&entry->vm->softirq_dev_lock, rflags);
+	CPU_INT_ALL_RESTORE(rflags);
 
 	bitmap_clear_nolock((entry->ptdev_entry_id) & 0x3FU,
 		&ptirq_entry_bitmaps[((entry->ptdev_entry_id) & 0x3FU) >> 6U]);
@@ -176,10 +177,10 @@ void ptirq_deactivate_entry(struct ptirq_remapping_info *entry)
 void ptdev_init(void)
 {
 	if (get_pcpu_id() == BOOT_CPU_ID) {
-
 		spinlock_init(&ptdev_lock);
 		register_softirq(SOFTIRQ_PTDEV, ptirq_softirq);
 	}
+	INIT_LIST_HEAD(&get_cpu_var(softirq_dev_entry_list));
 }
 
 void ptdev_release_all_entries(const struct acrn_vm *vm)
