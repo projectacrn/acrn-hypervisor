@@ -37,10 +37,6 @@ void switch_to_idle(run_thread_t idle_thread);
 void get_schedule_lock(uint16_t pcpu_id);
 void release_schedule_lock(uint16_t pcpu_id);
 
-void set_pcpu_used(uint16_t pcpu_id);
-uint16_t allocate_pcpu(void);
-void free_pcpu(uint16_t pcpu_id);
-
 void add_to_cpu_runqueue(struct sched_object *obj, uint16_t pcpu_id);
 void remove_from_cpu_runqueue(struct sched_object *obj);
 

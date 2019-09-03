@@ -365,21 +365,9 @@ void set_vcpu_startup_entry(struct acrn_vcpu *vcpu, uint64_t entry)
 	vcpu_set_rip(vcpu, 0UL);
 }
 
-/***********************************************************************
- *
+/*
  *  @pre vm != NULL && rtn_vcpu_handle != NULL
- *
- * vcpu_id/pcpu_id mapping table:
- *
- * if
- *     SOS_VM_CPUS[2] = {0, 2} , VM1_CPUS[2] = {3, 1};
- * then
- *     for physical CPU 0 : vcpu->pcpu_id = 0, vcpu->vcpu_id = 0, vmid = 0;
- *     for physical CPU 2 : vcpu->pcpu_id = 2, vcpu->vcpu_id = 1, vmid = 0;
- *     for physical CPU 3 : vcpu->pcpu_id = 3, vcpu->vcpu_id = 0, vmid = 1;
- *     for physical CPU 1 : vcpu->pcpu_id = 1, vcpu->vcpu_id = 1, vmid = 1;
- *
- ***********************************************************************/
+ */
 int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcpu_handle)
 {
 	struct acrn_vcpu *vcpu;
@@ -599,7 +587,6 @@ void offline_vcpu(struct acrn_vcpu *vcpu)
 {
 	vlapic_free(vcpu);
 	per_cpu(ever_run_vcpu, vcpu->pcpu_id) = NULL;
-	free_pcpu(vcpu->pcpu_id);
 	vcpu->state = VCPU_OFFLINE;
 }
 
@@ -761,8 +748,6 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 
 	ret = create_vcpu(pcpu_id, vm, &vcpu);
 	if (ret == 0) {
-		set_pcpu_used(pcpu_id);
-
 		INIT_LIST_HEAD(&vcpu->sched_obj.run_list);
 		snprintf(thread_name, 16U, "vm%hu:vcpu%hu", vm->vm_id, vcpu->vcpu_id);
 		(void)strncpy_s(vcpu->sched_obj.name, 16U, thread_name, 16U);
