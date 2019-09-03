@@ -478,8 +478,6 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 	if (status == 0) {
 		prepare_epc_vm_memmap(vm);
 
-		INIT_LIST_HEAD(&vm->softirq_dev_entry_list);
-		spinlock_init(&vm->softirq_dev_lock);
 		spinlock_init(&vm->vm_lock);
 
 		vm->arch_vm.vlapic_state = VM_VLAPIC_XAPIC;

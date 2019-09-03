@@ -520,11 +520,8 @@ static void ptirq_handle_intx(struct acrn_vm *vm,
 
 void ptirq_softirq(uint16_t pcpu_id)
 {
-	struct acrn_vcpu *vcpu = per_cpu(vcpu, pcpu_id);
-	struct acrn_vm *vm = vcpu->vm;
-
 	while (1) {
-		struct ptirq_remapping_info *entry = ptirq_dequeue_softirq(vm);
+		struct ptirq_remapping_info *entry = ptirq_dequeue_softirq(pcpu_id);
 		struct ptirq_msi_info *msi;
 
 		if (entry == NULL) {
@@ -541,11 +538,11 @@ void ptirq_softirq(uint16_t pcpu_id)
 
 		/* handle real request */
 		if (entry->intr_type == PTDEV_INTR_INTX) {
-			ptirq_handle_intx(vm, entry);
+			ptirq_handle_intx(entry->vm, entry);
 		} else {
 			if (msi != NULL) {
 				/* TODO: msi destmode check required */
-				(void)vlapic_intr_msi(vm, msi->vmsi_addr.full, msi->vmsi_data.full);
+				(void)vlapic_intr_msi(entry->vm, msi->vmsi_addr.full, msi->vmsi_data.full);
 				dev_dbg(ACRN_DBG_PTIRQ, "dev-assign: irq=0x%x MSI VR: 0x%x-0x%x",
 					entry->allocated_pirq,
 					msi->vmsi_data.bits.vector,

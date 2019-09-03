@@ -248,6 +248,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 		init_interrupt(pcpu_id);
 
 		timer_init();
+		ptdev_init();
 
 		/* Wait for boot processor to signal all secondary cores to continue */
 		wait_sync_change(&pcpu_sync, 0UL);
