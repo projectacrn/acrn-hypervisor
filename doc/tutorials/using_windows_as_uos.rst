@@ -143,7 +143,7 @@ Pre-install drivers and re-generate Windows ISO
 
 #. Right click the downloaded ``virtio-win-0.1.141.iso`` and select ``Mount``. The ISO will be mounted to a drive;
    for example, drive ``D:``
-   OR used Oracle Driver
+   OR use Oracle Driver
    Right click the downloaded ``winvirtio.iso`` and select ``Mount``. The ISO will be mounted to a drive;
    for example, drive ``D:``
 
@@ -360,17 +360,13 @@ together with the script used to install Windows 10.
    .. figure:: images/windows_install_6.png
       :align: center
 
-This is the step to install the oracle driver
+This is the step to install the Oracle driver
  
    .. figure:: images/windows_install_A.png
       :align: center
 
-This is the step to install the oracle driver
-
    .. figure:: images/windows_install_B.png
       :align: center
-
-This is the step to install the oracle driver
 
    .. figure:: images/windows_install_C.png
       :align: center
@@ -486,8 +482,8 @@ Device configurations of acrn-dm command line
 * *-s 8,ahci,cd:/root/img/virtio-win-0.1.141.iso*: This is another cdrom device
   to install the virtio Windows driver later. Make sure it points to your VirtIO ISO path.
 
-* *-s 8,ahci,cd:/root/img/winvirtio.iso*:This is another cdrom device
-  to install the oracle Windows driver later. Make sure it points to your winvirtio ISO path
+* *-s 8,ahci,cd:/root/img/winvirtio.iso*:
+  to install the Oracle Windows driver later. Make sure it points to your winvirtio ISO path
 
 * *--ovmf /root/bios/OVMF.fd*:
   Make sure it points to your OVMF binary path
