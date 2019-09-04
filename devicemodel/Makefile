@@ -92,6 +92,7 @@ SRCS += hw/platform/ioapic.c
 SRCS += hw/platform/cmos_io.c
 SRCS += hw/platform/ioc.c
 SRCS += hw/platform/ioc_cbc.c
+SRCS += hw/platform/pty_vuart.c
 SRCS += hw/platform/acpi/acpi.c
 SRCS += hw/platform/acpi/acpi_pm.c
 SRCS += hw/platform/rpmb/rpmb_sim.c
