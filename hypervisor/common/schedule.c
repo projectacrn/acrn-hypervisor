@@ -39,16 +39,16 @@ static inline void set_thread_status(struct thread_object *obj, enum thread_obje
 	obj->status = status;
 }
 
-void get_schedule_lock(uint16_t pcpu_id)
+void obtain_schedule_lock(uint16_t pcpu_id, uint64_t *rflag)
 {
 	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
-	spinlock_obtain(&ctl->scheduler_lock);
+	spinlock_irqsave_obtain(&ctl->scheduler_lock, rflag);
 }
 
-void release_schedule_lock(uint16_t pcpu_id)
+void release_schedule_lock(uint16_t pcpu_id, uint64_t rflag)
 {
 	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
-	spinlock_release(&ctl->scheduler_lock);
+	spinlock_irqrestore_release(&ctl->scheduler_lock, rflag);
 }
 
 static struct acrn_scheduler *get_scheduler(uint16_t pcpu_id)
@@ -91,13 +91,15 @@ void deinit_sched(uint16_t pcpu_id)
 void init_thread_data(struct thread_object *obj)
 {
 	struct acrn_scheduler *scheduler = get_scheduler(obj->pcpu_id);
-	get_schedule_lock(obj->pcpu_id);
+	uint64_t rflag;
+
+	obtain_schedule_lock(obj->pcpu_id, &rflag);
 	if (scheduler->init_data != NULL) {
 		scheduler->init_data(obj);
 	}
 	/* initial as BLOCKED status, so we can wake it up to run */
 	set_thread_status(obj, THREAD_STS_BLOCKED);
-	release_schedule_lock(obj->pcpu_id);
+	release_schedule_lock(obj->pcpu_id, rflag);
 }
 
 void deinit_thread_data(struct thread_object *obj)
@@ -151,8 +153,9 @@ void schedule(void)
 	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
 	struct thread_object *next = &per_cpu(idle, pcpu_id);
 	struct thread_object *prev = ctl->curr_obj;
+	uint64_t rflag;
 
-	get_schedule_lock(pcpu_id);
+	obtain_schedule_lock(pcpu_id, &rflag);
 	if (ctl->scheduler->pick_next != NULL) {
 		next = ctl->scheduler->pick_next(ctl);
 	}
@@ -164,7 +167,7 @@ void schedule(void)
 	}
 	set_thread_status(next, THREAD_STS_RUNNING);
 	ctl->curr_obj = next;
-	release_schedule_lock(pcpu_id);
+	release_schedule_lock(pcpu_id, rflag);
 
 	/* If we picked different sched object, switch context */
 	if (prev != next) {
@@ -184,8 +187,9 @@ void sleep_thread(struct thread_object *obj)
 {
 	uint16_t pcpu_id = obj->pcpu_id;
 	struct acrn_scheduler *scheduler = get_scheduler(pcpu_id);
+	uint64_t rflag;
 
-	get_schedule_lock(pcpu_id);
+	obtain_schedule_lock(pcpu_id, &rflag);
 	if (scheduler->sleep != NULL) {
 		scheduler->sleep(obj);
 	}
@@ -197,15 +201,16 @@ void sleep_thread(struct thread_object *obj)
 		}
 	}
 	set_thread_status(obj, THREAD_STS_BLOCKED);
-	release_schedule_lock(pcpu_id);
+	release_schedule_lock(pcpu_id, rflag);
 }
 
 void wake_thread(struct thread_object *obj)
 {
 	uint16_t pcpu_id = obj->pcpu_id;
 	struct acrn_scheduler *scheduler;
+	uint64_t rflag;
 
-	get_schedule_lock(pcpu_id);
+	obtain_schedule_lock(pcpu_id, &rflag);
 	if (is_blocked(obj)) {
 		scheduler = get_scheduler(pcpu_id);
 		if (scheduler->wake != NULL) {
@@ -214,16 +219,18 @@ void wake_thread(struct thread_object *obj)
 		set_thread_status(obj, THREAD_STS_RUNNABLE);
 		make_reschedule_request(pcpu_id, DEL_MODE_IPI);
 	}
-	release_schedule_lock(pcpu_id);
+	release_schedule_lock(pcpu_id, rflag);
 }
 
 void run_thread(struct thread_object *obj)
 {
+	uint64_t rflag;
+
 	init_thread_data(obj);
-	get_schedule_lock(obj->pcpu_id);
+	obtain_schedule_lock(obj->pcpu_id, &rflag);
 	get_cpu_var(sched_ctl).curr_obj = obj;
 	set_thread_status(obj, THREAD_STS_RUNNING);
-	release_schedule_lock(obj->pcpu_id);
+	release_schedule_lock(obj->pcpu_id, rflag);
 
 	if (obj->thread_entry != NULL) {
 		obj->thread_entry(obj);
