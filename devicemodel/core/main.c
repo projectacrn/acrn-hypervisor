@@ -63,6 +63,7 @@
 #include "atomic.h"
 #include "tpm.h"
 #include "virtio.h"
+#include "pm_vuart.h"
 #include "log.h"
 
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
@@ -138,7 +139,8 @@ usage(int code)
 		"       %*s [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]\n"
 		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
 		"       %*s [--vmcfg sub_options] [--dump vm_idx] [--ptdev_no_reset] [--debugexit] \n"
-		"       %*s [--logger-setting param_setting] [--pm_notify_channel] <vm>\n"
+		"       %*s [--logger-setting param_setting] [--pm_notify_channel]\n"
+		"       %*s [--pm_by_vuart vuart_node] <vm>\n"
 		"       -A: create ACPI tables\n"
 		"       -B: bootargs for kernel\n"
 		"       -c: # cpus (default 1)\n"
@@ -173,11 +175,12 @@ usage(int code)
 		"       --lapic_pt: enable local apic passthrough\n"
 		"       --rtvm: indicate that the guest is rtvm\n"
 		"       --logger_setting: params like console,level=4;kmsg,level=3\n"
-		"       --pm_notify_channel: define the channel used to notify guest about power event\n",
+		"       --pm_notify_channel: define the channel used to notify guest about power event\n"
+		"       --pm_by_vuart:pty,/run/acrn/vuart_vmname or tty,/dev/ttySn\n",
 		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
-		(int)strnlen(progname, PATH_MAX), "");
+		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "");
 
 	exit(code);
 }
@@ -421,6 +424,8 @@ guest_pm_notify_init(struct vmctx *ctx)
 		ioc_init(ctx);
 	else if (PWR_EVENT_NOTIFY_PWR_BT == pm_notify_channel)
 		power_button_init(ctx);
+	else if (PWR_EVENT_NOTIFY_UART == pm_notify_channel)
+		pm_by_vuart_init(ctx);
 	else
 		pr_err("No correct pm notify channel given\n");
 }
@@ -432,6 +437,8 @@ guest_pm_notify_deinit(struct vmctx *ctx)
 		ioc_deinit(ctx);
 	else if (PWR_EVENT_NOTIFY_PWR_BT == pm_notify_channel)
 		power_button_deinit(ctx);
+	else if (PWR_EVENT_NOTIFY_UART == pm_notify_channel)
+		pm_by_vuart_deinit(ctx);
 	else
 		pr_err("No correct pm notify channel given\n");
 }
@@ -724,6 +731,7 @@ enum {
 	CMD_OPT_RTVM,
 	CMD_OPT_LOGGER_SETTING,
 	CMD_OPT_PM_NOTIFY_CHANNEL,
+	CMD_OPT_PM_BY_VUART,
 };
 
 static struct option long_options[] = {
@@ -763,6 +771,7 @@ static struct option long_options[] = {
 	{"rtvm",		no_argument,		0, CMD_OPT_RTVM},
 	{"logger_setting",	required_argument,	0, CMD_OPT_LOGGER_SETTING},
 	{"pm_notify_channel",	required_argument,	0, CMD_OPT_PM_NOTIFY_CHANNEL},
+	{"pm_by_vuart",	required_argument,	0, CMD_OPT_PM_BY_VUART},
 	{0,			0,			0,  0  },
 };
 
@@ -923,6 +932,10 @@ main(int argc, char *argv[])
 			else if (strncmp("uart", optarg, 4) == 0)
 				pm_notify_channel = PWR_EVENT_NOTIFY_UART;
 
+			break;
+		case CMD_OPT_PM_BY_VUART:
+			if (parse_pm_by_vuart(optarg) != 0)
+				errx(EX_USAGE, "invalid pm-by-vuart params %s", optarg);
 			break;
 		case 'h':
 			usage(0);
