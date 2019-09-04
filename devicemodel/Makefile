@@ -141,6 +141,7 @@ SRCS += core/sw_load_elf.c
 SRCS += core/mevent.c
 SRCS += core/gc.c
 SRCS += core/pm.c
+SRCS += core/pm_vuart.c
 SRCS += core/console.c
 SRCS += core/inout.c
 SRCS += core/mem.c
