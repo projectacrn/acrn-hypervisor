@@ -56,9 +56,10 @@ static char bootargs[BOOT_ARG_LEN];
  * 2:       0x100000 -  lowmem      RAM             lowmem - 1MB
  * 3:         lowmem -  0x80000000  (reserved)      2GB - lowmem
  * 4:	  0x80000000 -  0x88000000  (reserved)	    128MB
- * 5:     0xE0000000 -  0x100000000 MCFG, MMIO      512MB
- * 6:    0x100000000 -  0x140000000 64-bit PCI hole 1GB
- * 7:    0x140000000 -  highmem     RAM             highmem - 5GB
+ * 5:     0xDF000000 -  0xE0000000  (reserved)      16MB
+ * 6:     0xE0000000 -  0x100000000 MCFG, MMIO      512MB
+ * 7:    0x100000000 -  0x140000000 64-bit PCI hole 1GB
+ * 8:    0x140000000 -  highmem     RAM             highmem - 5GB
  */
 const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 	{	/* 0 to video memory */
