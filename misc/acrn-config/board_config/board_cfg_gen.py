@@ -6,79 +6,53 @@
 
 import os
 import sys
-import shutil
-import subprocess
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
 import board_cfg_lib
 import board_c
 import pci_devices_h
 import acpi_platform_h
+import misc_cfg_h
+import ve820_c
+import new_board_kconfig
 
-ACRN_PATH = "../../../"
+ACRN_PATH = board_cfg_lib.SOURCE_ROOT_DIR
 ACRN_CONFIG = ACRN_PATH + "hypervisor/arch/x86/configs/"
 
 BOARD_NAMES = ['apl-mrb', 'apl-nuc', 'apl-up2', 'dnv-cb2', 'nuc6cayh',
                'nuc7i7dnb', 'kbl-nuc-i7', 'icl-rvp']
 
 ACRN_DEFAULT_PLATFORM = ACRN_PATH + "hypervisor/include/arch/x86/default_acpi_info.h"
-GEN_FILE = ["vm_configurations.h", "vm_configurations.c", "pt_dev.c", "pci_devices.h",
-            "board.c", "_acpi_info.h"]
-
-PY_CACHES = ["__pycache__", "board_config/__pycache__"]
-BIN_LIST = ['git']
+GEN_FILE = ["pci_devices.h", "board.c", "_acpi_info.h", "misc_cfg.h", "ve820.c", ".config"]
 
 
-def prepare():
-    """Prepare to check the environment"""
-    for excute in BIN_LIST:
-        res = subprocess.Popen("which {}".format(excute), shell=True, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, close_fds=True)
-
-        line = res.stdout.readline().decode('ascii')
-
-        if not line:
-            board_cfg_lib.print_yel("'{}' not found, please install it!".format(excute))
-            sys.exit(1)
-
-        if excute == "git":
-            res = subprocess.Popen("git tag -l", shell=True, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE, close_fds=True)
-            line = res.stdout.readline().decode("ascii")
-
-            if "acrn" not in line:
-                board_cfg_lib.print_red("Run this tool in acrn-hypervisor mainline source code!")
-                sys.exit(1)
-
-    for py_cache in PY_CACHES:
-        if os.path.exists(py_cache):
-            shutil.rmtree(py_cache)
-
-
-def gen_patch(srcs_list, board_name):
-    """Generate patch and apply to local source code
-    :param srcs_list: it is a list what contains source files
-    :param board_name: board name
+def main(args):
     """
-    changes = ' '.join(srcs_list)
-    git_add = "git add {}".format(changes)
-    subprocess.call(git_add, shell=True, stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE, close_fds=True)
-
-    # commit this changes
-    git_commit = 'git commit -sm "acrn-config: config board patch for {}"'.format(board_name)
-    subprocess.call(git_commit, shell=True, stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE, close_fds=True)
-
-
-def main(board_info_file):
-    """This is main function to start generate source code related with board
-    :param board_info_file: it is a file what contains board information for script to read from
+    This is main function to start generate source code related with board
+    :param args: it is a command line args for the script
     """
-    board = ''
+    err_dic = {}
     config_srcs = []
     config_dirs = []
 
+    (err_dic, board_info_file, scenario_info_file) = board_cfg_lib.get_param(args)
+    if err_dic:
+        return err_dic
+
+    board_cfg_lib.BOARD_INFO_FILE = board_info_file
+    board_cfg_lib.SCENARIO_INFO_FILE = scenario_info_file
+    board_cfg_lib.get_vm_count(scenario_info_file)
+
     # get board name
-    board = board_cfg_lib.get_board_name(board_info_file)
+    (err_dic, board) = board_cfg_lib.get_board_name()
+    if err_dic:
+        return err_dic
+    board_cfg_lib.BOARD_NAME = board
+
+    # check if this is the scenario config which matched board info
+    (err_dic, status) = board_cfg_lib.is_config_file_match()
+    if not status:
+        err_dic['board config: Not match'] = "The board xml and scenario xml should be matched"
+        return err_dic
 
     config_dirs.append(ACRN_CONFIG + board)
     if board not in BOARD_NAMES:
@@ -86,17 +60,25 @@ def main(board_info_file):
             if not os.path.exists(config_dir):
                 os.makedirs(config_dir)
 
-    config_pci = config_dirs[0] + '/' + GEN_FILE[3]
-    config_board = config_dirs[0] + '/' + GEN_FILE[4]
-    config_platform = config_dirs[0] + '/' + board + GEN_FILE[5]
+    config_pci = config_dirs[0] + '/' + GEN_FILE[0]
+    config_board = config_dirs[0] + '/' + GEN_FILE[1]
+    config_platform = config_dirs[0] + '/' + board + GEN_FILE[2]
+    config_misc_cfg = config_dirs[0] + '/' + GEN_FILE[3]
+    config_ve820 = config_dirs[0] + '/' + GEN_FILE[4]
+    config_board_kconfig = ACRN_CONFIG + board + GEN_FILE[5]
 
     config_srcs.append(config_pci)
     config_srcs.append(config_board)
     config_srcs.append(config_platform)
+    config_srcs.append(config_misc_cfg)
+    config_srcs.append(config_ve820)
+    config_srcs.append(config_board_kconfig)
 
     # generate board.c
     with open(config_board, 'w+') as config:
-        board_c.generate_file(config)
+        err_dic = board_c.generate_file(config)
+        if err_dic:
+            return err_dic
 
     # generate pci_devices.h
     with open(config_pci, 'w+') as config:
@@ -106,36 +88,61 @@ def main(board_info_file):
     with open(config_platform, 'w+') as config:
         acpi_platform_h.generate_file(config, ACRN_DEFAULT_PLATFORM)
 
-    # move changes to patch, and apply to the source code
-    gen_patch(config_srcs, board)
+    # generate acpi_platform.h
+    with open(config_ve820, 'w+') as config:
+        err_dic = ve820_c.generate_file(config)
+        if err_dic:
+            return err_dic
 
+    # generate acpi_platform.h
+    with open(config_misc_cfg, 'w+') as config:
+        err_dic = misc_cfg_h.generate_file(config)
+        if err_dic:
+            return err_dic
+
+    # generate new board_name.config
     if board not in BOARD_NAMES:
+        with open(config_board_kconfig, 'w+') as config:
+            err_dic = new_board_kconfig.generate_file(config)
+            if err_dic:
+                return err_dic
+
+    # move changes to patch, and apply to the source code
+    err_dic = board_cfg_lib.gen_patch(config_srcs, board)
+
+    if board not in BOARD_NAMES and not err_dic:
         print("Config patch for NEW board {} is committed successfully!".format(board))
-    else:
+    elif not err_dic:
         print("Config patch for {} is committed successfully!".format(board))
+    else:
+        print("Config patch for {} is failed".format(board))
+
+    return err_dic
 
 
-def usage():
-    """This is usage for how to use this tool"""
-    print("usage= [h] --board <board_info_file>'")
-    print('board_info_file, :  file name of the board info"')
-    sys.exit(1)
+def ui_entry_api(board_info,scenario_info):
+
+    arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info]
+
+    err_dic = board_cfg_lib.prepare()
+    if err_dic:
+        return err_dic
+
+    err_dic = main(arg_list)
+
+    return err_dic
 
 
 if __name__ == '__main__':
-    prepare()
 
-    ARGS = sys.argv[1:]
-
-    if ARGS[0] != '--board':
-        usage()
+    err_dic = board_cfg_lib.prepare()
+    if err_dic:
+        for err_k, err_v in err_dic.items():
+            board_cfg_lib.print_red("{}: {}".format(err_k, err_v), err=True)
         sys.exit(1)
 
-    BOARD_INFO_FILE = ARGS[1]
-    if not os.path.exists(BOARD_INFO_FILE):
-        board_cfg_lib.print_red("{} is not exist!".format(BOARD_INFO_FILE))
-        sys.exit(1)
-
-    board_cfg_lib.BOARD_INFO_FILE = BOARD_INFO_FILE
-
-    main(BOARD_INFO_FILE)
+    ARGS = sys.argv
+    err_dic = main(ARGS)
+    if err_dic:
+        for err_k, err_v in err_dic.items():
+            board_cfg_lib.print_red("{}: {}".format(err_k, err_v), err=True)

@@ -7,32 +7,17 @@ import sys
 import board_cfg_lib
 
 
-def clos_info_parser():
-    """Parser CLOS information"""
-
-    cache_support = False
-    clos_max = 0
-
-    cat_lines = board_cfg_lib.get_info(
-        board_cfg_lib.BOARD_INFO_FILE, "<CLOS_INFO>", "</CLOS_INFO>")
-
-    for line in cat_lines:
-        if line.split(':')[0] == "clos supported by cache":
-            cache_support = line.split(':')[1].strip()
-        elif line.split(':')[0] == "clos max":
-            clos_max = int(line.split(':')[1])
-
-    return (cache_support, clos_max)
-
-
 def gen_cat(config):
-    """Get CAT information
+    """
+    Get CAT information
     :param config: it is a file pointer of board information for writing to
     """
-    (cache_support, clos_max) = clos_info_parser()
+    err_dic = {}
+    (cache_support, clos_max) = board_cfg_lib.clos_info_parser(board_cfg_lib.BOARD_INFO_FILE)
 
     print("\n#include <board.h>", file=config)
     print("#include <acrn_common.h>", file=config)
+    print("#include <msr.h>", file=config)
 
     if cache_support == "False" or clos_max == 0:
         print("\nstruct platform_clos_info platform_clos_array[0];", file=config)
@@ -50,9 +35,8 @@ def gen_cat(config):
             elif cache_support == "L3":
                 print("\t\t.msr_index = {0}U,".format(hex(0x00000C90+i_cnt)), file=config)
             else:
-                board_cfg_lib.print_red("The input of {} was corrupted!".format(
-                    board_cfg_lib.BOARD_INFO_FILE))
-                sys.exit(1)
+                err_dic['board config: generate board.c failed'] = "The input of {} was corrupted!".format(board_cfg_lib.BOARD_INFO_FILE)
+                return err_dic
             print("\t},", file=config)
 
         print("};\n", file=config)
@@ -61,10 +45,12 @@ def gen_cat(config):
               file=config)
 
     print("", file=config)
+    return err_dic
 
 
 def gen_px_cx(config):
-    """Get Px/Cx and store them to board.c
+    """
+    Get Px/Cx and store them to board.c
     :param config: it is a file pointer of board information for writing to
     """
     cpu_brand_lines = board_cfg_lib.get_info(
@@ -97,16 +83,22 @@ def gen_px_cx(config):
 
 
 def generate_file(config):
-    """Start to generate board.c
+    """
+    Start to generate board.c
     :param config: it is a file pointer of board information for writing to
     """
+    err_dic = {}
     print("{0}".format(board_cfg_lib.HEADER_LICENSE), file=config)
 
     # insert bios info into board.c
     board_cfg_lib.handle_bios_info(config)
 
     # start to parser to get CAT info
-    gen_cat(config)
+    err_dic = gen_cat(config)
+    if err_dic:
+        return err_dic
 
     # start to parser PX/CX info
     gen_px_cx(config)
+
+    return err_dic
