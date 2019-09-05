@@ -14,24 +14,26 @@ PLATFORM_HEADER = r"""/* DO NOT MODIFY THIS FILE UNLESS YOU KNOW WHAT YOU ARE DO
 
 PLATFORM_END_HEADER = "\n#endif /* PLATFORM_ACPI_INFO_H */"
 
+
 class OverridAccessSize():
-    """The Pm access size which are needed to redefine"""
+    """ The Pm access size which are needed to redefine """
     def __init__(self):
         self.pm1a_cnt_ac_sz = True
         self.pm1b_cnt_ac_sz = True
         self.pm1b_evt_ac_sz = True
 
     def style_check_1(self):
-        """Style check if have public method"""
+        """ Style check if have public method """
         self.pm1a_cnt_ac_sz = True
 
     def style_check_2(self):
-        """Style check if have public method"""
+        """ Style check if have public method """
         self.pm1a_cnt_ac_sz = True
 
 
 def multi_parser(line, s_line, pm_ac_sz, config):
-    """Multi parser the line
+    """
+    Multi parse the line
     :param line: it is a line read from default_acpi_info.h
     :param s_line: it is a line read from board information file
     :param pm_ac_sz: it is a class for access size which would be override
@@ -76,7 +78,8 @@ def multi_parser(line, s_line, pm_ac_sz, config):
 
 
 def multi_info_parser(config, default_platform, msg_s, msg_e):
-    """Parser multi information
+    """
+    Parse multi information
     :param config: it is a file pointer to write acpi information
     :param default_platform: it is the default_acpi_info.h in acrn-hypervisor
     :param msg_s: it is a pattern of key stings what start to match from board information
@@ -109,7 +112,8 @@ def multi_info_parser(config, default_platform, msg_s, msg_e):
 
 
 def write_direct_info_parser(config, msg_s, msg_e):
-    """Direct to write
+    """
+    Direct to write
     :param config: it is a file pointer to write acpi information
     :param msg_s: it is a pattern of key stings what start to match from board information
     :param msg_e: it is a pattern of key stings what end to match from board information
@@ -123,7 +127,8 @@ def write_direct_info_parser(config, msg_s, msg_e):
 
 
 def drhd_info_parser(config):
-    """Parser DRHD information
+    """
+    Parse DRHD information
     :param config: it is a file pointer to write acpi information
     """
     prev_num = 0
@@ -149,7 +154,8 @@ def drhd_info_parser(config):
 
 
 def platform_info_parser(config, default_platform):
-    """Parser ACPI information
+    """
+    Parse ACPI information
     :param config: it is a file pointer to write acpi information
     :param default_platform: it is the default_acpi_info.h in acrn-hypervisor
     """
@@ -165,7 +171,8 @@ def platform_info_parser(config, default_platform):
 
 
 def generate_file(config, default_platform):
-    """write board_name_acpi_info.h
+    """
+    write board_name_acpi_info.h
     :param config: it is a file pointer to write acpi information
     :param default_platform: it is the default_acpi_info.h in acrn-hypervisor
     """
@@ -174,7 +181,7 @@ def generate_file(config, default_platform):
     print("{}".format(PLATFORM_HEADER), file=config)
 
     board_cfg_lib.handle_bios_info(config)
-    # parser for the platform info
+    # parse for the platform info
     platform_info_parser(config, default_platform)
 
     print("{}".format(PLATFORM_END_HEADER), file=config)

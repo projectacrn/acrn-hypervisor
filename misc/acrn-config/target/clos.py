@@ -18,7 +18,7 @@ def dump_cpuid_reg(cmd, reg):
     """
     cache_t = ''
 
-    res = parser_lib.cmd_excute(cmd)
+    res = parser_lib.cmd_execute(cmd)
     if reg == "ebx":
         idx = 3
 

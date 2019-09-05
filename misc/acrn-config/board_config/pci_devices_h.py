@@ -15,7 +15,7 @@ PCI_END_HEADER = r"""
 
 
 def parser_pci():
-    """Parser PCI lines"""
+    """ Parse PCI lines """
     cur_bdf = 0
     prev_bdf = 0
     tmp_bar_dic = {}
@@ -42,9 +42,7 @@ def parser_pci():
 
             pci_dev_dic[pci_bdf] = pci_sub_name
             cur_bdf = pci_bdf
-            #board_cfg_lib.LOGICAL_PCI_LINE[pci_bdf] = line
 
-            # skipt the first init value
             if not prev_bdf:
                 prev_bdf = cur_bdf
 
@@ -57,18 +55,29 @@ def parser_pci():
     # output all the pci device list to pci_device.h
     sub_name_count = collections.Counter(pci_dev_dic.values())
 
-    # share the pci profile with pt_dev
-    #board_cfg_lib.LOGICAL_PT_PROFILE = sub_name_count
-    #board_cfg_lib.LOGICAL_PCI_DEV = pci_dev_dic
-
     if tmp_bar_dic:
         pci_bar_dic[cur_bdf] = tmp_bar_dic
 
     return (pci_dev_dic, pci_bar_dic, sub_name_count)
 
 
+
+def undline_name(name):
+    """
+    This convert name which has contain '-' to '_'
+    :param name: name which contain '-'
+    :return:
+    """
+    name_list = name
+    if '-' in name:
+        name_list = "_".join(name.split('-'))
+
+    return name_list
+
+
 def write_pbdf(i_cnt, bdf, subname, config):
-    """Parser and generate pbdf
+    """
+    Parser and generate pbdf
     :param i_cnt: the number of pci devices have the same PCI subname
     :param bdf: it is a string what contains BDF
     :param subname: it is a string belong to PIC subname
@@ -78,7 +87,10 @@ def write_pbdf(i_cnt, bdf, subname, config):
     if i_cnt == 0 and subname.upper() == "HOST BRIDGE":
         tmp_sub_name = "_".join(subname.split()).upper()
     else:
-        tmp_sub_name = "_".join(subname.split()).upper() + "_" + str(i_cnt)
+        if '-' in subname:
+            tmp_sub_name = undline_name(subname)
+        else:
+            tmp_sub_name = "_".join(subname.split()).upper() + "_" + str(i_cnt)
 
     bus = int(bdf.split(':')[0], 16)
     dev = int(bdf.split(':')[1].split('.')[0], 16)
@@ -89,7 +101,8 @@ def write_pbdf(i_cnt, bdf, subname, config):
 
 
 def write_vbar(bdf, pci_bar_dic, config):
-    """Parser and generate vbar
+    """
+    Parser and generate vbar
     :param bdf: it is a string what contains BDF
     :param pci_bar_dic: it is a dictionary of pci vbar for those BDF
     :param config: it is a file pointer of pci information for writing to
@@ -119,7 +132,8 @@ def write_vbar(bdf, pci_bar_dic, config):
 
 
 def generate_file(config):
-    """Get PCI device and generate pci_devices.h
+    """
+    Get PCI device and generate pci_devices.h
     :param config: it is a file pointer of pci information for writing to
     """
 

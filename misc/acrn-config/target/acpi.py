@@ -305,7 +305,7 @@ def read_sx_locate(sx_name, f_node):
 
 
 def decode_sx_pkg(pkg_len, f_node):
-    """Parser and decode the sx pkg
+    """Parse and decode the sx pkg
     :param pkg_len: the length of sx package read from f_node
     :param f_node: file pointer that opened for sx reading from
     """
