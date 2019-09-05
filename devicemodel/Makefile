@@ -153,6 +153,7 @@ SRCS += core/timer.c
 
 # arch
 SRCS += arch/x86/pm.c
+SRCS += arch/x86/power_button.c
 
 # log
 SRCS += log/log.c
