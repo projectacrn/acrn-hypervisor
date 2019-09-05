@@ -19,7 +19,7 @@ OUTPUT = "./out/"
 PY_CACHE = "__pycache__"
 
 # This file store information which query from hw board
-BIN_LIST = ['cpuid', 'rdmsr', 'lspci', ' dmidecode', 'blkid']
+BIN_LIST = ['cpuid', 'rdmsr', 'lspci', ' dmidecode', 'blkid', 'stty']
 PCI_IDS = ["/usr/share/hwdata/pci.ids", "/usr/share/misc/pci.ids"]
 
 CPU_VENDOR = "GenuineIntel"
@@ -35,7 +35,7 @@ def check_permission():
 def native_check():
     """Check if this is natvie os"""
     cmd = "cpuid -r -l 0x01"
-    res = parser_lib.cmd_excute(cmd)
+    res = parser_lib.cmd_execute(cmd)
     while True:
         line = parser_lib.decode_stdout(res)
 

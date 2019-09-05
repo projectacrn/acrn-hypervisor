@@ -73,7 +73,7 @@ def handle_pci_dev(line):
     return False
 
 
-def cmd_excute(cmd):
+def cmd_execute(cmd):
     """Excute cmd and retrun raw information
     :param cmd: command what can be executed in shell
     """
@@ -107,7 +107,7 @@ def dump_execute(cmd, desc, config):
         print("\t\t</{0}>".format(desc), file=config)
         return
 
-    res = cmd_excute(cmd)
+    res = cmd_execute(cmd)
     while True:
         line = res.stdout.readline().decode('ascii')
 
