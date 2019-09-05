@@ -18,7 +18,7 @@ static uint32_t acrn_vhm_notification_vector = VECTOR_HYPERVISOR_CALLBACK_VHM;
 #define MMIO_DEFAULT_VALUE_SIZE_8	(0xFFFFFFFFFFFFFFFFUL)
 
 #if defined(HV_DEBUG)
-static void acrn_print_request(uint16_t vcpu_id, const struct vhm_request *req)
+__unused static void acrn_print_request(uint16_t vcpu_id, const struct vhm_request *req)
 {
 	switch (req->type) {
 	case REQ_MMIO:
@@ -121,12 +121,6 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
 		 * because VHM can work in pulling mode without wait for upcall
 		 */
 		set_vhm_req_state(vcpu->vm, vcpu->vcpu_id, REQ_STATE_PENDING);
-
-#if defined(HV_DEBUG)
-		stac();
-		acrn_print_request(vcpu->vcpu_id, vhm_req);
-		clac();
-#endif
 
 		/* signal VHM */
 		arch_fire_vhm_interrupt();
