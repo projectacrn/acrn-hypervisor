@@ -92,6 +92,7 @@ bool skip_pci_mem64bar_workaround = false;
 static int virtio_msix = 1;
 static bool debugexit_enabled;
 static char mac_seed_str[50];
+static int pm_notify_channel;
 
 static int acpi;
 
@@ -137,7 +138,7 @@ usage(int code)
 		"       %*s [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]\n"
 		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
 		"       %*s [--vmcfg sub_options] [--dump vm_idx] [--ptdev_no_reset] [--debugexit] \n"
-		"       %*s [--logger-setting param_setting] <vm>\n"
+		"       %*s [--logger-setting param_setting] [--pm_notify_channel] <vm>\n"
 		"       -A: create ACPI tables\n"
 		"       -B: bootargs for kernel\n"
 		"       -c: # cpus (default 1)\n"
@@ -171,7 +172,8 @@ usage(int code)
 		"       --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET\n"
 		"       --lapic_pt: enable local apic passthrough\n"
 		"       --rtvm: indicate that the guest is rtvm\n"
-		"       --logger_setting: params like console,level=4;kmsg,level=3\n",
+		"       --logger_setting: params like console,level=4;kmsg,level=3\n"
+		"       --pm_notify_channel: define the channel used to notify guest about power event\n",
 		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
@@ -408,6 +410,32 @@ handle_vmexit(struct vmctx *ctx, struct vhm_request *vhm_req, int vcpu)
 	vm_notify_request_done(ctx, vcpu);
 }
 
+static void
+guest_pm_notify_init(struct vmctx *ctx)
+{
+	/*
+	 * We don't care ioc_init return value so far.
+	 * Will add return value check once ioc is full function.
+	 */
+	if (PWR_EVENT_NOTIFY_IOC == pm_notify_channel)
+		ioc_init(ctx);
+	else if (PWR_EVENT_NOTIFY_PWR_BT == pm_notify_channel)
+		power_button_init(ctx);
+	else
+		pr_err("No correct pm notify channel given\n");
+}
+
+static void
+guest_pm_notify_deinit(struct vmctx *ctx)
+{
+	if (PWR_EVENT_NOTIFY_IOC == pm_notify_channel)
+		ioc_deinit(ctx);
+	else if (PWR_EVENT_NOTIFY_PWR_BT == pm_notify_channel)
+		power_button_deinit(ctx);
+	else
+		pr_err("No correct pm notify channel given\n");
+}
+
 static int
 vm_init_vdevs(struct vmctx *ctx)
 {
@@ -419,11 +447,7 @@ vm_init_vdevs(struct vmctx *ctx)
 	atkbdc_init(ctx);
 	ioapic_init(ctx);
 
-	/*
-	 * We don't care ioc_init return value so far.
-	 * Will add return value check once ioc is full function.
-	 */
-	ret = ioc_init(ctx);
+	guest_pm_notify_init(ctx);
 
 	ret = vrtc_init(ctx);
 	if (ret < 0)
@@ -466,7 +490,7 @@ vhpet_fail:
 vpit_fail:
 	vrtc_deinit(ctx);
 vrtc_fail:
-	ioc_deinit(ctx);
+	guest_pm_notify_deinit(ctx);
 	atkbdc_deinit(ctx);
 	pci_irq_deinit(ctx);
 	ioapic_deinit();
@@ -491,7 +515,7 @@ vm_deinit_vdevs(struct vmctx *ctx)
 	vhpet_deinit(ctx);
 	vpit_deinit(ctx);
 	vrtc_deinit(ctx);
-	ioc_deinit(ctx);
+	guest_pm_notify_deinit(ctx);
 	atkbdc_deinit(ctx);
 	pci_irq_deinit(ctx);
 	ioapic_deinit();
@@ -699,6 +723,7 @@ enum {
 	CMD_OPT_LAPIC_PT,
 	CMD_OPT_RTVM,
 	CMD_OPT_LOGGER_SETTING,
+	CMD_OPT_PM_NOTIFY_CHANNEL,
 };
 
 static struct option long_options[] = {
@@ -737,6 +762,7 @@ static struct option long_options[] = {
 	{"lapic_pt",		no_argument,		0, CMD_OPT_LAPIC_PT},
 	{"rtvm",		no_argument,		0, CMD_OPT_RTVM},
 	{"logger_setting",	required_argument,	0, CMD_OPT_LOGGER_SETTING},
+	{"pm_notify_channel",	required_argument,	0, CMD_OPT_PM_NOTIFY_CHANNEL},
 	{0,			0,			0,  0  },
 };
 
@@ -888,6 +914,15 @@ main(int argc, char *argv[])
 		case CMD_OPT_LOGGER_SETTING:
 			if (init_logger_setting(optarg) != 0)
 				errx(EX_USAGE, "invalid logger setting params %s", optarg);
+			break;
+		case CMD_OPT_PM_NOTIFY_CHANNEL:
+			if (strncmp("ioc", optarg, 3) == 0)
+				pm_notify_channel = PWR_EVENT_NOTIFY_IOC;
+			else if (strncmp("power_button", optarg, 12) == 0)
+				pm_notify_channel = PWR_EVENT_NOTIFY_PWR_BT;
+			else if (strncmp("uart", optarg, 4) == 0)
+				pm_notify_channel = PWR_EVENT_NOTIFY_UART;
+
 			break;
 		case 'h':
 			usage(0);
