@@ -85,7 +85,8 @@ each with their own way to install development tools:
           python3-pip \
           libblkid-dev \
           e2fslibs-dev \
-          pkg-config
+          pkg-config \
+          zlib1g-dev
      $ sudo pip3 install kconfiglib
 
   .. note::
