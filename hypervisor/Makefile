@@ -74,6 +74,7 @@ CFLAGS += -m64 -mno-mmx -mno-sse -mno-sse2 -mno-80387 -mno-fp-ret-in-387
 CFLAGS += -mno-red-zone
 CFLAGS += -nostdinc -nostdlib -fno-common
 CFLAGS += -Werror
+CFLAGS += -O2
 ifeq (y, $(CONFIG_RELOC))
 CFLAGS += -fpie
 else
