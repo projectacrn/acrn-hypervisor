@@ -275,7 +275,9 @@ the hypervisor using the updated ``.config``.
 
 .. code-block:: none
 
-   $ make menuconfig              # Modify the configurations per your needs
+   # Modify the configurations per your needs
+   $ cd ../         # Enter top-level folder of acrn-hypervisor source
+   $ make menuconfig -C hypervisor BOARD=kbl-nuc-i7   <select industry scenario>
 
 .. note::
    Menuconfig is python3 only.
@@ -293,7 +295,6 @@ Now you can build all these components in one go as follows:
 
 .. code-block:: none
 
-   $ cd ../                      # Enter top-level folder of acrn-hypervisor source
    $ make FIRMWARE=uefi          # Build the UEFI hypervisor with the new .config
 
 The build results are found in the ``build`` directory.  You can specify
@@ -304,35 +305,14 @@ If you only need the hypervisor, then use this command:
 
 .. code-block:: none
 
-   $ make clean                              # Remove files previously built
-   $ make FIRMWARE=uefi hypervisor           # This will only build the hypervisor
+   $ make clean                       # Remove files previously built
+   $ make -C hypervisor
+   $ make -C misc/efi-stub HV_OBJDIR=$PWD/hypervisor/build EFI_OBJDIR=$PWD/hypervisor/build
 
-You could also use ``FIRMWARE=sbl`` instead, to build the Intel SBL
+The acrn.efi will be generated in directory: . /hypervisor/build/acrn.efi
 (`Slim bootloader
 <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`_)
 hypervisor.
 
 Follow the same instructions to boot and test the images you created from your build.
 
-Save as default configuration
-*****************************
-
-Currently the ACRN hypervisor looks for default configurations under
-``hypervisor/arch/x86/configs/<BOARD>.config``, where ``<BOARD>`` is the
-specified platform. The following steps allow you to create a defconfig for
-another platform based on a current one.
-
-   .. code-block:: none
-
-      $ cd hypervisor
-      $ make defconfig BOARD=nuc6cayh
-      $ make menuconfig         # Modify the configurations
-      $ make savedefconfig      # The minimized config reside at build/defconfig
-      $ cp build/defconfig arch/x86/configs/xxx.config
-
-Then you can re-use that configuration by passing the name (``xxx`` in the
-example above) to 'BOARD=':
-
-   .. code-block:: none
-
-      $ make defconfig BOARD=xxx
