@@ -148,6 +148,11 @@ void do_acpi_sx(struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint
 	} while ((s1 & (1U << BIT_WAK_STS)) == 0U);
 }
 
+void host_enter_s5(struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
+{
+	do_acpi_sx(sstate_data, pm1a_cnt_val, pm1b_cnt_val);
+}
+
 void host_enter_s3(struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
 	uint64_t pmain_entry_saved;
