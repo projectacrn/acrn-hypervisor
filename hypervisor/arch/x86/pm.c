@@ -119,7 +119,8 @@ static uint32_t acpi_gas_read(const struct acpi_generic_address *gas)
 	return ret;
 }
 
-void do_acpi_s3(struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
+/* This function supports enter S3 or S5 according to the value given to pm1a_cnt_val and pm1b_cnt_val */
+void do_acpi_sx(struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
 	uint32_t s1, s2;
 
