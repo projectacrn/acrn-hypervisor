@@ -37,7 +37,7 @@ static uint64_t pcpu_sync = 0UL;
 static uint64_t startup_paddr = 0UL;
 
 /* physical cpu active bitmap, support up to 64 cpus */
-static uint64_t pcpu_active_bitmap = 0UL;
+static volatile uint64_t pcpu_active_bitmap = 0UL;
 
 static void pcpu_xsave_init(void);
 static void set_current_pcpu_id(uint16_t pcpu_id);
