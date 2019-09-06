@@ -130,9 +130,9 @@ int32_t vm_load_pm_s_state(struct acrn_vm *vm)
 	return ret;
 }
 
-static inline uint32_t s3_enabled(uint32_t pm1_cnt)
+static inline bool is_s3_enabled(uint32_t pm1_cnt)
 {
-	return pm1_cnt & (1U << BIT_SLP_EN);
+	return ((pm1_cnt & (1U << BIT_SLP_EN)) != 0U);
 }
 
 static inline uint8_t get_slp_typx(uint32_t pm1_cnt)
@@ -147,6 +147,47 @@ static bool pm1ab_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 	pio_req->value = pio_read(addr, width);
 
 	return true;
+}
+
+#define	POWEROFF_TIMEOUT	(5 * 60U) /* default poweroff timeout is 5 minutes */
+/* wait for other vm shutdown done. If POWEROFF_TIMEOUT passed and there are
+ * still some VMs active, we will force platform power off.
+ *
+ * TODO:
+ *   - Let user configure whether we wait for ever till all VMs powered off or
+ *     force shutdown once pre-defined timeout hit.
+ */
+static inline void wait_for_other_vm_shutdown(struct acrn_vm *self_vm)
+{
+	uint16_t vm_id;
+	bool ready_for_s5;
+	uint32_t timeout = POWEROFF_TIMEOUT;
+	struct acrn_vm *vm;
+
+	while (timeout != 0U) {
+		ready_for_s5 = true;
+		for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+			vm = get_vm_from_vmid(vm_id);
+
+			if ((vm != self_vm) && !is_poweroff_vm(vm)) {
+				ready_for_s5 = false;
+			}
+		}
+
+		if (ready_for_s5) {
+			break;
+		} else {
+			udelay(1000U * 1000U); /* delay 1s in each loop */
+		}
+
+		timeout--;
+	}
+}
+
+static inline void enter_s5(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
+{
+	wait_for_other_vm_shutdown(vm);
+	host_enter_s5(vm->pm.sx_state_data, pm1a_cnt_val, pm1b_cnt_val);
 }
 
 static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
@@ -179,24 +220,30 @@ static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, 
 	if (width == 2U) {
 		uint8_t val = get_slp_typx(v);
 
-		if ((addr == vm->pm.sx_state_data->pm1a_cnt.address)
-			&& (val == vm->pm.sx_state_data->s3_pkg.val_pm1a) && (s3_enabled(v) != 0U)) {
+		if ((addr == vm->pm.sx_state_data->pm1a_cnt.address) && is_s3_enabled(v)) {
 
 			if (vm->pm.sx_state_data->pm1b_cnt.address != 0UL) {
 				pm1a_cnt_ready = v;
 			} else {
-				enter_s3(vm, v, 0U);
+				if (vm->pm.sx_state_data->s3_pkg.val_pm1a == val) {
+					enter_s3(vm, v, 0U);
+				} else if (vm->pm.sx_state_data->s5_pkg.val_pm1a == val) {
+					enter_s5(vm, v, 0U);
+				}
 			}
 
 			to_write = false;
-
-		} else if ((addr == vm->pm.sx_state_data->pm1b_cnt.address)
-			&& (val == vm->pm.sx_state_data->s3_pkg.val_pm1b) && (s3_enabled(v) != 0U)) {
+		} else if ((addr == vm->pm.sx_state_data->pm1b_cnt.address) && is_s3_enabled(v)) {
 
 			if (pm1a_cnt_ready != 0U) {
 				pm1a_cnt_val = pm1a_cnt_ready;
 				pm1a_cnt_ready = 0U;
-				enter_s3(vm, pm1a_cnt_val, v);
+
+				if (vm->pm.sx_state_data->s3_pkg.val_pm1b == val) {
+					enter_s3(vm, pm1a_cnt_val, v);
+				} else if (vm->pm.sx_state_data->s5_pkg.val_pm1b == val) {
+					enter_s5(vm, pm1a_cnt_val, v);
+				}
 			} else {
 				/* the case broke ACPI spec */
 				pr_err("PM1B_CNT write error!");
