@@ -159,11 +159,8 @@ struct usb_block {
 	int			blen;	   /* in:len(buf), out:len(remaining) */
 	int			bdone;	   /* bytes transferred */
 	enum usb_block_stat	stat;      /* processed status */
-	void			*hci_data; /* HCI private reference */
-	int			ccs;
-	uint32_t		streamid;
-	uint64_t		trbnext;   /* next TRB guest address */
 	enum usb_block_type	type;
+	void                    *hcb;      /* host controller block */
 };
 
 struct usb_xfer {
@@ -253,7 +250,7 @@ struct usb_devemu *usb_emu_finddev(char *name);
 int usb_native_is_bus_existed(uint8_t bus_num);
 int usb_native_is_port_existed(uint8_t bus_num, uint8_t port_num);
 struct usb_block *usb_block_append(struct usb_xfer *xfer, void *buf, int blen,
-		void *hci_data, int ccs);
+		void *hcb, int hcb_len);
 int usb_get_hub_port_num(struct usb_devpath *path);
 char *usb_dev_path(struct usb_devpath *path);
 bool usb_dev_path_cmp(struct usb_devpath *p1, struct usb_devpath *p2);

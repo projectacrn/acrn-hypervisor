@@ -101,19 +101,21 @@ usb_emu_finddev(char *name)
 }
 
 struct usb_block *
-usb_block_append(struct usb_xfer *xfer, void *buf, int blen,
-		void *hci_data, int ccs)
+usb_block_append(struct usb_xfer *xfer, void *buf, int blen, void *hcb,
+		int hcb_len)
 {
 	struct usb_block *xb;
 
 	if (xfer->ndata >= USB_MAX_XFER_BLOCKS)
 		return NULL;
 
+	if (hcb == NULL)
+		return NULL;
+
 	xb = &xfer->data[xfer->tail];
 	xb->buf = buf;
 	xb->blen = blen;
-	xb->hci_data = hci_data;
-	xb->ccs = ccs;
+	memcpy(xb->hcb, hcb, hcb_len);
 	xb->stat = USB_BLOCK_FREE;
 	xb->bdone = 0;
 	xb->type = USB_DATA_NONE;
