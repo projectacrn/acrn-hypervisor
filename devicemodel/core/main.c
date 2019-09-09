@@ -132,7 +132,7 @@ usage(int code)
 	fprintf(stderr,
 		"Usage: %s [-hAWYv] [-B bootargs] [-c vcpus] [-E elf_image_path]\n"
 		"       %*s [-G GVT_args] [-i ioc_mediator_parameters] [-k kernel_image_path]\n"
-		"       %*s [-l lpc] [-m mem] [-p vcpu:hostcpu] [-r ramdisk_image_path]\n"
+		"       %*s [-l lpc] [-m mem] [-r ramdisk_image_path]\n"
 		"       %*s [-s pci] [-U uuid] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]\n"
 		"       %*s [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]\n"
 		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
