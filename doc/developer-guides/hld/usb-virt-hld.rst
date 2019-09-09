@@ -43,6 +43,33 @@ An xHCI register access from UOS will induce EPT trap from UOS to
 DM, and the xHCI DM or DRD DM will emulate hardware behaviors to make
 the subsystem run.
 
+USB devices supported by USB mediator
+*************************************
+
+The following USB devices are supported for the WaaG and LaaG operating systems.
+
++--------------+---------+---------+
+| Device       | WaaG OS | LaaG OS |
++==============+=========+=========+
+| USB Storage  |   Y     |   Y     |
++--------------+---------+---------+
+| USB Mouse    |   Y     |   Y     |
++--------------+---------+---------+
+| USB Keyboard |   Y     |   Y     |
++--------------+---------+---------+
+| USB Camera   |   N     |   Y     |
++--------------+---------+---------+
+| USB Headset  |   N     |   Y     |
++--------------+---------+---------+
+| USB Hub      |   Y     |   Y     |
+| (20 ports max|         |         |
+| per VM)      |         |         |
++--------------+---------+---------+
+
+.. note::
+   The above information is current as of ACRN 1.2.
+
+
 USB host virtualization
 ***********************
 
