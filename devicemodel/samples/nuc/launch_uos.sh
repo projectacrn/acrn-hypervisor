@@ -103,6 +103,7 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge \
   -s 4,virtio-net,tap0 \
   -s 7,virtio-rnd \
   --ovmf ./OVMF.fd \
+  --pm_notify_channel power_button \
   $logger_setting \
   --mac_seed $mac_seed \
   $vm_name
