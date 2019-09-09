@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <link href="https://cdn.staticfile.org/twitter-bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/3.0.3/js/bootstrap.min.js"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/css/bootstrap-select.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"></script>
+    <link href="../static/styles.css" rel="stylesheet" type="text/css">
+    <script src="../static/main.js" type="text/javascript"></script>
+</head>
+
+<body>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="{{ url_for('CONFIG_APP.scenarios') }}">ACRN Config</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li class="dropdown">
+                <a href="{{ url_for('CONFIG_APP.scenarios') }}">
+                    Scenario Setting <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    {% if scenarios[0] %}
+                        <small class="text-muted">default</small>
+                        {% for sc in scenarios[0] %}
+                        <li><a href="{{ url_for('CONFIG_APP.scenario', scenario_name=sc) }}">{{sc}}</a></li>
+                        {% endfor %}
+                        <small class="text-muted">user-defined</small>
+                        {% for sc in scenarios[1] %}
+                        <li><a href="{{ url_for('CONFIG_APP.scenario', scenario_name='user_defined_'+sc) }}">{{sc}}</a></li>
+                        {% endfor %}
+                    {% else %}
+                        <text class="form-control" id="err_msg" data-toggle="tooltip"
+                              title="No board selected or not supported board">No Setting
+                        </text>
+                    {% endif %}
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a href="{{ url_for('CONFIG_APP.launches') }}">Launch Setting <span
+                        class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    {% if launches[0] %}
+                    <small class="text-muted">default</small>
+                        {% for lc in launches[0] %}
+                        <li><a href="{{ url_for('CONFIG_APP.launch', launch_name=lc) }}">{{lc}}</a></li>
+                        {% endfor %}
+                        <small class="text-muted">user-defined</small>
+                        {% for lc in launches[1] %}
+                        <li><a href="{{ url_for('CONFIG_APP.launch', launch_name='user_defined_'+lc) }}">{{lc}}</a></li>
+                        {% endfor %}
+                    {% else %}
+                        <text class="form-control" id="err_msg" data-toggle="tooltip"
+                              title="No board selected or not supported board">No Setting
+                        </text>
+                    {% endif %}
+                </ul>
+            </li>
+        </ul>
+    </div>
+</nav>
+<form action="" enctype="multipart/form-data" method='POST'>
+    <div class="form-group">
+        <label for="board_info" class="col-sm-1 control-label" style="text-align: left;">Board info:</label>
+        <div class="col-sm-3">
+            <div class="dropdown">
+                <select class="selectpicker" id="board_info">
+                    <option style="display:none">
+                    {% for bi in board_info_list %}
+                        {% if bi==board_info %}
+                        <option value="{{bi}}" selected="selected">{{bi}}</option>
+                        {% else %}
+                        <option value="{{bi}}">{{bi}}</option>
+                        {% endif%}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <text class="col-sm-2" id="board_type">{{board_type if board_type != None else ''}}</text>
+        <div class="col-sm-6">
+            <form action="" enctype="multipart/form-data" method='POST'>
+                <label for="board_info_file" class="custom-file-upload btn btn-primary" id="board_info_file2"
+                       style="border: 1px solid #ccc; display: inline-block; padding: 6px 12px;
+                           cursor: pointer; border-radius:5px; ">
+                    Import Board info</label>
+                <input type="file" name="file" id="board_info_file" class="col-sm-6 btn btn-primary"
+                       style="display: none;">
+            </form>
+        </div>
+    </div>
+</form>
+<hr class="col-sm-12">
+
+{% block body_content %}
+
+{% endblock %}
+
+</body>
+
+</html>

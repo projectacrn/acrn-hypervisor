@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+
+{% block body_content %}
+
+<div class="modal fade" id="save_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Save as</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new_scenario_name" class="col-sm-3 control-label">Scenario: </label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control" id="new_scenario_name"
+                               value={{ scenario[13:] if scenario.startswith('user_defined_') else scenario }}>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" id="remove_scenario" class="btn btn-default" data-dismiss="modal">Remove</button>
+                <button type="button" id="save_scenario" data-id="" class="btn btn-primary" data-dismiss="modal">Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form class="form-horizontal" role="form" method="post">
+    <div class="form-group">
+        <label for="old_scenario_name" class="col-sm-2 control-label" style="text-align: left;">&nbsp;&nbsp;Scenario
+            Setting:</label>
+        <div class="col-sm-3">
+            <text class="form-control" id="old_scenario_name" readonly>{{scenario}}</text>
+        </div>
+        <div class="col-sm-1 col-sm-offset-1">
+            {% if board_info != None %}
+            <label for="scenario_file" class="btn btn-primary" id="scenario_file2"
+                   style="border: 1px solid #ccc; display: inline-block; padding: 6px 12px;
+                       cursor: pointer; border-radius:5px; ">
+                Import</label>
+            <input type="file" name="file" id="scenario_file" class="col-sm-1 btn btn-primary" style="display: none;">
+            {% else %}
+            <label for="scenario_file" class="btn"
+                   style="border: 1px solid #ccc; display: inline-block; padding: 6px 12px;
+                       cursor: pointer; border-radius:5px; ">
+                Import</label>
+            <input type="file" name="file" class="col-sm-1" style="display: none;" disabled>
+            {% endif %}
+        </div>
+        {% if board_info != None and root != None and scenario_item_values %}
+        <div class="col-sm-1">
+            <button type="button" data-id="save" class="btn btn-primary" data-toggle="modal" data-target="#save_modal">
+                Export
+            </button>
+        </div>
+        <div class="col-sm-2">
+            <button type="button" id="generate_board_src" data-id="generate_board_src" class="btn btn-primary"
+                    data-toggle="modal" data-target="#save_modal">Generate Board SRC
+            </button>
+        </div>
+        <div class="col-sm-2">
+            <button type="button" id="generate_scenario_src" data-id="generate_scenario_src" class="btn btn-primary"
+                    data-toggle="modal" data-target="#save_modal">Generate Scenario SRC
+            </button>
+        </div>
+        {% else %}
+        <div class="col-sm-1">
+            <button type="button" disabled class="btn btn-primary" data-toggle="modal" data-target="#save_modal">
+                Export
+            </button>
+        </div>
+        <div class="col-sm-2">
+            <button type="button" disabled class="btn btn-primary" data-toggle="modal" data-target="#save_modal">
+                Generate Board SRC
+            </button>
+        </div>
+        <div class="col-sm-2">
+            <button type="button" disabled class="btn btn-primary" data-toggle="modal" data-target="#save_modal">
+                Generate Scenario SRC
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if board_info != None and root != None and scenario_item_values %}
+    <table class="table table-hover" id="tab">
+        {% for vm in root.getchildren() %}
+            {% if 'configurable' not in vm.attrib or vm.attrib['configurable'] != '0'%}
+            <tr>
+                <td>
+                    <div class="form-group">
+                        <label class="col-sm-1 control-label">VM: </label>
+                        <label class="col-sm-1 control-label" id="vm">{{vm.attrib['id']}}</label>
+                    </div>
+                </td>
+                <td>
+                {% for elem in vm.getchildren() %}
+                    {% set elem_text = elem.text if elem.text != None else '' %}
+                    {% if elem.getchildren() == [] and ('configurable' not in elem.attrib or elem.attrib['configurable']
+                    != '0')%}
+                    <div class="form-group">
+                        <label class="col-sm-1 control-label" data-toggle="tooltip"
+                               title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">{{elem.tag}}</label>
+                        <label class="col-sm-2 control-label"></label>
+
+                        {% if ','.join(['vm', elem.tag]) not in scenario_item_values %}
+                        <div class="col-sm-6">
+                            {% if 'readonly' in elem.attrib and elem.attrib['readonly'] == 'true' %}
+                            <input type="text" class="form-control" id="{{'vm:id='+vm.attrib['id']+','+elem.tag}}"
+                                   value="{{elem_text}}" readonly>
+                            {% else %}
+                            <input type="text" class="form-control" id="{{'vm:id='+vm.attrib['id']+','+elem.tag}}"
+                                   value="{{elem_text}}">
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <div class="dropdown col-sm-6">
+                            {% if 'readonly' in elem.attrib and elem.attrib['readonly'] == 'true' %}
+                            <select class="selectpicker" data-width="auto"
+                                    id="{{'vm:id='+vm.attrib['id']+','+elem.tag}}" disabled>
+                            {% else %}
+                            <select class="selectpicker" data-width="auto"
+                                    id="{{'vm:id='+vm.attrib['id']+','+elem.tag}}">
+                            {% endif %}
+                            {% for item_value in scenario_item_values[','.join(['vm', elem.tag])] %}
+                                {% if item_value == elem_text %}
+                                <option value="{{item_value}}" selected="selected">{{item_value}}</option>
+                                {% else %}
+                                <option value="{{item_value}}">{{item_value}}</option>
+                                {% endif %}
+                            {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+                        <p id="{{'vm:id='+vm.attrib['id']+','+elem.tag}}_err" class="col-sm-3"></p>
+                    </div>
+                    {% elif elem.getchildren() != [] and ('configurable' not in elem.attrib or elem.attrib['configurable']
+                    != '0')%}
+                        {% if 'multiselect' not in elem.attrib or elem.attrib['multiselect'] != 'true' %}
+                            {% set first_child = [] %}
+                            {% for sub_elem in elem.getchildren() %}
+                                {% set sub_elem_text = sub_elem.text if sub_elem.text != None else '' %}
+                                {% if 'configurable' not in sub_elem.attrib or sub_elem.attrib['configurable'] != '0' %}
+                                <div class="form-group">
+                                    {% if 'id' not in elem.attrib %}
+                                        {% if not first_child %}
+                                        {% do first_child.append(1) %}
+                                        <label class="col-sm-1 control-label" data-toggle="tooltip"
+                                               title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
+                                            {{elem.tag}}</label>
+                                        {% else %}
+                                        <label class="col-sm-1 control-label" data-toggle="tooltip"
+                                               title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
+                                        </label>
+                                        {% endif %}
+
+                                        <label class="col-sm-2 control-label" data-toggle="tooltip"
+                                               title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
+                                            {{sub_elem.tag}}</label>
+                                        {% if ','.join(['vm', elem.tag, sub_elem.tag]) not in scenario_item_values %}
+                                            {% if sub_elem.tag in ['bootargs', 'kern_args'] %}
+                                                <div class="col-sm-6">
+                                                {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
+                                                <textarea type="text" class="form-control" style="height:120px"
+                                                          id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}"
+                                                          readonly>{{sub_elem_text}}</textarea>
+                                                {% else %}
+                                                <textarea type="text" class="form-control" style="height:120px"
+                                                          id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}">
+                                                    {{sub_elem_text}}</textarea>
+                                                {% endif %}
+                                                </div>
+                                            {% else %}
+                                                <div class="col-sm-6">
+                                                {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
+                                                <input type="text" class="form-control"
+                                                       id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}"
+                                                       value="{{sub_elem_text}}" readonly>
+                                                {% else %}
+                                                <input type="text" class="form-control"
+                                                       id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}"
+                                                       value="{{sub_elem_text}}">
+                                                {% endif %}
+                                                </div>
+                                            {% endif %}
+                                        {% else %}
+                                            <div class="dropdown col-sm-6">
+                                                {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
+                                                <select class="selectpicker" data-width="auto"
+                                                        id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}" disabled>
+                                                {% else %}
+                                                <select class="selectpicker" data-width="auto"
+                                                        id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}">
+                                                {% endif %}
+                                                {% for item_value in scenario_item_values[','.join(['vm', elem.tag, sub_elem.tag])] %}
+                                                    {% if item_value == sub_elem_text %}
+                                                    <option value="{{item_value}}" selected="selected">{{item_value}}</option>
+                                                    {% else %}
+                                                    <option value="{{item_value}}">{{item_value}}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                </select>
+                                            </div>
+                                        {% endif %}
+                                        <p id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}_err" class="col-sm-3"></p>
+                                    {% else %}
+                                        {% if not first_child %}
+                                        {% do first_child.append(1) %}
+                                        <label class="col-sm-1 control-label" data-toggle="tooltip"
+                                               id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_label1"
+                                               title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
+                                            {{elem.tag+' '+elem.attrib['id']}}</label>
+                                        {% else %}
+                                        <label class="col-sm-1 control-label" data-toggle="tooltip"
+                                               id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_label1"
+                                               title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
+                                        </label>
+                                        {% endif %}
+
+                                        <label class="col-sm-2 control-label" data-toggle="tooltip"
+                                               id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_label2"
+                                               title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
+                                            {{sub_elem.tag}}</label>
+                                        {% if (','.join(['vm', elem.tag, sub_elem.tag]) not in scenario_item_values) and
+                                        (elem.tag!='vuart' or sub_elem.tag!='base') %}
+                                            <div class="col-sm-6"
+                                                 id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_config">
+                                                {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
+                                                <input type="text" class="form-control"
+                                                       id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}"
+                                                       value="{{sub_elem_text}}" readonly>
+                                                {% else %}
+                                                <input type="text" class="form-control"
+                                                       id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}"
+                                                       value="{{sub_elem_text}}">
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <div class="dropdown col-sm-6">
+                                                {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
+                                                <select class="selectpicker" data-width="auto" disabled
+                                                        id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}">
+                                                {% else %}
+                                                <select class="selectpicker" data-width="auto"
+                                                        id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}">
+                                                {% endif %}
+                                                {% set key = ('vm='+vm.attrib['id']+','+elem.tag+'='+elem.attrib['id']+','+sub_elem.tag)
+                                                if (elem.tag=='vuart' and sub_elem.tag=='base')
+                                                else ','.join(['vm', elem.tag, sub_elem.tag]) %}
+                                                {% for item_value in scenario_item_values[key] %}
+                                                    {% if item_value == sub_elem_text %}
+                                                    <option value="{{item_value}}" selected="selected">{{item_value}}</option>
+                                                    {% else %}
+                                                    <option value="{{item_value}}">{{item_value}}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                </select>
+                                            </div>
+                                        {% endif %}
+                                        <p id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_err"
+                                           class="col-sm-3"></p>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% elif 'configurable' not in elem.attrib or elem.attrib['configurable'] != '0' %}
+                            <div class="form-group">
+                                <label class="col-sm-1 control-label" data-toggle="tooltip"
+                                       title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">{{elem.tag}}</label>
+                                <label class="col-sm-2 control-label" data-toggle="tooltip"
+                                       title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}"></label>
+                                <div class="dropdown col-sm-6">
+                                    {% if 'readonly' in elem.attrib and elem.attrib['readonly'] == 'true' %}
+                                    <select class="selectpicker" data-width="auto" disabled
+                                            id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+elem.tag[:-1]}}"
+                                            multiple>
+                                    {% else %}
+                                    <select class="selectpicker" data-width="auto"
+                                            id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+elem.tag[:-1]}}"
+                                            multiple>
+                                    {% endif %}
+                                    {% if ','.join(['vm', elem.tag]) not in scenario_item_values %}
+                                        {% set x=1 %}
+                                        {% for sub_elem in elem.getchildren() %}
+                                        <option value="{{sub_elem.text}}" selected="selected">{{sub_elem.text}}</option>
+                                        {% endfor %}
+                                    {% else %}
+                                        {% set selected_list = [] %}
+                                        {% for sub_elem in elem.getchildren() %}
+                                        {% do selected_list.append(sub_elem.text) %}
+                                        {% endfor %}
+                                        {% for item_value in scenario_item_values[','.join(['vm', elem.tag])] %}
+                                            {% if item_value in selected_list %}
+                                            <option value="{{item_value}}" selected="selected">{{item_value}}</option>
+                                            {% else %}
+                                            <option value="{{item_value}}">{{item_value}}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    </select>
+                                </div>
+                                <p id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+elem.tag[:-1]}}_err" class="col-sm-3"></p>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+                </td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+    </table>
+    {% else %}
+    <text class="form-control" id="err_msg">No setting available. Select one board info and make sure the scenario xml
+        exists.
+    </text>
+    {% endif %}
+</form>
+
+{% endblock %}
