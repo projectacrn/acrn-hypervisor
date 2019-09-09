@@ -7,7 +7,10 @@ Develop using ACRN
 Configuration Tools
 *******************
 
-- Offline configuration Tool (under developmemnt)
+.. toctree::
+   :maxdepth: 1
+
+   tutorials/acrn_configuration_tool
 
 Configuration Tutorials
 ***********************
@@ -23,7 +26,6 @@ Configuration Tutorials
    tutorials/using_partition_mode_on_up2
    tutorials/using_sdc2_mode_on_nuc
    tutorials/using_hybrid_mode_on_nuc
-   tutorials/acrn_configuration_tool
 
 User VM Tutorials
 *****************
