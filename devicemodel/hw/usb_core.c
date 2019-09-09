@@ -118,7 +118,7 @@ usb_block_append(struct usb_xfer *xfer, void *buf, int blen,
 	xb->bdone = 0;
 	xb->type = USB_DATA_NONE;
 	xfer->ndata++;
-	xfer->tail = (xfer->tail + 1) % USB_MAX_XFER_BLOCKS;
+	xfer->tail = index_inc(xfer->tail, USB_MAX_XFER_BLOCKS);
 	return xb;
 }
 

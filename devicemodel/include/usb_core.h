@@ -230,6 +230,21 @@ enum USB_ERRCODE {
 
 #define USB_DROPPED_XFER_MAGIC	0xaaaaaaaa55555555
 
+inline bool
+index_valid(int head, int tail, int maxcnt, int idx) {
+	if (head <= tail)
+		return (idx >= head && idx < tail);
+	else
+		return (idx >= head && idx < maxcnt) ||
+			(idx >= 0 && idx < tail);
+}
+
+inline int
+index_inc(int idx, int maxcnt)
+{
+	return (idx + 1) % maxcnt;
+}
+
 extern int usb_log_level;
 static inline int usb_get_log_level(void)		{ return usb_log_level; }
 static inline void usb_set_log_level(int level)	{ usb_log_level = level; }

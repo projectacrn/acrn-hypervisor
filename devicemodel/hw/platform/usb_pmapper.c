@@ -246,11 +246,8 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 	idx = r->blk_head;
 	buf_idx = 0;
 	done = trn->actual_length;
-
-	while ((r->blk_head <= r->blk_tail && idx >= r->blk_head &&
-			idx < r->blk_tail) || ((r->blk_head > r->blk_tail) &&
-			((idx >= r->blk_head && idx < USB_MAX_XFER_BLOCKS) ||
-			(idx >= 0 && idx < r->blk_tail)))) {
+	while (index_valid(r->blk_head, r->blk_tail, USB_MAX_XFER_BLOCKS, idx))
+	{
 		if (trn->type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS) {
 			buf_idx = 0;
 			buf = libusb_get_iso_packet_buffer_simple(trn, i);
@@ -284,7 +281,7 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 			block->blen -= d;
 			block->bdone = d;
 			block->stat = USB_BLOCK_HANDLED;
-			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
+			idx = index_inc(idx, USB_MAX_XFER_BLOCKS);
 
 		} while (block->type == USB_DATA_PART);
 	}
@@ -292,14 +289,11 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 stall_out:
 	if (is_stalled) {
 		idx = r->blk_head;
-
-		while ((r->blk_head <= r->blk_tail && idx >= r->blk_head &&
-			idx < r->blk_tail) || ((r->blk_head > r->blk_tail) &&
-			((idx >= r->blk_head && idx < USB_MAX_XFER_BLOCKS) ||
-			(idx >= 0 && idx < r->blk_tail)))) {
+		while (index_valid(r->blk_head, r->blk_tail,
+					USB_MAX_XFER_BLOCKS, idx)) {
 			block = &xfer->data[idx];
 			block->stat = USB_BLOCK_HANDLED;
-			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
+			idx = index_inc(idx, USB_MAX_XFER_BLOCKS);
 		}
 	}
 
@@ -377,8 +371,8 @@ usb_dev_prepare_xfer(struct usb_xfer *xfer, int *head, int *tail)
 	if (idx < 0 || idx >= USB_MAX_XFER_BLOCKS)
 		return -1;
 
-	for (i = 0; i < xfer->ndata; i++, idx = (idx + 1) % USB_MAX_XFER_BLOCKS)
-	{
+	for (i = 0; i < xfer->ndata;
+		i++, idx = index_inc(idx, USB_MAX_XFER_BLOCKS)) {
 		block = &xfer->data[idx];
 		if (block->stat == USB_BLOCK_HANDLED ||
 				block->stat == USB_BLOCK_HANDLING)
@@ -720,7 +714,7 @@ usb_dev_prepare_ctrl_xfer(struct usb_xfer *xfer)
 			ret = blk;
 
 		blk->stat = USB_BLOCK_HANDLED;
-		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
+		idx = index_inc(idx, USB_MAX_XFER_BLOCKS);
 	}
 	return ret;
 }
@@ -781,12 +775,10 @@ usb_dev_data(void *pdata, struct usb_xfer *xfer, int dir, int epctx)
 		framelen = USB_EP_MAXP_SZ(maxp) * (1 + USB_EP_MAXP_MT(maxp));
 		UPRINTF(LDBG, "iso maxp %u framelen %d\r\n", maxp, framelen);
 
-		idx = head;
-		while (((head <= tail && idx >= head && idx < tail) ||
-			((idx >= head && idx < USB_MAX_XFER_BLOCKS) ||
-			 (idx >= 0 && idx < tail)))) {
+		for (idx = head;
+			index_valid(head, tail, USB_MAX_XFER_BLOCKS, idx);
+			idx = index_inc(idx, USB_MAX_XFER_BLOCKS)) {
 
-			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 			if (xfer->data[idx].blen > framelen)
 				UPRINTF(LFTL, "err framelen %d\r\n", framelen);
 
@@ -821,13 +813,9 @@ usb_dev_data(void *pdata, struct usb_xfer *xfer, int dir, int epctx)
 			type_str[type]);
 
 	if (!dir) {
-		idx = head;
-		buf_idx = 0;
-		while (((head <= tail && idx >= head && idx < tail) ||
-			((idx >= head && idx < USB_MAX_XFER_BLOCKS) ||
-			 (idx >= 0 && idx < tail)))) {
-
-			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
+		for (idx = head, buf_idx = 0;
+			index_valid(head, tail, USB_MAX_XFER_BLOCKS, idx);
+			idx = index_inc(idx, USB_MAX_XFER_BLOCKS)) {
 			b = &xfer->data[idx];
 			if (b->type == USB_DATA_PART ||
 					b->type == USB_DATA_FULL) {
@@ -838,15 +826,10 @@ usb_dev_data(void *pdata, struct usb_xfer *xfer, int dir, int epctx)
 	}
 
 	if (type == USB_ENDPOINT_ISOC) {
-		idx = head;
-		while ((head <= tail && idx >= head && idx < tail) ||
-			((idx >= head && idx < USB_MAX_XFER_BLOCKS) ||
-			 (idx >= 0 && idx < tail))) {
-			int len;
-
-			i = 0;
-			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
-			len = xfer->data[idx].blen;
+		for (i = 0, idx = head;
+			index_valid(head, tail, USB_MAX_XFER_BLOCKS, idx);
+			idx = index_inc(idx, USB_MAX_XFER_BLOCKS)) {
+			int len = xfer->data[idx].blen;
 
 			if (xfer->data[idx].type == USB_DATA_NONE) {
 				continue;
