@@ -274,7 +274,8 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 			if (d > block->blen)
 				d = block->blen;
 
-			if (block->buf) {
+			if (block->type == USB_DATA_PART ||
+					block->type == USB_DATA_FULL) {
 				if (r->in == TOKEN_IN) {
 					memcpy(block->buf, buf + buf_idx, d);
 					buf_idx += d;
@@ -292,7 +293,7 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 			i++;
 
-		} while (block->chained == 1);
+		} while (block->type == USB_DATA_PART);
 	}
 
 stall_out:
@@ -386,14 +387,15 @@ usb_dev_prepare_xfer(struct usb_xfer *xfer, int *count, int *size)
 			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 			continue;
 		}
-		if (block->buf && block->blen > 0) {
+		if (block->type == USB_DATA_PART ||
+				block->type == USB_DATA_FULL) {
 			if (!found) {
 				found = 1;
 				first = idx;
 			}
 			c++;
 			s += block->blen;
-		} else if (!block->buf || !block->blen) {
+		} else if (block->type == USB_DATA_NONE) {
 			/* there are two cases:
 			 * 1. LINK trb is in the middle of trbs.
 			 * 2. LINK trb is a single trb.
@@ -801,7 +803,7 @@ usb_dev_data(void *pdata, struct usb_xfer *xfer, int dir, int epctx)
 				continue;
 			}
 
-			if (xfer->data[idx].chained == 1) {
+			if (xfer->data[idx].type == USB_DATA_PART) {
 				idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 				continue;
 			}
@@ -838,7 +840,8 @@ usb_dev_data(void *pdata, struct usb_xfer *xfer, int dir, int epctx)
 	if (!dir) {
 		for (i = 0, j = 0, buf_idx = 0; j < blk_count; ++i) {
 			b = &xfer->data[(blk_start + i) % USB_MAX_XFER_BLOCKS];
-			if (b->buf) {
+			if (b->type == USB_DATA_FULL ||
+					b->type == USB_DATA_PART) {
 				memcpy(&r->buffer[buf_idx], b->buf, b->blen);
 				buf_idx += b->blen;
 				j++;
@@ -850,13 +853,13 @@ usb_dev_data(void *pdata, struct usb_xfer *xfer, int dir, int epctx)
 		for (i = 0, j = 0, idx = blk_start; i < blk_count; ++i) {
 			int len = xfer->data[idx].blen;
 
-			if (len <= 0) {
+			if (xfer->data[idx].type == USB_DATA_NONE) {
 				idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 				i--;
 				continue;
 			}
 
-			if (xfer->data[idx].chained == 1) {
+			if (xfer->data[idx].type == USB_DATA_PART) {
 				r->trn->iso_packet_desc[j].length += len;
 				idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 				continue;

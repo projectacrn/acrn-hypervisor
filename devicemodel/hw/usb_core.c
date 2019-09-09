@@ -116,7 +116,7 @@ usb_block_append(struct usb_xfer *xfer, void *buf, int blen,
 	xb->ccs = ccs;
 	xb->stat = USB_BLOCK_FREE;
 	xb->bdone = 0;
-	xb->chained = 0;
+	xb->type = USB_DATA_NONE;
 	xfer->ndata++;
 	xfer->tail = (xfer->tail + 1) % USB_MAX_XFER_BLOCKS;
 	return xb;

@@ -2650,12 +2650,11 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
 		trbflags = trb->dwTrb3;
 
 		UPRINTF(LDBG, "xfer[%d] done?%u:%d trb %x %016lx %x "
-			 "(err %d) IOC?%d, chained %d\r\n",
+			 "(err %d) IOC?%d, type %d\r\n",
 			 i, xfer->data[i].stat, xfer->data[i].blen,
-			 XHCI_TRB_3_TYPE_GET(trbflags), evtrb.qwTrb0,
-			 trbflags, err,
-			 trb->dwTrb3 & XHCI_TRB_3_IOC_BIT ? 1 : 0,
-			 xfer->data[i].chained);
+			 XHCI_TRB_3_TYPE_GET(trbflags), evtrb.qwTrb0, trbflags,
+			 err, trb->dwTrb3 & XHCI_TRB_3_IOC_BIT ? 1 : 0,
+			 xfer->data[i].type);
 
 		if (xfer->data[i].stat < USB_BLOCK_HANDLED) {
 			xfer->head = (int)i;
@@ -2668,14 +2667,14 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
 		edtla += xfer->data[i].bdone;
 
 		trb->dwTrb3 = (trb->dwTrb3 & ~0x1) | (xfer->data[i].ccs);
-		if (xfer->data[i].chained == 1) {
+		if (xfer->data[i].type == USB_DATA_PART) {
 			rem_len += xfer->data[i].blen;
 			i = (i + 1) % USB_MAX_XFER_BLOCKS;
 
-			/* When the chained == 1, this 'continue' will delay
-			 * the IOC behavior which could decrease the number
-			 * of virtual interrupts. This could GREATLY improve
-			 * the performance especially under ISOCH scenario.
+			/* This 'continue' will delay the IOC behavior which
+			 * could decrease the number of virtual interrupts.
+			 * This could GREATLY improve the performance especially
+			 * under ISOCH scenario.
 			 */
 			continue;
 		} else
@@ -2818,6 +2817,7 @@ pci_xhci_handle_transfer(struct pci_xhci_vdev *xdev,
 	struct		xhci_trb *setup_trb;
 	struct		usb_xfer *xfer;
 	struct		usb_block *xfer_block;
+	struct		usb_block *prev_block;
 	uint64_t	val;
 	uint32_t	trbflags;
 	int		do_intr, err;
@@ -2837,6 +2837,7 @@ retry:
 	do_retry = 0;
 	do_intr = 0;
 	setup_trb = NULL;
+	prev_block = NULL;
 
 	while (1) {
 		pci_xhci_dump_trb(trb);
@@ -2920,8 +2921,17 @@ retry:
 					trb->dwTrb2 & 0x1FFFF, (void *)addr,
 					ccs);
 
-			if (xfer_block && (trb->dwTrb3 & XHCI_TRB_3_CHAIN_BIT))
-				xfer_block->chained = 1;
+			if (!xfer_block) {
+				err = XHCI_TRB_ERROR_STALL;
+				goto errout;
+			}
+
+			if (trb->dwTrb3 & XHCI_TRB_3_CHAIN_BIT)
+				xfer_block->type = USB_DATA_PART;
+			else
+				xfer_block->type = USB_DATA_FULL;
+
+			prev_block = xfer_block;
 			break;
 
 		case XHCI_TRB_TYPE_STATUS_STAGE:
@@ -2948,6 +2958,10 @@ retry:
 			}
 			if ((epid > 1) && (trbflags & XHCI_TRB_3_IOC_BIT))
 				xfer_block->stat = USB_BLOCK_HANDLED;
+
+			if (prev_block && prev_block->type == USB_DATA_PART)
+				prev_block->type = USB_DATA_FULL;
+
 			break;
 
 		default:
