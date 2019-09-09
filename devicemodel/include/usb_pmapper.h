@@ -73,9 +73,9 @@ struct usb_dev_req {
 	 * so here need some data to record it.
 	 */
 	uint8_t	*buffer;
-	int     buf_length;
-	int     blk_start;
-	int     blk_count;
+	int     buf_size;
+	int     blk_head;
+	int     blk_tail;
 
 	struct usb_xfer *xfer;
 	struct libusb_transfer *trn;
