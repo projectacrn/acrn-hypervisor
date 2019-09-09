@@ -142,6 +142,12 @@ struct usb_hci {
 	int	hci_port;
 };
 
+enum usb_block_type {
+	USB_DATA_NONE,
+	USB_DATA_PART,
+	USB_DATA_FULL
+};
+
 /*
  * Each xfer block is mapped to the hci transfer block.
  * On input into the device handler, blen is set to the lenght of buf.
@@ -155,9 +161,9 @@ struct usb_block {
 	enum usb_block_stat	stat;      /* processed status */
 	void			*hci_data; /* HCI private reference */
 	int			ccs;
-	int			chained;
 	uint32_t		streamid;
 	uint64_t		trbnext;   /* next TRB guest address */
+	enum usb_block_type	type;
 };
 
 struct usb_xfer {
