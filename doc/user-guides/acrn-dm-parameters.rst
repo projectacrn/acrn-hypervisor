@@ -317,3 +317,12 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        running. It can only be powered off from inside the VM itself.
 
        By default, this option is not enabled.
+
+   * - :kbd:`--logger_setting <console,level=4;disk,level=4;kmsg,level=3>`
+     - This option sets the level of logging that is used for each log channel.
+       The general format of this option is ``<log channel>,level=<log level>``.
+       Different log channels are separated by a semi-colon (``;``). The various
+       log channels available are: ``console``, ``disk`` and ``kmsg``.  The log
+       level ranges from 1 (``error``) up to 5 (``debug``).
+
+       By default, the log severity level is set to 4 (``info``).
