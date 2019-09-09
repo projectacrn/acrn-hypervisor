@@ -17,6 +17,7 @@
 #include <mmu.h>
 #include <lapic.h>
 #include <vtd.h>
+#include <timer.h>
 #include <logmsg.h>
 #include <vm_configurations.h>
 

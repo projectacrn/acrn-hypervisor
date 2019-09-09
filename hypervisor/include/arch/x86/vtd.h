@@ -6,7 +6,8 @@
 
 #ifndef VTD_H
 #define VTD_H
-#include <ptdev.h>
+#include <types.h>
+#include <pci.h>
 /*
  * Intel IOMMU register specification per version 1.0 public spec.
  */
@@ -54,6 +55,16 @@ struct iommu_domain {
 	uint32_t addr_width;   /* address width of the domain */
 	uint64_t trans_table_ptr;
 	bool iommu_snoop;
+};
+
+union source {
+	uint16_t ioapic_id;
+	union pci_bdf msi;
+};
+
+struct intr_source {
+	bool is_msi;
+	union source src;
 };
 
 static inline uint8_t dmar_ver_major(uint64_t version)
