@@ -187,6 +187,7 @@ acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:
   $logger_setting \
   $boot_ipu_option      \
   --mac_seed $mac_seed \
+  --pm_notify_channel power_button \
   -B "root=/dev/vda2 rw rootwait maxcpus=$2 nohpet console=hvc0 \
   console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
   consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$4 i915.enable_guc_loading=0 \
@@ -380,6 +381,7 @@ logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"
    --mac_seed $mac_seed \
    $boot_image_option \
    --enable_trusty \
+   --pm_notify_channel power_button \
    -B "$kernel_cmdline" $vm_name
 }
 
