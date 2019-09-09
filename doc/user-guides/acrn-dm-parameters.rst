@@ -326,3 +326,14 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        level ranges from 1 (``error``) up to 5 (``debug``).
 
        By default, the log severity level is set to 4 (``info``).
+
+   * - :kbd:`--pm_notify_channel <channel>`
+     - This option is used to define which channel could be used DM to
+       communicate with VM about power management event.
+
+       ACRN supports two channels: ``ioc`` and ``power button``.
+
+       usage::
+          --pm_notify_channel ioc
+
+       Use ioc as power management event motify channel.
