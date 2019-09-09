@@ -2663,13 +2663,13 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
 
 		xfer->data[i].stat = USB_BLOCK_FREE;
 		xfer->ndata--;
-		xfer->head = (xfer->head + 1) % USB_MAX_XFER_BLOCKS;
+		xfer->head = index_inc(xfer->head, USB_MAX_XFER_BLOCKS);
 		edtla += xfer->data[i].bdone;
 
 		trb->dwTrb3 = (trb->dwTrb3 & ~0x1) | (xfer->data[i].ccs);
 		if (xfer->data[i].type == USB_DATA_PART) {
 			rem_len += xfer->data[i].blen;
-			i = (i + 1) % USB_MAX_XFER_BLOCKS;
+			i = index_inc(i, USB_MAX_XFER_BLOCKS);
 
 			/* This 'continue' will delay the IOC behavior which
 			 * could decrease the number of virtual interrupts.
@@ -2688,7 +2688,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
 		    !((err == XHCI_TRB_ERROR_SHORT_PKT) &&
 		      (trb->dwTrb3 & XHCI_TRB_3_ISP_BIT))) {
 
-			i = (i + 1) % USB_MAX_XFER_BLOCKS;
+			i = index_inc(i, USB_MAX_XFER_BLOCKS);
 			continue;
 		}
 
@@ -2713,7 +2713,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
 		if (err != XHCI_TRB_ERROR_SUCCESS)
 			break;
 
-		i = (i + 1) % USB_MAX_XFER_BLOCKS;
+		i = index_inc(i, USB_MAX_XFER_BLOCKS);
 		rem_len = 0;
 	}
 
