@@ -21,6 +21,7 @@
 #include <version.h>
 #include <vmx.h>
 #include <msr.h>
+#include <ptdev.h>
 #include <ld_sym.h>
 #include <logmsg.h>
 #include <cat.h>

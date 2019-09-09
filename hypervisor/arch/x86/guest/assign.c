@@ -9,6 +9,7 @@
 #include <bits.h>
 #include <vm.h>
 #include <vtd.h>
+#include <ptdev.h>
 #include <per_cpu.h>
 #include <ioapic.h>
 
