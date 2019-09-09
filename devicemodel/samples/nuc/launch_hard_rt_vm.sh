@@ -30,6 +30,11 @@ echo ${passthru_vpid["sata"]} > /sys/bus/pci/drivers/pci-stub/new_id
 echo ${passthru_bdf["sata"]} > /sys/bus/pci/devices/${passthru_bdf["sata"]}/driver/unbind
 echo ${passthru_bdf["sata"]} > /sys/bus/pci/drivers/pci-stub/bind
 
+# for pm setting
+pm_channel="--pm_notify_channel uart "
+pm_by_vuart="--pm_by_vuart tty,/dev/ttyS1"
+
+
 /usr/bin/acrn-dm -A -m $mem_size -c $1 -s 0:0,hostbridge \
   -k /usr/lib/kernel/default-iot-lts2018-preempt-rt \
    --lapic_pt \
@@ -37,6 +42,7 @@ echo ${passthru_bdf["sata"]} > /sys/bus/pci/drivers/pci-stub/bind
    --virtio_poll 1000000 \
    -s 2,passthru,0/17/0 \
    -s 3,virtio-console,@stdio:stdio_port \
+   $pm_channel $pm_by_vuart \
   -B "root=/dev/sda3 rw rootwait maxcpus=$1 nohpet console=hvc0 \
   no_timer_check ignore_loglevel log_buf_len=16M \
   consoleblank=0 tsc=reliable x2apic_phys" hard_rtvm
