@@ -23,7 +23,7 @@ b) Mixed-use of ## or # operators shall not be allowed.
 Compliant example::
 
     #define CONCAT(x, y) x ## y
-    
+
     uint32_t ab = 32U;
     printf("%d \n", CONCAT(a, b));
 
@@ -32,7 +32,7 @@ Compliant example::
    Non-compliant example::
 
        #define CONCAT(x, y, z) x ## y ## z
-       
+
        uint32_t abc = 32U;
        printf("%d \n", CONCAT(a, b, c));
 
@@ -3609,6 +3609,7 @@ bytes, long is 8 bytes, and long long is not used.
 Language Extensions
 *******************
 
+Refer to the `GCC 7.3 Manual, Section 6 Extensions to the C Language Family <https://gcc.gnu.org/onlinedocs/gcc-7.3.0/gcc/C-Extensions.html#C-Extensions/>`_.
 
 C-LE-01: Use of inline Assembly language in C Code is allowed
 =============================================================
@@ -3646,4 +3647,5 @@ C-LE-05: Use of extended designated initializers is allowed
 This rule applies to the following designated initializer: writing '[first ...
 last] = value' to initialize a range of elements to the same value, refers to
 section 6.27 in GCC 7.3 Manual.
+
 
