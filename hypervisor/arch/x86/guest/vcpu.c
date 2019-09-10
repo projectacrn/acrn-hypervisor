@@ -38,7 +38,7 @@ uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
 	const struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	return ctx->guest_cpu_regs.longs[reg];
+	return ctx->cpu_regs.longs[reg];
 }
 
 void vcpu_set_gpreg(struct acrn_vcpu *vcpu, uint32_t reg, uint64_t val)
@@ -46,7 +46,7 @@ void vcpu_set_gpreg(struct acrn_vcpu *vcpu, uint32_t reg, uint64_t val)
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	ctx->guest_cpu_regs.longs[reg] = val;
+	ctx->cpu_regs.longs[reg] = val;
 }
 
 uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
@@ -72,7 +72,7 @@ uint64_t vcpu_get_rsp(const struct acrn_vcpu *vcpu)
 	const struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	return ctx->guest_cpu_regs.regs.rsp;
+	return ctx->cpu_regs.regs.rsp;
 }
 
 void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val)
@@ -80,7 +80,7 @@ void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val)
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
-	ctx->guest_cpu_regs.regs.rsp = val;
+	ctx->cpu_regs.regs.rsp = val;
 	bitmap_set_lock(CPU_REG_RSP, &vcpu->reg_updated);
 }
 
@@ -274,7 +274,7 @@ void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
 	ectx->ldtr.attr = LDTR_AR;
 	ectx->tr.attr = TR_AR;
 
-	(void)memcpy_s((void *)&(ctx->guest_cpu_regs), sizeof(struct acrn_gp_regs),
+	(void)memcpy_s((void *)&(ctx->cpu_regs), sizeof(struct acrn_gp_regs),
 			(void *)&(vcpu_regs->gprs), sizeof(struct acrn_gp_regs));
 
 	vcpu_set_rip(vcpu, vcpu_regs->rip);
@@ -478,7 +478,7 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 		exec_vmwrite(VMX_GUEST_RIP, ctx->rip);
 	}
 	if (bitmap_test_and_clear_lock(CPU_REG_RSP, &vcpu->reg_updated)) {
-		exec_vmwrite(VMX_GUEST_RSP, ctx->guest_cpu_regs.regs.rsp);
+		exec_vmwrite(VMX_GUEST_RSP, ctx->cpu_regs.regs.rsp);
 	}
 	if (bitmap_test_and_clear_lock(CPU_REG_EFER, &vcpu->reg_updated)) {
 		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, ctx->ia32_efer);
@@ -573,7 +573,7 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 	/* Obtain current VCPU instruction length */
 	vcpu->arch.inst_len = exec_vmread32(VMX_EXIT_INSTR_LEN);
 
-	ctx->guest_cpu_regs.regs.rsp = exec_vmread(VMX_GUEST_RSP);
+	ctx->cpu_regs.regs.rsp = exec_vmread(VMX_GUEST_RSP);
 
 	/* Obtain VM exit reason */
 	vcpu->arch.exit_reason = exec_vmread32(VMX_EXIT_REASON);
