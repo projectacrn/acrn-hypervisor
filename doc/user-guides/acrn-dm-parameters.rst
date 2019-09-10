@@ -331,9 +331,27 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
      - This option is used to define which channel could be used DM to
        communicate with VM about power management event.
 
-       ACRN supports two channels: ``ioc`` and ``power button``.
+       ACRN supports three channels: ``ioc``, ``power button`` and ``uart``.
 
        usage::
           --pm_notify_channel ioc
 
        Use ioc as power management event motify channel.
+
+   * - :kbd:`--pm_by_vuart [pty|tty],<node_path>`
+     - This option is used to set a user OS power management by virtual UART.
+       With acrn-dm UART emulation and hypervisor UART emulation and configure,
+       service OS can communicate with user OS through virtual UART. By this
+       option, service OS can notify user OS to shutdown itself by vUART.
+
+       It need work with `--pm_notify_channel` and PCI UART setting (lpc and -l).
+
+       Example::
+
+        for general UOS, like LaaG or WaaG, it need set:
+          --pm_notify_channel uart --pm_by_vuart pty,/run/acrn/life_mngr_vm1
+          -l com2,/run/acrn/life_mngr_vm1
+        for RTVM, like RT-Linux:
+          --pm_notify_channel uart --pm_by_vuart tty,/dev/ttyS1
+
+       For different UOS, it can be configured as needed.
