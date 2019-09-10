@@ -247,6 +247,7 @@ void usb_parse_log_level(char level);
 struct usb_devemu *usb_emu_finddev(char *name);
 int usb_native_is_bus_existed(uint8_t bus_num);
 int usb_native_is_port_existed(uint8_t bus_num, uint8_t port_num);
+int usb_native_is_device_existed(struct usb_devpath *path);
 struct usb_block *usb_block_append(struct usb_xfer *xfer, void *buf, int blen,
 		void *hcb, int hcb_len);
 int usb_get_hub_port_num(struct usb_devpath *path);
