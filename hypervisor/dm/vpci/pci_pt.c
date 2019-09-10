@@ -36,69 +36,50 @@
 
 /**
  * @brief get bar's full base address in 64-bit
- * @pre idx < nr_bars
+ * @pre (pci_get_bar_type(bars[idx].reg.value) == PCIBAR_MEM64) ? ((idx + 1U) < nr_bars) : (idx < nr_bars)
  * For 64-bit MMIO bar, its lower 32-bits base address and upper 32-bits base are combined
  * into one 64-bit base address
  */
-static uint64_t pci_bar_2_bar_base(const struct pci_bar *pbars, uint32_t nr_bars, uint32_t idx)
+static uint64_t pci_bar_2_bar_base(const struct pci_bar *bars, uint32_t nr_bars, uint32_t idx)
 {
 	uint64_t base = 0UL;
 	uint64_t tmp;
 	const struct pci_bar *bar;
+	enum pci_bar_type type;
 
-	bar = &pbars[idx];
+	bar = &bars[idx];
+	type = pci_get_bar_type(bar->reg.value);
+	switch (type) {
+	case PCIBAR_IO_SPACE:
+		/* IO bar, BITS 31-2 = base address, 4-byte aligned */
+		base = (uint64_t)(bar->reg.bits.io.base);
+		base <<= 2U;
+		break;
 
-	if (bar->is_64bit_high) {
-		ASSERT(idx > 0U, "idx for upper 32-bit of the 64-bit bar should be greater than 0!");
-		if (idx > 0U) {
-			const struct pci_bar *prev_bar = &pbars[idx - 1U];
+	case PCIBAR_MEM32:
+		base = (uint64_t)(bar->reg.bits.mem.base);
+		base <<= 4U;
+		break;
 
-			/* Upper 32-bit of 64-bit bar (does not have flags portion) */
-			base = (uint64_t)(bar->reg.value);
+	case PCIBAR_MEM64:
+		if ((idx + 1U) < nr_bars) {
+			const struct pci_bar *next_bar = &bars[idx + 1U];
+
+			/* Upper 32-bit of 64-bit bar */
+			base = (uint64_t)(next_bar->reg.value);
 			base <<= 32U;
 
 			/* Lower 32-bit of a 64-bit bar (BITS 31-4 = base address, 16-byte aligned) */
-			tmp = (uint64_t)(prev_bar->reg.bits.mem.base);
+			tmp = (uint64_t)(bar->reg.bits.mem.base);
 			tmp <<= 4U;
 
 			base |= tmp;
 		}
-	} else {
-		enum pci_bar_type type = pci_get_bar_type(bar->reg.value);
+		break;
 
-		switch (type) {
-		case PCIBAR_IO_SPACE:
-			/* IO bar, BITS 31-2 = base address, 4-byte aligned */
-			base = (uint64_t)(bar->reg.bits.io.base);
-			base <<= 2U;
-			break;
-
-		case PCIBAR_MEM32:
-			base = (uint64_t)(bar->reg.bits.mem.base);
-			base <<= 4U;
-			break;
-
-		case PCIBAR_MEM64:
-			ASSERT((idx + 1U) < nr_bars, "idx for upper 32-bit of the 64-bit bar is out of range!");
-			if ((idx + 1U) < nr_bars) {
-				const struct pci_bar *next_bar = &pbars[idx + 1U];
-
-				/* Upper 32-bit of 64-bit bar */
-				base = (uint64_t)(next_bar->reg.value);
-				base <<= 32U;
-
-				/* Lower 32-bit of a 64-bit bar (BITS 31-4 = base address, 16-byte aligned) */
-				tmp = (uint64_t)(bar->reg.bits.mem.base);
-				tmp <<= 4U;
-
-				base |= tmp;
-			}
-			break;
-
-		default:
-			/* Nothing to do */
-			break;
-		}
+	default:
+		/* Nothing to do */
+		break;
 	}
 
 	return base;
@@ -151,11 +132,7 @@ static void vdev_pt_remap_msix_table_vbar(struct pci_vdev *vdev)
 		uint64_t pbar_base = vbar->base_hpa; /* pbar (hpa) */
 
 		msix->mmio_hpa = pbar_base;
-		if (is_prelaunched_vm(vdev->vpci->vm)) {
-			msix->mmio_gpa = get_vbar_base(vdev, msix->table_bar);
-		} else {
-			msix->mmio_gpa = sos_vm_hpa2gpa(pbar_base);
-		}
+		msix->mmio_gpa = get_vbar_base(vdev, msix->table_bar);
 		msix->mmio_size = vbar->size;
 	}
 
