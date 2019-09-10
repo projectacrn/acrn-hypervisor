@@ -3640,3 +3640,10 @@ b) '__builtin_va_start', refers to section 6.20 in GCC 7.3 Manual.
 c) '__builtin_va_end', refers to section 6.20 in GCC 7.3 Manual.
 d) '__builtin_offsetof', refers to section 6.51 in GCC 7.3 Manual.
 
+C-LE-05: Use of extended designated initializers is allowed
+===========================================================
+
+This rule applies to the following designated initializer: writing '[first ...
+last] = value' to initialize a range of elements to the same value, refers to
+section 6.27 in GCC 7.3 Manual.
+
