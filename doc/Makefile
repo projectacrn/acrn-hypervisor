@@ -11,8 +11,8 @@ endif
 SPHINXOPTS    ?= -q
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = "Project ACRN"
-SOURCEDIR     = .
 BUILDDIR      ?= _build
+SOURCEDIR     = $(BUILDDIR)/rst/
 
 # document publication assumes the folder structure is setup
 # with the acrn-hypervisor and projectacrn.github.io repos as
@@ -33,39 +33,46 @@ help:
 	@echo "   specify RELEASE=name to publish as a tagged release version"
 	@echo "   and placed in a version subfolder.  Requires repo merge permission."
 
-.PHONY: help Makefile
+.PHONY: help Makefile copy-to-sourcedir doxy content kconfig html singlehtml clean publish
 
 # Generate the doxygen xml (for Sphinx) and copy the doxygen html to the
 # api folder for publishing along with the Sphinx-generated API docs.
 
-doxy:
-	$(Q)(cat acrn.doxyfile) | doxygen - > doc.log 2>&1
-	$(Q)find doxygen/xml/* | xargs sed -i 's/simplesect kind="pre"/simplesect kind="preconditions"/'
+copy-to-sourcedir:
+	$(Q)mkdir -p $(SOURCEDIR)
+	$(Q)rsync -rt --exclude=$(BUILDDIR) . $(SOURCEDIR)
 
-content:
-	$(Q)scripts/extract_content.py . misc
+doxy: copy-to-sourcedir
+	$(Q)(cat acrn.doxyfile ; echo "OUTPUT_DIRECTORY=$(SOURCEDIR)/doxygen" ) | doxygen - > $(BUILDDIR)/doc.log 2>&1
+	$(Q)find $(SOURCEDIR)/doxygen/xml/* | xargs sed -i 's/simplesect kind="pre"/simplesect kind="preconditions"/'
 
-kconfig:
+content: copy-to-sourcedir
+	$(Q)scripts/extract_content.py $(SOURCEDIR) misc
+
+kconfig: copy-to-sourcedir
 	$(Q)srctree=../hypervisor \
-	    python3 scripts/genrest.py Kconfig reference/kconfig/
+	    python3 scripts/genrest.py Kconfig $(SOURCEDIR)/reference/kconfig/
 
 pullsource:
 	$(Q)scripts/pullsource.sh
 
-html: doxy content kconfig
-	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> doc.log 2>&1
-	$(Q)./scripts/filter-doc-log.sh doc.log
+html: copy-to-sourcedir doxy content kconfig
+	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> $(BUILDDIR)/doc.log 2>&1
+	$(Q)./scripts/filter-doc-log.sh $(BUILDDIR)/doc.log
 
 singlehtml: doxy content kconfig
-	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b singlehtml -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> doc.log 2>&1
-	$(Q)./scripts/filter-doc-log.sh doc.log
+	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b singlehtml -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> $(BUILDDIR)/doc.log 2>&1
+	$(Q)./scripts/filter-doc-log.sh $(BUILDDIR)/doc.log
 
 # Remove generated content (Sphinx and doxygen)
 
 clean:
-	rm -fr $(BUILDDIR) doxygen
+	rm -fr $(BUILDDIR)
+	# Keeping these temporarily, but no longer strictly needed.
+	rm -fr doxygen
 	rm -fr misc
 	rm -fr reference/kconfig/*.rst
+
 
 # Copy material over to the GitHub pages staging repo
 # along with a README
