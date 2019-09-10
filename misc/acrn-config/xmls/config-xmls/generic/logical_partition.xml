@@ -1,0 +1,95 @@
+<acrn-config board="generic" scenario="logical_partition">
+  <vm id="0">
+    <load_order desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM." readonly="true">PRE_LAUNCHED_VM</load_order>
+    <name desc="Specify the VM name which will be shown in hypervisor console command: vm_list.">ACRN PRE-LAUNCHED VM0</name>
+    <uuid configurable="0" desc="vm uuid">26c5e0d8-8f8a-47d8-8109-f201ebd61a5e</uuid>
+    <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
+        <guest_flag></guest_flag>
+        <guest_flag></guest_flag>
+    </guest_flags>
+    <pcpu_ids desc="Assign physical CPU IDs to the VM" multiselect="true">
+        <pcpu_id>0</pcpu_id>
+        <pcpu_id>2</pcpu_id>
+    </pcpu_ids>
+    <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
+    <epc_section desc="epc section">
+        <base desc="SGX EPC section base, must be page aligned">0</base>
+        <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
+    </epc_section>
+    <memory>
+        <start_hpa desc="The start physical address in host for the VM">0x100000000</start_hpa>
+        <size desc="The memory size in Bytes for the VM">0x20000000</size>
+    </memory>
+    <os_config>
+        <name desc="Specify the OS name of VM, currently it is not referenced by hypervisor code.">ClearLinux</name>
+        <kern_type desc="Specify the kernel image type so that hypervisor could load it correctly. Currently support KERNEL_BZIMAGE and KERNEL_ZEPHYR.">KERNEL_BZIMAGE</kern_type>
+        <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline.">Linux_bzImage</kern_mod>
+        <console configurable="0" desc="ttyS console for Linux kernel">/dev/ttyS0</console>
+        <rootfs desc="rootfs for Linux kernel">/dev/sda3</rootfs>
+        <bootargs desc="Specify kernel boot arguments">
+        rw rootwait noxsave nohpet console=hvc0 no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable xapic_phys
+        </bootargs>
+    </os_config>
+    <vuart id="0">
+        <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address." readonly="true">COM1_BASE</base>
+        <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
+    </vuart>
+    <vuart id="1">
+        <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">COM2_BASE</base>
+        <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
+        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">1</target_vm_id>
+        <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
+    </vuart>
+    <pci_dev_num configurable="0" desc="pci devices number">VM0_CONFIG_PCI_DEV_NUM</pci_dev_num>
+    <pci_devs configurable="0" desc="pci devices list">vm0_pci_devs</pci_devs>
+  </vm>
+  <vm id="1">
+    <load_order desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM." readonly="true">PRE_LAUNCHED_VM</load_order>
+    <name desc="vm_name">ACRN PRE-LAUNCHED VM1</name>
+    <uuid configurable="0" desc="vm uuid">dd87ce08-66f9-473d-bc58-7605837f935e</uuid>
+    <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
+        <guest_flag>GUEST_FLAG_RT</guest_flag>
+        <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
+    </guest_flags>
+    <pcpu_ids desc="Assign physical CPU IDs to the VM" multiselect="true">
+        <pcpu_id>1</pcpu_id>
+        <pcpu_id>3</pcpu_id>
+    </pcpu_ids>
+    <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
+    <epc_section desc="epc section">
+        <base desc="SGX EPC section base, must be page aligned">0</base>
+        <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
+    </epc_section>
+    <memory>
+        <start_hpa desc="The start physical address in host for the VM">0x120000000</start_hpa>
+        <size desc="The memory size in Bytes for the VM" readonly="true">0x20000000</size>
+    </memory>
+    <os_config>
+        <name desc="Specify the OS name of VM, currently it is not referenced by hypervisor code.">ClearLinux</name>
+        <kern_type desc="kernel name">KERNEL_BZIMAGE</kern_type>
+        <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline.">Linux_bzImage</kern_mod>
+        <console configurable="0" desc="ttyS console for Linux kernel">/dev/ttyS0</console>
+        <rootfs desc="rootfs for Linux kernel" readonly="true">/dev/sda3</rootfs>
+        <bootargs desc="Specify kernel boot arguments">
+        rw rootwait noxsave nohpet console=hvc0 no_timer_check ignore_loglevel log_buf_len=16M
+        consoleblank=0 tsc=reliable xapic_phys
+        </bootargs>
+    </os_config>
+    <vuart id="0">
+        <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address." readonly="true">COM1_BASE</base>
+        <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
+    </vuart>
+    <vuart id="1">
+        <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">COM2_BASE</base>
+        <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
+        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
+        <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
+    </vuart>
+    <pci_dev_num configurable="0" desc="pci devices number">VM1_CONFIG_PCI_DEV_NUM</pci_dev_num>
+    <pci_devs configurable="0" desc="pci devices list">vm1_pci_devs</pci_devs>
+  </vm>
+</acrn-config>

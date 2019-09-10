@@ -1,0 +1,89 @@
+<acrn-config board="generic" scenario="sdc">
+  <vm id="0">
+    <load_order desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM." readonly="true">SOS_VM</load_order>
+    <name desc="Specify the VM name which will be shown in hypervisor console command: vm_list.">ACRN SOS VM</name>
+    <uuid configurable="0" desc="vm uuid">dbbbd434-7a57-4216-a12c-2201f1ab0240</uuid>
+    <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
+        <guest_flag>GUEST_FLAG_HIGHEST_SEVERITY</guest_flag>
+    </guest_flags>
+    <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
+    <memory>
+        <start_hpa configurable="0" desc="The start physical address in host for the VM">0</start_hpa>
+        <size configurable="0" desc="The memory size in Bytes for the VM">CONFIG_SOS_RAM_SIZE</size>
+    </memory>
+    <os_config>
+        <name desc="Specify the OS name of VM, currently it is not referenced by hypervisor code.">ACRN Service OS</name>
+        <kern_type desc="Specify the kernel image type so that hypervisor could load it correctly. Currently support KERNEL_BZIMAGE and KERNEL_ZEPHYR.">KERNEL_BZIMAGE</kern_type>
+        <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline.">Linux_bzImage</kern_mod>
+        <bootargs configurable="0" desc="Specify kernel boot arguments">SOS_VM_BOOTARGS</bootargs>
+    </os_config>
+    <vuart id="0">
+        <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address." readonly="true">SOS_COM1_BASE</base>
+        <irq configurable="0" desc="vCOM1 irq">SOS_COM1_IRQ</irq>
+    </vuart>
+    <vuart id="1">
+        <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
+        <irq configurable="0" desc="vCOM2 irq">SOS_COM2_IRQ</irq>
+        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">1</target_vm_id>
+        <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
+    </vuart>
+    <pci_dev_num configurable="0" desc="pci devices number">SOS_EMULATED_PCI_DEV_NUM</pci_dev_num>
+    <pci_devs configurable="0" desc="pci devices list">sos_pci_devs</pci_devs>
+    <board_private>
+        <rootfs desc="rootfs for Linux kernel">/dev/sda3</rootfs>
+        <console desc="ttyS console for Linux kernel">/dev/ttyS0</console>
+        <bootargs desc="Specify kernel boot arguments">
+        rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3
+        i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_gvt=1
+        hvlog=2M@0x1fe00000
+        </bootargs>
+    </board_private>
+  </vm>
+  <vm id="1">
+    <load_order desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM." readonly="true">POST_LAUNCHED_VM</load_order>
+    <uuid configurable="0" desc="vm uuid">d2795438-25d6-11e8-864e-cb7a18b34643</uuid>
+    <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
+        <guest_flag>0</guest_flag>
+    </guest_flags>
+    <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
+    <epc_section desc="epc section">
+        <base desc="SGX EPC section base, must be page aligned">0</base>
+        <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
+    </epc_section>
+    <vuart id="0">
+        <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
+        <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
+    </vuart>
+    <vuart id="1">
+        <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
+        <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
+        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
+        <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
+    </vuart>
+  </vm>
+  <vm id="2" configurable="0" desc="specific for Kata">
+    <load_order configurable="0" desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM.">POST_LAUNCHED_VM</load_order>
+    <uuid configurable="0" desc="vm uuid">a7ada506-1ab0-4b6b-a0da-e513ca9b8c2f</uuid>
+    <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
+    <epc_section desc="epc section">
+        <base desc="SGX EPC section base, must be page aligned">0</base>
+        <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
+    </epc_section>
+    <vuart id="0">
+        <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
+        <base configurable="0" desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
+        <irq configurable="0" desc="vCOM1 irq">COM1_BASE</irq>
+    </vuart>
+    <vuart id="1">
+        <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
+        <base configurable="0" desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
+        <irq configurable="0" desc="vCOM2 irq">COM2_BASE</irq>
+        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
+        <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">0</target_uart_id>
+    </vuart>
+  </vm>
+</acrn-config>
