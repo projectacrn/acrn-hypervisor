@@ -268,10 +268,10 @@ static void load_world_ctx(struct acrn_vcpu *vcpu, const struct ext_context *ext
 static void copy_smc_param(const struct run_context *prev_ctx,
 				struct run_context *next_ctx)
 {
-	next_ctx->guest_cpu_regs.regs.rdi = prev_ctx->guest_cpu_regs.regs.rdi;
-	next_ctx->guest_cpu_regs.regs.rsi = prev_ctx->guest_cpu_regs.regs.rsi;
-	next_ctx->guest_cpu_regs.regs.rdx = prev_ctx->guest_cpu_regs.regs.rdx;
-	next_ctx->guest_cpu_regs.regs.rbx = prev_ctx->guest_cpu_regs.regs.rbx;
+	next_ctx->cpu_regs.regs.rdi = prev_ctx->cpu_regs.regs.rdi;
+	next_ctx->cpu_regs.regs.rsi = prev_ctx->cpu_regs.regs.rsi;
+	next_ctx->cpu_regs.regs.rdx = prev_ctx->cpu_regs.regs.rdx;
+	next_ctx->cpu_regs.regs.rbx = prev_ctx->cpu_regs.regs.rbx;
 }
 
 void switch_world(struct acrn_vcpu *vcpu, int32_t next_world)
@@ -344,7 +344,7 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu, uint32_t mem_size, uint64_
 			 * address(GPA) of startup_param on boot. Currently, the startup_param
 			 * is put in the first page of trusty memory just followed by key_info.
 			 */
-			vcpu->arch.contexts[SECURE_WORLD].run_ctx.guest_cpu_regs.regs.rdi
+			vcpu->arch.contexts[SECURE_WORLD].run_ctx.cpu_regs.regs.rdi
 				= (uint64_t)TRUSTY_EPT_REBASE_GPA + sizeof(struct trusty_key_info);
 
 			stac();
@@ -378,7 +378,7 @@ static bool init_secure_world_env(struct acrn_vcpu *vcpu,
 
 	vcpu->arch.inst_len = 0U;
 	vcpu->arch.contexts[SECURE_WORLD].run_ctx.rip = entry_gpa;
-	vcpu->arch.contexts[SECURE_WORLD].run_ctx.guest_cpu_regs.regs.rsp =
+	vcpu->arch.contexts[SECURE_WORLD].run_ctx.cpu_regs.regs.rsp =
 		TRUSTY_EPT_REBASE_GPA + size;
 
 	vcpu->arch.contexts[SECURE_WORLD].ext_ctx.tsc_offset = 0UL;
@@ -453,10 +453,8 @@ bool initialize_trusty(struct acrn_vcpu *vcpu, struct trusty_boot_param *boot_pa
 
 void save_sworld_context(struct acrn_vcpu *vcpu)
 {
-	(void)memcpy_s(&vcpu->vm->sworld_snapshot,
-			sizeof(struct cpu_context),
-			&vcpu->arch.contexts[SECURE_WORLD],
-			sizeof(struct cpu_context));
+	(void)memcpy_s((void *)&vcpu->vm->sworld_snapshot, sizeof(struct guest_cpu_context),
+			(void *)&vcpu->arch.contexts[SECURE_WORLD], sizeof(struct guest_cpu_context));
 }
 
 void restore_sworld_context(struct acrn_vcpu *vcpu)
@@ -469,10 +467,8 @@ void restore_sworld_context(struct acrn_vcpu *vcpu)
 		sworld_ctl->sworld_memory.length,
 		TRUSTY_EPT_REBASE_GPA);
 
-	(void)memcpy_s(&vcpu->arch.contexts[SECURE_WORLD],
-			sizeof(struct cpu_context),
-			&vcpu->vm->sworld_snapshot,
-			sizeof(struct cpu_context));
+	(void)memcpy_s((void *)&vcpu->arch.contexts[SECURE_WORLD], sizeof(struct guest_cpu_context),
+			(void *)&vcpu->vm->sworld_snapshot, sizeof(struct guest_cpu_context));
 }
 
 /**

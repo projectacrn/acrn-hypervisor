@@ -8,6 +8,7 @@
 #include <platform_acpi_info.h>
 #include <per_cpu.h>
 #include <io.h>
+#include <msr.h>
 #include <pgtable.h>
 #include <host_pm.h>
 #include <trampoline.h>
@@ -16,7 +17,6 @@
 #include <ioapic.h>
 #include <vtd.h>
 #include <lapic.h>
-#include <vcpu.h>
 
 struct cpu_context cpu_ctx;
 

@@ -796,6 +796,7 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/arch/x86/guest/guest_memory.h \
                           ../hypervisor/include/arch/x86/guest/ept.h \
                           ../hypervisor/include/arch/x86/mmu.h \
+                          ../hypervisor/include/arch/x86/cpu.h \
                           ../hypervisor/include/arch/x86/pgtable.h \
                           ../hypervisor/include/arch/x86/vtd.h \
                           ../hypervisor/include/arch/x86/irq.h \
