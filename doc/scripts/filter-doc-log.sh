@@ -10,6 +10,7 @@ KI_SCRIPT=scripts/filter-known-issues.py
 CONFIG_DIR=.known-issues/doc
 
 LOG_FILE=$1
+BUILDDIR=$(dirname $LOG_FILE)
 
 if [ -z "${LOG_FILE}" ]; then
         echo "Error in $0: missing input parameter <logfile>"
@@ -29,7 +30,7 @@ else
 fi
 
 if [ -s "${LOG_FILE}" ]; then
-   $KI_SCRIPT --config-dir ${CONFIG_DIR} ${LOG_FILE} > doc.warnings 2>&1
+   $KI_SCRIPT --config-dir ${CONFIG_DIR} ${LOG_FILE} > ${BUILDDIR}/doc.warnings 2>&1
    if [ -s doc.warnings ]; then
 	   echo
 	   echo -e "${red}New errors/warnings found, please fix them:"
