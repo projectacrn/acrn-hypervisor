@@ -185,6 +185,7 @@ struct pci_bar {
 	/* Base Address Register */
 	union pci_bar_reg reg;
 	uint64_t size;
+	uint64_t base_hpa;
 	bool is_64bit_high; /* true if this is the upper 32-bit of a 64-bit bar */
 };
 

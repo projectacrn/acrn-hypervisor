@@ -116,17 +116,6 @@ static uint64_t get_vbar_base(const struct pci_vdev *vdev, uint32_t idx)
 }
 
 /**
- * @brief get pbar's full address in 64-bit
- * For 64-bit MMIO bar, its lower 32-bits base address and upper 32-bits base are combined
- * into one 64-bit base address
- * @pre pdev != NULL
- */
-static uint64_t get_pbar_base(const struct pci_pdev *pdev, uint32_t idx)
-{
-	return pci_bar_2_bar_base(&pdev->bar[0], pdev->nr_bars, idx);
-}
-
-/**
  * @pre vdev != NULL
  */
 void vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
@@ -143,17 +132,12 @@ void vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t byt
 * @pre vdev != NULL
 * @pre vdev->vpci != NULL
 * @pre vdev->vpci->vm != NULL
-* @pre vdev->pdev != NULL
-* @pre vdev->pdev->msix.table_bar < vdev->nr_bars
 */
 static void vdev_pt_remap_msix_table_vbar(struct pci_vdev *vdev)
 {
 	uint32_t i;
 	struct pci_msix *msix = &vdev->msix;
-	struct pci_pdev *pdev = vdev->pdev;
-	struct pci_bar *pbar;
-
-	ASSERT(vdev->pdev->msix.table_bar < vdev->nr_bars, "msix->table_bar is out of range");
+	struct pci_bar *vbar;
 
 	/* Mask all table entries */
 	for (i = 0U; i < msix->table_count; i++) {
@@ -162,9 +146,9 @@ static void vdev_pt_remap_msix_table_vbar(struct pci_vdev *vdev)
 		msix->table_entries[i].data = 0U;
 	}
 
-	pbar = &pdev->bar[msix->table_bar];
-	if (pbar != NULL) {
-		uint64_t pbar_base = get_pbar_base(pdev, msix->table_bar); /* pbar (hpa) */
+	vbar = &vdev->bar[msix->table_bar];
+	if (vbar->size != 0UL) {
+		uint64_t pbar_base = vbar->base_hpa; /* pbar (hpa) */
 
 		msix->mmio_hpa = pbar_base;
 		if (is_prelaunched_vm(vdev->vpci->vm)) {
@@ -172,7 +156,7 @@ static void vdev_pt_remap_msix_table_vbar(struct pci_vdev *vdev)
 		} else {
 			msix->mmio_gpa = sos_vm_hpa2gpa(pbar_base);
 		}
-		msix->mmio_size = pbar->size;
+		msix->mmio_size = vbar->size;
 	}
 
 	/*
@@ -279,7 +263,7 @@ static void vdev_pt_remap_generic_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 	/* If a new vbar is set (nonzero), set the EPT mapping accordingly */
 	if (vbar_base != 0UL) {
 		uint64_t hpa = gpa2hpa(vdev->vpci->vm, vbar_base);
-		uint64_t pbar_base = get_pbar_base(vdev->pdev, idx); /* pbar (hpa) */
+		uint64_t pbar_base = vbar->base_hpa; /* pbar (hpa) */
 
 		if (hpa != pbar_base) {
 			/* Unmap the existing mapping for new vbar */
@@ -489,13 +473,14 @@ void init_vdev_pt(struct pci_vdev *vdev)
 		vbar->size = 0UL;
 		vbar->reg.value = pbar->reg.value;
 		vbar->is_64bit_high = pbar->is_64bit_high;
+		vbar->base_hpa = pbar->base_hpa;
 
 		if (pbar->is_64bit_high) {
 			ASSERT(idx > 0U, "idx for upper 32-bit of the 64-bit bar should be greater than 0!");
 
 			if (is_sos_vm(vdev->vpci->vm)) {
 				/* For SOS: vbar base (GPA) = pbar base (HPA) */
-				vbar_base = get_pbar_base(vdev->pdev, idx);
+				vbar_base = vdev->bar[idx - 1U].base_hpa;
 			} else if (idx > 0U) {
 				/* For pre-launched VMs: vbar base is predefined in vm_config */
 				vbar_base = vdev->pci_dev_config->vbar_base[idx - 1U];
@@ -519,7 +504,7 @@ void init_vdev_pt(struct pci_vdev *vdev)
 
 				if (is_sos_vm(vdev->vpci->vm)) {
 					/* For SOS: vbar base (GPA) = pbar base (HPA) */
-					vbar_base = get_pbar_base(vdev->pdev, idx);
+					vbar_base = vbar->base_hpa;
 				} else {
 					/* For pre-launched VMs: vbar base is predefined in vm_config */
 					vbar_base = vdev->pci_dev_config->vbar_base[idx];
@@ -529,7 +514,7 @@ void init_vdev_pt(struct pci_vdev *vdev)
 
 			case PCIBAR_IO_SPACE:
 				vbar->size = pbar->size;
-				vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)get_pbar_base(vdev->pdev, idx));
+				vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)vbar->base_hpa);
 				break;
 
 			default:
