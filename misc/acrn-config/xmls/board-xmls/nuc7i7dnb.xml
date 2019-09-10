@@ -1,0 +1,250 @@
+<acrn-config board="nuc7i7dnb">
+	<BIOS_INFO>
+	BIOS Information
+	Vendor: Intel Corp.
+	Version: DNKBLi7v.86A.0065.2019.0611.1424
+	Release Date: 06/11/2019
+	BIOS Revision: 5.6
+	</BIOS_INFO>
+
+	<BASE_BOARD_INFO>
+	Base Board Information
+	Manufacturer: Intel Corporation
+	Product Name: NUC7i7DNB
+	Version: J83500-204
+	</BASE_BOARD_INFO>
+
+	<PCI_DEVICE>
+	00:00.0 Host bridge: Intel Corporation Xeon E3-1200 v6/7th Gen Core Processor Host Bridge/DRAM Registers (rev 08)
+	00:02.0 VGA compatible controller: Intel Corporation UHD Graphics 620 (rev 07)
+	Region 0: Memory at de000000 (64-bit, non-prefetchable) [size=16M]
+	Region 2: Memory at c0000000 (64-bit, prefetchable) [size=256M]
+	00:08.0 System peripheral: Intel Corporation Skylake Gaussian Mixture Model
+	Region 0: Memory at df252000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	00:14.0 USB controller: Intel Corporation Sunrise Point-LP USB 3.0 xHCI Controller (rev 21)
+	Region 0: Memory at df230000 (64-bit, non-prefetchable) [size=64K]
+	00:14.2 Signal processing controller: Intel Corporation Sunrise Point-LP Thermal subsystem (rev 21)
+	Region 0: Memory at df251000 (64-bit, non-prefetchable) [size=4K]
+	00:15.0 Signal processing controller: Intel Corporation Sunrise Point-LP Serial IO I2C Controller #0 (rev 21)
+	Region 0: Memory at df250000 (64-bit, non-prefetchable) [size=4K]
+	00:15.1 Signal processing controller: Intel Corporation Sunrise Point-LP Serial IO I2C Controller #1 (rev 21)
+	Region 0: Memory at df24f000 (64-bit, non-prefetchable) [size=4K]
+	00:16.0 Communication controller: Intel Corporation Sunrise Point-LP CSME HECI #1 (rev 21)
+	Region 0: Memory at df24e000 (64-bit, non-prefetchable) [size=4K]
+	00:16.3 Serial controller: Intel Corporation Device 9d3d (rev 21)
+	Region 1: Memory at df24d000 (32-bit, non-prefetchable) [size=4K]
+	00:17.0 SATA controller: Intel Corporation Sunrise Point-LP SATA Controller [AHCI mode] (rev 21)
+	Region 0: Memory at df248000 (32-bit, non-prefetchable) [size=8K]
+	Region 1: Memory at df24c000 (32-bit, non-prefetchable) [size=256]
+	Region 5: Memory at df24b000 (32-bit, non-prefetchable) [size=2K]
+	00:1c.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port (rev f1)
+	00:1d.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port #9 (rev f1)
+	00:1f.0 ISA bridge: Intel Corporation Device 9d4e (rev 21)
+	00:1f.2 Memory controller: Intel Corporation Sunrise Point-LP PMC (rev 21)
+	Region 0: Memory at df244000 (32-bit, non-prefetchable) [size=16K]
+	00:1f.3 Audio device: Intel Corporation Sunrise Point-LP HD Audio (rev 21)
+	Region 0: Memory at df240000 (64-bit, non-prefetchable) [size=16K]
+	Region 4: Memory at df220000 (64-bit, non-prefetchable) [size=64K]
+	00:1f.4 SMBus: Intel Corporation Sunrise Point-LP SMBus (rev 21)
+	Region 0: Memory at df24a000 (64-bit, non-prefetchable) [size=256]
+	00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection I219-LM (rev 21)
+	Region 0: Memory at df200000 (32-bit, non-prefetchable) [size=128K]
+	01:00.0 Network controller: Intel Corporation Wireless 8265 / 8275 (rev 78)
+	Region 0: Memory at df100000 (64-bit, non-prefetchable) [size=8K]
+	02:00.0 Non-Volatile memory controller: Intel Corporation Device f1a6 (rev 03)
+	Region 0: Memory at df000000 (64-bit, non-prefetchable) [size=16K]
+	</PCI_DEVICE>
+
+	<PCI_VID_PID>
+	00:00.0 0600: 8086:5914 (rev 08)
+	00:02.0 0300: 8086:5917 (rev 07)
+	00:08.0 0880: 8086:1911
+	00:14.0 0c03: 8086:9d2f (rev 21)
+	00:14.2 1180: 8086:9d31 (rev 21)
+	00:15.0 1180: 8086:9d60 (rev 21)
+	00:15.1 1180: 8086:9d61 (rev 21)
+	00:16.0 0780: 8086:9d3a (rev 21)
+	00:16.3 0700: 8086:9d3d (rev 21)
+	00:17.0 0106: 8086:9d03 (rev 21)
+	00:1c.0 0604: 8086:9d12 (rev f1)
+	00:1d.0 0604: 8086:9d18 (rev f1)
+	00:1f.0 0601: 8086:9d4e (rev 21)
+	00:1f.2 0580: 8086:9d21 (rev 21)
+	00:1f.3 0403: 8086:9d71 (rev 21)
+	00:1f.4 0c05: 8086:9d23 (rev 21)
+	00:1f.6 0200: 8086:156f (rev 21)
+	01:00.0 0280: 8086:24fd (rev 78)
+	02:00.0 0108: 8086:f1a6 (rev 03)
+	</PCI_VID_PID>
+
+	<WAKE_VECTOR_INFO>
+	#define WAKE_VECTOR_32          0x7FA22F8CUL
+	#define WAKE_VECTOR_64          0x7FA22F98UL
+	</WAKE_VECTOR_INFO>
+
+	<RESET_REGISTER_INFO>
+	#define RESET_REGISTER_ADDRESS  0xCF9UL
+	#define RESET_REGISTER_SPACE_ID SPACE_SYSTEM_IO
+	#define RESET_REGISTER_VALUE    0x6U
+	</RESET_REGISTER_INFO>
+
+	<PM_INFO>
+	#define PM1A_EVT_SPACE_ID       SPACE_SYSTEM_IO
+	#define PM1A_EVT_BIT_WIDTH      0x20U
+	#define PM1A_EVT_BIT_OFFSET     0x0U
+	#define PM1A_EVT_ADDRESS        0x1800UL
+	#define PM1A_EVT_ACCESS_SIZE    0x2U
+	#define PM1B_EVT_SPACE_ID       SPACE_SYSTEM_IO
+	#define PM1B_EVT_BIT_WIDTH      0x0U
+	#define PM1B_EVT_BIT_OFFSET     0x0U
+	#define PM1B_EVT_ADDRESS        0x0UL
+	#define PM1B_EVT_ACCESS_SIZE    0x2U
+	#define PM1A_CNT_SPACE_ID       SPACE_SYSTEM_IO
+	#define PM1A_CNT_BIT_WIDTH      0x10U
+	#define PM1A_CNT_BIT_OFFSET     0x0U
+	#define PM1A_CNT_ADDRESS        0x1804UL
+	#define PM1A_CNT_ACCESS_SIZE    0x2U
+	#define PM1B_CNT_SPACE_ID       SPACE_SYSTEM_IO
+	#define PM1B_CNT_BIT_WIDTH      0x0U
+	#define PM1B_CNT_BIT_OFFSET     0x0U
+	#define PM1B_CNT_ADDRESS        0x0UL
+	#define PM1B_CNT_ACCESS_SIZE    0x2U
+	</PM_INFO>
+
+	<S3_INFO>
+	#define S3_PKG_VAL_PM1A         0x5U
+	#define S3_PKG_VAL_PM1B         0U
+	#define S3_PKG_RESERVED         0x0U
+	</S3_INFO>
+
+	<S5_INFO>
+	#define S5_PKG_VAL_PM1A         0x7U
+	#define S5_PKG_VAL_PM1B         0U
+	#define S5_PKG_RESERVED         0x0U
+	</S5_INFO>
+
+	<DRHD_INFO>
+	#define DRHD_COUNT              2U
+	#define DRHD0_DEV_CNT           1U
+	#define DRHD0_SEGMENT           0U
+	#define DRHD0_FLAGS             0U
+	#define DRHD0_REG_BASE          0xFED90000UL
+	#define DRHD0_IGNORE            false
+	#define DRHD0_DEVSCOPE0_BUS     0x0U
+	#define DRHD0_DEVSCOPE0_PATH    0x10U
+	#define DRHD0_DEVSCOPE1_BUS     0x0U
+	#define DRHD0_DEVSCOPE1_PATH    0x0U
+	#define DRHD0_DEVSCOPE2_BUS     0x0U
+	#define DRHD0_DEVSCOPE2_PATH    0x0U
+	#define DRHD0_DEVSCOPE3_BUS     0x0U
+	#define DRHD0_DEVSCOPE3_PATH    0x0U
+	#define DRHD1_DEV_CNT           2U
+	#define DRHD1_SEGMENT           0U
+	#define DRHD1_FLAGS             1U
+	#define DRHD1_REG_BASE          0xFED91000UL
+	#define DRHD1_IGNORE            false
+	#define DRHD1_DEVSCOPE0_BUS     0xf0U
+	#define DRHD1_DEVSCOPE0_PATH    0xf8U
+	#define DRHD1_DEVSCOPE1_BUS     0x0U
+	#define DRHD1_DEVSCOPE1_PATH    0xf8U
+	#define DRHD1_DEVSCOPE2_BUS     0x0U
+	#define DRHD1_DEVSCOPE2_PATH    0x0U
+	#define DRHD1_DEVSCOPE3_BUS     0x0U
+	#define DRHD1_DEVSCOPE3_PATH    0x0U
+	#define DRHD1_IOAPIC_ID         2U
+	#define DRHD2_DEV_CNT           0U
+	#define DRHD2_SEGMENT           0U
+	#define DRHD2_FLAGS             0U
+	#define DRHD2_REG_BASE          0x00UL
+	#define DRHD2_IGNORE            false
+	#define DRHD2_DEVSCOPE0_BUS     0x0U
+	#define DRHD2_DEVSCOPE0_PATH    0x0U
+	#define DRHD2_DEVSCOPE1_BUS     0x0U
+	#define DRHD2_DEVSCOPE1_PATH    0x0U
+	#define DRHD2_DEVSCOPE2_BUS     0x0U
+	#define DRHD2_DEVSCOPE2_PATH    0x0U
+	#define DRHD2_DEVSCOPE3_BUS     0x0U
+	#define DRHD2_DEVSCOPE3_PATH    0x0U
+	#define DRHD3_DEV_CNT           0U
+	#define DRHD3_SEGMENT           0U
+	#define DRHD3_FLAGS             0U
+	#define DRHD3_REG_BASE          0x00UL
+	#define DRHD3_IGNORE            false
+	#define DRHD3_DEVSCOPE0_BUS     0x0U
+	#define DRHD3_DEVSCOPE0_PATH    0x0U
+	#define DRHD3_DEVSCOPE1_BUS     0x0U
+	#define DRHD3_DEVSCOPE1_PATH    0x0U
+	#define DRHD3_DEVSCOPE2_BUS     0x0U
+	#define DRHD3_DEVSCOPE2_PATH    0x0U
+	#define DRHD3_DEVSCOPE3_BUS     0x0U
+	#define DRHD3_DEVSCOPE3_PATH    0x0U
+	</DRHD_INFO>
+
+	<CPU_BRAND>
+	"Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz"
+	</CPU_BRAND>
+
+	<CX_INFO>
+	{{SPACE_FFixedHW, 0x00U, 0x00U, 0x00U, 0x00UL}, 0x01U, 0x01U, 0x00U},	/* C1 */
+	{{SPACE_SYSTEM_IO, 0x08U, 0x00U, 0x00U, 0x1816UL}, 0x02U, 0x97U, 0x00U},	/* C2 */
+	{{SPACE_SYSTEM_IO, 0x08U, 0x00U, 0x00U, 0x1819UL}, 0x03U, 0x40AU, 0x00U},	/* C3 */
+	</CX_INFO>
+
+	<PX_INFO>
+	{0x835UL, 0x00UL, 0x0AUL, 0x0AUL, 0x002A00UL, 0x002A00UL},	/* P0 */
+	{0x834UL, 0x00UL, 0x0AUL, 0x0AUL, 0x001500UL, 0x001500UL},	/* P1 */
+	{0x76CUL, 0x00UL, 0x0AUL, 0x0AUL, 0x001300UL, 0x001300UL},	/* P2 */
+	{0x708UL, 0x00UL, 0x0AUL, 0x0AUL, 0x001200UL, 0x001200UL},	/* P3 */
+	{0x6A4UL, 0x00UL, 0x0AUL, 0x0AUL, 0x001100UL, 0x001100UL},	/* P4 */
+	{0x640UL, 0x00UL, 0x0AUL, 0x0AUL, 0x001000UL, 0x001000UL},	/* P5 */
+	{0x5DCUL, 0x00UL, 0x0AUL, 0x0AUL, 0x000F00UL, 0x000F00UL},	/* P6 */
+	{0x578UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000E00UL, 0x000E00UL},	/* P7 */
+	{0x4B0UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000C00UL, 0x000C00UL},	/* P8 */
+	{0x44CUL, 0x00UL, 0x0AUL, 0x0AUL, 0x000B00UL, 0x000B00UL},	/* P9 */
+	{0x3E8UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000A00UL, 0x000A00UL},	/* P10 */
+	{0x320UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000800UL, 0x000800UL},	/* P11 */
+	{0x2BCUL, 0x00UL, 0x0AUL, 0x0AUL, 0x000700UL, 0x000700UL},	/* P12 */
+	{0x258UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000600UL, 0x000600UL},	/* P13 */
+	{0x1F4UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000500UL, 0x000500UL},	/* P14 */
+	{0x190UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000400UL, 0x000400UL},	/* P15 */
+	</PX_INFO>
+
+	<CLOS_INFO>
+	clos supported by cache:False
+	clos max:0
+	</CLOS_INFO>
+
+	<SYSTEM_RAM_INFO>
+	00001000-00057fff : System RAM
+	00059000-0009efff : System RAM
+	00100000-3fffffff : System RAM
+	40400000-764b8fff : System RAM
+	764bb000-7f0f3fff : System RAM
+	7ffff000-7fffffff : System RAM
+	88000000-883fffff : System RAM
+	100000000-2707fffff : System RAM
+	</SYSTEM_RAM_INFO>
+
+	<ROOT_DEVICE_INFO>
+	/dev/nvme0n1p3: LABEL="root" UUID="deb9eba1-9ab6-4d1e-95b9-aa1d2f7b660e" TYPE="ext4" PARTLABEL="/" PARTUUID="80521cfb-cce4-4ccc-8cf8-46a045196c73"
+	/dev/sda3: TYPE="ext4"
+	</ROOT_DEVICE_INFO>
+
+	<TTYS_INFO>
+	BDF:(02:00.0) seri:/dev/ttyS0 base:0x3F8 irq:4
+	BDF:(00:16.3) seri:/dev/ttyS4 base:0xF0A0 irq:19
+	</TTYS_INFO>
+
+	<AVAILABLE_IRQ_INFO>
+	3, 5, 6, 7, 10, 11, 12, 13, 15
+	</AVAILABLE_IRQ_INFO>
+
+	<TOTAL_MEM_INFO>
+	7898864 kB
+	</TOTAL_MEM_INFO>
+
+	<CPU_PROCESSOR_INFO>
+	0, 1, 2, 3
+	</CPU_PROCESSOR_INFO>
+
+</acrn-config>
