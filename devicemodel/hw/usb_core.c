@@ -181,6 +181,20 @@ usb_native_is_port_existed(uint8_t bus_num, uint8_t port_num)
 	return 1;
 }
 
+int
+usb_native_is_device_existed(struct usb_devpath *path)
+{
+	char _path[128];
+	int ret = 0;
+
+	if (path) {
+		snprintf(_path, sizeof(_path), "%s/%s", NATIVE_USBSYS_DEVDIR,
+				usb_dev_path(path));
+		ret = (access(_path, F_OK) == 0);
+	}
+	return ret;
+}
+
 void usb_parse_log_level(char level)
 {
 	switch (level) {

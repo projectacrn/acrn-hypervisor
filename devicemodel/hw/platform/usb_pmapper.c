@@ -214,6 +214,14 @@ usb_dev_comp_cb(struct libusb_transfer *trn)
 		xfer->status = USB_ERR_SHORT_XFER;
 		goto out;
 	case LIBUSB_TRANSFER_ERROR:
+		/*
+		 * If this error happened due to device disconnecting, there is
+		 * nothing should do and just wait usb_dev_native_sys_disconn_cb
+		 * to do the 'unplugging process'.
+		 */
+		if (usb_native_is_device_existed(&info->path) == 0)
+			goto cancel_out;
+
 		is_stalled = 1;
 		xfer->status = USB_ERR_STALLED;
 		goto stall_out;
