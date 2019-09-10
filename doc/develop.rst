@@ -26,6 +26,7 @@ Configuration Tutorials
    tutorials/using_partition_mode_on_up2
    tutorials/using_sdc2_mode_on_nuc
    tutorials/using_hybrid_mode_on_nuc
+   tutorials/building_acrn_in_docker
 
 User VM Tutorials
 *****************
