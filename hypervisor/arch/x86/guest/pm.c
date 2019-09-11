@@ -149,7 +149,7 @@ static bool pm1ab_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 	return true;
 }
 
-#define	POWEROFF_TIMEOUT	(5 * 60U) /* default poweroff timeout is 5 minutes */
+#define	POWEROFF_TIMEOUT	(300U) /* default poweroff timeout is 5 minutes */
 /* wait for other vm shutdown done. If POWEROFF_TIMEOUT passed and there are
  * still some VMs active, we will force platform power off.
  *
@@ -157,11 +157,11 @@ static bool pm1ab_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
  *   - Let user configure whether we wait for ever till all VMs powered off or
  *     force shutdown once pre-defined timeout hit.
  */
-static inline void wait_for_other_vm_shutdown(struct acrn_vm *self_vm)
+static inline void wait_for_other_vm_shutdown(const struct acrn_vm *self_vm)
 {
 	uint16_t vm_id;
 	bool ready_for_s5;
-	uint32_t timeout = POWEROFF_TIMEOUT;
+	uint32_t timeout = (uint32_t)POWEROFF_TIMEOUT;
 	struct acrn_vm *vm;
 
 	while (timeout != 0U) {
@@ -169,7 +169,7 @@ static inline void wait_for_other_vm_shutdown(struct acrn_vm *self_vm)
 		for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 			vm = get_vm_from_vmid(vm_id);
 
-			if ((vm != self_vm) && !is_poweroff_vm(vm)) {
+			if ((vm != self_vm) && (!is_poweroff_vm(vm))) {
 				ready_for_s5 = false;
 			}
 		}
@@ -184,9 +184,10 @@ static inline void wait_for_other_vm_shutdown(struct acrn_vm *self_vm)
 	}
 }
 
-static inline void enter_s5(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
+static inline void enter_s5(const struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
 	wait_for_other_vm_shutdown(vm);
+	pr_err("yfwyfw: before enter s5");
 	host_enter_s5(vm->pm.sx_state_data, pm1a_cnt_val, pm1b_cnt_val);
 }
 
