@@ -44,8 +44,8 @@ system on Intel KBL NUC with a SATA SSD as ``/dev/sda`` and an NVME SSD as
 1. Follow the :ref:`set-up-CL` instructions in the
    :ref:`getting-started-apl-nuc` to:
 
-   a. Install Clear Linux (version 29400 or higher) onto the NVMe
-   #. Install Clear Linux (version 29400 or higher) onto the SATA SSD
+   a. Install Clear Linux (version 29400) onto the NVMe
+   #. Install Clear Linux (version 29400) onto the SATA SSD
    #. Set up Clear Linux on the SATA SSD as the Service OS (SOS) following
       the :ref:`add-acrn-to-efi` instructions in the same guide.
 

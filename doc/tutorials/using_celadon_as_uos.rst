@@ -11,7 +11,7 @@ on the ACRN hypervisor. We are using Kaby Lake-based NUC (model NUC7i7DNHE) in t
 Prerequisites
 *************
 
-* Ubuntu 18.04 or higher with at least 150G free disk space
+* Ubuntu 18.04 with at least 150G free disk space
 * Intel Kaby Lake NUC7ixDNHE ( Reference Platforms: :ref:`ACRN supported platforms <hardware>` )
 * BIOS version 0059 or later firmware should be flashed on the NUC system,
   and the ``Device Mode`` option is selected on the USB category of the Devices tab,
