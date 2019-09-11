@@ -22,12 +22,35 @@ TOOLS_OUT := $(ROOT_OUT)/misc/tools
 DOC_OUT := $(ROOT_OUT)/doc
 BUILD_VERSION ?=
 BUILD_TAG ?=
+BOARD_FILE ?=
+SCENARIO_FILE ?=
+
 export TOOLS_OUT
 
 .PHONY: all hypervisor devicemodel tools doc
 all: hypervisor devicemodel tools
 
-hypervisor:
+ifneq ($(BOARD_FILE)$(SCENARIO_FILE),)
+BOARD := `sed -n '/board/p' $(BOARD_FILE) |head -1|awk -F'"' '{print $$2}'`
+SCENARIO := `sed -n '/scenario/p' $(SCENARIO_FILE) |head -1|awk -F'"' '{print $$4}'`
+
+cfg_src:
+	@if [ ! -f $(BOARD_FILE) ] ; then \
+		echo "$(BOARD_FILE) is not exist!"; exit 1; \
+	fi
+	@if [ ! -f "$(SCENARIO_FILE)" ]; then \
+		echo "$(SCENARIO_FILE) is not exist!"; exit 1; \
+	fi
+	@python3 misc/acrn-config/board_config/board_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) || exit $$?
+	@python3 misc/acrn-config/scenario_config/scenario_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) || exit $$?
+	@echo "Import hypervisor configurations from Config-xmls, configurations in source code are ignored!"
+else
+cfg_src:
+	@echo "Use hypervisor configurations from source code directly."
+
+endif
+
+hypervisor: cfg_src
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) SCENARIO=$(SCENARIO) RELEASE=$(RELEASE) clean
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) SCENARIO=$(SCENARIO) RELEASE=$(RELEASE)
 ifeq ($(FIRMWARE),uefi)
@@ -74,13 +97,13 @@ clean:
 .PHONY: install
 install: hypervisor-install devicemodel-install tools-install
 
-hypervisor-install:
+hypervisor-install: cfg_src
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) SCENARIO=$(SCENARIO) RELEASE=$(RELEASE) install
 ifeq ($(FIRMWARE),uefi)
 	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) SCENARIO=$(SCENARIO) EFI_OBJDIR=$(EFI_OUT) all install
 endif
 
-hypervisor-install-debug:
+hypervisor-install-debug: cfg_src
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) SCENARIO=$(SCENARIO) RELEASE=$(RELEASE) install-debug
 ifeq ($(FIRMWARE),uefi)
 	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) SCENARIO=$(SCENARIO) EFI_OBJDIR=$(EFI_OUT) all install-debug
