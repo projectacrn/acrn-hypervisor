@@ -30,7 +30,7 @@ with a specific release: generated v0.7 documents can be found at
 https://projectacrn.github.io/0.7/.  Documentation for the latest
 (master) branch is found at https://projectacrn.github.io/latest/.
 
-ACRN v0.7 requires Clear Linux OS version 28260 or newer.  Please follow the
+ACRN v0.7 requires Clear Linux OS version 28260. Please follow the
 instructions in the :ref:`getting-started-apl-nuc`.
 
 Version 0.7 new features

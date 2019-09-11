@@ -9,7 +9,7 @@ use `Open Virtual Switch (OVS)
 
 .. note::
    OVS is provided as part of the ``service-os``
-   bundle.  Use ClearLinux OS version ``29660`` or higher.
+   bundle.  Use ClearLinux OS version ``29660``.
 
 What is OVS
 ***********
