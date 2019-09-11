@@ -120,7 +120,7 @@ static uint32_t acpi_gas_read(const struct acpi_generic_address *gas)
 }
 
 /* This function supports enter S3 or S5 according to the value given to pm1a_cnt_val and pm1b_cnt_val */
-void do_acpi_sx(struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
+void do_acpi_sx(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
 	uint32_t s1, s2;
 
@@ -148,12 +148,12 @@ void do_acpi_sx(struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint
 	} while ((s1 & (1U << BIT_WAK_STS)) == 0U);
 }
 
-void host_enter_s5(struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
+void host_enter_s5(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
 	do_acpi_sx(sstate_data, pm1a_cnt_val, pm1b_cnt_val);
 }
 
-void host_enter_s3(struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
+void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
 	uint64_t pmain_entry_saved;
 
