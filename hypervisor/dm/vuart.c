@@ -76,6 +76,24 @@ static inline uint32_t fifo_numchars(const struct vuart_fifo *fifo)
 	return fifo->num;
 }
 
+static inline bool fifo_isfull(const struct vuart_fifo *fifo)
+{
+	bool ret = false;
+	/* When the FIFO has less than 16 empty bytes, it should be
+	 * mask as full. As when the 16550 driver in OS receive the
+	 * THRE interrupt, it will directly send 16 bytes without
+	 * checking the LSR(THRE) */
+
+	/* Desired value should be 16 bytes, but to improve
+	 * fault-tolerant, enlarge 16 to 64. So that even the THRE
+	 * interrupt is raised by mistake, only if it less than 4
+	 * times, data in FIFO will not be overwritten. */
+	if ((fifo->size - fifo->num) < 64U) {
+		ret = true;
+	}
+	return ret;
+}
+
 void vuart_putchar(struct acrn_vuart *vu, char ch)
 {
 	uint64_t rflags;
@@ -178,16 +196,21 @@ void vuart_toggle_intr(const struct acrn_vuart *vu)
 	vioapic_set_irqline_lock(vu->vm, vu->irq, operation);
 }
 
-static void send_to_target(struct acrn_vuart *vu, uint8_t value_u8)
+static bool send_to_target(struct acrn_vuart *vu, uint8_t value_u8)
 {
 	uint64_t rflags;
+	bool ret = false;
 
 	vuart_lock(vu, rflags);
 	if (vu->active) {
 		fifo_putchar(&vu->rxfifo, (char)value_u8);
+		if (fifo_isfull(&vu->rxfifo)) {
+			ret = true;
+		}
 		vuart_toggle_intr(vu);
 	}
 	vuart_unlock(vu, rflags);
+	return ret;
 }
 
 static uint8_t get_modem_status(uint8_t mcr)
@@ -358,16 +381,34 @@ static bool vuart_write(struct acrn_vcpu *vcpu, uint16_t offset_arg,
 
 		if (((vu->mcr & MCR_LOOPBACK) == 0U) && ((vu->lcr & LCR_DLAB) == 0U)
 			&& (offset == UART16550_THR) && (target_vu != NULL)) {
-			send_to_target(target_vu, value_u8);
-			vuart_lock(vu, rflags);
-			vu->thre_int_pending = true;
-			vuart_toggle_intr(vu);
-			vuart_unlock(vu, rflags);
+			if (!send_to_target(target_vu, value_u8)) {
+				/* FIFO is not full, raise THRE interrupt */
+				vuart_lock(vu, rflags);
+				vu->thre_int_pending = true;
+				vuart_toggle_intr(vu);
+				vuart_unlock(vu, rflags);
+			}
 		} else {
 			write_reg(vu, offset, value_u8);
 		}
 	}
 	return true;
+}
+
+static void notify_target(const struct acrn_vuart *vu)
+{
+	struct acrn_vuart *t_vu;
+	uint64_t rflags;
+
+	if (vu != NULL) {
+		t_vu = vu->target_vu;
+		if ((t_vu != NULL) && !fifo_isfull(&vu->rxfifo)) {
+			vuart_lock(t_vu, rflags);
+			t_vu->thre_int_pending = true;
+			vuart_toggle_intr(t_vu);
+			vuart_unlock(t_vu, rflags);
+		}
+	}
 }
 
 /**
@@ -379,10 +420,12 @@ static bool vuart_read(struct acrn_vcpu *vcpu, uint16_t offset_arg, __unused siz
 	uint16_t offset = offset_arg;
 	uint8_t iir, reg, intr_reason;
 	struct acrn_vuart *vu = find_vuart_by_port(vcpu->vm, offset);
+	struct acrn_vuart *t_vu;
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 	uint64_t rflags;
 
 	if (vu != NULL) {
+		t_vu = vu->target_vu;
 		offset -= vu->port_base;
 		vuart_lock(vu, rflags);
 		/*
@@ -424,8 +467,13 @@ static bool vuart_read(struct acrn_vcpu *vcpu, uint16_t offset_arg, __unused siz
 				reg = vu->mcr;
 				break;
 			case UART16550_LSR:
-				/* Transmitter is always ready for more data */
-				vu->lsr |= LSR_TEMT | LSR_THRE;
+				if (t_vu != NULL) {
+					if (!fifo_isfull(&t_vu->rxfifo)) {
+						vu->lsr |= LSR_TEMT | LSR_THRE;
+					}
+				} else {
+					vu->lsr |= LSR_TEMT | LSR_THRE;
+				}
 				/* Check for new receive data */
 				if (fifo_numchars(&vu->rxfifo) > 0U) {
 					vu->lsr |= LSR_DR;
@@ -454,6 +502,13 @@ static bool vuart_read(struct acrn_vcpu *vcpu, uint16_t offset_arg, __unused siz
 		vuart_toggle_intr(vu);
 		pio_req->value = (uint32_t)reg;
 		vuart_unlock(vu, rflags);
+
+	}
+
+	/* For commnunication vuart, when the data in FIFO is read out, should
+	 * notify the target vuart to send more data. */
+	if (offset == UART16550_RBR) {
+		notify_target(vu);
 	}
 
 	return true;
