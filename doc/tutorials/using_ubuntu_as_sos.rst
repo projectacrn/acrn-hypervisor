@@ -227,6 +227,8 @@ You can download latest Service OS kernel from
       [    0.000000] Hypervisor detected: ACRN
       [    0.862942] ACRN HVLog: acrn_hvlog_init
 
+.. _prepare-UOS:
+
 Prepare the User OS (UOS)
 *************************
 

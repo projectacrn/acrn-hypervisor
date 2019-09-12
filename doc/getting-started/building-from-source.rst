@@ -49,6 +49,8 @@ ACRN hypervisor, for the following considerations:
 You can build the ACRN hypervisor, device model, and tools from
 source, by following these steps.
 
+.. _install-build-tools-dependencies:
+
 Install build tools and dependencies
 ************************************
 
