@@ -49,6 +49,7 @@ Service VM Tutorials
    :maxdepth: 1
 
    tutorials/using_ubuntu_as_sos
+   tutorials/running_deb_as_serv_vm
 
 Enable ACRN Features
 ********************
