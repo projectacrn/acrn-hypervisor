@@ -3,43 +3,44 @@
 Building ACRN in Docker
 #######################
 
-In this tutorial, we will introduce how to build ACRN in Clear Linux Docker image.
+This tutorial shows how to build ACRN in a Clear Linux Docker image.
 
 Install Docker
 **************
 
-#. Install Docker according to `Docker installation instructions <https://docs.docker.com/install/>`_.
-#. If you are behind HTTP or HTTPS proxy server, follow the
+#. Install Docker according to the `Docker installation instructions <https://docs.docker.com/install/>`_.
+#. If you are behind an HTTP or HTTPS proxy server, follow the
    `HTTP/HTTPS proxy instructions <https://docs.docker.com/config/daemon/systemd/#httphttps-proxy>`_
-   to set up HTTP/HTTPS proxy to pull Docker image and
+   to set up an HTTP/HTTPS proxy to pull the Docker image and
    `Configure Docker to use a proxy server <https://docs.docker.com/network/proxy/>`_
-   to set up HTTP/HTTPS proxy for the Docker container.
+   to set up an HTTP/HTTPS proxy for the Docker container.
 #. Docker requires root privileges by default.
    Follow these `additional steps <https://docs.docker.com/install/linux/linux-postinstall/>`_
    to enable a non-root user.
 
    .. note::
 
-      It is not required to perform these post-installation steps. If you choose
-      not to, please add `sudo` in front of every `docker` command in this tutorial.
+      Performing these post-installation steps is not required. If you
+      choose not to, add `sudo` in front of every `docker` command in
+      this tutorial.
 
-Get Docker Image
-****************
+Get the Docker Image
+********************
 
-This tutorial presents two ways to get Clear Linux Docker image to build ACRN.
+This tutorial presents two ways to get the Clear Linux Docker image that's needed to build ACRN.
 
-Build Docker Image from Dockerfile
-==================================
+Build the Docker Image from Dockerfile
+======================================
 
 #. Download `Dockerfile <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/Dockerfile>`_
-   to your development machine
-#. Build Docker image
+   to your development machine.
+#. Build the Docker image:
 
    .. code-block:: none
 
       $ docker build -t clearlinux-acrn-builder:latest -f <path/to/Dockerfile> .
 
-   if you are behind HTTP or HTTPS proxy server, use this command instead:
+   if you are behind an HTTP or HTTPS proxy server, use this command instead:
 
    .. code-block:: none
 
@@ -48,11 +49,10 @@ Build Docker Image from Dockerfile
       -t clearlinux-acrn-builder:latest -f <path/to/Dockerfile> .
 
 
-Get Docker Image from Docker Hub
-================================
+Get the Docker Image from Docker Hub
+====================================
 
-You can instead, pull a pre-built Docker image from Docker Hub
-to your development machine, using this command:
+As an alternative, you can pull a pre-built Docker image from Docker Hub to your development machine. Use this command:
 
 .. code-block:: none
 
@@ -61,7 +61,7 @@ to your development machine, using this command:
 Build ACRN from Source in Docker
 ********************************
 
-#. Clone the acrn-hypervisor repo
+#. Clone the acrn-hypervisor repo:
 
    .. code-block:: none
 
@@ -69,16 +69,16 @@ Build ACRN from Source in Docker
       $ git clone https://github.com/projectacrn/acrn-hypervisor
       $ cd acrn-hypervisor
 
-#. Build acrn-hypervisor with default configuration (Software Defined Cockpit [SDC] configuration)
+#. Build the acrn-hypervisor with the default configuration (Software Defined Cockpit [SDC] configuration):
 
-   For the docker image build from Dockerfile, use the command to build:
+   For the Docker image build from Dockerfile, use this command to build ACRN:
 
    .. code-block:: none
 
       $ docker run -u`id -u`:`id -g` --rm -v $PWD:/workspace \
         clearlinux-acrn-builder:latest bash -c "make clean && make"
 
-   For the docker image downloaded from Docker Hub, use the command to build:
+   For the Docker image downloaded from Docker Hub, use this command to build ACRN:
 
    .. code-block:: none
 
@@ -87,10 +87,10 @@ Build ACRN from Source in Docker
 
    The build artifacts are found in the `build` directory.
 
-Build ACRN Service VM Kernel in Docker
-**************************************
+Build the ACRN Service VM Kernel in Docker
+******************************************
 
-#. Clone the acrn-kernel repo
+#. Clone the acrn-kernel repo:
 
    .. code-block:: none
 
@@ -98,9 +98,9 @@ Build ACRN Service VM Kernel in Docker
       $ git clone https://github.com/projectacrn/acrn-kernel
       $ cd acrn-kernel
 
-#. Build ACRN Service VM kernel
+#. Build the ACRN Service VM kernel:
 
-   For the docker image built from Dockerfile, use the command to build:
+   For the Docker image built from Dockerfile, use this command to build ACRN:
 
    .. code-block:: none
 
@@ -109,7 +109,7 @@ Build ACRN Service VM Kernel in Docker
         clearlinux-acrn-builder:latest \
         bash -c "make clean && make olddefconfig && make && make modules_install INSTALL_MOD_PATH=out/"
 
-   For the docker image downloaded from Docker Hub, use the command to build:
+   For the Docker image downloaded from Docker Hub, use this command to build ACRN:
 
    .. code-block:: none
 
@@ -119,12 +119,12 @@ Build ACRN Service VM Kernel in Docker
         bash -c "make clean && make olddefconfig && make && make modules_install INSTALL_MOD_PATH=out/"
 
    The commands build the bootable kernel image as ``arch/x86/boot/bzImage``,
-   and loadable kernel modules under the ``./out/`` folder.
+   and the loadable kernel modules under the ``./out/`` folder.
 
-Build ACRN User VM PREEMPT_RT Kernel in Docker
-**********************************************
+Build the ACRN User VM PREEMPT_RT Kernel in Docker
+**************************************************
 
-#. Clone the preempt-rt kernel repo
+#. Clone the preempt-rt kernel repo:
 
    .. code-block:: none
 
@@ -132,9 +132,9 @@ Build ACRN User VM PREEMPT_RT Kernel in Docker
       $ git clone -b 4.19/preempt-rt https://github.com/projectacrn/acrn-kernel preempt-rt
       $ cd preempt-rt
 
-#. Build ACRN User VM PREEMPT_RT kernel
+#. Buildthe ACRN User VM PREEMPT_RT kernel:
 
-   For the docker image built from Dockerfile, use the command to build:
+   For the Docker image built from Dockerfile, use this command to build ACRN:
 
    .. code-block:: none
 
@@ -143,7 +143,7 @@ Build ACRN User VM PREEMPT_RT Kernel in Docker
         acrn/clearlinux-acrn-builder:latest \
         bash -c "make clean && make olddefconfig && make && make modules_install INSTALL_MOD_PATH=out/"
 
-   For the docker image downloaded from Docker Hub, use the command to build:
+   For the Docker image downloaded from Docker Hub, use this command to build ACRN:
 
    .. code-block:: none
 
@@ -153,4 +153,4 @@ Build ACRN User VM PREEMPT_RT Kernel in Docker
         bash -c "make clean && make olddefconfig && make && make modules_install INSTALL_MOD_PATH=out/"
 
    The commands build the bootable kernel image as ``arch/x86/boot/bzImage``,
-   and loadable kernel modules under the ``./out/`` folder.
+   and the loadable kernel modules under the ``./out/`` folder.
