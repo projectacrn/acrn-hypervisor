@@ -107,7 +107,7 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge \
   -s 3,virtio-blk,/home/clear/uos/uos.img \
   -s 4,virtio-net,tap0 \
   -s 7,virtio-rnd \
-  --ovmf ./OVMF.fd \
+  --ovmf /usr/share/acrn/bios/OVMF.fd \
   $pm_channel $pm_by_vuart $pm_vuart_node \
   $logger_setting \
   --mac_seed $mac_seed \
