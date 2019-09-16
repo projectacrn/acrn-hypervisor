@@ -24,7 +24,7 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 3,virtio-blk,./win10-ltsc.img \
   -s 4,virtio-net,tap0 \
   -s 5,passthru,00/1f/3 \
-  --ovmf ./OVMF.fd \
+  --ovmf /usr/share/acrn/bios/OVMF.fd \
   $vm_name
 }
 
