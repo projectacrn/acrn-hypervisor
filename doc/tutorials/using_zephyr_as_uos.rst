@@ -97,7 +97,6 @@ Steps for Using Zephyr as User OS
 
       $ mkdir zephyr && cd zephyr
       $ cp /usr/share/acrn/samples/nuc/launch_zephyr.sh .
-      $ cp /usr/share/acrn/bios/OVMF.fd .
 
    You will also need to copy the ``zephyr.img`` created in the above section into directory ``zephyr``.
 

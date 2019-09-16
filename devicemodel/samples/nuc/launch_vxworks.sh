@@ -25,7 +25,7 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge \
   -s 5,virtio-console,@stdio:stdio_port \
   -s 3,virtio-blk,./VxWorks.img \
   --virtio_poll 1000000 \
-  --ovmf ./OVMF.fd \
+  --ovmf /usr/share/acrn/bios/OVMF.fd \
   --lapic_pt \
   $vm_name
 }
