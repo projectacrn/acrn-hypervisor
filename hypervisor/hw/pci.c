@@ -213,106 +213,6 @@ static uint32_t pci_pdev_get_nr_bars(uint8_t hdr_type)
 	return nr_bars;
 }
 
-/* Get the base address of the raw bar value (val) */
-static inline uint32_t pci_pdev_get_bar_base(uint32_t bar_val)
-{
-	uint32_t base;
-	union pci_bar_reg reg;
-
-	/* set raw bar value */
-	reg.value = bar_val;
-
-	/* Extract base address portion from the raw bar value */
-	if (reg.bits.io.is_io != 0U) {
-		/* IO bar, BITS 31-2 = base address, 4-byte aligned */
-		base = (uint32_t)(reg.bits.io.base);
-		base <<= 2U;
-	} else {
-		/* MMIO bar, BITS 31-4 = base address, 16-byte aligned */
-		base = (uint32_t)(reg.bits.mem.base);
-		base <<= 4U;
-	}
-
-	return base;
-}
-
-/*
- * @pre bar != NULL
- */
-static uint32_t pci_pdev_read_bar(union pci_bdf bdf, uint32_t idx, struct pci_bar *bar)
-{
-	uint64_t base, size;
-	enum pci_bar_type type;
-	uint32_t bar_lo, bar_hi, size_lo;
-
-	bar->reg.value = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
-
-	base = 0UL;
-	size = 0UL;
-	type = pci_get_bar_type(bar->reg.value);
-	bar_hi = 0U;
-
-	if (type != PCIBAR_NONE) {
-		bar_lo = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
-
-		base = (uint64_t)pci_pdev_get_bar_base(bar_lo);
-
-		if (type == PCIBAR_MEM64) {
-			bar_hi = pci_pdev_read_cfg(bdf, pci_bar_offset(idx + 1U), 4U);
-			base |= ((uint64_t)bar_hi << 32U);
-		}
-
-		if (base != 0UL) {
-			/* Sizing the BAR */
-			if ((type == PCIBAR_MEM64) && (idx < (PCI_BAR_COUNT - 1U))) {
-				pci_pdev_write_cfg(bdf, pci_bar_offset(idx + 1U), 4U, ~0U);
-				size = (uint64_t)pci_pdev_read_cfg(bdf, pci_bar_offset(idx + 1U), 4U);
-				size <<= 32U;
-			}
-
-			pci_pdev_write_cfg(bdf, pci_bar_offset(idx), 4U, ~0U);
-			size_lo = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
-			size |= (uint64_t)pci_pdev_get_bar_base(size_lo);
-
-			if (size != 0UL) {
-				size = size & ~(size - 1U);
-			}
-
-			/* Restore the BAR */
-			pci_pdev_write_cfg(bdf, pci_bar_offset(idx), 4U, bar_lo);
-
-			if (type == PCIBAR_MEM64) {
-				pci_pdev_write_cfg(bdf, pci_bar_offset(idx + 1U), 4U, bar_hi);
-			}
-		}
-	}
-
-	bar->size = size;
-	bar->base_hpa = base;
-
-	return (type == PCIBAR_MEM64)?2U:1U;
-}
-
-/*
- * @pre nr_bars <= PCI_BAR_COUNT
- */
-static void pci_pdev_read_bars(union pci_bdf bdf, uint32_t nr_bars, struct pci_bar *bar)
-{
-	uint32_t idx = 0U;
-	uint32_t bar_step;
-
-	while (idx < nr_bars) {
-		bar_step = pci_pdev_read_bar(bdf, idx, &bar[idx]);
-		if ((bar_step == 2U) && ((idx + 1U) < nr_bars)) {
-			/* Upper 32-bit of a 64-bit bar: */
-			bar[idx + 1U].is_64bit_high = true;
-			bar[idx + 1U].reg.value = pci_pdev_read_cfg(bdf, pci_bar_offset(idx + 1U), 4U);
-		}
-
-		idx += bar_step;
-	}
-}
-
 /*
  * @pre ((hdr_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_NORMAL) || ((hdr_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_BRIDGE) || ((hdr_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_CARDBUS)
  */
@@ -410,8 +310,6 @@ static void fill_pdev(uint16_t pbdf, struct pci_pdev *pdev)
 	hdr_type = (uint8_t)pci_pdev_read_cfg(pdev->bdf, PCIR_HDRTYPE, 1U);
 
 	pdev->nr_bars = pci_pdev_get_nr_bars(hdr_type);
-
-	pci_pdev_read_bars(pdev->bdf, pdev->nr_bars, &pdev->bar[0]);
 
 	if ((pci_pdev_read_cfg(pdev->bdf, PCIR_STATUS, 2U) & PCIM_STATUS_CAPPRESENT) != 0U) {
 		pci_read_cap(pdev, hdr_type);

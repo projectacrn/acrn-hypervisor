@@ -434,69 +434,72 @@ void vdev_pt_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, u
  */
 void init_vdev_pt(struct pci_vdev *vdev)
 {
+	enum pci_bar_type type;
 	uint32_t idx;
-	struct pci_bar *pbar, *vbar;
+	struct pci_bar *vbar;
 	uint16_t pci_command;
-	uint64_t vbar_base;
+	uint32_t size32, offset, lo, hi = 0U;
+	union pci_bdf pbdf;
+	uint64_t mask;
 
 	vdev->nr_bars = vdev->pdev->nr_bars;
-
-	ASSERT(vdev->nr_bars > 0U, "vdev->nr_bars should be greater than 0!");
+	pbdf.value = vdev->pdev->bdf.value;
 
 	for (idx = 0U; idx < vdev->nr_bars; idx++) {
-		pbar = &vdev->pdev->bar[idx];
 		vbar = &vdev->bar[idx];
+		offset = pci_bar_offset(idx);
+		lo = pci_pdev_read_cfg(pbdf, offset, 4U);
 
-		vbar->size = 0UL;
-		vbar->reg.value = pbar->reg.value;
-		vbar->is_64bit_high = pbar->is_64bit_high;
-		vbar->base_hpa = pbar->base_hpa;
+		type = pci_get_bar_type(lo);
+		if (type == PCIBAR_NONE) {
+			continue;
+		}
+		mask = (type == PCIBAR_IO_SPACE) ? PCI_BASE_ADDRESS_IO_MASK : PCI_BASE_ADDRESS_MEM_MASK;
+		vbar->base_hpa = (uint64_t)lo & mask;
 
-		if (pbar->is_64bit_high) {
-			ASSERT(idx > 0U, "idx for upper 32-bit of the 64-bit bar should be greater than 0!");
+		if (type == PCIBAR_MEM64) {
+			hi = pci_pdev_read_cfg(pbdf, offset + 4U, 4U);
+			vbar->base_hpa |= ((uint64_t)hi << 32U);
+		}
 
-			if (is_sos_vm(vdev->vpci->vm)) {
-				/* For SOS: vbar base (GPA) = pbar base (HPA) */
-				vbar_base = vdev->bar[idx - 1U].base_hpa;
-			} else if (idx > 0U) {
-				/* For pre-launched VMs: vbar base is predefined in vm_config */
-				vbar_base = vdev->pci_dev_config->vbar_base[idx - 1U];
-			} else {
-				vbar_base = 0UL;
+		if (vbar->base_hpa != 0UL) {
+			pci_pdev_write_cfg(pbdf, offset, 4U, ~0U);
+			size32 = pci_pdev_read_cfg(pbdf, offset, 4U);
+			pci_pdev_write_cfg(pbdf, offset, 4U, lo);
+
+			vbar->size = (uint64_t)size32 & mask;
+			vbar->reg.value = lo;
+
+			if (is_prelaunched_vm(vdev->vpci->vm)) {
+				lo = (uint32_t)vdev->pci_dev_config->vbar_base[idx];
 			}
-			/* Write the upper 32-bit of a 64-bit bar */
-			vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)(vbar_base >> 32U));
-		} else {
-			enum pci_bar_type type = pci_get_bar_type(pbar->reg.value);
 
-			switch (type) {
-			case PCIBAR_MEM32:
-			case PCIBAR_MEM64:
-				/**
-				 * If vbar->base is 0 (unassigned), Linux kernel will reprogram the vbar on
-				 * its bar size boundary, so in order to ensure the MMIO vbar allocated by guest
-				 * is 4k aligned, set its size to be 4K aligned.
-				 */
-				vbar->size = round_page_up(pbar->size);
+			if (type == PCIBAR_MEM64) {
+				idx++;
+				offset = pci_bar_offset(idx);
+				pci_pdev_write_cfg(pbdf, offset, 4U, ~0U);
+				size32 = pci_pdev_read_cfg(pbdf, offset, 4U);
+				pci_pdev_write_cfg(pbdf, offset, 4U, hi);
 
-				if (is_sos_vm(vdev->vpci->vm)) {
-					/* For SOS: vbar base (GPA) = pbar base (HPA) */
-					vbar_base = vbar->base_hpa;
-				} else {
-					/* For pre-launched VMs: vbar base is predefined in vm_config */
-					vbar_base = vdev->pci_dev_config->vbar_base[idx];
+				vbar->size |= ((uint64_t)size32 << 32U);
+				vbar->size = vbar->size & ~(vbar->size - 1UL);
+				vbar->size = round_page_up(vbar->size);
+
+				vbar = &vdev->bar[idx];
+				vbar->is_64bit_high = true;
+				vbar->reg.value = hi;
+
+				if (is_prelaunched_vm(vdev->vpci->vm)) {
+					hi = (uint32_t)(vdev->pci_dev_config->vbar_base[idx - 1U] >> 32U);
 				}
-				vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)vbar_base);
-				break;
-
-			case PCIBAR_IO_SPACE:
-				vbar->size = pbar->size;
-				vdev_pt_write_vbar(vdev, pci_bar_offset(idx), (uint32_t)vbar->base_hpa);
-				break;
-
-			default:
-				/* Nothing to do in this case */
-				break;
+				vdev_pt_write_vbar(vdev, pci_bar_offset(idx - 1U), lo);
+				vdev_pt_write_vbar(vdev, pci_bar_offset(idx), hi);
+			} else {
+				vbar->size = vbar->size & ~(vbar->size - 1UL);
+				if (type == PCIBAR_MEM32) {
+					vbar->size = round_page_up(vbar->size);
+				}
+				vdev_pt_write_vbar(vdev, pci_bar_offset(idx), lo);
 			}
 		}
 	}
