@@ -289,6 +289,10 @@ int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *handler
 	void *hva;
 
 	vdev = (struct pci_vdev *)handler_private_data;
+	/* This device is assigned to post-launched VM from SOS */
+	if (vdev->new_owner != NULL) {
+		vdev = vdev->new_owner;
+	}
 	offset = mmio->address - vdev->msix.mmio_gpa;
 
 	if (msixtable_access(vdev, (uint32_t)offset)) {
