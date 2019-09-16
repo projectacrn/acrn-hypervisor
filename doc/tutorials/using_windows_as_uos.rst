@@ -337,9 +337,6 @@ Boot Windows with GVT-g on ACRN
 ===============================
 #. Modify the ``/usr/share/acrn/samples/nuc/launch_win.sh`` script to specify the Windows image generated above.
 
-#. Download `OVMF.fd <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/OVMF.fd>`_
-   binary to the directory in Service VM: ``/usr/share/acrn/samples/nuc/``.
-
 #. Run the ``launch_win.sh`` and you should see the WaaG desktop coming up over the HDMI monitor (instead of the VNC).
 
    .. note:: Use the following command to disable the GNOME Display Manager (GDM) if it is enabled::
@@ -420,7 +417,7 @@ Device configurations of acrn-dm command line
 * *-s 8,ahci,cd:/root/img/virtio-win-0.1.141.iso*: This is another cdrom device
   to install the virtio Windows driver later. Make sure it points to your VirtIO ISO path.
 
-* *--ovmf /root/bios/OVMF.fd*:
+* *--ovmf /usr/share/acrn/bios/OVMF.fd*:
   Make sure it points to your OVMF binary path
 
 References

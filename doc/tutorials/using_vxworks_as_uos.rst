@@ -102,7 +102,6 @@ Steps for Using VxWorks as User OS
 
       $ mkdir vxworks && cd vxworks
       $ cp /usr/share/acrn/samples/nuc/launch_vxworks.sh .
-      $ cp /usr/share/acrn/bios/OVMF.fd .
 
    You will also need to copy the ``VxWorks.img`` created in the VxWorks build environment into directory
    ``vxworks`` (via, e.g. a USB stick or network).
