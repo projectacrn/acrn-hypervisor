@@ -399,10 +399,11 @@ struct xhci_dev_endpoint_trbs {
 	    XHCI_MAX_TRANSFERS) + XHCI_MAX_STREAMS];
 };
 
-struct xhci_event_ring_seg {
-	volatile uint64_t	qwEvrsTablePtr;
-	volatile uint32_t	dwEvrsTableSize;
-	volatile uint32_t	dwEvrsReserved;
+
+struct xhci_erst {
+	volatile uint64_t	qwRingSegBase;
+	volatile uint32_t	dwRingSegSize;
+	volatile uint32_t	dwRingSegRsv;
 };
 
 #endif /* _XHCI_H_ */

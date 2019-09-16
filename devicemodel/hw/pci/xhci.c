@@ -256,7 +256,7 @@ struct pci_xhci_rtsregs {
 	} intrreg __attribute__((packed));
 
 	/* guest mapped addresses */
-	struct xhci_event_ring_seg *erstba_p;
+	struct xhci_erst *erstba_p;
 	struct xhci_trb *erst_p;	/* event ring segment tbl */
 	int		er_deq_seg;	/* event ring dequeue segment */
 	int		er_enq_idx;	/* event ring enqueue index - xHCI */
@@ -1796,7 +1796,7 @@ pci_xhci_insert_event(struct pci_xhci_vdev *xdev,
 	rts = &xdev->rtsregs;
 
 	erdp = rts->intrreg.erdp & ~0xF;
-	erdp_idx = (erdp - rts->erstba_p[rts->er_deq_seg].qwEvrsTablePtr) /
+	erdp_idx = (erdp - rts->erstba_p[rts->er_deq_seg].qwRingSegBase) /
 		   sizeof(struct xhci_trb);
 
 	UPRINTF(LDBG, "insert event 0[%lx] 2[%x] 3[%x]\r\n"
@@ -1805,20 +1805,20 @@ pci_xhci_insert_event(struct pci_xhci_vdev *xdev,
 			evtrb->qwTrb0, evtrb->dwTrb2, evtrb->dwTrb3,
 			erdp_idx, rts->er_deq_seg, rts->er_enq_idx,
 			rts->er_enq_seg,
-			rts->event_pcs, erdp, rts->erstba_p->qwEvrsTablePtr,
-			rts->erstba_p->dwEvrsTableSize, do_intr);
+			rts->event_pcs, erdp, rts->erstba_p->qwRingSegBase,
+			rts->erstba_p->dwRingSegSize, do_intr);
 
 	evtrbptr = &rts->erst_p[rts->er_enq_idx];
 
 	/* TODO: multi-segment table */
-	if (rts->er_events_cnt >= rts->erstba_p->dwEvrsTableSize) {
+	if (rts->er_events_cnt >= rts->erstba_p->dwRingSegSize) {
 		UPRINTF(LWRN, "[%d] cannot insert event; ring full\r\n",
 			 __LINE__);
 		err = XHCI_TRB_ERROR_EV_RING_FULL;
 		goto done;
 	}
 
-	if (rts->er_events_cnt == rts->erstba_p->dwEvrsTableSize - 1) {
+	if (rts->er_events_cnt == rts->erstba_p->dwRingSegSize - 1) {
 		struct xhci_trb	errev;
 
 		if ((evtrbptr->dwTrb3 & 0x1) == (rts->event_pcs & 0x1)) {
@@ -1836,7 +1836,7 @@ pci_xhci_insert_event(struct pci_xhci_vdev *xdev,
 			memcpy(&rts->erst_p[rts->er_enq_idx], &errev,
 			       sizeof(struct xhci_trb));
 			rts->er_enq_idx = (rts->er_enq_idx + 1) %
-					  rts->erstba_p->dwEvrsTableSize;
+					  rts->erstba_p->dwRingSegSize;
 			err = XHCI_TRB_ERROR_EV_RING_FULL;
 			do_intr = 1;
 
@@ -1851,7 +1851,7 @@ pci_xhci_insert_event(struct pci_xhci_vdev *xdev,
 
 	memcpy(&rts->erst_p[rts->er_enq_idx], evtrb, sizeof(struct xhci_trb));
 	rts->er_enq_idx = (rts->er_enq_idx + 1) %
-			  rts->erstba_p->dwEvrsTableSize;
+			  rts->erstba_p->dwRingSegSize;
 
 	if (rts->er_enq_idx == 0)
 		rts->event_pcs ^= 1;
@@ -3358,12 +3358,12 @@ pci_xhci_rtsregs_write(struct pci_xhci_vdev *xdev,
 				   ~0x3FUL);
 
 		rts->erst_p = XHCI_GADDR(xdev,
-			xdev->rtsregs.erstba_p->qwEvrsTablePtr & ~0x3FUL);
+			xdev->rtsregs.erstba_p->qwRingSegBase & ~0x3FUL);
 
 		UPRINTF(LDBG, "wr erstba erst (%p) ptr 0x%lx, sz %u\r\n",
 			rts->erstba_p,
-			rts->erstba_p->qwEvrsTablePtr,
-			rts->erstba_p->dwEvrsTableSize);
+			rts->erstba_p->qwRingSegBase,
+			rts->erstba_p->dwRingSegSize);
 		break;
 
 	case 0x18:
@@ -3390,14 +3390,14 @@ pci_xhci_rtsregs_write(struct pci_xhci_vdev *xdev,
 			uint32_t erdp_i;
 
 			erdp = rts->intrreg.erdp & ~0xF;
-			erdp_i = (erdp - rts->erstba_p->qwEvrsTablePtr) /
+			erdp_i = (erdp - rts->erstba_p->qwRingSegBase) /
 				   sizeof(struct xhci_trb);
 
 			if (erdp_i <= rts->er_enq_idx)
 				rts->er_events_cnt = rts->er_enq_idx - erdp_i;
 			else
 				rts->er_events_cnt =
-					  rts->erstba_p->dwEvrsTableSize -
+					  rts->erstba_p->dwRingSegSize -
 					  (erdp_i - rts->er_enq_idx);
 
 			UPRINTF(LDBG, "erdp 0x%lx, events cnt %u\r\n",
