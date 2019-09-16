@@ -545,6 +545,8 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 int32_t shutdown_vm(struct acrn_vm *vm)
 {
 	uint16_t i;
+	uint16_t this_pcpu_id = get_pcpu_id();
+	bool offline_pcpu;
 	uint64_t mask = 0UL;
 	struct acrn_vcpu *vcpu = NULL;
 	struct acrn_vm_config *vm_config = NULL;
@@ -557,18 +559,26 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 		vm->state = VM_POWERED_OFF;
 
 		foreach_vcpu(i, vm, vcpu) {
+			offline_pcpu = is_lapic_pt_enabled(vcpu);
 			reset_vcpu(vcpu);
 			offline_vcpu(vcpu);
 
-			if (is_lapic_pt_enabled(vcpu)) {
-				bitmap_set_nolock(vcpu->pcpu_id, &mask);
+			if (offline_pcpu) {
+				/*
+				 * If the current pcpu needs to offline itself,
+				 * it will be done after shutdown_vm() completes
+				 * in the idle thread.
+				 */
+				if (this_pcpu_id != vcpu->pcpu_id) {
+					bitmap_set_nolock(vcpu->pcpu_id, &mask);
+				}
 				make_pcpu_offline(vcpu->pcpu_id);
 			}
 		}
 
 		wait_pcpus_offline(mask);
 
-		if (is_lapic_pt_configured(vm) && !start_pcpus(mask)) {
+		if (mask != 0UL && !start_pcpus(mask)) {
 			pr_fatal("Failed to start all cpus in mask(0x%llx)", mask);
 			ret = -ETIMEDOUT;
 		}
@@ -591,10 +601,8 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 
 		/* Free EPT allocated resources assigned to VM */
 		destroy_ept(vm);
-
-		ret = 0;
 	} else {
-	        ret = -EINVAL;
+		ret = -EINVAL;
 	}
 
 	/* Return status to caller */
@@ -621,17 +629,39 @@ void start_vm(struct acrn_vm *vm)
 int32_t reset_vm(struct acrn_vm *vm)
 {
 	uint16_t i;
+	uint16_t this_pcpu_id = get_pcpu_id();
+	bool offline_pcpu;
+	uint64_t mask = 0UL;
 	struct acrn_vcpu *vcpu = NULL;
-	int32_t ret;
+	int32_t ret = 0;
 
 	if (vm->state == VM_PAUSED) {
 		foreach_vcpu(i, vm, vcpu) {
+			offline_pcpu = is_lapic_pt_enabled(vcpu);
 			reset_vcpu(vcpu);
+
+			if (offline_pcpu) {
+				if (this_pcpu_id != vcpu->pcpu_id) {
+					bitmap_set_nolock(vcpu->pcpu_id, &mask);
+					make_pcpu_offline(vcpu->pcpu_id);
+				} else {
+					pr_warn("%s: cannot offline self(%u)",
+						__func__, this_pcpu_id);
+					ret = -EINVAL;
+				}
+			}
 		}
+
+		wait_pcpus_offline(mask);
+
+		if (mask != 0UL && !start_pcpus(mask)) {
+			pr_fatal("Failed to start all cpus in mask(0x%llx)", mask);
+			ret = -ETIMEDOUT;
+		}
+
 		/*
 		 * Set VM vLAPIC state to VM_VLAPIC_XAPIC
 		 */
-
 		vm->arch_vm.vlapic_state = VM_VLAPIC_XAPIC;
 
 		if (is_sos_vm(vm)) {
@@ -643,10 +673,8 @@ int32_t reset_vm(struct acrn_vm *vm)
 		destroy_secure_world(vm, false);
 		vm->sworld_control.flag.active = 0UL;
 		vm->state = VM_CREATED;
-
-		ret = 0;
 	} else {
-		ret = -1;
+		ret = -EINVAL;
 	}
 
 	return ret;
