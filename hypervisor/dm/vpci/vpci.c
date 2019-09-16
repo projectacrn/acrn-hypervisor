@@ -328,12 +328,13 @@ static struct pci_vdev *find_vdev(const struct acrn_vpci *vpci, union pci_bdf bd
 static void vpci_init_pt_dev(struct pci_vdev *vdev)
 {
 	/*
-	 * init_vdev_pt() must be called before init_vmsix() because init_vmsix
-	 * assigns BAR base hpa to MSI-X mmio_hpa which is initialized in init_vdev_pt().
+	 * Here init_vdev_pt() needs to be called after init_vmsix() for the following reason:
+	 * init_vdev_pt() will indirectly call has_msix_cap(), which
+	 * requires init_vmsix() to be called first.
 	 */
-	init_vdev_pt(vdev);
 	init_vmsi(vdev);
 	init_vmsix(vdev);
+	init_vdev_pt(vdev);
 
 	assign_vdev_pt_iommu_domain(vdev);
 }
