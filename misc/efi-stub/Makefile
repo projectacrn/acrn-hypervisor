@@ -36,6 +36,8 @@ C_SRCS = boot.c pe.c malloc.c
 ACRN_OBJS := $(patsubst %.c,$(EFI_OBJDIR)/%.o,$(C_SRCS))
 INCLUDE_PATH += $(HV_OBJDIR)/include
 
+SCENARIO ?= sdc
+
 OBJCOPY=objcopy
 
 HOST  = $(shell $(CC) -dumpmachine | sed "s/\(-\).*$$//")

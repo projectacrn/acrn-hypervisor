@@ -34,43 +34,70 @@ ifneq ($(BOARD_FILE)$(SCENARIO_FILE),)
 BOARD := `sed -n '/board/p' $(BOARD_FILE) |head -1|awk -F'"' '{print $$2}'`
 SCENARIO := `sed -n '/scenario/p' $(SCENARIO_FILE) |head -1|awk -F'"' '{print $$4}'`
 
+ifeq ($(BOARD), apl-nuc)
+override BOARD := nuc6cayh
+else ifeq ($(BOARD), kbl-nuc-i7)
+override BOARD := nuc7i7dnb
+endif
+
 cfg_src:
 	@if [ ! -f $(BOARD_FILE) ] ; then \
-		echo "$(BOARD_FILE) is not exist!"; exit 1; \
+		echo "Board xml file $(BOARD_FILE) is not exist!"; exit 1; \
 	fi
 	@if [ ! -f "$(SCENARIO_FILE)" ]; then \
-		echo "$(SCENARIO_FILE) is not exist!"; exit 1; \
+		echo "Scenario xml file $(SCENARIO_FILE) is not exist!"; exit 1; \
 	fi
 	@python3 misc/acrn-config/board_config/board_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) || exit $$?
 	@python3 misc/acrn-config/scenario_config/scenario_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) || exit $$?
 	@echo "Import hypervisor configurations from Config-xmls, configurations in source code are ignored!"
+
 else
+
+ifeq ($(BOARD), apl-nuc)
+override BOARD := nuc6cayh
+else ifeq ($(BOARD), kbl-nuc-i7)
+override BOARD := nuc7i7dnb
+endif
+
 cfg_src:
 	@echo "Use hypervisor configurations from source code directly."
 
 endif
 
 hypervisor: cfg_src
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) SCENARIO=$(SCENARIO) RELEASE=$(RELEASE) clean
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) SCENARIO=$(SCENARIO) RELEASE=$(RELEASE)
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) clean
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) defconfig
+	@if [ "$(SCENARIO)" ]; then \
+		echo "CONFIG_$(shell echo $(SCENARIO) | tr a-z A-Z)=y" >> $(HV_OUT)/.config;	\
+	fi
+	@if [ -f "$(SCENARIO_FILE)" ]; then \
+		echo "CONFIG_ENFORCE_VALIDATED_ACPI_INFO=y" >> $(HV_OUT)/.config;	\
+	fi
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) oldconfig
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)
 ifeq ($(FIRMWARE),uefi)
 	echo "building hypervisor as EFI executable..."
 	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) SCENARIO=$(SCENARIO) EFI_OBJDIR=$(EFI_OUT)
 endif
 
 sbl-hypervisor:
-	@mkdir -p $(HV_OUT)-sbl/apl-mrb $(HV_OUT)-sbl/apl-up2
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl SCENARIO=sdc RELEASE=$(RELEASE) clean
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl SCENARIO=sdc RELEASE=$(RELEASE)
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl SCENARIO=sdc RELEASE=$(RELEASE) clean
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl SCENARIO=sdc RELEASE=$(RELEASE)
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE) clean
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE) defconfig
+	@echo "CONFIG_SDC=y" >> $(HV_OUT)-sbl/.config
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE) oldconfig
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE)
 
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi SCENARIO=industry RELEASE=$(RELEASE) clean
-	@mkdir -p $(HV_OUT)-isd
-	@echo "CONFIG_INDUSTRY=y" > $(HV_OUT)-isd/.config
-	@echo 'CONFIG_BOARD="nuc7i7dnb"' >> $(HV_OUT)-isd/.config
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi SCENARIO=industry RELEASE=$(RELEASE) oldconfig
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi SCENARIO=industry RELEASE=$(RELEASE)
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl RELEASE=$(RELEASE) clean
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl RELEASE=$(RELEASE) defconfig
+	@echo "CONFIG_SDC=y" >> $(HV_OUT)-sbl/.config
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl RELEASE=$(RELEASE) oldconfig
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl RELEASE=$(RELEASE)
+
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi RELEASE=$(RELEASE) clean
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi RELEASE=$(RELEASE) defconfig
+	@echo "CONFIG_INDUSTRY=y" >> $(HV_OUT)-isd/.config
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi RELEASE=$(RELEASE) oldconfig
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi RELEASE=$(RELEASE)
 
 ifeq ($(FIRMWARE),uefi)
 	echo "building hypervisor as EFI executable..."
