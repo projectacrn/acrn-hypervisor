@@ -120,6 +120,16 @@ void do_acpi_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val,
 	} while ((s1 & (1U << BIT_WAK_STS)) == 0U);
 }
 
+static void suspend_tsc(__unused void *data)
+{
+	per_cpu(tsc_suspend, get_cpu_id()) = rdtsc();
+}
+
+static void resume_tsc(__unused void *data)
+{
+	msr_write(MSR_IA32_TIME_STAMP_COUNTER, per_cpu(tsc_suspend, get_cpu_id()));
+}
+
 void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
 	uint64_t pmain_entry_saved;
@@ -144,6 +154,10 @@ void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 			(uint32_t) trampoline_start16_paddr;
 
 		clac();
+
+		/* Save TSC on all PCPU */
+		smp_call_function(pcpu_active_bitmap, suspend_tsc, NULL);
+
 		/* offline all APs */
 		stop_cpus();
 
@@ -171,7 +185,6 @@ void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 		resume_lapic();
 		resume_iommu();
 		resume_ioapic();
-		resume_console();
 
 		exec_vmxon_instr(pcpu_id);
 		CPU_IRQ_ENABLE();
@@ -183,6 +196,14 @@ void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 
 		/* online all APs again */
 		start_cpus();
+
+		/* Restore TSC on all PCPU
+		 * Caution: There should no timer setup before TSC resumed.
+		 */
+		smp_call_function(pcpu_active_bitmap, resume_tsc, NULL);
+
+		/* console must be resumed after TSC restored since it will setup timer base on TSC */
+		resume_console();
 
 		/* jump back to vm */
 		resume_vm_from_s3(vm, guest_wakeup_vec32);
