@@ -42,6 +42,8 @@ User VM Tutorials
    tutorials/using_windows_as_uos
    tutorials/rt_linux
    tutorials/using_zephyr_as_uos
+   tutorials/running_deb_as_user_vm
+   tutorials/running_ubun_as_user_vm
 
 Service VM Tutorials
 ********************
