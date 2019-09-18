@@ -153,6 +153,16 @@ void host_enter_s5(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 	do_acpi_sx(sstate_data, pm1a_cnt_val, pm1b_cnt_val);
 }
 
+static void suspend_tsc(__unused void *data)
+{
+	per_cpu(tsc_suspend, get_pcpu_id()) = rdtsc();
+}
+
+static void resume_tsc(__unused void *data)
+{
+	msr_write(MSR_IA32_TIME_STAMP_COUNTER, per_cpu(tsc_suspend, get_pcpu_id()));
+}
+
 void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
 	uint64_t pmain_entry_saved;
@@ -163,6 +173,10 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 	*(sstate_data->wake_vector_32) = (uint32_t)get_trampoline_start16_paddr();
 
 	clac();
+
+	/* Save TSC on all PCPU */
+	smp_call_function(get_active_pcpu_bitmap(), suspend_tsc, NULL);
+
 	/* offline all APs */
 	stop_pcpus();
 
@@ -190,7 +204,6 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 	resume_lapic();
 	resume_iommu();
 	resume_ioapic();
-	resume_console();
 
 	vmx_on();
 	CPU_IRQ_ENABLE();
@@ -204,6 +217,14 @@ void host_enter_s3(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_
 	if (!start_pcpus(AP_MASK)) {
 		panic("Failed to start all APs!");
 	}
+
+	/* Restore TSC on all PCPU
+	 * Caution: There should no timer setup before TSC resumed.
+	 */
+	smp_call_function(get_active_pcpu_bitmap(), resume_tsc, NULL);
+
+	/* console must be resumed after TSC restored since it will setup timer base on TSC */
+	resume_console();
 }
 
 void reset_host(void)
