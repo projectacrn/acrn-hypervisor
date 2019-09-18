@@ -1,3 +1,11 @@
+OVMF release v1.3
+
+- GvtGopDxe: Fix crash if failed to get a valid mode
+- GvtGopDxe: Enable GOP with parameters from vgt interface
+- OvmfPkg/GvtGopDxe: Add GvtGopDxe skeleton driver
+- Add back NVME support
+- Update Readme.md
+
 OVMF release v1.2
 
 - Add support for VRING_USED_F_NO_NOTIFY in virtio devices
