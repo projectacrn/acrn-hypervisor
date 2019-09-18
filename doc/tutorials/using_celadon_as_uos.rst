@@ -31,6 +31,12 @@ Build Celadon from source
    <https://01.org/projectceladon/documentation/getting_started/build-source>`_ guide
    to set up the Celadon project source code.
 
+   .. note:: The master branch is based on Google Android 10 Pre-Production Early Release.
+      We should use following command to specify a stable Celadon branch based on the Google
+      Android 9 source code in order to apply those patches in the :ref:`ACRN patch list`::
+
+      $ repo init -u https://github.com/projectceladon/manifest.git -b celadon/p/mr0/master -m stable-build/ww201925_H.xml
+
 #. Select Celadon build target::
 
       $ cd <Celadon project directory>
