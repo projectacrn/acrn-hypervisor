@@ -1,0 +1,80 @@
+<acrn-config board="generic" scenario="industry" uos_launcher="3">
+    <uos id="1">
+	<uos_type desc="UOS type"></uos_type>
+	<rtos_type desc="UOS Realtime capability"></rtos_type>
+	<mem_size desc="UOS memory size in MByte"></mem_size>
+	<gvt_args desc="GVT argument for the vm"></gvt_args>
+	<vbootloader desc=""></vbootloader>
+	<rootfs_dev desc=""></rootfs_dev>
+	<rootfs_img desc=""></rootfs_img>
+	<console_type desc="UOS console type"></console_type>
+
+	<passthrough_devices>
+		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
+		<audio desc="vm audio device"></audio>
+		<audio_codec desc="vm audio codec device"></audio_codec>
+		<ipu desc="vm ipu device"></ipu>
+		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
+		<cse desc="vm cse device"></cse>
+		<wifi desc="vm wifi device"></wifi>
+		<bluetooth desc="vm bluetooth"></bluetooth>
+		<sd_card desc="vm sd card device"></sd_card>
+		<ethernet desc="vm wifi device"></ethernet>
+		<sata desc="vm sata device"></sata>
+		<nvme desc="vm nvme device"></nvme>
+	</passthrough_devices>
+
+    </uos>
+    <uos id="2">
+	<uos_type desc="UOS type"></uos_type>
+	<rtos_type desc="UOS Realtime capability"></rtos_type>
+	<mem_size desc="UOS memory size in MByte"></mem_size>
+	<gvt_args desc="GVT argument for the vm"></gvt_args>
+	<vbootloader desc=""></vbootloader>
+	<rootfs_dev desc=""></rootfs_dev>
+	<rootfs_img desc=""></rootfs_img>
+	<console_type desc="UOS console type"></console_type>
+
+	<passthrough_devices>
+		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
+		<audio desc="vm audio device"></audio>
+		<audio_codec desc="vm audio codec device"></audio_codec>
+		<ipu desc="vm ipu device"></ipu>
+		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
+		<cse desc="vm cse device"></cse>
+		<wifi desc="vm wifi device"></wifi>
+		<bluetooth desc="vm bluetooth"></bluetooth>
+		<sd_card desc="vm sd card device"></sd_card>
+		<ethernet desc="vm wifi device"></ethernet>
+		<sata desc="vm sata device"></sata>
+		<nvme desc="vm nvme device"></nvme>
+	</passthrough_devices>
+
+    </uos>
+    <uos id="3">
+	<uos_type desc="UOS type"></uos_type>
+	<rtos_type desc="UOS Realtime capability"></rtos_type>
+	<mem_size desc="UOS memory size in MByte"></mem_size>
+	<gvt_args desc="GVT argument for the vm"></gvt_args>
+	<vbootloader desc=""></vbootloader>
+	<rootfs_dev desc=""></rootfs_dev>
+	<rootfs_img desc=""></rootfs_img>
+	<console_type desc="UOS console type"></console_type>
+
+	<passthrough_devices>
+		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
+		<audio desc="vm audio device"></audio>
+		<audio_codec desc="vm audio codec device"></audio_codec>
+		<ipu desc="vm ipu device"></ipu>
+		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
+		<cse desc="vm cse device"></cse>
+		<wifi desc="vm wifi device"></wifi>
+		<bluetooth desc="vm bluetooth"></bluetooth>
+		<sd_card desc="vm sd card device"></sd_card>
+		<ethernet desc="vm wifi device"></ethernet>
+		<sata desc="vm sata device"></sata>
+		<nvme desc="vm nvme device"></nvme>
+	</passthrough_devices>
+
+    </uos>
+</acrn-config>
