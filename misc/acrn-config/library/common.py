@@ -285,9 +285,8 @@ def get_post_vm_count(config_file):
     # get post vm number
     root = get_config_root(config_file)
     for item in root:
-        for sub in item:
-            if sub.tag == "load_order" and sub.text == "POST_LAUNCHED_VM":
-                post_vm_count += 1
+        if item.tag == "uos":
+            post_vm_count += 1
 
     return post_vm_count
 
@@ -307,22 +306,23 @@ def get_tree_tag_val(config_file, tag_str):
     return False
 
 
-def get_branch_tag(config_file, tag_str):
-    """
-     This is get tag value by tag_str from config file
-     :param config_file: it is a file what contains information for script to read from
-     :param tag_str: it is key of pattern to config file item
-     :return: value of tag_str item list
-     """
-    tmp_tag = []
-    root = get_config_root(config_file)
-    for item in root:
-
-        for sub in item:
-            if sub.tag == tag_str:
-                tmp_tag.append(sub.text)
-
-    return tmp_tag
+#def get_spec_branch_tag(config_file, tag_str, p_id):
+#    """
+#     This is get tag value by tag_str from config file
+#     :param config_file: it is a file what contains information for script to read from
+#     :param tag_str: it is key of pattern to config file item
+#     :return: value of tag_str item list
+#     """
+#    tmp_tag = ''
+#    root = get_config_root(config_file)
+#    for item in root:
+#        if item.tag != 'vm' and item.attrib['id'] != str(p_id):
+#            continue
+#        for sub in item:
+#            if sub.tag == tag_str:
+#                tmp_tag = sub.text
+#
+#    return tmp_tag
 
 
 def get_branch_tag_val(config_file, tag_str):
@@ -338,6 +338,25 @@ def get_branch_tag_val(config_file, tag_str):
         for sub in item:
             if sub.tag == tag_str:
                 tmp_tag.append(sub.text)
+
+    return tmp_tag
+
+
+def get_spec_branch_tag_val(config_file, tag_str, uos_id):
+    """
+     This is get tag value by tag_str from config file
+     :param config_file: it is a file what contains information for script to read from
+     :param tag_str: it is key of pattern to config file item
+     :return: value of tag_str item list
+     """
+    tmp_tag = ''
+    root = get_config_root(config_file)
+    for item in root:
+        if item.attrib['id'] != uos_id:
+            continue
+        for sub in item:
+            if sub.tag == tag_str:
+                tmp_tag = sub.text
 
     return tmp_tag
 
@@ -360,6 +379,22 @@ def get_branch_tag_map(config_file, tag_str):
         if item.tag == "vm":
             vm_id += 1
 
+    return tmp_tag
+
+
+def get_spec_leaf_tag_val(config_file, branch_tag, tag_str, uos_id):
+    tmp_tag = ''
+    root = get_config_root(config_file)
+    for item in root:
+        if item.attrib['id'] != uos_id:
+            continue
+        for sub in item:
+            if sub.tag == branch_tag:
+                for leaf in sub:
+                    if leaf.tag == tag_str and tag_str != "guest_flag" and tag_str != "pcpu_id" and\
+                            sub.tag != "vuart":
+                        tmp_tag = leaf.text
+                        continue
     return tmp_tag
 
 
@@ -532,6 +567,18 @@ def vm_pre_launch_cnt(config_file):
             pre_launch_cnt += 1
 
     return pre_launch_cnt
+
+
+def handle_root_dev(line):
+    """Handle if it match root device information pattern
+    :param line: one line of information which had decoded to 'ASCII'
+    """
+    for root_type in line.split():
+        # only support ext4 rootfs
+        if "ext4" in root_type:
+            return True
+
+    return False
 
 
 def get_max_clos(board_file):

@@ -131,7 +131,7 @@ def dump_execute(cmd, desc, config):
             if not ret:
                 continue
 
-        if desc == "ROOT_DEVICE_INFO":
+        if desc == "BLOCK_DEVICE_INFO":
             ret = handle_root_dev(line)
             if not ret:
                 continue
