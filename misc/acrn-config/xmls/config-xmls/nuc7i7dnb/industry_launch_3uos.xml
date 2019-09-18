@@ -1,0 +1,84 @@
+<acrn-config board="nuc7i7dnb" scenario="industry" uos_launcher="3">
+    <uos id="1">
+	<uos_type desc="UOS type">WINDOWS</uos_type>
+	<rtos_type desc="UOS Realtime capability">no</rtos_type>
+	<mem_size desc="UOS memory size in MByte">4096</mem_size>
+	<gvt_args desc="GVT argument for the vm">64 448 8</gvt_args>
+	<cpu_num desc="max cpu number for the vm">1</cpu_num>
+	<vbootloader desc="virtual bootloader method">ovmf</vbootloader>
+	<rootfs_dev desc="rootfs partition devices" readonly="true">/dev/sda3</rootfs_dev>
+	<rootfs_img desc="rootfs image" readonly="true">./win10-ltsc.img</rootfs_img>
+	<console_type desc="UOS console type">com1(ttyS0)</console_type>
+
+	<passthrough_devices>
+		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
+		<audio desc="vm audio device">00:1f.3 Audio device: Intel Corporation Sunrise Point-LP HD Audio (rev 21)</audio>
+		<audio_codec desc="vm audio codec device"></audio_codec>
+		<ipu desc="vm ipu device"></ipu>
+		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
+		<cse desc="vm cse device"></cse>
+		<wifi desc="vm wifi device"></wifi>
+		<bluetooth desc="vm bluetooth"></bluetooth>
+		<sd_card desc="vm sd card device"></sd_card>
+		<ethernet desc="vm wifi device"></ethernet>
+		<sata desc="vm sata device"></sata>
+		<nvme desc="vm nvme device"></nvme>
+	</passthrough_devices>
+
+    </uos>
+
+    <uos id="2">
+	<uos_type desc="UOS type">PREEMPT-RT LINUX</uos_type>
+	<rtos_type desc="UOS Realtime capability">Hard RT</rtos_type>
+	<cpu_num desc="max cpu number for the vm">1</cpu_num>
+	<mem_size desc="UOS memory size in MByte">1024</mem_size>
+	<gvt_args configurable="0" desc="GVT argument for the vm"></gvt_args>
+	<vbootloader desc="" readonly="true">ovmf</vbootloader>
+	<rootfs_dev configurable="0" desc=""></rootfs_dev>
+	<rootfs_img configurable="0" desc=""></rootfs_img>
+	<console_type desc="UOS console type">virtio-console(hvc0)</console_type>
+
+	<passthrough_devices>
+		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
+		<audio desc="vm audio device"></audio>
+		<audio_codec desc="vm audio codec device"></audio_codec>
+		<ipu desc="vm ipu device"></ipu>
+		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
+		<cse desc="vm cse device"></cse>
+		<wifi desc="vm wifi device"></wifi>
+		<bluetooth desc="vm bluetooth"></bluetooth>
+		<sd_card desc="vm sd card device"></sd_card>
+		<ethernet desc="vm wifi device">00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection I219-LM (rev 21)</ethernet>
+		<sata desc="vm sata device"></sata>
+		<nvme desc="vm nvme device">02:00.0 Non-Volatile memory controller: Intel Corporation Device f1a6 (rev 03)</nvme>
+	</passthrough_devices>
+    </uos>
+
+    <uos id="3">
+	<uos_type desc="UOS type">VXWORKS</uos_type>
+	<rtos_type desc="UOS Realtime capability">Hard RT</rtos_type>
+	<cpu_num desc="max cpu number for the vm">1</cpu_num>
+	<mem_size desc="UOS memory size in MByte">2048</mem_size>
+	<gvt_args desc="GVT argument for the vm"></gvt_args>
+	<vbootloader desc="virtual boot loader method" readonly="true">ovmf</vbootloader>
+	<rootfs_dev desc="" readonly="true">/dev/sda3</rootfs_dev>
+	<rootfs_img desc="" readonly="true">./VxWorks.img</rootfs_img>
+	<console_type desc="UOS console type">virtio-console(hvc0)</console_type>
+
+	<passthrough_devices>
+		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
+		<audio desc="vm audio device"></audio>
+		<audio_codec desc="vm audio codec device"></audio_codec>
+		<ipu desc="vm ipu device"></ipu>
+		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
+		<cse desc="vm cse device"></cse>
+		<wifi desc="vm wifi device"></wifi>
+		<bluetooth desc="vm bluetooth"></bluetooth>
+		<sd_card desc="vm sd card device"></sd_card>
+		<ethernet desc="vm wifi device"></ethernet>
+		<sata desc="vm sata device"></sata>
+		<nvme desc="vm nvme device"></nvme>
+	</passthrough_devices>
+
+    </uos>
+</acrn-config>
