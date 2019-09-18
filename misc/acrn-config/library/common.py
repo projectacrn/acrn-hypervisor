@@ -274,7 +274,7 @@ def get_vm_count(config_file):
     return vm_count
 
 
-def get_post_vm_count(config_file):
+def launch_vm_cnt(config_file):
     """
     Get post vm number
     :param config_file: it is a file what contains information for script to read from
@@ -291,6 +291,23 @@ def get_post_vm_count(config_file):
     return post_vm_count
 
 
+def get_post_num_list(config_file):
+    """
+    Get post vm number list
+    :param config_file: it is a file what contains information for script to read from
+    :return: total post dic: {launch_id:scenario_id} in launch file
+    """
+    post_vm_list = []
+
+    # get post vm number
+    root = get_config_root(config_file)
+    for item in root:
+        if item.tag == "uos":
+            post_vm_list.append(int(item.attrib['id']))
+
+    return post_vm_list
+
+
 def get_tree_tag_val(config_file, tag_str):
     """
      This is get tag value by tag_str from config file
@@ -304,25 +321,6 @@ def get_tree_tag_val(config_file, tag_str):
             return item.text
 
     return False
-
-
-#def get_spec_branch_tag(config_file, tag_str, p_id):
-#    """
-#     This is get tag value by tag_str from config file
-#     :param config_file: it is a file what contains information for script to read from
-#     :param tag_str: it is key of pattern to config file item
-#     :return: value of tag_str item list
-#     """
-#    tmp_tag = ''
-#    root = get_config_root(config_file)
-#    for item in root:
-#        if item.tag != 'vm' and item.attrib['id'] != str(p_id):
-#            continue
-#        for sub in item:
-#            if sub.tag == tag_str:
-#                tmp_tag = sub.text
-#
-#    return tmp_tag
 
 
 def get_branch_tag_val(config_file, tag_str):
@@ -342,21 +340,23 @@ def get_branch_tag_val(config_file, tag_str):
     return tmp_tag
 
 
-def get_spec_branch_tag_val(config_file, tag_str, uos_id):
+def get_spec_branch_tag_val(config_file, tag_str):
     """
      This is get tag value by tag_str from config file
      :param config_file: it is a file what contains information for script to read from
      :param tag_str: it is key of pattern to config file item
      :return: value of tag_str item list
      """
-    tmp_tag = ''
+    tmp_tag = {}
     root = get_config_root(config_file)
     for item in root:
-        if item.attrib['id'] != uos_id:
-            continue
+        id_i = int(item.attrib['id'])
         for sub in item:
             if sub.tag == tag_str:
-                tmp_tag = sub.text
+                if sub.text == None or not sub.text:
+                    tmp_tag[id_i] = ''
+                else:
+                    tmp_tag[id_i] = sub.text
 
     return tmp_tag
 
@@ -369,31 +369,33 @@ def get_branch_tag_map(config_file, tag_str):
      :return: value of tag_str item dictionary
      """
     tmp_tag = {}
-    vm_id = 0
     root = get_config_root(config_file)
     for item in root:
+        vm_id = int(item.attrib['id'])
         for sub in item:
             if sub.tag == tag_str:
                 tmp_tag[vm_id] = sub.text
 
-        if item.tag == "vm":
-            vm_id += 1
+        #if item.tag == "vm":
+        #    vm_id += 1
 
     return tmp_tag
 
 
-def get_spec_leaf_tag_val(config_file, branch_tag, tag_str, uos_id):
-    tmp_tag = ''
+def get_spec_leaf_tag_val(config_file, branch_tag, tag_str):
+    tmp_tag = {}
     root = get_config_root(config_file)
     for item in root:
-        if item.attrib['id'] != uos_id:
-            continue
+        id_i = int(item.attrib['id'])
         for sub in item:
             if sub.tag == branch_tag:
                 for leaf in sub:
                     if leaf.tag == tag_str and tag_str != "guest_flag" and tag_str != "pcpu_id" and\
                             sub.tag != "vuart":
-                        tmp_tag = leaf.text
+                        if leaf.text == None or not leaf.text:
+                            tmp_tag[id_i] = ''
+                        else:
+                            tmp_tag[id_i] = leaf.text
                         continue
     return tmp_tag
 
@@ -567,6 +569,22 @@ def vm_pre_launch_cnt(config_file):
             pre_launch_cnt += 1
 
     return pre_launch_cnt
+
+
+def post_vm_cnt(config_file):
+    """
+    Calculate the pre launched vm number
+    :param config_file: it is a file what contains information for script to read from
+    :return: number of post launched vm
+    """
+    post_launch_cnt = 0
+    load_type_list = get_branch_tag_val(config_file, "load_order")
+
+    for vm_type in load_type_list:
+        if vm_type == "POST_LAUNCHED_VM":
+            post_launch_cnt += 1
+
+    return post_launch_cnt
 
 
 def handle_root_dev(line):
