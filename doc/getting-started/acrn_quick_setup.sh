@@ -41,8 +41,6 @@ skip_download_uos=0
 # switcher for disabling reboot device
 disable_reboot=0
 
-# acrn.conf path
-acrn_conf_path=/usr/share/acrn/samples/nuc/acrn.conf
 # acrn.efi path
 acrn_efi_path=/usr/lib/acrn/acrn.efi
 
@@ -60,8 +58,6 @@ function upgrade_sos()
 
     # Check EFI path exists.
     [[ ! -b $efi_partition ]] && echo "Please set the right EFI System partition firstly." && exit 1
-    efi_mount_point=`findmnt $efi_partition -n | cut -d' ' -f1`
-    root_partition=`echo $efi_partition | sed 's/1$/3/g'`
     partition=`echo $efi_partition | sed 's/1$//g;s/p$//g'`
 
     echo "Disable auto update..."
@@ -72,25 +68,17 @@ function upgrade_sos()
         echo "Clear Linux version $sos_ver is already installed. Continuing to setup SOS..."
     else
         echo "Upgrading Clear Linux version from $VERSION_ID to $sos_ver ..."
-        swupd verify --fix --picky -m $sos_ver 2>/dev/null
+        swupd repair --picky -V $sos_ver 2>/dev/null
     fi
 
     # Do the setups if previous process succeed.
     if [[ $? -eq 0 ]]; then
-        echo "Adding the service-os, kernel-iot-lts2018 and systemd-networkd-autostart bundles..."
-        swupd bundle-add service-os kernel-iot-lts2018 systemd-networkd-autostart 2>/dev/null
+        echo "Adding the service-os and systemd-networkd-autostart bundles..."
+        swupd bundle-add service-os systemd-networkd-autostart 2>/dev/null
 
         mount $efi_partition /mnt
         echo "Add /mnt/EFI/acrn folder"
         mkdir -p /mnt/EFI/acrn
-        echo "Copy $acrn_conf_path /mnt/loader/entries/"
-        if [[ ! -f $acrn_conf_path ]]; then
-            echo "Missing acrn.conf file in folder: $acrn_conf_path"
-            umount /mnt && sync
-            exit 1
-        fi
-        cp -r $acrn_conf_path /mnt/loader/entries/
-        if [[ $? -ne 0 ]]; then echo "Fail to copy $acrn_conf_path" && exit 1; fi
         echo "Copy $acrn_efi_path to /mnt/EFI/acrn"
         if [[ ! -f $acrn_efi_path ]]; then
             echo "Missing acrn.efi file in folder: $acrn_efi_path"
@@ -101,7 +89,7 @@ function upgrade_sos()
         if [[ $? -ne 0 ]]; then echo "Fail to copy $acrn_efi_path" && exit 1; fi
         echo "Check ACRN efi boot event"
         check_acrn_bootefi=`efibootmgr | grep ACRN`
-        if [[ "$check_arcn_bootefi" -ge "ACRN" ]]; then
+        if [[ "$check_acrn_bootefi" -ge "ACRN" ]]; then
             echo "Clean all ACRN efi boot event"
             efibootmgr | grep ACRN | cut -d'*' -f1 | cut -d't' -f2 | xargs -i efibootmgr -b {} -B >/dev/null
         fi
@@ -115,38 +103,22 @@ function upgrade_sos()
         echo "Add new ACRN efi boot event"
         efibootmgr -c -l "\EFI\acrn\acrn.efi" -d $partition -p 1 -L "ACRN" >/dev/null
 
-        echo "Create loader.conf"
-        mv /mnt/loader/loader.conf /mnt/loader/loader.conf.bck && touch /mnt/loader/loader.conf
-        echo "Add default (5 seconds) boot wait time"
-        echo "timeout 5" > /mnt/loader/loader.conf
-        echo "Add default boot to ACRN"
-        echo "default acrn" >> /mnt/loader/loader.conf
-
         new_kernel=`ls /mnt/EFI/org.clearlinux/*sos* -tl | grep kernel | head -n1 | awk -F'/' '{print $5}'`
+        new_kernel=${new_kernel#kernel-}
         echo "Getting latest Service OS kernel version: $new_kernel"
-        cur_kernel=`cat /mnt/loader/entries/acrn.conf | sed -n 2p | cut -d'/' -f4`
-        echo "Getting current Service OS kernel version: $cur_kernel"
 
-        echo "Replacing root partition uuid in acrn.conf"
-        sed -i "s/<UUID of rootfs partition>/`blkid -s PARTUUID -o value $root_partition`/g" /mnt/loader/entries/acrn.conf
-        # test replacing succeed or not.
-        if [[ -z `grep $(blkid -s PARTUUID -o value $root_partition) /mnt/loader/entries/acrn.conf` ]]; then
-            echo "Fail to replace root uuid in this file: /mnt/loader/entries/acrn.conf"
-            exit 1
-        fi
+        echo "Add default (5 seconds) boot wait time."
+        clr-boot-manager set-timeout 5 || { echo "Faild to add default boot wait time" && exit 1; }
+        clr-boot-manager update
 
-        if [[ "$cur_kernel" == "$new_kernel" ]]; then
-            echo "No need to replace kernel conf info"
-        else
-            echo "Replace with new SOS kernel in acrn.conf"
-            sed -i "s/$cur_kernel/$new_kernel/g" /mnt/loader/entries/acrn.conf
-        fi
+        echo "Set $new_kernel as default boot kernel."
+        clr-boot-manager set-kernel $new_kernel || { echo "Fail to set $new_kernel as default boot kernel." && exit 1; }
 
         echo "Service OS setup done!"
     else
         echo "Fail to upgrade SOS to $sos_ver."
         echo "Please try upgrade SOS with this command:"
-        echo "swupd update -m $sos_ver"
+        echo "swupd update -V $sos_ver"
         exit 1
     fi
 
@@ -198,10 +170,20 @@ function upgrade_uos()
     fi
 
     echo "Get UOS image: $uos_img"
-    uos_partition=`losetup -f -P --show $uos_img`p3
-    mount $uos_partition /mnt
-    [[ $? -ne 0 ]] && echo "Fail to mount UOS partition" && exit 1
-    cp -r /usr/lib/modules/"`readlink /usr/lib/kernel/default-iot-lts2018 | awk -F '2018.' '{print $2}'`.iot-lts2018" /mnt/lib/modules
+    uos_loop_device=`losetup -f -P --show $uos_img`
+
+    mount ${uos_loop_device}p3 /mnt || { echo "Fail to mount UOS rootfs partition" && exit 1; }
+    mount ${uos_loop_device}p1 /mnt/boot || { echo "Fail to mount UOS EFI partition" && exit 1; }
+
+    echo "Install kernel-iot-lts2018 to $uos_img"
+    swupd bundle-add --path=/mnt kernel-iot-lts2018 || { echo "Fail to install kernel-iot-lts2018" && exit 1; }
+
+    echo "Configure kernel-ios-lts2018 as $uos_img default boot kernel"
+    uos_kernel_conf=`ls -t /mnt/boot/loader/entries/ | grep Clear-linux-iot-lts2018 | head -n1`
+    uos_kernel=${uos_kernel_conf%.conf}
+    echo "default $uos_kernel" > /mnt/boot/loader/loader.conf
+
+    umount /mnt/boot
     umount /mnt
     sync
 
