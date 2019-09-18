@@ -67,7 +67,7 @@ static int check_name(const char *name)
 	/* Name should start with a letter */
 	if ((name[0] < 'a' || name[0] > 'z')
 	    && (name[0] < 'A' || name[0] > 'Z')) {
-		printf("name not started with latter!\n");
+		printf("name not started with letter!\n");
 		return -1;
 	}
 
