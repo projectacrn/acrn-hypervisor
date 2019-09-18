@@ -137,11 +137,18 @@ def get_rootdev_info(board_info):
     :return: root devices list
     """
     rootdev_list = []
-    rootdev_info = get_info(board_info, "<ROOT_DEVICE_INFO>", "</ROOT_DEVICE_INFO>")
+    rootdev_info = get_info(board_info, "<BLOCK_DEVICE_INFO>", "</BLOCK_DEVICE_INFO>")
+
+    # none 'BLOCK_DEVICE_INFO' tag
+    if rootdev_info == None:
+        return rootdev_list
 
     for rootdev_line in rootdev_info:
         if not rootdev_line:
             break
+
+        if not common.handle_root_dev(rootdev_line):
+            continue
 
         root_dev = rootdev_line.strip().split(':')[0]
         rootdev_list.append(root_dev)

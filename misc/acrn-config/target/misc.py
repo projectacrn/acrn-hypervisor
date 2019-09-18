@@ -160,12 +160,12 @@ def dump_system_ram(config):
     print("", file=config)
 
 
-def dump_root_dev(config):
-    """This will get available root device
+def dump_block_dev(config):
+    """This will get available block device
     :param config: file pointer that opened for writing board config information
     """
     cmd = 'blkid'
-    desc = 'ROOT_DEVICE_INFO'
+    desc = 'BLOCK_DEVICE_INFO'
     parser_lib.dump_execute(cmd, desc, config)
     print("", file=config)
 
@@ -230,7 +230,7 @@ def generate_info(board_info):
 
         dump_system_ram(config)
 
-        dump_root_dev(config)
+        dump_block_dev(config)
 
         dump_ttys(config)
 

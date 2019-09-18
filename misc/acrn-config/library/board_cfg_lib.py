@@ -199,10 +199,20 @@ def get_rootfs(config_file):
     :param config_file: it is a file which contain board information
     :return: rootfs partition list
     """
-    rootfs_lines = get_info(config_file, "<ROOT_DEVICE_INFO>", "</ROOT_DEVICE_INFO>")
     root_dev_list = []
+    rootfs_lines = get_info(config_file, "<BLOCK_DEVICE_INFO>", "</BLOCK_DEVICE_INFO>")
+
+    # none 'BLOCK_DEVICE_INFO' tag
+    if rootfs_lines == None:
+        return root_dev_list
 
     for rootfs_line in rootfs_lines:
+        if not rootfs_line:
+            break
+
+        if not common.handle_root_dev(rootfs_line):
+            continue
+
         root_dev = rootfs_line.strip().split(':')[0]
         root_dev_list.append(root_dev)
 
