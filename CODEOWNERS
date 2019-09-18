@@ -13,8 +13,15 @@
 *                                        @anthonyzxu @dongyaozu
 
 /hypervisor/                             @anthonyzxu @dongyaozu
-/devicemodel/                            @anthonyzxu @dongyaozu
+/devicemodel/                            @anthonyzxu @ywan170
 /doc/                                    @dbkinder @deb-intel @NanlinXie
-/misc/                                   @terryzouhao @szhen11
+/misc/tools/acrn-crashlog                @chengangc @dizhang417 
+/misc/tools/acrnlog                      @lyan3
+/misc/tools/acrntrace                    @lyan3
+/misc/acrn-manager                       @lyan3
+/misc/acrnbridge                         @lyan3
+/misc/acrn-config                        @binbinwu1
+/misc/Makefile                           @binbinwu1
+/misc/efi-stub                           @jren1
 
 *.rst                                    @dbkinder @deb-intel @NanlinXie
