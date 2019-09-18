@@ -220,7 +220,7 @@ void init_pcpu_capabilities(void)
 	boot_cpu_data.family = (uint8_t)family;
 
 	model = (eax >> 4U) & 0xfU;
-	if (family >= 0x06U) {
+	if (family == 0x06U || family == 0xFU) {
 		model += ((eax >> 16U) & 0xfU) << 4U;
 	}
 	boot_cpu_data.model = (uint8_t)model;
