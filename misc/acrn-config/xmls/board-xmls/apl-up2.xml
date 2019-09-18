@@ -273,10 +273,10 @@
 	100000000-17fffffff : System RAM
 	</SYSTEM_RAM_INFO>
 
-	<ROOT_DEVICE_INFO>
+	<BLOCK_DEVICE_INFO>
 	/dev/mmcblk0p3: UUID="bb0d14f3-e780-41d9-bcca-6f3ef493216c" TYPE="ext4" PARTLABEL="primary" PARTUUID="87cd7180-6c0b-4bc9-a0d0-5406a95988cc"
 	/dev/sda3: TYPE="ext4"
-	</ROOT_DEVICE_INFO>
+	</BLOCK_DEVICE_INFO>
 
 	<TTYS_INFO>
 	BDF:(00:18.0) seri:/dev/ttyS0 base:0x91526000 irq:4

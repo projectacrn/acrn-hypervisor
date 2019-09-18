@@ -218,7 +218,7 @@ def gen_sdc_source(vm_info, config):
     print("\t\t/* Allow SOS to reboot the host since " +
           "there is supposed to be the highest severity guest */", file=config)
     print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
-    if not vm_info.clos_set[0].strip():
+    if vm_info.clos_set[0] == None or not vm_info.clos_set[0].strip():
         print("\t\t.clos = {0}U,".format(0), file=config)
     else:
         print("\t\t.clos = {0}U,".format(vm_info.clos_set[0]), file=config)
@@ -298,7 +298,7 @@ def gen_sdc2_source(vm_info, config):
     print("\t\t/* Allow SOS to reboot the host since " +
           "there is supposed to be the highest severity guest */", file=config)
     print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
-    if not vm_info.clos_set[0].strip():
+    if vm_info.clos_set[0] == None or not vm_info.clos_set[0].strip():
         print("\t\t.clos = {0}U,".format(0), file=config)
     else:
         print("\t\t.clos = {0}U,".format(vm_info.clos_set[0]), file=config)
@@ -416,7 +416,7 @@ def gen_logical_partition_source(vm_info, config):
 
         print("\t\t.guest_flags = {0},".format(guest_flags), file=config)
 
-        if not vm_info.clos_set[i].strip():
+        if vm_info.clos_set[i] == None or not vm_info.clos_set[i].strip():
             print("\t\t.clos = {0}U,".format(0), file=config)
         else:
             print("\t\t.clos = {0}U,".format(vm_info.clos_set[i]), file=config)
@@ -475,7 +475,7 @@ def gen_industry_source(vm_info, config):
                 return err_dic
             print("\t\t")
             print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
-            if not vm_info.clos_set[i].strip():
+            if vm_info.clos_set[i] == None or not vm_info.clos_set[i].strip():
                 print("\t\t.clos = {0}U,".format(0), file=config)
             else:
                 print("\t\t.clos = {0}U,".format(vm_info.clos_set[i]), file=config)
@@ -541,7 +541,7 @@ def gen_hybrid_source(vm_info, config):
             print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
             if i == 0:
                 print("\t\t.pcpu_bitmap = VM0_CONFIG_PCPU_BITMAP,", file=config)
-            if not vm_info.clos_set[i].strip():
+            if vm_info.clos_set[i] == None or not vm_info.clos_set[i].strip():
                 print("\t\t.clos = {0}U,".format(0), file=config)
             else:
                 print("\t\t.clos = {0}U,".format(vm_info.clos_set[i]), file=config)
