@@ -44,7 +44,7 @@ int32_t init_cat_cap_info(void)
 		 *  CPUID.(EAX=0x10,ECX=ResID):EDX[15:0] reports the maximun CLOS supported
 		 */
 		cpuid_subleaf(CPUID_RSD_ALLOCATION, cat_cap_info.res_id, &eax, &ebx, &ecx, &edx);
-		cat_cap_info.cbm_len = (uint16_t)((eax & 0xfU) + 1U);
+		cat_cap_info.cbm_len = (uint16_t)((eax & 0x1fU) + 1U);
 		cat_cap_info.bitmask = ebx;
 		cat_cap_info.clos_max = (uint16_t)(edx & 0xffffU);
 
