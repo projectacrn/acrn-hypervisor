@@ -86,10 +86,10 @@ manually, as described below).
    Please refer to the ACRN :ref:`release_notes` for the Clear Linux OS
    version number tested with a specific ACRN release.  Adjust the
    instruction below to reference the appropriate version number of Clear
-   Linux OS (we use version 30210 as an example).
+   Linux OS (we use version 31030 as an example).
 
 #. Download the compressed Clear Linux OS installer image from
-   https://download.clearlinux.org/releases/30210/clear/clear-30210-live-server.img.xz
+   https://download.clearlinux.org/releases/31030/clear/clear-31030-live-server.iso.xz
    and follow the `Clear Linux OS installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install-server>`_
    as a starting point for installing Clear Linux OS onto your platform. Follow the recommended
@@ -106,16 +106,17 @@ manually, as described below).
 
        $ clr-installer
 
-   #.  From the Main Menu, select "Configure Media" and set
-       "Auto Partition" to your desired hard disk.
+   #.  From the Main Menu, select "Configure Installation Media" and set
+       "Destructive Installation" to your desired hard disk.
    #.  Select "Telemetry" to set Tab to highlight your choice.
    #.  Press :kbd:`A` to show the "Advanced options".
-   #.  Select "Additional Bundle Selection" to add bundles for
+   #.  Select "Select additional bundles" to add bundles for
        "desktop-autostart", "editors", "network-basic", "user-basic"
-   #.  Select "User Manager" to add an administrative user "clear" and
+   #.  Select "Manager User" to add an administrative user "clear" and
        password.
    #.  Select "Assign Hostname" to set the hostname as "clr-sos-guest"
-   #.  Select Confirm to start installation.
+   #.  Select "Install".
+   #.  Select "Confirm Install" in "Confirm Installtion" window to start installation.
 
 #. After installation is complete, boot into Clear Linux OS, login as
    **clear** (using the password you set earlier).
@@ -163,31 +164,39 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
       $ cd ~
       $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/getting-started/acrn_quick_setup.sh
 
-      $ sudo sh acrn_quick_setup.sh -s 30210
+      $ sudo sh acrn_quick_setup.sh -s 31030
       Password:
       Upgrading SOS...
       Disable auto update...
-      Clear Linux version 30210 is already installed. Continuing to setup SOS...
+      Running systemctl to disable updates
+      Clear Linux version 31030 is already installed. Continuing to setup SOS...
       Adding the service-os, kernel-iot-lts2018 and systemd-networkd-autostart bundles...
-        ...100%
-        ...100%
-        ...100%
+      Loading required manifests...
+      Downloading packs (104.41 MB) for:
+       - kernel-iot-lts2018-sos
+       - iasimage
+       - service-os
+       - kernel-iot-lts2018
+       - systemd-networkd-autostart
+              ...100%
+      Finishing packs extraction...
+      No extra files need to be downloaded
+      Installing bundle(s) files...
+              ...100%
+      Calling post-update helper scripts
       none
+      Successfully installed 3 bundles
       Add /mnt/EFI/acrn folder
-      Copy /usr/share/acrn/samples/nuc/acrn.conf /mnt/loader/entries/
       Copy /usr/lib/acrn/acrn.efi to /mnt/EFI/acrn
       Check ACRN efi boot event
       Clean all ACRN efi boot event
       Check linux bootloader event
       Clean all Linux bootloader event
       Add new ACRN efi boot event
-      Create loader.conf
-      Add default (5 seconds) boot wait time
-      Add default boot to ACRN
-      Getting latest Service OS kernel version: kernel-org.clearlinux.iot-lts2018-sos.4.19.34-45
-      Getting current Service OS kernel version: kernel-org.clearlinux.iot-lts2018-sos.4.19.13-1901141830
-      Replacing root partition uuid in acrn.conf
-      Replace with new SOS kernel in acrn.conf
+      Getting latest Service OS kernel version: org.clearlinux.iot-lts2018-sos.4.19.71-89
+      Add default (5 seconds) boot wait time.
+      New timeout value is: 5
+      Set org.clearlinux.iot-lts2018-sos.4.19.71-89 as default boot kernel.
       Service OS setup done!
       Rebooting Service OS to take effects.
       Rebooting.
@@ -198,7 +207,7 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
       it using ``-e`` option.  For example, to set up the SOS on an NVMe
       SSD, you could specify::
 
-         sudo sh acrn_quick_setup.sh -s 30210 -e /dev/nvme0n1p1
+         sudo sh acrn_quick_setup.sh -s 31030 -e /dev/nvme0n1p1
 
    .. note::
       If you don't need to reboot automatically after setting up the SOS, you
@@ -209,10 +218,12 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
 
    .. code-block:: console
 
-      $ dmesg | grep ACRN
+      $ sudo dmesg | grep ACRN
+      Password:
       [    0.000000] Hypervisor detected: ACRN
-      [    1.220887] ACRNTrace: Initialized acrn trace module with 4 cpu
-      [    1.224401] ACRN HVLog: Initialized hvlog module with 4 cpu
+      [    1.252840] ACRNTrace: Initialized acrn trace module with 4 cpu
+      [    1.253291] ACRN HVLog: Failed to init last hvlog devs, errno -19
+      [    1.253292] ACRN HVLog: Initialized hvlog module with 4 cpu
 
 #. Continue by setting up a Guest OS using the ``acrn_quick_setup.sh``
    script with the ``-u`` option (and the same Clear Linux version
@@ -220,10 +231,10 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
 
    .. code-block:: console
 
-      $ sudo sh acrn_quick_setup.sh -u 30210
+      $ sudo sh acrn_quick_setup.sh -u 31030
       Password:
       Upgrading UOS...
-      Downloading UOS image: https://download.clearlinux.org/releases/30210/clear/clear-30210-kvm.img.xz
+      Downloading UOS image: https://download.clearlinux.org/releases/31030/clear/clear-31030-kvm.img.xz
         % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                        Dload  Upload   Total   Spent    Left  Speed
        14  248M   14 35.4M    0     0   851k      0  0:04:57  0:00:42  0:04:15  293k
@@ -232,59 +243,79 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
 
    .. code-block:: console
 
-      Unxz UOS image: clear-30210-kvm.img.xz
-      Get UOS image: clear-30210-kvm.img
+      Unxz UOS image: clear-31030-kvm.img.xz
+      Get UOS image: clear-31030-kvm.img
       Upgrade UOS done...
       Now you can run this command to start UOS...
-      $ sudo /root/launch_uos_30210.sh
+      $ sudo /root/launch_uos_31030.sh
 
 #. Now you can launch the UOS using the customized launch_uos script
    (with sudo):
 
    .. code-block:: console
 
-      $ sudo /root/launch_uos_30210.sh
+      $ sudo /root/launch_uos_31030.sh
       Password:
+
       cpu1 online=0
       cpu2 online=0
       cpu3 online=0
       passed gvt-g optargs low_gm 64, high_gm 448, fence 8
-      SW_LOAD: get kernel path /usr/lib/kernel/default-iot-lts2018
-      SW_LOAD: get bootargs root=/dev/vda3 rw rootwait maxcpus=1 nohpet console=tty0 console=hvc0   console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M   consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=0x070F00   i915.enable_hangcheck=0 i915.nuclear_pageflip=1 i915.enable_guc_loading=0   i915.enable_guc_submission=0 i915.enable_guc=0
+      SW_LOAD: get ovmf path /usr/share/acrn/bios/OVMF.fd, size 0x200000
+      pm by vuart node-index = 0
+      logger: name=console, level=4
+      logger: name=kmsg, level=3
+      logger: name=disk, level=5
+      vm_create: vm1
       VHM api version 1.0
-      open hugetlbfs file /run/hugepage/acrn/huge_lv1/D279543825D611E8864ECB7A18B34643
-      open hugetlbfs file /run/hugepage/acrn/huge_lv2/D279543825D611E8864ECB7A18B34643
-      level 0 free/need pages:512/0 page size:0x200000
-      level 1 free/need pages:1/2 page size:0x40000000
-      to reserve more free pages:
-      to reserve pages (+orig 1): echo 2 > /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages
-      now enough free pages are reserved!
+      vm_setup_memory: size=0x80000000
+      open hugetlbfs file /run/hugepage/acrn/huge_lv1/vm1/D279543825D611E8864ECB7A18B34643
+      open hugetlbfs file /run/hugepage/acrn/huge_lv2/vm1/D279543825D611E8864ECB7A18B34643
+      level 0 free/need pages:1/1 page size:0x200000
+      level 1 free/need pages:2/2 page size:0x40000000
 
       try to setup hugepage with:
-          level 0 - lowmem 0x0, biosmem 0x0, highmem 0x0
-          level 1 - lowmem 0x80000000, biosmem 0x0, highmem 0x0
+              level 0 - lowmem 0x0, biosmem 0x200000, highmem 0x0
+              level 1 - lowmem 0x80000000, biosmem 0x0, highmem 0x0
       total_size 0x180000000
 
-      mmap ptr 0x0x7efef33bb000 -> baseaddr 0x0x7eff00000000
-      mmap 0x40000000@0x7eff00000000
-      touch 1 pages with pagesz 0x40000000
-      mmap 0x40000000@0x7eff40000000
-      touch 512 pages with pagesz 0x200000
+      mmap ptr 0x0x7f792ace5000 -> baseaddr 0x0x7f7940000000
+      mmap 0x80000000@0x7f7940000000
+      touch 2 pages with pagesz 0x40000000
+      mmap 0x200000@0x7f7a3fe00000
+      touch 1 pages with pagesz 0x200000
       ...
-      [  OK  ] Started Login Service.
-      [  OK  ] Started Network Name Resolution.
-      [  OK  ] Reached target Network.
-               Starting Permit User Sessions...
-      [  OK  ] Reached target Host and Network Name Lookups.
-      [  OK  ] Started Permit User Sessions.
-      [  OK  ] Started Serial Getty on ttyS0.
-      [  OK  ] Started Getty on tty1.
-      [  OK  ] Started Serial Getty on hvc0.
-      [  OK  ] Reached target Login Prompts.
-      [  OK  ] Reached target Multi-User System.
-      [  OK  ] Reached target Graphical Interface.
+      [    1.414873] Run /usr/lib/systemd/systemd-bootchart as init process
+      [    1.521343] systemd[1]: systemd 242 running in system mode. (+PAM +AUDIT -SELINUX +IMA -APPARMOR -SMACK -SYSVINIT +UTMP +LIBCRYPTSETUP +GCRYPT +GNUTLS +ACL +XZ +LZ4 +SECCOMP +BLKID +ELFUTILS +KMOD -IDN2 -IDN -PCRE2 default-hierarchy=legacy)
+      [    1.531173] systemd[1]: Detected virtualization acrn.
+      [    1.533287] systemd[1]: Detected architecture x86-64.
+      [    1.542775] systemd[1]: Failed to bump fs.file-max, ignoring: Invalid argument
+      [    1.681326] systemd[1]: File /usr/lib/systemd/system/systemd-journald.service:12 configures an IP firewall (IPAddressDeny=any), but the local system does not support BPF/cgroup based firewalling.
+      [    1.689540] systemd[1]: Proceeding WITHOUT firewalling in effect! (This warning is only shown for the first loaded unit using IP firewalling.)
+      [    1.734816] [drm] Cannot find any crtc or sizes
+      [    1.860168] systemd[1]: Set up automount Arbitrary Executable File Formats File System Automount Point.
+      [    1.870434] systemd[1]: Listening on udev Kernel Socket.
+      [    1.875555] systemd[1]: Created slice system-serial\x2dgetty.slice.
+      [    1.878446] systemd[1]: Started Dispatch Password Requests to Console Directory Watch.
+      [    2.075891] random: systemd-random-: uninitialized urandom read (512 bytes read)
+      [    2.239775] [drm] Cannot find any crtc or sizes
+      [    3.011537] systemd-journald[133]: Received request to flush runtime journal from PID 1
+      [    3.386326] i8042: PNP: PS/2 Controller [PNP0303:KBD,PNP0f13:MOU] at 0x60,0x64 irq 1,12
+      [    3.429277] i8042: Warning: Keylock active
+      [    3.556872] serio: i8042 KBD port at 0x60,0x64 irq 1
+      [    3.610010] serio: i8042 AUX port at 0x60,0x64 irq 12
+      [    3.658689] Adding 33788k swap on /dev/vda2.  Priority:-2 extents:1 across:33788k
+      [    4.034712] random: dbus-daemon: uninitialized urandom read (12 bytes read)
+      [    4.101122] random: tallow: uninitialized urandom read (4 bytes read)
+      [    4.119713] random: dbus-daemon: uninitialized urandom read (12 bytes read)
+      [    4.223296] virtio_net virtio1 enp0s4: renamed from eth0
+      [    4.342645] input: AT Translated Set 2 keyboard as /devices/platform/i8042/serio0/input/input1
+      [    4.560662] IPv6: ADDRCONF(NETDEV_UP): enp0s4: link is not ready
+      Unhandled ps2 mouse command 0xe1
+                                      [    4.725622] IPv6: ADDRCONF(NETDEV_CHANGE): enp0s4: link becomes ready
+      [    5.114339] input: PS/2 Generic Mouse as /devices/platform/i8042/serio1/input/input3
 
-      clr-0d449d5327d64aee8a6b8a3484dcd880 login:
+      clr-a632ec84744d4e02974fe1891130002e login:
 
 #. Login as root (and specify the new password).  You can verify you're
    running in the UOS by checking the kernel release version or seeing
@@ -293,7 +324,7 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
    .. code-block:: console
 
       # uname -r
-      4.19.34-45.iot-lts2018
+      4.19.71-89.iot-lts2018
       # ls /dev/acrn*
       ls: cannot access '/dev/acrn*': No such file or directory
 
@@ -302,9 +333,9 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
 
    .. code-block:: console
 
-      # uname -r
-      4.19.55-67.iot-lts2018-sos
-      # ls /dev/acrn*
+      $ uname -r
+      4.19.71-89.iot-lts2018-sos
+      $ ls /dev/acrn*
       /dev/acrn_hvlog_cur_0   /dev/acrn_hvlog_cur_2  /dev/acrn_trace_0  /dev/acrn_trace_2  /dev/acrn_vhm
       /dev/acrn_hvlog_cur_1   /dev/acrn_hvlog_cur_3  /dev/acrn_trace_1  /dev/acrn_trace_3
 
@@ -332,22 +363,22 @@ and UOS manually following these steps:
    .. note::
       The Clear Linux OS installer will automatically check for updates and install the
       latest version available on your system. If you wish to use a specific version
-      (such as 30210), you can achieve that after the installation has completed using
-      ``sudo swupd verify --fix --picky -m 30210``
+      (such as 31030), you can achieve that after the installation has completed using
+      ``sudo swupd repair --picky -V 31030``
 
 #. If you have an older version of Clear Linux OS already installed
    on your hardware, use this command to upgrade Clear Linux OS
-   to version 30210 (or newer):
+   to version 31030 (or newer):
 
    .. code-block:: none
 
-      $ sudo swupd update -m 30210     # or newer version
+      $ sudo swupd update -V 31030     # or newer version
 
 #. Use the ``sudo swupd bundle-add`` command and add these Clear Linux OS bundles:
 
    .. code-block:: none
 
-      $ sudo swupd bundle-add service-os kernel-iot-lts2018 systemd-networkd-autostart
+      $ sudo swupd bundle-add service-os systemd-networkd-autostart
 
    .. table:: Clear Linux OS bundles
       :widths: auto
@@ -358,10 +389,6 @@ and UOS manually following these steps:
       +============================+===========================================+
       | service-os                 | Add the acrn hypervisor, acrn             |
       |                            | devicemodel, and Service OS kernel        |
-      +----------------------------+-------------------------------------------+
-      | kernel-iot-lts2018         | Run the Intel kernel "kernel-iot-lts2018" |
-      |                            | which is enterprise-style kernel with     |
-      |                            | backports                                 |
       +----------------------------+-------------------------------------------+
       | systemd-networkd-autostart | Enable systemd-networkd as the default    |
       |                            | network manager                           |
@@ -382,9 +409,10 @@ partition. Follow these steps:
 
       $ sudo ls -1 /boot/EFI/org.clearlinux
       bootloaderx64.efi
-      kernel-org.clearlinux.native.4.20.11-702
-      kernel-org.clearlinux.iot-lts2018-sos.4.19.23-19
-      kernel-org.clearlinux.iot-lts2018.4.19.23-19
+      freestanding-00-intel-ucode.cpio
+      freestanding-i915-firmware.cpio.xz
+      kernel-org.clearlinux.iot-lts2018-sos.4.19.71-89
+      kernel-org.clearlinux.native.5.2.14-833
       loaderx64.efi
 
    .. note::
@@ -392,8 +420,7 @@ partition. Follow these steps:
       is mounted under ``/boot`` by default
       The Clear Linux project releases updates often, sometimes
       twice a day, so make note of the specific kernel versions
-      (*iot-lts2018 and *iot-lts2018-sos*) listed on your system,
-      as you will need them later.
+      (*iot-lts2018) listed on your system, as you will need them later.
 
    .. note::
       The EFI System Partition (ESP) may be different based on your hardware.
@@ -468,73 +495,41 @@ partition. Follow these steps:
       $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
             -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=port@0x3f8"
 
-#. Create a boot entry for the ACRN Service OS by copying a provided ``acrn.conf``
-   and editing it to account for the kernel versions noted in a previous step.
-
-   It must contain these settings:
-
-   +-----------+----------------------------------------------------------------+
-   | Setting   | Description                                                    |
-   +===========+================================================================+
-   | title     | Text to show in the boot menu                                  |
-   +-----------+----------------------------------------------------------------+
-   | linux     | Linux kernel for the Service OS (\*-sos)                       |
-   +-----------+----------------------------------------------------------------+
-   | options   | Options to pass to the Service OS kernel (kernel parameters)   |
-   +-----------+----------------------------------------------------------------+
-
-   A starter acrn.conf configuration file is included in the Clear Linux
-   OS release and is
-   also available in the acrn-hypervisor/hypervisor GitHub repo as `acrn.conf
-   <https://github.com/projectacrn/acrn-hypervisor/blob/master/efi-stub/clearlinux/acrn.conf>`__
-   as shown here:
-
-   .. literalinclude:: ../../misc/efi-stub/clearlinux/acrn.conf
-      :caption: efi-stub/clearlinux/acrn.conf
-
-   On the platform, copy the ``acrn.conf`` file to the EFI partition we mounted earlier:
-
-   .. code-block:: none
-
-      $ sudo cp /usr/share/acrn/samples/nuc/acrn.conf /boot/loader/entries/
-
-   You will need to edit this file to adjust the kernel version (``linux`` section),
-   insert the ``PARTUUID`` of your ``/dev/sda3`` partition
-   (``root=PARTUUID=<UUID of rootfs partition>``) in the ``options`` section, and
-   add the ``hugepagesz=1G hugepages=2`` at end of the ``options`` section.
-
-   Use ``blkid`` to find out what your ``/dev/sda3`` ``PARTUUID`` value is. Here
-   is a handy one-line command to do that:
-
-   .. code-block:: none
-
-      # sed -i "s/<UUID of rootfs partition>/`blkid -s PARTUUID -o value \
-                     /dev/sda3`/g" /boot/loader/entries/acrn.conf
-
-   .. note::
-      It is also possible to use the device name directly, e.g. ``root=/dev/sda3``
-
 #. Add a timeout period for Systemd-Boot to wait, otherwise it will not
    present the boot menu and will always boot the base Clear Linux OS
 
    .. code-block:: none
 
-      $ sudo clr-boot-manager set-timeout 20
+      $ sudo clr-boot-manager set-timeout 5
       $ sudo clr-boot-manager update
 
+#. Set the kernel-iot-lts2018 kernel as the default kernel:
 
-#. Reboot and select "The ACRN Service OS" to boot, as shown below:
+   .. code-block:: none
 
+      $ sudo clr-boot-manager list-kernels
+      * org.clearlinux.native.5.2.14-833
+        org.clearlinux.iot-lts2018-sos.4.19.71-89
+
+   set the default kernel from ``org.clearlinux.native.5.2.14-833`` to
+   ``org.clearlinux.iot-lts2018-sos.4.19.71-89``
+
+   .. code-block:: none
+
+      $ sudo clr-boot-manager set-kernel org.clearlinux.iot-lts2018-sos.4.19.71-89
+      $ sudo clr-boot-manager list-kernels
+        org.clearlinux.native.5.2.14-833
+      * org.clearlinux.iot-lts2018-sos.4.19.71-89
+
+
+#. Reboot and wait until boot menu is displayed, as shown below:
 
    .. code-block:: console
       :emphasize-lines: 1
       :caption: ACRN Service OS Boot Menu
 
-      => The ACRN Service OS
-      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-4.19.23-19)
-      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-sos-4.19.23-19)
-      Clear Linux OS for Intel Architecture (Clear-linux-native.4.20.11-702)
-      EFI Default Loader
+      Clear Linux OS (Clear-linux-iot-lts2018-sos-4.19.71-89)
+      Clear Linux OS (Clear-linux-native.5.2.14-833)
       Reboot Into Firmware Interface
 
 #. After booting up the ACRN hypervisor, the Service OS will be launched
@@ -550,14 +545,15 @@ partition. Follow these steps:
 
   .. code-block:: none
 
-   $ dmesg | grep ACRN
+   $ sudo dmesg | grep ACRN
    [    0.000000] Hypervisor detected: ACRN
-   [    1.687128] ACRNTrace: acrn_trace_init, cpu_num 4
-   [    1.693129] ACRN HVLog: acrn_hvlog_init
+   [    1.253093] ACRNTrace: Initialized acrn trace module with 4 cpu
+   [    1.253535] ACRN HVLog: Failed to init last hvlog devs, errno -19
+   [    1.253536] ACRN HVLog: Initialized hvlog module with 4 cpu
 
 If you see log information similar to this, the ACRN hypervisor is running properly
-and you can start deploying a User OS.  If not, verify the EFI boot options, SOS
-kernel, and ``acrn.conf`` settings are correct (as described above).
+and you can start deploying a User OS.  If not, verify the EFI boot options, and SOS
+kernel settings are correct (as described above).
 
 
 ACRN Network Bridge
@@ -572,18 +568,18 @@ Set up Reference UOS
 ====================
 
 #. On your platform, download the pre-built reference Clear Linux OS UOS
-   image version 30210 (or newer) into your (root) home directory:
+   image version 31030 (or newer) into your (root) home directory:
 
    .. code-block:: none
 
       $ cd ~
       $ mkdir uos
       $ cd uos
-      $ curl https://download.clearlinux.org/releases/30210/clear/clear-30210-kvm.img.xz -o uos.img.xz
+      $ curl https://download.clearlinux.org/releases/31030/clear/clear-31030-kvm.img.xz -o uos.img.xz
 
    .. note::
       In case you want to use or try out a newer version of Clear Linux OS as the UOS, you can
-      download the latest from http://download.clearlinux.org/image. Make sure to adjust the steps
+      download the latest from http://download.clearlinux.org/image/. Make sure to adjust the steps
       described below accordingly (image file name and kernel modules version).
 
 #. Uncompress it:
@@ -599,7 +595,12 @@ Set up Reference UOS
 
       $ sudo losetup -f -P --show uos.img
       $ sudo mount /dev/loop0p3 /mnt
-      $ sudo cp -r /usr/lib/modules/"`readlink /usr/lib/kernel/default-iot-lts2018 | awk -F '2018.' '{print $2}'`.iot-lts2018" /mnt/lib/modules
+      $ sudo mount /dev/loop0p1 /mnt/boot
+      $ sudo swupd bundle-add --path=/mnt kernel-iot-lts2018
+      $ uos_kernel_conf=`ls -t /mnt/boot/loader/entries/ | grep Clear-linux-iot-lts2018 | head -n1`
+      $ uos_kernel=${uos_kernel_conf%.conf}
+      $ sudo echo "default $uos_kernel" > /mnt/boot/loader/loader.conf
+      $ sudo umount /mnt/boot
       $ sudo umount /mnt
       $ sync
 
