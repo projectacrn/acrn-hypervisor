@@ -81,8 +81,6 @@ static int32_t hcall_setup_sbuf(struct acrn_vm *vm, uint64_t param)
 	struct sbuf_setup_param ssp;
 	uint64_t *hva;
 
-	(void)memset((void *)&ssp, 0U, sizeof(ssp));
-
 	if (copy_from_gpa(vm, &ssp, param, sizeof(ssp)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
@@ -110,8 +108,6 @@ static int32_t hcall_setup_sbuf(struct acrn_vm *vm, uint64_t param)
 static int32_t hcall_setup_hv_npk_log(struct acrn_vm *vm, uint64_t param)
 {
 	struct hv_npk_log_param npk_param;
-
-	(void)memset((void *)&npk_param, 0U, sizeof(npk_param));
 
 	if (copy_from_gpa(vm, &npk_param, param, sizeof(npk_param)) != 0) {
 		pr_err("%s: Unable copy param from vm\n", __func__);

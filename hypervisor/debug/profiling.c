@@ -815,8 +815,6 @@ int32_t profiling_msr_ops_all_cpus(struct acrn_vm *vm, uint64_t addr)
 	uint16_t pcpu_nums = get_pcpu_nums();
 	struct profiling_msr_ops_list msr_list[pcpu_nums];
 
-	(void)memset((void *)&msr_list, 0U, sizeof(msr_list));
-
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &msr_list, addr, sizeof(msr_list)) != 0) {
@@ -851,8 +849,6 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 	uint16_t i, j;
 	struct profiling_vm_info_list vm_info_list;
 	uint16_t pcpu_nums = get_pcpu_nums();
-
-	(void)memset((void *)&vm_info_list, 0U, sizeof(vm_info_list));
 
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 
@@ -914,8 +910,6 @@ int32_t profiling_get_version_info(struct acrn_vm *vm, uint64_t addr)
 {
 	struct profiling_version_info ver_info;
 
-	(void)memset((void *)&ver_info, 0U, sizeof(ver_info));
-
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &ver_info, addr, sizeof(ver_info)) != 0) {
@@ -947,8 +941,6 @@ int32_t profiling_get_version_info(struct acrn_vm *vm, uint64_t addr)
 int32_t profiling_get_control(struct acrn_vm *vm, uint64_t addr)
 {
 	struct profiling_control prof_control;
-
-	(void)memset((void *)&prof_control, 0U, sizeof(prof_control));
 
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 
@@ -989,8 +981,6 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 	uint16_t i;
 	uint16_t pcpu_nums = get_pcpu_nums();
 	struct profiling_control prof_control;
-
-	(void)memset((void *)&prof_control, 0U, sizeof(prof_control));
 
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 
@@ -1103,8 +1093,6 @@ int32_t profiling_configure_pmi(struct acrn_vm *vm, uint64_t addr)
 	struct profiling_pmi_config pmi_config;
 	uint16_t pcpu_nums = get_pcpu_nums();
 
-	(void)memset((void *)&pmi_config, 0U, sizeof(pmi_config));
-
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &pmi_config, addr, sizeof(pmi_config)) != 0) {
@@ -1182,8 +1170,6 @@ int32_t profiling_configure_vmsw(struct acrn_vm *vm, uint64_t addr)
 	struct profiling_vmsw_config vmsw_config;
 	uint16_t pcpu_nums = get_pcpu_nums();
 
-	(void)memset((void *)&vmsw_config, 0U, sizeof(vmsw_config));
-
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &vmsw_config, addr, sizeof(vmsw_config)) != 0) {
@@ -1244,8 +1230,6 @@ int32_t profiling_get_pcpu_id(struct acrn_vm *vm, uint64_t addr)
 {
 	struct profiling_pcpuid pcpuid;
 
-	(void)memset((void *)&pcpuid, 0U, sizeof(pcpuid));
-
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &pcpuid, addr, sizeof(pcpuid)) != 0) {
@@ -1274,8 +1258,6 @@ int32_t profiling_get_status_info(struct acrn_vm *vm, uint64_t gpa)
 	uint16_t i;
 	uint16_t pcpu_nums = get_pcpu_nums();
 	struct profiling_status pstats[pcpu_nums];
-
-	(void)memset((void *)&pstats, 0U, pcpu_nums*sizeof(struct profiling_status));
 
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 

@@ -55,13 +55,12 @@ int32_t hcall_world_switch(struct acrn_vcpu *vcpu)
 int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
 {
 	int32_t ret = -EFAULT;
-	struct trusty_boot_param boot_param;
 
 	if ((vcpu->vm->sworld_control.flag.supported != 0UL)
 		&& (vcpu->vm->sworld_control.flag.active == 0UL)
 		&& (vcpu->arch.cur_context == NORMAL_WORLD)) {
+		struct trusty_boot_param boot_param;
 
-		(void)memset(&boot_param, 0U, sizeof(boot_param));
 		if (copy_from_gpa(vcpu->vm, &boot_param, param, sizeof(boot_param)) == 0) {
 			if (initialize_trusty(vcpu, &boot_param)) {
 				vcpu->vm->sworld_control.flag.active = 1UL;
