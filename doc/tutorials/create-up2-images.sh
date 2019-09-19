@@ -34,13 +34,13 @@ create_sos_images() {
 
     mountpoint sos_rootfs || return 1
 
-    swupd verify --install --path=sos_rootfs --contenturl=$MIRRORURL --versionurl=$MIRRORURL --format=staging -m ${VERSION} ||
+    swupd os-install --path=sos_rootfs --contenturl=$MIRRORURL --versionurl=$MIRRORURL --format=staging -V ${VERSION} -N -b ||
     {
         echo "Failed to swupd install"
         return 1
     }
 
-    swupd bundle-add $SOS_BUNDLE_LIST --path=sos_rootfs --contenturl=$MIRRORURL --versionurl=$MIRRORURL --format=staging ||
+    swupd bundle-add --path=sos_rootfs --contenturl=$MIRRORURL --versionurl=$MIRRORURL --format=staging $SOS_BUNDLE_LIST ||
     {
         echo "Failed to swupd bundle add"
         return 1
@@ -48,7 +48,7 @@ create_sos_images() {
 
     if [[ ! ${ACRN_SBL} || ! -f ${ACRN_SBL} ]]
     then
-        ACRN_SBL=sos_rootfs/usr/lib/acrn/acrn.apl-up2.sbl
+        ACRN_SBL=sos_rootfs/usr/lib/acrn/acrn.apl-up2.sbl.sdc.32.out
     fi
 
     if [ ${ACRN_HV_CODE_PATH} ]
