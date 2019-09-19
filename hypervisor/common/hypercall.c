@@ -152,7 +152,6 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 	struct acrn_create_vm cv;
 	struct acrn_vm_config* vm_config = NULL;
 
-	(void)memset((void *)&cv, 0U, sizeof(cv));
 	if (copy_from_gpa(vm, &cv, param, sizeof(cv)) == 0) {
 		vm_id = get_vmid_by_uuid(&cv.uuid[0]);
 		if ((vm_id > vm->vm_id) && (vm_id < CONFIG_MAX_VM_NUM)
@@ -477,11 +476,11 @@ static void inject_msi_lapic_pt(struct acrn_vm *vm, const struct acrn_msi_entry 
 int32_t hcall_inject_msi(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = -1;
-	struct acrn_msi_entry msi;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
-		(void)memset((void *)&msi, 0U, sizeof(msi));
+		struct acrn_msi_entry msi;
+
 		if (copy_from_gpa(vm, &msi, param, sizeof(msi)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else {
@@ -533,13 +532,13 @@ int32_t hcall_inject_msi(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 int32_t hcall_set_ioreq_buffer(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 {
 	uint64_t hpa;
-	struct acrn_set_ioreq_buffer iobuf;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	uint16_t i;
 	int32_t ret = -1;
 
-	(void)memset((void *)&iobuf, 0U, sizeof(iobuf));
 	if (is_created_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+		struct acrn_set_ioreq_buffer iobuf;
+
 		if (copy_from_gpa(vm, &iobuf, param, sizeof(iobuf)) != 0) {
 			pr_err("%p %s: Unable copy param to vm\n", target_vm, __func__);
 	        } else {
@@ -717,8 +716,6 @@ int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, uint64_t param)
 	uint32_t idx;
 	int32_t ret = -1;
 
-	(void)memset((void *)&regions, 0U, sizeof(regions));
-
 	if (copy_from_gpa(vm, &regions, param, sizeof(regions)) == 0) {
 		/* the vmid in regions is a relative vm id, need to convert to absolute vm id */
 		uint16_t target_vmid = rel_vmid_2_vmid(vm->vm_id, regions.vmid);
@@ -799,12 +796,11 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
  */
 int32_t hcall_write_protect_page(struct acrn_vm *vm, uint16_t vmid, uint64_t wp_gpa)
 {
-	struct wp_data wp;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	int32_t ret = -1;
 
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
-		(void)memset((void *)&wp, 0U, sizeof(wp));
+		struct wp_data wp;
 
 		if (copy_from_gpa(vm, &wp, wp_gpa, sizeof(wp)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);
@@ -951,11 +947,11 @@ int32_t hcall_deassign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = -1;
-	struct hc_ptdev_irq irq;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	(void)memset((void *)&irq, 0U, sizeof(irq));
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+		struct hc_ptdev_irq irq;
+
 		if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else {
@@ -994,11 +990,10 @@ int32_t
 hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = -1;
-	struct hc_ptdev_irq irq;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
-		(void)memset((void *)&irq, 0U, sizeof(irq));
+		struct hc_ptdev_irq irq;
 
 		if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);
