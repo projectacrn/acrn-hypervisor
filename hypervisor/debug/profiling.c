@@ -812,12 +812,12 @@ static void profiling_stop_pmu(void)
 int32_t profiling_msr_ops_all_cpus(struct acrn_vm *vm, uint64_t addr)
 {
 	uint16_t i;
+	struct profiling_msr_ops_list msr_list[CONFIG_MAX_PCPU_NUM];
 	uint16_t pcpu_nums = get_pcpu_nums();
-	struct profiling_msr_ops_list msr_list[pcpu_nums];
 
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 
-	if (copy_from_gpa(vm, &msr_list, addr, sizeof(msr_list)) != 0) {
+	if (copy_from_gpa(vm, &msr_list, addr, (uint32_t)pcpu_nums * sizeof(struct profiling_msr_ops_list)) != 0) {
 		pr_err("%s: Unable to copy addr from vm\n", __func__);
 		return -EINVAL;
 	}
@@ -1256,8 +1256,8 @@ int32_t profiling_get_pcpu_id(struct acrn_vm *vm, uint64_t addr)
 int32_t profiling_get_status_info(struct acrn_vm *vm, uint64_t gpa)
 {
 	uint16_t i;
+	struct profiling_status pstats[CONFIG_MAX_PCPU_NUM];
 	uint16_t pcpu_nums = get_pcpu_nums();
-	struct profiling_status pstats[pcpu_nums];
 
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 
