@@ -56,7 +56,7 @@ BIOS binary file ``<SBL_IFWI_IMAGE>``, which is the new IFWI image with SBL in B
 Flash SBL on the UP2
 ********************
 
-#. Download the appropriate BIOS update for `UP2 Board <https://downloads.up-community.org/download/up-board-uefi-bios-upc1dm15/>`_.
+#. Download the appropriate BIOS update for `UP2 Board <https://downloads.up-community.org/download/up-board-uefi-bios-upc1dm17/>`_.
 #. Put the empty USB flash drive in your PC and format it as FAT32.
 #. Decompress the BIOS zip file into the formatted drive.
 #. Attach the USB disk and keyboard to the board and power it on.
@@ -95,14 +95,14 @@ An example of the configuration file ``uos.json``:
                              { "disk" : "clearlinux.img", "partition" : 2, "type" : "ext4" } ],
        "PartitionMountPoints" : [ { "disk" : "clearlinux.img", "partition" : 1, "mount" : "/boot" },
            		          { "disk" : "clearlinux.img", "partition" : 2, "mount" : "/" } ],
-       "Version": 30690,
+       "Version": 31030,
        "Bundles": ["kernel-iot-lts2018", "openssh-server", "x11-server", "os-core", "os-core-update"]
    }
 
 .. note::
    To generate the image with a specified version, please modify
    the "Version" argument, ``"Version": 3****`` instead
-   of ``"Version": 30690`` for example.
+   of ``"Version": 31030`` for example.
 
 
 Build SOS and LaaG image:
@@ -111,7 +111,7 @@ Build SOS and LaaG image:
 
    $ sudo -s
    # chmod +x create-up2-images.sh
-   # ./create-up2-images.sh --images-type all --clearlinux-version 30690 --laag-json uos.json
+   # ./create-up2-images.sh --images-type all --clearlinux-version 31030 --laag-json uos.json
 
 .. note::
    You must have root privileges to run ``create-up2-images.sh``.
@@ -122,7 +122,7 @@ Build SOS and LaaG image:
 
 .. note::
    When building images, you can modify the ``--clearlinux-version`` argument
-   to a specific version (such as 30690). To generate the images of SOS only,
+   to a specific version (such as 31030). To generate the images of SOS only,
    modify the ``--images-type`` argument to ``sos``.
 
 This step will generate the images of SOS and LaaG:
