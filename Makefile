@@ -24,6 +24,7 @@ BUILD_VERSION ?=
 BUILD_TAG ?=
 BOARD_FILE ?=
 SCENARIO_FILE ?=
+CONFIG_XML_ENABLED ?= false
 
 export TOOLS_OUT
 
@@ -31,8 +32,13 @@ export TOOLS_OUT
 all: hypervisor devicemodel tools
 
 ifneq ($(BOARD_FILE)$(SCENARIO_FILE),)
-BOARD := `sed -n '/board/p' $(BOARD_FILE) |head -1|awk -F'"' '{print $$2}'`
-SCENARIO := `sed -n '/scenario/p' $(SCENARIO_FILE) |head -1|awk -F'"' '{print $$4}'`
+override BOARD := $(shell echo `sed -n '/<acrn-config/p' $(BOARD_FILE) | sed -r 's/.*board="(.*)".*/\1/g'`)
+override SCENARIO := $(shell echo `sed -n '/<acrn-config/p' $(SCENARIO_FILE) | sed -r 's/.*scenario="(.*)".*/\1/g'`)
+
+ifneq ($(BOARD)$(SCENARIO),)
+CONFIG_XML_ENABLED := true
+endif
+endif
 
 ifeq ($(BOARD), apl-nuc)
 override BOARD := nuc6cayh
@@ -40,41 +46,21 @@ else ifeq ($(BOARD), kbl-nuc-i7)
 override BOARD := nuc7i7dnb
 endif
 
-cfg_src:
-	@if [ ! -f $(BOARD_FILE) ] ; then \
-		echo "Board xml file $(BOARD_FILE) is not exist!"; exit 1; \
-	fi
-	@if [ ! -f "$(SCENARIO_FILE)" ]; then \
-		echo "Scenario xml file $(SCENARIO_FILE) is not exist!"; exit 1; \
-	fi
-	@python3 misc/acrn-config/board_config/board_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) || exit $$?
-	@python3 misc/acrn-config/scenario_config/scenario_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) || exit $$?
-	@echo "Import hypervisor configurations from Config-xmls, configurations in source code are ignored!"
-
-else
-
-ifeq ($(BOARD), apl-nuc)
-override BOARD := nuc6cayh
-else ifeq ($(BOARD), kbl-nuc-i7)
-override BOARD := nuc7i7dnb
-endif
-
-cfg_src:
-	@echo "Use hypervisor configurations from source code directly."
-
-endif
-
-hypervisor: cfg_src
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) clean
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) defconfig
+hypervisor:
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)	\
+				BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) clean
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)	\
+				BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) defconfig
 	@if [ "$(SCENARIO)" ]; then \
 		echo "CONFIG_$(shell echo $(SCENARIO) | tr a-z A-Z)=y" >> $(HV_OUT)/.config;	\
 	fi
-	@if [ -f "$(SCENARIO_FILE)" ]; then \
+	@if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
 		echo "CONFIG_ENFORCE_VALIDATED_ACPI_INFO=y" >> $(HV_OUT)/.config;	\
 	fi
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) oldconfig
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)	\
+				BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) oldconfig
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)	\
+				BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE)
 ifeq ($(FIRMWARE),uefi)
 	echo "building hypervisor as EFI executable..."
 	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) SCENARIO=$(SCENARIO) EFI_OBJDIR=$(EFI_OUT)
@@ -124,13 +110,13 @@ clean:
 .PHONY: install
 install: hypervisor-install devicemodel-install tools-install
 
-hypervisor-install: cfg_src
+hypervisor-install:
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) SCENARIO=$(SCENARIO) RELEASE=$(RELEASE) install
 ifeq ($(FIRMWARE),uefi)
 	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) SCENARIO=$(SCENARIO) EFI_OBJDIR=$(EFI_OUT) all install
 endif
 
-hypervisor-install-debug: cfg_src
+hypervisor-install-debug:
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) SCENARIO=$(SCENARIO) RELEASE=$(RELEASE) install-debug
 ifeq ($(FIRMWARE),uefi)
 	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) SCENARIO=$(SCENARIO) EFI_OBJDIR=$(EFI_OUT) all install-debug
