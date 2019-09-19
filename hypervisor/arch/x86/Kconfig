@@ -63,11 +63,6 @@ config MAX_VCPUS_PER_VM
 	  The maximum number of virtual CPUs the hypervisor can support in a
 	  single VM.
 
-config MAX_PCPU_NUM
-	int "Maximum number of PCPU"
-	range 1 8
-	default 8
-
 config MAX_EMULATED_MMIO_REGIONS
 	int "Maximum number of emulated MMIO regions"
 	range 0 128

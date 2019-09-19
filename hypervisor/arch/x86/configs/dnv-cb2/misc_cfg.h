@@ -7,6 +7,7 @@
 #ifndef MISC_CFG_H
 #define MISC_CFG_H
 
+#define CONFIG_MAX_PCPU_NUM	8U
 #define ROOTFS_0		"root=/dev/sda3 "
 
 #define SOS_ROOTFS		ROOTFS_0
