@@ -393,6 +393,7 @@ ifneq ($(BOARD_FILE)$(SCENARIO_FILE),)
 	@cat $(HV_OBJDIR)/.cfg_src_result
 	@if [ "`sed -n /successfully/p $(HV_OBJDIR)/.cfg_src_result`" = "" ]; then exit 1;	fi
 	@echo "Import hypervisor configurations from Config-xmls, configurations in source code are ignored!"
+	@sed -i 's/#define HV_CONFIG_TOOL ""/#define HV_CONFIG_TOOL " with acrn-config"/g' $(VERSION)
 else
 	@echo "Use hypervisor configurations from source code directly."
 endif
@@ -504,6 +505,7 @@ $(VERSION):
 	echo "#define HV_BUILD_TYPE "\""$$BUILD_TYPE"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_TIME "\""$$TIME"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_USER "\""$$USER"\""" >> $(VERSION);\
+	echo "#define HV_CONFIG_TOOL \"\"" >> $(VERSION);\
 	echo "#endif" >> $(VERSION)
 
 -include $(C_OBJS:.o=.d)
