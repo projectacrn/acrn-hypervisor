@@ -2,8 +2,8 @@
 	<BIOS_INFO>
 	BIOS Information
 	Vendor: American Megatrends Inc.
-	Version: UPA1AM40
-	Release Date: 08/06/2018
+	Version: UPA1AM46
+	Release Date: 08/14/2019
 	BIOS Revision: 5.12
 	</BIOS_INFO>
 
@@ -16,7 +16,7 @@
 
 	<PCI_DEVICE>
 	00:00.0 Host bridge: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series Host Bridge (rev 0b)
-	00:02.0 VGA compatible controller: Intel Corporation Device 5a85 (rev 0b)
+	00:02.0 VGA compatible controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series Integrated Graphics Controller (rev 0b)
 	Region 0: Memory at 90000000 (64-bit, non-prefetchable) [size=16M]
 	Region 2: Memory at 80000000 (64-bit, prefetchable) [size=256M]
 	00:0e.0 Multimedia audio controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series Audio Cluster (rev 0b)
@@ -37,8 +37,8 @@
 	00:15.0 USB controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series USB xHCI (rev 0b)
 	Region 0: Memory at 91500000 (64-bit, non-prefetchable) [size=64K]
 	00:15.1 USB controller: Intel Corporation Device 5aaa (rev 0b)
-	Region 0: Memory at 91000000 (64-bit, non-prefetchable) [size=2M]
-	Region 2: Memory at 91537000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 91000000 (64-bit, non-prefetchable) [disabled] [size=2M]
+	Region 2: Memory at 91537000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:16.0 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series I2C Controller #1 (rev 0b)
 	Region 0: Memory at 91536000 (64-bit, non-prefetchable) [size=4K]
 	Region 2: Memory at 91535000 (64-bit, non-prefetchable) [size=4K]
@@ -100,7 +100,7 @@
 
 	<PCI_VID_PID>
 	00:00.0 0600: 8086:5af0 (rev 0b)
-	00:02.0 0300: 8086:5a85 (rev 0b)
+	00:02.0 0300: 8086:5a84 (rev 0b)
 	00:0e.0 0401: 8086:5a98 (rev 0b)
 	00:0f.0 0780: 8086:5a9a (rev 0b)
 	00:12.0 0106: 8086:5ae3 (rev 0b)
@@ -135,8 +135,8 @@
 	</PCI_VID_PID>
 
 	<WAKE_VECTOR_INFO>
-	#define WAKE_VECTOR_32          0x79CB308CUL
-	#define WAKE_VECTOR_64          0x79CB3098UL
+	#define WAKE_VECTOR_32          0x79CA108CUL
+	#define WAKE_VECTOR_64          0x79CA1098UL
 	</WAKE_VECTOR_INFO>
 
 	<RESET_REGISTER_INFO>
@@ -238,7 +238,7 @@
 	</DRHD_INFO>
 
 	<CPU_BRAND>
-	"Intel(R) Celeron(R) CPU N3350 @ 1.10GHz"
+	"Intel(R) Pentium(R) CPU N4200 @ 1.10GHz"
 	</CPU_BRAND>
 
 	<CX_INFO>
@@ -248,7 +248,7 @@
 	</CX_INFO>
 
 	<PX_INFO>
-	{0x44DUL, 0x00UL, 0x0AUL, 0x0AUL, 0x001800UL, 0x001800UL},	/* P0 */
+	{0x44DUL, 0x00UL, 0x0AUL, 0x0AUL, 0x001900UL, 0x001900UL},	/* P0 */
 	{0x44CUL, 0x00UL, 0x0AUL, 0x0AUL, 0x000B00UL, 0x000B00UL},	/* P1 */
 	{0x3E8UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000A00UL, 0x000A00UL},	/* P2 */
 	{0x384UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000900UL, 0x000900UL},	/* P3 */
@@ -264,18 +264,18 @@
 	00001000-0003efff : System RAM
 	00040000-0009dfff : System RAM
 	00100000-0fffffff : System RAM
-	12151000-7074c017 : System RAM
-	7074c018-7075c057 : System RAM
-	7075c058-77b30fff : System RAM
-	7a09d000-7a40afff : System RAM
-	7a426000-7a964fff : System RAM
+	12151000-70884017 : System RAM
+	70884018-70894057 : System RAM
+	70894058-77b0afff : System RAM
+	7a08b000-7a3f8fff : System RAM
+	7a424000-7a964fff : System RAM
 	7a967000-7affffff : System RAM
-	100000000-17fffffff : System RAM
+	100000000-27fffffff : System RAM
 	</SYSTEM_RAM_INFO>
 
 	<BLOCK_DEVICE_INFO>
-	/dev/mmcblk0p3: UUID="bb0d14f3-e780-41d9-bcca-6f3ef493216c" TYPE="ext4" PARTLABEL="primary" PARTUUID="87cd7180-6c0b-4bc9-a0d0-5406a95988cc"
-	/dev/sda3: TYPE="ext4"
+	/dev/sda3: LABEL="root" UUID="7de2c654-069b-4a56-b93f-70b2f7662bd0" TYPE="ext4" PARTLABEL="/" PARTUUID="712932d4-3420-4cca-b361-3606a40f3b89"
+	/dev/mmcblk0p3: LABEL="root" UUID="07c59c89-7796-429c-aad5-75f16193747c" TYPE="ext4" PARTLABEL="/" PARTUUID="f768183d-c825-4b18-be2d-45e67d27e71d"
 	</BLOCK_DEVICE_INFO>
 
 	<TTYS_INFO>
@@ -288,11 +288,11 @@
 	</AVAILABLE_IRQ_INFO>
 
 	<TOTAL_MEM_INFO>
-	3874760 kB
+	8066364 kB
 	</TOTAL_MEM_INFO>
 
 	<CPU_PROCESSOR_INFO>
-	0, 1
+	0, 1, 2, 3
 	</CPU_PROCESSOR_INFO>
 
 </acrn-config>
