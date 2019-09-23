@@ -13,6 +13,7 @@
 #include <pciaccess.h>
 
 #include "pci_core.h"
+#include "mevent.h"
 
 #define MAX_DEV_PER_GSI 4
 
@@ -117,7 +118,7 @@ create_gsi_sharing_groups(void)
 	uint8_t gsi;
 	char *dev_name;
 	int i, error, msi_support;
-	struct gsi_sharing_group *group = NULL;
+	struct gsi_sharing_group *group = NULL, *temp = NULL;
 
 	error = pciaccess_init();
 	if (error < 0)
@@ -144,7 +145,7 @@ create_gsi_sharing_groups(void)
 	 * clean up gsg_head - the list for gsi_sharing_group
 	 * delete the element without gsi sharing condition (shared_dev_num < 2)
 	 */
-	LIST_FOREACH(group, &gsg_head, gsg_list) {
+	list_foreach_safe(group, &gsg_head, gsg_list, temp) {
 		if (group->shared_dev_num < 2) {
 			LIST_REMOVE(group, gsg_list);
 			free(group);
@@ -181,7 +182,7 @@ update_pt_info(uint16_t phys_bdf)
 int
 check_gsi_sharing_violation(void)
 {
-	struct gsi_sharing_group *group;
+	struct gsi_sharing_group *group, *temp;
 	int i, error, violation;
 
 	error = 0;
@@ -226,7 +227,7 @@ check_gsi_sharing_violation(void)
 	}
 
 	/* destroy the gsg_head after all the checks have been done */
-	LIST_FOREACH(group, &gsg_head, gsg_list) {
+	list_foreach_safe(group, &gsg_head, gsg_list, temp) {
 		LIST_REMOVE(group, gsg_list);
 		free(group);
 	}

@@ -502,10 +502,10 @@ vmei_del_me_client(struct vmei_me_client *mclient)
 static void
 vmei_me_client_destroy_host_clients(struct vmei_me_client *mclient)
 {
-	struct vmei_host_client *e;
+	struct vmei_host_client *e, *temp;
 
 	pthread_mutex_lock(&mclient->list_mutex);
-	LIST_FOREACH(e, &mclient->connections, list) {
+	list_foreach_safe(e, &mclient->connections, list, temp) {
 		vmei_host_client_put(e);
 	}
 	LIST_INIT(&mclient->connections);
@@ -643,10 +643,10 @@ vmei_find_host_client(struct virtio_mei *vmei,
 
 static void vmei_free_me_clients(struct virtio_mei *vmei)
 {
-	struct vmei_me_client *e;
+	struct vmei_me_client *e, *temp;
 
 	pthread_mutex_lock(&vmei->list_mutex);
-	LIST_FOREACH(e, &vmei->active_clients, list) {
+	list_foreach_safe(e, &vmei->active_clients, list, temp) {
 		vmei_me_client_put(e);
 	}
 	LIST_INIT(&vmei->active_clients);
@@ -937,7 +937,7 @@ static void
 vmei_virtual_fw_reset(struct virtio_mei *vmei)
 {
 	DPRINTF("Firmware reset\n");
-	struct vmei_me_client *e;
+	struct vmei_me_client *e, *temp;
 
 	vmei_set_status(vmei, VMEI_STS_RESET);
 	vmei->config->hw_ready = 0;
@@ -948,7 +948,7 @@ vmei_virtual_fw_reset(struct virtio_mei *vmei)
 
 	/* disconnect all */
 	pthread_mutex_lock(&vmei->list_mutex);
-	LIST_FOREACH(e, &vmei->active_clients, list) {
+	list_foreach_safe(e, &vmei->active_clients, list, temp) {
 		vmei_me_client_destroy_host_clients(e);
 	}
 	pthread_mutex_unlock(&vmei->list_mutex);
