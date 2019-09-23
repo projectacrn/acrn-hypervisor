@@ -1,0 +1,298 @@
+<acrn-config board="apl-up2-n3350">
+	<BIOS_INFO>
+	BIOS Information
+	Vendor: American Megatrends Inc.
+	Version: UPA1AM46
+	Release Date: 08/14/2019
+	BIOS Revision: 5.12
+	</BIOS_INFO>
+
+	<BASE_BOARD_INFO>
+	Base Board Information
+	Manufacturer: AAEON
+	Product Name: UP-APL01
+	Version: V0.4
+	</BASE_BOARD_INFO>
+
+	<PCI_DEVICE>
+	00:00.0 Host bridge: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series Host Bridge (rev 0b)
+	00:02.0 VGA compatible controller: Intel Corporation Device 5a85 (rev 0b)
+	Region 0: Memory at 90000000 (64-bit, non-prefetchable) [size=16M]
+	Region 2: Memory at 80000000 (64-bit, prefetchable) [size=256M]
+	00:0e.0 Multimedia audio controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series Audio Cluster (rev 0b)
+	Region 0: Memory at 91510000 (64-bit, non-prefetchable) [size=16K]
+	Region 4: Memory at 91200000 (64-bit, non-prefetchable) [size=1M]
+	00:0f.0 Communication controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series Trusted Execution Engine (rev 0b)
+	Region 0: Memory at 9153c000 (64-bit, non-prefetchable) [size=4K]
+	00:12.0 SATA controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series SATA AHCI Controller (rev 0b)
+	Region 0: Memory at 91514000 (32-bit, non-prefetchable) [size=8K]
+	Region 1: Memory at 91539000 (32-bit, non-prefetchable) [size=256]
+	Region 5: Memory at 91538000 (32-bit, non-prefetchable) [size=2K]
+	00:13.0 PCI bridge: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series PCI Express Port A #1 (rev fb)
+	00:13.1 PCI bridge: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series PCI Express Port A #2 (rev fb)
+	00:13.2 PCI bridge: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series PCI Express Port A #3 (rev fb)
+	00:13.3 PCI bridge: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series PCI Express Port A #4 (rev fb)
+	00:14.0 PCI bridge: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series PCI Express Port B #1 (rev fb)
+	00:14.1 PCI bridge: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series PCI Express Port B #2 (rev fb)
+	00:15.0 USB controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series USB xHCI (rev 0b)
+	Region 0: Memory at 91500000 (64-bit, non-prefetchable) [size=64K]
+	00:15.1 USB controller: Intel Corporation Device 5aaa (rev 0b)
+	Region 0: Memory at 91000000 (64-bit, non-prefetchable) [disabled] [size=2M]
+	Region 2: Memory at 91537000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	00:16.0 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series I2C Controller #1 (rev 0b)
+	Region 0: Memory at 91536000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 91535000 (64-bit, non-prefetchable) [size=4K]
+	00:16.1 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series I2C Controller #2 (rev 0b)
+	Region 0: Memory at 91534000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 91533000 (64-bit, non-prefetchable) [size=4K]
+	00:16.2 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series I2C Controller #3 (rev 0b)
+	Region 0: Memory at 91532000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 91531000 (64-bit, non-prefetchable) [size=4K]
+	00:16.3 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series I2C Controller #4 (rev 0b)
+	Region 0: Memory at 91530000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 9152f000 (64-bit, non-prefetchable) [size=4K]
+	00:17.0 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series I2C Controller #5 (rev 0b)
+	Region 0: Memory at 9152e000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 9152d000 (64-bit, non-prefetchable) [size=4K]
+	00:17.1 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series I2C Controller #6 (rev 0b)
+	Region 0: Memory at 9152c000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 9152b000 (64-bit, non-prefetchable) [size=4K]
+	00:17.2 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series I2C Controller #7 (rev 0b)
+	Region 0: Memory at 9152a000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 91529000 (64-bit, non-prefetchable) [size=4K]
+	00:17.3 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series I2C Controller #8 (rev 0b)
+	Region 0: Memory at 91528000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 91527000 (64-bit, non-prefetchable) [size=4K]
+	00:18.0 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series HSUART Controller #1 (rev 0b)
+	Region 0: Memory at 91526000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 91525000 (64-bit, non-prefetchable) [size=4K]
+	00:18.1 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series HSUART Controller #2 (rev 0b)
+	Region 0: Memory at 91524000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 91523000 (64-bit, non-prefetchable) [size=4K]
+	00:19.0 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series SPI Controller #1 (rev 0b)
+	Region 0: Memory at 91522000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 91521000 (64-bit, non-prefetchable) [size=4K]
+	00:19.1 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series SPI Controller #2 (rev 0b)
+	Region 0: Memory at 91520000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 9151f000 (64-bit, non-prefetchable) [size=4K]
+	00:19.2 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series SPI Controller #3 (rev 0b)
+	Region 0: Memory at 9151e000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 9151d000 (64-bit, non-prefetchable) [size=4K]
+	00:1a.0 Serial bus controller [0c80]: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series PWM Pin Controller (rev 0b)
+	Region 0: Memory at 9151c000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 9151b000 (64-bit, non-prefetchable) [size=4K]
+	00:1c.0 SD Host controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series eMMC Controller (rev 0b)
+	Region 0: Memory at 9151a000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 91519000 (64-bit, non-prefetchable) [size=4K]
+	00:1e.0 SD Host controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series SDIO Controller (rev 0b)
+	Region 0: Memory at 91518000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 91517000 (64-bit, non-prefetchable) [size=4K]
+	00:1f.0 ISA bridge: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series Low Pin Count Interface (rev 0b)
+	00:1f.1 SMBus: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series SMBus Controller (rev 0b)
+	Region 0: Memory at 91516000 (64-bit, non-prefetchable) [size=256]
+	02:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 0c)
+	Region 2: Memory at 91404000 (64-bit, non-prefetchable) [size=4K]
+	Region 4: Memory at 91400000 (64-bit, prefetchable) [size=16K]
+	03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 0c)
+	Region 2: Memory at 91304000 (64-bit, non-prefetchable) [size=4K]
+	Region 4: Memory at 91300000 (64-bit, prefetchable) [size=16K]
+	</PCI_DEVICE>
+
+	<PCI_VID_PID>
+	00:00.0 0600: 8086:5af0 (rev 0b)
+	00:02.0 0300: 8086:5a85 (rev 0b)
+	00:0e.0 0401: 8086:5a98 (rev 0b)
+	00:0f.0 0780: 8086:5a9a (rev 0b)
+	00:12.0 0106: 8086:5ae3 (rev 0b)
+	00:13.0 0604: 8086:5ad8 (rev fb)
+	00:13.1 0604: 8086:5ad9 (rev fb)
+	00:13.2 0604: 8086:5ada (rev fb)
+	00:13.3 0604: 8086:5adb (rev fb)
+	00:14.0 0604: 8086:5ad6 (rev fb)
+	00:14.1 0604: 8086:5ad7 (rev fb)
+	00:15.0 0c03: 8086:5aa8 (rev 0b)
+	00:15.1 0c03: 8086:5aaa (rev 0b)
+	00:16.0 1180: 8086:5aac (rev 0b)
+	00:16.1 1180: 8086:5aae (rev 0b)
+	00:16.2 1180: 8086:5ab0 (rev 0b)
+	00:16.3 1180: 8086:5ab2 (rev 0b)
+	00:17.0 1180: 8086:5ab4 (rev 0b)
+	00:17.1 1180: 8086:5ab6 (rev 0b)
+	00:17.2 1180: 8086:5ab8 (rev 0b)
+	00:17.3 1180: 8086:5aba (rev 0b)
+	00:18.0 1180: 8086:5abc (rev 0b)
+	00:18.1 1180: 8086:5abe (rev 0b)
+	00:19.0 1180: 8086:5ac2 (rev 0b)
+	00:19.1 1180: 8086:5ac4 (rev 0b)
+	00:19.2 1180: 8086:5ac6 (rev 0b)
+	00:1a.0 0c80: 8086:5ac8 (rev 0b)
+	00:1c.0 0805: 8086:5acc (rev 0b)
+	00:1e.0 0805: 8086:5ad0 (rev 0b)
+	00:1f.0 0601: 8086:5ae8 (rev 0b)
+	00:1f.1 0c05: 8086:5ad4 (rev 0b)
+	02:00.0 0200: 10ec:8168 (rev 0c)
+	03:00.0 0200: 10ec:8168 (rev 0c)
+	</PCI_VID_PID>
+
+	<WAKE_VECTOR_INFO>
+	#define WAKE_VECTOR_32          0x79CB108CUL
+	#define WAKE_VECTOR_64          0x79CB1098UL
+	</WAKE_VECTOR_INFO>
+
+	<RESET_REGISTER_INFO>
+	#define RESET_REGISTER_ADDRESS  0xCF9UL
+	#define RESET_REGISTER_SPACE_ID SPACE_SYSTEM_IO
+	#define RESET_REGISTER_VALUE    0x6U
+	</RESET_REGISTER_INFO>
+
+	<PM_INFO>
+	#define PM1A_EVT_SPACE_ID       SPACE_SYSTEM_IO
+	#define PM1A_EVT_BIT_WIDTH      0x20U
+	#define PM1A_EVT_BIT_OFFSET     0x0U
+	#define PM1A_EVT_ADDRESS        0x400UL
+	#define PM1A_EVT_ACCESS_SIZE    0x2U
+	#define PM1B_EVT_SPACE_ID       SPACE_SYSTEM_IO
+	#define PM1B_EVT_BIT_WIDTH      0x0U
+	#define PM1B_EVT_BIT_OFFSET     0x0U
+	#define PM1B_EVT_ADDRESS        0x0UL
+	#define PM1B_EVT_ACCESS_SIZE    0x2U
+	#define PM1A_CNT_SPACE_ID       SPACE_SYSTEM_IO
+	#define PM1A_CNT_BIT_WIDTH      0x10U
+	#define PM1A_CNT_BIT_OFFSET     0x0U
+	#define PM1A_CNT_ADDRESS        0x404UL
+	#define PM1A_CNT_ACCESS_SIZE    0x2U
+	#define PM1B_CNT_SPACE_ID       SPACE_SYSTEM_IO
+	#define PM1B_CNT_BIT_WIDTH      0x0U
+	#define PM1B_CNT_BIT_OFFSET     0x0U
+	#define PM1B_CNT_ADDRESS        0x0UL
+	#define PM1B_CNT_ACCESS_SIZE    0x2U
+	</PM_INFO>
+
+	<S3_INFO>
+	#define S3_PKG_VAL_PM1A         0x5U
+	#define S3_PKG_VAL_PM1B         0U
+	#define S3_PKG_RESERVED         0x0U
+	</S3_INFO>
+
+	<S5_INFO>
+	#define S5_PKG_VAL_PM1A         0x7U
+	#define S5_PKG_VAL_PM1B         0U
+	#define S5_PKG_RESERVED         0x0U
+	</S5_INFO>
+
+	<DRHD_INFO>
+	#define DRHD_COUNT              2U
+	#define DRHD0_DEV_CNT           1U
+	#define DRHD0_SEGMENT           0U
+	#define DRHD0_FLAGS             0U
+	#define DRHD0_REG_BASE          0xFED64000UL
+	#define DRHD0_IGNORE            false
+	#define DRHD0_DEVSCOPE0_BUS     0x0U
+	#define DRHD0_DEVSCOPE0_PATH    0x10U
+	#define DRHD0_DEVSCOPE1_BUS     0x0U
+	#define DRHD0_DEVSCOPE1_PATH    0x0U
+	#define DRHD0_DEVSCOPE2_BUS     0x0U
+	#define DRHD0_DEVSCOPE2_PATH    0x0U
+	#define DRHD0_DEVSCOPE3_BUS     0x0U
+	#define DRHD0_DEVSCOPE3_PATH    0x0U
+	#define DRHD1_DEV_CNT           2U
+	#define DRHD1_SEGMENT           0U
+	#define DRHD1_FLAGS             1U
+	#define DRHD1_REG_BASE          0xFED65000UL
+	#define DRHD1_IGNORE            false
+	#define DRHD1_DEVSCOPE0_BUS     0xfaU
+	#define DRHD1_DEVSCOPE0_PATH    0xf8U
+	#define DRHD1_DEVSCOPE1_BUS     0x0U
+	#define DRHD1_DEVSCOPE1_PATH    0xffU
+	#define DRHD1_DEVSCOPE2_BUS     0x0U
+	#define DRHD1_DEVSCOPE2_PATH    0x0U
+	#define DRHD1_DEVSCOPE3_BUS     0x0U
+	#define DRHD1_DEVSCOPE3_PATH    0x0U
+	#define DRHD1_IOAPIC_ID         1U
+	#define DRHD2_DEV_CNT           0U
+	#define DRHD2_SEGMENT           0U
+	#define DRHD2_FLAGS             0U
+	#define DRHD2_REG_BASE          0x00UL
+	#define DRHD2_IGNORE            false
+	#define DRHD2_DEVSCOPE0_BUS     0x0U
+	#define DRHD2_DEVSCOPE0_PATH    0x0U
+	#define DRHD2_DEVSCOPE1_BUS     0x0U
+	#define DRHD2_DEVSCOPE1_PATH    0x0U
+	#define DRHD2_DEVSCOPE2_BUS     0x0U
+	#define DRHD2_DEVSCOPE2_PATH    0x0U
+	#define DRHD2_DEVSCOPE3_BUS     0x0U
+	#define DRHD2_DEVSCOPE3_PATH    0x0U
+	#define DRHD3_DEV_CNT           0U
+	#define DRHD3_SEGMENT           0U
+	#define DRHD3_FLAGS             0U
+	#define DRHD3_REG_BASE          0x00UL
+	#define DRHD3_IGNORE            false
+	#define DRHD3_DEVSCOPE0_BUS     0x0U
+	#define DRHD3_DEVSCOPE0_PATH    0x0U
+	#define DRHD3_DEVSCOPE1_BUS     0x0U
+	#define DRHD3_DEVSCOPE1_PATH    0x0U
+	#define DRHD3_DEVSCOPE2_BUS     0x0U
+	#define DRHD3_DEVSCOPE2_PATH    0x0U
+	#define DRHD3_DEVSCOPE3_BUS     0x0U
+	#define DRHD3_DEVSCOPE3_PATH    0x0U
+	</DRHD_INFO>
+
+	<CPU_BRAND>
+	"Intel(R) Celeron(R) CPU N3350 @ 1.10GHz"
+	</CPU_BRAND>
+
+	<CX_INFO>
+	{{SPACE_FFixedHW, 0x00U, 0x00U, 0x00U, 0x00UL}, 0x01U, 0x01U, 0x00U},	/* C1 */
+	{{SPACE_SYSTEM_IO, 0x08U, 0x00U, 0x00U, 0x415UL}, 0x02U, 0x32U, 0x00U},	/* C2 */
+	{{SPACE_SYSTEM_IO, 0x08U, 0x00U, 0x00U, 0x419UL}, 0x03U, 0x96U, 0x00U},	/* C3 */
+	</CX_INFO>
+
+	<PX_INFO>
+	{0x44DUL, 0x00UL, 0x0AUL, 0x0AUL, 0x001800UL, 0x001800UL},	/* P0 */
+	{0x44CUL, 0x00UL, 0x0AUL, 0x0AUL, 0x000B00UL, 0x000B00UL},	/* P1 */
+	{0x3E8UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000A00UL, 0x000A00UL},	/* P2 */
+	{0x384UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000900UL, 0x000900UL},	/* P3 */
+	{0x320UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000800UL, 0x000800UL},	/* P4 */
+	</PX_INFO>
+
+	<CLOS_INFO>
+	clos supported by cache:L2
+	clos max:4
+	</CLOS_INFO>
+
+	<SYSTEM_RAM_INFO>
+	00001000-0003efff : System RAM
+	00040000-0009dfff : System RAM
+	00100000-0fffffff : System RAM
+	12151000-70ecd017 : System RAM
+	70ecd018-70edd057 : System RAM
+	70edd058-77b2efff : System RAM
+	7a09b000-7a408fff : System RAM
+	7a424000-7a964fff : System RAM
+	7a967000-7affffff : System RAM
+	100000000-17fffffff : System RAM
+	</SYSTEM_RAM_INFO>
+
+	<BLOCK_DEVICE_INFO>
+	/dev/sda3: LABEL="root" UUID="7de2c654-069b-4a56-b93f-70b2f7662bd0" TYPE="ext4" PARTLABEL="/" PARTUUID="712932d4-3420-4cca-b361-3606a40f3b89"
+	/dev/mmcblk0p3: LABEL="root" UUID="045f2013-b4c4-4817-a1aa-dc4416ca800f" TYPE="ext4" PARTLABEL="/" PARTUUID="517bf93d-1cb5-4d72-9550-a0144a2fcdbc"
+	</BLOCK_DEVICE_INFO>
+
+	<TTYS_INFO>
+	BDF:(00:18.0) seri:/dev/ttyS0 base:0x91526000 irq:4
+	BDF:(00:18.1) seri:/dev/ttyS1 base:0x91524000 irq:5
+	</TTYS_INFO>
+
+	<AVAILABLE_IRQ_INFO>
+	3, 6, 7, 10, 11, 12, 13, 15
+	</AVAILABLE_IRQ_INFO>
+
+	<TOTAL_MEM_INFO>
+	3937756 kB
+	</TOTAL_MEM_INFO>
+
+	<CPU_PROCESSOR_INFO>
+	0, 1
+	</CPU_PROCESSOR_INFO>
+
+</acrn-config>
