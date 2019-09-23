@@ -90,7 +90,7 @@ def usage(file_name):
     print('board_info_file :  file name of the board info')
     print('scenario_info_file :  file name of the scenario info')
     print('launch_info_file :  file name of the launch info')
-    print('uosid :  the vm id which to launch:[0..max uosid id]')
+    print('uosid :  this is the relateive id for post launch vm in scenario info XML:[1..max post launch vm]')
 
 
 def get_param(args):

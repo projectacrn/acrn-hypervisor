@@ -1,5 +1,6 @@
 Please run board_cfg_gen.py to generate board related configuration patch, the patch would be applied on current acrn-hypervisor git tree automatically.
 
-usage: python3 board_cfg_gen.py [h] --board <board_info_file>
+usage: python3 board_cfg_gen.py [h] --board <board_info_file> --scenario <scenario_info_file>
 positional arguments:
   board_info_file  : file name of the board info XML
+  scenario_info_file  : file name of the scenario info XML

@@ -1,1 +1,8 @@
-TODO: parse board_info XML, scenario XML and devicemodel param XML to generate launch script for post-launched vm under devicesmodel/samples/$(BOARD)/ folder
+Please run launch_cfg_gen.py to generate board related configuration patch, the patch would be applied on current acrn-hypervisor git tree automatically.
+
+usage: python3 launch_cfg_gen.py [h] --board <board_info_file> --scenario <scenario_info_file> --launch <launch_info_file>
+positional arguments:
+  board_info_file  : file name of the board info XML
+  scenario_info_file  : file name of the scenario info XML
+  launch_info_file :  file name of the launch info
+  uosid :  this is the relateive id for post launch vm in scenario info XML:[1..max post launch vm]
