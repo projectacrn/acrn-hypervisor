@@ -1,1 +1,6 @@
-TODO: parse board_info XML and scenario XML to generate scenario based VM configuration files under hypervisor/scenarios/$(SCENARIO)/ folder
+Please run scenario_cfg_gen.py to generate board related configuration patch, the patch would be applied on current acrn-hypervisor git tree automatically.
+
+usage: python3 scenario_cfg_gen.py [h] --board <board_info_file> --scenario <scenario_info_file>
+positional arguments:
+  board_info_file  : file name of the board info XML
+  scenario_info_file  : file name of the scenario info XML
