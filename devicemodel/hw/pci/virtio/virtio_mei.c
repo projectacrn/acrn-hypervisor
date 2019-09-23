@@ -937,7 +937,7 @@ static void
 vmei_virtual_fw_reset(struct virtio_mei *vmei)
 {
 	DPRINTF("Firmware reset\n");
-	struct vmei_me_client *e;
+	struct vmei_me_client *e, *temp;
 
 	vmei_set_status(vmei, VMEI_STS_RESET);
 	vmei->config->hw_ready = 0;
@@ -948,7 +948,7 @@ vmei_virtual_fw_reset(struct virtio_mei *vmei)
 
 	/* disconnect all */
 	pthread_mutex_lock(&vmei->list_mutex);
-	LIST_FOREACH(e, &vmei->active_clients, list) {
+	list_foreach_safe(e, &vmei->active_clients, list, temp) {
 		vmei_me_client_destroy_host_clients(e);
 	}
 	pthread_mutex_unlock(&vmei->list_mutex);
