@@ -309,9 +309,9 @@ def is_config_file_match():
     return (err_dic, match)
 
 
-def get_sos_vmid(config_file, tag_str):
+def get_sos_vmid():
 
-    load_list = common.get_branch_tag_val(config_file, tag_str)
+    load_list = common.get_branch_tag_val(SCENARIO_INFO_FILE, "load_order")
 
     sos_id = 0
     for load_order in load_list:
