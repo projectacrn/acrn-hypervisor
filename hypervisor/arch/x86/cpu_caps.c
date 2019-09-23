@@ -420,9 +420,6 @@ int32_t detect_hardware_support(void)
 	} else if (is_vmx_disabled()) {
 		printf("%s, VMX can not be enabled\n", __func__);
 		ret = -ENODEV;
-	} else if (get_pcpu_nums() > CONFIG_MAX_PCPU_NUM) {
-		printf("%s, pcpu number(%d) is out of range\n", __func__, get_pcpu_nums());
-		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_X2APIC)) {
 		printf("%s, x2APIC not supported\n", __func__);
 		ret = -ENODEV;

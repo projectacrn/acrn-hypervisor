@@ -46,20 +46,20 @@ static void print_hv_banner(void);
 static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id);
 static uint64_t start_tsc __attribute__((__section__(".bss_noinit")));
 
+/**
+ * @pre phys_cpu_num <= CONFIG_MAX_PCPU_NUM
+ */
 static bool init_percpu_lapic_id(void)
 {
 	uint16_t i;
-	uint16_t pcpu_num;
 	uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM];
 	bool success = false;
 
 	/* Save all lapic_id detected via parse_mdt in lapic_id_array */
-	pcpu_num = parse_madt(lapic_id_array);
+	phys_cpu_num = parse_madt(lapic_id_array);
 
-	if (pcpu_num != 0U) {
-		phys_cpu_num = pcpu_num;
-
-		for (i = 0U; (i < pcpu_num) && (i < CONFIG_MAX_PCPU_NUM); i++) {
+	if ((phys_cpu_num != 0U) && (phys_cpu_num <= CONFIG_MAX_PCPU_NUM)) {
+		for (i = 0U; i < phys_cpu_num; i++) {
 			per_cpu(lapic_id, i) = lapic_id_array[i];
 		}
 		success = true;
@@ -81,6 +81,9 @@ static void pcpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
 	per_cpu(boot_state, pcpu_id) = state;
 }
 
+/*
+ * @post return <= CONFIG_MAX_PCPU_NUM
+ */
 uint16_t get_pcpu_nums(void)
 {
 	return phys_cpu_num;
@@ -267,7 +270,7 @@ static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id)
 	uint16_t i;
 	uint16_t pcpu_id = INVALID_CPU_ID;
 
-	for (i = 0U; (i < phys_cpu_num) && (i < CONFIG_MAX_PCPU_NUM); i++) {
+	for (i = 0U; i < phys_cpu_num; i++) {
 		if (per_cpu(lapic_id, i) == lapic_id) {
 			pcpu_id = i;
 			break;
