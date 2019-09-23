@@ -14,21 +14,21 @@ DESC = """
 
 VM_NUM_MAP_TOTAL_HV_RAM_SIZE = {
     # 120M
-    2:'0x7800000',
+    2:0x7800000,
     # 150M
-    3:'0x9600000',
+    3:0x9600000,
     # 180M
-    4:'0xB400000',
+    4:0xB400000,
     # 210M
-    5:'0xD200000',
+    5:0xD200000,
     # 240M
-    6:'0xF000000',
+    6:0xF000000,
     # 270M
-    7:'0x10E00000',
+    7:0x10E00000,
 }
 
 
-def get_addr_for_hv(ram_range, hpa_size):
+def find_avl_memory(ram_range, hpa_size):
     """
     This is get hv address from System RAM as host physical size
     :param ram_range: System RAM mapping
@@ -41,7 +41,7 @@ def get_addr_for_hv(ram_range, hpa_size):
     tmp_order_key = sorted(ram_range)
     for start_addr in tmp_order_key:
         mem_range = ram_range[start_addr]
-        if mem_range > int(hpa_size, 16):
+        if mem_range > int(hpa_size, 10):
             ret_start_addr = start_addr
             break
 
@@ -80,13 +80,18 @@ def generate_file(config):
         return err_dic
 
     ram_range = get_ram_range()
-    hv_start_addr = get_addr_for_hv(ram_range, hv_ram_size)
+
+    # reseve 16M memory for hv sbuf, ramoops, etc.
+    reserved_ram = 0xf00000
+    total_size = reserved_ram + hv_ram_size
+    avl_start_addr = find_avl_memory(ram_range, str(total_size))
+    hv_start_addr = int(avl_start_addr, 16) + int(hex(reserved_ram), 16)
 
     print('CONFIG_BOARD="{}"'.format(board_cfg_lib.BOARD_NAME), file=config)
     print("{}".format(DESC), file=config)
 
-    print("CONFIG_HV_RAM_START={}".format(hv_start_addr), file=config)
+    print("CONFIG_HV_RAM_START={}".format(hex(hv_start_addr)), file=config)
 
-    print("CONFIG_HV_RAM_SIZE={}".format(hv_ram_size), file=config)
+    print("CONFIG_HV_RAM_SIZE={}".format(hex(hv_ram_size)), file=config)
 
     return err_dic
