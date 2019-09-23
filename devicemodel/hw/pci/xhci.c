@@ -3033,11 +3033,7 @@ errout:
 		pci_xhci_assert_interrupt(xdev);
 
 	if (do_retry) {
-		if (epid == 1)
-			memset(xfer, 0, sizeof(*xfer));
-
-		UPRINTF(LDBG, "[%d]: retry:continuing with next TRBs\r\n",
-			 __LINE__);
+		UPRINTF(LDBG, "[%d]: retry next TRBs\r\n", __LINE__);
 		goto retry;
 	}
 	return err;
