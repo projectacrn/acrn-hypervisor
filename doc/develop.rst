@@ -27,6 +27,7 @@ Configuration Tutorials
    tutorials/using_sdc2_mode_on_nuc
    tutorials/using_hybrid_mode_on_nuc
    tutorials/building_acrn_in_docker
+   tutorials/realtime_performance_tuning
 
 User VM Tutorials
 *****************
