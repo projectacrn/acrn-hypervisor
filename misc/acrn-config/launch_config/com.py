@@ -419,9 +419,10 @@ def dm_arg_set(names, sel, dm, vmid, config):
 
     # uuid get
     scenario_uuid = launch_cfg_lib.get_scenario_uuid()
+    sos_vmid = launch_cfg_lib.get_sos_vmid()
 
     # clearlinux/android/alios
-    dm_str = 'acrn-dm -A -m $mem_size $boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -U {}'.format(scenario_uuid[vmid])
+    dm_str = 'acrn-dm -A -m $mem_size $boot_GVT_option"$GVT_args" -s 0:0,hostbridge  -s 1:0,lpc -U {}'.format(scenario_uuid[vmid + sos_vmid])
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if uos_type == "CLEARLINUX":
             print("{} \\".format(dm_str), file=config)
@@ -431,8 +432,9 @@ def dm_arg_set(names, sel, dm, vmid, config):
     if board_name == "apl-up2" or is_nuc_clr(names, vmid):
         print("   $logger_setting \\", file=config)
 
-    if uos_type in ("ANDROID", "ALIOS"):
-        print("   -s {},virtio-rpmb \\".format(launch_cfg_lib.virtual_dev_slot("virtio-rpmb")), file=config)
+    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
+        if uos_type in ("ANDROID", "ALIOS"):
+            print("   -s {},virtio-rpmb \\".format(launch_cfg_lib.virtual_dev_slot("virtio-rpmb")), file=config)
         if board_name == "apl-up2":
             print("   --pm_notify_channel power_button \\", file=config)
         if board_name == "apl-mrb":
@@ -441,7 +443,8 @@ def dm_arg_set(names, sel, dm, vmid, config):
     if is_nuc_clr(names, vmid):
         print("   --pm_notify_channel uart \\", file=config)
         print('   --pm_by_vuart pty,/run/acrn/life_mngr_$vm_name  \\', file=config)
-        print('   -s 1:0,lpc -l com2,/run/acrn/life_mngr_$vm_name \\', file=config)
+        print('   -l com2,/run/acrn/life_mngr_$vm_name \\', file=config)
+        print("   -s {},virtio-net,tap0 \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net")), file=config)
 
     # mac_seed
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
@@ -449,38 +452,36 @@ def dm_arg_set(names, sel, dm, vmid, config):
 
     # hard rt os
     if uos_type == "PREEMPT-RT LINUX":
-        print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {} \\".format(scenario_uuid[vmid]), file=config)
+        print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {} \\".format(scenario_uuid[vmid + sos_vmid]), file=config)
         #print("   -k /usr/lib/kernel/default-iot-lts2018-preempt-rt \\", file=config)
         print("   -k /usr/lib/kernel/default-iot-lts2018-preempt-rt \\", file=config)
         print("   --lapic_pt \\", file=config)
         print("   --rtvm \\", file=config)
-        print("   -s {},virtio-net,tap0 \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net")), file=config)
         print("   --virtio_poll 1000000 \\", file=config)
         print("   --pm_notify_channel uart --pm_by_vuart tty,/dev/ttyS1 \\", file=config)
 
     # vxworks
     if uos_type == "VXWORKS":
-        print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {} \\".format(scenario_uuid[vmid]), file=config)
+        print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {} \\".format(scenario_uuid[vmid + sos_vmid]), file=config)
         print("   -s {},virtio-blk,./VxWorks.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
         print("   --virtio_poll 1000000 \\", file=config)
         print("   --lapic_pt \\", file=config)
 
     # zephyr
     if uos_type == "ZEPHYR":
-        print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -l -U {} \\".format(scenario_uuid[vmid]), file=config)
+        print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -U {} \\".format(scenario_uuid[vmid + sos_vmid]), file=config)
         print("   -s {},virtio-blk,./zephyr.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
 
     # windows
     if uos_type == "WINDOWS":
-        print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -U {} \\".format(scenario_uuid[vmid]), file=config)
+        print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -U {} \\".format(scenario_uuid[vmid + sos_vmid]), file=config)
         print('   -s 2,pci-gvt -G "$3"  \\', file=config)
         print("   -s {},virtio-blk,./win10-ltsc.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
-        print("   -s {},virtio-net,tap0 \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net")), file=config)
 
-    # vbootloader of ovmf
+   # vbootloader of ovmf
     #if uos_type != "PREEMPT-RT LINUX" and dm['vbootloader'][vmid] == "ovmf":
     if dm['vbootloader'][vmid] == "ovmf":
-        print("   --ovmf ./OVMF.fd \\", file=config)
+        print("   --ovmf /usr/share/acrn/bios/OVMF.fd \\", file=config)
 
     # redirect console
     if dm['console_type'][vmid] == "com1(ttyS0)":
@@ -493,7 +494,8 @@ def dm_arg_set(names, sel, dm, vmid, config):
                 launch_cfg_lib.RE_CONSOLE_MAP['virtio-console(hvc0)']), file=config)
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
-        print("   -s {},virtio-net,$tap \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net")), file=config)
+        if board_name in ("apl-mrb", "apl-up2"):
+            print("   -s {},virtio-net,$tap \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net")), file=config)
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         print("   -s {},virtio-hyper_dmabuf \\".format(launch_cfg_lib.virtual_dev_slot("virtio-hyper_dmabuf")), file=config)
