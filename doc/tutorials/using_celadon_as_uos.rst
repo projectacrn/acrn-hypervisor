@@ -1,22 +1,22 @@
 .. _using_celadon_as_uos:
 
-Using Celadon as User OS
-########################
+Using Celadon as the User OS
+############################
 
 `Celadon <https://01.org/projectceladon/>`_ is an open source Android* software reference stack
 for Intel architecture. It builds upon a vanilla Android stack and incorporates open sourced components
 that are optimized for the hardware. This tutorial describes how to run Celadon as the User OS
-on the ACRN hypervisor. We are using Kaby Lake-based NUC (model NUC7i7DNHE) in this tutorial.
+on the ACRN hypervisor. We are using the Kaby Lake-based NUC (model NUC7i7DNHE) in this tutorial.
 
 Prerequisites
 *************
 
-* Ubuntu 18.04 with at least 150G free disk space
-* Intel Kaby Lake NUC7ixDNHE ( Reference Platforms: :ref:`ACRN supported platforms <hardware>` )
+* Ubuntu 18.04 with at least 150G free disk space.
+* Intel Kaby Lake NUC7ixDNHE (Reference Platforms: :ref:`ACRN supported platforms <hardware>`).
 * BIOS version 0059 or later firmware should be flashed on the NUC system,
-  and the ``Device Mode`` option is selected on the USB category of the Devices tab,
+  and the ``Device Mode`` option is selected on the USB category of the Devices tab
   in order to enable USB device function through the internal USB 3.0 port header.
-* Two HDMI monitors
+* Two HDMI monitors.
 * A USB dongle (e.g. `Dawson Canyon USB 3.0 female
   to 10-pin header cable <https://www.gorite.com/dawson-canyon-usb-3-0-female-to-10-pin-header-cable>`_)
   is optional if you plan to use the ``adb`` and ``fastboot`` tools in the Celadon User OS for debugging.
@@ -31,9 +31,8 @@ Build Celadon from source
    <https://01.org/projectceladon/documentation/getting_started/build-source>`_ guide
    to set up the Celadon project source code.
 
-   .. note:: The master branch is based on Google Android 10 Pre-Production Early Release.
-      We should use following command to specify a stable Celadon branch based on the Google
-      Android 9 source code in order to apply those patches in the :ref:`ACRN patch list`::
+   .. note:: The master branch is based on the Google Android 10 pre-Production Early Release.
+      Use the following command to specify a stable Celadon branch based on the Google Android 9 source code in order to apply those patches in the :ref:`ACRN patch list`::
 
       $ repo init -u https://github.com/projectceladon/manifest.git -b celadon/p/mr0/master -m stable-build/ww201925_H.xml
 
@@ -45,7 +44,7 @@ Build Celadon from source
 
    .. note:: You can run ``lunch`` with no arguments to manually choose your Celadon build variants.
 
-#. Download these additional patches and apply each one individually with the command::
+#. Download these additional patches and apply each one individually with the following command::
 
        $ git apply <patch-filename>
 
@@ -77,10 +76,10 @@ Build Celadon from source
    in order to build the source code with parallel tasks. The Celadon gptimage will be
    generated to ``out/target/product/cel_apl/cel_apl_gptimage.img``
 
-Steps for Using Celadon as User OS
-**********************************
+Steps for Using Celadon as the User OS
+**************************************
 
-#. Follow :ref:`getting-started-apl-nuc` to boot the "ACRN Service OS" based on Clear Linux 29880.
+#. Follow :ref:`getting-started-apl-nuc` to boot the ACRN Service OS based on Clear Linux 29880.
 
 #. Prepare dependencies on your NUC::
 
@@ -92,7 +91,7 @@ Steps for Using Celadon as User OS
    # sh launch_android.sh
 
 #. You will see the shell console from the terminal and the Celadon GUI on the secondary monitor
-   after system boots. You can check the build info using the ``getprop`` command in shell console:
+   after the system boots. You can check the build info using the ``getprop`` command in the shell console:
 
    .. code-block:: bash
 
