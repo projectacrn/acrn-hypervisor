@@ -23,7 +23,7 @@
 		<wifi desc="vm wifi device">03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 0c)</wifi>
 		<bluetooth desc="vm bluetooth">00:18.0 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series HSUART Controller #1 (rev 0b)</bluetooth>
 		<sd_card desc="vm sd card device">00:1b.0 SD Host controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series SDXC/MMC Host Controller (rev 0b)</sd_card>
-		<ethernet desc="vm wifi device"></ethernet>
+		<ethernet desc="vm ethernet device"></ethernet>
 		<sata desc="vm sata device"></sata>
 		<nvme desc="vm nvme device"></nvme>
 	</passthrough_devices>
