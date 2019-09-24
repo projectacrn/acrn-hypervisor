@@ -78,7 +78,7 @@ static const uint32_t mtrr_msrs[NUM_MTRR_MSRS] = {
 };
 
 /* Following MSRs are intercepted, but it throws GPs for any guest accesses */
-#define NUM_UNSUPPORTED_MSRS	99U
+#define NUM_UNSUPPORTED_MSRS	104U
 static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	/* Variable MTRRs are not supported */
 	MSR_IA32_MTRR_PHYSBASE_0,
@@ -212,6 +212,13 @@ static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	MSR_IA32_MCG_EXT_CTL,
 	/* MSR 0x280 ... 0x29F, not in this array */
 	/* MSR 0x400 ... 0x473, not in this array */
+
+	/* PRMRR related MSRs are configured by native BIOS / bootloader */
+	MSR_PRMRR_PHYS_BASE,
+	MSR_PRMRR_PHYS_MASK,
+	MSR_PRMRR_VALID_CONFIG,
+	MSR_UNCORE_PRMRR_PHYS_BASE,
+	MSR_UNCORE_PRMRR_PHYS_MASK,
 };
 
 /* emulated_guest_msrs[] shares same indexes with array vcpu->arch->guest_msrs[] */
