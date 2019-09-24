@@ -294,7 +294,8 @@
 	</SYSTEM_RAM_INFO>
 
 	<BLOCK_DEVICE_INFO>
-	/dev/mmcblk1p1: UUID="57f8f4bc-abf4-655f-bf67-946fc0f9f25b" TYPE="ext4" PARTLABEL="sos_rootfs" PARTUUID="5bd5afa7-ab7e-46f3-85ad-0cfd285d5d76"
+	/dev/mmcblk1p1: TYPE="ext4"
+	/dev/mmcblk1p3: TYPE="ext4"
 	/dev/mmcblk0p1: TYPE="ext4"
 	/dev/sda3: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
