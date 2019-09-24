@@ -247,9 +247,13 @@ def function_help(config):
 
 def uos_launch(names, args, vmid, config):
     gvt_args = args['gvt_args'][vmid]
-    cpu_num = int(args['cpu_num'][vmid])
     uos_type = names['uos_types'][vmid]
     launch_uos = '_'.join(uos_type.lower().split())
+    if args['cpu_num'][vmid] == None or not args['cpu_num'][vmid]:
+        # if cpu_num is set to None from user by mistake, set to default 1
+        cpu_num = 1
+    else:
+        cpu_num = int(args['cpu_num'][vmid])
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_clr(names, vmid):
 

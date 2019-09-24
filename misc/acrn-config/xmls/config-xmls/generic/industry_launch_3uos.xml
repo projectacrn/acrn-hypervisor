@@ -2,6 +2,7 @@
     <uos id="1">
 	<uos_type desc="UOS type"></uos_type>
 	<rtos_type desc="UOS Realtime capability"></rtos_type>
+	<cpu_num desc="max cpu number for the vm"></cpu_num>
 	<mem_size desc="UOS memory size in MByte"></mem_size>
 	<gvt_args desc="GVT argument for the vm"></gvt_args>
 	<vbootloader desc=""></vbootloader>
@@ -28,6 +29,7 @@
     <uos id="2">
 	<uos_type desc="UOS type"></uos_type>
 	<rtos_type desc="UOS Realtime capability"></rtos_type>
+	<cpu_num desc="max cpu number for the vm"></cpu_num>
 	<mem_size desc="UOS memory size in MByte"></mem_size>
 	<gvt_args desc="GVT argument for the vm"></gvt_args>
 	<vbootloader desc=""></vbootloader>
@@ -54,6 +56,7 @@
     <uos id="3">
 	<uos_type desc="UOS type"></uos_type>
 	<rtos_type desc="UOS Realtime capability"></rtos_type>
+	<cpu_num desc="max cpu number for the vm"></cpu_num>
 	<mem_size desc="UOS memory size in MByte"></mem_size>
 	<gvt_args desc="GVT argument for the vm"></gvt_args>
 	<vbootloader desc=""></vbootloader>
