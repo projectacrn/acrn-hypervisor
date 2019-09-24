@@ -282,13 +282,9 @@ static inline uint64_t git_size_masked_bar_base(uint64_t size, uint64_t val)
 	return (mask & val);
 }
 
-/**
- * @pre a != NULL
- * @pre b != NULL
- */
-static inline bool bdf_is_equal(const union pci_bdf *a, const union pci_bdf *b)
+static inline bool bdf_is_equal(union pci_bdf a, union pci_bdf b)
 {
-	return (a->value == b->value);
+	return (a.value == b.value);
 }
 
 uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes);
