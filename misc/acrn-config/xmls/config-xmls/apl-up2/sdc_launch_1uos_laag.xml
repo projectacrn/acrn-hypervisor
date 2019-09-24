@@ -23,7 +23,7 @@
 		<wifi desc="vm wifi device"></wifi>
 		<bluetooth desc="vm bluetooth"></bluetooth>
 		<sd_card desc="vm sd card device"></sd_card>
-		<ethernet desc="vm wifi device"></ethernet>
+		<ethernet desc="vm ethernet device"></ethernet>
 		<sata desc="vm sata device"></sata>
 		<nvme desc="vm nvme device"></nvme>
 	</passthrough_devices>
