@@ -37,7 +37,7 @@ static bool is_allocated_to_prelaunched_vm(struct pci_pdev *pdev)
 		for (pci_idx = 0U; pci_idx < vm_config->pci_dev_num; pci_idx++) {
 			dev_config = &vm_config->pci_devs[pci_idx];
 			if ((dev_config->emu_type == PCI_DEV_TYPE_PTDEV) &&
-					bdf_is_equal(&dev_config->pbdf, &pdev->bdf)) {
+					bdf_is_equal(dev_config->pbdf, pdev->bdf)) {
 				dev_config->pdev = pdev;
 				found = true;
 				break;
