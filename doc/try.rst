@@ -22,4 +22,5 @@ Follow these getting started guides to give ACRN a try:
    reference/hardware
    getting-started/apl-nuc
    getting-started/up2
+   getting-started/acrn_ootb
    getting-started/building-from-source
