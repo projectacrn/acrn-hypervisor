@@ -1,36 +1,33 @@
 .. _getting-started-apl-nuc:
 
-Getting started guide for Intel NUC
-###################################
+Getting Started Guide for the Intel NUC
+#######################################
 
 The Intel |reg| NUC is the primary tested platform for ACRN development,
 and its setup is described below.
 
 
-Hardware setup
+Hardware Setup
 **************
 
-Intel Apollo Lake NUC (APL) and Intel Kaby Lake NUC (KBL),
-described in :ref:`hardware`, are currently supported for ACRN development:
+The Intel Apollo Lake NUC (APL) and the Intel Kaby Lake NUC (KBL),
+described in :ref:`hardware`, are currently supported for ACRN development.
 
-- We can enable the serial console on `KBL
-  <https://www.amazon.com/Intel-Business-Mini-Technology-BLKNUC7i7DNH1E/dp/B07CCQ8V4R>`__
-  (NUC7i7DN), but this is not supported on APL (NUC6CAYH).
+Note that we can enable the serial console on the `KBL <https://www.amazon.com/Intel-Business-Mini-Technology-BLKNUC7i7DNH1E/dp/B07CCQ8V4R>`__ (NUC7i7DN), but this is not supported on the APL (NUC6CAYH).
 
 .. _connect_serial_port:
 
 Connecting to the serial port
 =============================
 
-If you don't need a serial console you can ignore this section. 
+If you do not need a serial console, ignore this section.
 
-Neither the APL or KBL NUCs present an external serial port interface.
-However, the KBL NUC does have a serial port header you can
-expose with a serial DB9 header cable. You can build this cable yourself,
-referring to the `KBL NUC product specification
+Neither the APL nor the KBL NUCs contain an external serial port interface.
+However, the KBL NUC has a serial port header you can
+expose with a serial DB9 header cable. You can build this cable yourself;
+refer to the `KBL NUC product specification
 <https://www.intel.com/content/dam/support/us/en/documents/mini-pcs/nuc-kits/NUC7i7DN_TechProdSpec.pdf>`__
-as shown below: 
-
+as shown below:
 
 .. figure:: images/KBL-serial-port-header.png
    :align: center
@@ -55,9 +52,7 @@ or an `RS232 DB9 female/female (NULL modem) cross-over cable
 <https://www.amazon.com/SF-Cable-Null-Modem-RS232/dp/B006W0I3BA>`__
 to connect to your host system.
 
-.. note::
-   If you want to use the RS232 DB9 female/female cable, please choose 
-   the ``cross-over`` type rather than ``straight-through`` type.
+Note that If you want to use the RS232 DB9 female/female cable, choose the ``cross-over`` type rather than ``straight-through`` type.
 
 Firmware update on the NUC
 ==========================
@@ -68,7 +63,7 @@ Follow these `BIOS Update Instructions
 for downloading and flashing an updated BIOS for the NUC.
 
 
-Software setup
+Software Setup
 **************
 
 .. _set-up-CL:
@@ -76,57 +71,55 @@ Software setup
 Set up a Clear Linux Operating System
 =====================================
 
-We begin by installing Clear Linux* as the development OS on the NUC.
+We begin by installing Clear Linux as the development OS on the NUC.
 The Clear Linux release includes an ``acrn.efi`` hypervisor application
 that will be added to the EFI partition (by the quick setup script or
 manually, as described below).
 
 .. note::
 
-   Please refer to the ACRN :ref:`release_notes` for the Clear Linux OS
+   Refer to the ACRN :ref:`release_notes` for the Clear Linux OS
    version number tested with a specific ACRN release.  Adjust the
    instruction below to reference the appropriate version number of Clear
    Linux OS (we use version 31030 as an example).
 
 #. Download the compressed Clear Linux OS installer image from
    https://download.clearlinux.org/releases/31030/clear/clear-31030-live-server.iso.xz
-   and follow the `Clear Linux OS installation guide
+   and follow the `Clear Linux OS Installation Guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install-server>`_
-   as a starting point for installing Clear Linux OS onto your platform. Follow the recommended
-   options for choosing an **Advanced options** installation type, and using the platform's
-   storage as the target device for installation (overwriting the
-   existing data).
+   as a starting point for installing the Clear Linux OS onto your platform.
+   Follow the recommended options for choosing an **Advanced options**
+   installation type, and using the platform's storage as the target device
+   for installation (overwriting the existing data).
 
    When setting up Clear Linux on your NUC:
 
-   #.  Launch the Clear Linux OS installer boot menu
-   #.  With Clear Linux OS highlighted, select Enter
-   #.  Login with your root account, and new password
-   #.  Run the installer using the command::
+   #.  Launch the Clear Linux OS installer boot menu.
+   #.  With Clear Linux OS highlighted, select **Enter**.
+   #.  Log in with your root account and new password.
+   #.  Run the installer using the following command::
 
        $ clr-installer
 
-   #.  From the Main Menu, select "Configure Installation Media" and set
-       "Destructive Installation" to your desired hard disk.
-   #.  Select "Telemetry" to set Tab to highlight your choice.
-   #.  Press :kbd:`A` to show the "Advanced options".
-   #.  Select "Select additional bundles" to add bundles for
-       "desktop-autostart", "editors", "network-basic", "user-basic"
-   #.  Select "Manager User" to add an administrative user "clear" and
+   #.  From the Main menu, select **Configure Installation Media** and set
+       **Destructive Installation** to your desired hard disk.
+   #.  Select **Telemetry** to set Tab to highlight your choice.
+   #.  Press :kbd:`A` to show the **Advanced** options.
+   #.  Select **Select additional bundles** and add bundles for
+       **desktop-autostart**, **editors**, **network-basic**, and **user-basic**.
+   #.  Select **Manager User** to add an administrative user **clear** and
        password.
-   #.  Select "Assign Hostname" to set the hostname as "clr-sos-guest"
-   #.  Select "Install".
-   #.  Select "Confirm Install" in "Confirm Installtion" window to start installation.
+   #.  Select **Install**.
+   #.  Select **Confirm Install** in the **Confirm Installation** window to start the installation.
 
-#. After installation is complete, boot into Clear Linux OS, login as
+#. After installation is complete, boot into Clear Linux OS, log in as
    **clear** (using the password you set earlier).
 
 #. The instructions below provide details for setting
    up the ACRN Hypervisor, Service OS, and Guest OS.  Along with the
-   manual step details, We also provide an
-   automated script that does all these steps for you, so you can skip these
-   manual steps.  See the `quick-setup-guide`_ section below to use the
-   automated setup script.
+   manual step details, We also provide an automated script that does all
+   these steps for you, so you can skip these manual steps. See the
+   `quick-setup-guide`_ section below to use the automated setup script.
 
 .. _quick-setup-guide:
 
@@ -139,24 +132,21 @@ in the ACRN GitHub repo to quickly and automatically set up the SOS and UOS
 and generate a customized script for launching the UOS.
 
 This script requires the Clear Linux version number you'd like to set up
-for the ACRN SOS and UOS.  The version specified must be greater than or
-equal to the Clear Linux version currently installed on the NUC.  You
-can see your current Clear Linux version with the command::
+for the ACRN SOS and UOS. The specified version must be greater than or
+equal to the Clear Linux version currently installed on the NUC. You can see
+your current Clear Linux version with this command:
 
    $ cat /etc/os-release
 
-.. note:: In the following steps, we're using Clear Linux version 30210.  You should
-   specify the Clear Linux version you want to use.
+The following instructions use Clear Linux version 30210. Specify the Clear Linux version you want to use.
 
-Here are the steps to install Clear Linux on your NUC, set up the SOS
-and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
+Follow these steps:
 
-#. Installing Clear Linux and login system
+#. Install and log in to Clear Linux.
 
-#. Open a terminal
+#. Open a terminal.
 
-#. Download ``acrn_quick_setup.sh`` script to set up the SOS. (If you don't need a proxy to
-   get the script, you can just skip the ``export`` command.)
+#. Download the ``acrn_quick_setup.sh`` script to set up the SOS. (If you don't need a proxy to get the script, skip the ``export`` command.)
 
    .. code-block:: console
 
@@ -202,19 +192,17 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
       Rebooting.
 
    .. note::
-      This script is using ``/dev/sda1`` as default EFI System Partition
+      This script is using ``/dev/sda1`` as the default EFI System Partition
       ESP). If the ESP is different based on your hardware, you can specify
-      it using ``-e`` option.  For example, to set up the SOS on an NVMe
-      SSD, you could specify::
+      it using the ``-e`` option. For example, to set up the SOS on an NVMe
+      SSD, you could specify:
 
          sudo sh acrn_quick_setup.sh -s 31030 -e /dev/nvme0n1p1
 
-   .. note::
       If you don't need to reboot automatically after setting up the SOS, you
-      can specify the ``-d`` parameter (don't reboot)
+      can specify the ``-d`` parameter (don't reboot).
 
-#. After the system reboots, login as the clear user.  You can verify
-   the SOS booted successfully by checking the ``dmesg`` log:
+#. After the system reboots, log in as the **clear** user. Verify that the SOS booted successfully by checking the ``dmesg`` log:
 
    .. code-block:: console
 
@@ -239,7 +227,7 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
                                        Dload  Upload   Total   Spent    Left  Speed
        14  248M   14 35.4M    0     0   851k      0  0:04:57  0:00:42  0:04:15  293k
 
-   After the download is completed, you'll get this output.
+   After the download is complete, you'll get this output.
 
    .. code-block:: console
 
@@ -249,8 +237,7 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
       Now you can run this command to start UOS...
       $ sudo /root/launch_uos_31030.sh
 
-#. Now you can launch the UOS using the customized launch_uos script
-   (with sudo):
+#. Launch the UOS using the customized launch_uos script (with sudo):
 
    .. code-block:: console
 
@@ -317,9 +304,7 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
 
       clr-a632ec84744d4e02974fe1891130002e login:
 
-#. Login as root (and specify the new password).  You can verify you're
-   running in the UOS by checking the kernel release version or seeing
-   if acrn devices are visible:
+#. Log in as root. Specify the new password. Verify that you are running in the UOS by checking the kernel release version or seeing if acrn devices are visible:
 
    .. code-block:: console
 
@@ -328,8 +313,8 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
       # ls /dev/acrn*
       ls: cannot access '/dev/acrn*': No such file or directory
 
-   In the UOS there won't be any ``/dev/acrn*`` devices.  If you're in the SOS,
-   you'd see results such as these:
+   The UOS does not have ``/dev/acrn*`` devices.  If you are in the SOS,
+   you will see results such as these:
 
    .. code-block:: console
 
@@ -339,68 +324,59 @@ and UOS using the ``acrn_quick_setup.sh`` script, and launch the UOS:
       /dev/acrn_hvlog_cur_0   /dev/acrn_hvlog_cur_2  /dev/acrn_trace_0  /dev/acrn_trace_2  /dev/acrn_vhm
       /dev/acrn_hvlog_cur_1   /dev/acrn_hvlog_cur_3  /dev/acrn_trace_1  /dev/acrn_trace_3
 
-With that you've successfully set up Clear Linux at the Service and User
-OS and started up a UOS VM.
+You have successfully set up Clear Linux at the Service and User OS and started up a UOS VM.
 
 .. _manual-setup-guide:
 
-Manual setup ACRN guide
-=======================
+Manually Set Up ACRN
+====================
 
 Instead of using the quick setup script, you can also set up ACRN, SOS,
-and UOS manually following these steps:
+and UOS manually. Follow these steps:
 
-#. After installing Clear Linux on the NUC, login as the **clear** user
+#. Install Clear Linux on the NUC, log in as the **clear** user,
    and open a terminal window.
-#. Clear Linux OS is set to automatically update itself. We recommend that you disable
-   this feature to have more control over when updates happen. Use this command
-   to disable the autoupdate feature:
+#. Disable the auto-update feature. Clear Linux OS is set to automatically update itself. We recommend that you disable this feature to have more control over when updates happen. Use this command:
 
    .. code-block:: none
 
       $ sudo swupd autoupdate --disable
 
    .. note::
-      The Clear Linux OS installer will automatically check for updates and install the
-      latest version available on your system. If you wish to use a specific version
-      (such as 31030), you can achieve that after the installation has completed using
+      When enabled, the Clear Linux OS installer automatically checks for updates and installs the latest version available on your system. To use a specific version (such as 31030), enter the following command  after the installation is complete:
+
       ``sudo swupd repair --picky -V 31030``
 
 #. If you have an older version of Clear Linux OS already installed
-   on your hardware, use this command to upgrade Clear Linux OS
+   on your hardware, use this command to upgrade the Clear Linux OS
    to version 31030 (or newer):
 
    .. code-block:: none
 
       $ sudo swupd update -V 31030     # or newer version
 
-#. Use the ``sudo swupd bundle-add`` command and add these Clear Linux OS bundles:
+#. Use the ``sudo swupd bundle-add`` command to add these Clear Linux OS bundles:
 
    .. code-block:: none
 
       $ sudo swupd bundle-add service-os systemd-networkd-autostart
 
-   .. table:: Clear Linux OS bundles
-      :widths: auto
-      :name: CL-bundles
-
-      +----------------------------+-------------------------------------------+
-      | Bundle                     | Description                               |
-      +============================+===========================================+
-      | service-os                 | Add the acrn hypervisor, acrn             |
-      |                            | devicemodel, and Service OS kernel        |
-      +----------------------------+-------------------------------------------+
-      | systemd-networkd-autostart | Enable systemd-networkd as the default    |
-      |                            | network manager                           |
-      +----------------------------+-------------------------------------------+
-
+   +----------------------------+-------------------------------------------+
+   | Bundle                     | Description                               |
+   +============================+===========================================+
+   | service-os                 | Adds the acrn hypervisor, acrn            |
+   |                            | devicemodel, and Service OS kernel        |
+   +----------------------------+-------------------------------------------+
+   | systemd-networkd-autostart | Enables systemd-networkd as the default   |
+   |                            | network manager                           |
+   +----------------------------+-------------------------------------------+
 
 .. _add-acrn-to-efi:
 
 Add the ACRN hypervisor to the EFI Partition
 ============================================
 
-In order to boot the ACRN SOS on the platform, you'll need to add it to the EFI
+In order to boot the ACRN SOS on the platform, you must add it to the EFI
 partition. Follow these steps:
 
 #. Mount the EFI partition and verify you have the following files:
@@ -416,31 +392,27 @@ partition. Follow these steps:
       loaderx64.efi
 
    .. note::
-      On Clear Linux OS, the EFI System Partition (e.g.: ``/dev/sda1``)
-      is mounted under ``/boot`` by default
-      The Clear Linux project releases updates often, sometimes
-      twice a day, so make note of the specific kernel versions
-      (*iot-lts2018) listed on your system, as you will need them later.
+      On the Clear Linux OS, the EFI System Partition (e.g. ``/dev/sda1``)
+      is mounted under ``/boot`` by default. The Clear Linux project releases updates often, sometimes twice a day, so make note of the specific kernel versions (iot-lts2018) listed on your system, as you will need them later.
 
-   .. note::
       The EFI System Partition (ESP) may be different based on your hardware.
       It will typically be something like ``/dev/mmcblk0p1`` on platforms
       that have an on-board eMMC or ``/dev/nvme0n1p1`` if your system has
       a non-volatile storage media attached via a PCI Express (PCIe) bus
       (NVMe).
 
-#. Put the ``acrn.efi`` hypervisor application (included in the Clear
-   Linux OS release) on the EFI partition with:
+#. Add the ``acrn.efi`` hypervisor application (included in the Clear
+   Linux OS release) to the EFI partition. Use these commands:
 
    .. code-block:: none
 
       $ sudo mkdir /boot/EFI/acrn
       $ sudo cp /usr/lib/acrn/acrn.efi /boot/EFI/acrn/
 
-#. Configure the EFI firmware to boot the ACRN hypervisor by default
+#. Configure the EFI firmware to boot the ACRN hypervisor by default.
 
-   The ACRN hypervisor (``acrn.efi``) is an EFI executable
-   loaded directly by the platform EFI firmware. It then in turns loads the
+   The ACRN hypervisor (``acrn.efi``) is an EFI executable that's
+   loaded directly by the platform EFI firmware. It then loads the
    Service OS bootloader. Use the ``efibootmgr`` utility to configure the EFI
    firmware and add a new entry that loads the ACRN hypervisor.
 
@@ -458,45 +430,45 @@ partition. Follow these steps:
       double-check the platform boot order using ``efibootmgr -v`` and
       modify it if needed.
 
-   The ACRN hypervisor (``acrn.efi``) accepts two command-line parameters that
-   tweak its behavior:
+   The ACRN hypervisor (``acrn.efi``) accepts two command-line parameters
+   that tweak its behavior:
 
    1. ``bootloader=``: this sets the EFI executable to be loaded once the hypervisor
-      is up and running. This is typically the bootloader of the Service OS and the
-      default value is to use the Clear Linux OS bootloader, i.e.:
+      is up and running. This is typically the bootloader of the Service OS.
+      The default value is to use the Clear Linux OS bootloader, i.e.:
       ``\EFI\org.clearlinux\bootloaderx64.efi``.
    #. ``uart=``: this tells the hypervisor where the serial port (UART) is found or
       whether it should be disabled. There are three forms for this parameter:
 
-      #. ``uart=disabled``: this disables the serial port completely
+      #. ``uart=disabled``: this disables the serial port completely.
       #. ``uart=bdf@<BDF value>``:  this sets the PCI serial port based on its BDF.
          For example, use ``bdf@0:18.1`` for a BDF of 0:18.1 ttyS1.
-      #. ``uart=port@<port address>``: this sets the serial port address
+      #. ``uart=port@<port address>``: this sets the serial port address.
 
       .. note::
 
          ``uart=port@<port address>`` is required if you want to enable the serial console.
-         You should run ``dmesg |grep ttyS0`` to get port address from the output, and then
+         Run ``dmesg |grep ttyS0`` to get port address from the output, and then
          add the ``uart`` parameter into the ``efibootmgr`` command.
 
 
    Here is a more complete example of how to configure the EFI firmware to load the ACRN
-   hypervisor and set these parameters.
+   hypervisor and set these parameters:
 
    .. code-block:: none
 
       $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
             -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=disabled"
 
-   And also here is the example of how to enable a serial console for KBL NUC.
+   Here is an example of how to enable a serial console for the KBL NUC:
 
    .. code-block:: none
 
       $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
             -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=port@0x3f8"
 
-#. Add a timeout period for Systemd-Boot to wait, otherwise it will not
-   present the boot menu and will always boot the base Clear Linux OS
+#. Add a timeout period for the Systemd-Boot to wait; otherwise, it will not
+   present the boot menu and will always boot the base Clear Linux OS:
 
    .. code-block:: none
 
@@ -511,8 +483,8 @@ partition. Follow these steps:
       * org.clearlinux.native.5.2.14-833
         org.clearlinux.iot-lts2018-sos.4.19.71-89
 
-   set the default kernel from ``org.clearlinux.native.5.2.14-833`` to
-   ``org.clearlinux.iot-lts2018-sos.4.19.71-89``
+   Set the default kernel from ``org.clearlinux.native.5.2.14-833`` to
+   ``org.clearlinux.iot-lts2018-sos.4.19.71-89``:
 
    .. code-block:: none
 
@@ -522,7 +494,7 @@ partition. Follow these steps:
       * org.clearlinux.iot-lts2018-sos.4.19.71-89
 
 
-#. Reboot and wait until boot menu is displayed, as shown below:
+#. Reboot and wait until the boot menu is displayed, as shown below:
 
    .. code-block:: console
       :emphasize-lines: 1
@@ -532,14 +504,11 @@ partition. Follow these steps:
       Clear Linux OS (Clear-linux-native.5.2.14-833)
       Reboot Into Firmware Interface
 
-#. After booting up the ACRN hypervisor, the Service OS will be launched
-   automatically by default, and the Clear Linux OS desktop will be showing with user "clear",
-   (or you can login remotely with an "ssh" client).
-   If there is any issue which makes the GNOME desktop doesn't show successfully, then the system will go to
-   shell console.
+#. After booting up the ACRN hypervisor, the Service OS launches
+   automatically by default, and the Clear Linux OS desktop show with the **clear** user (or you can login remotely with an "ssh" client).
+   If there is any issue which makes the GNOME desktop not successfully display,, then the system will go to the shell console.
 
-#. From ssh client, login as user "clear" using the password you set previously when
-   you installed Clear Linux OS.
+#. From the ssh client, log in as the **clear** user. Use the password you set previously when you installed the Clear Linux OS.
 
 #. After rebooting the system, check that the ACRN hypervisor is running properly with:
 
@@ -559,9 +528,8 @@ kernel settings are correct (as described above).
 ACRN Network Bridge
 ===================
 
-ACRN bridge has been setup as a part of systemd services for device communication. The default
-bridge creates ``acrn_br0`` which is the bridge and ``tap0`` as an initial setup. The files can be
-found in ``/usr/lib/systemd/network``. No additional setup is needed since systemd-networkd is
+The ACRN bridge has been set up as a part of systemd services for device
+communication. The default bridge creates ``acrn_br0`` which is the bridge and ``tap0`` as an initial setup. The files can be found in ``/usr/lib/systemd/network``. No additional setup is needed since systemd-networkd is
 automatically enabled after a system restart.
 
 Set up Reference UOS
@@ -577,10 +545,7 @@ Set up Reference UOS
       $ cd uos
       $ curl https://download.clearlinux.org/releases/31030/clear/clear-31030-kvm.img.xz -o uos.img.xz
 
-   .. note::
-      In case you want to use or try out a newer version of Clear Linux OS as the UOS, you can
-      download the latest from http://download.clearlinux.org/image/. Make sure to adjust the steps
-      described below accordingly (image file name and kernel modules version).
+      Note that if you want to use or try out a newer version of Clear Linux OS as the UOS, download the latest from http://download.clearlinux.org/image/. Make sure to adjust the steps described below accordingly (image file name and kernel modules version).
 
 #. Uncompress it:
 
@@ -588,8 +553,7 @@ Set up Reference UOS
 
       $ unxz uos.img.xz
 
-#. Deploy the UOS kernel modules to UOS virtual disk image (note: you'll need to use
-   the same **iot-lts2018** image version number noted in step 1 above):
+#. Deploy the UOS kernel modules to the UOS virtual disk image (note that you'll need to use the same **iot-lts2018** image version number noted in Step 1 above):
 
    .. code-block:: none
 
@@ -604,7 +568,7 @@ Set up Reference UOS
       $ sudo umount /mnt
       $ sync
 
-#. Edit and Run the ``launch_uos.sh`` script to launch the UOS.
+#. Edit and run the ``launch_uos.sh`` script to launch the UOS.
 
    A sample `launch_uos.sh
    <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/devicemodel/samples/nuc/launch_uos.sh>`__
@@ -624,8 +588,7 @@ Set up Reference UOS
       $ cd /usr/share/acrn/samples/nuc/
       $ sudo ./launch_uos.sh
 
-#. At this point, you've successfully booted the ACRN hypervisor,
-   SOS, and UOS:
+#. You have successfully booted the ACRN hypervisor, SOS, and UOS:
 
    .. figure:: images/gsg-successful-boot.png
       :align: center
