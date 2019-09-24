@@ -274,8 +274,9 @@
 	</SYSTEM_RAM_INFO>
 
 	<BLOCK_DEVICE_INFO>
-	/dev/sda3: LABEL="root" UUID="7de2c654-069b-4a56-b93f-70b2f7662bd0" TYPE="ext4" PARTLABEL="/" PARTUUID="712932d4-3420-4cca-b361-3606a40f3b89"
-	/dev/mmcblk0p3: LABEL="root" UUID="045f2013-b4c4-4817-a1aa-dc4416ca800f" TYPE="ext4" PARTLABEL="/" PARTUUID="517bf93d-1cb5-4d72-9550-a0144a2fcdbc"
+	/dev/sda3: TYPE="ext4"
+	/dev/mmcblk0p1: TYPE="ext4"
+	/dev/mmcblk0p3: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
 
 	<TTYS_INFO>

@@ -83,15 +83,23 @@ def cmd_execute(cmd):
     return res
 
 
-def handle_root_dev(line):
+def handle_block_dev(line):
     """Handle if it match root device information pattern
     :param line: one line of information which had decoded to 'ASCII'
     """
+    block_format = ''
     for root_type in line.split():
         if "ext4" in root_type or "ext3" in root_type:
-            return True
+            block_type = ''
+            block_dev = line.split()[0]
+            for type_str in line.split():
+                if "TYPE=" in type_str:
+                    block_type = type_str
 
-    return False
+            block_format = block_dev + " " + block_type
+            return block_format
+
+    return block_format
 
 
 def dump_execute(cmd, desc, config):
@@ -132,8 +140,8 @@ def dump_execute(cmd, desc, config):
                 continue
 
         if desc == "BLOCK_DEVICE_INFO":
-            ret = handle_root_dev(line)
-            if not ret:
+            line = handle_block_dev(line)
+            if not line:
                 continue
 
         print("\t{}".format(line.strip()), file=config)

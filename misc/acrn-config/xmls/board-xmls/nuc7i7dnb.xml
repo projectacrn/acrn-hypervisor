@@ -226,7 +226,7 @@
 	</SYSTEM_RAM_INFO>
 
 	<BLOCK_DEVICE_INFO>
-	/dev/nvme0n1p3: LABEL="root" UUID="deb9eba1-9ab6-4d1e-95b9-aa1d2f7b660e" TYPE="ext4" PARTLABEL="/" PARTUUID="80521cfb-cce4-4ccc-8cf8-46a045196c73"
+	/dev/nvme0n1p3: TYPE="ext4"
 	/dev/sda3: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
 
