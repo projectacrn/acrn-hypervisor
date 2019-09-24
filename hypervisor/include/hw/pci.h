@@ -141,6 +141,10 @@ union pci_bdf {
 		uint8_t d : 5; /* BITs 3-7 */
 		uint8_t b; /* BITs 8-15 */
 	} bits;
+	struct {
+		uint8_t devfun; /* BITs 0-7 */
+		uint8_t bus;   /* BITs 8-15 */
+	} fields;
 };
 
 enum pci_bar_type {
@@ -276,26 +280,6 @@ static inline uint64_t git_size_masked_bar_base(uint64_t size, uint64_t val)
 	mask = ~(size - 1UL);
 
 	return (mask & val);
-}
-
-static inline uint8_t pci_bus(uint16_t bdf)
-{
-	return (uint8_t)((bdf >> 8U) & 0xFFU);
-}
-
-static inline uint8_t pci_slot(uint16_t bdf)
-{
-	return (uint8_t)((bdf >> 3U) & 0x1FU);
-}
-
-static inline uint8_t pci_func(uint16_t bdf)
-{
-	return (uint8_t)(bdf & 0x7U);
-}
-
-static inline uint8_t pci_devfn(uint16_t bdf)
-{
-	return (uint8_t)(bdf & 0xFFU);
 }
 
 /**

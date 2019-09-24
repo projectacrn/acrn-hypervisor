@@ -1032,7 +1032,7 @@ static void get_ptdev_info(char *str_arg, size_t str_max)
 	uint64_t dest;
 	bool lvl_tm;
 	uint32_t pin, vpin;
-	uint32_t bdf, vbdf;
+	union pci_bdf bdf, vbdf;
 
 	len = snprintf(str, size, "\r\nVM\tTYPE\tIRQ\tVEC\tDEST\tTM\tPIN\tVPIN\tBDF\tVBDF");
 	if (len >= size) {
@@ -1044,9 +1044,8 @@ static void get_ptdev_info(char *str_arg, size_t str_max)
 	for (idx = 0U; idx < CONFIG_MAX_PT_IRQ_ENTRIES; idx++) {
 		entry = &ptirq_entries[idx];
 		if (is_entry_active(entry)) {
-			get_entry_info(entry, type, &irq, &vector,
-					&dest, &lvl_tm, &pin, &vpin,
-					&bdf, &vbdf);
+			get_entry_info(entry, type, &irq, &vector, &dest, &lvl_tm, &pin, &vpin,
+					(uint32_t *)&bdf, (uint32_t *)&vbdf);
 			len = snprintf(str, size, "\r\n%d\t%s\t%d\t0x%X\t0x%X",
 					entry->vm->vm_id, type, irq, vector, dest);
 			if (len >= size) {
@@ -1057,10 +1056,8 @@ static void get_ptdev_info(char *str_arg, size_t str_max)
 
 			len = snprintf(str, size, "\t%s\t%hhu\t%hhu\t%x:%x.%x\t%x:%x.%x",
 					is_entry_active(entry) ? (lvl_tm ? "level" : "edge") : "none",
-					pin, vpin, (bdf & 0xff00U) >> 8U,
-					(bdf & 0xf8U) >> 3U, bdf & 0x7U,
-					(vbdf & 0xff00U) >> 8U,
-					(vbdf & 0xf8U) >> 3U, vbdf & 0x7U);
+					pin, vpin, bdf.bits.b, bdf.bits.d, bdf.bits.f,
+					vbdf.bits.b, vbdf.bits.d, vbdf.bits.f);
 			if (len >= size) {
 				goto overflow;
 			}

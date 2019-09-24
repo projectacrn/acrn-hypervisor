@@ -532,9 +532,8 @@ static struct dmar_drhd_rt *ioapic_to_dmaru(uint16_t ioapic_id, union pci_bdf *s
 		for (i = 0U; i < dmar_unit->drhd->dev_cnt; i++) {
 			if ((dmar_unit->drhd->devices[i].type == ACPI_DMAR_SCOPE_TYPE_IOAPIC) &&
 					(dmar_unit->drhd->devices[i].id == ioapic_id)) {
-				sid->bits.f = pci_func((uint8_t)dmar_unit->drhd->devices[i].devfun);
-				sid->bits.d = pci_slot((uint8_t)dmar_unit->drhd->devices[i].devfun);
-				sid->bits.b = dmar_unit->drhd->devices[i].bus;
+				sid->fields.devfun = dmar_unit->drhd->devices[i].devfun;
+				sid->fields.bus = dmar_unit->drhd->devices[i].bus;
 				found = true;
 				break;
 			}
@@ -868,11 +867,14 @@ static void fault_status_analysis(uint32_t status)
 
 static void fault_record_analysis(__unused uint64_t low, uint64_t high)
 {
+	union pci_bdf dmar_bdf;
+
 	if (!dma_frcd_up_f(high)) {
+		dmar_bdf.value = dma_frcd_up_sid(high);
 		/* currently skip PASID related parsing */
 		pr_info("%s, Reason: 0x%x, SID: %x.%x.%x @0x%llx",
 			(dma_frcd_up_t(high) != 0U) ? "Read/Atomic" : "Write", dma_frcd_up_fr(high),
-			pci_bus(dma_frcd_up_sid(high)), pci_slot(dma_frcd_up_sid(high)), pci_func(dma_frcd_up_sid(high)), low);
+			dmar_bdf.bits.b, dmar_bdf.bits.d, dmar_bdf.bits.f, low);
 #if DBG_IOMMU
 		if (iommu_ecap_dt(dmar_unit->ecap) != 0U) {
 			pr_info("Address Type: 0x%x", dma_frcd_up_at(high));
@@ -1055,13 +1057,18 @@ static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, u
 	uint64_t hi_64;
 	uint64_t lo_64 = 0UL;
 	int32_t ret = 0;
+	/* source id */
+	union pci_bdf sid;
+
+	sid.fields.bus = bus;
+	sid.fields.devfun = devfun;
 
 	dmar_unit = device_to_dmaru(segment, bus, devfun);
 	if (dmar_unit == NULL) {
-		pr_err("no dmar unit found for device: %x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
+		pr_err("no dmar unit found for device: %x:%x.%x", bus, sid.bits.d, sid.bits.f);
 		ret = -EINVAL;
 	} else if (dmar_unit->drhd->ignore) {
-		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
+		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x", bus, sid.bits.d, sid.bits.f);
 	} else if ((!dmar_unit_support_aw(dmar_unit, domain->addr_width)) || (dmar_unit->root_table_addr == 0UL)) {
 		pr_err("invalid dmar unit");
 		ret = -EINVAL;
@@ -1108,7 +1115,7 @@ static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, u
 		} else if (dmar_get_bitslice(context_entry->lo_64, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS) != 0UL) {
 			/* the context entry should not be present */
 			pr_err("%s: context entry@0x%llx (Lower:%x) ", __func__, context_entry, context_entry->lo_64);
-			pr_err("already present for %x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
+			pr_err("already present for %x:%x.%x", bus, sid.bits.d, sid.bits.f);
 			ret = -EBUSY;
 		} else {
 			/* setup context entry for the devfun */
@@ -1162,15 +1169,20 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t s
 	struct dmar_entry *context;
 	struct dmar_entry *root_entry;
 	struct dmar_entry *context_entry;
+	/* source id */
 	union pci_bdf sid;
 	int32_t ret = 0;
 
 	dmar_unit = device_to_dmaru(segment, bus, devfun);
+
+	sid.fields.bus = bus;
+	sid.fields.devfun = devfun;
+
 	if (dmar_unit == NULL) {
-		pr_err("no dmar unit found for device: %x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
+		pr_err("no dmar unit found for device: %x:%x.%x", bus, sid.bits.d, sid.bits.f);
 		ret = -EINVAL;
 	} else if (dmar_unit->drhd->ignore) {
-		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
+		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x", bus, sid.bits.d, sid.bits.f);
 	} else {
 		root_table = (struct dmar_entry *)hpa2hva(dmar_unit->root_table_addr);
 		root_entry = root_table + bus;
@@ -1179,7 +1191,8 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t s
 			pr_err("dmar root table entry is invalid\n");
 			ret = -EINVAL;
 		} else {
-			context_table_addr = dmar_get_bitslice(root_entry->lo_64,  ROOT_ENTRY_LOWER_CTP_MASK, ROOT_ENTRY_LOWER_CTP_POS);
+			context_table_addr = dmar_get_bitslice(root_entry->lo_64,  ROOT_ENTRY_LOWER_CTP_MASK,
+								ROOT_ENTRY_LOWER_CTP_POS);
 			context_table_addr = context_table_addr << PAGE_SHIFT;
 			context = (struct dmar_entry *)hpa2hva(context_table_addr);
 
@@ -1188,7 +1201,8 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t s
 			if ((context == NULL) || (context_entry == NULL)) {
 				pr_err("dmar context entry is invalid");
 				ret = -EINVAL;
-			} else if ((uint16_t)dmar_get_bitslice(context_entry->hi_64, CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS) != vmid_to_domainid(domain->vm_id)) {
+			} else if ((uint16_t)dmar_get_bitslice(context_entry->hi_64, CTX_ENTRY_UPPER_DID_MASK,
+							CTX_ENTRY_UPPER_DID_POS) != vmid_to_domainid(domain->vm_id)) {
 				pr_err("%s: domain id mismatch", __func__);
 				ret = -EPERM;
 			} else {
@@ -1197,11 +1211,10 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t s
 				context_entry->hi_64 = 0UL;
 				iommu_flush_cache(context_entry, sizeof(struct dmar_entry));
 
-				sid.bits.b = bus;
-				sid.bits.d = pci_slot(devfun);
-				sid.bits.f = pci_func(devfun);
-				dmar_invalid_context_cache(dmar_unit, vmid_to_domainid(domain->vm_id), sid.value, 0U, DMAR_CIRG_DEVICE);
-				dmar_invalid_iotlb(dmar_unit, vmid_to_domainid(domain->vm_id), 0UL, 0U, false, DMAR_IIRG_DOMAIN);
+				dmar_invalid_context_cache(dmar_unit, vmid_to_domainid(domain->vm_id), sid.value, 0U,
+								DMAR_CIRG_DEVICE);
+				dmar_invalid_iotlb(dmar_unit, vmid_to_domainid(domain->vm_id), 0UL, 0U, false,
+								DMAR_IIRG_DOMAIN);
 			}
 		}
 	}
@@ -1345,7 +1358,7 @@ int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, 
 	int32_t ret = 0;
 
 	if (intr_src.is_msi) {
-		dmar_unit = device_to_dmaru(0U, (uint8_t)intr_src.src.msi.bits.b, pci_devfn(intr_src.src.msi.value));
+		dmar_unit = device_to_dmaru(0U, (uint8_t)intr_src.src.msi.bits.b, intr_src.src.msi.fields.devfun);
 		sid.value = intr_src.src.msi.value;
 		trigger_mode = 0x0UL;
 	} else {
@@ -1389,7 +1402,7 @@ void dmar_free_irte(struct intr_source intr_src, uint16_t index)
 	union pci_bdf sid;
 
 	if (intr_src.is_msi) {
-		dmar_unit = device_to_dmaru(0U, (uint8_t)intr_src.src.msi.bits.b, pci_devfn(intr_src.src.msi.value));
+		dmar_unit = device_to_dmaru(0U, (uint8_t)intr_src.src.msi.bits.b, intr_src.src.msi.fields.devfun);
 	} else {
 		dmar_unit = ioapic_to_dmaru(intr_src.src.ioapic_id, &sid);
 	}
