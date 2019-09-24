@@ -607,6 +607,7 @@ int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bd
 	struct ptirq_remapping_info *entry;
 	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
 	int32_t ret = -ENODEV;
+	union pci_bdf vbdf;
 
 	/*
 	 * Device Model should pre-hold the mapping entries by calling
@@ -673,9 +674,10 @@ int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bd
 
 			if (ret == 0) {
 				entry->msi = *info;
+				vbdf.value = virt_bdf;
 				dev_dbg(ACRN_DBG_IRQ, "PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
-					pci_bus(virt_bdf), pci_slot(virt_bdf), pci_func(virt_bdf), entry_nr,
-					info->vmsi_data.bits.vector, irq_to_vector(entry->allocated_pirq), entry->vm->vm_id);
+					vbdf.bits.b, vbdf.bits.d, vbdf.bits.f, entry_nr, info->vmsi_data.bits.vector,
+					irq_to_vector(entry->allocated_pirq), entry->vm->vm_id);
 			}
 		}
 	}

@@ -103,27 +103,23 @@ static uint8_t get_secondary_bus(uint8_t bus, uint8_t dev, uint8_t func)
 	return (data >> 8U) & 0xffU;
 }
 
-static uint16_t
+static union pci_bdf
 dmar_path_bdf(int32_t path_len, int32_t busno,
 	const struct acpi_dmar_pci_path *path)
 {
 	int32_t i;
-	uint8_t bus;
-	uint8_t dev;
-	uint8_t fun;
+	union pci_bdf dmar_bdf;
 
-
-	bus = (uint8_t)busno;
-	dev = path->device;
-	fun = path->function;
-
+	dmar_bdf.bits.b = (uint8_t)busno;
+	dmar_bdf.bits.d = path->device;
+	dmar_bdf.bits.f = path->function;
 
 	for (i = 1; i < path_len; i++) {
-		bus = get_secondary_bus(bus, dev, fun);
-		dev = path[i].device;
-		fun = path[i].function;
+		dmar_bdf.bits.b = get_secondary_bus(dmar_bdf.bits.b, dmar_bdf.bits.d, dmar_bdf.bits.f);
+		dmar_bdf.bits.d = path[i].device;
+		dmar_bdf.bits.f = path[i].function;
 	}
-	return (bus << 8U | DEVFUN(dev, fun));
+	return dmar_bdf;
 }
 
 
@@ -132,7 +128,7 @@ handle_dmar_devscope(struct dmar_dev_scope *dev_scope,
 	void *addr, int32_t remaining)
 {
 	int32_t path_len;
-	uint16_t bdf;
+	union pci_bdf dmar_bdf;
 	struct acpi_dmar_pci_path *path;
 	struct acpi_dmar_device_scope *apci_devscope = addr;
 
@@ -147,11 +143,11 @@ handle_dmar_devscope(struct dmar_dev_scope *dev_scope,
 			sizeof(struct acpi_dmar_device_scope)) /
 			sizeof(struct acpi_dmar_pci_path);
 
-	bdf = dmar_path_bdf(path_len, apci_devscope->bus, path);
+	dmar_bdf = dmar_path_bdf(path_len, apci_devscope->bus, path);
 	dev_scope->id = apci_devscope->enumeration_id;
 	dev_scope->type = apci_devscope->entry_type;
-	dev_scope->bus = (bdf >> 8U) & 0xffU;
-	dev_scope->devfun = bdf & 0xffU;
+	dev_scope->bus = dmar_bdf.fields.bus;
+	dev_scope->devfun = dmar_bdf.fields.devfun;
 
 	return apci_devscope->length;
 }

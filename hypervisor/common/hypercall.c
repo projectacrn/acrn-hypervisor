@@ -830,13 +830,13 @@ int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret;
-	uint16_t bdf;
+	union pci_bdf bdf;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	bool bdf_valid = true;
 
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		if (param < 0x10000UL) {
-			bdf = (uint16_t) param;
+			bdf.value = (uint16_t)param;
 		} else {
 			if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
 				pr_err("%s: Unable copy param from vm %d\n",
@@ -847,8 +847,7 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	        }
 
 		if (bdf_valid) {
-			ret = move_pt_device(vm->iommu, target_vm->iommu,
-				(uint8_t)(bdf >> 8U), (uint8_t)(bdf & 0xffU));
+			ret = move_pt_device(vm->iommu, target_vm->iommu, bdf.fields.bus, bdf.fields.devfun);
 		}
 	} else {
 		pr_err("%s, target vm is invalid\n", __func__);
@@ -873,13 +872,13 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 int32_t hcall_deassign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = -1;
-	uint16_t bdf;
+	union pci_bdf bdf;
 	bool bdf_valid = true;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		if (param < 0x10000UL) {
-			bdf = (uint16_t) param;
+			bdf.value = (uint16_t)param;
 		} else {
 			if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
 				pr_err("%s: Unable copy param to vm\n", __func__);
@@ -888,8 +887,7 @@ int32_t hcall_deassign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 		}
 
 		if (bdf_valid) {
-			ret = move_pt_device(target_vm->iommu, vm->iommu,
-				(uint8_t)(bdf >> 8U), (uint8_t)(bdf & 0xffU));
+			ret = move_pt_device(target_vm->iommu, vm->iommu, bdf.fields.bus, bdf.fields.devfun);
 		}
 	}
 
