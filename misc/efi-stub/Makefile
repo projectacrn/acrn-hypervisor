@@ -91,7 +91,7 @@ all: $(EFIBIN)
 install: $(EFIBIN) install-conf
 	install -D $(EFIBIN) $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(SCENARIO).efi
 # this is to keep the compatible with original output files
-ifeq ($(BOARD), apl-nuc)
+ifeq ($(BOARD), nuc6cayh)
     ifeq ($(SCENARIO), sdc)
 	install -D $(EFIBIN) $(DESTDIR)/usr/lib/acrn/$(HV_FILE).efi
     endif
@@ -101,7 +101,7 @@ install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
 	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(SCENARIO).efi.out
 	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(SCENARIO).efi.map
 # this is to keep the compatible with original output files
-ifeq ($(BOARD), apl-nuc)
+ifeq ($(BOARD), nuc6cayh)
     ifeq ($(SCENARIO), sdc)
 	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).efi.out
 	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)/usr/lib/acrn/$(HV_FILE).efi.map
