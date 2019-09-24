@@ -25,7 +25,7 @@ In the backend kick handler, data is obtained from the virtqueue, which reformat
 
 When the request is done, the backend driver updates the results and notifies the frontend. The msg process flow is shown in :numref:`virtio-process-flow` below.
 
-.. figure:: images/virtio-i2c-2.png
+.. figure:: images/virtio-i2c-1a.png
    :align: center
    :name: virtio-process-flow
 
@@ -67,7 +67,7 @@ a virtual I2C adapter will appear in the guest OS:
    root@clr-d5f61ae5f5224e59bb1727db3b5f5d4e ~ # ./i2cdetect -y -l
    i2c-3   i2c            DPDDC-A                       I2C adapter
    i2c-1   i2c            i915 gmbus dpc                I2C adapter
-   i2c-6   i2c            i2c-virtio                    I2C adapter
+   i2c-6   i2c            i2c-virtio                    I2C adapter  <------
    i2c-4   i2c            DPDDC-B                       I2C adapter
    i2c-2   i2c            i915 gmbus misc               I2C adapter
    i2c-0   i2c            i915 gmbus dpb                I2C adapter
@@ -77,9 +77,10 @@ You can find the slave device 0x1C under the virtio I2C adapter i2c-6:
 
 .. code-block:: none
 
+   root@clr-d5f61ae5f5224e59bb1727db3b5f5d4e ~ # ./i2cdetect -y -r 6
         0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
    00:          -- -- -- -- -- -- -- -- -- -- -- -- --
-   10: -- -- -- -- -- -- -- -- -- -- -- -- 1c -- -- --
+   10: -- -- -- -- -- -- -- -- -- -- -- -- 1c -- -- --       <--------
    20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
    30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
    40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
