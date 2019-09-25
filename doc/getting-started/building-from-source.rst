@@ -312,10 +312,23 @@ If you only need the hypervisor, then use this command:
    $ make -C hypervisor
    $ make -C misc/efi-stub HV_OBJDIR=$PWD/hypervisor/build EFI_OBJDIR=$PWD/hypervisor/build
 
-The acrn.efi will be generated in directory: . /hypervisor/build/acrn.efi
+The``acrn.efi`` will be generated in directory: ``./hypervisor/build/acrn.efi``
 (`Slim bootloader
 <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`_)
 hypervisor.
+
+As mentioned in :ref:`ACRN Configuration Tool <vm_config_workflow>`,
+Board configuration and VM configuration could be imported from XML files.
+If you want to build hypervisor with XML configuration files, please specify the
+file location as follows:
+
+.. code-block:: none
+
+   $ BOARD_FILE=/home/acrn-hypervisor/misc/acrn-config/xmls/board-xmls/apl-up2.xml 
+   SCENARIO_FILE=/home/acrn-hypervisor/misc/acrn-config/xmls/config-xmls/apl-up2/sdc.xml FIRMWARE=uefi
+
+.. note:: The file path must be absolute path. Both of the ``BOARD`` and ``SCENARIO``
+   parameters are not needed because the information could be got from XML.
 
 Follow the same instructions to boot and test the images you created from your build.
 
