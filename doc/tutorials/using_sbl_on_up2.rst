@@ -56,13 +56,13 @@ BIOS binary file ``<SBL_IFWI_IMAGE>``, which is the new IFWI image with SBL in B
 Flash SBL on the UP2
 ********************
 
-#. Download the appropriate BIOS update for `UP2 Board <https://downloads.up-community.org/download/up-board-uefi-bios-upc1dm17/>`_.
+#. Download the appropriate BIOS update for `UP2 Board <https://downloads.up-community.org>`_.
 #. Put the empty USB flash drive in your PC and format it as FAT32.
 #. Decompress the BIOS zip file into the formatted drive.
 #. Attach the USB disk and keyboard to the board and power it on.
 #. During boot, press :kbd:`F7` on the keyboard to enter the UEFI BIOS boot menu.
 #. Navigate through the following menus and select ``Built-in EFI shell``.
-#. Please take note of which filesystem number ``fs*`` your USB drive is mapped to.
+#. Please take note to which filesystem number ``fs*`` your USB drive is mapped.
 #. Switch to that filesystem, e.g. ``fs1:``.  (Don't forget the colon.)
 #. Navigate to the path where you decompressed the update (the ``cd`` and ``ls`` commands are available here, as if in an Unix shell).
 
@@ -100,7 +100,7 @@ An example of the configuration file ``uos.json``:
    }
 
 .. note::
-   To generate the image with a specified version, please modify
+   To generate the image with a specified version, modify
    the "Version" argument, ``"Version": 3****`` instead
    of ``"Version": 31030`` for example.
 
@@ -116,12 +116,10 @@ Build SOS and LaaG image:
 .. note::
    You must have root privileges to run ``create-up2-images.sh``.
 
-.. note::
    If you want to build with your own ``acrn-hypervisor``, add the ``--acrn-code-path``
-   argument specifying the directory where your ``acrn-hypervisor`` is found.
+   argument that specifies the directory where your ``acrn-hypervisor`` is found.
 
-.. note::
-   When building images, you can modify the ``--clearlinux-version`` argument
+   When building images, modify the ``--clearlinux-version`` argument
    to a specific version (such as 31030). To generate the images of SOS only,
    modify the ``--images-type`` argument to ``sos``.
 
@@ -131,9 +129,8 @@ This step will generate the images of SOS and LaaG:
 * sos_rootfs.img
 * up2_laag.img
 
-Build the binary image ``partition_desc.bin`` for
-GPT partitions, and change the partition layout
-in ``partition_desc.ini`` if needed.
+Build the binary image ``partition_desc.bin`` for GPT partitions and change
+the partition layout in ``partition_desc.ini`` if needed.
 
 .. code-block:: none
 
@@ -168,7 +165,7 @@ which is also in the directory ``~/acrn-hypervisor/doc/tutorials/``.
       +------------------------------+---------------------------------------------------+
 
 .. note::
-   In this step, please build SOS and LaaG images in Clear Linux rather than Ubuntu.
+   In this step, build SOS and LaaG images in Clear Linux rather than Ubuntu.
 
 Download and install flash tool
 *******************************
@@ -176,7 +173,7 @@ Download and install flash tool
 #. Download Intel Platform Flash Tool Lite from
    `<https://github.com/projectceladon/tools/tree/master/platform_flash_tool_lite/latest/>`_.
 
-#. For Ubuntu host, install `platformflashtoollite_5.8.9.0_linux_x86_64.deb
+#. For the Ubuntu host, install `platformflashtoollite_5.8.9.0_linux_x86_64.deb
    <https://github.com/projectceladon/tools/blob/master/platform_flash_tool_lite/latest/platformflashtoollite_5.8.9.0_linux_x86_64.deb>`_
    for example.
 
@@ -192,17 +189,17 @@ SOS and LaaG Installation
        $ ls /dev/ttyUSB*
        /dev/ttyUSB0
 
-#. Connect to board via ``minicom``, and use ``/dev/ttyUSB0`` for example:
+#. Connect to the board via ``minicom``, and use ``/dev/ttyUSB0``. For example:
 
    .. code-block:: none
 
        $ sudo minicom -s /dev/ttyUSB0
 
    .. note::
-      Please verify the minicom serial port settings are 115200 8N1 and
+      Verify that the minicom serial port settings are 115200 8N1 and
       both HW and SW flow control are turned off.
 
-#. When you see following console log, please press any key to enter
+#. When the following console log displays, press any key to enter the
    shell command:
 
    .. code-block:: none
@@ -274,8 +271,8 @@ SOS and LaaG Installation
        USB for fastboot transport layer selected
 
 
-#. When UP2 board is in fastboot mode, you should be able
-   see the device in Platform Flash Tool. Select the
+#. When the UP2 board is in fastboot mode, you should be able
+   see the device in the Platform Flash Tool. Select the
    file ``flash_LaaG.json`` and modify ``Configuration``
    to ``SOS_and_LaaG``. Click ``Start to flash`` to flash images.
 
@@ -284,14 +281,16 @@ SOS and LaaG Installation
 
 Boot to SOS
 ***********
+
 After flashing, UP2 board will automatically reboot and
-boot to ACRN hypervisor. And login SOS by following command:
+boot to the ACRN hypervisor. Log in to SOS by using the following command:
 
 .. image:: images/vm_console_login.png
    :align: center
 
 Launch UOS
 **********
+
 Run the ``launch_uos.sh`` script to launch the UOS:
 
 .. code-block:: none
