@@ -423,6 +423,9 @@ int32_t detect_hardware_support(void)
 	} else if (!pcpu_has_cap(X86_FEATURE_X2APIC)) {
 		printf("%s, x2APIC not supported\n", __func__);
 		ret = -ENODEV;
+	} else if (!pcpu_has_cap(X86_FEATURE_POPCNT)) {
+		printf("%s, popcnt instruction not supported\n", __func__);
+		ret = -ENODEV;
 	} else {
 		ret = check_vmx_mmu_cap();
 	}
