@@ -189,10 +189,10 @@ else:
 html_context = {
    'current_version': current_version,
    'versions': ( ("latest", "/latest/"),
+                 ("1.3", "/1.3/"),
                  ("1.2", "/1.2/"),
                  ("1.1", "/1.1/"),
                  ("1.0", "/1.0/"),
-                 ("0.8", "/0.8/"),
                )
     }
 
