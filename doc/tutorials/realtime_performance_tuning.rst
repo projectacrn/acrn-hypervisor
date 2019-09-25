@@ -1,20 +1,20 @@
 .. _rt_performance_tuning:
 
-Trace and Data Collection for ACRN Real-Time (RT) Performance Tuning
-####################################################################
+Real-Time (RT) Performance Analysis on ACRN
+###########################################
 
-The document describes the methods to collect trace/data for ACRN RT VM
+The document describes the methods to collect trace/data for ACRN Real-Time VM (RTVM)
 real-time performance analysis. Two parts are included:
 
-- Method to use trace for the VM exits analysis.
-- Method to collect performance monitoring counts for tuning based on Performance Monitoring Unit, or PMU.
+- Method to trace ``vmexit`` occurences for analysis.
+- Method to collect Performance Monitoring Counters information for tuning based on Performance Monitoring Unit, or PMU.
 
-VM exits analysis for ACRN RT performance
-*****************************************
+``vmexit`` analysis for ACRN RT performance
+*******************************************
 
-VM exits in response to certain instructions and events are a key source of
-performance degradation in virtual machines. During the runtime of a hard
-RTVM of ACRN, the following impacts real-time deterministic latency:
+``vmexit`` are triggered in response to certain instructions and events and are
+a key source of performance degradation in virtual machines. During the runtime
+of a hard RTVM of ACRN, the following impacts real-time deterministic latency:
 
   - CPUID
   - TSC_Adjust read/write
@@ -22,13 +22,13 @@ RTVM of ACRN, the following impacts real-time deterministic latency:
   - APICID/LDR read
   - ICR write
 
-Generally, we don't want to see any VM exits occur during the critical section of the RT task.
+Generally, we don't want to see any ``vmexit`` occur during the critical section of the RT task.
 
-The methodology of VM exits analysis is very simple. First, we clearly
+The methodology of ``vmexit`` analysis is very simple. First, we clearly
 identify the **critical section** of the RT task. The critical section is
-the duration of time where we do not want to see any VM exits occur.
+the duration of time where we do not want to see any ``vmexit`` occur.
 Different RT tasks use different critical sections. This document uses
-the cyclictest as an example of how to do VM exits analysis.
+the cyclictest benchmark as an example of how to do ``vmexit`` analysis.
 
 The critical sections
 =====================
@@ -46,32 +46,33 @@ Here is example pseudocode of a cyclictest implementation.
          next += interval
    }
 
-Time point ``now`` is the actual point at which the cyclictest is wakeuped
+Time point ``now`` is the actual point at which the cyclictest app is woken up
 and scheduled. Time point ``next`` is the expected point at which we want
 the cyclictest to be awakened and scheduled. Here we can get the latency by
-``now - next``. We don't want to see VM exits during ``next`` through ``now``. So, define the start point of critical section as ``next`` and end
-point ``now``.
+``now - next``. We don't want to see any ``vmexit`` in between ``next`` and ``now``.
+So, we define the start point of the critical section as ``next`` and the end
+point as ``now``.
 
 Log and trace data collection
 =============================
 
 #. Add timestamps (in TSC) at ``next`` and ``now``.
 #. Capture the log with the above timestamps in the RTVM.
-#. Capture the acrntrace log in the service VM at the same time.
+#. Capture the ``acrntrace`` log in the Service VM at the same time.
 
 Offline analysis
 ================
 
 #. Convert the raw trace data to human readable format.
 #. Merge the logs in the RTVM and the ACRN hypervisor trace based on timestamps (in TSC).
-#. Check to see if any VM exit exists within the critical sections. The pattern is as follows:
+#. Check to see if any ``vmexit`` occured within the critical sections. The pattern is as follows:
 
    .. figure:: images/vm_exits_log.png
       :align: center
       :name: vm_exits_log
 
-Performance monitoring counts collecting
-****************************************
+Collecting Performance Monitoring Counters data
+***********************************************
 
 Enable Performance Monitoring Unit (PMU) support in VM
 ======================================================
@@ -167,10 +168,10 @@ exported by recent versions of the Linux kernel.
 
 Refer to https://github.com/andikleen/pmu-tools for pmu usage.
 
-Top-down Micro-architecture Analysis Method (TMAM)
+Top-down Micro-Architecture Analysis Method (TMAM)
 ==================================================
 
-The Top-down Micro-architecture Analysis Method (TMAM), based on Top-Down
+The Top-down Micro-Architecture Analysis Method (TMAM), based on Top-Down
 Characterization methodology, aims to provide an insight into whether you
 have made wise choices with your algorithms and data structures. See the
 Intel |reg| 64 and IA-32 `Architectures Optimization Reference Manual <http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf>`_,
