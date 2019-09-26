@@ -372,7 +372,7 @@ Step 3: Deploy the Service VM image
 
    .. code-block:: none
 
-      # sudo gdisk /dev/nvme0n1
+      # sudo gdisk /dev/sda
       GPT fdisk (gdisk) version 1.0.3
 
       Partition table scan:
@@ -393,7 +393,7 @@ Step 3: Deploy the Service VM image
       PARTITIONS!!
 
       Do you want to proceed? (Y/N): Y
-      OK; writing new GUID partition table (GPT) to /dev/nvme0n1.
+      OK; writing new GUID partition table (GPT) to /dev/sda.
       The operation has completed successfully.
 
 #. Delete the old ACRN EFI firmware info:
@@ -408,19 +408,19 @@ Step 3: Deploy the Service VM image
 
      .. code-block:: none
 
-        # dd if=/mnt/sos.img of=/dev/nvme0n1 bs=4M oflag=sync status=progress
+        # dd if=/mnt/sos.img of=/dev/sda bs=4M oflag=sync status=progress
 
    - ACRN INDUSTRY scenario:
 
      .. code-block:: none
 
-        # dd if=/mnt/sos-industry.img of=/dev/nvme0n1 bs=4M oflag=sync status=progress
+        # dd if=/mnt/sos-industry.img of=/dev/sda bs=4M oflag=sync status=progress
 
 #. Configure the EFI firmware to boot the ACRN hypervisor by default:
 
    .. code-block:: none
 
-      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/nvme0n1 -p 1 -L "ACRN"
+      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN"
 
 #. Unplug the U disk and reboot the test machine. After the Clear Linux OS boots, log in as "root" for the first time.
 
@@ -517,18 +517,10 @@ Step 3: Deploy the User VM Preempt-RT image
 
    .. code-block:: none
 
-      $ sudo dd if=<path to preempt-rt.img> of=/dev/sda bs=4M oflag=sync status=progress
-
-#. Copy the ``OVMF.fd`` and ``launch_hard_rt_vm.sh``:
-
-   .. code-block:: none
-
-      $ cp /usr/share/acrn/bios/OVMF.fd .
-      $ cp /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh .
+      $ sudo dd if=<path to preempt-rt.img> of=/dev/nvme0n1 bs=4M oflag=sync status=progress
 
 #. Launch the Preempt-RT User VM:
 
    .. code-block:: none
 
-      $ chmod +x launch_hard_rt_vm.sh
-      $ ./launch_hard_rt_vm.sh
+      $ sudo /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
