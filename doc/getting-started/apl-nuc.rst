@@ -72,7 +72,7 @@ Set up a Clear Linux Operating System
 =====================================
 
 We begin by installing Clear Linux as the development OS on the NUC.
-The Clear Linux release includes an ``acrn.efi`` hypervisor application
+The Clear Linux release includes an ``acrn.nuc6cayh.sdc.efi`` hypervisor application
 that will be added to the EFI partition (by the quick setup script or
 manually, as described below).
 
@@ -81,10 +81,10 @@ manually, as described below).
    Refer to the ACRN :ref:`release_notes` for the Clear Linux OS
    version number tested with a specific ACRN release.  Adjust the
    instruction below to reference the appropriate version number of Clear
-   Linux OS (we use version 31030 as an example).
+   Linux OS (we use version 31090 as an example).
 
 #. Download the compressed Clear Linux OS installer image from
-   https://download.clearlinux.org/releases/31030/clear/clear-31030-live-server.iso.xz
+   https://download.clearlinux.org/releases/31090/clear/clear-31090-live-server.iso.xz
    and follow the `Clear Linux OS Installation Guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install-server>`_
    as a starting point for installing the Clear Linux OS onto your platform.
@@ -138,7 +138,7 @@ your current Clear Linux version with this command:
 
    $ cat /etc/os-release
 
-The following instructions use Clear Linux version 30210. Specify the Clear Linux version you want to use.
+The following instructions use Clear Linux version 31090. Specify the Clear Linux version you want to use.
 
 Follow these steps:
 
@@ -154,12 +154,12 @@ Follow these steps:
       $ cd ~
       $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/getting-started/acrn_quick_setup.sh
 
-      $ sudo sh acrn_quick_setup.sh -s 31030
+      $ sudo sh acrn_quick_setup.sh -s 31090
       Password:
       Upgrading SOS...
       Disable auto update...
       Running systemctl to disable updates
-      Clear Linux version 31030 is already installed. Continuing to setup SOS...
+      Clear Linux version 31090 is already installed. Continuing to setup SOS...
       Adding the service-os, kernel-iot-lts2018 and systemd-networkd-autostart bundles...
       Loading required manifests...
       Downloading packs (104.41 MB) for:
@@ -177,16 +177,16 @@ Follow these steps:
       none
       Successfully installed 3 bundles
       Add /mnt/EFI/acrn folder
-      Copy /usr/lib/acrn/acrn.efi to /mnt/EFI/acrn
+      Copy /usr/lib/acrn/acrn.nuc6cayh.sdc.efi to /mnt/EFI/acrn/acrn.efi
       Check ACRN efi boot event
       Clean all ACRN efi boot event
       Check linux bootloader event
       Clean all Linux bootloader event
       Add new ACRN efi boot event
-      Getting latest Service OS kernel version: org.clearlinux.iot-lts2018-sos.4.19.71-89
+      Getting latest Service OS kernel version: org.clearlinux.iot-lts2018-sos.4.19.73-92
       Add default (5 seconds) boot wait time.
       New timeout value is: 5
-      Set org.clearlinux.iot-lts2018-sos.4.19.71-89 as default boot kernel.
+      Set org.clearlinux.iot-lts2018-sos.4.19.73-92 as default boot kernel.
       Service OS setup done!
       Rebooting Service OS to take effects.
       Rebooting.
@@ -197,7 +197,7 @@ Follow these steps:
       it using the ``-e`` option. For example, to set up the SOS on an NVMe
       SSD, you could specify:
 
-         sudo sh acrn_quick_setup.sh -s 31030 -e /dev/nvme0n1p1
+         sudo sh acrn_quick_setup.sh -s 31090 -e /dev/nvme0n1p1
 
       If you don't need to reboot automatically after setting up the SOS, you
       can specify the ``-d`` parameter (don't reboot).
@@ -219,10 +219,10 @@ Follow these steps:
 
    .. code-block:: console
 
-      $ sudo sh acrn_quick_setup.sh -u 31030
+      $ sudo sh acrn_quick_setup.sh -u 31090
       Password:
       Upgrading UOS...
-      Downloading UOS image: https://download.clearlinux.org/releases/31030/clear/clear-31030-kvm.img.xz
+      Downloading UOS image: https://download.clearlinux.org/releases/31090/clear/clear-31090-kvm.img.xz
         % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                        Dload  Upload   Total   Spent    Left  Speed
        14  248M   14 35.4M    0     0   851k      0  0:04:57  0:00:42  0:04:15  293k
@@ -231,17 +231,17 @@ Follow these steps:
 
    .. code-block:: console
 
-      Unxz UOS image: clear-31030-kvm.img.xz
-      Get UOS image: clear-31030-kvm.img
+      Unxz UOS image: clear-31090-kvm.img.xz
+      Get UOS image: clear-31090-kvm.img
       Upgrade UOS done...
       Now you can run this command to start UOS...
-      $ sudo /root/launch_uos_31030.sh
+      $ sudo /root/launch_uos_31090.sh
 
 #. Launch the UOS using the customized launch_uos script (with sudo):
 
    .. code-block:: console
 
-      $ sudo /root/launch_uos_31030.sh
+      $ sudo /root/launch_uos_31090.sh
       Password:
 
       cpu1 online=0
@@ -309,7 +309,7 @@ Follow these steps:
    .. code-block:: console
 
       # uname -r
-      4.19.71-89.iot-lts2018
+      4.19.73-92.iot-lts2018
       # ls /dev/acrn*
       ls: cannot access '/dev/acrn*': No such file or directory
 
@@ -319,7 +319,7 @@ Follow these steps:
    .. code-block:: console
 
       $ uname -r
-      4.19.71-89.iot-lts2018-sos
+      4.19.73-92.iot-lts2018-sos
       $ ls /dev/acrn*
       /dev/acrn_hvlog_cur_0   /dev/acrn_hvlog_cur_2  /dev/acrn_trace_0  /dev/acrn_trace_2  /dev/acrn_vhm
       /dev/acrn_hvlog_cur_1   /dev/acrn_hvlog_cur_3  /dev/acrn_trace_1  /dev/acrn_trace_3
@@ -343,17 +343,17 @@ and UOS manually. Follow these steps:
       $ sudo swupd autoupdate --disable
 
    .. note::
-      When enabled, the Clear Linux OS installer automatically checks for updates and installs the latest version available on your system. To use a specific version (such as 31030), enter the following command  after the installation is complete:
+      When enabled, the Clear Linux OS installer automatically checks for updates and installs the latest version available on your system. To use a specific version (such as 31090), enter the following command  after the installation is complete:
 
-      ``sudo swupd repair --picky -V 31030``
+      ``sudo swupd repair --picky -V 31090``
 
 #. If you have an older version of Clear Linux OS already installed
    on your hardware, use this command to upgrade the Clear Linux OS
-   to version 31030 (or newer):
+   to version 31090 (or newer):
 
    .. code-block:: none
 
-      $ sudo swupd update -V 31030     # or newer version
+      $ sudo swupd update -V 31090     # or newer version
 
 #. Use the ``sudo swupd bundle-add`` command to add these Clear Linux OS bundles:
 
@@ -387,8 +387,8 @@ partition. Follow these steps:
       bootloaderx64.efi
       freestanding-00-intel-ucode.cpio
       freestanding-i915-firmware.cpio.xz
-      kernel-org.clearlinux.iot-lts2018-sos.4.19.71-89
-      kernel-org.clearlinux.native.5.2.14-833
+      kernel-org.clearlinux.iot-lts2018-sos.4.19.73-92
+      kernel-org.clearlinux.native.5.3.1-838
       loaderx64.efi
 
    .. note::
@@ -401,13 +401,13 @@ partition. Follow these steps:
       a non-volatile storage media attached via a PCI Express (PCIe) bus
       (NVMe).
 
-#. Add the ``acrn.efi`` hypervisor application (included in the Clear
+#. Add the ``acrn.nuc6cayh.sdc.efi`` hypervisor application (included in the Clear
    Linux OS release) to the EFI partition. Use these commands:
 
    .. code-block:: none
 
       $ sudo mkdir /boot/EFI/acrn
-      $ sudo cp /usr/lib/acrn/acrn.efi /boot/EFI/acrn/
+      $ sudo cp /usr/lib/acrn/acrn.nuc6cayh.sdc.efi /boot/EFI/acrn/acrn.efi
 
 #. Configure the EFI firmware to boot the ACRN hypervisor by default.
 
@@ -480,18 +480,18 @@ partition. Follow these steps:
    .. code-block:: none
 
       $ sudo clr-boot-manager list-kernels
-      * org.clearlinux.native.5.2.14-833
-        org.clearlinux.iot-lts2018-sos.4.19.71-89
+      * org.clearlinux.native.5.3.1-838
+        org.clearlinux.iot-lts2018-sos.4.19.73-92
 
-   Set the default kernel from ``org.clearlinux.native.5.2.14-833`` to
-   ``org.clearlinux.iot-lts2018-sos.4.19.71-89``:
+   Set the default kernel from ``org.clearlinux.native.5.3.1-838`` to
+   ``org.clearlinux.iot-lts2018-sos.4.19.73-92``:
 
    .. code-block:: none
 
-      $ sudo clr-boot-manager set-kernel org.clearlinux.iot-lts2018-sos.4.19.71-89
+      $ sudo clr-boot-manager set-kernel org.clearlinux.iot-lts2018-sos.4.19.73-92
       $ sudo clr-boot-manager list-kernels
-        org.clearlinux.native.5.2.14-833
-      * org.clearlinux.iot-lts2018-sos.4.19.71-89
+        org.clearlinux.native.5.3.1-838
+      * org.clearlinux.iot-lts2018-sos.4.19.73-92
 
 
 #. Reboot and wait until the boot menu is displayed, as shown below:
@@ -500,8 +500,8 @@ partition. Follow these steps:
       :emphasize-lines: 1
       :caption: ACRN Service OS Boot Menu
 
-      Clear Linux OS (Clear-linux-iot-lts2018-sos-4.19.71-89)
-      Clear Linux OS (Clear-linux-native.5.2.14-833)
+      Clear Linux OS (Clear-linux-iot-lts2018-sos-4.19.73-92)
+      Clear Linux OS (Clear-linux-native.5.3.1-838)
       Reboot Into Firmware Interface
 
 #. After booting up the ACRN hypervisor, the Service OS launches
@@ -536,14 +536,14 @@ Set up Reference UOS
 ====================
 
 #. On your platform, download the pre-built reference Clear Linux OS UOS
-   image version 31030 (or newer) into your (root) home directory:
+   image version 31090 (or newer) into your (root) home directory:
 
    .. code-block:: none
 
       $ cd ~
       $ mkdir uos
       $ cd uos
-      $ curl https://download.clearlinux.org/releases/31030/clear/clear-31030-kvm.img.xz -o uos.img.xz
+      $ curl https://download.clearlinux.org/releases/31090/clear/clear-31090-kvm.img.xz -o uos.img.xz
 
       Note that if you want to use or try out a newer version of Clear Linux OS as the UOS, download the latest from http://download.clearlinux.org/image/. Make sure to adjust the steps described below accordingly (image file name and kernel modules version).
 
