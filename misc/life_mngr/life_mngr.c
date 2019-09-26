@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
 	int fd_uos = 0;
 	unsigned char recvbuf[BUFF_SIZE];
 	enum nodetype node = NODE_UNKNOWN;
+	int ret = 0;
 
 	if (argc <= 2) {
 		printf("Too few options. Example: [./life_mngr uos /dev/ttyS1].\n");
@@ -98,16 +99,19 @@ int main(int argc, char *argv[])
 	do {
 		if (node == NODE_UOS_SERVER) {
 			memset(recvbuf, 0, sizeof(recvbuf));
-			read(fd_uos, recvbuf, sizeof(recvbuf));
+			ret = read(fd_uos, recvbuf, sizeof(recvbuf));
 
-			if (strncmp(SOS_REQ, recvbuf, MSG_SIZE) == 0) {
-				write(fd_uos, UOS_ACK, sizeof(UOS_ACK));
+			if (strncmp(SOS_REQ, (const char *)recvbuf, MSG_SIZE) == 0) {
+				ret = write(fd_uos, UOS_ACK, sizeof(UOS_ACK));
+				if (ret != sizeof(UOS_ACK)) {
+					printf("UOS acked fail\n");
+				}
 				printf("SOS start shutdown\n");
-				system("poweroff");
+				ret = system("poweroff");
 				break;
 			}
 		}
 	} while (1);
 
-	return 0;
+	return ret;
 }
