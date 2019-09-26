@@ -6,19 +6,19 @@
 # You should run this script with root privilege since it will modify various system parameters.
 #
 # Usages:
-#   Upgrade SOS to 28100 without reboot, it's highly recommended so that you can check configurations after upgrade SOS.
-#     sudo <script> -s 28100 -d
-#   Upgrade SOS to 28100 with specified proxy server
-#     sudo <script> -s 28100 -p <your proxy server>:<port>
-#   Upgrade UOS to 28100 with specified proxy server
-#     sudo <script> -u 28100 -p <your proxy server>:<port>
-#   Upgrade UOS to 28100 without downloading UOS image, you should put UOS image in /root directory previously.
-#     sudo <script> -u 28100 -k
+#   Upgrade SOS to 31090 without reboot, it's highly recommended so that you can check configurations after upgrade SOS.
+#     sudo <script> -s 31090 -d
+#   Upgrade SOS to 31090 with specified proxy server
+#     sudo <script> -s 31090 -p <your proxy server>:<port>
+#   Upgrade UOS to 31090 with specified proxy server
+#     sudo <script> -u 31090 -p <your proxy server>:<port>
+#   Upgrade UOS to 31090 without downloading UOS image, you should put UOS image in /root directory previously.
+#     sudo <script> -u 31090 -k
 
 function print_help()
 {
     echo "Usage:"
-    echo "Launch this script as: sudo $0 -s 28100"
+    echo "Launch this script as: sudo $0 -s 31090"
     echo -e "\t-s to upgrade SOS"
     echo -e "\t-u to upgrade UOS"
     echo -e "\t-p to specify a proxy server (HTTPS)"
@@ -42,7 +42,7 @@ skip_download_uos=0
 disable_reboot=0
 
 # acrn.efi path
-acrn_efi_path=/usr/lib/acrn/acrn.efi
+acrn_efi_path=/usr/lib/acrn/acrn.nuc6cayh.sdc.efi
 
 function upgrade_sos()
 {
@@ -79,13 +79,13 @@ function upgrade_sos()
         mount $efi_partition /mnt
         echo "Add /mnt/EFI/acrn folder"
         mkdir -p /mnt/EFI/acrn
-        echo "Copy $acrn_efi_path to /mnt/EFI/acrn"
+        echo "Copy $acrn_efi_path to /mnt/EFI/acrn/acrn.efi"
         if [[ ! -f $acrn_efi_path ]]; then
-            echo "Missing acrn.efi file in folder: $acrn_efi_path"
+            echo "Missing $acrn_efi_path file"
             umount /mnt && sync
             exit 1
         fi
-        cp -r $acrn_efi_path /mnt/EFI/acrn/
+        cp -a $acrn_efi_path /mnt/EFI/acrn/acrn.efi
         if [[ $? -ne 0 ]]; then echo "Fail to copy $acrn_efi_path" && exit 1; fi
         echo "Check ACRN efi boot event"
         check_acrn_bootefi=`efibootmgr | grep ACRN`
