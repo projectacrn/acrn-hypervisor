@@ -883,6 +883,8 @@ vlapic_process_eoi(struct acrn_vlapic *vlapic)
 			/* hook to vIOAPIC */
 			vioapic_process_eoi(vlapic->vm, vector);
 		}
+
+		vcpu_make_request(vlapic->vcpu, ACRN_REQUEST_EVENT);
 	}
 
 	dev_dbg(ACRN_DBG_LAPIC, "Gratuitous EOI");
