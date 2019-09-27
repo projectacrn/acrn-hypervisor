@@ -46,6 +46,33 @@ else ifeq ($(BOARD), kbl-nuc-i7)
 override BOARD := nuc7i7dnb
 endif
 
+#help functions to build acrn and install acrn/acrn symbols
+define build_acrn
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(4) RELEASE=$(RELEASE) clean
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(4) RELEASE=$(RELEASE) defconfig
+	@echo "$(3)=y" >> $(HV_OUT)-$(1)/$(2)/.config
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(4) RELEASE=$(RELEASE) oldconfig
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(4) RELEASE=$(RELEASE)
+	echo "building hypervisor as EFI executable..."
+	@if [ "$(1)" == "uefi" ]; then \
+	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT)-$(1)/$(2) SCENARIO=$(4) EFI_OBJDIR=$(EFI_OUT); \
+	fi
+endef
+
+define install_acrn
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(3) RELEASE=$(RELEASE) install
+	@if [ "$(1)" == "uefi" ]; then \
+	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(3) RELEASE=$(RELEASE) install; \
+	fi
+endef
+
+define install_acrn_debug
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(3) RELEASE=$(RELEASE) install-debug
+	@if [ "$(1)" == "uefi" ]; then \
+	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(3) RELEASE=$(RELEASE) install-debug; \
+	fi
+endef
+
 hypervisor:
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)	\
 				BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) clean
@@ -66,29 +93,6 @@ ifeq ($(FIRMWARE),uefi)
 	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) SCENARIO=$(SCENARIO) EFI_OBJDIR=$(EFI_OUT)
 endif
 
-sbl-hypervisor:
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE) clean
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE) defconfig
-	@echo "CONFIG_SDC=y" >> $(HV_OUT)-sbl/.config
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE) oldconfig
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE)
-
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl RELEASE=$(RELEASE) clean
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl RELEASE=$(RELEASE) defconfig
-	@echo "CONFIG_SDC=y" >> $(HV_OUT)-sbl/.config
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl RELEASE=$(RELEASE) oldconfig
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl RELEASE=$(RELEASE)
-
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi RELEASE=$(RELEASE) clean
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi RELEASE=$(RELEASE) defconfig
-	@echo "CONFIG_INDUSTRY=y" >> $(HV_OUT)-isd/.config
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi RELEASE=$(RELEASE) oldconfig
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi RELEASE=$(RELEASE)
-
-ifeq ($(FIRMWARE),uefi)
-	echo "building hypervisor as EFI executable..."
-	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT)-isd SCENARIO=industry EFI_OBJDIR=$(EFI_OUT)
-endif
 
 devicemodel: tools
 	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) RELEASE=$(RELEASE) clean
@@ -122,17 +126,32 @@ ifeq ($(FIRMWARE),uefi)
 	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) SCENARIO=$(SCENARIO) EFI_OBJDIR=$(EFI_OUT) all install-debug
 endif
 
-sbl-hypervisor-install:
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl SCENARIO=sdc RELEASE=$(RELEASE) install
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl SCENARIO=sdc RELEASE=$(RELEASE) install
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi SCENARIO=industry RELEASE=$(RELEASE) install
-	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi SCENARIO=industry EFI_OBJDIR=$(EFI_OUT) all install
+apl-mrb-sbl-sdc:
+	$(call build_acrn,sbl,apl-mrb,CONFIG_SDC,sdc)
+apl-up2-sbl-sdc:
+	$(call build_acrn,sbl,apl-up2,CONFIG_SDC,sdc)
+kbl-nuc-i7-uefi-industry:
+	$(call build_acrn,uefi,kbl-nuc-i7,CONFIG_INDUSTRY,industry)
 
-sbl-hypervisor-install-debug:
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-mrb BOARD=apl-mrb FIRMWARE=sbl SCENARIO=sdc RELEASE=$(RELEASE) install-debug
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl/apl-up2 BOARD=apl-up2 FIRMWARE=sbl SCENARIO=sdc RELEASE=$(RELEASE) install-debug
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi SCENARIO=industry RELEASE=$(RELEASE) install-debug
-	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT)-isd BOARD=kbl-nuc-i7 FIRMWARE=uefi SCENARIO=industry EFI_OBJDIR=$(EFI_OUT) all install-debug
+sbl-hypervisor: apl-mrb-sbl-sdc apl-up2-sbl-sdc kbl-nuc-i7-uefi-industry
+
+apl-mrb-sbl-sdc-install:
+	$(call install_acrn,sbl,apl-mrb,sdc)
+apl-up2-sbl-sdc-install:
+	$(call install_acrn,sbl,apl-up2,sdc)
+kbl-nuc-i7-uefi-industry-install:
+	$(call install_acrn,uefi,kbl-nuc-i7,industry)
+
+sbl-hypervisor-install: apl-mrb-sbl-sdc-install apl-up2-sbl-sdc-install kbl-nuc-i7-uefi-industry-install
+
+apl-mrb-sbl-sdc-install-debug:
+	$(call install_acrn_debug,sbl,apl-mrb,sdc)
+apl-up2-sbl-sdc-install-debug:
+	$(call install_acrn_debug,sbl,apl-up2,sdc)
+kbl-nuc-i7-uefi-industry-install-debug:
+	$(call install_acrn_debug,uefi,kbl-nuc-i7,industry)
+
+sbl-hypervisor-install-debug: apl-mrb-sbl-sdc-install-debug apl-up2-sbl-sdc-install-debug kbl-nuc-i7-uefi-industry-install-debug
 
 devicemodel-install:
 	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) install
