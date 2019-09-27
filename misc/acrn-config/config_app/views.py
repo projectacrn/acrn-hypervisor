@@ -452,7 +452,13 @@ def upload_board_info():
                 for generic_name in os.listdir(os.path.join(config_path, 'generic')):
                     generic_file = os.path.join(config_path, 'generic', generic_name)
                     if os.path.isfile(generic_file):
-                        copyfile(generic_file, os.path.join(config_path, board_type, generic_name))
+                        new_file = os.path.join(config_path, board_type, generic_name)
+                        copyfile(generic_file, new_file)
+                        xml_config = XmlConfig(os.path.join(current_app.config.get('CONFIG_PATH'),
+                                                            board_type))
+                        xml_config.set_curr(generic_name[:-4])
+                        xml_config.set_curr_attr('board', board_type)
+                        xml_config.save(generic_name[:-4], user_defined=False)
 
             board_info = os.path.splitext(file.filename)[0]
             current_app.config.update(BOARD_INFO=board_info)
