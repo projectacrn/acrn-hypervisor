@@ -36,6 +36,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <log.h>
 
 #include "vmmapi.h"
 
@@ -59,6 +60,17 @@ extern char *vmname;
 #define SYS_PATH_LV2  "/sys/kernel/mm/hugepages/hugepages-1048576kB/"
 #define SYS_NR_HUGEPAGES  "nr_hugepages"
 #define SYS_FREE_HUGEPAGES  "free_hugepages"
+
+/* File used for lock between different processes access to hugetlbfs.
+ * We observed when access hugetlbfs from different process to allocate
+ * huge page at the same time could fail. So use file lock here to make
+ * sure hugetlbfs is accessed sequentially.
+ *
+ * We use file range (0..9) for hugetlbfs access lock.
+ */
+#define	ACRN_HUGETLB_LOCK_FILE "/run/hugepage/acrn/lock"
+#define	LOCK_OFFSET_START	0
+#define	LOCK_OFFSET_END		10
 
 /* hugetlb_info record private information for one specific hugetlbfs:
  * - mounted: is hugetlbfs mounted for below mount_path
@@ -124,6 +136,35 @@ static struct hugetlb_info hugetlb_priv[HUGETLB_LV_MAX] = {
 static void *ptr;
 static size_t total_size;
 static int hugetlb_lv_max;
+static int lock_fd;
+
+static int lock_acrn_hugetlb(void)
+{
+	int ret;
+
+	ret = lockf(lock_fd, F_LOCK, LOCK_OFFSET_END);
+
+	if (ret < 0) {
+		pr_err("lock acrn hugetlb failed with errno: %d\n", errno);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int unlock_acrn_hugetlb(void)
+{
+	int ret;
+
+	ret = lockf(lock_fd, F_ULOCK, LOCK_OFFSET_END);
+
+	if (ret < 0) {
+		pr_err("lock acrn hugetlb failed with errno: %d\n", errno);
+		return ret;
+	}
+
+	return 0;
+}
 
 static int open_hugetlbfs(struct vmctx *ctx, int level)
 {
@@ -603,7 +644,6 @@ static bool hugetlb_reserve_pages(void)
 	return true;
 }
 
-
 bool init_hugetlb(void)
 {
 	int level;
@@ -625,6 +665,12 @@ bool init_hugetlb(void)
 	else if (level == HUGETLB_LV1) /* mount fail for level 2 */
 		printf("WARNING: only level 1 hugetlb supported");
 
+	lock_fd = open(ACRN_HUGETLB_LOCK_FILE, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+	if (lock_fd < 0) {
+		return false;
+	}
+	lseek(lock_fd, SEEK_SET, LOCK_OFFSET_START);
+
 	hugetlb_lv_max = level;
 
 	return true;
@@ -637,6 +683,8 @@ void uninit_hugetlb(void)
 		umount_hugetlbfs(level);
 		rm_hugetlb_dirs(level);
 	}
+
+	close(lock_fd);
 }
 
 int hugetlb_setup_memory(struct vmctx *ctx)
@@ -695,8 +743,12 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 	/* it will check each level memory need */
 	has_gap = hugetlb_check_memgap();
 	if (has_gap) {
-		if (!hugetlb_reserve_pages())
+		lock_acrn_hugetlb();
+		if (!hugetlb_reserve_pages()) {
+			unlock_acrn_hugetlb();
 			goto err;
+		}
+		unlock_acrn_hugetlb();
 	}
 
 	/* align up total size with huge page size for vma alignment */
@@ -802,6 +854,7 @@ err:
 	for (level = HUGETLB_LV1; level < hugetlb_lv_max; level++) {
 		close_hugetlbfs(level);
 	}
+
 	return -ENOMEM;
 }
 

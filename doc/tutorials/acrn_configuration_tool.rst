@@ -420,4 +420,3 @@ The **Launch Setting** is quite similar to the **Scenario Setting**:
    .. figure:: images/generate_launch_script.png
       :align: center
 
-

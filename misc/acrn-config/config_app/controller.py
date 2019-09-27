@@ -253,10 +253,11 @@ class XmlConfig:
 
         raise Exception('can not find node by {} from xml'.format(args))
 
-    def save(self, xml=None):
+    def save(self, xml=None, user_defined=True):
         """
         save current xml to file.
         :param xml: the file name to save; if not specified, save current xml to default names.
+        :param user_defined: save to user defined folder or default folder.
         :return: None.
         """
         if self._curr_xml_tree is None:
@@ -264,7 +265,9 @@ class XmlConfig:
         if xml is None:
             xml = self._curr_xml
 
-        xml_path = os.path.join(self._xml_path, 'user_defined')
+        xml_path = self._xml_path
+        if user_defined:
+            xml_path = os.path.join(self._xml_path, 'user_defined')
         if not os.path.isdir(xml_path):
             os.makedirs(xml_path)
 
