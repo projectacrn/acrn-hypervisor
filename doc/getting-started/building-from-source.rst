@@ -54,124 +54,18 @@ source, by following these steps.
 Install build tools and dependencies
 ************************************
 
-ACRN development is supported on popular Linux distributions,
-each with their own way to install development tools:
+ACRN development is supported on Clear Linux distributions,
 
   .. note::
      ACRN uses ``menuconfig``, a python3 text-based user interface (TUI) for
      configuring hypervisor options and using python's ``kconfiglib`` library.
 
-* On a Clear Linux OS development system, install the necessary tools:
+On the Clear Linux OS development system, install the necessary tools:
 
   .. code-block:: none
 
      $ sudo swupd bundle-add os-clr-on-clr os-core-dev python3-basic
      $ pip3 install --user kconfiglib
-
-* On a Ubuntu/Debian development system:
-
-  .. code-block:: none
-
-     $ sudo apt install gcc \
-          git \
-          make \
-          gnu-efi \
-          libssl-dev \
-          libpciaccess-dev \
-          uuid-dev \
-          libsystemd-dev \
-          libevent-dev \
-          libxml2-dev \
-          libusb-1.0-0-dev \
-          python3 \
-          python3-pip \
-          libblkid-dev \
-          e2fslibs-dev \
-          pkg-config \
-          zlib1g-dev
-     $ sudo pip3 install kconfiglib
-
-  .. note::
-     You need to use ``gcc`` version 7.3.* or higher else you will run into issue
-     `#1396 <https://github.com/projectacrn/acrn-hypervisor/issues/1396>`_. Follow
-     these instructions to install the ``gcc-7`` package on Ubuntu 16.04:
-
-     .. code-block:: none
-
-        $ sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-        $ sudo apt update
-        $ sudo apt install g++-7 -y
-        $ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 \
-                             --slave /usr/bin/g++ g++ /usr/bin/g++-7
-
-  .. note::
-     ACRN development requires ``binutils`` version 2.27 (or higher). You can
-     verify your version of ``binutils`` with the command ``apt show binutils``.
-     While Ubuntu 18.04 has a new version of ``binutils`` the default version on
-     Ubuntu 16.04 needs updating (see issue `#1133
-     <https://github.com/projectacrn/acrn-hypervisor/issues/1133>`_).
-
-     .. code-block:: none
-
-        $ wget https://mirrors.ocf.berkeley.edu/gnu/binutils/binutils-2.27.tar.gz
-        $ tar xzvf binutils-2.27.tar.gz && cd binutils-2.27
-        $ ./configure
-        $ make
-        $ sudo make install
-
-  .. note::
-     Ubuntu 14.04 requires ``libsystemd-journal-dev`` instead of ``libsystemd-dev``
-     as indicated above.
-
-* On a Fedora/Redhat development system:
-
-  .. code-block:: none
-
-     $ sudo dnf install gcc \
-          git \
-          make \
-          findutils \
-          gnu-efi-devel \
-          libuuid-devel \
-          openssl-devel \
-          libpciaccess-devel \
-          systemd-devel \
-          libxml2-devel \
-          libevent-devel \
-          libusbx-devel \
-          python3 \
-          python3-pip \
-          libblkid-devel \
-          e2fsprogs-devel
-     $ sudo pip3 install kconfiglib
-
-
-* On a CentOS development system:
-
-  .. code-block:: none
-
-     $ sudo yum install gcc \
-             git \
-             make \
-             gnu-efi-devel \
-             libuuid-devel \
-             openssl-devel \
-             libpciaccess-devel \
-             systemd-devel \
-             libxml2-devel \
-             libevent-devel \
-             libusbx-devel \
-             python34 \
-             python34-pip \
-             libblkid-devel \
-             e2fsprogs-devel
-     $ sudo pip3 install kconfiglib
-
-  .. note::
-     You may need to install `EPEL <https://fedoraproject.org/wiki/EPEL>`_ for
-     installing python3 via yum for CentOS 7. For CentOS 6 you need to install
-     pip manually. Please refer to https://pip.pypa.io/en/stable/installing for
-     details.
 
 
 Get the ACRN hypervisor source code
@@ -192,12 +86,8 @@ Follow this step to get the acrn-hypervisor source code:
    $ git clone https://github.com/projectacrn/acrn-hypervisor
 
 
-Choose the ACRN scenario
-************************
-
-.. note:: Documentation about the new ACRN use-case scenarios is a
-   work-in-progress on the master branch as we work towards the v1.2
-   release.
+Build with the ACRN scenario
+****************************
 
 Currently ACRN hypervisor defines these typical usage scenarios:
 
@@ -225,29 +115,31 @@ HYBRID:
    pre-launched VM, one pre-launched Service VM, and one post-launched
    Standard VM.
 
-You can select a build scenario by changing the default Kconfig name in
-the choice block of **ACRN Scenario** in ``arch/x86/Kconfig``. The
-corresponding VM configuration files in the corresponding
-``scenarios/$SCENARIO_NAME/`` folder.
+Assuming that you are under the top-level directory of acrn-hypervisor:
 
-.. code-block:: none
-   :emphasize-lines: 7
+* Build ``INDUSTRY`` scenario on ``nuc7i7dnb``:
 
-   $ cd  acrn-hypervisor/hypervisor
-   $ sudo vim arch/x86/Kconfig
-   # <Fill the scenario name into below and save>
+  .. code-block:: none
 
-   choice
-                prompt "ACRN Scenario"
-                default SDC
+     $ make all BOARD=nuc7i7dnb SCENARIO=industry
+
+* Build ``SDC`` scenario on ``nuc6cayh``:
+
+  .. code-block:: none
+
+     $ make all BOARD=nuc6cayh SCENARIO=sdc
+
 
 See the :ref:`hardware` document for information about the platform
 needs for each scenario.
 
 .. _getting-started-hypervisor-configuration:
 
+Build with the hypervisor configuration
+***************************************
+
 Modify the hypervisor configuration
-***********************************
+===================================
 
 The ACRN hypervisor leverages Kconfig to manage configurations, powered by
 Kconfiglib. A default configuration is generated based on the board you have
@@ -292,7 +184,7 @@ Refer to the help on menuconfig for a detailed guide on the interface.
    $ pydoc3 menuconfig
 
 Build the hypervisor, device model and tools
-********************************************
+============================================
 
 Now you can build all these components in one go as follows:
 
@@ -312,10 +204,7 @@ If you only need the hypervisor, then use this command:
    $ make -C hypervisor
    $ make -C misc/efi-stub HV_OBJDIR=$PWD/hypervisor/build EFI_OBJDIR=$PWD/hypervisor/build
 
-The``acrn.efi`` will be generated in directory: ``./hypervisor/build/acrn.efi``
-(`Slim bootloader
-<https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`_)
-hypervisor.
+The``acrn.efi`` will be generated in directory: ``./hypervisor/build/acrn.efi`` hypervisor.
 
 As mentioned in :ref:`ACRN Configuration Tool <vm_config_workflow>`,
 Board configuration and VM configuration could be imported from XML files.
