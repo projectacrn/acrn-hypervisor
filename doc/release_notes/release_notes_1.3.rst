@@ -43,7 +43,7 @@ Document updates
 ================
 We have many new `reference documents available <https://projectacrn.github.io>`_, including:
 
-* Getting Started Guide for Industry scenario
+* :ref:`Getting Started Guide for Industry scenario <rt_industry_setup>`
 * :ref:`ACRN Configuration Tool Manual <acrn_configuration_tool>`
 * :ref:`Trace and Data Collection for ACRN Real-Time(RT) Performance Tuning <rt_performance_tuning>`
 * :ref:`Building ACRN in Docker <building-acrn-in-docker>`
