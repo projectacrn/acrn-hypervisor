@@ -40,6 +40,9 @@ all:
 	$(CC) -g life_mngr.c -o $(OUT_DIR)/life_mngr -lpthread $(LIFEMNGR_CFLAGS) $(LIFEMNGR_LDFLAGS)
 	cp life_mngr.service $(OUT_DIR)/life_mngr.service
 
+	x86_64-w64-mingw32-gcc -g life_mngr_win.c -o $(OUT_DIR)/life_mngr_win.exe -Wall -O2 $(LDFLAGS)
+	cp COPYING.MinGW-w64-runtime.txt $(OUT_DIR)/COPYING.MinGW-w64-runtime.txt
+
 clean:
 	rm -f $(OUT_DIR)/life_mngr
 ifneq ($(OUT_DIR),.)
