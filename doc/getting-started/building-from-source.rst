@@ -257,6 +257,7 @@ top level of the acrn-hypervisor directory. The configuration file, named
 
 .. code-block:: none
 
+   $ cd hypervisor
    $ make defconfig BOARD=nuc6cayh
 
 The BOARD specified is used to select a ``defconfig`` under
@@ -314,8 +315,8 @@ the file location as follows:
 
 .. code-block:: none
 
-   $ BOARD_FILE=/home/acrn-hypervisor/misc/acrn-config/xmls/board-xmls/apl-up2.xml
-   SCENARIO_FILE=/home/acrn-hypervisor/misc/acrn-config/xmls/config-xmls/apl-up2/sdc.xml FIRMWARE=uefi
+   $ make BOARD_FILE=$PWD/misc/acrn-config/xmls/board-xmls/nuc7i7dnb.xml \
+   SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/nuc7i7dnb/industry.xml FIRMWARE=uefi
 
 
 Note that the file path must be absolute. Both of the ``BOARD`` and ``SCENARIO`` parameters are not needed because the information is retrieved from the XML file. Adjust the example above to your own environment path.
