@@ -132,7 +132,7 @@ Build the ACRN User VM PREEMPT_RT Kernel in Docker
       $ git clone -b 4.19/preempt-rt https://github.com/projectacrn/acrn-kernel preempt-rt
       $ cd preempt-rt
 
-#. Buildthe ACRN User VM PREEMPT_RT kernel:
+#. Build the ACRN User VM PREEMPT_RT kernel:
 
    For the Docker image built from Dockerfile, use this command to build ACRN:
 
@@ -154,3 +154,21 @@ Build the ACRN User VM PREEMPT_RT Kernel in Docker
 
    The commands build the bootable kernel image as ``arch/x86/boot/bzImage``,
    and the loadable kernel modules under the ``./out/`` folder.
+
+Build the ACRN documentation
+****************************
+
+#. Make sure you have both the ``acrn-hypervisor`` and ``acrn-kernel`` repositories already available in your workspace
+   (see steps above for instructions on how to clone them).
+
+#. Build the ACRN documentation:
+
+   .. code-block:: none
+
+      $ cd ~/workspace
+      $ docker run -u`id -u`:`id -g` --rm  -v $PWD:/workspace \
+        acrn/clearlinux-acrn-builder:latest \
+        bash -c "cd acrn-hypervisor && make clean && make doc"
+
+   The HTML documentation can be found in ``acrn-hypervisor/build/doc/html``
+      
