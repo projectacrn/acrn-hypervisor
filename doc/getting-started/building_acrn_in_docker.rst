@@ -32,7 +32,7 @@ This tutorial presents two ways to get the Clear Linux Docker image that's neede
 Build the Docker Image from Dockerfile
 ======================================
 
-#. Download `Dockerfile <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/Dockerfile>`_
+#. Download `Dockerfile <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/getting-started/Dockerfile>`_
    to your development machine.
 #. Build the Docker image:
 
