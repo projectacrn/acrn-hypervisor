@@ -52,7 +52,10 @@ Step 1: Install build tools and dependencies
 ********************************************
 
 ACRN development is supported on popular Linux distributions, each with
-their own way to install development tools:
+their own way to install development tools. This user guide covers the different
+steps to configure and build ACRN natively on your distribution. Please refer to
+the :ref:`building-acrn-in-docker` user guide for instructions on how to build
+ACRN using a container.
 
   .. note::
      ACRN uses ``menuconfig``, a python3 text-based user interface (TUI) for
