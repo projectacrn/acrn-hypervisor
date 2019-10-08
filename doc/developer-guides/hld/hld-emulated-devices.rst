@@ -14,5 +14,4 @@ documented in this section.
    usb-virt-hld
    UART virtualization <uart-virt-hld>
    Watchdoc virtualization <watchdog-hld>
-   random-virt-hld
    GVT-g GPU Virtualization <hld-APL_GVT-g>
