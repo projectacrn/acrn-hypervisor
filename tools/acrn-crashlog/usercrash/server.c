@@ -358,11 +358,6 @@ static void crash_completed_cb(evutil_socket_t sockfd, short ev, void *arg)
 		goto out;
 	}
 
-	if (crash->crash_path) {
-		LOGI("usercrash log written to: %s, ", crash->crash_path);
-		LOGI("crash process name is: %s\n", crash->name);
-	}
-
 out:
 	free_crash(crash);
 	/* If there's something queued up, let them proceed */
