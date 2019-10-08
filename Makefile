@@ -132,8 +132,13 @@ apl-up2-sbl-sdc:
 	$(call build_acrn,sbl,apl-up2,CONFIG_SDC,sdc)
 kbl-nuc-i7-uefi-industry:
 	$(call build_acrn,uefi,kbl-nuc-i7,CONFIG_INDUSTRY,industry)
+apl-up2-uefi-hybrid:
+	$(call build_acrn,uefi,apl-up2,CONFIG_HYBRID,hybrid)
 
-sbl-hypervisor: apl-mrb-sbl-sdc apl-up2-sbl-sdc kbl-nuc-i7-uefi-industry
+sbl-hypervisor: apl-mrb-sbl-sdc \
+                apl-up2-sbl-sdc \
+                kbl-nuc-i7-uefi-industry \
+                apl-up2-uefi-hybrid
 
 apl-mrb-sbl-sdc-install:
 	$(call install_acrn,sbl,apl-mrb,sdc)
@@ -141,8 +146,13 @@ apl-up2-sbl-sdc-install:
 	$(call install_acrn,sbl,apl-up2,sdc)
 kbl-nuc-i7-uefi-industry-install:
 	$(call install_acrn,uefi,kbl-nuc-i7,industry)
+apl-up2-uefi-hybrid-install:
+	$(call install_acrn,uefi,apl-up2,hybrid)
 
-sbl-hypervisor-install: apl-mrb-sbl-sdc-install apl-up2-sbl-sdc-install kbl-nuc-i7-uefi-industry-install
+sbl-hypervisor-install: apl-mrb-sbl-sdc-install \
+                        apl-up2-sbl-sdc-install \
+                        kbl-nuc-i7-uefi-industry-install \
+                        apl-up2-uefi-hybrid-install
 
 apl-mrb-sbl-sdc-install-debug:
 	$(call install_acrn_debug,sbl,apl-mrb,sdc)
@@ -150,8 +160,13 @@ apl-up2-sbl-sdc-install-debug:
 	$(call install_acrn_debug,sbl,apl-up2,sdc)
 kbl-nuc-i7-uefi-industry-install-debug:
 	$(call install_acrn_debug,uefi,kbl-nuc-i7,industry)
+apl-up2-uefi-hybrid-install-debug:
+	$(call install_acrn_debug,uefi,apl-up2,hybrid)
 
-sbl-hypervisor-install-debug: apl-mrb-sbl-sdc-install-debug apl-up2-sbl-sdc-install-debug kbl-nuc-i7-uefi-industry-install-debug
+sbl-hypervisor-install-debug: apl-mrb-sbl-sdc-install-debug \
+			      apl-up2-sbl-sdc-install-debug \
+			      kbl-nuc-i7-uefi-industry-install-debug \
+			      apl-up2-uefi-hybrid-install-debug
 
 devicemodel-install:
 	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) install
