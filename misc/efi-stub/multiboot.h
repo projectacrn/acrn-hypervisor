@@ -134,7 +134,7 @@ struct multiboot_info {
 	uint32_t		unused_mi_config_table;
 
 	/* Valid if mi_flags sets MULTIBOOT_INFO_HAS_LOADER_NAME. */
-	uint32_t		mi_loader_name;
+	uintptr_t		mi_loader_name;
 
 	/* Valid if mi_flags sets MULTIBOOT_INFO_HAS_APM. */
 	uint32_t		unused_mi_apm_table;

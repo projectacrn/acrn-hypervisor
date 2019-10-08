@@ -311,7 +311,7 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 	 * The host physical start address of boot loader name is stored in multiboot header.
 	 */
 	mbi->mi_flags |= MULTIBOOT_INFO_HAS_LOADER_NAME;
-	mbi->mi_loader_name = (UINT32)uefi_boot_loader_name;
+	mbi->mi_loader_name = (uintptr_t)uefi_boot_loader_name;
 
 	asm volatile ("pushf\n\t"
 		      "pop %0\n\t"
