@@ -65,14 +65,17 @@ def parser_pci():
 def undline_name(name):
     """
     This convert name which has contain '-' to '_'
-    :param name: name which contain '-'
-    :return:
+    :param name: name which contain '-' and ' '
+    :return: name_str which contain'_'
     """
-    name_list = name
-    if '-' in name:
-        name_list = "_".join(name.split('-'))
+    # convert '-' to '_' in name string
+    name_str = "_".join(name.split('-')).upper()
 
-    return name_list
+    # stitch '_' while ' ' in name string
+    if ' ' in name_str:
+        name_str = "_".join(name_str.split()).upper()
+
+    return name_str
 
 
 def write_pbdf(i_cnt, bdf, subname, config):
@@ -88,7 +91,7 @@ def write_pbdf(i_cnt, bdf, subname, config):
         tmp_sub_name = "_".join(subname.split()).upper()
     else:
         if '-' in subname:
-            tmp_sub_name = undline_name(subname)
+            tmp_sub_name = undline_name(subname) + "_" + str(i_cnt)
         else:
             tmp_sub_name = "_".join(subname.split()).upper() + "_" + str(i_cnt)
 
