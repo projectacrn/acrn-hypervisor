@@ -86,7 +86,7 @@ Create Windows 10 Image
 =======================
 Create a Windows 10 image which includes two steps:
 
-#. Re-generate an ISO that includes virtio-win drivers and the Windows graphics drivers that were pre-installed
+#. Re-generate an ISO that includes winvirtio or virtio-win drivers and the Windows graphics drivers that were pre-installed
    from the original Windows ISO.
 
 #. Install Windows 10 onto the virtual disk.
@@ -106,6 +106,16 @@ Preparations
   to the Service VM in ``/root/img/virtio-win-0.1.141.iso``.
 
 * Download `Intel DCH Graphics Driver <https://downloadmirror.intel.com/28148/a08/dch_win64_25.20.100.6444.exe>`_.
+
+* Download Oracle Windows driver to Service VM in ``/root/img/winvirtio.iso``.
+*  `Oracle Windows driver <https://edelivery.oracle.com/osdc/faces/SoftwareDelivery>`_.Sign in. If you do not have an oracle account, register one.
+*  Select "Download Package", key in "Oracle Linux 7.6" and click "Search"
+*  Click: DLP: Oracle Linux 7.6, it will be added to your Cart.
+*  Click "Checkout" at the top right corner
+*  In the "Platforms/Language", select "x86 64 bit", click "Continue"
+*  Check " I accept the terms in the license agreement", click "Continue"
+*  In the list, right check the item labeled as "Oracle VirtIO Drivers Version for Microsoft Windows 1.x.x, yy MB", and "Save link as ...".  At the time of this wiki, it is named as "V982789-01.zip"
+*  Click Download, When the download is complete, unzip, you will get one ISO named "winvirtio.iso"
 
 Install Windows 10 ADK
 ----------------------
@@ -131,6 +141,9 @@ Pre-install drivers and re-generate Windows ISO
 #. Create a folder on the ``C:`` drive called ``Mount``, so you have a folder ``C:\Mount``
 
 #. Right click the downloaded ``virtio-win-0.1.141.iso`` and select ``Mount``. The ISO will be mounted to a drive;
+   for example, drive ``D:``
+   Or used Oracle Driver
+   Right click the downloaded ``winvirtio.iso`` and select ``Mount``. The ISO will be mounted to a drive;
    for example, drive ``D:``
 
 #. Use ``7-zip`` or similar utility to unzip the downloaded Windows graphics driver
@@ -175,6 +188,26 @@ Pre-install drivers and re-generate Windows ISO
       dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\msdk.inf"
       dism /unmount-wim /mountdir:c:\mount /commit
 
+
+      REM inject-Oracle-driver-install
+      Set IDX=1
+
+      REM Modify boot.wim file to inject drivers
+      dism /Mount-Wim /WimFile:C:\WIM\boot.wim /Index:%IDX% /MountDir:C:\mount
+      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\netkvmorcl.inf"
+      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioinput.inf"
+      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\viorng.inf"
+      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioscsiorcl.inf"
+      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioserorcl.inf"
+      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\viostororcl.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\cui_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\HdBusExt.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\iigd_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\IntcDAud.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\msdk.inf"
+      dism /unmount-wim /mountdir:c:\mount /commit
+
+
    Run this ``virtio-inject-boot.bat`` script in a command prompt
    running as administrator.  It may take 4-5 minutes to run, depending on
    your Windows system performance.
@@ -195,6 +228,25 @@ Pre-install drivers and re-generate Windows ISO
       dism /image:C:\mount /Add-Driver "/driver:d:\vioserial\w10\amd64\vioser.inf" /forceunsigned
       dism /image:C:\mount /Add-Driver "/driver:d:\viostor\w10\amd64\viostor.inf" /forceunsigned
       dism /image:C:\mount /Add-Driver "/driver:d:\vioinput\w10\amd64\vioinput.inf" /forceunsigned
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\cui_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\HdBusExt.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\iigd_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\IntcDAud.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\msdk.inf"
+      dism /unmount-wim /mountdir:c:\mount /commit
+
+
+      REM inject-Oracle-driver-install
+      Set IDX=1
+
+      REM Modify install.wim to inject drivers
+      dism /Mount-Wim /WimFile:C:\WIM\install.wim /Index:%IDX% /MountDir:C:\mount
+      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\netkvmorcl.inf"
+      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioinput.inf"
+      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\viorng.inf"
+      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioscsiorcl.inf"
+      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioserorcl.inf"
+      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\viostororcl.inf"
       dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\cui_dch.inf"
       dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\HdBusExt.inf"
       dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\iigd_dch.inf"
@@ -263,7 +315,7 @@ Install Windows 10
 ------------------
 Currently, the ACRNGT OVMF GOP driver is not ready; thus, a special VGA
 version is used to install Windows 10 on ACRN from scratch. The
-``acrn.elf``, ``acrn-dm`` and ``OVMF`` binaries are included in the
+``acrn.efi``, ``acrn-dm`` and ``OVMF`` binaries are included in the
 `tarball
 <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/install_by_vga_gsg.tar.gz>`_
 together with the script used to install Windows 10.
@@ -277,6 +329,8 @@ together with the script used to install Windows 10.
    - Change ``-s 3,virtio-blk,./win10-ltsc-virtio.img`` to your path to the Windows 10 image.
    - Change ``-s 8,ahci,cd:./windows10-17763-107-LTSC-Virtio-Gfx.iso`` to the ISO you re-generated above.
    - Change ``-s 9,ahci,cd:./virtio-win-0.1.141.iso`` to your path to the virtio-win iso.
+   Or used Oracle driver
+   - Change ``-s 9,ahci,cd:./winvirtio.iso`` to your path to the winvirtio iso.
 
 #. Run ``install_vga.sh`` and connect to the Windows guest using a vnc client.::
 
@@ -307,6 +361,17 @@ together with the script used to install Windows 10.
       :align: center
 
    .. figure:: images/windows_install_6.png
+      :align: center
+
+This is the step to install the Oracle Driver
+
+   .. figure:: images/windows_install_A.png
+      :align: center
+
+   .. figure:: images/windows_install_B.png
+      :align: center
+
+   .. figure:: images/windows_install_C.png
       :align: center
 
    .. figure:: images/windows_install_7.png
