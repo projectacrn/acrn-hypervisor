@@ -18,9 +18,6 @@ import new_board_kconfig
 ACRN_PATH = board_cfg_lib.SOURCE_ROOT_DIR
 ACRN_CONFIG = ACRN_PATH + "hypervisor/arch/x86/configs/"
 
-BOARD_NAMES = ['apl-mrb', 'apl-nuc', 'apl-up2', 'dnv-cb2', 'nuc6cayh',
-               'nuc7i7dnb', 'kbl-nuc-i7', 'icl-rvp']
-
 ACRN_DEFAULT_PLATFORM = ACRN_PATH + "hypervisor/include/arch/x86/default_acpi_info.h"
 GEN_FILE = ["pci_devices.h", "board.c", "_acpi_info.h", "misc_cfg.h", "ve820.c", ".config"]
 
@@ -55,7 +52,7 @@ def main(args):
         return err_dic
 
     config_dirs.append(ACRN_CONFIG + board)
-    if board not in BOARD_NAMES:
+    if board not in board_cfg_lib.BOARD_NAMES:
         for config_dir in config_dirs:
             if not os.path.exists(config_dir):
                 os.makedirs(config_dir)
@@ -101,7 +98,7 @@ def main(args):
             return err_dic
 
     # generate new board_name.config
-    if board not in BOARD_NAMES:
+    if board not in board_cfg_lib.BOARD_NAMES:
         with open(config_board_kconfig, 'w+') as config:
             err_dic = new_board_kconfig.generate_file(config)
             if err_dic:
@@ -110,7 +107,7 @@ def main(args):
     # move changes to patch, and apply to the source code
     err_dic = board_cfg_lib.gen_patch(config_srcs, board)
 
-    if board not in BOARD_NAMES and not err_dic:
+    if board not in board_cfg_lib.BOARD_NAMES and not err_dic:
         print("Config patch for NEW board {} is committed successfully!".format(board))
     elif not err_dic:
         print("Config patch for {} is committed successfully!".format(board))
