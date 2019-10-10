@@ -25,6 +25,7 @@ acrn-dm -A -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 4,virtio-net,tap0 \
   -s 5,passthru,00/1f/3 \
   --ovmf /usr/share/acrn/bios/OVMF.fd \
+  --windows \
   $vm_name
 }
 

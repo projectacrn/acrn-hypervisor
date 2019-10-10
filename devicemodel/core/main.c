@@ -87,6 +87,7 @@ char *mac_seed;
 bool stdio_in_use;
 bool lapic_pt;
 bool is_rtvm;
+bool is_winvm;
 bool skip_pci_mem64bar_workaround = false;
 
 static int guest_ncpus;
@@ -175,7 +176,9 @@ usage(int code)
 		"       --rtvm: indicate that the guest is rtvm\n"
 		"       --logger_setting: params like console,level=4;kmsg,level=3\n"
 		"       --pm_notify_channel: define the channel used to notify guest about power event\n"
-		"       --pm_by_vuart:pty,/run/acrn/vuart_vmname or tty,/dev/ttySn\n",
+		"       --pm_by_vuart:pty,/run/acrn/vuart_vmname or tty,/dev/ttySn\n"
+		"       --windows: support Oracle virtio-blk, virtio-net and virtio-input devices\n"
+		"            for windows guest with secure boot\n",
 		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
@@ -730,6 +733,7 @@ enum {
 	CMD_OPT_LOGGER_SETTING,
 	CMD_OPT_PM_NOTIFY_CHANNEL,
 	CMD_OPT_PM_BY_VUART,
+	CMD_OPT_WINDOWS,
 };
 
 static struct option long_options[] = {
@@ -769,6 +773,7 @@ static struct option long_options[] = {
 	{"logger_setting",	required_argument,	0, CMD_OPT_LOGGER_SETTING},
 	{"pm_notify_channel",	required_argument,	0, CMD_OPT_PM_NOTIFY_CHANNEL},
 	{"pm_by_vuart",	required_argument,	0, CMD_OPT_PM_BY_VUART},
+	{"windows",		no_argument,		0, CMD_OPT_WINDOWS},
 	{0,			0,			0,  0  },
 };
 
@@ -929,6 +934,9 @@ main(int argc, char *argv[])
 		case CMD_OPT_PM_BY_VUART:
 			if (parse_pm_by_vuart(optarg) != 0)
 				errx(EX_USAGE, "invalid pm-by-vuart params %s", optarg);
+			break;
+		case CMD_OPT_WINDOWS:
+			is_winvm = true;
 			break;
 		case 'h':
 			usage(0);

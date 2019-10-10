@@ -213,6 +213,7 @@ enum {
  * PCI vendor/device IDs
  */
 #define	INTEL_VENDOR_ID		0x8086
+#define	ORACLE_VENDOR_ID	0x108E
 #define	VIRTIO_VENDOR		0x1AF4
 #define	VIRTIO_DEV_NET		0x1000
 #define	VIRTIO_DEV_BLOCK	0x1001
