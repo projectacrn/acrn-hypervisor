@@ -85,6 +85,10 @@ def generate_file(config):
     """
     board_cfg_lib.get_valid_irq(board_cfg_lib.BOARD_INFO_FILE)
 
+    # get cpu processor list
+    cpu_list = board_cfg_lib.get_processor_info()
+    max_cpu_num = len(cpu_list)
+
     # get the vuart0/vuart1 which user chosed from scenario.xml of board_private section
     (err_dic, ttys_n) = board_cfg_lib.parser_vuart_console()
     if err_dic:
@@ -116,6 +120,9 @@ def generate_file(config):
     # start to generate misc_cfg.h
     print("{0}".format(board_cfg_lib.HEADER_LICENSE), file=config)
     print("{}".format(MISC_CFG_HEADER), file=config)
+
+    # define CONFIG_MAX_PCPCU_NUM
+    print("#define CONFIG_MAX_PCPU_NUM\t{}U".format(max_cpu_num), file=config)
 
     # define rootfs with macro
     for i in range(root_dev_num):

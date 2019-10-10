@@ -15,6 +15,9 @@ BIOS_INFO = ['BIOS Information', 'Vendor:', 'Version:', 'Release Date:', 'BIOS R
 
 BASE_BOARD = ['Base Board Information', 'Manufacturer:', 'Product Name:', 'Version:']
 
+BOARD_NAMES = ['apl-mrb', 'apl-nuc', 'apl-up2', 'dnv-cb2', 'nuc6cayh',
+               'nuc7i7dnb', 'kbl-nuc-i7', 'icl-rvp']
+
 TTY_CONSOLE = {
     'ttyS0':'0x3F8',
     'ttyS1':'0x2F8',
@@ -430,3 +433,30 @@ def get_vuart_info_id(config_file, idx):
             vm_id += 1
 
     return tmp_tag
+
+
+def get_processor_info():
+    """
+    Get cpu processor list
+    :param board_info: it is a file what contains board information
+    :return: cpu processor list
+    """
+    processor_list = []
+    tmp_list = []
+    processor_info = get_info(BOARD_INFO_FILE, "<CPU_PROCESSOR_INFO>", "</CPU_PROCESSOR_INFO>")
+
+    if not processor_info:
+        key = "CPU PROCESSOR_INFO error:"
+        ERR_LIST[key] = "CPU core is not exists"
+        return processor_list
+
+    for processor_line in processor_info:
+        if not processor_line:
+            break
+
+        processor_list = processor_line.strip().split(',')
+        for processor in processor_list:
+            tmp_list.append(processor.strip())
+        break
+
+    return tmp_list
