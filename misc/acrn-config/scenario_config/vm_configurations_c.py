@@ -155,6 +155,20 @@ def is_need_epc(epc_section, i, config):
         print("\t\t},", file=config)
 
 
+def vcpu_affinity_output(vm_info, i, config):
+    """
+    Output the vcpu affinity
+    :param vminfo: the data structure have all the xml items values
+    :param i: the index of vm id
+    :param config: file pointor to store the information
+    """
+    if vm_info.load_order[i] == "SOS_VM":
+        return
+
+    cpu_bits = vm_info.get_cpu_bitmap(i)
+    print("\t\t.vcpu_num = {}U,".format(cpu_bits['cpu_num']), file=config)
+    print("\t\t.vcpu_affinity = VM{}_CONFIG_VCPU_AFFINITY,".format(i), file=config)
+
 def get_guest_flag(flag_index):
     """
     This is get flag index list
@@ -224,6 +238,7 @@ def gen_sdc_source(vm_info, config):
     print("\t\t/* Allow SOS to reboot the host since " +
           "there is supposed to be the highest severity guest */", file=config)
     print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
+    vcpu_affinity_output(vm_info, 0, config)
     if vm_info.clos_set[0] == None or not vm_info.clos_set[0].strip():
         print("\t\t.clos = {0}U,".format(0), file=config)
     else:
@@ -249,6 +264,8 @@ def gen_sdc_source(vm_info, config):
     # UUID
     uuid_output(uuid_1, vm_info.uuid[1], config)
     is_need_epc(vm_info.epc_section, 1, config)
+    print("\t\t.vcpu_num = CONFIG_MAX_PCPU_NUM - CONFIG_MAX_KATA_VM_NUM - 1U,", file=config)
+    print("\t\t.vcpu_affinity = VM{}_CONFIG_VCPU_AFFINITY,".format(1), file=config)
     # VUART
     err_dic = vuart_output(1, vm_info, config)
     if err_dic:
@@ -258,6 +275,7 @@ def gen_sdc_source(vm_info, config):
     print("\t{", file=config)
     print("\t\t.load_order = POST_LAUNCHED_VM,", file=config)
     uuid_output(uuid_2, vm_info.uuid[2], config)
+    vcpu_affinity_output(vm_info, 2, config)
     is_need_epc(vm_info.epc_section, 2, config)
     print("\t\t.vuart[0] = {", file=config)
     print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
@@ -304,6 +322,7 @@ def gen_sdc2_source(vm_info, config):
     print("\t\t/* Allow SOS to reboot the host since " +
           "there is supposed to be the highest severity guest */", file=config)
     print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
+    vcpu_affinity_output(vm_info, 0, config)
     if vm_info.clos_set[0] == None or not vm_info.clos_set[0].strip():
         print("\t\t.clos = {0}U,".format(0), file=config)
     else:
@@ -329,6 +348,7 @@ def gen_sdc2_source(vm_info, config):
     print("\t\t.load_order = {0},".format(vm_info.load_order[1]), file=config)
     # UUID
     uuid_output(uuid_1, vm_info.uuid[1], config)
+    vcpu_affinity_output(vm_info, 1, config)
     is_need_epc(vm_info.epc_section, 1, config)
     # VUART
     err_dic = vuart_output(1, vm_info, config)
@@ -340,6 +360,7 @@ def gen_sdc2_source(vm_info, config):
     print("\t\t.load_order = {0},".format(vm_info.load_order[1]), file=config)
     # UUID
     uuid_output(uuid_2, vm_info.uuid[2], config)
+    vcpu_affinity_output(vm_info, 2, config)
     is_need_epc(vm_info.epc_section, 2, config)
     # VUART
     err_dic = vuart_output(1, vm_info, config)
@@ -352,6 +373,7 @@ def gen_sdc2_source(vm_info, config):
     print("\t\t.load_order = POST_LAUNCHED_VM,", file=config)
     uuid_output(uuid_3, vm_info.uuid[3], config)
     is_need_epc(vm_info.epc_section, 3, config)
+    vcpu_affinity_output(vm_info, 3, config)
     print("\t\t.vuart[0] = {", file=config)
     print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
     print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
@@ -412,7 +434,7 @@ def gen_logical_partition_source(vm_info, config):
         print('\t\t.name = "{0}",'.format(vm_info.name[i]), file=config)
         # UUID
         uuid_output(uuid, vm_info.uuid[i], config)
-        print("\t\t.pcpu_bitmap = VM{0}_CONFIG_PCPU_BITMAP,".format(i), file=config)
+        vcpu_affinity_output(vm_info, i, config)
         # skip the vm0 for guest flag
 
         # guest flags
@@ -480,6 +502,10 @@ def gen_industry_source(vm_info, config):
                 return err_dic
             print("\t\t")
             print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
+
+        vcpu_affinity_output(vm_info, i, config)
+
+        if i == 0:
             if vm_info.clos_set[i] == None or not vm_info.clos_set[i].strip():
                 print("\t\t.clos = {0}U,".format(0), file=config)
             else:
@@ -544,8 +570,10 @@ def gen_hybrid_source(vm_info, config):
             if err_dic:
                 return err_dic
             print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
-            if i == 0:
-                print("\t\t.pcpu_bitmap = VM0_CONFIG_PCPU_BITMAP,", file=config)
+
+        vcpu_affinity_output(vm_info, i, config)
+
+        if i != 2:
             if vm_info.clos_set[i] == None or not vm_info.clos_set[i].strip():
                 print("\t\t.clos = {0}U,".format(0), file=config)
             else:

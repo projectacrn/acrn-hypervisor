@@ -48,6 +48,11 @@
     <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
         <guest_flag>0</guest_flag>
     </guest_flags>
+    <vcpu_affinity desc="vCPU affinity map. Each vCPU will pin to the selected pCPU ID. Please make sure each vCPU pin to different pCPU.">
+        <pcpu_id>1</pcpu_id>
+        <pcpu_id>2</pcpu_id>
+        <pcpu_id>3</pcpu_id>
+    </vcpu_affinity>
     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
     <epc_section desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>
@@ -70,6 +75,9 @@
     <load_order desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM.">POST_LAUNCHED_VM</load_order>
     <uuid configurable="0" desc="vm uuid">a7ada506-1ab0-4b6b-a0da-e513ca9b8c2f</uuid>
     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
+    <vcpu_affinity desc="vCPU affinity map. Each vCPU will pin to the selected pCPU ID. Please make sure each vCPU pin to different pCPU.">
+        <pcpu_id>3</pcpu_id>
+    </vcpu_affinity>
     <epc_section desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>
         <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>

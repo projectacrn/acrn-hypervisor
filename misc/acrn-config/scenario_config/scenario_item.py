@@ -280,7 +280,7 @@ class VmInfo:
         self.guest_flag_idx = scenario_cfg_lib.get_sub_leaf_tag(
             self.scenario_info, "guest_flags", "guest_flag")
         self.cpus_per_vm = scenario_cfg_lib.get_leaf_tag_map(
-            self.scenario_info, "pcpu_ids", "pcpu_id")
+            self.scenario_info, "vcpu_affinity", "pcpu_id")
         self.clos_set = scenario_cfg_lib.get_branch_tag_map(self.scenario_info, "clos")
         self.epc_section.get_info()
         self.mem_info.get_info()
