@@ -34,7 +34,7 @@ def get_scenario_item_values(board_info, scenario_info):
     # pre scenario
     guest_flags = copy.deepcopy(scenario_cfg_lib.GUEST_FLAG)
     guest_flags.remove('0UL')
-    scenario_item_values["vm,pcpu_ids"] = hw_info.get_processor_val()
+    scenario_item_values["vm,vcpu_affinity"] = hw_info.get_processor_val()
     scenario_item_values["vm,guest_flags"] = guest_flags
     scenario_item_values["vm,clos"] = hw_info.get_clos_val()
     scenario_item_values["vm,os_config,kern_type"] = scenario_cfg_lib.KERN_TYPE_LIST

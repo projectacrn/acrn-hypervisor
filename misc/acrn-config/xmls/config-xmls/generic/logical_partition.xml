@@ -7,10 +7,10 @@
         <guest_flag></guest_flag>
         <guest_flag></guest_flag>
     </guest_flags>
-    <pcpu_ids desc="Assign physical CPU IDs to the VM" multiselect="true">
+    <vcpu_affinity desc="vCPU affinity map. Each vCPU will pin to the selected pCPU ID. Please make sure each vCPU pin to different pCPU.">
         <pcpu_id>0</pcpu_id>
         <pcpu_id>2</pcpu_id>
-    </pcpu_ids>
+    </vcpu_affinity>
     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
     <epc_section desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>
@@ -53,10 +53,10 @@
         <guest_flag>GUEST_FLAG_RT</guest_flag>
         <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
     </guest_flags>
-    <pcpu_ids desc="Assign physical CPU IDs to the VM" multiselect="true">
+    <vcpu_affinity desc="vCPU affinity map. Each vCPU will pin to the selected pCPU ID. Please make sure each vCPU pin to different pCPU.">
         <pcpu_id>1</pcpu_id>
         <pcpu_id>3</pcpu_id>
-    </pcpu_ids>
+    </vcpu_affinity>
     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
     <epc_section desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>

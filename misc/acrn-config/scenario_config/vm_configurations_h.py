@@ -21,7 +21,22 @@ def gen_common_header(config):
     print("{0}".format(VM_HEADER_DEFINE), file=config)
 
 
-def gen_sdc_header(config):
+def cpu_affinity_output(vm_info, i, config):
+    """
+    Output the macro vcpu affinity
+    :param vm_info: the data structure have all the xml items values
+    :param i: the index of vm id
+    :param config: file pointor to store the information
+    """
+    if vm_info.load_order[i] == "SOS_VM":
+        return
+
+    cpu_bits = vm_info.get_cpu_bitmap(i)
+    print("#define VM{0}_CONFIG_VCPU_AFFINITY\t{1}".format(
+        i, cpu_bits['cpu_map']), file=config)
+
+
+def gen_sdc_header(vm_info, config):
     """
     Generate vm_configuration.h of sdc scenario
     :param config: it is the pointer which file write to
@@ -53,10 +68,20 @@ def gen_sdc_header(config):
     print("\t\t\t\t\tSOS_BOOTARGS_DIFF", file=config)
 
     print("", file=config)
+    print("#if CONFIG_MAX_KATA_VM_NUM > 0", file=config)
+    # POST LAUNCHED VM
+    print("  #define VM1_CONFIG_VCPU_AFFINITY\t{AFFINITY_CPU(1U), AFFINITY_CPU(2U)}", file=config)
+    # KATA VM
+    cpu_affinity_output(vm_info, 2, config)
+    print("#else", file=config)
+    for i in range(scenario_cfg_lib.VM_COUNT - 1):
+        cpu_affinity_output(vm_info, i, config)
+    print("#endif", file=config)
+    print("", file=config)
     print("{0}".format(VM_END_DEFINE), file=config)
 
 
-def gen_sdc2_header(config):
+def gen_sdc2_header(vm_info, config):
     """
     Generate vm_configuration.h of sdc2 scenario
     :param config: it is the pointer which file write to
@@ -88,6 +113,9 @@ def gen_sdc2_header(config):
     print("\t\t\t\t\tSOS_BOOTARGS_DIFF", file=config)
 
     print("", file=config)
+    for i in range(scenario_cfg_lib.VM_COUNT):
+        cpu_affinity_output(vm_info, i, config)
+    print("", file=config)
     print("{0}".format(VM_END_DEFINE), file=config)
 
 
@@ -101,7 +129,7 @@ def logic_max_vm_num(config):
     print("#define CONFIG_MAX_VM_NUM\t{0}U".format(scenario_cfg_lib.VM_COUNT), file=config)
     print("", file=config)
     print("/* The VM CONFIGs like:", file=config)
-    print(" *\tVMX_CONFIG_PCPU_BITMAP", file=config)
+    print(" *\tVMX_CONFIG_VCPU_AFFINITY", file=config)
     print(" *\tVMX_CONFIG_MEM_START_HPA", file=config)
     print(" *\tVMX_CONFIG_MEM_SIZE", file=config)
     print(" *\tVMX_CONFIG_OS_BOOTARG_ROOT", file=config)
@@ -112,7 +140,7 @@ def logic_max_vm_num(config):
     print("", file=config)
 
 
-def gen_logic_header(vm_info, config):
+def gen_logical_partition_header(vm_info, config):
     """
     Generate vm_configuration.h of logical_partition scenario
     :param config: it is the pointer which file write to
@@ -133,8 +161,7 @@ def gen_logic_header(vm_info, config):
     for i in range(scenario_cfg_lib.VM_COUNT):
 
         cpu_bits = vm_info.get_cpu_bitmap(i)
-        print("#define VM{0}_CONFIG_PCPU_BITMAP\t\t\t{1}".format(
-            i, cpu_bits['cpu_map']), file=config)
+        cpu_affinity_output(vm_info, i, config)
         print("#define VM{0}_CONFIG_MEM_START_HPA\t\t{1}UL".format(
             i, vm_info.mem_info.mem_start_hpa[i]), file=config)
         print("#define VM{0}_CONFIG_MEM_SIZE\t\t\t{1}UL".format(
@@ -176,7 +203,7 @@ def gen_logic_header(vm_info, config):
     print("{0}".format(VM_END_DEFINE), file=config)
 
 
-def gen_industry_header(config):
+def gen_industry_header(vm_info, config):
     """
     Generate vm_configuration.h of industry scenario
     :param config: it is the pointer which file write to
@@ -207,6 +234,9 @@ def gen_industry_header(config):
     print('\t\t\t\t\t"i915.enable_gvt=1 "\t\\', file=config)
     print("\t\t\t\t\tSOS_BOOTARGS_DIFF", file=config)
     print("", file=config)
+    for i in range(scenario_cfg_lib.VM_COUNT):
+        cpu_affinity_output(vm_info, i, config)
+    print("", file=config)
     print("{0}".format(VM_END_DEFINE), file=config)
 
 
@@ -225,12 +255,13 @@ def gen_hybrid_header(vm_info, config):
           "(GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH | \\\n" +
           "\t\t\t\t\t\tGUEST_FLAG_RT | GUEST_FLAG_IO_COMPLETION_POLLING)", file=config)
 
-    cpu_bits = vm_info.get_cpu_bitmap(0)
     print("", file=config)
     print("#define CONFIG_MAX_VM_NUM\t\t({0}U + CONFIG_MAX_KATA_VM_NUM)".format(
         scenario_cfg_lib.VM_COUNT), file=config)
     print("", file=config)
-    print("#define VM0_CONFIG_PCPU_BITMAP\t\t{0}".format(cpu_bits['cpu_map']), file=config)
+    for i in range(scenario_cfg_lib.VM_COUNT):
+        cpu_affinity_output(vm_info, i, config)
+
     print("#define VM0_CONFIG_MEM_START_HPA\t{0}UL".format(
         vm_info.mem_info.mem_start_hpa[0]), file=config)
     print("#define VM0_CONFIG_MEM_SIZE\t\t{0}UL".format(vm_info.mem_info.mem_size[0]), file=config)
@@ -260,13 +291,13 @@ def generate_file(scenario, vm_info, config):
     :param config: it is a file pointer of board information for writing to
     """
     if scenario == 'sdc':
-        gen_sdc_header(config)
+        gen_sdc_header(vm_info, config)
     elif scenario == 'sdc2':
-        gen_sdc2_header(config)
+        gen_sdc2_header(vm_info, config)
     elif scenario == 'logical_partition':
-        gen_logic_header(vm_info, config)
+        gen_logical_partition_header(vm_info, config)
     elif scenario == 'industry':
-        gen_industry_header(config)
+        gen_industry_header(vm_info, config)
     else:
         # scenario is 'hybrid'
         gen_hybrid_header(vm_info, config)
