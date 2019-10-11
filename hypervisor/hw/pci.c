@@ -27,6 +27,9 @@
  * SUCH DAMAGE.
  *
  * $FreeBSD$
+ *
+ * Only support Type 0 and Type 1 PCI(e) device. Remove PC-Card type support.
+ *
  */
 #include <types.h>
 #include <spinlock.h>
@@ -188,21 +191,17 @@ void init_pci_pdev_list(void)
 	}
 }
 
-static uint32_t pci_pdev_get_nr_bars(uint8_t hdr_type)
+static inline uint32_t pci_pdev_get_nr_bars(uint8_t hdr_type)
 {
 	uint32_t nr_bars = 0U;
 
-	switch (hdr_type & PCIM_HDRTYPE) {
+	switch (hdr_type) {
 	case PCIM_HDRTYPE_NORMAL:
 		nr_bars = 6U;
 		break;
 
 	case PCIM_HDRTYPE_BRIDGE:
 		nr_bars = 2U;
-		break;
-
-	case PCIM_HDRTYPE_CARDBUS:
-		nr_bars = 1U;
 		break;
 
 	default:
@@ -214,45 +213,16 @@ static uint32_t pci_pdev_get_nr_bars(uint8_t hdr_type)
 }
 
 /*
- * @pre ((hdr_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_NORMAL) || ((hdr_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_BRIDGE) || ((hdr_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_CARDBUS)
- */
-static uint32_t get_offset_of_caplist(uint8_t hdr_type)
-{
-	uint32_t cap_offset = 0U;
-
-	switch (hdr_type & PCIM_HDRTYPE) {
-	case PCIM_HDRTYPE_NORMAL:
-	case PCIM_HDRTYPE_BRIDGE:
-		cap_offset = PCIR_CAP_PTR;
-		break;
-
-	case PCIM_HDRTYPE_CARDBUS:
-		cap_offset = PCIR_CAP_PTR_CARDBUS;
-		break;
-
-	default:
-		/* do nothing */
-		break;
-	}
-
-	return cap_offset;
-}
-
-/*
  * @pre pdev != NULL
- * @pre ((hdr_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_NORMAL) || ((hdr_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_BRIDGE) || ((hdr_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_CARDBUS)
  */
-static void pci_read_cap(struct pci_pdev *pdev, uint8_t hdr_type)
+static void pci_read_cap(struct pci_pdev *pdev)
 {
 	uint8_t ptr, cap;
 	uint32_t msgctrl;
 	uint32_t len, offset, idx;
 	uint32_t table_info;
-	uint32_t cap_offset;
 
-	cap_offset = get_offset_of_caplist(hdr_type);
-
-	ptr = (uint8_t)pci_pdev_read_cfg(pdev->bdf, cap_offset, 1U);
+	ptr = (uint8_t)pci_pdev_read_cfg(pdev->bdf, PCIR_CAP_PTR, 1U);
 
 	while ((ptr != 0U) && (ptr != 0xFFU)) {
 		cap = (uint8_t)pci_pdev_read_cfg(pdev->bdf, ptr + PCICAP_ID, 1U);
@@ -298,31 +268,33 @@ static void pci_read_cap(struct pci_pdev *pdev, uint8_t hdr_type)
 	}
 }
 
-/*
- * @pre pdev != NULL
- */
-static void fill_pdev(uint16_t pbdf, struct pci_pdev *pdev)
-{
-	uint8_t hdr_type;
-
-	pdev->bdf.value = pbdf;
-
-	hdr_type = (uint8_t)pci_pdev_read_cfg(pdev->bdf, PCIR_HDRTYPE, 1U);
-
-	pdev->nr_bars = pci_pdev_get_nr_bars(hdr_type);
-
-	if ((pci_pdev_read_cfg(pdev->bdf, PCIR_STATUS, 2U) & PCIM_STATUS_CAPPRESENT) != 0U) {
-		pci_read_cap(pdev, hdr_type);
-	}
-
-	fill_pci_dev_config(pdev);
-}
-
 static void init_pdev(uint16_t pbdf)
 {
+	uint8_t hdr_type;
+	union pci_bdf bdf;
+	struct pci_pdev *pdev;
+
 	if (num_pci_pdev < CONFIG_MAX_PCI_DEV_NUM) {
-		fill_pdev(pbdf, &pci_pdev_array[num_pci_pdev]);
-		num_pci_pdev++;
+		bdf.value = pbdf;
+		hdr_type = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_HDRTYPE, 1U);
+		hdr_type &= PCIM_HDRTYPE;
+
+		if ((hdr_type == PCIM_HDRTYPE_NORMAL) || (hdr_type == PCIM_HDRTYPE_BRIDGE)) {
+			pdev = &pci_pdev_array[num_pci_pdev];
+			pdev->bdf.value = pbdf;
+			pdev->nr_bars = pci_pdev_get_nr_bars(hdr_type);
+
+			if ((pci_pdev_read_cfg(bdf, PCIR_STATUS, 2U) & PCIM_STATUS_CAPPRESENT) != 0U) {
+				pci_read_cap(pdev);
+			}
+
+			fill_pci_dev_config(pdev);
+
+			num_pci_pdev++;
+		} else {
+			pr_err("%s, %x:%x.%x unsupported headed type: 0x%x\n",
+				__func__, bdf.bits.b, bdf.bits.d, bdf.bits.f, hdr_type);
+		}
 	} else {
 		pr_err("%s, failed to alloc pci_pdev!\n", __func__);
 	}
