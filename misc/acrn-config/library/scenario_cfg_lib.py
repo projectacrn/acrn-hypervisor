@@ -189,7 +189,6 @@ def get_board_private_info(config_file):
     dev_private_tags = ['rootfs', 'console']
     for tag_str in dev_private_tags:
         dev_setting = get_sub_leaf_tag(config_file, branch_tag, tag_str)
-        #dev_info = get_sub_tree_tag(config_file, )
         if not dev_setting and tag_str == "console":
             continue
 
@@ -216,16 +215,6 @@ def get_vm_num(config_file):
     return common.get_vm_count(config_file)
 
 
-def get_sub_tree_tag(config_file, tag_str):
-    """
-     This is get tag value by tag_str from config file
-     :param config_file: it is a file what contains information for script to read from
-     :param tag_str: it is key of pattern to config file item
-     :return: value of tag_str item
-     """
-    return common.get_branch_tag_val(config_file, tag_str)
-
-
 def get_sub_leaf_tag(config_file, branch_tag, tag_str):
     """
       This is get tag value by tag_str from config file
@@ -242,13 +231,13 @@ def get_order_type_by_vmid(idx):
      Get load order by vm id
 
      :param idx: index of vm id
-     :return: load order type of vm
+     :return: load order type of index to vmid
      """
-    (err_dic, order_id_dic) = common.get_load_order_by_vmid(SCENARIO_INFO_FILE, VM_COUNT, idx)
+    (err_dic, order_type) = common.get_load_order_by_vmid(SCENARIO_INFO_FILE, VM_COUNT, idx)
     if err_dic:
         ERR_LIST.update(err_dic)
 
-    return order_id_dic
+    return order_type
 
 
 def get_vmid_by_order_type(type_str):
@@ -296,12 +285,12 @@ def pre_launch_vm_ids():
 def vm_name_check(vm_names, item):
     """
     Check vm name
-    :param vm_names: list of vm name
+    :param vm_names: dictionary of vm name
     :param item: vm name item in xml
     :return: None
     """
-    for name_i in range(len(vm_names)):
-        name_len = len(vm_names[name_i])
+    for name_i, name_str in vm_names.items():
+        name_len = len(name_str)
         if name_len > 32 or name_len == 0:
             key = "vm:id={},{}".format(name_i, item)
             ERR_LIST[key] = "VM name length should be in range [1,32] bytes"
@@ -310,12 +299,11 @@ def vm_name_check(vm_names, item):
 def load_order_check(load_orders, item):
     """
     Check load order type
-    :param load_orders: list of vm load_order
+    :param load_orders: dictionary of vm load_order
     :param item: vm name item in xml
     :return: None
     """
-    for order_i in range(len(load_orders)):
-        load_str = load_orders[order_i]
+    for order_i, load_str in load_orders.items():
 
         if not load_str:
             key = "vm:id={},{}".format(order_i, item)
@@ -347,17 +335,16 @@ def guest_flag_check(guest_flag_idx, branch_tag, leaf_tag):
     #            ERR_LIST[key] = "Invalid guest flag"
 
 
-def uuid_format_check(uuid_lists, item):
+def uuid_format_check(uuid_dic, item):
     """
     Check uuid
-    :param uuid_lists: list of vm uuid
+    :param uuid_dic: dictionary of vm uuid
     :param item: vm uuid item in xml
     :return: None
     """
     uuid_len = 36
 
-    for uuid_i in range(len(uuid_lists)):
-        uuid_str = uuid_lists[uuid_i]
+    for uuid_i, uuid_str in uuid_dic.items():
 
         if not uuid_str:
             key = "vm:id={},{}".format(uuid_i, item)
@@ -374,14 +361,23 @@ def uuid_format_check(uuid_lists, item):
             ERR_LIST[key] = "VM uuid format unknown"
 
 
-def cpus_per_vm_check(item):
+def get_leaf_tag_map(info_file, prime_item, item):
     """
-    Check cpu of per vm
+    :param info_file: some configurations in the info file
+    :param prime_item: the prime item in xml file
+    :param item: the item in xml file
+    :return: dictionary which item value could be indexed by vmid
+    """
+    vmid_item_dic = common.get_leaf_tag_map(info_file, prime_item, item)
+    return vmid_item_dic
+
+
+def cpus_per_vm_check(id_cpus_per_vm_dic, item):
+    """
+    Check cpu number of per vm
     :param item: vm pcpu_id item in xml
     :return: None
     """
-    prime_item = "pcpu_ids"
-    id_cpus_per_vm_dic = common.get_leaf_tag_map(SCENARIO_INFO_FILE, prime_item, item)
 
     for id_key in id_cpus_per_vm_dic.keys():
         vm_type = get_order_type_by_vmid(id_key)
@@ -391,14 +387,12 @@ def cpus_per_vm_check(item):
             ERR_LIST[key] = "VM have no assignment cpus"
 
 
-def mem_start_hpa_check(item):
+def mem_start_hpa_check(id_start_hpa_dic, item):
     """
-     Check host physical address
-     :param item: vm start_hpa item in xml
-     :return: None
-     """
-    prime_item = "memory"
-    id_start_hpa_dic = common.get_leaf_tag_map(SCENARIO_INFO_FILE, prime_item, item)
+    Check host physical address
+    :param item: vm start_hpa item in xml
+    :return: None
+    """
 
     for id_key, hpa_str in id_start_hpa_dic.items():
         hpa_strip_ul = hpa_str.strip('UL')
@@ -415,14 +409,12 @@ def mem_start_hpa_check(item):
                 ERR_LIST[key] = "Address should be Hex format"
 
 
-def mem_size_check(item):
+def mem_size_check(id_hpa_size_dic, item):
     """
-      Check host physical size
-      :param item: vm size item in xml
-      :return: None
-      """
-    prime_item = "memory"
-    id_hpa_size_dic = common.get_leaf_tag_map(SCENARIO_INFO_FILE, prime_item, item)
+    Check host physical size
+    :param item: vm size item in xml
+    :return: None
+    """
 
     for id_key, hpa_size in id_hpa_size_dic.items():
         hpa_sz_strip_ul = hpa_size.strip('UL')
@@ -443,14 +435,12 @@ def mem_size_check(item):
                 ERR_LIST[key] = "Mem size should less than 2GB"
 
 
-def os_kern_name_check(item):
+def os_kern_name_check(id_kern_name_dic, item):
     """
-      Check os kernel name
-      :param item: vm os config name item in xml
-      :return: None
-      """
-    prime_item = "os_config"
-    id_kern_name_dic = common.get_leaf_tag_map(SCENARIO_INFO_FILE, prime_item, item)
+    Check os kernel name
+    :param item: vm os config name item in xml
+    :return: None
+    """
 
     for id_key, kern_name in id_kern_name_dic.items():
         if len(kern_name) > 32 or len(kern_name) == 0:
@@ -458,14 +448,12 @@ def os_kern_name_check(item):
             ERR_LIST[key] = "VM os config kernel name length should be in range [1,32] bytes"
 
 
-def os_kern_type_check(item):
+def os_kern_type_check(id_kern_type_dic, item):
     """
-      Check os kernel type
-      :param item: vm os config type item in xml
-      :return: None
-      """
-    prime_item = "os_config"
-    id_kern_type_dic = common.get_leaf_tag_map(SCENARIO_INFO_FILE, prime_item, item)
+    Check os kernel type
+    :param item: vm os config type item in xml
+    :return: None
+    """
 
     for id_key, kern_type in id_kern_type_dic.items():
 
@@ -479,14 +467,12 @@ def os_kern_type_check(item):
             ERR_LIST[key] = "VM os config kernel type unknown"
 
 
-def os_kern_mod_check(item):
+def os_kern_mod_check(id_kern_mod_dic, item):
     """
-      Check os kernel mod
-      :param item: vm os config mod item in xml
-      :return: None
-      """
-    prime_item = "os_config"
-    id_kern_mod_dic = common.get_leaf_tag_map(SCENARIO_INFO_FILE, prime_item, item)
+    Check os kernel mod
+    :param item: vm os config mod item in xml
+    :return: None
+    """
 
     for id_key, kern_mod in id_kern_mod_dic.items():
         if len(kern_mod) > 32 or len(kern_mod) == 0:
@@ -494,14 +480,12 @@ def os_kern_mod_check(item):
             ERR_LIST[key] = "VM os config kernel mod tag should be in range [1,32] bytes"
 
 
-def os_kern_args_check(item):
+def os_kern_args_check(id_kern_args_dic, item):
     """
-      Check os kernel args
-      :param item: vm os config args item in xml
-      :return: None
-      """
-    prime_item = "os_config"
-    id_kern_args_dic = common.get_leaf_tag_map(SCENARIO_INFO_FILE, prime_item, item)
+    Check os kernel args
+    :param item: vm os config args item in xml
+    :return: None
+    """
 
     for id_key, kern_args in id_kern_args_dic.items():
         vm_type = get_order_type_by_vmid(id_key)
@@ -511,14 +495,12 @@ def os_kern_args_check(item):
             ERR_LIST[key] = "VM os config kernel service os should be SOS_VM_BOOTARGS"
 
 
-def os_kern_console_check(item):
+def os_kern_console_check(id_kern_console_dic, item):
     """
-      Check os kernel console
-      :param item: vm os config console item in xml
-      :return: None
-      """
-    prime_item = "os_config"
-    id_kern_console_dic = common.get_leaf_tag_map(SCENARIO_INFO_FILE, prime_item, item)
+    Check os kernel console
+    :param item: vm os config console item in xml
+    :return: None
+    """
 
     for id_key, kern_console in id_kern_console_dic.items():
         if kern_console and "ttyS" not in kern_console:
@@ -526,14 +508,12 @@ def os_kern_console_check(item):
             ERR_LIST[key] = "VM os config kernel console should be ttyS[0..3]"
 
 
-def os_kern_load_addr_check(item):
+def os_kern_load_addr_check(id_kern_load_addr_dic, item):
     """
-      Check os kernel load address
-      :param item: vm os config load address item in xml
-      :return: None
-      """
-    prime_item = "os_config"
-    id_kern_load_addr_dic = common.get_leaf_tag_map(SCENARIO_INFO_FILE, prime_item, item)
+    Check os kernel load address
+    :param item: vm os config load address item in xml
+    :return: None
+    """
 
     for id_key, kern_load_addr in id_kern_load_addr_dic.items():
 
@@ -547,14 +527,12 @@ def os_kern_load_addr_check(item):
             ERR_LIST[key] = "VM os config kernel load address should Hex format"
 
 
-def os_kern_entry_addr_check(item):
+def os_kern_entry_addr_check(id_kern_entry_addr_dic, item):
     """
-       Check os kernel entry address
-       :param item: vm os config entry address item in xml
-       :return: None
-       """
-    prime_item = "os_config"
-    id_kern_entry_addr_dic = common.get_leaf_tag_map(SCENARIO_INFO_FILE, prime_item, item)
+    Check os kernel entry address
+    :param item: vm os config entry address item in xml
+    :return: None
+    """
 
     for id_key, kern_entry_addr in id_kern_entry_addr_dic.items():
 
@@ -568,14 +546,12 @@ def os_kern_entry_addr_check(item):
             ERR_LIST[key] = "VM os config kernel entry address should Hex format"
 
 
-def os_kern_root_dev_check(item):
+def os_kern_root_dev_check(id_kern_rootdev_dic, item):
     """
-       Check os kernel rootfs partitions
-       :param item: vm os config rootdev item in xml
-       :return: None
-       """
-    prime_item = "os_config"
-    id_kern_rootdev_dic = common.get_leaf_tag_map(SCENARIO_INFO_FILE, prime_item, item)
+    Check os kernel rootfs partitions
+    :param item: vm os config rootdev item in xml
+    :return: None
+    """
 
     for id_key, kern_rootdev in id_kern_rootdev_dic.items():
         if not kern_rootdev:
@@ -583,13 +559,22 @@ def os_kern_root_dev_check(item):
             ERR_LIST[key] = "VM os config kernel root device should not empty"
 
 
-def pci_dev_num_check(item):
+def get_branch_tag_map(info_file, item):
     """
-        Check vm pci device number
-        :param item: vm pci_dev_num item in xml
-        :return: None
-        """
-    id_dev_num_dic = common.get_branch_tag_map(SCENARIO_INFO_FILE, item)
+    :param info_file: some configurations in the info file
+    :param item: the item in xml file
+    :return: dictionary which item value could be indexed by vmid
+    """
+    vmid_item_dic = common.get_branch_tag_map(info_file, item)
+    return vmid_item_dic
+
+
+def pci_dev_num_check(id_dev_num_dic, item):
+    """
+    Check vm pci device number
+    :param item: vm pci_dev_num item in xml
+    :return: None
+    """
 
     for id_key, pci_dev_num in id_dev_num_dic.items():
 
@@ -599,13 +584,12 @@ def pci_dev_num_check(item):
                 key = "vm:id={},{}".format(id_key, item)
                 ERR_LIST[key] = "VM pci device number  shoud be one of {}".format(PCI_DEV_NUM_LIST)
 
-def pci_devs_check(item):
+def pci_devs_check(id_devs_dic, item):
     """
-        Check vm pci devices
-        :param item: vm pci_devs item in xml
-        :return: None
-        """
-    id_devs_dic = common.get_branch_tag_map(SCENARIO_INFO_FILE, item)
+    Check vm pci devices
+    :param item: vm pci_devs item in xml
+    :return: None
+    """
 
     for id_key, pci_dev in id_devs_dic.items():
 
@@ -747,40 +731,6 @@ def avl_vuart_ui_select(scenario_info):
     #print(tmp_vuart)
     return tmp_vuart
 
-
-def vmid_map_epc(config_file, tag, item):
-    """
-    This is mapping table for {id:item}
-    :param config_file: it is a file what contains information for script to read from
-    :param item: the item in xml file
-    :return: table of id:item type dictionary
-    """
-    epc_order = {}
-    vm_cnt = VM_COUNT
-
-    item_list = common.get_leaf_tag_val(config_file, tag, item)
-    load_type_list = common.get_branch_tag_val(config_file, "load_order")
-
-    if 'SOS_VM' in load_type_list:
-        vm_cnt = VM_COUNT - 1
-    for i in range(vm_cnt):
-        epc_order[i] = item_list[i]
-
-    return epc_order
-
-
-def get_epc_base(scenario_info):
-
-    base_dic = {}
-    base_dic = vmid_map_epc(scenario_info, "epc_section", "base")
-    return base_dic
-
-
-def get_epc_size(scenario_info):
-
-    size_dic = {}
-    size_dic = vmid_map_epc(scenario_info, "epc_section", "size")
-    return size_dic
 
 def get_first_post_vm():
 
