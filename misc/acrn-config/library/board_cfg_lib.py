@@ -251,13 +251,13 @@ def get_order_type_by_vmid(idx):
     """
     This is get pre launched vm count
     :param idx: index of vm id
-    :return: idx and vm type mapping
+    :return: vm type of index to vmid
     """
-    (err_dic, order_id_dic) = common.get_load_order_by_vmid(SCENARIO_INFO_FILE, VM_COUNT, idx)
+    (err_dic, order_type) = common.get_load_order_by_vmid(SCENARIO_INFO_FILE, VM_COUNT, idx)
     if err_dic:
         ERR_LIST.update(err_dic)
 
-    return order_id_dic
+    return order_type
 
 
 def get_valid_irq(board_info):

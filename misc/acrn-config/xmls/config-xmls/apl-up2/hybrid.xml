@@ -38,6 +38,8 @@
         <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">1</target_vm_id>
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
     </vuart>
+    <pci_dev_num configurable="0" desc="pci devices number"></pci_dev_num>
+    <pci_devs configurable="0" desc="pci devices list"></pci_devs>
   </vm>
   <vm id="1">
     <load_order desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM." readonly="true">SOS_VM</load_order>

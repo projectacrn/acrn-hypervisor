@@ -124,23 +124,28 @@ def vuart_output(i, vm_info, config):
     print("\t\t},", file=config)
 
     # pci_dev_num/pci_devs only for SOS_VM or logical_partition pre_launched_vm
-    if vm_type == "SOS_VM":
-        print("\t\t.pci_dev_num = {},".format(vm_info.cfg_pci.pci_dev_num[0]), file=config)
-        print("\t\t.pci_devs = {},".format(vm_info.cfg_pci.pci_devs[0]), file=config)
+    if vm_type == "SOS_VM" or vm_type == "PRE_LAUNCHED_VM":
+        if vm_info.cfg_pci.pci_dev_num[i] and vm_info.cfg_pci.pci_dev_num[i] != None:
+            print("\t\t.pci_dev_num = {},".format(vm_info.cfg_pci.pci_dev_num[i]), file=config)
+        if vm_info.cfg_pci.pci_devs[i] and vm_info.cfg_pci.pci_devs[i] != None:
+            print("\t\t.pci_devs = {},".format(vm_info.cfg_pci.pci_devs[i]), file=config)
 
-    (err_dic, scenario_name) = scenario_cfg_lib.get_scenario_name()
-    if err_dic:
-        return err_dic
-
-    if scenario_name == "logical_partition":
-        print("\t\t.pci_dev_num = VM{}_CONFIG_PCI_DEV_NUM,".format(i), file=config)
-        print("\t\t.pci_devs = vm{}_pci_devs,".format(i), file=config)
     print("\t},", file=config)
-
-    return err_dic
 
 
 def is_need_epc(epc_section, i, config):
+    """
+    Check if it is need epc section
+    :param epc_section: struct epc_scectoin conatins base/size
+    :param i: the index of vm id
+    :param config: it is file pointer to store the information
+    :return: None
+    """
+    # SOS_VM have not set epc section
+    vm_type = scenario_cfg_lib.get_order_type_by_vmid(i)
+    if vm_type == "SOS_VM":
+        return
+
     if epc_section.base[i] == '0' and epc_section.size[i] == '0':
         return
     else:
@@ -148,6 +153,7 @@ def is_need_epc(epc_section, i, config):
         print('\t\t\t.base = "{0}",'.format(epc_section.base), file=config)
         print('\t\t\t.size = {0},'.format(epc_section.size), file=config)
         print("\t\t},", file=config)
+
 
 def get_guest_flag(flag_index):
     """
@@ -242,7 +248,7 @@ def gen_sdc_source(vm_info, config):
     print("\t\t.load_order = {0},".format(vm_info.load_order[1]), file=config)
     # UUID
     uuid_output(uuid_1, vm_info.uuid[1], config)
-    is_need_epc(vm_info.epc_section, 0, config)
+    is_need_epc(vm_info.epc_section, 1, config)
     # VUART
     err_dic = vuart_output(1, vm_info, config)
     if err_dic:
@@ -252,7 +258,7 @@ def gen_sdc_source(vm_info, config):
     print("\t{", file=config)
     print("\t\t.load_order = POST_LAUNCHED_VM,", file=config)
     uuid_output(uuid_2, vm_info.uuid[2], config)
-    is_need_epc(vm_info.epc_section, 1, config)
+    is_need_epc(vm_info.epc_section, 2, config)
     print("\t\t.vuart[0] = {", file=config)
     print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
     print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
@@ -323,7 +329,7 @@ def gen_sdc2_source(vm_info, config):
     print("\t\t.load_order = {0},".format(vm_info.load_order[1]), file=config)
     # UUID
     uuid_output(uuid_1, vm_info.uuid[1], config)
-    is_need_epc(vm_info.epc_section, 0, config)
+    is_need_epc(vm_info.epc_section, 1, config)
     # VUART
     err_dic = vuart_output(1, vm_info, config)
     if err_dic:
@@ -334,7 +340,7 @@ def gen_sdc2_source(vm_info, config):
     print("\t\t.load_order = {0},".format(vm_info.load_order[1]), file=config)
     # UUID
     uuid_output(uuid_2, vm_info.uuid[2], config)
-    is_need_epc(vm_info.epc_section, 1, config)
+    is_need_epc(vm_info.epc_section, 2, config)
     # VUART
     err_dic = vuart_output(1, vm_info, config)
     if err_dic:
@@ -345,7 +351,7 @@ def gen_sdc2_source(vm_info, config):
     print("\t{", file=config)
     print("\t\t.load_order = POST_LAUNCHED_VM,", file=config)
     uuid_output(uuid_3, vm_info.uuid[3], config)
-    is_need_epc(vm_info.epc_section, 2, config)
+    is_need_epc(vm_info.epc_section, 3, config)
     print("\t\t.vuart[0] = {", file=config)
     print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
     print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
@@ -466,8 +472,7 @@ def gen_industry_source(vm_info, config):
 
         # UUID
         uuid_output(uuid, vm_info.uuid[i], config)
-        if i != 0:
-            is_need_epc(vm_info.epc_section, i - 1, config)
+        is_need_epc(vm_info.epc_section, i, config)
 
         if i == 0:
             (err_dic, sos_guest_flags) = get_guest_flag(vm_info.guest_flag_idx[i])
@@ -553,10 +558,7 @@ def gen_hybrid_source(vm_info, config):
                 print("\t\t\t.start_hpa = 0UL,", file=config)
                 print("\t\t\t.size = CONFIG_SOS_RAM_SIZE,", file=config)
             print("\t\t},", file=config)
-            if i == 0:
-              is_need_epc(vm_info.epc_section, i, config)
-            elif i == scenario_cfg_lib.VM_COUNT:
-              is_need_epc(vm_info.epc_section, i - 1, config)
+            is_need_epc(vm_info.epc_section, i, config)
             print("\t\t.os_config = {", file=config)
             print('\t\t\t.name = "{0}",'.format(vm_info.os_cfg.kern_name[i]), file=config)
             print('\t\t\t.kernel_type = {0},'.format(

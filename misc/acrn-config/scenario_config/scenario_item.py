@@ -67,15 +67,15 @@ class HwInfo:
 
 class CfgOsKern:
     """ This is Abstract of class of configuration of vm os kernel setting """
-    kern_name = []
-    kern_type = []
-    kern_mod = []
-    kern_args = []
-    kern_console = []
-    kern_load_addr = []
-    kern_entry_addr = []
-    kern_root_dev = []
-    kern_args_append = []
+    kern_name = {}
+    kern_type = {}
+    kern_mod = {}
+    kern_args = {}
+    kern_console = {}
+    kern_load_addr = {}
+    kern_entry_addr = {}
+    kern_root_dev = {}
+    kern_args_append = {}
 
     def __init__(self, scenario_file):
         self.scenario_info = scenario_file
@@ -85,38 +85,37 @@ class CfgOsKern:
         Get all items which belong to this class
         :return: None
         """
-        self.kern_name = scenario_cfg_lib.get_sub_leaf_tag(self.scenario_info, "os_config", "name")
-        self.kern_type = scenario_cfg_lib.get_sub_leaf_tag(
+        self.kern_name = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "os_config", "name")
+        self.kern_type = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_type")
-        self.kern_mod = scenario_cfg_lib.get_sub_leaf_tag(
+        self.kern_mod = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_mod")
-        self.kern_args = scenario_cfg_lib.get_sub_leaf_tag(
+        self.kern_args = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "os_config", "bootargs")
-        self.kern_console = scenario_cfg_lib.get_sub_leaf_tag(
+        self.kern_console = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "os_config", "console")
-        self.kern_load_addr = scenario_cfg_lib.get_sub_leaf_tag(
+        self.kern_load_addr = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_load_addr")
-        self.kern_entry_addr = scenario_cfg_lib.get_sub_leaf_tag(
+        self.kern_entry_addr = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_entry_addr")
-        self.kern_root_dev = scenario_cfg_lib.get_sub_leaf_tag(
+        self.kern_root_dev = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "os_config", "rootfs")
-        self.kern_args_append = scenario_cfg_lib.get_sub_leaf_tag(
+        self.kern_args_append = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "boot_private", "bootargs")
 
-    @staticmethod
-    def check_item():
+    def check_item(self):
         """
         Check all items in this class
         :return: None
         """
-        scenario_cfg_lib.os_kern_name_check("name")
-        scenario_cfg_lib.os_kern_type_check("kern_type")
-        scenario_cfg_lib.os_kern_mod_check("kern_mod")
-        scenario_cfg_lib.os_kern_args_check("kern_args")
-        scenario_cfg_lib.os_kern_console_check("console")
-        scenario_cfg_lib.os_kern_load_addr_check("kern_load_addr")
-        scenario_cfg_lib.os_kern_entry_addr_check("kern_entry_addr")
-        scenario_cfg_lib.os_kern_root_dev_check("rootdev")
+        scenario_cfg_lib.os_kern_name_check(self.kern_name, "name")
+        scenario_cfg_lib.os_kern_type_check(self.kern_type, "kern_type")
+        scenario_cfg_lib.os_kern_mod_check(self.kern_mod, "kern_mod")
+        scenario_cfg_lib.os_kern_args_check(self.kern_args, "kern_args")
+        scenario_cfg_lib.os_kern_console_check(self.kern_console, "console")
+        scenario_cfg_lib.os_kern_load_addr_check(self.kern_load_addr, "kern_load_addr")
+        scenario_cfg_lib.os_kern_entry_addr_check(self.kern_entry_addr, "kern_entry_addr")
+        scenario_cfg_lib.os_kern_root_dev_check(self.kern_root_dev, "rootdev")
 
 
 class VuartTarget:
@@ -175,8 +174,8 @@ class VuartInfo:
 
 class MemInfo:
     """ This is Abstract of class of memory setting information """
-    mem_start_hpa = []
-    mem_size = []
+    mem_start_hpa = {}
+    mem_size = {}
 
     def __init__(self, scenario_file):
         self.scenario_info = scenario_file
@@ -186,25 +185,24 @@ class MemInfo:
         Get all items which belong to this class
         :return: None
         """
-        self.mem_start_hpa = scenario_cfg_lib.get_sub_leaf_tag(
+        self.mem_start_hpa = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "memory", "start_hpa")
-        self.mem_size = scenario_cfg_lib.get_sub_leaf_tag(
+        self.mem_size = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "memory", "size")
 
-    @staticmethod
-    def check_item():
+    def check_item(self):
         """
         Check all items in this class
         :return: None
         """
-        scenario_cfg_lib.mem_start_hpa_check("start_hpa")
-        scenario_cfg_lib.mem_size_check("size")
+        scenario_cfg_lib.mem_start_hpa_check(self.mem_start_hpa, "start_hpa")
+        scenario_cfg_lib.mem_size_check(self.mem_size, "size")
 
 
 class CfgPci:
     """ This is Abstract of class of PCi devices setting information """
-    pci_dev_num = []
-    pci_devs = []
+    pci_dev_num = {}
+    pci_devs = {}
 
     def __init__(self, scenario_file):
         self.scenario_info = scenario_file
@@ -214,14 +212,14 @@ class CfgPci:
         Get pci device number items
         :return: None
         """
-        self.pci_dev_num = scenario_cfg_lib.get_sub_tree_tag(self.scenario_info, "pci_dev_num")
+        self.pci_dev_num = scenario_cfg_lib.get_branch_tag_map(self.scenario_info, "pci_dev_num")
 
     def get_pci_devs(self):
         """
         Get pci devices items
         :return: None
         """
-        self.pci_devs = scenario_cfg_lib.get_sub_tree_tag(self.scenario_info, "pci_devs")
+        self.pci_devs = scenario_cfg_lib.get_branch_tag_map(self.scenario_info, "pci_devs")
 
     def get_info(self):
         """
@@ -231,13 +229,12 @@ class CfgPci:
         self.get_pci_dev_num()
         self.get_pci_devs()
 
-    @staticmethod
-    def check_item():
+    def check_item(self):
         """ Check all items in this class
         :return: None
         """
-        scenario_cfg_lib.pci_dev_num_check("pci_dev_num")
-        scenario_cfg_lib.pci_devs_check("pci_devs")
+        scenario_cfg_lib.pci_dev_num_check(self.pci_dev_num, "pci_dev_num")
+        scenario_cfg_lib.pci_devs_check(self.pci_devs, "pci_devs")
 
 
 class EpcSection:
@@ -248,18 +245,18 @@ class EpcSection:
         self.scenario_info = scenario_info
 
     def get_info(self):
-        self.base = scenario_cfg_lib.get_epc_base(self.scenario_info)
-        self.size = scenario_cfg_lib.get_epc_size(self.scenario_info)
+        self.base = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "epc_section", "base")
+        self.size = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "epc_section", "size")
 
 
 class VmInfo:
     """ This is Abstract of class of VM setting """
-    name = []
-    load_order = []
-    uuid = []
-    clos_set = []
-    guest_flag_idx = []
-    cpus_per_vm = []
+    name = {}
+    load_order = {}
+    uuid = {}
+    clos_set = {}
+    guest_flag_idx = {}
+    cpus_per_vm = {}
 
     def __init__(self, board_file, scenario_file):
         self.board_info = board_file
@@ -277,14 +274,14 @@ class VmInfo:
         Get all items which belong to this class
         :return: None
         """
-        self.name = scenario_cfg_lib.get_sub_tree_tag(self.scenario_info, "name")
-        self.load_order = scenario_cfg_lib.get_sub_tree_tag(self.scenario_info, "load_order")
-        self.uuid = scenario_cfg_lib.get_sub_tree_tag(self.scenario_info, "uuid")
+        self.name = scenario_cfg_lib.get_branch_tag_map(self.scenario_info, "name")
+        self.load_order = scenario_cfg_lib.get_branch_tag_map(self.scenario_info, "load_order")
+        self.uuid = scenario_cfg_lib.get_branch_tag_map(self.scenario_info, "uuid")
         self.guest_flag_idx = scenario_cfg_lib.get_sub_leaf_tag(
             self.scenario_info, "guest_flags", "guest_flag")
-        self.cpus_per_vm = scenario_cfg_lib.get_sub_leaf_tag(
+        self.cpus_per_vm = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "pcpu_ids", "pcpu_id")
-        self.clos_set = scenario_cfg_lib.get_sub_tree_tag(self.scenario_info, "clos")
+        self.clos_set = scenario_cfg_lib.get_branch_tag_map(self.scenario_info, "clos")
         self.epc_section.get_info()
         self.mem_info.get_info()
         self.os_cfg.get_info()
@@ -307,7 +304,7 @@ class VmInfo:
         scenario_cfg_lib.load_order_check(self.load_order, "load_order")
         scenario_cfg_lib.uuid_format_check(self.uuid, "uuid")
         scenario_cfg_lib.guest_flag_check(self.guest_flag_idx, "guest_flags", "guest_flag")
-        scenario_cfg_lib.cpus_per_vm_check("pcpu_id")
+        scenario_cfg_lib.cpus_per_vm_check(self.cpus_per_vm, "pcpu_id")
 
         self.mem_info.check_item()
         self.os_cfg.check_item()
