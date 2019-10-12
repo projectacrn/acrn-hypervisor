@@ -1110,7 +1110,7 @@ int32_t hcall_set_callback_vector(const struct acrn_vm *vm, uint64_t param)
 	}
 
 	if ((param > NR_MAX_VECTOR) || (param < VECTOR_DYNAMIC_START)) {
-		pr_err("%s: Invalid passed vector\n");
+		pr_err("%s: Invalid passed vector\n", __func__);
 		return -EINVAL;
 	}
 
