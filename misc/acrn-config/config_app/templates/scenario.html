@@ -147,20 +147,19 @@
                                 <div class="form-group">
                                     {% if 'id' not in elem.attrib %}
                                         {% if not first_child %}
-                                        {% do first_child.append(1) %}
                                         <label class="col-sm-1 control-label" data-toggle="tooltip"
-                                               title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
+                                               title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
                                             {{elem.tag}}</label>
                                         {% else %}
                                         <label class="col-sm-1 control-label" data-toggle="tooltip"
-                                               title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
+                                               title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
                                         </label>
                                         {% endif %}
-
                                         <label class="col-sm-2 control-label" data-toggle="tooltip"
                                                title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
                                             {{sub_elem.tag}}</label>
-                                        {% if ','.join(['vm', elem.tag, sub_elem.tag]) not in scenario_item_values %}
+
+                                        {% if ','.join(['vm', elem.tag, sub_elem.tag]) not in scenario_item_values and elem.tag != 'vcpu_affinity' %}
                                             {% if sub_elem.tag in ['bootargs', 'kern_args'] %}
                                                 <div class="col-sm-6">
                                                 {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
@@ -186,6 +185,8 @@
                                                 </div>
                                             {% endif %}
                                         {% else %}
+                                            {% set item_key = ','.join(['vm', elem.tag, sub_elem.tag]) if elem.tag != 'vcpu_affinity' else
+                                            ','.join(['vm', elem.tag])%}
                                             <div class="dropdown col-sm-6">
                                                 {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                                 <select class="selectpicker" data-width="auto"
@@ -194,7 +195,7 @@
                                                 <select class="selectpicker" data-width="auto"
                                                         id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}">
                                                 {% endif %}
-                                                {% for item_value in scenario_item_values[','.join(['vm', elem.tag, sub_elem.tag])] %}
+                                                {% for item_value in scenario_item_values[item_key] %}
                                                     {% if item_value == sub_elem_text %}
                                                     <option value="{{item_value}}" selected="selected">{{item_value}}</option>
                                                     {% else %}
@@ -202,8 +203,18 @@
                                                     {% endif %}
                                                 {% endfor %}
                                                 </select>
+
+                                                {% if elem.tag == 'vcpu_affinity' %}
+                                                <button type="button" class="btn" id="add_vcpu_{{first_child|length}}">+</button>
+                                                {% if not first_child %}
+                                                <button type="button" disabled class="btn" id="remove_vcpu_{{first_child|length}}">-</button>
+                                                {% else %}
+                                                <button type="button" class="btn" id="remove_vcpu_{{first_child|length}}">-</button>
+                                                {% endif %}
+                                                {% endif%}
                                             </div>
                                         {% endif %}
+                                        {% do first_child.append(1) %}
                                         <p id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}_err" class="col-sm-3"></p>
                                     {% else %}
                                         {% if not first_child %}
