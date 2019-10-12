@@ -1175,7 +1175,7 @@ int32_t hcall_set_callback_vector(const struct acrn_vm *vm, uint64_t param)
 		pr_err("%s: Targeting to service vm", __func__);
 	        ret = -EPERM;
 	} else if ((param > NR_MAX_VECTOR) || (param < VECTOR_DYNAMIC_START)) {
-		pr_err("%s: Invalid passed vector\n");
+		pr_err("%s: Invalid passed vector\n", __func__);
 		ret = -EINVAL;
 	} else {
 		set_vhm_notification_vector((uint32_t)param);
