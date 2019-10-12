@@ -153,21 +153,6 @@ void deinit_vmsi(const struct pci_vdev *vdev)
 	}
 }
 
-/* Read a uint32_t from buffer (little endian) */
-static uint32_t buf_read32(const uint8_t buf[])
-{
-	return buf[0] | ((uint32_t)buf[1] << 8U) | ((uint32_t)buf[2] << 16U) | ((uint32_t)buf[3] << 24U);
-}
-
-/* Write a uint32_t to buffer (little endian) */
-static void buf_write32(uint8_t buf[], uint32_t val)
-{
-	buf[0] = (uint8_t)(val & 0xFFU);
-	buf[1] = (uint8_t)((val >> 8U)  & 0xFFU);
-	buf[2] = (uint8_t)((val >> 16U) & 0xFFU);
-	buf[3] = (uint8_t)((val >> 24U) & 0xFFU);
-}
-
 /**
  * @pre vdev != NULL
  * @pre vdev->pdev != NULL
@@ -177,18 +162,15 @@ void init_vmsi(struct pci_vdev *vdev)
 	struct pci_pdev *pdev = vdev->pdev;
 	uint32_t val;
 
-	vdev->msi.capoff = pdev->msi.capoff;
-	vdev->msi.caplen = pdev->msi.caplen;
+	vdev->msi.capoff = pdev->msi_capoff;
 
 	if (has_msi_cap(vdev)) {
-		(void)memcpy_s((void *)&vdev->cfgdata.data_8[pdev->msi.capoff], pdev->msi.caplen,
-			(void *)&pdev->msi.cap[0U], pdev->msi.caplen);
+		val = pci_pdev_read_cfg(pdev->bdf, vdev->msi.capoff, 4U);
+		vdev->msi.caplen = ((val & (PCIM_MSICTRL_64BIT << 16U)) != 0U) ? 14U : 10U;
 
-		val = buf_read32(&pdev->msi.cap[0U]);
 		val &= ~((uint32_t)PCIM_MSICTRL_MMC_MASK << 16U);
 		val &= ~((uint32_t)PCIM_MSICTRL_MME_MASK << 16U);
-
-		buf_write32(&vdev->cfgdata.data_8[pdev->msi.capoff], val);
+		pci_vdev_write_cfg(vdev, vdev->msi.capoff, 4U, val);
 	}
 }
 

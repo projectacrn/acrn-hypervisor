@@ -128,7 +128,6 @@
 #define PCIM_MSIX_BIR_MASK    0x7U
 #define PCIM_MSIX_VCTRL_MASK  0x1U
 
-#define MSI_MAX_CAPLEN        14U
 #define MSIX_CAPLEN           12U
 #define MSIX_TABLE_ENTRY_SIZE 16U
 
@@ -195,13 +194,6 @@ struct pci_bar {
 	bool is_64bit_high; /* true if this is the upper 32-bit of a 64-bit bar */
 };
 
-/* Basic MSI capability info */
-struct pci_msi_cap {
-	uint32_t  capoff;
-	uint32_t  caplen;
-	uint8_t   cap[MSI_MAX_CAPLEN];
-};
-
 /* Basic MSIX capability info */
 struct pci_msix_cap {
 	uint32_t  capoff;
@@ -219,7 +211,7 @@ struct pci_pdev {
 	/* The bus/device/function triple of the physical PCI device. */
 	union pci_bdf bdf;
 
-	struct pci_msi_cap msi;
+	uint32_t msi_capoff;
 
 	struct pci_msix_cap msix;
 };

@@ -231,15 +231,7 @@ static void pci_read_cap(struct pci_pdev *pdev)
 		if ((cap == PCIY_MSI) || (cap == PCIY_MSIX)) {
 			offset = ptr;
 			if (cap == PCIY_MSI) {
-				pdev->msi.capoff = offset;
-				msgctrl = pci_pdev_read_cfg(pdev->bdf, offset + PCIR_MSI_CTRL, 2U);
-				len = ((msgctrl & PCIM_MSICTRL_64BIT) != 0U) ? 14U : 10U;
-				pdev->msi.caplen = len;
-
-				/* Copy MSI capability struct into buffer */
-				for (idx = 0U; idx < len; idx++) {
-					pdev->msi.cap[idx] = (uint8_t)pci_pdev_read_cfg(pdev->bdf, offset + idx, 1U);
-				}
+				pdev->msi_capoff = offset;
 			} else {
 				pdev->msix.capoff = offset;
 				pdev->msix.caplen = MSIX_CAPLEN;
