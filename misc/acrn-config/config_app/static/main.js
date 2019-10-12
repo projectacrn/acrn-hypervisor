@@ -299,6 +299,26 @@ $().ready(function(){
         show_com_target(id, value);
     })
 
+    $(document).on('click', "button:contains('+')", function() {
+        var add_vcpu_id = $(this).attr('id');
+        var id = add_vcpu_id.replace('add_vcpu_', '');
+        var config_item = $(this).parent().parent();
+        var config_item_added = config_item.clone();
+        var id_added = (parseInt(id)+1).toString();
+        config_item_added.find("button:contains('+')").attr('id', 'add_vcpu_'+id_added);
+        config_item_added.find("button:contains('-')").attr('id', 'remove_vcpu_'+id_added);
+        config_item_added.find("button:contains('-')").prop("disabled", false);
+        config_item_added.find("label:first").text("");
+        config_item_added.find('.bootstrap-select').replaceWith(function() { return $('select', this); });
+        config_item_added.find('.selectpicker').selectpicker('render');
+        config_item_added.insertAfter(config_item);
+    });
+
+    $(document).on('click', "button:contains('-')", function() {
+        var config_item = $(this).parent().parent();
+        config_item.remove();
+    });
+
 })
 
 
@@ -330,7 +350,7 @@ function show_com_target(id, value) {
 
 
 function save_scenario(generator=null){
-    var board_info = $("select#board_info").val();
+    var board_info = $("text#board_type").text();
     if (board_info==null || board_info=='') {
         alert("Please select one board info before this operation.");
         return;
@@ -346,7 +366,7 @@ function save_scenario(generator=null){
     	var value = $(this).val();
     	if(id!='new_scenario_name' && id!='board_info_file'
     	    && id!='board_info_upload' && id!="scenario_file") {
-    	    scenario_config[id] = $(this).val();
+            scenario_config[id] = value;
     	}
     })
 
@@ -355,16 +375,22 @@ function save_scenario(generator=null){
     	var value = $(this).val();
     	if(id!='new_scenario_name' && id!='board_info_file'
     	    && id!='board_info_upload' && id!="scenario_file") {
-    	    scenario_config[id] = $(this).val();
+            scenario_config[id] = value;
     	}
     })
 
     $("select").each(function(){
         var id = $(this).attr('id');
-    	var value = $(this).val();
-    	if(id!='board_info') {
-    	    scenario_config[$(this).attr('id')] = $(this).val();
-    	}
+        var value = $(this).val();
+        if(id.indexOf('pcpu_id')>=0) {
+            if(id in scenario_config) {
+                scenario_config[id].push(value);
+            } else {
+                scenario_config[id] = [value];
+            }
+        } else if(id!='board_info') {
+            scenario_config[id] = value;
+        }
     })
 
     $.ajax({
@@ -442,7 +468,7 @@ function save_scenario(generator=null){
 }
 
 function save_launch(generator=null) {
-    var board_info = $("select#board_info").val();
+    var board_info = $("text#board_type").text();
     var scenario_name = $("select#scenario_name").val();
     if (board_info==null || board_info=='' || scenario_name==null || scenario_name=='') {
         alert("Please select one board and scenario before this operation.");
@@ -461,7 +487,7 @@ function save_launch(generator=null) {
     	if(id!='new_launch_name' && id!='board_info_file'
     	    && id!='board_info_upload' && id!='scenario_name'
     	    && id!="launch_file") {
-    	    launch_config[id] = $(this).val();
+            launch_config[id] = value;
     	}
     })
 
@@ -469,7 +495,7 @@ function save_launch(generator=null) {
         var id = $(this).attr('id');
     	var value = $(this).val();
     	if(id!='board_info') {
-    	    launch_config[$(this).attr('id')] = $(this).val();
+            launch_config[id] = value;
     	}
     })
 
@@ -478,7 +504,7 @@ function save_launch(generator=null) {
     	var value = $(this).val();
     	if(id!='new_scenario_name' && id!='board_info_file'
     	    && id!='board_info_upload' && id!="scenario_file") {
-    	    launch_config[id] = $(this).val();
+            launch_config[id] = value;
     	}
     })
 
