@@ -24,12 +24,12 @@
 #include <pgtable.h>
 #include <mmu.h>
 #include <logmsg.h>
-#include <vboot.h>
 #include <vboot_info.h>
 #include <board.h>
 #include <sgx.h>
 #include <sbuf.h>
 #include <pci_dev.h>
+#include <vacpi.h>
 
 vm_sw_loader_t vm_sw_loader;
 

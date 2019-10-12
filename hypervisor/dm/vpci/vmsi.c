@@ -28,7 +28,6 @@
  */
 
 #include <vm.h>
-#include <errno.h>
 #include <ptdev.h>
 #include <assign.h>
 #include <vpci.h>

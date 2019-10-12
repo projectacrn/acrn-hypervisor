@@ -13,8 +13,6 @@
 #ifndef HYPERCALL_H
 #define HYPERCALL_H
 
-struct vhm_request;
-
 bool is_hypercall_from_ring0(void);
 
 /**
