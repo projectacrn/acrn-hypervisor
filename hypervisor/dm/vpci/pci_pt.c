@@ -27,10 +27,8 @@
 * $FreeBSD$
 */
 #include <vm.h>
-#include <errno.h>
 #include <ept.h>
 #include <mmu.h>
-#include <vmx.h>
 #include <logmsg.h>
 #include "vpci_priv.h"
 

@@ -7,7 +7,6 @@
  */
 
 #include <types.h>
-#include <errno.h>
 #include <vmcs.h>
 #include <vcpu.h>
 #include <vm.h>

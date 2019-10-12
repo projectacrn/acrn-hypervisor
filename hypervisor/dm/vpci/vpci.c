@@ -30,7 +30,6 @@
 #include <vm.h>
 #include <vtd.h>
 #include <mmu.h>
-#include <errno.h>
 #include <logmsg.h>
 #include "vpci_priv.h"
 #include "pci_dev.h"

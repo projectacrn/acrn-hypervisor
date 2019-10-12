@@ -10,8 +10,6 @@
 #include <logmsg.h>
 #include <per_cpu.h>
 #include <vm_reset.h>
-#include <default_acpi_info.h>
-#include <platform_acpi_info.h>
 
 /**
  * @pre vm != NULL

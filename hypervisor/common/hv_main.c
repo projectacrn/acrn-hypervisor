@@ -10,7 +10,6 @@
 #include <vmexit.h>
 #include <irq.h>
 #include <schedule.h>
-#include <softirq.h>
 #include <profiling.h>
 #include <trace.h>
 #include <logmsg.h>
