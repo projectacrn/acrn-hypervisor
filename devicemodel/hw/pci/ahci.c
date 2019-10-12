@@ -2419,8 +2419,8 @@ pci_ahci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts, int atapi)
 			sizeof(ahci_dev->port[p].ident),
 			"ACRN--%02X%02X-%02X%02X-%02X%02X", digest[0],
 			digest[1], digest[2], digest[3], digest[4], digest[5]);
-		if (rc > sizeof(ahci_dev->port[p].ident))
-			WPRINTF("%s: digest is longer than ident\n", __func__);
+		if (rc >= sizeof(ahci_dev->port[p].ident) || rc < 0)
+			WPRINTF("%s: digest number is invalid!\n", __func__);
 
 		/*
 		 * Allocate blockif request structures and add them
