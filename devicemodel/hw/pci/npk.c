@@ -244,8 +244,8 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	/* read the host NPK configuration space */
 	rc = snprintf(name, PATH_MAX, "%s/%s/config", NPK_DRV_SYSFS_PATH,
 			dent->d_name);
-	if (rc > PATH_MAX)
-		WPRINTF(("NPK device name too long\n"));
+	if (rc >= PATH_MAX || rc < 0)
+		WPRINTF(("NPK device name is invalid!\n"));
 	fd = open(name, O_RDONLY);
 	if (fd == -1) {
 		WPRINTF(("Cannot open host NPK config\n"));
