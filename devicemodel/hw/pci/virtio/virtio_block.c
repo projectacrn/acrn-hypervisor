@@ -427,12 +427,12 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	MD5_Init(&mdctx);
 	MD5_Update(&mdctx, opts, strnlen(opts, VIRTIO_BLK_MAX_OPTS_LEN));
 	MD5_Final(digest, &mdctx);
-	if (snprintf(blk->ident, sizeof(blk->ident),
+	rc = snprintf(blk->ident, sizeof(blk->ident),
 		"ACRN--%02X%02X-%02X%02X-%02X%02X", digest[0],
-		digest[1], digest[2], digest[3], digest[4],
-		digest[5]) >= sizeof(blk->ident)) {
-		WPRINTF(("virtio_blk: block ident too long\n"));
-	}
+		digest[1], digest[2], digest[3], digest[4], digest[5]);
+
+	if (rc >= sizeof(blk->ident) || rc < 0)
+		WPRINTF(("virtio_blk: block ident is invalid!\n"));
 
 	/* setup virtio block config space */
 	blk->cfg.capacity = size / DEV_BSIZE; /* 512-byte units */
