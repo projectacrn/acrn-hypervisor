@@ -90,9 +90,9 @@ Use the ACRN industry out-of-the-box image
 
 #. Decompress the xz image:
 
-  .. code-block:: none
+   .. code-block:: none
 
-     $ xz -d sos-industry-31080.img.xz
+      $ xz -d sos-industry-31080.img.xz
 
 #. Follow the instructions at :ref:`Deploy the Service VM image <deploy_ootb_service_vm>`
    to deploy the Service VM image on the SATA disk.
