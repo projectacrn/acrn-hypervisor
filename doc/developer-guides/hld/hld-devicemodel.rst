@@ -88,6 +88,10 @@ options:
        --virtio_poll: enable virtio poll mode with poll interval with ns
        --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET
        --lapic_pt: enable local apic passthrough
+       --rtvm: indicate that the guest is rtvm
+       --logger_setting: params like console,level=4;kmsg,level=3
+       --pm_notify_channel: define the channel used to notify guest about power event
+       --pm_by_vuart:pty,/run/acrn/vuart_vmname or tty,/dev/ttySn
 
 See :ref:`acrn-dm_parameters` for more detailed descriptions of these
 configuration options.
@@ -247,6 +251,11 @@ DM Initialization
                       handle_vmexit(ctx, vhm_req, vcpu_id);
               }
 
+              if (VM_SUSPEND_FULL_RESET == vm_get_suspend_mode() ||
+                VM_SUSPEND_POWEROFF == vm_get_suspend_mode()) {
+                break;
+              }
+
               if (VM_SUSPEND_SYSTEM_RESET == vm_get_suspend_mode()) {
                   vm_system_reset(ctx);
               }
@@ -255,7 +264,6 @@ DM Initialization
                   vm_suspend_resume(ctx);
               }
           }
-          quit_vm_loop = 0;
           printf("VM loop exit\n");
       }
 
@@ -625,11 +633,6 @@ to destination emulated devices:
     * set the "Interrupt pin" field of PCI config space. */
    void    pci_lintr_request(struct pci_vdev *pi);
    void    pci_lintr_release(struct pci_vdev *pi);
-
-   /* These APIs assert/deassert vPIC interrupt lines. */
-   int vm_isa_assert_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq);
-   int vm_isa_deassert_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq);
-   int vm_isa_pulse_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq);
 
 PIRQ Routing
 ============
@@ -1031,6 +1034,8 @@ including following elements:
        { basl_fwrite_mcfg, MCFG_OFFSET, true  },
        { basl_fwrite_facs, FACS_OFFSET, true  },
        { basl_fwrite_nhlt, NHLT_OFFSET, false }, /*valid with audio ptdev*/
+       { basl_fwrite_tpm2, TPM2_OFFSET, false },
+       { basl_fwrite_psds, PSDS_OFFSET, false }, /*valid when psds present in sos */
        { basl_fwrite_dsdt, DSDT_OFFSET, true  }
    };
 
@@ -1130,6 +1135,9 @@ device id:
         else if (device == 0x5abc)
             /* URT1 @ 00:18.0 for bluetooth*/
             write_dsdt_urt1(dev);
+        else if (device == 0x5aca)
+            /* SDC @ 00:1b.0 */
+            write_dsdt_sdc(dev);
 
     }
 
