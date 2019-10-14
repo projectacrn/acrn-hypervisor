@@ -23,7 +23,6 @@ void init_scheduler(void)
 		ctl = &per_cpu(sched_ctl, i);
 
 		spinlock_init(&ctl->scheduler_lock);
-		INIT_LIST_HEAD(&ctl->runqueue);
 		ctl->flags = 0UL;
 		ctl->curr_obj = NULL;
 	}
@@ -41,31 +40,23 @@ void release_schedule_lock(uint16_t pcpu_id)
 	spinlock_release(&ctl->scheduler_lock);
 }
 
-void add_to_cpu_runqueue(struct thread_object *obj, uint16_t pcpu_id)
+void insert_thread_obj(struct thread_object *obj, uint16_t pcpu_id)
 {
 	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
 
-	if (list_empty(&obj->run_list)) {
-		list_add_tail(&obj->run_list, &ctl->runqueue);
-	}
+	ctl->thread_obj = obj;
 }
 
-void remove_from_cpu_runqueue(struct thread_object *obj)
+void remove_thread_obj(__unused struct thread_object *obj, uint16_t pcpu_id)
 {
-	list_del_init(&obj->run_list);
+	struct sched_control *ctl = &per_cpu(sched_ctl, pcpu_id);
+
+	ctl->thread_obj = NULL;
 }
 
-static struct thread_object *get_next_sched_obj(struct sched_control *ctl)
+static struct thread_object *get_next_sched_obj(const struct sched_control *ctl)
 {
-	struct thread_object *obj = NULL;
-
-	if (!list_empty(&ctl->runqueue)) {
-		obj = get_first_item(&ctl->runqueue, struct thread_object, run_list);
-	} else {
-		obj = &get_cpu_var(idle);
-	}
-
-	return obj;
+	return ctl->thread_obj == NULL ? &get_cpu_var(idle) : ctl->thread_obj;
 }
 
 /**

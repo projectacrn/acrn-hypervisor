@@ -18,7 +18,6 @@ typedef void (*thread_entry_t)(struct thread_object *obj);
 typedef void (*switch_t)(struct thread_object *obj);
 struct thread_object {
 	char name[16];
-	struct list_head run_list;
 	uint64_t host_sp;
 	thread_entry_t thread_entry;
 	switch_t switch_out;
@@ -26,10 +25,11 @@ struct thread_object {
 };
 
 struct sched_control {
-	struct list_head runqueue;
 	uint64_t flags;
 	struct thread_object *curr_obj;
 	spinlock_t scheduler_lock;	/* to protect sched_control and thread_object */
+
+	struct thread_object *thread_obj;
 };
 
 void init_scheduler(void);
@@ -37,8 +37,8 @@ void switch_to_idle(thread_entry_t idle_thread);
 void get_schedule_lock(uint16_t pcpu_id);
 void release_schedule_lock(uint16_t pcpu_id);
 
-void add_to_cpu_runqueue(struct thread_object *obj, uint16_t pcpu_id);
-void remove_from_cpu_runqueue(struct thread_object *obj);
+void insert_thread_obj(struct thread_object *obj, uint16_t pcpu_id);
+void remove_thread_obj(struct thread_object *obj, uint16_t pcpu_id);
 
 void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode);
 bool need_reschedule(uint16_t pcpu_id);
