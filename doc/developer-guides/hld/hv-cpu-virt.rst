@@ -1047,7 +1047,7 @@ setting.
        are fixed to be 0 under VMX operation
 
    * - CR4_TRAP_MASK
-     - CR4_PSE | CR4_PAE | CR4_VMXE | CR4_PCIDE
+     - CR4_PSE | CR4_PAE | CR4_VMXE | CR4_PCIDE | CR4_SMEP | CR4_SMAP | CR4_PKE
      - ACRN will also trap PSE, PAE, VMXE, and PCIDE bits
 
    * - cr4_host_mask
