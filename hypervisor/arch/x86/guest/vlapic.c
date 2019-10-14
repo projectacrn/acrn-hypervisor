@@ -555,8 +555,8 @@ static void apicv_advanced_accept_intr(struct acrn_vlapic *vlapic, uint32_t vect
 		 */
 		bitmap_set_lock(ACRN_REQUEST_EVENT, &vlapic->vcpu->arch.pending_req);
 
-		if (get_pcpu_id() != vlapic->vcpu->pcpu_id) {
-			apicv_post_intr(vlapic->vcpu->pcpu_id);
+		if (get_pcpu_id() != pcpuid_from_vcpu(vlapic->vcpu)) {
+			apicv_post_intr(pcpuid_from_vcpu(vlapic->vcpu));
 		}
 	}
 }
@@ -2049,7 +2049,7 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 			default:
 				/* convert the dest from virtual apic_id to physical apic_id */
 				if (is_x2apic_enabled(vcpu_vlapic(target_vcpu))) {
-					papic_id = per_cpu(lapic_id, target_vcpu->pcpu_id);
+					papic_id = per_cpu(lapic_id, pcpuid_from_vcpu(target_vcpu));
 					dev_dbg(ACRN_DBG_LAPICPT,
 						"%s vapic_id: 0x%08lx papic_id: 0x%08lx icr_low:0x%08lx",
 						 __func__, vapic_id, papic_id, icr_low);

@@ -408,7 +408,7 @@ static void inject_msi_lapic_pt(struct acrn_vm *vm, const struct acrn_msi_entry 
 		while (vcpu_id != INVALID_BIT_INDEX) {
 			bitmap_clear_nolock(vcpu_id, &vdmask);
 			vcpu = vcpu_from_vid(vm, vcpu_id);
-			dest |= per_cpu(lapic_ldr, vcpu->pcpu_id);
+			dest |= per_cpu(lapic_ldr, pcpuid_from_vcpu(vcpu));
 			vcpu_id = ffs64(vdmask);
 		}
 

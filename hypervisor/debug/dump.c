@@ -67,12 +67,14 @@ struct intr_excp_ctx *crash_ctx;
 
 static void dump_guest_reg(struct acrn_vcpu *vcpu)
 {
+	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
+
 	pr_acrnlog("\n\n================================================");
 	pr_acrnlog("================================\n\n");
 	pr_acrnlog("Guest Registers:\r\n");
 	pr_acrnlog("=	VM ID %d ==== vCPU ID %hu ===  pCPU ID %d ===="
 			"world %d =============\r\n",
-			vcpu->vm->vm_id, vcpu->vcpu_id, vcpu->pcpu_id,
+			vcpu->vm->vm_id, vcpu->vcpu_id, pcpu_id,
 			vcpu->arch.cur_context);
 	pr_acrnlog("=	RIP=0x%016llx  RSP=0x%016llx "
 			"RFLAGS=0x%016llx\r\n",

@@ -534,7 +534,7 @@ static void do_init_vmcs(struct acrn_vcpu *vcpu)
  */
 void init_vmcs(struct acrn_vcpu *vcpu)
 {
-	uint16_t pcpu_id = vcpu->pcpu_id;
+	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
 
 	if (pcpu_id == get_pcpu_id()) {
 		do_init_vmcs(vcpu);

@@ -47,8 +47,8 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 		/* Either SOS or pre-launched VMs */
 		pause_vm(vm);
 
-		per_cpu(shutdown_vm_id, vcpu->pcpu_id) = vm->vm_id;
-		make_shutdown_vm_request(vcpu->pcpu_id);
+		per_cpu(shutdown_vm_id, pcpuid_from_vcpu(vcpu)) = vm->vm_id;
+		make_shutdown_vm_request(pcpuid_from_vcpu(vcpu));
 	}
 }
 

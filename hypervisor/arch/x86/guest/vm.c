@@ -414,7 +414,7 @@ static uint64_t lapic_pt_enabled_pcpu_bitmap(struct acrn_vm *vm)
 	if (is_lapic_pt_configured(vm)) {
 		foreach_vcpu(i, vm, vcpu) {
 			if (is_lapic_pt_enabled(vcpu)) {
-				bitmap_set_nolock(vcpu->pcpu_id, &bitmap);
+				bitmap_set_nolock(pcpuid_from_vcpu(vcpu), &bitmap);
 			}
 		}
 	}
@@ -598,8 +598,8 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 			reset_vcpu(vcpu);
 			offline_vcpu(vcpu);
 
-			if (bitmap_test(vcpu->pcpu_id, &mask)) {
-				make_pcpu_offline(vcpu->pcpu_id);
+			if (bitmap_test(pcpuid_from_vcpu(vcpu), &mask)) {
+				make_pcpu_offline(pcpuid_from_vcpu(vcpu));
 			}
 		}
 
@@ -679,8 +679,8 @@ int32_t reset_vm(struct acrn_vm *vm)
 		foreach_vcpu(i, vm, vcpu) {
 			reset_vcpu(vcpu);
 
-			if (bitmap_test(vcpu->pcpu_id, &mask)) {
-				make_pcpu_offline(vcpu->pcpu_id);
+			if (bitmap_test(pcpuid_from_vcpu(vcpu), &mask)) {
+				make_pcpu_offline(pcpuid_from_vcpu(vcpu));
 			}
 		}
 

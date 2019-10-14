@@ -888,7 +888,7 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 			vm_info_list.vm_list[vm_idx].cpu_map[i].vcpu_id
 				= vcpu->vcpu_id;
 			vm_info_list.vm_list[vm_idx].cpu_map[i].pcpu_id
-				= vcpu->pcpu_id;
+				= pcpuid_from_vcpu(vcpu);
 			vm_info_list.vm_list[vm_idx].cpu_map[i].apic_id = 0;
 			vm_info_list.vm_list[vm_idx].num_vcpus++;
 		}
@@ -1369,7 +1369,7 @@ void profiling_pre_vmexit_handler(struct acrn_vcpu *vcpu)
  */
 void profiling_post_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	per_cpu(profiling_info.s_state, vcpu->pcpu_id).total_vmexit_count++;
+	per_cpu(profiling_info.s_state, pcpuid_from_vcpu(vcpu)).total_vmexit_count++;
 
 	if ((get_cpu_var(profiling_info.s_state).pmu_state == PMU_RUNNING) ||
 		(get_cpu_var(profiling_info.soc_state) == SW_RUNNING)) {

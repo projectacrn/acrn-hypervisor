@@ -13,6 +13,14 @@
 #include <schedule.h>
 #include <sprintf.h>
 
+/**
+ * @pre obj != NULL
+ */
+uint16_t sched_get_pcpuid(const struct thread_object *obj)
+{
+	return obj->pcpu_id;
+}
+
 void init_scheduler(void)
 {
 	struct sched_control *ctl;
@@ -141,6 +149,7 @@ void switch_to_idle(thread_entry_t idle_thread)
 
 	snprintf(idle_name, 16U, "idle%hu", pcpu_id);
 	(void)strncpy_s(idle->name, 16U, idle_name, 16U);
+	idle->pcpu_id = pcpu_id;
 	idle->thread_entry = idle_thread;
 	idle->switch_out = NULL;
 	idle->switch_in = NULL;
