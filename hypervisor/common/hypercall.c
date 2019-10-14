@@ -626,7 +626,6 @@ static int32_t add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_v
 static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	struct acrn_vm *target_vm, const struct vm_memory_region *region)
 {
-	uint64_t gpa_end;
 	uint64_t *pml4_page;
 	int32_t ret;
 
@@ -635,8 +634,7 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 			__func__, target_vm->vm_id, region->size);
 	        ret = -EINVAL;
 	} else {
-		gpa_end = region->gpa + region->size;
-		if (gpa_end > target_vm->arch_vm.ept_mem_ops.info->ept.top_address_space) {
+		if (!ept_is_mr_valid(target_vm, region->gpa, region->size)) {
 				pr_err("%s, invalid gpa: 0x%llx, size: 0x%llx, top_address_space: 0x%llx", __func__,
 					region->gpa, region->size,
 					target_vm->arch_vm.ept_mem_ops.info->ept.top_address_space);

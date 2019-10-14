@@ -18,6 +18,18 @@
 
 #define ACRN_DBG_EPT	6U
 
+bool ept_is_mr_valid(const struct acrn_vm *vm, uint64_t base, uint64_t size)
+{
+	bool valid = true;
+	uint64_t end = base + size;
+	uint64_t top_address_space = vm->arch_vm.ept_mem_ops.info->ept.top_address_space;
+	if ((end <= base) || (end > top_address_space)) {
+		valid = false;
+	}
+
+	return valid;
+}
+
 void destroy_ept(struct acrn_vm *vm)
 {
 	/* Destroy secure world */
