@@ -856,7 +856,7 @@ This table describes details for CPUID emulation:
      - - Intel RDT Currently disabled
 
    * - 12H
-     - - Intel SGX Currently disabled
+     - - Fill according to SGX virtualization
 
    * - 14H
      - - Intel Processor Trace Currently disabled
