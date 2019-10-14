@@ -362,7 +362,6 @@ def launch_end(names, args, vmid, config):
 
 def set_dm_pt(names, sel, vmid, config):
 
-    #cap_pt = launch_cfg_lib.get_board_pt_dev(names, vmid)
     uos_type = names['uos_types'][vmid]
 
     if sel.bdf['usb_xdci'][vmid] and sel.slot['usb_xdci'][vmid]:
