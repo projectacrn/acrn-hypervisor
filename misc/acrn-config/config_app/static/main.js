@@ -300,6 +300,8 @@ $().ready(function(){
     })
 
     $(document).on('click', "button:contains('+')", function() {
+        if($(this).text() != '+')
+            return;
         var add_vcpu_id = $(this).attr('id');
         var id = add_vcpu_id.replace('add_vcpu_', '');
         var config_item = $(this).parent().parent();
@@ -315,6 +317,8 @@ $().ready(function(){
     });
 
     $(document).on('click', "button:contains('-')", function() {
+        if($(this).text() != '-')
+            return;
         var config_item = $(this).parent().parent();
         config_item.remove();
     });
