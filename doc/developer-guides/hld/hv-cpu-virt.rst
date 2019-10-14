@@ -1108,15 +1108,8 @@ APIs to register its IO/MMIO range:
      - register an I/O emulation handler for a hypervisor emulated device
        by specific I/O range
 
-   * - free_io_emulation_resource
-     - free all I/O emulation resources for a VM
-
    * - register_mmio_emulation_handler
      - register a MMIO emulation handler for a hypervisor emulated device
-       by specific MMIO range
-
-   * - unregister_mmio_emulation_handler
-     - unregister a MMIO emulation handler for a hypervisor emulated device
        by specific MMIO range
 
 .. _instruction-emulation:
