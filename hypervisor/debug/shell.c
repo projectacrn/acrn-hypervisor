@@ -664,7 +664,7 @@ static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv)
 			snprintf(temp_str, MAX_STR_SIZE,
 					"  %-9d %-10d %-7hu %-12s %-16s\r\n",
 					vm->vm_id,
-					vcpu->pcpu_id,
+					pcpuid_from_vcpu(vcpu),
 					vcpu->vcpu_id,
 					is_vcpu_bsp(vcpu) ?
 					"PRIMARY" : "SECONDARY",
@@ -767,7 +767,7 @@ static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv)
 {
 	int32_t status = 0;
 	uint16_t vm_id;
-	uint16_t vcpu_id;
+	uint16_t vcpu_id, pcpu_id;
 	struct acrn_vm *vm;
 	struct acrn_vcpu *vcpu;
 	uint64_t mask = 0UL;
@@ -807,13 +807,14 @@ static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv)
 		goto out;
 	}
 
+	pcpu_id = pcpuid_from_vcpu(vcpu);
 	dump.vcpu = vcpu;
 	dump.str = shell_log_buf;
 	dump.str_max = SHELL_LOG_BUF_SIZE;
-	if (vcpu->pcpu_id == get_pcpu_id()) {
+	if (pcpu_id == get_pcpu_id()) {
 		vcpu_dumpreg(&dump);
 	} else {
-		bitmap_set_nolock(vcpu->pcpu_id, &mask);
+		bitmap_set_nolock(pcpu_id, &mask);
 		smp_call_function(mask, vcpu_dumpreg, &dump);
 	}
 	shell_puts(shell_log_buf);

@@ -26,7 +26,7 @@ void vcpu_thread(struct thread_object *obj)
 		}
 
 		/* Don't open interrupt window between here and vmentry */
-		if (need_reschedule(vcpu->pcpu_id)) {
+		if (need_reschedule(pcpuid_from_vcpu(vcpu))) {
 			schedule();
 		}
 

@@ -177,7 +177,7 @@ static inline struct acrn_vcpu *vcpu_from_pid(struct acrn_vm *vm, uint16_t pcpu_
 	struct acrn_vcpu *vcpu, *target_vcpu = NULL;
 
 	foreach_vcpu(i, vm, vcpu) {
-		if (vcpu->pcpu_id == pcpu_id) {
+		if (pcpuid_from_vcpu(vcpu) == pcpu_id) {
 			target_vcpu = vcpu;
 			break;
 		}
