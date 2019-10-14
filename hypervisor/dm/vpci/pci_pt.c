@@ -248,15 +248,20 @@ static void vdev_pt_remap_generic_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 				vbar->size);
 			}
 
-			/* Map the physical BAR in the guest MMIO space */
-			ept_add_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
-				pbar_base, /* HPA (pbar) */
-				vbar_base, /* GPA (new vbar) */
-				vbar->size,
-				EPT_WR | EPT_RD | EPT_UNCACHED);
+			if (ept_is_mr_valid(vm, vbar_base, vbar->size)) {
+				/* Map the physical BAR in the guest MMIO space */
+				ept_add_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
+					pbar_base, /* HPA (pbar) */
+					vbar_base, /* GPA (new vbar) */
+					vbar->size,
+					EPT_WR | EPT_RD | EPT_UNCACHED);
 
-			/* Remember the previously mapped MMIO vbar */
-			vdev->bar_base_mapped[idx] = vbar_base;
+				/* Remember the previously mapped MMIO vbar */
+				vdev->bar_base_mapped[idx] = vbar_base;
+			} else {
+				pr_fatal("%s, %x:%x.%x set invalid bar[%d] address: 0x%llx\n", __func__,
+					vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, vbar_base);
+			}
 		}
 	}
 }
