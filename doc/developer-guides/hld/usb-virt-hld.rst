@@ -57,9 +57,9 @@ The following USB devices are supported for the WaaG and LaaG operating systems.
 +--------------+---------+---------+
 | USB Keyboard |   Y     |   Y     |
 +--------------+---------+---------+
-| USB Camera   |   N     |   Y     |
+| USB Camera   |   Y     |   Y     |
 +--------------+---------+---------+
-| USB Headset  |   N     |   Y     |
+| USB Headset  |   Y     |   Y     |
 +--------------+---------+---------+
 | USB Hub      |   Y     |   Y     |
 | (20 ports max|         |         |
@@ -67,7 +67,7 @@ The following USB devices are supported for the WaaG and LaaG operating systems.
 +--------------+---------+---------+
 
 .. note::
-   The above information is current as of ACRN 1.2.
+   The above information is current as of ACRN 1.4.
 
 
 USB host virtualization
