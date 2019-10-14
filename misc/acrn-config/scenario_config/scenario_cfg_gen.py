@@ -78,7 +78,7 @@ def main(args):
     err_dic = {}
     config_srcs = []
 
-    (err_dic, board_info_file, scenario_info_file) = scenario_cfg_lib.get_param(args)
+    (err_dic, board_info_file, scenario_info_file, enable_commit) = scenario_cfg_lib.get_param(args)
     if err_dic:
         return err_dic
 
@@ -127,18 +127,28 @@ def main(args):
         with open(pci_config_c, 'w') as config:
             pci_dev_c.generate_file(config)
 
+    config_str = 'Config files'
+    gen_str = 'generated'
     # move changes to patch, and apply to the source code
-    err_dic = scenario_cfg_lib.gen_patch(config_srcs, scenario)
+    if enable_commit:
+        err_dic = scenario_cfg_lib.gen_patch(config_srcs, scenario)
+        config_str = 'Config patch'
+        gen_str = 'committed'
+
     if not err_dic:
-        print("Config patch for {} is committed successfully!".format(scenario))
+        print("{} for {} is {} successfully!".format(config_str, scenario, gen_str))
     else:
-        print("Config patch for {} is failed".format(scenario))
+        print("{} for {} is failed".format(config_str, scenario))
 
     return err_dic
 
 
-def ui_entry_api(board_info, scenario_info):
+def ui_entry_api(board_info, scenario_info, enable_commit=False):
+
     arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info]
+    if enable_commit:
+        arg_list.append('--enable_commit')
+
     err_dic = scenario_cfg_lib.prepare()
     if err_dic:
         return err_dic

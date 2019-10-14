@@ -80,11 +80,12 @@ def print_red(msg, err=False):
 def usage(file_name):
     """ This is usage for how to use this tool """
     print("usage= {} [h]".format(file_name), end="")
-    print("--board <board_info_file> --scenario <scenario_info_file> --launch <launch_info_file> --uosid <uosid id>")
+    print("--board <board_info_file> --scenario <scenario_info_file> --launch <launch_info_file> --uosid <uosid id> [--enable_commit]")
     print('board_info_file :  file name of the board info')
     print('scenario_info_file :  file name of the scenario info')
     print('launch_info_file :  file name of the launch info')
     print('uosid :  this is the relateive id for post launch vm in scenario info XML:[1..max post launch vm]')
+    print('enable_commit:  enable the flag that git add/commit the generate files to the code base. without --enable_commit will not commit this source code')
 
 
 def get_param(args):
@@ -97,15 +98,24 @@ def get_param(args):
     board_info_file = False
     scenario_info_file = False
     launch_info_file = False
+    enable_commit = False
+    param_list = ['--board', '--scenario', '--launch', '--uosid', '--enable_commit']
 
-    if '--board' not in args or '--scenario' not in args or '--launch' not in args or '--uosid' not in args:
-        usage(args[0])
-        err_dic['common error: get wrong parameter'] = "wrong usage"
-        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+    for arg_str in param_list:
+
+        if arg_str == '--enable_commit':
+            continue
+
+        if arg_str not in args:
+            usage(args[0])
+            err_dic['common error: get wrong parameter'] = "wrong usage"
+            return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
 
     args_list = args[1:]
-    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario=', 'launch=', 'uosid='])
+    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario=', 'launch=', 'uosid=', 'enable_commit'])
     for arg_k, arg_v in optlist:
+        if arg_k == '--enable_commit':
+            enable_commit = True
         if arg_k == '--board':
             board_info_file = arg_v
         if arg_k == '--scenario':
@@ -117,26 +127,26 @@ def get_param(args):
                 vm_th = arg_v
                 if not vm_th.isnumeric():
                     err_dic['common error: get wrong parameter'] = "--uosid should be a number"
-                    return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+                    return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
 
     if not board_info_file or not scenario_info_file or not launch_info_file:
         usage(args[0])
         err_dic['common error: get wrong parameter'] = "wrong usage"
-        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
 
     if not os.path.exists(board_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(board_info_file)
-        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
 
     if not os.path.exists(scenario_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(scenario_info_file)
-        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
 
     if not os.path.exists(launch_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(launch_info_file)
-        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
 
-    return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+    return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
 
 
 def get_scenario_uuid():

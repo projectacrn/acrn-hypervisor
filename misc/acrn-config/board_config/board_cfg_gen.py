@@ -31,7 +31,7 @@ def main(args):
     config_srcs = []
     config_dirs = []
 
-    (err_dic, board_info_file, scenario_info_file) = board_cfg_lib.get_param(args)
+    (err_dic, board_info_file, scenario_info_file, enable_commit) = board_cfg_lib.get_param(args)
     if err_dic:
         return err_dic
 
@@ -104,22 +104,29 @@ def main(args):
             if err_dic:
                 return err_dic
 
+    config_str = 'Config files'
+    gen_str = 'generated'
     # move changes to patch, and apply to the source code
-    err_dic = board_cfg_lib.gen_patch(config_srcs, board)
+    if enable_commit:
+        err_dic = board_cfg_lib.gen_patch(config_srcs, board)
+        config_str = 'Config patch'
+        gen_str = 'committed'
 
     if board not in board_cfg_lib.BOARD_NAMES and not err_dic:
-        print("Config patch for NEW board {} is committed successfully!".format(board))
+        print("{} for NEW board {} is {} successfully!".format(config_str, board, gen_str))
     elif not err_dic:
-        print("Config patch for {} is committed successfully!".format(board))
+        print("{} for {} is {} successfully!".format(config_str, board, gen_str))
     else:
-        print("Config patch for {} is failed".format(board))
+        print("{} for {} is failed".format(config_str, board))
 
     return err_dic
 
 
-def ui_entry_api(board_info,scenario_info):
+def ui_entry_api(board_info,scenario_info, enable_commit=False):
 
     arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info]
+    if enable_commit:
+        arg_list.append('--enable_commit')
 
     err_dic = board_cfg_lib.prepare()
     if err_dic:

@@ -81,10 +81,14 @@ def validate_launch_setting(board_info, scenario_info, launch_info):
     return (launch_cfg_lib.ERR_LIST, pt_sel, dm)
 
 
-def ui_entry_api(board_info, scenario_info, launch_info):
+def ui_entry_api(board_info, scenario_info, launch_info, enable_commit=False):
 
     err_dic = {}
+
     arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--launch', launch_info, '--uosid', '0']
+
+    if enable_commit:
+        arg_list.append('--enable_commit')
 
     err_dic = launch_cfg_lib.prepare()
     if err_dic:
@@ -139,7 +143,7 @@ def main(args):
     config_srcs = []
 
     # get parameters
-    (err_dic, board_info_file, scenario_info_file, launch_info_file, vm_th) = launch_cfg_lib.get_param(args)
+    (err_dic, board_info_file, scenario_info_file, launch_info_file, vm_th, enable_commit) = launch_cfg_lib.get_param(args)
     if err_dic:
         return err_dic
     # vm_th =[0..post_vm_max]
@@ -208,12 +212,18 @@ def main(args):
 
         commit_msg = "launch_uos_id{}.sh".format(launch_vm_count)
 
+    config_str = 'Config files'
+    gen_str = 'generated'
     # move changes to patch, and apply to the source code
-    err_dic = launch_cfg_lib.gen_patch(config_srcs, commit_msg)
+    if enable_commit:
+        err_dic = launch_cfg_lib.gen_patch(config_srcs, commit_msg)
+        config_str = 'Config patch'
+        gen_str = 'committed'
+
     if not err_dic:
-        print("Config patch for {} is committed successfully!".format(commit_msg))
+        print("{} for {} is {} successfully!".format(config_str, commit_msg, gen_str))
     else:
-        print("Config patch for {} is failed".format(commit_msg))
+        print("{} for {} is failed".format(config_str, commit_msg))
 
     return err_dic
 

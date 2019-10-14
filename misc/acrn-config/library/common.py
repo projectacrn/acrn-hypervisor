@@ -58,9 +58,10 @@ def print_if_red(msg, err=False):
 def usage(file_name):
     """ This is usage for how to use this tool """
     print("usage= {} [h] ".format(file_name), end="")
-    print("--board <board_info_file> --scenario <scenario_info_file>")
+    print("--board <board_info_file> --scenario <scenario_info_file> [--enable_commit]")
     print('board_info_file :  file name of the board info')
     print('scenario_info_file :  file name of the scenario info')
+    print('enable_commit:  enable the flag that git add/commit the generate files to the code base. without --enable_commit will not commit this source code')
 
 
 def get_param(args):
@@ -71,34 +72,37 @@ def get_param(args):
     err_dic = {}
     board_info_file = False
     scenario_info_file = False
+    enable_commit = False
 
     if '--board' not in args or '--scenario' not in args:
         usage(args[0])
         err_dic['common error: get wrong parameter'] = "wrong usage"
-        return (err_dic, board_info_file, scenario_info_file)
+        return (err_dic, board_info_file, scenario_info_file, enable_commit)
 
     args_list = args[1:]
-    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario='])
+    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario=', 'enable_commit'])
     for arg_k, arg_v in optlist:
         if arg_k == '--board':
             board_info_file = arg_v
         if arg_k == '--scenario':
             scenario_info_file = arg_v
+        if arg_k == '--enable_commit':
+            enable_commit = True
 
     if not board_info_file or not scenario_info_file:
         usage(args[0])
         err_dic['common error: get wrong parameter'] = "wrong usage"
-        return (err_dic, board_info_file, scenario_info_file)
+        return (err_dic, board_info_file, scenario_info_file, enable_commit)
 
     if not os.path.exists(board_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(board_info_file)
-        return (err_dic, board_info_file, scenario_info_file)
+        return (err_dic, board_info_file, scenario_info_file, enable_commit)
 
     if not os.path.exists(scenario_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(scenario_info_file)
-        return (err_dic, board_info_file, scenario_info_file)
+        return (err_dic, board_info_file, scenario_info_file, enable_commit)
 
-    return (err_dic, board_info_file, scenario_info_file)
+    return (err_dic, board_info_file, scenario_info_file, enable_commit)
 
 
 def check_env():
