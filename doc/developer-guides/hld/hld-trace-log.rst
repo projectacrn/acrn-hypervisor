@@ -182,24 +182,14 @@ of a single log message is 320 bytes. Log messages with a length between
 messages with length larger then 320 will be truncated.
 
 For security, SOS allocates sbuf in its memory range and assigns it to
-the hypervisor. To handle log messages before SOS boots, sbuf for each
-physical cpu will be allocated in acrn hypervisor memory range for any
-early log entries. Once sbuf in the SOS memory range is allocated and
-assigned to hypervisor via hypercall, the Hypervisor logmsg will switch
-to use SOS allocated sbuf, early logs will be copied, and early sbuf in
-hypervisor memory range will be freed.
+the hypervisor.
 
 SOS ACRN Log Module
 ===================
 
-To enable retrieving log messages from a crash, 4MB of memory from
-0x6DE00000 is reserved for acrn log.  This space is further divided into
-two each ranges, one for current run and one for last previous run:
-
-.. figure:: images/log-image59.png
-   :align: center
-
-   ACRN Log crash log/current log buffers
+ACRNLog module provides one kernel option `hvlog=$size@$pbase` to configure
+the size and base address of hypervisor log buffer. This space will be further divided
+into two buffers with equal size: last log buffer and current log buffer.
 
 On SOS boot, SOS acrnlog module is responsible to:
 
