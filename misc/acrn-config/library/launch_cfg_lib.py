@@ -38,15 +38,9 @@ PT_SUB_PCI['ethernet'] = ['Ethernet controller']
 PT_SUB_PCI['sata'] = ['SATA controller']
 PT_SUB_PCI['nvme'] = ['Non-Volatile memory controller']
 
-# passthrough device of board and uos sepcify
-NUC_RT_PASSTHRU = ['ethernet', 'nvme', 'sata']
-NUC_WIN_PASSTHRU = ['audio', 'audio_codec']
-NUC_CLR_PASSTHRU = ['usb_xdci', 'ipu', 'ipu_i2c', 'cse', 'audio', 'audio_codec', 'sd_card', 'ethernet', 'bluetooth']
-UP2_CLR_PASSTHRU = ['usb_xdci', 'ipu', 'ipu_i2c', 'cse']
-UP2_ADR_PASSTHRU = ['usb_xdci', 'audio', 'audio_codec']
-MRB_CLR_PASSTHRU = ['usb_xdci', 'ipu', 'ipu_i2c', 'cse', 'sd_card']
-MRB_ADR_PASSTHRU = ['usb_xdci', 'audio', 'audio_codec', 'sd_card', 'wifi', 'bluetooth']
-GENERIC_PASSTHRU = ['usb_xdci', 'ipu', 'ipu_i2c', 'cse', 'audio', 'sata', 'nvme', 'audio_codec', 'sd_card', 'ethernet', 'wifi', 'bluetooth']
+# passthrough devices for board
+PASSTHRU_DEVS = ['usb_xdci', 'ipu', 'ipu_i2c', 'cse', 'audio', 'sata',
+                    'nvme', 'audio_codec', 'sd_card', 'ethernet', 'wifi', 'bluetooth']
 
 PT_SLOT = {
         "hostbridge":0,
@@ -499,34 +493,8 @@ def get_slot(bdf_list, dev):
     return slot_list
 
 
-def get_board_pt_dev(names, vmid):
-
-    board_name = names['board_name']
-    uos_type = names['uos_types'][vmid]
-    cap_pt = []
-
-    if 'mrb' in board_name:
-        if uos_type == "CLEARLINUX":
-            cap_pt = MRB_CLR_PASSTHRU
-        if uos_type == "ANDROID":
-            cap_pt = MRB_ADR_PASSTHRU
-    elif 'up2' in board_name:
-        if uos_type == "CLEARLINUX":
-            cap_pt = UP2_CLR_PASSTHRU
-        if uos_type == "ANDROID":
-            cap_pt = UP2_ADR_PASSTHRU
-    elif 'nuc' in board_name:
-        if uos_type == "CLEARLINUX":
-            cap_pt = NUC_CLR_PASSTHRU
-        elif uos_type == "PREEMPT-RT LINUX":
-            cap_pt = NUC_RT_PASSTHRU
-        elif uos_type == "WINDOWS":
-            cap_pt = NUC_WIN_PASSTHRU
-        else:
-            # zephyr/vxworks have no passthroug device
-            cap_pt = []
-    else:
-        # new board passthrough the generic device
-        cap_pt = GENERIC_PASSTHRU
+def get_pt_dev():
+    """ Get passthrough device list """
+    cap_pt = PASSTHRU_DEVS
 
     return cap_pt

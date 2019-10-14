@@ -196,7 +196,7 @@ def media_pt(uos_type, sel, cap_pt, vmid, config):
 def gen_pt(names, sel, vmid, config):
 
     pt_none = True
-    cap_pt = launch_cfg_lib.get_board_pt_dev(names, vmid)
+    cap_pt = launch_cfg_lib.get_pt_dev()
     uos_type = names['uos_types'][vmid]
     for pt_dev in cap_pt:
         if sel.bdf[pt_dev][vmid]:
@@ -214,8 +214,7 @@ def gen_pt(names, sel, vmid, config):
 
 def gen_pt_head(names, sel, vmid, config):
 
-    # get passthrough device for specify board and uos
-    cap_pt = launch_cfg_lib.get_board_pt_dev(names, vmid)
+    cap_pt = launch_cfg_lib.get_pt_dev()
     uos_type = names['uos_types'][vmid]
     pt_none = True
 
