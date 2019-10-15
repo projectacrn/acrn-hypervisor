@@ -229,20 +229,6 @@ def mem_size_set(names, args, vmid, config):
     print("", file=config)
 
 
-def function_help(config):
-    print("function help()", file=config)
-    print("{", file=config)
-    print('echo "Use luanch_uos.sh like that ./launch_uos.sh -V <#>"', file=config)
-    print('echo "The option -V means the UOSs group to be launched by vsbl as below"', file=config)
-    print('echo "-V 1 means just launching 1 clearlinux UOS"', file=config)
-    print('echo "-V 2 means just launching 1 android UOS"', file=config)
-    print('echo "-V 4 means launching 2 clearlinux UOSs"', file=config)
-    print('echo "-V 5 means just launching 1 alios UOS"', file=config)
-    print('echo "-V 6 means auto check android/linux/alios UOS; if exist, launch it"', file=config)
-    print("}", file=config)
-    print("", file=config)
-
-
 def uos_launch(names, args, vmid, config):
 
     gvt_args = args['gvt_args'][vmid]
@@ -252,23 +238,7 @@ def uos_launch(names, args, vmid, config):
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_clr(names, vmid):
 
         print("", file=config)
-        print("case $launch_type in", file=config)
-        print('	1) echo "Launch clearlinux UOS"', file=config)
-        print('		launch_clearlinux 1 "{}" clearlinux "LaaG" $debug'.format(gvt_args), file=config)
-        print("		;;", file=config)
-        print('	2) echo "Launch android UOS"', file=config)
-        print('		launch_android 1 "{}" android "AaaG" $debug'.format(gvt_args), file=config)
-        print("		;;", file=config)
-        print('	4) echo "Launch two clearlinux UOSs"', file=config)
-        print('		launch_clearlinux 1 "{}" clearlinux "L1aaG" $debug &'.format(gvt_args), file=config)
-        print("		sleep 5", file=config)
-        print('		launch_clearlinux 2 "{}" clearlinux_dup "L2aaG" $debug'.format(gvt_args), file=config)
-        print("		;;", file=config)
-        print('	5) echo "Launch alios UOS"', file=config)
-        print('		launch_alios 1 "{}" alios "AliaaG" $debug'.format(gvt_args), file=config)
-
-        print("		;;", file=config)
-        print("esac", file=config)
+        print('launch_{} {} "{}" {} "{}" $debug'.format(launch_uos, vmid, gvt_args, launch_uos, vmid), file=config)
         print("", file=config)
         print("umount /data", file=config)
 
@@ -291,24 +261,17 @@ def uos_launch(names, args, vmid, config):
         print("fi", file=config)
 
 
-def launch_type(names, args, vmid, config):
+def launch_end(names, args, vmid, config):
 
     uos_type = names['uos_types'][vmid]
-    #board_name = names['board_name']
     mem_size = args["mem_size"][vmid]
 
-    if uos_type in ("ANDROID", "ALIOS") and not is_nuc_clr(names, vmid):
-        function_help(config)
-
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_clr(names, vmid):
-        print("launch_type=1", file=config)
         print("debug=0", file=config)
         print("", file=config)
-        print('while getopts "V:M:hd" opt', file=config)
+        print('while getopts "M:hd" opt', file=config)
         print("do", file=config)
         print("	case $opt in", file=config)
-        print("		V) launch_type=$[$OPTARG]", file=config)
-        print("			;;", file=config)
 
         if not mem_size:
             print("		M) setup_mem=$OPTARG", file=config)
@@ -338,25 +301,10 @@ def launch_type(names, args, vmid, config):
         print("mkdir -p /data", file=config)
         print("mount {} /data".format(root_fs), file=config)
         print("", file=config)
-        print("if [ $launch_type == 6 ]; then", file=config)
-        print('	if [ -f "/data/android/android.img" ]; then', file=config)
-        print("	  launch_type=2;", file=config)
-        print('	elif [ -f "/data/alios/alios.img" ]; then', file=config)
-        print("	  launch_type=5;", file=config)
-        print("	else", file=config)
-        print("	  launch_type=1;", file=config)
-        print("	fi", file=config)
-        print("fi", file=config)
-        print("", file=config)
 
     off_line_cpus(uos_type, config)
 
     uos_launch(names, args, vmid, config)
-
-
-def launch_end(names, args, vmid, config):
-    #uos_type = names['uos_types']
-    launch_type(names, args, vmid, config)
 
 
 def set_dm_pt(names, sel, vmid, config):
