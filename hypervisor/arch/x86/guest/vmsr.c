@@ -401,6 +401,8 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case HV_X64_MSR_GUEST_OS_ID:
 	case HV_X64_MSR_HYPERCALL:
 	case HV_X64_MSR_VP_INDEX:
+	case HV_X64_MSR_REFERENCE_TSC:
+	case HV_X64_MSR_TIME_REF_COUNT:
 	{
 		err = hyperv_rdmsr(vcpu, msr, &v);
 		break;
@@ -689,6 +691,8 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case HV_X64_MSR_GUEST_OS_ID:
 	case HV_X64_MSR_HYPERCALL:
 	case HV_X64_MSR_VP_INDEX:
+	case HV_X64_MSR_REFERENCE_TSC:
+	case HV_X64_MSR_TIME_REF_COUNT:
 	{
 		err = hyperv_wrmsr(vcpu, msr, v);
 		break;
