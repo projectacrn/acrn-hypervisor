@@ -358,13 +358,13 @@ IPI Management
 The only purpose of IPI use in HV is to kick a vCPU out of non-root mode
 and enter to HV mode. This requires I/O request and virtual interrupt
 injection be distributed to different IPI vectors. The I/O request uses
-IPI vector 0xF4 upcall. The virtual interrupt injection uses IPI vector 0xF0.
+IPI vector 0xF3 upcall. The virtual interrupt injection uses IPI vector 0xF0.
 
-0xF4 upcall
+0xF3 upcall
    A Guest vCPU VM Exit exits due to EPT violation or IO instruction trap.
    It requires Device Module to emulate the MMIO/PortIO instruction.
    However it could be that the Service OS (SOS) vCPU0 is still in non-root
-   mode. So an IPI (0xF4 upcall vector) should be sent to the physical CPU0
+   mode. So an IPI (0xF3 upcall vector) should be sent to the physical CPU0
    (with non-root mode as vCPU0 inside SOS) to force vCPU0 to VM Exit due
    to the external interrupt. The virtual upcall vector is then injected to
    SOS, and the vCPU0 inside SOS then will pick up the IO request and do

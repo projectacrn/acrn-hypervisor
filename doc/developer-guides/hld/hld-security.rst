@@ -527,6 +527,8 @@ or the SOS device model process, in case its memory content is
 re-allocated to another guest VM which could otherwise leave the
 previous guest VM secrets in memory.
 
+.. _secure-hypervisor-interface:
+
 Secure Hypervisor Interface
 ---------------------------
 

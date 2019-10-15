@@ -33,6 +33,8 @@ Trusty Architecture
 .. note::
    Trusty OS is running in Secure World in the architecture drawing above.
 
+.. _trusty-hypercalls:
+
 Trusty specific Hypercalls
 **************************
 
