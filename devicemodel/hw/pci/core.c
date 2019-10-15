@@ -2490,6 +2490,8 @@ pci_get_vdev_info(int slot)
 	bi = pci_businfo[0];
 	if (bi == NULL)
 		return NULL;
+	if (slot < 0 || slot >= MAXSLOTS)
+		return NULL;
 
 	si = &bi->slotinfo[slot];
 	if (si != NULL)
