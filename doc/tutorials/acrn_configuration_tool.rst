@@ -272,13 +272,15 @@ Here is the offline configuration tool workflow:
    #. Generate a patch for scenario-based VM configuration::
 
          cd misc/scenario_config
-         python3 scenario_cfg_gen.py --board $(BOARD).xml --scenario
+         python3 scenario_cfg_gen.py --board $(BOARD).xml --scenario $(SCENARIO).xml
+
+      Note that this can also be done by clicking **Generate Scenario SRC** in the acrn-config UI.
 
    #. Generate the launch script for the specified
       post-launch User VM::
 
          cd misc/launch_config
-         python3 launch_cfg_gen.py --board $(BOARD).xml --scenario $(SCENARIO).xml --launch $(LAUNCH_PARAM).xml$
+         python3 launch_cfg_gen.py --board $(BOARD).xml --scenario $(SCENARIO).xml --launch $(LAUNCH).xml
 
       Note that this can also be done by clicking **Generate Launch Script** in the acrn-config UI.
 
