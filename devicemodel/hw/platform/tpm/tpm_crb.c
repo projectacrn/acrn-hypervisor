@@ -333,12 +333,10 @@ static void crb_reg_write(struct tpm_crb_vdev *tpm_vdev, uint64_t addr, int size
 
 			if (pthread_cond_signal(&tpm_vdev->request_cond)) {
 				DPRINTF("ERROR: Failed to wait condition\n");
-				break;
 			}
 
 			if (pthread_mutex_unlock(&tpm_vdev->request_mutex)) {
 				DPRINTF("ERROR: Failed to release mutex lock\n");
-				break;
 			}
 		}
 		break;
