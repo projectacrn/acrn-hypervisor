@@ -2,7 +2,6 @@
     <uos id="1">
 	<uos_type desc="UOS type">CLEARLINUX</uos_type>
 	<rtos_type desc="UOS Realtime capability">no</rtos_type>
-	<cpu_num desc="max cpu number for the vm">3</cpu_num>
 	<mem_size desc="UOS memory size in MByte">2048</mem_size>
 	<gvt_args desc="GVT argument for the vm">64 448 8</gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>

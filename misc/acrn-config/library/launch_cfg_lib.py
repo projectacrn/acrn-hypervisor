@@ -431,22 +431,95 @@ def pt_devs_check(bdf_list, vpid_list, item):
         i_cnt += 1
 
 
-def args_aval_check(arg_list, item, avl_list):
+def empty_err(i_cnt, item):
+    """
+    add empty error message into ERR_LIST
+    :param i_cnt: the launch vm index from config xml
+    :param item: the item of tag from config xml
+    :return: None
+    """
+    key = "uos,id={},{}".format(i_cnt, item)
+    ERR_LIST[key] = "The parameter should not be empty"
 
-    # allow args of dm is empty in launch xml
-    return
-    err_dic = {}
+
+def args_aval_check(arg_list, item, avl_list):
+    """
+    check arguments from config xml are available and validate
+    :param arg_list: the list of arguments from config xml
+    :param item: the item of tag from config xml
+    :param avl_list: available argument which are allowed to chose
+    :return: None
+    """
+    # args should be set into launch xml from webUI
     i_cnt = 1
     for arg_str in arg_list.values():
-        if arg_str == None or not arg_str:
-            key = "uos,id={},{}".format(i_cnt, item)
-            err_dic[key] = "The parameter should not be empty"
+        if arg_str == None or not arg_str.strip():
+            empty_err(i_cnt, item)
+            i_cnt += 1
+            continue
 
         if arg_str not in avl_list:
             key = "uos,id={},{}".format(i_cnt, item)
             ERR_LIST[key] = "The {} is invalidate".format(item)
-            if err_dic:
-                ERR_LIST.update(err_dic)
+        i_cnt += 1
+
+
+def get_cpu_processor_num():
+    """
+    get cpu processor number from config file which is dumped from native board
+    :return: integer number of cpu processor
+    """
+    cpu_lines = get_info(BOARD_INFO_FILE, "<CPU_PROCESSOR_INFO>", "</CPU_PROCESSOR_INFO>")
+
+    for cpu_line in cpu_lines:
+        cpu_processor_num = len(cpu_line.split(','))
+
+    return cpu_processor_num
+
+
+def get_total_mem():
+    """
+    get total memory size from config file which is dumped from native board
+    :return: integer number of total memory size, Unit: MByte
+    """
+    scale_to_mb = 1
+    total_mem_mb = scale_to_mb
+    mem_lines = get_info(BOARD_INFO_FILE, "<TOTAL_MEM_INFO>", "</TOTAL_MEM_INFO>")
+    for mem_line in mem_lines:
+        mem_info_list = mem_line.split()
+
+    if len(mem_info_list) <= 1:
+        return total_mem_mb
+
+    if mem_info_list[1] == "kB":
+        scale_to_mb = 1024
+
+    total_mem_mb = int(mem_info_list[0]) / scale_to_mb
+    return total_mem_mb
+
+
+def mem_size_check(arg_list, item):
+    """
+     check memory size list which are set from webUI
+     :param arg_list: the list of arguments from config xml
+     :param item: the item of tag from config xml
+     :return: None
+     """
+    # get total memory information
+    total_mem_mb = get_total_mem()
+
+    # available check
+    i_cnt = 1
+    for arg_str in arg_list.values():
+        if arg_str == None or not arg_str.strip():
+            empty_err(i_cnt, item)
+            i_cnt += 1
+            continue
+
+        mem_size_set = int(arg_str.strip())
+        if mem_size_set > total_mem_mb:
+            key = "uos,id={},{}".format(i_cnt, item)
+            ERR_LIST[key] = "{}MB should be less than total memory {}MB".format(item)
         i_cnt += 1
 
 

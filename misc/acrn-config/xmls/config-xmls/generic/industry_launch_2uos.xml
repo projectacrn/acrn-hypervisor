@@ -8,6 +8,8 @@
 	<rootfs_dev desc=""></rootfs_dev>
 	<rootfs_img desc=""></rootfs_img>
 	<console_type desc="UOS console type"></console_type>
+	<poweroff_channel desc="the method of power off uos">
+	</poweroff_channel>
 
 	<passthrough_devices>
 		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
@@ -34,6 +36,8 @@
 	<rootfs_dev desc=""></rootfs_dev>
 	<rootfs_img desc=""></rootfs_img>
 	<console_type desc="UOS console type"></console_type>
+	<poweroff_channel desc="the method of power off uos">
+	</poweroff_channel>
 
 	<passthrough_devices>
 		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
