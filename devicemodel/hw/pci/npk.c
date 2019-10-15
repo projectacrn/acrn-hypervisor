@@ -234,7 +234,6 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		else
 			break;
 	}
-	closedir(dir);
 
 	if (!dent) {
 		WPRINTF(("Cannot find NPK device\n"));
@@ -246,9 +245,10 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			dent->d_name);
 	if (rc >= PATH_MAX || rc < 0)
 		WPRINTF(("NPK device name is invalid!\n"));
+	closedir(dir);
 	fd = open(name, O_RDONLY);
 	if (fd == -1) {
-		WPRINTF(("Cannot open host NPK config\n"));
+		WPRINTF(("Cannot open host NPK config:%s\n", name));
 		return error;
 	}
 
