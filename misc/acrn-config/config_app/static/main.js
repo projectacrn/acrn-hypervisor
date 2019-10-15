@@ -419,19 +419,25 @@ function save_scenario(generator=null){
             })
             if(no_err == true && status == 'success') {
                 file_name = result.file_name;
+                validate_message = 'Scenario setting saved successfully with name: '
+                    +file_name+'\ninto acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/user_defined/.'
                 if(result.rename==true) {
-                    alert('Scenario setting existed, saved successfully with a new name: '
-                        +file_name+'\nto acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/user_defined/');
-                } else {
-                    alert('Scenario setting saved successfully with name: '
-                        +file_name+'\nto acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/user_defined/');
+                    validate_message = 'Scenario setting existed, saved successfully with a new name: '
+                        +file_name+'\ninto acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/user_defined/.';
                 }
                 if(generator != null) {
+                    commit_confirm_message = validate_message+'\n\nGenerate source codes from scenario setting.'
+                        +'\n\nDo you want to commit changes to local tree?'
+                    commit_confirm = 'no'
+                    if(confirm(commit_confirm_message)) {
+                        commit_confirm = 'yes'
+                    }
                     generator_config = {
                         type: generator,
                         board_info: $("select#board_info").val(),
                         board_setting: "board_setting",
-                        scenario_setting: file_name
+                        scenario_setting: file_name,
+                        commit: commit_confirm
                     }
                     $.ajax({
                         type : "POST",
@@ -442,8 +448,11 @@ function save_scenario(generator=null){
                             console.log(result);
                             status = result.status
                             error_list = result.error_list
-                            if (status == 'success' && JSON.stringify(error_list)=='{}') {
-                                alert(generator+' successfully.');
+                            if (status == 'success' && (JSON.stringify(error_list)=='{}' || JSON.stringify(error_list)=='null')) {
+                                if(commit_confirm == 'yes')
+                                    alert(generator+' with commit successfully.');
+                                else
+                                    alert(generator+' successfully.');
                             } else {
                                 alert(generator+' failed. \nError list:\n'+JSON.stringify(error_list));
                             }
@@ -456,6 +465,7 @@ function save_scenario(generator=null){
                         }
                     });
                 } else {
+                    alert(validate_message);
                     window.location = "./user_defined_" + file_name;
                 }
             }
@@ -536,20 +546,26 @@ function save_launch(generator=null) {
             })
             if(no_err == true && status == 'success') {
                 file_name = result.file_name;
+                validate_message = 'Launch setting saved successfully with name: '
+                    +file_name+'\nto acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/user_defined/.'
                 if(result.rename==true) {
-                    alert('Launch setting existed, saved successfully with a new name: '
-                        +file_name+'\nto acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/user_defined/');
-                } else {
-                    alert('Launch setting saved successfully with name: '
-                        +file_name+'\nto acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/user_defined/');
+                    validate_message = 'Launch setting existed, saved successfully with a new name: '
+                        +file_name+'\nto acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/user_defined/.';
                 }
                 if(generator != null) {
+                    commit_confirm_message = validate_message+'\n\nGenerate launch scripts from launch setting.'
+                        +'\n\nDo you want to commit changes to local tree?'
+                    commit_confirm = 'no'
+                    if(confirm(commit_confirm_message)) {
+                        commit_confirm = 'yes'
+                    }
                     generator_config = {
                         type: generator,
                         board_info: $("select#board_info").val(),
                         board_setting: "board_setting",
                         scenario_setting: $("select#scenario_name").val(),
-                        launch_setting: file_name
+                        launch_setting: file_name,
+                        commit: commit_confirm
                     }
                     $.ajax({
                         type : "POST",
@@ -560,8 +576,13 @@ function save_launch(generator=null) {
                             console.log(result);
                             status = result.status
                             error_list = result.error_list
-                            if (status == 'success' && JSON.stringify(error_list)=='{}') {
-                                alert(generator+' successfully.');
+                            if (status == 'success' && (JSON.stringify(error_list)=='{}' || JSON.stringify(error_list)=='null')) {
+                                if(commit_confirm == 'yes')
+                                    alert(generator+' successfully into '+
+                                        'acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/output/ with changes committed.');
+                                else
+                                    alert(generator+' successfully into '+
+                                        'acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/output/.');
                             } else {
                                 alert(generator+' failed. \nError list:\n'+JSON.stringify(error_list));
                             }
@@ -574,6 +595,7 @@ function save_launch(generator=null) {
                         }
                     });
                 } else {
+                    alert(validate_message);
                     window.location = "./user_defined_" + file_name;
                 }
             }
