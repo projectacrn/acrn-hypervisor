@@ -250,6 +250,9 @@ VP_BASE_C_SRCS += arch/x86/guest/virtual_cr.c
 VP_BASE_C_SRCS += arch/x86/guest/vmexit.c
 VP_BASE_C_SRCS += arch/x86/guest/ept.c
 VP_BASE_C_SRCS += arch/x86/guest/ucode.c
+ifeq ($(CONFIG_HYPERV_ENABLED),y)
+VP_BASE_C_SRCS += arch/x86/guest/hyperv.c
+endif
 VP_BASE_C_SRCS += boot/guest/vboot_info.c
 VP_BASE_C_SRCS += common/hv_main.c
 VP_BASE_C_SRCS += common/vm_load.c

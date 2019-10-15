@@ -26,6 +26,9 @@
 #include <cpu_caps.h>
 #include <e820.h>
 #include <vm_config.h>
+#ifdef CONFIG_HYPERV_ENABLED
+#include <hyperv.h>
+#endif
 
 struct vm_hw_info {
 	/* vcpu array of this VM */
@@ -100,6 +103,9 @@ struct vm_arch {
 	void *tmp_pg_array;	/* Page array for tmp guest paging struct */
 	struct acrn_vioapic vioapic;	/* Virtual IOAPIC base address */
 	struct acrn_vpic vpic;      /* Virtual PIC */
+#ifdef CONFIG_HYPERV_ENABLED
+	struct acrn_hyperv hyperv;
+#endif
 	enum vm_vlapic_state vlapic_state; /* Represents vLAPIC state across vCPUs*/
 
 	/* reference to virtual platform to come here (as needed) */

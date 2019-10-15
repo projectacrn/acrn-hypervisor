@@ -226,6 +226,13 @@ config ACPI_PARSE_ENABLED
 	help
 	  Whether to parse the ACPI tables at runtime.
 
+config HYPERV_ENABLED
+	bool "Enable Hyper-V enlightenment"
+	default y
+	help
+	  When set, the minimum set of TLFS functionality together with some
+	  performance enlightenments are enabled.
+
 config GPU_SBDF
 	hex "Segment, Bus, Device, and function of the GPU"
 	depends on ACPI_PARSE_ENABLED

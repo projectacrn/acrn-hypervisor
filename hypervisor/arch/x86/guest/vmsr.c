@@ -397,6 +397,15 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 
 	/* Do the required processing for each msr case */
 	switch (msr) {
+#ifdef CONFIG_HYPERV_ENABLED
+	case HV_X64_MSR_GUEST_OS_ID:
+	case HV_X64_MSR_HYPERCALL:
+	case HV_X64_MSR_VP_INDEX:
+	{
+		err = hyperv_rdmsr(vcpu, msr, &v);
+		break;
+	}
+#endif
 	case MSR_IA32_TSC_DEADLINE:
 	{
 		v = vlapic_get_tsc_deadline_msr(vcpu_vlapic(vcpu));
@@ -676,6 +685,15 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 
 	/* Do the required processing for each msr case */
 	switch (msr) {
+#ifdef CONFIG_HYPERV_ENABLED
+	case HV_X64_MSR_GUEST_OS_ID:
+	case HV_X64_MSR_HYPERCALL:
+	case HV_X64_MSR_VP_INDEX:
+	{
+		err = hyperv_wrmsr(vcpu, msr, v);
+		break;
+	}
+#endif
 	case MSR_IA32_TSC_DEADLINE:
 	{
 		vlapic_set_tsc_deadline_msr(vcpu_vlapic(vcpu), v);
