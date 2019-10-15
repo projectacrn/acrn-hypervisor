@@ -360,20 +360,23 @@ def generate_src():
         launch_setting = generator_config_data['launch_setting']
         launch_setting_xml = os.path.join(current_app.config.get('CONFIG_PATH'),
                                           board_type, 'user_defined', launch_setting + '.xml')
+    commit = False
+    if 'commit' in generator_config_data and generator_config_data['commit'] == 'yes':
+        commit = True
     msg = {}
     error_list = {}
     status = 'success'
     if src_type == 'generate_board_src':
         try:
             from board_config.board_cfg_gen import ui_entry_api
-            error_list = ui_entry_api(board_info_xml, scenario_setting_xml)
+            error_list = ui_entry_api(board_info_xml, scenario_setting_xml, commit)
         except Exception as error:
             status = 'fail'
             error_list = {'board setting error': str(error)}
     elif src_type == 'generate_scenario_src':
         try:
             from scenario_config.scenario_cfg_gen import ui_entry_api
-            error_list = ui_entry_api(board_info_xml, scenario_setting_xml)
+            error_list = ui_entry_api(board_info_xml, scenario_setting_xml, commit)
         except Exception as error:
             status = 'fail'
             error_list = {'scenario setting error': str(error)}
@@ -388,7 +391,7 @@ def generate_src():
 
         try:
             from launch_config.launch_cfg_gen import ui_entry_api
-            error_list = ui_entry_api(board_info_xml, scenario_setting_xml, launch_setting_xml)
+            error_list = ui_entry_api(board_info_xml, scenario_setting_xml, launch_setting_xml, commit)
         except Exception as error:
             status = 'fail'
             error_list = {'launch setting error': str(error)}
