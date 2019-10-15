@@ -243,6 +243,7 @@ acrn_load_elf(struct vmctx *ctx, char *elf_file_name, unsigned long *entry,
 	}
 
 	*entry = elf_ehdr->e_entry;
+	fclose(fp);
 	free(elf_buf);
 
 	return ret;
