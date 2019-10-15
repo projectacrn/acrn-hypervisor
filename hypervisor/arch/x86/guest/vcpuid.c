@@ -263,8 +263,25 @@ static int32_t set_vcpuid_extended_function(struct acrn_vm *vm)
 		if (is_sos_vm(vm)) {
 			entry.eax |= GUEST_CAPS_PRIVILEGE_VM;
 		}
+#ifdef CONFIG_HYPERV_ENABLED
+		else {
+			hyperv_init_vcpuid_entry(0x40000001U, 0U, 0U, &entry);
+		}
+#endif
 		result = set_vcpuid_entry(vm, &entry);
 	}
+
+#ifdef CONFIG_HYPERV_ENABLED
+	if (result == 0) {
+		for (i = 0x40000002U; i <= 0x40000006U; i++) {
+			hyperv_init_vcpuid_entry(i, 0U, 0U, &entry);
+			result = set_vcpuid_entry(vm, &entry);
+			if (result != 0) {
+				break;
+			}
+		}
+	}
+#endif
 
 	if (result == 0) {
 		init_vcpuid_entry(0x40000010U, 0U, 0U, &entry);
