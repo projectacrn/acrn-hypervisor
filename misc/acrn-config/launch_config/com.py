@@ -23,8 +23,8 @@ def tap_uos_net(names, vmid, config):
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if board_name in ("apl-mrb", "apl-up2"):
-            print('if [ ! -f "/data/$5/$5.img" ]; then', file=config)
-            print('  echo "no /data/$5/$5.img, exit"', file=config)
+            print('if [ ! -f "/data/$3/$3.img" ]; then', file=config)
+            print('  echo "no /data/$3/$3.img, exit"', file=config)
             print("  exit", file=config)
             print("fi", file=config)
             print("", file=config)
@@ -40,7 +40,7 @@ def tap_uos_net(names, vmid, config):
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if board_name in ("apl-mrb", "apl-up2"):
             print("# create a unique tap device for each VM", file=config)
-            print("tap=tap_$6", file=config)
+            print("tap=tap_$4", file=config)
             print('tap_exist=$(ip a | grep "$tap" | awk \'{print $1}\')', file=config)
             print('if [ "$tap_exist"x != "x" ]; then', file=config)
             print('  echo "tap device existed, reuse $tap"', file=config)
@@ -155,7 +155,7 @@ def boot_image_type(args, vmid, config):
         return
 
     print('boot_dev_flag=",b"', file=config)
-    print("if [ $7 == 1 ];then", file=config)
+    print("if [ $5 == 1 ];then", file=config)
     print('  boot_image_option="--vsbl /usr/share/acrn/bios/VSBL_debug.bin"', file=config)
     print("else", file=config)
     print('  boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"', file=config)
@@ -177,11 +177,9 @@ def interrupt_storm(names, vmid, config):
 
 def gvt_arg_set(uos_type, config):
 
-    if uos_type not in ('CLEARLINUX', 'ANDROID', 'ALIOS'):
+    if uos_type not in ('CLEARLINUX', 'ANDROID', 'ALIOS', 'WINDOWS'):
         return
-    print("GVT_args=$3", file=config)
-    print('boot_GVT_option=" -s 0:2:0,pci-gvt -G "', file=config)
-    print("", file=config)
+    print('   -s 2,pci-gvt -G "$2"  \\', file=config)
 
 
 def log_level_set(uos_type, config):
@@ -246,8 +244,8 @@ def function_help(config):
 
 
 def uos_launch(names, args, vmid, config):
+
     gvt_args = args['gvt_args'][vmid]
-    cpu_num = int(args['cpu_num'][vmid])
     uos_type = names['uos_types'][vmid]
     launch_uos = '_'.join(uos_type.lower().split())
 
@@ -256,18 +254,19 @@ def uos_launch(names, args, vmid, config):
         print("", file=config)
         print("case $launch_type in", file=config)
         print('	1) echo "Launch clearlinux UOS"', file=config)
-        print('		launch_clearlinux 1 {} "{}" 0x070F00 clearlinux "LaaG" $debug'.format(cpu_num, gvt_args), file=config)
+        print('		launch_clearlinux 1 "{}" clearlinux "LaaG" $debug'.format(gvt_args), file=config)
         print("		;;", file=config)
         print('	2) echo "Launch android UOS"', file=config)
-        print('		launch_android 1 {} "{}" 0x070F00 android "AaaG" $debug'.format(cpu_num, gvt_args), file=config)
+        print('		launch_android 1 "{}" android "AaaG" $debug'.format(gvt_args), file=config)
         print("		;;", file=config)
         print('	4) echo "Launch two clearlinux UOSs"', file=config)
-        print('		launch_clearlinux 1 {} "{}" 0x00000C clearlinux "L1aaG" $debug &'.format(cpu_num, gvt_args), file=config)
+        print('		launch_clearlinux 1 "{}" clearlinux "L1aaG" $debug &'.format(gvt_args), file=config)
         print("		sleep 5", file=config)
-        print('		launch_clearlinux 2 {} "{}" 0x070F00 clearlinux_dup "L2aaG" $debug'.format(cpu_num, gvt_args), file=config)
+        print('		launch_clearlinux 2 "{}" clearlinux_dup "L2aaG" $debug'.format(gvt_args), file=config)
         print("		;;", file=config)
         print('	5) echo "Launch alios UOS"', file=config)
-        print('		launch_alios 1 {} "{}" 0x070F00 alios "AliaaG" $debug'.format(cpu_num, gvt_args), file=config)
+        print('		launch_alios 1 "{}" alios "AliaaG" $debug'.format(gvt_args), file=config)
+
         print("		;;", file=config)
         print("esac", file=config)
         print("", file=config)
@@ -275,20 +274,20 @@ def uos_launch(names, args, vmid, config):
 
     if uos_type not in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if uos_type == "VXWORKS":
-            print("launch_{} 1 {}".format(launch_uos, cpu_num), file=config)
+            print("launch_{} 1".format(launch_uos), file=config)
         if uos_type == "PREEMPT-RT LINUX":
-            print("launch_{} {}".format(launch_uos, cpu_num), file=config)
+            print("launch_{}".format(launch_uos), file=config)
         if uos_type == "WINDOWS":
-            print('launch_{} 1 {} "{}"'.format(launch_uos, cpu_num, gvt_args), file=config)
+            print('launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
         if uos_type == "ZEPHYR":
-            print("launch_{} 1 {}".format(launch_uos, cpu_num), file=config)
+            print("launch_{} 1".format(launch_uos), file=config)
 
     if is_nuc_clr(names, vmid):
         print('if [ "$1" = "-C" ];then', file=config)
         print('    echo "runc_container"', file=config)
         print("    run_container", file=config)
         print("else", file=config)
-        print('    launch_{} 1 {} "{}" 0x070F00'.format(launch_uos, cpu_num, gvt_args), file=config)
+        print('    launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
         print("fi", file=config)
 
 
@@ -421,7 +420,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
     sos_vmid = launch_cfg_lib.get_sos_vmid()
 
     # clearlinux/android/alios
-    dm_str = 'acrn-dm -A -m $mem_size $boot_GVT_option"$GVT_args" -s 0:0,hostbridge  -s 1:0,lpc -U {}'.format(scenario_uuid[vmid + sos_vmid])
+    dm_str = 'acrn-dm -A -m $mem_size -s 0:0,hostbridge  -s 1:0,lpc -U {}'.format(scenario_uuid[vmid + sos_vmid])
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if uos_type == "CLEARLINUX":
             print("{} \\".format(dm_str), file=config)
@@ -474,10 +473,12 @@ def dm_arg_set(names, sel, dm, vmid, config):
     # windows
     if uos_type == "WINDOWS":
         print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -U {} \\".format(scenario_uuid[vmid + sos_vmid]), file=config)
-        print('   -s 2,pci-gvt -G "$3"  \\', file=config)
         print("   -s {},virtio-blk,./win10-ltsc.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
 
-   # vbootloader of ovmf
+    # GVT args set
+    gvt_arg_set(uos_type, config)
+
+    # vbootloader of ovmf
     #if uos_type != "PREEMPT-RT LINUX" and dm['vbootloader'][vmid] == "ovmf":
     if dm['vbootloader'][vmid] == "ovmf":
         print("   --ovmf /usr/share/acrn/bios/OVMF.fd \\", file=config)
@@ -507,7 +508,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
             print("   $intr_storm_monitor \\", file=config)
             if dm['vbootloader'][vmid] == "vsbl":
                 print("   $boot_image_option \\",file=config)
-            print("   -s {},virtio-blk$boot_dev_flag,/data/$5/$5.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
+            print("   -s {},virtio-blk$boot_dev_flag,/data/$3/$3.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
             print("   -s {},xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
         else:
             print("   -s {},virtio-blk,/home/clear/uos/uos.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
@@ -540,7 +541,6 @@ def gen(names, pt_sel, dm, vmid, config):
     delay_use_usb_storage(uos_type, config)
     mem_size_set(names, dm, vmid, config)
     interrupt_storm(names, vmid, config)
-    gvt_arg_set(uos_type, config)
     log_level_set(uos_type, config)
 
     # gen acrn-dm args

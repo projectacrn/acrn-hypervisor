@@ -2,7 +2,6 @@
     <uos id="1">
 	<uos_type desc="UOS type">WINDOWS</uos_type>
 	<rtos_type desc="UOS Realtime capability">no</rtos_type>
-	<cpu_num desc="max cpu number for the vm">1</cpu_num>
 	<mem_size desc="UOS memory size in MByte">4096</mem_size>
 	<gvt_args desc="GVT argument for the vm">64 448 8</gvt_args>
 	<vbootloader desc="virtual bootloader method">ovmf</vbootloader>
@@ -30,7 +29,6 @@
     <uos id="2">
 	<uos_type desc="UOS type">PREEMPT-RT LINUX</uos_type>
 	<rtos_type desc="UOS Realtime capability">Hard RT</rtos_type>
-	<cpu_num desc="max cpu number for the vm">1</cpu_num>
 	<mem_size desc="UOS memory size in MByte">1024</mem_size>
 	<gvt_args configurable="0" desc="GVT argument for the vm"></gvt_args>
 	<vbootloader desc="" readonly="true">ovmf</vbootloader>

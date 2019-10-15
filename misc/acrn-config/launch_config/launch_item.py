@@ -16,7 +16,6 @@ class AcrnDmArgs:
     def get_args(self):
         self.args["uos_type"] = launch_cfg_lib.get_sub_tree_tag(self.launch_info, "uos_type")
         self.args["rtos_type"] = launch_cfg_lib.get_sub_tree_tag(self.launch_info, "rtos_type")
-        self.args["cpu_num"] = launch_cfg_lib.get_sub_tree_tag(self.launch_info, "cpu_num")
         self.args["mem_size"] = launch_cfg_lib.get_sub_tree_tag(self.launch_info, "mem_size")
         self.args["gvt_args"] = launch_cfg_lib.get_sub_tree_tag(self.launch_info, "gvt_args")
         self.args["rootfs_dev"] = launch_cfg_lib.get_sub_tree_tag(self.launch_info, "rootfs_dev")
@@ -27,6 +26,7 @@ class AcrnDmArgs:
         rootfs = launch_cfg_lib.get_rootdev_info(self.board_info)
         launch_cfg_lib.args_aval_check(self.args["uos_type"], "uos_type", launch_cfg_lib.UOS_TYPES)
         launch_cfg_lib.args_aval_check(self.args["rtos_type"], "rtos_type", launch_cfg_lib.RTOS_TYPE)
+        launch_cfg_lib.mem_size_check(self.args["mem_size"], "mem_size")
         launch_cfg_lib.args_aval_check(self.args["gvt_args"], "gvt_args", launch_cfg_lib.GVT_ARGS)
         launch_cfg_lib.args_aval_check(self.args["vbootloader"], "vbootloader", launch_cfg_lib.BOOT_TYPE)
         launch_cfg_lib.args_aval_check(self.args["console_type"], "console_type", launch_cfg_lib.REDIRECT_CONSOLE)
