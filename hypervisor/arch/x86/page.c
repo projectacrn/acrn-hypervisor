@@ -8,9 +8,9 @@
 #include <pgtable.h>
 #include <page.h>
 #include <mmu.h>
-#include <vm.h>
 #include <trusty.h>
 #include <vtd.h>
+#include <vm_configurations.h>
 
 static struct page ppt_pml4_pages[PML4_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
 static struct page ppt_pdpt_pages[PDPT_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
@@ -164,9 +164,8 @@ static inline void *ept_get_sworld_memory_base(const union pgtable_pages_info *i
 	return info->ept.sworld_memory_base;
 }
 
-void init_ept_mem_ops(struct acrn_vm *vm)
+void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
 {
-	uint16_t vm_id = vm->vm_id;
 	if (vm_id != 0U) {
 		ept_pages_info[vm_id].ept.top_address_space = EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE);
 		ept_pages_info[vm_id].ept.nworld_pml4_base = uos_nworld_pml4_pages[vm_id - 1U];
@@ -176,15 +175,14 @@ void init_ept_mem_ops(struct acrn_vm *vm)
 		ept_pages_info[vm_id].ept.sworld_pgtable_base = uos_sworld_pgtable_pages[vm_id - 1U];
 		ept_pages_info[vm_id].ept.sworld_memory_base = uos_sworld_memory[vm_id - 1U];
 
-		vm->arch_vm.ept_mem_ops.get_sworld_memory_base = ept_get_sworld_memory_base;
+		mem_ops->get_sworld_memory_base = ept_get_sworld_memory_base;
 	}
-	vm->arch_vm.ept_mem_ops.info = &ept_pages_info[vm_id];
-
-	vm->arch_vm.ept_mem_ops.get_default_access_right = ept_get_default_access_right;
-	vm->arch_vm.ept_mem_ops.pgentry_present = ept_pgentry_present;
-	vm->arch_vm.ept_mem_ops.get_pml4_page = ept_get_pml4_page;
-	vm->arch_vm.ept_mem_ops.get_pdpt_page = ept_get_pdpt_page;
-	vm->arch_vm.ept_mem_ops.get_pd_page = ept_get_pd_page;
-	vm->arch_vm.ept_mem_ops.get_pt_page = ept_get_pt_page;
-	vm->arch_vm.ept_mem_ops.clflush_pagewalk = ept_clflush_pagewalk;
+	mem_ops->info = &ept_pages_info[vm_id];
+	mem_ops->get_default_access_right = ept_get_default_access_right;
+	mem_ops->pgentry_present = ept_pgentry_present;
+	mem_ops->get_pml4_page = ept_get_pml4_page;
+	mem_ops->get_pdpt_page = ept_get_pdpt_page;
+	mem_ops->get_pd_page = ept_get_pd_page;
+	mem_ops->get_pt_page = ept_get_pt_page;
+	mem_ops->clflush_pagewalk = ept_clflush_pagewalk;
 }
