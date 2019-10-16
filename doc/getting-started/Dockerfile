@@ -24,7 +24,9 @@ RUN swupd update -b && \
 			diffutils \
 			devpkg-elfutils \
 			doxygen \
+			rsync \
 			devpkg-ncurses \
+			devpkg-graphviz \
 			desktop-apps \
 	&& rm -rf /var/lib/swupd/*
 
