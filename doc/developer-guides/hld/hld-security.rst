@@ -9,19 +9,17 @@ Security high-level design
 Introduction
 ************
 
-This document describes the ACRN security high level design on Apollo
-Lake SoCs, including information about:
+This document describes security high level design in ACRN,
+including information about:
 
--  How to build a secure hypervisor, SOS, and UOS
--  How to extend platform root of trust with secure boot
--  How to design vTPM (virtual TPM)
--  How to create a virtualized tamper-resistant secure storage service
--  Platform security feature virtualization and enablement (such as SGX,
-   CSE/HECI/DAL, or SMEP/SMAP)
--  Hypervisor hardening
+-  Secure Boot in ACRN
+-  Hypervisor Security Enhancement, including memory management,secure
+   hypervisor interfaces etc.
+-  Platform Security Features Virtualizaion, such as the virtualizaion
+   of TPM(vTPM) and SGX(vSGX)
 
 This document is for developers, validation teams, architects, and
-maintainers of ACRN for Apollo Lake SoCs.
+maintainers of ACRN.
 
 The readers should be familiar with the basic concepts of system
 virtualization and ACRN hypervisor implementation.
