@@ -891,6 +891,10 @@ pass-through directly:
      - **Description**
      - **Handler**
 
+   * - MSR_IA32_TSC_ADJUST
+     - TSC adjustment of local APIC's TSC deadline mode
+     - emulates with vlapic
+
    * - MSR_IA32_TSC_DEADLINE
      - TSC target of local APIC's TSC deadline mode
      - emulates with vlapic
@@ -906,8 +910,12 @@ pass-through directly:
      - "
 
    * - MSR_IA32_TIME_STAMP_COUNTER
-     - TIme-stamp counter
+     - Time-stamp counter
      - work with VMX_TSC_OFFSET_FULL to emulate virtual TSC
+
+   * - MSR_IA32_APIC_BASE
+     - APIC base address
+     - emulates with vlapic
 
    * - MSR_IA32_PAT
      - Page-attribute table
@@ -917,6 +925,26 @@ pass-through directly:
      - Performance control
      - Trigger real p-state change if p-state is valid when writing,
        fetch physical MSR when reading
+
+   * - MSR_IA32_FEATURE_CONTROL
+     - Feature control bits that configure operation of VMX and SMX
+     - disabled, locked
+
+   * - MSR_IA32_MCG_CAP/STATUS
+     - Machine-Check global control/status
+     - emulates with vMCE
+
+   * - MSR_IA32_MISC_ENABLE
+     - Miscellaneous feature control
+     - readonly, except MONITOR/MWAIT enable bit
+
+   * - MSR_IA32_SGXLEPUBKEYHASH0/1/2/3
+     - SHA256 digest of the authorized launch enclaves
+     - emulates with vSGX
+
+   * - MSR_IA32_SGX_SVN_STATUS
+     - Status and SVN threshold of SGX support for ACM
+     - readonly, emulates with vSGX
 
    * - MSR_IA32_MTRR_CAP
      - Memory type range register related
@@ -941,6 +969,18 @@ pass-through directly:
    * - MSR_IA32_MTRR_FIX4K_C0000~F8000
      - "
      - "
+
+   * - MSR_IA32_X2APIC_*
+     - x2APIC related MSRs (offset from 0x800 to 0x900)
+     - emulates with vlapic
+
+   * - MSR_IA32_L2_MASK_n
+     - L2 CAT mask for COSn
+     - emulates with vCAT
+
+   * - MSR_IA32_L3_MASK_n
+     - L3 CAT mask for COSn
+     - emulates with vCAT
 
    * - MSR_IA32_VMX_BASIC~VMX_TRUE_ENTRY_CTLS
      - VMX related MSRs
