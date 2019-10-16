@@ -194,29 +194,14 @@ void wake_thread(struct thread_object *obj)
 	release_schedule_lock(pcpu_id);
 }
 
-void run_sched_thread(struct thread_object *obj)
+void run_thread(struct thread_object *obj)
 {
+	get_schedule_lock(obj->pcpu_id);
+	get_cpu_var(sched_ctl).curr_obj = obj;
+	set_thread_status(obj, THREAD_STS_RUNNING);
+	release_schedule_lock(obj->pcpu_id);
+
 	if (obj->thread_entry != NULL) {
 		obj->thread_entry(obj);
 	}
-
-	ASSERT(false, "Shouldn't go here, invalid thread entry!");
-}
-
-void switch_to_idle(thread_entry_t idle_thread)
-{
-	uint16_t pcpu_id = get_pcpu_id();
-	struct thread_object *idle = &per_cpu(idle, pcpu_id);
-	char idle_name[16];
-
-	snprintf(idle_name, 16U, "idle%hu", pcpu_id);
-	(void)strncpy_s(idle->name, 16U, idle_name, 16U);
-	idle->pcpu_id = pcpu_id;
-	idle->thread_entry = idle_thread;
-	idle->switch_out = NULL;
-	idle->switch_in = NULL;
-	get_cpu_var(sched_ctl).curr_obj = idle;
-	set_thread_status(idle, THREAD_STS_RUNNING);
-
-	run_sched_thread(idle);
 }

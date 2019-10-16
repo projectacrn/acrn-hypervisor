@@ -53,7 +53,6 @@ uint16_t sched_get_pcpuid(const struct thread_object *obj);
 struct thread_object *sched_get_current(uint16_t pcpu_id);
 
 void init_sched(uint16_t pcpu_id);
-void switch_to_idle(thread_entry_t idle_thread);
 void get_schedule_lock(uint16_t pcpu_id);
 void release_schedule_lock(uint16_t pcpu_id);
 
@@ -63,11 +62,12 @@ void remove_thread_obj(struct thread_object *obj, uint16_t pcpu_id);
 void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode);
 bool need_reschedule(uint16_t pcpu_id);
 
+void run_thread(struct thread_object *obj);
 void sleep_thread(struct thread_object *obj);
 void wake_thread(struct thread_object *obj);
 void schedule(void);
-void run_sched_thread(struct thread_object *obj);
 
 void arch_switch_to(void *prev_sp, void *next_sp);
+void run_idle_thread(void);
 #endif /* SCHEDULE_H */
 

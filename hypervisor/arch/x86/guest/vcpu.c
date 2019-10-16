@@ -611,7 +611,7 @@ static uint64_t build_stack_frame(struct acrn_vcpu *vcpu)
 	frame -= 1;
 
 	frame->magic = SP_BOTTOM_MAGIC;
-	frame->rip = (uint64_t)run_sched_thread; /*return address*/
+	frame->rip = (uint64_t)vcpu->thread_obj.thread_entry; /*return address*/
 	frame->rflag = 0UL;
 	frame->rbx = 0UL;
 	frame->rbp = 0UL;
