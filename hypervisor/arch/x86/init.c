@@ -49,16 +49,11 @@ static void init_debug_post(uint16_t pcpu_id)
 }
 
 /*TODO: move into guest-vcpu module */
-static void enter_guest_mode(uint16_t pcpu_id)
+static void init_guest_mode(uint16_t pcpu_id)
 {
 	vmx_on();
 
 	launch_vms(pcpu_id);
-
-	switch_to_idle(default_idle);
-
-	/* Control should not come here */
-	cpu_dead();
 }
 
 static void init_primary_pcpu_post(void)
@@ -71,7 +66,9 @@ static void init_primary_pcpu_post(void)
 
 	init_debug_post(BOOT_CPU_ID);
 
-	enter_guest_mode(BOOT_CPU_ID);
+	init_guest_mode(BOOT_CPU_ID);
+
+	run_idle_thread();
 }
 
 /* NOTE: this function is using temp stack, and after SWITCH_TO(runtime_sp, to)
@@ -101,5 +98,7 @@ void init_secondary_pcpu(void)
 
 	init_debug_post(pcpu_id);
 
-	enter_guest_mode(pcpu_id);
+	init_guest_mode(pcpu_id);
+
+	run_idle_thread();
 }
