@@ -106,14 +106,24 @@ def off_line_cpus(uos_type, config):
     print("", file=config)
 
 
-def run_container(board_name, config):
-    if board_name != "apl-mrb":
+def run_container(board_name, uos_type, config):
+    """
+    The container contains the clearlinux as rootfs
+    :param board_name: board name
+    :param uos_type: the os name of user os
+    :param config: the file pointer to store the information
+    """
+    # the runC.json is store in the path under board name, but for nuc7i7dnb/nuc6cayh/kbl-nuc-i7 is under nuc/
+    if 'nuc' in board_name:
+        board_name = 'nuc'
+
+    if board_name == "apl-up2" or uos_type != "CLEARLINUX":
         return
 
     print("function run_container()", file=config)
     print("{", file=config)
     print("vm_name=vm1", file=config)
-    print('config_src="/usr/share/acrn/samples/apl-mrb/runC.json"', file=config)
+    print('config_src="/usr/share/acrn/samples/{}/runC.json"'.format(board_name), file=config)
     print('shell="/usr/share/acrn/conf/add/$vm_name.sh"', file=config)
     print('arg_file="/usr/share/acrn/conf/add/$vm_name.args"', file=config)
     print('runc_bundle="/usr/share/acrn/conf/add/runc/$vm_name"', file=config)
@@ -148,6 +158,35 @@ def run_container(board_name, config):
     print("	fi", file=config)
     print("done", file=config)
 
+    dst_str = """    cp  "$config_src"  "$config_dst"
+    args=$(sed '{s/-C//g;s/^[ \\t]*//g;s/^/\\"/;s/ /\\",\\"/g;s/$/\\"/}' ${arg_file})
+    sed -i "s|\\"sh\\"|\\"$shell\\", $args|" $config_dst"""
+    print('', file=config)
+    print('if [ ! -f "$shell" ]; then', file=config)
+    print('        echo "Pls add the vm at first!"', file=config)
+    print('        exit', file=config)
+    print('fi', file=config)
+    print('', file=config)
+    print('if [ ! -f "$arg_file" ]; then', file=config)
+    print('        echo "Pls add the vm args!"', file=config)
+    print('        exit', file=config)
+    print('fi', file=config)
+    print('', file=config)
+    print('if [ ! -d "$rootfs_dir" ]; then', file=config)
+    print('        mkdir -p "$rootfs_dir"', file=config)
+    print('fi', file=config)
+    print('if [ ! -d "$runc_bundle" ]; then', file=config)
+    print('	mkdir -p "$runc_bundle"', file=config)
+    print('fi', file=config)
+    print('if [ ! -f "$config_dst" ]; then', file=config)
+    print('{}'.format(dst_str), file=config)
+    print('fi', file=config)
+    print('runc run --bundle $runc_bundle -d $vm_name', file=config)
+    print('echo "The runC container is running in backgroud"', file=config)
+    print('echo "\'#runc exec <vmname> bash\' to login the container bash"', file=config)
+    print('exit', file=config)
+    print('}', file=config)
+    print('', file=config)
 
 def boot_image_type(args, vmid, config):
 
@@ -191,8 +230,9 @@ def log_level_set(uos_type, config):
     print("", file=config)
 
 
-def launch_begin(uos_type, config):
+def launch_begin(board_name, uos_type, config):
     launch_uos = '_'.join(uos_type.lower().split())
+    run_container(board_name, uos_type, config)
     print("function launch_{}()".format(launch_uos), file=config)
     print("{", file=config)
 
@@ -231,6 +271,7 @@ def mem_size_set(names, args, vmid, config):
 
 def uos_launch(names, args, vmid, config):
 
+    board_name = names['board_name']
     gvt_args = args['gvt_args'][vmid]
     uos_type = names['uos_types'][vmid]
     launch_uos = '_'.join(uos_type.lower().split())
@@ -240,6 +281,7 @@ def uos_launch(names, args, vmid, config):
         print("", file=config)
         print('launch_{} {} "{}" {} "{}" $debug'.format(launch_uos, vmid, gvt_args, launch_uos, vmid), file=config)
         print("", file=config)
+
         print("umount /data", file=config)
 
     if uos_type not in ("CLEARLINUX", "ANDROID", "ALIOS"):
@@ -263,6 +305,7 @@ def uos_launch(names, args, vmid, config):
 
 def launch_end(names, args, vmid, config):
 
+    board_name = names['board_name']
     uos_type = names['uos_types'][vmid]
     mem_size = args["mem_size"][vmid]
 
@@ -302,6 +345,15 @@ def launch_end(names, args, vmid, config):
         print("mount {} /data".format(root_fs), file=config)
         print("", file=config)
 
+    if board_name == "apl-mrb":
+        print("if [ $runC_enable == 1 ]; then", file=config)
+        print('    if [ $(hostname) = "runc" ]; then', file=config)
+        print('            echo "Already in container exit!"', file=config)
+        print("            exit", file=config)
+        print("    fi", file=config)
+        print("    run_container", file=config)
+        print("    exit", file=config)
+        print("fi", file=config)
     off_line_cpus(uos_type, config)
 
     uos_launch(names, args, vmid, config)
@@ -474,13 +526,14 @@ def dm_arg_set(names, sel, dm, vmid, config):
 
 def gen(names, pt_sel, dm, vmid, config):
 
+    board_name = names['board_name']
     uos_type = names['uos_types'][vmid]
 
     # passthrough bdf/vpid dictionay
     pt.gen_pt_head(names, pt_sel, vmid, config)
 
     # gen launch header
-    launch_begin(uos_type, config)
+    launch_begin(board_name, uos_type, config)
     tap_uos_net(names, vmid, config)
 
     # passthrough device
