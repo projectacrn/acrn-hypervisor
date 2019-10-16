@@ -129,15 +129,11 @@ is not currently supported for ACRN and its guest VMs.
 
 Boot Flow
 ---------
+ACRN supports two verified boot sequences.
 
-.. figure:: images/security-image2.png
-   :width: 900px
-   :align: center
-   :name: security-bootflow
-
-   ACRN Boot Flow
-
-As shown in :numref:`security-bootflow`, the Converged Security Engine
+1) Verified Boot Sequence with SBL
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+As shown in :numref:`security-bootflow-sbl`, the Converged Security Engine
 Firmware (CSE FW) behaves as the root of trust in this platform boot
 flow. It authenticates and starts the BIOS (SBL), whereupon the SBL is
 responsible for authenticating and verifying the ACRN hypervisor image.
@@ -145,9 +141,29 @@ Currently the SOS kernel is built together with the ACRN hypervisor as
 one image bundle, so this whole image signature is verified by SBL
 before launching.
 
+.. figure:: images/security-image-bootflow-sbl.png
+   :width: 900px
+   :align: center
+   :name: security-bootflow-sbl
+
+   ACRN Boot Flow with SBL
+
+2) Verified Boot Sequence with UEFI
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+As shown in :numref:`security-bootflow-uefi`, in this boot sequence,UEFI
+authenticates and starts the ACRN hypervisor firstly,and hypervisor will return
+to UEFI enviorment to authenticate and load SOS kernel bootloader.
+
+.. figure:: images/security-image-bootflow-uefi.png
+   :width: 900px
+   :align: center
+   :name: security-bootflow-uefi
+
+   ACRN Boot Flow with UEFI
+
 As long as the SOS kernel starts, the SOS kernel will load all its
 subsystems subsequently. In order to launch a guest UOS, a DM process is
-started to launch the virtual BIOS (vSBL), and eventually the vSBL is
+started to launch the virtual BIOS (OVMF), and eventually, the OVMF is
 responsible for verifying and launching the guest UOS kernel (or the
 Android OS loader for an Android UOS).
 
