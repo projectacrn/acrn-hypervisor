@@ -78,7 +78,7 @@
         <console desc="ttyS console for Linux kernel">/dev/ttyS0</console>
         <bootargs desc="Specify kernel boot arguments">
         rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3
-        i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_gvt=1
+        i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x01070F i915.domain_plane_owners=0x011100001111 i915.enable_gvt=1
         </bootargs>
     </board_private>
   </vm>
