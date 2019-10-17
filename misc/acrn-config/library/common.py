@@ -622,3 +622,19 @@ def get_max_clos(board_file):
             clos_max = int(line.split(':')[1])
 
     return (cache_support, clos_max)
+
+
+def undline_name(name):
+    """
+    This convert name which has contain '-' to '_'
+    :param name: name which contain '-' and ' '
+    :return: name_str which contain'_'
+    """
+    # convert '-' to '_' in name string
+    name_str = "_".join(name.split('-')).upper()
+
+    # stitch '_' while ' ' in name string
+    if ' ' in name_str:
+        name_str = "_".join(name_str.split()).upper()
+
+    return name_str

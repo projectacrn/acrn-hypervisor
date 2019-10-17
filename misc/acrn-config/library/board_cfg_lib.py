@@ -460,3 +460,12 @@ def get_processor_info():
         break
 
     return tmp_list
+
+
+def undline_name(name):
+    """
+    This convert name which has contain '-' to '_'
+    :param name: name which contain '-' and ' '
+    :return: name_str which contain'_'
+    """
+    return common.undline_name(name)

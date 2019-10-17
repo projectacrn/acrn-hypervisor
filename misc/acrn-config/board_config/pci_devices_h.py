@@ -61,23 +61,6 @@ def parser_pci():
     return (pci_dev_dic, pci_bar_dic, sub_name_count)
 
 
-
-def undline_name(name):
-    """
-    This convert name which has contain '-' to '_'
-    :param name: name which contain '-' and ' '
-    :return: name_str which contain'_'
-    """
-    # convert '-' to '_' in name string
-    name_str = "_".join(name.split('-')).upper()
-
-    # stitch '_' while ' ' in name string
-    if ' ' in name_str:
-        name_str = "_".join(name_str.split()).upper()
-
-    return name_str
-
-
 def write_pbdf(i_cnt, bdf, subname, config):
     """
     Parser and generate pbdf
@@ -91,7 +74,7 @@ def write_pbdf(i_cnt, bdf, subname, config):
         tmp_sub_name = "_".join(subname.split()).upper()
     else:
         if '-' in subname:
-            tmp_sub_name = undline_name(subname) + "_" + str(i_cnt)
+            tmp_sub_name = board_cfg_lib.undline_name(subname) + "_" + str(i_cnt)
         else:
             tmp_sub_name = "_".join(subname.split()).upper() + "_" + str(i_cnt)
 
