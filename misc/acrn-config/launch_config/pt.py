@@ -134,12 +134,6 @@ def audio_pt(uos_type, sel, vmid, config):
         fun_codec = bdf_codec[6:7]
         slot_codec = sel.slot['audio_codec'][vmid]
 
-    if uos_type == "WINDOWS":
-        print('    echo ${passthru_vpid["audio"]} > /sys/bus/pci/drivers/pci-stub/new_id', file=config)
-        print('    echo ${passthru_bdf["audio"]} > /sys/bus/pci/devices/${passthru_bdf["audio"]}/driver/unbind', file=config)
-        print('    echo ${passthru_bdf["audio"]} > /sys/bus/pci/drivers/pci-stub/bind', file=config)
-        return
-
     if bdf_audio:
         print("kernel_version=$(uname -r)", file=config)
         print('audio_module="/usr/lib/modules/$kernel_version/kernel/sound/soc/intel/boards/snd-soc-sst_bxt_sos_tdf8532.ko"', file=config)
@@ -162,6 +156,7 @@ def audio_pt(uos_type, sel, vmid, config):
         print("audio_passthrough=1", file=config)
         print("fi", file=config)
         print('boot_audio_option=""', file=config)
+
         print("if [ $audio_passthrough == 1 ]; then", file=config)
         print("    # for audio device", file=config)
         print('    echo ${passthru_vpid["audio"]} > /sys/bus/pci/drivers/pci-stub/new_id', file=config)
@@ -169,19 +164,32 @@ def audio_pt(uos_type, sel, vmid, config):
         print('    echo ${passthru_bdf["audio"]} > /sys/bus/pci/drivers/pci-stub/bind', file=config)
         print("", file=config)
 
-        print("    # for audio codec", file=config)
-        print('    echo ${passthru_vpid["audio_codec"]} > /sys/bus/pci/drivers/pci-stub/new_id', file=config)
-        print('    echo ${passthru_bdf["audio_codec"]} > /sys/bus/pci/devices/${passthru_bdf["audio_codec"]}/driver/unbind', file=config)
-        print('    echo ${passthru_bdf["audio_codec"]} > /sys/bus/pci/drivers/pci-stub/bind', file=config)
-        print("", file=config)
+        if bdf_codec:
+            # select audio and audio_codec device to pass through to vm
+            print("    # for audio codec", file=config)
+            print('    echo ${passthru_vpid["audio_codec"]} > /sys/bus/pci/drivers/pci-stub/new_id', file=config)
+            print('    echo ${passthru_bdf["audio_codec"]} > /sys/bus/pci/devices/${passthru_bdf["audio_codec"]}/driver/unbind', file=config)
+            print('    echo ${passthru_bdf["audio_codec"]} > /sys/bus/pci/drivers/pci-stub/bind', file=config)
+            print("", file=config)
 
-        print('    boot_audio_option="-s {},passthru,{}/{}/{},'.format(
-            slot_audio, bus, dev, fun), end="", file=config)
-        print('keep_gsi -s {},passthru,{}/{}/{}"'.format(
-            slot_codec, bus_codec, dev_codec, fun_codec), file=config)
+            print('    boot_audio_option="-s {},passthru,{}/{}/{},keep_gsi '.format(
+                slot_audio, bus, dev, fun), end="", file=config)
+            print('-s {},passthru,{}/{}/{}"'.format(
+                slot_codec, bus_codec, dev_codec, fun_codec), file=config)
+        else:
+            # only select audio device to pass through to vm
+            print('    boot_audio_option="-s {},passthru,{}/{}/{},keep_gsi'.format(
+                slot_audio, bus, dev, fun), file=config)
+
         print("else", file=config)
         print('    boot_audio_option="-s {},virtio-audio"'.format(slot_audio), file=config)
         print("fi", file=config)
+    elif bdf_codec:
+        # only selected audio codec, then set error message
+        key = "audio/audio codec error:"
+        launch_cfg_lib.ERR_LIST[key] = "Audio codec device should be pass through together with Audio devcie"
+        print('    boot_audio_option=-s {},passthru,{}/{}/{}"'.format(
+            slot_codec, bus_codec, dev_codec, fun_codec), file=config)
 
 
 def media_pt(uos_type, sel, vmid, config):

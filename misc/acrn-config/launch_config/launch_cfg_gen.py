@@ -133,6 +133,8 @@ def generate_script_file(names, pt_sel, dm, vmid, config):
 
     print("{}".format(header_info), file=config)
     com.gen(names, pt_sel, dm, vmid, config)
+    if launch_cfg_lib.ERR_LIST:
+        return launch_cfg_lib.ERR_LIST
 
 
 def main(args):
@@ -201,14 +203,18 @@ def main(args):
         launch_script_file = output + script_name
         config_srcs.append(launch_script_file)
         with open(launch_script_file, mode = 'w', newline=None, encoding='utf-8') as config:
-            generate_script_file(names, pt_sel, dm.args, vm_th, config)
+            err_dic = generate_script_file(names, pt_sel, dm.args, vm_th, config)
+            if err_dic:
+                return err_dic
     else:
         for post_vm_i in post_num_list:
             script_name = "launch_uos_id{}.sh".format(post_vm_i)
             launch_script_file = output + script_name
             config_srcs.append(launch_script_file)
             with open(launch_script_file, mode = 'w', newline='\n', encoding='utf-8') as config:
-                generate_script_file(names, pt_sel, dm.args, post_vm_i, config)
+                err_dic = generate_script_file(names, pt_sel, dm.args, post_vm_i, config)
+                if err_dic:
+                    return err_dic
 
         commit_msg = "launch_uos_id{}.sh".format(launch_vm_count)
 
