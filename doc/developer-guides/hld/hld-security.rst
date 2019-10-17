@@ -223,12 +223,12 @@ such as Hypercall APIs, I/O emulations, and EPT violation handling.
 The main security goal of the ACRN hypervisor design is to prevent
 Privilege Escalation and enforce Isolation, for example:
 
--  VMM privilege escalation (vmx non-root -> vmx root)
+-  VMM privilege escalation (VMX non-root -> VMX root)
 -  Non-secure OS software (running in AaaG) accessing secure world TEE
    assets
 -  Unauthorized software from executing in the hypervisor
 -  Cross-guest VM attacks
--  Hypervisor secret information leaks
+-  Hypervisor secret information leakage
 
 Memory Management Enhancement
 -----------------------------
@@ -259,9 +259,9 @@ boundary for memory space between the hypervisor and Guest VMs.
 
    Hypervisor and Guest Memory Layout
 
-The hypervisor must appropriately configure the EPT tables (GPA->HPA
-mapping) to disallow any guest to access (read/write/execution) the
-memory space owned by the hypervisor.
+The hypervisor must appropriately configure the EPT tables to disallow
+any guest to access (read/write/execution) the memory space owned by
+the hypervisor.
 
 Memory Access Restrictions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -397,16 +397,13 @@ In order to activate SMEP protection, ACRN hypervisor must:
 #. Set CR4.SMEP bit. In the entire lifecycle of the hypervisor, this bit
    value always remains one.
 
-As an alternative, NX feature can also be used for this purpose by
-setting the corresponding NX (non-execution) bit for all the guest
-memory mapping in host CR3 paging tables.
+As an alternative, NX feature is used for this purpose by setting the
+corresponding NX (non-execution) bit for all the guest memory mapping
+in host CR3 paging tables.
 
 Since hypervisor code never runs in Ring 3 mode, either of these two
-solutions works very well. As the NX bit is also used by the hypervisor
-to disable execution of its own data (by policies mentioned previously),
-the latter solution should be easier to implement.  Since enabling
-CR0.SMEP bit is simple and does no harm to the system, it is recommended
-that both solutions should be enabled in the ACRN hypervisor.
+solutions works very well. Both solutions are enabled in the ACRN
+hypervisor.
 
 Guest Memory Access Prevention
 ++++++++++++++++++++++++++++++
@@ -418,7 +415,7 @@ application program.
 
 This feature is controlled by the CR4.SMAP bit. When that bit is set,
 any attempt to access user-accessible memory pages while running in a
-privileged or  kernel mode will lead to a page fault.
+privileged or kernel mode will lead to a page fault.
 
 However, there are times when the kernel legitimately needs to work with
 user-accessible memory pages. The Intel processor defines a separate
@@ -431,14 +428,11 @@ To manipulate that flag relatively quickly, STAC (set AC flag) and CLAC
 (clear AC flag) instructions are introduced for this purpose. Note that
 STAC and CLAC can only be executed in kernel mode (CPL=0).
 
-To activate SMAP protection, ACRN hypervisor must:
+To activate SMAP protection in ACRN hypervisor:
 
 #. Configure all the guest memory as user-writable memory (U/S bit = 1,
    and R/W bit = 1) in corresponding host CR3 paging table entries, as
-   shown in :numref:`security-smap` below. Note that the R/W bit would also be clear,
-   which means that the corresponding user-accessible pages are
-   read-only to user mode.  Then if CR0.WP = 1, even the kernel mode (in
-   hypervisor ring 0) cannot even write to this user-accessible pages.
+   shown in :numref:`security-smap` below.
 #. Set CR4.SMAP bit. In the entire lifecycle of hypervisor, this bit
    value always remains one.
 #. When needed, use STAC instruction to suppress SMAP protection, and
@@ -472,29 +466,13 @@ The attack surface can be minimized because there is only a
 very small window between step 1 and step 3 in which the guest memory
 can be accessed by hypervisor code running in ring 0.
 
-The following section details the memory operation rules and
-functions when accessing guest memory pages.
+Rules to Access Guest Memory in Hypervisor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Memory Operation Functions/Rules for Accessing Guest Memory
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The Linux kernel uses copy\_[to/from]\_user() / get\_user() /
-put\_user() whenever the kernel legitimately attempts to access
-user-accessible memory pages (refer to `Linux kernel copy routines
-documentation
-<https://www.kernel.org/doc/htmldocs/kernel-hacking/routines-copy.html>`_
-The ACRN hypervisor, provides similar functions:
-
-``put_vm()``, and ``get_vm()``
-   used to put and get single values (such as an int, char, or long) to
-   and from vm / guest memory area (user-accessible pages).
-
-``copy\_to\_vm()``, and ``copy\_from\_vm()``
-   used to copy an arbitrary amount of data to and from vm / guest
-   memory area (user-accessible pages).
-
-Inside these functions, the internal memory read/write operations
-are surrounded by STAC and CLAC instructions.
+In ACRN hypervisor, functions ``stac()`` and ``clac()`` wrap
+STAC and CLAC instructions respectively, and functions
+``copy_to_gpa()``, and ``copy_from_gpa()`` can be used to copy
+an arbitrary amount of data to or from VM memory area.
 
 Whenever the hypervisor needs to perform legitimate read/write access to
 guest memory pages, one of functions above must be used. Otherwise, the
@@ -508,8 +486,8 @@ host MMU mapping), and must not be in the range of hypervisor memory.
 Details of these ordinary checks are out of scope in this document.
 
 
-Memory Information Leak
------------------------
+Avoidance of Memory Information Leakage
+---------------------------------------
 
 Protecting the hypervisor's memory is critical to the security of the
 entire platform. The hypervisor must prevent any memory content (e.g.
