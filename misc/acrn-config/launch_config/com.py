@@ -367,14 +367,9 @@ def set_dm_pt(names, sel, vmid, config):
         print('   -s {},passthru,{}/{}/{} \\'.format(sel.slot["usb_xdci"][vmid], sel.bdf["usb_xdci"][vmid][0:2],\
             sel.bdf["usb_xdci"][vmid][3:5], sel.bdf["usb_xdci"][vmid][6:7]), file=config)
 
-    if uos_type in ("ANDROID", "ALIOS"):
+    # pass through audio/audio_codec
+    if sel.bdf['audio'][vmid]:
         print("   $boot_audio_option \\", file=config)
-    if uos_type == "WINDOWS":
-        if sel.bdf['audio'][vmid] and sel.slot['audio'][vmid]:
-            print("   -s {},passthru,{}/{}/{}  \\".format(
-                launch_cfg_lib.virtual_dev_slot("win_audio"),
-                sel.bdf['audio'][vmid][0:2], sel.bdf['audio'][vmid][3:5],
-                sel.bdf['audio'][vmid][6:7]), file=config)
 
     if sel.bdf['cse'][vmid] and sel.slot['cse'][vmid]:
         print("   $boot_cse_option \\", file=config)
