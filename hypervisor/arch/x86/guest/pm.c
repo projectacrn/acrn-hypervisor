@@ -103,7 +103,7 @@ static inline void init_cx_port(struct acrn_vm *vm)
 	}
 }
 
-void vm_setup_cpu_state(struct acrn_vm *vm)
+static void vm_setup_cpu_state(struct acrn_vm *vm)
 {
 	vm_setup_cpu_px(vm);
 	vm_setup_cpu_cx(vm);
@@ -113,7 +113,7 @@ void vm_setup_cpu_state(struct acrn_vm *vm)
 /* This function is for power management Sx state implementation,
  * VM need to load the Sx state data to implement S3/S5.
  */
-int32_t vm_load_pm_s_state(struct acrn_vm *vm)
+static int32_t vm_load_pm_s_state(struct acrn_vm *vm)
 {
 	int32_t ret;
 	struct pm_s_state_data *sx_data = get_host_sstate_data();
@@ -278,7 +278,7 @@ static void register_gas_io_handler(struct acrn_vm *vm, uint32_t pio_idx, const 
 	}
 }
 
-void register_pm1ab_handler(struct acrn_vm *vm)
+static void register_pm1ab_handler(struct acrn_vm *vm)
 {
 	struct pm_s_state_data *sx_data = vm->pm.sx_state_data;
 
@@ -315,7 +315,7 @@ static bool rt_vm_pm1a_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t wi
 	return false;
 }
 
-void register_rt_vm_pm1a_ctl_handler(struct acrn_vm *vm)
+static void register_rt_vm_pm1a_ctl_handler(struct acrn_vm *vm)
 {
 	struct vm_io_range io_range;
 
@@ -324,4 +324,21 @@ void register_rt_vm_pm1a_ctl_handler(struct acrn_vm *vm)
 
 	register_pio_emulation_handler(vm, VIRTUAL_PM1A_CNT_PIO_IDX, &io_range,
 					&rt_vm_pm1a_io_read, &rt_vm_pm1a_io_write);
+}
+
+void init_guest_pm(struct acrn_vm *vm)
+{
+	vm_setup_cpu_state(vm);
+
+	if (is_sos_vm(vm)) {
+		/* Load pm S state data */
+		if (vm_load_pm_s_state(vm) == 0) {
+			register_pm1ab_handler(vm);
+		}
+	}
+
+	/* Intercept the virtual pm port for RTVM */
+	if (is_rt_vm(vm)) {
+		register_rt_vm_pm1a_ctl_handler(vm);
+	}
 }
