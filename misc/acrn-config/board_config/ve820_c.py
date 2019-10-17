@@ -11,19 +11,6 @@ TOTAL_MEM_SIZE = 4 * 1024 * 1024 * 1024
 LOW_MEM_TO_PCI_HOLE = 0x20000000
 
 
-def undline_board_name(board_name):
-    """
-    This convert board name which has contain '-' to '_'
-    :param board_name:
-    :return:
-    """
-    name_list = board_name
-    if '-' in board_name:
-        name_list = "_".join(board_name.split('-'))
-
-    return name_list
-
-
 def ve820_per_launch(config, hpa_size):
     """
     Start to generate board.c
@@ -33,7 +20,7 @@ def ve820_per_launch(config, hpa_size):
     if err_dic:
         return err_dic
 
-    board_name = undline_board_name(board_name)
+    board_name = board_cfg_lib.undline_name(board_name)
 
     low_mem_to_pci_hole_len = '0xA0000000'
     low_mem_to_pci_hole = '0x20000000'
@@ -46,9 +33,9 @@ def ve820_per_launch(config, hpa_size):
     print("#include <e820.h>", file=config)
     print("#include <vm.h>", file=config)
     print("", file=config)
-    print("#define VE820_ENTRIES_{}\t{}U".format(board_name.upper(), 5), file=config)
+    print("#define VE820_ENTRIES_{}\t{}U".format(board_name, 5), file=config)
     print("static const struct e820_entry ve820_entry[{}] = {{".format(
-        "VE820_ENTRIES_{}".format(board_name.upper())), file=config)
+        "VE820_ENTRIES_{}".format(board_name)), file=config)
     print("\t{\t/* usable RAM under 1MB */", file=config)
     print("\t\t.baseaddr = 0x0UL,", file=config)
     print("\t\t.length   = 0xF0000UL,\t\t/* 960KB */", file=config)
@@ -96,7 +83,7 @@ def ve820_per_launch(config, hpa_size):
     print("*/", file=config)
     print("void create_prelaunched_vm_e820(struct acrn_vm *vm)", file=config)
     print("{", file=config)
-    print("\tvm->e820_entry_num = VE820_ENTRIES_{};".format(board_name.upper()), file=config)
+    print("\tvm->e820_entry_num = VE820_ENTRIES_{};".format(board_name), file=config)
     print("\tvm->e820_entries = ve820_entry;", file=config)
     print("}", file=config)
 
