@@ -35,7 +35,7 @@ def tap_uos_net(names, vmid, config):
         print("mac_seed=${mac:9:8}-${vm_name}", file=config)
         print("", file=config)
 
-    if uos_type in ("VXWORKS", "ZEPHYR", "WINDOWS"):
+    if uos_type in ("VXWORKS", "ZEPHYR", "WINDOWS", "PREEMPT-RT LINUX"):
         print("vm_name={}_vm$1".format(vm_name), file=config)
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
@@ -289,7 +289,7 @@ def uos_launch(names, args, vmid, config):
         if uos_type == "VXWORKS":
             print("launch_{} 1".format(launch_uos), file=config)
         if uos_type == "PREEMPT-RT LINUX":
-            print("launch_{}".format(launch_uos), file=config)
+            print("launch_{} 1".format(launch_uos), file=config)
         if uos_type == "WINDOWS":
             print('launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
         if uos_type == "ZEPHYR":
@@ -518,10 +518,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
         print("   --enable_trusty \\", file=config)
 
     set_dm_pt(names, sel, vmid, config)
-    if uos_type != "PREEMPT-RT LINUX":
-        print("   $vm_name", file=config)
-    else:
-        print("   hard_rtvm", file=config)
+    print("   $vm_name", file=config)
     print("}", file=config)
 
 
