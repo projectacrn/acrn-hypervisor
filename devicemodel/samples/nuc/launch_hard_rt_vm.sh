@@ -13,7 +13,7 @@ passthru_vpid=(
 passthru_bdf=(
 ["eth"]="0000:00:1f.6"
 ["sata"]="0000:00:17.0"
-["nvme"]="0000:02:0.0"
+["nvme"]="0000:02:00.0"
 )
 
 function launch_hard_rt_vm()
