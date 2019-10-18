@@ -17,9 +17,9 @@
 		<ipu desc="vm ipu device"></ipu>
 		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
 		<cse desc="vm cse device"></cse>
-		<audio desc="vm audio device">00:0e.0 Multimedia audio controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series Audio Cluster (rev 0b)</audio>
+		<audio desc="vm audio device">00:0e.0 Audio device: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series Audio Cluster (rev 0b)</audio>
 		<audio_codec desc="vm audio codec device">00:17.0 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series I2C Controller #5 (rev 0b)</audio_codec>
-		<wifi desc="vm wifi device">03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 0c)</wifi>
+		<wifi desc="vm wifi device">03:00.0 Ethernet controller: Marvell Technology Group Ltd. 88W8897 [AVASTAR] 802.11ac Wireless</wifi>
 		<bluetooth desc="vm bluetooth">00:18.0 Signal processing controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series HSUART Controller #1 (rev 0b)</bluetooth>
 		<sd_card desc="vm sd card device">00:1b.0 SD Host controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series SDXC/MMC Host Controller (rev 0b)</sd_card>
 		<ethernet desc="vm ethernet device"></ethernet>
