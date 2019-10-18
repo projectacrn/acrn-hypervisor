@@ -7,9 +7,9 @@ A critical part of virtualization is virtualizing devices: exposing all
 aspects of a device including its I/O, interrupts, DMA, and configuration.
 There are three typical device
 virtualization methods: emulation, para-virtualization, and passthrough.
-Both emulation and passthrough are used in ACRN project.  Device
-emulation is discussed in :ref:`hld-io-emulation` and
-device passthrough will be discussed here.
+All emulation, para-virtualization and passthrough are used in ACRN project.  Device
+emulation is discussed in :ref:`hld-io-emulation`, para-virtualization is discussed
+in :ref:`hld-virtio-devices` and device passthrough will be discussed here.
 
 In the ACRN project, device emulation means emulating all existing hardware
 resource through a software component device model running in the
@@ -34,15 +34,18 @@ can't support device sharing.
 Passthrough in the hypervisor provides the following functionalities to
 allow VM to access PCI devices directly:
 
--  DMA Remapping by VT-d for PCI device: hypervisor will setup DMA
+-  VT-d DMA Remapping for PCI devices: hypervisor will setup DMA
    remapping during VM initialization phase.
+-  VT-d Interrupt-remapping for PCI devices: hypervisor will enable
+   VT-d interrupt-remapping for PCI devices for security considerations.
 -  MMIO Remapping between virtual and physical BAR
 -  Device configuration Emulation
--  Remapping interrupts for PCI device
+-  Remapping interrupts for PCI devices
 -  ACPI configuration Virtualization
 -  GSI sharing violation check
 
-The following diagram details passthrough initialization control flow in ACRN:
+The following diagram details passthrough initialization control flow in ACRN
+for post-launched VM:
 
 .. figure:: images/passthru-image22.png
    :align: center
@@ -60,14 +63,39 @@ passthrough, as detailed here:
 
    Passthrough Device Status
 
-DMA Remapping
-*************
+Owner of Passthrough Devices
+****************************
+
+ACRN hypervisor will do PCI enumeration to discover the PCI devices on the platform.
+According to the hypervisor/VM configurations, the owner of these PCI devices can be
+one the following 4 cases:
+
+- **Hypervisor**: hypervisor uses UART device as the console in debug version for
+  debug purpose, so the UART device is owned by hypervisor and is not visible
+  to any VM. For now, UART is the only pci device could be owned by hypervisor.
+- **Pre-launched VM**: The passthrough devices will be used in a pre-launched VM is
+  pre-defined in VM configuration. These passthrough devices are owned by the
+  pre-launched VM after   the VM is created. These devices will not be removed
+  from the pre-launched VM. There could be pre-launched VM(s) in logical partition
+  mode and hybrid mode.
+- **Service VM**: All the passthrough devices except these described above (owned by
+  hypervisor or pre-launched VM(s)) are assigned to Service VM. And some of these devices
+  can be assigned to a post-launched VM according to the passthrough device list
+  specified in the parameters of the ACRN DM.
+- **Post-launched VM**: A list of passthrough devices can be specified in the parameters of
+  the ACRN DM. When creating a post-launched VM, these specified devices will be moved
+  from Service VM domain to the post-launched VM domain. After the post-launched VM is
+  powered-off, these devices will be moved back to Service VM domain.
+
+
+VT-d DMA Remapping
+******************
 
 To enable passthrough, for VM DMA access the VM can only
 support GPA, while physical DMA requires HPA. One work-around
 is building identity mapping so that GPA is equal to HPA, but this
 is not recommended as some VM don't support relocation well. To
-address this issue, Intel introduces VT-d in chipset to add one
+address this issue, Intel introduces VT-d in the chipset to add one
 remapping engine to translate GPA to HPA for DMA operations.
 
 Each VT-d engine (DMAR Unit), maintains a remapping structure
@@ -76,21 +104,16 @@ page table for GPA/HPA translation as output. The GPA/HPA translation
 page table is similar to a normal multi-level page table.
 
 VM DMA depends on Intel VT-d to do the translation from GPA to HPA, so we
-need to enable VT-d IOMMU engine in ACRN before we can passthrough any device. SOS
+need to enable VT-d IOMMU engine in ACRN before we can passthrough any device. Service VM
 in ACRN is a VM running in non-root mode which also depends
-on VT-d to access a device. In SOS DMA remapping
+on VT-d to access a device. In Service VM DMA remapping
 engine settings, GPA is equal to HPA.
 
 ACRN hypervisor checks DMA-Remapping Hardware unit Definition (DRHD) in
 host DMAR ACPI table to get basic info, then sets up each DMAR unit. For
 simplicity, ACRN reuses EPT table as the translation table in DMAR
-unit for each passthrough device. The control flow is shown in the
-following figures:
-
-.. figure:: images/passthru-image72.png
-   :align: center
-
-   DMA Remapping control flow during HV init
+unit for each passthrough device. The control flow of assigning and de-assigning
+a passthrough device to/from a post-launched VM is shown in the following figures:
 
 .. figure:: images/passthru-image86.png
    :align: center
@@ -102,25 +125,45 @@ following figures:
 
    ptdev de-assignment control flow
 
+VT-d Interrupt-remapping
+************************
+
+The VT-d interrupt-remapping architecture enables system software to
+control and censor external interrupt requests generated by all sources
+including those from interrupt controllers (I/OxAPICs), MSI/MSI-X capable
+devices including endpoints, root-ports and Root-Complex integrated
+end-points.
+ACRN forces to enabled VT-d interrupt-remapping feature for security reasons.
+If the VT-d hardware doesn't support interrupt-remapping, then ACRN will
+refuse to boot VMs.
+VT-d Interrupt-remapping is NOT related to the translation from physical
+interrupt to virtual interrupt or vice versa. The term VT-d interrupt-remapping
+remaps the interrupt index in the VT-d interrupt-remapping table to the physical
+interrupt vector after checking the external interrupt request is valid. Translation
+physical vector to virtual vector is still needed to be done by hypervisor, which is
+also described in the below section :ref:`_interrupt-remapping`.
 
 MMIO Remapping
 **************
 
 For PCI MMIO BAR, hypervisor builds EPT mapping between virtual BAR and
 physical BAR, then VM can access MMIO directly.
+There is one exception, MSI-X table is also in a MMIO BAR. Hypervisor needs to trap the
+accesses to MSI-X table. So the page(s) having MSI-X table should not be accessed by guest
+directly. EPT mapping is not built for these pages having MSI-X table.
 
 Device configuration emulation
 ******************************
 
 PCI configuration is based on access of port 0xCF8/CFC. ACRN
 implements PCI configuration emulation to handle 0xCF8/CFC to control
-PCI device through two paths: implemented in hypervisor or in SOS device
+PCI device through two paths: implemented in hypervisor or in Service VM device
 model.
 
 - When configuration emulation is in the hypervisor, the interception of
   0xCF8/CFC port and emulation of PCI configuration space access are
   tricky and unclean. Therefore the final solution is to reuse the
-  PCI emulation infrastructure of SOS device model. The hypervisor
+  PCI emulation infrastructure of Service VM device model. The hypervisor
   routes the UOS 0xCF8/CFC access to device model, and keeps blind to the
   physical PCI devices. Upon receiving UOS PCI configuration space access
   request, device model needs to emulate some critical space, for instance,
@@ -130,6 +173,25 @@ model.
   reads/writes physical configuration space on behalf of UOS. To do
   this, device model is linked with lib pci access to access physical PCI
   device.
+
+MSI-X table emulation
+*********************
+
+VM accesses to MSI-X table should be trapped so that hypervisor has the
+information to map the virtual vector and physical vector. EPT mapping should
+be skipped for the 4KB pages having MSI-X table.
+
+There are three situations for the emulation of MSI-X table:
+
+- **Service VM**: accesses to MSI-X table are handled by HV MMIO handler (4KB adjusted up
+  and down). HV will remap interrupts.
+- **Post-launched VM**: accesses to MSI-X Tables are handled by DM MMIO handler
+  (4KB adjusted up and down) and when DM (Service VM) writes to the table, it will be
+  intercepted by HV MMIO handler and HV will remap interrupts.
+- **Pre-launched VM**: Writes to MMIO region in MSI-X Table BAR handled by HV MMIO
+  handler. If the offset falls within the MSI-X table (offset, offset+tables_size),
+  HV remaps interrupts.
+
 
 .. _interrupt-remapping:
 
@@ -152,17 +214,17 @@ The hypervisor will record different information for interrupt
 distribution: physical and virtual IOAPIC pin for IOAPIC source,
 physical and virtual BDF and other info for MSI source.
 
-SOS passthrough is also in the scope of interrupt remapping which is
+Service VM passthrough is also in the scope of interrupt remapping which is
 done on-demand rather than on hypervisor initialization.
 
 .. figure:: images/passthru-image102.png
    :align: center
    :name: init-remapping
 
-   Initialization of remapping of virtual IOAPIC interrupts for SOS
+   Initialization of remapping of virtual IOAPIC interrupts for Service VM
 
 :numref:`init-remapping` above illustrates how remapping of (virtual) IOAPIC
-interrupts are remapped for SOS. VM exit occurs whenever SOS tries to
+interrupts are remapped for Service VM. VM exit occurs whenever Service VM tries to
 unmask an interrupt in (virtual) IOAPIC by writing to the Redirection
 Table Entry (or RTE). The hypervisor then invokes the IOAPIC emulation
 handler (refer to :ref:`hld-io-emulation` for details on I/O emulation) which
@@ -173,13 +235,13 @@ Remapping of (virtual) PIC interrupts are set up in a similar sequence:
 .. figure:: images/passthru-image98.png
    :align: center
 
-   Initialization of remapping of virtual MSI for SOS
+   Initialization of remapping of virtual MSI for Service VM
 
 This figure  illustrates how mappings of MSI or MSIX are set up for
-SOS. SOS is responsible for issuing an hypercall to notify the
+Service VM. Service VM is responsible for issuing a hypercall to notify the
 hypervisor before it configures the PCI configuration space to enable an
 MSI. The hypervisor takes this opportunity to set up a remapping for the
-given MSI or MSIX before it is actually enabled by SOS.
+given MSI or MSIX before it is actually enabled by Service VM.
 
 When the UOS needs to access the physical device by passthrough, it uses
 the following steps:
@@ -191,15 +253,15 @@ the following steps:
    according to ptirq_remapping_info.
 -  Hypervisor delivers the interrupt to UOS.
 
-When the SOS needs to use the physical device, the passthrough is also
-active because the SOS is the first VM. The detail steps are:
+When the Service VM needs to use the physical device, the passthrough is also
+active because the Service VM is the first VM. The detail steps are:
 
--  SOS get all physical interrupts. It assigns different interrupts for
+-  Service VM get all physical interrupts. It assigns different interrupts for
    different VMs during initialization and reassign when a VM is created or
    deleted.
 -  When physical interrupt is trapped, an exception will happen after VMCS
    has been set.
--  Hypervisor will handle the vm exit issue according to
+-  Hypervisor will handle the VM exit issue according to
    ptirq_remapping_info and translates the vector.
 -  The interrupt will be injected the same as a virtual interrupt.
 
@@ -209,32 +271,40 @@ ACPI Virtualization
 ACPI virtualization is designed in ACRN with these assumptions:
 
 -  HV has no knowledge of ACPI,
--  SOS owns all physical ACPI resources,
+-  Service VM owns all physical ACPI resources,
 -  UOS sees virtual ACPI resources emulated by device model.
 
 Some passthrough devices require physical ACPI table entry for
 initialization. The device model will create such device entry based on
 the physical one according to vendor ID and device ID. Virtualization is
-implemented in SOS device model and not in scope of the hypervisor.
+implemented in Service VM device model and not in scope of the hypervisor.
+For pre-launched VM, ACRN hypervisor doesn't support the ACPI virtualization,
+so devices relying on ACPI table are not supported.
 
 GSI Sharing Violation Check
 ***************************
 
 All the PCI devices that are sharing the same GSI should be assigned to
-the same VM to avoid physical GSI sharing between multiple VMs. For
-devices that don't support MSI, ACRN DM
-shares the same GSI pin to a GSI
+the same VM to avoid physical GSI sharing between multiple VMs.
+In logical partition mode or hybrid mode, the PCI devices assigned to
+pre-launched VM is statically pre-defined. Developers should take care not to
+violate the rule.
+For post-launched VM, devices that don't support MSI, ACRN DM puts the devices
+sharing the same GSI pin to a GSI
 sharing group. The devices in the same group should be assigned together to
 the current VM, otherwise, none of them should be assigned to the
 current VM. A device that violates the rule will be rejected to be
-passthrough. The checking logic is implemented in Device Mode and not
+passed-through. The checking logic is implemented in Device Model and not
 in scope of hypervisor.
+The platform GSI information is in devicemodel/hw/pci/platform_gsi_info.c
+for limited platform (currently, only APL MRB). For other platforms, the platform
+specific GSI information should be added to activate the checking of GSI sharing violation.
 
 Data structures and interfaces
 ******************************
 
-The following APIs are provided to initialize interrupt remapping for
-SOS:
+The following APIs are common APIs provided to initialize interrupt remapping for
+VMs:
 
 .. doxygenfunction:: ptirq_intx_pin_remap
    :project: Project ACRN
@@ -242,8 +312,9 @@ SOS:
 .. doxygenfunction:: ptirq_prepare_msix_remap
    :project: Project ACRN
 
-The following APIs are provided to manipulate the interrupt remapping
-for UOS.
+Post-launched VM needs to pre-allocate interrupt entries during VM initialization.
+Post-launched VM needs to free interrupt entries during VM de-initialization.
+The following APIs are provided to pre-allocate/free interrupt entries for post-launched VM:
 
 .. doxygenfunction:: ptirq_add_intx_remapping
    :project: Project ACRN
@@ -257,4 +328,33 @@ for UOS.
 The following APIs are provided to acknowledge a virtual interrupt.
 
 .. doxygenfunction:: ptirq_intx_ack
+   :project: Project ACRN
+
+The following APIs are provided to handle ptdev interrupt:
+
+.. doxygenfunction:: ptdev_init
+   :project: Project ACRN
+
+.. doxygenfunction:: ptirq_softirq
+   :project: Project ACRN
+
+.. doxygenfunction:: ptirq_alloc_entry
+   :project: Project ACRN
+
+.. doxygenfunction:: ptirq_release_entry
+   :project: Project ACRN
+
+.. doxygenfunction:: ptdev_release_all_entries
+   :project: Project ACRN
+
+.. doxygenfunction:: ptirq_activate_entry
+   :project: Project ACRN
+
+.. doxygenfunction:: ptirq_deactivate_entry
+   :project: Project ACRN
+
+.. doxygenfunction:: ptirq_dequeue_softirq
+   :project: Project ACRN
+
+.. doxygenfunction:: ptirq_get_intr_data
    :project: Project ACRN

@@ -156,14 +156,14 @@ extern spinlock_t ptdev_lock;
 /**
  * @brief Handler of softirq for passthrough device.
  *
- * When hypervisor receive a physcial interrupt from passthrough device, it
+ * When hypervisor receive a physical interrupt from passthrough device, it
  * will enqueue a ptirq entry and raise softirq SOFTIRQ_PTDEV. This function
  * is the handler of the softirq, it handles the interrupt and injects the
  * virtual into VM.
- * The handler is reigstered by calling @ref ptdev_init during hypervisor
- * intialization.
+ * The handler is registered by calling @ref ptdev_init during hypervisor
+ * initialization.
  *
- * @param[in]    pcpu_id physcial cpu id of the soft irq
+ * @param[in]    pcpu_id physical cpu id of the soft irq
  *
  */
 void ptirq_softirq(uint16_t pcpu_id);
@@ -178,14 +178,14 @@ void ptirq_softirq(uint16_t pcpu_id);
  */
 void ptdev_init(void);
 /**
- * @brief Deactiveate and release all ptirq entries for a VM.
+ * @brief Deactivate and release all ptirq entries for a VM.
  *
- * This function deactiveates and releases all ptirq entries for a VM. The function
+ * This function deactivates and releases all ptirq entries for a VM. The function
  * should only be called after the VM is already down.
  *
  * @param[in]    vm acrn_vm on which the ptirq entries will be released
  *
- * @pre VM is realdy down
+ * @pre VM is already down
  *
  */
 void ptdev_release_all_entries(const struct acrn_vm *vm);
@@ -193,9 +193,9 @@ void ptdev_release_all_entries(const struct acrn_vm *vm);
 /**
  * @brief Dequeue an entry from per cpu ptdev softirq queue.
  *
- * Dequeue an entry from the ptdev softirq queue on the specific physcial cpu.
+ * Dequeue an entry from the ptdev softirq queue on the specific physical cpu.
  *
- * @param[in]    pcpu_id physcial cpu id
+ * @param[in]    pcpu_id physical cpu id
  *
  * @retval NULL when \p when the queue is empty
  * @retval !NULL when \p there is available ptirq_remapping_info entry in the queue
@@ -227,11 +227,11 @@ void ptirq_release_entry(struct ptirq_remapping_info *entry);
 /**
  * @brief Activate a irq for the associated passthrough device.
  *
- * After activating the ptirq entry, the physcial interrupt irq of passthrough device will be handled
+ * After activating the ptirq entry, the physical interrupt irq of passthrough device will be handled
  * by the handler  ptirq_interrupt_handler.
  *
- * @param[in]    entry the ptirq_remapping_info entry that will be associated with the physcial irq.
- * @param[in]    phys_irq physcial interrupt irq for the entry
+ * @param[in]    entry the ptirq_remapping_info entry that will be associated with the physical irq.
+ * @param[in]    phys_irq physical interrupt irq for the entry
  *
  * @retval success when \p return value >=0
  * @retval success when \p return <0
@@ -252,7 +252,7 @@ void ptirq_deactivate_entry(struct ptirq_remapping_info *entry);
  * @param[out]    buffer the buffer to interrupt information stored to.
  * @param[in]    buffer_cnt the size of the buffer.
  *
- * @retval the actural size the buffer filled with the interrupt information
+ * @retval the actual size the buffer filled with the interrupt information
  *
  */
 uint32_t ptirq_get_intr_data(const struct acrn_vm *target_vm, uint64_t *buffer, uint32_t buffer_cnt);
