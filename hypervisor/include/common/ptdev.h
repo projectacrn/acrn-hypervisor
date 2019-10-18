@@ -139,16 +139,126 @@ static inline bool is_entry_active(const struct ptirq_remapping_info *entry)
 extern struct ptirq_remapping_info ptirq_entries[CONFIG_MAX_PT_IRQ_ENTRIES];
 extern spinlock_t ptdev_lock;
 
+/**
+ * @file ptdev.h
+ *
+ * @brief public APIs for ptdev
+ */
+
+/**
+ * @brief ptdev
+ *
+ * @addtogroup acrn_passthrough
+ * @{
+ */
+
+
+/**
+ * @brief Handler of softirq for passthrough device.
+ *
+ * When hypervisor receive a physcial interrupt from passthrough device, it
+ * will enqueue a ptirq entry and raise softirq SOFTIRQ_PTDEV. This function
+ * is the handler of the softirq, it handles the interrupt and injects the
+ * virtual into VM.
+ * The handler is reigstered by calling @ref ptdev_init during hypervisor
+ * intialization.
+ *
+ * @param[in]    pcpu_id physcial cpu id of the soft irq
+ *
+ */
 void ptirq_softirq(uint16_t pcpu_id);
+/**
+ * @brief Passthrough device global data structure initialization.
+ *
+ * During the hypervisor cpu initialization stage, this function:
+ * - init global spinlock for ptdev (on BSP)
+ * - register SOFTIRQ_PTDEV handler (on BSP)
+ * - init the softirq entry list for each CPU
+ *
+ */
 void ptdev_init(void);
+/**
+ * @brief Deactiveate and release all ptirq entries for a VM.
+ *
+ * This function deactiveates and releases all ptirq entries for a VM. The function
+ * should only be called after the VM is already down.
+ *
+ * @param[in]    vm acrn_vm on which the ptirq entries will be released
+ *
+ * @pre VM is realdy down
+ *
+ */
 void ptdev_release_all_entries(const struct acrn_vm *vm);
 
+/**
+ * @brief Dequeue an entry from per cpu ptdev softirq queue.
+ *
+ * Dequeue an entry from the ptdev softirq queue on the specific physcial cpu.
+ *
+ * @param[in]    pcpu_id physcial cpu id
+ *
+ * @retval NULL when \p when the queue is empty
+ * @retval !NULL when \p there is available ptirq_remapping_info entry in the queue
+ *
+ */
 struct ptirq_remapping_info *ptirq_dequeue_softirq(uint16_t pcpu_id);
+/**
+ * @brief Allocate a ptirq_remapping_info entry.
+ *
+ * Allocate a ptirq_remapping_info entry for hypervisor to store the remapping information.
+ * The total number of the entries is statically defined as CONFIG_MAX_PT_IRQ_ENTRIES.
+ * Appropriate number should be configured on different platforms.
+ *
+ * @param[in]    vm acrn_vm that the entry allocated for.
+ * @param[in]    interrupt type: PTDEV_INTR_MSI or PTDEV_INTR_INTX
+ *
+ * @retval NULL when \p the number of entries allocated is CONFIG_MAX_PT_IRQ_ENTRIES
+ * @retval !NULL when \p the number of entries allocated is less than CONFIG_MAX_PT_IRQ_ENTRIES
+ *
+ */
 struct ptirq_remapping_info *ptirq_alloc_entry(struct acrn_vm *vm, uint32_t intr_type);
+/**
+ * @brief Release a ptirq_remapping_info entry.
+ *
+ * @param[in]    entry the ptirq_remapping_info entry to release.
+ *
+ */
 void ptirq_release_entry(struct ptirq_remapping_info *entry);
+/**
+ * @brief Activate a irq for the associated passthrough device.
+ *
+ * After activating the ptirq entry, the physcial interrupt irq of passthrough device will be handled
+ * by the handler  ptirq_interrupt_handler.
+ *
+ * @param[in]    entry the ptirq_remapping_info entry that will be associated with the physcial irq.
+ * @param[in]    phys_irq physcial interrupt irq for the entry
+ *
+ * @retval success when \p return value >=0
+ * @retval success when \p return <0
+ *
+ */
 int32_t ptirq_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_irq);
+/**
+ * @brief De-activate a irq for the associated passthrough device.
+ *
+ * @param[in]    entry the ptirq_remapping_info entry that will be de-activated.
+ *
+ */
 void ptirq_deactivate_entry(struct ptirq_remapping_info *entry);
-
+/**
+ * @brief Get the interrupt information and store to the buffer provided.
+ *
+ * @param[in]    target_vm the VM to get the interrupt information.
+ * @param[out]    buffer the buffer to interrupt information stored to.
+ * @param[in]    buffer_cnt the size of the buffer.
+ *
+ * @retval the actural size the buffer filled with the interrupt information
+ *
+ */
 uint32_t ptirq_get_intr_data(const struct acrn_vm *target_vm, uint64_t *buffer, uint32_t buffer_cnt);
+
+/**
+  * @}
+  */
 
 #endif /* PTDEV_H */
