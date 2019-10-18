@@ -3,8 +3,8 @@
 Virtio-rnd
 ##########
 
-Virtio-rnd provides a virtual hardware random source for UOS. It simulates a PCI device
-followed virtio specification, and implemented base on virtio user mode framework.
+Virtio-rnd provides a virtual hardware random source for the UOS. It simulates a PCI device
+followed by a virtio specification, and is implemented based on the virtio user mode framework.
 
 Architecture
 ************
@@ -16,11 +16,11 @@ components are parts of Linux software or third party tools.
 virtio-rnd is implemented as a virtio legacy device in the ACRN device
 model (DM), and is registered as a PCI virtio device to the guest OS
 (UOS). Tools such as :command:`od` (dump a file in octal or other format) can
-be used to read random values from ``/dev/random``.  This device file in
+be used to read random values from ``/dev/random``.  This device file in the
 UOS is bound with the frontend virtio-rng driver. (The guest kernel must
 be built with ``CONFIG_HW_RANDOM_VIRTIO=y``). The backend
-virtio-rnd reads the HW random value from ``/dev/random`` in SOS and sends
-them to frontend.
+virtio-rnd reads the HW random value from ``/dev/random`` in the SOS and sends
+them to the frontend.
 
 .. figure:: images/virtio-hld-image61.png
    :align: center
@@ -31,18 +31,18 @@ them to frontend.
 How to Use
 **********
 
-Add a pci slot to the device model acrn-dm command line, for example::
+Add a pci slot to the device model acrn-dm command line; for example::
 
    -s <slot_number>,virtio-rnd
 
-Check if the frontend virtio_rng driver is available in UOS:
+Check to see if the frontend virtio_rng driver is available in the UOS:
 
 .. code-block:: console
 
    # cat /sys/class/misc/hw_random/rng_available
    virtio_rng.0
 
-Check if frontend virtio_rng is currently connected to ``/dev/random``:
+Check to see if the frontend virtio_rng is currently connected to ``/dev/random``:
 
 .. code-block:: console
 
@@ -71,5 +71,5 @@ Read random values:
 
 
 .. note:: HW randomness is a precious resource of the system. The
-   :command:`od` command will block and wait until there is randomness
+   :command:`od` command will block and wait until randomness is
    available.
