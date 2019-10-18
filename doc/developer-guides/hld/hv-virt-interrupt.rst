@@ -117,6 +117,8 @@ it clears the highest priority vector in ISR and TMR, and updates PPR
 status. vLAPIC will then notify vIOAPIC if the corresponding vector
 comes from vIOAPIC. This only occurs for the level triggered interrupts.
 
+.. _lapic_passthru:
+
 LAPIC passthrough based on vLAPIC
 =================================
 
