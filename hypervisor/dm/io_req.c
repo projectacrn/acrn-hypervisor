@@ -414,8 +414,13 @@ hv_emulate_pio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	struct acrn_vm *vm = vcpu->vm;
 	struct pio_request *pio_req = &io_req->reqs.pio;
 	struct vm_io_handler_desc *handler;
-	io_read_fn_t io_read = vm->default_io_read;
-	io_write_fn_t io_write = vm->default_io_write;
+	io_read_fn_t io_read = NULL;
+	io_write_fn_t io_write = NULL;
+
+	if (is_sos_vm(vcpu->vm) || is_prelaunched_vm(vcpu->vm)) {
+		io_read = pio_default_read;
+		io_write = pio_default_write;
+	}
 
 	port = (uint16_t)pio_req->address;
 	size = (uint16_t)pio_req->size;
@@ -472,8 +477,12 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	uint64_t address, size;
 	struct mmio_request *mmio_req = &io_req->reqs.mmio;
 	struct mem_io_node *mmio_handler = NULL;
-	hv_mem_io_handler_t read_write = vcpu->vm->default_read_write;
+	hv_mem_io_handler_t read_write = NULL;
 	void *handler_private_data = NULL;
+
+	if (is_sos_vm(vcpu->vm) || is_prelaunched_vm(vcpu->vm)) {
+		read_write = mmio_default_access_handler;
+	}
 
 	address = mmio_req->address;
 	size = mmio_req->size;
@@ -653,25 +662,4 @@ void register_mmio_emulation_handler(struct acrn_vm *vm,
 		}
 	}
 
-}
-
-/**
- * @brief Register port I/O default handler
- *
- * @param vm      The VM to which the port I/O handlers are registered
- */
-void register_pio_default_emulation_handler(struct acrn_vm *vm)
-{
-	vm->default_io_read = pio_default_read;
-	vm->default_io_write = pio_default_write;
-}
-
-/**
- * @brief Register MMIO default handler
- *
- * @param vm The VM to which the MMIO handler is registered
- */
-void register_mmio_default_emulation_handler(struct acrn_vm *vm)
-{
-	vm->default_read_write = mmio_default_access_handler;
 }
