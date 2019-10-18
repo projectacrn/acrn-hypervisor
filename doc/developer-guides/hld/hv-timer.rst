@@ -59,3 +59,9 @@ Interfaces Design
 
 .. doxygenfunction:: get_tsc_khz
    :project: Project ACRN
+
+.. doxygenfunction:: timer_is_started
+   :project: Project ACRN
+
+.. doxygenfunction:: udelay
+   :project: Project ACRN
