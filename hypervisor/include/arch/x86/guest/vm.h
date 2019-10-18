@@ -127,11 +127,8 @@ struct acrn_vm {
 
 	uint16_t emul_mmio_regions; /* Number of emulated mmio regions */
 	struct mem_io_node emul_mmio[CONFIG_MAX_EMULATED_MMIO_REGIONS];
-	hv_mem_io_handler_t default_read_write;
 
 	struct vm_io_handler_desc emul_pio[EMUL_PIO_IDX_MAX];
-	io_read_fn_t default_io_read;
-	io_write_fn_t default_io_write;
 
 	uint8_t uuid[16];
 	struct secure_world_control sworld_control;

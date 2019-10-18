@@ -266,20 +266,6 @@ void register_mmio_emulation_handler(struct acrn_vm *vm,
 	uint64_t end, void *handler_private_data);
 
 /**
- * @brief Register port I/O default handler
- *
- * @param vm      The VM to which the port I/O handlers are registered
- */
-void register_pio_default_emulation_handler(struct acrn_vm *vm);
-
-/**
- * @brief Register MMIO default handler
- *
- * @param vm The VM to which the MMIO handler is registered
- */
-void register_mmio_default_emulation_handler(struct acrn_vm *vm);
-
-/**
  * @}
  */
 
