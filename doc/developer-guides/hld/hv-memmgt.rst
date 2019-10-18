@@ -9,7 +9,7 @@ Overview
 ********
 
 The hypervisor (HV) virtualizes real physical memory so an unmodified OS
-(such as Linux or Android) running in a virtual machine, has the view of
+(such as Linux or Android), running in a virtual machine, has the view of
 managing its own contiguous physical memory.  HV uses virtual-processor
 identifiers (VPIDs) and the extended page-table mechanism (EPT) to
 translate guest-physical address into host-physical address. HV enables
@@ -22,8 +22,7 @@ consider.  From the hypervisor's point of view there are:
 
 -  **Host Physical Address (HPA)**: the native physical address space, and
 -  **Host Virtual Address (HVA)**: the native virtual address space based on
-   a MMU. A page table is used to translate between HPA and HVA
-   spaces.
+   a MMU. A page table is used to translate from HVA to HPA spaces.
 
 From the Guest OS running on a hypervisor there are:
 
@@ -62,7 +61,10 @@ Hypervisor Physical Memory Management
 In the ACRN, the HV initializes MMU page tables to manage all physical
 memory and then switches to the new MMU page tables. After MMU page
 tables are initialized at the platform initialization stage, no updates
-are made for MMU page tables.
+are made for MMU page tables except hv_access_memory_region_update is called.
+However, the memory region updated by hv_access_memory_region_update
+must not be accessed by ACRN hypervisor in advance. Because access could
+make mapping in TLB and there is no TLB flush mechanism for ACRN hv memory.
 
 Hypervisor Physical Memory Layout - E820
 ========================================
@@ -91,9 +93,12 @@ Hypervisor Memory Initialization
 
 The ACRN hypervisor runs under paging mode. After the bootstrap
 processor (BSP) gets the platform E820 table, BSP creates its MMU page
-table based on it. This is done by the function *init_paging()* and
-*smep()*. After the application processor (AP) receives IPI CPU startup
-interrupt, it uses the MMU page tables created by BSP and enable SMEP.
+table based on it. This is done by the function *init_paging()*.
+After the application processor (AP) receives IPI CPU startup
+interrupt, it uses the MMU page tables created by BSP. In order to bring
+the memory access rights into effect, some other APIs are provided:
+enable_paging will enable IA32_EFER.NXE and CR0.WP, enable_smep will
+enable CR4.SMEP and enable_smap will enale CR4.SMAP.
 :numref:`hv-mem-init`  describes the hypervisor memory initialization for BSP
 and APs.
 
@@ -107,8 +112,14 @@ The memory mapping policy used is:
 
 - Identical mapping (ACRN hypervisor memory could be relocatable in
   the future)
-- Map all memory regions with UNCACHED type
-- Remap RAM regions to WRITE-BACK type
+- Map all the address space with UNCACHED type, read/write, user
+  and execute-disable access right
+- Remap [0, low32_max_ram) regions to WRITE-BACK type
+- Remap [4G, high64_max_ram) regions to WRITE-BACK type
+- set the paging-structure entries' U/S flag to
+  supervisor-mode for hypervisor owned memroy
+  (exclude the memory reserve for trusty)
+- remove 'NX' bit for pages that contain hv code section
 
 .. figure:: images/mem-image69.png
    :align: center
@@ -125,7 +136,9 @@ The memory mapping policy used is:
   code/data (< 1M part is for secondary CPU reset code)
 
 The hypervisor should use minimum memory pages to map from virtual
-address space into physical address space.
+address space into physical address space. So ACRN only support
+map linear addresses to 2-MByte pages, or 1-GByte pages, doesn't
+support map linear addresses to 4-KByte pages.
 
 - If 1GB hugepage can be used
   for virtual address space mapping, the corresponding PDPT entry shall be
@@ -133,9 +146,6 @@ address space into physical address space.
 - If 1GB hugepage can't be used for virtual
   address space mapping and 2MB hugepage can be used, the corresponding
   PDT entry shall be set for this 2MB hugepage.
-- If both of 1GB hugepage
-  and 2MB hugepage can't be used for virtual address space mapping, the
-  corresponding PT entry shall be set.
 
 If memory type or access rights of a page is updated, or some virtual
 address space is deleted, it will lead to splitting of the corresponding
@@ -145,10 +155,9 @@ virtual address space into physical address space.
 Memory Pages Pool Functions
 ===========================
 
-Memory pages pool functions provide dynamic management of multiple
-4KB page-size memory blocks, used by the hypervisor to store internal
-data.  Through these functions, the hypervisor can allocate and
-deallocate pages.
+Memory pages pool functions provide static management of one
+4KB page-size memory block for each page level for each VM or HV,
+used by the hypervisor to do memory mapping.
 
 Data Flow Design
 ================
@@ -175,6 +184,9 @@ MMU Initialization
 .. doxygenfunction:: enable_smep
    :project: Project ACRN
 
+.. doxygenfunction:: enable_smap
+   :project: Project ACRN
+
 .. doxygenfunction:: enable_paging
    :project: Project ACRN
 
@@ -183,6 +195,12 @@ MMU Initialization
 
 Address Space Translation
 -------------------------
+
+.. doxygenfunction:: hpa2hva_early
+   :project: Project ACRN
+
+.. doxygenfunction:: hva2hpa_early
+   :project: Project ACRN
 
 .. doxygenfunction:: hpa2hva
    :project: Project ACRN
@@ -268,8 +286,8 @@ hypervisor should still keep to using minimum EPT pages to map from GPA
 space into HPA space.
 
 The hypervisor provides EPT guest-physical mappings adding service, EPT
-guest-physical mappings modifying/deleting service, EPT page tables
-deallocation, and EPT guest-physical mappings invalidation service.
+guest-physical mappings modifying/deleting service and EPT guest-physical
+mappings invalidation service.
 
 Virtual MTRR
 ************
@@ -420,6 +438,15 @@ EPT
 .. doxygenfunction:: ept_misconfig_vmexit_handler
    :project: Project ACRN
 
+.. doxygenfunction:: ept_flush_leaf_page
+   :project: Project ACRN
+
+.. doxygenfunction:: get_ept_entry
+   :project: Project ACRN
+
+.. doxygenfunction:: walk_ept_table
+   :project: Project ACRN
+
 Virtual MTRR
 ------------
 
@@ -469,7 +496,7 @@ almost all the system memory as shown here:
 Host to Guest Mapping
 =====================
 
-ACRN hypervisor creates Service OS's host (HPA) to guest (GPA) mapping
+ACRN hypervisor creates Service OS's guest (GPA) to host (HPA) mapping
 (EPT mapping) through the function ``prepare_sos_vm_memmap()``
 when it creates the SOS VM. It follows these rules:
 
@@ -477,13 +504,14 @@ when it creates the SOS VM. It follows these rules:
 -  Map all memory range with UNCACHED type
 -  Remap RAM entries in E820 (revised) with WRITE-BACK type
 -  Unmap ACRN hypervisor memory range
+-  Unmap all platform EPC resource
 -  Unmap ACRN hypervisor emulated vLAPIC/vIOAPIC MMIO range
 
-The host to guest mapping is static for the Service OS; it will not
-change after the Service OS begins running. Each native device driver
-can access its MMIO through this static mapping. EPT violation is only
-serving for vLAPIC/vIOAPIC's emulation in the hypervisor for Service OS
-VM.
+The guest to host mapping is static for the Service OS; it will not
+change after the Service OS begins running except the PCI device BAR
+address mapping could be re-programmed by the Service OS. EPT violation
+is serving for vLAPIC/vIOAPIC's emulation or PCI MSI-X table BAR's emulation
+in the hypervisor for Service OS VM.
 
 Trusty
 ******
