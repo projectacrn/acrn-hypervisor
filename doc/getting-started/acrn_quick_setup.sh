@@ -6,19 +6,19 @@
 # You should run this script with root privilege since it will modify various system parameters.
 #
 # Usages:
-#   Upgrade SOS to 31090 without reboot, it's highly recommended so that you can check configurations after upgrade SOS.
-#     sudo <script> -s 31090 -d
-#   Upgrade SOS to 31090 with specified proxy server
-#     sudo <script> -s 31090 -p <your proxy server>:<port>
-#   Upgrade UOS to 31090 with specified proxy server
-#     sudo <script> -u 31090 -p <your proxy server>:<port>
-#   Upgrade UOS to 31090 without downloading UOS image, you should put UOS image in /root directory previously.
-#     sudo <script> -u 31090 -k
+#   Upgrade SOS to 31080 without reboot, it's highly recommended so that you can check configurations after upgrade SOS.
+#     sudo <script> -s 31080 -d
+#   Upgrade SOS to 31080 with specified proxy server
+#     sudo <script> -s 31080 -p <your proxy server>:<port>
+#   Upgrade UOS to 31080 with specified proxy server
+#     sudo <script> -u 31080 -p <your proxy server>:<port>
+#   Upgrade UOS to 31080 without downloading UOS image, you should put UOS image in /root directory previously.
+#     sudo <script> -u 31080 -k
 
 function print_help()
 {
     echo "Usage:"
-    echo "Launch this script as: sudo $0 -s 31090"
+    echo "Launch this script as: sudo $0 -s 31080"
     echo -e "\t-s to upgrade SOS"
     echo -e "\t-u to upgrade UOS"
     echo -e "\t-p to specify a proxy server (HTTPS)"
