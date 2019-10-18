@@ -554,8 +554,12 @@ hypercall invocation in the hypervisor design:
    World\_switch Hypercall is used by the TIPC (Trusty IPC) driver to
    switch guest VM context between secure world and non-secure world.
    Further details will be discussed in the :ref:`secure_trusty` section.
+#. For those hypercalls that may result in data inconsistent intra hypervisor
+   when they are executed concurrently, such as ``hcall_create_vm()``
+   ``hcll_destroy_vm()`` etc. spinlock is used to ensure these hypercalls
+   are processed in hypervisor in a serializing way.
 
-In addition to these two rules, there are other regular checks in the
+In addition to above rules, there are other regular checks in the
 hypercall implementation to prevent hypercalls from being misused. For
 example, all the parameters must be sanitized, unexpected hypervisor
 memory overwrite must be avoided, any hypervisor memory content/secrets
@@ -566,15 +570,12 @@ I/O Emulation Handler
 ~~~~~~~~~~~~~~~~~~~~~
 
 I/O port monitoring is also widely used by the ACRN hypervisor to
-emulate legacy I/O access behaviors. If the hypervisor cannot handle the
-I/O vmexit appropriately, a malicious driver in the guest VM could
-manipulate the I/O access to compromise the hypervisor and its guest
-VM(s).
+emulate legacy I/O access behaviors.
 
 Typically, the I/O instructions could be IN, INS/INSB/INSW/INSD, OUT,
 OUTS/OUTSB/OUTSW/OUTSD with arbitrary port (although not all the I/O
 ports are monitored by hypervisor). As with other interface (e.g.
-hypercalls), the hypervisor must perform security checks for all the I/O
+hypercalls), the hypervisor performs security checks for all the I/O
 access parameters to make sure the emulation behaviors are correct.
 
 EPT Violation Handler
@@ -595,7 +596,7 @@ There are some other VMEXIT handlers in the hypervisor which might take
 untrusted parameters and registers from guest VM, for example, MSR write
 VMEXIT, APIC VMEXIT.
 
-Again, care must be taken by hypervisor to avoid security issue when
+Sanity checks are performed by hypervisor to avoid security issue when
 handling those special VMEXIT.
 
 Guest Instruction Emulation
@@ -642,18 +643,8 @@ scrubbed by either DM or hypervisor, then the new launched UOS could
 access the previous UOS's secrets by scanning the memory regions
 allocated for the new UOS.
 
-In a secure hypervisor and DM design, there are two solutions to solve
-this issue; the first one is preferred because it results in a smaller
-attack window:
-
-#. The memory content must be scrubbed immediately after the UOS is
-   shutdown or crashed.
-#. The memory content must be scrubbed immediately before allocating a
-   memory area to launch a new UOS.
-
-For project ACRN, the memory scrubbing operations could be done by the
-hypervisor, DM, or vBIOS (vSBL). This is function design decision, which
-is not in the scope of this document.
+In ACRN, the memory content is scrubbed in Device Model after the guest
+VM is shutdown.
 
 UOS Reboot
 ~~~~~~~~~~
@@ -679,8 +670,8 @@ the section on :ref:`platform_root_of_trust`.
 
 Normally, this warm reboot (crashdump) feature is a debug feature, and
 must be disabled in a production release. User who wants to use this
-feature must possess the private signing key to re-sign the image (e.g.
-the virtual SBL image) after enabling the configuration.
+feature must possess the private signing key to re-sign the image after
+enabling the configuration.
 
 .. _uos_suspend_resume:
 
@@ -697,8 +688,8 @@ SOS, the memory content of secure world of UOS must not be visible to
 SOS. This is designed for security with defense in depth.
 
 During the entire process of UOS sleep/suspend, the memory protection
-for secure-world must be preserved too.The physical memory region of
-secure world must be removed from EPT paging tables of any guest VM,
+for secure-world is preserved too.The physical memory region of
+secure world is removed from EPT paging tables of any guest VM,
 even including the SOS VM.
 
 Third-party libraries
