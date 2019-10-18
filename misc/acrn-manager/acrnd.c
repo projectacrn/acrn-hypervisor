@@ -697,6 +697,9 @@ static void display_usage(void)
 static int parse_opt(int argc, char *argv[])
 {
 	int opt, ret = 0;
+#ifdef MNGR_DEBUG
+	long delay = 0;
+#endif
 
 	while ((opt = getopt(argc, argv, optString)) != -1) {
 		switch (opt) {
@@ -705,15 +708,15 @@ static int parse_opt(int argc, char *argv[])
 			break;
 #ifdef MNGR_DEBUG
 		case 'd':
-			ret = strtol(optarg, NULL, 10);
-			if ((errno == ERANGE && (ret == LONG_MAX || ret == LONG_MIN))
-				|| (errno != 0 && ret == 0)
-				|| (ret < 0 || ret > 60)) {
+			delay = strtol(optarg, NULL, 10);
+			if ((errno == ERANGE && (delay == LONG_MAX || delay == LONG_MIN))
+				|| (errno != 0 && delay == 0)
+				|| (delay < 0 || delay > 60)) {
 				printf("'-d' invalid parameter: %s\n", optarg);
 				return -EINVAL;
 			}
 
-			autostart_delay = ret;
+			autostart_delay = (int)delay;
 			ret = 0;
 			break;
 #endif

@@ -74,6 +74,7 @@ static inline int _get_vmname_pid(const char *src, char *p_vmname,
 		int max_len_vmname, int *pid)
 {
 	char *p = NULL;
+	long val64;
 
 	p = strchr(src, '.');
 	/* p - src: length of the substring "vmname" in the sting "src" */
@@ -88,10 +89,12 @@ static inline int _get_vmname_pid(const char *src, char *p_vmname,
 	else
 		p = p + strlen(".monitor.");
 
-	*pid = strtol(p, NULL, 10);
-	if ((errno == ERANGE && (*pid == LONG_MAX || *pid == LONG_MIN))
-			|| (errno != 0 && *pid == 0))
+	val64 = strtol(p, NULL, 10);
+	if ((errno == ERANGE && (val64 == LONG_MAX || val64 == LONG_MIN))
+			|| (errno != 0 && val64 == 0))
 		return -1;
+
+	*pid = (int)val64;
 
 	p = strchr(p, '.');
 	if (!p || strncmp(".socket", p, strlen(".socket")))
