@@ -1188,6 +1188,34 @@ in *VMX_PROC_VM_EXEC_CONTROLS*):
 -  For read: ``val = rdtsc() + exec_vmread64(VMX_TSC_OFFSET_FULL)``
 -  For write: ``exec_vmwrite64(VMX_TSC_OFFSET_FULL, val - rdtsc())``
 
+ART Virtualization
+******************
+
+The invariant TSC is based on the invariant timekeeping hardware (called
+Always Running Timer or ART), that runs at the core crystal clock frequency.
+The ratio defined by CPUID leaf 15H express the frequency relationship
+between the ART hardware and TSC.
+
+If CPUID.15H.EBX[31:0] != 0 and CPUID.80000007H:EDX[InvariantTSC] = 1, the
+following linearity relationship holds between TSC and the ART hardware:
+
+   ``TSC_Value = (ART_Value * CPUID.15H:EBX[31:0]) / CPUID.15H:EAX[31:0] + K``
+
+Where `K` is an offset that can be adjusted by a privileged agent.
+When ART hardware is reset, both invariant TSC and K are also reset.
+
+The guideline of ART virtualization (vART) is that software in native can run in
+VM too. The vART solution is:
+
+-  Present the ART capability to guest through CPUID leaf 15H for `CPUID.15H:EBX[31:0]`
+   and `CPUID.15H:EAX[31:0]`.
+-  Passthrough devices see the physical ART_Value (vART_Value = pART_Value)
+-  Relationship between the ART and TSC in guest is:
+   ``vTSC_Value = (vART_Value * CPUID.15H:EBX[31:0]) / CPUID.15H:EAX[31:0] + vK``
+   Where `vK = K + VMCS.TSC_OFFSET`.
+-  If `vK` or `vTSC_Value` are changed by guest, we change the `VMCS.TSC_OFFSET` accordingly.
+-  `K` should never be changed by hypervisor.
+
 XSAVE Emulation
 ***************
 
