@@ -808,6 +808,7 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/arch/x86/guest/vmx_io.h \
                           ../hypervisor/include/arch/x86/guest/assign.h \
                           ../hypervisor/include/common/hypercall.h \
+                          ../hypervisor/include/common/ptdev.h \
                           ../hypervisor/include/public/acrn_common.h \
                           ../hypervisor/include/public/acrn_hv_defs.h \
                           ../hypervisor/include/arch/x86/guest/vcpu.h \
