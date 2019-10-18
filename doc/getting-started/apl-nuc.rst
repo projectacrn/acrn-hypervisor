@@ -81,10 +81,10 @@ manually, as described below).
    Refer to the ACRN :ref:`release_notes` for the Clear Linux OS
    version number tested with a specific ACRN release.  Adjust the
    instruction below to reference the appropriate version number of Clear
-   Linux OS (we use version 31090 as an example).
+   Linux OS (we use version 31080 as an example).
 
 #. Download the compressed Clear Linux OS installer image from
-   https://download.clearlinux.org/releases/31090/clear/clear-31090-live-server.iso.xz
+   https://download.clearlinux.org/releases/31080/clear/clear-31080-live-server.iso.xz
    and follow the `Clear Linux OS Installation Guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install-server>`_
    as a starting point for installing the Clear Linux OS onto your platform.
@@ -138,7 +138,7 @@ your current Clear Linux version with this command:
 
    $ cat /etc/os-release
 
-The following instructions use Clear Linux version 31090. Specify the Clear Linux version you want to use.
+The following instructions use Clear Linux version 31080. Specify the Clear Linux version you want to use.
 
 Follow these steps:
 
@@ -154,12 +154,12 @@ Follow these steps:
       $ cd ~
       $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/getting-started/acrn_quick_setup.sh
 
-      $ sudo sh acrn_quick_setup.sh -s 31090
+      $ sudo sh acrn_quick_setup.sh -s 31080
       Password:
       Upgrading SOS...
       Disable auto update...
       Running systemctl to disable updates
-      Clear Linux version 31090 is already installed. Continuing to setup SOS...
+      Clear Linux version 31080 is already installed. Continuing to setup SOS...
       Adding the service-os, kernel-iot-lts2018 and systemd-networkd-autostart bundles...
       Loading required manifests...
       Downloading packs (104.41 MB) for:
@@ -197,7 +197,7 @@ Follow these steps:
       it using the ``-e`` option. For example, to set up the SOS on an NVMe
       SSD, you could specify:
 
-         sudo sh acrn_quick_setup.sh -s 31090 -e /dev/nvme0n1p1
+         sudo sh acrn_quick_setup.sh -s 31080 -e /dev/nvme0n1p1
 
       If you don't need to reboot automatically after setting up the SOS, you
       can specify the ``-d`` parameter (don't reboot).
@@ -219,10 +219,10 @@ Follow these steps:
 
    .. code-block:: console
 
-      $ sudo sh acrn_quick_setup.sh -u 31090
+      $ sudo sh acrn_quick_setup.sh -u 31080
       Password:
       Upgrading UOS...
-      Downloading UOS image: https://download.clearlinux.org/releases/31090/clear/clear-31090-kvm.img.xz
+      Downloading UOS image: https://download.clearlinux.org/releases/31080/clear/clear-31080-kvm.img.xz
         % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                        Dload  Upload   Total   Spent    Left  Speed
        14  248M   14 35.4M    0     0   851k      0  0:04:57  0:00:42  0:04:15  293k
@@ -231,17 +231,17 @@ Follow these steps:
 
    .. code-block:: console
 
-      Unxz UOS image: clear-31090-kvm.img.xz
-      Get UOS image: clear-31090-kvm.img
+      Unxz UOS image: clear-31080-kvm.img.xz
+      Get UOS image: clear-31080-kvm.img
       Upgrade UOS done...
       Now you can run this command to start UOS...
-      $ sudo /root/launch_uos_31090.sh
+      $ sudo /root/launch_uos_31080.sh
 
 #. Launch the UOS using the customized launch_uos script (with sudo):
 
    .. code-block:: console
 
-      $ sudo /root/launch_uos_31090.sh
+      $ sudo /root/launch_uos_31080.sh
       Password:
 
       cpu1 online=0
@@ -343,17 +343,17 @@ and UOS manually. Follow these steps:
       $ sudo swupd autoupdate --disable
 
    .. note::
-      When enabled, the Clear Linux OS installer automatically checks for updates and installs the latest version available on your system. To use a specific version (such as 31090), enter the following command  after the installation is complete:
+      When enabled, the Clear Linux OS installer automatically checks for updates and installs the latest version available on your system. To use a specific version (such as 31080), enter the following command  after the installation is complete:
 
-      ``sudo swupd repair --picky -V 31090``
+      ``sudo swupd repair --picky -V 31080``
 
 #. If you have an older version of Clear Linux OS already installed
    on your hardware, use this command to upgrade the Clear Linux OS
-   to version 31090 (or newer):
+   to version 31080 (or newer):
 
    .. code-block:: none
 
-      $ sudo swupd update -V 31090     # or newer version
+      $ sudo swupd update -V 31080     # or newer version
 
 #. Use the ``sudo swupd bundle-add`` command to add these Clear Linux OS bundles:
 
@@ -536,14 +536,14 @@ Set up Reference UOS
 ====================
 
 #. On your platform, download the pre-built reference Clear Linux OS UOS
-   image version 31090 (or newer) into your (root) home directory:
+   image version 31080 (or newer) into your (root) home directory:
 
    .. code-block:: none
 
       $ cd ~
       $ mkdir uos
       $ cd uos
-      $ curl https://download.clearlinux.org/releases/31090/clear/clear-31090-kvm.img.xz -o uos.img.xz
+      $ curl https://download.clearlinux.org/releases/31080/clear/clear-31080-kvm.img.xz -o uos.img.xz
 
       Note that if you want to use or try out a newer version of Clear Linux OS as the UOS, download the latest from http://download.clearlinux.org/image/. Make sure to adjust the steps described below accordingly (image file name and kernel modules version).
 
