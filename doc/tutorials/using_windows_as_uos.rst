@@ -4,6 +4,13 @@ Using Windows as Guest VM on ACRN
 #################################
 This tutorial describes how to launch Windows as a Guest (WaaG) VM on the ACRN hypervisor.
 
+Validated Versions
+******************
+
+-  **Clear Linux version:** 31080
+-  **ACRN hypervisor tag:** v1.3
+-  **Service VM Kernel version:** acrn-2019w42.4-140000p
+
 Hardware setup
 **************
 The following Intel Kaby Lake NUCs are verified:
@@ -32,6 +39,7 @@ Build ACRN EFI Images
 
    $ git clone https://github.com/projectacrn/acrn-hypervisor.git
    $ cd acrn-hypervisor
+   $ git checkout v1.3
    $ make FIRMWARE=uefi BOARD=kbl-nuc-i7
 
 #. Get the outputs from::
@@ -56,7 +64,8 @@ Build Service VM Kernel
    $ WORKDIR=`pwd`;
    $ JOBS=`nproc`
    $ git clone -b master https://github.com/projectacrn/acrn-kernel.git
-   $ cd acrn-kernel && mkdir -p ${WORKDIR}/{build,build-rootfs}
+   $ cd acrn-kernel && git checkout acrn-2019w42.4-140000p
+   $ mkdir -p ${WORKDIR}/{build,build-rootfs}
    $ cp kernel_config_uefi_sos ${WORKDIR}/build/.config
    $ make olddefconfig O=${WORKDIR}/build && make -j${JOBS} O=${WORKDIR}/build
    $ make modules_install INSTALL_MOD_PATH=${WORKDIR}/build-rootfs O=${WORKDIR}/build -j${JOBS}
@@ -75,7 +84,7 @@ Update Kernel on KBL NUC
 
       title The ACRNGT Service VM
       linux /bzImage
-      options console=tty0 console=ttyS0 root=/dev/sda3 rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x010101 i915.domain_plane_owners=0x011100001111 i915.enable_gvt=1 i915.enable_conformance_check=0 i915.enable_guc=0 hvlog=2M@0x1FE00000
+      options console=tty0 console=ttyS0 root=/dev/sda3 rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x010101 i915.domain_plane_owners=0x011100001111 i915.enable_gvt=1 i915.enable_conformance_check=0 i915.enable_guc=0 hvlog=2M@0x1FE00000 memmap=2M$0x1FE00000
 
    .. note:: Change ``/dev/sda3`` to your file system partition.
 
@@ -105,7 +114,7 @@ Preparations
   <https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.141-1/virtio-win-0.1.141.iso>`_
   to the Service VM in ``/root/img/virtio-win-0.1.141.iso``.
 
-* Download `Intel DCH Graphics Driver <https://downloadmirror.intel.com/28148/a08/dch_win64_25.20.100.6444.exe>`_.
+* Download `Intel DCH Graphics Driver <https://downloadmirror.intel.com/28646/a08/dch_igcc_win64_25.20.100.6618.exe>`_.
 
 Install Windows 10 ADK
 ----------------------
@@ -134,8 +143,8 @@ Pre-install drivers and re-generate Windows ISO
    for example, drive ``D:``
 
 #. Use ``7-zip`` or similar utility to unzip the downloaded Windows graphics driver
-   ``dch_win64_25.20.100.6444.exe`` to a folder,
-   for example, to ``C:\Dev\Temp\wim\dch_win64_25.20.100.6444``
+   ``dch_igcc_win64_25.20.100.6618.exe`` to a folder,
+   for example, to ``C:\Dev\Temp\wim\dch_igcc_win64_25.20.100.6618``
 
 #. Right click the downloaded Windows ISO, for example, ``windows10-17763-107-LTSC.iso``, select ``Mount``,
    the ISO will be mounted to a drive; for example, drive ``E:``
@@ -160,20 +169,20 @@ Pre-install drivers and re-generate Windows ISO
       Set IDX=1
 
       REM Modify boot.wim file to inject drivers
-      dism /Mount-Wim /WimFile:C:\Wim\boot.wim /Index:%IDX% /MountDir:C:\mount
-      dism /image:C:\mount /Add-Driver "/driver:d:\balloon\w10\amd64\balloon.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\NetKVM\w10\amd64\netkvm.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\viorng\w10\amd64\viorng.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\vioscsi\w10\amd64\vioscsi.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\vioserial\w10\amd64\vioser.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\viostor\w10\amd64\viostor.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\vioinput\w10\amd64\vioinput.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\cui_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\HdBusExt.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\iigd_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\IntcDAud.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\msdk.inf"
-      dism /unmount-wim /mountdir:c:\mount /commit
+      dism /Mount-Wim /WimFile:C:\WIM\boot.wim /Index:%IDX% /MountDir:C:\Mount
+      dism /image:C:\Mount /Add-Driver "/driver:d:\balloon\w10\amd64\balloon.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:d:\NetKVM\w10\amd64\netkvm.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:d:\viorng\w10\amd64\viorng.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:d:\vioscsi\w10\amd64\vioscsi.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:d:\vioserial\w10\amd64\vioser.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:d:\viostor\w10\amd64\viostor.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:d:\vioinput\w10\amd64\vioinput.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_igcc_win64_25.20.100.6618\Graphics\cui_dch.inf"
+      dism /image:C:\Mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_igcc_win64_25.20.100.6618\Graphics\HdBusExt.inf"
+      dism /image:C:\Mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_igcc_win64_25.20.100.6618\Graphics\iigd_dch.inf"
+      dism /image:C:\Mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_igcc_win64_25.20.100.6618\Graphics\DisplayAudio\11.1\IntcDAud.inf"
+      dism /image:C:\Mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_igcc_win64_25.20.100.6618\Graphics\msdk.inf"
+      dism /unmount-wim /mountdir:c:\Mount /commit
 
    Run this ``virtio-inject-boot.bat`` script in a command prompt
    running as administrator.  It may take 4-5 minutes to run, depending on
@@ -187,24 +196,23 @@ Pre-install drivers and re-generate Windows ISO
       Set IDX=1
 
       REM Modify install.wim to inject drivers
-      dism /Mount-Wim /WimFile:C:\WIM\install.wim /Index:%IDX% /MountDir:C:\mount
-      dism /image:C:\mount /Add-Driver "/driver:d:\balloon\w10\amd64\balloon.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\NetKVM\w10\amd64\netkvm.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\viorng\w10\amd64\viorng.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\vioscsi\w10\amd64\vioscsi.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\vioserial\w10\amd64\vioser.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\viostor\w10\amd64\viostor.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\vioinput\w10\amd64\vioinput.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\cui_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\HdBusExt.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\iigd_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\IntcDAud.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\msdk.inf"
-      dism /unmount-wim /mountdir:c:\mount /commit
+      dism /Mount-Wim /WimFile:C:\WIM\install.wim /Index:%IDX% /MountDir:C:\Mount
+      dism /image:C:\Mount /Add-Driver "/driver:d:\balloon\w10\amd64\balloon.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:d:\NetKVM\w10\amd64\netkvm.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:d:\viorng\w10\amd64\viorng.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:d:\vioscsi\w10\amd64\vioscsi.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:d:\vioserial\w10\amd64\vioser.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:d:\viostor\w10\amd64\viostor.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:d:\vioinput\w10\amd64\vioinput.inf" /forceunsigned
+      dism /image:C:\Mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_igcc_win64_25.20.100.6618\Graphics\cui_dch.inf"
+      dism /image:C:\Mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_igcc_win64_25.20.100.6618\Graphics\HdBusExt.inf"
+      dism /image:C:\Mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_igcc_win64_25.20.100.6618\Graphics\iigd_dch.inf"
+      dism /image:C:\Mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_igcc_win64_25.20.100.6618\Graphics\DisplayAudio\11.1\IntcDAud.inf"
+      dism /image:C:\Mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_igcc_win64_25.20.100.6618\Graphics\msdk.inf"
+      dism /unmount-wim /mountdir:c:\Mount /commit
 
    Run this script in a command prompt running as administrator.  It may also
    take 4-5 minutes to run, depending on your Windows system performance.
-
 
 #. After running these two scripts the files ``C:\WIM\boot.wim`` and ``C:\WIM\install.wim``
    will be updated to install these drivers into the image:
@@ -309,6 +317,12 @@ together with the script used to install Windows 10.
    .. figure:: images/windows_install_6.png
       :align: center
 
+   .. figure:: images/windows_install_6_1.png
+      :align: center
+
+   .. figure:: images/windows_install_6_2.png
+      :align: center
+
    .. figure:: images/windows_install_7.png
       :align: center
 
@@ -383,12 +397,6 @@ ACRN Windows verified feature list
                    , "Maps",                         "OK"
                    , "Microsoft Store",              "OK"
                    , "3D Viewer",                    "OK"
-
-Known Limitations
-*****************
-* The cursor is not visible with the GVG-g local display.
-* The Windows graphic driver version must be ``dch_win64_25.20.100.6444.exe``;
-  the latest version ``dch_win64_25.20.100.6577.exe`` cannot be installed correctly.
 
 Device configurations of acrn-dm command line
 *********************************************
