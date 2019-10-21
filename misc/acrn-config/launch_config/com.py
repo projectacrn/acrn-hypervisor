@@ -470,6 +470,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
     if uos_type == "WINDOWS":
         print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -U {} \\".format(scenario_uuid[vmid + sos_vmid]), file=config)
         print("   -s {},virtio-blk,./win10-ltsc.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
+        print("   --windows \\", file=config)
 
     # GVT args set
     gvt_arg_set(uos_type, config)
