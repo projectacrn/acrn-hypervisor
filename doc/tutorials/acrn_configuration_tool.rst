@@ -109,6 +109,8 @@ Additional scenario XML elements:
 
 ``guest_flags``: Select all applicable flags for the VM.
 
+``vcpu_affinity``: vCPU affinity map; Each vCPU will pin to the selected pCPU ID and different vCPU should not pin to same pCPU.
+
 ``size`` under parent of ``epc_section``: SGX EPC section base; must be page aligned.
 
 ``base`` under parent of ``epc_section``: SGX EPC section size in Bytes; must be page aligned.
