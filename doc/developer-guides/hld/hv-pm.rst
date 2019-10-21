@@ -8,42 +8,42 @@ System PM module
 
 The PM module in the hypervisor does three things:
 
--  When all UOSes enter low power state, VM management will notify the SOS
-   lifecycle service and trigger the SOS to enter a low-power state.
-   SOS follows its own standard low-power state entry process and
-   writes the ACPI control register to put SOS into low-power state.
-   Hypervisor traps the ACPI control register writing and
-   emulates SOS low-power state entry.
+-  Monitor all guests power state transition. And emulate low power
+   state for the guests which are launched by HV directly.
 
--  Once SOS low-power emulation is done, Hypervisor handles its
+-  Once all guests enter low power state, Hypervisor handles its
    own low-power state transition
 
 -  Once system resumes from low-power mode, the hypervisor handles its
-   own resume and emulates SOS resume too.
+   own resume and emulates Service VM resume too.
 
-It is assumed that SOS does not trigger any power state transition until
-the VM manager of ACRN notifies it that all UOSes are inactive and SOS
-offlines all its virtual APs.
+It is assumed that Service VM does not trigger any power state transition
+until the VM manager of ACRN notifies it that all User VMs are inactive
+and Service VM offlines all its virtual APs. And it is assumed that HV
+does not trigger its own power state transition until all guests are in
+low power state.
 
-:numref:`pm-low-power-transition` shows the SOS/Hypervisor low-power
-state transition process.  SOS triggers power state transition by
+:numref:`pm-low-power-transition` shows the Hypervisor entering S3
+state process.  Service VM triggers power state transition by
 writing ACPI control register on its virtual BSP (which is pinned to the
 physical BSP). The hypervisor then does the following in sequence before
 it writes to the physical ACPI control register to trigger physical
 power state transition:
 
--  Pauses SOS.
+-  Pauses Service VM.
+-  Wait all other guests enter low power state.
 -  Offlines all physical APs.
--  Save the context of console, ioapic of SOS, I/O MMU, lapic of SOS,
-   virtual BSP.
+-  Save the context of console, ioapic of Service VM, I/O MMU, lapic of 
+   Service VM, virtual BSP.
 -  Save the context of physical BSP.
 
-When exiting from low-power mode, the hypervisor does similar steps in
-reverse order to restore contexts, start APs and resume SOS. SOS is
-responsible for starting its own virtual APs as well as UOSes.
+When exiting from S3 state, the hypervisor does similar steps in
+reverse order to restore contexts, start APs and resume all guests launched
+by hypervisor directly. Service VM is responsible for starting its own
+virtual APs as well as User VMs.
 
 .. figure:: images/pm-image24-105.png
    :align: center
    :name: pm-low-power-transition
 
-   SOS/Hypervisor low power state transition process
+   Service VM/Hypervisor S3 transition process
