@@ -6,13 +6,22 @@ Hypervisor Startup
 This section is an overview of the ACRN hypervisor startup.
 The ACRN hypervisor
 compiles to a 32-bit multiboot-compliant ELF file.
-The bootloader (ABL or SBL) loads the hypervisor according to the
+The bootloader (ABL/SBL or UEFI) loads the hypervisor according to the
 addresses specified in the ELF header. The BSP starts the hypervisor
 with an initial state compliant to multiboot 1 specification, after the
 bootloader prepares full configurations including ACPI, E820, etc.
 
 The HV startup has two parts: the native startup followed by
 VM startup.
+
+Multiboot Header
+****************
+
+The ACRN hypervisor is built with multiboot header, which presents
+``MULTIBOOT_HEADER_MAGIC`` and ``MULTIBOOT_HEADER_FLAGS`` at the beginning
+of the image, and it sets bit 6 in ``MULTIBOOT_HEADER_FLAGS`` which request
+bootloader passing memory mmap information(like e820 entries) through
+Multiboot Information(MBI) structure.
 
 Native Startup
 **************
@@ -36,10 +45,12 @@ description for the flow:
 -  **UART Init:** Initialize a pre-configured UART device used
    as the base physical console for HV and Service OS.
 
--  **Shell Init:** Start a command shell for HV accessible via the UART.
-
 -  **Memory Init:** Initialize memory type and cache policy, and creates
    MMU page table mapping for HV.
+
+-  **Scheduler Init:** Initialize scheduler framework, which provide the
+   capability to switch different threads(like vcpu vs. idle thread) on a
+   physical CPU, and to support CPU sharing.
 
 -  **Interrupt Init:** Initialize interrupt and exception for native HV
    including IDT and ``do_IRQ`` infrastructure; a timer interrupt
@@ -51,6 +62,8 @@ description for the flow:
    native APs (application processor). Each AP will initialize its
    own memory and interrupts, notifies the BSP on completion and
    enter the default idle loop.
+
+-  **Shell Init:** Start a command shell for HV accessible via the UART.
 
 Symbols in the hypervisor are placed with an assumed base address, but
 the bootloader may not place the hypervisor at that specified base. In
@@ -98,40 +111,63 @@ Memory
 Refer to :ref:`physical-interrupt-initialization` for a detailed description of interrupt-related
 initial states, including IDT and physical PICs.
 
-After BSP detects that all APs are up, BSP will start creating the first
-VM, i.e. SOS, as explained in the next section.
+After BSP detects that all APs are up, it will continue to enter guest mode; similar, after one AP
+complete its initialization, it will start entering guest mode as well.
+When BSP & APs enter guest mode, they will try to launch pre-defined VMs whose vBSP associated with
+this physical core; these pre-defined VMs are static configured in ``vm config`` and they could be
+pre-launched Safety VM or Service VM; the VM startup will be explained in next section.
 
 .. _vm-startup:
 
 VM Startup
 **********
 
-SOS is created and launched on the physical BSP after the hypervisor
-initializes itself.  Meanwhile, the APs enter the default idle loop
+The Service VM or a pre-launched VM is created and launched on the physical
+CPU which configured as its vBSP. Meanwhile, for the physical CPUs which
+configured as vAPs for dedicated VMs, they will enter the default idle loop
 (refer to :ref:`VCPU_lifecycle` for details), waiting for any vCPU to be
 scheduled to them.
 
 :numref:`hvstart-vmflow` illustrates a high-level execution flow of
-creating and launching a VM, applicable to both SOS and UOS. One major
-difference in the creation of SOS and UOS is that SOS is created by the
-hypervisor, while the creation of UOSes is triggered by the DM in SOS.
+creating and launching a VM, applicable to pre-launched VM, Service VM
+and User VM. One major difference in the creation of User VM and pre-launched
+/Service VM is that pre-launched/Service VM is created by the hypervisor,
+while the creation of User VMs is triggered by the DM in Service OS.
 The main steps include:
 
 -  **Create VM**: A VM structure is allocated and initialized. A unique
-   VM ID is picked, EPT is created, I/O bitmap is set up, I/O
-   emulation handlers initialized and registered and virtual CPUID
-   entries filled. For SOS an addition e820 table is prepared.
+   VM ID is picked, EPT is initialized, e820 table for this VM is prepared,
+   I/O bitmap is set up, virtual PIC/IOAPIC/PCI/UART is initialized, EPC for
+   virtual SGX is prepared, guest PM IO is set up, IOMMU for PT dev support
+   is enabled, virtual CPUID entries are filled, and vCPUs configred in this VM's
+   ``vm config`` are prepared. For post-launched User VM, the EPT page table and
+   e820 table is actually prepared by DM instead of hypervisor.
 
--  **Create vCPUs:** Create the vCPUs, assign the physical processor it
+-  **Prepare vCPUs:** Create the vCPUs, assign the physical processor it
    is pinned to, a unique-per-VM vCPU ID and a globally unique VPID,
-   and initializes its virtual lapic and MTRR. For SOS one vCPU is
-   created for each physical CPU on the platform. For UOS the DM
-   determines the number of vCPUs to be created.
+   and initializes its virtual lapic and MTRR, and its vCPU thread object got setup
+   for vcpu scheduling. The vCPU number and affinity are defined in corresponding
+   ``vm config`` for this VM.
 
--  **SW Load:** The BSP of a VM also prepares for each VM's SW
-   configuration including kernel entry address, ramdisk address,
-   bootargs, zero page etc. This is done by the hypervisor for SOS
-   while by DM for UOS.
+-  **Build vACPI:** For Service VM, the hypervisor will customize a virtual ACPI
+   table based on native ACPI table (this is in the TODO).
+   For pre-launched VM, the hypervisor will build a simple ACPI table with necessary
+   information like MADT.
+   For post-launched User VM, DM will build its ACPI table dynamically.
+
+-  **SW Load:** Prepares for each VM's SW configuration according to guest OS
+   requirement, which may include kernel entry address, ramdisk address,
+   bootargs, or zero page for launching bzImage etc.
+   This is done by the hypervisor for pre-launched or Service VM, while by DM
+   for post-launched User VMs.
+   Meanwhile, there are two kinds of boot mode - de-privilege and direct boot
+   mode. The de-privilege boot mode is combined with ACRN UEFI-stub, and only
+   apply to Service VM, which ensure native UEFI environment could be restored
+   and keep running in the Service VM. The direct boot mode is applied to both
+   pre-launched and Service VM, in this mode, the VM will start from standard
+   real or proteted mode which is not related with native environment.
+
+-  **Start VM:** The vBSP of vCPUs in this VM is kick to do schedule.
 
 -  **Schedule vCPUs:** The vCPUs are scheduled to the corresponding
    physical processors for execution.
@@ -140,10 +176,10 @@ The main steps include:
    state, execution control, entry control and exit control. It's
    the last configuration before vCPU runs.
 
--  **vCPU thread:** vCPU kicks out to run. For "Primary CPU" it will
+-  **vCPU thread:** vCPU kicks out to run. For vBSP of vCPUs, it will
    start running into kernel image which SW Load is configured; for
-   "Non-Primary CPU" it will wait for INIT-SIPI-SIPI IPI sequence
-   trigger from its "Primary CPU".
+   any vAP of vCPUs, it will wait for INIT-SIPI-SIPI IPI sequence
+   trigger from its vBSP.
 
 .. figure:: images/hld-image104.png
    :align: center
@@ -151,57 +187,70 @@ The main steps include:
 
    Hypervisor VM Startup Flow
 
-SW configuration for Service OS (SOS_VM):
+SW configuration for Service VM (bzimage SW load as example):
 
 -  **ACPI**: HV passes the entire ACPI table from bootloader to Service
-   OS directly. Legacy mode is currently supported as the ACPI table
+   VM directly. Legacy mode is currently supported as the ACPI table
    is loaded at F-Segment.
 
--  **E820**: HV passes e820 table from bootloader through multi-boot
-   information after the HV reserved memory (32M for example) is
-   filtered out.
+-  **E820**: HV passes e820 table from bootloader through zero-page
+   after the HV reserved (32M for example) and pre-launched VM owned
+   memory is filtered out.
 
 -  **Zero Page**: HV prepares the zero page at the high end of Service
-   OS memory which is determined by SOS_VM guest FIT binary build. The
+   VM memory which is determined by SOS_VM guest FIT binary build. The
    zero page includes configuration for ramdisk, bootargs and e820
-   entries. The zero page address will be set to "Primary CPU" RSI
-   register before VCPU gets run.
+   entries. The zero page address will be set to vBSP RSI register
+   before VCPU gets run.
 
--  **Entry address**: HV will copy Service OS kernel image to 0x1000000
-   as entry address for SOS_VM's "Primary CPU". This entry address will
-   be set to "Primary CPU" RIP register before VCPU gets run.
+-  **Entry address**: HV will copy Service OS kernel image to
+   kernel_load_addr, which could be got from "pref_addr" field in bzimage
+   header; the entry address will be calculated based on kernel_load_addr,
+   and will be set to vBSP RIP register before VCPU gets run.
 
-SW configuration for User OS (VMx):
+SW configuration for post-launched User VMs (OVMF SW load as example):
 
--  **ACPI**: the virtual ACPI table is built by DM and put at VMx's
+-  **ACPI**: the virtual ACPI table is built by DM and put at User VM's
    F-Segment. Refer to :ref:`hld-io-emulation` for details.
 
 -  **E820**: the virtual E820 table is built by the DM then passed to
-   the zero page. Refer to :ref:`hld-io-emulation` for details.
+   the virtual bootloader. Refer to :ref:`hld-io-emulation` for detais.
 
--  **Zero Page**: the DM prepares the zero page at location of
-   "lowmem_top - 4K" in VMx. This location is set into VMx's
-   "Primary CPU" RSI register in **SW Load**.
+-  **Entry address**: the DM will copy User OS kernel(OVMF) image to
+   OVMF_NVSTORAGE_OFFSET - normally is @(4G - 2M), and set the entry
+   address to 0xFFFFFFF0. As the vBSP will kick to run virtual bootloader
+   (OVMF) from real-mode, so its CS base will be set as 0xFFFF0000, and
+   RIP register will be set as 0xFFF0.
 
--  **Entry address**: the DM will copy User OS kernel image to 0x1000000
-   as entry address for VMx's "Primary CPU". This entry address will
-   be set to "Primary CPU" RIP register before VCPU gets run.
+SW configuration for pre-launched VMs (raw SW load as example):
+
+-  **ACPI**: the virtual ACPI table is built by the hypervisor and put at
+   this VM's F-Segment.
+
+-  **E820**: the virtual E820 table is built by the hypervisor then passed to
+   the VM according to different SW loaders. For raw SW load here, it's not
+   used.
+
+-  **Entry address**: the hypervisor will copy User OS kernel image to
+   kernel_load_addr which set by ``vm config``, and set the entry
+   address to kernel_entry_addr which set by ``vm config`` as well.
 
 Here is initial mode of vCPUs:
 
 
-+------------------------------+-------------------------------+
-|  VM and Processor Type       |    Initial Mode               |
-+=============+================+===============================+
-|  SOS        |        BSP     |   Same as physical BSP        |
-|             +----------------+-------------------------------+
-|             |        AP      |   Real Mode                   |
-+-------------+----------------+-------------------------------+
-|  UOS        |        BSP     |   Real Mode                   |
-|             +----------------+-------------------------------+
-|             |        AP      |   Real Mode                   |
-+-------------+----------------+-------------------------------+
++----------------------------------+----------------------------------------------------------+
+|  VM and Processor Type           |    Initial Mode                                          |
++=================+================+==========================================================+
+| Service VM      |        BSP     |   Same as physical BSP, or Real Mode if SOS boot w/ OVMF |
+|                 +----------------+----------------------------------------------------------+
+|                 |        AP      |   Real Mode                                              |
++-----------------+----------------+----------------------------------------------------------+
+| User VM         |        BSP     |   Real Mode                                              |
+|                 +----------------+----------------------------------------------------------+
+|                 |        AP      |   Real Mode                                              |
++-----------------+----------------+----------------------------------------------------------+
+| Pre-launched VM |        BSP     |   Real Mode or Protected Mode                            |
+|                 +----------------+----------------------------------------------------------+
+|                 |        AP      |   Real Mode                                              |
++-----------------+----------------+----------------------------------------------------------+
 
-Note that SOS is started with the same number of vCPUs as the physical
-CPUs to boost the boot-up. SOS will offline the APs right before it
-starts any UOS.
