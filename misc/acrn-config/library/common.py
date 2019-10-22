@@ -15,7 +15,6 @@ HV_LICENSE_FILE = SOURCE_PATH + 'misc/acrn-config/library/hypervisor_license'
 
 
 PY_CACHES = ["__pycache__", "../board_config/__pycache__", "../scenario_config/__pycache__"]
-BIN_LIST = ['git']
 GUEST_FLAG = ["0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTHROUGH",
               "GUEST_FLAG_IO_COMPLETION_POLLING", "GUEST_FLAG_CLOS_REQUIRED",
               "GUEST_FLAG_HIDE_MTRR", "GUEST_FLAG_RT", "GUEST_FLAG_HIGHEST_SEVERITY"]
@@ -105,10 +104,19 @@ def get_param(args):
     return (err_dic, board_info_file, scenario_info_file, enable_commit)
 
 
-def check_env():
+def check_env(check_git=False):
     """ Prepare to check the environment """
     err_dic = {}
-    for excute in BIN_LIST:
+    bin_list = []
+
+    if check_git:
+        bin_list.append('git')
+
+        usr_dir = os.environ['HOME']
+        if not os.path.isfile("{}/.gitconfig".format(usr_dir)):
+            err_dic['commn error: check env failed'] = "git not configured!"
+
+    for excute in bin_list:
         res = subprocess.Popen("which {}".format(excute), shell=True, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, close_fds=True)
 
@@ -124,10 +132,6 @@ def check_env():
 
             if "acrn" not in line:
                 err_dic['commn error: check env failed'] = "Run this tool in acrn-hypervisor mainline source code!"
-
-    usr_dir = os.environ['HOME']
-    if not os.path.isfile("{}/.gitconfig".format(usr_dir)):
-        err_dic['commn error: check env failed'] = "git not configured!"
 
     for py_cache in PY_CACHES:
         if os.path.exists(py_cache):

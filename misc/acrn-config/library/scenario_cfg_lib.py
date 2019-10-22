@@ -35,9 +35,9 @@ COMMUNICATE_VM_ID = []
 
 ERR_LIST = {}
 
-def prepare():
+def prepare(check_git):
     """ Check environment """
-    return common.check_env()
+    return common.check_env(check_git)
 
 
 def print_yel(msg, warn=False):

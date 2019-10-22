@@ -35,6 +35,11 @@ def main(args):
     if err_dic:
         return err_dic
 
+    # check env
+    err_dic = board_cfg_lib.prepare(enable_commit)
+    if err_dic:
+        return err_dic
+
     board_cfg_lib.BOARD_INFO_FILE = board_info_file
     board_cfg_lib.SCENARIO_INFO_FILE = scenario_info_file
     board_cfg_lib.get_vm_count(scenario_info_file)
@@ -124,11 +129,13 @@ def main(args):
 
 def ui_entry_api(board_info,scenario_info, enable_commit=False):
 
+    git_env_check = False
     arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info]
     if enable_commit:
         arg_list.append('--enable_commit')
+        git_env_check = True
 
-    err_dic = board_cfg_lib.prepare()
+    err_dic = board_cfg_lib.prepare(git_env_check)
     if err_dic:
         return err_dic
 
@@ -138,12 +145,6 @@ def ui_entry_api(board_info,scenario_info, enable_commit=False):
 
 
 if __name__ == '__main__':
-
-    err_dic = board_cfg_lib.prepare()
-    if err_dic:
-        for err_k, err_v in err_dic.items():
-            board_cfg_lib.print_red("{}: {}".format(err_k, err_v), err=True)
-        sys.exit(1)
 
     ARGS = sys.argv
     err_dic = main(ARGS)
