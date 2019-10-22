@@ -39,11 +39,7 @@ single Intel Apollo Lake-I SoC platform. See :numref:`security-ACRN`.
 
    ACRN Hypervisor Overview
 
-<<<<<<< HEAD
 This document focuses only on the security part of this automotive
-=======
-This document focuses only on the security part of the automotive
->>>>>>> 9c67d9b9c58a39ec14126b1acef47e39e27e89c0
 system built on top of the ACRN hypervisor. This includes how to build a
 secure system as well as how to virtualize the security features that
 the system can provide.
