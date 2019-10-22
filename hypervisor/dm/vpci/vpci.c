@@ -41,16 +41,6 @@ static void read_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t o
 static void write_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 
 /**
- * @pre pi != NULL
- */
-static void pci_cfg_clear_cache(struct pci_addr_info *pi)
-{
-	pi->cached_bdf.value = 0xFFFFU;
-	pi->cached_reg = 0U;
-	pi->cached_enable = false;
-}
-
-/**
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
  */
@@ -58,16 +48,11 @@ static bool pci_cfgaddr_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t by
 {
 	uint32_t val = ~0U;
 	struct acrn_vpci *vpci = &vcpu->vm->vpci;
-	struct pci_addr_info *pi = &vpci->addr_info;
+	union pci_cfg_addr_reg *cfg_addr = &vpci->addr;
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
 	if ((addr == (uint16_t)PCI_CONFIG_ADDR) && (bytes == 4U)) {
-		val = (uint32_t)pi->cached_bdf.value;
-		val <<= 8U;
-		val |= pi->cached_reg;
-		if (pi->cached_enable) {
-			val |= PCI_CFG_ENABLE;
-		}
+		val = cfg_addr->value;
 	}
 
 	pio_req->value = val;
@@ -82,12 +67,11 @@ static bool pci_cfgaddr_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t by
 static bool pci_cfgaddr_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
 {
 	struct acrn_vpci *vpci = &vcpu->vm->vpci;
-	struct pci_addr_info *pi = &vpci->addr_info;
+	union pci_cfg_addr_reg *cfg_addr = &vpci->addr;
 
 	if ((addr == (uint16_t)PCI_CONFIG_ADDR) && (bytes == 4U)) {
-		pi->cached_bdf.value = (uint16_t)(val >> 8U);
-		pi->cached_reg = val & PCI_REGMASK;
-		pi->cached_enable = ((val & PCI_CFG_ENABLE) == PCI_CFG_ENABLE);
+		/* unmask reserved fields: BITs 24-30 and BITs 0-1 */
+		cfg_addr->value = val & (~0x7f000003U);
 	}
 
 	return true;
@@ -119,20 +103,23 @@ static bool pci_cfgdata_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t by
 {
 	struct acrn_vm *vm = vcpu->vm;
 	struct acrn_vpci *vpci = &vm->vpci;
-	struct pci_addr_info *pi = &vpci->addr_info;
+	union pci_cfg_addr_reg cfg_addr;
+	union pci_bdf bdf;
 	uint16_t offset = addr - PCI_CONFIG_DATA;
 	uint32_t val = ~0U;
 	struct acrn_vm_config *vm_config;
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	if (pi->cached_enable) {
-		if (vpci_is_valid_access(pi->cached_reg + offset, bytes)) {
+	cfg_addr.value = atomic_readandclear32(&vpci->addr.value);
+	if (cfg_addr.bits.enable != 0U) {
+		if (vpci_is_valid_access(cfg_addr.bits.reg_num + offset, bytes)) {
 			vm_config = get_vm_config(vm->vm_id);
 
 			switch (vm_config->load_order) {
 			case PRE_LAUNCHED_VM:
 			case SOS_VM:
-				read_cfg(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
+				bdf.value = cfg_addr.bits.bdf;
+				read_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, &val);
 				break;
 
 			default:
@@ -140,7 +127,6 @@ static bool pci_cfgdata_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t by
 				break;
 			}
 		}
-		pci_cfg_clear_cache(pi);
 	}
 
 	pio_req->value = val;
@@ -159,19 +145,21 @@ static bool pci_cfgdata_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t b
 {
 	struct acrn_vm *vm = vcpu->vm;
 	struct acrn_vpci *vpci = &vm->vpci;
-	struct pci_addr_info *pi = &vpci->addr_info;
+	union pci_cfg_addr_reg cfg_addr;
+	union pci_bdf bdf;
 	uint16_t offset = addr - PCI_CONFIG_DATA;
 	struct acrn_vm_config *vm_config;
 
-
-	if (pi->cached_enable) {
-		if (vpci_is_valid_access(pi->cached_reg + offset, bytes)) {
+	cfg_addr.value = atomic_readandclear32(&vpci->addr.value);
+	if (cfg_addr.bits.enable != 0U) {
+		if (vpci_is_valid_access(cfg_addr.bits.reg_num + offset, bytes)) {
 			vm_config = get_vm_config(vm->vm_id);
 
 			switch (vm_config->load_order) {
 			case PRE_LAUNCHED_VM:
 			case SOS_VM:
-				write_cfg(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
+				bdf.value = cfg_addr.bits.bdf;
+				write_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, val);
 				break;
 
 			default:
@@ -179,7 +167,6 @@ static bool pci_cfgdata_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t b
 				break;
 			}
 		}
-		pci_cfg_clear_cache(pi);
 	}
 
 	return true;

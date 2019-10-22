@@ -101,15 +101,19 @@ struct pci_vdev {
 	struct pci_vdev *new_owner;
 };
 
-struct pci_addr_info {
-	union pci_bdf cached_bdf;
-	uint32_t cached_reg;
-	bool cached_enable;
+union pci_cfg_addr_reg {
+	uint32_t value;
+	struct {
+		uint32_t reg_num : 8;	/* BITs 0-7, Register Number (BITs 0-1, always reserve to 0) */
+		uint32_t bdf : 16;	/* BITs 8-23, BDF Number */
+		uint32_t resv : 7;	/* BITs 24-30, Reserved */
+		uint32_t enable : 1;	/* BITs 31, Enable bit */
+	} bits;
 };
 
 struct acrn_vpci {
 	struct acrn_vm *vm;
-	struct pci_addr_info addr_info;
+	union pci_cfg_addr_reg addr;
 	uint32_t pci_vdev_cnt;
 	struct pci_vdev pci_vdevs[CONFIG_MAX_PCI_DEV_NUM];
 };
