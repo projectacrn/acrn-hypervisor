@@ -431,7 +431,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
     sos_vmid = launch_cfg_lib.get_sos_vmid()
 
     # clearlinux/android/alios
-    dm_str = 'acrn-dm -A -m $mem_size -s 0:0,hostbridge  -s 1:0,lpc -U {}'.format(scenario_uuid[vmid + sos_vmid])
+    dm_str = 'acrn-dm -A -m -s 0:0,hostbridge -U {}'.format(scenario_uuid[vmid + sos_vmid])
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if uos_type == "CLEARLINUX":
             print("{} \\".format(dm_str), file=config)
@@ -461,7 +461,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
 
     # hard rt os
     if uos_type == "PREEMPT-RT LINUX":
-        print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {} \\".format(scenario_uuid[vmid + sos_vmid]), file=config)
+        print("{} \\".format(dm_str), file=config)
         print("   --lapic_pt \\", file=config)
         print("   --rtvm \\", file=config)
         print("   --virtio_poll 1000000 \\", file=config)
@@ -469,19 +469,19 @@ def dm_arg_set(names, sel, dm, vmid, config):
 
     # vxworks
     if uos_type == "VXWORKS":
-        print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {} \\".format(scenario_uuid[vmid + sos_vmid]), file=config)
+        print("{} \\".format(dm_str), file=config)
         print("   -s {},virtio-blk,./VxWorks.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
         print("   --virtio_poll 1000000 \\", file=config)
         print("   --lapic_pt \\", file=config)
 
     # zephyr
     if uos_type == "ZEPHYR":
-        print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -U {} \\".format(scenario_uuid[vmid + sos_vmid]), file=config)
+        print("{} \\".format(dm_str), file=config)
         print("   -s {},virtio-blk,./zephyr.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
 
     # windows
     if uos_type == "WINDOWS":
-        print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -U {} \\".format(scenario_uuid[vmid + sos_vmid]), file=config)
+        print("{} \\".format(dm_str), file=config)
         print("   -s {},virtio-blk,./win10-ltsc.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
         print("   --windows \\", file=config)
 
@@ -493,6 +493,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
 
     # redirect console
     if dm['console_type'][vmid] == "com1(ttyS0)":
+        print("   -s 1:0,lpc \\", file=config)
         print("   -l com1,stdio \\", file=config)
         print("   -s {},{} \\".format(launch_cfg_lib.virtual_dev_slot("com1(ttyS0)"),
             launch_cfg_lib.RE_CONSOLE_MAP['com1(ttyS0)']), file=config)
