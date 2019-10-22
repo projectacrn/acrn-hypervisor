@@ -496,10 +496,7 @@ static void init_exit_ctrl(const struct acrn_vcpu *vcpu)
 	exec_vmwrite64(VMX_EXIT_MSR_LOAD_ADDR_FULL, hva2hpa((void *)vcpu->arch.msr_area.host));
 }
 
-/**
- * @pre vcpu != NULL
- */
-void init_vmcs(struct acrn_vcpu *vcpu)
+static void do_init_vmcs(struct acrn_vcpu *vcpu)
 {
 	uint64_t vmx_rev_id;
 	uint64_t vmcs_pa;
@@ -530,6 +527,20 @@ void init_vmcs(struct acrn_vcpu *vcpu)
 	init_guest_state(vcpu);
 	init_entry_ctrl(vcpu);
 	init_exit_ctrl(vcpu);
+}
+
+/**
+ * @pre vcpu != NULL
+ */
+void init_vmcs(struct acrn_vcpu *vcpu)
+{
+	uint16_t pcpu_id = vcpu->pcpu_id;
+
+	if (pcpu_id == get_pcpu_id()) {
+		do_init_vmcs(vcpu);
+	} else {
+		smp_call_function((1UL << pcpu_id), (smp_call_func_t)do_init_vmcs, vcpu);
+	}
 }
 
 void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)

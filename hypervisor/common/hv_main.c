@@ -21,11 +21,6 @@ void vcpu_thread(struct thread_object *obj)
 	int32_t ret = 0;
 
 	do {
-		/* If vcpu is not launched, we need to do init_vmcs first */
-		if (!vcpu->launched) {
-			init_vmcs(vcpu);
-		}
-
 		if (!is_lapic_pt_enabled(vcpu)) {
 			CPU_IRQ_DISABLE();
 		}

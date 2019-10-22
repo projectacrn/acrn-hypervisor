@@ -639,7 +639,6 @@ void reset_vcpu(struct acrn_vcpu *vcpu)
 		vcpu->arch.exception_info.exception = VECTOR_INVALID;
 		vcpu->arch.cur_context = NORMAL_WORLD;
 		vcpu->arch.irq_window_enabled = false;
-		vcpu->thread_obj.host_sp = build_stack_frame(vcpu);
 		(void)memset((void *)vcpu->arch.vmcs, 0U, PAGE_SIZE);
 
 		for (i = 0; i < NR_WORLD; i++) {
