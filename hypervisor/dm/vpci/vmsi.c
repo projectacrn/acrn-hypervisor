@@ -78,17 +78,20 @@ static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
 	ret = ptirq_msix_remap(vm, vdev->bdf.value, pbdf.value, 0U, &info);
 	if (ret == 0) {
 		/* Update MSI Capability structure to physical device */
-		pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR, 0x4U, (uint32_t)info.pmsi_addr.full);
 		if ((msgctrl & PCIM_MSICTRL_64BIT) != 0U) {
-			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR_HIGH, 0x4U,
-				(uint32_t)(info.pmsi_addr.full >> 32U));
 			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_DATA_64BIT, 0x2U, (uint16_t)info.pmsi_data.full);
 		} else {
 			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_DATA, 0x2U, (uint16_t)info.pmsi_data.full);
 		}
 
-		/* If MSI Enable is being set, make sure INTxDIS bit is set */
 		if (enable) {
+			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR, 0x4U, (uint32_t)info.pmsi_addr.full);
+			if ((msgctrl & PCIM_MSICTRL_64BIT) != 0U) {
+				pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR_HIGH, 0x4U,
+					(uint32_t)(info.pmsi_addr.full >> 32U));
+			}
+
+			/* If MSI Enable is being set, make sure INTxDIS bit is set */
 			enable_disable_pci_intx(pbdf, false);
 			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_CTRL, 2U, msgctrl | PCIM_MSICTRL_MSI_ENABLE);
 		}
