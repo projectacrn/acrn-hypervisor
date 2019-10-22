@@ -487,6 +487,11 @@ Device configurations of acrn-dm command line
 * *--ovmf /usr/share/acrn/bios/OVMF.fd*:
   Make sure it points to your OVMF binary path
 
+Secure boot enabling
+********************
+You may refer to the steps in :ref:`How-to-enable-secure-boot-for-windows` for
+secure boot enabling.
+
 References
 **********
 
