@@ -21,6 +21,7 @@ def tap_uos_net(names, vmid, config):
     uos_type = names['uos_types'][vmid]
     board_name = names['board_name']
 
+    vm_name = launch_cfg_lib.undline_name(uos_type).lower()
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if board_name in ("apl-mrb", "apl-up2"):
             print('if [ ! -f "/data/$3/$3.img" ]; then', file=config)
@@ -34,8 +35,8 @@ def tap_uos_net(names, vmid, config):
         print("mac_seed=${mac:9:8}-${vm_name}", file=config)
         print("", file=config)
 
-    if uos_type in ("VXWORKS", "ZEPHYR", "WINDOWS"):
-        print("vm_name={}_vm$1".format(uos_type), file=config)
+    if uos_type in ("VXWORKS", "ZEPHYR", "WINDOWS", "PREEMPT-RT LINUX"):
+        print("vm_name={}_vm$1".format(vm_name), file=config)
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if board_name in ("apl-mrb", "apl-up2"):
@@ -231,7 +232,7 @@ def log_level_set(uos_type, config):
 
 
 def launch_begin(board_name, uos_type, config):
-    launch_uos = '_'.join(uos_type.lower().split())
+    launch_uos = launch_cfg_lib.undline_name(board_name).lower()
     run_container(board_name, uos_type, config)
     print("function launch_{}()".format(launch_uos), file=config)
     print("{", file=config)
@@ -274,7 +275,7 @@ def uos_launch(names, args, vmid, config):
     board_name = names['board_name']
     gvt_args = args['gvt_args'][vmid]
     uos_type = names['uos_types'][vmid]
-    launch_uos = '_'.join(uos_type.lower().split())
+    launch_uos = launch_cfg_lib.undline_name(board_name).lower()
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_clr(names, vmid):
 
@@ -288,7 +289,7 @@ def uos_launch(names, args, vmid, config):
         if uos_type == "VXWORKS":
             print("launch_{} 1".format(launch_uos), file=config)
         if uos_type == "PREEMPT-RT LINUX":
-            print("launch_{}".format(launch_uos), file=config)
+            print("launch_{} 1".format(launch_uos), file=config)
         if uos_type == "WINDOWS":
             print('launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
         if uos_type == "ZEPHYR":
@@ -512,10 +513,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
         print("   --enable_trusty \\", file=config)
 
     set_dm_pt(names, sel, vmid, config)
-    if uos_type != "PREEMPT-RT LINUX":
-        print("   $vm_name", file=config)
-    else:
-        print("   hard_rtvm", file=config)
+    print("   $vm_name", file=config)
     print("}", file=config)
 
 

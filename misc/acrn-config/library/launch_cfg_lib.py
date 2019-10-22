@@ -462,6 +462,10 @@ def args_aval_check(arg_list, item, avl_list):
     """
     # args should be set into launch xml from webUI
     i_cnt = 1
+    skip_check_list = ['gvt_args', 'rootfs_dev']
+    if item in skip_check_list:
+        return
+
     for arg_str in arg_list.values():
         if arg_str == None or not arg_str.strip():
             empty_err(i_cnt, item)
@@ -581,3 +585,12 @@ def get_pt_dev():
     cap_pt = PASSTHRU_DEVS
 
     return cap_pt
+
+
+def undline_name(name):
+    """
+    This convert name which has contain '-' to '_'
+    :param name: name which contain '-' and ' '
+    :return: name_str which contain'_'
+    """
+    return common.undline_name(name)
