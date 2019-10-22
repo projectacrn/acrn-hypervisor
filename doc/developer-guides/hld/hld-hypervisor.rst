@@ -8,6 +8,7 @@ Hypervisor high-level design
    :maxdepth: 1
 
    hv-startup
+   hv-vm-management
    hv-cpu-virt
    Memory management <hv-memmgt>
    I/O Emulation <hv-io-emulation>
