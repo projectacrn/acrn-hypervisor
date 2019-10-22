@@ -84,13 +84,14 @@ def validate_launch_setting(board_info, scenario_info, launch_info):
 def ui_entry_api(board_info, scenario_info, launch_info, enable_commit=False):
 
     err_dic = {}
-
+    git_env_check = False
     arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--launch', launch_info, '--uosid', '0']
 
     if enable_commit:
         arg_list.append('--enable_commit')
+        git_env_check = True
 
-    err_dic = launch_cfg_lib.prepare()
+    err_dic = launch_cfg_lib.prepare(git_env_check)
     if err_dic:
         return err_dic
 
@@ -148,6 +149,12 @@ def main(args):
     (err_dic, board_info_file, scenario_info_file, launch_info_file, vm_th, enable_commit) = launch_cfg_lib.get_param(args)
     if err_dic:
         return err_dic
+
+    # check env
+    err_dic = launch_cfg_lib.prepare(enable_commit)
+    if err_dic:
+        return err_dic
+
     # vm_th =[0..post_vm_max]
     # 0: generate all launch script for all post vm launch script
     # 1: generate launch script for 1st post vm launch script
@@ -235,12 +242,6 @@ def main(args):
 
 
 if __name__ == '__main__':
-
-    err_dic = launch_cfg_lib.prepare()
-    if err_dic:
-        for err_k, err_v in err_dic.items():
-            launch_cfg_lib.print_red("{}: {}".format(err_k, err_v), err=True)
-        sys.exit(1)
 
     ARGS = sys.argv
     err_dic = main(ARGS)

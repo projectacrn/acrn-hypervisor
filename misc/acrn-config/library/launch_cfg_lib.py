@@ -54,9 +54,9 @@ PT_SLOT = {
 POST_UUID_DIC = {}
 
 
-def prepare():
+def prepare(check_git):
     """ Check environment """
-    return common.check_env()
+    return common.check_env(check_git)
 
 
 def print_yel(msg, warn=False):

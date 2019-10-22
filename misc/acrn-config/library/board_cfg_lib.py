@@ -34,9 +34,9 @@ ERR_LIST = {}
 HEADER_LICENSE = common.open_license() + "\n"
 
 
-def prepare():
+def prepare(check_git):
     """ check environment """
-    return common.check_env()
+    return common.check_env(check_git)
 
 
 def print_yel(msg, warn=False):
