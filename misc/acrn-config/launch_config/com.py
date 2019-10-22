@@ -403,6 +403,21 @@ def set_dm_pt(names, sel, vmid, config):
             sel.bdf["nvme"][vmid][3:5], sel.bdf["nvme"][vmid][6:7]), file=config)
 
 
+def vboot_arg_set(dm, vmid, config):
+    """
+    Set the argument of vbootloader
+    :param dm: the dictionary of argument for acrn-dm
+    :param vmid: ID of the vm
+    :param config: it is a file pointer to write vboot loader information
+    :return: None
+    """
+    # TODO: Support to generate '-k' xml config from webUI and to parse it
+    if dm['vbootloader'][vmid] == "ovmf":
+        print("   --ovmf /usr/share/acrn/bios/OVMF.fd \\", file=config)
+    elif dm['vbootloader'][vmid] == "vsbl":
+        print("   $boot_image_option \\",file=config)
+
+
 def dm_arg_set(names, sel, dm, vmid, config):
 
     uos_type = names['uos_types'][vmid]
@@ -447,8 +462,6 @@ def dm_arg_set(names, sel, dm, vmid, config):
     # hard rt os
     if uos_type == "PREEMPT-RT LINUX":
         print("acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {} \\".format(scenario_uuid[vmid + sos_vmid]), file=config)
-        #print("   -k /usr/lib/kernel/default-iot-lts2018-preempt-rt \\", file=config)
-        print("   -k /usr/lib/kernel/default-iot-lts2018-preempt-rt \\", file=config)
         print("   --lapic_pt \\", file=config)
         print("   --rtvm \\", file=config)
         print("   --virtio_poll 1000000 \\", file=config)
@@ -475,10 +488,8 @@ def dm_arg_set(names, sel, dm, vmid, config):
     # GVT args set
     gvt_arg_set(uos_type, config)
 
-    # vbootloader of ovmf
-    #if uos_type != "PREEMPT-RT LINUX" and dm['vbootloader'][vmid] == "ovmf":
-    if dm['vbootloader'][vmid] == "ovmf":
-        print("   --ovmf /usr/share/acrn/bios/OVMF.fd \\", file=config)
+    # vbootloader setting
+    vboot_arg_set(dm, vmid, config)
 
     # redirect console
     if dm['console_type'][vmid] == "com1(ttyS0)":
@@ -503,8 +514,6 @@ def dm_arg_set(names, sel, dm, vmid, config):
         if not is_nuc_clr(names, vmid):
             print("   -s {},wdt-i6300esb \\".format(launch_cfg_lib.virtual_dev_slot("wdt-i6300esb")), file=config)
             print("   $intr_storm_monitor \\", file=config)
-            if dm['vbootloader'][vmid] == "vsbl":
-                print("   $boot_image_option \\",file=config)
             print("   -s {},virtio-blk$boot_dev_flag,/data/$3/$3.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
             print("   -s {},xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
         else:
