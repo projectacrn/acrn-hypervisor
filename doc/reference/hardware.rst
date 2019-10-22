@@ -19,6 +19,10 @@ Minimum System Requirements for Installing ACRN
 | Storage capabilities   | 20GB                              | 120GB or more                   |
 +------------------------+-----------------------------------+---------------------------------+
 
+Minimum Requirements for Processor
+**********************************
+1 GB Large pages
+
 Verified Platforms According to ACRN Usage
 ******************************************
 
