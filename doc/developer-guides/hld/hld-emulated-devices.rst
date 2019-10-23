@@ -18,3 +18,4 @@ documented in this section.
    GVT-g GPU Virtualization <hld-APL_GVT-g>
    UART emulation in hypervisor <vuart-virt-hld>
    RTC emulation in hypervisor <rtc-virt-hld>
+   Hostbridge emulation <hostbridge-virt-hld>
