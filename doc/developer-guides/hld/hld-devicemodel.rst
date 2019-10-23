@@ -1188,3 +1188,9 @@ To emulate UOS S3 entry, DM pauses the UOS VM, stops the UOS watchdog,
 and waits for a resume signal. When the UOS should exit from S3, DM will
 get a wakeup signal and reset the UOS VM to emulate the UOS exit from
 S3.
+
+Pass-through in Device Model
+****************************
+
+You may refer to :ref:`hv-device-passthrough` for pass-through realization 
+in device model.
