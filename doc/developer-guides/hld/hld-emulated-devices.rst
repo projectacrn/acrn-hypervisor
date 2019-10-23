@@ -15,3 +15,4 @@ documented in this section.
    UART virtualization <uart-virt-hld>
    Watchdoc virtualization <watchdog-hld>
    GVT-g GPU Virtualization <hld-APL_GVT-g>
+   UART emulation in hypervisor <vuart-virt-hld>
