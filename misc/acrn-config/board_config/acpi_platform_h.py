@@ -91,6 +91,11 @@ def multi_info_parser(config, default_platform, msg_s, msg_e):
     multi_lines = board_cfg_lib.get_info(board_cfg_lib.BOARD_INFO_FILE, msg_s, msg_e)
 
     for s_line in multi_lines:
+        # parse the commend line
+        if '/*' in s_line:
+            print("{}".format(s_line), file=config)
+            continue
+
         if s_line.split()[1] in write_direct:
             if "PM1A_CNT" in s_line.split()[1] and int(s_line.split()[2].strip('UL'), 16) == 0:
                 pm_ac_sz.pm1a_cnt_ac_sz = False
