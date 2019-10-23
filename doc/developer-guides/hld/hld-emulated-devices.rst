@@ -20,3 +20,4 @@ documented in this section.
    UART emulation in hypervisor <vuart-virt-hld>
    RTC emulation in hypervisor <rtc-virt-hld>
    Hostbridge emulation <hostbridge-virt-hld>
+   AT keyboard controller emulation <atkbdc-virt-hld>
