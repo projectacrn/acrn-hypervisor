@@ -1,4 +1,4 @@
- .. _virtio_i2c:
+ .. _virtio-i2c:
 
 Virtio-i2c
 ##########
