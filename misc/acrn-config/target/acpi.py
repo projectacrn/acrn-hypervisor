@@ -343,6 +343,13 @@ def decode_sx_pkg(pkg_len, f_node):
     return (pkg_val_pm1a, pkg_val_pm1b, pkg_val_resv, need_break)
 
 
+def set_default_sx_value(sx_name, config):
+    print("\t/* {} is not supported by BIOS */".format(sx_name), file=config)
+    print("\t#define {}_PKG_VAL_PM1A         0x0U".format(sx_name), file=config)
+    print("\t#define {}_PKG_VAL_PM1B         0x0U".format(sx_name), file=config)
+    print("\t#define {}_PKG_RESERVED         0x0U".format(sx_name), file=config)
+
+
 def read_pm_sdata(sysnode, sx_name, config):
     """This will read pm Sx state of power
     :param sysnode: the system node of Sx power state, like:/sys/firmware/acpi/tables/DSDT
@@ -358,6 +365,14 @@ def read_pm_sdata(sysnode, sx_name, config):
 
                 (need_break, need_continue, pkg_len) = read_sx_locate(sx_name, f_node)
                 if need_break:
+                    # BIOS dose not support for SX, set it to default value
+                    s_name = ''
+                    if 'S3' in sx_name:
+                        s_name = 'S3'
+                    else:
+                        s_name = 'S5'
+
+                    set_default_sx_value(s_name, config)
                     break
                 if need_continue:
                     continue
