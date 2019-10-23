@@ -753,6 +753,8 @@ their temporary IDs are listed in the following table.
    +--------------+-------------+-------------+-------------+-------------+
    | I2C          | 0x8086      | 0x860a      | 0x8086      | 0xFFF6      |
    +--------------+-------------+-------------+-------------+-------------+
+   | GPIO         | 0x8086      | 0x8609      | 0x8086      | 0xFFF7      |
+   +--------------+-------------+-------------+-------------+-------------+
 
 The following sections introduce the status of virtio devices currently
 supported in ACRN.
@@ -766,3 +768,4 @@ supported in ACRN.
    virtio-console
    virtio-rnd
    virtio-i2c
+   virtio-gpio
