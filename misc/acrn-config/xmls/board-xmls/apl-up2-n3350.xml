@@ -280,8 +280,8 @@
 	</BLOCK_DEVICE_INFO>
 
 	<TTYS_INFO>
-	BDF:(00:18.0) seri:/dev/ttyS0 base:0x91526000 irq:4
-	BDF:(00:18.1) seri:/dev/ttyS1 base:0x91524000 irq:5
+	seri:/dev/ttyS0 type:mmio base:0x91526000 irq:4
+	seri:/dev/ttyS1 type:mmio base:0x91524000 irq:5
 	</TTYS_INFO>
 
 	<AVAILABLE_IRQ_INFO>

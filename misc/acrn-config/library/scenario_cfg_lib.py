@@ -170,7 +170,7 @@ def get_ttys_info(board_info):
             break
 
         #ttys_dev = " ".join(ttys_line.strip().split()[:-2])
-        ttys_dev = ttys_line.split()[1].split(':')[1]
+        ttys_dev = ttys_line.split()[0].split(':')[1]
         ttys_list.append(ttys_dev)
 
     return ttys_list
