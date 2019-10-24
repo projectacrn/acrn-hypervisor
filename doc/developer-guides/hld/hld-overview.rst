@@ -4,10 +4,11 @@ ACRN high-level design overview
 ###############################
 
 ACRN is an open source reference hypervisor (HV) running on top of Intel
-Apollo Lake platforms for Software Defined Cockpit (SDC) or In-Vehicle
-Experience (IVE) solutions. ACRN provides embedded hypervisor vendors
-with a reference I/O mediation solution with a permissive license and
-provides auto makers a reference software stack for in-vehicle use.
+platforms(APL, KBL etc) for heterogeneous scenarios - like Software Defined
+Cockpit (SDC) or In-Vehicle Experience (IVE) for automotive, HMI & Real-Time
+OS for industry . ACRN provides embedded hypervisor vendors with a reference
+I/O mediation solution with a permissive license and provides auto makers and
+industry users a reference software stack for corresponding use.
 
 ACRN Supported Use Cases
 ************************
@@ -46,6 +47,26 @@ ACRN supports guest OSes of Clear Linux OS and Android. OEMs can use the ACRN
 hypervisor and Linux or Android guest OS reference code to implement their own
 VMs for a customized IC/IVI/RSE.
 
+Industry Usage
+==============
+
+A typical industry usage would include one windows HMI + one RT VM:
+
+- windows HMI as a guest OS with display to provide Human Machine Interface
+- RT VM which running specific RTOS on it to provide capability of handling
+  real-time workloads like PLC control
+
+ACRN supports guest OS of Windows, at the meantime, ACRN added/is adding a
+series features to enhance its real-time performance then meet hard-RT KPI
+for its RT VM:
+
+- CAT (Cache Allocation Technology)
+- LAPIC pass-thru
+- Polling mode driver
+- ART (always running timer)
+- other TCC feautres like split lock detection, Pseudo locking for cache
+
+
 Hardware Requirements
 *********************
 
@@ -64,11 +85,16 @@ ACRN Architecture
 *****************
 
 ACRN is a type-I hypervisor, running on top of bare metal. It supports
-Intel Apollo Lake platforms and can be easily extended to support future
+Intel APL & KBL platforms and can be easily extended to support future
 platforms. ACRN implements a hybrid VMM architecture, using a privileged
 service VM running the service OS (SOS) to manage I/O devices and
 provide I/O mediation. Multiple user VMs can be supported, running Clear
 Linux OS or Android OS as the user OS (UOS).
+
+ACRN 1.0
+========
+
+ACRN 1.0 is designed mainly for auto use case - like SDC & IVI.
 
 Instrument cluster applications are critical in the Software Defined
 Cockpit (SDC) use case, and may require functional safety certification
@@ -80,19 +106,45 @@ Some country regulations requires an IVE system to show a rear-view
 camera (RVC) within 2 seconds, which is difficult to achieve if a
 separate instrument cluster VM is started after the SOS is booted.
 
-:numref:`overview-arch` shows the architecture of ACRN together with IC VM and
-service VM. As shown, SOS owns most of platform devices and provides I/O
-mediation to VMs. Some of the PCIe devices function as pass-through mode
-to UOSs according to VM configuration. In addition, the SOS could run
-the IC applications and HV helper applications such as the Device Model,
-VM manager, etc. where the VM manager is responsible for VM
-start/stop/pause, virtual CPU pause/resume,etc.
+:numref:`overview-arch1.0` shows the architecture of ACRN 1.0 together with
+IC VM and service VM. As shown, SOS owns most of platform devices and
+provides I/O mediation to VMs. Some of the PCIe devices function as
+pass-through mode to UOSs according to VM configuration. In addition,
+the SOS could run the IC applications and HV helper applications such
+as the Device Model, VM manager, etc. where the VM manager is responsible
+for VM start/stop/pause, virtual CPU pause/resume,etc.
 
 .. figure:: images/over-image34.png
    :align: center
-   :name: overview-arch
+   :name: overview-arch1.0
 
-   ACRN Architecture
+   ACRN 1.0 Architecture
+
+ACRN 2.0
+========
+
+ACRN 2.0 is extending ACRN to support pre-launched VM (mainly for safety VM)
+and Real Time VM.
+
+:numref:`overview-arch2.0` shows the architecture of ACRN 2.0, the main difference
+compare to ACRN 1.0 is that:
+
+-  a pre-launched VM is supported in ACRN 2.0, with isolated resource including
+   CPU, memory and HW devices etc
+
+-  add a few necessary device emulation in hypervisor like vPCI, vUART to avoid
+   interference between different VMs
+
+-  support RT VM for a post-launched User VM, with assistant features like LAPIC
+   pass-thru, PMD virtio driver
+
+ACRN 2.0 is still WIP, and some of its features already merged in the master.
+
+.. figure:: images/over-image35.png
+   :align: center
+   :name: overview-arch2.0
+
+   ACRN 2.0 Architecture
 
 .. _intro-io-emulation:
 
@@ -405,7 +457,8 @@ the following mechanisms:
 
 -  Each physical CPU is dedicated to one vCPU.
 
-   Sharing a physical CPU among multiple vCPUs gives rise to multiple
+   CPU sharing is in the TODO list, but talking about inter-VM interference,
+   sharing a physical CPU among multiple vCPUs gives rise to multiple
    sources of interference such as the vCPU of one VM flushing the
    L1 & L2 cache for another, or tremendous interrupts for one VM
    delaying the execution of another. It also requires vCPU
@@ -413,7 +466,7 @@ the following mechanisms:
    scheduling latency and vCPU priority, exposing more opportunities
    for one VM to interfere another.
 
-   To prevent such interference, ACRN hypervisor adopts static
+   To prevent such interference, ACRN hypervisor could adopts static
    core partitioning by dedicating each physical CPU to one vCPU. The
    physical CPU loops in idle when the vCPU is paused by I/O
    emulation. This makes the vCPU scheduling deterministic and physical
