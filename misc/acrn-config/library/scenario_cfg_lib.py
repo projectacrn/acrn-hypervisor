@@ -202,7 +202,7 @@ def check_board_private_info():
     (err_dic, private_info) = get_board_private_info(SCENARIO_INFO_FILE)
 
     if not private_info['rootfs'] and err_dic:
-        ERR_LIST['vm,id=0,boot_private,rootfs'] = "The board have to chose one rootfs partition"
+        ERR_LIST['vm:id=0,boot_private,rootfs'] = "The board have to chose one rootfs partition"
         ERR_LIST.update(err_dic)
 
 
@@ -718,14 +718,14 @@ def avl_vuart_ui_select(scenario_info):
         vm_type = get_order_type_by_vmid(vm_i)
 
         if vm_type == "SOS_VM":
-            key = "vm={},vuart=0,base".format(vm_i)
+            key = "vm={}:vuart=0,base".format(vm_i)
             tmp_vuart[key] = ['SOS_COM1_BASE', 'INVALID_COM_BASE']
-            key = "vm={},vuart=1,base".format(vm_i)
+            key = "vm={}:vuart=1,base".format(vm_i)
             tmp_vuart[key] = ['SOS_COM2_BASE', 'INVALID_COM_BASE']
         else:
-            key = "vm={},vuart=0,base".format(vm_i)
+            key = "vm={}:vuart=0,base".format(vm_i)
             tmp_vuart[key] = ['INVALID_COM_BASE', 'COM1_BASE']
-            key = "vm={},vuart=1,base".format(vm_i)
+            key = "vm={}:vuart=1,base".format(vm_i)
             tmp_vuart[key] = ['INVALID_COM_BASE', 'COM2_BASE']
 
     #print(tmp_vuart)

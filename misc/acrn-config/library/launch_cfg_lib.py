@@ -425,7 +425,7 @@ def pt_devs_check(bdf_list, vpid_list, item):
         if is_bdf_format(bdf_str):
             continue
         else:
-            key = "uos,id={},passthrough_devices,{}".format(i_cnt, item)
+            key = "uos:id={},passthrough_devices,{}".format(i_cnt, item)
             ERR_LIST[key] = "Unkonw the BDF format of {} device".format(item)
         i_cnt += 1
 
@@ -435,7 +435,7 @@ def pt_devs_check(bdf_list, vpid_list, item):
         if is_vpid_format(vpid_str):
             continue
         else:
-            key = "uos,id={},passthrough_devices,{}".format(i_cnt, item)
+            key = "uos:id={},passthrough_devices,{}".format(i_cnt, item)
             ERR_LIST[key] = "Unkonw the Vendor:Product ID format of {} device".format(item)
 
         i_cnt += 1
@@ -448,7 +448,7 @@ def empty_err(i_cnt, item):
     :param item: the item of tag from config xml
     :return: None
     """
-    key = "uos,id={},{}".format(i_cnt, item)
+    key = "uos:id={},{}".format(i_cnt, item)
     ERR_LIST[key] = "The parameter should not be empty"
 
 
@@ -473,7 +473,7 @@ def args_aval_check(arg_list, item, avl_list):
             continue
 
         if arg_str not in avl_list:
-            key = "uos,id={},{}".format(i_cnt, item)
+            key = "uos:id={},{}".format(i_cnt, item)
             ERR_LIST[key] = "The {} is invalidate".format(item)
         i_cnt += 1
 
@@ -532,7 +532,7 @@ def mem_size_check(arg_list, item):
 
         mem_size_set = int(arg_str.strip())
         if mem_size_set > total_mem_mb:
-            key = "uos,id={},{}".format(i_cnt, item)
+            key = "uos:id={},{}".format(i_cnt, item)
             ERR_LIST[key] = "{}MB should be less than total memory {}MB".format(item)
         i_cnt += 1
 
