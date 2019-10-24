@@ -41,7 +41,7 @@ def tap_uos_net(names, vmid, config):
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if board_name in ("apl-mrb", "apl-up2"):
             print("# create a unique tap device for each VM", file=config)
-            print("tap=tap_$4", file=config)
+            print("tap=tap_$3", file=config)
             print('tap_exist=$(ip a | grep "$tap" | awk \'{print $1}\')', file=config)
             print('if [ "$tap_exist"x != "x" ]; then', file=config)
             print('  echo "tap device existed, reuse $tap"', file=config)
@@ -195,7 +195,7 @@ def boot_image_type(args, vmid, config):
         return
 
     print('boot_dev_flag=",b"', file=config)
-    print("if [ $5 == 1 ];then", file=config)
+    print("if [ $4 == 1 ];then", file=config)
     print('  boot_image_option="--vsbl /usr/share/acrn/bios/VSBL_debug.bin"', file=config)
     print("else", file=config)
     print('  boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"', file=config)
@@ -232,7 +232,7 @@ def log_level_set(uos_type, config):
 
 
 def launch_begin(board_name, uos_type, config):
-    launch_uos = launch_cfg_lib.undline_name(board_name).lower()
+    launch_uos = launch_cfg_lib.undline_name(uos_type).lower()
     run_container(board_name, uos_type, config)
     print("function launch_{}()".format(launch_uos), file=config)
     print("{", file=config)
@@ -272,15 +272,14 @@ def mem_size_set(names, args, vmid, config):
 
 def uos_launch(names, args, vmid, config):
 
-    board_name = names['board_name']
     gvt_args = args['gvt_args'][vmid]
     uos_type = names['uos_types'][vmid]
-    launch_uos = launch_cfg_lib.undline_name(board_name).lower()
+    launch_uos = launch_cfg_lib.undline_name(uos_type).lower()
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_clr(names, vmid):
 
         print("", file=config)
-        print('launch_{} {} "{}" {} "{}" $debug'.format(launch_uos, vmid, gvt_args, launch_uos, vmid), file=config)
+        print('launch_{} {} "{}" "{}" $debug'.format(launch_uos, vmid, gvt_args, vmid), file=config)
         print("", file=config)
 
         print("umount /data", file=config)
