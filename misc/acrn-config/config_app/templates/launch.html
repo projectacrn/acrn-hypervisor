@@ -134,7 +134,7 @@
                         {% endif %}
                     </div>
                     {% else %}
-                    <div class="dropdown col-sm-9">
+                    <div class="dropdown col-sm-6">
                         {% if 'readonly' in elem.attrib and elem.attrib['readonly'] == 'true' %}
                         <select class="selectpicker" data-width="auto" title="" disabled
                                 id="{{'uos:id='+vm.attrib['id']+','+elem.tag}}">
@@ -152,6 +152,7 @@
                         </select>
                     </div>
                     {% endif %}
+                    <p id="{{'uos:id='+vm.attrib['id']+','+elem.tag}}_err" class="col-sm-3"></p>
                 </div>
                 {% elif elem.getchildren() != [] %}
                     {% if 'multiselect' not in elem.attrib or elem.attrib['multiselect'] != 'true' %}
@@ -189,7 +190,7 @@
                                         {% endif %}
                                     </div>
                                     {% else %}
-                                    <div class="dropdown col-sm-9">
+                                    <div class="dropdown col-sm-6">
                                         {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                         <select class="selectpicker" data-width="auto" disabled
                                                 id="{{'uos:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}">
@@ -207,6 +208,7 @@
                                         </select>
                                     </div>
                                     {% endif %}
+                                    <p id="{{'uos:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}_err" class="col-sm-3"></p>
                                 {% else %}
                                     {% if not first_child %}
                                     {% do first_child.append(1) %}
@@ -236,7 +238,7 @@
                                         {% endif %}
                                     </div>
                                     {% else %}
-                                    <div class="dropdown col-sm-9">
+                                    <div class="dropdown col-sm-6">
                                         {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                         <select class="selectpicker" data-width="auto" disabled
                                                 id="{{'uos:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}">
@@ -253,6 +255,8 @@
                                         {% endfor %}
                                         </select>
                                     </div>
+                                    <p id="{{'uos:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_err"
+                                           class="col-sm-3"></p>
                                 {% endif %}
                             {% endif %}
                             </div>
@@ -292,6 +296,7 @@
                             {% endif %}
                             </select>
                         </div>
+                        <p id="{{'uos:id='+vm.attrib['id']+','+elem.tag+','+elem.tag[:-1]}}_err" class="col-sm-3"></p>
                     </div>
                     {% endif %}
                 {% endif %}
