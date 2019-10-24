@@ -9,7 +9,7 @@
 
 #include <misc_cfg.h>
 
-#define CONFIG_MAX_VM_NUM		(4U + CONFIG_MAX_KATA_VM_NUM)
+#define CONFIG_MAX_VM_NUM		(3U + CONFIG_MAX_KATA_VM_NUM)
 
 /* Bits mask of guest flags that can be programmed by device model. Other bits are set by hypervisor only */
 #define DM_OWNED_GUEST_FLAG_MASK	(GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH | \
@@ -29,7 +29,6 @@
 					SOS_BOOTARGS_DIFF
 
 #define	VM1_CONFIG_VCPU_AFFINITY	{AFFINITY_CPU(1U)}
-#define	VM2_CONFIG_VCPU_AFFINITY	{AFFINITY_CPU(2U)}
-#define	VM3_CONFIG_VCPU_AFFINITY	{AFFINITY_CPU(3U)}
+#define	VM2_CONFIG_VCPU_AFFINITY	{AFFINITY_CPU(2U), AFFINITY_CPU(3U)}
 
 #endif /* VM_CONFIGURATIONS_H */
