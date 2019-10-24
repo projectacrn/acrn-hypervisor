@@ -1,3 +1,7 @@
+OVMF release v1.4
+
+- Add back USB keyboard support
+
 OVMF release v1.3
 
 - GvtGopDxe: Fix crash if failed to get a valid mode
