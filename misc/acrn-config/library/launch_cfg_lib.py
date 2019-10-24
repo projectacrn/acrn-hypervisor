@@ -32,9 +32,10 @@ PT_SUB_PCI['cse'] = ['Communication controller']
 PT_SUB_PCI['audio'] = ['Audio device', 'Multimedia audio controller']
 PT_SUB_PCI['audio_codec'] = ['Signal processing controller']
 PT_SUB_PCI['sd_card'] = ['SD Host controller']
-PT_SUB_PCI['wifi'] = ['Ethernet controller']
+PT_SUB_PCI['wifi'] = ['Ethernet controller', 'Network controller', '802.1a controller',
+                        '802.1b controller', 'Wireless controller']
 PT_SUB_PCI['bluetooth'] = ['Signal processing controller']
-PT_SUB_PCI['ethernet'] = ['Ethernet controller']
+PT_SUB_PCI['ethernet'] = ['Ethernet controller', 'Network controller']
 PT_SUB_PCI['sata'] = ['SATA controller']
 PT_SUB_PCI['nvme'] = ['Non-Volatile memory controller']
 
