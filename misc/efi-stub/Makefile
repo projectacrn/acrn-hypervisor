@@ -32,9 +32,15 @@
 
 HV_OBJDIR:=build
 HV_FILE:=acrn
+HV_SRC:=../../hypervisor
 C_SRCS = boot.c pe.c malloc.c
 ACRN_OBJS := $(patsubst %.c,$(EFI_OBJDIR)/%.o,$(C_SRCS))
 INCLUDE_PATH += $(HV_OBJDIR)/include
+INCLUDE_PATH += $(HV_SRC)/include/arch/x86
+INCLUDE_PATH += $(HV_SRC)/include/arch/x86/guest
+INCLUDE_PATH += $(HV_SRC)/include/public
+INCLUDE_PATH += $(HV_SRC)/include/lib
+INCLUDE_PATH += $(HV_SRC)/boot/include/guest
 
 SCENARIO ?= sdc
 
@@ -61,10 +67,9 @@ LDSCRIPT := $(GNUEFI_DIR)/elf_$(ARCH)_efi.lds
 
 INCDIR := $(SYSROOT)/usr/include
 
-CFLAGS=-I. -I.. -I../../hypervisor/include/arch/x86/guest -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
-		-I../../hypervisor/include/public -I../../hypervisor/include/lib -I../../hypervisor/boot/include/guest \
+CFLAGS=-I. -I.. -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
 		-DEFI_FUNCTION_WRAPPER -fPIC -fshort-wchar -ffreestanding \
-		-Wall -I../fs/ -D$(ARCH) -O2 -I../../hypervisor/include/arch/x86 \
+		-Wall -I../fs/ -D$(ARCH) -O2	\
 		-include config.h
 
 CFLAGS += -mno-mmx -mno-sse -mno-sse2 -mno-80387 -mno-fp-ret-in-387
