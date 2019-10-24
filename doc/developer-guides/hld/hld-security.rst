@@ -32,7 +32,7 @@ The ACRN hypervisor is a type-1 hypervisor, built for running multiple
 guest OS instances, typical of an automotive infotainment system, on a
 single Intel Apollo Lake-I SoC platform. See :numref:`security-ACRN`.
 
-.. figure:: images/security-image1.png
+.. figure:: images/security-image-HV-overview.png
    :width: 900px
    :align: center
    :name: security-ACRN
@@ -67,29 +67,29 @@ devices, and in some cases, secrets of the guest OS. The ACRN
 hypervisor supports multiple guest VMs running in parallel in the less
 privileged level called VMX non-root mode.
 
-The Service OS (SOS) is a special VM OS. While it runs as a guest VM in
+The Service VM is a special VM. While it runs as a guest VM in
 VMX non-root mode, it behaves as a privileged guest VM controlling the
-behavior of other guest VMs. The SOS can create a guest VM, suspend and
+behavior of other guest VMs. The Service VM can create a guest VM, suspend and
 resume a guest VM, and provide device mediation services (Device
 Models) for other guest VMs it creates.
 
-In an SDC system, the SOS also contains safety-critical IC (Instrument
+In an SDC system, the Service VM also contains safety-critical IC (Instrument
 Cluster) applications. ACRN is designed to make sure the IC applications
-are well isolated from other applications in the SOS such as Device
+are well isolated from other applications in the Service VM such as Device
 Models (Mediators). A crash in other guest VM systems must not impact
 the IC applications, and must not cause any DoS (Deny of Service) attacks.
 Functional safety is out of scope of this document.
 
-In :numref:`security-ACRN`, the other guest VMs are referred to as User OS
-(UOS). These other VMs provide infotainment services (such as
+In :numref:`security-ACRN`, the other guest VMs are referred to as User VM.
+These other VMs provide infotainment services (such as
 navigation, music, and FM/AM radio) for the front seat or rear seat.
 
-The UOS systems can be based on Linux (LaaG, Linux as a Guest) or
+The User VM systems can be based on Linux (LaaG, Linux as a Guest) or
 Android\* (AaaG, Android as a Guest) depending on the customer's needs
 and board configuration. It can also be a mix of Linux and Android
 systems.
 
-In each UOS, a "side-car" OS system can accompany the normal OS system. We
+In each User VM, a "side-car" OS system can accompany the normal OS system. We
 call these two OS systems "secure world" and
 "non-secure world", and they are isolated from each other by the
 hypervisor. Secure world has a higher "privilege level" than non-secure
@@ -98,13 +98,13 @@ physical memory but not vice-versa. This document discusses how this
 security works and why it is required.
 
 Careful consideration should be made when evaluating using the Service
-OS (SOS) as the Trusted Computing Base (TCB). The Service OS may be a
+VM as the Trusted Computing Base (TCB). The Service OS may be a
 fairly large system running many lines of code; thus, treating it as a
 TCB doesn't make sense from a security perspective. To achieve the
 design purpose of "defense in depth", system security designers
-should always ask themselves, "What if the SOS is compromised?" and
+should always ask themselves, "What if the Service VM is compromised?" and
 "What's the impact if this happens?" This HLD document discusses how to
-security-harden the SOS system and mitigate attacks on the SOS.
+security-harden the Service VM system and mitigate attacks on the Service VM.
 
 ACRN High-Level Security Architecture
 *************************************
@@ -116,7 +116,7 @@ Secure / Verified Boot
 ======================
 
 The security of the entire system built on top of the ACRN hypervisor
-depends on the security from platform boot to UOS launching. Each layer
+depends on the security from platform boot to User VM launching. Each layer
 or module must verify the security of the next layer or module before
 transferring control to it. Verification can be checking a
 cryptographic signature on the executable of the next step before it is
@@ -137,7 +137,7 @@ As shown in :numref:`security-bootflow-sbl`, the Converged Security Engine
 Firmware (CSE FW) behaves as the root of trust in this platform boot
 flow. It authenticates and starts the BIOS (SBL), whereupon the SBL is
 responsible for authenticating and verifying the ACRN hypervisor image.
-Currently the SOS kernel is built together with the ACRN hypervisor as
+Currently the Service VM kernel is built together with the ACRN hypervisor as
 one image bundle, so this whole image signature is verified by SBL
 before launching.
 
@@ -152,7 +152,7 @@ before launching.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 As shown in :numref:`security-bootflow-uefi`, in this boot sequence,UEFI
 authenticates and starts the ACRN hypervisor firstly,and hypervisor will return
-to UEFI environment to authenticate and load SOS kernel bootloader.
+to UEFI environment to authenticate and load Service VM kernel bootloader.
 
 .. figure:: images/security-image-bootflow-uefi.png
    :width: 900px
@@ -161,11 +161,11 @@ to UEFI environment to authenticate and load SOS kernel bootloader.
 
    ACRN Boot Flow with UEFI
 
-As long as the SOS kernel starts, the SOS kernel will load all its
-subsystems subsequently. In order to launch a guest UOS, a DM process is
+As long as the Service VM kernel starts, the Service VM kernel will load all its
+subsystems subsequently. In order to launch a User VM, a DM process is
 started to launch the virtual BIOS (OVMF), and eventually, the OVMF is
-responsible for verifying and launching the guest UOS kernel (or the
-Android OS loader for an Android UOS).
+responsible for verifying and launching the User VM kernel (or the
+Android OS loader for an Android User VM).
 
 Secure Boot
 -----------
@@ -193,28 +193,85 @@ partners are responsible for image signing, ensuring the key strength
 meets security requirements, and storing the secret RSA private key
 securely.
 
+Guest Secure Boot with OVMF
+---------------------------
+Open Virtual Machine Firmware (OVMF) is an EDK II based project to enable UEFI
+support for virtual machines in virtualized environment. In ACRN, OVMF is
+deployed to launch a user VM, as if the user VM is booted on a machine with
+UEFI firmware.
+
+UEFI Secure Boot defines how a platform's firmware can authenticate a digitally
+signed UEFI image, such as an operating system loader or a UEFI driver stored
+in an option ROM. This provides the capability to ensure that those UEFI images
+are only loaded in an owner-authorized fashion and provides a common means to
+ensure platform's security and integrity over systems running UEFI-based firmware.
+UEFI Secure Boot is already supported by OVMF.
+
+:numref:`security-secure-boot-uefi` shows a Secure Boot overview in UEFI.
+
+.. figure:: images/security-image-secure-boot-uefi.png
+   :width: 500px
+   :align: center
+   :name: security-secure-boot-uefi
+
+   UEFI Secure Boot Overview
+
+UEFI Secure Boot is controlled by a set of UEFI Authenticated Variables which specify
+the UEFI Secure Boot Policy, the platform manufacturer or the platform owner enroll the
+policy objects, which include the n-tuple of keys {PK, KEK, db,dbx} as a step 1.
+During each successive boot, the UEFI secure boot implementation will assess the
+policy in order to verify the signed images that are discovered in a host-bus adapter
+or on a disk. If the images pass policy, then they are invoked.
+
+UEFI Secure Boot implementations use these keys:
+
+#. Platform Key (PK) is the top-level key in Secure Boot, UEFI supports a single PK,
+   which is generally provided by the manufacturer.
+#. Key Exchange Key (KEK) is used to sign Signature and Forbidden Signature Database updates.
+#. Signature Database (db) contains kyes and/or hashes of allowed EFI binaries.
+
+And keys and certificates are in multiple format:
+
+#. `.key`  PEM format private keys for EFI binary and EFI signature list signing.
+#. `.crt`  PEM format certificates for sbsign.
+#. `.cer`  DER format certificates for firmware.
+
+In ACRN, User VM Secure Boot can be enabled by below steps.
+
+#. Generate keys(PK/KEK/DB) with key generation tool such as Ubuntu KeyGeneration,
+   `PK.der`, `KEK.der` and `db.der` will be enrolled in UEFI BIOS, `db.key` and `db.crt`
+   will be used to sign user VM bootloader/kernel.
+#. Create a virtual disk to hold `PK.der`, `KEK.der` and `db.der`, then launch user VM with
+   this virtual disk which contains the keys for enrollment.
+#. Start OVMF in writeback mode to ensure the keys are persistently stored in the OVMF image.
+#. Enroll keys in OVMF GUI by following the Secure Boot configuration flow and enable
+   secure boot mode.
+#. Perform writeback via reset in OVMF.
+#. Sign user VM images with `db.key` and `db.crt`.
+#. Boot user VM with Secure Boot enabled.
+
 .. _sos_hardening:
 
-SOS Hardening
--------------
+Service VM Hardening
+--------------------
 
-In the ACRN project, the reference SOS is based on Clear Linux OS. Customers
-may choose to use different open source OSes or their own proprietary OS
-systems. To minimize the attack surfaces and achieve the goal of
-"defense in depth", there are many common guidelines to ensure the
-security of SOS system.
+In the ACRN project, the reference Service VM is based on Clear Linux OS.
+Customers may choose to use different open source OSes or their own
+proprietary OS systems. To minimize the attack surfaces and achieve the
+goal of "defense in depth", there are many common guidelines to ensure the
+security of Service VM system.
 
 As shown in :numref:`security-bootflow-sbl` and
-:numref:`security-bootflow-uefi` above, the integrity of the UOS
+:numref:`security-bootflow-uefi` above, the integrity of the User VM
 depends on the integrity of the DM module and vBIOS/vOSloader in the
-SOS. Hence, SOS integrity is critical to the entire UOS security. If the
-SOS system is compromised, all the other guest UOS VMs may be
+Service VM. Hence, Service VM integrity is critical to the entire User VM security.
+If the Service VM  system is compromised, all the other User VMs may be
 jeopardized.
 
-In practice, the SOS designer and implementer should obey at least the
+In practice, the Service VM  designer and implementer should obey at least the
 following rules:
 
-#. Verify that the SOS is a closed system and doesn't allow the user to
+#. Verify that the Service VM is a closed system and doesn't allow the user to
    install any unauthorized 3rd-party software or components.
 #. Verify that external peripherals are constrained.
 #. Enable kernel-based hardening techniques, for example dm-verity (to
@@ -268,7 +325,7 @@ not be trusted by the hypervisor. In other words, there must be a trust
 boundary for memory space between the hypervisor and Guest VMs.
 
 .. figure:: images/security-image14.png
-   :width: 900px
+   :width: 500px
    :align: center
    :name: security-hgmem
 
@@ -346,7 +403,7 @@ three typical solutions exist:
    all those guest memory pages.
 
    .. figure:: images/security-image3.png
-      :width: 900px
+      :width: 500px
       :align: center
       :name: security-gmem
 
@@ -454,7 +511,7 @@ To activate SMAP protection in the ACRN hypervisor:
    use CLAC instruction to restore SMAP protection.
 
 .. figure:: images/security-image5.png
-   :width: 900px
+   :width: 500px
    :align: center
    :name: security-smap
 
@@ -465,7 +522,7 @@ For example, :numref:`security-smap` shows a module of the hypervisor code
 write) access to a data area in guest memory page.
 
 .. figure:: images/security-image4.png
-   :width: 900px
+   :width: 500px
    :align: center
    :name: security-hagm
 
@@ -516,7 +573,7 @@ to avoid this in coding.
 Memory content from one guest VM might be leaked to another guest VM. So
 in ACRN and Device Model design, when one guest VM is destroyed or
 crashes, its memory content should be scrubbed either by the hypervisor
-or the SOS device model process, in case its memory content is
+or the Service VM device model process, in case its memory content is
 re-allocated to another guest VM which could otherwise leave the
 previous guest VM secrets in memory.
 
@@ -531,7 +588,7 @@ Hypercall API Interface Hardening
 The hypercall API is the primary interface between a guest VM and the
 hypervisor.
 
-.. figure:: images/security-image7.png
+.. figure:: images/security-image-HC-interface-restriction.png
    :width: 900px
    :align: center
    :name: security-hir
@@ -545,7 +602,7 @@ hypercall invocation in the hypervisor design:
    hypervisor must discard such hypercalls silently. Only ring-0
    hypercalls from the guest VM are handled by the hypervisor.
 #. All the hypercalls (except world\_switch hypercall) must be called
-   from the ring-0 driver of the SOS VM.
+   from the ring-0 driver of the Service VM.
    World\_switch Hypercall is used by the TIPC (Trusty IPC) driver to
    switch guest VM context between secure world and non-secure world.
    Further details will be discussed in the :ref:`secure_trusty` section.
@@ -610,45 +667,45 @@ document <https://software.intel.com/en-us/articles/intel-sdm>`_.
 Virtual Power Life Cycle Management
 -----------------------------------
 
-In a virtualization environment, each UOS (guest VM) can have its
-virtual power managed just like native behavior. For example, if a UOS
+In a virtualization environment, each User VM can have its
+virtual power managed just like native behavior. For example, if a User VM
 is required to enter S3 (Suspend to RAM) for power consumption saving,
-then the hypervisor and DM processor in SOS must handle it correctly.
+then the hypervisor and DM processor in Service must handle it correctly.
 Similarly, virtual cold/warm reboot is also supported. How to implement
 virtual power life cycle management is out of scope in this document.
 
 This subsection is intended to describe the security issues for those
 power cycles.
 
-UOS Power On and Shutdown
-~~~~~~~~~~~~~~~~~~~~~~~~~
+User VM Power On and Shutdown
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The memory of the guest VM (UOS) is allocated dynamically by the DM
-process in the SOS before the UOS is launched. When the UOS is shutdown
-(or crashed), its memory will be freed to SOS memory space. Later on, if
-there is a new UOS launch event occurring, DM may potentially allocate
-the same memory content (or some overlaps) for this new UOS.
+The memory of the User VM is allocated dynamically by the DM
+process in the Service VM before the User VM is launched. When the User VM
+is shutdown (or crashed), its memory will be freed to Service VM memory space.
+Later on, if there is a new User VM launch event occurring, DM may potentially allocate
+the same memory content (or some overlaps) for this new User VM.
 
-In the virtualization environment, a security goal is to ensure guest VM
-(UOS) isolation, not only for runtime memory isolation (e.g. w/ EPT),
+In the virtualization environment, a security goal is to ensure User VM
+isolation, not only for runtime memory isolation (e.g. w/ EPT),
 but also for data at rest isolation.
 
-Under this situation, if the memory contents of a previous UOS is not
-scrubbed by either DM or the hypervisor, then the new launched UOS could
-access the previous UOS's secrets by scanning the memory regions
-allocated for the new UOS.
+Under this situation, if the memory contents of a previous User VM is not
+scrubbed by either DM or the hypervisor, then the new launched User VM could
+access the previous User VM's secrets by scanning the memory regions
+allocated for the new User VM.
 
 In ACRN, the memory content is scrubbed in Device Model after the guest
 VM is shutdown.
 
-UOS Reboot
-~~~~~~~~~~
+User VM Reboot
+~~~~~~~~~~~~~~
 
-The behaviors of **cold** boot of virtual UOS reboot is the same as that of
+The behaviors of **cold** boot of virtual User VM reboot is the same as that of
 previous virtual power-on and shutdown events. There is a special case:
 virtual **warm** reboot.
 
-When a UOS encounters a panic, its kernel may trigger a warm reboot, so
+When a User VM encounters a panic, its kernel may trigger a warm reboot, so
 that in the next power cycle, a special purpose-built OS image is
 launched to dump the memory content for debugging analysis. In a warm
 reboot, the memory content must be preserved after a virtual power
@@ -656,11 +713,11 @@ cycle. However, this violates the security rules above.
 
 This typically is fine in project ACRN, because in the next virtual
 power cycle, the same memory content won't be re-allocated to another
-UOS.
+User VM.
 
 But there is a new issue when secure world (TEE/Trusty) is considered,
 because the memory content of secure world must not be dumped by a
-non-secure world UOS. More details will be discussed in
+non-secure world User VM. More details will be discussed in
 the section on :ref:`platform_root_of_trust`.
 
 Normally, this warm reboot (crashdump) feature is a debug feature, and
@@ -670,22 +727,22 @@ enabling the configuration.
 
 .. _uos_suspend_resume:
 
-UOS Suspend/Resume
-~~~~~~~~~~~~~~~~~~
+User VM Suspend/Resume
+~~~~~~~~~~~~~~~~~~~~~~
 
-There is no special design considerations for normal UOS without secure
+There is no special design considerations for normal User VM without secure
 world supported, as long as the EPT/VT-d memory protection/isolation is
 active during the entire suspended time.
 
 Secure world (Trusty/TEE) is a special case for virtual suspend. Unlike
-the non-secure world of UOS, whose memory content can be read/written by
-SOS, the memory content of secure world of UOS must not be visible to
-SOS. This is designed for security with defense in depth.
+the non-secure world of User VM, whose memory content can be read/written by
+Service VM, the memory content of secure world of User VM must not be visible to
+Service VM. This is designed for security with defense in depth.
 
-During the entire process of UOS sleep/suspend, the memory protection
+During the entire process of User VM sleep/suspend, the memory protection
 for secure-world is preserved too.The physical memory region of
 secure world is removed from EPT paging tables of any guest VM,
-even including the SOS VM.
+even including the Service VM.
 
 Third-party libraries
 ---------------------
@@ -711,7 +768,7 @@ burned into the chip.
 Then on each boot, the SBL BIOS is responsible for retrieving the pSEED
 from CSE FW, and deriving two other derivatives (dSEED, and uSEED).
 
-.. figure:: images/security-image6.png
+.. figure:: images/security-image-platform-seed-derivation.png
    :width: 900px
    :align: center
    :name: security-seed
@@ -744,14 +801,14 @@ Secure Isolated World (Trusty)
 ==============================
 
 This section explains how to build a secure isolated world in a specific
-guest VM such as the Android UOS VM. (See :ref:`trusty_tee` for more
+guest VM such as the Android User VM. (See :ref:`trusty_tee` for more
 information.)
 
 On the APL platform, the secure world is used to run a
 virtualization-based Trusty TEE in an isolated world which serves
 Android as a guest (AaaG,) to get Google's Android relevant certificates
 by fulfilling Android CDD requirements. Also as a plan, Trusty will be
-supported to provide security services for LaaG UOS as well.
+supported to provide security services for LaaG User VM as well.
 
 Refer to this Google website for `Trusty details
 <https://source.android.com/security/trusty/>`_ and for `Android CCD
@@ -761,17 +818,17 @@ Secure World Architecture Design
 --------------------------------
 
 To support a VT-TEE (Virtualization Technology based TEE) Trusty on
-ACRN, the hypervisor creates an isolated secure world in a UOS.
+ACRN, the hypervisor creates an isolated secure world in a User VM.
 
-.. figure:: images/security-image10.png
+.. figure:: images/security-image-secure-world.png
    :width: 900px
    :align: center
    :name: security-secure-world
 
    Secure World
 
-In :numref:`security-secure-world`, the Trusty OS runs in the UOS secure
-world and a Linux- or Android-based UOS runs in the non-secure world.
+In :numref:`security-secure-world`, the Trusty OS runs in the User VM secure
+world and a Linux- or Android-based User VM runs in the non-secure world.
 
 By design, the secure world is able to read and write to all non-secure
 world's memory space. But non-secure world applications cannot have
@@ -781,7 +838,7 @@ WS Hypercall can have parameters to specify the services cmd ID
 requested from non-secure world.
 
 To design the "one VM, two worlds" architecture, there is a single
-UOS/VM structure per-UOS in the hypervisor, but two vCPU structures that
+User VM structure per-User VM in the hypervisor, but two vCPU structures that
 save non-secure/secure world virtual logical processor states
 respectively.
 
@@ -821,7 +878,7 @@ memory (>=511G) are valid for Trusty World's EPT only.
    :align: center
    :name: security-mem-view
 
-   Memory View for UOS non-secure World and Secure World
+   Memory View for User VM non-secure World and Secure World
 
 Trusty/TEE Hypercalls
 ---------------------
@@ -832,9 +889,9 @@ execution on top of the hypervisor.
 Hypercall - Trusty Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a UOS is created by the DM in the SOS, if this UOS supports a
-secure isolated world, then this hypercall will be invoked by OSLoader
-(it could be Android OS loader in :numref:`security-bootflow-sbl` and
+When a User VM is created by the DM in the Service VM, if this User VM
+supports a secure isolated world, then this hypercall will be invoked
+by OSLoader(it could be Android OS loader in :numref:`security-bootflow-sbl` and
 :numref:`security-bootflow-uefi` above) to create / initialize the
 secure world (Trusty/TEE).
 
@@ -851,9 +908,9 @@ locating its entry point of TEE/Trusty executable, then executes a
 hypercall which exits to the hypervisor handler.
 
 In the hypervisor, from a security perspective, it removes GPA->HPA
-mapping of secure world from EPT paging tables of both UOS non-secure
-world and even SOS VM. This is intended to disallow non-secure world and
-SOS to access the memory region of secure world for security reasons as
+mapping of secure world from EPT paging tables of both User VM non-secure
+world and even Service VM. This is intended to disallow non-secure world and
+Service VM to access the memory region of secure world for security reasons as
 previously mentioned
 
 After all is set up by the hypervisor, including vCPU context
@@ -871,30 +928,30 @@ control back, and resumes to the OSLoader (step 6 in
 VM non-secure world context.
 
 Note that this trusty initialization hypercall can only be called once
-in the UOS life cycle.
+in the User VM life cycle.
 
 Hypercall - Trusty Switching
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There is another special hypercall introduced only for world switching
-between non-secure world and secure world in a UOS VM.
+between non-secure world and secure world in a User VM.
 
-.. figure:: images/security-image11.png
+.. figure:: images/security-image-world-switching-HC.png
    :width: 900px
    :align: center
    :name: security-ws
 
    World Switching Hypercall
 
-Whenever this hypercall is invoked in UOS, the hypervisor will
+Whenever this hypercall is invoked in User VM, the hypervisor will
 unconditionally switch to the other world. For example, if it is called
 in non-secure world, the hypervisor will then switch context to secure
 world. After secure world completes its security tasks (or an external
 interrupt occurs), this hypercall will be called again, then the hypervisor
 will switch context back to non-secure world.
 
-During entire world switching process, SOS is not involved. This
-hypervisor is only available to a UOS VM with duo-worlds supported.
+During entire world switching process, Service VM is not involved. This
+hypervisor is only available to a User VM with duo-worlds supported.
 
 Secure Storage Virtualization
 -----------------------------
@@ -907,7 +964,7 @@ RPMB works are out of scope for this document.
 Since currently the eMMC in APL SoC platform only has a single RPMB
 partition for tamper-resistant and anti-replay secure storage, the
 secure storage (RPMB) should be virtualized in order to support multiple
-guest UOS VMs. However, although future generation of flash storage
+guest User VMs. However, although future generation of flash storage
 (e.g. UFS 3.0, and NVMe) supports multiple RPMB partitions, this
 document still only focuses on the virtualization solution for
 single-RPMB flash storage device in APL SoC platform.
@@ -915,7 +972,7 @@ single-RPMB flash storage device in APL SoC platform.
 The following :numref:`security-storage` illustrates the virtualization
 of secure storage high-level architecture overview.
 
-.. figure:: images/security-image12.png
+.. figure:: images/security-image-secure-storage-virt.png
    :width: 900px
    :align: center
    :name: security-storage
@@ -924,11 +981,11 @@ of secure storage high-level architecture overview.
 
 In :numref:`security-storage`, the rKey is the physical RPMB
 authentication key used for data authenticated read/write access between
-the SOS kernel and the physical RPMB controller in eMMC device.  The
+the Service VM kernel and the physical RPMB controller in eMMC device.  The
 VrKey is the virtual RPMB authentication key used for authentication
-between the SOS DM module and its corresponding UOS secure software.
-Each UOS (if secure storage is supported) has its own VrKey, generated
-randomly when DM process starts, and is securely distributed to UOS
+between the DM module in Service VM and its corresponding User VM secure software.
+Each User VM (if secure storage is supported) has its own VrKey, generated
+randomly when DM process starts, and is securely distributed to User VM
 secure world for each reboot. The rKey is fixed on a specific platform
 unless the eMMC is replaced with another one.
 
@@ -939,20 +996,20 @@ BIOS (SBL) right after production device ends its manufacturing process.
 For each reboot, the BIOS/SBL always retrieves the rKey from CSE FW
 (or generated from a special SEED that is retrieved from CSE FW, refer
 to :ref:`platform_root_of_trust`). The SBL hands this over to the
-ACRN hypervisor, and the hypervisor in turn sends it to the SOS kernel.
+ACRN hypervisor, and the hypervisor in turn sends it to the Service VM kernel.
 
 As an example, secure storage virtualization workflow for data write
 access is like this:
 
-#. UOS Secure world (e.g. Trusty) packs the encrypted data and signs it
+#. User VM Secure world (e.g. Trusty) packs the encrypted data and signs it
    with the vRPMB authentication key (VrKey), and sends the data along
-   with its signature over the RPMB FE driver in UOS non-secure world.
-#. After DM process in SOS receives the data and signature, then the
+   with its signature over the RPMB FE driver in User VM non-secure world.
+#. After DM process in Service VM receives the data and signature, then the
    vRPMB module in DM verifies them with the shared secret (vRPMB
    authentication key, VrKey),
 #. If verification is successful, the vRPMB module does data address remap
-   (remembering that the multiple UOS VMs share a single physical RPMB
-   partition), and forwards the data to the SOS kernel. The kernel packs
+   (remembering that the multiple User VMs share a single physical RPMB
+   partition), and forwards the data to the Service VM kernel. The kernel packs
    the data and signs it with the physical RPMB authentication key
    (rKey). Eventually, the data and its signature will be sent to
    physical eMMC device.
@@ -967,13 +1024,13 @@ Note that there are some security considerations in this design:
 #. The rKey protection is very critical in this system. If  it is
    leaked, an attacker can overwrite the data on RPMB, which
    violates the "tamper-resistant & anti-replay" capability.
-#. Typically, the vRPMB module in DM process of SOS system can filter
-   data access, preventing one UOS to perform read/write access to the
-   data from another UOS VM. If the vRPMB module in the DM process is
-   compromised, one UOS may also change/overwrite the secure data of
-   other UOS.
+#. Typically, the vRPMB module in DM process of Service VM system can filter
+   data access, preventing one User VM to perform read/write access to the
+   data from another User VM. If the vRPMB module in the DM process is
+   compromised, one User VM may also change/overwrite the secure data of
+   other User VM.
 
-Keeping the SOS system as secure as possible is a very important goal in
+Keeping the Service VM system as secure as possible is a very important goal in
 the system security design, please follow the recommendations in
 :ref:`sos_hardening`.
 
@@ -995,7 +1052,7 @@ contexts/states.
 The save state hypercall is called only in secure world (Trusty/TEE OS)
 as long as the Trusty receives a signal when the entire system (actually
 the non-secure OS issues this power event) is about to enter S3. While
-the restore state hypercall is called only by vBIOS when UOS is ready to
+the restore state hypercall is called only by vBIOS when User VM is ready to
 resume from suspend state.
 
 For security design consideration of handling secure world S3, please
@@ -1003,8 +1060,6 @@ read the previous section: :ref:`uos_suspend_resume`.
 
 Platform Security Feature Virtualization and Enablement
 =======================================================
-
-.. note:: This section is under development
 
 This section talks about how the hypervisor enables host CPU features
 (e.g., SGX) and enables platform features (e.g., HECI), to allow guest
@@ -1025,8 +1080,7 @@ time). PTT, however, is a built-in TPM2.0 implementation in Intel APL
 platform, and does not require extra BOM cost (unlike discrete TPM).
 
 Note that the underlying CSE FW/HW implements PTT functionalities,
-however, this TPM2.0 feature does not rely on :ref:`MEI_HECI_virtualization`
-discussed below.
+however, this TPM2.0 feature does not rely on MEI/HECI virtualization.
 
 Unlike regular hardware, implementation of virtualizing a TPM must
 address both security and Trust.
@@ -1036,31 +1090,11 @@ VM, such as:
 
 #. Allows programs to interact with a TPM in a virtual system the same
    way they interact with a TPM on the physical system;
-#. Each UOS gets its own unique, emulated, software TPM, for example,
+#. Each User VM gets its own unique, emulated, software TPM, for example,
    vPCR and vNVRAM.
 #. One to one mapping between running vTPM instances and logical vTPM in
    each VM
 
 SGX Virtualization (vSGX)
 -------------------------
-
-Currently the APL platform processor doesn't support SGX
-capabilities, so ACRN doesn't provide a SGX virtualization
-implementation.
-
-.. _MEI_HECI_virtualization:
-
-MEI/HECI Virtualization (vHECI)
--------------------------------
-
-This information is forthcoming.
-
-Content Protection
-==================
-
-The ACRN hypervisor is designed to allow guest VMs (typically UOSs) to
-playback premium audio/video content. This section describes how the
-hypervisor will support content protection for each guest UOS VM on APL
-platform.
-
-Additional information is forthcoming.
+ Refer to :ref:`sgx_virt`
