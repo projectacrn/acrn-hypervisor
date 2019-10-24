@@ -22,44 +22,55 @@ Based on Intel VT-x virtualization technology, ACRN emulates a virtual CPU
    and guest execution.  (See `Static CPU Partitioning`_ for more
    information.)
 
--  **simple schedule**: only two thread loops are maintained for a CPU -
+-  **core sharing** (to be added): two or more vCPUs are sharing one
+   physical CPU (pCPU), more complicated context switch is needed
+   between different vCPUs' switching, and provides flexible computing
+   resources sharing for low performance demand vCPU tasks.
+   (See `Flexible CPU Sharing`_ for more information.)
+
+-  **simple schedule**: a well-designed scheduler framework allows ACRN
+   to adopt different scheduling policy, for example - noop & round-robin:
+
+   noop scheduler - only two thread loops are maintained for a CPU -
    vCPU thread and default idle thread. A CPU runs most of the time in
    the vCPU thread for emulating a guest CPU, switching between VMX root
    mode and non-root mode. A CPU schedules out to default idle when an
    operation needs it to stay in VMX root mode, such as when waiting for
    an I/O request from DM or ready to destroy.
 
+   round-robin scheduler (to be added) - allow more vcpu thread loops
+   running on a CPU. A CPU switches among different vCPU thread and default
+   idle thread, upon running out corresponding timeslice or necessary
+   scheduling out such as waiting for an I/O request. A vCPU could yield
+   itself as well, for example when it executes "PAUSE" instruction.
+
+
 Static CPU Partitioning
 ***********************
 
 CPU partitioning is a policy for mapping a virtual
-CPU (VCPU) to a physical CPU. The current ACRN implementation forces a
-static 1:1 mapping between VCPUs and physical CPUs and does
-not support multiple VCPUs running on a physical CPU and does not
-support VCPU migration from one physical CPU to another.
+CPU (VCPU) to a physical CPU. To enable this, the ACRN hypervisor could
+configure "noop scheduler" as the schedule policy for this physical CPU.
 
-ACRN forces a fixed 1:1 mapping between a VCPU and a physical CPU when
-creating a VCPU for the guest Operating System. This makes the VCPU
+ACRN then forces a fixed 1:1 mapping between a VCPU and this physical CPU
+when creating a VCPU for the guest Operating System. This makes the VCPU
 management code much simpler.
 
-An array is used to track the physical CPU allocation information. When
-a VCPU is created, we query, allocate, and update the array to map the
-VCPU to an available physical CPU.
+``vcpu_affinity`` in ``vm config`` help to decide which physical CPU a
+VCPU in a VM affine to, then finalize the fixed mapping.
 
-The physical CPU number assignment for each guest is pre-defined. For
-example, on a platform with four CPU cores, one physical CPU is assigned
-to run the Service Operating System (SOS) and other three physical CPUs
-are assigned to run the User Operating System (UOS) instances.
+Flexible CPU Sharing
+********************
 
-.. note::
+This is a TODO feature.
+To enable CPU sharing, the ACRN hypervisor could configure "round-robin
+scheduler" as the schedule policy for corresponding physical CPU.
 
-   To improvement SOS boot time, all physical CPUs are assigned to the SOS
-   during the SOS boot. Afterward, the physical CPUs defined for the UOS
-   are allocated by the Device Model (DM) by running the launch_uos.sh
-   script.
+``vcpu_affinity`` in ``vm config`` help to decide which physical CPU two
+or more VCPUs from different VMs are sharing.
 
-CPU management in SOS
-=====================
+CPU management in SOS under static CPU partitioning
+===================================================
 
 With ACRN, all ACPI table entries are pass-thru to the SOS, including
 the Multiple Interrupt Controller Table (MADT). The SOS sees all
@@ -79,80 +90,44 @@ Here is an example flow of CPU allocation on a multi-core platform.
 
    CPU allocation on a multi-core platform
 
+CPU management in SOS under flexing CPU sharing
+===============================================
+
+As all SOS CPUs could share with different UOSs, ACRN can still pass-thru
+MADT to Service VM, and the SOS is still able to see all physcial CPUs.
+
+But as under CPU sharing, SOS does not need offline/release the physical
+CPUs intended for UOS use.
+
 CPU management in UOS
 =====================
 
-From the UOS point of view, CPU management is very simple, using a
-hypercall to create the virtual CPUs. Here's an example from from the DM
-code:
+From the UOS point of view, CPU management is very simple - when DM do
+hypercall to create VM, the hypervisor will create its all virtual CPUs
+based on the configuration in this UOS VM's ``vm config``.
 
-.. code-block:: c
+As mentioned in previous description, ``vcpu_affinity`` in ``vm config``
+tells which physical CPUs a VM's VCPU will use, and the scheduler policy
+associated with corresponding physical CPU decide this VCPU will run in
+partition or sharing mode.
 
-   int vm_create_vcpu(struct vmctx *ctx, uint16_t vcpu_id)
-   {
-      struct acrn_create_vcpu cv;
-      int error;
-
-      bzero(&cv, sizeof(struct acrn_create_vcpu));
-      cv.vcpu_id = vcpu_id;
-      error = ioctl(ctx->fd, IC_CREATE_VCPU, &cv);
-      return error;
-   }
-
-The VHM will respond to the ioctl:
-
-.. code-block:: c
-
-   case IC_CREATE_VCPU: {
-      struct acrn_create_vcpu cv;
-
-      if (copy_from_user(&cv, (void *)ioctl_param,
-                         sizeof(struct acrn_create_vcpu)))
-         return -EFAULT;
-
-      ret = acrn_hypercall2(HC_CREATE_VCPU, vm->vmid,
-                            virt_to_phys(&cv));
-      if (ret < 0) {
-         pr_err("vhm: failed to create vcpu %d!\\n",
-                 cv.vcpu_id);
-         return -EFAULT;
-      }
-
-      atomic_inc(&vm->vcpu_num);
-      return ret;
-   }
-
-The hypercall ``HC_CREATE_VCPU`` is handled in the hypervisor with
-the parameter:
-
-.. doxygenstruct:: acrn_create_vcpu
-   :project: Project ACRN
 
 CPU assignment management in HV
 ===============================
 
-When we create a VCPU in the hypervisor, an available physical CPU is
-picked and marked as used. When we destroy the VCPU, we mark the
-physical CPU as available again.
+The physical CPU assignment is pre-defined by ``vcpu_affinity`` in
+``vm config``, necessary sanitize check should be done to ensure
 
-.. figure:: images/static-core-image1.png
-   :width: 600px
-   :align: center
-   :name: static-core-cpu-assign
+-  in one VM, each VCPU will have only one prefer physical CPU
 
-   HV CPU Assignment Management
+-  in one VM, its VCPUs will not share same physical CPU
 
-#. ``allocate_pcpu()`` queries the physical CPU allocation info to get an
-   available physical CPU and marks physical CPU as not available
-#. Physical CPU info is passed to ``create_vcpu()`` and a mapping is built
-   between the physical CPU and virtual CPU
-#. When the VCPU is destroyed VCPU, the physical CPU is passed to the
-   ``free_pcpu()`` function
-#. ``free_pcpu()`` marks the physical CPU available again.
+-  in one VM, if a VCPU is using "noop scheduler", corresponding
+   physical CPU will not be shared with any other VM's VCPU
 
 Currently, the ACRN hypervisor does not support virtual CPU migration to
 different physical CPUs. This means no changes to the virtual CPU to
-physical CPU can happen without first calling destroy_vcpu.
+physical CPU can happen without first calling offline_vcpu.
 
 
 .. _vCPU_lifecycle:
@@ -163,17 +138,19 @@ vCPU Lifecycle
 A vCPU lifecycle is shown in :numref:`hv-vcpu-transitions` below, where
 the major states are:
 
--  **VCPU_INIT**: vCPU is in an initialized state, and its associated CPU
-   is running in default_idle
+-  **VCPU_INIT**: vCPU is in an initialized state, and its vCPU thread
+   is not ready to run on its associated CPU
 
--  **VCPU_RUNNING**: vCPU is running, and its associated CPU is running in
-   vcpu_thread
+-  **VCPU_RUNNING**: vCPU is running, and its vCPU thread is ready (in
+   the queue) or running on its associated CPU
 
--  **VCPU_PAUSED**: vCPU is paused, and its associated CPU is running in
-   default_idle
+-  **VCPU_PAUSED**: vCPU is paused, and its vCPU thread is not running
+   on its associated CPU
 
--  **VPCU_ZOMBIE**: vCPU is being destroyed, and its associated CPU
-   is running in default_idle
+-  **VPCU_ZOMBIE**: vCPU is being offline, and its vCPU thread is not
+   running on its associated CPU
+
+-  **VPCU_OFFLINE**: vCPU is offlined
 
 .. figure:: images/hld-image17.png
    :align: center
@@ -196,30 +173,29 @@ lifecycle:
 .. doxygenfunction:: reset_vcpu
    :project: Project ACRN
 
-.. doxygenfunction:: run_vcpu
+.. doxygenfunction:: offline_vcpu
    :project: Project ACRN
 
 
-vCPU Scheduling
-***************
+vCPU Scheduling under static CPU partitioning
+*********************************************
 
 .. figure:: images/hld-image35.png
    :align: center
    :name: hv-vcpu-schedule
 
-   ACRN vCPU scheduling flow
+   ACRN vCPU scheduling flow under static CPU partitioning
 
-As describes in the CPU virtualization overview, ACRN implements a simple
-scheduling mechanism based on two threads: vcpu_thread and
-default_idle. A vCPU with VCPU_RUNNING state always runs in
-a vcpu_thread loop, meanwhile a vCPU with VCPU_PAUSED or VCPU_ZOMBIE
-state runs in default_idle loop. The detail behaviors in
-vcpu_thread and default_idle threads are illustrated in
-:numref:`hv-vcpu-schedule`:
+As describes in the CPU virtualization overview, if under static
+CPU partitioning, ACRN implements a simple scheduling mechanism
+based on two threads: vcpu_thread and default_idle. A vCPU with
+VCPU_RUNNING state always runs in a vcpu_thread loop, meanwhile
+a vCPU with VCPU_PAUSED or VCPU_ZOMBIE state runs in default_idle
+loop. The detail behaviors in vcpu_thread and default_idle threads
+are illustrated in :numref:`hv-vcpu-schedule`:
 
--  The **vcpu_thread** loop will try to initialize a vCPU's vmcs during
-   its first launch and then do the loop of handling its associated
-   softirq, vm exits, and pending requests around the VM entry/exit.
+-  The **vcpu_thread** loop will do the loop of handling vm exits,
+   and pending requests around the VM entry/exit.
    It will also check the reschedule request then schedule out to
    default_idle if necessary. See `vCPU Thread`_ for more details
    of vcpu_thread.
@@ -247,7 +223,7 @@ Some example scenario flows are shown here:
 
 -  **During shutting down a VM**: *pause_vm* function call makes a vCPU
    running in *vcpu_thread* to schedule out to *default_idle*. The
-   following *reset_vcpu*  and *destroy_vcpu* de-init and then destroy
+   following *reset_vcpu*  and *offline_vcpu* de-init and then offline
    this vCPU instance.
 
 -  **During IOReq handling**: after an IOReq is sent to DM for emulation, a
@@ -256,6 +232,11 @@ Some example scenario flows are shown here:
    complete the emulation for this IOReq, it calls
    *hcall_notify_ioreq_finish->resume_vcpu* and makes the vCPU
    schedule back to *vcpu_thread* to continue its guest execution.
+
+vCPU Scheduling under flexible CPU sharing
+******************************************
+
+To be added.
 
 vCPU Thread
 ***********
@@ -268,27 +249,22 @@ The vCPU thread flow is a loop as shown and described below:
    ACRN vCPU thread
 
 
-1. Check if this is the vCPU's first launch. If yes, do VMCS
-   initialization. (See `VMX Initialization`_.)
+1. Check if *vcpu_thread* needs to schedule out to *default_idle* or
+   other *vcpu_thread* by reschedule request. If needed, then schedule
+   out to *default_idle* or other *vcpu_thread*.
 
-2. Handle softirq by calling *do_softirq*.
-
-3. Handle pending request by calling *acrn_handle_pending_request*.
+2. Handle pending request by calling *acrn_handle_pending_request*.
    (See `Pending Request Handlers`_.)
 
-4. Check if *vcpu_thread* needs to schedule out to *default_idle* by
-   reschedule request. If needed, then schedule out to
-   *default_idle*.
-
-5. VM Enter by calling *start/run_vcpu*, then enter non-root mode to do
+3. VM Enter by calling *start/run_vcpu*, then enter non-root mode to do
    guest execution.
 
-6. VM Exit from *start/run_vcpu* when guest trigger vm exit reason in
+4. VM Exit from *start/run_vcpu* when guest trigger vm exit reason in
    non-root mode.
 
-7. Handle vm exit based on specific reason.
+5. Handle vm exit based on specific reason.
 
-8. Loop back to step 2.
+6. Loop back to step 1.
 
 vCPU Run Context
 ================
@@ -402,6 +378,14 @@ that will trigger an error message and return without handling:
      - external_interrupt_vmexit_handler
      - External interrupt handler for physical interrupt happening in non-root mode
 
+   * - VMX_EXIT_REASON_TRIPLE_FAULT
+     - triple_fault_vmexit_handler
+     - Handle triple fault from vcpu
+
+   * - VMX_EXIT_REASON_INIT_SIGNAL
+     - init_signal_vmexit_handler
+     - Handle INIT signal from vcpu
+
    * - VMX_EXIT_REASON_INTERRUPT_WINDOW
      - interrupt_window_vmexit_handler
      - To support interrupt window if VID is disabled
@@ -474,7 +458,7 @@ A bitmap in the vCPU structure lists the different requests:
    #define ACRN_REQUEST_EVENT 1U
    #define ACRN_REQUEST_EXTINT 2U
    #define ACRN_REQUEST_NMI 3U
-   #define ACRN_REQUEST_TMR_UPDATE 4U
+   #define ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE 4U
    #define ACRN_REQUEST_EPT_FLUSH 5U
    #define ACRN_REQUEST_TRP_FAULT 6U
    #define ACRN_REQUEST_VPID_FLUSH 7U /* flush vpid tlb */
@@ -489,6 +473,8 @@ running). See :ref:`vcpu-request-interrupt-injection` for details.
 
    void vcpu_make_request(struct vcpu *vcpu, uint16_t eventid)
    {
+      uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
+
       bitmap_set_lock(eventid, &vcpu->arch_vcpu.pending_req);
       /*
        * if current hostcpu is not the target vcpu's hostcpu, we need
@@ -499,8 +485,8 @@ running). See :ref:`vcpu-request-interrupt-injection` for details.
        *  scheduling, we need change here to determine it target vcpu is
        *  VMX non-root or root mode
        */
-      if (get_cpu_id() != vcpu->pcpu_id) {
-              send_single_ipi(vcpu->pcpu_id, VECTOR_NOTIFY_VCPU);
+      if (get_cpu_id() != pcpu_id) {
+              send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
       }
    }
 
@@ -541,11 +527,10 @@ request as shown below.
      - vcpu_inject_nmi
      - program VMX_ENTRY_INT_INFO_FIELD directly
 
-   * - ACRN_REQUEST_TMR_UPDATE
-     - Request for update vIOAPIC TMR, which also leads to vLAPIC
-       VEOI bitmap update for level triggered vector
-     - vlapic_reset_tmr or vioapic_indirect_write change trigger mode in RTC
-     - vioapic_update_tmr
+   * - ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE
+     - Request for update VEOI bitmap update for level triggered vector
+     - vlapic_reset_tmr or vlapic_set_tmr change trigger mode in RTC
+     - vcpu_set_vmcs_eoi_exit
 
    * - ACRN_REQUEST_EPT_FLUSH
      - Request for EPT flush
@@ -575,22 +560,21 @@ entry control and exit control, as shown in the table below.
 
 The table briefly shows how each field got configured.
 The guest state field is critical for a guest CPU start to run
-based on different CPU modes. One structure *boot_ctx* is used to pass
-the necessary initialized guest state to VMX, used only for the BSP of a
-guest.
+based on different CPU modes.
 
 For a guest vCPU's state initialization:
 
--  If it's BSP, the guest state configuration is based on *boot_ctx*,
-   which could be initialized on different objects:
+-  If it's BSP, the guest state configuration is done in SW load,
+   which could be initialized by different objects:
 
-   -  SOS BSP based on SBL: booting up context saved at the entry of
-      system boot up
+   -  SOS BSP: hypervisor will do context initialization in different
+      SW load based on different boot mode
+
 
    -  UOS BSP: DM context initialization through hypercall
 
 -  If it's AP, then it will always start from real mode, and the start
-       vector will always come from vlapic INIT-SIPI emulation. 
+       vector will always come from vlapic INIT-SIPI emulation.
 
 .. doxygenstruct:: acrn_vcpu_regs
    :project: Project ACRN
