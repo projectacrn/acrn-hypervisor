@@ -431,7 +431,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
     sos_vmid = launch_cfg_lib.get_sos_vmid()
 
     # clearlinux/android/alios
-    dm_str = 'acrn-dm -A -m -s 0:0,hostbridge -U {}'.format(scenario_uuid[vmid + sos_vmid])
+    dm_str = 'acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {}'.format(scenario_uuid[vmid + sos_vmid])
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if uos_type == "CLEARLINUX":
             print("{} \\".format(dm_str), file=config)
