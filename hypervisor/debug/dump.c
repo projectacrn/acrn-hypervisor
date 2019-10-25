@@ -264,7 +264,7 @@ void dump_intr_excp_frame(const struct intr_excp_ctx *ctx)
 	pr_acrnlog("=     RDX=0x%016llX  RDI=0x%016llX  RSI=0x%016llX\n",
 			ctx->gp_regs.rdx, ctx->gp_regs.rdi, ctx->gp_regs.rsi);
 	pr_acrnlog("=     RSP=0x%016llX  RBP=0x%016llX  RBX=0x%016llX\n",
-			ctx->gp_regs.rsp, ctx->gp_regs.rbp, ctx->gp_regs.rbx);
+			ctx->rsp, ctx->gp_regs.rbp, ctx->gp_regs.rbx);
 	pr_acrnlog("=      R8=0x%016llX   R9=0x%016llX  R10=0x%016llX\n",
 			ctx->gp_regs.r8, ctx->gp_regs.r9, ctx->gp_regs.r10);
 	pr_acrnlog("=     R11=0x%016llX  R12=0x%016llX  R13=0x%016llX\n",
