@@ -178,7 +178,7 @@ def audio_pt(uos_type, sel, vmid, config):
                 slot_codec, bus_codec, dev_codec, fun_codec), file=config)
         else:
             # only select audio device to pass through to vm
-            print('    boot_audio_option="-s {},passthru,{}/{}/{},keep_gsi'.format(
+            print('    boot_audio_option="-s {},passthru,{}/{}/{},keep_gsi"'.format(
                 slot_audio, bus, dev, fun), file=config)
 
         print("else", file=config)
@@ -188,8 +188,6 @@ def audio_pt(uos_type, sel, vmid, config):
         # only selected audio codec, then set error message
         key = "audio/audio codec error:"
         launch_cfg_lib.ERR_LIST[key] = "Audio codec device should be pass through together with Audio devcie"
-        print('    boot_audio_option=-s {},passthru,{}/{}/{}"'.format(
-            slot_codec, bus_codec, dev_codec, fun_codec), file=config)
 
 
 def media_pt(uos_type, sel, vmid, config):
