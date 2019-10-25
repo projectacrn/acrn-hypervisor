@@ -125,7 +125,7 @@ struct acrn_vm {
 	struct iommu_domain *iommu;	/* iommu domain of this VM */
 	spinlock_t vm_lock;	/* Spin-lock used to protect VM modifications */
 
-	uint16_t emul_mmio_regions; /* Number of emulated mmio regions */
+	uint16_t max_emul_mmio_regions;	/* max index of the emulated mmio_region */
 	struct mem_io_node emul_mmio[CONFIG_MAX_EMULATED_MMIO_REGIONS];
 
 	struct vm_io_handler_desc emul_pio[EMUL_PIO_IDX_MAX];

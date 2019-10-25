@@ -474,7 +474,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
 	int32_t status = -ENODEV;
 	uint16_t idx;
-	uint64_t address, size;
+	uint64_t address, size, base, end;
 	struct mmio_request *mmio_req = &io_req->reqs.mmio;
 	struct mem_io_node *mmio_handler = NULL;
 	hv_mem_io_handler_t read_write = NULL;
@@ -487,30 +487,24 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	address = mmio_req->address;
 	size = mmio_req->size;
 
-	for (idx = 0U; idx < vcpu->vm->emul_mmio_regions; idx++) {
-		uint64_t base, end;
-		bool emulation_done = false;
-
+	for (idx = 0U; idx <= vcpu->vm->max_emul_mmio_regions; idx++) {
 		mmio_handler = &(vcpu->vm->emul_mmio[idx]);
-		base = mmio_handler->range_start;
-		end = mmio_handler->range_end;
+		if (mmio_handler->read_write != NULL) {
+			base = mmio_handler->range_start;
+			end = mmio_handler->range_end;
 
-		if (((address + size) <= base) || (address >= end)) {
-			continue;
-		} else if (!((address >= base) && ((address + size) <= end))) {
-			pr_fatal("Err MMIO, address:0x%llx, size:%x", address, size);
-			status = -EIO;
-			emulation_done = true;
-		} else {
-			if (mmio_handler->read_write != NULL) {
-				read_write = mmio_handler->read_write;
-				handler_private_data = mmio_handler->handler_private_data;
-				emulation_done = true;
+			if (((address + size) <= base) || (address >= end)) {
+				continue;
+			} else {
+				 if ((address >= base) && ((address + size) <= end)) {
+					read_write = mmio_handler->read_write;
+					handler_private_data = mmio_handler->handler_private_data;
+				} else {
+					pr_fatal("Err MMIO, address:0x%llx, size:%x", address, size);
+					status = -EIO;
+				}
+				break;
 			}
-		}
-
-		if (emulation_done) {
-			break;
 		}
 	}
 
@@ -617,10 +611,66 @@ void register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
 }
 
 /**
+ * @brief Find match MMIO node
+ *
+ * This API find match MMIO node from \p vm.
+ *
+ * @param vm The VM to which the MMIO node is belong to.
+ *
+ * @return If there's a match mmio_node return it, otherwise return NULL;
+ */
+static inline struct mem_io_node *find_match_mmio_node(struct acrn_vm *vm,
+				uint64_t start, uint64_t end)
+{
+	bool found = false;
+	uint16_t idx;
+	struct mem_io_node *mmio_node;
+
+	for (idx = 0U; idx < CONFIG_MAX_EMULATED_MMIO_REGIONS; idx++) {
+		mmio_node = &(vm->emul_mmio[idx]);
+		if ((mmio_node->range_start == start) && (mmio_node->range_end == end)) {
+			found = true;
+			break;
+		}
+	}
+
+	if (!found) {
+		pr_fatal("%s, vm[%d] no match mmio region [0x%llx, 0x%llx] is found",
+				__func__, vm->vm_id, start, end);
+		mmio_node = NULL;
+	}
+
+	return mmio_node;
+}
+
+/**
+ * @brief Find a free MMIO node
+ *
+ * This API find a free MMIO node from \p vm.
+ *
+ * @param vm The VM to which the MMIO node is belong to.
+ *
+ * @return If there's a free mmio_node return it, otherwise return NULL;
+ */
+static inline struct mem_io_node *find_free_mmio_node(struct acrn_vm *vm)
+{
+	uint16_t idx;
+	struct mem_io_node *mmio_node = find_match_mmio_node(vm, 0UL, 0UL);
+
+	if (mmio_node != NULL) {
+		idx = (uint16_t)(uint64_t)(mmio_node - &(vm->emul_mmio[0U]));
+		if (vm->max_emul_mmio_regions < idx) {
+			vm->max_emul_mmio_regions = idx;
+		}
+	}
+
+	return mmio_node;
+}
+
+/**
  * @brief Register a MMIO handler
  *
- * This API registers a MMIO handler to \p vm before it is Started
- * For Pre-launched VMs, this API can be called after it is Started
+ * This API registers a MMIO handler to \p vm
  *
  * @param vm The VM to which the MMIO handler is registered
  * @param read_write The handler for emulating accesses to the given range
@@ -638,17 +688,13 @@ void register_mmio_emulation_handler(struct acrn_vm *vm,
 
 	/* Ensure both a read/write handler and range check function exist */
 	if ((read_write != NULL) && (end > start)) {
-		if (vm->emul_mmio_regions >= CONFIG_MAX_EMULATED_MMIO_REGIONS) {
-			pr_err("the emulated mmio region is out of range");
-		} else {
-			mmio_node = &(vm->emul_mmio[vm->emul_mmio_regions]);
+		mmio_node = find_free_mmio_node(vm);
+		if (mmio_node != NULL) {
 			/* Fill in information for this node */
 			mmio_node->read_write = read_write;
 			mmio_node->handler_private_data = handler_private_data;
 			mmio_node->range_start = start;
 			mmio_node->range_end = end;
-
-			(vm->emul_mmio_regions)++;
 
 			/*
 			 * SOS would map all its memory at beginning, so we
@@ -662,4 +708,25 @@ void register_mmio_emulation_handler(struct acrn_vm *vm,
 		}
 	}
 
+}
+
+/**
+ * @brief Unregister a MMIO handler
+ *
+ * This API unregisters a MMIO handler to \p vm
+ *
+ * @param vm The VM to which the MMIO handler is unregistered
+ * @param start The base address of the range which wants to unregister
+ * @param end The end of the range (exclusive) which wants to unregister
+ *
+ * @return None
+ */
+void unregister_mmio_emulation_handler(struct acrn_vm *vm,
+					uint64_t start, uint64_t end)
+{
+	struct mem_io_node *mmio_node = find_match_mmio_node(vm, start, end);
+
+	if (mmio_node != NULL) {
+		(void)memset(mmio_node, 0U, sizeof(struct mem_io_node));
+	}
 }
