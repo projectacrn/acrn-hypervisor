@@ -28,6 +28,7 @@ Configuration Tutorials
    tutorials/using_hybrid_mode_on_nuc
    tutorials/realtime_performance_tuning
    tutorials/kbl-nuc-sdc
+   tutorials/enable_laag_secure_boot
 
 User VM Tutorials
 *****************
