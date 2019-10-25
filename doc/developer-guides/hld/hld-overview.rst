@@ -449,6 +449,19 @@ For an Android VM, the vSBL will load and verify trusty OS first, and
 trusty OS will then load and verify Android OS according to the Android
 OS verification mechanism.
 
+OVMF bootloader
+=======================
+
+Open Virtual Machine Firmware (OVMF) is the virtual bootloader that supports
+EFI boot of UOS on the ACRN hypervisor platform.
+
+The OVMF is copied to UOS memory by the VM manager in the SOS while creating
+the UOS virtual BSP of UOS. The SOS passes the start of OVMF and related
+information to HV. HV sets guest RIP of UOS virtual BSP as the start of OVMF
+and related guest registers, and launches the UOS virtual BSP. The OVMF starts
+running in the virtual real mode within the UOS. Conceptually, OVMF is part of
+the UOS runtime.
+
 Freedom From Interference
 *************************
 
@@ -511,6 +524,9 @@ Boot Flow
 *********
 
 .. figure:: images/over-image85.png
+   :align: center
+
+.. figure:: images/over-image134.png
    :align: center
 
 
