@@ -19,7 +19,7 @@ Prerequisites
   $ unxz clear-29880-kvm.img.xz
 
 * Download script `sign_image.sh
-  <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/scripts/>`_ on Ubuntu.
+  <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/scripts/sign_image.sh>`_ on Ubuntu.
 
 Steps to sign the binaries of the Clear Linux image
 ***************************************************
