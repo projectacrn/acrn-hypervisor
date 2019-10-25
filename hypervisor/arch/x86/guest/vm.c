@@ -439,7 +439,6 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 	(void)memset((void *)vm, 0U, sizeof(struct acrn_vm));
 	vm->vm_id = vm_id;
 	vm->hw.created_vcpus = 0U;
-	vm->emul_mmio_regions = 0U;
 
 	init_ept_mem_ops(&vm->arch_vm.ept_mem_ops, vm->vm_id);
 	vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info);

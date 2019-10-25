@@ -251,7 +251,7 @@ void   register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
 /**
  * @brief Register a MMIO handler
  *
- * This API registers a MMIO handler to \p vm before it is launched.
+ * This API registers a MMIO handler to \p vm.
  *
  * @param vm The VM to which the MMIO handler is registered
  * @param read_write The handler for emulating accesses to the given range
@@ -264,6 +264,20 @@ void   register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
 void register_mmio_emulation_handler(struct acrn_vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
 	uint64_t end, void *handler_private_data);
+
+/**
+ * @brief Unregister a MMIO handler
+ *
+ * This API unregisters a MMIO handler to \p vm
+ *
+ * @param vm The VM to which the MMIO handler is unregistered
+ * @param start The base address of the range which wants to unregister
+ * @param end The end of the range (exclusive) which wants to unregister
+ *
+ * @return None
+ */
+void unregister_mmio_emulation_handler(struct acrn_vm *vm,
+					uint64_t start, uint64_t end);
 
 /**
  * @}
