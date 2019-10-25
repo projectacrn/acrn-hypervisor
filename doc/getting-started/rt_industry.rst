@@ -20,12 +20,58 @@ for the RTVM.
 
 - Intel Kaby Lake (aka KBL) NUC platform with two disks inside
   (refer to :ref:`the tables <hardware_setup>` for detailed information).
-- Clear Linux OS (Ver: 31080) installation onto both disks on the KBL NUC.
+- Follow below steps to install Clear Linux OS (Ver: 31080) onto both disks on the KBL NUC:
 
-.. _installation guide:
+.. _Clear Linux OS Server image:
+   https://download.clearlinux.org/releases/31080/clear/clear-31080-live-server.iso.xz
+
+  #. Create a bootable USB drive on Linux*:
+
+     a. Download and decompress the `Clear Linux OS Server image`_::
+
+        $ unxz clear-31080-live-server.iso.xz
+
+     #. Plug in the USB drive.
+     #. Use the ``lsblk`` command line to identify the USB drive:
+
+        .. code-block:: console
+           :emphasize-lines: 6,7
+
+           $ lsblk | grep sd*
+           sda         8:0    0 931.5G  0 disk
+           ├─sda1      8:1    0   512M  0 part /boot/efi
+           ├─sda2      8:2    0 930.1G  0 part /
+           └─sda3      8:3    0   977M  0 part [SWAP]
+           sdc         8:32   1  57.3G  0 disk
+           └─sdc1      8:33   1  57.3G  0 part
+
+     #. Unmount all the ``/dev/sdc`` partitions and burn the image onto the USB drive::
+
+        $ umount /dev/sdc* 2>/dev/null
+        $ sudo dd if=./clear-31080-live-server.iso of=/dev/sdc oflag=sync status=progress bs=4M
+
+  #. Plug in the USB drive to the KBL NUC and boot from USB.
+  #. Launch the Clear Linux OS installer boot menu.
+  #. With Clear Linux OS highlighted, select **Enter**.
+  #. Log in with your root account and new password.
+  #. Run the installer using the following command::
+
+     # clr-installer
+
+  #. From the Main menu, select **Configure Installation Media** and set
+     **Destructive Installation** to your desired hard disk.
+  #. Select **Telemetry** to set Tab to highlight your choice.
+  #. Press :kbd:`A` to show the **Advanced** options.
+  #. Select **Select additional bundles** and add bundles for
+     **network-basic**, and **user-basic**.
+  #. Select **Install**.
+  #. Select **Confirm Install** in the **Confirm Installation** window to start the installation.
+
+.. _step-by-step instruction:
    https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html
 
-.. note:: Follow the `installation guide`_ to install a Clear Linux OS.
+.. note:: You may also refer to the `step-by-step instruction`_ for the detailed Clear Linux OS
+   installation guide.
 
 .. _hardware_setup:
 
@@ -66,61 +112,182 @@ Use the pre-installed industry ACRN hypervisor
 
 .. note:: Skip this section if you choose :ref:`Using the ACRN industry out-of-the-box image <use industry ootb image>`.
 
-Follow :ref:`ACRN quick setup guide <quick-setup-guide>` to set up the
-ACRN Service VM. The industry hypervisor image is installed in the ``/usr/lib/acrn/``
-directory once the Service VM boots. Follow the steps below to use
-``acrn.kbl-nuc-i7.industry.efi`` instead of the original SDC hypervisor:
+#. Boot Clear Linux from SATA disk.
 
-.. code-block:: none
+#. Log in as root and download ACRN quick setup script:
 
-   $ sudo mount /dev/sda1 /mnt
-   $ sudo mv /mnt/EFI/acrn/acrn.efi /mnt/EFI/acrn/acrn.efi.bak
-   $ sudo cp /usr/lib/acrn/acrn.kbl-nuc-i7.industry.efi /mnt/EFI/acrn/acrn.efi
-   $ sync && umount /mnt
-   $ sudo reboot
+   .. code-block:: none
+
+      # wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/getting-started/acrn_quick_setup.sh
+      # chmod +x acrn_quick_setup.sh
+
+#. Run the script to set up Service VM:
+
+   .. code-block:: none
+
+      # ./acrn_quick_setup.sh -s 31080 -d -i
+
+   .. note:: ``-i`` option means the industry hypervisor image will be used:
+      ``acrn.kbl-nuc-i7.industry.efi``.
+
+   These outputs show the script is running correctly and
+   industry hypervisor is also installed:
+
+   .. code-block:: console
+      :emphasize-lines: 9
+
+      Upgrading Service VM...
+      Disable auto update...
+      Running systemctl to disable updates
+      Clear Linux version 31080 is already installed. Continuing to setup Service VM...
+      Adding the service-os and systemd-networkd-autostart bundles...
+      Loading required manifests...
+      2 bundles were already installed
+      Add /mnt/EFI/acrn folder
+      Copy /usr/lib/acrn/acrn.kbl-nuc-i7.industry.efi to /mnt/EFI/acrn/acrn.efi
+      Getting latest Service OS kernel version: org.clearlinux.iot-lts2018-sos.4.19.73-92
+      Add default (5 seconds) boot wait time.
+      New timeout value is: 5
+      Set org.clearlinux.iot-lts2018-sos.4.19.73-92 as default boot kernel.
+      Check ACRN efi boot event
+      Clean all ACRN efi boot event
+      Check linux bootloader event
+      Clean all Linux bootloader event
+      Add new ACRN efi boot event
+      Service OS setup done!
+
+#. Use ``efibootmgr -v`` command to check the ACRN boot order:
+
+   .. code-block:: none
+      :emphasize-lines: 3,5
+
+      BootCurrent: 000C
+      Timeout: 1 seconds
+      BootOrder: 0001,0002,000C,000D,0008,000E,000B,0003,0000,0004,0007
+      Boot0000* Windows Boot Manager	VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)WINDOWS.........x...B.C.D.O.B.J.E.C.T.=.{.9.d.e.a.8.6.2.c.-.5.c.d.d.-.4.e.7.0.-.a.c.c.1.-.f.3.2.b.3.4.4.d.4.7.9.5.}...o................
+      Boot0001* ACRN	HD(1,GPT,c6715698-0f6e-4e27-bb1b-bf7779c1486d,0x800,0x47000)/File(\EFI\acrn\acrn.efi)
+      Boot0002* Linux bootloader	HD(3,GPT,b537f16f-d70f-4f1b-83b4-0f11be83cd83,0xc1800,0xded3000)/File(\EFI\org.clearlinux\bootloaderx64.efi)
+      Boot0003* CentOS	VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)
+      Boot0004* CentOS Linux	VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)
+      Boot0007* Linux bootloader	VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)
+      Boot0008* UEFI : Built-in EFI Shell	VenMedia(5023b95c-db26-429b-a648-bd47664c8012)..BO
+      Boot000B* LAN : IBA CL Slot 00FE v0110	BBS(Network,,0x0)..BO
+      Boot000C* SATA : PORT 0 : KINGSTON SUV500120G : PART 0 : Boot Drive	BBS(HD,,0x0)..BO
+      Boot000D* INTEL SSDPEKKW256G8 : PART 0 : Boot Drive	BBS(HD,,0x0)..BO
+      Boot000E* UEFI : INTEL SSDPEKKW256G8 : PART 0 : OS Bootloader	PciRoot(0x0)/Pci(0x1d,0x0)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(1,GPT,8aa992f8-8149-4f6b-8b64-503998c776c1,0x800,0x47000)..BO
+
+   .. note:: Ensure the ACRN is the first boot order, or you may use ``efibootmgr -o 1`` command to move it
+      to the first order.
+
+#. Reboot KBL NUC.
+
+#. Use ``dmesg`` command to ensure the Service VM boots:
+
+   .. code-block:: console
+      :emphasize-lines: 2
+
+      # dmesg | grep ACRN
+      [    0.000000] Hypervisor detected: ACRN
+      [    1.252840] ACRNTrace: Initialized acrn trace module with 4 cpu
+      [    1.253291] ACRN HVLog: Failed to init last hvlog devs, errno -19
+      [    1.253292] ACRN HVLog: Initialized hvlog module with 4
 
 .. _use industry ootb image:
 
 Use the ACRN industry out-of-the-box image
 ==========================================
 
-#. Download the
-   `sos-industry-31080.img.xz <https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2019w39.1-140000p/sos-industry-31080.img.xz>`_
-   to your development machine.
+.. note:: If you are following the section above to set up the Service VM, jump to the next
+   :ref:`section <install_rtvm>`.
 
-#. Decompress the xz image:
+#. Boot Clear Linux from NVMe disk.
 
-   .. code-block:: none
+#. Download the Service VM industry image::
 
-      $ xz -d sos-industry-31080.img.xz
+   # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2019w39.1-140000p/sos-industry-31080.img.xz
 
-#. Follow the instructions at :ref:`Deploy the Service VM image <deploy_ootb_service_vm>`
-   to deploy the Service VM image on the SATA disk.
+#. Decompress the xz image::
+
+   # xz -d sos-industry-31080.img.xz
+
+#. Burn the Service VM image onto the SATA disk::
+
+   # dd if=sos-industry-31080.img of=/dev/sda bs=4M oflag=sync status=progress
+
+#. Configure the EFI firmware to boot the ACRN hypervisor by default::
+
+   # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN"
+
+#. Unplug the U disk and reboot the test machine. After the Clear Linux OS boots,
+   log in as “root” for the first time.
+
+.. _install_rtvm:
 
 Install and launch the Preempt-RT VM
 ************************************
 
-#. Download
-   `preempt-rt-31080.img.xz <`https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2019w39.1-140000p/preempt-rt-31080.img.xz>`_ to your development machine.
+#. Log in Service VM as root privileges.
 
-#. Decompress the xz image:
+#. Download the Preempt-RT VM image::
+
+   # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2019w39.1-140000p/preempt-rt-31080.img.xz
+
+#. Decompress the xz image::
+
+   # xz -d preempt-rt-31080.img.xz
+
+#. Burn the Preempt-RT VM image onto the NVMe disk::
+
+   # dd if=preempt-rt-31080.img of=/dev/nvme0n1 bs=4M oflag=sync status=progress
+
+#. Use the ``lspci`` command to ensure that the correct NVMe device IDs will
+   be used for the passthru before launching the script:
 
    .. code-block:: none
+      :emphasize-lines: 5
 
-      $ xz -d preempt-rt-31080.img.xz
+      # lspci -v | grep -iE 'nvm|ssd'
+      02:00.0 Non-Volatile memory controller: Intel Corporation Device f1a6 (rev 03) (prog-if 02 [NVM Express])
 
-#. Follow the instructions at :ref:`Deploy the User VM Preempt-RT image <deploy_ootb_rtvm>`
-   to deploy the Preempt-RT vm image on the NVMe disk.
+      # lspci -nn | grep "Non-Volatile memory controller"
+      02:00.0 Non-Volatile memory controller [0108]: Intel Corporation Device [8086:f1a6] (rev 03)
+
+#. Modify the script to use the correct NVMe device IDs and bus number.
+
+   .. code-block:: none
+      :emphasize-lines: 6,11
+
+      # vim /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
+
+      passthru_vpid=(
+      ["eth"]="8086 156f"
+      ["sata"]="8086 9d03"
+      ["nvme"]="8086 f1a6"
+      )
+      passthru_bdf=(
+      ["eth"]="0000:00:1f.6"
+      ["sata"]="0000:00:17.0"
+      ["nvme"]="0000:02:00.0"
+      )
+
+   .. code-block:: none
+      :emphasize-lines: 6
+
+      /usr/bin/acrn-dm -A -m $mem_size -c $1 -s 0:0,hostbridge \
+         --lapic_pt \
+         --rtvm \
+         --virtio_poll 1000000 \
+         -U 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 \
+         -s 2,passthru,02/00/0 \
+         -s 3,virtio-console,@stdio:stdio_port \
+         $pm_channel $pm_by_vuart \
+         --ovmf /usr/share/acrn/bios/OVMF.fd \
+         hard_rtvm
+      }
 
 #. Upon deployment completion, launch the RTVM directly on your KBL NUC::
 
-   $ sudo /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
-
-.. note:: Use the ``lspci`` command to ensure that the correct NMVe device IDs will be used for the passthru before launching the script::
-
-      $ sudo lspci -v | grep -iE 'nvm|ssd' 02:00.0 Non-Volatile memory controller: Intel Corporation Device f1a6 (rev 03) (prog-if 02 [NVM Express])
-      $ sudo lspci -nn | grep "Non-Volatile memory controller" 02:00.0 Non-Volatile memory controller [0108]: Intel Corporation Device [8086:f1a6] (rev 03)
-
+   # /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
 
 RT Performance Test
 *******************
@@ -173,6 +340,11 @@ Recommended BIOS settings
 
 Configure CAT
 -------------
+
+.. _Apollo Lake NUC:
+   https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc6cayh.html
+
+.. note:: CAT configuration is only supported on `Apollo Lake NUC`_.
 
 With the ACRN Hypervisor shell, we can use ``cpuid`` and ``wrmsr``/``rdmsr`` debug
 commands to enumerate the CAT capability and set the CAT configuration without rebuilding binaries.
@@ -238,37 +410,58 @@ In our recommended configuration, two cores are allocated to the RTVM:
 core 0 for housekeeping and core 1 for RT tasks. In order to achieve
 this, follow the below steps to allocate all housekeeping tasks to core 0:
 
-.. code-block:: bash
+#. Modify the script to use two cores before launching RTVM::
 
-   #!/bin/bash
-   # Move all IRQs to core 0.
-   for i in `cat /proc/interrupts | grep '^ *[0-9]*[0-9]:' | awk {'print $1'} | sed 's/:$//' `;
-   do
-       echo setting $i to affine for core zero
-       echo 1 > /proc/irq/$i/smp_affinity
-   done
+   # sed -i "s/launch_hard_rt_vm 1/launch_hard_rt_vm 2/" /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
 
-   # Move all rcu tasks to core 0.
-   for i in `pgrep rcu`; do taskset -pc 0 $i; done
+#. Launch RTVM::
 
-   # Change realtime attribute of all rcu tasks to SCHED_OTHER and priority 0
-   for i in `pgrep rcu`; do chrt -v -o -p 0 $i; done
+   # /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
 
-   # Change realtime attribute of all tasks on core 1 to SCHED_OTHER and priority 0
-   for i in `pgrep /1`; do chrt -v -o -p 0 $i; done
+#. Log in RTVM as root and run the script as below:
 
-   # Change realtime attribute of all tasks to SCHED_OTHER and priority 0
-   for i in `ps -A -o pid`; do chrt -v -o -p 0 $i; done
+   .. code-block:: bash
+   
+      #!/bin/bash
+      # Move all IRQs to core 0.
+      for i in `cat /proc/interrupts | grep '^ *[0-9]*[0-9]:' | awk {'print $1'} | sed 's/:$//' `;
+      do
+          echo setting $i to affine for core zero
+          echo 1 > /proc/irq/$i/smp_affinity
+      done
+   
+      # Move all rcu tasks to core 0.
+      for i in `pgrep rcu`; do taskset -pc 0 $i; done
+   
+      # Change realtime attribute of all rcu tasks to SCHED_OTHER and priority 0
+      for i in `pgrep rcu`; do chrt -v -o -p 0 $i; done
+   
+      # Change realtime attribute of all tasks on core 1 to SCHED_OTHER and priority 0
+      for i in `pgrep /1`; do chrt -v -o -p 0 $i; done
+   
+      # Change realtime attribute of all tasks to SCHED_OTHER and priority 0
+      for i in `ps -A -o pid`; do chrt -v -o -p 0 $i; done
+   
+      echo disabling timer migration
+      echo 0 > /proc/sys/kernel/timer_migration
 
-   echo disabling timer migration
-   echo 0 > /proc/sys/kernel/timer_migration
+   .. note:: You can ignore the error messages during the script running.
 
 Run cyclictest
 ==============
 
-Use the following command to start cyclictest::
+#. Refer to the :ref:`troubleshooting <enabling the network on RTVM>` to enable the
+   network connection for RTVM.
 
-   $ cyclictest -a 1 -p 80 -m -N -D 1h -q -H 30000 --histfile=test.log
+#. Launch RTVM and log in as root.
+
+#. Install ``cyclictest`` tool::
+
+   # swupd bundle-add dev-utils
+
+#. Use the following command to start cyclictest::
+
+   # cyclictest -a 1 -p 80 -m -N -D 1h -q -H 30000 --histfile=test.log
 
 - Usage:
 
@@ -278,3 +471,29 @@ Use the following command to start cyclictest::
     :-D 1h:                          to run for 1 hour, you can change it to other values
     :-q:                             quiee mode; print a summary only on exit
     :-H 30000 --histfile=test.log:   dump the latency histogram to a local file
+
+Troubleshooting
+***************
+
+.. _enabling the network on RTVM:
+
+**Enabling the network on RTVM**
+
+If you need to access the internet, you must add the following command line to the
+``launch_hard_rt_vm.sh`` script before launch it:
+
+.. code-block:: none
+   :emphasize-lines: 8
+
+   /usr/bin/acrn-dm -A -m $mem_size -c $1 -s 0:0,hostbridge \
+      --lapic_pt \
+      --rtvm \
+      --virtio_poll 1000000 \
+      -U 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 \
+      -s 2,passthru,02/0/0 \
+      -s 3,virtio-console,@stdio:stdio_port \
+      -s 8,virtio-net,tap0 \
+      $pm_channel $pm_by_vuart \
+      --ovmf /usr/share/acrn/bios/OVMF.fd \
+      hard_rtvm
+   }
