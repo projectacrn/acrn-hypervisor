@@ -40,7 +40,6 @@ User VM Tutorials
    tutorials/building_uos_from_clearlinux
    tutorials/using_vxworks_as_uos
    tutorials/using_windows_as_uos
-   tutorials/rt_linux
    tutorials/using_zephyr_as_uos
    tutorials/running_deb_as_user_vm
    tutorials/running_ubun_as_user_vm
