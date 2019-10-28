@@ -6,9 +6,9 @@ Getting Started Guide for ACRN Industry Scenario
 Verified version
 ****************
 
-- Clear Linux version: **31080**
-- ACRN-hypervisor tag: **v1.3**
-- ACRN-Kernel(Service VM kernel): **acrn-2019w39.1-140000p**
+- Clear Linux version: **31470**
+- ACRN-hypervisor tag: **v1.4**
+- ACRN-Kernel(Service VM kernel): **4.19.78-95.iot-lts2018-sos**
 - ACRN-Kernel(Preempt-RT kernel): **acrn-2019w39.1-143000p**
 
 Prerequisites
@@ -20,16 +20,17 @@ for the RTVM.
 
 - Intel Kaby Lake (aka KBL) NUC platform with two disks inside
   (refer to :ref:`the tables <hardware_setup>` for detailed information).
-- Follow below steps to install Clear Linux OS (Ver: 31080) onto both disks on the KBL NUC:
+- If you need to enable the serial port on KBL NUC, navigate to the :ref:`troubleshooting <connect_serial_port>` to prepare the cable.
+- Follow below steps to install Clear Linux OS (Ver: 31470) onto both disks on the KBL NUC:
 
 .. _Clear Linux OS Server image:
-   https://download.clearlinux.org/releases/31080/clear/clear-31080-live-server.iso.xz
+   https://download.clearlinux.org/releases/31470/clear/clear-31470-live-server.iso.xz
 
   #. Create a bootable USB drive on Linux*:
 
      a. Download and decompress the `Clear Linux OS Server image`_::
 
-        $ unxz clear-31080-live-server.iso.xz
+        $ unxz clear-31470-live-server.iso.xz
 
      #. Plug in the USB drive.
      #. Use the ``lsblk`` command line to identify the USB drive:
@@ -48,24 +49,25 @@ for the RTVM.
      #. Unmount all the ``/dev/sdc`` partitions and burn the image onto the USB drive::
 
         $ umount /dev/sdc* 2>/dev/null
-        $ sudo dd if=./clear-31080-live-server.iso of=/dev/sdc oflag=sync status=progress bs=4M
+        $ sudo dd if=./clear-31470-live-server.iso of=/dev/sdc oflag=sync status=progress bs=4M
 
   #. Plug in the USB drive to the KBL NUC and boot from USB.
   #. Launch the Clear Linux OS installer boot menu.
-  #. With Clear Linux OS highlighted, select **Enter**.
+  #. With Clear Linux OS highlighted, select :kbd:`Enter`.
   #. Log in with your root account and new password.
   #. Run the installer using the following command::
 
      # clr-installer
 
-  #. From the Main menu, select **Configure Installation Media** and set
-     **Destructive Installation** to your desired hard disk.
-  #. Select **Telemetry** to set Tab to highlight your choice.
-  #. Press :kbd:`A` to show the **Advanced** options.
-  #. Select **Select additional bundles** and add bundles for
+  #. From the Main menu, select :kbd:`Configure Installation Media` and set
+     :kbd:`Destructive Installation` to your desired hard disk.
+  #. Select :kbd:`Telemetry` to set Tab to highlight your choice.
+  #. Press :kbd:`A` to show the :kbd:`Advanced` options.
+  #. Select :kbd:`Select additional bundles` and add bundles for
      **network-basic**, and **user-basic**.
-  #. Select **Install**.
-  #. Select **Confirm Install** in the **Confirm Installation** window to start the installation.
+  #. Select :kbd:`Automatic OS Updates` and choose :kbd:`No [Disable]`.
+  #. Select :kbd:`Install`.
+  #. Select :kbd:`Confirm Install` in the :kbd:`Confirm Installation` window to start the installation.
 
 .. _step-by-step instruction:
    https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html
@@ -90,11 +92,18 @@ Hardware Setup
    |                      |                   | Graphics             | - UHD Graphics 620                                        |
    |                      |                   |                      | - Two HDMI 2.0a ports supporting 4K at 60 Hz              |
    |                      |                   +----------------------+-----------------------------------------------------------+
-   |                      |                   | System memory        | - 8GiB SODIMM DDR4 2400 MHz                               |
+   |                      |                   | System memory        | - 8GiB SODIMM DDR4 2400 MHz [1]_                          |
    |                      |                   +----------------------+-----------------------------------------------------------+
    |                      |                   | Storage capabilities | - SATA: 1TB WDC WD10SPZX-22Z                              |
    |                      |                   |                      | - NVMe: 256G Intel Corporation SSD Pro 7600p/760p/E 6100p |
    +----------------------+-------------------+----------------------+-----------------------------------------------------------+
+
+.. [1] The maximum supported memory size for ACRN is 16GB. If you are using
+   32GB memory, follow the :ref:`config_32GB_memory` instruction to modify the 
+   ``hypervisor/arch/x86/Kconfig`` and then use ``make FIRMWARE=uefi BOARD=nuc7i7dnb 
+   SCENARIO=industry hypervisor`` command to make the latest ACRN hypervisor
+   which is supported 32GB memory. For more detailed instruction about how to build ACRN 
+   from the source code, refer to this :ref:`guide <getting-started-building>`.
 
 Set up the ACRN Hypervisor for industry scenario
 ************************************************
@@ -125,36 +134,11 @@ Use the pre-installed industry ACRN hypervisor
 
    .. code-block:: none
 
-      # ./acrn_quick_setup.sh -s 31080 -d -i
+      # ./acrn_quick_setup.sh -s 31470 -d -i
 
-   .. note:: ``-i`` option means the industry hypervisor image will be used:
-      ``acrn.kbl-nuc-i7.industry.efi``.
-
-   These outputs show the script is running correctly and
-   industry hypervisor is also installed:
-
-   .. code-block:: console
-      :emphasize-lines: 9
-
-      Upgrading Service VM...
-      Disable auto update...
-      Running systemctl to disable updates
-      Clear Linux version 31080 is already installed. Continuing to setup Service VM...
-      Adding the service-os and systemd-networkd-autostart bundles...
-      Loading required manifests...
-      2 bundles were already installed
-      Add /mnt/EFI/acrn folder
-      Copy /usr/lib/acrn/acrn.kbl-nuc-i7.industry.efi to /mnt/EFI/acrn/acrn.efi
-      Getting latest Service OS kernel version: org.clearlinux.iot-lts2018-sos.4.19.73-92
-      Add default (5 seconds) boot wait time.
-      New timeout value is: 5
-      Set org.clearlinux.iot-lts2018-sos.4.19.73-92 as default boot kernel.
-      Check ACRN efi boot event
-      Clean all ACRN efi boot event
-      Check linux bootloader event
-      Clean all Linux bootloader event
-      Add new ACRN efi boot event
-      Service OS setup done!
+   .. note:: ``-i`` option means the industry scenario efi image will be used, e.g.
+      ``acrn.nuc7i7dnb.industry.efi``. For the detailed usage of the ``acrn_quick_setup.sh`` script, 
+      move to this :ref:`quick setup ACRN guide <quick-setup-guide>` or just type ``./acrn_quick_setup.sh -h``. 
 
 #. Use ``efibootmgr -v`` command to check the ACRN boot order:
 
@@ -165,7 +149,7 @@ Use the pre-installed industry ACRN hypervisor
       Timeout: 1 seconds
       BootOrder: 0001,0002,000C,000D,0008,000E,000B,0003,0000,0004,0007
       Boot0000* Windows Boot Manager	VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)WINDOWS.........x...B.C.D.O.B.J.E.C.T.=.{.9.d.e.a.8.6.2.c.-.5.c.d.d.-.4.e.7.0.-.a.c.c.1.-.f.3.2.b.3.4.4.d.4.7.9.5.}...o................
-      Boot0001* ACRN	HD(1,GPT,c6715698-0f6e-4e27-bb1b-bf7779c1486d,0x800,0x47000)/File(\EFI\acrn\acrn.efi)
+      Boot0001* ACRN	HD(1,GPT,c6715698-0f6e-4e27-bb1b-bf7779c1486d,0x800,0x47000)/File(\EFI\acrn\acrn.efi)u.a.r.t.=.d.i.s.a.b.l.e.d.
       Boot0002* Linux bootloader	HD(3,GPT,b537f16f-d70f-4f1b-83b4-0f11be83cd83,0xc1800,0xded3000)/File(\EFI\org.clearlinux\bootloaderx64.efi)
       Boot0003* CentOS	VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)
       Boot0004* CentOS Linux	VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)
@@ -178,6 +162,10 @@ Use the pre-installed industry ACRN hypervisor
 
    .. note:: Ensure the ACRN is the first boot order, or you may use ``efibootmgr -o 1`` command to move it
       to the first order.
+
+   .. note:: If you need to enable the serial port, run the following command before reboot:
+
+      ``efibootmgr -c -l '\EFI\acrn\acrn.efi' -d /dev/sda -p 1 -L ACRN -u "uart=port@0x3f8"``
 
 #. Reboot KBL NUC.
 
@@ -214,11 +202,19 @@ Use the ACRN industry out-of-the-box image
 
    # dd if=sos-industry-31080.img of=/dev/sda bs=4M oflag=sync status=progress
 
-#. Configure the EFI firmware to boot the ACRN hypervisor by default::
+#. Configure the EFI firmware to boot the ACRN hypervisor by default:
+   
+   ::
 
-   # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN"
+      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN" -u "uart=disabled"
 
-#. Unplug the U disk and reboot the test machine. After the Clear Linux OS boots,
+   Or use the following command to enable the serial port:
+
+   ::
+
+      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN" -u "uart=port@0x3f8"
+
+#. Reboot the test machine. After the Clear Linux OS boots,
    log in as “root” for the first time.
 
 .. _install_rtvm:
@@ -273,16 +269,18 @@ Install and launch the Preempt-RT VM
    .. code-block:: none
       :emphasize-lines: 6
 
-      /usr/bin/acrn-dm -A -m $mem_size -c $1 -s 0:0,hostbridge \
+      /usr/bin/acrn-dm -A -m $mem_size -s 0:0,hostbridge \
          --lapic_pt \
          --rtvm \
          --virtio_poll 1000000 \
          -U 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 \
          -s 2,passthru,02/00/0 \
          -s 3,virtio-console,@stdio:stdio_port \
+         -s 8,virtio-net,tap0 \
          $pm_channel $pm_by_vuart \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
          hard_rtvm
+      
       }
 
 #. Upon deployment completion, launch the RTVM directly on your KBL NUC::
@@ -308,6 +306,14 @@ suite rt-tests.
 
 Pre-Configurations
 ==================
+
+Firmware update on the NUC
+--------------------------
+
+If you need to update to the latest UEFI firmware for the NUC hardware.
+Follow these `BIOS Update Instructions
+<https://www.intel.com/content/www/us/en/support/articles/000005636.html>`__
+for downloading and flashing an updated BIOS for the NUC.
 
 Recommended BIOS settings
 -------------------------
@@ -410,10 +416,6 @@ In our recommended configuration, two cores are allocated to the RTVM:
 core 0 for housekeeping and core 1 for RT tasks. In order to achieve
 this, follow the below steps to allocate all housekeeping tasks to core 0:
 
-#. Modify the script to use two cores before launching RTVM::
-
-   # sed -i "s/launch_hard_rt_vm 1/launch_hard_rt_vm 2/" /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
-
 #. Launch RTVM::
 
    # /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
@@ -462,11 +464,12 @@ Run cyclictest
 #. Use the following command to start cyclictest::
 
    # cyclictest -a 1 -p 80 -m -N -D 1h -q -H 30000 --histfile=test.log
-
-- Usage:
+ 
+   Parameter descriptions:
 
     :-a 1:                           to bind the RT task to core 1
     :-p 80:                          to set the priority of the highest prio thread
+    :-m:                             lock current and future memory allocations
     :-N:                             print results in ns instead of us (default us)
     :-D 1h:                          to run for 1 hour, you can change it to other values
     :-q:                             quiee mode; print a summary only on exit
@@ -475,9 +478,72 @@ Run cyclictest
 Troubleshooting
 ***************
 
+.. _connect_serial_port:
+
+Use serial port on KBL NUC
+==========================
+
+You can enable the serial console on the
+`KBL NUC <https://www.amazon.com/Intel-Business-Mini-Technology-BLKNUC7i7DNH1E/dp/B07CCQ8V4R>`_
+(NUC7i7DNH). The KBL NUC has a serial port header you can
+expose with a serial DB9 header cable. You can build this cable yourself;
+refer to the `KBL NUC product specification
+<https://www.intel.com/content/dam/support/us/en/documents/mini-pcs/nuc-kits/NUC7i7DN_TechProdSpec.pdf>`_
+as shown below:
+
+.. figure:: images/KBL-serial-port-header.png
+   :scale: 80
+
+   KBL serial port header details
+
+
+.. figure:: images/KBL-serial-port-header-to-RS232-cable.jpg
+   :scale: 80
+
+   KBL `serial port header to RS232 cable
+   <https://www.amazon.com/dp/B07BV1W6N8/ref=cm_sw_r_cp_ep_dp_wYm0BbABD5AK6>`_
+
+
+Or you can `purchase
+<https://www.amazon.com/dp/B07BV1W6N8/ref=cm_sw_r_cp_ep_dp_wYm0BbABD5AK6>`_
+such a cable.
+
+You'll also need an `RS232 DB9 female to USB cable
+<https://www.amazon.com/Adapter-Chipset-CableCreation-Converter-Register/dp/B0769DVQM1>`_,
+or an `RS232 DB9 female/female (NULL modem) cross-over cable
+<https://www.amazon.com/SF-Cable-Null-Modem-RS232/dp/B006W0I3BA>`_
+to connect to your host system.
+
+Note that If you want to use the RS232 DB9 female/female cable, choose the ``cross-over``
+type rather than ``straight-through`` type.
+
+.. _efi image not exist:
+
+EFI image doesn't exist
+=======================
+
+You might see the error message if you are running the ``acrn_quick_setup.sh`` script
+on an older Clear Linux OS ( < 31470 ):
+
+   .. code-block:: console
+
+      /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi doesn't exist.
+      Use one of these efi images from /usr/lib/acrn.
+      ------
+      /usr/lib/acrn/acrn.kbl-nuc-i7.industry.efi
+      ------
+      Copy the efi image to /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi, then run the script again.
+
+To fix it, just rename the existing efi image to ``/usr/lib/acrn/acrn.nuc7i7dnb.industry.efi`` and 
+then run the script again::
+
+      # cp -r /usr/lib/acrn/acrn.kbl-nuc-i7.industry.efi /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi
+      # ./acrn_quick_setup.sh -s <target version> -i -d
+
 .. _enabling the network on RTVM:
 
-**Enabling the network on RTVM**
+Enabling the network on RTVM
+============================
 
 If you need to access the internet, you must add the following command line to the
 ``launch_hard_rt_vm.sh`` script before launch it:
@@ -485,7 +551,7 @@ If you need to access the internet, you must add the following command line to t
 .. code-block:: none
    :emphasize-lines: 8
 
-   /usr/bin/acrn-dm -A -m $mem_size -c $1 -s 0:0,hostbridge \
+   /usr/bin/acrn-dm -A -m $mem_size -s 0:0,hostbridge \
       --lapic_pt \
       --rtvm \
       --virtio_poll 1000000 \
@@ -496,4 +562,6 @@ If you need to access the internet, you must add the following command line to t
       $pm_channel $pm_by_vuart \
       --ovmf /usr/share/acrn/bios/OVMF.fd \
       hard_rtvm
+   
    }
+

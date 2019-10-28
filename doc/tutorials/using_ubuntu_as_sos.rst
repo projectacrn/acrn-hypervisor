@@ -7,7 +7,7 @@ This document builds on the :ref:`getting_started`, and explains how to use
 Ubuntu instead of using `Clear Linux OS`_ as the Service OS with the ACRN
 hypervisor. (Note that different OSes can be used for the Service and User OS.)
 In the following instructions we'll build on material in the
-:ref:`getting-started-apl-nuc`.
+:ref:`kbl-nuc-sdc`.
 
 Install Ubuntu (natively)
 *************************
@@ -337,7 +337,7 @@ script example shows how to set this up (verified in Ubuntu 16.04 and 18.04 as t
 Enabling USB keyboard and mouse
 *******************************
 
-Please refer to :ref:`getting-started-apl-nuc` for enabling the
+Please refer to :ref:`kbl-nuc-sdc` for enabling the
 USB keyboard and mouse for the UOS.
 
 

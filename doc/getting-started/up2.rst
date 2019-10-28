@@ -49,11 +49,11 @@ Software setup
 
 Setting up the ACRN hypervisor (and associated components) on the UP2
 board is no different than other hardware platforms so please follow
-the instructions provided in the :ref:`getting-started-apl-nuc`, with
+the instructions provided in the :ref:`rt_industry_setup`, with
 the additional information below.
 
 There are a few parameters specific to the UP2 board that differ from
-what is referenced in the :ref:`getting-started-apl-nuc` section:
+what is referenced in the :ref:`rt_industry_setup` section:
 
 1. Serial Port settings
 #. Storage device name
@@ -118,4 +118,4 @@ Running the hypervisor
 
 Now that the hypervisor and Service OS have been installed on your UP2 board,
 you can proceed with the rest of the instructions in the
-:ref:`getting-started-apl-nuc` and install the User OS (UOS).
+:ref:`kbl-nuc-sdc` and install the User OS (UOS).

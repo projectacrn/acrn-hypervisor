@@ -70,7 +70,7 @@ the maximal CPU resource for the VM0 or VM1 is 33% of the entire CPU resource.
 
 How to use ACRN-DM QoS
 **********************
-#. Follow :ref:`getting-started-apl-nuc` to boot "The ACRN Service OS" based on Clear Linux 29970 (ACRN tag v1.1).
+#. Follow :ref:`kbl-nuc-sdc` to boot "The ACRN Service OS" based on Clear Linux 29970 (ACRN tag v1.1).
 
 #. Add these parameters to the ``runC.json`` file:
 

@@ -49,9 +49,7 @@ development team for Software-Defined Cockpit (SDC), Industrial Usage
    https://up-shop.org/home/270-up-squared.html
 
 
-For general instructions setting up ACRN on supported hardware platforms, visit the :ref:`getting-started-apl-nuc`
-and :ref:`getting-started-up2` pages.
-
+For general instructions setting up ACRN on supported hardware platforms, visit the :ref:`rt_industry_setup` page.
 
 
 +--------------------------------+-------------------------+-----------+-----------+-------------+------------+------------+

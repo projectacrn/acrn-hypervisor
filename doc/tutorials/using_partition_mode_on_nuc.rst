@@ -22,7 +22,7 @@ Prerequisites
 *************
 
 * `Intel NUC Kit NUC7i7DNHE <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_
-* Connecting to the serial port, described in :ref:`getting-started-apl-nuc`
+* Connecting to the serial port, described in :ref:`kbl-nuc-sdc`
 * NVMe disk
 * SATA disk
 * Storage device with USB interface (such as USB Flash

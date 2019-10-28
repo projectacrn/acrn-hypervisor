@@ -36,7 +36,7 @@ enabling GPU passthrough:
 Software Setup
 **************
 
-Please follow the :ref:`getting-started-apl-nuc`, with the following changes:
+Please follow the :ref:`kbl-nuc-sdc`, with the following changes:
 
 1. Set up a Clear Linux Operating System
 
