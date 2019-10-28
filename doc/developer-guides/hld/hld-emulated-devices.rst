@@ -16,6 +16,7 @@ documented in this section.
    Watchdoc virtualization <watchdog-hld>
    AHCI virtualization <ahci-hld>
    GVT-g GPU Virtualization <hld-APL_GVT-g>
+   System timer virtualization <system-timer-hld>
    UART emulation in hypervisor <vuart-virt-hld>
    RTC emulation in hypervisor <rtc-virt-hld>
    Hostbridge emulation <hostbridge-virt-hld>
