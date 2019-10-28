@@ -27,6 +27,7 @@ Configuration Tutorials
    tutorials/using_sdc2_mode_on_nuc
    tutorials/using_hybrid_mode_on_nuc
    tutorials/realtime_performance_tuning
+   tutorials/kbl-nuc-sdc
 
 User VM Tutorials
 *****************

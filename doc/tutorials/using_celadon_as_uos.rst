@@ -79,7 +79,7 @@ Build Celadon from source
 Steps for Using Celadon as the User OS
 **************************************
 
-#. Follow :ref:`getting-started-apl-nuc` to boot the ACRN Service OS based on Clear Linux 29880.
+#. Follow :ref:`kbl-nuc-sdc` to boot the ACRN Service OS based on Clear Linux 29880.
 
 #. Prepare dependencies on your NUC::
 

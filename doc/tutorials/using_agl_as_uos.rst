@@ -29,7 +29,7 @@ For more information about AGL, please visit `AGL's official website
 Steps for using AGL as the UOS
 ******************************
 
-#. Follow the instructions found in the :ref:`getting-started-apl-nuc` to
+#. Follow the instructions found in the :ref:`kbl-nuc-sdc` to
    boot "The ACRN Service OS"
    
 #. In SOS, download the release of AGL from https://download.automotivelinux.org/AGL/release/eel/.
@@ -52,7 +52,7 @@ Steps for using AGL as the UOS
       $ sync
 
    .. note::
-      Follow the instructions in :ref:`getting-started-apl-nuc`,
+      Follow the instructions in :ref:`kbl-nuc-sdc`,
       the ``linux-iot-lts2018`` kernels and modules will be installed 
       by default after adding the bundle ``kernel-iot-lts2018``. 
       Here the version of modules is ``4.19.0-27.iot-lts2018``.

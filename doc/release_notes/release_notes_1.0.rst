@@ -32,7 +32,7 @@ The project's online technical documentation is also tagged to correspond
 with a specific release: generated v1.0 documents can be found at https://projectacrn.github.io/1.0/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
 ACRN v1.0 requires Clear Linux* OS version 29070. Please follow the
-instructions in the :ref:`getting-started-apl-nuc`.
+instructions in the :ref:`kbl-nuc-sdc`.
 
 Version 1.0 major features
 **************************

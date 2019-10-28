@@ -91,7 +91,7 @@ noted above.  For example, add the following code into function
 
 Once you have instrumented the code, you need to rebuild the hypervisor and
 install it on your platform. Refer to :ref:`getting-started-building` and
-:ref:`getting-started-apl-nuc` for detailed instructions on how to do that.
+:ref:`kbl-nuc-sdc` for detailed instructions on how to do that.
 
 We set console log level to 5, and mem log level to 2 through the
 command::
@@ -205,7 +205,7 @@ shown in the following example:
 
 4. After we have inserted the trace code addition, we need to rebuild
    the ACRN hypervisor and install it on the platform. Refer to
-   :ref:`getting-started-building` and :ref:`getting-started-apl-nuc` for
+   :ref:`getting-started-building` and :ref:`kbl-nuc-sdc` for
    detailed instructions on how to do that.
 
 5. Now we can use the following command in the SOS console
