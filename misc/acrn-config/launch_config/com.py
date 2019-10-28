@@ -422,8 +422,9 @@ def dm_arg_set(names, sel, dm, vmid, config):
     uos_type = names['uos_types'][vmid]
     board_name = names['board_name']
 
-    # vbootlaoder for vsbl
+    # vboot loader for vsbl
     boot_image_type(dm, vmid, config)
+    root_img = dm['rootfs_img'][vmid]
 
     # uuid get
     scenario_uuid = launch_cfg_lib.get_scenario_uuid()
@@ -469,19 +470,16 @@ def dm_arg_set(names, sel, dm, vmid, config):
     # vxworks
     if uos_type == "VXWORKS":
         print("{} \\".format(dm_str), file=config)
-        print("   -s {},virtio-blk,./VxWorks.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
         print("   --virtio_poll 1000000 \\", file=config)
         print("   --lapic_pt \\", file=config)
 
     # zephyr
     if uos_type == "ZEPHYR":
         print("{} \\".format(dm_str), file=config)
-        print("   -s {},virtio-blk,./zephyr.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
 
     # windows
     if uos_type == "WINDOWS":
         print("{} \\".format(dm_str), file=config)
-        print("   -s {},virtio-blk,./win10-ltsc.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
         print("   --windows \\", file=config)
 
     # GVT args set
@@ -514,10 +512,12 @@ def dm_arg_set(names, sel, dm, vmid, config):
         if not is_nuc_clr(names, vmid):
             print("   -s {},wdt-i6300esb \\".format(launch_cfg_lib.virtual_dev_slot("wdt-i6300esb")), file=config)
             print("   $intr_storm_monitor \\", file=config)
-            print("   -s {},virtio-blk$boot_dev_flag,/data/$3/$3.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
             print("   -s {},xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
-        else:
-            print("   -s {},virtio-blk,/home/clear/uos/uos.img \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk")), file=config)
+
+    if dm['vbootloader'][vmid] and dm['vbootloader'][vmid] == "vsbl":
+        print("   -s {},virtio-blk$boot_dev_flag,/data/{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk"), root_img), file=config)
+    elif dm['vbootloader'][vmid] and dm['vbootloader'][vmid] == "ovmf":
+        print("   -s {},virtio-blk,{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk"), root_img), file=config)
 
     if uos_type in ("ANDROID", "ALIOS"):
         print("   --enable_trusty \\", file=config)
