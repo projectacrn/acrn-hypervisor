@@ -87,6 +87,11 @@
 #define ACRN_REQUEST_VPID_FLUSH			7U
 
 /**
+ * @brief Request for initilizing VMCS
+ */
+#define ACRN_REQUEST_INIT_VMCS			8U
+
+/**
  * @}
  */
 /* End of virt_int_injection */
