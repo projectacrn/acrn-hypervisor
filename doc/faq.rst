@@ -31,8 +31,10 @@ fails to boot, here are some options to try:
     not checked in the "Boot Options"
 * Make sure you are using EFI (and not legacy BIOS)
 
-How do I configure ACRN's memory use?
-*************************************
+.. _config_32GB_memory:
+
+How do I configure ACRN's memory size?
+**************************************
 
 It's important that the ACRN Kconfig settings are aligned with the physical memory
 on your platform. Check the documentation for these option settings for
@@ -43,44 +45,53 @@ details:
 * :option:`CONFIG_UOS_RAM_SIZE`
 * :option:`CONFIG_HV_RAM_SIZE`
 
-For example, if memory is 32G, setup ``PLATFORM_RAM_SIZE`` = 32G
+For example, if the NUC's physical memory size is 32G, you may follow these steps
+to make the new uefi ACRN hypervisor, and then deploy it onto the NUC board to boot
+ACRN Service VM with the 32G memory size.
 
-::
+#. Modify the ``hypervisor/arch/x86/Kconfig`` from the ACRN source on host machine.
 
-  config PLATFORM_RAM_SIZE
-        hex "Size of the physical platform RAM"
-        default 0x200000000 if PLATFORM_SBL
-        default 0x800000000 if PLATFORM_UEFI
+   ::
+   
+      config HV_RAM_SIZE
+              hex "Size of the RAM region used by the hypervisor"
+      -       default 0x0b800000
+      +       default 0x0f000000
+              help
+                A 64-bit integer indicating the size of RAM used by the hypervisor.
+                It is ensured at link time that the footprint of the hypervisor
+   
+   ::
+   
+      config PLATFORM_RAM_SIZE
+              hex "Size of the physical platform RAM"
+      -       default 0x400000000
+      +       default 0x800000000
+              help
+                A 64-bit integer indicating the size of the physical platform RAM
+                (MMIO not included).
+   
+   ::
+   
+      config SOS_RAM_SIZE
+              hex "Size of the Service OS (SOS) RAM"
+      -       default 0x400000000
+      +       default 0x800000000
+              help
+                A 64-bit integer indicating the size of the Service OS RAM (MMIO not
+                included).
 
-Setup ``SOS_RAM_SIZE`` = 32G too (The SOS will have the whole resource)
+#. Use ``make BOARD=nuc7i7dnb FIRMWARE=uefi hypervisor`` command to build the new
+   efi image for KBL NUC.
 
-::
+#. Log in to your KBL NUC (assumes all the ACRN configurations are set up), then copy
+   the new efi image into the EFI partition::
 
-  config SOS_RAM_SIZE
-        hex "Size of the Service OS (SOS) RAM"
-        default 0x200000000 if PLATFORM_SBL
-        default 0x800000000 if PLATFORM_UEFI
+   # mount /dev/sda1 /mnt
+   # scp -r <host machine IP>:<ACRN source>/build/hypervisor/acrn.efi /mnt/EFI/acrn/
+   # sync && umount /mnt
 
-Setup ``UOS_RAM_SIZE`` to what you need, for example,  16G
-
-::
-
-  config UOS_RAM_SIZE
-        hex "Size of the User OS (UOS) RAM"
-        default 0x100000000 if PLATFORM_SBL
-        default 0x400000000 if PLATFORM_UEFI
-
-Setup ``HV_RAM_SIZE`` (we will reserve memory for guest EPT paging
-table), if you setup 32G (default 16G), you must enlarge it with
-(32G-16G)/2M pages (where pages are 4K). The example below is after
-HV_RAM_SIZE is changed to 240M
-
-::
-
-  config HV_RAM_SIZE
-    hex "Size of the RAM region used by the hypervisor"
-    default 0x07800000 if PLATFORM_SBL
-    default 0x0f000000 if PLATFORM_UEFI
+#. Reboot KBL NUC to enjoy the ACRN with 32G memory.
 
 How to modify the default display output for a UOS?
 ***************************************************

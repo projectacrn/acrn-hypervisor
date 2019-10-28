@@ -18,7 +18,7 @@
 function print_help()
 {
     echo "Usage:"
-    echo "Launch this script as: sudo $0 -s 31080"
+    echo "Launch this script as: sudo $0 -s 31470"
     echo -e "\t-s to upgrade Service VM"
     echo -e "\t-u to upgrade User VM"
     echo -e "\t-p to specify a proxy server (HTTPS)"
@@ -42,9 +42,6 @@ skip_download_uos=0
 # switcher for disabling reboot device
 disable_reboot=0
 
-# acrn.efi path
-acrn_efi_path=/usr/lib/acrn/acrn.nuc6cayh.sdc.efi
-
 function upgrade_sos()
 {
     # Check Service VM version
@@ -52,6 +49,14 @@ function upgrade_sos()
     [[ $VERSION_ID -gt $sos_ver ]] && echo "You're trying to install an older version of Clear Linux." && exit 1
 
     echo "Upgrading Service VM..."
+
+    # get board name
+    BOARD_NAME=`cat /sys/devices/virtual/dmi/id/board_name`
+    BOARD_NAME=${BOARD_NAME,,}
+    [[ -z $BOARD_NAME ]] && echo "Unknown board name." && exit 1
+    echo "Board name is: $BOARD_NAME"
+    # set default scenario name
+    scenario=sdc
 
     # setup mirror and proxy url while specified with m and p options
     [[ -n $mirror ]] && echo "Setting swupd mirror to: $mirror" && swupd mirror -s $mirror
@@ -77,6 +82,18 @@ function upgrade_sos()
         echo "Adding the service-os and systemd-networkd-autostart bundles..."
         swupd bundle-add service-os systemd-networkd-autostart 2>/dev/null
 
+        # get acrn.efi path
+        acrn_efi_path=/usr/lib/acrn/acrn.$BOARD_NAME.$scenario.efi
+        if [[ ! -f $acrn_efi_path ]]; then
+            echo "$acrn_efi_path doesn't exist."
+            echo "Use one of these efi images from /usr/lib/acrn."
+            echo "------"
+            ls /usr/lib/acrn/acrn.*.$scenario.efi -1
+            echo "------"
+            echo "Copy the efi image to $acrn_efi_path, then run the script again."
+            exit 1
+        fi
+
         mount $efi_partition /mnt
         echo "Add /mnt/EFI/acrn folder"
         mkdir -p /mnt/EFI/acrn
@@ -89,16 +106,21 @@ function upgrade_sos()
         cp -a $acrn_efi_path /mnt/EFI/acrn/acrn.efi
         if [[ $? -ne 0 ]]; then echo "Fail to copy $acrn_efi_path" && exit 1; fi
 
-        new_kernel=`ls /mnt/EFI/org.clearlinux/*sos* -tl | grep kernel | head -n1 | awk -F'/' '{print $5}'`
-        new_kernel=${new_kernel#kernel-}
+        new_kernel=`ls /usr/lib/kernel/org*sos* -tl | head -n1 | awk -F'/' '{print $5}'`
         echo "Getting latest Service OS kernel version: $new_kernel"
 
         echo "Add default (5 seconds) boot wait time."
-        clr-boot-manager set-timeout 5 || { echo "Faild to add default boot wait time" && exit 1; }
+        clr-boot-manager set-timeout 5 || { echo "Fail to add default boot wait time" && exit 1; }
         clr-boot-manager update
-
         echo "Set $new_kernel as default boot kernel."
         clr-boot-manager set-kernel $new_kernel || { echo "Fail to set $new_kernel as default boot kernel." && exit 1; }
+
+        # Rename Clear-linux-iot-lts2018-sos conf to acrn.conf
+        conf_directory=/mnt/loader/entries/
+        conf=`sed -n 2p /mnt/loader/loader.conf | sed "s/default //"`
+        cp -r ${conf_directory}${conf}.conf ${conf_directory}acrn.conf 2>/dev/null || \
+        { echo "${conf_directory}${conf}.conf does not exist." && exit 1; }
+        sed -i 2"s/$conf/acrn/" /mnt/loader/loader.conf
 
         echo "Check ACRN efi boot event"
         check_acrn_bootefi=`efibootmgr | grep ACRN | wc -l`
@@ -113,9 +135,10 @@ function upgrade_sos()
             efibootmgr | grep 'Linux bootloader' | cut -d'*' -f1 | cut -d't' -f2 | head -n$number | xargs -i efibootmgr -b {} -B >/dev/null
         fi
 
-        echo "Add new ACRN efi boot event"
-        efibootmgr -c -l "\EFI\acrn\acrn.efi" -d $partition -p 1 -L "ACRN" >/dev/null
-
+        echo "Add new ACRN efi boot event, uart is disabled by default."
+        set -x
+        efibootmgr -c -l "\EFI\acrn\acrn.efi" -d $partition -p 1 -L "ACRN" -u "uart=disabled" >/dev/null
+        { set +x; } 2>/dev/null
         echo "Service OS setup done!"
     else
         echo "Fail to upgrade Service VM to $sos_ver."
@@ -218,7 +241,7 @@ do
                         ;;
                 h) print_help
                         ;;
-                i) acrn_efi_path=/usr/lib/acrn/acrn.kbl-nuc-i7.industry.efi
+                i) scenario=industry
                         ;;
                 ?) print_help
                         ;;

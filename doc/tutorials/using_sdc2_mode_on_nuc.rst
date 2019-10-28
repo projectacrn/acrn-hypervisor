@@ -15,7 +15,7 @@ process can be applied to launch a third Linux VM as well.
 ACRN Service VM Setup
 *********************
 
-Follow the steps in :ref:`getting-started-apl-nuc` to set up ACRN on an
+Follow the steps in :ref:`kbl-nuc-sdc` to set up ACRN on an
 Intel NUC. The target device must be capable of launching a Clear Linux
 User VM as a starting point.
 

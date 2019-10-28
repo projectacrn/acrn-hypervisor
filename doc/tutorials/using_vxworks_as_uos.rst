@@ -92,7 +92,7 @@ Steps for Using VxWorks as User OS
 
    You now have a virtual disk image with bootable VxWorks in ``VxWorks.img``.
 
-#. Follow :ref:`getting-started-apl-nuc` to boot "The ACRN Service OS".
+#. Follow :ref:`kbl-nuc-sdc` to boot "The ACRN Service OS".
 
 #. Boot VxWorks as User OS.
 
