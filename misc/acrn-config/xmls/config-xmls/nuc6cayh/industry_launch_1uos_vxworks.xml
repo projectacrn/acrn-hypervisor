@@ -1,5 +1,5 @@
 <acrn-config board="nuc6cayh" scenario="industry" uos_launcher="1">
-    <uos id="3">
+    <uos id="1">
 	<uos_type desc="UOS type">VXWORKS</uos_type>
 	<rtos_type desc="UOS Realtime capability">Hard RT</rtos_type>
 	<mem_size desc="UOS memory size in MByte">2048</mem_size>
