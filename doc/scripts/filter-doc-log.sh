@@ -31,13 +31,13 @@ fi
 
 if [ -s "${LOG_FILE}" ]; then
    $KI_SCRIPT --config-dir ${CONFIG_DIR} ${LOG_FILE} > ${BUILDDIR}/doc.warnings 2>&1
-   if [ -s doc.warnings ]; then
+   if [ -s ${BUILDDIR}/doc.warnings ]; then
 	   echo
 	   echo -e "${red}New errors/warnings found, please fix them:"
 	   echo -e "=============================================="
 	   $TPUT sgr0
 	   echo
-	   cat doc.warnings
+	   cat ${BUILDDIR}/doc.warnings
 	   echo
 	   exit 1
    else
