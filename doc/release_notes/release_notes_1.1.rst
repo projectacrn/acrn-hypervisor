@@ -45,7 +45,7 @@ Document updates
 ================
 We have many `reference documents available <https://projectacrn.github.io>`_, including:
 
-* :ref:`Update: Using PREEMPT_RT-Linux for real-time UOS <rt_linux_setup>`
+* Update: Using PREEMPT_RT-Linux for real-time UOS
 * :ref:`Zephyr RTOS as Guest OS <using_zephyr_as_uos>`
 * :ref:`Using VxWorks* as User OS <using_vxworks_as_uos>`
 * :ref:`How to enable OVS in ACRN <open_vswitch>`
