@@ -6,15 +6,19 @@ vUART Virtualization
 Architecture
 ************
 
-vUART is virtual 16550 uart implemented in hypervisor. It can work as a console or a communication port. Currently, the vuart is mapped to the traditional COM port address. Uart driver in kernel can auto detect the port base and irq.
+A vUART is a virtual 16550 UART implemented in the hypervisor. It can work as a
+console or a communication port. Currently, the vUART is mapped to the
+traditional COM port address. A UART driver in the kernel can auto detect the
+port base and IRQ.
 
 .. figure:: images/uart-virt-hld-1.png
    :align: center
-   :name: uart-arch
+   :name: uart-arch-pic
 
    UART virtualization architecture
 
-Each vUART has two FIFOs, 8192 bytes Tx FIFO and 256 bytes Rx FIFO.  Currently, we only provide 4 ports for use.
+Each vUART has two FIFOs: 8192 bytes Tx FIFO and 256 bytes Rx FIFO.
+Currently, we only provide 4 ports for use.
 
 -  COM1 (port base: 0x3F8, irq: 4)
 
@@ -24,12 +28,20 @@ Each vUART has two FIFOs, 8192 bytes Tx FIFO and 256 bytes Rx FIFO.  Currently, 
 
 -  COM4 (port base: 0x2E8, irq: 7)
 
-A VM can enable one console vuart and several communication vuarts.
+A VM can enable one console vUART and several communication vUARTs.
 
 Console vUART
 *************
 
-vUART can be used as a console port, and it can be activated by  ``vm_console <vm_id>`` command in hypervisor console. From :numref:`console-uart-arch`,  there is only one physical uart, but four console vuarts (green color blocks). A hypervisor console is implemented above the physical uart, and it works in polling mode.  There is a timer in hv console, the timer handler dispatches the input from physical uart to the vuart or the hypervisor shell process and get data from vuart’s Tx FIFO and send to physical uart. The data in vuart’s FIFOs will be overwritten when it is not taken out intime.
+A vUART can be used as a console port, and it can be activated by
+a ``vm_console <vm_id>`` command in the hypervisor console. From
+:numref:`console-uart-arch`,  there is only one physical UART, but four
+console vUARTs (green color blocks). A hypervisor console is implemented
+above the physical UART, and it works in polling mode.  There is a timer
+in hv console. The timer handler dispatches the input from physical UART
+to the vUART or the hypervisor shell process and gets data from vUART's
+Tx FIFO and sends it to the physical UART. The data in vUART's FIFOs will be
+overwritten when it is not taken out in time.
 
 .. figure:: images/uart-virt-hld-2.png
    :align: center
@@ -40,33 +52,37 @@ vUART can be used as a console port, and it can be activated by  ``vm_console <v
 Communication vUART
 *******************
 
-The communication vuart is used to transfer data between two VMs in low speed. For kernel driver, it is a general uart, can be detected and probed by 8250 serial driver. But in hypervisor, it has special process.
+The communication vUART is used to transfer data between two VMs in low
+speed. For kernel driver, it is a general UART, can be detected and
+probed by 8250 serial driver. But in hypervisor, it has special process.
 
-From :numref:`communication-uart-arch`, the vuart in two VMs is connected according to the configuration in hypervisor.  When user write a byte to the communication uart in VM0:
+From :numref:`communication-uart-arch`, the vUART in two VMs is
+connected according to the configuration in hypervisor.  When user
+writes a byte to the communication UART in VM0:
 
 Operations in VM0
 
--  VM0 uart driver put the data to THR.
+-  VM0 UART driver puts the data to THR.
 
--  VM trap to hypervisor, and the vuart PIO handler is called.
+-  VM traps to hypervisor, and the vUART PIO handler is called.
 
--  Put the data to its target vuart’s Rx FIFO.
+-  Puts the data to its target vUART's Rx FIFO.
 
--  Inject a Data Ready interrupt to VM1.
+-  Injects a Data Ready interrupt to VM1.
 
--  If the target vuart’s FIFO is not full, inject a THRE interrupt to VM0.
+-  If the target vUART's FIFO is not full, injects a THRE interrupt to VM0.
 
--  Return.
+-  Returns.
 
 Operations in VM1
 
--  Receive an interrupt, dispatch to uart driver.
+-  Receives an interrupt, dispatches to UART driver.
 
--  Read LSR register, find a Data Ready interrupt.
+-  Reads LSR register, finds a Data Ready interrupt.
 
--  Read data from Rx FIFO.
+-  Reads data from Rx FIFO.
 
--  If Rx FIFO is not full, inject THRE interrupt to VM0.
+-  If Rx FIFO is not full, injects THRE interrupt to VM0.
 
 .. figure:: images/uart-virt-hld-3.png
    :align: center
@@ -79,7 +95,11 @@ Usage
 
 -  For console vUART
 
-   To enable the console port for a VM, only need to change the port_base and irq in ``acrn-hypervi   sor/hypervisor/scenarios/<scenario name>/vm_configurations.c``. If the irq number has been used    in your system ( ``cat /proc/interrupt``), you can choose other IRQ number. Set the .irq =0, the   vuart will work in polling mode.
+   To enable the console port for a VM, change the
+   port_base and IRQ in ``acrn-hypervisor/hypervisor/scenarios/<scenario
+   name>/vm_configurations.c``. If the IRQ number has been used in your
+   system ( ``cat /proc/interrupt``), you can choose other IRQ number. Set
+   the .irq =0, the vUART will work in polling mode.
 
    -  COM1_BASE (0x3F8) + COM1_IRQ(4)
 
@@ -97,16 +117,23 @@ Usage
                         .irq = COM1_IRQ,
                   }
 
-   The kernel bootargs ``console=ttySx`` should be the same with vuart[0], otherwise, the kernel co   nsole log can not captured by hypervisor.Then, after bringup the system, you can switch the cons   ole to the target VM by:
+   The kernel bootargs ``console=ttySx`` should be the same with
+   vuart[0], otherwise, the kernel console log can not captured by
+   hypervisor. Then, after bringing up the system, you can switch the console
+   to the target VM by:
 
    .. code-block:: console
-      
+
       ACRN:\>vm_console 0
       ----- Entering VM 0 Shell -----
 
 -  For communication vUART
-   
-   To enable the communication port, you should configure vuart[1] in the two VMs which want to com   municate. The port_base and irq should not repeat with the vuart[0] in the same VM. t_vuart.vm_i   d is the target VM's vm_id, start from 0 (0 means VM0). t_vuart.vuart_id is the target vuart ind   ex in the target VM, start from 1 (1 means vuart[1]).
+
+   To enable the communication port, you should configure vuart[1] in
+   the two VMs which want to communicate. The port_base and IRQ should
+   not repeat with the vuart[0] in the same VM. t_vuart.vm_id is the
+   target VM's vm_id, start from 0 (0 means VM0). t_vuart.vuart_id is the
+   target vUART index in the target VM, start from 1 (1 means vuart[1]).
 
    Example::
 
@@ -130,7 +157,13 @@ Usage
                         .t_vuart.vuart_id = 1U,
                   },
 
-.. note:: As the device mode also has virtual uart, and also use 0x3F8 and 0x2F8 as port base. If y   ou add ``-s <slot>, lpc`` in launch script, the device model will create COM0 and COM1 for the p   ost launched VM. It will also add the port info to ACPI table. This is useful for windows, vxwor   ksas they probe driver according to ACPI table.
+.. note:: The device mode also has a virtual UART, and also uses 0x3F8
+   and 0x2F8 as port base. If you add ``-s <slot>, lpc`` in the launch
+   script, the device model will create COM0 and COM1 for the post
+   launched VM. It will also add the port info to the ACPI table. This is
+   useful for Windows and vxworks as they probe the driver according to the ACPI
+   table.
 
-   If user enable both the device model uart and hypervisor vuart in the same port address, the ac    cess to the port address will be response by hypervisor vuart directly and will not pass to devi   ce model.
-
+   If user enables both the device model UART and hypervisor vUART at the
+   same port address, access to the port address will be responded to
+   by the hypervisor vUART directly, and will not pass to the device model.
