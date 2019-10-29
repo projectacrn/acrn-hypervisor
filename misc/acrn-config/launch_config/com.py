@@ -383,8 +383,12 @@ def set_dm_pt(names, sel, vmid, config):
             sel.bdf["bluetooth"][vmid][3:5], sel.bdf["bluetooth"][vmid][6:7]), file=config)
 
     if sel.bdf['wifi'][vmid] and sel.slot['wifi'][vmid]:
-        print("   -s {},passthru,{}/{}/{},keep_gsi \\".format(sel.slot["wifi"][vmid], sel.bdf["wifi"][vmid][0:2], \
-            sel.bdf["wifi"][vmid][3:5], sel.bdf["wifi"][vmid][6:7]), file=config)
+        if uos_type == "ANDROID":
+            print("   -s {},passthru,{}/{}/{},keep_gsi \\".format(sel.slot["wifi"][vmid], sel.bdf["wifi"][vmid][0:2], \
+                sel.bdf["wifi"][vmid][3:5], sel.bdf["wifi"][vmid][6:7]), file=config)
+        else:
+            print("   -s {},passthru,{}/{}/{} \\".format(sel.slot["wifi"][vmid], sel.bdf["wifi"][vmid][0:2], \
+                sel.bdf["wifi"][vmid][3:5], sel.bdf["wifi"][vmid][6:7]), file=config)
 
     if sel.bdf['ipu'][vmid] or sel.bdf['ipu_i2c'][vmid]:
         print("   $boot_ipu_option      \\", file=config)
