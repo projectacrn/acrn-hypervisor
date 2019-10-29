@@ -172,14 +172,22 @@ def audio_pt(uos_type, sel, vmid, config):
             print('    echo ${passthru_bdf["audio_codec"]} > /sys/bus/pci/drivers/pci-stub/bind', file=config)
             print("", file=config)
 
-            print('    boot_audio_option="-s {},passthru,{}/{}/{},keep_gsi '.format(
-                slot_audio, bus, dev, fun), end="", file=config)
+            if uos_type == "ANDROID":
+                print('    boot_audio_option="-s {},passthru,{}/{}/{},keep_gsi '.format(
+                    slot_audio, bus, dev, fun), end="", file=config)
+            else:
+                print('    boot_audio_option="-s {},passthru,{}/{}/{} '.format(
+                    slot_audio, bus, dev, fun), end="", file=config)
             print('-s {},passthru,{}/{}/{}"'.format(
                 slot_codec, bus_codec, dev_codec, fun_codec), file=config)
         else:
             # only select audio device to pass through to vm
-            print('    boot_audio_option="-s {},passthru,{}/{}/{},keep_gsi"'.format(
-                slot_audio, bus, dev, fun), file=config)
+            if uos_type == "ANDROID":
+                print('    boot_audio_option="-s {},passthru,{}/{}/{},keep_gsi"'.format(
+                    slot_audio, bus, dev, fun), file=config)
+            else:
+                print('    boot_audio_option="-s {},passthru,{}/{}/{}"'.format(
+                    slot_audio, bus, dev, fun), file=config)
 
         print("else", file=config)
         print('    boot_audio_option="-s {},virtio-audio"'.format(slot_audio), file=config)
