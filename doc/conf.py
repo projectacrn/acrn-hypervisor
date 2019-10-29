@@ -81,15 +81,16 @@ author = u'Project ARCN developers'
 
 # The following code tries to extract the information by reading the
 # Makefile from the acrn-hypervisor repo by finding these lines:
-#   MAJOR_VERSION=0
-#   MINOR_VERSION=1
-#   RC_VERSION=1
+#   MAJOR_VERSION=1
+#   MINOR_VERSION=3
+#   EXTRA_VERSION=-unstable
 
 try:
     version_major = None
     version_minor = None
     version_rc = None
-    for line in open(os.path.normpath("../VERSION")) :
+
+    for line in open(os.path.realpath("../../../VERSION")) :
         # remove comments
         line = line.split('#', 1)[0]
         line = line.rstrip()
@@ -103,18 +104,14 @@ try:
               version_rc = val
            if version_major and version_minor and version_rc :
               break
-except:
-    pass
 finally:
     if version_major and version_minor :
-        version = release = "v " + version_major + '.' + version_minor
+        version = release = "v " + str(version_major) + '.' + str(version_minor)
         if version_rc :
           version = release = version + version_rc
     else:
         sys.stderr.write('Warning: Could not extract hypervisor version from VERSION file\n')
         version = release = "unknown"
-
-
 
 #
 # The short X.Y version.
