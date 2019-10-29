@@ -73,13 +73,6 @@ config MAX_PT_IRQ_ENTRIES
 	range 0 128
 	default 64
 
-config MAX_IOMMU_NUM
-	int "Maximum number of IOMMU devices"
-	range 1 6
-	default 2
-	help
-	  The maximum number of physical IOMMUs the hypervisor can support.
-
 config STACK_SIZE
 	hex "Capacity of one stack, in bytes"
 	default 0x2000
