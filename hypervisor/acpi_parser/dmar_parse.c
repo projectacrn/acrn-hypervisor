@@ -14,13 +14,13 @@
 
 
 struct find_iter_args {
-	int32_t i;
+	uint32_t i;
 	struct acpi_dmar_hardware_unit *res;
 };
 
 typedef int32_t (*dmar_iter_t)(struct acpi_dmar_header*, void*);
 
-static int32_t dmar_unit_cnt;
+static uint32_t dmar_unit_cnt;
 
 static void *get_dmar_table(void)
 {
@@ -72,7 +72,7 @@ drhd_find_iter(struct acpi_dmar_header *dmar_header, void *arg)
 		return 1;
 
 	args = arg;
-	if (args->i == 0) {
+	if (args->i == 0U) {
 		args->res = (struct acpi_dmar_hardware_unit *)dmar_header;
 		return 0;
 	}
@@ -81,7 +81,7 @@ drhd_find_iter(struct acpi_dmar_header *dmar_header, void *arg)
 }
 
 static struct acpi_dmar_hardware_unit *
-drhd_find_by_index(int32_t idx)
+drhd_find_by_index(uint32_t idx)
 {
 	struct find_iter_args args;
 
@@ -229,7 +229,7 @@ handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 
 int32_t parse_dmar_table(struct dmar_info *plat_dmar_info)
 {
-	int32_t i;
+	uint32_t i;
 	struct acpi_dmar_hardware_unit *acpi_drhd;
 
 	/* find out how many dmar units */
@@ -238,12 +238,12 @@ int32_t parse_dmar_table(struct dmar_info *plat_dmar_info)
 
 	plat_dmar_info->drhd_count = dmar_unit_cnt;
 
-	for (i = 0; i < dmar_unit_cnt; i++) {
+	for (i = 0U; i < dmar_unit_cnt; i++) {
 		acpi_drhd = drhd_find_by_index(i);
 		if (acpi_drhd == NULL)
 			continue;
 		if (acpi_drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK)
-			ASSERT((i+1) == dmar_unit_cnt,
+			ASSERT((i + 1U) == dmar_unit_cnt,
 				"drhd with flags set should be the last one");
 		handle_one_drhd(acpi_drhd, &(plat_dmar_info->drhd_units[i]));
 	}

@@ -8,6 +8,8 @@
 #define VTD_H
 #include <types.h>
 #include <pci.h>
+#include <platform_acpi_info.h>
+
 /*
  * Intel IOMMU register specification per version 1.0 public spec.
  */
@@ -468,7 +470,7 @@ static inline uint16_t dma_frcd_up_sid(uint64_t up_sid)
 	return ((uint16_t)up_sid & 0xffffU);
 }
 
-#define MAX_DRHDS		4
+#define MAX_DRHDS		DRHD_COUNT
 #define MAX_DRHD_DEVSCOPES	4
 
 #define DMAR_CONTEXT_TRANSLATION_TYPE_TRANSLATED 0x00U

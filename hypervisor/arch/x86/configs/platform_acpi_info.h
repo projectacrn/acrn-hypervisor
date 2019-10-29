@@ -25,7 +25,7 @@
 #define RESET_REGISTER_SPACE_ID 0UL
 
 /* DRHD of DMAR */
-#define DRHD_COUNT		0U
+#define DRHD_COUNT		8U
 
 #define DRHD0_DEV_CNT		0U
 #define DRHD0_SEGMENT		0U
