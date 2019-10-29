@@ -114,7 +114,7 @@ function upgrade_sos()
         fi
 
         echo "Add new ACRN efi boot event"
-        efibootmgr -c -l "\EFI\acrn\acrn.efi" -d $partition -p 1 -L "ACRN" >/dev/null
+        efibootmgr -c -l "\EFI\acrn\acrn.efi" -d $partition -p 1 -L "ACRN" -u "uart=disabled" >/dev/null
 
         echo "Service OS setup done!"
     else
