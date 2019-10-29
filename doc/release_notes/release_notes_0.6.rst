@@ -40,8 +40,7 @@ Version 0.6 new features
 Initial patches to enable a User OS
 (UOS) running as a virtual machine (VM)
 with real-time characteristics, also called a "Privileged VM". We've
-published a tutorial :ref:`rt_linux_setup`.  More patches
-for ACRN real time support will continue.
+published a tutorial.  More patches for ACRN real time support will continue.
 
 **Document updates**: Several new documents have been added in this release, including:
 

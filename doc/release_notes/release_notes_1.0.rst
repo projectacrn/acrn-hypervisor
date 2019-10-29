@@ -56,8 +56,7 @@ Enable post-launched RTVM support for real-time UOS in ACRN
 ===========================================================
 This release provides initial patches enabling a User OS (UOS) running as a
 virtual machine (VM) with real-time characteristics,
-also called a "post-launched RTVM". We've published a tutorial
-:ref:`rt_linux_setup`. More patches for ACRN real time support will continue.
+also called a "post-launched RTVM". More patches for ACRN real time support will continue.
 
 Enable cache QOS with CAT
 =========================
@@ -206,7 +205,7 @@ We have many reference documents `available
 * :ref:`GPU Passthrough on Skylake NUC <skl-nuc-gpu-passthrough>`
 * :ref:`Device Model Parameters <acrn-dm_parameters>`
 * :ref:`Running Automotive Grade Linux as a VM <agl-vms>`
-* :ref:`Using PREEMPT_RT-Linux for real-time UOS <rt_linux_setup>`
+* Using PREEMPT_RT-Linux for real-time UOS
 * :ref:`Frequently Asked Questions <faq>`
 * :ref:`An introduction to Trusty and Security services on ACRN <trusty-security-services>`
 * A Wiki article about `Porting Clear Linux/ACRN to support Yocto Project/ACRN
