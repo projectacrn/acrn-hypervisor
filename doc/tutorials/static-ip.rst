@@ -35,7 +35,7 @@ Modify the ``[Network]`` section in the
 ``/etc/systemd/network/50-eth.network`` file you just created.
 This is the content of the file used in ACRN by default.
 
-.. literalinclude:: ../../misc/acrnbridge/eth.network
+.. literalinclude:: ../../../../misc/acrnbridge/eth.network
    :caption: misc/acrnbridge/eth.network
    :emphasize-lines: 5
 
