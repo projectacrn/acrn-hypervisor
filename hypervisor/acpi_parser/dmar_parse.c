@@ -21,6 +21,8 @@ struct find_iter_args {
 typedef int32_t (*dmar_iter_t)(struct acpi_dmar_header*, void*);
 
 static uint32_t dmar_unit_cnt;
+static struct dmar_drhd drhd_info_array[MAX_DRHDS];
+static struct dmar_dev_scope drhd_dev_scope[MAX_DRHDS][MAX_DRHD_DEVSCOPES];
 
 static void *get_dmar_table(void)
 {
@@ -237,6 +239,7 @@ int32_t parse_dmar_table(struct dmar_info *plat_dmar_info)
 	ASSERT(dmar_unit_cnt <= MAX_DRHDS, "parsed dmar_unit_cnt > MAX_DRHDS");
 
 	plat_dmar_info->drhd_count = dmar_unit_cnt;
+	plat_dmar_info->drhd_units = drhd_info_array;
 
 	for (i = 0U; i < dmar_unit_cnt; i++) {
 		acpi_drhd = drhd_find_by_index(i);
@@ -245,6 +248,7 @@ int32_t parse_dmar_table(struct dmar_info *plat_dmar_info)
 		if (acpi_drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK)
 			ASSERT((i + 1U) == dmar_unit_cnt,
 				"drhd with flags set should be the last one");
+		plat_dmar_info->drhd_units[i].devices = drhd_dev_scope[i];
 		handle_one_drhd(acpi_drhd, &(plat_dmar_info->drhd_units[i]));
 	}
 
