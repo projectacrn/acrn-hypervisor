@@ -576,7 +576,7 @@ Set up Reference UOS
    is also available in the acrn-hypervisor/devicemodel GitHub repo (in the samples
    folder) as shown here:
 
-   .. literalinclude:: ../../devicemodel/samples/nuc/launch_uos.sh
+   .. literalinclude:: ../../../../devicemodel/samples/nuc/launch_uos.sh
       :caption: devicemodel/samples/nuc/launch_uos.sh
       :language: bash
 
