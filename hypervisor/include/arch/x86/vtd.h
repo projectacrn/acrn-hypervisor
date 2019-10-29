@@ -471,7 +471,7 @@ static inline uint16_t dma_frcd_up_sid(uint64_t up_sid)
 }
 
 #define MAX_DRHDS		DRHD_COUNT
-#define MAX_DRHD_DEVSCOPES	4
+#define MAX_DRHD_DEVSCOPES	16U
 
 #define DMAR_CONTEXT_TRANSLATION_TYPE_TRANSLATED 0x00U
 #define DMAR_CONTEXT_TRANSLATION_TYPE_RESERVED 0x01U
@@ -529,8 +529,6 @@ union dmar_ir_entry {
 		uint64_t rsvd_3:44;
 	} bits __packed;
 };
-
-extern struct dmar_info *get_dmar_info(void);
 
 #ifdef CONFIG_ACPI_PARSE_ENABLED
 int32_t parse_dmar_table(struct dmar_info *plat_dmar_info);

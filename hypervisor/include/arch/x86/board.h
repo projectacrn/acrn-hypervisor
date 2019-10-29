@@ -17,6 +17,7 @@ struct platform_clos_info {
 	uint32_t msr_index;
 };
 
+extern struct dmar_info plat_dmar_info;
 extern struct platform_clos_info platform_clos_array[];
 extern uint16_t platform_clos_num;
 extern const struct cpu_state_table board_cpu_state_tbl;

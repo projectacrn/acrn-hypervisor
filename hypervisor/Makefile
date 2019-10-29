@@ -225,7 +225,6 @@ ifneq (,$(wildcard scenarios/$(SCENARIO_NAME)/pci_dev.c))
 HW_C_SRCS += scenarios/$(SCENARIO_NAME)/pci_dev.c
 endif
 HW_C_SRCS += boot/acpi_base.c
-HW_C_SRCS += boot/dmar_info.c
 HW_C_SRCS += boot/cmdline.c
 # ACPI parsing component
 # This part should be isolated from FuSa Cert

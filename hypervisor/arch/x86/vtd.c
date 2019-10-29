@@ -19,6 +19,7 @@
 #include <vtd.h>
 #include <timer.h>
 #include <logmsg.h>
+#include <board.h>
 #include <vm_configurations.h>
 
 #define DBG_IOMMU 0
@@ -1327,6 +1328,18 @@ void suspend_iommu(void)
 void resume_iommu(void)
 {
 	do_action_for_iommus(dmar_resume);
+}
+
+/**
+ * @post return != NULL
+ * @post return->drhd_count > 0U
+ */
+static struct dmar_info *get_dmar_info(void)
+{
+#ifdef CONFIG_ACPI_PARSE_ENABLED
+	parse_dmar_table(&plat_dmar_info);
+#endif
+	return &plat_dmar_info;
 }
 
 int32_t init_iommu(void)
