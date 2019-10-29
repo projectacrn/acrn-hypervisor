@@ -36,6 +36,8 @@
 #define ROOT_ENTRY_LOWER_CTP_POS            (12U)
 #define ROOT_ENTRY_LOWER_CTP_MASK           (0xFFFFFFFFFFFFFUL << ROOT_ENTRY_LOWER_CTP_POS)
 
+#define CONFIG_MAX_IOMMU_NUM		DRHD_COUNT
+
 /* 4 iommu fault register state */
 #define	IOMMU_FAULT_REGISTER_STATE_NUM	4U
 #define	IOMMU_FAULT_REGISTER_SIZE	4U
@@ -188,7 +190,7 @@ bool iommu_snoop_supported(const struct iommu_domain *iommu)
 	return ret;
 }
 
-static struct dmar_drhd_rt dmar_drhd_units[CONFIG_MAX_IOMMU_NUM];
+static struct dmar_drhd_rt dmar_drhd_units[MAX_DRHDS];
 static bool iommu_page_walk_coherent = true;
 static uint32_t qi_status = 0U;
 static struct dmar_info *platform_dmar_info = NULL;
