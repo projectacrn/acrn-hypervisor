@@ -514,10 +514,11 @@ def dm_arg_set(names, sel, dm, vmid, config):
             print("   $intr_storm_monitor \\", file=config)
             print("   -s {},xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
 
-    if dm['vbootloader'][vmid] and dm['vbootloader'][vmid] == "vsbl":
-        print("   -s {},virtio-blk$boot_dev_flag,/data/{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk"), root_img), file=config)
-    elif dm['vbootloader'][vmid] and dm['vbootloader'][vmid] == "ovmf":
-        print("   -s {},virtio-blk,{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk"), root_img), file=config)
+    if uos_type != "PREEMPT-RT LINUX":
+        if dm['vbootloader'][vmid] and dm['vbootloader'][vmid] == "vsbl":
+            print("   -s {},virtio-blk$boot_dev_flag,/data/{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk"), root_img), file=config)
+        elif dm['vbootloader'][vmid] and dm['vbootloader'][vmid] == "ovmf":
+            print("   -s {},virtio-blk,{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk"), root_img), file=config)
 
     if uos_type in ("ANDROID", "ALIOS"):
         print("   --enable_trusty \\", file=config)
