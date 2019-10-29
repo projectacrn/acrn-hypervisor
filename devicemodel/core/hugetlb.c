@@ -740,15 +740,13 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 		}
 	}
 
+	lock_acrn_hugetlb();
+
 	/* it will check each level memory need */
 	has_gap = hugetlb_check_memgap();
 	if (has_gap) {
-		lock_acrn_hugetlb();
-		if (!hugetlb_reserve_pages()) {
-			unlock_acrn_hugetlb();
-			goto err;
-		}
-		unlock_acrn_hugetlb();
+		if (!hugetlb_reserve_pages())
+			goto err_lock;
 	}
 
 	/* align up total size with huge page size for vma alignment */
@@ -775,7 +773,7 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 			MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 	if (ptr == MAP_FAILED) {
 		perror("anony mmap fail");
-		goto err;
+		goto err_lock;
 	}
 
 	/* align up baseaddr according to hugepage level size */
@@ -791,22 +789,24 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 	/* mmap lowmem */
 	if (mmap_hugetlbfs(ctx, 0, get_lowmem_param, adj_lowmem_param) < 0) {
 		perror("lowmem mmap failed");
-		goto err;
+		goto err_lock;
 	}
 
 	/* mmap highmem */
 	if (mmap_hugetlbfs(ctx, ctx->highmem_gpa_base,
 				get_highmem_param, adj_highmem_param) < 0) {
 		perror("highmem mmap failed");
-		goto err;
+		goto err_lock;
 	}
 
 	/* mmap biosmem */
 	if (mmap_hugetlbfs(ctx, 4 * GB - ctx->biosmem,
 				get_biosmem_param, adj_biosmem_param) < 0) {
 		perror("biosmem mmap failed");
-		goto err;
+		goto err_lock;
 	}
+
+	unlock_acrn_hugetlb();
 
 	/* dump hugepage really setup */
 	printf("\nreally setup hugepage with:\n");
@@ -846,6 +846,8 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 
 	return 0;
 
+err_lock:
+	unlock_acrn_hugetlb();
 err:
 	if (ptr) {
 		munmap(ptr, total_size);
