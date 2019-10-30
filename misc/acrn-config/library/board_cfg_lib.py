@@ -376,7 +376,6 @@ def get_board_private_vuart(branch_tag, tag_console):
 
     # VUART1
     if len(vuart1_valid_console) == 4:
-        ttys_n = get_sub_leaf_tag(SCENARIO_INFO_FILE, branch_tag, "vuart1_console")
         vuart1_console_dic[ttys_n] = alloc_irq()
     else:
         vuart1_console_dic[vuart1_valid_console[0]] = alloc_irq()
