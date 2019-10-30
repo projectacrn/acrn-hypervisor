@@ -102,7 +102,7 @@ void append_seed_arg(char *cmd_dst, bool vm_is_sos)
 
 	if ((cmd_dst != NULL) && vm_is_sos) {
 		for (i = 0U; seed_arg[i].str != NULL; i++) {
-			if (seed_arg[i].addr != 0ULL) {
+			if (seed_arg[i].addr != 0UL) {
 				(void)memset(buf, 0U, sizeof(buf));
 
 				snprintf(buf, sizeof(buf), "%s0x%X ", seed_arg[i].str,

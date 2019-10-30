@@ -1409,7 +1409,7 @@ static int32_t vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg, uint
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 	uint32_t i;
 	uint32_t offset = offset_arg;
-	*data = 0ULL;
+	*data = 0UL;
 
 	if (offset > sizeof(*lapic)) {
 		ret = -EACCES;
