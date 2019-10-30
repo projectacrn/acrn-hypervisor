@@ -152,7 +152,7 @@ before launching.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 As shown in :numref:`security-bootflow-uefi`, in this boot sequence,UEFI
 authenticates and starts the ACRN hypervisor firstly,and hypervisor will return
-to UEFI enviorment to authenticate and load SOS kernel bootloader.
+to UEFI environment to authenticate and load SOS kernel bootloader.
 
 .. figure:: images/security-image-bootflow-uefi.png
    :width: 900px
@@ -204,7 +204,8 @@ systems. To minimize the attack surfaces and achieve the goal of
 "defense in depth", there are many common guidelines to ensure the
 security of SOS system.
 
-As shown in :numref:`security-bootflow` above, the integrity of the UOS
+As shown in :numref:`security-bootflow-sbl` and
+:numref:`security-bootflow-uefi` above, the integrity of the UOS
 depends on the integrity of the DM module and vBIOS/vOSloader in the
 SOS. Hence, SOS integrity is critical to the entire UOS security. If the
 SOS system is compromised, all the other guest UOS VMs may be
@@ -833,8 +834,9 @@ Hypercall - Trusty Initialization
 
 When a UOS is created by the DM in the SOS, if this UOS supports a
 secure isolated world, then this hypercall will be invoked by OSLoader
-(it could be Android OS loader in :numref:`security-bootflow` above) to
-create / initialize the secure world (Trusty/TEE).
+(it could be Android OS loader in :numref:`security-bootflow-sbl` and
+:numref:`security-bootflow-uefi` above) to create / initialize the
+secure world (Trusty/TEE).
 
 .. figure:: images/security-image9.png
    :width: 900px

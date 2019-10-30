@@ -21,7 +21,6 @@ system.
    Device Model <hld-devicemodel>
    Emulated Devices <hld-emulated-devices>
    Virtio Devices <hld-virtio-devices>
-   VM Management <hld-vm-management>
    Power Management <hld-power-management>
    Tracing and Logging <hld-trace-log>
    Virtual Bootloader <hld-vsbl>
