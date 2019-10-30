@@ -164,9 +164,6 @@ lifecycle:
 .. doxygenfunction:: create_vcpu
    :project: Project ACRN
 
-.. doxygenfunction:: schedule_vcpu
-   :project: Project ACRN
-
 .. doxygenfunction:: pause_vcpu
    :project: Project ACRN
 
