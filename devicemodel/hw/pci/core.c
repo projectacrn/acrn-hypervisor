@@ -2253,64 +2253,6 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 	}
 }
 
-static int cfgenable, cfgbus, cfgslot, cfgfunc, cfgoff;
-
-static int
-pci_emul_cfgaddr(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
-		 uint32_t *eax, void *arg)
-{
-	uint32_t x;
-
-	if (bytes != 4) {
-		if (in)
-			*eax = (bytes == 2) ? 0xffff : 0xff;
-		return 0;
-	}
-
-	if (in) {
-		x = (cfgbus << 16) | (cfgslot << 11) | (cfgfunc << 8) | cfgoff;
-		if (cfgenable)
-			x |= CONF1_ENABLE;
-		*eax = x;
-	} else {
-		x = *eax;
-		cfgenable = (x & CONF1_ENABLE) == CONF1_ENABLE;
-		cfgoff = x & PCI_REGMAX;
-		cfgfunc = (x >> 8) & PCI_FUNCMAX;
-		cfgslot = (x >> 11) & PCI_SLOTMAX;
-		cfgbus = (x >> 16) & PCI_BUSMAX;
-	}
-
-	return 0;
-}
-INOUT_PORT(pci_cfgaddr, CONF1_ADDR_PORT, IOPORT_F_INOUT, pci_emul_cfgaddr);
-
-static int
-pci_emul_cfgdata(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
-		 uint32_t *eax, void *arg)
-{
-	int coff;
-
-	if ((bytes != 1) && (bytes != 2) && (bytes != 4))
-		return -1;
-
-	coff = cfgoff + (port - CONF1_DATA_PORT);
-	if (cfgenable) {
-		pci_cfgrw(ctx, vcpu, in, cfgbus, cfgslot, cfgfunc, coff, bytes,
-		    eax);
-	} else {
-		/* Ignore accesses to cfgdata if not enabled by cfgaddr */
-		if (in)
-			*eax = 0xffffffff;
-	}
-	return 0;
-}
-
-INOUT_PORT(pci_cfgdata, CONF1_DATA_PORT+0, IOPORT_F_INOUT, pci_emul_cfgdata);
-INOUT_PORT(pci_cfgdata, CONF1_DATA_PORT+1, IOPORT_F_INOUT, pci_emul_cfgdata);
-INOUT_PORT(pci_cfgdata, CONF1_DATA_PORT+2, IOPORT_F_INOUT, pci_emul_cfgdata);
-INOUT_PORT(pci_cfgdata, CONF1_DATA_PORT+3, IOPORT_F_INOUT, pci_emul_cfgdata);
-
 int
 emulate_pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot,
 		  int func, int reg, int bytes, int *value)
