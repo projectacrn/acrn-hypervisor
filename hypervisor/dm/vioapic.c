@@ -33,6 +33,7 @@
 #include <vm.h>
 #include <errno.h>
 #include <irq.h>
+#include <ept.h>
 #include <assign.h>
 #include <logmsg.h>
 
@@ -472,6 +473,8 @@ vioapic_init(struct acrn_vm *vm)
 			(uint64_t)VIOAPIC_BASE,
 			(uint64_t)VIOAPIC_BASE + VIOAPIC_SIZE,
 			vm);
+	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+			(uint64_t)VIOAPIC_BASE, (uint64_t)VIOAPIC_SIZE);
 	vm->arch_vm.vioapic.ready = true;
 }
 

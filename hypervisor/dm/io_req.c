@@ -6,7 +6,6 @@
 #include <vm.h>
 #include <irq.h>
 #include <errno.h>
-#include <ept.h>
 #include <logmsg.h>
 
 #define ACRN_DBG_IOREQUEST	6U
@@ -695,16 +694,6 @@ void register_mmio_emulation_handler(struct acrn_vm *vm,
 			mmio_node->handler_private_data = handler_private_data;
 			mmio_node->range_start = start;
 			mmio_node->range_end = end;
-
-			/*
-			 * SOS would map all its memory at beginning, so we
-			 * should unmap it. But UOS will not, so we shouldn't
-			 * need to unmap it.
-			 */
-			if (is_sos_vm(vm)) {
-				ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, start, end - start);
-			}
-
 		}
 	}
 
