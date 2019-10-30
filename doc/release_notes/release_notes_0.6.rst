@@ -45,7 +45,7 @@ published a tutorial.  More patches for ACRN real time support will continue.
 **Document updates**: Several new documents have been added in this release, including:
 
 * :ref:`Running Automotive Grade Linux as a VM <agl-vms>`
-* :ref:`Using PREEMPT_RT-Linux for real-time UOS <rt_linux_setup>`
+* Using PREEMPT_RT-Linux for real-time UOS
 * :ref:`Frequently Asked Questions <faq>`
 * :ref:`An introduction to Trusty and Security services on ACRN
   <trusty-security-services>`
