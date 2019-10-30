@@ -25,7 +25,7 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 		io_req->io_type = REQ_PORTIO;
 		io_req->reqs.pio.direction = REQUEST_WRITE;
 		io_req->reqs.pio.address = VIRTUAL_PM1A_CNT_ADDR;
-		io_req->reqs.pio.size = 2ULL;
+		io_req->reqs.pio.size = 2UL;
 		io_req->reqs.pio.value = (VIRTUAL_PM1A_SLP_EN | (5U << 10U));
 
 		/* Inject pm1a S5 request to SOS to shut down the guest */
