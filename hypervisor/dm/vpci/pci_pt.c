@@ -108,126 +108,18 @@ void vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t byt
 }
 
 /**
-* @pre vdev != NULL
-* @pre vdev->vpci != NULL
-* @pre vdev->vpci->vm != NULL
-*/
-static void vdev_pt_remap_msix_table_vbar(struct pci_vdev *vdev)
-{
-	uint32_t i;
-	struct pci_msix *msix = &vdev->msix;
-	struct pci_bar *vbar;
-
-	/* Mask all table entries */
-	for (i = 0U; i < msix->table_count; i++) {
-		msix->table_entries[i].vector_control = PCIM_MSIX_VCTRL_MASK;
-		msix->table_entries[i].addr = 0U;
-		msix->table_entries[i].data = 0U;
-	}
-
-	vbar = &vdev->bar[msix->table_bar];
-	if (vbar->size != 0UL) {
-		uint64_t pbar_base = vbar->base_hpa; /* pbar (hpa) */
-
-		msix->mmio_hpa = pbar_base;
-		msix->mmio_gpa = get_vbar_base(vdev, msix->table_bar);
-		msix->mmio_size = vbar->size;
-	}
-
-	/*
-	 *    For SOS:
-	 *    --------
-	 *    MSI-X Table BAR Contains:
-	 *    Other Info + Tables + PBA	        Other info already mapped into EPT (since SOS)
-	 *    					Tables are handled by HV MMIO handler (4k adjusted up and down)
-	 *    						and remaps interrupts
-	 *    					PBA already mapped into EPT (since SOS)
-	 *
-	 *    Other Info + Tables		Other info already mapped into EPT (since SOS)
-	 *					Tables are handled by HV MMIO handler (4k adjusted up and down)
-	 *						and remaps interrupts
-	 *
-	 *    Tables				Tables are handled by HV MMIO handler (4k adjusted up and down)
-	 *    						and remaps interrupts
-	 *
-	 *    For UOS (launched by DM):
-	 *    -------------------------
-	 *    MSI-X Table BAR Contains:
-	 *    Other Info + Tables + PBA		Other info  mapped into EPT (4k adjusted) by DM
-	 *    					Tables are handled by DM MMIO handler (4k adjusted up and down) and SOS writes to tables,
-	 *    						intercepted by HV MMIO handler and HV remaps interrupts
-	 *    					PBA already mapped into EPT by DM
-	 *
-	 *    Other Info + Tables		Other info mapped into EPT by DM
-	 *    					Tables are handled by DM MMIO handler (4k adjusted up and down) and SOS writes to tables,
-	 *    						intercepted by HV MMIO handler and HV remaps interrupts.
-	 *
-	 *    Tables				Tables are handled by DM MMIO handler (4k adjusted up and down) and SOS writes to tables,
-	 *    						intercepted by HV MMIO handler and HV remaps interrupts.
-	 *
-	 *    For Pre-launched VMs (no SOS/DM):
-	 *    --------------------------------
-	 *    MSI-X Table BAR Contains:
-	 *    All 3 cases:			Writes to MMIO region in MSI-X Table BAR handled by HV MMIO handler
-	 *    					If the offset falls within the MSI-X table [offset, offset+tables_size), HV remaps
-	 *    						interrupts.
-	 *    					Else, HV writes/reads to/from the corresponding HPA
-	 */
-
-
-	if (msix->mmio_gpa != 0UL) {
-		uint64_t addr_hi, addr_lo;
-
-		if (is_prelaunched_vm(vdev->vpci->vm)) {
-			addr_hi = msix->mmio_gpa + msix->mmio_size;
-			addr_lo = msix->mmio_gpa;
-		} else {
-			/*
-			* PCI Spec: a BAR may also map other usable address space that is not associated
-			* with MSI-X structures, but it must not share any naturally aligned 4 KB
-			* address range with one where either MSI-X structure resides.
-			* The MSI-X Table and MSI-X PBA are permitted to co-reside within a naturally
-			* aligned 4 KB address range.
-			*
-			* If PBA or others reside in the same BAR with MSI-X Table, devicemodel could
-			* emulate them and maps these memory range at the 4KB boundary. Here, we should
-			* make sure only intercept the minimum number of 4K pages needed for MSI-X table.
-			*/
-
-			/* The higher boundary of the 4KB aligned address range for MSI-X table */
-			addr_hi = msix->mmio_gpa + msix->table_offset + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
-			addr_hi = round_page_up(addr_hi);
-
-			/* The lower boundary of the 4KB aligned address range for MSI-X table */
-			addr_lo = round_page_down(msix->mmio_gpa + msix->table_offset);
-		}
-
-		if (vdev->bar_base_mapped[msix->table_bar] != addr_lo) {
-			register_mmio_emulation_handler(vdev->vpci->vm, vmsix_table_mmio_access_handler,
-				addr_lo, addr_hi, vdev);
-			/* Remember the previously registered MMIO vbar base */
-			vdev->bar_base_mapped[msix->table_bar] = addr_lo;
-		}
-	}
-}
-
-/**
- * @brief Remaps guest MMIO BARs other than MSI-x Table BAR
- * This API is invoked upon guest re-programming PCI BAR with MMIO region
- * after a new vbar is set.
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-static void vdev_pt_remap_generic_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
+static void vdev_pt_unmap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
-	struct acrn_vm *vm = vdev->vpci->vm;
+	bool is_msix_table_bar;
 	struct pci_bar *vbar;
-	uint64_t vbar_base = get_vbar_base(vdev, idx); /* vbar (gpa) */
+	struct acrn_vm *vm = vdev->vpci->vm;
 
 	vbar = &vdev->bar[idx];
 
-	/* If the old vbar is mapped before, unmap it first */
 	if (vdev->bar_base_mapped[idx] != 0UL) {
 		ept_del_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
 			vdev->bar_base_mapped[idx], /* GPA (old vbar) */
@@ -235,50 +127,85 @@ static void vdev_pt_remap_generic_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 		vdev->bar_base_mapped[idx] = 0UL;
 	}
 
-	/* If a new vbar is set (nonzero), set the EPT mapping accordingly */
-	if (vbar_base != 0UL) {
-		uint64_t hpa = gpa2hpa(vdev->vpci->vm, vbar_base);
-		uint64_t pbar_base = vbar->base_hpa; /* pbar (hpa) */
+	is_msix_table_bar = (has_msix_cap(vdev) && (idx == vdev->msix.table_bar));
+	if (is_msix_table_bar) {
+		uint32_t i;
+		uint64_t addr_hi, addr_lo;
+		struct pci_msix *msix = &vdev->msix;
 
-		if (hpa != pbar_base) {
-			/* Unmap the existing mapping for new vbar */
-			if (hpa != INVALID_HPA) {
-				ept_del_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
-				vbar_base, /* GPA (new vbar) */
-				vbar->size);
-			}
+		/* Mask all table entries */
+		for (i = 0U; i < msix->table_count; i++) {
+			msix->table_entries[i].vector_control = PCIM_MSIX_VCTRL_MASK;
+			msix->table_entries[i].addr = 0U;
+			msix->table_entries[i].data = 0U;
+		}
+		msix->mmio_hpa = vbar->base_hpa; /* pbar (hpa) */
+		msix->mmio_size = vbar->size;
 
-			if (ept_is_mr_valid(vm, vbar_base, vbar->size)) {
-				/* Map the physical BAR in the guest MMIO space */
-				ept_add_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
-					pbar_base, /* HPA (pbar) */
-					vbar_base, /* GPA (new vbar) */
-					vbar->size,
-					EPT_WR | EPT_RD | EPT_UNCACHED);
+		if (msix->mmio_gpa != 0UL) {
+			addr_lo = msix->mmio_gpa + msix->table_offset;
+			addr_hi = addr_lo + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
 
-				/* Remember the previously mapped MMIO vbar */
-				vdev->bar_base_mapped[idx] = vbar_base;
-			} else {
-				pr_fatal("%s, %x:%x.%x set invalid bar[%d] address: 0x%llx\n", __func__,
-					vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, vbar_base);
-			}
+			addr_lo = round_page_down(addr_lo);
+			addr_hi = round_page_up(addr_hi);
+			unregister_mmio_emulation_handler(vm, addr_lo, addr_hi);
+			msix->mmio_gpa = 0UL;
+
 		}
 	}
 }
 
 /**
  * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
  */
-static void vdev_pt_remap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
+static void vdev_pt_map_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
 	bool is_msix_table_bar;
+	struct pci_bar *vbar;
+	uint64_t vbar_base;
+	struct acrn_vm *vm = vdev->vpci->vm;
+
+	vbar = &vdev->bar[idx];
+
+	vbar_base = get_vbar_base(vdev, idx);
+	if (vbar_base != 0UL) {
+		if (ept_is_mr_valid(vm, vbar_base, vbar->size)) {
+			uint64_t hpa = gpa2hpa(vdev->vpci->vm, vbar_base);
+			uint64_t pbar_base = vbar->base_hpa; /* pbar (hpa) */
+
+			if (hpa != pbar_base) {
+				ept_add_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
+					pbar_base, /* HPA (pbar) */
+					vbar_base, /* GPA (new vbar) */
+					vbar->size,
+					EPT_WR | EPT_RD | EPT_UNCACHED);
+			}
+			/* Remember the previously mapped MMIO vbar */
+			vdev->bar_base_mapped[idx] = vbar_base;
+		} else {
+			pr_fatal("%s, %x:%x.%x set invalid bar[%d] address: 0x%llx\n", __func__,
+				vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, vbar_base);
+		}
+	}
 
 	is_msix_table_bar = (has_msix_cap(vdev) && (idx == vdev->msix.table_bar));
-
 	if (is_msix_table_bar) {
-		vdev_pt_remap_msix_table_vbar(vdev);
-	} else {
-		vdev_pt_remap_generic_mem_vbar(vdev, idx);
+		uint64_t addr_hi, addr_lo;
+		struct pci_msix *msix = &vdev->msix;
+
+		if (vdev->bar_base_mapped[idx] != 0UL) {
+			addr_lo = vdev->bar_base_mapped[idx] + msix->table_offset;
+			addr_hi = addr_lo + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
+
+			addr_lo = round_page_down(addr_lo);
+			addr_hi = round_page_up(addr_hi);
+			register_mmio_emulation_handler(vm, vmsix_table_mmio_access_handler,
+					addr_lo, addr_hi, vdev);
+			ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, addr_lo, addr_hi - addr_lo);
+			msix->mmio_gpa = vdev->bar_base_mapped[idx];
+		}
 	}
 }
 
@@ -352,11 +279,12 @@ static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t 
 		if (idx > 0U) {
 			uint32_t prev_idx = idx - 1U;
 
+			vdev_pt_unmap_mem_vbar(vdev, prev_idx);
 			base = git_size_masked_bar_base(vdev->bar[prev_idx].size, ((uint64_t)val) << 32U) >> 32U;
 			set_vbar_base(vbar, (uint32_t)base);
 
 			if (bar_update_normal) {
-				vdev_pt_remap_mem_vbar(vdev, prev_idx);
+				vdev_pt_map_mem_vbar(vdev, prev_idx);
 			}
 		} else {
 			ASSERT(false, "idx for upper 32-bit of the 64-bit bar should be greater than 0!");
@@ -375,15 +303,17 @@ static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t 
 			break;
 
 		case PCIBAR_MEM32:
+			vdev_pt_unmap_mem_vbar(vdev, idx);
 			base = git_size_masked_bar_base(vbar->size, (uint64_t)val);
 			set_vbar_base(vbar, (uint32_t)base);
 
 			if (bar_update_normal) {
-				vdev_pt_remap_mem_vbar(vdev, idx);
+				vdev_pt_map_mem_vbar(vdev, idx);
 			}
 			break;
 
 		case PCIBAR_MEM64:
+			vdev_pt_unmap_mem_vbar(vdev, idx);
 			base = git_size_masked_bar_base(vbar->size, (uint64_t)val);
 			set_vbar_base(vbar, (uint32_t)base);
 			break;
