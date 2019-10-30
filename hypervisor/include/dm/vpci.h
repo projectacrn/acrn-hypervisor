@@ -30,6 +30,7 @@
 #ifndef VPCI_H_
 #define VPCI_H_
 
+#include <spinlock.h>
 #include <pci.h>
 
 
@@ -112,6 +113,7 @@ union pci_cfg_addr_reg {
 };
 
 struct acrn_vpci {
+	spinlock_t lock;
 	struct acrn_vm *vm;
 	union pci_cfg_addr_reg addr;
 	uint32_t pci_vdev_cnt;
@@ -120,8 +122,8 @@ struct acrn_vpci {
 
 extern const struct pci_vdev_ops vhostbridge_ops;
 void vpci_init(struct acrn_vm *vm);
-void vpci_cleanup(const struct acrn_vm *vm);
+void vpci_cleanup(struct acrn_vm *vm);
 void vpci_set_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
-void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
+void vpci_reset_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
 
 #endif /* VPCI_H_ */

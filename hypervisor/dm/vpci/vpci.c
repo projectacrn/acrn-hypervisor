@@ -35,10 +35,10 @@
 #include "pci_dev.h"
 
 static void vpci_init_vdevs(struct acrn_vm *vm);
-static void deinit_prelaunched_vm_vpci(const struct acrn_vm *vm);
-static void deinit_postlaunched_vm_vpci(const struct acrn_vm *vm);
-static void read_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t *val);
-static void write_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
+static void deinit_prelaunched_vm_vpci(struct acrn_vm *vm);
+static void deinit_postlaunched_vm_vpci(struct acrn_vm *vm);
+static void read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t *val);
+static void write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 
 /**
  * @pre vcpu != NULL
@@ -216,13 +216,15 @@ void vpci_init(struct acrn_vm *vm)
 		/* Nothing to do for other vm types */
 		break;
 	}
+
+	spinlock_init(&vm->vpci.lock);
 }
 
 /**
  * @pre vm != NULL
  * @pre vm->vm_id < CONFIG_MAX_VM_NUM
  */
-void vpci_cleanup(const struct acrn_vm *vm)
+void vpci_cleanup(struct acrn_vm *vm)
 {
 	struct acrn_vm_config *vm_config;
 
@@ -287,20 +289,11 @@ static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 	}
 }
 
-static struct pci_vdev *find_vdev_for_sos(union pci_bdf bdf)
-{
-	struct acrn_vm *vm;
-
-	vm = get_sos_vm();
-
-	return pci_find_vdev(&vm->vpci, bdf);
-}
-
 /**
  * @pre vpci != NULL
  * @pre vpci->vm != NULL
  */
-static struct pci_vdev *find_vdev(const struct acrn_vpci *vpci, union pci_bdf bdf)
+static struct pci_vdev *find_vdev(struct acrn_vpci *vpci, union pci_bdf bdf)
 {
 	struct pci_vdev *vdev = pci_find_vdev(vpci, bdf);
 
@@ -376,27 +369,33 @@ static const struct pci_vdev_ops pci_pt_dev_ops = {
 /**
  * @pre vpci != NULL
  */
-static void read_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf,
+static void read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
-	struct pci_vdev *vdev = find_vdev(vpci, bdf);
+	struct pci_vdev *vdev;
 
+	spinlock_obtain(&vpci->lock);
+	vdev = find_vdev(vpci, bdf);
 	if (vdev != NULL) {
 		vdev->vdev_ops->read_vdev_cfg(vdev, offset, bytes, val);
 	}
+	spinlock_release(&vpci->lock);
 }
 
 /**
  * @pre vpci != NULL
  */
-static void write_cfg(const struct acrn_vpci *vpci, union pci_bdf bdf,
+static void write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
-	struct pci_vdev *vdev = find_vdev(vpci, bdf);
+	struct pci_vdev *vdev;
 
+	spinlock_obtain(&vpci->lock);
+	vdev = find_vdev(vpci, bdf);
 	if (vdev != NULL) {
 		vdev->vdev_ops->write_vdev_cfg(vdev, offset, bytes, val);
 	}
+	spinlock_release(&vpci->lock);
 }
 
 /**
@@ -444,7 +443,7 @@ static void vpci_init_vdevs(struct acrn_vm *vm)
  * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  * @pre is_sos_vm(vm) || is_prelaunched_vm(vm)
  */
-static void deinit_prelaunched_vm_vpci(const struct acrn_vm *vm)
+static void deinit_prelaunched_vm_vpci(struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
 	uint32_t i;
@@ -457,11 +456,11 @@ static void deinit_prelaunched_vm_vpci(const struct acrn_vm *vm)
 }
 
 /**
- * @pre vm != NULL
+ * @pre vm != NULL && Pointer vm shall point to SOS_VM
  * @pre vm->vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
  * @pre is_postlaunched_vm(vm) == true
  */
-static void deinit_postlaunched_vm_vpci(const struct acrn_vm *vm)
+static void deinit_postlaunched_vm_vpci(struct acrn_vm *vm)
 {
 	struct acrn_vm *sos_vm;
 	uint32_t i;
@@ -480,10 +479,12 @@ static void deinit_postlaunched_vm_vpci(const struct acrn_vm *vm)
 	 * ACRN must cleanup
 	 */
 	sos_vm = get_sos_vm();
+	spinlock_obtain(&sos_vm->vpci.lock);
 	for (i = 0U; i < sos_vm->vpci.pci_vdev_cnt; i++) {
 		vdev = (struct pci_vdev *)&(sos_vm->vpci.pci_vdevs[i]);
 
 		if (vdev->vpci->vm == vm) {
+			spinlock_obtain(&vm->vpci.lock);
 			target_vdev = vdev->new_owner;
 			ret = move_pt_device(vm->iommu, sos_vm->iommu, (uint8_t)target_vdev->pdev->bdf.bits.b,
 					(uint8_t)(target_vdev->pdev->bdf.value & 0xFFU));
@@ -498,58 +499,72 @@ static void deinit_postlaunched_vm_vpci(const struct acrn_vm *vm)
 			/* Move vdev pointers back to SOS*/
 			vdev->vpci = (struct acrn_vpci *) &sos_vm->vpci;
 			vdev->new_owner = NULL;
+			spinlock_release(&vm->vpci.lock);
 		}
 	}
+	spinlock_release(&sos_vm->vpci.lock);
 }
 
 /**
- * @pre target_vm != NULL
+ * @pre target_vm != NULL && Pointer target_vm shall point to SOS_VM
  */
 void vpci_set_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
 {
 	struct pci_vdev *vdev, *target_vdev;
 	struct acrn_vpci *target_vpci;
 	union pci_bdf bdf;
+	struct acrn_vm *sos_vm;
 
 	bdf.value = pbdf;
-	vdev = find_vdev_for_sos(bdf);
+	sos_vm = get_sos_vm();
+	spinlock_obtain(&sos_vm->vpci.lock);
+	vdev = pci_find_vdev(&sos_vm->vpci, bdf);
 	if (vdev == NULL) {
 		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
 			target_vm->vm_id, vbdf, pbdf);
 	} else {
-		target_vpci = &(target_vm->vpci);
-		vdev->vpci = target_vpci;
+		if (vdev->vpci->vm == sos_vm) {
+			spinlock_obtain(&target_vm->vpci.lock);
+			target_vpci = &(target_vm->vpci);
+			vdev->vpci = target_vpci;
 
-		target_vdev = &target_vpci->pci_vdevs[target_vpci->pci_vdev_cnt];
-		target_vpci->pci_vdev_cnt++;
-		(void)memcpy_s((void *)target_vdev, sizeof(struct pci_vdev), (void *)vdev, sizeof(struct pci_vdev));
-		target_vdev->bdf.value = vbdf;
+			target_vdev = &target_vpci->pci_vdevs[target_vpci->pci_vdev_cnt];
+			target_vpci->pci_vdev_cnt++;
+			(void)memcpy_s((void *)target_vdev, sizeof(struct pci_vdev),
+					(void *)vdev, sizeof(struct pci_vdev));
+			target_vdev->bdf.value = vbdf;
 
-		vdev->new_owner = target_vdev;
+			vdev->new_owner = target_vdev;
+			spinlock_release(&target_vm->vpci.lock);
+		}
 	}
+	spinlock_release(&sos_vm->vpci.lock);
 }
 
 /**
- * @pre target_vm != NULL
+ * @pre target_vm != NULL && Pointer target_vm shall point to SOS_VM
  */
-void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
+void vpci_reset_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
 {
 	struct pci_vdev *vdev;
-	struct acrn_vm *vm;
 	union pci_bdf bdf;
+	struct acrn_vm *sos_vm;
 
 	bdf.value = pbdf;
-	vdev = find_vdev_for_sos(bdf);
+	sos_vm = get_sos_vm();
+	spinlock_obtain(&sos_vm->vpci.lock);
+	vdev = pci_find_vdev(&sos_vm->vpci, bdf);
 	if (vdev == NULL) {
 		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
 			target_vm->vm_id, vbdf, pbdf);
 	} else {
 		/* Return this PCI device to SOS */
 		if (vdev->vpci->vm == target_vm) {
-			vm = get_sos_vm();
-
-			vdev->vpci = &vm->vpci;
+			spinlock_obtain(&target_vm->vpci.lock);
+			vdev->vpci = &sos_vm->vpci;
 			vdev->new_owner = NULL;
+			spinlock_release(&target_vm->vpci.lock);
 		}
 	}
+	spinlock_release(&sos_vm->vpci.lock);
 }
