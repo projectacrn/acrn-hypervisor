@@ -98,7 +98,7 @@ an interrupt, for example:
 - from an emulated device for a MSI
 
 These APIs will finish by making a vCPU request.
-_
+
 .. doxygenfunction:: vlapic_inject_intr
   :project: Project ACRN
 

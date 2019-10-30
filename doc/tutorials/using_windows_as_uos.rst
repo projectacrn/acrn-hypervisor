@@ -329,7 +329,9 @@ together with the script used to install Windows 10.
    - Change ``-s 3,virtio-blk,./win10-ltsc-virtio.img`` to your path to the Windows 10 image.
    - Change ``-s 8,ahci,cd:./windows10-17763-107-LTSC-Virtio-Gfx.iso`` to the ISO you re-generated above.
    - Change ``-s 9,ahci,cd:./virtio-win-0.1.141.iso`` to your path to the virtio-win iso.
-   Or used Oracle driver
+
+   Or if you used the Oracle driver:
+
    - Change ``-s 9,ahci,cd:./winvirtio.iso`` to your path to the winvirtio iso.
 
 #. Run ``install_vga.sh`` and connect to the Windows guest using a vnc client.::
