@@ -84,7 +84,6 @@ Steps for Using Celadon as the User OS
 #. Prepare dependencies on your NUC::
 
    # mkdir ~/celadon && cd ~/celadon
-   # cp /usr/share/acrn/bios/OVMF.fd ./
    # cp /usr/share/acrn/samples/nuc/launch_win.sh ./launch_android.sh
    # sed -i "s/win10-ltsc/android/" launch_android.sh
    # scp <cel_apl_gptimage.img from your host> ./android.img
