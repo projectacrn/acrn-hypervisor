@@ -661,6 +661,9 @@ void reset_vcpu(struct acrn_vcpu *vcpu)
 		}
 		vcpu->arch.cur_context = NORMAL_WORLD;
 
+		/* TODO: we may need to add one scheduler->reset_data to reset the thread_obj */
+		vcpu->thread_obj.notify_mode = SCHED_NOTIFY_IPI;
+
 		vlapic = vcpu_vlapic(vcpu);
 		vlapic_reset(vlapic, apicv_ops);
 
@@ -758,8 +761,7 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 		vcpu->thread_obj.sched_ctl = &per_cpu(sched_ctl, pcpu_id);
 		vcpu->thread_obj.thread_entry = vcpu_thread;
 		vcpu->thread_obj.pcpu_id = pcpu_id;
-		vcpu->thread_obj.notify_mode = is_lapic_pt_enabled(vcpu) ?
-			SCHED_NOTIFY_INIT : SCHED_NOTIFY_IPI;
+		vcpu->thread_obj.notify_mode = SCHED_NOTIFY_IPI;
 		vcpu->thread_obj.host_sp = build_stack_frame(vcpu);
 		vcpu->thread_obj.switch_out = context_switch_out;
 		vcpu->thread_obj.switch_in = context_switch_in;
