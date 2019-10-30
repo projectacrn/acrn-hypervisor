@@ -2,7 +2,7 @@
 # global helper variables
 T := $(CURDIR)
 
-BOARD ?= apl-nuc
+BOARD ?= kbl-nuc-i7
 
 ifneq (,$(filter $(BOARD),apl-mrb))
 	FIRMWARE ?= sbl
@@ -131,7 +131,7 @@ apl-mrb-sbl-sdc:
 apl-up2-sbl-sdc:
 	$(call build_acrn,sbl,apl-up2,CONFIG_SDC,sdc)
 kbl-nuc-i7-uefi-industry:
-	$(call build_acrn,uefi,kbl-nuc-i7,CONFIG_INDUSTRY,industry)
+	$(call build_acrn,uefi,nuc7i7dnb,CONFIG_INDUSTRY,industry)
 apl-up2-uefi-hybrid:
 	$(call build_acrn,uefi,apl-up2,CONFIG_HYBRID,hybrid)
 
@@ -145,7 +145,7 @@ apl-mrb-sbl-sdc-install:
 apl-up2-sbl-sdc-install:
 	$(call install_acrn,sbl,apl-up2,sdc)
 kbl-nuc-i7-uefi-industry-install:
-	$(call install_acrn,uefi,kbl-nuc-i7,industry)
+	$(call install_acrn,uefi,nuc7i7dnb,industry)
 apl-up2-uefi-hybrid-install:
 	$(call install_acrn,uefi,apl-up2,hybrid)
 
@@ -159,7 +159,7 @@ apl-mrb-sbl-sdc-install-debug:
 apl-up2-sbl-sdc-install-debug:
 	$(call install_acrn_debug,sbl,apl-up2,sdc)
 kbl-nuc-i7-uefi-industry-install-debug:
-	$(call install_acrn_debug,uefi,kbl-nuc-i7,industry)
+	$(call install_acrn_debug,uefi,nuc7i7dnb,industry)
 apl-up2-uefi-hybrid-install-debug:
 	$(call install_acrn_debug,uefi,apl-up2,hybrid)
 
