@@ -73,7 +73,12 @@ void init_sched(uint16_t pcpu_id)
 	ctl->flags = 0UL;
 	ctl->curr_obj = NULL;
 	ctl->pcpu_id = pcpu_id;
+#ifdef CONFIG_SCHED_NOOP
 	ctl->scheduler = &sched_noop;
+#endif
+#ifdef CONFIG_SCHED_IORR
+	ctl->scheduler = &sched_iorr;
+#endif
 	if (ctl->scheduler->init != NULL) {
 		ctl->scheduler->init(ctl);
 	}
