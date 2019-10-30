@@ -136,14 +136,13 @@ Modify the `launch_win.sh` script in order to launch Ubuntu as the User VM.
 
       # scp ~/ubuntu_images/uos.img user_name@ip_address:~/uos.img
 
-#. Log in to the ACRN Service VM; generate the launch script and copy OVMF to the image directory:
+#. Log in to the ACRN Service VM, and create a launch script from the existing script:
 
    .. code-block:: none
 
       $ cd ~
       $ cp /usr/share/acrn/samples/nuc/launch_win.sh ./launch_ubuntu.sh
       $ sed -i "s/win10-ltsc.img/uos.img/" launch_ubuntu.sh
-      $ cp /usr/share/acrn/bios/OVMF.fd ./
 
 #. Assign USB ports to the Ubuntu VM in order to use the mouse and keyboard before the launch:
 

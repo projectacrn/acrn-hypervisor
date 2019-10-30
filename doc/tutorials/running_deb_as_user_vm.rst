@@ -146,14 +146,13 @@ Re-use and modify the `launch_win.sh` script in order to launch the new Debian 1
 
       # scp ~/debian10/debian10.img user_name@ip_address:~/debian10.img
 
-#. Log in to the ACRN Service VM; generate the launch script and copy OVMF to the image directory:
+#. Log in to the ACRN Service VM, and create a launch script from the existing script:
 
    .. code-block:: none
 
       $ cd ~
       $ cp /usr/share/acrn/samples/nuc/launch_win.sh ./launch_debian.sh
       $ sed -i "s/win10-ltsc.img/debian10.img/" launch_debian.sh
-      $ cp /usr/share/acrn/bios/OVMF.fd ./
 
 #. Assign USB ports to the Debian VM in order to use the mouse and keyboard before the launch:
 
