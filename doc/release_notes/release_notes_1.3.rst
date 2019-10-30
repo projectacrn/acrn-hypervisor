@@ -51,7 +51,7 @@ We have many new `reference documents available <https://projectacrn.github.io>`
 * :ref:`Running Debian as the User VM <running_deb_as_user_vm>`
 * :ref:`Running Debian as the Service VM <running_deb_as_serv_vm>`
 * :ref:`vUART configuration <vuart_config>`
-* :ref:`Enable virtio-i2c <virtio_i2c>`
+* :ref:`Enable virtio-i2c <virtio-i2c>`
 
 New Features Details
 ********************

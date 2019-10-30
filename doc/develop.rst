@@ -63,7 +63,6 @@ Enable ACRN Features
    tutorials/open_vswitch
    tutorials/rtvm_workload_design_guideline
    tutorials/sgx_virtualization
-   tutorials/virtio_i2c
    tutorials/vuart_configuration
    tutorials/skl-nuc
    tutorials/using_cat_on_up2
