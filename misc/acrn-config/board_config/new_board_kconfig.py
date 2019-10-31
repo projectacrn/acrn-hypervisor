@@ -64,6 +64,34 @@ def get_ram_range():
     return ram_range
 
 
+def get_serial_type():
+    """ Get the serial type of consle which set by user """
+    ttys_type = ''
+
+    # Get ttySx information from board config file
+    ttys_lines = board_cfg_lib.get_info(board_cfg_lib.BOARD_INFO_FILE, "<TTYS_INFO>", "</TTYS_INFO>")
+
+    scenario_name = board_cfg_lib.get_scenario_name()
+    if scenario_name == "logical_partition":
+        ttyn = 'ttyS0'
+    else:
+        # Get ttySx from scenario config file which selected by user
+        (err_dic, ttyn) = board_cfg_lib.parser_vuart_console()
+        if err_dic:
+            board_cfg_lib.ERR_LIST.update(err_dic)
+
+    # query the serial type from board config file
+    for line in ttys_lines:
+        if ttyn in line:
+            # line format:
+            # seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
+            # seri:/dev/ttyS0 type:mmio base:0xB3640000 irq:4
+            ttys_type = line.split()[1].split(':')[1]
+            break
+
+    return ttys_type
+
+
 def generate_file(config):
     """Start to generate board.c
     :param config: it is a file pointer of board information for writing to
@@ -87,11 +115,17 @@ def generate_file(config):
     avl_start_addr = find_avl_memory(ram_range, str(total_size))
     hv_start_addr = int(avl_start_addr, 16) + int(hex(reserved_ram), 16)
 
-    print('CONFIG_BOARD="{}"'.format(board_cfg_lib.BOARD_NAME), file=config)
     print("{}".format(DESC), file=config)
+    print('CONFIG_BOARD="{}"'.format(board_cfg_lib.BOARD_NAME), file=config)
+
+    serial_type = get_serial_type()
+
+    if serial_type == "portio":
+        print("CONFIG_SERIAL_LEGACY=y", file=config)
+    if serial_type == "mmio":
+        print("CONFIG_SERIAL_PCI=y", file=config)
 
     print("CONFIG_HV_RAM_START={}".format(hex(hv_start_addr)), file=config)
-
     print("CONFIG_HV_RAM_SIZE={}".format(hex(hv_ram_size)), file=config)
 
     return err_dic
