@@ -211,12 +211,11 @@ def boot_image_type(args, vmid, config):
     print("", file=config)
 
 
-def interrupt_storm(names, vmid, config):
-    uos_type = names['uos_types'][vmid]
-
-    if uos_type not in ("CLEARLINUX", "ANDROID", "ALIOS") or is_nuc_whl_clr(names, vmid):
+def interrupt_storm(pt_sel, config):
+    if not pt_sel:
         return
 
+    # TODO: --intr_monitor should be configurable by user
     print("#interrupt storm monitor for pass-through devices, params order:", file=config)
     print("#threshold/s,probe-period(s),intr-inject-delay-time(ms),delay-duration(ms)", file=config)
     print('intr_storm_monitor="--intr_monitor 10000,10,1,100"', file=config)
@@ -517,9 +516,11 @@ def dm_arg_set(names, sel, dm, vmid, config):
             print("   -i /run/acrn/ioc_$vm_name,0x20 \\", file=config)
             print("   -l com2,/run/acrn/ioc_$vm_name \\", file=config)
 
+        if sel:
+            print("   $intr_storm_monitor \\", file=config)
+
         if not is_nuc_whl_clr(names, vmid):
             print("   -s {},wdt-i6300esb \\".format(launch_cfg_lib.virtual_dev_slot("wdt-i6300esb")), file=config)
-            print("   $intr_storm_monitor \\", file=config)
             print("   -s {},xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
 
     if uos_type != "PREEMPT-RT LINUX":
@@ -553,7 +554,7 @@ def gen(names, pt_sel, dm, vmid, config):
     wa_usage(uos_type, config)
     delay_use_usb_storage(uos_type, config)
     mem_size_set(names, dm, vmid, config)
-    interrupt_storm(names, vmid, config)
+    interrupt_storm(pt_sel, config)
     log_level_set(uos_type, config)
 
     # gen acrn-dm args
