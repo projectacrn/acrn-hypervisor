@@ -486,6 +486,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	address = mmio_req->address;
 	size = mmio_req->size;
 
+	spinlock_obtain(&vcpu->vm->emul_mmio_lock);
 	for (idx = 0U; idx <= vcpu->vm->max_emul_mmio_regions; idx++) {
 		mmio_handler = &(vcpu->vm->emul_mmio[idx]);
 		if (mmio_handler->read_write != NULL) {
@@ -510,6 +511,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	if ((status == -ENODEV) && (read_write != NULL)) {
 		status = read_write(io_req, handler_private_data);
 	}
+	spinlock_release(&vcpu->vm->emul_mmio_lock);
 
 	return status;
 }
@@ -687,6 +689,7 @@ void register_mmio_emulation_handler(struct acrn_vm *vm,
 
 	/* Ensure both a read/write handler and range check function exist */
 	if ((read_write != NULL) && (end > start)) {
+		spinlock_obtain(&vm->emul_mmio_lock);
 		mmio_node = find_free_mmio_node(vm);
 		if (mmio_node != NULL) {
 			/* Fill in information for this node */
@@ -695,6 +698,7 @@ void register_mmio_emulation_handler(struct acrn_vm *vm,
 			mmio_node->range_start = start;
 			mmio_node->range_end = end;
 		}
+		spinlock_release(&vm->emul_mmio_lock);
 	}
 
 }
@@ -713,9 +717,12 @@ void register_mmio_emulation_handler(struct acrn_vm *vm,
 void unregister_mmio_emulation_handler(struct acrn_vm *vm,
 					uint64_t start, uint64_t end)
 {
-	struct mem_io_node *mmio_node = find_match_mmio_node(vm, start, end);
+	struct mem_io_node *mmio_node;
 
+	spinlock_obtain(&vm->emul_mmio_lock);
+	mmio_node = find_match_mmio_node(vm, start, end);
 	if (mmio_node != NULL) {
 		(void)memset(mmio_node, 0U, sizeof(struct mem_io_node));
 	}
+	spinlock_release(&vm->emul_mmio_lock);
 }
