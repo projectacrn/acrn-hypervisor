@@ -123,8 +123,9 @@ struct acrn_vm {
 	struct acrn_vuart vuart[MAX_VUART_NUM_PER_VM];		/* Virtual UART */
 	enum vpic_wire_mode wire_mode;
 	struct iommu_domain *iommu;	/* iommu domain of this VM */
-	spinlock_t vm_lock;	/* Spin-lock used to protect VM modifications */
+	spinlock_t vm_lock;	/* Spin-lock used to protect vlapic_state modifications for a VM */
 
+	spinlock_t emul_mmio_lock;	/* Used to protect emulation mmio_node concurrent access for a VM */
 	uint16_t max_emul_mmio_regions;	/* max index of the emulated mmio_region */
 	struct mem_io_node emul_mmio[CONFIG_MAX_EMULATED_MMIO_REGIONS];
 
