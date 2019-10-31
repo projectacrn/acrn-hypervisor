@@ -247,7 +247,6 @@ def wa_usage(uos_type, config):
 def mem_size_set(names, args, vmid, config):
 
     uos_type = names['uos_types'][vmid]
-    #board_name = names['board_name']
     mem_size = args['mem_size'][vmid]
 
     if uos_type not in ("CLEARLINUX", "ANDROID", "ALIOS") or is_nuc_clr(names, vmid):
@@ -277,30 +276,31 @@ def uos_launch(names, args, vmid, config):
     launch_uos = launch_cfg_lib.undline_name(uos_type).lower()
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_clr(names, vmid):
+        print('if [ "$1" = "-C" ];then', file=config)
+        print('    if [ $(hostname) = "runc" ]; then', file=config)
+        print('            echo "Already in container exit!"', file=config)
+        print("            exit", file=config)
+        print("    fi", file=config)
+        print('    echo "runc_container"', file=config)
+        print("    run_container", file=config)
+        if board_name == "apl-mrb":
+            print("    exit", file=config)
+            print("fi", file=config)
+        else:
+            print("else", file=config)
+            print('    launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
+            print("fi", file=config)
+    else:
+        if uos_type in ("VXWORKS", "PREEMPT-RT LINUX", "ZEPHYR"):
+            print("launch_{} 1".format(launch_uos), file=config)
+        if uos_type in ("CLEARLINUX", "WINDOWS"):
+            print('launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
 
+    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_clr(names, vmid):
         print("", file=config)
         print('launch_{} {} "{}" "{}" $debug'.format(launch_uos, vmid, gvt_args, vmid), file=config)
         print("", file=config)
-
         print("umount /data", file=config)
-
-    if uos_type not in ("CLEARLINUX", "ANDROID", "ALIOS"):
-        if uos_type == "VXWORKS":
-            print("launch_{} 1".format(launch_uos), file=config)
-        if uos_type == "PREEMPT-RT LINUX":
-            print("launch_{} 1".format(launch_uos), file=config)
-        if uos_type == "WINDOWS":
-            print('launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
-        if uos_type == "ZEPHYR":
-            print("launch_{} 1".format(launch_uos), file=config)
-
-    if is_nuc_clr(names, vmid):
-        print('if [ "$1" = "-C" ];then', file=config)
-        print('    echo "runc_container"', file=config)
-        print("    run_container", file=config)
-        print("else", file=config)
-        print('    launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
-        print("fi", file=config)
 
 
 def launch_end(names, args, vmid, config):
@@ -312,7 +312,7 @@ def launch_end(names, args, vmid, config):
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_clr(names, vmid):
         print("debug=0", file=config)
         print("", file=config)
-        print('while getopts "M:hd" opt', file=config)
+        print('while getopts "M:hdC" opt', file=config)
         print("do", file=config)
         print("	case $opt in", file=config)
 
@@ -322,6 +322,8 @@ def launch_end(names, args, vmid, config):
             print("		M) setup_mem={}M".format(mem_size), file=config)
         print("			;;", file=config)
         print("		d) debug=1", file=config)
+        print("			;;", file=config)
+        print("		C)", file=config)
         print("			;;", file=config)
         print("		h) help", file=config)
         print("			exit 1", file=config)
@@ -345,15 +347,6 @@ def launch_end(names, args, vmid, config):
         print("mount {} /data".format(root_fs), file=config)
         print("", file=config)
 
-    if board_name == "apl-mrb":
-        print("if [ $runC_enable == 1 ]; then", file=config)
-        print('    if [ $(hostname) = "runc" ]; then', file=config)
-        print('            echo "Already in container exit!"', file=config)
-        print("            exit", file=config)
-        print("    fi", file=config)
-        print("    run_container", file=config)
-        print("    exit", file=config)
-        print("fi", file=config)
     off_line_cpus(uos_type, config)
 
     uos_launch(names, args, vmid, config)
