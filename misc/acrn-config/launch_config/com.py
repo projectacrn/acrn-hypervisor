@@ -251,29 +251,10 @@ def wa_usage(uos_type, config):
         print("echo on > /sys/devices/pci0000:00/0000:00:15.0/power/control", file=config)
         print("", file=config)
 
-def mem_size_set(names, args, vmid, config):
-
-    uos_type = names['uos_types'][vmid]
+def mem_size_set(args, vmid, config):
     mem_size = args['mem_size'][vmid]
 
-    if uos_type not in ("CLEARLINUX", "ANDROID", "ALIOS") or is_nuc_whl_clr(names, vmid):
-        print("mem_size={}M".format(mem_size), file=config)
-        return
-
-    print("#for memsize setting, total 8GB(>7.5GB) uos->6GB, 4GB(>3.5GB) uos->2GB", file=config)
-    print("memsize=`cat /proc/meminfo|head -n 1|awk '{print $2}'`", file=config)
-    print("if [ $memsize -gt 7500000 ];then", file=config)
-    print("    mem_size=6G", file=config)
-    print("elif [ $memsize -gt 3500000 ];then", file=config)
-    print("    mem_size=2G", file=config)
-    print("else", file=config)
-    print("    mem_size=1750M", file=config)
-    print("fi", file=config)
-    print("", file=config)
-    print('if [ "$setup_mem" != "" ];then', file=config)
-    print("    mem_size=$setup_mem", file=config)
-    print("fi", file=config)
-    print("", file=config)
+    print("mem_size={}M".format(mem_size), file=config)
 
 
 def uos_launch(names, args, vmid, config):
@@ -322,14 +303,10 @@ def launch_end(names, args, vmid, config):
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_whl_clr(names, vmid):
         print("debug=0", file=config)
         print("", file=config)
-        print('while getopts "M:hdC" opt', file=config)
+        print('while getopts "hdC" opt', file=config)
         print("do", file=config)
         print("	case $opt in", file=config)
 
-        if not mem_size:
-            print("		M) setup_mem=$OPTARG", file=config)
-        else:
-            print("		M) setup_mem={}M".format(mem_size), file=config)
         print("			;;", file=config)
         print("		d) debug=1", file=config)
         print("			;;", file=config)
@@ -553,7 +530,7 @@ def gen(names, pt_sel, dm, vmid, config):
     pt.gen_pt(names, pt_sel, vmid, config)
     wa_usage(uos_type, config)
     delay_use_usb_storage(uos_type, config)
-    mem_size_set(names, dm, vmid, config)
+    mem_size_set(dm, vmid, config)
     interrupt_storm(pt_sel, config)
     log_level_set(uos_type, config)
 
