@@ -71,8 +71,8 @@ def get_scenario_name():
     Get scenario name from scenario.xml at fist line
     :param scenario_info: it is a file what contains board information for script to read from
     """
-    (err_dic, board) = common.get_xml_attrib(SCENARIO_INFO_FILE, "scenario")
-    return (err_dic, board)
+    (err_dic, scenario) = common.get_xml_attrib(SCENARIO_INFO_FILE, "scenario")
+    return (err_dic, scenario)
 
 
 def is_config_file_match():

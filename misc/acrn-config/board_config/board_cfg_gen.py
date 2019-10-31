@@ -22,6 +22,16 @@ ACRN_DEFAULT_PLATFORM = ACRN_PATH + "hypervisor/include/arch/x86/default_acpi_in
 GEN_FILE = ["pci_devices.h", "board.c", "_acpi_info.h", "misc_cfg.h", "ve820.c", ".config"]
 
 
+def need_gen_new_board_config(board_name):
+
+    # 1. if it is old board, they are already have the $(board_name).config, return and no need to generate it.
+
+    if board_name in board_cfg_lib.BOARD_NAMES:
+        return False
+    else:
+        return True
+
+
 def main(args):
     """
     This is main function to start generate source code related with board
@@ -103,7 +113,7 @@ def main(args):
             return err_dic
 
     # generate new board_name.config
-    if board not in board_cfg_lib.BOARD_NAMES:
+    if need_gen_new_board_config(board):
         with open(config_board_kconfig, 'w+') as config:
             err_dic = new_board_kconfig.generate_file(config)
             if err_dic:
