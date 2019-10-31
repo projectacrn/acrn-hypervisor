@@ -43,6 +43,8 @@ ARCH_ASFLAGS :=
 ARCH_ARFLAGS :=
 ARCH_LDFLAGS :=
 
+DEFCONFIG_FILE := $(CURDIR)/arch/x86/configs/$(BOARD).config
+
 ifneq ($(BOARD_FILE)$(SCENARIO_FILE),)
 override BOARD := $(shell echo `sed -n '/<acrn-config/p' $(BOARD_FILE) | sed -r 's/.*board="(.*)".*/\1/g'`)
 SCENARIO_IN_XML := $(shell sed -n '/<acrn-config/p' $(SCENARIO_FILE) | sed -r 's/.*scenario="(.*)".*/\1/g')
@@ -388,7 +390,7 @@ ifneq ($(BOARD_FILE)$(SCENARIO_FILE),)
 	@if [ "$(BOARD)" != "$(CONFIG_BOARD)" ]; then \
 		echo "Board in xml file <$(BOARD)> does not match Kconfig <$(CONFIG_BOARD)>!"; exit 1; \
 	fi
-	@if [ "$(SCENARIO_IN_XML)" != "$(SCENARIO_NAME)" ]; then \
+	@if [ "$(SCENARIO_IN_XML)" != "$(SCENARIO_NAME)" ] && [ -f $(DEFCONFIG_FILE) ]; then \
 		echo "Scenario in xml file <$(SCENARIO_IN_XML)> does not match Kconfig <$(SCENARIO_NAME)>!"; exit 1; \
 	fi
 	@python3 ../misc/acrn-config/board_config/board_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) > $(HV_OBJDIR)/.cfg_src_result
