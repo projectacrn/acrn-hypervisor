@@ -7,12 +7,20 @@ import launch_cfg_lib
 import pt
 
 
-def is_nuc_clr(names, vmid):
+def is_nuc_whl_clr(names, vmid):
     uos_type = names['uos_types'][vmid]
     board_name = names['board_name']
 
-    if uos_type == "CLEARLINUX" and 'nuc' in board_name:
+    if uos_type == "CLEARLINUX" and board_name not in ("apl-mrb", "apl-up2"):
         return True
+
+    return False
+
+
+def is_mount_needed(names, vmid):
+    uos_type = names['uos_types'][vmid]
+    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_whl_clr(names, vmid):
+         return True
 
     return False
 
@@ -118,7 +126,7 @@ def run_container(board_name, uos_type, config):
     if 'nuc' in board_name:
         board_name = 'nuc'
 
-    if board_name == "apl-up2" or uos_type != "CLEARLINUX":
+    if board_name not in ("apl-mrb", "nuc") or uos_type != "CLEARLINUX":
         return
 
     print("function run_container()", file=config)
@@ -206,7 +214,7 @@ def boot_image_type(args, vmid, config):
 def interrupt_storm(names, vmid, config):
     uos_type = names['uos_types'][vmid]
 
-    if uos_type not in ("CLEARLINUX", "ANDROID", "ALIOS") or is_nuc_clr(names, vmid):
+    if uos_type not in ("CLEARLINUX", "ANDROID", "ALIOS") or is_nuc_whl_clr(names, vmid):
         return
 
     print("#interrupt storm monitor for pass-through devices, params order:", file=config)
@@ -249,7 +257,7 @@ def mem_size_set(names, args, vmid, config):
     uos_type = names['uos_types'][vmid]
     mem_size = args['mem_size'][vmid]
 
-    if uos_type not in ("CLEARLINUX", "ANDROID", "ALIOS") or is_nuc_clr(names, vmid):
+    if uos_type not in ("CLEARLINUX", "ANDROID", "ALIOS") or is_nuc_whl_clr(names, vmid):
         print("mem_size={}M".format(mem_size), file=config)
         return
 
@@ -274,8 +282,11 @@ def uos_launch(names, args, vmid, config):
     gvt_args = args['gvt_args'][vmid]
     uos_type = names['uos_types'][vmid]
     launch_uos = launch_cfg_lib.undline_name(uos_type).lower()
+    board_name = names['board_name']
+    if 'nuc' in board_name:
+        board_name = 'nuc'
 
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_clr(names, vmid):
+    if uos_type == "CLEARLINUX" and board_name in ("apl-mrb", "nuc"):
         print('if [ "$1" = "-C" ];then', file=config)
         print('    if [ $(hostname) = "runc" ]; then', file=config)
         print('            echo "Already in container exit!"', file=config)
@@ -296,7 +307,7 @@ def uos_launch(names, args, vmid, config):
         if uos_type in ("CLEARLINUX", "WINDOWS"):
             print('launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
 
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_clr(names, vmid):
+    if is_mount_needed(names, vmid):
         print("", file=config)
         print('launch_{} {} "{}" "{}" $debug'.format(launch_uos, vmid, gvt_args, vmid), file=config)
         print("", file=config)
@@ -309,7 +320,7 @@ def launch_end(names, args, vmid, config):
     uos_type = names['uos_types'][vmid]
     mem_size = args["mem_size"][vmid]
 
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_clr(names, vmid):
+    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_whl_clr(names, vmid):
         print("debug=0", file=config)
         print("", file=config)
         print('while getopts "M:hdC" opt', file=config)
@@ -335,7 +346,7 @@ def launch_end(names, args, vmid, config):
         print("done", file=config)
         print("", file=config)
 
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_clr(names, vmid):
+    if is_mount_needed(names, vmid):
         root_fs = args['rootfs_dev'][vmid]
 
         print('if [ ! -b "{}" ]; then'.format(root_fs), file=config)
@@ -431,7 +442,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
         else:
             print('{} $npk_virt \\'.format(dm_str), file=config)
 
-    if board_name == "apl-up2" or is_nuc_clr(names, vmid):
+    if board_name == "apl-up2" or is_nuc_whl_clr(names, vmid):
         print("   $logger_setting \\", file=config)
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
@@ -442,7 +453,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
         if board_name == "apl-mrb":
             print("   --pm_notify_channel ioc \\", file=config)
 
-    if is_nuc_clr(names, vmid):
+    if is_nuc_whl_clr(names, vmid):
         print("   --pm_notify_channel uart \\", file=config)
         print('   --pm_by_vuart pty,/run/acrn/life_mngr_$vm_name  \\', file=config)
         print('   -l com2,/run/acrn/life_mngr_$vm_name \\', file=config)
@@ -502,7 +513,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
             print("   -i /run/acrn/ioc_$vm_name,0x20 \\", file=config)
             print("   -l com2,/run/acrn/ioc_$vm_name \\", file=config)
 
-        if not is_nuc_clr(names, vmid):
+        if not is_nuc_whl_clr(names, vmid):
             print("   -s {},wdt-i6300esb \\".format(launch_cfg_lib.virtual_dev_slot("wdt-i6300esb")), file=config)
             print("   $intr_storm_monitor \\", file=config)
             print("   -s {},xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
