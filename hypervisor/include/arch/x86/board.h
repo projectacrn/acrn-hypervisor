@@ -7,6 +7,7 @@
 #define BOARD_H
 
 #include <types.h>
+#include <misc_cfg.h>
 #include <host_pm.h>
 
 /* forward declarations */
@@ -18,8 +19,7 @@ struct platform_clos_info {
 };
 
 extern struct dmar_info plat_dmar_info;
-extern struct platform_clos_info platform_clos_array[];
-extern uint16_t platform_clos_num;
+extern struct platform_clos_info platform_clos_array[MAX_PLATFORM_CLOS_NUM];
 extern const struct cpu_state_table board_cpu_state_tbl;
 
 /* board specific functions */

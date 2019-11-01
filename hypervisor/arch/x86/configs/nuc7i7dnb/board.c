@@ -55,6 +55,5 @@ struct dmar_info plat_dmar_info = {
 	.drhd_units = drhd_info_array,
 };
 
-struct platform_clos_info platform_clos_array[0];
-uint16_t platform_clos_num = 0;
+struct platform_clos_info platform_clos_array[MAX_PLATFORM_CLOS_NUM];
 const struct cpu_state_table board_cpu_state_tbl;
