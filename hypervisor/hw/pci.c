@@ -45,6 +45,29 @@ static struct pci_pdev pci_pdev_array[CONFIG_MAX_PCI_DEV_NUM];
 
 static void init_pdev(uint16_t pbdf);
 
+/* @brief: Find the DRHD index corresponding to a PCI device
+ * Runs through the pci_pdev_array and returns the value in drhd_idx
+ * member from pdev strucutre that matches matches B:D.F
+ *
+ * @pbdf[in]	B:D.F of a PCI device
+ *
+ * @return if there is a matching pbdf in pci_pdev_array, pdev->drhd_idx, else INVALID_DRHD_INDEX
+ */
+
+uint32_t pci_lookup_drhd_for_pbdf(uint16_t pbdf)
+{
+	uint32_t drhd_index = INVALID_DRHD_INDEX;
+	uint32_t index;
+
+	for (index = 0U; index < num_pci_pdev; index++) {
+		if (pci_pdev_array[index].bdf.value == pbdf) {
+			drhd_index = pci_pdev_array[index].drhd_index;
+			break;
+		}
+	}
+
+	return drhd_index;
+}
 
 static uint32_t pci_pdev_calc_address(union pci_bdf bdf, uint32_t offset)
 {
