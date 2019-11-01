@@ -96,14 +96,21 @@ static void modify_or_del_pte(const uint64_t *pde, uint64_t vaddr_start, uint64_
 	for (; index < PTRS_PER_PTE; index++) {
 		uint64_t *pte = pt_page + index;
 
-		if ((mem_ops->pgentry_present(*pte) == 0UL) && (type == MR_MODIFY)) {
-			ASSERT(false, "invalid op, pte not present");
+		if ((mem_ops->pgentry_present(*pte) == 0UL)) {
+			/*suppress warning message for low memory (< 1MBytes),as service VM
+			 * will update MTTR attributes for this region by default whether it
+			 * is present or not.
+			 */
+			if ((type == MR_MODIFY) && (vaddr >= MEM_1M)) {
+				pr_warn("%s, vaddr: 0x%llx pte is not present.\n", __func__, vaddr);
+			}
 		} else {
 			local_modify_or_del_pte(pte, prot_set, prot_clr, type, mem_ops);
-			vaddr += PTE_SIZE;
-			if (vaddr >= vaddr_end) {
-				break;
-			}
+		}
+
+		vaddr += PTE_SIZE;
+		if (vaddr >= vaddr_end) {
+			break;
 		}
 	}
 }
@@ -127,8 +134,10 @@ static void modify_or_del_pde(const uint64_t *pdpte, uint64_t vaddr_start, uint6
 		uint64_t *pde = pd_page + index;
 		uint64_t vaddr_next = (vaddr & PDE_MASK) + PDE_SIZE;
 
-		if ((mem_ops->pgentry_present(*pde) == 0UL) && (type == MR_MODIFY)) {
-			ASSERT(false, "invalid op, pde not present");
+		if (mem_ops->pgentry_present(*pde) == 0UL) {
+			if (type == MR_MODIFY) {
+				pr_warn("%s, addr: 0x%llx pde is not present.\n", __func__, vaddr);
+			}
 		} else {
 			if (pde_large(*pde) != 0UL) {
 				if ((vaddr_next > vaddr_end) || (!mem_aligned_check(vaddr, PDE_SIZE))) {
@@ -143,11 +152,11 @@ static void modify_or_del_pde(const uint64_t *pdpte, uint64_t vaddr_start, uint6
 				}
 			}
 			modify_or_del_pte(pde, vaddr, vaddr_end, prot_set, prot_clr, mem_ops, type);
-			if (vaddr_next >= vaddr_end) {
-				break;	/* done */
-			}
-			vaddr = vaddr_next;
 		}
+		if (vaddr_next >= vaddr_end) {
+			break;	/* done */
+		}
+		vaddr = vaddr_next;
 	}
 }
 
@@ -170,8 +179,10 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
 		uint64_t *pdpte = pdpt_page + index;
 		uint64_t vaddr_next = (vaddr & PDPTE_MASK) + PDPTE_SIZE;
 
-		if ((mem_ops->pgentry_present(*pdpte) == 0UL) && (type == MR_MODIFY)) {
-			ASSERT(false, "invalid op, pdpte not present");
+		if (mem_ops->pgentry_present(*pdpte) == 0UL) {
+			if (type == MR_MODIFY) {
+				pr_warn("%s, vaddr: 0x%llx pdpte is not present.\n", __func__, vaddr);
+			}
 		} else {
 			if (pdpte_large(*pdpte) != 0UL) {
 				if ((vaddr_next > vaddr_end) ||
@@ -187,11 +198,11 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
 				}
 			}
 			modify_or_del_pde(pdpte, vaddr, vaddr_end, prot_set, prot_clr, mem_ops, type);
-			if (vaddr_next >= vaddr_end) {
-				break;	/* done */
-			}
-			vaddr = vaddr_next;
 		}
+		if (vaddr_next >= vaddr_end) {
+			break;	/* done */
+		}
+		vaddr = vaddr_next;
 	}
 }
 
