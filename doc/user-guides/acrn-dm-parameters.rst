@@ -33,11 +33,6 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
        specifies the kernel log level at 7
 
-   * - :kbd:`-c, --ncpus <cpus>`
-     - Set number of CPUs for UOS. This number is an integer and must not be
-       more than the total number of CPUs in the system, minus one (which is
-       used by the SOS).
-
    * - :kbd:`--debugexit`
      - Enable guest to write io port 0xf4 to exit guest. It's mainly used by
        guest unit test.
