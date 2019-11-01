@@ -236,5 +236,36 @@ void enable_disable_pci_intx(union pci_bdf bdf, bool enable);
 
 void init_pci_pdev_list(void);
 
+static inline bool is_pci_vendor_valid(uint32_t vendor_id)
+{
+	return !((vendor_id == 0xFFFFFFFFU) || (vendor_id == 0U) ||
+		 (vendor_id == 0xFFFF0000U) || (vendor_id == 0xFFFFU));
+}
+
+static inline uint32_t read_pci_pdev_cfg_vendor(union pci_bdf pbdf)
+{
+	return pci_pdev_read_cfg(pbdf, PCIR_VENDOR, 2U);
+}
+
+static inline uint8_t read_pci_pdev_cfg_headertype(union pci_bdf pbdf)
+{
+	return (uint8_t)pci_pdev_read_cfg(pbdf, PCIR_HDRTYPE, 1U);
+}
+
+static inline uint8_t read_pci_pdev_cfg_secbus(union pci_bdf pbdf)
+{
+	return (uint8_t)pci_pdev_read_cfg(pbdf, PCIR_SECBUS_1, 1U);
+}
+
+static inline bool is_pci_cfg_multifunction(uint8_t header_type)
+{
+	return ((header_type & PCIM_MFDEV) == PCIM_MFDEV);
+}
+
+static inline bool is_pci_cfg_bridge(uint8_t header_type)
+{
+	return ((header_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_BRIDGE);
+}
+
 
 #endif /* PCI_H_ */
