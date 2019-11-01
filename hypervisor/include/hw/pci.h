@@ -237,6 +237,12 @@ uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes);
 void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 void enable_disable_pci_intx(union pci_bdf bdf, bool enable);
 
+/*
+ * @brief Walks the PCI heirarchy and initializes array of pci_pdev structs
+ * Uses DRHD info from ACPI DMAR tables to cover the endpoints and
+ * bridges along with their hierarchy captured in the device scope entries
+ * Walks through rest of the devices starting at bus 0 and thru PCI_BUSMAX
+ */
 void init_pci_pdev_list(void);
 
 /* @brief: Find the DRHD index corresponding to a PCI device
