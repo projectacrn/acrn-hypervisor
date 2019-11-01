@@ -10,6 +10,8 @@
 #include <pci.h>
 #include <platform_acpi_info.h>
 
+#define INVALID_DRHD_INDEX 0xFFFFFFFFU
+
 /*
  * Intel IOMMU register specification per version 1.0 public spec.
  */
