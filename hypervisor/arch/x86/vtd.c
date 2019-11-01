@@ -21,6 +21,7 @@
 #include <logmsg.h>
 #include <board.h>
 #include <vm_configurations.h>
+#include <pci.h>
 
 #define DBG_IOMMU 0
 
@@ -555,30 +556,23 @@ static struct dmar_drhd_rt *ioapic_to_dmaru(uint16_t ioapic_id, union pci_bdf *s
 
 static struct dmar_drhd_rt *device_to_dmaru(uint8_t bus, uint8_t devfun)
 {
-	struct dmar_drhd_rt *dmar_unit = NULL;
-	uint32_t i, j;
+	struct dmar_drhd_rt *dmaru = NULL;
+	uint16_t bdf = ((uint16_t)bus << 8U) | devfun;
+	uint32_t index = pci_lookup_drhd_for_pbdf(bdf);
 
-	for (j = 0U; j < platform_dmar_info->drhd_count; j++) {
-		dmar_unit = &dmar_drhd_units[j];
-
-		for (i = 0U; i < dmar_unit->drhd->dev_cnt; i++) {
-			if ((dmar_unit->drhd->devices[i].bus == bus) &&
-					(dmar_unit->drhd->devices[i].devfun == devfun)) {
-				break;
-			}
-		}
-
-		if ((i != dmar_unit->drhd->dev_cnt) || ((dmar_unit->drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK) != 0U)) {
-			break;
-		}
+	if (index == INVALID_DRHD_INDEX) {
+		pr_fatal("BDF %02x:%02x:%x has no IOMMU\n", bus, devfun >> 3U, devfun & 7U);
+		/*
+		 * pci_lookup_drhd_for_pbdf would return -1U for any of the reasons
+		 * 1) PCI device with bus, devfun does not exist on platform
+		 * 2) ACRN had issues finding the device with bus, devfun during init
+		 * 3) DMAR tables provided by ACPI for this platform are incorrect
+		 */
+	} else {
+		dmaru = &dmar_drhd_units[index];
 	}
 
-	/* not found */
-	if (j == platform_dmar_info->drhd_count) {
-		dmar_unit = NULL;
-	}
-
-	return dmar_unit;
+	return dmaru;
 }
 
 static void dmar_issue_qi_request(struct dmar_drhd_rt *dmar_unit, struct dmar_entry invalidate_desc)
