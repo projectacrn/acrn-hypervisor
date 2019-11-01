@@ -401,6 +401,26 @@ def vboot_arg_set(dm, vmid, config):
         print("   $boot_image_option \\",file=config)
 
 
+def xhci_args_set(names, vmid, config):
+    board_name = names['board_name']
+    uos_type = names['uos_types'][vmid]
+
+    # Get locate of vmid
+    idx = 0
+    #if board_name not in ("whl-ipc-i5", "whl-ipc-i7"):
+    if uos_type in ("CLEARLINUX", "WINDOWS") and board_name in ("whl-ipc-i5", "whl-ipc-i7", "nuc7i7dnb"):
+        for num in names['uos_types'].keys():
+            idx += 1
+            if num == vmid:
+                break
+
+        # if the vmid is first vm
+        if idx == 1:
+            print("   -s {},xhci,1-2:2-2 \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
+        elif idx > 1:
+            print("   -s {},xhci,1-2:2-4 \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
+
+
 def dm_arg_set(names, sel, dm, vmid, config):
 
     uos_type = names['uos_types'][vmid]
@@ -466,6 +486,9 @@ def dm_arg_set(names, sel, dm, vmid, config):
         print("{} \\".format(dm_str), file=config)
         print("   --windows \\", file=config)
 
+    # WA: XHCI args set
+    xhci_args_set(names, vmid, config)
+
     # GVT args set
     gvt_arg_set(uos_type, config)
 
@@ -498,7 +521,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
 
         if not is_nuc_whl_clr(names, vmid):
             print("   -s {},wdt-i6300esb \\".format(launch_cfg_lib.virtual_dev_slot("wdt-i6300esb")), file=config)
-            print("   -s {},xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
+            #print("   -s {},xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
 
     if dm['vbootloader'][vmid] and dm['vbootloader'][vmid] == "vsbl":
         print("   -s {},virtio-blk$boot_dev_flag,/data/{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk"), root_img), file=config)
