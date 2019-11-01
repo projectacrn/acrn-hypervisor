@@ -224,12 +224,12 @@ void init_pcpu_post(uint16_t pcpu_id)
 		timer_init();
 		setup_notification();
 		setup_posted_intr_notification();
-		init_pci_pdev_list();
 
 		if (init_iommu() != 0) {
 			panic("failed to initialize iommu!");
 		}
 
+		init_pci_pdev_list(); /* init_iommu must come before this */
 		ptdev_init();
 
 		if (init_sgx() != 0) {
