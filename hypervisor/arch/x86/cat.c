@@ -18,6 +18,7 @@
 
 struct cat_hw_info cat_cap_info;
 const uint16_t hv_clos = 0U;
+static uint16_t platform_clos_num = MAX_PLATFORM_CLOS_NUM;
 
 int32_t init_cat_cap_info(void)
 {

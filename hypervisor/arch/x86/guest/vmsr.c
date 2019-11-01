@@ -337,7 +337,7 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 	}
 
 	/* RDT-A disabled: CPUID.07H.EBX[12], CPUID.10H */
-	for (msr = MSR_IA32_L3_MASK_0; msr < MSR_IA32_BNDCFGS; msr++) {
+	for (msr = MSR_IA32_L3_MASK_BASE; msr < MSR_IA32_BNDCFGS; msr++) {
 		enable_msr_interception(msr_bitmap, msr, INTERCEPT_READ_WRITE);
 	}
 

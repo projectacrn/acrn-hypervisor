@@ -15,25 +15,23 @@
 
 struct dmar_info plat_dmar_info;
 
-struct platform_clos_info platform_clos_array[4] = {
+struct platform_clos_info platform_clos_array[MAX_PLATFORM_CLOS_NUM] = {
 	{
 		.clos_mask = 0xff,
-		.msr_index = MSR_IA32_L2_MASK_0,
+		.msr_index = MSR_IA32_L2_MASK_BASE,
 	},
 	{
 		.clos_mask = 0xff,
-		.msr_index = MSR_IA32_L2_MASK_1,
+		.msr_index = MSR_IA32_L2_MASK_BASE + 1U,
 	},
 	{
 		.clos_mask = 0xff,
-		.msr_index = MSR_IA32_L2_MASK_2,
+		.msr_index = MSR_IA32_L2_MASK_BASE + 2U,
 	},
 	{
 		.clos_mask = 0xff,
-		.msr_index = MSR_IA32_L2_MASK_3,
+		.msr_index = MSR_IA32_L2_MASK_BASE + 3U,
 	},
 };
-
-uint16_t platform_clos_num = (uint16_t)(sizeof(platform_clos_array)/sizeof(struct platform_clos_info));
 
 const struct cpu_state_table board_cpu_state_tbl;
