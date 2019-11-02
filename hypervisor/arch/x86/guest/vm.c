@@ -25,6 +25,7 @@
 #include <mmu.h>
 #include <logmsg.h>
 #include <vboot_info.h>
+#include <vboot.h>
 #include <board.h>
 #include <sgx.h>
 #include <sbuf.h>
@@ -380,6 +381,14 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 			ept_del_mr(vm, pml4_page, vm_config->memory.start_hpa, vm_config->memory.size);
 		}
 	}
+
+	/* unmap AP trampoline code for security
+	 * 'allocate_pages()' in depri boot mode or
+	 * 'e820_alloc_low_memory()' in direct boot
+	 * mode will ensure the base address of tramploline
+	 * code be page-aligned.
+	 */
+	ept_del_mr(vm, pml4_page, get_ap_trampoline_buf(), CONFIG_LOW_RAM_SIZE);
 }
 
 /* Add EPT mapping of EPC reource for the VM */
