@@ -74,7 +74,6 @@ define install_acrn_debug
 endef
 
 hypervisor:
-	$(MAKE) -C $(T)/hypervisor cfg_src
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)	\
 				BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) clean
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)	\
