@@ -25,7 +25,7 @@ fi
 logger_setting="--logger_setting console,level=4;kmsg,level=3"
 
 #for memsize setting
-mem_size=4096M
+mem_size=12288M
 
 systemctl stop gdm.patch gdm
 

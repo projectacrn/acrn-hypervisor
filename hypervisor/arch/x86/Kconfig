@@ -221,7 +221,7 @@ config SOS_RAM_SIZE
 
  config UOS_RAM_SIZE
 	hex "Size of the User OS (UOS) RAM"
-	default 0x200000000
+	default 0x400000000
 	help
 	  A 64-bit integer indicating the size of the User OS RAM (MMIO not
 	  included). Now we assume each UOS uses same amount of RAM size.
