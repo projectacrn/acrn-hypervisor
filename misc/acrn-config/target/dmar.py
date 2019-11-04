@@ -333,33 +333,10 @@ def write_dmar_data(sysnode, config):
     (dmar_tbl, dmar_hw_list, dmar_dev_list, drhd_cnt) = walk_dmar_table(
         dmar_tbl, dmar_hw_list, dmar_dev_list, sysnode)
 
-    # num drhd and scope are hard coded
-    drhd_num = 4
-    scope_num = 4
-    # padding dev_scope_cnt_list
-    j = 0
-    if len(dmar_dev_list.dev_scope_cnt_list) < scope_num:
-        for j in range(scope_num - dmar_dev_list.dev_scope_cnt_list[j]):
-            dmar_dev_list.dev_scope_cnt_list.append(0)
-
-    # padding dev_bus_list/dev_path_list
-    for i in range(drhd_num):
-        for scope_level in range(scope_num - dmar_dev_list.dev_scope_cnt_list[i]):
-            dmar_dev_list.dev_path_list.insert(i * 4 + dmar_dev_list.dev_scope_cnt_list[i], 0)
-            dmar_dev_list.dev_bus_list.insert(i * 4 + dmar_dev_list.dev_scope_cnt_list[i], 0)
-            scope_level = scope_level
-
-    # padding the drhd count from hard code drhd_num
-    for i in range(drhd_num - drhd_cnt):
-        dmar_dev_list.dev_scope_cnt_list.append(0)
-        dmar_hw_list.hw_segment_list.append(0)
-        dmar_hw_list.hw_flags_list.append(0)
-        dmar_hw_list.hw_address_list.append(0)
-        dmar_hw_list.hw_ignore[drhd_cnt + i] = 'false'
-
-    # output the DRHD macro
     print("\t#define DRHD_COUNT              {0}U".format(drhd_cnt), file=config)
-    for drhd_hw_i in range(drhd_num):
+    prev_dev_scope_num = 0
+    for drhd_hw_i in range(drhd_cnt):
+        dev_scope_num = dmar_dev_list.dev_scope_cnt_list[drhd_hw_i]
         print("\t#define DRHD"+str(drhd_hw_i)+"_DEV_CNT           {0}U".format(
             dmar_dev_list.dev_scope_cnt_list[drhd_hw_i]), file=config)
         print("\t#define DRHD"+str(drhd_hw_i)+"_SEGMENT           {0}U".format(
@@ -371,17 +348,18 @@ def write_dmar_data(sysnode, config):
         if drhd_hw_i in dmar_hw_list.hw_ignore.keys():
             print("\t#define DRHD"+str(drhd_hw_i)+"_IGNORE            {0}".format(
                 dmar_hw_list.hw_ignore[drhd_hw_i]), file=config)
-        for dev_scope_i in range(scope_num):
+        for dev_scope_i in range(dev_scope_num):
             print("\t#define DRHD"+str(drhd_hw_i)+"_DEVSCOPE"+str(dev_scope_i),
                   file=config, end="")
             print("_BUS     {0}U".format(hex(
-                dmar_dev_list.dev_bus_list[drhd_hw_i * scope_num + dev_scope_i])),
+                dmar_dev_list.dev_bus_list[prev_dev_scope_num + dev_scope_i])),
                   file=config)
             print("\t#define DRHD"+str(drhd_hw_i)+"_DEVSCOPE"+str(dev_scope_i),
                   file=config, end="")
             print("_PATH    {0}U".format(hex(
-                dmar_dev_list.dev_path_list[drhd_hw_i * scope_num + dev_scope_i])),
+                dmar_dev_list.dev_path_list[prev_dev_scope_num + dev_scope_i])),
                   file=config)
         if drhd_hw_i in dmar_dev_list.dev_ioapic.keys():
             print("\t#define DRHD"+str(drhd_hw_i)+"_IOAPIC_ID         {0}U".format(
                 dmar_dev_list.dev_ioapic[drhd_hw_i]), file=config)
+        prev_dev_scope_num = dev_scope_num
