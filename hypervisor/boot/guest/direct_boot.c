@@ -11,15 +11,20 @@
 #include <cpu.h>
 #include <direct_boot.h>
 
+/*AP trampoline code buffer base address.*/
+static uint64_t ap_trampoline_buf;
+
 static void init_direct_boot(void)
 {
-	/* nothing to do for now */
+	if (ap_trampoline_buf == 0UL) {
+		ap_trampoline_buf = e820_alloc_low_memory(CONFIG_LOW_RAM_SIZE);
+	}
 }
 
 /* @post: return != 0UL */
 static uint64_t get_direct_boot_ap_trampoline(void)
 {
-	return e820_alloc_low_memory(CONFIG_LOW_RAM_SIZE);
+	return ap_trampoline_buf;
 }
 
 static void* get_direct_boot_rsdp(void)
