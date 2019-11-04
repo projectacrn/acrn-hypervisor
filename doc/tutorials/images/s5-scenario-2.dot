@@ -1,0 +1,6 @@
+digraph G {
+   node [shape=plaintext fontsize=12];
+   rankdir=LR;
+   bgcolor="transparent";
+   "ACRN-DM" -> "Service VM:/dev/ttyS1" -> "ACRN hypervisor" -> "User VM:/dev/ttyS1" [arrowsize=.5];
+}
