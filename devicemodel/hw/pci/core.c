@@ -416,11 +416,10 @@ pci_emul_mem_handler(struct vmctx *ctx, int vcpu, int dir, uint64_t addr,
 	uint64_t offset;
 	int bidx = (int) arg2;
 
-	assert(bidx <= PCI_BARMAX);
-	assert(pdi->bar[bidx].type == PCIBAR_MEM32 ||
-	       pdi->bar[bidx].type == PCIBAR_MEM64);
-	assert(addr >= pdi->bar[bidx].addr &&
-	       addr + size <= pdi->bar[bidx].addr + pdi->bar[bidx].size);
+	if (addr + size > pdi->bar[bidx].addr + pdi->bar[bidx].size) {
+		printf("%s, Out of emulated memory range.\n", __func__);
+		return -ESRCH;
+	}
 
 	offset = addr - pdi->bar[bidx].addr;
 
