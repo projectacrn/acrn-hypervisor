@@ -1,0 +1,14 @@
+digraph G {
+   node [shape=plaintext fontsize=12];
+   graph [rankdir=LR];
+
+   subgraph cluster_0 {
+        node [shape=box];
+        label="PTY"
+        "Master" -> "Slave" [dir=both arrowsize=.5];
+    }
+
+   "ACRN-DM" -> "Master" [arrowsize=.5];
+   "Slave" -> "User VM:/dev/ttyS1" [arrowsize=.5];
+
+}
