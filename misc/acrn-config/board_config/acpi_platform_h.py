@@ -12,7 +12,7 @@ PLATFORM_HEADER = r"""/* DO NOT MODIFY THIS FILE UNLESS YOU KNOW WHAT YOU ARE DO
 #define PLATFORM_ACPI_INFO_H
 """
 
-PLATFORM_END_HEADER = "\n#endif /* PLATFORM_ACPI_INFO_H */"
+PLATFORM_END_HEADER = "#endif /* PLATFORM_ACPI_INFO_H */"
 
 
 class OverridAccessSize():
@@ -144,18 +144,7 @@ def drhd_info_parser(config):
     # write DRHD
     print("/* DRHD of DMAR */", file=config)
     for drhd in drhd_lines:
-        cur_num = drhd.strip().split()[1][4:5]
-
-        if drhd.strip().split()[1] == "DRHD_COUNT":
-            print("", file=config)
-            print("{}".format(drhd.strip()), file=config)
-            continue
-
-        if cur_num != prev_num:
-            print("", file=config)
-
-        print("{}".format(drhd.strip()), file=config)
-        prev_num = cur_num
+        print(drhd.strip(), file=config)
 
 
 def platform_info_parser(config, default_platform):
