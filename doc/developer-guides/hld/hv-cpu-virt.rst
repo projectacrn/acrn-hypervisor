@@ -216,8 +216,8 @@ Some example scenario flows are shown here:
 
    ACRN vCPU scheduling scenarios
 
--  **During starting a VM**: after create a vCPU, BSP calls *schedule_vcpu*
-   through *start_vm*, AP calls *schedule_vcpu* through vlapic
+-  **During starting a VM**: after create a vCPU, BSP calls *launch_vcpu*
+   through *start_vm*, AP calls *launch_vcpu* through vlapic
    INIT-SIPI emulation, finally this vCPU runs in a
    *vcpu_thread* loop.
 
