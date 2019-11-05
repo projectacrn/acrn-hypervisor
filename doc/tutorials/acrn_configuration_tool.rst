@@ -24,11 +24,11 @@ setting up the log and the serial port.
 The hypervisor configuration uses the ``Kconfig`` ``make
 menuconfig`` mechanism.  The configuration file is located at::
 
-   acrn-hypervisor/hypervisor/arch/x86/configs/Kconfig
+   acrn-hypervisor/hypervisor/arch/x86/configs/
 
 A board-specific ``defconfig`` file, located at::
 
-   acrn-hypervisor/hypervisor/arch/x86/configs/$(BOARD)/$(BOARD).config
+   acrn-hypervisor/hypervisor/arch/x86/configs/$(BOARD).config
 
 is loaded first; it is the default ``Kconfig`` for the specified board.
 
@@ -42,7 +42,7 @@ board settings, root device selection, and the kernel cmdline. It also includes
 and BDF information. The board configuration is organized as
 ``*.c/*.h`` files located at::
 
-   acrn-hypervisor/hypervisor/arch/x86/$(BOARD)/
+   acrn-hypervisor/hypervisor/arch/x86/configs/$(BOARD)/
 
 VM configuration
 =================
@@ -80,6 +80,8 @@ configurations by exporting XMLs.
 Board XML format
 ================
 
+The board XML located at:
+acrn-hypervisor/misc/acrn-config/xmls/board-xmls
 The board XML has an ``acrn-config`` root element and a ``board`` attribute:
 
 .. code-block:: xml
@@ -90,7 +92,8 @@ As an input for the ``acrn-config`` tool, end users do not need to care about th
 
 Scenario XML format
 ===================
-
+The scenario XML located at:
+acrn-hypervisor/misc/acrn-config/xmls/config-xmls
 The scenario XML has an ``acrn-config`` root element as well as ``board`` and ``scenario`` attributes:
 
 .. code-block:: xml
@@ -155,7 +158,8 @@ Additional scenario XML elements:
 
 Launch XML format
 =================
-
+The launch XML located at:
+acrn-hypervisor/misc/acrn-config/xmls/config-xmls
 The launch XML has an ``acrn-config`` root element as well as
 ``board``, ``scenario`` and ``uos_launcher`` attributes:
 
@@ -170,8 +174,6 @@ Attributes of the ``uos_launcher`` specify the number of User VMs that the curre
 ``uos_type``: Specify the User VM type, such as  CLEARLINUX, ANDROID, or VXWORKS.
 
 ``rtos_type``: Specify the User VM Realtime capability: Soft RT, Hard RT, or none of them.
-
-``cpu_num``: Specify the max cpu number for the VM.
 
 ``mem_size``: Specify the User VM memory size in Mbyte.
 
@@ -265,7 +267,7 @@ Here is the offline configuration tool workflow:
 
    a. Generate a patch for the board-related configuration::
 
-         cd misc/board_config
+         cd misc/acrn-config/board_config
          python3 board_cfg_gen.py --board $(BOARD).xml --scenario $(SCENARIO).xml
 
       Note that this can also be done by clicking **Generate Board SRC** in the acrn-config UI.
@@ -273,7 +275,7 @@ Here is the offline configuration tool workflow:
 
    #. Generate a patch for scenario-based VM configuration::
 
-         cd misc/scenario_config
+         cd misc/acrn-config/scenario_config
          python3 scenario_cfg_gen.py --board $(BOARD).xml --scenario $(SCENARIO).xml
 
       Note that this can also be done by clicking **Generate Scenario SRC** in the acrn-config UI.
@@ -281,8 +283,8 @@ Here is the offline configuration tool workflow:
    #. Generate the launch script for the specified
       post-launch User VM::
 
-         cd misc/launch_config
-         python3 launch_cfg_gen.py --board $(BOARD).xml --scenario $(SCENARIO).xml --launch $(LAUNCH).xml
+         cd misc/acrn-config/launch_config
+         python3 launch_cfg_gen.py --board $(BOARD).xml --scenario $(SCENARIO).xml --launch $(LAUNCH).xml --uosid xx
 
       Note that this can also be done by clicking **Generate Launch Script** in the acrn-config UI.
 
@@ -316,10 +318,11 @@ Prerequisites
 .. _get acrn repo guide:
    https://projectacrn.github.io/latest/getting-started/building-from-source.html#get-the-acrn-hypervisor-source-code
 
-- Follow the :ref:`instruction <getting-started-building>` to install the
-  ACRN hypervisor dependencies and tools on your development host.
+- Clone acrn-hypervisor :
 
-- Follow the `get acrn repo guide`_ to download the ACRN hypervisor repo to your host.
+  .. code-block:: none
+
+     $git clone https://github.com/username/acrn-hypervisor.git
 
 - Install ACRN configuration app dependencies:
 
@@ -327,6 +330,7 @@ Prerequisites
 
      $ cd ~/acrn-hypervisor/misc/acrn-config/config_app
      $ sudo pip3 install -r requirements
+
 
 Instructions
 ============
