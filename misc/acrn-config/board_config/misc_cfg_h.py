@@ -124,6 +124,10 @@ def generate_file(config):
     # define CONFIG_MAX_PCPCU_NUM
     print("#define CONFIG_MAX_PCPU_NUM\t{}U".format(max_cpu_num), file=config)
 
+    # set macro of max clos number
+    (cache_support, clos_max) = board_cfg_lib.clos_info_parser(board_cfg_lib.BOARD_INFO_FILE)
+    print("#define MAX_PLATFORM_CLOS_NUM\t{}U".format(clos_max), file=config)
+
     # define rootfs with macro
     for i in range(root_dev_num):
         print('#define ROOTFS_{}\t\t"root={} "'.format(i, root_devs[i]), file=config)

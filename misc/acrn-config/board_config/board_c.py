@@ -7,6 +7,17 @@ import sys
 import board_cfg_lib
 
 
+INCLUDE_HEADER = """
+#include <board.h>
+#include <vtd.h>"""
+
+
+MSR_IA32_L2_MASK_BASE = 0x00000D10
+MSR_IA32_L2_MASK_END = 0x00000D4F
+MSR_IA32_L3_MASK_BASE = 0x00000C90
+MSR_IA32_L3_MASK_END = 0x00000D0F
+
+
 def gen_cat(config):
     """
     Get CAT information
@@ -15,34 +26,30 @@ def gen_cat(config):
     err_dic = {}
     (cache_support, clos_max) = board_cfg_lib.clos_info_parser(board_cfg_lib.BOARD_INFO_FILE)
 
-    print("\n#include <board.h>", file=config)
-    print("#include <acrn_common.h>", file=config)
-    print("#include <msr.h>", file=config)
+    if clos_max > MSR_IA32_L2_MASK_END - MSR_IA32_L2_MASK_BASE or\
+        clos_max > MSR_IA32_L3_MASK_END - MSR_IA32_L3_MASK_BASE:
+        err_dic["board config: generate board.c failed"] = "CLOS MAX should be less than reserved adress region length of L2/L3 cache"
+        return err_dic
 
     if cache_support == "False" or clos_max == 0:
-        print("\nstruct platform_clos_info platform_clos_array[0];", file=config)
-        print("uint16_t platform_clos_num = 0;", file=config)
+        print("\nstruct platform_clos_info platform_clos_array[MAX_PLATFORM_CLOS_NUM];", file=config)
     else:
-        print("\nstruct platform_clos_info platform_clos_array[{0}] = {{".format(
-            clos_max), file=config)
+        print("\nstruct platform_clos_info platform_clos_array[{}] = {{".format(
+            "MAX_PLATFORM_CLOS_NUM"), file=config)
         for i_cnt in range(clos_max):
             print("\t{", file=config)
 
-            print("\t\t.clos_mask = {0},".format(hex(0xff)), file=config)
+            print("\t\t.clos_mask = {0}U,".format(hex(0xff)), file=config)
             if cache_support == "L2":
-                print("\t\t.msr_index = MSR_IA32_{0}_MASK_{1},".format(
-                    cache_support, i_cnt), file=config)
+                print("\t\t.msr_index = MSR_IA32_L2_MASK_BASE + {}U,".format(i_cnt), file=config)
             elif cache_support == "L3":
-                print("\t\t.msr_index = {0}U,".format(hex(0x00000C90+i_cnt)), file=config)
+                print("\t\t.msr_index = MSR_IA32_L3_MASK_BASE + {}U,".format(i_cnt), file=config)
             else:
                 err_dic['board config: generate board.c failed'] = "The input of {} was corrupted!".format(board_cfg_lib.BOARD_INFO_FILE)
                 return err_dic
             print("\t},", file=config)
 
         print("};\n", file=config)
-        print("uint16_t platform_clos_num = ", file=config, end="")
-        print("(uint16_t)(sizeof(platform_clos_array)/sizeof(struct platform_clos_info));",
-              file=config)
 
     print("", file=config)
     return err_dic
@@ -92,6 +99,7 @@ def generate_file(config):
 
     # insert bios info into board.c
     board_cfg_lib.handle_bios_info(config)
+    print(INCLUDE_HEADER, file=config)
 
     # start to parser to get CAT info
     err_dic = gen_cat(config)
