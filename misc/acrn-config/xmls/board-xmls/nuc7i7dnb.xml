@@ -41,7 +41,7 @@
 	00:1d.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port #9 (rev f1)
 	00:1f.0 ISA bridge: Intel Corporation Device 9d4e (rev 21)
 	00:1f.2 Memory controller: Intel Corporation Sunrise Point-LP PMC (rev 21)
-	Region 0: Memory at df244000 (32-bit, non-prefetchable) [size=16K]
+	Region 0: Memory at df244000 (32-bit, non-prefetchable) [disabled] [size=16K]
 	00:1f.3 Audio device: Intel Corporation Sunrise Point-LP HD Audio (rev 21)
 	Region 0: Memory at df240000 (64-bit, non-prefetchable) [size=16K]
 	Region 4: Memory at df220000 (64-bit, non-prefetchable) [size=64K]
@@ -78,8 +78,8 @@
 	</PCI_VID_PID>
 
 	<WAKE_VECTOR_INFO>
-	#define WAKE_VECTOR_32          0x7FA22F8CUL
-	#define WAKE_VECTOR_64          0x7FA22F98UL
+	#define WAKE_VECTOR_32          0x8AA09F8CUL
+	#define WAKE_VECTOR_64          0x8AA09F98UL
 	</WAKE_VECTOR_INFO>
 
 	<RESET_REGISTER_INFO>
@@ -125,59 +125,31 @@
 
 	<DRHD_INFO>
 	#define DRHD_COUNT              2U
-	#define DRHD0_DEV_CNT           1U
-	#define DRHD0_SEGMENT           0U
-	#define DRHD0_FLAGS             0U
+
+	#define DRHD0_DEV_CNT           0x1U
+	#define DRHD0_SEGMENT           0x0U
+	#define DRHD0_FLAGS             0x0U
 	#define DRHD0_REG_BASE          0xFED90000UL
 	#define DRHD0_IGNORE            true
+	#define DRHD0_DEVSCOPE0_TYPE    0x1U
+	#define DRHD0_DEVSCOPE0_ID      0x0U
 	#define DRHD0_DEVSCOPE0_BUS     0x0U
 	#define DRHD0_DEVSCOPE0_PATH    0x10U
-	#define DRHD0_DEVSCOPE1_BUS     0x0U
-	#define DRHD0_DEVSCOPE1_PATH    0x0U
-	#define DRHD0_DEVSCOPE2_BUS     0x0U
-	#define DRHD0_DEVSCOPE2_PATH    0x0U
-	#define DRHD0_DEVSCOPE3_BUS     0x0U
-	#define DRHD0_DEVSCOPE3_PATH    0x0U
-	#define DRHD1_DEV_CNT           2U
-	#define DRHD1_SEGMENT           0U
-	#define DRHD1_FLAGS             1U
+
+	#define DRHD1_DEV_CNT           0x2U
+	#define DRHD1_SEGMENT           0x0U
+	#define DRHD1_FLAGS             0x1U
 	#define DRHD1_REG_BASE          0xFED91000UL
 	#define DRHD1_IGNORE            false
+	#define DRHD1_DEVSCOPE0_TYPE    0x3U
+	#define DRHD1_DEVSCOPE0_ID      0x2U
 	#define DRHD1_DEVSCOPE0_BUS     0xf0U
 	#define DRHD1_DEVSCOPE0_PATH    0xf8U
+	#define DRHD1_DEVSCOPE1_TYPE    0x4U
+	#define DRHD1_DEVSCOPE1_ID      0x0U
 	#define DRHD1_DEVSCOPE1_BUS     0x0U
 	#define DRHD1_DEVSCOPE1_PATH    0xf8U
-	#define DRHD1_DEVSCOPE2_BUS     0x0U
-	#define DRHD1_DEVSCOPE2_PATH    0x0U
-	#define DRHD1_DEVSCOPE3_BUS     0x0U
-	#define DRHD1_DEVSCOPE3_PATH    0x0U
-	#define DRHD1_IOAPIC_ID         2U
-	#define DRHD2_DEV_CNT           0U
-	#define DRHD2_SEGMENT           0U
-	#define DRHD2_FLAGS             0U
-	#define DRHD2_REG_BASE          0x00UL
-	#define DRHD2_IGNORE            false
-	#define DRHD2_DEVSCOPE0_BUS     0x0U
-	#define DRHD2_DEVSCOPE0_PATH    0x0U
-	#define DRHD2_DEVSCOPE1_BUS     0x0U
-	#define DRHD2_DEVSCOPE1_PATH    0x0U
-	#define DRHD2_DEVSCOPE2_BUS     0x0U
-	#define DRHD2_DEVSCOPE2_PATH    0x0U
-	#define DRHD2_DEVSCOPE3_BUS     0x0U
-	#define DRHD2_DEVSCOPE3_PATH    0x0U
-	#define DRHD3_DEV_CNT           0U
-	#define DRHD3_SEGMENT           0U
-	#define DRHD3_FLAGS             0U
-	#define DRHD3_REG_BASE          0x00UL
-	#define DRHD3_IGNORE            false
-	#define DRHD3_DEVSCOPE0_BUS     0x0U
-	#define DRHD3_DEVSCOPE0_PATH    0x0U
-	#define DRHD3_DEVSCOPE1_BUS     0x0U
-	#define DRHD3_DEVSCOPE1_PATH    0x0U
-	#define DRHD3_DEVSCOPE2_BUS     0x0U
-	#define DRHD3_DEVSCOPE2_PATH    0x0U
-	#define DRHD3_DEVSCOPE3_BUS     0x0U
-	#define DRHD3_DEVSCOPE3_PATH    0x0U
+
 	</DRHD_INFO>
 
 	<CPU_BRAND>
@@ -216,18 +188,18 @@
 
 	<SYSTEM_RAM_INFO>
 	00001000-00057fff : System RAM
-	00059000-0009efff : System RAM
+	00059000-0009dfff : System RAM
 	00100000-3fffffff : System RAM
-	40400000-764b8fff : System RAM
-	764bb000-7f0f3fff : System RAM
-	7ffff000-7fffffff : System RAM
-	88000000-883fffff : System RAM
-	100000000-2707fffff : System RAM
+	40400000-7da93fff : System RAM
+	7da96000-8a0dafff : System RAM
+	8afff000-8affffff : System RAM
+	100000000-26dffffff : System RAM
 	</SYSTEM_RAM_INFO>
 
 	<BLOCK_DEVICE_INFO>
-	/dev/nvme0n1p3: TYPE="ext4"
 	/dev/sda3: TYPE="ext4"
+	/dev/nvme0n1p3: TYPE="ext4"
+	/dev/nvme0n1p4: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
 
 	<TTYS_INFO>
@@ -240,7 +212,7 @@
 	</AVAILABLE_IRQ_INFO>
 
 	<TOTAL_MEM_INFO>
-	7898864 kB
+	8033848 kB
 	</TOTAL_MEM_INFO>
 
 	<CPU_PROCESSOR_INFO>
