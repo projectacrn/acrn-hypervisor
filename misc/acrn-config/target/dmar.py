@@ -186,6 +186,11 @@ class DmarTbl:
         self.path_offset = 0
 
 
+# TODO: Get board information is independent part of acrn-config tools, it does not get the GPU_SBDF default
+# config from the other part of tools, so hard code the GPU_SBDF to gernerate DRHDx_IGNORE macro
+CONFIG_GPU_SBDF = 0x10
+
+
 class PathDevFun:
     """Path Device Function meta data"""
     def __init__(self):
@@ -218,9 +223,8 @@ def walk_pci_bus(tmp_pdf, dmar_tbl, dmar_hw_list, n_cnt, drhd_cnt):
         dmar_tbl.path_offset += ctypes.sizeof(DevScopePath)
         n_cnt -= 1
 
-        # this not support to warning if no dedicated iommu for gpu
         if ((dmar_tbl.dmar_drhd.segment << 16) | (
-                dmar_tbl.dmar_dev_scope.bus << 8) | scope_path.function) == 0x10:
+                dmar_tbl.dmar_dev_scope.bus << 8) | tmp_pdf.path) == CONFIG_GPU_SBDF:
             dmar_hw_list.hw_ignore[drhd_cnt] = 'true'
         else:
             dmar_hw_list.hw_ignore[drhd_cnt] = 'false'
