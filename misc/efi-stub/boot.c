@@ -347,6 +347,53 @@ static inline EFI_STATUS isspace(CHAR8 ch)
     return ((uint8_t)ch <= ' ');
 }
 
+EFI_STATUS reserve_unconfigure_high_memory(void)
+{
+#define PLATFORM_LO_MMIO_SIZE	0x80000000UL
+	UINTN map_size, map_key, desc_size;
+	EFI_MEMORY_DESCRIPTOR *map_buf;
+	UINTN d, map_end;
+	UINTN i;
+	UINT32 desc_version;
+	EFI_STATUS err;
+	UINT64 reserved_hpa;
+	EFI_PHYSICAL_ADDRESS top_addr_space = CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE;
+
+	err = memory_map(&map_buf, &map_size, &map_key, &desc_size, &desc_version);
+	if (err != EFI_SUCCESS)
+		goto fail;
+
+	d = (UINTN)map_buf;
+	map_end = (UINTN)map_buf + map_size;
+
+	for (i = 0; d < map_end; d += desc_size, i++) {
+		EFI_MEMORY_DESCRIPTOR *desc;
+		EFI_PHYSICAL_ADDRESS start, end;
+
+		desc = (EFI_MEMORY_DESCRIPTOR *)d;
+		if (desc->Type != EfiConventionalMemory)
+			continue;
+
+		start = desc->PhysicalStart;
+		end = start + (desc->NumberOfPages << EFI_PAGE_SHIFT);
+
+		if (end > top_addr_space) {
+			if (start < top_addr_space)
+				start = top_addr_space;
+			err = emalloc_fixed_addr(&reserved_hpa, end - start, start);
+			Print(L"memory region (%lx, %lx) is truncated from region (%lx, %lx).",
+					start, end, desc->PhysicalStart, end);
+			if (err != EFI_SUCCESS)
+				break;
+		}
+	}
+
+	free_pool(map_buf);
+fail:
+	return err;
+
+}
+
 #define DEFAULT_UEFI_OS_LOADER_NAME L"\\EFI\\org.clearlinux\\bootloaderx64.efi"
 /**
  * efi_main - The entry point for the OS loader image.
@@ -420,6 +467,12 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	err = get_pe_section(info->ImageBase, section, strlen(section), &sec_addr, &sec_size);
 	if (EFI_ERROR(err)) {
 		Print(L"Unable to locate section of ACRNHV %r ", err);
+		goto free_args;
+	}
+
+	err = reserve_unconfigure_high_memory();
+	if (err != EFI_SUCCESS) {
+		Print(L"Unable to reserve un-configure high memory %r ", err);
 		goto free_args;
 	}
 
