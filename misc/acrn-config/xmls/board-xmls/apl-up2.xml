@@ -186,7 +186,7 @@
 	#define DRHD0_SEGMENT           0U
 	#define DRHD0_FLAGS             0U
 	#define DRHD0_REG_BASE          0xFED64000UL
-	#define DRHD0_IGNORE            false
+	#define DRHD0_IGNORE            true
 	#define DRHD0_DEVSCOPE0_BUS     0x0U
 	#define DRHD0_DEVSCOPE0_PATH    0x10U
 	#define DRHD0_DEVSCOPE1_BUS     0x0U
