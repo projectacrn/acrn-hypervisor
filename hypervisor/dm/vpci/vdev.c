@@ -91,3 +91,47 @@ struct pci_vdev *pci_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf)
 
 	return vdev;
 }
+
+void pci_vdev_write_bar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
+{
+	struct pci_bar *vbar;
+	uint32_t bar, offset;
+
+	vbar = &vdev->bar[idx];
+	bar = val & vbar->mask;
+	bar |= vbar->fixed;
+	offset = pci_bar_offset(idx);
+	pci_vdev_write_cfg_u32(vdev, offset, bar);
+}
+
+uint64_t pci_vdev_get_bar_base(const struct pci_vdev *vdev, uint32_t idx)
+{
+	const struct pci_bar *vbar;
+	enum pci_bar_type type;
+	uint64_t base = 0UL;
+	uint32_t lo, hi, offset;
+
+	vbar = &vdev->bar[idx];
+	offset = pci_bar_offset(idx);
+	lo = pci_vdev_read_cfg_u32(vdev, offset);
+	if ((vbar->type != PCIBAR_NONE) && (lo != ~0U)) {
+		type = vbar->type;
+		base = lo & vbar->mask;
+
+		if (vbar->type == PCIBAR_MEM64) {
+			vbar = &vdev->bar[idx + 1U];
+			hi = pci_vdev_read_cfg_u32(vdev, offset + 4U);
+			if (hi != ~0U) {
+				hi &= vbar->mask;
+				base |= ((uint64_t)hi << 32U);
+			} else {
+				base = 0UL;
+			}
+		}
+		if (type == PCIBAR_IO_SPACE) {
+			base &= 0xffffUL;
+		}
+	}
+
+	return base;
+}

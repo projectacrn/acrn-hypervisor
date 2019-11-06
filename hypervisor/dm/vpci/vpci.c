@@ -329,7 +329,10 @@ static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t val)
 {
 	if (vbar_access(vdev, offset)) {
-		vdev_pt_write_cfg(vdev, offset, bytes, val);
+		/* bar write access must be 4 bytes and offset must also be 4 bytes aligned */
+		if ((bytes == 4U) && ((offset & 0x3U) == 0U)) {
+			vdev_pt_write_vbar(vdev, pci_bar_index(offset), val);
+		}
 	} else if (msicap_access(vdev, offset)) {
 		vmsi_write_cfg(vdev, offset, bytes, val);
 	} else if (msixcap_access(vdev, offset)) {
