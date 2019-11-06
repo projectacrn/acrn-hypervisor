@@ -9,15 +9,15 @@ for a broad collection of architectures and platforms.
 Minimum System Requirements for Installing ACRN
 ***********************************************
 
-+------------------------+-----------------------------------+---------------------------------+
-| Hardware               | Minimum Requirements              | Recommended                     |
-+========================+===================================+=================================+
-| Processor              | Compatible x86 64-bit processor   | 4 core or more                  |
-+------------------------+-----------------------------------+---------------------------------+
-| System memory          | 4GB RAM                           | 8GB or more (< 32G)             |
-+------------------------+-----------------------------------+---------------------------------+
-| Storage capabilities   | 20GB                              | 120GB or more                   |
-+------------------------+-----------------------------------+---------------------------------+
++------------------------+-----------------------------------+---------------------------------------------------------------------------------+
+| Hardware               | Minimum Requirements              | Recommended                                                                     |
++========================+===================================+=================================================================================+
+| Processor              | Compatible x86 64-bit processor   | 2 core with “Intel Hyper Threading Technology” enabled in the BIOS or more core |
++------------------------+-----------------------------------+---------------------------------------------------------------------------------+
+| System memory          | 4GB RAM                           | 8GB or more (< 32G)                                                             |
++------------------------+-----------------------------------+---------------------------------------------------------------------------------+
+| Storage capabilities   | 20GB                              | 120GB or more                                                                   |
++------------------------+-----------------------------------+---------------------------------------------------------------------------------+
 
 Minimum Requirements for Processor
 **********************************
@@ -90,7 +90,7 @@ Verified Hardware Specifications Detail
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
 |   Platform (Intel x86)         |   Product/Kit Name     |   Hardware Class       |   Description                                             |
 +================================+========================+========================+===========================================================+
-| | **Apollo Lake**              | | NUC6CAYH             | Processor              | -  Intel(R) Celeron(R) CPU J3455 @ 1.50GHz                |
+| | **Apollo Lake**              | | NUC6CAYH             | Processor              | -  Intel(R) Celeron(R) CPU J3455 @ 1.50GHz (4C4T)         |
 | | (Formal name: Arches Canyon) | | (Board: NUC6CAYB)    |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Graphics               | -  Intel HD Graphics 500                                  |
@@ -105,10 +105,10 @@ Verified Hardware Specifications Detail
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Serial Port            | -  No                                                     |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
-| | **Apollo Lake**              | | UP2 - N3350          | Processor              | -  Intel® Celeron™ N3350 (up to 2.4 GHz)                  |
-|                                | | UP2 - N4200          |                        | -  Intel® Pentium™ N4200 (up to 2.5 GHz)                  |
-|                                | | UP2 - x5-E3940       |                        | -  Intel® Atom ™ x5-E3940                                 |
-|                                |                        |                        |    (up to 1.8Ghz)/x7-E3950 ( up to 2.0GHz)                |
+| | **Apollo Lake**              | | UP2 - N3350          | Processor              | -  Intel® Celeron™ N3350 (2C2T, up to 2.4 GHz)            |
+|                                | | UP2 - N4200          |                        | -  Intel® Pentium™ N4200 (4C4T, up to 2.5 GHz)            |
+|                                | | UP2 - x5-E3940       |                        | -  Intel® Atom ™ x5-E3940 (4C4T)                          |
+|                                |                        |                        |    (up to 1.8Ghz)/x7-E3950 (4C4T, up to 2.0GHz)           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Graphics               | -  2GB ( single channel) LPDDR4                           |
 |                                |                        |                        | -  4GB/8GB ( dual channel) LPDDR4                         |
@@ -120,7 +120,7 @@ Verified Hardware Specifications Detail
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Serial Port            | -  Yes                                                    |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
-| | **Kaby Lake**                | | NUC7i5BNH            | Processor              | -  Intel(R) Core(TM) i5-7260U CPU @ 2.20GHz               |
+| | **Kaby Lake**                | | NUC7i5BNH            | Processor              | -  Intel(R) Core(TM) i5-7260U CPU @ 2.20GHz (2C4T)        |
 | | (Codename: Baby Canyon)      | | (Board: NUC7i5BNB)   |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Graphics               | -  Intel® Iris™ Plus Graphics 640                         |
@@ -135,9 +135,9 @@ Verified Hardware Specifications Detail
 |                                |                        |                        | -  One SATA3 port for connection to 2.5" HDD or SSD       |
 |                                |                        |                        |    (up to 9.5 mm thickness)                               |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Serial Port            | -  No                                                     |
+|                                |                        | Serial Port            | -  Yes                                                    |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
-| | **Kaby Lake**                | | NUC7i7BNH            | Processor              | -  Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz               |
+| | **Kaby Lake**                | | NUC7i7BNH            | Processor              | -  Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz (2C4T)        |
 | | (Codename: Baby Canyon)      | | (Board: NUC7i7BNB)   |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Graphics               | -  Intel® Iris™ Plus Graphics 650                         |
@@ -154,7 +154,7 @@ Verified Hardware Specifications Detail
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Serial Port            | -  No                                                     |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
-| | **Kaby Lake**                | | NUC7i5DNH            | Processor              | -  Intel(R) Core(TM) i5-7300U CPU @ 2.64GHz               |
+| | **Kaby Lake**                | | NUC7i5DNH            | Processor              | -  Intel(R) Core(TM) i5-7300U CPU @ 2.64GHz (2C4T)        |
 | | (Codename: Dawson Canyon)    | | (Board: NUC7i5DNB)   |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Graphics               | -  Intel® HD Graphics 620                                 |
@@ -170,7 +170,7 @@ Verified Hardware Specifications Detail
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Serial Port            | -  No                                                     |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
-| | **Kaby Lake**                | | NUC7i7DNH            | Processor              | -  Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz               |
+| | **Kaby Lake**                | | NUC7i7DNH            | Processor              | -  Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz (4C8T)        |
 | | (Codename: Dawson Canyon)    | | (Board: NUC7i7DNB)   |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Graphics               | -  UHD Graphics 620                                       |
