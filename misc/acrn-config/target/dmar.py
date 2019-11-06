@@ -156,7 +156,8 @@ class DmarDevList:
         self.dev_scope_cnt_list = []
         self.dev_bus_list = []
         self.dev_path_list = []
-        self.dev_ioapic = {}
+        self.dev_scope_id_list = []
+        self.dev_scope_type_list = []
 
     def style_check_1(self):
         """Style check if have public method"""
@@ -253,6 +254,10 @@ def walk_dev_scope(dmar_tbl, dmar_dev_list, dmar_hw_list, drhd_cnt):
                 ACPI_DEV_SCOPE_TYPE['ACPI_DMAR_SCOPE_TYPE_RESERVED']:
             dmar_tbl.dev_scope_cnt += 1
 
+            # get type and id from device scope
+            dmar_dev_list.dev_scope_type_list.append(dmar_tbl.dmar_dev_scope.entry_type)
+            dmar_dev_list.dev_scope_id_list.append(dmar_tbl.dmar_dev_scope.enumeration_id)
+
             # path offset is in end of device spcope
             dmar_tbl.path_offset = dmar_tbl.dev_scope_offset + ctypes.sizeof(DmarDevScope)
             # walk the pci bus with path deep, and find the {Device,Function}
@@ -262,11 +267,6 @@ def walk_dev_scope(dmar_tbl, dmar_dev_list, dmar_hw_list, drhd_cnt):
                                                              n_cnt, drhd_cnt)
             dmar_dev_list.dev_bus_list.append(dmar_tbl.dmar_dev_scope.bus)
             dmar_dev_list.dev_path_list.append(tmp_pdf.path)
-
-            # if the scope entry type is ioapic, should address enumeration id
-            if dmar_tbl.dmar_dev_scope.entry_type ==\
-                    ACPI_DEV_SCOPE_TYPE['ACPI_DMAR_SCOPE_TYPE_IOAPIC']:
-                dmar_dev_list.dev_ioapic[drhd_cnt] = dmar_tbl.dmar_dev_scope.enumeration_id
 
         dmar_tbl.dev_scope_offset += dmar_tbl.dmar_dev_scope.scope_length
 
@@ -334,21 +334,32 @@ def write_dmar_data(sysnode, config):
         dmar_tbl, dmar_hw_list, dmar_dev_list, sysnode)
 
     print("\t#define DRHD_COUNT              {0}U".format(drhd_cnt), file=config)
+    print("", file=config)
     prev_dev_scope_num = 0
     for drhd_hw_i in range(drhd_cnt):
         dev_scope_num = dmar_dev_list.dev_scope_cnt_list[drhd_hw_i]
         print("\t#define DRHD"+str(drhd_hw_i)+"_DEV_CNT           {0}U".format(
-            dmar_dev_list.dev_scope_cnt_list[drhd_hw_i]), file=config)
+            hex(dmar_dev_list.dev_scope_cnt_list[drhd_hw_i])), file=config)
         print("\t#define DRHD"+str(drhd_hw_i)+"_SEGMENT           {0}U".format(
-            dmar_hw_list.hw_segment_list[drhd_hw_i]), file=config)
+            hex(dmar_hw_list.hw_segment_list[drhd_hw_i])), file=config)
         print("\t#define DRHD"+str(drhd_hw_i)+"_FLAGS             {0}U".format(
-            dmar_hw_list.hw_flags_list[drhd_hw_i]), file=config)
+            hex(dmar_hw_list.hw_flags_list[drhd_hw_i])), file=config)
         print("\t#define DRHD"+str(drhd_hw_i)+"_REG_BASE          0x{:0>2X}UL".format(
             dmar_hw_list.hw_address_list[drhd_hw_i]), file=config)
         if drhd_hw_i in dmar_hw_list.hw_ignore.keys():
             print("\t#define DRHD"+str(drhd_hw_i)+"_IGNORE            {0}".format(
                 dmar_hw_list.hw_ignore[drhd_hw_i]), file=config)
         for dev_scope_i in range(dev_scope_num):
+            print("\t#define DRHD"+str(drhd_hw_i)+"_DEVSCOPE"+str(dev_scope_i),
+                  file=config, end="")
+            print("_TYPE    {0}U".format(
+                hex(dmar_dev_list.dev_scope_type_list[prev_dev_scope_num + dev_scope_i])),
+                  file=config)
+            print("\t#define DRHD"+str(drhd_hw_i)+"_DEVSCOPE"+str(dev_scope_i),
+                  file=config, end="")
+            print("_ID      {0}U".format(
+                hex(dmar_dev_list.dev_scope_id_list[prev_dev_scope_num + dev_scope_i])),
+                  file=config)
             print("\t#define DRHD"+str(drhd_hw_i)+"_DEVSCOPE"+str(dev_scope_i),
                   file=config, end="")
             print("_BUS     {0}U".format(hex(
@@ -359,7 +370,6 @@ def write_dmar_data(sysnode, config):
             print("_PATH    {0}U".format(hex(
                 dmar_dev_list.dev_path_list[prev_dev_scope_num + dev_scope_i])),
                   file=config)
-        if drhd_hw_i in dmar_dev_list.dev_ioapic.keys():
-            print("\t#define DRHD"+str(drhd_hw_i)+"_IOAPIC_ID         {0}U".format(
-                dmar_dev_list.dev_ioapic[drhd_hw_i]), file=config)
-        prev_dev_scope_num = dev_scope_num
+
+        print("", file=config)
+        prev_dev_scope_num += dev_scope_num
