@@ -227,7 +227,7 @@ int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint64_t hypcall_id = vcpu_get_gpreg(vcpu, CPU_REG_R8);
 
 	if (!is_hypercall_from_ring0()) {
-		pr_err("hypercall is only allowed from RING-0!\n");
+		pr_err("hypercall 0x%llx is only allowed from RING-0!\n", hypcall_id);
 		vcpu_inject_gp(vcpu, 0U);
 		ret = -EACCES;
 	} else if (hypcall_id == HC_WORLD_SWITCH) {
@@ -243,7 +243,7 @@ int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 		/* Dispatch the hypercall handler */
 		ret = dispatch_sos_hypercall(vcpu);
 	} else  {
-		pr_err("hypercall %d is only allowed from SOS_VM!\n", hypcall_id);
+		pr_err("hypercall 0x%llx is only allowed from SOS_VM!\n", hypcall_id);
 		vcpu_inject_ud(vcpu);
 		ret = -ENODEV;
 	}
