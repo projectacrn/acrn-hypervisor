@@ -17,33 +17,36 @@
  * and hide HV memory from SOS_VM...
  */
 
-static uint32_t e820_entries_count;
-static struct e820_entry e820[E820_MAX_ENTRIES];
-static struct e820_mem_params e820_mem;
+static uint32_t hv_e820_entries_nr;
+/* Describe the memory layout the hypervisor uses */
+static struct e820_entry hv_e820[E820_MAX_ENTRIES];
+/* Describe the top/bottom/size of the physical memory the hypervisor manages */
+static struct mem_range hv_mem_range;
 
 #define ACRN_DBG_E820	6U
 
-static void obtain_e820_mem_info(void)
+static void obtain_mem_range_info(void)
 {
 	uint32_t i;
 	struct e820_entry *entry;
 
-	e820_mem.mem_bottom = UINT64_MAX;
-	e820_mem.mem_top = 0x0UL;
-	e820_mem.total_mem_size = 0UL;
+	hv_mem_range.mem_bottom = UINT64_MAX;
+	hv_mem_range.mem_top = 0x0UL;
+	hv_mem_range.total_mem_size = 0UL;
 
-	for (i = 0U; i < e820_entries_count; i++) {
-		entry = &e820[i];
-		if (e820_mem.mem_bottom > entry->baseaddr) {
-			e820_mem.mem_bottom = entry->baseaddr;
+	for (i = 0U; i < hv_e820_entries_nr; i++) {
+		entry = &hv_e820[i];
+
+		if (hv_mem_range.mem_bottom > entry->baseaddr) {
+			hv_mem_range.mem_bottom = entry->baseaddr;
 		}
 
-		if ((entry->baseaddr + entry->length) > e820_mem.mem_top) {
-			e820_mem.mem_top = entry->baseaddr + entry->length;
+		if ((entry->baseaddr + entry->length) > hv_mem_range.mem_top) {
+			hv_mem_range.mem_top = entry->baseaddr + entry->length;
 		}
 
 		if (entry->type == E820_TYPE_RAM) {
-			e820_mem.total_mem_size += entry->length;
+			hv_mem_range.total_mem_size += entry->length;
 		}
 	}
 }
@@ -59,8 +62,8 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 	/* We want memory in page boundary and integral multiple of pages */
 	size = (((size + PAGE_SIZE) - 1U) >> PAGE_SHIFT) << PAGE_SHIFT;
 
-	for (i = 0U; i < e820_entries_count; i++) {
-		entry = &e820[i];
+	for (i = 0U; i < hv_e820_entries_nr; i++) {
+		entry = &hv_e820[i];
 		uint64_t start, end, length;
 
 		start = round_page_up(entry->baseaddr);
@@ -76,7 +79,7 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 		/* found exact size of e820 entry */
 		if (length == size) {
 			entry->type = E820_TYPE_RESERVED;
-			e820_mem.total_mem_size -= size;
+			hv_mem_range.total_mem_size -= size;
 			ret = start;
 			break;
 		}
@@ -85,15 +88,15 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 		 * found entry with available memory larger than requested
 		 * allocate memory from the end of this entry at page boundary
 		 */
-		new_entry = &e820[e820_entries_count];
+		new_entry = &hv_e820[hv_e820_entries_nr];
 		new_entry->type = E820_TYPE_RESERVED;
 		new_entry->baseaddr = end - size;
 		new_entry->length = (entry->baseaddr + entry->length) - new_entry->baseaddr;
 
 		/* Shrink the existing entry and total available memory */
 		entry->length -= new_entry->length;
-		e820_mem.total_mem_size -= new_entry->length;
-		e820_entries_count++;
+		hv_mem_range.total_mem_size -= new_entry->length;
+		hv_e820_entries_nr++;
 
 	        ret = new_entry->baseaddr;
 		break;
@@ -124,19 +127,19 @@ void init_e820(void)
 			hpa = (uint64_t)mbi->mi_mmap_addr;
 			struct multiboot_mmap *mmap = (struct multiboot_mmap *)hpa;
 
-			e820_entries_count = mbi->mi_mmap_length / sizeof(struct multiboot_mmap);
-			if (e820_entries_count > E820_MAX_ENTRIES) {
-				pr_err("Too many E820 entries %d\n", e820_entries_count);
-				e820_entries_count = E820_MAX_ENTRIES;
+			hv_e820_entries_nr = mbi->mi_mmap_length / sizeof(struct multiboot_mmap);
+			if (hv_e820_entries_nr > E820_MAX_ENTRIES) {
+				pr_err("Too many E820 entries %d\n", hv_e820_entries_nr);
+				hv_e820_entries_nr = E820_MAX_ENTRIES;
 			}
 
 			dev_dbg(ACRN_DBG_E820, "mmap length 0x%x addr 0x%x entries %d\n",
-				mbi->mi_mmap_length, mbi->mi_mmap_addr, e820_entries_count);
+				mbi->mi_mmap_length, mbi->mi_mmap_addr, hv_e820_entries_nr);
 
-			for (i = 0U; i < e820_entries_count; i++) {
-				e820[i].baseaddr = mmap[i].baseaddr;
-				e820[i].length = mmap[i].length;
-				e820[i].type = mmap[i].type;
+			for (i = 0U; i < hv_e820_entries_nr; i++) {
+				hv_e820[i].baseaddr = mmap[i].baseaddr;
+				hv_e820[i].length = mmap[i].length;
+				hv_e820[i].type = mmap[i].type;
 
 				dev_dbg(ACRN_DBG_E820, "mmap table: %d type: 0x%x\n", i, mmap[i].type);
 				dev_dbg(ACRN_DBG_E820, "Base: 0x%016llx length: 0x%016llx",
@@ -144,7 +147,7 @@ void init_e820(void)
 			}
 		}
 
-		obtain_e820_mem_info();
+		obtain_mem_range_info();
 	} else {
 		panic("no multiboot info found");
 	}
@@ -152,15 +155,15 @@ void init_e820(void)
 
 uint32_t get_e820_entries_count(void)
 {
-	return e820_entries_count;
+	return hv_e820_entries_nr;
 }
 
 const struct e820_entry *get_e820_entry(void)
 {
-	return e820;
+	return hv_e820;
 }
 
-const struct e820_mem_params *get_e820_mem_info(void)
+const struct mem_range *get_mem_range_info(void)
 {
-	return &e820_mem;
+	return &hv_mem_range;
 }

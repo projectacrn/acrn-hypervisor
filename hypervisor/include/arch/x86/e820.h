@@ -28,7 +28,7 @@ struct e820_entry {
 	uint32_t type;
 } __packed;
 
-struct e820_mem_params {
+struct mem_range {
 	uint64_t mem_bottom;
 	uint64_t mem_top;
 	uint64_t total_mem_size;
@@ -47,6 +47,6 @@ uint32_t get_e820_entries_count(void);
 const struct e820_entry *get_e820_entry(void);
 
 /* get the e820 total memory info */
-const struct e820_mem_params *get_e820_mem_info(void);
+const struct mem_range *get_mem_range_info(void);
 
 #endif
