@@ -80,6 +80,7 @@ license.
    contribute
    reference/index
    release_notes/index
+   asa
    faq
 
 .. _BSD 3-clause license:
