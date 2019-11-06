@@ -151,47 +151,7 @@ enum pci_bar_type {
 	PCIBAR_IO_SPACE,
 	PCIBAR_MEM32,
 	PCIBAR_MEM64,
-};
-
-/*
- * Base Address Register for MMIO, pf=prefetchable, type=0 (32-bit), 1 (<=1MB), 2 (64-bit):
- *  31                        4  3  2   1   0
- *  +----------+--------------+-------------+
- *  |    Base address         |pf| type | 0 |
- *  +---------------------------------------+
- *
- * Base Address Register for IO (R=reserved):
- *  31                              2   1   0
- *  +----------+----------------------------+
- *  |    Base address               | R | 1 |
- *  +---------------------------------------+
- */
-union pci_bar_reg {
-	uint32_t value;
-
-	/* Base address + flags portion */
-	union {
-		struct {
-			uint32_t is_io:1; /* 0 for memory */
-			uint32_t type:2;
-			uint32_t prefetchable:1;
-			uint32_t base:28; /* BITS 31-4 = base address, 16-byte aligned */
-		} mem;
-
-		struct {
-			uint32_t is_io:1; /* 1 for I/O */
-			uint32_t:1;
-			uint32_t base:30; /* BITS 31-2 = base address, 4-byte aligned */
-		} io;
-	} bits;
-};
-
-struct pci_bar {
-	/* Base Address Register */
-	union pci_bar_reg reg;
-	uint64_t size;
-	uint64_t base_hpa;
-	bool is_64bit_high; /* true if this is the upper 32-bit of a 64-bit bar */
+	PCIBAR_MEM64HI,
 };
 
 /* Basic MSIX capability info */
@@ -221,6 +181,11 @@ static inline uint32_t pci_bar_offset(uint32_t idx)
 	return PCIR_BARS + (idx << 2U);
 }
 
+static inline uint32_t pci_bar_index(uint32_t offset)
+{
+	return (offset - PCIR_BARS) >> 2U;
+}
+
 static inline bool is_bar_offset(uint32_t nr_bars, uint32_t offset)
 {
 	bool ret;
@@ -244,7 +209,6 @@ static inline enum pci_bar_type pci_get_bar_type(uint32_t val)
 	} else {
 		switch (val & PCIM_BAR_MEM_TYPE) {
 		case PCIM_BAR_MEM_32:
-		case PCIM_BAR_MEM_1MB:
 			type = PCIBAR_MEM32;
 			break;
 
@@ -259,19 +223,6 @@ static inline enum pci_bar_type pci_get_bar_type(uint32_t val)
 	}
 
 	return type;
-}
-
-/**
- * Given bar size and raw bar value, return bar base address by masking off its lower flag bits
- * size/val: all in 64-bit values to accommodate 64-bit MMIO bar size masking
- */
-static inline uint64_t git_size_masked_bar_base(uint64_t size, uint64_t val)
-{
-	uint64_t mask;
-
-	mask = ~(size - 1UL);
-
-	return (mask & val);
 }
 
 static inline bool bdf_is_equal(union pci_bdf a, union pci_bdf b)
