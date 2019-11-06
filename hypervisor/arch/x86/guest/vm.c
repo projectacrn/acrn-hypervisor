@@ -287,7 +287,7 @@ static void create_sos_vm_e820(struct acrn_vm *vm)
 	uint64_t hv_start_pa = hva2hpa((void *)(get_hv_image_base()));
 	uint64_t hv_end_pa  = hv_start_pa + CONFIG_HV_RAM_SIZE;
 	uint32_t entries_count = get_e820_entries_count();
-	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
+	const struct mem_range *p_mem_range_info = get_mem_range_info();
 	struct acrn_vm_config *sos_vm_config = get_vm_config(vm->vm_id);
 
 	(void)memcpy_s((void *)sos_ve820, entries_count * sizeof(struct e820_entry),
@@ -297,7 +297,7 @@ static void create_sos_vm_e820(struct acrn_vm *vm)
 	vm->e820_entries = sos_ve820;
 	/* filter out hv memory from e820 table */
 	filter_mem_from_sos_e820(vm, hv_start_pa, hv_end_pa);
-	sos_vm_config->memory.size = p_e820_mem_info->total_mem_size - CONFIG_HV_RAM_SIZE;
+	sos_vm_config->memory.size = p_mem_range_info->total_mem_size - CONFIG_HV_RAM_SIZE;
 
 	/* filter out prelaunched vm memory from e820 table */
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
@@ -332,18 +332,18 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	const struct e820_entry *entry;
 	uint32_t entries_count = vm->e820_entry_num;
 	const struct e820_entry *p_e820 = vm->e820_entries;
-	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
+	const struct mem_range *p_mem_range_info = get_mem_range_info();
 
 	pr_dbg("sos_vm: bottom memory - 0x%llx, top memory - 0x%llx\n",
-		p_e820_mem_info->mem_bottom, p_e820_mem_info->mem_top);
+		p_mem_range_info->mem_bottom, p_mem_range_info->mem_top);
 
-	if (p_e820_mem_info->mem_top > EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE)) {
+	if (p_mem_range_info->mem_top > EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE)) {
 		panic("Please configure SOS_VM_ADDRESS_SPACE correctly!\n");
 	}
 
 	/* create real ept map for all ranges with UC */
-	ept_add_mr(vm, pml4_page, p_e820_mem_info->mem_bottom, p_e820_mem_info->mem_bottom,
-			(p_e820_mem_info->mem_top - p_e820_mem_info->mem_bottom), attr_uc);
+	ept_add_mr(vm, pml4_page, p_mem_range_info->mem_bottom, p_mem_range_info->mem_bottom,
+			(p_mem_range_info->mem_top - p_mem_range_info->mem_bottom), attr_uc);
 
 	/* update ram entries to WB attr */
 	for (i = 0U; i < entries_count; i++) {

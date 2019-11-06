@@ -220,12 +220,12 @@ void init_paging(void)
 	const struct e820_entry *entry;
 	uint32_t entries_count = get_e820_entries_count();
 	const struct e820_entry *p_e820 = get_e820_entry();
-	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
+	const struct mem_range *p_mem_range_info = get_mem_range_info();
 
 	pr_dbg("HV MMU Initialization");
 
 	/* align to 2MB */
-	high64_max_ram = round_pde_up(p_e820_mem_info->mem_top);
+	high64_max_ram = round_pde_up(p_mem_range_info->mem_top);
 	if ((high64_max_ram > (CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)) ||
 			(high64_max_ram < (1UL << 32U))) {
 		printf("ERROR!!! high64_max_ram: 0x%llx, top address space: 0x%llx\n",
