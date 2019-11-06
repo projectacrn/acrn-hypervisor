@@ -112,6 +112,7 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 void init_e820(void)
 {
 	uint32_t i;
+	uint64_t top_addr_space = CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE;
 
 	if (boot_regs[0] == MULTIBOOT_INFO_MAGIC) {
 		/*
@@ -137,6 +138,14 @@ void init_e820(void)
 				mbi->mi_mmap_length, mbi->mi_mmap_addr, hv_e820_entries_nr);
 
 			for (i = 0U; i < hv_e820_entries_nr; i++) {
+				if (mmap[i].baseaddr >= top_addr_space) {
+					mmap[i].length = 0UL;
+				} else {
+					if ((mmap[i].baseaddr + mmap[i].length) > top_addr_space) {
+						mmap[i].length = top_addr_space - mmap[i].baseaddr;
+					}
+				}
+
 				hv_e820[i].baseaddr = mmap[i].baseaddr;
 				hv_e820[i].length = mmap[i].length;
 				hv_e820[i].type = mmap[i].type;
