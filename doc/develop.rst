@@ -69,3 +69,4 @@ Enable ACRN Features
    tutorials/using_cat_on_up2
    tutorials/using_sbl_on_up2
    tutorials/trustyACRN
+   tutorials/waag-secure-boot
