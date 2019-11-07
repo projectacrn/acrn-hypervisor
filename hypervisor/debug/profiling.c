@@ -79,7 +79,7 @@ static void profiling_initialize_pmi(void)
 			if (msrop->msr_op_type == (uint8_t)MSR_OP_WRITE) {
 				msr_write(msrop->msr_id, msrop->value);
 				dev_dbg(ACRN_DBG_PROFILING,
-				"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%llx",
+				"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%lx",
 				__func__, get_pcpu_id(), msrop->msr_id, msrop->value);
 			}
 		}
@@ -114,11 +114,11 @@ static void profiling_enable_pmu(void)
 
 	/* Unmask LAPIC LVT entry for PMC register */
 	lvt_perf_ctr = (uint32_t) msr_read(MSR_IA32_EXT_APIC_LVT_PMI);
-	dev_dbg(ACRN_DBG_PROFILING, "%s: 0x%x, 0x%llx",
+	dev_dbg(ACRN_DBG_PROFILING, "%s: 0x%x, 0x%lx",
 		__func__, MSR_IA32_EXT_APIC_LVT_PMI, lvt_perf_ctr);
 	lvt_perf_ctr &= LVT_PERFCTR_BIT_UNMASK;
 	msr_write(MSR_IA32_EXT_APIC_LVT_PMI, lvt_perf_ctr);
-	dev_dbg(ACRN_DBG_PROFILING, "%s: 0x%x, 0x%llx",
+	dev_dbg(ACRN_DBG_PROFILING, "%s: 0x%x, 0x%lx",
 		__func__, MSR_IA32_EXT_APIC_LVT_PMI, lvt_perf_ctr);
 
 	if (ss->guest_debugctl_value != 0U) {
@@ -155,7 +155,7 @@ static void profiling_enable_pmu(void)
 			if (msrop->msr_op_type == (uint8_t)MSR_OP_WRITE) {
 				msr_write(msrop->msr_id, msrop->value);
 				dev_dbg(ACRN_DBG_PROFILING,
-				"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%llx",
+				"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%lx",
 				__func__, get_pcpu_id(), msrop->msr_id, msrop->value);
 			}
 		}
@@ -202,7 +202,7 @@ static void profiling_disable_pmu(void)
 				if (msrop->msr_op_type == (uint8_t)MSR_OP_WRITE) {
 					msr_write(msrop->msr_id, msrop->value);
 					dev_dbg(ACRN_DBG_PROFILING,
-					"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%llx",
+					"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%lx",
 					__func__, get_pcpu_id(), msrop->msr_id, msrop->value);
 				}
 			}
@@ -502,7 +502,7 @@ static void profiling_handle_msrops(void)
 			my_msr_node->entries[i].value
 				= msr_read(my_msr_node->entries[i].msr_id);
 			dev_dbg(ACRN_DBG_PROFILING,
-			"%s: MSRREAD cpu%d, msr_id=0x%x, msr_val=0x%llx",
+			"%s: MSRREAD cpu%d, msr_id=0x%x, msr_val=0x%lx",
 			__func__, get_pcpu_id(),	my_msr_node->entries[i].msr_id,
 			my_msr_node->entries[i].value);
 			break;
@@ -510,7 +510,7 @@ static void profiling_handle_msrops(void)
 			my_msr_node->entries[i].value
 				= msr_read(my_msr_node->entries[i].msr_id);
 			dev_dbg(ACRN_DBG_PROFILING,
-			"%s: MSRREADCLEAR cpu%d, msr_id=0x%x, msr_val=0x%llx",
+			"%s: MSRREADCLEAR cpu%d, msr_id=0x%x, msr_val=0x%lx",
 			__func__, get_pcpu_id(), my_msr_node->entries[i].msr_id,
 			my_msr_node->entries[i].value);
 			msr_write(my_msr_node->entries[i].msr_id, 0U);
@@ -519,7 +519,7 @@ static void profiling_handle_msrops(void)
 			msr_write(my_msr_node->entries[i].msr_id,
 				my_msr_node->entries[i].value);
 			dev_dbg(ACRN_DBG_PROFILING,
-			"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%llx",
+			"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%lx",
 			__func__, get_pcpu_id(), my_msr_node->entries[i].msr_id,
 			my_msr_node->entries[i].value);
 			break;
