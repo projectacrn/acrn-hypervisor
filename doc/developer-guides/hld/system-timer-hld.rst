@@ -3,28 +3,28 @@
 System timer virtualization
 ###########################
 
-ACRN supports RTC (Real-time clock), HPET (High Precision Event Timer)
-and PIT (Programmable interval timer) devices for VM system timer.
-Different timer devices support different resolutions, HPET device can
-support higher resolution than RTC and PIT.
+ACRN supports RTC (Real-time clock), HPET (High Precision Event Timer),
+and PIT (Programmable interval timer) devices for the VM system timer.
+Different timer devices support different resolutions. The HPET device can
+support higher resolutions than RTC and PIT.
 
 System timer virtualization architecture
 
 |image0|
 
--  In UOS, vRTC, vHPET and vPIT are used by clock event module and clock
-   source module in kernel space.
+-  In the User VM, vRTC, vHPET, and vPIT are used by the clock event module and the clock
+   source module in the kernel space.
 
--  In SOS, all of vRTC, vHPET and vPIT devices are created by device
-   model in initialization phase and using timer\_create and
-   timerfd\_create interfaces to setup native timers for trigger timeout
+-  In the Service VM, all vRTC, vHPET, and vPIT devices are created by the device
+   model in the initialization phase and uses timer\_create and
+   timerfd\_create interfaces to set up native timers for the trigger timeout
    mechanism.
 
 System Timer initialization
 ===========================
 
-Device model initializes vRTC, vHEPT and vPIT devices automatically when
-ACRN device model starts booting initialization, and the initialization
+The device model initializes vRTC, vHEPT, and vPIT devices automatically when
+the ACRN device model starts the booting initialization, and the initialization
 flow goes from vrtc\_init to vpit\_init and ends with vhept\_init, see
 below code snippets.::
 
@@ -51,7 +51,8 @@ below code snippets.::
 PIT emulation
 =============
 
-ACRN emulated Intel 8253 Programmable Interval Timer, the chip has three
+The ACRN emulated Intel 8253 Programmable Interval Timer includes a chip
+that has three
 independent 16-bit down counters that can be read on the fly. There are
 three mode registers and three countdown registers. The countdown
 registers are addressed directly, via the first three I/O ports.The
@@ -88,9 +89,9 @@ RTC emulation
 ACRN supports RTC (Real-Time Clock) that can only be accessed through
 I/O ports (0x70 and 0x71).
 
-0x70 is used to access CMOS address register, 0x71 is used to access
-CMOS data register, user need to set CMOS address register then
-read/write CMOS data register for CMOS accessing.
+0x70 is used to access CMOS address register and 0x71 is used to access
+CMOS data register; the user needs to set the CMOS address register and then
+the read/write CMOS data register for CMOS accessing.
 
 The RTC ACPI description as below::
 
@@ -116,10 +117,10 @@ The RTC ACPI description as below::
 HPET emulation
 ==============
 
-ACRN supports HPET (High Precision Event Timer) that is high resolution
-timer than RTC and PIT. Its frequency is 16.7Mhz and using MMIO to
-access HPET device, the base address is 0xfed00000 and size is 1024
-bytes. Accesses to the HPET should be 4 or 8 bytes wide.::
+ACRN supports HPET (High Precision Event Timer) which is a higher resolution
+timer than RTC and PIT. Its frequency is 16.7Mhz and uses MMIO to
+access HPET device; the base address is 0xfed00000 and size is 1024
+bytes. Access to the HPET should be 4 or 8 bytes wide.::
 
 	#define HPET_FREQ (16777216) /* 16.7 (2^24) Mhz */
 	#define VHPET_BASE (0xfed00000)

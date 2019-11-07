@@ -17,9 +17,9 @@ VM startup.
 Multiboot Header
 ****************
 
-The ACRN hypervisor is built with multiboot header, which presents
+The ACRN hypervisor is built with a multiboot header, which presents
 ``MULTIBOOT_HEADER_MAGIC`` and ``MULTIBOOT_HEADER_FLAGS`` at the beginning
-of the image, and it sets bit 6 in ``MULTIBOOT_HEADER_FLAGS`` which request
+of the image, and it sets bit 6 in ``MULTIBOOT_HEADER_FLAGS`` which requests
 bootloader passing memory mmap information(like e820 entries) through
 Multiboot Information(MBI) structure.
 
@@ -39,7 +39,7 @@ description for the flow:
 
 -  **BSP Startup:** The starting point for bootstrap processor.
 
--  **Relocation**: relocate the hypervisor image if the hypervisor image
+-  **Relocation**: Relocate the hypervisor image if the hypervisor image
    is not placed at the assumed base address.
 
 -  **UART Init:** Initialize a pre-configured UART device used
@@ -67,11 +67,11 @@ description for the flow:
 
 Symbols in the hypervisor are placed with an assumed base address, but
 the bootloader may not place the hypervisor at that specified base. In
-such case the hypervisor will relocate itself to where the bootloader
+this case, the hypervisor will relocate itself to where the bootloader
 loads it.
 
 Here is a summary of CPU and memory initial states that are set up after
-native startup.
+the native startup.
 
 CPU
    ACRN hypervisor brings all physical processors to 64-bit IA32e
@@ -111,7 +111,7 @@ Memory
 Refer to :ref:`physical-interrupt-initialization` for a detailed description of interrupt-related
 initial states, including IDT and physical PICs.
 
-After BSP detects that all APs are up, it will continue to enter guest mode; similar, after one AP
+After the BSP detects that all APs are up, it will continue to enter guest mode; similar, after one AP
 complete its initialization, it will start entering guest mode as well.
 When BSP & APs enter guest mode, they will try to launch pre-defined VMs whose vBSP associated with
 this physical core; these pre-defined VMs are static configured in ``vm config`` and they could be
@@ -149,23 +149,23 @@ The main steps include:
    for vcpu scheduling. The vCPU number and affinity are defined in corresponding
    ``vm config`` for this VM.
 
--  **Build vACPI:** For Service VM, the hypervisor will customize a virtual ACPI
-   table based on native ACPI table (this is in the TODO).
-   For pre-launched VM, the hypervisor will build a simple ACPI table with necessary
+-  **Build vACPI:** For the Service VM, the hypervisor will customize a virtual ACPI
+   table based on the native ACPI table (this is in the TODO).
+   For a pre-launched VM, the hypervisor will build a simple ACPI table with necessary
    information like MADT.
-   For post-launched User VM, DM will build its ACPI table dynamically.
+   For a post-launched User VM, the DM will build its ACPI table dynamically.
 
 -  **SW Load:** Prepares for each VM's SW configuration according to guest OS
    requirement, which may include kernel entry address, ramdisk address,
    bootargs, or zero page for launching bzImage etc.
    This is done by the hypervisor for pre-launched or Service VM, while by DM
    for post-launched User VMs.
-   Meanwhile, there are two kinds of boot mode - de-privilege and direct boot
+   Meanwhile, there are two kinds of boot modes - de-privilege and direct boot
    mode. The de-privilege boot mode is combined with ACRN UEFI-stub, and only
-   apply to Service VM, which ensure native UEFI environment could be restored
-   and keep running in the Service VM. The direct boot mode is applied to both
-   pre-launched and Service VM, in this mode, the VM will start from standard
-   real or proteted mode which is not related with native environment.
+   applies to the Service VM, which ensures that the native UEFI environment could be restored
+   and keep running in the Service VM. The direct boot mode is applied to both the
+   pre-launched and Service VM. In this mode, the VM will start from the standard
+   real or protected mode which is not related to the native environment.
 
 -  **Start VM:** The vBSP of vCPUs in this VM is kick to do schedule.
 

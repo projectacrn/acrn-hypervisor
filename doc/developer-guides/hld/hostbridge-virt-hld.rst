@@ -6,7 +6,7 @@ Hostbridge emulation
 Overview
 ********
 
-Hostbridge emulation is based on PCI emulation. However hostbridge emulation only sets PCI configuration space. Device model set the PCI configuration space for hostbridge in Service VM, then expose to User VM to detect the PCI hostbridge.
+Hostbridge emulation is based on PCI emulation; however, the hostbridge emulation only sets the PCI configuration space. The device model sets the PCI configuration space for hostbridge in the Service VM ans then exposes it to the User VM to detect the PCI hostbridge.
 
 PCI Host Bridge and hierarchy
 *****************************
@@ -29,7 +29,7 @@ There is PCI host bridge emulation in DM. The bus hierarchy is determined by ``a
 the bus hierarchy would be:
 
 .. code-block:: console
-   
+
    # lspci
    00:00.0 Host bridge: Network Appliance Corporation Device 1275
    00:01.0 ISA bridge: Intel Corporation 82371SB PIIX3 ISA [Natoma/Triton II]

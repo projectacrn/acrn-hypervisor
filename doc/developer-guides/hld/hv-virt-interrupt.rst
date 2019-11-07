@@ -3,7 +3,7 @@
 Virtual Interrupt
 #################
 
-This section introduces ACRN guest virtual interrupt
+This section introduces the ACRN guest virtual interrupt
 management, which includes:
 
 - VCPU request for virtual interrupt kick off,
@@ -11,10 +11,10 @@ management, which includes:
 - physical-to-virtual interrupt mapping for a pass-thru device, and
 - the process of VMX interrupt/exception injection.
 
-A standard VM never owns any physical interrupts, all interrupts received by
-Guest OS come from a virtual interrupt injected by vLAPIC, vIOAPIC or
+A standard VM never owns any physical interrupts; all interrupts received by the
+Guest OS come from a virtual interrupt injected by vLAPIC, vIOAPIC, or
 vPIC. Such virtual interrupts are triggered either from a pass-through
-device or from I/O mediators in SOS via hypercalls. The
+device or from I/O mediators in the Service VM via hypercalls. The
 :ref:`interrupt-remapping` section discusses how the hypervisor manages
 the mapping between physical and virtual interrupts for pass-through
 devices. However, a hard RT VM with LAPIC pass-through does own the physical
@@ -22,11 +22,11 @@ maskable external interrupts. On its physical CPUs, interrupts are disabled
 in VMX root mode, while in VMX non-root mode, physical interrupts will be
 deliverd to RT VM directly.
 
-Emulation for devices is inside SOS user space device model, i.e.,
-acrn-dm. However for performance consideration: vLAPIC, vIOAPIC, and vPIC
+Emulation for devices is inside the Service VM user space device model, i.e.,
+acrn-dm. However, for performance consideration, vLAPIC, vIOAPIC, and vPIC
 are emulated inside HV directly.
 
-From guest OS point of view, vPIC is Virtual Wire Mode via vIOAPIC. The
+From the guest OS point of view, vPIC is Virtual Wire Mode via vIOAPIC. The
 symmetric I/O Mode is shown in :numref:`pending-virt-interrupt` later in
 this section.
 
@@ -61,7 +61,7 @@ The eventid supported for virtual interrupt injection includes:
 The *vcpu_make_request* is necessary for a virtual interrupt
 injection. If the target vCPU is running under VMX non-root mode, it
 will send an IPI to kick it out, which leads to an external-interrupt
-VM-Exit. For some cases there is no need to send IPI when making a request,
+VM-Exit. In some cases, there is no need to send IPI when making a request,
 because the CPU making the request itself is the target VCPU. For
 example, the #GP exception request always happens on the current CPU when it
 finds an invalid emulation has happened. An external interrupt for a pass-thru
@@ -72,11 +72,10 @@ target VCPU.
 Virtual LAPIC
 *************
 
-LAPIC is virtualized for all Guest types: SOS and UOS. Given support by
-the
-physical processor, APICv Virtual Interrupt Delivery (VID) is enabled
-and will support Posted-Interrupt feature. Otherwise, it will fall back to legacy
-virtual interrupt injection mode.
+LAPIC is virtualized for all Guest types: Serice and User VMs. Given support
+by the physical processor, APICv Virtual Interrupt Delivery (VID) is enabled
+and will support Posted-Interrupt feature. Otherwise, it will fall back to
+the legacy virtual interrupt injection mode.
 
 vLAPIC provides the same features as the native LAPIC:
 
@@ -118,7 +117,7 @@ EOI processing
 ==============
 
 EOI virtualization is enabled if APICv virtual interrupt delivery is
-supported. Except for level triggered interrupts, VM will not exit in
+supported. Except for level triggered interrupts, the VM will not exit in
 case of EOI.
 
 In case of no APICv virtual interrupt delivery support, vLAPIC requires
@@ -133,7 +132,7 @@ indicate that is a level triggered interrupt.
 LAPIC passthrough based on vLAPIC
 =================================
 
-LAPIC passthrough is supported based on vLAPIC, guest OS firstly boots with
+LAPIC passthrough is supported based on vLAPIC, the guest OS first boots with
 vLAPIC in xAPIC mode and then switches to x2APIC mode to enable the LAPIC
 pass-through.
 
@@ -201,7 +200,7 @@ When doing emulation, an exception may need to be triggered in
 hypervisor, for example:
 
 - if guest accesses an invalid vMSR register,
-- hypervisor needs to inject a #GP, or 
+- hypervisor needs to inject a #GP, or
 - hypervisor needs to inject #PF when an instruction accesses a non-exist page
   from rip_gva during instruction emulation.
 
