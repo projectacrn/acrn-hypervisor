@@ -3,12 +3,12 @@
 AT keyboard controller emulation
 ################################
 
-This document describes AT keyboard controller emulation implementation in ACRN device model. Atkbdc device emulates a PS2 keyboard and mouse.
+This document describes the AT keyboard controller emulation implementation in the ACRN device model. The Atkbdc device emulates a PS2 keyboard and mouse.
 
 Overview
 ********
 
-The PS2 port is a 6-pin mini-Din connector used for connecting keyboards and mice to a PC compatible computer system. Its name comes from the IBM Personal System/2 series of personal computers, with which it was introduced in 1987. PS2 keyboard/mouse emulation is based on ACPI Emulation. We can add ACPI description of PS2 keyboard/mouse into virtual DSDT table to emulate keyboard/mouse in the User VM.
+The PS2 port is a 6-pin mini-Din connector used for connecting keyboards and mice to a PC-compatible computer system. Its name comes from the IBM Personal System/2 series of personal computers, with which it was introduced in 1987. PS2 keyboard/mouse emulation is based on ACPI Emulation. We can add ACPI description of PS2 keyboard/mouse into virtual DSDT table to emulate keyboard/mouse in the User VM.
 
 .. figure:: images/atkbdc-virt-hld.png
    :align: center
@@ -19,7 +19,7 @@ The PS2 port is a 6-pin mini-Din connector used for connecting keyboards and mic
 PS2 keyboard emulation
 **********************
 
-ACRN supports AT keyboard controller for PS2 keyboard that can be accessed through I/O ports(0x60 and 0x64). 0x60 is used to access AT keyboard controller data register, 0x64 is used to access AT keyboard controller address register. 
+ACRN supports AT keyboard controller for PS2 keyboard that can be accessed through I/O ports(0x60 and 0x64). 0x60 is used to access AT keyboard controller data register, 0x64 is used to access AT keyboard controller address register.
 
 The PS2 keyboard ACPI description as below::
 

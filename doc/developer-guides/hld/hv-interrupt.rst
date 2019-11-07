@@ -7,14 +7,14 @@ Overview
 ********
 
 The ACRN hypervisor implements a simple but fully functional framework
-to manage interrupts and exceptions, as show in
+to manage interrupts and exceptions, as shown in
 :numref:`interrupt-modules-overview`. In its native layer, it configures
-the physical PIC, IOAPIC and LAPIC to support different interrupt
-sources from local timer/IPI to external INTx/MSI. In its virtual guest
-layer, it emulates virtual PIC, virtual IOAPIC and virtual LAPIC/pass-thru
-LAPIC, and provides full APIs allowing virtual interrupt injection from
-emulated or pass-thru devices. The contents in this section does not include
-the pass-thru LAPIC case, for the pass-thru LAPIC, please refer to
+the physical PIC, IOAPIC, and LAPIC to support different interrupt
+sources from the local timer/IPI to the external INTx/MSI. In its virtual guest
+layer, it emulates virtual PIC, virtual IOAPIC, and virtual LAPIC/pass-thru
+LAPIC. It provides full APIs, allowing virtual interrupt injection from
+emulated or pass-thru devices. The contents in this section do not include
+the pass-thru LAPIC case. For the pass-thru LAPIC, refer to
 :ref:`lapic_passthru`
 
 .. figure:: images/interrupt-image3.png
@@ -26,10 +26,10 @@ the pass-thru LAPIC case, for the pass-thru LAPIC, please refer to
 
 In the software modules view shown in :numref:`interrupt-sw-modules`,
 the ACRN hypervisor sets up the physical interrupt in its basic
-interrupt modules (e.g., IOAPIC/LAPIC/IDT).  It dispatches the interrupt
+interrupt modules (e.g., IOAPIC/LAPIC/IDT). It dispatches the interrupt
 in the hypervisor interrupt flow control layer to the corresponding
-handlers, that could be pre-defined IPI notification, timer, or runtime
-registered pass-thru devices.  The ACRN hypervisor then uses its VM
+handlers; this could be pre-defined IPI notification, timer, or runtime
+registered pass-thru devices. The ACRN hypervisor then uses its VM
 interfaces based on vPIC, vIOAPIC, and vMSI modules, to inject the
 necessary virtual interrupt into the specific VM, or directly deliver
 interrupt to the specific RT VM with pass-thru LAPIC.
@@ -63,8 +63,7 @@ to support this. The ACRN hypervisor also initializes all the interrupt
 related modules like IDT, PIC, IOAPIC, and LAPIC.
 
 HV does not own any host devices (except UART). All devices are by
-default assigned to SOS. Any interrupts received by Guest VM (SOS or
-UOS) device drivers are virtual interrupts injected by HV (via vLAPIC).
+default assigned to the Service VM. Any interrupts received by Guest VM (Service VM or User VM) device drivers are virtual interrupts injected by HV (via vLAPIC).
 HV manages a Host-to-Guest mapping. When a native IRQ/interrupt occurs,
 HV decides whether this IRQ/interrupt should be forwarded to a VM and
 which VM to forward to (if any). Refer to
@@ -76,10 +75,10 @@ happens, with some exceptions such as #INT3 and #MC.  This is to
 simplify the design as HV does not support any exception handling
 itself. HV supports only static memory mapping, so there should be no
 #PF or #GP. If HV receives an exception indicating an error, an assert
-function is then executed with an error message print out, and the
+function is then executed with an error message printout, and the
 system then halts.
 
-Native interrupts could be generated from one of the following
+Native interrupts can be generated from one of the following
 sources:
 
 -  GSI interrupts
@@ -112,7 +111,7 @@ IDT Initialization
 ==================
 
 ACRN hypervisor builds its native IDT (interrupt descriptor table)
-during interrupt initialization and set up the following handlers:
+during interrupt initialization and sets up the following handlers:
 
 -  On an exception, the hypervisor dumps its context and halts the current
    physical processor (because physical exceptions are not expected).

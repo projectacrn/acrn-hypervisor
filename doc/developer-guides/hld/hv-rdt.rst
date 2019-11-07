@@ -3,12 +3,12 @@
 RDT Allocation Feature Supported by Hypervisor
 ##############################################
 
-The hypervisor allows to use RDT (Resource Director Technology) allocation features to optimize performance of VMs. There are 2 sub-features: CAT (Cache Allocation Technology) and MBA(Memory Bandwidth Allocation), CAT is for cache resources and MBA is for memory bandwidth resources. Code and Data Prioritization (CDP) is an extension of CAT. Only CAT is enabled due to the feature availability on ACRN supported platform. In ACRN, the CAT is configured via the "VM-Configuration", the resources allocated for VMs are determined in the VM configuration.
+The hypervisor uses RDT (Resource Director Technology) allocation features to optimize VM performance. There are 2 sub-features: CAT (Cache Allocation Technology) and MBA (Memory Bandwidth Allocation). CAT is for cache resources and MBA is for memory bandwidth resources. Code and Data Prioritization (CDP) is an extension of CAT. Only CAT is enabled due to the feature availability on an ACRN-supported platform. In ACRN, the CAT is configured via the "VM-Configuration". The resources allocated for VMs are determined in the VM configuration.
 
 CAT Support in ACRN
 *******************
 
-Introduction of CAT Capabilities
+Introduction to CAT Capabilities
 ================================
 
 On a platform which supports CAT, each CPU can mask last-level-cache (LLC) with a cache mask, the masked cache ways cannot be evicted by this CPU. In terms of SDM, please see chapter 17, volume 3, CAT capabilities are enumerated via CPUID, and configured via MSR registers, these are:
@@ -24,12 +24,12 @@ On a platform which supports CAT, each CPU can mask last-level-cache (LLC) with 
 Objective of CAT
 ================
 
-CAT feature in hypervisor can isolate cache for a VM from other VMs. It can also isolate the cache usage between VMX root mode and VMX non-root mode. Generally, certain cache resources will be allocated for the RT VMs in order to reduce the performance interference through the shared cache access from the neighbour VMs.
+The CAT feature in the hypervisor can isolate the cache for a VM from other VMs. It can also isolate the cache usage between VMX root mode and VMX non-root mode. Generally, certain cache resources will be allocated for the RT VMs in order to reduce the performance interference through the shared cache access from the neighbour VMs.
 
 CAT Workflow
 =============
 
-The hypervisor enumerates CAT capabilities and setup cache mask arrays; It also sets up CLOS for VMs and hypervisor itself per the "vm configuration".
+The hypervisor enumerates CAT capabilities and setup cache mask arrays; it also sets up CLOS for VMs and hypervisor itself per the "vm configuration".
 
 * The CAT capabilities are enumerated on boot-strap processor (BSP), at the
   PCPU pre-initialize stage. The global data structure cat_cap_info holds the

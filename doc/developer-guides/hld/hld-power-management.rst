@@ -13,13 +13,12 @@ CPU P-state/C-state are controlled by the guest OS. The ACPI
 P/C-state driver relies on some P/C-state-related ACPI data in the guest
 ACPI table.
 
-Service VM could run ACPI driver with no problem because it can access native
-the ACPI table. For User VM though, we need to prepare the corresponding ACPI data
-for Device Model to build virtual ACPI table.
+The Service VM can run the ACPI driver with no problems because it can access the native ACPI table. For the User VM though, we need to prepare the corresponding ACPI data
+for the Device Model to build a virtual ACPI table.
 
 The Px/Cx data includes four
 ACPI objects: _PCT, _PPC, and _PSS for P-state management, and _CST for
-C-state management. All these ACPI data must  be consistent with the
+C-state management. All these ACPI data must be consistent with the
 native data because the control method is a kind of pass through.
 
 These ACPI objects data are parsed by an offline tool and hard-coded in a
@@ -52,13 +51,13 @@ Hypervisor module named CPU state table:
    } __attribute__((aligned(8)));
 
 
-With these Px/Cx data, the Hypervisor is able to intercept guest's
+With these Px/Cx data, the Hypervisor is able to intercept the guest's
 P/C-state requests with desired restrictions.
 
 Virtual ACPI table build flow
 =============================
 
-:numref:`vACPItable` shows how to build virtual ACPI table with
+:numref:`vACPItable` shows how to build the virtual ACPI table with the
 Px/Cx data for User VM P/C-state management:
 
 .. figure:: images/hld-pm-image28.png
@@ -67,26 +66,26 @@ Px/Cx data for User VM P/C-state management:
 
    System block for building vACPI table with Px/Cx data
 
-Some ioctl APIs are defined for Device model to query Px/Cx data from
-Service VM VHM. The Hypervisor needs to provide hypercall APIs to transit
-Px/Cx data from CPU state table to Service VM VHM.
+Some ioctl APIs are defined for the Device model to query Px/Cx data from
+the Service VM VHM. The Hypervisor needs to provide hypercall APIs to transit
+Px/Cx data from the CPU state table to the Service VM VHM.
 
 The build flow is:
 
-1) Use offline tool (e.g. **iasl**) to parse the Px/Cx data and hard-code to
-   CPU state table in Hypervisor. Hypervisor loads the data after
-   system boot up.
-2) Before User VM launching, Device mode queries the Px/Cx data from Service
+1) Use an offline tool (e.g. **iasl**) to parse the Px/Cx data and hard-code to
+   a CPU state table in the Hypervisor. The Hypervisor loads the data after
+   system boots up.
+2) Before User VM launching, the Device mode queries the Px/Cx data from the Service
    VM VHM via ioctl interface.
-3) VHM transmits the query request to Hypervisor by hypercall.
-4) Hypervisor returns the Px/Cx data.
-5) Device model builds the virtual ACPI table with these Px/Cx data
+3) VHM transmits the query request to the Hypervisor by hypercall.
+4) The Hypervisor returns the Px/Cx data.
+5) The Device model builds the virtual ACPI table with these Px/Cx data
 
 Intercept Policy
 ================
 
-Hypervisor should be able to restrict guest's
-P/C-state request, with a user-customized policy.
+The Hypervisor should be able to restrict guest's
+P/C-state request with a user-customized policy.
 
 Hypervisor should intercept guest P-state request and validate whether
 it is a valid P-state. Any invalid P-state (e.g. doesn't exist in CPU state
@@ -176,8 +175,8 @@ System low power state exit process
 ===================================
 
 The low power state exit process is in reverse order. The ACRN
-hypervisor is woken up at first. It will go through its own low power
-state exit path. Then ACRN hypervisor will resume the Service VM to let
+hypervisor is awakened first. It will go through its own low power
+state exit path. Then, ACRN hypervisor will resume the Service VM to let
 Service VM go through Service VM low power state exit path. After that,
 the DM is resumed and let User VM go through User VM low power state exit
 path. The system is resumed to running state after at least one User VM

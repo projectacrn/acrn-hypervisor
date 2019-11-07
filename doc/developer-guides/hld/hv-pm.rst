@@ -8,23 +8,23 @@ System PM module
 
 The PM module in the hypervisor does three things:
 
--  Monitor all guests power state transition. And emulate low power
-   state for the guests which are launched by HV directly.
+-  Monitors all guests power state transitions and emulates a low power
+   state for the guests which are launched by the HV directly.
 
--  Once all guests enter low power state, Hypervisor handles its
-   own low-power state transition
+-  Once all guests enter low power state, the Hypervisor handles its
+   own low-power state transition.
 
--  Once system resumes from low-power mode, the hypervisor handles its
-   own resume and emulates Service VM resume too.
+-  Once the system resumes from low-power mode, the hypervisor handles its
+   own resume and emulates the Service VM resume.
 
-It is assumed that Service VM does not trigger any power state transition
+It is assumed that the Service VM does not trigger any power state transition
 until the VM manager of ACRN notifies it that all User VMs are inactive
 and Service VM offlines all its virtual APs. And it is assumed that HV
 does not trigger its own power state transition until all guests are in
 low power state.
 
 :numref:`pm-low-power-transition` shows the Hypervisor entering S3
-state process.  Service VM triggers power state transition by
+state process. The Service VM triggers power state transition by
 writing ACPI control register on its virtual BSP (which is pinned to the
 physical BSP). The hypervisor then does the following in sequence before
 it writes to the physical ACPI control register to trigger physical
