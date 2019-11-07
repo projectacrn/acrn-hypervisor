@@ -58,7 +58,7 @@ static int32_t hcall_profiling_ops(struct acrn_vm *vm, uint64_t cmd, uint64_t pa
 		ret = profiling_get_status_info(vm, param);
 		break;
 	default:
-		pr_err("%s: invalid profiling command %llu\n", __func__, cmd);
+		pr_err("%s: invalid profiling command %lu\n", __func__, cmd);
 		ret = -1;
 		break;
 	}

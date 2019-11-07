@@ -54,7 +54,7 @@ int32_t hcall_sos_offline_cpu(struct acrn_vm *vm, uint64_t lapicid)
 	uint16_t i;
 	int32_t ret = 0;
 
-	pr_info("sos offline cpu with lapicid %lld", lapicid);
+	pr_info("sos offline cpu with lapicid %ld", lapicid);
 
 	foreach_vcpu(i, vm, vcpu) {
 		if (vlapic_get_apicid(vcpu_vlapic(vcpu)) == lapicid) {
@@ -164,7 +164,7 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 			/* GUEST_FLAG_RT must be set if we have GUEST_FLAG_LAPIC_PASSTHROUGH set in guest_flags */
 			if (((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)
 				&& ((vm_config->guest_flags & GUEST_FLAG_RT) == 0U)) {
-				pr_err("Wrong guest flags 0x%llx\n", vm_config->guest_flags);
+				pr_err("Wrong guest flags 0x%lx\n", vm_config->guest_flags);
 				ret = -1;
 			} else {
 				ret = create_vm(vm_id, vm_config, &target_vm);
@@ -390,7 +390,7 @@ static void inject_msi_lapic_pt(struct acrn_vm *vm, const struct acrn_msi_entry 
 	vmsi_addr.full = vmsi->msi_addr;
 	vmsi_data.full = (uint32_t)vmsi->msi_data;
 
-	dev_dbg(ACRN_DBG_LAPICPT, "%s: msi_addr 0x%016llx, msi_data 0x%016llx",
+	dev_dbg(ACRN_DBG_LAPICPT, "%s: msi_addr 0x%016lx, msi_data 0x%016lx",
 		__func__, vmsi->msi_addr, vmsi->msi_data);
 
 	if (vmsi_addr.bits.addr_base == MSI_ADDR_BASE) {
@@ -402,7 +402,7 @@ static void inject_msi_lapic_pt(struct acrn_vm *vm, const struct acrn_msi_entry 
 		 * and handled by hardware.
 		 */
 		vlapic_calc_dest_lapic_pt(vm, &vdmask, false, vdest, phys);
-		dev_dbg(ACRN_DBG_LAPICPT, "%s: vcpu destination mask 0x%016llx", __func__, vdmask);
+		dev_dbg(ACRN_DBG_LAPICPT, "%s: vcpu destination mask 0x%016lx", __func__, vdmask);
 
 		vcpu_id = ffs64(vdmask);
 		while (vcpu_id != INVALID_BIT_INDEX) {
@@ -419,7 +419,7 @@ static void inject_msi_lapic_pt(struct acrn_vm *vm, const struct acrn_msi_entry 
 		icr.bits.destination_mode = MSI_ADDR_DESTMODE_LOGICAL; 
 
 		msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
-		dev_dbg(ACRN_DBG_LAPICPT, "%s: icr.value 0x%016llx", __func__, icr.value);
+		dev_dbg(ACRN_DBG_LAPICPT, "%s: icr.value 0x%016lx", __func__, icr.value);
 	}
 }
 
@@ -510,7 +510,7 @@ int32_t hcall_set_ioreq_buffer(struct acrn_vm *vm, uint16_t vmid, uint64_t param
 
 			hpa = gpa2hpa(vm, iobuf.req_buf);
 			if (hpa == INVALID_HPA) {
-				pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
+				pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
 					__func__, vm->vm_id, iobuf.req_buf);
 				target_vm->sw.io_shared_page = NULL;
 			} else {
@@ -577,7 +577,7 @@ static int32_t add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_v
 
 	hpa = gpa2hpa(vm, region->sos_vm_gpa);
 	if (hpa == INVALID_HPA) {
-		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
+		pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
 			__func__, vm->vm_id, region->sos_vm_gpa);
 		ret = -EINVAL;
 	} else {
@@ -632,13 +632,13 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	if ((region->size & (PAGE_SIZE - 1UL)) != 0UL) {
 		pr_err("%s: [vm%d] map size 0x%x is not page aligned",
 			__func__, target_vm->vm_id, region->size);
-	        ret = -EINVAL;
+		ret = -EINVAL;
 	} else {
 		if (!ept_is_mr_valid(target_vm, region->gpa, region->size)) {
-				pr_err("%s, invalid gpa: 0x%llx, size: 0x%llx, top_address_space: 0x%llx", __func__,
-					region->gpa, region->size,
-					target_vm->arch_vm.ept_mem_ops.info->ept.top_address_space);
-				ret = 0;
+			pr_err("%s, invalid gpa: 0x%lx, size: 0x%lx, top_address_space: 0x%lx", __func__,
+				region->gpa, region->size,
+				target_vm->arch_vm.ept_mem_ops.info->ept.top_address_space);
+			ret = 0;
 		} else {
 			dev_dbg(ACRN_DBG_HYCALL,
 				"[vm%d] type=%d gpa=0x%x sos_vm_gpa=0x%x size=0x%x",
@@ -718,7 +718,7 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 
 	hpa = gpa2hpa(vm, wp->gpa);
 	if (hpa == INVALID_HPA) {
-		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
+		pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
 			__func__, vm->vm_id, wp->gpa);
 		ret = -EINVAL;
 	} else {
@@ -799,7 +799,7 @@ int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 			&& (copy_from_gpa(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa)) == 0)) {
 		v_gpa2hpa.hpa = gpa2hpa(target_vm, v_gpa2hpa.gpa);
 		if (v_gpa2hpa.hpa == INVALID_HPA) {
-			pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
+			pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
 				__func__, target_vm->vm_id, v_gpa2hpa.gpa);
 		} else if (copy_to_gpa(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);

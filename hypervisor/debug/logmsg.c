@@ -61,7 +61,7 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 
 	(void)memset(buffer, 0U, LOG_MESSAGE_MAX_SIZE);
 	/* Put time-stamp, CPU ID and severity into buffer */
-	snprintf(buffer, LOG_MESSAGE_MAX_SIZE, "[%lluus][cpu=%hu][sev=%u][seq=%u]:",
+	snprintf(buffer, LOG_MESSAGE_MAX_SIZE, "[%luus][cpu=%hu][sev=%u][seq=%u]:",
 			timestamp, pcpu_id, severity, atomic_inc_return(&logmsg_ctl.seq));
 
 	/* Put message into remaining portion of local buffer */

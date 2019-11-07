@@ -500,7 +500,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 					read_write = mmio_handler->read_write;
 					handler_private_data = mmio_handler->handler_private_data;
 				} else {
-					pr_fatal("Err MMIO, address:0x%llx, size:%x", address, size);
+					pr_fatal("Err MMIO, address:0x%lx, size:%x", address, size);
 					status = -EIO;
 				}
 				break;
@@ -578,8 +578,7 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 			 */
 			struct pio_request *pio_req = &io_req->reqs.pio;
 
-			pr_fatal("%s Err: access dir %d, io_type %d, "
-				"addr = 0x%llx, size=%lu", __func__,
+			pr_fatal("%s Err: access dir %d, io_type %d, addr = 0x%lx, size=%lu", __func__,
 				pio_req->direction, io_req->io_type,
 				pio_req->address, pio_req->size);
 		}
@@ -636,7 +635,7 @@ static inline struct mem_io_node *find_match_mmio_node(struct acrn_vm *vm,
 	}
 
 	if (!found) {
-		pr_fatal("%s, vm[%d] no match mmio region [0x%llx, 0x%llx] is found",
+		pr_fatal("%s, vm[%d] no match mmio region [0x%lx, 0x%lx] is found",
 				__func__, vm->vm_id, start, end);
 		mmio_node = NULL;
 	}

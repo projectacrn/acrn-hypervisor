@@ -996,7 +996,7 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 		sep_collection_switch = prof_control.switches;
 
 		dev_dbg(ACRN_DBG_PROFILING,
-			" old_switch: %llu sep_collection_switch: %llu!",
+			" old_switch: %lu sep_collection_switch: %lu!",
 			   old_switch, sep_collection_switch);
 
 		for (i = 0U; i < (uint16_t)MAX_SEP_FEATURE_ID; i++) {
@@ -1030,7 +1030,7 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 		socwatch_collection_switch = prof_control.switches;
 
 		dev_dbg(ACRN_DBG_PROFILING,
-			"socwatch_collection_switch: %llu!",
+			"socwatch_collection_switch: %lu!",
 			socwatch_collection_switch);
 
 		if (socwatch_collection_switch != 0UL) {

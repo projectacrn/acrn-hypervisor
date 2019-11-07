@@ -145,7 +145,7 @@ static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu)
 
 		reserving_1g_pages = (vm_config->memory.size >> 30U) - NUM_REMAIN_1G_PAGES;
 		if (reserving_1g_pages > 0) {
-			snprintf(dyn_bootargs, 100U, " hugepagesz=1G hugepages=%lld", reserving_1g_pages);
+			snprintf(dyn_bootargs, 100U, " hugepagesz=1G hugepages=%ld", reserving_1g_pages);
 			(void)copy_to_gpa(vm, dyn_bootargs, ((uint64_t)bootargs_info->load_addr
 				+ bootargs_info->size), (strnlen_s(dyn_bootargs, 99U) + 1U));
 		}
@@ -224,7 +224,7 @@ int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 	if (ret == 0) {
 		/* Set VCPU entry point to kernel entry */
 		vcpu_set_rip(vcpu, (uint64_t)sw_kernel->kernel_entry_addr);
-		pr_info("%s, VM %hu VCPU %hu Entry: 0x%016llx ", __func__, vm->vm_id, vcpu->vcpu_id,
+		pr_info("%s, VM %hu VCPU %hu Entry: 0x%016lx ", __func__, vm->vm_id, vcpu->vcpu_id,
 			sw_kernel->kernel_entry_addr);
 	}
 
