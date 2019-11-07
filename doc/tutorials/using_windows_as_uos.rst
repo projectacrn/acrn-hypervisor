@@ -16,8 +16,8 @@ The following Intel Kaby Lake NUCs are verified:
 
 ACRN Service VM Setup
 *********************
-You may refer to the steps in :ref:`kbl-nuc-sdc` for
-Intel NUC to set up ACRN on the KBL NUC. After following the steps in that guide,
+You may refer to the steps in :ref:`kbl-nuc-sdc` for the
+Intel NUC in order to set up ACRN on the KBL NUC. After following the steps in that guide,
 you should be able to launch the Service VM successfully.
 
 Setup for Using Windows as Guest VM

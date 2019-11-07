@@ -37,8 +37,8 @@ A vUART can be used as a console port, and it can be activated by
 a ``vm_console <vm_id>`` command in the hypervisor console. From
 :numref:`console-uart-arch`,  there is only one physical UART, but four
 console vUARTs (green color blocks). A hypervisor console is implemented
-above the physical UART, and it works in polling mode.  There is a timer
-in hv console. The timer handler dispatches the input from physical UART
+above the physical UART, and it works in polling mode. There is a timer
+in the hv console. The timer handler dispatches the input from physical UART
 to the vUART or the hypervisor shell process and gets data from vUART's
 Tx FIFO and sends it to the physical UART. The data in vUART's FIFOs will be
 overwritten when it is not taken out in time.
@@ -53,11 +53,11 @@ Communication vUART
 *******************
 
 The communication vUART is used to transfer data between two VMs in low
-speed. For kernel driver, it is a general UART, can be detected and
-probed by 8250 serial driver. But in hypervisor, it has special process.
+speed. For the kernel driver, it is a general UART that can be detected and
+probed by 8250 serial driver. But in the hypervisor, it has a special process.
 
 From :numref:`communication-uart-arch`, the vUART in two VMs is
-connected according to the configuration in hypervisor.  When user
+connected according to the configuration in the hypervisor.  When a user
 writes a byte to the communication UART in VM0:
 
 Operations in VM0
@@ -118,7 +118,7 @@ Usage
                   }
 
    The kernel bootargs ``console=ttySx`` should be the same with
-   vuart[0], otherwise, the kernel console log can not captured by
+   vuart[0]; otherwise, the kernel console log can not be captured by
    hypervisor. Then, after bringing up the system, you can switch the console
    to the target VM by:
 
@@ -164,6 +164,6 @@ Usage
    useful for Windows and vxworks as they probe the driver according to the ACPI
    table.
 
-   If user enables both the device model UART and hypervisor vUART at the
+   If the user enables both the device model UART and the hypervisor vUART at the
    same port address, access to the port address will be responded to
    by the hypervisor vUART directly, and will not pass to the device model.
