@@ -394,7 +394,6 @@ fail:
 
 }
 
-#define DEFAULT_UEFI_OS_LOADER_NAME L"\\EFI\\org.clearlinux\\bootloaderx64.efi"
 /**
  * efi_main - The entry point for the OS loader image.
  * @image: firmware-allocated handle that identifies the image
@@ -460,7 +459,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 		 * bootloader name to be used. Fall back to the default bootloader
 		 * as specified in config.h
 		 */
-		bootloader_name = DEFAULT_UEFI_OS_LOADER_NAME;
+		bootloader_name = ch8_2_ch16(CONFIG_UEFI_OS_LOADER_NAME, strlen(CONFIG_UEFI_OS_LOADER_NAME));
 	}
 
 	section = ".hv";

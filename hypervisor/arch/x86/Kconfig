@@ -303,3 +303,11 @@ config MAX_KATA_VM_NUM
 	int "Maximum number of Kata Containers in SOS"
 	range 0 1
 	default 0
+
+config UEFI_OS_LOADER_NAME
+	string "UEFI OS loader name"
+	default "\\EFI\\org.clearlinux\\bootloaderx64.efi"
+	help
+	  Name of the UEFI bootloader that starts the Service VM. This is
+	  typically the systemd-boot or Grub bootloader but could be any other
+	  UEFI executable.
