@@ -108,4 +108,19 @@ static inline char *ch16_2_ch8(CHAR16 *str16, UINTN len)
 	return str8;
 }
 
+static inline CHAR16 *ch8_2_ch16(char *str8, UINTN len)
+{
+	UINTN i;
+	CHAR16 *str16;
+
+	str16 = AllocatePool((len + 1) * sizeof(CHAR16));
+
+	for (i = 0; i < len; i++)
+		str16[i] = str8[i];
+
+	str16[len] = 0;
+
+	return str16;
+}
+
 #endif /* __STDLIB_H__ */
