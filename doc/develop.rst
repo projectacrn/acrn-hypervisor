@@ -18,6 +18,7 @@ Configuration Tutorials
 .. toctree::
    :maxdepth: 1
 
+   tutorials/up2
    tutorials/increase-uos-disk-size
    tutorials/sign_clear_linux_image
    tutorials/static-ip
@@ -29,6 +30,8 @@ Configuration Tutorials
    tutorials/realtime_performance_tuning
    tutorials/kbl-nuc-sdc
    tutorials/enable_laag_secure_boot
+   tutorials/building_acrn_in_docker
+   tutorials/acrn_ootb
 
 User VM Tutorials
 *****************
