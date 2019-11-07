@@ -151,7 +151,7 @@ void init_e820(void)
 				hv_e820[i].type = mmap[i].type;
 
 				dev_dbg(ACRN_DBG_E820, "mmap table: %d type: 0x%x\n", i, mmap[i].type);
-				dev_dbg(ACRN_DBG_E820, "Base: 0x%016llx length: 0x%016llx",
+				dev_dbg(ACRN_DBG_E820, "Base: 0x%016lx length: 0x%016lx",
 					mmap[i].baseaddr, mmap[i].length);
 			}
 		}

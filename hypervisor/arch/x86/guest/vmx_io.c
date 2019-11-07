@@ -164,8 +164,8 @@ int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 
 	if (ret <= 0) {
-		pr_acrnlog("Guest Linear Address: 0x%016llx", exec_vmread(VMX_GUEST_LINEAR_ADDR));
-		pr_acrnlog("Guest Physical Address address: 0x%016llx", gpa);
+		pr_acrnlog("Guest Linear Address: 0x%016lx", exec_vmread(VMX_GUEST_LINEAR_ADDR));
+		pr_acrnlog("Guest Physical Address address: 0x%016lx", gpa);
 	}
 	return status;
 }

@@ -41,7 +41,7 @@ static void split_large_page(uint64_t *pte, enum _page_table_level level,
 		break;
 	}
 
-	dev_dbg(ACRN_DBG_MMU, "%s, paddr: 0x%llx, pbase: 0x%llx\n", __func__, ref_paddr, pbase);
+	dev_dbg(ACRN_DBG_MMU, "%s, paddr: 0x%lx, pbase: 0x%lx\n", __func__, ref_paddr, pbase);
 
 	paddr = ref_paddr;
 	for (i = 0UL; i < PTRS_PER_PTE; i++) {
@@ -92,7 +92,7 @@ static void modify_or_del_pte(const uint64_t *pde, uint64_t vaddr_start, uint64_
 	uint64_t vaddr = vaddr_start;
 	uint64_t index = pte_index(vaddr);
 
-	dev_dbg(ACRN_DBG_MMU, "%s, vaddr: [0x%llx - 0x%llx]\n", __func__, vaddr, vaddr_end);
+	dev_dbg(ACRN_DBG_MMU, "%s, vaddr: [0x%lx - 0x%lx]\n", __func__, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PTE; index++) {
 		uint64_t *pte = pt_page + index;
 
@@ -102,7 +102,7 @@ static void modify_or_del_pte(const uint64_t *pde, uint64_t vaddr_start, uint64_
 			 * is present or not.
 			 */
 			if ((type == MR_MODIFY) && (vaddr >= MEM_1M)) {
-				pr_warn("%s, vaddr: 0x%llx pte is not present.\n", __func__, vaddr);
+				pr_warn("%s, vaddr: 0x%lx pte is not present.\n", __func__, vaddr);
 			}
 		} else {
 			local_modify_or_del_pte(pte, prot_set, prot_clr, type, mem_ops);
@@ -129,14 +129,14 @@ static void modify_or_del_pde(const uint64_t *pdpte, uint64_t vaddr_start, uint6
 	uint64_t vaddr = vaddr_start;
 	uint64_t index = pde_index(vaddr);
 
-	dev_dbg(ACRN_DBG_MMU, "%s, vaddr: [0x%llx - 0x%llx]\n", __func__, vaddr, vaddr_end);
+	dev_dbg(ACRN_DBG_MMU, "%s, vaddr: [0x%lx - 0x%lx]\n", __func__, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PDE; index++) {
 		uint64_t *pde = pd_page + index;
 		uint64_t vaddr_next = (vaddr & PDE_MASK) + PDE_SIZE;
 
 		if (mem_ops->pgentry_present(*pde) == 0UL) {
 			if (type == MR_MODIFY) {
-				pr_warn("%s, addr: 0x%llx pde is not present.\n", __func__, vaddr);
+				pr_warn("%s, addr: 0x%lx pde is not present.\n", __func__, vaddr);
 			}
 		} else {
 			if (pde_large(*pde) != 0UL) {
@@ -174,14 +174,14 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
 	uint64_t vaddr = vaddr_start;
 	uint64_t index = pdpte_index(vaddr);
 
-	dev_dbg(ACRN_DBG_MMU, "%s, vaddr: [0x%llx - 0x%llx]\n", __func__, vaddr, vaddr_end);
+	dev_dbg(ACRN_DBG_MMU, "%s, vaddr: [0x%lx - 0x%lx]\n", __func__, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PDPTE; index++) {
 		uint64_t *pdpte = pdpt_page + index;
 		uint64_t vaddr_next = (vaddr & PDPTE_MASK) + PDPTE_SIZE;
 
 		if (mem_ops->pgentry_present(*pdpte) == 0UL) {
 			if (type == MR_MODIFY) {
-				pr_warn("%s, vaddr: 0x%llx pdpte is not present.\n", __func__, vaddr);
+				pr_warn("%s, vaddr: 0x%lx pdpte is not present.\n", __func__, vaddr);
 			}
 		} else {
 			if (pdpte_large(*pdpte) != 0UL) {
@@ -227,7 +227,7 @@ void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
 	uint64_t *pml4e;
 
 	vaddr_end = vaddr + round_page_down(size);
-	dev_dbg(ACRN_DBG_MMU, "%s, vaddr: 0x%llx, size: 0x%llx\n",
+	dev_dbg(ACRN_DBG_MMU, "%s, vaddr: 0x%lx, size: 0x%lx\n",
 		__func__, vaddr, size);
 
 	while (vaddr < vaddr_end) {
@@ -254,13 +254,13 @@ static void add_pte(const uint64_t *pde, uint64_t paddr_start, uint64_t vaddr_st
 	uint64_t paddr = paddr_start;
 	uint64_t index = pte_index(vaddr);
 
-	dev_dbg(ACRN_DBG_MMU, "%s, paddr: 0x%llx, vaddr: [0x%llx - 0x%llx]\n",
+	dev_dbg(ACRN_DBG_MMU, "%s, paddr: 0x%lx, vaddr: [0x%lx - 0x%lx]\n",
 		__func__, paddr, vaddr_start, vaddr_end);
 	for (; index < PTRS_PER_PTE; index++) {
 		uint64_t *pte = pt_page + index;
 
 		if (mem_ops->pgentry_present(*pte) != 0UL) {
-			pr_fatal("%s, pte 0x%llx is already present!\n", __func__, vaddr);
+			pr_fatal("%s, pte 0x%lx is already present!\n", __func__, vaddr);
 		} else {
 			set_pgentry(pte, paddr | prot, mem_ops);
 			paddr += PTE_SIZE;
@@ -285,14 +285,14 @@ static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_
 	uint64_t paddr = paddr_start;
 	uint64_t index = pde_index(vaddr);
 
-	dev_dbg(ACRN_DBG_MMU, "%s, paddr: 0x%llx, vaddr: [0x%llx - 0x%llx]\n",
+	dev_dbg(ACRN_DBG_MMU, "%s, paddr: 0x%lx, vaddr: [0x%lx - 0x%lx]\n",
 		__func__, paddr, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PDE; index++) {
 		uint64_t *pde = pd_page + index;
 		uint64_t vaddr_next = (vaddr & PDE_MASK) + PDE_SIZE;
 
 		if (pde_large(*pde) != 0UL) {
-			pr_fatal("%s, pde 0x%llx is already present!\n", __func__, vaddr);
+			pr_fatal("%s, pde 0x%lx is already present!\n", __func__, vaddr);
 		} else {
 			if (mem_ops->pgentry_present(*pde) == 0UL) {
 				if (mem_aligned_check(paddr, PDE_SIZE) &&
@@ -332,13 +332,13 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
 	uint64_t paddr = paddr_start;
 	uint64_t index = pdpte_index(vaddr);
 
-	dev_dbg(ACRN_DBG_MMU, "%s, paddr: 0x%llx, vaddr: [0x%llx - 0x%llx]\n", __func__, paddr, vaddr, vaddr_end);
+	dev_dbg(ACRN_DBG_MMU, "%s, paddr: 0x%lx, vaddr: [0x%lx - 0x%lx]\n", __func__, paddr, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PDPTE; index++) {
 		uint64_t *pdpte = pdpt_page + index;
 		uint64_t vaddr_next = (vaddr & PDPTE_MASK) + PDPTE_SIZE;
 
 		if (pdpte_large(*pdpte) != 0UL) {
-			pr_fatal("%s, pdpte 0x%llx is already present!\n", __func__, vaddr);
+			pr_fatal("%s, pdpte 0x%lx is already present!\n", __func__, vaddr);
 		} else {
 			if (mem_ops->pgentry_present(*pdpte) == 0UL) {
 				if (mem_aligned_check(paddr, PDPTE_SIZE) &&
@@ -378,7 +378,7 @@ void mmu_add(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base, uint
 	uint64_t paddr;
 	uint64_t *pml4e;
 
-	dev_dbg(ACRN_DBG_MMU, "%s, paddr 0x%llx, vaddr 0x%llx, size 0x%llx\n", __func__, paddr_base, vaddr_base, size);
+	dev_dbg(ACRN_DBG_MMU, "%s, paddr 0x%lx, vaddr 0x%lx, size 0x%lx\n", __func__, paddr_base, vaddr_base, size);
 
 	/* align address to page size*/
 	vaddr = round_page_up(vaddr_base);

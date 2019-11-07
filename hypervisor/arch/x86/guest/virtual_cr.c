@@ -235,7 +235,7 @@ static void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 			/* clear read cache, next time read should from VMCS */
 			bitmap_clear_lock(CPU_REG_CR0, &vcpu->reg_cached);
 
-			pr_dbg("VMM: Try to write %016llx, allow to write 0x%016llx to CR0", cr0_mask, cr0_vmx);
+			pr_dbg("VMM: Try to write %016lx, allow to write 0x%016lx to CR0", cr0_mask, cr0_vmx);
 		}
 	}
 }
@@ -337,7 +337,7 @@ static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 			/* clear read cache, next time read should from VMCS */
 			bitmap_clear_lock(CPU_REG_CR4, &vcpu->reg_cached);
 
-			pr_dbg("VMM: Try to write %016llx, allow to write 0x%016llx to CR4", cr4, cr4_vmx);
+			pr_dbg("VMM: Try to write %016lx, allow to write 0x%016lx to CR4", cr4, cr4_vmx);
 		}
 	}
 }
@@ -388,12 +388,12 @@ void init_cr0_cr4_host_mask(void)
 
 	exec_vmwrite(VMX_CR0_GUEST_HOST_MASK, cr0_host_owned_bits);
 	/* Output CR0 mask value */
-	pr_dbg("CR0 guest-host mask value: 0x%016llx", cr0_host_owned_bits);
+	pr_dbg("CR0 guest-host mask value: 0x%016lx", cr0_host_owned_bits);
 
 
 	exec_vmwrite(VMX_CR4_GUEST_HOST_MASK, cr4_host_owned_bits);
 	/* Output CR4 mask value */
-	pr_dbg("CR4 guest-host mask value: 0x%016llx", cr4_host_owned_bits);
+	pr_dbg("CR4 guest-host mask value: 0x%016lx", cr4_host_owned_bits);
 }
 
 uint64_t vcpu_get_cr0(struct acrn_vcpu *vcpu)
