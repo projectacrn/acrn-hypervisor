@@ -185,7 +185,7 @@ static void vdev_pt_map_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 			/* Remember the previously mapped MMIO vbar */
 			vdev->bar_base_mapped[idx] = vbar_base;
 		} else {
-			pr_fatal("%s, %x:%x.%x set invalid bar[%d] address: 0x%llx\n", __func__,
+			pr_fatal("%s, %x:%x.%x set invalid bar[%d] address: 0x%lx\n", __func__,
 				vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, vbar_base);
 		}
 	}

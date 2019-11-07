@@ -85,7 +85,7 @@ static inline void local_invvpid(uint64_t type, uint16_t vpid, uint64_t gva)
 	const struct invvpid_operand operand = { vpid, 0U, 0U, gva };
 
 	if (asm_invvpid(operand, type) != 0) {
-		pr_dbg("%s, failed. type = %llu, vpid = %u", __func__, type, vpid);
+		pr_dbg("%s, failed. type = %lu, vpid = %u", __func__, type, vpid);
 	}
 }
 
@@ -106,7 +106,7 @@ static inline int32_t asm_invept(uint64_t type, struct invept_desc desc)
 static inline void local_invept(uint64_t type, struct invept_desc desc)
 {
 	if (asm_invept(type, desc) != 0) {
-		pr_dbg("%s, failed. type = %llu, eptp = 0x%lx", __func__, type, desc.eptp);
+		pr_dbg("%s, failed. type = %lu, eptp = 0x%lx", __func__, type, desc.eptp);
 	}
 }
 

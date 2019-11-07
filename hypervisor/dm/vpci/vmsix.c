@@ -271,7 +271,7 @@ static void vmsix_table_rw(const struct pci_vdev *vdev, struct mmio_request *mmi
 
 		}
 	} else {
-		pr_err("%s, invalid arguments %llx - %llx", __func__, mmio->value, mmio->address);
+		pr_err("%s, invalid arguments %lx - %lx", __func__, mmio->value, mmio->address);
 	}
 
 }
