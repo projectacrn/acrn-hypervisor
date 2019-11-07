@@ -36,11 +36,11 @@
 #include <vm.h>
 #include <logmsg.h>
 
-#define vuart_lock_init(vu)	spinlock_init(&((vu)->lock))
-#define vuart_lock(vu, flags)	spinlock_irqsave_obtain(&((vu)->lock), &(flags))
-#define vuart_unlock(vu, flags)	spinlock_irqrestore_release(&((vu)->lock), (flags))
+#define init_vuart_lock(vu)	spinlock_init(&((vu)->lock))
+#define obtain_vuart_lock(vu, flags)	spinlock_irqsave_obtain(&((vu)->lock), &(flags))
+#define release_vuart_lock(vu, flags)	spinlock_irqrestore_release(&((vu)->lock), (flags))
 
-static inline void fifo_reset(struct vuart_fifo *fifo)
+static inline void reset_fifo(struct vuart_fifo *fifo)
 {
 	fifo->rindex = 0U;
 	fifo->windex = 0U;
@@ -98,9 +98,9 @@ void vuart_putchar(struct acrn_vuart *vu, char ch)
 {
 	uint64_t rflags;
 
-	vuart_lock(vu, rflags);
+	obtain_vuart_lock(vu, rflags);
 	fifo_putchar(&vu->rxfifo, ch);
-	vuart_unlock(vu, rflags);
+	release_vuart_lock(vu, rflags);
 }
 
 char vuart_getchar(struct acrn_vuart *vu)
@@ -108,20 +108,20 @@ char vuart_getchar(struct acrn_vuart *vu)
 	uint64_t rflags;
 	char c;
 
-	vuart_lock(vu, rflags);
+	obtain_vuart_lock(vu, rflags);
 	c = fifo_getchar(&vu->txfifo);
-	vuart_unlock(vu, rflags);
+	release_vuart_lock(vu, rflags);
 	return c;
 }
 
-static inline void vuart_fifo_init(struct acrn_vuart *vu)
+static inline void init_fifo(struct acrn_vuart *vu)
 {
 	vu->txfifo.buf = vu->vuart_tx_buf;
 	vu->rxfifo.buf = vu->vuart_rx_buf;
 	vu->txfifo.size = TX_BUF_SIZE;
 	vu->rxfifo.size = RX_BUF_SIZE;
-	fifo_reset(&(vu->txfifo));
-	fifo_reset(&(vu->rxfifo));
+	reset_fifo(&(vu->txfifo));
+	reset_fifo(&(vu->rxfifo));
 }
 
 /*
@@ -201,7 +201,7 @@ static bool send_to_target(struct acrn_vuart *vu, uint8_t value_u8)
 	uint64_t rflags;
 	bool ret = false;
 
-	vuart_lock(vu, rflags);
+	obtain_vuart_lock(vu, rflags);
 	if (vu->active) {
 		fifo_putchar(&vu->rxfifo, (char)value_u8);
 		if (fifo_isfull(&vu->rxfifo)) {
@@ -209,7 +209,7 @@ static bool send_to_target(struct acrn_vuart *vu, uint8_t value_u8)
 		}
 		vuart_toggle_intr(vu);
 	}
-	vuart_unlock(vu, rflags);
+	release_vuart_lock(vu, rflags);
 	return ret;
 }
 
@@ -279,7 +279,7 @@ static void write_reg(struct acrn_vuart *vu, uint16_t reg, uint8_t value_u8)
 	uint8_t msr;
 	uint64_t rflags;
 
-	vuart_lock(vu, rflags);
+	obtain_vuart_lock(vu, rflags);
 	/*
 	 * Take care of the special case DLAB accesses first
 	 */
@@ -317,7 +317,7 @@ static void write_reg(struct acrn_vuart *vu, uint16_t reg, uint8_t value_u8)
 				vu->fcr = 0U;
 			} else {
 				if ((value_u8 & FCR_RFR) != 0U) {
-					fifo_reset(&vu->rxfifo);
+					reset_fifo(&vu->rxfifo);
 				}
 				vu->fcr = value_u8 & (FCR_FIFOE | FCR_DMA | FCR_RX_MASK);
 			}
@@ -359,7 +359,7 @@ static void write_reg(struct acrn_vuart *vu, uint16_t reg, uint8_t value_u8)
 		}
 	}
 	vuart_toggle_intr(vu);
-	vuart_unlock(vu, rflags);
+	release_vuart_lock(vu, rflags);
 }
 
 /**
@@ -383,10 +383,10 @@ static bool vuart_write(struct acrn_vcpu *vcpu, uint16_t offset_arg,
 			&& (offset == UART16550_THR) && (target_vu != NULL)) {
 			if (!send_to_target(target_vu, value_u8)) {
 				/* FIFO is not full, raise THRE interrupt */
-				vuart_lock(vu, rflags);
+				obtain_vuart_lock(vu, rflags);
 				vu->thre_int_pending = true;
 				vuart_toggle_intr(vu);
-				vuart_unlock(vu, rflags);
+				release_vuart_lock(vu, rflags);
 			}
 		} else {
 			write_reg(vu, offset, value_u8);
@@ -403,10 +403,10 @@ static void notify_target(const struct acrn_vuart *vu)
 	if (vu != NULL) {
 		t_vu = vu->target_vu;
 		if ((t_vu != NULL) && !fifo_isfull(&vu->rxfifo)) {
-			vuart_lock(t_vu, rflags);
+			obtain_vuart_lock(t_vu, rflags);
 			t_vu->thre_int_pending = true;
 			vuart_toggle_intr(t_vu);
-			vuart_unlock(t_vu, rflags);
+			release_vuart_lock(t_vu, rflags);
 		}
 	}
 }
@@ -427,7 +427,7 @@ static bool vuart_read(struct acrn_vcpu *vcpu, uint16_t offset_arg, __unused siz
 	if (vu != NULL) {
 		t_vu = vu->target_vu;
 		offset -= vu->port_base;
-		vuart_lock(vu, rflags);
+		obtain_vuart_lock(vu, rflags);
 		/*
 		 * Take care of the special case DLAB accesses first
 		 */
@@ -501,7 +501,7 @@ static bool vuart_read(struct acrn_vcpu *vcpu, uint16_t offset_arg, __unused siz
 		}
 		vuart_toggle_intr(vu);
 		pio_req->value = (uint32_t)reg;
-		vuart_unlock(vu, rflags);
+		release_vuart_lock(vu, rflags);
 
 	}
 
@@ -543,7 +543,7 @@ static bool vuart_register_io_handler(struct acrn_vm *vm, uint16_t port_base, ui
 	return ret;
 }
 
-static void vuart_setup(struct acrn_vm *vm,
+static void setup_vuart(struct acrn_vm *vm,
 		const struct vuart_config *vu_config, uint16_t vuart_idx)
 {
 	uint32_t divisor;
@@ -554,8 +554,8 @@ static void vuart_setup(struct acrn_vm *vm,
 	vu->dll = (uint8_t)divisor;
 	vu->dlh = (uint8_t)(divisor >> 8U);
 	vu->vm = vm;
-	vuart_fifo_init(vu);
-	vuart_lock_init(vu);
+	init_fifo(vu);
+	init_vuart_lock(vu);
 	vu->thre_int_pending = true;
 	vu->ier = 0U;
 	vuart_toggle_intr(vu);
@@ -609,7 +609,7 @@ static void vuart_setup_connection(struct acrn_vm *vm,
 	}
 }
 
-static void vuart_deinit_connect(struct acrn_vuart *vu)
+static void vuart_deinit_connection(struct acrn_vuart *vu)
 {
 	struct acrn_vuart *t_vu = vu->target_vu;
 
@@ -630,7 +630,7 @@ bool is_vuart_intx(const struct acrn_vm *vm, uint32_t intx_pin)
 	return ret;
 }
 
-void vuart_init(struct acrn_vm *vm, const struct vuart_config *vu_config)
+void init_vuart(struct acrn_vm *vm, const struct vuart_config *vu_config)
 {
 	uint8_t i;
 
@@ -641,7 +641,7 @@ void vuart_init(struct acrn_vm *vm, const struct vuart_config *vu_config)
 				(vu_config[i].addr.port_base == INVALID_COM_BASE)) {
 			continue;
 		}
-		vuart_setup(vm, &vu_config[i], i);
+		setup_vuart(vm, &vu_config[i], i);
 		/*
 		 * The first vuart is used for VM console.
 		 * The rest of vuarts are used for connection.
@@ -652,14 +652,14 @@ void vuart_init(struct acrn_vm *vm, const struct vuart_config *vu_config)
 	}
 }
 
-void vuart_deinit(struct acrn_vm *vm)
+void deinit_vuart(struct acrn_vm *vm)
 {
 	uint8_t i;
 
 	for (i = 0U; i < MAX_VUART_NUM_PER_VM; i++) {
 		vm->vuart[i].active = false;
 		if (vm->vuart[i].target_vu != NULL) {
-			vuart_deinit_connect(&vm->vuart[i]);
+			vuart_deinit_connection(&vm->vuart[i]);
 		}
 	}
 }
