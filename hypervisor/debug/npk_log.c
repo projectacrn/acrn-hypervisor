@@ -77,7 +77,7 @@ void npk_log_setup(struct hv_npk_log_param *param)
 	uint16_t i;
 	uint16_t pcpu_nums;
 
-	pr_info("HV_NPK_LOG: cmd %d param 0x%llx\n", param->cmd,
+	pr_info("HV_NPK_LOG: cmd %d param 0x%lx\n", param->cmd,
 			param->mmio_addr);
 
 	param->res = HV_NPK_LOG_RES_KO;

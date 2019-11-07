@@ -76,38 +76,31 @@ static void dump_guest_reg(struct acrn_vcpu *vcpu)
 			"world %d =============\r\n",
 			vcpu->vm->vm_id, vcpu->vcpu_id, pcpu_id,
 			vcpu->arch.cur_context);
-	pr_acrnlog("=	RIP=0x%016llx  RSP=0x%016llx "
-			"RFLAGS=0x%016llx\r\n",
+	pr_acrnlog("=	RIP=0x%016lx  RSP=0x%016lx RFLAGS=0x%016lx\r\n",
 			vcpu_get_rip(vcpu),
 			vcpu_get_gpreg(vcpu, CPU_REG_RSP),
 			vcpu_get_rflags(vcpu));
-	pr_acrnlog("=	CR0=0x%016llx  CR2=0x%016llx "
-			" CR3=0x%016llx\r\n",
+	pr_acrnlog("=	CR0=0x%016lx  CR2=0x%016lx  CR3=0x%016lx\r\n",
 			vcpu_get_cr0(vcpu),
 			vcpu_get_cr2(vcpu),
 			exec_vmread(VMX_GUEST_CR3));
-	pr_acrnlog("=	RAX=0x%016llx  RBX=0x%016llx  "
-			"RCX=0x%016llx\r\n",
+	pr_acrnlog("=	RAX=0x%016lx  RBX=0x%016lx  RCX=0x%016lx\r\n",
 			vcpu_get_gpreg(vcpu, CPU_REG_RAX),
 			vcpu_get_gpreg(vcpu, CPU_REG_RBX),
 			vcpu_get_gpreg(vcpu, CPU_REG_RCX));
-	pr_acrnlog("=	RDX=0x%016llx  RDI=0x%016llx  "
-			"RSI=0x%016llx\r\n",
+	pr_acrnlog("=	RDX=0x%016lx  RDI=0x%016lx  RSI=0x%016lx\r\n",
 			vcpu_get_gpreg(vcpu, CPU_REG_RDX),
 			vcpu_get_gpreg(vcpu, CPU_REG_RDI),
 			vcpu_get_gpreg(vcpu, CPU_REG_RSI));
-	pr_acrnlog("=	RBP=0x%016llx  R8=0x%016llx  "
-			"R9=0x%016llx\r\n",
+	pr_acrnlog("=	RBP=0x%016lx  R8=0x%016lx  R9=0x%016lx\r\n",
 			vcpu_get_gpreg(vcpu, CPU_REG_RBP),
 			vcpu_get_gpreg(vcpu, CPU_REG_R8),
 			vcpu_get_gpreg(vcpu, CPU_REG_R9));
-	pr_acrnlog("=	R10=0x%016llx  R11=0x%016llx  "
-			"R12=0x%016llx\r\n",
+	pr_acrnlog("=	R10=0x%016lx  R11=0x%016lx  R12=0x%016lx\r\n",
 			vcpu_get_gpreg(vcpu, CPU_REG_R10),
 			vcpu_get_gpreg(vcpu, CPU_REG_R11),
 			vcpu_get_gpreg(vcpu, CPU_REG_R12));
-	pr_acrnlog("=	R13=0x%016llx  R14=0x%016llx  "
-			"R15=0x%016llx\r\n",
+	pr_acrnlog("=	R13=0x%016lx  R14=0x%016lx  R15=0x%016lx\r\n",
 			vcpu_get_gpreg(vcpu, CPU_REG_R13),
 			vcpu_get_gpreg(vcpu, CPU_REG_R14),
 			vcpu_get_gpreg(vcpu, CPU_REG_R15));
@@ -127,11 +120,10 @@ static void dump_guest_stack(struct acrn_vcpu *vcpu)
 	}
 
 	pr_acrnlog("\r\nGuest Stack:\r\n");
-	pr_acrnlog("Dump stack for vcpu %hu, from gva 0x%016llx\r\n",
+	pr_acrnlog("Dump stack for vcpu %hu, from gva 0x%016lx\r\n",
 			vcpu->vcpu_id, vcpu_get_gpreg(vcpu, CPU_REG_RSP));
 	for (i = 0U; i < (DUMP_STACK_SIZE >> 5U); i++) {
-		pr_acrnlog("guest_rsp(0x%llx):  0x%016llx  0x%016llx  "
-				"0x%016llx  0x%016llx\r\n",
+		pr_acrnlog("guest_rsp(0x%lx):  0x%016lx  0x%016lx 0x%016lx  0x%016lx\r\n",
 				(vcpu_get_gpreg(vcpu, CPU_REG_RSP)+(i*32U)),
 				tmp[i*4], tmp[(i*4)+1],
 				tmp[(i*4)+2], tmp[(i*4)+3]);
@@ -173,7 +165,7 @@ static void show_guest_call_trace(struct acrn_vcpu *vcpu)
 			return;
 		}
 
-		pr_acrnlog("BP_GVA(0x%016llx) RIP=0x%016llx\r\n", bp, parent_bp);
+		pr_acrnlog("BP_GVA(0x%016lx) RIP=0x%016lx\r\n", bp, parent_bp);
 		/* Get previous rbp*/
 		bp = parent_bp;
 		count++;
@@ -201,8 +193,8 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp_arg, uint16_t pcpu_i
 
 	pr_acrnlog("\r\nHost Stack: CPU_ID = %hu\r\n", pcpu_id);
 	for (i = 0U; i < (DUMP_STACK_SIZE >> 5U); i++) {
-		pr_acrnlog("addr(0x%llx)	0x%016llx  0x%016llx  0x%016llx  "
-			"0x%016llx\r\n", (rsp + (i * 32U)), sp[i * 4U],
+		pr_acrnlog("addr(0x%lx)	0x%016lx  0x%016lx  0x%016lx  0x%016lx\r\n",
+			(rsp + (i * 32U)), sp[i * 4U],
 			sp[(i * 4U) + 1U], sp[(i * 4U) + 2U],
 			sp[(i * 4U) + 3U]);
 	}
@@ -228,7 +220,7 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp_arg, uint16_t pcpu_i
 		if (return_address == SP_BOTTOM_MAGIC) {
 			break;
 		}
-		pr_acrnlog("----> 0x%016llx\r\n",
+		pr_acrnlog("----> 0x%016lx\r\n",
 				*(uint64_t *)(rbp + sizeof(uint64_t)));
 		rbp = *(uint64_t *)rbp;
 		cb_hierarchy++;

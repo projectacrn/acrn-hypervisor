@@ -691,14 +691,14 @@ static void vcpu_dumpreg(void *data)
 
 	len = snprintf(str, size,
 		"=  VM ID %d ==== CPU ID %hu========================\r\n"
-		"=  RIP=0x%016llx  RSP=0x%016llx RFLAGS=0x%016llx\r\n"
-		"=  CR0=0x%016llx  CR2=0x%016llx\r\n"
-		"=  CR3=0x%016llx  CR4=0x%016llx\r\n"
-		"=  RAX=0x%016llx  RBX=0x%016llx RCX=0x%016llx\r\n"
-		"=  RDX=0x%016llx  RDI=0x%016llx RSI=0x%016llx\r\n"
-		"=  RBP=0x%016llx  R8=0x%016llx R9=0x%016llx\r\n"
-		"=  R10=0x%016llx  R11=0x%016llx R12=0x%016llx\r\n"
-		"=  R13=0x%016llx  R14=0x%016llx  R15=0x%016llx\r\n",
+		"=  RIP=0x%016lx  RSP=0x%016lx RFLAGS=0x%016lx\r\n"
+		"=  CR0=0x%016lx  CR2=0x%016lx\r\n"
+		"=  CR3=0x%016lx  CR4=0x%016lx\r\n"
+		"=  RAX=0x%016lx  RBX=0x%016lx RCX=0x%016lx\r\n"
+		"=  RDX=0x%016lx  RDI=0x%016lx RSI=0x%016lx\r\n"
+		"=  RBP=0x%016lx  R8=0x%016lx R9=0x%016lx\r\n"
+		"=  R10=0x%016lx  R11=0x%016lx R12=0x%016lx\r\n"
+		"=  R13=0x%016lx  R14=0x%016lx  R15=0x%016lx\r\n",
 		vcpu->vm->vm_id, vcpu->vcpu_id,
 		vcpu_get_rip(vcpu),
 		vcpu_get_gpreg(vcpu, CPU_REG_RSP),
@@ -739,7 +739,7 @@ static void vcpu_dumpreg(void *data)
 		size -= len;
 		str += len;
 	} else {
-		len = snprintf(str, size, "\r\nDump RSP for vm %hu, from gva 0x%016llx\r\n",
+		len = snprintf(str, size, "\r\nDump RSP for vm %hu, from gva 0x%016lx\r\n",
 			vcpu->vm->vm_id, vcpu_get_gpreg(vcpu, CPU_REG_RSP));
 		if (len >= size) {
 			goto overflow;
@@ -748,7 +748,7 @@ static void vcpu_dumpreg(void *data)
 		str += len;
 
 		for (i = 0UL; i < 8UL; i++) {
-			len = snprintf(str, size, "=  0x%016llx  0x%016llx 0x%016llx  0x%016llx\r\n",
+			len = snprintf(str, size, "=  0x%016lx  0x%016lx 0x%016lx  0x%016lx\r\n",
 					tmp[i*4UL], tmp[(i*4UL)+1UL], tmp[(i*4UL)+2UL], tmp[(i*4UL)+3UL]);
 			if (len >= size) {
 				goto overflow;
@@ -845,14 +845,14 @@ static int32_t shell_dumpmem(int32_t argc, char **argv)
 	}
 
 	snprintf(temp_str, MAX_STR_SIZE,
-		"Dump physical memory addr: 0x%016llx, length %d:\r\n",
+		"Dump physical memory addr: 0x%016lx, length %d:\r\n",
 		addr, length);
 	shell_puts(temp_str);
 
 	ptr = (uint64_t *)addr;
 	for (i = 0U; i < (length >> 5U); i++) {
 		snprintf(temp_str, MAX_STR_SIZE,
-			"=  0x%016llx  0x%016llx  0x%016llx  0x%016llx\r\n",
+			"=  0x%016lx  0x%016lx  0x%016lx  0x%016lx\r\n",
 			*(ptr + (i * 4U)), *(ptr + ((i * 4U) + 1U)),
 			*(ptr + ((i * 4U) + 2U)), *(ptr + ((i * 4U) + 3U)));
 		shell_puts(temp_str);
@@ -860,7 +860,7 @@ static int32_t shell_dumpmem(int32_t argc, char **argv)
 
 	if ((length & 0x1fU) != 0U) {
 		snprintf(temp_str, MAX_STR_SIZE,
-			"=  0x%016llx  0x%016llx  0x%016llx 0x%016llx\r\n",
+			"=  0x%016lx  0x%016lx  0x%016lx 0x%016lx\r\n",
 			*(ptr + (i * 4U)), *(ptr + ((i * 4U) + 1U)),
 			*(ptr + ((i * 4U) + 2U)), *(ptr + ((i * 4U) + 3U)));
 		shell_puts(temp_str);
@@ -1330,7 +1330,7 @@ static int32_t shell_rdmsr(int32_t argc, char **argv)
 
 	if (ret == 0) {
 		val = msr_read_pcpu(msr_index, pcpu_id);
-		snprintf(str, MAX_STR_SIZE, "rdmsr(0x%x):0x%llx\n", msr_index, val);
+		snprintf(str, MAX_STR_SIZE, "rdmsr(0x%x):0x%lx\n", msr_index, val);
 		shell_puts(str);
 	}
 
