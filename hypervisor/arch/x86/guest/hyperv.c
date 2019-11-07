@@ -188,7 +188,7 @@ hyperv_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval)
 		break;
 	}
 
-	dev_dbg(ACRN_DBG_HYPERV, "hv: %s: MSR=0x%x wval=0x%llx vcpuid=%d vmid=%d",
+	dev_dbg(ACRN_DBG_HYPERV, "hv: %s: MSR=0x%x wval=0x%lx vcpuid=%d vmid=%d",
 		__func__, msr, wval, vcpu->vcpu_id, vcpu->vm->vm_id);
 
 	return ret;
@@ -221,7 +221,7 @@ hyperv_rdmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *rval)
 		break;
 	}
 
-	dev_dbg(ACRN_DBG_HYPERV, "hv: %s: MSR=0x%x rval=0x%llx vcpuid=%d vmid=%d",
+	dev_dbg(ACRN_DBG_HYPERV, "hv: %s: MSR=0x%x rval=0x%lx vcpuid=%d vmid=%d",
 		__func__, msr, *rval, vcpu->vcpu_id, vcpu->vm->vm_id);
 
 	return ret;

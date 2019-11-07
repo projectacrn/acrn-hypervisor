@@ -106,7 +106,7 @@ static inline int32_t asm_invept(uint64_t type, struct invept_desc desc)
 static inline void local_invept(uint64_t type, struct invept_desc desc)
 {
 	if (asm_invept(type, desc) != 0) {
-		pr_dbg("%s, failed. type = %llu, eptp = 0x%llx", __func__, type, desc.eptp);
+		pr_dbg("%s, failed. type = %llu, eptp = 0x%lx", __func__, type, desc.eptp);
 	}
 }
 
@@ -228,7 +228,7 @@ void init_paging(void)
 	high64_max_ram = round_pde_up(p_mem_range_info->mem_top);
 	if ((high64_max_ram > (CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)) ||
 			(high64_max_ram < (1UL << 32U))) {
-		printf("ERROR!!! high64_max_ram: 0x%llx, top address space: 0x%llx\n",
+		printf("ERROR!!! high64_max_ram: 0x%lx, top address space: 0x%lx\n",
 			high64_max_ram, CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE);
 		panic("Please configure HV_ADDRESS_SPACE correctly!\n");
 	}

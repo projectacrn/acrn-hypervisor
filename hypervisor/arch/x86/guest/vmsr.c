@@ -347,7 +347,7 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 	/* Setup MSR bitmap - Intel SDM Vol3 24.6.9 */
 	value64 = hva2hpa(vcpu->arch.msr_bitmap);
 	exec_vmwrite64(VMX_MSR_BITMAP_FULL, value64);
-	pr_dbg("VMX_MSR_BITMAP: 0x%016llx ", value64);
+	pr_dbg("VMX_MSR_BITMAP: 0x%016lx ", value64);
 
 	/* Initialize the MSR save/store area */
 	init_msr_area(vcpu);
@@ -362,7 +362,7 @@ static int32_t write_pat_msr(struct acrn_vcpu *vcpu, uint64_t value)
 	for (i = 0U; i < 8U; i++) {
 		field = (value >> (i * 8U)) & 0xffUL;
 		if (pat_mem_type_invalid(field) || ((PAT_FIELD_RSV_BITS & field) != 0UL)) {
-			pr_err("invalid guest IA32_PAT: 0x%016llx", value);
+			pr_err("invalid guest IA32_PAT: 0x%016lx", value);
 			ret = -EINVAL;
 			break;
 		}

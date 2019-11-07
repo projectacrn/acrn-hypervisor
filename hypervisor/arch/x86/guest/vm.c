@@ -334,7 +334,7 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	const struct e820_entry *p_e820 = vm->e820_entries;
 	const struct mem_range *p_mem_range_info = get_mem_range_info();
 
-	pr_dbg("sos_vm: bottom memory - 0x%llx, top memory - 0x%llx\n",
+	pr_dbg("sos_vm: bottom memory - 0x%lx, top memory - 0x%lx\n",
 		p_mem_range_info->mem_bottom, p_mem_range_info->mem_top);
 
 	if (p_mem_range_info->mem_top > EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE)) {
@@ -357,7 +357,7 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	for (i = 0U; i < entries_count; i++) {
 		entry = p_e820 + i;
 		pr_dbg("e820 table: %d type: 0x%x", i, entry->type);
-		pr_dbg("BaseAddress: 0x%016llx length: 0x%016llx\n", entry->baseaddr, entry->length);
+		pr_dbg("BaseAddress: 0x%016lx length: 0x%016lx\n", entry->baseaddr, entry->length);
 	}
 
 	/* Unmap all platform EPC resource from SOS.
@@ -609,7 +609,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 		wait_pcpus_offline(mask);
 
 		if ((mask != 0UL) && (!start_pcpus(mask))) {
-			pr_fatal("Failed to start all cpus in mask(0x%llx)", mask);
+			pr_fatal("Failed to start all cpus in mask(0x%lx)", mask);
 			ret = -ETIMEDOUT;
 		}
 
@@ -690,7 +690,7 @@ int32_t reset_vm(struct acrn_vm *vm)
 		wait_pcpus_offline(mask);
 
 		if ((mask != 0UL) && (!start_pcpus(mask))) {
-			pr_fatal("Failed to start all cpus in mask(0x%llx)", mask);
+			pr_fatal("Failed to start all cpus in mask(0x%lx)", mask);
 			ret = -ETIMEDOUT;
 		}
 

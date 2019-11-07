@@ -1130,7 +1130,7 @@ vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, bool is_broadcast
 			}
 			bitmap_set_nolock(vcpu_id, dmask);
 		}
-		dev_dbg(ACRN_DBG_LAPICPT, "%s: logical destmod, dmask: 0x%016llx", __func__, *dmask);
+		dev_dbg(ACRN_DBG_LAPICPT, "%s: logical destmod, dmask: 0x%016lx", __func__, *dmask);
 	}
 }
 
@@ -1527,7 +1527,7 @@ static int32_t vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg, uint
 		}
 	}
 
-	dev_dbg(ACRN_DBG_LAPIC, "vlapic read offset %#x, data %#llx", offset, *data);
+	dev_dbg(ACRN_DBG_LAPIC, "vlapic read offset %x, data %lx", offset, *data);
 	return ret;
 }
 

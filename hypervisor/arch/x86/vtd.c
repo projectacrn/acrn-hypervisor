@@ -464,7 +464,7 @@ static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 {
 	int32_t ret = 0;
 
-	dev_dbg(ACRN_DBG_IOMMU, "Register dmar uint [%d] @0x%llx", dmar_unit->index, dmar_unit->drhd->reg_base_addr);
+	dev_dbg(ACRN_DBG_IOMMU, "Register dmar uint [%d] @0x%lx", dmar_unit->index, dmar_unit->drhd->reg_base_addr);
 
 	spinlock_init(&dmar_unit->lock);
 
@@ -479,7 +479,7 @@ static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 	dmar_unit->ecap_iotlb_offset = iommu_ecap_iro(dmar_unit->ecap) * 16U;
 
 #if DBG_IOMMU
-	pr_info("version:0x%x, cap:0x%llx, ecap:0x%llx",
+	pr_info("version:0x%x, cap:0x%lx, ecap:0x%lx",
 		iommu_read32(dmar_unit, DMAR_VER_REG), dmar_unit->cap, dmar_unit->ecap);
 	pr_info("sagaw:0x%x, msagaw:0x%x, iotlb offset 0x%x",
 		iommu_cap_sagaw(dmar_unit->cap), dmar_unit->cap_msagaw, dmar_unit->ecap_iotlb_offset);
@@ -875,7 +875,7 @@ static void fault_record_analysis(__unused uint64_t low, uint64_t high)
 	if (!dma_frcd_up_f(high)) {
 		dmar_bdf.value = dma_frcd_up_sid(high);
 		/* currently skip PASID related parsing */
-		pr_info("%s, Reason: 0x%x, SID: %x.%x.%x @0x%llx",
+		pr_info("%s, Reason: 0x%x, SID: %x.%x.%x @0x%lx",
 			(dma_frcd_up_t(high) != 0U) ? "Read/Atomic" : "Write", dma_frcd_up_fr(high),
 			dmar_bdf.bits.b, dmar_bdf.bits.d, dmar_bdf.bits.f, low);
 #if DBG_IOMMU
@@ -916,7 +916,7 @@ static void dmar_fault_handler(uint32_t irq, void *data)
 		fault_record.lo_64 = iommu_read64(dmar_unit, record_reg_offset);
 		fault_record.hi_64 = iommu_read64(dmar_unit, record_reg_offset + 8U);
 
-		dev_dbg(ACRN_DBG_IOMMU, "%s: record[%d] @0x%x:  0x%llx, 0x%llx",
+		dev_dbg(ACRN_DBG_IOMMU, "%s: record[%d] @0x%x:  0x%lx, 0x%lx",
 			__func__, index, record_reg_offset, fault_record.lo_64, fault_record.hi_64);
 
 		fault_record_analysis(fault_record.lo_64, fault_record.hi_64);
@@ -1117,7 +1117,7 @@ static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, u
 			ret = -EINVAL;
 		} else if (dmar_get_bitslice(context_entry->lo_64, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS) != 0UL) {
 			/* the context entry should not be present */
-			pr_err("%s: context entry@0x%llx (Lower:%x) ", __func__, context_entry, context_entry->lo_64);
+			pr_err("%s: context entry@0x%lx (Lower:%x) ", __func__, context_entry, context_entry->lo_64);
 			pr_err("already present for %x:%x.%x", bus, sid.bits.d, sid.bits.f);
 			ret = -EBUSY;
 		} else {

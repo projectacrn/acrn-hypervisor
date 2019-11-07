@@ -2355,7 +2355,7 @@ int32_t decode_instruction(struct acrn_vcpu *vcpu)
 	retval = vie_init(&emul_ctxt->vie, vcpu);
 	if (retval < 0) {
 		if (retval != -EFAULT) {
-			pr_err("init vie failed @ 0x%016llx:", vcpu_get_rip(vcpu));
+			pr_err("init vie failed @ 0x%016lx:", vcpu_get_rip(vcpu));
 		}
 	} else {
 
@@ -2365,7 +2365,7 @@ int32_t decode_instruction(struct acrn_vcpu *vcpu)
 		retval = local_decode_instruction(cpu_mode, seg_desc_def32(csar), &emul_ctxt->vie);
 
 		if (retval != 0) {
-			pr_err("decode instruction failed @ 0x%016llx:", vcpu_get_rip(vcpu));
+			pr_err("decode instruction failed @ 0x%016lx:", vcpu_get_rip(vcpu));
 			vcpu_inject_ud(vcpu);
 			retval = -EFAULT;
 		} else {
