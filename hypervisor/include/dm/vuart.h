@@ -81,8 +81,8 @@ struct acrn_vuart {
 	spinlock_t lock;	/* protects all softc elements */
 };
 
-void vuart_init(struct acrn_vm *vm, const struct vuart_config *vu_config);
-void vuart_deinit(struct acrn_vm *vm);
+void init_vuart(struct acrn_vm *vm, const struct vuart_config *vu_config);
+void deinit_vuart(struct acrn_vm *vm);
 
 void vuart_putchar(struct acrn_vuart *vu, char ch);
 char vuart_getchar(struct acrn_vuart *vu);
