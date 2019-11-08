@@ -409,6 +409,18 @@ def read_pm_sdata(sysnode, sx_name, config):
                     hex(int.from_bytes(S5_PKG.reserved, 'little')))+'U', file=config)
 
 
+def get_value_after_str(cstate_str, hw_type):
+    """ Get the value after cstate string """
+    idx = 0
+    cstate_list = cstate_str.split()
+    for idx_hw_type, val in enumerate(cstate_list):
+        if val.find(hw_type) != -1:
+            idx = idx_hw_type
+            break
+
+    return cstate_list[idx + 1]
+
+
 def store_cx_data(sysnode1, sysnode2, config):
     """This will get Cx data of power and store it to PackedCx
     :param sysnode1: the path of cx power state driver
@@ -448,25 +460,25 @@ def store_cx_data(sysnode1, sysnode2, config):
             cx_state[state][item] = cx_data_file.read().strip()
             cx_state[state]['type'] = i
 
-        if cx_state[state][cpu_state[0]].find(acpi_hw_type[0]) != -1 or \
-             cx_state[state][cpu_state[0]].find(acpi_hw_type[1]) != -1:
-            PackedCx.space_id_8b = SPACE_ID[0x7F]
-            if cx_state[state][cpu_state[0]].find(acpi_hw_type[0]) != -1:
-                PackedCx.bit_width_8b = 0
-                PackedCx.bit_offset_8b = 0
-                PackedCx.access_size_8b = 0
-                PackedCx.address_64b = 0
-            else:
-                PackedCx.bit_width_8b = 1
-                PackedCx.bit_offset_8b = 2
-                PackedCx.access_size_8b = 1
-                PackedCx.address_64b = cx_state[state][cpu_state[0]].split()[3]
+        PackedCx.space_id_8b = SPACE_ID[0x7F]
+        if cx_state[state][cpu_state[0]].find(acpi_hw_type[0]) != -1:
+            PackedCx.bit_width_8b = 0
+            PackedCx.bit_offset_8b = 0
+            PackedCx.access_size_8b = 0
+            PackedCx.address_64b = 0
+        elif cx_state[state][cpu_state[0]].find(acpi_hw_type[1]) != -1:
+            PackedCx.bit_width_8b = 1
+            PackedCx.bit_offset_8b = 2
+            PackedCx.access_size_8b = 1
+            addr_val = get_value_after_str(cx_state[state][cpu_state[0]], acpi_hw_type[1])
+            PackedCx.address_64b = addr_val
         elif cx_state[state][cpu_state[0]].find(acpi_hw_type[2]) != -1:
             PackedCx.space_id_8b = SPACE_ID[1]
             PackedCx.bit_width_8b = 8
             PackedCx.bit_offset_8b = 0
             PackedCx.access_size_8b = 0
-            PackedCx.address_64b = cx_state[state][cpu_state[0]].split()[2]
+            addr_val = get_value_after_str(cx_state[state][cpu_state[0]], acpi_hw_type[2])
+            PackedCx.address_64b = addr_val
         print("\t{{{{{}, 0x{:0>2X}U, 0x{:0>2X}U, 0x{:0>2X}U, ".format(
             PackedCx.space_id_8b, PackedCx.bit_width_8b, PackedCx.bit_offset_8b,
             PackedCx.access_size_8b), file=config, end="")
