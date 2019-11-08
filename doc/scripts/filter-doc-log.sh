@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (C) 2019 Intel Corporation.
+# SPDX-License-Identifier: BSD-3-Clause
 
 # run the filter-known-issues.py script to remove "expected" warning
 # messages from the output of the document build process and write
