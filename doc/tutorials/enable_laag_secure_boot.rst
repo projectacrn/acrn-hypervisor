@@ -36,7 +36,7 @@ Generate keys
 For formal case, key generation and management can be referenced by:
 `Ubuntu-KeyGeneration`_ or `Windows-secure-boot-key-creation-and-management-guidance`_.
 
-For testing, the keys can be created on the KBL NUC by below commands:
+For testing, the keys can be created on the KBL NUC with these commands:
 
 .. code-block:: none
 
@@ -59,7 +59,8 @@ The keys to sign bootloader or kernel: **db.key**, **db.crt**
 Create virtual disk to hold the keys
 ====================================
 
-Follow below commands to create virtual disk and copy keys:
+Follow these commands to create a virtual disk and copy the keys
+generated above:
 
 .. code-block:: none
 
@@ -76,8 +77,8 @@ Follow below commands to create virtual disk and copy keys:
 Enroll keys in OVMF
 ===================
 
-#. Customize the ``launch_uos.sh`` script to boot with the virtual disk which
-   contains the keys for enrollment:
+#. Customize the ``launch_uos.sh`` script to boot with the virtual disk
+   that contains the keys for enrollment:
 
    .. code-block:: none
       :emphasize-lines: 6,7,9
@@ -102,7 +103,7 @@ Enroll keys in OVMF
 
 #. Launch the customized script to enroll keys::
 
-   $ sudo ./launch_virtual_disk.sh
+      $ sudo ./launch_virtual_disk.sh
 
 #. Type ``exit`` command in UEFI shell.
 
@@ -199,12 +200,12 @@ Follow these commands to sign the Clear Linux VM binaries.
 
 #. Download and decompress the Clear Linux image::
 
-   $ wget https://download.clearlinux.org/releases/31080/clear/clear-31080-kvm.img.xz
-   $ unxz clear-31080-kvm.img.xz
+      $ wget https://download.clearlinux.org/releases/31080/clear/clear-31080-kvm.img.xz
+      $ unxz clear-31080-kvm.img.xz
 
 #. Download the script to sign image::
 
-   $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/scripts/sign_image.sh
+      $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/scripts/sign_image.sh
 
 #. Run the script to sign image.
 
@@ -235,13 +236,13 @@ Follow these commands to sign the Clear Linux VM binaries.
 Boot Clear Linux signed image
 *****************************
 
-#. Modify the ``launch_uos.sh`` script to use signed image.
+#. Modify the ``launch_uos.sh`` script to use the signed image.
 
    .. code-block:: none
       :emphasize-lines: 5,6,8
-   
+
       $ sudo vim /usr/share/acrn/samples/nuc/launch_uos.sh
-   
+
       acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge \
         -s 2,pci-gvt -G "$3" \
         -l com1,stdio \
@@ -265,9 +266,11 @@ Boot Clear Linux signed image
 
 #. Type ``exit`` to enter Bios configuration.
 
-#. Navigate to the **Boot Manager** and select **UEFI Misc Device** to boot signed Clear Linux image.
+#. Navigate to the **Boot Manager** and select **UEFI Misc Device** to
+   boot the signed Clear Linux image.
 
-#. Log in as root and use ``dmesg`` to check the secure boot status on User VM.
+#. Login as root and use ``dmesg`` to check the secure boot status on
+   the User VM.
 
    .. code-block:: none
       :emphasize-lines: 2
