@@ -1641,58 +1641,6 @@ static int32_t emulate_bittest(struct acrn_vcpu *vcpu, const struct instr_emul_v
 	return ret;
 }
 
-static int32_t vmm_emulate_instruction(struct acrn_vcpu *vcpu)
-{
-	struct instr_emul_vie *vie = &vcpu->inst_ctxt.vie;
-	int32_t error;
-
-	if (vie->decoded != 0U) {
-		switch (vie->op.op_type) {
-		case VIE_OP_TYPE_GROUP1:
-			error = emulate_group1(vcpu, vie);
-			break;
-		case VIE_OP_TYPE_CMP:
-			error = emulate_cmp(vcpu, vie);
-			break;
-		case VIE_OP_TYPE_MOV:
-			error = emulate_mov(vcpu, vie);
-			break;
-		case VIE_OP_TYPE_MOVSX:
-		case VIE_OP_TYPE_MOVZX:
-			error = emulate_movx(vcpu, vie);
-			break;
-		case VIE_OP_TYPE_MOVS:
-			error = emulate_movs(vcpu, vie);
-			break;
-		case VIE_OP_TYPE_STOS:
-			error = emulate_stos(vcpu, vie);
-			break;
-		case VIE_OP_TYPE_AND:
-			error = emulate_and(vcpu, vie);
-			break;
-		case VIE_OP_TYPE_TEST:
-			error = emulate_test(vcpu, vie);
-			break;
-		case VIE_OP_TYPE_OR:
-			error = emulate_or(vcpu, vie);
-			break;
-		case VIE_OP_TYPE_SUB:
-			error = emulate_sub(vcpu, vie);
-			break;
-		case VIE_OP_TYPE_BITTEST:
-			error = emulate_bittest(vcpu, vie);
-			break;
-		default:
-			error = -EINVAL;
-			break;
-		}
-	} else {
-		error = -EINVAL;
-	}
-
-	return error;
-}
-
 static int32_t vie_init(struct instr_emul_vie *vie, struct acrn_vcpu *vcpu)
 {
 	uint64_t guest_rip_gva = vcpu_get_rip(vcpu);
@@ -2404,5 +2352,52 @@ int32_t decode_instruction(struct acrn_vcpu *vcpu)
 
 int32_t emulate_instruction(struct acrn_vcpu *vcpu)
 {
-	return vmm_emulate_instruction(vcpu);
+	struct instr_emul_vie *vie = &vcpu->inst_ctxt.vie;
+	int32_t error;
+
+	if (vie->decoded != 0U) {
+		switch (vie->op.op_type) {
+		case VIE_OP_TYPE_GROUP1:
+			error = emulate_group1(vcpu, vie);
+			break;
+		case VIE_OP_TYPE_CMP:
+			error = emulate_cmp(vcpu, vie);
+			break;
+		case VIE_OP_TYPE_MOV:
+			error = emulate_mov(vcpu, vie);
+			break;
+		case VIE_OP_TYPE_MOVSX:
+		case VIE_OP_TYPE_MOVZX:
+			error = emulate_movx(vcpu, vie);
+			break;
+		case VIE_OP_TYPE_MOVS:
+			error = emulate_movs(vcpu, vie);
+			break;
+		case VIE_OP_TYPE_STOS:
+			error = emulate_stos(vcpu, vie);
+			break;
+		case VIE_OP_TYPE_AND:
+			error = emulate_and(vcpu, vie);
+			break;
+		case VIE_OP_TYPE_TEST:
+			error = emulate_test(vcpu, vie);
+			break;
+		case VIE_OP_TYPE_OR:
+			error = emulate_or(vcpu, vie);
+			break;
+		case VIE_OP_TYPE_SUB:
+			error = emulate_sub(vcpu, vie);
+			break;
+		case VIE_OP_TYPE_BITTEST:
+			error = emulate_bittest(vcpu, vie);
+			break;
+		default:
+			error = -EINVAL;
+			break;
+		}
+	} else {
+		error = -EINVAL;
+	}
+
+	return error;
 }
