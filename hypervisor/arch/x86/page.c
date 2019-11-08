@@ -11,6 +11,7 @@
 #include <trusty.h>
 #include <vtd.h>
 #include <vm_configurations.h>
+#include <security.h>
 
 static struct page ppt_pml4_pages[PML4_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
 static struct page ppt_pdpt_pages[PDPT_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
@@ -60,8 +61,8 @@ static inline struct page *ppt_get_pd_page(const union pgtable_pages_info *info,
 	return pd_page;
 }
 
-static inline void ppt_tweak_exe_right(uint64_t *entry __attribute__((unused))) {}
-static inline void ppt_recover_exe_right(uint64_t *entry __attribute__((unused))) {}
+static inline void nop_tweak_exe_right(uint64_t *entry __attribute__((unused))) {}
+static inline void nop_recover_exe_right(uint64_t *entry __attribute__((unused))) {}
 
 const struct memory_ops ppt_mem_ops = {
 	.info = &ppt_pages_info,
@@ -71,8 +72,8 @@ const struct memory_ops ppt_mem_ops = {
 	.get_pdpt_page = ppt_get_pdpt_page,
 	.get_pd_page = ppt_get_pd_page,
 	.clflush_pagewalk = ppt_clflush_pagewalk,
-	.tweak_exe_right = ppt_tweak_exe_right,
-	.recover_exe_right = ppt_recover_exe_right,
+	.tweak_exe_right = nop_tweak_exe_right,
+	.recover_exe_right = nop_recover_exe_right,
 };
 
 static struct page sos_vm_pml4_pages[PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
@@ -204,7 +205,13 @@ void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
 	mem_ops->get_pd_page = ept_get_pd_page;
 	mem_ops->get_pt_page = ept_get_pt_page;
 	mem_ops->clflush_pagewalk = ept_clflush_pagewalk;
+
 	/* Mitigation for issue "Machine Check Error on Page Size Change" */
-	mem_ops->tweak_exe_right = ept_tweak_exe_right;
-	mem_ops->recover_exe_right = ept_recover_exe_right;
+	if (is_ept_force_4k_ipage()) {
+		mem_ops->tweak_exe_right = ept_tweak_exe_right;
+		mem_ops->recover_exe_right = ept_recover_exe_right;
+	} else {
+		mem_ops->tweak_exe_right = nop_tweak_exe_right;
+		mem_ops->recover_exe_right = nop_recover_exe_right;
+	}
 }
