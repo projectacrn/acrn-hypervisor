@@ -105,7 +105,7 @@ Preparations
   <https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.141-1/virtio-win-0.1.141.iso>`_
   to the Service VM in ``/root/img/virtio-win-0.1.141.iso``.
 
-* Download `Intel DCH Graphics Driver <https://downloadmirror.intel.com/28148/a08/dch_win64_25.20.100.6444.exe>`_.
+* Download `Intel DCH Graphics Driver <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`_.
 
 * Download Oracle Windows driver to Service VM in ``/root/img/winvirtio.iso``.
 *  `Oracle Windows driver <https://edelivery.oracle.com/osdc/faces/SoftwareDelivery>`_.Sign in. If you do not have an oracle account, register one.
@@ -147,8 +147,8 @@ Pre-install drivers and re-generate Windows ISO
    for example, drive ``D:``
 
 #. Use ``7-zip`` or similar utility to unzip the downloaded Windows graphics driver
-   ``dch_win64_25.20.100.6444.exe`` to a folder,
-   for example, to ``C:\Dev\Temp\wim\dch_win64_25.20.100.6444``
+   ``igfx_win10_100.7212.zip`` to a folder,
+   for example, to ``C:\Dev\Temp\wim\igfx_win10_100.7212``
 
 #. Right click the downloaded Windows ISO, for example, ``windows10-17763-107-LTSC.iso``, select ``Mount``,
    the ISO will be mounted to a drive; for example, drive ``E:``
@@ -181,11 +181,11 @@ Pre-install drivers and re-generate Windows ISO
       dism /image:C:\mount /Add-Driver "/driver:d:\vioserial\w10\amd64\vioser.inf" /forceunsigned
       dism /image:C:\mount /Add-Driver "/driver:d:\viostor\w10\amd64\viostor.inf" /forceunsigned
       dism /image:C:\mount /Add-Driver "/driver:d:\vioinput\w10\amd64\vioinput.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\cui_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\HdBusExt.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\iigd_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\IntcDAud.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\msdk.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\cui_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\HdBusExt.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\iigd_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\DisplayAudio\11.1\IntcDAud.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\msdk.inf"
       dism /unmount-wim /mountdir:c:\mount /commit
 
 
@@ -200,11 +200,11 @@ Pre-install drivers and re-generate Windows ISO
       dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioscsiorcl.inf"
       dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioserorcl.inf"
       dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\viostororcl.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\cui_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\HdBusExt.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\iigd_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\IntcDAud.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\msdk.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\cui_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\HdBusExt.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\iigd_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\DisplayAudio\11.1\IntcDAud.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\msdk.inf"
       dism /unmount-wim /mountdir:c:\mount /commit
 
 
@@ -228,11 +228,11 @@ Pre-install drivers and re-generate Windows ISO
       dism /image:C:\mount /Add-Driver "/driver:d:\vioserial\w10\amd64\vioser.inf" /forceunsigned
       dism /image:C:\mount /Add-Driver "/driver:d:\viostor\w10\amd64\viostor.inf" /forceunsigned
       dism /image:C:\mount /Add-Driver "/driver:d:\vioinput\w10\amd64\vioinput.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\cui_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\HdBusExt.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\iigd_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\IntcDAud.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\msdk.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\cui_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\HdBusExt.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\iigd_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\DisplayAudio\11.1\IntcDAud.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\msdk.inf"
       dism /unmount-wim /mountdir:c:\mount /commit
 
 
@@ -247,11 +247,11 @@ Pre-install drivers and re-generate Windows ISO
       dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioscsiorcl.inf"
       dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioserorcl.inf"
       dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\viostororcl.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\cui_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\HdBusExt.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\iigd_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\IntcDAud.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\dch_win64_25.20.100.6444\Graphics\msdk.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\cui_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\HdBusExt.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\iigd_dch.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\DisplayAudio\11.1\IntcDAud.inf"
+      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\msdk.inf"
       dism /unmount-wim /mountdir:c:\mount /commit
 
    Run this script in a command prompt running as administrator.  It may also
@@ -319,6 +319,7 @@ version is used to install Windows 10 on ACRN from scratch. The
 `tarball
 <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/install_by_vga_gsg.tar.gz>`_
 together with the script used to install Windows 10.
+Make sure the Service VM version is 31300.
 
 #. Uncompress ``install_by_vga_gsg.tar.gz`` to the Service VM::
 
@@ -427,7 +428,7 @@ ACRN Windows verified feature list
 
 * Windows graphics driver:
 
-  - dch_win64_25.20.100.6444.exe
+  - igfx_win10_100.7212.zip
 
 
 .. csv-table::
@@ -454,8 +455,8 @@ ACRN Windows verified feature list
 Known Limitations
 *****************
 * The cursor is not visible with the GVG-g local display.
-* The Windows graphic driver version must be ``dch_win64_25.20.100.6444.exe``;
-  the latest version ``dch_win64_25.20.100.6577.exe`` cannot be installed correctly.
+* The Windows graphic driver version must be ``igfx_win10_100.7212.zip``;
+  the latest version ``1910.1007372.zip`` cannot be installed correctly.
 
 Device configurations of acrn-dm command line
 *********************************************
