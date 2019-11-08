@@ -3,35 +3,35 @@
 Hypercall / VHM upcall
 ######################
 
-Hypercall/upcall used to request services between Guest VM and hypervisor,
-hypercall is from Guest VM to hypervisor, upcall is from hypervisor to Guest VM.
-Hypervisor currently supports hypercall APIs for VM management, I/O request
-distribution,interrupt injection, PCI assignment, guest memory mapping,
-power management and secure world switch.
+The hypercall/upcall is used to request services between the Guest VM and the hypervisor.
+The hypercall is from the Guest VM to hypervisor, and the upcall is from the hypervisor to the Guest VM.
+The hypervisor currently supports hypercall APIs for VM management, I/O request
+distribution, interrupt injection, PCI assignment, guest memory mapping,
+power management, and secure world switch.
 
 There are some restrictions for hypercall and upcall:
 
-#. Only ring0 hypercalls from the guest VM are handled by the hypervisor,
-   otherwise hypervisor will inject GP to Guest VM.
-#. All the hypercalls (except secure world hypercalls) must be called from SOS VM,
-   otherwise hypervisor will inject UD to Guest VM.
+#. Only ring 0 hypercalls from the guest VM are handled by the hypervisor;
+   otherwise, the hypervisor will inject GP to the Guest VM.
+#. All the hypercalls (except secure world hypercalls) must be called from the Service VM;
+   otherwise, the hypervisor will inject UD to the Guest VM.
    see :ref:`secure-hypervisor-interface` for a detailed description.
-#. Hypervisor needs to protect the critical resources such as global VM and VCPU structures
+#. The hypervisor needs to protect the critical resources such as global VM and VCPU structures
    for VM and VCPU management hypercalls.
-#. Upcall is only used for SOS VM.
+#. Upcall is only used for the Service VM.
 
 
-HV and Service OS (SOS) both use the same vector(0xF3) reserved as x86 platform
-IPI vector for HV notification to SOS. This upcall is necessary whenever
-there is device emulation requirement to SOS. The upcall vector(0xF3) is
-injected to SOS vCPU0.SOS will register the irq handler for vector(0xF3) and notify the I/O emulation
-module in SOS once the irq is triggered.
-The detailed upcall process see :ref:`ipi-management`
+HV and Service VM both use the same vector (0xF3) reserved as x86 platform
+IPI vector for HV notification to the Service VM. This upcall is necessary whenever
+there is device emulation requirement to the Service VM. The upcall vector (0xF3) is
+injected to Service VM vCPU0. The Service VM will register the irq handler for vector (0xF3) and notify the I/O emulation
+module in the Service VM once the irq is triggered.
+View the detailed upcall process at :ref:`ipi-management`
 
 Hypercall APIs reference:
 *************************
 
-:ref:`hypercall_apis` for SOS
+:ref:`hypercall_apis` for the Service VM
 
 :ref:`trusty-hypercalls` for Trusty
 
