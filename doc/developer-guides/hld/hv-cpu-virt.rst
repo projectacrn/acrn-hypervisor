@@ -23,7 +23,7 @@ Based on Intel VT-x virtualization technology, ACRN emulates a virtual CPU
    information.)
 
 -  **core sharing** (to be added): two or more vCPUs are sharing one
-   physical CPU (pCPU), more complicated context switch is needed
+   physical CPU (pCPU); a more complicated context switch is needed
    between different vCPUs' switching, and provides flexible computing
    resources sharing for low performance demand vCPU tasks.
    (See `Flexible CPU Sharing`_ for more information.)
@@ -69,16 +69,16 @@ scheduler" as the schedule policy for corresponding physical CPU.
 ``vcpu_affinity`` in ``vm config`` help to decide which physical CPU two
 or more VCPUs from different VMs are sharing.
 
-CPU management in SOS under static CPU partitioning
-===================================================
+CPU management in the Service VM under static CPU partitioning
+==============================================================
 
-With ACRN, all ACPI table entries are pass-thru to the SOS, including
-the Multiple Interrupt Controller Table (MADT). The SOS sees all
-physical CPUs by parsing the MADT when the SOS  kernel boots. All
-physical CPUs are initially assigned to the SOS by creating the same
+With ACRN, all ACPI table entries are pass-thru to the Service VM, including
+the Multiple Interrupt Controller Table (MADT). The Service VM sees all
+physical CPUs by parsing the MADT when the Service VM kernel boots. All
+physical CPUs are initially assigned to the Service VM by creating the same
 number of virtual CPUs.
 
-When the SOS boot is finished, it releases the physical CPUs intended
+When the Service VM boot is finished, it releases the physical CPUs intended
 for UOS use.
 
 Here is an example flow of CPU allocation on a multi-core platform.
@@ -90,13 +90,13 @@ Here is an example flow of CPU allocation on a multi-core platform.
 
    CPU allocation on a multi-core platform
 
-CPU management in SOS under flexing CPU sharing
-===============================================
+CPU management in the Service VM under flexing CPU sharing
+==========================================================
 
-As all SOS CPUs could share with different UOSs, ACRN can still pass-thru
-MADT to Service VM, and the SOS is still able to see all physcial CPUs.
+As all Service VM CPUs could share with different UOSs, ACRN can still pass-thru
+MADT to Service VM, and the Service VM is still able to see all physcial CPUs.
 
-But as under CPU sharing, SOS does not need offline/release the physical
+But as under CPU sharing, the Service VM does not need offline/release the physical
 CPUs intended for UOS use.
 
 CPU management in UOS
@@ -567,7 +567,7 @@ For a guest vCPU's state initialization:
 -  If it's BSP, the guest state configuration is done in SW load,
    which could be initialized by different objects:
 
-   -  SOS BSP: hypervisor will do context initialization in different
+   -  The Service VM BSP: hypervisor will do context initialization in different
       SW load based on different boot mode
 
 
@@ -882,8 +882,8 @@ pass-through directly:
 
    * - MSR_IA32_BIOS_UPDT_TRIG
      - BIOS update trigger
-     - work for update microcode from SOS, the signature ID read is from
-       physical MSR, and a BIOS update trigger from SOS will trigger a
+     - work for update microcode from the Service VM, the signature ID read is from
+       physical MSR, and a BIOS update trigger from the Service VM will trigger a
        physical microcode update.
 
    * - MSR_IA32_BIOS_SIGN_ID
@@ -1088,13 +1088,13 @@ ACRN always enables I/O bitmap in *VMX_PROC_VM_EXEC_CONTROLS* and EPT
 in *VMX_PROC_VM_EXEC_CONTROLS2*. Based on them,
 *pio_instr_vmexit_handler* and *ept_violation_vmexit_handler* are
 used for IO/MMIO emulation for a emulated device. The emulated device
-could locate in hypervisor or DM in SOS. Please refer to the "I/O
+could locate in hypervisor or DM in the Service VM. Please refer to the "I/O
 Emulation" section for more details.
 
 For an emulated device done in the hypervisor, ACRN provide some basic
 APIs to register its IO/MMIO range:
 
--  For SOS, the default I/O bitmap are all set to 0, which means SOS will pass
+-  For the Service VM, the default I/O bitmap are all set to 0, which means the Service VM will pass
    through all I/O port access by default. Adding an I/O handler
    for a hypervisor emulated device needs to first set its corresponding
    I/O bitmap to 1.
@@ -1103,11 +1103,11 @@ APIs to register its IO/MMIO range:
    all I/O port access by default. Adding an I/O handler for a
    hypervisor emulated device does not need change its I/O bitmap.
    If the trapped I/O port access does not fall into a hypervisor
-   emulated device, it will create an I/O request and pass it to SOS
+   emulated device, it will create an I/O request and pass it to the Service VM
    DM.
 
--  For SOS, EPT maps all range of memory to the SOS except for ACRN hypervisor
-   area. This means SOS will pass through all MMIO access by
+-  For the Service VM, EPT maps all range of memory to the Service VM except for ACRN hypervisor
+   area. This means the Service VM will pass through all MMIO access by
    default. Adding a MMIO handler for a hypervisor emulated
    device needs to first remove its MMIO range from EPT mapping.
 
@@ -1115,7 +1115,7 @@ APIs to register its IO/MMIO range:
    trap all MMIO access by default. Adding a MMIO handler for a
    hypervisor emulated device does not need to change its EPT mapping.
    If the trapped MMIO access does not fall into a hypervisor
-   emulated device, it will create an I/O request and pass it to SOS
+   emulated device, it will create an I/O request and pass it to the Service VM
    DM.
 
 .. list-table::
@@ -1207,11 +1207,11 @@ ART Virtualization
 
 The invariant TSC is based on the invariant timekeeping hardware (called
 Always Running Timer or ART), that runs at the core crystal clock frequency.
-The ratio defined by CPUID leaf 15H express the frequency relationship
-between the ART hardware and TSC.
+The ratio defined by the CPUID leaf 15H expresses the frequency relationship
+between the ART hardware and the TSC.
 
 If CPUID.15H.EBX[31:0] != 0 and CPUID.80000007H:EDX[InvariantTSC] = 1, the
-following linearity relationship holds between TSC and the ART hardware:
+following linearity relationship holds between the TSC and the ART hardware:
 
    ``TSC_Value = (ART_Value * CPUID.15H:EBX[31:0]) / CPUID.15H:EAX[31:0] + K``
 
