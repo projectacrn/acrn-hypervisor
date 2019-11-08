@@ -184,3 +184,48 @@ void set_fs_base(void)
 	msr_write(MSR_IA32_FS_BASE, (uint64_t)psc);
 }
 #endif
+
+bool is_ept_force_4k_ipage(void)
+{
+	bool force_4k_ipage = true;
+	const struct cpuinfo_x86 *info = get_pcpu_info();
+	uint64_t x86_arch_capabilities;
+
+	if (info->family == 0x6U) {
+		switch (info->model) {
+		case 0x26U:
+		case 0x27U:
+		case 0x35U:
+		case 0x36U:
+		case 0x37U:
+		case 0x86U:
+		case 0x1CU:
+		case 0x4AU:
+		case 0x4CU:
+		case 0x4DU:
+		case 0x5AU:
+		case 0x5CU:
+		case 0x5DU:
+		case 0x5FU:
+		case 0x6EU:
+		case 0x7AU:
+			/* Atom processor is not affected by the issue
+			 * "Machine Check Error on Page Size Change"
+			 */
+			force_4k_ipage = false;
+			break;
+		default:
+			force_4k_ipage = true;
+			break;
+		}
+	}
+
+	if (pcpu_has_cap(X86_FEATURE_ARCH_CAP)) {
+		x86_arch_capabilities = msr_read(MSR_IA32_ARCH_CAPABILITIES);
+		if ((x86_arch_capabilities & IA32_ARCH_CAP_IF_PSCHANGE_MC_NO) != 0UL) {
+			force_4k_ipage = false;
+		}
+	}
+
+	return force_4k_ipage;
+}
