@@ -99,10 +99,8 @@ Hardware Setup
    +----------------------+-------------------+----------------------+-----------------------------------------------------------+
 
 .. [1] The maximum supported memory size for ACRN is 16GB. If you are using
-   32GB memory, follow the :ref:`config_32GB_memory` instruction to modify the 
-   ``hypervisor/arch/x86/Kconfig`` and then use ``make FIRMWARE=uefi BOARD=nuc7i7dnb 
-   SCENARIO=industry hypervisor`` command to make the latest ACRN hypervisor
-   which is supported 32GB memory. For more detailed instruction about how to build ACRN 
+   32GB memory, follow the :ref:`config_32GB_memory` instruction to make the customized ACRN hypervisor
+   which is supported 32GB memory. For more detailed information about how to build ACRN
    from the source code, refer to this :ref:`guide <getting-started-building>`.
 
 Set up the ACRN Hypervisor for industry scenario
