@@ -49,46 +49,32 @@ For example, if the NUC's physical memory size is 32G, you may follow these step
 to make the new uefi ACRN hypervisor, and then deploy it onto the NUC board to boot
 ACRN Service VM with the 32G memory size.
 
-#. Modify the ``hypervisor/arch/x86/Kconfig`` from the ACRN source on host machine.
+#. Use ``make menuconfig`` to change the ``RAM_SIZE``::
 
-   ::
-   
-      config HV_RAM_SIZE
-              hex "Size of the RAM region used by the hypervisor"
-      -       default 0x0b800000
-      +       default 0x0f000000
-              help
-                A 64-bit integer indicating the size of RAM used by the hypervisor.
-                It is ensured at link time that the footprint of the hypervisor
-   
-   ::
-   
-      config PLATFORM_RAM_SIZE
-              hex "Size of the physical platform RAM"
-      -       default 0x400000000
-      +       default 0x800000000
-              help
-                A 64-bit integer indicating the size of the physical platform RAM
-                (MMIO not included).
-   
-   ::
-   
-      config SOS_RAM_SIZE
-              hex "Size of the Service OS (SOS) RAM"
-      -       default 0x400000000
-      +       default 0x800000000
-              help
-                A 64-bit integer indicating the size of the Service OS RAM (MMIO not
-                included).
+   $ cd acrn-hypervisor
+   $ make menuconfig -C hypervisor BOARD=nuc7i7dnb
 
-#. Use ``make BOARD=nuc7i7dnb FIRMWARE=uefi hypervisor`` command to build the new
-   efi image for KBL NUC.
+#. Navigate to these items and then change the value as given below::
+
+   (0x0f000000) Size of the RAM region used by the hypervisor
+   (0x800000000) Size of the physical platform RAM
+   (0x800000000) Size of the Service OS (SOS) RAM
+
+#. Press :kbd:`S` and then :kbd:`Enter` to save the ``.config`` to the default directory:
+   ``acrn-hypervisor/hypervisor/build/.config``
+
+#. Press :kbd:`ESC` to leave the menu.
+
+#. Use these command lines to build the new efi image for KBL NUC::
+
+   $ make -C hypervisor
+   $ make -C misc/efi-stub HV_OBJDIR=$PWD/hypervisor/build EFI_OBJDIR=$PWD/hypervisor/build
 
 #. Log in to your KBL NUC (assumes all the ACRN configurations are set up), then copy
    the new efi image into the EFI partition::
 
    # mount /dev/sda1 /mnt
-   # scp -r <host machine IP>:<ACRN source>/build/hypervisor/acrn.efi /mnt/EFI/acrn/
+   # scp -r <host name>@<host address>:<your workspace>/acrn-hypervisor/hypervisor/build/acrn.efi /mnt/EFI/acrn/
    # sync && umount /mnt
 
 #. Reboot KBL NUC to enjoy the ACRN with 32G memory.

@@ -41,6 +41,8 @@ source /etc/os-release
 skip_download_uos=0
 # switcher for disabling the reboot device
 disable_reboot=0
+# set default scenario name
+scenario=sdc
 
 function upgrade_sos()
 {
@@ -51,13 +53,11 @@ function upgrade_sos()
     echo "Upgrading Service VM..."
 
     # get board name
-    BOARD_NAME=`cat /sys/devices/virtual/dmi/id/board_name`
+    BOARD_NAME=`cat /sys/devices/virtual/dmi/id/board_name | cut -d' ' -f1`
     BOARD_NAME=${BOARD_NAME,,}
     [[ -z $BOARD_NAME ]] && echo "Unknown board name." && exit 1
     echo "Board name is: $BOARD_NAME"
-    # set default scenario name
-    scenario=sdc
-
+ 
     # set up mirror and proxy url while specified with m and p options
     [[ -n $mirror ]] && echo "Setting swupd mirror to: $mirror" && swupd mirror -s $mirror
     [[ -n $proxy ]] && echo "Setting proxy to: $proxy" && export https_proxy=$proxy
@@ -103,7 +103,7 @@ function upgrade_sos()
             umount /mnt && sync
             exit 1
         fi
-        cp -a $acrn_efi_path /mnt/EFI/acrn/acrn.efi
+        cp -r $acrn_efi_path /mnt/EFI/acrn/acrn.efi
         if [[ $? -ne 0 ]]; then echo "Failed to copy $acrn_efi_path" && exit 1; fi
 
         new_kernel=`ls /usr/lib/kernel/org*sos* -tl | head -n1 | awk -F'/' '{print $5}'`
