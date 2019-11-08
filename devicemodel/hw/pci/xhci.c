@@ -1555,7 +1555,7 @@ pci_xhci_alloc_usb_xfer(struct pci_xhci_dev_emu *dev, int epid)
 	struct usb_xfer *xfer;
 	struct xhci_dev_ctx *dev_ctx;
 	struct xhci_endp_ctx *ep_ctx;
-	int dir, max_blk_cnt, i = 0;
+	int max_blk_cnt, i = 0;
 	uint8_t type;
 
 	if (!dev)
@@ -1585,8 +1585,8 @@ pci_xhci_alloc_usb_xfer(struct pci_xhci_dev_emu *dev, int epid)
 		max_blk_cnt = 2048;
 		break;
 	default:
-		UPRINTF(LFTL, "err: unexpected epid %d type %d dir %d\r\n",
-				epid, type, dir);
+		UPRINTF(LFTL, "err: unexpected epid %d type %d\r\n",
+				epid, type);
 		return NULL;
 	}
 
@@ -1608,8 +1608,8 @@ pci_xhci_alloc_usb_xfer(struct pci_xhci_dev_emu *dev, int epid)
 			goto fail;
 	}
 
-	UPRINTF(LINF, "allocate %d blocks for epid %d type %d dir %d\r\n",
-			max_blk_cnt, epid, type, dir);
+	UPRINTF(LINF, "allocate %d blocks for epid %d type %d\r\n",
+			max_blk_cnt, epid, type);
 
 	xfer->max_blk_cnt = max_blk_cnt;
 	xfer->dev = (void *)dev;
@@ -1617,11 +1617,14 @@ pci_xhci_alloc_usb_xfer(struct pci_xhci_dev_emu *dev, int epid)
 	return xfer;
 
 fail:
-	for (; i >= 0; i--)
-		free(xfer->data[i].hcb);
-
-	free(xfer->data);
-	free(xfer->reqs);
+	if (xfer->data) {
+		for (; i >= 0; i--)
+			if (xfer->data[i].hcb)
+				free(xfer->data[i].hcb);
+		free(xfer->data);
+	}
+	if (xfer->reqs)
+		free(xfer->reqs);
 	free(xfer);
 	return NULL;
 }
