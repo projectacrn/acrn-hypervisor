@@ -20,7 +20,8 @@ for the RTVM.
 
 - Intel Kaby Lake (aka KBL) NUC platform with two disks inside
   (refer to :ref:`the tables <hardware_setup>` for detailed information).
-- If you need to enable the serial port on KBL NUC, navigate to the :ref:`troubleshooting <connect_serial_port>` to prepare the cable.
+- If you need to enable the serial port on KBL NUC, navigate to the
+  :ref:`troubleshooting <connect_serial_port>` to prepare the cable.
 - Follow below steps to install Clear Linux OS (Ver: 31470) onto both disks on the KBL NUC:
 
 .. _Clear Linux OS Server image:
@@ -99,8 +100,9 @@ Hardware Setup
    +----------------------+-------------------+----------------------+-----------------------------------------------------------+
 
 .. [1] The maximum supported memory size for ACRN is 16GB. If you are using
-   32GB memory, follow the :ref:`config_32GB_memory` instruction to make the customized ACRN hypervisor
-   which is supported 32GB memory. For more detailed information about how to build ACRN
+   32GB memory, follow the :ref:`config_32GB_memory` instruction to make
+   a customized ACRN hypervisor that can support 32GB memory. For more
+   detailed information about how to build ACRN
    from the source code, refer to this :ref:`guide <getting-started-building>`.
 
 Set up the ACRN Hypervisor for industry scenario
@@ -121,7 +123,7 @@ Use the pre-installed industry ACRN hypervisor
 
 #. Boot Clear Linux from SATA disk.
 
-#. Log in as root and download ACRN quick setup script:
+#. Login as root and download ACRN quick setup script:
 
    .. code-block:: none
 
@@ -158,8 +160,8 @@ Use the pre-installed industry ACRN hypervisor
       Boot000D* INTEL SSDPEKKW256G8 : PART 0 : Boot Drive	BBS(HD,,0x0)..BO
       Boot000E* UEFI : INTEL SSDPEKKW256G8 : PART 0 : OS Bootloader	PciRoot(0x0)/Pci(0x1d,0x0)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(1,GPT,8aa992f8-8149-4f6b-8b64-503998c776c1,0x800,0x47000)..BO
 
-   .. note:: Ensure the ACRN is the first boot order, or you may use ``efibootmgr -o 1`` command to move it
-      to the first order.
+   .. note:: Ensure the ACRN is first in the boot order, or you may use ``efibootmgr -o 1`` command to move it
+      to the first position.
 
    .. note:: If you need to enable the serial port, run the following command before reboot:
 
@@ -192,7 +194,7 @@ Use the ACRN industry out-of-the-box image
 
    # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2019w39.1-140000p/sos-industry-31080.img.xz
 
-#. Decompress the xz image::
+#. Decompress the .xz image::
 
    # xz -d sos-industry-31080.img.xz
 
