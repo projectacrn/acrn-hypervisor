@@ -107,8 +107,7 @@ Install the necessary tools for the following systems:
 
 
      ACRN development requires ``binutils`` version 2.27 (or higher).
-     Verify your version of ``binutils`` with the command ``apt show binutils
-     ``.
+     Verify your version of ``binutils`` with the command ``apt show binutils``.
 
 
 * Fedora/Redhat development system:
