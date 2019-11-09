@@ -196,8 +196,8 @@ securely.
 Guest Secure Boot with OVMF
 ---------------------------
 Open Virtual Machine Firmware (OVMF) is an EDK II based project to enable UEFI
-support for virtual machines in virtualized environment. In ACRN, OVMF is
-deployed to launch a user VM, as if the user VM is booted on a machine with
+support for virtual machines in a virtualized environment. In ACRN, OVMF is
+deployed to launch a User VM, as if the User VM is booted on a machine with
 UEFI firmware.
 
 UEFI Secure Boot defines how a platform's firmware can authenticate a digitally
@@ -217,15 +217,15 @@ UEFI Secure Boot is already supported by OVMF.
    UEFI Secure Boot Overview
 
 UEFI Secure Boot is controlled by a set of UEFI Authenticated Variables which specify
-the UEFI Secure Boot Policy, the platform manufacturer or the platform owner enroll the
-policy objects, which include the n-tuple of keys {PK, KEK, db,dbx} as a step 1.
+the UEFI Secure Boot Policy; the platform manufacturer or the platform owner enroll the
+policy objects, which includes the n-tuple of keys {PK, KEK, db,dbx} as step 1.
 During each successive boot, the UEFI secure boot implementation will assess the
 policy in order to verify the signed images that are discovered in a host-bus adapter
 or on a disk. If the images pass policy, then they are invoked.
 
 UEFI Secure Boot implementations use these keys:
 
-#. Platform Key (PK) is the top-level key in Secure Boot, UEFI supports a single PK,
+#. Platform Key (PK) is the top-level key in Secure Boot; UEFI supports a single PK,
    which is generally provided by the manufacturer.
 #. Key Exchange Key (KEK) is used to sign Signature and Forbidden Signature Database updates.
 #. Signature Database (db) contains kyes and/or hashes of allowed EFI binaries.
@@ -241,9 +241,9 @@ In ACRN, User VM Secure Boot can be enabled by below steps.
 #. Generate keys(PK/KEK/DB) with key generation tool such as Ubuntu KeyGeneration,
    `PK.der`, `KEK.der` and `db.der` will be enrolled in UEFI BIOS, `db.key` and `db.crt`
    will be used to sign user VM bootloader/kernel.
-#. Create a virtual disk to hold `PK.der`, `KEK.der` and `db.der`, then launch user VM with
+#. Create a virtual disk to hold `PK.der`, `KEK.der` and `db.der`, then launch the User VM with
    this virtual disk which contains the keys for enrollment.
-#. Start OVMF in writeback mode to ensure the keys are persistently stored in the OVMF image.
+#. Start the OVMF in writeback mode to ensure the keys are persistently stored in the OVMF image.
 #. Enroll keys in OVMF GUI by following the Secure Boot configuration flow and enable
    secure boot mode.
 #. Perform writeback via reset in OVMF.
@@ -255,7 +255,7 @@ In ACRN, User VM Secure Boot can be enabled by below steps.
 Service VM Hardening
 --------------------
 
-In the ACRN project, the reference Service VM is based on Clear Linux OS.
+In the ACRN project, the reference Service VM is based on the Clear Linux OS.
 Customers may choose to use different open source OSes or their own
 proprietary OS systems. To minimize the attack surfaces and achieve the
 goal of "defense in depth", there are many common guidelines to ensure the
