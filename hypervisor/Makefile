@@ -5,8 +5,6 @@
 include ../VERSION
 FULL_VERSION=$(MAJOR_VERSION).$(MINOR_VERSION)$(EXTRA_VERSION)
 
-SCENARIO_IN_XML :=
-
 API_MAJOR_VERSION=1
 API_MINOR_VERSION=0
 
@@ -43,13 +41,10 @@ ARCH_ASFLAGS :=
 ARCH_ARFLAGS :=
 ARCH_LDFLAGS :=
 
-ifneq ($(BOARD_FILE)$(SCENARIO_FILE),)
-override BOARD := $(shell echo `sed -n '/<acrn-config/p' $(BOARD_FILE) | sed -r 's/.*board="(.*)".*/\1/g'`)
-SCENARIO_IN_XML := $(shell sed -n '/<acrn-config/p' $(SCENARIO_FILE) | sed -r 's/.*scenario="(.*)".*/\1/g')
-endif
-
 .PHONY: default
 default: all
+
+include $(BASEDIR)/../misc/acrn-config/library/cfg_update.mk
 
 include $(BASEDIR)/../misc/acrn-config/library/deps.mk
 
@@ -338,7 +333,7 @@ BOARDTEMPLATE_ACPI_INFO_HEADER := arch/x86/configs/$(CONFIG_BOARD)/platform_acpi
 SOURCE_ACPI_INFO_HEADER := arch/x86/configs/$(CONFIG_BOARD)/$(CONFIG_BOARD)_acpi_info.h
 TARGET_ACPI_INFO_HEADER := $(HV_OBJDIR)/include/platform_acpi_info.h
 
-$(TARGET_ACPI_INFO_HEADER): $(HV_OBJDIR)/$(HV_CONFIG) cfg_src
+$(TARGET_ACPI_INFO_HEADER): $(HV_OBJDIR)/$(HV_CONFIG)
 ifeq ($(CONFIG_ENFORCE_VALIDATED_ACPI_INFO),y)
 	@if [ ! -f $(SOURCE_ACPI_INFO_HEADER) ]; then	\
 	 echo "******* No ACPI info found *******" && \
@@ -367,7 +362,7 @@ else
 endif
 
 .PHONY: all
-all: cfg_src pre_build $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
+all: pre_build $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
 install: $(HV_OBJDIR)/$(HV_FILE).32.out
 	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO_NAME).32.out
@@ -375,32 +370,6 @@ install: $(HV_OBJDIR)/$(HV_FILE).32.out
 install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
 	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO_NAME).out
 	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO_NAME).map
-
-cfg_src: $(VERSION)
-ifneq ($(BOARD_FILE)$(SCENARIO_FILE),)
-	@if [ ! -f $(BOARD_FILE) ]; then \
-		echo "Board xml file $(BOARD_FILE) is not exist!"; exit 1; \
-	fi
-	@if [ ! -f "$(SCENARIO_FILE)" ]; then \
-		echo "Scenario xml file $(SCENARIO_FILE) is not exist!"; exit 1; \
-	fi
-	@if [ "$(BOARD)" != "$(CONFIG_BOARD)" ]; then \
-		echo "Board in xml file <$(BOARD)> does not match Kconfig <$(CONFIG_BOARD)>!"; exit 1; \
-	fi
-	@if [ "$(SCENARIO_IN_XML)" != "$(SCENARIO_NAME)" ]; then \
-		echo "Scenario in xml file <$(SCENARIO_IN_XML)> does not match Kconfig <$(SCENARIO_NAME)>!"; exit 1; \
-	fi
-	@python3 ../misc/acrn-config/board_config/board_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) > $(HV_OBJDIR)/.cfg_src_result
-	@cat $(HV_OBJDIR)/.cfg_src_result
-	@if [ "`sed -n /successfully/p $(HV_OBJDIR)/.cfg_src_result`" = "" ]; then exit 1;	fi
-	@python3 ../misc/acrn-config/scenario_config/scenario_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) > $(HV_OBJDIR)/.cfg_src_result
-	@cat $(HV_OBJDIR)/.cfg_src_result
-	@if [ "`sed -n /successfully/p $(HV_OBJDIR)/.cfg_src_result`" = "" ]; then exit 1;	fi
-	@echo "Import hypervisor configurations from Config-xmls, configurations in source code are ignored!"
-	@sed -i 's/#define HV_CONFIG_TOOL ""/#define HV_CONFIG_TOOL " with acrn-config"/g' $(VERSION)
-else
-	@echo "Use hypervisor configurations from source code directly."
-endif
 
 .PHONY: pre_build
 pre_build: $(PRE_BUILD_OBJS)
@@ -467,6 +436,7 @@ $(HV_OBJDIR)/$(HV_FILE).32.out: $(HV_OBJDIR)/$(HV_FILE).out
 
 $(HV_OBJDIR)/$(HV_FILE).bin: $(HV_OBJDIR)/$(HV_FILE).out
 	$(OBJCOPY) -O binary $< $(HV_OBJDIR)/$(HV_FILE).bin
+	rm -f $(UPDATE_RESULT)
 
 $(HV_OBJDIR)/$(HV_FILE).out: $(MODULES)
 	${BASH} ${LD_IN_TOOL} $(ARCH_LDSCRIPT_IN) $(ARCH_LDSCRIPT) ${HV_OBJDIR}/.config
@@ -487,6 +457,10 @@ distclean:
 
 PHONY: (VERSION)
 $(VERSION):
+	@echo "SCENARIO <$(SCENARIO_NAME)> for BOARD <$(BOARD)> is specified."
+	@if [ "$(CONFIG_XML_ENABLED)" = "true" ] && [ "$(SCENARIO_NAME)" != "$(SCENARIO_IN_XML)" ]; then \
+		echo "SCENARIO in XML <$(SCENARIO_IN_XML)> does not match SCENARIO in Kconfig <$(SCENARIO_NAME)> !" ; exit 1; \
+	fi
 	touch $(VERSION)
 	@COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
 	DIRTY=`git diff-index --name-only HEAD`;\
@@ -509,7 +483,11 @@ $(VERSION):
 	echo "#define HV_BUILD_TYPE "\""$$BUILD_TYPE"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_TIME "\""$$TIME"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_USER "\""$$USER"\""" >> $(VERSION);\
-	echo "#define HV_CONFIG_TOOL \"\"" >> $(VERSION);\
+	if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
+		echo "#define HV_CONFIG_TOOL \" with acrn-config\"" >> $(VERSION);\
+	else	\
+		echo "#define HV_CONFIG_TOOL \"\"" >> $(VERSION);\
+	fi;\
 	echo "#endif" >> $(VERSION)
 
 -include $(C_OBJS:.o=.d)

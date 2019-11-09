@@ -54,7 +54,7 @@ $(eval $(call check_dep_py3lib,kconfiglib,KCONFIG_DEPS))
 #
 # A dummy command is necessary to trigger the remaking of config.mk right after
 # oldconfig changes HV_CONFIG in the same execution of make.
-$(HV_OBJDIR)/$(HV_CONFIG): oldconfig
+$(HV_OBJDIR)/$(HV_CONFIG): update_config oldconfig
 	@true
 
 # Note: This target must not depend on a phony target (e.g. oldconfig) because

@@ -22,29 +22,19 @@ TOOLS_OUT := $(ROOT_OUT)/misc/tools
 DOC_OUT := $(ROOT_OUT)/doc
 BUILD_VERSION ?=
 BUILD_TAG ?=
-BOARD_FILE ?=
-SCENARIO_FILE ?=
-CONFIG_XML_ENABLED ?= false
 
-export TOOLS_OUT
+export TOOLS_OUT BOARD SCENARIO FIRMWARE RELEASE
 
 .PHONY: all hypervisor devicemodel tools doc
 all: hypervisor devicemodel tools
-
-ifneq ($(BOARD_FILE)$(SCENARIO_FILE),)
-override BOARD := $(shell echo `sed -n '/<acrn-config/p' $(BOARD_FILE) | sed -r 's/.*board="(.*)".*/\1/g'`)
-override SCENARIO := $(shell echo `sed -n '/<acrn-config/p' $(SCENARIO_FILE) | sed -r 's/.*scenario="(.*)".*/\1/g'`)
-
-ifneq ($(BOARD)$(SCENARIO),)
-CONFIG_XML_ENABLED := true
-endif
-endif
 
 ifeq ($(BOARD), apl-nuc)
 override BOARD := nuc6cayh
 else ifeq ($(BOARD), kbl-nuc-i7)
 override BOARD := nuc7i7dnb
 endif
+
+include $(T)/misc/acrn-config/library/cfg_update.mk
 
 #help functions to build acrn and install acrn/acrn symbols
 define build_acrn
@@ -74,24 +64,25 @@ define install_acrn_debug
 endef
 
 hypervisor:
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)	\
-				BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) clean
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)	\
-				BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) defconfig
-	@if [ "$(SCENARIO)" ]; then \
+	@if [ "$(SCENARIO)" != "sdc" ] && [ "$(SCENARIO)" != "sdc2" ] && [ "$(SCENARIO)" != "industry" ] \
+			&& [ "$(SCENARIO)" != "logical_partition" ] && [ "$(SCENARIO)" != "hybrid" ]; then \
+		echo "SCENARIO <$(SCENARIO)> is not supported. "; exit 1; \
+	fi
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) clean
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) defconfig
+	@if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
+		echo "CONFIG_$(shell echo $(SCENARIO_IN_XML) | tr a-z A-Z)=y" >> $(HV_OUT)/.config;	\
+		echo "CONFIG_ENFORCE_VALIDATED_ACPI_INFO=y" >> $(HV_OUT)/.config;	\
+	elif [ "$(SCENARIO)" ]; then \
 		echo "CONFIG_$(shell echo $(SCENARIO) | tr a-z A-Z)=y" >> $(HV_OUT)/.config;	\
 	fi
-	@if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
-		echo "CONFIG_ENFORCE_VALIDATED_ACPI_INFO=y" >> $(HV_OUT)/.config;	\
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)
+#ifeq ($(FIRMWARE),uefi)
+	@if [ "$(SCENARIO)" != "logical_partition" ] && [ "$(SCENARIO)" != "hybrid" ]; then \
+		echo "building hypervisor as EFI executable..."; \
+		$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) EFI_OBJDIR=$(HV_OUT)/$(EFI_OUT); \
 	fi
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)	\
-				BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) oldconfig
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)	\
-				BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE)
-ifeq ($(FIRMWARE),uefi)
-	echo "building hypervisor as EFI executable..."
-	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) SCENARIO=$(SCENARIO) EFI_OBJDIR=$(HV_OUT)/$(EFI_OUT)
-endif
+#endif
 
 
 devicemodel: tools
