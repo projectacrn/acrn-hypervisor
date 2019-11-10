@@ -97,7 +97,7 @@ def main():
             need_update = True
         else:
             # report an error if no known defconfig exists
-            sys.stderr.write(".config does not exist and no defconfig available.\n")
+            sys.stderr.write(".config does not exist and no defconfig available for BOARD %s.\n" % os.environ['BOARD'])
             sys.exit(1)
 
     # Update the old .config with those specified on cmdline
