@@ -113,8 +113,8 @@ hypervisor:
 		$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) clean; \
 		mkdir -p $(HV_OUT) && cp $(DEFAULT_MENU_CONFIG_FILE) $(HV_OUT)/.config; \
 	else \
-		$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) clean; \
-		$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) defconfig; \
+		$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) clean; \
+		$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) defconfig; \
 		if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
 			echo "CONFIG_$(shell echo $(SCENARIO_IN_XML) | tr a-z A-Z)=y" >> $(HV_OUT)/.config;	\
 			echo "CONFIG_ENFORCE_VALIDATED_ACPI_INFO=y" >> $(HV_OUT)/.config;	\
@@ -122,7 +122,7 @@ hypervisor:
 			echo "CONFIG_$(shell echo $(SCENARIO) | tr a-z A-Z)=y" >> $(HV_OUT)/.config;	\
 		fi \
 	fi
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE)
 #ifeq ($(FIRMWARE),uefi)
 	@if [ "$(SCENARIO)" != "logical_partition" ] && [ "$(SCENARIO)" != "hybrid" ]; then \
 		echo "building hypervisor as EFI executable..."; \
