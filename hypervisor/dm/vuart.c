@@ -534,7 +534,7 @@ static bool vuart_register_io_handler(struct acrn_vm *vm, uint16_t port_base, ui
 		pio_idx = UART_PIO_IDX1;
 		break;
 	default:
-		printf("Not support vuart index %d, will not register \n");
+		printf("Not support vuart index %d, will not register \n", vuart_idx);
 		ret = false;
 	}
 	if (ret != 0U) {
