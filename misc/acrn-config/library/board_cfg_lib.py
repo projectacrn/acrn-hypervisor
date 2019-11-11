@@ -375,11 +375,10 @@ def get_board_private_vuart(branch_tag, tag_console):
             vuart0_console_dic[ttys_n] = NATIVE_CONSOLE_DIC[ttys_n]
 
     # VUART1
-    if len(NATIVE_CONSOLE_DIC) >= 2:
+    if len(NATIVE_CONSOLE_DIC) >= 2 and 'ttyS1' in NATIVE_CONSOLE_DIC.keys():
         # There are more than 1 serial port in native, we need to use native ttyS1 info for vuart1 which include
         # base ioport and irq number.
-        if 'ttyS1' in NATIVE_CONSOLE_DIC.keys():
-            vuart1_console_dic['ttyS1'] = NATIVE_CONSOLE_DIC['ttyS1']
+        vuart1_console_dic['ttyS1'] = NATIVE_CONSOLE_DIC['ttyS1']
     else:
         # There is only one native serial port. We hardcode base ioport for vuart1 and allocate a irq which is
         # free in native env and use it for vuart1 irq number
