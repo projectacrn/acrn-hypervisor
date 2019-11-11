@@ -530,7 +530,7 @@ int32_t vioapic_mmio_access_handler(struct io_request *io_req, void *handler_pri
  * @pre vm->arch_vm.vioapic != NULL
  * @pre rte != NULL
  */
-void vioapic_get_rte(struct acrn_vm *vm, uint32_t pin, union ioapic_rte *rte)
+void vioapic_get_rte(const struct acrn_vm *vm, uint32_t pin, union ioapic_rte *rte)
 {
 	struct acrn_vioapic *vioapic;
 

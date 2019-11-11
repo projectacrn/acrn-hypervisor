@@ -47,19 +47,6 @@ ptirq_lookup_entry_by_sid(uint32_t intr_type,
 	return entry_found;
 }
 
-static inline struct ptirq_remapping_info *
-ptirq_lookup_entry_by_vpin(const struct acrn_vm *vm, uint32_t virt_pin, bool pic_pin)
-{
-	struct ptirq_remapping_info *entry;
-
-	if (pic_pin) {
-		entry = vm->arch_vm.vpic.vpin_to_pt_entry[virt_pin];
-	} else {
-		entry = vm->arch_vm.vioapic.vpin_to_pt_entry[virt_pin];
-	}
-	return entry;
-}
-
 static uint32_t calculate_logical_dest_mask(uint64_t pdmask)
 {
 	uint32_t dest_mask = 0UL;
@@ -356,23 +343,21 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entr
  * - if the entry already be added by other vm, return NULL
  */
 static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin,
-		uint32_t phys_pin, bool pic_pin)
+		uint32_t phys_pin, enum intx_ctlr vpin_ctlr)
 {
 	struct ptirq_remapping_info *entry = NULL;
-	bool entry_is_updated = true;
-	enum intx_ctlr vpin_ctlr = pic_pin ? INTX_CTLR_PIC : INTX_CTLR_IOAPIC;
 	DEFINE_INTX_SID(phys_sid, phys_pin, INTX_CTLR_IOAPIC);
 	DEFINE_INTX_SID(virt_sid, virt_pin, vpin_ctlr);
 	uint32_t phys_irq = ioapic_pin_to_irq(phys_pin);
 
-	if (((!pic_pin) && (virt_pin >= vioapic_pincount(vm))) || (pic_pin && (virt_pin >= vpic_pincount()))) {
+	if (((vpin_ctlr == INTX_CTLR_IOAPIC) && (virt_pin >= vioapic_pincount(vm))) || ((vpin_ctlr == INTX_CTLR_PIC) && (virt_pin >= vpic_pincount()))) {
 		pr_err("ptirq_add_intx_remapping fails!\n");
 	} else if (!ioapic_irq_is_gsi(phys_irq)) {
 		pr_err("%s, invalid phys_pin: %d <-> irq: 0x%x is not a GSI\n", __func__, phys_pin, phys_irq);
 	} else {
 		entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_INTX, &phys_sid, NULL);
 		if (entry == NULL) {
-			if (ptirq_lookup_entry_by_vpin(vm, virt_pin, pic_pin) == NULL) {
+			if (ptirq_lookup_entry_by_sid(PTDEV_INTR_INTX, &virt_sid, vm) == NULL) {
 				entry = ptirq_alloc_entry(vm, PTDEV_INTR_INTX);
 				if (entry != NULL) {
 					entry->phys_sid.value = phys_sid.value;
@@ -401,15 +386,12 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 		} else {
 			/* The mapping has already been added to the VM. No action
 			 * required. */
-			entry_is_updated = false;
 		}
 
-		if ((entry != NULL) && entry_is_updated) {
-			if (pic_pin) {
-				vm->arch_vm.vpic.vpin_to_pt_entry[virt_pin] = entry;
-			} else {
-				vm->arch_vm.vioapic.vpin_to_pt_entry[virt_pin] = entry;
-			}
+		/*
+		 * ptirq entry is either created or transferred from SOS VM to Post-launched VM
+		 */
+		if (entry != NULL) {
 			dev_dbg(DBG_LEVEL_IRQ, "VM%d INTX add pin mapping vpin%d:ppin%d",
 				entry->vm->vm_id, virt_pin, phys_pin);
 		}
@@ -419,16 +401,17 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 }
 
 /* deactive & remove mapping entry of vpin for vm */
-static void remove_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, bool pic_pin)
+static void remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_pin, enum intx_ctlr vpin_ctlr)
 {
 	uint32_t phys_irq;
 	struct ptirq_remapping_info *entry;
 	struct intr_source intr_src;
+	DEFINE_INTX_SID(virt_sid, virt_pin, vpin_ctlr);
 
-	if (((!pic_pin) && (virt_pin >= vioapic_pincount(vm))) || (pic_pin && (virt_pin >= vpic_pincount()))) {
+	if (((vpin_ctlr == INTX_CTLR_IOAPIC) && (virt_pin >= vioapic_pincount(vm))) || ((vpin_ctlr == INTX_CTLR_PIC) && (virt_pin >= vpic_pincount()))) {
 		pr_err("virtual irq pin is invalid!\n");
 	} else {
-		entry = ptirq_lookup_entry_by_vpin(vm, virt_pin, pic_pin);
+		entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_INTX, &virt_sid, vm);
 		if (entry != NULL) {
 			if (is_entry_active(entry)) {
 				phys_irq = entry->allocated_pirq;
@@ -442,16 +425,10 @@ static void remove_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, bool pi
 				dmar_free_irte(intr_src, (uint16_t)phys_irq);
 				dev_dbg(DBG_LEVEL_IRQ,
 					"deactive %s intx entry:ppin=%d, pirq=%d ",
-					pic_pin ? "vPIC" : "vIOAPIC",
+					(vpin_ctlr == INTX_CTLR_PIC) ? "vPIC" : "vIOAPIC",
 					entry->phys_sid.intx_id.pin, phys_irq);
 				dev_dbg(DBG_LEVEL_IRQ, "from vm%d vpin=%d\n",
 					entry->vm->vm_id, virt_pin);
-			}
-
-			if (pic_pin) {
-				vm->arch_vm.vpic.vpin_to_pt_entry[virt_pin] = NULL;
-			} else {
-				vm->arch_vm.vioapic.vpin_to_pt_entry[virt_pin] = NULL;
 			}
 
 			ptirq_release_entry(entry);
@@ -560,9 +537,9 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_pin, enum intx_ctlr vpin_c
 {
 	uint32_t phys_irq;
 	struct ptirq_remapping_info *entry;
-	bool pic_pin = (vpin_ctlr == INTX_CTLR_PIC);
+	DEFINE_INTX_SID(virt_sid, virt_pin, vpin_ctlr);
 
-	entry = ptirq_lookup_entry_by_vpin(vm, virt_pin, pic_pin);
+	entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_INTX, &virt_sid, vm);
 	if (entry != NULL) {
 		phys_irq = entry->allocated_pirq;
 
@@ -705,9 +682,8 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, enum intx_ct
 {
 	int32_t status = 0;
 	struct ptirq_remapping_info *entry = NULL;
-	bool need_switch_vpin_ctlr = false;
 	DEFINE_INTX_SID(virt_sid, virt_pin, vpin_ctlr);
-	bool pic_pin = (vpin_ctlr == INTX_CTLR_PIC);
+	DEFINE_INTX_SID(alt_virt_sid, virt_pin, vpin_ctlr);
 
 	/*
 	 * virt pin could come from vpic master, vpic slave or vioapic
@@ -721,16 +697,10 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, enum intx_ct
 	 */
 
 	/* no remap for vuart intx */
-	if (is_vuart_intx(vm, virt_sid.intx_id.pin)) {
-		status = -ENODEV;
-	}
-
-	if ((status != 0) || (pic_pin && (virt_pin >= NR_VPIC_PINS_TOTAL))) {
-		status = -EINVAL;
-	} else {
+	if (!is_vuart_intx(vm, virt_sid.intx_id.pin)) {
 		/* query if we have virt to phys mapping */
 		spinlock_obtain(&ptdev_lock);
-		entry = ptirq_lookup_entry_by_vpin(vm, virt_pin, pic_pin);
+		entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_INTX, &virt_sid, vm);
 		if (entry == NULL) {
 			if (is_sos_vm(vm)) {
 
@@ -744,9 +714,23 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, enum intx_ct
 				if (virt_pin < NR_LEGACY_PIN) {
 					uint32_t vpin = get_pic_pin_from_ioapic_pin(virt_pin);
 
-					entry = ptirq_lookup_entry_by_vpin(vm, vpin, !pic_pin);
+					if (vpin_ctlr == INTX_CTLR_PIC) {
+						alt_virt_sid.intx_id.ctlr = INTX_CTLR_IOAPIC;
+					} else {
+						alt_virt_sid.intx_id.ctlr = INTX_CTLR_PIC;
+					}
+					alt_virt_sid.intx_id.pin = vpin;
+
+					entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_INTX, &alt_virt_sid, vm);
 					if (entry != NULL) {
-						need_switch_vpin_ctlr = true;
+						entry->virt_sid.value = virt_sid.value;
+						dev_dbg(DBG_LEVEL_IRQ,
+								"IOAPIC pin=%hhu pirq=%u vpin=%d switch from %s to %s vpin=%d for vm%d",
+								entry->phys_sid.intx_id.pin,
+								entry->allocated_pirq, entry->virt_sid.intx_id.pin,
+								(vpin_ctlr == INTX_CTLR_IOAPIC) ? "vPIC" : "vIOAPIC",
+								(vpin_ctlr == INTX_CTLR_IOAPIC) ? "vIOPIC" : "vPIC",
+								virt_pin, entry->vm->vm_id);
 					}
 				}
 
@@ -755,10 +739,10 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, enum intx_ct
 					uint32_t phys_pin = virt_pin;
 
 					/* fix vPIC pin to correct native IOAPIC pin */
-					if (pic_pin) {
+					if (vpin_ctlr == INTX_CTLR_PIC) {
 						phys_pin = get_pic_pin_from_ioapic_pin(virt_pin);
 					}
-					entry = add_intx_remapping(vm, virt_pin, phys_pin, pic_pin);
+					entry = add_intx_remapping(vm, virt_pin, phys_pin, vpin_ctlr);
 					if (entry == NULL) {
 						pr_err("%s, add intx remapping failed",
 								__func__);
@@ -774,22 +758,11 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, enum intx_ct
 			}
 		}
 		spinlock_release(&ptdev_lock);
+	} else {
+		status = -EINVAL;
 	}
 
 	if (status == 0) {
-		spinlock_obtain(&ptdev_lock);
-		/* if vpin source need switch */
-		if ((need_switch_vpin_ctlr) && (entry != NULL)) {
-			dev_dbg(DBG_LEVEL_IRQ,
-				"IOAPIC pin=%hhu pirq=%u vpin=%d switch from %s to %s vpin=%d for vm%d",
-				entry->phys_sid.intx_id.pin,
-				entry->allocated_pirq, entry->virt_sid.intx_id.pin,
-				(vpin_ctlr == INTX_CTLR_IOAPIC) ? "vPIC" : "vIOAPIC",
-				(vpin_ctlr == INTX_CTLR_IOAPIC) ? "vIOPIC" : "vPIC",
-				virt_pin, entry->vm->vm_id);
-			entry->virt_sid.value = virt_sid.value;
-		}
-		spinlock_release(&ptdev_lock);
 		activate_physical_ioapic(vm, entry);
 	}
 
@@ -807,9 +780,10 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, enum intx_ct
 int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, uint32_t phys_pin, bool pic_pin)
 {
 	struct ptirq_remapping_info *entry;
+	enum intx_ctlr vpin_ctlr = pic_pin ? INTX_CTLR_PIC : INTX_CTLR_IOAPIC;
 
 	spinlock_obtain(&ptdev_lock);
-	entry = add_intx_remapping(vm, virt_pin, phys_pin, pic_pin);
+	entry = add_intx_remapping(vm, virt_pin, phys_pin, vpin_ctlr);
 	spinlock_release(&ptdev_lock);
 
 	return (entry != NULL) ? 0 : -ENODEV;
@@ -818,10 +792,12 @@ int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, uint32_t
 /*
  * @pre vm != NULL
  */
-void ptirq_remove_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, bool pic_pin)
+void ptirq_remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_pin, bool pic_pin)
 {
+	enum intx_ctlr vpin_ctlr = pic_pin ? INTX_CTLR_PIC : INTX_CTLR_IOAPIC;
+
 	spinlock_obtain(&ptdev_lock);
-	remove_intx_remapping(vm, virt_pin, pic_pin);
+	remove_intx_remapping(vm, virt_pin, vpin_ctlr);
 	spinlock_release(&ptdev_lock);
 }
 
