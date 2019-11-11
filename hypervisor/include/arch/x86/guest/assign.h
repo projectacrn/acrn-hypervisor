@@ -122,7 +122,7 @@ int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, uint32_t
  * @pre vm != NULL
  *
  */
-void ptirq_remove_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, bool pic_pin);
+void ptirq_remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_pin, bool pic_pin);
 
 /**
  * @brief Remove interrupt remapping entry/entries for MSI/MSI-x.
