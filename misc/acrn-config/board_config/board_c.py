@@ -9,7 +9,8 @@ import board_cfg_lib
 
 INCLUDE_HEADER = """
 #include <board.h>
-#include <vtd.h>"""
+#include <vtd.h>
+#include <msr.h>"""
 
 
 MSR_IA32_L2_MASK_BASE = 0x00000D10
