@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (C) 2019 Intel Corporation.
+# SPDX-License-Identifier: BSD-3-Clause
 # This is an example of launch script for KBL NUC7i7DNH, may need to revise for other platform.
 
 # pci devices for passthru
