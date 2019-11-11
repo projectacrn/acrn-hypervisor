@@ -18,6 +18,7 @@
 #include <hypercall.h>
 #include <errno.h>
 #include <logmsg.h>
+#include <ioapic.h>
 
 #define DBG_LEVEL_HYCALL	6U
 
@@ -905,8 +906,14 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t pa
 				vdev = pci_find_vdev(vpci, bdf);
 				spinlock_release(&vpci->lock);
 				if ((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf)) {
-					ret = ptirq_add_intx_remapping(target_vm, irq.intx.virt_pin,
-						irq.intx.phys_pin, irq.intx.pic_pin);
+					if ((((!irq.intx.pic_pin) && (irq.intx.virt_pin < vioapic_pincount(target_vm))) ||
+							((irq.intx.pic_pin) && (irq.intx.virt_pin < vpic_pincount()))) &&
+							ioapic_irq_is_gsi(irq.intx.phys_pin)) {
+						ret = ptirq_add_intx_remapping(target_vm, irq.intx.virt_pin,
+							irq.intx.phys_pin, irq.intx.pic_pin);
+					} else {
+						pr_err("%s: Invalid phys pin or virt pin\n", __func__);
+					}
 				}
 			} else {
 				pr_err("%s: Invalid irq type: %u\n", __func__, irq.type);
@@ -948,8 +955,13 @@ hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 				vdev = pci_find_vdev(vpci, bdf);
 				spinlock_release(&vpci->lock);
 				if ((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf)) {
-					ptirq_remove_intx_remapping(target_vm, irq.intx.virt_pin, irq.intx.pic_pin);
-					ret = 0;
+					if (((!irq.intx.pic_pin) && (irq.intx.virt_pin < vioapic_pincount(target_vm))) ||
+						((irq.intx.pic_pin) && (irq.intx.virt_pin < vpic_pincount()))) {
+						ptirq_remove_intx_remapping(target_vm, irq.intx.virt_pin, irq.intx.pic_pin);
+						ret = 0;
+					} else {
+						pr_err("%s: Invalid virt pin\n", __func__);
+					}
 				}
 			} else {
 				pr_err("%s: Invalid irq type: %u\n", __func__, irq.type);
