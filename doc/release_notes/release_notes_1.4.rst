@@ -5,8 +5,8 @@ ACRN v1.4 (Oct 2019)
 
 We are pleased to announce the release of ACRN version 1.4.
 
-ACRN is a flexible, lightweight reference hypervisor, built with
-real-time and safety-criticality in mind, optimized to streamline embedded
+ACRN is a flexible, lightweight reference hypervisor that is built with
+real-time and safety-criticality in mind. It is optimized to streamline embedded
 development through an open source platform. Check out the :ref:`introduction` for more information.
 All project ACRN source code is maintained in the https://github.com/projectacrn/acrn-hypervisor
 repository and includes folders for the ACRN hypervisor, the ACRN device
@@ -22,7 +22,7 @@ or use Git clone and checkout commands::
 The project's online technical documentation is also tagged to correspond
 with a specific release: generated v1.4 documents can be found at https://projectacrn.github.io/1.4/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
-ACRN v1.4 requires Clear Linux* OS version 31520. Please follow the
+ACRN v1.4 requires Clear Linux* OS version 31520. Follow the
 instructions in the :ref:`rt_industry_setup`.
 
 Version 1.4 major features
@@ -30,59 +30,58 @@ Version 1.4 major features
 
 What's New in v1.4
 ==================
-* ACRN is now conformant to Microsoft(r) Hypervisor Top Level Functional Specification(TLFS).
-* Added basic CPU sharing capabilities.
-* Improved WaaG (Windows as a guest) stability and performance.
-* Improved Realtime performance of RTVM (preempt-RT kernel based).
+* ACRN now conforms to the Microsoft* Hypervisor Top-Level Functional Specification (TLFS).
+* Basic CPU sharing capabilities have been added.
+* WaaG (Windows as a guest) stability and performance has been improved.
+* Realtime performance of the RTVM (preempt-RT kernel-based) has been improved.
 
 Document updates
 ================
-We have many new `reference documents available <https://projectacrn.github.io>`_, including:
+Many new `reference documents <https://projectacrn.github.io>`_ are available, including:
 
-* [to be update once pr merge]:enable-s5
+* :ref:`enable-s5`
 * :ref:`enable_laag_secure_boot`
 * :ref:`How-to-enable-secure-boot-for-windows`
-* [to be update once pr merge]:asa
+* :ref:`asa`
 
 Security Vulnerabilities
 ************************
 
-We recommend all developers upgrade to this v1.4 release, which addresses these security
-issues discovered in earlier releases:
+We recommend that all developers upgrade to this v1.4 release, which
+addresses the following security issues that were discovered in previous releases:
 
-AP Trampoline Is Accessible to Service VM
-   This vulnerability is triggered when validating the memory isolation between
-   VM and hypervisor. AP Trampoline code exists in LOW_RAM region in hypervisor but is
-   potentially accessible to service VM. This could be used by an attacker to mount DoS
-   attacks on the hypervisor if service VM is compromised.
+AP Trampoline Is Accessible to the Service VM
+   This vulnerability is triggered when validating the memory isolation between the VM and hypervisor. The AP Trampoline code exists in the LOW_RAM region in the hypervisor but is
+   potentially accessible to the Service VM. This could be used by an attacker to mount DoS
+   attacks on the hypervisor if the Service VM is compromised.
 
-Improper Usage Of ``LIST_FOREACH()`` macro
-   Testing discovered that the MACRO ``LIST_FOREACH()`` was incorrectly used for some cases
-   which may induce a "wild pointer" and cause ACRN Device Model crash. An attacker
-   could use this issue to cause a denial of service (DoS).
+Improper Usage Of the ``LIST_FOREACH()`` Macro
+   Testing discovered that the MACRO ``LIST_FOREACH()`` was incorrectly used in some cases
+   which could induce a "wild pointer" and cause the ACRN Device Model to crash. Attackers
+   can potentially use this issue to cause denial of service (DoS) attacks.
 
 Hypervisor Crashed When Fuzzing HC_SET_CALLBACK_VECTOR
-   This vulnerability was reported by Fuzzing tool for debug version of ACRN. When software fails
+   This vulnerability was reported by the Fuzzing tool for the debug version of ACRN. When the software fails
    to validate input properly, an attacker is able to craft the input in a form that is
    not expected by the rest of the application. This can lead to parts of the system
-   receiving unintended input, which may result in altered control flow, arbitrary control
+   receiving unintended inputs, which may result in an altered control flow, arbitrary control
    of a resource, or arbitrary code execution.
 
 FILE Pointer Is Not Closed After Using
-   This vulnerability was reported by Fuzzing tool. Leaving the file unclosed will cause
-   leaking file descriptor and may cause unexpected errors in Device Model program.
+   This vulnerability was reported by the Fuzzing tool. Leaving the file unclosed will cause a
+   leaking file descriptor and may cause unexpected errors in the Device Model program.
 
 Descriptor of Directory Stream Is Referenced After Release
-   This vulnerability was reported by Fuzzing tool. A successful call to ``closedir(DIR *dirp)``
+   This vulnerability was reported by the Fuzzing tool. A successful call to ``closedir(DIR *dirp)``
    also closes the underlying file descriptor associated with ``dirp``. Access to the released
    descriptor may point to some arbitrary memory location or cause undefined behavior.
 
-Mutex Is Potentially Kept in Locked State Forever
-   This vulnerability was reported by Fuzzing tool. pthread_mutex_lock/unlock pairing was not
+Mutex Is Potentially Kept in a Locked State Forever
+   This vulnerability was reported by the Fuzzing tool. Here, ``pthread_mutex_lock/unlock`` pairing was not
    always done. Leaving a mutex in a locked state forever can cause program deadlock,
    depending on the usage scenario.
 
-We recommend all developers upgrade to ACRN release v1.4.
+We recommend that all developers upgrade to ACRN release v1.4.
 
 New Features Details
 ********************
@@ -120,7 +119,7 @@ Fixed Issues Details
 - :acrn-issue:`3708` - [Auto][Daily][OVMF] RTVM can not launch after poweroff, rtvm can not reboot
 - :acrn-issue:`3718` - [KBLNUC][Stability][RTVM]WaaG hang after keep WaaG idle in RTVM Create/Destroy test.
 - :acrn-issue:`3729` - [KBLNUC]Cannot auto boot 2 VMs with acrnd
-- :acrn-issue:`3751` - [acrn-configuration-tool] The default launch script generated by acrn-config for Preemp-RT 
+- :acrn-issue:`3751` - [acrn-configuration-tool] The default launch script generated by acrn-config for Preemp-RT
   Linux will pass through Ethernet device, which does not match the behavior with devicemodel/samples/nuc/launch_hard_rt.sh
 - :acrn-issue:`3754` - [acrn-configuration-tool] WebUI could not select /dev/mmcblk0p1 as UOS rootfs for apl-up2 board, and /dev/mmcblk1p3 for apl-mrb
 - :acrn-issue:`3760` - [acrn-configuration-tool]WebUI could not generate configuration patch for a new imported board
@@ -132,14 +131,14 @@ Fixed Issues Details
 - :acrn-issue:`3801` - [UP2/KBL][HV][LaaG][Fuzzing]Hypervisor crash when run syz_ic_set_callback_vector.
 - :acrn-issue:`3809` - [acrn-configuration-tool]The "uos_type"& items in "passthrough_devices" will disappear when clicking on the drop-down box.
 - :acrn-issue:`3811` - [acrn-configuration-tool]Fail to Generate launch_script for a new imported board
-- :acrn-issue:`3812` - [acrn-configuration-tool] Generated Launch script is incorrect when select ethernet for apl-mrb with 
+- :acrn-issue:`3812` - [acrn-configuration-tool] Generated Launch script is incorrect when select ethernet for apl-mrb with
   Scenario:SDC+Launch Setting: sdc_launch_1uos_laag/aaag
 - :acrn-issue:`3817` - DM: FILE Pointer Is Not Closed After Operations in acrn_load_elf
 - :acrn-issue:`3821` - DM: DIR handler is referenced after release in npk.c
 - :acrn-issue:`3822` - DM: Potential Buffer Overflow due to Unvalidated Input in vm_monitor_blkrescan()
 - :acrn-issue:`3825` - DM: 'request_mutex' is potentially not unlocked in tpm_crb.c
 - :acrn-issue:`3827` - Service VM power off need at least one minute when passthru NVMe to RTVM
-- :acrn-issue:`3834` - [acrn-configuration-tool] UX enhancement: acrn-config end users hope to have interfaces to commit changes to 
+- :acrn-issue:`3834` - [acrn-configuration-tool] UX enhancement: acrn-config end users hope to have interfaces to commit changes to
   local tree or not after setting scenario/launch scripts
 - :acrn-issue:`3840` - [Hybrid][UP2][GVT][LaaG]LaaG has no display with uefi boot mode
 - :acrn-issue:`3852` - [acrn-configuration-tool]RTVM cannot launched successfully after have launched vxworks or waag.
@@ -155,7 +154,7 @@ Fixed Issues Details
 - :acrn-issue:`3925` - Statically allocate 2 pCPUs for hard RT VM by default
 - :acrn-issue:`3932` - [KBL][acrn-configuration-tool]Generated Launch script miss "-m $mem_size" after select passthru_device
 - :acrn-issue:`3933` - [KBLNUC][Function][LaaG] can't bootup LaaG
-- :acrn-issue:`3937` - [KBL][acrn-configuration-tool][WaaG]Generated Launch script miss boot_audio_option's right_double_quotation_marks 
+- :acrn-issue:`3937` - [KBL][acrn-configuration-tool][WaaG]Generated Launch script miss boot_audio_option's right_double_quotation_marks
   for Board info:nuc7i7dnb + Launch Setting: industry_launch_1uos_waag
 - :acrn-issue:`3947` - [ISD][Stability][WaaG] WaaG auto boot failed after systemctl enable acrnd during S5 testing
 - :acrn-issue:`3948` - [KBL][acrn-configuration-tool]'keep_gsi' should not set along with waag vm
