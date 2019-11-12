@@ -88,7 +88,7 @@ Step 1: Create a Service VM YAML file and script
            {cmd: "${yamlDir}/service-os-post.sh ${chrootDir}"},
         ]
 
-        version: 30970
+        version: 31670
 
      .. note:: Update the version value to your target Clear Linux version.
 
@@ -103,6 +103,8 @@ Step 1: Create a Service VM YAML file and script
      .. code-block:: bash
 
         #!/bin/bash
+        # Copyright (C) 2019 Intel Corporation.
+        # SPDX-License-Identifier: BSD-3-Clause
 
         # ACRN SOS Image Post Install steps
 
@@ -111,11 +113,11 @@ Step 1: Create a Service VM YAML file and script
         CHROOTPATH=$1
 
         # acrn.efi path
-        acrn_efi_path="$CHROOTPATH/usr/lib/acrn/acrn.efi"
+        acrn_efi_path="$CHROOTPATH/usr/lib/acrn/acrn.nuc7i7dnb.sdc.efi"
 
         # copy acrn.efi to efi partition
         mkdir -p "$CHROOTPATH/boot/EFI/acrn" || exit 1
-        cp "$acrn_efi_path" "$CHROOTPATH/boot/EFI/acrn" || exit 1
+        cp "$acrn_efi_path" "$CHROOTPATH/boot/EFI/acrn/acrn.efi" || exit 1
 
         # create load.conf
         echo "Add default (5 seconds) boot wait time"
@@ -131,6 +133,12 @@ Step 1: Create a Service VM YAML file and script
         " >> $1/etc/issue
 
         exit 0
+
+     Grant execute permission to the script:
+
+     .. code-block:: none
+
+        $ chmod a+x service-os-post.sh
 
 **Scenario 2: ACRN INDUSTRY**
 
@@ -197,7 +205,7 @@ Step 1: Create a Service VM YAML file and script
            {cmd: "${yamlDir}/service-os-industry-post.sh ${chrootDir}"},
         ]
 
-        version: 30970
+        version: 31670
 
      .. note:: Update the version value to your target Clear Linux version.
 
@@ -212,6 +220,9 @@ Step 1: Create a Service VM YAML file and script
      .. code-block:: bash
 
         #!/bin/bash
+        # Copyright (C) 2019 Intel Corporation.
+        # SPDX-License-Identifier: BSD-3-Clause
+
 
         # ACRN SOS Image Post Install steps
 
@@ -219,8 +230,8 @@ Step 1: Create a Service VM YAML file and script
 
         CHROOTPATH=$1
 
-        # acrn.kbl-nuc-i7.industry.efi path
-        acrn_industry_efi_path="$CHROOTPATH/usr/lib/acrn/acrn.kbl-nuc-i7.industry.efi"
+        # acrn.nuc7i7dnb.industry.efi path
+        acrn_industry_efi_path="$CHROOTPATH/usr/lib/acrn/acrn.nuc7i7dnb.industry.efi"
 
         # copy acrn.efi to efi partition
         mkdir -p "$CHROOTPATH/boot/EFI/acrn" || exit 1
@@ -241,6 +252,12 @@ Step 1: Create a Service VM YAML file and script
 
         exit 0
 
+     Grant execute permission to the script:
+
+     .. code-block:: none
+
+        $ chmod a+x service-os-industry-post.sh
+
 Step 2: Build the Service VM image
 ==================================
 
@@ -254,7 +271,7 @@ Use the clr-installer to build the Service VM image.
      $ sudo clr-installer -c service-os.yaml
 
 
-  The ``service-os.img`` will be generated at current directory.
+  The ``sos.img`` will be generated at current directory.
 
 
 **Scenario 2: ACRN INDUSTRY**
@@ -265,14 +282,40 @@ Use the clr-installer to build the Service VM image.
      $ sudo clr-installer -c service-os-industry.yaml
 
 
-  The ``service-os-industry.img`` will be generated at current directory.
+  The ``sos-industry.img`` will be generated at current directory.
 
 .. _deploy_ootb_service_vm:
 
 Step 3: Deploy the Service VM image
 ===================================
 
-#. Prepare a U disk with at least 8GB memory.
+#. Prepare a U disk with at least 8GB memory. Begin by formatting the U disk:
+
+   .. code-block:: none
+
+      # sudo gdisk /dev/sdb
+      GPT fdisk (gdisk) version 1.0.3
+
+      Partition table scan:
+        MBR: protective
+        BSD: not present
+        APM: not present
+        GPT: present
+
+      Found valid GPT with protective MBR; using GPT.
+
+      Command (? for help): o
+      This option deletes all partitions and creates a new protective MBR.
+      Proceed? (Y/N): Y
+
+      Command (? for help): w
+
+      Final checks complete. About to write GPT data. THIS WILL OVERWRITE EXISTING
+      PARTITIONS!!
+
+      Do you want to proceed? (Y/N): Y
+      OK; writing new GUID partition table (GPT) to /dev/sdb.
+      The operation has completed successfully.
 
 #. Follow these steps to create two partitions on the U disk.
    Keep 4GB in the first partition and leave free space in the second parition.
@@ -334,11 +377,10 @@ Step 3: Deploy the Service VM image
 
    .. code-block:: none
 
-      $ wget https://download.clearlinux.org/releases/30970/clear/clear-30970-live-server.iso.xz
-      $ xz -d clear-30970-live-server.iso.xz
-      $ sudo dd if=clear-30970-live-server.iso of=/dev/sdb1 bs=4M oflag=sync status=progress
+      $ wget https://download.clearlinux.org/releases/31670/clear/clear-31670-live-server.iso
+      $ sudo dd if=clear-31670-live-server.iso of=/dev/sdb1 bs=4M oflag=sync status=progress
 
-#. Copy the ``service-os.img`` or ``service-os-industry.img`` to the U disk:
+#. Copy the ``sos.img`` or ``sos-industry.img`` to the U disk:
 
    .. code-block:: none
 
@@ -349,14 +391,14 @@ Step 3: Deploy the Service VM image
 
      .. code-block:: none
 
-        $ cp ~/service-os/service-os.img /mnt
+        $ cp ~/service-os/sos.img /mnt
         $ sync && umount /mnt
 
    - ACRN INDUSTRY scenario:
 
      .. code-block:: none
 
-        $ cp ~/service-os-industry/service-os-industry.img /mnt
+        $ cp ~/service-os-industry/sos-industry.img /mnt
         $ sync && umount /mnt
 
 #. Unplug the U disk from the development machine and plug it in to your test machine.
@@ -491,7 +533,7 @@ Step 1: Create a Preempt-RT image YAML file and script
       language: en_US.UTF-8
       kernel: kernel-lts2018-preempt-rt
 
-      version: 30970
+      version: 31670
 
    .. note:: Update the version value to your target Clear Linux version
 
