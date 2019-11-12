@@ -128,6 +128,7 @@ vm_create(const char *name, uint64_t req_buf, int *vcpu_num)
 	/* Pass uuid as parameter of create vm*/
 	uuid_copy(create_vm.uuid, vm_uuid);
 
+	ctx->enable_gvt = false;
 	ctx->fd = devfd;
 	ctx->lowmem_limit = 2 * GB;
 	ctx->highmem_gpa_base = PCI_EMUL_MEMLIMIT64;
