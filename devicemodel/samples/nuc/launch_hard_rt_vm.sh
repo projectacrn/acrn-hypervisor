@@ -65,7 +65,7 @@ pm_by_vuart="--pm_by_vuart tty,/dev/ttyS1"
 #root=/dev/nvme0n1p3 rw rootwait nohpet console=hvc0 console=ttyS0 \
 #no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 \
 #clocksource=tsc tsc=reliable x2apic_phys processor.max_cstate=0 \
-#intel_idle.max_cstate=0 intel_pstate=disabled mce=ignore_ce audit=0 \
+#intel_idle.max_cstate=0 intel_pstate=disable mce=ignore_ce audit=0 \
 #isolcpus=nohz,domain,1 nohz_full=1 rcu_nocbs=1 nosoftlockup idle=poll \
 #irqaffinity=0
 
