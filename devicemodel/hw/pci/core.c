@@ -166,6 +166,36 @@ void destory_mmio_rsvd_rgns(struct pci_vdev *vdev){
 			reserved_bar_regions[i].vdev = NULL;
 }
 
+static bool
+is_mmio_rgns_overlap(uint64_t x1, uint64_t x2, uint64_t y1, uint64_t y2)
+{
+	if(x1 <= y2 && y1 <= x2)
+		return true;
+	return false;
+}
+
+/* reserved_bar_regions has sorted mmio_rsvd_rgns.
+ * iterate all mmio_rsvd_rgn in reserved_bar_regions,
+ * if [base, base + size - 1] with any mmio_rsvd_rgn,
+ * adjust base addr to ensure [base, base + size - 1]
+ * won't overlap with reserved mmio_rsvd_rgn
+ */
+static void
+adjust_bar_region(uint64_t *base, uint64_t size, int bar_type)
+{
+	int i;
+
+	for(i = 0; i < REGION_NUMS; i++){
+		if(!reserved_bar_regions[i].vdev ||
+			reserved_bar_regions[i].bar_type != bar_type)
+			continue;
+		if(is_mmio_rgns_overlap(reserved_bar_regions[i].start,
+					reserved_bar_regions[i].end, *base, *base + size -1)){
+			*base = roundup2(reserved_bar_regions[i].end + 1, size);
+		}
+	}
+}
+
 static inline void
 CFGWRITE(struct pci_vdev *dev, int coff, uint32_t val, int bytes)
 {
@@ -525,10 +555,9 @@ pci_emul_mem_handler(struct vmctx *ctx, int vcpu, int dir, uint64_t addr,
 	return 0;
 }
 
-
 static int
 pci_emul_alloc_resource(uint64_t *baseptr, uint64_t limit, uint64_t size,
-			uint64_t *addr)
+                    uint64_t *addr, int bar_type)
 {
 	uint64_t base;
 
@@ -538,6 +567,14 @@ pci_emul_alloc_resource(uint64_t *baseptr, uint64_t limit, uint64_t size,
 	}
 
 	base = roundup2(*baseptr, size);
+
+	/* TODO:Currently, we only reserve gvt mmio regions,
+	 * so ignore PCIBAR_IO when adjust_bar_region.
+	 * If other devices also use reserved bar regions later,
+	 * need remove pcibar_type != PCIBAR_IO condition
+	 */
+	if(bar_type != PCIBAR_IO)
+		adjust_bar_region(&base, size, bar_type);
 
 	if (base + size <= limit) {
 		*addr = base;
@@ -622,10 +659,10 @@ unregister_bar(struct pci_vdev *dev, int idx)
 	modify_bar_registration(dev, idx, 0);
 }
 
-static void
+static int
 register_bar(struct pci_vdev *dev, int idx)
 {
-	modify_bar_registration(dev, idx, 1);
+	return modify_bar_registration(dev, idx, 1);
 }
 
 /* Are we decoding i/o port accesses for the emulated pci device? */
@@ -699,12 +736,28 @@ update_bar_address(struct vmctx *ctx, struct pci_vdev *dev, uint64_t addr,
 		dev->dev_ops->vdev_update_bar_map(ctx, dev, idx, orig_addr);
 }
 
+static struct mmio_rsvd_rgn *
+get_mmio_rsvd_rgn_by_vdev_idx(struct pci_vdev *pdi, int idx)
+{
+	int i;
+
+	for(i = 0; i < REGION_NUMS; i++){
+		if(reserved_bar_regions[i].vdev &&
+			reserved_bar_regions[i].idx == idx &&
+			reserved_bar_regions[i].vdev == pdi)
+			return &reserved_bar_regions[i];
+	}
+
+	return NULL;
+}
+
 int
 pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 		    enum pcibar_type type, uint64_t size)
 {
 	int error;
 	uint64_t *baseptr, limit, addr, mask, lobits, bar;
+	struct mmio_rsvd_rgn *region;
 
 	if ((size & (size - 1)) != 0)
 		size = 1UL << flsl(size);	/* round up to a power of 2 */
@@ -773,8 +826,12 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 		return -1;
 	}
 
-	if (baseptr != NULL) {
-		error = pci_emul_alloc_resource(baseptr, limit, size, &addr);
+	region = get_mmio_rsvd_rgn_by_vdev_idx(pdi, idx);
+	if(region)
+		addr = region->start;
+
+	if (baseptr != NULL && !region) {
+		error = pci_emul_alloc_resource(baseptr, limit, size, &addr, type);
 		if (error != 0)
 			return error;
 	}
@@ -792,7 +849,20 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 		pci_set_cfgdata32(pdi, PCIR_BAR(idx + 1), bar >> 32);
 	}
 
-	register_bar(pdi, idx);
+	error = register_bar(pdi, idx);
+
+	if(error != 0){
+		/* FIXME: Currently, only gvt needs reserve regions.
+		 * because gvt isn't firstly initialized, previous pci
+		 * devices' bars may conflict with gvt bars.
+		 * Use register_bar to detect this case,
+		 * but this case rarely happen.
+		 * If this case always happens, we need to
+		 * change core.c code to ensure gvt firstly initialzed
+		 */
+		printf("%s failed to register_bar\n", pdi->name);
+		return error;
+	}
 
 	return 0;
 }

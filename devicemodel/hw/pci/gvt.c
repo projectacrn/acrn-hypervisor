@@ -21,6 +21,8 @@
 
 static int pci_gvt_debug;
 
+static struct pci_vdev *gvt_dev;
+
 #define DPRINTF(params) do { if (pci_gvt_debug) printf params; } while (0)
 
 #define WPRINTF(params) (printf params)
@@ -89,8 +91,6 @@ gvt_init_config(struct pci_gvt *gvt)
 	int ret;
 	char name[PATH_MAX];
 	uint8_t cap_ptr = 0;
-	uint8_t aperture_size_reg;
-	uint16_t aperture_size = 256;
 	char res_name[PATH_MAX];
 	char resource[512];
 	int res_fd;
@@ -203,42 +203,15 @@ gvt_init_config(struct pci_gvt *gvt)
 	/* processor graphics control register */
 	pci_set_cfgdata16(gvt->gvt_pi, 0x52, gvt->host_config[0x52]);
 
-	/* Alloc resource only and no need to register bar for gvt */
 	ret = pci_emul_alloc_bar(gvt->gvt_pi, 0, PCIBAR_MEM32,
-		16 * 1024 * 1024);
+		bar0_end_addr - bar0_start_addr + 1);
 	if (ret != 0) {
 		pr_err("allocate gvt pci bar[0] failed\n");
 		return -1;
 	}
 
-	/* same as host, but guest only use partition of it by ballon */
-	aperture_size_reg = gvt->host_config[0x62];
-	switch(aperture_size_reg & 0b1111){
-		case 0b00000:
-			aperture_size = 128;
-			break;
-		case 0b00001:
-			aperture_size = 256;
-			break;
-		case 0b00011:
-			aperture_size = 512;
-			break;
-		case 0b00111:
-			aperture_size = 1024;
-			break;
-		case 0b01111:
-			aperture_size = 2048;
-			break;
-		case 0b11111:
-			aperture_size = 4096;
-			break;
-		default:
-			aperture_size = 256;
-			break;
-	}
-
 	ret = pci_emul_alloc_bar(gvt->gvt_pi, 2, PCIBAR_MEM32,
-		aperture_size * 1024 * 1024);
+		bar2_end_addr - bar2_start_addr + 1);
 	if (ret != 0) {
 		pr_err("allocate gvt pci bar[2] failed\n");
 		return -1;
@@ -344,6 +317,8 @@ pci_gvt_init(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 	gvt->gvt_pi = pi;
 	guest_domid = ctx->vmid;
 
+	gvt_dev = pi;
+
 	ret = gvt_init_config(gvt);
 
 	if (ret)
@@ -354,6 +329,7 @@ pci_gvt_init(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 	if(!ret)
 		return ret;
 fail:
+	gvt_dev = NULL;
 	ctx->gvt_enabled = false;
 	perror("GVT: init failed\n");
 	free(gvt);
@@ -372,8 +348,10 @@ pci_gvt_deinit(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 		if (ret)
 			WPRINTF(("GVT: %s: failed: errno=%d\n", __func__, ret));
 
+		destory_mmio_rsvd_rgns(gvt_dev);
 		free(gvt);
 		pi->arg = NULL;
+		gvt_dev = NULL;
 	}
 }
 
