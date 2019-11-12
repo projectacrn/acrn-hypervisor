@@ -44,11 +44,11 @@ ARCH_LDFLAGS :=
 .PHONY: default
 default: all
 
-include $(BASEDIR)/../misc/acrn-config/library/cfg_update.mk
+include scripts/makefile/cfg_update.mk
 
-include $(BASEDIR)/../misc/acrn-config/library/deps.mk
+include scripts/makefile/deps.mk
 
-include scripts/kconfig/kconfig.mk
+include scripts/makefile/kconfig.mk
 
 #initialize scenarios name
 ifeq ($(CONFIG_SDC),y)

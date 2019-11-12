@@ -54,7 +54,7 @@ endif
 #     default value defined in this make file will be used
 #
 
-include $(T)/misc/acrn-config/library/cfg_update.mk
+include $(T)/hypervisor/scripts/makefile/cfg_update.mk
 
 ifeq ($(DEFAULT_MENU_CONFIG_FILE), $(wildcard $(DEFAULT_MENU_CONFIG_FILE)))
   BOARD_IN_MENUCONFIG := $(shell grep CONFIG_BOARD= $(DEFAULT_MENU_CONFIG_FILE) | awk -F '"' '{print $$2}')
