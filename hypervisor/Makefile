@@ -446,6 +446,7 @@ $(HV_OBJDIR)/$(HV_FILE).out: $(MODULES)
 .PHONY: clean
 clean:
 	rm -f $(VERSION)
+	rm -f $(SOURCE_ACPI_INFO_HEADER)
 	rm -rf $(HV_OBJDIR)
 
 .PHONY: distclean
