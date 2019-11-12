@@ -30,7 +30,7 @@ static inline uint64_t ppt_get_default_access_right(void)
 	return (PAGE_PRESENT | PAGE_RW | PAGE_USER);
 }
 
-static inline void ppt_clflush_pagewalk(const void* etry __attribute__((unused)))
+static inline void ppt_clflush_pagewalk(const void* entry __attribute__((unused)))
 {
 }
 
@@ -60,6 +60,9 @@ static inline struct page *ppt_get_pd_page(const union pgtable_pages_info *info,
 	return pd_page;
 }
 
+static inline void ppt_tweak_exe_right(uint64_t *entry __attribute__((unused))) {}
+static inline void ppt_recover_exe_right(uint64_t *entry __attribute__((unused))) {}
+
 const struct memory_ops ppt_mem_ops = {
 	.info = &ppt_pages_info,
 	.get_default_access_right = ppt_get_default_access_right,
@@ -68,6 +71,8 @@ const struct memory_ops ppt_mem_ops = {
 	.get_pdpt_page = ppt_get_pdpt_page,
 	.get_pd_page = ppt_get_pd_page,
 	.clflush_pagewalk = ppt_clflush_pagewalk,
+	.tweak_exe_right = ppt_tweak_exe_right,
+	.recover_exe_right = ppt_recover_exe_right,
 };
 
 static struct page sos_vm_pml4_pages[PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
@@ -164,6 +169,20 @@ static inline void *ept_get_sworld_memory_base(const union pgtable_pages_info *i
 	return info->ept.sworld_memory_base;
 }
 
+/* The function is used to disable execute right for (2MB / 1GB)large pages in EPT */
+static inline void ept_tweak_exe_right(uint64_t *entry)
+{
+	*entry &= ~EPT_EXE;
+}
+
+/* The function is used to recover the execute right when large pages are breaking into 4KB pages
+ * Hypervisor doesn't control execute right for guest memory, recovers execute right by default.
+ */
+static inline void ept_recover_exe_right(uint64_t *entry)
+{
+	*entry |= EPT_EXE;
+}
+
 void init_ept_mem_ops(struct acrn_vm *vm)
 {
 	uint16_t vm_id = vm->vm_id;
@@ -187,4 +206,7 @@ void init_ept_mem_ops(struct acrn_vm *vm)
 	vm->arch_vm.ept_mem_ops.get_pd_page = ept_get_pd_page;
 	vm->arch_vm.ept_mem_ops.get_pt_page = ept_get_pt_page;
 	vm->arch_vm.ept_mem_ops.clflush_pagewalk = ept_clflush_pagewalk;
+	/* Mitigation for issue "Machine Check Error on Page Size Change" */
+	vm->arch_vm.ept_mem_ops.tweak_exe_right = ept_tweak_exe_right;
+	vm->arch_vm.ept_mem_ops.recover_exe_right = ept_recover_exe_right;
 }

@@ -72,6 +72,8 @@ struct memory_ops {
 	struct page *(*get_pt_page)(const union pgtable_pages_info *info, uint64_t gpa);
 	void *(*get_sworld_memory_base)(const union pgtable_pages_info *info);
 	void (*clflush_pagewalk)(const void *p);
+	void (*tweak_exe_right)(uint64_t *entry);
+	void (*recover_exe_right)(uint64_t *entry);
 };
 
 extern const struct memory_ops ppt_mem_ops;
