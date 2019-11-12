@@ -25,6 +25,7 @@
 #include <cat.h>
 #include <firmware.h>
 #include <board.h>
+#include <trampoline.h>
 
 vm_sw_loader_t vm_sw_loader;
 
@@ -304,6 +305,14 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	 */
 	hv_hpa = hva2hpa((void *)(get_hv_image_base()));
 	ept_mr_del(vm, pml4_page, hv_hpa, CONFIG_HV_RAM_SIZE);
+
+	/* unmap AP trampoline code for security reason.
+	 * 'allocate_pages()' in efi boot mode or
+	 * 'e820_alloc_low_memory()' in direct boot
+	 * mode will ensure the base address of tramploline
+	 * code be page-aligned.
+	 */
+	ept_mr_del(vm, pml4_page, get_trampoline_start16_paddr(), CONFIG_LOW_RAM_SIZE);
 }
 
 /**
