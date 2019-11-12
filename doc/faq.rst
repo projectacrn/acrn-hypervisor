@@ -74,18 +74,18 @@ ACRN Service VM with the 32G memory size.
    the new efi image into the EFI partition::
 
    # mount /dev/sda1 /mnt
-   # scp -r <host name>@<host address>:<your workspace>/acrn-hypervisor/hypervisor/build/acrn.efi /mnt/EFI/acrn/
+   # scp -r <user name>@<host address>:<your workspace>/acrn-hypervisor/hypervisor/build/acrn.efi /mnt/EFI/acrn/
    # sync && umount /mnt
 
 #. Reboot KBL NUC to enjoy the ACRN with 32G memory.
 
-How to modify the default display output for a UOS?
-***************************************************
+How to modify the default display output for a User VM?
+*******************************************************
 
 Apollo Lake HW has three pipes and each pipe can have three or four planes which
 help to display the overlay video. The hardware can support up to 3 monitors
 simultaneously. Some parameters are available to control how display monitors
-are assigned between the SOS and UOS(s), simplifying the assignment policy and
+are assigned between the Service VM and User VM(s), simplifying the assignment policy and
 providing configuration flexibility for the pipes and planes for various IoT
 scenarios. This is known as the **plane restriction** feature.
 
@@ -96,33 +96,33 @@ scenarios. This is known as the **plane restriction** feature.
 
 Refer to :ref:`GVT-g-kernel-options` for detailed parameter descriptions.
 
-In the default configuration, pipe A is assigned to the SOS and pipes B and C
-are assigned to the UOS, as described by these parameters:
+In the default configuration, pipe A is assigned to the Service VM and pipes B and C
+are assigned to the User VM, as described by these parameters:
 
-* SOS::
+* Service VM::
 
     i915.avail_planes_per_pipe=0x01010F
     i915.domain_plane_owners=0x011111110000
 
-* UOS::
+* User VM::
 
     i915.avail_planes_per_pipe=0x0070F00
 
-To assign pipes A and B to the UOS, while pipe C is assigned to the SOS, use
+To assign pipes A and B to the User VM, while pipe C is assigned to the Service VM, use
 these parameters:
 
-* SOS::
+* Service VM::
 
     i915.avail_planes_per_pipe=0x070101
     i915.domain_plane_owners=0x000011111111
 
-* UOS::
+* User VM::
 
     i915.avail_planes_per_pipe=0x000F0F
 
 .. note::
 
-   The careful reader may have noticed that in all examples given above, the SOS
+   The careful reader may have noticed that in all examples given above, the Service VM
    always has at least one plane per pipe. This is intentional, and the driver
    will enforce this if the parameters do not do this.
 

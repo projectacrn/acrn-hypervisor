@@ -1,7 +1,7 @@
 .. _asa:
 
-Advisory
-********
+Security Advisory
+*****************
 
 We recommend that all developers upgrade to this v1.4 release, which addresses the following security
 issues that were discovered in previous releases:
