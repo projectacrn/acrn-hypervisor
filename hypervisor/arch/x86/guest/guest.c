@@ -9,6 +9,7 @@
 #include <multiboot.h>
 #include <reloc.h>
 #include <e820.h>
+#include <trampoline.h>
 
 #define ACRN_DBG_GUEST	6U
 
@@ -507,5 +508,14 @@ int32_t prepare_vm0_memmap(struct acrn_vm *vm)
 	 */
 	hv_hpa = get_hv_image_base();
 	ept_mr_del(vm, pml4_page, hv_hpa, CONFIG_HV_RAM_SIZE);
+
+	/* unmap AP trampoline code for security reason.
+	 * 'allocate_pages()' in efi boot mode or
+	 * 'e820_alloc_low_memory()' in direct boot
+	 * mode will ensure the base address of tramploline
+	 * code be page-aligned.
+	 */
+	ept_mr_del(vm, pml4_page, trampoline_start16_paddr, CONFIG_LOW_RAM_SIZE);
+
 	return 0;
 }
