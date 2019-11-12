@@ -12,6 +12,7 @@
 # Default/global reviewers (if not overridden later)
 *                                        @anthonyzxu @dongyaozu
 
+Makefile                                 @binbinwu1
 /hypervisor/                             @anthonyzxu @dongyaozu
 /devicemodel/                            @anthonyzxu @ywan170
 /doc/                                    @dbkinder @deb-intel @NanlinXie
