@@ -73,6 +73,8 @@ struct vmctx {
 
 	/* ensure other pci devices bar space not conflict with gvt */
 	void (*adjust_bar_region)(struct vmctx *ctx, uint64_t *base, uint64_t size);
+
+	void (*update_gvt_bar)(struct vmctx *ctx);
 };
 
 #define	PROT_RW		(PROT_READ | PROT_WRITE)

@@ -331,6 +331,7 @@ void	pciaccess_cleanup(void);
 int	parse_bdf(char *s, int *bus, int *dev, int *func, int base);
 struct pci_vdev *pci_get_vdev_info(int slot);
 int register_bar(struct pci_vdev *dev, int idx);
+void unregister_bar(struct pci_vdev *dev, int idx);
 
 /**
  * @brief Set virtual PCI device's configuration space in 1 byte width

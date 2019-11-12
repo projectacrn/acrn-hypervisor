@@ -176,6 +176,71 @@ gvt_reserve_resource(int idx, enum pcibar_type type, uint64_t size)
 	return 0;
 }
 
+void
+update_gvt_bar(struct vmctx *ctx)
+{
+	char bar_path[PATH_MAX];
+	int bar_fd;
+	int ret;
+	char resource[76];
+	char *next;
+	uint64_t bar0_start_addr, bar0_end_addr, bar2_start_addr, bar2_end_addr;
+	int i;
+
+	snprintf(bar_path, sizeof(bar_path),
+		"/sys/kernel/gvt/vm%d/vgpu_bar_info",
+		ctx->vmid);
+
+	if(access(bar_path, F_OK) == -1)
+		return;
+
+	bar_fd = open(bar_path, O_RDONLY);
+	if(bar_fd == -1){
+		perror("failed to open sys bar info\n");
+		return;
+	}
+
+	ret = pread(bar_fd, resource, 76, 0);
+
+	close(bar_fd);
+
+	if (ret < 76) {
+		perror("failed to read sys bar info\n");
+		return;
+	}
+
+	next = resource;
+    	bar0_start_addr = strtoull(next, &next, 16);
+	bar0_end_addr = strtoull(next, &next, 16) + bar0_start_addr -1;
+    	bar2_start_addr = strtoull(next, &next, 16);
+	bar2_end_addr = strtoull(next, &next, 16) + bar2_start_addr -1;
+
+	/* if vgpu bar address doesn't change,
+	 * pass the unregister_bar/register_bar operation
+	 */
+	if((bar0_start_addr == bar_interval[0].start &&
+			bar2_start_addr == bar_interval[1].start) ||
+			(bar0_start_addr == bar_interval[1].start &&
+			bar2_start_addr == bar_interval[0].start))
+		return;
+
+	for(i = 0; i < 2; i++)
+		unregister_bar(gvt_dev, bar_interval[i].idx);
+
+	gvt_dev->bar[0].addr = bar0_start_addr;
+	gvt_dev->bar[2].addr = bar2_start_addr;
+
+	bar_interval[0].start = bar0_start_addr;
+	bar_interval[0].end = bar0_end_addr;
+	bar_interval[0].idx = 0;
+	bar_interval[1].start = bar2_start_addr;
+	bar_interval[1].end = bar2_end_addr;
+	bar_interval[1].idx = 2;
+
+	for(i = 0; i < 2; i++)
+		register_bar(gvt_dev, bar_interval[i].idx);
+}
+
 static int
 gvt_init_config(struct pci_gvt *gvt)
 {
@@ -237,7 +302,11 @@ gvt_init_config(struct pci_gvt *gvt)
 
 	ctx->enable_gvt = true;
 
+	/* by making adjust_bar_region_by_gvt_bars and update_gvt_bar as callback func,
+	 * can reduce code change in core.c
+	 */
 	ctx->adjust_bar_region = adjust_bar_region_by_gvt_bars;
+	ctx->update_gvt_bar = update_gvt_bar; 
 
 	bar_interval[0].start = bar0_start_addr;
 	bar_interval[0].end = bar0_end_addr;

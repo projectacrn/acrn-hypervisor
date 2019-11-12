@@ -558,7 +558,7 @@ modify_bar_registration(struct pci_vdev *dev, int idx, int registration)
 	return error;
 }
 
-static void
+void
 unregister_bar(struct pci_vdev *dev, int idx)
 {
 	modify_bar_registration(dev, idx, 0);
@@ -614,6 +614,9 @@ update_bar_address(struct vmctx *ctx, struct pci_vdev *dev, uint64_t addr,
 
 	if (decode)
 		unregister_bar(dev, idx);
+
+	if(type != PCIBAR_IO && ctx->enable_gvt)
+		ctx->update_gvt_bar(ctx);
 
 	switch (type) {
 	case PCIBAR_IO:
