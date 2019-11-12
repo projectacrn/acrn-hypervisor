@@ -465,10 +465,9 @@ pci_emul_mem_handler(struct vmctx *ctx, int vcpu, int dir, uint64_t addr,
 	return 0;
 }
 
-
 static int
 pci_emul_alloc_resource(uint64_t *baseptr, uint64_t limit, uint64_t size,
-			uint64_t *addr)
+			uint64_t *addr, enum pcibar_type type, struct vmctx *ctx)
 {
 	uint64_t base;
 
@@ -478,6 +477,9 @@ pci_emul_alloc_resource(uint64_t *baseptr, uint64_t limit, uint64_t size,
 	}
 
 	base = roundup2(*baseptr, size);
+
+	if(ctx->enable_gvt && type != PCIBAR_IO)
+		ctx->adjust_bar_region(ctx, &base, size);
 
 	if (base + size <= limit) {
 		*addr = base;
@@ -562,10 +564,10 @@ unregister_bar(struct pci_vdev *dev, int idx)
 	modify_bar_registration(dev, idx, 0);
 }
 
-static void
+int
 register_bar(struct pci_vdev *dev, int idx)
 {
-	modify_bar_registration(dev, idx, 1);
+	return modify_bar_registration(dev, idx, 1);
 }
 
 /* Are we decoding i/o port accesses for the emulated pci device? */
@@ -645,6 +647,7 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 {
 	int error;
 	uint64_t *baseptr, limit, addr, mask, lobits, bar;
+	struct vmctx *ctx;
 
 	if ((size & (size - 1)) != 0)
 		size = 1UL << flsl(size);	/* round up to a power of 2 */
@@ -713,8 +716,9 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 		return -1;
 	}
 
+	ctx = pdi->vmctx;
 	if (baseptr != NULL) {
-		error = pci_emul_alloc_resource(baseptr, limit, size, &addr);
+		error = pci_emul_alloc_resource(baseptr, limit, size, &addr, type, ctx);
 		if (error != 0)
 			return error;
 	}

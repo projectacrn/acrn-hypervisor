@@ -21,6 +21,8 @@
 
 static int pci_gvt_debug;
 
+static struct pci_vdev *gvt_dev;
+
 #define DPRINTF(params) do { if (pci_gvt_debug) printf params; } while (0)
 
 #define WPRINTF(params) (printf params)
@@ -41,6 +43,14 @@ struct pci_gvt {
 	uint8_t host_config[PCI_REGMAX+1];
 	int instance_created;
 };
+
+struct gvt_interval {
+	uint64_t start;
+	uint64_t end;
+	int idx;
+};
+
+static struct gvt_interval bar_interval[2];
 
 /* These are the default values */
 int gvt_low_gm_sz = 64; /* in MB */
@@ -83,6 +93,89 @@ pci_gvt_read(struct vmctx *ctx, int vcpu, struct pci_vdev *pi,
 	return 0;
 }
 
+static bool
+is_two_region_overlap(uint64_t x1, uint64_t x2, uint64_t y1, uint64_t y2)
+{
+	if(x1 <= y2 && y1 <= x2)
+		return true;
+	return false;
+}
+
+void
+adjust_bar_region_by_gvt_bars(struct vmctx *ctx, uint64_t *base, uint64_t size)
+{
+	/*
+	 * for gvt, we reserve two region
+	 * 1. bar0 region:[bar0_start_addr, bar0_end_addr]
+	 * 2. bar2 region:[bar2_start_addr, bar2_end_addr]
+	 * these two regions have sorted and stored in array bar_interval
+	 */
+	int i;
+	
+	for(i = 0; i < 2; i++){
+		if(is_two_region_overlap(bar_interval[i].start,
+						bar_interval[i].end, *base, *base + size -1)){
+			*base = roundup2(bar_interval[i].end + 1, size);
+		}
+	}
+}
+
+static struct gvt_interval *
+get_interval_by_idx(int idx)
+{
+	int i;
+	
+	for(i = 0; i < 2; i++)
+		if(bar_interval[i].idx == idx)
+			return &bar_interval[i];
+	
+	return NULL;
+}
+
+static int
+gvt_reserve_resource(int idx, enum pcibar_type type, uint64_t size)
+{
+	uint64_t addr, mask, lobits, bar;
+	struct gvt_interval *interval;
+	int ret;
+
+	mask = PCIM_BAR_MEM_BASE;
+	lobits = PCIM_BAR_MEM_SPACE | PCIM_BAR_MEM_32;
+
+	interval = get_interval_by_idx(idx);
+
+	if(!interval){
+		perror("gvt failed to find interval\n");
+		return -1;
+	}
+
+	addr = interval->start;
+	
+	gvt_dev->bar[idx].type = type;
+	gvt_dev->bar[idx].addr = addr;
+	gvt_dev->bar[idx].size = size;
+
+	/* Initialize the BAR register in config space */
+	bar = (addr & mask) | lobits;
+	pci_set_cfgdata32(gvt_dev, PCIR_BAR(idx), bar);
+
+	ret = register_bar(gvt_dev, idx);
+
+	if(ret != 0){
+		/* because gvt isn't firstly initialized, previous pci
+		 * devices' bars may conflict with gvt bars.
+		 * Use register_bar to detect this case,
+		 * but this case rarely happen.
+		 * If this case always happens, we need to
+		 * change core.c code to ensure gvt firstly initialzed
+		 */
+		perror("gvt failed to register_bar\n");
+		return ret;
+	}
+
+	return 0;
+}
+
 static int
 gvt_init_config(struct pci_gvt *gvt)
 {
@@ -100,6 +193,7 @@ gvt_init_config(struct pci_gvt *gvt)
 	uint64_t bar2_end_addr;
 	char *next;
 	struct vmctx *ctx;
+	struct gvt_interval tem;
 
 	snprintf(res_name, sizeof(res_name),
 		"/sys/bus/pci/devices/%04x:%02x:%02x.%x/resource",
@@ -142,6 +236,21 @@ gvt_init_config(struct pci_gvt *gvt)
 	}
 
 	ctx->enable_gvt = true;
+
+	ctx->adjust_bar_region = adjust_bar_region_by_gvt_bars;
+
+	bar_interval[0].start = bar0_start_addr;
+	bar_interval[0].end = bar0_end_addr;
+	bar_interval[0].idx = 0;
+	bar_interval[1].start = bar2_start_addr;
+	bar_interval[1].end = bar2_end_addr;
+	bar_interval[1].idx = 2;
+
+	if(bar_interval[0].start > bar_interval[1].start){
+		tem = bar_interval[0];
+		bar_interval[0] = bar_interval[1];
+		bar_interval[1] = tem;
+	}
 
 	snprintf(name, sizeof(name),
 		"/sys/bus/pci/devices/%04x:%02x:%02x.%x/config",
@@ -193,7 +302,7 @@ gvt_init_config(struct pci_gvt *gvt)
 	pci_set_cfgdata16(gvt->gvt_pi, 0x52, gvt->host_config[0x52]);
 
 	/* Alloc resource only and no need to register bar for gvt */
-	ret = pci_emul_alloc_bar(gvt->gvt_pi, 0, PCIBAR_MEM32,
+	ret = gvt_reserve_resource(0, PCIBAR_MEM32,
 		16 * 1024 * 1024);
 	if (ret != 0) {
 		pr_err("allocate gvt pci bar[0] failed\n");
@@ -226,7 +335,7 @@ gvt_init_config(struct pci_gvt *gvt)
 			break;
 	}
 
-	ret = pci_emul_alloc_bar(gvt->gvt_pi, 2, PCIBAR_MEM32,
+	ret = gvt_reserve_resource(2, PCIBAR_MEM32,
 		aperture_size * 1024 * 1024);
 	if (ret != 0) {
 		pr_err("allocate gvt pci bar[2] failed\n");
@@ -333,6 +442,8 @@ pci_gvt_init(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 	gvt->gvt_pi = pi;
 	guest_domid = ctx->vmid;
 
+	gvt_dev = pi;
+
 	ret = gvt_init_config(gvt);
 
 	if (ret)
@@ -343,6 +454,7 @@ pci_gvt_init(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 	if(!ret)
 		return ret;
 fail:
+	gvt_dev = NULL;
 	ctx->enable_gvt = false;
 	perror("GVT: init failed\n");
 	free(gvt);
@@ -363,6 +475,7 @@ pci_gvt_deinit(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 
 		free(gvt);
 		pi->arg = NULL;
+		gvt_dev = NULL;
 	}
 }
 
