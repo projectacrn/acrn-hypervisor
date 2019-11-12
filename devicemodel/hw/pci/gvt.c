@@ -91,7 +91,69 @@ gvt_init_config(struct pci_gvt *gvt)
 	uint8_t cap_ptr = 0;
 	uint8_t aperture_size_reg;
 	uint16_t aperture_size = 256;
+	char res_name[PATH_MAX];
+	char resource[512];
+	int res_fd;
+	uint64_t bar0_start_addr;
+	uint64_t bar0_end_addr;
+	uint64_t bar2_start_addr;
+	uint64_t bar2_end_addr;
+	char *next;
+	struct vmctx *ctx;
 
+	/* get physical gpu bars info from
+	 * "/sys/bus/PCI/devices/0000\:00\:02.0/resource"
+	 */
+	snprintf(res_name, sizeof(res_name),
+		"/sys/bus/pci/devices/%04x:%02x:%02x.%x/resource",
+		gvt->addr.domain, gvt->addr.bus, gvt->addr.slot,
+		gvt->addr.function);
+	res_fd = open(res_name, O_RDONLY);
+	if (res_fd == -1) {
+		perror("gvt:open host pci resource failed\n");
+		return -1;
+	}
+
+	ret = pread(res_fd, resource, 512, 0);
+
+	close(res_fd);
+
+	if (ret < 512) {
+		perror("failed to read host device resource space\n");
+		return -1;
+	}
+
+	next = resource;
+	bar0_start_addr = strtoull(next, &next, 16);
+	bar0_end_addr = strtoull(next, &next, 16);
+
+	/* bar0 and bar2 have some distance, need pass the distance */
+	next = next + 80;
+	bar2_start_addr = strtoull(next, &next, 16);
+	bar2_end_addr = strtoull(next, &next, 16);
+
+	ctx = gvt->gvt_pi->vmctx;
+	if(bar0_start_addr < ctx->lowmem_limit
+		|| bar2_start_addr < ctx->lowmem_limit
+		|| bar0_end_addr > PCI_EMUL_ECFG_BASE
+		|| bar2_end_addr > PCI_EMUL_ECFG_BASE){
+		perror("gvt pci bases are out of range\n");
+		return -1;
+	}
+
+	ctx->gvt_enabled = true;
+
+	/* In GVT-g design, it only use pci bar0 and bar2,
+	 * So we need reserve bar0 region and bar2 region only
+	 */
+	ret = create_mmio_rsvd_rgn(bar0_start_addr,
+				bar0_end_addr, 0, PCIBAR_MEM32, gvt->gvt_pi);
+	if(ret != 0)
+		return -1;
+	ret = create_mmio_rsvd_rgn(bar2_start_addr,
+				bar2_end_addr, 2, PCIBAR_MEM32, gvt->gvt_pi);
+	if(ret != 0)
+		return -1;
 	snprintf(name, sizeof(name),
 		"/sys/bus/pci/devices/%04x:%02x:%02x.%x/config",
 		gvt->addr.domain, gvt->addr.bus, gvt->addr.slot,
@@ -292,6 +354,7 @@ pci_gvt_init(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 	if(!ret)
 		return ret;
 fail:
+	ctx->gvt_enabled = false;
 	perror("GVT: init failed\n");
 	free(gvt);
 	return -1;

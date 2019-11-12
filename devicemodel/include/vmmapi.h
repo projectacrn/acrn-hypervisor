@@ -67,6 +67,9 @@ struct vmctx {
 
 	/* BSP state. guest loader needs to fill it */
 	struct acrn_set_vcpu_regs bsp_regs;
+
+	/* if gvt-g is enabled for current VM */
+	bool gvt_enabled;
 };
 
 #define	PROT_RW		(PROT_READ | PROT_WRITE)

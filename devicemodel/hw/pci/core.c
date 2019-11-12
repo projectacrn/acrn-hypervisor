@@ -91,6 +91,8 @@ static uint64_t pci_emul_membase64;
 
 extern bool skip_pci_mem64bar_workaround;
 
+struct mmio_rsvd_rgn reserved_bar_regions[REGION_NUMS];
+
 #define	PCI_EMUL_IOBASE		0x2000
 #define	PCI_EMUL_IOLIMIT	0x10000
 
@@ -105,6 +107,64 @@ static void pci_lintr_update(struct pci_vdev *dev);
 static void pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot,
 		      int func, int coff, int bytes, uint32_t *val);
 static void pci_emul_free_msixcap(struct pci_vdev *pdi);
+
+int compare_mmio_rgns(const void *data1, const void *data2)
+{
+    struct mmio_rsvd_rgn *rng1, *rng2;
+
+    rng1 = (struct mmio_rsvd_rgn*)data1;
+    rng2 = (struct mmio_rsvd_rgn*)data2;
+
+    if(!rng1->vdev)
+            return 1;
+    if(!rng2->vdev)
+            return -1;
+    return (rng1->start - rng2->start);
+}
+
+/* FIXME: the new registered region may overlap with exist mmio regions
+ * whatever they are registered by dm or reserved.
+ * Due to we only has gvt-g to use this feature,
+ * this case rarely happen.
+ */
+int create_mmio_rsvd_rgn(uint64_t start,
+	    uint64_t end, int idx, int bar_type, struct pci_vdev *vdev)
+{
+	int i;
+
+	if(bar_type == PCIBAR_IO){
+		perror("fail to create PCIBAR_IO bar_type\n");
+		return -1;
+	}
+
+	for(i = 0; i < REGION_NUMS; i++){
+		if(reserved_bar_regions[i].vdev == NULL){
+			reserved_bar_regions[i].start = start;
+			reserved_bar_regions[i].end = end;
+			reserved_bar_regions[i].idx = idx;
+			reserved_bar_regions[i].bar_type = bar_type;
+			reserved_bar_regions[i].vdev = vdev;
+
+			/* sort reserved_bar_regions array by "start" member,
+			 * if this mmio_rsvd_rgn is not used, put it in the last.
+			 */
+			qsort((void*)reserved_bar_regions, REGION_NUMS,
+					sizeof(reserved_bar_regions[0]),  compare_mmio_rgns);
+			return 0;
+		}
+	}
+
+	perror("reserved_bar_regions is overflow\n");
+	return -1;
+}
+
+void destory_mmio_rsvd_rgns(struct pci_vdev *vdev){
+    int i;
+
+    for(i = 0; i < REGION_NUMS; i++)
+		if(reserved_bar_regions[i].vdev == vdev)
+			reserved_bar_regions[i].vdev = NULL;
+}
 
 static inline void
 CFGWRITE(struct pci_vdev *dev, int coff, uint32_t val, int bytes)
