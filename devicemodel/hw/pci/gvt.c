@@ -85,6 +85,70 @@ pci_gvt_read(struct vmctx *ctx, int vcpu, struct pci_vdev *pi,
 	return 0;
 }
 
+void
+update_gvt_bar(struct vmctx *ctx)
+{
+	char bar_path[PATH_MAX];
+	int bar_fd;
+	int ret;
+	char resource[76];
+	char *next;
+	uint64_t bar0_start_addr, bar0_end_addr, bar2_start_addr, bar2_end_addr;
+	int i;
+
+	/* "/sys/kernel/gvt/vmx/vgpu_bar_info" exposes vgpu bar regions. */
+	snprintf(bar_path, sizeof(bar_path),
+		"/sys/kernel/gvt/vm%d/vgpu_bar_info",
+		ctx->vmid);
+
+	if(access(bar_path, F_OK) == -1)
+		return;
+
+	bar_fd = open(bar_path, O_RDONLY);
+	if(bar_fd == -1){
+		perror("failed to open sys bar info\n");
+		return;
+	}
+
+	ret = pread(bar_fd, resource, 76, 0);
+
+	close(bar_fd);
+
+	if (ret < 76) {
+		perror("failed to read sys bar info\n");
+		return;
+	}
+
+	next = resource;
+	bar0_start_addr = strtoull(next, &next, 16);
+	bar0_end_addr = strtoull(next, &next, 16) + bar0_start_addr -1;
+	bar2_start_addr = strtoull(next, &next, 16);
+	bar2_end_addr = strtoull(next, &next, 16) + bar2_start_addr -1;
+
+	for(i = 0; i < REGION_NUMS; i++){
+		if(reserved_bar_regions[i].vdev &&
+			reserved_bar_regions[i].vdev == gvt_dev){
+			pci_emul_free_bar(gvt_dev, reserved_bar_regions[i].idx);
+		}
+	}
+
+	destory_mmio_rsvd_rgns(gvt_dev);
+
+	ret = create_mmio_rsvd_rgn(bar0_start_addr,
+                        bar0_end_addr, 0, PCIBAR_MEM32, gvt_dev);
+	if(ret != 0)
+		return;
+	ret = create_mmio_rsvd_rgn(bar2_start_addr,
+                        bar2_end_addr, 2, PCIBAR_MEM32, gvt_dev);
+	if(ret != 0)
+		return;
+
+	pci_emul_alloc_bar(gvt_dev, 0, PCIBAR_MEM32,
+			bar0_end_addr - bar0_start_addr + 1);
+	pci_emul_alloc_bar(gvt_dev, 2, PCIBAR_MEM32,
+			bar2_end_addr - bar2_start_addr + 1);
+}
+
 static int
 gvt_init_config(struct pci_gvt *gvt)
 {
@@ -142,6 +206,7 @@ gvt_init_config(struct pci_gvt *gvt)
 	}
 
 	ctx->gvt_enabled = true;
+	ctx->update_gvt_bar = &update_gvt_bar;
 
 	/* In GVT-g design, it only use pci bar0 and bar2,
 	 * So we need reserve bar0 region and bar2 region only

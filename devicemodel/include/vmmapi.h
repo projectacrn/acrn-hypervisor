@@ -70,6 +70,8 @@ struct vmctx {
 
 	/* if gvt-g is enabled for current VM */
 	bool gvt_enabled;
+
+	void (*update_gvt_bar)(struct vmctx *ctx);
 };
 
 #define	PROT_RW		(PROT_READ | PROT_WRITE)

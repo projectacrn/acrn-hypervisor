@@ -710,6 +710,19 @@ update_bar_address(struct vmctx *ctx, struct pci_vdev *dev, uint64_t addr,
 	if (decode)
 		unregister_bar(dev, idx);
 
+	/* TODO:Currently, we only reserve gvt mmio regions,
+	 * so ignore PCIBAR_IO when adjust_bar_region_with_reserved_bars.
+	 * If other devices also use reserved bar regions later,
+	 * need remove pcibar_type != PCIBAR_IO condition
+	 */
+	if(type != PCIBAR_IO && ctx->gvt_enabled)
+		/* uos kernel may update gvt bars' value,
+		 * but ACRN-DM doesn't know this update.
+		 * When other pci devices write bar address,
+		 * ACRN-DM need update vgpu bars' info.
+		 */
+		ctx->update_gvt_bar(ctx);
+
 	switch (type) {
 	case PCIBAR_IO:
 	case PCIBAR_MEM32:
@@ -868,29 +881,35 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 }
 
 void
+pci_emul_free_bar(struct pci_vdev *pdi, int idx)
+{
+	bool enabled;
+
+	if ((pdi->bar[idx].type != PCIBAR_NONE) &&
+		(pdi->bar[idx].type != PCIBAR_MEMHI64)){
+		/*
+		 * Check whether the bar is enabled or not,
+		 * if it is disabled then it should have been
+		 * unregistered in pci_emul_cmdsts_write.
+		 */
+		if (pdi->bar[idx].type == PCIBAR_IO)
+			enabled = porten(pdi);
+		else
+			enabled = memen(pdi);
+
+		if (enabled)
+			unregister_bar(pdi, idx);
+		pdi->bar[idx].type = PCIBAR_NONE;
+	}
+}
+
+void
 pci_emul_free_bars(struct pci_vdev *pdi)
 {
 	int i;
-	bool enabled;
 
-	for (i = 0; i < PCI_BARMAX; i++) {
-		if ((pdi->bar[i].type != PCIBAR_NONE) &&
-			(pdi->bar[i].type != PCIBAR_MEMHI64)){
-			/*
-			 * Check whether the bar is enabled or not,
-			 * if it is disabled then it should have been
-			 * unregistered in pci_emul_cmdsts_write.
-			 */
-			if (pdi->bar[i].type == PCIBAR_IO)
-				enabled = porten(pdi);
-			else
-				enabled = memen(pdi);
-
-			if (enabled)
-				unregister_bar(pdi, i);
-			pdi->bar[i].type = PCIBAR_NONE;
-		}
-	}
+	for (i = 0; i < PCI_BARMAX; i++)
+		pci_emul_free_bar(pdi, i);
 }
 
 #define	CAP_START_OFFSET	0x40
