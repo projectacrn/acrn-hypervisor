@@ -16,15 +16,22 @@ def check_dmi():
     return os.path.exists("/sys/firmware/dmi")
 
 
-def print_yel(msg, warn=False):
+def print_yel(msg, warn=False, end=True):
     """Output the message with the color of yellow
     :param msg: the stings which will be output to STDOUT
     :param warn: the condition if needs to be output the color of yellow with 'Warning'
+    :param end: The flag of it needs to combine with the next line for stdout
     """
     if warn:
-        print("\033[1;33mWarning\033[0m:"+msg)
+        if end:
+            print("\033[1;33mWarning\033[0m:"+msg)
+        else:
+            print("\033[1;33mWarning\033[0m:"+msg, end="")
     else:
-        print("\033[1;33m{0}\033[0m".format(msg))
+        if end:
+            print("\033[1;33m{}\033[0m".format(msg))
+        else:
+            print("\033[1;33m{}\033[0m".format(msg), end="")
 
 
 def print_red(msg, err=False):

@@ -112,6 +112,26 @@ def gen_cat(config):
     return err_dic
 
 
+def gen_single_data(data_lines, domain_str, config):
+    line_i = 0
+    data_statues = True
+    data_len = len(data_lines)
+    for data_l in data_lines:
+        if line_i == 0:
+            if "not available" in data_l:
+                print(data_l.strip(), file=config)
+                print("static const struct cpu_{}x_data board_cpu_{}x[0];".format(domain_str, domain_str), file=config)
+                print("", file=config)
+                data_statues = False
+                break
+            else:
+                print("static const struct cpu_{}x_data board_cpu_{}x[{}] = {{".format(domain_str, domain_str, data_len), file=config)
+        print("\t{0}".format(data_l.strip()), file=config)
+        line_i += 1
+    if data_statues:
+        print("};\n", file=config)
+
+
 def gen_px_cx(config):
     """
     Get Px/Cx and store them to board.c
@@ -122,18 +142,8 @@ def gen_px_cx(config):
     cx_lines = board_cfg_lib.get_info(board_cfg_lib.BOARD_INFO_FILE, "<CX_INFO>", "</CX_INFO>")
     px_lines = board_cfg_lib.get_info(board_cfg_lib.BOARD_INFO_FILE, "<PX_INFO>", "</PX_INFO>")
 
-    cx_len = len(cx_lines)
-    px_len = len(px_lines)
-    #print("#ifdef CONFIG_CPU_POWER_STATES_SUPPORT", file=config)
-    print("static const struct cpu_cx_data board_cpu_cx[%s] = {"%str(cx_len), file=config)
-    for cx_l in cx_lines:
-        print("\t{0}".format(cx_l.strip()), file=config)
-    print("};\n", file=config)
-
-    print("static const struct cpu_px_data board_cpu_px[%s] = {"%str(px_len), file=config)
-    for px_l in px_lines:
-        print("\t{0}".format(px_l.strip()), file=config)
-    print("};\n", file=config)
+    gen_single_data(cx_lines, 'c', config)
+    gen_single_data(px_lines, 'p', config)
 
     for brand_line in cpu_brand_lines:
         cpu_brand = brand_line
@@ -143,7 +153,6 @@ def gen_px_cx(config):
     print("\t{(uint8_t)ARRAY_SIZE(board_cpu_px), board_cpu_px,", file=config)
     print("\t(uint8_t)ARRAY_SIZE(board_cpu_cx), board_cpu_cx}", file=config)
     print("};", file=config)
-    #print("#endif", file=config)
 
 
 def generate_file(config):
