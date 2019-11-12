@@ -22,7 +22,7 @@ or use Git clone and checkout commands::
 The project's online technical documentation is also tagged to correspond
 with a specific release: generated v1.4 documents can be found at https://projectacrn.github.io/1.4/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
-ACRN v1.4 requires Clear Linux* OS version 31520. Follow the
+ACRN v1.4 requires Clear Linux* OS version 31670. Follow the
 instructions in the :ref:`rt_industry_setup`.
 
 Version 1.4 major features
@@ -31,7 +31,7 @@ Version 1.4 major features
 What's New in v1.4
 ==================
 * ACRN now conforms to the Microsoft* Hypervisor Top-Level Functional Specification (TLFS).
-* Basic CPU sharing capabilities have been added.
+* ACRN scheduler framework re-architected capabilities have been added.
 * WaaG (Windows as a guest) stability and performance has been improved.
 * Realtime performance of the RTVM (preempt-RT kernel-based) has been improved.
 
@@ -39,6 +39,7 @@ Document updates
 ================
 Many new `reference documents <https://projectacrn.github.io>`_ are available, including:
 
+* :ref:`ACRN high-level design <hld>` documents.
 * :ref:`enable-s5`
 * :ref:`enable_laag_secure_boot`
 * :ref:`How-to-enable-secure-boot-for-windows`
@@ -50,8 +51,14 @@ Security Vulnerabilities
 We recommend that all developers upgrade to this v1.4 release, which
 addresses the following security issues that were discovered in previous releases:
 
+Mitigation for Machine Check Error on Page Size Change
+   Improper invalidation for page table updates by a virtual guest operating system for multiple 
+   Intel |reg| Processors may allow an authenticated user to potentially enable denial of service 
+   of the host system via local access. Malicious guest kernel could trigger this issue, CVE-2018-12207.
+
 AP Trampoline Is Accessible to the Service VM
-   This vulnerability is triggered when validating the memory isolation between the VM and hypervisor. The AP Trampoline code exists in the LOW_RAM region in the hypervisor but is
+   This vulnerability is triggered when validating the memory isolation between the VM and hypervisor.
+   The AP Trampoline code exists in the LOW_RAM region in the hypervisor but is
    potentially accessible to the Service VM. This could be used by an attacker to mount DoS
    attacks on the hypervisor if the Service VM is compromised.
 
@@ -189,6 +196,29 @@ release in Sep 2019 (click on the CommitID link to see details):
 
    git log --pretty=format:'- :acrn-commit:`%h` - %s' --after="2019-09-28"
 
+- :acrn-commit:`e0d14b70` - Doc: Grammatical edits to the 1.4 Release Notes.
+- :acrn-commit:`d8bd5088` - doc: Release notes v1.4
+- :acrn-commit:`90a61134` - Doc: Grammatical edits to the Advisory doc.
+- :acrn-commit:`c6bccd5c` - doc: Add Advisory notes
+- :acrn-commit:`94394ae9` - Doc: Grammatical edits to the Enable S5 Guide.
+- :acrn-commit:`b16e5987` - doc: enable s5 guide
+- :acrn-commit:`d473cafe` - dm: Add licenses to the scripts.
+- :acrn-commit:`79294b39` - Doc: Final edits for the HLD-Security doc.
+- :acrn-commit:`865d1a22` - doc: add hld-security guest secure boot description
+- :acrn-commit:`a4713fce` - doc: add copyright/license header to doc scripts
+- :acrn-commit:`04767070` - Doc: Final edits to the HV Hypercall doc.
+- :acrn-commit:`dcfa7587` - Doc: Final edits to the CPU Virt doc
+- :acrn-commit:`ce46f35d` - doc: review edits for rt_industry doc
+- :acrn-commit:`3298891f` - Doc: Final edits to the HLD Overview doc.
+- :acrn-commit:`a74a7551` - Doc: Final edits to Memory Mangt HLD doc.
+- :acrn-commit:`1c3f16f5` - doc: review edit for enable_laag_secure_boot
+- :acrn-commit:`ae126bd5` - doc: review edits for acrn_configuration_tool
+- :acrn-commit:`9687d72e` - doc: add cores and threads for CPU of supported hardware
+- :acrn-commit:`2d0739bf` - doc: fix error in building_from_source doc
+- :acrn-commit:`3b977eef` - doc: clean up the docs in try using acrn table.
+- :acrn-commit:`2a3178aa` - doc: Update Using Windows as Guest VM on ACRN
+- :acrn-commit:`9bd274ae` - doc:modfiy ubuntu build on 18.04
+- :acrn-commit:`7d818c82` - doc: Stop using kconfig to make a customized efi.
 - :acrn-commit:`67c64522` - dm: fix memory free issue for xhci
 - :acrn-commit:`3fb1021d` - Doc: Minor grammatical edits on various files.
 - :acrn-commit:`72f71192` - doc: fix doc build errors previously masked

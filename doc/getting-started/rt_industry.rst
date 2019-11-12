@@ -6,10 +6,10 @@ Getting Started Guide for ACRN Industry Scenario
 Verified version
 ****************
 
-- Clear Linux version: **31470**
+- Clear Linux version: **31670**
 - ACRN-hypervisor tag: **v1.4**
-- ACRN-Kernel(Service VM kernel): **4.19.78-95.iot-lts2018-sos**
-- ACRN-Kernel(Preempt-RT kernel): **acrn-2019w39.1-143000p**
+- ACRN-Kernel(Service VM kernel): **4.19.78-98.iot-lts2018-sos**
+- ACRN-Kernel(Preempt-RT kernel): **acrn-2019w47.3-140000p**
 
 Prerequisites
 *************
@@ -22,17 +22,14 @@ for the RTVM.
   (refer to :ref:`the tables <hardware_setup>` for detailed information).
 - If you need to enable the serial port on KBL NUC, navigate to the
   :ref:`troubleshooting <connect_serial_port>` to prepare the cable.
-- Follow below steps to install Clear Linux OS (Ver: 31470) onto both disks on the KBL NUC:
+- Follow below steps to install Clear Linux OS (Ver: 31670) onto both disks on the KBL NUC:
 
 .. _Clear Linux OS Server image:
-   https://download.clearlinux.org/releases/31470/clear/clear-31470-live-server.iso.xz
+   https://download.clearlinux.org/releases/31670/clear/clear-31670-live-server.iso
 
   #. Create a bootable USB drive on Linux*:
 
-     a. Download and decompress the `Clear Linux OS Server image`_::
-
-        $ unxz clear-31470-live-server.iso.xz
-
+     a. Download the `Clear Linux OS Server image`_.
      #. Plug in the USB drive.
      #. Use the ``lsblk`` command line to identify the USB drive:
 
@@ -50,7 +47,7 @@ for the RTVM.
      #. Unmount all the ``/dev/sdc`` partitions and burn the image onto the USB drive::
 
         $ umount /dev/sdc* 2>/dev/null
-        $ sudo dd if=./clear-31470-live-server.iso of=/dev/sdc oflag=sync status=progress bs=4M
+        $ sudo dd if=./clear-31670-live-server.iso of=/dev/sdc oflag=sync status=progress bs=4M
 
   #. Plug in the USB drive to the KBL NUC and boot from USB.
   #. Launch the Clear Linux OS installer boot menu.
@@ -134,7 +131,7 @@ Use the pre-installed industry ACRN hypervisor
 
    .. code-block:: none
 
-      # ./acrn_quick_setup.sh -s 31470 -d -i
+      # ./acrn_quick_setup.sh -s 31670 -d -i
 
    .. note:: ``-i`` option means the industry scenario efi image will be used, e.g.
       ``acrn.nuc7i7dnb.industry.efi``. For the detailed usage of the ``acrn_quick_setup.sh`` script, 
@@ -192,15 +189,15 @@ Use the ACRN industry out-of-the-box image
 
 #. Download the Service VM industry image::
 
-   # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2019w39.1-140000p/sos-industry-31080.img.xz
+   # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2019w47.1-140000p/sos-industry-31670.img.xz
 
 #. Decompress the .xz image::
 
-   # xz -d sos-industry-31080.img.xz
+   # xz -d sos-industry-31670.img.xz
 
 #. Burn the Service VM image onto the SATA disk::
 
-   # dd if=sos-industry-31080.img of=/dev/sda bs=4M oflag=sync status=progress
+   # dd if=sos-industry-31670.img of=/dev/sda bs=4M oflag=sync status=progress
 
 #. Configure the EFI firmware to boot the ACRN hypervisor by default:
    
@@ -226,15 +223,15 @@ Install and launch the Preempt-RT VM
 
 #. Download the Preempt-RT VM image::
 
-   # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2019w39.1-140000p/preempt-rt-31080.img.xz
+   # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2019w47.1-140000p/preempt-rt-31670.img.xz
 
 #. Decompress the xz image::
 
-   # xz -d preempt-rt-31080.img.xz
+   # xz -d preempt-rt-31670.img.xz
 
 #. Burn the Preempt-RT VM image onto the NVMe disk::
 
-   # dd if=preempt-rt-31080.img of=/dev/nvme0n1 bs=4M oflag=sync status=progress
+   # dd if=preempt-rt-31670.img of=/dev/nvme0n1 bs=4M oflag=sync status=progress
 
 #. Use the ``lspci`` command to ensure that the correct NVMe device IDs will
    be used for the passthru before launching the script:
@@ -425,6 +422,8 @@ this, follow the below steps to allocate all housekeeping tasks to core 0:
    .. code-block:: bash
    
       #!/bin/bash
+      # Copyright (C) 2019 Intel Corporation.
+      # SPDX-License-Identifier: BSD-3-Clause
       # Move all IRQs to core 0.
       for i in `cat /proc/interrupts | grep '^ *[0-9]*[0-9]:' | awk {'print $1'} | sed 's/:$//' `;
       do
@@ -525,20 +524,20 @@ EFI image doesn't exist
 You might see the error message if you are running the ``acrn_quick_setup.sh`` script
 on an older Clear Linux OS ( < 31470 ):
 
-   .. code-block:: console
+.. code-block:: console
 
-      /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi doesn't exist.
-      Use one of these efi images from /usr/lib/acrn.
-      ------
-      /usr/lib/acrn/acrn.kbl-nuc-i7.industry.efi
-      ------
-      Copy the efi image to /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi, then run the script again.
+   /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi doesn't exist.
+   Use one of these efi images from /usr/lib/acrn.
+   ------
+   /usr/lib/acrn/acrn.kbl-nuc-i7.industry.efi
+   ------
+   Copy the efi image to /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi, then run the script again.
 
-To fix it, just rename the existing efi image to ``/usr/lib/acrn/acrn.nuc7i7dnb.industry.efi`` and 
+To fix it, just rename the existing efi image to ``/usr/lib/acrn/acrn.nuc7i7dnb.industry.efi`` and
 then run the script again::
 
-      # cp -r /usr/lib/acrn/acrn.kbl-nuc-i7.industry.efi /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi
-      # ./acrn_quick_setup.sh -s <target version> -i -d
+   # cp -r /usr/lib/acrn/acrn.kbl-nuc-i7.industry.efi /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi
+   # ./acrn_quick_setup.sh -s <target version> -i -d
 
 .. _enabling the network on RTVM:
 
@@ -562,6 +561,5 @@ If you need to access the internet, you must add the following command line to t
       $pm_channel $pm_by_vuart \
       --ovmf /usr/share/acrn/bios/OVMF.fd \
       hard_rtvm
-   
    }
 
