@@ -219,7 +219,6 @@ def gen_sdc_source(vm_info, config):
     """
     uuid_0 = uuid2str(vm_info.uuid[0])
     uuid_1 = uuid2str(vm_info.uuid[1])
-    uuid_2 = uuid2str(vm_info.uuid[2])
 
     (err_dic, sos_guest_flags) = get_guest_flag(vm_info.guest_flag_idx[0])
     if err_dic:
@@ -264,31 +263,38 @@ def gen_sdc_source(vm_info, config):
     # UUID
     uuid_output(uuid_1, vm_info.uuid[1], config)
     is_need_epc(vm_info.epc_section, 1, config)
-    print("\t\t.vcpu_num = CONFIG_MAX_PCPU_NUM - CONFIG_MAX_KATA_VM_NUM - 1U,", file=config)
-    print("\t\t.vcpu_affinity = VM{}_CONFIG_VCPU_AFFINITY,".format(1), file=config)
+
+    vm1_id = 1
+    vm1_cpu_num = len(vm_info.cpus_per_vm[vm1_id])
+    print("\t\t.vcpu_num = {}U,".format(vm1_cpu_num), file=config)
+    print("\t\t.vcpu_affinity = VM{}_CONFIG_VCPU_AFFINITY,".format(vm1_id), file=config)
     # VUART
     err_dic = vuart_output(1, vm_info, config)
     if err_dic:
         return err_dic
-    # VM2
-    print("#if CONFIG_MAX_KATA_VM_NUM > 0", file=config)
-    print("\t{", file=config)
-    print("\t\t.load_order = POST_LAUNCHED_VM,", file=config)
-    uuid_output(uuid_2, vm_info.uuid[2], config)
-    vcpu_affinity_output(vm_info, 2, config)
-    is_need_epc(vm_info.epc_section, 2, config)
-    print("\t\t.vuart[0] = {", file=config)
-    print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
-    print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
-    print("\t\t},", file=config)
-    print("\t\t.vuart[1] = {", file=config)
-    print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
-    print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
-    print("\t\t}", file=config)
-    print("\t},", file=config)
-    print("#endif", file=config)
-    print("};", file=config)
 
+    # VM2
+    if scenario_cfg_lib.KATA_VM_COUNT == 1:
+        # Setup Kata vm configurations if more than 3 VMs in SDC config file
+        uuid_2 = uuid2str(vm_info.uuid[2])
+        print("#if CONFIG_MAX_KATA_VM_NUM > 0", file=config)
+        print("\t{", file=config)
+        print("\t\t.load_order = POST_LAUNCHED_VM,", file=config)
+        uuid_output(uuid_2, vm_info.uuid[2], config)
+        vcpu_affinity_output(vm_info, 2, config)
+        is_need_epc(vm_info.epc_section, 2, config)
+        print("\t\t.vuart[0] = {", file=config)
+        print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
+        print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
+        print("\t\t},", file=config)
+        print("\t\t.vuart[1] = {", file=config)
+        print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
+        print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
+        print("\t\t}", file=config)
+        print("\t},", file=config)
+        print("#endif", file=config)
+
+    print("};", file=config)
     return err_dic
 
 

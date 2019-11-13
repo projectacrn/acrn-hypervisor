@@ -10,7 +10,6 @@ HEADER_LICENSE = common.open_license()
 BOARD_INFO_FILE = "board_info.txt"
 SCENARIO_INFO_FILE = ""
 
-VM_COUNT = 0
 LOAD_ORDER_TYPE = ['PRE_LAUNCHED_VM', 'SOS_VM', 'POST_LAUNCHED_VM']
 START_HPA_LIST = ['0', '0x100000000', '0x120000000']
 
@@ -34,6 +33,16 @@ PCI_DEVS_LIST = ['sos_pci_devs', 'vm0_pci_devs', 'vm1_pci_devs']
 COMMUNICATE_VM_ID = []
 
 ERR_LIST = {}
+
+VM_COUNT = 0
+DEFAULT_VM_COUNT = {
+    'sdc':2,
+    'sdc2':4,
+    'industry':3,
+    'hybrid':3,
+    'logical_partition':2,
+}
+KATA_VM_COUNT = 0
 
 def prepare(check_git):
     """ Check environment """
