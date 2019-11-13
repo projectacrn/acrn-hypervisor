@@ -117,6 +117,13 @@ def main(args):
         scenario_cfg_lib.print_red("Validate the scenario item failue", err=True)
         return err_dic
 
+    # get kata vm count
+    if scenario != "logical_partition":
+        scenario_cfg_lib.KATA_VM_COUNT = scenario_cfg_lib.VM_COUNT - scenario_cfg_lib.DEFAULT_VM_COUNT[scenario]
+        if scenario_cfg_lib.KATA_VM_COUNT > 1:
+            err_dic['scenario config: kata vm count err'] = "Only one kata vm is supported!"
+            return err_dic
+
     # generate vm_configuration.h
     with open(vm_config_h, 'w') as config:
         vm_configurations_h.generate_file(scenario, vm_info, config)

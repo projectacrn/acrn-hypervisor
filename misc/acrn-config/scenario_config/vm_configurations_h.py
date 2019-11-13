@@ -44,8 +44,8 @@ def gen_sdc_header(vm_info, config):
     """
     gen_common_header(config)
     print("#include <misc_cfg.h>\n", file=config)
-    print("#define CONFIG_MAX_VM_NUM\t\t({0}U + CONFIG_MAX_KATA_VM_NUM)".format(
-        scenario_cfg_lib.VM_COUNT - 1), file=config)
+
+    print("#define CONFIG_MAX_VM_NUM\t\t(2U + CONFIG_MAX_KATA_VM_NUM)", file=config)
     print("", file=config)
     print("/* Bits mask of guest flags that can be programmed by device model." +
           " Other bits are set by hypervisor only */", file=config)
@@ -66,17 +66,23 @@ def gen_sdc_header(vm_info, config):
     print('\t\t\t\t\t"i915.domain_plane_owners=0x011111110000 " \\', file=config)
     print('\t\t\t\t\t"i915.enable_gvt=1 "\t\\', file=config)
     print("\t\t\t\t\tSOS_BOOTARGS_DIFF", file=config)
-
     print("", file=config)
-    print("#if CONFIG_MAX_KATA_VM_NUM > 0", file=config)
+
     # POST LAUNCHED VM
-    print("  #define VM1_CONFIG_VCPU_AFFINITY\t{AFFINITY_CPU(1U), AFFINITY_CPU(2U)}", file=config)
-    # KATA VM
-    cpu_affinity_output(vm_info, 2, config)
-    print("#else", file=config)
-    for i in range(scenario_cfg_lib.VM_COUNT - 1):
-        cpu_affinity_output(vm_info, i, config)
-    print("#endif", file=config)
+    if scenario_cfg_lib.KATA_VM_COUNT == 1:
+        print("#if CONFIG_MAX_KATA_VM_NUM > 0", file=config)
+        # Set VM1 vcpu
+        cpu_affinity_output(vm_info, 1, config)
+        # KATA VM
+        cpu_affinity_output(vm_info, 2, config)
+        #else:
+        print("#else", file=config)
+        # Only two VMs in SDC config, setup vcpu affinity for VM1
+        cpu_affinity_output(vm_info, 1, config)
+        print("#endif", file=config)
+    else:
+        cpu_affinity_output(vm_info, 1, config)
+
     print("", file=config)
     print("{0}".format(VM_END_DEFINE), file=config)
 
