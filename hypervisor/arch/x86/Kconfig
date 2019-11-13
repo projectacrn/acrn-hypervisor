@@ -21,10 +21,10 @@ config LOGICAL_PARTITION
 	help
 	  This scenario will run two pre-launched VMs.
 
-config INDUSTRY 
+config INDUSTRY
 	bool "Industry VMs"
 	help
-	  This scenario is a typical scenario for industry usage with 4 VMs: 
+	  This scenario is a typical scenario for industry usage with 4 VMs:
 	  one pre-launched SOS VM, one post-launched Standard VM for HMI, one or two
 	  post-launched  RT VM for real-time control.
 
@@ -304,3 +304,12 @@ config UEFI_OS_LOADER_NAME
 	  Name of the UEFI bootloader that starts the Service VM. This is
 	  typically the systemd-boot or Grub bootloader but could be any other
 	  UEFI executable.
+
+config MCE_ON_PSC_WORKAROUND_DISABLED
+	bool "Force to disable software workaround for Machine Check Error on Page Size Change"
+	default n
+	help
+	  By default, software workaround for Machine Check Error on Page Size Change is
+	  conditionally applied to the models that may be affected by the issue. However,
+	  the software workaround has negative impact on performance. If all the guest OS
+	  kernels are trusted, this option may be set for performance.
