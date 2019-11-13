@@ -450,7 +450,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	dummy_bctxt = false;
 
 	if (opts == NULL) {
-		printf("virtio_blk: backing device required\n");
+		pr_err("virtio_blk: backing device required\n");
 		return -1;
 	}
 

@@ -72,7 +72,7 @@ atkbdc_kbd_queue_data(struct atkbdc_base *base, uint8_t val)
 		base->status |= KBDS_KBD_BUFFER_FULL;
 		base->outport |= KBDO_KBD_OUTFULL;
 	} else {
-		printf("atkbd data buffer full\n");
+		pr_err("atkbd data buffer full\n");
 	}
 
 	return (base->kbd.bcnt < FIFOSZ);

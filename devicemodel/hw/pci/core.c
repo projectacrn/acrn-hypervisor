@@ -516,7 +516,7 @@ modify_bar_registration(struct pci_vdev *dev, int idx, int registration)
 		 * addressing and generate ACPI PCI resource from using
 		 * acrn-dm.
 		 */
-		printf("modify_bar_registration: bypass for pci-gvt\n");
+		pr_notice("modify_bar_registration: bypass for pci-gvt\n");
 		return 0;
 	}
 	switch (dev->bar[idx].type) {
@@ -2306,7 +2306,7 @@ pci_emul_diow(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 
 	if (baridx == 0) {
 		if (offset + size > DIOSZ) {
-			printf("diow: iow too large, offset %ld size %d\n",
+			pr_err("diow: iow too large, offset %ld size %d\n",
 			       offset, size);
 			return;
 		}
@@ -2319,7 +2319,7 @@ pci_emul_diow(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 		else if (size == 4)
 			*(uint32_t *)offset = value;
 		else
-			printf("diow: iow unknown size %d\n", size);
+			pr_err("diow: iow unknown size %d\n", size);
 
 		/*
 		 * Special magic value to generate an interrupt
@@ -2335,7 +2335,7 @@ pci_emul_diow(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 
 	if (baridx == 1 || baridx == 2) {
 		if (offset + size > DMEMSZ) {
-			printf("diow: memw too large, offset %ld size %d\n",
+			pr_err("diow: memw too large, offset %ld size %d\n",
 			       offset, size);
 			return;
 		}
@@ -2352,7 +2352,7 @@ pci_emul_diow(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 		else if (size == 8)
 			*(uint64_t *)offset_ptr = value;
 		else
-			printf("diow: memw unknown size %d\n", size);
+			pr_err("diow: memw unknown size %d\n", size);
 
 		/*
 		 * magic interrupt ??
@@ -2360,7 +2360,7 @@ pci_emul_diow(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 	}
 
 	if (baridx > 2 || baridx < 0)
-		printf("diow: unknown bar idx %d\n", baridx);
+		pr_err("diow: unknown bar idx %d\n", baridx);
 }
 
 static uint64_t
@@ -2374,7 +2374,7 @@ pci_emul_dior(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 
 	if (baridx == 0) {
 		if (offset + size > DIOSZ) {
-			printf("dior: ior too large, offset %ld size %d\n",
+			pr_err("dior: ior too large, offset %ld size %d\n",
 			       offset, size);
 			return 0;
 		}
@@ -2388,12 +2388,12 @@ pci_emul_dior(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 		else if (size == 4)
 			value = *(uint32_t *)offset_ptr;
 		else
-			printf("dior: ior unknown size %d\n", size);
+			pr_err("dior: ior unknown size %d\n", size);
 	}
 
 	if (baridx == 1 || baridx == 2) {
 		if (offset + size > DMEMSZ) {
-			printf("dior: memr too large, offset %ld size %d\n",
+			pr_err("dior: memr too large, offset %ld size %d\n",
 			       offset, size);
 			return 0;
 		}
@@ -2410,12 +2410,12 @@ pci_emul_dior(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 		else if (size == 8)
 			value = *(uint64_t *)offset_ptr;
 		else
-			printf("dior: ior unknown size %d\n", size);
+			pr_err("dior: ior unknown size %d\n", size);
 	}
 
 
 	if (baridx > 2 || baridx < 0) {
-		printf("dior: unknown bar idx %d\n", baridx);
+		pr_err("dior: unknown bar idx %d\n", baridx);
 		return 0;
 	}
 

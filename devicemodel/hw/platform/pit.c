@@ -39,6 +39,7 @@
 #include "timer.h"
 #include "inout.h"
 #include "pit.h"
+#include "log.h"
 
 #define	TMR2_OUT_STS		0x20
 
@@ -358,7 +359,7 @@ pit_update_counter(struct vpit *vpit, struct channel *c, bool latch,
 		 * set the timer to 100hz in this condition; do the same
 		 * here.
 		 */
-		printf("vpit reading uninitialized counter value\n");
+		pr_warn("vpit reading uninitialized counter value\n");
 
 		c->initial = PIT_HZ_TO_TICKS(100);
 		delta_ticks = 0;
@@ -471,7 +472,7 @@ vpit_update_mode(struct vpit *vpit, uint8_t val)
 
 	if (rw != TIMER_LATCH) {
 		if (rw != TIMER_16BIT) {
-			printf("vpit unsupported rw: 0x%x\n", rw);
+			pr_err("vpit unsupported rw: 0x%x\n", rw);
 			return (-1);
 		}
 
@@ -482,7 +483,7 @@ vpit_update_mode(struct vpit *vpit, uint8_t val)
 		if (mode != TIMER_INTTC &&
 		    !PERIODIC_MODE(mode & ~TIMER_MODE_DONT_CARE_MASK) &&
 		    mode != TIMER_SWSTROBE) {
-			printf("vpit unsupported mode: 0x%x\n", mode);
+			pr_err("vpit unsupported mode: 0x%x\n", mode);
 			return (-1);
 		}
 	}
@@ -647,8 +648,7 @@ vpit_nmisc_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 
 		VPIT_UNLOCK();
 	} else
-		printf("out instr on NMI port (0x%u) not supported\n",
-				NMISC_PORT);
+		pr_err("out instr on NMI port (0x%x) not supported\n", NMISC_PORT);
 
 	return (0);
 }

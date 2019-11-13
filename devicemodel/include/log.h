@@ -7,6 +7,7 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
+#include <stdbool.h>
 #include "types.h"
 
 /* Logging severity levels */

@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include "inout.h"
+#include "log.h"
 SET_DECLARE(inout_port_set, struct inout_port);
 
 #define	MAX_IOPORTS	(1 << 16)
@@ -71,7 +72,7 @@ register_default_iohandler(int start, int size)
 	struct inout_port iop;
 
 	if (!VERIFY_IOPORT(start, size)) {
-		printf("invalid input: port:0x%x, size:%d", start, size);
+		pr_err("invalid input: port:0x%x, size:%d", start, size);
 		return;
 	}
 
@@ -133,7 +134,7 @@ init_inout(void)
 	SET_FOREACH(iopp, inout_port_set) {
 		iop = *iopp;
 		if (iop->port >= MAX_IOPORTS) {
-			printf("%s: invalid port:0x%x", __func__, iop->port);
+			pr_err("%s: invalid port:0x%x", __func__, iop->port);
 			continue;
 		}
 
@@ -150,7 +151,7 @@ register_inout(struct inout_port *iop)
 	int i;
 
 	if (!VERIFY_IOPORT(iop->port, iop->size)) {
-		printf("invalid input: port:0x%x, size:%d",
+		pr_err("invalid input: port:0x%x, size:%d",
 				iop->port, iop->size);
 		return -1;
 	}
@@ -181,7 +182,7 @@ unregister_inout(struct inout_port *iop)
 {
 
 	if (!VERIFY_IOPORT(iop->port, iop->size)) {
-		printf("invalid input: port:0x%x, size:%d",
+		pr_err("invalid input: port:0x%x, size:%d",
 				iop->port, iop->size);
 		return -1;
 	}

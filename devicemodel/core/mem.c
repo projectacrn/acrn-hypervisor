@@ -100,7 +100,7 @@ mmio_rb_add(struct mmio_rb_tree *rbt, struct mmio_rb_range *new)
 
 	if (overlap != NULL) {
 #ifdef RB_DEBUG
-		printf("overlap detected: new %lx:%lx, tree %lx:%lx\n",
+		pr_dbg("overlap detected: new %lx:%lx, tree %lx:%lx\n",
 		       new->mr_base, new->mr_end,
 		       overlap->mr_base, overlap->mr_end);
 #endif
@@ -119,7 +119,7 @@ mmio_rb_dump(struct mmio_rb_tree *rbt)
 
 	pthread_rwlock_rdlock(&mmio_rwlock);
 	RB_FOREACH(np, mmio_rb_tree, rbt) {
-		printf(" %lx:%lx, %s\n", np->mr_base, np->mr_end,
+		pr_dbg(" %lx:%lx, %s\n", np->mr_base, np->mr_end,
 		       np->mr_param.name);
 	}
 	pthread_rwlock_unlock(&mmio_rwlock);
