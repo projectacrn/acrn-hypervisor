@@ -159,7 +159,7 @@ is_pci_gvt(struct pci_vdev *dev)
 static void
 pci_parse_slot_usage(char *aopt)
 {
-	fprintf(stderr, "Invalid PCI slot info field \"%s\"\n", aopt);
+	pr_err("Invalid PCI slot info field \"%s\"\n", aopt);
 }
 
 int
@@ -863,7 +863,7 @@ pci_emul_init(struct vmctx *ctx, struct pci_vdev_ops *ops, int bus, int slot,
 
 	pdi = calloc(1, sizeof(struct pci_vdev));
 	if (!pdi) {
-		fprintf(stderr, "%s: calloc returns NULL\n", __func__);
+		pr_err("%s: calloc returns NULL\n", __func__);
 		return -1;
 	}
 
@@ -2439,7 +2439,7 @@ pci_get_vdev_info(int slot)
 	if (si != NULL)
 		dev = si->si_funcs[0].fi_devi;
 	else
-		fprintf(stderr, "slot=%d is empty!\n", slot);
+		pr_err("slot=%d is empty!\n", slot);
 
 	return dev;
 }

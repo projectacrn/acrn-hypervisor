@@ -202,7 +202,7 @@ lpc_init(struct vmctx *ctx)
 		if (uart_legacy_alloc(unit,
 				      &lpc_uart->iobase,
 				      &lpc_uart->irq) != 0) {
-			fprintf(stderr, "Unable to allocate resources for "
+			pr_err("Unable to allocate resources for "
 			    "LPC device %s\n", name);
 			goto init_failed;
 		}
@@ -401,7 +401,7 @@ pci_lpc_init(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 	 * Do not allow more than one LPC bridge to be configured.
 	 */
 	if (lpc_bridge != NULL) {
-		fprintf(stderr, "Only one LPC bridge is allowed.\n");
+		pr_err("Only one LPC bridge is allowed.\n");
 		return -1;
 	}
 
@@ -411,7 +411,7 @@ pci_lpc_init(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 	 * all legacy i/o ports behind bus 0.
 	 */
 	if (pi->bus != 0) {
-		fprintf(stderr, "LPC bridge can be present only on bus 0.\n");
+		pr_err("LPC bridge can be present only on bus 0.\n");
 		return -1;
 	}
 

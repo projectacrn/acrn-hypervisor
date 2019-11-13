@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <linux/mei.h>
 #include "att_keybox.h"
+#include "log.h"
 
 static const uuid_le HECI_CLIENT_GUID =
 	UUID_LE(0x8e6a6715, 0x9abc, 0x4043,
@@ -55,7 +56,7 @@ uint16_t get_attkb_size(void)
 
 	fd = open(MEI_DEV, O_RDWR);
 	if (fd == -1) {
-		fprintf(stderr, "Failed to open %s, %s\n",
+		pr_err("Failed to open %s, %s\n",
 				MEI_DEV, strerror(errno));
 		return 0;
 	}
@@ -65,7 +66,7 @@ uint16_t get_attkb_size(void)
 
 	ret = ioctl(fd, IOCTL_MEI_CONNECT_CLIENT, &mdcd);
 	if (ret) {
-		fprintf(stderr, "HECI connection failed, %s\n",
+		pr_err("HECI connection failed, %s\n",
 				strerror(errno));
 		goto err;
 	}
@@ -80,26 +81,26 @@ uint16_t get_attkb_size(void)
 
 	ret = write(fd, &req, sizeof(req));
 	if (ret != sizeof(req)) {
-		fprintf(stderr, "Failed to send HECI command, %s\n",
+		pr_err("Failed to send HECI command, %s\n",
 				strerror(errno));
 		goto err;
 	}
 
 	ret = read(fd, &resp, sizeof(resp));
 	if (ret != sizeof(resp)) {
-		fprintf(stderr, "ret = %d,Failed to read HECI command result, %d:%s\n",
+		pr_err("ret = %d,Failed to read HECI command result, %d:%s\n",
 				ret, errno, strerror(errno));
 		goto err;
 	}
 
 	if ((resp.header.is_response != 1) || (resp.header.result != 0)) {
-		fprintf(stderr,	"Failed to check resp header = 0x%x\n",
+		pr_err("Failed to check resp header = 0x%x\n",
 				resp.header.result);
 		goto err;
 	}
 
 	if (resp.total_file_size == 0) {
-		fprintf(stderr,	"ret = %d, Unexpected filesize 0!\n", ret);
+		pr_err("ret = %d, Unexpected filesize 0!\n", ret);
 	}
 
 	close(fd);
@@ -127,7 +128,7 @@ uint16_t read_attkb(void *data, uint16_t size)
 
 	fd = open(MEI_DEV, O_RDWR);
 	if (fd == -1) {
-		fprintf(stderr, "Failed to open %s, %s\n",
+		pr_err("Failed to open %s, %s\n",
 				MEI_DEV, strerror(errno));
 		return 0;
 	}
@@ -137,7 +138,7 @@ uint16_t read_attkb(void *data, uint16_t size)
 
 	ret = ioctl(fd, IOCTL_MEI_CONNECT_CLIENT, &mdcd);
 	if (ret) {
-		fprintf(stderr, "HECI connection failed, %s\n",
+		pr_err("HECI connection failed, %s\n",
 				strerror(errno));
 		goto err;
 	}
@@ -157,27 +158,27 @@ uint16_t read_attkb(void *data, uint16_t size)
 
 		ret = write(fd, &req, sizeof(req));
 		if (ret != sizeof(req)) {
-			fprintf(stderr, "Failed to send HECI command, %s\n",
+			pr_err("Failed to send HECI command, %s\n",
 					strerror(errno));
 			goto err;
 		}
 
 		ret = read(fd, &resp, sizeof(resp));
 		if (ret != sizeof(resp)) {
-			fprintf(stderr, "Failed to read HECI command result, %s\n",
+			pr_err("Failed to read HECI command result, %s\n",
 					strerror(errno));
 			goto err;
 		}
 
 		if ((resp.header.is_response != 1) || (resp.header.result != 0)) {
-			fprintf(stderr,	"Failed to check resp header = 0x%x\n",
+			pr_err("Failed to check resp header = 0x%x\n",
 					resp.header.result);
 			goto err;
 		}
 
 		ret = read(fd, (uint8_t *)data + bytes_read, req.size);
 		if (ret != req.size) {
-			fprintf(stderr, "Failed to read attkb, %s\n",
+			pr_err("Failed to read attkb, %s\n",
 					strerror(errno));
 			goto err;
 		}

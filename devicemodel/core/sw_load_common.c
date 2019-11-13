@@ -148,8 +148,7 @@ check_image(char *path, size_t size_limit, size_t *size)
 	fp = fopen(path, "r");
 
 	if (fp == NULL) {
-		fprintf(stderr,
-			"SW_LOAD ERR: image file failed to open\n");
+		pr_err("SW_LOAD ERR: image file failed to open\n");
 		return -1;
 	}
 
@@ -157,8 +156,7 @@ check_image(char *path, size_t size_limit, size_t *size)
 	len = ftell(fp);
 
 	if (len == 0 || (size_limit && len > size_limit)) {
-		fprintf(stderr,
-			"SW_LOAD ERR: file is %s\n",
+		pr_err("SW_LOAD ERR: file is %s\n",
 			len ? "too large" : "empty");
 		fclose(fp);
 		return -1;

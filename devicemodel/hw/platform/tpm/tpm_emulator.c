@@ -292,7 +292,7 @@ static int ctrl_chan_write(int ctrl_chan_fd, const uint8_t *buf, int len,
 	} while (ret < 0 && errno == EINTR);
 
 	if (ret < 0) {
-		fprintf(stderr, "Failed to send msg, reason: %s\n", strerror(errno));
+		pr_err("Failed to send msg, reason: %s\n", strerror(errno));
 	}
 
 	return ret;
@@ -350,7 +350,7 @@ static int cmd_chan_write(int cmd_chan_fd, const uint8_t *buf, int len)
 			buf += nwritten;
 		}
 		else {
-			fprintf(stderr, "cmd_chan_write: Error, write() %d %s\n",
+			pr_err("cmd_chan_write: Error, write() %d %s\n",
 					  errno, strerror(errno));
 			return -1;
 		}
@@ -376,12 +376,12 @@ static int cmd_chan_read(int cmd_chan_fd, uint8_t *buf, int len)
 			buf += nread;
 		}
 		else if (nread < 0) {/* error */
-			fprintf(stderr, "cmd_chan_read: Error, read() error %d %s\n",
+			pr_err("cmd_chan_read: Error, read() error %d %s\n",
 				   errno, strerror(errno));
 			return -1;
 		}
 		else if (nread == 0) {/* EOF */
-			fprintf(stderr, "cmd_chan_read: Error, read EOF, read %lu bytes\n",
+			pr_err("cmd_chan_read: Error, read EOF, read %lu bytes\n",
 				   (unsigned long)(len - nleft));
 			return -1;
 		}

@@ -67,12 +67,12 @@ reset_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		reset_control = *eax;
 
 		if (*eax & 0x8) {
-			fprintf(stderr, "full reset\r\n");
+			pr_notice("full reset\r\n");
 			vm_suspend(ctx, VM_SUSPEND_FULL_RESET);
 			mevent_notify();
 			reset_control = 0;
 		} else if (*eax & 0x4) {
-			fprintf(stderr, "system reset\r\n");
+			pr_notice("system reset\r\n");
 			vm_suspend(ctx, VM_SUSPEND_SYSTEM_RESET);
 			mevent_notify();
 		}

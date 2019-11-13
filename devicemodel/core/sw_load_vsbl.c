@@ -214,8 +214,7 @@ acrn_prepare_vsbl(struct vmctx *ctx)
 
 	fp = fopen(vsbl_path, "r");
 	if (fp == NULL) {
-		fprintf(stderr,
-			"SW_LOAD ERR: could not open vsbl file: %s\n",
+		pr_err("SW_LOAD ERR: could not open vsbl file: %s\n",
 			vsbl_path);
 		return -1;
 	}
@@ -223,8 +222,7 @@ acrn_prepare_vsbl(struct vmctx *ctx)
 	fseek(fp, 0, SEEK_END);
 
 	if (ftell(fp) != vsbl_size) {
-		fprintf(stderr,
-			"SW_LOAD ERR: vsbl file changed\n");
+		pr_err("SW_LOAD ERR: vsbl file changed\n");
 		fclose(fp);
 		return -1;
 	}
@@ -233,8 +231,7 @@ acrn_prepare_vsbl(struct vmctx *ctx)
 	read = fread(ctx->baseaddr + VSBL_TOP(ctx) - vsbl_size,
 		sizeof(char), vsbl_size, fp);
 	if (read < vsbl_size) {
-		fprintf(stderr,
-			"SW_LOAD ERR: could not read whole partition blob\n");
+		pr_err("SW_LOAD ERR: could not read whole partition blob\n");
 		fclose(fp);
 		return -1;
 	}

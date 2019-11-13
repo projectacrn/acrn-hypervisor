@@ -68,6 +68,7 @@
 #include "tpm.h"
 #include "vmmapi.h"
 #include "hpet.h"
+#include "log.h"
 
 /*
  * Define the base address of the ACPI tables, and the offsets to
@@ -623,7 +624,7 @@ basl_fwrite_nhlt(FILE *fp, struct vmctx *ctx)
 	int fd = open("/sys/firmware/acpi/tables/NHLT", O_RDONLY);
 
 	if (fd < 0) {
-		fprintf(stderr, "Open host NHLT fail! %s\n", strerror(errno));
+		pr_err("Open host NHLT fail! %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -631,7 +632,7 @@ basl_fwrite_nhlt(FILE *fp, struct vmctx *ctx)
 	audio_nhlt_len = lseek(fd, 0, SEEK_END);
 	/* check if file size exceeds reserved room */
 	if (audio_nhlt_len > DSDT_OFFSET - NHLT_OFFSET) {
-		fprintf(stderr, "Host NHLT exceeds reserved room!\n");
+		pr_err("Host NHLT exceeds reserved room!\n");
 		close(fd);
 		return -1;
 	}
@@ -639,7 +640,7 @@ basl_fwrite_nhlt(FILE *fp, struct vmctx *ctx)
 	/* skip 36 bytes as NHLT table header */
 	offset = lseek(fd, 36, SEEK_SET);
 	if (offset != 36) {
-		fprintf(stderr, "Seek NHLT data fail! %s\n", strerror(errno));
+		pr_err("Seek NHLT data fail! %s\n", strerror(errno));
 		close(fd);
 		return -1;
 	}
@@ -663,7 +664,7 @@ basl_fwrite_nhlt(FILE *fp, struct vmctx *ctx)
 		EFPRINTF(fp, "UINT8 : %02X\n", data);
 
 	if (len < 0) {
-		fprintf(stderr, "Read host NHLT fail! %s\n", strerror(errno));
+		pr_err("Read host NHLT fail! %s\n", strerror(errno));
 		close(fd);
 		return -1;
 	}
@@ -690,7 +691,7 @@ copy_table_pos_len(int fd, int offset, int len, FILE *fp)
 
 	for (i = 0; i < len; i++) {
 		if (read(fd, &data, 1) != 1) {
-			fprintf(stderr, "%s: read fail! %s\n", __func__, strerror(errno));
+			pr_err("%s: read fail! %s\n", __func__, strerror(errno));
 			return -1;
 		}
 		EFPRINTF(fp, "UINT8 : %02X\n", data);
@@ -739,7 +740,7 @@ basl_fwrite_psds(FILE *fp, struct vmctx *ctx)
 	 * [0004]PSD Version
 	 */
 	if (copy_table_pos_len(psds_fd, 36, 4, fp) != 0) {
-		fprintf(stderr, "Failed to read psds table!\n");
+		pr_err("Failed to read psds table!\n");
 		return -1;
 	}
 
@@ -752,7 +753,7 @@ basl_fwrite_psds(FILE *fp, struct vmctx *ctx)
 	 * [0001]EOM State
 	 */
 	if (copy_table_pos_len(psds_fd, 46, 33, fp) !=0) {
-		fprintf(stderr, "Failed to read psds table!\n");
+		pr_err("Failed to read psds table!\n");
 		return -1;
 	}
 
@@ -1169,7 +1170,7 @@ void
 acpi_table_enable(int num)
 {
 	if (num > (ARRAY_SIZE(basl_ftables) - 1)) {
-		fprintf(stderr, "Enable non-existing ACPI tables:%d\n", num);
+		pr_err("Enable non-existing ACPI tables:%d\n", num);
 		return;
 	}
 

@@ -46,6 +46,7 @@
 #include "block_if.h"
 #include "ahci.h"
 #include "dm_string.h"
+#include "log.h"
 
 /*
  * Notes:
@@ -478,7 +479,7 @@ sub_file_unlock(struct blockif_ctxt *bc)
 		DPRINTF(("blockif: release file lock...\n"));
 		fl->l_type = F_UNLCK;
 		if (fcntl(bc->fd, F_OFD_SETLK, fl) == -1) {
-			fprintf(stderr, "blockif: failed to unlock subfile!\n");
+			pr_err("blockif: failed to unlock subfile!\n");
 			exit(1);
 		}
 		DPRINTF(("blockif: release done\n"));
@@ -579,7 +580,7 @@ blockif_open(const char *optstr, const char *ident)
 			else
 				goto err;
 		} else {
-			fprintf(stderr, "Invalid device option \"%s\"\n", cp);
+			pr_err("Invalid device option \"%s\"\n", cp);
 			goto err;
 		}
 	}
@@ -619,7 +620,7 @@ blockif_open(const char *optstr, const char *ident)
 		/* get size */
 		err_code = ioctl(fd, BLKGETSIZE, &sz);
 		if (err_code) {
-			fprintf(stderr, "error %d getting block size!\n",
+			pr_err("error %d getting block size!\n",
 				err_code);
 			size = sbuf.st_size;	/* set default value */
 		} else {
@@ -641,7 +642,7 @@ blockif_open(const char *optstr, const char *ident)
 		/* get physical sector size */
 		err_code = ioctl(fd, BLKPBSZGET, &psectsz);
 		if (err_code) {
-			fprintf(stderr, "error %d getting physical sectsz!\n",
+			pr_err("error %d getting physical sectsz!\n",
 				err_code);
 			psectsz = DEV_BSIZE;  /* set default physical size */
 		}
@@ -668,7 +669,7 @@ blockif_open(const char *optstr, const char *ident)
 	if (ssopt != 0) {
 		if (!powerof2(ssopt) || !powerof2(pssopt) || ssopt < 512 ||
 		    ssopt > pssopt) {
-			fprintf(stderr, "Invalid sector size %d/%d\n",
+			pr_err("Invalid sector size %d/%d\n",
 			    ssopt, pssopt);
 			goto err;
 		}
@@ -682,8 +683,7 @@ blockif_open(const char *optstr, const char *ident)
 		 */
 		if (S_ISCHR(sbuf.st_mode)) {
 			if (ssopt < sectsz || (ssopt % sectsz) != 0) {
-				fprintf(stderr,
-				"Sector size %d incompatible with underlying device sector size %d\n",
+				pr_err("Sector size %d incompatible with underlying device sector size %d\n",
 				    ssopt, sectsz);
 				goto err;
 			}
@@ -709,7 +709,7 @@ blockif_open(const char *optstr, const char *ident)
 		err_code = sub_file_validate(bc, fd, ro, bc->sub_file_start_lba,
 					     size);
 		if (err_code < 0) {
-			fprintf(stderr, "subfile range specified not valid!\n");
+			pr_err("subfile range specified not valid!\n");
 			exit(1);
 		}
 		DPRINTF(("Validated done!\n"));

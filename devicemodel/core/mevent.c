@@ -42,6 +42,7 @@
 
 #include "mevent.h"
 #include "vmmapi.h"
+#include "log.h"
 
 #define	MEVENT_MAX	64
 
@@ -419,7 +420,7 @@ mevent_dispatch(void)
 	 */
 	pipev = mevent_add(mevent_pipefd[0], EVF_READ, mevent_pipe_read, NULL, NULL, NULL);
 	if (!pipev) {
-		fprintf(stderr, "pipefd mevent_add failed\n");
+		pr_err("pipefd mevent_add failed\n");
 		exit(0);
 	}
 

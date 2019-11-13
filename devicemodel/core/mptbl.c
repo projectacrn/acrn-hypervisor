@@ -290,7 +290,7 @@ mptable_build(struct vmctx *ctx, int ncpu)
 
 	startaddr = paddr_guest2host(ctx, MPTABLE_BASE, MPTABLE_MAX_LENGTH);
 	if (startaddr == NULL) {
-		fprintf(stderr, "mptable requires mapped mem\n");
+		pr_err("mptable requires mapped mem\n");
 		return -1;
 	}
 
@@ -301,9 +301,9 @@ mptable_build(struct vmctx *ctx, int ncpu)
 	 */
 	for (bus = 1; bus <= PCI_BUSMAX; bus++) {
 		if (pci_bus_configured(bus)) {
-			fprintf(stderr, "MPtable is incompatible with "
+			pr_err("MPtable is incompatible with "
 			    "multiple PCI hierarchies.\r\n");
-			fprintf(stderr, "MPtable generation can be disabled "
+			pr_err("MPtable generation can be disabled "
 			    "by passing the -Y option to acrn-dm.\r\n");
 			return -1;
 		}

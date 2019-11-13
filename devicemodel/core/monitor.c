@@ -444,7 +444,7 @@ static void handle_blkrescan(struct mngr_msg *msg, int client_fd, void *param)
 
 	if (!count) {
 		ack.data.err = -1;
-		fprintf(stderr, "No handler for id:%u\r\n", msg->msgid);
+		pr_err("No handler for id:%u\r\n", msg->msgid);
 	} else
 		ack.data.err = ret;
 

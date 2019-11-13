@@ -110,14 +110,14 @@ open_power_button_input_device(const char *drv, const char *dir)
 	ninput = scandir(dir, &input_dirs, input_dir_filter,
 			alphasort);
 	if (ninput < 0) {
-		fprintf(stderr, "failed to scan power button %s\n",
+		pr_err("failed to scan power button %s\n",
 				dir);
 		goto err;
 	} else if (ninput == 1) {
 		rc = snprintf(path, sizeof(path), "%s/%s",
 				dir, input_dirs[0]->d_name);
 		if (rc < 0 || rc >= sizeof(path)) {
-			fprintf(stderr, "failed to set power button path %d\n",
+			pr_err("failed to set power button path %d\n",
 					rc);
 			goto err_input;
 		}
@@ -129,7 +129,7 @@ open_power_button_input_device(const char *drv, const char *dir)
 		nevent = scandir(path, &event_dirs, event_dir_filter,
 				alphasort);
 		if (nevent < 0) {
-			fprintf(stderr, "failed to get power button event %s\n",
+			pr_err("failed to get power button event %s\n",
 					path);
 			goto err_input;
 		} else if (nevent == 1) {
@@ -138,16 +138,16 @@ open_power_button_input_device(const char *drv, const char *dir)
 			rc = snprintf(name, sizeof(name), "/dev/input/%s",
 					event_dirs[0]->d_name);
 			if (rc < 0 || rc >= sizeof(name)) {
-				fprintf(stderr, "power button error %d\n", rc);
+				pr_err("power button error %d\n", rc);
 				goto err_input;
 			}
 		} else {
-			fprintf(stderr, "power button event number error %d\n",
+			pr_err("power button event number error %d\n",
 					nevent);
 			goto err_event;
 		}
 	} else {
-		fprintf(stderr, "power button input number error %d\n", nevent);
+		pr_err("power button input number error %d\n", nevent);
 		goto err_input;
 	}
 
@@ -203,7 +203,7 @@ power_button_init(struct vmctx *ctx)
 	if (input_evt0 == NULL) {
 		pwrbtn_fd = open_native_power_button();
 		if (pwrbtn_fd < 0)
-			fprintf(stderr, "open power button error=%d\n",
+			pr_err("open power button error=%d\n",
 					errno);
 		else
 			input_evt0 = mevent_add(pwrbtn_fd, EVF_READ,
@@ -217,8 +217,7 @@ power_button_init(struct vmctx *ctx)
 	if (monitor_run == false) {
 		if (monitor_register_vm_ops(&vm_ops, ctx,
 					POWER_BUTTON_NAME) < 0)
-			fprintf(stderr,
-					"failed to register vm ops for power button\n");
+			pr_err("failed to register vm ops for power button\n");
 		else
 			monitor_run = true;
 	}
