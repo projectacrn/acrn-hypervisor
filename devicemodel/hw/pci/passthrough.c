@@ -501,7 +501,7 @@ deinit_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev)
 	int vector_cnt = dev->msix.table_count;
 
 	if (ptdev->msix.ptirq_allocated) {
-		printf("ptdev reset msix: 0x%x-%x, vector_cnt=%d.\n",
+		pr_info("ptdev reset msix: 0x%x-%x, vector_cnt=%d.\n",
 				virt_bdf, ptdev->phys_bdf, vector_cnt);
 		vm_reset_ptdev_msix_info(ctx, virt_bdf, ptdev->phys_bdf, vector_cnt);
 		ptdev->msix.ptirq_allocated = false;
@@ -920,7 +920,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		vm_reset_ptdev_msix_info(ctx, virt_bdf, ptdev->phys_bdf, 1);
 	}
 
-	printf("vm_reset_ptdev_intx:0x%x-%x, ioapic virpin=%d.\n",
+	pr_info("vm_reset_ptdev_intx:0x%x-%x, ioapic virpin=%d.\n",
 			virt_bdf, ptdev->phys_bdf, dev->lintr.ioapic_irq);
 
 	if (dev->lintr.pin != 0) {
@@ -992,9 +992,9 @@ passthru_bind_irq(struct vmctx *ctx, struct pci_vdev *dev)
 	if (dev->lintr.pin == 0)
 		return;
 
-	printf("vm_set_ptdev_intx for %d:%d.%d, ",
+	pr_info("vm_set_ptdev_intx for %d:%d.%d, ",
 		dev->bus, dev->slot, dev->func);
-	printf("virt_pin=%d, phys_pin=%d, virt_bdf=0x%x, phys_bdf=0x%x.\n",
+	pr_info("virt_pin=%d, phys_pin=%d, virt_bdf=0x%x, phys_bdf=0x%x.\n",
 		dev->lintr.ioapic_irq, ptdev->phys_pin,
 		virt_bdf, ptdev->phys_bdf);
 
@@ -1106,7 +1106,7 @@ passthru_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 static void
 write_dsdt_xdci(struct pci_vdev *dev)
 {
-	printf("write virt-%x:%x.%x in dsdt for XDCI @ 00:15.1\n",
+	pr_info("write virt-%x:%x.%x in dsdt for XDCI @ 00:15.1\n",
 	       dev->bus,
 	       dev->slot,
 	       dev->func);
@@ -1124,7 +1124,7 @@ write_dsdt_xdci(struct pci_vdev *dev)
 static void
 write_dsdt_hdac(struct pci_vdev *dev)
 {
-	printf("write virt-%x:%x.%x in dsdt for HDAC @ 00:17.0\n",
+	pr_info("write virt-%x:%x.%x in dsdt for HDAC @ 00:17.0\n",
 	       dev->bus,
 	       dev->slot,
 	       dev->func);
@@ -1243,7 +1243,7 @@ write_dsdt_hdac(struct pci_vdev *dev)
 static void
 write_dsdt_hdas(struct pci_vdev *dev)
 {
-	printf("write virt-%x:%x.%x in dsdt for HDAS @ 00:e.0\n",
+	pr_info("write virt-%x:%x.%x in dsdt for HDAS @ 00:e.0\n",
 	       dev->bus,
 	       dev->slot,
 	       dev->func);
@@ -1463,7 +1463,7 @@ write_dsdt_hdas(struct pci_vdev *dev)
 static void
 write_dsdt_ipu_i2c(struct pci_vdev *dev)
 {
-	printf("write virt-%x:%x.%x in dsdt for ipu's i2c-bus @ 00:16.0\n",
+	pr_info("write virt-%x:%x.%x in dsdt for ipu's i2c-bus @ 00:16.0\n",
 			dev->bus, dev->slot, dev->func);
 
 	/* physical I2C 0:16.0 */
@@ -1693,7 +1693,7 @@ write_dsdt_ipu_i2c(struct pci_vdev *dev)
 static void
 write_dsdt_urt1(struct pci_vdev *dev)
 {
-	printf("write virt-%x:%x.%x in dsdt for URT1 @ 00:18.0\n",
+	pr_info("write virt-%x:%x.%x in dsdt for URT1 @ 00:18.0\n",
 	       dev->bus,
 	       dev->slot,
 	       dev->func);
@@ -1715,7 +1715,7 @@ write_dsdt_urt1(struct pci_vdev *dev)
 static void
 write_dsdt_sdc(struct pci_vdev *dev)
 {
-	printf("write SDC-%x:%x.%x in dsdt for SDC @ 00:1b.0\n",
+	pr_info("write SDC-%x:%x.%x in dsdt for SDC @ 00:1b.0\n",
 	       dev->bus,
 	       dev->slot,
 	       dev->func);

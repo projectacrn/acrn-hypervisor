@@ -3919,7 +3919,7 @@ pci_xhci_parse_log_level(struct pci_xhci_vdev *xdev, char *opts)
 
 errout:
 	if (rc)
-		printf("USB: fail to set log level, rc=%d\r\n", rc);
+		pr_err("USB: fail to set log level, rc=%d\r\n", rc);
 	free(o);
 	return rc;
 }
@@ -4086,7 +4086,7 @@ pci_xhci_parse_extcap(struct pci_xhci_vdev *xdev, char *opts)
 
 errout:
 	if (rc)
-		printf("USB: fail to set vendor capability, rc=%d\r\n", rc);
+		pr_err("USB: fail to set vendor capability, rc=%d\r\n", rc);
 	free(o);
 	return rc;
 }

@@ -34,6 +34,7 @@
 #include "vmmapi.h"
 #include "sw_load.h"
 #include "acpi.h"
+#include "log.h"
 
 
 /* If the vsbl is loaded by DM, the UOS memory layout will be like:
@@ -131,7 +132,7 @@ acrn_parse_guest_part_info(char *arg)
 		strncpy(guest_part_info_path, arg, len + 1);
 		if (check_image(guest_part_info_path, 0, &guest_part_info_size) == 0) {
 			with_guest_part_info = true;
-			printf("SW_LOAD: get partition blob path %s\n",
+			pr_info("SW_LOAD: get partition blob path %s\n",
 						guest_part_info_path);
 			error = 0;
 		}
@@ -238,7 +239,7 @@ acrn_prepare_vsbl(struct vmctx *ctx)
 		return -1;
 	}
 	fclose(fp);
-	printf("SW_LOAD: partition blob %s size %lu copy to guest 0x%lx\n",
+	pr_info("SW_LOAD: partition blob %s size %lu copy to guest 0x%lx\n",
 		vsbl_path, vsbl_size, VSBL_TOP(ctx) - vsbl_size);
 
 	return 0;
@@ -295,7 +296,7 @@ acrn_sw_load_vsbl(struct vmctx *ctx)
 	vsbl_para->e820_entries = add_e820_entry(e820, vsbl_para->e820_entries,
 		vsbl_para->vsbl_address, vsbl_size, E820_TYPE_RESERVED);
 
-	printf("SW_LOAD: vsbl_entry 0x%lx\n", VSBL_TOP(ctx) - 16);
+	pr_info("SW_LOAD: vsbl_entry 0x%lx\n", VSBL_TOP(ctx) - 16);
 
 	vsbl_para->boot_device_address = boot_blk_bdf;
 	vsbl_para->trusty_enabled = trusty_enabled;

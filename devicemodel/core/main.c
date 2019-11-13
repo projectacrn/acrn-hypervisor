@@ -695,7 +695,7 @@ vm_loop(struct vmctx *ctx)
 			vm_suspend_resume(ctx);
 		}
 	}
-	printf("VM loop exit\n");
+	pr_err("VM loop exit\n");
 }
 
 static int

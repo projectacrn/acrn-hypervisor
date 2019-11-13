@@ -32,6 +32,7 @@
 #include "dm.h"
 #include "vmmapi.h"
 #include "sw_load.h"
+#include "log.h"
 
 
 /*                 ovmf binary layout:
@@ -239,7 +240,7 @@ acrn_writeback_ovmf_nvstorage(struct vmctx *ctx)
 	}
 
 	fclose(fp);
-	printf("OVMF_WRITEBACK: OVMF has been written back \
+	pr_info("OVMF_WRITEBACK: OVMF has been written back \
 		to partition blob %s size %lu from guest 0x%lx\n",
 		ovmf_path, OVMF_NVSTORAGE_SZ, OVMF_NVSTORAGE_OFFSET);
 

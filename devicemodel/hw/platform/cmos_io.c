@@ -16,6 +16,7 @@
 #include "inout.h"
 #include "vmmapi.h"
 #include "vrpmb.h"
+#include "log.h"
 
 #define CMOS_ADDR		0x74
 #define CMOS_DATA		0x75
@@ -96,7 +97,7 @@ int init_cmos_vrpmb(struct vmctx *ctx)
 
 	/* get vrpmb key, and store it to cmos buffer */
 	if (!get_vrpmb_key(vrpmb_buffer, RPMB_KEY_LEN)) {
-		printf("SW_LOAD: failed to get vrpmb key\n");
+		pr_err("SW_LOAD: failed to get vrpmb key\n");
 		return -1;
 	}
 	return 0;

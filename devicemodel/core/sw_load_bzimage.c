@@ -33,6 +33,7 @@
 #include "dm.h"
 #include "vmmapi.h"
 #include "sw_load.h"
+#include "log.h"
 
 #define SETUP_SIG 0x5a5aaa55
 
@@ -183,7 +184,7 @@ acrn_prepare_ramdisk(struct vmctx *ctx)
 	}
 
 	if (len > (BOOTARGS_LOAD_OFF(ctx) - RAMDISK_LOAD_OFF(ctx))) {
-		printf("SW_LOAD ERR: the size of ramdisk file is too big"
+		pr_err("SW_LOAD ERR: the size of ramdisk file is too big"
 				" file len=0x%lx, limit is 0x%lx\n", len,
 				BOOTARGS_LOAD_OFF(ctx) - RAMDISK_LOAD_OFF(ctx));
 		fclose(fp);
@@ -194,13 +195,13 @@ acrn_prepare_ramdisk(struct vmctx *ctx)
 	read = fread(ctx->baseaddr + RAMDISK_LOAD_OFF(ctx),
 			sizeof(char), len, fp);
 	if (read < len) {
-		printf("SW_LOAD ERR: could not read the whole ramdisk file,"
+		pr_err("SW_LOAD ERR: could not read the whole ramdisk file,"
 				" file len=%ld, read %lu\n", len, read);
 		fclose(fp);
 		return -1;
 	}
 	fclose(fp);
-	printf("SW_LOAD: ramdisk %s size %lu copied to guest 0x%lx\n",
+	pr_info("SW_LOAD: ramdisk %s size %lu copied to guest 0x%lx\n",
 			ramdisk_path, ramdisk_size, RAMDISK_LOAD_OFF(ctx));
 
 	return 0;
@@ -272,7 +273,7 @@ acrn_prepare_zeropage(struct vmctx *ctx, int setup_size)
 			((uint64_t)RAMDISK_LOAD_OFF(ctx));
 		zeropage->hdr.ramdisk_size = (uint32_t)ramdisk_size;
 
-		printf("SW_LOAD: build zeropage for ramdisk addr: 0x%x,"
+		pr_info("SW_LOAD: build zeropage for ramdisk addr: 0x%x,"
 				" size: %d\n", zeropage->hdr.ramdisk_addr,
 				zeropage->hdr.ramdisk_size);
 	}
@@ -280,7 +281,7 @@ acrn_prepare_zeropage(struct vmctx *ctx, int setup_size)
 	/* Copy bootargs load_addr in zeropage header structure */
 	zeropage->hdr.bootargs_addr = (uint32_t)
 		((uint64_t)BOOTARGS_LOAD_OFF(ctx));
-	printf("SW_LOAD: build zeropage for bootargs addr: 0x%x\n",
+	pr_info("SW_LOAD: build zeropage for bootargs addr: 0x%x\n",
 			zeropage->hdr.bootargs_addr);
 
 	/* set constant arguments in zero page */
@@ -310,7 +311,7 @@ acrn_sw_load_bzimage(struct vmctx *ctx)
 
 	if (with_bootargs) {
 		strncpy(ctx->baseaddr + BOOTARGS_LOAD_OFF(ctx), get_bootargs(), STR_LEN);
-		printf("SW_LOAD: bootargs copied to guest 0x%lx\n",
+		pr_info("SW_LOAD: bootargs copied to guest 0x%lx\n",
 				BOOTARGS_LOAD_OFF(ctx));
 	}
 
@@ -335,7 +336,7 @@ acrn_sw_load_bzimage(struct vmctx *ctx)
 		if (ret)
 			return ret;
 
-		printf("SW_LOAD: zeropage prepared @ 0x%lx, "
+		pr_info("SW_LOAD: zeropage prepared @ 0x%lx, "
 				"kernel_entry_addr=0x%lx\n",
 				ZEROPAGE_LOAD_OFF(ctx),
 				(KERNEL_LOAD_OFF(ctx) + setup_size));

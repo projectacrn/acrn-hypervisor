@@ -253,11 +253,11 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 		removed++;
 	}
 
-	printf("SW_LOAD: build e820 %d entries to addr: %p\r\n",
+	pr_info("SW_LOAD: build e820 %d entries to addr: %p\r\n",
 			NUM_E820_ENTRIES - removed, (void *)e820);
 
 	for (k = 0; k < NUM_E820_ENTRIES - removed; k++)
-		printf("SW_LOAD: entry[%d]: addr 0x%016lx, size 0x%016lx, "
+		pr_info("SW_LOAD: entry[%d]: addr 0x%016lx, size 0x%016lx, "
 				" type 0x%x\r\n",
 				k, e820[k].baseaddr,
 				e820[k].length,

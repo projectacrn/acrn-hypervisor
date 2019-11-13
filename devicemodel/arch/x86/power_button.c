@@ -23,6 +23,7 @@
 #include "acpi.h"
 #include "mevent.h"
 #include "monitor.h"
+#include "log.h"
 
 #define POWER_BUTTON_NAME	"power_button"
 #define POWER_BUTTON_ACPI_DRV	"/sys/bus/acpi/drivers/button/LNXPWRBN:00/"
@@ -153,7 +154,7 @@ open_power_button_input_device(const char *drv, const char *dir)
 	/* Open the input device */
 	fd = open(name, O_RDONLY);
 	if (fd > 0)
-		printf("Watching power button on %s\n", name);
+		pr_info("Watching power button on %s\n", name);
 
 	while (nevent--)
 		free(event_dirs[nevent]);

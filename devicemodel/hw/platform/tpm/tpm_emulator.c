@@ -22,6 +22,7 @@
 
 #include "vmmapi.h"
 #include "tpm_internal.h"
+#include "log.h"
 
 /* According to definition in TPM2 spec */
 #define TPM_ORD_ContinueSelfTest	0x53
@@ -212,18 +213,18 @@ static int ctrl_chan_conn(const char *servername)
 	int ret;
 
 	if (!servername) {
-		printf("%s error, invalid input\n", __func__);
+		pr_err("%s error, invalid input\n", __func__);
 		return -1;
 	}
 
 	if (strnlen(servername, sizeof(servaddr.sun_path)) == (sizeof(servaddr.sun_path))) {
-		printf("%s error, length of servername is too long\n", __func__);
+		pr_err("%s error, length of servername is too long\n", __func__);
 		return -1;
 	}
 
 	clifd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (clifd < 0) {
-		printf("socket failed.\n");
+		pr_err("socket failed.\n");
 		return -1;
 	}
 
@@ -234,7 +235,7 @@ static int ctrl_chan_conn(const char *servername)
 
 	ret = connect(clifd, (struct sockaddr *)&servaddr, sizeof(servaddr));
 	if (ret < 0) {
-		printf("connect failed.\n");
+		pr_err("connect failed.\n");
 		close(clifd);
 		return -1;
 	}
@@ -255,7 +256,7 @@ static int ctrl_chan_write(int ctrl_chan_fd, const uint8_t *buf, int len,
 	struct cmsghdr *pcmsg;
 
 	if (!buf || (!pdatafd && fd_num)) {
-		printf("%s error, invalid input\n", __func__);
+		pr_err("%s error, invalid input\n", __func__);
 		return -1;
 	}
 
@@ -282,7 +283,7 @@ static int ctrl_chan_write(int ctrl_chan_fd, const uint8_t *buf, int len,
 		pcmsg->cmsg_type = SCM_RIGHTS;
 		*((int *)CMSG_DATA(pcmsg)) = *pdatafd;
 	} else {
-		printf("fd_num failed.\n");
+		pr_err("fd_num failed.\n");
 		return -1;
 	}
 
@@ -305,7 +306,7 @@ static int ctrl_chan_read(int ctrl_chan_fd, uint8_t *buf, int len)
 	int n;
 
 	if (!buf) {
-		printf("%s error, invalid input\n", __func__);
+		pr_err("%s error, invalid input\n", __func__);
 		return -1;
 	}
 
@@ -338,7 +339,7 @@ static int cmd_chan_write(int cmd_chan_fd, const uint8_t *buf, int len)
 	int buffer_length = len;
 
 	if (!buf) {
-		printf("%s error, invalid input\n", __func__);
+		pr_err("%s error, invalid input\n", __func__);
 		return -1;
 	}
 
@@ -364,7 +365,7 @@ static int cmd_chan_read(int cmd_chan_fd, uint8_t *buf, int len)
 	size_t nleft = len;
 
 	if (!buf) {
-		printf("%s error, invalid input\n", __func__);
+		pr_err("%s error, invalid input\n", __func__);
 		return -1;
 	}
 
@@ -410,7 +411,7 @@ static int swtpm_ctrlcmd(int ctrl_chan_fd, unsigned long cmd, void *msg,
 	int recv_num;
 
 	if (!msg || (!pdatafd && fd_num)) {
-		printf("%s error, invalid input\n", __func__);
+		pr_err("%s error, invalid input\n", __func__);
 		return -1;
 	}
 
@@ -423,14 +424,14 @@ static int swtpm_ctrlcmd(int ctrl_chan_fd, unsigned long cmd, void *msg,
 
 	send_num = ctrl_chan_write(ctrl_chan_fd, buf, n, pdatafd, fd_num);
 	if ((send_num <= 0) || (send_num != n) ) {
-		printf("%s failed to write %d != %ld\n", __func__, send_num, n);
+		pr_err("%s failed to write %d != %ld\n", __func__, send_num, n);
 		goto end;
 	}
 
 	if (msg_len_out != 0) {
 		recv_num = ctrl_chan_read(ctrl_chan_fd, msg, msg_len_out);
 		if ((recv_num <= 0) || (recv_num != msg_len_out)) {
-			printf("%s failed to read %d != %ld\n", __func__, recv_num, msg_len_out);
+			pr_err("%s failed to read %d != %ld\n", __func__, recv_num, msg_len_out);
 			goto end;
 		}
 	}
@@ -459,7 +460,7 @@ static int swtpm_cmdcmd(int cmd_chan_fd,
 	bool is_selftest = false;
 
 	if (!in || !out) {
-		printf("%s error, invalid input\n", __func__);
+		pr_err("%s error, invalid input\n", __func__);
 		return -1;
 	}
 
@@ -470,19 +471,19 @@ static int swtpm_cmdcmd(int cmd_chan_fd,
 
 	ret = cmd_chan_write(cmd_chan_fd, (uint8_t *)in, in_len);
 	if ((ret == -1) || (ret != in_len)) {
-		printf("%s failed to write %ld != %d\n", __func__, ret, in_len);
+		pr_err("%s failed to write %ld != %d\n", __func__, ret, in_len);
 		return -1;
 	}
 
 	ret = cmd_chan_read(cmd_chan_fd, (uint8_t *)out,
 			  sizeof(tpm_output_header));
 	if (ret == -1) {
-		printf("%s failed to read size\n", __func__);
+		pr_err("%s failed to read size\n", __func__);
 		return -1;
 	}
 
 	if (tpm_cmd_get_size(out) > out_len) {
-		printf("%s error, get out size is larger than out_len\n", __func__);
+		pr_err("%s error, get out size is larger than out_len\n", __func__);
 		return -1;
 	}
 
@@ -490,7 +491,7 @@ static int swtpm_cmdcmd(int cmd_chan_fd,
 				(uint8_t *)out + sizeof(tpm_output_header),
 				tpm_cmd_get_size(out) - sizeof(tpm_output_header));
 	if (ret == -1) {
-		printf("%s failed to read data\n", __func__);
+		pr_err("%s failed to read data\n", __func__);
 		return -1;
 	}
 
@@ -509,14 +510,14 @@ static int swtpm_ctrlchan_create(const char *arg_path)
 	int connfd;
 
 	if (!arg_path) {
-		printf("%s error, invalid input\n", __func__);
+		pr_err("%s error, invalid input\n", __func__);
 		return -1;
 	}
 
 	connfd = ctrl_chan_conn(arg_path);
 	if(connfd < 0)
 	{
-		printf("Error[%d] when connecting...",errno);
+		pr_err("Error[%d] when connecting...", errno);
 		return -1;
 	}
 
@@ -535,12 +536,12 @@ static int swtpm_cmdchan_create(void)
 
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) < 0)
 	{
-		printf("socketpair failed!\n");
+		pr_err("socketpair failed!\n");
 		return -1;
 	}
 	if (swtpm_ctrlcmd(tpm_context.ctrl_chan_fd, CMD_SET_DATAFD, &res, 0,
 				 sizeof(res), &sv[1], 1) < 0 || res != 0) {
-		printf("swtpm: Failed to send CMD_SET_DATAFD: %s", strerror(errno));
+		pr_err("swtpm: Failed to send CMD_SET_DATAFD: %s", strerror(errno));
 		goto err_exit;
 	}
 	tpm_context.cmd_chan_fd = sv[0];
@@ -559,19 +560,19 @@ static int swtpm_start(ptm_init *init)
 	ptm_res res;
 
 	if (!init) {
-		printf("%s error, invalid input\n", __func__);
+		pr_err("%s error, invalid input\n", __func__);
 		return -1;
 	}
 
 	if (swtpm_ctrlcmd(tpm_context.ctrl_chan_fd, CMD_INIT,
 				init, sizeof(*init), sizeof(*init), NULL, 0) < 0) {
-		printf("swtpm: could not send INIT: %s", strerror(errno));
+		pr_err("swtpm: could not send INIT: %s", strerror(errno));
 		goto err_exit;
 	}
 
 	res = __builtin_bswap32(init->u.resp.tpm_result);
 	if (res) {
-		printf("swtpm: TPM result for CMD_INIT: 0x%x", res);
+		pr_err("swtpm: TPM result for CMD_INIT: 0x%x", res);
 		goto err_exit;
 	}
 
@@ -586,13 +587,13 @@ static int swtpm_stop(void)
 	ptm_res res = 0;
 
 	if (swtpm_ctrlcmd(tpm_context.ctrl_chan_fd, CMD_STOP, &res, 0, sizeof(res), NULL, 0) < 0) {
-		printf("swtpm: Could not stop TPM: %s", strerror(errno));
+		pr_err("swtpm: Could not stop TPM: %s", strerror(errno));
 		return -1;
 	}
 
 	res = __builtin_bswap32(res);
 	if (res) {
-		printf("swtpm: TPM result for CMD_STOP: 0x%x", res);
+		pr_err("swtpm: TPM result for CMD_STOP: 0x%x", res);
 		return -1;
 	}
 
@@ -611,7 +612,7 @@ static int swtpm_set_buffer_size(size_t wanted_size,
 	ptm_setbuffersize psbs;
 
 	if (wanted_size == 0) {
-		printf("%s error, wanted_size is 0\n", __func__);
+		pr_err("%s error, wanted_size is 0\n", __func__);
 		return -1;
 	}
 
@@ -619,13 +620,13 @@ static int swtpm_set_buffer_size(size_t wanted_size,
 
 	if (swtpm_ctrlcmd(tpm_context.ctrl_chan_fd, CMD_SET_BUFFERSIZE, &psbs,
 			 sizeof(psbs.u.req), sizeof(psbs.u.resp), NULL, 0) < 0) {
-		printf("swtpm: Could not set buffer size: %s", strerror(errno));
+		pr_err("swtpm: Could not set buffer size: %s", strerror(errno));
 		return -1;
 	}
 
 	psbs.u.resp.tpm_result = __builtin_bswap32(psbs.u.resp.tpm_result);
 	if (psbs.u.resp.tpm_result != 0) {
-		printf("swtpm: TPM result for set buffer size : 0x%x", psbs.u.resp.tpm_result);
+		pr_err("swtpm: TPM result for set buffer size : 0x%x", psbs.u.resp.tpm_result);
 		return -1;
 	}
 
@@ -644,7 +645,7 @@ static int swtpm_startup_tpm(size_t buffersize,
 	};
 
 	if (swtpm_stop() < 0) {
-		printf("swtpm_stop() failed!\n");
+		pr_err("swtpm_stop() failed!\n");
 		return -1;
 	}
 
@@ -666,9 +667,9 @@ static void swtpm_shutdown(void)
 
 	if (swtpm_ctrlcmd(tpm_context.ctrl_chan_fd, CMD_SHUTDOWN,
 				&res, 0, sizeof(res), NULL, 0) < 0) {
-		printf("swtpm: Could not cleanly shutdown the TPM: %s", strerror(errno));
+		pr_err("swtpm: Could not cleanly shutdown the TPM: %s", strerror(errno));
 	} else if (res != 0) {
-		printf("swtpm: TPM result for sutdown: 0x%x", __builtin_bswap32(res));
+		pr_err("swtpm: TPM result for sutdown: 0x%x", __builtin_bswap32(res));
 	}
 }
 
@@ -682,13 +683,13 @@ static int swtpm_set_locality(uint8_t locty_number)
 	loc.u.req.loc = locty_number;
 	if (swtpm_ctrlcmd(tpm_context.ctrl_chan_fd, CMD_SET_LOCALITY, &loc,
 							 sizeof(loc), sizeof(loc), NULL, 0) < 0) {
-		printf("swtpm: could not set locality : %s", strerror(errno));
+		pr_err("swtpm: could not set locality : %s", strerror(errno));
 		return -1;
 	}
 
 	loc.u.resp.tpm_result = __builtin_bswap32(loc.u.resp.tpm_result);
 	if (loc.u.resp.tpm_result != 0) {
-		printf("swtpm: TPM result for set locality : 0x%x", loc.u.resp.tpm_result);
+		pr_err("swtpm: TPM result for set locality : 0x%x", loc.u.resp.tpm_result);
 		return -1;
 	}
 
@@ -700,7 +701,7 @@ static int swtpm_set_locality(uint8_t locty_number)
 static void swtpm_write_fatal_error_response(uint8_t *out, uint32_t out_len)
 {
 	if (!out) {
-		printf("%s error, invalid input.\n", __func__);
+		pr_err("%s error, invalid input.\n", __func__);
 		return;
 	}
 
@@ -726,7 +727,7 @@ int swtpm_startup(size_t buffersize)
 int swtpm_handle_request(TPMCommBuffer *cmd)
 {
 	if (!cmd) {
-		printf("%s error, invalid input.\n", __func__);
+		pr_err("%s error, invalid input.\n", __func__);
 		return -1;
 	}
 
@@ -751,7 +752,7 @@ bool swtpm_get_tpm_established_flag(void)
 
 	if (swtpm_ctrlcmd(tpm_context.ctrl_chan_fd, CMD_GET_TPMESTABLISHED, &est,
 				0, sizeof(est), NULL, 0) < 0) {
-		printf("swtpm: Could not get the TPM established flag: %s", strerror(errno));
+		pr_err("swtpm: Could not get the TPM established flag: %s", strerror(errno));
 		return false;
 	}
 
@@ -767,21 +768,21 @@ void swtpm_cancel_cmd(void)
 
 	if (swtpm_ctrlcmd(tpm_context.ctrl_chan_fd, CMD_CANCEL_TPM_CMD, &res, 0,
 				sizeof(res), NULL, 0) < 0) {
-		printf("swtpm: Could not cancel command: %s", strerror(errno));
+		pr_err("swtpm: Could not cancel command: %s", strerror(errno));
 	} else if (res != 0) {
-		printf("swtpm: Failed to cancel TPM: 0x%x", __builtin_bswap32(res));
+		pr_err("swtpm: Failed to cancel TPM: 0x%x", __builtin_bswap32(res));
 	}
 }
 
 int init_tpm_emulator(const char *sock_path)
 {
 	if (swtpm_ctrlchan_create(sock_path) < 0) {
-		printf("error, failed to create ctrl channel.\n");
+		pr_err("error, failed to create ctrl channel.\n");
 		return -1;
 	}
 
 	if (swtpm_cmdchan_create() < 0) {
-		printf("error, failed to create cmd channel.\n");
+		pr_err("error, failed to create cmd channel.\n");
 		return -1;
 	}
 

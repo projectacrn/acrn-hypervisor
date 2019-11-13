@@ -41,6 +41,7 @@
 #include "irq.h"
 #include "lpc.h"
 #include "monitor.h"
+#include "log.h"
 
 static pthread_mutex_t pm_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct mevent *power_button;
@@ -225,7 +226,7 @@ INOUT_PORT(pm1_enable, PM1A_EVT_ADDR + 2, IOPORT_F_INOUT, pm1_enable_handler);
 void
 inject_power_button_event(struct vmctx *ctx)
 {
-	printf("%s", "press power button\n");
+	pr_info("press power button\n");
 	pthread_mutex_lock(&pm_lock);
 	if (!(pm1_status & PM1_PWRBTN_STS)) {
 		pm1_status |= PM1_PWRBTN_STS;
