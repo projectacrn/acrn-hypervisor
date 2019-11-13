@@ -131,48 +131,6 @@ static void dump_guest_stack(struct acrn_vcpu *vcpu)
 	pr_acrnlog("\r\n");
 }
 
-static void show_guest_call_trace(struct acrn_vcpu *vcpu)
-{
-	uint64_t bp;
-	uint64_t count = 0UL;
-	int32_t err;
-	uint32_t err_code;
-
-	bp = vcpu_get_gpreg(vcpu, CPU_REG_RBP);
-	pr_acrnlog("Guest Call Trace: **************************************\r\n");
-	pr_acrnlog("Maybe the call trace is not accurate, pls check stack!!\r\n");
-	/* if enable compiler option(no-omit-frame-pointer)  the stack layout
-	 * should be like this when call a function for x86_64
-	 *
-	 *                  |                    |
-	 *       rbp+8      |  return address    |
-	 *       rbp        |  rbp               |    push rbp
-	 *                  |                    |    mov rsp rbp
-	 *
-	 *       rsp        |                    |
-	 *
-	 *  try to print out call trace,here can not check if the rbp is valid
-	 *  if the address is invalid, it will cause hv page fault
-	 *  then halt system */
-	while ((count < CALL_TRACE_HIERARCHY_MAX) && (bp != 0UL)) {
-		uint64_t parent_bp = 0UL, fault_addr;
-
-		err_code = 0U;
-		err = copy_from_gva(vcpu, &parent_bp, bp, sizeof(parent_bp),
-			&err_code, &fault_addr);
-		if (err < 0) {
-			pr_acrnlog("\r\nUnabled to get Guest parent BP\r\n");
-			return;
-		}
-
-		pr_acrnlog("BP_GVA(0x%016lx) RIP=0x%016lx\r\n", bp, parent_bp);
-		/* Get previous rbp*/
-		bp = parent_bp;
-		count++;
-	}
-	pr_acrnlog("\r\n");
-}
-
 static void dump_guest_context(uint16_t pcpu_id)
 {
 	struct acrn_vcpu *vcpu = get_running_vcpu(pcpu_id);
@@ -180,7 +138,6 @@ static void dump_guest_context(uint16_t pcpu_id)
 	if (vcpu != NULL) {
 		dump_guest_reg(vcpu);
 		dump_guest_stack(vcpu);
-		show_guest_call_trace(vcpu);
 	}
 }
 
