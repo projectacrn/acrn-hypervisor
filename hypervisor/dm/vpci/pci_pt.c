@@ -34,19 +34,6 @@
 
 /**
  * @pre vdev != NULL
- */
-void vdev_pt_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
-{
-	/* bar access must be 4 bytes and offset must also be 4 bytes aligned */
-	if ((bytes == 4U) && ((offset & 0x3U) == 0U)) {
-		*val = pci_vdev_read_cfg(vdev, offset, bytes);
-	} else {
-		*val = ~0U;
-	}
-}
-
-/**
- * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
@@ -191,7 +178,6 @@ static void vdev_pt_deny_io_vbar(struct pci_vdev *vdev, uint32_t idx)
  */
 void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 {
-	bool update_bar = false;
 	uint32_t update_idx = idx;
 	uint32_t offset = pci_bar_offset(idx);
 	struct pci_bar *vbar = &vdev->bar[idx];
@@ -203,30 +189,25 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 			pci_vdev_write_bar(vdev, idx, val);
 			vdev_pt_allow_io_vbar(vdev, update_idx);
 		} else {
-			pci_vdev_write_cfg_u32(vdev, offset, vbar->mask);
+			pci_vdev_write_cfg_u32(vdev, offset, val);
 		}
 		break;
 
-	case PCIBAR_MEM64HI:
-		update_idx = idx - 1U;
-		/* falls through */
-	case PCIBAR_MEM32:
-		update_bar = true;
-		/* falls through */
-	case PCIBAR_MEM64:
-		vdev_pt_unmap_mem_vbar(vdev, update_idx);
-		if (val != ~0U) {
-			pci_vdev_write_bar(vdev, idx, val);
-			if (update_bar) {
-				vdev_pt_map_mem_vbar(vdev, update_idx);
-			}
-		} else {
-			pci_vdev_write_cfg_u32(vdev, offset, vbar->mask);
-		}
+	case PCIBAR_NONE:
+		/* Nothing to do */
 		break;
 
 	default:
-		/* Nothing to do */
+		if (vbar->type == PCIBAR_MEM64HI) {
+			update_idx = idx - 1U;
+		}
+		vdev_pt_unmap_mem_vbar(vdev, update_idx);
+		if (val != ~0U) {
+			pci_vdev_write_bar(vdev, idx, val);
+			vdev_pt_map_mem_vbar(vdev, update_idx);
+		} else {
+			pci_vdev_write_cfg_u32(vdev, offset, val);
+		}
 		break;
 	}
 }
@@ -299,6 +280,7 @@ void init_vdev_pt(struct pci_vdev *vdev)
 			if (is_prelaunched_vm(vdev->vpci->vm)) {
 				lo = (uint32_t)vdev->pci_dev_config->vbar_base[idx];
 			}
+			pci_vdev_write_bar(vdev, idx, lo);
 
 			if (type == PCIBAR_MEM64) {
 				idx++;
@@ -318,14 +300,12 @@ void init_vdev_pt(struct pci_vdev *vdev)
 				if (is_prelaunched_vm(vdev->vpci->vm)) {
 					hi = (uint32_t)(vdev->pci_dev_config->vbar_base[idx - 1U] >> 32U);
 				}
-				vdev_pt_write_vbar(vdev, idx - 1U, lo);
-				vdev_pt_write_vbar(vdev, idx, hi);
+				pci_vdev_write_bar(vdev, idx, hi);
 			} else {
 				vbar->size = vbar->size & ~(vbar->size - 1UL);
 				if (type == PCIBAR_MEM32) {
 					vbar->size = round_page_up(vbar->size);
 				}
-				vdev_pt_write_vbar(vdev, idx, lo);
 			}
 		}
 	}

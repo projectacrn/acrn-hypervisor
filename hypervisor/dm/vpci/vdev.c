@@ -92,6 +92,19 @@ struct pci_vdev *pci_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf)
 	return vdev;
 }
 
+uint32_t pci_vdev_read_bar(const struct pci_vdev *vdev, uint32_t idx)
+{
+	uint32_t bar, offset;
+
+	offset = pci_bar_offset(idx);
+	bar = pci_vdev_read_cfg_u32(vdev, offset);
+	/* Sizing BAR */
+	if (bar == ~0U) {
+		bar = vdev->bar[idx].mask;
+	}
+	return bar;
+}
+
 void pci_vdev_write_bar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 {
 	struct pci_bar *vbar;
