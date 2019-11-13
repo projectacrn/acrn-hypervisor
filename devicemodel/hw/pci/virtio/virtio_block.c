@@ -565,7 +565,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		register_vm_monitor_blkrescan = true;
 		if (monitor_register_vm_ops(&virtio_blk_rescan_ops, ctx,
 						"virtio_blk_rescan") < 0)
-			fprintf(stderr, "Rescan registration to VM monitor failed\n");
+			pr_err("Rescan registration to VM monitor failed\n");
 	}
 
 	return 0;
@@ -654,24 +654,24 @@ virtio_blk_rescan(struct vmctx *ctx, struct pci_vdev *dev, char *newpath)
 	struct virtio_blk *blk = (struct virtio_blk *) dev->arg;
 
 	if (!blk) {
-		fprintf(stderr, "Invalid virtio_blk device!\n");
+		pr_err("Invalid virtio_blk device!\n");
 		goto end;
 	}
 
 	/* validate inputs for virtio-blk blockrescan */
 	if (newpath == NULL) {
-		fprintf(stderr, "no path info available\n");
+		pr_err("no path info available\n");
 		goto end;
 	}
 
 	if (strstr(newpath, "nodisk") != NULL) {
-		fprintf(stderr, "no valid backend file found\n");
+		pr_err("no valid backend file found\n");
 		goto end;
 	}
 
 	if (snprintf(bident, sizeof(bident), "%d:%d",
 				dev->slot, dev->func) >= sizeof(bident)) {
-		fprintf(stderr, "bident error, please check slot and func\n");
+		pr_err("bident error, please check slot and func\n");
 		goto end;
 	}
 
@@ -680,15 +680,15 @@ virtio_blk_rescan(struct vmctx *ctx, struct pci_vdev *dev, char *newpath)
 	 * If this is the case, blk->bc would be null.
 	 */
 	if (blk->bc) {
-		fprintf(stderr, "Replacing valid backend file not supported!\n");
+		pr_err("Replacing valid backend file not supported!\n");
 		goto end;
 	}
 
-	fprintf(stderr, "name=%s, Path=%s, ident=%s\n", dev->name, newpath, bident);
+	pr_err("name=%s, Path=%s, ident=%s\n", dev->name, newpath, bident);
 	/* update the bctxt for the virtio-blk device */
 	bctxt = blockif_open(newpath, bident);
 	if (bctxt == NULL) {
-		fprintf(stderr, "Error opening backing file\n");
+		pr_err("Error opening backing file\n");
 		goto end;
 	}
 
@@ -725,30 +725,30 @@ vm_monitor_blkrescan(void *arg, char *devargs)
 	if ((str_slot != NULL) && (str_newpath != NULL)) {
 		error = dm_strtoi(str_slot, &str_slot, 10, &slot);
 		if (error) {
-			fprintf(stderr, "Incorrect slot, error=0x%x!\n", error);
+			pr_err("Incorrect slot, error=0x%x!\n", error);
 			goto end;
 		}
 
 	} else {
-		fprintf(stderr, "Slot info or path not available!");
+		pr_err("Slot info or path not available!");
 		error = -1;
 		goto end;
 	}
 
 	dev = pci_get_vdev_info(slot);
 	if (dev == NULL) {
-		fprintf(stderr, "vdev info failed for Slot %d\n!", slot);
+		pr_err("vdev info failed for Slot %d\n!", slot);
 		error = -1;
 		goto end;
 	}
 
 	if (strstr(dev->name, "virtio-blk") == NULL) {
 		error = -1;
-		fprintf(stderr, "virtio-blk only supports rescan: found %s at slot %d\n", dev->name, slot);
+		pr_err("virtio-blk only supports rescan: found %s at slot %d\n", dev->name, slot);
 	} else {
 		error = virtio_blk_rescan(ctx, dev, str_newpath);
 		if (error) {
-			fprintf(stderr, "virtio-blk rescan failed!");
+			pr_err("virtio-blk rescan failed!");
 		}
 	}
 end:

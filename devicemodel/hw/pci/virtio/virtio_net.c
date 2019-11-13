@@ -639,7 +639,7 @@ virtio_net_parsemac(char *mac_str, uint8_t *mac_addr)
 		if (ea == NULL || ETHER_IS_MULTICAST(ea->ether_addr_octet) ||
 		    memcmp(ea->ether_addr_octet, zero_addr, ETHER_ADDR_LEN)
 				== 0) {
-			fprintf(stderr, "Invalid MAC %s\n", mac_str);
+			pr_err("Invalid MAC %s\n", mac_str);
 			return -1;
 		}
 		memcpy(mac_addr, ea->ether_addr_octet, ETHER_ADDR_LEN);
@@ -998,7 +998,7 @@ virtio_net_teardown(void *param)
 		close(net->tapfd);
 		net->tapfd = -1;
 	} else
-		fprintf(stderr, "net->tapfd is -1!\n");
+		pr_err("net->tapfd is -1!\n");
 
 	free(net);
 }
@@ -1027,7 +1027,7 @@ virtio_net_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 		DPRINTF(("%s: done\n", __func__));
 	} else
-		fprintf(stderr, "%s: NULL!\n", __func__);
+		pr_err("%s: NULL!\n", __func__);
 }
 
 static struct vhost_net *

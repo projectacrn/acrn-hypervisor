@@ -145,8 +145,7 @@ gvt_init_config(struct pci_gvt *gvt)
 	ret = pci_emul_alloc_bar(gvt->gvt_pi, 0, PCIBAR_MEM32,
 		16 * 1024 * 1024);
 	if (ret != 0) {
-		fprintf(stderr,
-			"allocate gvt pci bar[0] failed\n");
+		pr_err("allocate gvt pci bar[0] failed\n");
 		return -1;
 	}
 
@@ -179,16 +178,14 @@ gvt_init_config(struct pci_gvt *gvt)
 	ret = pci_emul_alloc_bar(gvt->gvt_pi, 2, PCIBAR_MEM32,
 		aperture_size * 1024 * 1024);
 	if (ret != 0) {
-		fprintf(stderr,
-			"allocate gvt pci bar[2] failed\n");
+		pr_err("allocate gvt pci bar[2] failed\n");
 		return -1;
 	}
 
 	/* same as host, lagecy vga usage */
 	ret = pci_emul_alloc_bar(gvt->gvt_pi, 4, PCIBAR_IO, 64);
 	if (ret != 0) {
-		fprintf(stderr,
-			"allocate gvt pci bar[4] failed\n");
+		pr_err("allocate gvt pci bar[4] failed\n");
 		return -1;
 	}
 

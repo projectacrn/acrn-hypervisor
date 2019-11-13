@@ -44,6 +44,7 @@
 #include "vmmapi.h"
 #include "sw_load.h"
 #include "acpi.h"
+#include "log.h"
 
 #define	ELF_BUF_LEN			(1024UL*8UL)
 #define	MULTIBOOT_HEAD_MAGIC		(0x1BADB002U)
@@ -119,22 +120,21 @@ static int load_elf32(struct vmctx *ctx, FILE *fp, void *buf)
 	phd_size = elf32_header->e_phentsize * elf32_header->e_phnum;
 	elf32_phdr_bk = elf32_phdr = (Elf32_Phdr *)calloc(1, phd_size);
 	if (elf32_phdr == NULL) {
-		fprintf(stderr, "Can't allocate memory for elf program header\n");
+		pr_err("Can't allocate memory for elf program header\n");
 		return -1;
 	}
 
 	fseek(fp, elf32_header->e_phoff, SEEK_SET);
 	read_len = fread((void *)elf32_phdr, 1, phd_size, fp);
 	if (read_len != phd_size) {
-		fprintf(stderr, "can't get %ld data from elf file\n", phd_size);
+		pr_err("can't get %ld data from elf file\n", phd_size);
 	}
 
 	for (i = 0; i < elf32_header->e_phnum; i++) {
 		if (elf32_phdr->p_type == PT_LOAD) {
 			if ((elf32_phdr->p_vaddr + elf32_phdr->p_memsz) >
 					ctx->lowmem) {
-				fprintf(stderr,
-					"No enough memory to load elf file\n");
+				pr_err("No enough memory to load elf file\n");
 				free(elf32_phdr_bk);
 				return -1;
 			}
@@ -148,7 +148,7 @@ static int load_elf32(struct vmctx *ctx, FILE *fp, void *buf)
 			fseek(fp, elf32_phdr->p_offset, SEEK_SET);
 			read_len = fread(seg_ptr, 1, elf32_phdr->p_filesz, fp);
 			if (read_len != elf32_phdr->p_filesz) {
-				fprintf(stderr, "Can't get %d data\n",
+				pr_err("Can't get %d data\n",
 						elf32_phdr->p_filesz);
 			}
 		}
@@ -174,20 +174,20 @@ acrn_load_elf(struct vmctx *ctx, char *elf_file_name, unsigned long *entry,
 
 	elf_buf = calloc(1, ELF_BUF_LEN);
 	if (elf_buf == NULL) {
-		fprintf(stderr, "Can't allocate elf buf\r\n");
+		pr_err("Can't allocate elf buf\r\n");
 		return -1;
 	}
 
 	fp = fopen(elf_file_name, "r");
 	if (fp == NULL) {
-		fprintf(stderr, "Can't open elf file: %s\r\n", elf_file_name);
+		pr_err("Can't open elf file: %s\r\n", elf_file_name);
 		free(elf_buf);
 		return -1;
 	}
 
 	read_len = fread(elf_buf, 1, ELF_BUF_LEN, fp);
 	if (read_len != ELF_BUF_LEN) {
-		fprintf(stderr, "Can't get %ld data from elf file\n",
+		pr_err("Can't get %ld data from elf file\n",
 				ELF_BUF_LEN);
 	}
 
@@ -226,7 +226,7 @@ acrn_load_elf(struct vmctx *ctx, char *elf_file_name, unsigned long *entry,
 		(elf_ehdr->e_ident[EI_MAG1] != ELFMAG1) ||
 		(elf_ehdr->e_ident[EI_MAG2] != ELFMAG2) ||
 		(elf_ehdr->e_ident[EI_MAG3] != ELFMAG3)) {
-		fprintf(stderr, "This is not elf file\n");
+		pr_err("This is not elf file\n");
 		fclose(fp);
 		free(elf_buf);
 
@@ -236,7 +236,7 @@ acrn_load_elf(struct vmctx *ctx, char *elf_file_name, unsigned long *entry,
 	if (elf_ehdr->e_ident[EI_CLASS] == ELFCLASS32) {
 		ret = load_elf32(ctx, fp, elf_buf);
 	} else {
-		fprintf(stderr, "No available 64bit elf loader ready yet\n");
+		pr_err("No available 64bit elf loader ready yet\n");
 		fclose(fp);
 		free(elf_buf);
 		return -1;
@@ -314,8 +314,7 @@ acrn_sw_load_elf(struct vmctx *ctx)
 			mi->mem_upper = GDT_LOAD_OFF(ctx) / 1024U;
 			ctx->bsp_regs.vcpu_regs.gprs.rbx = MULTIBOOT_OFFSET;
 		} else {
-			fprintf(stderr,
-				"Invalid multiboot header in elf binary\n");
+			pr_err("Invalid multiboot header in elf binary\n");
 			return -1;
 		}
 	}

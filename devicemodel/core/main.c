@@ -257,7 +257,7 @@ add_cpu(struct vmctx *ctx, int vcpu_num)
 	for (i = 0; i < vcpu_num; i++) {
 		error = vm_create_vcpu(ctx, (uint16_t)i);
 		if (error != 0) {
-			fprintf(stderr, "ERROR: could not create VCPU %d\n", i);
+			pr_err("ERROR: could not create VCPU %d\n", i);
 			return error;
 		}
 		CPU_SET_ATOMIC(i, &cpumask);
@@ -278,7 +278,7 @@ static int
 delete_cpu(struct vmctx *ctx, int vcpu)
 {
 	if (!CPU_ISSET(vcpu, &cpumask)) {
-		fprintf(stderr, "Attempting to delete unknown cpu %d\n", vcpu);
+		pr_err("Attempting to delete unknown cpu %d\n", vcpu);
 		exit(1);
 	}
 
@@ -310,7 +310,7 @@ vmexit_inout(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 
 	error = emulate_inout(ctx, pvcpu, &vhm_req->reqs.pio);
 	if (error) {
-		fprintf(stderr, "Unhandled %s%c 0x%04x\n",
+		pr_err("Unhandled %s%c 0x%04x\n",
 				in ? "in" : "out",
 				bytes == 1 ? 'b' : (bytes == 2 ? 'w' : 'l'),
 				port);
@@ -331,11 +331,11 @@ vmexit_mmio_emul(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 
 	if (err) {
 		if (err == -ESRCH)
-			fprintf(stderr, "Unhandled memory access to 0x%lx\n",
+			pr_err("Unhandled memory access to 0x%lx\n",
 				vhm_req->reqs.mmio.address);
 
-		fprintf(stderr, "Failed to emulate instruction [");
-		fprintf(stderr, "mmio address 0x%lx, size %ld",
+		pr_err("Failed to emulate instruction [");
+		pr_err("mmio address 0x%lx, size %ld",
 				vhm_req->reqs.mmio.address,
 				vhm_req->reqs.mmio.size);
 
@@ -358,7 +358,7 @@ vmexit_pci_emul(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 			vhm_req->reqs.pci.size,
 			&vhm_req->reqs.pci.value);
 	if (err) {
-		fprintf(stderr, "Unhandled pci cfg rw at %x:%x.%x reg 0x%x\n",
+		pr_err("Unhandled pci cfg rw at %x:%x.%x reg 0x%x\n",
 			vhm_req->reqs.pci.bus,
 			vhm_req->reqs.pci.dev,
 			vhm_req->reqs.pci.func,
@@ -393,7 +393,7 @@ handle_vmexit(struct vmctx *ctx, struct vhm_request *vhm_req, int vcpu)
 
 	exitcode = vhm_req->type;
 	if (exitcode >= VM_EXITCODE_MAX || handler[exitcode] == NULL) {
-		fprintf(stderr, "handle vmexit: unexpected exitcode 0x%x\n",
+		pr_err("handle vmexit: unexpected exitcode 0x%x\n",
 				exitcode);
 		exit(1);
 	}

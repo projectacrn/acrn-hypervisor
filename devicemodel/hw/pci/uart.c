@@ -88,7 +88,7 @@ pci_uart_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	dev->arg = uart_set_backend(pci_uart_intr_assert, pci_uart_intr_deassert, dev, opts);
 	if (dev->arg == NULL) {
-		fprintf(stderr, "Unable to initialize backend '%s' for "
+		pr_err("Unable to initialize backend '%s' for "
 		    "pci uart at %d:%d\n", opts, dev->slot, dev->func);
 		return -1;
 	}

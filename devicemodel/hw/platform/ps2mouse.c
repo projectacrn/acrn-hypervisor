@@ -277,7 +277,7 @@ ps2mouse_write(struct ps2mouse_info *mouse, uint8_t val, int insert)
 			fifo_put(mouse, PS2MC_ACK);
 			break;
 		default:
-			fprintf(stderr, "Unhandled ps2 mouse current "
+			pr_err("Unhandled ps2 mouse current "
 			    "command byte 0x%02x\n", val);
 			break;
 		}
@@ -346,7 +346,7 @@ ps2mouse_write(struct ps2mouse_info *mouse, uint8_t val, int insert)
 			break;
 		default:
 			fifo_put(mouse, PS2MC_ACK);
-			fprintf(stderr, "Unhandled ps2 mouse command "
+			pr_err("Unhandled ps2 mouse command "
 			    "0x%02x\n", val);
 			break;
 		}

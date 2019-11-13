@@ -145,7 +145,7 @@ ps2kbd_write(struct ps2kbd_info *kbd, uint8_t val)
 			fifo_put(kbd, PS2KC_ACK);
 			break;
 		default:
-			fprintf(stderr, "Unhandled ps2 keyboard current "
+			pr_err("Unhandled ps2 keyboard current "
 			    "command byte 0x%02x\n", val);
 			break;
 		}
@@ -190,7 +190,7 @@ ps2kbd_write(struct ps2kbd_info *kbd, uint8_t val)
 			fifo_put(kbd, PS2KC_ACK);
 			break;
 		default:
-			fprintf(stderr, "Unhandled ps2 keyboard command "
+			pr_err("Unhandled ps2 keyboard command "
 			    "0x%02x\n", val);
 			break;
 		}
@@ -429,7 +429,7 @@ ps2kbd_keysym_queue(struct ps2kbd_info *kbd,
 		fifo_put(kbd, 0x71);
 		break;
 	default:
-		fprintf(stderr, "Unhandled ps2 keyboard keysym 0x%x\n",
+		pr_err("Unhandled ps2 keyboard keysym 0x%x\n",
 		     keysym);
 		break;
 	}
