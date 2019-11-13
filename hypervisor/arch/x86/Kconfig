@@ -21,10 +21,10 @@ config LOGICAL_PARTITION
 	help
 	  This scenario will run two pre-launched VMs.
 
-config INDUSTRY 
+config INDUSTRY
 	bool "Industry VMs"
 	help
-	  This scenario is a typical scenario for industry usage with 4 VMs: 
+	  This scenario is a typical scenario for industry usage with 4 VMs:
 	  one pre-launched SOS VM, one post-launched Standard VM for HMI, one or two
 	  post-launched  RT VM for real-time control.
 
@@ -303,3 +303,12 @@ config MAX_KATA_VM_NUM
 	int "Maximum number of Kata Containers in SOS"
 	range 0 1
 	default 0
+
+config MCE_ON_PSC_WORKAROUND_DISABLED
+	bool "Force to disable software workaround for Machine Check Error on Page Size Change"
+	default n
+	help
+	  By default, software workaround for Machine Check Error on Page Size Change is
+	  conditionally applied to the models that may be affected by the issue. However,
+	  the software workaround has negative impact on performance. If all the guest VMs
+	  are trusted, for performance, this option can be set.
