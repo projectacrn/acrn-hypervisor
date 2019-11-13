@@ -217,22 +217,35 @@ static void vdev_pt_map_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
  */
 static void vdev_pt_allow_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
-	struct pci_bar *vbar;
-	uint64_t vbar_base = get_vbar_base(vdev, idx); /* vbar (gpa) */
-
-	vbar = &vdev->bar[idx];
-
 	/* For SOS, all port IO access is allowed by default, so skip SOS here */
-	if ((vdev->bar_base_mapped[idx] != vbar_base) && !is_sos_vm(vdev->vpci->vm)) {
+	if (!is_sos_vm(vdev->vpci->vm)) {
+		struct pci_bar *vbar = &vdev->bar[idx];
+		uint64_t vbar_base = get_vbar_base(vdev, idx); /* vbar (gpa) */
+		if (vbar_base != 0UL) {
+			allow_guest_pio_access(vdev->vpci->vm, (uint16_t)vbar_base, (uint32_t)(vbar->size));
+			/* Remember the previously allowed IO vbar base */
+			vdev->bar_base_mapped[idx] = vbar_base;
+		}
+	}
+}
+
+/**
+ * @brief Deny IO bar access
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ */
+static void vdev_pt_deny_io_vbar(struct pci_vdev *vdev, uint32_t idx)
+{
+	/* For SOS, all port IO access is allowed by default, so skip SOS here */
+	if (!is_sos_vm(vdev->vpci->vm)) {
+		struct pci_bar *vbar = &vdev->bar[idx];
 		if (vdev->bar_base_mapped[idx] != 0UL) {
 			deny_guest_pio_access(vdev->vpci->vm, (uint16_t)(vdev->bar_base_mapped[idx]),
 				(uint32_t)(vbar->size));
+			vdev->bar_base_mapped[idx] = 0UL;
 		}
 
-		allow_guest_pio_access(vdev->vpci->vm, (uint16_t)vbar_base, (uint32_t)(vbar->size));
-
-		/* Remember the previously allowed IO vbar base */
-		vdev->bar_base_mapped[idx] = vbar_base;
 	}
 }
 
@@ -294,6 +307,7 @@ static void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t offset, uint32_t 
 
 		switch (type) {
 		case PCIBAR_IO_SPACE:
+			vdev_pt_deny_io_vbar(vdev, idx);
 			base = git_size_masked_bar_base(vbar->size, (uint64_t)val) & 0xffffUL;
 			set_vbar_base(vbar, (uint32_t)base);
 
