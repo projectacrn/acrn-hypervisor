@@ -29,6 +29,8 @@
 
 #include <vm.h>
 #include "vpci_priv.h"
+#include <ept.h>
+#include <logmsg.h>
 
 /**
  * @pre vdev != NULL
@@ -105,24 +107,13 @@ uint32_t pci_vdev_read_bar(const struct pci_vdev *vdev, uint32_t idx)
 	return bar;
 }
 
-void pci_vdev_write_bar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
+static void pci_vdev_update_bar_base(struct pci_vdev *vdev, uint32_t idx)
 {
 	struct pci_bar *vbar;
-	uint32_t bar, offset;
-
-	vbar = &vdev->bar[idx];
-	bar = val & vbar->mask;
-	bar |= vbar->fixed;
-	offset = pci_bar_offset(idx);
-	pci_vdev_write_cfg_u32(vdev, offset, bar);
-}
-
-uint64_t pci_vdev_get_bar_base(const struct pci_vdev *vdev, uint32_t idx)
-{
-	const struct pci_bar *vbar;
 	enum pci_bar_type type;
 	uint64_t base = 0UL;
 	uint32_t lo, hi, offset;
+	struct acrn_vm *vm = vdev->vpci->vm;
 
 	vbar = &vdev->bar[idx];
 	offset = pci_bar_offset(idx);
@@ -146,5 +137,31 @@ uint64_t pci_vdev_get_bar_base(const struct pci_vdev *vdev, uint32_t idx)
 		}
 	}
 
-	return base;
+	if ((base != 0UL) && !ept_is_mr_valid(vm, base, vdev->bar[idx].size)) {
+		pr_fatal("%s, %x:%x.%x set invalid bar[%d] base: 0x%lx, size: 0x%lx\n", __func__,
+			vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, base, vdev->bar[idx].size);
+		/* If guest set a invalid GPA, ignore it temporarily */
+		base = 0UL;
+	}
+
+	vdev->bar[idx].base = base;
+}
+
+void pci_vdev_write_bar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
+{
+	struct pci_bar *vbar;
+	uint32_t bar, offset;
+	uint32_t update_idx = idx;
+
+	vbar = &vdev->bar[idx];
+	bar = val & vbar->mask;
+	bar |= vbar->fixed;
+	offset = pci_bar_offset(idx);
+	pci_vdev_write_cfg_u32(vdev, offset, bar);
+
+	if (vbar->type == PCIBAR_MEM64HI) {
+		update_idx -= 1U;
+	}
+
+	pci_vdev_update_bar_base(vdev, update_idx);
 }

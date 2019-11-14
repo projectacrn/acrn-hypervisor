@@ -146,5 +146,4 @@ struct pci_vdev *pci_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf);
 
 uint32_t pci_vdev_read_bar(const struct pci_vdev *vdev, uint32_t idx);
 void pci_vdev_write_bar(struct pci_vdev *vdev, uint32_t idx, uint32_t val);
-uint64_t pci_vdev_get_bar_base(const struct pci_vdev *vdev, uint32_t idx);
 #endif /* VPCI_PRIV_H_ */
