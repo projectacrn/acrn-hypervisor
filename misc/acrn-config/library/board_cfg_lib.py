@@ -336,6 +336,9 @@ def parser_vuart_console():
     else:
         ttys = get_sub_leaf_tag(SCENARIO_INFO_FILE, "os_config", "console")
 
+    if not ttys or ttys[0] == None:
+        return (err_dic, ttys_n)
+
     if ttys and 'BDF' in ttys[0] or '/dev' in ttys[0]:
         ttys_n = ttys[0].split('/')[2]
     else:
@@ -359,20 +362,24 @@ def get_board_private_vuart(branch_tag, tag_console):
     if err_dic:
         return err_dic
 
-    if not ttys_n or ttys_n not in list(TTY_CONSOLE.keys()):
-        err_dic["board config: ttyS not available"] = "console should be set in scenario.xml of board_private section"
-        return (err_dic, vuart0_console_dic, vuart1_console_dic)
+    if ttys_n:
 
-    (vuart0_valid_console, vuart1_valid_console, show_vuart1) = console_to_show(BOARD_INFO_FILE)
+        if ttys_n not in list(TTY_CONSOLE.keys()):
+            err_dic["board config: ttyS not available"] = "console should be set in scenario.xml of board_private section"
+            return (err_dic, vuart0_console_dic, vuart1_console_dic)
 
-    # VUART0
-    if ttys_n not in list(NATIVE_CONSOLE_DIC.keys()):
-        vuart0_console_dic[ttys_n] = alloc_irq()
-    else:
-        if int(NATIVE_CONSOLE_DIC[ttys_n]) >= 16:
+        (vuart0_valid_console, vuart1_valid_console, show_vuart1) = console_to_show(BOARD_INFO_FILE)
+
+        # VUART0
+        if ttys_n not in list(NATIVE_CONSOLE_DIC.keys()):
             vuart0_console_dic[ttys_n] = alloc_irq()
         else:
-            vuart0_console_dic[ttys_n] = NATIVE_CONSOLE_DIC[ttys_n]
+            if int(NATIVE_CONSOLE_DIC[ttys_n]) >= 16:
+                vuart0_console_dic[ttys_n] = alloc_irq()
+            else:
+                vuart0_console_dic[ttys_n] = NATIVE_CONSOLE_DIC[ttys_n]
+    else:
+        vuart1_valid_console = ['ttyS1']
 
     # VUART1
     if len(NATIVE_CONSOLE_DIC) >= 2 and 'ttyS1' in NATIVE_CONSOLE_DIC.keys():
