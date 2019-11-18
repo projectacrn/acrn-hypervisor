@@ -6,6 +6,12 @@ Advisory
 We recommend that all developers upgrade to this v1.4 release, which addresses the following security
 issues that were discovered in previous releases:
 
+Mitigation for Machine Check Error on Page Size Change
+   Improper invalidation for page table updates by a virtual guest operating system for multiple Intel(R) Processors may allow an authenticated user to potentially enable denial of service of the host system via local access. Malicious guest kernel could trigger this issue, CVE-2018-12207.
+
+   | **Affected Release:** v1.3 and earlier.
+   | Upgrade to ACRN release v1.4.
+
 AP Trampoline Is Accessible to the Service VM
    This vulnerability is triggered when validating the memory isolation between the VM and hypervisor. The AP Trampoline code exists in the LOW_RAM region in the hypervisor but is
    potentially accessible to the Service VM. This could be used by an attacker to mount DoS
