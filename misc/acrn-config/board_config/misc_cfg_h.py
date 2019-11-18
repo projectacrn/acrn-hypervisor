@@ -68,9 +68,6 @@ def parse_boot_info():
         sos_rootfs = board_cfg_lib.get_sub_leaf_tag(board_cfg_lib.SCENARIO_INFO_FILE, "os_config", "rootfs")
         (err_dic, vuart0_dic, vuart1_dic) = board_cfg_lib.get_board_private_vuart("os_config", "console")
 
-    if err_dic:
-        return (err_dic, sos_cmdlines, sos_rootfs, vuart0_dic, vuart1_dic, vm_types)
-
     for i in range(board_cfg_lib.VM_COUNT):
         vm_type = board_cfg_lib.get_order_type_by_vmid(i)
         vm_types.append(vm_type)
@@ -99,9 +96,11 @@ def generate_file(config):
     if err_dic:
         return err_dic
 
-    # parse to get poart/base of vuart0/vuart1
-    vuart0_port_base = board_cfg_lib.TTY_CONSOLE[list(vuart0_dic.keys())[0]]
-    vuart0_irq = vuart0_dic[list(vuart0_dic.keys())[0]]
+    if vuart0_dic:
+        # parse to get poart/base of vuart0/vuart1
+        vuart0_port_base = board_cfg_lib.TTY_CONSOLE[list(vuart0_dic.keys())[0]]
+        vuart0_irq = vuart0_dic[list(vuart0_dic.keys())[0]]
+
     vuart1_port_base = board_cfg_lib.TTY_CONSOLE[list(vuart1_dic.keys())[0]]
     vuart1_irq = vuart1_dic[list(vuart1_dic.keys())[0]]
 
@@ -136,7 +135,10 @@ def generate_file(config):
     print("", file=config)
     if "SOS_VM" in vm_types:
         print('#define SOS_ROOTFS\t\t"root={} "'.format(sos_rootfs[0]), file=config)
-        print('#define SOS_CONSOLE\t\t"console={} "'.format(ttys_n), file=config)
+        if ttys_n:
+            print('#define SOS_CONSOLE\t\t"console={} "'.format(ttys_n), file=config)
+        else:
+            print('#define SOS_CONSOLE\t\t" "', file=config)
 
     # sos com base/irq
     i_type = 0
@@ -146,8 +148,13 @@ def generate_file(config):
         i_type += 1
 
     if "SOS_VM" in vm_types:
-        print("#define SOS_COM1_BASE\t\t{}U".format(vuart0_port_base), file=config)
-        print("#define SOS_COM1_IRQ\t\t{}U".format(vuart0_irq), file=config)
+        if vuart0_dic:
+            print("#define SOS_COM1_BASE\t\t{}U".format(vuart0_port_base), file=config)
+            print("#define SOS_COM1_IRQ\t\t{}U".format(vuart0_irq), file=config)
+        else:
+            print("#define SOS_COM1_BASE\t\t0U", file=config)
+            print("#define SOS_COM1_IRQ\t\t0U", file=config)
+
         if vuart1_setting[i_type]['base'] != "INVALID_COM_BASE":
             print("#define SOS_COM2_BASE\t\t{}U".format(vuart1_port_base), file=config)
             print("#define SOS_COM2_IRQ\t\t{}U".format(vuart1_irq), file=config)
