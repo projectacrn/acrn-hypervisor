@@ -12,6 +12,7 @@
 #include <vtd.h>
 #include <vm_configurations.h>
 #include <security.h>
+#include <vm.h>
 
 static struct page ppt_pml4_pages[PML4_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
 static struct page ppt_pdpt_pages[PDPT_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
@@ -31,7 +32,7 @@ static inline uint64_t ppt_get_default_access_right(void)
 	return (PAGE_PRESENT | PAGE_RW | PAGE_USER);
 }
 
-static inline void ppt_clflush_pagewalk(const void* etry __attribute__((unused)))
+static inline void ppt_clflush_pagewalk(const void* entry __attribute__((unused)))
 {
 }
 
@@ -66,6 +67,7 @@ static inline void nop_recover_exe_right(uint64_t *entry __attribute__((unused))
 
 const struct memory_ops ppt_mem_ops = {
 	.info = &ppt_pages_info,
+	.large_page_enabled = true,
 	.get_default_access_right = ppt_get_default_access_right,
 	.pgentry_present = ppt_pgentry_present,
 	.get_pml4_page = ppt_get_pml4_page,
@@ -205,11 +207,16 @@ void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
 	mem_ops->get_pd_page = ept_get_pd_page;
 	mem_ops->get_pt_page = ept_get_pt_page;
 	mem_ops->clflush_pagewalk = ept_clflush_pagewalk;
+	mem_ops->large_page_enabled = true;
 
 	/* Mitigation for issue "Machine Check Error on Page Size Change" */
 	if (is_ept_force_4k_ipage()) {
 		mem_ops->tweak_exe_right = ept_tweak_exe_right;
 		mem_ops->recover_exe_right = ept_recover_exe_right;
+		/* For RTVM, build 4KB page mapping in EPT */
+		if (is_rt_vm(get_vm_from_vmid(vm_id))) {
+			mem_ops->large_page_enabled = false;
+		}
 	} else {
 		mem_ops->tweak_exe_right = nop_tweak_exe_right;
 		mem_ops->recover_exe_right = nop_recover_exe_right;
