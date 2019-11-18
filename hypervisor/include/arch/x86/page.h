@@ -64,6 +64,7 @@ union pgtable_pages_info {
 
 struct memory_ops {
 	union pgtable_pages_info *info;
+	bool large_page_enabled;
 	uint64_t (*get_default_access_right)(void);
 	uint64_t (*pgentry_present)(uint64_t pte);
 	struct page *(*get_pml4_page)(const union pgtable_pages_info *info);
