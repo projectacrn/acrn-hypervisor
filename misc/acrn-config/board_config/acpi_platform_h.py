@@ -90,6 +90,12 @@ def multi_info_parser(config, default_platform, msg_s, msg_e):
     pm_ac_sz = OverridAccessSize()
     multi_lines = board_cfg_lib.get_info(board_cfg_lib.BOARD_INFO_FILE, msg_s, msg_e)
 
+    # S3/S5 not supported by BIOS
+    sx_name = msg_s.split('_')[0].strip('<')
+    if not multi_lines and sx_name in ("S3", "S5"):
+        print("/* {} is not supported by BIOS */".format(sx_name), file=config)
+        return
+
     for s_line in multi_lines:
         # parse the commend line
         if '/*' in s_line:
