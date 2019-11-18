@@ -507,20 +507,6 @@ modify_bar_registration(struct pci_vdev *dev, int idx, int registration)
 	struct inout_port iop;
 	struct mem_range mr;
 
-	if (is_pci_gvt(dev)) {
-		/* GVT device is the only one who traps the pci bar access and
-		 * intercepts the corresponding contents in kernel. It needs
-		 * register pci resource only, but no need to register the
-		 * region.
-		 *
-		 * FIXME: This is a short term solution. This patch will be
-		 * obsoleted with the migration of using OVMF to do bar
-		 * addressing and generate ACPI PCI resource from using
-		 * acrn-dm.
-		 */
-		pr_notice("modify_bar_registration: bypass for pci-gvt\n");
-		return 0;
-	}
 	switch (dev->bar[idx].type) {
 	case PCIBAR_IO:
 		bzero(&iop, sizeof(struct inout_port));
