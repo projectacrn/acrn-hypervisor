@@ -60,6 +60,10 @@ struct shell {
 #define SHELL_CMD_DUMP_HOST_MEM_PARAM	"<addr, length>"
 #define SHELL_CMD_DUMP_HOST_MEM_HELP	"Dump host memory, starting at a given address(Hex), and for a given length (Dec in bytes)"
 
+#define SHELL_CMD_DUMP_GUEST_MEM	"dump_guest_mem"
+#define SHELL_CMD_DUMP_GUEST_MEM_PARAM	"<vm_id, addr, length>"
+#define SHELL_CMD_DUMP_GUEST_MEM_HELP	"Dump guest memory, vm id(Dec), starting at a given address(Hex), and for a given length (Dec in bytes)"
+
 #define SHELL_CMD_VM_CONSOLE		"vm_console"
 #define SHELL_CMD_VM_CONSOLE_PARAM	"<vm id>"
 #define SHELL_CMD_VM_CONSOLE_HELP	"Switch to the VM's console. Use [Ctrl+Spacebar] to return to the ACRN shell "\

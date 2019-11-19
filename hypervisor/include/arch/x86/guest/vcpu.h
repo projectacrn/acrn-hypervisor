@@ -263,6 +263,12 @@ struct vcpu_dump {
 	uint32_t str_max;
 };
 
+struct guest_mem_dump {
+	struct acrn_vcpu *vcpu;
+	uint64_t gva;
+	uint64_t len;
+};
+
 static inline bool is_vcpu_bsp(const struct acrn_vcpu *vcpu)
 {
 	return (vcpu->vcpu_id == BOOT_CPU_ID);
