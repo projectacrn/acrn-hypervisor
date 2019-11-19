@@ -23,6 +23,7 @@ DOC_OUT := $(ROOT_OUT)/doc
 BUILD_VERSION ?=
 BUILD_TAG ?=
 DEFAULT_MENU_CONFIG_FILE ?= $(T)/hypervisor/build/.config
+GENED_ACPI_INFO_HEADER = $(T)/hypervisor/arch/x86/configs/$(BOARD)/$(BOARD)_acpi_info.h
 
 ifneq ($(BOARD_FILE),)
     override BOARD_FILE := $(shell if [ -f $(BOARD_FILE) ]; then realpath $(BOARD_FILE); fi)
@@ -120,7 +121,10 @@ hypervisor:
 			echo "CONFIG_ENFORCE_VALIDATED_ACPI_INFO=y" >> $(HV_OUT)/.config;	\
 		elif [ "$(SCENARIO)" ]; then \
 			echo "CONFIG_$(shell echo $(SCENARIO) | tr a-z A-Z)=y" >> $(HV_OUT)/.config;	\
-		fi \
+		fi; \
+		if [ -f $(GENED_ACPI_INFO_HEADER) ] && [ "$(CONFIG_XML_ENABLED)" != "true" ]; then \
+			echo "Warning: Find acrn-config tool generated $(GENED_ACPI_INFO_HEADER), please double check its validity."; \
+		fi; \
 	fi
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE)
 #ifeq ($(FIRMWARE),uefi)
