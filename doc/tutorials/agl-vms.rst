@@ -18,15 +18,14 @@ technologies.
 
    Demo concept
 
-:numref:`agl-demo-concept` shows the AGL demo system configuration.  The
+:numref:`agl-demo-concept` shows the AGL demo system configuration. The
 hardware is an Intel Kaby Lake NUC and three displays for the cluster
 meter, the In-Vehicle Infotainment (IVI) system, and the rear seat
-entertainment (RSE).  For the software, there are three VMs running on
-top of ACRN:
+entertainment (RSE). For software, three VMs run on top of ACRN:
 
-* Clear Linux OS runs as the service OS (Service VM) to control the cluster meter,
-* an AGL instance runs as a user OS (User VM) controlling the IVI display, and
-* a second AGL User VM controls the RSE display.
+* Clear Linux OS runs as the service OS (Service VM) to control the cluster meter.
+* An AGL instance runs as a user OS (User VM) to control the IVI display.
+* A second AGL User VM controls the RSE display.
 
 :numref:`agl-demo-setup` shows the hardware and display images of a
 running demo:
@@ -38,10 +37,10 @@ running demo:
 
    Demo in action
 
-Hardware setup
+Hardware Setup
 **************
 
-Here is the hardware used for the demo development:
+The following hardware is used for demo development:
 
 .. list-table:: Demo Hardware
    :header-rows: 1
@@ -57,7 +56,7 @@ Here is the hardware used for the demo development:
          <https://www.intel.com/content/dam/support/us/en/documents/mini-pcs/nuc-kits/NUC7i7DN_TechProdSpec.pdf>`_,
        * `Tested components and peripherals
          <http://compatibleproducts.intel.com/ProductDetails?prodSearch=True&searchTerm=NUC7i7DNHE#>`_,
-       * 16GB RAM, and
+       * 16GB RAM
        * 120GB SATA SSD
    * - eDP display
      - `Sharp LQ125T1JX05
@@ -78,10 +77,10 @@ Here is the hardware used for the demo development:
        <https://www.gorite.com/intel-nuc-rs232-lid-for-7th-gen-dawson-canyon-nuc>`_
      -
 
-Connecting hardware
-===================
+Connect Hardware
+================
 
-Learn how to connect an eDP display to the NUC using an eDP cable as
+Learn how to connect an eDP display to the NUC using an eDP cable, as
 shown in :numref:`agl-cables`, by
 following the `NUC specification
 <https://www.intel.com/content/dam/support/us/en/documents/mini-pcs/nuc-kits/NUC7i7DN_TechProdSpec.pdf>`_
@@ -93,9 +92,9 @@ following the `NUC specification
    USB an Display cable connections
 
 As shown in :numref:`agl-cables`, connect HDMI cables and USB cables
-(for touch) to the touch displays for the IVI and RSE. (If the USB port
-for touch is changed, the USB bus-port number in the AGL launch script
-must be changed accordingly.)
+(for touch) to the touch displays for the IVI and RSE. Note that if the USB
+port for touch is changed, the USB bus-port number in the AGL launch script
+must be changed accordingly.
 
 Software Setup
 **************
@@ -130,16 +129,16 @@ Service OS
    https://download.clearlinux.org/releases/31080/clear/clear-31080-live-server.img.xz
    and follow the `Clear Linux OS installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install-server>`_
-   as a starting point for installing Clear Linux OS onto your platform.
+   as a starting point for installing the Clear Linux OS onto your platform.
    Follow the recommended options for choosing an Automatic installation
    type, and using the platform's storage as the target device for
    installation (overwriting the existing data and creating three
    partitions on the platform's storage drive).
 
-#. After installation is complete, boot into Clear Linux OS, login as
+#. After installation is complete, boot into the Clear Linux OS, log in as
    root, and set a password.
 
-#. Clear Linux OS is set to automatically update itself. We recommend that
+#. The Clear Linux OS is set to automatically update itself. We recommend that
    you disable this feature to have more control over when the updates
    happen. Use this command (as root) to disable the autoupdate feature::
 
@@ -152,20 +151,20 @@ Service OS
 
       # swupd verify --fix --picky -m 31080
 
-#. Use `acrn_quick_setup.sh <https://github.com/projectacrn/acrn-hypervisor/blob/84c2b8819f479c5e6f4641490ff4bf6004f112d1/doc/getting-started/acrn_quick_setup.sh>`_ 
+#. Use `acrn_quick_setup.sh <https://github.com/projectacrn/acrn-hypervisor/blob/84c2b8819f479c5e6f4641490ff4bf6004f112d1/doc/getting-started/acrn_quick_setup.sh>`_
    to automatically install ACRN::
-      
-      # sh acrn_quick_setup.sh -s 31080 -i 
 
-#. After installation, the system will automatically start
+      # sh acrn_quick_setup.sh -s 31080 -i
 
-#. Reboot the system, choose "ACRN Hypervisor" and launch Clear Linux OS
+#. After installation, the system will automatically start.
+
+#. Reboot the system, choose **ACRN Hypervisor**, and launch the Clear Linux OS
    Service VM. If the EFI boot order is not right, use :kbd:`F10`
-   on boot up to enter the EFI menu and choose "ACRN Hypervisor".
+   on boot up to enter the EFI menu and choose **ACRN Hypervisor**.
 
 
 #. Install the graphics UI if necessary. Use only one of the two
-   options listed below (this guide uses the first GNOME on Wayland option)::
+   options listed below (this guide uses the GNOME on Wayland option)::
 
       # swupd bundle-add desktop desktop-autostart # GNOME and Weston
 
@@ -174,7 +173,7 @@ Service OS
       # swupd bundle-add software-defined-cockpit # IAS shell for IVI (optional)
 
 
-#. Create a new user and allow the user to use "sudo"::
+#. Create a new user and allow the user to use sudo::
 
       # useradd <username>
       # passwd <username>
@@ -185,14 +184,14 @@ Service OS
 
       # reboot
 
-#. The system will reboot to the graphic interface (GDM). In the login
-   screen, click on the setting button and choose "GNOME on Wayland". Then
-   chose the <username> and enter the password to login.
+#. The system will reboot to the graphic interface (GDM). From the login
+   screen, click **Setting** and choose **GNOME on Wayland**. Then
+   chose the <username> and enter the password to log in.
 
-Building ACRN kernel for AGL (User VM)
-==================================
+Build ACRN kernel for AGL (User VM)
+===================================
 
-In this demo, we use acrn-kernel as the baseline for development for AGL.
+In this demo, we use acrn-kernel as the baseline for AGL development.
 
 #. Create a workspace, get the kernel source code, and configure kernel
    settings with::
@@ -202,11 +201,11 @@ In this demo, we use acrn-kernel as the baseline for development for AGL.
       $ git checkout tags/acrn-2019w39.1-140000p
       $ cp kernel_config_uos .config
       $ vi .config
-      $ make olddefconfig   
+      $ make olddefconfig
 
 
-   Load the **.config** for the User VM kernel build, and verify
-   the following configs options are on::
+#. Load the `.config` for the User VM kernel build, and verify
+   that the following config options are on::
 
       CONFIG_LOCALVERSION="-uos"
       CONFIG_SECURITY_SMACK=y
@@ -227,8 +226,8 @@ In this demo, we use acrn-kernel as the baseline for development for AGL.
       $ sudo make modules_install
       $ sudo cp arch/x86/boot/bzImage /root/bzImage-4.19.0-uos
 
-Setting up AGLs
-===============
+Set up AGLs
+===========
 
 #. Download the AGL Funky Flounder image::
 
@@ -328,7 +327,7 @@ Setting up AGLs
 
       #!/bin/bash
 
-      set -x 
+      set -x
 
       offline_path="/sys/class/vhm/acrn_vhm"
 
@@ -482,7 +481,7 @@ Setting up AGLs
 
    .. note:: Reboot for the changes to take affect.
 
-Congratulations! You've successfully launch the demo system. It should
+You have successfully launched the demo system. It should
 look similar to :numref:`agl-demo-setup` at the beginning of this
 document. AGL as IVI and RSE work independently on top
 of ACRN and you can interact with them via the mouse.
