@@ -56,10 +56,9 @@ struct shell {
 #define SHELL_CMD_VCPU_DUMPREG_PARAM	"<vm id, vcpu id>"
 #define SHELL_CMD_VCPU_DUMPREG_HELP	"Dump registers for a specific vCPU"
 
-#define SHELL_CMD_DUMPMEM		"dumpmem"
-#define SHELL_CMD_DUMPMEM_PARAM		"<addr, length>"
-#define SHELL_CMD_DUMPMEM_HELP		"Dump host memory, starting at a given address, and for a given length (in "\
-					"bytes)"
+#define SHELL_CMD_DUMP_HOST_MEM		"dump_host_mem"
+#define SHELL_CMD_DUMP_HOST_MEM_PARAM	"<addr, length>"
+#define SHELL_CMD_DUMP_HOST_MEM_HELP	"Dump host memory, starting at a given address(Hex), and for a given length (Dec in bytes)"
 
 #define SHELL_CMD_VM_CONSOLE		"vm_console"
 #define SHELL_CMD_VM_CONSOLE_PARAM	"<vm id>"

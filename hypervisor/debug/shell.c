@@ -38,7 +38,7 @@ static int32_t shell_version(__unused int32_t argc, __unused char **argv);
 static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv);
 static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv);
 static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv);
-static int32_t shell_dumpmem(int32_t argc, char **argv);
+static int32_t shell_dump_host_mem(int32_t argc, char **argv);
 static int32_t shell_to_vm_console(int32_t argc, char **argv);
 static int32_t shell_show_cpu_int(__unused int32_t argc, __unused char **argv);
 static int32_t shell_show_ptdev_info(__unused int32_t argc, __unused char **argv);
@@ -82,10 +82,10 @@ static struct shell_cmd shell_cmds[] = {
 		.fcn		= shell_vcpu_dumpreg,
 	},
 	{
-		.str		= SHELL_CMD_DUMPMEM,
-		.cmd_param	= SHELL_CMD_DUMPMEM_PARAM,
-		.help_str	= SHELL_CMD_DUMPMEM_HELP,
-		.fcn		= shell_dumpmem,
+		.str		= SHELL_CMD_DUMP_HOST_MEM,
+		.cmd_param	= SHELL_CMD_DUMP_HOST_MEM_PARAM,
+		.help_str	= SHELL_CMD_DUMP_HOST_MEM_HELP,
+		.fcn		= shell_dump_host_mem,
 	},
 	{
 		.str		= SHELL_CMD_VM_CONSOLE,
@@ -824,49 +824,34 @@ out:
 	return status;
 }
 
-#define MAX_MEMDUMP_LEN		(32U * 8U)
-static int32_t shell_dumpmem(int32_t argc, char **argv)
+static int32_t shell_dump_host_mem(int32_t argc, char **argv)
 {
-	uint64_t addr;
-	uint64_t *ptr;
-	uint32_t i, length;
+	uint64_t *hva;
+	int32_t ret;
+	uint32_t i, length, loop_cnt;
 	char temp_str[MAX_STR_SIZE];
 
 	/* User input invalidation */
-	if ((argc != 2) && (argc != 3)) {
-		return -EINVAL;
-	}
+	if (argc != 3) {
+		ret = -EINVAL;
+	} else	{
+		hva = (uint64_t *)strtoul_hex(argv[1]);
+		length = (uint32_t)strtol_deci(argv[2]);
 
-	addr = strtoul_hex(argv[1]);
-	length = (uint32_t)strtol_deci(argv[2]);
-	if (length > MAX_MEMDUMP_LEN) {
-		shell_puts("over max length, round back\r\n");
-		length = MAX_MEMDUMP_LEN;
-	}
-
-	snprintf(temp_str, MAX_STR_SIZE,
-		"Dump physical memory addr: 0x%016lx, length %d:\r\n",
-		addr, length);
-	shell_puts(temp_str);
-
-	ptr = (uint64_t *)addr;
-	for (i = 0U; i < (length >> 5U); i++) {
-		snprintf(temp_str, MAX_STR_SIZE,
-			"=  0x%016lx  0x%016lx  0x%016lx  0x%016lx\r\n",
-			*(ptr + (i * 4U)), *(ptr + ((i * 4U) + 1U)),
-			*(ptr + ((i * 4U) + 2U)), *(ptr + ((i * 4U) + 3U)));
+		snprintf(temp_str, MAX_STR_SIZE, "Dump physical memory addr: 0x%016lx, length %d:\r\n", hva, length);
 		shell_puts(temp_str);
+		/* Change the length to a multiple of 32 if the length is not */
+		loop_cnt = ((length & 0x1fU) == 0U) ? ((length >> 5U)) : ((length >> 5U) + 1U);
+		for (i = 0U; i < loop_cnt; i++) {
+			snprintf(temp_str, MAX_STR_SIZE, "HVA(0x%llx): 0x%016lx  0x%016lx  0x%016lx  0x%016lx\r\n",
+					hva, *hva, *(hva + 1UL), *(hva + 2UL), *(hva + 3UL));
+			hva += 4UL;
+			shell_puts(temp_str);
+		}
+		ret = 0;
 	}
 
-	if ((length & 0x1fU) != 0U) {
-		snprintf(temp_str, MAX_STR_SIZE,
-			"=  0x%016lx  0x%016lx  0x%016lx 0x%016lx\r\n",
-			*(ptr + (i * 4U)), *(ptr + ((i * 4U) + 1U)),
-			*(ptr + ((i * 4U) + 2U)), *(ptr + ((i * 4U) + 3U)));
-		shell_puts(temp_str);
-	}
-
-	return 0;
+	return ret;
 }
 
 static int32_t shell_to_vm_console(int32_t argc, char **argv)
