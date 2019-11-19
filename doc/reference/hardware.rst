@@ -23,6 +23,10 @@ Minimum Requirements for Processor
 **********************************
 1 GB Large pages
 
+Known Limitations
+*****************
+Platforms with multiple PCI segments
+
 Verified Platforms According to ACRN Usage
 ******************************************
 
