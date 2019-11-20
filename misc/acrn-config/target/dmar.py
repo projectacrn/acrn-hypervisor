@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import sys
 import ctypes
+import parser_lib
 
 ACPI_DMAR_TYPE = {
     'ACPI_DMAR_TYPE_HARDWARE_UNIT':0,
@@ -167,6 +169,7 @@ class DmarTbl:
 # config from the other part of tools, so hard code the GPU_SBDF to gernerate DRHDx_IGNORE macro
 CONFIG_GPU_SBDF = 0x10
 
+PCI_BRIDGE_HEADER = 1
 
 class PathDevFun:
     """Path Device Function meta data"""
@@ -184,6 +187,56 @@ class PathDevFun:
         self.path = 0
 
 
+def get_secondary_bus(dmar_tbl, tmp_dev, tmp_fun):
+
+    cmd = "lspci -xxx"
+    secondary_bus_str = ''
+    found_pci_bdf = False
+    pci_bridge_header_type = False
+    res = parser_lib.cmd_execute(cmd)
+
+    while True:
+        line = res.stdout.readline().decode("ascii")
+
+        if not line:
+            break
+
+        if ':' not in line or len(line.strip().split(":")) < 1:
+            continue
+
+        if not found_pci_bdf:
+            if '.' not in line.strip():
+                continue
+
+            bus = int(line.strip().split(":")[0], 16)
+            dev = int(line.strip().split()[0].split(":")[1].split(".")[0], 16)
+            fun = int(line.strip().split()[0].split(":")[1].split(".")[1].strip(), 16)
+            if bus == dmar_tbl.dmar_dev_scope.bus and dev == tmp_dev and fun == tmp_fun:
+                found_pci_bdf = True
+                continue
+        else:
+            if "00:" == line.strip().split()[0]:
+                # PCI Header type stores in 0xE
+                if len(line.split()) >= 16 and int(line.strip().split()[15], 16) & 0x7 == PCI_BRIDGE_HEADER:
+                    pci_bridge_header_type = True
+                    continue
+
+            if not pci_bridge_header_type:
+                continue
+
+            # found the pci device, parse the secondary bus
+            if "10:" == line.strip().split()[0]:
+                # Secondary PCI BUS number stores in 0x18
+                secondary_bus_str = line.split()[9]
+                found_pci_bdf = False
+                pci_bridge_header_type = False
+                break
+
+    # the pci device has secondary bus
+    if secondary_bus_str:
+        dmar_tbl.dmar_dev_scope.bus = int(secondary_bus_str, 16)
+
+
 def walk_pci_bus(tmp_pdf, dmar_tbl, dmar_hw_list, drhd_cnt):
     """Walk Pci bus
     :param tmp_pdf: it is a class what contains path,device,function in dmar device scope region
@@ -199,6 +252,9 @@ def walk_pci_bus(tmp_pdf, dmar_tbl, dmar_hw_list, drhd_cnt):
         tmp_pdf.device = scope_path.device
         tmp_pdf.function = scope_path.function
         tmp_pdf.path = (((tmp_pdf.device & 0x1F) << 3) | ((tmp_pdf.function & 0x7)))
+
+        # walk the secondary pci bus
+        get_secondary_bus(dmar_tbl, tmp_pdf.device, tmp_pdf.function)
 
         if ((dmar_tbl.dmar_drhd.segment << 16) | (
                 dmar_tbl.dmar_dev_scope.bus << 8) | tmp_pdf.path) == CONFIG_GPU_SBDF:
