@@ -63,7 +63,8 @@ def gen_dmar_structure(config):
         print("\t\t.segment       = DRHD{}_SEGMENT,".format(i_drhd_cnt), file=config)
         print("\t\t.flags         = DRHD{}_FLAGS,".format(i_drhd_cnt), file=config)
         print("\t\t.reg_base_addr = DRHD{}_REG_BASE,".format(i_drhd_cnt), file=config)
-        print("\t\t.ignore        = DRHD{}_IGNORE,".format(i_drhd_cnt), file=config)
+        if dev_cnt != 0:
+            print("\t\t.ignore        = DRHD{}_IGNORE,".format(i_drhd_cnt), file=config)
         print("\t\t.devices       = drhd{}_dev_scope".format(i_drhd_cnt), file=config)
         print("\t},", file=config)
 
