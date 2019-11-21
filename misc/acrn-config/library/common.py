@@ -550,7 +550,7 @@ def add_to_patch(srcs_list, commit_name):
         return err_dic
 
     # commit this changes
-    git_commit = 'git commit -sm "acrn-config: config board patch for {}"'.format(commit_name)
+    git_commit = 'git commit -sm "acrn-config: config patch for {}"'.format(commit_name)
 
     try:
         ret = subprocess.call(git_commit, shell=True, stdout=subprocess.PIPE,

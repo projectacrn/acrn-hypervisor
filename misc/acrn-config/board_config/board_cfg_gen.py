@@ -123,7 +123,7 @@ def main(args):
     gen_str = 'generated'
     # move changes to patch, and apply to the source code
     if enable_commit:
-        err_dic = board_cfg_lib.gen_patch(config_srcs, board)
+        err_dic = board_cfg_lib.gen_patch(config_srcs, "board " + board)
         config_str = 'Config patch'
         gen_str = 'committed'
 
