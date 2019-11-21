@@ -1,10 +1,10 @@
 .. _release_notes_1.0.2:
 
 ACRN v1.0.2 (November 2019)
-#######################
+###########################
 
 We are pleased to announce the release of ACRN version 1.0.2. This is a
-maintenance release based off the v1.0 branch that primarily fixes some
+maintenance release based on the v1.0 branch that primarily fixes some
 potential security and stability issues discovered after the v1.0
 release.
 
@@ -27,8 +27,8 @@ There were no documentation changes in this update, so you can still
 refer to the v1.0-specific documentation found at
 https://projectacrn.github.io/1.0/.
 
-Change Log in version 1.0.2 since version 1.0.1
-*********************************************
+Change Log in v1.0.2 since v1.0.1
+*********************************
 
 Primary changes are to fix several security and stability issues found
 on the v1.0 branch, as listed here:
