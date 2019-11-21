@@ -136,7 +136,7 @@ def main(args):
     gen_str = 'generated'
     # move changes to patch, and apply to the source code
     if enable_commit:
-        err_dic = scenario_cfg_lib.gen_patch(config_srcs, scenario)
+        err_dic = scenario_cfg_lib.gen_patch(config_srcs, "scenario " + scenario)
         config_str = 'Config patch'
         gen_str = 'committed'
 
