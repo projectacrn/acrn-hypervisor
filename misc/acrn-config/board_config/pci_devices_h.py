@@ -14,6 +14,18 @@ PCI_END_HEADER = r"""
 #endif /* PCI_DEVICES_H_ */"""
 
 
+def get_value_after_str(line, key):
+    """ Get the value after cstate string """
+    idx = 0
+    line_in_list = line.split()
+    for idx_key, val in enumerate(line_in_list):
+        if val == key:
+            idx = idx_key
+            break
+
+    return line_in_list[idx + 1]
+
+
 def parser_pci():
     """ Parse PCI lines """
     cur_bdf = 0
@@ -21,7 +33,8 @@ def parser_pci():
     tmp_bar_dic = {}
     pci_dev_dic = {}
     pci_bar_dic = {}
-    bar_value = bar_num = '0'
+    above_4G_mmio = False
+    bar_addr = bar_num = '0'
 
     pci_lines = board_cfg_lib.get_info(
         board_cfg_lib.BOARD_INFO_FILE, "<PCI_DEVICE>", "</PCI_DEVICE>")
@@ -29,8 +42,10 @@ def parser_pci():
         # get pci bar information into pci_bar_dic
         if "Region" in line and "Memory at" in line:
             bar_num = line.split()[1].strip(':')
-            bar_value = line.split()[4]
-            tmp_bar_dic[int(bar_num)] = hex(int(bar_value, 16))
+            bar_addr = get_value_after_str(line, "at")
+            if int(bar_addr, 16) > 0xffffffff:
+                above_4G_mmio = True
+            tmp_bar_dic[int(bar_num)] = hex(int(bar_addr, 16))
         else:
             prev_bdf = cur_bdf
             pci_bdf = line.split()[0]
@@ -51,6 +66,11 @@ def parser_pci():
 
             # clear the tmp_bar_dic before store the next dic
             tmp_bar_dic = {}
+
+    if above_4G_mmio:
+        board_cfg_lib.print_yel("Currently ACRN does not support BAR size above 4G, please double check below possible items in BIOS:\n\
+        1. GPU Aperture size is less than 1GB;\n\
+        2. the device MMIO mapping region is below 4GB", warn=True)
 
     # output all the pci device list to pci_device.h
     sub_name_count = collections.Counter(pci_dev_dic.values())
