@@ -637,48 +637,43 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 
 	if (entry != NULL) {
 		ret = 0;
-		if (is_entry_active(entry) && (info->vmsi_data.full == 0U)) {
-			/* handle destroy case */
-			info->pmsi_data.full = 0U;
-		} else {
-			/* build physical config MSI, update to info->pmsi_xxx */
-			if (is_lapic_pt_configured(vm)) {
-				enum vm_vlapic_state vlapic_state = check_vm_vlapic_state(vm);
-				if (vlapic_state == VM_VLAPIC_X2APIC) {
-					/*
-					 * All the vCPUs are in x2APIC mode and LAPIC is Pass-through
-					 * Use guest vector to program the interrupt source
-					 */
-					ptirq_build_physical_msi(vm, info, entry, (uint32_t)info->vmsi_data.bits.vector);
-				} else if (vlapic_state == VM_VLAPIC_XAPIC) {
-					/*
-					 * All the vCPUs are in xAPIC mode and LAPIC is emulated
-					 * Use host vector to program the interrupt source
-					 */
-					ptirq_build_physical_msi(vm, info, entry, irq_to_vector(entry->allocated_pirq));
-				} else if (vlapic_state == VM_VLAPIC_TRANSITION) {
-					/*
-					 * vCPUs are in middle of transition, so do not program interrupt source
-					 * TODO: Devices programmed during transistion do not work after transition
-					 * as device is not programmed with interrupt info. Need to implement a
-					 * method to get interrupts working after transition.
-					 */
-					ret = -EFAULT;
-				} else {
-					/* Do nothing for VM_VLAPIC_DISABLED */
-					ret = -EFAULT;
-				}
-			} else {
+		/* build physical config MSI, update to info->pmsi_xxx */
+		if (is_lapic_pt_configured(vm)) {
+			enum vm_vlapic_state vlapic_state = check_vm_vlapic_state(vm);
+			if (vlapic_state == VM_VLAPIC_X2APIC) {
+				/*
+				 * All the vCPUs are in x2APIC mode and LAPIC is Pass-through
+				 * Use guest vector to program the interrupt source
+				 */
+				ptirq_build_physical_msi(vm, info, entry, (uint32_t)info->vmsi_data.bits.vector);
+			} else if (vlapic_state == VM_VLAPIC_XAPIC) {
+				/*
+				 * All the vCPUs are in xAPIC mode and LAPIC is emulated
+				 * Use host vector to program the interrupt source
+				 */
 				ptirq_build_physical_msi(vm, info, entry, irq_to_vector(entry->allocated_pirq));
+			} else if (vlapic_state == VM_VLAPIC_TRANSITION) {
+				/*
+				 * vCPUs are in middle of transition, so do not program interrupt source
+				 * TODO: Devices programmed during transistion do not work after transition
+				 * as device is not programmed with interrupt info. Need to implement a
+				 * method to get interrupts working after transition.
+				 */
+				ret = -EFAULT;
+			} else {
+				/* Do nothing for VM_VLAPIC_DISABLED */
+				ret = -EFAULT;
 			}
+		} else {
+			ptirq_build_physical_msi(vm, info, entry, irq_to_vector(entry->allocated_pirq));
+		}
 
-			if (ret == 0) {
-				entry->msi = *info;
-				vbdf.value = virt_bdf;
-				dev_dbg(ACRN_DBG_IRQ, "PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
-					vbdf.bits.b, vbdf.bits.d, vbdf.bits.f, entry_nr, info->vmsi_data.bits.vector,
-					irq_to_vector(entry->allocated_pirq), entry->vm->vm_id);
-			}
+		if (ret == 0) {
+			entry->msi = *info;
+			vbdf.value = virt_bdf;
+			dev_dbg(ACRN_DBG_IRQ, "PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
+				vbdf.bits.b, vbdf.bits.d, vbdf.bits.f, entry_nr, info->vmsi_data.bits.vector,
+				irq_to_vector(entry->allocated_pirq), entry->vm->vm_id);
 		}
 	}
 
