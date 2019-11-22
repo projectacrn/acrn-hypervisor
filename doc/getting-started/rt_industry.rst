@@ -9,7 +9,6 @@ Verified version
 - Clear Linux version: **31670**
 - ACRN-hypervisor tag: **v1.4**
 - ACRN-Kernel(Service VM kernel): **4.19.78-98.iot-lts2018-sos**
-- ACRN-Kernel(Preempt-RT kernel): **acrn-2019w47.3-140000p**
 
 Prerequisites
 *************
