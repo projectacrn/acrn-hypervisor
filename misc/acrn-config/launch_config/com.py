@@ -32,8 +32,8 @@ def tap_uos_net(names, vmid, config):
     vm_name = launch_cfg_lib.undline_name(uos_type).lower()
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if board_name in ("apl-mrb", "apl-up2"):
-            print('if [ ! -f "/data/$3/$3.img" ]; then', file=config)
-            print('  echo "no /data/$3/$3.img, exit"', file=config)
+            print('if [ ! -f "/data/{}/{}.img" ]; then'.format(vm_name, vm_name), file=config)
+            print('  echo "no /data/{}/{}.img, exit"'.format(vm_name, vm_name), file=config)
             print("  exit", file=config)
             print("fi", file=config)
             print("", file=config)
@@ -81,35 +81,42 @@ def delay_use_usb_storage(uos_type, config):
         print("echo 100 > /sys/bus/usb/drivers/usb-storage/module/parameters/delay_use", file=config)
 
 
-def off_line_cpus(uos_type, config):
+def off_line_cpus(args, vmid, uos_type, config):
+    """
+    :param args: the dictionary of argument for acrn-dm
+    :param vmid: ID of the vm
+    :param uos_type: the type of UOS
+    :param config: it is a file pointer to write offline cpu information
+    """
+    cpus = ''
+    cpus = '..'.join(list(args["off_pcpus"][vmid]))
+    if not cpus.strip():
+        key = "launch script error:"
+        launch_cfg_lib.ERR_LIST[key] = "No available cpu to offline and pass it to vm {}".format(vmid)
 
     print('offline_path="/sys/class/vhm/acrn_vhm"', file=config)
     print("", file=config)
 
-    if uos_type in ("ANDROID", "CLEARLINUX", "ALIOS"):
-        print("# Check the device file of /dev/acrn_hsm to determine the offline_path", file=config)
-        print('if [ -e "/dev/acrn_hsm" ]; then', file=config)
-        print('offline_path="/sys/class/acrn/acrn_hsm"', file=config)
-        print('fi', file=config)
-        print("", file=config)
-    print("# offline SOS CPUs except BSP before launch UOS", file=config)
-    print("for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do", file=config)
+    print("# Check the device file of /dev/acrn_hsm to determine the offline_path", file=config)
+    print('if [ -e "/dev/acrn_hsm" ]; then', file=config)
+    print('offline_path="/sys/class/acrn/acrn_hsm"', file=config)
+    print('fi', file=config)
+    print("", file=config)
+    print("# offline pinned vCPUs from SOS before launch UOS", file=config)
+    print("for i in `ls -d /sys/devices/system/cpu/cpu[{}]`; do".format(cpus), file=config)
     print("        online=`cat $i/online`", file=config)
     print('        idx=`echo $i | tr -cd "[1-99]"`', file=config)
     print("        echo cpu$idx online=$online", file=config)
     print('        if [ "$online" = "1" ]; then', file=config)
-    print("                echo 0 > $i/online", file=config)
-
-    if uos_type in ("ANDROID", "CLEARLINUX", "ALIOS"):
-        print("             online=`cat $i/online`", file=config)
-        print("             # during boot time, cpu hotplug may be disabled by pci_device_probe during a pci module insmod", file=config)
-    if uos_type != "PREEMPT-RT LINUX":
-        print('             while [ "$online" = "1" ]; do', file=config)
-        print("                     sleep 1", file=config)
-        print("                     echo 0 > $i/online", file=config)
-        print("                     online=`cat $i/online`", file=config)
-        print("             done", file=config)
-    print("                echo $idx > ${offline_path}/offline_cpu", file=config)
+    print("             echo 0 > $i/online", file=config)
+    print("             online=`cat $i/online`", file=config)
+    print("             # during boot time, cpu hotplug may be disabled by pci_device_probe during a pci module insmod", file=config)
+    print('             while [ "$online" = "1" ]; do', file=config)
+    print("                     sleep 1", file=config)
+    print("                     echo 0 > $i/online", file=config)
+    print("                     online=`cat $i/online`", file=config)
+    print("             done", file=config)
+    print("             echo $idx > ${offline_path}/offline_cpu", file=config)
     print("        fi", file=config)
     print("done", file=config)
     print("", file=config)
@@ -306,8 +313,6 @@ def launch_end(names, args, vmid, config):
         print('while getopts "hdC" opt', file=config)
         print("do", file=config)
         print("	case $opt in", file=config)
-
-        print("			;;", file=config)
         print("		d) debug=1", file=config)
         print("			;;", file=config)
         print("		C)", file=config)
@@ -334,7 +339,7 @@ def launch_end(names, args, vmid, config):
         print("mount {} /data".format(root_fs), file=config)
         print("", file=config)
 
-    off_line_cpus(uos_type, config)
+    off_line_cpus(args, vmid, uos_type, config)
 
     uos_launch(names, args, vmid, config)
 

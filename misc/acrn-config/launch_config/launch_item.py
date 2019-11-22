@@ -22,6 +22,7 @@ class AcrnDmArgs:
         self.args["rootfs_img"] = launch_cfg_lib.get_sub_tree_tag(self.launch_info, "rootfs_img")
         self.args["vbootloader"] = launch_cfg_lib.get_sub_tree_tag(self.launch_info, "vbootloader")
         self.args["console_type"] = launch_cfg_lib.get_sub_tree_tag(self.launch_info, "console_type")
+        self.args["off_pcpus"] = launch_cfg_lib.get_leaf_tag_map(self.scenario_info, "vcpu_affinity", "pcpu_id")
 
     def check_item(self):
         rootfs = launch_cfg_lib.get_rootdev_info(self.board_info)
