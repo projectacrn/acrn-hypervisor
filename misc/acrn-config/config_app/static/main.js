@@ -323,6 +323,17 @@ $().ready(function(){
         config_item.remove();
     });
 
+    $('#remove_vm_kata').on('click', function() {
+        if(confirm("Do you want to remove the VM?")) {
+            save_scenario("remove_vm_kata");
+        }
+    });
+
+    $('#add_vm_kata').on('click', function() {
+        if(confirm("Do you want to add the Kata VM based on generic config?")) {
+            save_scenario("add_vm_kata");
+        }
+    });
 })
 
 
@@ -362,7 +373,8 @@ function save_scenario(generator=null){
 
     scenario_config = {
 		old_scenario_name: $("#old_scenario_name").text(),
-		new_scenario_name: $("#new_scenario_name").val()
+		new_scenario_name: $("#new_scenario_name").val(),
+		generator: generator
 	}
 
     $("input").each(function(){
@@ -425,7 +437,7 @@ function save_scenario(generator=null){
                     validate_message = 'Scenario setting existed, saved successfully with a new name: '
                         +file_name+'\ninto acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/user_defined/.';
                 }
-                if(generator != null) {
+                if(generator=="generate_board_src" || generator=="generate_scenario_src") {
                     commit_confirm_message = validate_message+'\n\nGenerate source codes from scenario setting.'
                         +'\n\nDo you want to commit changes to local tree?'
                     commit_confirm = 'no'

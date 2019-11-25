@@ -169,11 +169,25 @@ def save_scenario():
     scenario_config.set_curr(old_scenario_name)
     for key in scenario_config_data:
         if key not in ['old_scenario_name', 'new_scenario_name', 'board_info_file',
-                       'board_info_upload']:
+                       'board_info_upload', 'generator']:
             if isinstance(scenario_config_data[key], list):
                 scenario_config.set_curr_list(scenario_config_data[key], *tuple(key.split(',')))
             else:
                 scenario_config.set_curr_value(scenario_config_data[key], *tuple(key.split(',')))
+
+    if scenario_config_data['generator'] == 'remove_vm_kata':
+        scenario_config.delete_curr_key('vm:desc=specific for Kata')
+    elif scenario_config_data['generator'] == 'add_vm_kata':
+        # clone vm kata from generic config
+        generic_scenario_config = get_generic_scenario_config(scenario_config)
+        generic_scenario_config_root = generic_scenario_config.get_curr_root()
+        elem_kata = None
+        for vm in generic_scenario_config_root.getchildren():
+            if 'desc' in vm.attrib and vm.attrib['desc'] == 'specific for Kata':
+                elem_kata = vm
+                break
+        if elem_kata is not None:
+            scenario_config.clone_curr_elem(elem_kata)
 
     tmp_scenario_file = os.path.join(scenario_path, 'user_defined',
                                      'tmp_'+scenario_config_data['new_scenario_name']+'.xml')
@@ -191,6 +205,8 @@ def save_scenario():
             tmp_scenario_file)
         print('vm_info: ', vm_info)
     except Exception as error:
+        if os.path.isfile(tmp_scenario_file):
+            os.remove(tmp_scenario_file)
         return {'status': 'fail', 'file_name': new_scenario_name,
                 'rename': rename, 'error_list': {'error': str(error)}}
 
@@ -280,6 +296,8 @@ def save_launch():
             tmp_launch_file)
         print(pthru_sel, dm_value)
     except Exception as error:
+        if os.path.isfile(tmp_launch_file):
+            os.remove(tmp_launch_file)
         return {'status': 'fail', 'file_name': launch_config_data['new_launch_name'],
                 'rename': rename, 'error_list': {'launch config error': str(error)}}
 
@@ -661,6 +679,23 @@ def get_xml_configs(user_defined=False):
         launch_config = XmlConfig(config_path)
 
     return board_info, board_type, scenario_config, launch_config
+
+
+def get_generic_scenario_config(scenario_config):
+    config_path = os.path.join(current_app.config.get('CONFIG_PATH'), 'generic')
+    generic_scenario_config = XmlConfig(config_path)
+    for file in os.listdir(config_path):
+        if os.path.isfile(os.path.join(config_path, file)) and \
+                os.path.splitext(file)[1] == '.xml':
+            generic_scenario_config.set_curr(os.path.splitext(file)[0])
+            generic_scenario_config_root = generic_scenario_config.get_curr_root()
+            if 'scenario' in generic_scenario_config_root.attrib \
+                and 'uos_launcher' not in generic_scenario_config_root.attrib \
+                and generic_scenario_config_root.attrib['scenario'] == \
+                    scenario_config.get_curr_root().attrib['scenario']:
+                return generic_scenario_config
+
+    return None
 
 
 def get_board_info_type(board_info):

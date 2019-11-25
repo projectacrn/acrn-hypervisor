@@ -87,14 +87,24 @@
 
     {% if board_info != None and root != None and scenario_item_values %}
     <table class="table table-hover" id="tab">
+        {% set vm_kata = [] %}
         {% for vm in root.getchildren() %}
+            {% if 'desc' in vm.attrib and vm.attrib['desc'] == 'specific for Kata'  %}
+                {% do vm_kata.append(1) %}
+            {% endif %}
             {% if 'configurable' not in vm.attrib or vm.attrib['configurable'] != '0'%}
             <tr>
                 <td>
                     <div class="form-group">
                         <label class="col-sm-1 control-label">VM: </label>
                         <label class="col-sm-1 control-label" id="vm">{{vm.attrib['id']}}</label>
+
                     </div>
+                    {% if 'desc' in vm.attrib or vm.attrib['desc'] == 'specific for Kata'  %}
+                    <div class="form-group">
+                        <button type="button" class="btn" id="remove_vm_kata">Remove Kata VM</button>
+                    </div>
+                    {% endif %}
                 </td>
                 <td>
                 {% for elem in vm.getchildren() %}
@@ -321,6 +331,11 @@
             </tr>
             {% endif %}
         {% endfor %}
+        {% if not vm_kata and ('scenario' in root.attrib and root.attrib['scenario'] == 'sdc') %}
+        <tr><td>
+            <button type="button" class="btn" id="add_vm_kata">Add Kata VM</button>
+        </td></tr>
+        {% endif %}
     </table>
     {% else %}
     <text class="form-control" id="err_msg">No setting available. Select one board info and make sure the scenario xml
