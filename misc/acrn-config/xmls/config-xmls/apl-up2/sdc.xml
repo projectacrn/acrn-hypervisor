@@ -71,8 +71,8 @@
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
     </vuart>
   </vm>
-  <vm id="2" configurable="0" desc="specific for Kata">
-    <load_order configurable="0" desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM.">POST_LAUNCHED_VM</load_order>
+  <vm id="2" configurable="1" desc="specific for Kata">
+    <load_order readonly="true" desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM.">POST_LAUNCHED_VM</load_order>
     <uuid configurable="0" desc="vm uuid">a7ada506-1ab0-4b6b-a0da-e513ca9b8c2f</uuid>
     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
     <vcpu_affinity desc="vCPU affinity map. Each vCPU will pin to the selected pCPU ID. Please make sure each vCPU pin to different pCPU.">
