@@ -35,6 +35,12 @@ Ubuntu 18.04.1 LTS was used throughout this document, other older versions such 
      sudo service ssh status
      sudo service ssh start
 
+* If you want to SSH ubuntu as root, you will also need to modify ``/etc/ssh/sshd_config``:
+
+  .. code-block:: none
+
+     PermitRootLogin yes
+  
 Install ACRN
 ************
 
@@ -53,7 +59,7 @@ the source code, build it, and install it on your device.
 
       cd ~
       git clone https://github.com/projectacrn/acrn-hypervisor
-      git checkout <known-good-tag/release>
+      git checkout acrn-2019w47.1-140000p
 
    .. note::
       We clone the git repository above but it is also possible to download the
@@ -140,25 +146,25 @@ You can download latest Service OS kernel from
 
    While we recommend using the "current" (latest) release of Clear Linux OS, you can download
    a specific Clear Linux release from an area with that release number, e.g.:
-   https://download.clearlinux.org/releases/26440/clear/x86_64/os/Packages/linux-iot-lts2018-sos-4.19.0-22.x86_64.rpm
+   https://download.clearlinux.org/releases/31670/clear/x86_64/os/Packages/linux-iot-lts2018-sos-4.19.78-98.x86_64.rpm
 
-#. Download and extract the latest Service OS kernel(this guide is based on 26440 as the current example)
+#. Download and extract the latest Service OS kernel(this guide is based on 31670 as the current example)
 
    .. code-block:: none
 
       sudo mkdir ~/sos-kernel-build
       cd ~/sos-kernel-build
-      wget https://download.clearlinux.org/releases/26440/clear/x86_64/os/Packages/linux-iot-lts2018-sos-4.19.0-22.x86_64.rpm
+      wget https://download.clearlinux.org/releases/31670/clear/x86_64/os/Packages/linux-iot-lts2018-sos-4.19.78-98.x86_64.rpm
       sudo apt-get install rpm2cpio
-      rpm2cpio linux-iot-lts2018-sos-4.19.0-22.x86_64.rpm | cpio -idmv
+      rpm2cpio linux-iot-lts2018-sos-4.19.78-98.x86_64.rpm | cpio -idmv
 
 #. Install the SOS kernel and its drivers (modules)
 
    .. code-block:: none
 
-      sudo cp -r ~/sos-kernel-build/usr/lib/modules/4.19.0-22.iot-lts2018-sos/ /lib/modules/
+      sudo cp -r ~/sos-kernel-build/usr/lib/modules/4.19.78-98.iot-lts2018-sos/ /lib/modules/
       sudo mkdir /boot/acrn/
-      sudo cp ~/sos-kernel-build/usr/lib/kernel/org.clearlinux.iot-lts2018-sos.4.19.0-22  /boot/acrn/
+      sudo cp ~/sos-kernel-build/usr/lib/kernel/org.clearlinux.iot-lts2018-sos.4.19.78-98  /boot/acrn/
 
 #. Configure Grub to load the Service OS kernel
 
@@ -173,7 +179,7 @@ You can download latest Service OS kernel from
                 insmod gzio
                 insmod part_gpt
                 insmod ext2
-                linux  /boot/acrn/org.clearlinux.iot-lts2018-sos.4.19.0-22  pci_devices_ignore=(0:18:1) console=tty0 console=ttyS0 root=PARTUUID=<UUID of rootfs partition> rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_gvt=1 i915.enable_guc=0 hvlog=2M@0x1FE00000
+                linux  /boot/acrn/org.clearlinux.iot-lts2018-sos.4.19.78-98  pci_devices_ignore=(0:18:1) console=tty0 console=ttyS0 root=PARTUUID=<UUID of rootfs partition> rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_gvt=1 i915.enable_guc=0 hvlog=2M@0x1FE00000
         }
 
    .. note::
@@ -239,8 +245,8 @@ For the User OS, we are using the same `Clear Linux OS`_ release version as the 
   .. code-block:: none
 
      cd ~
-     wget https://download.clearlinux.org/releases/26440/clear/clear-26440-kvm.img.xz
-     unxz clear-26440-kvm.img.xz
+     wget https://download.clearlinux.org/releases/31670/clear/clear-31670-kvm.img.xz
+     unxz clear-31670-kvm.img.xz
 
 * Download the "kernel-iot-lts2018" kernel
 
@@ -248,16 +254,16 @@ For the User OS, we are using the same `Clear Linux OS`_ release version as the 
 
      sudo mkdir ~/uos-kernel-build
      cd ~/uos-kernel-build
-     wget https://download.clearlinux.org/releases/26440/clear/x86_64/os/Packages/linux-iot-lts2018-4.19.0-22.x86_64.rpm
-     rpm2cpio linux-iot-lts2018-4.19.0-22.x86_64.rpm | cpio -idmv
+     wget https://download.clearlinux.org/releases/31670/clear/x86_64/os/Packages/linux-iot-lts2018-sos-4.19.78-98.x86_64.rpm
+     rpm2cpio linux-iot-lts2018-4.19.78-98.x86_64.rpm | cpio -idmv
 
 * Update the UOS kernel modules
 
   .. code-block:: none
 
-     sudo losetup -f -P --show ~/clear-26440-kvm.img
+     sudo losetup -f -P --show ~/clear-31670-kvm.img
      sudo mount /dev/loop0p3 /mnt
-     sudo cp -r ~/uos-kernel-build/usr/lib/modules/4.19.0-22.iot-lts2018/ /mnt/lib/modules/
+     sudo cp -r ~/uos-kernel-build/usr/lib/modules/4.19.78-98.iot-lts2018/ /mnt/lib/modules/
      sudo cp -r ~/uos-kernel-build/usr/lib/kernel /lib/modules/
      sudo umount /mnt
      sync
@@ -272,8 +278,15 @@ For the User OS, we are using the same `Clear Linux OS`_ release version as the 
 
   .. code-block:: none
 
-     sudo apt-get install iasl
-     sudo cp /usr/bin/iasl /usr/sbin/iasl
+      sudo apt update
+      sudo apt install m4 bison flex zlib1g-dev
+      cd ~
+      wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
+      tar zxvf acpica-unix-20191018.tar.gz
+      cd acpica-unix-20191018
+      make clean && make iasl
+      sudo cp ./generate/unix/bin/iasl /usr/sbin/
+
 
 * Adjust ``launch_uos.sh``
 
@@ -282,8 +295,7 @@ For the User OS, we are using the same `Clear Linux OS`_ release version as the 
 
   .. code-block:: none
 
-     -s 3,virtio-blk,~/clear-26440-kvm.img
-     -k /lib/modules/kernel/default-iot-lts2018
+     -s 3,virtio-blk,/root/clear-31670-kvm.img \
 
   .. note::
       The image of UOS can be stored in other directories instead of ``~/``,
