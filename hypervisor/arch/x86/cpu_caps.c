@@ -189,11 +189,28 @@ static void detect_vmx_mmu_cap(void)
 	cpu_caps.vmx_vpid = (uint32_t) (val >> 32U);
 }
 
+static void detect_xsave_cap(void)
+{
+	uint32_t unused;
+
+	cpuid_subleaf(CPUID_XSAVE_FEATURES, 0U,
+		&boot_cpu_data.cpuid_leaves[FEAT_D_0_EAX],
+		&unused,
+		&unused,
+		&boot_cpu_data.cpuid_leaves[FEAT_D_0_EDX]);
+	cpuid_subleaf(CPUID_XSAVE_FEATURES, 1U,
+		&boot_cpu_data.cpuid_leaves[FEAT_D_1_EAX],
+		&unused,
+		&boot_cpu_data.cpuid_leaves[FEAT_D_1_ECX],
+		&boot_cpu_data.cpuid_leaves[FEAT_D_1_EDX]);
+}
+
 static void detect_pcpu_cap(void)
 {
 	detect_apicv_cap();
 	detect_ept_cap();
 	detect_vmx_mmu_cap();
+	detect_xsave_cap();
 }
 
 static uint64_t get_address_mask(uint8_t limit)
@@ -425,6 +442,12 @@ int32_t detect_hardware_support(void)
 		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_POPCNT)) {
 		printf("%s, popcnt instruction not supported\n", __func__);
+		ret = -ENODEV;
+	} else if (!pcpu_has_cap(X86_FEATURE_XSAVES)) {
+		printf("%s, XSAVES not supported\n", __func__);
+		ret = -ENODEV;
+	} else if (!pcpu_has_cap(X86_FEATURE_COMPACTION_EXT)) {
+		printf("%s, Compaction extensions in XSAVE is not supported\n", __func__);
 		ret = -ENODEV;
 	} else {
 		ret = check_vmx_mmu_cap();

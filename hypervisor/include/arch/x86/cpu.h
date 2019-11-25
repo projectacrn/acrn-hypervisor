@@ -150,7 +150,14 @@
 
 /* Number of GPRs saved / restored for guest in VCPU structure */
 #define NUM_GPRS                            16U
-#define GUEST_STATE_AREA_SIZE               512
+
+#define XSAVE_STATE_AREA_SIZE			4096U
+#define XSAVE_LEGACY_AREA_SIZE			512U
+#define XSAVE_HEADER_AREA_SIZE			64U
+#define XSAVE_EXTEND_AREA_SIZE			(XSAVE_STATE_AREA_SIZE - \
+						XSAVE_HEADER_AREA_SIZE - \
+						XSAVE_LEGACY_AREA_SIZE)
+#define XSAVE_COMPACTED_FORMAT			(1UL << 63U)
 
 #define	CPU_CONTEXT_OFFSET_RAX			0U
 #define	CPU_CONTEXT_OFFSET_RCX			8U
@@ -179,9 +186,6 @@
 #define	CPU_CONTEXT_OFFSET_CR3			184U
 #define	CPU_CONTEXT_OFFSET_IDTR			192U
 #define	CPU_CONTEXT_OFFSET_LDTR			216U
-
-/*sizes of various registers within the VCPU data structure */
-#define VMX_CPU_S_FXSAVE_GUEST_AREA_SIZE    GUEST_STATE_AREA_SIZE
 
 #ifndef ASSEMBLER
 
@@ -344,6 +348,21 @@ struct run_context {
 	uint64_t ia32_efer;
 };
 
+union xsave_header {
+	uint64_t value[XSAVE_HEADER_AREA_SIZE / sizeof(uint64_t)];
+	struct {
+		/* bytes 7:0 */
+		uint64_t xstate_bv;
+		/* bytes 15:8 */
+		uint64_t xcomp_bv;
+	} hdr;
+};
+
+struct xsave_area {
+	uint64_t legacy_region[XSAVE_LEGACY_AREA_SIZE / sizeof(uint64_t)];
+	union xsave_header xsave_hdr;
+	uint64_t extend_region[XSAVE_EXTEND_AREA_SIZE / sizeof(uint64_t)];
+} __aligned(64);
 /*
  * extended context does not save/restore during vm exit/entry, it's mainly
  * used in trusty world switch
@@ -377,10 +396,9 @@ struct ext_context {
 	uint64_t dr7;
 	uint64_t tsc_offset;
 
-	/* The 512 bytes area to save the FPU/MMX/SSE states for the guest */
-	uint64_t
-	fxstore_guest_area[VMX_CPU_S_FXSAVE_GUEST_AREA_SIZE / sizeof(uint64_t)]
-	__aligned(16);
+	struct xsave_area xs_area;
+	uint64_t xcr0;
+	uint64_t xss;
 };
 
 struct cpu_context {
@@ -607,6 +625,13 @@ static inline void write_xcr(int32_t reg, uint64_t val)
 	asm volatile("xsetbv" : : "c" (reg), "a" ((uint32_t)val), "d" ((uint32_t)(val >> 32U)));
 }
 
+static inline uint64_t read_xcr(int32_t reg)
+{
+	uint32_t  xcrl, xcrh;
+
+	asm volatile ("xgetbv ": "=a"(xcrl), "=d"(xcrh) : "c" (reg));
+	return (((uint64_t)xcrh << 32U) | xcrl);
+}
 /*
  * stac/clac pair is used to access guest's memory protected by SMAP,
  * following below flow:
