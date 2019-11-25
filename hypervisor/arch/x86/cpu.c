@@ -476,20 +476,39 @@ static void init_pcpu_xsave(void)
 {
 	uint64_t val64;
 	struct cpuinfo_x86 *cpu_info;
+	uint64_t xcr0, xss;
+	uint32_t eax, ecx, unused, xsave_area_size;
 
-	if (pcpu_has_cap(X86_FEATURE_XSAVE)) {
-		CPU_CR_READ(cr4, &val64);
-		val64 |= CR4_OSXSAVE;
-		CPU_CR_WRITE(cr4, val64);
+	CPU_CR_READ(cr4, &val64);
+	val64 |= CR4_OSXSAVE;
+	CPU_CR_WRITE(cr4, val64);
 
-		if (get_pcpu_id() == BOOT_CPU_ID) {
-			uint32_t ecx, unused;
-			cpuid(CPUID_FEATURES, &unused, &unused, &ecx, &unused);
+	if (get_pcpu_id() == BOOT_CPU_ID) {
+		cpuid(CPUID_FEATURES, &unused, &unused, &ecx, &unused);
 
-			/* if set, update it */
-			if ((ecx & CPUID_ECX_OSXSAVE) != 0U) {
-				cpu_info = get_pcpu_info();
-				cpu_info->cpuid_leaves[FEAT_1_ECX] |= CPUID_ECX_OSXSAVE;
+		/* if set, update it */
+		if ((ecx & CPUID_ECX_OSXSAVE) != 0U) {
+			cpu_info = get_pcpu_info();
+			cpu_info->cpuid_leaves[FEAT_1_ECX] |= CPUID_ECX_OSXSAVE;
+
+			/* set xcr0 and xss with the componets bitmap get from cpuid */
+			xcr0 = ((uint64_t)cpu_info->cpuid_leaves[FEAT_D_0_EDX] << 32U)
+				+ cpu_info->cpuid_leaves[FEAT_D_0_EAX];
+			xss = ((uint64_t)cpu_info->cpuid_leaves[FEAT_D_1_EDX] << 32U)
+				+ cpu_info->cpuid_leaves[FEAT_D_1_ECX];
+			write_xcr(0, xcr0);
+			msr_write(MSR_IA32_XSS, xss);
+
+			/* get xsave area size, containing all the state components
+			 * corresponding to bits currently set in XCR0 | IA32_XSS */
+			cpuid_subleaf(CPUID_XSAVE_FEATURES, 1U,
+				&eax,
+				&xsave_area_size,
+				&ecx,
+				&unused);
+			if (xsave_area_size > XSAVE_STATE_AREA_SIZE) {
+				panic("XSAVE area (%d bytes) exceeds the pre-allocated 4K region\n",
+						xsave_area_size);
 			}
 		}
 	}

@@ -43,6 +43,10 @@ typedef _Bool bool;
 #define UINT64_MAX	(0xffffffffffffffffUL)
 #endif
 
+#ifndef UINT32_MAX
+#define UINT32_MAX	(0xffffffffU)
+#endif
+
 #endif /* ASSEMBLER */
 
 #endif /* INCLUDE_TYPES_H defined */
