@@ -155,16 +155,6 @@ def get_tree_tag(config_file, tag_str):
     return common.get_tree_tag_val(config_file, tag_str)
 
 
-def get_sub_tree_tag(config_file, tag_str):
-    """
-     This is get tag value by tag_str from config file
-     :param config_file: it is a file what contains information for script to read from
-     :param tag_str: it is key of pattern to config file item
-     :return: value of tag_str item
-     """
-    return common.get_branch_tag_val(config_file, tag_str)
-
-
 def get_sub_leaf_tag(config_file, branch_tag, tag_str):
     """
      This is get tag value by tag_str from config file

@@ -224,7 +224,7 @@ def get_vm_num(config_file):
     return common.get_vm_count(config_file)
 
 
-def get_sub_leaf_tag(config_file, branch_tag, tag_str):
+def get_sub_leaf_tag(config_file, branch_tag, tag_str=''):
     """
       This is get tag value by tag_str from config file
       :param config_file: it is a file what contains information for script to read from
@@ -370,7 +370,7 @@ def uuid_format_check(uuid_dic, item):
             ERR_LIST[key] = "VM uuid format unknown"
 
 
-def get_leaf_tag_map(info_file, prime_item, item):
+def get_leaf_tag_map(info_file, prime_item, item=''):
     """
     :param info_file: some configurations in the info file
     :param prime_item: the prime item in xml file
@@ -396,9 +396,10 @@ def cpus_per_vm_check(id_cpus_per_vm_dic, item):
             ERR_LIST[key] = "VM have no assignment cpus"
 
 
-def mem_start_hpa_check(id_start_hpa_dic, item):
+def mem_start_hpa_check(id_start_hpa_dic, prime_item, item):
     """
     Check host physical address
+    :param prime_item: the prime item in xml file
     :param item: vm start_hpa item in xml
     :return: None
     """
@@ -418,9 +419,10 @@ def mem_start_hpa_check(id_start_hpa_dic, item):
                 ERR_LIST[key] = "Address should be Hex format"
 
 
-def mem_size_check(id_hpa_size_dic, item):
+def mem_size_check(id_hpa_size_dic, prime_item, item):
     """
     Check host physical size
+    :param prime_item: the prime item in xml file
     :param item: vm size item in xml
     :return: None
     """
@@ -444,9 +446,10 @@ def mem_size_check(id_hpa_size_dic, item):
                 ERR_LIST[key] = "Mem size should less than 2GB"
 
 
-def os_kern_name_check(id_kern_name_dic, item):
+def os_kern_name_check(id_kern_name_dic, prime_item, item):
     """
     Check os kernel name
+    :param prime_item: the prime item in xml file
     :param item: vm os config name item in xml
     :return: None
     """
@@ -457,9 +460,10 @@ def os_kern_name_check(id_kern_name_dic, item):
             ERR_LIST[key] = "VM os config kernel name length should be in range [1,32] bytes"
 
 
-def os_kern_type_check(id_kern_type_dic, item):
+def os_kern_type_check(id_kern_type_dic, prime_item, item):
     """
     Check os kernel type
+    :param prime_item: the prime item in xml file
     :param item: vm os config type item in xml
     :return: None
     """
@@ -476,9 +480,10 @@ def os_kern_type_check(id_kern_type_dic, item):
             ERR_LIST[key] = "VM os config kernel type unknown"
 
 
-def os_kern_mod_check(id_kern_mod_dic, item):
+def os_kern_mod_check(id_kern_mod_dic, prime_item, item):
     """
     Check os kernel mod
+    :param prime_item: the prime item in xml file
     :param item: vm os config mod item in xml
     :return: None
     """
@@ -489,9 +494,10 @@ def os_kern_mod_check(id_kern_mod_dic, item):
             ERR_LIST[key] = "VM os config kernel mod tag should be in range [1,32] bytes"
 
 
-def os_kern_args_check(id_kern_args_dic, item):
+def os_kern_args_check(id_kern_args_dic, prime_item, item):
     """
     Check os kernel args
+    :param prime_item: the prime item in xml file
     :param item: vm os config args item in xml
     :return: None
     """
@@ -504,9 +510,10 @@ def os_kern_args_check(id_kern_args_dic, item):
             ERR_LIST[key] = "VM os config kernel service os should be SOS_VM_BOOTARGS"
 
 
-def os_kern_console_check(id_kern_console_dic, item):
+def os_kern_console_check(id_kern_console_dic, prime_item, item):
     """
     Check os kernel console
+    :param prime_item: the prime item in xml file
     :param item: vm os config console item in xml
     :return: None
     """
@@ -517,9 +524,10 @@ def os_kern_console_check(id_kern_console_dic, item):
             ERR_LIST[key] = "VM os config kernel console should be ttyS[0..3]"
 
 
-def os_kern_load_addr_check(id_kern_load_addr_dic, item):
+def os_kern_load_addr_check(id_kern_load_addr_dic, prime_item, item):
     """
     Check os kernel load address
+    :param prime_item: the prime item in xml file
     :param item: vm os config load address item in xml
     :return: None
     """
@@ -536,9 +544,10 @@ def os_kern_load_addr_check(id_kern_load_addr_dic, item):
             ERR_LIST[key] = "VM os config kernel load address should Hex format"
 
 
-def os_kern_entry_addr_check(id_kern_entry_addr_dic, item):
+def os_kern_entry_addr_check(id_kern_entry_addr_dic, prime_item, item):
     """
     Check os kernel entry address
+    :param prime_item: the prime item in xml file
     :param item: vm os config entry address item in xml
     :return: None
     """
@@ -555,9 +564,10 @@ def os_kern_entry_addr_check(id_kern_entry_addr_dic, item):
             ERR_LIST[key] = "VM os config kernel entry address should Hex format"
 
 
-def os_kern_root_dev_check(id_kern_rootdev_dic, item):
+def os_kern_root_dev_check(id_kern_rootdev_dic, prime_item, item):
     """
     Check os kernel rootfs partitions
+    :param prime_item: the prime item in xml file
     :param item: vm os config rootdev item in xml
     :return: None
     """
@@ -566,16 +576,6 @@ def os_kern_root_dev_check(id_kern_rootdev_dic, item):
         if not kern_rootdev:
             key = "vm:id={},{},{}".format(id_key, prime_item, item)
             ERR_LIST[key] = "VM os config kernel root device should not empty"
-
-
-def get_branch_tag_map(info_file, item):
-    """
-    :param info_file: some configurations in the info file
-    :param item: the item in xml file
-    :return: dictionary which item value could be indexed by vmid
-    """
-    vmid_item_dic = common.get_branch_tag_map(info_file, item)
-    return vmid_item_dic
 
 
 def pci_dev_num_check(id_dev_num_dic, item):
