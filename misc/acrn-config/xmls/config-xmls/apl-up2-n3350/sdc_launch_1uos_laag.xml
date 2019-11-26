@@ -26,5 +26,9 @@
 		<sata desc="vm sata device"></sata>
 		<nvme desc="vm nvme device"></nvme>
 	</passthrough_devices>
+
+	<virtio_devices>
+		<input desc="virtio input device"></input>
+	</virtio_devices>
     </uos>
 </acrn-config>

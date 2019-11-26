@@ -26,6 +26,9 @@
 		<nvme desc="vm nvme device"></nvme>
 	</passthrough_devices>
 
+	<virtio_devices>
+		<input desc="virtio input device"></input>
+	</virtio_devices>
     </uos>
     <uos id="2">
 	<uos_type desc="UOS type"></uos_type>
@@ -54,5 +57,8 @@
 		<nvme desc="vm nvme device"></nvme>
 	</passthrough_devices>
 
+	<virtio_devices>
+		<input desc="virtio input device"></input>
+	</virtio_devices>
     </uos>
 </acrn-config>

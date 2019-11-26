@@ -24,6 +24,9 @@
 		<nvme desc="vm nvme device"></nvme>
 	</passthrough_devices>
 
+	<virtio_devices>
+		<input desc="virtio input device"></input>
+	</virtio_devices>
     </uos>
 
     <uos id="2">
@@ -50,5 +53,9 @@
 		<sata desc="vm sata device"></sata>
 		<nvme desc="vm nvme device">02:00.0 Non-Volatile memory controller: Silicon Motion, Inc. Device 2263 (rev 03)</nvme>
 	</passthrough_devices>
+
+	<virtio_devices>
+		<input desc="virtio input device"></input>
+	</virtio_devices>
     </uos>
 </acrn-config>

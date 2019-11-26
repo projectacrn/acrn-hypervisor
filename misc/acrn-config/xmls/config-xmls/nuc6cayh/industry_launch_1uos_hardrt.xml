@@ -23,5 +23,9 @@
 		<sata desc="vm sata device"></sata>
 		<nvme desc="vm nvme device">02:00.0 Non-Volatile memory controller: Intel Corporation Device f1a6 (rev 03)</nvme>
 	</passthrough_devices>
+
+	<virtio_devices>
+		<input desc="virtio input device"></input>
+	</virtio_devices>
     </uos>
 </acrn-config>
