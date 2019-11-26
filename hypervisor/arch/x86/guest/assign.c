@@ -601,7 +601,7 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpin_src)
  * entry_nr = 0 means first vector
  * user must provide bdf and entry_nr
  */
-int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
+int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 				uint16_t entry_nr, struct ptirq_msi_info *info)
 {
 	struct ptirq_remapping_info *entry;
@@ -626,7 +626,7 @@ int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bd
 				pr_err("dev-assign: msi entry exist in others");
 			}
 		} else {
-			/* ptirq_msix_remap is called by SOS on demand, if
+			/* ptirq_prepare_msix_remap is called by SOS on demand, if
 			 * failed to find pre-hold mapping, return error to
 			 * the caller.
 			 */
