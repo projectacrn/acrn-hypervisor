@@ -406,24 +406,11 @@ def vboot_arg_set(dm, vmid, config):
         print("   $boot_image_option \\",file=config)
 
 
-def xhci_args_set(names, vmid, config):
-    board_name = names['board_name']
-    uos_type = names['uos_types'][vmid]
-
-    # Get locate of vmid
-    idx = 0
-    #if board_name not in ("whl-ipc-i5", "whl-ipc-i7"):
-    if uos_type in ("CLEARLINUX", "WINDOWS") and board_name in ("whl-ipc-i5", "whl-ipc-i7", "nuc7i7dnb"):
-        for num in names['uos_types'].keys():
-            idx += 1
-            if num == vmid:
-                break
-
-        # if the vmid is first vm
-        if idx == 1:
-            print("   -s {},xhci,1-2:2-2 \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
-        elif idx > 1:
-            print("   -s {},xhci,1-2:2-4 \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
+def xhci_args_set(dm, vmid, config):
+    # usb_xhci set, the value is string
+    if dm['xhci'][vmid]:
+        print("   -s {},xhci,{} \\".format(
+            launch_cfg_lib.virtual_dev_slot("xhci"), dm['xhci'][vmid]), file=config)
 
 
 def vritio_args_set(virt_io, vmid, config):
@@ -505,7 +492,7 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
         print("   --windows \\", file=config)
 
     # WA: XHCI args set
-    xhci_args_set(names, vmid, config)
+    xhci_args_set(dm, vmid, config)
 
     # VIRTIO args set
     vritio_args_set(virt_io, vmid, config)
