@@ -142,3 +142,13 @@ class PthruSelected():
         launch_cfg_lib.pt_devs_check(self.bdf["audio_codec"], self.vpid["audio_codec"], "audio_codec")
         launch_cfg_lib.pt_devs_check(self.bdf["wifi"], self.vpid["wifi"], "wifi")
         launch_cfg_lib.pt_devs_check(self.bdf["bluetooth"], self.vpid["bluetooth"], "bluetooth")
+
+
+class VirtioDeviceSelect():
+
+    dev = {}
+    def __init__(self, launch_info):
+        self.launch_info = launch_info
+
+    def get_virtio(self):
+        self.dev["input"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "virtio_devices", "input")

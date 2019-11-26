@@ -6,7 +6,7 @@
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-from launch_item import AvailablePthru, PthruSelected, AcrnDmArgs
+from launch_item import AvailablePthru, PthruSelected, VirtioDeviceSelect, AcrnDmArgs
 import launch_cfg_lib
 import com
 
@@ -21,6 +21,7 @@ def get_launch_item_values(board_info):
     """
     launch_item_values = {}
 
+    # passthrough devices
     pthru = AvailablePthru(board_info)
     pthru.get_pci_dev()
     pthru.insert_nun()
@@ -66,19 +67,21 @@ def validate_launch_setting(board_info, scenario_info, launch_info):
     # init available pt devices and get selected pt devices
     pt_avl = AvailablePthru(board_info)
     pt_sel = PthruSelected(launch_info, pt_avl.bdf_desc_map, pt_avl.bdf_vpid_map)
-    dm = AcrnDmArgs(board_info, scenario_info, launch_info)
-
-    # get bdf/vpid list from config xml
     pt_sel.get_bdf()
     pt_sel.get_vpid()
     pt_sel.get_slot()
-    dm.get_args()
-
-    # check items in config xml
     pt_sel.check_item()
+
+    # virt-io devices
+    virtio = VirtioDeviceSelect(launch_info)
+    virtio.get_virtio()
+
+    # acrn dm arguments
+    dm = AcrnDmArgs(board_info, scenario_info, launch_info)
+    dm.get_args()
     dm.check_item()
 
-    return (launch_cfg_lib.ERR_LIST, pt_sel, dm)
+    return (launch_cfg_lib.ERR_LIST, pt_sel, virtio, dm)
 
 
 def ui_entry_api(board_info, scenario_info, launch_info, enable_commit=False):
@@ -122,7 +125,7 @@ def get_names():
     return (err_dic, names)
 
 
-def generate_script_file(names, pt_sel, dm, vmid, config):
+def generate_script_file(names, pt_sel, virt_io, dm, vmid, config):
 
     uos_type = names['uos_types'][vmid]
     board_name = names['board_name']
@@ -133,7 +136,7 @@ def generate_script_file(names, pt_sel, dm, vmid, config):
             board_name.upper(), scenario_name.upper(), uos_type.upper())
 
     print("{}".format(header_info), file=config)
-    com.gen(names, pt_sel, dm, vmid, config)
+    com.gen(names, pt_sel, virt_io, dm, vmid, config)
     if launch_cfg_lib.ERR_LIST:
         return launch_cfg_lib.ERR_LIST
 
@@ -184,7 +187,7 @@ def main(args):
         return err_dic
 
     # validate launch config file
-    (err_dic, pt_sel, dm) = validate_launch_setting(board_info_file, scenario_info_file, launch_info_file)
+    (err_dic, pt_sel, virt_io, dm) = validate_launch_setting(board_info_file, scenario_info_file, launch_info_file)
     if err_dic:
         return err_dic
 
@@ -210,7 +213,7 @@ def main(args):
         launch_script_file = output + script_name
         config_srcs.append(launch_script_file)
         with open(launch_script_file, mode = 'w', newline=None, encoding='utf-8') as config:
-            err_dic = generate_script_file(names, pt_sel, dm.args, vm_th, config)
+            err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, vm_th, config)
             if err_dic:
                 return err_dic
     else:
@@ -219,7 +222,7 @@ def main(args):
             launch_script_file = output + script_name
             config_srcs.append(launch_script_file)
             with open(launch_script_file, mode = 'w', newline='\n', encoding='utf-8') as config:
-                err_dic = generate_script_file(names, pt_sel, dm.args, post_vm_i, config)
+                err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, post_vm_i, config)
                 if err_dic:
                     return err_dic
 
