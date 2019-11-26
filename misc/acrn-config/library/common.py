@@ -23,6 +23,23 @@ GUEST_FLAG = ["0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTH
 START_HPA_SIZE_LIST = ['0x20000000', '0x40000000', '0x80000000', 'CONFIG_SOS_RAM_SIZE', 'VM0_MEM_SIZE']
 
 
+MULTI_ITEM = ["guest_flag", "pcpu_id"]
+
+
+class MultiItem():
+
+    def __init__(self):
+        self.guest_flag = []
+        self.pcpu_id = []
+        self.vir_console = []
+        self.vir_net = []
+
+class TmpItem():
+
+    def __init__(self):
+        self.tag = {}
+        self.multi = MultiItem
+
 def open_license():
     """ Get the license """
     with open(HV_LICENSE_FILE, 'r') as f_licence:
@@ -331,84 +348,8 @@ def get_tree_tag_val(config_file, tag_str):
     return False
 
 
-def get_branch_tag_val(config_file, tag_str):
-    """
-     This is get tag value by tag_str from config file
-     :param config_file: it is a file what contains information for script to read from
-     :param tag_str: it is key of pattern to config file item
-     :return: value of tag_str item list
-     """
-    tmp_tag = []
-    root = get_config_root(config_file)
-    for item in root:
-        for sub in item:
-            if sub.tag == tag_str:
-                tmp_tag.append(sub.text)
-
-    return tmp_tag
-
-
-def get_spec_branch_tag_val(config_file, tag_str):
-    """
-     This is get tag value by tag_str from config file
-     :param config_file: it is a file what contains information for script to read from
-     :param tag_str: it is key of pattern to config file item
-     :return: value of tag_str item list
-     """
-    tmp_tag = {}
-    root = get_config_root(config_file)
-    for item in root:
-        id_i = int(item.attrib['id'])
-        for sub in item:
-            if sub.tag == tag_str:
-                if sub.text == None or not sub.text:
-                    tmp_tag[id_i] = ''
-                else:
-                    tmp_tag[id_i] = sub.text
-
-    return tmp_tag
-
-
-def get_branch_tag_map(config_file, tag_str):
-    """
-     This is get tag value by tag_str from config file
-     :param config_file: it is a file what contains information for script to read from
-     :param tag_str: it is key of pattern to config file item
-     :return: value of tag_str item dictionary
-     """
-    tmp_tag = {}
-    root = get_config_root(config_file)
-    for item in root:
-        vm_id = int(item.attrib['id'])
-        for sub in item:
-            if sub.tag == tag_str:
-                tmp_tag[vm_id] = sub.text
-
-        #if item.tag == "vm":
-        #    vm_id += 1
-
-    return tmp_tag
-
-
-def get_spec_leaf_tag_val(config_file, branch_tag, tag_str):
-    tmp_tag = {}
-    root = get_config_root(config_file)
-    for item in root:
-        id_i = int(item.attrib['id'])
-        for sub in item:
-            if sub.tag == branch_tag:
-                for leaf in sub:
-                    if leaf.tag == tag_str and tag_str != "guest_flag" and tag_str != "pcpu_id" and\
-                            sub.tag != "vuart":
-                        if leaf.text == None or not leaf.text:
-                            tmp_tag[id_i] = ''
-                        else:
-                            tmp_tag[id_i] = leaf.text
-                        continue
-    return tmp_tag
-
-
-def get_leaf_tag_val(config_file, branch_tag, tag_str):
+# TODO: This will be abandonment in future
+def get_leaf_tag_val(config_file, branch_tag, tag_str=''):
     """
      This is get tag value by tag_str from config file
      :param config_file: it is a file what contains information for script to read from
@@ -419,13 +360,18 @@ def get_leaf_tag_val(config_file, branch_tag, tag_str):
     tmp_tag = []
     root = get_config_root(config_file)
     for item in root:
+        # for each 2th level item
         for sub in item:
             tmp_flag = []
             tmp_cpus = []
             if sub.tag == branch_tag:
+                if not tag_str:
+                    tmp_tag.append(sub.text)
+                    continue
+
+                # for each 3rd level item
                 for leaf in sub:
-                    if leaf.tag == tag_str and tag_str != "guest_flag" and tag_str != "pcpu_id" and\
-                            sub.tag != "vuart":
+                    if leaf.tag == tag_str and tag_str not in MULTI_ITEM and sub.tag != "vuart":
                         tmp_tag.append(leaf.text)
                         continue
 
@@ -450,8 +396,31 @@ def get_leaf_tag_val(config_file, branch_tag, tag_str):
                     tmp_tag.append(tmp_cpus)
                     continue
 
-
     return tmp_tag
+
+
+def get_leaf_value(tmp, tag_str, leaf):
+
+    # get guest flag for logical partition vm1
+    if leaf.tag == "guest_flag" and tag_str == "guest_flag":
+        t_flag = find_tmp_flag(leaf.text)
+        tmp.multi.guest_flag.append(t_flag)
+
+    # get cpu for vm
+    if leaf.tag == "pcpu_id" and tag_str == "pcpu_id":
+        tmp.multi.pcpu_id.append(leaf.text)
+
+
+def get_sub_value(tmp, tag_str, vm_id):
+
+    # append guest flags for each vm
+    if tmp.multi.guest_flag and tag_str == "guest_flag":
+        tmp.tag[vm_id] = tmp.multi.guest_flag
+        tmp.tag.append(tmp.multi.guest_flag)
+
+    # append cpus for vm
+    if tmp.multi.pcpu_id and tag_str == "pcpu_id":
+        tmp.tag[vm_id] = tmp.multi.pcpu_id
 
 
 def get_leaf_tag_map(config_file, branch_tag, tag_str):
@@ -462,45 +431,35 @@ def get_leaf_tag_map(config_file, branch_tag, tag_str):
      :param tag_str: it is key of pattern to config file leaf tag item
      :return: value of tag_str item map
      """
-    tmp_tag = {}
-    vm_id = 0
+    tmp = TmpItem()
     root = get_config_root(config_file)
     for item in root:
+        vm_id = int(item.attrib['id'])
+        # for each 2th level item
         for sub in item:
-            tmp_flag = []
-            tmp_cpus = []
+            tmp.multi = MultiItem()
             if sub.tag == branch_tag:
+                if not tag_str:
+                    if sub.text == None or not sub.text:
+                        tmp.tag[vm_id] = ''
+                    else:
+                        tmp.tag[vm_id] = sub.text
+                    continue
+
+                # for each 3rd level item
                 for leaf in sub:
-                    if leaf.tag == tag_str and tag_str != "guest_flag" and tag_str != "pcpu_id"\
-                            and sub.tag != "vuart":
-                        tmp_tag[vm_id] = leaf.text
+                    if leaf.tag == tag_str and tag_str not in MULTI_ITEM and sub.tag != "vuart":
+                        if leaf.text == None or not leaf.text:
+                            tmp.tag[vm_id] = ''
+                        else:
+                            tmp.tag[vm_id] = leaf.text
                         continue
 
-                    # get guest flag for logical partition vm1
-                    if leaf.tag == "guest_flag" and tag_str == "guest_flag":
-                        tmp_flag = find_tmp_flag(tmp_flag, leaf.text)
-                        continue
+                    get_leaf_value(tmp, tag_str, leaf)
 
-                    # get cpu for vm
-                    if leaf.tag == "pcpu_id" and tag_str == "pcpu_id":
-                        tmp_cpus.append(leaf.text)
-                        continue
+                get_sub_value(tmp, tag_str, vm_id)
 
-                # append guest flags for each vm
-                if tmp_flag and tag_str == "guest_flag":
-                    tmp_tag[vm_id] = tmp_flag
-                    continue
-
-                # append cpus for vm
-                if tmp_cpus and tag_str == "pcpu_id":
-                    tmp_tag[vm_id] = tmp_cpus
-                    continue
-
-        if item.tag == "vm":
-            vm_id += 1
-
-
-    return tmp_tag
+    return tmp.tag
 
 
 def order_type_map_vmid(config_file, vm_count):
@@ -511,7 +470,7 @@ def order_type_map_vmid(config_file, vm_count):
     :return: table of id:order type dictionary
     """
     order_id_dic = {}
-    load_type_list = get_branch_tag_val(config_file, "load_order")
+    load_type_list = get_leaf_tag_val(config_file, "load_order")
     for i in range(vm_count):
         order_id_dic[i] = load_type_list[i]
 
@@ -570,7 +529,7 @@ def vm_pre_launch_cnt(config_file):
     :return: number of pre launched vm
     """
     pre_launch_cnt = 0
-    load_type_list = get_branch_tag_val(config_file, "load_order")
+    load_type_list = get_leaf_tag_val(config_file, "load_order")
 
     for vm_type in load_type_list:
         if vm_type == "PRE_LAUNCHED_VM":
@@ -586,7 +545,7 @@ def post_vm_cnt(config_file):
     :return: number of post launched vm
     """
     post_launch_cnt = 0
-    load_type_list = get_branch_tag_val(config_file, "load_order")
+    load_type_list = get_leaf_tag_val(config_file, "load_order")
 
     for vm_type in load_type_list:
         if vm_type == "POST_LAUNCHED_VM":

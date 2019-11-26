@@ -438,6 +438,10 @@ def dm_arg_set(names, sel, dm, vmid, config):
     # uuid get
     scenario_uuid = launch_cfg_lib.get_scenario_uuid()
     sos_vmid = launch_cfg_lib.get_sos_vmid()
+    if not str(sos_vmid).isnumeric():
+        sos_vmid = 0
+        key = "launch config err:"
+        launch_cfg_lib.ERR_LIST[key] = "There is no SOS_VM in scenario config file!"
 
     # clearlinux/android/alios
     dm_str = 'acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {}'.format(scenario_uuid[vmid + sos_vmid])
