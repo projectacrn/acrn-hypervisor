@@ -10,6 +10,7 @@
 	<console_type desc="UOS console type"></console_type>
 	<poweroff_channel desc="the method of power off uos">
 	</poweroff_channel>
+	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2:4"></usb_xhci>
 
 	<passthrough_devices>
 		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
@@ -41,6 +42,7 @@
 	<console_type desc="UOS console type"></console_type>
 	<poweroff_channel desc="the method of power off uos">
 	</poweroff_channel>
+	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2:4"></usb_xhci>
 
 	<passthrough_devices>
 		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
