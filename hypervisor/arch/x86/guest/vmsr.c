@@ -524,16 +524,31 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
  * If VMX_TSC_OFFSET_FULL is 0, no need to trap the write of IA32_TSC_DEADLINE because there is
  * no offset between vTSC and pTSC, in this case, only write to vTSC_ADJUST is trapped.
  */
-static void set_tsc_msr_intercept(struct acrn_vcpu *vcpu, bool intercept)
+static void set_tsc_msr_interception(struct acrn_vcpu *vcpu, bool interception)
 {
 	uint8_t *msr_bitmap = vcpu->arch.msr_bitmap;
+	bool is_intercepted =
+		((msr_bitmap[MSR_IA32_TSC_DEADLINE >> 3U] & (1U << (MSR_IA32_TSC_DEADLINE & 0x7U))) != 0U);
 
-	if (!intercept) {
+	if (!interception && is_intercepted) {
 		enable_msr_interception(msr_bitmap, MSR_IA32_TSC_DEADLINE, INTERCEPT_DISABLE);
 		enable_msr_interception(msr_bitmap, MSR_IA32_TSC_ADJUST, INTERCEPT_WRITE);
-	} else {
+		/* If the timer hasn't expired, sync virtual TSC_DEADLINE to physical TSC_DEADLINE, to make the guest read the same tsc_deadline
+		 * as it writes. This may change when the timer actually trigger.
+		 * If the timer has expired, write 0 to the virtual TSC_DEADLINE.
+		 */
+		if (msr_read(MSR_IA32_TSC_DEADLINE) != 0UL) {
+			msr_write(MSR_IA32_TSC_DEADLINE, vcpu_get_guest_msr(vcpu, MSR_IA32_TSC_DEADLINE));
+		} else {
+			vcpu_set_guest_msr(vcpu, MSR_IA32_TSC_DEADLINE, 0UL);
+		}
+	} else if (interception && !is_intercepted) {
 		enable_msr_interception(msr_bitmap, MSR_IA32_TSC_DEADLINE, INTERCEPT_READ_WRITE);
 		enable_msr_interception(msr_bitmap, MSR_IA32_TSC_ADJUST, INTERCEPT_READ_WRITE);
+		/* sync physical TSC_DEADLINE to virtual TSC_DEADLINE */
+		vcpu_set_guest_msr(vcpu, MSR_IA32_TSC_DEADLINE, msr_read(MSR_IA32_TSC_DEADLINE));
+	} else {
+		/* Do nothing */
 	}
 }
 
@@ -567,7 +582,7 @@ static void set_guest_tsc(struct acrn_vcpu *vcpu, uint64_t guest_tsc)
 	/* write to VMCS because rdtsc and rdtscp are not intercepted */
 	exec_vmwrite64(VMX_TSC_OFFSET_FULL, tsc_delta);
 
-	set_tsc_msr_intercept(vcpu, tsc_delta != 0UL);
+	set_tsc_msr_interception(vcpu, tsc_delta != 0UL);
 }
 
 /*
@@ -616,7 +631,7 @@ static void set_guest_tsc_adjust(struct acrn_vcpu *vcpu, uint64_t tsc_adjust)
 	/* IA32_TSC_ADJUST is supposed to carry the value it's written to */
 	vcpu_set_guest_msr(vcpu, MSR_IA32_TSC_ADJUST, tsc_adjust);
 
-	set_tsc_msr_intercept(vcpu, (tsc_offset + tsc_adjust_delta ) != 0UL);
+	set_tsc_msr_interception(vcpu, (tsc_offset + tsc_adjust_delta ) != 0UL);
 }
 
 /**
@@ -855,5 +870,5 @@ void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu)
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_XAPICID, INTERCEPT_READ);
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_LDR, INTERCEPT_READ);
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_ICR, INTERCEPT_WRITE);
-	set_tsc_msr_intercept(vcpu, exec_vmread64(VMX_TSC_OFFSET_FULL) != 0UL);
+	set_tsc_msr_interception(vcpu, exec_vmread64(VMX_TSC_OFFSET_FULL) != 0UL);
 }
