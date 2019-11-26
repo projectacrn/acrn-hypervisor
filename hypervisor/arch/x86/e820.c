@@ -154,6 +154,8 @@ void init_e820(void)
 				dev_dbg(ACRN_DBG_E820, "Base: 0x%016lx length: 0x%016lx",
 					mmap[i].baseaddr, mmap[i].length);
 			}
+		} else {
+			panic("no memory map found from multiboot info");
 		}
 
 		obtain_mem_range_info();
