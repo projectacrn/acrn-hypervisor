@@ -150,13 +150,6 @@ def get_param(args):
     return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
 
 
-def get_scenario_uuid():
-    # {id_num:uuid} (id_num:0~max)
-    scenario_uuid_dic = {}
-    scenario_uuid_dic = common.get_branch_tag_map(SCENARIO_INFO_FILE, 'uuid')
-    return scenario_uuid_dic
-
-
 def get_post_num_list():
     """
     Get board name from launch.xml at fist line
@@ -314,35 +307,40 @@ def is_config_file_match():
     return (err_dic, match)
 
 
+def get_leaf_tag_map(info_file, prime_item, item=''):
+    """
+    :param info_file: some configurations in the info file
+    :param prime_item: the prime item in xml file
+    :param item: the item in xml file
+    :return: dictionary which item value could be indexed by vmid
+    """
+    vmid_item_dic = common.get_leaf_tag_map(info_file, prime_item, item)
+    return vmid_item_dic
+
+
+def get_scenario_uuid():
+    # {id_num:uuid} (id_num:0~max)
+    scenario_uuid_dic = {}
+    scenario_uuid_dic = get_leaf_tag_map(SCENARIO_INFO_FILE, 'uuid')
+    return scenario_uuid_dic
+
+
 def get_sos_vmid():
 
-    load_list = common.get_branch_tag_val(SCENARIO_INFO_FILE, "load_order")
+    load_dic = get_leaf_tag_map(SCENARIO_INFO_FILE, "load_order")
 
-    sos_id = 0
-    for load_order in load_list:
+    sos_id = ''
+    for idx,load_order in load_dic.items():
         if load_order == "SOS_VM":
+            sos_id = idx
             break
-
-        sos_id += 1
 
     return sos_id
 
 
-def get_sub_tree_tag(config_file, tag_str):
-    """
-     This is get tag value by tag_str from config file
-     :param config_file: it is a file what contains information for script to read from
-     :param tag_str: it is key of pattern to config file item
-     :return: value of tag_str item
-     """
-    arg = common.get_spec_branch_tag_val(config_file, tag_str)
-
-    return arg
-
-
 def get_bdf_from_tag(config_file, branch_tag, tag_str):
     bdf_list = {}
-    bdf_list = common.get_spec_leaf_tag_val(config_file, branch_tag, tag_str)
+    bdf_list = get_leaf_tag_map(config_file, branch_tag, tag_str)
 
     # split b:d:f from pci description
     for idx, bdf_v in bdf_list.items():
@@ -382,7 +380,7 @@ def get_uos_type():
     """
     Get uos name from launch.xml at fist line
     """
-    uos_types = get_sub_tree_tag(LAUNCH_INFO_FILE, "uos_type")
+    uos_types = get_leaf_tag_map(LAUNCH_INFO_FILE, "uos_type")
 
     return uos_types
 

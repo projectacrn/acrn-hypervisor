@@ -111,14 +111,14 @@ class CfgOsKern:
         Check all items in this class
         :return: None
         """
-        scenario_cfg_lib.os_kern_name_check(self.kern_name, "name")
-        scenario_cfg_lib.os_kern_type_check(self.kern_type, "kern_type")
-        scenario_cfg_lib.os_kern_mod_check(self.kern_mod, "kern_mod")
-        scenario_cfg_lib.os_kern_args_check(self.kern_args, "kern_args")
-        scenario_cfg_lib.os_kern_console_check(self.kern_console, "console")
-        scenario_cfg_lib.os_kern_load_addr_check(self.kern_load_addr, "kern_load_addr")
-        scenario_cfg_lib.os_kern_entry_addr_check(self.kern_entry_addr, "kern_entry_addr")
-        scenario_cfg_lib.os_kern_root_dev_check(self.kern_root_dev, "rootdev")
+        scenario_cfg_lib.os_kern_name_check(self.kern_name, "os_config", "name")
+        scenario_cfg_lib.os_kern_type_check(self.kern_type, "os_config", "kern_type")
+        scenario_cfg_lib.os_kern_mod_check(self.kern_mod, "os_config", "kern_mod")
+        scenario_cfg_lib.os_kern_args_check(self.kern_args, "os_config", "kern_args")
+        scenario_cfg_lib.os_kern_console_check(self.kern_console, "os_config", "console")
+        scenario_cfg_lib.os_kern_load_addr_check(self.kern_load_addr, "os_config", "kern_load_addr")
+        scenario_cfg_lib.os_kern_entry_addr_check(self.kern_entry_addr, "os_config", "kern_entry_addr")
+        scenario_cfg_lib.os_kern_root_dev_check(self.kern_root_dev, "os_config", "rootdev")
 
 
 class VuartTarget:
@@ -198,8 +198,8 @@ class MemInfo:
         Check all items in this class
         :return: None
         """
-        scenario_cfg_lib.mem_start_hpa_check(self.mem_start_hpa, "start_hpa")
-        scenario_cfg_lib.mem_size_check(self.mem_size, "size")
+        scenario_cfg_lib.mem_start_hpa_check(self.mem_start_hpa, "memory", "start_hpa")
+        scenario_cfg_lib.mem_size_check(self.mem_size, "memory", "size")
 
 
 class CfgPci:
@@ -215,14 +215,14 @@ class CfgPci:
         Get pci device number items
         :return: None
         """
-        self.pci_dev_num = scenario_cfg_lib.get_branch_tag_map(self.scenario_info, "pci_dev_num")
+        self.pci_dev_num = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "pci_dev_num")
 
     def get_pci_devs(self):
         """
         Get pci devices items
         :return: None
         """
-        self.pci_devs = scenario_cfg_lib.get_branch_tag_map(self.scenario_info, "pci_devs")
+        self.pci_devs = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "pci_devs")
 
     def get_info(self):
         """
@@ -277,14 +277,14 @@ class VmInfo:
         Get all items which belong to this class
         :return: None
         """
-        self.name = scenario_cfg_lib.get_branch_tag_map(self.scenario_info, "name")
-        self.load_order = scenario_cfg_lib.get_branch_tag_map(self.scenario_info, "load_order")
-        self.uuid = scenario_cfg_lib.get_branch_tag_map(self.scenario_info, "uuid")
+        self.name = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "name")
+        self.load_order = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "load_order")
+        self.uuid = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "uuid")
         self.guest_flag_idx = scenario_cfg_lib.get_sub_leaf_tag(
             self.scenario_info, "guest_flags", "guest_flag")
         self.cpus_per_vm = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "vcpu_affinity", "pcpu_id")
-        self.clos_set = scenario_cfg_lib.get_branch_tag_map(self.scenario_info, "clos")
+        self.clos_set = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "clos")
         self.epc_section.get_info()
         self.mem_info.get_info()
         self.os_cfg.get_info()
