@@ -426,7 +426,16 @@ def xhci_args_set(names, vmid, config):
             print("   -s {},xhci,1-2:2-4 \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
 
 
-def dm_arg_set(names, sel, dm, vmid, config):
+def vritio_args_set(virt_io, vmid, config):
+
+    # virtio-input set, the value type is a list
+    for input_val in virt_io['input'][vmid]:
+        if input_val:
+            print("   -s {},virtio-input,{} \\".format(
+                launch_cfg_lib.virtual_dev_slot("virtio-input{}".format(input_val)), input_val), file=config)
+
+
+def dm_arg_set(names, sel, virt_io, dm, vmid, config):
 
     uos_type = names['uos_types'][vmid]
     board_name = names['board_name']
@@ -498,6 +507,9 @@ def dm_arg_set(names, sel, dm, vmid, config):
     # WA: XHCI args set
     xhci_args_set(names, vmid, config)
 
+    # VIRTIO args set
+    vritio_args_set(virt_io, vmid, config)
+
     # GVT args set
     gvt_arg_set(uos_type, config)
 
@@ -545,7 +557,7 @@ def dm_arg_set(names, sel, dm, vmid, config):
     print("}", file=config)
 
 
-def gen(names, pt_sel, dm, vmid, config):
+def gen(names, pt_sel, virt_io, dm, vmid, config):
 
     board_name = names['board_name']
     uos_type = names['uos_types'][vmid]
@@ -566,7 +578,7 @@ def gen(names, pt_sel, dm, vmid, config):
     log_level_set(uos_type, config)
 
     # gen acrn-dm args
-    dm_arg_set(names, pt_sel, dm, vmid, config)
+    dm_arg_set(names, pt_sel, virt_io, dm, vmid, config)
 
     # gen launch end
     launch_end(names, dm, vmid, config)

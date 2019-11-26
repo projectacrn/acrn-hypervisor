@@ -290,11 +290,11 @@ def save_launch():
     # call validate function
     rename = False
     try:
-        (error_list, pthru_sel, dm_value) = validate_launch_setting(
+        (error_list, pthru_sel, virtio, dm_value) = validate_launch_setting(
             os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res', xml_configs[0]+'.xml'),
             scenario_file_path,
             tmp_launch_file)
-        print(pthru_sel, dm_value)
+        print(pthru_sel, virtio, dm_value)
     except Exception as error:
         if os.path.isfile(tmp_launch_file):
             os.remove(tmp_launch_file)
