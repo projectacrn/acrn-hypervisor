@@ -239,7 +239,7 @@ SOS:
 .. doxygenfunction:: ptirq_intx_pin_remap
    :project: Project ACRN
 
-.. doxygenfunction:: ptirq_msix_remap
+.. doxygenfunction:: ptirq_prepare_msix_remap
    :project: Project ACRN
 
 The following APIs are provided to manipulate the interrupt remapping

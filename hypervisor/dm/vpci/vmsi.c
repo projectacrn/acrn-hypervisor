@@ -75,7 +75,7 @@ static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
 		info.vmsi_data.full = 0U;
 	}
 
-	ret = ptirq_msix_remap(vm, vdev->bdf.value, pbdf.value, 0U, &info);
+	ret = ptirq_prepare_msix_remap(vm, vdev->bdf.value, pbdf.value, 0U, &info);
 	if (ret == 0) {
 		/* Update MSI Capability structure to physical device */
 		if ((msgctrl & PCIM_MSICTRL_64BIT) != 0U) {

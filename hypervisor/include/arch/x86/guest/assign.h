@@ -61,7 +61,7 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpin_src);
  * @pre info != NULL
  *
  */
-int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,  uint16_t phys_bdf,
+int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,  uint16_t phys_bdf,
 				uint16_t entry_nr, struct ptirq_msi_info *info);
 
 
