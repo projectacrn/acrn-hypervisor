@@ -120,8 +120,7 @@ static void reset_host(void)
 /**
  * @pre vcpu != NULL && vm != NULL
  */
-static bool handle_reset_reg_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, __unused uint16_t addr,
-		__unused size_t bytes)
+static bool handle_reset_reg_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
 {
 	bool ret = true;
 
@@ -129,12 +128,16 @@ static bool handle_reset_reg_read(struct acrn_vm *vm, struct acrn_vcpu *vcpu, __
 		/* re-inject to DM */
 		ret = false;
 	} else {
-		/*
-		 * - keyboard control/status register 0x64: ACRN doesn't expose kbd controller to the guest.
-		 * - reset control register 0xcf9: hide this from guests for now.
-		 * - FADT reset register: the read behavior is not defined in spec, keep it simple to return all '1'.
-		 */
-		vcpu->req.reqs.pio.value = ~0U;
+		if (is_sos_vm(vm) && (bytes == 1U) && (addr == 0x64)) {
+			vcpu->req.reqs.pio.value = (uint32_t)pio_read8(addr);
+		} else {
+			/*
+			* - keyboard control/status register 0x64: ACRN doesn't expose kbd controller to the guest.
+			* - reset control register 0xcf9: hide this from guests for now.
+			* - FADT reset register: the read behavior is not defined in spec, keep it simple to return all '1'.
+			*/
+			vcpu->req.reqs.pio.value = ~0U;
+		}
 	}
 
 	return ret;
@@ -171,10 +174,18 @@ static bool handle_common_reset_reg_write(struct acrn_vm *vm, bool reset)
 /**
  * @pre vm != NULL
  */
-static bool handle_kb_write(struct acrn_vm *vm, __unused uint16_t addr, size_t bytes, uint32_t val)
+static bool handle_kb_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
 {
-	/* ignore commands other than system reset */
-	return handle_common_reset_reg_write(vm, ((bytes == 1U) && (val == 0xfeU)));
+	bool ret = true;
+
+	/* passthru none reset commands. */
+	if (is_sos_vm(vm) && (val != 0xfe) && (bytes == 1U)) {
+		pio_write8((uint8_t)val, addr);
+	} else {
+		ret = handle_common_reset_reg_write(vm, ((bytes == 1U) && (val == 0xfeU)));
+	}
+
+	return ret;
 }
 
 /*
