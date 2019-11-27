@@ -144,6 +144,12 @@ void init_pcpu_pre(bool is_bsp)
 		early_init_lapic();
 
 		init_vboot();
+#ifdef CONFIG_ACPI_PARSE_ENABLED
+		ret = acpi_fixup();
+		if (ret != 0) {
+			panic("failed to parse/fix up ACPI table!");
+		}
+#endif
 
 		if (!init_percpu_lapic_id()) {
 			panic("failed to init_percpu_lapic_id!");

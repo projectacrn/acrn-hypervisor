@@ -41,12 +41,26 @@
 #include <vtd.h>
 #include <bits.h>
 #include <board.h>
+#include <platform_acpi_info.h>
 
 static spinlock_t pci_device_lock;
 static uint32_t num_pci_pdev;
 static struct pci_pdev pci_pdev_array[CONFIG_MAX_PCI_DEV_NUM];
+static uint64_t pci_mmcfg_base = DEFAULT_PCI_MMCFG_BASE;
 
 static void init_pdev(uint16_t pbdf, uint32_t drhd_index);
+
+#ifdef CONFIG_ACPI_PARSE_ENABLED
+void set_mmcfg_base(uint64_t mmcfg_base)
+{
+	pci_mmcfg_base = mmcfg_base;
+}
+#endif
+
+uint64_t get_mmcfg_base(void)
+{
+	return pci_mmcfg_base;
+}
 
 /* @brief: Find the DRHD index corresponding to a PCI device
  * Runs through the pci_pdev_array and returns the value in drhd_idx

@@ -36,13 +36,19 @@
 #define OFFSET_WAKE_VECTOR_32    12U
 #define OFFSET_WAKE_VECTOR_64    24U
 
+/* MCFG field offsets */
+#define OFFSET_MCFG_LENGTH       4U
+#define OFFSET_MCFG_ENTRY0       44U
+#define OFFSET_MCFG_ENTRY0_BASE  44U
+#define OFFSET_MCFG_ENTRY1       60U
+
 #define ACPI_SIG_FADT            "FACP" /* Fixed ACPI Description Table */
 #define ACPI_SIG_FACS             0x53434146U /* "FACS" */
 #define ACPI_SIG_RSDP            "RSD PTR " /* Root System Description Ptr */
 #define ACPI_SIG_XSDT            "XSDT"      /* Extended  System Description Table */
 #define ACPI_SIG_MADT            "APIC" /* Multiple APIC Description Table */
 #define ACPI_SIG_DMAR            "DMAR"
-
+#define ACPI_SIG_MCFG            "MCFG" /* Memory Mapped Configuration table */
 
 struct packed_gas {
 	uint8_t 	space_id;
@@ -200,7 +206,7 @@ uint16_t parse_madt(uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM]);
 uint16_t parse_madt_ioapic(struct ioapic_info *ioapic_id_array);
 
 #ifdef CONFIG_ACPI_PARSE_ENABLED
-void acpi_fixup(void);
+int32_t acpi_fixup(void);
 #endif
 
 #endif /* !ACPI_H */

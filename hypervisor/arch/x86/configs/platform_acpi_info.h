@@ -24,6 +24,9 @@
 #define RESET_REGISTER_VALUE	0UL
 #define RESET_REGISTER_SPACE_ID 0UL
 
+/* PCI mmcfg base of MCFG, pre-assumption is platform only has one PCI segment group */
+#define DEFAULT_PCI_MMCFG_BASE	0UL
+
 /* DRHD of DMAR */
 #define DRHD_COUNT		8U
 
