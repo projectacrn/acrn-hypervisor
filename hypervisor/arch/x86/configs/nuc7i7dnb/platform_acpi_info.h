@@ -39,6 +39,9 @@
 #define RESET_REGISTER_SPACE_ID SPACE_SYSTEM_IO
 #define RESET_REGISTER_VALUE    0x6U
 
+/* PCI mmcfg base of MCFG */
+#define DEFAULT_PCI_MMCFG_BASE	0xE0000000UL
+
 /* DRHD of DMAR */
 
 #define DRHD_COUNT              2U

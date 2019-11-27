@@ -33,6 +33,7 @@
 #include <ioapic.h>
 #include <logmsg.h>
 #include <host_pm.h>
+#include <pci.h>
 #include <acrn_common.h>
 
 /* Per ACPI spec:
@@ -111,15 +112,30 @@ static void *get_facs_table(const uint8_t *facp_addr)
 	return (void *)facs_addr;
 }
 
-/* put all ACPI fix up code here */
-void acpi_fixup(void)
+/* @pre mcfg_addr != NULL */
+static uint64_t parse_mmcfg_base(const uint8_t *mcfg_addr)
 {
-	uint8_t *facp_addr, *facs_addr;
+	uint64_t base = 0UL;
+	uint32_t length = get_acpi_dt_dword(mcfg_addr, OFFSET_MCFG_LENGTH);
+
+	if (length > OFFSET_MCFG_ENTRY1) {
+		pr_fatal("Multiple PCI segment groups is not supported!");
+	} else {
+		base = get_acpi_dt_qword(mcfg_addr, OFFSET_MCFG_ENTRY0_BASE);
+	}
+	return base;
+}
+
+/* put all ACPI fix up code here */
+int32_t acpi_fixup(void)
+{
+	uint8_t *facp_addr = NULL, *facs_addr = NULL, *mcfg_addr = NULL;
+	uint64_t def_mmcfg_base = 0UL;
+	int32_t ret = 0;
 	struct acpi_generic_address pm1a_cnt, pm1a_evt;
 	struct pm_s_state_data *sx_data = get_host_sstate_data();
 
 	facp_addr = (uint8_t *)get_acpi_tbl(ACPI_SIG_FADT);
-
 	if (facp_addr != NULL) {
 		get_acpi_dt_gas(facp_addr, OFFSET_PM1A_EVT, &pm1a_evt);
 		get_acpi_dt_gas(facp_addr, OFFSET_PM1A_CNT, &pm1a_cnt);
@@ -143,4 +159,17 @@ void acpi_fixup(void)
 			rr_data->val = *(facp_addr + OFFSET_RESET_VALUE);
 		}
 	}
+
+	mcfg_addr = (uint8_t *)get_acpi_tbl(ACPI_SIG_MCFG);
+	if (mcfg_addr != NULL) {
+		def_mmcfg_base = parse_mmcfg_base(mcfg_addr);
+		set_mmcfg_base(def_mmcfg_base);
+	}
+
+	if ((facp_addr == NULL) || (facs_addr == NULL)
+				|| (mcfg_addr == NULL) || (def_mmcfg_base == 0UL)) {
+		ret = -1;
+	}
+
+	return ret;
 }
