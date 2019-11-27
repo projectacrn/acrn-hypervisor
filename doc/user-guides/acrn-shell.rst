@@ -21,9 +21,12 @@ The ACRN hypervisor shell supports the following commands:
      - List all vCPUs in all VMs
    * - vcpu_dumpreg <vm_id> <vcpu_id>
      - Dump registers for a specific vCPU
-   * - dumpmem <hva> <length>
-     - Dump host memory, starting at a given address, and for a given length
-       (in bytes)
+   * - dump_host_mem <hva> <length>
+     - Dump the host memory region as specified by the start of the region ``hva`` (in hexadecimal)
+       and its length ``length`` (in bytes, decimal number).
+   * - dump_guest_mem <vm_id> <gva> <length>
+     - Dump a User VM (guest) memory region based on the VM ID (``vm_id``, in decimal),
+       the start of the memory region ``gva`` (in hexadecimal) and its length ``length`` (in bytes, decimal number).
    * - vm_console <vm_id>
      - Switch to the VM's console. Use :kbd:`Ctrl+Spacebar` to return to the ACRN
        shell console
@@ -104,10 +107,10 @@ function ``acpi_idle_do_entry``.
 
    system map information
 
-dumpmem
-=======
+dump_host_mem
+=============
 
-``dumpmem mem_address`` provides the specified memory target data such as
+``dump_host_mem hva length`` provides the specified memory target data such as
 the physical CPU (pCPU) number, etc.
 
 In this example, we know the pCPU active bitmap and physical CPU number
@@ -128,6 +131,26 @@ pCPU number is 0x0000000000000004.
    :align: center
 
    acrn map information
+
+dump_guest_mem
+==============
+
+The ``dump_guest_mem`` command can dump guest memory according to the given
+VM ID and guest virtual address (``gva``).
+
+In this example, we know the starting address of kernel text segment
+in guest console or through the ``system.map`` (Note that the path for
+``system.map`` depends on how we build the kernel)
+
+.. figure:: images/shell_image19.png
+   :align: center
+
+   guest virtual address
+
+.. figure:: images/shell_image20.png
+   :align: center
+
+   guest memory information
 
 vm_console
 ===========
