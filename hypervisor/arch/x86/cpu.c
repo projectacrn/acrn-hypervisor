@@ -40,7 +40,7 @@ static uint64_t startup_paddr = 0UL;
 /* physical cpu active bitmap, support up to 64 cpus */
 static volatile uint64_t pcpu_active_bitmap = 0UL;
 
-static void pcpu_xsave_init(void);
+static void init_pcpu_xsave(void);
 static void set_current_pcpu_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
 static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id);
@@ -186,7 +186,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 #endif
 	load_gdtr_and_tr();
 
-	pcpu_xsave_init();
+	init_pcpu_xsave();
 
 	if (pcpu_id == BOOT_CPU_ID) {
 		/* Print Hypervisor Banner */
@@ -472,7 +472,7 @@ void wait_sync_change(volatile const uint64_t *sync, uint64_t wake_sync)
 	}
 }
 
-static void pcpu_xsave_init(void)
+static void init_pcpu_xsave(void)
 {
 	uint64_t val64;
 	struct cpuinfo_x86 *cpu_info;
