@@ -89,11 +89,30 @@ def parse_trace_data(ifile):
 
     global TSC_BEGIN, TSC_END, TOTAL_NR_EXITS
     last_ev_id = ''
-    tsc_enter = 0
     tsc_exit = 0
-    tsc_last_exit_period = 0
 
     fd = open(ifile, 'rb')
+
+    # The duration of one vmexit is tsc_enter - tsc_exit
+    # Here we should find the first vmexit and ignore other entries on top of the first vmexit
+    while True:
+        try:
+            line = fd.read(struct.calcsize(TRCREC))
+            if not line:
+                break
+            (tsc, event, d1, d2) = struct.unpack(TRCREC, line)
+            event = event & 0xffffffffffff
+
+            if event != VM_EXIT:
+                continue
+
+            # We found the first vmexit and should seek back one line as we will read it in the following loop
+            TSC_BEGIN = tsc
+            fd.seek(fd.tell() - len(line))
+            break
+
+        except (IOError, struct.error) as e:
+            sys.exit()
 
     while True:
         try:
@@ -105,21 +124,12 @@ def parse_trace_data(ifile):
             event = event & 0xffffffffffff
 
             if event == VM_ENTER:
-                if TSC_BEGIN == 0:
-                    TSC_BEGIN = tsc
-                    tsc_exit = tsc
-                    TOTAL_NR_EXITS = 0
-
-                tsc_enter = tsc
-                TSC_END = tsc_enter
-                tsc_last_exit_period = tsc_enter - tsc_exit
-
-                if tsc_last_exit_period != 0:
-                    TIME_IN_EXIT[last_ev_id] += tsc_last_exit_period
+                TSC_END = tsc
+                # Found one vmenter in pair with the last vmexit
+                TIME_IN_EXIT[last_ev_id] += tsc - tsc_exit
 
             elif event == VM_EXIT:
                 tsc_exit = tsc
-                TSC_END = tsc_exit
                 TOTAL_NR_EXITS += 1
 
             else:
