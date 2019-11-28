@@ -137,6 +137,7 @@ def parse_trace_data(ifile):
                     if event == LIST_EVENTS.get(key):
                         NR_EXITS[key] += 1
                         last_ev_id = key
+                        break
 
                     else:
                         # Skip the non-VMEXIT trace event
