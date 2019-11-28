@@ -40,7 +40,7 @@
  * @pre vdev->vpci->vm != NULL
  * @pre vdev->pdev != NULL
  */
-static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
+static int32_t remap_vmsi(const struct pci_vdev *vdev, bool enable)
 {
 	struct ptirq_msi_info info;
 	union pci_bdf pbdf = vdev->pdev->bdf;
@@ -135,10 +135,10 @@ void vmsi_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint
 	if (((offset - vdev->msi.capoff) == PCIR_MSI_CTRL) &&
 		(((msgctrl ^ val) & PCIM_MSICTRL_MSI_ENABLE) != 0U)) {
 		enable = ((val & PCIM_MSICTRL_MSI_ENABLE) != 0U);
-		(void)vmsi_remap(vdev, enable);
+		(void)remap_vmsi(vdev, enable);
 	} else {
 		if (message_changed && ((msgctrl & PCIM_MSICTRL_MSI_ENABLE) != 0U)) {
-			(void)vmsi_remap(vdev, true);
+			(void)remap_vmsi(vdev, true);
 		}
 	}
 }
