@@ -174,7 +174,7 @@ def generate_report(ofile, freq):
 
             print ("Total run time: %d cycles" % (rt_cycle))
             print ("TSC Freq: %s MHz" % (freq))
-            print ("Total run time: %d sec" % (rt_sec))
+            print ("Total run time: %.6f sec" % (rt_sec))
 
             f_csv.writerow(['Run time(cycles)', 'Run time(Sec)', 'Freq(MHz)'])
             f_csv.writerow(['%d' % (rt_cycle),
