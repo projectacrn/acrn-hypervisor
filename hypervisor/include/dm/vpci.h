@@ -51,6 +51,7 @@ struct msix_table_entry {
 
 /* MSI capability structure */
 struct pci_msi {
+	bool      is_64bit;
 	uint32_t  capoff;
 	uint32_t  caplen;
 };
