@@ -52,7 +52,7 @@ static inline bool msixtable_access(const struct pci_vdev *vdev, uint32_t offset
  * @pre vdev->vpci->vm != NULL
  * @pre vdev->pdev != NULL
  */
-static int32_t vmsix_remap_entry(const struct pci_vdev *vdev, uint32_t index, bool enable)
+static int32_t remap_vmsix_entry(const struct pci_vdev *vdev, uint32_t index, bool enable)
 {
 	struct msix_table_entry *pentry;
 	struct ptirq_msi_info info;
@@ -107,7 +107,7 @@ static inline void enable_disable_msix(const struct pci_vdev *vdev, bool enable)
  * @pre vdev != NULL
  * @pre vdev->pdev != NULL
  */
-static int32_t vmsix_remap(const struct pci_vdev *vdev, bool enable)
+static int32_t remap_vmsix(const struct pci_vdev *vdev, bool enable)
 {
 	uint32_t index;
 	int32_t ret = 0;
@@ -116,7 +116,7 @@ static int32_t vmsix_remap(const struct pci_vdev *vdev, bool enable)
 	enable_disable_msix(vdev, false);
 
 	for (index = 0U; index < vdev->msix.table_count; index++) {
-		ret = vmsix_remap_entry(vdev, index, enable);
+		ret = remap_vmsix_entry(vdev, index, enable);
 		if (ret != 0) {
 			break;
 		}
@@ -138,7 +138,7 @@ static int32_t vmsix_remap(const struct pci_vdev *vdev, bool enable)
  * @pre vdev != NULL
  * @pre vdev->pdev != NULL
  */
-static int32_t vmsix_remap_one_entry(const struct pci_vdev *vdev, uint32_t index, bool enable)
+static int32_t remap_one_vmsx_entry(const struct pci_vdev *vdev, uint32_t index, bool enable)
 {
 	uint32_t msgctrl;
 	int32_t ret;
@@ -146,7 +146,7 @@ static int32_t vmsix_remap_one_entry(const struct pci_vdev *vdev, uint32_t index
 	/* disable MSI-X during configuration */
 	enable_disable_msix(vdev, false);
 
-	ret = vmsix_remap_entry(vdev, index, enable);
+	ret = remap_vmsix_entry(vdev, index, enable);
 	if (ret == 0) {
 		/* If MSI Enable is being set, make sure INTxDIS bit is set */
 		if (enable) {
@@ -191,9 +191,9 @@ void vmsix_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uin
 	if ((offset - vdev->msix.capoff) == PCIR_MSIX_CTRL) {
 		if (((msgctrl ^ val) & PCIM_MSIXCTRL_MSIX_ENABLE) != 0U) {
 			if ((val & PCIM_MSIXCTRL_MSIX_ENABLE) != 0U) {
-				(void)vmsix_remap(vdev, true);
+				(void)remap_vmsix(vdev, true);
 			} else {
-				(void)vmsix_remap(vdev, false);
+				(void)remap_vmsix(vdev, false);
 			}
 		}
 
@@ -207,7 +207,7 @@ void vmsix_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uin
  * @pre vdev != NULL
  * @pre mmio != NULL
  */
-static void vmsix_table_rw(const struct pci_vdev *vdev, struct mmio_request *mmio, uint32_t offset)
+static void rw_vmsix_table(const struct pci_vdev *vdev, struct mmio_request *mmio, uint32_t offset)
 {
 	const struct msix_table_entry *entry;
 	uint32_t vector_control, entry_offset, table_offset, index;
@@ -262,7 +262,7 @@ static void vmsix_table_rw(const struct pci_vdev *vdev, struct mmio_request *mmi
 					if ((((entry->vector_control ^ vector_control) & PCIM_MSIX_VCTRL_MASK) != 0U)
 							|| message_changed) {
 						unmasked = ((entry->vector_control & PCIM_MSIX_VCTRL_MASK) == 0U);
-						(void)vmsix_remap_one_entry(vdev, index, unmasked);
+						(void)remap_one_vmsx_entry(vdev, index, unmasked);
 					}
 				}
 			} else {
@@ -280,7 +280,7 @@ static void vmsix_table_rw(const struct pci_vdev *vdev, struct mmio_request *mmi
  * @pre io_req != NULL
  * @pre handler_private_data != NULL
  */
-int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
+int32_t vmsix_handle_table_mmio_access(struct io_request *io_req, void *handler_private_data)
 {
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	struct pci_vdev *vdev;
@@ -296,7 +296,7 @@ int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *handler
 	offset = mmio->address - vdev->msix.mmio_gpa;
 
 	if (msixtable_access(vdev, (uint32_t)offset)) {
-		vmsix_table_rw(vdev, mmio, (uint32_t)offset);
+		rw_vmsix_table(vdev, mmio, (uint32_t)offset);
 	} else {
 		hva = hpa2hva(vdev->msix.mmio_hpa + offset);
 
