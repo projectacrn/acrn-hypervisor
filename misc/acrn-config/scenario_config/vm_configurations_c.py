@@ -150,8 +150,8 @@ def is_need_epc(epc_section, i, config):
         return
     else:
         print("\t\t.epc= {", file=config)
-        print('\t\t\t.base = "{0}",'.format(epc_section.base), file=config)
-        print('\t\t\t.size = {0},'.format(epc_section.size), file=config)
+        print('\t\t\t.base = {0},'.format(epc_section.base[i]), file=config)
+        print('\t\t\t.size = {0},'.format(epc_section.size[i]), file=config)
         print("\t\t},", file=config)
 
 
