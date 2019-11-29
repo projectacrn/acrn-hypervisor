@@ -43,7 +43,6 @@ def get_launch_item_values(board_info):
     # acrn dm available optargs
     launch_item_values['uos,uos_type'] = launch_cfg_lib.UOS_TYPES
     launch_item_values["uos,rtos_type"] = launch_cfg_lib.RTOS_TYPE
-    launch_item_values["uos,rootfs_dev"] = launch_cfg_lib.get_rootdev_info(board_info)
 
     launch_item_values["uos,vbootloader"] = launch_cfg_lib.BOOT_TYPE
     launch_item_values['uos,console_type'] = launch_cfg_lib.REDIRECT_CONSOLE

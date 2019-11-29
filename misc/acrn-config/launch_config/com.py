@@ -17,10 +17,18 @@ def is_nuc_whl_clr(names, vmid):
     return False
 
 
-def is_mount_needed(names, vmid):
-    uos_type = names['uos_types'][vmid]
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_whl_clr(names, vmid):
-         return True
+def is_mount_needed(virt_io, vmid):
+    rootfs_img = ''
+    blk_dev_list = launch_cfg_lib.get_rootdev_info(launch_cfg_lib.BOARD_INFO_FILE)
+    if virt_io['block'][vmid]:
+        if ':' in virt_io['block'][vmid]:
+            blk_dev = virt_io['block'][vmid].split(':')[0]
+            rootfs_img = virt_io['block'][vmid].split(':')[1]
+        else:
+            blk_dev = virt_io['block'][vmid]
+
+        if blk_dev in blk_dev_list and rootfs_img:
+            return True
 
     return False
 
@@ -264,7 +272,7 @@ def mem_size_set(args, vmid, config):
     print("mem_size={}M".format(mem_size), file=config)
 
 
-def uos_launch(names, args, vmid, config):
+def uos_launch(names, args, virt_io, vmid, config):
 
     gvt_args = args['gvt_args'][vmid]
     uos_type = names['uos_types'][vmid]
@@ -294,14 +302,14 @@ def uos_launch(names, args, vmid, config):
         if uos_type in ("CLEARLINUX", "WINDOWS"):
             print('launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
 
-    if is_mount_needed(names, vmid):
+    if is_mount_needed(virt_io, vmid):
         print("", file=config)
         print('launch_{} {} "{}" "{}" $debug'.format(launch_uos, vmid, gvt_args, vmid), file=config)
         print("", file=config)
         print("umount /data", file=config)
 
 
-def launch_end(names, args, vmid, config):
+def launch_end(names, args, virt_io, vmid, config):
 
     board_name = names['board_name']
     uos_type = names['uos_types'][vmid]
@@ -327,8 +335,8 @@ def launch_end(names, args, vmid, config):
         print("done", file=config)
         print("", file=config)
 
-    if is_mount_needed(names, vmid):
-        root_fs = args['rootfs_dev'][vmid]
+    if is_mount_needed(virt_io, vmid):
+        root_fs = virt_io['block'][vmid].split(':')[0]
 
         print('if [ ! -b "{}" ]; then'.format(root_fs), file=config)
         print('  echo "no {} data partition, exit"'.format(root_fs), file=config)
@@ -341,7 +349,7 @@ def launch_end(names, args, vmid, config):
 
     off_line_cpus(args, vmid, uos_type, config)
 
-    uos_launch(names, args, vmid, config)
+    uos_launch(names, args, virt_io, vmid, config)
 
 
 def set_dm_pt(names, sel, vmid, config):
@@ -413,7 +421,7 @@ def xhci_args_set(dm, vmid, config):
             launch_cfg_lib.virtual_dev_slot("xhci"), dm['xhci'][vmid]), file=config)
 
 
-def vritio_args_set(virt_io, vmid, config):
+def virtio_args_set(dm, virt_io, vmid, config):
 
     # virtio-input set, the value type is a list
     for input_val in virt_io['input'][vmid]:
@@ -421,15 +429,18 @@ def vritio_args_set(virt_io, vmid, config):
             print("   -s {},virtio-input,{} \\".format(
                 launch_cfg_lib.virtual_dev_slot("virtio-input{}".format(input_val)), input_val), file=config)
 
+    # virtio-blk set, the value type is a list
+    for blk in virt_io['block'][vmid]:
+        if blk:
+            print("   -s {},virtio-blk,{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk{}".format(blk)), blk.strip(':')), file=config)
+
 
 def dm_arg_set(names, sel, virt_io, dm, vmid, config):
 
     uos_type = names['uos_types'][vmid]
     board_name = names['board_name']
 
-    # vboot loader for vsbl
     boot_image_type(dm, vmid, config)
-    root_img = dm['rootfs_img'][vmid]
 
     # uuid get
     scenario_uuid = launch_cfg_lib.get_scenario_uuid()
@@ -495,7 +506,7 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     xhci_args_set(dm, vmid, config)
 
     # VIRTIO args set
-    vritio_args_set(virt_io, vmid, config)
+    virtio_args_set(dm, virt_io, vmid, config)
 
     # GVT args set
     gvt_arg_set(uos_type, config)
@@ -529,12 +540,6 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
 
         if not is_nuc_whl_clr(names, vmid):
             print("   -s {},wdt-i6300esb \\".format(launch_cfg_lib.virtual_dev_slot("wdt-i6300esb")), file=config)
-            #print("   -s {},xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \\".format(launch_cfg_lib.virtual_dev_slot("xhci")), file=config)
-
-    if dm['vbootloader'][vmid] and dm['vbootloader'][vmid] == "vsbl":
-        print("   -s {},virtio-blk$boot_dev_flag,/data/{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk"), root_img), file=config)
-    elif dm['vbootloader'][vmid] and dm['vbootloader'][vmid] == "ovmf":
-        print("   -s {},virtio-blk,{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk"), root_img), file=config)
 
     if uos_type in ("ANDROID", "ALIOS"):
         print("   --enable_trusty \\", file=config)
@@ -568,4 +573,4 @@ def gen(names, pt_sel, virt_io, dm, vmid, config):
     dm_arg_set(names, pt_sel, virt_io, dm, vmid, config)
 
     # gen launch end
-    launch_end(names, dm, vmid, config)
+    launch_end(names, dm, virt_io, vmid, config)
