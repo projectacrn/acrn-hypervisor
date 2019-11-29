@@ -493,6 +493,14 @@ Secure boot enabling
 You may refer to the steps in :ref:`How-to-enable-secure-boot-for-windows` for
 secure boot enabling.
 
+Activate Windows 10
+********************
+If you are using Windows 10 without activation (30 days free trial), you may encounter some problems
+(e.g. Some apps and features can not work, Windows 10 automatically shutdown by Windows licensing monitoring service and so on) when
+using Windows 10 that is unlicensed.
+
+For Windows 10 activation steps, you may refer to "`windows 10 activate  <https://support.microsoft.com/en-us/help/12440/windows-10-activate>`__"
+
 References
 **********
 
