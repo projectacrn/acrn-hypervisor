@@ -4,7 +4,7 @@
 	<rtos_type desc="UOS Realtime capability">no</rtos_type>
 	<mem_size desc="UOS memory size in MByte">4096</mem_size>
 	<gvt_args desc="GVT argument for the vm">64 448 8</gvt_args>
-	<vbootloader desc="virtual bootloader method">ovmf</vbootloader>
+	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<rootfs_dev desc="rootfs partition devices" readonly="true">/dev/sda3</rootfs_dev>
 	<rootfs_img desc="rootfs image" readonly="true">./win10-ltsc.img</rootfs_img>
 	<console_type desc="UOS console type">com1(ttyS0)</console_type>
