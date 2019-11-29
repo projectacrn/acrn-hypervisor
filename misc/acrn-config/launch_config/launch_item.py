@@ -18,8 +18,6 @@ class AcrnDmArgs:
         self.args["rtos_type"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "rtos_type")
         self.args["mem_size"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "mem_size")
         self.args["gvt_args"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "gvt_args")
-        self.args["rootfs_dev"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "rootfs_dev")
-        self.args["rootfs_img"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "rootfs_img")
         self.args["vbootloader"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "vbootloader")
         self.args["console_type"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "console_type")
         self.args["off_pcpus"] = launch_cfg_lib.get_leaf_tag_map(self.scenario_info, "vcpu_affinity", "pcpu_id")
@@ -33,7 +31,6 @@ class AcrnDmArgs:
         launch_cfg_lib.args_aval_check(self.args["gvt_args"], "gvt_args", launch_cfg_lib.GVT_ARGS)
         launch_cfg_lib.args_aval_check(self.args["vbootloader"], "vbootloader", launch_cfg_lib.BOOT_TYPE)
         launch_cfg_lib.args_aval_check(self.args["console_type"], "console_type", launch_cfg_lib.REDIRECT_CONSOLE)
-        launch_cfg_lib.args_aval_check(self.args["rootfs_dev"], "rootfs_dev", rootfs)
 
 
 class AvailablePthru():
@@ -153,3 +150,4 @@ class VirtioDeviceSelect():
 
     def get_virtio(self):
         self.dev["input"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "virtio_devices", "input")
+        self.dev["block"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "virtio_devices", "block")

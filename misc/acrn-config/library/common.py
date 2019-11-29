@@ -23,7 +23,7 @@ GUEST_FLAG = ["0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTH
 START_HPA_SIZE_LIST = ['0x20000000', '0x40000000', '0x80000000', 'CONFIG_SOS_RAM_SIZE', 'VM0_MEM_SIZE']
 
 
-MULTI_ITEM = ["guest_flag", "pcpu_id", "input"]
+MULTI_ITEM = ["guest_flag", "pcpu_id", "input", "block"]
 
 
 class MultiItem():
@@ -32,6 +32,7 @@ class MultiItem():
         self.guest_flag = []
         self.pcpu_id = []
         self.vir_input = []
+        self.vir_block = []
         self.vir_console = []
         self.vir_net = []
 
@@ -415,6 +416,10 @@ def get_leaf_value(tmp, tag_str, leaf):
     if leaf.tag == "input" and tag_str == "input":
         tmp.multi.vir_input.append(leaf.text)
 
+    # get virtio-blk for vm
+    if leaf.tag == "block" and tag_str == "block":
+        tmp.multi.vir_block.append(leaf.text)
+
 
 def get_sub_value(tmp, tag_str, vm_id):
 
@@ -427,9 +432,13 @@ def get_sub_value(tmp, tag_str, vm_id):
     if tmp.multi.pcpu_id and tag_str == "pcpu_id":
         tmp.tag[vm_id] = tmp.multi.pcpu_id
 
-    # append input for vm
+    # append virtio input for vm
     if tmp.multi.vir_input and tag_str == "input":
         tmp.tag[vm_id] = tmp.multi.vir_input
+
+    # append virtio block for vm
+    if tmp.multi.vir_block and tag_str == "block":
+        tmp.tag[vm_id] = tmp.multi.vir_block
 
 
 def get_leaf_tag_map(config_file, branch_tag, tag_str):
