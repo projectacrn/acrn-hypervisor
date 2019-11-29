@@ -4,7 +4,7 @@
 	<rtos_type desc="UOS Realtime capability"></rtos_type>
 	<mem_size desc="UOS memory size in MByte"></mem_size>
 	<gvt_args desc="GVT argument for the vm"></gvt_args>
-	<vbootloader desc=""></vbootloader>
+	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<rootfs_dev desc=""></rootfs_dev>
 	<rootfs_img desc=""></rootfs_img>
 	<console_type desc="UOS console type"></console_type>
@@ -36,7 +36,7 @@
 	<rtos_type desc="UOS Realtime capability"></rtos_type>
 	<mem_size desc="UOS memory size in MByte"></mem_size>
 	<gvt_args desc="GVT argument for the vm"></gvt_args>
-	<vbootloader desc=""></vbootloader>
+	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<rootfs_dev desc=""></rootfs_dev>
 	<rootfs_img desc=""></rootfs_img>
 	<console_type desc="UOS console type"></console_type>
