@@ -5,8 +5,6 @@
 	<mem_size desc="UOS memory size in MByte">128</mem_size>
 	<gvt_args desc="GVT argument for the vm"></gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
-	<rootfs_dev desc="rootfs partition devices" readonly="true">/dev/sda3</rootfs_dev>
-	<rootfs_img desc="rootfs image" readonly="true">./zephyr.img</rootfs_img>
 	<console_type desc="UOS console type">com1(ttyS0)</console_type>
 	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2:4"></usb_xhci>
 
@@ -27,6 +25,7 @@
 
 	<virtio_devices>
 		<input desc="virtio input device"></input>
+		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">./zephyr.img</block>
 	</virtio_devices>
     </uos>
 </acrn-config>
