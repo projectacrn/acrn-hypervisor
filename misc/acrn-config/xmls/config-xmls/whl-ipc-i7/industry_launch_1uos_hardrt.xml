@@ -5,8 +5,6 @@
 	<mem_size desc="UOS memory size in MByte">1024</mem_size>
 	<gvt_args configurable="0" desc="GVT argument for the vm"></gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
-	<rootfs_dev configurable="0" desc="rootfs partition devices"></rootfs_dev>
-	<rootfs_img configurable="0" desc="rootfs image"></rootfs_img>
 	<console_type desc="UOS console type">virtio-console(hvc0)</console_type>
 	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2:4"></usb_xhci>
 
@@ -27,6 +25,7 @@
 
 	<virtio_devices>
 		<input desc="virtio input device"></input>
+		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img"></block>
 	</virtio_devices>
     </uos>
 </acrn-config>

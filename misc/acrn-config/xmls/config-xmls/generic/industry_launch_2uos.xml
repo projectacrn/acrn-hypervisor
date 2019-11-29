@@ -5,8 +5,6 @@
 	<mem_size desc="UOS memory size in MByte"></mem_size>
 	<gvt_args desc="GVT argument for the vm"></gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
-	<rootfs_dev desc=""></rootfs_dev>
-	<rootfs_img desc=""></rootfs_img>
 	<console_type desc="UOS console type"></console_type>
 	<poweroff_channel desc="the method of power off uos">
 	</poweroff_channel>
@@ -29,6 +27,7 @@
 
 	<virtio_devices>
 		<input desc="virtio input device"></input>
+		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img"></block>
 	</virtio_devices>
     </uos>
     <uos id="2">
@@ -37,8 +36,6 @@
 	<mem_size desc="UOS memory size in MByte"></mem_size>
 	<gvt_args desc="GVT argument for the vm"></gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
-	<rootfs_dev desc=""></rootfs_dev>
-	<rootfs_img desc=""></rootfs_img>
 	<console_type desc="UOS console type"></console_type>
 	<poweroff_channel desc="the method of power off uos">
 	</poweroff_channel>
@@ -61,6 +58,7 @@
 
 	<virtio_devices>
 		<input desc="virtio input device"></input>
+		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img"></block>
 	</virtio_devices>
     </uos>
 </acrn-config>
