@@ -11,6 +11,7 @@ TRACE_CFLAGS += -Werror
 TRACE_CFLAGS += -O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 TRACE_CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
 TRACE_CFLAGS += -fpie -fpic
+TRACE_CFLAGS += -lnuma
 TRACE_CFLAGS += $(CFLAGS)
 
 GCC_MAJOR=$(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
