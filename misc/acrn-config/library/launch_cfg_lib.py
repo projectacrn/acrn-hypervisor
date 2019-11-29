@@ -366,17 +366,6 @@ def get_vpid_from_bdf(bdf_vpid_map, bdf_list):
     return vpid_list
 
 
-def get_leaf_tag_map(info_file, prime_item, item):
-    """
-    :param info_file: some configurations in the info file
-    :param prime_item: the prime item in xml file
-    :param item: the item in xml file
-    :return: dictionary which item value could be indexed by vmid
-    """
-    vmid_item_dic = common.get_leaf_tag_map(info_file, prime_item, item)
-    return vmid_item_dic
-
-
 def gen_patch(srcs_list, launch_name):
     """
     Generate patch and apply to local source code
