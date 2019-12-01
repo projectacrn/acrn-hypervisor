@@ -30,10 +30,10 @@ static int exiting = 0;
 
 /* for opt */
 static uint64_t period = 10000;
-static const char optString[] = "i:hct:a:";
+static const char optString[] = "i:hcrt:a:";
 static const char dev_prefix[] = "acrn_trace_";
 
-static uint32_t flags;
+static uint32_t flags = FLAG_CLEAR_BUF;
 static char trace_file_dir[TRACE_FILE_DIR_LEN];
 
 static reader_struct *reader;
@@ -49,7 +49,8 @@ static void display_usage(void)
 	       "\t-h: print this message\n"
 	       "\t-i: period_in_ms: specify polling interval [1-999]\n"
 	       "\t-t: max time to capture trace data (in second)\n"
-	       "\t-c: clear the buffered old data\n"
+	       "\t-c: clear the buffered old data (deprecated)\n"
+	       "\t-r: capture the buffered old data instead of clearing it\n"
 	       "\t-a: cpu-set: only capture the trace data on these configured cpu-set\n");
 }
 
@@ -117,8 +118,14 @@ static int parse_opt(int argc, char *argv[])
 			timeout = ret;
 			pr_dbg("Capture trace data for at most %ds\n", ret);
 			break;
+		/*
+		 * We have set the FLAG_CLEAR_BUF by default.
+		 * Here we just keep the -c for backward compatibility.
+		 */
 		case 'c':
-			flags |= FLAG_CLEAR_BUF;
+			break;
+		case 'r':
+			flags &= ~FLAG_CLEAR_BUF;
 			break;
 		case 'a':
 			cpu_bitmask = numa_parse_cpustring_all(optarg);
