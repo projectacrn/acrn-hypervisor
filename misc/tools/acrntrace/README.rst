@@ -23,7 +23,8 @@ Options:
 -h                      print this message
 -i period               specify polling interval in milliseconds [1-999]
 -t max_time             max time to capture trace data (in second)
--c                      clear the buffered old data
+-c                      clear the buffered old data (deprecated)
+-r                      capture the buffered old data instead of clearing it
 -a cpu-set              only capture the trace data on these configured cpu-set
 
 acrntrace_format.py
