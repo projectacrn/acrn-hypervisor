@@ -7,7 +7,7 @@ import sys
 import board_cfg_lib
 
 
-TOTAL_MEM_SIZE = 4 * 1024 * 1024 * 1024
+FOUR_GBYTE = 4 * 1024 * 1024 * 1024
 LOW_MEM_TO_PCI_HOLE = 0x20000000
 
 
@@ -22,18 +22,27 @@ def ve820_per_launch(config, hpa_size):
 
     board_name = board_cfg_lib.undline_name(board_name)
 
+    high_mem_hpa_len = 0x0
     low_mem_to_pci_hole_len = '0xA0000000'
     low_mem_to_pci_hole = '0x20000000'
     pci_hole_addr = '0xe0000000'
     pci_hole_len = '0x20000000'
     start_low_hpa = 0x100000
-    hpa_len = int(hpa_size, 16) - 1 * 1024 * 1024
+    if (int(hpa_size, 16) <= 512 * 1024 * 1024):
+        low_mem_hpa_len = int(hpa_size, 16) - 1 * 1024 * 1024
+    else:
+        low_mem_hpa_len = 511 * 1024 * 1024
+        high_mem_hpa_len = int(hpa_size, 16) - 512 * 1024 * 1024
 
     # pre_launch memroy: mem_size is the ve820 length
     print("#include <e820.h>", file=config)
     print("#include <vm.h>", file=config)
     print("", file=config)
-    print("#define VE820_ENTRIES_{}\t{}U".format(board_name, 5), file=config)
+    if (high_mem_hpa_len == 0):
+        print("#define VE820_ENTRIES_{}\t{}U".format(board_name, 5), file=config)
+    else:
+        print("#define VE820_ENTRIES_{}\t{}U".format(board_name, 6), file=config)
+
     print("static const struct e820_entry ve820_entry[{}] = {{".format(
         "VE820_ENTRIES_{}".format(board_name)), file=config)
     print("\t{\t/* usable RAM under 1MB */", file=config)
@@ -54,7 +63,7 @@ def ve820_per_launch(config, hpa_size):
     print("\t\t.baseaddr = {}UL,\t\t/* 1MB */".format(
         hex(start_low_hpa)), file=config)
     print("\t\t.length   = {}UL,\t/* {}MB */".format(
-        hex(hpa_len), hpa_len / 1024 / 1024), file=config)
+        hex(low_mem_hpa_len), low_mem_hpa_len / 1024 / 1024), file=config)
 
     print("\t\t.type     = E820_TYPE_RAM", file=config)
     print("\t},", file=config)
@@ -68,14 +77,24 @@ def ve820_per_launch(config, hpa_size):
     print("\t\t.type     = E820_TYPE_RESERVED", file=config)
     print("\t},", file=config)
     print("", file=config)
-    print("\t{{\t/* between PCI hole and {}GB */".format(
-        TOTAL_MEM_SIZE / 1024 / 1024 / 1024), file=config)
+    print("\t{\t/* between PCI hole and 4 GB */", file=config)
     print("\t\t.baseaddr = {}UL,\t/* {}GB */".format(
         hex(int(pci_hole_addr, 16)), int(pci_hole_addr, 16) / 1024 / 1024 / 1024), file=config)
     print("\t\t.length   = {}UL,\t/* {}MB */".format(
         hex(int(pci_hole_len, 16)), int(pci_hole_len, 16) / 1024 / 1024), file=config)
     print("\t\t.type     = E820_TYPE_RESERVED", file=config)
     print("\t},", file=config)
+    print("", file=config)
+    if (high_mem_hpa_len != 0):
+        print("\t{\t/* high mem after 4GB*/", file=config)
+        print("\t\t.baseaddr = {}UL,\t/* 4 GB */".format(
+            hex(FOUR_GBYTE)), file=config)
+        print("\t\t.length   = {}UL,\t/* {}MB */".format(
+            hex(high_mem_hpa_len), high_mem_hpa_len / 1024 / 1024), file=config)
+        print("\t\t.type     = E820_TYPE_RAM", file=config)
+        print("\t},", file=config)
+        print("", file=config)
+
     print("};", file=config)
     print("", file=config)
     print("/**", file=config)
