@@ -140,17 +140,56 @@ void sched_iorr_init_data(struct thread_object *obj)
 	data->left_cycles = data->slice_cycles = CONFIG_SLICE_MS * CYCLES_PER_MS;
 }
 
-static struct thread_object *sched_iorr_pick_next(__unused struct sched_control *ctl)
+static struct thread_object *sched_iorr_pick_next(struct sched_control *ctl)
 {
-	return NULL;
+	struct sched_iorr_control *iorr_ctl = (struct sched_iorr_control *)ctl->priv;
+	struct thread_object *next = NULL;
+	struct thread_object *current = NULL;
+	struct sched_iorr_data *data;
+	uint64_t now = rdtsc();
+
+	current = ctl->curr_obj;
+	data = (struct sched_iorr_data *)current->data;
+	/* Ignore the idle object, inactive objects */
+	if (!is_idle_thread(current) && is_inqueue(current)) {
+		data->left_cycles -= now - data->last_cycles;
+		if (data->left_cycles <= 0) {
+			/*  replenish thread_object with slice_cycles */
+			data->left_cycles += data->slice_cycles;
+		}
+		/* move the thread_object to tail */
+		runqueue_remove(current);
+		runqueue_add_tail(current);
+	}
+
+	/*
+	 * Pick the next runnable sched object
+	 * 1) get the first item in runqueue firstly
+	 * 2) if object picked has no time_cycles, replenish it pick this one
+	 * 3) At least take one idle sched object if we have no runnable one after step 1) and 2)
+	 */
+	if (!list_empty(&iorr_ctl->runqueue)) {
+		next = get_first_item(&iorr_ctl->runqueue, struct thread_object, data);
+		data = (struct sched_iorr_data *)next->data;
+		data->last_cycles = now;
+		while (data->left_cycles <= 0) {
+			data->left_cycles += data->slice_cycles;
+		}
+	} else {
+		next = &get_cpu_var(idle);
+	}
+
+	return next;
 }
 
-static void sched_iorr_sleep(__unused struct thread_object *obj)
+static void sched_iorr_sleep(struct thread_object *obj)
 {
+	runqueue_remove(obj);
 }
 
-static void sched_iorr_wake(__unused struct thread_object *obj)
+static void sched_iorr_wake(struct thread_object *obj)
 {
+	runqueue_add_head(obj);
 }
 
 struct acrn_scheduler sched_iorr = {
