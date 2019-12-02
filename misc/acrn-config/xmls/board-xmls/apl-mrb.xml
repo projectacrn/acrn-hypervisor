@@ -253,6 +253,11 @@
 	{0x320UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000800UL, 0x000800UL},	/* P16 */
 	</PX_INFO>
 
+	<MMCFG_BASE_INFO>
+	/* PCI mmcfg base of MCFG */
+	#define DEFAULT_PCI_MMCFG_BASE   0xe0000000UL
+	</MMCFG_BASE_INFO>
+
 	<CLOS_INFO>
 	clos supported by cache:L2
 	clos max:4
