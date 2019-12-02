@@ -168,6 +168,7 @@ def platform_info_parser(config, default_platform):
     write_direct_info_parser(config, "<WAKE_VECTOR_INFO>", "</WAKE_VECTOR_INFO>")
     write_direct_info_parser(config, "<RESET_REGISTER_INFO>", "</RESET_REGISTER_INFO>")
     drhd_info_parser(config)
+    write_direct_info_parser(config, "<MMCFG_BASE_INFO>", "</MMCFG_BASE_INFO>")
 
 
 def generate_file(config, default_platform):
