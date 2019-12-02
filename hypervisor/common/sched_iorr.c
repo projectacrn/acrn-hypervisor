@@ -18,8 +18,86 @@ struct sched_iorr_data {
 	int64_t  left_cycles;
 };
 
-static void sched_tick_handler(__unused void *param)
+/*
+ * @pre obj != NULL
+ * @pre obj->data != NULL
+ */
+bool is_inqueue(struct thread_object *obj)
 {
+	struct sched_iorr_data *data = (struct sched_iorr_data *)obj->data;
+	return !list_empty(&data->list);
+}
+
+/*
+ * @pre obj != NULL
+ * @pre obj->data != NULL
+ * @pre obj->sched_ctl != NULL
+ * @pre obj->sched_ctl->priv != NULL
+ */
+void runqueue_add_head(struct thread_object *obj)
+{
+	struct sched_iorr_control *iorr_ctl = (struct sched_iorr_control *)obj->sched_ctl->priv;
+	struct sched_iorr_data *data = (struct sched_iorr_data *)obj->data;
+
+	if (!is_inqueue(obj)) {
+		list_add(&data->list, &iorr_ctl->runqueue);
+	}
+}
+
+/*
+ * @pre obj != NULL
+ * @pre obj->data != NULL
+ * @pre obj->sched_ctl != NULL
+ * @pre obj->sched_ctl->priv != NULL
+ */
+void runqueue_add_tail(struct thread_object *obj)
+{
+	struct sched_iorr_control *iorr_ctl = (struct sched_iorr_control *)obj->sched_ctl->priv;
+	struct sched_iorr_data *data = (struct sched_iorr_data *)obj->data;
+
+	if (!is_inqueue(obj)) {
+		list_add_tail(&data->list, &iorr_ctl->runqueue);
+	}
+}
+
+/*
+ * @pre obj != NULL
+ * @pre obj->data != NULL
+ */
+void runqueue_remove(struct thread_object *obj)
+{
+	struct sched_iorr_data *data = (struct sched_iorr_data *)obj->data;
+	list_del_init(&data->list);
+}
+
+static void sched_tick_handler(void *param)
+{
+	struct sched_control  *ctl = (struct sched_control *)param;
+	struct sched_iorr_control *iorr_ctl = (struct sched_iorr_control *)ctl->priv;
+	struct sched_iorr_data *data;
+	struct thread_object *current;
+	uint16_t pcpu_id = get_pcpu_id();
+	uint64_t now = rdtsc();
+	uint64_t rflags;
+
+	obtain_schedule_lock(pcpu_id, &rflags);
+	current = ctl->curr_obj;
+	/* If no vCPU start scheduling, ignore this tick */
+	if (current != NULL ) {
+		if (!(is_idle_thread(current) && list_empty(&iorr_ctl->runqueue))) {
+			data = (struct sched_iorr_data *)current->data;
+			/* consume the left_cycles of current thread_object if it is not idle */
+			if (!is_idle_thread(current)) {
+				data->left_cycles -= now - data->last_cycles;
+				data->last_cycles = now;
+			}
+			/* make reschedule request if current ran out of its cycles */
+			if (is_idle_thread(current) || data->left_cycles <= 0) {
+				make_reschedule_request(pcpu_id, DEL_MODE_IPI);
+			}
+		}
+	}
+	release_schedule_lock(pcpu_id, rflags);
 }
 
 /*
