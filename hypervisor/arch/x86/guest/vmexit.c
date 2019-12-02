@@ -31,6 +31,7 @@ static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t undefined_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t pause_vmexit_handler(__unused struct acrn_vcpu *vcpu);
+static int32_t hlt_vmexit_handler(struct acrn_vcpu *vcpu);
 
 /* VM Dispatch table for Exit condition handling */
 static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
@@ -59,7 +60,7 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_GETSEC] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_HLT] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = hlt_vmexit_handler},
 	[VMX_EXIT_REASON_INVD] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_INVLPG] = {
@@ -281,6 +282,14 @@ static int32_t triple_fault_vmexit_handler(struct acrn_vcpu *vcpu)
 static int32_t pause_vmexit_handler(__unused struct acrn_vcpu *vcpu)
 {
 	yield_current();
+	return 0;
+}
+
+static int32_t hlt_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	if ((vcpu->arch.pending_req == 0UL) && (!vlapic_has_pending_intr(vcpu))) {
+		wait_event(&vcpu->events[VCPU_EVENT_VIRTUAL_INTERRUPT]);
+	}
 	return 0;
 }
 
