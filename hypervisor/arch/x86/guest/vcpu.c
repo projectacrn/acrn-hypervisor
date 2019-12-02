@@ -768,7 +768,7 @@ static void context_switch_in(struct thread_object *next)
 	struct acrn_vcpu *vcpu = list_entry(next, struct acrn_vcpu, thread_obj);
 	struct ext_context *ectx = &(vcpu->arch.contexts[vcpu->arch.cur_context].ext_ctx);
 
-	switch_vmcs(vcpu);
+	load_vmcs(vcpu);
 
 	msr_write(MSR_IA32_STAR, ectx->ia32_star);
 	msr_write(MSR_IA32_LSTAR, ectx->ia32_lstar);

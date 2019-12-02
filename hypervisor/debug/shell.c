@@ -20,6 +20,7 @@
 #include <logmsg.h>
 #include <version.h>
 #include <shell.h>
+#include <vmcs.h>
 
 #define TEMP_STR_SIZE		60U
 #define MAX_STR_SIZE		256U
@@ -686,7 +687,7 @@ static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv)
 
 #define DUMPREG_SP_SIZE	32
 /* the input 'data' must != NULL and indicate a vcpu structure pointer */
-static void vcpu_dumpreg(void *data)
+static void dump_vcpu_reg(void *data)
 {
 	int32_t status;
 	uint64_t i, fault_addr, tmp[DUMPREG_SP_SIZE];
@@ -695,6 +696,11 @@ static void vcpu_dumpreg(void *data)
 	struct acrn_vcpu *vcpu = dump->vcpu;
 	char *str = dump->str;
 	size_t len, size = dump->str_max;
+	uint16_t pcpu_id = get_pcpu_id();
+	struct acrn_vcpu *curr = get_running_vcpu(pcpu_id);
+
+	/* switch vmcs */
+	load_vmcs(vcpu);
 
 	len = snprintf(str, size,
 		"=  VM ID %d ==== CPU ID %hu========================\r\n"
@@ -764,6 +770,9 @@ static void vcpu_dumpreg(void *data)
 			str += len;
 		}
 	}
+	if (curr != NULL) {
+		load_vmcs(curr);
+	}
 	return;
 
 overflow:
@@ -818,12 +827,8 @@ static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv)
 	dump.vcpu = vcpu;
 	dump.str = shell_log_buf;
 	dump.str_max = SHELL_LOG_BUF_SIZE;
-	if (pcpu_id == get_pcpu_id()) {
-		vcpu_dumpreg(&dump);
-	} else {
-		bitmap_set_nolock(pcpu_id, &mask);
-		smp_call_function(mask, vcpu_dumpreg, &dump);
-	}
+	bitmap_set_nolock(pcpu_id, &mask);
+	smp_call_function(mask, dump_vcpu_reg, &dump);
 	shell_puts(shell_log_buf);
 	status = 0;
 
@@ -872,6 +877,10 @@ static void dump_guest_mem(void *data)
 	uint64_t length = dump->len;
 	uint64_t gva = dump->gva;
 	struct acrn_vcpu *vcpu = dump->vcpu;
+	uint16_t pcpu_id = get_pcpu_id();
+	struct acrn_vcpu *curr = get_running_vcpu(pcpu_id);
+
+	load_vmcs(vcpu);
 
 	/* Change the length to a multiple of 32 if the length is not */
 	loop_cnt = ((length & 0x1fUL) == 0UL) ? ((length >> 5UL)) : ((length >> 5UL) + 1UL);
@@ -886,6 +895,9 @@ static void dump_guest_mem(void *data)
 				gva, buf[0], buf[1], buf[2], buf[3]);
 		shell_puts(temp_str);
 		gva += 32UL;
+	}
+	if (curr != NULL) {
+		load_vmcs(curr);
 	}
 }
 
@@ -916,12 +928,8 @@ static int32_t shell_dump_guest_mem(int32_t argc, char **argv)
 		dump.len = length;
 
 		pcpu_id = pcpuid_from_vcpu(vcpu);
-		if (pcpu_id == get_pcpu_id()) {
-			dump_guest_mem(&dump);
-		} else {
-			bitmap_set_nolock(pcpu_id, &mask);
-			smp_call_function(mask, dump_guest_mem, &dump);
-		}
+		bitmap_set_nolock(pcpu_id, &mask);
+		smp_call_function(mask, dump_guest_mem, &dump);
 		ret = 0;
 	}
 
