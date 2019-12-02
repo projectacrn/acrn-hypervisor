@@ -126,18 +126,15 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
 
 		/* Polling completion of the request in polling mode */
 		if (is_polling) {
-			/*
-			 * Now, we only have one case that will schedule out this vcpu
-			 * from IO completion polling status, it's pause_vcpu to VCPU_ZOMBIE.
-			 * In this case, we cannot come back to polling status again. Currently,
-			 * it's OK as we needn't handle IO completion in zombie status.
-			 */
-			while (!need_reschedule(pcpuid_from_vcpu(vcpu))) {
+			while (true) {
 				if (has_complete_ioreq(vcpu)) {
 					/* we have completed ioreq pending */
 					break;
 				}
 				asm_pause();
+				if (need_reschedule(pcpuid_from_vcpu(vcpu))) {
+					schedule();
+				}
 			}
 		} else if (need_reschedule(pcpuid_from_vcpu(vcpu))) {
 			schedule();
