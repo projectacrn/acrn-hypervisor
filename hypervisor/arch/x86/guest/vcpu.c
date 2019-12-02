@@ -702,7 +702,9 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 	vcpu->prev_state = vcpu->state;
 	vcpu->state = new_state;
 
-	sleep_thread(&vcpu->thread_obj);
+	if (vcpu->prev_state == VCPU_RUNNING) {
+		sleep_thread(&vcpu->thread_obj);
+	}
 	if (pcpu_id != get_pcpu_id()) {
 		while (vcpu->running) {
 			asm_pause();
