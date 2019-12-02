@@ -115,6 +115,9 @@ DWORD_LEN = 4
 PACK_TYPE_LEN = 12
 WAKE_VECTOR_OFFSET_32 = 12
 WAKE_VECTOR_OFFSET_64 = 24
+MCFG_OFFSET = 4
+MCFG_ENTRY1_OFFSET = 60
+MCFG_ENTRY0_BASE_OFFSET = 44
 
 S3_PKG = SxPkg()
 S5_PKG = SxPkg()
@@ -559,6 +562,23 @@ def store_px_data(sysnode, config):
 
         p_cnt += 1
 
+def store_mmcfg_base_data(mmcfg_node, config):
+
+    print("\t/* PCI mmcfg base of MCFG */", file=config)
+    with open(mmcfg_node, 'rb') as mmcfg:
+        mmcfg.read(MCFG_OFFSET)
+        mmcfg_len_obj = mmcfg.read(DWORD_LEN)
+        mmcfg_len_int = int.from_bytes(mmcfg_len_obj, 'little')
+
+        if mmcfg_len_int > MCFG_ENTRY1_OFFSET:
+            parser_lib.print_red("Multiple PCI segment groups is not supported!", err=True)
+            sys.exit(1)
+
+        mmcfg.seek(MCFG_ENTRY0_BASE_OFFSET, 0)
+        mmcfg_base_addr_obj = mmcfg.read(DWORD_LEN)
+        mmcfg_base_addr = int.from_bytes(mmcfg_base_addr_obj, 'little')
+        print("\t#define DEFAULT_PCI_MMCFG_BASE   {}UL".format(hex(mmcfg_base_addr)), file=config)
+
 
 def gen_acpi_info(config):
     """This will parser the sys node form SYS_PATH and generate ACPI info
@@ -589,6 +609,10 @@ def gen_acpi_info(config):
     print("{0}".format("\t<PX_INFO>"), file=config)
     store_px_data(SYS_PATH[2], config)
     print("{0}".format("\t</PX_INFO>\n"), file=config)
+
+    print("{0}".format("\t<MMCFG_BASE_INFO>"), file=config)
+    store_mmcfg_base_data(SYS_PATH[1] + 'MCFG', config)
+    print("{0}".format("\t</MMCFG_BASE_INFO>\n"), file=config)
 
 
 def generate_info(board_file):
