@@ -40,6 +40,7 @@ void vcpu_thread(struct thread_object *obj)
 			continue;
 		}
 
+		reset_event(&vcpu->events[VCPU_EVENT_VIRTUAL_INTERRUPT]);
 		profiling_vmenter_handler(vcpu);
 
 		TRACE_2L(TRACE_VM_ENTER, 0UL, 0UL);
