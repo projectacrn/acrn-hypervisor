@@ -540,7 +540,7 @@ void init_vmcs(struct acrn_vcpu *vcpu)
 /**
  * @pre vcpu != NULL
  */
-void switch_vmcs(const struct acrn_vcpu *vcpu)
+void load_vmcs(const struct acrn_vcpu *vcpu)
 {
 	uint64_t vmcs_pa;
 	void **vmcs_ptr = &get_cpu_var(vmcs_run);
