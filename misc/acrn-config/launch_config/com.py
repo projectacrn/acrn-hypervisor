@@ -33,11 +33,12 @@ def is_mount_needed(virt_io, vmid):
     return False
 
 
-def tap_uos_net(names, vmid, config):
+def tap_uos_net(names, virt_io, vmid, config):
     uos_type = names['uos_types'][vmid]
     board_name = names['board_name']
 
     vm_name = launch_cfg_lib.undline_name(uos_type).lower()
+
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if board_name in ("apl-mrb", "apl-up2"):
             print('if [ ! -f "/data/{}/{}.img" ]; then'.format(vm_name, vm_name), file=config)
@@ -54,26 +55,13 @@ def tap_uos_net(names, vmid, config):
     if uos_type in ("VXWORKS", "ZEPHYR", "WINDOWS", "PREEMPT-RT LINUX"):
         print("vm_name={}_vm$1".format(vm_name), file=config)
 
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
-        if board_name in ("apl-mrb", "apl-up2"):
-            print("# create a unique tap device for each VM", file=config)
-            print("tap=tap_$3", file=config)
-            print('tap_exist=$(ip a | grep "$tap" | awk \'{print $1}\')', file=config)
-            print('if [ "$tap_exist"x != "x" ]; then', file=config)
-            print('  echo "tap device existed, reuse $tap"', file=config)
-            print("else", file=config)
-            print("  ip tuntap add dev $tap mode tap", file=config)
-            print("fi", file=config)
-            print("", file=config)
-            print("# if acrn-br0 exists, add VM's unique tap device under it", file=config)
-            print("br_exist=$(ip a | grep acrn-br0 | awk '{print $1}')", file=config)
-            print('if [ "$br_exist"x != "x" -a "$tap_exist"x = "x" ]; then', file=config)
-            print('  echo "acrn-br0 bridge aleady exists, adding new tap device to it..."', file=config)
-            print('  ip link set "$tap" master acrn-br0', file=config)
-            print('  ip link set dev "$tap" down', file=config)
-            print('  ip link set dev "$tap" up', file=config)
-            print("fi", file=config)
-            print("", file=config)
+    for net in virt_io['network'][vmid]:
+        if net:
+            net_name = net
+            if ',' in net:
+                net_name = net.split(',')[0]
+            print("tap_net {}".format(net_name), file=config)
+
     print("#check if the vm is running or not", file=config)
     print("vm_ps=$(pgrep -a -f acrn-dm)", file=config)
     print('result=$(echo $vm_ps | grep -w "${vm_name}")', file=config)
@@ -252,9 +240,44 @@ def log_level_set(uos_type, config):
     print('logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"', file=config)
     print("", file=config)
 
+def tap_network(virt_io, vmid, config):
 
-def launch_begin(board_name, uos_type, config):
+    none_i = 0
+    tap_net_list = virt_io['network'][vmid]
+    for net in tap_net_list:
+        if net == None:
+            none_i += 1
+    tap_net_num = len(tap_net_list) - none_i
+
+    if tap_net_num >= 1:
+        print("function tap_net() {", file=config)
+        print("# create a unique tap device for each VM", file=config)
+        print("tap=$1", file=config)
+        print('tap_exist=$(ip a | grep "$tap" | awk \'{print $1}\')', file=config)
+        print('if [ "$tap_exist"x != "x" ]; then', file=config)
+        print('  echo "tap device existed, reuse $tap"', file=config)
+        print("else", file=config)
+        print("  ip tuntap add dev $tap mode tap", file=config)
+        print("fi", file=config)
+        print("", file=config)
+        print("# if acrn-br0 exists, add VM's unique tap device under it", file=config)
+        print("br_exist=$(ip a | grep acrn-br0 | awk '{print $1}')", file=config)
+        print('if [ "$br_exist"x != "x" -a "$tap_exist"x = "x" ]; then', file=config)
+        print('  echo "acrn-br0 bridge aleady exists, adding new tap device to it..."', file=config)
+        print('  ip link set "$tap" master acrn-br0', file=config)
+        print('  ip link set dev "$tap" down', file=config)
+        print('  ip link set dev "$tap" up', file=config)
+        print("fi", file=config)
+        print("}", file=config)
+        print("", file=config)
+
+
+def launch_begin(names, virt_io, vmid, config):
+    board_name = names['board_name']
+    uos_type = names['uos_types'][vmid]
+
     launch_uos = launch_cfg_lib.undline_name(uos_type).lower()
+    tap_network(virt_io, vmid, config)
     run_container(board_name, uos_type, config)
     print("function launch_{}()".format(launch_uos), file=config)
     print("{", file=config)
@@ -434,6 +457,14 @@ def virtio_args_set(dm, virt_io, vmid, config):
         if blk:
             print("   -s {},virtio-blk,{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk{}".format(blk)), blk.strip(':')), file=config)
 
+    # virtio-net set, the value type is a list
+    for net in virt_io['network'][vmid]:
+        if net:
+            net_name = net
+            if ',' in net:
+                net_name = net.split(',')[0]
+            print("   -s {},virtio-net,{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net{}".format(net)), net_name), file=config)
+
 
 def dm_arg_set(names, sel, virt_io, dm, vmid, config):
 
@@ -473,7 +504,6 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
         print("   --pm_notify_channel uart \\", file=config)
         print('   --pm_by_vuart pty,/run/acrn/life_mngr_$vm_name  \\', file=config)
         print('   -l com2,/run/acrn/life_mngr_$vm_name \\', file=config)
-        print("   -s {},virtio-net,tap0 \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net")), file=config)
 
     # mac_seed
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
@@ -526,10 +556,6 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
                 launch_cfg_lib.RE_CONSOLE_MAP['virtio-console(hvc0)']), file=config)
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
-        if board_name in ("apl-mrb", "apl-up2"):
-            print("   -s {},virtio-net,$tap \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net")), file=config)
-
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         print("   -s {},virtio-hyper_dmabuf \\".format(launch_cfg_lib.virtual_dev_slot("virtio-hyper_dmabuf")), file=config)
         if board_name == "apl-mrb":
             print("   -i /run/acrn/ioc_$vm_name,0x20 \\", file=config)
@@ -558,8 +584,8 @@ def gen(names, pt_sel, virt_io, dm, vmid, config):
     pt.gen_pt_head(names, pt_sel, vmid, config)
 
     # gen launch header
-    launch_begin(board_name, uos_type, config)
-    tap_uos_net(names, vmid, config)
+    launch_begin(names, virt_io, vmid, config)
+    tap_uos_net(names, virt_io,  vmid, config)
 
     # passthrough device
     pt.gen_pt(names, pt_sel, vmid, config)
