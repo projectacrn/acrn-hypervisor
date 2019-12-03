@@ -157,6 +157,7 @@
                 {% elif elem.getchildren() != [] %}
                     {% if 'multiselect' not in elem.attrib or elem.attrib['multiselect'] != 'true' %}
                     {% set first_child = [] %}
+                    {% set first_multi_child = {'block': 0, 'network': 0} %}
                         {% for sub_elem in elem.getchildren() %}
                             {% set sub_elem_text = '' if sub_elem.text == None else sub_elem.text %}
                             {% if 'configurable' not in sub_elem.attrib or sub_elem.attrib['configurable'] != '0' %}
@@ -178,7 +179,7 @@
                                         {{sub_elem.tag}}</label>
 
                                     {% if ','.join(['uos', elem.tag, sub_elem.tag]) not in launch_item_values %}
-                                    <div class="col-sm-6">
+                                    <div class="col-sm-5">
                                         {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                         <input type="text" class="form-control" readonly
                                                id="{{'uos:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}"
@@ -189,6 +190,19 @@
                                                value="{{sub_elem_text}}">
                                         {% endif %}
                                     </div>
+
+                                    {% if elem.tag in ['virtio_devices'] and sub_elem.tag in ['block', 'network'] %}
+                                        <div class="col-sm-1">
+                                            <button type="button" class="btn" id="add_virtio_{{sub_elem.tag}}_{{first_multi_child[sub_elem.tag]}}">+</button>
+                                            {% if first_multi_child[sub_elem.tag] == 0 %}
+                                            <button type="button" disabled class="btn" id="remove_virtio_{{sub_elem.tag}}_{{first_multi_child[sub_elem.tag]}}">-</button>
+                                            {% else %}
+                                            <button type="button" class="btn" id="remove_virtio_{{sub_elem.tag}}_{{first_multi_child[sub_elem.tag]}}">-</button>
+                                            {% endif %}
+                                        </div>
+                                        {% do first_multi_child.update({sub_elem.tag: first_multi_child[sub_elem.tag]+1}) %}
+                                    {% endif%}
+
                                     {% else %}
                                     <div class="dropdown col-sm-6">
                                         {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}

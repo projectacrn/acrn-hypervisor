@@ -163,11 +163,17 @@ class XmlConfig:
         tag = args[-1]
         args = args[:-1]
         dest_node = self._get_dest_node(*args)
+        new_node_desc = None
         for node in dest_node.getchildren():
-            dest_node.remove(node)
+            if node.tag == tag:
+                if 'desc' in node.attrib:
+                    new_node_desc = node.attrib['desc']
+                dest_node.remove(node)
         for value in values:
             new_node = ElementTree.SubElement(dest_node, tag)
             new_node.text = value
+            if new_node_desc is not None:
+                new_node.attrib['desc'] = new_node_desc
 
     def set_curr_attr(self, attr_name, attr_value, *args):
         """

@@ -510,7 +510,14 @@ function save_launch(generator=null) {
     $("input").each(function(){
         var id = $(this).attr('id');
     	var value = $(this).val();
-    	if(id!='new_launch_name' && id!='board_info_file'
+
+        if(id.indexOf('virtio_devices,network')>=0 || id.indexOf('virtio_devices,block')>=0) {
+            if(id in launch_config) {
+                launch_config[id].push(value);
+            } else {
+                launch_config[id] = [value];
+            }
+        } else if(id!='new_launch_name' && id!='board_info_file'
     	    && id!='board_info_upload' && id!='scenario_name'
     	    && id!="launch_file") {
             launch_config[id] = value;
