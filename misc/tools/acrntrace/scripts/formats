@@ -5,7 +5,7 @@
 0x00000011 CPU%(cpu)d 0x%(event)016x %(tsc)d vmenter
 0x00010001 CPU%(cpu)d 0x%(event)016x %(tsc)d external intr [vector = 0x%(1)08x]
 0x00010002 CPU%(cpu)d 0x%(event)016x %(tsc)d intr window
-0x00010004 CPU%(cpu)d 0x%(event)016x %(tsc)d cpuid [vcpuid = %(1)d]
+0x00010004 CPU%(cpu)d 0x%(event)016x %(tsc)d cpuid [leaf = 0x%(1)08x, subleaf = 0x%(2)08x]
 0x00010012 CPU%(cpu)d 0x%(event)016x %(tsc)d hypercall [vmid = %(1)d, hypercall id = 0x%(2)08x]
 0x0001001C CPU%(cpu)d 0x%(event)016x %(tsc)d cr access [access type = 0x%(1)08x, cr num = %(2)d]
 0x0001001F CPU%(cpu)d 0x%(event)016x %(tsc)d read msr [msr = 0x%(1)08x, val = 0x%(2)016x]
