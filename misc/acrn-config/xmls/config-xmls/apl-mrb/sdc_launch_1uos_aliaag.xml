@@ -27,6 +27,7 @@
 	</passthrough_devices>
 
 	<virtio_devices>
+		<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">AliaaG</network>
 		<input desc="virtio input device"></input>
 		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">/dev/mmcblk1p3:alios/alios.img</block>
 	</virtio_devices>
