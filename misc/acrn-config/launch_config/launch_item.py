@@ -151,3 +151,4 @@ class VirtioDeviceSelect():
     def get_virtio(self):
         self.dev["input"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "virtio_devices", "input")
         self.dev["block"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "virtio_devices", "block")
+        self.dev["network"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "virtio_devices", "network")
