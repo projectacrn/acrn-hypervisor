@@ -457,6 +457,8 @@ def gen_logical_partition_source(vm_info, config):
         print("\t\t.memory = {", file=config)
         print("\t\t\t.start_hpa = VM{0}_CONFIG_MEM_START_HPA,".format(i), file=config)
         print("\t\t\t.size = VM{0}_CONFIG_MEM_SIZE,".format(i), file=config)
+        print("\t\t\t.start_hpa2 = VM{0}_CONFIG_MEM_START_HPA2,".format(i), file=config)
+        print("\t\t\t.size_hpa2 = VM{0}_CONFIG_MEM_SIZE_HPA2,".format(i), file=config)
         print("\t\t},", file=config)
         is_need_epc(vm_info.epc_section, i, config)
         print("\t\t.os_config = {", file=config)
@@ -594,6 +596,8 @@ def gen_hybrid_source(vm_info, config):
             if i == 0:
                 print("\t\t\t.start_hpa = VM0_CONFIG_MEM_START_HPA,", file=config)
                 print("\t\t\t.size = VM0_CONFIG_MEM_SIZE,", file=config)
+                print("\t\t\t.start_hpa2 = VM0_CONFIG_MEM_START_HPA2,", file=config)
+                print("\t\t\t.size_hpa2 = VM0_CONFIG_MEM_SIZE_HPA2,", file=config)
             elif i == 1:
                 print("\t\t\t.start_hpa = 0UL,", file=config)
                 print("\t\t\t.size = CONFIG_SOS_RAM_SIZE,", file=config)
