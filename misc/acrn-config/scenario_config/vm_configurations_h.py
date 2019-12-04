@@ -138,6 +138,8 @@ def logic_max_vm_num(config):
     print(" *\tVMX_CONFIG_VCPU_AFFINITY", file=config)
     print(" *\tVMX_CONFIG_MEM_START_HPA", file=config)
     print(" *\tVMX_CONFIG_MEM_SIZE", file=config)
+    print(" *\tVMX_CONFIG_MEM_START_HPA2", file=config)
+    print(" *\tVMX_CONFIG_MEM_SIZE_HPA2", file=config)
     print(" *\tVMX_CONFIG_OS_BOOTARG_ROOT", file=config)
     print(" *\tVMX_CONFIG_OS_BOOTARG_MAX_CPUS", file=config)
     print(" *\tVMX_CONFIG_OS_BOOTARG_CONSOLE", file=config)
@@ -171,7 +173,11 @@ def gen_logical_partition_header(vm_info, config):
         print("#define VM{0}_CONFIG_MEM_START_HPA\t\t{1}UL".format(
             i, vm_info.mem_info.mem_start_hpa[i]), file=config)
         print("#define VM{0}_CONFIG_MEM_SIZE\t\t\t{1}UL".format(
-            i, vm_info.mem_info.mem_size[0]), file=config)
+            i, vm_info.mem_info.mem_size[i]), file=config)
+        print("#define VM{0}_CONFIG_MEM_START_HPA2\t\t{1}UL".format(
+            i, vm_info.mem_info.mem_start_hpa2[i]), file=config)
+        print("#define VM{0}_CONFIG_MEM_SIZE_HPA2\t\t\t{1}UL".format(
+            i, vm_info.mem_info.mem_size_hpa2[i]), file=config)
         print('#define VM{0}_CONFIG_OS_BOOTARG_ROOT\t\t"root={1} "'.format(
             i, vm_info.os_cfg.kern_root_dev[i]), file=config)
         print('#define VM{0}_CONFIG_OS_BOOTARG_MAXCPUS\t\t"maxcpus={1} "'.format(
@@ -271,6 +277,9 @@ def gen_hybrid_header(vm_info, config):
     print("#define VM0_CONFIG_MEM_START_HPA\t{0}UL".format(
         vm_info.mem_info.mem_start_hpa[0]), file=config)
     print("#define VM0_CONFIG_MEM_SIZE\t\t{0}UL".format(vm_info.mem_info.mem_size[0]), file=config)
+    print("#define VM0_CONFIG_MEM_START_HPA2\t{0}UL".format(
+        vm_info.mem_info.mem_start_hpa2[0]), file=config)
+    print("#define VM0_CONFIG_MEM_SIZE_HPA2\t\t{0}UL".format(vm_info.mem_info.mem_size_hpa2[0]), file=config)
     print("", file=config)
     print("#define SOS_VM_BOOTARGS\t\t\tSOS_ROOTFS\t\\", file=config)
     print('\t\t\t\t\t"rw rootwait "\t\\', file=config)
