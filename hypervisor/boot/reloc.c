@@ -59,8 +59,10 @@ void relocate(void)
 {
 #ifdef CONFIG_RELOC
 	struct Elf64_Dyn *dyn;
-	struct Elf64_Rel *start = NULL, *end = NULL;
-	uint64_t delta, size = 0;
+	struct Elf64_Rel *entry = NULL;
+	uint8_t *rela_start = NULL, *rela_end = NULL;
+	uint64_t rela_size = 0;
+	uint64_t delta, entry_size = 0;
 	uint64_t trampoline_end;
 	uint64_t primary_32_start, primary_32_end;
 	uint64_t *addr;
@@ -73,13 +75,13 @@ void relocate(void)
 		for (dyn = (struct Elf64_Dyn *)_DYNAMIC; dyn->d_tag != DT_NULL; dyn++) {
 			switch (dyn->d_tag) {
 			case DT_RELA:
-				start = (struct Elf64_Rel *)(dyn->d_ptr + delta);
+				rela_start = (uint8_t *)(dyn->d_ptr + delta);
 				break;
 			case DT_RELASZ:
-				end = (struct Elf64_Rel *)start + dyn->d_ptr;
+				rela_size = dyn->d_ptr;
 				break;
 			case DT_RELAENT:
-				size = dyn->d_ptr;
+				entry_size = dyn->d_ptr;
 				break;
 			default:
 				/* if no RELA/RELASZ found, both start and end will be initialized to NULL, and later while loop won't be executed */
@@ -95,9 +97,11 @@ void relocate(void)
 		primary_32_start = (uint64_t)(&cpu_primary_start_32) - delta;
 		primary_32_end = (uint64_t)(&cpu_primary_start_64) - delta;
 
-		while (start < end) {
-			if ((elf64_r_type(start->r_info)) == R_X86_64_RELATIVE) {
-				addr = (uint64_t *)(delta + start->r_offset);
+		rela_end = rela_start + rela_size;
+		while (rela_start < rela_end) {
+			entry = (struct Elf64_Rel *)rela_start;
+			if ((elf64_r_type(entry->r_info)) == R_X86_64_RELATIVE) {
+				addr = (uint64_t *)(delta + entry->r_offset);
 
 				/*
 				 * we won't fixup any trampoline.S and cpu_primary.S here
@@ -113,13 +117,13 @@ void relocate(void)
 				 *   is needed in the future, it's recommended to do it
 				 *   explicitly in the assembly code to avoid confusion.
 				 */
-				if ((start->r_offset > trampoline_end) &&
-						((start->r_offset < primary_32_start) ||
-						(start->r_offset > primary_32_end))) {
+				if ((entry->r_offset > trampoline_end) &&
+						((entry->r_offset < primary_32_start) ||
+						(entry->r_offset > primary_32_end))) {
 					*addr += delta;
 				}
 			}
-			start = (struct Elf64_Rel *)((char *)start + size);
+			rela_start += entry_size;
 		}
 	}
 #endif
