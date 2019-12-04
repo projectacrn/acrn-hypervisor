@@ -471,7 +471,15 @@ static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 
 	dmar_unit->cap = iommu_read64(dmar_unit, DMAR_CAP_REG);
 	dmar_unit->ecap = iommu_read64(dmar_unit, DMAR_ECAP_REG);
-	dmar_unit->gcmd = iommu_read32(dmar_unit, DMAR_GCMD_REG);
+
+	/*
+	 * The initialization of "dmar_unit->gcmd" shall be done via reading from Global Status Register rather than
+	 * Global Command Register.
+	 * According to Chapter 10.4.4 Global Command Register in VT-d spec, Global Command Register is a write-only
+	 * register to control remapping hardware. Global Status Register is the corresponding read-only register to
+	 * report remapping hardware status.
+	 */
+	dmar_unit->gcmd = iommu_read32(dmar_unit, DMAR_GSTS_REG);
 
 	dmar_unit->cap_msagaw = dmar_unit_get_msagw(dmar_unit);
 
