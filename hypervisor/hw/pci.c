@@ -440,7 +440,7 @@ static void pci_parse_iommu_devscopes(struct pci_bdf_set *const bdfs_from_drhds,
 void init_pci_pdev_list(void)
 {
 	uint64_t buses_visited[BUSES_BITMAP_LEN] = {0UL};
-	struct pci_bdf_set bdfs_from_drhds;
+	struct pci_bdf_set bdfs_from_drhds = {.pci_bdf_map_count = 0U};
 	uint32_t drhd_idx_pci_all = INVALID_DRHD_INDEX;
 	uint16_t bus;
 	bool was_visited = false;
