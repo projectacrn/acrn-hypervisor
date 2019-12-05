@@ -183,4 +183,13 @@ void send_single_ipi(uint16_t pcpu_id, uint32_t vector);
  */
 void send_single_init(uint16_t pcpu_id);
 
+/**
+ * @brief Send an NMI signal to a single pCPU
+ *
+ * @param[in] pcpu_id The id of destination physical cpu
+ *
+ * @return None
+ */
+void send_single_nmi(uint16_t pcpu_id);
+
 #endif /* INTR_LAPIC_H */
