@@ -10,6 +10,7 @@ LIFEMNGR_CFLAGS += -Wall -ffunction-sections
 LIFEMNGR_CFLAGS += -Werror
 LIFEMNGR_CFLAGS += -O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 LIFEMNGR_CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
+LIFEMNGR_CFLAGS += -fno-delete-null-pointer-checks -fwrapv
 LIFEMNGR_CFLAGS += -fpie -fpic
 LIFEMNGR_CFLAGS += $(CFLAGS)
 

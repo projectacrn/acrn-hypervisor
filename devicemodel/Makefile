@@ -19,6 +19,7 @@ CFLAGS += -Wall -ffunction-sections
 CFLAGS += -Werror
 CFLAGS += -O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
+CFLAGS += -fno-delete-null-pointer-checks -fwrapv
 CFLAGS += -fpie
 CFLAGS += -Wno-stringop-truncation -Wno-address-of-packed-member
 

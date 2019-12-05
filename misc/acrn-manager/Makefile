@@ -11,6 +11,7 @@ MANAGER_CFLAGS += -Wall -ffunction-sections
 MANAGER_CFLAGS += -Werror
 MANAGER_CFLAGS += -O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 MANAGER_CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
+MANAGER_CFLAGS += -fno-delete-null-pointer-checks -fwrapv
 MANAGER_CFLAGS += -fpie -fpic
 #FIXME: remove me. work-around for system() calls, which will be removed
 MANAGER_CFLAGS += -Wno-format-truncation -Wno-unused-result
