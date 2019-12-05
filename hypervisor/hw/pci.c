@@ -34,6 +34,7 @@
 #include <types.h>
 #include <spinlock.h>
 #include <io.h>
+#include <pgtable.h>
 #include <pci.h>
 #include <uart16550.h>
 #include <logmsg.h>
@@ -62,92 +63,90 @@ uint64_t get_mmcfg_base(void)
 	return pci_mmcfg_base;
 }
 
-/* @brief: Find the DRHD index corresponding to a PCI device
- * Runs through the pci_pdev_array and returns the value in drhd_idx
- * member from pdev structure that matches matches B:D.F
- *
- * @pbdf[in]	B:D.F of a PCI device
- *
- * @return if there is a matching pbdf in pci_pdev_array, pdev->drhd_idx, else INVALID_DRHD_INDEX
+/*
+ * @pre offset < 0x1000U
  */
-
-uint32_t pci_lookup_drhd_for_pbdf(uint16_t pbdf)
+static inline uint32_t pci_mmcfg_calc_address(union pci_bdf bdf, uint32_t offset)
 {
-	uint32_t drhd_index = INVALID_DRHD_INDEX;
-	uint32_t index;
-
-	for (index = 0U; index < num_pci_pdev; index++) {
-		if (pci_pdev_array[index].bdf.value == pbdf) {
-			drhd_index = pci_pdev_array[index].drhd_index;
-			break;
-		}
-	}
-
-	return drhd_index;
+	return (uint32_t)pci_mmcfg_base + (((uint32_t)bdf.value << 12U) | offset);
 }
 
-static uint32_t pci_pdev_calc_address(union pci_bdf bdf, uint32_t offset)
+static uint32_t pci_mmcfg_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes)
 {
-	uint32_t addr = (uint32_t)bdf.value;
-
-	addr <<= 8U;
-	addr |= (offset | PCI_CFG_ENABLE);
-	return addr;
-}
-
-uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes)
-{
-	uint32_t addr;
+	uint32_t addr = pci_mmcfg_calc_address(bdf, offset);
+	void *hva = hpa2hva(addr);
 	uint32_t val;
 
-	addr = pci_pdev_calc_address(bdf, offset);
-
 	spinlock_obtain(&pci_device_lock);
-
-	/* Write address to ADDRESS register */
-	pio_write32(addr, (uint16_t)PCI_CONFIG_ADDR);
-
-	/* Read result from DATA register */
+	stac();
 	switch (bytes) {
 	case 1U:
-		val = (uint32_t)pio_read8((uint16_t)PCI_CONFIG_DATA + ((uint16_t)offset & 3U));
+		val = (uint32_t)mmio_read8(hva);
 		break;
 	case 2U:
-		val = (uint32_t)pio_read16((uint16_t)PCI_CONFIG_DATA + ((uint16_t)offset & 2U));
+		val = (uint32_t)mmio_read16(hva);
 		break;
 	default:
-		val = pio_read32((uint16_t)PCI_CONFIG_DATA);
+		val = mmio_read32(hva);
 		break;
 	}
+	clac();
 	spinlock_release(&pci_device_lock);
 
 	return val;
 }
 
-void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val)
+/*
+ * @pre bytes == 1U || bytes == 2U || bytes == 4U
+ */
+static void pci_mmcfg_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val)
 {
-	uint32_t addr;
+	uint32_t addr = pci_mmcfg_calc_address(bdf, offset);
+	void *hva = hpa2hva(addr);
 
 	spinlock_obtain(&pci_device_lock);
-
-	addr = pci_pdev_calc_address(bdf, offset);
-
-	/* Write address to ADDRESS register */
-	pio_write32(addr, (uint16_t)PCI_CONFIG_ADDR);
-
-	/* Write value to DATA register */
+	stac();
 	switch (bytes) {
 	case 1U:
-		pio_write8((uint8_t)val, (uint16_t)PCI_CONFIG_DATA + ((uint16_t)offset & 3U));
+		mmio_write8((uint8_t)val, hva);
 		break;
 	case 2U:
-		pio_write16((uint16_t)val, (uint16_t)PCI_CONFIG_DATA + ((uint16_t)offset & 2U));
+		mmio_write16((uint16_t)val, hva);
 		break;
 	default:
-		pio_write32(val, (uint16_t)PCI_CONFIG_DATA);
+		mmio_write32(val, hva);
 		break;
 	}
+	clac();
 	spinlock_release(&pci_device_lock);
+}
+
+static struct pci_cfg_ops pci_mmcfg_cfg_ops = {
+	.pci_read_cfg = pci_mmcfg_read_cfg,
+	.pci_write_cfg = pci_mmcfg_write_cfg,
+};
+
+static struct pci_cfg_ops *acrn_pci_cfg_ops = &pci_direct_cfg_ops;
+
+void pci_switch_to_mmio_cfg_ops(void)
+{
+	acrn_pci_cfg_ops = &pci_mmcfg_cfg_ops;
+}
+
+/*
+ * @pre bytes == 1U || bytes == 2U || bytes == 4U
+ */
+uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes)
+{
+	return acrn_pci_cfg_ops->pci_read_cfg(bdf, offset, bytes);
+}
+
+/*
+ * @pre bytes == 1U || bytes == 2U || bytes == 4U
+ */
+void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val)
+{
+	acrn_pci_cfg_ops->pci_write_cfg(bdf, offset, bytes, val);
 }
 
 bool pdev_need_bar_restore(const struct pci_pdev *pdev)
@@ -182,6 +181,30 @@ void pdev_restore_bar(const struct pci_pdev *pdev)
 	for (idx = 0U; idx < PCI_STD_NUM_BARS; idx++) {
 		pci_pdev_write_cfg(pdev->bdf, pci_bar_offset(idx), 4U, pdev->bars[idx]);
 	}
+}
+
+/* @brief: Find the DRHD index corresponding to a PCI device
+ * Runs through the pci_pdev_array and returns the value in drhd_idx
+ * member from pdev structure that matches matches B:D.F
+ *
+ * @pbdf[in]	B:D.F of a PCI device
+ *
+ * @return if there is a matching pbdf in pci_pdev_array, pdev->drhd_idx, else INVALID_DRHD_INDEX
+ */
+
+uint32_t pci_lookup_drhd_for_pbdf(uint16_t pbdf)
+{
+	uint32_t drhd_index = INVALID_DRHD_INDEX;
+	uint32_t index;
+
+	for (index = 0U; index < num_pci_pdev; index++) {
+		if (pci_pdev_array[index].bdf.value == pbdf) {
+			drhd_index = pci_pdev_array[index].drhd_index;
+			break;
+		}
+	}
+
+	return drhd_index;
 }
 
 /* enable: 1: enable INTx; 0: Disable INTx */
