@@ -90,7 +90,7 @@ static inline void vlapic_dump_isr(__unused const struct acrn_vlapic *vlapic, __
 
 const struct acrn_apicv_ops *apicv_ops;
 
-static int32_t
+static bool
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector);
 
 static void apicv_post_intr(uint16_t dest_pcpu_id);
@@ -507,11 +507,7 @@ vlapic_esr_write_handler(struct acrn_vlapic *vlapic)
 static void
 vlapic_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 {
-	struct lapic_regs *lapic;
-	struct lapic_reg *tmrptr;
-
-	lapic = &(vlapic->apic_page);
-	tmrptr = &lapic->tmr[0];
+	struct lapic_reg *tmrptr = &(vlapic->apic_page.tmr[0]);
 	if (level) {
 		if (!bitmap32_test_and_set_lock((uint16_t)(vector & 0x1fU), &tmrptr[(vector & 0xffU) >> 5U].v)) {
 			vcpu_set_eoi_exit_bitmap(vlapic->vcpu, vector);
@@ -552,7 +548,7 @@ static void apicv_basic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector,
 
 	/* If the interrupt is set, don't try to do it again */
 	if (!bitmap32_test_and_set_lock((uint16_t)(vector & 0x1fU), &irrptr[idx].v)) {
-		/* set tmr if corresponding irr bit changes from 0 to 1 */
+		/* update TMR if interrupt trigger mode has changed */
 		vlapic_set_tmr(vlapic, vector, level);
 		vcpu_make_request(vlapic->vcpu, ACRN_REQUEST_EVENT);
 	}
@@ -560,11 +556,10 @@ static void apicv_basic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector,
 
 static void apicv_advanced_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 {
-	int32_t pending_intr = apicv_set_intr_ready(vlapic, vector);
-
+	/* update TMR if interrupt trigger mode has changed */
 	vlapic_set_tmr(vlapic, vector, level);
 
-	if (pending_intr != 0) {
+	if (apicv_set_intr_ready(vlapic, vector)) {
 		/*
 		 * Send interrupt to vCPU via posted interrupt way:
 		 * 1. If target vCPU is in root mode(isn't running),
@@ -2208,19 +2203,20 @@ void vlapic_free(struct acrn_vcpu *vcpu)
 /**
  * APIC-v functions
  * **/
-static int32_t
+static bool
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
 {
 	struct vlapic_pir_desc *pir_desc;
 	uint32_t idx;
-	int32_t notify;
+	bool notify = false;
 
 	pir_desc = &(vlapic->pir_desc);
 
 	idx = vector >> 6U;
 
-	bitmap_set_lock((uint16_t)(vector & 0x3fU), &pir_desc->pir[idx]);
-	notify = (atomic_cmpxchg64(&pir_desc->pending, 0UL, 1UL) == 0UL) ? 1 : 0;
+	if (!bitmap_test_and_set_lock((uint16_t)(vector & 0x3fU), &pir_desc->pir[idx])) {
+		notify = (atomic_cmpxchg64(&pir_desc->pending, 0UL, 1UL) == 0UL);
+	}
 	return notify;
 }
 
