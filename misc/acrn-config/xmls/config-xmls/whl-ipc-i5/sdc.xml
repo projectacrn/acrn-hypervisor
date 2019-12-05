@@ -15,6 +15,7 @@
         <name desc="Specify the OS name of VM, currently it is not referenced by hypervisor code.">ACRN Service OS</name>
         <kern_type desc="Specify the kernel image type so that hypervisor could load it correctly. Currently support KERNEL_BZIMAGE and KERNEL_ZEPHYR.">KERNEL_BZIMAGE</kern_type>
         <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline.">Linux_bzImage</kern_mod>
+        <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline."></ramdisk_mod>
         <bootargs configurable="0" desc="Specify kernel boot arguments">SOS_VM_BOOTARGS</bootargs>
     </os_config>
     <vuart id="0">
