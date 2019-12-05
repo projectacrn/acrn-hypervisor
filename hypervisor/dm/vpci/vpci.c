@@ -29,6 +29,7 @@
 
 #include <vm.h>
 #include <vtd.h>
+#include <io.h>
 #include <mmu.h>
 #include <logmsg.h>
 #include "vpci_priv.h"
@@ -173,6 +174,48 @@ static bool pci_cfgdata_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t b
 }
 
 /**
+ * @pre io_req != NULL && private_data != NULL
+ */
+static int32_t vpci_handle_mmconfig_access(struct io_request *io_req, void *private_data)
+{
+	struct mmio_request *mmio = &io_req->reqs.mmio;
+	struct acrn_vpci *vpci = (struct acrn_vpci *)private_data;
+	uint64_t pci_mmcofg_base = vpci->pci_mmcfg_base;
+	uint64_t address = mmio->address;
+	uint32_t reg_num = (uint32_t)(address & 0xfffUL);
+	union pci_bdf bdf;
+
+	/**
+	 * Enhanced Configuration Address Mapping
+	 * A[(20+n-1):20] Bus Number 1 ≤ n ≤ 8
+	 * A[19:15] Device Number
+	 * A[14:12] Function Number
+	 * A[11:8] Extended Register Number
+	 * A[7:2] Register Number
+	 * A[1:0] Along with size of the access, used to generate Byte Enables
+	 */
+	bdf.value = (uint16_t)((address - pci_mmcofg_base) >> 12U);
+
+	if (mmio->direction == REQUEST_READ) {
+		if (!is_plat_hidden_pdev(bdf)) {
+			read_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t *)&mmio->value);
+		} else {
+			/* expose and pass through platform hidden devices to SOS */
+			mmio->value = (uint64_t)pci_pdev_read_cfg(bdf, reg_num, (uint32_t)mmio->size);
+		}
+	} else {
+		if (!is_plat_hidden_pdev(bdf)) {
+			write_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);
+		} else {
+			/* expose and pass through platform hidden devices to SOS */
+			pci_pdev_write_cfg(bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);
+		}
+	}
+
+	return 0;
+}
+
+/**
  * @pre vm != NULL
  * @pre vm->vm_id < CONFIG_MAX_VM_NUM
  */
@@ -189,6 +232,7 @@ void vpci_init(struct acrn_vm *vm)
 	};
 
 	struct acrn_vm_config *vm_config;
+	uint64_t pci_mmcfg_base;
 
 	vm->vpci.vm = vm;
 	vm->iommu = create_iommu_domain(vm->vm_id, hva2hpa(vm->arch_vm.nworld_eptp), 48U);
@@ -197,8 +241,13 @@ void vpci_init(struct acrn_vm *vm)
 
 	vm_config = get_vm_config(vm->vm_id);
 	switch (vm_config->load_order) {
-	case PRE_LAUNCHED_VM:
 	case SOS_VM:
+		pci_mmcfg_base = get_mmcfg_base();
+		vm->vpci.pci_mmcfg_base = pci_mmcfg_base;
+		register_mmio_emulation_handler(vm, vpci_handle_mmconfig_access,
+			pci_mmcfg_base, pci_mmcfg_base + PCI_MMCONFIG_SIZE, &vm->vpci);
+		/* falls through */
+	case PRE_LAUNCHED_VM:
 		/*
 		 * SOS: intercept port CF8 only.
 		 * UOS or pre-launched VM: register handler for CF8 only and I/O requests to CF9/CFA/CFB are
@@ -404,6 +453,9 @@ static void write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	vdev = find_vdev(vpci, bdf);
 	if (vdev != NULL) {
 		vdev->vdev_ops->write_vdev_cfg(vdev, offset, bytes, val);
+	} else {
+		pr_acrnlog("%s %x:%x.%x not found! off: 0x%x, val: 0x%x\n", __func__,
+				bdf.bits.b, bdf.bits.d, bdf.bits.f, offset, val);
 	}
 	spinlock_release(&vpci->lock);
 }

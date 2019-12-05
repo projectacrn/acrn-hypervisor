@@ -70,9 +70,9 @@ struct pci_msix {
 };
 
 union pci_cfgdata {
-	uint8_t data_8[PCI_REGMAX + 1U];
-	uint16_t data_16[(PCI_REGMAX + 1U) >> 1U];
-	uint32_t data_32[(PCI_REGMAX + 1U) >> 2U];
+	uint8_t data_8[PCIE_CONFIG_SPACE_SIZE];
+	uint16_t data_16[PCIE_CONFIG_SPACE_SIZE >> 1U];
+	uint32_t data_32[PCIE_CONFIG_SPACE_SIZE >> 2U];
 };
 
 struct pci_vdev;
@@ -123,6 +123,7 @@ struct acrn_vpci {
 	spinlock_t lock;
 	struct acrn_vm *vm;
 	union pci_cfg_addr_reg addr;
+	uint64_t pci_mmcfg_base;
 	uint32_t pci_vdev_cnt;
 	struct pci_vdev pci_vdevs[CONFIG_MAX_PCI_DEV_NUM];
 };

@@ -48,8 +48,11 @@
 #define PCI_SLOTMAX           0x1FU
 #define PCI_FUNCMAX           0x7U
 #define PCI_BAR_COUNT         0x6U
-#define PCI_REGMAX            0xFFU
 #define PCI_REGMASK           0xFCU
+
+#define PCI_CONFIG_SPACE_SIZE 0x100U
+#define PCIE_CONFIG_SPACE_SIZE 0x1000U
+#define PCI_MMCONFIG_SIZE     0x10000000U
 
 /* I/O ports */
 #define PCI_CONFIG_ADDR       0xCF8U
@@ -323,6 +326,7 @@ static inline bool is_pci_cfg_bridge(uint8_t header_type)
 	return ((header_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_BRIDGE);
 }
 
+bool is_plat_hidden_pdev(union pci_bdf bdf);
 bool pdev_need_bar_restore(const struct pci_pdev *pdev);
 void pdev_restore_bar(const struct pci_pdev *pdev);
 void pci_switch_to_mmio_cfg_ops(void);

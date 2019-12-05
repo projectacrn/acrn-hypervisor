@@ -78,7 +78,6 @@ static uint32_t pci_mmcfg_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t 
 	uint32_t val;
 
 	spinlock_obtain(&pci_device_lock);
-	stac();
 	switch (bytes) {
 	case 1U:
 		val = (uint32_t)mmio_read8(hva);
@@ -90,7 +89,6 @@ static uint32_t pci_mmcfg_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t 
 		val = mmio_read32(hva);
 		break;
 	}
-	clac();
 	spinlock_release(&pci_device_lock);
 
 	return val;
@@ -105,7 +103,6 @@ static void pci_mmcfg_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t byt
 	void *hva = hpa2hva(addr);
 
 	spinlock_obtain(&pci_device_lock);
-	stac();
 	switch (bytes) {
 	case 1U:
 		mmio_write8((uint8_t)val, hva);
@@ -117,7 +114,6 @@ static void pci_mmcfg_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t byt
 		mmio_write32(val, hva);
 		break;
 	}
-	clac();
 	spinlock_release(&pci_device_lock);
 }
 
@@ -223,6 +219,22 @@ void enable_disable_pci_intx(union pci_bdf bdf, bool enable)
 	if ((cmd ^ new_cmd) != 0U) {
 		pci_pdev_write_cfg(bdf, PCIR_COMMAND, 0x2U, new_cmd);
 	}
+}
+
+bool is_plat_hidden_pdev(union pci_bdf bdf)
+{
+	static uint32_t hidden_pdevs_num = MAX_HIDDEN_PDEVS_NUM;
+	uint32_t hidden_idx;
+	bool hidden = false;
+
+	for (hidden_idx = 0U; hidden_idx < hidden_pdevs_num; hidden_idx++) {
+		if (bdf_is_equal(plat_hidden_pdevs[hidden_idx], bdf)) {
+			hidden = true;
+			break;
+		}
+	}
+
+	return hidden;
 }
 
 static bool is_hv_owned_pdev(union pci_bdf pbdf)
