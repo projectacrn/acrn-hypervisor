@@ -237,6 +237,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 			panic("failed to initialize iommu!");
 		}
 
+		hv_access_memory_region_update(get_mmcfg_base(), PCI_MMCONFIG_SIZE);
 		init_pci_pdev_list(); /* init_iommu must come before this */
 		ptdev_init();
 

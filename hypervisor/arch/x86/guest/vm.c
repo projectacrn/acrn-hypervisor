@@ -431,6 +431,9 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	 * code be page-aligned.
 	 */
 	ept_del_mr(vm, pml4_page, get_ap_trampoline_buf(), CONFIG_LOW_RAM_SIZE);
+
+	/* unmap PCIe MMCONFIG region since it's owned by hypervisor */
+	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, get_mmcfg_base(), PCI_MMCONFIG_SIZE);
 }
 
 /* Add EPT mapping of EPC reource for the VM */
