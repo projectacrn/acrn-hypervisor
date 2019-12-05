@@ -59,8 +59,8 @@ include $(T)/hypervisor/scripts/makefile/cfg_update.mk
 
 ifeq ($(DEFAULT_MENU_CONFIG_FILE), $(wildcard $(DEFAULT_MENU_CONFIG_FILE)))
   BOARD_IN_MENUCONFIG := $(shell grep CONFIG_BOARD= $(DEFAULT_MENU_CONFIG_FILE) | awk -F '"' '{print $$2}')
-  SCENARIO_IN_MENUCONFIG := $(shell grep -E "SDC=y|SDC2=y|INDUSTRY=y|LOGICAL_PARTITION=y" \
-           $(DEFAULT_MENU_CONFIG_FILE) | awk -F "_|=" '{print $$2}' | tr A-Z a-z)
+  SCENARIO_IN_MENUCONFIG := $(shell grep -E "SDC=y|SDC2=y|INDUSTRY=y|LOGICAL_PARTITION=y|HYBRID=y" \
+           $(DEFAULT_MENU_CONFIG_FILE) | awk -F "=" '{print $$1}' | cut -d '_' -f 2- | tr A-Z a-z)
 
   RELEASE := $(shell grep CONFIG_RELEASE=y $(DEFAULT_MENU_CONFIG_FILE))
   ifneq ($(RELEASE),)
