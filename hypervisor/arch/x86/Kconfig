@@ -57,7 +57,7 @@ config RELEASE
 
 config MAX_VCPUS_PER_VM
 	int "Maximum number of VCPUs per VM"
-	range 1 8
+	range 1 48
 	default 8
 	help
 	  The maximum number of virtual CPUs the hypervisor can support in a
@@ -70,7 +70,7 @@ config MAX_EMULATED_MMIO_REGIONS
 
 config MAX_PT_IRQ_ENTRIES
 	int "Maximum number of interrupt source for PT devices"
-	range 0 128
+	range 0 256
 	default 64
 
 config STACK_SIZE
