@@ -76,6 +76,7 @@ class CfgOsKern:
     kern_entry_addr = {}
     kern_root_dev = {}
     kern_args_append = {}
+    ramdisk_mod = {}
 
     def __init__(self, scenario_file):
         self.scenario_info = scenario_file
@@ -100,6 +101,8 @@ class CfgOsKern:
             self.scenario_info, "os_config", "kern_entry_addr")
         self.kern_root_dev = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "os_config", "rootfs")
+        self.ramdisk_mod = scenario_cfg_lib.get_leaf_tag_map(
+            self.scenario_info, "os_config", "ramdisk_mod")
         self.kern_args_append = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "boot_private", "bootargs")
 
