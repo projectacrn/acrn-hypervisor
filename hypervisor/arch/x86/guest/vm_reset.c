@@ -94,9 +94,16 @@ static bool handle_common_reset_reg_write(struct acrn_vm *vm, bool reset)
 		if (reset && is_rt_vm(vm)) {
 			vm->state = VM_POWERING_OFF;
 		}
+	} else if (is_prelaunched_vm(vm)) {
+		/* Don't support re-launch for now, just shutdown the guest */
+		pause_vm(vm);
+
+		struct acrn_vcpu *bsp = vcpu_from_vid(vm, BOOT_CPU_ID);
+		per_cpu(shutdown_vm_id, pcpuid_from_vcpu(bsp)) = vm->vm_id;
+		make_shutdown_vm_request(pcpuid_from_vcpu(bsp));
 	} else {
 		/*
-		 * ignore writes from SOS or pre-launched VMs.
+		 * ignore writes from SOS.
 		 * equivalent to hide this port from guests.
 		 */
 	}
