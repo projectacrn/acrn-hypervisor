@@ -288,3 +288,18 @@ void send_single_init(uint16_t pcpu_id)
 
 	msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
 }
+
+/**
+ * @pre pcpu_id < CONFIG_MAX_PCPU_NUM
+ *
+ * @return None
+ */
+void send_single_nmi(uint16_t pcpu_id)
+{
+	union apic_icr icr;
+
+	icr.value_32.hi_32 = per_cpu(lapic_id, pcpu_id);
+	icr.value_32.lo_32 = (INTR_LAPIC_ICR_PHYSICAL << 11U) | (INTR_LAPIC_ICR_NMI << 8U);
+
+	msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
+}
