@@ -253,6 +253,9 @@ def gen_sdc_source(vm_info, config):
     print('\t\t\t.kernel_mod_tag = "{0}",'.format(
         vm_info.os_cfg.kern_mod[0]), file=config)
     print('\t\t\t.bootargs = {0},'.format(vm_info.os_cfg.kern_args[0]), file=config)
+    if (vm_info.os_cfg.ramdisk_mod[0].strip()):
+        print('\t\t\t.ramdisk_mod_tag = "{0}",'.format(
+            vm_info.os_cfg.ramdisk_mod[0]), file=config)
     print("\t\t},", file=config)
     # VUART
     err_dic = vuart_output(0, vm_info, config)
@@ -337,6 +340,9 @@ def gen_sdc2_source(vm_info, config):
     print('\t\t\t.kernel_mod_tag = "{0}",'.format(
         vm_info.os_cfg.kern_mod[0]), file=config)
     print('\t\t\t.bootargs = {0},'.format(vm_info.os_cfg.kern_args[0]), file=config)
+    if (vm_info.os_cfg.ramdisk_mod[0].strip()):
+        print('\t\t\t.ramdisk_mod_tag = "{0}",'.format(
+            vm_info.os_cfg.ramdisk_mod[0]), file=config)
     print("\t\t},", file=config)
     # VUART
     err_dic = vuart_output(0, vm_info, config)
@@ -459,6 +465,9 @@ def gen_logical_partition_source(vm_info, config):
             vm_info.os_cfg.kern_type[i]), file=config)
         print('\t\t\t.kernel_mod_tag = "{0}",'.format(
             vm_info.os_cfg.kern_mod[i]), file=config)
+        if (vm_info.os_cfg.ramdisk_mod[i].strip()):
+            print('\t\t\t.ramdisk_mod_tag = "{0}",'.format(
+                vm_info.os_cfg.ramdisk_mod[i]), file=config)
         print("\t\t\t.bootargs = VM{0}_CONFIG_OS_BOOTARG_CONSOLE\t\\".format(i), file=config)
         print("\t\t\t\tVM{0}_CONFIG_OS_BOOTARG_MAXCPUS\t\t\\".format(i), file=config)
         print("\t\t\t\tVM{0}_CONFIG_OS_BOOTARG_ROOT\t\t\\".format(i), file=config)
@@ -520,8 +529,11 @@ def gen_industry_source(vm_info, config):
                 vm_info.os_cfg.kern_type[i]), file=config)
             print('\t\t\t.kernel_mod_tag = "{0}",'.format(
                 vm_info.os_cfg.kern_mod[i]), file=config)
+            if (vm_info.os_cfg.ramdisk_mod[i].strip()):
+                print('\t\t\t.ramdisk_mod_tag = "{0}",'.format(
+                    vm_info.os_cfg.ramdisk_mod[i]), file=config)
             print("\t\t\t.bootargs = {0}".format(
-                vm_info.os_cfg.kern_args[i]), file=config)
+               vm_info.os_cfg.kern_args[i]), file=config)
             print("\t\t},", file=config)
 
         if i == 2:
@@ -593,6 +605,9 @@ def gen_hybrid_source(vm_info, config):
                 vm_info.os_cfg.kern_type[i]), file=config)
             print('\t\t\t.kernel_mod_tag = "{0}",'.format(
                 vm_info.os_cfg.kern_mod[i]), file=config)
+            if (vm_info.os_cfg.ramdisk_mod[i].strip()):
+                print('\t\t\t.ramdisk_mod_tag = "{0}",'.format(
+                vm_info.os_cfg.ramdisk_mod[i]), file=config)
 
             if i < post_vm_i:
                 if not vm_info.os_cfg.kern_args[i] or not vm_info.os_cfg.kern_args[i].strip():
