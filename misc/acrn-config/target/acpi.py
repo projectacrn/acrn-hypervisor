@@ -432,19 +432,24 @@ def store_cx_data(sysnode1, sysnode2, config):
     """
     i = 0
     state_cpus = {}
-    with open(sysnode1, 'r') as acpi_idle:
-        idle_driver = acpi_idle.read(32)
+    try:
+        with open(sysnode1, 'r') as acpi_idle:
+            idle_driver = acpi_idle.read(32)
 
-        if idle_driver.find("acpi_idle") == -1:
-            parser_lib.print_yel("The Cx data for ACRN relies on " +\
-                 "acpi_idle driver but it is not found, ", warn=True, end=False)
-            if idle_driver.find("intel_idle") == 0:
-                print("please add idle=nomwait in kernel " +\
-                    "cmdline to fall back to acpi_idle driver")
-            else:
-                parser_lib.print_yel("please make sure ACPI Cstate is enabled in BIOS.", warn=True)
-            print("\t/* Cx data is not available */", file=config)
-            return
+            if idle_driver.find("acpi_idle") == -1:
+                parser_lib.print_yel("The Cx data for ACRN relies on " +\
+                     "acpi_idle driver but it is not found, ", warn=True, end=False)
+                if idle_driver.find("intel_idle") == 0:
+                    print("please add idle=nomwait in kernel " +\
+                        "cmdline to fall back to acpi_idle driver")
+                else:
+                    parser_lib.print_yel("please make sure ACPI Cstate is enabled in BIOS.", warn=True)
+                print("\t/* Cx data is not available */", file=config)
+                return
+    except IOError:
+        parser_lib.print_yel("No idle driver found.", warn=True)
+        print("\t/* Cx data is not available */", file=config)
+        return
 
     files = os.listdir(sysnode2)
     for d_path in files:
@@ -501,18 +506,24 @@ def store_px_data(sysnode, config):
     """
     px_tmp = PxPkg()
     px_data = {}
-    with open(sysnode+'cpu0/cpufreq/scaling_driver', 'r') as f_node:
-        freq_driver = f_node.read()
-        if freq_driver.find("acpi-cpufreq") == -1:
-            parser_lib.print_yel("The Px data for ACRN relies on " +\
-                 "acpi-cpufreq driver but it is not found, ", warn=True, end=False)
-            if freq_driver.find("intel_pstate") == 0:
-                print("please add intel_pstate=disable in kernel " +\
-                    "cmdline to fall back to acpi-cpufreq driver")
-            else:
-                parser_lib.print_yel("please make sure ACPI Pstate is enabled in BIOS.", warn=True)
-            print("\t/* Px data is not available */", file=config)
-            return
+
+    try:
+        with open(sysnode+'cpu0/cpufreq/scaling_driver', 'r') as f_node:
+            freq_driver = f_node.read()
+            if freq_driver.find("acpi-cpufreq") == -1:
+                parser_lib.print_yel("The Px data for ACRN relies on " +\
+                     "acpi-cpufreq driver but it is not found, ", warn=True, end=False)
+                if freq_driver.find("intel_pstate") == 0:
+                    print("please add intel_pstate=disable in kernel " +\
+                        "cmdline to fall back to acpi-cpufreq driver")
+                else:
+                    parser_lib.print_yel("please make sure ACPI Pstate is enabled in BIOS.", warn=True)
+                print("\t/* Px data is not available */", file=config)
+                return
+    except IOError:
+        parser_lib.print_yel("No scaling_driver found.", warn=True)
+        print("\t/* Px data is not available */", file=config)
+        return
 
     try:
         with open(sysnode+'cpufreq/boost', 'r') as f_node:
