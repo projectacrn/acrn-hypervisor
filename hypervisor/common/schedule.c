@@ -123,7 +123,7 @@ struct thread_object *sched_get_current(uint16_t pcpu_id)
 }
 
 /**
- * @pre delmode == DEL_MODE_IPI || delmode == DEL_MODE_INIT
+ * @pre delmode == DEL_MODE_IPI || delmode == DEL_MODE_INIT || delmode == DEL_MODE_NMI
  */
 void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode)
 {
@@ -137,6 +137,9 @@ void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode)
 			break;
 		case DEL_MODE_INIT:
 			send_single_init(pcpu_id);
+			break;
+		case DEL_MODE_NMI:
+			send_single_nmi(pcpu_id);
 			break;
 		default:
 			ASSERT(false, "Unknown delivery mode %u for pCPU%u", delmode, pcpu_id);
@@ -235,10 +238,20 @@ void kick_thread(const struct thread_object *obj)
 	obtain_schedule_lock(pcpu_id, &rflag);
 	if (is_running(obj)) {
 		if (get_pcpu_id() != pcpu_id) {
-			send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
+			if (obj->notify_mode == SCHED_NOTIFY_IPI) {
+				send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
+			} else {
+				/* For lapic-pt vCPUs */
+				send_single_nmi(pcpu_id);
+			}
 		}
 	} else if (is_runnable(obj)) {
-		make_reschedule_request(pcpu_id, DEL_MODE_IPI);
+		if (obj->notify_mode == SCHED_NOTIFY_IPI) {
+			make_reschedule_request(pcpu_id, DEL_MODE_IPI);
+		} else {
+			/* For lapic-pt vCPUs */
+			make_reschedule_request(pcpu_id, DEL_MODE_NMI);
+		}
 	} else {
 		/* do nothing */
 	}

@@ -562,6 +562,7 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 		 * Disable posted interrupt processing
 		 * update x2apic msr bitmap for pass-thru
 		 * enable inteception only for ICR
+		 * enable NMI exit as we will use NMI to kick vCPU thread
 		 * disable pre-emption for TSC DEADLINE MSR
 		 * Disable Register Virtualization and virtual interrupt delivery
 		 * Disable "use TPR shadow"
@@ -572,6 +573,16 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 		if (is_apicv_advanced_feature_supported()) {
 			value32 &= ~VMX_PINBASED_CTLS_POST_IRQ;
 		}
+
+		/*
+		 * ACRN hypervisor needs to kick vCPU off VMX non-root mode to do some
+		 * operations in hypervisor, such as interrupt/exception injection, EPT
+		 * flush etc. For non lapic-pt vCPUs, we can use IPI to do so. But, it
+		 * doesn't work for lapic-pt vCPUs as the IPI will be injected to VMs
+		 * directly without vmexit. So, here we enable NMI-exiting and use NMI
+		 * as notification signal after passthroughing the lapic to vCPU.
+		 */
+		value32 |= VMX_PINBASED_CTLS_NMI_EXIT;
 		exec_vmwrite32(VMX_PIN_VM_EXEC_CONTROLS, value32);
 
 		value32 = exec_vmread32(VMX_EXIT_CONTROLS);
