@@ -66,7 +66,6 @@ static bool handle_reset_reg_read(struct acrn_vcpu *vcpu, __unused uint16_t addr
 		ret = false;
 	} else {
 		/*
-		 * - keyboard control/status register 0x64: ACRN doesn't expose kbd controller to the guest.
 		 * - reset control register 0xcf9: hide this from guests for now.
 		 * - FADT reset register: the read behavior is not defined in spec, keep it simple to return all '1'.
 		 */
@@ -120,6 +119,19 @@ static bool handle_kb_write(struct acrn_vcpu *vcpu, __unused uint16_t addr, size
 	/* ignore commands other than system reset */
 	return handle_common_reset_reg_write(vcpu->vm, ((bytes == 1U) && (val == 0xfeU)));
 }
+
+static bool handle_kb_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
+{
+	if (is_sos_vm(vcpu->vm) && (bytes == 1U)) {
+		/* In case i8042 is defined as ACPI PNP device in BIOS, HV need expose physical 0x64 port. */
+		vcpu->req.reqs.pio.value = pio_read8(addr);
+	} else {
+		/* ACRN will not expose kbd controller to the guest in this case. */
+		vcpu->req.reqs.pio.value = ~0U;
+	}
+	return true;
+}
+
 
 /*
  * Reset Control register at I/O port 0xcf9.
@@ -183,7 +195,7 @@ void register_reset_port_handler(struct acrn_vm *vm)
 		};
 
 		io_range.base = 0x64U;
-		register_pio_emulation_handler(vm, KB_PIO_IDX, &io_range, handle_reset_reg_read, handle_kb_write);
+		register_pio_emulation_handler(vm, KB_PIO_IDX, &io_range, handle_kb_read, handle_kb_write);
 
 		io_range.base = 0xcf9U;
 		register_pio_emulation_handler(vm, CF9_PIO_IDX, &io_range, handle_reset_reg_read, handle_cf9_write);
