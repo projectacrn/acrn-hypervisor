@@ -531,3 +531,20 @@ int32_t exception_vmexit_handler(struct acrn_vcpu *vcpu)
 
 	return status;
 }
+
+int32_t nmi_window_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	uint32_t value32;
+
+	/*
+	 * Disable NMI-window exiting here. We will process
+	 * the pending request in acrn_handle_pending_request later
+	 */
+	value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
+	value32 &= ~VMX_PROCBASED_CTLS_NMI_WINEXIT;
+	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
+
+	vcpu_retain_rip(vcpu);
+
+	return 0;
+}

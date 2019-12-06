@@ -209,6 +209,7 @@ void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid);
  * @pre vcpu != NULL
  */
 int32_t exception_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t nmi_window_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu);
