@@ -14,6 +14,7 @@
 
 #define DEL_MODE_INIT		(1U)
 #define DEL_MODE_IPI		(2U)
+#define DEL_MODE_NMI		(3U)
 
 #define THREAD_DATA_SIZE	(256U)
 
