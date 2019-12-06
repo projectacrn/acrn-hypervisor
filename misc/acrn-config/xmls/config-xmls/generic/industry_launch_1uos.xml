@@ -5,7 +5,7 @@
 	<mem_size desc="UOS memory size in MByte"></mem_size>
 	<gvt_args desc="GVT argument for the vm"></gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
-	<console_type desc="UOS console type"></console_type>
+	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
 	<poweroff_channel desc="the method of power off uos">
 	</poweroff_channel>
 	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"></usb_xhci>
@@ -29,6 +29,7 @@
 		<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]."></network>
 		<input desc="virtio input device"></input>
 		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img"></block>
+		<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]"></console>
 	</virtio_devices>
     </uos>
 </acrn-config>
