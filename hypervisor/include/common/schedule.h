@@ -26,6 +26,7 @@ enum thread_object_state {
 
 enum sched_notify_mode {
 	SCHED_NOTIFY_INIT,
+	SCHED_NOTIFY_NMI,
 	SCHED_NOTIFY_IPI
 };
 
