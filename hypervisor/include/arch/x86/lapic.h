@@ -175,15 +175,6 @@ void send_single_ipi(uint16_t pcpu_id, uint32_t vector);
 /* End of ipi_ext_apis */
 
 /**
- * @brief Send an INIT signal to a single pCPU
- *
- * @param[in] pcpu_id The id of destination physical cpu
- *
- * @return None
- */
-void send_single_init(uint16_t pcpu_id);
-
-/**
  * @brief Send an NMI signal to a single pCPU
  *
  * @param[in] pcpu_id The id of destination physical cpu
