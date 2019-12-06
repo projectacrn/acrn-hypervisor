@@ -123,7 +123,7 @@ struct thread_object *sched_get_current(uint16_t pcpu_id)
 }
 
 /**
- * @pre delmode == DEL_MODE_IPI || delmode == DEL_MODE_INIT || delmode == DEL_MODE_NMI
+ * @pre delmode == DEL_MODE_IPI || delmode == DEL_MODE_NMI
  */
 void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode)
 {
@@ -134,9 +134,6 @@ void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode)
 		switch (delmode) {
 		case DEL_MODE_IPI:
 			send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
-			break;
-		case DEL_MODE_INIT:
-			send_single_init(pcpu_id);
 			break;
 		case DEL_MODE_NMI:
 			send_single_nmi(pcpu_id);
