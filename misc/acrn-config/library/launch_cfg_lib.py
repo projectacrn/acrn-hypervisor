@@ -15,14 +15,9 @@ LAUNCH_INFO_FILE = ""
 ERR_LIST = {}
 BOOT_TYPE = ['no', 'vsbl', 'ovmf']
 RTOS_TYPE = ['no', 'Soft RT', 'Hard RT']
-REDIRECT_CONSOLE = ['com1(ttyS0)', 'virtio-console(hvc0)']
+DM_VUART0 = ['Disable', 'Enable']
 UOS_TYPES = ['CLEARLINUX', 'ANDROID', 'ALIOS', 'PREEMPT-RT LINUX', 'VXWORKS', 'WINDOWS', 'ZEPHYR', 'GENERIC LINUX']
 GVT_ARGS = ['64 448 8']
-
-RE_CONSOLE_MAP = {
-        "com1(ttyS0)":"virtio-console,@pty:pty_port",
-        "virtio-console(hvc0)":"virtio-console,@stdio:stdio_port"
-}
 
 PT_SUB_PCI = {}
 PT_SUB_PCI['usb_xdci'] = ['USB controller']
