@@ -45,7 +45,7 @@ def get_launch_item_values(board_info):
     launch_item_values["uos,rtos_type"] = launch_cfg_lib.RTOS_TYPE
 
     launch_item_values["uos,vbootloader"] = launch_cfg_lib.BOOT_TYPE
-    launch_item_values['uos,console_type'] = launch_cfg_lib.REDIRECT_CONSOLE
+    launch_item_values['uos,vuart0'] = launch_cfg_lib.DM_VUART0
     launch_item_values['uos,gvt_args'] = launch_cfg_lib.GVT_ARGS
 
     return launch_item_values

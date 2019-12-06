@@ -465,6 +465,12 @@ def virtio_args_set(dm, virt_io, vmid, config):
                 net_name = net.split(',')[0]
             print("   -s {},virtio-net,{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net{}".format(net)), net_name), file=config)
 
+    # virtio-console set, the value type is a string
+    if virt_io['console'][vmid]:
+        print("   -s {},virtio-console,{} \\".format(
+            launch_cfg_lib.virtual_dev_slot("virtio-console"),
+                virt_io['console'][vmid]), file=config)
+
 
 def dm_arg_set(names, sel, virt_io, dm, vmid, config):
 
@@ -545,15 +551,9 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     vboot_arg_set(dm, vmid, config)
 
     # redirect console
-    if dm['console_type'][vmid] == "com1(ttyS0)":
+    if dm['vuart0'][vmid] == "Enable":
         print("   -s 1:0,lpc \\", file=config)
         print("   -l com1,stdio \\", file=config)
-        print("   -s {},{} \\".format(launch_cfg_lib.virtual_dev_slot("com1(ttyS0)"),
-            launch_cfg_lib.RE_CONSOLE_MAP['com1(ttyS0)']), file=config)
-    else:
-        print("   -s {},{} \\".format(
-            launch_cfg_lib.virtual_dev_slot("virtio-console(hvc0)"),
-                launch_cfg_lib.RE_CONSOLE_MAP['virtio-console(hvc0)']), file=config)
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         print("   -s {},virtio-hyper_dmabuf \\".format(launch_cfg_lib.virtual_dev_slot("virtio-hyper_dmabuf")), file=config)
