@@ -582,7 +582,7 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 		 * directly without vmexit. So, here we enable NMI-exiting and use NMI
 		 * as notification signal after passthroughing the lapic to vCPU.
 		 */
-		value32 |= VMX_PINBASED_CTLS_NMI_EXIT;
+		value32 |= VMX_PINBASED_CTLS_NMI_EXIT | VMX_PINBASED_CTLS_VIRT_NMI;
 		exec_vmwrite32(VMX_PIN_VM_EXEC_CONTROLS, value32);
 
 		value32 = exec_vmread32(VMX_EXIT_CONTROLS);
