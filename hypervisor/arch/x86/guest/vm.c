@@ -321,6 +321,13 @@ static void create_sos_vm_e820(struct acrn_vm *vm)
 			filter_mem_from_sos_e820(vm, vm_config->memory.start_hpa,
 					vm_config->memory.start_hpa + vm_config->memory.size);
 			sos_vm_config->memory.size -= vm_config->memory.size;
+
+			/* if HPA2 is available, filter it out as well*/
+			if (vm_config->memory.size_hpa2 != 0UL) {
+				filter_mem_from_sos_e820(vm, vm_config->memory.start_hpa2,
+					vm_config->memory.start_hpa2 + vm_config->memory.size_hpa2);
+				sos_vm_config->memory.size -= vm_config->memory.size_hpa2;
+			}
 		}
 	}
 }
