@@ -37,8 +37,9 @@ enum acrn_vm_load_order {
 struct acrn_vm_mem_config {
 	uint64_t start_hpa;	/* the start HPA of VM memory configuration, for pre-launched VMs only */
 	uint64_t size;		/* VM memory size configuration */
-	uint64_t start_hpa2;	/* the start HPA of VM memory configuration, for pre-launched VMs only */
-	uint64_t size_hpa2;	/* VM shared memory size configuration */
+	uint64_t start_hpa2;	/* Start of second HPA for non-contiguous allocations in VM memory configuration,
+				   for pre-launched VMs only */
+	uint64_t size_hpa2;	/* Size of second HPA for non-contiguous allocations in VM memory configuration */
 };
 
 struct target_vuart {
