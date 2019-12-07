@@ -20,6 +20,7 @@ def ve820_per_launch(config, hpa_size, hpa2_size):
         return err_dic
 
     board_name = board_cfg_lib.undline_name(board_name)
+    pre_vm_cnt = board_cfg_lib.get_pre_launch_cnt(board_cfg_lib.SCENARIO_INFO_FILE)
 
     low_mem_to_pci_hole_len = '0xA0000000'
     low_mem_to_pci_hole = '0x20000000'
@@ -36,7 +37,7 @@ def ve820_per_launch(config, hpa_size, hpa2_size):
     print("#include <vm.h>", file=config)
     print("", file=config)
 
-    for i in range(board_cfg_lib.VM_COUNT):
+    for i in range(pre_vm_cnt):
         if (int(hpa_size[i], 16) <= 512 * 1024 * 1024):
                low_mem_hpa_len.append(int(hpa_size[i], 16) - 1 * 1024 * 1024)
                high_mem_hpa_len.append(0)
@@ -58,7 +59,7 @@ def ve820_per_launch(config, hpa_size, hpa2_size):
         else:
             print("#define VM{}_VE820_ENTRIES_{}\t{}U".format(i, board_name, 5), file=config)
 
-    for i in range(board_cfg_lib.VM_COUNT):
+    for i in range(pre_vm_cnt):
         print("static const struct e820_entry vm{}_ve820_entry[{}] = {{".format(
             i, "VM{}_VE820_ENTRIES_{}".format(i, board_name)), file=config)
         print("\t{\t/* usable RAM under 1MB */", file=config)
@@ -144,7 +145,7 @@ def ve820_per_launch(config, hpa_size, hpa2_size):
     print("*/", file=config)
     print("void create_prelaunched_vm_e820(struct acrn_vm *vm)", file=config)
     print("{", file=config)
-    for i in range(board_cfg_lib.VM_COUNT):
+    for i in range(pre_vm_cnt):
         print("\tif (vm->vm_id == {}U)".format(hex(i)), file=config)
         print("\t{", file=config)
         print("\t\tvm->e820_entry_num = VM{}_VE820_ENTRIES_{};".format(i, board_name), file=config)
@@ -202,7 +203,7 @@ def generate_file(config):
         return err_dic
 
     # HPA size for both VMs should have valid length.
-    for i in range(board_cfg_lib.VM_COUNT):
+    for i in range(pre_vm_cnt):
         if hpa_size_list[i] == '0x0' or hpa_size_list[i] == '0X0':
             board_cfg_lib.print_red("HPA size should not be zero", err=True)
             err_dic['board config: generate ve820.c failed'] = "HPA size should not be zero"

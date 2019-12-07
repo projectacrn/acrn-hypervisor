@@ -19,8 +19,8 @@
     <memory>
         <start_hpa desc="The start physical address in host for the VM">0x100000000</start_hpa>
         <size desc="The memory size in Bytes for the VM">0x20000000</size>
-        <start_hpa2 desc="The start physical address in host for the VM">0x0</start_hpa2>
-        <size_hpa2 desc="The memory size in Bytes for the VM">0x0</size_hpa2>
+        <start_hpa2 desc="Start of second HPA for non-contiguous allocations in host for the VM">0x0</start_hpa2>
+        <size_hpa2 desc="Memory size of second HPA for non-contiguous allocations in Bytes for the VM">0x0</size_hpa2>
     </memory>
     <os_config>
         <name desc="Specify the OS name of VM, currently it is not referenced by hypervisor code.">ClearLinux</name>
@@ -68,8 +68,8 @@
     <memory>
         <start_hpa desc="The start physical address in host for the VM">0x120000000</start_hpa>
         <size desc="The memory size in Bytes for the VM">0x20000000</size>
-        <start_hpa2 desc="The start physical address in host for the VM">0x0</start_hpa2>
-        <size_hpa2 desc="The memory size in Bytes for the VM">0x0</size_hpa2>
+        <start_hpa2 desc="Start of second HPA for non-contiguous allocations in host for the VM">0x0</start_hpa2>
+        <size_hpa2 desc="Memory size of second HPA for non-contiguous allocations in Bytes for the VM">0x0</size_hpa2>
     </memory>
     <os_config>
         <name desc="Specify the OS name of VM, currently it is not referenced by hypervisor code.">ClearLinux</name>
