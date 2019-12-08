@@ -17,7 +17,6 @@ BOOT_TYPE = ['no', 'vsbl', 'ovmf']
 RTOS_TYPE = ['no', 'Soft RT', 'Hard RT']
 DM_VUART0 = ['Disable', 'Enable']
 UOS_TYPES = ['CLEARLINUX', 'ANDROID', 'ALIOS', 'PREEMPT-RT LINUX', 'VXWORKS', 'WINDOWS', 'ZEPHYR', 'GENERIC LINUX']
-GVT_ARGS = ['64 448 8']
 
 PT_SUB_PCI = {}
 PT_SUB_PCI['usb_xdci'] = ['USB controller']
@@ -464,7 +463,7 @@ def args_aval_check(arg_list, item, avl_list):
     """
     # args should be set into launch xml from webUI
     i_cnt = 1
-    skip_check_list = ['gvt_args']
+    skip_check_list = ['']
     if item in skip_check_list:
         return
 
