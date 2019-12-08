@@ -29,7 +29,6 @@ class AcrnDmArgs:
         launch_cfg_lib.args_aval_check(self.args["uos_type"], "uos_type", launch_cfg_lib.UOS_TYPES)
         launch_cfg_lib.args_aval_check(self.args["rtos_type"], "rtos_type", launch_cfg_lib.RTOS_TYPE)
         launch_cfg_lib.mem_size_check(self.args["mem_size"], "mem_size")
-        launch_cfg_lib.args_aval_check(self.args["gvt_args"], "gvt_args", launch_cfg_lib.GVT_ARGS)
         launch_cfg_lib.args_aval_check(self.args["vbootloader"], "vbootloader", launch_cfg_lib.BOOT_TYPE)
         launch_cfg_lib.args_aval_check(self.args["vuart0"], "vuart0", launch_cfg_lib.DM_VUART0)
 

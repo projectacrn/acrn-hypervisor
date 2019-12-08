@@ -225,11 +225,13 @@ def interrupt_storm(pt_sel, config):
     print("", file=config)
 
 
-def gvt_arg_set(uos_type, config):
+def gvt_arg_set(dm, vmid, uos_type, config):
 
     if uos_type not in ('CLEARLINUX', 'ANDROID', 'ALIOS', 'WINDOWS'):
         return
-    print('   -s 2,pci-gvt -G "$2"  \\', file=config)
+    gvt_args = dm['gvt_args'][vmid]
+    if gvt_args:
+        print('   -s 2,pci-gvt -G "$2"  \\', file=config)
 
 
 def log_level_set(uos_type, config):
@@ -546,7 +548,7 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     virtio_args_set(dm, virt_io, vmid, config)
 
     # GVT args set
-    gvt_arg_set(uos_type, config)
+    gvt_arg_set(dm, vmid, uos_type, config)
 
     # vbootloader setting
     vboot_arg_set(dm, vmid, config)
