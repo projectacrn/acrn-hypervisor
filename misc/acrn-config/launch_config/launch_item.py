@@ -20,6 +20,7 @@ class AcrnDmArgs:
         self.args["gvt_args"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "gvt_args")
         self.args["vbootloader"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "vbootloader")
         self.args["vuart0"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "vuart0")
+        self.args["pm_channel"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "poweroff_channel")
         self.args["off_pcpus"] = launch_cfg_lib.get_leaf_tag_map(self.scenario_info, "vcpu_affinity", "pcpu_id")
         self.args["xhci"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "usb_xhci")
 
