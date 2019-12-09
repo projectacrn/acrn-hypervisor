@@ -330,8 +330,8 @@ def write_dmar_data(sysnode, config):
         dmar_tbl, dmar_hw_list, dmar_dev_list, sysnode)
 
     # num drhd and scope are hard coded
-    drhd_num = 4
-    scope_num = 4
+    drhd_num = 8
+    scope_num = 16
     # padding dev_scope_cnt_list
     j = 0
     if len(dmar_dev_list.dev_scope_cnt_list) < scope_num:

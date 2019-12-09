@@ -18,7 +18,9 @@ def gen_cat(config):
     print("\n#include <board.h>", file=config)
     print("#include <acrn_common.h>", file=config)
     print("#include <msr.h>", file=config)
+    print("#include <vtd.h>", file=config)
 
+    print("\nstruct dmar_info plat_dmar_info;", file=config)
     if cache_support == "False" or clos_max == 0:
         print("\nstruct platform_clos_info platform_clos_array[0];", file=config)
         print("uint16_t platform_clos_num = 0;", file=config)
