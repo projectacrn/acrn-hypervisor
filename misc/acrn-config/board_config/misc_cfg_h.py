@@ -14,17 +14,11 @@ MISC_CFG_END = """#endif /* MISC_CFG_H */"""
 
 class Vuart:
 
-    t_vm_id = []
-    t_vuart_id = []
-    v_type = []
-    v_base = []
-    v_irq = []
-
-    def style_check_1(self):
-        self.v_irq = []
-
-    def style_check_2(self):
-        self.v_irq = []
+    t_vm_id = {}
+    t_vuart_id = {}
+    v_type = {}
+    v_base = {}
+    v_irq = {}
 
 
 def sos_bootarg_diff(sos_cmdlines, config):
@@ -158,7 +152,6 @@ def generate_file(config):
         if vuart1_setting[i_type]['base'] != "INVALID_COM_BASE":
             print("#define SOS_COM2_BASE\t\t{}U".format(vuart1_port_base), file=config)
             print("#define SOS_COM2_IRQ\t\t{}U".format(vuart1_irq), file=config)
-
 
     # sos boot command line
     print("", file=config)

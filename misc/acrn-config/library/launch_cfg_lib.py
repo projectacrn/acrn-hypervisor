@@ -53,7 +53,7 @@ PM_CHANNEL_DIC = {
     None:'',
     'IOC':'--pm_notify_channel ioc',
     'PowerButton':'--pm_notify_channel power_button',
-    'vuart1(pty)':'--pm_notify_channel uart \\\n\t--pm_by_vuart pty,/run/acrn/life_mngr_$vm_name \\\n\t-l com2,/run/acrn/life_mngr_$vm_name',
+    'vuart1(pty)':'--pm_notify_channel uart \\\n   --pm_by_vuart pty,/run/acrn/life_mngr_$vm_name \\\n   -l com2,/run/acrn/life_mngr_$vm_name',
     'vuart1(tty)':'--pm_notify_channel uart --pm_by_vuart tty,/dev/ttyS1',
 }
 
@@ -596,3 +596,9 @@ def undline_name(name):
     :return: name_str which contain'_'
     """
     return common.undline_name(name)
+
+
+def get_vuart1_from_scenario(vmid):
+    """Get the vmid's  vuart1 base"""
+    vuart1 = common.get_vuart_info_id(SCENARIO_INFO_FILE, 1)
+    return vuart1[vmid]['base']

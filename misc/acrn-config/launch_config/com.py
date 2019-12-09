@@ -531,6 +531,12 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     # pm_channel set
     if dm['pm_channel'][vmid] and dm['pm_channel'][vmid] != None:
         pm_key = dm['pm_channel'][vmid]
+        if pm_key == "vuart1(tty)":
+            vuart_base = launch_cfg_lib.get_vuart1_from_scenario(sos_vmid + vmid)
+            if vuart_base == "INVALID_COM_BASE":
+                err_key = "uos:id={}:poweroff_channel".format(vmid)
+                launch_cfg_lib.ERR_LIST[err_key] = "vuart1 of VM{} in scenario file should select 'SOS_COM2_BASE'".format(sos_vmid + vmid)
+                return
         print("   {} \\".format(launch_cfg_lib.PM_CHANNEL_DIC[pm_key]), file=config)
 
     # XHCI args set
