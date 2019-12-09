@@ -48,6 +48,14 @@ PT_SLOT = {
 
 
 POST_UUID_DIC = {}
+PM_CHANNEL = ['', 'IOC', 'PowerButton', 'vuart1(pty)', 'vuart1(tty)']
+PM_CHANNEL_DIC = {
+    None:'',
+    'IOC':'--pm_notify_channel ioc',
+    'PowerButton':'--pm_notify_channel power_button',
+    'vuart1(pty)':'--pm_notify_channel uart \\\n\t--pm_by_vuart pty,/run/acrn/life_mngr_$vm_name \\\n\t-l com2,/run/acrn/life_mngr_$vm_name',
+    'vuart1(tty)':'--pm_notify_channel uart --pm_by_vuart tty,/dev/ttyS1',
+}
 
 
 def prepare(check_git):

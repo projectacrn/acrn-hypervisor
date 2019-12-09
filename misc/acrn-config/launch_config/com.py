@@ -501,15 +501,6 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if uos_type in ("ANDROID", "ALIOS"):
             print("   -s {},virtio-rpmb \\".format(launch_cfg_lib.virtual_dev_slot("virtio-rpmb")), file=config)
-        if board_name == "apl-up2":
-            print("   --pm_notify_channel power_button \\", file=config)
-        if board_name == "apl-mrb":
-            print("   --pm_notify_channel ioc \\", file=config)
-
-    if is_nuc_whl_clr(names, vmid):
-        print("   --pm_notify_channel uart \\", file=config)
-        print('   --pm_by_vuart pty,/run/acrn/life_mngr_$vm_name  \\', file=config)
-        print('   -l com2,/run/acrn/life_mngr_$vm_name \\', file=config)
 
     # mac_seed
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
@@ -521,7 +512,6 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
         print("   --lapic_pt \\", file=config)
         print("   --rtvm \\", file=config)
         print("   --virtio_poll 1000000 \\", file=config)
-        print("   --pm_notify_channel uart --pm_by_vuart tty,/dev/ttyS1 \\", file=config)
 
     # vxworks
     if uos_type == "VXWORKS":
@@ -538,7 +528,12 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
         print("{} \\".format(dm_str), file=config)
         print("   --windows \\", file=config)
 
-    # WA: XHCI args set
+    # pm_channel set
+    if dm['pm_channel'][vmid] and dm['pm_channel'][vmid] != None:
+        pm_key = dm['pm_channel'][vmid]
+        print("   {} \\".format(launch_cfg_lib.PM_CHANNEL_DIC[pm_key]), file=config)
+
+    # XHCI args set
     xhci_args_set(dm, vmid, config)
 
     # VIRTIO args set
