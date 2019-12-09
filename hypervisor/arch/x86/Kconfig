@@ -308,7 +308,8 @@ config L1D_FLUSH_VMENTRY_ENABLED
 config MAX_KATA_VM_NUM
 	int "Maximum number of Kata Containers in SOS"
 	range 0 1
-	default 0
+	default 1 if SDC
+	default 0 if !SDC
 
 config UEFI_OS_LOADER_NAME
 	string "UEFI OS loader name"
