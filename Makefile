@@ -117,6 +117,9 @@ hypervisor:
 	else \
 		$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) defconfig; \
 		echo "CONFIG_$(shell echo $(SCENARIO) | tr a-z A-Z)=y" >> $(HV_OUT)/.config;	\
+		if [ "$(SCENARIO)" != "sdc" ]; then \
+			echo "CONFIG_MAX_KATA_VM_NUM=0" >> $(HV_OUT)/.config; \
+		fi; \
 		if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
 			echo "CONFIG_ENFORCE_VALIDATED_ACPI_INFO=y" >> $(HV_OUT)/.config;	\
 		fi; \
