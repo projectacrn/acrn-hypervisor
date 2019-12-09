@@ -511,7 +511,8 @@ function save_launch(generator=null) {
         var id = $(this).attr('id');
     	var value = $(this).val();
 
-        if(id.indexOf('virtio_devices,network')>=0 || id.indexOf('virtio_devices,block')>=0) {
+        if(id.indexOf('virtio_devices,network')>=0 || id.indexOf('virtio_devices,block')>=0
+            || id.indexOf('virtio_devices,input')>=0) {
             if(id in launch_config) {
                 launch_config[id].push(value);
             } else {
