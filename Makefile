@@ -24,6 +24,7 @@ BUILD_VERSION ?=
 BUILD_TAG ?=
 DEFAULT_MENU_CONFIG_FILE ?= $(T)/hypervisor/build/.config
 GENED_ACPI_INFO_HEADER = $(T)/hypervisor/arch/x86/configs/$(BOARD)/$(BOARD)_acpi_info.h
+HV_CFG_LOG = $(HV_OUT)/cfg.log
 
 ifneq ($(BOARD_FILE),)
     override BOARD_FILE := $(shell if [ -f $(BOARD_FILE) ]; then realpath $(BOARD_FILE); fi)
@@ -36,6 +37,7 @@ export TOOLS_OUT BOARD SCENARIO FIRMWARE RELEASE
 
 .PHONY: all hypervisor devicemodel tools doc
 all: hypervisor devicemodel tools
+	@cat $(HV_CFG_LOG)
 
 ifeq ($(BOARD), apl-nuc)
   override BOARD := nuc6cayh
@@ -109,21 +111,14 @@ hypervisor:
 			&& [ "$(SCENARIO)" != "logical_partition" ] && [ "$(SCENARIO)" != "hybrid" ]; then \
 		echo "SCENARIO <$(SCENARIO)> is not supported. "; exit 1; \
 	fi
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) clean;
 	@if [ -f $(DEFAULT_MENU_CONFIG_FILE) ]; then \
-		echo "Find existing menuconfig file: $(DEFAULT_MENU_CONFIG_FILE), import hypervisor configuration from it..."; \
-		$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) clean; \
 		mkdir -p $(HV_OUT) && cp $(DEFAULT_MENU_CONFIG_FILE) $(HV_OUT)/.config; \
 	else \
-		$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) clean; \
 		$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) defconfig; \
+		echo "CONFIG_$(shell echo $(SCENARIO) | tr a-z A-Z)=y" >> $(HV_OUT)/.config;	\
 		if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
-			echo "CONFIG_$(shell echo $(SCENARIO_IN_XML) | tr a-z A-Z)=y" >> $(HV_OUT)/.config;	\
 			echo "CONFIG_ENFORCE_VALIDATED_ACPI_INFO=y" >> $(HV_OUT)/.config;	\
-		elif [ "$(SCENARIO)" ]; then \
-			echo "CONFIG_$(shell echo $(SCENARIO) | tr a-z A-Z)=y" >> $(HV_OUT)/.config;	\
-		fi; \
-		if [ -f $(GENED_ACPI_INFO_HEADER) ] && [ "$(CONFIG_XML_ENABLED)" != "true" ]; then \
-			echo "Warning: Find acrn-config tool generated $(GENED_ACPI_INFO_HEADER), please double check its validity."; \
 		fi; \
 	fi
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE)
@@ -133,7 +128,21 @@ hypervisor:
 		$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT) EFI_OBJDIR=$(HV_OUT)/$(EFI_OUT); \
 	fi
 #endif
-
+	@echo -e "\n\033[47;30mACRN Configuration Summary:\033[0m \nBOARD = $(BOARD)\t SCENARIO = $(SCENARIO)" > $(HV_CFG_LOG); \
+	if [ -f $(DEFAULT_MENU_CONFIG_FILE) ]; then \
+		echo "Hypervisor configuration is based on menuconfig file: ./hypervisor/build/.config;" >> $(HV_CFG_LOG); \
+	else \
+		echo "Hypervisor configuration is based on ./hypervisor/arch/x86/Kconfig and ./hypervisor/arch/x86/configs/$(BOARD).config;" >> $(HV_CFG_LOG); \
+	fi; \
+	if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
+		echo "VM configuration is based on $(BOARD_FILE) and $(SCENARIO_FILE);" >> $(HV_CFG_LOG); \
+	else \
+		echo "VM configuration is based on current code base;" >> $(HV_CFG_LOG); \
+	fi; \
+	if [ -f $(GENED_ACPI_INFO_HEADER) ] && [ "$(CONFIG_XML_ENABLED)" != "true" ]; then \
+		echo -e "\033[33mWarning: The platform ACPI info is based on acrn-config generated $(GENED_ACPI_INFO_HEADER), please make sure its validity.\033[0m" >> $(HV_CFG_LOG); \
+	fi
+	@cat $(HV_CFG_LOG)
 
 devicemodel: tools
 	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) RELEASE=$(RELEASE) clean
