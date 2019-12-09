@@ -670,29 +670,6 @@ def gen_patch(srcs_list, scenario_name):
     return err_dic
 
 
-def get_vuart_id(tmp_vuart, leaf_tag, leaf_text):
-    """
-    Get all vuart id member of class
-    :param tmp_vuart: a dictionary to store member:value
-    :param leaf_tag: key pattern of item tag
-    :param leaf_text: key pattern of item tag's value
-    :return: a dictionary to which stored member:value
-    """
-    if leaf_tag == "type":
-        tmp_vuart['type'] = leaf_text
-    if leaf_tag == "base":
-        tmp_vuart['base'] = leaf_text
-    if leaf_tag == "irq":
-        tmp_vuart['irq'] = leaf_text
-
-    if leaf_tag == "target_vm_id":
-        tmp_vuart['target_vm_id'] = leaf_text
-    if leaf_tag == "target_uart_id":
-        tmp_vuart['target_uart_id'] = leaf_text
-
-    return tmp_vuart
-
-
 def get_vuart_info_id(config_file, idx):
     """
     Get vuart information by vuart id indexx
@@ -700,23 +677,7 @@ def get_vuart_info_id(config_file, idx):
     :param idx: vuart index in range: [0,1]
     :return: dictionary which stored the vuart-id
     """
-    tmp_tag = {}
-    vm_id = 0
-    root = common.get_config_root(config_file)
-    for item in root:
-        for sub in item:
-            tmp_vuart = {}
-            for leaf in sub:
-                if sub.tag == "vuart" and int(sub.attrib['id']) == idx:
-                    tmp_vuart = get_vuart_id(tmp_vuart, leaf.tag, leaf.text)
-
-            # append vuart for each vm
-            if tmp_vuart and sub.tag == "vuart":
-                tmp_tag[vm_id] = tmp_vuart
-
-        if item.tag == "vm":
-            vm_id += 1
-
+    tmp_tag = common.get_vuart_info_id(config_file, idx)
     return tmp_tag
 
 
@@ -737,7 +698,6 @@ def avl_vuart_ui_select(scenario_info):
             key = "vm={},vuart=1,base".format(vm_i)
             tmp_vuart[key] = ['INVALID_COM_BASE', 'COM2_BASE']
 
-    #print(tmp_vuart)
     return tmp_vuart
 
 

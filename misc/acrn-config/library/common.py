@@ -627,3 +627,53 @@ def undline_name(name):
         name_str = "_".join(name_str.split()).upper()
 
     return name_str
+
+
+def get_vuart_id(tmp_vuart, leaf_tag, leaf_text):
+    """
+    Get all vuart id member of class
+    :param tmp_vuart: a dictionary to store member:value
+    :param leaf_tag: key pattern of item tag
+    :param leaf_text: key pattern of item tag's value
+    :return: a dictionary to which stored member:value
+    """
+    if leaf_tag == "type":
+        tmp_vuart['type'] = leaf_text
+    if leaf_tag == "base":
+        tmp_vuart['base'] = leaf_text
+    if leaf_tag == "irq":
+        tmp_vuart['irq'] = leaf_text
+
+    if leaf_tag == "target_vm_id":
+        tmp_vuart['target_vm_id'] = leaf_text
+    if leaf_tag == "target_uart_id":
+        tmp_vuart['target_uart_id'] = leaf_text
+
+    return tmp_vuart
+
+
+def get_vuart_info_id(config_file, idx):
+    """
+    Get vuart information by vuart id indexx
+    :param config_file: it is a file what contains information for script to read from
+    :param idx: vuart index in range: [0,1]
+    :return: dictionary which stored the vuart-id
+    """
+    tmp_tag = {}
+    vm_id = 0
+    root = get_config_root(config_file)
+    for item in root:
+        for sub in item:
+            tmp_vuart = {}
+            for leaf in sub:
+                if sub.tag == "vuart" and int(sub.attrib['id']) == idx:
+                    tmp_vuart = get_vuart_id(tmp_vuart, leaf.tag, leaf.text)
+
+            # append vuart for each vm
+            if tmp_vuart and sub.tag == "vuart":
+                tmp_tag[vm_id] = tmp_vuart
+
+        if item.tag == "vm":
+            vm_id += 1
+
+    return tmp_tag
