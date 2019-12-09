@@ -262,7 +262,7 @@ hyperv_init_vcpuid_entry(uint32_t leaf, uint32_t subleaf, uint32_t flags,
 		entry->edx = 0U;
 		break;
 	case 0x40000005U: /* HV Maximum Supported Virtual & logical Processors */
-		entry->eax = CONFIG_MAX_VCPUS_PER_VM;
+		entry->eax = MAX_VCPUS_PER_VM;
 		entry->ebx = 0U;
 		entry->ecx = 0U;
 		entry->edx = 0U;

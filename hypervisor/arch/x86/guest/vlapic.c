@@ -1685,7 +1685,7 @@ vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops)
 
 /**
  * @pre vlapic->vm != NULL
- * @pre vlapic->vcpu->vcpu_id < CONFIG_MAX_VCPUS_PER_VM
+ * @pre vlapic->vcpu->vcpu_id < MAX_VCPUS_PER_VM
  */
 void
 vlapic_init(struct acrn_vlapic *vlapic)

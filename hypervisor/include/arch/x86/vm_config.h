@@ -15,6 +15,7 @@
 #include <sgx.h>
 
 #define AFFINITY_CPU(n)		(1U << (n))
+#define MAX_VCPUS_PER_VM	MAX_PCPU_NUM
 #define MAX_VUART_NUM_PER_VM	2U
 #define MAX_VM_OS_NAME_LEN	32U
 #define MAX_MOD_TAG_LEN		32U
@@ -99,7 +100,7 @@ struct acrn_vm_config {
 	const uint8_t uuid[16];				/* UUID of the VM */
 	uint16_t vcpu_num;				/* Number of vCPUs for the VM */
 
-	uint64_t vcpu_affinity[CONFIG_MAX_VCPUS_PER_VM];/* bitmaps for vCPUs' affinity */
+	uint64_t vcpu_affinity[MAX_VCPUS_PER_VM];/* bitmaps for vCPUs' affinity */
 	uint64_t guest_flags;				/* VM flags that we want to configure for guest
 							 * Now we have two flags:
 							 *	GUEST_FLAG_SECURE_WORLD_ENABLED

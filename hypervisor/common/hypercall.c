@@ -120,7 +120,7 @@ int32_t hcall_get_platform_info(struct acrn_vm *vm, uint64_t param)
 	struct hc_platform_info platform_info;
 
 	platform_info.cpu_num = get_pcpu_nums();
-	platform_info.max_vcpus_per_vm = CONFIG_MAX_VCPUS_PER_VM;
+	platform_info.max_vcpus_per_vm = MAX_VCPUS_PER_VM;
 	platform_info.max_kata_containers = CONFIG_MAX_KATA_VM_NUM;
 	if (copy_to_gpa(vm, &platform_info, param, sizeof(platform_info)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
@@ -317,7 +317,7 @@ int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 			(target_vm->state != VM_STARTED)) {
 		if (copy_from_gpa(vm, &vcpu_regs, param, sizeof(vcpu_regs)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);
-		} else if (vcpu_regs.vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
+		} else if (vcpu_regs.vcpu_id >= MAX_VCPUS_PER_VM) {
 			pr_err("%s: invalid vcpu_id for set_vcpu_regs\n", __func__);
 		} else {
 			vcpu = vcpu_from_vid(target_vm, vcpu_regs.vcpu_id);
@@ -548,7 +548,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 		dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
 			vmid, vcpu_id);
 
-		if (vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
+		if (vcpu_id >= MAX_VCPUS_PER_VM) {
 			pr_err("%s, failed to get VCPU %d context from VM %d\n",
 				__func__, vcpu_id, target_vm->vm_id);
 		} else {
