@@ -191,7 +191,7 @@ void vlapic_create(struct acrn_vcpu *vcpu);
 void vlapic_free(struct acrn_vcpu *vcpu);
 /**
  * @pre vlapic->vm != NULL
- * @pre vlapic->vcpu->vcpu_id < CONFIG_MAX_VCPUS_PER_VM
+ * @pre vlapic->vcpu->vcpu_id < MAX_VCPUS_PER_VM
  */
 void vlapic_init(struct acrn_vlapic *vlapic);
 void vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops);

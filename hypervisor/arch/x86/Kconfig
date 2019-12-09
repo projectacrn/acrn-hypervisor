@@ -76,14 +76,6 @@ config RELEASE
 	  console and hypervisor shell are available only in non-release
 	  (i.e. debug) builds. Assertions are not effective in release builds.
 
-config MAX_VCPUS_PER_VM
-	int "Maximum number of VCPUs per VM"
-	range 1 48
-	default 8
-	help
-	  The maximum number of virtual CPUs the hypervisor can support in a
-	  single VM.
-
 config MAX_EMULATED_MMIO_REGIONS
 	int "Maximum number of emulated MMIO regions"
 	range 0 128

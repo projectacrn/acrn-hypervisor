@@ -10,6 +10,7 @@
 #ifdef PROFILING_ON
 
 #include <vcpu.h>
+#include <vm_config.h>
 #include <vm_configurations.h>
 
 #define MAX_MSR_LIST_NUM		15U
@@ -114,7 +115,7 @@ struct profiling_vm_info {
 	uint8_t uuid[16];
 	char vm_name[16];
 	uint16_t num_vcpus;
-	struct profiling_vcpu_pcpu_map cpu_map[CONFIG_MAX_VCPUS_PER_VM];
+	struct profiling_vcpu_pcpu_map cpu_map[MAX_VCPUS_PER_VM];
 };
 
 struct profiling_vm_info_list {

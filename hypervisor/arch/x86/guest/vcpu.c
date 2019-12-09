@@ -412,7 +412,7 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 	 * vm->hw.created_vcpus++;
 	 */
 	vcpu_id = vm->hw.created_vcpus;
-	if (vcpu_id < CONFIG_MAX_VCPUS_PER_VM) {
+	if (vcpu_id < MAX_VCPUS_PER_VM) {
 		/* Allocate memory for VCPU */
 		vcpu = &(vm->hw.vcpu_array[vcpu_id]);
 		(void)memset((void *)vcpu, 0U, sizeof(struct acrn_vcpu));
@@ -443,7 +443,7 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 		 *
 		 * This assignment guarantees a unique non-zero per vcpu vpid in runtime.
 		 */
-		vcpu->arch.vpid = 1U + (vm->vm_id * CONFIG_MAX_VCPUS_PER_VM) + vcpu->vcpu_id;
+		vcpu->arch.vpid = 1U + (vm->vm_id * MAX_VCPUS_PER_VM) + vcpu->vcpu_id;
 
 		/* Initialize exception field in VCPU context */
 		vcpu->arch.exception_info.exception = VECTOR_INVALID;

@@ -32,7 +32,7 @@
 
 struct vm_hw_info {
 	/* vcpu array of this VM */
-	struct acrn_vcpu vcpu_array[CONFIG_MAX_VCPUS_PER_VM];
+	struct acrn_vcpu vcpu_array[MAX_VCPUS_PER_VM];
 	uint16_t created_vcpus;	/* Number of created vcpus */
 } __aligned(PAGE_SIZE);
 
@@ -165,7 +165,7 @@ static inline uint64_t vm_active_cpus(const struct acrn_vm *vm)
 }
 
 /*
- * @pre vcpu_id < CONFIG_MAX_VCPUS_PER_VM
+ * @pre vcpu_id < MAX_VCPUS_PER_VM
  * @pre &(vm->hw.vcpu_array[vcpu_id])->state != VCPU_OFFLINE
  */
 static inline struct acrn_vcpu *vcpu_from_vid(struct acrn_vm *vm, uint16_t vcpu_id)
