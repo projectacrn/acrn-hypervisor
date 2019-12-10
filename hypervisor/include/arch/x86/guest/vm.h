@@ -90,7 +90,6 @@ struct vm_arch {
 	/* I/O bitmaps A and B for this VM, MUST be 4-Kbyte aligned */
 	uint8_t io_bitmap[PAGE_SIZE*2];
 
-	uint64_t guest_init_pml4;/* Guest init pml4 */
 	/* EPT hierarchy for Normal World */
 	void *nworld_eptp;
 	/* EPT hierarchy for Secure World
@@ -100,7 +99,6 @@ struct vm_arch {
 	void *sworld_eptp;
 	struct memory_ops ept_mem_ops;
 
-	void *tmp_pg_array;	/* Page array for tmp guest paging struct */
 	struct acrn_vioapic vioapic;	/* Virtual IOAPIC base address */
 	struct acrn_vpic vpic;      /* Virtual PIC */
 #ifdef CONFIG_HYPERV_ENABLED
