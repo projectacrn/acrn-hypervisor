@@ -532,6 +532,10 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 		 */
 		flush_vpid_global();
 
+		/* Set XCR0 and XSS to default value */
+		write_xcr(0, XCR0_DEFAULT);
+		msr_write(MSR_IA32_XSS, XSS_DEFAULT);
+
 		/* Set vcpu launched */
 		vcpu->launched = true;
 
