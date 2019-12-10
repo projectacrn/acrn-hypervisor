@@ -805,8 +805,8 @@ bad:
 		if (cr != NULL) {
 			/* offset must be OK, so size must be bad */
 			fprintf(stderr,
-			    "%s: read from %s: bad size %d\r\n",
-			    name, cr->name, size);
+			    "%s: read from %s: bad size %d instead of %d\r\n",
+			    name, cr->name, size, cr->size);
 		} else {
 			fprintf(stderr,
 			    "%s: read from bad offset/size %jd/%d\r\n",
@@ -905,8 +905,13 @@ virtio_pci_legacy_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		max = vops->cfgsize ? vops->cfgsize : 0x100000000;
 		if (newoff + size > max)
 			goto bad;
-		error = (*vops->cfgwrite)(DEV_STRUCT(base), newoff,
+		if(vops->cfgwrite == NULL) {
+			//printf("%s: offset %ld cfg size %ld\tcannot write config\r\n", __func__, offset, virtio_config_size);
+			error = 1;	/* want to proceed */
+		} else {
+			error = (*vops->cfgwrite)(DEV_STRUCT(base), newoff,
 					  size, value);
+		}
 		if (!error)
 			goto done;
 	}
