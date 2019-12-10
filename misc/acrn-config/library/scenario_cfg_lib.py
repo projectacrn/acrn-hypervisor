@@ -44,6 +44,13 @@ DEFAULT_VM_COUNT = {
 }
 KATA_VM_COUNT = 0
 
+LEGACY_TTYS = {
+    'ttyS0':'0x3F8',
+    'ttyS1':'0x2F8',
+    'ttyS2':'0x3E8',
+    'ttyS3':'0x2E8',
+}
+
 def prepare(check_git):
     """ Check environment """
     return common.check_env(check_git)
@@ -178,8 +185,11 @@ def get_ttys_info(board_info):
         if not ttys_line:
             break
 
-        #ttys_dev = " ".join(ttys_line.strip().split()[:-2])
         ttys_dev = ttys_line.split()[0].split(':')[1]
+        ttysn = ttys_dev.split('/')[-1]
+        # currently SOS console can only support legacy serial port
+        if ttysn not in list(LEGACY_TTYS.keys()):
+            continue
         ttys_list.append(ttys_dev)
 
     return ttys_list

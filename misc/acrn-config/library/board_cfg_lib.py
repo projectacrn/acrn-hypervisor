@@ -18,7 +18,7 @@ BASE_BOARD = ['Base Board Information', 'Manufacturer:', 'Product Name:', 'Versi
 BOARD_NAMES = ['apl-mrb', 'apl-nuc', 'apl-up2', 'dnv-cb2', 'nuc6cayh',
                'nuc7i7dnb', 'kbl-nuc-i7', 'icl-rvp']
 
-TTY_CONSOLE = {
+LEGACY_TTYS = {
     'ttyS0':'0x3F8',
     'ttyS1':'0x2F8',
     'ttyS2':'0x3E8',
@@ -353,10 +353,6 @@ def get_board_private_vuart(branch_tag, tag_console):
         return err_dic
 
     if ttys_n:
-
-        if ttys_n not in list(TTY_CONSOLE.keys()):
-            err_dic["board config: ttyS not available"] = "console should be set in scenario.xml of board_private section"
-            return (err_dic, vuart0_console_dic, vuart1_console_dic)
 
         (vuart0_valid_console, vuart1_valid_console, show_vuart1) = console_to_show(BOARD_INFO_FILE)
 
