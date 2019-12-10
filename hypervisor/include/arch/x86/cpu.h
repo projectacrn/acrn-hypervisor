@@ -85,6 +85,8 @@
 #define CR4_SMAP                (1UL<<21U)
 #define CR4_PKE                 (1UL<<22U)	/* Protect-key-enable */
 
+/* XCR0_FPU */
+#define XCR0_FPU		(1UL<<0U)
 /* XCR0_SSE */
 #define XCR0_SSE		(1UL<<1U)
 /* XCR0_AVX */
@@ -100,6 +102,8 @@
  */
 #define	XCR0_RESERVED_BITS	((~((1UL << 10U) - 1UL)) | (1UL << 8U))
 
+#define XCR0_DEFAULT		(XCR0_FPU)
+#define XSS_DEFAULT		(0U)
 
 /*
  * Entries in the Interrupt Descriptor Table (IDT)
