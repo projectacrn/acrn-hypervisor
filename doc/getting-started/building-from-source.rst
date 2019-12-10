@@ -90,7 +90,8 @@ Install the necessary tools for the following systems:
           libblkid-dev \
           e2fslibs-dev \
           pkg-config \
-          zlib1g-dev
+          zlib1g-dev \
+          libnuma-dev
      $ sudo pip3 install kconfiglib
 
   .. note::
@@ -129,7 +130,8 @@ Install the necessary tools for the following systems:
           python3 \
           python3-pip \
           libblkid-devel \
-          e2fsprogs-devel
+          e2fsprogs-devel \
+          numactl-devel
      $ sudo pip3 install kconfiglib
 
 
@@ -151,7 +153,8 @@ Install the necessary tools for the following systems:
              python34 \
              python34-pip \
              libblkid-devel \
-             e2fsprogs-devel
+             e2fsprogs-devel \
+             libnuma-devel
      $ sudo pip3 install kconfiglib
 
   .. note::
