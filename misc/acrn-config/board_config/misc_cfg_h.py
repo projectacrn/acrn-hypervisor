@@ -92,10 +92,10 @@ def generate_file(config):
 
     if vuart0_dic:
         # parse to get poart/base of vuart0/vuart1
-        vuart0_port_base = board_cfg_lib.TTY_CONSOLE[list(vuart0_dic.keys())[0]]
+        vuart0_port_base = board_cfg_lib.LEGACY_TTYS[list(vuart0_dic.keys())[0]]
         vuart0_irq = vuart0_dic[list(vuart0_dic.keys())[0]]
 
-    vuart1_port_base = board_cfg_lib.TTY_CONSOLE[list(vuart1_dic.keys())[0]]
+    vuart1_port_base = board_cfg_lib.LEGACY_TTYS[list(vuart1_dic.keys())[0]]
     vuart1_irq = vuart1_dic[list(vuart1_dic.keys())[0]]
 
     # parse the setting ttys vuatx dic: {vmid:base/irq}
