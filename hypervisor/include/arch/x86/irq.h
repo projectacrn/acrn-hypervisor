@@ -303,6 +303,15 @@ uint32_t irq_to_vector(uint32_t irq);
 void dispatch_interrupt(const struct intr_excp_ctx *ctx);
 
 /**
+ * @brief Handle NMI
+ *
+ * To handle an NMI
+ *
+ * @param ctx Pointer to interrupt exception context
+ */
+void handle_nmi(__unused struct intr_excp_ctx *ctx);
+
+/**
  * @brief Initialize interrupt
  *
  * To do interrupt initialization for a cpu, will be called for each physical cpu.

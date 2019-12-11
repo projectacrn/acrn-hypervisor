@@ -382,6 +382,14 @@ void dispatch_exception(struct intr_excp_ctx *ctx)
 	cpu_dead();
 }
 
+void handle_nmi(__unused struct intr_excp_ctx *ctx)
+{
+	/*
+	 * Just ignore the NMI here for now.
+	 * TODO: implement specific NMI handling function.
+	 */
+}
+
 static void init_irq_descs(void)
 {
 	uint32_t i;

@@ -110,9 +110,9 @@ excp_debug:
 
 .align 8
 excp_nmi:
-
-
-
+	pushq  $0x0			/* pseudo error code */
+	pushq  $0x2
+	jmp    nmi_save_frame
 
 .align 8
 excp_breakpoint:
@@ -325,6 +325,19 @@ excp_rsvd:
     save_frame
 
     call   dispatch_exception
+
+    restore_frame
+
+    iretq
+
+/*
+ * Common entry point for NMI interrupts
+ */
+.align 8
+nmi_save_frame:
+    save_frame
+
+    call   handle_nmi
 
     restore_frame
 
