@@ -19,6 +19,7 @@ RUN swupd update -b && \
 			devpkg-libusb \
 			devpkg-libpciaccess \
 			devpkg-gnu-efi \
+			devpkg-numactl \
 			bc \
 			lz4 \
 			diffutils \
