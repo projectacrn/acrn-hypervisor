@@ -212,18 +212,20 @@ HYBRID:
    Standard VM.
 
 Assuming that you are at the top level of the acrn-hypervisor directory:
+  .. note::
+     Release version is built by default, 'RELEASE=0' is to build debug version.
 
 * Build ``INDUSTRY`` scenario on ``nuc7i7dnb``:
 
   .. code-block:: none
 
-     $ make all BOARD=nuc7i7dnb SCENARIO=industry
+     $ make all BOARD=nuc7i7dnb SCENARIO=industry RELEASE=0
 
 * Build ``SDC`` scenario on ``nuc6cayh``:
 
   .. code-block:: none
 
-     $ make all BOARD=nuc6cayh SCENARIO=sdc
+     $ make all BOARD=nuc6cayh SCENARIO=sdc RELEASE=0
 
 See the :ref:`hardware` document for information about the platform needs
 for each scenario.
