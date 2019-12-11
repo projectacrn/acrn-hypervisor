@@ -12,6 +12,7 @@
 #include <cpu.h>
 #include <per_cpu.h>
 #include <lapic.h>
+#include <vm.h>
 
 static uint32_t notification_irq = IRQ_INVALID;
 
@@ -113,4 +114,26 @@ void setup_posted_intr_notification(void)
 			NULL, IRQF_NONE) < 0) {
 		pr_err("Failed to setup posted-intr notification");
 	}
+}
+
+/**
+ * @brief Check if the NMI is for notification purpose
+ *
+ * @return true, if the NMI is triggered for notifying vCPU
+ * @return false, if the NMI is triggered for other purpose
+ */
+bool is_notification_nmi(const struct acrn_vm *vm)
+{
+	bool ret;
+
+	/*
+	 * Currently, ACRN doesn't support vNMI well and there is no well-designed
+	 * way to check if the NMI is for notification or not. Here we take all the
+	 * NMIs as notification NMI for lapic-pt VMs temporarily.
+	 *
+	 * TODO: Add a way to check the NMI is for notification or not in order to support vNMI.
+	 */
+	ret = is_lapic_pt_configured(vm);
+
+	return ret;
 }

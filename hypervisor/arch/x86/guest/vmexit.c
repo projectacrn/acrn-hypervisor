@@ -194,8 +194,20 @@ int32_t vmexit_handler(struct acrn_vcpu *vcpu)
 				(void)vcpu_queue_exception(vcpu, vector, err_code);
 				vcpu->arch.idt_vectoring_info = 0U;
 			} else if (type == VMX_INT_TYPE_NMI) {
-				vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
-				vcpu->arch.idt_vectoring_info = 0U;
+				if (is_notification_nmi(vcpu->vm)) {
+					/*
+					 * Currently, ACRN doesn't support vNMI well and there is no well-designed
+					 * way to check if the NMI is for notification or not. Here we take all the
+					 * NMIs as notification NMI for lapic-pt VMs temporarily.
+					 *
+					 * TODO: Add a way in is_notification_nmi to check the NMI is for notification
+					 *       or not in order to support vNMI.
+					 */
+					pr_dbg("This NMI is used as notification signal. So ignore it.");
+				} else {
+					vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
+					vcpu->arch.idt_vectoring_info = 0U;
+				}
 			} else {
 				/* No action on EXT_INT or SW exception. */
 			}
