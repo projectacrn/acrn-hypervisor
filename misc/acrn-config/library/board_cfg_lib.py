@@ -284,8 +284,10 @@ def get_valid_console():
     if used_console_lines:
         vuart0_valid_console.clear()
         for console in used_console_lines:
+            #seri:/dev/ttySx type:mmio base:0x91526000 irq:4 bdf:"00:18.0"
+            #seri:/dev/ttySy type:portio base:0x2f8 irq:5
             tty = console.split('/')[2].split()[0]
-            ttys_irq = console.split(':')[-1].strip()
+            ttys_irq = console.split()[3].split(':')[1].strip()
             NATIVE_CONSOLE_DIC[tty] = ttys_irq
             vuart0_valid_console.append(tty)
             if tty:
