@@ -812,7 +812,7 @@ static void profiling_stop_pmu(void)
 int32_t profiling_msr_ops_all_cpus(struct acrn_vm *vm, uint64_t addr)
 {
 	uint16_t i;
-	struct profiling_msr_ops_list msr_list[CONFIG_MAX_PCPU_NUM];
+	struct profiling_msr_ops_list msr_list[MAX_PCPU_NUM];
 	uint16_t pcpu_nums = get_pcpu_nums();
 
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
@@ -1256,7 +1256,7 @@ int32_t profiling_get_pcpu_id(struct acrn_vm *vm, uint64_t addr)
 int32_t profiling_get_status_info(struct acrn_vm *vm, uint64_t gpa)
 {
 	uint16_t i;
-	struct profiling_status pstats[CONFIG_MAX_PCPU_NUM];
+	struct profiling_status pstats[MAX_PCPU_NUM];
 	uint16_t pcpu_nums = get_pcpu_nums();
 
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);

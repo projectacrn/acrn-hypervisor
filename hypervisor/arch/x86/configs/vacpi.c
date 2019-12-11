@@ -53,7 +53,7 @@ static struct acpi_table_info acpi_table_template[CONFIG_MAX_VM_NUM] = {
 			.lint = 0x1U,
 		},
 		.lapic_array = {
-			[0U ... (CONFIG_MAX_PCPU_NUM - 1U)] = {
+			[0U ... (MAX_PCPU_NUM - 1U)] = {
 				.header.type = ACPI_MADT_TYPE_LOCAL_APIC,
 				.header.length = sizeof(struct acpi_madt_local_apic),
 				.lapic_flags = 0x1U, /* Processor Enabled=1, Runtime Online Capable=0 */
