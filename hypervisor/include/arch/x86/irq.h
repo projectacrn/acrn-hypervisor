@@ -65,6 +65,7 @@
 #define IRQF_PT		(1U << 2U)	/* 1: for passthrough dev */
 
 struct acrn_vcpu;
+struct acrn_vm;
 
 /*
  * Definition of the stack frame layout
@@ -87,6 +88,7 @@ struct smp_call_info_data {
 };
 
 void smp_call_function(uint64_t mask, smp_call_func_t func, void *data);
+bool is_notification_nmi(const struct acrn_vm *vm);
 
 void init_default_irqs(uint16_t cpu_id);
 
