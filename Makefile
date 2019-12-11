@@ -10,7 +10,7 @@ else
 	FIRMWARE ?= uefi
 endif
 
-RELEASE ?= 0
+RELEASE ?= 1
 SCENARIO ?= sdc
 
 O ?= build
