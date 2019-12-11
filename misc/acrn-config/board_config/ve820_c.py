@@ -48,9 +48,9 @@ def ve820_per_launch(config, hpa_size, hpa2_size):
          #HPA2 is always allocated in >4G space.
         high_mem_hpa2_len.append(int(hpa2_size[i], 16))
         if (high_mem_hpa_len[i] != 0) and (high_mem_hpa2_len[i] != 0):
-            high_mem_hpa2_addr.append(hex(FOUR_GBYTE) + high_mem_hpa_len[i])
+            high_mem_hpa2_addr.append(FOUR_GBYTE + high_mem_hpa_len[i])
         else:
-            high_mem_hpa2_addr.append(hex(FOUR_GBYTE))
+            high_mem_hpa2_addr.append(FOUR_GBYTE)
 
         if (high_mem_hpa_len[i] != 0) and (high_mem_hpa2_len[i] != 0):
             print("#define VM{}_VE820_ENTRIES_{}\t{}U".format(i, board_name, 7), file=config)
@@ -113,9 +113,9 @@ def ve820_per_launch(config, hpa_size, hpa2_size):
             print("", file=config)
             print("\t{\t/* HPA2 after high mem*/", file=config)
             print("\t\t.baseaddr = {}UL,\t/* {}GB */".format(
-                hex(high_mem_hpa2_addr[i]), int(high_mem_hpa2_addr[i], 16) / 1024 / 1024 / 1024), file=config)
+                hex(high_mem_hpa2_addr[i]), high_mem_hpa2_addr[i] / 1024 / 1024 / 1024), file=config)
             print("\t\t.length   = {}UL,\t/* {}MB */".format(
-                hex(high_mem_hpa_len[i]), high_mem_hpa_len[i] / 1024 / 1024), file=config)
+                hex(high_mem_hpa2_len[i]), high_mem_hpa2_len[i] / 1024 / 1024), file=config)
             print("\t\t.type     = E820_TYPE_RAM", file=config)
             print("\t},", file=config)
             print("", file=config)
