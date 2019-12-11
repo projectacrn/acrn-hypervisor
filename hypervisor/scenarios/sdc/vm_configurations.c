@@ -46,7 +46,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.uuid = {0xd2U, 0x79U, 0x54U, 0x38U, 0x25U, 0xd6U, 0x11U, 0xe8U,	\
 			 0x86U, 0x4eU, 0xcbU, 0x7aU, 0x18U, 0xb3U, 0x46U, 0x43U},
 			/* d2795438-25d6-11e8-864e-cb7a18b34643 */
-		.vcpu_num = CONFIG_MAX_PCPU_NUM - CONFIG_MAX_KATA_VM_NUM - 1U,
+		.vcpu_num = MAX_PCPU_NUM - CONFIG_MAX_KATA_VM_NUM - 1U,
 		.vcpu_affinity = VM1_CONFIG_VCPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,

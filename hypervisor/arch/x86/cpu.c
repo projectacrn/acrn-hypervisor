@@ -32,7 +32,7 @@
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */
 
-struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
+struct per_cpu_region per_cpu_data[MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 static uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
 static uint64_t startup_paddr = 0UL;
@@ -47,18 +47,18 @@ static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id);
 static uint64_t start_tsc __attribute__((__section__(".bss_noinit")));
 
 /**
- * @pre phys_cpu_num <= CONFIG_MAX_PCPU_NUM
+ * @pre phys_cpu_num <= MAX_PCPU_NUM
  */
 static bool init_percpu_lapic_id(void)
 {
 	uint16_t i;
-	uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM];
+	uint32_t lapic_id_array[MAX_PCPU_NUM];
 	bool success = false;
 
 	/* Save all lapic_id detected via parse_mdt in lapic_id_array */
 	phys_cpu_num = parse_madt(lapic_id_array);
 
-	if ((phys_cpu_num != 0U) && (phys_cpu_num <= CONFIG_MAX_PCPU_NUM)) {
+	if ((phys_cpu_num != 0U) && (phys_cpu_num <= MAX_PCPU_NUM)) {
 		for (i = 0U; i < phys_cpu_num; i++) {
 			per_cpu(lapic_id, i) = lapic_id_array[i];
 		}
@@ -82,7 +82,7 @@ static void pcpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
 }
 
 /*
- * @post return <= CONFIG_MAX_PCPU_NUM
+ * @post return <= MAX_PCPU_NUM
  */
 uint16_t get_pcpu_nums(void)
 {
@@ -174,7 +174,7 @@ void init_pcpu_pre(bool is_bsp)
 		early_init_lapic();
 
 		pcpu_id = get_pcpu_id_from_lapic_id(get_cur_lapic_id());
-		if (pcpu_id >= CONFIG_MAX_PCPU_NUM) {
+		if (pcpu_id >= MAX_PCPU_NUM) {
 			panic("Invalid pCPU ID!");
 		}
 	}

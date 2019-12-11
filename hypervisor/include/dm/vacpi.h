@@ -54,7 +54,7 @@ struct acpi_table_info {
 	struct {
 		struct acpi_table_madt madt;
 		struct acpi_madt_local_apic_nmi lapic_nmi;
-		struct acpi_madt_local_apic lapic_array[CONFIG_MAX_PCPU_NUM];
+		struct acpi_madt_local_apic lapic_array[MAX_PCPU_NUM];
 	} __packed;
 };
 
