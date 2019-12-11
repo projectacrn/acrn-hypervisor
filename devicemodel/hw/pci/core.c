@@ -1376,9 +1376,10 @@ init_pci(struct vmctx *ctx)
 	struct slotinfo *si;
 	struct funcinfo *fi;
 	size_t lowmem;
-	int bus, slot, func;
+	int bus, slot, func, i;
 	int success_cnt = 0;
 	int error;
+	uint64_t bus0_memlimit;
 
 	pci_emul_iobase = PCI_EMUL_IOBASE;
 	pci_emul_membase32 = vm_get_lowmem_limit(ctx);
@@ -1439,6 +1440,23 @@ init_pci(struct vmctx *ctx)
 		    BUSMEM_ROUNDUP);
 		bi->memlimit64 = pci_emul_membase64;
 	}
+
+	/* TODO: gvt PCI bar0 and bar2 aren't allocated by ACRN DM,
+	 * here, need update bus0 memlimit32 value.
+	 * Currently, we only deal with bus0 memlimit32.
+	 * If other PCI devices also use reserved regions,
+	 * need to change these code.
+	 */
+	bi = pci_businfo[0];
+	bus0_memlimit = bi->memlimit32;
+	for(i = 0; i < REGION_NUMS; i++){
+		if(reserved_bar_regions[i].vdev &&
+		  reserved_bar_regions[i].bar_type == PCIBAR_MEM32){
+			bus0_memlimit = (bus0_memlimit > (reserved_bar_regions[i].end + 1))
+				        ? bus0_memlimit : (reserved_bar_regions[i].end + 1);
+		}
+	}
+	bi->memlimit32 = bus0_memlimit;
 
 	error = check_gsi_sharing_violation();
 	if (error < 0)
