@@ -11,6 +11,7 @@
 #include <logmsg.h>
 #include <platform_acpi_info.h>
 #include <guest_pm.h>
+#include <per_cpu.h>
 
 int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 {
@@ -149,45 +150,18 @@ static bool pm1ab_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 	return true;
 }
 
-#define	POWEROFF_TIMEOUT	(300U) /* default poweroff timeout is 5 minutes */
-/* wait for other vm shutdown done. If POWEROFF_TIMEOUT passed and there are
- * still some VMs active, we will force platform power off.
- *
- * TODO:
- *   - Let user configure whether we wait for ever till all VMs powered off or
- *     force shutdown once pre-defined timeout hit.
- */
-static inline void wait_for_other_vm_shutdown(const struct acrn_vm *self_vm)
+static inline void enter_s5(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
-	uint16_t vm_id;
-	bool ready_for_s5;
-	uint32_t timeout = (uint32_t)POWEROFF_TIMEOUT;
-	struct acrn_vm *vm;
-
-	while (timeout != 0U) {
-		ready_for_s5 = true;
-		for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
-			vm = get_vm_from_vmid(vm_id);
-
-			if ((vm != self_vm) && (!is_poweroff_vm(vm))) {
-				ready_for_s5 = false;
-			}
-		}
-
-		if (ready_for_s5) {
-			break;
-		} else {
-			udelay(1000U * 1000U); /* delay 1s in each loop */
-		}
-
-		timeout--;
+	/*
+	 * It's possible that ACRN come here from SOS and pre-launched VM. Currently, we
+	 * assume SOS has full ACPI power management stack. That means the value from SOS
+	 * should be saved and used to shutdown the system.
+	 */
+	if (is_sos_vm(vm)) {
+		save_s5_reg_val(pm1a_cnt_val, pm1b_cnt_val);
 	}
-}
 
-static inline void enter_s5(const struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
-{
-	wait_for_other_vm_shutdown(vm);
-	host_enter_s5(vm->pm.sx_state_data, pm1a_cnt_val, pm1b_cnt_val);
+	(void)shutdown_vm(vm);
 }
 
 static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
