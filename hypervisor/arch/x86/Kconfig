@@ -178,6 +178,7 @@ config NPK_LOGLEVEL_DEFAULT
 
 config LOW_RAM_SIZE
 	hex "Size of the low RAM region"
+	range 0 0x10000
 	default 0x00010000
 	help
 	  A 32-bit integer indicating the size of RAM region below address
@@ -199,6 +200,7 @@ config HV_RAM_START
 
 config HV_RAM_SIZE
 	hex "Size of the RAM region used by the hypervisor"
+	range 0x1000000 0x10000000
 	default 0x0b800000
 	help
 	  A 64-bit integer indicating the size of RAM used by the hypervisor.
@@ -207,6 +209,7 @@ config HV_RAM_SIZE
 
 config PLATFORM_RAM_SIZE
 	hex "Size of the physical platform RAM"
+	range 0x100000000 0x4000000000
 	default 0x400000000
 	help
 	  A 64-bit integer indicating the size of the physical platform RAM
@@ -214,6 +217,7 @@ config PLATFORM_RAM_SIZE
 
 config SOS_RAM_SIZE
 	hex "Size of the Service OS (SOS) RAM"
+	range 0x100000000 0x4000000000
 	default 0x400000000
 	help
 	  A 64-bit integer indicating the size of the Service OS RAM (MMIO not
@@ -221,6 +225,7 @@ config SOS_RAM_SIZE
 
  config UOS_RAM_SIZE
 	hex "Size of the User OS (UOS) RAM"
+	range 0 0x2000000000
 	default 0x200000000
 	help
 	  A 64-bit integer indicating the size of the User OS RAM (MMIO not
