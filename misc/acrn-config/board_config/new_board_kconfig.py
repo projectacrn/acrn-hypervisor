@@ -28,11 +28,12 @@ VM_NUM_MAP_TOTAL_HV_RAM_SIZE = {
 }
 
 
-def find_avl_memory(ram_range, hpa_size):
+def find_avl_memory(ram_range, hpa_size, hv_start_offset):
     """
     This is get hv address from System RAM as host physical size
     :param ram_range: System RAM mapping
     :param hpa_size: fixed host physical size
+    :param hv_start_offset: base address of HV RAM start
     :return: start host physical address
     """
     ret_start_addr = 0
@@ -41,7 +42,13 @@ def find_avl_memory(ram_range, hpa_size):
     tmp_order_key = sorted(ram_range)
     for start_addr in tmp_order_key:
         mem_range = ram_range[start_addr]
-        if mem_range > int(hpa_size, 10):
+        if start_addr < hv_start_offset < start_addr +  ram_range[start_addr]:
+            # 256M address located in this start ram range
+            if start_addr + mem_range - hv_start_offset > int(hpa_size, 10):
+                ret_start_addr = hv_start_offset
+                break
+        elif start_addr > hv_start_offset:
+            # above 256M address, than return the start address of this ram range
             ret_start_addr = start_addr
             break
 
@@ -115,9 +122,12 @@ def generate_file(config):
     ram_range = get_ram_range()
 
     # reseve 16M memory for hv sbuf, ramoops, etc.
-    reserved_ram = 0xf00000
+    reserved_ram = 0x1000000
+    # We recommend to put hv ram start address high than 0x10000000 to
+    # reduce memory conflict with GRUB/SOS Kernel.
+    hv_start_offset = 0x10000000
     total_size = reserved_ram + hv_ram_size
-    avl_start_addr = find_avl_memory(ram_range, str(total_size))
+    avl_start_addr = find_avl_memory(ram_range, str(total_size), hv_start_offset)
     hv_start_addr = int(avl_start_addr, 16) + int(hex(reserved_ram), 16)
 
     print("{}".format(DESC), file=config)
