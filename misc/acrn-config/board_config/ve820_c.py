@@ -45,8 +45,12 @@ def ve820_per_launch(config, hpa_size, hpa2_size):
             low_mem_hpa_len.append(511 * 1024 * 1024)
             high_mem_hpa_len.append(int(hpa_size[i], 16) - 512 * 1024 * 1024)
 
-         #HPA2 is always allocated in >4G space.
-        high_mem_hpa2_len.append(int(hpa2_size[i], 16))
+        if len(hpa2_size) == 0:
+            high_mem_hpa2_len.append(0)
+        else:
+            high_mem_hpa2_len.append(int(hpa2_size[i], 16))
+
+        #HPA2 is always allocated in >4G space.
         if (high_mem_hpa_len[i] != 0) and (high_mem_hpa2_len[i] != 0):
             high_mem_hpa2_addr.append(FOUR_GBYTE + high_mem_hpa_len[i])
         else:
