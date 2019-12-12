@@ -580,6 +580,24 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 	return status;
 }
 
+static bool is_ready_for_system_shutdown(void)
+{
+	bool ret = true;
+	uint16_t vm_id;
+	struct acrn_vm *vm;
+
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm = get_vm_from_vmid(vm_id);
+		/* TODO: Update code to cover hybrid mode */
+		if (!is_poweroff_vm(vm)) {
+			ret = false;
+			break;
+		}
+	}
+
+	return ret;
+}
+
 /*
  * @pre vm != NULL
  */
@@ -646,6 +664,11 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 		destroy_ept(vm);
 	} else {
 		ret = -EINVAL;
+	}
+
+	if (is_ready_for_system_shutdown()) {
+		/* If no any guest running, shutdown system */
+		shutdown_system();
 	}
 
 	/* Return status to caller */
