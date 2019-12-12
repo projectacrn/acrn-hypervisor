@@ -117,14 +117,35 @@ bool is_rt_vm(const struct acrn_vm *vm)
 	return ((vm_config->guest_flags & GUEST_FLAG_RT) != 0U);
 }
 
+static struct acrn_vm *get_highest_severity_vm(void)
+{
+	uint16_t vm_id, highest_vm_id = 0U;
+	struct acrn_vm *vm = NULL;
+	struct acrn_vm_config *vm_config;
+
+	for (vm_id = 1U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm = get_vm_from_vmid(vm_id);
+
+		if (is_poweroff_vm(vm)) {
+			/* If vm is non-existed or shutdown, it's not highest severity VM */
+			continue;
+		}
+
+		vm_config = get_vm_config(vm_id);
+		if (vm_config->severity > get_vm_config(highest_vm_id)->severity) {
+			highest_vm_id = vm_id;
+		}
+	}
+
+	return get_vm_from_vmid(highest_vm_id);
+}
+
 /**
  * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
  */
 bool is_highest_severity_vm(const struct acrn_vm *vm)
 {
-	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-
-	return ((vm_config->guest_flags & GUEST_FLAG_HIGHEST_SEVERITY) != 0U);
+	return (get_highest_severity_vm() == vm);
 }
 
 /**

@@ -82,29 +82,37 @@ static bool handle_common_reset_reg_write(struct acrn_vm *vm, bool reset)
 {
 	bool ret = true;
 
-	if (is_highest_severity_vm(vm)) {
-		if (reset) {
+	if (reset) {
+		if (is_highest_severity_vm(vm)) {
 			reset_host();
-		}
-	} else if (is_postlaunched_vm(vm)) {
-		/* re-inject to DM */
-		ret = false;
+		} else if (is_postlaunched_vm(vm)) {
+			/* re-inject to DM */
+			ret = false;
 
-		if (reset && is_rt_vm(vm)) {
-			vm->state = VM_POWERING_OFF;
-		}
-	} else if (is_prelaunched_vm(vm)) {
-		/* Don't support re-launch for now, just shutdown the guest */
-		pause_vm(vm);
+			if (is_rt_vm(vm)) {
+				vm->state = VM_POWERING_OFF;
+			}
+		} else {
+			/*
+			 * If it's SOS reset while RTVM is still alive
+			 *    or pre-launched VM reset,
+			 * ACRN doesn't support re-launch, just shutdown the guest.
+			 */
+			const struct acrn_vcpu *bsp = vcpu_from_vid(vm, BOOT_CPU_ID);
 
-		struct acrn_vcpu *bsp = vcpu_from_vid(vm, BOOT_CPU_ID);
-		per_cpu(shutdown_vm_id, pcpuid_from_vcpu(bsp)) = vm->vm_id;
-		make_shutdown_vm_request(pcpuid_from_vcpu(bsp));
+			pause_vm(vm);
+			per_cpu(shutdown_vm_id, pcpuid_from_vcpu(bsp)) = vm->vm_id;
+			make_shutdown_vm_request(pcpuid_from_vcpu(bsp));
+		}
 	} else {
+		if (is_postlaunched_vm(vm)) {
+			/* If post-launched VM write none reset value, re-inject to DM */
+			ret = false;
+		}
 		/*
-		 * ignore writes from SOS.
-		 * equivalent to hide this port from guests.
-		 */
+                 * ignore writes from SOS and pre-launched VM.
+                 * equivalent to hide this port from guests.
+                 */
 	}
 
 	return ret;
@@ -158,15 +166,13 @@ static bool handle_cf9_write(struct acrn_vcpu *vcpu, __unused uint16_t addr, siz
  */
 static bool handle_reset_reg_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
 {
+	bool ret = true;
+
 	if (bytes == 1U) {
 		struct acpi_reset_reg *reset_reg = get_host_reset_reg_data();
 
 		if (val == reset_reg->val) {
-			if (is_highest_severity_vm(vcpu->vm)) {
-				reset_host();
-			} else {
-				/* ignore reset request */
-			}
+			ret = handle_common_reset_reg_write(vcpu->vm, true);
 		} else {
 			/*
 			 * ACPI defines the reset value but doesn't specify the meaning of other values.
@@ -177,7 +183,7 @@ static bool handle_reset_reg_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 		}
 	}
 
-	return true;
+	return ret;
 }
 
 /**
