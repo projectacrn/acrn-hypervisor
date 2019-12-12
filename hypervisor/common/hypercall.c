@@ -714,30 +714,34 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 	uint64_t hpa, base_paddr;
 	uint64_t prot_set;
 	uint64_t prot_clr;
-	int32_t ret;
+	int32_t ret = -EINVAL;
 
-	hpa = gpa2hpa(vm, wp->gpa);
-	if (hpa == INVALID_HPA) {
-		pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
+	if ((!mem_aligned_check(wp->gpa, PAGE_SIZE)) ||
+		(!ept_is_mr_valid(vm, wp->gpa, PAGE_SIZE))) {
+		pr_err("%s,vm[%hu] gpa 0x%lx,GPA is invalid or not page size aligned.",
 			__func__, vm->vm_id, wp->gpa);
-		ret = -EINVAL;
 	} else {
-		dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x",
+		hpa = gpa2hpa(vm, wp->gpa);
+		if (hpa == INVALID_HPA) {
+			pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
+				__func__, vm->vm_id, wp->gpa);
+		} else {
+			dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x",
 				vm->vm_id, wp->gpa, hpa);
 
-		base_paddr = hva2hpa((void *)(get_hv_image_base()));
-		if (((hpa <= base_paddr) && ((hpa + PAGE_SIZE) > base_paddr)) ||
+			base_paddr = hva2hpa((void *)(get_hv_image_base()));
+			if (((hpa <= base_paddr) && ((hpa + PAGE_SIZE) > base_paddr)) ||
 				((hpa >= base_paddr) &&
 				(hpa < (base_paddr + CONFIG_HV_RAM_SIZE)))) {
-			pr_err("%s: overlap the HV memory region.", __func__);
-			ret = -EINVAL;
-		} else {
-			prot_set = (wp->set != 0U) ? 0UL : EPT_WR;
-			prot_clr = (wp->set != 0U) ? EPT_WR : 0UL;
+				pr_err("%s: overlap the HV memory region.", __func__);
+			} else {
+				prot_set = (wp->set != 0U) ? 0UL : EPT_WR;
+				prot_clr = (wp->set != 0U) ? EPT_WR : 0UL;
 
-			ept_modify_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-				wp->gpa, PAGE_SIZE, prot_set, prot_clr);
-			ret = 0;
+				ept_modify_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+					wp->gpa, PAGE_SIZE, prot_set, prot_clr);
+				ret = 0;
+			}
 		}
 	}
 
