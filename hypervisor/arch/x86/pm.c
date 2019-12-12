@@ -148,9 +148,17 @@ void do_acpi_sx(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val
 	} while ((s1 & (1U << BIT_WAK_STS)) == 0U);
 }
 
-void host_enter_s5(const struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
+static uint32_t system_pm1a_cnt_val, system_pm1b_cnt_val;
+void save_s5_reg_val(uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
-	do_acpi_sx(sstate_data, pm1a_cnt_val, pm1b_cnt_val);
+	system_pm1a_cnt_val = pm1a_cnt_val;
+	system_pm1b_cnt_val = pm1b_cnt_val;
+}
+
+void shutdown_system(void)
+{
+	struct pm_s_state_data *sx_data = get_host_sstate_data();
+	do_acpi_sx(sx_data, system_pm1a_cnt_val, system_pm1b_cnt_val);
 }
 
 static void suspend_tsc(__unused void *data)
