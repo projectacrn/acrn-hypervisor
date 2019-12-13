@@ -1745,6 +1745,11 @@ static bool ptapic_has_pending_delivery_intr(__unused struct acrn_vcpu *vcpu)
 	return false;
 }
 
+static bool ptapic_has_pending_intr(__unused struct acrn_vcpu *vcpu)
+{
+	return false;
+}
+
 static bool ptapic_invalid(__unused uint32_t offset)
 {
 	return false;
@@ -1754,6 +1759,7 @@ static const struct acrn_apicv_ops ptapic_ops = {
 	.accept_intr = ptapic_accept_intr,
 	.inject_intr = ptapic_inject_intr,
 	.has_pending_delivery_intr = ptapic_has_pending_delivery_intr,
+	.has_pending_intr = ptapic_has_pending_intr,
 	.apic_read_access_may_valid  = ptapic_invalid,
 	.apic_write_access_may_valid  = ptapic_invalid,
 	.x2apic_read_msr_may_valid  = ptapic_invalid,
@@ -2379,6 +2385,27 @@ bool vlapic_has_pending_delivery_intr(struct acrn_vcpu *vcpu)
 	return vlapic->ops->has_pending_delivery_intr(vcpu);
 }
 
+static bool apicv_basic_has_pending_intr(struct acrn_vcpu *vcpu)
+{
+	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
+	uint32_t vector;
+
+	vector = vlapic_find_highest_irr(vlapic);
+
+	return vector != 0UL;
+}
+
+static bool apicv_advanced_has_pending_intr(struct acrn_vcpu *vcpu)
+{
+	return apicv_basic_has_pending_intr(vcpu);
+}
+
+bool vlapic_has_pending_intr(struct acrn_vcpu *vcpu)
+{
+	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
+	return vlapic->ops->has_pending_intr(vcpu);
+}
+
 static bool apicv_basic_apic_read_access_may_valid(__unused uint32_t offset)
 {
 	return true;
@@ -2592,6 +2619,7 @@ static const struct acrn_apicv_ops apicv_basic_ops = {
 	.accept_intr = apicv_basic_accept_intr,
 	.inject_intr = apicv_basic_inject_intr,
 	.has_pending_delivery_intr = apicv_basic_has_pending_delivery_intr,
+	.has_pending_intr = apicv_basic_has_pending_intr,
 	.apic_read_access_may_valid = apicv_basic_apic_read_access_may_valid,
 	.apic_write_access_may_valid = apicv_basic_apic_write_access_may_valid,
 	.x2apic_read_msr_may_valid = apicv_basic_x2apic_read_msr_may_valid,
@@ -2602,6 +2630,7 @@ static const struct acrn_apicv_ops apicv_advanced_ops = {
 	.accept_intr = apicv_advanced_accept_intr,
 	.inject_intr = apicv_advanced_inject_intr,
 	.has_pending_delivery_intr = apicv_advanced_has_pending_delivery_intr,
+	.has_pending_intr = apicv_advanced_has_pending_intr,
 	.apic_read_access_may_valid  = apicv_advanced_apic_read_access_may_valid,
 	.apic_write_access_may_valid  = apicv_advanced_apic_write_access_may_valid,
 	.x2apic_read_msr_may_valid  = apicv_advanced_x2apic_read_msr_may_valid,
