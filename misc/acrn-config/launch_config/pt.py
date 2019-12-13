@@ -192,10 +192,6 @@ def audio_pt(uos_type, sel, vmid, config):
         print("else", file=config)
         print('    boot_audio_option="-s {},virtio-audio"'.format(slot_audio), file=config)
         print("fi", file=config)
-    elif bdf_codec:
-        # only selected audio codec, then set error message
-        key = "audio/audio codec error:"
-        launch_cfg_lib.ERR_LIST[key] = "Audio codec device should be pass through together with Audio devcie"
 
 
 def media_pt(uos_type, sel, vmid, config):
