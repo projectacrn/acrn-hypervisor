@@ -17,7 +17,7 @@
 int32_t parse_hv_cmdline(void)
 {
 	const char *start;
-	const char *end;
+	const char *end = NULL;
 	struct multiboot_info *mbi = NULL;
 
 	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC) {
@@ -35,20 +35,20 @@ int32_t parse_hv_cmdline(void)
 	start = (char *)hpa2hva_early((uint64_t)mbi->mi_cmdline);
 	dev_dbg(ACRN_DBG_PARSE, "hv cmdline: %s", start);
 
-	do {
-		while (*start == ' ')
+	while ((start != NULL) && ((*start) != '\0')) {
+		while ((*start) == ' ')
 			start++;
+		if ((*start) != '\0') {
+			end = start + 1;
+			while ((*end != ' ') && ((*end) != '\0'))
+				end++;
 
-		end = start + 1;
-		while ((*end != ' ') && ((*end) != '\0'))
-			end++;
-
-		if (!handle_dbg_cmd(start, (int32_t)(end - start))) {
-			/* if not handled by handle_dbg_cmd, it can be handled further */
+			if (!handle_dbg_cmd(start, (int32_t)(end - start))) {
+				/* if not handled by handle_dbg_cmd, it can be handled further */
+			}
+			start = end;
 		}
-		start = end + 1;
-
-	} while (((*end) != '\0') && ((*start) != '\0'));
+	}
 
 	return 0;
 }
