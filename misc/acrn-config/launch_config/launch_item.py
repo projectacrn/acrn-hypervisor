@@ -141,6 +141,9 @@ class PthruSelected():
         launch_cfg_lib.pt_devs_check(self.bdf["wifi"], self.vpid["wifi"], "wifi")
         launch_cfg_lib.pt_devs_check(self.bdf["bluetooth"], self.vpid["bluetooth"], "bluetooth")
 
+        # check connections between several pass-through devices
+        launch_cfg_lib.pt_devs_check_audio(self.bdf['audio'], self.bdf['audio_codec'])
+
 
 class VirtioDeviceSelect():
 
