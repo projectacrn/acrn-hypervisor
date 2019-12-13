@@ -548,12 +548,12 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 		dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
 			vmid, vcpu_id);
 
-		if (vcpu_id >= MAX_VCPUS_PER_VM) {
+		if (vcpu_id >= target_vm->hw.created_vcpus) {
 			pr_err("%s, failed to get VCPU %d context from VM %d\n",
 				__func__, vcpu_id, target_vm->vm_id);
 		} else {
 			vcpu = vcpu_from_vid(target_vm, vcpu_id);
-			if (vcpu->state != VCPU_OFFLINE) {
+			if (vcpu->state == VCPU_PAUSED) {
 				if (!vcpu->vm->sw.is_completion_polling) {
 					resume_vcpu(vcpu);
 				}
