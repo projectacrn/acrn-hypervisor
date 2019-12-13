@@ -601,3 +601,19 @@ def get_vuart1_from_scenario(vmid):
     """Get the vmid's  vuart1 base"""
     vuart1 = common.get_vuart_info_id(SCENARIO_INFO_FILE, 1)
     return vuart1[vmid]['base']
+
+
+def pt_devs_check_audio(audio_map, audio_codec_map):
+    """
+    Check the connections about audio/audio_codec pass-through devices
+    If audio_codec is selected as pass-through device, the audio device
+    must to be chosen as pass-through device either.
+    :param audio_map: the dictionary contains vmid and bdf of audio device
+    :param audio_codec_map: the dictionary contains vmid and bdf of audio_codec device
+    """
+    for vmid in list(audio_map.keys()):
+        bdf_audio = audio_map[vmid]
+        bdf_codec = audio_codec_map[vmid]
+        if not bdf_audio and bdf_codec:
+            key = "uos:id={},passthrough_devices,{}".format(vmid, 'audio_codec')
+            ERR_LIST[key] = "Audio codec device should be pass through together with Audio devcie!"
