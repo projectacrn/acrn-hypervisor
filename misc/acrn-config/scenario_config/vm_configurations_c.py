@@ -71,6 +71,24 @@ def vuart0_output(i, vm_type, vm_info, config):
     print("\t\t},", file=config)
 
 
+def vuart_map_enable(vm_info):
+
+    map_dic = {}
+    for i in range(scenario_cfg_lib.VM_COUNT):
+        base_i = vm_info.vuart.v1_vuart[i]['base']
+        src_t_vm_i = vm_info.vuart.v1_vuart[i]['target_vm_id']
+        src_t_vuart_i = vm_info.vuart.v1_vuart[i]['target_uart_id']
+        des_base = vm_info.vuart.v1_vuart[int(src_t_vm_i)]['base']
+        des_t_vm_i = vm_info.vuart.v1_vuart[int(src_t_vm_i)]['target_vm_id']
+        des_t_vuart_i = vm_info.vuart.v1_vuart[int(src_t_vm_i)]['target_uart_id']
+
+        if int(des_t_vm_i) == i and int(des_t_vuart_i) == 1 and des_t_vuart_i == src_t_vuart_i:
+            map_dic[i] = True
+        else:
+            map_dic[i] = False
+
+    return map_dic
+
 def vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config):
     """
     This is generate vuart 1 setting
@@ -81,26 +99,25 @@ def vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config):
     :param config: it is the pointer which file write to
     :return: None
     """
+    vuart_enable = vuart_map_enable(vm_info)
     # vuart1:   {vmid:target_vmid}
     print("\t\t.vuart[1] = {", file=config)
     print("\t\t\t.type = {0},".format(vm_info.vuart.v1_vuart[i]['type']), file=config)
-    if vm_type == "SOS_VM":
-        if vm_info.vuart.v1_vuart[i]['base'] != "INVALID_COM_BASE":
-            print("\t\t\t.addr.port_base = SOS_COM2_BASE,", file=config)
-        else:
-            print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
-    else:
+    if vm_info.vuart.v1_vuart[i]['base'] != "INVALID_COM_BASE" and vuart_enable[i]:
         print("\t\t\t.addr.port_base = {0},".format(
             vm_info.vuart.v1_vuart[i]['base']), file=config)
+    else:
+        print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
+
     if vuart1_vmid_dic and i in vuart1_vmid_dic.keys():
         if vm_type == "SOS_VM":
-            if vm_info.vuart.v1_vuart[i]['base'] != "INVALID_COM_BASE":
+            if vm_info.vuart.v1_vuart[i]['base'] != "INVALID_COM_BASE" and vuart_enable[i]:
                 print("\t\t\t.irq = SOS_COM2_IRQ,", file=config)
         else:
-            if vm_info.vuart.v1_vuart[i]['base'] != "INVALID_COM_BASE":
+            if vm_info.vuart.v1_vuart[i]['base'] != "INVALID_COM_BASE" and vuart_enable[i]:
                 print("\t\t\t.irq = COM2_IRQ,", file=config)
 
-        if vm_info.vuart.v1_vuart[i]['base'] != "INVALID_COM_BASE":
+        if vm_info.vuart.v1_vuart[i]['base'] != "INVALID_COM_BASE" and vuart_enable[i]:
             print("\t\t\t.t_vuart.vm_id = {0}U,".format(
                 vm_info.vuart.v1_vuart[i]['target_vm_id']), file=config)
             print("\t\t\t.t_vuart.vuart_id = {0}U,".format(
