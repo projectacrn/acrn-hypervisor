@@ -124,7 +124,11 @@ void ept_add_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 		prot |= EPT_SNOOP_CTRL;
 	}
 
+	spinlock_obtain(&vm->ept_lock);
+
 	mmu_add(pml4_page, hpa, gpa, size, prot, &vm->arch_vm.ept_mem_ops);
+
+	spinlock_release(&vm->ept_lock);
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
@@ -145,7 +149,11 @@ void ept_modify_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 		local_prot |= EPT_SNOOP_CTRL;
 	}
 
+	spinlock_obtain(&vm->ept_lock);
+
 	mmu_modify_or_del(pml4_page, gpa, size, local_prot, prot_clr, &(vm->arch_vm.ept_mem_ops), MR_MODIFY);
+
+	spinlock_release(&vm->ept_lock);
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
@@ -161,7 +169,11 @@ void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t 
 
 	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%lx size 0x%lx\n", __func__, vm->vm_id, gpa, size);
 
+	spinlock_obtain(&vm->ept_lock);
+
 	mmu_modify_or_del(pml4_page, gpa, size, 0UL, 0UL, &vm->arch_vm.ept_mem_ops, MR_DEL);
+
+	spinlock_release(&vm->ept_lock);
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
