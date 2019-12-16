@@ -10,6 +10,9 @@
 #include <cat.h>
 #include <pgtable.h>
 
+static uint8_t rtvm_uuid1[16] = RTVM_UUID1;
+static uint8_t safety_vm_uuid1[16] = SAFETY_VM_UUID1;
+
 /*
  * @pre vm_id < CONFIG_MAX_VM_NUM
  * @post return != NULL
@@ -39,6 +42,27 @@ bool vm_has_matched_uuid(uint16_t vmid, const uint8_t *uuid)
 	struct acrn_vm_config *vm_config = get_vm_config(vmid);
 
 	return (uuid_is_equal(vm_config->uuid, uuid));
+}
+/**
+ * return true if the input uuid is for RTVM
+ *
+ * @pre vmid < CONFIG_MAX_VM_NUM
+ */
+static bool is_safety_vm_uuid(const uint8_t *uuid)
+{
+	/* TODO: Extend to check more safety VM uuid if we have more than one safety VM. */
+	return uuid_is_equal(uuid, safety_vm_uuid1);
+}
+
+/**
+ * return true if the input uuid is for RTVM
+ *
+ * @pre vmid < CONFIG_MAX_VM_NUM
+ */
+static bool is_rtvm_uuid(const uint8_t *uuid)
+{
+	/* TODO: Extend to check more rtvm uuid if we have more than one RTVM. */
+	return uuid_is_equal(uuid, rtvm_uuid1);
 }
 
 /**
@@ -108,7 +132,9 @@ bool sanitize_vm_config(void)
 			} else if (((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)
 					&& ((vm_config->guest_flags & GUEST_FLAG_RT) == 0U)) {
 				ret = false;
-			}else if (vm_config->epc.size != 0UL) {
+			} else if (vm_config->epc.size != 0UL) {
+				ret = false;
+			} else if (is_safety_vm_uuid(vm_config->uuid) && (vm_config->severity != (uint8_t)SEVERITY_SAFETY_VM)) {
 				ret = false;
 			} else {
 				pre_launch_pcpu_bitmap |= vm_pcpu_bitmap;
@@ -118,6 +144,8 @@ bool sanitize_vm_config(void)
 			/* Deduct pcpus of PRE_LAUNCHED_VMs */
 			sos_pcpu_bitmap ^= pre_launch_pcpu_bitmap;
 			if ((sos_pcpu_bitmap == 0U) || ((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)) {
+				ret = false;
+			} else if (vm_config->severity != (uint8_t)SEVERITY_SOS) {
 				ret = false;
 			} else {
 				vm_config->vcpu_num = bitmap_weight(sos_pcpu_bitmap);
@@ -133,6 +161,22 @@ bool sanitize_vm_config(void)
 				pr_err("%s: Post-launch VM has no pcpus or share pcpu with Pre-launch VM!", __func__);
 				ret = false;
 			}
+
+			if ((vm_config->severity == (uint8_t)SEVERITY_SAFETY_VM) ||
+					(vm_config->severity == (uint8_t)SEVERITY_SOS)) {
+				ret = false;
+			}
+
+			/* VM with RTVM uuid must have RTVM severity */
+			if (is_rtvm_uuid(vm_config->uuid) && (vm_config->severity != (uint8_t)SEVERITY_RTVM)) {
+				ret = false;
+			}
+
+			/* VM WITHOUT RTVM uuid must NOT have RTVM severity */
+			if (!is_rtvm_uuid(vm_config->uuid) && (vm_config->severity == (uint8_t)SEVERITY_RTVM)) {
+				ret = false;
+			}
+
 			break;
 		default:
 			/* Nothing to do for a unknown VM, break directly. */

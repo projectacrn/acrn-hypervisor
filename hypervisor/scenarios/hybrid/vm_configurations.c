@@ -12,13 +12,13 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	{	/* VM0 */
 		.load_order = PRE_LAUNCHED_VM,
 		.name = "ACRN PRE-LAUNCHED VM0",
-		.uuid = {0xfcU, 0x83U, 0x69U, 0x01U, 0x86U, 0x85U, 0x4bU, 0xc0U,	\
-			 0x8bU, 0x71U, 0x6eU, 0x31U, 0xdcU, 0x36U, 0xfaU, 0x47U},
-			/* fc836901-8685-4bc0-8b71-6e31dc36fa47 */
-		.guest_flags = GUEST_FLAG_HIGHEST_SEVERITY,
+		/* fc836901-8685-4bc0-8b71-6e31dc36fa47 */
+		.uuid = SAFETY_VM_UUID1,
+		.guest_flags = 0UL,
 		.vcpu_num = 1U,
 		.vcpu_affinity = VM0_CONFIG_VCPU_AFFINITY,
 		.clos = 0U,
+		.severity = SEVERITY_SAFETY_VM,
 		.memory = {
 			.start_hpa = VM0_CONFIG_MEM_START_HPA,
 			.size = VM0_CONFIG_MEM_SIZE,
@@ -53,6 +53,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 
 		.guest_flags = 0UL,
 		.clos = 0U,
+		.severity = SEVERITY_SOS,
 		.memory = {
 			.start_hpa = 0UL,
 			.size = CONFIG_SOS_RAM_SIZE,
@@ -85,6 +86,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* d2795438-25d6-11e8-864e-cb7a18b34643 */
 		.vcpu_num = 1U,
 		.vcpu_affinity = VM2_CONFIG_VCPU_AFFINITY,
+		.severity = SEVERITY_STANDARD_VM,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
