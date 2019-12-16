@@ -60,7 +60,7 @@ def tap_uos_net(names, virt_io, vmid, config):
             net_name = net
             if ',' in net:
                 net_name = net.split(',')[0]
-            print("tap_net {}".format(net_name), file=config)
+            print("tap_net tap_{}".format(net_name), file=config)
 
     print("#check if the vm is running or not", file=config)
     print("vm_ps=$(pgrep -a -f acrn-dm)", file=config)
@@ -465,7 +465,7 @@ def virtio_args_set(dm, virt_io, vmid, config):
             net_name = net
             if ',' in net:
                 net_name = net.split(',')[0]
-            print("   -s {},virtio-net,{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net{}".format(net)), net_name), file=config)
+            print("   -s {},virtio-net,tap_{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net{}".format(net)), net_name), file=config)
 
     # virtio-console set, the value type is a string
     if virt_io['console'][vmid]:
