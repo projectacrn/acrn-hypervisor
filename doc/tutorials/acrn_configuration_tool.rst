@@ -374,7 +374,7 @@ Prerequisites
 
   .. code-block:: none
 
-     $git clone https://github.com/username/acrn-hypervisor.git
+     $git clone https://github.com/projectacrn/acrn-hypervisor
 
 - Install ACRN configuration app dependencies:
 
