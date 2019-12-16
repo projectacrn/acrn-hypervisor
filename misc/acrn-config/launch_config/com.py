@@ -497,9 +497,6 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
         else:
             print('{} $npk_virt \\'.format(dm_str), file=config)
 
-    if board_name == "apl-up2" or is_nuc_whl_clr(names, vmid):
-        print("   $logger_setting \\", file=config)
-
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if uos_type in ("ANDROID", "ALIOS"):
             print("   -s {},virtio-rpmb \\".format(launch_cfg_lib.virtual_dev_slot("virtio-rpmb")), file=config)
@@ -540,6 +537,9 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
                 launch_cfg_lib.ERR_LIST[err_key] = "vuart1 of VM{} in scenario file should select 'SOS_COM2_BASE'".format(sos_vmid + vmid)
                 return
         print("   {} \\".format(launch_cfg_lib.PM_CHANNEL_DIC[pm_key]), file=config)
+
+    # set logger_setting for all vm
+    print("   $logger_setting \\", file=config)
 
     # XHCI args set
     xhci_args_set(dm, vmid, config)
