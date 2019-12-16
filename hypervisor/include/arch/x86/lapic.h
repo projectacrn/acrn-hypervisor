@@ -36,18 +36,6 @@
 #define INTR_LAPIC_ICR_ALL_INC_SELF         0x2U
 #define INTR_LAPIC_ICR_ALL_EX_SELF            0x3U
 
-/* LAPIC register bit and bitmask definitions */
-#define LAPIC_SVR_VECTOR                        0x000000FFU
-#define LAPIC_SVR_APIC_ENABLE_MASK                   0x00000100U
-
-#define LAPIC_LVT_MASK                          0x00010000U
-#define LAPIC_DELIVERY_MODE_EXTINT_MASK         0x00000700U
-
-/* LAPIC Timer bit and bitmask definitions */
-#define LAPIC_TMR_ONESHOT                       ((uint32_t) 0x0U << 17U)
-#define LAPIC_TMR_PERIODIC                      ((uint32_t) 0x1U << 17U)
-#define LAPIC_TMR_TSC_DEADLINE                  ((uint32_t) 0x2U << 17U)
-
 enum intr_cpu_startup_shorthand {
 	INTR_CPU_STARTUP_USE_DEST,
 	INTR_CPU_STARTUP_ALL_EX_SELF,
