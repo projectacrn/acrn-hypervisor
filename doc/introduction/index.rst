@@ -4,8 +4,8 @@ Introduction to Project ACRN
 ############################
 
 ACRN™ is a, flexible, lightweight reference hypervisor, built with
-real-time and safety-criticality in mind, optimized to streamline
-embedded development through an open source platform.  ACRN defines a
+real-time and safety-criticality in mind, and optimized to streamline
+embedded development through an open source platform. ACRN defines a
 device hypervisor reference stack and an architecture for running
 multiple software subsystems, managed securely, on a consolidated system
 by means of a virtual machine manager (VMM). It also defines a reference
@@ -388,9 +388,9 @@ De-privilege boot mode
 ======================
 
 **De-privilege boot mode** is loaded by ``acrn.efi`` under a UEFI
-environment. The Service VM must be the first launched VM,  (i.e. VM0).
+environment. The Service VM must be the first launched VM, (i.e. VM0).
 
-In :numref:`boot-flow` we show a verified Boot Sequence with UEFI
+In :numref:`boot-flow`, we show a verified Boot Sequence with UEFI
 on an Intel Architecture platform NUC (see :ref:`hardware`).
 
 .. graphviz:: images/boot-flow.dot
@@ -400,43 +400,43 @@ on an Intel Architecture platform NUC (see :ref:`hardware`).
 
 The Boot process proceeds as follows:
 
-#. UEFI verifies and boots the ACRN hypervisor and Service VM Bootloader
-#. UEFI (or Service VM Bootloader) verifies and boots Service VM kernel
-#. Service VM kernel verifies and loads ACRN Device Model and Virtual
-   bootloader through dm-verity
-#. Virtual bootloader starts the User-side verified boot process
+#. UEFI verifies and boots the ACRN hypervisor and Service VM Bootloader.
+#. UEFI (or Service VM Bootloader) verifies and boots the Service VM kernel.
+#. The Service VM kernel verifies and loads the ACRN Device Model and the Virtual
+   bootloader through ``dm-verity``.
+#. The virtual bootloader starts the User-side verified boot process.
 
 .. note::
-   To avoid hardware resources conflict with ACRN hypervisor, UEFI
-   services shall not use IOMMU. In addition, currently we only support
-   UEFI timer with HPET MSI.
+   To avoid a hardware resources conflict with the ACRN hypervisor, UEFI
+   services shall not use IOMMU. In addition, we only currently support the
+   UEFI timer with the HPET MSI.
 
 In this boot mode, both the Service and User VM boot options (e.g. Linux
 command-line parameters) are configured following the instructions for the EFI
 bootloader used by the Operating System (OS).
 
-* In the case of Clear Linux, this EFI bootloader is `systemd-boot`_ and Linux
+* In the case of Clear Linux, the EFI bootloader is `systemd-boot`_ and the Linux
   kernel command-line parameters are defined in the ``.conf`` files.
 * Another popular EFI bootloader used by Linux distributions is `grub`_.
-  Distributions like Ubuntu/Debian, Fedora/CentOS use `grub`_
+  Distributions like Ubuntu/Debian, Fedora/CentOS use `grub`_.
 
 .. note::
 
    The `Slim Bootloader <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`_
    is an alternative boot firmware that can be used to boot ACRN. The `Boot ACRN Hyervisor <https://slimbootloader.github.io/how-tos/boot-acrn.html>`_
-   and :ref:`using-sbl-up2` tutorials have more information on how to use SBL with ACRN.
+   tutorial provides more information on how to use SBL with ACRN.
 
 .. note::
 
-   A virtual `Slim Bootloader <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`_
-   can also be used to start User VMs, it is called ``vSBL``. The :ref:`acrn-dm_parameters` has more information
+   A virtual `Slim Bootloader <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`_, called ``vSBL``,
+   can also be used to start User VMs. The :ref:`acrn-dm_parameters` provides more information
    on how to boot a User VM using ``vSBL``. Note that in this case, the kernel command-line parameters are
    defined by the combination of the ``cmdline.txt`` passed on to the ``iasimage`` script and in the launch script, via the ``-B`` option.
 
 Direct boot mode
 ================
 
-In :numref:`boot-flow-2` we show the **Direct boot mode** sequence:
+In :numref:`boot-flow-2`, we show the **Direct boot mode** sequence:
 
 .. graphviz:: images/boot-flow-2.dot
   :name: boot-flow-2
@@ -445,14 +445,14 @@ In :numref:`boot-flow-2` we show the **Direct boot mode** sequence:
 
 The Boot process proceeds as follows:
 
-#. UEFI boots GRUB
+#. UEFI boots GRUB.
 #. GRUB boots the ACRN hypervisor and loads the VM kernels as Multi-boot
-   modules
-#. ACRN hypervisor verifies and boots kernels of the Pre-launched VM and
-   Service VM
+   modules.
+#. The ACRN hypervisor verifies and boots kernels of the Pre-launched VM and
+   Service VM.
 #. In the Service VM launch path, the Service VM kernel verifies and loads
-   the ACRN Device Model and Virtual bootloader through dm-verity
-#. Virtual bootloader starts the User-side verified boot process
+   the ACRN Device Model and Virtual bootloader through ``dm-verity``.
+#. The virtual bootloader starts the User-side verified boot process.
 
 In this boot mode, the boot options are defined via the ``VM{x}_CONFIG_OS_BOOTARGS``
 macro in the source code (replace ``{x}`` with the VM number).
