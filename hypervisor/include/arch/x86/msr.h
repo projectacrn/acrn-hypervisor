@@ -568,10 +568,13 @@
 /* Miscellaneous data */
 #define MSR_IA32_MISC_UNRESTRICTED_GUEST	(1U<<5U)
 
+/* 5 high-order bits in every field are reserved */
+#define PAT_FIELD_RSV_BITS			(0xF8UL)
+
 #ifndef ASSEMBLER
-static inline bool pat_mem_type_invalid(uint64_t x)
+static inline bool is_pat_mem_type_invalid(uint64_t x)
 {
-	return ((x & ~0x7UL) != 0UL || (x & 0x6UL) == 0x2UL);
+	return (((x & PAT_FIELD_RSV_BITS) != 0UL) || ((x & 0x6UL) == 0x2UL));
 }
 
 static inline bool is_x2apic_msr(uint32_t msr)
@@ -590,9 +593,6 @@ void update_msr_bitmap_x2apic_apicv(struct acrn_vcpu *vcpu);
 void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu);
 
 #endif /* ASSEMBLER */
-
-/* 5 high-order bits in every field are reserved */
-#define PAT_FIELD_RSV_BITS			(0xF8U)
 
 #define PAT_POWER_ON_VALUE	(PAT_MEM_TYPE_WB + \
 	(PAT_MEM_TYPE_WT << 8U) + \

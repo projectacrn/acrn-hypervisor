@@ -361,7 +361,7 @@ static int32_t write_pat_msr(struct acrn_vcpu *vcpu, uint64_t value)
 
 	for (i = 0U; i < 8U; i++) {
 		field = (value >> (i * 8U)) & 0xffUL;
-		if (pat_mem_type_invalid(field) || ((PAT_FIELD_RSV_BITS & field) != 0UL)) {
+		if (is_pat_mem_type_invalid(field)) {
 			pr_err("invalid guest IA32_PAT: 0x%016lx", value);
 			ret = -EINVAL;
 			break;
