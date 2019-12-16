@@ -63,6 +63,7 @@ for the RTVM.
   #. Select :kbd:`Select additional bundles` and add bundles for
      **network-basic**, and **user-basic**.
   #. Select :kbd:`Automatic OS Updates` and choose :kbd:`No [Disable]`.
+  #. Select :kbd:`Manage User` and choose :kbd:`Add New User `.
   #. Select :kbd:`Install`.
   #. Select :kbd:`Confirm Install` in the :kbd:`Confirm Installation` window to start the installation.
 
