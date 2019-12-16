@@ -17,8 +17,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* dbbbd434-7a57-4216-a12c-2201f1ab0240 */
 
 		/* Allow SOS to reboot the host since there is supposed to be the highest severity guest */
-		.guest_flags = GUEST_FLAG_HIGHEST_SEVERITY,
+		.guest_flags = 0UL,
 		.clos = 0U,
+		.severity = SEVERITY_SOS,
 		.memory = {
 			.start_hpa = 0UL,
 			.size = CONFIG_SOS_RAM_SIZE,
@@ -48,6 +49,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* d2795438-25d6-11e8-864e-cb7a18b34643 */
 		.vcpu_num = 1U,
 		.vcpu_affinity = VM1_CONFIG_VCPU_AFFINITY,
+		.severity = SEVERITY_STANDARD_VM,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = INVALID_COM_BASE,
@@ -65,6 +67,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 */
 		.vcpu_num = 1U,
 		.vcpu_affinity = VM2_CONFIG_VCPU_AFFINITY,
+		.severity = SEVERITY_STANDARD_VM,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = INVALID_COM_BASE,
@@ -82,6 +85,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* 38158821-5208-4005-b72a-8a609e4190d0 */
 		.vcpu_num = 1U,
 		.vcpu_affinity = VM3_CONFIG_VCPU_AFFINITY,
+		.severity = SEVERITY_STANDARD_VM,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = INVALID_COM_BASE,

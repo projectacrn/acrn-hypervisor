@@ -24,6 +24,9 @@
 #define PCI_DEV_TYPE_HVEMUL	(1U << 1U)
 #define PCI_DEV_TYPE_SOSEMUL	(1U << 2U)
 
+#define	RTVM_UUID1	{0x49U, 0x5aU, 0xe2U, 0xe5U, 0x26U, 0x03U, 0x4dU, 0x64U,	\
+			 0xafU, 0x76U, 0xd4U, 0xbcU, 0x5aU, 0x8eU, 0xc0U, 0xe5U}
+
 /*
  * PRE_LAUNCHED_VM is launched by ACRN hypervisor, with LAPIC_PT;
  * SOS_VM is launched by ACRN hypervisor, without LAPIC_PT;
@@ -33,6 +36,14 @@ enum acrn_vm_load_order {
 	PRE_LAUNCHED_VM = 1,
 	SOS_VM,
 	POST_LAUNCHED_VM	/* Launched by Devicemodel in SOS_VM */
+};
+
+/* ACRN guest severity */
+enum acrn_vm_severity {
+	SEVERITY_SAFETY_VM = 0x40U,
+	SEVERITY_RTVM = 0x30U,
+	SEVERITY_SOS = 0x20U,
+	SEVERITY_STANDARD_VM = 0x10U,
 };
 
 struct acrn_vm_mem_config {
@@ -99,6 +110,7 @@ struct acrn_vm_config {
 	char name[MAX_VM_OS_NAME_LEN];			/* VM name identifier, useful for debug. */
 	const uint8_t uuid[16];				/* UUID of the VM */
 	uint16_t vcpu_num;				/* Number of vCPUs for the VM */
+	uint8_t severity;				/* severity of the VM */
 
 	uint64_t vcpu_affinity[MAX_VCPUS_PER_VM];/* bitmaps for vCPUs' affinity */
 	uint64_t guest_flags;				/* VM flags that we want to configure for guest

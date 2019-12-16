@@ -17,6 +17,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* dbbbd434-7a57-4216-a12c-2201f1ab0240 */
 		.guest_flags = 0UL,
 		.clos = 0U,
+		.severity = SEVERITY_SOS,
 		.memory = {
 			.start_hpa = 0UL,
 			.size = CONFIG_SOS_RAM_SIZE,
@@ -49,6 +50,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* d2795438-25d6-11e8-864e-cb7a18b34643 */
 		.vcpu_num = 1U,
 		.vcpu_affinity = VM1_CONFIG_VCPU_AFFINITY,
+		.severity = SEVERITY_STANDARD_VM,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
@@ -62,14 +64,13 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{
 		.load_order = POST_LAUNCHED_VM,
-		.uuid = {0x49U, 0x5aU, 0xe2U, 0xe5U, 0x26U, 0x03U, 0x4dU, 0x64U,	\
-			 0xafU, 0x76U, 0xd4U, 0xbcU, 0x5aU, 0x8eU, 0xc0U, 0xe5U},
-			/* 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 */
-
+		/* 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 */
+		.uuid = RTVM_UUID1,
 		/* The hard RTVM must be launched as VM2 */
-		.guest_flags = GUEST_FLAG_HIGHEST_SEVERITY,
+		.guest_flags = 0UL,
 		.vcpu_num = 2U,
 		.vcpu_affinity = VM2_CONFIG_VCPU_AFFINITY,
+		.severity = SEVERITY_RTVM,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
