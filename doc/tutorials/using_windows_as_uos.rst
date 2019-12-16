@@ -313,93 +313,89 @@ Run these commands on the Service VM::
 
 Install Windows 10
 ------------------
-Currently, the ACRNGT OVMF GOP driver is not ready; thus, a special VGA
-version is used to install Windows 10 on ACRN from scratch. The
-``acrn.efi``, ``acrn-dm`` and ``OVMF`` binaries are included in the
-`tarball
-<https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/install_by_vga_gsg.tar.gz>`_
-together with the script used to install Windows 10.
-Make sure the Service VM version is 31300.
 
-#. Uncompress ``install_by_vga_gsg.tar.gz`` to the Service VM::
+   .. note:: Please make sure you have configured your monitor and display according to **3** of
+      :ref:`Boot Windows with GVT-g on ACRN <waag_display_conf_lable>`.
 
-   # tar zxvf install_by_vga_gsg.tar.gz && cd install_by_vga_gsg
+#. Make a copy from ``/usr/share/acrn/samples/nuc/launch_win.sh`` to ``install_win.sh``::
 
-#. Edit the ``acrn-dm`` command line in ``install_vga.sh`` if your configuration is different.
+   # cp /usr/share/acrn/samples/nuc/launch_win.sh ~/install_win.sh
+
+#. Add the following lines **before** ``acrn-dm`` command line in ``install_win.sh``. It is used
+   to passthrough USB to WaaG, by which both mouse and keyboard can be used during Windows installation::
+
+      echo "8086 9d2f" > /sys/bus/pci/drivers/pci-stub/new_id
+      echo "0000:00:14.0" > /sys/bus/pci/devices/0000:00:14.0/driver/unbind
+      echo "0000:00:14.0" > /sys/bus/pci/drivers/pci-stub/bind
+
+   .. note:: You may need to change the bdf and vid/pid of the USB controller in above command to match those
+      of your platform. You can use ``lspci`` and ``lspci -n`` to get this information.
+
+#. Edit the ``acrn-dm`` command line in ``install_win.sh`` as follows:
 
    - Change ``-s 3,virtio-blk,./win10-ltsc-virtio.img`` to your path to the Windows 10 image.
-   - Change ``-s 8,ahci,cd:./windows10-17763-107-LTSC-Virtio-Gfx.iso`` to the ISO you re-generated above.
-   - Change ``-s 9,ahci,cd:./virtio-win-0.1.141.iso`` to your path to the virtio-win iso.
+   - Add ``-s 6,passthru,0/14/0``.
+
+    .. note:: You may need to change 0/14/0 to match bdf of the USB controller of your platform.
+
+   - Add ``-s 8,ahci,cd:./windows10-17763-107-LTSC-Virtio-Gfx.iso`` to point to the ISO you re-generated above.
+   - Add ``-s 9,ahci,cd:./virtio-win-0.1.141.iso`` to point to your path to the virtio-win iso.
 
    Or if you used the Oracle driver:
 
-   - Change ``-s 9,ahci,cd:./winvirtio.iso`` to your path to the winvirtio iso.
+   - Add ``-s 9,ahci,cd:./winvirtio.iso`` to point to your path to the winvirtio iso.
 
-#. Run ``install_vga.sh`` and connect to the Windows guest using a vnc client.::
+#. Run ``install_win.sh``.
 
-   # vncviewer <IP-OF-HOST-MACHINE>:5900
-
-#. Input ``exit`` followed by :kbd:`ENTER`
+#. When it is showing "Press any key to boot from CD or DVD" on the monitor, press any key in the terminal on
+   **Host** side.
 
    .. figure:: images/windows_install_1.png
       :align: center
 
-#. Select ``Boot Manager``
-
    .. figure:: images/windows_install_2.png
       :align: center
-
-#. Select ``UEFI ACRN-DM SATA DVD ROM ACRN--F9B7-5503-A05B``, which is using the PCI slot 7.
-   This is what we configured in the script for the Windows ISO cdrom.
 
    .. figure:: images/windows_install_3.png
       :align: center
 
-#. Select :kbd:`ENTER` followed by any key press to be prompted to the Windows installation screen.
+#. Click **Load driver**.
 
    .. figure:: images/windows_install_4.png
       :align: center
 
+#. Click :kbd:`Browser` and go to the drive which includes virtio win drivers. Select **viostor\\w10\\amd64\\viostor.inf**
+   or **viostororcl.inf** if you are using Oracle virtio drivers and install virtio block driver.
+
    .. figure:: images/windows_install_5.png
       :align: center
+
+#. Select the virtio block drive and click :kbd:`Next`.
 
    .. figure:: images/windows_install_6.png
       :align: center
 
-This is the step to install the Oracle Driver
-
-   .. figure:: images/windows_install_A.png
-      :align: center
-
-   .. figure:: images/windows_install_B.png
-      :align: center
-
-   .. figure:: images/windows_install_C.png
-      :align: center
+#. Continue the installation.
 
    .. figure:: images/windows_install_7.png
       :align: center
 
+#. System will restart.
+
    .. figure:: images/windows_install_8.png
       :align: center
 
-#. Connect again after Windows guest reboots. Use ``vncviewer <IP-OF-HOST-MACHINE>:5900``.
+#. Windows will restart several times and finally you are asked to configure your system.
 
    .. figure:: images/windows_install_9.png
       :align: center
 
-#. Connect again after Windows guest reboots a second time. Use ``vncviewer <IP-OF-HOST-MACHINE>:5900``.
+#. Windows installation is complete after a few configuation steps, and you get to the Windows desktop.
 
    .. figure:: images/windows_install_10.png
       :align: center
 
-#. Perform a few configuration steps. The Windows desktop appears.
-
-   .. figure:: images/windows_install_11.png
-      :align: center
-
-   .. figure:: images/windows_install_12.png
-      :align: center
+.. _waag_display_conf_lable:
 
 Boot Windows with GVT-g on ACRN
 ===============================
