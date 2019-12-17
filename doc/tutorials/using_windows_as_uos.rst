@@ -314,22 +314,22 @@ Run these commands on the Service VM::
 Install Windows 10
 ------------------
 
-   .. note:: Please make sure you have configured your monitor and display according to **3** of
+   .. note:: Make sure you have configured your monitor and display according to **3** of
       :ref:`Boot Windows with GVT-g on ACRN <waag_display_conf_lable>`.
 
-#. Make a copy from ``/usr/share/acrn/samples/nuc/launch_win.sh`` to ``install_win.sh``::
+#. Copy ``/usr/share/acrn/samples/nuc/launch_win.sh`` to ``install_win.sh``::
 
    # cp /usr/share/acrn/samples/nuc/launch_win.sh ~/install_win.sh
 
-#. Add the following lines **before** ``acrn-dm`` command line in ``install_win.sh``. It is used
-   to passthrough USB to WaaG, by which both mouse and keyboard can be used during Windows installation::
+#. Add the following lines **before** the ``acrn-dm`` command line in ``install_win.sh``. It is used
+   to passthrough USB to WaaG, by which both mouse and keyboard can be used during the Windows installation::
 
       echo "8086 9d2f" > /sys/bus/pci/drivers/pci-stub/new_id
       echo "0000:00:14.0" > /sys/bus/pci/devices/0000:00:14.0/driver/unbind
       echo "0000:00:14.0" > /sys/bus/pci/drivers/pci-stub/bind
 
-   .. note:: You may need to change the bdf and vid/pid of the USB controller in above command to match those
-      of your platform. You can use ``lspci`` and ``lspci -n`` to get this information.
+   .. note:: You may need to change the bdf and vid/pid of the USB controller in the above command to match those
+      of your platform. Use ``lspci`` and ``lspci -n`` to get this information.
 
 #. Edit the ``acrn-dm`` command line in ``install_win.sh`` as follows:
 
@@ -347,7 +347,7 @@ Install Windows 10
 
 #. Run ``install_win.sh``.
 
-#. When it is showing "Press any key to boot from CD or DVD" on the monitor, press any key in the terminal on
+#. When the display reads "Press any key to boot from CD or DVD" on the monitor, press any key in the terminal on the
    **Host** side.
 
    .. figure:: images/windows_install_1.png
@@ -364,8 +364,8 @@ Install Windows 10
    .. figure:: images/windows_install_4.png
       :align: center
 
-#. Click :kbd:`Browser` and go to the drive which includes virtio win drivers. Select **viostor\\w10\\amd64\\viostor.inf**
-   or **viostororcl.inf** if you are using Oracle virtio drivers and install virtio block driver.
+#. Click :kbd:`Browser` and go to the drive which includes the virtio win drivers. Select **viostor\\w10\\amd64\\viostor.inf**
+   or **viostororcl.inf** if you are using Oracle virtio drivers and install the virtio block driver.
 
    .. figure:: images/windows_install_5.png
       :align: center
@@ -375,22 +375,22 @@ Install Windows 10
    .. figure:: images/windows_install_6.png
       :align: center
 
-#. Continue the installation.
+#. Continue with the installation.
 
    .. figure:: images/windows_install_7.png
       :align: center
 
-#. System will restart.
+#. The system will restart.
 
    .. figure:: images/windows_install_8.png
       :align: center
 
-#. Windows will restart several times and finally you are asked to configure your system.
+#. Windows will restart several times and then you will be asked to configure your system.
 
    .. figure:: images/windows_install_9.png
       :align: center
 
-#. Windows installation is complete after a few configuation steps, and you get to the Windows desktop.
+#. The Windows installation is complete after a few configuation steps, and you get to the Windows desktop.
 
    .. figure:: images/windows_install_10.png
       :align: center
@@ -491,16 +491,14 @@ secure boot enabling.
 
 Activate Windows 10
 ********************
-If you are using Windows 10 without activation (30 days free trial), you may encounter some problems
-(e.g. Some apps and features can not work, Windows 10 automatically shutdown by Windows licensing monitoring service and so on) when
-using Windows 10 that is unlicensed.
+If you are using a trial version of Windows 10, you may find that some apps and features do not work or that Windows 10 get automatically shut down by the Windows licensing monitoring service. To avoid these issues, obtain a licensed verson of Windows.
 
-For Windows 10 activation steps, you may refer to "`windows 10 activate  <https://support.microsoft.com/en-us/help/12440/windows-10-activate>`__"
+For Windows 10 activation steps, refer to "`Activate Windows 10 <https://support.microsoft.com/en-us/help/12440/windows-10-activate>`__"
 
 References
 **********
 
 .. [1]
-   These virtio drivers injecting batch script are based on Derek Seaman's IT blog about
+   These virtio drivers injecting batch scripts are based on Derek Seaman's IT blog about
    `injecting VirtIO Drivers into Windows
    <https://www.derekseaman.com/2015/07/injecting-kvm-virtio-drivers-into-windows.html>`_.
