@@ -75,3 +75,4 @@ Enable ACRN Features
    tutorials/trustyACRN
    tutorials/waag-secure-boot
    tutorials/enable_s5
+   tutorials/cpu_sharing
