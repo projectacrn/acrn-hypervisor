@@ -32,6 +32,7 @@ Configuration Tutorials
    tutorials/enable_laag_secure_boot
    tutorials/building_acrn_in_docker
    tutorials/acrn_ootb
+   tutorials/acrn-sanity-test
 
 User VM Tutorials
 *****************
