@@ -156,3 +156,6 @@ class VirtioDeviceSelect():
         self.dev["block"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "virtio_devices", "block")
         self.dev["network"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "virtio_devices", "network")
         self.dev["console"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "virtio_devices", "console")
+
+    def check_virtio(self):
+        launch_cfg_lib.check_block_mount(self.dev["block"])
