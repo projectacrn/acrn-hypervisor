@@ -18,17 +18,9 @@ def is_nuc_whl_clr(names, vmid):
 
 
 def is_mount_needed(virt_io, vmid):
-    rootfs_img = ''
-    blk_dev_list = launch_cfg_lib.get_rootdev_info(launch_cfg_lib.BOARD_INFO_FILE)
-    if virt_io['block'][vmid]:
-        if ':' in virt_io['block'][vmid]:
-            blk_dev = virt_io['block'][vmid].split(':')[0]
-            rootfs_img = virt_io['block'][vmid].split(':')[1]
-        else:
-            blk_dev = virt_io['block'][vmid]
 
-        if blk_dev in blk_dev_list and rootfs_img:
-            return True
+    if True in launch_cfg_lib.MOUNT_FLAG_DIC[vmid]:
+        return True
 
     return False
 
@@ -40,12 +32,20 @@ def tap_uos_net(names, virt_io, vmid, config):
     vm_name = launch_cfg_lib.undline_name(uos_type).lower()
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
-        if board_name in ("apl-mrb", "apl-up2"):
-            print('if [ ! -f "/data/{}/{}.img" ]; then'.format(vm_name, vm_name), file=config)
-            print('  echo "no /data/{}/{}.img, exit"'.format(vm_name, vm_name), file=config)
+        i = 0
+        for mount_flag in launch_cfg_lib.MOUNT_FLAG_DIC[vmid]:
+            if not mount_flag:
+                i += 1
+                continue
+            blk = virt_io['block'][vmid][i]
+            rootfs_img = blk.split(':')[1].strip(':')
+            print('if [ ! -f "/data{}/{}" ]; then'.format(i, rootfs_img), file=config)
+            print('  echo "no /data{}/{}, exit"'.format(i, rootfs_img), file=config)
             print("  exit", file=config)
             print("fi", file=config)
             print("", file=config)
+            i += 1
+
         print("#vm-name used to generate uos-mac address", file=config)
         print("mac=$(cat /sys/class/net/e*/address)", file=config)
         print("vm_name=vm$1", file=config)
@@ -331,7 +331,14 @@ def uos_launch(names, args, virt_io, vmid, config):
         print("", file=config)
         print('launch_{} {} "{}" "{}" $debug'.format(launch_uos, vmid, gvt_args, vmid), file=config)
         print("", file=config)
-        print("umount /data", file=config)
+
+        i = 0
+        for mount_flag in launch_cfg_lib.MOUNT_FLAG_DIC[vmid]:
+            if not mount_flag:
+                i += 1
+                continue
+            print("umount /data{}".format(i), file=config)
+            i += 1
 
 
 def launch_end(names, args, virt_io, vmid, config):
@@ -361,16 +368,21 @@ def launch_end(names, args, virt_io, vmid, config):
         print("", file=config)
 
     if is_mount_needed(virt_io, vmid):
-        root_fs = virt_io['block'][vmid].split(':')[0]
-
-        print('if [ ! -b "{}" ]; then'.format(root_fs), file=config)
-        print('  echo "no {} data partition, exit"'.format(root_fs), file=config)
-        print("  exit", file=config)
-        print("fi", file=config)
-        print("", file=config)
-        print("mkdir -p /data", file=config)
-        print("mount {} /data".format(root_fs), file=config)
-        print("", file=config)
+        i = 0
+        for mount_flag in launch_cfg_lib.MOUNT_FLAG_DIC[vmid]:
+            if not mount_flag:
+                i += 1
+                continue
+            blk = virt_io['block'][vmid][i]
+            root_fs = blk.split(':')[0]
+            print('if [ ! -b "{}" ]; then'.format(root_fs), file=config)
+            print('  echo "no {} data partition, exit"'.format(root_fs), file=config)
+            print("  exit", file=config)
+            print("fi", file=config)
+            print("mkdir -p /data{}".format(i), file=config)
+            print("mount {} /data{}".format(root_fs, i), file=config)
+            print("", file=config)
+            i += 1
 
     off_line_cpus(args, vmid, uos_type, config)
 
@@ -455,9 +467,19 @@ def virtio_args_set(dm, virt_io, vmid, config):
                 launch_cfg_lib.virtual_dev_slot("virtio-input{}".format(input_val)), input_val), file=config)
 
     # virtio-blk set, the value type is a list
-    for blk in virt_io['block'][vmid]:
-        if blk:
-            print("   -s {},virtio-blk,{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk{}".format(blk)), blk.strip(':')), file=config)
+    i = 0
+    for mount_flag in launch_cfg_lib.MOUNT_FLAG_DIC[vmid]:
+        blk = virt_io['block'][vmid][i]
+        if not mount_flag:
+            if blk:
+                rootfs_img = blk.strip(':')
+                print("   -s {},virtio-blk,{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-blk{}".format(blk)), rootfs_img), file=config)
+            i += 1
+            continue
+
+        rootfs_img = blk.split(':')[1].strip(':')
+        print("   -s {},virtio-blk,/data{}/{} \\".format(launch_cfg_lib.virtual_dev_slot("blk_mount_{}".format(i)), i, rootfs_img), file=config)
+        i += 1
 
     # virtio-net set, the value type is a list
     for net in virt_io['network'][vmid]:

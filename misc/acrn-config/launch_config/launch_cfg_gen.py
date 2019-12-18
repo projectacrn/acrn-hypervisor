@@ -74,6 +74,7 @@ def validate_launch_setting(board_info, scenario_info, launch_info):
     # virt-io devices
     virtio = VirtioDeviceSelect(launch_info)
     virtio.get_virtio()
+    virtio.check_virtio()
 
     # acrn dm arguments
     dm = AcrnDmArgs(board_info, scenario_info, launch_info)
