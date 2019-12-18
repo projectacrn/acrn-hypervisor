@@ -1,3 +1,37 @@
+OVMF release v1.5
+
+- Upgrade OpenSSL to 1.1.1d - cherry-picked the following commits from master:
+  - 4d613feee5 - CryptoPkg/OpensslLib.inf: list OpenSSL local header
+    "ms/uplink.h" (2019-12-02) <Laszlo Ersek>
+  - b49a6c8f80 - CryptoPkg/OpensslLib: improve INF file consistency
+    (2019-12-02) <Laszlo Ersek>
+  - 1bcc65b9a1 - CryptoPkg: Upgrade OpenSSL to 1.1.1d (2019-11-05) <Shenglei
+    Zhang>
+  - 9f4fbd56d4 - CryptoPkg/OpensslLib: Update process_files.pl to generate .h
+    files (2019-10-30) <Shenglei Zhang>
+  - 8906f076de - CryptoPkg/OpensslLib: Add missing header files in INF file
+    (2019-08-16) <Shenglei Zhang>
+  - 51f7a3e6c5 - CryptoPkg/OpensslLib: Exclude err_all.c in process_files.pl
+    (2019-06-25) <Xiaoyu Lu>
+  - b86fbe1f98 - CryptoPkg/OpensslLib: disable autoload-config for OpenSSL
+    (2019-06-21) <Xiaoyu Lu>
+  - 20d2e5a125 - CryptoPkg/OpensslLib: fix build break caused by missing
+    library (2019-06-06) <Wang, Jian J>
+  - 0a1b13fd4d - CryptoPkg/OpensslLib: fix VS2017 build failure (2019-06-05)
+    <Wang, Jian J>
+  - 456dd8b99f - CryptoPkg: Upgrade OpenSSL to 1.1.1b (2019-06-03) <XiaoyuX
+    Lu>
+  - b739678918 - CryptoPkg/OpensslLib: Add functions for upgrading
+    OpenSSL1_1_1b (2019-06-03) <XiaoyuX Lu>
+  - 5db2fbff23 - CryptoPkg/OpensslLib: Prepare for upgrading OpenSSL
+    (2019-06-03) <XiaoyuX Lu>
+  - 7eee048894 - CryptoPkg/OpensslLib: Exclude unnecessary files in
+    process_files.pl (2019-06-03) <Xiaoyu Lu>
+  - 6fcc3d68eb - CryptoPkg/OpensslLib: Modify process_files.pl for upgrading
+    OpenSSL (2019-06-03) <Xiaoyu Lu>
+  - a18f784cfd - Upgrade OpenSSL to 1.1.0j (2018-12-21) <Jian J Wang>
+- Security hardening for OVMF build
+
 OVMF release v1.4
 
 - Add back USB keyboard support
