@@ -224,7 +224,7 @@ static inline uint32_t vlapic_find_isrv(const struct acrn_vlapic *vlapic)
 }
 
 static void
-vlapic_dfr_write_handler(struct acrn_vlapic *vlapic)
+vlapic_write_dfr(struct acrn_vlapic *vlapic)
 {
 	struct lapic_regs *lapic;
 
@@ -243,7 +243,7 @@ vlapic_dfr_write_handler(struct acrn_vlapic *vlapic)
 }
 
 static void
-vlapic_ldr_write_handler(struct acrn_vlapic *vlapic)
+vlapic_write_ldr(struct acrn_vlapic *vlapic)
 {
 	struct lapic_regs *lapic;
 
@@ -391,7 +391,7 @@ static uint32_t vlapic_get_ccr(const struct acrn_vlapic *vlapic)
 	return remain_count;
 }
 
-static void vlapic_dcr_write_handler(struct acrn_vlapic *vlapic)
+static void vlapic_write_dcr(struct acrn_vlapic *vlapic)
 {
 	uint32_t divisor_shift;
 	struct vlapic_timer *vtimer;
@@ -403,7 +403,7 @@ static void vlapic_dcr_write_handler(struct acrn_vlapic *vlapic)
 	vtimer->divisor_shift = divisor_shift;
 }
 
-static void vlapic_icrtmr_write_handler(struct acrn_vlapic *vlapic)
+static void vlapic_write_icrtmr(struct acrn_vlapic *vlapic)
 {
 	struct lapic_regs *lapic;
 	struct vlapic_timer *vtimer;
@@ -495,7 +495,7 @@ void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic, uint64_t val_arg)
 }
 
 static void
-vlapic_esr_write_handler(struct acrn_vlapic *vlapic)
+vlapic_write_esr(struct acrn_vlapic *vlapic)
 {
 	struct lapic_regs *lapic;
 
@@ -723,7 +723,7 @@ vlapic_get_lvt(const struct acrn_vlapic *vlapic, uint32_t offset)
 }
 
 static void
-vlapic_lvt_write_handler(struct acrn_vlapic *vlapic, uint32_t offset)
+vlapic_write_lvt(struct acrn_vlapic *vlapic, uint32_t offset)
 {
 	uint32_t *lvtptr, mask, val, idx;
 	struct lapic_regs *lapic;
@@ -798,25 +798,25 @@ vlapic_mask_lvts(struct acrn_vlapic *vlapic)
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 
 	lapic->lvt_cmci.v |= APIC_LVT_M;
-	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_CMCI_LVT);
+	vlapic_write_lvt(vlapic, APIC_OFFSET_CMCI_LVT);
 
 	lapic->lvt[APIC_LVT_TIMER].v |= APIC_LVT_M;
-	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_TIMER_LVT);
+	vlapic_write_lvt(vlapic, APIC_OFFSET_TIMER_LVT);
 
 	lapic->lvt[APIC_LVT_THERMAL].v |= APIC_LVT_M;
-	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_THERM_LVT);
+	vlapic_write_lvt(vlapic, APIC_OFFSET_THERM_LVT);
 
 	lapic->lvt[APIC_LVT_PMC].v |= APIC_LVT_M;
-	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_PERF_LVT);
+	vlapic_write_lvt(vlapic, APIC_OFFSET_PERF_LVT);
 
 	lapic->lvt[APIC_LVT_LINT0].v |= APIC_LVT_M;
-	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_LINT0_LVT);
+	vlapic_write_lvt(vlapic, APIC_OFFSET_LINT0_LVT);
 
 	lapic->lvt[APIC_LVT_LINT1].v |= APIC_LVT_M;
-	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_LINT1_LVT);
+	vlapic_write_lvt(vlapic, APIC_OFFSET_LINT1_LVT);
 
 	lapic->lvt[APIC_LVT_ERROR].v |= APIC_LVT_M;
-	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_ERROR_LVT);
+	vlapic_write_lvt(vlapic, APIC_OFFSET_ERROR_LVT);
 }
 
 /*
@@ -1197,7 +1197,7 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode, uint32_t 
 	return;
 }
 
-static void vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
+static void vlapic_write_icrlo(struct acrn_vlapic *vlapic)
 {
 	uint16_t vcpu_id;
 	bool phys = false, is_broadcast = false;
@@ -1383,7 +1383,7 @@ static void vlapic_get_deliverable_intr(struct acrn_vlapic *vlapic, uint32_t vec
 }
 
 static void
-vlapic_svr_write_handler(struct acrn_vlapic *vlapic)
+vlapic_write_svr(struct acrn_vlapic *vlapic)
 {
 	struct lapic_regs *lapic;
 	uint32_t old, new, changed;
@@ -1569,22 +1569,22 @@ static int32_t vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_
 			break;
 		case APIC_OFFSET_LDR:
 			lapic->ldr.v = data32;
-			vlapic_ldr_write_handler(vlapic);
+			vlapic_write_ldr(vlapic);
 			break;
 		case APIC_OFFSET_DFR:
 			lapic->dfr.v = data32;
-			vlapic_dfr_write_handler(vlapic);
+			vlapic_write_dfr(vlapic);
 			break;
 		case APIC_OFFSET_SVR:
 			lapic->svr.v = data32;
-			vlapic_svr_write_handler(vlapic);
+			vlapic_write_svr(vlapic);
 			break;
 		case APIC_OFFSET_ICR_LOW:
 			if (is_x2apic_enabled(vlapic)) {
 				lapic->icr_hi.v = (uint32_t)(data >> 32U);
 			}
 			lapic->icr_lo.v = data32;
-			vlapic_icrlo_write_handler(vlapic);
+			vlapic_write_icrlo(vlapic);
 			break;
 		case APIC_OFFSET_ICR_HI:
 			lapic->icr_hi.v = data32;
@@ -1598,7 +1598,7 @@ static int32_t vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_
 		case APIC_OFFSET_ERROR_LVT:
 			regptr = vlapic_get_lvtptr(vlapic, offset);
 			*regptr = data32;
-			vlapic_lvt_write_handler(vlapic, offset);
+			vlapic_write_lvt(vlapic, offset);
 			break;
 		case APIC_OFFSET_TIMER_ICR:
 			/* if TSCDEADLINE mode ignore icr_timer */
@@ -1606,15 +1606,15 @@ static int32_t vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_
 				break;
 			}
 			lapic->icr_timer.v = data32;
-			vlapic_icrtmr_write_handler(vlapic);
+			vlapic_write_icrtmr(vlapic);
 			break;
 
 		case APIC_OFFSET_TIMER_DCR:
 			lapic->dcr_timer.v = data32;
-			vlapic_dcr_write_handler(vlapic);
+			vlapic_write_dcr(vlapic);
 			break;
 		case APIC_OFFSET_ESR:
-			vlapic_esr_write_handler(vlapic);
+			vlapic_write_esr(vlapic);
 			break;
 
 		case APIC_OFFSET_SELF_IPI:
@@ -1668,7 +1668,7 @@ vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops)
 
 	lapic->icr_timer.v = 0U;
 	lapic->dcr_timer.v = 0U;
-	vlapic_dcr_write_handler(vlapic);
+	vlapic_write_dcr(vlapic);
 	vlapic_reset_timer(vlapic);
 
 	vlapic->svr_last = lapic->svr.v;
@@ -1706,7 +1706,7 @@ void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs)
 		lapic->tmr[i].v = regs->tmr[i].v;
 	}
 	lapic->svr = regs->svr;
-	vlapic_svr_write_handler(vlapic);
+	vlapic_write_svr(vlapic);
 	lapic->lvt[APIC_LVT_TIMER].v = regs->lvt[APIC_LVT_TIMER].v;
 	lapic->lvt[APIC_LVT_LINT0].v = regs->lvt[APIC_LVT_LINT0].v;
 	lapic->lvt[APIC_LVT_LINT1].v = regs->lvt[APIC_LVT_LINT1].v;
@@ -1714,7 +1714,7 @@ void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs)
 	lapic->icr_timer = regs->icr_timer;
 	lapic->ccr_timer = regs->ccr_timer;
 	lapic->dcr_timer = regs->dcr_timer;
-	vlapic_dcr_write_handler(vlapic);
+	vlapic_write_dcr(vlapic);
 }
 
 uint64_t vlapic_get_apicbase(const struct acrn_vlapic *vlapic)
@@ -2512,19 +2512,19 @@ int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
 		/* Force APIC ID as read only */
 		break;
 	case APIC_OFFSET_LDR:
-		vlapic_ldr_write_handler(vlapic);
+		vlapic_write_ldr(vlapic);
 		break;
 	case APIC_OFFSET_DFR:
-		vlapic_dfr_write_handler(vlapic);
+		vlapic_write_dfr(vlapic);
 		break;
 	case APIC_OFFSET_SVR:
-		vlapic_svr_write_handler(vlapic);
+		vlapic_write_svr(vlapic);
 		break;
 	case APIC_OFFSET_ESR:
-		vlapic_esr_write_handler(vlapic);
+		vlapic_write_esr(vlapic);
 		break;
 	case APIC_OFFSET_ICR_LOW:
-		vlapic_icrlo_write_handler(vlapic);
+		vlapic_write_icrlo(vlapic);
 		break;
 	case APIC_OFFSET_CMCI_LVT:
 	case APIC_OFFSET_TIMER_LVT:
@@ -2533,13 +2533,13 @@ int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
 	case APIC_OFFSET_LINT0_LVT:
 	case APIC_OFFSET_LINT1_LVT:
 	case APIC_OFFSET_ERROR_LVT:
-		vlapic_lvt_write_handler(vlapic, offset);
+		vlapic_write_lvt(vlapic, offset);
 		break;
 	case APIC_OFFSET_TIMER_ICR:
-		vlapic_icrtmr_write_handler(vlapic);
+		vlapic_write_icrtmr(vlapic);
 		break;
 	case APIC_OFFSET_TIMER_DCR:
-		vlapic_dcr_write_handler(vlapic);
+		vlapic_write_dcr(vlapic);
 		break;
 	case APIC_OFFSET_SELF_IPI:
 		if (is_x2apic_enabled(vlapic)) {
