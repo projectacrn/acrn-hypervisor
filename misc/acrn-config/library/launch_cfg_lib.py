@@ -56,6 +56,8 @@ PM_CHANNEL_DIC = {
     'vuart1(tty)':'--pm_notify_channel uart --pm_by_vuart tty,/dev/ttyS1',
 }
 
+MOUNT_FLAG_DIC = {}
+
 
 def prepare(check_git):
     """ Check environment """
@@ -617,3 +619,27 @@ def pt_devs_check_audio(audio_map, audio_codec_map):
         if not bdf_audio and bdf_codec:
             key = "uos:id={},passthrough_devices,{}".format(vmid, 'audio_codec')
             ERR_LIST[key] = "Audio codec device should be pass through together with Audio devcie!"
+
+
+def check_block_mount(virtio_blk_dic):
+    blk_dev_list = get_rootdev_info(BOARD_INFO_FILE)
+    for vmid in list(virtio_blk_dic.keys()):
+        mount_flags = []
+        for blk in virtio_blk_dic[vmid]:
+            rootfs_img = ''
+            if not blk:
+                mount_flags.append(False)
+                continue
+
+            if ':' in blk:
+                blk_dev = blk.split(':')[0]
+                rootfs_img = blk.split(':')[1]
+            else:
+                blk_dev = blk
+
+            if blk_dev in blk_dev_list and rootfs_img:
+                mount_flags.append(True)
+            else:
+                mount_flags.append(False)
+
+        MOUNT_FLAG_DIC[vmid] = mount_flags
