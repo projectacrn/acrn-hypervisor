@@ -236,8 +236,6 @@ def gvt_arg_set(dm, vmid, uos_type, config):
 
 def log_level_set(uos_type, config):
 
-    if uos_type not in ('CLEARLINUX', 'ANDROID', 'ALIOS'):
-        return
     print("#logger_setting, format: logger_name,level; like following", file=config)
     print('logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"', file=config)
     print("", file=config)
