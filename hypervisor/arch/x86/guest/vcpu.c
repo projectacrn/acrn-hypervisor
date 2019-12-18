@@ -193,6 +193,35 @@ void vcpu_reset_eoi_exit_bitmaps(struct acrn_vcpu *vcpu)
 	vcpu_make_request(vcpu, ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE);
 }
 
+/* As a vcpu reset internal API, DO NOT touch any vcpu state transition in this function. */
+static void vcpu_reset_internal(struct acrn_vcpu *vcpu, __unused enum reset_mode mode)
+{
+	int32_t i;
+	struct acrn_vlapic *vlapic;
+
+	vcpu->launched = false;
+	vcpu->running = false;
+	vcpu->arch.nr_sipi = 0U;
+
+	vcpu->arch.exception_info.exception = VECTOR_INVALID;
+	vcpu->arch.cur_context = NORMAL_WORLD;
+	vcpu->arch.irq_window_enabled = false;
+	(void)memset((void *)vcpu->arch.vmcs, 0U, PAGE_SIZE);
+
+	for (i = 0; i < NR_WORLD; i++) {
+		(void)memset((void *)(&vcpu->arch.contexts[i]), 0U,
+			sizeof(struct run_context));
+	}
+
+	/* TODO: we may need to add one scheduler->reset_data to reset the thread_obj */
+	vcpu->thread_obj.notify_mode = SCHED_NOTIFY_IPI;
+
+	vlapic = vcpu_vlapic(vcpu);
+	vlapic_reset(vlapic, apicv_ops);
+
+	reset_vcpu_regs(vcpu);
+}
+
 struct acrn_vcpu *get_running_vcpu(uint16_t pcpu_id)
 {
 	struct thread_object *curr = sched_get_current(pcpu_id);
@@ -445,12 +474,6 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 		 */
 		vcpu->arch.vpid = 1U + (vm->vm_id * MAX_VCPUS_PER_VM) + vcpu->vcpu_id;
 
-		/* Initialize exception field in VCPU context */
-		vcpu->arch.exception_info.exception = VECTOR_INVALID;
-
-		/* Initialize cur context */
-		vcpu->arch.cur_context = NORMAL_WORLD;
-
 		/* Create per vcpu vlapic */
 		vlapic_create(vcpu);
 
@@ -460,14 +483,10 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 
 		/* Populate the return handle */
 		*rtn_vcpu_handle = vcpu;
-
-		vcpu->launched = false;
-		vcpu->running = false;
-		vcpu->arch.nr_sipi = 0U;
 		vcpu->state = VCPU_INIT;
 
 		init_xsave(vcpu);
-		reset_vcpu_regs(vcpu);
+		vcpu_reset_internal(vcpu, POWER_ON_RESET);
 		(void)memset((void *)&vcpu->req, 0U, sizeof(struct io_request));
 		vm->hw.created_vcpus++;
 		ret = 0;
@@ -655,40 +674,15 @@ static uint64_t build_stack_frame(struct acrn_vcpu *vcpu)
 /* NOTE:
  * vcpu should be paused before call this function.
  */
-void reset_vcpu(struct acrn_vcpu *vcpu)
+void reset_vcpu(struct acrn_vcpu *vcpu, enum reset_mode mode)
 {
-	int32_t i;
-	struct acrn_vlapic *vlapic;
-
 	pr_dbg("vcpu%hu reset", vcpu->vcpu_id);
 	ASSERT(vcpu->state != VCPU_RUNNING,
 			"reset vcpu when it's running");
 
 	if (vcpu->state != VCPU_INIT) {
+		vcpu_reset_internal(vcpu, mode);
 		vcpu->state = VCPU_INIT;
-
-		vcpu->launched = false;
-		vcpu->running = false;
-		vcpu->arch.nr_sipi = 0U;
-
-		vcpu->arch.exception_info.exception = VECTOR_INVALID;
-		vcpu->arch.cur_context = NORMAL_WORLD;
-		vcpu->arch.irq_window_enabled = false;
-		(void)memset((void *)vcpu->arch.vmcs, 0U, PAGE_SIZE);
-
-		for (i = 0; i < NR_WORLD; i++) {
-			(void)memset((void *)(&vcpu->arch.contexts[i]), 0U,
-				sizeof(struct run_context));
-		}
-		vcpu->arch.cur_context = NORMAL_WORLD;
-
-		/* TODO: we may need to add one scheduler->reset_data to reset the thread_obj */
-		vcpu->thread_obj.notify_mode = SCHED_NOTIFY_IPI;
-
-		vlapic = vcpu_vlapic(vcpu);
-		vlapic_reset(vlapic, apicv_ops);
-
-		reset_vcpu_regs(vcpu);
 	}
 }
 
@@ -806,7 +800,7 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 		vcpu->thread_obj.sched_ctl = &per_cpu(sched_ctl, pcpu_id);
 		vcpu->thread_obj.thread_entry = vcpu_thread;
 		vcpu->thread_obj.pcpu_id = pcpu_id;
-		vcpu->thread_obj.notify_mode = SCHED_NOTIFY_IPI;
+		/* vcpu->thread_obj.notify_mode is initialized in vcpu_reset_internal() when create vcpu */
 		vcpu->thread_obj.host_sp = build_stack_frame(vcpu);
 		vcpu->thread_obj.switch_out = context_switch_out;
 		vcpu->thread_obj.switch_in = context_switch_in;

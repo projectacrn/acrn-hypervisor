@@ -146,6 +146,7 @@ enum vm_cpu_mode {
 	CPU_MODE_64BIT,			/* IA-32E mode (CS.L = 1) */
 };
 
+enum reset_mode;
 
 /* 2 worlds: 0 for Normal World, 1 for Secure World */
 #define NR_WORLD	2
@@ -600,10 +601,11 @@ void offline_vcpu(struct acrn_vcpu *vcpu);
  * Reset all fields in a vCPU instance, the vCPU state is reset to VCPU_INIT.
  *
  * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] mode the reset mode
  *
  * @return None
  */
-void reset_vcpu(struct acrn_vcpu *vcpu);
+void reset_vcpu(struct acrn_vcpu *vcpu, enum reset_mode mode);
 
 /**
  * @brief pause the vcpu and set new state

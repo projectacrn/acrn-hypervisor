@@ -650,7 +650,6 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 		}
 
 		foreach_vcpu(i, vm, vcpu) {
-			reset_vcpu(vcpu);
 			offline_vcpu(vcpu);
 
 			if (bitmap_test(pcpuid_from_vcpu(vcpu), &mask)) {
@@ -737,7 +736,7 @@ int32_t reset_vm(struct acrn_vm *vm)
 		}
 
 		foreach_vcpu(i, vm, vcpu) {
-			reset_vcpu(vcpu);
+			reset_vcpu(vcpu, COLD_RESET);
 
 			if (bitmap_test(pcpuid_from_vcpu(vcpu), &mask)) {
 				make_pcpu_offline(pcpuid_from_vcpu(vcpu));
@@ -824,7 +823,7 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 
 	vm->state = VM_STARTED;
 
-	reset_vcpu(bsp);
+	reset_vcpu(bsp, POWER_ON_RESET);
 
 	/* When SOS resume from S3, it will return to real mode
 	 * with entry set to wakeup_vec.

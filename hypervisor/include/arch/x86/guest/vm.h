@@ -30,6 +30,14 @@
 #include <hyperv.h>
 #endif
 
+enum reset_mode {
+	POWER_ON_RESET,		/* reset by hardware Power-on */
+	COLD_RESET,		/* hardware cold reset */
+	WARM_RESET,		/* behavior slightly differ from cold reset, that some MSRs might be retained. */
+	INIT_RESET,		/* reset by INIT */
+	SOFTWARE_RESET,		/* reset by software disable<->enable */
+};
+
 struct vm_hw_info {
 	/* vcpu array of this VM */
 	struct acrn_vcpu vcpu_array[MAX_VCPUS_PER_VM];

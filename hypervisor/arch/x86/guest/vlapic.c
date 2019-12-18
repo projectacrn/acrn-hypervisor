@@ -1163,7 +1163,7 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode, uint32_t 
 
 			/* put target vcpu to INIT state and wait for SIPI */
 			pause_vcpu(target_vcpu, VCPU_PAUSED);
-			reset_vcpu(target_vcpu);
+			reset_vcpu(target_vcpu, INIT_RESET);
 			/* new cpu model only need one SIPI to kick AP run,
 			 * the second SIPI will be ignored as it move out of
 			 * wait-for-SIPI state.
@@ -1686,8 +1686,6 @@ void
 vlapic_init(struct acrn_vlapic *vlapic)
 {
 	vlapic_init_timer(vlapic);
-
-	vlapic_reset(vlapic, apicv_ops);
 }
 
 void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs)
