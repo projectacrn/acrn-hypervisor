@@ -102,6 +102,9 @@ struct pci_vdev {
 	bool has_flr;
 	uint32_t pcie_capoff;
 
+	bool has_af_flr;
+	uint32_t af_capoff;
+
 	/* Pointer to corresponding PCI device's vm_config */
 	struct acrn_vm_pci_dev_config *pci_dev_config;
 

@@ -235,6 +235,8 @@ void init_vdev_pt(struct pci_vdev *vdev)
 
 	vdev->has_flr = vdev->pdev->has_flr;
 	vdev->pcie_capoff = vdev->pdev->pcie_capoff;
+	vdev->has_af_flr = vdev->pdev->has_af_flr;
+	vdev->af_capoff = vdev->pdev->af_capoff;
 
 	for (idx = 0U; idx < vdev->nr_bars; idx++) {
 		vbar = &vdev->bar[idx];
