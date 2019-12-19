@@ -138,6 +138,12 @@
 #define PCIM_PCIE_FLRCAP      (0x1U << 28U)
 #define PCIM_PCIE_FLR         (0x1U << 15U)
 
+/* Conventional PCI Advanced Features Capability */
+#define PCIY_AF               0x13U
+#define PCIM_AF_FLR_CAP       (0x1U << 25U)
+#define PCIR_AF_CTRL          0x4U
+#define PCIM_AF_FLR           0x1U
+
 #define HOST_BRIDGE_BDF		0U
 #define PCI_STD_NUM_BARS        6U
 
@@ -189,6 +195,10 @@ struct pci_pdev {
 	/* Function Level Reset Capability */
 	bool has_flr;
 	uint32_t pcie_capoff;
+
+	/* Conventional PCI Advanced Features FLR Capability */
+	bool has_af_flr;
+	uint32_t af_capoff;
 };
 
 static inline uint32_t pci_bar_offset(uint32_t idx)
