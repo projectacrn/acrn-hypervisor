@@ -337,8 +337,9 @@ static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 		vmsi_write_cfg(vdev, offset, bytes, val);
 	} else if (msixcap_access(vdev, offset)) {
 		vmsix_write_cfg(vdev, offset, bytes, val);
-	} else if (vdev->has_flr && ((vdev->pcie_capoff + PCIR_PCIE_DEVCTRL) == offset) &&
-				((val & PCIM_PCIE_FLR) != 0U)) {
+	} else if ((vdev->has_flr && ((vdev->pcie_capoff + PCIR_PCIE_DEVCTRL) == offset) &&
+				((val & PCIM_PCIE_FLR) != 0U)) || (vdev->has_af_flr &&
+				((vdev->af_capoff + PCIR_AF_CTRL) == offset) && ((val & PCIM_AF_FLR) != 0U))) {
 			/* Assume that guest write FLR must be 4 bytes aligned */
 			pdev_do_flr(vdev->pdev->bdf, offset, bytes, val);
 	} else {
