@@ -907,6 +907,8 @@ main(int argc, char *argv[])
 			break;
 		case CMD_OPT_LAPIC_PT:
 			lapic_pt = true;
+			is_rtvm = true;
+			break;
 		case CMD_OPT_RTVM:
 			is_rtvm = true;
 			break;
