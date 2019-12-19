@@ -418,7 +418,7 @@ static void pci_read_cap(struct pci_pdev *pdev)
 	uint32_t msgctrl;
 	uint32_t len, offset, idx;
 	uint32_t table_info;
-	uint32_t pcie_devcap;
+	uint32_t pcie_devcap, val;
 
 	ptr = (uint8_t)pci_pdev_read_cfg(pdev->bdf, PCIR_CAP_PTR, 1U);
 
@@ -426,7 +426,7 @@ static void pci_read_cap(struct pci_pdev *pdev)
 		cap = (uint8_t)pci_pdev_read_cfg(pdev->bdf, ptr + PCICAP_ID, 1U);
 
 		/* Ignore all other Capability IDs for now */
-		if ((cap == PCIY_MSI) || (cap == PCIY_MSIX) || (cap == PCIY_PCIE)) {
+		if ((cap == PCIY_MSI) || (cap == PCIY_MSIX) || (cap == PCIY_PCIE) || (cap == PCIY_AF)) {
 			offset = ptr;
 			if (cap == PCIY_MSI) {
 				pdev->msi_capoff = offset;
@@ -451,11 +451,16 @@ static void pci_read_cap(struct pci_pdev *pdev)
 				for (idx = 0U; idx < len; idx++) {
 					pdev->msix.cap[idx] = (uint8_t)pci_pdev_read_cfg(pdev->bdf, offset + idx, 1U);
 				}
-			} else {
+			} else if (cap == PCIY_PCIE) {
 				/* PCI Express Capability */
 				pdev->pcie_capoff = offset;
 				pcie_devcap = pci_pdev_read_cfg(pdev->bdf, offset + PCIR_PCIE_DEVCAP, 4U);
 				pdev->has_flr = ((pcie_devcap & PCIM_PCIE_FLRCAP) != 0U) ? true : false;
+			} else {
+				/* Conventional PCI Advanced Features Capability */
+				pdev->af_capoff = offset;
+				val = pci_pdev_read_cfg(pdev->bdf, offset, 4U);
+				pdev->has_af_flr = ((val & PCIM_AF_FLR_CAP) != 0U) ? true : false;
 			}
 		}
 
