@@ -242,6 +242,7 @@ def gen_sdc_source(vm_info, config):
         print("\t\t.clos = {0}U,".format(0), file=config)
     else:
         print("\t\t.clos = {0}U,".format(vm_info.clos_set[0]), file=config)
+    print("\t\t.severity = {0},".format(vm_info.severity[0].strip()), file=config)
     print("\t\t.memory = {", file=config)
     print("\t\t\t.start_hpa = {}UL,".format(vm_info.mem_info.mem_start_hpa[0]), file=config)
     print("\t\t\t.size = {0},".format("CONFIG_SOS_RAM_SIZE"), file=config)
@@ -271,6 +272,7 @@ def gen_sdc_source(vm_info, config):
     vm1_cpu_num = len(vm_info.cpus_per_vm[vm1_id])
     print("\t\t.vcpu_num = {}U,".format(vm1_cpu_num), file=config)
     print("\t\t.vcpu_affinity = VM{}_CONFIG_VCPU_AFFINITY,".format(vm1_id), file=config)
+    print("\t\t.severity = {0},".format(vm_info.severity[1].strip()), file=config)
     # VUART
     err_dic = vuart_output(1, vm_info, config)
     if err_dic:
@@ -285,6 +287,7 @@ def gen_sdc_source(vm_info, config):
         print("\t\t.load_order = POST_LAUNCHED_VM,", file=config)
         uuid_output(uuid_2, vm_info.uuid[2], config)
         vcpu_affinity_output(vm_info, 2, config)
+        print("\t\t.severity = {0},".format(vm_info.severity[2].strip()), file=config)
         is_need_epc(vm_info.epc_section, 2, config)
         print("\t\t.vuart[0] = {", file=config)
         print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
@@ -336,6 +339,7 @@ def gen_sdc2_source(vm_info, config):
         print("\t\t.clos = {0}U,".format(0), file=config)
     else:
         print("\t\t.clos = {0}U,".format(vm_info.clos_set[0]), file=config)
+    print("\t\t.severity = {0},".format(vm_info.severity[0].strip()), file=config)
     print("\t\t.memory = {", file=config)
     print("\t\t\t.start_hpa = {}UL,".format(vm_info.mem_info.mem_start_hpa[0]), file=config)
     print("\t\t\t.size = {0},".format("CONFIG_SOS_RAM_SIZE"), file=config)
@@ -361,6 +365,7 @@ def gen_sdc2_source(vm_info, config):
     # UUID
     uuid_output(uuid_1, vm_info.uuid[1], config)
     vcpu_affinity_output(vm_info, 1, config)
+    print("\t\t.severity = {0},".format(vm_info.severity[1].strip()), file=config)
     is_need_epc(vm_info.epc_section, 1, config)
     # VUART
     err_dic = vuart_output(1, vm_info, config)
@@ -373,6 +378,7 @@ def gen_sdc2_source(vm_info, config):
     # UUID
     uuid_output(uuid_2, vm_info.uuid[2], config)
     vcpu_affinity_output(vm_info, 2, config)
+    print("\t\t.severity = {0},".format(vm_info.severity[2].strip()), file=config)
     is_need_epc(vm_info.epc_section, 2, config)
     # VUART
     err_dic = vuart_output(1, vm_info, config)
@@ -386,6 +392,7 @@ def gen_sdc2_source(vm_info, config):
     uuid_output(uuid_3, vm_info.uuid[3], config)
     is_need_epc(vm_info.epc_section, 3, config)
     vcpu_affinity_output(vm_info, 3, config)
+    print("\t\t.severity = {0},".format(vm_info.severity[3].strip()), file=config)
     print("\t\t.vuart[0] = {", file=config)
     print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
     print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
@@ -521,6 +528,7 @@ def gen_industry_source(vm_info, config):
             print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
 
         vcpu_affinity_output(vm_info, i, config)
+        print("\t\t.severity = {0},".format(vm_info.severity[i].strip()), file=config)
 
         if i == 0:
             if vm_info.clos_set[i] == None or not vm_info.clos_set[i].strip():
@@ -592,6 +600,7 @@ def gen_hybrid_source(vm_info, config):
             print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
 
         vcpu_affinity_output(vm_info, i, config)
+        print("\t\t.severity = {0},".format(vm_info.severity[i].strip()), file=config)
 
         if i != 2:
             if vm_info.clos_set[i] == None or not vm_info.clos_set[i].strip():
