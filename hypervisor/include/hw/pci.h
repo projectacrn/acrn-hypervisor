@@ -131,7 +131,15 @@
 #define MSIX_CAPLEN           12U
 #define MSIX_TABLE_ENTRY_SIZE 16U
 
+/* PCI Express Capability */
+#define PCIY_PCIE             0x10U
+#define PCIR_PCIE_DEVCAP      0x04U
+#define PCIR_PCIE_DEVCTRL     0x08U
+#define PCIM_PCIE_FLRCAP      (0x1U << 28U)
+#define PCIM_PCIE_FLR         (0x1U << 15U)
+
 #define HOST_BRIDGE_BDF		0U
+#define PCI_STD_NUM_BARS        6U
 
 union pci_bdf {
 	uint16_t value;
@@ -177,6 +185,10 @@ struct pci_pdev {
 	uint32_t msi_capoff;
 
 	struct pci_msix_cap msix;
+
+	/* Function Level Reset Capability */
+	bool has_flr;
+	uint32_t pcie_capoff;
 };
 
 static inline uint32_t pci_bar_offset(uint32_t idx)
@@ -291,5 +303,6 @@ static inline bool is_pci_cfg_bridge(uint8_t header_type)
 	return ((header_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_BRIDGE);
 }
 
+void pdev_do_flr(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 
 #endif /* PCI_H_ */

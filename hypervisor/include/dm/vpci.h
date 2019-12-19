@@ -99,6 +99,9 @@ struct pci_vdev {
 	struct pci_msi msi;
 	struct pci_msix msix;
 
+	bool has_flr;
+	uint32_t pcie_capoff;
+
 	/* Pointer to corresponding PCI device's vm_config */
 	struct acrn_vm_pci_dev_config *pci_dev_config;
 
