@@ -4,9 +4,10 @@
     <name desc="Specify the VM name which will be shown in hypervisor console command: vm_list.">ACRN SOS VM</name>
     <uuid configurable="0" desc="vm uuid">dbbbd434-7a57-4216-a12c-2201f1ab0240</uuid>
     <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
-        <guest_flag>GUEST_FLAG_HIGHEST_SEVERITY</guest_flag>
+        <guest_flag>0</guest_flag>
     </guest_flags>
     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
+    <severity desc="severity of the guest VM">SEVERITY_SOS</severity>
     <memory>
         <start_hpa configurable="0" desc="The start physical address in host for the VM">0</start_hpa>
         <size configurable="0" desc="The memory size in Bytes for the VM">CONFIG_SOS_RAM_SIZE</size>
@@ -54,6 +55,7 @@
         <pcpu_id>3</pcpu_id>
     </vcpu_affinity>
     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
+    <severity desc="severity of the guest VM">SEVERITY_STANDARD_VM</severity>
     <epc_section desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>
         <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
@@ -75,6 +77,7 @@
     <load_order readonly="true" desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM.">POST_LAUNCHED_VM</load_order>
     <uuid configurable="0" desc="vm uuid">a7ada506-1ab0-4b6b-a0da-e513ca9b8c2f</uuid>
     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
+    <severity desc="severity of the guest VM">SEVERITY_STANDARD_VM</severity>
     <vcpu_affinity desc="vCPU affinity map. Each vCPU will pin to the selected pCPU ID. Please make sure each vCPU pin to different pCPU.">
         <pcpu_id>3</pcpu_id>
     </vcpu_affinity>
