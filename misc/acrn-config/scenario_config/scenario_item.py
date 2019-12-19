@@ -268,6 +268,7 @@ class VmInfo:
     clos_set = {}
     guest_flag_idx = {}
     cpus_per_vm = {}
+    severity = {}
 
     def __init__(self, board_file, scenario_file):
         self.board_info = board_file
@@ -293,6 +294,7 @@ class VmInfo:
         self.cpus_per_vm = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "vcpu_affinity", "pcpu_id")
         self.clos_set = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "clos")
+        self.severity = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "severity")
         self.epc_section.get_info()
         self.mem_info.get_info()
         self.os_cfg.get_info()

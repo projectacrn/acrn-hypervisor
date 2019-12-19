@@ -37,6 +37,7 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["vm,vcpu_affinity"] = hw_info.get_processor_val()
     scenario_item_values["vm,guest_flags"] = guest_flags
     scenario_item_values["vm,clos"] = hw_info.get_clos_val()
+    scenario_item_values["vm,severity"] = scenario_cfg_lib.VM_SEVERITY
     scenario_item_values["vm,os_config,kern_type"] = scenario_cfg_lib.KERN_TYPE_LIST
     scenario_item_values.update(scenario_cfg_lib.avl_vuart_ui_select(scenario_info))
 
