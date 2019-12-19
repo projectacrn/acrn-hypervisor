@@ -338,3 +338,22 @@ void udelay(uint32_t us)
 	while (rdtsc() < dest_tsc) {
 	}
 }
+
+/*
+ * @pre ms <= MAX_UINT32 / 1000U
+ */
+void msleep(uint32_t ms)
+{
+	uint64_t dest_tsc, delta_tsc;
+
+	/* Calculate number of ticks to wait */
+	delta_tsc = us_to_ticks(ms * 1000U);
+	dest_tsc = rdtsc() + delta_tsc;
+
+	/* Loop until time expired */
+	while (rdtsc() < dest_tsc) {
+		if (need_reschedule(get_pcpu_id())) {
+			schedule();
+		}
+	}
+}

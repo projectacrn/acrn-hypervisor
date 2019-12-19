@@ -42,6 +42,7 @@
 #include <bits.h>
 #include <board.h>
 #include <platform_acpi_info.h>
+#include <timer.h>
 
 static spinlock_t pci_device_lock;
 static uint32_t num_pci_pdev;
@@ -393,7 +394,7 @@ static inline uint32_t pci_pdev_get_nr_bars(uint8_t hdr_type)
 
 	switch (hdr_type) {
 	case PCIM_HDRTYPE_NORMAL:
-		nr_bars = 6U;
+		nr_bars = PCI_STD_NUM_BARS;
 		break;
 
 	case PCIM_HDRTYPE_BRIDGE:
@@ -417,6 +418,7 @@ static void pci_read_cap(struct pci_pdev *pdev)
 	uint32_t msgctrl;
 	uint32_t len, offset, idx;
 	uint32_t table_info;
+	uint32_t pcie_devcap;
 
 	ptr = (uint8_t)pci_pdev_read_cfg(pdev->bdf, PCIR_CAP_PTR, 1U);
 
@@ -424,11 +426,11 @@ static void pci_read_cap(struct pci_pdev *pdev)
 		cap = (uint8_t)pci_pdev_read_cfg(pdev->bdf, ptr + PCICAP_ID, 1U);
 
 		/* Ignore all other Capability IDs for now */
-		if ((cap == PCIY_MSI) || (cap == PCIY_MSIX)) {
+		if ((cap == PCIY_MSI) || (cap == PCIY_MSIX) || (cap == PCIY_PCIE)) {
 			offset = ptr;
 			if (cap == PCIY_MSI) {
 				pdev->msi_capoff = offset;
-			} else {
+			} else if (cap == PCIY_MSIX) {
 				pdev->msix.capoff = offset;
 				pdev->msix.caplen = MSIX_CAPLEN;
 				len = pdev->msix.caplen;
@@ -449,6 +451,11 @@ static void pci_read_cap(struct pci_pdev *pdev)
 				for (idx = 0U; idx < len; idx++) {
 					pdev->msix.cap[idx] = (uint8_t)pci_pdev_read_cfg(pdev->bdf, offset + idx, 1U);
 				}
+			} else {
+				/* PCI Express Capability */
+				pdev->pcie_capoff = offset;
+				pcie_devcap = pci_pdev_read_cfg(pdev->bdf, offset + PCIR_PCIE_DEVCAP, 4U);
+				pdev->has_flr = ((pcie_devcap & PCIM_PCIE_FLRCAP) != 0U) ? true : false;
 			}
 		}
 
@@ -487,5 +494,29 @@ static void init_pdev(uint16_t pbdf, uint32_t drhd_index)
 		}
 	} else {
 		pr_err("%s, failed to alloc pci_pdev!\n", __func__);
+	}
+}
+
+void pdev_do_flr(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val)
+{
+	uint32_t idx;
+	uint32_t bars[PCI_STD_NUM_BARS];
+
+	for (idx = 0U; idx < PCI_STD_NUM_BARS; idx++) {
+		bars[idx] = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
+	}
+
+	/* do the real reset */
+	pci_pdev_write_cfg(bdf, offset, bytes, val);
+
+	/*
+	 * After an FLR has been initiated by writing a 1b to
+	 * the Initiate Function Level Reset bit,
+	 * the Function must complete the FLR within 100 ms
+	 */
+	msleep(100U);
+
+	for (idx = 0U; idx < PCI_STD_NUM_BARS; idx++) {
+		pci_pdev_write_cfg(bdf, pci_bar_offset(idx), 4U, bars[idx]);
 	}
 }
