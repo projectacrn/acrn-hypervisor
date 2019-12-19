@@ -233,6 +233,9 @@ void init_vdev_pt(struct pci_vdev *vdev)
 	vdev->nr_bars = vdev->pdev->nr_bars;
 	pbdf.value = vdev->pdev->bdf.value;
 
+	vdev->has_flr = vdev->pdev->has_flr;
+	vdev->pcie_capoff = vdev->pdev->pcie_capoff;
+
 	for (idx = 0U; idx < vdev->nr_bars; idx++) {
 		vbar = &vdev->bar[idx];
 		offset = pci_bar_offset(idx);

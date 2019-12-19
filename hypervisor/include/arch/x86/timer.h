@@ -50,6 +50,7 @@ struct hv_timer {
 #define CYCLES_PER_MS	us_to_ticks(1000U)
 
 void udelay(uint32_t us);
+void msleep(uint32_t ms);
 
 /**
  * @brief convert us to ticks.
