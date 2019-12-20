@@ -14,6 +14,7 @@ def generate_file(config):
     :return: None
     """
     print("{}".format(scenario_cfg_lib.HEADER_LICENSE), file=config)
+    print("", file=config)
     print("#include <vm_config.h>", file=config)
     print("#include <pci_devices.h>", file=config)
     print("#include <vpci.h>", file=config)
@@ -25,6 +26,7 @@ def generate_file(config):
           file=config)
     print(" */", file=config)
     for i in range(scenario_cfg_lib.VM_COUNT):
+        print("", file=config)
         print("struct acrn_vm_pci_dev_config " +
               "vm{}_pci_devs[VM{}_CONFIG_PCI_DEV_NUM] = {{".format(i, i), file=config)
         print("\t{", file=config)
@@ -47,4 +49,3 @@ def generate_file(config):
         if i != 0:
             print("#endif", file=config)
         print("};", file=config)
-        print("", file=config)

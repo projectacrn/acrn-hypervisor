@@ -41,7 +41,7 @@ def uuid_output(uuid, uuid_string, config):
     print("\t\t\t 0x{0}U, 0x{1}U, 0x{2}U, 0x{3}U, 0x{4}U, 0x{5}U, 0x{6}U, 0x{7}U}},".
           format(uuid[16:18], uuid[18:20], uuid[20:22], uuid[22:24],
                  uuid[24:26], uuid[26:28], uuid[28:30], uuid[30:32]), file=config)
-    print("\t\t\t/* {0} */".format(uuid_string), file=config)
+    print("\t\t/* {0} */".format(uuid_string), file=config)
 
 
 def vuart0_output(i, vm_type, vm_info, config):
