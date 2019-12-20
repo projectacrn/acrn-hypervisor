@@ -59,7 +59,7 @@ struct acrn_hyperv {
 
 int32_t hyperv_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval);
 int32_t hyperv_rdmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *rval);
+void hyperv_init_time(struct acrn_vm *vm);
 void hyperv_init_vcpuid_entry(uint32_t leaf, uint32_t subleaf, uint32_t flags,
 	struct vcpuid_entry *entry);
-
 #endif
