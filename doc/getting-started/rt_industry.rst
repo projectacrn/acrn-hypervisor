@@ -63,14 +63,14 @@ for the RTVM.
   #. Select :kbd:`Select additional bundles` and add bundles for
      **network-basic**, and **user-basic**.
   #. Select :kbd:`Automatic OS Updates` and choose :kbd:`No [Disable]`.
-  #. Select :kbd:`Manage User` and choose :kbd:`Add New User `.
+  #. Select :kbd:`Manage User` and choose :kbd:`Add New User`.
   #. Select :kbd:`Install`.
   #. Select :kbd:`Confirm Install` in the :kbd:`Confirm Installation` window to start the installation.
 
 .. _step-by-step instruction:
    https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html
 
-.. note:: You may also refer to the `step-by-step instruction`_ for the detailed Clear Linux OS
+.. note:: Refer to the `step-by-step instruction`_ for detailed instructions from the Clear Linux OS
    installation guide.
 
 .. _hardware_setup:
