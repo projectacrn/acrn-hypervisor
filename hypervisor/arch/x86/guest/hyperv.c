@@ -192,15 +192,13 @@ hyperv_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval)
 		vcpu->vm->arch_vm.hyperv.hypercall_page.val64 = wval;
 		hyperv_setup_hypercall_page(vcpu, wval);
 		break;
-	case HV_X64_MSR_VP_INDEX:
-		/* read only */
-		break;
-	case HV_X64_MSR_TIME_REF_COUNT:
-		/* read only */
-		break;
 	case HV_X64_MSR_REFERENCE_TSC:
 		hyperv_setup_tsc_page(vcpu, wval);
 		break;
+	case HV_X64_MSR_VP_INDEX:
+	case HV_X64_MSR_TIME_REF_COUNT:
+		/* read only */
+		/* fallthrough */
 	default:
 		pr_err("hv: %s: unexpected MSR[0x%x] write", __func__, msr);
 		ret = -1;
