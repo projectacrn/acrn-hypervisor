@@ -32,7 +32,7 @@ def cpu_affinity_output(vm_info, i, config):
         return
 
     cpu_bits = vm_info.get_cpu_bitmap(i)
-    print("#define VM{0}_CONFIG_VCPU_AFFINITY\t{1}".format(
+    print("#define VM{0}_CONFIG_VCPU_AFFINITY\t\t{1}".format(
         i, cpu_bits['cpu_map']), file=config)
 
 
@@ -132,7 +132,7 @@ def logic_max_vm_num(config):
     :return: None
     """
     print("", file=config)
-    print("#define CONFIG_MAX_VM_NUM\t{0}U".format(scenario_cfg_lib.VM_COUNT), file=config)
+    print("#define CONFIG_MAX_VM_NUM\t\t{0}U".format(scenario_cfg_lib.VM_COUNT), file=config)
     print("", file=config)
     print("/* The VM CONFIGs like:", file=config)
     print(" *\tVMX_CONFIG_VCPU_AFFINITY", file=config)
