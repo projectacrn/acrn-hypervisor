@@ -136,8 +136,23 @@ hyperv_setup_hypercall_page(const struct acrn_vcpu *vcpu, uint64_t val)
 	uint64_t page_gpa;
 	void *page_hva;
 
-	/* asm volatile ("mov $2,%%eax; mov $0,%%edx; ret":::"eax","edx"); */
-	const uint8_t inst[11] = {0xb8U, 0x02U, 0x0U, 0x0U, 0x0U, 0xbaU, 0x0U, 0x0U, 0x0U, 0x0U, 0xc3U};
+	/*
+	 * All enlightened versions of Windows operating systems invoke guest hypercalls on
+	 * the basis of the recommendations presented by the hypervisor in CPUID.40000004:EAX.
+	 * A conforming hypervisor must return HV_STATUS_INVALID_HYPERCALL_CODE for any
+	 * unimplemented hypercalls.
+	 * ACRN does not wish to handle any hypercalls at moment, the following hypercall 
+	 * code page is implemented for this purpose.
+	 * inst32[] for 32 bits:
+	 * 	mov eax, 0x02 ; HV_STATUS_INVALID_HYPERCALL_CODE
+	 * 	mov edx, 0
+	 * 	ret
+	 * inst64[] for 64 bits:
+	 * 	mov rax, 0x02 ; HV_STATUS_INVALID_HYPERCALL_CODE
+	 * 	ret
+	 */
+	const uint8_t inst32[11] = {0xb8U, 0x02U, 0x0U, 0x0U, 0x0U, 0xbaU, 0x0U, 0x0U, 0x0U, 0x0U, 0xc3U};
+	const uint8_t inst64[8] = {0x48U, 0xc7U, 0xc0U, 0x02U, 0x0U, 0x0U, 0x0U, 0xc3U};
 
 	hypercall.val64 = val;
 
@@ -147,7 +162,11 @@ hyperv_setup_hypercall_page(const struct acrn_vcpu *vcpu, uint64_t val)
 		if (page_hva != NULL) {
 			stac();
 			(void)memset(page_hva, 0U, PAGE_SIZE);
-			(void)memcpy_s(page_hva, 11U, inst, 11U);
+			if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
+				(void)memcpy_s(page_hva, 8U, inst64, 8U);
+			} else {
+				(void)memcpy_s(page_hva, 11U, inst32, 11U);
+			}
 			clac();
 		}
 	}
