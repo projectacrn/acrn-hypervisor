@@ -643,6 +643,12 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 		 */
 		flush_vpid_global();
 
+#ifdef CONFIG_HYPERV_ENABLED
+		if (is_vcpu_bsp(vcpu)) {
+			hyperv_init_time(vcpu->vm);
+		}
+#endif
+
 		/* Set vcpu launched */
 		vcpu->launched = true;
 
