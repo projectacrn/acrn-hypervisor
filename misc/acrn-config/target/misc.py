@@ -9,7 +9,7 @@ import subprocess
 MEM_PATH = ['/proc/iomem', '/proc/meminfo']
 TTY_PATH = '/sys/class/tty/'
 SYS_IRQ_PATH = '/proc/interrupts'
-CPU_INFO_PATH = '/proc/cpuinfo'
+CPU_INFO_PATH = '/sys/devices/system/cpu/possible'
 
 ttys_type = {
     '0': 'PORT',
@@ -194,31 +194,18 @@ def dump_total_mem(config):
 def dump_cpu_core_info(config):
 
     print("\t<CPU_PROCESSOR_INFO>", file=config)
-    processor_id_list = []
     with open(CPU_INFO_PATH, 'rt') as cpu_info:
-        while True:
-            line = cpu_info.readline()
+        line = cpu_info.readline()
 
-            if not line:
-                break
+        processor_id = int(line.split('-')[0].strip())
+        print("\t{}".format(processor_id), end="", file=config)
 
-            if ':' in line and line.split(':')[0].strip() == "processor":
-                processor_id = line.split(':')[1].strip()
-                processor_id_list.append(processor_id)
+        processor_id += 1
+        while (processor_id < int(line.split('-')[1].strip())):
+            print(", {}".format(processor_id), end="", file=config)
+            processor_id += 1
 
-    processor_len = len(processor_id_list)
-    for processor_id in processor_id_list:
-        if int(processor_id) == 0:
-            if processor_len == 1:
-                print("\t{},".format(processor_id.strip()), file=config)
-            else:
-                print("\t{},".format(processor_id.strip()), end="", file=config)
-        else:
-            if processor_len == int(processor_id) + 1:
-                print(" {}".format(processor_id.strip()), file=config)
-            else:
-                print(" {},".format(processor_id.strip()), end="", file=config)
-
+    print("", file=config)
     print("\t</CPU_PROCESSOR_INFO>", file=config)
     print("", file=config)
 
