@@ -292,18 +292,12 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	pr_dbg("VMX_PROC_VM_EXEC_CONTROLS: 0x%x ", value32);
 
 	/* Set up secondary processor based VM execution controls - pg 2901
-	 * 24.6.2. Set up for: * Enable EPT * Enable RDTSCP * Unrestricted
-	 * guest (optional)
+	 * 24.6.2. Set up for: * Enable EPT * Eable VPID * Enable RDTSCP *
+	 * Enable Unrestricted guest (optional)
 	 */
 	value32 = check_vmx_ctrl(MSR_IA32_VMX_PROCBASED_CTLS2,
-			VMX_PROCBASED_CTLS2_VAPIC | VMX_PROCBASED_CTLS2_EPT |
+			VMX_PROCBASED_CTLS2_VAPIC | VMX_PROCBASED_CTLS2_EPT |VMX_PROCBASED_CTLS2_VPID |
 			VMX_PROCBASED_CTLS2_RDTSCP | VMX_PROCBASED_CTLS2_UNRESTRICT);
-
-	if (vcpu->arch.vpid != 0U) {
-		value32 |= VMX_PROCBASED_CTLS2_VPID;
-	} else {
-		value32 &= ~VMX_PROCBASED_CTLS2_VPID;
-	}
 
 	if (is_apicv_advanced_feature_supported()) {
 		value32 |= VMX_PROCBASED_CTLS2_VIRQ;
