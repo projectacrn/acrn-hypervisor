@@ -6,12 +6,12 @@ ACRN CPU Sharing
 Introduction
 ************
 
-The goal of CPU Sharing is to fully utilize the physical CPU resource, to support more virtual machines. Current ACRN only supports partition mode, which is a strict 1 to 1 mapping mode between vCPUs and pCPUs. Because of the lack of CPU sharing ability, the number of VM is limited. To support the CPU Sharing, we introduce a schedule framework and implement two simple tiny scheduling algorithms to satisfy embedded device requirements.
+The goal of CPU Sharing is to fully utilize the physical CPU resource to support more virtual machines. Currently, ACRN only supports partition mode, which is a strict 1 to 1 mapping mode between vCPUs and pCPUs. Because of the lack of CPU sharing ability, the number of VMs is limited. To support CPU Sharing, we have introduced a schedule framework and implemented two simple small scheduling algorithms to satisfy embedded device requirements.
 
 Schedule Framework
 ******************
 
-To satisfy the modularization design conception, the schedule framework layer isolates the vcpu layer and scheduler algorithm. It has not vCPU concept and can only be aware of the thread object instance. The thread object state machine will be maintained in the framework. The framework abstracts the scheduler algorithm object, so this architecture can easily extend new scheduler algorithms.
+To satisfy the modularization design concept, the schedule framework layer isolates the vcpu layer and scheduler algorithm. It does not have a vCPU concept so it is only aware of the thread object instance. The thread object state machine is maintained in the framework. The framework abstracts the scheduler algorithm object, so this architecture can easily extend to new scheduler algorithms.
 
 .. figure:: images/cpu_sharing_framework.png
    :align: center
@@ -24,7 +24,7 @@ The below diagram shows that vcpu layer invokes APIs provided by schedule framew
 vCPU affinity
 *************
 
-Currently, we do not support vCPU migration, the assignment of vCPU mapping to pCPU is statically configured in VM configuration via a vcpu_affinity array. The item number of the array matches the vCPU number of this VM. Each item has one bit to indicate the assigned pCPU of the corresponding vCPU. There are some rules to configure the vCPU affinity:
+Currently, we do not support vCPU migration; the assignment of vCPU mapping to pCPU is statically configured in the VM configuration via a vcpu_affinity array. The item number of the array matches the vCPU number of this VM. Each item has one bit to indicate the assigned pCPU of the corresponding vCPU. Use these rules to configure the vCPU affinity:
 
 - Only one bit can be set for each affinity item of vCPU.
 - vCPUs in the same VM cannot be assigned to the same pCPU.
@@ -41,36 +41,36 @@ Here is an example for affinity:
 Thread object state
 *******************
 
-There are three states for thread object, RUNNING, RUNNABLE and BLOCK. States transition happens in certain conditions.
+The thread object contains three states: RUNNING, RUNNABLE, and BLOCK.
 
 .. figure:: images/cpu_sharing_state.png
    :align: center
 
-After a new vCPU is created, the corresponding thread object is initiated. The vcpu layer will invoke a wakeup operation. After wakeup, the state for the new thread object is set to RUNNABLE, then follow its algorithm to determine to preempt the current running thread object or not. If yes, it will turn to RUNNING state. In RUNNING state, the thread object may turn back to RUNNABLE state when it runs out of its timeslice, or it yields the pCPU by itself, or be preempted. The thread object under RUNNING state may trigger sleep to transfer to BLOCKED state.
+After a new vCPU is created, the corresponding thread object is initiated. The vCPU layer invokes a wakeup operation. After wakeup, the state for the new thread object is set to RUNNABLE, and then follows its algorithm to determine whether or not to preempt the current running thread object. If yes, it turns to the RUNNING state. In RUNNING state, the thread object may turn back to the RUNNABLE state when it runs out of its timeslice, or it might yield the pCPU by itself, or be preempted. The thread object under RUNNING state may trigger sleep to transfer to BLOCKED state.
 
 Scheduler
 *********
 
-Below block diagram shows the basic concept for the scheduler. There are two kinds of scheduler in the diagram, one is NOOP (No-Operation) scheduler and the other is IORR (IO sensitive Round-Robin) scheduler.
+The below block diagram shows the basic concept for the scheduler. There are two kinds of scheduler in the diagram: NOOP (No-Operation) scheduler and IORR (IO sensitive Round-Robin) scheduler.
 
 
 - **No-Operation scheduler**:
 
-  The NOOP (No-operation) scheduler has the same policy with original partition mode, every pCPU can run only two thread objects, one is idle thread, and another is the thread of the assigned vCPU. With this scheduler, vCPU work in work-conserving mode, and will run once it’s ready. idle thread could run when the vCPU thread blocked.
+  The NOOP (No-operation) scheduler has the same policy as the original partition mode; every pCPU can run only two thread objects: one is the idle thread, and another is the thread of the assigned vCPU. With this scheduler, vCPU works in work-conserving mode, and will run once it is ready. Idle thread can run when the vCPU thread blocked.
 
 - **IO sensitive round-robin scheduler**:
 
-  IORR (IO sensitive round-robin) scheduler is implemented with per-pCPU runqueue and per-pCPU tick timer, it supports more than one vCPU running on a pCPU. The scheduler schedule thread objects in round-robin policy basically, and support preemption by timeslice counting.
+  The IORR (IO sensitive round-robin) scheduler is implemented with the per-pCPU runqueue and the per-pCPU tick timer; it supports more than one vCPU running on a pCPU. It basically schedules thread objects in a round-robin policy and supports preemption by timeslice counting.
 
   - Every thread object has an initial timeslice (ex: 10ms)
-  - Timeslice is consumed with time and be counted in context switch and tick handler
-  - If timeslice is positive or zero, then switch out current thread object and put it to tail of runqueue.Then, pick next runnable one from runqueue to run.
-  - Threads who has IO request will preempt current running thread on the same pCPU.
+  - The timeslice is consumed with time and be counted in the context switch and tick handler
+  - If the timeslice is positive or zero, then switch out the current thread object and put it to tail of runqueue. Then, pick the next runnable one from runqueue to run.
+  - Threads with an IO request will preempt current running threads on the same pCPU.
 
 Scheduler configuration
 ***********************
 
-There are two place in the code decide the usage for scheduler.
+Two places in the code decide the usage for the scheduler.
 
 * The option in Kconfig decides the only scheduler used in runtime.
   ``hypervisor/arch/x86/Kconfig``
@@ -80,9 +80,10 @@ There are two place in the code decide the usage for scheduler.
      :caption: Kconfig for Scheduler
      :linenos:
      :lines: 40-58
+     :emphasize-lines: 3
      :language: c
 
-The default scheduler is **SCHED_NOOP**. To use the IORR, only need to set **SCHED_IORR** in **ACRN Scheduler**.
+The default scheduler is **SCHED_NOOP**. To use the IORR, change it to **SCHED_IORR** in the **ACRN Scheduler**.
 
 * The affinity for VMs are set in  ``hypervisor/scenarios/<scenario_name>/vm_configurations.h``
 
@@ -93,9 +94,12 @@ The default scheduler is **SCHED_NOOP**. To use the IORR, only need to set **SCH
      :lines: 31-32
      :language: c
 
-* vCPU number corresponding to affinity is set in ``hypervisor/scenarios/<scenario_name>/vm_configurations.c`` by **vcpu_num**
+* vCPU number corresponding to affinity is set in ``hypervisor/scenarios/<scenario_name>/vm_configurations.c`` by the **vcpu_num**
 
-For example, to support below configuration in industry scenario.
+Example
+*******
+
+To support below configuration in industry scenario:
 
 +----------+-------+-------+--------+
 |pCPU0     |pCPU1  |pCPU2  |pCPU3   |
@@ -103,7 +107,7 @@ For example, to support below configuration in industry scenario.
 |SOS WaaG  |RT Linux       |vxWorks |
 +----------+---------------+--------+
 
-You should change three files:
+Change the following three files:
 
 1. ``hypervisor/arch/x86/Kconfig``
 
@@ -237,7 +241,7 @@ You should change three files:
 
  };
 
-After you start all the VMs, you can check the vcpu affinities from Hypervisor console:
+After you start all VMs, check the vCPU affinities from the Hypervisor console:
 
 .. code-block:: none
 
