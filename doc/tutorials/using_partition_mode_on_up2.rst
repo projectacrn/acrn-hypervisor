@@ -204,9 +204,9 @@ Enable partition mode in ACRN hypervisor
      #define VM0_CONFIG_MEM_SIZE		0x20000000UL
 
      #define VM0_CONFIG_OS_NAME			"ClearLinux 26600"
-     #define VM0_CONFIG_OS_BOOTARGS		"root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
+     #define VM0_CONFIG_OS_BOOTARGS		"root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet \
 						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
-						consoleblank=0 tsc=reliable xapic_phys"
+						consoleblank=0 tsc=reliable"
 
      #define	VM1_CONFIGURED
 
@@ -218,9 +218,9 @@ Enable partition mode in ACRN hypervisor
      #define VM1_CONFIG_MEM_SIZE		0x20000000UL
 
      #define VM1_CONFIG_OS_NAME			"ClearLinux 26600"
-     #define VM1_CONFIG_OS_BOOTARGS		"root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
+     #define VM1_CONFIG_OS_BOOTARGS		"root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet \
 						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
-						consoleblank=0 tsc=reliable xapic_phys"
+						consoleblank=0 tsc=reliable"
 
      #define VM0_CONFIG_PCI_PTDEV_NUM		2U
      #define VM1_CONFIG_PCI_PTDEV_NUM		3U
@@ -295,9 +295,9 @@ Enable partition mode in ACRN hypervisor
      #define VM0_CONFIG_MEM_SIZE		0x20000000UL
 
      #define VM0_CONFIG_OS_NAME			"ClearLinux 26600"
-     #define VM0_CONFIG_OS_BOOTARGS		"root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
+     #define VM0_CONFIG_OS_BOOTARGS		"root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet \
 						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
-						consoleblank=0 tsc=reliable xapic_phys"
+						consoleblank=0 tsc=reliable"
 
    .. note::
 

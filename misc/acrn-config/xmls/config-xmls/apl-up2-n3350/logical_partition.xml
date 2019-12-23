@@ -29,7 +29,7 @@
         <console configurable="0" desc="ttyS console for Linux kernel">/dev/ttyS0</console>
         <rootfs desc="rootfs for Linux kernel">/dev/sda3</rootfs>
         <bootargs desc="Specify kernel boot arguments">
-        rw rootwait noxsave nohpet console=hvc0 no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable xapic_phys
+        rw rootwait noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable
         </bootargs>
     </os_config>
     <vuart id="0">
@@ -77,8 +77,8 @@
         <console configurable="0" desc="ttyS console for Linux kernel">/dev/ttyS0</console>
         <rootfs desc="rootfs for Linux kernel" readonly="true">/dev/sda3</rootfs>
         <bootargs desc="Specify kernel boot arguments">
-        rw rootwait noxsave nohpet console=hvc0 no_timer_check ignore_loglevel log_buf_len=16M
-        consoleblank=0 tsc=reliable xapic_phys
+        rw rootwait noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
+        consoleblank=0 tsc=reliable
         </bootargs>
     </os_config>
     <vuart id="0">
