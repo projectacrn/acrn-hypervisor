@@ -299,6 +299,15 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 			VMX_PROCBASED_CTLS2_VAPIC | VMX_PROCBASED_CTLS2_EPT |VMX_PROCBASED_CTLS2_VPID |
 			VMX_PROCBASED_CTLS2_RDTSCP | VMX_PROCBASED_CTLS2_UNRESTRICT);
 
+	/* SDM Vol3, 25.3,  setting "enable INVPCID" VM-execution to 1 with "INVLPG exiting" disabled,
+	 * passes-through INVPCID instruction to guest if the instruction is supported.
+	 */
+	if (pcpu_has_cap(X86_FEATURE_INVPCID)) {
+		value32 |= VMX_PROCBASED_CTLS2_INVPCID;
+	} else {
+		value32 &= ~VMX_PROCBASED_CTLS2_INVPCID;
+	}
+
 	if (is_apicv_advanced_feature_supported()) {
 		value32 |= VMX_PROCBASED_CTLS2_VIRQ;
 		value32 |= VMX_PROCBASED_CTLS2_VAPIC_REGS;
