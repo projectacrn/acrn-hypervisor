@@ -17,6 +17,7 @@
 #include <vtd.h>
 #include <vmexit.h>
 #include <pgtable.h>
+#include <cpufeatures.h>
 #include <trace.h>
 #include <logmsg.h>
 
@@ -26,7 +27,7 @@
 			   CR0_NE |  CR0_ET | CR0_TS | CR0_EM | CR0_MP | CR0_PE)
 
 /* CR4 bits hv want to trap to track status change */
-#define CR4_TRAP_MASK (CR4_PSE | CR4_PAE | CR4_VMXE | CR4_PCIDE | CR4_SMEP | CR4_SMAP | CR4_PKE)
+#define CR4_TRAP_MASK (CR4_PSE | CR4_PAE | CR4_VMXE | CR4_SMEP | CR4_SMAP | CR4_PKE)
 #define	CR4_RESERVED_MASK ~(CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_PSE | \
 				CR4_PAE | CR4_MCE | CR4_PGE | CR4_PCE |     \
 				CR4_OSFXSR | CR4_PCIDE | CR4_OSXSAVE |       \
@@ -111,6 +112,14 @@ static bool is_cr0_write_valid(struct acrn_vcpu *vcpu, uint64_t cr0)
 				 * is invalid
 				 */
 				if (((cr0 & CR0_CD) == 0UL) && ((cr0 & CR0_NW) != 0UL)) {
+					ret = false;
+				}
+				/* SDM 4.10.1 "Process-Context Identifiers"
+				 *
+				 * MOV to CR0 causes a general-protection exception if it would
+				 * clear CR0.PG to 0 while CR4.PCIDE = 1
+				 */
+				if (((cr0 & CR0_PG) == 0UL) && ((vcpu_get_cr4(vcpu) & CR4_PCIDE) != 0UL)) {
 					ret = false;
 				}
 			}
@@ -252,14 +261,9 @@ static bool is_cr4_write_valid(struct acrn_vcpu *vcpu, uint64_t cr4)
 		if (((cr4 & CR4_VMXE) != 0UL) || ((cr4 & CR4_SMXE) != 0UL)) {
 			ret = false;
 		} else {
-			/* Do NOT support PCID in guest */
-			if ((cr4 & CR4_PCIDE) != 0UL) {
-				ret = false;
-			} else {
-				if (is_long_mode(vcpu)) {
-					if ((cr4 & CR4_PAE) == 0UL) {
-						ret = false;
-					}
+			if (is_long_mode(vcpu)) {
+				if ((cr4 & CR4_PAE) == 0UL) {
+					ret = false;
 				}
 			}
 		}
@@ -294,7 +298,7 @@ static bool is_cr4_write_valid(struct acrn_vcpu *vcpu, uint64_t cr4)
  *   - OSXMMEXCPT (10) Flexible to guest
  *   - VMXE (13) Trapped to hide from guest
  *   - SMXE (14) must always be 0 => must lead to a VM exit
- *   - PCIDE (17) Trapped to hide from guest
+ *   - PCIDE (17) Flexible tol guest
  *   - OSXSAVE (18) Flexible to guest
  *   - XSAVE (19) Flexible to guest
  *         We always keep align with physical cpu. So it's flexible to
@@ -322,6 +326,30 @@ static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 				}
 			}
 			if (err_found == false) {
+				vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
+			}
+		}
+
+		if ((err_found == false) && (((cr4 ^ old_cr4) & CR4_PCIDE) != 0UL)) {
+			/* MOV to CR4 causes a general-protection exception (#GP) if it would change
+			 * CR4.PCIDE from 0 to 1 and either IA32_EFER.LMA = 0 or CR3[11:0] != 000H
+			 */
+			if ((cr4 & CR4_PCIDE) != 0UL) {
+				uint64_t guest_cr3 = exec_vmread(VMX_GUEST_CR3);
+				/* For now, HV passes-through PCID capability to guest, check X86_FEATURE_PCID of
+				 * pcpu capabilities directly.
+				 */
+				if ((!pcpu_has_cap(X86_FEATURE_PCID)) || (!is_long_mode(vcpu)) ||
+				   ((guest_cr3 & 0xFFFUL) != 0UL)) {
+					pr_dbg("Failed to enable CR4.PCIE");
+					err_found = true;
+					vcpu_inject_gp(vcpu, 0U);
+				}
+			} else {
+				/* The instruction invalidates all TLB entries (including global entries) and
+				 * all entries in all paging-structure caches (for all PCIDs) if it changes the
+				 * value of the CR4.PCIDE from 1 to 0
+				 */
 				vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 			}
 		}
