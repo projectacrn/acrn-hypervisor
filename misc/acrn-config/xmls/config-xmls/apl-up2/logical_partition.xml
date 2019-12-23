@@ -67,7 +67,7 @@
     </epc_section>
     <memory>
         <start_hpa configurable="0" desc="The start physical address in host for the VM">0x120000000</start_hpa>
-        <size desc="The memory size in Bytes for the VM" readonly="true">VM0_MEM_SIZE</size>
+        <size desc="The memory size in Bytes for the VM">0x20000000</size>
         <start_hpa2 desc="Start of second HPA for non-contiguous allocations in host for the VM">0x0</start_hpa2>
         <size_hpa2 desc="Memory size of second HPA for non-contiguous allocations in Bytes for the VM">0x0</size_hpa2>
     </memory>
