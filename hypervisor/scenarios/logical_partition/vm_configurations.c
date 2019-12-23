@@ -31,9 +31,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.bootargs = VM0_CONFIG_OS_BOOTARG_CONSOLE	\
 				VM0_CONFIG_OS_BOOTARG_MAXCPUS		\
 				VM0_CONFIG_OS_BOOTARG_ROOT		\
-				"rw rootwait noxsave nohpet console=hvc0 \
+				"rw rootwait noxsave nohpet \
 				no_timer_check ignore_loglevel log_buf_len=16M \
-				consoleblank=0 tsc=reliable xapic_phys"
+				consoleblank=0 tsc=reliable"
 		},
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
@@ -71,9 +71,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.bootargs = VM1_CONFIG_OS_BOOTARG_CONSOLE	\
 				VM1_CONFIG_OS_BOOTARG_MAXCPUS		\
 				VM1_CONFIG_OS_BOOTARG_ROOT		\
-				"rw rootwait noxsave nohpet console=hvc0 \
+				"rw rootwait noxsave nohpet \
 				no_timer_check ignore_loglevel log_buf_len=16M \
-				consoleblank=0 tsc=reliable xapic_phys"
+				consoleblank=0 tsc=reliable"
 		},
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
