@@ -102,20 +102,20 @@ uint32_t pci_vdev_read_bar(const struct pci_vdev *vdev, uint32_t idx)
 	bar = pci_vdev_read_cfg_u32(vdev, offset);
 	/* Sizing BAR */
 	if (bar == ~0U) {
-		bar = vdev->bar[idx].mask;
+		bar = vdev->vbars[idx].mask;
 	}
 	return bar;
 }
 
 static void pci_vdev_update_bar_base(struct pci_vdev *vdev, uint32_t idx)
 {
-	struct pci_bar *vbar;
+	struct pci_vbar *vbar;
 	enum pci_bar_type type;
 	uint64_t base = 0UL;
 	uint32_t lo, hi, offset;
 	struct acrn_vm *vm = vdev->vpci->vm;
 
-	vbar = &vdev->bar[idx];
+	vbar = &vdev->vbars[idx];
 	offset = pci_bar_offset(idx);
 	lo = pci_vdev_read_cfg_u32(vdev, offset);
 	if ((vbar->type != PCIBAR_NONE) && (lo != ~0U)) {
@@ -123,7 +123,7 @@ static void pci_vdev_update_bar_base(struct pci_vdev *vdev, uint32_t idx)
 		base = lo & vbar->mask;
 
 		if (vbar->type == PCIBAR_MEM64) {
-			vbar = &vdev->bar[idx + 1U];
+			vbar = &vdev->vbars[idx + 1U];
 			hi = pci_vdev_read_cfg_u32(vdev, offset + 4U);
 			if (hi != ~0U) {
 				hi &= vbar->mask;
@@ -137,23 +137,23 @@ static void pci_vdev_update_bar_base(struct pci_vdev *vdev, uint32_t idx)
 		}
 	}
 
-	if ((base != 0UL) && !ept_is_mr_valid(vm, base, vdev->bar[idx].size)) {
+	if ((base != 0UL) && !ept_is_mr_valid(vm, base, vdev->vbars[idx].size)) {
 		pr_fatal("%s, %x:%x.%x set invalid bar[%d] base: 0x%lx, size: 0x%lx\n", __func__,
-			vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, base, vdev->bar[idx].size);
+			vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, base, vdev->vbars[idx].size);
 		/* If guest set a invalid GPA, ignore it temporarily */
 		base = 0UL;
 	}
 
-	vdev->bar[idx].base = base;
+	vdev->vbars[idx].base = base;
 }
 
 void pci_vdev_write_bar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 {
-	struct pci_bar *vbar;
+	struct pci_vbar *vbar;
 	uint32_t bar, offset;
 	uint32_t update_idx = idx;
 
-	vbar = &vdev->bar[idx];
+	vbar = &vdev->vbars[idx];
 	bar = val & vbar->mask;
 	bar |= vbar->fixed;
 	offset = pci_bar_offset(idx);
