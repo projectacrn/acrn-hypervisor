@@ -1,22 +1,21 @@
 .. _run-kata-containers:
 
-How to run Kata containers on Service VM
-########################################
+Run Kata containers on a Service VM
+###################################
 
-This tutorial describes how to install, configure and run Kata containers on
-ACRN Service VM.
+This tutorial describes how to install, configure, and run Kata containers on
+the ACRN Service VM.
 
-Pre-requisites
+Pre-Requisites
 **************
 
 .. _kata prerequisites:
    https://github.com/kata-containers/documentation/blob/master/how-to/how-to-use-kata-containers-with-acrn.md#pre-requisites
 
-#. :ref:`ACRN supported hardware <hardware>`.
-#. For default prebuilt ACRN binary in E2E package, You need have 4 CPUs cores or enable "CPU Hyper-Threading”
-   to have 4 CPU Thread for 2 CPU cores.
-#. Follow this :ref:`instruction <quick-setup-guide>` to set up the ACRN Service VM.
-#. Build ACRN kernel to enable ``macvtap`` function.
+#. Refer to the :ref:`ACRN supported hardware <hardware>`.
+#. For a default prebuilt ACRN binary in the E2E package, you must have 4 CPU cores or enable "CPU Hyper-Threading” in order to have 4 CPU threads for 2 CPU cores.
+#. Follow :ref:`these instructions <quick-setup-guide>` to set up the ACRN Service VM.
+#. Build the ACRN kernel to enable the ``macvtap`` function:
 
    .. code-block:: none
 
@@ -27,7 +26,7 @@ Pre-requisites
       $ sed -i '$ i CONFIG_MACVTAP=y' .config
       $ make clean && make olddefconfig && make && sudo make modules_install INSTALL_MOD_PATH=out/
 
-   Login Service VM, use the new ACRN kernel:
+   Log in to the Service VM and use the new ACRN kernel:
 
    .. code-block:: none
 
@@ -42,6 +41,6 @@ Pre-requisites
 Configure Kata on ACRN
 **********************
 
-Now you can follow this `kata instruction
+Follow these `kata instructions
 <https://github.com/kata-containers/documentation/blob/master/how-to/how-to-use-kata-containers-with-acrn.md>`_
 to configure and launch the Kata VMs with ACRN.
