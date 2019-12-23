@@ -414,57 +414,53 @@ static inline uint32_t pci_pdev_get_nr_bars(uint8_t hdr_type)
  */
 static void pci_read_cap(struct pci_pdev *pdev)
 {
-	uint8_t ptr, cap;
+	uint8_t pos, cap;
 	uint32_t msgctrl;
-	uint32_t len, offset, idx;
+	uint32_t len, idx;
 	uint32_t table_info;
 	uint32_t pcie_devcap, val;
 
-	ptr = (uint8_t)pci_pdev_read_cfg(pdev->bdf, PCIR_CAP_PTR, 1U);
+	pos = (uint8_t)pci_pdev_read_cfg(pdev->bdf, PCIR_CAP_PTR, 1U);
 
-	while ((ptr != 0U) && (ptr != 0xFFU)) {
-		cap = (uint8_t)pci_pdev_read_cfg(pdev->bdf, ptr + PCICAP_ID, 1U);
+	while ((pos != 0U) && (pos != 0xFFU)) {
+		cap = (uint8_t)pci_pdev_read_cfg(pdev->bdf, pos + PCICAP_ID, 1U);
 
-		/* Ignore all other Capability IDs for now */
-		if ((cap == PCIY_MSI) || (cap == PCIY_MSIX) || (cap == PCIY_PCIE) || (cap == PCIY_AF)) {
-			offset = ptr;
-			if (cap == PCIY_MSI) {
-				pdev->msi_capoff = offset;
-			} else if (cap == PCIY_MSIX) {
-				pdev->msix.capoff = offset;
-				pdev->msix.caplen = MSIX_CAPLEN;
-				len = pdev->msix.caplen;
+		if (cap == PCIY_MSI) {
+			pdev->msi_capoff = pos;
+		} else if (cap == PCIY_MSIX) {
+			pdev->msix.capoff = pos;
+			pdev->msix.caplen = MSIX_CAPLEN;
+			len = pdev->msix.caplen;
 
-				msgctrl = pci_pdev_read_cfg(pdev->bdf, pdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
+			msgctrl = pci_pdev_read_cfg(pdev->bdf, pdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
 
-				/* Read Table Offset and Table BIR */
-				table_info = pci_pdev_read_cfg(pdev->bdf, pdev->msix.capoff + PCIR_MSIX_TABLE, 4U);
+			/* Read Table Offset and Table BIR */
+			table_info = pci_pdev_read_cfg(pdev->bdf, pdev->msix.capoff + PCIR_MSIX_TABLE, 4U);
 
-				pdev->msix.table_bar = (uint8_t)(table_info & PCIM_MSIX_BIR_MASK);
+			pdev->msix.table_bar = (uint8_t)(table_info & PCIM_MSIX_BIR_MASK);
 
-				pdev->msix.table_offset = table_info & ~PCIM_MSIX_BIR_MASK;
-				pdev->msix.table_count = (msgctrl & PCIM_MSIXCTRL_TABLE_SIZE) + 1U;
+			pdev->msix.table_offset = table_info & ~PCIM_MSIX_BIR_MASK;
+			pdev->msix.table_count = (msgctrl & PCIM_MSIXCTRL_TABLE_SIZE) + 1U;
 
-				ASSERT(pdev->msix.table_count <= CONFIG_MAX_MSIX_TABLE_NUM);
+			ASSERT(pdev->msix.table_count <= CONFIG_MAX_MSIX_TABLE_NUM);
 
-				/* Copy MSIX capability struct into buffer */
-				for (idx = 0U; idx < len; idx++) {
-					pdev->msix.cap[idx] = (uint8_t)pci_pdev_read_cfg(pdev->bdf, offset + idx, 1U);
-				}
-			} else if (cap == PCIY_PCIE) {
-				/* PCI Express Capability */
-				pdev->pcie_capoff = offset;
-				pcie_devcap = pci_pdev_read_cfg(pdev->bdf, offset + PCIR_PCIE_DEVCAP, 4U);
-				pdev->has_flr = ((pcie_devcap & PCIM_PCIE_FLRCAP) != 0U) ? true : false;
-			} else {
-				/* Conventional PCI Advanced Features Capability */
-				pdev->af_capoff = offset;
-				val = pci_pdev_read_cfg(pdev->bdf, offset, 4U);
-				pdev->has_af_flr = ((val & PCIM_AF_FLR_CAP) != 0U) ? true : false;
+			/* Copy MSIX capability struct into buffer */
+			for (idx = 0U; idx < len; idx++) {
+				pdev->msix.cap[idx] = (uint8_t)pci_pdev_read_cfg(pdev->bdf, (uint32_t)pos + idx, 1U);
 			}
+		} else if (cap == PCIY_PCIE) {
+			pdev->pcie_capoff = pos;
+			pcie_devcap = pci_pdev_read_cfg(pdev->bdf, pos + PCIR_PCIE_DEVCAP, 4U);
+			pdev->has_flr = ((pcie_devcap & PCIM_PCIE_FLRCAP) != 0U) ? true : false;
+		} else if (cap == PCIY_AF) {
+			pdev->af_capoff = pos;
+			val = pci_pdev_read_cfg(pdev->bdf, pos, 4U);
+			pdev->has_af_flr = ((val & PCIM_AF_FLR_CAP) != 0U) ? true : false;
+		} else {
+			/* Ignore all other Capability IDs for now */
 		}
 
-		ptr = (uint8_t)pci_pdev_read_cfg(pdev->bdf, ptr + PCICAP_NEXTPTR, 1U);
+		pos = (uint8_t)pci_pdev_read_cfg(pdev->bdf, pos + PCICAP_NEXTPTR, 1U);
 	}
 }
 
