@@ -116,8 +116,8 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 	case 0x07U:
 		if (subleaf == 0U) {
 			cpuid_subleaf(leaf, subleaf, &entry->eax, &entry->ebx, &entry->ecx, &entry->edx);
-			/* mask invpcid */
-			entry->ebx &= ~(CPUID_EBX_INVPCID | CPUID_EBX_PQM | CPUID_EBX_PQE);
+
+			entry->ebx &= ~(CPUID_EBX_PQM | CPUID_EBX_PQE);
 
 			/* mask SGX and SGX_LC */
 			entry->ebx &= ~CPUID_EBX_SGX;
@@ -421,9 +421,6 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 
 	/* mask SDBG for silicon debug */
 	*ecx &= ~CPUID_ECX_SDBG;
-
-	/* mask pcid */
-	*ecx &= ~CPUID_ECX_PCID;
 
 	/*mask vmx to guest os */
 	*ecx &= ~CPUID_ECX_VMX;
