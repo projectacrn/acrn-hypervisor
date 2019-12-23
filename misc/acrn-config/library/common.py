@@ -20,7 +20,7 @@ GUEST_FLAG = ["0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTH
               "GUEST_FLAG_HIDE_MTRR", "GUEST_FLAG_RT"]
 # Support 512M, 1G, 2G
 # pre launch less then 2G, sos vm less than 24G
-START_HPA_SIZE_LIST = ['0x20000000', '0x40000000', '0x80000000', 'CONFIG_SOS_RAM_SIZE', 'VM0_MEM_SIZE']
+START_HPA_SIZE_LIST = ['0x20000000', '0x40000000', '0x80000000', 'CONFIG_SOS_RAM_SIZE']
 
 
 MULTI_ITEM = ["guest_flag", "pcpu_id", "input", "block", "network"]
