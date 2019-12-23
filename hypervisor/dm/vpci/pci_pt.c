@@ -40,10 +40,10 @@
 static void vdev_pt_unmap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
 	bool is_msix_table_bar;
-	struct pci_bar *vbar;
+	struct pci_vbar *vbar;
 	struct acrn_vm *vm = vdev->vpci->vm;
 
-	vbar = &vdev->bar[idx];
+	vbar = &vdev->vbars[idx];
 
 	if (vbar->base != 0UL) {
 		ept_del_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
@@ -87,10 +87,10 @@ static void vdev_pt_unmap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 static void vdev_pt_map_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
 	bool is_msix_table_bar;
-	struct pci_bar *vbar;
+	struct pci_vbar *vbar;
 	struct acrn_vm *vm = vdev->vpci->vm;
 
-	vbar = &vdev->bar[idx];
+	vbar = &vdev->vbars[idx];
 
 	if (vbar->base != 0UL) {
 		ept_add_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
@@ -129,7 +129,7 @@ static void vdev_pt_allow_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
 	/* For SOS, all port IO access is allowed by default, so skip SOS here */
 	if (!is_sos_vm(vdev->vpci->vm)) {
-		struct pci_bar *vbar = &vdev->bar[idx];
+		struct pci_vbar *vbar = &vdev->vbars[idx];
 		if (vbar->base != 0UL) {
 			allow_guest_pio_access(vdev->vpci->vm, (uint16_t)vbar->base, (uint32_t)(vbar->size));
 		}
@@ -146,7 +146,7 @@ static void vdev_pt_deny_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
 	/* For SOS, all port IO access is allowed by default, so skip SOS here */
 	if (!is_sos_vm(vdev->vpci->vm)) {
-		struct pci_bar *vbar = &vdev->bar[idx];
+		struct pci_vbar *vbar = &vdev->vbars[idx];
 		if (vbar->base != 0UL) {
 			deny_guest_pio_access(vdev->vpci->vm, (uint16_t)(vbar->base), (uint32_t)(vbar->size));
 		}
@@ -161,7 +161,7 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 {
 	uint32_t update_idx = idx;
 	uint32_t offset = pci_bar_offset(idx);
-	struct pci_bar *vbar = &vdev->bar[idx];
+	struct pci_vbar *vbar = &vdev->vbars[idx];
 
 	switch (vbar->type) {
 	case PCIBAR_IO_SPACE:
@@ -171,7 +171,7 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 			vdev_pt_allow_io_vbar(vdev, update_idx);
 		} else {
 			pci_vdev_write_cfg_u32(vdev, offset, val);
-			vdev->bar[update_idx].base = 0UL;
+			vdev->vbars[update_idx].base = 0UL;
 		}
 		break;
 
@@ -189,7 +189,7 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 			vdev_pt_map_mem_vbar(vdev, update_idx);
 		} else {
 			pci_vdev_write_cfg_u32(vdev, offset, val);
-			vdev->bar[update_idx].base = 0UL;
+			vdev->vbars[update_idx].base = 0UL;
 		}
 		break;
 	}
@@ -224,7 +224,7 @@ void init_vdev_pt(struct pci_vdev *vdev)
 {
 	enum pci_bar_type type;
 	uint32_t idx;
-	struct pci_bar *vbar;
+	struct pci_vbar *vbar;
 	uint16_t pci_command;
 	uint32_t size32, offset, lo, hi = 0U;
 	union pci_bdf pbdf;
@@ -239,7 +239,7 @@ void init_vdev_pt(struct pci_vdev *vdev)
 	vdev->af_capoff = vdev->pdev->af_capoff;
 
 	for (idx = 0U; idx < vdev->nr_bars; idx++) {
-		vbar = &vdev->bar[idx];
+		vbar = &vdev->vbars[idx];
 		offset = pci_bar_offset(idx);
 		lo = pci_pdev_read_cfg(pbdf, offset, 4U);
 
@@ -280,7 +280,7 @@ void init_vdev_pt(struct pci_vdev *vdev)
 				vbar->size = vbar->size & ~(vbar->size - 1UL);
 				vbar->size = round_page_up(vbar->size);
 
-				vbar = &vdev->bar[idx];
+				vbar = &vdev->vbars[idx];
 				vbar->mask = size32;
 				vbar->type = PCIBAR_MEM64HI;
 
