@@ -483,10 +483,7 @@ def virtio_args_set(dm, virt_io, vmid, config):
     # virtio-net set, the value type is a list
     for net in virt_io['network'][vmid]:
         if net:
-            net_name = net
-            if ',' in net:
-                net_name = net.split(',')[0]
-            print("   -s {},virtio-net,tap_{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net{}".format(net)), net_name), file=config)
+            print("   -s {},virtio-net,tap_{} \\".format(launch_cfg_lib.virtual_dev_slot("virtio-net{}".format(net)), net), file=config)
 
     # virtio-console set, the value type is a string
     if virt_io['console'][vmid]:
