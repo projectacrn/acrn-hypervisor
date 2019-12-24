@@ -9,6 +9,7 @@
 #include <logmsg.h>
 #include <cat.h>
 #include <pgtable.h>
+#include <vuart.h>
 
 static uint8_t rtvm_uuid1[16] = RTVM_UUID1;
 static uint8_t safety_vm_uuid1[16] = SAFETY_VM_UUID1;
@@ -93,7 +94,7 @@ static bool check_vm_uuid_collision(uint16_t vm_id)
 bool sanitize_vm_config(void)
 {
 	bool ret = true;
-	uint16_t vm_id, vcpu_id, nr;
+	uint16_t vm_id, vcpu_id, vuart_idx, nr;
 	uint64_t sos_pcpu_bitmap, pre_launch_pcpu_bitmap = 0U, vm_pcpu_bitmap;
 	struct acrn_vm_config *vm_config;
 
@@ -200,6 +201,20 @@ bool sanitize_vm_config(void)
 			/* make sure no identical UUID in following VM configurations */
 			ret = check_vm_uuid_collision(vm_id);
 		}
+
+		/* vuart[1+] are used for VM communications */
+		for (vuart_idx = 1U; vuart_idx < MAX_VUART_NUM_PER_VM; vuart_idx++) {
+			const struct vuart_config *vu_config = &vm_config->vuart[vuart_idx];
+
+			if (!(vu_config->type == VUART_LEGACY_PIO) && (vu_config->addr.port_base == INVALID_COM_BASE)) {
+				if ((vu_config->t_vuart.vm_id >= CONFIG_MAX_VM_NUM) ||
+					(vu_config->t_vuart.vm_id == vm_id)) {
+					pr_err("%s invalid vuart configuration for VM %d\n", __func__, vm_id);
+					ret = false;
+				}
+			}
+		}
+
 		if (!ret) {
 			break;
 		}

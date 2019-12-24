@@ -580,17 +580,16 @@ static struct acrn_vuart *find_active_target_vuart(const struct vuart_config *vu
 
 	target_vmid = vu_config->t_vuart.vm_id;
 	target_vuid = vu_config->t_vuart.vuart_id;
-	if (target_vmid < CONFIG_MAX_VM_NUM) {
+
+	if ((target_vmid < CONFIG_MAX_VM_NUM) && (target_vuid < MAX_VUART_NUM_PER_VM)) {
 		target_vm = get_vm_from_vmid(target_vmid);
-	}
-
-	if (target_vuid < MAX_VUART_NUM_PER_VM) {
 		target_vu = &target_vm->vuart[target_vuid];
+
+		if ((target_vu != NULL) && (target_vu->active)) {
+			ret_vu = target_vu;
+		}
 	}
 
-	if ((target_vu != NULL) && (target_vu->active)) {
-		ret_vu = target_vu;
-	}
 	return ret_vu;
 }
 
