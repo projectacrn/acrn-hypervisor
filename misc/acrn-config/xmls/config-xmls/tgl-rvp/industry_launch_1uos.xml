@@ -6,6 +6,7 @@
         <mem_size desc="UOS memory size in MByte">2000</mem_size>
         <gvt_args desc="GVT arguments. Recommendation is 64 448 8. Leave it blank to disable GVT.">64 448 8</gvt_args>
         <vbootloader desc="">ovmf</vbootloader>
+	<cpu_sharing desc="Whether the binding pCPUs are sharing with other VMs.">Disabled</cpu_sharing>
         <rootfs_dev desc="">/dev/nvme0n1p3</rootfs_dev>
         <rootfs_img desc="">/root/uos/uos.img</rootfs_img>
         <console_type desc="UOS console type">com1(ttyS0)</console_type>
