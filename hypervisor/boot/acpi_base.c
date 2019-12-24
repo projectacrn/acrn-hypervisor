@@ -35,16 +35,17 @@
 #include <logmsg.h>
 #include <acrn_common.h>
 #include <util.h>
+#include <e820.h>
 
 static struct acpi_table_rsdp *acpi_rsdp;
 
-static struct acpi_table_rsdp *found_rsdp(char *base, int32_t length)
+static struct acpi_table_rsdp *found_rsdp(char *base, uint64_t length)
 {
 	struct acpi_table_rsdp *rsdp, *ret = NULL;
-	int32_t ofs;
+	uint64_t ofs;
 
 	/* search on 16-byte boundaries */
-	for (ofs = 0; ofs < length; ofs += 16) {
+	for (ofs = 0UL; ofs < length; ofs += 16UL) {
 		rsdp = (struct acpi_table_rsdp *)(base + ofs);
 
 		/* compare signature, validate checksum */
@@ -76,11 +77,27 @@ static struct acpi_table_rsdp *get_rsdp(void)
 			/* EBDA is addressed by the 16 bit pointer at 0x40E */
 			addr = (uint16_t *)hpa2hva(0x40eUL);
 
-			rsdp = found_rsdp((char *)hpa2hva((uint64_t)(*addr) << 4U), 0x400);
+			rsdp = found_rsdp((char *)hpa2hva((uint64_t)(*addr) << 4U), 0x400UL);
 		}
 		if (rsdp == NULL) {
 			/* Check the upper memory BIOS space, 0xe0000 - 0xfffff. */
-			rsdp = found_rsdp((char *)hpa2hva(0xe0000UL), 0x20000);
+			rsdp = found_rsdp((char *)hpa2hva(0xe0000UL), 0x20000UL);
+		}
+
+		if (rsdp == NULL) {
+			/* Check ACPI RECLAIM region, there might be multiple ACPI reclaimable regions. */
+			uint32_t i;
+			const struct e820_entry *entry = get_e820_entry();
+			uint32_t entries_count = get_e820_entries_count();
+
+			for (i = 0U; i < entries_count; i++) {
+				if (entry[i].type == E820_TYPE_ACPI_RECLAIM) {
+					rsdp = found_rsdp((char *)hpa2hva(entry[i].baseaddr), entry[i].length);
+					if (rsdp != NULL) {
+						break;
+					}
+				}
+			}
 		}
 
 		if (rsdp == NULL) {
