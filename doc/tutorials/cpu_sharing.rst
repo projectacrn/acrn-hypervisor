@@ -6,17 +6,17 @@ ACRN CPU Sharing
 Introduction
 ************
 
-The goal of CPU Sharing is to fully utilize the physical CPU resource to support more virtual machines. Currently, ACRN only supports partition mode, which is a strict 1 to 1 mapping mode between vCPUs and pCPUs. Because of the lack of CPU sharing ability, the number of VMs is limited. To support CPU Sharing, we have introduced a schedule framework and implemented two simple small scheduling algorithms to satisfy embedded device requirements.
+The goal of CPU Sharing is to fully utilize the physical CPU resource to support more virtual machines. Currently, ACRN only supports 1 to 1 mapping mode between virtual CPUs (vCPUs) and physical CPUs (pCPUs). Because of the lack of CPU sharing ability, the number of VMs is limited. To support CPU Sharing, we have introduced a scheduling framework and implemented two simple small scheduling algorithms to satisfy embedded device requirements. Note that, CPU Sharing is not available for VMs with local APIC passthrough (``--lapic_pt`` option).
 
-Schedule Framework
-******************
+Scheduling Framework
+********************
 
-To satisfy the modularization design concept, the schedule framework layer isolates the vcpu layer and scheduler algorithm. It does not have a vCPU concept so it is only aware of the thread object instance. The thread object state machine is maintained in the framework. The framework abstracts the scheduler algorithm object, so this architecture can easily extend to new scheduler algorithms.
+To satisfy the modularization design concept, the scheduling framework layer isolates the vCPU layer and scheduler algorithm. It does not have a vCPU concept so it is only aware of the thread object instance. The thread object state machine is maintained in the framework. The framework abstracts the scheduler algorithm object, so this architecture can easily extend to new scheduler algorithms.
 
 .. figure:: images/cpu_sharing_framework.png
    :align: center
 
-The below diagram shows that vcpu layer invokes APIs provided by schedule framework for vCPU scheduling. The schedule framework also provides some APIs for schedulers. The scheduler mainly implements some callbacks in an acrn_scheduler instance for schedule framework. Scheduling initialization is invoked in the hardware management layer.
+The below diagram shows that the vCPU layer invokes APIs provided by scheduling framework for vCPU scheduling. The scheduling framework also provides some APIs for schedulers. The scheduler mainly implements some callbacks in an ``acrn_scheduler`` instance for scheduling framework. Scheduling initialization is invoked in the hardware management layer.
 
 .. figure:: images/cpu_sharing_api.png
    :align: center
@@ -41,7 +41,7 @@ Here is an example for affinity:
 Thread object state
 *******************
 
-The thread object contains three states: RUNNING, RUNNABLE, and BLOCK.
+The thread object contains three states: RUNNING, RUNNABLE, and BLOCKED.
 
 .. figure:: images/cpu_sharing_state.png
    :align: center
@@ -56,7 +56,7 @@ The below block diagram shows the basic concept for the scheduler. There are two
 
 - **No-Operation scheduler**:
 
-  The NOOP (No-operation) scheduler has the same policy as the original partition mode; every pCPU can run only two thread objects: one is the idle thread, and another is the thread of the assigned vCPU. With this scheduler, vCPU works in work-conserving mode, and will run once it is ready. Idle thread can run when the vCPU thread blocked.
+  The NOOP (No-operation) scheduler has the same policy as the original 1-1 mapping previously used; every pCPU can run only two thread objects: one is the idle thread, and another is the thread of the assigned vCPU. With this scheduler, vCPU works in Work-Conserving mode, which always try to keep resource busy, and will run once it is ready. Idle thread can run when the vCPU thread is blocked.
 
 - **IO sensitive round-robin scheduler**:
 
