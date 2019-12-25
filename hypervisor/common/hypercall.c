@@ -827,10 +827,11 @@ int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
  */
 int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 {
-	int32_t ret;
+	int32_t ret = 0;
 	union pci_bdf bdf;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	bool bdf_valid = true;
+	struct pci_vdev *vdev;
 
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		if (param < 0x10000UL) {
@@ -845,7 +846,22 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	        }
 
 		if (bdf_valid) {
-			ret = move_pt_device(vm->iommu, target_vm->iommu, bdf.fields.bus, bdf.fields.devfun);
+			spinlock_obtain(&vm->vpci.lock);
+			vdev = pci_find_vdev(&vm->vpci, bdf);
+			if (vdev == NULL) {
+				pr_fatal("%s %x:%x.%x not found\n", __func__, bdf.bits.b,  bdf.bits.d,  bdf.bits.f);
+				ret = -EPERM;
+			} else {
+				/* ToDo: Each PT device must support one type reset */
+				if (!vdev->pdev->has_pm_reset && !vdev->pdev->has_flr && !vdev->pdev->has_af_flr) {
+					pr_fatal("%s %x:%x.%x not support FLR or not support PM reset\n",
+						__func__, bdf.bits.b,  bdf.bits.d,  bdf.bits.f);
+				}
+			}
+			spinlock_release(&vm->vpci.lock);
+			if (ret == 0) {
+				ret = move_pt_device(vm->iommu, target_vm->iommu, bdf.fields.bus, bdf.fields.devfun);
+			}
 		}
 	} else {
 		pr_err("%s, target vm is invalid\n", __func__);
