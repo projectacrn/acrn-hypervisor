@@ -55,8 +55,8 @@ static inline uint32_t prio(uint32_t x)
 
 #define VLAPIC_VERSION		(16U)
 #define	APICBASE_BSP		0x00000100UL
-#define	APICBASE_X2APIC		0x00000400U
-#define APICBASE_XAPIC		0x00000800U
+#define	APICBASE_X2APIC		0x00000400UL
+#define APICBASE_XAPIC		0x00000800UL
 #define APICBASE_LAPIC_MODE	(APICBASE_XAPIC | APICBASE_X2APIC)
 #define	APICBASE_ENABLED	0x00000800UL
 #define LOGICAL_ID_MASK		0xFU
@@ -1643,24 +1643,39 @@ static int32_t vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_
  * @pre vlapic != NULL && ops != NULL
  */
 void
-vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops)
+vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops, enum reset_mode mode)
 {
 	struct lapic_regs *lapic;
+	uint64_t preserved_lapic_mode = vlapic->msr_apicbase & APICBASE_LAPIC_MODE;
+	uint32_t preserved_apic_id = vlapic->apic_page.id.v;
 
-	/*
-	 * Upon reset, vlapic is set to xAPIC mode.
-	 */
-	vlapic->msr_apicbase = DEFAULT_APIC_BASE | APICBASE_ENABLED;
+	vlapic->msr_apicbase = DEFAULT_APIC_BASE;
 
 	if (vlapic->vcpu->vcpu_id == BOOT_CPU_ID) {
 		vlapic->msr_apicbase |= APICBASE_BSP;
+	}
+	if (mode == INIT_RESET) {
+		if ((preserved_lapic_mode & APICBASE_ENABLED) != 0U ) {
+			/* Per SDM 10.12.5.1 vol.3, need to preserve lapic mode after INIT */
+			vlapic->msr_apicbase |= preserved_lapic_mode;
+		}
+	} else {
+		/* Upon reset, vlapic is set to xAPIC mode. */
+		vlapic->msr_apicbase |= APICBASE_XAPIC;
 	}
 
 	lapic = &(vlapic->apic_page);
 	(void)memset((void *)lapic, 0U, sizeof(struct lapic_regs));
 	(void)memset((void *)&(vlapic->pir_desc), 0U, sizeof(vlapic->pir_desc));
 
-	lapic->id.v = vlapic_build_id(vlapic);
+	if (mode == INIT_RESET) {
+		if ((preserved_lapic_mode & APICBASE_ENABLED) != 0U ) {
+			/* the local APIC ID register should be preserved in XAPIC or X2APIC mode */
+			lapic->id.v = preserved_apic_id;
+		}
+	} else {
+		lapic->id.v = vlapic_build_id(vlapic);
+	}
 	lapic->version.v = VLAPIC_VERSION;
 	lapic->version.v |= (VLAPIC_MAXLVT_INDEX << MAXLVTSHIFT);
 	lapic->dfr.v = 0xffffffffU;
@@ -1779,7 +1794,8 @@ int32_t vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 			if ((new & APICBASE_LAPIC_MODE) ==
 						(APICBASE_XAPIC | APICBASE_X2APIC)) {
 				if (is_lapic_pt_configured(vcpu->vm)) {
-					vlapic_reset(vlapic, &ptapic_ops);
+					/* vlapic need to be reset to make sure it is in correct state */
+					vlapic_reset(vlapic, &ptapic_ops, SOFTWARE_RESET);
 				}
 				vlapic->msr_apicbase = new;
 				vlapic_build_x2apic_id(vlapic);
