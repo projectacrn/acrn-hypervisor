@@ -70,7 +70,7 @@ Install the necessary tools for the following systems:
      $ sudo swupd bundle-add os-clr-on-clr os-core-dev python3-basic
      $ pip3 install --user kconfiglib
 
-* Ubuntu/Debian development system:
+* Ubuntu development system:
 
   .. code-block:: none
 
@@ -111,57 +111,6 @@ Install the necessary tools for the following systems:
      Verify your version of ``binutils`` with the command ``apt show binutils``.
 
 
-* Fedora/Redhat development system:
-
-  .. code-block:: none
-
-     $ sudo dnf install gcc \
-          git \
-          make \
-          findutils \
-          gnu-efi-devel \
-          libuuid-devel \
-          openssl-devel \
-          libpciaccess-devel \
-          systemd-devel \
-          libxml2-devel \
-          libevent-devel \
-          libusbx-devel \
-          python3 \
-          python3-pip \
-          libblkid-devel \
-          e2fsprogs-devel \
-          numactl-devel
-     $ sudo pip3 install kconfiglib
-
-
-* CentOS development system:
-
-  .. code-block:: none
-
-     $ sudo yum install gcc \
-             git \
-             make \
-             gnu-efi-devel \
-             libuuid-devel \
-             openssl-devel \
-             libpciaccess-devel \
-             systemd-devel \
-             libxml2-devel \
-             libevent-devel \
-             libusbx-devel \
-             python34 \
-             python34-pip \
-             libblkid-devel \
-             e2fsprogs-devel \
-             libnuma-devel
-     $ sudo pip3 install kconfiglib
-
-  .. note::
-     You may need to install `EPEL <https://fedoraproject.org/wiki/EPEL>`_
-     for installing python3 via yum for CentOS 7. For CentOS 6, you need to
-     install pip manually. Refer to https://pip.pypa.io/en/stable/installing
-     for details.
 
 
 Step 2: Get the ACRN hypervisor source code
@@ -220,6 +169,14 @@ Assuming that you are at the top level of the acrn-hypervisor directory:
   .. code-block:: none
 
      $ make all BOARD=nuc7i7dnb SCENARIO=industry RELEASE=0
+
+* Build ``INDUSTRY`` scenario on ``whl-ipc-i5``:
+  .. code-block:: none
+     
+     $ make all BOARD=whl-ipc-i5 SCENARIO=industry BOARD_FILE=/absolute_path/
+     acrn-hypervisor/misc/acrn-config/xmls/board-xmls/whl-ipc-i5.xml SCENARIO_FILE=
+     /absolute_patch/acrn-hypervisor/misc/acrn-config/xmls/config-xmls/whl-ipc-i5/industry.xml
+     RELEASE=0
 
 * Build ``SDC`` scenario on ``nuc6cayh``:
 
