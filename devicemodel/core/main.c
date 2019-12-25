@@ -139,7 +139,7 @@ usage(int code)
 		"       %*s [-s pci] [-U uuid] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]\n"
 		"       %*s [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]\n"
 		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
-		"       %*s [--vmcfg sub_options] [--dump vm_idx] [--ptdev_no_reset] [--debugexit] \n"
+		"       %*s [--vmcfg sub_options] [--dump vm_idx] [--debugexit] \n"
 		"       %*s [--logger-setting param_setting] [--pm_notify_channel]\n"
 		"       %*s [--pm_by_vuart vuart_node] <vm>\n"
 		"       -A: create ACPI tables\n"
@@ -166,7 +166,6 @@ usage(int code)
 		"       --ovmf: ovmf file path\n"
 		"       --part_info: guest partition info file path\n"
 		"       --enable_trusty: enable trusty for guest\n"
-		"       --ptdev_no_reset: disable reset check for ptdev\n"
 		"       --debugexit: enable debug exit function\n"
 		"       --intr_monitor: enable interrupt storm monitor\n"
 		"            its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)\n"
@@ -722,7 +721,6 @@ enum {
 	CMD_OPT_TRUSTY_ENABLE,
 	CMD_OPT_VIRTIO_POLL_ENABLE,
 	CMD_OPT_MAC_SEED,
-	CMD_OPT_PTDEV_NO_RESET,
 	CMD_OPT_DEBUGEXIT,
 	CMD_OPT_VMCFG,
 	CMD_OPT_DUMP,
@@ -763,8 +761,6 @@ static struct option long_options[] = {
 					CMD_OPT_TRUSTY_ENABLE},
 	{"virtio_poll",		required_argument,	0, CMD_OPT_VIRTIO_POLL_ENABLE},
 	{"mac_seed",		required_argument,	0, CMD_OPT_MAC_SEED},
-	{"ptdev_no_reset",	no_argument,		0,
-		CMD_OPT_PTDEV_NO_RESET},
 	{"debugexit",		no_argument,		0, CMD_OPT_DEBUGEXIT},
 	{"intr_monitor",	required_argument,	0, CMD_OPT_INTR_MONITOR},
 	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
@@ -898,9 +894,6 @@ main(int argc, char *argv[])
 			strncpy(mac_seed_str, optarg, sizeof(mac_seed_str));
 			mac_seed_str[sizeof(mac_seed_str) - 1] = '\0';
 			mac_seed = mac_seed_str;
-			break;
-		case CMD_OPT_PTDEV_NO_RESET:
-			ptdev_no_reset(true);
 			break;
 		case CMD_OPT_DEBUGEXIT:
 			debugexit_enabled = true;
