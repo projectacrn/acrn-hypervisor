@@ -342,6 +342,8 @@ static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 				((vdev->af_capoff + PCIR_AF_CTRL) == offset) && ((val & PCIM_AF_FLR) != 0U))) {
 			/* Assume that guest write FLR must be 4 bytes aligned */
 			pdev_do_flr(vdev->pdev->bdf, offset, bytes, val);
+	} else if (offset == PCIR_COMMAND) {
+		vdev_pt_write_command(vdev, (bytes > 2U) ? 2U : bytes, (uint16_t)val);
 	} else {
 		/* passthru to physical device */
 		pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);

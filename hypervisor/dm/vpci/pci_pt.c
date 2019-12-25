@@ -307,3 +307,23 @@ void init_vdev_pt(struct pci_vdev *vdev)
 		pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
 	}
 }
+
+/*
+ * @pre vdev != NULL && vdev->pdev != NULL && vdev->pdev->hdr_type == PCIM_HDRTYPE_NORMAL
+ */
+void vdev_pt_write_command(const struct pci_vdev *vdev, uint32_t bytes, uint16_t new_cmd)
+{
+	union pci_bdf bdf = vdev->pdev->bdf;
+	uint16_t phys_cmd = (uint16_t)pci_pdev_read_cfg(bdf, PCIR_COMMAND, 2U);
+	uint16_t enable_mask = PCIM_CMD_PORTEN | PCIM_CMD_MEMEN;
+
+	/* WARN: don't support Type 1 device BAR restore for now */
+	if (vdev->pdev->hdr_type == PCIM_HDRTYPE_NORMAL) {
+		if (((phys_cmd & enable_mask) == 0U) && ((new_cmd & enable_mask) != 0U) &&
+				pdev_need_bar_restore(vdev->pdev)) {
+			pdev_restore_bar(vdev->pdev);
+		}
+	}
+
+	pci_pdev_write_cfg(bdf, PCIR_COMMAND, bytes, new_cmd);
+}
