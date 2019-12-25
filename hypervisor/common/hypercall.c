@@ -552,11 +552,8 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 				__func__, vcpu_id, target_vm->vm_id);
 		} else {
 			vcpu = vcpu_from_vid(target_vm, vcpu_id);
-			if (vcpu->state == VCPU_PAUSED) {
-				if (!vcpu->vm->sw.is_completion_polling) {
-					resume_vcpu(vcpu);
-				}
-				ret = 0;
+			if (!vcpu->vm->sw.is_completion_polling) {
+				ret = resume_vcpu(vcpu);
 			}
 		}
 	}
