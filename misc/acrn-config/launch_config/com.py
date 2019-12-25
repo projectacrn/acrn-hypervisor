@@ -382,7 +382,8 @@ def launch_end(names, args, virt_io, vmid, config):
             print("", file=config)
             i += 1
 
-    off_line_cpus(args, vmid, uos_type, config)
+    if args['cpu_sharing'][vmid] == "Disabled":
+        off_line_cpus(args, vmid, uos_type, config)
 
     uos_launch(names, args, virt_io, vmid, config)
 

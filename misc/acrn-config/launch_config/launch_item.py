@@ -20,6 +20,7 @@ class AcrnDmArgs:
         self.args["gvt_args"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "gvt_args")
         self.args["vbootloader"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "vbootloader")
         self.args["vuart0"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "vuart0")
+        self.args["cpu_sharing"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "cpu_sharing")
         self.args["pm_channel"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "poweroff_channel")
         self.args["off_pcpus"] = launch_cfg_lib.get_leaf_tag_map(self.scenario_info, "vcpu_affinity", "pcpu_id")
         self.args["xhci"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "usb_xhci")
@@ -31,6 +32,7 @@ class AcrnDmArgs:
         launch_cfg_lib.mem_size_check(self.args["mem_size"], "mem_size")
         launch_cfg_lib.args_aval_check(self.args["vbootloader"], "vbootloader", launch_cfg_lib.BOOT_TYPE)
         launch_cfg_lib.args_aval_check(self.args["vuart0"], "vuart0", launch_cfg_lib.DM_VUART0)
+        launch_cfg_lib.cpu_sharing_check(self.args["cpu_sharing"], "cpu_sharing")
 
 
 class AvailablePthru():
