@@ -1161,9 +1161,11 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode, uint32_t 
 				"Sending INIT to %hu",
 				target_vcpu->vcpu_id);
 
-			/* put target vcpu to INIT state and wait for SIPI */
-			pause_vcpu(target_vcpu, VCPU_PAUSED);
-			reset_vcpu(target_vcpu, INIT_RESET);
+			if (target_vcpu->state != VCPU_INIT) {
+				/* put target vcpu to INIT state and wait for SIPI */
+				pause_vcpu(target_vcpu, VCPU_ZOMBIE);
+				reset_vcpu(target_vcpu, INIT_RESET);
+			}
 			/* new cpu model only need one SIPI to kick AP run,
 			 * the second SIPI will be ignored as it move out of
 			 * wait-for-SIPI state.

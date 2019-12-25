@@ -131,12 +131,11 @@
 		if (vcpu->state != VCPU_OFFLINE)
 
 enum vcpu_state {
+	VCPU_OFFLINE = 0U,
 	VCPU_INIT,
 	VCPU_RUNNING,
 	VCPU_PAUSED,
 	VCPU_ZOMBIE,
-	VCPU_OFFLINE,
-	VCPU_UNKNOWN_STATE,
 };
 
 enum vm_cpu_mode {
@@ -626,9 +625,9 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  *
- * @return None
+ * @return 0 on success, -1 on failure.
  */
-void resume_vcpu(struct acrn_vcpu *vcpu);
+int32_t resume_vcpu(struct acrn_vcpu *vcpu);
 
 /**
  * @brief set the vcpu to running state, then it will be scheculed.

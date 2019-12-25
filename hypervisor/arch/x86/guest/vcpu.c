@@ -633,9 +633,11 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
  */
 void offline_vcpu(struct acrn_vcpu *vcpu)
 {
-	vlapic_free(vcpu);
-	per_cpu(ever_run_vcpu, pcpuid_from_vcpu(vcpu)) = NULL;
-	vcpu->state = VCPU_OFFLINE;
+	if (vcpu->state == VCPU_ZOMBIE) {
+		vlapic_free(vcpu);
+		per_cpu(ever_run_vcpu, pcpuid_from_vcpu(vcpu)) = NULL;
+		vcpu->state = VCPU_OFFLINE;
+	}
 }
 
 void kick_vcpu(const struct acrn_vcpu *vcpu)
@@ -677,10 +679,10 @@ static uint64_t build_stack_frame(struct acrn_vcpu *vcpu)
 void reset_vcpu(struct acrn_vcpu *vcpu, enum reset_mode mode)
 {
 	pr_dbg("vcpu%hu reset", vcpu->vcpu_id);
-	ASSERT(vcpu->state != VCPU_RUNNING,
-			"reset vcpu when it's running");
+	ASSERT(vcpu->state == VCPU_ZOMBIE,
+			"reset vcpu only when it's in zombie");
 
-	if (vcpu->state != VCPU_INIT) {
+	if (vcpu->state == VCPU_ZOMBIE) {
 		vcpu_reset_internal(vcpu, mode);
 		vcpu->state = VCPU_INIT;
 	}
@@ -693,27 +695,36 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 	pr_dbg("vcpu%hu paused, new state: %d",
 		vcpu->vcpu_id, new_state);
 
-	vcpu->prev_state = vcpu->state;
-	vcpu->state = new_state;
+	if (((vcpu->state == VCPU_RUNNING) || (vcpu->state == VCPU_PAUSED) || (vcpu->state == VCPU_INIT))
+			&& ((new_state == VCPU_PAUSED) || (new_state == VCPU_ZOMBIE))) {
+		vcpu->prev_state = vcpu->state;
+		vcpu->state = new_state;
 
-	if (vcpu->prev_state == VCPU_RUNNING) {
-		sleep_thread(&vcpu->thread_obj);
-	}
-	if (pcpu_id != get_pcpu_id()) {
-		while (vcpu->running) {
-			asm_pause();
+		if (vcpu->prev_state == VCPU_RUNNING) {
+			sleep_thread(&vcpu->thread_obj);
+		}
+		if (pcpu_id != get_pcpu_id()) {
+			while (vcpu->running) {
+				asm_pause();
+			}
 		}
 	}
 }
 
-void resume_vcpu(struct acrn_vcpu *vcpu)
+int32_t resume_vcpu(struct acrn_vcpu *vcpu)
 {
+	int32_t ret = -1;
+
 	pr_dbg("vcpu%hu resumed", vcpu->vcpu_id);
 
-	vcpu->state = vcpu->prev_state;
-	if (vcpu->state == VCPU_RUNNING) {
-		wake_thread(&vcpu->thread_obj);
+	if (vcpu->state == VCPU_PAUSED) {
+		vcpu->state = vcpu->prev_state;
+		if (vcpu->state == VCPU_RUNNING) {
+			wake_thread(&vcpu->thread_obj);
+		}
+		ret = 0;
 	}
+	return ret;
 }
 
 void save_xsave_area(struct ext_context *ectx)
@@ -780,10 +791,12 @@ void launch_vcpu(struct acrn_vcpu *vcpu)
 {
 	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
 
-	vcpu->state = VCPU_RUNNING;
 	pr_dbg("vcpu%hu scheduled on pcpu%hu", vcpu->vcpu_id, pcpu_id);
 
-	wake_thread(&vcpu->thread_obj);
+	if (vcpu->state == VCPU_INIT) {
+		vcpu->state = VCPU_RUNNING;
+		wake_thread(&vcpu->thread_obj);
+	}
 }
 
 /* help function for vcpu create */
