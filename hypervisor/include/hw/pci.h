@@ -179,11 +179,14 @@ struct pci_msix_cap {
 };
 
 struct pci_pdev {
+	uint8_t hdr_type;
+
 	/* IOMMU responsible for DMA and Interrupt Remapping for this device */
 	uint32_t drhd_index;
 
 	/* The bar info of the physical PCI device. */
 	uint32_t nr_bars; /* 6 for normal device, 2 for bridge, 1 for cardbus */
+	uint32_t bars[PCI_STD_NUM_BARS];
 
 	/* The bus/device/function triple of the physical PCI device. */
 	union pci_bdf bdf;
@@ -314,5 +317,7 @@ static inline bool is_pci_cfg_bridge(uint8_t header_type)
 }
 
 void pdev_do_flr(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
+bool pdev_need_bar_restore(const struct pci_pdev *pdev);
+void pdev_restore_bar(const struct pci_pdev *pdev);
 
 #endif /* PCI_H_ */

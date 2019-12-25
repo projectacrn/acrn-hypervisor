@@ -151,6 +151,40 @@ void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint
 	spinlock_release(&pci_device_lock);
 }
 
+bool pdev_need_bar_restore(const struct pci_pdev *pdev)
+{
+	bool need_restore = false;
+	uint32_t idx, bar;
+
+	for (idx = 0U; idx < PCI_STD_NUM_BARS; idx++) {
+		bar = pci_pdev_read_cfg(pdev->bdf, pci_bar_offset(idx), 4U);
+		if (bar != pdev->bars[idx]) {
+			need_restore = true;
+			break;
+		}
+	}
+
+	return need_restore;
+}
+
+static inline void pdev_save_bar(struct pci_pdev *pdev)
+{
+	uint32_t idx;
+
+	for (idx = 0U; idx < PCI_STD_NUM_BARS; idx++) {
+		pdev->bars[idx] = pci_pdev_read_cfg(pdev->bdf, pci_bar_offset(idx), 4U);
+	}
+}
+
+void pdev_restore_bar(const struct pci_pdev *pdev)
+{
+	uint32_t idx;
+
+	for (idx = 0U; idx < PCI_STD_NUM_BARS; idx++) {
+		pci_pdev_write_cfg(pdev->bdf, pci_bar_offset(idx), 4U, pdev->bars[idx]);
+	}
+}
+
 /* enable: 1: enable INTx; 0: Disable INTx */
 void enable_disable_pci_intx(union pci_bdf bdf, bool enable)
 {
@@ -478,7 +512,11 @@ static void init_pdev(uint16_t pbdf, uint32_t drhd_index)
 		if ((hdr_type == PCIM_HDRTYPE_NORMAL) || (hdr_type == PCIM_HDRTYPE_BRIDGE)) {
 			pdev = &pci_pdev_array[num_pci_pdev];
 			pdev->bdf.value = pbdf;
+			pdev->hdr_type = hdr_type;
 			pdev->nr_bars = pci_pdev_get_nr_bars(hdr_type);
+			if (hdr_type == PCIM_HDRTYPE_NORMAL) {
+				pdev_save_bar(pdev);
+			}
 
 			if ((pci_pdev_read_cfg(bdf, PCIR_STATUS, 2U) & PCIM_STATUS_CAPPRESENT) != 0U) {
 				pci_read_cap(pdev);
