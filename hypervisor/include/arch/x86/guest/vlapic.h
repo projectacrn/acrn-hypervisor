@@ -106,6 +106,7 @@ struct acrn_apicv_ops {
 	bool (*x2apic_write_msr_may_valid)(uint32_t offset);
 };
 
+enum reset_mode;
 extern const struct acrn_apicv_ops *apicv_ops;
 void vlapic_set_apicv_ops(void);
 
@@ -194,7 +195,7 @@ void vlapic_free(struct acrn_vcpu *vcpu);
  * @pre vlapic->vcpu->vcpu_id < MAX_VCPUS_PER_VM
  */
 void vlapic_init(struct acrn_vlapic *vlapic);
-void vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops);
+void vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops, enum reset_mode mode);
 void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs);
 uint64_t vlapic_apicv_get_apic_access_addr(void);
 uint64_t vlapic_apicv_get_apic_page_addr(struct acrn_vlapic *vlapic);

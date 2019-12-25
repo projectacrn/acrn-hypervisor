@@ -194,7 +194,7 @@ void vcpu_reset_eoi_exit_bitmaps(struct acrn_vcpu *vcpu)
 }
 
 /* As a vcpu reset internal API, DO NOT touch any vcpu state transition in this function. */
-static void vcpu_reset_internal(struct acrn_vcpu *vcpu, __unused enum reset_mode mode)
+static void vcpu_reset_internal(struct acrn_vcpu *vcpu, enum reset_mode mode)
 {
 	int32_t i;
 	struct acrn_vlapic *vlapic;
@@ -217,7 +217,7 @@ static void vcpu_reset_internal(struct acrn_vcpu *vcpu, __unused enum reset_mode
 	vcpu->thread_obj.notify_mode = SCHED_NOTIFY_IPI;
 
 	vlapic = vcpu_vlapic(vcpu);
-	vlapic_reset(vlapic, apicv_ops);
+	vlapic_reset(vlapic, apicv_ops, mode);
 
 	reset_vcpu_regs(vcpu);
 }
