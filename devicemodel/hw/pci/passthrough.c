@@ -75,11 +75,6 @@ extern uint64_t audio_nhlt_len;
 static int pciaccess_ref_cnt;
 static pthread_mutex_t ref_cnt_mtx = PTHREAD_MUTEX_INITIALIZER;
 
-/* Not check reset capability before assign ptdev.
- * Set false by default, that is, always check.
- */
-static bool no_reset = false;
-
 struct mmio_map {
 	uint64_t gpa;
 	uint64_t hpa;
@@ -116,11 +111,6 @@ struct passthru_dev {
 	 */
 	struct mmio_map	msix_bar_mmio[2];
 };
-
-void ptdev_no_reset(bool enable)
-{
-	no_reset = enable;
-}
 
 static int
 msi_caplen(int msgctrl)
@@ -671,22 +661,18 @@ cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 	 *   UOS reboot
 	 * - refuse to passthrough PCIe dev without any reset capability
 	 */
-	snprintf(reset_path, 40,
-		"/sys/bus/pci/devices/0000:%02x:%02x.%x/reset",
-		bus, slot, func);
+	if (ptdev->need_reset) {
+		snprintf(reset_path, 40,
+			"/sys/bus/pci/devices/0000:%02x:%02x.%x/reset",
+			bus, slot, func);
 
-	fd = open(reset_path, O_WRONLY);
-	if (fd >= 0) {
-		if (ptdev->need_reset && write(fd, "1", 1) < 0)
-			warnx("reset dev %x/%x/%x failed!\n",
-			      bus, slot, func);
-		close(fd);
-	} else if (errno == ENOENT && ptdev->pcie_cap) {
-		warnx("No reset capability for PCIe %x/%x/%x, "
-				"remove it from ptdev list!!\n",
-				bus, slot, func);
-		if (!no_reset)
-			return -1;
+		fd = open(reset_path, O_WRONLY);
+		if (fd >= 0) {
+			if (write(fd, "1", 1) < 0)
+				warnx("reset dev %x/%x/%x failed!\n",
+				      bus, slot, func);
+			close(fd);
+		}
 	}
 
 	if (cfginitbar(ctx, ptdev) != 0) {
@@ -767,7 +753,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	struct pci_device *phys_dev;
 	char *opt;
 	bool keep_gsi = false;
-	bool need_reset = false;
+	bool need_reset = true;
 
 	ptdev = NULL;
 	error = -EINVAL;
@@ -786,8 +772,8 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	while ((opt = strsep(&opts, ",")) != NULL) {
 		if (!strncmp(opt, "keep_gsi", 8))
 			keep_gsi = true;
-		else if (!strncmp(opt, "reset", 5))
-			need_reset = true;
+		else if (!strncmp(opt, "no_reset", 8))
+			need_reset = false;
 		else
 			warnx("Invalid passthru options:%s", opt);
 	}
