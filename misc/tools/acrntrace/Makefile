@@ -1,3 +1,5 @@
+include ../../../paths.make
+
 T := $(CURDIR)
 OUT_DIR ?= $(shell mkdir -p $(T)/build;cd $(T)/build;pwd)
 CC ?= gcc
@@ -47,5 +49,5 @@ ifneq ($(OUT_DIR),.)
 endif
 
 install: $(OUT_DIR)/acrntrace
-	install -d $(DESTDIR)/usr/bin
-	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/acrntrace
+	install -d $(DESTDIR)$(bindir)
+	install -t $(DESTDIR)$(bindir) $(OUT_DIR)/acrntrace

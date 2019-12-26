@@ -1,3 +1,5 @@
+include ../../../paths.make
+
 T := $(CURDIR)
 OUT_DIR ?= $(shell mkdir -p $(T)/build;cd $(T)/build;pwd)
 CC ?= gcc
@@ -48,7 +50,7 @@ ifneq ($(OUT_DIR),.)
 endif
 
 install: $(OUT_DIR)/acrnlog
-	install -d $(DESTDIR)/usr/bin
-	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/acrnlog
-	install -d $(DESTDIR)/usr/lib/systemd/system
-	install -p -D -m 0644 $(OUT_DIR)/acrnlog.service $(DESTDIR)/usr/lib/systemd/system
+	install -d $(DESTDIR)$(bindir)
+	install -t $(DESTDIR)$(bindir) $(OUT_DIR)/acrnlog
+	install -d $(DESTDIR)$(systemd_unitdir)/system
+	install -p -D -m 0644 $(OUT_DIR)/acrnlog.service $(DESTDIR)$(systemd_unitdir)/system

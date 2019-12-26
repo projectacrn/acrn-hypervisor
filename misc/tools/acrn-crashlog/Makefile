@@ -2,6 +2,8 @@
 # ACRN-Crashlog Makefile
 #
 
+include ../../../paths.make
+
 BASEDIR 	:= $(shell pwd)
 OUT_DIR 	?= $(BASEDIR)
 BUILDDIR	:= $(OUT_DIR)/acrn-crashlog
@@ -97,60 +99,60 @@ clean:
 
 .PHONY:install
 install:
-	@install -d $(DESTDIR)/usr/bin/
-	@install -p -D -m 0755 $(BUILDDIR)/acrnprobe/bin/acrnprobe $(DESTDIR)/usr/bin/
-	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/debugger $(DESTDIR)/usr/bin/
-	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash_c $(DESTDIR)/usr/bin/
-	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash_s $(DESTDIR)/usr/bin/
-	@install -p -D -m 0755 data/crashlogctl $(DESTDIR)/usr/bin/
-	@install -p -D -m 0755 data/usercrash-wrapper $(DESTDIR)/usr/bin/
-	@install -d $(DESTDIR)/usr/share/acrn/crashlog
-	@install -p -D -m 0644 data/40-watchdog.conf $(DESTDIR)/usr/share/acrn/crashlog
-	@install -p -D -m 0644 data/80-coredump.conf $(DESTDIR)/usr/share/acrn/crashlog
-	@install -d $(DESTDIR)/usr/share/defaults/telemetrics/
-	@install -p -D -m 0644 data/acrnprobe.xml $(DESTDIR)/usr/share/defaults/telemetrics/
-	@install -d $(DESTDIR)/usr/lib/systemd/system/
-	@install -p -D -m 0644 data/acrnprobe.service $(DESTDIR)/usr/lib/systemd/system/
-	@install -p -D -m 0644 data/usercrash.service $(DESTDIR)/usr/lib/systemd/system/
-	@install -d $(DESTDIR)/usr/lib/tmpfiles.d
-	@install -p -D -m 0644 data/acrn-crashlog-dirs.conf $(DESTDIR)/usr/lib/tmpfiles.d/
+	@install -d $(DESTDIR)$(bindir)/
+	@install -p -D -m 0755 $(BUILDDIR)/acrnprobe/bin/acrnprobe $(DESTDIR)$(bindir)/
+	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/debugger $(DESTDIR)$(bindir)/
+	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash_c $(DESTDIR)$(bindir)/
+	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash_s $(DESTDIR)$(bindir)/
+	@install -p -D -m 0755 data/crashlogctl $(DESTDIR)$(bindir)/
+	@install -p -D -m 0755 data/usercrash-wrapper $(DESTDIR)$(bindir)/
+	@install -d $(DESTDIR)$(datadir)/acrn/crashlog
+	@install -p -D -m 0644 data/40-watchdog.conf $(DESTDIR)$(datadir)/acrn/crashlog
+	@install -p -D -m 0644 data/80-coredump.conf $(DESTDIR)$(datadir)/acrn/crashlog
+	@install -d $(DESTDIR)$(datadir)/defaults/telemetrics/
+	@install -p -D -m 0644 data/acrnprobe.xml $(DESTDIR)$(datadir)/defaults/telemetrics/
+	@install -d $(DESTDIR)$(systemd_unitdir)/system/
+	@install -p -D -m 0644 data/acrnprobe.service $(DESTDIR)$(systemd_unitdir)/system/
+	@install -p -D -m 0644 data/usercrash.service $(DESTDIR)$(systemd_unitdir)/system/
+	@install -d $(DESTDIR)$(libdir)/tmpfiles.d
+	@install -p -D -m 0644 data/acrn-crashlog-dirs.conf $(DESTDIR)$(libdir)/tmpfiles.d/
 
 .PHONY:uninstall
 uninstall:
-	@if [ -e "$(DESTDIR)/usr/bin/acrnprobe" ];then \
-		$(RM) $(DESTDIR)/usr/bin/acrnprobe; \
+	@if [ -e "$(DESTDIR)$(bindir)/acrnprobe" ];then \
+		$(RM) $(DESTDIR)$(bindir)/acrnprobe; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/bin/crashlogctl" ];then \
-		$(DESTDIR)/usr/bin/crashlogctl disable && \
-		$(RM) $(DESTDIR)/usr/bin/crashlogctl; \
+	@if [ -e "$(DESTDIR)$(bindir)/crashlogctl" ];then \
+		$(DESTDIR)$(bindir)/crashlogctl disable && \
+		$(RM) $(DESTDIR)$(bindir)/crashlogctl; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/bin/debugger" ];then \
-		$(RM) $(DESTDIR)/usr/bin/debugger; \
+	@if [ -e "$(DESTDIR)$(bindir)/debugger" ];then \
+		$(RM) $(DESTDIR)$(bindir)/debugger; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/bin/usercrash_c" ];then \
-		$(RM) $(DESTDIR)/usr/bin/usercrash_c; \
+	@if [ -e "$(DESTDIR)$(bindir)/usercrash_c" ];then \
+		$(RM) $(DESTDIR)$(bindir)/usercrash_c; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/bin/usercrash_s" ];then \
-		$(RM) $(DESTDIR)/usr/bin/usercrash_s; \
+	@if [ -e "$(DESTDIR)$(bindir)/usercrash_s" ];then \
+		$(RM) $(DESTDIR)$(bindir)/usercrash_s; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/bin/usercrash-wrapper" ];then \
-		$(RM) $(DESTDIR)/usr/bin/usercrash-wrapper; \
+	@if [ -e "$(DESTDIR)$(bindir)/usercrash-wrapper" ];then \
+		$(RM) $(DESTDIR)$(bindir)/usercrash-wrapper; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/share/acrn/crashlog/40-watchdog.conf" ];then \
-		$(RM) $(DESTDIR)/usr/share/acrn/crashlog/40-watchdog.conf; \
+	@if [ -e "$(DESTDIR)$(datadir)/acrn/crashlog/40-watchdog.conf" ];then \
+		$(RM) $(DESTDIR)$(datadir)/acrn/crashlog/40-watchdog.conf; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/share/acrn/crashlog/80-coredump.conf" ];then \
-		$(RM) $(DESTDIR)/usr/share/acrn/crashlog/80-coredump.conf; \
+	@if [ -e "$(DESTDIR)$(datadir)/acrn/crashlog/80-coredump.conf" ];then \
+		$(RM) $(DESTDIR)$(datadir)/acrn/crashlog/80-coredump.conf; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/share/defaults/telemetrics/acrnprobe.xml" ];then \
-		$(RM) $(DESTDIR)/usr/share/defaults/telemetrics/acrnprobe.xml; \
+	@if [ -e "$(DESTDIR)$(datadir)/defaults/telemetrics/acrnprobe.xml" ];then \
+		$(RM) $(DESTDIR)$(datadir)/defaults/telemetrics/acrnprobe.xml; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/lib/systemd/system/acrnprobe.service" ];then \
-		$(RM) $(DESTDIR)/usr/lib/systemd/system/acrnprobe.service; \
+	@if [ -e "$(DESTDIR)$(systemd_unitdir)/system/acrnprobe.service" ];then \
+		$(RM) $(DESTDIR)$(systemd_unitdir)/system/acrnprobe.service; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/lib/systemd/system/usercrash.service" ];then \
-		$(RM) $(DESTDIR)/usr/lib/systemd/system/usercrash.service; \
+	@if [ -e "$(DESTDIR)$(systemd_unitdir)/system/usercrash.service" ];then \
+		$(RM) $(DESTDIR)$(systemd_unitdir)/system/usercrash.service; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/lib/tmpfiles.d/acrn-crashlog-dirs.conf" ];then \
-		$(RM) $(DESTDIR)/usr/lib/tmpfiles.d/acrn-crashlog-dirs.conf; \
+	@if [ -e "$(DESTDIR)$(libdir)/tmpfiles.d/acrn-crashlog-dirs.conf" ];then \
+		$(RM) $(DESTDIR)$(libdir)/tmpfiles.d/acrn-crashlog-dirs.conf; \
 	fi
