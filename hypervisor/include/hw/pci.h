@@ -131,6 +131,12 @@
 #define MSIX_CAPLEN           12U
 #define MSIX_TABLE_ENTRY_SIZE 16U
 
+/* PCI Power Management Capability */
+#define PCIY_PMC              0x01U
+/* Power Management Control/Status Register */
+#define PCIR_PMCSR            0x04U
+#define PCIM_PMCSR_NO_SOFT_RST (0x1U << 3U)
+
 /* PCI Express Capability */
 #define PCIY_PCIE             0x10U
 #define PCIR_PCIE_DEVCAP      0x04U
@@ -195,6 +201,7 @@ struct pci_pdev {
 
 	struct pci_msix_cap msix;
 
+	bool has_pm_reset;
 	bool has_flr;
 	bool has_af_flr;
 };
