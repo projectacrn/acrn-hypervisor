@@ -49,6 +49,9 @@ development team for Software-Defined Cockpit (SDC), Industrial Usage
 .. _NUC7i7DNH:
    https://ark.intel.com/content/www/us/en/ark/products/130393/intel-nuc-kit-nuc7i7dnhe.html
 
+.. _WHL-IPC-I5:
+   http://www.maxtangpc.com/industrialmotherboards/142.html#parameters
+
 .. _UP2 Shop:
    https://up-shop.org/home/270-up-squared.html
 
@@ -85,6 +88,9 @@ For general instructions setting up ACRN on supported hardware platforms, visit 
 | | **Kaby Lake**                | | `NUC7i7DNH`_          | V         | V         | V           | V          | V          |
 | | (Codename: Dawson Canyon)    | | (Board: NUC7i7DNB)    |           |           |             |            |            |
 +--------------------------------+-------------------------+-----------+-----------+-------------+------------+------------+
+| | **Whiskey Lake**             | | `WHL-IPC-I5`_         | V         | V         | V           | V          | V          |
+| |                              | | (Board: WHL-IPC-I5)   |           |           |             |            |            |
++--------------------------------+-------------------------+-----------+-----------+-------------+------------+------------+
 
 V: Verified by engineering team; remaining scenarios are not in verification scope
 
@@ -94,10 +100,10 @@ Verified Hardware Specifications Detail
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
 |   Platform (Intel x86)         |   Product/Kit Name     |   Hardware Class       |   Description                                             |
 +================================+========================+========================+===========================================================+
-| | **Apollo Lake**              | | NUC6CAYH             | Processor              | -  Intel(R) Celeron(R) CPU J3455 @ 1.50GHz (4C4T)         |
+| | **Apollo Lake**              | | NUC6CAYH             | Processor              | -  Intel® Celeron™ CPU J3455 @ 1.50GHz (4C4T)             |
 | | (Formal name: Arches Canyon) | | (Board: NUC6CAYB)    |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Graphics               | -  Intel HD Graphics 500                                  |
+|                                |                        | Graphics               | -  Intel® HD Graphics 500                                 |
 |                                |                        |                        | -  VGA (HDB15); HDMI 2.0                                  |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | System memory          | -  Two DDR3L SO-DIMM sockets                              |
@@ -124,7 +130,7 @@ Verified Hardware Specifications Detail
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Serial Port            | -  Yes                                                    |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
-| | **Kaby Lake**                | | NUC7i5BNH            | Processor              | -  Intel(R) Core(TM) i5-7260U CPU @ 2.20GHz (2C4T)        |
+| | **Kaby Lake**                | | NUC7i5BNH            | Processor              | -  Intel® Core™ i5-7260U CPU @ 2.20GHz (2C4T)             |
 | | (Codename: Baby Canyon)      | | (Board: NUC7i5BNB)   |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Graphics               | -  Intel® Iris™ Plus Graphics 640                         |
@@ -141,7 +147,7 @@ Verified Hardware Specifications Detail
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Serial Port            | -  Yes                                                    |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
-| | **Kaby Lake**                | | NUC7i7BNH            | Processor              | -  Intel(R) Core(TM) i7-7567U CPU @ 3.50GHz (2C4T)        |
+| | **Kaby Lake**                | | NUC7i7BNH            | Processor              | -  Intel® Core™ i7-7567U CPU @ 3.50GHz (2C4T)             |
 | | (Codename: Baby Canyon)      | | (Board: NUC7i7BNB)   |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Graphics               | -  Intel® Iris™ Plus Graphics 650                         |
@@ -158,7 +164,7 @@ Verified Hardware Specifications Detail
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Serial Port            | -  No                                                     |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
-| | **Kaby Lake**                | | NUC7i5DNH            | Processor              | -  Intel(R) Core(TM) i5-7300U CPU @ 2.64GHz (2C4T)        |
+| | **Kaby Lake**                | | NUC7i5DNH            | Processor              | -  Intel® Core™ i5-7300U CPU @ 2.64GHz (2C4T)             |
 | | (Codename: Dawson Canyon)    | | (Board: NUC7i5DNB)   |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Graphics               | -  Intel® HD Graphics 620                                 |
@@ -174,21 +180,38 @@ Verified Hardware Specifications Detail
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Serial Port            | -  No                                                     |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
-| | **Kaby Lake**                | | NUC7i7DNH            | Processor              | -  Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz (4C8T)        |
-| | (Codename: Dawson Canyon)    | | (Board: NUC7i7DNB)   |                        |                                                           |
+| | **Whiskey Lake**             | | WHL-IPC-I5           | Processor              | -  Intel® Core™ i5-8265U CPU @ 1.60GHz (4C8T)             |
+| |                              | | (Board: WHL-IPC-I5)  |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Graphics               | -  UHD Graphics 620                                       |
-|                                |                        |                        | -  Two HDMI\* 2.0a ports supporting 4K at 60 Hz           |
+|                                |                        | Graphics               | -  HD Graphics 610/620                                    |
+|                                |                        |                        | -  ONE HDMI\* 1.4a ports supporting 4K at 60 Hz           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | System memory          | -  Two DDR4 SO-DIMM sockets (up to 32 GB, 2400 MHz), 1.2V |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Storage capabilities   | -  One M.2 connector supporting 22x80 M.2 SSD             |
-|                                |                        |                        | -  One M.2 connector supporting 22x30 M.2 card            |
-|                                |                        |                        |    (NUC7i7DNBE Only)                                      |
-|                                |                        |                        | -  One SATA3 port for connection to 2.5" HDD or SSD       |
-|                                |                        |                        |    (up to 9.5 mm thickness) (NUC7i7DNHE only)             |
+|                                |                        | Storage capabilities   | -  One M.2 connector for WIFI                             |
+|                                |                        |                        | -  One M.2 connector for 3G/4G module, supporting         |
+|                                |                        |                        |    LTE Category 6 and above                               |
+|                                |                        |                        | -  One M.2 connector for 2242 SSD                         |
+|                                |                        |                        | -  TWO SATA3 port (only one if Celeron onboard)           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Serial Port            | -  Yes                                                    |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
+| | **Whiskey Lake**             | | WHL-IPC-I7           | Processor              | -  Intel® Core™ i5-8265U CPU @ 1.80GHz (4C8T)             |
+| |                              | | (Board: WHL-IPC-I7)  |                        |                                                           |
+|                                |                        +------------------------+-----------------------------------------------------------+
+|                                |                        | Graphics               | -  HD Graphics 610/620                                    |
+|                                |                        |                        | -  ONE HDMI\* 1.4a ports supporting 4K at 60 Hz           |
+|                                |                        +------------------------+-----------------------------------------------------------+
+|                                |                        | System memory          | -  Two DDR4 SO-DIMM sockets (up to 32 GB, 2400 MHz), 1.2V |
+|                                |                        +------------------------+-----------------------------------------------------------+
+|                                |                        | Storage capabilities   | -  One M.2 connector for WIFI                             |
+|                                |                        |                        | -  One M.2 connector for 3G/4G module, supporting         |
+|                                |                        |                        |    LTE Category 6 and above                               |
+|                                |                        |                        | -  One M.2 connector for 2242 SSD                         |
+|                                |                        |                        | -  TWO SATA3 port (only one if Celeron onboard)           |
+|                                |                        +------------------------+-----------------------------------------------------------+
+|                                |                        | Serial Port            | -  Yes                                                    |
++--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
+
 
 .. # vim: tw=200
