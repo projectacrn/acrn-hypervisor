@@ -25,7 +25,7 @@
 					"i915.nuclear_pageflip=1 " \
 					"i915.avail_planes_per_pipe=0x01010F "	\
 					"i915.domain_plane_owners=0x011111110000 " \
-					"i915.enable_gvt=1 "	\
+					"i915.enable_gvt=1 idle=halt "	\
 					SOS_BOOTARGS_DIFF
 
 #define	VM1_CONFIG_VCPU_AFFINITY	{AFFINITY_CPU(1U)}
