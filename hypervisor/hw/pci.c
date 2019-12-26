@@ -481,6 +481,9 @@ static void pci_read_cap(struct pci_pdev *pdev)
 			for (idx = 0U; idx < len; idx++) {
 				pdev->msix.cap[idx] = (uint8_t)pci_pdev_read_cfg(pdev->bdf, (uint32_t)pos + idx, 1U);
 			}
+		} else if (cap == PCIY_PMC) {
+			val = pci_pdev_read_cfg(pdev->bdf, pos + PCIR_PMCSR, 4U);
+			pdev->has_pm_reset = ((val & PCIM_PMCSR_NO_SOFT_RST) == 0U);
 		} else if (cap == PCIY_PCIE) {
 			pcie_devcap = pci_pdev_read_cfg(pdev->bdf, pos + PCIR_PCIE_DEVCAP, 4U);
 			pdev->has_flr = ((pcie_devcap & PCIM_PCIE_FLRCAP) != 0U);
