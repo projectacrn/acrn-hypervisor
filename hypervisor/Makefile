@@ -63,6 +63,8 @@ else
   SCENARIO_CFG_DIR := $(TARGET_DIR)/$(SCENARIO)
 endif
 
+include ../paths.make
+
 LD_IN_TOOL = scripts/genld.sh
 BASH = $(shell which bash)
 
@@ -403,12 +405,12 @@ endif
 all: pre_build $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
 install: $(HV_OBJDIR)/$(HV_FILE).32.out
-	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).32.out
-	install -D $(HV_OBJDIR)/$(HV_FILE).bin $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).bin
+	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)$(libdir)/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).32.out
+	install -D $(HV_OBJDIR)/$(HV_FILE).bin $(DESTDIR)$(libdir)/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).bin
 
 install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
-	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).out
-	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).map
+	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)$(libdir)/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).out
+	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)$(libdir)/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).map
 
 .PHONY: pre_build
 pre_build: $(PRE_BUILD_OBJS)
