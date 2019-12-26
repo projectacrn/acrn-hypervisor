@@ -195,13 +195,8 @@ struct pci_pdev {
 
 	struct pci_msix_cap msix;
 
-	/* Function Level Reset Capability */
 	bool has_flr;
-	uint32_t pcie_capoff;
-
-	/* Conventional PCI Advanced Features FLR Capability */
 	bool has_af_flr;
-	uint32_t af_capoff;
 };
 
 static inline uint32_t pci_bar_offset(uint32_t idx)
@@ -316,7 +311,6 @@ static inline bool is_pci_cfg_bridge(uint8_t header_type)
 	return ((header_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_BRIDGE);
 }
 
-void pdev_do_flr(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 bool pdev_need_bar_restore(const struct pci_pdev *pdev);
 void pdev_restore_bar(const struct pci_pdev *pdev);
 

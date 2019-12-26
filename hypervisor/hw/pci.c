@@ -42,7 +42,6 @@
 #include <bits.h>
 #include <board.h>
 #include <platform_acpi_info.h>
-#include <timer.h>
 
 static spinlock_t pci_device_lock;
 static uint32_t num_pci_pdev;
@@ -483,13 +482,11 @@ static void pci_read_cap(struct pci_pdev *pdev)
 				pdev->msix.cap[idx] = (uint8_t)pci_pdev_read_cfg(pdev->bdf, (uint32_t)pos + idx, 1U);
 			}
 		} else if (cap == PCIY_PCIE) {
-			pdev->pcie_capoff = pos;
 			pcie_devcap = pci_pdev_read_cfg(pdev->bdf, pos + PCIR_PCIE_DEVCAP, 4U);
-			pdev->has_flr = ((pcie_devcap & PCIM_PCIE_FLRCAP) != 0U) ? true : false;
+			pdev->has_flr = ((pcie_devcap & PCIM_PCIE_FLRCAP) != 0U);
 		} else if (cap == PCIY_AF) {
-			pdev->af_capoff = pos;
 			val = pci_pdev_read_cfg(pdev->bdf, pos, 4U);
-			pdev->has_af_flr = ((val & PCIM_AF_FLR_CAP) != 0U) ? true : false;
+			pdev->has_af_flr = ((val & PCIM_AF_FLR_CAP) != 0U);
 		} else {
 			/* Ignore all other Capability IDs for now */
 		}
@@ -533,29 +530,5 @@ static void init_pdev(uint16_t pbdf, uint32_t drhd_index)
 		}
 	} else {
 		pr_err("%s, failed to alloc pci_pdev!\n", __func__);
-	}
-}
-
-void pdev_do_flr(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val)
-{
-	uint32_t idx;
-	uint32_t bars[PCI_STD_NUM_BARS];
-
-	for (idx = 0U; idx < PCI_STD_NUM_BARS; idx++) {
-		bars[idx] = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
-	}
-
-	/* do the real reset */
-	pci_pdev_write_cfg(bdf, offset, bytes, val);
-
-	/*
-	 * After an FLR has been initiated by writing a 1b to
-	 * the Initiate Function Level Reset bit,
-	 * the Function must complete the FLR within 100 ms
-	 */
-	msleep(100U);
-
-	for (idx = 0U; idx < PCI_STD_NUM_BARS; idx++) {
-		pci_pdev_write_cfg(bdf, pci_bar_offset(idx), 4U, bars[idx]);
 	}
 }
