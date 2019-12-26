@@ -202,6 +202,10 @@ static const struct instr_emul_vie_op one_byte_opcodes[256] = {
 	[0x85] = {
 		.op_type = VIE_OP_TYPE_TEST,
 	},
+	[0xF6] = {
+		.op_type = VIE_OP_TYPE_TEST,
+		.op_flags = VIE_OP_F_BYTE_OP,
+	},
 	[0x08] = {
 		.op_type = VIE_OP_TYPE_OR,
 		.op_flags = VIE_OP_F_BYTE_OP,
@@ -1218,6 +1222,20 @@ static int32_t emulate_test(struct acrn_vcpu *vcpu, const struct instr_emul_vie 
 	error = 0;
 
 	switch (vie->opcode) {
+	case 0xF6U:
+		/*
+		 * f6/0 ib	test r/m8, imm8
+		 */
+		size = 1U;
+		/* get the first operand */
+		vie_mmio_read(vcpu, &val1);
+
+		/*
+		 * perform the operation with the pre-fetched immediate
+		 * operand and write the result
+		 */
+		result = val1 & vie->immediate;
+		break;
 	case 0x84U:
 		/*
 		 * 84/r		test r8, r/m8
