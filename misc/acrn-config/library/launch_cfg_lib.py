@@ -545,8 +545,6 @@ def virtual_dev_slot(dev):
     max_slot = 31
     base_slot = 3
 
-    #slot_used_len = len(list(PT_SLOT.values()))
-
     # get devices slot which already stored
     if dev in list(PT_SLOT.keys()):
         return PT_SLOT[dev]
@@ -574,11 +572,16 @@ def get_slot(bdf_list, dev):
         if not bdf_list[p_id]:
             slot_list[p_id] = ''
         else:
+            bus = int(bdf_list[p_id][0:2], 16)
             slot = int(bdf_list[p_id][3:5], 16)
-            # re-allocate virtual slot while slot is 0
-            if slot == 0:
-                slot = virtual_dev_slot(dev)
-            slot_list[p_id] = slot
+            fun = int(bdf_list[p_id][6:7], 16)
+            slot_fun = str(bus) + ":" +  str(slot) + ":" + str(fun)
+            if bus != 0:
+                slot_fun = virtual_dev_slot(dev)
+
+            slot_list[p_id] = slot_fun
+
+            # add already used slot for pass-throught devices to avoid conflict with virtio devices
             PT_SLOT[dev] = slot
 
     return slot_list
@@ -683,3 +686,25 @@ def cpu_sharing_check(cpu_sharing, item):
             key = "uos:id={},{}".format(vm_i, item)
             ERR_LIST[key] = "The same pcpu was configurated in scenario config, and not allow to set the cpu_sharing to 'Disabled'!"
             return
+
+
+def bdf_duplicate_check(bdf_dic):
+    """
+    Check if exist duplicate slot
+    :param bdf_dic: contains all selected pass-through devices
+    :return: None
+    """
+    bdf_used = []
+    for dev in bdf_dic.keys():
+        dev_bdf_dic = bdf_dic[dev]
+        for vm_i in dev_bdf_dic.keys():
+            dev_bdf = dev_bdf_dic[vm_i]
+            if not dev_bdf:
+                continue
+
+            if dev_bdf in bdf_used:
+                key = "uos:id={},{},{}".format(vm_i, 'passthrough_devices', dev)
+                ERR_LIST[key] = "You select the same device for {} pass-through !".format(dev)
+                return
+            else:
+                bdf_used.append(dev_bdf)
