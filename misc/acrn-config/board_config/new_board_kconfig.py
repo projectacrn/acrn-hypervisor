@@ -145,4 +145,9 @@ def generate_file(config):
     print("CONFIG_HV_RAM_START={}".format(hex(hv_start_addr)), file=config)
     print("CONFIG_HV_RAM_SIZE={}".format(hex(hv_ram_size)), file=config)
 
+    cpu_core_num = len(board_cfg_lib.get_processor_info())
+    if cpu_core_num == 2:
+        print("# KATA VM is not supported on dual-core systems", file=config)
+        print("CONFIG_MAX_KATA_VM_NUM=0", file=config)
+
     return err_dic
