@@ -464,7 +464,7 @@ static uint64_t lapic_pt_enabled_pcpu_bitmap(struct acrn_vm *vm)
 
 	if (is_lapic_pt_configured(vm)) {
 		foreach_vcpu(i, vm, vcpu) {
-			if (is_lapic_pt_enabled(vcpu)) {
+			if (is_x2apic_enabled(vcpu_vlapic(vcpu))) {
 				bitmap_set_nolock(pcpuid_from_vcpu(vcpu), &bitmap);
 			}
 		}
@@ -619,13 +619,53 @@ static bool is_ready_for_system_shutdown(void)
 	return ret;
 }
 
+static int32_t offline_lapic_pt_enabled_pcpus(const struct acrn_vm *vm, uint64_t pcpu_mask)
+{
+	int32_t ret = 0;
+	uint16_t i;
+	uint64_t mask = pcpu_mask;
+	const struct acrn_vcpu *vcpu = NULL;
+	uint16_t this_pcpu_id = get_pcpu_id();
+
+	if (bitmap_test(this_pcpu_id, &mask)) {
+		bitmap_clear_nolock(this_pcpu_id, &mask);
+		if (vm->state == VM_POWERED_OFF) {
+			/*
+			 * If the current pcpu needs to offline itself,
+			 * it will be done after shutdown_vm() completes
+			 * in the idle thread.
+			 */
+			make_pcpu_offline(this_pcpu_id);
+		} else {
+			/*
+			 * The current pcpu can't reset itself
+			 */
+			pr_warn("%s: cannot offline self(%u)",
+				__func__, this_pcpu_id);
+			ret = -EINVAL;
+		}
+	}
+
+	foreach_vcpu(i, vm, vcpu) {
+		if (bitmap_test(pcpuid_from_vcpu(vcpu), &mask)) {
+			make_pcpu_offline(pcpuid_from_vcpu(vcpu));
+		}
+	}
+
+	wait_pcpus_offline(mask);
+	if (!start_pcpus(mask)) {
+		pr_fatal("Failed to start all cpus in mask(0x%lx)", mask);
+		ret = -ETIMEDOUT;
+	}
+	return ret;
+}
+
 /*
  * @pre vm != NULL
  */
 int32_t shutdown_vm(struct acrn_vm *vm)
 {
 	uint16_t i;
-	uint16_t this_pcpu_id;
 	uint64_t mask;
 	struct acrn_vcpu *vcpu = NULL;
 	struct acrn_vm_config *vm_config = NULL;
@@ -636,32 +676,14 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	/* Only allow shutdown paused vm */
 	if (vm->state == VM_PAUSED) {
 		vm->state = VM_POWERED_OFF;
-		this_pcpu_id = get_pcpu_id();
-		mask = lapic_pt_enabled_pcpu_bitmap(vm);
 
-		/*
-		 * If the current pcpu needs to offline itself,
-		 * it will be done after shutdown_vm() completes
-		 * in the idle thread.
-		 */
-		if (bitmap_test(this_pcpu_id, &mask)) {
-			bitmap_clear_nolock(this_pcpu_id, &mask);
-			make_pcpu_offline(this_pcpu_id);
+		mask = lapic_pt_enabled_pcpu_bitmap(vm);
+		if (mask != 0UL) {
+			ret = offline_lapic_pt_enabled_pcpus(vm, mask);
 		}
 
 		foreach_vcpu(i, vm, vcpu) {
 			offline_vcpu(vcpu);
-
-			if (bitmap_test(pcpuid_from_vcpu(vcpu), &mask)) {
-				make_pcpu_offline(pcpuid_from_vcpu(vcpu));
-			}
-		}
-
-		wait_pcpus_offline(mask);
-
-		if ((mask != 0UL) && (!start_pcpus(mask))) {
-			pr_fatal("Failed to start all cpus in mask(0x%lx)", mask);
-			ret = -ETIMEDOUT;
 		}
 
 		vm_config = get_vm_config(vm->vm_id);
@@ -716,38 +738,18 @@ void start_vm(struct acrn_vm *vm)
 int32_t reset_vm(struct acrn_vm *vm)
 {
 	uint16_t i;
-	uint16_t this_pcpu_id;
 	uint64_t mask;
 	struct acrn_vcpu *vcpu = NULL;
 	int32_t ret = 0;
 
 	if (vm->state == VM_PAUSED) {
-		this_pcpu_id = get_pcpu_id();
 		mask = lapic_pt_enabled_pcpu_bitmap(vm);
-
-		/*
-		 * The current pcpu can't reset itself
-		 */
-		if (bitmap_test(this_pcpu_id, &mask)) {
-			pr_warn("%s: cannot offline self(%u)",
-				__func__, this_pcpu_id);
-			bitmap_clear_nolock(this_pcpu_id, &mask);
-			ret = -EINVAL;
+		if (mask != 0UL) {
+			ret = offline_lapic_pt_enabled_pcpus(vm, mask);
 		}
 
 		foreach_vcpu(i, vm, vcpu) {
 			reset_vcpu(vcpu, COLD_RESET);
-
-			if (bitmap_test(pcpuid_from_vcpu(vcpu), &mask)) {
-				make_pcpu_offline(pcpuid_from_vcpu(vcpu));
-			}
-		}
-
-		wait_pcpus_offline(mask);
-
-		if ((mask != 0UL) && (!start_pcpus(mask))) {
-			pr_fatal("Failed to start all cpus in mask(0x%lx)", mask);
-			ret = -ETIMEDOUT;
 		}
 
 		/*
