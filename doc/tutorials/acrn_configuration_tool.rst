@@ -68,7 +68,7 @@ board. The scenario-relevant board and scenario-based VM configurations
 are stored in the ``scenario`` XML. The launch script-based VM
 configuration is stored in the ``launch`` XML. These two XMLs can be
 customized by using the web interface tool at
-``misc/acrn-config/config-app/app.py``. End users can load their own
+``misc/acrn-config/config_app/app.py``. End users can load their own
 configurations by importing customized XMLs or by saving the
 configurations by exporting XMLs.
 
@@ -296,7 +296,7 @@ Here is the offline configuration tool workflow:
 #. Customize your needs.
 
    a. Copy ``$(BOARD).xml`` to the host development machine.
-   #. Run the ``misc/acrn-config/config-app/app.py`` tool on the host
+   #. Run the ``misc/acrn-config/config_app/app.py`` tool on the host
       machine and import the $(BOARD).xml. Select your working scenario under
       **Scenario Setting** and input the desired scenario settings. The tool
       will do a sanity check on the input based on the $(BOARD).xml. The
@@ -332,7 +332,7 @@ Here is the offline configuration tool workflow:
       Note that this can also be done by clicking **Generate Scenario SRC** in the acrn-config UI.
 
    #. Generate the launch script for the specified
-      post-launch User VM::
+      post-launched User VM::
 
          cd misc/acrn-config/launch_config
          python3 launch_cfg_gen.py --board $(BOARD).xml --scenario $(SCENARIO).xml --launch $(LAUNCH).xml --uosid xx
@@ -425,7 +425,7 @@ Instructions
 #. Choose a scenario from the **Scenario Setting** menu which lists all the scenarios,
    including the default scenarios and the user-defined scenarios for the board you selected
    in the previous step. The scenario configuration xmls are located at
-   ``acrn-hypervisor/misc/xmls/config-xmls/[board]/``.
+   ``acrn-hypervisor/misc/acrn-config/xmls/config-xmls/[board]/``.
 
    .. figure:: images/choose_scenario.png
       :align: center
@@ -449,7 +449,7 @@ Instructions
 #. Click **Export** to save the scenario xml; you can rename it in the pop-up modal.
 
    .. note:: All customized scenario xmls will be in user-defined groups which located in
-      ``acrn-hypervisor/misc/xmls/config-xmls/[board]/user_defined/``.
+      ``acrn-hypervisor/misc/acrn-config/xmls/config-xmls/[board]/user_defined/``.
 
    Before saving the scenario xml, the configuration app will validate
    the configurable items. If errors exist, the configuration app lists all
