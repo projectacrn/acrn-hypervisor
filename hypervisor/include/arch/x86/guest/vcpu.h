@@ -22,6 +22,7 @@
 #include <vlapic.h>
 #include <vmtrr.h>
 #include <schedule.h>
+#include <event.h>
 #include <io_req.h>
 #include <msr.h>
 #include <cpu.h>
@@ -145,6 +146,10 @@ enum vm_cpu_mode {
 	CPU_MODE_64BIT,			/* IA-32E mode (CS.L = 1) */
 };
 
+#define	VCPU_EVENT_IOREQ		0
+#define	VCPU_EVENT_VIRTUAL_INTERRUPT	1
+#define	VCPU_EVENT_NUM			2
+
 enum reset_mode;
 
 /* 2 worlds: 0 for Normal World, 1 for Secure World */
@@ -260,6 +265,8 @@ struct acrn_vcpu {
 
 	uint64_t reg_cached;
 	uint64_t reg_updated;
+
+	struct sched_event events[VCPU_EVENT_NUM];
 } __aligned(PAGE_SIZE);
 
 struct vcpu_dump {
