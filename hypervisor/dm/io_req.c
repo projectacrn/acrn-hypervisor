@@ -103,14 +103,6 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
 		}
 		clac();
 
-		/* pause vcpu in notification mode , wait for VHM to handle the MMIO request.
-		 * TODO: when pause_vcpu changed to switch vcpu out directlly, we
-		 * should fix the race issue between req.processed update and vcpu pause
-		 */
-		if (!is_polling) {
-			pause_vcpu(vcpu, VCPU_PAUSED);
-		}
-
 		/* Before updating the vhm_req state, enforce all fill vhm_req operations done */
 		cpu_write_memory_barrier();
 
@@ -136,10 +128,8 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
 					schedule();
 				}
 			}
-		} else if (need_reschedule(pcpuid_from_vcpu(vcpu))) {
-			schedule();
 		} else {
-			ret = -EINVAL;
+			wait_event(&vcpu->events[VCPU_EVENT_IOREQ]);
 		}
 	} else {
 		ret = -EINVAL;
