@@ -799,7 +799,7 @@ void launch_vcpu(struct acrn_vcpu *vcpu)
 /* help function for vcpu create */
 int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 {
-	int32_t ret;
+	int32_t ret, i;
 	struct acrn_vcpu *vcpu = NULL;
 	char thread_name[16];
 
@@ -815,6 +815,9 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 		vcpu->thread_obj.switch_out = context_switch_out;
 		vcpu->thread_obj.switch_in = context_switch_in;
 		init_thread_data(&vcpu->thread_obj);
+		for (i = 0; i < VCPU_EVENT_NUM; i++) {
+			init_event(&vcpu->events[i]);
+		}
 	}
 
 	return ret;
