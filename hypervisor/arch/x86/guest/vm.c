@@ -584,8 +584,6 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	struct acrn_vm_config *vm_config = NULL;
 	int32_t ret = 0;
 
-	pause_vm(vm);
-
 	/* Only allow shutdown paused vm */
 	if (vm->state == VM_PAUSED) {
 		vm->state = VM_POWERED_OFF;

@@ -160,7 +160,7 @@ static inline void enter_s5(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t 
 	if (is_sos_vm(vm)) {
 		save_s5_reg_val(pm1a_cnt_val, pm1b_cnt_val);
 	}
-
+	pause_vm(vm);
 	(void)shutdown_vm(vm);
 }
 
