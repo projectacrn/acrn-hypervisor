@@ -39,6 +39,7 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 				struct acrn_vm *pl_vm = get_vm_from_vmid(vm_id);
 
 				if (!is_poweroff_vm(pl_vm) && is_postlaunched_vm(pl_vm) && !is_rt_vm(pl_vm)) {
+					pause_vm(pl_vm);
 					(void)shutdown_vm(pl_vm);
 				}
 			}
