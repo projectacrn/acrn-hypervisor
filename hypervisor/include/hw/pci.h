@@ -320,5 +320,4 @@ static inline bool is_pci_cfg_bridge(uint8_t header_type)
 
 bool pdev_need_bar_restore(const struct pci_pdev *pdev);
 void pdev_restore_bar(const struct pci_pdev *pdev);
-
 #endif /* PCI_H_ */

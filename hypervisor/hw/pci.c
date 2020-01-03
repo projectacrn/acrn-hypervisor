@@ -202,7 +202,7 @@ void enable_disable_pci_intx(union pci_bdf bdf, bool enable)
 	}
 }
 
-static bool is_hidden_pdev(union pci_bdf pbdf)
+static bool is_hv_owned_pdev(union pci_bdf pbdf)
 {
 	bool hidden = false;
 	/* if it is debug uart, hide it*/
@@ -216,7 +216,7 @@ static bool is_hidden_pdev(union pci_bdf pbdf)
 
 static void pci_init_pdev(union pci_bdf pbdf, uint32_t drhd_index)
 {
-	if (!is_hidden_pdev(pbdf)) {
+	if (!is_hv_owned_pdev(pbdf)) {
 		init_pdev(pbdf.value, drhd_index);
 	}
 }

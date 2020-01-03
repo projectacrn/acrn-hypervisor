@@ -26,4 +26,6 @@
 #define SOS_BOOTARGS_DIFF	""
 #endif
 
+#define MAX_HIDDEN_PDEVS_NUM	0U
+
 #endif /* MISC_CFG_H */

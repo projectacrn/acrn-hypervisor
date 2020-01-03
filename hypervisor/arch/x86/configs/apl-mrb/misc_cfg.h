@@ -41,4 +41,6 @@
 				"cma=64M@0- "	\
 				"panic_print=0x1f"
 
+#define MAX_HIDDEN_PDEVS_NUM	0U
+
 #endif /* MISC_CFG_H */
