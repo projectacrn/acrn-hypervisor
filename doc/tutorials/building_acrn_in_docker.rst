@@ -140,7 +140,7 @@ Build the ACRN User VM PREEMPT_RT Kernel in Docker
 
       $ cp x86-64_defconfig .config
       $ docker run -u`id -u`:`id -g` --rm  -v $PWD:/workspace \
-        acrn/clearlinux-acrn-builder:latest \
+        clearlinux-acrn-builder:latest \
         bash -c "make clean && make olddefconfig && make && make modules_install INSTALL_MOD_PATH=out/"
 
    For the Docker image downloaded from Docker Hub, use this command to build ACRN:
