@@ -7,6 +7,7 @@
 #include <board.h>
 #include <msr.h>
 #include <vtd.h>
+#include <pci.h>
 
 #ifndef CONFIG_ACPI_PARSE_ENABLED
 #error "DMAR info is not available, please set ACPI_PARSE_ENABLED to y in Kconfig. \
@@ -35,3 +36,11 @@ struct platform_clos_info platform_clos_array[MAX_PLATFORM_CLOS_NUM] = {
 };
 
 const struct cpu_state_table board_cpu_state_tbl;
+
+const union pci_bdf plat_hidden_pdevs[MAX_HIDDEN_PDEVS_NUM] = {
+	{
+		.bits.b = 0x0,
+		.bits.d = 0xd,
+		.bits.f = 0x0,
+	},
+};

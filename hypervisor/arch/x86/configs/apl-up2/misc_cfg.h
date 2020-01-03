@@ -37,4 +37,6 @@
 				"i915.enable_guc=0x02 "	\
 				"cma=64M@0- "
 
+#define MAX_HIDDEN_PDEVS_NUM	1U
+
 #endif /* MISC_CFG_H */
