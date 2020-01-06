@@ -836,7 +836,7 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 
 		spinlock_obtain(&vm->vpci.lock);
 		vdev = pci_find_vdev(&vm->vpci, bdf);
-		if (vdev == NULL) {
+		if ((vdev == NULL) || (vdev->pdev == NULL)) {
 			pr_fatal("%s %x:%x.%x not found\n", __func__, bdf.bits.b,  bdf.bits.d,  bdf.bits.f);
 			ret = -EPERM;
 		} else {
