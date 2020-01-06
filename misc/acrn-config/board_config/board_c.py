@@ -10,7 +10,8 @@ import board_cfg_lib
 INCLUDE_HEADER = """
 #include <board.h>
 #include <vtd.h>
-#include <msr.h>"""
+#include <msr.h>
+#include <pci.h>"""
 
 
 MSR_IA32_L2_MASK_BASE = 0x00000D10
@@ -155,6 +156,26 @@ def gen_px_cx(config):
     print("};", file=config)
 
 
+def gen_pci_hide(config):
+    """Generate hide pci information for this platform"""
+    if board_cfg_lib.BOARD_NAME in list(board_cfg_lib.KNOWN_HIDE_PDEVS_BOARD_DB.keys()) and board_cfg_lib.KNOWN_HIDE_PDEVS_BOARD_DB[board_cfg_lib.BOARD_NAME] != 0:
+        hide_pdev_list = board_cfg_lib.KNOWN_HIDE_PDEVS_BOARD_DB[board_cfg_lib.BOARD_NAME]
+        hide_pdev_num = len(hide_pdev_list)
+        print("const union pci_bdf plat_hide_pdevs[MAX_HIDE_PDEVS_NUM] = {", file=config)
+        for hide_pdev_i in range(hide_pdev_num):
+            bus = hex(int(hide_pdev_list[hide_pdev_i].split(':')[0], 16))
+            dev = hex(int(hide_pdev_list[hide_pdev_i].split(':')[1], 16))
+            fun = hex(int(hide_pdev_list[hide_pdev_i].split(':')[2], 16))
+            print("\t{", file=config)
+            print("\t\t.bits.b = {}U,".format(bus), file=config)
+            print("\t\t.bits.d = {}U,".format(dev), file=config)
+            print("\t\t.bits.f = {}U,".format(fun), file=config)
+            print("\t},", file=config)
+        print("};", file=config)
+    else:
+        print("const union pci_bdf plat_hide_pdevs[MAX_HIDE_PDEVS_NUM];", file=config)
+
+
 def generate_file(config):
     """
     Start to generate board.c
@@ -177,5 +198,8 @@ def generate_file(config):
 
     # start to parse PX/CX info
     gen_px_cx(config)
+
+    # gen hide pci info for platform
+    gen_pci_hide(config)
 
     return err_dic
