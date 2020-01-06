@@ -254,8 +254,6 @@ int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
  * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param the physical BDF of the assigning ptdev
- *              To keep the compatibility it still can be the guest physical address that
- *              points to the physical BDF of the assigning ptdev.(Depreciated)
  *
  * @pre Pointer vm shall point to SOS_VM
  * @return 0 on success, non-zero on error.
@@ -268,8 +266,6 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
  * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param the physical BDF of the deassigning ptdev
- *              To keep the compatibility it still can be the guest physical address that
- *              points to the physical BDF of the deassigning ptdev.(Depreciated)
  *
  * @pre Pointer vm shall point to SOS_VM
  * @return 0 on success, non-zero on error.

@@ -820,8 +820,6 @@ int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
  * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param the physical BDF of the assigning ptdev
- *              For the compatibility it still can be the guest physical address that
- *              points to the physical BDF of the assigning ptdev.(Depreciated)
  *
  * @pre Pointer vm shall point to SOS_VM
  * @return 0 on success, non-zero on error.
@@ -831,38 +829,26 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	int32_t ret = 0;
 	union pci_bdf bdf;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
-	bool bdf_valid = true;
 	struct pci_vdev *vdev;
 
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
-		if (param < 0x10000UL) {
-			bdf.value = (uint16_t)param;
-		} else {
-			if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
-				pr_err("%s: Unable copy param from vm %d\n",
-				__func__, vm->vm_id);
-				bdf_valid = false;
-			        ret = -EIO;
-		        }
-	        }
+		bdf.value = (uint16_t)param;
 
-		if (bdf_valid) {
-			spinlock_obtain(&vm->vpci.lock);
-			vdev = pci_find_vdev(&vm->vpci, bdf);
-			if (vdev == NULL) {
-				pr_fatal("%s %x:%x.%x not found\n", __func__, bdf.bits.b,  bdf.bits.d,  bdf.bits.f);
-				ret = -EPERM;
-			} else {
-				/* ToDo: Each PT device must support one type reset */
-				if (!vdev->pdev->has_pm_reset && !vdev->pdev->has_flr && !vdev->pdev->has_af_flr) {
-					pr_fatal("%s %x:%x.%x not support FLR or not support PM reset\n",
-						__func__, bdf.bits.b,  bdf.bits.d,  bdf.bits.f);
-				}
+		spinlock_obtain(&vm->vpci.lock);
+		vdev = pci_find_vdev(&vm->vpci, bdf);
+		if (vdev == NULL) {
+			pr_fatal("%s %x:%x.%x not found\n", __func__, bdf.bits.b,  bdf.bits.d,  bdf.bits.f);
+			ret = -EPERM;
+		} else {
+			/* ToDo: Each PT device must support one type reset */
+			if (!vdev->pdev->has_pm_reset && !vdev->pdev->has_flr && !vdev->pdev->has_af_flr) {
+				pr_fatal("%s %x:%x.%x not support FLR or not support PM reset\n",
+					__func__, bdf.bits.b,  bdf.bits.d,  bdf.bits.f);
 			}
-			spinlock_release(&vm->vpci.lock);
-			if (ret == 0) {
-				ret = move_pt_device(vm->iommu, target_vm->iommu, bdf.fields.bus, bdf.fields.devfun);
-			}
+		}
+		spinlock_release(&vm->vpci.lock);
+		if (ret == 0) {
+			ret = move_pt_device(vm->iommu, target_vm->iommu, bdf.fields.bus, bdf.fields.devfun);
 		}
 	} else {
 		pr_err("%s, target vm is invalid\n", __func__);
@@ -878,8 +864,6 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
  * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param the physical BDF of the deassigning ptdev
- *              To keep the compatibility it still can be the guest physical address that
- *              points to the physical BDF of the deassigning ptdev.(Depreciated)
  *
  * @pre Pointer vm shall point to SOS_VM
  * @return 0 on success, non-zero on error.
@@ -888,22 +872,11 @@ int32_t hcall_deassign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = -1;
 	union pci_bdf bdf;
-	bool bdf_valid = true;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
-		if (param < 0x10000UL) {
-			bdf.value = (uint16_t)param;
-		} else {
-			if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
-				pr_err("%s: Unable copy param to vm\n", __func__);
-				bdf_valid = false;
-			}
-		}
-
-		if (bdf_valid) {
-			ret = move_pt_device(target_vm->iommu, vm->iommu, bdf.fields.bus, bdf.fields.devfun);
-		}
+		bdf.value = (uint16_t)param;
+		ret = move_pt_device(target_vm->iommu, vm->iommu, bdf.fields.bus, bdf.fields.devfun);
 	}
 
 	return ret;
