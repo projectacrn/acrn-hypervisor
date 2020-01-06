@@ -12,6 +12,7 @@ MISC_CFG_HEADER = """
 
 MISC_CFG_END = """#endif /* MISC_CFG_H */"""
 
+
 class Vuart:
 
     t_vm_id = {}
@@ -157,6 +158,15 @@ def generate_file(config):
     print("", file=config)
     if "SOS_VM" in vm_types:
         sos_bootarg_diff(sos_cmdlines, config)
+
+    # set macro for HIDDEN PTDEVS
+    print("", file=config)
+    if board_cfg_lib.BOARD_NAME in list(board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB):
+        print("#define MAX_HIDDEN_PDEVS_NUM	{}U".format(len(board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB[board_cfg_lib.BOARD_NAME])), file=config)
+    else:
+        print("#define MAX_HIDDEN_PDEVS_NUM	0U", file=config)
+    print("", file=config)
+
     print("{}".format(MISC_CFG_END), file=config)
 
     return err_dic
