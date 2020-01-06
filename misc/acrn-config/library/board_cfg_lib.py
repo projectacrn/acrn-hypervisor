@@ -33,6 +33,11 @@ ERR_LIST = {}
 
 HEADER_LICENSE = common.open_license() + "\n"
 
+# The data base contains hide pci device
+KNOWN_HIDDEN_PDEVS_BOARD_DB = {
+    'apl-up2':['00:0d:0'],
+}
+
 
 def prepare(check_git):
     """ check environment """
