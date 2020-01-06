@@ -106,7 +106,7 @@ update_gvt_bar(struct vmctx *ctx)
 
 	bar_fd = open(bar_path, O_RDONLY);
 	if(bar_fd == -1){
-		perror("failed to open sys bar info\n");
+		pr_err("failed to open sys bar info\n");
 		return;
 	}
 
@@ -115,7 +115,7 @@ update_gvt_bar(struct vmctx *ctx)
 	close(bar_fd);
 
 	if (ret < 76) {
-		perror("failed to read sys bar info\n");
+		pr_err("failed to read sys bar info\n");
 		return;
 	}
 
@@ -174,7 +174,7 @@ gvt_init_config(struct pci_gvt *gvt)
 		gvt->addr.function);
 	res_fd = open(res_name, O_RDONLY);
 	if (res_fd == -1) {
-		perror("gvt:open host pci resource failed\n");
+		pr_err("gvt:open host pci resource failed\n");
 		return -1;
 	}
 
@@ -183,7 +183,7 @@ gvt_init_config(struct pci_gvt *gvt)
 	close(res_fd);
 
 	if (ret < 512) {
-		perror("failed to read host device resource space\n");
+		pr_err("failed to read host device resource space\n");
 		return -1;
 	}
 
@@ -201,7 +201,7 @@ gvt_init_config(struct pci_gvt *gvt)
 		|| bar2_start_addr < ctx->lowmem_limit
 		|| bar0_end_addr > PCI_EMUL_ECFG_BASE
 		|| bar2_end_addr > PCI_EMUL_ECFG_BASE){
-		perror("gvt pci bases are out of range\n");
+		pr_err("gvt pci bases are out of range\n");
 		return -1;
 	}
 
@@ -225,7 +225,7 @@ gvt_init_config(struct pci_gvt *gvt)
 		gvt->addr.function);
 	gvt->host_config_fd = open(name, O_RDONLY);
 	if (gvt->host_config_fd == -1) {
-		perror("gvt:open host pci config failed\n");
+		pr_err("gvt:open host pci config failed\n");
 		return -1;
 	}
 
@@ -234,7 +234,7 @@ gvt_init_config(struct pci_gvt *gvt)
 	close(gvt->host_config_fd);
 
 	if (ret <= PCI_REGMAX) {
-		perror("failed to read host device config space\n");
+		pr_err("failed to read host device config space\n");
 		return -1;
 	}
 
@@ -368,7 +368,7 @@ pci_gvt_init(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 
 	gvt = calloc(1, sizeof(struct pci_gvt));
 	if (!gvt) {
-		perror("gvt:calloc gvt failed\n");
+		pr_err("gvt:calloc gvt failed\n");
 		return -1;
 	}
 
@@ -396,7 +396,7 @@ pci_gvt_init(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 fail:
 	gvt_dev = NULL;
 	ctx->gvt_enabled = false;
-	perror("GVT: init failed\n");
+	pr_err("GVT: init failed\n");
 	free(gvt);
 	return -1;
 }

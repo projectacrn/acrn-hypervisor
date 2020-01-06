@@ -51,7 +51,7 @@ static int init_kmsg_logger(bool enable, uint8_t log_level)
 	kmsg_fd = open(KMSG_DEV_NODE, O_RDWR | O_APPEND | O_NONBLOCK);
 	if (kmsg_fd < 0) {
 		kmsg_enabled = false;
-		perror(KMSG_PREFIX"open kmsg dev failed");
+		pr_err(KMSG_PREFIX"open kmsg dev failed");
 	}
 
 	return kmsg_fd;
@@ -85,7 +85,7 @@ static void write_to_kmsg(const char *fmt, va_list args)
 
 	write_cnt = write(kmsg_fd, kmsg_buf, strnlen(kmsg_buf, KMSG_MAX_LEN));
 	if (write_cnt < 0) {
-		perror(KMSG_PREFIX"write kmsg failed");
+		pr_err(KMSG_PREFIX"write kmsg failed");
 		close(kmsg_fd);
 		kmsg_fd = -1;
 	}

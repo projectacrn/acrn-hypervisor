@@ -411,7 +411,7 @@ mevent_dispatch(void)
 	 */
 	ret = pipe2(mevent_pipefd, O_NONBLOCK);
 	if (ret < 0) {
-		perror("pipe");
+		pr_err("pipe");
 		exit(0);
 	}
 
@@ -433,7 +433,7 @@ mevent_dispatch(void)
 		ret = epoll_wait(epoll_fd, eventlist, MEVENT_MAX, -1);
 
 		if (ret == -1 && errno != EINTR)
-			perror("Error return from epoll_wait");
+			pr_err("Error return from epoll_wait");
 
 		/*
 		 * Handle reported events

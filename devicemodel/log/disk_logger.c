@@ -174,7 +174,7 @@ static void write_to_disk(const char *fmt, va_list args)
 
 	write_cnt = write(disk_fd, buffer, strnlen(buffer, DISK_LOG_MAX_LEN));
 	if (write_cnt < 0) {
-		perror(DISK_PREFIX"write disk failed");
+		pr_err(DISK_PREFIX"write disk failed");
 		close(disk_fd);
 		disk_fd = -1;
 		return;
