@@ -696,7 +696,7 @@ blockif_open(const char *optstr, const char *ident)
 
 	bc = calloc(1, sizeof(struct blockif_ctxt));
 	if (bc == NULL) {
-		perror("calloc");
+		pr_err("calloc");
 		goto err;
 	}
 
@@ -750,7 +750,7 @@ blockif_open(const char *optstr, const char *ident)
 	for (i = 0; i < BLOCKIF_NUMTHR; i++) {
 		if (snprintf(tname, sizeof(tname), "blk-%s-%d",
 					ident, i) >= sizeof(tname)) {
-			perror("blk thread name too long");
+			pr_err("blk thread name too long");
 		}
 		pthread_create(&bc->btid[i], NULL, blockif_thr, bc);
 		pthread_setname_np(bc->btid[i], tname);

@@ -187,7 +187,7 @@ start_wdt_timer(void)
 	timer_val.it_value.tv_sec = seconds;
 
 	if (acrn_timer_settime(&wdt_state.timer, &timer_val) == -1) {
-		perror("WDT timerfd_settime failed.\n");
+		pr_err("WDT timerfd_settime failed.\n");
 		wdt_state.wdt_armed = false;
 		return;
 	}
@@ -331,7 +331,7 @@ pci_wdt_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	/*the wdt just has one inistance */
 	if (wdt_state.reboot_enabled && wdt_state.timer1_val) {
-		perror("wdt can't be initialized twice, please check!");
+		pr_err("wdt can't be initialized twice, please check!");
 		return -1;
 	}
 

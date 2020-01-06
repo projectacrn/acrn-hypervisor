@@ -175,7 +175,7 @@ static int open_hugetlbfs(struct vmctx *ctx, int level)
 	struct statfs fs;
 
 	if (level >= HUGETLB_LV_MAX) {
-		perror("exceed max hugetlb level");
+		pr_err("exceed max hugetlb level");
 		return -EINVAL;
 	}
 
@@ -186,7 +186,7 @@ static int open_hugetlbfs(struct vmctx *ctx, int level)
 	len = strnlen(path, MAX_PATH_LEN);
 	/* UUID will use 32 bytes */
 	if (len + 32 > MAX_PATH_LEN) {
-		perror("PATH overflow");
+		pr_err("PATH overflow");
 		return -ENOMEM;
 	}
 
@@ -206,13 +206,13 @@ static int open_hugetlbfs(struct vmctx *ctx, int level)
 
 	hugetlb_priv[level].fd = open(path, O_CREAT | O_RDWR, 0644);
 	if (hugetlb_priv[level].fd  < 0) {
-		perror("Open hugtlbfs failed");
+		pr_err("Open hugtlbfs failed");
 		return -EINVAL;
 	}
 
 	/* get the pagesize */
 	if (fstatfs(hugetlb_priv[level].fd, &fs) != 0) {
-		perror("Failed to get statfs fo hugetlbfs");
+		pr_err("Failed to get statfs fo hugetlbfs");
 		return -EINVAL;
 	}
 
@@ -232,7 +232,7 @@ static int open_hugetlbfs(struct vmctx *ctx, int level)
 static void close_hugetlbfs(int level)
 {
 	if (level >= HUGETLB_LV_MAX) {
-		perror("exceed max hugetlb level");
+		pr_err("exceed max hugetlb level");
 		return;
 	}
 
@@ -247,7 +247,7 @@ static void close_hugetlbfs(int level)
 static bool should_enable_hugetlb_level(int level)
 {
 	if (level >= HUGETLB_LV_MAX) {
-		perror("exceed max hugetlb level");
+		pr_err("exceed max hugetlb level");
 		return false;
 	}
 
@@ -270,7 +270,7 @@ static int mmap_hugetlbfs_from_level(struct vmctx *ctx, int level, size_t len,
 	int fd, i;
 
 	if (level >= HUGETLB_LV_MAX) {
-		perror("exceed max hugetlb level");
+		pr_err("exceed max hugetlb level");
 		return -EINVAL;
 	}
 
@@ -379,7 +379,7 @@ static int rm_hugetlb_dirs(int level)
 	char path[MAX_PATH_LEN]={0};
 
 	if (level >= HUGETLB_LV_MAX) {
-		perror("exceed max hugetlb level");
+		pr_err("exceed max hugetlb level");
 		return -EINVAL;
 	}
 
@@ -387,7 +387,7 @@ static int rm_hugetlb_dirs(int level)
 
 	if (access(path, F_OK) == 0) {
 		if (rmdir(path) < 0) {
-			perror("rmdir failed");
+			pr_err("rmdir failed");
 			return -1;
 		}
 	}
@@ -401,7 +401,7 @@ static int create_hugetlb_dirs(int level)
 	size_t len;
 
 	if (level >= HUGETLB_LV_MAX) {
-		perror("exceed max hugetlb level");
+		pr_err("exceed max hugetlb level");
 		return -EINVAL;
 	}
 
@@ -413,7 +413,7 @@ static int create_hugetlb_dirs(int level)
 			path[i] = 0;
 			if (access(path, F_OK) != 0) {
 				if (mkdir(path, 0755) < 0) {
-					perror("mkdir failed");
+					pr_err("mkdir failed");
 					return -1;
 				}
 			}
@@ -430,7 +430,7 @@ static int mount_hugetlbfs(int level)
 	char path[MAX_PATH_LEN];
 
 	if (level >= HUGETLB_LV_MAX) {
-		perror("exceed max hugetlb level");
+		pr_err("exceed max hugetlb level");
 		return -EINVAL;
 	}
 
@@ -453,7 +453,7 @@ static void umount_hugetlbfs(int level)
 	char path[MAX_PATH_LEN];
 
 	if (level >= HUGETLB_LV_MAX) {
-		perror("exceed max hugetlb level");
+		pr_err("exceed max hugetlb level");
 		return;
 	}
 
@@ -694,14 +694,14 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 	bool has_gap;
 
 	if (ctx->lowmem == 0) {
-		perror("vm requests 0 memory");
+		pr_err("vm requests 0 memory");
 		goto err;
 	}
 
 	/* open hugetlbfs and get pagesize for two level */
 	for (level = HUGETLB_LV1; level < hugetlb_lv_max; level++) {
 		if (open_hugetlbfs(ctx, level) < 0) {
-			perror("failed to open hugetlbfs");
+			pr_err("failed to open hugetlbfs");
 			goto err;
 		}
 	}
@@ -772,7 +772,7 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 	ptr = mmap(NULL, total_size, PROT_NONE,
 			MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 	if (ptr == MAP_FAILED) {
-		perror("anony mmap fail");
+		pr_err("anony mmap fail");
 		goto err_lock;
 	}
 
@@ -788,21 +788,21 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 
 	/* mmap lowmem */
 	if (mmap_hugetlbfs(ctx, 0, get_lowmem_param, adj_lowmem_param) < 0) {
-		perror("lowmem mmap failed");
+		pr_err("lowmem mmap failed");
 		goto err_lock;
 	}
 
 	/* mmap highmem */
 	if (mmap_hugetlbfs(ctx, ctx->highmem_gpa_base,
 				get_highmem_param, adj_highmem_param) < 0) {
-		perror("highmem mmap failed");
+		pr_err("highmem mmap failed");
 		goto err_lock;
 	}
 
 	/* mmap biosmem */
 	if (mmap_hugetlbfs(ctx, 4 * GB - ctx->biosmem,
 				get_biosmem_param, adj_biosmem_param) < 0) {
-		perror("biosmem mmap failed");
+		pr_err("biosmem mmap failed");
 		goto err_lock;
 	}
 

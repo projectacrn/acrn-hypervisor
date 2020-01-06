@@ -471,7 +471,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	} else {
 		bctxt = blockif_open(opts, bident);
 		if (bctxt == NULL) {
-			perror("Could not open backing file");
+			pr_err("Could not open backing file");
 			return -1;
 		}
 	}

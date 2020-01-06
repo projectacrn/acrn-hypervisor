@@ -133,7 +133,7 @@ int create_mmio_rsvd_rgn(uint64_t start,
 	int i;
 
 	if(bar_type == PCIBAR_IO){
-		perror("fail to create PCIBAR_IO bar_type\n");
+		pr_err("fail to create PCIBAR_IO bar_type\n");
 		return -1;
 	}
 
@@ -154,7 +154,7 @@ int create_mmio_rsvd_rgn(uint64_t start,
 		}
 	}
 
-	perror("reserved_bar_regions is overflow\n");
+	pr_err("reserved_bar_regions is overflow\n");
 	return -1;
 }
 
