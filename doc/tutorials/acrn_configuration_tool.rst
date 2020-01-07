@@ -104,9 +104,9 @@ Additional scenario XML elements:
   Specify the VM with VMID by its "id" attribute.
 
 ``load_order``:
-  Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM.
+  Specify the VM by its load order: ``PRE_LAUNCHED_VM``, ``SOS_VM`` or ``POST_LAUNCHED_VM``.
 
-``name`` under parent of ``vm``:
+``name`` (a child node of ``vm``):
   Specify the VM name which will be shown in the hypervisor console command: vm_list.
 
 ``uuid``:
@@ -114,57 +114,78 @@ Additional scenario XML elements:
 
 ``guest_flags``:
   Select all applicable flags for the VM.
+  ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify whether secure world is enabled;
+  ``GUEST_FLAG_LAPIC_PASSTHROUGH`` specify whether LAPIC is passed through;
+  ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify whether need hypervisor poll IO completion;
+  ``GUEST_FLAG_CLOS_REQUIRED`` specify whether CLOS is required;
+  ``GUEST_FLAG_HIDE_MTRR`` specify whether hide MTRR from VM;
+  ``GUEST_FLAG_RT`` specify whether the vm is RT-VM;
+
+``severity``:
+  Severity of the guest VM; The lower severity VM should not impact higher severity VM.
+  The order of severity from high to low is:
+  ``SEVERITY_SAFETY_VM``, ``SEVERITY_RTVM``, ``SEVERITY_SOS``, ``SEVERITY_STANDARD_VM``.
 
 ``vcpu_affinity``:
-  vCPU affinity map. Each vCPU will pin to the selected pCPU ID. A different vCPU cannot pin to the same pCPU.
+  vCPU affinity map. Each vCPU will be mapped to the selected pCPU ID. A different vCPU in same VM cannot be mapped to the same pCPU.
+  If the pCPU is mapped by different VMs, ``cpu_sharing`` of the VM must be set to ``Enabled`` in launch XML.
 
-``size`` under parent of ``epc_section``:
+``base`` (a child node of ``epc_section``):
   SGX EPC section base; must be page aligned.
 
-``base`` under parent of ``epc_section``:
+``size`` (a child node of ``epc_section``):
   SGX EPC section size in Bytes; must be page aligned.
 
 ``clos``:
-  Class of Service for Cache Allocation Technology. Refer to the SDM 17.19.2 for details and use with caution.
+  Class of Service for Cache Allocation Technology settings. Refer to :ref:`hv_rdt` for details.
 
-``start_hpa``:
+``start_hpa`` (a child node of ``memory``):
   The start physical address in host for the VM.
 
-``size`` under parent of ``memory``:
+``size`` (a child node of ``memory``):
   The memory size in Bytes for the VM.
 
-``name`` under parent of ``os_config``:
+``name`` (a child node of ``os_config``):
   Specify the OS name of VM; currently, it is not referenced by the hypervisor code.
 
-``kern_type``:
+``kern_type`` (a child node of ``os_config``):
   Specify the kernel image type so that the hypervisor can load it correctly.
-  Currently supports KERNEL_BZIMAGE and KERNEL_ZEPHYR.
+  Currently supports ``KERNEL_BZIMAGE`` and ``KERNEL_ZEPHYR``.
 
-``kern_mod``:
+``kern_mod`` (a child node of ``os_config``):
   The tag for the kernel image that acts as a multiboot module; it must exactly match the module tag in the GRUB multiboot cmdline.
 
-``bootargs`` under parent of ``os_config``:
+``ramdisk_mod`` (a child node of ``os_config``):
+  The tag for the ramdisk image which acts as a multiboot module; it must exactly match the module tag in the GRUB multiboot cmdline.
+
+``bootargs`` (a child node of ``os_config``):
   For internal use and is not configurable. Specify the kernel boot arguments
   in bootargs under the parent of board_private.
+
+``kern_load_addr`` (a child node of ``os_config``):
+  The loading address in host memory for the VM kernel.
+
+``kern_entry_addr`` (a child node of ``os_config``):
+  The entry address in host memory for the VM kernel.
 
 ``vuart``:
   Specify the vuart (A.K.A COM) with the vUART ID by its "id" attribute.
   Refer to :ref:`vuart_config` for detailed vUART settings.
 
-``type`` under parent of ``vuart``:
+``type`` (a child node of ``vuart``):
   vUART (A.K.A COM) type, currently only supports the legacy PIO mode.
 
-``base`` under parent of ``vuart``:
+``base`` (a child node of ``vuart``):
   vUART (A.K.A COM) enabling switch. Enable by exposing its COM_BASE
   (SOS_COM_BASE for Service VM); disable by returning INVALID_COM_BASE.
 
-``irq`` under parent of ``vuart``:
+``irq`` (a child node of ``vuart``):
   vCOM irq.
 
-``target_vm_id``:
+``target_vm_id`` (a child node of ``vuart1``):
   COM2 is used for VM communications. When it is enabled, specify which target VM the current VM connects to.
 
-``target_uart_id``:
+``target_uart_id`` (a child node of ``vuart1``):
   Target vUART ID that vCOM2 connects to.
 
 ``pci_dev_num``:
@@ -182,7 +203,7 @@ Additional scenario XML elements:
 ``console``:
   ttyS console for the Linux kernel.
 
-``bootargs`` under parent of ``board_private``:
+``bootargs`` (a child node of ``board_private``):
   Specify kernel boot arguments.
 
 Launch XML format
@@ -202,7 +223,8 @@ Attributes of the ``uos_launcher`` specify the number of User VMs that the curre
   Specify the User VM with its relative ID to Service VM by the "id" attribute.
 
 ``uos_type``:
-  Specify the User VM type, such as  CLEARLINUX, ANDROID, or VXWORKS.
+  Specify the User VM type, such as ``CLEARLINUX``, ``ANDROID``, ``ALIOS``,
+  ``PREEMPT-RT LINUX``, ``GENERIC LINUX``, ``WINDOWS``, ``ZEPHYR`` or ``VXWORKS``.
 
 ``rtos_type``:
   Specify the User VM Realtime capability: Soft RT, Hard RT, or none of them.
@@ -211,27 +233,43 @@ Attributes of the ``uos_launcher`` specify the number of User VMs that the curre
   Specify the User VM memory size in Mbyte.
 
 ``gvt_args``:
-  GVT argument for the VM.
+  GVT arguments for the VM. Input format: ``low_gm_size high_gm_size fence_sz``.
+  Recommendation is: ``64 448 8``. Leave it blank to disable the GVT.
 
 ``vbootloader``:
   Virtual bootloader type; currently only supports OVMF.
 
-``rootfs_dev``:
-  The device where User VM rootfs located.
+``cpu_sharing``:
+  Specify whether the pCPUs listed can be shared with other VMs.
 
-``rootfs_img``:
-  User VM rootfs image file including path.
-
-``console_type``:
-  Specify whether the User VM console is virtio or vUART; refer to :ref:`vuart_config` for details.
+``vuart0``:
+  Specify whether the device model emulates the vUART0(vCOM1); refer to :ref:`vuart_config` for details.
+  If set to ``Enable``, the vUART0 is emulated by the device model;
+  If set to ``Disable``, the vUART0 is emulated by the hypervisor if it is configured in scenario XML.
 
 ``poweroff_channel``:
   Specify whether the User VM power off channel is through the IOC, Powerbutton, or vUART.
+
+``usb_xhci``:
+  USB xHCI mediator configuration. Input format: ``bus#-port#[:bus#-port#: ...]``. e.g.: ``1-2:2-4``.
+  refer to :ref:`usb_virtualization` for details.
 
 ``passthrough_devices``:
   Select the passthrough device from the lspci list; currently we support:
   usb_xdci, audio, audio_codec, ipu, ipu_i2c, cse, wifi, Bluetooth, sd_card,
   ethernet, wifi, sata, and nvme.
+
+``network`` (a child node of ``virtio_devices``):
+  The virtio network device setting.
+  Input format: ``tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX]``.
+
+``block`` (a child node of ``virtio_devices``):
+  The virtio block device setting.
+  Input format: ``[blk partition:][img path]`` e.g.: ``/dev/sda3:./a/b.img``.
+
+``console`` (a child node of ``virtio_devices``):
+  The virtio console device setting.
+  Input format: ``[@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]``.
 
 .. note::
 
