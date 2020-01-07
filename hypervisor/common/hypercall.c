@@ -552,7 +552,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 				__func__, vcpu_id, target_vm->vm_id);
 		} else {
 			vcpu = vcpu_from_vid(target_vm, vcpu_id);
-			if (!vcpu->vm->sw.is_completion_polling) {
+			if (!vcpu->vm->sw.is_polling_ioreq) {
 				signal_event(&vcpu->events[VCPU_EVENT_IOREQ]);
 			}
 			ret = 0;
