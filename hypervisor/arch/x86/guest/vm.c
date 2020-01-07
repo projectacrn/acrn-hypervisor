@@ -575,7 +575,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		vm->sw.io_shared_page = NULL;
 		if ((vm_config->load_order == POST_LAUNCHED_VM) && ((vm_config->guest_flags & GUEST_FLAG_IO_COMPLETION_POLLING) != 0U)) {
 			/* enable IO completion polling mode per its guest flags in vm_config. */
-			vm->sw.is_completion_polling = true;
+			vm->sw.is_polling_ioreq = true;
 		}
 		status = set_vcpuid_entries(vm);
 		if (status == 0) {

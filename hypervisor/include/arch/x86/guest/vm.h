@@ -67,7 +67,7 @@ struct vm_sw_info {
 	/* HVA to IO shared page */
 	void *io_shared_page;
 	/* If enable IO completion polling mode */
-	bool is_completion_polling;
+	bool is_polling_ioreq;
 };
 
 struct vm_pm_info {

@@ -97,7 +97,7 @@ int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_
 		vhm_req->type = io_req->io_type;
 		(void)memcpy_s(&vhm_req->reqs, sizeof(union vhm_io_request),
 			&io_req->reqs, sizeof(union vhm_io_request));
-		if (vcpu->vm->sw.is_completion_polling) {
+		if (vcpu->vm->sw.is_polling_ioreq) {
 			vhm_req->completion_polling = 1U;
 			is_polling = true;
 		}
