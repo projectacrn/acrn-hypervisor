@@ -581,7 +581,7 @@ void vpci_set_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t
 	sos_vm = get_sos_vm();
 	spinlock_obtain(&sos_vm->vpci.lock);
 	vdev = pci_find_vdev(&sos_vm->vpci, bdf);
-	if (vdev == NULL) {
+	if ((vdev == NULL) || (vdev->pdev == NULL)) {
 		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
 			target_vm->vm_id, vbdf, pbdf);
 	} else {
