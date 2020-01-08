@@ -42,7 +42,7 @@ Many new `reference documents <https://projectacrn.github.io>`_ are available, i
 * :ref:`run-kata-containers`
 * :ref:`hardware` (Addition of Whiskey Lake information)
 * :ref:`cpu_sharing`
-* :ref:`using_windows_as_uos` (Updated kernel information)
+* :ref:`using_windows_as_uos` (Update to use ACRNGT GOP to install Windows)
 
 Fixed Issues Details
 ********************
