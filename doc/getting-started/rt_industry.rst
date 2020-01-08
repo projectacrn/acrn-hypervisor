@@ -6,9 +6,9 @@ Getting Started Guide for ACRN Industry Scenario
 Verified version
 ****************
 
-- Clear Linux version: **31670**
-- ACRN-hypervisor tag: **v1.4**
-- ACRN-Kernel(Service VM kernel): **4.19.78-98.iot-lts2018-sos**
+- Clear Linux version: **32030**
+- ACRN-hypervisor tag: **v1.5 (acrn-2020w01.1-140000p)**
+- ACRN-Kernel (Service VM kernel): **4.19.78-98.iot-lts2018-sos**
 
 Prerequisites
 *************
@@ -21,10 +21,10 @@ for the RTVM.
   (refer to :ref:`the tables <hardware_setup>` for detailed information).
 - If you need to enable the serial port on KBL NUC, navigate to the
   :ref:`troubleshooting <connect_serial_port>` to prepare the cable.
-- Follow below steps to install Clear Linux OS (Ver: 31670) onto both disks on the KBL NUC:
+- Follow below steps to install Clear Linux OS (Ver: 32030) onto both disks on the KBL NUC:
 
 .. _Clear Linux OS Server image:
-   https://download.clearlinux.org/releases/31670/clear/clear-31670-live-server.iso
+   https://download.clearlinux.org/releases/32030/clear/clear-32030-live-server.iso
 
   #. Create a bootable USB drive on Linux*:
 
@@ -46,7 +46,7 @@ for the RTVM.
      #. Unmount all the ``/dev/sdc`` partitions and burn the image onto the USB drive::
 
         $ umount /dev/sdc* 2>/dev/null
-        $ sudo dd if=./clear-31670-live-server.iso of=/dev/sdc oflag=sync status=progress bs=4M
+        $ sudo dd if=./clear-32030-live-server.iso of=/dev/sdc oflag=sync status=progress bs=4M
 
   #. Plug in the USB drive to the KBL NUC and boot from USB.
   #. Launch the Clear Linux OS installer boot menu.
@@ -131,7 +131,7 @@ Use the pre-installed industry ACRN hypervisor
 
    .. code-block:: none
 
-      # ./acrn_quick_setup.sh -s 31670 -d -i
+      # ./acrn_quick_setup.sh -s 32030 -d -i
 
    .. note:: ``-i`` option means the industry scenario efi image will be used, e.g.
       ``acrn.nuc7i7dnb.industry.efi``. For the detailed usage of the ``acrn_quick_setup.sh`` script, 
@@ -189,15 +189,15 @@ Use the ACRN industry out-of-the-box image
 
 #. Download the Service VM industry image::
 
-   # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2019w47.1-140000p/sos-industry-31670.img.xz
+   # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w01.1-140000p/sos-industry-32030.img.xz
 
 #. Decompress the .xz image::
 
-   # xz -d sos-industry-31670.img.xz
+   # xz -d sos-industry-32030.img.xz
 
 #. Burn the Service VM image onto the SATA disk::
 
-   # dd if=sos-industry-31670.img of=/dev/sda bs=4M oflag=sync status=progress
+   # dd if=sos-industry-32030.img of=/dev/sda bs=4M oflag=sync status=progress
 
 #. Configure the EFI firmware to boot the ACRN hypervisor by default:
    
@@ -223,15 +223,15 @@ Install and launch the Preempt-RT VM
 
 #. Download the Preempt-RT VM image::
 
-   # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2019w47.1-140000p/preempt-rt-31670.img.xz
+   # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w01.1-140000p/preempt-rt-32030.img.xz
 
 #. Decompress the xz image::
 
-   # xz -d preempt-rt-31670.img.xz
+   # xz -d preempt-rt-32030.img.xz
 
 #. Burn the Preempt-RT VM image onto the NVMe disk::
 
-   # dd if=preempt-rt-31670.img of=/dev/nvme0n1 bs=4M oflag=sync status=progress
+   # dd if=preempt-rt-32030.img of=/dev/nvme0n1 bs=4M oflag=sync status=progress
 
 #. Use the ``lspci`` command to ensure that the correct NVMe device IDs will
    be used for the passthru before launching the script:
