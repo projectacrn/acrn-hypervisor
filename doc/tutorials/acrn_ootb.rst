@@ -88,7 +88,7 @@ Step 1: Create a Service VM YAML file and script
            {cmd: "${yamlDir}/service-os-post.sh ${chrootDir}"},
         ]
 
-        version: 31670
+        version: 32030
 
      .. note:: Update the version value to your target Clear Linux version.
 
@@ -205,7 +205,7 @@ Step 1: Create a Service VM YAML file and script
            {cmd: "${yamlDir}/service-os-industry-post.sh ${chrootDir}"},
         ]
 
-        version: 31670
+        version: 32030
 
      .. note:: Update the version value to your target Clear Linux version.
 
@@ -377,8 +377,8 @@ Step 3: Deploy the Service VM image
 
    .. code-block:: none
 
-      $ wget https://download.clearlinux.org/releases/31670/clear/clear-31670-live-server.iso
-      $ sudo dd if=clear-31670-live-server.iso of=/dev/sdb1 bs=4M oflag=sync status=progress
+      $ wget https://download.clearlinux.org/releases/32030/clear/clear-32030-live-server.iso
+      $ sudo dd if=clear-32030-live-server.iso of=/dev/sdb1 bs=4M oflag=sync status=progress
 
 #. Copy the ``sos.img`` or ``sos-industry.img`` to the U disk:
 
@@ -460,6 +460,7 @@ Step 3: Deploy the Service VM image
 
         # dd if=/mnt/sos-industry.img of=/dev/sda bs=4M oflag=sync status=progress
 
+Note: With the above “size” settings in yaml, >100G SOS image will be generated and it will quite some time to write it into the disk.
 #. Configure the EFI firmware to boot the ACRN hypervisor by default:
 
    .. code-block:: none
@@ -533,7 +534,7 @@ Step 1: Create a Preempt-RT image YAML file and script
       language: en_US.UTF-8
       kernel: kernel-lts2018-preempt-rt
 
-      version: 31670
+      version: 32030
 
    .. note:: Update the version value to your target Clear Linux version
 
