@@ -113,28 +113,36 @@ Additional scenario XML elements:
   UUID of the VM. It is for internal use and is not configurable.
 
 ``guest_flags``:
-  Select all applicable flags for the VM.
-  ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify whether secure world is enabled;
-  ``GUEST_FLAG_LAPIC_PASSTHROUGH`` specify whether LAPIC is passed through;
-  ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify whether need hypervisor poll IO completion;
-  ``GUEST_FLAG_CLOS_REQUIRED`` specify whether CLOS is required;
-  ``GUEST_FLAG_HIDE_MTRR`` specify whether hide MTRR from VM;
-  ``GUEST_FLAG_RT`` specify whether the vm is RT-VM;
+  Select all applicable flags for the VM:
+
+  ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify whether secure world is enabled
+
+  ``GUEST_FLAG_LAPIC_PASSTHROUGH`` specify whether LAPIC is passed through
+
+  ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify whether the hypervisor needs
+  IO polling to completion
+
+  ``GUEST_FLAG_CLOS_REQUIRED`` specify whether CLOS is required
+
+  ``GUEST_FLAG_HIDE_MTRR`` specify whether to hide MTRR from the VM
+
+  ``GUEST_FLAG_RT`` specify whether the vm is RT-VM
 
 ``severity``:
-  Severity of the guest VM; The lower severity VM should not impact higher severity VM.
+  Severity of the guest VM; the lower severity VM should not impact the higher severity VM.
+
   The order of severity from high to low is:
   ``SEVERITY_SAFETY_VM``, ``SEVERITY_RTVM``, ``SEVERITY_SOS``, ``SEVERITY_STANDARD_VM``.
 
 ``vcpu_affinity``:
-  vCPU affinity map. Each vCPU will be mapped to the selected pCPU ID. A different vCPU in same VM cannot be mapped to the same pCPU.
-  If the pCPU is mapped by different VMs, ``cpu_sharing`` of the VM must be set to ``Enabled`` in launch XML.
+  vCPU affinity map. Each vCPU will be mapped to the selected pCPU ID. A different vCPU in the same VM cannot be mapped to the same pCPU.
+  If the pCPU is mapped by different VMs, ``cpu_sharing`` of the VM must be set to ``Enabled`` in the launch XML.
 
 ``base`` (a child node of ``epc_section``):
   SGX EPC section base; must be page aligned.
 
 ``size`` (a child node of ``epc_section``):
-  SGX EPC section size in Bytes; must be page aligned.
+  SGX EPC section size in bytes; must be page aligned.
 
 ``clos``:
   Class of Service for Cache Allocation Technology settings. Refer to :ref:`hv_rdt` for details.
@@ -143,7 +151,7 @@ Additional scenario XML elements:
   The start physical address in host for the VM.
 
 ``size`` (a child node of ``memory``):
-  The memory size in Bytes for the VM.
+  The memory size inbBytes for the VM.
 
 ``name`` (a child node of ``os_config``):
   Specify the OS name of VM; currently, it is not referenced by the hypervisor code.
@@ -245,7 +253,7 @@ Attributes of the ``uos_launcher`` specify the number of User VMs that the curre
 ``vuart0``:
   Specify whether the device model emulates the vUART0(vCOM1); refer to :ref:`vuart_config` for details.
   If set to ``Enable``, the vUART0 is emulated by the device model;
-  If set to ``Disable``, the vUART0 is emulated by the hypervisor if it is configured in scenario XML.
+  if set to ``Disable``, the vUART0 is emulated by the hypervisor if it is configured in the scenario XML.
 
 ``poweroff_channel``:
   Specify whether the User VM power off channel is through the IOC, Powerbutton, or vUART.
