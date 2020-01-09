@@ -452,13 +452,13 @@ Step 3: Deploy the Service VM image
 
      .. code-block:: none
 
-        # dd if=/mnt/sos.img of=/dev/sda bs=4M oflag=sync status=progress
+        # dd if=/mnt/sos.img of=/dev/sda bs=4M oflag=sync status=progress iflag=fullblock seek=0 conv=notrunc
 
    - ACRN INDUSTRY scenario:
 
      .. code-block:: none
 
-        # dd if=/mnt/sos-industry.img of=/dev/sda bs=4M oflag=sync status=progress
+        # dd if=/mnt/sos-industry.img of=/dev/sda bs=4M oflag=sync status=progress iflag=fullblock seek=0 conv=notrunc
 
 .. note:: Given the large YAML size setting of over 100G, generating the SOS image and writing it to disk will take some time.
 

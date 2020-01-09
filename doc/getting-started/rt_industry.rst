@@ -21,10 +21,12 @@ for the RTVM.
   (refer to :ref:`the tables <hardware_setup>` for detailed information).
 - If you need to enable the serial port on KBL NUC, navigate to the
   :ref:`troubleshooting <connect_serial_port>` to prepare the cable.
-- Follow below steps to install Clear Linux OS (Ver: 32030) onto both disks on the KBL NUC:
+- Follow below steps to install Clear Linux OS (Ver: 31670) onto the SATA disk
+  of the KBL NUC(Here we install Clear linux with version 31670 and then the
+  subsequent ACRN quick setup script will upgrade Clear linux to version 32030):
 
 .. _Clear Linux OS Server image:
-   https://download.clearlinux.org/releases/32030/clear/clear-32030-live-server.iso
+   https://download.clearlinux.org/releases/31670/clear/clear-31670-live-server.iso
 
   #. Create a bootable USB drive on Linux*:
 
