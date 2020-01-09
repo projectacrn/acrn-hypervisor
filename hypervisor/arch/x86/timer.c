@@ -141,7 +141,7 @@ static void init_tsc_deadline_timer(void)
 {
 	uint32_t val;
 
-	val = VECTOR_TIMER;
+	val = TIMER_VECTOR;
 	val |= APIC_LVTT_TM_TSCDLT; /* TSC deadline and unmask */
 	msr_write(MSR_IA32_EXT_APIC_LVT_TIMER, val);
 	cpu_memory_barrier();
