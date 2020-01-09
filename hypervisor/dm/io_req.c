@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <logmsg.h>
 
-#define ACRN_DBG_IOREQUEST	6U
+#define DBG_LEVEL_IOREQ	6U
 
 static uint32_t acrn_vhm_notification_vector = VECTOR_HYPERVISOR_CALLBACK_VHM;
 #define MMIO_DEFAULT_VALUE_SIZE_1	(0xFFUL)
@@ -21,8 +21,8 @@ __unused static void acrn_print_request(uint16_t vcpu_id, const struct vhm_reque
 {
 	switch (req->type) {
 	case REQ_MMIO:
-		dev_dbg(ACRN_DBG_IOREQUEST, "[vcpu_id=%hu type=MMIO]", vcpu_id);
-		dev_dbg(ACRN_DBG_IOREQUEST,
+		dev_dbg(DBG_LEVEL_IOREQ, "[vcpu_id=%hu type=MMIO]", vcpu_id);
+		dev_dbg(DBG_LEVEL_IOREQ,
 			"gpa=0x%lx, R/W=%d, size=%ld value=0x%lx processed=%lx",
 			req->reqs.mmio.address,
 			req->reqs.mmio.direction,
@@ -31,8 +31,8 @@ __unused static void acrn_print_request(uint16_t vcpu_id, const struct vhm_reque
 			req->processed);
 		break;
 	case REQ_PORTIO:
-		dev_dbg(ACRN_DBG_IOREQUEST, "[vcpu_id=%hu type=PORTIO]", vcpu_id);
-		dev_dbg(ACRN_DBG_IOREQUEST,
+		dev_dbg(DBG_LEVEL_IOREQ, "[vcpu_id=%hu type=PORTIO]", vcpu_id);
+		dev_dbg(DBG_LEVEL_IOREQ,
 			"IO=0x%lx, R/W=%d, size=%ld value=0x%lx processed=%lx",
 			req->reqs.pio.address,
 			req->reqs.pio.direction,
@@ -41,7 +41,7 @@ __unused static void acrn_print_request(uint16_t vcpu_id, const struct vhm_reque
 			req->processed);
 		break;
 	default:
-		dev_dbg(ACRN_DBG_IOREQUEST, "[vcpu_id=%hu type=%d] NOT support type",
+		dev_dbg(DBG_LEVEL_IOREQ, "[vcpu_id=%hu type=%d] NOT support type",
 			vcpu_id, req->type);
 		break;
 	}

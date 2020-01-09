@@ -17,8 +17,8 @@
  * @brief public APIs for virtual IRQ
  */
 
-#define ACRN_DBG_PTIRQ		6U
-#define ACRN_DBG_IRQ		6U
+#define DBG_LEVEL_PTIRQ		6U
+#define DBG_LEVEL_IRQ		6U
 
 /* vectors range for dynamic allocation, usually for devices */
 #define VECTOR_DYNAMIC_START	0x20U

@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <logmsg.h>
 
-#define ACRN_DBG_HYCALL	6U
+#define DBG_LEVEL_HYCALL	6U
 
 bool is_hypercall_from_ring0(void)
 {
@@ -168,7 +168,7 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 			} else {
 				ret = create_vm(vm_id, vm_config, &target_vm);
 				if (ret != 0) {
-					dev_dbg(ACRN_DBG_HYCALL, "HCALL: Create VM failed");
+					dev_dbg(DBG_LEVEL_HYCALL, "HCALL: Create VM failed");
 					cv.vmid = ACRN_INVALID_VMID;
 					ret = -1;
 				} else {
@@ -389,7 +389,7 @@ static void inject_msi_lapic_pt(struct acrn_vm *vm, const struct acrn_msi_entry 
 	vmsi_addr.full = vmsi->msi_addr;
 	vmsi_data.full = (uint32_t)vmsi->msi_data;
 
-	dev_dbg(ACRN_DBG_LAPICPT, "%s: msi_addr 0x%016lx, msi_data 0x%016lx",
+	dev_dbg(DBG_LEVEL_LAPICPT, "%s: msi_addr 0x%016lx, msi_data 0x%016lx",
 		__func__, vmsi->msi_addr, vmsi->msi_data);
 
 	if (vmsi_addr.bits.addr_base == MSI_ADDR_BASE) {
@@ -401,7 +401,7 @@ static void inject_msi_lapic_pt(struct acrn_vm *vm, const struct acrn_msi_entry 
 		 * and handled by hardware.
 		 */
 		vlapic_calc_dest_lapic_pt(vm, &vdmask, false, vdest, phys);
-		dev_dbg(ACRN_DBG_LAPICPT, "%s: vcpu destination mask 0x%016lx", __func__, vdmask);
+		dev_dbg(DBG_LEVEL_LAPICPT, "%s: vcpu destination mask 0x%016lx", __func__, vdmask);
 
 		vcpu_id = ffs64(vdmask);
 		while (vcpu_id != INVALID_BIT_INDEX) {
@@ -418,7 +418,7 @@ static void inject_msi_lapic_pt(struct acrn_vm *vm, const struct acrn_msi_entry 
 		icr.bits.destination_mode = MSI_ADDR_DESTMODE_LOGICAL; 
 
 		msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
-		dev_dbg(ACRN_DBG_LAPICPT, "%s: icr.value 0x%016lx", __func__, icr.value);
+		dev_dbg(DBG_LEVEL_LAPICPT, "%s: icr.value 0x%016lx", __func__, icr.value);
 	}
 }
 
@@ -504,7 +504,7 @@ int32_t hcall_set_ioreq_buffer(struct acrn_vm *vm, uint16_t vmid, uint64_t param
 		if (copy_from_gpa(vm, &iobuf, param, sizeof(iobuf)) != 0) {
 			pr_err("%p %s: Unable copy param to vm\n", target_vm, __func__);
 	        } else {
-			dev_dbg(ACRN_DBG_HYCALL, "[%d] SET BUFFER=0x%p",
+			dev_dbg(DBG_LEVEL_HYCALL, "[%d] SET BUFFER=0x%p",
 					vmid, iobuf.req_buf);
 
 			hpa = gpa2hpa(vm, iobuf.req_buf);
@@ -544,7 +544,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 
 	/* make sure we have set req_buf */
 	if ((!is_poweroff_vm(target_vm)) && (is_postlaunched_vm(target_vm)) && (target_vm->sw.io_shared_page != NULL)) {
-		dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
+		dev_dbg(DBG_LEVEL_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
 			vmid, vcpu_id);
 
 		if (vcpu_id >= target_vm->hw.created_vcpus) {
@@ -637,7 +637,7 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 				target_vm->arch_vm.ept_mem_ops.info->ept.top_address_space);
 			ret = 0;
 		} else {
-			dev_dbg(ACRN_DBG_HYCALL,
+			dev_dbg(DBG_LEVEL_HYCALL,
 				"[vm%d] type=%d gpa=0x%x sos_vm_gpa=0x%x size=0x%x",
 				target_vm->vm_id, region->type, region->gpa,
 				region->sos_vm_gpa, region->size);
@@ -723,7 +723,7 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 			pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
 				__func__, vm->vm_id, wp->gpa);
 		} else {
-			dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x",
+			dev_dbg(DBG_LEVEL_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x",
 				vm->vm_id, wp->gpa, hpa);
 
 			base_paddr = hva2hpa((void *)(get_hv_image_base()));

@@ -160,7 +160,7 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *
 		info->pmsi_addr.bits.rh = MSI_ADDR_RH;
 		info->pmsi_addr.bits.dest_mode = MSI_ADDR_DESTMODE_LOGICAL;
 	}
-	dev_dbg(ACRN_DBG_IRQ, "MSI %s addr:data = 0x%lx:%x(V) -> 0x%lx:%x(P)",
+	dev_dbg(DBG_LEVEL_IRQ, "MSI %s addr:data = 0x%lx:%x(V) -> 0x%lx:%x(P)",
 		(info->pmsi_addr.ir_bits.intr_format != 0U) ? " Remappable Format" : "Compatibility Format",
 		info->vmsi_addr.full, info->vmsi_data.full,
 		info->pmsi_addr.full, info->pmsi_data.full);
@@ -242,7 +242,7 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 			rte.bits.dest_field = dest_mask;
 		}
 
-		dev_dbg(ACRN_DBG_IRQ, "IOAPIC RTE %s = 0x%x:%x(V) -> 0x%x:%x(P)",
+		dev_dbg(DBG_LEVEL_IRQ, "IOAPIC RTE %s = 0x%x:%x(V) -> 0x%x:%x(P)",
 			(rte.ir_bits.intr_format != 0U) ? "Remappable Format" : "Compatibility Format",
 			virt_rte.u.hi_32, virt_rte.u.lo_32,
 			rte.u.hi_32, rte.u.lo_32);
@@ -259,7 +259,7 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 			rte.bits.trigger_mode = IOAPIC_RTE_TRGRMODE_LEVEL;
 		}
 
-		dev_dbg(ACRN_DBG_IRQ, "IOAPIC RTE %s = 0x%x:%x(P) -> 0x%x:%x(P)",
+		dev_dbg(DBG_LEVEL_IRQ, "IOAPIC RTE %s = 0x%x:%x(P) -> 0x%x:%x(P)",
 			(rte.ir_bits.intr_format != 0U) ? "Remappable Format" : "Compatibility Format",
 			phys_rte.u.hi_32, phys_rte.u.lo_32,
 			rte.u.hi_32, rte.u.lo_32);
@@ -315,7 +315,7 @@ static struct ptirq_remapping_info *add_msix_remapping(struct acrn_vm *vm,
 		 * required. */
 	}
 
-	dev_dbg(ACRN_DBG_IRQ, "VM%d MSIX add vector mapping vbdf%x:pbdf%x idx=%d",
+	dev_dbg(DBG_LEVEL_IRQ, "VM%d MSIX add vector mapping vbdf%x:pbdf%x idx=%d",
 		vm->vm_id, virt_bdf, phys_bdf, entry_nr);
 
 	return entry;
@@ -340,7 +340,7 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entr
 		intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
 		dmar_free_irte(intr_src, (uint16_t)entry->allocated_pirq);
 
-		dev_dbg(ACRN_DBG_IRQ,
+		dev_dbg(DBG_LEVEL_IRQ,
 			"VM%d MSIX remove vector mapping vbdf-pbdf:0x%x-0x%x idx=%d",
 			entry->vm->vm_id, virt_bdf,
 			entry->phys_sid.msi_id.bdf, entry_nr);
@@ -410,7 +410,7 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 			} else {
 				vm->arch_vm.vioapic.vpin_to_pt_entry[virt_pin] = entry;
 			}
-			dev_dbg(ACRN_DBG_IRQ, "VM%d INTX add pin mapping vpin%d:ppin%d",
+			dev_dbg(DBG_LEVEL_IRQ, "VM%d INTX add pin mapping vpin%d:ppin%d",
 				entry->vm->vm_id, virt_pin, phys_pin);
 		}
 	}
@@ -440,11 +440,11 @@ static void remove_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, bool pi
 				intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(phys_irq);
 
 				dmar_free_irte(intr_src, (uint16_t)phys_irq);
-				dev_dbg(ACRN_DBG_IRQ,
+				dev_dbg(DBG_LEVEL_IRQ,
 					"deactive %s intx entry:ppin=%d, pirq=%d ",
 					pic_pin ? "vPIC" : "vIOAPIC",
 					entry->phys_sid.intx_id.pin, phys_irq);
-				dev_dbg(ACRN_DBG_IRQ, "from vm%d vpin=%d\n",
+				dev_dbg(DBG_LEVEL_IRQ, "from vm%d vpin=%d\n",
 					entry->vm->vm_id, virt_pin);
 			}
 
@@ -489,7 +489,7 @@ static void ptirq_handle_intx(struct acrn_vm *vm,
 			}
 		}
 
-		dev_dbg(ACRN_DBG_PTIRQ,
+		dev_dbg(DBG_LEVEL_PTIRQ,
 			"dev-assign: irq=0x%x assert vr: 0x%x vRTE=0x%lx",
 			entry->allocated_pirq,
 			irq_to_vector(entry->allocated_pirq),
@@ -544,11 +544,11 @@ void ptirq_softirq(uint16_t pcpu_id)
 			if (msi != NULL) {
 				/* TODO: msi destmode check required */
 				(void)vlapic_intr_msi(entry->vm, msi->vmsi_addr.full, msi->vmsi_data.full);
-				dev_dbg(ACRN_DBG_PTIRQ, "dev-assign: irq=0x%x MSI VR: 0x%x-0x%x",
+				dev_dbg(DBG_LEVEL_PTIRQ, "dev-assign: irq=0x%x MSI VR: 0x%x-0x%x",
 					entry->allocated_pirq,
 					msi->vmsi_data.bits.vector,
 					irq_to_vector(entry->allocated_pirq));
-				dev_dbg(ACRN_DBG_PTIRQ, " vmsi_addr: 0x%lx vmsi_data: 0x%x",
+				dev_dbg(DBG_LEVEL_PTIRQ, " vmsi_addr: 0x%lx vmsi_data: 0x%x",
 					msi->vmsi_addr.full,
 					msi->vmsi_data.full);
 			}
@@ -589,7 +589,7 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpin_src)
 			break;
 		}
 
-		dev_dbg(ACRN_DBG_PTIRQ, "dev-assign: irq=0x%x acked vr: 0x%x",
+		dev_dbg(DBG_LEVEL_PTIRQ, "dev-assign: irq=0x%x acked vr: 0x%x",
 				phys_irq, irq_to_vector(phys_irq));
 		ioapic_gsi_unmask_irq(phys_irq);
 	}
@@ -671,7 +671,7 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 		if (ret == 0) {
 			entry->msi = *info;
 			vbdf.value = virt_bdf;
-			dev_dbg(ACRN_DBG_IRQ, "PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
+			dev_dbg(DBG_LEVEL_IRQ, "PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
 				vbdf.bits.b, vbdf.bits.d, vbdf.bits.f, entry_nr, info->vmsi_data.bits.vector,
 				irq_to_vector(entry->allocated_pirq), entry->vm->vm_id);
 		}
@@ -792,7 +792,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpi
 		spinlock_obtain(&ptdev_lock);
 		/* if vpin source need switch */
 		if ((need_switch_vpin_src) && (entry != NULL)) {
-			dev_dbg(ACRN_DBG_IRQ,
+			dev_dbg(DBG_LEVEL_IRQ,
 				"IOAPIC pin=%hhu pirq=%u vpin=%d switch from %s to %s vpin=%d for vm%d",
 				entry->phys_sid.intx_id.pin,
 				entry->allocated_pirq, entry->virt_sid.intx_id.pin,

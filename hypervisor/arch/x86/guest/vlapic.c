@@ -62,7 +62,7 @@ static inline uint32_t prio(uint32_t x)
 #define LOGICAL_ID_MASK		0xFU
 #define CLUSTER_ID_MASK		0xFFFF0U
 
-#define ACRN_DBG_LAPIC		6U
+#define DBG_LEVEL_VLAPIC		6U
 
 #if VLAPIC_VERBOS
 static inline void vlapic_dump_irr(const struct acrn_vlapic *vlapic, const char *msg)
@@ -70,7 +70,7 @@ static inline void vlapic_dump_irr(const struct acrn_vlapic *vlapic, const char 
 	const struct lapic_reg *irrptr = &(vlapic->apic_page.irr[0]);
 
 	for (uint8_t i = 0U; i < 8U; i++) {
-		dev_dbg(ACRN_DBG_LAPIC, "%s irr%u 0x%08x", msg, i, irrptr[i].v);
+		dev_dbg(DBG_LEVEL_VLAPIC, "%s irr%u 0x%08x", msg, i, irrptr[i].v);
 	}
 }
 
@@ -79,7 +79,7 @@ static inline void vlapic_dump_isr(const struct acrn_vlapic *vlapic, const char 
 	const struct lapic_reg *isrptr = &(vlapic->apic_page.isr[0]);
 
 	for (uint8_t i = 0U; i < 8U; i++) {
-		dev_dbg(ACRN_DBG_LAPIC, "%s isr%u 0x%08x", msg, i, isrptr[i].v);
+		dev_dbg(DBG_LEVEL_VLAPIC, "%s isr%u 0x%08x", msg, i, isrptr[i].v);
 	}
 }
 #else
@@ -185,7 +185,7 @@ vlapic_build_id(const struct acrn_vlapic *vlapic)
 		lapic_regs_id = vlapic_id << APIC_ID_SHIFT;
 	}
 
-	dev_dbg(ACRN_DBG_LAPIC, "vlapic APIC PAGE ID : 0x%08x", lapic_regs_id);
+	dev_dbg(DBG_LEVEL_VLAPIC, "vlapic APIC PAGE ID : 0x%08x", lapic_regs_id);
 
 	return lapic_regs_id;
 }
@@ -233,12 +233,12 @@ vlapic_write_dfr(struct acrn_vlapic *vlapic)
 	lapic->dfr.v |= APIC_DFR_RESERVED;
 
 	if ((lapic->dfr.v & APIC_DFR_MODEL_MASK) == APIC_DFR_MODEL_FLAT) {
-		dev_dbg(ACRN_DBG_LAPIC, "vlapic DFR in Flat Model");
+		dev_dbg(DBG_LEVEL_VLAPIC, "vlapic DFR in Flat Model");
 	} else if ((lapic->dfr.v & APIC_DFR_MODEL_MASK)
 			== APIC_DFR_MODEL_CLUSTER) {
-		dev_dbg(ACRN_DBG_LAPIC, "vlapic DFR in Cluster Model");
+		dev_dbg(DBG_LEVEL_VLAPIC, "vlapic DFR in Cluster Model");
 	} else {
-		dev_dbg(ACRN_DBG_LAPIC, "DFR in Unknown Model %#x", lapic->dfr);
+		dev_dbg(DBG_LEVEL_VLAPIC, "DFR in Unknown Model %#x", lapic->dfr);
 	}
 }
 
@@ -249,7 +249,7 @@ vlapic_write_ldr(struct acrn_vlapic *vlapic)
 
 	lapic = &(vlapic->apic_page);
 	lapic->ldr.v &= ~APIC_LDR_RESERVED;
-	dev_dbg(ACRN_DBG_LAPIC, "vlapic LDR set to %#x", lapic->ldr);
+	dev_dbg(DBG_LEVEL_VLAPIC, "vlapic LDR set to %#x", lapic->ldr);
 }
 
 static inline uint32_t
@@ -525,7 +525,7 @@ vlapic_reset_tmr(struct acrn_vlapic *vlapic)
 	int16_t i;
 	struct lapic_regs *lapic;
 
-	dev_dbg(ACRN_DBG_LAPIC,
+	dev_dbg(DBG_LEVEL_VLAPIC,
 			"vlapic resetting all vectors to edge-triggered");
 
 	lapic = &(vlapic->apic_page);
@@ -588,7 +588,7 @@ static void vlapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, bool
 
 	lapic = &(vlapic->apic_page);
 	if ((lapic->svr.v & APIC_SVR_ENABLE) == 0U) {
-		dev_dbg(ACRN_DBG_LAPIC, "vlapic is software disabled, ignoring interrupt %u", vector);
+		dev_dbg(DBG_LEVEL_VLAPIC, "vlapic is software disabled, ignoring interrupt %u", vector);
 	} else {
 		signal_event(&vlapic->vcpu->events[VCPU_EVENT_VIRTUAL_INTERRUPT]);
 		vlapic->ops->accept_intr(vlapic, vector, level);
@@ -764,7 +764,7 @@ vlapic_write_lvt(struct acrn_vlapic *vlapic, uint32_t offset)
 			if ((vlapic->vm->wire_mode == VPIC_WIRE_INTR) ||
 				(vlapic->vm->wire_mode == VPIC_WIRE_NULL)) {
 				vlapic->vm->wire_mode = VPIC_WIRE_LAPIC;
-				dev_dbg(ACRN_DBG_LAPIC,
+				dev_dbg(DBG_LEVEL_VLAPIC,
 					"vpic wire mode -> LAPIC");
 			} else {
 				pr_err("WARNING:invalid vpic wire mode change");
@@ -774,7 +774,7 @@ vlapic_write_lvt(struct acrn_vlapic *vlapic, uint32_t offset)
 		} else if (((last & APIC_LVT_M) == 0U) && ((val & APIC_LVT_M) != 0U)) {
 			if (vlapic->vm->wire_mode == VPIC_WIRE_LAPIC) {
 				vlapic->vm->wire_mode = VPIC_WIRE_NULL;
-				dev_dbg(ACRN_DBG_LAPIC,
+				dev_dbg(DBG_LEVEL_VLAPIC,
 						"vpic wire mode -> NULL");
 			}
 		} else {
@@ -872,7 +872,7 @@ vlapic_update_ppr(struct acrn_vlapic *vlapic)
 	}
 
 	vlapic->apic_page.ppr.v = ppr;
-	dev_dbg(ACRN_DBG_LAPIC, "%s 0x%02x", __func__, ppr);
+	dev_dbg(DBG_LEVEL_VLAPIC, "%s 0x%02x", __func__, ppr);
 }
 
 static void
@@ -891,7 +891,7 @@ vlapic_process_eoi(struct acrn_vlapic *vlapic)
 		bitpos = (vector & 0x1fU);
 		bitmap32_clear_nolock((uint16_t)bitpos, &isrptr[i].v);
 
-		dev_dbg(ACRN_DBG_LAPIC, "EOI vector %u", vector);
+		dev_dbg(DBG_LEVEL_VLAPIC, "EOI vector %u", vector);
 		vlapic_dump_isr(vlapic, "vlapic_process_eoi");
 
 		vlapic->isrv = vlapic_find_isrv(vlapic);
@@ -905,7 +905,7 @@ vlapic_process_eoi(struct acrn_vlapic *vlapic)
 		vcpu_make_request(vlapic->vcpu, ACRN_REQUEST_EVENT);
 	}
 
-	dev_dbg(ACRN_DBG_LAPIC, "Gratuitous EOI");
+	dev_dbg(DBG_LEVEL_VLAPIC, "Gratuitous EOI");
 }
 
 static void
@@ -1054,7 +1054,7 @@ static inline bool is_dest_field_matched(const struct acrn_vlapic *vlapic, uint3
 			}
 		} else {
 			/* Guest has configured a bad logical model for this vcpu. */
-			dev_dbg(ACRN_DBG_LAPIC,	"vlapic has bad logical model %x", dfr);
+			dev_dbg(DBG_LEVEL_VLAPIC, "vlapic has bad logical model %x", dfr);
 		}
 	}
 
@@ -1148,7 +1148,7 @@ vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, bool is_broadcast
 			}
 			bitmap_set_nolock(vcpu_id, dmask);
 		}
-		dev_dbg(ACRN_DBG_LAPICPT, "%s: logical destmod, dmask: 0x%016lx", __func__, *dmask);
+		dev_dbg(DBG_LEVEL_LAPICPT, "%s: logical destmod, dmask: 0x%016lx", __func__, *dmask);
 	}
 }
 
@@ -1158,7 +1158,7 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode, uint32_t 
 	if (mode == APIC_DELMODE_INIT) {
 		if ((icr_low & APIC_LEVEL_MASK) != APIC_LEVEL_DEASSERT) {
 
-			dev_dbg(ACRN_DBG_LAPIC,
+			dev_dbg(DBG_LEVEL_VLAPIC,
 				"Sending INIT to %hu",
 				target_vcpu->vcpu_id);
 
@@ -1178,7 +1178,7 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode, uint32_t 
 		if ((target_vcpu->state == VCPU_INIT) &&
 			(target_vcpu->arch.nr_sipi != 0U)) {
 
-			dev_dbg(ACRN_DBG_LAPIC,
+			dev_dbg(DBG_LEVEL_VLAPIC,
 				"Sending SIPI to %hu with vector %u",
 				 target_vcpu->vcpu_id,
 				(icr_low & APIC_VECTOR_MASK));
@@ -1229,14 +1229,14 @@ static void vlapic_write_icrlo(struct acrn_vlapic *vlapic)
 
 	if ((mode == APIC_DELMODE_FIXED) && (vec < 16U)) {
 		vlapic_set_error(vlapic, APIC_ESR_SEND_ILLEGAL_VECTOR);
-		dev_dbg(ACRN_DBG_LAPIC, "Ignoring invalid IPI %u", vec);
+		dev_dbg(DBG_LEVEL_VLAPIC, "Ignoring invalid IPI %u", vec);
 	} else if (((shorthand == APIC_DEST_SELF) || (shorthand == APIC_DEST_ALLISELF))
 			&& ((mode == APIC_DELMODE_NMI) || (mode == APIC_DELMODE_INIT)
 			|| (mode == APIC_DELMODE_STARTUP))) {
-			dev_dbg(ACRN_DBG_LAPIC, "Invalid ICR value");
+		dev_dbg(DBG_LEVEL_VLAPIC, "Invalid ICR value");
 	} else {
 
-		dev_dbg(ACRN_DBG_LAPIC,
+		dev_dbg(DBG_LEVEL_VLAPIC,
 			"icrlo 0x%08x icrhi 0x%08x triggered ipi %u",
 				icr_low, icr_high, vec);
 
@@ -1268,12 +1268,12 @@ static void vlapic_write_icrlo(struct acrn_vlapic *vlapic)
 
 				if (mode == APIC_DELMODE_FIXED) {
 					vlapic_set_intr(target_vcpu, vec, LAPIC_TRIG_EDGE);
-					dev_dbg(ACRN_DBG_LAPIC,
+					dev_dbg(DBG_LEVEL_VLAPIC,
 						"vlapic sending ipi %u to vcpu_id %hu",
 						vec, vcpu_id);
 				} else if (mode == APIC_DELMODE_NMI) {
 					vcpu_inject_nmi(target_vcpu);
-					dev_dbg(ACRN_DBG_LAPIC,
+					dev_dbg(DBG_LEVEL_VLAPIC,
 						"vlapic send ipi nmi to vcpu_id %hu", vcpu_id);
 				} else if (mode == APIC_DELMODE_INIT) {
 					vlapic_process_init_sipi(target_vcpu, mode, icr_low);
@@ -1404,14 +1404,14 @@ vlapic_write_svr(struct acrn_vlapic *vlapic)
 			 * The apic is now disabled so stop the apic timer
 			 * and mask all the LVT entries.
 			 */
-			dev_dbg(ACRN_DBG_LAPIC, "vlapic is software-disabled");
+			dev_dbg(DBG_LEVEL_VLAPIC, "vlapic is software-disabled");
 			del_timer(&vlapic->vtimer.timer);
 
 			vlapic_mask_lvts(vlapic);
 			/* the only one enabled LINT0-ExtINT vlapic disabled */
 			if (vlapic->vm->wire_mode == VPIC_WIRE_NULL) {
 				vlapic->vm->wire_mode = VPIC_WIRE_INTR;
-				dev_dbg(ACRN_DBG_LAPIC,
+				dev_dbg(DBG_LEVEL_VLAPIC,
 					"vpic wire mode -> INTR");
 			}
 		} else {
@@ -1419,7 +1419,7 @@ vlapic_write_svr(struct acrn_vlapic *vlapic)
 			 * The apic is now enabled so restart the apic timer
 			 * if it is configured in periodic mode.
 			 */
-			dev_dbg(ACRN_DBG_LAPIC, "vlapic is software-enabled");
+			dev_dbg(DBG_LEVEL_VLAPIC, "vlapic is software-enabled");
 			if (vlapic_lvtt_period(vlapic)) {
 				if (set_expiration(vlapic)) {
 					/* vlapic_init_timer has been called,
@@ -1546,7 +1546,7 @@ static int32_t vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg, uint
 		}
 	}
 
-	dev_dbg(ACRN_DBG_LAPIC, "vlapic read offset %x, data %lx", offset, *data);
+	dev_dbg(DBG_LEVEL_VLAPIC, "vlapic read offset %x, data %lx", offset, *data);
 	return ret;
 }
 
@@ -1560,7 +1560,7 @@ static int32_t vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_
 	ASSERT(((offset & 0xfU) == 0U) && (offset < PAGE_SIZE),
 		"%s: invalid offset %#x", __func__, offset);
 
-	dev_dbg(ACRN_DBG_LAPIC, "vlapic write offset %#x, data %#lx", offset, data);
+	dev_dbg(DBG_LEVEL_VLAPIC, "vlapic write offset %#x, data %#lx", offset, data);
 
 	if (offset <= sizeof(*lapic)) {
 		switch (offset) {
@@ -1837,7 +1837,7 @@ vlapic_receive_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 	if ((delmode != IOAPIC_RTE_DELMODE_FIXED) &&
 			(delmode != IOAPIC_RTE_DELMODE_LOPRI) &&
 			(delmode != IOAPIC_RTE_DELMODE_EXINT)) {
-		dev_dbg(ACRN_DBG_LAPIC,
+		dev_dbg(DBG_LEVEL_VLAPIC,
 			"vlapic intr invalid delmode %#x", delmode);
 	} else {
 		lowprio = (delmode == IOAPIC_RTE_DELMODE_LOPRI) || rh;
@@ -1880,7 +1880,7 @@ vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level)
 	vlapic = vcpu_vlapic(vcpu);
 	if (vector < 16U) {
 		vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
-		dev_dbg(ACRN_DBG_LAPIC,
+		dev_dbg(DBG_LEVEL_VLAPIC,
 		    "vlapic ignoring interrupt to vector %u", vector);
 	} else {
 		vlapic_accept_intr(vlapic, vector, level);
@@ -1955,7 +1955,7 @@ vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg)
 
 	address.full = addr;
 	data.full = (uint32_t) msg;
-	dev_dbg(ACRN_DBG_LAPIC, "lapic MSI addr: %#lx msg: %#lx", address.full, data.full);
+	dev_dbg(DBG_LEVEL_VLAPIC, "lapic MSI addr: %#lx msg: %#lx", address.full, data.full);
 
 	if (address.bits.addr_base == MSI_ADDR_BASE) {
 		/*
@@ -1976,13 +1976,13 @@ vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg)
 		delmode = data.bits.delivery_mode;
 		vec = data.bits.vector;
 
-		dev_dbg(ACRN_DBG_LAPIC, "lapic MSI %s dest %#x, vec %u",
+		dev_dbg(DBG_LEVEL_VLAPIC, "lapic MSI %s dest %#x, vec %u",
 			phys ? "physical" : "logical", dest, vec);
 
 		vlapic_receive_intr(vm, LAPIC_TRIG_EDGE, dest, phys, delmode, vec, rh);
 		ret = 0;
 	} else {
-		dev_dbg(ACRN_DBG_LAPIC, "lapic MSI invalid addr %#lx", address.full);
+		dev_dbg(DBG_LEVEL_VLAPIC, "lapic MSI invalid addr %#lx", address.full);
 	        ret = -1;
 	}
 
@@ -2084,7 +2084,7 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 				/* convert the dest from virtual apic_id to physical apic_id */
 				if (is_x2apic_enabled(vcpu_vlapic(target_vcpu))) {
 					papic_id = per_cpu(lapic_id, pcpuid_from_vcpu(target_vcpu));
-					dev_dbg(ACRN_DBG_LAPICPT,
+					dev_dbg(DBG_LEVEL_LAPICPT,
 						"%s vapic_id: 0x%08lx papic_id: 0x%08lx icr_low:0x%08lx",
 						 __func__, vapic_id, papic_id, icr_low);
 					msr_write(MSR_IA32_EXT_APIC_ICR, (((uint64_t)papic_id) << 32U) | icr_low);
@@ -2532,7 +2532,7 @@ static void vlapic_x2apic_self_ipi_handler(struct acrn_vlapic *vlapic)
 	target_vcpu = vlapic->vcpu;
 	if (vector < 16U) {
 		vlapic_set_error(vlapic, APIC_ESR_SEND_ILLEGAL_VECTOR);
-		dev_dbg(ACRN_DBG_LAPIC, "Ignoring invalid IPI %u", vector);
+		dev_dbg(DBG_LEVEL_VLAPIC, "Ignoring invalid IPI %u", vector);
 	} else {
 		vlapic_set_intr(target_vcpu, vector, LAPIC_TRIG_EDGE);
 	}

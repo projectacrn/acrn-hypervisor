@@ -12,7 +12,7 @@
 #include <logmsg.h>
 #include <vboot.h>
 
-#define ACRN_DBG_PARSE		6
+#define DBG_LEVEL_PARSE		6
 
 int32_t parse_hv_cmdline(void)
 {
@@ -25,15 +25,15 @@ int32_t parse_hv_cmdline(void)
 	}
 
 	mbi = (struct multiboot_info *)(hpa2hva_early((uint64_t)boot_regs[1]));
-	dev_dbg(ACRN_DBG_PARSE, "Multiboot detected, flag=0x%x", mbi->mi_flags);
+	dev_dbg(DBG_LEVEL_PARSE, "Multiboot detected, flag=0x%x", mbi->mi_flags);
 
 	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) == 0U) {
-		dev_dbg(ACRN_DBG_PARSE, "no hv cmdline!");
+		dev_dbg(DBG_LEVEL_PARSE, "no hv cmdline!");
 		return -EINVAL;
 	}
 
 	start = (char *)hpa2hva_early((uint64_t)mbi->mi_cmdline);
-	dev_dbg(ACRN_DBG_PARSE, "hv cmdline: %s", start);
+	dev_dbg(DBG_LEVEL_PARSE, "hv cmdline: %s", start);
 
 	while ((start != NULL) && ((*start) != '\0')) {
 		while ((*start) == ' ')

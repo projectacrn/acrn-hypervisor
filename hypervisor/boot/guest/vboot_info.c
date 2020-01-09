@@ -20,7 +20,7 @@
 #include <deprivilege_boot.h>
 #include <vboot_info.h>
 
-#define ACRN_DBG_BOOT	6U
+#define DBG_LEVEL_BOOT	6U
 
 #define MAX_BOOT_PARAMS_LEN 64U
 #define INVALID_MOD_IDX		0xFFFFU
@@ -135,7 +135,7 @@ static int32_t init_vm_kernel_info(struct acrn_vm *vm, const struct multiboot_mo
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
-	dev_dbg(ACRN_DBG_BOOT, "kernel mod start=0x%x, end=0x%x",
+	dev_dbg(DBG_LEVEL_BOOT, "kernel mod start=0x%x, end=0x%x",
 		mod->mm_mod_start, mod->mm_mod_end);
 
 	vm->sw.kernel_type = vm_config->os_config.kernel_type;
@@ -217,7 +217,7 @@ static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct multiboot_info *
 	uint32_t mod_idx;
 	int32_t ret = -EINVAL;
 
-	dev_dbg(ACRN_DBG_BOOT, "mod counts=%d\n", mbi->mi_mods_count);
+	dev_dbg(DBG_LEVEL_BOOT, "mod counts=%d\n", mbi->mi_mods_count);
 
 	if (mods != NULL) {
 		mod_idx = get_mod_idx_by_tag(mods, mbi->mi_mods_count, vm_config->os_config.kernel_mod_tag);
@@ -255,7 +255,7 @@ static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
 
 		if (mbi != NULL) {
 			stac();
-			dev_dbg(ACRN_DBG_BOOT, "Multiboot detected, flag=0x%x", mbi->mi_flags);
+			dev_dbg(DBG_LEVEL_BOOT, "Multiboot detected, flag=0x%x", mbi->mi_flags);
 			if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
 				panic("no multiboot module info found");
 			} else {

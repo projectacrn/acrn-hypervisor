@@ -9,7 +9,6 @@
 #include <errno.h>
 #include <logmsg.h>
 
-#define ACRN_DBG_TRUSTY_HYCALL 6U
 
 /**
  * @brief Switch vCPU state between Normal/Secure World.

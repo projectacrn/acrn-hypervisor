@@ -19,7 +19,7 @@
 
 #define EXCEPTION_ERROR_CODE_VALID  8U
 
-#define ACRN_DBG_INTR	6U
+#define DBG_LEVEL_INTR	6U
 
 #define EXCEPTION_CLASS_BENIGN	1
 #define EXCEPTION_CLASS_CONT	2
@@ -131,7 +131,7 @@ static bool vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
 
 		vpic_pending_intr(vm_pic(vcpu->vm), &vector);
 		if (vector <= NR_MAX_VECTOR) {
-			dev_dbg(ACRN_DBG_INTR, "VPIC: to inject PIC vector %d\n",
+			dev_dbg(DBG_LEVEL_INTR, "VPIC: to inject PIC vector %d\n",
 					vector & 0xFFU);
 			exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
 					VMX_INT_INFO_VALID |

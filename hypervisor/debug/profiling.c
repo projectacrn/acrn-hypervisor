@@ -16,8 +16,8 @@
 #include <sprintf.h>
 #include <logmsg.h>
 
-#define ACRN_DBG_PROFILING		5U
-#define ACRN_ERR_PROFILING		3U
+#define DBG_LEVEL_PROFILING		5U
+#define DBG_LEVEL_ERR_PROFILING		3U
 
 #define MAJOR_VERSION			1
 #define MINOR_VERSION			0
@@ -38,10 +38,10 @@ extern struct irq_desc irq_desc_array[NR_IRQS];
 
 static void profiling_initialize_vmsw(void)
 {
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering cpu%d",
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering cpu%d",
 		__func__, get_pcpu_id());
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting cpu%d",
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting cpu%d",
 		__func__, get_pcpu_id());
 }
 
@@ -57,11 +57,11 @@ static void profiling_initialize_pmi(void)
 	struct profiling_msr_op *msrop = NULL;
 	struct sep_state *ss = &get_cpu_var(profiling_info.s_state);
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering cpu%d",
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering cpu%d",
 		__func__, get_pcpu_id());
 
 	if (ss == NULL) {
-		dev_dbg(ACRN_ERR_PROFILING, "%s: exiting cpu%d",
+		dev_dbg(DBG_LEVEL_ERR_PROFILING, "%s: exiting cpu%d",
 			__func__, get_pcpu_id());
 		return;
 	}
@@ -78,7 +78,7 @@ static void profiling_initialize_pmi(void)
 			}
 			if (msrop->msr_op_type == (uint8_t)MSR_OP_WRITE) {
 				msr_write(msrop->msr_id, msrop->value);
-				dev_dbg(ACRN_DBG_PROFILING,
+				dev_dbg(DBG_LEVEL_PROFILING,
 				"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%lx",
 				__func__, get_pcpu_id(), msrop->msr_id, msrop->value);
 			}
@@ -87,7 +87,7 @@ static void profiling_initialize_pmi(void)
 
 	ss->pmu_state = PMU_SETUP;
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting cpu%d",
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting cpu%d",
 		__func__,  get_pcpu_id());
 }
 
@@ -103,22 +103,22 @@ static void profiling_enable_pmu(void)
 	struct profiling_msr_op *msrop = NULL;
 	struct sep_state *ss = &get_cpu_var(profiling_info.s_state);
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering cpu%d",
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering cpu%d",
 		__func__, get_pcpu_id());
 
 	if (ss == NULL) {
-		dev_dbg(ACRN_ERR_PROFILING, "%s: exiting cpu%d",
+		dev_dbg(DBG_LEVEL_ERR_PROFILING, "%s: exiting cpu%d",
 			__func__, get_pcpu_id());
 		return;
 	}
 
 	/* Unmask LAPIC LVT entry for PMC register */
 	lvt_perf_ctr = (uint32_t) msr_read(MSR_IA32_EXT_APIC_LVT_PMI);
-	dev_dbg(ACRN_DBG_PROFILING, "%s: 0x%x, 0x%lx",
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: 0x%x, 0x%lx",
 		__func__, MSR_IA32_EXT_APIC_LVT_PMI, lvt_perf_ctr);
 	lvt_perf_ctr &= LVT_PERFCTR_BIT_UNMASK;
 	msr_write(MSR_IA32_EXT_APIC_LVT_PMI, lvt_perf_ctr);
-	dev_dbg(ACRN_DBG_PROFILING, "%s: 0x%x, 0x%lx",
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: 0x%x, 0x%lx",
 		__func__, MSR_IA32_EXT_APIC_LVT_PMI, lvt_perf_ctr);
 
 	if (ss->guest_debugctl_value != 0U) {
@@ -154,7 +154,7 @@ static void profiling_enable_pmu(void)
 			}
 			if (msrop->msr_op_type == (uint8_t)MSR_OP_WRITE) {
 				msr_write(msrop->msr_id, msrop->value);
-				dev_dbg(ACRN_DBG_PROFILING,
+				dev_dbg(DBG_LEVEL_PROFILING,
 				"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%lx",
 				__func__, get_pcpu_id(), msrop->msr_id, msrop->value);
 			}
@@ -163,7 +163,7 @@ static void profiling_enable_pmu(void)
 
 	ss->pmu_state = PMU_RUNNING;
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting cpu%d",
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting cpu%d",
 		__func__,  get_pcpu_id());
 }
 
@@ -178,7 +178,7 @@ static void profiling_disable_pmu(void)
 	struct profiling_msr_op *msrop = NULL;
 	struct sep_state *ss = &get_cpu_var(profiling_info.s_state);
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering cpu%d",
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering cpu%d",
 		__func__,  get_pcpu_id());
 
 	if (ss != NULL) {
@@ -201,7 +201,7 @@ static void profiling_disable_pmu(void)
 				}
 				if (msrop->msr_op_type == (uint8_t)MSR_OP_WRITE) {
 					msr_write(msrop->msr_id, msrop->value);
-					dev_dbg(ACRN_DBG_PROFILING,
+					dev_dbg(DBG_LEVEL_PROFILING,
 					"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%lx",
 					__func__, get_pcpu_id(), msrop->msr_id, msrop->value);
 				}
@@ -216,10 +216,10 @@ static void profiling_disable_pmu(void)
 
 		ss->pmu_state = PMU_SETUP;
 
-		dev_dbg(ACRN_DBG_PROFILING, "%s: exiting cpu%d",
+		dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting cpu%d",
 			__func__,  get_pcpu_id());
 	} else {
-		dev_dbg(ACRN_ERR_PROFILING, "%s: exiting cpu%d",
+		dev_dbg(DBG_LEVEL_ERR_PROFILING, "%s: exiting cpu%d",
 			__func__, get_pcpu_id());
 	}
 }
@@ -315,7 +315,7 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 	uint64_t rflags;
 	spinlock_t *sw_lock = NULL;
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering cpu%d",
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering cpu%d",
 		__func__,  get_pcpu_id());
 
 	if (collector == COLLECT_PROFILE_DATA) {
@@ -323,7 +323,7 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 
 		if (sbuf == NULL) {
 			ss->samples_dropped++;
-			dev_dbg(ACRN_DBG_PROFILING, "%s: sbuf is NULL exiting cpu%d",
+			dev_dbg(DBG_LEVEL_PROFILING, "%s: sbuf is NULL exiting cpu%d",
 				__func__,  get_pcpu_id());
 			return 0;
 		}
@@ -372,7 +372,7 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 
 			if ((uint64_t)remaining_space < (DATA_HEADER_SIZE + payload_size)) {
 				ss->samples_dropped++;
-				dev_dbg(ACRN_DBG_PROFILING,
+				dev_dbg(DBG_LEVEL_PROFILING,
 				"%s: not enough space left in sbuf[%d: %d] exiting cpu%d",
 				__func__, remaining_space,
 				DATA_HEADER_SIZE + payload_size, get_pcpu_id());
@@ -394,7 +394,7 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 		sbuf = per_cpu(sbuf, get_pcpu_id())[ACRN_SOCWATCH];
 
 		if (sbuf == NULL) {
-			dev_dbg(ACRN_DBG_PROFILING,
+			dev_dbg(DBG_LEVEL_PROFILING,
 			"%s: socwatch buffers not initialized?", __func__);
 			return 0;
 		}
@@ -418,7 +418,7 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 
 		switch (type) {
 		case SOCWATCH_MSR_OP:
-			dev_dbg(ACRN_DBG_PROFILING,
+			dev_dbg(DBG_LEVEL_PROFILING,
 				"%s: generating cstate/pstate sample socwatch cpu %d",
 				__func__, sw_msrop->cpu_id);
 			pkt_header.cpu_id = (uint16_t)sw_msrop->cpu_id;
@@ -429,7 +429,7 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 			break;
 
 		case SOCWATCH_VM_SWITCH_TRACING:
-			dev_dbg(ACRN_DBG_PROFILING,
+			dev_dbg(DBG_LEVEL_PROFILING,
 				"%s: generating vm-switch sample", __func__);
 			payload_size = VM_SWITCH_TRACE_SIZE;
 			payload = &get_cpu_var(profiling_info.vm_trace);
@@ -460,7 +460,7 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 
 		spinlock_irqrestore_release(sw_lock, rflags);
 	} else {
-		dev_dbg(ACRN_ERR_PROFILING,
+		dev_dbg(DBG_LEVEL_ERR_PROFILING,
 			"%s: Unknown collector type", __func__);
 		return 0;
 	}
@@ -478,19 +478,19 @@ static void profiling_handle_msrops(void)
 	struct sw_msr_op_info *sw_msrop
 		= &(get_cpu_var(profiling_info.sw_msr_info));
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering cpu%d",
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering cpu%d",
 		__func__, get_pcpu_id());
 
 	if ((my_msr_node == NULL) ||
 		(my_msr_node->msr_op_state != (int32_t)MSR_OP_REQUESTED)) {
-		dev_dbg(ACRN_DBG_PROFILING, "%s: invalid my_msr_node on cpu%d",
+		dev_dbg(DBG_LEVEL_PROFILING, "%s: invalid my_msr_node on cpu%d",
 			__func__, get_pcpu_id());
 		return;
 	}
 
 	if ((my_msr_node->num_entries == 0U) ||
 		(my_msr_node->num_entries >= MAX_MSR_LIST_NUM)) {
-		dev_dbg(ACRN_DBG_PROFILING,
+		dev_dbg(DBG_LEVEL_PROFILING,
 		"%s: invalid num_entries on cpu%d",
 		__func__, get_pcpu_id());
 		return;
@@ -501,7 +501,7 @@ static void profiling_handle_msrops(void)
 		case MSR_OP_READ:
 			my_msr_node->entries[i].value
 				= msr_read(my_msr_node->entries[i].msr_id);
-			dev_dbg(ACRN_DBG_PROFILING,
+			dev_dbg(DBG_LEVEL_PROFILING,
 			"%s: MSRREAD cpu%d, msr_id=0x%x, msr_val=0x%lx",
 			__func__, get_pcpu_id(),	my_msr_node->entries[i].msr_id,
 			my_msr_node->entries[i].value);
@@ -509,7 +509,7 @@ static void profiling_handle_msrops(void)
 		case MSR_OP_READ_CLEAR:
 			my_msr_node->entries[i].value
 				= msr_read(my_msr_node->entries[i].msr_id);
-			dev_dbg(ACRN_DBG_PROFILING,
+			dev_dbg(DBG_LEVEL_PROFILING,
 			"%s: MSRREADCLEAR cpu%d, msr_id=0x%x, msr_val=0x%lx",
 			__func__, get_pcpu_id(), my_msr_node->entries[i].msr_id,
 			my_msr_node->entries[i].value);
@@ -518,7 +518,7 @@ static void profiling_handle_msrops(void)
 		case MSR_OP_WRITE:
 			msr_write(my_msr_node->entries[i].msr_id,
 				my_msr_node->entries[i].value);
-			dev_dbg(ACRN_DBG_PROFILING,
+			dev_dbg(DBG_LEVEL_PROFILING,
 			"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%lx",
 			__func__, get_pcpu_id(), my_msr_node->entries[i].msr_id,
 			my_msr_node->entries[i].value);
@@ -564,7 +564,7 @@ static void profiling_handle_msrops(void)
 		my_msr_node->msr_op_state = (int32_t)MSR_OP_REQUESTED;
 	}
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting cpu%d",
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting cpu%d",
 		__func__, get_pcpu_id());
 }
 
@@ -582,7 +582,7 @@ static void profiling_pmi_handler(uint32_t irq, __unused void *data)
 	struct sep_state *ss = &(get_cpu_var(profiling_info.s_state));
 
 	if ((ss == NULL) || (psample == NULL)) {
-		dev_dbg(ACRN_ERR_PROFILING, "%s: exiting cpu%d",
+		dev_dbg(DBG_LEVEL_ERR_PROFILING, "%s: exiting cpu%d",
 			__func__, get_pcpu_id());
 		return;
 	}
@@ -726,7 +726,7 @@ static void profiling_start_pmu(void)
 	uint16_t i;
 	uint16_t pcpu_nums = get_pcpu_nums();
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (in_pmu_profiling) {
 		return;
@@ -757,7 +757,7 @@ static void profiling_start_pmu(void)
 
 	in_pmu_profiling = true;
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: done", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: done", __func__);
 }
 
 /*
@@ -768,7 +768,7 @@ static void profiling_stop_pmu(void)
 	uint16_t i;
 	uint16_t pcpu_nums = get_pcpu_nums();
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (in_pmu_profiling) {
 		for (i = 0U; i < pcpu_nums; i++) {
@@ -777,19 +777,19 @@ static void profiling_stop_pmu(void)
 				per_cpu(profiling_info.s_state, i).pmu_state = PMU_SETUP;
 			}
 
-			dev_dbg(ACRN_DBG_PROFILING,
+			dev_dbg(DBG_LEVEL_PROFILING,
 			"%s: pmi_cnt[%d] = total:%u valid=%u, vmexit_cnt=%u",
 			__func__, i, per_cpu(profiling_info.s_state, i).total_pmi_count,
 			per_cpu(profiling_info.s_state, i).valid_pmi_count,
 			per_cpu(profiling_info.s_state, i).total_vmexit_count);
 
-			dev_dbg(ACRN_DBG_PROFILING,
+			dev_dbg(DBG_LEVEL_PROFILING,
 			"%s: cpu%d frozen well:%u frozen delayed=%u, nofrozen_pmi=%u",
 			__func__, i, per_cpu(profiling_info.s_state, i).frozen_well,
 			per_cpu(profiling_info.s_state, i).frozen_delayed,
 			per_cpu(profiling_info.s_state, i).nofrozen_pmi);
 
-			dev_dbg(ACRN_DBG_PROFILING,
+			dev_dbg(DBG_LEVEL_PROFILING,
 			"%s: cpu%d samples captured:%u samples dropped=%u",
 			__func__, i, per_cpu(profiling_info.s_state, i).samples_logged,
 			per_cpu(profiling_info.s_state, i).samples_dropped);
@@ -800,7 +800,7 @@ static void profiling_stop_pmu(void)
 
 		in_pmu_profiling = false;
 
-		dev_dbg(ACRN_DBG_PROFILING, "%s: done.", __func__);
+		dev_dbg(DBG_LEVEL_PROFILING, "%s: done.", __func__);
 	}
 
 }
@@ -815,7 +815,7 @@ int32_t profiling_msr_ops_all_cpus(struct acrn_vm *vm, uint64_t addr)
 	struct profiling_msr_ops_list msr_list[MAX_PCPU_NUM];
 	uint16_t pcpu_nums = get_pcpu_nums();
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &msr_list, addr, (uint32_t)pcpu_nums * sizeof(struct profiling_msr_ops_list)) != 0) {
 		pr_err("%s: Unable to copy addr from vm\n", __func__);
@@ -834,7 +834,7 @@ int32_t profiling_msr_ops_all_cpus(struct acrn_vm *vm, uint64_t addr)
 		return -EINVAL;
 	}
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting", __func__);
 	return 0;
 }
 
@@ -850,7 +850,7 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 	struct profiling_vm_info_list vm_info_list;
 	uint16_t pcpu_nums = get_pcpu_nums();
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &vm_info_list, addr, sizeof(vm_info_list)) != 0) {
 		pr_err("%s: Unable to copy addr from vm\n", __func__);
@@ -899,7 +899,7 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 		return -EINVAL;
 	}
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting", __func__);
 	return 0;
 }
 
@@ -910,7 +910,7 @@ int32_t profiling_get_version_info(struct acrn_vm *vm, uint64_t addr)
 {
 	struct profiling_version_info ver_info;
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &ver_info, addr, sizeof(ver_info)) != 0) {
 		pr_err("%s: Unable to copy addr from vm\n", __func__);
@@ -930,7 +930,7 @@ int32_t profiling_get_version_info(struct acrn_vm *vm, uint64_t addr)
 		return -EINVAL;
 	}
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting", __func__);
 
 	return 0;
 }
@@ -942,7 +942,7 @@ int32_t profiling_get_control(struct acrn_vm *vm, uint64_t addr)
 {
 	struct profiling_control prof_control;
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &prof_control, addr, sizeof(prof_control)) != 0) {
 		pr_err("%s: Unable to copy addr from vm\n", __func__);
@@ -966,7 +966,7 @@ int32_t profiling_get_control(struct acrn_vm *vm, uint64_t addr)
 		return -EINVAL;
 	}
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting", __func__);
 
 	return 0;
 }
@@ -982,7 +982,7 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 	uint16_t pcpu_nums = get_pcpu_nums();
 	struct profiling_control prof_control;
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &prof_control, addr, sizeof(prof_control)) != 0) {
 		pr_err("%s: Unable to copy addr from vm\n", __func__);
@@ -995,7 +995,7 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 		new_switch = prof_control.switches;
 		sep_collection_switch = prof_control.switches;
 
-		dev_dbg(ACRN_DBG_PROFILING,
+		dev_dbg(DBG_LEVEL_PROFILING,
 			" old_switch: %lu sep_collection_switch: %lu!",
 			   old_switch, sep_collection_switch);
 
@@ -1015,7 +1015,7 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 				case VM_SWITCH_TRACING:
 					break;
 				default:
-					dev_dbg(ACRN_DBG_PROFILING,
+					dev_dbg(DBG_LEVEL_PROFILING,
 					"%s: feature not supported %u",
 					 __func__, i);
 					break;
@@ -1024,17 +1024,17 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 		}
 		break;
 	case COLLECT_POWER_DATA:
-		dev_dbg(ACRN_DBG_PROFILING,
+		dev_dbg(DBG_LEVEL_PROFILING,
 			"%s: configuring socwatch", __func__);
 
 		socwatch_collection_switch = prof_control.switches;
 
-		dev_dbg(ACRN_DBG_PROFILING,
+		dev_dbg(DBG_LEVEL_PROFILING,
 			"socwatch_collection_switch: %lu!",
 			socwatch_collection_switch);
 
 		if (socwatch_collection_switch != 0UL) {
-			dev_dbg(ACRN_DBG_PROFILING,
+			dev_dbg(DBG_LEVEL_PROFILING,
 			"%s: socwatch start collection invoked!", __func__);
 			for (i = 0U; i < (uint16_t)MAX_SOCWATCH_FEATURE_ID; i++) {
 				if ((socwatch_collection_switch & (0x1UL << i)) != 0UL) {
@@ -1042,12 +1042,12 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 					case SOCWATCH_COMMAND:
 						break;
 					case SOCWATCH_VM_SWITCH_TRACING:
-						dev_dbg(ACRN_DBG_PROFILING,
+						dev_dbg(DBG_LEVEL_PROFILING,
 						"%s: socwatch vm-switch feature requested!",
 						__func__);
 						break;
 					default:
-						dev_dbg(ACRN_DBG_PROFILING,
+						dev_dbg(DBG_LEVEL_PROFILING,
 						"%s: socwatch feature not supported %u",
 						__func__, i);
 						break;
@@ -1059,7 +1059,7 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 					= SW_RUNNING;
 			}
 		} else { /* stop socwatch collection */
-			dev_dbg(ACRN_DBG_PROFILING,
+			dev_dbg(DBG_LEVEL_PROFILING,
 			"%s: socwatch stop collection invoked or collection switch not set!",
 			__func__);
 			for (i = 0U; i < pcpu_nums ; i++) {
@@ -1079,7 +1079,7 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 		return -EINVAL;
 	}
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting", __func__);
 
 	return 0;
 }
@@ -1093,7 +1093,7 @@ int32_t profiling_configure_pmi(struct acrn_vm *vm, uint64_t addr)
 	struct profiling_pmi_config pmi_config;
 	uint16_t pcpu_nums = get_pcpu_nums();
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &pmi_config, addr, sizeof(pmi_config)) != 0) {
 		pr_err("%s: Unable to copy addr from vm\n", __func__);
@@ -1156,7 +1156,7 @@ int32_t profiling_configure_pmi(struct acrn_vm *vm, uint64_t addr)
 		return -EINVAL;
 	}
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting", __func__);
 	return 0;
 }
 
@@ -1170,7 +1170,7 @@ int32_t profiling_configure_vmsw(struct acrn_vm *vm, uint64_t addr)
 	struct profiling_vmsw_config vmsw_config;
 	uint16_t pcpu_nums = get_pcpu_nums();
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &vmsw_config, addr, sizeof(vmsw_config)) != 0) {
 		pr_err("%s: Unable to copy addr from vm\n", __func__);
@@ -1218,7 +1218,7 @@ int32_t profiling_configure_vmsw(struct acrn_vm *vm, uint64_t addr)
 		return -EINVAL;
 	}
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting", __func__);
 
 	return ret;
 }
@@ -1230,7 +1230,7 @@ int32_t profiling_get_pcpu_id(struct acrn_vm *vm, uint64_t addr)
 {
 	struct profiling_pcpuid pcpuid;
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &pcpuid, addr, sizeof(pcpuid)) != 0) {
 		pr_err("%s: Unable to copy addr from vm\n", __func__);
@@ -1245,7 +1245,7 @@ int32_t profiling_get_pcpu_id(struct acrn_vm *vm, uint64_t addr)
 		return -EINVAL;
 	}
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting", __func__);
 
 	return 0;
 }
@@ -1259,7 +1259,7 @@ int32_t profiling_get_status_info(struct acrn_vm *vm, uint64_t gpa)
 	struct profiling_status pstats[MAX_PCPU_NUM];
 	uint16_t pcpu_nums = get_pcpu_nums();
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &pstats, gpa,
 		pcpu_nums*sizeof(struct profiling_status)) != 0) {
@@ -1280,7 +1280,7 @@ int32_t profiling_get_status_info(struct acrn_vm *vm, uint64_t gpa)
 		return -EINVAL;
 	}
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting", __func__);
 
 	return 0;
 }
@@ -1409,7 +1409,7 @@ void profiling_setup(void)
 {
 	uint16_t cpu;
 	int32_t retval;
-	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 	cpu = get_pcpu_id();
 	/* support PMI notification, SOS_VM will register all CPU */
 	if ((cpu == BOOT_CPU_ID) && (profiling_pmi_irq == IRQ_INVALID)) {
@@ -1437,7 +1437,7 @@ void profiling_setup(void)
 	msr_write(MSR_IA32_EXT_APIC_LVT_PMI,
 		VECTOR_PMI | LVT_PERFCTR_BIT_MASK);
 
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
+	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting", __func__);
 }
 
 #endif
