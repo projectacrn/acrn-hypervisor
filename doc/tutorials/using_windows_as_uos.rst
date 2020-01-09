@@ -5,6 +5,20 @@ Using Windows as Guest VM on ACRN
 #################################
 This tutorial describes how to launch Windows as a Guest (WaaG) VM on the ACRN hypervisor.
 
+Verified version
+****************
+* Clear Linux version: 32030
+* ACRN-hypervisor tag: v1.5 (acrn-2020w01.1-140000p)
+* ACRN-kernel tag: acrn-2020w01.1-140000p
+* Windows 10 Version:
+
+  - Microsoft Windows 10 Enterprise, 10.0.17134 Build 17134
+  - Microsoft Windows 10 Pro, 10.0.17763 Build 17763
+
+* Windows graphics driver:
+
+  - igfx_win10_100.7212.zip
+
 Hardware setup
 **************
 The following Intel Kaby Lake NUCs are verified:
@@ -14,13 +28,7 @@ The following Intel Kaby Lake NUCs are verified:
 
    "NUC7i7DNHE", "DNKBLi7v.86A.0052.2018.0808.1344", "`link <https://downloadcenter.intel.com/download/28886?v=t>`__"
    "NUC7i5DNHE", "DNKBLi5v.86A.0060.2018.1220.1536", "`link <https://downloadcenter.intel.com/download/28885?v=t>`__"
-
-Verified version
-****************
-#. Clear Linux version: 32030
-#. ACRN-hypervisor tag: v1.5 (acrn-2020w01.1-140000p)
-#. ACRN-Kernel (Service VM kernel): 4.19.78-98.iot-lts2018-sos
-   
+  
 ACRN Service VM Setup
 *********************
 You may refer to the steps in :ref:`kbl-nuc-sdc` for the
@@ -424,15 +432,6 @@ Boot Windows with GVT-g on ACRN
 
 ACRN Windows verified feature list
 **********************************
-* Windows 10 Version:
-
-  - Microsoft Windows 10 Enterprise, 10.0.17134 Build 17134
-  - Microsoft Windows 10 Pro, 10.0.17763 Build 17763
-
-* Windows graphics driver:
-
-  - igfx_win10_100.7212.zip
-
 
 .. csv-table::
    :header: "Items", "Details", "Status"
