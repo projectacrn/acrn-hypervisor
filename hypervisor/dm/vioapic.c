@@ -39,7 +39,7 @@
 
 #define	RTBL_RO_BITS	((uint32_t)0x00004000U | (uint32_t)0x00001000U) /*Remote IRR and Delivery Status bits*/
 
-#define ACRN_DBG_IOAPIC	6U
+#define DBG_LEVEL_VIOAPIC	6U
 #define ACRN_IOAPIC_VERSION	0x11U
 
 #define IOAPIC_ID_MASK		0x0f000000U
@@ -63,7 +63,7 @@ vioapic_generate_intr(struct acrn_vioapic *vioapic, uint32_t pin)
 	rte = vioapic->rtbl[pin];
 
 	if (rte.bits.intr_mask == IOAPIC_RTE_MASK_SET) {
-		dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: masked", pin);
+		dev_dbg(DBG_LEVEL_VIOAPIC, "ioapic pin%hhu: masked", pin);
 	} else {
 		phys = (rte.bits.dest_mode == IOAPIC_RTE_DESTMODE_PHY);
 		delmode = rte.bits.delivery_mode;
@@ -310,7 +310,7 @@ static void vioapic_indirect_write(struct acrn_vioapic *vioapic, uint32_t addr, 
 				if ((vioapic->vm->wire_mode == VPIC_WIRE_NULL) ||
 						(vioapic->vm->wire_mode == VPIC_WIRE_INTR)) {
 					vioapic->vm->wire_mode = VPIC_WIRE_IOAPIC;
-					dev_dbg(ACRN_DBG_IOAPIC, "vpic wire mode -> IOAPIC");
+					dev_dbg(DBG_LEVEL_VIOAPIC, "vpic wire mode -> IOAPIC");
 				} else {
 					pr_err("WARNING: invalid vpic wire mode change");
 					wire_mode_valid = false;
@@ -319,14 +319,14 @@ static void vioapic_indirect_write(struct acrn_vioapic *vioapic, uint32_t addr, 
 			} else {
 				if (vioapic->vm->wire_mode == VPIC_WIRE_IOAPIC) {
 					vioapic->vm->wire_mode = VPIC_WIRE_INTR;
-					dev_dbg(ACRN_DBG_IOAPIC, "vpic wire mode -> INTR");
+					dev_dbg(DBG_LEVEL_VIOAPIC, "vpic wire mode -> INTR");
 				}
 			}
 		}
 
 		if (wire_mode_valid) {
 			vioapic->rtbl[pin] = new;
-			dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: redir table entry %#lx",
+			dev_dbg(DBG_LEVEL_VIOAPIC, "ioapic pin%hhu: redir table entry %#lx",
 				pin, vioapic->rtbl[pin].full);
 
 			/* remap for ptdev */
@@ -345,7 +345,7 @@ static void vioapic_indirect_write(struct acrn_vioapic *vioapic, uint32_t addr, 
 			if ((vioapic->rtbl[pin].bits.intr_mask == IOAPIC_RTE_MASK_CLR) &&
 				(vioapic->rtbl[pin].bits.remote_irr == 0UL) &&
 				vioapic_need_intr(vioapic, (uint16_t)pin)) {
-				dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: asserted at rtbl write", pin);
+				dev_dbg(DBG_LEVEL_VIOAPIC, "ioapic pin%hhu: asserted at rtbl write", pin);
 				vioapic_generate_intr(vioapic, pin);
 			}
 		}
@@ -410,7 +410,7 @@ vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector)
 	}
 
 	vioapic = vm_ioapic(vm);
-	dev_dbg(ACRN_DBG_IOAPIC, "ioapic processing eoi for vector %u", vector);
+	dev_dbg(DBG_LEVEL_VIOAPIC, "ioapic processing eoi for vector %u", vector);
 
 	/* notify device to ack if assigned pin */
 	for (pin = 0U; pin < pincount; pin++) {
@@ -437,7 +437,7 @@ vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector)
 
 		vioapic->rtbl[pin].bits.remote_irr = 0U;
 		if (vioapic_need_intr(vioapic, (uint16_t)pin)) {
-			dev_dbg(ACRN_DBG_IOAPIC,
+			dev_dbg(DBG_LEVEL_VIOAPIC,
 				"ioapic pin%hhu: asserted at eoi", pin);
 			vioapic_generate_intr(vioapic, pin);
 		}

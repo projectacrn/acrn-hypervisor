@@ -23,7 +23,7 @@ static struct e820_entry hv_e820[E820_MAX_ENTRIES];
 /* Describe the top/bottom/size of the physical memory the hypervisor manages */
 static struct mem_range hv_mem_range;
 
-#define ACRN_DBG_E820	6U
+#define DBG_LEVEL_E820	6U
 
 static void obtain_mem_range_info(void)
 {
@@ -134,7 +134,7 @@ void init_e820(void)
 				hv_e820_entries_nr = E820_MAX_ENTRIES;
 			}
 
-			dev_dbg(ACRN_DBG_E820, "mmap length 0x%x addr 0x%x entries %d\n",
+			dev_dbg(DBG_LEVEL_E820, "mmap length 0x%x addr 0x%x entries %d\n",
 				mbi->mi_mmap_length, mbi->mi_mmap_addr, hv_e820_entries_nr);
 
 			for (i = 0U; i < hv_e820_entries_nr; i++) {
@@ -150,8 +150,8 @@ void init_e820(void)
 				hv_e820[i].length = mmap[i].length;
 				hv_e820[i].type = mmap[i].type;
 
-				dev_dbg(ACRN_DBG_E820, "mmap table: %d type: 0x%x\n", i, mmap[i].type);
-				dev_dbg(ACRN_DBG_E820, "Base: 0x%016lx length: 0x%016lx",
+				dev_dbg(DBG_LEVEL_E820, "mmap table: %d type: 0x%x\n", i, mmap[i].type);
+				dev_dbg(DBG_LEVEL_E820, "Base: 0x%016lx length: 0x%016lx",
 					mmap[i].baseaddr, mmap[i].length);
 			}
 		} else {

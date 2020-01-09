@@ -15,8 +15,6 @@
 #include <ept.h>
 #include <logmsg.h>
 
-#define ACRN_DBG_GUEST	6U
-
 struct page_walk_info {
 	uint64_t top_entry;	/* Top level paging structure entry */
 	uint32_t level;

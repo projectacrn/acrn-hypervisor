@@ -16,7 +16,7 @@
 #include <logmsg.h>
 #include <trace.h>
 
-#define ACRN_DBG_EPT	6U
+#define DBG_LEVEL_EPT	6U
 
 bool ept_is_mr_valid(const struct acrn_vm *vm, uint64_t base, uint64_t size)
 {
@@ -113,7 +113,7 @@ void ept_add_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 	struct acrn_vcpu *vcpu;
 	uint64_t prot = prot_orig;
 
-	dev_dbg(ACRN_DBG_EPT, "%s, vm[%d] hpa: 0x%016lx gpa: 0x%016lx size: 0x%016lx prot: 0x%016x\n",
+	dev_dbg(DBG_LEVEL_EPT, "%s, vm[%d] hpa: 0x%016lx gpa: 0x%016lx size: 0x%016lx prot: 0x%016x\n",
 			__func__, vm->vm_id, hpa, gpa, size, prot);
 
 	/* EPT & VT-d share the same page tables, set SNP bit
@@ -139,7 +139,7 @@ void ept_modify_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 	uint16_t i;
 	uint64_t local_prot = prot_set;
 
-	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%lx size 0x%lx\n", __func__, vm->vm_id, gpa, size);
+	dev_dbg(DBG_LEVEL_EPT, "%s,vm[%d] gpa 0x%lx size 0x%lx\n", __func__, vm->vm_id, gpa, size);
 
 	if (((local_prot & EPT_MT_MASK) != EPT_UNCACHED) && iommu_snoop_supported(vm->iommu)) {
 		local_prot |= EPT_SNOOP_CTRL;
@@ -159,7 +159,7 @@ void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t 
 	struct acrn_vcpu *vcpu;
 	uint16_t i;
 
-	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%lx size 0x%lx\n", __func__, vm->vm_id, gpa, size);
+	dev_dbg(DBG_LEVEL_EPT, "%s,vm[%d] gpa 0x%lx size 0x%lx\n", __func__, vm->vm_id, gpa, size);
 
 	mmu_modify_or_del(pml4_page, gpa, size, 0UL, 0UL, &vm->arch_vm.ept_mem_ops, MR_DEL);
 

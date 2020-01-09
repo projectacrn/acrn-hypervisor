@@ -26,10 +26,10 @@
 #define DBG_IOMMU 0
 
 #if DBG_IOMMU
-#define ACRN_DBG_IOMMU LOG_INFO
+#define DBG_LEVEL_IOMMU LOG_INFO
 #define DMAR_FAULT_LOOP_MAX 10
 #else
-#define ACRN_DBG_IOMMU 6U
+#define DBG_LEVEL_IOMMU 6U
 #endif
 #define LEVEL_WIDTH 9U
 
@@ -408,7 +408,7 @@ static void dmar_enable_intr_remapping(struct dmar_drhd_rt *dmar_unit)
 	}
 
 	spinlock_release(&(dmar_unit->lock));
-	dev_dbg(ACRN_DBG_IOMMU, "%s: gsr:0x%x", __func__, status);
+	dev_dbg(DBG_LEVEL_IOMMU, "%s: gsr:0x%x", __func__, status);
 }
 
 static void dmar_enable_translation(struct dmar_drhd_rt *dmar_unit)
@@ -428,7 +428,7 @@ static void dmar_enable_translation(struct dmar_drhd_rt *dmar_unit)
 
 	spinlock_release(&(dmar_unit->lock));
 
-	dev_dbg(ACRN_DBG_IOMMU, "%s: gsr:0x%x", __func__, status);
+	dev_dbg(DBG_LEVEL_IOMMU, "%s: gsr:0x%x", __func__, status);
 }
 
 static void dmar_disable_intr_remapping(struct dmar_drhd_rt *dmar_unit)
@@ -465,7 +465,7 @@ static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 {
 	int32_t ret = 0;
 
-	dev_dbg(ACRN_DBG_IOMMU, "Register dmar uint [%d] @0x%lx", dmar_unit->index, dmar_unit->drhd->reg_base_addr);
+	dev_dbg(DBG_LEVEL_IOMMU, "Register dmar uint [%d] @0x%lx", dmar_unit->index, dmar_unit->drhd->reg_base_addr);
 
 	spinlock_init(&dmar_unit->lock);
 
@@ -524,7 +524,7 @@ static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 		 * translation paging structures?
 		 */
 		if (iommu_ecap_sc(dmar_unit->ecap) == 0U) {
-			dev_dbg(ACRN_DBG_IOMMU, "dmar uint doesn't support snoop control!");
+			dev_dbg(DBG_LEVEL_IOMMU, "dmar uint doesn't support snoop control!");
 		}
 
 		dmar_disable_translation(dmar_unit);
@@ -892,7 +892,7 @@ static void dmar_fault_handler(uint32_t irq, void *data)
 	struct dmar_entry fault_record;
 	int32_t loop = 0;
 
-	dev_dbg(ACRN_DBG_IOMMU, "%s: irq = %d", __func__, irq);
+	dev_dbg(DBG_LEVEL_IOMMU, "%s: irq = %d", __func__, irq);
 
 	fsr = iommu_read32(dmar_unit, DMAR_FSTS_REG);
 
@@ -905,7 +905,7 @@ static void dmar_fault_handler(uint32_t irq, void *data)
 		index = dma_fsts_fri(fsr);
 		record_reg_offset = (uint32_t)dmar_unit->cap_fault_reg_offset + (index * 16U);
 		if (index >= dmar_unit->cap_num_fault_regs) {
-			dev_dbg(ACRN_DBG_IOMMU, "%s: invalid FR Index", __func__);
+			dev_dbg(DBG_LEVEL_IOMMU, "%s: invalid FR Index", __func__);
 			break;
 		}
 
@@ -913,7 +913,7 @@ static void dmar_fault_handler(uint32_t irq, void *data)
 		fault_record.lo_64 = iommu_read64(dmar_unit, record_reg_offset);
 		fault_record.hi_64 = iommu_read64(dmar_unit, record_reg_offset + 8U);
 
-		dev_dbg(ACRN_DBG_IOMMU, "%s: record[%d] @0x%x:  0x%lx, 0x%lx",
+		dev_dbg(DBG_LEVEL_IOMMU, "%s: record[%d] @0x%x:  0x%lx, 0x%lx",
 			__func__, index, record_reg_offset, fault_record.lo_64, fault_record.hi_64);
 
 		fault_record_analysis(fault_record.lo_64, fault_record.hi_64);
@@ -924,7 +924,7 @@ static void dmar_fault_handler(uint32_t irq, void *data)
 
 #ifdef DMAR_FAULT_LOOP_MAX
 		if (loop > DMAR_FAULT_LOOP_MAX) {
-			dev_dbg(ACRN_DBG_IOMMU, "%s: loop more than %d times", __func__, DMAR_FAULT_LOOP_MAX);
+			dev_dbg(DBG_LEVEL_IOMMU, "%s: loop more than %d times", __func__, DMAR_FAULT_LOOP_MAX);
 			break;
 		}
 #endif
@@ -950,7 +950,7 @@ static void dmar_setup_interrupt(struct dmar_drhd_rt *dmar_unit)
 	}
 
 	vector = irq_to_vector(dmar_unit->dmar_irq);
-	dev_dbg(ACRN_DBG_IOMMU, "irq#%d vector#%d for dmar_unit", dmar_unit->dmar_irq, vector);
+	dev_dbg(DBG_LEVEL_IOMMU, "irq#%d vector#%d for dmar_unit", dmar_unit->dmar_irq, vector);
 
 	dmar_fault_msi_write(dmar_unit, vector);
 	dmar_fault_event_unmask(dmar_unit);
@@ -993,7 +993,7 @@ static void dmar_disable_qi(struct dmar_drhd_rt *dmar_unit)
 
 static void dmar_prepare(struct dmar_drhd_rt *dmar_unit)
 {
-	dev_dbg(ACRN_DBG_IOMMU, "enable dmar uint [0x%x]", dmar_unit->drhd->reg_base_addr);
+	dev_dbg(DBG_LEVEL_IOMMU, "enable dmar uint [0x%x]", dmar_unit->drhd->reg_base_addr);
 	dmar_setup_interrupt(dmar_unit);
 	dmar_set_root_table(dmar_unit);
 	dmar_enable_qi(dmar_unit);
@@ -1002,7 +1002,7 @@ static void dmar_prepare(struct dmar_drhd_rt *dmar_unit)
 
 static void dmar_enable(struct dmar_drhd_rt *dmar_unit)
 {
-	dev_dbg(ACRN_DBG_IOMMU, "enable dmar uint [0x%x]", dmar_unit->drhd->reg_base_addr);
+	dev_dbg(DBG_LEVEL_IOMMU, "enable dmar uint [0x%x]", dmar_unit->drhd->reg_base_addr);
 	dmar_invalid_context_cache_global(dmar_unit);
 	dmar_invalid_iotlb_global(dmar_unit);
 	dmar_invalid_iec_global(dmar_unit);
@@ -1068,7 +1068,7 @@ static int32_t add_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_
 		pr_err("no dmar unit found for device: %x:%x.%x", bus, sid.bits.d, sid.bits.f);
 		ret = -EINVAL;
 	} else if (dmar_unit->drhd->ignore) {
-		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x", bus, sid.bits.d, sid.bits.f);
+		dev_dbg(DBG_LEVEL_IOMMU, "device is ignored :0x%x:%x.%x", bus, sid.bits.d, sid.bits.f);
 	} else if ((!dmar_unit_support_aw(dmar_unit, domain->addr_width)) || (dmar_unit->root_table_addr == 0UL)) {
 		pr_err("invalid dmar unit");
 		ret = -EINVAL;
@@ -1076,7 +1076,7 @@ static int32_t add_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_
 		if (iommu_ecap_sc(dmar_unit->ecap) == 0U) {
 			/* TODO: remove iommu_snoop from iommu_domain */
 			domain->iommu_snoop = false;
-			dev_dbg(ACRN_DBG_IOMMU, "vm=%d add %x:%x no snoop control!", domain->vm_id, bus, devfun);
+			dev_dbg(DBG_LEVEL_IOMMU, "vm=%d add %x:%x no snoop control!", domain->vm_id, bus, devfun);
 		}
 
 		root_table = (struct dmar_entry *)hpa2hva(dmar_unit->root_table_addr);
@@ -1182,7 +1182,7 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint8_t bu
 		pr_err("no dmar unit found for device: %x:%x.%x", bus, sid.bits.d, sid.bits.f);
 		ret = -EINVAL;
 	} else if (dmar_unit->drhd->ignore) {
-		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x", bus, sid.bits.d, sid.bits.f);
+		dev_dbg(DBG_LEVEL_IOMMU, "device is ignored :0x%x:%x.%x", bus, sid.bits.d, sid.bits.f);
 	} else {
 		root_table = (struct dmar_entry *)hpa2hva(dmar_unit->root_table_addr);
 		root_entry = root_table + bus;
@@ -1235,7 +1235,7 @@ static void do_action_for_iommus(void (*action)(struct dmar_drhd_rt *))
 		if (!dmar_unit->drhd->ignore) {
 			action(dmar_unit);
 		} else {
-			dev_dbg(ACRN_DBG_IOMMU, "ignore dmar_unit @0x%x", dmar_unit->drhd->reg_base_addr);
+			dev_dbg(DBG_LEVEL_IOMMU, "ignore dmar_unit @0x%x", dmar_unit->drhd->reg_base_addr);
 		}
 	}
 }
@@ -1265,7 +1265,7 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 		domain->is_tt_ept = true;
 		domain->iommu_snoop = true;
 
-		dev_dbg(ACRN_DBG_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
+		dev_dbg(DBG_LEVEL_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
 			vmid_to_domainid(domain->vm_id), domain->vm_id, domain->trans_table_ptr);
 	}
 
@@ -1382,7 +1382,7 @@ int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, 
 		pr_err("no dmar unit found for device: %x:%x.%x", sid.bits.b, sid.bits.d, sid.bits.f);
 		ret = -EINVAL;
 	} else if (dmar_unit->drhd->ignore) {
-		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x", sid.bits.b, sid.bits.d, sid.bits.f);
+		dev_dbg(DBG_LEVEL_IOMMU, "device is ignored :0x%x:%x.%x", sid.bits.b, sid.bits.d, sid.bits.f);
 		ret = -EINVAL;
 	} else if (dmar_unit->ir_table_addr == 0UL) {
 		pr_err("IR table is not set for dmar unit");
@@ -1423,7 +1423,7 @@ void dmar_free_irte(struct intr_source intr_src, uint16_t index)
 		pr_err("no dmar unit found for device: %x:%x.%x", intr_src.src.msi.bits.b,
 			intr_src.src.msi.bits.d, intr_src.src.msi.bits.f);
 	} else if (dmar_unit->drhd->ignore) {
-		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x", intr_src.src.msi.bits.b,
+		dev_dbg(DBG_LEVEL_IOMMU, "device is ignored :0x%x:%x.%x", intr_src.src.msi.bits.b,
 			intr_src.src.msi.bits.d, intr_src.src.msi.bits.f);
 	} else if (dmar_unit->ir_table_addr == 0UL) {
 		pr_err("IR table is not set for dmar unit");

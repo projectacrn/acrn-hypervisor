@@ -94,7 +94,7 @@ void setup_notification(void)
 		pr_err("Failed to setup notification");
 	}
 
-	dev_dbg(ACRN_DBG_PTIRQ, "NOTIFY: irq[%d] setup vector %x",
+	dev_dbg(DBG_LEVEL_PTIRQ, "NOTIFY: irq[%d] setup vector %x",
 		notification_irq, irq_to_vector(notification_irq));
 }
 

@@ -220,7 +220,7 @@ int32_t request_irq(uint32_t req_irq, irq_action_t action_fn, void *priv_data,
 				spinlock_irqrestore_release(&desc->lock, rflags);
 
 				ret = (int32_t)irq;
-				dev_dbg(ACRN_DBG_IRQ, "[%s] irq%d vr:0x%x", __func__, irq, desc->vector);
+				dev_dbg(DBG_LEVEL_IRQ, "[%s] irq%d vr:0x%x", __func__, irq, desc->vector);
 			} else {
 				spinlock_irqrestore_release(&desc->lock, rflags);
 
@@ -241,7 +241,7 @@ void free_irq(uint32_t irq)
 
 	if (irq < NR_IRQS) {
 		desc = &irq_desc_array[irq];
-		dev_dbg(ACRN_DBG_IRQ, "[%s] irq%d vr:0x%x",
+		dev_dbg(DBG_LEVEL_IRQ, "[%s] irq%d vr:0x%x",
 			__func__, irq, irq_to_vector(irq));
 
 		free_irq_vector(irq);

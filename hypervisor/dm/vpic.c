@@ -33,7 +33,7 @@
 #include <spinlock.h>
 #include <logmsg.h>
 
-#define ACRN_DBG_PIC	6U
+#define DBG_LEVEL_PIC	6U
 
 static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t level);
 
@@ -149,7 +149,7 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 	i8259 = &vpic->i8259[1];
 	pin = vpic_get_highest_irrpin(i8259);
 	if (!i8259->intr_raised && (pin < NR_VPIC_PINS_PER_CHIP)) {
-		dev_dbg(ACRN_DBG_PIC,
+		dev_dbg(DBG_LEVEL_PIC,
 		"pic slave notify pin = %hhu (imr 0x%x irr 0x%x isr 0x%x)\n",
 		pin, i8259->mask, i8259->request, i8259->service);
 
@@ -160,7 +160,7 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 		vpic_set_pinstate(vpic, 2U, 1U);
 		vpic_set_pinstate(vpic, 2U, 0U);
 	} else {
-		dev_dbg(ACRN_DBG_PIC,
+		dev_dbg(DBG_LEVEL_PIC,
 		"pic slave no eligible interrupt (imr 0x%x irr 0x%x isr 0x%x)",
 		i8259->mask, i8259->request, i8259->service);
 	}
@@ -171,7 +171,7 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 	i8259 = &vpic->i8259[0];
 	pin = vpic_get_highest_irrpin(i8259);
 	if (!i8259->intr_raised && (pin < NR_VPIC_PINS_PER_CHIP)) {
-		dev_dbg(ACRN_DBG_PIC,
+		dev_dbg(DBG_LEVEL_PIC,
 		"pic master notify pin = %hhu (imr 0x%x irr 0x%x isr 0x%x)\n",
 		pin, i8259->mask, i8259->request, i8259->service);
 
@@ -218,7 +218,7 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 			vioapic_set_irqline_lock(vpic->vm, 0U, GSI_RAISING_PULSE);
 		}
 	} else {
-		dev_dbg(ACRN_DBG_PIC,
+		dev_dbg(DBG_LEVEL_PIC,
 		"pic master no eligible interrupt (imr 0x%x irr 0x%x isr 0x%x)",
 		i8259->mask, i8259->request, i8259->service);
 	}
@@ -228,7 +228,7 @@ static int32_t vpic_icw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 {
 	int32_t ret;
 
-	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 icw1 0x%x\n",
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 icw1 0x%x\n",
 		vpic->vm, val);
 
 	i8259->ready = false;
@@ -242,10 +242,10 @@ static int32_t vpic_icw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 	i8259->smm = 0U;
 
 	if ((val & ICW1_SNGL) != 0U) {
-		dev_dbg(ACRN_DBG_PIC, "vpic cascade mode required\n");
+		dev_dbg(DBG_LEVEL_PIC, "vpic cascade mode required\n");
 		ret = -1;
 	} else if ((val & ICW1_IC4) == 0U) {
-		dev_dbg(ACRN_DBG_PIC, "vpic icw4 required\n");
+		dev_dbg(DBG_LEVEL_PIC, "vpic icw4 required\n");
 		ret = -1;
 	} else {
 		i8259->icw_num++;
@@ -257,7 +257,7 @@ static int32_t vpic_icw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 static int32_t vpic_icw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
-	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 icw2 0x%x\n",
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 icw2 0x%x\n",
 		vpic->vm, val);
 
 	i8259->irq_base = val & 0xf8U;
@@ -269,7 +269,7 @@ static int32_t vpic_icw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 static int32_t vpic_icw3(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
-	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 icw3 0x%x\n",
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 icw3 0x%x\n",
 		vpic->vm, val);
 
 	i8259->icw_num++;
@@ -281,11 +281,11 @@ static int32_t vpic_icw4(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 {
 	int32_t ret;
 
-	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 icw4 0x%x\n",
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 icw4 0x%x\n",
 		vpic->vm, val);
 
 	if ((val & ICW4_8086) == 0U) {
-		dev_dbg(ACRN_DBG_PIC,
+		dev_dbg(DBG_LEVEL_PIC,
 			"vpic microprocessor mode required\n");
 	        ret = -1;
 	} else {
@@ -297,7 +297,7 @@ static int32_t vpic_icw4(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 			if (master_pic(vpic, i8259)) {
 				i8259->sfn = true;
 			} else {
-				dev_dbg(ACRN_DBG_PIC,
+				dev_dbg(DBG_LEVEL_PIC,
 				"Ignoring special fully nested mode on slave pic: %#x",
 				val);
 			}
@@ -316,7 +316,7 @@ static int32_t vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 	uint32_t pin, i, bit;
 	uint8_t old = i8259->mask;
 
-	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 ocw1 0x%x\n",
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 ocw1 0x%x\n",
 		vpic->vm, val);
 
 	i8259->mask = val & 0xffU;
@@ -352,7 +352,7 @@ static int32_t vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 static int32_t vpic_ocw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
-	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 ocw2 0x%x\n",
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 ocw2 0x%x\n",
 		vpic->vm, val);
 
 	i8259->rotate = ((val & OCW2_R) != 0U);
@@ -393,12 +393,12 @@ static int32_t vpic_ocw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 static int32_t vpic_ocw3(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
-	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 ocw3 0x%x\n",
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 ocw3 0x%x\n",
 		vpic->vm, val);
 
 	if ((val & OCW3_ESMM) != 0U) {
 		i8259->smm = ((val & OCW3_SMM) != 0U) ? 1U : 0U;
-		dev_dbg(ACRN_DBG_PIC, "%s i8259 special mask mode %s\n",
+		dev_dbg(DBG_LEVEL_PIC, "%s i8259 special mask mode %s\n",
 		    master_pic(vpic, i8259) ? "master" : "slave",
 		    (i8259->smm != 0U) ?  "enabled" : "disabled");
 	}
@@ -436,16 +436,16 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t leve
 
 		if (((old_lvl == 0U) && (level == 1U)) || ((level == 1U) && lvl_trigger)) {
 			/* raising edge or level */
-			dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: asserted\n", pin);
+			dev_dbg(DBG_LEVEL_PIC, "pic pin%hhu: asserted\n", pin);
 			i8259->request |= (uint8_t)(1U << (pin & 0x7U));
 		} else if ((old_lvl == 1U) && (level == 0U)) {
 			/* falling edge */
-			dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: deasserted\n", pin);
+			dev_dbg(DBG_LEVEL_PIC, "pic pin%hhu: deasserted\n", pin);
 			if (lvl_trigger) {
 				i8259->request &= ~(uint8_t)(1U << (pin & 0x7U));
 			}
 		} else {
-			dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: %s, ignored\n",
+			dev_dbg(DBG_LEVEL_PIC, "pic pin%hhu: %s, ignored\n",
 				pin, (level != 0U) ? "asserted" : "deasserted");
 		}
 	}
@@ -555,7 +555,7 @@ void vpic_pending_intr(struct acrn_vpic *vpic, uint32_t *vecptr)
 	} else {
 		*vecptr = i8259->irq_base + pin;
 
-		dev_dbg(ACRN_DBG_PIC, "Got pending vector 0x%x\n", *vecptr);
+		dev_dbg(DBG_LEVEL_PIC, "Got pending vector 0x%x\n", *vecptr);
 	}
 
 	spinlock_release(&(vpic->lock));

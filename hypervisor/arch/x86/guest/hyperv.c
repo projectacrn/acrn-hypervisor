@@ -13,7 +13,7 @@
 #include <vmx.h>
 #include <hyperv.h>
 
-#define ACRN_DBG_HYPERV		6U
+#define DBG_LEVEL_HYPERV		6U
 
 /* Partition Reference Counter (HV_X64_MSR_TIME_REF_COUNT) */
 #define CPUID3A_TIME_REF_COUNT_MSR	(1U << 1U)
@@ -75,7 +75,7 @@ hyperv_get_tsc_scale_offset(struct acrn_vm *vm, uint64_t *scale, uint64_t *offse
 		/* ret = (10000U << 64U) / get_tsc_khz() */
 		ret = u64_shl64_div_u64(10000U, khz);
 
-		dev_dbg(ACRN_DBG_HYPERV, "%s, ret = 0x%lx", __func__, ret);
+		dev_dbg(DBG_LEVEL_HYPERV, "%s, ret = 0x%lx", __func__, ret);
 
 		vm->arch_vm.hyperv.tsc_scale = ret;
 		vm->arch_vm.hyperv.tsc_offset = 0UL;
@@ -188,7 +188,7 @@ hyperv_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval)
 		break;
 	}
 
-	dev_dbg(ACRN_DBG_HYPERV, "hv: %s: MSR=0x%x wval=0x%lx vcpuid=%d vmid=%d",
+	dev_dbg(DBG_LEVEL_HYPERV, "hv: %s: MSR=0x%x wval=0x%lx vcpuid=%d vmid=%d",
 		__func__, msr, wval, vcpu->vcpu_id, vcpu->vm->vm_id);
 
 	return ret;
@@ -221,7 +221,7 @@ hyperv_rdmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *rval)
 		break;
 	}
 
-	dev_dbg(ACRN_DBG_HYPERV, "hv: %s: MSR=0x%x rval=0x%lx vcpuid=%d vmid=%d",
+	dev_dbg(DBG_LEVEL_HYPERV, "hv: %s: MSR=0x%x rval=0x%lx vcpuid=%d vmid=%d",
 		__func__, msr, *rval, vcpu->vcpu_id, vcpu->vm->vm_id);
 
 	return ret;
@@ -278,6 +278,6 @@ hyperv_init_vcpuid_entry(uint32_t leaf, uint32_t subleaf, uint32_t flags,
 		break;
 	}
 
-	dev_dbg(ACRN_DBG_HYPERV, "hv: %s: leaf=%x subleaf=%x flags=%x eax=%x ebx=%x ecx=%x edx=%x",
+	dev_dbg(DBG_LEVEL_HYPERV, "hv: %s: leaf=%x subleaf=%x flags=%x eax=%x ebx=%x ecx=%x edx=%x",
 		__func__, leaf, subleaf, flags, entry->eax, entry->ebx, entry->ecx, entry->edx);
 }
