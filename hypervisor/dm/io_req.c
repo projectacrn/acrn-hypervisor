@@ -10,7 +10,7 @@
 
 #define DBG_LEVEL_IOREQ	6U
 
-static uint32_t acrn_vhm_notification_vector = VECTOR_HYPERVISOR_CALLBACK_VHM;
+static uint32_t acrn_vhm_notification_vector = HYPERVISOR_CALLBACK_VHM_VECTOR;
 #define MMIO_DEFAULT_VALUE_SIZE_1	(0xFFUL)
 #define MMIO_DEFAULT_VALUE_SIZE_2	(0xFFFFUL)
 #define MMIO_DEFAULT_VALUE_SIZE_4	(0xFFFFFFFFUL)

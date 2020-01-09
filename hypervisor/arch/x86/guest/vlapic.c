@@ -609,7 +609,7 @@ static void vlapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, bool
  */
 static void apicv_post_intr(uint16_t dest_pcpu_id)
 {
-	send_single_ipi(dest_pcpu_id, VECTOR_POSTED_INTR);
+	send_single_ipi(dest_pcpu_id, POSTED_INTR_VECTOR);
 }
 
 /**

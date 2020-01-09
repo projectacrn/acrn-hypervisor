@@ -20,6 +20,15 @@
 #define DBG_LEVEL_PTIRQ		6U
 #define DBG_LEVEL_IRQ		6U
 
+#define NR_MAX_VECTOR		0xFFU
+#define VECTOR_INVALID		(NR_MAX_VECTOR + 1U)
+#define NR_IRQS			256U
+#define IRQ_INVALID		0xffffffffU
+
+#define NR_STATIC_MAPPINGS     (4U)
+
+#define HYPERVISOR_CALLBACK_VHM_VECTOR	0xF3U
+
 /* vectors range for dynamic allocation, usually for devices */
 #define VECTOR_DYNAMIC_START	0x20U
 #define VECTOR_DYNAMIC_END	0xDFU
@@ -28,29 +37,20 @@
 #define VECTOR_FIXED_START	0xE0U
 #define VECTOR_FIXED_END	0xFFU
 
-#define VECTOR_TIMER		0xEFU
-#define VECTOR_NOTIFY_VCPU	0xF0U
-#define VECTOR_POSTED_INTR	0xF2U
-#define VECTOR_VIRT_IRQ_VHM	0xF7U
-#define VECTOR_SPURIOUS		0xFFU
-#define VECTOR_HYPERVISOR_CALLBACK_VHM	0xF3U
-#define VECTOR_PMI			0xF4U
+#define TIMER_VECTOR		(VECTOR_FIXED_START)
+#define NOTIFY_VCPU_VECTOR	(VECTOR_FIXED_START + 1U)
+#define POSTED_INTR_VECTOR	(VECTOR_FIXED_START + 2U)
+#define PMI_VECTOR		(VECTOR_FIXED_START + 3U)
+
+#define TIMER_IRQ		(NR_IRQS - 1U)
+#define NOTIFY_VCPU_IRQ		(NR_IRQS - 2U)
+#define POSTED_INTR_IRQ		(NR_IRQS - 3U)
+#define PMI_IRQ			(NR_IRQS - 4U)
 
 /* the maximum number of msi entry is 2048 according to PCI
  * local bus specification
  */
 #define MAX_MSI_ENTRY 0x800U
-
-#define NR_MAX_VECTOR		0xFFU
-#define VECTOR_INVALID		(NR_MAX_VECTOR + 1U)
-#define NR_IRQS		256U
-#define IRQ_INVALID		0xffffffffU
-
-#define NR_STATIC_MAPPINGS     (4U)
-#define TIMER_IRQ		(NR_IRQS - 1U)
-#define NOTIFY_IRQ		(NR_IRQS - 2U)
-#define POSTED_INTR_NOTIFY_IRQ	(NR_IRQS - 3U)
-#define PMI_IRQ			(NR_IRQS - 4U)
 
 #define DEFAULT_DEST_MODE	IOAPIC_RTE_DESTMODE_LOGICAL
 #define DEFAULT_DELIVERY_MODE	IOAPIC_RTE_DELMODE_LOPRI

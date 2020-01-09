@@ -133,7 +133,7 @@ void make_reschedule_request(uint16_t pcpu_id, uint16_t delmode)
 	if (get_pcpu_id() != pcpu_id) {
 		switch (delmode) {
 		case DEL_MODE_IPI:
-			send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
+			send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
 			break;
 		case DEL_MODE_NMI:
 			send_single_nmi(pcpu_id);
@@ -236,7 +236,7 @@ void kick_thread(const struct thread_object *obj)
 	if (is_running(obj)) {
 		if (get_pcpu_id() != pcpu_id) {
 			if (obj->notify_mode == SCHED_NOTIFY_IPI) {
-				send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
+				send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
 			} else {
 				/* For lapic-pt vCPUs */
 				send_single_nmi(pcpu_id);

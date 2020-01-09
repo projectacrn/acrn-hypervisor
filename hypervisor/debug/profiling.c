@@ -620,7 +620,7 @@ static void profiling_pmi_handler(uint32_t irq, __unused void *data)
 	if ((get_cpu_var(profiling_info.vm_info).vmexit_reason
 			== VMX_EXIT_REASON_EXTERNAL_INTERRUPT) &&
 			((uint64_t)get_cpu_var(profiling_info.vm_info).external_vector
-			== VECTOR_PMI)) {
+			== PMI_VECTOR)) {
 		psample->csample.os_id
 			= get_cpu_var(profiling_info.vm_info).guest_vm_id;
 		(void)memset(psample->csample.task, 0U, 16);
@@ -1435,7 +1435,7 @@ void profiling_setup(void)
 	per_cpu(profiling_info.s_state, cpu).nofrozen_pmi = 0U;
 
 	msr_write(MSR_IA32_EXT_APIC_LVT_PMI,
-		VECTOR_PMI | LVT_PERFCTR_BIT_MASK);
+		PMI_VECTOR | LVT_PERFCTR_BIT_MASK);
 
 	dev_dbg(DBG_LEVEL_PROFILING, "%s: exiting", __func__);
 }
