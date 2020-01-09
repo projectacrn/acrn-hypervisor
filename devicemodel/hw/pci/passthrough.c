@@ -527,6 +527,7 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 	struct pci_bar_io bar;
 	enum pcibar_type bartype;
 	uint64_t base, size;
+	uint32_t vbar_lo32;
 
 	dev = ptdev->dev;
 
@@ -589,6 +590,24 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 		error = pci_emul_alloc_pbar(dev, i, base, bartype, size);
 		if (error)
 			return -1;
+
+		/*
+		 * For pass-thru devices,
+		 * set the bar prefetchable property the same as physical bar.
+		 *
+		 * the pci bar prefetchable property has set by pci_emul_alloc_pbar,
+		 * here, override the prefetchable property according to the physical bar.
+		 */
+		if (bartype == PCIBAR_MEM32 ||  bartype == PCIBAR_MEM64) {
+			vbar_lo32 = pci_get_cfgdata32(dev, PCIR_BAR(i));
+
+			if (bar.base & PCIM_BAR_MEM_PREFETCH)
+				vbar_lo32 |= PCIM_BAR_MEM_PREFETCH;
+			else
+				vbar_lo32 &= ~PCIM_BAR_MEM_PREFETCH;
+
+			pci_set_cfgdata32(dev, PCIR_BAR(i), vbar_lo32);
+	}
 
 		/* The MSI-X table needs special handling */
 		if (i == ptdev_msix_table_bar(ptdev)) {
