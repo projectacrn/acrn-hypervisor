@@ -151,7 +151,7 @@ Additional scenario XML elements:
   The start physical address in host for the VM.
 
 ``size`` (a child node of ``memory``):
-  The memory size inbBytes for the VM.
+  The memory size in bytes for the VM.
 
 ``name`` (a child node of ``os_config``):
   Specify the OS name of VM; currently, it is not referenced by the hypervisor code.
