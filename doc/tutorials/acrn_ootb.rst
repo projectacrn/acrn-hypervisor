@@ -460,7 +460,8 @@ Step 3: Deploy the Service VM image
 
         # dd if=/mnt/sos-industry.img of=/dev/sda bs=4M oflag=sync status=progress
 
-Note: With the above “size” settings in yaml, >100G SOS image will be generated and it will quite some time to write it into the disk.
+.. note:: Given the large YAML size setting of over 100G, generating the SOS image and writing it to disk will take some time.
+
 #. Configure the EFI firmware to boot the ACRN hypervisor by default:
 
    .. code-block:: none
