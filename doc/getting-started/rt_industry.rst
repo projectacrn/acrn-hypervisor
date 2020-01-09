@@ -20,10 +20,8 @@ for the RTVM.
 - Intel Kaby Lake (aka KBL) NUC platform with two disks inside
   (refer to :ref:`the tables <hardware_setup>` for detailed information).
 - If you need to enable the serial port on KBL NUC, navigate to the
-  :ref:`troubleshooting <connect_serial_port>` to prepare the cable.
-- Follow below steps to install Clear Linux OS (Ver: 31670) onto the SATA disk
-  of the KBL NUC(Here we install Clear linux with version 31670 and then the
-  subsequent ACRN quick setup script will upgrade Clear linux to version 32030):
+  :ref:`troubleshooting section <connect_serial_port>` that discusses how to prepare the cable.
+- Follow the below steps to install Clear Linux OS (version 31670) onto the SATA disk of the KBL NUC. In the example below, we will install Clear Linux with version 31670 and then follow the subsequent ACRN quick setup script which will upgrade Clear Linux to version 32030:
 
 .. _Clear Linux OS Server image:
    https://download.clearlinux.org/releases/31670/clear/clear-31670-live-server.iso
@@ -69,11 +67,10 @@ for the RTVM.
   #. Select :kbd:`Install`.
   #. Select :kbd:`Confirm Install` in the :kbd:`Confirm Installation` window to start the installation.
 
-.. _step-by-step instruction:
+.. _step-by-step instructions:
    https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html
 
-.. note:: Refer to the `step-by-step instruction`_ for detailed instructions from the Clear Linux OS
-   installation guide.
+.. note:: Refer to these `step-by-step instructions`_ from the Clear Linux OS installation guide.
 
 .. _hardware_setup:
 
@@ -99,7 +96,7 @@ Hardware Setup
    +----------------------+-------------------+----------------------+-----------------------------------------------------------+
 
 .. [1] The maximum supported memory size for ACRN is 16GB. If you are using
-   32GB memory, follow the :ref:`config_32GB_memory` instruction to make
+   32GB memory, follow the :ref:`config_32GB_memory` instructions to make
    a customized ACRN hypervisor that can support 32GB memory. For more
    detailed information about how to build ACRN
    from the source code, refer to this :ref:`guide <getting-started-building>`.
@@ -135,9 +132,7 @@ Use the pre-installed industry ACRN hypervisor
 
       # ./acrn_quick_setup.sh -s 32030 -d -i
 
-   .. note:: ``-i`` option means the industry scenario efi image will be used, e.g.
-      ``acrn.nuc7i7dnb.industry.efi``. For the detailed usage of the ``acrn_quick_setup.sh`` script, 
-      move to this :ref:`quick setup ACRN guide <quick-setup-guide>` or just type ``./acrn_quick_setup.sh -h``. 
+   .. note:: ``-i`` option means the industry scenario efi image will be used, e.g. ``acrn.nuc7i7dnb.industry.efi``. For the detailed usage of the ``acrn_quick_setup.sh`` script, refer to the :ref:`quick setup ACRN guide <quick-setup-guide>` or simply type ``./acrn_quick_setup.sh -h``.
 
 #. Use ``efibootmgr -v`` command to check the ACRN boot order:
 
@@ -159,16 +154,14 @@ Use the pre-installed industry ACRN hypervisor
       Boot000D* INTEL SSDPEKKW256G8 : PART 0 : Boot Drive	BBS(HD,,0x0)..BO
       Boot000E* UEFI : INTEL SSDPEKKW256G8 : PART 0 : OS Bootloader	PciRoot(0x0)/Pci(0x1d,0x0)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(1,GPT,8aa992f8-8149-4f6b-8b64-503998c776c1,0x800,0x47000)..BO
 
-   .. note:: Ensure the ACRN is first in the boot order, or you may use ``efibootmgr -o 1`` command to move it
-      to the first position.
-
-   .. note:: If you need to enable the serial port, run the following command before reboot:
+   .. note:: Ensure that ACRN is first in the boot order, or you may use ``efibootmgr -o 1`` command to move it
+      to the first position. If you need to enable the serial port, run the following command before rebooting:
 
       ``efibootmgr -c -l '\EFI\acrn\acrn.efi' -d /dev/sda -p 1 -L ACRN -u "uart=port@0x3f8"``
 
 #. Reboot KBL NUC.
 
-#. Use ``dmesg`` command to ensure the Service VM boots:
+#. Use the ``dmesg`` command to ensure that the Service VM boots:
 
    .. code-block:: console
       :emphasize-lines: 2
@@ -202,7 +195,7 @@ Use the ACRN industry out-of-the-box image
    # dd if=sos-industry-32030.img of=/dev/sda bs=4M oflag=sync status=progress
 
 #. Configure the EFI firmware to boot the ACRN hypervisor by default:
-   
+
    ::
 
       # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN" -u "uart=disabled"
@@ -221,7 +214,7 @@ Use the ACRN industry out-of-the-box image
 Install and launch the Preempt-RT VM
 ************************************
 
-#. Log in Service VM as root privileges.
+#. Log in to the Service VM with root privileges.
 
 #. Download the Preempt-RT VM image::
 
@@ -279,10 +272,10 @@ Install and launch the Preempt-RT VM
          $pm_channel $pm_by_vuart \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
          hard_rtvm
-      
+
       }
 
-#. Upon deployment completion, launch the RTVM directly on your KBL NUC::
+#. Upon deployment completion, launch the RTVM directly onto your KBL NUC::
 
    # /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
 
@@ -294,14 +287,7 @@ RT Performance Test
 Cyclictest introduction
 =======================
 
-The cyclictest is most commonly used for benchmarking RT systems. It is one of the
-most frequently used tools for evaluating the relative performance of real-time
-systems. Cyclictest accurately and repeatedly measures the difference between a
-thread's intended wake-up time and the time at which it actually wakes up in order
-to provide statistics about the system's latencies. It can measure latencies in
-real-time systems that are caused by hardware, firmware, and the operating system.
-The cyclictest is currently maintained by Linux Foundation and is part of the test
-suite rt-tests.
+The cyclictest is most commonly used for benchmarking RT systems. It is one of the most frequently used tools for evaluating the relative performance of real-time systems. Cyclictest accurately and repeatedly measures the difference between a thread's intended wake-up time and the time at which it actually wakes up in order to provide statistics about the system's latencies. It can measure latencies in real-time systems that are caused by hardware, firmware, and the operating system. The cyclictest is currently maintained by Linux Foundation and is part of the test suite rt-tests.
 
 Pre-Configurations
 ==================
@@ -341,7 +327,7 @@ Recommended BIOS settings
    "ACPI S3 Support", "Intel Advanced Menu -> ACPI Settings", "Disabled"
    "Native ASPM", "Intel Advanced Menu -> ACPI Settings", "Disabled"
 
-.. note:: The BIOS settings depend on the platform and BIOS version; some may not be applicable.
+.. note:: BIOS settings depend on the platform and BIOS version; some may not be applicable.
 
 Configure CAT
 -------------
@@ -349,12 +335,9 @@ Configure CAT
 .. _Apollo Lake NUC:
    https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc6cayh.html
 
-.. note:: CAT configuration is only supported on `Apollo Lake NUC`_.
+.. note:: CAT configuration is only supported on the `Apollo Lake NUC`_.
 
-With the ACRN Hypervisor shell, we can use ``cpuid`` and ``wrmsr``/``rdmsr`` debug
-commands to enumerate the CAT capability and set the CAT configuration without rebuilding binaries.
-Because ``lapic`` is a pass-through to the RTVM, the CAT configuration must be
-set before launching the RTVM.
+With the ACRN Hypervisor shell, we can use ``cpuid`` and ``wrmsr``/``rdmsr`` debug commands to enumerate the CAT capability and set the CAT configuration without rebuilding binaries. Because ``lapic`` is a pass-through to the RTVM, the CAT configuration must be set before launching the RTVM.
 
 Check CAT ability with cupid
 ````````````````````````````
@@ -385,8 +368,7 @@ The PQR_ASSOC MSR is per CPU core; each core has its own PQR_ASSOC::
    MSR_IA32_PQR_ASSOC        0x00000C8F
 
 To set the CAT, first set the CLOS MSRs. Next, set the PQR_ASSOC of each CPU
-so that the CPU of the RTVM uses dedicated cache and other CPUs use other cache.
-Taking a Quad Core Apollo Lake platform for example, CPU0 and CPU1 share L2 cache while CPU2 and CPU3 share the other L2 cache.
+so that the CPU of the RTVM uses dedicated cache and other CPUs use other cache. Taking a Quad Core Apollo Lake platform for example, CPU0 and CPU1 share L2 cache while CPU2 and CPU3 share the other L2 cache.
 
 - If we allocate CPU2 and CPU3, no extra action is required.
 - If we allocate only CPU1 to the RTVM, we need to set the CAT as follows.
@@ -398,15 +380,12 @@ a. Set CLOS with ``wrmsr <reg_num> <value>``, we want VM1 to use the lower 6 way
       ACRN:\>wrmsr -p1 0xd10 0xf0
       ACRN:\>wrmsr -p1 0xd11 0x0f
 
-#. Attach COS1 to PCPU1. Because MSR is IA32_PQR_ASSOC [bit 63:32], we’ll write
-   0x100000000 to it to use CLOS1::
+#. Attach COS1 to PCPU1. Because MSR is IA32_PQR_ASSOC [bit 63:32], we’ll write 0x100000000 to it to use CLOS1::
 
       ACRN:\>wrmsr -p0 0xc8f 0x000000000
       ACRN:\>wrmsr -p1 0xc8f 0x100000000
 
-In addition to setting the CAT configuration via HV commands, we allow developers to add
-the CAT configurations to the VM config and do the configure automatically at the
-time of RTVM creation. Refer to the :ref:`configure_cat_vm` for details.
+In addition to setting the CAT configuration via HV commands, we allow developers to add the CAT configurations to the VM config and do the configure automatically at the time of RTVM creation. Refer to :ref:`configure_cat_vm` for details.
 
 Set up the core allocation for the RTVM
 ---------------------------------------
@@ -419,10 +398,10 @@ this, follow the below steps to allocate all housekeeping tasks to core 0:
 
    # /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
 
-#. Log in RTVM as root and run the script as below:
+#. Log in to RTVM as root and run the script as below:
 
    .. code-block:: bash
-   
+
       #!/bin/bash
       # Copyright (C) 2019 Intel Corporation.
       # SPDX-License-Identifier: BSD-3-Clause
@@ -432,19 +411,19 @@ this, follow the below steps to allocate all housekeeping tasks to core 0:
           echo setting $i to affine for core zero
           echo 1 > /proc/irq/$i/smp_affinity
       done
-   
+
       # Move all rcu tasks to core 0.
       for i in `pgrep rcu`; do taskset -pc 0 $i; done
-   
+
       # Change realtime attribute of all rcu tasks to SCHED_OTHER and priority 0
       for i in `pgrep rcu`; do chrt -v -o -p 0 $i; done
-   
+
       # Change realtime attribute of all tasks on core 1 to SCHED_OTHER and priority 0
       for i in `pgrep /1`; do chrt -v -o -p 0 $i; done
-   
+
       # Change realtime attribute of all tasks to SCHED_OTHER and priority 0
       for i in `ps -A -o pid`; do chrt -v -o -p 0 $i; done
-   
+
       echo disabling timer migration
       echo 0 > /proc/sys/kernel/timer_migration
 
@@ -453,19 +432,18 @@ this, follow the below steps to allocate all housekeeping tasks to core 0:
 Run cyclictest
 ==============
 
-#. Refer to the :ref:`troubleshooting <enabling the network on RTVM>` to enable the
-   network connection for RTVM.
+#. Refer to the :ref:`troubleshooting section <enabling the network on RTVM>` below that discusses how to enable the network connection for RTVM.
 
 #. Launch RTVM and log in as root.
 
-#. Install ``cyclictest`` tool::
+#. Install the ``cyclictest`` tool::
 
    # swupd bundle-add dev-utils
 
 #. Use the following command to start cyclictest::
 
    # cyclictest -a 1 -p 80 -m -N -D 1h -q -H 30000 --histfile=test.log
- 
+
    Parameter descriptions:
 
     :-a 1:                           to bind the RT task to core 1
