@@ -2236,6 +2236,7 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 	int idx, needcfg;
 	uint64_t addr, bar, mask;
 	bool decode, ignore_reg_unreg = false;
+	uint8_t mmio_bar_prop;
 
 	bi = pci_businfo[bus];
 	if (bi != NULL) {
@@ -2342,6 +2343,11 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 				}
 			}
 
+			/* save the bar property for MMIO pci bar. */
+			mmio_bar_prop = pci_get_cfgdata32(dev, PCIR_BAR(idx)) &
+						(PCIM_BAR_SPACE | PCIM_BAR_MEM_TYPE |
+						PCIM_BAR_MEM_PREFETCH);
+
 			switch (dev->bar[idx].type) {
 			case PCIBAR_NONE:
 				dev->bar[idx].addr = bar = 0;
@@ -2361,7 +2367,8 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 				break;
 			case PCIBAR_MEM32:
 				addr = bar = *eax & mask;
-				bar |= PCIM_BAR_MEM_SPACE | PCIM_BAR_MEM_32;
+				/* Restore the readonly fields for mmio bar */
+				bar |= mmio_bar_prop;
 				if (addr != dev->bar[idx].addr) {
 					update_bar_address(ctx, dev, addr, idx,
 							   PCIBAR_MEM32,
@@ -2370,8 +2377,8 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 				break;
 			case PCIBAR_MEM64:
 				addr = bar = *eax & mask;
-				bar |= PCIM_BAR_MEM_SPACE | PCIM_BAR_MEM_64 |
-				       PCIM_BAR_MEM_PREFETCH;
+				/* Restore the readonly fields for mmio bar */
+				bar |= mmio_bar_prop;
 				if (addr != (uint32_t)dev->bar[idx].addr) {
 					update_bar_address(ctx, dev, addr, idx,
 							   PCIBAR_MEM64,
