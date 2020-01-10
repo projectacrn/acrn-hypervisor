@@ -69,6 +69,10 @@
  */
 #define AUDIO_NHLT_HACK 1
 
+#define GPU_GSM_SIZE			0x4000000
+/* set gsm gpa=0xDB000000, which is reserved in e820 table */
+#define GPU_GSM_GPA  			0xDB000000
+
 extern uint64_t audio_nhlt_len;
 
 /* reference count for libpciaccess init/deinit */
@@ -85,6 +89,8 @@ struct mmio_map {
 	uint64_t hpa;
 	size_t size;
 };
+
+uint32_t gsm_start_hpa = 0;
 
 struct passthru_dev {
 	struct pci_vdev *dev;
@@ -856,6 +862,14 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (error < 0)
 		goto done;
 
+	if (ptdev->phys_bdf == PCI_BDF_GPU) {
+		/* get gsm hpa */
+		gsm_start_hpa = read_config(ptdev->phys_dev, PCIR_BDSM, 4);
+		gsm_start_hpa &= PCIM_BDSM_GSM_MASK;
+		/* initialize the EPT mapping for passthrough GPU gsm region */
+		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_GSM_GPA, GPU_GSM_SIZE, gsm_start_hpa);
+	}
+
 	/* If ptdev support MSI/MSIX, stop here to skip virtual INTx setup.
 	 * Forge Guest to use MSI/MSIX in this case to mitigate IRQ sharing
 	 * issue
@@ -939,6 +953,10 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 				ptdev->sel.dev, ptdev->sel.func,
 				dev->bar[i].addr, ptdev->bar[i].size,
 				ptdev->bar[i].addr);
+	}
+
+	if (ptdev->phys_bdf == PCI_BDF_GPU) {
+		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, GPU_GSM_GPA, GPU_GSM_SIZE, gsm_start_hpa);
 	}
 
 	pciaccess_cleanup();
@@ -1032,13 +1050,15 @@ passthru_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	/* Everything else just read from the device's config space */
 	*rv = read_config(ptdev->phys_dev, coff, bytes);
 
-	/*
-	 * return zero for graphics stolen memory since acrn does not have
-	 * support for RMRR
+	/* passthru_init has initialized the EPT mapping
+	 * for GPU gsm region.
+	 * So uos GPU can passthrough physical gsm now.
+	 * Here, only need return gsm gpa value for uos.
 	 */
 	if ((PCI_BDF(dev->bus, dev->slot, dev->func) == PCI_BDF_GPU)
-		&& (coff == PCIR_GMCH_CTL)) {
-		*rv &= ~PCIM_GMCH_CTL_GMS;
+		&& (coff == PCIR_BDSM)) {
+		*rv &= ~PCIM_BDSM_GSM_MASK;
+		*rv |= GPU_GSM_GPA;
 	}
 
 	return 0;
