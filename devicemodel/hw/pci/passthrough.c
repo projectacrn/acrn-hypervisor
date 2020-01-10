@@ -73,6 +73,14 @@
 /* set gsm gpa=0xDB000000, which is reserved in e820 table */
 #define GPU_GSM_GPA  			0xDB000000
 
+#define GPU_OPREGION_SIZE		0x3000
+/* set opregion gpa=0xDFFFD000, which is reserved in e820 table.
+ * [0xDFFFD000, 0XE0000000] 12K opregion has reserved for GVT-g,
+ * because GVT-d is not compatible with GVT-g,
+ * so here can use [0xDFFFD000, 0XE0000000] region.
+ */
+#define GPU_OPREGION_GPA  		0xDFFFD000
+
 extern uint64_t audio_nhlt_len;
 
 /* reference count for libpciaccess init/deinit */
@@ -86,6 +94,7 @@ struct mmio_map {
 };
 
 uint32_t gsm_start_hpa = 0;
+uint32_t opregion_start_hpa = 0;
 
 struct passthru_dev {
 	struct pci_vdev *dev;
@@ -873,6 +882,12 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		gsm_start_hpa &= PCIM_BDSM_GSM_MASK;
 		/* initialize the EPT mapping for passthrough GPU gsm region */
 		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_GSM_GPA, GPU_GSM_SIZE, gsm_start_hpa);
+
+		/* get opregion hpa */
+		opregion_start_hpa = read_config(ptdev->phys_dev, PCIR_ASLS_CTL, 4);
+		opregion_start_hpa &= PCIM_ASLS_OPREGION_MASK;
+		/* initialize the EPT mapping for passthrough GPU opregion */
+		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
 	}
 
 	/* If ptdev support MSI/MSIX, stop here to skip virtual INTx setup.
@@ -962,6 +977,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	if (ptdev->phys_bdf == PCI_BDF_GPU) {
 		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, GPU_GSM_GPA, GPU_GSM_SIZE, gsm_start_hpa);
+		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
 	}
 
 	pciaccess_cleanup();
@@ -1064,6 +1080,18 @@ passthru_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		&& (coff == PCIR_BDSM)) {
 		*rv &= ~PCIM_BDSM_GSM_MASK;
 		*rv |= GPU_GSM_GPA;
+	}
+
+	/* passthru_init has initialized the EPT mapping
+	 * for GPU opregion.
+	 * So uos GPU can passthrough physical opregion now.
+	 * Here, only need return opregion gpa value for uos.
+	 */
+	if ((PCI_BDF(dev->bus, dev->slot, dev->func) == PCI_BDF_GPU)
+		&& (coff == PCIR_ASLS_CTL)) {
+		/* reserve opregion start addr offset to 4KB page */
+		*rv &= ~PCIM_ASLS_OPREGION_MASK;
+		*rv |= GPU_OPREGION_GPA;
 	}
 
 	return 0;
