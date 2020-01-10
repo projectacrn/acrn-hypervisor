@@ -599,11 +599,13 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 
 		value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
 		value32 &= ~VMX_PROCBASED_CTLS_TPR_SHADOW;
+		value32 &= ~VMX_PROCBASED_CTLS_HLT;
 		exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
 
 		exec_vmwrite32(VMX_TPR_THRESHOLD, 0U);
 
 		value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS2);
+		value32 &= ~VMX_PROCBASED_CTLS2_PAUSE_LOOP;
 		value32 &= ~VMX_PROCBASED_CTLS2_VAPIC;
 		if (is_apicv_advanced_feature_supported()) {
 			value32 &= ~VMX_PROCBASED_CTLS2_VIRQ;
