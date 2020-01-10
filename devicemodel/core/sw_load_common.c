@@ -101,6 +101,9 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 		 * For ACRN, we simply hard code to 64MB and static
 		 * reserved the memory region to avoid more efforts in OVMF,
 		 * and user *must* align the native BIOS setting to 64MB.
+		 *
+		 * GPU_GSM_GPA micro in passthrough.c should
++		 * align with this address here.
 		 */
 		.baseaddr = 0xDB000000,
 		.length	  = 0x4000000,
