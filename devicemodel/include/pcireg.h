@@ -1066,6 +1066,6 @@
 #define	PCIM_OSC_CTL_PCIE_CAP_STRUCT	0x10 /* Various Capability Structures */
 
 /* Graphics definitions */
-#define PCIR_GMCH_CTL			0x50 /*GMCH grpahics control register */
-#define PCIM_GMCH_CTL_GMS		0xFF00 /*GMS - stolen memory bits 15:8 */
+#define PCIR_BDSM			0x5C /* BDSM graphics base data of stolen memory register */
+#define PCIM_BDSM_GSM_MASK  		0xFFF00000 /* bits 31:20 contains the base address of stolen memory */
 #endif
