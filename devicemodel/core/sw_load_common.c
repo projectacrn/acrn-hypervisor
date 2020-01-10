@@ -56,10 +56,11 @@ static char bootargs[BOOT_ARG_LEN];
  * 2:       0x100000 -  lowmem      RAM             lowmem - 1MB
  * 3:         lowmem -  0x80000000  (reserved)      2GB - lowmem
  * 4:	  0x80000000 -  0x88000000  (reserved)	    128MB
- * 5:     0xDF000000 -  0xE0000000  (reserved)      16MB
- * 6:     0xE0000000 -  0x100000000 MCFG, MMIO      512MB
- * 7:    0x100000000 -  0x140000000 64-bit PCI hole 1GB
- * 8:    0x140000000 -  highmem     RAM             highmem - 5GB
+ * 5:     0xDB000000 -  0xDF000000  (reserved)      64MB
+ * 6:     0xDF000000 -  0xE0000000  (reserved)      16MB
+ * 7:     0xE0000000 -  0x100000000 MCFG, MMIO      512MB
+ * 8:    0x100000000 -  0x140000000 64-bit PCI hole 1GB
+ * 9:    0x140000000 -  highmem     RAM             highmem - 5GB
  */
 const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 	{	/* 0 to video memory */
@@ -90,6 +91,19 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 		/* reserve for PRM resource */
 		.baseaddr = 0x80000000,
 		.length	  = 0x8000000,
+		.type     = E820_TYPE_RESERVED
+	},
+
+	{
+		/* reserve for GVT-d graphics stolen memory.
+		 * The native BIOS allocates the stolen memory by itself,
+		 * and size can be configured by user itself through BIOS GUI.
+		 * For ACRN, we simply hard code to 64MB and static
+		 * reserved the memory region to avoid more efforts in OVMF,
+		 * and user *must* align the native BIOS setting to 64MB.
+		 */
+		.baseaddr = 0xDB000000,
+		.length	  = 0x4000000,
 		.type     = E820_TYPE_RESERVED
 	},
 
