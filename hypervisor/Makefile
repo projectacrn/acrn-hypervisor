@@ -97,6 +97,13 @@ endif
 CFLAGS += -DSTACK_PROTECTOR
 endif
 
+# In case using Ubuntu 19.10 as build environment, its gcc has -fcf-protection enabled
+# by default. But this option is not compatible with -mindirect-branch:
+#   https://bugs.launchpad.net/ubuntu/+source/gcc-9/+bug/1830961
+#
+# We disable the -fcf-protection in ACRN build.
+CFLAGS += -fcf-protection=none
+
 ASFLAGS += -m64 -nostdinc -nostdlib
 
 LDFLAGS += -Wl,--gc-sections -nostartfiles -nostdlib
