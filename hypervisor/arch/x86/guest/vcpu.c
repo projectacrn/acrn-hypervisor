@@ -262,24 +262,18 @@ static void set_vcpu_mode(struct acrn_vcpu *vcpu, uint32_t cs_attr, uint64_t ia3
 
 static void init_xsave(struct acrn_vcpu *vcpu)
 {
-	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
 	struct ext_context *ectx = &(vcpu->arch.contexts[vcpu->arch.cur_context].ext_ctx);
+	struct xsave_area *area = &ectx->xs_area;
 
-	/* Get user state components */
-	ectx->xcr0 = ((uint64_t)cpu_info->cpuid_leaves[FEAT_D_0_EDX] << 32U)
-		+ cpu_info->cpuid_leaves[FEAT_D_0_EAX];
-
-	/* Get supervisor state components */
-	ectx->xss = ((uint64_t)cpu_info->cpuid_leaves[FEAT_D_1_EDX] << 32U)
-		+ cpu_info->cpuid_leaves[FEAT_D_1_ECX];
+	ectx->xcr0 = XSAVE_FPU;
+	ectx->xss = 0U;
+	(void)memset((void *)area, 0U, XSAVE_STATE_AREA_SIZE);
 
 	/* xsaves only support compacted format, so set it in xcomp_bv[63],
-	 * keep the reset area in header area as zero.
-	 * With this config, the first time a vcpu is scheduled in, it will
-	 * initiate all the xsave componets */
+	* keep the reset area in header area as zero. */
 	ectx->xs_area.xsave_hdr.hdr.xcomp_bv |= XSAVE_COMPACTED_FORMAT;
-
 }
+
 void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
 {
 	struct ext_context *ectx;
