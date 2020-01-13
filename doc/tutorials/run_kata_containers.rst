@@ -19,7 +19,7 @@ Pre-Requisites
 
 #. Refer to the :ref:`ACRN supported hardware <hardware>`.
 #. For a default prebuilt ACRN binary in the E2E package, you must have 4 CPU cores or enable "CPU Hyper-Threading” in order to have 4 CPU threads for 2 CPU cores.
-#. Follow :ref:`these instructions <quick-setup-guide>` to set up the ACRN Service VM.
+#. Follow :ref:`these instructions <kbl-nuc-sdc>` to set up the ACRN Service VM.
 #. Build the ACRN kernel (required to support ``macvtap``, enabled by default since `247a3ba9243b <https://github.com/projectacrn/acrn-kernel/commit/247a3ba9243b1fd8c2d763158d55f8791a9cac94>`_).
 
    .. code-block:: none

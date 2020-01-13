@@ -9,9 +9,9 @@ and its setup is described below.
 Validated Version
 *****************
 
-- Clear Linux version: **31470**
-- ACRN-hypervisor tag: **acrn-2019w44.3-140000p**
-- ACRN-Kernel(Service VM kernel): **4.19.78-95.iot-lts2018-sos**
+- Clear Linux version: **32080**
+- ACRN-hypervisor tag: **acrn-2012020w02.5.140000p**
+- ACRN-Kernel (Service VM kernel): **4.19.94-102.iot-lts2018-sos**
 
 Software Setup
 **************
@@ -31,7 +31,7 @@ manually, as described below).
    Refer to the ACRN :ref:`release_notes` for the Clear Linux OS
    version number tested with a specific ACRN release.  Adjust the
    instruction below to reference the appropriate version number of Clear
-   Linux OS (we use version 31470 as an example).
+   Linux OS (we use version 32080 as an example).
 
 #. Download the compressed Clear Linux OS installer image from
    https://download.clearlinux.org/releases/31470/clear/clear-31470-live-server.iso.xz
@@ -98,7 +98,7 @@ Follow these steps:
       $ export https_proxy=https://myproxy.mycompany.com:port
       $ cd ~
       $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/getting-started/acrn_quick_setup.sh
-      $ sudo sh acrn_quick_setup.sh -s 31470
+      $ sudo sh acrn_quick_setup.sh -s 32080
 
 #. This output means the script ran successfully.
 
@@ -120,12 +120,12 @@ Follow these steps:
       it using the ``-e`` option. For example, to set up the Service VM on an NVMe
       SSD, you could specify:
 
-         ``sudo sh acrn_quick_setup.sh -s 31470 -e /dev/nvme0n1p1``
+         ``sudo sh acrn_quick_setup.sh -s 32080 -e /dev/nvme0n1p1``
 
       If you don't need to reboot automatically after setting up the Service VM, you
       can specify the ``-d`` parameter (don't reboot).
 
-         ``sudo sh acrn_quick_setup.sh -s 31470 -e /dev/nvme0n1p1 -d``
+         ``sudo sh acrn_quick_setup.sh -s 32080 -e /dev/nvme0n1p1 -d``
 
 #. After the system reboots, log in as the **clear** user. Verify that the Service VM 
    booted successfully by checking the ``dmesg`` log:
@@ -145,10 +145,10 @@ Follow these steps:
 
    .. code-block:: console
 
-      $ sudo sh acrn_quick_setup.sh -u 31470
+      $ sudo sh acrn_quick_setup.sh -u 32080
       Password:
       Upgrading User VM...
-      Downloading User VM image: https://download.clearlinux.org/releases/31470/clear/clear-31470-kvm.img.xz
+      Downloading User VM image: https://download.clearlinux.org/releases/32080/clear/clear-32080-kvm.img.xz
         % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                        Dload  Upload   Total   Spent    Left  Speed
        14  248M   14 35.4M    0     0   851k      0  0:04:57  0:00:42  0:04:15  293k
@@ -157,13 +157,13 @@ Follow these steps:
 
    .. code-block:: console
 
-      Unxz User VM image: clear-31470-kvm.img.xz
-      Get User VM image: clear-31470-kvm.img
+      Unxz User VM image: clear-32080-kvm.img.xz
+      Get User VM image: clear-32080-kvm.img
       Upgrade User VM done...
       Now you can run this command to start User VM...
-      $ sudo /root/launch_uos_31470.sh
+      $ sudo /root/launch_uos_32080.sh
 
-#. Launch the User VM using the customized ``launch_uos_31470.sh`` script (with sudo):
+#. Launch the User VM using the customized ``launch_uos_32080.sh`` script (with sudo):
 
    .. code-block:: console
 
@@ -186,7 +186,7 @@ Follow these steps:
    .. code-block:: console
 
       # uname -r
-      4.19.78-95.iot-lts2018
+      4.19.94-102.iot-lts2018-sos
       # ls /dev/acrn*
       ls: cannot access '/dev/acrn*': No such file or directory
 
@@ -196,7 +196,7 @@ Follow these steps:
    .. code-block:: console
 
       $ uname -r
-      4.19.78-95.iot-lts2018-sos
+      4.19.94-102.iot-lts2018-sos
       $ ls /dev/acrn*
       /dev/acrn_hvlog_cur_0   /dev/acrn_hvlog_cur_2  /dev/acrn_trace_0  /dev/acrn_trace_2  /dev/acrn_vhm
       /dev/acrn_hvlog_cur_1   /dev/acrn_hvlog_cur_3  /dev/acrn_trace_1  /dev/acrn_trace_3
@@ -223,18 +223,18 @@ and User VM manually. Follow these steps:
 
    .. note::
       When enabled, the Clear Linux OS installer automatically checks for updates and installs the latest version 
-      available on your system. To use a specific version (such as 31470), enter the following command after the 
+      available on your system. To use a specific version (such as 32080), enter the following command after the 
       installation is complete:
 
-      ``sudo swupd repair --picky -V 31470``
+      ``sudo swupd repair --picky -V 32080``
 
 #. If you have an older version of Clear Linux OS already installed
    on your hardware, use this command to upgrade the Clear Linux OS
-   to version 31470 (or newer):
+   to version 32080 (or newer):
 
    .. code-block:: none
 
-      $ sudo swupd update -V 31470     # or newer version
+      $ sudo swupd update -V 32080     # or newer version
 
 #. Use the ``sudo swupd bundle-add`` command to add these Clear Linux OS bundles:
 
@@ -268,8 +268,8 @@ partition. Follow these steps:
       bootloaderx64.efi
       freestanding-00-intel-ucode.cpio
       freestanding-i915-firmware.cpio.xz
-      kernel-org.clearlinux.iot-lts2018-sos.4.19.78-95
-      kernel-org.clearlinux.native.5.3.8-854
+      kernel-org.clearlinux.iot-lts2018-sos.4.19.94-102
+      kernel-org.clearlinux.native.5.4.11-890
       loaderx64.efi
 
    .. note::
@@ -361,18 +361,18 @@ partition. Follow these steps:
    .. code-block:: none
 
       $ sudo clr-boot-manager list-kernels
-      * org.clearlinux.native.5.3.8-854
-        org.clearlinux.iot-lts2018-sos.4.19.78-95
+      * org.clearlinux.native.5.4.11-890
+        org.clearlinux.iot-lts2018-sos.4.19.94-102
 
-   Set the default kernel from ``org.clearlinux.native.5.3.8-854`` to
-   ``org.clearlinux.iot-lts2018-sos.4.19.78-95``:
+   Set the default kernel from ``org.clearlinux.native.5.4.11-890`` to
+   ``org.clearlinux.iot-lts2018-sos.4.19.94-102``:
 
    .. code-block:: none
 
-      $ sudo clr-boot-manager set-kernel org.clearlinux.iot-lts2018-sos.4.19.78-95
+      $ sudo clr-boot-manager set-kernel org.clearlinux.iot-lts2018-sos.4.19.94-102
       $ sudo clr-boot-manager list-kernels
-        org.clearlinux.native.5.3.8-854
-      * org.clearlinux.iot-lts2018-sos.4.19.78-95
+        org.clearlinux.native.5.4.11-890
+      * org.clearlinux.iot-lts2018-sos.4.19.94-102
 
 #. Reboot and wait until the boot menu is displayed, as shown below:
 
@@ -380,8 +380,8 @@ partition. Follow these steps:
       :emphasize-lines: 1
       :caption: ACRN Service OS Boot Menu
 
-      Clear Linux OS (Clear-linux-iot-lts2018-sos-4.19.78-95)
-      Clear Linux OS (Clear-linux-native.5.3.8-854)
+      Clear Linux OS (Clear-linux-iot-lts2018-sos-4.19.94-102)
+      Clear Linux OS (Clear-linux-native.5.4.11-890)
       Reboot Into Firmware Interface
 
 #. After booting up the ACRN hypervisor, the Service OS launches
@@ -423,7 +423,7 @@ Set up Reference User VM
       $ cd ~
       $ mkdir uos
       $ cd uos
-      $ curl https://download.clearlinux.org/releases/31470/clear/clear-31470-kvm.img.xz -o uos.img.xz
+      $ curl https://download.clearlinux.org/releases/32080/clear/clear-32080-kvm.img.xz -o uos.img.xz
 
    Note that if you want to use or try out a newer version of Clear Linux OS as the User VM, download the 
    latest from `http://download.clearlinux.org/image/`. 
