@@ -735,22 +735,14 @@ void save_xsave_area(struct ext_context *ectx)
 {
 	ectx->xcr0 = read_xcr(0);
 	ectx->xss = msr_read(MSR_IA32_XSS);
-	asm volatile("xsaves %0"
-			: : "m" (ectx->xs_area),
-			"d" (UINT32_MAX),
-			"a" (UINT32_MAX):
-			"memory");
+	xsaves(&ectx->xs_area, UINT64_MAX);
 }
 
 void rstore_xsave_area(const struct ext_context *ectx)
 {
 	write_xcr(0, ectx->xcr0);
 	msr_write(MSR_IA32_XSS, ectx->xss);
-	asm volatile("xrstors %0"
-			: : "m" (ectx->xs_area),
-			"d" (UINT32_MAX),
-			"a" (UINT32_MAX):
-			"memory");
+	xrstors(&ectx->xs_area, UINT64_MAX);
 }
 
 /* TODO:

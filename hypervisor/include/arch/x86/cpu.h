@@ -633,6 +633,25 @@ static inline uint64_t read_xcr(int32_t reg)
 	asm volatile ("xgetbv ": "=a"(xcrl), "=d"(xcrh) : "c" (reg));
 	return (((uint64_t)xcrh << 32U) | xcrl);
 }
+
+static inline void xsaves(struct xsave_area *region_addr, uint64_t mask)
+{
+	asm volatile("xsaves %0"
+			: : "m" (*(region_addr)),
+			"d" ((uint32_t)(mask >> 32U)),
+			"a" ((uint32_t)mask):
+			"memory");
+}
+
+static inline void xrstors(const struct xsave_area *region_addr, uint64_t mask)
+{
+	asm volatile("xrstors %0"
+			: : "m" (*(region_addr)),
+			"d" ((uint32_t)(mask >> 32U)),
+			"a" ((uint32_t)mask):
+			"memory");
+}
+
 /*
  * stac/clac pair is used to access guest's memory protected by SMAP,
  * following below flow:
