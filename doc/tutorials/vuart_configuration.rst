@@ -178,60 +178,21 @@ For a post-launched VM, the ``acrn-dm`` cmdline also provides a COM port configu
 
 This adds ``com1 (0x3f8)`` and ``com2 (0x2f8)`` modules in the Guest VM, including the ACPI info for these two ports.
 
-**Data Flow 1:**
+**Data Flows**
 
-When the post-launched VM is started with the vUART enabled in the hypervisor configuration file only, the data flow is shown as below:
+Three different data flows exist based on how the post-launched VM is started, as shown in the diagram below.
 
-.. figure:: images/vuart-config-3.png
+Figure 1 data flow: The post-launched VM is started with the vUART enabled in the hypervisor configuration file only.
+
+Figure 2 data flow: The post-launched VM is started with the ``acrn-dm`` cmdline of ``-s 1:0,lpc -l com1,stdio`` only.
+
+Figure 3 data flow: The post-launched VM is started with both vUART enabled and the ``acrn-dm`` cmdline of ``-s 1:0,lpc -l com1,stdio``.
+
+.. figure:: images/vuart-config-post-launch.png
    :align: center
-   :name: PLVM1-vuart
-
-**acrn-dm cmdline:** N/A
-
-.. code-block:: none
-
-   vm_configuration.c: .vuart[0] = {
-                                    .type = VUART_LEGACY_PIO,
-                                    .addr.port_base = COM1_BASE,
-                                    .irq = COM1_IRQ,
-                                   },
-
-**Data Flow 2:**
-
-When the post-launched VM is started with the ``acrn-dm`` cmdline of ``-s 1:0,lpc -l com1,stdio`` only, the data flow is shown as below:
-
-.. figure:: images/vuart-config-4.png
-   :align: center
-   :name: PLVM2-vuart
-
-**acrn-dm cmdline:** ``-s 1:0,lpc -l com1,stdio``
-
-.. code-block:: none
-
-   vm_configuration.c: .vuart[0] = {
-                                   .type = VUART_LEGACY_PIO,
-                                   .addr.port_base = INVALID_COM_BASE,
-                                   },
-
-**Date Flow 3:**
-
-When the post-launched VM is started with both vUART enabled and the ``acrn-dm`` cmdline of ``-s 1:0,lpc -l com1,stdio``, the data flow is show as below:
-
-.. figure:: images/vuart-config-5.png
-   :align: center
-   :name: PLVM3-vuart
-
-**acrn-dm cmdline:** ``-s 1:0,lpc -l com1,stdio``
-
-.. code-block:: none
-
-   vm_configuration.c: .vuart[0] = {
-                                    .type = VUART_LEGACY_PIO,
-                                    .addr.port_base = COM1_BASE,
-                                    .irq = COM1_IRQ,
-                                   },
+   :name: Post-Launched VMs
 
 .. note::
-   For operating systems such as VxWorks and Windows that depend on the ACPI table to probe the uart driver, adding the vuart configuration in the hypervisor is not sufficient. Currently, we recommend that you use the configuration in Data Flow 3. This may be refined in the future.
+   For operating systems such as VxWorks and Windows that depend on the ACPI table to probe the uart driver, adding the vuart configuration in the hypervisor is not sufficient. Currently, we recommend that you use the configuration in the figure 3 data flow. This may be refined in the future.
 
 
