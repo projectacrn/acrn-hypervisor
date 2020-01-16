@@ -883,6 +883,66 @@ int32_t hcall_deassign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 }
 
 /**
+ * @brief Assign one PCI dev to a VM.
+ *
+ * @param vm Pointer to VM data structure
+ * @param vmid ID of the VM
+ * @param param guest physical address. This gpa points to data structure of
+ *              acrn_assign_pcidev including assign PCI device info
+ *
+ * @pre Pointer vm shall point to SOS_VM
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_assign_pcidev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
+{
+	int32_t ret = -EINVAL;
+	struct acrn_assign_pcidev pcidev;
+	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
+
+	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+		if (copy_from_gpa(vm, &pcidev, param, sizeof(pcidev)) != 0) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+		} else {
+			ret = vpci_assign_pcidev(target_vm, &pcidev);
+	        }
+	} else {
+		pr_err("%s, vm[%d] is invalid\n", __func__, vm->vm_id);
+	}
+
+	return ret;
+}
+
+/**
+ * @brief Deassign one PCI dev from a VM.
+ *
+ * @param vm Pointer to VM data structure
+ * @param vmid ID of the VM
+ * @param param guest physical address. This gpa points to data structure of
+ *              acrn_assign_pcidev including deassign PCI device info
+ *
+ * @pre Pointer vm shall point to SOS_VM
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_deassign_pcidev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
+{
+	int32_t ret = -EINVAL;
+	struct acrn_assign_pcidev pcidev;
+	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
+
+	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+		if (copy_from_gpa(vm, &pcidev, param, sizeof(pcidev)) != 0) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+		} else {
+			ret = vpci_deassign_pcidev(target_vm, &pcidev);
+	        }
+	} else {
+		pr_err("%s, vm[%d] is invalid\n", __func__, vm->vm_id);
+	}
+
+	return ret;
+}
+
+/**
  * @brief Set interrupt mapping info of ptdev.
  *
  * @param vm Pointer to VM data structure
