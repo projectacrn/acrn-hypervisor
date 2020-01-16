@@ -273,6 +273,32 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 int32_t hcall_deassign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 
 /**
+ * @brief Assign one PCI dev to VM.
+ *
+ * @param vm Pointer to VM data structure
+ * @param vmid ID of the VM
+ * @param param guest physical address. This gpa points to data structure of
+ *              acrn_assign_pcidev including assign PCI device info
+ *
+ * @pre Pointer vm shall point to SOS_VM
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_assign_pcidev(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
+
+/**
+ * @brief Deassign one PCI dev to VM.
+ *
+ * @param vm Pointer to VM data structure
+ * @param vmid ID of the VM
+ * @param param guest physical address. This gpa points to data structure of
+ *              acrn_assign_pcidev including deassign PCI device info
+ *
+ * @pre Pointer vm shall point to SOS_VM
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_deassign_pcidev(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
+
+/**
  * @brief Set interrupt mapping info of ptdev.
  *
  * @param vm Pointer to VM data structure

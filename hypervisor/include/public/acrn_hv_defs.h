@@ -64,6 +64,8 @@
 #define HC_VM_PCI_MSIX_REMAP        BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x02UL)
 #define HC_SET_PTDEV_INTR_INFO      BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x03UL)
 #define HC_RESET_PTDEV_INTR_INFO    BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x04UL)
+#define HC_ASSIGN_PCIDEV            BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x05UL)
+#define HC_DEASSIGN_PCIDEV          BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x06UL)
 
 /* DEBUG */
 #define HC_ID_DBG_BASE              0x60UL
@@ -270,6 +272,39 @@ struct hc_ptdev_irq {
 		} msix;
 	} is;	/* irq source */
 } __aligned(8);
+
+/**
+ * @brief Info to assign or deassign PCI for a VM
+ *
+ * the parameter for HC_ASSIGN_PCIDEV or HC_DEASSIGN_PCIDEV hypercall
+ */
+struct acrn_assign_pcidev {
+	/** reversed for externed compatibility */
+	uint32_t rsvd1;
+
+	/** virtual BDF# of the pass-through PCI device */
+	uint16_t virt_bdf;
+
+	/** physical BDF# of the pass-through PCI device */
+	uint16_t phys_bdf;
+
+	/** the PCI Interrupt Line, initialized by ACRN-DM, which is RO and
+	 *  ideally not used for pass-through MSI/MSI-x devices.
+	 */
+	uint8_t intr_line;
+
+	/** the PCI Interrupt Pin, initialized by ACRN-DM, which is RO and
+	 *  ideally not used for pass-through MSI/MSI-x devices.
+	 */
+	uint8_t intr_pin;
+
+	/** the base address of the PCI BAR, initialized by ACRN-DM. */
+	uint32_t bar[6];
+
+	/** reserved for extension */
+	uint32_t rsvd2[6];
+
+} __attribute__((aligned(8)));
 
 /**
  * Hypervisor api version info, return it for HC_GET_API_VERSION hypercall

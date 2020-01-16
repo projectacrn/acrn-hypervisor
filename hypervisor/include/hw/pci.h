@@ -90,6 +90,8 @@
 #define PCIR_CAP_PTR_CARDBUS  0x14U
 #define PCI_BASE_ADDRESS_MEM_MASK (~0x0fUL)
 #define PCI_BASE_ADDRESS_IO_MASK  (~0x03UL)
+#define PCIR_INTERRUPT_LINE   0x3cU
+#define PCIR_INTERRUPT_PIN    0x3dU
 
 /* config registers for header type 1 (PCI-to-PCI bridge) devices */
 #define PCIR_PRIBUS_1         0x18U
