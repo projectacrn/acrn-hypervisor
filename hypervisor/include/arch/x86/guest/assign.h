@@ -125,27 +125,6 @@ int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, uint32_t
 void ptirq_remove_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, bool pic_pin);
 
 /**
- * @brief Add interrupt remapping entry/entries for MSI/MSI-x as pre-hold mapping.
- *
- * Add pre-hold mapping of the given number of vectors between the given physical and virtual BDF for the given vm.
- * Except sos_vm, Device Model should call this function to pre-hold ptdev MSI/MSI-x.
- * The entry is identified by phys_bdf:msi_idx, one entry vs. one phys_bdf:msi_idx.
- *
- * @param[in] vm pointer to acrn_vm
- * @param[in] virt_bdf virtual bdf associated with the passthrough device
- * @param[in] phys_bdf physical bdf associated with the passthrough device
- * @param[in] vector_count number of vectors
- *
- * @return
- *    - 0: on success
- *    - \p -ENODEV: failed to add the remapping entry
- *
- * @pre vm != NULL
- *
- */
-int32_t ptirq_add_msix_remapping(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bdf, uint32_t vector_count);
-
-/**
  * @brief Remove interrupt remapping entry/entries for MSI/MSI-x.
  *
  * Remove the mapping of given number of vectors of the given virtual BDF for the given vm.

@@ -251,9 +251,6 @@ for UOS.
 .. doxygenfunction:: ptirq_remove_intx_remapping
    :project: Project ACRN
 
-.. doxygenfunction:: ptirq_add_msix_remapping
-   :project: Project ACRN
-
 .. doxygenfunction:: ptirq_remove_msix_remapping
    :project: Project ACRN
 
