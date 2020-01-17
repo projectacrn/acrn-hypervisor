@@ -395,6 +395,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	bool keep_gsi = false;
 	bool need_reset = true;
 	struct acrn_assign_pcidev pcidev = {};
+	uint16_t vendor = 0, device = 0;
 
 	ptdev = NULL;
 	error = -EINVAL;
@@ -467,12 +468,20 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata16(dev, PCIR_MINGNT,
 			  read_config(ptdev->phys_dev, PCIR_MINGNT, 2));
 
+
+	/* Once this device is assigned to other guest, the original guest can't access it again
+	 * So we need to cache verdor and device for filling DSDT.
+	 */
+	vendor = read_config(ptdev->phys_dev, PCIR_VENDOR, 2);
+	device = read_config(ptdev->phys_dev, PCIR_DEVICE, 2);
+	pci_set_cfgdata16(dev, PCIR_VENDOR, vendor);
+	pci_set_cfgdata16(dev, PCIR_DEVICE, device);
+
 #if AUDIO_NHLT_HACK
 	/* device specific handling:
 	 * audio: enable NHLT ACPI table
 	 */
-	if (read_config(ptdev->phys_dev, PCIR_VENDOR, 2) == 0x8086 &&
-		read_config(ptdev->phys_dev, PCIR_DEVICE, 2) == 0x5a98)
+	if (vendor == 0x8086 && device == 0x5a98)
 		acpi_table_enable(NHLT_ENTRY_NO);
 #endif
 
@@ -1284,15 +1293,14 @@ write_dsdt_sdc(struct pci_vdev *dev)
 static void
 passthru_write_dsdt(struct pci_vdev *dev)
 {
-	struct passthru_dev *ptdev = (struct passthru_dev *) dev->arg;
-	uint32_t vendor = 0, device = 0;
+	uint16_t vendor = 0, device = 0;
 
-	vendor = read_config(ptdev->phys_dev, PCIR_VENDOR, 2);
+	vendor = pci_get_cfgdata16(dev, PCIR_VENDOR);
 
 	if (vendor != 0x8086)
 		return;
 
-	device = read_config(ptdev->phys_dev, PCIR_DEVICE, 2);
+	device = pci_get_cfgdata16(dev, PCIR_DEVICE);
 
 	/* Provides ACPI extra info */
 	if (device == 0x5aaa)
