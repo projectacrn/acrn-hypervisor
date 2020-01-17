@@ -341,7 +341,8 @@ static struct pci_vdev *find_vdev(struct acrn_vpci *vpci, union pci_bdf bdf)
 	struct pci_vdev *vdev = pci_find_vdev(vpci, bdf);
 
 	if ((vdev != NULL) && (vdev->vpci != vpci)) {
-		vdev = vdev->new_owner;
+		/* If the device is assigned to other guest, we could not access it */
+		vdev = NULL;
 	}
 
 	return vdev;
