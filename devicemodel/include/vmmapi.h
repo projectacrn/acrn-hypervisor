@@ -123,17 +123,12 @@ int	vm_run(struct vmctx *ctx);
 int	vm_suspend(struct vmctx *ctx, enum vm_suspend_how how);
 int	vm_lapic_msi(struct vmctx *ctx, uint64_t addr, uint64_t msg);
 int	vm_set_gsi_irq(struct vmctx *ctx, int gsi, uint32_t operation);
-int	vm_assign_ptdev(struct vmctx *ctx, int bus, int slot, int func);
-int	vm_unassign_ptdev(struct vmctx *ctx, int bus, int slot, int func);
 int	vm_assign_pcidev(struct vmctx *ctx, struct acrn_assign_pcidev *pcidev);
 int	vm_deassign_pcidev(struct vmctx *ctx, struct acrn_assign_pcidev *pcidev);
 int	vm_map_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
 			  vm_paddr_t gpa, size_t len, vm_paddr_t hpa);
 int	vm_unmap_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
 			  vm_paddr_t gpa, size_t len, vm_paddr_t hpa);
-int	vm_set_ptdev_msix_info(struct vmctx *ctx, struct ic_ptdev_irq *ptirq);
-int	vm_reset_ptdev_msix_info(struct vmctx *ctx, uint16_t virt_bdf, uint16_t phys_bdf,
-	int vector_count);
 int	vm_set_ptdev_intx_info(struct vmctx *ctx, uint16_t virt_bdf,
 	uint16_t phys_bdf, int virt_pin, int phys_pin, bool pic_pin);
 int	vm_reset_ptdev_intx_info(struct vmctx *ctx, uint16_t virt_bdf,

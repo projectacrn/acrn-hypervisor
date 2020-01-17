@@ -219,15 +219,6 @@ CFGREAD(struct pci_vdev *dev, int coff, int bytes)
 }
 
 static inline int
-is_pci_gvt(struct pci_vdev *dev)
-{
-	if (dev == NULL || strncmp(dev->dev_ops->class_name, "pci-gvt",7))
-		return 0;
-	else
-		return 1;
-}
-
-static inline int
 is_pt_pci(struct pci_vdev *dev)
 {
 	if (dev == NULL || strncmp(dev->dev_ops->class_name, "passthru",8))
