@@ -815,74 +815,6 @@ int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 }
 
 /**
- * @brief Assign one passthrough dev to VM.
- *
- * @param vm Pointer to VM data structure
- * @param vmid ID of the VM
- * @param param the physical BDF of the assigning ptdev
- *
- * @pre Pointer vm shall point to SOS_VM
- * @return 0 on success, non-zero on error.
- */
-int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
-{
-	int32_t ret = 0;
-	union pci_bdf bdf;
-	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
-	struct pci_vdev *vdev;
-
-	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
-		bdf.value = (uint16_t)param;
-
-		spinlock_obtain(&vm->vpci.lock);
-		vdev = pci_find_vdev(&vm->vpci, bdf);
-		if ((vdev == NULL) || (vdev->pdev == NULL)) {
-			pr_fatal("%s %x:%x.%x not found\n", __func__, bdf.bits.b,  bdf.bits.d,  bdf.bits.f);
-			ret = -EPERM;
-		} else {
-			/* ToDo: Each PT device must support one type reset */
-			if (!vdev->pdev->has_pm_reset && !vdev->pdev->has_flr && !vdev->pdev->has_af_flr) {
-				pr_fatal("%s %x:%x.%x not support FLR or not support PM reset\n",
-					__func__, bdf.bits.b,  bdf.bits.d,  bdf.bits.f);
-			}
-		}
-		spinlock_release(&vm->vpci.lock);
-		if (ret == 0) {
-			ret = move_pt_device(vm->iommu, target_vm->iommu, bdf.fields.bus, bdf.fields.devfun);
-		}
-	} else {
-		pr_err("%s, target vm is invalid\n", __func__);
-		ret = -EINVAL;
-	}
-
-	return ret;
-}
-
-/**
- * @brief Deassign one passthrough dev from VM.
- *
- * @param vm Pointer to VM data structure
- * @param vmid ID of the VM
- * @param param the physical BDF of the deassigning ptdev
- *
- * @pre Pointer vm shall point to SOS_VM
- * @return 0 on success, non-zero on error.
- */
-int32_t hcall_deassign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
-{
-	int32_t ret = -1;
-	union pci_bdf bdf;
-	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
-
-	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
-		bdf.value = (uint16_t)param;
-		ret = move_pt_device(target_vm->iommu, vm->iommu, bdf.fields.bus, bdf.fields.devfun);
-	}
-
-	return ret;
-}
-
-/**
  * @brief Assign one PCI dev to a VM.
  *
  * @param vm Pointer to VM data structure
@@ -964,20 +896,20 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t pa
 		if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else {
-			/* Inform vPCI about the interupt info changes */
-			vpci_set_ptdev_intr_info(target_vm, irq.virt_bdf, irq.phys_bdf);
-
 			if (irq.type == IRQ_INTX) {
-				ret = ptirq_add_intx_remapping(target_vm, irq.is.intx.virt_pin,
-						irq.is.intx.phys_pin, irq.is.intx.pic_pin);
-			} else if (((irq.type == IRQ_MSI) || (irq.type == IRQ_MSIX)) &&
-					(irq.is.msix.vector_cnt <= CONFIG_MAX_MSIX_TABLE_NUM)) {
-				ret = ptirq_add_msix_remapping(target_vm,
-						irq.virt_bdf, irq.phys_bdf,
-						irq.is.msix.vector_cnt);
+				struct pci_vdev *vdev;
+				union pci_bdf bdf = {.value = irq.virt_bdf};
+				struct acrn_vpci *vpci = &target_vm->vpci;
+
+				spinlock_obtain(&vpci->lock);
+				vdev = pci_find_vdev(vpci, bdf);
+				spinlock_release(&vpci->lock);
+				if ((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf)) {
+					ret = ptirq_add_intx_remapping(target_vm, irq.intx.virt_pin,
+						irq.intx.phys_pin, irq.intx.pic_pin);
+				}
 			} else {
-				pr_err("%s: Invalid irq type: %u or MSIX vector count: %u\n",
-						__func__, irq.type, irq.is.msix.vector_cnt);
+				pr_err("%s: Invalid irq type: %u\n", __func__, irq.type);
 			}
 		}
 	}
@@ -1006,28 +938,22 @@ hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 
 		if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);
-		} else if (irq.type == IRQ_INTX) {
-			vpci_reset_ptdev_intr_info(target_vm, irq.virt_bdf, irq.phys_bdf);
-			ptirq_remove_intx_remapping(target_vm,
-					irq.is.intx.virt_pin,
-					irq.is.intx.pic_pin);
-			ret = 0;
-		} else if (((irq.type == IRQ_MSI) || (irq.type == IRQ_MSIX)) &&
-				(irq.is.msix.vector_cnt <= CONFIG_MAX_MSIX_TABLE_NUM)) {
-
-			/*
-			 * Inform vPCI about the interupt info changes
-			 * TODO: Need to add bdf info for IRQ_INTX type in devicemodel
-			 */
-			vpci_reset_ptdev_intr_info(target_vm, irq.virt_bdf, irq.phys_bdf);
-
-			ptirq_remove_msix_remapping(target_vm,
-					irq.virt_bdf,
-					irq.is.msix.vector_cnt);
-			ret = 0;
 		} else {
-			pr_err("%s: Invalid irq type: %u or MSIX vector count: %u\n",
-					__func__, irq.type, irq.is.msix.vector_cnt);
+			if (irq.type == IRQ_INTX) {
+				struct pci_vdev *vdev;
+				union pci_bdf bdf = {.value = irq.virt_bdf};
+				struct acrn_vpci *vpci = &target_vm->vpci;
+
+				spinlock_obtain(&vpci->lock);
+				vdev = pci_find_vdev(vpci, bdf);
+				spinlock_release(&vpci->lock);
+				if ((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf)) {
+					ptirq_remove_intx_remapping(target_vm, irq.intx.virt_pin, irq.intx.pic_pin);
+					ret = 0;
+				}
+			} else {
+				pr_err("%s: Invalid irq type: %u\n", __func__, irq.type);
+			}
 		}
 	}
 

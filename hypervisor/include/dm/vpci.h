@@ -132,8 +132,6 @@ extern const struct pci_vdev_ops vhostbridge_ops;
 void vpci_init(struct acrn_vm *vm);
 void vpci_cleanup(struct acrn_vm *vm);
 struct pci_vdev *pci_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf);
-void vpci_set_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
-void vpci_reset_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
 struct acrn_assign_pcidev;
 int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pcidev);
 int32_t vpci_deassign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pcidev);

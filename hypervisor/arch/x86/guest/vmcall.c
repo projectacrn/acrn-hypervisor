@@ -167,20 +167,6 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 		}
 		break;
 
-	case HC_ASSIGN_PTDEV:
-		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
-			ret = hcall_assign_ptdev(sos_vm, vm_id, param2);
-		}
-		break;
-
-	case HC_DEASSIGN_PTDEV:
-		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
-			ret = hcall_deassign_ptdev(sos_vm, vm_id, param2);
-		}
-		break;
-
 	case HC_ASSIGN_PCIDEV:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
 		if (vmid_is_valid) {
