@@ -194,30 +194,16 @@ struct ic_ptdev_irq {
 	uint16_t virt_bdf;	/* IN: Device virtual BDF# */
 	/** physical bdf description of pass thru device */
 	uint16_t phys_bdf;	/* IN: Device physical BDF# */
-	union {
-		/** info of IOAPIC/PIC interrupt */
-		struct {
-			/** virtual IOAPIC pin */
-			uint32_t virt_pin;
-			/** physical IOAPIC pin */
-			uint32_t phys_pin;
-			/** PIC pin */
-			uint32_t is_pic_pin;
-		} intx;
 
-		/** info of MSI/MSIX interrupt */
-		struct {
-                        /* Keep this filed on top of msix */
-			/** vector count of MSI/MSIX */
-			uint32_t vector_cnt;
-
-			/** size of MSIX table(round up to 4K) */
-			uint32_t table_size;
-
-			/** physical address of MSIX table */
-			uint64_t table_paddr;
-		} msix;
-	};
+	/** info of IOAPIC/PIC interrupt */
+	struct {
+		/** virtual IOAPIC pin */
+		uint32_t virt_pin;
+		/** physical IOAPIC pin */
+		uint32_t phys_pin;
+		/** PIC pin */
+		uint32_t is_pic_pin;
+	} intx;
 };
 
 /**
