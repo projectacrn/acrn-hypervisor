@@ -194,43 +194,44 @@ int32_t vmsix_handle_table_mmio_access(struct io_request *io_req, void *handler_
 	void *hva;
 
 	vdev = (struct pci_vdev *)handler_private_data;
-	/* This device is assigned to post-launched VM from SOS */
-	if (vdev->new_owner != NULL) {
-		vdev = vdev->new_owner;
-	}
-	offset = mmio->address - vdev->msix.mmio_gpa;
+	/* This device has not be assigned to other OS */
+	if (vdev->new_owner == NULL) {
+		offset = mmio->address - vdev->msix.mmio_gpa;
 
-	if (msixtable_access(vdev, (uint32_t)offset)) {
-		rw_vmsix_table(vdev, mmio, (uint32_t)offset);
-	} else {
-		hva = hpa2hva(vdev->msix.mmio_hpa + offset);
+		if (msixtable_access(vdev, (uint32_t)offset)) {
+			rw_vmsix_table(vdev, mmio, (uint32_t)offset);
+		} else {
+			hva = hpa2hva(vdev->msix.mmio_hpa + offset);
 
-		/* Only DWORD and QWORD are permitted */
-		if ((mmio->size != 4U) && (mmio->size != 8U)) {
-			pr_err("%s, Only DWORD and QWORD are permitted", __func__);
-			ret = -EINVAL;
-		} else if (hva != NULL) {
-			stac();
-			/* MSI-X PBA and Capability Table could be in the same range */
-			if (mmio->direction == REQUEST_READ) {
-				/* mmio->size is either 4U or 8U */
-				if (mmio->size == 4U) {
-					mmio->value = (uint64_t)mmio_read32((const void *)hva);
-				} else {
-					mmio->value = mmio_read64((const void *)hva);
+			/* Only DWORD and QWORD are permitted */
+			if ((mmio->size == 4U) || (mmio->size == 8U)) {
+				if (hva != NULL) {
+					stac();
+					/* MSI-X PBA and Capability Table could be in the same range */
+					if (mmio->direction == REQUEST_READ) {
+						/* mmio->size is either 4U or 8U */
+						if (mmio->size == 4U) {
+							mmio->value = (uint64_t)mmio_read32((const void *)hva);
+						} else {
+							mmio->value = mmio_read64((const void *)hva);
+						}
+					} else {
+						/* mmio->size is either 4U or 8U */
+						if (mmio->size == 4U) {
+							mmio_write32((uint32_t)(mmio->value), (void *)hva);
+						} else {
+							mmio_write64(mmio->value, (void *)hva);
+						}
+					}
+					clac();
 				}
 			} else {
-				/* mmio->size is either 4U or 8U */
-				if (mmio->size == 4U) {
-					mmio_write32((uint32_t)(mmio->value), (void *)hva);
-				} else {
-					mmio_write64(mmio->value, (void *)hva);
-				}
+				pr_err("%s, Only DWORD and QWORD are permitted", __func__);
+				ret = -EINVAL;
 			}
-			clac();
-		} else {
-			/* No other state currently, do nothing */
 		}
+	} else {
+		ret = -EFAULT;
 	}
 
 	return ret;
