@@ -480,6 +480,18 @@ vm_unassign_ptdev(struct vmctx *ctx, int bus, int slot, int func)
 }
 
 int
+vm_assign_pcidev(struct vmctx *ctx, struct acrn_assign_pcidev *pcidev)
+{
+	return ioctl(ctx->fd, IC_ASSIGN_PCIDEV, pcidev);
+}
+
+int
+vm_deassign_pcidev(struct vmctx *ctx, struct acrn_assign_pcidev *pcidev)
+{
+	return ioctl(ctx->fd, IC_DEASSIGN_PCIDEV, pcidev);
+}
+
+int
 vm_map_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
 		   vm_paddr_t gpa, size_t len, vm_paddr_t hpa)
 {

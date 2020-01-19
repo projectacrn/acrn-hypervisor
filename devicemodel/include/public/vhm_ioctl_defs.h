@@ -105,6 +105,8 @@
 #define IC_VM_PCI_MSIX_REMAP           _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x02)
 #define IC_SET_PTDEV_INTR_INFO         _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x03)
 #define IC_RESET_PTDEV_INTR_INFO       _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x04)
+#define IC_ASSIGN_PCIDEV               _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x05)
+#define IC_DEASSIGN_PCIDEV             _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x06)
 
 /* Power management */
 #define IC_ID_PM_BASE                   0x60UL
@@ -146,6 +148,38 @@ struct vm_memmap {
 	/** memory mapping attribute */
 	uint32_t prot;	/* RWX */
 };
+
+/**
+ * @brief Info to assign or deassign PCI for a VM
+ *
+ */
+struct acrn_assign_pcidev {
+	/** reversed for externed compatibility */
+	uint32_t rsvd1;
+
+	/** virtual BDF# of the pass-through PCI device */
+	uint16_t virt_bdf;
+
+	/** physical BDF# of the pass-through PCI device */
+	uint16_t phys_bdf;
+
+	/** the PCI Interrupt Line, initialized by ACRN-DM, which is RO and
+	 *  ideally not used for pass-through MSI/MSI-x devices.
+	 */
+	uint8_t intr_line;
+
+	/** the PCI Interrupt Pin, initialized by ACRN-DM, which is RO and
+	 *  ideally not used for pass-through MSI/MSI-x devices.
+	 */
+	uint8_t intr_pin;
+
+	/** the base address of the PCI BAR, initialized by ACRN-DM. */
+	uint32_t bar[6];
+
+	/** reserved for extension */
+	uint32_t rsvd2[6];
+
+} __attribute__((aligned(8)));
 
 /**
  * @brief pass thru device irq data structure
