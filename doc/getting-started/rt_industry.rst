@@ -48,7 +48,7 @@ for the RTVM.
      #. Unmount all the ``/dev/sdc`` partitions and burn the image onto the USB drive::
 
         $ umount /dev/sdc* 2>/dev/null
-        $ sudo dd if=./clear-32030-live-server.iso of=/dev/sdc oflag=sync status=progress bs=4M
+        $ sudo dd if=./clear-31670-live-server.iso of=/dev/sdc oflag=sync status=progress bs=4M
 
   #. Plug in the USB drive to the KBL NUC and boot from USB.
   #. Launch the Clear Linux OS installer boot menu.
