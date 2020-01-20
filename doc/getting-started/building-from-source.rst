@@ -36,7 +36,8 @@ the ACRN hypervisor for the following reasons:
 
 - **Keep small footprint.** Implementing dynamic parsing introduces
   hundreds or thousands of lines of code. Avoiding dynamic parsing
-  helps keep the hypervisor's Lines of Code (LOC) in a desirable range (around 30K).
+  helps keep the hypervisor's Lines of Code (LOC) in a desirable range (less
+  than 40K).
 
 - **Improve boot up time.** Dynamic parsing at runtime increases the boot
   up time. Using a build-time configuration and not dynamic parsing
