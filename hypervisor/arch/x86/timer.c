@@ -318,7 +318,13 @@ uint64_t us_to_ticks(uint32_t us)
 
 uint64_t ticks_to_us(uint64_t ticks)
 {
-	return (ticks * 1000UL) / (uint64_t)tsc_khz;
+	uint64_t us = 0UL;
+
+	if (tsc_khz != 0U ) {
+		us = (ticks * 1000UL) / (uint64_t)tsc_khz;
+	}
+
+	return us;
 }
 
 uint64_t ticks_to_ms(uint64_t ticks)

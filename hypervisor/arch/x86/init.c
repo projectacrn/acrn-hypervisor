@@ -15,6 +15,9 @@
 #include <vm.h>
 #include <logmsg.h>
 #include <seed.h>
+#include <uart16550.h>
+#include <ld_sym.h>
+#include <vboot.h>
 
 /* Push sp magic to top of stack for call trace */
 #define SWITCH_TO(rsp, to)                                              \
@@ -29,6 +32,12 @@
 /*TODO: move into debug module */
 static void init_debug_pre(void)
 {
+	/*
+	 * Enable UART as early as possible.
+	 * Then we could use printf for debugging on early boot stage.
+	 */
+	uart16550_init(true);
+
 	/* Initialize console */
 	console_init();
 
@@ -58,8 +67,6 @@ static void init_guest_mode(uint16_t pcpu_id)
 
 static void init_primary_pcpu_post(void)
 {
-	init_debug_pre();
-
 	init_seed();
 
 	init_pcpu_post(BOOT_CPU_ID);
@@ -77,6 +84,13 @@ static void init_primary_pcpu_post(void)
 void init_primary_pcpu(void)
 {
 	uint64_t rsp;
+
+	/* Clear BSS */
+	(void)memset(&ld_bss_start, 0U, (size_t)(&ld_bss_end - &ld_bss_start));
+
+	(void)parse_hv_cmdline();
+
+	init_debug_pre();
 
 	init_pcpu_pre(true);
 
