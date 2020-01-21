@@ -85,6 +85,82 @@ check_api(int fd)
 }
 
 static int devfd = -1;
+static uint64_t cpu_affinity_bitmap = 0UL;
+
+static void add_one_pcpu(int pcpu_id)
+{
+	if (cpu_affinity_bitmap & (1UL << pcpu_id)) {
+		pr_err("%s: pcpu_id %d has been allocated to this VM.\n", __func__, pcpu_id);
+		return;
+	}
+
+	cpu_affinity_bitmap |= (1UL << pcpu_id);
+}
+
+/*
+ * example options:
+ *   --pcpu_list 1,2,3
+ *   --pcpu_list 1-3
+ *   --pcpu_list 1,3,4-6
+ *   --pcpu_list 1,3,4-6,9
+ */
+int acrn_parse_pcpu_list(char *opt)
+{
+	char *str, *cp;
+	int pcpu_id;
+	int pcpu_start, pcpu_end;
+
+	cp = strdup(opt);
+	if (!cp) {
+		pr_err("%s: strdup returns NULL\n", __func__);
+		return -1;
+	}
+
+	while (cp) {
+		str = strpbrk(cp, ",-");
+
+		/* no more entries delimited by ',' or '-' */
+		if (!str) {
+			if (!dm_strtoi(cp, NULL, 10, &pcpu_id)) {
+				add_one_pcpu(pcpu_id);
+				break;
+			}
+		}
+
+		if (*str == ',') {
+			/* after this, 'cp' points to the character after ',' */
+			str = strsep(&cp, ",");
+
+			/* parse the entry before ',' */
+			if (dm_strtoi(str, NULL, 10, &pcpu_id)) {
+				return -1;
+			}
+			add_one_pcpu(pcpu_id);
+		}
+
+		if (*str == '-') {
+			str = strsep(&cp, "-");
+
+			/* parse the entry before and after '-' respectively */
+			if (dm_strtoi(str, NULL, 10, &pcpu_start) || dm_strtoi(cp, NULL, 10, &pcpu_end)) {
+				return -1;
+			}
+
+			if (pcpu_end <= pcpu_start) {
+				return -1;
+			}
+
+			for (; pcpu_start <= pcpu_end; pcpu_start++) {
+				add_one_pcpu(pcpu_start);
+			}
+
+			/* skip the ',' after pcpu_end */
+			str = strsep(&cp, ",");
+		}
+	}
+
+	return 0;
+}
 
 struct vmctx *
 vm_create(const char *name, uint64_t req_buf, int *vcpu_num)
@@ -149,6 +225,9 @@ vm_create(const char *name, uint64_t req_buf, int *vcpu_num)
 		create_vm.vm_flag &= (~GUEST_FLAG_LAPIC_PASSTHROUGH);
 		create_vm.vm_flag &= (~GUEST_FLAG_IO_COMPLETION_POLLING);
 	}
+
+	/* command line arguments specified CPU affinity could overwrite HV's static configuration */
+	create_vm.cpu_affinity = cpu_affinity_bitmap;
 
 	if (is_rtvm) {
 		create_vm.vm_flag |= GUEST_FLAG_RT;
