@@ -50,9 +50,9 @@
  * +-----------------------------------------------------+
  * | ...                                                 |
  * +-----------------------------------------------------+
- * | offset: lowmem - 4MB - 2K (kernel gdt)              |
+ * | offset: lowmem - RAMDISK_LOAD_SIZE - 2K (kernel gdt)|
  * +-----------------------------------------------------+
- * | offset: lowmem - 4MB (ramdisk image)                |
+ * | offset: lowmem - RAMDISK_LOAD_SIZE (ramdisk image)  |
  * +-----------------------------------------------------+
  * | offset: lowmem - 8K (bootargs)                      |
  * +-----------------------------------------------------+
@@ -63,8 +63,10 @@
  */
 
 /* Check default e820 table in sw_load_common.c for info about ctx->lowmem */
-#define	GDT_LOAD_OFF(ctx)	(ctx->lowmem - 4*MB - 2* KB)
-#define RAMDISK_LOAD_OFF(ctx)	(ctx->lowmem - 4*MB)
+/* use ramdisk size for ramdisk load offset, leave 8KB room for bootargs */
+#define RAMDISK_LOAD_SIZE	roundup2(ramdisk_size + 8*KB, 4*KB)
+#define GDT_LOAD_OFF(ctx)	(ctx->lowmem - RAMDISK_LOAD_SIZE - 2*KB)
+#define RAMDISK_LOAD_OFF(ctx)	(ctx->lowmem - RAMDISK_LOAD_SIZE)
 #define BOOTARGS_LOAD_OFF(ctx)	(ctx->lowmem - 8*KB)
 #define KERNEL_ENTRY_OFF(ctx)	(ctx->lowmem - 6*KB)
 #define ZEROPAGE_LOAD_OFF(ctx)	(ctx->lowmem - 4*KB)
@@ -183,10 +185,12 @@ acrn_prepare_ramdisk(struct vmctx *ctx)
 		return -1;
 	}
 
-	if (len > (BOOTARGS_LOAD_OFF(ctx) - RAMDISK_LOAD_OFF(ctx))) {
+	/* make sure there is enough room for the theoretical maximum ramdisk
+	 * size (kernel size is not yet available)
+	 */
+	if (ctx->lowmem <= (RAMDISK_LOAD_SIZE + 2*KB + KERNEL_LOAD_OFF(ctx))) {
 		pr_err("SW_LOAD ERR: the size of ramdisk file is too big"
-				" file len=0x%lx, limit is 0x%lx\n", len,
-				BOOTARGS_LOAD_OFF(ctx) - RAMDISK_LOAD_OFF(ctx));
+			" file len=0x%lx\n", len);
 		fclose(fp);
 		return -1;
 	}
