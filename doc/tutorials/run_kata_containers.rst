@@ -14,39 +14,106 @@ details on Kata Containers and how the integration with ACRN has been done.
 Pre-Requisites
 **************
 
-.. _kata prerequisites:
-   https://github.com/kata-containers/documentation/blob/master/how-to/how-to-use-kata-containers-with-acrn.md#pre-requisites
-
 #. Refer to the :ref:`ACRN supported hardware <hardware>`.
 #. For a default prebuilt ACRN binary in the E2E package, you must have 4 CPU cores or enable "CPU Hyper-Threading” in order to have 4 CPU threads for 2 CPU cores.
 #. Follow :ref:`these instructions <kbl-nuc-sdc>` to set up the ACRN Service VM.
-#. Build the ACRN kernel (required to support ``macvtap``, enabled by default since `247a3ba9243b <https://github.com/projectacrn/acrn-kernel/commit/247a3ba9243b1fd8c2d763158d55f8791a9cac94>`_).
+
+
+Install Docker
+**************
+
+.. code-block:: none
+
+   $ sudo swupd bundle-add containers-basic
+   $ sudo systemctl enable docker
+   $ sudo systemctl start docker
+
+Install Kata Containers
+***********************
+
+The Kata Containers installation from Clear Linux's official repository does not
+work with ACRN at the moment, we therefore install Kata Containers using the
+`manual installation <https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md>`_
+instructions (using a ``rootfs`` image).
+
+#. Install the build dependencies
 
    .. code-block:: none
 
-      $ git clone https://github.com/projectacrn/acrn-kernel.git
-      $ cd acrn-kernel
-      $ cp kernel_config_sos .config
-      $ make clean && make olddefconfig && make && make modules_install INSTALL_MOD_PATH=out/
+      $ sudo swupd bundle-add go-basic devpkg-elfutils
 
-   Log in to the Service VM and use the new ACRN kernel:
+#. Install Kata Containers
 
-   .. code-block:: none
+   At a high level, the `manual installation <https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md>`_
+   steps are:
 
-      $ sudo mount /dev/sda1 /mnt
-      $ sudo scp -r <user name>@<host address>:<your workspace>/acrn-kernel/arch/x86/boot/bzImage /mnt/
-      $ sudo scp -r <user name>@<host address>:<your workspace>/acrn-kernel/out/lib/modules/* /lib/modules/
-      $ conf_file=`sed -n '$ s/default //p' /mnt/loader/loader.conf`.conf
-      $ kernel_img=`sed -n 2p /mnt/loader/entries/$conf_file | cut -d'/' -f4`
-      $ sed -i "s/$kernel_img/bzImage/g" /mnt/loader/entries/$conf_file
-      $ sync && sudo umount /mnt && reboot
-
-  .. note::
-     Adjust the EFI System Partition (ESP) device node (``/dev/sda1`` in the example above) to match your system setup.
+   #. Build and install the Kata runtime
+   #. Create and install a ``rootfs``
+   #. Build and install the Kata Containers kernel
+   #. Build and install the Kata proxy
+   #. Build and install the Kata shim
 
 Configure Kata on ACRN
 **********************
 
-Follow these `kata instructions
-<https://github.com/kata-containers/documentation/blob/master/how-to/how-to-use-kata-containers-with-acrn.md>`_
-to configure and launch the Kata VMs with ACRN.
+With the core components installed on the system, the next step is to configure
+them to work seamlessly together. There are two parts to this.
+
+#. `Configure Docker <https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md#run-kata-containers-with-docker>`_
+   to recognize the ``kata-runtime`` as an additional runtime available for use.
+
+#. Configure Kata to use ACRN.
+
+   .. code-block:: none
+
+      $ sudo mkdir -p /etc/kata-containers
+      $ sudo cp /usr/share/defaults/kata-containers/configuration-acrn.toml /etc/kata-containers/configuration.toml
+
+You can verify that these configurations are effective by checking the following outputs:
+
+.. code-block:: none
+
+   $ sudo docker info | grep runtime
+   WARNING: the devicemapper storage-driver is deprecated, and will be removed in a future release.
+   WARNING: devicemapper: usage of loopback devices is strongly discouraged for production use.
+            Use `--storage-opt dm.thinpooldev` to specify a custom block storage device.
+   Runtimes: kata-runtime runc
+
+.. code-block:: none
+
+   $ kata-runtime kata-env | awk -v RS= '/\[Hypervisor\]/'
+   [Hypervisor]
+     MachineType = ""
+     Version = "DM version is: 1.5-unstable-”2020w02.5.140000p_261” (daily tag:”2020w02.5.140000p”), build by mockbuild@2020-01-12 08:44:52"
+     Path = "/usr/bin/acrn-dm"
+     BlockDeviceDriver = "virtio-blk"
+     EntropySource = "/dev/urandom"
+     Msize9p = 0
+     MemorySlots = 10
+     Debug = false
+     UseVSock = false
+     SharedFS = ""
+
+Run a Kata Container with ACRN
+******************************
+
+The system is now ready to run a Kata Container on ACRN (a reboot is recommended
+after the installation).
+
+Before running a Kata Container on ACRN, you must offline at least one CPU.
+
+.. code-block:: none
+
+   $ curl -O https://raw.githubusercontent.com/kata-containers/documentation/master/how-to/offline_cpu.sh
+   $ chmod +x ./offline_cpu.sh
+   $ sudo ./offline_cpu.sh
+
+Now start a Kata Container on ACRN.
+
+.. code-block:: none
+
+   $ sudo docker run -ti --runtime=kata-runtime busybox sh
+
+If you run into problems, contact us on the mailing list and provide as much
+details as possible about the issue. The output of ``sudo docker info`` and
+``kata-runtime kata-env`` is useful.
