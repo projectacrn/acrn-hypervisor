@@ -14,7 +14,7 @@
 #include <deprivilege_boot.h>
 #include <logmsg.h>
 
-#define BOOTLOADER_NUM 4U
+#define BOOTLOADER_NUM 5U
 #define BOOTLOADER_NAME_SIZE 20U
 
 struct vboot_bootloader_map {
@@ -40,6 +40,7 @@ void init_vboot(void)
 		{"Intel IOTG/TSD ABL", DIRECT_BOOT_MODE},
 		{"ACRN UEFI loader", DEPRI_BOOT_MODE},
 		{"GRUB", DIRECT_BOOT_MODE},
+		{"PXELINUX", DIRECT_BOOT_MODE},
 	};
 
 	mbi = (struct multiboot_info *)hpa2hva((uint64_t)boot_regs[1]);
