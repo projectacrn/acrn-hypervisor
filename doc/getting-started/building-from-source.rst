@@ -6,10 +6,7 @@ Build ACRN from Source
 Introduction
 ************
 
-Following a general embedded-system programming model, the ACRN
-hypervisor is designed to be customized at build time per hardware
-platform and per usage scenario, rather than one binary for all
-scenarios.
+Following a general embedded-system programming model, the ACRN hypervisor is designed to be customized at build time per hardware platform and per usage scenario, rather than one binary for all scenarios.
 
 The hypervisor binary is generated based on Kconfig configuration
 settings. Instructions about these settings can be found in
@@ -26,7 +23,7 @@ One binary for all platforms and all usage scenarios is currently not
 supported, primarily because dynamic configuration parsing is restricted in
 the ACRN hypervisor for the following reasons:
 
-- **Meeting functional safety requirements.** Implementing dynamic parsing
+- **Maintain functional safety requirements.** Implementing dynamic parsing
   introduces dynamic objects, which violates functional safety requirements.
 
 - **Reduce complexity.** ACRN is a lightweight reference hypervisor, built for
@@ -34,7 +31,7 @@ the ACRN hypervisor for the following reasons:
   support for one binary could require more and more complexity in the
   hypervisor, which is something we strive to avoid.
 
-- **Keep small footprint.** Implementing dynamic parsing introduces
+- **Maintain small footprint.** Implementing dynamic parsing introduces
   hundreds or thousands of lines of code. Avoiding dynamic parsing
   helps keep the hypervisor's Lines of Code (LOC) in a desirable range (less
   than 40K).
@@ -52,15 +49,10 @@ these steps.
 Step 1: Install build tools and dependencies
 ********************************************
 
-ACRN development is supported on popular Linux distributions, each with
-their own way to install development tools. This user guide covers the different
-steps to configure and build ACRN natively on your distribution. Please refer to
-the :ref:`building-acrn-in-docker` user guide for instructions on how to build
-ACRN using a container.
+ACRN development is supported on popular Linux distributions, each with their own way to install development tools. This user guide covers the different steps to configure and build ACRN natively on your distribution. Refer to the :ref:`building-acrn-in-docker` user guide for instructions on how to build ACRN using a container.
 
-  .. note::
-     ACRN uses ``menuconfig``, a python3 text-based user interface (TUI) for
-     configuring hypervisor options and using python's ``kconfiglib`` library.
+.. note::
+   ACRN uses ``menuconfig``, a python3 text-based user interface (TUI) for configuring hypervisor options and using python's ``kconfiglib`` library.
 
 Install the necessary tools for the following systems:
 
@@ -96,8 +88,7 @@ Install the necessary tools for the following systems:
      $ sudo pip3 install kconfiglib
 
   .. note::
-     Use ``gcc`` version 7.3.* or higher to avoid running into
-     issue `#1396 <https://github.com/projectacrn/acrn-hypervisor/issues/1396>`_. Follow these instructions to install the ``gcc-7`` package on Ubuntu 18.04:
+     Use ``gcc`` version 7.3.* or higher to avoid gcc compilation issues. Follow these instructions to install the ``gcc-7`` package on Ubuntu 18.04:
 
      .. code-block:: none
 
@@ -110,8 +101,6 @@ Install the necessary tools for the following systems:
 
      ACRN development requires ``binutils`` version 2.27 (or higher).
      Verify your version of ``binutils`` with the command ``apt show binutils``.
-
-
 
 
 Step 2: Get the ACRN hypervisor source code
@@ -139,7 +128,7 @@ Currently, the ACRN hypervisor defines these typical usage scenarios:
 
 SDC:
    The SDC (Software Defined Cockpit) scenario defines a simple
-   automotive use-case that includes one pre-launched Service VM and one
+   automotive use case that includes one pre-launched Service VM and one
    post-launched User VM.
 
 SDC2:
@@ -161,31 +150,33 @@ HYBRID:
    pre-launched VM, one pre-launched Service VM, and one post-launched
    Standard VM.
 
-Assuming that you are at the top level of the acrn-hypervisor directory:
-  .. note::
-     Release version is built by default, 'RELEASE=0' is to build debug version.
+Assuming that you are at the top level of the acrn-hypervisor directory, perform the following:
 
-* Build ``INDUSTRY`` scenario on ``nuc7i7dnb``:
+.. note::
+   The release version is built by default, 'RELEASE=0' builds the debug version.
+
+* Build the ``INDUSTRY`` scenario on the ``nuc7i7dnb``:
 
   .. code-block:: none
 
      $ make all BOARD=nuc7i7dnb SCENARIO=industry RELEASE=0
 
-* Build ``INDUSTRY`` scenario on ``whl-ipc-i5``:
+* Build the ``INDUSTRY`` scenario on the ``whl-ipc-i5``:
+
   .. code-block:: none
-     
+
      $ make all BOARD=whl-ipc-i5 SCENARIO=industry BOARD_FILE=/absolute_path/
      acrn-hypervisor/misc/acrn-config/xmls/board-xmls/whl-ipc-i5.xml SCENARIO_FILE=
      /absolute_patch/acrn-hypervisor/misc/acrn-config/xmls/config-xmls/whl-ipc-i5/industry.xml
      RELEASE=0
 
-* Build ``SDC`` scenario on ``nuc6cayh``:
+* Build the ``SDC`` scenario on the ``nuc6cayh``:
 
   .. code-block:: none
 
      $ make all BOARD=nuc6cayh SCENARIO=sdc RELEASE=0
 
-See the :ref:`hardware` document for information about the platform needs
+See the :ref:`hardware` document for information about platform needs
 for each scenario.
 
 .. _getting-started-hypervisor-configuration:
@@ -214,11 +205,10 @@ top level of the acrn-hypervisor directory. The configuration file, named
    $ make defconfig BOARD=nuc6cayh
 
 The BOARD specified is used to select a ``defconfig`` under
-``arch/x86/configs/``. The other command line-based options (e.g. ``RELEASE``)
-take no effect when generating a defconfig.
+``arch/x86/configs/``. The other command line-based options (e.g. ``RELEASE``) take no effect when generating a defconfig.
 
 To modify the hypervisor configurations, you can either edit ``.config``
-manually, or invoke a TUI-based menuconfig, powered by kconfiglib, by
+manually, or you can invoke a TUI-based menuconfig--powered by kconfiglib--by
 executing ``make menuconfig``. As an example, the following commands
 (assuming that you are at the top level of the acrn-hypervisor directory)
 generate a default configuration file for UEFI, allowing you to modify some
@@ -246,7 +236,7 @@ Now you can build all these components at once as follows:
 
 .. code-block:: none
 
-   $ make FIRMWARE=uefi          # Build the UEFI hypervisor with the new .config
+   $ make FIRMWARE=uefi       # Build the UEFI hypervisor with the new .config
 
 The build results are found in the ``build`` directory. You can specify
 a different Output folder by setting the ``O`` ``make`` parameter,
