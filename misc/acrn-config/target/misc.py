@@ -201,7 +201,7 @@ def dump_cpu_core_info(config):
         print("\t{}".format(processor_id), end="", file=config)
 
         processor_id += 1
-        while (processor_id < int(line.split('-')[1].strip())):
+        while (processor_id <= int(line.split('-')[1].strip())):
             print(", {}".format(processor_id), end="", file=config)
             processor_id += 1
 
