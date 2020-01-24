@@ -72,7 +72,7 @@ def get_ram_range():
 
 
 def get_serial_type():
-    """ Get the serial type of consle which set by user """
+    """ Get serial console type specified by user """
     ttys_type = ''
     ttys_value = ''
 
@@ -115,8 +115,8 @@ def generate_file(config):
     if board_cfg_lib.VM_COUNT in list(VM_NUM_MAP_TOTAL_HV_RAM_SIZE.keys()):
         hv_ram_size = VM_NUM_MAP_TOTAL_HV_RAM_SIZE[board_cfg_lib.VM_COUNT]
     else:
-        board_cfg_lib.print_red("VM num should not greater than 8", err=True)
-        err_dic["baord config: total vm number error"] = "VM num should not greater than 8"
+        board_cfg_lib.print_red("VM num should not be greater than 8", err=True)
+        err_dic["board config: total vm number error"] = "VM num should not be greater than 8"
         return err_dic
 
     ram_range = get_ram_range()
