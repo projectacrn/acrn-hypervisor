@@ -37,7 +37,7 @@ int32_t init_cat_cap_info(void)
 			cat_cap_info.res_id = CAT_RESID_L2;
 		}
 
-		cat_cap_info.support = true;
+		cat_cap_info.enabled = true;
 
 		/* CPUID.(EAX=0x10,ECX=ResID):EAX[4:0] reports the length of CBM supported
 		 * CPUID.(EAX=0x10,ECX=ResID):EBX[31:0] indicates the corresponding uints
