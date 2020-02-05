@@ -55,6 +55,15 @@ config SCHED_IORR
           IORR (IO sensitive Round Robin) scheduler supports multipule vCPUs running on
 	  on one pCPU, and they will be scheduled by a IO sensitive round robin policy.
 
+config SCHED_BVT
+        bool "BVT scheduler"
+        help
+	  BVT (Borrowed Virtual time) is virtual time based scheduling algorithm, it
+	  dispatching the runnable thread with the earliest effective virtual time.
+	  TODO: BVT scheduler will be built on top of prioritized scheduling mechanism,
+	  i.e. higher priority threads get scheduled first, and same priority tasks are
+	  scheduled per BVT.
+
 endchoice
 
 

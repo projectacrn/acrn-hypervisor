@@ -39,6 +39,7 @@ struct per_cpu_region {
 	struct sched_control sched_ctl;
 	struct sched_noop_control sched_noop_ctl;
 	struct sched_iorr_control sched_iorr_ctl;
+	struct sched_bvt_control sched_bvt_ctl;
 	struct thread_object idle;
 	struct host_gdt gdt;
 	struct tss_64 tss;
