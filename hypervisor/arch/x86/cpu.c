@@ -149,10 +149,12 @@ void init_pcpu_pre(bool is_bsp)
 			panic("System IOAPIC info is incorrect!");
 		}
 
+#ifdef CONFIG_CAT_ENABLED
 		ret = init_cat_cap_info();
 		if (ret != 0) {
 			panic("Platform CAT info is incorrect!");
 		}
+#endif
 
 		/* NOTE: this must call after MMCONFIG is parsed in init_vboot and before APs are INIT. */
 		pci_switch_to_mmio_cfg_ops();

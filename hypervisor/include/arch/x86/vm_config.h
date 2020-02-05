@@ -127,7 +127,9 @@ struct acrn_vm_config {
 	uint16_t pci_dev_num;				/* indicate how many PCI devices in VM */
 	struct acrn_vm_pci_dev_config *pci_devs;	/* point to PCI devices BDF list */
 	struct acrn_vm_os_config os_config;		/* OS information the VM */
-	uint16_t clos;					/* if guest_flags has GUEST_FLAG_CLOS_REQUIRED, then VM use this CLOS */
+	uint16_t clos;					/* Class of Service, effective only if CONFIG_CAT_ENABLED
+							 * is defined on CAT capable platforms
+							 */
 
 	struct vuart_config vuart[MAX_VUART_NUM_PER_VM];/* vuart configuration for VM */
 } __aligned(8);

@@ -9,8 +9,7 @@
 
 /* The intel Resource Director Tech(RDT) based Cache Allocation Tech support */
 struct cat_hw_info {
-	bool support;		/* If L2/L3 CAT supported */
-	bool enabled;		/* If any VM setup CLOS */
+	bool enabled;		/* If L2/L3 CAT enabled */
 	uint32_t bitmask;	/* Used by other entities */
 	uint16_t cbm_len;	/* Length of Cache mask in bits */
 	uint16_t clos_max;	/* Maximum CLOS supported, the number of cache masks */

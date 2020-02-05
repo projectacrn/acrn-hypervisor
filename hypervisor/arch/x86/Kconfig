@@ -244,6 +244,14 @@ config HYPERV_ENABLED
 	  When set, the minimum set of TLFS functionality together with some
 	  performance enlightenments are enabled.
 
+config CAT_ENABLED
+	bool "Enable CAT (Cache Allocation Technology)"
+	default n
+	help
+	  When set in platforms that support CAT, hypervisor can allocate
+	  various amount of last-level-cache (LLC) resources to VMs to achieve
+	  different Class of Service (COS, or CLOS).
+
 config GPU_SBDF
 	hex "Segment, Bus, Device, and function of the GPU"
 	depends on ACPI_PARSE_ENABLED
