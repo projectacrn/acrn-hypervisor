@@ -173,7 +173,7 @@ You can download latest Service OS kernel from
 
      .. code-block:: none
 
-        menuentry 'ACRN ubuntu SOS' {
+        menuentry 'ACRN ubuntu SOS' --id ubuntu-service-vm {
                 recordfail
                 load_video
                 insmod gzio
@@ -194,14 +194,15 @@ You can download latest Service OS kernel from
         The command line for the kernel in /etc/grub.d/40_custom should be all
         as a single line, not as multiple lines. Otherwise the kernel will fail to boot
 
-   * Modify the ``/etc/default/grub`` file to make the grub menu visible when booting.
-     There are a couple of lines to be modified, as shown below.
+   * Modify the ``/etc/default/grub`` file to make the grub menu visible when booting
+     and make it load the Service OS kernel by default.
+     There are a few lines to be modified, as shown below.
 
      .. code-block:: none
 
+        GRUB_DEFAULT=ubuntu-service-vm
         #GRUB_TIMEOUT_STYLE=hidden
-        #GRUB_HIDDEN_TIMEOUT=0
-        GRUB_HIDDEN_TIMEOUT_QUIET=false
+        GRUB_TIMEOUT=3
 
    * Update Grub on your system
 
