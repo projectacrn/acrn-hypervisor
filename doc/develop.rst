@@ -71,7 +71,7 @@ Enable ACRN Features
    tutorials/sgx_virtualization
    tutorials/vuart_configuration
    tutorials/skl-nuc
-   tutorials/using_cat_on_up2
+   tutorials/enable_cat
    tutorials/using_sbl_on_up2
    tutorials/trustyACRN
    tutorials/waag-secure-boot
