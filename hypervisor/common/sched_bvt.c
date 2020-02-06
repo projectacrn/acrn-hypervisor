@@ -30,17 +30,52 @@ struct sched_bvt_data {
 	uint64_t start_tsc;
 };
 
-static int sched_bvt_init(__unused struct sched_control *ctl)
-{
-	return 0;
-}
-
-static void sched_bvt_deinit(__unused struct sched_control *ctl)
+static void sched_tick_handler(__unused void *param)
 {
 }
 
-static void sched_bvt_init_data(__unused struct thread_object *obj)
+/*
+ *@pre: ctl->pcpu_id == get_pcpu_id()
+ */
+static int sched_bvt_init(struct sched_control *ctl)
 {
+	struct sched_bvt_control *bvt_ctl = &per_cpu(sched_bvt_ctl, ctl->pcpu_id);
+	uint64_t tick_period = BVT_MCU_MS * CYCLES_PER_MS;
+	int ret = 0;
+
+	ASSERT(ctl->pcpu_id == get_pcpu_id(), "Init scheduler on wrong CPU!");
+
+	ctl->priv = bvt_ctl;
+	INIT_LIST_HEAD(&bvt_ctl->runqueue);
+
+	/* The tick_timer is periodically */
+	initialize_timer(&bvt_ctl->tick_timer, sched_tick_handler, ctl,
+			rdtsc() + tick_period, TICK_MODE_PERIODIC, tick_period);
+
+	if (add_timer(&bvt_ctl->tick_timer) < 0) {
+		pr_err("Failed to add schedule tick timer!");
+		ret = -1;
+	}
+
+	return ret;
+}
+
+static void sched_bvt_deinit(struct sched_control *ctl)
+{
+	struct sched_bvt_control *bvt_ctl = (struct sched_bvt_control *)ctl->priv;
+	del_timer(&bvt_ctl->tick_timer);
+}
+
+static void sched_bvt_init_data(struct thread_object *obj)
+{
+	struct sched_bvt_data *data;
+
+	data = (struct sched_bvt_data *)obj->data;
+	INIT_LIST_HEAD(&data->list);
+	data->mcu = BVT_MCU_MS * CYCLES_PER_MS;
+	/* TODO: virtual time advance ratio should be proportional to weight. */
+	data->vt_ratio = 1U;
+	data->run_countdown = BVT_CSA_MCU;
 }
 
 static struct thread_object *sched_bvt_pick_next(__unused struct sched_control *ctl)
