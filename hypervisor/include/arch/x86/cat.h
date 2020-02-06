@@ -26,6 +26,6 @@ void setup_clos(uint16_t pcpu_id);
 #define CAT_RESID_L2   2U
 
 int32_t init_cat_cap_info(void);
-uint64_t clos2prq_msr(uint16_t clos);
+uint64_t clos2pqr_msr(uint16_t clos);
 
 #endif	/* CAT_H */

@@ -5,6 +5,7 @@
  */
 
 #include <types.h>
+#include <bits.h>
 #include <cpu.h>
 #include <cpu_caps.h>
 #include <cpufeatures.h>
@@ -23,7 +24,7 @@ static uint16_t platform_clos_num = MAX_PLATFORM_CLOS_NUM;
 int32_t init_cat_cap_info(void)
 {
 	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
-	int32_t ret = 0;
+	int32_t i, ret = 0;
 
 	if (pcpu_has_cap(X86_FEATURE_CAT)) {
 		cpuid_subleaf(CPUID_RSD_ALLOCATION, 0, &eax, &ebx, &ecx, &edx);
@@ -53,6 +54,14 @@ int32_t init_cat_cap_info(void)
 			pr_err("%s clos_max:%hu, platform_clos_num:%u\n", __func__, cat_cap_info.clos_max, platform_clos_num);
 			ret = -EINVAL;
 		}
+
+		for (i = 0U; i < platform_clos_num; i++) {
+			if (fls32(platform_clos_array[i].clos_mask) > cat_cap_info.cbm_len) {
+				pr_err("%s length of clos_mask(0x%x) should not more than %d(CBM_LEN)",
+					__func__, platform_clos_array[i].clos_mask, cat_cap_info.cbm_len);
+				ret = -EINVAL;
+			}
+		}
 	}
 
 	return ret;
@@ -72,16 +81,16 @@ void setup_clos(uint16_t pcpu_id)
 			msr_write_pcpu(msr_index, val, pcpu_id);
 		}
 		/* set hypervisor CAT clos */
-		msr_write_pcpu(MSR_IA32_PQR_ASSOC, clos2prq_msr(hv_clos), pcpu_id);
+		msr_write_pcpu(MSR_IA32_PQR_ASSOC, clos2pqr_msr(hv_clos), pcpu_id);
 	}
 }
 
-uint64_t clos2prq_msr(uint16_t clos)
+uint64_t clos2pqr_msr(uint16_t clos)
 {
-	uint64_t prq_assoc;
+	uint64_t pqr_assoc;
 
-	prq_assoc = msr_read(MSR_IA32_PQR_ASSOC);
-	prq_assoc = (prq_assoc & 0xffffffffUL) | ((uint64_t)clos << 32U);
+	pqr_assoc = msr_read(MSR_IA32_PQR_ASSOC);
+	pqr_assoc = (pqr_assoc & 0xffffffffUL) | ((uint64_t)clos << 32U);
 
-	return prq_assoc;
+	return pqr_assoc;
 }
