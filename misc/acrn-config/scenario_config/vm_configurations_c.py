@@ -5,6 +5,7 @@
 
 import sys
 import scenario_cfg_lib
+import board_cfg_lib
 import common
 
 C_HEADER = scenario_cfg_lib.HEADER_LICENSE + r"""
@@ -186,6 +187,20 @@ def vcpu_affinity_output(vm_info, i, config):
     print("\t\t.vcpu_num = {}U,".format(cpu_bits['cpu_num']), file=config)
     print("\t\t.vcpu_affinity = VM{}_CONFIG_VCPU_AFFINITY,".format(i), file=config)
 
+
+def clos_output(vm_info, i, config):
+    """
+    This is generate clos setting
+    :param vm_info: it is the class which contain all user setting information
+    :param i: vm id number
+    :param config: it is the pointer which file write to
+    :return: None
+    """
+    (cache_support, clos_max) = board_cfg_lib.clos_info_parser(scenario_cfg_lib.BOARD_INFO_FILE)
+    if cache_support != "False" and clos_max > 0 and i in vm_info.clos_set:
+        print("\t\t.clos = {0}U,".format(vm_info.clos_set[i]), file=config)
+
+
 def get_guest_flag(flag_index):
     """
     This is get flag index list
@@ -255,10 +270,7 @@ def gen_sdc_source(vm_info, config):
           "there is supposed to be the highest severity guest */", file=config)
     print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
     vcpu_affinity_output(vm_info, 0, config)
-    if vm_info.clos_set[0] == None or not vm_info.clos_set[0].strip():
-        print("\t\t.clos = {0}U,".format(0), file=config)
-    else:
-        print("\t\t.clos = {0}U,".format(vm_info.clos_set[0]), file=config)
+    clos_output(vm_info, 0, config)
     print("\t\t.severity = {0},".format(vm_info.severity[0].strip()), file=config)
     print("\t\t.memory = {", file=config)
     print("\t\t\t.start_hpa = {}UL,".format(vm_info.mem_info.mem_start_hpa[0]), file=config)
@@ -352,10 +364,7 @@ def gen_sdc2_source(vm_info, config):
           "there is supposed to be the highest severity guest */", file=config)
     print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
     vcpu_affinity_output(vm_info, 0, config)
-    if vm_info.clos_set[0] == None or not vm_info.clos_set[0].strip():
-        print("\t\t.clos = {0}U,".format(0), file=config)
-    else:
-        print("\t\t.clos = {0}U,".format(vm_info.clos_set[0]), file=config)
+    clos_output(vm_info, 0, config)
     print("\t\t.severity = {0},".format(vm_info.severity[0].strip()), file=config)
     print("\t\t.memory = {", file=config)
     print("\t\t\t.start_hpa = {}UL,".format(vm_info.mem_info.mem_start_hpa[0]), file=config)
@@ -479,11 +488,7 @@ def gen_logical_partition_source(vm_info, config):
             return err_dic
 
         print("\t\t.guest_flags = {0},".format(guest_flags), file=config)
-
-        if vm_info.clos_set[i] == None or not vm_info.clos_set[i].strip():
-            print("\t\t.clos = {0}U,".format(0), file=config)
-        else:
-            print("\t\t.clos = {0}U,".format(vm_info.clos_set[i]), file=config)
+        clos_output(vm_info, i, config)
         print("\t\t.memory = {", file=config)
         print("\t\t\t.start_hpa = VM{0}_CONFIG_MEM_START_HPA,".format(i), file=config)
         print("\t\t\t.size = VM{0}_CONFIG_MEM_SIZE,".format(i), file=config)
@@ -548,10 +553,7 @@ def gen_industry_source(vm_info, config):
         print("\t\t.severity = {0},".format(vm_info.severity[i].strip()), file=config)
 
         if i == 0:
-            if vm_info.clos_set[i] == None or not vm_info.clos_set[i].strip():
-                print("\t\t.clos = {0}U,".format(0), file=config)
-            else:
-                print("\t\t.clos = {0}U,".format(vm_info.clos_set[i]), file=config)
+            clos_output(vm_info, i, config)
             print("\t\t.memory = {", file=config)
             print("\t\t\t.start_hpa = 0UL,", file=config)
             print("\t\t\t.size = CONFIG_SOS_RAM_SIZE,", file=config)
@@ -620,10 +622,7 @@ def gen_hybrid_source(vm_info, config):
         print("\t\t.severity = {0},".format(vm_info.severity[i].strip()), file=config)
 
         if i != 2:
-            if vm_info.clos_set[i] == None or not vm_info.clos_set[i].strip():
-                print("\t\t.clos = {0}U,".format(0), file=config)
-            else:
-                print("\t\t.clos = {0}U,".format(vm_info.clos_set[i]), file=config)
+            clos_output(vm_info, i, config)
             print("\t\t.memory = {", file=config)
             if i == 0:
                 print("\t\t\t.start_hpa = VM0_CONFIG_MEM_START_HPA,", file=config)
