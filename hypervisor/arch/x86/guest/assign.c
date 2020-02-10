@@ -619,18 +619,9 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 	spinlock_obtain(&ptdev_lock);
 	entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_MSI, &virt_sid, vm);
 	if (entry == NULL) {
-		/* SOS_VM we add mapping dynamically */
-		if (is_sos_vm(vm) || is_prelaunched_vm(vm)) {
-			entry = add_msix_remapping(vm, virt_bdf, phys_bdf, entry_nr);
-			if (entry == NULL) {
-				pr_err("dev-assign: msi entry exist in others");
-			}
-		} else {
-			/* ptirq_prepare_msix_remap is called by SOS on demand, if
-			 * failed to find pre-hold mapping, return error to
-			 * the caller.
-			 */
-			pr_err("dev-assign: msi entry not exist");
+		entry = add_msix_remapping(vm, virt_bdf, phys_bdf, entry_nr);
+		if (entry == NULL) {
+			pr_err("dev-assign: msi entry exist in others");
 		}
 	}
 	spinlock_release(&ptdev_lock);

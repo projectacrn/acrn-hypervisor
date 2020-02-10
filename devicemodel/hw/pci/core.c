@@ -227,6 +227,15 @@ is_pci_gvt(struct pci_vdev *dev)
 		return 1;
 }
 
+static inline int
+is_pt_pci(struct pci_vdev *dev)
+{
+	if (dev == NULL || strncmp(dev->dev_ops->class_name, "passthru",8))
+		return 0;
+	else
+		return 1;
+}
+
 /*
  * I/O access
  */
@@ -601,6 +610,11 @@ modify_bar_registration(struct pci_vdev *dev, int idx, int registration)
 	int error;
 	struct inout_port iop;
 	struct mem_range mr;
+
+	if (is_pt_pci(dev)) {
+		printf("%s: bypass for pci-passthru %x:%x.%x\n", __func__, dev->bus, dev->slot, dev->func);
+		return 0;
+	}
 
 	switch (dev->bar[idx].type) {
 	case PCIBAR_IO:

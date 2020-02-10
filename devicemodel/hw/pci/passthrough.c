@@ -211,16 +211,8 @@ cfginit_cap(struct vmctx *ctx, struct passthru_dev *ptdev)
 {
 	int ptr, capptr, cap, sts, caplen;
 	uint32_t u32;
-	struct pci_vdev *dev;
+	struct pci_vdev *dev = ptdev->dev;
 	struct pci_device *phys_dev = ptdev->phys_dev;
-	uint16_t virt_bdf = PCI_BDF(ptdev->dev->bus,
-				    ptdev->dev->slot,
-				    ptdev->dev->func);
-	uint32_t pba_info;
-	uint32_t table_info;
-	uint16_t msgctrl;
-
-	dev = ptdev->dev;
 
 	/*
 	 * Parse the capabilities and cache the location of the MSI
@@ -287,35 +279,6 @@ cfginit_cap(struct vmctx *ctx, struct passthru_dev *ptdev)
 
 			ptr = read_config(phys_dev, ptr + PCICAP_NEXTPTR, 1);
 		}
-	}
-
-	dev->msix.table_bar = -1;
-	dev->msix.pba_bar = -1;
-	if (ptdev->msix.capoff != 0) {
-		capptr = ptdev->msix.capoff;
-
-		pba_info = pci_get_cfgdata32(dev, capptr + 8);
-		dev->msix.pba_bar = pba_info & PCIM_MSIX_BIR_MASK;
-		dev->msix.pba_offset = pba_info & ~PCIM_MSIX_BIR_MASK;
-
-		table_info = pci_get_cfgdata32(dev, capptr + 4);
-		dev->msix.table_bar = table_info & PCIM_MSIX_BIR_MASK;
-		dev->msix.table_offset = table_info & ~PCIM_MSIX_BIR_MASK;
-
-		msgctrl = pci_get_cfgdata16(dev, capptr + 2);
-		dev->msix.table_count = MSIX_TABLE_COUNT(msgctrl);
-		dev->msix.pba_size = PBA_SIZE(dev->msix.table_count);
-	} else if (ptdev->msi.capoff != 0) {
-		struct ic_ptdev_irq ptirq;
-
-		ptirq.type = IRQ_MSI;
-		ptirq.virt_bdf = virt_bdf;
-		ptirq.phys_bdf = ptdev->phys_bdf;
-		/* currently, only support one vector for MSI */
-		ptirq.msix.vector_cnt = 1;
-		ptirq.msix.table_paddr = 0;
-		ptirq.msix.table_size = 0;
-		vm_set_ptdev_msix_info(ctx, &ptirq);
 	}
 
 	return 0;
@@ -622,22 +585,6 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 				vbar_lo32 &= ~PCIM_BAR_MEM_PREFETCH;
 
 			pci_set_cfgdata32(dev, PCIR_BAR(i), vbar_lo32);
-	}
-
-		/* The MSI-X table needs special handling */
-		if (i == ptdev_msix_table_bar(ptdev)) {
-			error = init_msix_table(ctx, ptdev, base);
-			if (error) {
-				deinit_msix_table(ctx, ptdev);
-				return -1;
-			}
-		} else if (bartype != PCIBAR_IO) {
-			/* Map the physical BAR in the guest MMIO space */
-			error = vm_map_ptdev_mmio(ctx, ptdev->sel.bus,
-				ptdev->sel.dev, ptdev->sel.func,
-				dev->bar[i].addr, dev->bar[i].size, base);
-			if (error)
-				return -1;
 		}
 
 		/*
@@ -781,13 +728,14 @@ pciaccess_init(void)
 static int
 passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	int bus, slot, func, error;
+	int bus, slot, func, idx, error;
 	struct passthru_dev *ptdev;
 	struct pci_device_iterator *iter;
 	struct pci_device *phys_dev;
 	char *opt;
 	bool keep_gsi = false;
 	bool need_reset = true;
+	struct acrn_assign_pcidev pcidev = {};
 
 	ptdev = NULL;
 	error = -EINVAL;
@@ -810,12 +758,6 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			need_reset = false;
 		else
 			warnx("Invalid passthru options:%s", opt);
-	}
-
-	if (vm_assign_ptdev(ctx, bus, slot, func) != 0) {
-		warnx("PCI device at %x/%x/%x is not using the pt(4) driver",
-			bus, slot, func);
-		goto done;
 	}
 
 	ptdev = calloc(1, sizeof(struct passthru_dev));
@@ -890,31 +832,36 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
 	}
 
+	pcidev.virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
+	pcidev.phys_bdf = ptdev->phys_bdf;
+	for (idx = 0; idx <= PCI_BARMAX; idx++) {
+		pcidev.bar[idx] = pci_get_cfgdata32(dev, PCIR_BAR(idx));
+	}
+
 	/* If ptdev support MSI/MSIX, stop here to skip virtual INTx setup.
 	 * Forge Guest to use MSI/MSIX in this case to mitigate IRQ sharing
 	 * issue
 	 */
-	if (error == IRQ_MSI && !keep_gsi)
-		return 0;
+	if (error != IRQ_MSI && !keep_gsi) {
+		/* Allocates the virq if ptdev only support INTx */
+		pci_lintr_request(dev);
 
-	/* Allocates the virq if ptdev only support INTx */
-	pci_lintr_request(dev);
+		ptdev->phys_pin = read_config(ptdev->phys_dev, PCIR_INTLINE, 1);
 
-	ptdev->phys_pin = read_config(ptdev->phys_dev, PCIR_INTLINE, 1);
-
-	if (ptdev->phys_pin == -1 || ptdev->phys_pin > 256) {
-		warnx("ptdev %x/%x/%x has wrong phys_pin %d, likely fail!",
-		    bus, slot, func, ptdev->phys_pin);
-		goto done;
+		if (ptdev->phys_pin == -1 || ptdev->phys_pin > 256) {
+			warnx("ptdev %x/%x/%x has wrong phys_pin %d, likely fail!",
+				bus, slot, func, ptdev->phys_pin);
+			error = -1;
+			goto done;
+		}
 	}
 
-	error = 0;		/* success */
+	pcidev.intr_line = pci_get_cfgdata8(dev, PCIR_INTLINE);
+	pcidev.intr_pin = pci_get_cfgdata8(dev, PCIR_INTPIN);
+	error = vm_assign_pcidev(ctx, &pcidev);
 done:
-	if (error) {
-		if (ptdev != NULL) {
+	if (error && (ptdev != NULL)) {
 			free(ptdev);
-		}
-		vm_unassign_ptdev(ctx, bus, slot, func);
 	}
 	return error;
 }
@@ -933,9 +880,8 @@ static void
 passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct passthru_dev *ptdev;
-	uint8_t bus, slot, func;
 	uint16_t virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
-	int i;
+	struct acrn_assign_pcidev pcidev = {};
 
 	if (!dev->arg) {
 		warnx("%s: passthru_dev is NULL", __func__);
@@ -943,36 +889,11 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	ptdev = (struct passthru_dev *) dev->arg;
-	bus = (ptdev->phys_bdf >> 8) & 0xff;
-	slot = (ptdev->phys_bdf & 0xff) >> 3;
-	func = ptdev->phys_bdf & 0x7;
-
-	if (ptdev->msix.capoff != 0)
-		deinit_msix_table(ctx, ptdev);
-	else if(ptdev->msi.capoff != 0) {
-		/* Currently only support 1 vector */
-		vm_reset_ptdev_msix_info(ctx, virt_bdf, ptdev->phys_bdf, 1);
-	}
 
 	pr_info("vm_reset_ptdev_intx:0x%x-%x, ioapic virpin=%d.\n",
 			virt_bdf, ptdev->phys_bdf, dev->lintr.ioapic_irq);
-
 	if (dev->lintr.pin != 0) {
 		vm_reset_ptdev_intx_info(ctx, virt_bdf, ptdev->phys_bdf, dev->lintr.ioapic_irq, false);
-	}
-
-	/* unmap the physical BAR in guest MMIO space */
-	for (i = 0; i <= PCI_BARMAX; i++) {
-
-		if (ptdev->bar[i].size == 0 ||
-			i == ptdev_msix_table_bar(ptdev) ||
-			ptdev->bar[i].type == PCIBAR_IO)
-			continue;
-
-		vm_unmap_ptdev_mmio(ctx, ptdev->sel.bus,
-				ptdev->sel.dev, ptdev->sel.func,
-				dev->bar[i].addr, ptdev->bar[i].size,
-				ptdev->bar[i].addr);
 	}
 
 	if (ptdev->phys_bdf == PCI_BDF_GPU) {
@@ -980,9 +901,11 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
 	}
 
+	pcidev.virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
+	pcidev.phys_bdf = ptdev->phys_bdf;
 	pciaccess_cleanup();
 	free(ptdev);
-	vm_unassign_ptdev(ctx, bus, slot, func);
+	vm_deassign_pcidev(ctx, &pcidev);
 }
 
 static void
