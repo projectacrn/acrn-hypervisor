@@ -102,7 +102,7 @@ uint32_t pci_vdev_read_bar(const struct pci_vdev *vdev, uint32_t idx)
 	bar = pci_vdev_read_cfg_u32(vdev, offset);
 	/* Sizing BAR */
 	if (bar == ~0U) {
-		bar = vdev->vbars[idx].mask;
+		bar = vdev->vbars[idx].mask | vdev->vbars[idx].fixed;
 	}
 	return bar;
 }

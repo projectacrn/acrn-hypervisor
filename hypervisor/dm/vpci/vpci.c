@@ -39,8 +39,9 @@
 static void vpci_init_vdevs(struct acrn_vm *vm);
 static void deinit_prelaunched_vm_vpci(struct acrn_vm *vm);
 static void deinit_postlaunched_vm_vpci(struct acrn_vm *vm);
-static void read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t *val);
-static void write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
+static int32_t read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t *val);
+static int32_t write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
+static struct pci_vdev *find_vdev(struct acrn_vpci *vpci, union pci_bdf bdf);
 
 /**
  * @pre vcpu != NULL
@@ -65,18 +66,33 @@ static bool pci_cfgaddr_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t by
 /**
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
+ *
+ * @retval true on success.
+ * @retval false. (ACRN will deliver this IO request to DM to handle for post-launched VM)
  */
 static bool pci_cfgaddr_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
 {
+	bool ret = true;
 	struct acrn_vpci *vpci = &vcpu->vm->vpci;
 	union pci_cfg_addr_reg *cfg_addr = &vpci->addr;
+	union pci_bdf vbdf;
 
 	if ((addr == (uint16_t)PCI_CONFIG_ADDR) && (bytes == 4U)) {
 		/* unmask reserved fields: BITs 24-30 and BITs 0-1 */
 		cfg_addr->value = val & (~0x7f000003U);
+
+		if (is_postlaunched_vm(vcpu->vm)) {
+			vbdf.value = cfg_addr->bits.bdf;
+			/* For post-launched VM, ACRN will only handle PT device, all virtual PCI device
+			 * still need to deliver to ACRN DM to handle.
+			 */
+			if (find_vdev(vpci, vbdf) == NULL) {
+				ret = false;
+			}
+		}
 	}
 
-	return true;
+	return ret;
 }
 
 static inline bool vpci_is_valid_access_offset(uint32_t offset, uint32_t bytes)
@@ -100,40 +116,31 @@ static inline bool vpci_is_valid_access(uint32_t offset, uint32_t bytes)
  * @pre vcpu->vm->vm_id < CONFIG_MAX_VM_NUM
  * @pre (get_vm_config(vcpu->vm->vm_id)->load_order == PRE_LAUNCHED_VM)
  *	|| (get_vm_config(vcpu->vm->vm_id)->load_order == SOS_VM)
+ *
+ * @retval true on success.
+ * @retval false. (ACRN will deliver this IO request to DM to handle for post-launched VM)
  */
 static bool pci_cfgdata_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
 {
+	int32_t ret = 0;
 	struct acrn_vm *vm = vcpu->vm;
 	struct acrn_vpci *vpci = &vm->vpci;
 	union pci_cfg_addr_reg cfg_addr;
 	union pci_bdf bdf;
 	uint16_t offset = addr - PCI_CONFIG_DATA;
 	uint32_t val = ~0U;
-	struct acrn_vm_config *vm_config;
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
 	cfg_addr.value = atomic_readandclear32(&vpci->addr.value);
 	if (cfg_addr.bits.enable != 0U) {
 		if (vpci_is_valid_access(cfg_addr.bits.reg_num + offset, bytes)) {
-			vm_config = get_vm_config(vm->vm_id);
-
-			switch (vm_config->load_order) {
-			case PRE_LAUNCHED_VM:
-			case SOS_VM:
-				bdf.value = cfg_addr.bits.bdf;
-				read_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, &val);
-				break;
-
-			default:
-				ASSERT(false, "Error, pci_cfgdata_io_read should only be called for PRE_LAUNCHED_VM and SOS_VM");
-				break;
-			}
+			bdf.value = cfg_addr.bits.bdf;
+			ret = read_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, &val);
 		}
 	}
 
 	pio_req->value = val;
-
-	return true;
+	return (ret == 0);
 }
 
 /**
@@ -142,43 +149,39 @@ static bool pci_cfgdata_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t by
  * @pre vcpu->vm->vm_id < CONFIG_MAX_VM_NUM
  * @pre (get_vm_config(vcpu->vm->vm_id)->load_order == PRE_LAUNCHED_VM)
  *	|| (get_vm_config(vcpu->vm->vm_id)->load_order == SOS_VM)
+ *
+ * @retval true on success.
+ * @retval false. (ACRN will deliver this IO request to DM to handle for post-launched VM)
  */
 static bool pci_cfgdata_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
 {
+	int32_t ret = 0;
 	struct acrn_vm *vm = vcpu->vm;
 	struct acrn_vpci *vpci = &vm->vpci;
 	union pci_cfg_addr_reg cfg_addr;
 	union pci_bdf bdf;
 	uint16_t offset = addr - PCI_CONFIG_DATA;
-	struct acrn_vm_config *vm_config;
 
 	cfg_addr.value = atomic_readandclear32(&vpci->addr.value);
 	if (cfg_addr.bits.enable != 0U) {
 		if (vpci_is_valid_access(cfg_addr.bits.reg_num + offset, bytes)) {
-			vm_config = get_vm_config(vm->vm_id);
-
-			switch (vm_config->load_order) {
-			case PRE_LAUNCHED_VM:
-			case SOS_VM:
-				bdf.value = cfg_addr.bits.bdf;
-				write_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, val);
-				break;
-
-			default:
-				ASSERT(false, "Error, pci_cfgdata_io_write should only be called for PRE_LAUNCHED_VM and SOS_VM");
-				break;
-			}
+			bdf.value = cfg_addr.bits.bdf;
+			ret = write_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, val);
 		}
 	}
 
-	return true;
+	return (ret == 0);
 }
 
 /**
  * @pre io_req != NULL && private_data != NULL
+ *
+ * @retval 0 on success.
+ * @retval other on false. (ACRN will deliver this MMIO request to DM to handle for post-launched VM)
  */
 static int32_t vpci_handle_mmconfig_access(struct io_request *io_req, void *private_data)
 {
+	int32_t ret = 0;
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	struct acrn_vpci *vpci = (struct acrn_vpci *)private_data;
 	uint64_t pci_mmcofg_base = vpci->pci_mmcfg_base;
@@ -199,21 +202,21 @@ static int32_t vpci_handle_mmconfig_access(struct io_request *io_req, void *priv
 
 	if (mmio->direction == REQUEST_READ) {
 		if (!is_plat_hidden_pdev(bdf)) {
-			read_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t *)&mmio->value);
+			ret = read_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t *)&mmio->value);
 		} else {
 			/* expose and pass through platform hidden devices to SOS */
 			mmio->value = (uint64_t)pci_pdev_read_cfg(bdf, reg_num, (uint32_t)mmio->size);
 		}
 	} else {
 		if (!is_plat_hidden_pdev(bdf)) {
-			write_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);
+			ret = write_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);
 		} else {
 			/* expose and pass through platform hidden devices to SOS */
 			pci_pdev_write_cfg(bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);
 		}
 	}
 
-	return 0;
+	return ret;
 }
 
 /**
@@ -241,31 +244,21 @@ void vpci_init(struct acrn_vm *vm)
 	vpci_init_vdevs(vm);
 
 	vm_config = get_vm_config(vm->vm_id);
-	switch (vm_config->load_order) {
-	case SOS_VM:
-		pci_mmcfg_base = get_mmcfg_base();
+	if (vm_config->load_order != PRE_LAUNCHED_VM) {
+		/* PCI MMCONFIG for post-launched VM is fixed to 0xE0000000 */
+		pci_mmcfg_base = (vm_config->load_order == SOS_VM) ? get_mmcfg_base() : 0xE0000000UL;
 		vm->vpci.pci_mmcfg_base = pci_mmcfg_base;
 		register_mmio_emulation_handler(vm, vpci_handle_mmconfig_access,
 			pci_mmcfg_base, pci_mmcfg_base + PCI_MMCONFIG_SIZE, &vm->vpci);
-		/* falls through */
-	case PRE_LAUNCHED_VM:
-		/*
-		 * SOS: intercept port CF8 only.
-		 * UOS or pre-launched VM: register handler for CF8 only and I/O requests to CF9/CFA/CFB are
-		 * not handled by vpci.
-		 */
-		register_pio_emulation_handler(vm, PCI_CFGADDR_PIO_IDX, &pci_cfgaddr_range,
-			pci_cfgaddr_io_read, pci_cfgaddr_io_write);
-
-		/* Intercept and handle I/O ports CFC -- CFF */
-		register_pio_emulation_handler(vm, PCI_CFGDATA_PIO_IDX, &pci_cfgdata_range,
-			pci_cfgdata_io_read, pci_cfgdata_io_write);
-		break;
-
-	default:
-		/* Nothing to do for other vm types */
-		break;
 	}
+
+	/* Intercept and handle I/O ports CF8h */
+	register_pio_emulation_handler(vm, PCI_CFGADDR_PIO_IDX, &pci_cfgaddr_range,
+		pci_cfgaddr_io_read, pci_cfgaddr_io_write);
+
+	/* Intercept and handle I/O ports CFCh -- CFFh */
+	register_pio_emulation_handler(vm, PCI_CFGDATA_PIO_IDX, &pci_cfgdata_range,
+		pci_cfgdata_io_read, pci_cfgdata_io_write);
 
 	spinlock_init(&vm->vpci.lock);
 }
@@ -390,8 +383,13 @@ static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 	} else if (offset == PCIR_COMMAND) {
 		vdev_pt_write_command(vdev, (bytes > 2U) ? 2U : bytes, (uint16_t)val);
 	} else {
-		/* passthru to physical device */
-		pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+		if (is_postlaunched_vm(vdev->vpci->vm) &&
+				in_range(offset, PCIR_INTERRUPT_LINE, 4U)) {
+			pci_vdev_write_cfg(vdev, offset, bytes, val);
+		} else {
+			/* passthru to physical device */
+			pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+		}
 	}
 
 	return 0;
@@ -412,8 +410,13 @@ static int32_t vpci_read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset
 	} else if (msixcap_access(vdev, offset)) {
 		vmsix_read_cfg(vdev, offset, bytes, val);
 	} else {
-		/* passthru to physical device */
-		*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+		if (is_postlaunched_vm(vdev->vpci->vm) &&
+				in_range(offset, PCIR_INTERRUPT_LINE, 4U)) {
+			*val = pci_vdev_read_cfg(vdev, offset, bytes);
+		} else {
+			/* passthru to physical device */
+			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+		}
 	}
 
 	return 0;
@@ -429,25 +432,32 @@ static const struct pci_vdev_ops pci_pt_dev_ops = {
 /**
  * @pre vpci != NULL
  */
-static void read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
+static int32_t read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
+	int32_t ret = 0;
 	struct pci_vdev *vdev;
 
 	spinlock_obtain(&vpci->lock);
 	vdev = find_vdev(vpci, bdf);
 	if (vdev != NULL) {
 		vdev->vdev_ops->read_vdev_cfg(vdev, offset, bytes, val);
+	} else {
+		if (is_postlaunched_vm(vpci->vm)) {
+			ret = -ENODEV;
+		}
 	}
 	spinlock_release(&vpci->lock);
+	return ret;
 }
 
 /**
  * @pre vpci != NULL
  */
-static void write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
+static int32_t write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
+	int32_t ret = 0;
 	struct pci_vdev *vdev;
 
 	spinlock_obtain(&vpci->lock);
@@ -455,10 +465,15 @@ static void write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	if (vdev != NULL) {
 		vdev->vdev_ops->write_vdev_cfg(vdev, offset, bytes, val);
 	} else {
-		pr_acrnlog("%s %x:%x.%x not found! off: 0x%x, val: 0x%x\n", __func__,
+		if (!is_postlaunched_vm(vpci->vm)) {
+			pr_acrnlog("%s %x:%x.%x not found! off: 0x%x, val: 0x%x\n", __func__,
 				bdf.bits.b, bdf.bits.d, bdf.bits.f, offset, val);
+		} else {
+			ret = -ENODEV;
+		}
 	}
 	spinlock_release(&vpci->lock);
+	return ret;
 }
 
 /**
