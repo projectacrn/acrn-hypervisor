@@ -113,8 +113,33 @@ static int64_t get_svt(struct thread_object *obj)
 	return svt;
 }
 
-static void sched_tick_handler(__unused void *param)
+static void sched_tick_handler(void *param)
 {
+	struct sched_control  *ctl = (struct sched_control *)param;
+	struct sched_bvt_control *bvt_ctl = (struct sched_bvt_control *)ctl->priv;
+	struct sched_bvt_data *data;
+	struct thread_object *current;
+	uint16_t pcpu_id = get_pcpu_id();
+	uint64_t rflags;
+
+	obtain_schedule_lock(pcpu_id, &rflags);
+	current = ctl->curr_obj;
+
+	if (current != NULL ) {
+		data = (struct sched_bvt_data *)current->data;
+		/* only non-idle thread need to consume run_countdown */
+		if (!is_idle_thread(current)) {
+			data->run_countdown -= 1U;
+			if (data->run_countdown == 0U) {
+				make_reschedule_request(pcpu_id, DEL_MODE_IPI);
+			}
+		} else {
+			if (!list_empty(&bvt_ctl->runqueue)) {
+				make_reschedule_request(pcpu_id, DEL_MODE_IPI);
+			}
+		}
+	}
+	release_schedule_lock(pcpu_id, rflags);
 }
 
 /*
