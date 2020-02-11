@@ -8,14 +8,11 @@
 #include <init.h>
 #include <console.h>
 #include <per_cpu.h>
-#include <profiling.h>
-#include <vtd.h>
 #include <shell.h>
 #include <vmx.h>
 #include <vm.h>
 #include <logmsg.h>
 #include <seed.h>
-#include <uart16550.h>
 #include <ld_sym.h>
 #include <vboot.h>
 
@@ -32,12 +29,6 @@
 /*TODO: move into debug module */
 static void init_debug_pre(void)
 {
-	/*
-	 * Enable UART as early as possible.
-	 * Then we could use printf for debugging on early boot stage.
-	 */
-	uart16550_init(true);
-
 	/* Initialize console */
 	console_init();
 
@@ -88,7 +79,7 @@ void init_primary_pcpu(void)
 	/* Clear BSS */
 	(void)memset(&ld_bss_start, 0U, (size_t)(&ld_bss_end - &ld_bss_start));
 
-	(void)parse_hv_cmdline();
+	parse_hv_cmdline();
 
 	init_debug_pre();
 
