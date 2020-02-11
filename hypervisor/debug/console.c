@@ -24,6 +24,11 @@ uint16_t console_vmid = ACRN_INVALID_VMID;
 
 void console_init(void)
 {
+	/*
+	 * Enable UART as early as possible.
+	 * Then we could use printf for debugging on early boot stage.
+	 */
+	uart16550_init(true);
 }
 
 void console_putc(const char *ch)

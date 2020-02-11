@@ -12,28 +12,18 @@
 #include <logmsg.h>
 #include <vboot.h>
 
-#define DBG_LEVEL_PARSE		6
-
-int32_t parse_hv_cmdline(void)
+void parse_hv_cmdline(void)
 {
-	const char *start;
+	const char *start = NULL;
 	const char *end = NULL;
-	struct multiboot_info *mbi = NULL;
 
-	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC) {
-		return -EINVAL;
+	if ((boot_regs[0] == MULTIBOOT_INFO_MAGIC) && (boot_regs[1] != 0U)) {
+		struct multiboot_info *mbi = (struct multiboot_info *)(hpa2hva_early((uint64_t)boot_regs[1]));
+
+		if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
+			start = (char *)hpa2hva_early((uint64_t)mbi->mi_cmdline);
+		}
 	}
-
-	mbi = (struct multiboot_info *)(hpa2hva_early((uint64_t)boot_regs[1]));
-	dev_dbg(DBG_LEVEL_PARSE, "Multiboot detected, flag=0x%x", mbi->mi_flags);
-
-	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) == 0U) {
-		dev_dbg(DBG_LEVEL_PARSE, "no hv cmdline!");
-		return -EINVAL;
-	}
-
-	start = (char *)hpa2hva_early((uint64_t)mbi->mi_cmdline);
-	dev_dbg(DBG_LEVEL_PARSE, "hv cmdline: %s", start);
 
 	while ((start != NULL) && ((*start) != '\0')) {
 		while ((*start) == ' ')
@@ -50,5 +40,4 @@ int32_t parse_hv_cmdline(void)
 		}
 	}
 
-	return 0;
 }
