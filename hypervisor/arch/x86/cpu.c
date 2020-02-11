@@ -22,7 +22,6 @@
 #include <vmx.h>
 #include <msr.h>
 #include <ptdev.h>
-#include <ld_sym.h>
 #include <logmsg.h>
 #include <cat.h>
 #include <vboot.h>
@@ -107,16 +106,6 @@ void init_pcpu_pre(bool is_bsp)
 	if (is_bsp) {
 		pcpu_id = BOOT_CPU_ID;
 		start_tsc = rdtsc();
-
-		/* Clear BSS */
-		(void)memset(&ld_bss_start, 0U, (size_t)(&ld_bss_end - &ld_bss_start));
-
-		(void)parse_hv_cmdline();
-		/*
-		 * Enable UART as early as possible.
-		 * Then we could use printf for debugging on early boot stage.
-		 */
-		uart16550_init(true);
 
 		/* Get CPU capabilities thru CPUID, including the physical address bit
 		 * limit which is required for initializing paging.
