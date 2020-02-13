@@ -120,6 +120,9 @@
 #define PCIC_BRIDGE           0x06U
 #define PCIS_BRIDGE_HOST      0x00U
 
+/* PCI device subclass */
+#define PCIS_BRIDGE_PCI       0x04U
+
 /* MSI-X definitions */
 #define PCIR_MSIX_CTRL        0x2U
 #define PCIR_MSIX_TABLE       0x4U
