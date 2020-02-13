@@ -32,8 +32,8 @@ void wait_event(struct sched_event *event)
 
 	spinlock_irqsave_obtain(&event->lock, &rflag);
 	ASSERT((event->waiting_thread == NULL), "only support exclusive waiting");
-	while (!event->set) {
-		event->waiting_thread = sched_get_current(get_pcpu_id());
+	event->waiting_thread = sched_get_current(get_pcpu_id());
+	while (!event->set && (event->waiting_thread != NULL)) {
 		sleep_thread(event->waiting_thread);
 		spinlock_irqrestore_release(&event->lock, rflag);
 		schedule();
