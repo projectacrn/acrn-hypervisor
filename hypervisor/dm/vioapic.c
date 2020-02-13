@@ -92,7 +92,7 @@ vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint32_t pin, uint32_t level)
 	uint32_t old_lvl;
 	union ioapic_rte rte;
 
-	if (pin < REDIR_ENTRIES_HW) {
+	if (pin < vioapic->nr_pins) {
 		rte = vioapic->rtbl[pin];
 		old_lvl = (uint32_t)bitmap_test((uint16_t)(pin & 0x3FU), &vioapic->pin_state[pin >> 6U]);
 		if (level == 0U) {
@@ -232,11 +232,9 @@ static inline bool vioapic_need_intr(const struct acrn_vioapic *vioapic, uint16_
 {
 	uint32_t lvl;
 	union ioapic_rte rte;
-	bool ret;
+	bool ret = false;
 
-	if (pin >= REDIR_ENTRIES_HW) {
-		ret = false;
-	} else {
+	if (pin < vioapic->nr_pins) {
 		rte = vioapic->rtbl[pin];
 		lvl = (uint32_t)bitmap_test(pin & 0x3FU, &vioapic->pin_state[pin >> 6U]);
 		ret = !!(((rte.bits.intr_polarity == IOAPIC_RTE_INTPOL_ALO) && lvl == 0U) ||
@@ -359,7 +357,7 @@ vioapic_mmio_rw(struct acrn_vioapic *vioapic, uint64_t gpa,
 	uint32_t offset;
 	uint64_t rflags;
 
-	offset = (uint32_t)(gpa - VIOAPIC_BASE);
+	offset = (uint32_t)(gpa - vioapic->base_addr);
 
 	spinlock_irqsave_obtain(&(vioapic->mtx), &rflags);
 
@@ -466,30 +464,29 @@ vioapic_init(struct acrn_vm *vm)
 	vm->arch_vm.vioapic.vm = vm;
 	spinlock_init(&(vm->arch_vm.vioapic.mtx));
 
+	vm->arch_vm.vioapic.base_addr = VIOAPIC_BASE;
+	if (is_sos_vm(vm)) {
+		vm->arch_vm.vioapic.nr_pins = REDIR_ENTRIES_HW;
+	} else {
+		vm->arch_vm.vioapic.nr_pins = VIOAPIC_RTE_NUM;
+	}
+
 	vioapic_reset(vm);
 
 	register_mmio_emulation_handler(vm,
 			vioapic_mmio_access_handler,
-			(uint64_t)VIOAPIC_BASE,
-			(uint64_t)VIOAPIC_BASE + VIOAPIC_SIZE,
-			vm, false);
+			(uint64_t)vm->arch_vm.vioapic.base_addr,
+			(uint64_t)vm->arch_vm.vioapic.base_addr + VIOAPIC_SIZE,
+			(void *)&vm->arch_vm.vioapic, false);
 	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-			(uint64_t)VIOAPIC_BASE, (uint64_t)VIOAPIC_SIZE);
+			(uint64_t)vm->arch_vm.vioapic.base_addr, VIOAPIC_SIZE);
 	vm->arch_vm.vioapic.ready = true;
 }
 
 uint32_t
 vioapic_pincount(const struct acrn_vm *vm)
 {
-	uint32_t ret;
-
-	if (is_sos_vm(vm)) {
-	        ret = REDIR_ENTRIES_HW;
-	} else {
-		ret = VIOAPIC_RTE_NUM;
-	}
-
-	return ret;
+	return vm->arch_vm.vioapic.nr_pins;
 }
 
 /*
@@ -498,13 +495,10 @@ vioapic_pincount(const struct acrn_vm *vm)
  */
 int32_t vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
 {
-	struct acrn_vm *vm = (struct acrn_vm *)handler_private_data;
-	struct acrn_vioapic *vioapic;
+	struct acrn_vioapic *vioapic = (struct acrn_vioapic *)handler_private_data;
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	uint64_t gpa = mmio->address;
 	int32_t ret = 0;
-
-	vioapic = vm_ioapic(vm);
 
 	/* Note all RW to IOAPIC are 32-Bit in size */
 	if (mmio->size == 4UL) {
