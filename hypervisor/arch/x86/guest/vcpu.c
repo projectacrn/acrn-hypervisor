@@ -220,6 +220,10 @@ static void vcpu_reset_internal(struct acrn_vcpu *vcpu, enum reset_mode mode)
 	vlapic_reset(vlapic, apicv_ops, mode);
 
 	reset_vcpu_regs(vcpu);
+
+	for (i = 0; i < VCPU_EVENT_NUM; i++) {
+		reset_event(&vcpu->events[i]);
+	}
 }
 
 struct acrn_vcpu *get_running_vcpu(uint16_t pcpu_id)
