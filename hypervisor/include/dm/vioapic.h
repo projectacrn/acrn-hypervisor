@@ -51,6 +51,8 @@
 struct acrn_vioapic {
 	struct acrn_vm	*vm;
 	spinlock_t	mtx;
+	uint32_t	base_addr;
+	uint32_t	nr_pins;
 	uint32_t	id;
 	bool		ready;
 	uint32_t	ioregsel;
