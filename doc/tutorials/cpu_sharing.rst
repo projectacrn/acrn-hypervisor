@@ -33,7 +33,7 @@ Here is an example for affinity:
 
 - VM0: 2 vCPUs, pinned to pCPU0 and pCPU1
 - VM1: 2 vCPUs, pinned to pCPU2 and pCPU3
-- VM2: 2 vCPUs, pinned to pCPU2 and pCPU3
+- VM2: 2 vCPUs, pinned to pCPU0 and pCPU1
 
 .. figure:: images/cpu_sharing_affinity.png
    :align: center
