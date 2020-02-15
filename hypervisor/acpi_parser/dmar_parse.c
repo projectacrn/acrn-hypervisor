@@ -8,6 +8,7 @@
 #include <logmsg.h>
 #include <io.h>
 #include <spinlock.h>
+#include <cpu_caps.h>
 #include "pci.h"
 #include "vtd.h"
 #include "acpi.h"
@@ -204,11 +205,14 @@ handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 
 		consumed = handle_dmar_devscope(dev_scope, cp, remaining);
 
-		if (((drhd->segment << 16U) |
-		     (dev_scope->bus << 8U) |
-		     dev_scope->devfun) == CONFIG_GPU_SBDF) {
-			ASSERT(dev_count == 1, "no dedicated iommu for gpu");
-			drhd->ignore = true;
+		/* Disable GPU IOMMU due to gvt-d hasn’t been enabled on APL yet. */
+		if (is_apl_platform()) {
+			if (((drhd->segment << 16U) |
+		     	     (dev_scope->bus << 8U) |
+		     	     dev_scope->devfun) == CONFIG_GPU_SBDF) {
+				ASSERT(dev_count == 1, "no dedicated iommu for gpu");
+				drhd->ignore = true;
+			}
 		}
 
 		if (consumed <= 0)
