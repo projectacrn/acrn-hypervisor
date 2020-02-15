@@ -67,9 +67,20 @@ void setup_clos(uint16_t pcpu_id)
 
 	if (cat_cap_info.enabled) {
 		for (i = 0U; i < platform_clos_num; i++) {
-			msr_index = platform_clos_array[i].msr_index;
-			val = (uint64_t)platform_clos_array[i].clos_mask;
-			msr_write_pcpu(msr_index, val, pcpu_id);
+			switch (cat_cap_info.res_id) {
+			case CAT_RESID_L2:
+				msr_index = platform_l2_clos_array[i].msr_index;
+				val = (uint64_t)platform_l2_clos_array[i].clos_mask;
+				msr_write_pcpu(msr_index, val, pcpu_id);
+				break;
+			case CAT_RESID_L3:
+				msr_index = platform_l3_clos_array[i].msr_index;
+				val = (uint64_t)platform_l3_clos_array[i].clos_mask;
+				msr_write_pcpu(msr_index, val, pcpu_id);
+				break;
+			default:
+				pr_err("Invalid RDT resource configuration\n");
+			}
 		}
 		/* set hypervisor CAT clos */
 		msr_write_pcpu(MSR_IA32_PQR_ASSOC, clos2prq_msr(hv_clos), pcpu_id);

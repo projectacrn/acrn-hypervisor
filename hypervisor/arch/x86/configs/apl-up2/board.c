@@ -16,7 +16,8 @@
 
 struct dmar_info plat_dmar_info;
 
-struct platform_clos_info platform_clos_array[MAX_PLATFORM_CLOS_NUM] = {
+struct platform_clos_info platform_l3_clos_array[MAX_PLATFORM_CLOS_NUM];
+struct platform_clos_info platform_l2_clos_array[MAX_PLATFORM_CLOS_NUM] = {
 	{
 		.clos_mask = 0xff,
 		.msr_index = MSR_IA32_L2_MASK_BASE,
