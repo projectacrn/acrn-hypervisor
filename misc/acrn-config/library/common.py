@@ -17,8 +17,7 @@ HV_LICENSE_FILE = SOURCE_PATH + 'misc/acrn-config/library/hypervisor_license'
 
 PY_CACHES = ["__pycache__", "../board_config/__pycache__", "../scenario_config/__pycache__"]
 GUEST_FLAG = ["0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTHROUGH",
-              "GUEST_FLAG_IO_COMPLETION_POLLING", "GUEST_FLAG_CLOS_REQUIRED",
-              "GUEST_FLAG_HIDE_MTRR", "GUEST_FLAG_RT"]
+              "GUEST_FLAG_IO_COMPLETION_POLLING", "GUEST_FLAG_HIDE_MTRR", "GUEST_FLAG_RT"]
 # Support 512M, 1G, 2G
 # pre launch less then 2G, sos vm less than 24G
 START_HPA_SIZE_LIST = ['0x20000000', '0x40000000', '0x80000000', 'CONFIG_SOS_RAM_SIZE']
