@@ -14,6 +14,7 @@
 #endif
 
 struct dmar_info plat_dmar_info;
-struct platform_clos_info platform_clos_array[MAX_PLATFORM_CLOS_NUM];
+struct platform_clos_info platform_l2_clos_array[MAX_PLATFORM_CLOS_NUM];
+struct platform_clos_info platform_l3_clos_array[MAX_PLATFORM_CLOS_NUM];
 const struct cpu_state_table board_cpu_state_tbl;
 const union pci_bdf plat_hidden_pdevs[MAX_HIDDEN_PDEVS_NUM];
