@@ -113,6 +113,17 @@ static bool is_ctrl_setting_allowed(uint64_t msr_val, uint32_t ctrl)
 	return ((((uint32_t)(msr_val >> 32UL)) & ctrl) == ctrl);
 }
 
+bool is_apl_platform(void)
+{
+	bool ret = false;
+
+	if ((boot_cpu_data.family == 0x6U) && (boot_cpu_data.model == 0x92U)) {
+		ret = true;
+	}
+
+	return ret;
+}
+
 static void detect_ept_cap(void)
 {
 	uint64_t msr_val;
