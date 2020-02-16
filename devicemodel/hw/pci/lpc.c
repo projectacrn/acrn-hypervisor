@@ -32,6 +32,9 @@
 #include <string.h>
 #include <stdbool.h>
 #include <sys/errno.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "dm.h"
 #include "vmmapi.h"
@@ -467,6 +470,40 @@ lpc_pirq_routed(void)
 		pci_set_cfgdata8(lpc_bridge, 0x68 + pin, pirq_read(pin + 5));
 }
 
+static int
+pci_igd_lpc_init(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
+{
+	int fd;
+	uint8_t host_config[PCI_REGMAX+1];
+	int ret;
+
+	fd = open("/sys/bus/pci/devices/0000:00:1f.0/config", O_RDONLY);
+	if (fd == -1) {
+		pr_err("lpcbridge:open host pci config failed\n");
+		return -1;
+	}
+
+	ret = pread(fd, host_config, PCI_REGMAX+1, 0);
+	if (ret <= PCI_REGMAX) {
+		pr_err("failed to read lpcbridge config space\n");
+		return -1;
+	}
+
+	close(fd);
+
+	/*
+	 * The VID, DID, REVID, SUBVID, SUBDID of igd-lpc need aligned with physical one.
+	 * Without these physical values, gvt-d GOP driver couldn't work.
+	 */
+	pci_set_cfgdata16(pi, PCIR_DEVICE, (host_config[0x03] << 8) | host_config[0x02]);
+	pci_set_cfgdata16(pi, PCIR_VENDOR, (host_config[0x01] << 8) | host_config[0x00]);
+	pci_set_cfgdata8(pi, PCIR_REVID, host_config[0x08]);
+	pci_set_cfgdata16(pi, PCIR_SUBVEND_0, (host_config[0x01] << 8) | host_config[0x00]);
+	pci_set_cfgdata16(pi, PCIR_SUBDEV_0, (host_config[0x03] << 8) | host_config[0x02]);
+
+	return 0;
+}
+
 struct pci_vdev_ops pci_ops_lpc = {
 	.class_name		= "lpc",
 	.vdev_init		= pci_lpc_init,
@@ -477,3 +514,14 @@ struct pci_vdev_ops pci_ops_lpc = {
 	.vdev_barread		= pci_lpc_read
 };
 DEFINE_PCI_DEVTYPE(pci_ops_lpc);
+
+/*
+ * Intel Graphics Device(IGD) passthrough on Windows guest has the restriction
+ * that it need a lpc bridge device located in 00:1f.0 PCI slot.
+ * Here, create an extra lpc class for this restriction.
+ */
+struct pci_vdev_ops pci_ops_igd_lpc = {
+	.class_name	= "igd-lpc",
+	.vdev_init	= pci_igd_lpc_init,
+};
+DEFINE_PCI_DEVTYPE(pci_ops_igd_lpc);
