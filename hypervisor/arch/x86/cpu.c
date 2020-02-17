@@ -23,7 +23,7 @@
 #include <msr.h>
 #include <ptdev.h>
 #include <logmsg.h>
-#include <cat.h>
+#include <rdt.h>
 #include <vboot.h>
 #include <sgx.h>
 #include <uart16550.h>
