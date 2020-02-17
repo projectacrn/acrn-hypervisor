@@ -114,54 +114,34 @@ void init_e820(void)
 	uint32_t i;
 	uint64_t top_addr_space = CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE;
 
-	if (boot_regs[0] == MULTIBOOT_INFO_MAGIC) {
-		/*
-		 * Before installing new PML4 table in enable_paging(), HPA->HVA is always 1:1 mapping
-		 * and hpa2hva() can't be used to do the conversion. Here we simply treat boot_reg[1] as HPA.
-		 */
-		uint64_t hpa = (uint64_t)boot_regs[1];
-		struct multiboot_info *mbi = (struct multiboot_info *)hpa;
+	struct acrn_multiboot_info *mbi = get_multiboot_info();
+	struct multiboot_mmap *mmap = mbi->mi_mmap_entry;
 
-		pr_info("Multiboot info detected\n");
-		if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MMAP) != 0U) {
-			/* HPA->HVA is always 1:1 mapping at this moment */
-			hpa = (uint64_t)mbi->mi_mmap_addr;
-			struct multiboot_mmap *mmap = (struct multiboot_mmap *)hpa;
+	hv_e820_entries_nr = mbi->mi_mmap_entries;
 
-			hv_e820_entries_nr = mbi->mi_mmap_length / sizeof(struct multiboot_mmap);
-			if (hv_e820_entries_nr > E820_MAX_ENTRIES) {
-				pr_err("Too many E820 entries %d\n", hv_e820_entries_nr);
-				hv_e820_entries_nr = E820_MAX_ENTRIES;
-			}
+	dev_dbg(DBG_LEVEL_E820, "mmap addr 0x%x entries %d\n",
+		mbi->mi_mmap_entry, hv_e820_entries_nr);
 
-			dev_dbg(DBG_LEVEL_E820, "mmap length 0x%x addr 0x%x entries %d\n",
-				mbi->mi_mmap_length, mbi->mi_mmap_addr, hv_e820_entries_nr);
 
-			for (i = 0U; i < hv_e820_entries_nr; i++) {
-				if (mmap[i].baseaddr >= top_addr_space) {
-					mmap[i].length = 0UL;
-				} else {
-					if ((mmap[i].baseaddr + mmap[i].length) > top_addr_space) {
-						mmap[i].length = top_addr_space - mmap[i].baseaddr;
-					}
-				}
-
-				hv_e820[i].baseaddr = mmap[i].baseaddr;
-				hv_e820[i].length = mmap[i].length;
-				hv_e820[i].type = mmap[i].type;
-
-				dev_dbg(DBG_LEVEL_E820, "mmap table: %d type: 0x%x\n", i, mmap[i].type);
-				dev_dbg(DBG_LEVEL_E820, "Base: 0x%016lx length: 0x%016lx",
-					mmap[i].baseaddr, mmap[i].length);
-			}
+	for (i = 0U; i < hv_e820_entries_nr; i++) {
+		if (mmap[i].baseaddr >= top_addr_space) {
+			mmap[i].length = 0UL;
 		} else {
-			panic("no memory map found from multiboot info");
+			if ((mmap[i].baseaddr + mmap[i].length) > top_addr_space) {
+				mmap[i].length = top_addr_space - mmap[i].baseaddr;
+			}
 		}
 
-		obtain_mem_range_info();
-	} else {
-		panic("no multiboot info found");
+		hv_e820[i].baseaddr = mmap[i].baseaddr;
+		hv_e820[i].length = mmap[i].length;
+		hv_e820[i].type = mmap[i].type;
+
+		dev_dbg(DBG_LEVEL_E820, "mmap table: %d type: 0x%x\n", i, mmap[i].type);
+		dev_dbg(DBG_LEVEL_E820, "Base: 0x%016lx length: 0x%016lx",
+			mmap[i].baseaddr, mmap[i].length);
 	}
+
+	obtain_mem_range_info();
 }
 
 uint32_t get_e820_entries_count(void)

@@ -24,11 +24,10 @@ static struct lapic_regs depri_boot_lapic_regs;
 static void init_depri_boot(void)
 {
 	static bool depri_initialized = false;
-	struct multiboot_info *mbi = NULL;
+	struct acrn_multiboot_info *mbi = get_multiboot_info();
 
 	if (!depri_initialized) {
-		mbi = (struct multiboot_info *) hpa2hva(((uint64_t)(uint32_t)boot_regs[1]));
-		if ((mbi == NULL) || ((mbi->mi_flags & MULTIBOOT_INFO_HAS_DRIVES) == 0U)) {
+		if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_DRIVES) == 0U) {
 			pr_err("no multiboot drivers for depri_boot found");
 		} else {
 			(void)memcpy_s(&depri_boot_ctx, sizeof(struct depri_boot_context),
