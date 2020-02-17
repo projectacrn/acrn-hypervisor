@@ -7,26 +7,32 @@
 #ifndef RDT_H
 #define RDT_H
 
-/* The intel Resource Director Tech(RDT) based Cache Allocation Tech support */
-struct cat_hw_info {
-	bool enabled;		/* If L2/L3 CAT enabled */
-	uint32_t bitmask;	/* Used by other entities */
-	uint16_t cbm_len;	/* Length of Cache mask in bits */
-	uint16_t clos_max;	/* Maximum CLOS supported, the number of cache masks */
+enum {
+	RDT_RESOURCE_L3,
+	RDT_RESOURCE_L2,
 
-	uint32_t res_id;
+	/* Must be the last */
+	RDT_NUM_RESOURCES,
 };
 
-extern struct cat_hw_info cat_cap_info;
+#define RDT_RESID_L3   1U
+#define RDT_RESID_L2   2U
+
 extern const uint16_t hv_clos;
-extern uint16_t platform_clos_num;
-void setup_clos(uint16_t pcpu_id);
+extern const uint16_t platform_clos_num;
 
+/* The intel Resource Director Tech(RDT) based Allocation Tech support */
+struct rdt_info {
+	uint32_t bitmask;	/* Shared CLOS bitmask used by other entities */
+	uint16_t cbm_len;	/* Length of Cache mask in bits */
+	uint16_t clos_max;	/* Maximum CLOS supported, 0 indicates resource is not supported.*/
+	uint32_t res_id;
+	uint32_t msr_base;	/* MSR base to program clos mask*/
+	struct platform_clos_info *platform_clos_array; /* user configured mask and MSR info for each CLOS*/
+};
 
-#define CAT_RESID_L3   1U
-#define CAT_RESID_L2   2U
-
-int32_t init_cat_cap_info(void);
+int32_t init_rdt_cap_info(void);
+bool setup_clos(uint16_t pcpu_id);
 uint64_t clos2pqr_msr(uint16_t clos);
 bool is_platform_rdt_capable(void);
 

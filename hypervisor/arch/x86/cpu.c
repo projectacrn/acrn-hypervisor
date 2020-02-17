@@ -153,10 +153,10 @@ void init_pcpu_pre(bool is_bsp)
 			panic("System IOAPIC info is incorrect!");
 		}
 
-#ifdef CONFIG_CAT_ENABLED
-		ret = init_cat_cap_info();
+#ifdef CONFIG_RDT_ENABLED
+		ret = init_rdt_cap_info();
 		if (ret != 0) {
-			panic("Platform CAT info is incorrect!");
+			panic("Platform RDT info is incorrect!");
 		}
 #endif
 
@@ -262,7 +262,9 @@ void init_pcpu_post(uint16_t pcpu_id)
 
 	init_sched(pcpu_id);
 
-	setup_clos(pcpu_id);
+	if (!setup_clos(pcpu_id)) {
+		panic("CLOS resource MSRs setup incorrectly!");
+	}
 
 	enable_smep();
 
