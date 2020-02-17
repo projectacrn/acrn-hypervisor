@@ -54,7 +54,10 @@ int32_t sanitize_multiboot_info(void)
 		} else {
 			acrn_mbi.mi_flags &= ~MULTIBOOT_INFO_HAS_MODS;
 		}
-
+#ifdef CONFIG_MULTIBOOT2
+	} else if (boot_from_multiboot2()) {
+		ret = multiboot2_to_acrn_mbi(&acrn_mbi, hpa2hva_early((uint64_t)boot_regs[1]));
+#endif
 	} else {
 		pr_err("no multiboot info found!");
 		ret = -ENODEV;

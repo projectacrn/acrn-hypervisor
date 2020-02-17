@@ -197,6 +197,9 @@ BOOT_S_SRCS += arch/x86/boot/cpu_primary.S
 BOOT_S_SRCS += arch/x86/boot/cpu_save_boot_ctx.S
 BOOT_S_SRCS += arch/x86/boot/trampoline.S
 BOOT_C_SRCS += boot/multiboot.c
+ifeq ($(CONFIG_MULTIBOOT2),y)
+BOOT_C_SRCS += boot/multiboot2.c
+endif
 BOOT_C_SRCS += boot/reloc.c
 
 # hardware management component
