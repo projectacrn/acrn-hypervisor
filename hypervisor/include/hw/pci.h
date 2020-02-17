@@ -106,6 +106,15 @@
 #define PCIY_MSI              0x05U
 #define PCIY_MSIX             0x11U
 
+/* PCIe Extended Capability*/
+#define PCI_ECAP_BASE_PTR	0x100U
+#define PCI_ECAP_ID(hdr)	((uint32_t)((hdr) & 0xFFFFU))
+#define PCI_ECAP_NEXT(hdr)	((uint32_t)(((hdr) >> 20U) & 0xFFCU))
+#define PCIZ_SRIOV		0x10U
+
+/* SRIOV Definitions */
+#define PCI_SRIOV_CAP_LEN	0x40U
+
 /* PCI Message Signalled Interrupts (MSI) */
 #define PCIR_MSI_CTRL         0x02U
 #define PCIM_MSICTRL_64BIT    0x80U
@@ -192,6 +201,11 @@ struct pci_msix_cap {
 	uint8_t   cap[MSIX_CAPLEN];
 };
 
+struct pci_sriov_cap {
+	uint32_t  capoff;
+	uint32_t  caplen;
+};
+
 struct pci_pdev {
 	uint8_t hdr_type;
 
@@ -208,6 +222,7 @@ struct pci_pdev {
 	uint32_t msi_capoff;
 
 	struct pci_msix_cap msix;
+	struct pci_sriov_cap sriov;
 
 	bool has_pm_reset;
 	bool has_flr;
