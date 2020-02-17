@@ -56,7 +56,7 @@ static bool is_allocated_to_prelaunched_vm(struct pci_pdev *pdev)
 /*
  * @pre: pdev != NULL
  */
-void fill_pci_dev_config(struct pci_pdev *pdev)
+void init_one_dev_config(struct pci_pdev *pdev)
 {
 	uint16_t vmid;
 	struct acrn_vm_config *vm_config;
