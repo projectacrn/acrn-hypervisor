@@ -16,9 +16,9 @@
 #include <vm_config.h>
 #include <msr.h>
 
-struct cat_hw_info cat_cap_info;
+struct cat_hw_info cat_cap_info = {false, 0U, 0U, 0U, 0U};
 const uint16_t hv_clos = 0U;
-static uint16_t platform_clos_num = MAX_PLATFORM_CLOS_NUM;
+uint16_t platform_clos_num = MAX_PLATFORM_CLOS_NUM;
 
 int32_t init_cat_cap_info(void)
 {
@@ -29,15 +29,15 @@ int32_t init_cat_cap_info(void)
 		cpuid_subleaf(CPUID_RSD_ALLOCATION, 0, &eax, &ebx, &ecx, &edx);
 		/* If support L3 CAT, EBX[1] is set */
 		if ((ebx & 2U) != 0U) {
+			cat_cap_info.enabled = true;
 			cat_cap_info.res_id = CAT_RESID_L3;
 		}
 
 		/* If support L2 CAT, EBX[2] is set */
 		if ((ebx & 4U) != 0U) {
+			cat_cap_info.enabled = true;
 			cat_cap_info.res_id = CAT_RESID_L2;
 		}
-
-		cat_cap_info.enabled = true;
 
 		/* CPUID.(EAX=0x10,ECX=ResID):EAX[4:0] reports the length of CBM supported
 		 * CPUID.(EAX=0x10,ECX=ResID):EBX[31:0] indicates the corresponding uints
@@ -50,14 +50,14 @@ int32_t init_cat_cap_info(void)
 		cat_cap_info.clos_max = (uint16_t)(edx & 0xffffU);
 
 		if ((platform_clos_num != 0U) && ((cat_cap_info.clos_max + 1U) != platform_clos_num)) {
-			pr_err("%s clos_max:%hu, platform_clos_num:%u\n", __func__, cat_cap_info.clos_max, platform_clos_num);
+			pr_err("%s clos_max:%hu, platform_clos_num:%u\n",
+			 __func__, cat_cap_info.clos_max, platform_clos_num);
 			ret = -EINVAL;
 		}
 	}
 
 	return ret;
 }
-
 
 void setup_clos(uint16_t pcpu_id)
 {
@@ -66,7 +66,7 @@ void setup_clos(uint16_t pcpu_id)
 	uint64_t val;
 
 	if (cat_cap_info.enabled) {
-		for (i = 0U; i < platform_clos_num; i++) {
+		for (i = 0; i < platform_clos_num; i++) {
 			switch (cat_cap_info.res_id) {
 			case CAT_RESID_L2:
 				msr_index = platform_l2_clos_array[i].msr_index;
@@ -83,16 +83,21 @@ void setup_clos(uint16_t pcpu_id)
 			}
 		}
 		/* set hypervisor CAT clos */
-		msr_write_pcpu(MSR_IA32_PQR_ASSOC, clos2prq_msr(hv_clos), pcpu_id);
+		msr_write_pcpu(MSR_IA32_PQR_ASSOC, clos2pqr_msr(hv_clos), pcpu_id);
 	}
 }
 
-uint64_t clos2prq_msr(uint16_t clos)
+uint64_t clos2pqr_msr(uint16_t clos)
 {
-	uint64_t prq_assoc;
+	uint64_t pqr_assoc;
 
-	prq_assoc = msr_read(MSR_IA32_PQR_ASSOC);
-	prq_assoc = (prq_assoc & 0xffffffffUL) | ((uint64_t)clos << 32U);
+	pqr_assoc = msr_read(MSR_IA32_PQR_ASSOC);
+	pqr_assoc = (pqr_assoc & 0xffffffffUL) | ((uint64_t)clos << 32U);
 
-	return prq_assoc;
+	return pqr_assoc;
+}
+
+bool is_platform_rdt_capable(void)
+{
+	return cat_cap_info.enabled;
 }

@@ -184,13 +184,15 @@ bool sanitize_vm_config(void)
 			break;
 		}
 
-		if (cat_cap_info.enabled && (vm_config->clos > cat_cap_info.clos_max)) {
-			pr_err("%s set CLOS(%d) more than system supports(%d)\n", __func__,
-					vm_config->clos, cat_cap_info.clos_max);
+		if (ret &&
+		    is_platform_rdt_capable() &&
+		    (vm_config->clos >= platform_clos_num)) {
+			pr_err("%s set wrong CLOS. Please set below %d\n", __func__, platform_clos_num);
 			ret = false;
 		}
 
-		if (((vm_config->epc.size | vm_config->epc.base) & ~PAGE_MASK) != 0UL) {
+		if (ret &&
+		    (((vm_config->epc.size | vm_config->epc.base) & ~PAGE_MASK) != 0UL)) {
 			ret = false;
 		}
 
@@ -199,15 +201,18 @@ bool sanitize_vm_config(void)
 			ret = check_vm_uuid_collision(vm_id);
 		}
 
-		/* vuart[1+] are used for VM communications */
-		for (vuart_idx = 1U; vuart_idx < MAX_VUART_NUM_PER_VM; vuart_idx++) {
-			const struct vuart_config *vu_config = &vm_config->vuart[vuart_idx];
+		if (ret) {
+			/* vuart[1+] are used for VM communications */
+			for (vuart_idx = 1U; vuart_idx < MAX_VUART_NUM_PER_VM; vuart_idx++) {
+				const struct vuart_config *vu_config = &vm_config->vuart[vuart_idx];
 
-			if (!(vu_config->type == VUART_LEGACY_PIO) && (vu_config->addr.port_base == INVALID_COM_BASE)) {
-				if ((vu_config->t_vuart.vm_id >= CONFIG_MAX_VM_NUM) ||
-					(vu_config->t_vuart.vm_id == vm_id)) {
-					pr_err("%s invalid vuart configuration for VM %d\n", __func__, vm_id);
-					ret = false;
+				if (!(vu_config->type == VUART_LEGACY_PIO) &&
+					(vu_config->addr.port_base == INVALID_COM_BASE)) {
+					if ((vu_config->t_vuart.vm_id >= CONFIG_MAX_VM_NUM) ||
+						(vu_config->t_vuart.vm_id == vm_id)) {
+						pr_err("%s invalid vuart configuration for VM %d\n", __func__, vm_id);
+						ret = false;
+					}
 				}
 			}
 		}
