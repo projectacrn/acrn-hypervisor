@@ -898,8 +898,13 @@ vlapic_process_eoi(struct acrn_vlapic *vlapic)
 		vlapic_update_ppr(vlapic);
 
 		if (bitmap32_test((uint16_t)bitpos, &tmrptr[i].v)) {
-			/* hook to vIOAPIC */
-			vioapic_process_eoi(vlapic->vm, vector);
+			/*
+			 * Per Intel SDM 10.8.5, Software can inhibit the broadcast of
+			 * EOI by setting bit 12 of the Spurious Interrupt Vector
+			 * Register of the LAPIC.
+			 * TODO: Check if the bit 12 "Suppress EOI Broadcasts" is set.
+			 */
+			vioapic_broadcast_eoi(vlapic->vm, vector);
 		}
 
 		vcpu_make_request(vlapic->vcpu, ACRN_REQUEST_EVENT);
@@ -2513,7 +2518,7 @@ int32_t veoi_vmexit_handler(struct acrn_vcpu *vcpu)
 
 	if (bitmap32_test((uint16_t)(vector & 0x1fU), &tmrptr[idx].v)) {
 		/* hook to vIOAPIC */
-		vioapic_process_eoi(vlapic->vm, vector);
+		vioapic_broadcast_eoi(vlapic->vm, vector);
 	}
 
 	TRACE_2L(TRACE_VMEXIT_APICV_VIRT_EOI, vector, 0UL);

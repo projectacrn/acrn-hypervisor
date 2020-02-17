@@ -107,7 +107,7 @@ struct vm_arch {
 	void *sworld_eptp;
 	struct memory_ops ept_mem_ops;
 
-	struct acrn_vioapic vioapic;	/* Virtual IOAPIC base address */
+	struct acrn_vioapics vioapics;	/* Virtual IOAPIC/s */
 	struct acrn_vpic vpic;      /* Virtual PIC */
 #ifdef CONFIG_HYPERV_ENABLED
 	struct acrn_hyperv hyperv;

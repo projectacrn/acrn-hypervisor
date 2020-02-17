@@ -73,6 +73,17 @@ uint32_t get_pic_pin_from_ioapic_pin(uint32_t pin_index)
 	return pin_id;
 }
 
+uint8_t get_platform_ioapic_info (struct ioapic_info **plat_ioapic_info)
+{
+	*plat_ioapic_info = ioapic_array;
+	return ioapic_num;
+}
+
+uint8_t get_gsi_to_ioapic_index(uint32_t gsi)
+{
+	return gsi_table_data[gsi].ioapic_info.index;
+}
+
 /*
  * @pre gsi < NR_MAX_GSI
  */
