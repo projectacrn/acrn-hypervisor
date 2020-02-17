@@ -26,6 +26,8 @@ uint32_t gsi_to_ioapic_pin(uint32_t gsi);
 int32_t init_ioapic_id_info(void);
 uint8_t ioapic_irq_to_ioapic_id(uint32_t irq);
 
+uint8_t get_platform_ioapic_info (struct ioapic_info **plat_ioapic_info);
+
 /**
  * @defgroup ioapic_ext_apis IOAPIC External Interfaces
  *
@@ -108,6 +110,7 @@ struct gsi_table {
 
 void *gsi_to_ioapic_base(uint32_t gsi);
 uint32_t get_max_nr_gsi(void);
+uint8_t get_gsi_to_ioapic_index(uint32_t gsi);
 uint32_t get_pic_pin_from_ioapic_pin(uint32_t pin_index);
 bool is_gsi_valid(uint32_t gsi);
 #endif /* IOAPIC_H */

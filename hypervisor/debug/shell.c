@@ -1173,7 +1173,7 @@ static void get_vioapic_info(char *str_arg, size_t str_max, uint16_t vmid)
 	uint32_t delmode, vector, dest;
 	bool level, phys, remote_irr, mask;
 	struct acrn_vm *vm = get_vm_from_vmid(vmid);
-	uint32_t gsi, pincount;
+	uint32_t gsi, gsi_count;
 
 	if (is_poweroff_vm(vm)) {
 		len = snprintf(str, size, "\r\nvm is not exist for vmid %hu", vmid);
@@ -1192,9 +1192,12 @@ static void get_vioapic_info(char *str_arg, size_t str_max, uint16_t vmid)
 	size -= len;
 	str += len;
 
-	pincount = vioapic_pincount(vm);
+	gsi_count = get_vm_gsicount(vm);
 	rte.full = 0UL;
-	for (gsi = 0U; gsi < pincount; gsi++) {
+	for (gsi = 0U; gsi < gsi_count; gsi++) {
+		if (is_sos_vm(vm) && (!is_gsi_valid(gsi))) {
+			continue;
+		}
 		vioapic_get_rte(vm, gsi, &rte);
 		mask = (rte.bits.intr_mask == IOAPIC_RTE_MASK_SET);
 		remote_irr = (rte.bits.remote_irr == IOAPIC_RTE_REM_IRR);
