@@ -661,7 +661,7 @@ int32_t reset_vm(struct acrn_vm *vm)
 		}
 
 		reset_vm_ioreqs(vm);
-		vioapic_reset(vm);
+		reset_vioapics(vm);
 		destroy_secure_world(vm, false);
 		vm->sworld_control.flag.active = 0UL;
 		vm->state = VM_CREATED;

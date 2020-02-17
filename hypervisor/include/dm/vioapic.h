@@ -48,11 +48,16 @@
 
 #define IOAPIC_RTE_LOW_INTVEC	((uint32_t)IOAPIC_RTE_INTVEC)
 
-struct acrn_vioapic {
-	struct acrn_vm	*vm;
+/*
+ * id field is used to emulate the IOAPIC_ID register of vIOAPIC
+ */
+
+struct acrn_single_vioapic {
 	spinlock_t	mtx;
+	struct acrn_vm  *vm;
 	uint32_t	base_addr;
 	uint32_t	nr_pins;
+	uint32_t	gsi_base;
 	uint32_t	id;
 	bool		ready;
 	uint32_t	ioregsel;
@@ -61,8 +66,19 @@ struct acrn_vioapic {
 	uint64_t pin_state[STATE_BITMAP_SIZE];
 };
 
-void    vioapic_init(struct acrn_vm *vm);
-void	vioapic_reset(struct acrn_vm *vm);
+/*
+ * ioapic_num represents the number of IO-APICs emulated for the VM.
+ * nr_gsi represents the maximum number of GSI emulated for the VM.
+ */
+struct acrn_vioapics {
+	uint8_t ioapic_num;
+	uint32_t nr_gsi;
+	struct acrn_single_vioapic vioapic_array[CONFIG_MAX_IOAPIC_NUM];
+};
+
+void dump_vioapic(struct acrn_vm *vm);
+void vioapic_init(struct acrn_vm *vm);
+void reset_vioapics(const struct acrn_vm *vm);
 
 
 /**
@@ -102,8 +118,8 @@ void	vioapic_set_irqline_lock(const struct acrn_vm *vm, uint32_t vgsi, uint32_t 
  */
 void	vioapic_set_irqline_nolock(const struct acrn_vm *vm, uint32_t vgsi, uint32_t operation);
 
-uint32_t	vioapic_pincount(const struct acrn_vm *vm);
-void	vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector);
+uint32_t get_vm_gsicount(const struct acrn_vm *vm);
+void	vioapic_broadcast_eoi(const struct acrn_vm *vm, uint32_t vector);
 void	vioapic_get_rte(const struct acrn_vm *vm, uint32_t vgsi, union ioapic_rte *rte);
 int32_t	vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data);
 
