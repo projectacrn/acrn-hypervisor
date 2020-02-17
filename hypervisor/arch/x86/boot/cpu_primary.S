@@ -22,6 +22,10 @@
  */
 
 #include <multiboot.h>
+#ifdef CONFIG_MULTIBOOT2
+#include <multiboot2.h>
+#endif
+
 /* MULTIBOOT HEADER */
 #define MULTIBOOT_HEADER_FLAGS	MULTIBOOT_HEADER_NEED_MEMINFO
 
@@ -38,6 +42,33 @@
     /* header checksum = -(magic + flags) */
     .long   -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
 
+#ifdef CONFIG_MULTIBOOT2
+    .align     MULTIBOOT2_HEADER_ALIGN
+mb2_header_start:
+    /* Magic number indicating a Multiboot2 header. */
+    .long   MULTIBOOT2_HEADER_MAGIC
+    /* Architecture: i386. */
+    .long   MULTIBOOT2_ARCHITECTURE_I386
+    /* Multiboot2 header length. */
+    .long   mb2_header_end - mb2_header_start
+    /* Multiboot2 header checksum. */
+    .long   -(MULTIBOOT2_HEADER_MAGIC + MULTIBOOT2_ARCHITECTURE_I386 + (mb2_header_end - mb2_header_start))
+
+    /* please be aware that each tag should be 8 bytes aligned */
+    .align     MULTIBOOT2_TAG_ALIGN
+info_req_tag_start:
+    .short  MULTIBOOT2_HEADER_TAG_INFORMATION_REQUEST
+    .short  0
+    .long   info_req_tag_end - info_req_tag_start
+    .long   MULTIBOOT2_TAG_TYPE_MMAP
+info_req_tag_end:
+
+    .align     MULTIBOOT2_TAG_ALIGN
+    .short  MULTIBOOT2_HEADER_TAG_END
+    .short  0
+    .long   8
+mb2_header_end:
+#endif
     .section    entry, "ax"
 
     .align      8

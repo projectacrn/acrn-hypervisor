@@ -107,6 +107,9 @@ CFLAGS += -fcf-protection=none
 endif
 
 ASFLAGS += -m64 -nostdinc -nostdlib
+ifeq (y, $(CONFIG_MULTIBOOT2))
+ASFLAGS += -DCONFIG_MULTIBOOT2
+endif
 
 LDFLAGS += -Wl,--gc-sections -nostartfiles -nostdlib
 LDFLAGS += -Wl,-n,-z,max-page-size=0x1000
