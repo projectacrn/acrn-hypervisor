@@ -14,7 +14,7 @@
 #include <logmsg.h>
 #include <seed.h>
 #include <ld_sym.h>
-#include <vboot.h>
+#include <boot.h>
 
 /* Push sp magic to top of stack for call trace */
 #define SWITCH_TO(rsp, to)                                              \

@@ -16,7 +16,7 @@ void parse_hv_cmdline(void)
 	const char *start = NULL;
 	const char *end = NULL;
 
-	if ((boot_regs[0] == MULTIBOOT_INFO_MAGIC) && (boot_regs[1] != 0U)) {
+	if (boot_from_multiboot1()) {
 		struct multiboot_info *mbi = (struct multiboot_info *)(hpa2hva_early((uint64_t)boot_regs[1]));
 
 		if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {

@@ -151,7 +151,7 @@ static int32_t init_vm_kernel_info(struct acrn_vm *vm, const struct multiboot_mo
 /**
  * @pre vm != NULL && mbi != NULL
  */
-static void init_vm_bootargs_info(struct acrn_vm *vm, const struct multiboot_info *mbi)
+static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_multiboot_info *mbi)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	char *bootargs = vm_config->os_config.bootargs;
@@ -162,12 +162,12 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct multiboot_inf
 	} else {
 		/* vm_config->load_order == SOS_VM */
 		if (((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U)
-				&& (*(char *)hpa2hva(mbi->mi_cmdline) != 0)) {
+				&& (*(mbi->mi_cmdline) != '\0')) {
 			/*
 			 * If there is cmdline from mbi->mi_cmdline, merge it with
 			 * vm_config->os_config.bootargs
 			 */
-			merge_cmdline(vm, hpa2hva((uint64_t)mbi->mi_cmdline), bootargs);
+			merge_cmdline(vm, mbi->mi_cmdline, bootargs);
 
 			vm->sw.bootargs_info.src_addr = kernel_cmdline;
 			vm->sw.bootargs_info.size = strnlen_s(kernel_cmdline, MAX_BOOTARGS_SIZE);
@@ -210,10 +210,10 @@ static uint32_t get_mod_idx_by_tag(const struct multiboot_module *mods, uint32_t
 
 /* @pre vm != NULL && mbi != NULL
  */
-static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct multiboot_info *mbi)
+static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct acrn_multiboot_info *mbi)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-	struct multiboot_module *mods = (struct multiboot_module *)hpa2hva((uint64_t)mbi->mi_mods_addr);
+	struct multiboot_module *mods = (struct multiboot_module *)(&mbi->mi_mods[0]);
 	uint32_t mod_idx;
 	int32_t ret = -EINVAL;
 
@@ -245,25 +245,17 @@ static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct multiboot_info *
  */
 static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
 {
-	struct multiboot_info *mbi = NULL;
+	struct acrn_multiboot_info *mbi = get_multiboot_info();
 	int32_t ret = -EINVAL;
 
-	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC) {
-		panic("no multiboot info found");
+	stac();
+	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
+		panic("no multiboot module info found");
 	} else {
-		mbi = (struct multiboot_info *)hpa2hva((uint64_t)boot_regs[1]);
-
-		if (mbi != NULL) {
-			stac();
-			dev_dbg(DBG_LEVEL_BOOT, "Multiboot detected, flag=0x%x", mbi->mi_flags);
-			if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
-				panic("no multiboot module info found");
-			} else {
-				ret = init_vm_sw_load(vm, mbi);
-			}
-			clac();
-		}
+		ret = init_vm_sw_load(vm, mbi);
 	}
+	clac();
+
 	return ret;
 }
 
