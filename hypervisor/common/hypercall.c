@@ -353,7 +353,7 @@ int32_t hcall_set_irqline(const struct acrn_vm *vm, uint16_t vmid,
 	int32_t ret = -1;
 
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
-		if (ops->gsi < vioapic_pincount(vm)) {
+		if (ops->gsi < get_vm_gsicount(vm)) {
 			if (ops->gsi < vpic_pincount()) {
 				/*
 				 * IRQ line for 8254 timer is connected to
@@ -905,8 +905,13 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t pa
 				spinlock_obtain(&vpci->lock);
 				vdev = pci_find_vdev(vpci, bdf);
 				spinlock_release(&vpci->lock);
+				/*
+				 * TODO: Change the hc_ptdev_irq structure member names
+				 * virt_pin to virt_gsi
+				 * phys_pin to phys_gsi
+				 */
 				if ((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf)) {
-					if ((((!irq.intx.pic_pin) && (irq.intx.virt_pin < vioapic_pincount(target_vm))) ||
+					if ((((!irq.intx.pic_pin) && (irq.intx.virt_pin < get_vm_gsicount(target_vm))) ||
 							((irq.intx.pic_pin) && (irq.intx.virt_pin < vpic_pincount()))) &&
 							is_gsi_valid(irq.intx.phys_pin)) {
 						ret = ptirq_add_intx_remapping(target_vm, irq.intx.virt_pin,
@@ -954,8 +959,13 @@ hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 				spinlock_obtain(&vpci->lock);
 				vdev = pci_find_vdev(vpci, bdf);
 				spinlock_release(&vpci->lock);
+				/*
+				 * TODO: Change the hc_ptdev_irq structure member names
+				 * virt_pin to virt_gsi
+				 * phys_pin to phys_gsi
+				 */
 				if ((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf)) {
-					if (((!irq.intx.pic_pin) && (irq.intx.virt_pin < vioapic_pincount(target_vm))) ||
+					if (((!irq.intx.pic_pin) && (irq.intx.virt_pin < get_vm_gsicount(target_vm))) ||
 						((irq.intx.pic_pin) && (irq.intx.virt_pin < vpic_pincount()))) {
 						ptirq_remove_intx_remapping(target_vm, irq.intx.virt_pin, irq.intx.pic_pin);
 						ret = 0;
