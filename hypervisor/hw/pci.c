@@ -305,8 +305,13 @@ static uint32_t pci_check_override_drhd_index(union pci_bdf pbdf,
 	return bdf_drhd_index;
 }
 
-/* Scan part of PCI hierarchy, starting with the given bus. */
-static void init_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_LEN],
+/* @brief: scan PCI physical devices from specific bus.
+ * walks through the bus to scan PCI physical devices and using the discovered physical devices
+ * to initialize pdevs, each pdev can only provdie a physical device information (like bdf, bar,
+ * capabilities) before using this pdev, it needs to use the pdev to initialize a per VM device
+ * configuration(acrn_vm_pci_dev_config), call init_one_dev_config or init_all_dev_config to do this.
+ */
+static void scan_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_LEN],
 				const struct pci_bdf_set *const bdfs_from_drhds, uint32_t drhd_index)
 {
 	bool is_mfdev;
@@ -375,7 +380,7 @@ static void init_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_
 
 /*
  * @brief: Setup bdfs_from_drhds data structure as the DMAR tables are walked searching
- * for PCI device scopes. bdfs_from_drhds is used later in init_pci_hierarchy
+ * for PCI device scopes. bdfs_from_drhds is used later in scan_pci_hierarchy
  * to map the right DRHD unit to the PCI device
  */
 static void pci_add_bdf_from_drhd(union pci_bdf bdf, struct pci_bdf_set *const bdfs_from_drhds,
@@ -394,7 +399,7 @@ static void pci_add_bdf_from_drhd(union pci_bdf bdf, struct pci_bdf_set *const b
 
 /*
  * @brief: Setup bdfs_from_drhds data structure as the DMAR tables are walked searching
- * for PCI device scopes. bdfs_from_drhds is used later in init_pci_hierarchy
+ * for PCI device scopes. bdfs_from_drhds is used later in scan_pci_hierarchy
  * to map the right DRHD unit to the PCI device.
  * TODO: bdfs_from_drhds is a good candidate to be part of generated platform
  * info.
@@ -432,6 +437,43 @@ static void pci_parse_iommu_devscopes(struct pci_bdf_set *const bdfs_from_drhds,
 }
 
 /*
+ * @brief: walks through all pdevs that have been initialized and determine
+ * which pdevs need to be added to pci dev_config. The pdevs added to pci
+ * dev_config will be exposed to SOS finally.
+ */
+static void init_all_dev_config(void)
+{
+	uint32_t idx, cnt = 0U;
+	uint32_t total = num_pci_pdev;
+	struct pci_pdev *pdev = NULL;
+
+	for (idx = 0U; idx < num_pci_pdev; idx++) {
+		pdev = &pci_pdev_array[idx];
+
+		/*
+		 * FIXME: Mask the SR-IOV capability instead drop the device
+		 * when supporting PCIe extended capabilities whitelist.
+		 */
+		if (pdev->sriov.capoff != 0U) {
+			cnt = pci_pdev_read_cfg(pdev->bdf,
+				pdev->sriov.capoff + PCIR_SRIOV_TOTAL_VFS, 2U);
+			/*
+			 * For SRIOV-Capable device, drop the device
+			 * if no room for its all of virtual functions.
+			 */
+			if ((total + cnt) > CONFIG_MAX_PCI_DEV_NUM) {
+				pr_err("%s, %x:%x.%x is dropped since no room for %u VFs",
+						__func__, pdev->bdf.bits.b, pdev->bdf.bits.d, pdev->bdf.bits.f, cnt);
+				continue;
+			} else {
+				total += cnt;
+			}
+		}
+		init_one_dev_config(pdev);
+	}
+}
+
+/*
  * @brief Walks the PCI heirarchy and initializes array of pci_pdev structs
  * Uses DRHD info from ACPI DMAR tables to cover the endpoints and
  * bridges along with their hierarchy captured in the device scope entries
@@ -451,9 +493,10 @@ void init_pci_pdev_list(void)
 	for (bus = 0U; bus <= PCI_BUSMAX; bus++) {
 		was_visited = bitmap_test((bus & 0x3FU), &buses_visited[bus >> 6U]);
 		if (!was_visited) {
-			init_pci_hierarchy((uint8_t)bus, buses_visited, &bdfs_from_drhds, drhd_idx_pci_all);
+			scan_pci_hierarchy((uint8_t)bus, buses_visited, &bdfs_from_drhds, drhd_idx_pci_all);
 		}
 	}
+	init_all_dev_config();
 }
 
 static inline uint32_t pci_pdev_get_nr_bars(uint8_t hdr_type)
@@ -589,9 +632,6 @@ static void init_pdev(uint16_t pbdf, uint32_t drhd_index)
 			}
 
 			pdev->drhd_index = drhd_index;
-
-			fill_pci_dev_config(pdev);
-
 			num_pci_pdev++;
 		} else {
 			pr_err("%s, %x:%x.%x unsupported headed type: 0x%x\n",

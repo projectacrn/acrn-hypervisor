@@ -114,6 +114,7 @@
 
 /* SRIOV Definitions */
 #define PCI_SRIOV_CAP_LEN	0x40U
+#define PCIR_SRIOV_TOTAL_VFS	0xEU
 
 /* PCI Message Signalled Interrupts (MSI) */
 #define PCIR_MSI_CTRL         0x02U
