@@ -477,6 +477,31 @@ static inline uint32_t pci_pdev_get_nr_bars(uint8_t hdr_type)
 	return nr_bars;
 }
 
+/**
+ * @pre pdev != NULL
+ */
+static void pci_read_ext_cap(struct pci_pdev *pdev) {
+
+	uint32_t hdr, pos;
+
+	pos = PCI_ECAP_BASE_PTR;
+
+	/* PCI Express Extended Capability must have 4 bytes header */
+	hdr = pci_pdev_read_cfg(pdev->bdf, pos, 4U);
+	while (hdr != 0U) {
+		if (PCI_ECAP_ID(hdr) == PCIZ_SRIOV) {
+			pdev->sriov.capoff = pos;
+			pdev->sriov.caplen = PCI_SRIOV_CAP_LEN;
+		}
+		pos = PCI_ECAP_NEXT(hdr);
+		if (pos == 0U) {
+			break;
+		}
+
+		hdr = pci_pdev_read_cfg(pdev->bdf, pos, 4U);
+	};
+}
+
 /*
  * @pre pdev != NULL
  */
@@ -487,6 +512,7 @@ static void pci_read_cap(struct pci_pdev *pdev)
 	uint32_t len, idx;
 	uint32_t table_info;
 	uint32_t pcie_devcap, val;
+	bool is_pcie = false;
 
 	pos = (uint8_t)pci_pdev_read_cfg(pdev->bdf, PCIR_CAP_PTR, 1U);
 
@@ -520,6 +546,7 @@ static void pci_read_cap(struct pci_pdev *pdev)
 			val = pci_pdev_read_cfg(pdev->bdf, pos + PCIR_PMCSR, 4U);
 			pdev->has_pm_reset = ((val & PCIM_PMCSR_NO_SOFT_RST) == 0U);
 		} else if (cap == PCIY_PCIE) {
+			is_pcie = true;
 			pcie_devcap = pci_pdev_read_cfg(pdev->bdf, pos + PCIR_PCIE_DEVCAP, 4U);
 			pdev->has_flr = ((pcie_devcap & PCIM_PCIE_FLRCAP) != 0U);
 		} else if (cap == PCIY_AF) {
@@ -530,6 +557,10 @@ static void pci_read_cap(struct pci_pdev *pdev)
 		}
 
 		pos = (uint8_t)pci_pdev_read_cfg(pdev->bdf, pos + PCICAP_NEXTPTR, 1U);
+	}
+
+	if (is_pcie) {
+		pci_read_ext_cap(pdev);
 	}
 }
 
