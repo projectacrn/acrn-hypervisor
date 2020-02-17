@@ -33,6 +33,23 @@ static void mb2_mmap_to_mbi(struct acrn_multiboot_info *mbi, struct multiboot2_t
 }
 
 /**
+ * @pre mbi != NULL && mb2_tag_mods != NULL
+ */
+static void mb2_mods_to_mbi(struct acrn_multiboot_info *mbi,
+			uint32_t mbi_mod_idx, struct multiboot2_tag_module *mb2_tag_mods)
+{
+	if (mbi_mod_idx >= MAX_MODULE_COUNT) {
+		pr_err("unhandled multiboot2 module: 0x%x", mb2_tag_mods->mod_start);
+	} else {
+		mbi->mi_mods[mbi_mod_idx].mm_mod_start = mb2_tag_mods->mod_start;
+		mbi->mi_mods[mbi_mod_idx].mm_mod_end = mb2_tag_mods->mod_end;
+		mbi->mi_mods[mbi_mod_idx].mm_string = (uint32_t)(uint64_t)mb2_tag_mods->cmdline;
+		mbi->mi_mods_count = mbi_mod_idx + 1U;
+	}
+	mbi->mi_flags |= MULTIBOOT_INFO_HAS_MODS;
+}
+
+/**
  * @pre mbi != NULL && mb2_info != NULL
  */
 int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
@@ -40,6 +57,7 @@ int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
 	int32_t ret = 0;
 	struct multiboot2_tag *mb2_tag, *mb2_tag_end;
 	uint32_t mb2_info_size = *(uint32_t *)mb2_info;
+	uint32_t mod_idx = 0U;
 
 	/* The start part of multiboot2 info: total mbi size (4 bytes), reserved (4 bytes) */
 	mb2_tag = (struct multiboot2_tag *)((uint8_t *)mb2_info + 8U);
@@ -55,6 +73,16 @@ int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
 		switch (mb2_tag->type) {
 		case MULTIBOOT2_TAG_TYPE_MMAP:
 			mb2_mmap_to_mbi(mbi, (struct multiboot2_tag_mmap *)mb2_tag);
+			break;
+		case MULTIBOOT2_TAG_TYPE_MODULE:
+			mb2_mods_to_mbi(mbi, mod_idx, (struct multiboot2_tag_module *)mb2_tag);
+			mod_idx++;
+			break;
+		case MULTIBOOT2_TAG_TYPE_BOOT_LOADER_NAME:
+			mbi->mi_loader_name = ((struct multiboot2_tag_string *)mb2_tag)->string;
+			break;
+		case MULTIBOOT2_TAG_TYPE_ACPI_NEW:
+			mbi->mi_acpi_rsdp = ((struct multiboot2_tag_new_acpi *)mb2_tag)->rsdp;
 			break;
 		default:
 			if (mb2_tag->type <= MULTIBOOT2_TAG_TYPE_LOAD_BASE_ADDR) {
