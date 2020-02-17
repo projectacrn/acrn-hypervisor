@@ -253,12 +253,12 @@ config HYPERV_ENABLED
 	  When set, the minimum set of TLFS functionality together with some
 	  performance enlightenments are enabled.
 
-config CAT_ENABLED
-	bool "Enable CAT (Cache Allocation Technology)"
+config RDT_ENABLED
+	bool "Enable RDT (Resource Director Technology)"
 	default n
 	help
-	  When set in platforms that support CAT, hypervisor can allocate
-	  various amount of last-level-cache (LLC) resources to VMs to achieve
+	  When set in platforms that support RDT, hypervisor can allocate
+	  various amount of HW resources such as L2 or/and L3 to VMs to achieve
 	  different Class of Service (COS, or CLOS).
 
 config GPU_SBDF
