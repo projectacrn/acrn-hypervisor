@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2019 Intel Corporation. All rights reserved.
+ * Copyright (C) 2020 Intel Corporation. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef CAT_H
-#define CAT_H
+#ifndef RDT_H
+#define RDT_H
 
 /* The intel Resource Director Tech(RDT) based Cache Allocation Tech support */
 struct cat_hw_info {
@@ -27,4 +27,4 @@ void setup_clos(uint16_t pcpu_id);
 int32_t init_cat_cap_info(void);
 uint64_t clos2prq_msr(uint16_t clos);
 
-#endif	/* CAT_H */
+#endif	/* RDT_H */

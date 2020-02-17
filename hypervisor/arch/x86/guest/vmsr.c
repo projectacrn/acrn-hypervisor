@@ -15,7 +15,7 @@
 #include <sgx.h>
 #include <guest_pm.h>
 #include <ucode.h>
-#include <cat.h>
+#include <rdt.h>
 #include <trace.h>
 #include <logmsg.h>
 
