@@ -26,6 +26,7 @@ struct sched_bvt_data {
 	int64_t avt;
 	/* effective virtual time in units of mcu */
 	int64_t evt;
+	uint64_t residual;
 
 	uint64_t start_tsc;
 };
@@ -157,12 +158,90 @@ static void sched_bvt_init_data(struct thread_object *obj)
 	data->mcu = BVT_MCU_MS * CYCLES_PER_MS;
 	/* TODO: virtual time advance ratio should be proportional to weight. */
 	data->vt_ratio = 1U;
+	data->residual = 0U;
 	data->run_countdown = BVT_CSA_MCU;
 }
 
-static struct thread_object *sched_bvt_pick_next(__unused struct sched_control *ctl)
+static uint64_t v2p(uint64_t virt_time, uint64_t ratio)
 {
-	return NULL;
+	return (uint64_t)(virt_time / ratio);
+}
+
+static uint64_t p2v(uint64_t phy_time, uint64_t ratio)
+{
+	return (uint64_t)(phy_time * ratio);
+}
+
+static void update_vt(struct thread_object *obj)
+{
+	struct sched_bvt_data *data;
+	uint64_t now_tsc = rdtsc();
+	uint64_t v_delta, delta_mcu = 0U;
+
+	data = (struct sched_bvt_data *)obj->data;
+
+	/* update current thread's avt and evt */
+	if (now_tsc > data->start_tsc) {
+		v_delta = p2v(now_tsc - data->start_tsc, data->vt_ratio) + data->residual;
+		delta_mcu = (uint64_t)(v_delta / data->mcu);
+		data->residual = v_delta % data->mcu;
+	}
+	data->avt += delta_mcu;
+	/* TODO: evt = avt - (warp ? warpback : 0U) */
+	data->evt = data->avt;
+
+	if (is_inqueue(obj)) {
+		runqueue_remove(obj);
+		runqueue_add(obj);
+	}
+}
+
+static struct thread_object *sched_bvt_pick_next(struct sched_control *ctl)
+{
+	struct sched_bvt_control *bvt_ctl = (struct sched_bvt_control *)ctl->priv;
+	struct thread_object *first_obj = NULL, *second_obj = NULL;
+	struct sched_bvt_data *first_data = NULL, *second_data = NULL;
+	struct list_head *first, *sec;
+	struct thread_object *next = NULL;
+	struct thread_object *current = ctl->curr_obj;
+	uint64_t now_tsc = rdtsc();
+	uint64_t delta_mcu = 0U;
+
+	if (!is_idle_thread(current)) {
+		update_vt(current);
+	}
+
+	if (!list_empty(&bvt_ctl->runqueue)) {
+		first = bvt_ctl->runqueue.next;
+		sec = (first->next == &bvt_ctl->runqueue) ? NULL : first->next;
+
+		first_obj = list_entry(first, struct thread_object, data);
+		first_data = (struct sched_bvt_data *)first_obj->data;
+
+		/* The run_countdown is used to store how may mcu the next thread
+		 * can run for. It is set in pick_next handler, and decreases in
+		 * tick handler. Normally, the next thread can run until its AVT
+		 * is ahead of the next runnable thread for one CSA
+		 * (context switch allowance). But when there is only one object
+		 * in runqueue, it can run forever. so, set a very very large
+		 * number to it so that it can run for a long time. Here,
+		 * UINT64_MAX can make it run for >100 years before rescheduled.
+		 */
+		if (sec != NULL) {
+			second_obj = list_entry(sec, struct thread_object, data);
+			second_data = (struct sched_bvt_data *)second_obj->data;
+			delta_mcu = second_data->evt - first_data->evt;
+			first_data->run_countdown = v2p(delta_mcu, first_data->vt_ratio) + BVT_CSA_MCU;
+		} else {
+			first_data->run_countdown = UINT64_MAX;
+		}
+		first_data->start_tsc = now_tsc;
+		next = first_obj;
+	} else {
+		next = &get_cpu_var(idle);
+	}
+
+	return next;
 }
 
 static void sched_bvt_sleep(struct thread_object *obj)
