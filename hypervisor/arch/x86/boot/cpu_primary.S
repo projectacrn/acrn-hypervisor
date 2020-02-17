@@ -61,6 +61,8 @@ info_req_tag_start:
     .short  0
     .long   info_req_tag_end - info_req_tag_start
     .long   MULTIBOOT2_TAG_TYPE_MMAP
+    .long   MULTIBOOT2_TAG_TYPE_MODULE
+    .long   MULTIBOOT2_TAG_TYPE_ACPI_NEW
 info_req_tag_end:
 
     .align     MULTIBOOT2_TAG_ALIGN

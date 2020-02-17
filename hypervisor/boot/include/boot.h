@@ -30,6 +30,8 @@ struct acrn_multiboot_info {
 
 	uint32_t		mi_mmap_entries;
 	struct multiboot_mmap	mi_mmap_entry[E820_MAX_ENTRIES];
+
+	void			*mi_acpi_rsdp;
 };
 
 /* boot_regs store the multiboot info magic and address */
