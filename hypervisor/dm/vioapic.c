@@ -472,7 +472,7 @@ vioapic_init(struct acrn_vm *vm)
 			vioapic_mmio_access_handler,
 			(uint64_t)VIOAPIC_BASE,
 			(uint64_t)VIOAPIC_BASE + VIOAPIC_SIZE,
-			vm);
+			vm, false);
 	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
 			(uint64_t)VIOAPIC_BASE, (uint64_t)VIOAPIC_SIZE);
 	vm->arch_vm.vioapic.ready = true;

@@ -459,6 +459,7 @@ static int32_t
 hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
 	int32_t status = -ENODEV;
+	bool hold_lock = true;
 	uint16_t idx;
 	uint64_t address, size, base, end;
 	struct mmio_request *mmio_req = &io_req->reqs.mmio;
@@ -484,6 +485,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 				continue;
 			} else {
 				 if ((address >= base) && ((address + size) <= end)) {
+					hold_lock = mmio_handler->hold_lock;
 					read_write = mmio_handler->read_write;
 					handler_private_data = mmio_handler->handler_private_data;
 				} else {
@@ -496,7 +498,16 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	}
 
 	if ((status == -ENODEV) && (read_write != NULL)) {
+		/* This mmio_handler will never modify once register, so we don't
+		 * need to hold the lock when handling the MMIO access.
+		 */
+		if (!hold_lock) {
+			spinlock_release(&vcpu->vm->emul_mmio_lock);
+		}
 		status = read_write(io_req, handler_private_data);
+		if (!hold_lock) {
+			spinlock_obtain(&vcpu->vm->emul_mmio_lock);
+		}
 	}
 	spinlock_release(&vcpu->vm->emul_mmio_lock);
 
@@ -669,7 +680,7 @@ static inline struct mem_io_node *find_free_mmio_node(struct acrn_vm *vm)
  */
 void register_mmio_emulation_handler(struct acrn_vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
-	uint64_t end, void *handler_private_data)
+	uint64_t end, void *handler_private_data, bool hold_lock)
 {
 	struct mem_io_node *mmio_node;
 
@@ -679,6 +690,7 @@ void register_mmio_emulation_handler(struct acrn_vm *vm,
 		mmio_node = find_free_mmio_node(vm);
 		if (mmio_node != NULL) {
 			/* Fill in information for this node */
+			mmio_node->hold_lock = hold_lock;
 			mmio_node->read_write = read_write;
 			mmio_node->handler_private_data = handler_private_data;
 			mmio_node->range_start = start;
