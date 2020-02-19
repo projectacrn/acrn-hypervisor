@@ -249,7 +249,7 @@ void vpci_init(struct acrn_vm *vm)
 		pci_mmcfg_base = (vm_config->load_order == SOS_VM) ? get_mmcfg_base() : 0xE0000000UL;
 		vm->vpci.pci_mmcfg_base = pci_mmcfg_base;
 		register_mmio_emulation_handler(vm, vpci_handle_mmconfig_access,
-			pci_mmcfg_base, pci_mmcfg_base + PCI_MMCONFIG_SIZE, &vm->vpci);
+			pci_mmcfg_base, pci_mmcfg_base + PCI_MMCONFIG_SIZE, &vm->vpci, false);
 	}
 
 	/* Intercept and handle I/O ports CF8h */

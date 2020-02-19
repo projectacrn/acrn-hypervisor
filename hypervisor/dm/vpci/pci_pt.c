@@ -112,7 +112,7 @@ static void vdev_pt_map_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 			addr_lo = round_page_down(addr_lo);
 			addr_hi = round_page_up(addr_hi);
 			register_mmio_emulation_handler(vm, vmsix_handle_table_mmio_access,
-					addr_lo, addr_hi, vdev);
+					addr_lo, addr_hi, vdev, true);
 			ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, addr_lo, addr_hi - addr_lo);
 			msix->mmio_gpa = vbar->base;
 		}

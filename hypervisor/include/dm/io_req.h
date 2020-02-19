@@ -112,6 +112,13 @@ typedef int32_t (*hv_mem_io_handler_t)(struct io_request *io_req, void *handler_
  * @brief Structure for MMIO handler node
  */
 struct mem_io_node {
+
+	/**
+	 * @brief Whether the lock needs to hold when handle the MMIO access
+	 */
+	bool hold_lock;
+
+
 	/**
 	 * @brief A pointer to the handler
 	 *
@@ -258,12 +265,13 @@ void   register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
  * @param start The base address of the range \p read_write can emulate
  * @param end The end of the range (exclusive) \p read_write can emulate
  * @param handler_private_data Handler-specific data which will be passed to \p read_write when called
+ * @param hold_lock Whether hold the lock to handle the MMIO access
  *
  * @return None
  */
 void register_mmio_emulation_handler(struct acrn_vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
-	uint64_t end, void *handler_private_data);
+	uint64_t end, void *handler_private_data, bool hold_lock);
 
 /**
  * @brief Unregister a MMIO handler
