@@ -58,11 +58,10 @@ static uint32_t create_zeropage_e820(struct zero_page *zp, const struct acrn_vm 
  */
 static uint64_t create_zero_page(struct acrn_vm *vm)
 {
-	struct zero_page *zeropage;
+	struct zero_page *zeropage, *hva;
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
 	struct sw_module_info *bootargs_info = &(vm->sw.bootargs_info);
 	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
-	struct zero_page *hva;
 	uint64_t gpa, addr;
 
 	/* Set zeropage in Linux Guest RAM region just past boot args */
@@ -74,6 +73,14 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 	/* clear the zeropage */
 	(void)memset(zeropage, 0U, MEM_2K);
 
+#ifdef CONFIG_MULTIBOOT2
+	if (is_sos_vm(vm)) {
+		struct acrn_multiboot_info *mbi = get_multiboot_info();
+
+		(void)memcpy_s(&(zeropage->boot_efi_info), sizeof(zeropage->boot_efi_info),
+				&(mbi->mi_efi_info), sizeof(mbi->mi_efi_info));
+	}
+#endif
 	/* copy part of the header into the zero page */
 	hva = (struct zero_page *)gpa2hva(vm, (uint64_t)sw_kernel->kernel_load_addr);
 	(void)memcpy_s(&(zeropage->hdr), sizeof(zeropage->hdr),

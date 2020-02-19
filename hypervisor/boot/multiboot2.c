@@ -50,6 +50,37 @@ static void mb2_mods_to_mbi(struct acrn_multiboot_info *mbi,
 }
 
 /**
+ * @pre mbi != NULL && mb2_tag_efi64 != 0
+ */
+static void mb2_efi64_to_mbi(struct acrn_multiboot_info *mbi, struct multiboot2_tag_efi64 *mb2_tag_efi64)
+{
+	mbi->mi_efi_info.efi_systab = (uint32_t)(uint64_t)mb2_tag_efi64->pointer;
+	mbi->mi_efi_info.efi_loader_signature = (uint32_t)(uint64_t)efiloader_sig;
+	mbi->mi_flags |= MULTIBOOT_INFO_HAS_EFI64;
+}
+
+/**
+ * @pre mbi != NULL && mb2_tag_efimmap != 0
+ */
+static int32_t mb2_efimmap_to_mbi(struct acrn_multiboot_info *mbi, struct multiboot2_tag_efi_mmap *mb2_tag_efimmap)
+{
+	int32_t ret = 0;
+
+	mbi->mi_efi_info.efi_memdesc_size = mb2_tag_efimmap->descr_size;
+	mbi->mi_efi_info.efi_memdesc_version = mb2_tag_efimmap->descr_vers;
+	mbi->mi_efi_info.efi_memmap = (uint32_t)(uint64_t)mb2_tag_efimmap->efi_mmap;
+	mbi->mi_efi_info.efi_memmap_size = mb2_tag_efimmap->size - 16U;
+	mbi->mi_efi_info.efi_memmap_hi = (uint32_t)(((uint64_t)mb2_tag_efimmap->efi_mmap) >> 32U);
+	if (mbi->mi_efi_info.efi_memmap_hi != 0U) {
+		pr_err("the efi mmap address should be less than 4G!");
+		ret = -EINVAL;
+	} else {
+		mbi->mi_flags |= MULTIBOOT_INFO_HAS_EFI64;
+	}
+	return ret;
+}
+
+/**
  * @pre mbi != NULL && mb2_info != NULL
  */
 int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
@@ -84,6 +115,12 @@ int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
 		case MULTIBOOT2_TAG_TYPE_ACPI_NEW:
 			mbi->mi_acpi_rsdp = ((struct multiboot2_tag_new_acpi *)mb2_tag)->rsdp;
 			break;
+		case MULTIBOOT2_TAG_TYPE_EFI64:
+			mb2_efi64_to_mbi(mbi, (struct multiboot2_tag_efi64 *)mb2_tag);
+			break;
+		case MULTIBOOT2_TAG_TYPE_EFI_MMAP:
+			ret = mb2_efimmap_to_mbi(mbi, (struct multiboot2_tag_efi_mmap *)mb2_tag);
+			break;
 		default:
 			if (mb2_tag->type <= MULTIBOOT2_TAG_TYPE_LOAD_BASE_ADDR) {
 				pr_warn("unhandled multiboot2 tag type: %d", mb2_tag->type);
@@ -103,6 +140,9 @@ int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
 		 */
 		mb2_tag = (struct multiboot2_tag *)((uint8_t *)mb2_tag
 				+ ((mb2_tag->size + (MULTIBOOT2_INFO_ALIGN - 1U)) & ~(MULTIBOOT2_INFO_ALIGN - 1U)));
+	}
+	if ((mbi->mi_flags & (MULTIBOOT_INFO_HAS_EFI64 | MULTIBOOT_INFO_HAS_EFI_MMAP)) == 0U) {
+		pr_err("no multiboot2 uefi info found!");
 	}
 	return ret;
 }

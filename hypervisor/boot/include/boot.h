@@ -12,9 +12,14 @@
 #include <multiboot2.h>
 #endif
 #include <e820.h>
+#include <zeropage.h>
 
 #define MAX_BOOTARGS_SIZE		2048U
 #define MAX_MODULE_COUNT		4U
+
+/* extended flags for acrn multiboot info from multiboot2  */
+#define	MULTIBOOT_INFO_HAS_EFI_MMAP	0x00010000U
+#define	MULTIBOOT_INFO_HAS_EFI64	0x00020000U
 
 struct acrn_multiboot_info {
 	uint32_t		mi_flags;	/* the flags is back-compatible with multiboot1 */
@@ -32,10 +37,13 @@ struct acrn_multiboot_info {
 	struct multiboot_mmap	mi_mmap_entry[E820_MAX_ENTRIES];
 
 	void			*mi_acpi_rsdp;
+	struct efi_info		mi_efi_info;
 };
 
 /* boot_regs store the multiboot info magic and address */
 extern uint32_t boot_regs[2];
+
+extern char *efiloader_sig;
 
 static inline bool boot_from_multiboot1(void)
 {
