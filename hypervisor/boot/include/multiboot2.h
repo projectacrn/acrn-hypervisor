@@ -126,6 +126,22 @@ struct multiboot2_tag_new_acpi
 	uint8_t rsdp[0];
 };
 
+struct multiboot2_tag_efi64
+{
+	uint32_t type;
+	uint32_t size;
+	uint64_t pointer;
+};
+
+struct multiboot2_tag_efi_mmap
+{
+	uint32_t type;
+	uint32_t size;
+	uint32_t descr_size;
+	uint32_t descr_vers;
+	uint8_t efi_mmap[0];
+};
+
 #endif /* ASSEMBLER */
 
 #endif /*  MULTIBOOT2_H */

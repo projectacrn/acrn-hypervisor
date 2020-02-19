@@ -63,6 +63,8 @@ info_req_tag_start:
     .long   MULTIBOOT2_TAG_TYPE_MMAP
     .long   MULTIBOOT2_TAG_TYPE_MODULE
     .long   MULTIBOOT2_TAG_TYPE_ACPI_NEW
+    .long   MULTIBOOT2_TAG_TYPE_EFI64
+    .long   MULTIBOOT2_TAG_TYPE_EFI_MMAP
 info_req_tag_end:
 
     .align     MULTIBOOT2_TAG_ALIGN
@@ -246,3 +248,9 @@ cpu_primary32_pdt_addr:
     .quad  address + 0x83
     address = address + 0x200000
     .endr
+
+#ifdef CONFIG_MULTIBOOT2
+    .global efiloader_sig
+efiloader_sig:
+    .asciz    "EL64"
+#endif
