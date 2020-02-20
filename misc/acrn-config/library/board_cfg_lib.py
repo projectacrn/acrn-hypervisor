@@ -35,6 +35,7 @@ HEADER_LICENSE = common.open_license() + "\n"
 
 # The data base contains hide pci device
 KNOWN_HIDDEN_PDEVS_BOARD_DB = {
+    'apl-mrb':['00:0d:0'],
     'apl-up2':['00:0d:0'],
 }
 
