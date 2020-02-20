@@ -10,7 +10,7 @@
 #include <per_cpu.h>
 #include <irq.h>
 #include <boot_context.h>
-#include <multiboot.h>
+#include <boot.h>
 #include <pgtable.h>
 #include <zeropage.h>
 #include <seed.h>

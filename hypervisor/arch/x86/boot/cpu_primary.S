@@ -21,9 +21,9 @@
  * the macros involved are changed.
  */
 
+#include <multiboot.h>
 /* MULTIBOOT HEADER */
-#define MULTIBOOT_HEADER_MAGIC 0x1badb002
-#define MULTIBOOT_HEADER_FLAGS 0x00000002 /*flags bit 1 : enable mem_*, mmap_**/
+#define MULTIBOOT_HEADER_FLAGS	MULTIBOOT_HEADER_NEED_MEMINFO
 
     .extern cpu_primary_save32
     .extern cpu_primary_save64

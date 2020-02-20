@@ -9,7 +9,7 @@
 #include <page.h>
 #include <e820.h>
 #include <mmu.h>
-#include <multiboot.h>
+#include <boot.h>
 #include <logmsg.h>
 
 /*
