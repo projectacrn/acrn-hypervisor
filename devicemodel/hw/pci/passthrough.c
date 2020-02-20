@@ -808,7 +808,11 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			keep_gsi = true;
 		else if (!strncmp(opt, "no_reset", 8))
 			need_reset = false;
-		else
+		else if (!strncmp(opt, "gpu", 3)) {
+			/* Create the dedicated "igd-lpc" on 00:1f.0 for IGD passthrough */
+			if (pci_parse_slot("31,igd-lpc") != 0)
+				warnx("faild to create igd-lpc");
+		} else
 			warnx("Invalid passthru options:%s", opt);
 	}
 
