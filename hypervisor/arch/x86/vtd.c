@@ -1263,7 +1263,17 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 		domain->trans_table_ptr = translation_table;
 		domain->addr_width = addr_width;
 		domain->is_tt_ept = true;
+
+#ifdef CONFIG_IOMMU_ENFORCE_SNP
 		domain->iommu_snoop = true;
+#else
+		/* TODO: GPU IOMMU doesn't have snoop control capbility,
+		 * so set domain->iommu_snoop false to enable gvt-d by default.
+		 * If want to refine iommu snoop control policy,
+		 * need to change domain->iommu_snoop dynamically.
+		 */
+		domain->iommu_snoop = false;
+#endif
 
 		dev_dbg(ACRN_DBG_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
 			vmid_to_domainid(domain->vm_id), domain->vm_id, domain->trans_table_ptr);
