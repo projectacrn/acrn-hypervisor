@@ -332,3 +332,10 @@ config MCE_ON_PSC_WORKAROUND_DISABLED
 	  conditionally applied to the models that may be affected by the issue. However,
 	  the software workaround has negative impact on performance. If all the guest OS
 	  kernels are trusted, this option may be set for performance.
+
+config IOMMU_ENFORCE_SNP
+	bool "IOMMU enforce snoop behavior of DMA operation"
+	default n
+	help
+	  GPU IOMMU doesn't support snoop control capability,
+	  To enable gvt-d,disable IOMMU snoop control by default.
