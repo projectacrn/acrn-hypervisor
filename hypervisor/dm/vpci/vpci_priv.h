@@ -101,6 +101,22 @@ static inline bool msixcap_access(const struct pci_vdev *vdev, uint32_t offset)
 	return (has_msix_cap(vdev) && in_range(offset, vdev->msix.capoff, vdev->msix.caplen));
 }
 
+/*
+ * @pre vdev != NULL
+ */
+static inline bool has_sriov_cap(const struct pci_vdev *vdev)
+{
+	return (vdev->sriov.capoff != 0U);
+}
+
+/*
+ * @pre vdev != NULL
+ */
+static inline bool sriovcap_access(const struct pci_vdev *vdev, uint32_t offset)
+{
+	return (has_sriov_cap(vdev) && in_range(offset, vdev->sriov.capoff, vdev->sriov.caplen));
+}
+
 /**
  * @pre vdev != NULL
  */
@@ -139,6 +155,10 @@ int32_t vmsix_handle_table_mmio_access(struct io_request *io_req, void *handler_
 void vmsix_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 void vmsix_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 void deinit_vmsix(const struct pci_vdev *vdev);
+
+void init_vsriov(struct pci_vdev *vdev);
+void read_sriov_cap_reg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
+void write_sriov_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 
 uint32_t pci_vdev_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
 void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
