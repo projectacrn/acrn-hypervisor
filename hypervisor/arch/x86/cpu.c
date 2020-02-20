@@ -258,9 +258,11 @@ void init_pcpu_post(uint16_t pcpu_id)
 
 	init_sched(pcpu_id);
 
+#ifdef CONFIG_RDT_ENABLED
 	if (!setup_clos(pcpu_id)) {
 		panic("CLOS resource MSRs setup incorrectly!");
 	}
+#endif
 
 	enable_smep();
 
