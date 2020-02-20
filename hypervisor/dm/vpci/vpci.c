@@ -357,6 +357,7 @@ static void vpci_init_pt_dev(struct pci_vdev *vdev)
 	 */
 	init_vmsi(vdev);
 	init_vmsix(vdev);
+	init_vsriov(vdev);
 	init_vdev_pt(vdev);
 
 	assign_vdev_pt_iommu_domain(vdev);
@@ -381,6 +382,8 @@ static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 		vmsi_write_cfg(vdev, offset, bytes, val);
 	} else if (msixcap_access(vdev, offset)) {
 		vmsix_write_cfg(vdev, offset, bytes, val);
+	} else if (sriovcap_access(vdev, offset)) {
+		write_sriov_cap_reg(vdev, offset, bytes, val);
 	} else if (offset == PCIR_COMMAND) {
 		vdev_pt_write_command(vdev, (bytes > 2U) ? 2U : bytes, (uint16_t)val);
 	} else {
@@ -410,6 +413,8 @@ static int32_t vpci_read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset
 		vmsi_read_cfg(vdev, offset, bytes, val);
 	} else if (msixcap_access(vdev, offset)) {
 		vmsix_read_cfg(vdev, offset, bytes, val);
+	} else if (sriovcap_access(vdev, offset)) {
+		read_sriov_cap_reg(vdev, offset, bytes, val);
 	} else {
 		if (is_postlaunched_vm(vdev->vpci->vm) &&
 				in_range(offset, PCIR_INTERRUPT_LINE, 4U)) {

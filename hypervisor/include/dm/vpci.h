@@ -69,6 +69,12 @@ struct pci_msix {
 	uint32_t  table_count;
 };
 
+/* SRIOV capability structure */
+struct pci_cap_sriov {
+	uint32_t  capoff;
+	uint32_t  caplen;
+};
+
 union pci_cfgdata {
 	uint8_t data_8[PCIE_CONFIG_SPACE_SIZE];
 	uint16_t data_16[PCIE_CONFIG_SPACE_SIZE >> 1U];
@@ -98,6 +104,7 @@ struct pci_vdev {
 
 	struct pci_msi msi;
 	struct pci_msix msix;
+	struct pci_cap_sriov sriov;
 
 	/* Pointer to corresponding PCI device's vm_config */
 	struct acrn_vm_pci_dev_config *pci_dev_config;

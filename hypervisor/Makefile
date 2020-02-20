@@ -293,6 +293,7 @@ VP_DM_C_SRCS += dm/vpci/vhostbridge.c
 VP_DM_C_SRCS += dm/vpci/pci_pt.c
 VP_DM_C_SRCS += dm/vpci/vmsi.c
 VP_DM_C_SRCS += dm/vpci/vmsix.c
+VP_DM_C_SRCS += dm/vpci/vsriov.c
 VP_DM_C_SRCS += arch/x86/guest/vlapic.c
 VP_DM_C_SRCS += arch/x86/guest/pm.c
 VP_DM_C_SRCS += arch/x86/guest/assign.c
