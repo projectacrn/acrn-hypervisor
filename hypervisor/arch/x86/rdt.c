@@ -42,6 +42,7 @@ const uint16_t hv_clos = 0U;
  */
 const uint16_t platform_clos_num = MAX_PLATFORM_CLOS_NUM;
 
+#ifdef CONFIG_RDT_ENABLED
 static void rdt_read_cat_capability(int res)
 {
 	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
@@ -158,6 +159,13 @@ uint64_t clos2pqr_msr(uint16_t clos)
 
 	return pqr_assoc;
 }
+#else
+uint64_t clos2pqr_msr(uint16_t clos)
+{
+	(void)(clos);
+	return 0UL;
+}
+#endif
 
 bool is_platform_rdt_capable(void)
 {

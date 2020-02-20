@@ -20,8 +20,12 @@ struct platform_clos_info {
 };
 
 extern struct dmar_info plat_dmar_info;
+
+#ifdef CONFIG_RDT_ENABLED
 extern struct platform_clos_info platform_l2_clos_array[MAX_PLATFORM_CLOS_NUM];
 extern struct platform_clos_info platform_l3_clos_array[MAX_PLATFORM_CLOS_NUM];
+#endif
+
 extern const struct cpu_state_table board_cpu_state_tbl;
 extern const union pci_bdf plat_hidden_pdevs[MAX_HIDDEN_PDEVS_NUM];
 
