@@ -15,7 +15,7 @@
 #include <lapic.h>
 #include <per_cpu.h>
 #include <guest/vm.h>
-#include <multiboot.h>
+#include <boot.h>
 #include <deprivilege_boot.h>
 
 static struct depri_boot_context depri_boot_ctx;

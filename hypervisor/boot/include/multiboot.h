@@ -7,16 +7,20 @@
 #ifndef MULTIBOOT_H
 #define MULTIBOOT_H
 
-#include <types.h>
+#define	MULTIBOOT_HEADER_MAGIC		0x1BADB002
 #define	MULTIBOOT_INFO_MAGIC		0x2BADB002U
+
+/* MULTIBOOT HEADER FLAGS */
+#define	MULTIBOOT_HEADER_NEED_MEMINFO	0x00000002
+
+/* MULTIBOOT INFO FLAGS */
 #define	MULTIBOOT_INFO_HAS_CMDLINE	0x00000004U
 #define	MULTIBOOT_INFO_HAS_MODS		0x00000008U
 #define	MULTIBOOT_INFO_HAS_MMAP		0x00000040U
 #define	MULTIBOOT_INFO_HAS_DRIVES	0x00000080U
 #define	MULTIBOOT_INFO_HAS_LOADER_NAME	0x00000200U
 
-/* maximum lengt of the guest OS' command line parameter string */
-#define MAX_BOOTARGS_SIZE		2048U
+#ifndef ASSEMBLER
 
 struct multiboot_info {
 	uint32_t               mi_flags;
@@ -83,6 +87,6 @@ struct multiboot_module {
 	uint32_t	mm_reserved;
 };
 
-/* boot_regs store the multiboot header address */
-extern uint32_t boot_regs[2];
-#endif
+#endif	/* ASSEMBLER */
+
+#endif	/* MULTIBOOT_H */

@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <multiboot.h>
 #include <vm.h>
 #include <types.h>
 #include <pgtable.h>
 #include <acpi.h>
+#include <boot.h>
 #include <vboot.h>
 #include <direct_boot.h>
 #include <deprivilege_boot.h>

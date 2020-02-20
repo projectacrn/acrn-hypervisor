@@ -6,11 +6,10 @@
 
 #include <types.h>
 #include <errno.h>
-#include <multiboot.h>
+#include <boot.h>
 #include <pgtable.h>
 #include <dbg_cmd.h>
 #include <logmsg.h>
-#include <vboot.h>
 
 void parse_hv_cmdline(void)
 {
