@@ -102,7 +102,9 @@ endif
 #   https://bugs.launchpad.net/ubuntu/+source/gcc-9/+bug/1830961
 #
 # We disable the -fcf-protection in ACRN build.
+ifeq (true, $(shell [ $(GCC_MAJOR) -gt 8 ] && echo true))
 CFLAGS += -fcf-protection=none
+endif
 
 ASFLAGS += -m64 -nostdinc -nostdlib
 
