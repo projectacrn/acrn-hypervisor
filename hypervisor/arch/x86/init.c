@@ -48,7 +48,7 @@ static void init_debug_pre(void)
 /*TODO: move into debug module */
 static void init_debug_post(uint16_t pcpu_id)
 {
-	if (pcpu_id == BOOT_CPU_ID) {
+	if (pcpu_id == BSP_CPU_ID) {
 		/* Initialize the shell */
 		shell_init();
 		console_setup_timer();
@@ -69,11 +69,11 @@ static void init_primary_pcpu_post(void)
 {
 	init_seed();
 
-	init_pcpu_post(BOOT_CPU_ID);
+	init_pcpu_post(BSP_CPU_ID);
 
-	init_debug_post(BOOT_CPU_ID);
+	init_debug_post(BSP_CPU_ID);
 
-	init_guest_mode(BOOT_CPU_ID);
+	init_guest_mode(BSP_CPU_ID);
 
 	run_idle_thread();
 }

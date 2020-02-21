@@ -1412,7 +1412,7 @@ void profiling_setup(void)
 	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 	cpu = get_pcpu_id();
 	/* support PMI notification, SOS_VM will register all CPU */
-	if ((cpu == BOOT_CPU_ID) && (profiling_pmi_irq == IRQ_INVALID)) {
+	if ((cpu == BSP_CPU_ID) && (profiling_pmi_irq == IRQ_INVALID)) {
 		pr_info("%s: calling request_irq", __func__);
 		retval = request_irq(PMI_IRQ,
 			profiling_pmi_handler, NULL, IRQF_NONE);

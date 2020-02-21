@@ -937,7 +937,7 @@ static int32_t shell_dump_guest_mem(int32_t argc, char **argv)
 		length = (uint64_t)strtol_deci(argv[3]);
 
 		vm = get_vm_from_vmid(vm_id);
-		vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
+		vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
 
 		dump.vcpu = vcpu;
 		dump.gva = gva;

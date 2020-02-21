@@ -197,7 +197,7 @@ void timer_init(void)
 
 	init_percpu_timer(pcpu_id);
 
-	if (pcpu_id == BOOT_CPU_ID) {
+	if (pcpu_id == BSP_CPU_ID) {
 		register_softirq(SOFTIRQ_TIMER, timer_softirq);
 
 		retval = request_irq(TIMER_IRQ, (irq_action_t)tsc_deadline_handler, NULL, IRQF_NONE);

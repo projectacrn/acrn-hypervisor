@@ -451,7 +451,7 @@ static void disable_pic_irqs(void)
 
 void init_default_irqs(uint16_t cpu_id)
 {
-	if (cpu_id == BOOT_CPU_ID) {
+	if (cpu_id == BSP_CPU_ID) {
 		init_irq_descs();
 
 		/* we use ioapic only, disable legacy PIC */
@@ -488,7 +488,7 @@ void init_interrupt(uint16_t pcpu_id)
 {
 	struct host_idt_descriptor *idtd = &HOST_IDTR;
 
-	if (pcpu_id == BOOT_CPU_ID) {
+	if (pcpu_id == BSP_CPU_ID) {
 		fixup_idt(idtd);
 	}
 	set_idt(idtd);

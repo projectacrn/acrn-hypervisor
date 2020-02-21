@@ -59,7 +59,7 @@ int32_t hcall_sos_offline_cpu(struct acrn_vm *vm, uint64_t lapicid)
 	foreach_vcpu(i, vm, vcpu) {
 		if (vlapic_get_apicid(vcpu_vlapic(vcpu)) == lapicid) {
 			/* should not offline BSP */
-			if (vcpu->vcpu_id == BOOT_CPU_ID) {
+			if (vcpu->vcpu_id == BSP_CPU_ID) {
 				ret = -1;
 				break;
 			}

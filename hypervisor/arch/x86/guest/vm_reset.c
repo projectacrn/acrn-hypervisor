@@ -98,7 +98,7 @@ static bool handle_common_reset_reg_write(struct acrn_vm *vm, bool reset)
 			 *    or pre-launched VM reset,
 			 * ACRN doesn't support re-launch, just shutdown the guest.
 			 */
-			const struct acrn_vcpu *bsp = vcpu_from_vid(vm, BOOT_CPU_ID);
+			const struct acrn_vcpu *bsp = vcpu_from_vid(vm, BSP_CPU_ID);
 
 			pause_vm(vm);
 			per_cpu(shutdown_vm_id, pcpuid_from_vcpu(bsp)) = vm->vm_id;
