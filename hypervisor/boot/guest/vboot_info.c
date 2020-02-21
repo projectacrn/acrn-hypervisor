@@ -269,8 +269,8 @@ static int32_t init_general_vm_boot_info(struct acrn_vm *vm)
 
 static void depri_boot_spurious_handler(uint32_t vector)
 {
-	if (get_pcpu_id() == BOOT_CPU_ID) {
-		struct acrn_vcpu *vcpu = vcpu_from_vid(get_sos_vm(), BOOT_CPU_ID);
+	if (get_pcpu_id() == BSP_CPU_ID) {
+		struct acrn_vcpu *vcpu = vcpu_from_vid(get_sos_vm(), BSP_CPU_ID);
 
 		if (vcpu != NULL) {
 			vlapic_set_intr(vcpu, vector, LAPIC_TRIG_EDGE);
@@ -284,7 +284,7 @@ static int32_t depri_boot_sw_loader(struct acrn_vm *vm)
 {
 	int32_t ret = 0;
 	/* get primary vcpu */
-	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
 	struct acrn_vcpu_regs *vcpu_regs = &boot_context;
 	const struct depri_boot_context *depri_boot_ctx = get_depri_boot_ctx();
 	const struct lapic_regs *depri_boot_lapic_regs = get_depri_boot_lapic_regs();

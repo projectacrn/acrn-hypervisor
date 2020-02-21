@@ -180,7 +180,7 @@ int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 	struct sw_module_info *bootargs_info = &(vm->sw.bootargs_info);
 	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
 	/* get primary vcpu */
-	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BOOT_CPU_ID);
+	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
 
 	pr_dbg("Loading guest to run-time location");
 

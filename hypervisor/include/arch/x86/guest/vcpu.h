@@ -283,7 +283,7 @@ struct guest_mem_dump {
 
 static inline bool is_vcpu_bsp(const struct acrn_vcpu *vcpu)
 {
-	return (vcpu->vcpu_id == BOOT_CPU_ID);
+	return (vcpu->vcpu_id == BSP_CPU_ID);
 }
 
 static inline enum vm_cpu_mode get_vcpu_mode(const struct acrn_vcpu *vcpu)

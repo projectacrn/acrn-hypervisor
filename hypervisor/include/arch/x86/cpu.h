@@ -145,8 +145,6 @@
 #define CPU_MHZ_TO_HZ           1000000
 #define CPU_MHZ_TO_KHZ          1000
 
-/* Boot CPU ID */
-#define BOOT_CPU_ID             0U
 
 /* Number of GPRs saved / restored for guest in VCPU structure */
 #define NUM_GPRS                            16U
@@ -275,6 +273,9 @@ extern uint64_t               secondary_cpu_stack[1];
  *   + offset_of_member_per_cpu_region
  * to locate the per cpu data.
  */
+
+/* Boot CPU ID */
+#define BSP_CPU_ID             0U
 
 /**
  *The invalid cpu_id (INVALID_CPU_ID) is error

@@ -199,7 +199,7 @@ static inline uint16_t get_vm_bsp_pcpu_id(const struct acrn_vm_config *vm_config
 {
 	uint16_t cpu_id = INVALID_CPU_ID;
 
-	cpu_id = ffs64(vm_config->vcpu_affinity[0]);
+	cpu_id = ffs64(vm_config->vcpu_affinity[BSP_CPU_ID]);
 
 	return (cpu_id < get_pcpu_nums()) ? cpu_id : INVALID_CPU_ID;
 }
@@ -730,7 +730,7 @@ void start_vm(struct acrn_vm *vm)
 	vm->state = VM_STARTED;
 
 	/* Only start BSP (vid = 0) and let BSP start other APs */
-	bsp = vcpu_from_vid(vm, BOOT_CPU_ID);
+	bsp = vcpu_from_vid(vm, BSP_CPU_ID);
 	vcpu_make_request(bsp, ACRN_REQUEST_INIT_VMCS);
 	launch_vcpu(bsp);
 }
@@ -824,7 +824,7 @@ void pause_vm(struct acrn_vm *vm)
  */
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 {
-	struct acrn_vcpu *bsp = vcpu_from_vid(vm, BOOT_CPU_ID);
+	struct acrn_vcpu *bsp = vcpu_from_vid(vm, BSP_CPU_ID);
 
 	vm->state = VM_STARTED;
 

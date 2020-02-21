@@ -202,7 +202,7 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 		 */
 		i8259->intr_raised = true;
 		if (vpic->vm->wire_mode == VPIC_WIRE_INTR) {
-			struct acrn_vcpu *bsp = vcpu_from_vid(vpic->vm, BOOT_CPU_ID);
+			struct acrn_vcpu *bsp = vcpu_from_vid(vpic->vm, BSP_CPU_ID);
 			vcpu_inject_extint(bsp);
 		} else {
 			/*

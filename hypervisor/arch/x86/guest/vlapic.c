@@ -1652,7 +1652,7 @@ vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops, enum 
 
 	vlapic->msr_apicbase = DEFAULT_APIC_BASE;
 
-	if (vlapic->vcpu->vcpu_id == BOOT_CPU_ID) {
+	if (vlapic->vcpu->vcpu_id == BSP_CPU_ID) {
 		vlapic->msr_apicbase |= APICBASE_BSP;
 	}
 	if (mode == INIT_RESET) {

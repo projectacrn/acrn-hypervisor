@@ -104,7 +104,7 @@ void init_pcpu_pre(bool is_bsp)
 	int32_t ret;
 
 	if (is_bsp) {
-		pcpu_id = BOOT_CPU_ID;
+		pcpu_id = BSP_CPU_ID;
 		start_tsc = rdtsc();
 
 		/* Get CPU capabilities thru CPUID, including the physical address bit
@@ -187,7 +187,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 
 	init_pcpu_xsave();
 
-	if (pcpu_id == BOOT_CPU_ID) {
+	if (pcpu_id == BSP_CPU_ID) {
 		/* Print Hypervisor Banner */
 		print_hv_banner();
 
@@ -205,7 +205,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 
 		pr_acrnlog("Detect processor: %s", (get_pcpu_info())->model_name);
 
-		pr_dbg("Core %hu is up", BOOT_CPU_ID);
+		pr_dbg("Core %hu is up", BSP_CPU_ID);
 
 		if (!sanitize_vm_config()) {
 			panic("VM Configuration Error!");
@@ -218,7 +218,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 		}
 
 		/* Initialize interrupts */
-		init_interrupt(BOOT_CPU_ID);
+		init_interrupt(BSP_CPU_ID);
 
 		timer_init();
 		setup_notification();
@@ -242,7 +242,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 			panic("Failed to start all secondary cores!");
 		}
 
-		ASSERT(get_pcpu_id() == BOOT_CPU_ID, "");
+		ASSERT(get_pcpu_id() == BSP_CPU_ID, "");
 	} else {
 		pr_dbg("Core %hu is up", pcpu_id);
 
@@ -483,7 +483,7 @@ static void init_pcpu_xsave(void)
 	val64 |= CR4_OSXSAVE;
 	CPU_CR_WRITE(cr4, val64);
 
-	if (get_pcpu_id() == BOOT_CPU_ID) {
+	if (get_pcpu_id() == BSP_CPU_ID) {
 		cpuid(CPUID_FEATURES, &unused, &unused, &ecx, &unused);
 
 		/* if set, update it */
