@@ -12,6 +12,7 @@ __x86_indirect_thunk_\reg:
     call 22f
 11:
     pause
+    lfence
     jmp 11b
 22:
     mov %\reg, (%rsp)
