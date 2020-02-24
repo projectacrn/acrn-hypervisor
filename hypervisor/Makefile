@@ -110,6 +110,7 @@ ASFLAGS += -m64 -nostdinc -nostdlib
 
 LDFLAGS += -Wl,--gc-sections -nostartfiles -nostdlib
 LDFLAGS += -Wl,-n,-z,max-page-size=0x1000
+LDFLAGS += -Wl,--no-dynamic-linker
 
 ifeq (y, $(CONFIG_RELOC))
 # on X86_64, when build with "-pie", GCC fails on linking R_X86_64_32
