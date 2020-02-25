@@ -8,6 +8,7 @@ import sys
 import getopt
 import shutil
 import subprocess
+import re
 import xml.etree.ElementTree as ET
 
 SOURCE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../')
@@ -592,25 +593,29 @@ def handle_root_dev(line):
     return False
 
 
-def get_max_clos(board_file):
+def get_max_clos_mask(board_file):
     """
     Parse CLOS information
     :param board_file: it is a file what contains board information for script to read from
-    :return: type of cache support for clos and clos max number
+    :return: type of rdt resource supported and their corresponding clos max.
     """
+    rdt_res=[]
+    rdt_res_clos_max=[]
+    rdt_res_mask_max=[]
 
-    cache_support = False
-    clos_max = 0
+    clos_lines = get_board_info(board_file, "<CLOS_INFO>", "</CLOS_INFO>")
+    for line in clos_lines:
+        if line.split(':')[0].strip() == "rdt resources supported":
+            rdt_res = line.split(':')[1].strip()
+        elif line.split(':')[0].strip() == "rdt resource clos max":
+            rdt_res_clos_max = line.split(':')[1].strip()
+        elif line.split(':')[0].strip() == "rdt resource mask max":
+            rdt_res_mask_max = line.split(':')[1].strip()
 
-    cat_lines = get_board_info(board_file, "<CLOS_INFO>", "</CLOS_INFO>")
-
-    for line in cat_lines:
-        if line.split(':')[0].strip() == "clos supported by cache":
-            cache_support = line.split(':')[1].strip()
-        elif line.split(':')[0].strip() == "clos max":
-            clos_max = int(line.split(':')[1])
-
-    return (cache_support, clos_max)
+    if (len(rdt_res) == 0) or (len(rdt_res_clos_max) == 0):
+        return rdt_res, rdt_res_clos_max, rdt_res_mask_max
+    else:
+        return list(re.split(', |\s |,', rdt_res)), list(map(int, rdt_res_clos_max.split(','))), list(re.split(', |\s |,', rdt_res_mask_max))
 
 
 def undline_name(name):
