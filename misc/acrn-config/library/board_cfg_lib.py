@@ -220,7 +220,7 @@ def get_rootfs(config_file):
 
 def clos_info_parser(board_info):
     """ Parse CLOS information """
-    return common.get_max_clos(board_info)
+    return common.get_max_clos_mask(board_info)
 
 
 def get_pre_launch_cnt(config_file):
