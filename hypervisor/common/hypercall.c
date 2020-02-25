@@ -908,7 +908,7 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t pa
 				if ((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf)) {
 					if ((((!irq.intx.pic_pin) && (irq.intx.virt_pin < vioapic_pincount(target_vm))) ||
 							((irq.intx.pic_pin) && (irq.intx.virt_pin < vpic_pincount()))) &&
-							ioapic_irq_is_gsi(irq.intx.phys_pin)) {
+							is_gsi_valid(irq.intx.phys_pin)) {
 						ret = ptirq_add_intx_remapping(target_vm, irq.intx.virt_pin,
 							irq.intx.phys_pin, irq.intx.pic_pin);
 					} else {

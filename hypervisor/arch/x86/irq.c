@@ -82,7 +82,7 @@ static void free_irq_num(uint32_t irq)
 	uint64_t rflags;
 
 	if (irq < NR_IRQS) {
-		if (!ioapic_irq_is_gsi(irq)) {
+		if (!is_ioapic_irq(irq)) {
 			spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
 			(void)bitmap_test_and_clear_nolock((uint16_t)(irq & 0x3FU),
 						     irq_alloc_bitmap + (irq >> 6U));
@@ -301,7 +301,7 @@ static inline bool irq_need_mask(const struct irq_desc *desc)
 {
 	/* level triggered gsi should be masked */
 	return (((desc->flags & IRQF_LEVEL) != 0U)
-		&& ioapic_irq_is_gsi(desc->irq));
+		&& is_ioapic_irq(desc->irq));
 }
 
 static inline bool irq_need_unmask(const struct irq_desc *desc)
@@ -309,7 +309,7 @@ static inline bool irq_need_unmask(const struct irq_desc *desc)
 	/* level triggered gsi for non-ptdev should be unmasked */
 	return (((desc->flags & IRQF_LEVEL) != 0U)
 		&& ((desc->flags & IRQF_PT) == 0U)
-		&& ioapic_irq_is_gsi(desc->irq));
+		&& is_ioapic_irq(desc->irq));
 }
 
 static inline void handle_irq(const struct irq_desc *desc)
