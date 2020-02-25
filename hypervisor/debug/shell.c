@@ -1253,7 +1253,7 @@ static int32_t shell_show_vioapic_info(int32_t argc, char **argv)
 static int32_t get_ioapic_info(char *str_arg, size_t str_max_len)
 {
 	char *str = str_arg;
-	uint32_t irq;
+	uint32_t gsi;
 	size_t len, size = str_max_len;
 	uint32_t ioapic_nr_gsi = 0U;
 
@@ -1264,20 +1264,21 @@ static int32_t get_ioapic_info(char *str_arg, size_t str_max_len)
 	size -= len;
 	str += len;
 
-	ioapic_nr_gsi = ioapic_get_nr_gsi ();
-	for (irq = 0U; irq < ioapic_nr_gsi; irq++) {
-		void *addr = gsi_to_ioapic_base(irq);
-		uint32_t pin = ioapic_irq_to_pin(irq);
+	ioapic_nr_gsi = get_max_nr_gsi ();
+	for (gsi = 0U; gsi < ioapic_nr_gsi; gsi++) {
+		void *addr;
+		uint32_t pin;
 		union ioapic_rte rte;
 
-		/* Add NULL check for addr, INVALID_PIN check for pin */
-		if ((addr == NULL) || (!ioapic_is_pin_valid(pin))) {
-			goto overflow;
+		if (!is_gsi_valid(gsi)) {
+			continue;
 		}
+		addr = gsi_to_ioapic_base(gsi);
+		pin = gsi_to_ioapic_pin(gsi);
 
 		ioapic_get_rte_entry(addr, pin, &rte);
 
-		len = snprintf(str, size, "\r\n%03d\t%03hhu\t0x%08X\t0x%08X\t", irq, pin, rte.u.hi_32, rte.u.lo_32);
+		len = snprintf(str, size, "\r\n%03d\t%03hhu\t0x%08X\t0x%08X\t", gsi, pin, rte.u.hi_32, rte.u.lo_32);
 		if (len >= size) {
 			goto overflow;
 		}
@@ -1285,8 +1286,10 @@ static int32_t get_ioapic_info(char *str_arg, size_t str_max_len)
 		str += len;
 
 		len = snprintf(str, size, "0x%02X\t0x%02X\t%s\t%s\t%u\t%d\t%d",
-			rte.bits.vector, rte.bits.dest_field, rte.bits.dest_mode ? "logic" : "phys",
-			rte.bits.trigger_mode ? "level" : "edge", rte.bits.delivery_mode, rte.bits.remote_irr,
+			rte.bits.vector, rte.bits.dest_field,
+			(rte.bits.dest_mode == IOAPIC_RTE_DESTMODE_LOGICAL)? "logic" : "phys",
+			(rte.bits.trigger_mode == IOAPIC_RTE_TRGRMODE_LEVEL)? "level" : "edge",
+			rte.bits.delivery_mode, rte.bits.remote_irr,
 			rte.bits.intr_mask);
 		if (len >= size) {
 			goto overflow;
