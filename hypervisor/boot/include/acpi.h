@@ -203,7 +203,7 @@ void *get_acpi_tbl(const char *signature);
 
 struct ioapic_info;
 uint16_t parse_madt(uint32_t lapic_id_array[MAX_PCPU_NUM]);
-uint16_t parse_madt_ioapic(struct ioapic_info *ioapic_id_array);
+uint8_t parse_madt_ioapic(struct ioapic_info *ioapic_id_array);
 
 #ifdef CONFIG_ACPI_PARSE_ENABLED
 int32_t acpi_fixup(void);
