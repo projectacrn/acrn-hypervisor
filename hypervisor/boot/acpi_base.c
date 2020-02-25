@@ -209,14 +209,14 @@ local_parse_madt(struct acpi_table_madt *madt, uint32_t lapic_id_array[MAX_PCPU_
 	return pcpu_num;
 }
 
-static uint16_t
+static uint8_t
 ioapic_parse_madt(void *madt, struct ioapic_info *ioapic_id_array)
 {
 	struct acpi_madt_ioapic *ioapic;
 	struct acpi_table_madt *madt_ptr;
 	void *first, *end, *iterator;
 	struct acpi_subtable_header *entry;
-	uint16_t ioapic_idx = 0U;
+	uint8_t ioapic_idx = 0U;
 
 	madt_ptr = (struct acpi_table_madt *)madt;
 
@@ -261,9 +261,9 @@ uint16_t parse_madt(uint32_t lapic_id_array[MAX_PCPU_NUM])
 	return ret;
 }
 
-uint16_t parse_madt_ioapic(struct ioapic_info *ioapic_id_array)
+uint8_t parse_madt_ioapic(struct ioapic_info *ioapic_id_array)
 {
-	uint16_t ret = 0U;
+	uint8_t ret = 0U;
 	struct acpi_table_rsdp *rsdp = NULL;
 
 	rsdp = get_rsdp();
