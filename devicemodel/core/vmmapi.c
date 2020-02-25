@@ -330,11 +330,17 @@ vm_unsetup_memory(struct vmctx *ctx)
 	 * allocated the new UOS, the previous UOS sensitive data
 	 * may be leaked to the new UOS if the memory is not cleared.
 	 *
+	 * For rtvm, we can't clean VM's memory as RTVM may still
+	 * run. But we need to return the memory to SOS here.
+	 * Otherwise, VM can't be restart again.
 	 */
-	bzero((void *)ctx->baseaddr, ctx->lowmem);
-	if (ctx->highmem > 0) {
-		bzero((void *)(ctx->baseaddr + ctx->highmem_gpa_base),
-			ctx->highmem);
+
+	if (!is_rtvm) {
+		bzero((void *)ctx->baseaddr, ctx->lowmem);
+		if (ctx->highmem > 0) {
+			bzero((void *)(ctx->baseaddr + ctx->highmem_gpa_base),
+					ctx->highmem);
+		}
 	}
 
 	hugetlb_unsetup_memory(ctx);
