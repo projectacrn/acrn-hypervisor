@@ -220,12 +220,11 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
  * @pre vdev->vpci->vm != NULL
  * @pre vdev->pdev != NULL
  */
-void init_vdev_pt(struct pci_vdev *vdev)
+static void init_bars(struct pci_vdev *vdev)
 {
 	enum pci_bar_type type;
 	uint32_t idx;
 	struct pci_vbar *vbar;
-	uint16_t pci_command;
 	uint32_t size32, offset, lo, hi = 0U;
 	union pci_bdf pbdf;
 	uint64_t mask;
@@ -293,7 +292,34 @@ void init_vdev_pt(struct pci_vdev *vdev)
 			}
 		}
 	}
+}
 
+/*
+ * @brief Initialize a specified passthrough vdev structure.
+ *
+ * The function init_vdev_pt is used to initialize a vdev structure. If a vdev structure supports
+ * SRIOV capability that the vdev represents a SRIOV physical function(PF) virtual device, then
+ * function init_vdev_pt can initialize PF vdev SRIOV capability if parameter is_pf_vdev is true.
+ *
+ * @param vdev        pointer to vdev data structure
+ * @param is_pf_vdev  indicate the first parameter vdev is the data structure of a PF, which contains
+ *                    the SR-IOV capability
+ *
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ * @pre vdev->pdev != NULL
+ *
+ * @return None
+ */
+void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
+{
+	uint16_t pci_command;
+
+	/* SRIOV capability initialization implementaion in next patch */
+	(void) is_pf_vdev;
+
+	init_bars(vdev);
 	if (is_prelaunched_vm(vdev->vpci->vm)) {
 		pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
 

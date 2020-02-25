@@ -358,7 +358,7 @@ static void vpci_init_pt_dev(struct pci_vdev *vdev)
 	init_vmsi(vdev);
 	init_vmsix(vdev);
 	init_vsriov(vdev);
-	init_vdev_pt(vdev);
+	init_vdev_pt(vdev, false);
 
 	assign_vdev_pt_iommu_domain(vdev);
 }
