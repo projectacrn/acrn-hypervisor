@@ -47,9 +47,10 @@ class HwInfo:
         :return: clos support list
         """
         self.clos_val = []
-        (clos_support, clos_max) = board_cfg_lib.clos_info_parser(self.board_info)
-        if clos_support:
-            for i_cnt in range(clos_max):
+        (rdt_resources, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(self.board_info)
+        if len(rdt_resources) != 0 and len(rdt_res_clos_max) != 0:
+            common_clos_max = min(rdt_res_clos_max)
+            for i_cnt in range(common_clos_max):
                 self.clos_val.append(str(i_cnt))
 
         return self.clos_val
