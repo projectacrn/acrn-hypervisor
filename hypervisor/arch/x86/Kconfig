@@ -291,7 +291,7 @@ config RELOC
 
 config MAX_IOAPIC_NUM
 	int "Maximum number of IO-APICs"
-	range 1 8
+	range 1 10
 	default 1
 
 config MAX_IOAPIC_LINES
