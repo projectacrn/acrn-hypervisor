@@ -196,8 +196,12 @@ def clos_output(vm_info, i, config):
     :param config: it is the pointer which file write to
     :return: None
     """
-    (cache_support, clos_max) = board_cfg_lib.clos_info_parser(scenario_cfg_lib.BOARD_INFO_FILE)
-    if cache_support != "False" and clos_max > 0 and i in vm_info.clos_set:
+    (rdt_res, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(scenario_cfg_lib.BOARD_INFO_FILE)
+    if len(rdt_res_clos_max) != 0:
+        common_clos_max = min(rdt_res_clos_max)
+    else:
+        common_clos_max = 0
+    if len(rdt_res) != 0 and common_clos_max !=0 and i in vm_info.clos_set:
         print("\t\t.clos = {0}U,".format(vm_info.clos_set[i]), file=config)
 
 
