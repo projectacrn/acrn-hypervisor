@@ -86,6 +86,7 @@
 #define PCIM_BAR_MEM_1MB      0x02U
 #define PCIM_BAR_MEM_64       0x04U
 #define PCIM_BAR_MEM_BASE     0xFFFFFFF0U
+#define PCIV_SUB_VENDOR_ID    0x2CU
 #define PCIR_CAP_PTR          0x34U
 #define PCIR_CAP_PTR_CARDBUS  0x14U
 #define PCI_BASE_ADDRESS_MEM_MASK (~0x0fUL)
@@ -114,7 +115,12 @@
 
 /* SRIOV Definitions */
 #define PCI_SRIOV_CAP_LEN	0x40U
+#define PCIR_SRIOV_CONTROL	0x8U
 #define PCIR_SRIOV_TOTAL_VFS	0xEU
+#define PCIR_SRIOV_NUMVFS	0x10U
+#define PCIR_SRIOV_FST_VF_OFF	0x14U
+#define PCIR_SRIOV_VF_STRIDE	0x16U
+#define PCIM_SRIOV_VF_ENABLE	0x1U
 
 /* PCI Message Signalled Interrupts (MSI) */
 #define PCIR_MSI_CTRL         0x02U
