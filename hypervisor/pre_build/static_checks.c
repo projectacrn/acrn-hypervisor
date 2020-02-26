@@ -8,6 +8,7 @@
 #include <boot_context.h>
 #include <acrn_common.h>
 #include <vcpu.h>
+#include <mmu.h>
 #include <trusty.h>
 
 #define CAT__(A,B) A ## B
@@ -18,6 +19,14 @@ typedef int32_t CAT_(CTA_DummyType,__LINE__)[(expr) ? 1 : -1]
 /* This is to make sure the 16 bits vpid won't overflow */
 #if ((CONFIG_MAX_VM_NUM * MAX_VCPUS_PER_VM) > 0xffffU)
 #error "VM number or VCPU number are too big"
+#endif
+
+#if ((CONFIG_HV_RAM_START & (MEM_2M - 1UL)) != 0UL)
+#error "CONFIG_HV_RAM_START must be aligned to 2MB"
+#endif
+
+#if ((CONFIG_HV_RAM_SIZE & (MEM_2M - 1UL)) != 0UL)
+#error "CONFIG_HV_RAM_SIZE must be integral multiple of 2MB"
 #endif
 
 /* Build time sanity checks to make sure hard-coded offset
