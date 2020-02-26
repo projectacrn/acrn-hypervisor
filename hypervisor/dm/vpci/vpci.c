@@ -710,7 +710,13 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pc
 	sos_vm = get_sos_vm();
 	spinlock_obtain(&sos_vm->vpci.lock);
 	vdev_in_sos = pci_find_vdev(&sos_vm->vpci, bdf);
-	if ((vdev_in_sos != NULL) && (vdev_in_sos->vpci->vm == sos_vm) && (vdev_in_sos->pdev != NULL)) {
+	/*
+	 * TODO We didn't support SR-IOV capability of PF in UOS for now, we should
+	 * hide the SR-IOV capability if we pass through the PF to a UOS.
+	 *
+	 * For now, we don't support assignment of PF to a UOS.
+	 */
+	if ((vdev_in_sos != NULL) && (vdev_in_sos->vpci->vm == sos_vm) && (vdev_in_sos->pdev != NULL) && (!has_sriov_cap(vdev_in_sos))) {
 		/* ToDo: Each PT device must support one type reset */
 		if (!vdev_in_sos->pdev->has_pm_reset && !vdev_in_sos->pdev->has_flr &&
 				!vdev_in_sos->pdev->has_af_flr) {
