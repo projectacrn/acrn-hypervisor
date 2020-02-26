@@ -4,6 +4,7 @@
 #
 
 import sys
+import subprocess
 import board_cfg_lib
 
 
@@ -104,6 +105,17 @@ def get_serial_type():
     return (ttys_type, ttys_value)
 
 
+def is_rdt_supported():
+    """
+    Returns True if platform supports RDT else False
+    """
+    (rdt_resources, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(board_cfg_lib.BOARD_INFO_FILE)
+    if len(rdt_resources) == 0 or len(rdt_res_clos_max) == 0:
+        return False
+    else:
+        return True
+
+
 def generate_file(config):
     """Start to generate board.c
     :param config: it is a file pointer of board information for writing to
@@ -149,5 +161,10 @@ def generate_file(config):
     if cpu_core_num == 2:
         print("# KATA VM is not supported on dual-core systems", file=config)
         print("CONFIG_MAX_KATA_VM_NUM=0", file=config)
+
+    if is_rdt_supported():
+        print("CONFIG_RDT_ENABLED=y", file=config)
+    else:
+        print("CONFIG_RDT_ENABLED=n", file=config)
 
     return err_dic
