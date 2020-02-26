@@ -45,6 +45,7 @@
 #include "pciio.h"
 #include "pci_core.h"
 #include "acpi.h"
+#include "dm.h"
 
 
 /* Some audio drivers get topology data from ACPI NHLT table.
@@ -558,7 +559,13 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pcidev.phys_bdf = ptdev->phys_bdf;
 	pciaccess_cleanup();
 	free(ptdev);
-	vm_deassign_pcidev(ctx, &pcidev);
+
+	if (!is_rtvm) {
+		/* Let the HV to deassign the pt device for RTVM, In this case, the RTVM
+		 * could still be alive if DM died.
+		 */
+		vm_deassign_pcidev(ctx, &pcidev);
+	}
 }
 
 /* bind pin info for pass-through device */
