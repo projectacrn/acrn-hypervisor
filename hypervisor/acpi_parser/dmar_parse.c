@@ -176,6 +176,10 @@ get_drhd_dev_scope_cnt(struct acpi_dmar_hardware_unit *drhd)
 	return count;
 }
 
+/**
+ * @Application constraint: The dedicated DMAR unit for Intel integrated GPU
+ * shall be available on the physical platform.
+ */ 
 static int32_t
 handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 		struct dmar_drhd *drhd)
@@ -210,7 +214,6 @@ handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 			if (((drhd->segment << 16U) |
 		     	     (dev_scope->bus << 8U) |
 		     	     dev_scope->devfun) == CONFIG_GPU_SBDF) {
-				ASSERT(dev_count == 1, "no dedicated iommu for gpu");
 				drhd->ignore = true;
 			}
 		}
