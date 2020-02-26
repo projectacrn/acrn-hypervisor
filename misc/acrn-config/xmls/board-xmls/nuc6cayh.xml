@@ -189,8 +189,9 @@
 	</MMCFG_BASE_INFO>
 
 	<CLOS_INFO>
-	clos supported by cache:L2
-	clos max:4
+	rdt resources supported: L2
+	rdt resource clos max: 4
+	rdt resource mask max: '0xff'
 	</CLOS_INFO>
 
 	<SYSTEM_RAM_INFO>

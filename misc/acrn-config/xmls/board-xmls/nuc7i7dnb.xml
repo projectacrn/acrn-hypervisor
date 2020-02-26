@@ -187,8 +187,6 @@
 	</MMCFG_BASE_INFO>
 
 	<CLOS_INFO>
-	clos supported by cache:False
-	clos max:0
 	</CLOS_INFO>
 
 	<SYSTEM_RAM_INFO>
