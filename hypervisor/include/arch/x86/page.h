@@ -29,7 +29,9 @@
  * - Guest OS won't re-program device MMIO bars to the address not covered by
  *   this EPT_ADDRESS_SPACE.
  */
-#define EPT_ADDRESS_SPACE(size)	(((size) != 0UL) ? ((size) + PLATFORM_LO_MMIO_SIZE + PLATFORM_HI_MMIO_SIZE) : 0UL)
+#define EPT_ADDRESS_SPACE(size)		((size > MEM_2G) ?	\
+			((size) + PLATFORM_LO_MMIO_SIZE + PLATFORM_HI_MMIO_SIZE)	\
+			: (MEM_2G + PLATFORM_LO_MMIO_SIZE + PLATFORM_HI_MMIO_SIZE))
 
 #define TRUSTY_PML4_PAGE_NUM(size)	(1UL)
 #define TRUSTY_PDPT_PAGE_NUM(size)	(1UL)

@@ -10,7 +10,6 @@
 #include <mmu.h>
 #include <trusty.h>
 #include <vtd.h>
-#include <vm_configurations.h>
 #include <security.h>
 #include <vm.h>
 
@@ -78,37 +77,33 @@ const struct memory_ops ppt_mem_ops = {
 	.recover_exe_right = nop_recover_exe_right,
 };
 
-static struct page sos_vm_pml4_pages[PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
-static struct page sos_vm_pdpt_pages[PDPT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
-static struct page sos_vm_pd_pages[PD_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
-static struct page sos_vm_pt_pages[PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
+static struct page sos_vm_pml4_pages[SOS_VM_NUM][PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
+static struct page sos_vm_pdpt_pages[SOS_VM_NUM][PDPT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
+static struct page sos_vm_pd_pages[SOS_VM_NUM][PD_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
+static struct page sos_vm_pt_pages[SOS_VM_NUM][PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
 
-/* uos_nworld_pml4_pages[i] is ...... of UOS i (whose vm_id = i +1) */
-static struct page uos_nworld_pml4_pages[CONFIG_MAX_VM_NUM - 1U][PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
-static struct page uos_nworld_pdpt_pages[CONFIG_MAX_VM_NUM - 1U][PDPT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
-static struct page uos_nworld_pd_pages[CONFIG_MAX_VM_NUM - 1U][PD_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
-static struct page uos_nworld_pt_pages[CONFIG_MAX_VM_NUM - 1U][PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+/* pre_uos_nworld_pml4_pages */
+static struct page pre_uos_nworld_pml4_pages[PRE_VM_NUM][PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+static struct page pre_uos_nworld_pdpt_pages[PRE_VM_NUM][PDPT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+static struct page pre_uos_nworld_pd_pages[PRE_VM_NUM][PD_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+static struct page pre_uos_nworld_pt_pages[PRE_VM_NUM][PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
 
-static struct page uos_sworld_pgtable_pages[CONFIG_MAX_VM_NUM - 1U][TRUSTY_PGTABLE_PAGE_NUM(TRUSTY_RAM_SIZE)];
+/* post_uos_nworld_pml4_pages */
+static struct page post_uos_nworld_pml4_pages[MAX_POST_VM_NUM][PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+static struct page post_uos_nworld_pdpt_pages[MAX_POST_VM_NUM][PDPT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+static struct page post_uos_nworld_pd_pages[MAX_POST_VM_NUM][PD_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+static struct page post_uos_nworld_pt_pages[MAX_POST_VM_NUM][PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+
+static struct page post_uos_sworld_pgtable_pages[MAX_POST_VM_NUM][TRUSTY_PGTABLE_PAGE_NUM(TRUSTY_RAM_SIZE)];
 /* pre-assumption: TRUSTY_RAM_SIZE is 2M aligned */
-static struct page uos_sworld_memory[CONFIG_MAX_VM_NUM - 1U][TRUSTY_RAM_SIZE >> PAGE_SHIFT] __aligned(MEM_2M);
+static struct page post_uos_sworld_memory[MAX_POST_VM_NUM][TRUSTY_RAM_SIZE >> PAGE_SHIFT] __aligned(MEM_2M);
 
 /* ept: extended page table*/
-static union pgtable_pages_info ept_pages_info[CONFIG_MAX_VM_NUM] = {
-	{
-		.ept = {
-			.top_address_space = EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE),
-			.nworld_pml4_base = sos_vm_pml4_pages,
-			.nworld_pdpt_base = sos_vm_pdpt_pages,
-			.nworld_pd_base = sos_vm_pd_pages,
-			.nworld_pt_base = sos_vm_pt_pages,
-		},
-	},
-};
+static union pgtable_pages_info ept_pages_info[CONFIG_MAX_VM_NUM];
 
 void *get_reserve_sworld_memory_base(void)
 {
-	return uos_sworld_memory;
+	return post_uos_sworld_memory;
 }
 
 static inline uint64_t ept_get_default_access_right(void)
@@ -188,15 +183,31 @@ static inline void ept_recover_exe_right(uint64_t *entry)
 
 void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
 {
-	if (vm_id != 0U) {
-		ept_pages_info[vm_id].ept.top_address_space = EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE);
-		ept_pages_info[vm_id].ept.nworld_pml4_base = uos_nworld_pml4_pages[vm_id - 1U];
-		ept_pages_info[vm_id].ept.nworld_pdpt_base = uos_nworld_pdpt_pages[vm_id - 1U];
-		ept_pages_info[vm_id].ept.nworld_pd_base = uos_nworld_pd_pages[vm_id - 1U];
-		ept_pages_info[vm_id].ept.nworld_pt_base = uos_nworld_pt_pages[vm_id - 1U];
-		ept_pages_info[vm_id].ept.sworld_pgtable_base = uos_sworld_pgtable_pages[vm_id - 1U];
-		ept_pages_info[vm_id].ept.sworld_memory_base = uos_sworld_memory[vm_id - 1U];
+	struct acrn_vm *vm = get_vm_from_vmid(vm_id);
 
+	if (is_sos_vm(vm)) {
+		ept_pages_info[vm_id].ept.top_address_space = EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE);
+		ept_pages_info[vm_id].ept.nworld_pml4_base = sos_vm_pml4_pages[0U];
+		ept_pages_info[vm_id].ept.nworld_pdpt_base = sos_vm_pdpt_pages[0U];
+		ept_pages_info[vm_id].ept.nworld_pd_base = sos_vm_pd_pages[0U];
+		ept_pages_info[vm_id].ept.nworld_pt_base = sos_vm_pt_pages[0U];
+	} else if (is_prelaunched_vm(vm)) {
+		ept_pages_info[vm_id].ept.top_address_space = EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE);
+		ept_pages_info[vm_id].ept.nworld_pml4_base = pre_uos_nworld_pml4_pages[vm_id];
+		ept_pages_info[vm_id].ept.nworld_pdpt_base = pre_uos_nworld_pdpt_pages[vm_id];
+		ept_pages_info[vm_id].ept.nworld_pd_base = pre_uos_nworld_pd_pages[vm_id];
+		ept_pages_info[vm_id].ept.nworld_pt_base = pre_uos_nworld_pt_pages[vm_id];
+	} else {
+		uint16_t sos_vm_id = (get_sos_vm())->vm_id;
+		uint16_t page_idx = vmid_2_rel_vmid(sos_vm_id, vm_id) - 1U;
+
+		ept_pages_info[vm_id].ept.top_address_space = EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE);
+		ept_pages_info[vm_id].ept.nworld_pml4_base = post_uos_nworld_pml4_pages[page_idx];
+		ept_pages_info[vm_id].ept.nworld_pdpt_base = post_uos_nworld_pdpt_pages[page_idx];
+		ept_pages_info[vm_id].ept.nworld_pd_base = post_uos_nworld_pd_pages[page_idx];
+		ept_pages_info[vm_id].ept.nworld_pt_base = post_uos_nworld_pt_pages[page_idx];
+		ept_pages_info[vm_id].ept.sworld_pgtable_base = post_uos_sworld_pgtable_pages[page_idx];
+		ept_pages_info[vm_id].ept.sworld_memory_base = post_uos_sworld_memory[page_idx];
 		mem_ops->get_sworld_memory_base = ept_get_sworld_memory_base;
 	}
 	mem_ops->info = &ept_pages_info[vm_id];
@@ -214,7 +225,7 @@ void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
 		mem_ops->tweak_exe_right = ept_tweak_exe_right;
 		mem_ops->recover_exe_right = ept_recover_exe_right;
 		/* For RTVM, build 4KB page mapping in EPT */
-		if (is_rt_vm(get_vm_from_vmid(vm_id))) {
+		if (is_rt_vm(vm)) {
 			mem_ops->large_page_enabled = false;
 		}
 	} else {

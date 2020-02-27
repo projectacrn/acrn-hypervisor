@@ -13,7 +13,13 @@
 /* Bits mask of guest flags that can be programmed by device model. Other bits are set by hypervisor only */
 #define DM_OWNED_GUEST_FLAG_MASK	0UL
 
-#define CONFIG_MAX_VM_NUM	2U
+/* SOS_VM_NUM can only be 0U or 1U;
+ * When SOS_VM_NUM is 0U, MAX_POST_VM_NUM must be 0U too;
+ * MAX_POST_VM_NUM must be bigger than CONFIG_MAX_KATA_VM_NUM;
+ */
+#define PRE_VM_NUM			2U
+#define SOS_VM_NUM			0U
+#define MAX_POST_VM_NUM			0U
 
 /* The VM CONFIGs like:
  *	VMX_CONFIG_VCPU_AFFINITY
