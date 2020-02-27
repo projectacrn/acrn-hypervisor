@@ -270,6 +270,7 @@ VP_BASE_C_SRCS += arch/x86/guest/virq.c
 VP_BASE_C_SRCS += arch/x86/guest/virtual_cr.c
 VP_BASE_C_SRCS += arch/x86/guest/vmexit.c
 VP_BASE_C_SRCS += arch/x86/guest/ept.c
+VP_BASE_C_SRCS += arch/x86/guest/ve820.c
 VP_BASE_C_SRCS += arch/x86/guest/ucode.c
 ifeq ($(CONFIG_HYPERV_ENABLED),y)
 VP_BASE_C_SRCS += arch/x86/guest/hyperv.c
@@ -279,7 +280,6 @@ VP_BASE_C_SRCS += common/hv_main.c
 VP_BASE_C_SRCS += common/vm_load.c
 VP_BASE_C_SRCS += arch/x86/configs/pci_dev.c
 VP_BASE_C_SRCS += arch/x86/configs/vacpi.c
-VP_BASE_C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/ve820.c
 
 # virtual platform device model
 VP_DM_C_SRCS += dm/vpic.c
