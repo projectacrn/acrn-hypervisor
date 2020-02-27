@@ -9,7 +9,13 @@
 
 #include <misc_cfg.h>
 
-#define CONFIG_MAX_VM_NUM		(3U + CONFIG_MAX_KATA_VM_NUM)
+/* SOS_VM_NUM can only be 0U or 1U;
+ * When SOS_VM_NUM is 0U, MAX_POST_VM_NUM must be 0U too;
+ * MAX_POST_VM_NUM must be bigger than CONFIG_MAX_KATA_VM_NUM;
+ */
+#define PRE_VM_NUM			0U
+#define SOS_VM_NUM			1U
+#define MAX_POST_VM_NUM			2U
 
 /* Bits mask of guest flags that can be programmed by device model. Other bits are set by hypervisor only */
 #define DM_OWNED_GUEST_FLAG_MASK	(GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH | \

@@ -20,7 +20,7 @@
 #include <timer.h>
 #include <logmsg.h>
 #include <board.h>
-#include <vm_configurations.h>
+#include <vm_config.h>
 #include <pci.h>
 
 #define DBG_IOMMU 0

@@ -277,10 +277,10 @@ void init_paging(void)
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, round_pde_down(hv_hva),
 			round_pde_up((uint64_t)&ld_text_end) - round_pde_down(hv_hva), 0UL,
 			PAGE_NX, &ppt_mem_ops, MR_MODIFY);
-
+#if (SOS_VM_NUM == 1)
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_reserve_sworld_memory_base(),
-			TRUSTY_RAM_SIZE * (CONFIG_MAX_VM_NUM - 1U), PAGE_USER, 0UL, &ppt_mem_ops, MR_MODIFY);
-
+			TRUSTY_RAM_SIZE * MAX_POST_VM_NUM, PAGE_USER, 0UL, &ppt_mem_ops, MR_MODIFY);
+#endif
 	/* Enable paging */
 	enable_paging();
 

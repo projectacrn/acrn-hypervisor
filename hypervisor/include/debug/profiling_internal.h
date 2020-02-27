@@ -11,7 +11,6 @@
 
 #include <vcpu.h>
 #include <vm_config.h>
-#include <vm_configurations.h>
 
 #define MAX_MSR_LIST_NUM		15U
 #define MAX_PROFILING_MSR_STORE_NUM	1
