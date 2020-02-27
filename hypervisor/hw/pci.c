@@ -49,8 +49,6 @@ static uint32_t num_pci_pdev;
 static struct pci_pdev pci_pdev_array[CONFIG_MAX_PCI_DEV_NUM];
 static uint64_t pci_mmcfg_base = DEFAULT_PCI_MMCFG_BASE;
 
-static void init_pdev(uint16_t pbdf, uint32_t drhd_index);
-
 #ifdef CONFIG_ACPI_PARSE_ENABLED
 void set_mmcfg_base(uint64_t mmcfg_base)
 {
@@ -607,11 +605,22 @@ static void pci_read_cap(struct pci_pdev *pdev)
 	}
 }
 
-static void init_pdev(uint16_t pbdf, uint32_t drhd_index)
+/*
+ * @brief Initialize a pdev data structure.
+ *
+ * Initialize a pdev data structure with a physical device BDF(pbdf) and DRHD index(drhd_index).
+ * The caller of the function init_pdev should guarantee execution atomically.
+ *
+ * @param pbdf        Physical device BDF
+ * @param drhd_index  DRHD index
+ *
+ * @return If there's a successfully initialized pdev return it, otherwise return NULL;
+ */
+struct pci_pdev *init_pdev(uint16_t pbdf, uint32_t drhd_index)
 {
 	uint8_t hdr_type;
 	union pci_bdf bdf;
-	struct pci_pdev *pdev;
+	struct pci_pdev *pdev = NULL;
 
 	if (num_pci_pdev < CONFIG_MAX_PCI_DEV_NUM) {
 		bdf.value = pbdf;
@@ -640,4 +649,6 @@ static void init_pdev(uint16_t pbdf, uint32_t drhd_index)
 	} else {
 		pr_err("%s, failed to alloc pci_pdev!\n", __func__);
 	}
+
+	return pdev;
 }

@@ -301,6 +301,7 @@ void set_mmcfg_base(uint64_t mmcfg_base);
 #endif
 uint64_t get_mmcfg_base(void);
 
+struct pci_pdev *init_pdev(uint16_t pbdf, uint32_t drhd_index);
 uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes);
 void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 void enable_disable_pci_intx(union pci_bdf bdf, bool enable);
