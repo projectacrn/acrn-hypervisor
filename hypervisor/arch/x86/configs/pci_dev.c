@@ -54,13 +54,21 @@ static bool is_allocated_to_prelaunched_vm(struct pci_pdev *pdev)
 
 
 /*
- * @pre: pdev != NULL
+ * @brief Initialize a acrn_vm_pci_dev_config structure
+ *
+ * Initialize a acrn_vm_pci_dev_config structure with a specified the pdev structure.
+ * A acrn_vm_pci_dev_config is used to store a PCI device configuration for a VM. The
+ * caller of the function init_one_dev_config should guarantee execution atomically.
+ *
+ * @pre pdev != NULL
+ *
+ * @return If there's a successfully initialized acrn_vm_pci_dev_config return it, otherwise return NULL;
  */
-void init_one_dev_config(struct pci_pdev *pdev)
+struct acrn_vm_pci_dev_config *init_one_dev_config(struct pci_pdev *pdev)
 {
 	uint16_t vmid;
 	struct acrn_vm_config *vm_config;
-	struct acrn_vm_pci_dev_config *dev_config;
+	struct acrn_vm_pci_dev_config *dev_config = NULL;
 
 	if (!is_allocated_to_prelaunched_vm(pdev)) {
 		for (vmid = 0U; vmid < CONFIG_MAX_VM_NUM; vmid++) {
@@ -77,4 +85,5 @@ void init_one_dev_config(struct pci_pdev *pdev)
 			vm_config->pci_dev_num++;
 		}
 	}
+	return dev_config;
 }
