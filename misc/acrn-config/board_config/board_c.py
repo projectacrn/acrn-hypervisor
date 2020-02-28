@@ -11,6 +11,7 @@ import board_cfg_lib
 class RDT(enum.Enum):
     L2 = 0
     L3 = 1
+    MBA = 2
 
 INCLUDE_HEADER = """
 #include <board.h>
@@ -83,8 +84,9 @@ def gen_dmar_structure(config):
 def populate_clos_mask_msr(rdt_res, common_clos_max, mask, config):
     """
     Populate the clos bitmask and msr index for a given RDT resource
-    :param rdt_res_str: it is a string representing the RDT resource
-    :param common_clos: Least common clos supported by all RDT resource
+    :param rdt_res: it is a string representing the RDT resource
+    :param common_clos_max: Least common clos supported by all RDT resource
+    :param mask: Max CLOS mask supported by the RDT resource
     :param config: it is a file pointer of board information for writing to
     """
     for idx in range(common_clos_max):
@@ -94,15 +96,29 @@ def populate_clos_mask_msr(rdt_res, common_clos_max, mask, config):
               rdt_res, idx), file=config)
         print("\t},", file=config)
 
+def populate_mba_delay_mask(rdt_res, common_clos_max, config):
+    """
+    Populate the mba delay mask and msr index for memory resource
+    :param rdt_res: it is a string representing the RDT resource
+    :param common_clos_max: Least common clos supported by all RDT resource
+    :param config: it is a file pointer of board information for writing to
+    """
+    for idx in range(common_clos_max):
+        print("\t{", file=config)
+        print("\t\t.mba_delay = 0U,", file=config)
+        print("\t\t.msr_index = MSR_IA32_{0}_MASK_BASE + {1},".format(
+              rdt_res, idx), file=config)
+        print("\t},", file=config)
+
 
 def gen_rdt_res(config):
     """
-    Get RDT resource (L2, L3) information
+    Get RDT resource (L2, L3, MBA) information
     :param config: it is a file pointer of board information for writing to
     """
     err_dic = {}
     rdt_res_str =""
-    res_present = [0, 0]
+    res_present = [0, 0, 0]
     (rdt_resources, rdt_res_clos_max, rdt_res_mask_max) = board_cfg_lib.clos_info_parser(board_cfg_lib.BOARD_INFO_FILE)
     if len(rdt_res_clos_max) != 0:
         common_clos_max = min(rdt_res_clos_max)
@@ -118,6 +134,7 @@ def gen_rdt_res(config):
     if len(rdt_resources) == 0 or common_clos_max == 0:
         print("struct platform_clos_info platform_{0}_clos_array[MAX_PLATFORM_CLOS_NUM];".format("l2"), file=config)
         print("struct platform_clos_info platform_{0}_clos_array[MAX_PLATFORM_CLOS_NUM];".format("l3"), file=config)
+        print("struct platform_clos_info platform_{0}_clos_array[MAX_PLATFORM_CLOS_NUM];".format("mba"), file=config)
     else:
         for idx, rdt_res in enumerate(rdt_resources):
             if rdt_res == "L2":
@@ -134,14 +151,24 @@ def gen_rdt_res(config):
                 populate_clos_mask_msr(rdt_res, common_clos_max, int(rdt_res_mask_max[idx].strip('\''), 16), config)
                 print("};\n", file=config)
                 res_present[RDT.L3.value] = 1
+            elif rdt_res == "MBA":
+                rdt_res_str = "mba"
+                print("struct platform_clos_info platform_{0}_clos_array[{1}] = {{".format(rdt_res_str,
+                      "MAX_PLATFORM_CLOS_NUM"), file=config)
+                populate_mba_delay_mask(rdt_res, common_clos_max, config)
+                print("};\n", file=config)
+                res_present[RDT.MBA.value] = 1
             else:
                 err_dic['board config: generate board.c failed'] = "The input of {} was corrupted!".format(board_cfg_lib.BOARD_INFO_FILE)
                 return err_dic
 
         if res_present[RDT.L2.value] == 0:
             print("struct platform_clos_info platform_{0}_clos_array[{1}];".format("l2", "MAX_PLATFORM_CLOS_NUM"), file=config)
-        elif res_present[RDT.L3.value] == 0:
+        if res_present[RDT.L3.value] == 0:
             print("struct platform_clos_info platform_{0}_clos_array[{1}];".format("l3", "MAX_PLATFORM_CLOS_NUM"), file=config)
+        if res_present[RDT.MBA.value] == 0:
+            print("struct platform_clos_info platform_{0}_clos_array[{1}];".format("mba", "MAX_PLATFORM_CLOS_NUM"), file=config)
+
     print("#endif", file=config)
 
     print("", file=config)
