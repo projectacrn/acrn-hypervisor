@@ -7,7 +7,8 @@ import parser_lib
 
 RDT_TYPE = {
         "L2":4,
-        "L3":2
+        "L3":2,
+        "MBA":8
     }
 
 
@@ -36,17 +37,17 @@ def dump_cpuid_reg(cmd, reg):
         reg_value = line.split()[idx].split('=')[1]
 
         if reg == "eax":
-            eax_reg_val = int(reg_value, 16) + 1
-            res_info = hex((1 << eax_reg_val) - 1)
+            res_info = int(reg_value, 16) + 1
             break
         elif reg == "ebx":
             res_info = []
             if int(reg_value, 16) & RDT_TYPE['L2'] != 0:
                 res_info.append("L2")
-                break
             if int(reg_value, 16) & RDT_TYPE['L3'] != 0:
                 res_info.append("L3")
-                break
+            if int(reg_value, 16) & RDT_TYPE['MBA'] != 0:
+                res_info.append("MBA")
+            break
         elif reg == "edx":
             res_info = int(reg_value, 16) + 1
             break
@@ -59,7 +60,7 @@ def get_clos_info():
     rdt_res = []
     rdt_clos_max = []
     rdt_mask_max = []
-    cmd = "cpuid -r -l 0x10"
+    cmd = "cpuid -1 -r -l 0x10"
     rdt_res = dump_cpuid_reg(cmd, "ebx")
 
     if len(rdt_res) == 0:
@@ -67,13 +68,19 @@ def get_clos_info():
     else:
         for i in range(len(rdt_res)):
             if rdt_res[i] == "L2":
-                cmd = "cpuid -r -l 0x10 --subleaf 2"
+                cmd = "cpuid -1 -r -l 0x10 --subleaf 2"
                 rdt_clos_max.append(dump_cpuid_reg(cmd, "edx"))
-                rdt_mask_max.append(dump_cpuid_reg(cmd, "eax"))
+                l2_info = dump_cpuid_reg(cmd, "eax")
+                rdt_mask_max.append(hex((1 << l2_info) - 1))
             if rdt_res[i] == "L3":
-                cmd = "cpuid -r -l 0x10 --subleaf 1"
+                cmd = "cpuid -1 -r -l 0x10 --subleaf 1"
                 rdt_clos_max.append(dump_cpuid_reg(cmd, "edx"))
-                rdt_mask_max.append(dump_cpuid_reg(cmd, "eax"))
+                l3_info = dump_cpuid_reg(cmd, "eax")
+                rdt_mask_max.append(hex((1 << l3_info) - 1))
+            if rdt_res[i] == "MBA":
+                cmd = "cpuid -1 -r -l 0x10 --subleaf 3"
+                rdt_clos_max.append(dump_cpuid_reg(cmd, "edx"))
+                rdt_mask_max.append(hex(dump_cpuid_reg(cmd, "eax")))
 
     return (rdt_res, rdt_clos_max, rdt_mask_max)
 
