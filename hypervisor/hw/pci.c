@@ -252,7 +252,7 @@ static bool is_hv_owned_pdev(union pci_bdf pbdf)
 static void pci_init_pdev(union pci_bdf pbdf, uint32_t drhd_index)
 {
 	if (!is_hv_owned_pdev(pbdf)) {
-		init_pdev(pbdf.value, drhd_index);
+		(void)init_pdev(pbdf.value, drhd_index);
 	}
 }
 
@@ -469,7 +469,7 @@ static void init_all_dev_config(void)
 				total += cnt;
 			}
 		}
-		init_one_dev_config(pdev);
+		(void)init_one_dev_config(pdev);
 	}
 }
 

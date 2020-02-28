@@ -215,26 +215,46 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
  * Hypervisor traps guest changes to the mmio vbar (gpa) to establish ept mapping
  * between vbar(gpa) and pbar(hpa). pbar should always align on 4K boundary.
  *
+ * @param vdev         Pointer to a vdev structure
+ * @param is_sriov_bar When the first parameter vdev is a SRIOV PF vdev, the function
+ *                     init_bars is used to initialize normal PCIe BARs of PF vdev if the
+ *                     parameter is_sriov_bar is false, the function init_bars is used to
+ *                     initialize SRIOV VF BARs of PF vdev if parameter is_sriov_bar is true
+ *                     Otherwise, the parameter is_sriov_bar should be false if the first
+ *                     parameter vdev is not SRIOV PF vdev
+ *
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  * @pre vdev->pdev != NULL
+ *
+ * @return None
  */
-static void init_bars(struct pci_vdev *vdev)
+static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 {
 	enum pci_bar_type type;
-	uint32_t idx;
+	uint32_t idx, bar_cnt;
 	struct pci_vbar *vbar;
 	uint32_t size32, offset, lo, hi = 0U;
 	union pci_bdf pbdf;
 	uint64_t mask;
 
-	vdev->nr_bars = vdev->pdev->nr_bars;
+	if (is_sriov_bar) {
+		bar_cnt = PCI_BAR_COUNT;
+	} else {
+		vdev->nr_bars = vdev->pdev->nr_bars;
+		bar_cnt = vdev->nr_bars;
+	}
 	pbdf.value = vdev->pdev->bdf.value;
 
-	for (idx = 0U; idx < vdev->nr_bars; idx++) {
-		vbar = &vdev->vbars[idx];
-		offset = pci_bar_offset(idx);
+	for (idx = 0U; idx < bar_cnt; idx++) {
+		if (is_sriov_bar) {
+			vbar = &vdev->sriov.vbars[idx];
+			offset = sriov_bar_offset(vdev, idx);
+		} else {
+			vbar = &vdev->vbars[idx];
+			offset = pci_bar_offset(idx);
+		}
 		lo = pci_pdev_read_cfg(pbdf, offset, 4U);
 
 		type = pci_get_bar_type(lo);
@@ -265,7 +285,11 @@ static void init_bars(struct pci_vdev *vdev)
 
 			if (type == PCIBAR_MEM64) {
 				idx++;
-				offset = pci_bar_offset(idx);
+				if (is_sriov_bar) {
+					offset = sriov_bar_offset(vdev, idx);
+				} else {
+					offset = pci_bar_offset(idx);
+				}
 				pci_pdev_write_cfg(pbdf, offset, 4U, ~0U);
 				size32 = pci_pdev_read_cfg(pbdf, offset, 4U);
 				pci_pdev_write_cfg(pbdf, offset, 4U, hi);
@@ -274,21 +298,32 @@ static void init_bars(struct pci_vdev *vdev)
 				vbar->size = vbar->size & ~(vbar->size - 1UL);
 				vbar->size = round_page_up(vbar->size);
 
-				vbar = &vdev->vbars[idx];
+				if (is_sriov_bar) {
+					vbar = &vdev->sriov.vbars[idx];
+				} else {
+					vbar = &vdev->vbars[idx];
+				}
+
 				vbar->mask = size32;
 				vbar->type = PCIBAR_MEM64HI;
 
 				if (is_prelaunched_vm(vdev->vpci->vm)) {
 					hi = (uint32_t)(vdev->pci_dev_config->vbar_base[idx - 1U] >> 32U);
 				}
-				pci_vdev_write_bar(vdev, idx - 1U, lo);
-				pci_vdev_write_bar(vdev, idx, hi);
+				/* if it is parsing SRIOV VF BARs, no need to write vdev bars */
+				if (!is_sriov_bar) {
+					pci_vdev_write_bar(vdev, idx - 1U, lo);
+					pci_vdev_write_bar(vdev, idx, hi);
+				}
 			} else {
 				vbar->size = vbar->size & ~(vbar->size - 1UL);
 				if (type == PCIBAR_MEM32) {
 					vbar->size = round_page_up(vbar->size);
 				}
-				pci_vdev_write_bar(vdev, idx, lo);
+				/* if it is parsing SRIOV VF BARs, no need to write vdev bar */
+				if (!is_sriov_bar) {
+					pci_vdev_write_bar(vdev, idx, lo);
+				}
 			}
 		}
 	}
@@ -316,11 +351,8 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 {
 	uint16_t pci_command;
 
-	/* SRIOV capability initialization implementaion in next patch */
-	(void) is_pf_vdev;
-
-	init_bars(vdev);
-	if (is_prelaunched_vm(vdev->vpci->vm)) {
+	init_bars(vdev, is_pf_vdev);
+	if (is_prelaunched_vm(vdev->vpci->vm) && (!is_pf_vdev)) {
 		pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
 
 		/* Disable INTX */
