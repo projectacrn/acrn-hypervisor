@@ -260,48 +260,6 @@ def get_order_type_by_vmid(idx):
     return order_type
 
 
-def get_vmid_by_order_type(type_str):
-    """
-    This is mapping table for {id:order type}
-    :param type_str: vm loader type
-    :return: table of id:order type dictionary
-    """
-
-    idx_list = []
-    order_id_dic = common.order_type_map_vmid(SCENARIO_INFO_FILE, VM_COUNT)
-
-    for idx, order_type in order_id_dic.items():
-        if type_str == order_type:
-            idx_list.append(idx)
-
-    return idx_list
-
-
-def is_pre_launch_vm(idx):
-    """
-    Identification the vm id loader type is pre launched
-    :param idx: vm id number
-    :return: True if it is a pre launched vm
-    """
-    order_type = get_order_type_by_vmid(idx)
-    if order_type == "PRE_LAUNCHED_VM":
-        status = True
-    else:
-        status = False
-
-    return status
-
-def pre_launch_vm_ids():
-    """ Get pre launched vm ids as list """
-    pre_vm = []
-
-    for i in range(VM_COUNT):
-        if is_pre_launch_vm(i):
-            pre_vm.append(i)
-
-    return pre_vm
-
-
 def vm_name_check(vm_names, item):
     """
     Check vm name
@@ -323,7 +281,18 @@ def load_order_check(load_orders, item):
     :param item: vm name item in xml
     :return: None
     """
+    sos_vm_ids = []
+    pre_vm_ids = []
+    post_vm_ids = []
     for order_i, load_str in load_orders.items():
+        if load_str == "SOS_VM":
+            sos_vm_ids.append(order_i)
+
+        if load_str == "PRE_LAUNCHED_VM":
+            pre_vm_ids.append(order_i)
+
+        if load_str == "POST_LAUNCHED_VM":
+            post_vm_ids.append(order_i)
 
         if not load_str:
             key = "vm:id={},{}".format(order_i, item)
@@ -333,6 +302,35 @@ def load_order_check(load_orders, item):
         if load_str not in LOAD_ORDER_TYPE:
             key = "vm:id={},{}".format(order_i, item)
             ERR_LIST[key] = "VM load order unknown"
+
+    if len(sos_vm_ids) >= 2:
+        key = "vm:id={},{}".format(sos_vm_ids[0], item)
+        ERR_LIST[key] = "SOS_VM number should not be greater than 1"
+
+    if post_vm_ids and sos_vm_ids:
+        if post_vm_ids[0] < sos_vm_ids[-1]:
+            key = "vm:id={},{}".format(post_vm_ids[0], item)
+            ERR_LIST[key] = "POST_LAUNCHED_VM should be configured after SOS_VM"
+
+    if pre_vm_ids and sos_vm_ids:
+        if sos_vm_ids[-1] < pre_vm_ids[-1]:
+            key = "vm:id={},{}".format(sos_vm_ids[0], item)
+            ERR_LIST[key] = "PRE_LAUNCHED_VM should be configured before SOS_VM"
+
+
+def get_load_order_cnt(load_orders, type_name):
+    """
+    Get load order type count
+    :param load_orders: dictionary of vm load_order
+    :param type_name: load order type for vm
+    :return: number for this load order type name
+    """
+    type_cnt = 0
+    for load_str in load_orders.values():
+        if type_name == load_str:
+            type_cnt += 1
+
+    return type_cnt
 
 
 def guest_flag_check(guest_flag_idx, branch_tag, leaf_tag):
