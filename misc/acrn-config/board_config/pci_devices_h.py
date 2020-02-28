@@ -41,6 +41,9 @@ def parser_pci():
     for line in pci_lines:
         # get pci bar information into pci_bar_dic
         if "Region" in line and "Memory at" in line:
+            #ignore memory region from SR-IOV capabilities
+            if "size=" not in line:
+                 continue
             bar_num = line.split()[1].strip(':')
             bar_addr = get_value_after_str(line, "at")
             if int(bar_addr, 16) > 0xffffffff:
