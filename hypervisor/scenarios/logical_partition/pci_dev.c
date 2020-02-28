@@ -7,6 +7,8 @@
 #include <vm_config.h>
 #include <pci_devices.h>
 #include <vpci.h>
+#include <mmu.h>
+#include <page.h>
 
 /* The vbar_base info of pt devices is included in device MACROs which defined in
  *           arch/x86/configs/$(CONFIG_BOARD)/pci_devices.h.
