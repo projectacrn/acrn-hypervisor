@@ -36,6 +36,12 @@ def cpu_affinity_output(vm_info, i, config):
         i, cpu_bits['cpu_map']), file=config)
 
 
+def scenario_vm_num(load_type_cnt, config):
+
+    print("#define PRE_VM_NUM\t\t{}U".format(load_type_cnt.pre_vm), file=config)
+    print("#define SOS_VM_NUM\t\t{}U".format(load_type_cnt.sos_vm), file=config)
+    print("#define MAX_POST_VM_NUM\t\t{}U".format(load_type_cnt.post_vm), file=config)
+
 def gen_sdc_header(vm_info, config):
     """
     Generate vm_configuration.h of sdc scenario
@@ -45,7 +51,7 @@ def gen_sdc_header(vm_info, config):
     gen_common_header(config)
     print("#include <misc_cfg.h>\n", file=config)
 
-    print("#define CONFIG_MAX_VM_NUM\t\t(2U + CONFIG_MAX_KATA_VM_NUM)", file=config)
+    scenario_vm_num(vm_info.load_order_cnt, config)
     print("", file=config)
     print("/* Bits mask of guest flags that can be programmed by device model." +
           " Other bits are set by hypervisor only */", file=config)
@@ -95,8 +101,7 @@ def gen_sdc2_header(vm_info, config):
     """
     gen_common_header(config)
     print("#include <misc_cfg.h>\n", file=config)
-    print("#define CONFIG_MAX_VM_NUM\t\t({0}U + CONFIG_MAX_KATA_VM_NUM)".format(
-        scenario_cfg_lib.VM_COUNT), file=config)
+    scenario_vm_num(vm_info.load_order_cnt, config)
     print("", file=config)
     print("/* Bits mask of guest flags that can be programmed by device model." +
           " Other bits are set by hypervisor only */", file=config)
@@ -125,14 +130,14 @@ def gen_sdc2_header(vm_info, config):
     print("{0}".format(VM_END_DEFINE), file=config)
 
 
-def logic_max_vm_num(config):
+def logic_max_vm_num(vm_info, config):
     """
     This is logical max vm number comment
     :param config: it is the pointer which file write to
     :return: None
     """
     print("", file=config)
-    print("#define CONFIG_MAX_VM_NUM\t\t{0}U".format(scenario_cfg_lib.VM_COUNT), file=config)
+    scenario_vm_num(vm_info.load_order_cnt, config)
     print("", file=config)
     print("/* The VM CONFIGs like:", file=config)
     print(" *\tVMX_CONFIG_VCPU_AFFINITY", file=config)
@@ -164,7 +169,7 @@ def gen_logical_partition_header(vm_info, config):
           " Other bits are set by hypervisor only */", file=config)
     print("#define DM_OWNED_GUEST_FLAG_MASK\t0UL", file=config)
 
-    logic_max_vm_num(config)
+    logic_max_vm_num(vm_info, config)
 
     for i in range(scenario_cfg_lib.VM_COUNT):
 
@@ -224,8 +229,7 @@ def gen_industry_header(vm_info, config):
     gen_common_header(config)
     print("#include <misc_cfg.h>", file=config)
     print("", file=config)
-    print("#define CONFIG_MAX_VM_NUM\t\t({0}U + CONFIG_MAX_KATA_VM_NUM)".format(
-        scenario_cfg_lib.VM_COUNT), file=config)
+    scenario_vm_num(vm_info.load_order_cnt, config)
     print("", file=config)
     print("/* Bits mask of guest flags that can be programmed by device model." +
           " Other bits are set by hypervisor only */", file=config)
@@ -268,8 +272,7 @@ def gen_hybrid_header(vm_info, config):
           "\t\t\t\t\t\tGUEST_FLAG_RT | GUEST_FLAG_IO_COMPLETION_POLLING)", file=config)
 
     print("", file=config)
-    print("#define CONFIG_MAX_VM_NUM\t\t({0}U + CONFIG_MAX_KATA_VM_NUM)".format(
-        scenario_cfg_lib.VM_COUNT), file=config)
+    scenario_vm_num(vm_info.load_order_cnt, config)
     print("", file=config)
     for i in range(scenario_cfg_lib.VM_COUNT):
         cpu_affinity_output(vm_info, i, config)

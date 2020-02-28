@@ -261,6 +261,18 @@ class EpcSection:
         self.size = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "epc_section", "size")
 
 
+class LoadOrderNum:
+    """ This is Abstract of VM number for different load order """
+    def __init__(self):
+        self.pre_vm = 0
+        self.sos_vm = 0
+        self.post_vm = 0
+
+    def get_info(self, load_order):
+        self.pre_vm = scenario_cfg_lib.get_load_order_cnt(load_order, "PRE_LAUNCHED_VM")
+        self.sos_vm = scenario_cfg_lib.get_load_order_cnt(load_order, "SOS_VM")
+        self.post_vm = scenario_cfg_lib.get_load_order_cnt(load_order, "POST_LAUNCHED_VM")
+
 class VmInfo:
     """ This is Abstract of class of VM setting """
     name = {}
@@ -281,6 +293,7 @@ class VmInfo:
         self.os_cfg = CfgOsKern(self.scenario_info)
         self.vuart = VuartInfo(self.scenario_info)
         self.cfg_pci = CfgPci(self.scenario_info)
+        self.load_order_cnt = LoadOrderNum()
 
     def get_info(self):
         """
@@ -301,6 +314,7 @@ class VmInfo:
         self.os_cfg.get_info()
         self.vuart.get_info()
         self.cfg_pci.get_info()
+        self.load_order_cnt.get_info(self.load_order)
 
     def get_cpu_bitmap(self, index):
         """
