@@ -83,10 +83,10 @@ static struct page sos_vm_pd_pages[SOS_VM_NUM][PD_PAGE_NUM(EPT_ADDRESS_SPACE(CON
 static struct page sos_vm_pt_pages[SOS_VM_NUM][PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
 
 /* pre_uos_nworld_pml4_pages */
-static struct page pre_uos_nworld_pml4_pages[PRE_VM_NUM][PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
-static struct page pre_uos_nworld_pdpt_pages[PRE_VM_NUM][PDPT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
-static struct page pre_uos_nworld_pd_pages[PRE_VM_NUM][PD_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
-static struct page pre_uos_nworld_pt_pages[PRE_VM_NUM][PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+static struct page pre_uos_nworld_pml4_pages[PRE_VM_NUM][PML4_PAGE_NUM(PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+static struct page pre_uos_nworld_pdpt_pages[PRE_VM_NUM][PDPT_PAGE_NUM(PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+static struct page pre_uos_nworld_pd_pages[PRE_VM_NUM][PD_PAGE_NUM(PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+static struct page pre_uos_nworld_pt_pages[PRE_VM_NUM][PT_PAGE_NUM(PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
 
 /* post_uos_nworld_pml4_pages */
 static struct page post_uos_nworld_pml4_pages[MAX_POST_VM_NUM][PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];

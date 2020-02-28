@@ -7,6 +7,8 @@
 #ifndef PCI_DEVICES_H_
 #define PCI_DEVICES_H_
 
+#define PTDEV_HI_MMIO_SIZE	0UL
+
 #define SATA_CONTROLLER_0	.pbdf.bits = {.b = 0x00U, .d = 0x12U, .f = 0x00U},	\
 				.vbar_base[0] = 0xb3f10000UL,				\
 				.vbar_base[1] = 0xb3f53000UL,				\

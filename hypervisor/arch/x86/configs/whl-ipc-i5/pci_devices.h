@@ -20,6 +20,8 @@
 #ifndef PCI_DEVICES_H_
 #define PCI_DEVICES_H_
 
+#define PTDEV_HI_MMIO_SIZE			0UL
+
 #define HOST_BRIDGE                             .pbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U}
 #define VGA_COMPATIBLE_CONTROLLER_0             .pbdf.bits = {.b = 0x00U, .d = 0x02U, .f = 0x00U}, \
                                                 .vbar_base[0] = 0xa0000000UL, \
