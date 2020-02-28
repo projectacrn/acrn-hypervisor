@@ -74,8 +74,7 @@ static bool is_vf_enabled(const struct pci_vdev *pf_vdev)
  */
 static void init_sriov_vf_bar(struct pci_vdev *pf_vdev)
 {
-	/* Implementation in next patch */
-	(void)pf_vdev;
+	init_vdev_pt(pf_vdev, true);
 }
 
 /**
@@ -233,4 +232,13 @@ void write_sriov_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 	} else {
 		pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
 	}
+}
+
+
+/**
+ * @pre vdev != NULL
+ */
+uint32_t sriov_bar_offset(const struct pci_vdev *vdev, uint32_t bar_idx)
+{
+	return (vdev->sriov.capoff + PCIR_SRIOV_VF_BAR_OFF + (bar_idx << 2U));
 }
