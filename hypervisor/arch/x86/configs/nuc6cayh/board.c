@@ -18,6 +18,7 @@ struct dmar_info plat_dmar_info;
 #ifdef CONFIG_RDT_ENABLED
 struct platform_clos_info platform_l2_clos_array[MAX_PLATFORM_CLOS_NUM];
 struct platform_clos_info platform_l3_clos_array[MAX_PLATFORM_CLOS_NUM];
+struct platform_clos_info platform_mba_clos_array[MAX_PLATFORM_CLOS_NUM];
 #endif
 
 const struct cpu_state_table board_cpu_state_tbl;
