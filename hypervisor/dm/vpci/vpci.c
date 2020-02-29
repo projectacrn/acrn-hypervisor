@@ -483,10 +483,24 @@ static int32_t write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 }
 
 /**
+ * @brief Initialize a vdev structure.
+ *
+ * The function vpci_init_vdev is used to initialize a vdev structure with a PCI device configuration(dev_config)
+ * on a specified vPCI bus(vpci). If the function vpci_init_vdev initializes a SRIOV Virtual Function(VF) vdev structure,
+ * the parameter parent_pf_vdev is the VF associated Physical Function(PF) vdev structure, otherwise the parameter parent_pf_vdev is NULL.
+ * The caller of the function vpci_init_vdev should guarantee execution atomically.
+ *
+ * @param vpci              Pointer to a vpci structure
+ * @param dev_config        Pointer to a dev_config structure of the vdev
+ * @param parent_pf_vdev    If the parameter def_config points to a SRIOV VF vdev, this parameter parent_pf_vdev indicates the parent PF vdev.
+ *                          Otherwise, it is NULL.
+ *
  * @pre vpci != NULL
  * @pre vpci.pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
+ *
+ * @return If there's a successfully initialized vdev structure return it, otherwise return NULL;
  */
-static struct pci_vdev *vpci_init_vdev(struct acrn_vpci *vpci, struct acrn_vm_pci_dev_config *dev_config)
+struct pci_vdev *vpci_init_vdev(struct acrn_vpci *vpci, struct acrn_vm_pci_dev_config *dev_config, struct pci_vdev *parent_pf_vdev)
 {
 	struct pci_vdev *vdev = &vpci->pci_vdevs[vpci->pci_vdev_cnt];
 
@@ -495,6 +509,7 @@ static struct pci_vdev *vpci_init_vdev(struct acrn_vpci *vpci, struct acrn_vm_pc
 	vdev->bdf.value = dev_config->vbdf.value;
 	vdev->pdev = dev_config->pdev;
 	vdev->pci_dev_config = dev_config;
+	vdev->phyfun = parent_pf_vdev;
 
 	if (dev_config->vdev_ops != NULL) {
 		vdev->vdev_ops = dev_config->vdev_ops;
@@ -525,7 +540,7 @@ static void vpci_init_vdevs(struct acrn_vm *vm)
 	const struct acrn_vm_config *vm_config = get_vm_config(vpci->vm->vm_id);
 
 	for (idx = 0U; idx < vm_config->pci_dev_num; idx++) {
-		(void)vpci_init_vdev(vpci, &vm_config->pci_devs[idx]);
+		(void)vpci_init_vdev(vpci, &vm_config->pci_devs[idx], NULL);
 	}
 }
 
@@ -632,7 +647,7 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pc
 			vdev_in_sos->vpci = vpci;
 
 			spinlock_obtain(&tgt_vm->vpci.lock);
-			vdev = vpci_init_vdev(vpci, vdev_in_sos->pci_dev_config);
+			vdev = vpci_init_vdev(vpci, vdev_in_sos->pci_dev_config, NULL);
 			pci_vdev_write_cfg_u8(vdev, PCIR_INTERRUPT_LINE, pcidev->intr_line);
 			pci_vdev_write_cfg_u8(vdev, PCIR_INTERRUPT_PIN, pcidev->intr_pin);
 			for (idx = 0U; idx < vdev->nr_bars; idx++) {

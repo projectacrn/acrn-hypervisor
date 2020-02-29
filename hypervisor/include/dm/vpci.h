@@ -112,6 +112,9 @@ struct pci_vdev {
 	struct pci_msix msix;
 	struct pci_cap_sriov sriov;
 
+	/* Pointer to the SRIOV VF associated PF's vdev */
+	struct pci_vdev *phyfun;
+
 	/* Pointer to corresponding PCI device's vm_config */
 	struct acrn_vm_pci_dev_config *pci_dev_config;
 
@@ -149,5 +152,6 @@ struct pci_vdev *pci_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf);
 struct acrn_assign_pcidev;
 int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pcidev);
 int32_t vpci_deassign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pcidev);
+struct pci_vdev *vpci_init_vdev(struct acrn_vpci *vpci, struct acrn_vm_pci_dev_config *dev_config, struct pci_vdev *parent_pf_vdev);
 
 #endif /* VPCI_H_ */
