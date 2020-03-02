@@ -94,14 +94,10 @@ static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
 
 	efi_ctx->vcpu_regs.rip = (uint64_t)&guest_entry;
 
-	/* The 64-bit entry of acrn hypervisor is 0x200 from the start
-	 * address of hv image. But due to there is multiboot header,
-	 * so it has to be added with 0x10.
-	 *
-	 * FIXME: The hardcode value 0x210 should be worked out
-	 * from the link address of cpu_primary_start_64 in acrn.out
+	/* The 64-bit entry of acrn hypervisor is 0x1200 from the start
+	 * address of hv image.
 	 */
-	hf = (hv_func)(hv_start + 0x210);
+	hf = (hv_func)(hv_start + 0x1200);
 
 	asm volatile ("cli");
 
