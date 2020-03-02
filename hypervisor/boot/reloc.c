@@ -64,7 +64,7 @@ void relocate(void)
 	uint64_t rela_size = 0;
 	uint64_t delta, entry_size = 0;
 	uint64_t trampoline_end;
-	uint64_t primary_32_start, primary_32_end;
+	uint64_t primary_entry_end;
 	uint64_t *addr;
 
 	/* get the delta that needs to be patched */
@@ -94,8 +94,7 @@ void relocate(void)
 		 * absolute addresses
 		 */
 		trampoline_end = (uint64_t)(&ld_trampoline_end) - delta;
-		primary_32_start = (uint64_t)(&cpu_primary_start_32) - delta;
-		primary_32_end = (uint64_t)(&cpu_primary_start_64) - delta;
+		primary_entry_end = (uint64_t)(&ld_entry_end) - delta;
 
 		rela_end = rela_start + rela_size;
 		while (rela_start < rela_end) {
@@ -104,22 +103,17 @@ void relocate(void)
 				addr = (uint64_t *)(delta + entry->r_offset);
 
 				/*
-				 * we won't fixup any trampoline.S and cpu_primary.S here
+				 * we won't fixup any symbols from trampoline.S or cpu_primary.S
 				 * for a number of reasons:
 				 *
 				 * - trampoline code itself takes another relocation,
 				 *   so any entries for trampoline symbols can't be fixed up
 				 *   through .rela sections
-				 * - In cpu_primary.S, the 32 bits code doesn't need relocation
 				 * - Linker option "-z noreloc-overflow" could force R_X86_32
 				 *   to R_X86_64 in the relocation sections, which could make
-				 *   the fixed up code dirty. Even if relocation for 32 bits
-				 *   is needed in the future, it's recommended to do it
-				 *   explicitly in the assembly code to avoid confusion.
+				 *   the fixed up code dirty.
 				 */
-				if ((entry->r_offset > trampoline_end) &&
-						((entry->r_offset < primary_32_start) ||
-						(entry->r_offset > primary_32_end))) {
+				if ((entry->r_offset > trampoline_end) && (entry->r_offset > primary_entry_end)) {
 					*addr += delta;
 				}
 			}

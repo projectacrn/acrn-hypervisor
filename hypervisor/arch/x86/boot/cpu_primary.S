@@ -122,9 +122,18 @@ mb2_header_end:
 
     .global     cpu_primary_start_32
 cpu_primary_start_32:
+
+  /*
+   * Calculate the relocation delta between where we were compiled to run
+   * at and where we were actually loaded at.
+   */
+    call    0f
+0:  pop     %esi
+    sub     $0b, %esi
+
     /* save the MULTBOOT magic number & MBI */
-    movl    %eax, (boot_regs)
-    movl    %ebx, (boot_regs+4)
+    movl    %eax, boot_regs(%esi)
+    movl    %ebx, (boot_regs+4)(%esi)
 
     /* Disable interrupts */
     cli
@@ -156,8 +165,16 @@ cpu_primary_start_32:
     movl    $0x00000668, %eax
     mov     %eax, %cr4
 
+    /* fixup page table pointers with relocation delta */
+    addl    %esi, cpu_primary32_pdpt_addr(%esi)
+    addl    %esi, (cpu_primary32_pdpt_addr+8)(%esi)
+    addl    %esi, (cpu_primary32_pdpt_addr+16)(%esi)
+    addl    %esi, (cpu_primary32_pdpt_addr+24)(%esi)
+
     /* Set CR3 to PML4 table address */
     movl    $cpu_boot32_page_tables_start, %edi
+    addl    %esi, %edi
+    addl    %esi, (%edi)
     mov     %edi, %cr3
 
     /* Set LME bit in EFER */
@@ -178,11 +195,20 @@ cpu_primary_start_32:
 
     /* Load temportary GDT pointer value */
     mov     $cpu_primary32_gdt_ptr, %ebx
+    addl    %esi, %ebx
+    addl    %esi, 2(%ebx)
     lgdt    (%ebx)
 
     /* Perform a long jump based to start executing in 64-bit mode */
+    movl    $jmpbuf_32, %eax
+    addl    %esi, %eax
+    addl    %esi, (%eax)
+    ljmp    *(%eax)
+
+jmpbuf_32:
+    .long   primary_start_long_mode
     /* 0x0008 = HOST_GDT_RING0_CODE_SEL */
-    ljmp    $0x0008, $primary_start_long_mode
+    .word 0x0008
 
     .code64
     .org 0x200
@@ -212,17 +238,22 @@ primary_start_long_mode:
      */
     call relocate
 
+    call    0f
+0:  pop     %rsi
+    sub     $0b, %rsi    /* relocation delta */
+
     /* Load temportary GDT pointer value */
-    lea     cpu_primary32_gdt_ptr(%rip), %rbx
+    lea     cpu_primary64_gdt_ptr(%rip), %rbx
+    addq    %rsi, 2(%rbx)
     lgdt    (%ebx)
 
     /* Set the correct long jump address */
-    lea     jmpbuf(%rip), %rax
+    lea     jmpbuf_64(%rip), %rax
     lea     after(%rip), %rbx
     mov     %rbx, (%rax)
     rex.w ljmp  *(%rax)
 .data
-jmpbuf: .quad 0
+jmpbuf_64: .quad 0
 	/* 0x0008 = HOST_GDT_RING0_CODE_SEL */
         .word 0x0008
 .text
@@ -258,6 +289,10 @@ cpu_primary32_gdt_end:
 /* GDT pointer */
     .align  2
 cpu_primary32_gdt_ptr:
+    .short  (cpu_primary32_gdt_end - cpu_primary32_gdt) - 1
+    .quad   cpu_primary32_gdt
+
+cpu_primary64_gdt_ptr:
     .short  (cpu_primary32_gdt_end - cpu_primary32_gdt) - 1
     .quad   cpu_primary32_gdt
 

@@ -20,6 +20,7 @@ SECTIONS
     .entry :
     {
         KEEP(*(entry)) ;
+	ld_entry_end = . ;
 
     } > ram
 
