@@ -10,19 +10,22 @@
 #include <spinlock.h>
 #include <timer.h>
 
+
+enum intx_ctlr {
+	INTX_CTLR_IOAPIC	= 0U,
+	INTX_CTLR_PIC
+};
+
 #define PTDEV_INTR_MSI		(1U << 0U)
 #define PTDEV_INTR_INTX		(1U << 1U)
 
 #define INVALID_PTDEV_ENTRY_ID 0xffffU
 
-#define PTDEV_VPIN_IOAPIC	0x0U
-#define	PTDEV_VPIN_PIC		0x1U
-
 #define DEFINE_MSI_SID(name, a, b)	\
 union source_id (name) = {.msi_id = {.bdf = (a), .entry_nr = (b)} }
 
-#define DEFINE_IOAPIC_SID(name, a, b)	\
-union source_id (name) = {.intx_id = {.pin = (a), .src = (b)} }
+#define DEFINE_INTX_SID(name, a, b)	\
+union source_id (name) = {.intx_id = {.pin = (a), .ctlr = (b)} }
 
 union irte_index {
 	uint16_t index;
@@ -32,6 +35,7 @@ union irte_index {
 	} bits __packed;
 };
 
+
 union source_id {
 	uint64_t value;
 	struct {
@@ -39,9 +43,13 @@ union source_id {
 		uint16_t entry_nr;
 		uint32_t reserved;
 	} msi_id;
+	/*
+	 * ctlr indicates if the source of interrupt is IO-APIC or PIC
+	 * pin indicates the pin number of interrupt controller determined by ctlr
+	 */
 	struct {
+		enum intx_ctlr ctlr;
 		uint32_t pin;
-		uint32_t src;
 	} intx_id;
 };
 

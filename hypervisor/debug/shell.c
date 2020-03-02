@@ -1073,7 +1073,7 @@ static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 			uint32_t phys_irq = entry->allocated_pirq;
 			union ioapic_rte rte;
 
-			if (entry->virt_sid.intx_id.src == PTDEV_VPIN_IOAPIC) {
+			if (entry->virt_sid.intx_id.ctlr == INTX_CTLR_IOAPIC) {
 				(void)strncpy_s(type, 16U, "IOAPIC", 16U);
 			} else {
 				(void)strncpy_s(type, 16U, "PIC", 16U);
