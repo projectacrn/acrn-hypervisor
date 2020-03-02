@@ -30,6 +30,7 @@
 #include <vm.h>
 #include <ptdev.h>
 #include <vpci.h>
+#include <pci_dev.h>
 #include <logmsg.h>
 
 #include "vpci_priv.h"
@@ -82,9 +83,36 @@ static void init_sriov_vf_bar(struct pci_vdev *pf_vdev)
  */
 static void create_vf(struct pci_vdev *pf_vdev, union pci_bdf vf_bdf)
 {
-	/* Implementation in next patch */
-	(void)pf_vdev;
-	(void)vf_bdf;
+	struct pci_pdev *vf_pdev;
+	struct pci_vdev *vf_vdev = NULL;
+
+	/*
+	 * Per VT-d 8.3.3, the VFs are under the scope of the same
+	 * remapping unit as the associated PF when SRIOV is enabled.
+	 */
+	vf_pdev = init_pdev(vf_bdf.value, pf_vdev->pdev->drhd_index);
+	if (vf_pdev != NULL) {
+		struct acrn_vm_pci_dev_config *dev_cfg;
+
+		dev_cfg = init_one_dev_config(vf_pdev);
+		if (dev_cfg != NULL) {
+			vf_vdev = vpci_init_vdev(&pf_vdev->vpci->vm->vpci, dev_cfg, pf_vdev);
+		}
+	}
+
+	/*
+	 * if a VF vdev failed to be created, the VF number is less than requested number
+	 * and the requested VF physical devices are ready at this time, clear VF_ENABLE.
+	 */
+	if (vf_vdev == NULL) {
+		uint16_t control;
+
+		control = read_sriov_reg(pf_vdev, PCIR_SRIOV_CONTROL);
+		control &= (~PCIM_SRIOV_VF_ENABLE);
+		pci_pdev_write_cfg(pf_vdev->bdf, pf_vdev->sriov.capoff + PCIR_SRIOV_CONTROL, 2U, control);
+		pr_err("PF %x:%x.%x can't creat VF, unset VF_ENABLE",
+			pf_vdev->bdf.bits.b, pf_vdev->bdf.bits.d, pf_vdev->bdf.bits.f);
+	}
 }
 
 /**
@@ -241,4 +269,13 @@ void write_sriov_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 uint32_t sriov_bar_offset(const struct pci_vdev *vdev, uint32_t bar_idx)
 {
 	return (vdev->sriov.capoff + PCIR_SRIOV_VF_BAR_OFF + (bar_idx << 2U));
+}
+
+/**
+ * @pre vdev != NULL
+ */
+void init_sriov_vf_vdev(struct pci_vdev *vdev)
+{
+	/* Implementation in next path */
+	(void)vdev;
 }
