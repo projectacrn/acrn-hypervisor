@@ -84,9 +84,6 @@ cpu_primary_start_32:
     movl    %eax, (boot_regs)
     movl    %ebx, (boot_regs+4)
 
-    /* Save boot context from 32bit mode */
-    call cpu_primary_save_32
-
     /* Disable interrupts */
     cli
 

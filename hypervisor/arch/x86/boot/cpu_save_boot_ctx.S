@@ -8,43 +8,6 @@
 
     .section    entry, "ax"
     .align      8
-    .code32
-
-    .global     cpu_primary_save_32
-cpu_primary_save_32:
-    /* save context from 32bit mode */
-    lea     boot_context, %eax
-    sgdt    BOOT_CTX_GDT_OFFSET(%eax)
-    sidt    BOOT_CTX_IDT_OFFSET(%eax)
-    str     BOOT_CTX_TR_SEL_OFFSET(%eax)
-    sldt    BOOT_CTX_LDT_SEL_OFFSET(%eax)
-    movl    %cr0, %ecx
-    movl    %ecx, BOOT_CTX_CR0_OFFSET(%eax)
-    movl    %cr3, %ecx
-    movl    %ecx, BOOT_CTX_CR3_OFFSET(%eax)
-    movl    %cr4, %ecx
-    movl    %ecx, BOOT_CTX_CR4_OFFSET(%eax)
-    mov     %cs, %cx
-    mov     %cx,  BOOT_CTX_CS_SEL_OFFSET(%eax)
-    lar     %ecx, %ecx
-    /* CS AR start from bit 8 */
-    shr     $8, %ecx
-    /* Clear Limit field, bit 8-11 */
-    andl    $0x0000f0ff, %ecx
-    mov     %ecx, BOOT_CTX_CS_AR_OFFSET(%eax)
-
-    /* Save CS limit field */
-    mov     %cs, %cx
-    xor     %edx, %edx
-    lsl     %ecx, %edx
-    mov     %edx, BOOT_CTX_CS_LIMIT_OFFSET(%eax)
-
-    mov     %es,  BOOT_CTX_ES_SEL_OFFSET(%eax)
-    mov     %ss,  BOOT_CTX_SS_SEL_OFFSET(%eax)
-    mov     %ds,  BOOT_CTX_DS_SEL_OFFSET(%eax)
-    mov     %fs,  BOOT_CTX_FS_SEL_OFFSET(%eax)
-    mov     %gs,  BOOT_CTX_GS_SEL_OFFSET(%eax)
-    ret
 
     .code64
     .global     cpu_primary_save_64
