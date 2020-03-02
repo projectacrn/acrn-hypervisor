@@ -177,7 +177,7 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 	struct intr_source intr_src;
 	int32_t ret;
 
-	if (virt_sid->intx_id.src == PTDEV_VPIN_IOAPIC) {
+	if (virt_sid->intx_id.ctlr == INTX_CTLR_IOAPIC) {
 		uint64_t vdmask, pdmask;
 		uint32_t dest, delmode, dest_mask, vector;
 		union ioapic_rte virt_rte;
@@ -360,9 +360,9 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 {
 	struct ptirq_remapping_info *entry = NULL;
 	bool entry_is_updated = true;
-	uint32_t vpin_src = pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
-	DEFINE_IOAPIC_SID(phys_sid, phys_pin, 0U);
-	DEFINE_IOAPIC_SID(virt_sid, virt_pin, vpin_src);
+	enum intx_ctlr vpin_ctlr = pic_pin ? INTX_CTLR_PIC : INTX_CTLR_IOAPIC;
+	DEFINE_INTX_SID(phys_sid, phys_pin, INTX_CTLR_IOAPIC);
+	DEFINE_INTX_SID(virt_sid, virt_pin, vpin_ctlr);
 	uint32_t phys_irq = ioapic_pin_to_irq(phys_pin);
 
 	if (((!pic_pin) && (virt_pin >= vioapic_pincount(vm))) || (pic_pin && (virt_pin >= vpic_pincount()))) {
@@ -463,13 +463,13 @@ static void ptirq_handle_intx(struct acrn_vm *vm,
 		const struct ptirq_remapping_info *entry)
 {
 	const union source_id *virt_sid = &entry->virt_sid;
-	switch (virt_sid->intx_id.src) {
-	case PTDEV_VPIN_IOAPIC:
+	switch (virt_sid->intx_id.ctlr) {
+	case INTX_CTLR_IOAPIC:
 	{
 		union ioapic_rte rte;
 		bool trigger_lvl = false;
 
-		/* VPIN_IOAPIC src means we have vioapic enabled */
+		/* INTX_CTLR_IOAPIC means we have vioapic enabled */
 		vioapic_get_rte(vm, (uint32_t)virt_sid->intx_id.pin, &rte);
 		if (rte.bits.trigger_mode == IOAPIC_RTE_TRGRMODE_LEVEL) {
 			trigger_lvl = true;
@@ -496,11 +496,11 @@ static void ptirq_handle_intx(struct acrn_vm *vm,
 			rte.full);
 		break;
 	}
-	case PTDEV_VPIN_PIC:
+	case INTX_CTLR_PIC:
 	{
 		enum vpic_trigger trigger;
 
-		/* VPIN_PIC src means we have vpic enabled */
+		/* INTX_CTLR_PIC means we have vpic enabled */
 		vpic_get_irqline_trigger_mode(vm_pic(vm), virt_sid->intx_id.pin, &trigger);
 		if (trigger == LEVEL_TRIGGER) {
 			vpic_set_irqline(vm_pic(vm), virt_sid->intx_id.pin, GSI_SET_HIGH);
@@ -511,8 +511,8 @@ static void ptirq_handle_intx(struct acrn_vm *vm,
 	}
 	default:
 		/*
-		 * In this switch statement, virt_sid->intx_id.src shall
-		 * either be PTDEV_VPIN_IOAPIC or PTDEV_VPIN_PIC.
+		 * In this switch statement, virt_sid->intx_id.ctlr shall
+		 * either be INTX_CTLR_IOAPIC or INTX_CTLR_PIC.
 		 * Gracefully return if prior case clauses have not been met.
 		 */
 		break;
@@ -556,11 +556,11 @@ void ptirq_softirq(uint16_t pcpu_id)
 	}
 }
 
-void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpin_src)
+void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_pin, enum intx_ctlr vpin_ctlr)
 {
 	uint32_t phys_irq;
 	struct ptirq_remapping_info *entry;
-	bool pic_pin = (vpin_src == PTDEV_VPIN_PIC);
+	bool pic_pin = (vpin_ctlr == INTX_CTLR_PIC);
 
 	entry = ptirq_lookup_entry_by_vpin(vm, virt_pin, pic_pin);
 	if (entry != NULL) {
@@ -569,21 +569,21 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpin_src)
 		/* NOTE: only Level trigger will process EOI/ACK and if we got here
 		 * means we have this vioapic or vpic or both enabled
 		 */
-		switch (vpin_src) {
-		case PTDEV_VPIN_IOAPIC:
+		switch (vpin_ctlr) {
+		case INTX_CTLR_IOAPIC:
 			if (entry->polarity != 0U) {
 				vioapic_set_irqline_lock(vm, virt_pin, GSI_SET_HIGH);
 			} else {
 				vioapic_set_irqline_lock(vm, virt_pin, GSI_SET_LOW);
 			}
 			break;
-		case PTDEV_VPIN_PIC:
+		case INTX_CTLR_PIC:
 			vpic_set_irqline(vm_pic(vm), virt_pin, GSI_SET_LOW);
 			break;
 		default:
 			/*
-			 * In this switch statement, vpin_src shall either be
-			 * PTDEV_VPIN_IOAPIC or PTDEV_VPIN_PIC.
+			 * In this switch statement, vpin_ctlr shall either be
+			 * INTX_CTLR_IOAPIC or INTX_CTLR_PIC.
 			 * Gracefully return if prior case clauses have not been met.
 			 */
 			break;
@@ -701,13 +701,13 @@ static void activate_physical_ioapic(struct acrn_vm *vm,
 /* Main entry for PCI/Legacy device assignment with INTx, calling from vIOAPIC
  * or vPIC
  */
-int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpin_src)
+int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, enum intx_ctlr vpin_ctlr)
 {
 	int32_t status = 0;
 	struct ptirq_remapping_info *entry = NULL;
-	bool need_switch_vpin_src = false;
-	DEFINE_IOAPIC_SID(virt_sid, virt_pin, vpin_src);
-	bool pic_pin = (vpin_src == PTDEV_VPIN_PIC);
+	bool need_switch_vpin_ctlr = false;
+	DEFINE_INTX_SID(virt_sid, virt_pin, vpin_ctlr);
+	bool pic_pin = (vpin_ctlr == INTX_CTLR_PIC);
 
 	/*
 	 * virt pin could come from vpic master, vpic slave or vioapic
@@ -746,7 +746,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpi
 
 					entry = ptirq_lookup_entry_by_vpin(vm, vpin, !pic_pin);
 					if (entry != NULL) {
-						need_switch_vpin_src = true;
+						need_switch_vpin_ctlr = true;
 					}
 				}
 
@@ -779,13 +779,13 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpi
 	if (status == 0) {
 		spinlock_obtain(&ptdev_lock);
 		/* if vpin source need switch */
-		if ((need_switch_vpin_src) && (entry != NULL)) {
+		if ((need_switch_vpin_ctlr) && (entry != NULL)) {
 			dev_dbg(DBG_LEVEL_IRQ,
 				"IOAPIC pin=%hhu pirq=%u vpin=%d switch from %s to %s vpin=%d for vm%d",
 				entry->phys_sid.intx_id.pin,
 				entry->allocated_pirq, entry->virt_sid.intx_id.pin,
-				(vpin_src == 0U) ? "vPIC" : "vIOAPIC",
-				(vpin_src == 0U) ? "vIOPIC" : "vPIC",
+				(vpin_ctlr == INTX_CTLR_IOAPIC) ? "vPIC" : "vIOAPIC",
+				(vpin_ctlr == INTX_CTLR_IOAPIC) ? "vIOPIC" : "vPIC",
 				virt_pin, entry->vm->vm_id);
 			entry->virt_sid.value = virt_sid.value;
 		}
