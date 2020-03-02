@@ -169,6 +169,11 @@
 #define PCIM_PCIE_FLRCAP      (0x1U << 28U)
 #define PCIM_PCIE_FLR         (0x1U << 15U)
 
+#define PCIR_PCIE_DEVCAP2     0x24U
+#define PCIM_PCIE_DEVCAP2_ARI (0x1U << 5U)
+#define PCIR_PCIE_DEVCTL2     0x28U
+#define PCIM_PCIE_DEVCTL2_ARI (0x1U << 5U)
+
 /* Conventional PCI Advanced Features Capability */
 #define PCIY_AF               0x13U
 #define PCIM_AF_FLR_CAP       (0x1U << 25U)
@@ -228,6 +233,7 @@ struct pci_pdev {
 	union pci_bdf bdf;
 
 	uint32_t msi_capoff;
+	uint32_t pcie_capoff;
 
 	struct pci_msix_cap msix;
 	struct pci_sriov_cap sriov;
