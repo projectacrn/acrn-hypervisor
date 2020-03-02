@@ -53,7 +53,16 @@ static inline bool boot_from_multiboot1(void)
 #ifdef CONFIG_MULTIBOOT2
 static inline bool boot_from_multiboot2(void)
 {
-	return ((boot_regs[0] == MULTIBOOT2_INFO_MAGIC) && (boot_regs[1] != 0U));
+	/*
+	 * Multiboot spec states that the Multiboot information structure may be placed
+	 * anywhere in memory by the boot loader.
+	 *
+	 * Seems both SBL and GRUB won't place multiboot1 MBI structure at 0 address,
+	 * but GRUB could place Multiboot2 MBI structure at 0 address until commit
+	 * 0f3f5b7c13fa9b67 ("multiboot2: Set min address for mbi allocation to 0x1000")
+	 * which dates on Dec 26 2019.
+	 */
+	return (boot_regs[0] == MULTIBOOT2_INFO_MAGIC);
 }
 
 int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info);
