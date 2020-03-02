@@ -434,6 +434,26 @@ static void pci_parse_iommu_devscopes(struct pci_bdf_set *const bdfs_from_drhds,
 	}
 }
 
+/* do enabling or limitation to pci bridge */
+static void	config_pci_bridge(struct pci_pdev *pdev)
+{
+	uint32_t offset, val;
+
+	/* Enable ARI if PCIe bridge could support it for SRIOV needs it */
+	if (pdev->pcie_capoff != 0x00UL) {
+		offset = pdev->pcie_capoff + PCIR_PCIE_DEVCAP2;
+		val = pci_pdev_read_cfg(pdev->bdf, offset, 2U);
+
+		if (val & PCIM_PCIE_DEVCAP2_ARI) {
+			offset = pdev->pcie_capoff + PCIR_PCIE_DEVCTL2;
+
+			val = pci_pdev_read_cfg(pdev->bdf, offset, 2U);
+			val |= PCIM_PCIE_DEVCTL2_ARI;
+			pci_pdev_write_cfg(pdev->bdf, offset, 2U, val);
+		}
+	}
+}
+
 /*
  * @brief: walks through all pdevs that have been initialized and determine
  * which pdevs need to be added to pci dev_config. The pdevs added to pci
@@ -447,6 +467,10 @@ static void init_all_dev_config(void)
 
 	for (idx = 0U; idx < num_pci_pdev; idx++) {
 		pdev = &pci_pdev_array[idx];
+
+		if (pdev->hdr_type == PCIM_HDRTYPE_BRIDGE) {
+			config_pci_bridge(pdev);
+		}
 
 		/*
 		 * FIXME: Mask the SR-IOV capability instead drop the device
@@ -589,6 +613,7 @@ static void pci_read_cap(struct pci_pdev *pdev)
 		} else if (cap == PCIY_PCIE) {
 			is_pcie = true;
 			pcie_devcap = pci_pdev_read_cfg(pdev->bdf, pos + PCIR_PCIE_DEVCAP, 4U);
+			pdev->pcie_capoff = pos;
 			pdev->has_flr = ((pcie_devcap & PCIM_PCIE_FLRCAP) != 0U);
 		} else if (cap == PCIY_AF) {
 			val = pci_pdev_read_cfg(pdev->bdf, pos, 4U);
