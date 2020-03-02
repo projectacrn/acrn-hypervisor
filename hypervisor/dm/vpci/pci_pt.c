@@ -351,13 +351,17 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 {
 	uint16_t pci_command;
 
-	init_bars(vdev, is_pf_vdev);
-	if (is_prelaunched_vm(vdev->vpci->vm) && (!is_pf_vdev)) {
-		pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
+	if (vdev->phyfun != NULL) {
+		init_sriov_vf_vdev(vdev);
+	} else {
+		init_bars(vdev, is_pf_vdev);
+		if (is_prelaunched_vm(vdev->vpci->vm) && (!is_pf_vdev)) {
+			pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
 
-		/* Disable INTX */
-		pci_command |= 0x400U;
-		pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
+			/* Disable INTX */
+			pci_command |= 0x400U;
+			pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
+		}
 	}
 }
 
