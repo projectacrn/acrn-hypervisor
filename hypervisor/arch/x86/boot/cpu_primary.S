@@ -115,8 +115,14 @@ relocatable_tag_end:
 mb2_header_end:
 #endif
 
+    /*
+     * The page tables are aligned to 4KB, which implicitly aligns this section at
+     * 4KB boundary. Put an extra .align here to explicitly state that regardless
+     * the actual length of the multiboot header section, this section will be linked
+     * at offset 0x1000 to the beginning of the target executable.
+     */
+    .align      0x1000
     .section    entry, "ax"
-
     .align      8
     .code32
 
@@ -210,8 +216,13 @@ jmpbuf_32:
     /* 0x0008 = HOST_GDT_RING0_CODE_SEL */
     .word 0x0008
 
-    .code64
+    /*
+     * Offset from the beginning of the entry section.
+     * This is to make sure that cpu_primary_start_64 is linked to a known address
+     * so that efi-stub knows where to pass control to hypervisor.
+     */
     .org 0x200
+    .code64
     .global     cpu_primary_start_64
 cpu_primary_start_64:
     /* save the MULTBOOT magic number & MBI */
@@ -252,11 +263,10 @@ primary_start_long_mode:
     lea     after(%rip), %rbx
     mov     %rbx, (%rax)
     rex.w ljmp  *(%rax)
-.data
 jmpbuf_64: .quad 0
 	/* 0x0008 = HOST_GDT_RING0_CODE_SEL */
         .word 0x0008
-.text
+
 after:
     /* 0x10 = HOST_GDT_RING0_DATA_SEL*/
     movl    $0x10,%eax
