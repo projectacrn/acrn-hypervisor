@@ -56,16 +56,57 @@ mb2_header_start:
 
     /* please be aware that each tag should be 8 bytes aligned */
     .align     MULTIBOOT2_TAG_ALIGN
+    /*
+     * Request infomation from boot loader, which is supposed to provide th relevant information
+     * specified in the following tags to the image through the MBI if it is available
+     */
 info_req_tag_start:
     .short  MULTIBOOT2_HEADER_TAG_INFORMATION_REQUEST
     .short  0
     .long   info_req_tag_end - info_req_tag_start
-    .long   MULTIBOOT2_TAG_TYPE_MMAP
-    .long   MULTIBOOT2_TAG_TYPE_MODULE
-    .long   MULTIBOOT2_TAG_TYPE_ACPI_NEW
-    .long   MULTIBOOT2_TAG_TYPE_EFI64
-    .long   MULTIBOOT2_TAG_TYPE_EFI_MMAP
+    .long   MULTIBOOT2_TAG_TYPE_MMAP        /* memory map */
+    .long   MULTIBOOT2_TAG_TYPE_MODULE      /* boot modules infomation */
+    .long   MULTIBOOT2_TAG_TYPE_ACPI_NEW    /* a copy of RSDP as defined per ACPI 2.0 or later specification */
+    .long   MULTIBOOT2_TAG_TYPE_EFI64       /* EFI system table, to be passed to guest Linux  */
+    .long   MULTIBOOT2_TAG_TYPE_EFI_MMAP    /* EFI memory map, to be passed to guest Linux */
 info_req_tag_end:
+
+    .align  MULTIBOOT2_TAG_ALIGN
+address_tag_start:
+    .short  MULTIBOOT2_HEADER_TAG_ADDRESS
+    .short  0
+    .long   address_tag_end - address_tag_start
+    .long   mb2_header_start  /* address corresponding to the beginning of the Multiboot2 header */
+    .long   -1  /* load_addr: the file to be loaded from its beginning */
+    /*
+     * load_end_addr: this includes .bss so that boot loader could reserve the
+     * memory that .bss occupies to avoid placing boot modules or other data in that area.
+     *
+     * However, the boot loader is supposed not to actually load the .bss section because
+     * it's beyond the scope of acrn.bin
+     */
+    .long   _ld_ram_end
+    .long   0   /* bss_end_addr, don't ask boot loader to clear .bss */
+address_tag_end:
+
+    .align  MULTIBOOT2_TAG_ALIGN
+entry_address_tag_start:
+    .short  MULTIBOOT2_HEADER_TAG_ENTRY_ADDRESS
+    .short  0
+    .long   entry_address_tag_end - entry_address_tag_start
+    .long   cpu_primary_start_32  /* The address to which the boot loader should jump to start hypervisor */
+entry_address_tag_end:
+
+    .align  MULTIBOOT2_TAG_ALIGN
+relocatable_tag_start:
+    .short  MULTIBOOT2_HEADER_TAG_RELOCATABLE
+    .short  0
+    .long   relocatable_tag_end - relocatable_tag_start
+    .long   0x10000000   /* min_addr. TODO: change it to 2MB after fixing the load_addr issue */
+    .long   0x80000000   /* max_addr */
+    .long   0x200000     /* image alignment */
+    .long   1            /* preference: lowest possible address */
+relocatable_tag_end:
 
     .align     MULTIBOOT2_TAG_ALIGN
     .short  MULTIBOOT2_HEADER_TAG_END
@@ -73,6 +114,7 @@ info_req_tag_end:
     .long   8
 mb2_header_end:
 #endif
+
     .section    entry, "ax"
 
     .align      8
