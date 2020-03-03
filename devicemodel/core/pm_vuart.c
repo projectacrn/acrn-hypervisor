@@ -93,8 +93,28 @@ static void *pm_monitor_loop(void *arg)
 
 	while (1) {
 		rc = read_bytes(node_fd, (uint8_t *)buf, CMD_LEN);
-
 		switch (pm_monitor_state) {
+		/* it can receive shutdown command from UOS for the following two states,
+		 * it will change the state to SHUTDOWN_REQ_FROM_UOS if receive the shutdown
+		 * command from UOS, this can prevent the follow-up shutdown command
+		 * from UOS or SOS in this state.
+		 * it will wait UOS poweroff itself and then send shutdown to
+		 * life_mngr running on the SOS to shutdown system
+		 */
+		case SHUTDOWN_REQ_WAITING:
+		case SHUTDOWN_REQ_FROM_UOS:
+			if ((rc > 0) && (strncmp(SHUTDOWN_CMD, (const char *)buf, strlen(SHUTDOWN_CMD)) == 0)) {
+				pm_monitor_state = SHUTDOWN_REQ_FROM_UOS;
+				if (write(node_fd, SHUTDOWN_CMD_ACK, sizeof(SHUTDOWN_CMD_ACK))
+						!= sizeof(SHUTDOWN_CMD_ACK)) {
+					/* here no need to resend ack, it will resend shutdown cmd
+					 * if uos can not receive acked message
+					 */
+					pr_err("send acked message to UOS failed!\n");
+				}
+			}
+			break;
+
 		/* Waiting acked message from UOS, this is triggered by SOS */
 		case SHUTDOWN_ACK_WAITING:
 			/* Once received the SHUTDOWN ACK from UOS, then wait UOS to set ACPI PM register to change
@@ -127,8 +147,8 @@ static void *pm_monitor_loop(void *arg)
 			pr_err("Invalid pm_monitor_state(0x%x)\r\n", pm_monitor_state);
 			break;
 		}
-
 		sleep(1);
+
 	}
 
 	return NULL;
