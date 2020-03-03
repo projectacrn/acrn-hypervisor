@@ -183,7 +183,7 @@ def gen_logical_partition_header(vm_info, config):
         print('#define VM{0}_CONFIG_OS_BOOTARG_MAXCPUS\t\t"maxcpus={1} "'.format(
             i, cpu_bits['cpu_num']), file=config)
         print('#define VM{0}_CONFIG_OS_BOOTARG_CONSOLE\t\t"console={1} "'.format(
-            i, vm_info.os_cfg.kern_console[i]), file=config)
+            i, vm_info.os_cfg.kern_console[i].strip('/dev/')), file=config)
         print("", file=config)
 
     print('/* VM pass-through devices assign policy:', file=config)
