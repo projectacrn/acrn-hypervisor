@@ -211,7 +211,7 @@ void hv_access_memory_region_update(uint64_t base, uint64_t size)
 
 void init_paging(void)
 {
-	uint64_t hv_hpa, text_end, size;
+	uint64_t hv_hva;
 	uint32_t i;
 	uint64_t low32_max_ram = 0UL;
 	uint64_t high64_max_ram;
@@ -265,19 +265,17 @@ void init_paging(void)
 	 * Before the new PML4 take effect in enable_paging(), HPA->HVA is always 1:1 mapping,
 	 * simply treat the return value of get_hv_image_base() as HPA.
 	 */
-	hv_hpa = get_hv_image_base();
-	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, hv_hpa & PDE_MASK,
-			CONFIG_HV_RAM_SIZE + (((hv_hpa & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL),
+	hv_hva = get_hv_image_base();
+	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, hv_hva & PDE_MASK,
+			CONFIG_HV_RAM_SIZE + (((hv_hva & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL),
 			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER, &ppt_mem_ops, MR_MODIFY);
 
-	size = ((uint64_t)&ld_text_end - hv_hpa);
-	text_end = hv_hpa + size;
 	/*
 	 * remove 'NX' bit for pages that contain hv code section, as by default XD bit is set for
 	 * all pages, including pages for guests.
 	 */
-	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, round_pde_down(hv_hpa),
-			round_pde_up(text_end) - round_pde_down(hv_hpa), 0UL,
+	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, round_pde_down(hv_hva),
+			round_pde_up((uint64_t)&ld_text_end) - round_pde_down(hv_hva), 0UL,
 			PAGE_NX, &ppt_mem_ops, MR_MODIFY);
 
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_reserve_sworld_memory_base(),
