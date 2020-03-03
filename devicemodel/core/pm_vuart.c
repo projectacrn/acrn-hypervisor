@@ -18,6 +18,10 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <termios.h>
 
 #include "vmmapi.h"
@@ -30,6 +34,7 @@
 #define CMD_LEN 16
 #define RESEND_CMD_CNT  3
 #define MAX_NODE_PATH  128
+#define SOS_SOCKET_PORT 0x2000
 
 static const char * const node_name[] = {
 	"pty",
@@ -77,6 +82,55 @@ static int read_bytes(int fd, uint8_t *buffer, int buf_len)
 	} while (rc > 0);
 
 	return count;
+}
+
+/*
+ * acrn-dm receive shutdown command from UOS,
+ * it will call this api to send shutdown to life_mngr
+ * running on SOS
+ */
+int send_shutdown_to_lifemngr(void)
+{
+	int rc;
+	char buffer[CMD_LEN];
+	int socket_fd;
+	struct sockaddr_in socket_addr;
+
+	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (socket_fd  == -1) {
+		pr_err("socket() error.\n");
+		return -1;
+	}
+
+	memset(&socket_addr, 0, sizeof(struct sockaddr_in));
+	socket_addr.sin_family = AF_INET;
+	socket_addr.sin_port = htons(SOS_SOCKET_PORT);
+	socket_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+	if (connect(socket_fd, (struct sockaddr *)&socket_addr, sizeof(socket_addr)) == -1) {
+		pr_err("connect() error.\n");
+		close(socket_fd);
+		return -1;
+	}
+
+	/* send shutdown command to lifecycle management process */
+	if (write(socket_fd, SHUTDOWN_CMD, sizeof(SHUTDOWN_CMD)) <= 0) {
+		pr_err("send shutdown cmd to lifecycle management process failed!\n");
+		close(socket_fd);
+		return -1;
+	}
+
+	/* wait the acked message from lifecycle management */
+	rc = read(socket_fd, (uint8_t *)buffer, sizeof(SHUTDOWN_CMD_ACK));
+	if ((rc > 0) && strncmp(buffer, SHUTDOWN_CMD_ACK, strlen(SHUTDOWN_CMD_ACK)) == 0) {
+		pr_info("received acked from lifecycle management process\n");
+	} else {
+		pr_err("received acked from lifecycle management failed!\n");
+		close(socket_fd);
+		return -1;
+	}
+	close(socket_fd);
+	return 0;
 }
 
 /*
