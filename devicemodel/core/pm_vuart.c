@@ -25,11 +25,10 @@
 #include "pty_vuart.h"
 #include "log.h"
 
-#define SHUTDOWN_UOS_CMD  "shutdown"
+#define SHUTDOWN_CMD  "shutdown"
 #define SHUTDOWN_CMD_ACK   "acked"
 #define CMD_LEN 16
-#define WAIT_SND_CNT  3
-#define WAIT_ACK_CNT  5
+#define RESEND_CMD_CNT  3
 #define MAX_NODE_PATH  128
 
 static const char * const node_name[] = {
@@ -43,16 +42,111 @@ enum node_type_t {
 	MAX_NODE_CNT,
 };
 
+/* Enumerated shutdown state machine */
+enum shutdown_state {
+	SHUTDOWN_REQ_WAITING = 0,        /* Can receive shutdown cmd in this state */
+	SHUTDOWN_ACK_WAITING,		 /* Wait acked message from UOS */
+	SHUTDOWN_REQ_FROM_SOS,		 /* Trigger shutdown by SOS */
+	SHUTDOWN_REQ_FROM_UOS,           /* Trigger shutdown by UOS */
+};
+
 static uint8_t node_index = MAX_NODE_CNT;
 static char node_path[MAX_NODE_PATH];
 static int node_fd = -1;
-static bool shutdown_uos_thread_started = false;
-static pthread_t shutdown_uos_thread_pid;
+static enum shutdown_state pm_monitor_state = SHUTDOWN_REQ_WAITING;
+static pthread_t pm_monitor_thread;
 
 static int vm_stop_handler(void *arg);
 static struct monitor_vm_ops vm_ops = {
 	.stop = vm_stop_handler,
 };
+/* it read from vuart, and if end is '\0' or '\n' or len = buff-len it will return */
+static int read_bytes(int fd, uint8_t *buffer, int buf_len)
+{
+	int rc = 0, count = 0;
+
+	do {
+		rc = read(fd, buffer + count, buf_len - count);
+		if (rc > 0) {
+			count += rc;
+			if ((buffer[count - 1] == '\0') || (buffer[count - 1] == '\n') ||
+					(count == buf_len)) {
+				break;
+			}
+		}
+	} while (rc > 0);
+
+	return count;
+}
+
+/*
+ * this pm_monitor can do:
+ * --send shutdown request to UOS
+ * --receive acked message from UOS
+ * --receive shutdown request from UOS
+ */
+static void *pm_monitor_loop(void *arg)
+{
+	int rc;
+	int retry = RESEND_CMD_CNT;
+	char buf[CMD_LEN];
+
+	while (1) {
+		rc = read_bytes(node_fd, (uint8_t *)buf, CMD_LEN);
+
+		switch (pm_monitor_state) {
+		/* Waiting acked message from UOS, this is triggered by SOS */
+		case SHUTDOWN_ACK_WAITING:
+			/* Once received the SHUTDOWN ACK from UOS, then wait UOS to set ACPI PM register to change
+			 * VM to POWEROFF state
+			 */
+			if ((rc > 0) && (strncmp(SHUTDOWN_CMD_ACK, (const char *)buf, strlen(SHUTDOWN_CMD_ACK)) == 0)) {
+				pr_info("received acked message from uos\n");
+			} else {
+				/* it will try to resend shutdown cmd to UOS if there is no acked message from UOS */
+				if (retry > 0) {
+					if (write(node_fd, SHUTDOWN_CMD, sizeof(SHUTDOWN_CMD))
+							!= sizeof(SHUTDOWN_CMD)) {
+						pr_err("Try resend shutdown cmd failed cnt = %d\n", retry);
+					}
+					retry--;
+				} else {
+					/* If there is no acked message from UOS, just ignore the shutdown request
+					 * from SOS, and the SOS can re-trigger shutdown flow,
+					 * so it need restore the pm_monitor_state
+					 */
+					pr_err("Can not receive acked message from uos, have try %d times\r\n",
+							RESEND_CMD_CNT);
+					pm_monitor_state = SHUTDOWN_REQ_WAITING;
+					retry = RESEND_CMD_CNT;
+				}
+			}
+			break;
+
+		default:
+			pr_err("Invalid pm_monitor_state(0x%x)\r\n", pm_monitor_state);
+			break;
+		}
+
+		sleep(1);
+	}
+
+	return NULL;
+}
+
+static int start_pm_monitor_thread(void)
+{
+	int ret;
+
+	ret = pthread_create(&pm_monitor_thread, NULL, pm_monitor_loop, NULL);
+	if (ret) {
+		pr_err("failed %s %d\n", __func__, __LINE__);
+		return -1;
+	}
+
+	pthread_setname_np(pm_monitor_thread, "pm_monitor");
+	return 0;
+}
 
 /*
  * --pm_vuart configuration is in the following 2 forms:
@@ -145,75 +239,14 @@ void pm_by_vuart_init(struct vmctx *ctx)
 	} else {
 		pr_err("%s open failed, fd=%d\n", node_path, node_fd);
 	}
+
+	start_pm_monitor_thread();
 }
 
 void pm_by_vuart_deinit(struct vmctx *ctx)
 {
 	close(node_fd);
 	node_fd = -1;
-}
-
-/* it read from vuart, and if end is '\0' or '\n' or len = buff-len it will return */
-static int read_bytes(int fd, uint8_t *buffer, int buf_len)
-{
-	int rc, offset = 0;
-
-	do {
-		rc = read(fd, buffer + offset, buf_len - offset);
-		if (rc > 0) {
-			offset += rc;
-
-			if ((buffer[offset - 1] == '\0') || (buffer[offset - 1] == '\n') ||
-				(offset == buf_len)) {
-				break;
-			}
-		}
-	} while (rc > 0);
-
-	return offset;
-}
-
-/* thread to send shutdown cmd to uos and wait acked from it */
-static void *shutdown_uos_thread(void *arg)
-{
-	int rc, wait_snd, wait_ack;
-	char buffer[CMD_LEN];
-
-	wait_snd = WAIT_SND_CNT;
-	while (wait_snd > 0) {
-		rc = write(node_fd, SHUTDOWN_UOS_CMD, strlen(SHUTDOWN_UOS_CMD));
-		if (rc < 0) {
-			pr_err("send shutdown cmd to uos failed!\n");
-			break;
-		}
-
-		sleep(1); /* wait 1 second to communicate with UOS */
-
-		wait_ack = WAIT_ACK_CNT;
-		while (wait_ack > 0) {
-			rc = read_bytes(node_fd, (uint8_t *)buffer, CMD_LEN - 1);
-			if ((rc > 0) && strncmp(buffer, SHUTDOWN_CMD_ACK, strlen(SHUTDOWN_CMD_ACK)) == 0) {
-				pr_info("received acked from UOS\n");
-				break;
-			}
-
-			sleep(1);
-			wait_ack--;
-		}
-
-		if (wait_ack > 0) {
-			break;
-		}
-
-		wait_snd--;
-	}
-
-	if ((wait_snd == 0) && (wait_ack == 0)) {
-		pr_err("not received acked from UOS\n");
-	}
-
-	shutdown_uos_thread_started = false;
-	return NULL;
 }
 
 /* called when acrn-dm receive stop command */
@@ -229,22 +262,21 @@ static int vm_stop_handler(void *arg)
 		return -1;
 	}
 
-	if (shutdown_uos_thread_started) {
-		pr_info("stop cmd send thread started!\n");
+	/* will ignore this shutdown command if it is shutdowning */
+	if (pm_monitor_state != SHUTDOWN_REQ_WAITING) {
+		pr_err("can not shutdown in this state(0x%x),it is shutdowning\n", pm_monitor_state);
 		return -1;
 	}
 
-	shutdown_uos_thread_started = true;
-	ret = pthread_create(&shutdown_uos_thread_pid, NULL, shutdown_uos_thread, NULL);
-	if (ret) {
-		pr_err("failed %s %d\n", __func__, __LINE__);
-		shutdown_uos_thread_pid = 0;
-		shutdown_uos_thread_started = false;
-		return -1;
+	pm_monitor_state = SHUTDOWN_REQ_FROM_SOS;
+	ret = write(node_fd, SHUTDOWN_CMD, sizeof(SHUTDOWN_CMD));
+	if (ret != sizeof(SHUTDOWN_CMD)) {
+		/* no need to resend shutdown here, will resend in pm_monitor thread */
+		pr_err("send shutdown command to uos failed\r\n");
 	}
 
-	pr_info("created shutdown uos thread.\n");
-	pthread_setname_np(shutdown_uos_thread_pid, "shutdown_uos");
+	/* it will handle acked and resend shutdown cmd in pm_monitor thread */
+	pm_monitor_state = SHUTDOWN_ACK_WAITING;
 
 	return 0;
 }
