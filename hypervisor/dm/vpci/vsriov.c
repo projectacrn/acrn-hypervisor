@@ -150,6 +150,7 @@ static void enable_vf(struct pci_vdev *pf_vdev)
 	union pci_bdf vf_bdf;
 	uint16_t idx;
 	uint16_t sub_vid = 0U;
+	uint16_t num_vfs, stride, fst_off;
 
 	/* Confirm that the physical VF_ENABLE register has been set successfully */
 	ASSERT(is_vf_enabled(pf_vdev), "VF_ENABLE was not set successfully on the hardware");
@@ -182,14 +183,15 @@ static void enable_vf(struct pci_vdev *pf_vdev)
 	 * To check if all enabled VFs are ready, just check the first VF already exists,
 	 * do not need to check all.
 	 */
+	fst_off = read_sriov_reg(pf_vdev, PCIR_SRIOV_FST_VF_OFF);
+	stride = read_sriov_reg(pf_vdev, PCIR_SRIOV_VF_STRIDE);
+	vf_bdf.fields.bus = get_vf_bus(pf_vdev, fst_off, stride, 0U);
+	vf_bdf.fields.devfun = get_vf_devfun(pf_vdev, fst_off, stride, 0U);
 	sub_vid = (uint16_t) pci_pdev_read_cfg(vf_bdf, PCIV_SUB_VENDOR_ID, 2U);
 	if ((sub_vid != 0xFFFFU) && (sub_vid != 0U)) {
-		uint16_t num_vfs, stride, fst_off;
 		struct pci_vdev *vf_vdev;
 
 		num_vfs = read_sriov_reg(pf_vdev, PCIR_SRIOV_NUMVFS);
-		fst_off = read_sriov_reg(pf_vdev, PCIR_SRIOV_FST_VF_OFF);
-		stride = read_sriov_reg(pf_vdev, PCIR_SRIOV_VF_STRIDE);
 		for (idx = 0U; idx < num_vfs; idx++) {
 			vf_bdf.fields.bus = get_vf_bus(pf_vdev, fst_off, stride, idx);
 			vf_bdf.fields.devfun = get_vf_devfun(pf_vdev, fst_off, stride, idx);
