@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <pthread.h>
+#include <termios.h>
 
 #include "vmmapi.h"
 #include "monitor.h"
@@ -84,14 +85,55 @@ int parse_pm_by_vuart(const char *opts)
 	return error;
 }
 
+static int set_tty_attr(int fd, int speed)
+{
+	struct termios tty;
+
+	if (tcgetattr(fd, &tty) < 0) {
+		pr_err("error from tcgetattr\n");
+		return -1;
+	}
+	cfsetospeed(&tty, (speed_t)speed);
+	cfsetispeed(&tty, (speed_t)speed);
+
+	/* set input-mode */
+	tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK |
+			ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+	/* set output-mode */
+	tty.c_oflag &= ~OPOST;
+
+	/* set control-mode */
+	tty.c_cflag |= (CLOCAL | CREAD | CS8);
+	tty.c_cflag &= ~(CSIZE | PARENB | CSTOPB | CRTSCTS);
+
+	/* set local-mode */
+	tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+
+	/* block until one char read, set next char's timeout */
+	tty.c_cc[VMIN] = 1;
+	tty.c_cc[VTIME] = 1;
+
+	tcflush(fd, TCIOFLUSH);
+
+	if (tcsetattr(fd, TCSANOW, &tty) != 0) {
+		pr_err("error from tcsetattr\n");
+		return -1;
+	}
+
+	return 0;
+}
+
 void pm_by_vuart_init(struct vmctx *ctx)
 {
 	assert(node_index < MAX_NODE_CNT);
+
+	pr_info("%s idx: %d, path: %s\r\n", __func__, node_index, node_path);
 
 	if (node_index == PTY_NODE) {
 		node_fd = pty_open_virtual_uart(node_path);
 	} else if (node_index == TTY_NODE) {
 		node_fd = open(node_path, O_RDWR | O_NOCTTY | O_NONBLOCK);
+		set_tty_attr(node_fd, B115200);
 	}
 
 	if (node_fd > 0) {
