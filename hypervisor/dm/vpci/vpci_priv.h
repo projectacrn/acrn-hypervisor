@@ -104,6 +104,14 @@ static inline bool vbar_access(const struct pci_vdev *vdev, uint32_t offset)
 /**
  * @pre vdev != NULL
  */
+static inline bool cfg_header_access(uint32_t offset)
+{
+	return (offset < PCI_CFG_HEADER_LENGTH);
+}
+
+/**
+ * @pre vdev != NULL
+ */
 static inline bool has_msi_cap(const struct pci_vdev *vdev)
 {
 	return (vdev->msi.capoff != 0U);
@@ -119,7 +127,6 @@ static inline bool msicap_access(const struct pci_vdev *vdev, uint32_t offset)
 
 void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev);
 void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val);
-void vdev_pt_write_command(const struct pci_vdev *vdev, uint32_t bytes, uint16_t new_cmd);
 
 void init_vmsi(struct pci_vdev *vdev);
 void vmsi_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);

@@ -247,6 +247,10 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 	}
 	pbdf.value = vdev->pdev->bdf.value;
 
+	for (offset = 0U; offset < PCI_CFG_HEADER_LENGTH; offset += 4U) {
+		pci_vdev_write_cfg(vdev, offset, 4U, pci_pdev_read_cfg(pbdf, offset, 4U));
+	}
+
 	for (idx = 0U; idx < bar_cnt; idx++) {
 		if (is_sriov_bar) {
 			vbar = &vdev->sriov.vbars[idx];
@@ -363,24 +367,4 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 			pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
 		}
 	}
-}
-
-/*
- * @pre vdev != NULL && vdev->pdev != NULL && vdev->pdev->hdr_type == PCIM_HDRTYPE_NORMAL
- */
-void vdev_pt_write_command(const struct pci_vdev *vdev, uint32_t bytes, uint16_t new_cmd)
-{
-	union pci_bdf bdf = vdev->pdev->bdf;
-	uint16_t phys_cmd = (uint16_t)pci_pdev_read_cfg(bdf, PCIR_COMMAND, 2U);
-	uint16_t enable_mask = PCIM_CMD_PORTEN | PCIM_CMD_MEMEN;
-
-	/* WARN: don't support Type 1 device BAR restore for now */
-	if (vdev->pdev->hdr_type == PCIM_HDRTYPE_NORMAL) {
-		if (((phys_cmd & enable_mask) == 0U) && ((new_cmd & enable_mask) != 0U) &&
-				pdev_need_bar_restore(vdev->pdev)) {
-			pdev_restore_bar(vdev->pdev);
-		}
-	}
-
-	pci_pdev_write_cfg(bdf, PCIR_COMMAND, bytes, new_cmd);
 }

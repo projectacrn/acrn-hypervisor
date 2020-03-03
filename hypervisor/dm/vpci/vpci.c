@@ -370,37 +370,38 @@ static void vpci_deinit_pt_dev(struct pci_vdev *vdev)
 	deinit_vmsi(vdev);
 }
 
-static int32_t write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
-		uint32_t bytes, uint32_t val)
-{
-	if (vbar_access(vdev, offset)) {
-		/* bar write access must be 4 bytes and offset must also be 4 bytes aligned */
-		if ((bytes == 4U) && ((offset & 0x3U) == 0U)) {
-			vdev_pt_write_vbar(vdev, pci_bar_index(offset), val);
-		}
-	} else if (msicap_access(vdev, offset)) {
-		vmsi_write_cfg(vdev, offset, bytes, val);
-	} else if (msixcap_access(vdev, offset)) {
-		vmsix_write_cfg(vdev, offset, bytes, val);
-	} else if (sriovcap_access(vdev, offset)) {
-		write_sriov_cap_reg(vdev, offset, bytes, val);
-	} else if (offset == PCIR_COMMAND) {
-		vdev_pt_write_command(vdev, (bytes > 2U) ? 2U : bytes, (uint16_t)val);
-	} else {
-		if (is_postlaunched_vm(vdev->vpci->vm) &&
-				in_range(offset, PCIR_INTERRUPT_LINE, 4U)) {
-			pci_vdev_write_cfg(vdev, offset, bytes, val);
-		} else {
-			/* passthru to physical device */
-			pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
-		}
-	}
+struct cfg_header_perm {
+	/* For each 4-byte register defined in PCI config space header,
+	 * there is one bit dedicated for it in pt_mask and ro_mask.
+	 * For example, bit 0 for CFG Vendor ID and Device ID register,
+	 * Bit 1 for CFG register Command and Status register, and so on.
+	 *
+	 * For each mask, only low 16-bits takes effect.
+	 *
+	 * If bit x is set the pt_mask, it indicates that the corresponding 4 Bytes register
+	 * for bit x is pass through to guest. Otherwise, it's virtualized.
+	 *
+	 * If bit x is set the ro_mask, it indicates that the corresponding 4 Bytes register
+	 * for bit x is read-only. Otherwise, it's writable.
+	 */
+	uint32_t pt_mask;
+	uint32_t ro_mask;
+};
 
-	return 0;
-}
+static const struct cfg_header_perm cfg_hdr_perm = {
+	/* Only Command (0x04-0x05) and Status (0x06-0x07) Registers are pass through */
+	.pt_mask = 0x0002U,
+	/* Command (0x04-0x05) and Status (0x06-0x07) Registers and
+	 * Base Address Registers (0x10-0x27) are writable */
+	.ro_mask = (uint16_t)~0x03f2U
+};
 
-static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
-		uint32_t bytes, uint32_t *val)
+
+/*
+ * @pre offset + bytes < PCI_CFG_HEADER_LENGTH
+ */
+static void read_cfg_header(const struct pci_vdev *vdev,
+		uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	if (vbar_access(vdev, offset)) {
 		/* bar access must be 4 bytes and offset must also be 4 bytes aligned */
@@ -409,6 +410,72 @@ static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
 		} else {
 			*val = ~0U;
 		}
+	} else {
+		if (bitmap32_test(((uint16_t)offset) >> 2U, &cfg_hdr_perm.pt_mask)) {
+			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+		} else {
+			*val = pci_vdev_read_cfg(vdev, offset, bytes);
+		}
+	}
+}
+
+/*
+ * @pre offset + bytes < PCI_CFG_HEADER_LENGTH
+ */
+static void write_cfg_header(struct pci_vdev *vdev,
+		uint32_t offset, uint32_t bytes, uint32_t val)
+{
+	if (vbar_access(vdev, offset)) {
+		/* bar write access must be 4 bytes and offset must also be 4 bytes aligned */
+		if ((bytes == 4U) && ((offset & 0x3U) == 0U)) {
+			vdev_pt_write_vbar(vdev, pci_bar_index(offset), val);
+		}
+	} else {
+		if (offset == PCIR_COMMAND) {
+#define PCIM_SPACE_EN (PCIM_CMD_PORTEN | PCIM_CMD_MEMEN)
+			uint16_t phys_cmd = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
+
+			/* check whether need to restore BAR because some kind of reset */
+			if (((phys_cmd & PCIM_SPACE_EN) == 0U) && ((val & PCIM_SPACE_EN) != 0U) &&
+					pdev_need_bar_restore(vdev->pdev)) {
+				pdev_restore_bar(vdev->pdev);
+			}
+		}
+
+		if (!bitmap32_test(((uint16_t)offset) >> 2U, &cfg_hdr_perm.ro_mask)) {
+			if (bitmap32_test(((uint16_t)offset) >> 2U, &cfg_hdr_perm.pt_mask)) {
+				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+			} else {
+				pci_vdev_write_cfg(vdev, offset, bytes, val);
+			}
+		}
+	}
+}
+
+static int32_t write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
+		uint32_t bytes, uint32_t val)
+{
+	if (cfg_header_access(offset)) {
+		write_cfg_header(vdev, offset, bytes, val);
+	} else if (msicap_access(vdev, offset)) {
+		vmsi_write_cfg(vdev, offset, bytes, val);
+	} else if (msixcap_access(vdev, offset)) {
+		vmsix_write_cfg(vdev, offset, bytes, val);
+	} else if (sriovcap_access(vdev, offset)) {
+		write_sriov_cap_reg(vdev, offset, bytes, val);
+	} else {
+		/* passthru to physical device */
+		pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+	}
+
+	return 0;
+}
+
+static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
+		uint32_t bytes, uint32_t *val)
+{
+	if (cfg_header_access(offset)) {
+		read_cfg_header(vdev, offset, bytes, val);
 	} else if (msicap_access(vdev, offset)) {
 		vmsi_read_cfg(vdev, offset, bytes, val);
 	} else if (msixcap_access(vdev, offset)) {
@@ -416,13 +483,8 @@ static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
 	} else if (sriovcap_access(vdev, offset)) {
 		read_sriov_cap_reg(vdev, offset, bytes, val);
 	} else {
-		if (is_postlaunched_vm(vdev->vpci->vm) &&
-				in_range(offset, PCIR_INTERRUPT_LINE, 4U)) {
-			*val = pci_vdev_read_cfg(vdev, offset, bytes);
-		} else {
-			/* passthru to physical device */
-			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
-		}
+		/* passthru to physical device */
+		*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
 	}
 
 	return 0;
