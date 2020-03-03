@@ -450,17 +450,37 @@ static void pci_parse_iommu_devscopes(struct pci_bdf_set *const bdfs_from_drhds,
 	}
 }
 
-/* do enabling or limitation to pci bridge */
-static void	config_pci_bridge(struct pci_pdev *pdev)
+/*
+ * There are some rules to config PCI bridge: try to avoid interference between SOS and RTVM or
+ * pre-launched VM; and to support some features like SRIOV by default, so as following:
+ *	1. disable interrupt, including INTx and MSI.
+ *	2. enable ARI if it's a PCIe bridge and all its sub devices support ARI (need check further).
+ *  3. enable ACS. (now assume BIOS does it), could check and do it in HV in the future.
+ *
+ */
+static void	config_pci_bridge(const struct pci_pdev *pdev)
 {
-	uint32_t offset, val;
+	uint32_t offset, val, msgctrl;
+
+	/* for command regsiters, disable INTx */
+	val = pci_pdev_read_cfg(pdev->bdf, PCIR_COMMAND, 2U);
+	pci_pdev_write_cfg(pdev->bdf, PCIR_COMMAND, 2U, (uint16_t)val | PCIM_CMD_INTxDIS);
+
+	/* disale MSI */
+	if (pdev->msi_capoff != 0x00UL) {
+		offset = pdev->msi_capoff + PCIR_MSI_CTRL;
+
+		msgctrl = pci_pdev_read_cfg(pdev->bdf, offset, 2U);
+		msgctrl &= ~PCIM_MSICTRL_MSI_ENABLE;
+		pci_pdev_write_cfg(pdev->bdf, offset, 2U, msgctrl);
+	}
 
 	/* Enable ARI if PCIe bridge could support it for SRIOV needs it */
 	if (pdev->pcie_capoff != 0x00UL) {
 		offset = pdev->pcie_capoff + PCIR_PCIE_DEVCAP2;
 		val = pci_pdev_read_cfg(pdev->bdf, offset, 2U);
 
-		if (val & PCIM_PCIE_DEVCAP2_ARI) {
+		if ((val & PCIM_PCIE_DEVCAP2_ARI) != 0U) {
 			offset = pdev->pcie_capoff + PCIR_PCIE_DEVCTL2;
 
 			val = pci_pdev_read_cfg(pdev->bdf, offset, 2U);
