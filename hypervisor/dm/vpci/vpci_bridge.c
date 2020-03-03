@@ -37,8 +37,6 @@
  *
  * for this emulation of vpci bridge, limitations set as following:
  *   1. all configure registers are readonly
- *   2. BIST not support; by default is 0H
- *   3. not support interrupt, including INTx and MSI.
  *
  * TODO:
  *  1. configure tool can select whether a PCI bridge is emulated or pass through
@@ -55,7 +53,7 @@
 
 static void init_vpci_bridge(struct pci_vdev *vdev)
 {
-	uint32_t offset, val, capoff, msgctrl;
+	uint32_t offset, val;
 
 	/* read PCI config space to virtual space */
 	for (offset = 0x00U; offset < 0x100U; offset += 4U) {
@@ -72,21 +70,6 @@ static void init_vpci_bridge(struct pci_vdev *vdev)
 	pci_vdev_write_cfg_u8(vdev, PCIR_HDRTYPE, (uint8_t)(PCIM_HDRTYPE_BRIDGE | PCIM_MFDEV));
 	pci_vdev_write_cfg_u8(vdev, PCIR_CLASS, (uint8_t)PCIC_BRIDGE);
 	pci_vdev_write_cfg_u8(vdev, PCIR_SUBCLASS, (uint8_t)PCIS_BRIDGE_PCI);
-
-	/* for command regsiters, disable INTx */
-	val = pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
-	pci_vdev_write_cfg_u16(vdev, PCIR_COMMAND, (uint16_t)val | PCIM_CMD_INTxDIS);
-	pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, (uint16_t)val | PCIM_CMD_INTxDIS);
-
-	/* disale MSI */
-	if (vdev->pdev->msi_capoff != 0x00UL) {
-		capoff = vdev->pdev->msi_capoff;
-		msgctrl = pci_vdev_read_cfg(vdev, capoff + PCIR_MSI_CTRL, 2U);
-
-		msgctrl &= ~PCIM_MSICTRL_MSI_ENABLE;
-		pci_pdev_write_cfg(vdev->pdev->bdf, capoff + PCIR_MSI_CTRL, 2U, msgctrl);
-		pci_vdev_write_cfg(vdev, capoff + PCIR_MSI_CTRL, 2U, msgctrl);
-	}
 }
 
 static void deinit_vpci_bridge(__unused struct pci_vdev *vdev)
