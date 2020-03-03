@@ -43,6 +43,8 @@
  * PCIZ_xxx: extended capability identification number
  */
 
+#define PCI_CFG_HEADER_LENGTH 0x40U
+
 /* some PCI bus constants */
 #define PCI_BUSMAX            0xFFU
 #define PCI_SLOTMAX           0x1FU
