@@ -129,18 +129,34 @@ void pci_switch_to_mmio_cfg_ops(void)
 
 /*
  * @pre bytes == 1U || bytes == 2U || bytes == 4U
+ * @pre must not be called before pci_switch_to_mmio_cfg_ops in release version.
  */
 uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes)
 {
-	return acrn_pci_cfg_ops->pci_read_cfg(bdf, offset, bytes);
+	uint32_t val = ~0U;
+
+	/* The pci_read_cfg would not be empty unless be called before
+	 * pci_switch_to_mmio_cfg_ops in release version.
+	 */
+	if (acrn_pci_cfg_ops->pci_read_cfg != NULL) {
+		val = acrn_pci_cfg_ops->pci_read_cfg(bdf, offset, bytes);
+	}
+
+	return val;
 }
 
 /*
  * @pre bytes == 1U || bytes == 2U || bytes == 4U
+ * @pre must not be called before pci_switch_to_mmio_cfg_ops in release version.
  */
 void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val)
 {
-	acrn_pci_cfg_ops->pci_write_cfg(bdf, offset, bytes, val);
+	/* The pci_write_cfg would not be empty unless be called before
+	 * pci_switch_to_mmio_cfg_ops in release version.
+	 */
+	if (acrn_pci_cfg_ops->pci_write_cfg != NULL) {
+		acrn_pci_cfg_ops->pci_write_cfg(bdf, offset, bytes, val);
+	}
 }
 
 bool pdev_need_bar_restore(const struct pci_pdev *pdev)

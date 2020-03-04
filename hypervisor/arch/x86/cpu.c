@@ -160,7 +160,10 @@ void init_pcpu_pre(bool is_bsp)
 		}
 #endif
 
-		/* NOTE: this must call after MMCONFIG is parsed in init_vboot and before APs are INIT. */
+		/* NOTE: this must call after MMCONFIG is parsed in init_vboot and before APs are INIT.
+		 * We only support platform with MMIO based CFG space access.
+		 * IO port access only support in debug version.
+		 */
 		pci_switch_to_mmio_cfg_ops();
 	} else {
 		/* Switch this CPU to use the same page tables set-up by the
