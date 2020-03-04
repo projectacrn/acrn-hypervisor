@@ -39,15 +39,15 @@
 static void vpci_init_vdevs(struct acrn_vm *vm);
 static void deinit_prelaunched_vm_vpci(struct acrn_vm *vm);
 static void deinit_postlaunched_vm_vpci(struct acrn_vm *vm);
-static int32_t read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t *val);
-static int32_t write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
+static int32_t vpci_read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t *val);
+static int32_t vpci_write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 static struct pci_vdev *find_vdev(struct acrn_vpci *vpci, union pci_bdf bdf);
 
 /**
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
  */
-static bool pci_cfgaddr_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
+static bool vpci_pio_cfgaddr_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
 {
 	uint32_t val = ~0U;
 	struct acrn_vpci *vpci = &vcpu->vm->vpci;
@@ -70,7 +70,7 @@ static bool pci_cfgaddr_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t by
  * @retval true on success.
  * @retval false. (ACRN will deliver this IO request to DM to handle for post-launched VM)
  */
-static bool pci_cfgaddr_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
+static bool vpci_pio_cfgaddr_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
 {
 	bool ret = true;
 	struct acrn_vpci *vpci = &vcpu->vm->vpci;
@@ -120,7 +120,7 @@ static inline bool vpci_is_valid_access(uint32_t offset, uint32_t bytes)
  * @retval true on success.
  * @retval false. (ACRN will deliver this IO request to DM to handle for post-launched VM)
  */
-static bool pci_cfgdata_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
+static bool vpci_pio_cfgdata_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
 {
 	int32_t ret = 0;
 	struct acrn_vm *vm = vcpu->vm;
@@ -135,7 +135,7 @@ static bool pci_cfgdata_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t by
 	if (cfg_addr.bits.enable != 0U) {
 		if (vpci_is_valid_access(cfg_addr.bits.reg_num + offset, bytes)) {
 			bdf.value = cfg_addr.bits.bdf;
-			ret = read_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, &val);
+			ret = vpci_read_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, &val);
 		}
 	}
 
@@ -153,7 +153,7 @@ static bool pci_cfgdata_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t by
  * @retval true on success.
  * @retval false. (ACRN will deliver this IO request to DM to handle for post-launched VM)
  */
-static bool pci_cfgdata_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
+static bool vpci_pio_cfgdata_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes, uint32_t val)
 {
 	int32_t ret = 0;
 	struct acrn_vm *vm = vcpu->vm;
@@ -166,7 +166,7 @@ static bool pci_cfgdata_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t b
 	if (cfg_addr.bits.enable != 0U) {
 		if (vpci_is_valid_access(cfg_addr.bits.reg_num + offset, bytes)) {
 			bdf.value = cfg_addr.bits.bdf;
-			ret = write_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, val);
+			ret = vpci_write_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, val);
 		}
 	}
 
@@ -179,7 +179,7 @@ static bool pci_cfgdata_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t b
  * @retval 0 on success.
  * @retval other on false. (ACRN will deliver this MMIO request to DM to handle for post-launched VM)
  */
-static int32_t vpci_handle_mmconfig_access(struct io_request *io_req, void *private_data)
+static int32_t vpci_mmio_cfg_access(struct io_request *io_req, void *private_data)
 {
 	int32_t ret = 0;
 	struct mmio_request *mmio = &io_req->reqs.mmio;
@@ -202,14 +202,14 @@ static int32_t vpci_handle_mmconfig_access(struct io_request *io_req, void *priv
 
 	if (mmio->direction == REQUEST_READ) {
 		if (!is_plat_hidden_pdev(bdf)) {
-			ret = read_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t *)&mmio->value);
+			ret = vpci_read_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t *)&mmio->value);
 		} else {
 			/* expose and pass through platform hidden devices to SOS */
 			mmio->value = (uint64_t)pci_pdev_read_cfg(bdf, reg_num, (uint32_t)mmio->size);
 		}
 	} else {
 		if (!is_plat_hidden_pdev(bdf)) {
-			ret = write_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);
+			ret = vpci_write_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);
 		} else {
 			/* expose and pass through platform hidden devices to SOS */
 			pci_pdev_write_cfg(bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);
@@ -248,17 +248,17 @@ void vpci_init(struct acrn_vm *vm)
 		/* PCI MMCONFIG for post-launched VM is fixed to 0xE0000000 */
 		pci_mmcfg_base = (vm_config->load_order == SOS_VM) ? get_mmcfg_base() : 0xE0000000UL;
 		vm->vpci.pci_mmcfg_base = pci_mmcfg_base;
-		register_mmio_emulation_handler(vm, vpci_handle_mmconfig_access,
+		register_mmio_emulation_handler(vm, vpci_mmio_cfg_access,
 			pci_mmcfg_base, pci_mmcfg_base + PCI_MMCONFIG_SIZE, &vm->vpci, false);
 	}
 
 	/* Intercept and handle I/O ports CF8h */
 	register_pio_emulation_handler(vm, PCI_CFGADDR_PIO_IDX, &pci_cfgaddr_range,
-		pci_cfgaddr_io_read, pci_cfgaddr_io_write);
+		vpci_pio_cfgaddr_read, vpci_pio_cfgaddr_write);
 
 	/* Intercept and handle I/O ports CFCh -- CFFh */
 	register_pio_emulation_handler(vm, PCI_CFGDATA_PIO_IDX, &pci_cfgdata_range,
-		pci_cfgdata_io_read, pci_cfgdata_io_write);
+		vpci_pio_cfgdata_read, vpci_pio_cfgdata_write);
 
 	spinlock_init(&vm->vpci.lock);
 }
@@ -370,7 +370,7 @@ static void vpci_deinit_pt_dev(struct pci_vdev *vdev)
 	deinit_vmsi(vdev);
 }
 
-static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
+static int32_t write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t val)
 {
 	if (vbar_access(vdev, offset)) {
@@ -399,7 +399,7 @@ static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 	return 0;
 }
 
-static int32_t vpci_read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
+static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t *val)
 {
 	if (vbar_access(vdev, offset)) {
@@ -431,14 +431,14 @@ static int32_t vpci_read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset
 static const struct pci_vdev_ops pci_pt_dev_ops = {
 	.init_vdev	= vpci_init_pt_dev,
 	.deinit_vdev	= vpci_deinit_pt_dev,
-	.write_vdev_cfg	= vpci_write_pt_dev_cfg,
-	.read_vdev_cfg	= vpci_read_pt_dev_cfg,
+	.write_vdev_cfg	= write_pt_dev_cfg,
+	.read_vdev_cfg	= read_pt_dev_cfg,
 };
 
 /**
  * @pre vpci != NULL
  */
-static int32_t read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
+static int32_t vpci_read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	int32_t ret = 0;
@@ -460,7 +460,7 @@ static int32_t read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 /**
  * @pre vpci != NULL
  */
-static int32_t write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
+static int32_t vpci_write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	int32_t ret = 0;
