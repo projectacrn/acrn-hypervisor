@@ -146,14 +146,14 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val);
 void vdev_pt_write_command(const struct pci_vdev *vdev, uint32_t bytes, uint16_t new_cmd);
 
 void init_vmsi(struct pci_vdev *vdev);
-void vmsi_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
-void vmsi_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
+void read_vmsi_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
+void write_vmsi_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 void deinit_vmsi(const struct pci_vdev *vdev);
 
 void init_vmsix(struct pci_vdev *vdev);
 int32_t vmsix_handle_table_mmio_access(struct io_request *io_req, void *handler_private_data);
-void vmsix_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
-void vmsix_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
+void read_vmsix_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
+void write_vmsix_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 void deinit_vmsix(const struct pci_vdev *vdev);
 
 void init_vsriov(struct pci_vdev *vdev);

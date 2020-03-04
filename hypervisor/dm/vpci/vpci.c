@@ -379,9 +379,9 @@ static int32_t vpci_write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 			vdev_pt_write_vbar(vdev, pci_bar_index(offset), val);
 		}
 	} else if (msicap_access(vdev, offset)) {
-		vmsi_write_cfg(vdev, offset, bytes, val);
+		write_vmsi_cfg(vdev, offset, bytes, val);
 	} else if (msixcap_access(vdev, offset)) {
-		vmsix_write_cfg(vdev, offset, bytes, val);
+		write_vmsix_cfg(vdev, offset, bytes, val);
 	} else if (sriovcap_access(vdev, offset)) {
 		write_sriov_cap_reg(vdev, offset, bytes, val);
 	} else if (offset == PCIR_COMMAND) {
@@ -410,9 +410,9 @@ static int32_t vpci_read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset
 			*val = ~0U;
 		}
 	} else if (msicap_access(vdev, offset)) {
-		vmsi_read_cfg(vdev, offset, bytes, val);
+		read_vmsi_cfg(vdev, offset, bytes, val);
 	} else if (msixcap_access(vdev, offset)) {
-		vmsix_read_cfg(vdev, offset, bytes, val);
+		read_vmsix_cfg(vdev, offset, bytes, val);
 	} else if (sriovcap_access(vdev, offset)) {
 		read_sriov_cap_reg(vdev, offset, bytes, val);
 	} else {
