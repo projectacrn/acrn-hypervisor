@@ -61,9 +61,12 @@ def get_ram_range():
     # read system ram from board_info.xml
     ram_range = {}
 
-    sys_mem_lines = board_cfg_lib.get_info(
-        board_cfg_lib.BOARD_INFO_FILE, "<SYSTEM_RAM_INFO>", "</SYSTEM_RAM_INFO>")
-    for line in sys_mem_lines:
+    io_mem_lines = board_cfg_lib.get_info(
+        board_cfg_lib.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
+
+    for line in io_mem_lines:
+        if 'System RAM' not in line:
+            continue
         start_addr = int(line.split('-')[0], 16)
         end_addr = int(line.split('-')[1].split(':')[0], 16)
         mem_range = end_addr - start_addr
