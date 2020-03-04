@@ -727,7 +727,7 @@ void start_vm(struct acrn_vm *vm)
 {
 	struct acrn_vcpu *bsp = NULL;
 
-	vm->state = VM_STARTED;
+	vm->state = VM_RUNNING;
 
 	/* Only start BSP (vid = 0) and let BSP start other APs */
 	bsp = vcpu_from_vid(vm, BSP_CPU_ID);
@@ -791,7 +791,7 @@ void pause_vm(struct acrn_vm *vm)
 			 *  - It is powering off by itself
 			 *  - It is created but doesn't start
 			 */
-			if ((vm->state == VM_POWERING_OFF) || (vm->state == VM_CREATED)) {
+			if ((vm->state == VM_READY_TO_POWEROFF) || (vm->state == VM_CREATED)) {
 				foreach_vcpu(i, vm, vcpu) {
 					pause_vcpu(vcpu, VCPU_ZOMBIE);
 				}
@@ -826,7 +826,7 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 {
 	struct acrn_vcpu *bsp = vcpu_from_vid(vm, BSP_CPU_ID);
 
-	vm->state = VM_STARTED;
+	vm->state = VM_RUNNING;
 
 	reset_vcpu(bsp, POWER_ON_RESET);
 

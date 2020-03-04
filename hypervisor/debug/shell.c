@@ -601,8 +601,8 @@ static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv)
 		case VM_CREATED:
 			(void)strncpy_s(state, 32U, "Created", 32U);
 			break;
-		case VM_STARTED:
-			(void)strncpy_s(state, 32U, "Started", 32U);
+		case VM_RUNNING:
+			(void)strncpy_s(state, 32U, "Running", 32U);
 			break;
 		case VM_PAUSED:
 			(void)strncpy_s(state, 32U, "Paused", 32U);

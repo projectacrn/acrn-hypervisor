@@ -82,8 +82,8 @@ struct vm_pm_info {
 enum vm_state {
 	VM_POWERED_OFF = 0,
 	VM_CREATED,	/* VM created / awaiting start (boot) */
-	VM_STARTED,	/* VM started (booted) */
-	VM_POWERING_OFF,     /* RTVM only, it is trying to poweroff by itself */
+	VM_RUNNING,	/* VM running */
+	VM_READY_TO_POWEROFF,     /* RTVM only, it is trying to poweroff by itself */
 	VM_PAUSED,	/* VM paused */
 };
 

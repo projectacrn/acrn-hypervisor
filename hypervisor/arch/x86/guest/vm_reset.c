@@ -90,7 +90,7 @@ static bool handle_common_reset_reg_write(struct acrn_vm *vm, bool reset)
 			ret = false;
 
 			if (is_rt_vm(vm)) {
-				vm->state = VM_POWERING_OFF;
+				vm->state = VM_READY_TO_POWEROFF;
 			}
 		} else {
 			/*
