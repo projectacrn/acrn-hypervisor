@@ -69,12 +69,12 @@ static void remap_vmsi(const struct pci_vdev *vdev)
 	uint32_t vmsi_msgdata, vmsi_addrlo, vmsi_addrhi = 0U;
 
 	/* Read the MSI capability structure from virtual device */
-	vmsi_addrlo = pci_vdev_read_cfg_u32(vdev, capoff + PCIR_MSI_ADDR);
+	vmsi_addrlo = pci_vdev_read_cfg(vdev, (capoff + PCIR_MSI_ADDR), 4U);
 	if (vdev->msi.is_64bit) {
-		vmsi_addrhi = pci_vdev_read_cfg_u32(vdev, capoff + PCIR_MSI_ADDR_HIGH);
-		vmsi_msgdata = pci_vdev_read_cfg_u16(vdev, capoff + PCIR_MSI_DATA_64BIT);
+		vmsi_addrhi = pci_vdev_read_cfg(vdev, (capoff + PCIR_MSI_ADDR_HIGH), 4U);
+		vmsi_msgdata = pci_vdev_read_cfg(vdev, (capoff + PCIR_MSI_DATA_64BIT), 2U);
 	} else {
-		vmsi_msgdata = pci_vdev_read_cfg_u16(vdev, capoff + PCIR_MSI_DATA);
+		vmsi_msgdata = pci_vdev_read_cfg(vdev, (capoff + PCIR_MSI_DATA), 2U);
 	}
 	info.vmsi_addr.full = (uint64_t)vmsi_addrlo | ((uint64_t)vmsi_addrhi << 32U);
 	info.vmsi_data.full = vmsi_msgdata;
