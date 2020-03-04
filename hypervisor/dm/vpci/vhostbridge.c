@@ -99,7 +99,7 @@ static void deinit_vhostbridge(__unused struct pci_vdev *vdev)
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-static int32_t vhostbridge_read_cfg(const struct pci_vdev *vdev, uint32_t offset,
+static int32_t read_vhostbridge_cfg(const struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
 {
 	*val = pci_vdev_read_cfg(vdev, offset, bytes);
@@ -112,7 +112,7 @@ static int32_t vhostbridge_read_cfg(const struct pci_vdev *vdev, uint32_t offset
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-static int32_t vhostbridge_write_cfg(struct pci_vdev *vdev, uint32_t offset,
+static int32_t write_vhostbridge_cfg(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t val)
 {
 	if (!is_bar_offset(PCI_BAR_COUNT, offset)) {
@@ -124,6 +124,6 @@ static int32_t vhostbridge_write_cfg(struct pci_vdev *vdev, uint32_t offset,
 const struct pci_vdev_ops vhostbridge_ops = {
 	.init_vdev	= init_vhostbridge,
 	.deinit_vdev	= deinit_vhostbridge,
-	.write_vdev_cfg	= vhostbridge_write_cfg,
-	.read_vdev_cfg	= vhostbridge_read_cfg,
+	.write_vdev_cfg	= write_vhostbridge_cfg,
+	.read_vdev_cfg	= read_vhostbridge_cfg,
 };

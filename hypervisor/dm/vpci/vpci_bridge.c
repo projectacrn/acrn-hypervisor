@@ -93,7 +93,7 @@ static void deinit_vpci_bridge(__unused struct pci_vdev *vdev)
 {
 }
 
-static int32_t vpci_bridge_read_cfg(const struct pci_vdev *vdev, uint32_t offset,
+static int32_t read_vpci_bridge_cfg(const struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
 {
 	if ((offset + bytes) <= 0x100U) {
@@ -106,7 +106,7 @@ static int32_t vpci_bridge_read_cfg(const struct pci_vdev *vdev, uint32_t offset
 	return 0;
 }
 
-static int32_t vpci_bridge_write_cfg(__unused struct pci_vdev *vdev, __unused uint32_t offset,
+static int32_t write_vpci_bridge_cfg(__unused struct pci_vdev *vdev, __unused uint32_t offset,
 	__unused uint32_t bytes, __unused uint32_t val)
 {
 	return 0;
@@ -115,6 +115,6 @@ static int32_t vpci_bridge_write_cfg(__unused struct pci_vdev *vdev, __unused ui
 const struct pci_vdev_ops vpci_bridge_ops = {
 	.init_vdev         = init_vpci_bridge,
 	.deinit_vdev       = deinit_vpci_bridge,
-	.write_vdev_cfg    = vpci_bridge_write_cfg,
-	.read_vdev_cfg     = vpci_bridge_read_cfg,
+	.write_vdev_cfg    = write_vpci_bridge_cfg,
+	.read_vdev_cfg     = read_vpci_bridge_cfg,
 };
