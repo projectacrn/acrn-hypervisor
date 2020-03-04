@@ -313,7 +313,7 @@ int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 
 	/* Only allow setup init ctx while target_vm is inactive */
 	if ((!is_poweroff_vm(target_vm)) && (param != 0U) && (is_postlaunched_vm(target_vm)) &&
-			(target_vm->state != VM_STARTED)) {
+			(target_vm->state != VM_RUNNING)) {
 		if (copy_from_gpa(vm, &vcpu_regs, param, sizeof(vcpu_regs)) != 0) {
 			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else if (vcpu_regs.vcpu_id >= MAX_VCPUS_PER_VM) {
