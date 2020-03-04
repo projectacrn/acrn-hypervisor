@@ -521,7 +521,7 @@ static inline uint32_t pci_pdev_get_nr_bars(uint8_t hdr_type)
 /**
  * @pre pdev != NULL
  */
-static void pci_read_ext_cap(struct pci_pdev *pdev) {
+static void pci_enumerate_ext_cap(struct pci_pdev *pdev) {
 
 	uint32_t hdr, pos;
 
@@ -546,7 +546,7 @@ static void pci_read_ext_cap(struct pci_pdev *pdev) {
 /*
  * @pre pdev != NULL
  */
-static void pci_read_cap(struct pci_pdev *pdev)
+static void pci_enumerate_cap(struct pci_pdev *pdev)
 {
 	uint8_t pos, cap;
 	uint32_t msgctrl;
@@ -601,7 +601,7 @@ static void pci_read_cap(struct pci_pdev *pdev)
 	}
 
 	if (is_pcie) {
-		pci_read_ext_cap(pdev);
+		pci_enumerate_ext_cap(pdev);
 	}
 }
 
@@ -637,7 +637,7 @@ struct pci_pdev *init_pdev(uint16_t pbdf, uint32_t drhd_index)
 			}
 
 			if ((pci_pdev_read_cfg(bdf, PCIR_STATUS, 2U) & PCIM_STATUS_CAPPRESENT) != 0U) {
-				pci_read_cap(pdev);
+				pci_enumerate_cap(pdev);
 			}
 
 			pdev->drhd_index = drhd_index;
