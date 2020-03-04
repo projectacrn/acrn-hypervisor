@@ -113,7 +113,7 @@ static void remap_one_vmsix_entry(const struct pci_vdev *vdev, uint32_t index)
 /**
  * @pre vdev != NULL
  */
-void vmsix_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
+void read_vmsix_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	/* For PIO access, we emulate Capability Structures only */
 	*val = pci_vdev_read_vcfg(vdev, offset, bytes);
@@ -125,7 +125,7 @@ void vmsix_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes
  * @pre vdev != NULL
  * @pre vdev->pdev != NULL
  */
-void vmsix_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
+void write_vmsix_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	uint32_t old_msgctrl, msgctrl;
 
