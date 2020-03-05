@@ -41,7 +41,7 @@ static void deinit_prelaunched_vm_vpci(struct acrn_vm *vm);
 static void deinit_postlaunched_vm_vpci(struct acrn_vm *vm);
 static int32_t vpci_read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t *val);
 static int32_t vpci_write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
-static struct pci_vdev *find_vdev(struct acrn_vpci *vpci, union pci_bdf bdf);
+static struct pci_vdev *find_available_vdev(struct acrn_vpci *vpci, union pci_bdf bdf);
 
 /**
  * @pre vcpu != NULL
@@ -86,7 +86,7 @@ static bool vpci_pio_cfgaddr_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 			/* For post-launched VM, ACRN will only handle PT device, all virtual PCI device
 			 * still need to deliver to ACRN DM to handle.
 			 */
-			if (find_vdev(vpci, vbdf) == NULL) {
+			if (find_available_vdev(vpci, vbdf) == NULL) {
 				ret = false;
 			}
 		}
@@ -333,10 +333,22 @@ static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 }
 
 /**
+ * @brief Find an available vdev structure with BDF from a specified vpci structure.
+ *        If the vdev's vpci is the same as the specified vpci, the vdev is available.
+ *        If the vdev's vpci is not the same as the specified vpci, the vdev has already
+ *        been assigned and it is unavailable for SOS.
+ *        If the vdev's vpci is NULL, the vdev is a orphan/zombie instance, it can't
+ *        be accessed by any vpci.
+ *
+ * @param vpci Pointer to a specified vpci structure
+ * @param bdf  Indicate the vdev's BDF
+ *
  * @pre vpci != NULL
  * @pre vpci->vm != NULL
+ *
+ * @return Return a available vdev instance, otherwise return NULL
  */
-static struct pci_vdev *find_vdev(struct acrn_vpci *vpci, union pci_bdf bdf)
+static struct pci_vdev *find_available_vdev(struct acrn_vpci *vpci, union pci_bdf bdf)
 {
 	struct pci_vdev *vdev = pci_find_vdev(vpci, bdf);
 
@@ -507,7 +519,7 @@ static int32_t vpci_read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	struct pci_vdev *vdev;
 
 	spinlock_obtain(&vpci->lock);
-	vdev = find_vdev(vpci, bdf);
+	vdev = find_available_vdev(vpci, bdf);
 	if (vdev != NULL) {
 		vdev->vdev_ops->read_vdev_cfg(vdev, offset, bytes, val);
 	} else {
@@ -529,7 +541,7 @@ static int32_t vpci_write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	struct pci_vdev *vdev;
 
 	spinlock_obtain(&vpci->lock);
-	vdev = find_vdev(vpci, bdf);
+	vdev = find_available_vdev(vpci, bdf);
 	if (vdev != NULL) {
 		vdev->vdev_ops->write_vdev_cfg(vdev, offset, bytes, val);
 	} else {
