@@ -27,8 +27,8 @@
 #define PM1A_EVT_ADDRESS        0x1800UL
 #define PM1A_EVT_ACCESS_SIZE    0x2U
 #define PM1A_CNT_ADDRESS        0x1804UL
-	/* S3 is not supported by BIOS */
 
+/* S3 is not supported by BIOS */
 #undef S3_PKG_VAL_PM1A
 #define S3_PKG_VAL_PM1A         0x0U
 
