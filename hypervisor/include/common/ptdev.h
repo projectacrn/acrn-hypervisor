@@ -210,7 +210,7 @@ struct ptirq_remapping_info *ptirq_dequeue_softirq(uint16_t pcpu_id);
  * Appropriate number should be configured on different platforms.
  *
  * @param[in]    vm acrn_vm that the entry allocated for.
- * @param[in]    interrupt type: PTDEV_INTR_MSI or PTDEV_INTR_INTX
+ * @param[in]    intr_type interrupt type: PTDEV_INTR_MSI or PTDEV_INTR_INTX
  *
  * @retval NULL when \p the number of entries allocated is CONFIG_MAX_PT_IRQ_ENTRIES
  * @retval !NULL when \p the number of entries allocated is less than CONFIG_MAX_PT_IRQ_ENTRIES

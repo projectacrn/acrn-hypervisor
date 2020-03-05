@@ -141,7 +141,7 @@ interrupt to virtual interrupt or vice versa. The term VT-d interrupt-remapping
 remaps the interrupt index in the VT-d interrupt-remapping table to the physical
 interrupt vector after checking the external interrupt request is valid. Translation
 physical vector to virtual vector is still needed to be done by hypervisor, which is
-also described in the below section :ref:`_interrupt-remapping`.
+also described in the below section :ref:`interrupt-remapping`.
 
 MMIO Remapping
 **************
