@@ -1068,6 +1068,7 @@ dev_fail:
 mevent_fail:
 	vm_unsetup_memory(ctx);
 fail:
+	vm_pause(ctx);
 	vm_destroy(ctx);
 create_fail:
 	uninit_hugetlb();
