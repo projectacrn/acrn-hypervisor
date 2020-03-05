@@ -319,6 +319,21 @@ void pm_by_vuart_init(struct vmctx *ctx)
 
 void pm_by_vuart_deinit(struct vmctx *ctx)
 {
+	/* it indicates that acrn-dm has received shutdown command
+	 * from UOS in this state, and it will send shutdown command
+	 * to life_mngr running on SOS to shutdown system after UOS
+	 * has poweroff itself.
+	 */
+	if (pm_monitor_state == SHUTDOWN_REQ_FROM_UOS) {
+		/* send shutdown command to life_mngr running on SOS */
+		if (send_shutdown_to_lifemngr() != 0) {
+			pr_err("send shutdown to life-management failed\r\n");
+		}
+	}
+
+	pthread_cancel(pm_monitor_thread);
+	pthread_join(pm_monitor_thread, NULL);
+
 	close(node_fd);
 	node_fd = -1;
 }
