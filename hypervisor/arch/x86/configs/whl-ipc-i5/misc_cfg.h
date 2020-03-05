@@ -8,12 +8,25 @@
 #ifndef MISC_CFG_H
 #define MISC_CFG_H
 
-#define MAX_PCPU_NUM	4U
+#define MAX_PCPU_NUM		4U
 #define MAX_PLATFORM_CLOS_NUM	0U
+
 #define ROOTFS_0		"root=/dev/nvme0n1p3 "
 #define ROOTFS_1		"root=/dev/sda3 "
 
+#define SOS_ROOTFS		ROOTFS_1
+#define SOS_CONSOLE		"console=ttyS0 "
+#define SOS_COM1_BASE		0x3F8U
+#define SOS_COM1_IRQ		4U
+#define SOS_COM2_BASE		0x2F8U
+#define SOS_COM2_IRQ		3U
 
+#ifndef CONFIG_RELEASE
+#define SOS_BOOTARGS_DIFF	"hvlog=2M@0x1FE00000 "	\
+				"memmap=0x200000$0x1fe00000 "
+#else
+#define SOS_BOOTARGS_DIFF	""
+#endif
 
 #define MAX_HIDDEN_PDEVS_NUM	0U
 
