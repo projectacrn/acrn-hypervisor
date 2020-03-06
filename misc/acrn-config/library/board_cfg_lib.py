@@ -39,6 +39,11 @@ KNOWN_HIDDEN_PDEVS_BOARD_DB = {
     'apl-up2':['00:0d:0'],
 }
 
+SIZE_K = common.SIZE_K
+SIZE_M = common.SIZE_M
+SIZE_2G = common.SIZE_2G
+SIZE_4G = common.SIZE_4G
+
 
 def prepare(check_git):
     """ check environment """
@@ -433,3 +438,8 @@ def undline_name(name):
     :return: name_str which contain'_'
     """
     return common.undline_name(name)
+
+
+def round_up(addr, mem_align):
+    """Keep memory align"""
+    return common.round_up(addr, mem_align)
