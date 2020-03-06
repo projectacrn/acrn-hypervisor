@@ -13,7 +13,7 @@ Verified version
 * Windows 10 Version:
 
   - Microsoft Windows 10 Enterprise, 10.0.17134 Build 17134
-  - Microsoft Windows 10 Pro, 10.0.17763 Build 17763
+  - Microsoft Windows 10 Enterprise LTSC Evaluation, 10.0.17763 Build 17763
 
 * Windows graphics driver:
 
@@ -97,33 +97,21 @@ Update Kernel on KBL NUC
 #. ``reboot`` the Service VM and select ``The ACRNGT Service VM`` from the boot menu to apply
    the ACRN kernel and hypervisor updates.
 
-Create Windows 10 Image
-=======================
-Create a Windows 10 image which includes two steps:
+Create Windows 10 Image in Service VM
+=====================================
+Create a Windows 10 image is to install Windows 10 onto the virtual disk.
 
-#. Re-generate an ISO that includes winvirtio or virtio-win drivers and the Windows graphics drivers that were pre-installed
-   from the original Windows ISO.
-
-#. Install Windows 10 onto the virtual disk.
-
-Preparations
-------------
-* Download `Windows 10 ADK <https://docs.microsoft.com/en-us/windows-hardware/get-started/adk-install>`_
-  according to your working Windows 10 version.
-
-.. note:: :kbd:`Win` + :kbd:`R` to open the Run window. Key in ``winver`` to get your working Windows version.
-
-* Download `Windows 10 LTSC ISO
-  <https://software-download.microsoft.com/download/sg/17763.107.101029-1455.rs5_release_svc_refresh_CLIENT_LTSC_EVAL_x64FRE_en-us.iso>`_.
-
-* Download `virtio Windows driver
-  <https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.141-1/virtio-win-0.1.141.iso>`_
-  to the Service VM in ``/root/img/virtio-win-0.1.141.iso``.
-
+Download Win10 ISO and Drivers
+------------------------------
+* Download `Windows 10 LTSC ISO <https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise>`_.
+*  Select ISO-LTSC, then continue.
+*  Complete the required info then continue.
+*  Select language and "x86 64 bit", click to download ISO and save as "windows10-LTSC-17763.iso".
+  
 * Download `Intel DCH Graphics Driver <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`_.
 
-* Download Oracle Windows driver to Service VM in ``/root/img/winvirtio.iso``.
-*  `Oracle Windows driver <https://edelivery.oracle.com/osdc/faces/SoftwareDelivery>`_.Sign in. If you do not have an oracle account, register one.
+* Download `Oracle Windows driver <https://edelivery.oracle.com/osdc/faces/SoftwareDelivery>`_.
+*  Sign in. If you do not have an oracle account, register one.
 *  Select "Download Package", key in "Oracle Linux 7.6" and click "Search"
 *  Click: DLP: Oracle Linux 7.6, it will be added to your Cart.
 *  Click "Checkout" at the top right corner
@@ -132,191 +120,6 @@ Preparations
 *  In the list, right check the item labeled as "Oracle VirtIO Drivers Version for Microsoft Windows 1.x.x, yy MB", and "Save link as ...".  At the time of this wiki, it is named as "V982789-01.zip"
 *  Click Download, When the download is complete, unzip, you will get one ISO named "winvirtio.iso"
 
-Install Windows 10 ADK
-----------------------
-#. Double click ``adksetup.exe`` to start the installation.
-
-   .. figure:: images/adk_install_1.png
-      :align: center
-
-#. Click ``Next``.
-
-   .. figure:: images/adk_install_2.png
-      :align: center
-
-#. Select ``Deployment Tools`` and ``Windows Preinstallation Environment (Windows PE)``,
-   and click ``Install`` to continue the installation.
-
-   .. note:: You need to install Windows 10 ADK only once.
-
-Pre-install drivers and re-generate Windows ISO
------------------------------------------------
-#. Create a folder on the ``C:`` drive called ``WIM``, so you have a folder ``C:\WIM``
-
-#. Create a folder on the ``C:`` drive called ``Mount``, so you have a folder ``C:\Mount``
-
-#. Right click the downloaded ``virtio-win-0.1.141.iso`` and select ``Mount``. The ISO will be mounted to a drive;
-   for example, drive ``D:``
-   Or used Oracle Driver
-   Right click the downloaded ``winvirtio.iso`` and select ``Mount``. The ISO will be mounted to a drive;
-   for example, drive ``D:``
-
-#. Use ``7-zip`` or similar utility to unzip the downloaded Windows graphics driver
-   ``igfx_win10_100.7212.zip`` to a folder,
-   for example, to ``C:\Dev\Temp\wim\igfx_win10_100.7212``
-
-#. Right click the downloaded Windows ISO, for example, ``windows10-17763-107-LTSC.iso``, select ``Mount``,
-   the ISO will be mounted to a drive; for example, drive ``E:``
-
-#. Copy ``E:\sources\boot.wim`` and ``E:\sources\install.wim`` to ``C:\WIM``
-
-#. Depending on your Windows ISO image, more than one image may be included in the ``WIM``.
-   Run ``dism /get-wiminfo /wimfile:C:\WIM\install.wim`` with administrator privileges.
-   Select the ``Index`` you want. For ``windows10-17763-107-LTSC.iso``,
-   there is only one ``Index``; it is ``1``
-
-   .. figure:: images/install_wim_index.png
-      :align: center
-
-#. Create a batch file named ``virtio-inject-boot.bat`` [1]_ to modify
-   ``boot.wim`` to inject drivers (using the mounted Windows ISO drive
-   (``D:``), image Index (``1``), and folder where the unzipped Windows
-   graphics drivers were placed, from the previous steps (update this
-   batch file as needed)::
-
-      REM virt-inject-boot
-      Set IDX=1
-
-      REM Modify boot.wim file to inject drivers
-      dism /Mount-Wim /WimFile:C:\Wim\boot.wim /Index:%IDX% /MountDir:C:\mount
-      dism /image:C:\mount /Add-Driver "/driver:d:\balloon\w10\amd64\balloon.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\NetKVM\w10\amd64\netkvm.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\viorng\w10\amd64\viorng.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\vioscsi\w10\amd64\vioscsi.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\vioserial\w10\amd64\vioser.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\viostor\w10\amd64\viostor.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\vioinput\w10\amd64\vioinput.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\cui_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\HdBusExt.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\iigd_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\DisplayAudio\11.1\IntcDAud.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\msdk.inf"
-      dism /unmount-wim /mountdir:c:\mount /commit
-
-
-      REM inject-Oracle-driver-install
-      Set IDX=1
-
-      REM Modify boot.wim file to inject drivers
-      dism /Mount-Wim /WimFile:C:\WIM\boot.wim /Index:%IDX% /MountDir:C:\mount
-      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\netkvmorcl.inf"
-      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioinput.inf"
-      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\viorng.inf"
-      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioscsiorcl.inf"
-      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioserorcl.inf"
-      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\viostororcl.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\cui_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\HdBusExt.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\iigd_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\DisplayAudio\11.1\IntcDAud.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\msdk.inf"
-      dism /unmount-wim /mountdir:c:\mount /commit
-
-
-   Run this ``virtio-inject-boot.bat`` script in a command prompt
-   running as administrator.  It may take 4-5 minutes to run, depending on
-   your Windows system performance.
-
-#. Similarly, create another batch file named
-   ``virtio-inject-install.bat`` [1]_ to modify ``install.wim`` to inject
-   drivers (and verify the ISO drive, image Index, and drivers folder)::
-
-      REM virt-inject-install
-      Set IDX=1
-
-      REM Modify install.wim to inject drivers
-      dism /Mount-Wim /WimFile:C:\WIM\install.wim /Index:%IDX% /MountDir:C:\mount
-      dism /image:C:\mount /Add-Driver "/driver:d:\balloon\w10\amd64\balloon.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\NetKVM\w10\amd64\netkvm.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\viorng\w10\amd64\viorng.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\vioscsi\w10\amd64\vioscsi.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\vioserial\w10\amd64\vioser.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\viostor\w10\amd64\viostor.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:d:\vioinput\w10\amd64\vioinput.inf" /forceunsigned
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\cui_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\HdBusExt.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\iigd_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\DisplayAudio\11.1\IntcDAud.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\msdk.inf"
-      dism /unmount-wim /mountdir:c:\mount /commit
-
-
-      REM inject-Oracle-driver-install
-      Set IDX=1
-
-      REM Modify install.wim to inject drivers
-      dism /Mount-Wim /WimFile:C:\WIM\install.wim /Index:%IDX% /MountDir:C:\mount
-      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\netkvmorcl.inf"
-      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioinput.inf"
-      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\viorng.inf"
-      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioscsiorcl.inf"
-      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\vioserorcl.inf"
-      dism /image:C:\mount /Add-Driver "/driver:d:\vio\Win10\amd64\viostororcl.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\cui_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\HdBusExt.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\iigd_dch.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\DisplayAudio\11.1\IntcDAud.inf"
-      dism /image:C:\mount /Add-Driver "/driver:c:\Dev\Temp\wim\igfx_win10_100.7212\Graphics\msdk.inf"
-      dism /unmount-wim /mountdir:c:\mount /commit
-
-   Run this script in a command prompt running as administrator.  It may also
-   take 4-5 minutes to run, depending on your Windows system performance.
-
-
-#. After running these two scripts the files ``C:\WIM\boot.wim`` and ``C:\WIM\install.wim``
-   will be updated to install these drivers into the image:
-
-   - Virtio-balloon
-   - Virtio-net
-   - Virtio-rng
-   - Virtio-scsi
-   - Virtio-serial
-   - Virtio-block
-   - Virtio-input
-   - Windows graphics drivers
-
-#. Use 7-zip to unzip the downloaded Windows ISO to a folder; for example, into
-   ``C:\Dev\Temp\wim\windows10-17763-107-LTSC``
-
-#. Delete ``C:\Dev\Temp\wim\windows10-17763-107-LTSC\sources\boot.wim`` and
-   ``C:\Dev\Temp\wim\windows10-17763-107-LTSC\sources\install.wim``
-
-#. Copy ``C:\WIM\boot.wim`` and ``C:\WIM\install.wim`` to ``C:\Dev\Temp\wim\windows10-17763-107-LTSC\sources``
-
-#. Download and unzip `cdrtools-3.01.a23-bootcd.ru-mkisofs.7z
-   <http://reboot.pro/index.php?app=core&module=attach&section=attach&attach_id=15214>`_ to a folder;
-   for example, to ``C:\Dev\Temp\wim\cdrtools-3.01.a23-bootcd.ru-mkisofs``
-
-#. Create a batch file named ``mkisofs_both_legacy_and_uefi.bat``
-   containing (update folder names as needed to reflect where the
-   referenced files are located on your system, and ``inputdir``,
-   ``outputiso`` and ``mkisofs.exe`` path, downloaded by the previous
-   step)::
-
-      set inputdir=C:\Dev\Temp\wim\windows10-17763-107-LTSC
-      set outputiso=C:\Dev\Temp\wim\mkisofs_iso\windows10-17763-107-LTSC-Virtio-Gfx.iso
-      set label="WIN10_17763_107_LTSC_VIRTIO_GFX"
-      set biosboot=boot/etfsboot.com
-      set efiboot=efi/microsoft/boot/efisys.bin
-      C:\Dev\Temp\wim\cdrtools-3.01.a23-bootcd.ru-mkisofs\mingw\mkisofs.exe \
-        -iso-level 4 -l -R -UDF -D -volid %label% -b %biosboot% -no-emul-boot \
-        -boot-load-size 8 -hide boot.catalog -eltorito-alt-boot \
-        -eltorito-platform efi -no-emul-boot -b %efiboot%  -o %outputiso% \
-        %inputdir%
-
-   Run this ``mkisofs_both_legacy_and_uefi.bat`` script. The resulting
-   ISO will be generated in ``outputiso`` location you specified.
-
 Create Raw Disk
 ---------------
 Run these commands on the Service VM::
@@ -324,43 +127,34 @@ Run these commands on the Service VM::
    # swupd bundle-add kvm-host
    # mkdir /root/img
    # cd /root/img
-   # qemu-img create -f raw win10-ltsc-virtio.img 30G
+   # qemu-img create -f raw win10-ltsc.img 30G
 
-Install Windows 10
-------------------
-
-   .. note:: Make sure you have configured your monitor and display according to **3** of
-      :ref:`Boot Windows with GVT-g on ACRN <waag_display_conf_lable>`.
+Prepare Script to Create Image
+-------------------------------
 
 #. Copy ``/usr/share/acrn/samples/nuc/launch_win.sh`` to ``install_win.sh``::
 
    # cp /usr/share/acrn/samples/nuc/launch_win.sh ~/install_win.sh
 
-#. Add the following lines **before** the ``acrn-dm`` command line in ``install_win.sh``. It is used
-   to passthrough USB to WaaG, by which both mouse and keyboard can be used during the Windows installation::
-
-      echo "8086 9d2f" > /sys/bus/pci/drivers/pci-stub/new_id
-      echo "0000:00:14.0" > /sys/bus/pci/devices/0000:00:14.0/driver/unbind
-      echo "0000:00:14.0" > /sys/bus/pci/drivers/pci-stub/bind
-
-   .. note:: You may need to change the bdf and vid/pid of the USB controller in the above command to match those
-      of your platform. Use ``lspci`` and ``lspci -n`` to get this information.
 
 #. Edit the ``acrn-dm`` command line in ``install_win.sh`` as follows:
 
-   - Change ``-s 3,virtio-blk,./win10-ltsc-virtio.img`` to your path to the Windows 10 image.
-   - Add ``-s 6,passthru,0/14/0``.
+   - Change ``-s 3,virtio-blk,./win10-ltsc.img`` to your path to the Windows 10 image.
 
-    .. note:: You may need to change 0/14/0 to match bdf of the USB controller of your platform.
+   - Add ``-s 6,xhci,1-5:1-9``. You may need to change 1-5:1-9 to match the ports of USB keyboard/Mouse and flash of your platform.
 
-   - Add ``-s 8,ahci,cd:./windows10-17763-107-LTSC-Virtio-Gfx.iso`` to point to the ISO you re-generated above.
-   - Add ``-s 9,ahci,cd:./virtio-win-0.1.141.iso`` to point to your path to the virtio-win iso.
-
-   Or if you used the Oracle driver:
+   - Add ``-s 8,ahci,cd:./windows10-LTSC-17763.iso`` to point to the Win10 ISO.
 
    - Add ``-s 9,ahci,cd:./winvirtio.iso`` to point to your path to the winvirtio iso.
 
-#. Run ``install_win.sh``.
+Install Windows 10
+------------------
+.. note:: Make sure you have configured your monitor and display according to **3** of
+      :ref:`Boot Windows with GVT-g on ACRN <waag_display_conf_lable>`.
+   
+#. Run ``install_win.sh``, then you will see UEFI shell, input "exit".
+
+#. Select "Boot Manager", and boot up from Win10 ISO.
 
 #. When the display reads "Press any key to boot from CD or DVD" on the monitor, press any key in the terminal on the
    **Host** side.
@@ -379,13 +173,22 @@ Install Windows 10
    .. figure:: images/windows_install_4.png
       :align: center
 
-#. Click :kbd:`Browser` and go to the drive which includes the virtio win drivers. Select **viostor\\w10\\amd64\\viostor.inf**
-   or **viostororcl.inf** if you are using Oracle virtio drivers and install the virtio block driver.
+#. Click :kbd:`Browser` and go to the drive which includes the virtio win drivers. Select all in **viostor\\w10\\amd64** 
+   and install the following all drivers into the image:
+   - Virtio-balloon
+   - Virtio-net
+   - Virtio-rng
+   - Virtio-scsi
+   - Virtio-serial
+   - Virtio-block
+   - Virtio-input
+   
+   .. note:: Make sure you have unselected "Hide Drivers that aren't compatible with this computer's hardware" in the bottom.
 
    .. figure:: images/windows_install_5.png
       :align: center
 
-#. Select the virtio block drive and click :kbd:`Next`.
+#. Click :kbd:`Next`.
 
    .. figure:: images/windows_install_6.png
       :align: center
@@ -405,10 +208,16 @@ Install Windows 10
    .. figure:: images/windows_install_9.png
       :align: center
 
-#. The Windows installation is complete after a few configuation steps, and you get to the Windows desktop.
+   .. note:: You must connect two monitors to the KBL NUC in order to launch Windows with
+      the default configurations above.
+
+#. The Windows installation is completed after a few configuration steps, and you get to the Windows desktop.
 
    .. figure:: images/windows_install_10.png
       :align: center
+
+
+#. Copy `Intel DCH Graphics Driver <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`_ into the Windows and install, display driver is updated to 7212.
 
 .. _waag_display_conf_lable:
 
@@ -416,7 +225,7 @@ Boot Windows with GVT-g on ACRN
 ===============================
 #. Modify the ``/usr/share/acrn/samples/nuc/launch_win.sh`` script to specify the Windows image generated above.
 
-#. Run the ``launch_win.sh`` and you should see the WaaG desktop coming up over the HDMI monitor (instead of the VNC).
+#. Run the ``launch_win.sh`` and you should see the WaaG desktop coming up over the HDMI monitor.
 
    .. note:: Use the following command to disable the GNOME Display Manager (GDM) if it is enabled::
 
@@ -457,11 +266,12 @@ ACRN Windows verified feature list
 Known Limitations
 *****************
 * The cursor is not visible with the GVG-g local display.
-* The Windows graphic driver version must be ``igfx_win10_100.7212.zip``;
-  the latest version ``1910.1007372.zip`` cannot be installed correctly.
 
-Device configurations of acrn-dm command line
+Explanation for acrn-dm popular command lines
 *********************************************
+
+.. note:: You can use those acrn-dm command lines according to your real requirements.
+
 * *-s 3,ahci,hd:/root/img/win10.img*:
   This is the hard disk onto which to install Windows 10.
   Make sure that the slot ID 3 points to your win10 img path.
@@ -480,12 +290,16 @@ Device configurations of acrn-dm command line
    <To get the input event of mouse>
    # cat /proc/bus/input/devices | grep mouse
 
-* *-s 7,ahci,cd:/root/img/Windows.iso*:
+* *-s 7,ahci,cd:/root/img/Windows10.iso*:
   This is the IOS image used to install Windows 10. It appears as a cdrom device.
   Make sure that the slot ID 7 points to your win10 ISO path.
 
-* *-s 8,ahci,cd:/root/img/virtio-win-0.1.141.iso*: This is another cdrom device
-  to install the virtio Windows driver later. Make sure it points to your VirtIO ISO path.
+* *-s 8,ahci,cd:/root/img/winvirtio.iso*: 
+  This is cdrom device to install the virtio Windows driver. Make sure it points to your VirtIO ISO path.
+
+* *-s 9,passthru,0/14/0*:
+  This is to passthrough USB controller to Windows.
+  You may need to change 0/14/0 to match bdf of the USB controller of your platform.
 
 * *--ovmf /usr/share/acrn/bios/OVMF.fd*:
   Make sure it points to your OVMF binary path
@@ -497,14 +311,7 @@ secure boot enabling.
 
 Activate Windows 10
 ********************
-If you are using a trial version of Windows 10, you may find that some apps and features do not work or that Windows 10 get automatically shut down by the Windows licensing monitoring service. To avoid these issues, obtain a licensed verson of Windows.
+If you are using a trial version of Windows 10, you may find that some apps and features do not work or that Windows 10 get automatically shut down by the Windows licensing monitoring service. To avoid these issues, obtain a licensed version of Windows.
 
 For Windows 10 activation steps, refer to "`Activate Windows 10 <https://support.microsoft.com/en-us/help/12440/windows-10-activate>`__"
 
-References
-**********
-
-.. [1]
-   These virtio drivers injecting batch scripts are based on Derek Seaman's IT blog about
-   `injecting VirtIO Drivers into Windows
-   <https://www.derekseaman.com/2015/07/injecting-kvm-virtio-drivers-into-windows.html>`_.
