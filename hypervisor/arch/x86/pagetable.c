@@ -264,12 +264,12 @@ static void add_pte(const uint64_t *pde, uint64_t paddr_start, uint64_t vaddr_st
 			pr_fatal("%s, pte 0x%lx is already present!\n", __func__, vaddr);
 		} else {
 			set_pgentry(pte, paddr | prot, mem_ops);
-			paddr += PTE_SIZE;
-			vaddr += PTE_SIZE;
+		}
+		paddr += PTE_SIZE;
+		vaddr += PTE_SIZE;
 
-			if (vaddr >= vaddr_end) {
-				break;	/* done */
-			}
+		if (vaddr >= vaddr_end) {
+			break;	/* done */
 		}
 	}
 }
