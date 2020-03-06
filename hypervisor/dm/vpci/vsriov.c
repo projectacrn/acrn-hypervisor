@@ -185,6 +185,7 @@ static void enable_vf(struct pci_vdev *pf_vdev)
 	sub_vid = (uint16_t) pci_pdev_read_cfg(vf_bdf, PCIV_SUB_VENDOR_ID, 2U);
 	if ((sub_vid != 0xFFFFU) && (sub_vid != 0U)) {
 		uint16_t num_vfs, stride, fst_off;
+		struct pci_vdev *vf_vdev;
 
 		num_vfs = read_sriov_reg(pf_vdev, PCIR_SRIOV_NUMVFS);
 		fst_off = read_sriov_reg(pf_vdev, PCIR_SRIOV_FST_VF_OFF);
@@ -193,9 +194,20 @@ static void enable_vf(struct pci_vdev *pf_vdev)
 			vf_bdf.fields.bus = get_vf_bus(pf_vdev, fst_off, stride, idx);
 			vf_bdf.fields.devfun = get_vf_devfun(pf_vdev, fst_off, stride, idx);
 
-			/* if one VF has never been created then create new pdev/vdev for this VF */
-			if (pci_find_vdev(&pf_vdev->vpci->vm->vpci, vf_bdf) == NULL) {
+			/*
+			 * If one VF has never been created then create new one including pdev/vdev structures.
+			 *
+			 * The VF maybe have already existed but it is a zombie instance that vf_vdev->vpci
+			 * is NULL, in this case, we need to make the vf_vdev available again in here.
+			 */
+			vf_vdev = pci_find_vdev(&pf_vdev->vpci->vm->vpci, vf_bdf);
+			if (vf_vdev == NULL) {
 				create_vf(pf_vdev, vf_bdf, idx);
+			} else {
+				/* Re-activate a zombie VF */
+				if (vf_vdev->vpci == NULL) {
+					vf_vdev->vpci = pf_vdev->vpci;
+				}
 			}
 		}
 	} else {
@@ -213,8 +225,34 @@ static void enable_vf(struct pci_vdev *pf_vdev)
  */
 static void disable_vf(struct pci_vdev *pf_vdev)
 {
-	/* Implementation in next patch */
-	(void)pf_vdev;
+	uint16_t idx, num_vfs, stride, first;
+	struct pci_vdev *vf_vdev;
+
+	/*
+	 * PF can disable VFs only when all VFs are not used by any VM or any application
+	 *
+	 * Ideally, VF instances should be deleted after VFs are disabled, but for FuSa reasons,
+	 * we simply set the VF instance status to "zombie" to avoid dynamically adding/removing
+	 * resources
+	 *
+	 * If the VF drivers are still running in SOS or UOS, the MMIO access will return 0xFF.
+	 *
+	 * TODO For security reasons, we need to enforce a return of 0xFF to avoid information leakage.
+	 */
+	num_vfs = read_sriov_reg(pf_vdev, PCIR_SRIOV_NUMVFS);
+	first = read_sriov_reg(pf_vdev, PCIR_SRIOV_FST_VF_OFF);
+	stride = read_sriov_reg(pf_vdev, PCIR_SRIOV_VF_STRIDE);
+	for (idx = 0U; idx < num_vfs; idx++) {
+		union pci_bdf bdf;
+
+		bdf.fields.bus = get_vf_bus(pf_vdev, first, stride, idx);
+		bdf.fields.devfun = get_vf_devfun(pf_vdev, first, stride, idx);
+		vf_vdev = pci_find_vdev(&pf_vdev->vpci->vm->vpci, bdf);
+		if (vf_vdev != NULL) {
+			/* set disabled VF as zombie vdev instance */
+			vf_vdev->vpci = NULL;
+		}
+	}
 }
 
 /**
