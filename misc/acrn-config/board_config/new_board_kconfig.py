@@ -28,6 +28,8 @@ VM_NUM_MAP_TOTAL_HV_RAM_SIZE = {
     7:0x10E00000,
 }
 
+MEM_ALIGN = 2 * board_cfg_lib.SIZE_M
+
 
 def find_avl_memory(ram_range, hpa_size, hv_start_offset):
     """
@@ -141,6 +143,7 @@ def generate_file(config):
     total_size = reserved_ram + hv_ram_size
     avl_start_addr = find_avl_memory(ram_range, str(total_size), hv_start_offset)
     hv_start_addr = int(avl_start_addr, 16) + int(hex(reserved_ram), 16)
+    hv_start_addr = board_cfg_lib.round_up(hv_start_addr, MEM_ALIGN)
 
     print("{}".format(DESC), file=config)
     print('CONFIG_BOARD="{}"'.format(board_cfg_lib.BOARD_NAME), file=config)
