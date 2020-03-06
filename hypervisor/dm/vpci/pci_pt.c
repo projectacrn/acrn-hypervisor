@@ -32,6 +32,60 @@
 #include <logmsg.h>
 #include "vpci_priv.h"
 
+/*
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ */
+static void vdev_pt_unmap_msix(struct pci_vdev *vdev)
+{
+	uint32_t i;
+	uint64_t addr_hi, addr_lo;
+	struct pci_msix *msix = &vdev->msix;
+	struct acrn_vm *vm = vdev->vpci->vm;
+
+	/* Mask all table entries */
+	for (i = 0U; i < msix->table_count; i++) {
+		msix->table_entries[i].vector_control = PCIM_MSIX_VCTRL_MASK;
+		msix->table_entries[i].addr = 0U;
+		msix->table_entries[i].data = 0U;
+	}
+
+	if (msix->mmio_gpa != 0UL) {
+		addr_lo = msix->mmio_gpa + msix->table_offset;
+		addr_hi = addr_lo + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
+		addr_lo = round_page_down(addr_lo);
+		addr_hi = round_page_up(addr_hi);
+		unregister_mmio_emulation_handler(vm, addr_lo, addr_hi);
+		msix->mmio_gpa = 0UL;
+	}
+}
+
+/*
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ * @pre vdev->vpci->vm != NULL
+ */
+static void vdev_pt_map_msix(struct pci_vdev *vdev, bool hold_lock)
+{
+	struct pci_vbar *vbar;
+	uint64_t addr_hi, addr_lo;
+	struct pci_msix *msix = &vdev->msix;
+	struct acrn_vm *vm = vdev->vpci->vm;
+
+	vbar = &vdev->vbars[vdev->msix.table_bar];
+	if (vbar->base != 0UL) {
+		addr_lo = vbar->base + msix->table_offset;
+		addr_hi = addr_lo + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
+		addr_lo = round_page_down(addr_lo);
+		addr_hi = round_page_up(addr_hi);
+		register_mmio_emulation_handler(vm, vmsix_handle_table_mmio_access,
+				addr_lo, addr_hi, vdev, hold_lock);
+		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, addr_lo, addr_hi - addr_lo);
+		msix->mmio_gpa = vbar->base;
+	}
+}
+
 /**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
@@ -39,7 +93,6 @@
  */
 static void vdev_pt_unmap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
-	bool is_msix_table_bar;
 	struct pci_vbar *vbar;
 	struct acrn_vm *vm = vdev->vpci->vm;
 
@@ -51,31 +104,8 @@ static void vdev_pt_unmap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 			vbar->size);
 	}
 
-	is_msix_table_bar = (has_msix_cap(vdev) && (idx == vdev->msix.table_bar));
-	if (is_msix_table_bar) {
-		uint32_t i;
-		uint64_t addr_hi, addr_lo;
-		struct pci_msix *msix = &vdev->msix;
-
-		/* Mask all table entries */
-		for (i = 0U; i < msix->table_count; i++) {
-			msix->table_entries[i].vector_control = PCIM_MSIX_VCTRL_MASK;
-			msix->table_entries[i].addr = 0U;
-			msix->table_entries[i].data = 0U;
-		}
-		msix->mmio_hpa = vbar->base_hpa; /* pbar (hpa) */
-		msix->mmio_size = vbar->size;
-
-		if (msix->mmio_gpa != 0UL) {
-			addr_lo = msix->mmio_gpa + msix->table_offset;
-			addr_hi = addr_lo + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
-
-			addr_lo = round_page_down(addr_lo);
-			addr_hi = round_page_up(addr_hi);
-			unregister_mmio_emulation_handler(vm, addr_lo, addr_hi);
-			msix->mmio_gpa = 0UL;
-
-		}
+	if ((has_msix_cap(vdev) && (idx == vdev->msix.table_bar))) {
+		vdev_pt_unmap_msix(vdev);
 	}
 }
 
@@ -86,7 +116,6 @@ static void vdev_pt_unmap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
  */
 static void vdev_pt_map_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
-	bool is_msix_table_bar;
 	struct pci_vbar *vbar;
 	struct acrn_vm *vm = vdev->vpci->vm;
 
@@ -100,22 +129,8 @@ static void vdev_pt_map_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 			EPT_WR | EPT_RD | EPT_UNCACHED);
 	}
 
-	is_msix_table_bar = (has_msix_cap(vdev) && (idx == vdev->msix.table_bar));
-	if (is_msix_table_bar) {
-		uint64_t addr_hi, addr_lo;
-		struct pci_msix *msix = &vdev->msix;
-
-		if (vbar->base != 0UL) {
-			addr_lo = vbar->base + msix->table_offset;
-			addr_hi = addr_lo + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
-
-			addr_lo = round_page_down(addr_lo);
-			addr_hi = round_page_up(addr_hi);
-			register_mmio_emulation_handler(vm, vmsix_handle_table_mmio_access,
-					addr_lo, addr_hi, vdev, true);
-			ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, addr_lo, addr_hi - addr_lo);
-			msix->mmio_gpa = vbar->base;
-		}
+	if (has_msix_cap(vdev) && (idx == vdev->msix.table_bar)) {
+		vdev_pt_map_msix(vdev, true);
 	}
 }
 
@@ -330,6 +345,12 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 				}
 			}
 		}
+	}
+
+	/* Initialize MSIx mmio hpa and size after BARs initialization */
+	if (has_msix_cap(vdev) && (!is_sriov_bar)) {
+		vdev->msix.mmio_hpa = vdev->vbars[vdev->msix.table_bar].base_hpa;
+		vdev->msix.mmio_size = vdev->vbars[vdev->msix.table_bar].size;
 	}
 }
 
