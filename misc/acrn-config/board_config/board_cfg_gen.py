@@ -12,7 +12,6 @@ import board_c
 import pci_devices_h
 import acpi_platform_h
 import misc_cfg_h
-import ve820_c
 import new_board_kconfig
 
 ACRN_PATH = board_cfg_lib.SOURCE_ROOT_DIR
@@ -99,12 +98,6 @@ def main(args):
     # generate acpi_platform.h
     with open(config_platform, 'w+') as config:
         acpi_platform_h.generate_file(config, ACRN_DEFAULT_PLATFORM)
-
-    # generate acpi_platform.h
-    with open(config_ve820, 'w+') as config:
-        err_dic = ve820_c.generate_file(config)
-        if err_dic:
-            return err_dic
 
     # generate acpi_platform.h
     with open(config_misc_cfg, 'w+') as config:
