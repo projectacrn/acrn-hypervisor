@@ -167,7 +167,7 @@ $().ready(function(){
 
     $('#save_scenario').on('click', function() {
         var name = $(this).data('id');
-        if(name=="generate_board_src" || name=="generate_scenario_src") {
+        if(name=="generate_config_src") {
             save_scenario(name);
         }
         else {
@@ -271,12 +271,7 @@ $().ready(function(){
         });
     });
 
-    $('#generate_board_src').on('click', function() {
-        var dataId = $(this).data('id');
-        $("#save_scenario").data('id', dataId);
-    });
-
-    $('#generate_scenario_src').on('click', function() {
+    $('#generate_config_src').on('click', function() {
         var dataId = $(this).data('id');
         $("#save_scenario").data('id', dataId);
     });
@@ -437,19 +432,12 @@ function save_scenario(generator=null){
                     validate_message = 'Scenario setting existed, saved successfully with a new name: '
                         +file_name+'\ninto acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/user_defined/.';
                 }
-                if(generator=="generate_board_src" || generator=="generate_scenario_src") {
-                    commit_confirm_message = validate_message+'\n\nGenerate source codes from scenario setting.'
-                        +'\n\nDo you want to commit changes to local tree?'
-                    commit_confirm = 'no'
-                    if(confirm(commit_confirm_message)) {
-                        commit_confirm = 'yes'
-                    }
+                if(generator=="generate_config_src") {
                     generator_config = {
                         type: generator,
                         board_info: $("select#board_info").val(),
                         board_setting: "board_setting",
                         scenario_setting: file_name,
-                        commit: commit_confirm
                     }
                     $.ajax({
                         type : "POST",
@@ -461,10 +449,7 @@ function save_scenario(generator=null){
                             status = result.status
                             error_list = result.error_list
                             if (status == 'success' && (JSON.stringify(error_list)=='{}' || JSON.stringify(error_list)=='null')) {
-                                if(commit_confirm == 'yes')
-                                    alert(generator+' with commit successfully.');
-                                else
-                                    alert(generator+' successfully.');
+                                alert(generator+' successfully.');
                             } else {
                                 alert(generator+' failed. \nError list:\n'+JSON.stringify(error_list));
                             }
@@ -573,19 +558,12 @@ function save_launch(generator=null) {
                         +file_name+'\nto acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/user_defined/.';
                 }
                 if(generator != null) {
-                    commit_confirm_message = validate_message+'\n\nGenerate launch scripts from launch setting.'
-                        +'\n\nDo you want to commit changes to local tree?'
-                    commit_confirm = 'no'
-                    if(confirm(commit_confirm_message)) {
-                        commit_confirm = 'yes'
-                    }
                     generator_config = {
                         type: generator,
                         board_info: $("select#board_info").val(),
                         board_setting: "board_setting",
                         scenario_setting: $("select#scenario_name").val(),
                         launch_setting: file_name,
-                        commit: commit_confirm
                     }
                     $.ajax({
                         type : "POST",
@@ -597,11 +575,7 @@ function save_launch(generator=null) {
                             status = result.status
                             error_list = result.error_list
                             if (status == 'success' && (JSON.stringify(error_list)=='{}' || JSON.stringify(error_list)=='null')) {
-                                if(commit_confirm == 'yes')
-                                    alert(generator+' successfully into '+
-                                        'acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/output/ with changes committed.');
-                                else
-                                    alert(generator+' successfully into '+
+                                alert(generator+' successfully into '+
                                         'acrn-hypervisor/misc/acrn-config/xmls/config-xmls/'+board_info+'/output/.');
                             } else {
                                 alert(generator+' failed. \nError list:\n'+JSON.stringify(error_list));

@@ -384,14 +384,14 @@ def generate_src():
     msg = {}
     error_list = {}
     status = 'success'
-    if src_type == 'generate_board_src':
+    if src_type == 'generate_config_src':
         try:
             from board_config.board_cfg_gen import ui_entry_api
             error_list = ui_entry_api(board_info_xml, scenario_setting_xml, commit)
         except Exception as error:
             status = 'fail'
             error_list = {'board setting error': str(error)}
-    elif src_type == 'generate_scenario_src':
+
         try:
             from scenario_config.scenario_cfg_gen import ui_entry_api
             error_list = ui_entry_api(board_info_xml, scenario_setting_xml, commit)
