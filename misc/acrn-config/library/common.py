@@ -25,6 +25,11 @@ START_HPA_SIZE_LIST = ['0x20000000', '0x40000000', '0x80000000', 'CONFIG_SOS_RAM
 
 MULTI_ITEM = ["guest_flag", "pcpu_id", "input", "block", "network"]
 
+SIZE_K = 1024
+SIZE_M = SIZE_K * 1024
+SIZE_2G = 2 * SIZE_M * SIZE_K
+SIZE_4G = 2 * SIZE_2G
+
 
 class MultiItem():
 
@@ -681,3 +686,8 @@ def get_vuart_info_id(config_file, idx):
             vm_id += 1
 
     return tmp_tag
+
+
+def round_up(addr, mem_align):
+    """Keep memory align"""
+    return ((addr + (mem_align - 1)) & (~(mem_align - 1)))
