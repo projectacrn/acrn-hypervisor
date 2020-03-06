@@ -12,14 +12,13 @@ import board_c
 import pci_devices_h
 import acpi_platform_h
 import misc_cfg_h
-import ve820_c
 import new_board_kconfig
 
 ACRN_PATH = board_cfg_lib.SOURCE_ROOT_DIR
 ACRN_CONFIG = ACRN_PATH + "hypervisor/arch/x86/configs/"
 
 ACRN_DEFAULT_PLATFORM = ACRN_PATH + "hypervisor/include/arch/x86/default_acpi_info.h"
-GEN_FILE = ["pci_devices.h", "board.c", "_acpi_info.h", "misc_cfg.h", "ve820.c", ".config"]
+GEN_FILE = ["pci_devices.h", "board.c", "_acpi_info.h", "misc_cfg.h", ".config"]
 
 
 def need_gen_new_board_config(board_name):
@@ -76,14 +75,12 @@ def main(args):
     config_board = config_dirs[0] + '/' + GEN_FILE[1]
     config_platform = config_dirs[0] + '/' + board + GEN_FILE[2]
     config_misc_cfg = config_dirs[0] + '/' + GEN_FILE[3]
-    config_ve820 = config_dirs[0] + '/' + GEN_FILE[4]
-    config_board_kconfig = ACRN_CONFIG + board + GEN_FILE[5]
+    config_board_kconfig = ACRN_CONFIG + board + GEN_FILE[4]
 
     config_srcs.append(config_pci)
     config_srcs.append(config_board)
     config_srcs.append(config_platform)
     config_srcs.append(config_misc_cfg)
-    config_srcs.append(config_ve820)
     config_srcs.append(config_board_kconfig)
 
     # generate board.c
@@ -100,13 +97,7 @@ def main(args):
     with open(config_platform, 'w+') as config:
         acpi_platform_h.generate_file(config, ACRN_DEFAULT_PLATFORM)
 
-    # generate acpi_platform.h
-    with open(config_ve820, 'w+') as config:
-        err_dic = ve820_c.generate_file(config)
-        if err_dic:
-            return err_dic
-
-    # generate acpi_platform.h
+    # generate misc_cfg.h
     with open(config_misc_cfg, 'w+') as config:
         err_dic = misc_cfg_h.generate_file(config)
         if err_dic:
