@@ -66,7 +66,7 @@ static void vdev_pt_unmap_msix(struct pci_vdev *vdev)
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-static void vdev_pt_map_msix(struct pci_vdev *vdev, bool hold_lock)
+void vdev_pt_map_msix(struct pci_vdev *vdev, bool hold_lock)
 {
 	struct pci_vbar *vbar;
 	uint64_t addr_hi, addr_lo;
@@ -262,10 +262,6 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 	}
 	pbdf.value = vdev->pdev->bdf.value;
 
-	for (offset = 0U; offset < PCI_CFG_HEADER_LENGTH; offset += 4U) {
-		pci_vdev_write_vcfg(vdev, offset, 4U, pci_pdev_read_cfg(pbdf, offset, 4U));
-	}
-
 	for (idx = 0U; idx < bar_cnt; idx++) {
 		if (is_sriov_bar) {
 			vbar = &vdev->sriov.vbars[idx];
@@ -375,10 +371,14 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 {
 	uint16_t pci_command;
+	uint32_t offset;
 
-	if (vdev->phyfun != NULL) {
-		init_sriov_vf_vdev(vdev);
-	} else {
+	for (offset = 0U; offset < PCI_CFG_HEADER_LENGTH; offset += 4U) {
+		pci_vdev_write_vcfg(vdev, offset, 4U, pci_pdev_read_cfg(vdev->pdev->bdf, offset, 4U));
+	}
+
+	/* Initialize the vdev BARs except SRIOV VF, VF BARs are initialized directly from create_vf function */
+	if (vdev->phyfun == NULL) {
 		init_bars(vdev, is_pf_vdev);
 		if (is_prelaunched_vm(vdev->vpci->vm) && (!is_pf_vdev)) {
 			pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
