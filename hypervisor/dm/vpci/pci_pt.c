@@ -387,5 +387,18 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 			pci_command |= 0x400U;
 			pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
 		}
+	} else {
+		/* VF is assigned to a UOS */
+		if (vdev->vpci != vdev->phyfun->vpci) {
+			uint32_t vid, did;
+
+			vdev->nr_bars = PCI_BAR_COUNT;
+			/* SRIOV VF Vendor ID and Device ID initialization */
+			vid = pci_pdev_read_cfg(vdev->phyfun->bdf, PCIR_VENDOR, 2U);
+			did = pci_pdev_read_cfg(vdev->phyfun->bdf,
+				(vdev->phyfun->sriov.capoff + PCIR_SRIOV_VF_DEV_ID), 2U);
+			pci_vdev_write_vcfg(vdev, PCIR_VENDOR, 2U, vid);
+			pci_vdev_write_vcfg(vdev, PCIR_DEVICE, 2U, did);
+		}
 	}
 }
