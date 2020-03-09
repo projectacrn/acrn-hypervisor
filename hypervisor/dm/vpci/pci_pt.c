@@ -167,10 +167,10 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 	case PCIBAR_IO_SPACE:
 		vdev_pt_deny_io_vbar(vdev, update_idx);
 		if (val != ~0U) {
-			pci_vdev_write_bar(vdev, idx, val);
+			pci_vdev_write_vbar(vdev, idx, val);
 			vdev_pt_allow_io_vbar(vdev, update_idx);
 		} else {
-			pci_vdev_write_cfg(vdev, offset, 4U, val);
+			pci_vdev_write_vcfg(vdev, offset, 4U, val);
 			vdev->vbars[update_idx].base = 0UL;
 		}
 		break;
@@ -185,10 +185,10 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 		}
 		vdev_pt_unmap_mem_vbar(vdev, update_idx);
 		if (val != ~0U) {
-			pci_vdev_write_bar(vdev, idx, val);
+			pci_vdev_write_vbar(vdev, idx, val);
 			vdev_pt_map_mem_vbar(vdev, update_idx);
 		} else {
-			pci_vdev_write_cfg(vdev, offset, 4U, val);
+			pci_vdev_write_vcfg(vdev, offset, 4U, val);
 			vdev->vbars[update_idx].base = 0UL;
 		}
 		break;
@@ -248,7 +248,7 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 	pbdf.value = vdev->pdev->bdf.value;
 
 	for (offset = 0U; offset < PCI_CFG_HEADER_LENGTH; offset += 4U) {
-		pci_vdev_write_cfg(vdev, offset, 4U, pci_pdev_read_cfg(pbdf, offset, 4U));
+		pci_vdev_write_vcfg(vdev, offset, 4U, pci_pdev_read_cfg(pbdf, offset, 4U));
 	}
 
 	for (idx = 0U; idx < bar_cnt; idx++) {
@@ -316,8 +316,8 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 				}
 				/* if it is parsing SRIOV VF BARs, no need to write vdev bars */
 				if (!is_sriov_bar) {
-					pci_vdev_write_bar(vdev, idx - 1U, lo);
-					pci_vdev_write_bar(vdev, idx, hi);
+					pci_vdev_write_vbar(vdev, idx - 1U, lo);
+					pci_vdev_write_vbar(vdev, idx, hi);
 				}
 			} else {
 				vbar->size = vbar->size & ~(vbar->size - 1UL);
@@ -326,7 +326,7 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 				}
 				/* if it is parsing SRIOV VF BARs, no need to write vdev bar */
 				if (!is_sriov_bar) {
-					pci_vdev_write_bar(vdev, idx, lo);
+					pci_vdev_write_vbar(vdev, idx, lo);
 				}
 			}
 		}

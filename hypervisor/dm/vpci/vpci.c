@@ -406,7 +406,7 @@ static void read_cfg_header(const struct pci_vdev *vdev,
 	if (vbar_access(vdev, offset)) {
 		/* bar access must be 4 bytes and offset must also be 4 bytes aligned */
 		if ((bytes == 4U) && ((offset & 0x3U) == 0U)) {
-			*val = pci_vdev_read_bar(vdev, pci_bar_index(offset));
+			*val = pci_vdev_read_vbar(vdev, pci_bar_index(offset));
 		} else {
 			*val = ~0U;
 		}
@@ -414,7 +414,7 @@ static void read_cfg_header(const struct pci_vdev *vdev,
 		if (bitmap32_test(((uint16_t)offset) >> 2U, &cfg_hdr_perm.pt_mask)) {
 			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
 		} else {
-			*val = pci_vdev_read_cfg(vdev, offset, bytes);
+			*val = pci_vdev_read_vcfg(vdev, offset, bytes);
 		}
 	}
 }
@@ -446,7 +446,7 @@ static void write_cfg_header(struct pci_vdev *vdev,
 			if (bitmap32_test(((uint16_t)offset) >> 2U, &cfg_hdr_perm.pt_mask)) {
 				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
 			} else {
-				pci_vdev_write_cfg(vdev, offset, bytes, val);
+				pci_vdev_write_vcfg(vdev, offset, bytes, val);
 			}
 		}
 	}
@@ -710,10 +710,10 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pc
 
 			spinlock_obtain(&tgt_vm->vpci.lock);
 			vdev = vpci_init_vdev(vpci, vdev_in_sos->pci_dev_config, NULL);
-			pci_vdev_write_cfg(vdev, PCIR_INTERRUPT_LINE, 1U, pcidev->intr_line);
-			pci_vdev_write_cfg(vdev, PCIR_INTERRUPT_PIN, 1U, pcidev->intr_pin);
+			pci_vdev_write_vcfg(vdev, PCIR_INTERRUPT_LINE, 1U, pcidev->intr_line);
+			pci_vdev_write_vcfg(vdev, PCIR_INTERRUPT_PIN, 1U, pcidev->intr_pin);
 			for (idx = 0U; idx < vdev->nr_bars; idx++) {
-				pci_vdev_write_bar(vdev, idx, pcidev->bar[idx]);
+				pci_vdev_write_vbar(vdev, idx, pcidev->bar[idx]);
 			}
 
 			vdev->bdf.value = pcidev->virt_bdf;

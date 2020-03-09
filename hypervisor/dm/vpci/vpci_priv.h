@@ -121,9 +121,9 @@ void write_sriov_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 uint32_t sriov_bar_offset(const struct pci_vdev *vdev, uint32_t bar_idx);
 void init_sriov_vf_vdev(struct pci_vdev *vdev);
 
-uint32_t pci_vdev_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
-void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
+uint32_t pci_vdev_read_vcfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
+void pci_vdev_write_vcfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 
-uint32_t pci_vdev_read_bar(const struct pci_vdev *vdev, uint32_t idx);
-void pci_vdev_write_bar(struct pci_vdev *vdev, uint32_t idx, uint32_t val);
+uint32_t pci_vdev_read_vbar(const struct pci_vdev *vdev, uint32_t idx);
+void pci_vdev_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val);
 #endif /* VPCI_PRIV_H_ */
