@@ -207,8 +207,9 @@ static void enable_vfs(struct pci_vdev *pf_vdev)
 				create_vf(pf_vdev, vf_bdf, idx);
 			} else {
 				/* Re-activate a zombie VF */
-				if (vf_vdev->vpci == NULL) {
+				if (is_zombie_vf(vf_vdev)) {
 					vf_vdev->vpci = pf_vdev->vpci;
+					vf_vdev->vdev_ops->init_vdev(vf_vdev);
 				}
 			}
 		}
@@ -250,8 +251,9 @@ static void disable_vfs(struct pci_vdev *pf_vdev)
 		bdf.fields.bus = get_vf_bus(pf_vdev, first, stride, idx);
 		bdf.fields.devfun = get_vf_devfun(pf_vdev, first, stride, idx);
 		vf_vdev = pci_find_vdev(&pf_vdev->vpci->vm->vpci, bdf);
-		if (vf_vdev != NULL) {
+		if ((vf_vdev != NULL) && (!is_zombie_vf(vf_vdev))) {
 			/* set disabled VF as zombie vdev instance */
+			vf_vdev->vdev_ops->deinit_vdev(vf_vdev);
 			vf_vdev->vpci = NULL;
 		}
 	}
