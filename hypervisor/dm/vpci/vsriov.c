@@ -81,7 +81,7 @@ static void init_sriov_vf_bar(struct pci_vdev *pf_vdev)
 /**
  * @pre pf_vdev != NULL
  */
-static void create_vf(struct pci_vdev *pf_vdev, union pci_bdf vf_bdf)
+static void create_vf(struct pci_vdev *pf_vdev, union pci_bdf vf_bdf, uint16_t vf_id)
 {
 	struct pci_pdev *vf_pdev;
 	struct pci_vdev *vf_vdev = NULL;
@@ -112,6 +112,31 @@ static void create_vf(struct pci_vdev *pf_vdev, union pci_bdf vf_bdf)
 		pci_pdev_write_cfg(pf_vdev->bdf, pf_vdev->sriov.capoff + PCIR_SRIOV_CONTROL, 2U, control);
 		pr_err("PF %x:%x.%x can't creat VF, unset VF_ENABLE",
 			pf_vdev->bdf.bits.b, pf_vdev->bdf.bits.d, pf_vdev->bdf.bits.f);
+	} else {
+		uint16_t bar_idx;
+		struct pci_vbar *vf_vbar;
+
+		/* VF bars information from its PF SRIOV capability, no need to access physical device */
+		vf_vdev->nr_bars = PCI_BAR_COUNT;
+		for (bar_idx = 0U; bar_idx < PCI_BAR_COUNT; bar_idx++) {
+			vf_vbar = &vf_vdev->vbars[bar_idx];
+			*vf_vbar = vf_vdev->phyfun->sriov.vbars[bar_idx];
+			vf_vbar->base_hpa += (vf_vbar->size * vf_id);
+			vf_vbar->base = vf_vbar->base_hpa;
+			if (has_msix_cap(vf_vdev) && (bar_idx == vf_vdev->msix.table_bar)) {
+				vf_vdev->msix.mmio_hpa = vf_vbar->base_hpa;
+				vf_vdev->msix.mmio_size = vf_vbar->size;
+			}
+			/*
+			 * VF BARs value are zero and read only, according to PCI Express
+			 * Base 4.0 chapter 9.3.4.1.11, the VF
+			 */
+			pci_vdev_write_vcfg(vf_vdev, pci_bar_offset(bar_idx), 4U, 0U);
+		}
+
+		if (has_msix_cap(vf_vdev)) {
+			vdev_pt_map_msix(vf_vdev, false);
+		}
 	}
 }
 
@@ -170,7 +195,7 @@ static void enable_vf(struct pci_vdev *pf_vdev)
 
 			/* if one VF has never been created then create new pdev/vdev for this VF */
 			if (pci_find_vdev(&pf_vdev->vpci->vm->vpci, vf_bdf) == NULL) {
-				create_vf(pf_vdev, vf_bdf);
+				create_vf(pf_vdev, vf_bdf, idx);
 			}
 		}
 	} else {
@@ -269,13 +294,4 @@ void write_sriov_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 uint32_t sriov_bar_offset(const struct pci_vdev *vdev, uint32_t bar_idx)
 {
 	return (vdev->sriov.capoff + PCIR_SRIOV_VF_BAR_OFF + (bar_idx << 2U));
-}
-
-/**
- * @pre vdev != NULL
- */
-void init_sriov_vf_vdev(struct pci_vdev *vdev)
-{
-	/* Implementation in next path */
-	(void)vdev;
 }
