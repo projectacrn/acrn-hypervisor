@@ -144,7 +144,7 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 		base = 0UL;
 	}
 
-	vdev->vbars[idx].base = base;
+	vdev->vbars[idx].base_gpa = base;
 }
 
 void pci_vdev_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)

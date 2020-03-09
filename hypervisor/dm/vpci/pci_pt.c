@@ -74,15 +74,15 @@ void vdev_pt_map_msix(struct pci_vdev *vdev, bool hold_lock)
 	struct acrn_vm *vm = vdev->vpci->vm;
 
 	vbar = &vdev->vbars[vdev->msix.table_bar];
-	if (vbar->base != 0UL) {
-		addr_lo = vbar->base + msix->table_offset;
+	if (vbar->base_gpa != 0UL) {
+		addr_lo = vbar->base_gpa + msix->table_offset;
 		addr_hi = addr_lo + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
 		addr_lo = round_page_down(addr_lo);
 		addr_hi = round_page_up(addr_hi);
 		register_mmio_emulation_handler(vm, vmsix_handle_table_mmio_access,
 				addr_lo, addr_hi, vdev, hold_lock);
 		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, addr_lo, addr_hi - addr_lo);
-		msix->mmio_gpa = vbar->base;
+		msix->mmio_gpa = vbar->base_gpa;
 	}
 }
 
@@ -98,9 +98,9 @@ static void vdev_pt_unmap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 
 	vbar = &vdev->vbars[idx];
 
-	if (vbar->base != 0UL) {
+	if (vbar->base_gpa != 0UL) {
 		ept_del_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
-			vbar->base, /* GPA (old vbar) */
+			vbar->base_gpa, /* GPA (old vbar) */
 			vbar->size);
 	}
 
@@ -121,10 +121,10 @@ static void vdev_pt_map_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 
 	vbar = &vdev->vbars[idx];
 
-	if (vbar->base != 0UL) {
+	if (vbar->base_gpa != 0UL) {
 		ept_add_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
 			vbar->base_hpa, /* HPA (pbar) */
-			vbar->base, /* GPA (new vbar) */
+			vbar->base_gpa, /* GPA (new vbar) */
 			vbar->size,
 			EPT_WR | EPT_RD | EPT_UNCACHED);
 	}
@@ -145,8 +145,8 @@ static void vdev_pt_allow_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 	/* For SOS, all port IO access is allowed by default, so skip SOS here */
 	if (!is_sos_vm(vdev->vpci->vm)) {
 		struct pci_vbar *vbar = &vdev->vbars[idx];
-		if (vbar->base != 0UL) {
-			allow_guest_pio_access(vdev->vpci->vm, (uint16_t)vbar->base, (uint32_t)(vbar->size));
+		if (vbar->base_gpa != 0UL) {
+			allow_guest_pio_access(vdev->vpci->vm, (uint16_t)vbar->base_gpa, (uint32_t)(vbar->size));
 		}
 	}
 }
@@ -162,8 +162,8 @@ static void vdev_pt_deny_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 	/* For SOS, all port IO access is allowed by default, so skip SOS here */
 	if (!is_sos_vm(vdev->vpci->vm)) {
 		struct pci_vbar *vbar = &vdev->vbars[idx];
-		if (vbar->base != 0UL) {
-			deny_guest_pio_access(vdev->vpci->vm, (uint16_t)(vbar->base), (uint32_t)(vbar->size));
+		if (vbar->base_gpa != 0UL) {
+			deny_guest_pio_access(vdev->vpci->vm, (uint16_t)(vbar->base_gpa), (uint32_t)(vbar->size));
 		}
 
 	}
@@ -186,7 +186,7 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 			vdev_pt_allow_io_vbar(vdev, update_idx);
 		} else {
 			pci_vdev_write_vcfg(vdev, offset, 4U, val);
-			vdev->vbars[update_idx].base = 0UL;
+			vdev->vbars[update_idx].base_gpa = 0UL;
 		}
 		break;
 
@@ -204,7 +204,7 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 			vdev_pt_map_mem_vbar(vdev, update_idx);
 		} else {
 			pci_vdev_write_vcfg(vdev, offset, 4U, val);
-			vdev->vbars[update_idx].base = 0UL;
+			vdev->vbars[update_idx].base_gpa = 0UL;
 		}
 		break;
 	}
