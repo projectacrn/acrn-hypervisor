@@ -35,7 +35,7 @@
 /**
  * @pre vdev != NULL
  */
-uint32_t pci_vdev_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes)
+uint32_t pci_vdev_read_vcfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes)
 {
 	uint32_t val;
 
@@ -57,7 +57,7 @@ uint32_t pci_vdev_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_
 /**
  * @pre vdev != NULL
  */
-void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
+void pci_vdev_write_vcfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	switch (bytes) {
 	case 1U:
@@ -94,12 +94,12 @@ struct pci_vdev *pci_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf)
 	return vdev;
 }
 
-uint32_t pci_vdev_read_bar(const struct pci_vdev *vdev, uint32_t idx)
+uint32_t pci_vdev_read_vbar(const struct pci_vdev *vdev, uint32_t idx)
 {
 	uint32_t bar, offset;
 
 	offset = pci_bar_offset(idx);
-	bar = pci_vdev_read_cfg(vdev, offset, 4U);
+	bar = pci_vdev_read_vcfg(vdev, offset, 4U);
 	/* Sizing BAR */
 	if (bar == ~0U) {
 		bar = vdev->vbars[idx].mask | vdev->vbars[idx].fixed;
@@ -107,7 +107,7 @@ uint32_t pci_vdev_read_bar(const struct pci_vdev *vdev, uint32_t idx)
 	return bar;
 }
 
-static void pci_vdev_update_bar_base(struct pci_vdev *vdev, uint32_t idx)
+static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 {
 	struct pci_vbar *vbar;
 	enum pci_bar_type type;
@@ -117,14 +117,14 @@ static void pci_vdev_update_bar_base(struct pci_vdev *vdev, uint32_t idx)
 
 	vbar = &vdev->vbars[idx];
 	offset = pci_bar_offset(idx);
-	lo = pci_vdev_read_cfg(vdev, offset, 4U);
+	lo = pci_vdev_read_vcfg(vdev, offset, 4U);
 	if ((vbar->type != PCIBAR_NONE) && (lo != ~0U)) {
 		type = vbar->type;
 		base = lo & vbar->mask;
 
 		if (vbar->type == PCIBAR_MEM64) {
 			vbar = &vdev->vbars[idx + 1U];
-			hi = pci_vdev_read_cfg(vdev, (offset + 4U), 4U);
+			hi = pci_vdev_read_vcfg(vdev, (offset + 4U), 4U);
 			if (hi != ~0U) {
 				hi &= vbar->mask;
 				base |= ((uint64_t)hi << 32U);
@@ -147,7 +147,7 @@ static void pci_vdev_update_bar_base(struct pci_vdev *vdev, uint32_t idx)
 	vdev->vbars[idx].base = base;
 }
 
-void pci_vdev_write_bar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
+void pci_vdev_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 {
 	struct pci_vbar *vbar;
 	uint32_t bar, offset;
@@ -157,11 +157,11 @@ void pci_vdev_write_bar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 	bar = val & vbar->mask;
 	bar |= vbar->fixed;
 	offset = pci_bar_offset(idx);
-	pci_vdev_write_cfg(vdev, offset, 4U, bar);
+	pci_vdev_write_vcfg(vdev, offset, 4U, bar);
 
 	if (vbar->type == PCIBAR_MEM64HI) {
 		update_idx -= 1U;
 	}
 
-	pci_vdev_update_bar_base(vdev, update_idx);
+	pci_vdev_update_vbar_base(vdev, update_idx);
 }

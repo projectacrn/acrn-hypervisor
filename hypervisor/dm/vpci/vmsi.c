@@ -69,12 +69,12 @@ static void remap_vmsi(const struct pci_vdev *vdev)
 	uint32_t vmsi_msgdata, vmsi_addrlo, vmsi_addrhi = 0U;
 
 	/* Read the MSI capability structure from virtual device */
-	vmsi_addrlo = pci_vdev_read_cfg(vdev, (capoff + PCIR_MSI_ADDR), 4U);
+	vmsi_addrlo = pci_vdev_read_vcfg(vdev, (capoff + PCIR_MSI_ADDR), 4U);
 	if (vdev->msi.is_64bit) {
-		vmsi_addrhi = pci_vdev_read_cfg(vdev, (capoff + PCIR_MSI_ADDR_HIGH), 4U);
-		vmsi_msgdata = pci_vdev_read_cfg(vdev, (capoff + PCIR_MSI_DATA_64BIT), 2U);
+		vmsi_addrhi = pci_vdev_read_vcfg(vdev, (capoff + PCIR_MSI_ADDR_HIGH), 4U);
+		vmsi_msgdata = pci_vdev_read_vcfg(vdev, (capoff + PCIR_MSI_DATA_64BIT), 2U);
 	} else {
-		vmsi_msgdata = pci_vdev_read_cfg(vdev, (capoff + PCIR_MSI_DATA), 2U);
+		vmsi_msgdata = pci_vdev_read_vcfg(vdev, (capoff + PCIR_MSI_DATA), 2U);
 	}
 	info.vmsi_addr.full = (uint64_t)vmsi_addrlo | ((uint64_t)vmsi_addrhi << 32U);
 	info.vmsi_data.full = vmsi_msgdata;
@@ -101,7 +101,7 @@ static void remap_vmsi(const struct pci_vdev *vdev)
 void vmsi_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	/* For PIO access, we emulate Capability Structures only */
-	*val = pci_vdev_read_cfg(vdev, offset, bytes);
+	*val = pci_vdev_read_vcfg(vdev, offset, bytes);
 }
 
 /**
@@ -114,9 +114,9 @@ void vmsi_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint
 	uint32_t msgctrl;
 
 	enable_disable_msi(vdev, false);
-	pci_vdev_write_cfg(vdev, offset, bytes, val);
+	pci_vdev_write_vcfg(vdev, offset, bytes, val);
 
-	msgctrl = pci_vdev_read_cfg(vdev, vdev->msi.capoff + PCIR_MSI_CTRL, 2U);
+	msgctrl = pci_vdev_read_vcfg(vdev, vdev->msi.capoff + PCIR_MSI_CTRL, 2U);
 	if ((msgctrl & PCIM_MSICTRL_MSI_ENABLE) != 0U) {
 		remap_vmsi(vdev);
 	}
@@ -152,7 +152,7 @@ void init_vmsi(struct pci_vdev *vdev)
 
 		val &= ~((uint32_t)PCIM_MSICTRL_MMC_MASK << 16U);
 		val &= ~((uint32_t)PCIM_MSICTRL_MME_MASK << 16U);
-		pci_vdev_write_cfg(vdev, vdev->msi.capoff, 4U, val);
+		pci_vdev_write_vcfg(vdev, vdev->msi.capoff, 4U, val);
 	}
 }
 

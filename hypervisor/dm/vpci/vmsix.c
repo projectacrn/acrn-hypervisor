@@ -116,7 +116,7 @@ static void remap_one_vmsix_entry(const struct pci_vdev *vdev, uint32_t index)
 void vmsix_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	/* For PIO access, we emulate Capability Structures only */
-	*val = pci_vdev_read_cfg(vdev, offset, bytes);
+	*val = pci_vdev_read_vcfg(vdev, offset, bytes);
 }
 
 /**
@@ -129,10 +129,10 @@ void vmsix_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uin
 {
 	uint32_t old_msgctrl, msgctrl;
 
-	old_msgctrl = pci_vdev_read_cfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
+	old_msgctrl = pci_vdev_read_vcfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
 	/* Write to vdev */
-	pci_vdev_write_cfg(vdev, offset, bytes, val);
-	msgctrl = pci_vdev_read_cfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
+	pci_vdev_write_vcfg(vdev, offset, bytes, val);
+	msgctrl = pci_vdev_read_vcfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
 
 	if (((old_msgctrl ^ msgctrl) & (PCIM_MSIXCTRL_MSIX_ENABLE | PCIM_MSIXCTRL_FUNCTION_MASK)) != 0U) {
 		/* If MSI Enable is being set, make sure INTxDIS bit is set */

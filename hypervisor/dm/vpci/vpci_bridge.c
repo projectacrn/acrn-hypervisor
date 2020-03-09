@@ -58,18 +58,18 @@ static void init_vpci_bridge(struct pci_vdev *vdev)
 	/* read PCI config space to virtual space */
 	for (offset = 0x00U; offset < 0x100U; offset += 4U) {
 		val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, 4U);
-		pci_vdev_write_cfg(vdev, offset, 4U, val);
+		pci_vdev_write_vcfg(vdev, offset, 4U, val);
 	}
 
 	/* emulated for type info */
-	pci_vdev_write_cfg(vdev, PCIR_VENDOR, 2U, 0x8086U);
-	pci_vdev_write_cfg(vdev, PCIR_DEVICE, 2U, 0x9d12U);
+	pci_vdev_write_vcfg(vdev, PCIR_VENDOR, 2U, 0x8086U);
+	pci_vdev_write_vcfg(vdev, PCIR_DEVICE, 2U, 0x9d12U);
 
-	pci_vdev_write_cfg(vdev, PCIR_REVID, 1U, 0xf1U);
+	pci_vdev_write_vcfg(vdev, PCIR_REVID, 1U, 0xf1U);
 
-	pci_vdev_write_cfg(vdev, PCIR_HDRTYPE, 1U, (PCIM_HDRTYPE_BRIDGE | PCIM_MFDEV));
-	pci_vdev_write_cfg(vdev, PCIR_CLASS, 1U, PCIC_BRIDGE);
-	pci_vdev_write_cfg(vdev, PCIR_SUBCLASS, 1U, PCIS_BRIDGE_PCI);
+	pci_vdev_write_vcfg(vdev, PCIR_HDRTYPE, 1U, (PCIM_HDRTYPE_BRIDGE | PCIM_MFDEV));
+	pci_vdev_write_vcfg(vdev, PCIR_CLASS, 1U, PCIC_BRIDGE);
+	pci_vdev_write_vcfg(vdev, PCIR_SUBCLASS, 1U, PCIS_BRIDGE_PCI);
 }
 
 static void deinit_vpci_bridge(__unused struct pci_vdev *vdev)
@@ -80,7 +80,7 @@ static int32_t read_vpci_bridge_cfg(const struct pci_vdev *vdev, uint32_t offset
 	uint32_t bytes, uint32_t *val)
 {
 	if ((offset + bytes) <= 0x100U) {
-		*val = pci_vdev_read_cfg(vdev, offset, bytes);
+		*val = pci_vdev_read_vcfg(vdev, offset, bytes);
 	} else {
 		/* just passthru read to physical device when read PCIE sapce > 0x100 */
 		*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
