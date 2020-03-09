@@ -206,6 +206,31 @@ static inline uint16_t vmid_2_rel_vmid(uint16_t sos_vmid, uint16_t vmid) {
 	return (vmid - sos_vmid);
 }
 
+/**
+ * @brief Check if the vdev belongs to the vm
+ *
+ * @param vm   Pointer to a vm instance
+ * @param vdev Pointer to a vdev instance
+ *
+ * @return  If the vm owns the vdev device return true, otherwsie return false
+ */
+static inline bool is_own_device(const struct acrn_vm *vm, const struct pci_vdev *vdev)
+{
+	return (&vm->vpci == vdev->vpci);
+}
+
+/**
+ * @brief Check if the specified vdev is a zombie VF instance
+ *
+ * @param vdev Pointer to vdev instance
+ *
+ * @return If the vdev is a zombie VF instance return true, otherwise return false
+ */
+static inline bool is_zombie_vf(const struct pci_vdev *vdev)
+{
+	return (vdev->vpci == NULL);
+}
+
 void make_shutdown_vm_request(uint16_t pcpu_id);
 bool need_shutdown_vm(uint16_t pcpu_id);
 int32_t shutdown_vm(struct acrn_vm *vm);

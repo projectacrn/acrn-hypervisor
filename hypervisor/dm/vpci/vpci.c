@@ -637,7 +637,10 @@ static void deinit_prelaunched_vm_vpci(struct acrn_vm *vm)
 	for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
 		vdev = (struct pci_vdev *) &(vm->vpci.pci_vdevs[i]);
 
-		vdev->vdev_ops->deinit_vdev(vdev);
+		/* Only deinit the VM's own devices */
+		if (is_own_device(vm, vdev)) {
+			vdev->vdev_ops->deinit_vdev(vdev);
+		}
 	}
 }
 
@@ -669,7 +672,8 @@ static void deinit_postlaunched_vm_vpci(struct acrn_vm *vm)
 	for (i = 0U; i < sos_vm->vpci.pci_vdev_cnt; i++) {
 		vdev = (struct pci_vdev *)&(sos_vm->vpci.pci_vdevs[i]);
 
-		if (vdev->vpci->vm == vm) {
+		/* Only deinit the VM's own devices */
+		if (is_own_device(vm, vdev)) {
 			spinlock_obtain(&vm->vpci.lock);
 			target_vdev = vdev->new_owner;
 			ret = move_pt_device(vm->iommu, sos_vm->iommu, (uint8_t)target_vdev->pdev->bdf.bits.b,
@@ -716,7 +720,7 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pc
 	 *
 	 * For now, we don't support assignment of PF to a UOS.
 	 */
-	if ((vdev_in_sos != NULL) && (vdev_in_sos->vpci->vm == sos_vm) && (vdev_in_sos->pdev != NULL) && (!has_sriov_cap(vdev_in_sos))) {
+	if ((vdev_in_sos != NULL) && is_own_device(sos_vm, vdev_in_sos) && (vdev_in_sos->pdev != NULL) && (!has_sriov_cap(vdev_in_sos))) {
 		/* ToDo: Each PT device must support one type reset */
 		if (!vdev_in_sos->pdev->has_pm_reset && !vdev_in_sos->pdev->has_flr &&
 				!vdev_in_sos->pdev->has_af_flr) {
@@ -781,7 +785,7 @@ int32_t vpci_deassign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *
 	sos_vm = get_sos_vm();
 	spinlock_obtain(&sos_vm->vpci.lock);
 	vdev_in_sos = pci_find_vdev(&sos_vm->vpci, bdf);
-	if ((vdev_in_sos != NULL) && (vdev_in_sos->vpci->vm == tgt_vm) && (vdev_in_sos->pdev != NULL)) {
+	if ((vdev_in_sos != NULL) && is_own_device(tgt_vm, vdev_in_sos) && (vdev_in_sos->pdev != NULL)) {
 		vdev = vdev_in_sos->new_owner;
 
 		spinlock_obtain(&tgt_vm->vpci.lock);
