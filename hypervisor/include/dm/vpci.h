@@ -37,7 +37,7 @@
 struct pci_vbar {
 	enum pci_bar_type type;
 	uint64_t size;		/* BAR size */
-	uint64_t base;		/* BAR guest physical address */
+	uint64_t base_gpa;	/* BAR guest physical address */
 	uint64_t base_hpa;	/* BAR host physical address */
 	uint32_t fixed;		/* BAR fix memory type encoding */
 	uint32_t mask;		/* BAR size mask */

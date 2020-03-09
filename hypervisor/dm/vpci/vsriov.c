@@ -122,7 +122,7 @@ static void create_vf(struct pci_vdev *pf_vdev, union pci_bdf vf_bdf, uint16_t v
 			vf_vbar = &vf_vdev->vbars[bar_idx];
 			*vf_vbar = vf_vdev->phyfun->sriov.vbars[bar_idx];
 			vf_vbar->base_hpa += (vf_vbar->size * vf_id);
-			vf_vbar->base = vf_vbar->base_hpa;
+			vf_vbar->base_gpa = vf_vbar->base_hpa;
 			if (has_msix_cap(vf_vdev) && (bar_idx == vf_vdev->msix.table_bar)) {
 				vf_vdev->msix.mmio_hpa = vf_vbar->base_hpa;
 				vf_vdev->msix.mmio_size = vf_vbar->size;
@@ -145,7 +145,7 @@ static void create_vf(struct pci_vdev *pf_vdev, union pci_bdf vf_bdf, uint16_t v
  * @pre is_vf_enabled(pf_dev) == true
  * @Application constraints: PCIR_SRIOV_NUMVFS register value cannot be 0 if VF_ENABLE is set.
  */
-static void enable_vf(struct pci_vdev *pf_vdev)
+static void enable_vfs(struct pci_vdev *pf_vdev)
 {
 	union pci_bdf vf_bdf;
 	uint16_t idx;
@@ -225,7 +225,7 @@ static void enable_vf(struct pci_vdev *pf_vdev)
 /**
  * @pre pf_vdev != NULL
  */
-static void disable_vf(struct pci_vdev *pf_vdev)
+static void disable_vfs(struct pci_vdev *pf_vdev)
 {
 	uint16_t idx, num_vfs, stride, first;
 	struct pci_vdev *vf_vdev;
@@ -296,14 +296,14 @@ void write_sriov_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 		if (enable != is_vf_enabled(vdev)) {
 			if (enable) {
 				/*
-				 * set VF_ENABLE to PF physical device before enable_vf
+				 * set VF_ENABLE to PF physical device before enable_vfs
 				 * since need to ask hardware to create VF physical
 				 * devices firstly
 				 */
 				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
-				enable_vf(vdev);
+				enable_vfs(vdev);
 			} else {
-				disable_vf(vdev);
+				disable_vfs(vdev);
 				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
 			}
 		} else {
