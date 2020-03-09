@@ -47,46 +47,45 @@
 static void init_vhostbridge(struct pci_vdev *vdev)
 {
 	/* PCI config space */
-	pci_vdev_write_cfg_u16(vdev, PCIR_VENDOR, (uint16_t)0x8086U);
-	pci_vdev_write_cfg_u16(vdev, PCIR_DEVICE, (uint16_t)0x5af0U);
+	pci_vdev_write_cfg(vdev, PCIR_VENDOR, 2U, 0x8086U);
+	pci_vdev_write_cfg(vdev, PCIR_DEVICE, 2U, 0x5af0U);
 
-	pci_vdev_write_cfg_u8(vdev, PCIR_REVID, (uint8_t)0xbU);
+	pci_vdev_write_cfg(vdev, PCIR_REVID, 1U, 0xbU);
 
-	pci_vdev_write_cfg_u8(vdev, PCIR_HDRTYPE, (uint8_t)PCIM_HDRTYPE_NORMAL
-			| PCIM_MFDEV);
-	pci_vdev_write_cfg_u8(vdev, PCIR_CLASS, (uint8_t)PCIC_BRIDGE);
-	pci_vdev_write_cfg_u8(vdev, PCIR_SUBCLASS, (uint8_t)PCIS_BRIDGE_HOST);
+	pci_vdev_write_cfg(vdev, PCIR_HDRTYPE, 1U, (PCIM_HDRTYPE_NORMAL | PCIM_MFDEV));
+	pci_vdev_write_cfg(vdev, PCIR_CLASS, 1U, PCIC_BRIDGE);
+	pci_vdev_write_cfg(vdev, PCIR_SUBCLASS, 1U, PCIS_BRIDGE_HOST);
 
-	pci_vdev_write_cfg_u8(vdev, 0x34U, (uint8_t)0xe0U);
-	pci_vdev_write_cfg_u8(vdev, 0x3cU, (uint8_t)0xe0U);
-	pci_vdev_write_cfg_u8(vdev, 0x48U, (uint8_t)0x1U);
-	pci_vdev_write_cfg_u8(vdev, 0x4aU, (uint8_t)0xd1U);
-	pci_vdev_write_cfg_u8(vdev, 0x4bU, (uint8_t)0xfeU);
-	pci_vdev_write_cfg_u8(vdev, 0x50U, (uint8_t)0xc1U);
-	pci_vdev_write_cfg_u8(vdev, 0x51U, (uint8_t)0x2U);
-	pci_vdev_write_cfg_u8(vdev, 0x54U, (uint8_t)0x33U);
-	pci_vdev_write_cfg_u8(vdev, 0x58U, (uint8_t)0x7U);
-	pci_vdev_write_cfg_u8(vdev, 0x5aU, (uint8_t)0xf0U);
-	pci_vdev_write_cfg_u8(vdev, 0x5bU, (uint8_t)0x7fU);
-	pci_vdev_write_cfg_u8(vdev, 0x60U, (uint8_t)0x1U);
-	pci_vdev_write_cfg_u8(vdev, 0x63U, (uint8_t)0xe0U);
-	pci_vdev_write_cfg_u8(vdev, 0xabU, (uint8_t)0x80U);
-	pci_vdev_write_cfg_u8(vdev, 0xacU, (uint8_t)0x2U);
-	pci_vdev_write_cfg_u8(vdev, 0xb0U, (uint8_t)0x1U);
-	pci_vdev_write_cfg_u8(vdev, 0xb3U, (uint8_t)0x7cU);
-	pci_vdev_write_cfg_u8(vdev, 0xb4U, (uint8_t)0x1U);
-	pci_vdev_write_cfg_u8(vdev, 0xb6U, (uint8_t)0x80U);
-	pci_vdev_write_cfg_u8(vdev, 0xb7U, (uint8_t)0x7bU);
-	pci_vdev_write_cfg_u8(vdev, 0xb8U, (uint8_t)0x1U);
-	pci_vdev_write_cfg_u8(vdev, 0xbbU, (uint8_t)0x7bU);
-	pci_vdev_write_cfg_u8(vdev, 0xbcU, (uint8_t)0x1U);
-	pci_vdev_write_cfg_u8(vdev, 0xbfU, (uint8_t)0x80U);
-	pci_vdev_write_cfg_u8(vdev, 0xe0U, (uint8_t)0x9U);
-	pci_vdev_write_cfg_u8(vdev, 0xe2U, (uint8_t)0xcU);
-	pci_vdev_write_cfg_u8(vdev, 0xe3U, (uint8_t)0x1U);
-	pci_vdev_write_cfg_u8(vdev, 0xf5U, (uint8_t)0xfU);
-	pci_vdev_write_cfg_u8(vdev, 0xf6U, (uint8_t)0x1cU);
-	pci_vdev_write_cfg_u8(vdev, 0xf7U, (uint8_t)0x1U);
+	pci_vdev_write_cfg(vdev, 0x34U, 1U, 0xe0U);
+	pci_vdev_write_cfg(vdev, 0x3cU, 1U, 0xe0U);
+	pci_vdev_write_cfg(vdev, 0x48U, 1U, 0x1U);
+	pci_vdev_write_cfg(vdev, 0x4aU, 1U, 0xd1U);
+	pci_vdev_write_cfg(vdev, 0x4bU, 1U, 0xfeU);
+	pci_vdev_write_cfg(vdev, 0x50U, 1U, 0xc1U);
+	pci_vdev_write_cfg(vdev, 0x51U, 1U, 0x2U);
+	pci_vdev_write_cfg(vdev, 0x54U, 1U, 0x33U);
+	pci_vdev_write_cfg(vdev, 0x58U, 1U, 0x7U);
+	pci_vdev_write_cfg(vdev, 0x5aU, 1U, 0xf0U);
+	pci_vdev_write_cfg(vdev, 0x5bU, 1U, 0x7fU);
+	pci_vdev_write_cfg(vdev, 0x60U, 1U, 0x1U);
+	pci_vdev_write_cfg(vdev, 0x63U, 1U, 0xe0U);
+	pci_vdev_write_cfg(vdev, 0xabU, 1U, 0x80U);
+	pci_vdev_write_cfg(vdev, 0xacU, 1U, 0x2U);
+	pci_vdev_write_cfg(vdev, 0xb0U, 1U, 0x1U);
+	pci_vdev_write_cfg(vdev, 0xb3U, 1U, 0x7cU);
+	pci_vdev_write_cfg(vdev, 0xb4U, 1U, 0x1U);
+	pci_vdev_write_cfg(vdev, 0xb6U, 1U, 0x80U);
+	pci_vdev_write_cfg(vdev, 0xb7U, 1U, 0x7bU);
+	pci_vdev_write_cfg(vdev, 0xb8U, 1U, 0x1U);
+	pci_vdev_write_cfg(vdev, 0xbbU, 1U, 0x7bU);
+	pci_vdev_write_cfg(vdev, 0xbcU, 1U, 0x1U);
+	pci_vdev_write_cfg(vdev, 0xbfU, 1U, 0x80U);
+	pci_vdev_write_cfg(vdev, 0xe0U, 1U, 0x9U);
+	pci_vdev_write_cfg(vdev, 0xe2U, 1U, 0xcU);
+	pci_vdev_write_cfg(vdev, 0xe3U, 1U, 0x1U);
+	pci_vdev_write_cfg(vdev, 0xf5U, 1U, 0xfU);
+	pci_vdev_write_cfg(vdev, 0xf6U, 1U, 0x1cU);
+	pci_vdev_write_cfg(vdev, 0xf7U, 1U, 0x1U);
 }
 
 static void deinit_vhostbridge(__unused struct pci_vdev *vdev)

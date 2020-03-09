@@ -710,8 +710,8 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pc
 
 			spinlock_obtain(&tgt_vm->vpci.lock);
 			vdev = vpci_init_vdev(vpci, vdev_in_sos->pci_dev_config, NULL);
-			pci_vdev_write_cfg_u8(vdev, PCIR_INTERRUPT_LINE, pcidev->intr_line);
-			pci_vdev_write_cfg_u8(vdev, PCIR_INTERRUPT_PIN, pcidev->intr_pin);
+			pci_vdev_write_cfg(vdev, PCIR_INTERRUPT_LINE, 1U, pcidev->intr_line);
+			pci_vdev_write_cfg(vdev, PCIR_INTERRUPT_PIN, 1U, pcidev->intr_pin);
 			for (idx = 0U; idx < vdev->nr_bars; idx++) {
 				pci_vdev_write_bar(vdev, idx, pcidev->bar[idx]);
 			}
