@@ -425,6 +425,12 @@ static void read_cfg_header(const struct pci_vdev *vdev,
 	} else {
 		if (bitmap32_test(((uint16_t)offset) >> 2U, &cfg_hdr_perm.pt_mask)) {
 			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+
+			/* MSE(Memory Space Enable) bit always be set for an assigned VF */
+			if ((vdev->phyfun != NULL) && (offset == PCIR_COMMAND) &&
+					(vdev->vpci != vdev->phyfun->vpci)) {
+				*val |= PCIM_CMD_MEMEN;
+			}
 		} else {
 			*val = pci_vdev_read_vcfg(vdev, offset, bytes);
 		}
@@ -721,10 +727,18 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pc
 			vdev_in_sos->vpci = vpci;
 
 			spinlock_obtain(&tgt_vm->vpci.lock);
-			vdev = vpci_init_vdev(vpci, vdev_in_sos->pci_dev_config, NULL);
+			vdev = vpci_init_vdev(vpci, vdev_in_sos->pci_dev_config, vdev_in_sos->phyfun);
 			pci_vdev_write_vcfg(vdev, PCIR_INTERRUPT_LINE, 1U, pcidev->intr_line);
 			pci_vdev_write_vcfg(vdev, PCIR_INTERRUPT_PIN, 1U, pcidev->intr_pin);
 			for (idx = 0U; idx < vdev->nr_bars; idx++) {
+				/* VF is assigned to a UOS */
+				if (vdev->phyfun != NULL) {
+					vdev->vbars[idx] = vdev_in_sos->vbars[idx];
+					if (has_msix_cap(vdev) && (idx == vdev->msix.table_bar)) {
+						vdev->msix.mmio_hpa = vdev->vbars[idx].base_hpa;
+						vdev->msix.mmio_size = vdev->vbars[idx].size;
+					}
+				}
 				pci_vdev_write_vbar(vdev, idx, pcidev->bar[idx]);
 			}
 
