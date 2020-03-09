@@ -40,30 +40,6 @@ static inline bool in_range(uint32_t value, uint32_t lower, uint32_t len)
 /**
  * @pre vdev != NULL
  */
-static inline void pci_vdev_write_cfg_u8(struct pci_vdev *vdev, uint32_t offset, uint8_t val)
-{
-	vdev->cfgdata.data_8[offset] = val;
-}
-
-/**
- * @pre vdev != NULL
- */
-static inline void pci_vdev_write_cfg_u16(struct pci_vdev *vdev, uint32_t offset, uint16_t val)
-{
-	vdev->cfgdata.data_16[offset >> 1U] = val;
-}
-
-/**
- * @pre vdev != NULL
- */
-static inline void pci_vdev_write_cfg_u32(struct pci_vdev *vdev, uint32_t offset, uint32_t val)
-{
-	vdev->cfgdata.data_32[offset >> 2U] = val;
-}
-
-/**
- * @pre vdev != NULL
- */
 static inline bool has_msix_cap(const struct pci_vdev *vdev)
 {
 	return (vdev->msix.capoff != 0U);

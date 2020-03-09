@@ -61,13 +61,13 @@ void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, 
 {
 	switch (bytes) {
 	case 1U:
-		pci_vdev_write_cfg_u8(vdev, offset, (uint8_t)val);
+		vdev->cfgdata.data_8[offset] = (uint8_t)val;
 		break;
 	case 2U:
-		pci_vdev_write_cfg_u16(vdev, offset, (uint16_t)val);
+		vdev->cfgdata.data_16[offset >> 1U] = (uint16_t)val;
 		break;
 	default:
-		pci_vdev_write_cfg_u32(vdev, offset, val);
+		vdev->cfgdata.data_32[offset >> 2U] = val;
 		break;
 	}
 }
@@ -157,7 +157,7 @@ void pci_vdev_write_bar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 	bar = val & vbar->mask;
 	bar |= vbar->fixed;
 	offset = pci_bar_offset(idx);
-	pci_vdev_write_cfg_u32(vdev, offset, bar);
+	pci_vdev_write_cfg(vdev, offset, 4U, bar);
 
 	if (vbar->type == PCIBAR_MEM64HI) {
 		update_idx -= 1U;

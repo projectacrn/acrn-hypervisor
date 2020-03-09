@@ -58,18 +58,18 @@ static void init_vpci_bridge(struct pci_vdev *vdev)
 	/* read PCI config space to virtual space */
 	for (offset = 0x00U; offset < 0x100U; offset += 4U) {
 		val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, 4U);
-		pci_vdev_write_cfg_u32(vdev, offset, val);
+		pci_vdev_write_cfg(vdev, offset, 4U, val);
 	}
 
 	/* emulated for type info */
-	pci_vdev_write_cfg_u16(vdev, PCIR_VENDOR, (uint16_t)0x8086U);
-	pci_vdev_write_cfg_u16(vdev, PCIR_DEVICE, (uint16_t)0x9d12U);
+	pci_vdev_write_cfg(vdev, PCIR_VENDOR, 2U, 0x8086U);
+	pci_vdev_write_cfg(vdev, PCIR_DEVICE, 2U, 0x9d12U);
 
-	pci_vdev_write_cfg_u8(vdev, PCIR_REVID, (uint8_t)0xf1U);
+	pci_vdev_write_cfg(vdev, PCIR_REVID, 1U, 0xf1U);
 
-	pci_vdev_write_cfg_u8(vdev, PCIR_HDRTYPE, (uint8_t)(PCIM_HDRTYPE_BRIDGE | PCIM_MFDEV));
-	pci_vdev_write_cfg_u8(vdev, PCIR_CLASS, (uint8_t)PCIC_BRIDGE);
-	pci_vdev_write_cfg_u8(vdev, PCIR_SUBCLASS, (uint8_t)PCIS_BRIDGE_PCI);
+	pci_vdev_write_cfg(vdev, PCIR_HDRTYPE, 1U, (PCIM_HDRTYPE_BRIDGE | PCIM_MFDEV));
+	pci_vdev_write_cfg(vdev, PCIR_CLASS, 1U, PCIC_BRIDGE);
+	pci_vdev_write_cfg(vdev, PCIR_SUBCLASS, 1U, PCIS_BRIDGE_PCI);
 }
 
 static void deinit_vpci_bridge(__unused struct pci_vdev *vdev)

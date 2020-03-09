@@ -170,7 +170,7 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 			pci_vdev_write_bar(vdev, idx, val);
 			vdev_pt_allow_io_vbar(vdev, update_idx);
 		} else {
-			pci_vdev_write_cfg_u32(vdev, offset, val);
+			pci_vdev_write_cfg(vdev, offset, 4U, val);
 			vdev->vbars[update_idx].base = 0UL;
 		}
 		break;
@@ -188,7 +188,7 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 			pci_vdev_write_bar(vdev, idx, val);
 			vdev_pt_map_mem_vbar(vdev, update_idx);
 		} else {
-			pci_vdev_write_cfg_u32(vdev, offset, val);
+			pci_vdev_write_cfg(vdev, offset, 4U, val);
 			vdev->vbars[update_idx].base = 0UL;
 		}
 		break;
