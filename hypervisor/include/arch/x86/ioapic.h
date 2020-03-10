@@ -87,7 +87,7 @@ void resume_ioapic(void);
 void ioapic_gsi_mask_irq(uint32_t irq);
 void ioapic_gsi_unmask_irq(uint32_t irq);
 
-void ioapic_get_rte_entry(void *ioapic_addr, uint32_t pin, union ioapic_rte *rte);
+void ioapic_get_rte_entry(void *ioapic_base, uint32_t pin, union ioapic_rte *rte);
 
 struct gsi_table {
 	uint8_t ioapic_id;
@@ -95,7 +95,7 @@ struct gsi_table {
 	void  *addr;
 };
 
-void *ioapic_get_gsi_irq_addr(uint32_t irq_num);
+void *gsi_to_ioapic_base(uint32_t gsi);
 uint32_t ioapic_get_nr_gsi(void);
 uint32_t get_pic_pin_from_ioapic_pin(uint32_t pin_index);
 bool ioapic_is_pin_valid(uint32_t pin);
