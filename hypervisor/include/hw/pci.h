@@ -185,6 +185,10 @@
 #define HOST_BRIDGE_BDF		0U
 #define PCI_STD_NUM_BARS        6U
 
+/* Graphics definitions */
+#define PCIR_BDSM             0x5CU /* BDSM graphics base data of stolen memory register */
+#define PCIR_ASLS_CTL         0xFCU /* Opregion start addr register */
+
 union pci_bdf {
 	uint16_t value;
 	struct {
@@ -249,6 +253,11 @@ struct pci_cfg_ops {
 	uint32_t (*pci_read_cfg)(union pci_bdf bdf, uint32_t offset, uint32_t bytes);
 	void (*pci_write_cfg)(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 };
+
+static inline bool is_gvtd(union pci_bdf bdf)
+{
+	return (bdf.value == CONFIG_GPU_SBDF);
+}
 
 static inline uint32_t pci_bar_offset(uint32_t idx)
 {

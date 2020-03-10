@@ -57,6 +57,8 @@
  */
 #define AUDIO_NHLT_HACK 1
 
+#define PCI_BDF_GPU			0x00000010	/* 00:02.0 */
+
 #define GPU_GSM_SIZE			0x4000000
 /* set gsm gpa=0xDB000000, which is reserved in e820 table */
 #define GPU_GSM_GPA  			0xDB000000
@@ -74,6 +76,9 @@ extern uint64_t audio_nhlt_len;
 /* reference count for libpciaccess init/deinit */
 static int pciaccess_ref_cnt;
 static pthread_mutex_t ref_cnt_mtx = PTHREAD_MUTEX_INITIALIZER;
+
+uint32_t gsm_start_hpa = 0;
+uint32_t opregion_start_hpa = 0;
 
 struct passthru_dev {
 	struct pci_vdev *dev;
@@ -412,6 +417,11 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		return -EINVAL;
 	}
 
+	if (is_rtvm && (PCI_BDF(bus, slot, func) == PCI_BDF_GPU)) {
+		warnx("%s RTVM doesn't support GVT-D.", __func__);
+		return -EINVAL;
+	}
+
 	while ((opt = strsep(&opts, ",")) != NULL) {
 		if (!strncmp(opt, "keep_gsi", 8))
 			keep_gsi = true;
@@ -491,6 +501,24 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (error < 0)
 		goto done;
 
+	if (ptdev->phys_bdf == PCI_BDF_GPU) {
+		uint32_t gsm_phys, opregion_phys;
+		/* get gsm hpa */
+		gsm_phys = read_config(ptdev->phys_dev, PCIR_BDSM, 4);
+		gsm_start_hpa = gsm_phys & PCIM_BDSM_GSM_MASK;
+		/* initialize the EPT mapping for passthrough GPU gsm region */
+		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_GSM_GPA, GPU_GSM_SIZE, gsm_start_hpa);
+
+		/* get opregion hpa */
+		opregion_phys = read_config(ptdev->phys_dev, PCIR_ASLS_CTL, 4);
+		opregion_start_hpa = opregion_phys & PCIM_ASLS_OPREGION_MASK;
+		/* initialize the EPT mapping for passthrough GPU opregion */
+		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
+
+		pcidev.rsvd2[0] = GPU_GSM_GPA | (gsm_phys & ~PCIM_BDSM_GSM_MASK) ;
+		pcidev.rsvd2[1] = GPU_OPREGION_GPA | (opregion_phys & ~PCIM_ASLS_OPREGION_MASK);
+	}
+
 	pcidev.virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
 	pcidev.phys_bdf = ptdev->phys_bdf;
 	for (idx = 0; idx <= PCI_BARMAX; idx++) {
@@ -553,6 +581,11 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			virt_bdf, ptdev->phys_bdf, dev->lintr.ioapic_irq);
 	if (dev->lintr.pin != 0) {
 		vm_reset_ptdev_intx_info(ctx, virt_bdf, ptdev->phys_bdf, dev->lintr.ioapic_irq, false);
+	}
+
+	if (ptdev->phys_bdf == PCI_BDF_GPU) {
+		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, GPU_GSM_GPA, GPU_GSM_SIZE, gsm_start_hpa);
+		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
 	}
 
 	pcidev.virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
