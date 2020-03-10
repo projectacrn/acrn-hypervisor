@@ -1266,7 +1266,7 @@ static int32_t get_ioapic_info(char *str_arg, size_t str_max_len)
 
 	ioapic_nr_gsi = ioapic_get_nr_gsi ();
 	for (irq = 0U; irq < ioapic_nr_gsi; irq++) {
-		void *addr = ioapic_get_gsi_irq_addr(irq);
+		void *addr = gsi_to_ioapic_base(irq);
 		uint32_t pin = ioapic_irq_to_pin(irq);
 		union ioapic_rte rte;
 

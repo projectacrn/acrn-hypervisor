@@ -99,12 +99,12 @@ uint32_t get_pic_pin_from_ioapic_pin(uint32_t pin_index)
 }
 
 /*
- * @pre irq_num < NR_MAX_GSI
+ * @pre gsi < NR_MAX_GSI
  */
-void *ioapic_get_gsi_irq_addr(uint32_t irq_num)
+void *gsi_to_ioapic_base(uint32_t gsi)
 {
 
-	return gsi_table_data[irq_num].addr;
+	return gsi_table_data[gsi].addr;
 }
 
 uint32_t ioapic_get_nr_gsi(void)
@@ -162,20 +162,20 @@ get_ioapic_base(uint8_t apic_id)
 	return ioapic_array[apic_id].addr;
 }
 
-void ioapic_get_rte_entry(void *ioapic_addr, uint32_t pin, union ioapic_rte *rte)
+void ioapic_get_rte_entry(void *ioapic_base, uint32_t pin, union ioapic_rte *rte)
 {
 	uint32_t rte_addr = (pin * 2U) + 0x10U;
-	rte->u.lo_32 = ioapic_read_reg32(ioapic_addr, rte_addr);
-	rte->u.hi_32 = ioapic_read_reg32(ioapic_addr, rte_addr + 1U);
+	rte->u.lo_32 = ioapic_read_reg32(ioapic_base, rte_addr);
+	rte->u.hi_32 = ioapic_read_reg32(ioapic_base, rte_addr + 1U);
 }
 
 static inline void
-ioapic_set_rte_entry(void *ioapic_addr,
+ioapic_set_rte_entry(void *ioapic_base,
 		uint32_t pin, union ioapic_rte rte)
 {
 	uint32_t rte_addr = (pin * 2U) + 0x10U;
-	ioapic_write_reg32(ioapic_addr, rte_addr, rte.u.lo_32);
-	ioapic_write_reg32(ioapic_addr, rte_addr + 1U, rte.u.hi_32);
+	ioapic_write_reg32(ioapic_base, rte_addr, rte.u.lo_32);
+	ioapic_write_reg32(ioapic_base, rte_addr + 1U, rte.u.hi_32);
 }
 
 static inline union ioapic_rte
@@ -233,12 +233,12 @@ create_rte_for_gsi_irq(uint32_t irq, uint32_t vr)
 
 static void ioapic_set_routing(uint32_t gsi, uint32_t vr)
 {
-	void *addr;
+	void *ioapic_base;
 	union ioapic_rte rte;
 
-	addr = gsi_table_data[gsi].addr;
+	ioapic_base = gsi_to_ioapic_base(gsi);
 	rte = create_rte_for_gsi_irq(gsi, vr);
-	ioapic_set_rte_entry(addr, gsi_table_data[gsi].pin, rte);
+	ioapic_set_rte_entry(ioapic_base, gsi_table_data[gsi].pin, rte);
 
 	if (rte.bits.trigger_mode == IOAPIC_RTE_TRGRMODE_LEVEL) {
 		set_irq_trigger_mode(gsi, true);
@@ -259,7 +259,7 @@ void ioapic_get_rte(uint32_t irq, union ioapic_rte *rte)
 	void *addr;
 
 	if (ioapic_irq_is_gsi(irq)) {
-		addr = gsi_table_data[irq].addr;
+		addr = gsi_to_ioapic_base(irq);
 		ioapic_get_rte_entry(addr, gsi_table_data[irq].pin, rte);
 	}
 }
@@ -269,7 +269,7 @@ void ioapic_set_rte(uint32_t irq, union ioapic_rte rte)
 	void *addr;
 
 	if (ioapic_irq_is_gsi(irq)) {
-		addr = gsi_table_data[irq].addr;
+		addr = gsi_to_ioapic_base(irq);
 		ioapic_set_rte_entry(addr, gsi_table_data[irq].pin, rte);
 
 		dev_dbg(DBG_LEVEL_IRQ, "GSI: irq:%d pin:%hhu rte:%lx",
@@ -323,7 +323,7 @@ ioapic_irq_gsi_mask_unmask(uint32_t irq, bool mask)
 	union ioapic_rte rte;
 
 	if (ioapic_irq_is_gsi(irq)) {
-		addr = gsi_table_data[irq].addr;
+		addr = gsi_to_ioapic_base(irq);
 		pin = gsi_table_data[irq].pin;
 
 		if (addr != NULL) {
