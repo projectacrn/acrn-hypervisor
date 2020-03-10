@@ -482,8 +482,12 @@ static int32_t write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 	} else if (sriovcap_access(vdev, offset)) {
 		write_sriov_cap_reg(vdev, offset, bytes, val);
 	} else {
-		/* passthru to physical device */
-		pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+		/* For GVT-D, prevent stolen memory and opregion memory write */
+		if (!(is_postlaunched_vm(vdev->vpci->vm) && is_gvtd(vdev->pdev->bdf) &&
+			((offset == PCIR_BDSM) || (offset == PCIR_ASLS_CTL)))) {
+			/* passthru to physical device */
+			pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+		}
 	}
 
 	return 0;
@@ -501,8 +505,14 @@ static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
 	} else if (sriovcap_access(vdev, offset)) {
 		read_sriov_cap_reg(vdev, offset, bytes, val);
 	} else {
-		/* passthru to physical device */
-		*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+		/* For GVT-D, just return GPA for stolen memory and opregion memory read. */
+		if (is_postlaunched_vm(vdev->vpci->vm) && is_gvtd(vdev->pdev->bdf) &&
+				((offset == PCIR_BDSM) || (offset == PCIR_ASLS_CTL))) {
+			*val = pci_vdev_read_vcfg(vdev, offset, bytes);
+		} else {
+			/* passthru to physical device */
+			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+		}
 	}
 
 	return 0;
@@ -752,6 +762,12 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pc
 				pci_vdev_write_vbar(vdev, idx, pcidev->bar[idx]);
 			}
 
+			if (is_gvtd(bdf)) {
+				/* rsvd2[0U] for stolen memory GPA; rsvd2[1U] for opregion memory GPA */
+				pci_vdev_write_vcfg(vdev, PCIR_BDSM, 4U, pcidev->rsvd2[0U]);
+				pci_vdev_write_vcfg(vdev, PCIR_ASLS_CTL, 4U, pcidev->rsvd2[1U]);
+			}
+
 			vdev->bdf.value = pcidev->virt_bdf;
 			spinlock_release(&tgt_vm->vpci.lock);
 			vdev_in_sos->new_owner = vdev;
@@ -800,7 +816,6 @@ int32_t vpci_deassign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *
 			deinit_vmsi(vdev);
 
 			deinit_vmsix(vdev);
-
 		}
 		spinlock_release(&tgt_vm->vpci.lock);
 
