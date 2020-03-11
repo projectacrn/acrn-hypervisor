@@ -42,6 +42,7 @@ void init_vboot(void)
 		{"PXELINUX", DIRECT_BOOT_MODE},
 	};
 
+	printf("Detect bootloader: %s\n", mbi->mi_loader_name);
 	for (i = 0U; i < BOOTLOADER_NUM; i++) {
 		if (strncmp(mbi->mi_loader_name, vboot_bootloader_maps[i].bootloader_name,
 			strnlen_s(vboot_bootloader_maps[i].bootloader_name, BOOTLOADER_NAME_SIZE)) == 0) {

@@ -111,6 +111,10 @@ ifeq (y, $(CONFIG_MULTIBOOT2))
 ASFLAGS += -DCONFIG_MULTIBOOT2
 endif
 
+ifeq (y, $(CONFIG_RELOC))
+ASFLAGS += -DCONFIG_RELOC
+endif
+
 LDFLAGS += -Wl,--gc-sections -nostartfiles -nostdlib
 LDFLAGS += -Wl,-n,-z,max-page-size=0x1000
 LDFLAGS += -Wl,--no-dynamic-linker
