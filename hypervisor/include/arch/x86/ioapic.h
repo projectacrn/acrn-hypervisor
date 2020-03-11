@@ -35,14 +35,13 @@ uint8_t ioapic_irq_to_ioapic_id(uint32_t irq);
  */
 
 /**
- * @brief Get irq num from pin num
+ * @brief Get irq num from gsi num
  *
- * @param[in]	pin The pin number
+ * @param[in]	gsi The gsi number
  *
  * @return irq number
  */
-uint32_t ioapic_pin_to_irq(uint32_t pin);
-
+uint32_t ioapic_gsi_to_irq(uint32_t gsi);
 /**
  * @brief Set the redirection table entry
  *

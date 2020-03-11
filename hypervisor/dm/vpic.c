@@ -32,6 +32,7 @@
 #include <assign.h>
 #include <spinlock.h>
 #include <logmsg.h>
+#include <ioapic.h>
 
 #define DBG_LEVEL_PIC	6U
 
@@ -311,6 +312,79 @@ static int32_t vpic_icw4(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 	return ret;
 }
 
+static uint32_t vpin_to_vgsi(const struct acrn_vm *vm, uint32_t vpin)
+{
+	uint32_t vgsi = vpin;
+
+	/*
+	 * Remap depending on the type of VM
+	 */
+
+	if (is_sos_vm(vm)) {
+		/*
+		 * For SOS VM vPIC pin to GSI is same as the one
+		 * that is used for platform
+		 */
+		vgsi = get_pic_pin_from_ioapic_pin(vpin);
+	} else if (is_postlaunched_vm(vm)) {
+		/*
+		 * Devicemodel provides Interrupt Source Override Structure
+		 * via ACPI to Post-Launched VM.
+		 * 
+		 * 1) Interrupt source connected to vPIC pin 0 is connected to vIOAPIC pin 2
+		 * 2) Devicemodel, as of today, does not request to hold ptirq entry with vPIC as 
+		 *    interrupt controller, for a Post-Launched VM.
+		 */
+		if (vpin == 0U) {
+			vgsi = 2U;
+		}
+	} else {
+		/*
+		 * For Pre-launched VMs, Interrupt Source Override Structure
+		 * and IO-APIC Structure are not provided in the VM's ACPI info.
+		 * No remapping needed.
+		 */
+	}
+	return vgsi;
+}
+
+static uint32_t vgsi_to_vpin(const struct acrn_vm *vm, uint32_t vgsi)
+{
+	uint32_t vpin = vgsi;
+
+	/*
+	 * Remap depending on the type of VM
+	 */
+
+	if (is_sos_vm(vm)) {
+		/*
+		 * For SOS VM vPIC pin to GSI is same as the one
+		 * that is used for platform
+		 */
+		vpin = get_pic_pin_from_ioapic_pin(vgsi);
+	} else if (is_postlaunched_vm(vm)) {
+		/*
+		 * Devicemodel provides Interrupt Source Override Structure
+		 * via ACPI to Post-Launched VM.
+		 * 
+		 * 1) Interrupt source connected to vPIC pin 0 is connected to vIOAPIC pin 2
+		 * 2) Devicemodel, as of today, does not request to hold ptirq entry with vPIC as 
+		 *    interrupt controller, for a Post-Launched VM.
+		 */
+		if (vgsi == 2U) {
+			vpin = 0U;
+		}
+	} else {
+		/*
+		 * For Pre-launched VMs, Interrupt Source Override Structure
+		 * and IO-APIC Structure are not provided in the VM's ACPI info.
+		 * No remapping needed.
+		 */
+	}
+	return vpin;
+
+}
+
 static int32_t vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	uint32_t pin, i, bit;
@@ -331,6 +405,7 @@ static int32_t vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 		 */
 		if (((i8259->mask & bit) == 0U) && ((old & bit) != 0U)) {
 			uint32_t virt_pin;
+			uint32_t vgsi;
 
 			/* master i8259 pin2 connect with slave i8259,
 			 * not device, so not need pt remap
@@ -342,7 +417,9 @@ static int32_t vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 			virt_pin = (master_pic(vpic, i8259)) ?
 					pin : (pin + 8U);
-			(void)ptirq_intx_pin_remap(vpic->vm, virt_pin, INTX_CTLR_PIC);
+
+			vgsi = vpin_to_vgsi(vpic->vm, virt_pin);
+			(void)ptirq_intx_pin_remap(vpic->vm, vgsi, INTX_CTLR_PIC);
 		}
 		pin = (pin + 1U) & 0x7U;
 	}
@@ -359,6 +436,7 @@ static int32_t vpic_ocw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 	if ((val & OCW2_EOI) != 0U) {
 		uint32_t isr_bit;
+		uint32_t vgsi;
 
 		if ((val & OCW2_SL) != 0U) {
 			/* specific EOI */
@@ -378,8 +456,8 @@ static int32_t vpic_ocw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 		/* if level ack PTDEV */
 		if ((i8259->elc & (1U << (isr_bit & 0x7U))) != 0U) {
-			ptirq_intx_ack(vpic->vm, (master_pic(vpic, i8259) ? isr_bit : isr_bit + 8U),
-					INTX_CTLR_PIC);
+			vgsi = vpin_to_vgsi(vpic->vm, (master_pic(vpic, i8259) ? isr_bit : isr_bit + 8U));
+			ptirq_intx_ack(vpic->vm, vgsi, INTX_CTLR_PIC);
 		}
 	} else if (((val & OCW2_SL) != 0U) && i8259->rotate) {
 		/* specific priority */
@@ -461,17 +539,18 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t leve
  *
  * @return None
  */
-void vpic_set_irqline(struct acrn_vpic *vpic, uint32_t irqline, uint32_t operation)
+void vpic_set_irqline(struct acrn_vpic *vpic, uint32_t vgsi, uint32_t operation)
 {
 	struct i8259_reg_state *i8259;
 	uint32_t pin;
 	uint64_t rflags;
 
-	if (irqline < NR_VPIC_PINS_TOTAL) {
-		i8259 = &vpic->i8259[irqline >> 3U];
-		pin = irqline;
+
+	if (vgsi < NR_VPIC_PINS_TOTAL) {
+		i8259 = &vpic->i8259[vgsi >> 3U];
 
 		if (i8259->ready) {
+			pin = vgsi_to_vpin(vpic->vm, vgsi);
 			spinlock_irqsave_obtain(&(vpic->lock), &rflags);
 			switch (operation) {
 			case GSI_SET_HIGH:
@@ -511,9 +590,11 @@ vpic_pincount(void)
  * @pre irqline < NR_VPIC_PINS_TOTAL
  * @pre this function should be called after vpic_init()
  */
-void vpic_get_irqline_trigger_mode(const struct acrn_vpic *vpic, uint32_t irqline,
+void vpic_get_irqline_trigger_mode(const struct acrn_vpic *vpic, uint32_t vgsi,
 		enum vpic_trigger *trigger)
 {
+	uint32_t irqline = vgsi_to_vpin(vpic->vm, vgsi);
+	
 	if ((vpic->i8259[irqline >> 3U].elc & (1U << (irqline & 0x7U))) != 0U) {
 		*trigger = LEVEL_TRIGGER;
 	} else {
