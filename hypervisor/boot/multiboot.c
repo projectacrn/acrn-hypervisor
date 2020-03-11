@@ -68,6 +68,10 @@ int32_t sanitize_multiboot_info(void)
 		ret = -EINVAL;
 	}
 
+	if (acrn_mbi.mi_loader_name[0] == '\0') {
+		pr_err("no bootloader name found!");
+		ret = -EINVAL;
+	}
 	return ret;
 }
 

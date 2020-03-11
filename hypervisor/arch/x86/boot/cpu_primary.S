@@ -71,13 +71,14 @@ info_req_tag_start:
     .long   MULTIBOOT2_TAG_TYPE_EFI_MMAP    /* EFI memory map, to be passed to guest Linux */
 info_req_tag_end:
 
+#ifdef CONFIG_RELOC
     .align  MULTIBOOT2_TAG_ALIGN
 address_tag_start:
     .short  MULTIBOOT2_HEADER_TAG_ADDRESS
     .short  0
     .long   address_tag_end - address_tag_start
     .long   mb2_header_start  /* address corresponding to the beginning of the Multiboot2 header */
-    .long   -1  /* load_addr: the file to be loaded from its beginning */
+    .long   _ld_ram_start     /* load_addr: load from the binary's beginning */
     /*
      * load_end_addr: this includes .bss so that boot loader could reserve the
      * memory that .bss occupies to avoid placing boot modules or other data in that area.
@@ -107,13 +108,14 @@ relocatable_tag_start:
     .long   0x200000     /* image alignment */
     .long   1            /* preference: lowest possible address */
 relocatable_tag_end:
+#endif	/* CONFIG_RELOC */
 
     .align     MULTIBOOT2_TAG_ALIGN
     .short  MULTIBOOT2_HEADER_TAG_END
     .short  0
     .long   8
 mb2_header_end:
-#endif
+#endif	/* CONFIG_MULTIBOOT2 */
 
     /*
      * The page tables are aligned to 4KB, which implicitly aligns this section at

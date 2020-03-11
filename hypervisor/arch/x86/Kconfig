@@ -39,8 +39,7 @@ endchoice
 
 config MULTIBOOT2
 	bool "Multiboot2 support"
-	depends on RELOC
-	default n
+	default y
 	help
 	  Support boot ACRN from multiboot2 protocol. Multiboot2 support is needed for
 	  some EFI platforms to get correct ACPI RSDP, it also could provide host efi
