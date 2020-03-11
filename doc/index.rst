@@ -6,7 +6,10 @@ Project ACRN documentation
 Welcome to the Project ACRN (version |version|) documentation.  ACRN is
 a flexible, lightweight reference hypervisor, built with real-time and
 safety-criticality in mind, optimized to streamline embedded development
-through an open source platform. 
+through an open source platform.
+
+.. important::
+   The latest version of ACRN is currently under construction. If necessary, visit ACRN `version 1.5 <https://projectacrn.github.io/1.5/>`_ to view the last stable build.
 
 .. comment The links in this grid display can't use :ref: because we're
    using raw html.  There's a risk of broken links if referenced content is
