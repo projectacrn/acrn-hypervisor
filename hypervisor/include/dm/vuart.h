@@ -88,5 +88,5 @@ void vuart_putchar(struct acrn_vuart *vu, char ch);
 char vuart_getchar(struct acrn_vuart *vu);
 void vuart_toggle_intr(const struct acrn_vuart *vu);
 
-bool is_vuart_intx(const struct acrn_vm *vm, uint32_t intx_pin);
+bool is_vuart_intx(const struct acrn_vm *vm, uint32_t intx_gsi);
 #endif /* VUART_H */

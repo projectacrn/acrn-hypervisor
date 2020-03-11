@@ -29,15 +29,15 @@
  * Acknowledge a virtual legacy interrupt for a passthrough device.
  *
  * @param[in] vm pointer to acrn_vm
- * @param[in] virt_pin virtual pin number associated with the passthrough device
- * @param[in] vpin_ctlr INTX_CTLR_IOAPIC or INTX_CTLR_PIC
+ * @param[in] virt_gsi virtual GSI number associated with the passthrough device
+ * @param[in] vgsi_ctlr INTX_CTLR_IOAPIC or INTX_CTLR_PIC
  *
  * @return None
  *
  * @pre vm != NULL
  *
  */
-void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_pin, enum intx_ctlr vpin_ctlr);
+void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ctlr vgsi_ctlr);
 
 /**
  * @brief MSI/MSI-x remapping for passthrough device.
@@ -72,8 +72,8 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,  uint16_
  * This is the main entry for PCI/Legacy device assignment with INTx, calling from vIOAPIC or vPIC.
  *
  * @param[in] vm pointer to acrn_vm
- * @param[in] virt_pin virtual pin number associated with the passthrough device
- * @param[in] vpin_ctlr INTX_CTLR_IOAPIC or INTX_CTLR_PIC
+ * @param[in] virt_gsi virtual GSI number associated with the passthrough device
+ * @param[in] vgsi_ctlr INTX_CTLR_IOAPIC or INTX_CTLR_PIC
  *
  * @return
  *    - 0: on success
@@ -84,7 +84,7 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,  uint16_
  * @pre vm != NULL
  *
  */
-int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, enum intx_ctlr vpin_ctlr);
+int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ctlr vgsi_ctlr);
 
 /**
  * @brief Add an interrupt remapping entry for INTx as pre-hold mapping.
@@ -94,8 +94,8 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, enum intx_ct
  * Currently, one phys_pin can only be held by one pin source (vPIC or vIOAPIC).
  *
  * @param[in] vm pointer to acrn_vm
- * @param[in] virt_pin virtual pin number associated with the passthrough device
- * @param[in] phys_pin physical pin number associated with the passthrough device
+ * @param[in] virt_gsi virtual pin number associated with the passthrough device
+ * @param[in] phys_gsi physical pin number associated with the passthrough device
  * @param[in] pic_pin true for pic, false for ioapic
  *
  * @return
@@ -106,7 +106,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, enum intx_ct
  * @pre vm != NULL
  *
  */
-int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, uint32_t phys_pin, bool pic_pin);
+int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint32_t virt_gsi, uint32_t phys_gsi, bool pic_pin);
 
 /**
  * @brief Remove an interrupt remapping entry for INTx.
@@ -114,7 +114,7 @@ int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, uint32_t
  * Deactivate & remove mapping entry of the given virt_pin for given vm.
  *
  * @param[in] vm pointer to acrn_vm
- * @param[in] virt_pin virtual pin number associated with the passthrough device
+ * @param[in] virt_gsi virtual pin number associated with the passthrough device
  * @param[in] pic_pin true for pic, false for ioapic
  *
  * @return None
@@ -122,7 +122,7 @@ int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, uint32_t
  * @pre vm != NULL
  *
  */
-void ptirq_remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_pin, bool pic_pin);
+void ptirq_remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_gsi, bool pic_pin);
 
 /**
  * @brief Remove interrupt remapping entry/entries for MSI/MSI-x.
