@@ -7,8 +7,6 @@
 #ifndef UART16550_H
 #define UART16550_H
 
-#include <pci.h>
-
 /* Register / bit definitions for 16c550 uart */
 /*receive buffer register            | base+00h, dlab=0b r*/
 #define UART16550_RBR           0x00U
@@ -128,8 +126,6 @@
 
 /* UART oscillator clock */
 #define UART_CLOCK_RATE	1843200U	/* 1.8432 MHz */
-
-extern struct pci_cfg_ops pci_direct_cfg_ops;
 
 void uart16550_init(bool early_boot);
 char uart16550_getc(void);

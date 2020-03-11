@@ -8,4 +8,3 @@
 #include <pci.h>
 
 void uart16550_init(__unused bool early_boot) {}
-struct pci_cfg_ops pci_direct_cfg_ops;

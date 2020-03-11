@@ -46,67 +46,6 @@ typedef uint32_t uart_reg_t;
 static union pci_bdf serial_pci_bdf;
 
 
-static uint32_t pci_direct_calc_address(union pci_bdf bdf, uint32_t offset)
-{
-	uint32_t addr = (uint32_t)bdf.value;
-
-	addr <<= 8U;
-	addr |= (offset | PCI_CFG_ENABLE);
-	return addr;
-}
-
-static uint32_t pci_direct_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes)
-{
-	uint32_t addr;
-	uint32_t val;
-
-	addr = pci_direct_calc_address(bdf, offset);
-
-	/* Write address to ADDRESS register */
-	pio_write32(addr, (uint16_t)PCI_CONFIG_ADDR);
-
-	/* Read result from DATA register */
-	switch (bytes) {
-	case 1U:
-		val = (uint32_t)pio_read8((uint16_t)PCI_CONFIG_DATA + ((uint16_t)offset & 3U));
-		break;
-	case 2U:
-		val = (uint32_t)pio_read16((uint16_t)PCI_CONFIG_DATA + ((uint16_t)offset & 2U));
-		break;
-	default:
-		val = pio_read32((uint16_t)PCI_CONFIG_DATA);
-		break;
-	}
-
-	return val;
-}
-
-static void pci_direct_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val)
-{
-	uint32_t addr = pci_direct_calc_address(bdf, offset);
-
-	/* Write address to ADDRESS register */
-	pio_write32(addr, (uint16_t)PCI_CONFIG_ADDR);
-
-	/* Write value to DATA register */
-	switch (bytes) {
-	case 1U:
-		pio_write8((uint8_t)val, (uint16_t)PCI_CONFIG_DATA + ((uint16_t)offset & 3U));
-		break;
-	case 2U:
-		pio_write16((uint16_t)val, (uint16_t)PCI_CONFIG_DATA + ((uint16_t)offset & 2U));
-		break;
-	default:
-		pio_write32(val, (uint16_t)PCI_CONFIG_DATA);
-		break;
-	}
-}
-
-struct pci_cfg_ops pci_direct_cfg_ops = {
-	.pci_read_cfg = pci_direct_read_cfg,
-	.pci_write_cfg = pci_direct_write_cfg,
-};
-
 /* PCI BDF must follow format: bus:dev.func, for example 0:18.2 */
 static uint16_t get_pci_bdf_value(char *bdf)
 {

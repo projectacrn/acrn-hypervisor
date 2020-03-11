@@ -61,17 +61,92 @@ uint64_t get_mmcfg_base(void)
 	return pci_mmcfg_base;
 }
 
+#if defined(HV_DEBUG)
+static inline uint32_t pio_off_to_address(union pci_bdf bdf, uint32_t offset)
+
+{
+	uint32_t addr = (uint32_t)bdf.value;
+
+	addr <<= 8U;
+	addr |= (offset | PCI_CFG_ENABLE);
+	return addr;
+}
+
+static uint32_t pci_pio_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes)
+{
+	uint32_t addr;
+	uint32_t val;
+
+	addr = pio_off_to_address(bdf, offset);
+
+	/* Write address to ADDRESS register */
+	pio_write32(addr, (uint16_t)PCI_CONFIG_ADDR);
+
+	/* Read result from DATA register */
+	switch (bytes) {
+	case 1U:
+		val = (uint32_t)pio_read8((uint16_t)PCI_CONFIG_DATA + ((uint16_t)offset & 3U));
+		break;
+	case 2U:
+		val = (uint32_t)pio_read16((uint16_t)PCI_CONFIG_DATA + ((uint16_t)offset & 2U));
+		break;
+	default:
+		val = pio_read32((uint16_t)PCI_CONFIG_DATA);
+		break;
+	}
+
+	return val;
+}
+
+static void pci_pio_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val)
+{
+	uint32_t addr = pio_off_to_address(bdf, offset);
+
+	/* Write address to ADDRESS register */
+	pio_write32(addr, (uint16_t)PCI_CONFIG_ADDR);
+
+	/* Write value to DATA register */
+	switch (bytes) {
+	case 1U:
+		pio_write8((uint8_t)val, (uint16_t)PCI_CONFIG_DATA + ((uint16_t)offset & 3U));
+		break;
+	case 2U:
+		pio_write16((uint16_t)val, (uint16_t)PCI_CONFIG_DATA + ((uint16_t)offset & 2U));
+		break;
+	default:
+		pio_write32(val, (uint16_t)PCI_CONFIG_DATA);
+		break;
+	}
+}
+#else
+static uint32_t pci_pio_read_cfg(__unused union pci_bdf bdf,
+		__unused uint32_t offset, __unused uint32_t bytes)
+{
+	return ~0U;
+}
+
+static void pci_pio_write_cfg(__unused union pci_bdf bdf,
+		__unused uint32_t offset, __unused uint32_t bytes, __unused uint32_t val)
+{
+}
+#endif
+
+static const struct pci_cfg_ops pci_pio_cfg_ops = {
+	.pci_read_cfg = pci_pio_read_cfg,
+	.pci_write_cfg = pci_pio_write_cfg,
+};
+
 /*
  * @pre offset < 0x1000U
  */
-static inline uint32_t pci_mmcfg_calc_address(union pci_bdf bdf, uint32_t offset)
+static inline uint32_t mmcfg_off_to_address(union pci_bdf bdf, uint32_t offset)
 {
 	return (uint32_t)pci_mmcfg_base + (((uint32_t)bdf.value << 12U) | offset);
 }
 
 static uint32_t pci_mmcfg_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes)
 {
-	uint32_t addr = pci_mmcfg_calc_address(bdf, offset);
+	uint32_t addr = mmcfg_off_to_address(bdf, offset);
 	void *hva = hpa2hva(addr);
 	uint32_t val;
 
@@ -97,7 +172,7 @@ static uint32_t pci_mmcfg_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t 
  */
 static void pci_mmcfg_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val)
 {
-	uint32_t addr = pci_mmcfg_calc_address(bdf, offset);
+	uint32_t addr = mmcfg_off_to_address(bdf, offset);
 	void *hva = hpa2hva(addr);
 
 	spinlock_obtain(&pci_device_lock);
@@ -115,12 +190,12 @@ static void pci_mmcfg_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t byt
 	spinlock_release(&pci_device_lock);
 }
 
-static struct pci_cfg_ops pci_mmcfg_cfg_ops = {
+static const struct pci_cfg_ops pci_mmcfg_cfg_ops = {
 	.pci_read_cfg = pci_mmcfg_read_cfg,
 	.pci_write_cfg = pci_mmcfg_write_cfg,
 };
 
-static struct pci_cfg_ops *acrn_pci_cfg_ops = &pci_direct_cfg_ops;
+static const struct pci_cfg_ops *acrn_pci_cfg_ops = &pci_pio_cfg_ops;
 
 void pci_switch_to_mmio_cfg_ops(void)
 {
@@ -135,12 +210,7 @@ uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes)
 {
 	uint32_t val = ~0U;
 
-	/* The pci_read_cfg would not be empty unless be called before
-	 * pci_switch_to_mmio_cfg_ops in release version.
-	 */
-	if (acrn_pci_cfg_ops->pci_read_cfg != NULL) {
-		val = acrn_pci_cfg_ops->pci_read_cfg(bdf, offset, bytes);
-	}
+	val = acrn_pci_cfg_ops->pci_read_cfg(bdf, offset, bytes);
 
 	return val;
 }
@@ -151,12 +221,7 @@ uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes)
  */
 void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val)
 {
-	/* The pci_write_cfg would not be empty unless be called before
-	 * pci_switch_to_mmio_cfg_ops in release version.
-	 */
-	if (acrn_pci_cfg_ops->pci_write_cfg != NULL) {
-		acrn_pci_cfg_ops->pci_write_cfg(bdf, offset, bytes, val);
-	}
+	acrn_pci_cfg_ops->pci_write_cfg(bdf, offset, bytes, val);
 }
 
 bool pdev_need_bar_restore(const struct pci_pdev *pdev)
