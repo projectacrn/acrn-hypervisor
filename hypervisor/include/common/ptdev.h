@@ -25,7 +25,7 @@ enum intx_ctlr {
 union source_id (name) = {.msi_id = {.bdf = (a), .entry_nr = (b)} }
 
 #define DEFINE_INTX_SID(name, a, b)	\
-union source_id (name) = {.intx_id = {.pin = (a), .ctlr = (b)} }
+union source_id (name) = {.intx_id = {.gsi = (a), .ctlr = (b)} }
 
 union irte_index {
 	uint16_t index;
@@ -49,7 +49,7 @@ union source_id {
 	 */
 	struct {
 		enum intx_ctlr ctlr;
-		uint32_t pin;
+		uint32_t gsi;
 	} intx_id;
 };
 
