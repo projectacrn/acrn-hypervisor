@@ -301,18 +301,12 @@ bool ioapic_is_pin_valid(uint32_t pin)
 	return (pin != INVALID_INTERRUPT_PIN);
 }
 
-uint32_t ioapic_pin_to_irq(uint32_t pin)
+/*
+ *@pre ioapic_irq_is_gsi(gsi) == true
+ */
+uint32_t ioapic_gsi_to_irq(uint32_t gsi)
 {
-	uint32_t i;
-	uint32_t irq = IRQ_INVALID;
-
-	for (i = 0U; i < ioapic_nr_gsi; i++) {
-		if (gsi_table_data[i].pin == pin) {
-			irq = i;
-			break;
-		}
-	}
-	return irq;
+	return gsi;
 }
 
 static void

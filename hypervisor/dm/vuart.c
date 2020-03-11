@@ -616,13 +616,13 @@ static void vuart_deinit_connection(struct acrn_vuart *vu)
 	vu->target_vu = NULL;
 }
 
-bool is_vuart_intx(const struct acrn_vm *vm, uint32_t intx_pin)
+bool is_vuart_intx(const struct acrn_vm *vm, uint32_t intx_gsi)
 {
 	uint8_t i;
 	bool ret = false;
 
 	for (i = 0U; i < MAX_VUART_NUM_PER_VM; i++) {
-		if ((vm->vuart[i].active) && (vm->vuart[i].irq == intx_pin)) {
+		if ((vm->vuart[i].active) && (vm->vuart[i].irq == intx_gsi)) {
 			ret = true;
 		}
 	}
