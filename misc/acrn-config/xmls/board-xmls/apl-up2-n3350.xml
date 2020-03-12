@@ -238,18 +238,200 @@
 	rdt resource mask max: '0xff'
 	</CLOS_INFO>
 
-	<SYSTEM_RAM_INFO>
+	<IOMEM_INFO>
+	00000000-00000fff : Reserved
 	00001000-0003efff : System RAM
+	0003f000-0003ffff : Reserved
 	00040000-0009dfff : System RAM
+	0009e000-000fffff : Reserved
+	  000f0000-000fffff : System ROM
 	00100000-0fffffff : System RAM
-	12151000-70ecd017 : System RAM
-	70ecd018-70edd057 : System RAM
-	70edd058-77b2efff : System RAM
-	7a09b000-7a408fff : System RAM
-	7a424000-7a964fff : System RAM
+	10000000-12150fff : Reserved
+	12151000-70770017 : System RAM
+	70770018-70780057 : System RAM
+	70780058-77b30fff : System RAM
+	77b31000-79c3afff : Reserved
+	79c3b000-79c53fff : ACPI Tables
+	79c54000-79cb3fff : ACPI Non-volatile Storage
+	79cb4000-7a09cfff : Reserved
+	7a09d000-7a40afff : System RAM
+	7a40b000-7a40bfff : ACPI Non-volatile Storage
+	7a40c000-7a425fff : Reserved
+	7a426000-7a964fff : System RAM
+	7a965000-7a966fff : Reserved
 	7a967000-7affffff : System RAM
+	7b000000-7fffffff : Reserved
+	  7b800001-7bffffff : PCI Bus 0000:00
+	  7c000001-7fffffff : PCI Bus 0000:00
+	    7c000001-7ffffffe : Graphics Stolen Memory
+	80000000-cfffffff : PCI Bus 0000:00
+	  80000000-8fffffff : 0000:00:02.0
+	  90000000-90ffffff : 0000:00:02.0
+	  91000000-911fffff : 0000:00:15.1
+	  91200000-912fffff : 0000:00:0e.0
+	    91200000-912fffff : ICH HD audio
+	  91300000-913fffff : PCI Bus 0000:03
+	    91300000-91303fff : 0000:03:00.0
+	    91304000-91304fff : 0000:03:00.0
+	      91304000-91304fff : r8169
+	  91400000-914fffff : PCI Bus 0000:02
+	    91400000-91403fff : 0000:02:00.0
+	    91404000-91404fff : 0000:02:00.0
+	      91404000-91404fff : r8169
+	  91500000-9150ffff : 0000:00:15.0
+	    91500000-9150ffff : xhci-hcd
+	      91508070-9150846f : intel_xhci_usb_sw
+	  91510000-91513fff : 0000:00:0e.0
+	    91510000-91513fff : ICH HD audio
+	  91514000-91515fff : 0000:00:12.0
+	    91514000-91515fff : ahci
+	  91516000-915160ff : 0000:00:1f.1
+	  91517000-91517fff : 0000:00:1e.0
+	  91518000-91518fff : 0000:00:1e.0
+	    91518000-91518fff : mmc1
+	  91519000-91519fff : 0000:00:1c.0
+	  9151a000-9151afff : 0000:00:1c.0
+	    9151a000-9151afff : mmc0
+	  9151b000-9151bfff : 0000:00:1a.0
+	  9151c000-9151cfff : 0000:00:1a.0
+	    9151c000-9151cfff : 0000:00:1a.0
+	  9151d000-9151dfff : 0000:00:19.2
+	  9151e000-9151efff : 0000:00:19.2
+	    9151e000-9151e1ff : lpss_dev
+	      9151e000-9151e1ff : lpss_dev
+	    9151e200-9151e2ff : lpss_priv
+	    9151e800-9151efff : idma64.12
+	      9151e800-9151efff : idma64.12
+	  9151f000-9151ffff : 0000:00:19.1
+	  91520000-91520fff : 0000:00:19.1
+	    91520000-915201ff : lpss_dev
+	      91520000-915201ff : lpss_dev
+	    91520200-915202ff : lpss_priv
+	    91520800-91520fff : idma64.11
+	      91520800-91520fff : idma64.11
+	  91521000-91521fff : 0000:00:19.0
+	  91522000-91522fff : 0000:00:19.0
+	    91522000-915221ff : lpss_dev
+	      91522000-915221ff : lpss_dev
+	    91522200-915222ff : lpss_priv
+	    91522800-91522fff : idma64.10
+	      91522800-91522fff : idma64.10
+	  91523000-91523fff : 0000:00:18.1
+	  91524000-91524fff : 0000:00:18.1
+	    91524000-915241ff : lpss_dev
+	      91524000-9152401f : serial
+	    91524200-915242ff : lpss_priv
+	    91524800-91524fff : idma64.9
+	      91524800-91524fff : idma64.9
+	  91525000-91525fff : 0000:00:18.0
+	  91526000-91526fff : 0000:00:18.0
+	    91526000-915261ff : lpss_dev
+	      91526000-9152601f : serial
+	    91526200-915262ff : lpss_priv
+	    91526800-91526fff : idma64.8
+	      91526800-91526fff : idma64.8
+	  91527000-91527fff : 0000:00:17.3
+	  91528000-91528fff : 0000:00:17.3
+	    91528000-915281ff : lpss_dev
+	      91528000-915281ff : lpss_dev
+	    91528200-915282ff : lpss_priv
+	    91528800-91528fff : idma64.7
+	      91528800-91528fff : idma64.7
+	  91529000-91529fff : 0000:00:17.2
+	  9152a000-9152afff : 0000:00:17.2
+	    9152a000-9152a1ff : lpss_dev
+	      9152a000-9152a1ff : lpss_dev
+	    9152a200-9152a2ff : lpss_priv
+	    9152a800-9152afff : idma64.6
+	      9152a800-9152afff : idma64.6
+	  9152b000-9152bfff : 0000:00:17.1
+	  9152c000-9152cfff : 0000:00:17.1
+	    9152c000-9152c1ff : lpss_dev
+	      9152c000-9152c1ff : lpss_dev
+	    9152c200-9152c2ff : lpss_priv
+	    9152c800-9152cfff : idma64.5
+	      9152c800-9152cfff : idma64.5
+	  9152d000-9152dfff : 0000:00:17.0
+	  9152e000-9152efff : 0000:00:17.0
+	    9152e000-9152e1ff : lpss_dev
+	      9152e000-9152e1ff : lpss_dev
+	    9152e200-9152e2ff : lpss_priv
+	    9152e800-9152efff : idma64.4
+	      9152e800-9152efff : idma64.4
+	  9152f000-9152ffff : 0000:00:16.3
+	  91530000-91530fff : 0000:00:16.3
+	    91530000-915301ff : lpss_dev
+	      91530000-915301ff : lpss_dev
+	    91530200-915302ff : lpss_priv
+	    91530800-91530fff : idma64.3
+	      91530800-91530fff : idma64.3
+	  91531000-91531fff : 0000:00:16.2
+	  91532000-91532fff : 0000:00:16.2
+	    91532000-915321ff : lpss_dev
+	      91532000-915321ff : lpss_dev
+	    91532200-915322ff : lpss_priv
+	    91532800-91532fff : idma64.2
+	      91532800-91532fff : idma64.2
+	  91533000-91533fff : 0000:00:16.1
+	  91534000-91534fff : 0000:00:16.1
+	    91534000-915341ff : lpss_dev
+	      91534000-915341ff : lpss_dev
+	    91534200-915342ff : lpss_priv
+	    91534800-91534fff : idma64.1
+	      91534800-91534fff : idma64.1
+	  91535000-91535fff : 0000:00:16.0
+	  91536000-91536fff : 0000:00:16.0
+	    91536000-915361ff : lpss_dev
+	      91536000-915361ff : lpss_dev
+	    91536200-915362ff : lpss_priv
+	    91536800-91536fff : idma64.0
+	      91536800-91536fff : idma64.0
+	  91537000-91537fff : 0000:00:15.1
+	  91538000-915387ff : 0000:00:12.0
+	    91538000-915387ff : ahci
+	  91539000-915390ff : 0000:00:12.0
+	    91539000-915390ff : ahci
+	  9153c000-9153cfff : 0000:00:0f.0
+	    9153c000-9153cfff : mei_me
+	d0000000-d0ffffff : Reserved
+	  d0c00000-d0c00653 : INT3452:03
+	    d0c00000-d0c00653 : INT3452:03
+	  d0c40000-d0c40763 : INT3452:01
+	    d0c40000-d0c40763 : INT3452:01
+	  d0c50000-d0c5076b : INT3452:00
+	    d0c50000-d0c5076b : INT3452:00
+	  d0c70000-d0c70673 : INT3452:02
+	    d0c70000-d0c70673 : INT3452:02
+	e0000000-efffffff : PCI MMCONFIG 0000 [bus 00-ff]
+	  e0000000-efffffff : Reserved
+	    e0000000-efffffff : PCI Bus 0000:00
+	      e0000000-efffffff : pnp 00:01
+	fe042000-fe044fff : Reserved
+	fe900000-fe902fff : Reserved
+	fea00000-feafffff : pnp 00:01
+	fec00000-fec00fff : Reserved
+	  fec00000-fec003ff : IOAPIC 0
+	fed00000-fed003ff : HPET 0
+	  fed00000-fed003ff : PNP0103:00
+	fed01000-fed01fff : intel-spi
+	  fed01000-fed01fff : Reserved
+	    fed01000-fed01fff : pnp 00:01
+	fed03000-fed03fff : pnp 00:01
+	fed06000-fed06fff : pnp 00:01
+	fed08000-fed09fff : pnp 00:01
+	fed1c000-fed1cfff : pnp 00:01
+	fed40000-fed44fff : MSFT0101:00
+	fed64000-fed64fff : dmar0
+	fed65000-fed65fff : dmar1
+	fed80000-fedbffff : pnp 00:01
+	fee00000-fee00fff : Local APIC
+	  fee00000-fee00fff : Reserved
+	ff000000-ffffffff : Reserved
 	100000000-17fffffff : System RAM
-	</SYSTEM_RAM_INFO>
+	  179000000-17a005560 : Kernel code
+	  17a005561-17a9c0f7f : Kernel data
+	  17ab14000-17abfffff : Kernel bss
+	</IOMEM_INFO>
 
 	<BLOCK_DEVICE_INFO>
 	/dev/sda3: TYPE="ext4"

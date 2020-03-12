@@ -181,20 +181,100 @@
 	<CLOS_INFO>
 	</CLOS_INFO>
 
-	<SYSTEM_RAM_INFO>
+	<IOMEM_INFO>
+	00000000-00000fff : Reserved
 	00001000-0005efff : System RAM
+	0005f000-0005ffff : Reserved
 	00060000-0009ffff : System RAM
-	00100000-1fdfffff : System RAM
-	20000000-3fffffff : System RAM
-	40400000-8276e017 : System RAM
-	8276e018-8277e657 : System RAM
-	8277e658-8277f017 : System RAM
-	8277f018-8278f057 : System RAM
-	8278f058-85b3dfff : System RAM
-	85b40000-8bfbafff : System RAM
-	8ceff000-8cefffff : System RAM
+	000a0000-000fffff : Reserved
+	  000a0000-000bffff : PCI Bus 0000:00
+	  000c0000-000cffff : Video ROM
+	  000f0000-000fffff : System ROM
+	00100000-3fffffff : System RAM
+	  00c5fffc-00c5ffff : iTCO_wdt
+	40000000-403fffff : Reserved
+	  40000000-403fffff : pnp 00:00
+	40400000-808a6017 : System RAM
+	808a6018-808b6657 : System RAM
+	808b6658-808b7017 : System RAM
+	808b7018-808c7057 : System RAM
+	808c7058-83536fff : System RAM
+	83537000-83537fff : ACPI Non-volatile Storage
+	83538000-83538fff : Reserved
+	83539000-89f8afff : System RAM
+	89f8b000-8a3f6fff : Reserved
+	8a3f7000-8a473fff : ACPI Tables
+	8a474000-8a8a8fff : ACPI Non-volatile Storage
+	8a8a9000-8aefefff : Reserved
+	8aeff000-8aefffff : System RAM
+	8af00000-8fffffff : Reserved
+	  8c000000-8fffffff : Graphics Stolen Memory
+	90000000-dfffffff : PCI Bus 0000:00
+	  90000000-9fffffff : 0000:00:02.0
+	  a0000000-a0ffffff : 0000:00:02.0
+	  a1000000-a10fffff : 0000:00:1f.3
+	  a1100000-a11fffff : PCI Bus 0000:04
+	    a1100000-a111ffff : 0000:04:00.0
+	      a1100000-a111ffff : igb
+	    a1120000-a1123fff : 0000:04:00.0
+	      a1120000-a1123fff : igb
+	  a1200000-a12fffff : PCI Bus 0000:03
+	    a1200000-a121ffff : 0000:03:00.0
+	      a1200000-a121ffff : igb
+	    a1220000-a1223fff : 0000:03:00.0
+	      a1220000-a1223fff : igb
+	  a1300000-a13fffff : PCI Bus 0000:02
+	    a1300000-a1303fff : 0000:02:00.0
+	      a1300000-a1303fff : nvme
+	  a1400000-a140ffff : 0000:00:14.0
+	    a1400000-a140ffff : xhci-hcd
+	  a1410000-a1413fff : 0000:00:1f.3
+	  a1414000-a1415fff : 0000:00:17.0
+	    a1414000-a1415fff : ahci
+	  a1416000-a1417fff : 0000:00:14.2
+	  a1418000-a14180ff : 0000:00:1f.4
+	  a1419000-a1419fff : 0000:00:1a.0
+	    a1419000-a1419fff : mmc0
+	  a141a000-a141a7ff : 0000:00:17.0
+	    a141a000-a141a7ff : ahci
+	  a141b000-a141b0ff : 0000:00:17.0
+	    a141b000-a141b0ff : ahci
+	  a141c000-a141cfff : 0000:00:16.0
+	  a141d000-a141dfff : 0000:00:14.2
+	  a141e000-a141efff : 0000:00:12.0
+	e0000000-efffffff : PCI MMCONFIG 0000 [bus 00-ff]
+	  e0000000-efffffff : Reserved
+	    e0000000-efffffff : pnp 00:0d
+	fc800000-fe7fffff : PCI Bus 0000:00
+	  fd000000-fd69ffff : pnp 00:0e
+	  fd6a0000-fd6affff : pnp 00:10
+	  fd6b0000-fd6cffff : pnp 00:0e
+	  fd6d0000-fd6dffff : pnp 00:10
+	  fd6e0000-fd6effff : pnp 00:10
+	  fd6f0000-fdffffff : pnp 00:0e
+	  fe000000-fe010fff : Reserved
+	    fe010000-fe010fff : 0000:00:1f.5
+	  fe200000-fe7fffff : pnp 00:0e
+	fec00000-fec00fff : Reserved
+	  fec00000-fec003ff : IOAPIC 0
+	fed00000-fed003ff : HPET 0
+	  fed00000-fed003ff : PNP0103:00
+	fed10000-fed17fff : pnp 00:0d
+	fed18000-fed18fff : pnp 00:0d
+	fed19000-fed19fff : pnp 00:0d
+	fed20000-fed3ffff : pnp 00:0d
+	fed45000-fed8ffff : pnp 00:0d
+	fed90000-fed93fff : pnp 00:0d
+	fee00000-fee00fff : Local APIC
+	  fee00000-fee00fff : Reserved
+	ff000000-ffffffff : Reserved
+	  ff000000-ffffffff : pnp 00:0e
 	100000000-26dffffff : System RAM
-	</SYSTEM_RAM_INFO>
+	  207400000-2084031d0 : Kernel code
+	  2084031d1-208b6323f : Kernel data
+	  208d1a000-208dfffff : Kernel bss
+	26e000000-26fffffff : RAM buffer
+	</IOMEM_INFO>
 
 	<BLOCK_DEVICE_INFO>
 	/dev/nvme0n1p3: TYPE="ext4"
