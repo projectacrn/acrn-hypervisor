@@ -189,15 +189,106 @@
 	<CLOS_INFO>
 	</CLOS_INFO>
 
-	<SYSTEM_RAM_INFO>
+	<IOMEM_INFO>
+	00000000-00000fff : Reserved
 	00001000-00057fff : System RAM
-	00059000-0009dfff : System RAM
-	00100000-3fffffff : System RAM
-	40400000-7da93fff : System RAM
-	7da96000-8a0dafff : System RAM
-	8afff000-8affffff : System RAM
-	100000000-26dffffff : System RAM
-	</SYSTEM_RAM_INFO>
+	00058000-00058fff : Reserved
+	00059000-0009efff : System RAM
+	0009f000-000fffff : Reserved
+	  000a0000-000bffff : PCI Bus 0000:00
+	  000c0000-000cffff : Video ROM
+	  000d0000-000d0fff : Adapter ROM
+	  000f0000-000fffff : System ROM
+	00100000-797d4017 : System RAM
+	797d4018-797e4e57 : System RAM
+	797e4e58-797e5017 : System RAM
+	797e5018-797f5057 : System RAM
+	797f5058-7e126fff : System RAM
+	7e127000-7e127fff : ACPI Non-volatile Storage
+	7e128000-7e128fff : Reserved
+	7e129000-89d8afff : System RAM
+	89d8b000-8a21afff : Reserved
+	8a21b000-8a25dfff : ACPI Tables
+	8a25e000-8aa39fff : ACPI Non-volatile Storage
+	8aa3a000-8affdfff : Reserved
+	8affe000-8affefff : System RAM
+	8afff000-8fffffff : Reserved
+	  8c000000-8fffffff : Graphics Stolen Memory
+	90000000-dfffffff : PCI Bus 0000:00
+	  c0000000-cfffffff : 0000:00:02.0
+	  d0000000-d09fffff : PCI Bus 0000:01
+	  de000000-deffffff : 0000:00:02.0
+	  df000000-df9fffff : PCI Bus 0000:01
+	  dfa00000-dfafffff : PCI Bus 0000:03
+	    dfa00000-dfa00fff : 0000:03:00.0
+	      dfa00000-dfa00fff : rtsx_pci
+	  dfb00000-dfbfffff : PCI Bus 0000:02
+	    dfb00000-dfb01fff : 0000:02:00.0
+	      dfb00000-dfb01fff : iwlwifi
+	  dfc00000-dfc1ffff : 0000:00:1f.6
+	    dfc00000-dfc1ffff : e1000e
+	  dfc20000-dfc2ffff : 0000:00:1f.3
+	    dfc20000-dfc2ffff : ICH HD audio
+	  dfc30000-dfc3ffff : 0000:00:14.0
+	    dfc30000-dfc3ffff : xhci-hcd
+	      dfc38070-dfc3846f : intel_xhci_usb_sw
+	  dfc40000-dfc43fff : 0000:00:1f.3
+	    dfc40000-dfc43fff : ICH HD audio
+	  dfc44000-dfc47fff : 0000:00:1f.2
+	  dfc48000-dfc49fff : 0000:00:17.0
+	    dfc48000-dfc49fff : ahci
+	  dfc4a000-dfc4a0ff : 0000:00:1f.4
+	  dfc4b000-dfc4b7ff : 0000:00:17.0
+	    dfc4b000-dfc4b7ff : ahci
+	  dfc4c000-dfc4c0ff : 0000:00:17.0
+	    dfc4c000-dfc4c0ff : ahci
+	  dfc4d000-dfc4dfff : 0000:00:16.0
+	    dfc4d000-dfc4dfff : mei_me
+	  dfc4e000-dfc4efff : 0000:00:14.2
+	    dfc4e000-dfc4efff : Intel PCH thermal driver
+	  dfc4f000-dfc4ffff : 0000:00:08.0
+	  dffe0000-dfffffff : pnp 00:05
+	e0000000-efffffff : PCI MMCONFIG 0000 [bus 00-ff]
+	  e0000000-efffffff : Reserved
+	    e0000000-efffffff : pnp 00:05
+	fd000000-fe7fffff : PCI Bus 0000:00
+	  fd000000-fdabffff : pnp 00:06
+	  fdac0000-fdacffff : pnp 00:08
+	  fdad0000-fdadffff : pnp 00:06
+	  fdae0000-fdaeffff : pnp 00:08
+	  fdaf0000-fdafffff : pnp 00:08
+	  fdb00000-fdffffff : pnp 00:06
+	    fdc6000c-fdc6000f : iTCO_wdt
+	  fe000000-fe010fff : Reserved
+	  fe028000-fe028fff : pnp 00:08
+	  fe029000-fe029fff : pnp 00:08
+	  fe036000-fe03bfff : pnp 00:06
+	  fe03d000-fe3fffff : pnp 00:06
+	  fe410000-fe7fffff : pnp 00:06
+	fec00000-fec00fff : Reserved
+	  fec00000-fec003ff : IOAPIC 0
+	fed00000-fed00fff : Reserved
+	  fed00000-fed003ff : HPET 0
+	    fed00000-fed003ff : PNP0103:00
+	fed10000-fed17fff : pnp 00:05
+	fed18000-fed18fff : pnp 00:05
+	fed19000-fed19fff : pnp 00:05
+	fed20000-fed3ffff : pnp 00:05
+	fed40000-fed44fff : MSFT0101:00
+	fed45000-fed8ffff : pnp 00:05
+	fed90000-fed90fff : dmar0
+	fed91000-fed91fff : dmar1
+	fee00000-fee00fff : Local APIC
+	  fee00000-fee00fff : Reserved
+	ff000000-ffffffff : Reserved
+	  ff000000-ffffffff : INT0800:00
+	    ff000000-ffffffff : pnp 00:05
+	100000000-26effffff : System RAM
+	  1dd000000-1de005580 : Kernel code
+	  1de005581-1de9c61ff : Kernel data
+	  1deb1f000-1df3fffff : Kernel bss
+	26f000000-26fffffff : RAM buffer
+	</IOMEM_INFO>
 
 	<BLOCK_DEVICE_INFO>
 	/dev/sda3: TYPE="ext4"
