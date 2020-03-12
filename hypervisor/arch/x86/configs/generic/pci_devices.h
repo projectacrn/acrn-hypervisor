@@ -7,6 +7,6 @@
 #ifndef PCI_DEVICES_H_
 #define PCI_DEVICES_H_
 
-#error "This is a dummy pci_devices.h, please generate PCI BDF info for your board."
+#define PTDEV_HI_MMIO_SIZE		0UL
 
 #endif /* PCI_DEVICES_H_ */
