@@ -37,15 +37,14 @@ def main(args):
     :param args: it is a command line args for the script
     """
     err_dic = {}
-    config_srcs = []
     config_dirs = []
 
-    (err_dic, board_info_file, scenario_info_file, enable_commit) = board_cfg_lib.get_param(args)
+    (err_dic, board_info_file, scenario_info_file) = board_cfg_lib.get_param(args)
     if err_dic:
         return err_dic
 
     # check env
-    err_dic = board_cfg_lib.prepare(enable_commit)
+    err_dic = board_cfg_lib.prepare()
     if err_dic:
         return err_dic
 
@@ -77,12 +76,6 @@ def main(args):
     config_misc_cfg = config_dirs[0] + '/' + GEN_FILE[3]
     config_board_kconfig = ACRN_CONFIG + board + GEN_FILE[4]
 
-    config_srcs.append(config_pci)
-    config_srcs.append(config_board)
-    config_srcs.append(config_platform)
-    config_srcs.append(config_misc_cfg)
-    config_srcs.append(config_board_kconfig)
-
     # generate board.c
     with open(config_board, 'w+') as config:
         err_dic = board_c.generate_file(config)
@@ -110,33 +103,21 @@ def main(args):
             if err_dic:
                 return err_dic
 
-    config_str = 'Config files'
-    gen_str = 'generated'
-    # move changes to patch, and apply to the source code
-    if enable_commit:
-        err_dic = board_cfg_lib.gen_patch(config_srcs, "board " + board)
-        config_str = 'Config patch'
-        gen_str = 'committed'
-
     if board not in board_cfg_lib.BOARD_NAMES and not err_dic:
-        print("{} for NEW board {} is {} successfully!".format(config_str, board, gen_str))
+        print("Config files for NEW board {} is generated successfully!".format(board ))
     elif not err_dic:
-        print("{} for {} is {} successfully!".format(config_str, board, gen_str))
+        print("Config files for {} is generated successfully!".format(board))
     else:
-        print("{} for {} is failed".format(config_str, board))
+        print("Config files for {} is failed".format(board))
 
     return err_dic
 
 
-def ui_entry_api(board_info,scenario_info, enable_commit=False):
+def ui_entry_api(board_info, scenario_info):
 
-    git_env_check = False
     arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info]
-    if enable_commit:
-        arg_list.append('--enable_commit')
-        git_env_check = True
 
-    err_dic = board_cfg_lib.prepare(git_env_check)
+    err_dic = board_cfg_lib.prepare()
     if err_dic:
         return err_dic
 

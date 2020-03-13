@@ -1,4 +1,4 @@
-Please run launch_cfg_gen.py to generate board related configuration patch, the patch would be applied on current acrn-hypervisor git tree automatically.
+Please run launch_cfg_gen.py to generate board related configuration files.
 
 usage: python3 launch_cfg_gen.py [h] --board <board_info_file> --scenario <scenario_info_file> --launch <launch_info_file>
 positional arguments:
