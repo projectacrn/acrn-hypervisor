@@ -60,9 +60,9 @@ PM_CHANNEL_DIC = {
 MOUNT_FLAG_DIC = {}
 
 
-def prepare(check_git):
+def prepare():
     """ Check environment """
-    return common.check_env(check_git)
+    return common.check_env()
 
 
 def print_yel(msg, warn=False):
@@ -86,12 +86,11 @@ def print_red(msg, err=False):
 def usage(file_name):
     """ This is usage for how to use this tool """
     print("usage= {} [h]".format(file_name), end="")
-    print("--board <board_info_file> --scenario <scenario_info_file> --launch <launch_info_file> --uosid <uosid id> [--enable_commit]")
+    print("--board <board_info_file> --scenario <scenario_info_file> --launch <launch_info_file> --uosid <uosid id>")
     print('board_info_file :  file name of the board info')
     print('scenario_info_file :  file name of the scenario info')
     print('launch_info_file :  file name of the launch info')
     print('uosid :  this is the relateive id for post launch vm in scenario info XML:[1..max post launch vm]')
-    print('enable_commit:  enable the flag that git add/commit the generate files to the code base. without --enable_commit will not commit this source code')
 
 
 def get_param(args):
@@ -104,24 +103,18 @@ def get_param(args):
     board_info_file = False
     scenario_info_file = False
     launch_info_file = False
-    enable_commit = False
-    param_list = ['--board', '--scenario', '--launch', '--uosid', '--enable_commit']
+    param_list = ['--board', '--scenario', '--launch', '--uosid']
 
     for arg_str in param_list:
-
-        if arg_str == '--enable_commit':
-            continue
 
         if arg_str not in args:
             usage(args[0])
             err_dic['common error: get wrong parameter'] = "wrong usage"
-            return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
+            return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
 
     args_list = args[1:]
-    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario=', 'launch=', 'uosid=', 'enable_commit'])
+    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario=', 'launch=', 'uosid='])
     for arg_k, arg_v in optlist:
-        if arg_k == '--enable_commit':
-            enable_commit = True
         if arg_k == '--board':
             board_info_file = arg_v
         if arg_k == '--scenario':
@@ -133,26 +126,26 @@ def get_param(args):
                 vm_th = arg_v
                 if not vm_th.isnumeric():
                     err_dic['common error: get wrong parameter'] = "--uosid should be a number"
-                    return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
+                    return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
 
     if not board_info_file or not scenario_info_file or not launch_info_file:
         usage(args[0])
         err_dic['common error: get wrong parameter'] = "wrong usage"
-        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
+        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
 
     if not os.path.exists(board_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(board_info_file)
-        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
+        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
 
     if not os.path.exists(scenario_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(scenario_info_file)
-        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
+        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
 
     if not os.path.exists(launch_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(launch_info_file)
-        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
+        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
 
-    return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), enable_commit)
+    return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
 
 
 def get_post_num_list():
@@ -369,16 +362,6 @@ def get_vpid_from_bdf(bdf_vpid_map, bdf_list):
                 vpid_list[p_id] = ''
 
     return vpid_list
-
-
-def gen_patch(srcs_list, launch_name):
-    """
-    Generate patch and apply to local source code
-    :param srcs_list: it is a list what contains source files
-    :param scenario_name: scenario name
-    """
-    err_dic = common.add_to_patch(srcs_list, launch_name)
-    return err_dic
 
 
 def get_uos_type():

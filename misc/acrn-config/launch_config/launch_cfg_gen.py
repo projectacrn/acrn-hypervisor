@@ -85,17 +85,12 @@ def validate_launch_setting(board_info, scenario_info, launch_info):
     return (launch_cfg_lib.ERR_LIST, pt_sel, virtio, dm)
 
 
-def ui_entry_api(board_info, scenario_info, launch_info, enable_commit=False):
+def ui_entry_api(board_info, scenario_info, launch_info):
 
     err_dic = {}
-    git_env_check = False
     arg_list = ['launch_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--launch', launch_info, '--uosid', '0']
 
-    if enable_commit:
-        arg_list.append('--enable_commit')
-        git_env_check = True
-
-    err_dic = launch_cfg_lib.prepare(git_env_check)
+    err_dic = launch_cfg_lib.prepare()
     if err_dic:
         return err_dic
 
@@ -147,15 +142,14 @@ def main(args):
     This is main function to start generate launch script
     :param args: it is a command line args for the script
     """
-    config_srcs = []
 
     # get parameters
-    (err_dic, board_info_file, scenario_info_file, launch_info_file, vm_th, enable_commit) = launch_cfg_lib.get_param(args)
+    (err_dic, board_info_file, scenario_info_file, launch_info_file, vm_th) = launch_cfg_lib.get_param(args)
     if err_dic:
         return err_dic
 
     # check env
-    err_dic = launch_cfg_lib.prepare(enable_commit)
+    err_dic = launch_cfg_lib.prepare()
     if err_dic:
         return err_dic
 
@@ -210,9 +204,7 @@ def main(args):
     # generate launch script
     if vm_th:
         script_name = "launch_uos_id{}.sh".format(vm_th)
-        commit_msg = script_name
         launch_script_file = output + script_name
-        config_srcs.append(launch_script_file)
         with open(launch_script_file, mode = 'w', newline=None, encoding='utf-8') as config:
             err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, vm_th, config)
             if err_dic:
@@ -221,26 +213,15 @@ def main(args):
         for post_vm_i in post_num_list:
             script_name = "launch_uos_id{}.sh".format(post_vm_i)
             launch_script_file = output + script_name
-            config_srcs.append(launch_script_file)
             with open(launch_script_file, mode = 'w', newline='\n', encoding='utf-8') as config:
                 err_dic = generate_script_file(names, pt_sel, virt_io.dev, dm.args, post_vm_i, config)
                 if err_dic:
                     return err_dic
 
-        commit_msg = "launch_uos_id{}.sh".format(launch_vm_count)
-
-    config_str = 'Config files'
-    gen_str = 'generated'
-    # move changes to patch, and apply to the source code
-    if enable_commit:
-        err_dic = launch_cfg_lib.gen_patch(config_srcs, commit_msg)
-        config_str = 'Config patch'
-        gen_str = 'committed'
-
     if not err_dic:
-        print("{} for {} is {} successfully!".format(config_str, commit_msg, gen_str))
+        print("Launch files in {} is generated successfully!".format(output))
     else:
-        print("{} for {} is failed".format(config_str, commit_msg))
+        print("Launch files generate failed".format(output))
 
     return err_dic
 

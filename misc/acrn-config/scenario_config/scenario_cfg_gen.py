@@ -77,14 +77,13 @@ def main(args):
     :param args: it is a command line args for the script
     """
     err_dic = {}
-    config_srcs = []
 
-    (err_dic, board_info_file, scenario_info_file, enable_commit) = scenario_cfg_lib.get_param(args)
+    (err_dic, board_info_file, scenario_info_file) = scenario_cfg_lib.get_param(args)
     if err_dic:
         return err_dic
 
     # check env
-    err_dic = scenario_cfg_lib.prepare(enable_commit)
+    err_dic = scenario_cfg_lib.prepare()
     if err_dic:
         return err_dic
 
@@ -105,11 +104,6 @@ def main(args):
     vm_config_h = SCENARIO_PATH + '/' + scenario + '/' + GEN_FILE[0]
     vm_config_c = SCENARIO_PATH + '/' + scenario + '/' + GEN_FILE[1]
     pci_config_c = SCENARIO_PATH + '/' + scenario + '/' + GEN_FILE[2]
-
-    config_srcs.append(vm_config_h)
-    config_srcs.append(vm_config_c)
-    if scenario == "logical_partition":
-        config_srcs.append(pci_config_c)
 
     # parse the scenario.xml
     get_scenario_item_values(board_info_file, scenario_info_file)
@@ -140,31 +134,19 @@ def main(args):
         with open(pci_config_c, 'w') as config:
             pci_dev_c.generate_file(config)
 
-    config_str = 'Config files'
-    gen_str = 'generated'
-    # move changes to patch, and apply to the source code
-    if enable_commit:
-        err_dic = scenario_cfg_lib.gen_patch(config_srcs, "scenario " + scenario)
-        config_str = 'Config patch'
-        gen_str = 'committed'
-
     if not err_dic:
-        print("{} for {} is {} successfully!".format(config_str, scenario, gen_str))
+        print("Config files for {} is generated successfully!".format(scenario))
     else:
-        print("{} for {} is failed".format(config_str, scenario))
+        print("Config files for {} is failed".format(scenario))
 
     return err_dic
 
 
-def ui_entry_api(board_info, scenario_info, enable_commit=False):
+def ui_entry_api(board_info, scenario_info):
 
-    git_env_check = False
     arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info]
-    if enable_commit:
-        arg_list.append('--enable_commit')
-        git_env_check = True
 
-    err_dic = scenario_cfg_lib.prepare(git_env_check)
+    err_dic = scenario_cfg_lib.prepare()
     if err_dic:
         return err_dic
 
