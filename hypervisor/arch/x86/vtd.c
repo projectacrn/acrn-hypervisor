@@ -22,6 +22,7 @@
 #include <board.h>
 #include <vm_configurations.h>
 #include <pci.h>
+#include <vm.h>
 
 #define DBG_IOMMU 0
 
@@ -1135,6 +1136,21 @@ static int32_t iommu_attach_device(struct iommu_domain *domain, uint8_t bus, uin
 				} else {
 					pr_err("dmaru[%d] doesn't support trans passthrough", dmar_unit->index);
 					ret = -ENODEV;
+				}
+			} else if ((bus == ((CONFIG_GPU_SBDF >> 8) & 0xFFU)) && (devfun == (CONFIG_GPU_SBDF & 0xFFU))) {
+				hi_64 = dmar_set_bitslice(hi_64,
+						CTX_ENTRY_UPPER_AW_MASK, CTX_ENTRY_UPPER_AW_POS, (uint64_t)width_to_agaw(domain->addr_width));
+
+				/* TODO: This is a GVT-G WA to resolve invisible cursor issue in Guest. But this change is harmlessly
+				 * due to benefits for SOS graphic performance.  Will revisit how much benefits after root cause the
+				 * cursor issue, then determine if it needs to revert or not.
+				 */
+				if (is_sos_vm(get_vm_from_vmid(domain->vm_id))) {
+					lo_64 = dmar_set_bitslice(lo_64,
+							CTX_ENTRY_LOWER_TT_MASK, CTX_ENTRY_LOWER_TT_POS, DMAR_CTX_TT_PASSTHROUGH);
+				} else {
+					lo_64 = dmar_set_bitslice(lo_64,
+							CTX_ENTRY_LOWER_TT_MASK, CTX_ENTRY_LOWER_TT_POS, DMAR_CTX_TT_UNTRANSLATED);
 				}
 			} else {
 				/* TODO: add Device TLB support */
