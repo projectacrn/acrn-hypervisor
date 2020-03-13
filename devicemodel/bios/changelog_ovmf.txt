@@ -1,3 +1,7 @@
+OVMF release v1.6
+
+- Enable fstack-protector-strong for OVMF x64 and gcc5
+
 OVMF release v1.5
 
 - Upgrade OpenSSL to 1.1.1d - cherry-picked the following commits from master:
