@@ -81,10 +81,9 @@ def print_if_red(msg, err=False):
 def usage(file_name):
     """ This is usage for how to use this tool """
     print("usage= {} [h] ".format(file_name), end="")
-    print("--board <board_info_file> --scenario <scenario_info_file> [--enable_commit]")
+    print("--board <board_info_file> --scenario <scenario_info_file>")
     print('board_info_file :  file name of the board info')
     print('scenario_info_file :  file name of the scenario info')
-    print('enable_commit:  enable the flag that git add/commit the generate files to the code base. without --enable_commit will not commit this source code')
 
 
 def get_param(args):
@@ -95,50 +94,40 @@ def get_param(args):
     err_dic = {}
     board_info_file = False
     scenario_info_file = False
-    enable_commit = False
 
     if '--board' not in args or '--scenario' not in args:
         usage(args[0])
         err_dic['common error: get wrong parameter'] = "wrong usage"
-        return (err_dic, board_info_file, scenario_info_file, enable_commit)
+        return (err_dic, board_info_file, scenario_info_file)
 
     args_list = args[1:]
-    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario=', 'enable_commit'])
+    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario='])
     for arg_k, arg_v in optlist:
         if arg_k == '--board':
             board_info_file = arg_v
         if arg_k == '--scenario':
             scenario_info_file = arg_v
-        if arg_k == '--enable_commit':
-            enable_commit = True
 
     if not board_info_file or not scenario_info_file:
         usage(args[0])
         err_dic['common error: get wrong parameter'] = "wrong usage"
-        return (err_dic, board_info_file, scenario_info_file, enable_commit)
+        return (err_dic, board_info_file, scenario_info_file)
 
     if not os.path.exists(board_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(board_info_file)
-        return (err_dic, board_info_file, scenario_info_file, enable_commit)
+        return (err_dic, board_info_file, scenario_info_file)
 
     if not os.path.exists(scenario_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(scenario_info_file)
-        return (err_dic, board_info_file, scenario_info_file, enable_commit)
+        return (err_dic, board_info_file, scenario_info_file)
 
-    return (err_dic, board_info_file, scenario_info_file, enable_commit)
+    return (err_dic, board_info_file, scenario_info_file)
 
 
-def check_env(check_git=False):
+def check_env():
     """ Prepare to check the environment """
     err_dic = {}
     bin_list = []
-
-    if check_git:
-        bin_list.append('git')
-
-        usr_dir = os.environ['HOME']
-        if not os.path.isfile("{}/.gitconfig".format(usr_dir)):
-            err_dic['commn error: check env failed'] = "git not configured!"
 
     for excute in bin_list:
         res = subprocess.Popen("which {}".format(excute), shell=True, stdout=subprocess.PIPE,
@@ -148,14 +137,6 @@ def check_env(check_git=False):
 
         if not line:
             err_dic['commn error: check env failed'] = "'{}' not found, please install it!".format(excute)
-
-        if excute == "git":
-            res = subprocess.Popen("git tag -l", shell=True, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE, close_fds=True)
-            line = res.stdout.readline().decode("ascii")
-
-            if "acrn" not in line:
-                err_dic['commn error: check env failed'] = "Run this tool in acrn-hypervisor mainline source code!"
 
     for py_cache in PY_CACHES:
         if os.path.exists(py_cache):
@@ -522,35 +503,6 @@ def get_load_order_by_vmid(config_file, vm_count, idx):
         err_dic['vm number: failue'] = "Toatal vm number is less than index number"
 
     return (err_dic, order_id_dic[idx])
-
-
-def add_to_patch(srcs_list, commit_name):
-    """
-    Generate patch and apply to local source code
-    :param srcs_list: it is a list what contains source files
-    :param commit_name: distinguish the key commit message for the patch
-    """
-    err_dic = {}
-    changes = ' '.join(srcs_list)
-    git_add = "git add {}".format(changes)
-    ret = subprocess.call(git_add, shell=True, stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE, close_fds=True)
-    if ret:
-        err_dic['add patch: failue'] = "Add patch failue"
-        return err_dic
-
-    # commit this changes
-    git_commit = 'git commit -sm "acrn-config: config patch for {}"'.format(commit_name)
-
-    try:
-        ret = subprocess.call(git_commit, shell=True, stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE, close_fds=True)
-        if ret < 0:
-            err_dic['commit patch: commit patch failue'] = "Commit patch failue"
-    except (OSError, subprocess.CalledProcessError) as e:
-        err_dic['commit patch: commit patch failue'] = "Commit patch failue"
-
-    return err_dic
 
 
 def vm_pre_launch_cnt(config_file):

@@ -45,9 +45,9 @@ SIZE_2G = common.SIZE_2G
 SIZE_4G = common.SIZE_4G
 
 
-def prepare(check_git):
+def prepare():
     """ check environment """
-    return common.check_env(check_git)
+    return common.check_env()
 
 
 def print_yel(msg, warn=False):
@@ -175,16 +175,6 @@ def get_sub_leaf_tag(config_file, branch_tag, tag_str):
      :return: value of tag_str item
      """
     return common.get_leaf_tag_val(config_file, branch_tag, tag_str)
-
-
-def gen_patch(srcs_list, board_name):
-    """
-    Generate patch and apply to local source code
-    :param srcs_list: it is a list what contains source files
-    :param board_name: board name
-    """
-    err_dic = common.add_to_patch(srcs_list, board_name)
-    return err_dic
 
 
 def is_hpa_size(hpa_size_list):

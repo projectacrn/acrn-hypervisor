@@ -52,9 +52,9 @@ LEGACY_TTYS = {
     'ttyS3':'0x2E8',
 }
 
-def prepare(check_git):
+def prepare():
     """ Check environment """
-    return common.check_env(check_git)
+    return common.check_env()
 
 
 def print_yel(msg, warn=False):
@@ -667,16 +667,6 @@ def cpus_assignment(cpus_per_vm, index):
     vm_cpu_bmp['cpu_map'] = cpu_str
     vm_cpu_bmp['cpu_num'] = len(cpus_per_vm[index])
     return vm_cpu_bmp
-
-
-def gen_patch(srcs_list, scenario_name):
-    """
-    Generate patch and apply to local source code
-    :param srcs_list: it is a list what contains source files
-    :param scenario_name: scenario name
-    """
-    err_dic = common.add_to_patch(srcs_list, scenario_name)
-    return err_dic
 
 
 def get_vuart_info_id(config_file, idx):
