@@ -272,8 +272,9 @@ struct hc_ptdev_irq {
  * the parameter for HC_ASSIGN_PCIDEV or HC_DEASSIGN_PCIDEV hypercall
  */
 struct acrn_assign_pcidev {
-	/** reversed for externed compatibility */
-	uint32_t rsvd1;
+#define QUIRK_PTDEV    (1U << 0)    /* We will only handle general part in HV, others in DM */
+	/** the type of the the pass-through PCI device */
+	uint32_t type;
 
 	/** virtual BDF# of the pass-through PCI device */
 	uint16_t virt_bdf;

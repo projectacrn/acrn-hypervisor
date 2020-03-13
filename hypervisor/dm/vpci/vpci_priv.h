@@ -32,6 +32,11 @@
 
 #include <pci.h>
 
+static inline bool is_quirk_ptdev(const struct pci_vdev *vdev)
+{
+	return ((vdev->flags & QUIRK_PTDEV) != 0U);
+}
+
 static inline bool in_range(uint32_t value, uint32_t lower, uint32_t len)
 {
 	return ((value >= lower) && (value < (lower + len)));

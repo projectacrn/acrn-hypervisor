@@ -104,6 +104,8 @@ struct pci_vdev {
 
 	union pci_cfgdata cfgdata;
 
+	uint32_t flags;
+
 	/* The bar info of the virtual PCI device. */
 	uint32_t nr_bars; /* 6 for normal device, 2 for bridge, 1 for cardbus */
 	struct pci_vbar vbars[PCI_BAR_COUNT];
