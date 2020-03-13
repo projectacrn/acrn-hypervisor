@@ -16,7 +16,7 @@ Tools
       reference/kconfig/index
       user-guides/acrn-dm-parameters
 
-   .. _tools:
+.. _tools:
 
    **Runtime Tools**
 
