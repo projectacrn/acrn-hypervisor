@@ -353,8 +353,16 @@ static struct pci_vdev *find_available_vdev(struct acrn_vpci *vpci, union pci_bd
 	struct pci_vdev *vdev = pci_find_vdev(vpci, bdf);
 
 	if ((vdev != NULL) && (vdev->vpci != vpci)) {
-		/* If the device is assigned to other guest, we could not access it */
-		vdev = NULL;
+		/* In the case a device is assigned to a UOS and is not in a zombie state */
+		if ((vdev->new_owner != NULL) && (vdev->new_owner->vpci != NULL)) {
+			/* the SOS is able to access, if and only if the SOS has higher severity than the UOS. */
+			if (get_vm_severity(vpci->vm->vm_id) <
+					get_vm_severity(vdev->new_owner->vpci->vm->vm_id)) {
+				vdev = NULL;
+			}
+		} else {
+			vdev = NULL;
+		}
 	}
 
 	return vdev;

@@ -119,7 +119,6 @@ static struct acrn_vm *get_highest_severity_vm(void)
 {
 	uint16_t vm_id, highest_vm_id = 0U;
 	struct acrn_vm *vm = NULL;
-	struct acrn_vm_config *vm_config;
 
 	for (vm_id = 1U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm = get_vm_from_vmid(vm_id);
@@ -129,8 +128,7 @@ static struct acrn_vm *get_highest_severity_vm(void)
 			continue;
 		}
 
-		vm_config = get_vm_config(vm_id);
-		if (vm_config->severity > get_vm_config(highest_vm_id)->severity) {
+		if (get_vm_severity(vm_id) > get_vm_severity(highest_vm_id)) {
 			highest_vm_id = vm_id;
 		}
 	}
