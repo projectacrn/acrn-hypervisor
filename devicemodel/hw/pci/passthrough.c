@@ -124,6 +124,28 @@ read_config(struct pci_device *phys_dev, long reg, int width)
 }
 
 static int
+write_config(struct pci_device *phys_dev, long reg, int width, uint32_t data)
+{
+	int temp = -1;
+
+	switch (width) {
+	case 1:
+		temp = pci_device_cfg_write_u8(phys_dev, data, reg);
+		break;
+	case 2:
+		temp = pci_device_cfg_write_u16(phys_dev, data, reg);
+		break;
+	case 4:
+		temp = pci_device_cfg_write_u32(phys_dev, data, reg);
+		break;
+	default:
+		warnx("%s: invalid reg width", __func__);
+	}
+
+	return temp;
+}
+
+static int
 cfginit_cap(struct vmctx *ctx, struct passthru_dev *ptdev)
 {
 	int ptr, cap, sts;
@@ -515,8 +537,10 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		/* initialize the EPT mapping for passthrough GPU opregion */
 		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
 
-		pcidev.rsvd2[0] = GPU_GSM_GPA | (gsm_phys & ~PCIM_BDSM_GSM_MASK) ;
-		pcidev.rsvd2[1] = GPU_OPREGION_GPA | (opregion_phys & ~PCIM_ASLS_OPREGION_MASK);
+		pci_set_cfgdata32(dev, PCIR_BDSM, GPU_GSM_GPA | (gsm_phys & ~PCIM_BDSM_GSM_MASK));
+		pci_set_cfgdata32(dev, PCIR_ASLS_CTL, GPU_OPREGION_GPA | (opregion_phys & ~PCIM_ASLS_OPREGION_MASK));
+
+		pcidev.type = QUIRK_PTDEV;
 	}
 
 	pcidev.virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
@@ -628,13 +652,27 @@ static int
 passthru_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		 int coff, int bytes, uint32_t *rv)
 {
-	return ~0;
+	struct passthru_dev *ptdev = dev->arg;
+
+	if ((PCI_BDF(dev->bus, dev->slot, dev->func) == PCI_BDF_GPU) &&
+		((coff == PCIR_BDSM) || (coff == PCIR_ASLS_CTL)))
+		*rv = pci_get_cfgdata32(dev, coff);
+	else
+		*rv = read_config(ptdev->phys_dev, coff, bytes);
+
+	return 0;
 }
 
 static int
 passthru_cfgwrite(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		  int coff, int bytes, uint32_t val)
 {
+	struct passthru_dev *ptdev = dev->arg;
+
+	if (!((PCI_BDF(dev->bus, dev->slot, dev->func) == PCI_BDF_GPU) &&
+		((coff == PCIR_BDSM) || (coff == PCIR_ASLS_CTL))))
+		write_config(ptdev->phys_dev, coff, bytes, val);
+
 	return 0;
 }
 

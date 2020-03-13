@@ -82,11 +82,15 @@ static bool vpci_pio_cfgaddr_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 		cfg_addr->value = val & (~0x7f000003U);
 
 		if (is_postlaunched_vm(vcpu->vm)) {
+			const struct pci_vdev *vdev;
+
 			vbdf.value = cfg_addr->bits.bdf;
-			/* For post-launched VM, ACRN will only handle PT device, all virtual PCI device
+			vdev = find_available_vdev(vpci, vbdf);
+			/* For post-launched VM, ACRN HV will only handle PT device,
+			 * all virtual PCI device and QUIRK PT device
 			 * still need to deliver to ACRN DM to handle.
 			 */
-			if (find_available_vdev(vpci, vbdf) == NULL) {
+			if ((vdev == NULL) || is_quirk_ptdev(vdev)) {
 				ret = false;
 			}
 		}
@@ -481,6 +485,8 @@ static void write_cfg_header(struct pci_vdev *vdev,
 static int32_t write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t val)
 {
+	int32_t ret = 0;
+
 	if (cfg_header_access(offset)) {
 		write_cfg_header(vdev, offset, bytes, val);
 	} else if (msicap_access(vdev, offset)) {
@@ -490,20 +496,22 @@ static int32_t write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 	} else if (sriovcap_access(vdev, offset)) {
 		write_sriov_cap_reg(vdev, offset, bytes, val);
 	} else {
-		/* For GVT-D, prevent stolen memory and opregion memory write */
-		if (!(is_postlaunched_vm(vdev->vpci->vm) && is_gvtd(vdev->pdev->bdf) &&
-			((offset == PCIR_BDSM) || (offset == PCIR_ASLS_CTL)))) {
+		if (!is_quirk_ptdev(vdev)) {
 			/* passthru to physical device */
 			pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+		} else {
+			ret = -ENODEV;
 		}
 	}
 
-	return 0;
+	return ret;
 }
 
 static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t *val)
 {
+	int32_t ret = 0;
+
 	if (cfg_header_access(offset)) {
 		read_cfg_header(vdev, offset, bytes, val);
 	} else if (msicap_access(vdev, offset)) {
@@ -513,17 +521,15 @@ static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
 	} else if (sriovcap_access(vdev, offset)) {
 		read_sriov_cap_reg(vdev, offset, bytes, val);
 	} else {
-		/* For GVT-D, just return GPA for stolen memory and opregion memory read. */
-		if (is_postlaunched_vm(vdev->vpci->vm) && is_gvtd(vdev->pdev->bdf) &&
-				((offset == PCIR_BDSM) || (offset == PCIR_ASLS_CTL))) {
-			*val = pci_vdev_read_vcfg(vdev, offset, bytes);
-		} else {
+		if (!is_quirk_ptdev(vdev)) {
 			/* passthru to physical device */
 			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+		} else {
+			ret = -ENODEV;
 		}
 	}
 
-	return 0;
+	return ret;
 }
 
 static const struct pci_vdev_ops pci_pt_dev_ops = {
@@ -545,7 +551,7 @@ static int32_t vpci_read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	spinlock_obtain(&vpci->lock);
 	vdev = find_available_vdev(vpci, bdf);
 	if (vdev != NULL) {
-		vdev->vdev_ops->read_vdev_cfg(vdev, offset, bytes, val);
+		ret = vdev->vdev_ops->read_vdev_cfg(vdev, offset, bytes, val);
 	} else {
 		if (is_postlaunched_vm(vpci->vm)) {
 			ret = -ENODEV;
@@ -567,7 +573,7 @@ static int32_t vpci_write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	spinlock_obtain(&vpci->lock);
 	vdev = find_available_vdev(vpci, bdf);
 	if (vdev != NULL) {
-		vdev->vdev_ops->write_vdev_cfg(vdev, offset, bytes, val);
+		ret = vdev->vdev_ops->write_vdev_cfg(vdev, offset, bytes, val);
 	} else {
 		if (!is_postlaunched_vm(vpci->vm)) {
 			pr_acrnlog("%s %x:%x.%x not found! off: 0x%x, val: 0x%x\n", __func__,
@@ -770,12 +776,7 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pc
 				pci_vdev_write_vbar(vdev, idx, pcidev->bar[idx]);
 			}
 
-			if (is_gvtd(bdf)) {
-				/* rsvd2[0U] for stolen memory GPA; rsvd2[1U] for opregion memory GPA */
-				pci_vdev_write_vcfg(vdev, PCIR_BDSM, 4U, pcidev->rsvd2[0U]);
-				pci_vdev_write_vcfg(vdev, PCIR_ASLS_CTL, 4U, pcidev->rsvd2[1U]);
-			}
-
+			vdev->flags |= pcidev->type;
 			vdev->bdf.value = pcidev->virt_bdf;
 			spinlock_release(&tgt_vm->vpci.lock);
 			vdev_in_sos->new_owner = vdev;
