@@ -81,7 +81,6 @@ license.
    try
    develop
    contribute
-   reference/index
    release_notes/index
    asa
    faq

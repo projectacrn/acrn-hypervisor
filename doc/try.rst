@@ -1,7 +1,7 @@
 .. _getting_started:
 
-Try using ACRN
-##############
+Getting Started
+###############
 
 After reading the :ref:`introduction`, use these guides to get started
 using ACRN in a reference setup.  We'll show how to set up your
