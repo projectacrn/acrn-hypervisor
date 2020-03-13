@@ -195,7 +195,7 @@ modified to map native GPIO to UOS. (See :ref:`virtio-hld` for more information.
 New ACRN tools
 ==============
 We've added a collection of support tools including ``acrnctl``, ``acrntrace``, ``acrnlog``,
-``acrn-crashlog``, ``acrnprobe``. (See :ref:`tools` for details.)
+``acrn-crashlog``, ``acrnprobe``. (See the `Tools` section under **User Guides** for details.)
 
 Document updates
 ================
