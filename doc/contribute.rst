@@ -1,7 +1,7 @@
 .. _contribute_acrn:
 
-Contribute to ACRN
-##################
+Developer Reference
+###################
 
 Here's where you'll find details about ACRN's high-level design and
 design principles, along with guidelines followed by the
@@ -27,8 +27,8 @@ also find details about specific architecture topics.
    developer-guides/VBSK-analysis
 
 
-Contributing Guides
-*******************
+Contribute Guides
+*****************
 
 As an open-source project, we welcome and encourage the community to
 submit patches for code, documentation, tests, and more, directly to the
@@ -45,15 +45,12 @@ the project.
    developer-guides/graphviz
    tutorials/docbuild
 
-.. _tools:
-
-Tools
-*****
+API Documentation
+*****************
 
 .. toctree::
-   :glob:
    :maxdepth: 1
 
-   misc/tools/acrn-crashlog/README
-   misc/tools/**
-   misc/acrn-manager/**
+   api/index
+
+
