@@ -93,7 +93,6 @@ int32_t hcall_get_api_version(struct acrn_vm *vm, uint64_t param)
 	int32_t ret;
 
 	if (copy_to_gpa(vm, &version, param, sizeof(version)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
 		ret = -1;
 	} else {
 		ret = 0;
@@ -123,7 +122,6 @@ int32_t hcall_get_platform_info(struct acrn_vm *vm, uint64_t param)
 	platform_info.max_vcpus_per_vm = MAX_VCPUS_PER_VM;
 	platform_info.max_kata_containers = CONFIG_MAX_KATA_VM_NUM;
 	if (copy_to_gpa(vm, &platform_info, param, sizeof(platform_info)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
 		ret = -1;
 	}
 
@@ -180,13 +178,11 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 				}
 
 				if (copy_to_gpa(vm, &cv, param, sizeof(cv)) != 0) {
-					pr_err("%s: Unable copy param to vm\n", __func__);
 					ret = -1;
 				}
 			}
 		}
 	} else {
-		pr_err("%s: Unable copy param to vm\n", __func__);
 	        ret = -1;
 	}
 
@@ -316,7 +312,6 @@ int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	if ((!is_poweroff_vm(target_vm)) && (param != 0U) && (is_postlaunched_vm(target_vm)) &&
 			(target_vm->state != VM_RUNNING)) {
 		if (copy_from_gpa(vm, &vcpu_regs, param, sizeof(vcpu_regs)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else if (vcpu_regs.vcpu_id >= MAX_VCPUS_PER_VM) {
 			pr_err("%s: invalid vcpu_id for set_vcpu_regs\n", __func__);
 		} else {
@@ -445,7 +440,6 @@ int32_t hcall_inject_msi(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 		struct acrn_msi_entry msi;
 
 		if (copy_from_gpa(vm, &msi, param, sizeof(msi)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else {
 			/* For target cpu with lapic pt, send ipi instead of injection via vlapic */
 			if (is_lapic_pt_configured(target_vm)) {
@@ -503,7 +497,6 @@ int32_t hcall_set_ioreq_buffer(struct acrn_vm *vm, uint16_t vmid, uint64_t param
 		struct acrn_set_ioreq_buffer iobuf;
 
 		if (copy_from_gpa(vm, &iobuf, param, sizeof(iobuf)) != 0) {
-			pr_err("%p %s: Unable copy param to vm\n", target_vm, __func__);
 	        } else {
 			dev_dbg(DBG_LEVEL_HYCALL, "[%d] SET BUFFER=0x%p",
 					vmid, iobuf.req_buf);
@@ -766,7 +759,6 @@ int32_t hcall_write_protect_page(struct acrn_vm *vm, uint16_t vmid, uint64_t wp_
 		struct wp_data wp;
 
 		if (copy_from_gpa(vm, &wp, wp_gpa, sizeof(wp)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else {
 			ret = write_protect_page(target_vm, &wp);
 		}
@@ -804,7 +796,6 @@ int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 			pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
 				__func__, target_vm->vm_id, v_gpa2hpa.gpa);
 		} else if (copy_to_gpa(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else {
 			ret = 0;
 		}
@@ -834,7 +825,6 @@ int32_t hcall_assign_pcidev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		if (copy_from_gpa(vm, &pcidev, param, sizeof(pcidev)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else {
 			ret = vpci_assign_pcidev(target_vm, &pcidev);
 	        }
@@ -864,7 +854,6 @@ int32_t hcall_deassign_pcidev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		if (copy_from_gpa(vm, &pcidev, param, sizeof(pcidev)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else {
 			ret = vpci_deassign_pcidev(target_vm, &pcidev);
 	        }
@@ -895,7 +884,6 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t pa
 		struct hc_ptdev_irq irq;
 
 		if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else {
 			if (irq.type == IRQ_INTX) {
 				struct pci_vdev *vdev;
@@ -949,7 +937,6 @@ hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 		struct hc_ptdev_irq irq;
 
 		if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
 		} else {
 			if (irq.type == IRQ_INTX) {
 				struct pci_vdev *vdev;
@@ -1011,7 +998,6 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, uint64_t cmd, uint64_t param)
 			        ret = -1;
 			} else if (copy_to_gpa(vm, &(target_vm->pm.px_cnt), param,
 						sizeof(target_vm->pm.px_cnt)) != 0) {
-				pr_err("%s: Unable copy param to vm\n", __func__);
 			        ret = -1;
 			} else {
 				ret = 0;
@@ -1040,7 +1026,6 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, uint64_t cmd, uint64_t param)
 			px_data = target_vm->pm.px_data + pn;
 			if (copy_to_gpa(vm, px_data, param,
 							sizeof(struct cpu_px_data)) != 0) {
-				pr_err("%s: Unable copy param to vm\n", __func__);
 			        ret = -1;
 				break;
 			}
@@ -1054,7 +1039,6 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, uint64_t cmd, uint64_t param)
 			        ret = -1;
 			} else if (copy_to_gpa(vm, &(target_vm->pm.cx_cnt), param,
 						sizeof(target_vm->pm.cx_cnt)) != 0) {
-				pr_err("%s: Unable copy param to vm\n", __func__);
 				ret = -1;
 			} else {
 				ret = 0;
@@ -1081,7 +1065,6 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, uint64_t cmd, uint64_t param)
 
 			if (copy_to_gpa(vm, cx_data, param,
 							sizeof(struct cpu_cx_data)) != 0) {
-				pr_err("%s: Unable copy param to vm\n", __func__);
 			        ret = -1;
 				break;
 			}
