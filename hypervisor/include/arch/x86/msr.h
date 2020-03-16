@@ -40,6 +40,7 @@
 #define MSR_IA32_PMC5				0x000000C6U
 #define MSR_IA32_PMC6				0x000000C7U
 #define MSR_IA32_PMC7				0x000000C8U
+#define MSR_IA32_CORE_CAPABILITIES		0x000000CFU
 /* Max. qualified performance clock counter */
 #define MSR_IA32_MPERF				0x000000E7U
 /* Actual performance clock counter */
