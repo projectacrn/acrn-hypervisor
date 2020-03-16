@@ -102,6 +102,7 @@ static inline bool msicap_access(const struct pci_vdev *vdev, uint32_t offset)
 }
 
 void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev);
+void deinit_vdev_pt(struct pci_vdev *vdev);
 void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val);
 void vdev_pt_map_msix(struct pci_vdev *vdev, bool hold_lock);
 
