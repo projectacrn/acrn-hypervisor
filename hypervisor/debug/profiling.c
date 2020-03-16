@@ -818,7 +818,6 @@ int32_t profiling_msr_ops_all_cpus(struct acrn_vm *vm, uint64_t addr)
 	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &msr_list, addr, (uint32_t)pcpu_nums * sizeof(struct profiling_msr_ops_list)) != 0) {
-		pr_err("%s: Unable to copy addr from vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -830,7 +829,6 @@ int32_t profiling_msr_ops_all_cpus(struct acrn_vm *vm, uint64_t addr)
 	smp_call_function(get_active_pcpu_bitmap(), profiling_ipi_handler, NULL);
 
 	if (copy_to_gpa(vm, &msr_list, addr, sizeof(msr_list)) != 0) {
-		pr_err("%s: Unable to copy addr from vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -853,7 +851,6 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &vm_info_list, addr, sizeof(vm_info_list)) != 0) {
-		pr_err("%s: Unable to copy addr from vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -895,7 +892,6 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 	}
 
 	if (copy_to_gpa(vm, &vm_info_list, addr, sizeof(vm_info_list)) != 0) {
-		pr_err("%s: Unable to copy addr to vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -913,7 +909,6 @@ int32_t profiling_get_version_info(struct acrn_vm *vm, uint64_t addr)
 	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &ver_info, addr, sizeof(ver_info)) != 0) {
-		pr_err("%s: Unable to copy addr from vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -926,7 +921,6 @@ int32_t profiling_get_version_info(struct acrn_vm *vm, uint64_t addr)
 					(1U << (uint64_t)VM_SWITCH_TRACING));
 
 	if (copy_to_gpa(vm, &ver_info, addr, sizeof(ver_info)) != 0) {
-		pr_err("%s: Unable to copy addr to vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -945,7 +939,6 @@ int32_t profiling_get_control(struct acrn_vm *vm, uint64_t addr)
 	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &prof_control, addr, sizeof(prof_control)) != 0) {
-		pr_err("%s: Unable to copy addr from vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -962,7 +955,6 @@ int32_t profiling_get_control(struct acrn_vm *vm, uint64_t addr)
 	}
 
 	if (copy_to_gpa(vm, &prof_control, addr, sizeof(prof_control)) != 0) {
-		pr_err("%s: Unable to copy addr to vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -985,7 +977,6 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &prof_control, addr, sizeof(prof_control)) != 0) {
-		pr_err("%s: Unable to copy addr from vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -1075,7 +1066,6 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 	}
 
 	if (copy_to_gpa(vm, &prof_control, addr, sizeof(prof_control)) != 0) {
-		pr_err("%s: Unable to copy addr to vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -1096,7 +1086,6 @@ int32_t profiling_configure_pmi(struct acrn_vm *vm, uint64_t addr)
 	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &pmi_config, addr, sizeof(pmi_config)) != 0) {
-		pr_err("%s: Unable to copy addr from vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -1152,7 +1141,6 @@ int32_t profiling_configure_pmi(struct acrn_vm *vm, uint64_t addr)
 	smp_call_function(get_active_pcpu_bitmap(), profiling_ipi_handler, NULL);
 
 	if (copy_to_gpa(vm, &pmi_config, addr, sizeof(pmi_config)) != 0) {
-		pr_err("%s: Unable to copy addr to vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -1173,7 +1161,6 @@ int32_t profiling_configure_vmsw(struct acrn_vm *vm, uint64_t addr)
 	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &vmsw_config, addr, sizeof(vmsw_config)) != 0) {
-		pr_err("%s: Unable to copy addr from vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -1214,7 +1201,6 @@ int32_t profiling_configure_vmsw(struct acrn_vm *vm, uint64_t addr)
 	}
 
 	if (copy_to_gpa(vm, &vmsw_config, addr, sizeof(vmsw_config)) != 0) {
-		pr_err("%s: Unable to copy addr to vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -1233,7 +1219,6 @@ int32_t profiling_get_pcpu_id(struct acrn_vm *vm, uint64_t addr)
 	dev_dbg(DBG_LEVEL_PROFILING, "%s: entering", __func__);
 
 	if (copy_from_gpa(vm, &pcpuid, addr, sizeof(pcpuid)) != 0) {
-		pr_err("%s: Unable to copy addr from vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -1241,7 +1226,6 @@ int32_t profiling_get_pcpu_id(struct acrn_vm *vm, uint64_t addr)
 			&pcpuid.ebx, &pcpuid.ecx, &pcpuid.edx);
 
 	if (copy_to_gpa(vm, &pcpuid, addr, sizeof(pcpuid)) != 0) {
-		pr_err("%s: Unable to copy param to vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -1263,7 +1247,6 @@ int32_t profiling_get_status_info(struct acrn_vm *vm, uint64_t gpa)
 
 	if (copy_from_gpa(vm, &pstats, gpa,
 		pcpu_nums*sizeof(struct profiling_status)) != 0) {
-		pr_err("%s: Unable to copy addr from vm\n", __func__);
 		return -EINVAL;
 	}
 
@@ -1276,7 +1259,6 @@ int32_t profiling_get_status_info(struct acrn_vm *vm, uint64_t gpa)
 
 	if (copy_to_gpa(vm, &pstats, gpa,
 		pcpu_nums*sizeof(struct profiling_status)) != 0) {
-		pr_err("%s: Unable to copy param to vm\n", __func__);
 		return -EINVAL;
 	}
 
