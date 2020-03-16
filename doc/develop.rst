@@ -7,26 +7,16 @@ Advanced Guides
 Tools
 *****
 
-   **Configuration Tools**
+.. toctree::
+   :glob:
+   :maxdepth: 1
 
-   .. toctree::
-      :maxdepth: 1
-
-      tutorials/acrn_configuration_tool
-      reference/kconfig/index
-      user-guides/acrn-dm-parameters
-
-.. _tools:
-
-   **Runtime Tools**
-
-   .. toctree::
-      :glob:
-      :maxdepth: 1
-
-      misc/tools/acrn-crashlog/README
-      misc/tools/**
-      misc/acrn-manager/**
+   tutorials/acrn_configuration_tool
+   reference/kconfig/index
+   user-guides/acrn-dm-parameters
+   misc/tools/acrn-crashlog/README
+   misc/tools/**
+   misc/acrn-manager/**
 
 Service VM Tutorials
 ********************
