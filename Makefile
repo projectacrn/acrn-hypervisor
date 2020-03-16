@@ -1,6 +1,16 @@
+# acrn-hypervisor/Makefile
 
 # global helper variables
 T := $(CURDIR)
+
+ifneq ($(KCONFIG_FILE),)
+  ifneq ($(KCONFIG_FILE), $(wildcard $(KCONFIG_FILE)))
+    $(error KCONFIG_FILE: $(KCONFIG_FILE) does not exist)
+  endif
+  override KCONFIG_FILE := $(realpath $(KCONFIG_FILE))
+else
+  override KCONFIG_FILE := $(T)/hypervisor/build/.config
+endif
 
 BOARD ?= kbl-nuc-i7
 
@@ -22,7 +32,6 @@ TOOLS_OUT := $(ROOT_OUT)/misc/tools
 DOC_OUT := $(ROOT_OUT)/doc
 BUILD_VERSION ?=
 BUILD_TAG ?=
-DEFAULT_MENU_CONFIG_FILE ?= $(T)/hypervisor/build/.config
 GENED_ACPI_INFO_HEADER = $(T)/hypervisor/arch/x86/configs/$(BOARD)/$(BOARD)_acpi_info.h
 HV_CFG_LOG = $(HV_OUT)/cfg.log
 
@@ -59,22 +68,22 @@ endif
 
 include $(T)/hypervisor/scripts/makefile/cfg_update.mk
 
-ifeq ($(DEFAULT_MENU_CONFIG_FILE), $(wildcard $(DEFAULT_MENU_CONFIG_FILE)))
-  BOARD_IN_MENUCONFIG := $(shell grep CONFIG_BOARD= $(DEFAULT_MENU_CONFIG_FILE) | awk -F '"' '{print $$2}')
-  SCENARIO_IN_MENUCONFIG := $(shell grep -E "SDC=y|SDC2=y|INDUSTRY=y|LOGICAL_PARTITION=y|HYBRID=y" \
-           $(DEFAULT_MENU_CONFIG_FILE) | awk -F "=" '{print $$1}' | cut -d '_' -f 2- | tr A-Z a-z)
+ifeq ($(KCONFIG_FILE), $(wildcard $(KCONFIG_FILE)))
+  BOARD_IN_KCONFIG := $(shell grep CONFIG_BOARD= $(KCONFIG_FILE) | awk -F '"' '{print $$2}')
+  SCENARIO_IN_KCONFIG := $(shell grep -E "SDC=y|SDC2=y|INDUSTRY=y|LOGICAL_PARTITION=y|HYBRID=y" \
+           $(KCONFIG_FILE) | awk -F "=" '{print $$1}' | cut -d '_' -f 2- | tr A-Z a-z)
 
-  RELEASE := $(shell grep CONFIG_RELEASE=y $(DEFAULT_MENU_CONFIG_FILE))
+  RELEASE := $(shell grep CONFIG_RELEASE=y $(KCONFIG_FILE))
   ifneq ($(RELEASE),)
     override RELEASE := 1
   endif
 
-  ifneq ($(BOARD_IN_MENUCONFIG),$(BOARD))
-    override BOARD := $(BOARD_IN_MENUCONFIG)
+  ifneq ($(BOARD_IN_KCONFIG),$(BOARD))
+    override BOARD := $(BOARD_IN_KCONFIG)
   endif
 
-  ifneq ($(SCENARIO_IN_MENUCONFIG),$(SCENARIO))
-    override SCENARIO := $(SCENARIO_IN_MENUCONFIG)
+  ifneq ($(SCENARIO_IN_KCONFIG),$(SCENARIO))
+    override SCENARIO := $(SCENARIO_IN_KCONFIG)
   endif
 
 endif
@@ -111,19 +120,17 @@ hypervisor:
 			&& [ "$(SCENARIO)" != "logical_partition" ] && [ "$(SCENARIO)" != "hybrid" ]; then \
 		echo "SCENARIO <$(SCENARIO)> is not supported. "; exit 1; \
 	fi
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) clean;
-	@if [ -f $(DEFAULT_MENU_CONFIG_FILE) ]; then \
-		mkdir -p $(HV_OUT) && cp $(DEFAULT_MENU_CONFIG_FILE) $(HV_OUT)/.config; \
-	else \
-		$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) defconfig; \
-		echo "CONFIG_$(shell echo $(SCENARIO) | tr a-z A-Z)=y" >> $(HV_OUT)/.config;	\
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) clean;
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) defconfig;
+	@if [ -f $(KCONFIG_FILE) ]; then \
+		cp $(KCONFIG_FILE) $(HV_OUT)/.config; \
+	elif [ "$(CONFIG_XML_ENABLED)" != "true" ]; then \
+		echo "CONFIG_$(shell echo $(SCENARIO) | tr a-z A-Z)=y" >> $(HV_OUT)/.config; \
 		if [ "$(SCENARIO)" != "sdc" ]; then \
 			echo "CONFIG_MAX_KATA_VM_NUM=0" >> $(HV_OUT)/.config; \
 		fi; \
-		if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
-			echo "CONFIG_ENFORCE_VALIDATED_ACPI_INFO=y" >> $(HV_OUT)/.config;	\
-		fi; \
-	fi
+	fi; \
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) oldconfig;
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE)
 #ifeq ($(FIRMWARE),uefi)
 	@if [ "$(SCENARIO)" != "logical_partition" ] && [ "$(SCENARIO)" != "hybrid" ]; then \
@@ -132,13 +139,15 @@ hypervisor:
 	fi
 #endif
 	@echo -e "\n\033[47;30mACRN Configuration Summary:\033[0m \nBOARD = $(BOARD)\t SCENARIO = $(SCENARIO)" > $(HV_CFG_LOG); \
-	if [ -f $(DEFAULT_MENU_CONFIG_FILE) ]; then \
-		echo "Hypervisor configuration is based on menuconfig file: ./hypervisor/build/.config;" >> $(HV_CFG_LOG); \
+	if [ -f $(KCONFIG_FILE) ]; then \
+		echo -e "Hypervisor configuration is based on:\n\tKconfig file:\t$(KCONFIG_FILE);" >> $(HV_CFG_LOG); \
 	else \
-		echo "Hypervisor configuration is based on ./hypervisor/arch/x86/Kconfig and ./hypervisor/arch/x86/configs/$(BOARD).config;" >> $(HV_CFG_LOG); \
+		echo -e "Hypervisor configuration is based on:\n\t$(BOARD) defconfig file:\t$(T)/hypervisor/arch/x86/configs/$(BOARD).config;" \
+			"\n\tOthers are set by default in:\t$(T)/hypervisor/arch/x86/Kconfig;" >> $(HV_CFG_LOG); \
 	fi; \
 	if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
-		echo "VM configuration is based on $(BOARD_FILE) and $(SCENARIO_FILE);" >> $(HV_CFG_LOG); \
+		echo -e "VM configuration is based on:\n\tBOARD File:\t$(BOARD_FILE);" \
+			"\n\tSCENARIO File:\t$(SCENARIO_FILE);" >> $(HV_CFG_LOG); \
 	else \
 		echo "VM configuration is based on current code base;" >> $(HV_CFG_LOG); \
 	fi; \
