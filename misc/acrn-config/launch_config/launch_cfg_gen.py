@@ -89,7 +89,7 @@ def ui_entry_api(board_info, scenario_info, launch_info, enable_commit=False):
 
     err_dic = {}
     git_env_check = False
-    arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--launch', launch_info, '--uosid', '0']
+    arg_list = ['launch_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--launch', launch_info, '--uosid', '0']
 
     if enable_commit:
         arg_list.append('--enable_commit')
