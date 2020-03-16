@@ -37,6 +37,7 @@ static struct cpu_capability {
 
 	uint32_t vmx_ept;
 	uint32_t vmx_vpid;
+	uint32_t core_caps;	/* value of MSR_IA32_CORE_CAPABLITIES */
 } cpu_caps;
 
 static struct cpuinfo_x86 boot_cpu_data;
@@ -122,6 +123,11 @@ bool is_apl_platform(void)
 	}
 
 	return ret;
+}
+
+bool has_core_cap(uint32_t bit_mask)
+{
+	return ((cpu_caps.core_caps & bit_mask) != 0U);
 }
 
 static void detect_ept_cap(void)
@@ -216,12 +222,20 @@ static void detect_xsave_cap(void)
 		&boot_cpu_data.cpuid_leaves[FEAT_D_1_EDX]);
 }
 
+static void detect_core_caps(void)
+{
+	if (pcpu_has_cap(X86_FEATURE_CORE_CAP)) {
+		cpu_caps.core_caps = (uint32_t)msr_read(MSR_IA32_CORE_CAPABILITIES);
+	}
+}
+
 static void detect_pcpu_cap(void)
 {
 	detect_apicv_cap();
 	detect_ept_cap();
 	detect_vmx_mmu_cap();
 	detect_xsave_cap();
+	detect_core_caps();
 }
 
 static uint64_t get_address_mask(uint8_t limit)
