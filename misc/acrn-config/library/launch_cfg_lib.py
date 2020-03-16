@@ -578,11 +578,12 @@ def get_slot(bdf_list, dev):
             slot_fun = str(bus) + ":" +  str(slot) + ":" + str(fun)
             if bus != 0:
                 slot_fun = virtual_dev_slot(dev)
+                PT_SLOT[dev] = slot_fun
+            else:
+                # add already used slot for pass-throught devices to avoid conflict with virtio devices
+                PT_SLOT[dev] = slot
 
             slot_list[p_id] = slot_fun
-
-            # add already used slot for pass-throught devices to avoid conflict with virtio devices
-            PT_SLOT[dev] = slot
 
     return slot_list
 
