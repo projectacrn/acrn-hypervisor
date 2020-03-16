@@ -388,8 +388,8 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 			pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
 		}
 	} else {
-		/* VF is assigned to a UOS */
-		if (vdev->vpci != vdev->phyfun->vpci) {
+		if (!is_own_device(vdev->phyfun->vpci->vm, vdev)) {
+			/* VF is assigned to a UOS */
 			uint32_t vid, did;
 
 			vdev->nr_bars = PCI_BAR_COUNT;
@@ -399,6 +399,37 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 				(vdev->phyfun->sriov.capoff + PCIR_SRIOV_VF_DEV_ID), 2U);
 			pci_vdev_write_vcfg(vdev, PCIR_VENDOR, 2U, vid);
 			pci_vdev_write_vcfg(vdev, PCIR_DEVICE, 2U, did);
+		} else {
+			/* VF is unassinged  */
+			uint32_t bar_idx;
+
+			for (bar_idx = 0U; bar_idx < vdev->nr_bars; bar_idx++) {
+				vdev_pt_map_mem_vbar(vdev, bar_idx);
+			}
+		}
+	}
+}
+
+/*
+ * @brief Destruct a specified passthrough vdev structure.
+ *
+ * The function deinit_vdev_pt is the destructor corresponding to the function init_vdev_pt.
+ *
+ * @param vdev  pointer to vdev data structure
+ *
+ * @pre vdev != NULL
+ *
+ * @return None
+ */
+void deinit_vdev_pt(struct pci_vdev *vdev) {
+
+	/* Check if the vdev is an unassigned SR-IOV VF device */
+	if ((vdev->phyfun != NULL) && (is_own_device(vdev->phyfun->vpci->vm, vdev))) {
+		uint32_t bar_idx;
+
+		/* Delete VF MMIO from EPT table since the VF physical device has gone */
+		for (bar_idx = 0U; bar_idx < vdev->nr_bars; bar_idx++) {
+			vdev_pt_unmap_mem_vbar(vdev, bar_idx);
 		}
 	}
 }

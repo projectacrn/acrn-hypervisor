@@ -377,6 +377,7 @@ static void vpci_init_pt_dev(struct pci_vdev *vdev)
 
 static void vpci_deinit_pt_dev(struct pci_vdev *vdev)
 {
+	deinit_vdev_pt(vdev);
 	remove_vdev_pt_iommu_domain(vdev);
 	deinit_vmsix(vdev);
 	deinit_vmsi(vdev);

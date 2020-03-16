@@ -239,8 +239,6 @@ static void disable_vfs(struct pci_vdev *pf_vdev)
 	 * resources
 	 *
 	 * If the VF drivers are still running in SOS or UOS, the MMIO access will return 0xFF.
-	 *
-	 * TODO For security reasons, we need to enforce a return of 0xFF to avoid information leakage.
 	 */
 	num_vfs = read_sriov_reg(pf_vdev, PCIR_SRIOV_NUMVFS);
 	first = read_sriov_reg(pf_vdev, PCIR_SRIOV_FST_VF_OFF);
