@@ -12,16 +12,25 @@ ifneq ($$(BOARD_IN_XML),)
     endif
 endif
 
-ifeq ($$(CONFIG_XML_ENABLED),true)
-    override BOARD := $$(BOARD_IN_XML)
-    override SCENARIO := $$(SCENARIO_IN_XML)
-endif
-
-
 endef
 
-ifeq ($(CONFIG_XML_ENALBED),)
+ifeq ($(CONFIG_XML_ENABLED),)
     $(eval $(call check_xml_enabled,$(BOARD_FILE),$(SCENARIO_FILE)))
+endif
+
+ifeq ($(CONFIG_XML_ENABLED),true)
+    ifneq ($(BOARD_IN_KCONFIG),)
+        ifneq ($(BOARD_IN_XML),$(BOARD_IN_KCONFIG))
+            $(error BOARD $(BOARD_IN_XML) in $(BOARD_FILE) does not match BOARD $(BOARD_IN_KCONFIG) in $(KCONFIG_FILE))
+        endif
+    endif
+    ifneq ($(SCENARIO_IN_KCONFIG),)
+        ifneq ($(SCENARIO_IN_XML),$(SCENARIO_IN_KCONFIG))
+            $(error SCENARIO $(SCENARIO_IN_XML) in $(SCENARIO_FILE) does not match SCENARIO $(SCENARIO_IN_KCONFIG) in $(KCONFIG_FILE))
+        endif
+    endif
+    override BOARD := $(BOARD_IN_XML)
+    override SCENARIO := $(SCENARIO_IN_XML)
 endif
 
 update_config:
