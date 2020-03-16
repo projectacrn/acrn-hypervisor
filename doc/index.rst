@@ -19,9 +19,9 @@ through an open source platform.
 
    <ul class="grid">
        <li class="grid-item">
-           <a href="learn.html">
+           <a href="introduction/index.html">
                <img alt="" src="_static/images/ACRNlogo80w.png"/>
-               <h2>Learn about<br/>ACRN</h2>
+               <h2>What is ACRN</h2>
            </a>
            <p>Overview, architecture,
               features, and use-case scenarios</p>
@@ -29,7 +29,7 @@ through an open source platform.
        <li class="grid-item">
            <a href="try.html">
                <span class="grid-icon fa fa-map-signs"></span>
-               <h2>Try using<br/>ACRN</h2>
+               <h2>Getting Started</h2>
            </a>
            <p>Getting started guides for quickly running scenario-based
               samples</p>
@@ -37,26 +37,24 @@ through an open source platform.
        <li class="grid-item">
            <a href="develop.html">
                <span class="grid-icon fa fa-cogs"></span>
-               <h2>Develop using<br/>ACRN</h2>
+               <h2>Advanced Guides</h2>
            </a>
-           <p>Details for developing hypervisor-based
-              solutions</p>
+           <p>Tools, tutorials, features, and debugging guides that go beyond getting started</p>
        </li>
        <li class="grid-item">
            <a href="contribute.html">
                <span class="grid-icon fa fa-github"></span>
-               <h2>Contribute to<br/>ACRN</h2>
+               <h2>Developer Reference</h2>
            </a>
-           <p>High-level design and details, developer
-              guidelines</p>
+           <p>High-level design and details, developer and
+              contribution guidelines, API details</p>
        </li>
        <li class="grid-item">
-           <a href="reference/index.html">
+           <a href="release_notes/index.html">
                <span class="grid-icon fa fa-sign-in"></span>
-               <h2>Developer<br/>Reference</h2>
+               <h2>Release<br/>Notes</h2>
            </a>
-           <p>API details, configuration
-              options, and site index</p>
+           <p>Archived Release Notes</p>
        </li>
        <li class="grid-item">
            <a href="reference/hardware.html">
@@ -77,7 +75,7 @@ license.
    :hidden:
 
    Documentation Home <self>
-   learn
+   introduction/index
    try
    develop
    contribute

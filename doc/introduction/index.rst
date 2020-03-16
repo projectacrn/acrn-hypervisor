@@ -1,7 +1,10 @@
 .. _introduction:
 
+What is ACRN
+############
+
 Introduction to Project ACRN
-############################
+****************************
 
 ACRN™ is a, flexible, lightweight reference hypervisor, built with
 real-time and safety-criticality in mind, and optimized to streamline
