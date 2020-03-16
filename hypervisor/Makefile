@@ -1,5 +1,5 @@
 #
-# ACRN Hypervisor
+# acrn-hypervisor/hypervisor/Makefile
 #
 
 include ../VERSION
@@ -50,17 +50,30 @@ include scripts/makefile/deps.mk
 
 include scripts/makefile/kconfig.mk
 
-#initialize scenarios name
+#initialize BOARD if it is not specified
+ifeq ($(BOARD),)
+    override BOARD := $(CONFIG_BOARD)
+endif
+
 ifeq ($(CONFIG_SDC),y)
-SCENARIO_NAME := sdc
+  KCONFIG_SCENARIO := sdc
 else ifeq ($(CONFIG_SDC2),y)
-SCENARIO_NAME := sdc2
+  KCONFIG_SCENARIO := sdc2
 else ifeq ($(CONFIG_LOGICAL_PARTITION),y)
-SCENARIO_NAME := logical_partition
+  KCONFIG_SCENARIO := logical_partition
 else ifeq ($(CONFIG_INDUSTRY),y)
-SCENARIO_NAME := industry
+  KCONFIG_SCENARIO := industry
 else ifeq ($(CONFIG_HYBRID),y)
-SCENARIO_NAME := hybrid
+  KCONFIG_SCENARIO := hybrid
+endif
+
+#initialize SCENARIO if it is not specified
+ifeq ($(SCENARIO),)
+  ifeq ($(KCONFIG_SCENARIO),)
+    override SCENARIO := sdc
+  else
+    override SCENARIO := $(KCONFIG_SCENARIO)
+  endif
 endif
 
 LD_IN_TOOL = scripts/genld.sh
@@ -157,8 +170,8 @@ INCLUDE_PATH += include/hw
 INCLUDE_PATH += boot/include
 INCLUDE_PATH += boot/include/guest
 INCLUDE_PATH += $(HV_OBJDIR)/include
-INCLUDE_PATH += arch/x86/configs/$(CONFIG_BOARD)
-INCLUDE_PATH += scenarios/$(SCENARIO_NAME)
+INCLUDE_PATH += arch/x86/configs/$(BOARD)
+INCLUDE_PATH += scenarios/$(SCENARIO)
 
 CC ?= gcc
 AS ?= as
@@ -244,10 +257,10 @@ HW_C_SRCS += common/sched_bvt.c
 endif
 HW_C_SRCS += hw/pci.c
 HW_C_SRCS += arch/x86/configs/vm_config.c
-HW_C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/board.c
-HW_C_SRCS += scenarios/$(SCENARIO_NAME)/vm_configurations.c
-ifneq (,$(wildcard scenarios/$(SCENARIO_NAME)/pci_dev.c))
-HW_C_SRCS += scenarios/$(SCENARIO_NAME)/pci_dev.c
+HW_C_SRCS += arch/x86/configs/$(BOARD)/board.c
+HW_C_SRCS += scenarios/$(SCENARIO)/vm_configurations.c
+ifneq (,$(wildcard scenarios/$(SCENARIO)/pci_dev.c))
+HW_C_SRCS += scenarios/$(SCENARIO)/pci_dev.c
 endif
 HW_C_SRCS += boot/acpi_base.c
 HW_C_SRCS += boot/cmdline.c
@@ -364,8 +377,8 @@ VERSION := $(HV_OBJDIR)/include/version.h
 
 # Create platform_acpi_info.h
 TEMPLATE_ACPI_INFO_HEADER := arch/x86/configs/platform_acpi_info.h
-BOARDTEMPLATE_ACPI_INFO_HEADER := arch/x86/configs/$(CONFIG_BOARD)/platform_acpi_info.h
-SOURCE_ACPI_INFO_HEADER := arch/x86/configs/$(CONFIG_BOARD)/$(CONFIG_BOARD)_acpi_info.h
+BOARDTEMPLATE_ACPI_INFO_HEADER := arch/x86/configs/$(BOARD)/platform_acpi_info.h
+SOURCE_ACPI_INFO_HEADER := arch/x86/configs/$(BOARD)/$(BOARD)_acpi_info.h
 TARGET_ACPI_INFO_HEADER := $(HV_OBJDIR)/include/platform_acpi_info.h
 
 $(TARGET_ACPI_INFO_HEADER): $(HV_OBJDIR)/$(HV_CONFIG)
@@ -400,11 +413,11 @@ endif
 all: pre_build $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
 install: $(HV_OBJDIR)/$(HV_FILE).32.out
-	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO_NAME).32.out
+	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).32.out
 
 install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
-	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO_NAME).out
-	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO_NAME).map
+	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).out
+	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).map
 
 .PHONY: pre_build
 pre_build: $(PRE_BUILD_OBJS)
@@ -492,10 +505,7 @@ distclean:
 
 PHONY: (VERSION)
 $(VERSION):
-	@echo "SCENARIO <$(SCENARIO_NAME)> for BOARD <$(BOARD)> is specified."
-	@if [ "$(CONFIG_XML_ENABLED)" = "true" ] && [ "$(SCENARIO_NAME)" != "$(SCENARIO_IN_XML)" ]; then \
-		echo "SCENARIO in XML <$(SCENARIO_IN_XML)> does not match SCENARIO in Kconfig <$(SCENARIO_NAME)> !" ; exit 1; \
-	fi
+	@echo "SCENARIO <$(SCENARIO)> for BOARD <$(BOARD)> is specified."
 	touch $(VERSION)
 	@COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
 	DIRTY=`git diff-index --name-only HEAD`;\
