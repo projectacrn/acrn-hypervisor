@@ -99,7 +99,7 @@ def get_serial_type():
             if ttys_type == "portio":
                 ttys_value = line.split()[2].split(':')[1]
             elif ttys_type == "mmio":
-                ttys_value = line.split()[-1].split(':')[1]
+                ttys_value = line.split()[-1].split('"')[1:-1][0]
             break
 
     return (ttys_type, ttys_value)
@@ -157,7 +157,7 @@ def generate_file(config):
         print("CONFIG_SERIAL_PIO_BASE={}".format(serial_value), file=config)
     if serial_type == "mmio":
         print("CONFIG_SERIAL_PCI=y", file=config)
-        print("CONFIG_SERIAL_PCI_BDF={}".format(serial_value), file=config)
+        print('CONFIG_SERIAL_PCI_BDF="{}"'.format(serial_value), file=config)
 
     print("CONFIG_HV_RAM_START={}".format(hex(hv_start_addr)), file=config)
     print("CONFIG_HV_RAM_SIZE={}".format(hex(hv_ram_size)), file=config)
