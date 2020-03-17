@@ -11,7 +11,7 @@ import launch_cfg_lib
 import com
 
 ACRN_PATH = launch_cfg_lib.SOURCE_ROOT_DIR
-XML_PATH = ACRN_PATH + '/misc/acrn-config/xmls/config-xmls/'
+ACRN_CONFIG_TARGET = ACRN_PATH + '/misc/acrn-config/xmls/config-xmls/'
 
 
 def get_launch_item_values(board_info):
@@ -142,11 +142,14 @@ def main(args):
     This is main function to start generate launch script
     :param args: it is a command line args for the script
     """
-
+    global ACRN_CONFIG_TARGET
     # get parameters
-    (err_dic, board_info_file, scenario_info_file, launch_info_file, vm_th) = launch_cfg_lib.get_param(args)
+    (err_dic, board_info_file, scenario_info_file, launch_info_file, vm_th, output_folder) = launch_cfg_lib.get_param(args)
     if err_dic:
         return err_dic
+
+    if output_folder:
+        ACRN_CONFIG_TARGET = os.path.abspath(output_folder) + '/'
 
     # check env
     err_dic = launch_cfg_lib.prepare()
@@ -197,9 +200,8 @@ def main(args):
 
     # create output directory
     board_name = names['board_name']
-    output = XML_PATH + '/' + board_name + '/output/'
-    if not os.path.exists(output):
-        os.makedirs(output)
+    output = ACRN_CONFIG_TARGET + '/' + board_name + '/output/'
+    launch_cfg_lib.mkdir(output)
 
     # generate launch script
     if vm_th:

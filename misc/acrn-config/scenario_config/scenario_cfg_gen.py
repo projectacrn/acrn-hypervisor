@@ -14,7 +14,7 @@ import vm_configurations_h
 import pci_dev_c
 
 ACRN_PATH = scenario_cfg_lib.SOURCE_ROOT_DIR
-SCENARIO_PATH = ACRN_PATH + 'hypervisor/scenarios'
+ACRN_CONFIG_TARGET = ACRN_PATH + 'hypervisor/scenarios/'
 GEN_FILE = ["vm_configurations.h", "vm_configurations.c", "pci_dev.c"]
 
 
@@ -76,11 +76,15 @@ def main(args):
     This is main function to start generate source code related with board
     :param args: it is a command line args for the script
     """
+    global ACRN_CONFIG_TARGET
     err_dic = {}
 
-    (err_dic, board_info_file, scenario_info_file) = scenario_cfg_lib.get_param(args)
+    (err_dic, board_info_file, scenario_info_file, output_folder) = scenario_cfg_lib.get_param(args)
     if err_dic:
         return err_dic
+
+    if output_folder:
+        ACRN_CONFIG_TARGET = os.path.abspath(output_folder) + '/'
 
     # check env
     err_dic = scenario_cfg_lib.prepare()
@@ -101,9 +105,12 @@ def main(args):
         err_dic['scenario config: Not match'] = "The board xml and scenario xml should be matched!"
         return err_dic
 
-    vm_config_h = SCENARIO_PATH + '/' + scenario + '/' + GEN_FILE[0]
-    vm_config_c = SCENARIO_PATH + '/' + scenario + '/' + GEN_FILE[1]
-    pci_config_c = SCENARIO_PATH + '/' + scenario + '/' + GEN_FILE[2]
+    scenario_dir = ACRN_CONFIG_TARGET + scenario + '/'
+    scenario_cfg_lib.mkdir(scenario_dir)
+
+    vm_config_h = scenario_dir + GEN_FILE[0]
+    vm_config_c = scenario_dir + GEN_FILE[1]
+    pci_config_c = scenario_dir + GEN_FILE[2]
 
     # parse the scenario.xml
     get_scenario_item_values(board_info_file, scenario_info_file)
@@ -135,9 +142,9 @@ def main(args):
             pci_dev_c.generate_file(config)
 
     if not err_dic:
-        print("Config files for {} is generated successfully!".format(scenario))
+        print("Scenario configurations for {} is generated successfully.".format(scenario))
     else:
-        print("Config files for {} is failed".format(scenario))
+        print("Scenario configurations for {} is generated failed.".format(scenario))
 
     return err_dic
 

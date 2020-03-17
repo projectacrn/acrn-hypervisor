@@ -15,20 +15,10 @@ import misc_cfg_h
 import new_board_kconfig
 
 ACRN_PATH = board_cfg_lib.SOURCE_ROOT_DIR
-ACRN_CONFIG = ACRN_PATH + "hypervisor/arch/x86/configs/"
+ACRN_CONFIG_TARGET = ACRN_PATH + "hypervisor/arch/x86/configs/"
 
-ACRN_DEFAULT_PLATFORM = ACRN_PATH + "hypervisor/include/arch/x86/default_acpi_info.h"
+ACRN_DEFAULT_ACPI = ACRN_PATH + "hypervisor/include/arch/x86/default_acpi_info.h"
 GEN_FILE = ["pci_devices.h", "board.c", "_acpi_info.h", "misc_cfg.h", ".config"]
-
-
-def need_gen_new_board_config(board_name):
-
-    # 1. if it is old board, they are already have the $(board_name).config, return and no need to generate it.
-
-    if board_name in board_cfg_lib.BOARD_NAMES:
-        return False
-    else:
-        return True
 
 
 def main(args):
@@ -36,12 +26,15 @@ def main(args):
     This is main function to start generate source code related with board
     :param args: it is a command line args for the script
     """
+    global ACRN_CONFIG_TARGET
     err_dic = {}
-    config_dirs = []
 
-    (err_dic, board_info_file, scenario_info_file) = board_cfg_lib.get_param(args)
+    (err_dic, board_info_file, scenario_info_file, output_folder) = board_cfg_lib.get_param(args)
     if err_dic:
         return err_dic
+
+    if output_folder:
+        ACRN_CONFIG_TARGET = os.path.abspath(output_folder) + '/'
 
     # check env
     err_dic = board_cfg_lib.prepare()
@@ -64,17 +57,14 @@ def main(args):
         err_dic['board config: Not match'] = "The board xml and scenario xml should be matched"
         return err_dic
 
-    config_dirs.append(ACRN_CONFIG + board)
-    if board not in board_cfg_lib.BOARD_NAMES:
-        for config_dir in config_dirs:
-            if not os.path.exists(config_dir):
-                os.makedirs(config_dir)
+    board_dir = ACRN_CONFIG_TARGET + board + '/'
+    board_cfg_lib.mkdir(board_dir)
 
-    config_pci = config_dirs[0] + '/' + GEN_FILE[0]
-    config_board = config_dirs[0] + '/' + GEN_FILE[1]
-    config_platform = config_dirs[0] + '/' + board + GEN_FILE[2]
-    config_misc_cfg = config_dirs[0] + '/' + GEN_FILE[3]
-    config_board_kconfig = ACRN_CONFIG + board + GEN_FILE[4]
+    config_pci = board_dir + GEN_FILE[0]
+    config_board = board_dir + GEN_FILE[1]
+    config_acpi = board_dir + board + GEN_FILE[2]
+    config_misc_cfg = board_dir + GEN_FILE[3]
+    config_board_kconfig = ACRN_CONFIG_TARGET + board + GEN_FILE[4]
 
     # generate board.c
     with open(config_board, 'w+') as config:
@@ -86,9 +76,9 @@ def main(args):
     with open(config_pci, 'w+') as config:
         pci_devices_h.generate_file(config)
 
-    # generate acpi_platform.h
-    with open(config_platform, 'w+') as config:
-        acpi_platform_h.generate_file(config, ACRN_DEFAULT_PLATFORM)
+    # generate ($board)_acpi_info.h
+    with open(config_acpi, 'w+') as config:
+        acpi_platform_h.generate_file(config, ACRN_DEFAULT_ACPI)
 
     # generate misc_cfg.h
     with open(config_misc_cfg, 'w+') as config:
@@ -96,19 +86,16 @@ def main(args):
         if err_dic:
             return err_dic
 
-    # generate new board_name.config
-    if need_gen_new_board_config(board):
-        with open(config_board_kconfig, 'w+') as config:
-            err_dic = new_board_kconfig.generate_file(config)
-            if err_dic:
-                return err_dic
+    # generate ($board).config
+    with open(config_board_kconfig, 'w+') as config:
+        err_dic = new_board_kconfig.generate_file(config)
+        if err_dic:
+            return err_dic
 
-    if board not in board_cfg_lib.BOARD_NAMES and not err_dic:
-        print("Config files for NEW board {} is generated successfully!".format(board ))
-    elif not err_dic:
-        print("Config files for {} is generated successfully!".format(board))
+    if not err_dic:
+        print("Board configurations for {} is generated successfully.".format(board))
     else:
-        print("Config files for {} is failed".format(board))
+        print("Board configurations for {} is generated failed.".format(board))
 
     return err_dic
 
