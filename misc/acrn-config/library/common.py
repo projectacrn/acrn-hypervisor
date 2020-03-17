@@ -81,9 +81,10 @@ def print_if_red(msg, err=False):
 def usage(file_name):
     """ This is usage for how to use this tool """
     print("usage= {} [h] ".format(file_name), end="")
-    print("--board <board_info_file> --scenario <scenario_info_file>")
+    print("--board <board_info_file> --scenario <scenario_info_file> --out [output folder]")
     print('board_info_file :  file name of the board info')
     print('scenario_info_file :  file name of the scenario info')
+    print('output folder :  path to acrn-hypervisor_folder')
 
 
 def get_param(args):
@@ -94,34 +95,37 @@ def get_param(args):
     err_dic = {}
     board_info_file = False
     scenario_info_file = False
+    output_folder = False
 
     if '--board' not in args or '--scenario' not in args:
         usage(args[0])
         err_dic['common error: get wrong parameter'] = "wrong usage"
-        return (err_dic, board_info_file, scenario_info_file)
+        return (err_dic, board_info_file, scenario_info_file, output_folder)
 
     args_list = args[1:]
-    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario='])
+    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario=', 'out='])
     for arg_k, arg_v in optlist:
         if arg_k == '--board':
             board_info_file = arg_v
         if arg_k == '--scenario':
             scenario_info_file = arg_v
+        if arg_k == '--out':
+            output_folder = arg_v
 
     if not board_info_file or not scenario_info_file:
         usage(args[0])
         err_dic['common error: get wrong parameter'] = "wrong usage"
-        return (err_dic, board_info_file, scenario_info_file)
+        return (err_dic, board_info_file, scenario_info_file, output_folder)
 
     if not os.path.exists(board_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(board_info_file)
-        return (err_dic, board_info_file, scenario_info_file)
+        return (err_dic, board_info_file, scenario_info_file, output_folder)
 
     if not os.path.exists(scenario_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(scenario_info_file)
-        return (err_dic, board_info_file, scenario_info_file)
+        return (err_dic, board_info_file, scenario_info_file, output_folder)
 
-    return (err_dic, board_info_file, scenario_info_file)
+    return (err_dic, board_info_file, scenario_info_file, output_folder)
 
 
 def check_env():
@@ -643,3 +647,12 @@ def get_vuart_info_id(config_file, idx):
 def round_up(addr, mem_align):
     """Keep memory align"""
     return ((addr + (mem_align - 1)) & (~(mem_align - 1)))
+
+
+def mkdir(path):
+
+    if not os.path.exists(path):
+        try:
+            subprocess.check_call('mkdir -p {}'.format(path), shell=True, stdout=subprocess.PIPE)
+        except subprocess.CalledProcessError:
+            print_if_red("{} file create failed!".format(path), err=True)
