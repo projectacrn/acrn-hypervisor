@@ -58,6 +58,8 @@ static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 	MSR_IA32_SGXLEPUBKEYHASH3,
 	/* Read only */
 	MSR_IA32_SGX_SVN_STATUS,
+
+	MSR_TEST_CTL,
 };
 
 #define NUM_MTRR_MSRS	13U
@@ -498,6 +500,18 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		}
 		break;
 	}
+	case MSR_TEST_CTL:
+	{
+		/* If has MSR_TEST_CTL, give emulated value
+		 * If don't have MSR_TEST_CTL, trigger #GP
+		 */
+		if (has_core_cap(1U << 5U)) {
+			v = vcpu_get_guest_msr(vcpu, MSR_TEST_CTL);
+		} else {
+			vcpu_inject_gp(vcpu, 0U);
+		}
+		break;
+	}
 	default:
 	{
 		if (is_x2apic_msr(msr)) {
@@ -800,6 +814,19 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_MISC_ENABLE:
 	{
 		set_guest_ia32_misc_enalbe(vcpu, v);
+		break;
+	}
+	case MSR_TEST_CTL:
+	{
+		/* If VM has MSR_TEST_CTL, ignore write operation
+		 * If don't have MSR_TEST_CTL, trigger #GP
+		 */
+		if (has_core_cap(1U << 5U)) {
+			vcpu_set_guest_msr(vcpu, MSR_TEST_CTL, v);
+			pr_warn("Ignore writting 0x%llx to MSR_TEST_CTL from VM%d", v, vcpu->vm->vm_id);
+		} else {
+			vcpu_inject_gp(vcpu, 0U);
+		}
 		break;
 	}
 	default:
