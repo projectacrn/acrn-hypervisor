@@ -21,3 +21,4 @@ documented in this section.
    RTC emulation in hypervisor <rtc-virt-hld>
    Hostbridge emulation <hostbridge-virt-hld>
    AT keyboard controller emulation <atkbdc-virt-hld>
+   Split Device Model <split-dm>
