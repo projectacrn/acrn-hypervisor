@@ -13,6 +13,7 @@ Tools
 
    tutorials/acrn_configuration_tool
    reference/kconfig/index
+   user-guides/acrn-shell
    user-guides/acrn-dm-parameters
    misc/tools/acrn-crashlog/README
    misc/tools/**
@@ -90,5 +91,4 @@ Additional Tutorials
    tutorials/building_acrn_in_docker
    tutorials/acrn_ootb
    tutorials/run_kata_containers
-   user-guides/acrn-shell
    user-guides/kernel-parameters
