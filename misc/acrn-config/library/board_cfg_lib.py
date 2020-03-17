@@ -433,3 +433,8 @@ def undline_name(name):
 def round_up(addr, mem_align):
     """Keep memory align"""
     return common.round_up(addr, mem_align)
+
+
+def mkdir(path):
+
+    common.mkdir(path)
