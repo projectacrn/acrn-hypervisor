@@ -86,11 +86,12 @@ def print_red(msg, err=False):
 def usage(file_name):
     """ This is usage for how to use this tool """
     print("usage= {} [h]".format(file_name), end="")
-    print("--board <board_info_file> --scenario <scenario_info_file> --launch <launch_info_file> --uosid <uosid id>")
+    print("--board <board_info_file> --scenario <scenario_info_file> --launch <launch_info_file> --uosid <uosid id> --out [output folder]")
     print('board_info_file :  file name of the board info')
     print('scenario_info_file :  file name of the scenario info')
     print('launch_info_file :  file name of the launch info')
     print('uosid :  this is the relateive id for post launch vm in scenario info XML:[1..max post launch vm]')
+    print('output folder :  path to acrn-hypervisor_folder')
 
 
 def get_param(args):
@@ -103,6 +104,7 @@ def get_param(args):
     board_info_file = False
     scenario_info_file = False
     launch_info_file = False
+    output_folder = False
     param_list = ['--board', '--scenario', '--launch', '--uosid']
 
     for arg_str in param_list:
@@ -110,10 +112,10 @@ def get_param(args):
         if arg_str not in args:
             usage(args[0])
             err_dic['common error: get wrong parameter'] = "wrong usage"
-            return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+            return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     args_list = args[1:]
-    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario=', 'launch=', 'uosid='])
+    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario=', 'launch=', 'uosid=', 'out='])
     for arg_k, arg_v in optlist:
         if arg_k == '--board':
             board_info_file = arg_v
@@ -121,31 +123,33 @@ def get_param(args):
             scenario_info_file = arg_v
         if arg_k == '--launch':
             launch_info_file = arg_v
+        if arg_k == '--out':
+            output_folder = arg_v
         if '--uosid' in args:
             if arg_k == '--uosid':
                 vm_th = arg_v
                 if not vm_th.isnumeric():
                     err_dic['common error: get wrong parameter'] = "--uosid should be a number"
-                    return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+                    return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     if not board_info_file or not scenario_info_file or not launch_info_file:
         usage(args[0])
         err_dic['common error: get wrong parameter'] = "wrong usage"
-        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     if not os.path.exists(board_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(board_info_file)
-        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     if not os.path.exists(scenario_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(scenario_info_file)
-        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     if not os.path.exists(launch_info_file):
         err_dic['common error: get wrong parameter'] = "{} is not exist!".format(launch_info_file)
-        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+        return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
-    return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th))
+    return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
 
 def get_post_num_list():
@@ -692,3 +696,8 @@ def bdf_duplicate_check(bdf_dic):
                 return
             else:
                 bdf_used.append(dev_bdf)
+
+
+def mkdir(path):
+
+    common.mkdir(path)

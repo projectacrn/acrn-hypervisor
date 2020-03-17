@@ -708,3 +708,8 @@ def get_first_post_vm():
             break
 
     return (err_dic, i)
+
+
+def mkdir(path):
+
+    common.mkdir(path)
