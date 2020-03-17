@@ -613,7 +613,7 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  * @pre vcpu != NULL
- *
+ * @pre vcpu->state == VCPU_ZOMBIE
  * @return None
  */
 void offline_vcpu(struct acrn_vcpu *vcpu);
@@ -625,7 +625,8 @@ void offline_vcpu(struct acrn_vcpu *vcpu);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] mode the reset mode
- *
+ * @pre vcpu != NULL
+ * @pre vcpu->state == VCPU_ZOMBIE
  * @return None
  */
 void reset_vcpu(struct acrn_vcpu *vcpu, enum reset_mode mode);
@@ -659,7 +660,8 @@ int32_t resume_vcpu(struct acrn_vcpu *vcpu);
  * Adds a vCPU into the run queue and make a reschedule request for it. It sets the vCPU state to VCPU_RUNNING.
  *
  * @param[inout] vcpu pointer to vcpu data structure
- *
+ * @pre vcpu != NULL
+ * @pre vcpu->state == VCPU_INIT
  * @return None
  */
 void launch_vcpu(struct acrn_vcpu *vcpu);
