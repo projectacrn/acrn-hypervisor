@@ -155,24 +155,10 @@ directly. EPT mapping is not built for these pages having MSI-X table.
 Device configuration emulation
 ******************************
 
-PCI configuration is based on access of port 0xCF8/CFC. ACRN
-implements PCI configuration emulation to handle 0xCF8/CFC to control
-PCI device through two paths: implemented in hypervisor or in Service VM device
-model.
-
-- When configuration emulation is in the hypervisor, the interception of
-  0xCF8/CFC port and emulation of PCI configuration space access are
-  tricky and unclean. Therefore the final solution is to reuse the
-  PCI emulation infrastructure of Service VM device model. The hypervisor
-  routes the UOS 0xCF8/CFC access to device model, and keeps blind to the
-  physical PCI devices. Upon receiving UOS PCI configuration space access
-  request, device model needs to emulate some critical space, for instance,
-  BAR, MSI capability, and INTLINE/INTPIN.
-
-- For other access, device model
-  reads/writes physical configuration space on behalf of UOS. To do
-  this, device model is linked with lib pci access to access physical PCI
-  device.
+PCI configuration space could been accessed by PCI-compatible Configuration Mechanism
+(IO port 0xCF8/CFC) and PCI Express Enhanced Configuration Access Mechanism (PCI MMCONFIG).
+ACRN hypervisor will trap these PCI configuration space access and emulate it. You may refer
+to :ref:`split-device-model` for detail.
 
 MSI-X table emulation
 *********************
