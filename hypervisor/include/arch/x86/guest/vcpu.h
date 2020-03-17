@@ -158,7 +158,7 @@ enum reset_mode;
 #define SECURE_WORLD	1
 
 #define NUM_WORLD_MSRS		2U
-#define NUM_COMMON_MSRS		15U
+#define NUM_COMMON_MSRS		16U
 #define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS)
 
 #define EOI_EXIT_BITMAP_SIZE	256U
