@@ -62,6 +62,7 @@ Enable ACRN Features
    tutorials/waag-secure-boot
    tutorials/enable_s5
    tutorials/cpu_sharing
+   tutorials/sriov_virtualization
 
 Debug
 *****
