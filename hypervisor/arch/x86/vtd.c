@@ -22,6 +22,7 @@
 #include <board.h>
 #include <vm_config.h>
 #include <pci.h>
+#include <platform_caps.h>
 
 #define DBG_IOMMU 0
 
@@ -206,6 +207,7 @@ static inline uint16_t vmid_to_domainid(uint16_t vm_id)
 
 static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit);
 static struct dmar_drhd_rt *device_to_dmaru(uint8_t bus, uint8_t devfun);
+
 static int32_t register_hrhd_units(void)
 {
 	struct dmar_drhd_rt *drhd_rt;
@@ -223,6 +225,10 @@ static int32_t register_hrhd_units(void)
 		ret = dmar_register_hrhd(drhd_rt);
 		if (ret != 0) {
 			break;
+		}
+
+		if ((iommu_cap_pi(drhd_rt->cap) == 0U) || (!is_apicv_advanced_feature_supported())) {
+			platform_caps.pi = false;
 		}
 	}
 
