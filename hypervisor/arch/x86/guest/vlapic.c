@@ -629,7 +629,7 @@ uint64_t apicv_get_pir_desc_paddr(struct acrn_vcpu *vcpu)
 	struct acrn_vlapic *vlapic;
 
 	vlapic = &vcpu->arch.vlapic;
-	return hva2hpa(&(vlapic->pir_desc));
+	return hva2hpa(&(vlapic->pid));
 }
 
 /**
@@ -1672,7 +1672,7 @@ vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops, enum 
 
 	lapic = &(vlapic->apic_page);
 	(void)memset((void *)lapic, 0U, sizeof(struct lapic_regs));
-	(void)memset((void *)&(vlapic->pir_desc), 0U, sizeof(vlapic->pir_desc));
+	(void)memset((void *)&(vlapic->pid), 0U, sizeof(vlapic->pid));
 
 	if (mode == INIT_RESET) {
 		if ((preserved_lapic_mode & APICBASE_ENABLED) != 0U ) {
@@ -2229,16 +2229,16 @@ void vlapic_free(struct acrn_vcpu *vcpu)
 static bool
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
 {
-	struct vlapic_pir_desc *pir_desc;
+	struct pi_desc *pid;
 	uint32_t idx;
 	bool notify = false;
 
-	pir_desc = &(vlapic->pir_desc);
+	pid = &(vlapic->pid);
 
 	idx = vector >> 6U;
 
-	if (!bitmap_test_and_set_lock((uint16_t)(vector & 0x3fU), &pir_desc->pir[idx])) {
-		notify = (atomic_cmpxchg64(&pir_desc->pending, 0UL, 1UL) == 0UL);
+	if (!bitmap_test_and_set_lock((uint16_t)(vector & 0x3fU), &pid->pir[idx])) {
+		notify = (atomic_cmpxchg64(&pid->pending, 0UL, 1UL) == 0UL);
 	}
 	return notify;
 }
@@ -2289,21 +2289,21 @@ static bool apicv_basic_inject_intr(struct acrn_vlapic *vlapic,
  */
 static void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 {
-	struct vlapic_pir_desc *pir_desc;
+	struct pi_desc *pid;
 	struct lapic_regs *lapic;
 	uint64_t val, pirval;
 	uint16_t rvi, pirbase = 0U, i;
 	uint16_t intr_status_old, intr_status_new;
 	struct lapic_reg *irr = NULL;
 
-	pir_desc = &(vlapic->pir_desc);
-	if (atomic_cmpxchg64(&pir_desc->pending, 1UL, 0UL) == 1UL) {
+	pid = &(vlapic->pid);
+	if (atomic_cmpxchg64(&pid->pending, 1UL, 0UL) == 1UL) {
 		pirval = 0UL;
 		lapic = &(vlapic->apic_page);
 		irr = &lapic->irr[0];
 
 		for (i = 0U; i < 4U; i++) {
-			val = atomic_readandclear64(&pir_desc->pir[i]);
+			val = atomic_readandclear64(&pid->pir[i]);
 			if (val != 0UL) {
 				irr[i * 2U].v |= (uint32_t)val;
 				irr[(i * 2U) + 1U].v |= (uint32_t)(val >> 32U);
