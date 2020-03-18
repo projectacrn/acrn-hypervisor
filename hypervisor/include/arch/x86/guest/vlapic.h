@@ -43,7 +43,9 @@
 
 #define VLAPIC_MAXLVT_INDEX	APIC_LVT_CMCI
 
-struct vlapic_pir_desc {
+/* Posted Interrupt Descriptor (PID) in VT-d spec */
+struct pi_desc {
+	/* Posted Interrupt Requests, one bit per requested vector */
 	uint64_t pir[4];
 	uint64_t pending;
 	uint64_t unused[3];
@@ -58,16 +60,16 @@ struct vlapic_timer {
 
 struct acrn_vlapic {
 	/*
-	 * Please keep 'apic_page' and 'pir_desc' be the first two fields in
+	 * Please keep 'apic_page' and 'pid' be the first two fields in
 	 * current structure, as below alignment restrictions are mandatory
 	 * to support APICv features:
 	 * - 'apic_page' MUST be 4KB aligned.
-	 * - 'pir_desc' MUST be 64 bytes aligned.
+	 * - 'pid' MUST be 64 bytes aligned.
 	 * IRR, TMR and PIR could be accessed by other vCPUs when deliver
 	 * an interrupt to vLAPIC.
 	 */
 	struct lapic_regs	apic_page;
-	struct vlapic_pir_desc	pir_desc;
+	struct pi_desc	pid;
 
 	struct acrn_vm		*vm;
 	struct acrn_vcpu	*vcpu;
