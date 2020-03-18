@@ -12,6 +12,42 @@
 #include <ptdev.h>
 #include <per_cpu.h>
 #include <ioapic.h>
+#include <pgtable.h>
+
+/*
+ * Check if the IRQ is single-destination and return the destination vCPU if so.
+ *
+ * VT-d PI (posted mode) cannot support multicast/broadcast IRQs.
+ * If returns NULL, this means it is multicast/broadcast IRQ and
+ * we can only handle it in remapped mode.
+ * If returns non-NULL, the destination vCPU is returned, which means it is
+ * single-destination IRQ and we can handle it in posted mode.
+ *
+ * @pre (vm != NULL) && (info != NULL)
+ */
+static struct acrn_vcpu *is_single_destination(struct acrn_vm *vm, const struct ptirq_msi_info *info)
+{
+	uint64_t vdmask;
+	uint16_t vid;
+	struct acrn_vcpu *vcpu = NULL;
+
+	vlapic_calc_dest(vm, &vdmask, false, (uint32_t)(info->vmsi_addr.bits.dest_field),
+		(bool)(info->vmsi_addr.bits.dest_mode == MSI_ADDR_DESTMODE_PHYS),
+		(bool)(info->vmsi_data.bits.delivery_mode == MSI_DATA_DELMODE_LOPRI));
+
+	vid = ffs64(vdmask);
+
+	/* Can only post fixed and Lowpri IRQs */
+	if ((info->vmsi_data.bits.delivery_mode == MSI_DATA_DELMODE_FIXED)
+		|| (info->vmsi_data.bits.delivery_mode == MSI_DATA_DELMODE_LOPRI)) {
+		/* Can only post single-destination IRQs */
+		if (vdmask == (1UL << vid)) {
+			vcpu = vcpu_from_vid(vm, vid);
+		}
+	}
+
+	return vcpu;
+}
 
 /*
  * lookup a ptdev entry by sid
@@ -80,8 +116,14 @@ static void ptirq_free_irte(const struct ptirq_remapping_info *entry)
 	dmar_free_irte(&intr_src, (uint16_t)entry->allocated_pirq);
 }
 
+/*
+ * pid_paddr = 0: invalid address, indicate that remapped mode shall be used
+ *
+ * pid_paddr != 0: physical address of posted interrupt descriptor, indicate
+ * that posted mode shall be used
+ */
 static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *info,
-		const struct ptirq_remapping_info *entry, uint32_t vector)
+		const struct ptirq_remapping_info *entry, uint32_t vector, uint64_t pid_paddr)
 {
 	uint64_t vdmask, pdmask;
 	uint32_t dest, delmode, dest_mask;
@@ -116,6 +158,7 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *
 	irte.bits.remap.dest = dest_mask;
 
 	intr_src.is_msi = true;
+	intr_src.pid_paddr = pid_paddr;
 	intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
 	ret = dmar_assign_irte(&intr_src, &irte, (uint16_t)entry->allocated_pirq);
 
@@ -212,6 +255,7 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 		irte.bits.remap.trigger_mode = rte.bits.trigger_mode;
 
 		intr_src.is_msi = false;
+		intr_src.pid_paddr = 0UL;
 		intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(phys_irq);
 		ret = dmar_assign_irte(&intr_src, &irte, (uint16_t)phys_irq);
 
@@ -606,13 +650,13 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 				 * All the vCPUs are in x2APIC mode and LAPIC is Pass-through
 				 * Use guest vector to program the interrupt source
 				 */
-				ptirq_build_physical_msi(vm, info, entry, (uint32_t)info->vmsi_data.bits.vector);
+				ptirq_build_physical_msi(vm, info, entry, (uint32_t)info->vmsi_data.bits.vector, 0UL);
 			} else if (vlapic_state == VM_VLAPIC_XAPIC) {
 				/*
 				 * All the vCPUs are in xAPIC mode and LAPIC is emulated
 				 * Use host vector to program the interrupt source
 				 */
-				ptirq_build_physical_msi(vm, info, entry, irq_to_vector(entry->allocated_pirq));
+				ptirq_build_physical_msi(vm, info, entry, irq_to_vector(entry->allocated_pirq), 0UL);
 			} else if (vlapic_state == VM_VLAPIC_TRANSITION) {
 				/*
 				 * vCPUs are in middle of transition, so do not program interrupt source
@@ -626,7 +670,15 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 				ret = -EFAULT;
 			}
 		} else {
-			ptirq_build_physical_msi(vm, info, entry, irq_to_vector(entry->allocated_pirq));
+			struct acrn_vcpu *vcpu = is_single_destination(vm, info);
+
+			if (is_pi_capable(vm) && (vcpu != NULL)) {
+				ptirq_build_physical_msi(vm, info, entry,
+					(uint32_t)info->vmsi_data.bits.vector, hva2hpa(get_pi_desc(vcpu)));
+			} else {
+				/* Go with remapped mode if we cannot handle it in posted mode */
+				ptirq_build_physical_msi(vm, info, entry, irq_to_vector(entry->allocated_pirq), 0UL);
+			}
 		}
 
 		if (ret == 0) {
