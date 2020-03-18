@@ -43,14 +43,6 @@
 
 #define VLAPIC_MAXLVT_INDEX	APIC_LVT_CMCI
 
-/* Posted Interrupt Descriptor (PID) in VT-d spec */
-struct pi_desc {
-	/* Posted Interrupt Requests, one bit per requested vector */
-	uint64_t pir[4];
-	uint64_t pending;
-	uint64_t unused[3];
-} __aligned(64);
-
 struct vlapic_timer {
 	struct hv_timer timer;
 	uint32_t mode;
@@ -60,16 +52,14 @@ struct vlapic_timer {
 
 struct acrn_vlapic {
 	/*
-	 * Please keep 'apic_page' and 'pid' be the first two fields in
+	 * Please keep 'apic_page' as the first field in
 	 * current structure, as below alignment restrictions are mandatory
 	 * to support APICv features:
 	 * - 'apic_page' MUST be 4KB aligned.
-	 * - 'pid' MUST be 64 bytes aligned.
 	 * IRR, TMR and PIR could be accessed by other vCPUs when deliver
 	 * an interrupt to vLAPIC.
 	 */
 	struct lapic_regs	apic_page;
-	struct pi_desc	pid;
 
 	struct acrn_vm		*vm;
 	struct acrn_vcpu	*vcpu;
@@ -123,20 +113,6 @@ void vlapic_set_apicv_ops(void);
 bool vlapic_inject_intr(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected);
 bool vlapic_has_pending_delivery_intr(struct acrn_vcpu *vcpu);
 bool vlapic_has_pending_intr(struct acrn_vcpu *vcpu);
-
-/**
- * @brief Get physical address to PIR description.
- *
- * If APICv Posted-interrupt is supported, this address will be configured
- * to VMCS "Posted-interrupt descriptor address" field.
- *
- * @param[in] vcpu Target vCPU
- *
- * @return physicall address to PIR
- *
- * @pre vcpu != NULL
- */
-uint64_t apicv_get_pir_desc_paddr(struct acrn_vcpu *vcpu);
 
 uint64_t vlapic_get_tsc_deadline_msr(const struct acrn_vlapic *vlapic);
 void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic, uint64_t val_arg);

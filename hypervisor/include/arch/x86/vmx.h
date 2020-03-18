@@ -374,6 +374,14 @@
 #define VMX_INT_TYPE_HW_EXP		3U
 #define VMX_INT_TYPE_SW_EXP		6U
 
+/* Posted Interrupt Descriptor (PID) in VT-d spec */
+struct pi_desc {
+	/* Posted Interrupt Requests, one bit per requested vector */
+	uint64_t pir[4];
+	uint64_t pending;
+	uint32_t unused[3];
+} __aligned(64);
+
 /* External Interfaces */
 void vmx_on(void);
 void vmx_off(void);
