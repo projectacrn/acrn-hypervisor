@@ -270,7 +270,8 @@ static void init_xsave(struct acrn_vcpu *vcpu)
 	(void)memset((void *)area, 0U, XSAVE_STATE_AREA_SIZE);
 
 	/* xsaves only support compacted format, so set it in xcomp_bv[63],
-	* keep the reset area in header area as zero. */
+	 * keep the reset area in header area as zero.
+	 */
 	ectx->xs_area.xsave_hdr.hdr.xcomp_bv |= XSAVE_COMPACTED_FORMAT;
 }
 
@@ -402,7 +403,7 @@ void init_vcpu_protect_mode_regs(struct acrn_vcpu *vcpu, uint64_t vgdt_base_gpa)
 {
 	struct acrn_vcpu_regs vcpu_regs;
 
-	(void)memcpy_s((void*)&vcpu_regs, sizeof(struct acrn_vcpu_regs),
+	(void)memcpy_s((void *)&vcpu_regs, sizeof(struct acrn_vcpu_regs),
 		(void *)&protect_mode_init_vregs, sizeof(struct acrn_vcpu_regs));
 
 	vcpu_regs.gdt.base = vgdt_base_gpa;
@@ -471,6 +472,12 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 		 * This assignment guarantees a unique non-zero per vcpu vpid in runtime.
 		 */
 		vcpu->arch.vpid = 1U + (vm->vm_id * MAX_VCPUS_PER_VM) + vcpu->vcpu_id;
+
+		vcpu->arch.pid.control.bits.nv = POSTED_INTR_VECTOR;
+		/* ACRN does not support vCPU migration, one vCPU always runs on
+		 * the same pCPU, so PI's ndst is never changed after startup.
+		 */
+		vcpu->arch.pid.control.bits.ndst = per_cpu(lapic_id, pcpu_id);
 
 		/* Create per vcpu vlapic */
 		vlapic_create(vcpu);
@@ -644,8 +651,8 @@ void kick_vcpu(const struct acrn_vcpu *vcpu)
 }
 
 /*
-* @pre (&vcpu->stack[CONFIG_STACK_SIZE] & (CPU_STACK_ALIGN - 1UL)) == 0
-*/
+ * @pre (&vcpu->stack[CONFIG_STACK_SIZE] & (CPU_STACK_ALIGN - 1UL)) == 0
+ */
 static uint64_t build_stack_frame(struct acrn_vcpu *vcpu)
 {
 	uint64_t stacktop = (uint64_t)&vcpu->stack[CONFIG_STACK_SIZE];
@@ -846,8 +853,8 @@ uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask)
  *
  * @pre vcpu != NULL
  *
- *  @return true, if vCPU LAPIC is in x2APIC mode and VM, vCPU belongs to, is configured for
- *  				LAPIC Pass-through
+ * @return true, if vCPU LAPIC is in x2APIC mode and VM, vCPU belongs to, is configured for
+ *				LAPIC Pass-through
  */
 bool is_lapic_pt_enabled(struct acrn_vcpu *vcpu)
 {
