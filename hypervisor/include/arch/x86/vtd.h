@@ -511,24 +511,49 @@ struct dmar_entry {
 };
 
 union dmar_ir_entry {
-	struct dmar_entry entry;
-	struct {
-		uint64_t present:1;
-		uint64_t fpd:1;
-		uint64_t dest_mode:1;
-		uint64_t rh:1;
-		uint64_t trigger_mode:1;
-		uint64_t delivery_mode:3;
-		uint64_t sw_bits:4;
-		uint64_t rsvd_1:3;
-		uint64_t mode:1;
-		uint64_t vector:8;
-		uint64_t rsvd_2:8;
-		uint64_t dest:32;
-		uint64_t sid:16;
-		uint64_t sq:2;
-		uint64_t svt:2;
-		uint64_t rsvd_3:44;
+	struct dmar_entry value;
+
+	union {
+		/* Remapped mode */
+		struct {
+			uint64_t present:1;
+			uint64_t fpd:1;
+			uint64_t dest_mode:1;
+			uint64_t rh:1;
+			uint64_t trigger_mode:1;
+			uint64_t delivery_mode:3;
+			uint64_t avail:4;
+			uint64_t rsvd_1:3;
+			uint64_t mode:1;
+			uint64_t vector:8;
+			uint64_t rsvd_2:8;
+			uint64_t dest:32;
+
+			uint64_t sid:16;
+			uint64_t sq:2;
+			uint64_t svt:2;
+			uint64_t rsvd_3:44;
+		} remap;
+
+		/* Posted mode */
+		struct {
+			uint64_t present:1;
+			uint64_t fpd:1;
+			uint64_t rsvd_1:6;
+			uint64_t avail:4;
+			uint64_t rsvd_2:2;
+			uint64_t urgent:1;
+			uint64_t mode:1;
+			uint64_t vector:8;
+			uint64_t rsvd_3:14;
+			uint64_t pda_l:26;
+
+			uint64_t sid:16;
+			uint64_t sq:2;
+			uint64_t svt:2;
+			uint64_t rsvd_4:12;
+			uint64_t pda_h:32;
+		} post;
 	} bits __packed;
 };
 
