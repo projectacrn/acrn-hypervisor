@@ -106,7 +106,7 @@ configure, install, and use it as explained on the
 as introduced in the project ACRN `Getting Started Guide`_.
 
 .. _Getting Started Guide:
-   https://projectacrn.github.io/getting_started/
+   https://projectacrn.github.io/latest/try.html
 
 You should be familiar with common developer tools such as Git and
 platforms such as GitHub.
