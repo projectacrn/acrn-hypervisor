@@ -152,13 +152,13 @@ struct intr_remap_table {
 	struct page tables[CONFIG_MAX_IR_ENTRIES/DMAR_NUM_IR_ENTRIES_PER_PAGE];
 };
 
-static inline uint8_t* get_root_table(uint32_t dmar_index)
+static inline uint8_t *get_root_table(uint32_t dmar_index)
 {
 	static struct page root_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 	return root_tables[dmar_index].contents;
 }
 
-static inline uint8_t* get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
+static inline uint8_t *get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
 {
 	static struct context_table ctx_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 	return ctx_tables[dmar_index].buses[bus_no].contents;
@@ -945,7 +945,7 @@ static void dmar_setup_interrupt(struct dmar_drhd_rt *dmar_unit)
 	}
 	spinlock_release(&(dmar_unit->lock));
 	/* the panic will only happen before any VM starts running */
-	if (retval < 0 ) {
+	if (retval < 0) {
 		panic("dmar[%d] fail to setup interrupt", dmar_unit->index);
 	}
 
@@ -1249,7 +1249,7 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 
 	if (translation_table == 0UL) {
 		pr_err("translation table is NULL");
-	        domain =  NULL;
+		domain = NULL;
 	} else {
 		/*
 		 * A hypercall is called to create an iommu domain for a valid VM,
@@ -1371,7 +1371,7 @@ int32_t init_iommu(void)
 	return ret;
 }
 
-int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, uint16_t index)
+int32_t dmar_assign_irte(const struct intr_source *intr_src, union dmar_ir_entry *irte, uint16_t index)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	union dmar_ir_entry *ir_table, *ir_entry;
@@ -1379,13 +1379,13 @@ int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, 
 	uint64_t trigger_mode;
 	int32_t ret = 0;
 
-	if (intr_src.is_msi) {
-		dmar_unit = device_to_dmaru((uint8_t)intr_src.src.msi.bits.b, intr_src.src.msi.fields.devfun);
-		sid.value = intr_src.src.msi.value;
+	if (intr_src->is_msi) {
+		dmar_unit = device_to_dmaru((uint8_t)intr_src->src.msi.bits.b, intr_src->src.msi.fields.devfun);
+		sid.value = (uint16_t)(intr_src->src.msi.value);
 		trigger_mode = 0x0UL;
 	} else {
-		dmar_unit = ioapic_to_dmaru(intr_src.src.ioapic_id, &sid);
-		trigger_mode = irte.bits.trigger_mode;
+		dmar_unit = ioapic_to_dmaru(intr_src->src.ioapic_id, &sid);
+		trigger_mode = irte->bits.trigger_mode;
 	}
 
 	if (dmar_unit == NULL) {
@@ -1399,17 +1399,17 @@ int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, 
 		ret = -EINVAL;
 	} else {
 		dmar_enable_intr_remapping(dmar_unit);
-		irte.bits.svt = 0x1UL;
-		irte.bits.sq = 0x0UL;
-		irte.bits.sid = sid.value;
-		irte.bits.present = 0x1UL;
-		irte.bits.mode = 0x0UL;
-		irte.bits.trigger_mode = trigger_mode;
-		irte.bits.fpd = 0x0UL;
+		irte->bits.svt = 0x1UL;
+		irte->bits.sq = 0x0UL;
+		irte->bits.sid = sid.value;
+		irte->bits.present = 0x1UL;
+		irte->bits.mode = 0x0UL;
+		irte->bits.trigger_mode = trigger_mode;
+		irte->bits.fpd = 0x0UL;
 		ir_table = (union dmar_ir_entry *)hpa2hva(dmar_unit->ir_table_addr);
 		ir_entry = ir_table + index;
-		ir_entry->entry.hi_64 = irte.entry.hi_64;
-		ir_entry->entry.lo_64 = irte.entry.lo_64;
+		ir_entry->entry.hi_64 = irte->entry.hi_64;
+		ir_entry->entry.lo_64 = irte->entry.lo_64;
 
 		iommu_flush_cache(ir_entry, sizeof(union dmar_ir_entry));
 		dmar_invalid_iec(dmar_unit, index, 0U, false);
@@ -1417,24 +1417,24 @@ int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, 
 	return ret;
 }
 
-void dmar_free_irte(struct intr_source intr_src, uint16_t index)
+void dmar_free_irte(const struct intr_source *intr_src, uint16_t index)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	union dmar_ir_entry *ir_table, *ir_entry;
 	union pci_bdf sid;
 
-	if (intr_src.is_msi) {
-		dmar_unit = device_to_dmaru((uint8_t)intr_src.src.msi.bits.b, intr_src.src.msi.fields.devfun);
+	if (intr_src->is_msi) {
+		dmar_unit = device_to_dmaru((uint8_t)intr_src->src.msi.bits.b, intr_src->src.msi.fields.devfun);
 	} else {
-		dmar_unit = ioapic_to_dmaru(intr_src.src.ioapic_id, &sid);
+		dmar_unit = ioapic_to_dmaru(intr_src->src.ioapic_id, &sid);
 	}
 
 	if (dmar_unit == NULL) {
-		pr_err("no dmar unit found for device: %x:%x.%x", intr_src.src.msi.bits.b,
-			intr_src.src.msi.bits.d, intr_src.src.msi.bits.f);
+		pr_err("no dmar unit found for device: %x:%x.%x", intr_src->src.msi.bits.b,
+			intr_src->src.msi.bits.d, intr_src->src.msi.bits.f);
 	} else if (dmar_unit->drhd->ignore) {
-		dev_dbg(DBG_LEVEL_IOMMU, "device is ignored :0x%x:%x.%x", intr_src.src.msi.bits.b,
-			intr_src.src.msi.bits.d, intr_src.src.msi.bits.f);
+		dev_dbg(DBG_LEVEL_IOMMU, "device is ignored :0x%x:%x.%x", intr_src->src.msi.bits.b,
+			intr_src->src.msi.bits.d, intr_src->src.msi.bits.f);
 	} else if (dmar_unit->ir_table_addr == 0UL) {
 		pr_err("IR table is not set for dmar unit");
 	} else {
