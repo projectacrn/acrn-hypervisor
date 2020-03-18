@@ -77,7 +77,7 @@ static void ptirq_free_irte(const struct ptirq_remapping_info *entry)
 		intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(entry->allocated_pirq);
 	}
 
-	dmar_free_irte(intr_src, (uint16_t)entry->allocated_pirq);
+	dmar_free_irte(&intr_src, (uint16_t)entry->allocated_pirq);
 }
 
 static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *info,
@@ -117,7 +117,7 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *
 
 	intr_src.is_msi = true;
 	intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
-	ret = dmar_assign_irte(intr_src, irte, (uint16_t)entry->allocated_pirq);
+	ret = dmar_assign_irte(&intr_src, &irte, (uint16_t)entry->allocated_pirq);
 
 	if (ret == 0) {
 		/*
@@ -213,7 +213,7 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 
 		intr_src.is_msi = false;
 		intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(phys_irq);
-		ret = dmar_assign_irte(intr_src, irte, (uint16_t)phys_irq);
+		ret = dmar_assign_irte(&intr_src, &irte, (uint16_t)phys_irq);
 
 		if (ret == 0) {
 			ir_index.index = (uint16_t)phys_irq;
@@ -299,7 +299,8 @@ static struct ptirq_remapping_info *add_msix_remapping(struct acrn_vm *vm,
 		}
 	} else {
 		/* The mapping has already been added to the VM. No action
-		 * required. */
+		 * required.
+		 */
 	}
 
 	dev_dbg(DBG_LEVEL_IRQ, "VM%d MSIX add vector mapping vbdf%x:pbdf%x idx=%d",
@@ -325,7 +326,7 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entr
 
 		intr_src.is_msi = true;
 		intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
-		dmar_free_irte(intr_src, (uint16_t)entry->allocated_pirq);
+		dmar_free_irte(&intr_src, (uint16_t)entry->allocated_pirq);
 
 		dev_dbg(DBG_LEVEL_IRQ,
 			"VM%d MSIX remove vector mapping vbdf-pbdf:0x%x-0x%x idx=%d",
@@ -380,7 +381,8 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 		}
 	} else {
 		/* The mapping has already been added to the VM. No action
-		 * required. */
+		 * required.
+		 */
 	}
 
 
@@ -415,7 +417,7 @@ static void remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_gsi, e
 			intr_src.is_msi = false;
 			intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(phys_irq);
 
-			dmar_free_irte(intr_src, (uint16_t)phys_irq);
+			dmar_free_irte(&intr_src, (uint16_t)phys_irq);
 			dev_dbg(DBG_LEVEL_IRQ,
 				"deactive %s intx entry:pgsi=%d, pirq=%d ",
 				(vgsi_ctlr == INTX_CTLR_PIC) ? "vPIC" : "vIOAPIC",
@@ -432,6 +434,7 @@ static void ptirq_handle_intx(struct acrn_vm *vm,
 		const struct ptirq_remapping_info *entry)
 {
 	const union source_id *virt_sid = &entry->virt_sid;
+
 	switch (virt_sid->intx_id.ctlr) {
 	case INTX_CTLR_IOAPIC:
 	{
@@ -597,6 +600,7 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 		/* build physical config MSI, update to info->pmsi_xxx */
 		if (is_lapic_pt_configured(vm)) {
 			enum vm_vlapic_state vlapic_state = check_vm_vlapic_state(vm);
+
 			if (vlapic_state == VM_VLAPIC_X2APIC) {
 				/*
 				 * All the vCPUs are in x2APIC mode and LAPIC is Pass-through
