@@ -107,13 +107,13 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *
 	dest_mask = calculate_logical_dest_mask(pdmask);
 
 	/* Using phys_irq as index in the corresponding IOMMU */
-	irte.entry.lo_64 = 0UL;
-	irte.entry.hi_64 = 0UL;
-	irte.bits.vector = vector;
-	irte.bits.delivery_mode = delmode;
-	irte.bits.dest_mode = MSI_ADDR_DESTMODE_LOGICAL;
-	irte.bits.rh = MSI_ADDR_RH;
-	irte.bits.dest = dest_mask;
+	irte.value.lo_64 = 0UL;
+	irte.value.hi_64 = 0UL;
+	irte.bits.remap.vector = vector;
+	irte.bits.remap.delivery_mode = delmode;
+	irte.bits.remap.dest_mode = MSI_ADDR_DESTMODE_LOGICAL;
+	irte.bits.remap.rh = MSI_ADDR_RH;
+	irte.bits.remap.dest = dest_mask;
 
 	intr_src.is_msi = true;
 	intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
@@ -203,13 +203,13 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 		vector = irq_to_vector(phys_irq);
 		dest_mask = calculate_logical_dest_mask(pdmask);
 
-		irte.entry.lo_64 = 0UL;
-		irte.entry.hi_64 = 0UL;
-		irte.bits.vector = vector;
-		irte.bits.delivery_mode = delmode;
-		irte.bits.dest_mode = IOAPIC_RTE_DESTMODE_LOGICAL;
-		irte.bits.dest = dest_mask;
-		irte.bits.trigger_mode = rte.bits.trigger_mode;
+		irte.value.lo_64 = 0UL;
+		irte.value.hi_64 = 0UL;
+		irte.bits.remap.vector = vector;
+		irte.bits.remap.delivery_mode = delmode;
+		irte.bits.remap.dest_mode = IOAPIC_RTE_DESTMODE_LOGICAL;
+		irte.bits.remap.dest = dest_mask;
+		irte.bits.remap.trigger_mode = rte.bits.trigger_mode;
 
 		intr_src.is_msi = false;
 		intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(phys_irq);
