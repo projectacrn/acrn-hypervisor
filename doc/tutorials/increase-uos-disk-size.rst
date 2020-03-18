@@ -10,8 +10,9 @@ sufficient for some applications. This guide explains a simple few steps to
 increase the size of that virtual disk.
 
 This document is largely inspired from Clear Linux's `Increase virtual disk size
-of a Clear Linux* OS image <https://clearlinux.org/documentation/clear-linux/
-guides/maintenance/increase-virtual-disk-size>`_ tutorial. The process can be
+of a Clear Linux* OS image
+<https://docs.01.org/clearlinux/latest/guides/maintenance/increase-virtual-disk-size.html>`_
+tutorial. The process can be
 broken down into three steps:
 
 1. Increase the virtual disk (``uos.img``) size

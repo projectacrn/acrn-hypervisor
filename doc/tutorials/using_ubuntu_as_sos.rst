@@ -138,7 +138,8 @@ Install the Service VM kernel
 Download the latest Service VM kernel.
 
 1. The latest Service VM kernel from the latest Clear Linux OS release is
-   located here: https://download.clearlinux.org/releases/current/clear/x86_64/os/Packages.  Look for the following ``.rpm`` file:
+   located here:
+   https://download.clearlinux.org/releases/current/clear/x86_64/os/Packages/.  Look for the following ``.rpm`` file:
    ``linux-iot-lts2018-sos-<kernel-version>-<build-version>.x86_64.rpm``.
 
    While we recommend using the current (latest) Clear Linux OS release, you

@@ -57,7 +57,7 @@ container::
    # acrnctl add launch_uos.sh -C
 
 .. note:: You can download an `example launch_uos.sh script
-   <https://raw.githubusercontent.com/projectacrn/acrnhypervisor/master/devicemodel/samples/nuc/launch_uos.sh>`_
+   <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/devicemodel/samples/nuc/launch_uos.sh>`_
    that supports the ``-C``  (``run_container`` function) option. You may refer to :ref:`acrn-dm_qos`
    for more details about this option.
 

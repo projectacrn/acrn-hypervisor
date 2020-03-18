@@ -175,7 +175,8 @@ The Top-down Micro-Architecture Analysis Method (TMAM), based on Top-Down
 Characterization methodology, aims to provide an insight into whether you
 have made wise choices with your algorithms and data structures. See the
 Intel |reg| 64 and IA-32 `Architectures Optimization Reference Manual <http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf>`_,
-Appendix B.1 for more details on TMAM. Refer to this `technical paper <https://fd.io/wp-content/uploads/sites/34/2018/01/performance_analysis_sw_data_planes_dec21_2017.pdf>`_
+Appendix B.1 for more details on TMAM. Refer to this `technical paper
+<https://fd.io/docs/whitepapers/performance_analysis_sw_data_planes_dec21_2017.pdf>`_
 which adopts TMAM for systematic performance benchmarking and analysis
 of compute-native Network Function data planes that are executed on
 Commercial-Off-The-Shelf (COTS) servers using available open-source

@@ -12,7 +12,7 @@ Refer to `Intel Analysis of L1TF`_ and `Linux L1TF document`_ for details.
    https://software.intel.com/security-software-guidance/insights/deep-dive-intel-analysis-l1-terminal-fault
 
 .. _Linux L1TF document:
-   https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/l1tf.rst
+   https://www.kernel.org/doc/html/latest/admin-guide/hw-vuln/l1tf.html
 
 L1 Terminal Fault is a speculative side channel which allows unprivileged
 speculative access to data which is available in the Level 1 Data Cache
