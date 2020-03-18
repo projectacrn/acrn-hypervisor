@@ -67,6 +67,13 @@ union source {
 struct intr_source {
 	bool is_msi;
 	union source src;
+	/*
+	 * pid_paddr = 0: invalid address, indicate that remapped mode shall be used
+	 *
+	 * pid_paddr != 0: physical address of posted interrupt descriptor, indicate
+	 * that posted mode shall be used
+	 */
+	uint64_t pid_paddr;
 };
 
 static inline uint8_t dmar_ver_major(uint64_t version)
