@@ -31,6 +31,7 @@
 #include <sbuf.h>
 #include <pci_dev.h>
 #include <vacpi.h>
+#include <platform_caps.h>
 
 vm_sw_loader_t vm_sw_loader;
 
@@ -113,6 +114,20 @@ bool is_rt_vm(const struct acrn_vm *vm)
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 	return ((vm_config->guest_flags & GUEST_FLAG_RT) != 0U);
+}
+
+/**
+ * @brief VT-d PI posted mode can possibly be used for PTDEVs assigned
+ * to this VM if platform supports VT-d PI AND lapic passthru is not configured
+ * for this VM.
+ * However, as we can only post single destination IRQ, so meeting these 2 conditions
+ * does not necessarily mean posted mode will be used for all PTDEVs belonging
+ * to the VM, unless the IRQ is single-destination for the specific PTDEV
+ * @pre vm != NULL
+ */
+bool is_pi_capable(const struct acrn_vm *vm)
+{
+	return (platform_caps.pi && (!is_lapic_pt_configured(vm)));
 }
 
 static struct acrn_vm *get_highest_severity_vm(void)
