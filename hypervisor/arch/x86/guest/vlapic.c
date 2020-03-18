@@ -1957,8 +1957,8 @@ vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg)
 		phys = (address.bits.dest_mode == MSI_ADDR_DESTMODE_PHYS);
 		rh = (address.bits.rh == MSI_ADDR_RH);
 
-		delmode = data.bits.delivery_mode;
-		vec = data.bits.vector;
+		delmode = (uint32_t)(data.bits.delivery_mode);
+		vec = (uint32_t)(data.bits.vector);
 
 		dev_dbg(DBG_LEVEL_VLAPIC, "lapic MSI %s dest %#x, vec %u",
 			phys ? "physical" : "logical", dest, vec);
@@ -2214,11 +2214,9 @@ apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
 	bool notify = false;
 
 	pid = get_pi_desc(vlapic->vcpu);
-
 	idx = vector >> 6U;
-
 	if (!bitmap_test_and_set_lock((uint16_t)(vector & 0x3fU), &pid->pir[idx])) {
-		notify = (atomic_cmpxchg64(&pid->pending, 0UL, 1UL) == 0UL);
+		notify = (bitmap_test_and_set_lock(POSTED_INTR_ON, &pid->control.value) == false);
 	}
 	return notify;
 }
@@ -2278,7 +2276,7 @@ static void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 	struct lapic_reg *irr = NULL;
 
 	pid = get_pi_desc(vlapic->vcpu);
-	if (atomic_cmpxchg64(&pid->pending, 1UL, 0UL) == 1UL) {
+	if (bitmap_test_and_clear_lock(POSTED_INTR_ON, &pid->control.value)) {
 		pirval = 0UL;
 		lapic = &(vlapic->apic_page);
 		irr = &lapic->irr[0];
@@ -2445,7 +2443,7 @@ int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 	 * 2 = linear access for an instruction fetch
 	 * c) we suppose the guest goes wrong when it will access the APIC-access page
 	 * when process event-delivery. According chap 26.5.1.2 VM Exits During Event Injection,
-	 * vol 3, sdm: If the "virtualize APIC accesses"� VM-execution control is 1 and
+	 * vol 3, sdm: If the "virtualize APIC accesses" VM-execution control is 1 and
 	 * event delivery generates an access to the APIC-access page, that access is treated as
 	 * described in Section 29.4 and may cause a VM exit.
 	 * 3 = linear access (read or write) during event delivery

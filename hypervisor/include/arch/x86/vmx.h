@@ -378,9 +378,32 @@
 struct pi_desc {
 	/* Posted Interrupt Requests, one bit per requested vector */
 	uint64_t pir[4];
-	uint64_t pending;
-	uint32_t unused[3];
+
+	union {
+		struct {
+			/* Outstanding Notification */
+			uint16_t on:1;
+
+			/* Suppress Notification, of non-urgent interrupts */
+			uint16_t sn:1;
+
+			uint16_t rsvd_1:14;
+
+			/* Notification Vector */
+			uint8_t nv;
+
+			uint8_t rsvd_2;
+
+			/* Notification destination, a physical LAPIC ID */
+			uint32_t ndst;
+		} bits;
+
+		uint64_t value;
+	} control;
+
+	uint32_t rsvd[6];
 } __aligned(64);
+
 
 /* External Interfaces */
 void vmx_on(void);
@@ -408,4 +431,5 @@ void exec_vmwrite64(uint32_t field_full, uint64_t value);
 void exec_vmclear(void *addr);
 void exec_vmptrld(void *addr);
 
+#define POSTED_INTR_ON  0U
 #endif /* VMX_H_ */
