@@ -3218,20 +3218,20 @@ function:
 6) A blank line shall separate different paragraphs. Inside each paragraph, a
    blank line is not required to separate each element.
 7) The brief description of the function shall be documented with the format
-   '@brief <brief description>'.
+   '\@brief <brief description>'.
 8) No specific format is required for the detailed description of the function.
 9) The description of the function parameter shall be documented with the format
-   '@param <parameter name> <parameter description>'.
-10) The pre-condition of the function shall be documented with the format '@pre
+   '\@param <parameter name> <parameter description>'.
+10) The pre-condition of the function shall be documented with the format '\@pre
     <pre-condition description>'.
 11) The post-condition of the function shall be documented with the format
-    '@post <post-condition description>'.
+    '\@post <post-condition description>'.
 12) The brief description of the function return value shall be documented with
-    the format '@return <brief description of return value>'.
-13) A void-returning function shall be documented with the format '@return
+    the format '\@return <brief description of return value>'.
+13) A void-returning function shall be documented with the format '\@return
     None'.
 14) The comments explaining the actual return values shall be documented with
-    the format '@retval <return value> <return value explanation>'.
+    the format '\@retval <return value> <return value explanation>'.
 15) If the description of one element needs to span multiple lines, each line
     shall be aligned to the start of the description in the first line for that
     element.

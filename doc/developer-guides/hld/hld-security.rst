@@ -282,7 +282,7 @@ following rules:
 Detailed configurations and policies are out of scope for this document.
 For good references on OS system security hardening and enhancement,
 see `AGL security
-<http://docs.automotivelinux.org/master/docs/architecture/en/dev/reference/security/part-2/0_Abstract.html>`_
+<https://docs.automotivelinux.org/docs/en/master/architecture/reference/security/part-2/0_Abstract.html>`_
 and `Android security <https://source.android.com/security/>`_
 
 Hypervisor Security Enhancement

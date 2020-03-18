@@ -33,10 +33,10 @@ manually, as described below).
    instruction below to reference the appropriate version number of Clear
    Linux OS (we use version 32080 as an example).
 
-#. Download the compressed Clear Linux OS installer image from
-   https://download.clearlinux.org/releases/31470/clear/clear-31470-live-server.iso.xz
+#. Download the Clear Linux OS installer image from
+   https://download.clearlinux.org/releases/31470/clear/clear-31470-live-server.iso
    and follow the `Clear Linux OS Installation Guide
-   <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install-server>`_
+   <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_
    as a starting point for installing the Clear Linux OS onto your platform.
    Follow the recommended options for choosing an :kbd:`Advanced options`
    installation type, and using the platform's storage as the target device

@@ -33,7 +33,7 @@ Prerequisites
   are started by the ACRN hypervisor.  Each VM has its own root
   filesystem. Set up each VM by following the `Install Clear Linux
   OS on bare metal with live server
-  <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install-server>`_
+  <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_
   and install Clear Linux OS (version: 29970) first on a SATA disk and then again
   on a storage device with a USB interface. The two pre-launched
   VMs will mount the root file systems via the SATA controller and

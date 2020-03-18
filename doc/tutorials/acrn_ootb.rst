@@ -9,7 +9,7 @@ Set up a Build Environment
 **************************
 
 #. Follow the `Clear Linux OS installation guide
-   <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install-server>`_
+   <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_
    to install a native Clear Linux OS on a development machine.
 
 #. Log in to the Clear Linux OS and install these bundles::
