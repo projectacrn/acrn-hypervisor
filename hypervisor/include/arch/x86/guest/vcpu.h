@@ -27,6 +27,7 @@
 #include <msr.h>
 #include <cpu.h>
 #include <instr_emul.h>
+#include <vmx.h>
 
 /**
  * @brief vcpu
@@ -200,6 +201,9 @@ struct acrn_vcpu_arch {
 	/* per vcpu lapic */
 	struct acrn_vlapic vlapic;
 
+	/* pid MUST be 64 bytes aligned */
+	struct pi_desc pid __aligned(64);
+
 	struct acrn_vmtrr vmtrr;
 
 	int32_t cur_context;
@@ -297,10 +301,23 @@ static inline void vcpu_retain_rip(struct acrn_vcpu *vcpu)
 	(vcpu)->arch.inst_len = 0U;
 }
 
-static inline struct acrn_vlapic *
-vcpu_vlapic(struct acrn_vcpu *vcpu)
+static inline struct acrn_vlapic *vcpu_vlapic(struct acrn_vcpu *vcpu)
 {
 	return &(vcpu->arch.vlapic);
+}
+
+/**
+ * @brief Get pointer to PI description.
+ *
+ * @param[in] vcpu Target vCPU
+ *
+ * @return pointer to PI description
+ *
+ * @pre vcpu != NULL
+ */
+static inline struct pi_desc *get_pi_desc(struct acrn_vcpu *vcpu)
+{
+	return &(vcpu->arch.pid);
 }
 
 uint16_t pcpuid_from_vcpu(const struct acrn_vcpu *vcpu);
@@ -557,7 +574,7 @@ static inline bool is_pae(struct acrn_vcpu *vcpu)
 }
 
 struct acrn_vcpu *get_running_vcpu(uint16_t pcpu_id);
-struct acrn_vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
+struct acrn_vcpu *get_ever_run_vcpu(uint16_t pcpu_id);
 
 void save_xsave_area(struct ext_context *ectx);
 void rstore_xsave_area(const struct ext_context *ectx);

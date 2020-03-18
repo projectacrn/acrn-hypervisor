@@ -613,26 +613,6 @@ static void apicv_post_intr(uint16_t dest_pcpu_id)
 }
 
 /**
- * @brief Get physical address to PIR description.
- *
- * If APICv Posted-interrupt is supported, this address will be configured
- * to VMCS "Posted-interrupt descriptor address" field.
- *
- * @param[in] vcpu Target vCPU
- *
- * @return physicall address to PIR
- *
- * @pre vcpu != NULL
- */
-uint64_t apicv_get_pir_desc_paddr(struct acrn_vcpu *vcpu)
-{
-	struct acrn_vlapic *vlapic;
-
-	vlapic = &vcpu->arch.vlapic;
-	return hva2hpa(&(vlapic->pid));
-}
-
-/**
  * @pre offset value shall be one of the folllowing values:
  *	APIC_OFFSET_CMCI_LVT
  *	APIC_OFFSET_TIMER_LVT
@@ -1672,7 +1652,6 @@ vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops, enum 
 
 	lapic = &(vlapic->apic_page);
 	(void)memset((void *)lapic, 0U, sizeof(struct lapic_regs));
-	(void)memset((void *)&(vlapic->pid), 0U, sizeof(vlapic->pid));
 
 	if (mode == INIT_RESET) {
 		if ((preserved_lapic_mode & APICBASE_ENABLED) != 0U ) {
@@ -2225,7 +2204,8 @@ void vlapic_free(struct acrn_vcpu *vcpu)
 
 /**
  * APIC-v functions
- * **/
+ * @pre get_pi_desc(vlapic->vcpu) != NULL
+ */
 static bool
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
 {
@@ -2233,7 +2213,7 @@ apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
 	uint32_t idx;
 	bool notify = false;
 
-	pid = &(vlapic->pid);
+	pid = get_pi_desc(vlapic->vcpu);
 
 	idx = vector >> 6U;
 
@@ -2286,6 +2266,7 @@ static bool apicv_basic_inject_intr(struct acrn_vlapic *vlapic,
 /*
  * Transfer the pending interrupts in the PIR descriptor to the IRR
  * in the virtual APIC page.
+ * @pre get_pi_desc(vlapic->vcpu) != NULL
  */
 static void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 {
@@ -2296,7 +2277,7 @@ static void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 	uint16_t intr_status_old, intr_status_new;
 	struct lapic_reg *irr = NULL;
 
-	pid = &(vlapic->pid);
+	pid = get_pi_desc(vlapic->vcpu);
 	if (atomic_cmpxchg64(&pid->pending, 1UL, 0UL) == 1UL) {
 		pirval = 0UL;
 		lapic = &(vlapic->apic_page);
@@ -2464,7 +2445,7 @@ int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 	 * 2 = linear access for an instruction fetch
 	 * c) we suppose the guest goes wrong when it will access the APIC-access page
 	 * when process event-delivery. According chap 26.5.1.2 VM Exits During Event Injection,
-	 * vol 3, sdm: If the “virtualize APIC accesses” VM-execution control is 1 and
+	 * vol 3, sdm: If the "virtualize APIC accesses"� VM-execution control is 1 and
 	 * event delivery generates an access to the APIC-access page, that access is treated as
 	 * described in Section 29.4 and may cause a VM exit.
 	 * 3 = linear access (read or write) during event delivery
