@@ -229,7 +229,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 
 		timer_init();
 		setup_notification();
-		setup_posted_intr_notification();
+		setup_pi_notification();
 
 		if (init_iommu() != 0) {
 			panic("failed to initialize iommu!");
