@@ -95,10 +95,9 @@ static inline void vlapic_dump_isr(__unused const struct acrn_vlapic *vlapic, __
 
 const struct acrn_apicv_ops *apicv_ops;
 
-static bool
-apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector);
+static bool apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector);
 
-static void apicv_post_intr(uint16_t dest_pcpu_id);
+static void apicv_trigger_pi_anv(uint16_t dest_pcpu_id, uint32_t anv);
 
 static void vlapic_x2apic_self_ipi_handler(struct acrn_vlapic *vlapic);
 
@@ -581,7 +580,7 @@ static void apicv_advanced_accept_intr(struct acrn_vlapic *vlapic, uint32_t vect
 		bitmap_set_lock(ACRN_REQUEST_EVENT, &vcpu->arch.pending_req);
 
 		if (get_pcpu_id() != pcpuid_from_vcpu(vcpu)) {
-			apicv_post_intr(pcpuid_from_vcpu(vcpu));
+			apicv_trigger_pi_anv(pcpuid_from_vcpu(vcpu), (uint32_t)vcpu->arch.pid.control.bits.nv);
 		}
 	}
 }
@@ -612,12 +611,13 @@ static void vlapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, bool
  * If pCPU in root-mode, virtual interrupt will be injected in next VM entry.
  *
  * @param[in] dest_pcpu_id Target CPU ID.
+ * @param[in] anv Activation Notification Vectors (ANV)
  *
  * @return None
  */
-static void apicv_post_intr(uint16_t dest_pcpu_id)
+static void apicv_trigger_pi_anv(uint16_t dest_pcpu_id, uint32_t anv)
 {
-	send_single_ipi(dest_pcpu_id, POSTED_INTR_VECTOR);
+	send_single_ipi(dest_pcpu_id, anv);
 }
 
 /**
