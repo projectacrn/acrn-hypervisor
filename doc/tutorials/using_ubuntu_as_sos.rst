@@ -113,10 +113,15 @@ the source code, build it, and install it on your device.
 
          # For SATA
          sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 \
-                -L "ACRN Hypervisor" -u "bootloader=\EFI\ubuntu\grubx64.efi"
+                -L "ACRN Hypervisor" -u "bootloader=\EFI\ubuntu\grubx64.efi "
          # For NVMe
          sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/nvme0n1 -p 1 \
-                -L "ACRN Hypervisor" -u "bootloader=\EFI\ubuntu\grubx64.efi"
+                -L "ACRN Hypervisor" -u "bootloader=\EFI\ubuntu\grubx64.efi "
+
+      .. Note::
+         This is a workaround for the issue in efi-stub;
+         Add an extra space to the EFI option to make sure space could be used to detect the end of bootloader name string.
+         This extra space can be removed after issue in efi-stub fixed later.
 
    #. Verify that "ACRN Hypervisor" is added and that it will boot first:
 
