@@ -6,8 +6,9 @@
 import os
 import getopt
 import common
+import board_cfg_lib
 
-SOURCE_ROOT_DIR = common.SOURCE_PATH
+SOURCE_ROOT_DIR = common.SOURCE_ROOT_DIR
 BOARD_INFO_FILE = "board_info.txt"
 SCENARIO_INFO_FILE = ""
 LAUNCH_INFO_FILE = ""
@@ -62,7 +63,7 @@ MOUNT_FLAG_DIC = {}
 
 def prepare():
     """ Check environment """
-    return common.check_env()
+    return common.prepare()
 
 
 def print_yel(msg, warn=False):
@@ -71,7 +72,7 @@ def print_yel(msg, warn=False):
     :param msg: the stings which will be output to STDOUT
     :param warn: the condition if needs to be output the color of yellow with 'Warning'
     """
-    common.print_if_yel(msg, warn)
+    common.print_yel(msg, warn)
 
 
 def print_red(msg, err=False):
@@ -80,7 +81,7 @@ def print_red(msg, err=False):
     :param msg: the stings which will be output to STDOUT
     :param err: the condition if needs to be output the color of red with 'Error'
     """
-    common.print_if_red(msg, err)
+    common.print_red(msg, err)
 
 
 def usage(file_name):
@@ -152,14 +153,53 @@ def get_param(args):
     return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
 
+def launch_vm_cnt(config_file):
+    """
+    Get post vm number
+    :param config_file: it is a file what contains information for script to read from
+    :return: total post vm number in launch file
+    """
+    post_vm_count = 0
+
+    # get post vm number
+    root = common.get_config_root(config_file)
+    for item in root:
+        if item.tag == "uos":
+            post_vm_count += 1
+
+    return post_vm_count
+
+
 def get_post_num_list():
     """
-    Get board name from launch.xml at fist line
-    :param scenario_file: it is a file what contains scenario information for script to read from
+    Get post vm number list
+    :return: total post dic: {launch_id:scenario_id} in launch file
     """
-    post_num_list = common.get_post_num_list(LAUNCH_INFO_FILE)
-    # {launch_id:scenario_id}
-    return post_num_list
+    post_vm_list = []
+
+    # get post vm number
+    root = common.get_config_root(LAUNCH_INFO_FILE)
+    for item in root:
+        if item.tag == "uos":
+            post_vm_list.append(int(item.attrib['id']))
+
+    return post_vm_list
+
+
+def post_vm_cnt(config_file):
+    """
+    Calculate the pre launched vm number
+    :param config_file: it is a file what contains information for script to read from
+    :return: number of post launched vm
+    """
+    post_launch_cnt = 0
+    load_type_list = common.get_sub_leaf_tag(config_file, "load_order")
+
+    for vm_type in load_type_list:
+        if vm_type == "POST_LAUNCHED_VM":
+            post_launch_cnt += 1
+
+    return post_launch_cnt
 
 
 def get_post_vm_cnt():
@@ -167,8 +207,8 @@ def get_post_vm_cnt():
     Get board name from launch.xml at fist line
     :param scenario_file: it is a file what contains scenario information for script to read from
     """
-    launch_vm_count = common.launch_vm_cnt(LAUNCH_INFO_FILE)
-    post_vm_count = common.post_vm_cnt(SCENARIO_INFO_FILE)
+    launch_vm_count = launch_vm_cnt(LAUNCH_INFO_FILE)
+    post_vm_count = post_vm_cnt(SCENARIO_INFO_FILE)
     return (launch_vm_count, post_vm_count)
 
 
@@ -242,7 +282,7 @@ def get_info(board_info, msg_s, msg_e):
     :param msg_s: it is a pattern of key stings what start to match from board information
     :param msg_e: it is a pattern of key stings what end to match from board information
     """
-    info_lines = common.get_board_info(board_info, msg_s, msg_e)
+    info_lines = board_cfg_lib.get_info(board_info, msg_s, msg_e)
     return info_lines
 
 
@@ -253,7 +293,7 @@ def get_rootdev_info(board_info):
     :return: root devices list
     """
     rootdev_list = []
-    rootdev_info = get_info(board_info, "<BLOCK_DEVICE_INFO>", "</BLOCK_DEVICE_INFO>")
+    rootdev_info = board_cfg_lib.get_info(board_info, "<BLOCK_DEVICE_INFO>", "</BLOCK_DEVICE_INFO>")
 
     if rootdev_info == None:
         return rootdev_list
@@ -262,7 +302,7 @@ def get_rootdev_info(board_info):
         if not rootdev_line:
             break
 
-        if not common.handle_root_dev(rootdev_line):
+        if not board_cfg_lib.handle_root_dev(rootdev_line):
             continue
 
         root_dev = rootdev_line.strip().split(':')[0]
@@ -276,9 +316,7 @@ def get_scenario_name():
     Get board name from scenario.xml at fist line
     :param scenario_file: it is a file what contains scenario information for script to read from
     """
-    (err_dic, scenario) = common.get_xml_attrib(SCENARIO_INFO_FILE, "scenario")
-
-    return (err_dic, scenario)
+    return common.get_scenario_name()
 
 
 def get_board_name():
@@ -286,8 +324,7 @@ def get_board_name():
     Get board name from board.xml at fist line
     :param board_info: it is a file what contains board information for script to read from
     """
-    (err_dic, board) = common.get_xml_attrib(BOARD_INFO_FILE, "board")
-    return (err_dic, board)
+    return common.get_board_name()
 
 
 def is_config_file_match():
@@ -474,7 +511,7 @@ def get_cpu_processor_num():
     get cpu processor number from config file which is dumped from native board
     :return: integer number of cpu processor
     """
-    cpu_lines = get_info(BOARD_INFO_FILE, "<CPU_PROCESSOR_INFO>", "</CPU_PROCESSOR_INFO>")
+    cpu_lines = board_cfg_lib.get_info(BOARD_INFO_FILE, "<CPU_PROCESSOR_INFO>", "</CPU_PROCESSOR_INFO>")
 
     for cpu_line in cpu_lines:
         cpu_processor_num = len(cpu_line.split(','))
@@ -489,7 +526,7 @@ def get_total_mem():
     """
     scale_to_mb = 1
     total_mem_mb = scale_to_mb
-    mem_lines = get_info(BOARD_INFO_FILE, "<TOTAL_MEM_INFO>", "</TOTAL_MEM_INFO>")
+    mem_lines = board_cfg_lib.get_info(BOARD_INFO_FILE, "<TOTAL_MEM_INFO>", "</TOTAL_MEM_INFO>")
     for mem_line in mem_lines:
         mem_info_list = mem_line.split()
 
@@ -593,7 +630,7 @@ def undline_name(name):
 
 def get_vuart1_from_scenario(vmid):
     """Get the vmid's  vuart1 base"""
-    vuart1 = common.get_vuart_info_id(SCENARIO_INFO_FILE, 1)
+    vuart1 = board_cfg_lib.get_vuart_info_id(SCENARIO_INFO_FILE, 1)
     return vuart1[vmid]['base']
 
 
@@ -614,7 +651,7 @@ def pt_devs_check_audio(audio_map, audio_codec_map):
 
 
 def check_block_mount(virtio_blk_dic):
-    blk_dev_list = get_rootdev_info(BOARD_INFO_FILE)
+    blk_dev_list = board_cfg_lib.get_rootfs(BOARD_INFO_FILE)
     for vmid in list(virtio_blk_dic.keys()):
         mount_flags = []
         for blk in virtio_blk_dic[vmid]:
