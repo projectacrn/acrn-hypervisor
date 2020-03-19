@@ -157,7 +157,7 @@ Use the pre-installed industry ACRN hypervisor
    .. note:: Ensure that ACRN is first in the boot order, or you may use ``efibootmgr -o 1`` command to move it
       to the first position. If you need to enable the serial port, run the following command before rebooting:
 
-      ``efibootmgr -c -l '\EFI\acrn\acrn.efi' -d /dev/sda -p 1 -L ACRN -u "uart=port@0x3f8"``
+      ``efibootmgr -c -l '\EFI\acrn\acrn.efi' -d /dev/sda -p 1 -L ACRN -u "uart=port@0x3f8 "``
 
 #. Reboot KBL NUC.
 
@@ -198,13 +198,17 @@ Use the ACRN industry out-of-the-box image
 
    ::
 
-      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN" -u "uart=disabled"
+      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN" -u "uart=disabled "
 
    Or use the following command to enable the serial port:
 
    ::
 
-      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN" -u "uart=port@0x3f8"
+      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN" -u "uart=port@0x3f8 "
+
+   .. note:: This is a workaround for the issue in efi-stub;
+      Add an extra space to the EFI option to make sure space could be used to detect the end of bootloader name string.
+      The extra space can be removed after the issue in efi-stub is fixed later.
 
 #. Reboot the test machine. After the Clear Linux OS boots,
    log in as “root” for the first time.
