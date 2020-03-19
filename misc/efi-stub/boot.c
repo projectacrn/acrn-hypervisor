@@ -406,12 +406,12 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	char *section;
 	EFI_DEVICE_PATH *path;
 
-	INTN i, index;
+	INTN index;
 	CHAR16 *bootloader_name = NULL;
 	CHAR16 bootloader_param[] = L"bootloader=";
 	EFI_HANDLE bootloader_image;
 	CHAR16 *options = NULL;
-	UINT32 options_size = 0;
+	UINT32 options_size = 0, bootloader_name_off = 0;
 	CHAR16 *cmdline16, *n;
 
 	InitializeLib(image, _table);
@@ -441,12 +441,16 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	 */
 	cmdline16 = StrDuplicate(options);
 	bootloader_name = strstr_16(cmdline16, bootloader_param, StrLen(bootloader_param));
+
 	if (bootloader_name) {
 		bootloader_name = bootloader_name + StrLen(bootloader_param);
+		bootloader_name_off = bootloader_name - cmdline16;
+
+		bootloader_name_off *= sizeof(CHAR16);
+
 		n = bootloader_name;
-		i = 0;
-		while (*n && !isspace((CHAR8)*n) && (*n < 0xff)) {
-			n++; i++;
+		while (*n && !isspace((CHAR8)*n) && (*n < 0xff) && (bootloader_name_off < options_size)) {
+			n++; bootloader_name_off += sizeof(CHAR16);
 		}
 		*n++ = '\0';
 	} else {
