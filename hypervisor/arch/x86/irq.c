@@ -37,8 +37,10 @@ struct static_mapping_table {
 static struct static_mapping_table irq_static_mappings[NR_STATIC_MAPPINGS] = {
 	{TIMER_IRQ, TIMER_VECTOR},
 	{NOTIFY_VCPU_IRQ, NOTIFY_VCPU_VECTOR},
-	{POSTED_INTR_IRQ, POSTED_INTR_VECTOR},
 	{PMI_IRQ, PMI_VECTOR},
+
+	/* To be initialized at runtime in init_irq_descs() */
+	[NR_STATIC_MAPPINGS_1 ... (NR_STATIC_MAPPINGS_1 + CONFIG_MAX_VM_NUM - 1U)] = {},
 };
 
 /*
@@ -420,6 +422,20 @@ void handle_nmi(__unused struct intr_excp_ctx *ctx)
 static void init_irq_descs(void)
 {
 	uint32_t i;
+
+	/*
+	 * Fill in #CONFIG_MAX_VM_NUM posted interrupt specific irq and vector pairs
+	 * at runtime
+	 */
+	for (i = 0U; i < CONFIG_MAX_VM_NUM; i++) {
+		uint32_t idx = i + NR_STATIC_MAPPINGS_1;
+
+		ASSERT(irq_static_mappings[idx].irq == 0U, "");
+		ASSERT(irq_static_mappings[idx].vector == 0U, "");
+
+		irq_static_mappings[idx].irq = POSTED_INTR_IRQ + i;
+		irq_static_mappings[idx].vector = POSTED_INTR_VECTOR + i;
+	}
 
 	for (i = 0U; i < NR_IRQS; i++) {
 		irq_desc_array[i].irq = i;

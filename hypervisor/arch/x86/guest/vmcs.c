@@ -352,7 +352,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 		exec_vmwrite64(VMX_EOI_EXIT3_FULL, 0UL);
 
 		exec_vmwrite16(VMX_GUEST_INTR_STATUS, 0U);
-		exec_vmwrite16(VMX_POSTED_INTR_VECTOR, POSTED_INTR_VECTOR);
+		exec_vmwrite16(VMX_POSTED_INTR_VECTOR, (uint16_t)(vcpu->arch.pid.control.bits.nv));
 		exec_vmwrite64(VMX_PIR_DESC_ADDR_FULL, hva2hpa(get_pi_desc(vcpu)));
 	}
 
