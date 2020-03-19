@@ -3,10 +3,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import re
 import sys
 import common
 
-SOURCE_ROOT_DIR = common.SOURCE_PATH
+SOURCE_ROOT_DIR = common.SOURCE_ROOT_DIR
 BOARD_NAME = ''
 BOARD_INFO_FILE = "board_info.txt"
 SCENARIO_INFO_FILE = ""
@@ -47,7 +48,7 @@ SIZE_G = common.SIZE_G
 
 def prepare():
     """ check environment """
-    return common.check_env()
+    return common.prepare()
 
 
 def print_yel(msg, warn=False):
@@ -56,7 +57,7 @@ def print_yel(msg, warn=False):
     :param msg: the stings which will be output to STDOUT
     :param warn: the condition if needs to be output the color of yellow with 'Warning'
     """
-    common.print_if_yel(msg, warn)
+    common.print_yel(msg, warn)
 
 
 def print_red(msg, err=False):
@@ -65,7 +66,7 @@ def print_red(msg, err=False):
     :param msg: the stings which will be output to STDOUT
     :param err: the condition if needs to be output the color of red with 'Error'
     """
-    common.print_if_red(msg, err)
+    common.print_red(msg, err)
 
 
 def get_board_name():
@@ -73,8 +74,7 @@ def get_board_name():
     Get board name from board.xml at fist line
     :param board_info: it is a file what contains board information for script to read from
     """
-    (err_dic, board) = common.get_xml_attrib(BOARD_INFO_FILE, "board")
-    return (err_dic, board)
+    return common.get_board_name()
 
 
 def get_scenario_name():
@@ -82,19 +82,12 @@ def get_scenario_name():
     Get scenario name from scenario.xml at fist line
     :param scenario_info: it is a file what contains board information for script to read from
     """
-    (err_dic, scenario) = common.get_xml_attrib(SCENARIO_INFO_FILE, "scenario")
-    return (err_dic, scenario)
+    return common.get_scenario_name()
 
 
 def is_config_file_match():
 
-    (err_dic, scenario_for_board) = common.get_xml_attrib(SCENARIO_INFO_FILE, "board")
-    (err_dic, board_name) = common.get_xml_attrib(BOARD_INFO_FILE, "board")
-
-    if scenario_for_board == board_name:
-        return (err_dic, True)
-    else:
-        return (err_dic, False)
+    return common.is_config_file_match()
 
 
 def usage(file_name):
@@ -117,8 +110,34 @@ def get_info(board_info, msg_s, msg_e):
     :param msg_s: it is a pattern of key stings what start to match from board information
     :param msg_e: it is a pattern of key stings what end to match from board information
     """
-    info_lines = common.get_board_info(board_info, msg_s, msg_e)
-    return info_lines
+    info_start = False
+    info_end = False
+    info_lines = []
+    num = len(msg_s.split())
+
+    with open(board_info, 'rt') as f_board:
+        while True:
+
+            line = f_board.readline()
+            if not line:
+                break
+
+            if " ".join(line.split()[0:num]) == msg_s:
+                info_start = True
+                info_end = False
+                continue
+
+            if " ".join(line.split()[0:num]) == msg_e:
+                info_start = False
+                info_end = True
+                continue
+
+            if info_start and not info_end:
+                info_lines.append(line)
+                continue
+
+            if not info_start and info_end:
+                return info_lines
 
 
 def handle_bios_info(config):
@@ -156,17 +175,44 @@ def handle_bios_info(config):
     print(" */", file=config)
 
 
-def get_tree_tag(config_file, tag_str):
+def handle_root_dev(line):
+    """Handle if it match root device information pattern
+    :param line: one line of information which had decoded to 'ASCII'
     """
-    This is get tag value by tag_str from config file
-    :param config_file: it is a file what contains information for script to read from
-    :param tag_str: it is key of pattern to config file item
-    :return: value of tag_str item
-    """
-    return common.get_tree_tag_val(config_file, tag_str)
+    for root_type in line.split():
+        # only support ext4 rootfs
+        if "ext4" in root_type:
+            return True
+
+    return False
 
 
-def get_sub_leaf_tag(config_file, branch_tag, tag_str):
+def get_max_clos_mask(board_file):
+    """
+    Parse CLOS information
+    :param board_file: it is a file what contains board information for script to read from
+    :return: type of rdt resource supported and their corresponding clos max.
+    """
+    rdt_res=[]
+    rdt_res_clos_max=[]
+    rdt_res_mask_max=[]
+
+    clos_lines = get_info(board_file, "<CLOS_INFO>", "</CLOS_INFO>")
+    for line in clos_lines:
+        if line.split(':')[0].strip() == "rdt resources supported":
+            rdt_res = line.split(':')[1].strip()
+        elif line.split(':')[0].strip() == "rdt resource clos max":
+            rdt_res_clos_max = line.split(':')[1].strip()
+        elif line.split(':')[0].strip() == "rdt resource mask max":
+            rdt_res_mask_max = line.split(':')[1].strip()
+
+    if (len(rdt_res) == 0) or (len(rdt_res_clos_max) == 0):
+        return rdt_res, rdt_res_clos_max, rdt_res_mask_max
+    else:
+        return list(re.split(', |\s |,', rdt_res)), list(map(int, rdt_res_clos_max.split(','))), list(re.split(', |\s |,', rdt_res_mask_max))
+
+
+def get_sub_leaf_tag(config_file, branch_tag, tag_str=''):
     """
      This is get tag value by tag_str from config file
      :param config_file: it is a file what contains information for script to read from
@@ -174,17 +220,7 @@ def get_sub_leaf_tag(config_file, branch_tag, tag_str):
      :param tag_str: it is key of pattern to config file leaf tag item
      :return: value of tag_str item
      """
-    return common.get_leaf_tag_val(config_file, branch_tag, tag_str)
-
-
-def is_hpa_size(hpa_size_list):
-    """
-    This is identify if the host physical size list is correct format
-    :param hpa_size_list: host physical size list
-    :return: True if good format
-    """
-    ret = common.check_hpa_size(hpa_size_list)
-    return ret
+    return common.get_sub_leaf_tag(config_file, branch_tag, tag_str)
 
 
 def get_rootfs(config_file):
@@ -204,7 +240,7 @@ def get_rootfs(config_file):
         if not rootfs_line:
             break
 
-        if not common.handle_root_dev(rootfs_line):
+        if not handle_root_dev(rootfs_line):
             continue
 
         root_dev = rootfs_line.strip().split(':')[0]
@@ -215,27 +251,17 @@ def get_rootfs(config_file):
 
 def clos_info_parser(board_info):
     """ Parse CLOS information """
-    return common.get_max_clos_mask(board_info)
+    return get_max_clos_mask(board_info)
 
 
-def get_pre_launch_cnt(config_file):
-    """
-    This is get pre launched vm count
-    :param config_file:  it is a file what contains vm information for script to read from
-    :return: number of per launched vm
-    """
-    pre_launch_cnt = common.vm_pre_launch_cnt(config_file)
-    return pre_launch_cnt
-
-
-def get_vm_count(config_file):
+def get_vm_num(config_file):
     """
     This is get vm count
     :param config_file:  it is a file what contains vm information for script to read from
     :return: number of vm
     """
     global VM_COUNT
-    VM_COUNT = common.get_vm_count(config_file)
+    VM_COUNT = common.get_vm_num(config_file)
 
 
 def get_order_type_by_vmid(idx):
@@ -383,6 +409,29 @@ def get_board_private_vuart(branch_tag, tag_console):
     return (err_dic, vuart0_console_dic, vuart1_console_dic)
 
 
+def get_vuart_id(tmp_vuart, leaf_tag, leaf_text):
+    """
+    Get all vuart id member of class
+    :param tmp_vuart: a dictionary to store member:value
+    :param leaf_tag: key pattern of item tag
+    :param leaf_text: key pattern of item tag's value
+    :return: a dictionary to which stored member:value
+    """
+    if leaf_tag == "type":
+        tmp_vuart['type'] = leaf_text
+    if leaf_tag == "base":
+        tmp_vuart['base'] = leaf_text
+    if leaf_tag == "irq":
+        tmp_vuart['irq'] = leaf_text
+
+    if leaf_tag == "target_vm_id":
+        tmp_vuart['target_vm_id'] = leaf_text
+    if leaf_tag == "target_uart_id":
+        tmp_vuart['target_uart_id'] = leaf_text
+
+    return tmp_vuart
+
+
 def get_vuart_info_id(config_file, idx):
     """
     Get vuart information by vuart id indexx
@@ -390,7 +439,23 @@ def get_vuart_info_id(config_file, idx):
     :param idx: vuart index in range: [0,1]
     :return: dictionary which stored the vuart-id
     """
-    tmp_tag = common.get_vuart_info_id(config_file, idx)
+    tmp_tag = {}
+    vm_id = 0
+    root = common.get_config_root(config_file)
+    for item in root:
+        for sub in item:
+            tmp_vuart = {}
+            for leaf in sub:
+                if sub.tag == "vuart" and int(sub.attrib['id']) == idx:
+                    tmp_vuart = get_vuart_id(tmp_vuart, leaf.tag, leaf.text)
+
+            # append vuart for each vm
+            if tmp_vuart and sub.tag == "vuart":
+                tmp_tag[vm_id] = tmp_vuart
+
+        if item.tag == "vm":
+            vm_id += 1
+
     return tmp_tag
 
 
@@ -419,6 +484,100 @@ def get_processor_info():
         break
 
     return tmp_list
+
+
+def get_ttys_info(board_info):
+    """
+    Get ttySn from board info
+    :param board_info: it is a file what contains board information for script to read from
+    :return: serial console list
+    """
+    ttys_list = []
+    ttys_info = get_info(board_info, "<TTYS_INFO>", "</TTYS_INFO>")
+
+    for ttys_line in ttys_info:
+        if not ttys_line:
+            break
+
+        ttys_dev = ttys_line.split()[0].split(':')[1]
+        ttysn = ttys_dev.split('/')[-1]
+        # currently SOS console can only support legacy serial port
+        if ttysn not in list(LEGACY_TTYS.keys()):
+            continue
+        ttys_list.append(ttys_dev)
+
+    return ttys_list
+
+def get_total_mem():
+    """
+    get total memory size from config file which is dumped from native board
+    :return: integer number of total memory size, Unit: MByte
+    """
+    scale_to_mb = 1
+    total_mem_mb = scale_to_mb
+    mem_lines = get_info(common.BOARD_INFO_FILE, "<TOTAL_MEM_INFO>", "</TOTAL_MEM_INFO>")
+    for mem_line in mem_lines:
+        mem_info_list = mem_line.split()
+
+    if len(mem_info_list) <= 1:
+        return total_mem_mb
+
+    if mem_info_list[1] == "kB":
+        scale_to_mb = 1024
+
+    total_mem_mb = int(mem_info_list[0]) / scale_to_mb
+    return total_mem_mb
+
+
+def get_pci_info(board_info):
+    pci_bdf_vpid = {}
+    pci_vid_start = False
+    pci_vid_end = False
+    pci_desc = {}
+    pci_start = False
+    pci_end = False
+
+    with open(board_info, 'r') as f:
+        while True:
+            line = f.readline()
+            if not line:
+                break
+
+            s = " "
+            if s.join(line.split()[0:2]) == "<PCI_DEVICE>":
+                pci_start = True
+                pci_end = False
+                continue
+
+            if s.join(line.split()[0:2]) == "</PCI_DEVICE>":
+                pci_start = False
+                pci_end = True
+                continue
+
+            # all pci device wiht description
+            if pci_start and not pci_end:
+                if "Region" in line and "Memory at" in line:
+                    continue
+                bdf = line.split()[0]
+                pci_desc[bdf] = line
+
+            if s.join(line.split()[0:2]) == "<PCI_VID_PID>":
+                pci_vid_start = True
+                pci_vid_end = False
+                continue
+
+            if s.join(line.split()[0:2]) == "</PCI_VID_PID>":
+                pci_vid_start = False
+                pci_vid_end = True
+                continue
+
+            # all pci device with vid/pid and bdf
+            if pci_vid_start and not pci_vid_end:
+                bdf_str = line.split()[0]
+                vid_pid = line.split()[2]
+                pci_bdf_vpid[bdf_str] = vid_pid
+
+    return (pci_desc, pci_bdf_vpid)
 
 
 def undline_name(name):

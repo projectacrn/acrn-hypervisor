@@ -13,6 +13,7 @@ import pci_devices_h
 import acpi_platform_h
 import misc_cfg_h
 import new_board_kconfig
+import common
 
 ACRN_PATH = board_cfg_lib.SOURCE_ROOT_DIR
 ACRN_CONFIG_TARGET = ACRN_PATH + "hypervisor/arch/x86/configs/"
@@ -41,9 +42,12 @@ def main(args):
     if err_dic:
         return err_dic
 
+    common.BOARD_INFO_FILE = board_info_file
+    common.SCENARIO_INFO_FILE = scenario_info_file
+    common.get_vm_num(scenario_info_file)
     board_cfg_lib.BOARD_INFO_FILE = board_info_file
     board_cfg_lib.SCENARIO_INFO_FILE = scenario_info_file
-    board_cfg_lib.get_vm_count(scenario_info_file)
+    board_cfg_lib.get_vm_num(scenario_info_file)
 
     # get board name
     (err_dic, board) = board_cfg_lib.get_board_name()
