@@ -469,7 +469,7 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 		 * the "enable VPID" VM-execution control is 1, the current VPID
 		 * is the value of the VPID VM-execution control field in the VMCS.
 		 *
-		 * This assignment guarantees a unique non-zero per vcpu vpid in runtime.
+		 * This assignment guarantees a unique non-zero per vcpu vpid at runtime.
 		 */
 		vcpu->arch.vpid = 1U + (vm->vm_id * MAX_VCPUS_PER_VM) + vcpu->vcpu_id;
 
