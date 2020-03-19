@@ -4,8 +4,9 @@
 #
 
 import common
+import board_cfg_lib
 
-SOURCE_ROOT_DIR = common.SOURCE_PATH
+SOURCE_ROOT_DIR = common.SOURCE_ROOT_DIR
 HEADER_LICENSE = common.open_license()
 BOARD_INFO_FILE = "board_info.txt"
 SCENARIO_INFO_FILE = ""
@@ -30,6 +31,9 @@ VUART_IRQ = ['SOS_COM1_IRQ', 'SOS_COM2_IRQ', 'COM1_IRQ', 'COM2_IRQ', 'COM3_IRQ',
 
 PCI_DEV_NUM_LIST = ['SOS_EMULATED_PCI_DEV_NUM', 'VM0_CONFIG_PCI_DEV_NUM', 'VM1_CONFIG_PCI_DEV_NUM']
 PCI_DEVS_LIST = ['sos_pci_devs', 'vm0_pci_devs', 'vm1_pci_devs']
+# Support 512M, 1G, 2G
+# pre launch less then 2G, sos vm less than 24G
+START_HPA_SIZE_LIST = ['0x20000000', '0x40000000', '0x80000000', 'CONFIG_SOS_RAM_SIZE']
 
 COMMUNICATE_VM_ID = []
 
@@ -54,7 +58,7 @@ LEGACY_TTYS = {
 
 def prepare():
     """ Check environment """
-    return common.check_env()
+    return common.prepare()
 
 
 def print_yel(msg, warn=False):
@@ -63,7 +67,7 @@ def print_yel(msg, warn=False):
     :param msg: the stings which will be output to STDOUT
     :param warn: the condition if needs to be output the color of yellow with 'Warning'
     """
-    common.print_if_yel(msg, warn)
+    common.print_yel(msg, warn)
 
 
 def print_red(msg, err=False):
@@ -72,7 +76,7 @@ def print_red(msg, err=False):
     :param msg: the stings which will be output to STDOUT
     :param err: the condition if needs to be output the color of red with 'Error'
     """
-    common.print_if_red(msg, err)
+    common.print_red(msg, err)
 
 
 def usage(file_name):
@@ -93,20 +97,12 @@ def get_scenario_name():
     Get board name from scenario.xml at fist line
     :param scenario_file: it is a file what contains scenario information for script to read from
     """
-    (err_dic, scenario) = common.get_xml_attrib(SCENARIO_INFO_FILE, "scenario")
-
-    return (err_dic, scenario)
+    return common.get_scenario_name()
 
 
 def is_config_file_match():
 
-    (err_dic, scenario_for_board) = common.get_xml_attrib(SCENARIO_INFO_FILE, "board")
-    (err_dic, board_name) = common.get_xml_attrib(BOARD_INFO_FILE, "board")
-
-    if scenario_for_board == board_name:
-        return (err_dic, True)
-    else:
-        return (err_dic, False)
+    return common.is_config_file_match()
 
 
 def get_info(board_info, msg_s, msg_e):
@@ -116,7 +112,7 @@ def get_info(board_info, msg_s, msg_e):
     :param msg_s: it is a pattern of key stings what start to match from board information
     :param msg_e: it is a pattern of key stings what end to match from board information
     """
-    info_lines = common.get_board_info(board_info, msg_s, msg_e)
+    info_lines = board_cfg_lib.get_info(board_info, msg_s, msg_e)
     return info_lines
 
 
@@ -128,7 +124,7 @@ def get_processor_info(board_info):
     """
     processor_list = []
     tmp_list = []
-    processor_info = get_info(board_info, "<CPU_PROCESSOR_INFO>", "</CPU_PROCESSOR_INFO>")
+    processor_info = board_cfg_lib.get_info(board_info, "<CPU_PROCESSOR_INFO>", "</CPU_PROCESSOR_INFO>")
 
     if not processor_info:
         key = "vm:id=0,vcpu_affinity"
@@ -154,7 +150,7 @@ def get_rootdev_info(board_info):
     :return: root devices list
     """
     rootdev_list = []
-    rootdev_info = get_info(board_info, "<BLOCK_DEVICE_INFO>", "</BLOCK_DEVICE_INFO>")
+    rootdev_info = board_cfg_lib.get_info(board_info, "<BLOCK_DEVICE_INFO>", "</BLOCK_DEVICE_INFO>")
 
     # none 'BLOCK_DEVICE_INFO' tag
     if rootdev_info == None:
@@ -164,7 +160,7 @@ def get_rootdev_info(board_info):
         if not rootdev_line:
             break
 
-        if not common.handle_root_dev(rootdev_line):
+        if not board_cfg_lib.handle_root_dev(rootdev_line):
             continue
 
         root_dev = rootdev_line.strip().split(':')[0]
@@ -180,7 +176,7 @@ def get_ttys_info(board_info):
     :return: serial console list
     """
     ttys_list = []
-    ttys_info = get_info(board_info, "<TTYS_INFO>", "</TTYS_INFO>")
+    ttys_info = board_cfg_lib.get_info(board_info, "<TTYS_INFO>", "</TTYS_INFO>")
 
     for ttys_line in ttys_info:
         if not ttys_line:
@@ -232,7 +228,7 @@ def get_vm_num(config_file):
     :param config_file:  it is a file what contains vm information for script to read from
     :return: number of vm
     """
-    return common.get_vm_count(config_file)
+    return common.get_vm_num(config_file)
 
 
 def get_sub_leaf_tag(config_file, branch_tag, tag_str=''):
@@ -243,7 +239,7 @@ def get_sub_leaf_tag(config_file, branch_tag, tag_str=''):
       :param tag_str: it is key of pattern to config file leaf tag item
       :return: value of tag_str item
       """
-    return common.get_leaf_tag_val(config_file, branch_tag, tag_str)
+    return common.get_sub_leaf_tag(config_file, branch_tag, tag_str)
 
 
 def get_order_type_by_vmid(idx):
@@ -445,8 +441,8 @@ def mem_size_check(id_hpa_size_dic, prime_item, item):
             ERR_LIST[key] = "VM start host physical memory size should not empty"
             return
 
-        if hpa_sz_strip_ul not in common.START_HPA_SIZE_LIST and hpa_sz_strip_u not in \
-                common.START_HPA_SIZE_LIST:
+        if hpa_sz_strip_ul not in START_HPA_SIZE_LIST and hpa_sz_strip_u not in \
+                START_HPA_SIZE_LIST:
             key = "vm:id={},{},{}".format(id_key, prime_item, item)
             if '0x' not in hpa_size and '0X' not in hpa_size:
                 ERR_LIST[key] = "Mem size should be Hex format"
@@ -696,7 +692,7 @@ def get_vuart_info_id(config_file, idx):
     :param idx: vuart index in range: [0,1]
     :return: dictionary which stored the vuart-id
     """
-    tmp_tag = common.get_vuart_info_id(config_file, idx)
+    tmp_tag = board_cfg_lib.get_vuart_info_id(config_file, idx)
     return tmp_tag
 
 

@@ -9,6 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '
 from launch_item import AvailablePthru, PthruSelected, VirtioDeviceSelect, AcrnDmArgs
 import launch_cfg_lib
 import com
+import common
 
 ACRN_PATH = launch_cfg_lib.SOURCE_ROOT_DIR
 ACRN_CONFIG_TARGET = ACRN_PATH + '/misc/acrn-config/xmls/config-xmls/'
@@ -60,6 +61,9 @@ def validate_launch_setting(board_info, scenario_info, launch_info):
     :return: return a dictionary contain errors
     """
     launch_cfg_lib.ERR_LIST = {}
+    common.BOARD_INFO_FILE = board_info
+    common.SCENARIO_INFO_FILE = scenario_info
+    common.LAUNCH_INFO_FILE = launch_info
     launch_cfg_lib.BOARD_INFO_FILE = board_info
     launch_cfg_lib.SCENARIO_INFO_FILE = scenario_info
     launch_cfg_lib.LAUNCH_INFO_FILE = launch_info
@@ -161,6 +165,9 @@ def main(args):
     # 1: generate launch script for 1st post vm launch script
     # 2: generate launch script for 2nd post vm launch script
 
+    common.BOARD_INFO_FILE = board_info_file
+    common.SCENARIO_INFO_FILE = scenario_info_file
+    common.LAUNCH_INFO_FILE = launch_info_file
     launch_cfg_lib.BOARD_INFO_FILE = board_info_file
     launch_cfg_lib.SCENARIO_INFO_FILE = scenario_info_file
     launch_cfg_lib.LAUNCH_INFO_FILE = launch_info_file

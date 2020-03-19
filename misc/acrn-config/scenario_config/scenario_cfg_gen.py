@@ -12,6 +12,7 @@ import scenario_cfg_lib
 import vm_configurations_c
 import vm_configurations_h
 import pci_dev_c
+import common
 
 ACRN_PATH = scenario_cfg_lib.SOURCE_ROOT_DIR
 ACRN_CONFIG_TARGET = ACRN_PATH + 'hypervisor/scenarios/'
@@ -27,6 +28,8 @@ def get_scenario_item_values(board_info, scenario_info):
     hw_info = HwInfo(board_info)
 
     # get vm count
+    common.BOARD_INFO_FILE = board_info
+    common.SCENARIO_INFO_FILE = scenario_info
     scenario_cfg_lib.SCENARIO_INFO_FILE = scenario_info
     scenario_cfg_lib.BOARD_INFO_FILE = board_info
     scenario_cfg_lib.VM_COUNT = scenario_cfg_lib.get_vm_num(scenario_info)
@@ -59,6 +62,8 @@ def validate_scenario_setting(board_info, scenario_info):
     :return: return a dictionary contain errors
     """
     scenario_cfg_lib.ERR_LIST = {}
+    common.BOARD_INFO_FILE = board_info
+    common.SCENARIO_INFO_FILE = scenario_info
     scenario_cfg_lib.BOARD_INFO_FILE = board_info
     scenario_cfg_lib.SCENARIO_INFO_FILE = scenario_info
 
@@ -91,6 +96,8 @@ def main(args):
     if err_dic:
         return err_dic
 
+    common.BOARD_INFO_FILE = board_info_file
+    common.SCENARIO_INFO_FILE = scenario_info_file
     scenario_cfg_lib.BOARD_INFO_FILE = board_info_file
     scenario_cfg_lib.SCENARIO_INFO_FILE = scenario_info_file
 
