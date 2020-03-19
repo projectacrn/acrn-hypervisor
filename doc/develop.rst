@@ -49,6 +49,7 @@ User VM Tutorials
    tutorials/using_zephyr_as_uos
    tutorials/running_deb_as_user_vm
    tutorials/running_ubun_as_user_vm
+   tutorials/using_xenomai_as_uos
 
 Service VM Tutorials
 ********************
