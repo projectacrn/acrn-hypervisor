@@ -13,8 +13,10 @@
 #include <security.h>
 #include <vm.h>
 
-static struct page ppt_pml4_pages[PML4_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
-static struct page ppt_pdpt_pages[PDPT_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
+#define LINEAR_ADDRESS_SPACE_48_BIT	(1UL << 48U)
+
+static struct page ppt_pml4_pages[PML4_PAGE_NUM(LINEAR_ADDRESS_SPACE_48_BIT)];
+static struct page ppt_pdpt_pages[PDPT_PAGE_NUM(LINEAR_ADDRESS_SPACE_48_BIT)];
 static struct page ppt_pd_pages[PD_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
 
 /* ppt: pripary page table */
