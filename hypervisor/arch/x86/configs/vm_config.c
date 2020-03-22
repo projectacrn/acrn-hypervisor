@@ -11,7 +11,7 @@
 #include <pgtable.h>
 #include <vuart.h>
 
-static uint8_t rtvm_uuid1[16] = RTVM_UUID1;
+static uint8_t rtvm_uuid1[16] = POST_RTVM_UUID1;
 static uint8_t safety_vm_uuid1[16] = SAFETY_VM_UUID1;
 
 /*
