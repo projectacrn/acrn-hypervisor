@@ -11,6 +11,7 @@
 #include <pci.h>
 #include <boot.h>
 #include <acrn_common.h>
+#include <vm_uuids.h>
 #include <vm_configurations.h>
 #include <sgx.h>
 
@@ -26,11 +27,29 @@
 #define PCI_DEV_TYPE_HVEMUL	(1U << 1U)
 #define PCI_DEV_TYPE_SOSEMUL	(1U << 2U)
 
-#define	RTVM_UUID1	{0x49U, 0x5aU, 0xe2U, 0xe5U, 0x26U, 0x03U, 0x4dU, 0x64U,	\
-			 0xafU, 0x76U, 0xd4U, 0xbcU, 0x5aU, 0x8eU, 0xc0U, 0xe5U}
+#define CONFIG_SOS_VM		.load_order = SOS_VM,	\
+				.uuid = SOS_VM_UUID,	\
+				.severity = SEVERITY_SOS
 
-#define	SAFETY_VM_UUID1	{0xfcU, 0x83U, 0x69U, 0x01U, 0x86U, 0x85U, 0x4bU, 0xc0U,	\
-			 0x8bU, 0x71U, 0x6eU, 0x31U, 0xdcU, 0x36U, 0xfaU, 0x47U}
+#define CONFIG_SAFETY_VM(idx)	.load_order = PRE_LAUNCHED_VM,	\
+				.uuid = SAFETY_VM_UUID##idx,	\
+				.severity = SEVERITY_SAFETY_VM
+
+#define CONFIG_PRE_STD_VM(idx)	.load_order = PRE_LAUNCHED_VM,	\
+				.uuid = PRE_STANDARD_VM_UUID##idx,	\
+				.severity = SEVERITY_STANDARD_VM
+
+#define CONFIG_POST_STD_VM(idx)	.load_order = POST_LAUNCHED_VM,	\
+				.uuid = POST_STANDARD_VM_UUID##idx,	\
+				.severity = SEVERITY_STANDARD_VM
+
+#define CONFIG_POST_RT_VM(idx)	.load_order = POST_LAUNCHED_VM,	\
+				.uuid = POST_RTVM_UUID##idx,	\
+				.severity = SEVERITY_RTVM
+
+#define CONFIG_KATA_VM(idx)	.load_order = POST_LAUNCHED_VM,	\
+				.uuid = KATA_VM_UUID##idx,	\
+				.severity = SEVERITY_STANDARD_VM
 
 /*
  * PRE_LAUNCHED_VM is launched by ACRN hypervisor, with LAPIC_PT;
