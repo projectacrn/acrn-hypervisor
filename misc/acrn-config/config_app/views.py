@@ -527,6 +527,9 @@ def upload_scenario():
             tmp_scenario_name = 'tmp_' + scenario_file_name + '.xml'
             tmp_scenario_file = os.path.join(current_app.config.get('CONFIG_PATH'), board_type,
                                              'user_defined', tmp_scenario_name)
+            tmp_scenario_folder = os.path.dirname(tmp_scenario_file)
+            if not os.path.exists(tmp_scenario_folder):
+                os.makedirs(tmp_scenario_folder)
             if os.path.isfile(tmp_scenario_file):
                 os.remove(tmp_scenario_file)
 
