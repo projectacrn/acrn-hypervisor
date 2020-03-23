@@ -108,13 +108,31 @@ int32_t hcall_get_api_version(struct acrn_vm *vm, uint64_t param)
  */
 int32_t hcall_get_platform_info(struct acrn_vm *vm, uint64_t param)
 {
-	struct hc_platform_info platform_info;
+	struct hc_platform_info pi = { 0 };
+	uint32_t entry_size = sizeof(struct acrn_vm_config);
+	int32_t ret;
 
-	platform_info.cpu_num = get_pcpu_nums();
-	platform_info.max_vcpus_per_vm = MAX_VCPUS_PER_VM;
-	platform_info.max_kata_containers = CONFIG_MAX_KATA_VM_NUM;
+	/* to get the vm_config_info pointer */
+	ret = copy_from_gpa(vm, &pi, param, sizeof(pi));
+	if (ret == 0) {
+		pi.cpu_num = get_pcpu_nums();
+		pi.version = 0x100;  /* version 1.0; byte[1:0] = major:minor version */
+		pi.max_vcpus_per_vm = MAX_VCPUS_PER_VM;
+		pi.max_kata_containers = CONFIG_MAX_KATA_VM_NUM;
+		pi.max_vms = CONFIG_MAX_VM_NUM;
+		pi.vm_config_entry_size = entry_size;
 
-	return copy_to_gpa(vm, &platform_info, param, sizeof(platform_info));
+		/* If it wants to get the vm_configs info */
+		if (pi.vm_configs_addr != 0UL) {
+			ret = copy_to_gpa(vm, (void *)get_vm_config(0U), pi.vm_configs_addr, entry_size * pi.max_vms);
+		}
+
+		if (ret == 0) {
+			ret = copy_to_gpa(vm, &pi, param, sizeof(pi));
+		}
+	}
+
+	return ret;
 }
 
 /**
