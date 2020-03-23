@@ -8,11 +8,6 @@ import getopt
 import common
 import board_cfg_lib
 
-SOURCE_ROOT_DIR = common.SOURCE_ROOT_DIR
-BOARD_INFO_FILE = "board_info.txt"
-SCENARIO_INFO_FILE = ""
-LAUNCH_INFO_FILE = ""
-
 ERR_LIST = {}
 BOOT_TYPE = ['no', 'vsbl', 'ovmf']
 RTOS_TYPE = ['no', 'Soft RT', 'Hard RT']
@@ -59,29 +54,6 @@ PM_CHANNEL_DIC = {
 }
 
 MOUNT_FLAG_DIC = {}
-
-
-def prepare():
-    """ Check environment """
-    return common.prepare()
-
-
-def print_yel(msg, warn=False):
-    """
-    Print the message with color of yellow
-    :param msg: the stings which will be output to STDOUT
-    :param warn: the condition if needs to be output the color of yellow with 'Warning'
-    """
-    common.print_yel(msg, warn)
-
-
-def print_red(msg, err=False):
-    """
-    Print the message with color of red
-    :param msg: the stings which will be output to STDOUT
-    :param err: the condition if needs to be output the color of red with 'Error'
-    """
-    common.print_red(msg, err)
 
 
 def usage(file_name):
@@ -178,7 +150,7 @@ def get_post_num_list():
     post_vm_list = []
 
     # get post vm number
-    root = common.get_config_root(LAUNCH_INFO_FILE)
+    root = common.get_config_root(common.LAUNCH_INFO_FILE)
     for item in root:
         if item.tag == "uos":
             post_vm_list.append(int(item.attrib['id']))
@@ -207,60 +179,9 @@ def get_post_vm_cnt():
     Get board name from launch.xml at fist line
     :param scenario_file: it is a file what contains scenario information for script to read from
     """
-    launch_vm_count = launch_vm_cnt(LAUNCH_INFO_FILE)
-    post_vm_count = post_vm_cnt(SCENARIO_INFO_FILE)
+    launch_vm_count = launch_vm_cnt(common.LAUNCH_INFO_FILE)
+    post_vm_count = post_vm_cnt(common.SCENARIO_INFO_FILE)
     return (launch_vm_count, post_vm_count)
-
-
-def get_pci_info(board_info):
-    pci_bdf_vpid = {}
-    pci_vid_start = False
-    pci_vid_end = False
-    pci_desc = {}
-    pci_start = False
-    pci_end = False
-
-    with open(board_info, 'r') as f:
-        while True:
-            line = f.readline()
-            if not line:
-                break
-
-            s = " "
-            if s.join(line.split()[0:2]) == "<PCI_DEVICE>":
-                pci_start = True
-                pci_end = False
-                continue
-
-            if s.join(line.split()[0:2]) == "</PCI_DEVICE>":
-                pci_start = False
-                pci_end = True
-                continue
-
-            # all pci device wiht description
-            if pci_start and not pci_end:
-                if "Region" in line and "Memory at" in line:
-                    continue
-                bdf = line.split()[0]
-                pci_desc[bdf] = line
-
-            if s.join(line.split()[0:2]) == "<PCI_VID_PID>":
-                pci_vid_start = True
-                pci_vid_end = False
-                continue
-
-            if s.join(line.split()[0:2]) == "</PCI_VID_PID>":
-                pci_vid_start = False
-                pci_vid_end = True
-                continue
-
-            # all pci device with vid/pid and bdf
-            if pci_vid_start and not pci_vid_end:
-                bdf_str = line.split()[0]
-                vid_pid = line.split()[2]
-                pci_bdf_vpid[bdf_str] = vid_pid
-
-    return (pci_desc, pci_bdf_vpid)
 
 
 def get_avl_dev_info(bdf_desc_map, pci_sub_class):
@@ -275,70 +196,18 @@ def get_avl_dev_info(bdf_desc_map, pci_sub_class):
     return tmp_pci_desc
 
 
-def get_info(board_info, msg_s, msg_e):
-    """
-    Get information which specify by argument
-    :param board_info: it is a file what contains board information for script to read from
-    :param msg_s: it is a pattern of key stings what start to match from board information
-    :param msg_e: it is a pattern of key stings what end to match from board information
-    """
-    info_lines = board_cfg_lib.get_info(board_info, msg_s, msg_e)
-    return info_lines
-
-
-def get_rootdev_info(board_info):
-    """
-    Get root devices from board info
-    :param board_info: it is a file what contains board information for script to read from
-    :return: root devices list
-    """
-    rootdev_list = []
-    rootdev_info = board_cfg_lib.get_info(board_info, "<BLOCK_DEVICE_INFO>", "</BLOCK_DEVICE_INFO>")
-
-    if rootdev_info == None:
-        return rootdev_list
-
-    for rootdev_line in rootdev_info:
-        if not rootdev_line:
-            break
-
-        if not board_cfg_lib.handle_root_dev(rootdev_line):
-            continue
-
-        root_dev = rootdev_line.strip().split(':')[0]
-        rootdev_list.append(root_dev)
-
-    return rootdev_list
-
-
-def get_scenario_name():
-    """
-    Get board name from scenario.xml at fist line
-    :param scenario_file: it is a file what contains scenario information for script to read from
-    """
-    return common.get_scenario_name()
-
-
-def get_board_name():
-    """
-    Get board name from board.xml at fist line
-    :param board_info: it is a file what contains board information for script to read from
-    """
-    return common.get_board_name()
-
-
 def is_config_file_match():
 
     match = True
     # check if the board config match scenario config
-    (err_dic, scenario_for_board) = common.get_xml_attrib(SCENARIO_INFO_FILE, "board")
-    (err_dic, board_name) = common.get_xml_attrib(BOARD_INFO_FILE, "board")
+    (err_dic, scenario_for_board) = common.get_xml_attrib(common.SCENARIO_INFO_FILE, "board")
+    (err_dic, board_name) = common.get_xml_attrib(common.BOARD_INFO_FILE, "board")
     if scenario_for_board != board_name:
         err_dic['scenario config: Not match'] = "The board xml and scenario xml should be matched!"
         match = False
 
     # check if the board config match launch config
-    (err_dic, launch_for_board) = common.get_xml_attrib(LAUNCH_INFO_FILE, "board")
+    (err_dic, launch_for_board) = common.get_xml_attrib(common.LAUNCH_INFO_FILE, "board")
     if launch_for_board != board_name:
         err_dic['launch config: Not match'] = "The board xml and launch xml should be matched!"
         match = False
@@ -346,27 +215,16 @@ def is_config_file_match():
     return (err_dic, match)
 
 
-def get_leaf_tag_map(info_file, prime_item, item=''):
-    """
-    :param info_file: some configurations in the info file
-    :param prime_item: the prime item in xml file
-    :param item: the item in xml file
-    :return: dictionary which item value could be indexed by vmid
-    """
-    vmid_item_dic = common.get_leaf_tag_map(info_file, prime_item, item)
-    return vmid_item_dic
-
-
 def get_scenario_uuid():
     # {id_num:uuid} (id_num:0~max)
     scenario_uuid_dic = {}
-    scenario_uuid_dic = get_leaf_tag_map(SCENARIO_INFO_FILE, 'uuid')
+    scenario_uuid_dic = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, 'uuid')
     return scenario_uuid_dic
 
 
 def get_sos_vmid():
 
-    load_dic = get_leaf_tag_map(SCENARIO_INFO_FILE, "load_order")
+    load_dic = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "load_order")
 
     sos_id = ''
     for idx,load_order in load_dic.items():
@@ -379,7 +237,7 @@ def get_sos_vmid():
 
 def get_bdf_from_tag(config_file, branch_tag, tag_str):
     bdf_list = {}
-    bdf_list = get_leaf_tag_map(config_file, branch_tag, tag_str)
+    bdf_list = common.get_leaf_tag_map(config_file, branch_tag, tag_str)
 
     # split b:d:f from pci description
     for idx, bdf_v in bdf_list.items():
@@ -409,7 +267,7 @@ def get_uos_type():
     """
     Get uos name from launch.xml at fist line
     """
-    uos_types = get_leaf_tag_map(LAUNCH_INFO_FILE, "uos_type")
+    uos_types = common.get_leaf_tag_map(common.LAUNCH_INFO_FILE, "uos_type")
 
     return uos_types
 
@@ -506,40 +364,6 @@ def args_aval_check(arg_list, item, avl_list):
         i_cnt += 1
 
 
-def get_cpu_processor_num():
-    """
-    get cpu processor number from config file which is dumped from native board
-    :return: integer number of cpu processor
-    """
-    cpu_lines = board_cfg_lib.get_info(BOARD_INFO_FILE, "<CPU_PROCESSOR_INFO>", "</CPU_PROCESSOR_INFO>")
-
-    for cpu_line in cpu_lines:
-        cpu_processor_num = len(cpu_line.split(','))
-
-    return cpu_processor_num
-
-
-def get_total_mem():
-    """
-    get total memory size from config file which is dumped from native board
-    :return: integer number of total memory size, Unit: MByte
-    """
-    scale_to_mb = 1
-    total_mem_mb = scale_to_mb
-    mem_lines = board_cfg_lib.get_info(BOARD_INFO_FILE, "<TOTAL_MEM_INFO>", "</TOTAL_MEM_INFO>")
-    for mem_line in mem_lines:
-        mem_info_list = mem_line.split()
-
-    if len(mem_info_list) <= 1:
-        return total_mem_mb
-
-    if mem_info_list[1] == "kB":
-        scale_to_mb = 1024
-
-    total_mem_mb = int(mem_info_list[0]) / scale_to_mb
-    return total_mem_mb
-
-
 def mem_size_check(arg_list, item):
     """
      check memory size list which are set from webUI
@@ -548,7 +372,7 @@ def mem_size_check(arg_list, item):
      :return: None
      """
     # get total memory information
-    total_mem_mb = get_total_mem()
+    total_mem_mb = board_cfg_lib.get_total_mem()
 
     # available check
     i_cnt = 1
@@ -619,18 +443,9 @@ def get_pt_dev():
     return cap_pt
 
 
-def undline_name(name):
-    """
-    This convert name which has contain '-' to '_'
-    :param name: name which contain '-' and ' '
-    :return: name_str which contain'_'
-    """
-    return common.undline_name(name)
-
-
 def get_vuart1_from_scenario(vmid):
     """Get the vmid's  vuart1 base"""
-    vuart1 = board_cfg_lib.get_vuart_info_id(SCENARIO_INFO_FILE, 1)
+    vuart1 = board_cfg_lib.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
     return vuart1[vmid]['base']
 
 
@@ -651,7 +466,7 @@ def pt_devs_check_audio(audio_map, audio_codec_map):
 
 
 def check_block_mount(virtio_blk_dic):
-    blk_dev_list = board_cfg_lib.get_rootfs(BOARD_INFO_FILE)
+    blk_dev_list = board_cfg_lib.get_rootfs(common.BOARD_INFO_FILE)
     for vmid in list(virtio_blk_dic.keys()):
         mount_flags = []
         for blk in virtio_blk_dic[vmid]:
@@ -686,7 +501,7 @@ def cpu_sharing_check(cpu_sharing, item):
     vm_cpu_share = []
     vm_cpu_share_consistent = True
 
-    cpu_affinity = get_leaf_tag_map(SCENARIO_INFO_FILE, "vcpu_affinity", "pcpu_id")
+    cpu_affinity = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "vcpu_affinity", "pcpu_id")
     for vm_i in cpu_affinity.keys():
         for cpu in cpu_affinity[vm_i]:
             if cpu in use_cpus:
@@ -733,8 +548,3 @@ def bdf_duplicate_check(bdf_dic):
                 return
             else:
                 bdf_used.append(dev_bdf)
-
-
-def mkdir(path):
-
-    common.mkdir(path)
