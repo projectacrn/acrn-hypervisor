@@ -6,10 +6,7 @@
 import common
 import board_cfg_lib
 
-SOURCE_ROOT_DIR = common.SOURCE_ROOT_DIR
 HEADER_LICENSE = common.open_license()
-BOARD_INFO_FILE = "board_info.txt"
-SCENARIO_INFO_FILE = ""
 
 LOAD_ORDER_TYPE = ['PRE_LAUNCHED_VM', 'SOS_VM', 'POST_LAUNCHED_VM']
 START_HPA_LIST = ['0', '0x100000000', '0x120000000']
@@ -39,7 +36,6 @@ COMMUNICATE_VM_ID = []
 
 ERR_LIST = {}
 
-VM_COUNT = 0
 DEFAULT_VM_COUNT = {
     'sdc':2,
     'sdc2':4,
@@ -49,152 +45,10 @@ DEFAULT_VM_COUNT = {
 }
 KATA_VM_COUNT = 0
 
-LEGACY_TTYS = {
-    'ttyS0':'0x3F8',
-    'ttyS1':'0x2F8',
-    'ttyS2':'0x3E8',
-    'ttyS3':'0x2E8',
-}
-
-def prepare():
-    """ Check environment """
-    return common.prepare()
-
-
-def print_yel(msg, warn=False):
-    """
-    Print the message with color of yellow
-    :param msg: the stings which will be output to STDOUT
-    :param warn: the condition if needs to be output the color of yellow with 'Warning'
-    """
-    common.print_yel(msg, warn)
-
-
-def print_red(msg, err=False):
-    """
-    Print the message with color of red
-    :param msg: the stings which will be output to STDOUT
-    :param err: the condition if needs to be output the color of red with 'Error'
-    """
-    common.print_red(msg, err)
-
-
-def usage(file_name):
-    """ This is usage for how to use this tool """
-    common.usage(file_name)
-
-
-def get_param(args):
-    """
-    Get the script parameters from command line
-    :param args: this the command line of string for the script without script name
-    """
-    return common.get_param(args)
-
-
-def get_scenario_name():
-    """
-    Get board name from scenario.xml at fist line
-    :param scenario_file: it is a file what contains scenario information for script to read from
-    """
-    return common.get_scenario_name()
-
-
-def is_config_file_match():
-
-    return common.is_config_file_match()
-
-
-def get_info(board_info, msg_s, msg_e):
-    """
-    Get information which specify by argument
-    :param board_info: it is a file what contains board information for script to read from
-    :param msg_s: it is a pattern of key stings what start to match from board information
-    :param msg_e: it is a pattern of key stings what end to match from board information
-    """
-    info_lines = board_cfg_lib.get_info(board_info, msg_s, msg_e)
-    return info_lines
-
-
-def get_processor_info(board_info):
-    """
-    Get cpu core list
-    :param board_info: it is a file what contains board information for script to read from
-    :return: cpu processor which one cpu has
-    """
-    processor_list = []
-    tmp_list = []
-    processor_info = board_cfg_lib.get_info(board_info, "<CPU_PROCESSOR_INFO>", "</CPU_PROCESSOR_INFO>")
-
-    if not processor_info:
-        key = "vm:id=0,vcpu_affinity"
-        ERR_LIST[key] = "CPU core is not exists"
-        return processor_list
-
-    for processor_line in processor_info:
-        if not processor_line:
-            break
-
-        processor_list = processor_line.strip().split(',')
-        for processor in processor_list:
-            tmp_list.append(processor.strip())
-        break
-
-    return tmp_list
-
-
-def get_rootdev_info(board_info):
-    """
-    Get root devices from board info
-    :param board_info: it is a file what contains board information for script to read from
-    :return: root devices list
-    """
-    rootdev_list = []
-    rootdev_info = board_cfg_lib.get_info(board_info, "<BLOCK_DEVICE_INFO>", "</BLOCK_DEVICE_INFO>")
-
-    # none 'BLOCK_DEVICE_INFO' tag
-    if rootdev_info == None:
-        return rootdev_list
-
-    for rootdev_line in rootdev_info:
-        if not rootdev_line:
-            break
-
-        if not board_cfg_lib.handle_root_dev(rootdev_line):
-            continue
-
-        root_dev = rootdev_line.strip().split(':')[0]
-        rootdev_list.append(root_dev)
-
-    return rootdev_list
-
-
-def get_ttys_info(board_info):
-    """
-    Get ttySn from board info
-    :param board_info: it is a file what contains board information for script to read from
-    :return: serial console list
-    """
-    ttys_list = []
-    ttys_info = board_cfg_lib.get_info(board_info, "<TTYS_INFO>", "</TTYS_INFO>")
-
-    for ttys_line in ttys_info:
-        if not ttys_line:
-            break
-
-        ttys_dev = ttys_line.split()[0].split(':')[1]
-        ttysn = ttys_dev.split('/')[-1]
-        # currently SOS console can only support legacy serial port
-        if ttysn not in list(LEGACY_TTYS.keys()):
-            continue
-        ttys_list.append(ttys_dev)
-
-    return ttys_list
-
 
 def get_board_private_info(config_file):
 
-    (err_dic, scenario_name) = get_scenario_name()
+    (err_dic, scenario_name) = common.get_scenario_name()
 
     if scenario_name == "logical_partition":
         branch_tag = "os_config"
@@ -204,7 +58,7 @@ def get_board_private_info(config_file):
     private_info = {}
     dev_private_tags = ['rootfs', 'console']
     for tag_str in dev_private_tags:
-        dev_setting = get_sub_leaf_tag(config_file, branch_tag, tag_str)
+        dev_setting = common.get_sub_leaf_tag(config_file, branch_tag, tag_str)
         if not dev_setting and tag_str == "console":
             continue
 
@@ -215,31 +69,11 @@ def get_board_private_info(config_file):
 
 def check_board_private_info():
 
-    (err_dic, private_info) = get_board_private_info(SCENARIO_INFO_FILE)
+    (err_dic, private_info) = get_board_private_info(common.SCENARIO_INFO_FILE)
 
     if not private_info['rootfs'] and err_dic:
         ERR_LIST['vm:id=0,boot_private,rootfs'] = "The board have to chose one rootfs partition"
         ERR_LIST.update(err_dic)
-
-
-def get_vm_num(config_file):
-    """
-    This is get vm count
-    :param config_file:  it is a file what contains vm information for script to read from
-    :return: number of vm
-    """
-    return common.get_vm_num(config_file)
-
-
-def get_sub_leaf_tag(config_file, branch_tag, tag_str=''):
-    """
-      This is get tag value by tag_str from config file
-      :param config_file: it is a file what contains information for script to read from
-      :param branch_tag: it is key of patter to config file branch tag item
-      :param tag_str: it is key of pattern to config file leaf tag item
-      :return: value of tag_str item
-      """
-    return common.get_sub_leaf_tag(config_file, branch_tag, tag_str)
 
 
 def get_order_type_by_vmid(idx):
@@ -249,7 +83,7 @@ def get_order_type_by_vmid(idx):
      :param idx: index of vm id
      :return: load order type of index to vmid
      """
-    (err_dic, order_type) = common.get_load_order_by_vmid(SCENARIO_INFO_FILE, VM_COUNT, idx)
+    (err_dic, order_type) = common.get_load_order_by_vmid(common.SCENARIO_INFO_FILE, common.VM_COUNT, idx)
     if err_dic:
         ERR_LIST.update(err_dic)
 
@@ -373,17 +207,6 @@ def uuid_format_check(uuid_dic, item):
 
         if uuid_str_list[8] != '-':
             ERR_LIST[key] = "VM uuid format unknown"
-
-
-def get_leaf_tag_map(info_file, prime_item, item=''):
-    """
-    :param info_file: some configurations in the info file
-    :param prime_item: the prime item in xml file
-    :param item: the item in xml file
-    :return: dictionary which item value could be indexed by vmid
-    """
-    vmid_item_dic = common.get_leaf_tag_map(info_file, prime_item, item)
-    return vmid_item_dic
 
 
 def cpus_per_vm_check(id_cpus_per_vm_dic, item):
@@ -618,7 +441,7 @@ def get_vuart1_vmid(vm_vuart1):
     :return: dictionary of vmid:vuart1
     """
     vm_id_dic = {}
-    for i in range(VM_COUNT):
+    for i in range(common.VM_COUNT):
         for key in vm_vuart1[i].keys():
             if key == "target_vm_id":
                 vm_id_dic[i] = vm_vuart1[i][key]
@@ -685,21 +508,10 @@ def clos_assignment(clos_per_vm, index):
     vm_clos_bmp['clos_map'] = clos_str
     return vm_clos_bmp
 
-def get_vuart_info_id(config_file, idx):
-    """
-    Get vuart information by vuart id indexx
-    :param config_file: it is a file what contains information for script to read from
-    :param idx: vuart index in range: [0,1]
-    :return: dictionary which stored the vuart-id
-    """
-    tmp_tag = board_cfg_lib.get_vuart_info_id(config_file, idx)
-    return tmp_tag
-
 
 def avl_vuart_ui_select(scenario_info):
-    vm_num = get_vm_num(scenario_info)
     tmp_vuart = {}
-    for vm_i in range(vm_num):
+    for vm_i in range(common.VM_COUNT):
         vm_type = get_order_type_by_vmid(vm_i)
 
         if vm_type == "SOS_VM":
@@ -718,14 +530,9 @@ def avl_vuart_ui_select(scenario_info):
 
 def get_first_post_vm():
 
-    for i in range(VM_COUNT):
-        (err_dic, vm_type) = common.get_load_order_by_vmid(SCENARIO_INFO_FILE, VM_COUNT, i)
+    for i in range(common.VM_COUNT):
+        (err_dic, vm_type) = common.get_load_order_by_vmid(common.SCENARIO_INFO_FILE, common.VM_COUNT, i)
         if vm_type == "POST_LAUNCHED_VM":
             break
 
     return (err_dic, i)
-
-
-def mkdir(path):
-
-    common.mkdir(path)
