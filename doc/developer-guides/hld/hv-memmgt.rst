@@ -32,7 +32,7 @@ From the Guest OS running on a hypervisor:
 -  **Guest Virtual Address (GVA)**: the guest virtual address space from a
    virtual machine based on a vMMU.
 
-.. figure:: images/mem-image2.png
+.. figure:: images/mem-image2a.png
    :align: center
    :width: 900px
    :name: mem-overview
