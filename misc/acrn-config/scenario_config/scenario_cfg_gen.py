@@ -8,14 +8,15 @@ import sys
 import copy
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
 from scenario_item import HwInfo, VmInfo
+import board_cfg_lib
 import scenario_cfg_lib
 import vm_configurations_c
 import vm_configurations_h
 import pci_dev_c
 import common
 
-ACRN_PATH = scenario_cfg_lib.SOURCE_ROOT_DIR
-ACRN_CONFIG_TARGET = ACRN_PATH + 'hypervisor/scenarios/'
+ACRN_PATH = common.SOURCE_ROOT_DIR
+ACRN_CONFIG_DEF = ACRN_PATH + 'hypervisor/scenarios/'
 GEN_FILE = ["vm_configurations.h", "vm_configurations.c", "pci_dev.c"]
 
 
@@ -30,9 +31,7 @@ def get_scenario_item_values(board_info, scenario_info):
     # get vm count
     common.BOARD_INFO_FILE = board_info
     common.SCENARIO_INFO_FILE = scenario_info
-    scenario_cfg_lib.SCENARIO_INFO_FILE = scenario_info
-    scenario_cfg_lib.BOARD_INFO_FILE = board_info
-    scenario_cfg_lib.VM_COUNT = scenario_cfg_lib.get_vm_num(scenario_info)
+    common.get_vm_num(scenario_info)
 
     # pre scenario
     guest_flags = copy.deepcopy(scenario_cfg_lib.GUEST_FLAG)
@@ -45,11 +44,11 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values.update(scenario_cfg_lib.avl_vuart_ui_select(scenario_info))
 
     # pre board_private
-    scenario_item_values["vm,board_private,rootfs"] = scenario_cfg_lib.get_rootdev_info(board_info)
-    scenario_item_values["vm,board_private,console"] = scenario_cfg_lib.get_ttys_info(board_info)
+    scenario_item_values["vm,board_private,rootfs"] = board_cfg_lib.get_rootfs(board_info)
+    scenario_item_values["vm,board_private,console"] = board_cfg_lib.get_ttys_info(board_info)
 
     # os config
-    scenario_item_values["vm,os_config,rootfs"] = scenario_cfg_lib.get_rootdev_info(board_info)
+    scenario_item_values["vm,os_config,rootfs"] = board_cfg_lib.get_rootfs(board_info)
 
     return scenario_item_values
 
@@ -64,8 +63,6 @@ def validate_scenario_setting(board_info, scenario_info):
     scenario_cfg_lib.ERR_LIST = {}
     common.BOARD_INFO_FILE = board_info
     common.SCENARIO_INFO_FILE = scenario_info
-    scenario_cfg_lib.BOARD_INFO_FILE = board_info
-    scenario_cfg_lib.SCENARIO_INFO_FILE = scenario_info
 
     vm_info = VmInfo(board_info, scenario_info)
 
@@ -81,39 +78,39 @@ def main(args):
     This is main function to start generate source code related with board
     :param args: it is a command line args for the script
     """
-    global ACRN_CONFIG_TARGET
     err_dic = {}
 
-    (err_dic, board_info_file, scenario_info_file, output_folder) = scenario_cfg_lib.get_param(args)
+    (err_dic, board_info_file, scenario_info_file, output_folder) = common.get_param(args)
     if err_dic:
         return err_dic
 
     if output_folder:
-        ACRN_CONFIG_TARGET = os.path.abspath(output_folder) + '/'
+        common.ACRN_CONFIG_TARGET = os.path.abspath(output_folder) + '/'
 
     # check env
-    err_dic = scenario_cfg_lib.prepare()
+    err_dic = common.prepare()
     if err_dic:
         return err_dic
 
     common.BOARD_INFO_FILE = board_info_file
     common.SCENARIO_INFO_FILE = scenario_info_file
-    scenario_cfg_lib.BOARD_INFO_FILE = board_info_file
-    scenario_cfg_lib.SCENARIO_INFO_FILE = scenario_info_file
 
     # get scenario name
-    (err_dic, scenario) = scenario_cfg_lib.get_scenario_name()
+    (err_dic, scenario) = common.get_scenario_name()
     if err_dic:
         return err_dic
 
     # check if this is the scenario config which matched board info
-    (err_dic, status) = scenario_cfg_lib.is_config_file_match()
+    (err_dic, status) = common.is_config_file_match()
     if not status:
         err_dic['scenario config: Not match'] = "The board xml and scenario xml should be matched!"
         return err_dic
 
-    scenario_dir = ACRN_CONFIG_TARGET + scenario + '/'
-    scenario_cfg_lib.mkdir(scenario_dir)
+    if common.ACRN_CONFIG_TARGET:
+        scenario_dir = common.ACRN_CONFIG_TARGET + scenario + '/'
+    else:
+        scenario_dir = ACRN_CONFIG_DEF + scenario + '/'
+    common.mkdir(scenario_dir)
 
     vm_config_h = scenario_dir + GEN_FILE[0]
     vm_config_c = scenario_dir + GEN_FILE[1]
@@ -123,12 +120,12 @@ def main(args):
     get_scenario_item_values(board_info_file, scenario_info_file)
     (err_dic, vm_info) = validate_scenario_setting(board_info_file, scenario_info_file)
     if err_dic:
-        scenario_cfg_lib.print_red("Validate the scenario item failue", err=True)
+        common.print_red("Validate the scenario item failue", err=True)
         return err_dic
 
     # get kata vm count
     if scenario != "logical_partition":
-        scenario_cfg_lib.KATA_VM_COUNT = scenario_cfg_lib.VM_COUNT - scenario_cfg_lib.DEFAULT_VM_COUNT[scenario]
+        scenario_cfg_lib.KATA_VM_COUNT = common.VM_COUNT - scenario_cfg_lib.DEFAULT_VM_COUNT[scenario]
         if scenario_cfg_lib.KATA_VM_COUNT > 1:
             err_dic['scenario config: kata vm count err'] = "Only one kata vm is supported!"
             return err_dic
@@ -160,7 +157,7 @@ def ui_entry_api(board_info, scenario_info):
 
     arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info]
 
-    err_dic = scenario_cfg_lib.prepare()
+    err_dic = common.prepare()
     if err_dic:
         return err_dic
 
@@ -175,5 +172,5 @@ if __name__ == '__main__':
     err_dic = main(ARGS)
     if err_dic:
         for err_k, err_v in err_dic.items():
-            scenario_cfg_lib.print_red("{}: {}".format(err_k, err_v), err=True)
+            common.print_red("{}: {}".format(err_k, err_v), err=True)
 

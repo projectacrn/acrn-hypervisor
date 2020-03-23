@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import common
 import scenario_cfg_lib
+
 PCI_DEV_TYPE = ['PCI_DEV_TYPE_HVEMUL', 'PCI_DEV_TYPE_PTDEV']
 
 
@@ -27,7 +29,7 @@ def generate_file(config):
     print(" * The memory range of vBAR should exactly match with the e820 layout of VM.",
           file=config)
     print(" */", file=config)
-    for i in range(scenario_cfg_lib.VM_COUNT):
+    for i in range(common.VM_COUNT):
         print("", file=config)
         print("struct acrn_vm_pci_dev_config " +
               "vm{}_pci_devs[VM{}_CONFIG_PCI_DEV_NUM] = {{".format(i, i), file=config)
