@@ -4,6 +4,7 @@
 #
 
 import launch_cfg_lib
+import common
 import pt
 
 
@@ -29,7 +30,7 @@ def tap_uos_net(names, virt_io, vmid, config):
     uos_type = names['uos_types'][vmid]
     board_name = names['board_name']
 
-    vm_name = launch_cfg_lib.undline_name(uos_type).lower()
+    vm_name = common.undline_name(uos_type).lower()
 
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         i = 0
@@ -276,7 +277,7 @@ def launch_begin(names, virt_io, vmid, config):
     board_name = names['board_name']
     uos_type = names['uos_types'][vmid]
 
-    launch_uos = launch_cfg_lib.undline_name(uos_type).lower()
+    launch_uos = common.undline_name(uos_type).lower()
     tap_network(virt_io, vmid, config)
     run_container(board_name, uos_type, config)
     print("function launch_{}()".format(launch_uos), file=config)
@@ -299,7 +300,7 @@ def uos_launch(names, args, virt_io, vmid, config):
 
     gvt_args = args['gvt_args'][vmid]
     uos_type = names['uos_types'][vmid]
-    launch_uos = launch_cfg_lib.undline_name(uos_type).lower()
+    launch_uos = common.undline_name(uos_type).lower()
     board_name = names['board_name']
     if 'nuc' in board_name:
         board_name = 'nuc'
