@@ -3,8 +3,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import scenario_cfg_lib
+import common
 import board_cfg_lib
+import scenario_cfg_lib
 
 
 class HwInfo:
@@ -22,7 +23,7 @@ class HwInfo:
         Get cpu core list
         :return: cpu processor which one cpu has
         """
-        self.processor_val = scenario_cfg_lib.get_processor_info(self.board_info)
+        self.processor_val = board_cfg_lib.get_processor_info()
         return self.processor_val
 
     def get_rootdev_val(self):
@@ -30,7 +31,7 @@ class HwInfo:
         Get root devices from board info
         :return: root devices list
         """
-        self.root_dev_val = scenario_cfg_lib.get_rootdev_info(self.board_info)
+        self.root_dev_val = common.get_rootfs(self.board_info)
         return self.root_dev_val
 
     def get_ttys_val(self):
@@ -38,7 +39,7 @@ class HwInfo:
         Get ttySn from board info
         :return: serial console list
         """
-        self.ttys_val = scenario_cfg_lib.get_ttys_info(self.board_info)
+        self.ttys_val = board_cfg_lib.get_ttys_info(self.board_info)
         return self.ttys_val
 
     def get_clos_val(self):
@@ -87,24 +88,24 @@ class CfgOsKern:
         Get all items which belong to this class
         :return: None
         """
-        self.kern_name = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "os_config", "name")
-        self.kern_type = scenario_cfg_lib.get_leaf_tag_map(
+        self.kern_name = common.get_leaf_tag_map(self.scenario_info, "os_config", "name")
+        self.kern_type = common.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_type")
-        self.kern_mod = scenario_cfg_lib.get_leaf_tag_map(
+        self.kern_mod = common.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_mod")
-        self.kern_args = scenario_cfg_lib.get_leaf_tag_map(
+        self.kern_args = common.get_leaf_tag_map(
             self.scenario_info, "os_config", "bootargs")
-        self.kern_console = scenario_cfg_lib.get_leaf_tag_map(
+        self.kern_console = common.get_leaf_tag_map(
             self.scenario_info, "os_config", "console")
-        self.kern_load_addr = scenario_cfg_lib.get_leaf_tag_map(
+        self.kern_load_addr = common.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_load_addr")
-        self.kern_entry_addr = scenario_cfg_lib.get_leaf_tag_map(
+        self.kern_entry_addr = common.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_entry_addr")
-        self.kern_root_dev = scenario_cfg_lib.get_leaf_tag_map(
+        self.kern_root_dev = common.get_leaf_tag_map(
             self.scenario_info, "os_config", "rootfs")
-        self.ramdisk_mod = scenario_cfg_lib.get_leaf_tag_map(
+        self.ramdisk_mod = common.get_leaf_tag_map(
             self.scenario_info, "os_config", "ramdisk_mod")
-        self.kern_args_append = scenario_cfg_lib.get_leaf_tag_map(
+        self.kern_args_append = common.get_leaf_tag_map(
             self.scenario_info, "boot_private", "bootargs")
 
     def check_item(self):
@@ -171,8 +172,8 @@ class VuartInfo:
         Get all items which belong to this class
         :return: None
         """
-        self.v0_vuart = scenario_cfg_lib.get_vuart_info_id(self.scenario_info, 0)
-        self.v1_vuart = scenario_cfg_lib.get_vuart_info_id(self.scenario_info, 1)
+        self.v0_vuart = board_cfg_lib.get_vuart_info_id(self.scenario_info, 0)
+        self.v1_vuart = board_cfg_lib.get_vuart_info_id(self.scenario_info, 1)
         scenario_cfg_lib.check_board_private_info()
 
 
@@ -191,13 +192,13 @@ class MemInfo:
         Get all items which belong to this class
         :return: None
         """
-        self.mem_start_hpa = scenario_cfg_lib.get_leaf_tag_map(
+        self.mem_start_hpa = common.get_leaf_tag_map(
             self.scenario_info, "memory", "start_hpa")
-        self.mem_size = scenario_cfg_lib.get_leaf_tag_map(
+        self.mem_size = common.get_leaf_tag_map(
             self.scenario_info, "memory", "size")
-        self.mem_start_hpa2 = scenario_cfg_lib.get_leaf_tag_map(
+        self.mem_start_hpa2 = common.get_leaf_tag_map(
             self.scenario_info, "memory", "start_hpa2")
-        self.mem_size_hpa2 = scenario_cfg_lib.get_leaf_tag_map(
+        self.mem_size_hpa2 = common.get_leaf_tag_map(
             self.scenario_info, "memory", "size_hpa2")
 
     def check_item(self):
@@ -224,14 +225,15 @@ class CfgPci:
         Get pci device number items
         :return: None
         """
-        self.pci_dev_num = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "pci_dev_num")
+        self.pci_dev_num = common.get_leaf_tag_map(self.scenario_info, "pci_dev_num")
 
     def get_pci_devs(self):
         """
         Get pci devices items
         :return: None
         """
-        self.pci_devs = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "pci_devs")
+        self.pci_devs = common.get_leaf_tag_map(self.scenario_info, "pci_devs")
+
 
     def get_info(self):
         """
@@ -257,8 +259,8 @@ class EpcSection:
         self.scenario_info = scenario_info
 
     def get_info(self):
-        self.base = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "epc_section", "base")
-        self.size = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "epc_section", "size")
+        self.base = common.get_leaf_tag_map(self.scenario_info, "epc_section", "base")
+        self.size = common.get_leaf_tag_map(self.scenario_info, "epc_section", "size")
 
 
 class LoadOrderNum:
@@ -286,7 +288,7 @@ class VmInfo:
     def __init__(self, board_file, scenario_file):
         self.board_info = board_file
         self.scenario_info = scenario_file
-        scenario_cfg_lib.VM_COUNT = scenario_cfg_lib.get_vm_num(self.scenario_info)
+        common.get_vm_num(self.scenario_info)
 
         self.epc_section = EpcSection(self.scenario_info)
         self.mem_info = MemInfo(self.scenario_info)
@@ -300,17 +302,17 @@ class VmInfo:
         Get all items which belong to this class
         :return: None
         """
-        self.name = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "name")
-        self.load_order = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "load_order")
-        self.uuid = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "uuid")
-        self.guest_flag_idx = scenario_cfg_lib.get_sub_leaf_tag(
+        self.name = common.get_leaf_tag_map(self.scenario_info, "name")
+        self.load_order = common.get_leaf_tag_map(self.scenario_info, "load_order")
+        self.uuid = common.get_leaf_tag_map(self.scenario_info, "uuid")
+        self.guest_flag_idx = common.get_sub_leaf_tag(
             self.scenario_info, "guest_flags", "guest_flag")
-        self.cpus_per_vm = scenario_cfg_lib.get_leaf_tag_map(
+        self.cpus_per_vm = common.get_leaf_tag_map(
             self.scenario_info, "vcpu_affinity", "pcpu_id")
-        self.clos_per_vm = scenario_cfg_lib.get_leaf_tag_map(
+        self.clos_per_vm = common.get_leaf_tag_map(
             self.scenario_info, "clos", "vcpu_clos")
 
-        self.severity = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "severity")
+        self.severity = common.get_leaf_tag_map(self.scenario_info, "severity")
         self.epc_section.get_info()
         self.mem_info.get_info()
         self.os_cfg.get_info()

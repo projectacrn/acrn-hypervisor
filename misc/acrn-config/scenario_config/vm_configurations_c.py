@@ -4,9 +4,9 @@
 #
 
 import sys
-import scenario_cfg_lib
-import board_cfg_lib
 import common
+import board_cfg_lib
+import scenario_cfg_lib
 
 C_HEADER = scenario_cfg_lib.HEADER_LICENSE + r"""
 #include <vm_config.h>
@@ -75,7 +75,7 @@ def vuart0_output(i, vm_type, vm_info, config):
 def vuart_map_enable(vm_info):
 
     map_dic = {}
-    for i in range(scenario_cfg_lib.VM_COUNT):
+    for i in range(common.VM_COUNT):
         base_i = vm_info.vuart.v1_vuart[i]['base']
         src_t_vm_i = vm_info.vuart.v1_vuart[i]['target_vm_id']
         src_t_vuart_i = vm_info.vuart.v1_vuart[i]['target_uart_id']
@@ -196,7 +196,7 @@ def clos_output(vm_info, i, config):
     :param config: it is the pointer which file write to
     :return: None
     """
-    (rdt_res, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(scenario_cfg_lib.BOARD_INFO_FILE)
+    (rdt_res, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
     if len(rdt_res_clos_max) != 0:
         common_clos_max = min(rdt_res_clos_max)
     else:
@@ -468,13 +468,13 @@ def gen_logical_partition_source(vm_info, config):
     """
     err_dic = {}
     gen_source_header(config)
-    for i in range(scenario_cfg_lib.VM_COUNT):
+    for i in range(common.VM_COUNT):
         print("extern struct acrn_vm_pci_dev_config " +
               "vm{0}_pci_devs[VM{1}_CONFIG_PCI_DEV_NUM];".format(i, i), file=config)
     print("", file=config)
     print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)
 
-    for i in range(scenario_cfg_lib.VM_COUNT):
+    for i in range(common.VM_COUNT):
         uuid = uuid2str(vm_info.uuid[i])
         print("\t{{\t/* VM{0} */".format(i), file=config)
         print("\t\t.load_order = {0},".format(vm_info.load_order[i]), file=config)
@@ -533,7 +533,7 @@ def gen_industry_source(vm_info, config):
     err_dic = {}
     gen_source_header(config)
     print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)
-    for i in range(scenario_cfg_lib.VM_COUNT):
+    for i in range(common.VM_COUNT):
         uuid = uuid2str(vm_info.uuid[i])
         print("\t{", file=config)
         print("\t\t.load_order = {0},".format(vm_info.load_order[i]), file=config)
@@ -604,7 +604,7 @@ def gen_hybrid_source(vm_info, config):
     gen_source_header(config)
     print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)
 
-    for i in range(scenario_cfg_lib.VM_COUNT):
+    for i in range(common.VM_COUNT):
         uuid = uuid2str(vm_info.uuid[i])
         print("\t{{\t/* VM{0} */".format(i), file=config)
         print("\t\t.load_order = {0},".format(vm_info.load_order[i]), file=config)

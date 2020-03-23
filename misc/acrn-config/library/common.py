@@ -267,7 +267,6 @@ def get_vm_num(config_file):
         if item.tag == "vm":
             vm_count += 1
     VM_COUNT = vm_count
-    return vm_count
 
 
 # TODO: This will be abandonment in future
@@ -382,7 +381,7 @@ def get_sub_value(tmp, tag_str, vm_id):
         tmp.tag[vm_id] = tmp.multi.vir_network
 
 
-def get_leaf_tag_map(config_file, branch_tag, tag_str):
+def get_leaf_tag_map(config_file, branch_tag, tag_str=''):
     """
      This is get tag value by tag_str from config file
      :param config_file: it is a file what contains information for script to read from
