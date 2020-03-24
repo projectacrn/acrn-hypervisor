@@ -292,6 +292,7 @@ static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, uint32_t mode)
 static void init_msr_area(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vm_config *cfg = get_vm_config(vcpu->vm->vm_id);
+	uint16_t vcpu_clos = cfg->clos[vcpu->vcpu_id];
 
 	vcpu->arch.msr_area.count = 0U;
 
@@ -302,14 +303,14 @@ static void init_msr_area(struct acrn_vcpu *vcpu)
 	vcpu->arch.msr_area.count++;
 
 	/* only load/restore MSR IA32_PQR_ASSOC when hv and guest have differnt settings */
-	if (is_platform_rdt_capable() && (cfg->clos != hv_clos)) {
+	if (is_platform_rdt_capable() && (vcpu_clos != hv_clos)) {
 		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
-		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(cfg->clos);
+		vcpu->arch.msr_area.guest[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(vcpu_clos);
 		vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].msr_index = MSR_IA32_PQR_ASSOC;
 		vcpu->arch.msr_area.host[MSR_AREA_IA32_PQR_ASSOC].value = clos2pqr_msr(hv_clos);
 		vcpu->arch.msr_area.count++;
 		pr_acrnlog("switch clos for VM %u vcpu_id %u, host 0x%x, guest 0x%x",
-			vcpu->vm->vm_id, vcpu->vcpu_id, hv_clos, cfg->clos);
+			vcpu->vm->vm_id, vcpu->vcpu_id, hv_clos, vcpu_clos);
 	}
 }
 

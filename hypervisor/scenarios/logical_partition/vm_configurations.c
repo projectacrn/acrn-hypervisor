@@ -19,7 +19,6 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* 26c5e0d8-8f8a-47d8-8109-f201ebd61a5e */
 		.vcpu_num = 2U,
 		.vcpu_affinity = VM0_CONFIG_VCPU_AFFINITY,
-		.clos = 0U,
 		.memory = {
 			.start_hpa = VM0_CONFIG_MEM_START_HPA,
 			.size = VM0_CONFIG_MEM_SIZE,
@@ -59,7 +58,6 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.vcpu_num = 2U,
 		.vcpu_affinity = VM1_CONFIG_VCPU_AFFINITY,
 		.guest_flags = (GUEST_FLAG_RT | GUEST_FLAG_LAPIC_PASSTHROUGH),
-		.clos = 0U,
 		.memory = {
 			.start_hpa = VM1_CONFIG_MEM_START_HPA,
 			.size = VM1_CONFIG_MEM_SIZE,
