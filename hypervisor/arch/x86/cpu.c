@@ -495,7 +495,7 @@ static void init_pcpu_xsave(void)
 	CPU_CR_WRITE(cr4, val64);
 
 	if (get_pcpu_id() == BSP_CPU_ID) {
-		cpuid(CPUID_FEATURES, &unused, &unused, &ecx, &unused);
+		cpuid_subleaf(CPUID_FEATURES, 0x0U, &unused, &unused, &ecx, &unused);
 
 		/* if set, update it */
 		if ((ecx & CPUID_ECX_OSXSAVE) != 0U) {

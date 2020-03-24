@@ -204,7 +204,7 @@ static void detect_xsave_cap(void)
 {
 	uint32_t unused;
 
-	cpuid_subleaf(CPUID_XSAVE_FEATURES, 0U,
+	cpuid_subleaf(CPUID_XSAVE_FEATURES, 0x0U,
 		&boot_cpu_data.cpuid_leaves[FEAT_D_0_EAX],
 		&unused,
 		&unused,
@@ -234,11 +234,11 @@ void init_pcpu_capabilities(void)
 	uint32_t eax, unused;
 	uint32_t family, model;
 
-	cpuid(CPUID_VENDORSTRING,
+	cpuid_subleaf(CPUID_VENDORSTRING, 0x0U,
 		&boot_cpu_data.cpuid_level,
 		&unused, &unused, &unused);
 
-	cpuid(CPUID_FEATURES, &eax, &unused,
+	cpuid_subleaf(CPUID_FEATURES, 0x0U, &eax, &unused,
 		&boot_cpu_data.cpuid_leaves[FEAT_1_ECX],
 		&boot_cpu_data.cpuid_leaves[FEAT_1_EDX]);
 	family = (eax >> 8U) & 0xfU;
@@ -254,28 +254,28 @@ void init_pcpu_capabilities(void)
 	boot_cpu_data.model = (uint8_t)model;
 
 
-	cpuid(CPUID_EXTEND_FEATURE, &unused,
+	cpuid_subleaf(CPUID_EXTEND_FEATURE, 0x0U, &unused,
 		&boot_cpu_data.cpuid_leaves[FEAT_7_0_EBX],
 		&boot_cpu_data.cpuid_leaves[FEAT_7_0_ECX],
 		&boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX]);
 
-	cpuid(CPUID_MAX_EXTENDED_FUNCTION,
+	cpuid_subleaf(CPUID_MAX_EXTENDED_FUNCTION, 0x0U,
 		&boot_cpu_data.extended_cpuid_level,
 		&unused, &unused, &unused);
 
 	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_FUNCTION_1) {
-		cpuid(CPUID_EXTEND_FUNCTION_1, &unused, &unused,
+		cpuid_subleaf(CPUID_EXTEND_FUNCTION_1, 0x0U, &unused, &unused,
 			&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_ECX],
 			&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_EDX]);
 	}
 
 	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_INVA_TSC) {
-		cpuid(CPUID_EXTEND_INVA_TSC, &eax, &unused, &unused,
+		cpuid_subleaf(CPUID_EXTEND_INVA_TSC, 0x0U, &eax, &unused, &unused,
 			&boot_cpu_data.cpuid_leaves[FEAT_8000_0007_EDX]);
 	}
 
 	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_ADDRESS_SIZE) {
-		cpuid(CPUID_EXTEND_ADDRESS_SIZE, &eax,
+		cpuid_subleaf(CPUID_EXTEND_ADDRESS_SIZE, 0x0U, &eax,
 			&boot_cpu_data.cpuid_leaves[FEAT_8000_0008_EBX],
 			&unused, &unused);
 
@@ -318,17 +318,17 @@ bool pcpu_has_vmx_vpid_cap(uint32_t bit_mask)
 
 void init_pcpu_model_name(void)
 {
-	cpuid(CPUID_EXTEND_FUNCTION_2,
+	cpuid_subleaf(CPUID_EXTEND_FUNCTION_2, 0x0U,
 		(uint32_t *)(boot_cpu_data.model_name),
 		(uint32_t *)(&boot_cpu_data.model_name[4]),
 		(uint32_t *)(&boot_cpu_data.model_name[8]),
 		(uint32_t *)(&boot_cpu_data.model_name[12]));
-	cpuid(CPUID_EXTEND_FUNCTION_3,
+	cpuid_subleaf(CPUID_EXTEND_FUNCTION_3, 0x0U,
 		(uint32_t *)(&boot_cpu_data.model_name[16]),
 		(uint32_t *)(&boot_cpu_data.model_name[20]),
 		(uint32_t *)(&boot_cpu_data.model_name[24]),
 		(uint32_t *)(&boot_cpu_data.model_name[28]));
-	cpuid(CPUID_EXTEND_FUNCTION_4,
+	cpuid_subleaf(CPUID_EXTEND_FUNCTION_4, 0x0U,
 		(uint32_t *)(&boot_cpu_data.model_name[32]),
 		(uint32_t *)(&boot_cpu_data.model_name[36]),
 		(uint32_t *)(&boot_cpu_data.model_name[40]),
