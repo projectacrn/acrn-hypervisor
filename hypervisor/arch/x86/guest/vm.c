@@ -592,14 +592,10 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	uint16_t i;
 	uint64_t mask;
 	struct acrn_vcpu *vcpu = NULL;
-	struct acrn_vm_config *vm_config = NULL;
 	int32_t ret = 0;
 
 	/* Only allow shutdown paused vm */
 	vm->state = VM_POWERED_OFF;
-
-	vm_config = get_vm_config(vm->vm_id);
-	vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
 
 	if (is_sos_vm(vm)) {
 		sbuf_reset();
