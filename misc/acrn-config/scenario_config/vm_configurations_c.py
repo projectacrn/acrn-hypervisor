@@ -201,9 +201,8 @@ def clos_output(vm_info, i, config):
         common_clos_max = min(rdt_res_clos_max)
     else:
         common_clos_max = 0
-    if len(rdt_res) != 0 and common_clos_max !=0 and i in vm_info.clos_set:
-        print("\t\t.clos = {0}U,".format(vm_info.clos_set[i]), file=config)
-
+    if len(rdt_res) != 0 and common_clos_max !=0 and i in vm_info.clos_per_vm:
+        print("\t\t.clos = VM{}_VCPU_CLOS,".format(i), file=config)
 
 def get_guest_flag(flag_index):
     """
@@ -274,7 +273,6 @@ def gen_sdc_source(vm_info, config):
           "there is supposed to be the highest severity guest */", file=config)
     print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
     vcpu_affinity_output(vm_info, 0, config)
-    clos_output(vm_info, 0, config)
     print("\t\t.severity = {0},".format(vm_info.severity[0].strip()), file=config)
     print("\t\t.memory = {", file=config)
     print("\t\t\t.start_hpa = {}UL,".format(vm_info.mem_info.mem_start_hpa[0]), file=config)
@@ -555,9 +553,9 @@ def gen_industry_source(vm_info, config):
 
         vcpu_affinity_output(vm_info, i, config)
         print("\t\t.severity = {0},".format(vm_info.severity[i].strip()), file=config)
+        clos_output(vm_info, i, config)
 
         if i == 0:
-            clos_output(vm_info, i, config)
             print("\t\t.memory = {", file=config)
             print("\t\t\t.start_hpa = 0UL,", file=config)
             print("\t\t\t.size = CONFIG_SOS_RAM_SIZE,", file=config)
