@@ -4,6 +4,7 @@
 #
 
 import scenario_cfg_lib
+import board_cfg_lib
 
 VM_HEADER_DEFINE = scenario_cfg_lib.HEADER_LICENSE + r"""
 #ifndef VM_CONFIGURATIONS_H
@@ -35,6 +36,24 @@ def cpu_affinity_output(vm_info, i, config):
     print("#define VM{0}_CONFIG_VCPU_AFFINITY\t\t{1}".format(
         i, cpu_bits['cpu_map']), file=config)
 
+def clos_config_output(vm_info, i, config):
+    """
+    Output the macro vcpu affinity
+    :param vm_info: the data structure have all the xml items values
+    :param i: the index of vm id
+    :param config: file pointor to store the information
+    """
+    (rdt_res, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(scenario_cfg_lib.BOARD_INFO_FILE)
+    if len(rdt_res_clos_max) != 0:
+        common_clos_max = min(rdt_res_clos_max)
+    else:
+        common_clos_max = 0
+
+    if common_clos_max == 0:
+        return
+
+    clos_config = vm_info.get_clos_bitmap(i)
+    print("#define VM{0}_VCPU_CLOS\t\t{1}".format(i, clos_config['clos_map']), file=config)
 
 def scenario_vm_num(load_type_cnt, config):
 
@@ -70,16 +89,19 @@ def gen_sdc_header(vm_info, config):
         print("#if CONFIG_MAX_KATA_VM_NUM > 0", file=config)
         # Set VM1 vcpu
         cpu_affinity_output(vm_info, 1, config)
+        clos_config_output(vm_info, 1, config)
         # KATA VM
         cpu_affinity_output(vm_info, 2, config)
+        clos_config_output(vm_info, 2, config)
         #else:
         print("#else", file=config)
         # Only two VMs in SDC config, setup vcpu affinity for VM1
         cpu_affinity_output(vm_info, 1, config)
+        clos_config_output(vm_info, 1, config)
         print("#endif", file=config)
     else:
         cpu_affinity_output(vm_info, 1, config)
-
+        clos_config_output(vm_info, 1, config)
     print("", file=config)
     print("{0}".format(VM_END_DEFINE), file=config)
 
@@ -108,6 +130,7 @@ def gen_sdc2_header(vm_info, config):
     print("", file=config)
     for i in range(scenario_cfg_lib.VM_COUNT):
         cpu_affinity_output(vm_info, i, config)
+        clos_config_output(vm_info, i, config)
     print("", file=config)
     print("{0}".format(VM_END_DEFINE), file=config)
 
@@ -157,6 +180,7 @@ def gen_logical_partition_header(vm_info, config):
 
         cpu_bits = vm_info.get_cpu_bitmap(i)
         cpu_affinity_output(vm_info, i, config)
+        clos_config_output(vm_info, i, config)
         print("#define VM{0}_CONFIG_MEM_START_HPA\t\t{1}UL".format(
             i, vm_info.mem_info.mem_start_hpa[i]), file=config)
         print("#define VM{0}_CONFIG_MEM_SIZE\t\t\t{1}UL".format(
@@ -225,6 +249,7 @@ def gen_industry_header(vm_info, config):
     print("", file=config)
     for i in range(scenario_cfg_lib.VM_COUNT):
         cpu_affinity_output(vm_info, i, config)
+        clos_config_output(vm_info, i, config)
     print("", file=config)
     print("{0}".format(VM_END_DEFINE), file=config)
 
@@ -249,6 +274,7 @@ def gen_hybrid_header(vm_info, config):
     print("", file=config)
     for i in range(scenario_cfg_lib.VM_COUNT):
         cpu_affinity_output(vm_info, i, config)
+        clos_config_output(vm_info, i, config)
 
     print("#define VM0_CONFIG_MEM_START_HPA\t{0}UL".format(
         vm_info.mem_info.mem_start_hpa[0]), file=config)
