@@ -72,9 +72,18 @@ $(HV_OBJDIR)/$(HV_CONFIG_H): $(HV_OBJDIR)/$(HV_CONFIG)
 .PHONY: defconfig
 defconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
-	@BOARD=$(TARGET_BOARD) \
-	 python3 $(KCONFIG_DIR)/defconfig.py Kconfig \
-		$(HV_OBJDIR)/$(HV_CONFIG)
+	@if [ ! -f $(KCONFIG_FILE) ] && [ "$(CONFIG_XML_ENABLED)" != "true" ]; then \
+		BOARD=$(TARGET_BOARD) python3 $(KCONFIG_DIR)/defconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG); \
+	else \
+		if [ "$(KCONFIG_FILE)" != "" ] && [ -f $(KCONFIG_FILE) ]; then \
+			echo "Writing $(HV_OBJDIR)/$(HV_CONFIG) with $(KCONFIG_FILE)"; \
+			cp $(KCONFIG_FILE) $(HV_OBJDIR)/$(HV_CONFIG); \
+		elif [ "$(CONFIG_XML_ENABLED)" = "true" ] && [ "$(TARGET_DIR)" != "" ] && [ -d $(TARGET_DIR) ]; then \
+			echo "Writing $(HV_OBJDIR)/$(HV_CONFIG) with $(TARGET_DIR)/$(BOARD).config"; \
+			cp $(TARGET_DIR)/$(BOARD).config $(HV_OBJDIR)/$(HV_CONFIG); \
+		fi; \
+		python3 $(KCONFIG_DIR)/silentoldconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG) RELEASE=$(RELEASE); \
+	fi
 
 # Use silentoldconfig to forcefully update the current .config, or generate a
 # new one if no previous .config exists. This target can be used as a
@@ -98,7 +107,7 @@ savedefconfig: $(HV_OBJDIR)/$(HV_CONFIG)
 
 $(eval $(call check_dep_exec,menuconfig,MENUCONFIG_DEPS))
 export KCONFIG_CONFIG := $(HV_OBJDIR)/$(HV_CONFIG)
-menuconfig: $(MENUCONFIG_DEPS) $(HV_OBJDIR)/$(HV_CONFIG)
+menuconfig: $(MENUCONFIG_DEPS) defconfig
 	@python3 $(shell which menuconfig) Kconfig
 
 CFLAGS += -include $(HV_OBJDIR)/$(HV_CONFIG_H)

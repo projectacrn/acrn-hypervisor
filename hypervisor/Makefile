@@ -76,6 +76,14 @@ ifeq ($(SCENARIO),)
   endif
 endif
 
+ifeq ($(TARGET_DIR),)
+  BOARD_CFG_DIR := arch/x86/configs/$(BOARD)
+  SCENARIO_CFG_DIR := scenarios/$(SCENARIO)
+else
+  BOARD_CFG_DIR := $(TARGET_DIR)/$(BOARD)
+  SCENARIO_CFG_DIR := $(TARGET_DIR)/$(SCENARIO)
+endif
+
 LD_IN_TOOL = scripts/genld.sh
 BASH = $(shell which bash)
 
@@ -170,8 +178,8 @@ INCLUDE_PATH += include/hw
 INCLUDE_PATH += boot/include
 INCLUDE_PATH += boot/include/guest
 INCLUDE_PATH += $(HV_OBJDIR)/include
-INCLUDE_PATH += arch/x86/configs/$(BOARD)
-INCLUDE_PATH += scenarios/$(SCENARIO)
+INCLUDE_PATH += $(BOARD_CFG_DIR)
+INCLUDE_PATH += $(SCENARIO_CFG_DIR)
 
 CC ?= gcc
 AS ?= as
@@ -257,10 +265,10 @@ HW_C_SRCS += common/sched_bvt.c
 endif
 HW_C_SRCS += hw/pci.c
 HW_C_SRCS += arch/x86/configs/vm_config.c
-HW_C_SRCS += arch/x86/configs/$(BOARD)/board.c
-HW_C_SRCS += scenarios/$(SCENARIO)/vm_configurations.c
-ifneq (,$(wildcard scenarios/$(SCENARIO)/pci_dev.c))
-HW_C_SRCS += scenarios/$(SCENARIO)/pci_dev.c
+HW_C_SRCS += $(BOARD_CFG_DIR)/board.c
+HW_C_SRCS += $(SCENARIO_CFG_DIR)/vm_configurations.c
+ifneq (,$(wildcard $(SCENARIO_CFG_DIR)/pci_dev.c))
+HW_C_SRCS += $(SCENARIO_CFG_DIR)/pci_dev.c
 endif
 HW_C_SRCS += boot/acpi_base.c
 HW_C_SRCS += boot/cmdline.c
@@ -375,7 +383,7 @@ VERSION := $(HV_OBJDIR)/include/version.h
 # Create platform_acpi_info.h
 TEMPLATE_ACPI_INFO_HEADER := arch/x86/configs/platform_acpi_info.h
 BOARDTEMPLATE_ACPI_INFO_HEADER := arch/x86/configs/$(BOARD)/platform_acpi_info.h
-SOURCE_ACPI_INFO_HEADER := arch/x86/configs/$(BOARD)/$(BOARD)_acpi_info.h
+SOURCE_ACPI_INFO_HEADER := $(BOARD_CFG_DIR)/$(BOARD)_acpi_info.h
 TARGET_ACPI_INFO_HEADER := $(HV_OBJDIR)/include/platform_acpi_info.h
 
 $(TARGET_ACPI_INFO_HEADER): $(HV_OBJDIR)/$(HV_CONFIG)
@@ -385,7 +393,7 @@ ifeq ($(CONFIG_ENFORCE_VALIDATED_ACPI_INFO),y)
 	 echo "Expected ACPI info header at $(SOURCE_ACPI_INFO_HEADER)" && \
 	 echo "" && \
 	 echo "The ACPI info header for this board is not available. Please use" && \
-	 echo "acrn-config tool for the target board to generate a validated one." \
+	 echo "acrn-config tool for the target board to generate a validated one." && \
 	 echo "If you want to build the hypervisor with the template ACPI info," && \
 	 echo "unset ENFORCE_VALIDATED_ACPI_INFO using 'make menuconfig'." && \
 	 false;	\
@@ -503,6 +511,16 @@ distclean:
 PHONY: (VERSION)
 $(VERSION):
 	@echo "SCENARIO <$(SCENARIO)> for BOARD <$(BOARD)> is specified."
+	@if [ ! -d $(BOARD_CFG_DIR) ]; then \
+		echo "Configurations for BOARD $(BOARD) is not found."; exit 1; \
+	else \
+		echo "Found BOARD configurations under $(BOARD_CFG_DIR)"; \
+	fi;
+	@if [ ! -d $(SCENARIO_CFG_DIR) ]; then \
+		echo "Configurations for SCENARIO $(SCENARIO) is not found."; exit 1; \
+	else \
+		echo "Found SCENARIO configurations under $(SCENARIO_CFG_DIR)"; \
+	fi;
 	touch $(VERSION)
 	@COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
 	DIRTY=`git diff-index --name-only HEAD`;\
