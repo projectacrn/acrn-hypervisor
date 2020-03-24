@@ -16,8 +16,8 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			 0xa1U, 0x2cU, 0x22U, 0x01U, 0xf1U, 0xabU, 0x02U, 0x40U},
 			/* dbbbd434-7a57-4216-a12c-2201f1ab0240 */
 		.guest_flags = 0UL,
-		.clos = 0U,
 		.severity = SEVERITY_SOS,
+		.clos = { 0U },
 		.memory = {
 			.start_hpa = 0UL,
 			.size = CONFIG_SOS_RAM_SIZE,
