@@ -10,7 +10,9 @@
     <vcpu_affinity desc="vCPU affinity map. Each vCPU will pin to the selected pCPU ID. Please make sure each vCPU pin to different pCPU.">
         <pcpu_id>0</pcpu_id>
     </vcpu_affinity>
-    <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
+    <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+        <vcpu_clos>0</vcpu_clos>
+    </clos>
     <epc_section desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>
         <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
@@ -58,7 +60,9 @@
     <vcpu_affinity desc="vCPU affinity map. Each vCPU will pin to the selected pCPU ID. Please make sure each vCPU pin to different pCPU.">
         <pcpu_id>1</pcpu_id>
     </vcpu_affinity>
-    <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">0</clos>
+    <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+        <vcpu_clos>0</vcpu_clos>
+    </clos>
     <epc_section desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>
         <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
