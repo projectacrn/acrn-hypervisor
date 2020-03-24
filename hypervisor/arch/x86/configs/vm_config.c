@@ -15,12 +15,35 @@ static uint8_t rtvm_uuid1[16] = POST_RTVM_UUID1;
 static uint8_t safety_vm_uuid1[16] = SAFETY_VM_UUID1;
 
 /*
+ * To be used for post-launched VMS only.
+ *
+ * acrn-dm could modify post-launched VM configuration through command line arguments.
+ * We make use of this additional array to make sure that the dynamic configuration
+ * from acrn-dm won't overwrite the static vm_configs[].
+ */
+static struct acrn_vm_config vm_configs_saved[CONFIG_MAX_VM_NUM];
+
+/*
  * @pre vm_id < CONFIG_MAX_VM_NUM
  * @post return != NULL
  */
 struct acrn_vm_config *get_vm_config(uint16_t vm_id)
 {
 	return &vm_configs[vm_id];
+}
+
+/*
+ * @pre vm_id < CONFIG_MAX_VM_NUM
+ */
+void save_or_restore_vm_config(uint16_t vm_id, bool save)
+{
+	size_t size = sizeof(struct acrn_vm_config);
+
+	if (save) {
+		(void)memcpy_s((void *)&vm_configs_saved[vm_id], size, (void *)&vm_configs[vm_id], size);
+	} else {
+		(void)memcpy_s((void *)&vm_configs[vm_id], size, (void *)&vm_configs_saved[vm_id], size);
+	}
 }
 
 static inline bool uuid_is_equal(const uint8_t *uuid1, const uint8_t *uuid2)
