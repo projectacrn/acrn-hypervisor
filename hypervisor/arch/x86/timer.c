@@ -272,7 +272,7 @@ static uint64_t native_calibrate_tsc(void)
 	if (cpu_info->cpuid_level >= 0x15U) {
 		uint32_t eax_denominator, ebx_numerator, ecx_hz, reserved;
 
-		cpuid(0x15U, &eax_denominator, &ebx_numerator,
+		cpuid_subleaf(0x15U, 0x0U, &eax_denominator, &ebx_numerator,
 			&ecx_hz, &reserved);
 
 		if ((eax_denominator != 0U) && (ebx_numerator != 0U)) {
@@ -283,7 +283,7 @@ static uint64_t native_calibrate_tsc(void)
 
 	if ((tsc_hz == 0UL) && (cpu_info->cpuid_level >= 0x16U)) {
 		uint32_t eax_base_mhz, ebx_max_mhz, ecx_bus_mhz, edx;
-		cpuid(0x16U, &eax_base_mhz, &ebx_max_mhz, &ecx_bus_mhz, &edx);
+		cpuid_subleaf(0x16U, 0x0U, &eax_base_mhz, &ebx_max_mhz, &ecx_bus_mhz, &edx);
 		tsc_hz = (uint64_t) eax_base_mhz * 1000000U;
 	}
 

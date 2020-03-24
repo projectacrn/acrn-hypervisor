@@ -25,7 +25,7 @@ uint64_t get_microcode_version(void)
 	uint32_t eax, ebx, ecx, edx;
 
 	msr_write(MSR_IA32_BIOS_SIGN_ID, 0U);
-	cpuid(CPUID_FEATURES, &eax, &ebx, &ecx, &edx);
+	cpuid_subleaf(CPUID_FEATURES, 0x0U, &eax, &ebx, &ecx, &edx);
 	val = msr_read(MSR_IA32_BIOS_SIGN_ID);
 
 	return val;

@@ -400,7 +400,7 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 	uint32_t apicid = vlapic_get_apicid(vcpu_vlapic(vcpu));
 	uint64_t guest_ia32_misc_enable = vcpu_get_guest_msr(vcpu, MSR_IA32_MISC_ENABLE);
 
-	cpuid(0x1U, eax, ebx, ecx, edx);
+	cpuid_subleaf(0x1U, 0x0U, eax, ebx, ecx, edx);
 	/* Patching initial APIC ID */
 	*ebx &= ~APIC_ID_MASK;
 	*ebx |= (apicid <<  APIC_ID_SHIFT);
@@ -517,7 +517,7 @@ static void guest_cpuid_80000001h(const struct acrn_vcpu *vcpu,
 	uint32_t leaf = 0x80000001U;
 
 	if ((entry_check != NULL) && (entry_check->eax >= leaf)) {
-		cpuid(leaf, eax, ebx, ecx, edx);
+		cpuid_subleaf(leaf, 0x0U, eax, ebx, ecx, edx);
 		/* SDM Vol4 2.1, XD Bit Disable of MSR_IA32_MISC_ENABLE
 		 * When set to 1, the Execute Disable Bit feature (XD Bit) is disabled and the XD Bit
 		 * extended feature flag will be clear (CPUID.80000001H: EDX[20]=0)
