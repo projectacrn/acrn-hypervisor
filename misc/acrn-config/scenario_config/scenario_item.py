@@ -278,7 +278,7 @@ class VmInfo:
     name = {}
     load_order = {}
     uuid = {}
-    clos_set = {}
+    clos_per_vm = {}
     guest_flag_idx = {}
     cpus_per_vm = {}
     severity = {}
@@ -307,7 +307,9 @@ class VmInfo:
             self.scenario_info, "guest_flags", "guest_flag")
         self.cpus_per_vm = scenario_cfg_lib.get_leaf_tag_map(
             self.scenario_info, "vcpu_affinity", "pcpu_id")
-        self.clos_set = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "clos")
+        self.clos_per_vm = scenario_cfg_lib.get_leaf_tag_map(
+            self.scenario_info, "clos", "vcpu_clos")
+
         self.severity = scenario_cfg_lib.get_leaf_tag_map(self.scenario_info, "severity")
         self.epc_section.get_info()
         self.mem_info.get_info()
@@ -322,6 +324,13 @@ class VmInfo:
         :return: cpus per vm and their vm id
         """
         return scenario_cfg_lib.cpus_assignment(self.cpus_per_vm, index)
+
+    def get_clos_bitmap(self, index):
+        """
+        :param index: index list in GUESF_FLAGS
+        :return: clos per vm and their vm id
+        """
+        return scenario_cfg_lib.clos_assignment(self.clos_per_vm, index)
 
     def check_item(self):
         """

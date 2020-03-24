@@ -23,7 +23,7 @@ GUEST_FLAG = ["0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTH
 START_HPA_SIZE_LIST = ['0x20000000', '0x40000000', '0x80000000', 'CONFIG_SOS_RAM_SIZE']
 
 
-MULTI_ITEM = ["guest_flag", "pcpu_id", "input", "block", "network"]
+MULTI_ITEM = ["guest_flag", "pcpu_id", "vcpu_clos", "input", "block", "network"]
 
 SIZE_K = 1024
 SIZE_M = SIZE_K * 1024
@@ -36,6 +36,7 @@ class MultiItem():
     def __init__(self):
         self.guest_flag = []
         self.pcpu_id = []
+        self.vcpu_clos = []
         self.vir_input = []
         self.vir_block = []
         self.vir_console = []
@@ -378,6 +379,11 @@ def get_leaf_tag_val(config_file, branch_tag, tag_str=''):
                         tmp_cpus.append(leaf.text)
                         continue
 
+                    # get vcpu_clos for vm
+                    if leaf.tag == "vcpu_clos" and tag_str == "vcpu_clos":
+                        tmp_cpus.append(leaf.text)
+                        continue
+
                 # append guest flags for each vm
                 if tmp_flag and tag_str == "guest_flag":
                     tmp_tag.append(tmp_flag)
@@ -402,6 +408,10 @@ def get_leaf_value(tmp, tag_str, leaf):
     if leaf.tag == "pcpu_id" and tag_str == "pcpu_id":
         tmp.multi.pcpu_id.append(leaf.text)
 
+    # get vcpu_clos for vm
+    if leaf.tag == "vcpu_clos" and tag_str == "vcpu_clos":
+        tmp.multi.vcpu_clos.append(leaf.text)
+
     # get virtio-input for vm
     if leaf.tag == "input" and tag_str == "input":
         tmp.multi.vir_input.append(leaf.text)
@@ -425,6 +435,10 @@ def get_sub_value(tmp, tag_str, vm_id):
     # append cpus for vm
     if tmp.multi.pcpu_id and tag_str == "pcpu_id":
         tmp.tag[vm_id] = tmp.multi.pcpu_id
+
+    # append cpus for vm
+    if tmp.multi.vcpu_clos and tag_str == "vcpu_clos":
+        tmp.tag[vm_id] = tmp.multi.vcpu_clos
 
     # append virtio input for vm
     if tmp.multi.vir_input and tag_str == "input":

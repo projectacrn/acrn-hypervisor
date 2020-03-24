@@ -668,6 +668,29 @@ def cpus_assignment(cpus_per_vm, index):
     vm_cpu_bmp['cpu_num'] = len(cpus_per_vm[index])
     return vm_cpu_bmp
 
+def clos_assignment(clos_per_vm, index):
+    """
+    Get clos id assignment for vm by vm index
+    :param clos_per_vm: a dictionary by vmid:cpus
+    :param index: vm index
+    :return: clos assignment string
+    """
+    vm_clos_bmp = {}
+
+    for i in range(len(clos_per_vm[index])):
+        if i == 0:
+            if len(clos_per_vm[index]) == 1:
+                clos_str = "{{{0}U}}".format(clos_per_vm[index][0])
+            else:
+                clos_str = "{{{0}U".format(clos_per_vm[index][0])
+        else:
+            if i == len(clos_per_vm[index]) - 1:
+                clos_str = clos_str + ", {0}U}}".format(clos_per_vm[index][i])
+            else:
+                clos_str = clos_str + ", {0}U".format(clos_per_vm[index][i])
+
+    vm_clos_bmp['clos_map'] = clos_str
+    return vm_clos_bmp
 
 def get_vuart_info_id(config_file, idx):
     """
