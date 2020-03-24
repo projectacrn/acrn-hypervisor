@@ -161,6 +161,9 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 		vm_id = get_vmid_by_uuid(&cv.uuid[0]);
 		if ((vm_id > vm->vm_id) && (vm_id < CONFIG_MAX_VM_NUM)
 			&& (is_poweroff_vm(get_vm_from_vmid(vm_id)))) {
+
+			/* Save a copy of the static vm configuration */
+			save_or_restore_vm_config(vm_id, true);
 			vm_config = get_vm_config(vm_id);
 
 			/* Filter out the bits should not set by DM and then assign it to guest_flags */
@@ -220,6 +223,9 @@ int32_t hcall_destroy_vm(uint16_t vmid)
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		/* TODO: check target_vm guest_flags */
 		ret = shutdown_vm(target_vm);
+
+		/* restore with the static vm configuration */
+		save_or_restore_vm_config(vmid, false);
 	}
 
 	return ret;

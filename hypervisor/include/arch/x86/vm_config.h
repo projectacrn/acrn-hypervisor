@@ -175,6 +175,7 @@ struct acrn_vm_config {
 } __aligned(8);
 
 struct acrn_vm_config *get_vm_config(uint16_t vm_id);
+void save_or_restore_vm_config(uint16_t vm_id, bool save);
 bool vm_has_matched_uuid(uint16_t vmid, const uint8_t *uuid);
 bool sanitize_vm_config(void);
 
