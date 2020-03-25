@@ -8,7 +8,8 @@ a flexible, lightweight reference hypervisor, built with real-time and
 safety-criticality in mind, optimized to streamline embedded development
 through an open source platform.
 
-.. important::
+.. comment Add back this note if we need to redirect users to a more stable
+   release.
    The latest version of ACRN is currently under construction. If necessary, visit ACRN `version 1.5 <https://projectacrn.github.io/1.5/>`_ to view the last stable build.
 
 .. comment The links in this grid display can't use :ref: because we're
@@ -63,6 +64,13 @@ through an open source platform.
            </a>
            <p>Supported hardware platforms and boards</p>
        </li>
+       <li class="grid-item">
+           <a href="glossary.html">
+               <img alt="" src="_static/images/ACRNlogo80w.png"/>
+               <h2>Glossary<br/>of Terms</h2>
+           </a>
+           <p>Glossary of useful terms</p>
+       </li>
    </ul>
 
 
@@ -82,6 +90,7 @@ license.
    release_notes/index
    asa
    faq
+   glossary
 
 .. _BSD 3-clause license:
    https://github.com/projectacrn/acrn-hypervisor/blob/master/LICENSE
