@@ -344,28 +344,28 @@ static void pci_init_pdev(union pci_bdf pbdf, uint32_t drhd_index)
 
 /*
  * must be >= total Endpoints in all DRDH devscope
- * TODO: BDF_SET_LEN is a good candidate to move to
+ * TODO: BDF_MAPPING_NUM is a good candidate to move to
  * generated platform files.
  */
-#define BDF_SET_LEN			32U
+#define BDF_MAPPING_NUM			32U
 
-struct pci_bdf_to_iommu {
+struct pci_bdf_to_drhd_index_mapping {
 	union pci_bdf dev_scope_bdf;
 	uint32_t dev_scope_drhd_index;
 };
 
-struct pci_bdf_set {
+struct pci_bdf_mapping_group {
 	uint32_t pci_bdf_map_count;
-	struct pci_bdf_to_iommu bdf_map[BDF_SET_LEN];
+	struct pci_bdf_to_drhd_index_mapping bdf_map[BDF_MAPPING_NUM];
 };
 
-struct pci_bus_set {
+struct pci_bus_num_to_drhd_index_mapping {
 	uint8_t bus_under_scan;
 	uint32_t bus_drhd_index;
 };
 
 static uint32_t pci_check_override_drhd_index(union pci_bdf pbdf,
-						const struct pci_bdf_set *const bdfs_from_drhds,
+						const struct pci_bdf_mapping_group *const bdfs_from_drhds,
 						uint32_t current_drhd_index)
 {
 	uint16_t bdfi;
@@ -391,7 +391,7 @@ static uint32_t pci_check_override_drhd_index(union pci_bdf pbdf,
  * configuration(acrn_vm_pci_dev_config), call init_one_dev_config or init_all_dev_config to do this.
  */
 static void scan_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_LEN],
-				const struct pci_bdf_set *const bdfs_from_drhds, uint32_t drhd_index)
+				const struct pci_bdf_mapping_group *const bdfs_from_drhds, uint32_t drhd_index)
 {
 	bool is_mfdev;
 	uint32_t vendor;
@@ -400,7 +400,7 @@ static void scan_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_
 	uint8_t current_bus_index;
 	uint32_t current_drhd_index, bdf_drhd_index;
 
-	struct pci_bus_set bus_map[PCI_BUSMAX + 1U]; /* FIFO queue of buses to walk */
+	struct pci_bus_num_to_drhd_index_mapping bus_map[PCI_BUSMAX + 1U]; /* FIFO queue of buses to walk */
 	uint32_t s = 0U, e = 0U; /* start and end index into queue */
 
 	bus_map[e].bus_under_scan = bus;
@@ -462,16 +462,16 @@ static void scan_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_
  * for PCI device scopes. bdfs_from_drhds is used later in scan_pci_hierarchy
  * to map the right DRHD unit to the PCI device
  */
-static void pci_add_bdf_from_drhd(union pci_bdf bdf, struct pci_bdf_set *const bdfs_from_drhds,
+static void pci_add_bdf_from_drhd(union pci_bdf bdf, struct pci_bdf_mapping_group *const bdfs_from_drhds,
 					uint32_t drhd_index)
 {
-	if (bdfs_from_drhds->pci_bdf_map_count < BDF_SET_LEN) {
+	if (bdfs_from_drhds->pci_bdf_map_count < BDF_MAPPING_NUM) {
 		bdfs_from_drhds->bdf_map[bdfs_from_drhds->pci_bdf_map_count].dev_scope_bdf = bdf;
 		bdfs_from_drhds->bdf_map[bdfs_from_drhds->pci_bdf_map_count].dev_scope_drhd_index = drhd_index;
 		bdfs_from_drhds->pci_bdf_map_count++;
 	} else {
-		ASSERT(bdfs_from_drhds->pci_bdf_map_count < BDF_SET_LEN,
-				"Compare value in BDF_SET_LEN against those in ACPI DMAR tables");
+		ASSERT(bdfs_from_drhds->pci_bdf_map_count < BDF_MAPPING_NUM,
+				"Compare value in BDF_MAPPING_NUM against those in ACPI DMAR tables");
 	}
 }
 
@@ -483,7 +483,7 @@ static void pci_add_bdf_from_drhd(union pci_bdf bdf, struct pci_bdf_set *const b
  * TODO: bdfs_from_drhds is a good candidate to be part of generated platform
  * info.
  */
-static void pci_parse_iommu_devscopes(struct pci_bdf_set *const bdfs_from_drhds,
+static void pci_parse_iommu_devscopes(struct pci_bdf_mapping_group *const bdfs_from_drhds,
 						uint32_t *drhd_idx_pci_all)
 {
 	union pci_bdf bdf;
@@ -605,7 +605,7 @@ static void init_all_dev_config(void)
 void init_pci_pdev_list(void)
 {
 	uint64_t buses_visited[BUSES_BITMAP_LEN] = {0UL};
-	struct pci_bdf_set bdfs_from_drhds = {.pci_bdf_map_count = 0U};
+	struct pci_bdf_mapping_group bdfs_from_drhds = {.pci_bdf_map_count = 0U};
 	uint32_t drhd_idx_pci_all = INVALID_DRHD_INDEX;
 	uint16_t bus;
 	bool was_visited = false;
