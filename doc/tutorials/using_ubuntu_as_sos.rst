@@ -118,10 +118,11 @@ the source code, build it, and install it on your device.
          sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/nvme0n1 -p 1 \
                 -L "ACRN Hypervisor" -u "bootloader=\EFI\ubuntu\grubx64.efi "
 
-      .. Note::
-         This is a workaround for the issue in efi-stub;
-         Add an extra space to the EFI option to make sure space could be used to detect the end of bootloader name string.
-         This extra space can be removed after issue in efi-stub fixed later.
+     .. note::
+        Note the extra space at the end of the EFI command-line options
+        strings above. This is a workaround for a current `efi-stub
+        bootloader name issue <https://github.com/projectacrn/acrn-hypervisor/issues/4520>`_.
+        It ensures that the end of the string is properly detected.
 
    #. Verify that "ACRN Hypervisor" is added and that it will boot first:
 
@@ -220,9 +221,9 @@ Download the latest Service VM kernel.
    start the Ubuntu Desktop and you can now log in (as before).
 
    .. note::
-       If you don't see the Grub menu after rebooting the system (and you are
-       not booting into the ACRN hypervisor), enter the EFI firmware at boot
-       (using :kbd:`F10`) and manually select ``ACRN Hypervisor``.
+      If you don't see the Grub menu after rebooting the system (and you are
+      not booting into the ACRN hypervisor), enter the EFI firmware at boot
+      (using :kbd:`F10`) and manually select ``ACRN Hypervisor``.
 
        If you see a black screen on the first-time reboot after installing
        the ACRN Hypervisor, wait a few moments and the Ubuntu desktop will
@@ -303,8 +304,8 @@ for the Service VM.
      -s 3,virtio-blk,/root/clear-31670-kvm.img \
 
   .. note::
-      The User VM image can be stored in other directories instead of ``~/``.
-      Remember to also modify the image directory in ``launch_uos.sh``.
+     The User VM image can be stored in other directories instead of ``~/``.
+     Remember to also modify the image directory in ``launch_uos.sh``.
 
 Start the User VM
 *****************

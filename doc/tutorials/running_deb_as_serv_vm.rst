@@ -14,7 +14,7 @@ Use the following instructions to install Debian.
 
 -  Navigate to `Debian 10 iso <https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/>`_. Select and download **debian-10.1.0-amd64-netinst.iso** (scroll down to the bottom of the page).
 -  Follow the `Debian installation guide <https://www.debian.org/releases/stable/amd64/index.en.html>`_ to install it on your NUC; we are using an Intel Kaby Lake NUC (NUC7i7DNHE) in this tutorial.
--  :ref:`install-build-tools-dependencies` for ACRN.
+-  Install the necessary development tools. Refer to :ref:`install-build-tools-dependencies` for ACRN.
 -  Update to the latest iASL (required by the ACRN Device Model):
 
    .. code-block:: bash
@@ -63,7 +63,7 @@ Install ACRN on the Debian VM
 
          $ sudo mkdir /boot/efi/EFI/acrn/
          $ sudo cp ~/acrn-hypervisor/build/hypervisor/acrn.efi /boot/efi/EFI/acrn/
-         $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN Hypervisor" -u "bootloader=\EFI\debian\grubx64.efi"
+         $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN Hypervisor" -u "bootloader=\EFI\debian\grubx64.efi "
          $ sudo efibootmgr -v     # shows output as below
          Timeout: 1 seconds
          BootOrder: 0009,0003,0004,0007,0005,0006,0001,0008,0002,0000
@@ -78,7 +78,14 @@ Install ACRN on the Debian VM
          Boot0008* Linux bootloader VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)
          Boot0009* ACRN Hypervisor HD(1,GPT,94597852-7166-4216-b0f1-cef5fd1f2349,0x800,0x100000)/File(\EFI\acrn\acrn.efi)b.o.o.t.l.o.a.d.e.r.=.\.E.F.I.\.d.e.b.i.a.n.\.g.r.u.b.x.6.4...e.f.i.
 
-   #. Install the Service VM kernel and reboot:
+
+     .. note::
+        Note the extra space at the end of the EFI command-line options
+        string above. This is a workaround for a current `efi-stub
+        bootloader name issue <https://github.com/projectacrn/acrn-hypervisor/issues/4520>`_.
+        It ensures that the end of the string is properly detected.
+
+   b. Install the Service VM kernel and reboot:
 
       .. code-block:: bash
 
