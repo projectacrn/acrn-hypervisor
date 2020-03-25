@@ -1054,7 +1054,7 @@ static int32_t iommu_attach_device(struct iommu_domain *domain, uint8_t bus, uin
 	struct dmar_entry *context;
 	struct dmar_entry *root_entry;
 	struct dmar_entry *context_entry;
-	uint64_t hi_64;
+	uint64_t hi_64 = 0UL;
 	uint64_t lo_64 = 0UL;
 	int32_t ret = 0;
 	/* source id */
@@ -1119,30 +1119,11 @@ static int32_t iommu_attach_device(struct iommu_domain *domain, uint8_t bus, uin
 			ret = -EBUSY;
 		} else {
 			/* setup context entry for the devfun */
-			hi_64 = 0UL;
-			lo_64 = 0UL;
-			if (domain->is_host) {
-				if (iommu_ecap_pt(dmar_unit->ecap) != 0U) {
-					/* When the Translation-type (T) field indicates
-					 * pass-through processing (10b), AW field must be
-					 * programmed to indicate the largest AGAW value
-					 * supported by hardware.
-					 */
-					hi_64 = dmar_set_bitslice(hi_64,
-							CTX_ENTRY_UPPER_AW_MASK, CTX_ENTRY_UPPER_AW_POS, dmar_unit->cap_msagaw);
-					lo_64 = dmar_set_bitslice(lo_64,
-							CTX_ENTRY_LOWER_TT_MASK, CTX_ENTRY_LOWER_TT_POS, DMAR_CTX_TT_PASSTHROUGH);
-				} else {
-					pr_err("dmaru[%d] doesn't support trans passthrough", dmar_unit->index);
-					ret = -ENODEV;
-				}
-			} else {
-				/* TODO: add Device TLB support */
-				hi_64 = dmar_set_bitslice(hi_64,
-						CTX_ENTRY_UPPER_AW_MASK, CTX_ENTRY_UPPER_AW_POS, (uint64_t)width_to_agaw(domain->addr_width));
-				lo_64 = dmar_set_bitslice(lo_64,
-						CTX_ENTRY_LOWER_TT_MASK, CTX_ENTRY_LOWER_TT_POS, DMAR_CTX_TT_UNTRANSLATED);
-			}
+			/* TODO: add Device TLB support */
+			hi_64 = dmar_set_bitslice(hi_64,
+					CTX_ENTRY_UPPER_AW_MASK, CTX_ENTRY_UPPER_AW_POS, (uint64_t)width_to_agaw(domain->addr_width));
+			lo_64 = dmar_set_bitslice(lo_64,
+					CTX_ENTRY_LOWER_TT_MASK, CTX_ENTRY_LOWER_TT_POS, DMAR_CTX_TT_UNTRANSLATED);
 
 			if (ret == 0) {
 				hi_64 = dmar_set_bitslice(hi_64,
@@ -1258,11 +1239,9 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 		 */
 		domain = &iommu_domains[vmid_to_domainid(vm_id)];
 
-		domain->is_host = false;
 		domain->vm_id = vm_id;
 		domain->trans_table_ptr = translation_table;
 		domain->addr_width = addr_width;
-		domain->is_tt_ept = true;
 
 #ifdef CONFIG_IOMMU_ENFORCE_SNP
 		domain->iommu_snoop = true;
@@ -1287,11 +1266,6 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
  */
 void destroy_iommu_domain(struct iommu_domain *domain)
 {
-	/* currently only support ept */
-	if (!domain->is_tt_ept) {
-		ASSERT(false, "translation_table is not EPT!");
-	}
-
 	/* TODO: check if any device assigned to this domain */
 	(void)memset(domain, 0U, sizeof(*domain));
 }

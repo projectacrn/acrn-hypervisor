@@ -53,8 +53,6 @@ enum acpi_dmar_scope_type {
 };
 
 struct iommu_domain {
-	bool is_host;
-	bool is_tt_ept;     /* if reuse EPT of the domain */
 	uint16_t vm_id;
 	uint32_t addr_width;   /* address width of the domain */
 	uint64_t trans_table_ptr;
