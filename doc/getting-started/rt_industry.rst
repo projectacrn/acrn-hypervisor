@@ -154,10 +154,15 @@ Use the pre-installed industry ACRN hypervisor
       Boot000D* INTEL SSDPEKKW256G8 : PART 0 : Boot Drive	BBS(HD,,0x0)..BO
       Boot000E* UEFI : INTEL SSDPEKKW256G8 : PART 0 : OS Bootloader	PciRoot(0x0)/Pci(0x1d,0x0)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(1,GPT,8aa992f8-8149-4f6b-8b64-503998c776c1,0x800,0x47000)..BO
 
-   .. note:: Ensure that ACRN is first in the boot order, or you may use ``efibootmgr -o 1`` command to move it
-      to the first position. If you need to enable the serial port, run the following command before rebooting:
+   .. note:: Ensure that ACRN is first in the boot order, or you may use the
+      ``efibootmgr -o 1`` command to move it to the first position. If you need to enable the serial port, run the following command before rebooting:
 
       ``efibootmgr -c -l '\EFI\acrn\acrn.efi' -d /dev/sda -p 1 -L ACRN -u "uart=port@0x3f8 "``
+
+      Note the extra space at the end of the EFI command-line options
+      string. This is a workaround for a current `efi-stub bootloader name
+      issue <https://github.com/projectacrn/acrn-hypervisor/issues/4520>`_.
+      It ensures that the end of the string is properly detected.
 
 #. Reboot KBL NUC.
 
@@ -206,9 +211,10 @@ Use the ACRN industry out-of-the-box image
 
       # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN" -u "uart=port@0x3f8 "
 
-   .. note:: This is a workaround for the issue in efi-stub;
-      Add an extra space to the EFI option to make sure space could be used to detect the end of bootloader name string.
-      The extra space can be removed after the issue in efi-stub is fixed later.
+   .. note:: Note the extra space at the end of the EFI command-line options
+      strings above. This is a workaround for a current `efi-stub bootloader
+      name issue <https://github.com/projectacrn/acrn-hypervisor/issues/4520>`_.
+      It ensures that the end of the string is properly detected.
 
 #. Reboot the test machine. After the Clear Linux OS boots,
    log in as “root” for the first time.
