@@ -98,6 +98,17 @@ uint64_t get_active_pcpu_bitmap(void)
 	return pcpu_active_bitmap;
 }
 
+static void enable_ac_for_splitlock(void)
+{
+	uint64_t test_ctl;
+
+	if (has_core_cap(1U << 5U)) {
+		test_ctl = msr_read(MSR_TEST_CTL);
+		test_ctl |= (1U << 29U);
+		msr_write(MSR_TEST_CTL, test_ctl);
+	}
+}
+
 void init_pcpu_pre(bool is_bsp)
 {
 	uint16_t pcpu_id;
@@ -166,6 +177,7 @@ void init_pcpu_pre(bool is_bsp)
 		 */
 		pci_switch_to_mmio_cfg_ops();
 	} else {
+
 		/* Switch this CPU to use the same page tables set-up by the
 		 * primary/boot CPU
 		 */
@@ -191,6 +203,8 @@ void init_pcpu_post(uint16_t pcpu_id)
 	set_fs_base();
 #endif
 	load_gdtr_and_tr();
+
+	enable_ac_for_splitlock();
 
 	init_pcpu_xsave();
 
