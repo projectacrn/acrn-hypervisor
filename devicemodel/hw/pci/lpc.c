@@ -495,11 +495,11 @@ pci_igd_lpc_init(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 	 * The VID, DID, REVID, SUBVID, SUBDID of igd-lpc need aligned with physical one.
 	 * Without these physical values, gvt-d GOP driver couldn't work.
 	 */
-	pci_set_cfgdata16(pi, PCIR_DEVICE, (host_config[0x03] << 8) | host_config[0x02]);
-	pci_set_cfgdata16(pi, PCIR_VENDOR, (host_config[0x01] << 8) | host_config[0x00]);
-	pci_set_cfgdata8(pi, PCIR_REVID, host_config[0x08]);
-	pci_set_cfgdata16(pi, PCIR_SUBVEND_0, (host_config[0x01] << 8) | host_config[0x00]);
-	pci_set_cfgdata16(pi, PCIR_SUBDEV_0, (host_config[0x03] << 8) | host_config[0x02]);
+	pci_set_cfgdata16(pi, PCIR_DEVICE, *(uint16_t *)(host_config + PCIR_DEVICE));
+	pci_set_cfgdata16(pi, PCIR_VENDOR, *(uint16_t *)(host_config + PCIR_VENDOR));
+	pci_set_cfgdata8(pi, PCIR_REVID, host_config[PCIR_REVID]);
+	pci_set_cfgdata16(pi, PCIR_SUBVEND_0, *(uint16_t *)(host_config + PCIR_SUBVEND_0));
+	pci_set_cfgdata16(pi, PCIR_SUBDEV_0, *(uint16_t *)(host_config + PCIR_SUBDEV_0));
 
 	return 0;
 }
