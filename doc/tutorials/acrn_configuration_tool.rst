@@ -122,8 +122,6 @@ Additional scenario XML elements:
   ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify whether the hypervisor needs
   IO polling to completion
 
-  ``GUEST_FLAG_CLOS_REQUIRED`` specify whether CLOS is required
-
   ``GUEST_FLAG_HIDE_MTRR`` specify whether to hide MTRR from the VM
 
   ``GUEST_FLAG_RT`` specify whether the vm is RT-VM

@@ -339,63 +339,10 @@ Recommended BIOS settings
 
 .. note:: BIOS settings depend on the platform and BIOS version; some may not be applicable.
 
-Configure CAT
+Configure RDT
 -------------
 
-.. _Apollo Lake NUC:
-   https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc6cayh.html
-
-.. note:: CAT configuration is only supported on the `Apollo Lake NUC`_.
-
-With the ACRN Hypervisor shell, we can use ``cpuid`` and ``wrmsr``/``rdmsr`` debug commands to enumerate the CAT capability and set the CAT configuration without rebuilding binaries. Because ``lapic`` is a pass-through to the RTVM, the CAT configuration must be set before launching the RTVM.
-
-Check CAT ability with cupid
-````````````````````````````
-
-First run ``cpuid 0x10 0x0``. The return value of ``ebx[bit 2]`` reports that the L2 CAT is supported.
-Next, run ``cpuid 0x10 0x2`` to query the L2 CAT capability; the return value of ``eax[bit 4:0]``
-reports that the cache mask has 8 bits, and ``edx[bit 15:0]`` reports that 04 CLOS are supported,
-as shown below. The reported data is in the format of ``[ eax:ebx:ecx:edx ]``::
-
-   ACRN:\>cpuid 0x10 0x0
-   cpuid leaf: 0x10, subleaf: 0x0, 0x0:0x4:0x0:0x0
-
-   ACRN:\>cpuid 0x10 0x2
-   cpuid leaf: 0x10, subleaf: 0x2, 0x7:0x0:0x0:0x3
-
-Set CLOS (QOS MASK) and PQR_ASSOC MSRs to configure the CAT
-```````````````````````````````````````````````````````````
-
-Apollo Lake doesn't have L3 cache and it supports L2 CAT. The CLOS MSRs are per L2 cache and starts from 0x00000D10. In the case of 4 CLOS MSRs, the address is as follows::
-
-   MSR_IA32_L2_QOS_MASK_0    0x00000D10
-   MSR_IA32_L2_QOS_MASK_1    0x00000D11
-   MSR_IA32_L2_QOS_MASK_2    0x00000D12
-   MSR_IA32_L2_QOS_MASK_3    0x00000D13
-
-The PQR_ASSOC MSR is per CPU core; each core has its own PQR_ASSOC::
-
-   MSR_IA32_PQR_ASSOC        0x00000C8F
-
-To set the CAT, first set the CLOS MSRs. Next, set the PQR_ASSOC of each CPU
-so that the CPU of the RTVM uses dedicated cache and other CPUs use other cache. Taking a Quad Core Apollo Lake platform for example, CPU0 and CPU1 share L2 cache while CPU2 and CPU3 share the other L2 cache.
-
-- If we allocate CPU2 and CPU3, no extra action is required.
-- If we allocate only CPU1 to the RTVM, we need to set the CAT as follows.
-  These commands actually set the CAT configuration for L2 cache shared by CPU0 and CPU1.
-
-a. Set CLOS with ``wrmsr <reg_num> <value>``, we want VM1 to use the lower 6 ways of cache,
-   so CLOS0 is set to 0xf0 for the upper 4 ways, and CLOS1 is set to 0x0f for the lower 4 ways::
-
-      ACRN:\>wrmsr -p1 0xd10 0xf0
-      ACRN:\>wrmsr -p1 0xd11 0x0f
-
-#. Attach COS1 to PCPU1. Because MSR is IA32_PQR_ASSOC [bit 63:32], we’ll write 0x100000000 to it to use CLOS1::
-
-      ACRN:\>wrmsr -p0 0xc8f 0x000000000
-      ACRN:\>wrmsr -p1 0xc8f 0x100000000
-
-In addition to setting the CAT configuration via HV commands, we allow developers to add the CAT configurations to the VM config and do the configure automatically at the time of RTVM creation. Refer to :ref:`configure_cat_vm` for details.
+In addition to setting the CAT configuration via HV commands, we allow developers to add the CAT configurations to the VM config and do the configure automatically at the time of RTVM creation. Refer to :ref:`rdt_configuration` for details on RDT configuration and :ref:`hv_rdt` for details on RDT high-level design.
 
 Set up the core allocation for the RTVM
 ---------------------------------------

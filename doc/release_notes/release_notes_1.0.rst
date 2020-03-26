@@ -221,7 +221,7 @@ We have many reference documents `available
 * Additional project `coding guidelines
   <coding_guidelines.html>`_
 * :ref:`Zephyr RTOS as Guest OS <using_zephyr_as_uos>`
-* :ref:`Enable cache QoS with CAT <using_cat_up2>`
+* :ref:`Enable cache QoS with CAT <rdt_configuration>`
 * :ref:`ACRN kernel parameter introduction <kernel-parameters>`
 * :ref:`FAQ update for two issues <faq>`
 * :ref:`ACRN Debug introduction <acrn-debug>`

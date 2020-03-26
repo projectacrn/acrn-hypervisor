@@ -63,7 +63,7 @@ Document updates
 Several new documents have been added in this release, including:
 
 * :ref:`Zephyr RTOS as Guest OS <using_zephyr_as_uos>`
-* :ref:`Enable cache QoS with CAT <using_cat_up2>`
+* :ref:`Enable cache QoS with CAT <rdt_configuration>`
 * :ref:`ACRN kernel parameter introduction <kernel-parameters>`
 * :ref:`faq` update for two issues
 * :ref:`ACRN Debug introduction <acrn-debug>`
