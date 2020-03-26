@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import common
 import board_cfg_lib
 
 MISC_CFG_HEADER = """
@@ -49,21 +50,21 @@ def parse_boot_info():
     err_dic = {}
     vm_types = []
 
-    (err_dic, scenario_name) = board_cfg_lib.get_scenario_name()
+    (err_dic, scenario_name) = common.get_scenario_name()
     if err_dic:
         return (err_dic, sos_cmdlines, sos_rootfs, vuart0_dic, vuart1_dic, vm_types)
 
     if scenario_name != "logical_partition":
-        sos_cmdlines = board_cfg_lib.get_sub_leaf_tag(board_cfg_lib.SCENARIO_INFO_FILE, "board_private", "bootargs")
-        sos_rootfs = board_cfg_lib.get_sub_leaf_tag(board_cfg_lib.SCENARIO_INFO_FILE, "board_private", "rootfs")
+        sos_cmdlines = common.get_sub_leaf_tag(common.SCENARIO_INFO_FILE, "board_private", "bootargs")
+        sos_rootfs = common.get_sub_leaf_tag(common.SCENARIO_INFO_FILE, "board_private", "rootfs")
         (err_dic, vuart0_dic, vuart1_dic) = board_cfg_lib.get_board_private_vuart("board_private", "console")
     else:
-        sos_cmdlines = board_cfg_lib.get_sub_leaf_tag(board_cfg_lib.SCENARIO_INFO_FILE, "os_config", "bootargs")
+        sos_cmdlines = common.get_sub_leaf_tag(common.SCENARIO_INFO_FILE, "os_config", "bootargs")
 
-        sos_rootfs = board_cfg_lib.get_sub_leaf_tag(board_cfg_lib.SCENARIO_INFO_FILE, "os_config", "rootfs")
+        sos_rootfs = common.get_sub_leaf_tag(common.SCENARIO_INFO_FILE, "os_config", "rootfs")
         (err_dic, vuart0_dic, vuart1_dic) = board_cfg_lib.get_board_private_vuart("os_config", "console")
 
-    for i in range(board_cfg_lib.VM_COUNT):
+    for i in range(common.VM_COUNT):
         vm_type = board_cfg_lib.get_order_type_by_vmid(i)
         vm_types.append(vm_type)
 
@@ -77,7 +78,7 @@ def find_hi_mmio_window(config):
     mmio_max = 0
     is_hi_mmio = False
 
-    iomem_lines = board_cfg_lib.get_info(board_cfg_lib.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
+    iomem_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
 
     for line in iomem_lines:
         if "PCI Bus" not in line:
@@ -85,12 +86,12 @@ def find_hi_mmio_window(config):
 
         line_start_addr = int(line.split('-')[0], 16)
         line_end_addr = int(line.split('-')[1].split()[0], 16)
-        if line_start_addr < board_cfg_lib.SIZE_4G and line_end_addr < board_cfg_lib.SIZE_4G:
+        if line_start_addr < common.SIZE_4G and line_end_addr < common.SIZE_4G:
             continue
-        elif line_start_addr < board_cfg_lib.SIZE_4G and line_end_addr >= board_cfg_lib.SIZE_4G:
+        elif line_start_addr < common.SIZE_4G and line_end_addr >= common.SIZE_4G:
             i_cnt += 1
             is_hi_mmio = True
-            mmio_min = board_cfg_lib.SIZE_4G
+            mmio_min = common.SIZE_4G
             mmio_max = line_end_addr
             continue
 
@@ -116,7 +117,7 @@ def generate_file(config):
     Start to generate board.c
     :param config: it is a file pointer of board information for writing to
     """
-    board_cfg_lib.get_valid_irq(board_cfg_lib.BOARD_INFO_FILE)
+    board_cfg_lib.get_valid_irq(common.BOARD_INFO_FILE)
 
     # get cpu processor list
     cpu_list = board_cfg_lib.get_processor_info()
@@ -143,14 +144,14 @@ def generate_file(config):
     # parse the setting ttys vuatx dic: {vmid:base/irq}
     vuart0_setting = Vuart()
     vuart1_setting = Vuart()
-    vuart0_setting = board_cfg_lib.get_vuart_info_id(board_cfg_lib.SCENARIO_INFO_FILE, 0)
-    vuart1_setting = board_cfg_lib.get_vuart_info_id(board_cfg_lib.SCENARIO_INFO_FILE, 1)
+    vuart0_setting = board_cfg_lib.get_vuart_info_id(common.SCENARIO_INFO_FILE, 0)
+    vuart1_setting = board_cfg_lib.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
 
     # sos command lines information
     sos_cmdlines = [i for i in sos_cmdlines[0].split() if i != '']
 
     # get native rootfs list from board_info.xml
-    (root_devs, root_dev_num) = board_cfg_lib.get_rootfs(board_cfg_lib.BOARD_INFO_FILE)
+    (root_devs, root_dev_num) = board_cfg_lib.get_rootfs(common.BOARD_INFO_FILE)
 
     # start to generate misc_cfg.h
     print("{0}".format(board_cfg_lib.HEADER_LICENSE), file=config)
@@ -160,7 +161,7 @@ def generate_file(config):
     print("#define MAX_PCPU_NUM\t{}U".format(max_cpu_num), file=config)
 
     # set macro of max clos number
-    (_, clos_max, _) = board_cfg_lib.clos_info_parser(board_cfg_lib.BOARD_INFO_FILE)
+    (_, clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
     if len(clos_max) != 0:
         common_clos_max = min(clos_max)
     else:
