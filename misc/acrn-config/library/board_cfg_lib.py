@@ -7,17 +7,9 @@ import re
 import sys
 import common
 
-SOURCE_ROOT_DIR = common.SOURCE_ROOT_DIR
 BOARD_NAME = ''
-BOARD_INFO_FILE = "board_info.txt"
-SCENARIO_INFO_FILE = ""
-
 BIOS_INFO = ['BIOS Information', 'Vendor:', 'Version:', 'Release Date:', 'BIOS Revision:']
-
 BASE_BOARD = ['Base Board Information', 'Manufacturer:', 'Product Name:', 'Version:']
-
-BOARD_NAMES = ['apl-mrb', 'apl-nuc', 'apl-up2', 'dnv-cb2', 'nuc6cayh',
-               'nuc7i7dnb', 'kbl-nuc-i7', 'icl-rvp']
 
 LEGACY_TTYS = {
     'ttyS0':'0x3F8',
@@ -28,8 +20,6 @@ LEGACY_TTYS = {
 
 NATIVE_CONSOLE_DIC = {}
 VALID_LEGACY_IRQ = []
-VM_COUNT = 0
-
 ERR_LIST = {}
 
 HEADER_LICENSE = common.open_license() + "\n"
@@ -39,69 +29,6 @@ KNOWN_HIDDEN_PDEVS_BOARD_DB = {
     'apl-mrb':['00:0d:0'],
     'apl-up2':['00:0d:0'],
 }
-
-SIZE_K = common.SIZE_K
-SIZE_M = common.SIZE_M
-SIZE_2G = common.SIZE_2G
-SIZE_4G = common.SIZE_4G
-SIZE_G = common.SIZE_G
-
-def prepare():
-    """ check environment """
-    return common.prepare()
-
-
-def print_yel(msg, warn=False):
-    """
-    Print the message with color of yellow
-    :param msg: the stings which will be output to STDOUT
-    :param warn: the condition if needs to be output the color of yellow with 'Warning'
-    """
-    common.print_yel(msg, warn)
-
-
-def print_red(msg, err=False):
-    """
-    Print the message with color of red
-    :param msg: the stings which will be output to STDOUT
-    :param err: the condition if needs to be output the color of red with 'Error'
-    """
-    common.print_red(msg, err)
-
-
-def get_board_name():
-    """
-    Get board name from board.xml at fist line
-    :param board_info: it is a file what contains board information for script to read from
-    """
-    return common.get_board_name()
-
-
-def get_scenario_name():
-    """
-    Get scenario name from scenario.xml at fist line
-    :param scenario_info: it is a file what contains board information for script to read from
-    """
-    return common.get_scenario_name()
-
-
-def is_config_file_match():
-
-    return common.is_config_file_match()
-
-
-def usage(file_name):
-    """ This is usage for how to use this tool """
-    common.usage(file_name)
-
-
-def get_param(args):
-    """
-    Get the script parameters from command line
-    :param args: this the command line of string for the script without script name
-    """
-    return common.get_param(args)
-
 
 def get_info(board_info, msg_s, msg_e):
     """
@@ -145,8 +72,8 @@ def handle_bios_info(config):
     Handle bios information
     :param config: it is a file pointer of bios information for writing to
     """
-    bios_lines = get_info(BOARD_INFO_FILE, "<BIOS_INFO>", "</BIOS_INFO>")
-    board_lines = get_info(BOARD_INFO_FILE, "<BASE_BOARD_INFO>", "</BASE_BOARD_INFO>")
+    bios_lines = get_info(common.BOARD_INFO_FILE, "<BIOS_INFO>", "</BIOS_INFO>")
+    board_lines = get_info(common.BOARD_INFO_FILE, "<BASE_BOARD_INFO>", "</BASE_BOARD_INFO>")
     print("/*", file=config)
 
     if not bios_lines or not board_lines:
@@ -212,17 +139,6 @@ def get_max_clos_mask(board_file):
         return list(re.split(', |\s |,', rdt_res)), list(map(int, rdt_res_clos_max.split(','))), list(re.split(', |\s |,', rdt_res_mask_max))
 
 
-def get_sub_leaf_tag(config_file, branch_tag, tag_str=''):
-    """
-     This is get tag value by tag_str from config file
-     :param config_file: it is a file what contains information for script to read from
-     :param branch_tag: it is key of patter to config file branch tag item
-     :param tag_str: it is key of pattern to config file leaf tag item
-     :return: value of tag_str item
-     """
-    return common.get_sub_leaf_tag(config_file, branch_tag, tag_str)
-
-
 def get_rootfs(config_file):
     """
     This will get rootfs partition from board information
@@ -254,23 +170,13 @@ def clos_info_parser(board_info):
     return get_max_clos_mask(board_info)
 
 
-def get_vm_num(config_file):
-    """
-    This is get vm count
-    :param config_file:  it is a file what contains vm information for script to read from
-    :return: number of vm
-    """
-    global VM_COUNT
-    VM_COUNT = common.get_vm_num(config_file)
-
-
 def get_order_type_by_vmid(idx):
     """
     This is get pre launched vm count
     :param idx: index of vm id
     :return: vm type of index to vmid
     """
-    (err_dic, order_type) = common.get_load_order_by_vmid(SCENARIO_INFO_FILE, VM_COUNT, idx)
+    (err_dic, order_type) = common.get_load_order_by_vmid(common.SCENARIO_INFO_FILE, common.VM_COUNT, idx)
     if err_dic:
         ERR_LIST.update(err_dic)
 
@@ -304,7 +210,7 @@ def alloc_irq():
 
 def get_valid_console():
     """ Get valid console with mapping {ttyS:irq} returned """
-    used_console_lines = get_info(BOARD_INFO_FILE, "<TTYS_INFO>", "</TTYS_INFO>")
+    used_console_lines = get_info(common.BOARD_INFO_FILE, "<TTYS_INFO>", "</TTYS_INFO>")
 
     vuart0_valid_console = []
     vuart1_valid_console = ['ttyS0', 'ttyS1', 'ttyS2', 'ttyS3', 'ttyS4', 'ttyS5', 'ttyS6', 'ttyS7']
@@ -348,12 +254,12 @@ def parser_vuart_console():
     3. ttyS2
     """
     ttys_n = ''
-    (err_dic, scenario_name) = get_scenario_name()
+    (err_dic, scenario_name) = common.get_scenario_name()
 
     if scenario_name != "logical_partition":
-        ttys = get_sub_leaf_tag(SCENARIO_INFO_FILE, "board_private", "console")
+        ttys = common.get_sub_leaf_tag(common.SCENARIO_INFO_FILE, "board_private", "console")
     else:
-        ttys = get_sub_leaf_tag(SCENARIO_INFO_FILE, "os_config", "console")
+        ttys = common.get_sub_leaf_tag(common.SCENARIO_INFO_FILE, "os_config", "console")
 
     if not ttys or ttys[0] == None:
         return (err_dic, ttys_n)
@@ -383,7 +289,7 @@ def get_board_private_vuart(branch_tag, tag_console):
 
     if ttys_n:
 
-        (vuart0_valid_console, vuart1_valid_console, show_vuart1) = console_to_show(BOARD_INFO_FILE)
+        (vuart0_valid_console, vuart1_valid_console, show_vuart1) = console_to_show(common.BOARD_INFO_FILE)
 
         # VUART0
         if ttys_n not in list(NATIVE_CONSOLE_DIC.keys()):
@@ -467,7 +373,7 @@ def get_processor_info():
     """
     processor_list = []
     tmp_list = []
-    processor_info = get_info(BOARD_INFO_FILE, "<CPU_PROCESSOR_INFO>", "</CPU_PROCESSOR_INFO>")
+    processor_info = get_info(common.BOARD_INFO_FILE, "<CPU_PROCESSOR_INFO>", "</CPU_PROCESSOR_INFO>")
 
     if not processor_info:
         key = "CPU PROCESSOR_INFO error:"
@@ -578,22 +484,3 @@ def get_pci_info(board_info):
                 pci_bdf_vpid[bdf_str] = vid_pid
 
     return (pci_desc, pci_bdf_vpid)
-
-
-def undline_name(name):
-    """
-    This convert name which has contain '-' to '_'
-    :param name: name which contain '-' and ' '
-    :return: name_str which contain'_'
-    """
-    return common.undline_name(name)
-
-
-def round_up(addr, mem_align):
-    """Keep memory align"""
-    return common.round_up(addr, mem_align)
-
-
-def mkdir(path):
-
-    common.mkdir(path)

@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import xml.etree.ElementTree as ET
 
+ACRN_CONFIG_TARGET = ''
 SOURCE_ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../')
 HV_LICENSE_FILE = SOURCE_ROOT_DIR + 'misc/acrn-config/library/hypervisor_license'
 
@@ -258,6 +259,7 @@ def get_vm_num(config_file):
     :param config_file: it is a file what contains information for script to read from
     :return: total vm number
     """
+    global VM_COUNT
     vm_count = 0
     root = get_config_root(config_file)
     for item in root:

@@ -5,6 +5,7 @@
 
 import collections
 import board_cfg_lib
+import common
 
 PCI_HEADER = r"""
 #ifndef PCI_DEVICES_H_
@@ -59,11 +60,11 @@ def get_size(line):
     # get size string from format, Region n: Memory at x ... [size=NK]
     size_str = line.split()[-1].strip(']').split('=')[1]
     if 'G' in size_str:
-        size = int(size_str.strip('G')) * board_cfg_lib.SIZE_G
+        size = int(size_str.strip('G')) * common.SIZE_G
     elif 'M' in size_str:
-        size = int(size_str.strip('M')) * board_cfg_lib.SIZE_M
+        size = int(size_str.strip('M')) * common.SIZE_M
     elif 'K' in size_str:
-        size = int(size_str.strip('K')) * board_cfg_lib.SIZE_K
+        size = int(size_str.strip('K')) * common.SIZE_K
     else:
         size = int(size_str)
 
@@ -74,7 +75,7 @@ def remap_bar_addr_to_high(bar_addr, line):
     """Generate vbar address"""
     global HI_MMIO_OFFSET
     size = get_size(line)
-    cur_addr = board_cfg_lib.round_up(bar_addr, size)
+    cur_addr = common.round_up(bar_addr, size)
     HI_MMIO_OFFSET = cur_addr + size
     return cur_addr
 
@@ -88,7 +89,7 @@ def parser_pci():
     cal_sub_pci_name = []
 
     pci_lines = board_cfg_lib.get_info(
-        board_cfg_lib.BOARD_INFO_FILE, "<PCI_DEVICE>", "</PCI_DEVICE>")
+        common.BOARD_INFO_FILE, "<PCI_DEVICE>", "</PCI_DEVICE>")
 
     for line in pci_lines:
         tmp_bar_mem = Bar_Mem()
@@ -100,7 +101,7 @@ def parser_pci():
 
             bar_addr = int(get_value_after_str(line, "at"), 16)
             bar_num = line.split()[1].strip(':')
-            if bar_addr >= board_cfg_lib.SIZE_4G or bar_addr < board_cfg_lib.SIZE_2G:
+            if bar_addr >= common.SIZE_4G or bar_addr < common.SIZE_2G:
                 if not tmp_bar_attr.remappable:
                     continue
 
@@ -155,7 +156,7 @@ def write_pbdf(i_cnt, bdf, bar_attr, config):
         tmp_sub_name = "_".join(bar_attr.name.split()).upper()
     else:
         if '-' in bar_attr.name:
-            tmp_sub_name = board_cfg_lib.undline_name(bar_attr.name) + "_" + str(i_cnt)
+            tmp_sub_name = common.undline_name(bar_attr.name) + "_" + str(i_cnt)
         else:
             tmp_sub_name = "_".join(bar_attr.name.split()).upper() + "_" + str(i_cnt)
 
@@ -185,7 +186,7 @@ def write_vbar(i_cnt, bdf, pci_bar_dic, bar_attr, config):
     align = ' ' * 48
     ptdev_mmio_str = ''
 
-    tmp_sub_name = board_cfg_lib.undline_name(bar_attr.name) + "_" + str(i_cnt)
+    tmp_sub_name = common.undline_name(bar_attr.name) + "_" + str(i_cnt)
     if bdf in pci_bar_dic.keys():
         bar_list = list(pci_bar_dic[bdf].keys())
         bar_len = len(bar_list)
