@@ -328,7 +328,7 @@ static void dm_emulate_io_complete(struct acrn_vcpu *vcpu)
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
  */
-static bool pio_default_read(struct acrn_vcpu *vcpu,
+bool pio_default_read(struct acrn_vcpu *vcpu,
 	__unused uint16_t addr, size_t width)
 {
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
@@ -343,7 +343,7 @@ static bool pio_default_read(struct acrn_vcpu *vcpu,
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
  */
-static bool pio_default_write(__unused struct acrn_vcpu *vcpu, __unused uint16_t addr,
+bool pio_default_write(__unused struct acrn_vcpu *vcpu, __unused uint16_t addr,
 	__unused size_t width, __unused uint32_t v)
 {
 	return true; /* ignore write */

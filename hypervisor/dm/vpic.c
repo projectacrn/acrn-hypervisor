@@ -975,11 +975,11 @@ static void vpic_register_io_handler(struct acrn_vm *vm)
 	};
 
 	register_pio_emulation_handler(vm, PIC_MASTER_PIO_IDX, &master_range,
-			vpic_master_io_read, vpic_master_io_write);
+			pio_default_read, pio_default_write);
 	register_pio_emulation_handler(vm, PIC_SLAVE_PIO_IDX, &slave_range,
-			vpic_slave_io_read, vpic_slave_io_write);
+			pio_default_read, pio_default_write);
 	register_pio_emulation_handler(vm, PIC_ELC_PIO_IDX, &elcr_range,
-			vpic_elc_io_read, vpic_elc_io_write);
+			pio_default_read, pio_default_write);
 }
 
 void vpic_init(struct acrn_vm *vm)

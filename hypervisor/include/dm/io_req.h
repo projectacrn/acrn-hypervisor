@@ -167,6 +167,12 @@ struct mem_io_node {
 
 /* External Interfaces */
 
+bool pio_default_read(struct acrn_vcpu *vcpu,
+	__unused uint16_t addr, size_t width);
+
+bool pio_default_write(__unused struct acrn_vcpu *vcpu,
+	__unused uint16_t addr, __unused size_t width, __unused uint32_t v);
+
 /**
  * @brief Deliver \p io_req to SOS and suspend \p vcpu till its completion
  *
