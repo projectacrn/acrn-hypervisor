@@ -167,16 +167,16 @@ static inline uint8_t* get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
 /*
  * @pre dmar_index < CONFIG_MAX_IOMMU_NUM
  */
-static inline uint8_t *get_qi_queue(uint32_t dmar_index)
+static inline void *get_qi_queue(uint32_t dmar_index)
 {
 	static struct page qi_queues[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
-	return qi_queues[dmar_index].contents;
+	return (void *)qi_queues[dmar_index].contents;
 }
 
-static inline uint8_t *get_ir_table(uint32_t dmar_index)
+static inline void *get_ir_table(uint32_t dmar_index)
 {
 	static struct intr_remap_table ir_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
-	return ir_tables[dmar_index].tables[0].contents;
+	return (void *)ir_tables[dmar_index].tables[0].contents;
 }
 
 bool iommu_snoop_supported(const struct iommu_domain *iommu)
