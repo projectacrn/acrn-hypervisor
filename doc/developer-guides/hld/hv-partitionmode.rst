@@ -23,11 +23,13 @@ In partition mode, ACRN provides guests with exclusive access to cores,
 memory, cache, and peripheral devices. Partition mode enables developers
 to dedicate resources exclusively among the guests. However there is no
 support today in x86 hardware or in ACRN to partition resources such as
-peripheral buses (e.g. PCI) or memory bandwidth. Cache partitioning
-technology, such as Cache Allocation Technology (CAT) in x86, can be
-used by developers to partition Last Level Cache (LLC) among the guests.
-(Note: ACRN support for x86 CAT is on the roadmap, but not currently
-supported).
+peripheral buses (e.g. PCI). On x86 platforms that support Cache
+Allocation Technology (CAT) and Memory Bandwidth Allocation(MBA), resources
+such as Cache and memory bandwidth can be used by developers to partition
+L2, Last Level Cache (LLC) and memory bandwidth among the guests. Refer to
+:ref:`hv_rdt` for more details on ACRN RDT high-level design and
+:ref:`rdt_configuration` for RDT configuration.
+
 
 ACRN expects static partitioning of resources either by code
 modification for guest configuration or through compile-time config

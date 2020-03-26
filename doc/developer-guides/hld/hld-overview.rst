@@ -60,6 +60,7 @@ series features to enhance its real-time performance then meet hard-RT KPI
 for its RT VM:
 
 - CAT (Cache Allocation Technology)
+- MBA (Memory Bandwidth Allocation)
 - LAPIC pass-thru
 - Polling mode driver
 - ART (always running timer)

@@ -955,13 +955,17 @@ pass-through directly:
      - x2APIC related MSRs (offset from 0x800 to 0x900)
      - emulates with vlapic
 
-   * - MSR_IA32_L2_MASK_n
-     - L2 CAT mask for COSn
-     - emulates with vCAT
+   * - MSR_IA32_L2_MASK_BASE~n
+     - L2 CAT mask for CLOSn
+     - disabled for guest access
 
-   * - MSR_IA32_L3_MASK_n
-     - L3 CAT mask for COSn
-     - emulates with vCAT
+   * - MSR_IA32_L3_MASK_BASE~n
+     - L3 CAT mask for CLOSn
+     - disabled for guest access
+
+   * - MSR_IA32_MBA_MASK_BASE~n
+     - MBA delay mask for CLOSn
+     - disabled for guest access
 
    * - MSR_IA32_VMX_BASIC~VMX_TRUE_ENTRY_CTLS
      - VMX related MSRs

@@ -23,4 +23,4 @@ Hypervisor high-level design
    Console, Shell, and vUART <hv-console>
    Hypercall / VHM upcall <hv-hypercall>
    Compile-time configuration <hv-config>
-   RDT support, CAT <hv-rdt>
+   RDT support <hv-rdt>
