@@ -116,14 +116,6 @@ void ept_add_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 	dev_dbg(DBG_LEVEL_EPT, "%s, vm[%d] hpa: 0x%016lx gpa: 0x%016lx size: 0x%016lx prot: 0x%016x\n",
 			__func__, vm->vm_id, hpa, gpa, size, prot);
 
-	/* EPT & VT-d share the same page tables, set SNP bit
-	 * to force snooping of PCIe devices if the page
-	 * is cachable
-	 */
-	if (((prot & EPT_MT_MASK) != EPT_UNCACHED) && iommu_snoop_supported(vm->iommu)) {
-		prot |= EPT_SNOOP_CTRL;
-	}
-
 	spinlock_obtain(&vm->ept_lock);
 
 	mmu_add(pml4_page, hpa, gpa, size, prot, &vm->arch_vm.ept_mem_ops);
@@ -144,10 +136,6 @@ void ept_modify_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 	uint64_t local_prot = prot_set;
 
 	dev_dbg(DBG_LEVEL_EPT, "%s,vm[%d] gpa 0x%lx size 0x%lx\n", __func__, vm->vm_id, gpa, size);
-
-	if (((local_prot & EPT_MT_MASK) != EPT_UNCACHED) && iommu_snoop_supported(vm->iommu)) {
-		local_prot |= EPT_SNOOP_CTRL;
-	}
 
 	spinlock_obtain(&vm->ept_lock);
 
