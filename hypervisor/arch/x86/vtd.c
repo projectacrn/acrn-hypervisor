@@ -979,7 +979,7 @@ static void dmar_disable_qi(struct dmar_drhd_rt *dmar_unit)
 	spinlock_release(&(dmar_unit->lock));
 }
 
-static void dmar_prepare(struct dmar_drhd_rt *dmar_unit)
+static void prepare_dmar(struct dmar_drhd_rt *dmar_unit)
 {
 	dev_dbg(DBG_LEVEL_IOMMU, "enable dmar uint [0x%x]", dmar_unit->drhd->reg_base_addr);
 	dmar_setup_interrupt(dmar_unit);
@@ -988,7 +988,7 @@ static void dmar_prepare(struct dmar_drhd_rt *dmar_unit)
 	dmar_set_intr_remap_table(dmar_unit);
 }
 
-static void dmar_enable(struct dmar_drhd_rt *dmar_unit)
+static void enable_dmar(struct dmar_drhd_rt *dmar_unit)
 {
 	dev_dbg(DBG_LEVEL_IOMMU, "enable dmar uint [0x%x]", dmar_unit->drhd->reg_base_addr);
 	dmar_invalid_context_cache_global(dmar_unit);
@@ -997,7 +997,7 @@ static void dmar_enable(struct dmar_drhd_rt *dmar_unit)
 	dmar_enable_translation(dmar_unit);
 }
 
-static void dmar_disable(struct dmar_drhd_rt *dmar_unit)
+static void disable_dmar(struct dmar_drhd_rt *dmar_unit)
 {
 	dmar_disable_qi(dmar_unit);
 	dmar_disable_translation(dmar_unit);
@@ -1005,7 +1005,7 @@ static void dmar_disable(struct dmar_drhd_rt *dmar_unit)
 	dmar_disable_intr_remapping(dmar_unit);
 }
 
-static void dmar_suspend(struct dmar_drhd_rt *dmar_unit)
+static void suspend_dmar(struct dmar_drhd_rt *dmar_unit)
 {
 	uint32_t i;
 
@@ -1013,7 +1013,7 @@ static void dmar_suspend(struct dmar_drhd_rt *dmar_unit)
 	dmar_invalid_iotlb_global(dmar_unit);
 	dmar_invalid_iec_global(dmar_unit);
 
-	dmar_disable(dmar_unit);
+	disable_dmar(dmar_unit);
 
 	/* save IOMMU fault register state */
 	for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
@@ -1021,7 +1021,7 @@ static void dmar_suspend(struct dmar_drhd_rt *dmar_unit)
 	}
 }
 
-static void dmar_resume(struct dmar_drhd_rt *dmar_unit)
+static void resume_dmar(struct dmar_drhd_rt *dmar_unit)
 {
 	uint32_t i;
 
@@ -1029,8 +1029,8 @@ static void dmar_resume(struct dmar_drhd_rt *dmar_unit)
 	for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
 		iommu_write32(dmar_unit, DMAR_FECTL_REG + (i * IOMMU_FAULT_REGISTER_SIZE), dmar_unit->fault_state[i]);
 	}
-	dmar_prepare(dmar_unit);
-	dmar_enable(dmar_unit);
+	prepare_dmar(dmar_unit);
+	enable_dmar(dmar_unit);
 	dmar_enable_intr_remapping(dmar_unit);
 }
 
@@ -1286,17 +1286,17 @@ int32_t move_pt_device(const struct iommu_domain *from_domain, struct iommu_doma
 
 void enable_iommu(void)
 {
-	do_action_for_iommus(dmar_enable);
+	do_action_for_iommus(enable_dmar);
 }
 
 void suspend_iommu(void)
 {
-	do_action_for_iommus(dmar_suspend);
+	do_action_for_iommus(suspend_dmar);
 }
 
 void resume_iommu(void)
 {
-	do_action_for_iommus(dmar_resume);
+	do_action_for_iommus(resume_dmar);
 }
 
 /**
@@ -1327,7 +1327,7 @@ int32_t init_iommu(void)
 	} else {
 		ret = register_hrhd_units();
 		if (ret == 0) {
-			do_action_for_iommus(dmar_prepare);
+			do_action_for_iommus(prepare_dmar);
 		}
 	}
 	return ret;
