@@ -36,7 +36,6 @@
 
 #define DBG_LEVEL_PIC	6U
 
-static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t level);
 
 struct acrn_vpic *vm_pic(const struct acrn_vm *vm)
 {
@@ -97,129 +96,6 @@ static inline uint32_t vpic_get_highest_irrpin(const struct i8259_reg_state *i82
 	return found_pin;
 }
 
-static void vpic_notify_intr(struct acrn_vpic *vpic)
-{
-	struct i8259_reg_state *i8259;
-	uint32_t pin;
-
-	/*
-	 * First check the slave.
-	 */
-	i8259 = &vpic->i8259[1];
-	pin = vpic_get_highest_irrpin(i8259);
-	if (!i8259->intr_raised && (pin < NR_VPIC_PINS_PER_CHIP)) {
-		dev_dbg(DBG_LEVEL_PIC,
-		"pic slave notify pin = %hhu (imr 0x%x irr 0x%x isr 0x%x)\n",
-		pin, i8259->mask, i8259->request, i8259->service);
-
-		/*
-		 * Cascade the request from the slave to the master.
-		 */
-		i8259->intr_raised = true;
-		vpic_set_pinstate(vpic, 2U, 1U);
-		vpic_set_pinstate(vpic, 2U, 0U);
-	} else {
-		dev_dbg(DBG_LEVEL_PIC,
-		"pic slave no eligible interrupt (imr 0x%x irr 0x%x isr 0x%x)",
-		i8259->mask, i8259->request, i8259->service);
-	}
-
-	/*
-	 * Then check the master.
-	 */
-	i8259 = &vpic->i8259[0];
-	pin = vpic_get_highest_irrpin(i8259);
-	if (!i8259->intr_raised && (pin < NR_VPIC_PINS_PER_CHIP)) {
-		dev_dbg(DBG_LEVEL_PIC,
-		"pic master notify pin = %hhu (imr 0x%x irr 0x%x isr 0x%x)\n",
-		pin, i8259->mask, i8259->request, i8259->service);
-
-		/*
-		 * From Section 3.6.2, "Interrupt Modes", in the
-		 * MPtable Specification, Version 1.4
-		 *
-		 * PIC interrupts are routed to both the Local APIC
-		 * and the I/O APIC to support operation in 1 of 3
-		 * modes.
-		 *
-		 * 1. Legacy PIC Mode: the PIC effectively bypasses
-		 * all APIC components.  In this mode the local APIC is
-		 * disabled and LINT0 is reconfigured as INTR to
-		 * deliver the PIC interrupt directly to the CPU.
-		 *
-		 * 2. Virtual Wire Mode: the APIC is treated as a
-		 * virtual wire which delivers interrupts from the PIC
-		 * to the CPU.  In this mode LINT0 is programmed as
-		 * ExtINT to indicate that the PIC is the source of
-		 * the interrupt.
-		 *
-		 * 3. Virtual Wire Mode via I/O APIC: PIC interrupts are
-		 * fielded by the I/O APIC and delivered to the appropriate
-		 * CPU.  In this mode the I/O APIC input 0 is programmed
-		 * as ExtINT to indicate that the PIC is the source of the
-		 * interrupt.
-		 */
-		i8259->intr_raised = true;
-		if (vpic->vm->wire_mode == VPIC_WIRE_INTR) {
-			struct acrn_vcpu *bsp = vcpu_from_vid(vpic->vm, BSP_CPU_ID);
-			vcpu_inject_extint(bsp);
-		} else {
-			/*
-			 * The input parameters here guarantee the return value of vlapic_set_local_intr is 0, means
-			 * success.
-			 */
-			(void)vlapic_set_local_intr(vpic->vm, BROADCAST_CPU_ID, APIC_LVT_LINT0);
-			/* notify vioapic pin0 if existing
-			 * For vPIC + vIOAPIC mode, vpic master irq connected
-			 * to vioapic pin0 (irq2)
-			 * From MPSpec session 5.1
-			 */
-			vioapic_set_irqline_lock(vpic->vm, 0U, GSI_RAISING_PULSE);
-		}
-	} else {
-		dev_dbg(DBG_LEVEL_PIC,
-		"pic master no eligible interrupt (imr 0x%x irr 0x%x isr 0x%x)",
-		i8259->mask, i8259->request, i8259->service);
-	}
-}
-
-/**
- * @pre pin < NR_VPIC_PINS_TOTAL
- */
-static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t level)
-{
-	struct i8259_reg_state *i8259;
-	uint8_t old_lvl;
-	bool lvl_trigger;
-
-	if (pin < NR_VPIC_PINS_TOTAL) {
-		i8259 = &vpic->i8259[pin >> 3U];
-		old_lvl = i8259->pin_state[pin & 0x7U];
-		if (level != 0U) {
-			i8259->pin_state[pin & 0x7U] = 1U;
-		} else {
-			i8259->pin_state[pin & 0x7U] = 0U;
-		}
-
-		lvl_trigger = ((vpic->i8259[pin >> 3U].elc & (1U << (pin & 0x7U))) != 0U);
-
-		if (((old_lvl == 0U) && (level == 1U)) || ((level == 1U) && lvl_trigger)) {
-			/* raising edge or level */
-			dev_dbg(DBG_LEVEL_PIC, "pic pin%hhu: asserted\n", pin);
-			i8259->request |= (uint8_t)(1U << (pin & 0x7U));
-		} else if ((old_lvl == 1U) && (level == 0U)) {
-			/* falling edge */
-			dev_dbg(DBG_LEVEL_PIC, "pic pin%hhu: deasserted\n", pin);
-			if (lvl_trigger) {
-				i8259->request &= ~(uint8_t)(1U << (pin & 0x7U));
-			}
-		} else {
-			dev_dbg(DBG_LEVEL_PIC, "pic pin%hhu: %s, ignored\n",
-				pin, (level != 0U) ? "asserted" : "deasserted");
-		}
-	}
-}
-
 /**
  * @brief Get pending virtual interrupts for vPIC.
  *
@@ -256,59 +132,6 @@ void vpic_pending_intr(struct acrn_vpic *vpic, uint32_t *vecptr)
 
 		dev_dbg(DBG_LEVEL_PIC, "Got pending vector 0x%x\n", *vecptr);
 	}
-
-	spinlock_release(&(vpic->lock));
-}
-
-static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint32_t pin)
-{
-	i8259->intr_raised = false;
-
-	if ((i8259->elc & (1U << pin)) == 0U) {
-		/*only used edge trigger mode*/
-		i8259->request &= ~(uint8_t)(1U << pin);
-	}
-
-	if (i8259->aeoi) {
-		if (i8259->rotate) {
-			i8259->lowprio = pin;
-		}
-	} else {
-		i8259->service |= (uint8_t)(1U << pin);
-	}
-}
-
-/**
- * @brief Accept virtual interrupt for vPIC.
- *
- * @param[in] vm     Pointer to target VM
- * @param[in] vector Target virtual interrupt vector
- *
- * @return None
- *
- * @pre vm != NULL
- * @pre this function should be called after vpic_init()
- */
-void vpic_intr_accepted(struct acrn_vpic *vpic, uint32_t vector)
-{
-	uint32_t pin;
-
-	spinlock_obtain(&(vpic->lock));
-
-	pin = (vector & 0x7U);
-
-	if ((vector & ~0x7U) == vpic->i8259[1].irq_base) {
-		vpic_pin_accepted(&vpic->i8259[1], pin);
-		/*
-		 * If this vector originated from the slave,
-		 * accept the cascaded interrupt too.
-		 */
-		vpic_pin_accepted(&vpic->i8259[0], 2U);
-	} else {
-		vpic_pin_accepted(&vpic->i8259[0], pin);
-	}
-
-	vpic_notify_intr(vpic);
 
 	spinlock_release(&(vpic->lock));
 }

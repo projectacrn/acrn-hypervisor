@@ -58,7 +58,7 @@
 #define ACRN_REQUEST_EVENT			1U
 
 /**
- * @brief Request for external interrupt from vPIC
+ * @brief Request for external interrupt from vPIC (deprecated, don't use)
  */
 #define ACRN_REQUEST_EXTINT			2U
 

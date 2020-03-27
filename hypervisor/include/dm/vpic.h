@@ -149,17 +149,6 @@ void vpic_init(struct acrn_vm *vm);
  */
 void vpic_pending_intr(struct acrn_vpic *vpic, uint32_t *vecptr);
 
-/**
- * @brief Accept virtual interrupt for vPIC.
- *
- * @param[in] vpic     Pointer to target VM's vpic table
- * @param[in] vector Target virtual interrupt vector
- *
- * @return None
- *
- * @pre vm != NULL
- */
-void vpic_intr_accepted(struct acrn_vpic *vpic, uint32_t vector);
 struct acrn_vpic *vm_pic(const struct acrn_vm *vm);
 
 /**

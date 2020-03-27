@@ -841,9 +841,6 @@ vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
 		case APIC_LVT_DM_NMI:
 			vcpu_inject_nmi(vcpu);
 			break;
-		case APIC_LVT_DM_EXTINT:
-			vcpu_inject_extint(vcpu);
-			break;
 		default:
 			/* Other modes ignored */
 			pr_warn("func:%s other mode is not support\n",__func__);
@@ -950,9 +947,6 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t lvt_index)
 		 * respectively.
 		 */
 		switch (lvt_index) {
-		case APIC_LVT_LINT0:
-			vcpu_inject_extint(vcpu);
-			break;
 		case APIC_LVT_LINT1:
 			vcpu_inject_nmi(vcpu);
 			break;
@@ -1840,8 +1834,7 @@ vlapic_receive_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 	struct acrn_vcpu *target_vcpu;
 
 	if ((delmode != IOAPIC_RTE_DELMODE_FIXED) &&
-			(delmode != IOAPIC_RTE_DELMODE_LOPRI) &&
-			(delmode != IOAPIC_RTE_DELMODE_EXINT)) {
+			(delmode != IOAPIC_RTE_DELMODE_LOPRI)) {
 		dev_dbg(DBG_LEVEL_VLAPIC,
 			"vlapic intr invalid delmode %#x", delmode);
 	} else {
@@ -1862,11 +1855,7 @@ vlapic_receive_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 				/* only make request when vlapic enabled */
 				vlapic = vcpu_vlapic(target_vcpu);
 				if (vlapic_enabled(vlapic)) {
-					if (delmode == IOAPIC_RTE_DELMODE_EXINT) {
-						vcpu_inject_extint(target_vcpu);
-					} else {
-						vlapic_set_intr(target_vcpu, vec, level);
-					}
+					vlapic_set_intr(target_vcpu, vec, level);
 				}
 			}
 		}
