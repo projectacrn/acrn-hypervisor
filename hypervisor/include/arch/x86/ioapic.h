@@ -111,6 +111,5 @@ struct gsi_table {
 void *gsi_to_ioapic_base(uint32_t gsi);
 uint32_t get_max_nr_gsi(void);
 uint8_t get_gsi_to_ioapic_index(uint32_t gsi);
-uint32_t get_pic_pin_from_ioapic_pin(uint32_t pin_index);
 bool is_gsi_valid(uint32_t gsi);
 #endif /* IOAPIC_H */

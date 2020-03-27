@@ -139,25 +139,6 @@ struct acrn_vpic {
 void vpic_init(struct acrn_vm *vm);
 
 /**
- * @brief virtual PIC
- *
- * @addtogroup acrn_vpic ACRN vPIC
- * @{
- */
-
-/**
- * @brief Set vPIC IRQ line status.
- *
- * @param[in] vpic      Pointer to target VM's vpic table
- * @param[in] vgsi      GSI for the virtual interrupt
- * @param[in] operation action options:GSI_SET_HIGH/GSI_SET_LOW/
- *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
- *
- * @return None
- */
-void vpic_set_irqline(struct acrn_vpic *vpic, uint32_t vgsi, uint32_t operation);
-
-/**
  * @brief Get pending virtual interrupts for vPIC.
  *
  * @param[in]    vpic   Pointer to target VM's vpic table
@@ -179,8 +160,6 @@ void vpic_pending_intr(struct acrn_vpic *vpic, uint32_t *vecptr);
  * @pre vm != NULL
  */
 void vpic_intr_accepted(struct acrn_vpic *vpic, uint32_t vector);
-void vpic_get_irqline_trigger_mode(const struct acrn_vpic *vpic, uint32_t vgsi, enum vpic_trigger *trigger);
-uint32_t vpic_pincount(void);
 struct acrn_vpic *vm_pic(const struct acrn_vm *vm);
 
 /**

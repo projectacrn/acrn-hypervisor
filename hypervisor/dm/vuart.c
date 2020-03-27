@@ -192,7 +192,6 @@ void vuart_toggle_intr(const struct acrn_vuart *vu)
 		operation = (intr_reason != IIR_NOPEND) ? GSI_SET_HIGH : GSI_SET_LOW;
 	}
 
-	vpic_set_irqline(vm_pic(vu->vm), vu->irq, operation);
 	vioapic_set_irqline_lock(vu->vm, vu->irq, operation);
 }
 

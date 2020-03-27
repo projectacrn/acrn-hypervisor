@@ -348,22 +348,11 @@ int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 int32_t hcall_set_irqline(const struct acrn_vm *vm, uint16_t vmid,
 				const struct acrn_irqline_ops *ops)
 {
-	uint32_t irq_pic;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	int32_t ret = -1;
 
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		if (ops->gsi < get_vm_gsicount(vm)) {
-			if (ops->gsi < vpic_pincount()) {
-				/*
-				 * IRQ line for 8254 timer is connected to
-				 * I/O APIC pin #2 but PIC pin #0,route GSI
-				 * number #2 to PIC IRQ #0.
-				 */
-				irq_pic = (ops->gsi == 2U) ? 0U : ops->gsi;
-				vpic_set_irqline(vm_pic(target_vm), irq_pic, ops->op);
-		        }
-
 			/* handle IOAPIC irqline */
 			vioapic_set_irqline_lock(target_vm, ops->gsi, ops->op);
 			ret = 0;

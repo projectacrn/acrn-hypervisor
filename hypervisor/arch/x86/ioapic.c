@@ -42,36 +42,9 @@ static const uint32_t legacy_irq_trigger_mode[NR_LEGACY_PIN] = {
 	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ15*/
 };
 
-static const uint32_t pic_ioapic_pin_map[NR_LEGACY_PIN] = {
-	2U, /* pin0*/
-	1U, /* pin1*/
-	0U, /* pin2*/
-	3U, /* pin3*/
-	4U, /* pin4*/
-	5U, /* pin5*/
-	6U, /* pin6*/
-	7U, /* pin7*/
-	8U, /* pin8*/
-	9U, /* pin9*/
-	10U, /* pin10*/
-	11U, /* pin11*/
-	12U, /* pin12*/
-	13U, /* pin13*/
-	14U, /* pin14*/
-	15U, /* pin15*/
-};
-
 static struct ioapic_info ioapic_array[CONFIG_MAX_IOAPIC_NUM];
 static uint8_t ioapic_num;
 
-uint32_t get_pic_pin_from_ioapic_pin(uint32_t pin_index)
-{
-	uint32_t pin_id = INVALID_INTERRUPT_PIN;
-	if (pin_index < NR_LEGACY_PIN) {
-		pin_id = pic_ioapic_pin_map[pin_index];
-	}
-	return pin_id;
-}
 
 uint8_t get_platform_ioapic_info (struct ioapic_info **plat_ioapic_info)
 {

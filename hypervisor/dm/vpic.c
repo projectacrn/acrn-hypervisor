@@ -183,43 +183,6 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 	}
 }
 
-static uint32_t vgsi_to_vpin(const struct acrn_vm *vm, uint32_t vgsi)
-{
-	uint32_t vpin = vgsi;
-
-	/*
-	 * Remap depending on the type of VM
-	 */
-
-	if (is_sos_vm(vm)) {
-		/*
-		 * For SOS VM vPIC pin to GSI is same as the one
-		 * that is used for platform
-		 */
-		vpin = get_pic_pin_from_ioapic_pin(vgsi);
-	} else if (is_postlaunched_vm(vm)) {
-		/*
-		 * Devicemodel provides Interrupt Source Override Structure
-		 * via ACPI to Post-Launched VM.
-		 * 
-		 * 1) Interrupt source connected to vPIC pin 0 is connected to vIOAPIC pin 2
-		 * 2) Devicemodel, as of today, does not request to hold ptirq entry with vPIC as 
-		 *    interrupt controller, for a Post-Launched VM.
-		 */
-		if (vgsi == 2U) {
-			vpin = 0U;
-		}
-	} else {
-		/*
-		 * For Pre-launched VMs, Interrupt Source Override Structure
-		 * and IO-APIC Structure are not provided in the VM's ACPI info.
-		 * No remapping needed.
-		 */
-	}
-	return vpin;
-
-}
-
 /**
  * @pre pin < NR_VPIC_PINS_TOTAL
  */
@@ -254,79 +217,6 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t leve
 			dev_dbg(DBG_LEVEL_PIC, "pic pin%hhu: %s, ignored\n",
 				pin, (level != 0U) ? "asserted" : "deasserted");
 		}
-	}
-}
-
-/**
- * @brief Set vPIC IRQ line status.
- *
- * @param[in] vpic      Pointer to virtual pic structure
- * @param[in] irqline   Target IRQ number
- * @param[in] operation action options:GSI_SET_HIGH/GSI_SET_LOW/
- *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
- *
- * @return None
- */
-void vpic_set_irqline(struct acrn_vpic *vpic, uint32_t vgsi, uint32_t operation)
-{
-	struct i8259_reg_state *i8259;
-	uint32_t pin;
-	uint64_t rflags;
-
-
-	if (vgsi < NR_VPIC_PINS_TOTAL) {
-		i8259 = &vpic->i8259[vgsi >> 3U];
-
-		if (i8259->ready) {
-			pin = vgsi_to_vpin(vpic->vm, vgsi);
-			spinlock_irqsave_obtain(&(vpic->lock), &rflags);
-			switch (operation) {
-			case GSI_SET_HIGH:
-				vpic_set_pinstate(vpic, pin, 1U);
-				break;
-			case GSI_SET_LOW:
-				vpic_set_pinstate(vpic, pin, 0U);
-				break;
-			case GSI_RAISING_PULSE:
-				vpic_set_pinstate(vpic, pin, 1U);
-				vpic_set_pinstate(vpic, pin, 0U);
-				break;
-			case GSI_FALLING_PULSE:
-				vpic_set_pinstate(vpic, pin, 0U);
-				vpic_set_pinstate(vpic, pin, 1U);
-				break;
-			default:
-				/*
-				 * The function caller could guarantee the pre condition.
-				 */
-				break;
-			}
-			vpic_notify_intr(vpic);
-			spinlock_irqrestore_release(&(vpic->lock), rflags);
-		}
-	}
-}
-
-uint32_t
-vpic_pincount(void)
-{
-	return NR_VPIC_PINS_TOTAL;
-}
-
-/**
- * @pre vm->vpic != NULL
- * @pre irqline < NR_VPIC_PINS_TOTAL
- * @pre this function should be called after vpic_init()
- */
-void vpic_get_irqline_trigger_mode(const struct acrn_vpic *vpic, uint32_t vgsi,
-		enum vpic_trigger *trigger)
-{
-	uint32_t irqline = vgsi_to_vpin(vpic->vm, vgsi);
-	
-	if ((vpic->i8259[irqline >> 3U].elc & (1U << (irqline & 0x7U))) != 0U) {
-		*trigger = LEVEL_TRIGGER;
-	} else {
-		*trigger = EDGE_TRIGGER;
 	}
 }
 
