@@ -728,7 +728,6 @@ vlapic_write_lvt(struct acrn_vlapic *vlapic, uint32_t offset)
 {
 	uint32_t *lvtptr, mask, val, idx;
 	struct lapic_regs *lapic;
-	bool error = false;
 
 	lapic = &(vlapic->apic_page);
 	lvtptr = vlapic_get_lvtptr(vlapic, offset);
@@ -754,43 +753,15 @@ vlapic_write_lvt(struct acrn_vlapic *vlapic, uint32_t offset)
 	}
 	val &= mask;
 
-	/* vlapic mask/unmask LINT0 for ExtINT? */
-	if ((offset == APIC_OFFSET_LINT0_LVT) &&
-		((val & APIC_LVT_DM) == APIC_LVT_DM_EXTINT)) {
-		uint32_t last = vlapic_get_lvt(vlapic, offset);
-
-		/* mask -> unmask: may from every vlapic in the vm */
-		if (((last & APIC_LVT_M) != 0U) && ((val & APIC_LVT_M) == 0U)) {
-			if ((vlapic->vm->wire_mode == VPIC_WIRE_INTR) ||
-				(vlapic->vm->wire_mode == VPIC_WIRE_NULL)) {
-				vlapic->vm->wire_mode = VPIC_WIRE_LAPIC;
-				dev_dbg(DBG_LEVEL_VLAPIC,
-					"vpic wire mode -> LAPIC");
-			} else {
-				pr_err("WARNING:invalid vpic wire mode change");
-				error = true;
-			}
-		/* unmask -> mask: only from the vlapic LINT0-ExtINT enabled */
-		} else if (((last & APIC_LVT_M) == 0U) && ((val & APIC_LVT_M) != 0U)) {
-			if (vlapic->vm->wire_mode == VPIC_WIRE_LAPIC) {
-				vlapic->vm->wire_mode = VPIC_WIRE_NULL;
-				dev_dbg(DBG_LEVEL_VLAPIC,
-						"vpic wire mode -> NULL");
-			}
-		} else {
-			/* APIC_LVT_M unchanged. No action required. */
-		}
-	} else if (offset == APIC_OFFSET_TIMER_LVT) {
+	if (offset == APIC_OFFSET_TIMER_LVT) {
 		vlapic_update_lvtt(vlapic, val);
 	} else {
 		/* No action required. */
 	}
 
-	if (error == false) {
-		*lvtptr = val;
-		idx = lvt_off_to_idx(offset);
-		vlapic->lvt_last[idx] = val;
-	}
+	*lvtptr = val;
+	idx = lvt_off_to_idx(offset);
+	vlapic->lvt_last[idx] = val;
 }
 
 static void
@@ -818,36 +789,6 @@ vlapic_mask_lvts(struct acrn_vlapic *vlapic)
 
 	lapic->lvt[APIC_LVT_ERROR].v |= APIC_LVT_M;
 	vlapic_write_lvt(vlapic, APIC_OFFSET_ERROR_LVT);
-}
-
-/*
- * @pre vec = (lvt & APIC_LVT_VECTOR) >=16
- */
-static void
-vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
-{
-	uint32_t vec, mode;
-	struct acrn_vcpu *vcpu = vlapic->vcpu;
-
-	if ((lvt & APIC_LVT_M) == 0U) {
-
-		vec = lvt & APIC_LVT_VECTOR;
-		mode = lvt & APIC_LVT_DM;
-
-		switch (mode) {
-		case APIC_LVT_DM_FIXED:
-			vlapic_set_intr(vcpu, vec, LAPIC_TRIG_EDGE);
-			break;
-		case APIC_LVT_DM_NMI:
-			vcpu_inject_nmi(vcpu);
-			break;
-		default:
-			/* Other modes ignored */
-			pr_warn("func:%s other mode is not support\n",__func__);
-			break;
-		}
-	}
-	return;
 }
 
 /*
@@ -929,72 +870,6 @@ vlapic_set_error(struct acrn_vlapic *vlapic, uint32_t mask)
 		}
 		vlapic->esr_firing = 0;
 	}
-}
-/*
- * @pre APIC_LVT_TIMER <= lvt_index <= APIC_LVT_MAX
- */
-static int32_t
-vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t lvt_index)
-{
-	uint32_t lvt;
-	int32_t ret = 0;
-	struct acrn_vcpu *vcpu = vlapic->vcpu;
-
-	if (vlapic_enabled(vlapic) == false) {
-		/*
-		 * When the local APIC is global/hardware disabled,
-		 * LINT[1:0] pins are configured as INTR and NMI pins,
-		 * respectively.
-		 */
-		switch (lvt_index) {
-		case APIC_LVT_LINT1:
-			vcpu_inject_nmi(vcpu);
-			break;
-		default:
-			/*
-			 * Only LINT[1:0] pins will be handled here.
-			 * Gracefully return if prior case clauses have not
-			 * been met.
-			 */
-			break;
-		}
-	} else {
-
-		switch (lvt_index) {
-		case APIC_LVT_LINT0:
-			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_LINT0_LVT);
-			break;
-		case APIC_LVT_LINT1:
-			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_LINT1_LVT);
-			break;
-		case APIC_LVT_TIMER:
-			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_TIMER_LVT);
-			lvt |= APIC_LVT_DM_FIXED;
-			break;
-		case APIC_LVT_ERROR:
-			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_ERROR_LVT);
-			lvt |= APIC_LVT_DM_FIXED;
-			break;
-		case APIC_LVT_PMC:
-			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_PERF_LVT);
-			break;
-		case APIC_LVT_THERMAL:
-			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_THERM_LVT);
-			break;
-		case APIC_LVT_CMCI:
-			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_CMCI_LVT);
-			break;
-		default:
-			lvt = 0U; /* make MISRA happy */
-			ret =  -EINVAL;
-			break;
-		}
-
-		if (ret == 0) {
-			vlapic_fire_lvt(vlapic, lvt);
-		}
-	}
-	return ret;
 }
 
 static inline void set_dest_mask_phys(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest)
@@ -1407,12 +1282,6 @@ vlapic_write_svr(struct acrn_vlapic *vlapic)
 			del_timer(&vlapic->vtimer.timer);
 
 			vlapic_mask_lvts(vlapic);
-			/* the only one enabled LINT0-ExtINT vlapic disabled */
-			if (vlapic->vm->wire_mode == VPIC_WIRE_NULL) {
-				vlapic->vm->wire_mode = VPIC_WIRE_INTR;
-				dev_dbg(DBG_LEVEL_VLAPIC,
-					"vpic wire mode -> INTR");
-			}
 		} else {
 			/*
 			 * The apic is now enabled so restart the apic timer
@@ -1879,50 +1748,6 @@ vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level)
 	} else {
 		vlapic_accept_intr(vlapic, vector, level);
 	}
-}
-
-/**
- * @brief Triggers LAPIC local interrupt(LVT).
- *
- * @param[in] vm           Pointer to VM data structure
- * @param[in] vcpu_id_arg  ID of vCPU, BROADCAST_CPU_ID means triggering
- *			   interrupt to all vCPUs.
- * @param[in] lvt_index    The index which LVT would be to be fired.
- *
- * @retval 0 on success.
- * @retval -EINVAL on error that vcpu_id_arg or vector of the LVT is invalid.
- *
- * @pre vm != NULL
- */
-int32_t
-vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t lvt_index)
-{
-	struct acrn_vlapic *vlapic;
-	uint64_t dmask = 0UL;
-	int32_t error;
-	uint16_t vcpu_id = vcpu_id_arg;
-
-	if ((vcpu_id != BROADCAST_CPU_ID) && (vcpu_id >= vm->hw.created_vcpus)) {
-	        error = -EINVAL;
-	} else {
-		if (vcpu_id == BROADCAST_CPU_ID) {
-			dmask = vm_active_cpus(vm);
-		} else {
-			bitmap_set_nolock(vcpu_id, &dmask);
-		}
-		error = 0;
-		for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
-			if ((dmask & (1UL << vcpu_id)) != 0UL) {
-				vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
-				error = vlapic_trigger_lvt(vlapic, lvt_index);
-				if (error != 0) {
-					break;
-				}
-			}
-		}
-	}
-
-	return error;
 }
 
 /**

@@ -104,9 +104,6 @@ These APIs will finish by making a vCPU request.
 .. doxygenfunction:: vlapic_set_intr
   :project: Project ACRN
 
-.. doxygenfunction:: vlapic_set_local_intr
-  :project: Project ACRN
-
 .. doxygenfunction:: vlapic_intr_msi
   :project: Project ACRN
 
@@ -168,30 +165,7 @@ vLAPIC APIs.
 Virtual PIC
 ***********
 
-vPIC is required for TSC calculation. Normally guest OS will boot with
-vIOAPIC and vPIC as the source of external interrupts. On every
-VM Exit, HV will check if there are any pending external PIC interrupts.
-vPIC APIs usage are similar to vIOAPIC.
-
-ACRN hypervisor emulates a vPIC for each VM based on IO range 0x20~0x21,
-0xa0~0xa1 and 0x4d0~0x4d1.
-
-If an interrupt source from vPIC need to inject an interrupt, the
-following APIs need be called, which will finally make a request for
-*ACRN_REQUEST_EXTINT or ACRN_REQUEST_EVENT*:
-
-.. doxygenfunction:: vpic_set_irqline
-  :project: Project ACRN
-
-The following APIs are used to query the vector needed to be injected and ACK
-the service (means move the interrupt from request service - IRR to in
-service - ISR):
-
-.. doxygenfunction:: vpic_pending_intr
-  :project: Project ACRN
-
-.. doxygenfunction:: vpic_intr_accepted
-  :project: Project ACRN
+ACRN will hide PIC from guest.
 
 Virtual Exception
 *****************

@@ -278,7 +278,7 @@ static inline bool vioapic_need_intr(const struct acrn_single_vioapic *vioapic, 
  */
 static void vioapic_indirect_write(struct acrn_single_vioapic *vioapic, uint32_t addr, uint32_t data)
 {
-	union ioapic_rte last, new, changed;
+	union ioapic_rte last, new;
 	uint32_t regnum;
 	uint32_t pin, pincount = vioapic->nr_pins;
 
@@ -303,7 +303,6 @@ static void vioapic_indirect_write(struct acrn_single_vioapic *vioapic, uint32_t
 
 	/* redirection table entries */
 	if ((regnum >= IOAPIC_REDTBL) && (regnum < (IOAPIC_REDTBL + (pincount * 2U)))) {
-		bool wire_mode_valid = true;
 		uint32_t addr_offset = regnum - IOAPIC_REDTBL;
 		uint32_t rte_offset = addr_offset >> 1U;
 		pin = rte_offset;
@@ -327,53 +326,29 @@ static void vioapic_indirect_write(struct acrn_single_vioapic *vioapic, uint32_t
 			new.bits.remote_irr = 0U;
 		}
 
-		changed.full = last.full ^ new.full;
-		/* pin0 from vpic mask/unmask */
-		if ((pin == 0U) && (changed.bits.intr_mask != 0UL)) {
-			/* mask -> umask */
-			if (last.bits.intr_mask == IOAPIC_RTE_MASK_SET) {
-				if ((vioapic->vm->wire_mode == VPIC_WIRE_NULL) ||
-						(vioapic->vm->wire_mode == VPIC_WIRE_INTR)) {
-					vioapic->vm->wire_mode = VPIC_WIRE_IOAPIC;
-					dev_dbg(DBG_LEVEL_VIOAPIC, "vpic wire mode -> IOAPIC");
-				} else {
-					pr_err("WARNING: invalid vpic wire mode change");
-					wire_mode_valid = false;
-				}
-			/* unmask -> mask */
-			} else {
-				if (vioapic->vm->wire_mode == VPIC_WIRE_IOAPIC) {
-					vioapic->vm->wire_mode = VPIC_WIRE_INTR;
-					dev_dbg(DBG_LEVEL_VIOAPIC, "vpic wire mode -> INTR");
-				}
-			}
+		vioapic->rtbl[pin] = new;
+		dev_dbg(DBG_LEVEL_VIOAPIC, "ioapic pin%hhu: redir table entry %#lx",
+			pin, vioapic->rtbl[pin].full);
+
+		/* remap for ptdev */
+		if ((new.bits.intr_mask == IOAPIC_RTE_MASK_CLR) || (last.bits.intr_mask  == IOAPIC_RTE_MASK_CLR)) {
+			/* VM enable intr */
+			/* NOTE: only support max 256 pin */
+			
+			(void)ptirq_intx_pin_remap(vioapic->vm, vioapic->gsi_base + pin);
 		}
 
-		if (wire_mode_valid) {
-			vioapic->rtbl[pin] = new;
-			dev_dbg(DBG_LEVEL_VIOAPIC, "ioapic pin%hhu: redir table entry %#lx",
-				pin, vioapic->rtbl[pin].full);
-
-			/* remap for ptdev */
-			if ((new.bits.intr_mask == IOAPIC_RTE_MASK_CLR) || (last.bits.intr_mask  == IOAPIC_RTE_MASK_CLR)) {
-				/* VM enable intr */
-				/* NOTE: only support max 256 pin */
-				
-				(void)ptirq_intx_pin_remap(vioapic->vm, vioapic->gsi_base + pin);
-			}
-
-			/*
-			 * Generate an interrupt if the following conditions are met:
-			 * - pin is not masked
-			 * - previous interrupt has been EOIed
-			 * - pin level is asserted
-			 */
-			if ((vioapic->rtbl[pin].bits.intr_mask == IOAPIC_RTE_MASK_CLR) &&
-				(vioapic->rtbl[pin].bits.remote_irr == 0UL) &&
-				vioapic_need_intr(vioapic, (uint16_t)pin)) {
-				dev_dbg(DBG_LEVEL_VIOAPIC, "ioapic pin%hhu: asserted at rtbl write", pin);
-				vioapic_generate_intr(vioapic, pin);
-			}
+		/*
+		 * Generate an interrupt if the following conditions are met:
+		 * - pin is not masked
+		 * - previous interrupt has been EOIed
+		 * - pin level is asserted
+		 */
+		if ((vioapic->rtbl[pin].bits.intr_mask == IOAPIC_RTE_MASK_CLR) &&
+			(vioapic->rtbl[pin].bits.remote_irr == 0UL) &&
+			vioapic_need_intr(vioapic, (uint16_t)pin)) {
+			dev_dbg(DBG_LEVEL_VIOAPIC, "ioapic pin%hhu: asserted at rtbl write", pin);
+			vioapic_generate_intr(vioapic, pin);
 		}
 	}
 }

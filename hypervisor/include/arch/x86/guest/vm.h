@@ -17,7 +17,6 @@
 #include <spinlock.h>
 #include <vcpu.h>
 #include <vioapic.h>
-#include <vpic.h>
 #include <vmx_io.h>
 #include <vuart.h>
 #include <trusty.h>
@@ -108,7 +107,6 @@ struct vm_arch {
 	struct memory_ops ept_mem_ops;
 
 	struct acrn_vioapics vioapics;	/* Virtual IOAPIC/s */
-	struct acrn_vpic vpic;      /* Virtual PIC */
 #ifdef CONFIG_HYPERV_ENABLED
 	struct acrn_hyperv hyperv;
 #endif
@@ -127,7 +125,6 @@ struct acrn_vm {
 	uint16_t vm_id;		    /* Virtual machine identifier */
 	enum vm_state state;	/* VM state */
 	struct acrn_vuart vuart[MAX_VUART_NUM_PER_VM];		/* Virtual UART */
-	enum vpic_wire_mode wire_mode;
 	struct iommu_domain *iommu;	/* iommu domain of this VM */
 	spinlock_t vm_lock;	/* Spin-lock used to protect vlapic_state modifications for a VM */
 

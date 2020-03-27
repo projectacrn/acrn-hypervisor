@@ -31,6 +31,7 @@
 #include <sbuf.h>
 #include <pci_dev.h>
 #include <vacpi.h>
+#include <vpic.h>
 
 vm_sw_loader_t vm_sw_loader;
 
@@ -455,9 +456,6 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		enable_iommu();
 
 		register_reset_port_handler(vm);
-
-		/* vpic wire_mode default is INTR */
-		vm->wire_mode = VPIC_WIRE_INTR;
 
 		/* Init full emulated vIOAPIC instance */
 		if (!is_lapic_pt_configured(vm)) {
