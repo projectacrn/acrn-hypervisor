@@ -234,14 +234,24 @@ combination of:
      - snoop
      - Snoop
 
-ACRN enable Snoop Control by default if all enabled VT-d DMAR units
-support Snoop Control by setting bit 11 of leaf PTE of EPT table. Bit 11
-of leaf PTE of EPT is ignored by MMU. So no side effect for MMU.
+If VT-d DMAR units doesn't support Snoop Control, then SNP Bit (bit 11)
+of leaf PETs of EPT is not set since the field is treated as reserved(0)
+by VT-d hardware implementations not supporting Snoop Control.
 
-If one of the enabled VT-d DMAR units doesn't support Snoop Control,
-then Bit 11 of leaf PET of EPT is not set since the field is treated as
-reserved(0) by VT-d hardware implementations not supporting Snoop
-Control.
+VT-d DMAR unit of Intel integrated graphics device doesn't support Snoop
+Control. ACRN hypervisor uses a same copy of EPT as the secondary address
+translation table for a VM. When enalbe DMAR unit for Intel integrated
+graphics device, SNP Bit cannot be set in lead PTEs of EPT.
+
+No matter ACRN enables or disables Snoop Control, the DMA operations of
+passthrough devices behave correctly from guests' point of view. ACRN
+disables Snoop Control in VT-d DMAR engines for simplifing the implementation.
+Also, since the snoop behavior of PCIE transactions can be controlled by
+guest drivers, some devices may take the advantage of the NO_SNOOP_ATTRIBUTE
+of PCIE transactions for better performance when snoop is not needed.
+
+It's driver's responsibility to configure correct attribute in PCIE transactions.
+Otherwise, the corresponding device may not work properly.
 
 Initialization
 **************
