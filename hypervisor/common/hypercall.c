@@ -911,11 +911,10 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t pa
 				 * phys_pin to phys_gsi
 				 */
 				if ((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf)) {
-					if ((((!irq.intx.pic_pin) && (irq.intx.virt_pin < get_vm_gsicount(target_vm))) ||
-							((irq.intx.pic_pin) && (irq.intx.virt_pin < vpic_pincount()))) &&
-							is_gsi_valid(irq.intx.phys_pin)) {
+					if (!irq.intx.pic_pin && (irq.intx.virt_pin < get_vm_gsicount(target_vm))
+							&& is_gsi_valid(irq.intx.phys_pin)) {
 						ret = ptirq_add_intx_remapping(target_vm, irq.intx.virt_pin,
-							irq.intx.phys_pin, irq.intx.pic_pin);
+							irq.intx.phys_pin);
 					} else {
 						pr_err("%s: Invalid phys pin or virt pin\n", __func__);
 					}
@@ -965,9 +964,8 @@ hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 				 * phys_pin to phys_gsi
 				 */
 				if ((vdev != NULL) && (vdev->pdev->bdf.value == irq.phys_bdf)) {
-					if (((!irq.intx.pic_pin) && (irq.intx.virt_pin < get_vm_gsicount(target_vm))) ||
-						((irq.intx.pic_pin) && (irq.intx.virt_pin < vpic_pincount()))) {
-						ptirq_remove_intx_remapping(target_vm, irq.intx.virt_pin, irq.intx.pic_pin);
+					if (!irq.intx.pic_pin && (irq.intx.virt_pin < get_vm_gsicount(target_vm))) {
+						ptirq_remove_intx_remapping(target_vm, irq.intx.virt_pin);
 						ret = 0;
 					} else {
 						pr_err("%s: Invalid virt pin\n", __func__);

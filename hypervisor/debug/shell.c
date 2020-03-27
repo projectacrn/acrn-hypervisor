@@ -1067,17 +1067,13 @@ static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 			}
 			*pgsi = INVALID_INTERRUPT_PIN;
 			*vgsi = INVALID_INTERRUPT_PIN;
-			*bdf = entry->phys_sid.msi_id.bdf;
-			*vbdf = entry->virt_sid.msi_id.bdf;
+			*bdf = entry->phys_sid.msi.bdf;
+			*vbdf = entry->virt_sid.msi.bdf;
 		} else {
 			uint32_t phys_irq = entry->allocated_pirq;
 			union ioapic_rte rte;
 
-			if (entry->virt_sid.intx_id.ctlr == INTX_CTLR_IOAPIC) {
-				(void)strncpy_s(type, 16U, "IOAPIC", 16U);
-			} else {
-				(void)strncpy_s(type, 16U, "PIC", 16U);
-			}
+			(void)strncpy_s(type, 16U, "IOAPIC", 16U);
 			ioapic_get_rte(phys_irq, &rte);
 			*dest = rte.bits.dest_field;
 			if (rte.bits.trigger_mode == IOAPIC_RTE_TRGRMODE_LEVEL) {
@@ -1085,8 +1081,8 @@ static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 			} else {
 				*lvl_tm = false;
 			}
-			*pgsi = entry->phys_sid.intx_id.gsi;
-			*vgsi = entry->virt_sid.intx_id.gsi;
+			*pgsi = entry->phys_sid.ioapic.gsi;
+			*vgsi = entry->virt_sid.ioapic.gsi;
 			*bdf = 0U;
 			*vbdf = 0U;
 		}
