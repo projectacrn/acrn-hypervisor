@@ -171,14 +171,15 @@ void *sos_socket_thread(void *arg)
 	listen_fd = setup_socket_listen(SOS_SOCKET_PORT);
 	LOG_PRINTF("life_mngr:listen_fd=0x%x socket port is 0x%x\r\n", listen_fd, SOS_SOCKET_PORT);
 
+	connect_fd = accept(listen_fd, (struct sockaddr *)&client, &len);
+	if (connect_fd == -1) {
+		LOG_WRITE("accept a connection error on a socket\n");
+		close(listen_fd);
+		exit(1);
+	}
+
 	while (1) {
 		memset(buf, 0, BUFF_SIZE);
-		connect_fd = accept(listen_fd, (struct sockaddr *)&client, &len);
-		if (connect_fd == -1) {
-			LOG_WRITE("accept a connection error on a socket\n");
-			close(listen_fd);
-			exit(1);
-		}
 
 		/* Here assume the socket communication is reliable, no need to try */
 		num = read(connect_fd, buf, sizeof(SHUTDOWN_CMD));
@@ -250,7 +251,7 @@ void *listener_fn_to_sos(void *arg)
 				shutdown_self = true;
 			} else {
 				if (retry  > 0) {
-					if (send_message(tty_dev_fd, SHUTDOWN_CMD, sizeof(SHUTDOWN_CMD) != 0)) {
+					if (send_message(tty_dev_fd, SHUTDOWN_CMD, sizeof(SHUTDOWN_CMD)) != 0) {
 						LOG_PRINTF("Try resend shutdown cmd failed cnt = %d\n", retry);
 					}
 					retry--;
