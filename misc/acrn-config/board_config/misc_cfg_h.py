@@ -70,6 +70,47 @@ def parse_boot_info():
     return (err_dic, sos_cmdlines, sos_rootfs, vuart0_dic, vuart1_dic, vm_types)
 
 
+def find_hi_mmio_window(config):
+
+    i_cnt = 0
+    mmio_min = 0
+    mmio_max = 0
+    is_hi_mmio = False
+
+    iomem_lines = board_cfg_lib.get_info(board_cfg_lib.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
+
+    for line in iomem_lines:
+        if "PCI Bus" not in line:
+            continue
+
+        line_start_addr = int(line.split('-')[0], 16)
+        line_end_addr = int(line.split('-')[1].split()[0], 16)
+        if line_start_addr < board_cfg_lib.SIZE_4G and line_end_addr < board_cfg_lib.SIZE_4G:
+            continue
+        elif line_start_addr < board_cfg_lib.SIZE_4G and line_end_addr >= board_cfg_lib.SIZE_4G:
+            i_cnt += 1
+            is_hi_mmio = True
+            mmio_min = board_cfg_lib.SIZE_4G
+            mmio_max = line_end_addr
+            continue
+
+        is_hi_mmio = True
+        if i_cnt == 0:
+            mmio_min = line_start_addr
+            mmio_max = line_end_addr
+
+        if mmio_max < line_end_addr:
+            mmio_max = line_end_addr
+        i_cnt += 1
+
+    print("", file=config)
+    if is_hi_mmio:
+        print("#define HI_MMIO_START\t\t0x%xUL" % mmio_min, file=config)
+        print("#define HI_MMIO_END\t\t0x%xUL" % mmio_max, file=config)
+    else:
+        print("#define HI_MMIO_START\t\t~0UL", file=config)
+        print("#define HI_MMIO_END\t\t0UL", file=config)
+
 def generate_file(config):
     """
     Start to generate board.c
@@ -171,6 +212,10 @@ def generate_file(config):
         print("#define MAX_HIDDEN_PDEVS_NUM	{}U".format(len(board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB[board_cfg_lib.BOARD_NAME])), file=config)
     else:
         print("#define MAX_HIDDEN_PDEVS_NUM	0U", file=config)
+
+    # generate HI_MMIO_START/HI_MMIO_END
+    find_hi_mmio_window(config)
+
     print("", file=config)
 
     print("{}".format(MISC_CFG_END), file=config)
