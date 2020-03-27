@@ -255,29 +255,13 @@ static inline void dmar_wait_completion(const struct dmar_drhd_rt *dmar_unit, ui
 {
 	/* variable start isn't used when built as release version */
 	__unused uint64_t start = rdtsc();
-	bool condition, temp_condition;
 
-	while (1) {
+	do {
 		*status = iommu_read32(dmar_unit, offset);
-		temp_condition = ((*status & mask) == 0U) ? true : false;
-
-		/*
-		 * pre_condition    temp_condition    | condition
-		 * -----------------------------------|----------
-		 * true             true              | true
-		 * true             false             | false
-		 * false            true              | false
-		 * false            false             | true
-		 */
-		condition = (temp_condition == pre_condition) ? true : false;
-
-		if (condition) {
-			break;
-		}
 		ASSERT(((rdtsc() - start) < CYCLES_PER_MS),
 			"DMAR OP Timeout!");
 		asm_pause();
-	}
+	} while( ((bool)(*status & mask)) == pre_condition);
 }
 
 /* Flush CPU cache when root table, context table or second-level translation teable updated
