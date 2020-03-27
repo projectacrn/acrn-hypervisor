@@ -30,9 +30,7 @@
 #include "log.h"
 
 #define SHUTDOWN_CMD  "shutdown"
-#define SHUTDOWN_CMD_ACK   "acked"
 #define CMD_LEN 16
-#define RESEND_CMD_CNT  3
 #define MAX_NODE_PATH  128
 #define SOS_SOCKET_PORT 0x2000
 
@@ -47,19 +45,12 @@ enum node_type_t {
 	MAX_NODE_CNT,
 };
 
-/* Enumerated shutdown state machine */
-enum shutdown_state {
-	SHUTDOWN_REQ_WAITING = 0,        /* Can receive shutdown cmd in this state */
-	SHUTDOWN_ACK_WAITING,		 /* Wait acked message from UOS */
-	SHUTDOWN_REQ_FROM_SOS,		 /* Trigger shutdown by SOS */
-	SHUTDOWN_REQ_FROM_UOS,           /* Trigger shutdown by UOS */
-};
-
 static uint8_t node_index = MAX_NODE_CNT;
 static char node_path[MAX_NODE_PATH];
 static int node_fd = -1;
-static enum shutdown_state pm_monitor_state = SHUTDOWN_REQ_WAITING;
+static int socket_fd = -1;
 static pthread_t pm_monitor_thread;
+static pthread_mutex_t pm_vuart_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static int vm_stop_handler(void *arg);
 static struct monitor_vm_ops vm_ops = {
@@ -84,21 +75,13 @@ static int read_bytes(int fd, uint8_t *buffer, int buf_len)
 	return count;
 }
 
-/*
- * acrn-dm receive shutdown command from UOS,
- * it will call this api to send shutdown to life_mngr
- * running on SOS
- */
-int send_shutdown_to_lifemngr(void)
+int pm_setup_socket(void)
 {
-	int rc;
-	char buffer[CMD_LEN];
-	int socket_fd;
 	struct sockaddr_in socket_addr;
 
 	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd  == -1) {
-		pr_err("socket() error.\n");
+		pr_err("create a socket endpoint error\n");
 		return -1;
 	}
 
@@ -108,103 +91,53 @@ int send_shutdown_to_lifemngr(void)
 	socket_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	if (connect(socket_fd, (struct sockaddr *)&socket_addr, sizeof(socket_addr)) == -1) {
-		pr_err("connect() error.\n");
+		pr_err("initiate a connection on a socket error\n");
 		close(socket_fd);
 		return -1;
 	}
 
-	/* send shutdown command to lifecycle management process */
-	if (write(socket_fd, SHUTDOWN_CMD, sizeof(SHUTDOWN_CMD)) <= 0) {
-		pr_err("send shutdown cmd to lifecycle management process failed!\n");
-		close(socket_fd);
-		return -1;
-	}
-
-	/* wait the acked message from lifecycle management */
-	rc = read(socket_fd, (uint8_t *)buffer, sizeof(SHUTDOWN_CMD_ACK));
-	if ((rc > 0) && strncmp(buffer, SHUTDOWN_CMD_ACK, strlen(SHUTDOWN_CMD_ACK)) == 0) {
-		pr_info("received acked from lifecycle management process\n");
-	} else {
-		pr_err("received acked from lifecycle management failed!\n");
-		close(socket_fd);
-		return -1;
-	}
-	close(socket_fd);
 	return 0;
 }
 
-/*
- * this pm_monitor can do:
- * --send shutdown request to UOS
- * --receive acked message from UOS
- * --receive shutdown request from UOS
- */
 static void *pm_monitor_loop(void *arg)
 {
 	int rc;
-	int retry = RESEND_CMD_CNT;
 	char buf[CMD_LEN];
+	int max_fd;
+	fd_set read_fd;
 
-	while (1) {
-		rc = read_bytes(node_fd, (uint8_t *)buf, CMD_LEN);
-		switch (pm_monitor_state) {
-		/* it can receive shutdown command from UOS for the following two states,
-		 * it will change the state to SHUTDOWN_REQ_FROM_UOS if receive the shutdown
-		 * command from UOS, this can prevent the follow-up shutdown command
-		 * from UOS or SOS in this state.
-		 * it will wait UOS poweroff itself and then send shutdown to
-		 * life_mngr running on the SOS to shutdown system
-		 */
-		case SHUTDOWN_REQ_WAITING:
-		case SHUTDOWN_REQ_FROM_UOS:
-			if ((rc > 0) && (strncmp(SHUTDOWN_CMD, (const char *)buf, strlen(SHUTDOWN_CMD)) == 0)) {
-				pm_monitor_state = SHUTDOWN_REQ_FROM_UOS;
-				if (write(node_fd, SHUTDOWN_CMD_ACK, sizeof(SHUTDOWN_CMD_ACK))
-						!= sizeof(SHUTDOWN_CMD_ACK)) {
-					/* here no need to resend ack, it will resend shutdown cmd
-					 * if uos can not receive acked message
-					 */
-					pr_err("send acked message to UOS failed!\n");
-				}
-			}
-			break;
-
-		/* Waiting acked message from UOS, this is triggered by SOS */
-		case SHUTDOWN_ACK_WAITING:
-			/* Once received the SHUTDOWN ACK from UOS, then wait UOS to set ACPI PM register to change
-			 * VM to POWEROFF state
-			 */
-			if ((rc > 0) && (strncmp(SHUTDOWN_CMD_ACK, (const char *)buf, strlen(SHUTDOWN_CMD_ACK)) == 0)) {
-				pr_info("received acked message from uos\n");
-			} else {
-				/* it will try to resend shutdown cmd to UOS if there is no acked message from UOS */
-				if (retry > 0) {
-					if (write(node_fd, SHUTDOWN_CMD, sizeof(SHUTDOWN_CMD))
-							!= sizeof(SHUTDOWN_CMD)) {
-						pr_err("Try resend shutdown cmd failed cnt = %d\n", retry);
-					}
-					retry--;
-				} else {
-					/* If there is no acked message from UOS, just ignore the shutdown request
-					 * from SOS, and the SOS can re-trigger shutdown flow,
-					 * so it need restore the pm_monitor_state
-					 */
-					pr_err("Can not receive acked message from uos, have try %d times\r\n",
-							RESEND_CMD_CNT);
-					pm_monitor_state = SHUTDOWN_REQ_WAITING;
-					retry = RESEND_CMD_CNT;
-				}
-			}
-			break;
-
-		default:
-			pr_err("Invalid pm_monitor_state(0x%x)\r\n", pm_monitor_state);
-			break;
-		}
-		sleep(1);
-
+	if (pm_setup_socket() == -1) {
+		pr_err("create socket to connect life-cycle manager failed\n");
+		return NULL;
 	}
 
+	max_fd = (socket_fd > node_fd) ? (socket_fd + 1) : (node_fd + 1);
+
+	while (1) {
+		memset(buf, 0, CMD_LEN);
+		FD_ZERO(&read_fd);
+		FD_SET(socket_fd, &read_fd);
+		FD_SET(node_fd, &read_fd);
+
+		rc = select(max_fd, &read_fd, NULL, NULL, NULL);
+		if (rc > 0) {
+			if (FD_ISSET(node_fd, &read_fd)) {
+				rc = read_bytes(node_fd, (uint8_t *)buf, CMD_LEN);
+				pr_info("Received msg[%s] from UOS, rc=%d\r\n", buf, rc);
+				rc = write(socket_fd, buf, CMD_LEN);
+			} else if (FD_ISSET(socket_fd, &read_fd)) {
+				rc = read_bytes(socket_fd, (uint8_t *)buf, CMD_LEN);
+				pr_info("Received msg[%s] from life_mngr on SOS,  rc=%d\r\n", buf, rc);
+				pthread_mutex_lock(&pm_vuart_lock);
+				rc = write(node_fd, buf, CMD_LEN);
+				pthread_mutex_unlock(&pm_vuart_lock);
+			}
+
+			if (rc != CMD_LEN) {
+				pr_err("%s: write error ret_val = 0x%x\r\n", rc);
+			}
+		}
+	}
 	return NULL;
 }
 
@@ -319,23 +252,12 @@ void pm_by_vuart_init(struct vmctx *ctx)
 
 void pm_by_vuart_deinit(struct vmctx *ctx)
 {
-	/* it indicates that acrn-dm has received shutdown command
-	 * from UOS in this state, and it will send shutdown command
-	 * to life_mngr running on SOS to shutdown system after UOS
-	 * has poweroff itself.
-	 */
-	if (pm_monitor_state == SHUTDOWN_REQ_FROM_UOS) {
-		/* send shutdown command to life_mngr running on SOS */
-		if (send_shutdown_to_lifemngr() != 0) {
-			pr_err("send shutdown to life-management failed\r\n");
-		}
-	}
-
 	pthread_cancel(pm_monitor_thread);
 	pthread_join(pm_monitor_thread, NULL);
-
 	close(node_fd);
 	node_fd = -1;
+	close(socket_fd);
+	socket_fd = -1;
 }
 
 /* called when acrn-dm receive stop command */
@@ -351,21 +273,13 @@ static int vm_stop_handler(void *arg)
 		return -1;
 	}
 
-	/* will ignore this shutdown command if it is shutdowning */
-	if (pm_monitor_state != SHUTDOWN_REQ_WAITING) {
-		pr_err("can not shutdown in this state(0x%x),it is shutdowning\n", pm_monitor_state);
-		return -1;
-	}
-
-	pm_monitor_state = SHUTDOWN_REQ_FROM_SOS;
+	pthread_mutex_lock(&pm_vuart_lock);
 	ret = write(node_fd, SHUTDOWN_CMD, sizeof(SHUTDOWN_CMD));
+	pthread_mutex_unlock(&pm_vuart_lock);
 	if (ret != sizeof(SHUTDOWN_CMD)) {
 		/* no need to resend shutdown here, will resend in pm_monitor thread */
 		pr_err("send shutdown command to uos failed\r\n");
 	}
-
-	/* it will handle acked and resend shutdown cmd in pm_monitor thread */
-	pm_monitor_state = SHUTDOWN_ACK_WAITING;
 
 	return 0;
 }
