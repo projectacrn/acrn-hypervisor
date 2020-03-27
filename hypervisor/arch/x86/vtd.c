@@ -237,13 +237,7 @@ static uint32_t iommu_read32(const struct dmar_drhd_rt *dmar_unit, uint32_t offs
 
 static uint64_t iommu_read64(const struct dmar_drhd_rt *dmar_unit, uint32_t offset)
 {
-	uint64_t value;
-
-	value = mmio_read32(hpa2hva(dmar_unit->drhd->reg_base_addr + offset + 4U));
-	value = value << 32U;
-	value = value | mmio_read32(hpa2hva(dmar_unit->drhd->reg_base_addr + offset));
-
-	return value;
+	return mmio_read64(hpa2hva(dmar_unit->drhd->reg_base_addr + offset));
 }
 
 static void iommu_write32(const struct dmar_drhd_rt *dmar_unit, uint32_t offset, uint32_t value)
@@ -253,13 +247,7 @@ static void iommu_write32(const struct dmar_drhd_rt *dmar_unit, uint32_t offset,
 
 static void iommu_write64(const struct dmar_drhd_rt *dmar_unit, uint32_t offset, uint64_t value)
 {
-	uint32_t temp;
-
-	temp = (uint32_t)value;
-	mmio_write32(temp, hpa2hva(dmar_unit->drhd->reg_base_addr + offset));
-
-	temp = (uint32_t)(value >> 32U);
-	mmio_write32(temp, hpa2hva(dmar_unit->drhd->reg_base_addr + offset + 4U));
+	mmio_write64(value, hpa2hva(dmar_unit->drhd->reg_base_addr + offset));
 }
 
 static inline void dmar_wait_completion(const struct dmar_drhd_rt *dmar_unit, uint32_t offset,
