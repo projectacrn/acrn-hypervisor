@@ -70,17 +70,20 @@ static int32_t
 drhd_find_iter(struct acpi_dmar_header *dmar_header, void *arg)
 {
 	struct find_iter_args *args;
+	int32_t ret = 1;
 
-	if (dmar_header->type != ACPI_DMAR_TYPE_HARDWARE_UNIT)
-		return 1;
-
-	args = arg;
-	if (args->i == 0U) {
-		args->res = (struct acpi_dmar_hardware_unit *)dmar_header;
-		return 0;
+	if (dmar_header->type == ACPI_DMAR_TYPE_HARDWARE_UNIT){
+		args = arg;
+		if (args->i == 0U) {
+			args->res = (struct acpi_dmar_hardware_unit *)dmar_header;
+			ret = 0;
+		}
+		else{
+			args->i--;
+			ret = 1;
+		}
 	}
-	args->i--;
-	return 1;
+	return ret;
 }
 
 static struct acpi_dmar_hardware_unit *
