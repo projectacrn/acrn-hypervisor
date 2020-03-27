@@ -3,8 +3,32 @@
 Security Advisory
 *****************
 
-We recommend that all developers upgrade to this v1.4 release, which addresses the following security
+We recommend that all developers upgrade to this v1.6 release, which addresses the following security
 issues that were discovered in previous releases:
+
+Hypervisor Crashed When Fuzzing HC_DESTROY_VM
+   The input 'vdev->pdev' shall be validated properly when handling HC_SET_PTDEV_INTR_INFO,
+   to insure physical device is linked to 'vdev', otherwise hypervisor will crash when fuzzing
+   hypercall HC_DESTROY_VM with crafted input.
+
+   | **Affected Release:** v1.5 and earlier.
+   | Upgrade to ACRN release v1.6.
+
+Hypervisor Crashed When Fuzzing HC_VM_WRITE_PROTECT_PAGE
+   The input GPA is not validated when handling this hypercall, Invalid GPA that is not
+   in the scope of the target VM's EPT address space results in hypervisor crash when
+   handing this hypercall.
+
+   | **Affected Release:** v1.4 and earlier.
+   | Upgrade to ACRN release v1.6.
+
+Hypervisor Crashed When Fuzzing HC_NOTIFY_REQUEST_FINISH
+   The input is not validated properly when handing this hypercall, 'vcpu_id' shall be
+   less than 'vm->hw.created_vcpus' instead of 'MAX_VCPUS_PER_VM'. When the software
+   fails to validate input properly, hypervisor will crash when handling crafted inputs.
+
+   | **Affected Release:** v1.4 and earlier.
+   | Upgrade to ACRN release v1.6.
 
 Mitigation for Machine Check Error on Page Size Change
    Improper invalidation for page table updates by a virtual guest operating system for multiple Intel(R) Processors may allow an authenticated user to potentially enable denial of service of the host system via local access. Malicious guest kernel could trigger this issue, CVE-2018-12207.
