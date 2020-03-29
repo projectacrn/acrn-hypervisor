@@ -342,7 +342,11 @@ Recommended BIOS settings
 Configure RDT
 -------------
 
-In addition to setting the CAT configuration via HV commands, we allow developers to add the CAT configurations to the VM config and do the configure automatically at the time of RTVM creation. Refer to :ref:`rdt_configuration` for details on RDT configuration and :ref:`hv_rdt` for details on RDT high-level design.
+In addition to setting the CAT configuration via HV commands, we allow
+developers to add CAT configurations to the VM config and configure
+automatically at the time of RTVM creation. Refer to :ref:`rdt_configuration`
+for details on RDT configuration and :ref:`hv_rdt` for details on RDT
+high-level design.
 
 Set up the core allocation for the RTVM
 ---------------------------------------
