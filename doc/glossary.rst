@@ -168,16 +168,16 @@ Glossary of Terms
    RDT
       Intel Resource Director Technology (Intel RDT) provides a set of
       monitoring and allocation capabilities to control resources such as
-      Cache, Memory. ACRN supports, Cache Allocation Technology (CAT) and
+      Cache and Memory. ACRN supports Cache Allocation Technology (CAT) and
       Memory Bandwidth Allocation (MBA).
 
    RTVM
-      Real-time VM.  A specially designed VM to run hard real-time or
-      soft real-time workloads (or application) much more efficiently
-      than the typical User VM through the use of pass-through interrupt
-      controller, polling-mode Virtio, Intel RDT allocation features(CAT, MBA)
-      and I/O prioritization.  RTVMs are typically a :term:`pre-launched VM`.
-      A non-:term:`safety VM` with real-time requirements can a
+      Real-time VM. A specially-designed VM that can run hard real-time or
+      soft real-time workloads (or applications) much more efficiently
+      than the typical User VM through the use of a passthrough interrupt
+      controller, polling-mode Virtio, Intel RDT allocation features (CAT,
+      MBA), and I/O prioritization.  RTVMs are typically a :term:`pre-launched VM`.
+      A non-:term:`safety VM` with real-time requirements is a
       :term:`post-launched VM`.
 
    Safety VM

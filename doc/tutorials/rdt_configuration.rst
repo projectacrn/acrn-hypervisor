@@ -3,69 +3,86 @@
 RDT Configuration
 #################
 
-On x86 platforms that support Intel Resource Director Technology(RDT) Allocation features such as Cache Allocation Technology (CAT) and Memory Bandwidth Allocation(MBA), ACRN hypervisor can be used to limit regular VMs which may be over-utilizing common resources such cache and memory bandwidth relative to their priority so that performance of other higher priority VMs (such as RTVMs) are not impacted.
-There are basically 3 steps to use RDT,
+On x86 platforms that support Intel Resource Director Technology (RDT)
+allocation features such as Cache Allocation Technology (CAT) and Memory
+Bandwidth Allocation (MBA), the ACRN hypervisor can be used to limit regular
+VMs which may be over-utilizing common resources such as cache and memory
+bandwidth relative to their priorities so that the performance of other
+higher priorities VMs (such as RTVMs) are not impacted.
+
+Using RDT includes three steps:
 
 1. Detect and enumerate RDT allocation capabilites on supported resources such as cache and memory bandwidth.
-2. Setup resource mask array MSRs for each CLOS (Class of Service), basically to limit or allow access to resource usage.
-3. Select CLOS for the CPU associated with VM, that will apply the resource mask on the CP
+#. Set up resource mask array MSRs (Model-Specific Registers) for each CLOS (Class of Service, which is a resource allocation), basically to limit or allow access to resource usage.
+#. Select the CLOS for the CPU associated with the VM that will apply the resource mask on the CP.
 
-Steps #2 and #3 configure RDT resources for a VM and can be done in 2 ways,
-a) Using HV debug shell
-b) Using VM configuration
+Steps #2 and #3 configure RDT resources for a VM and can be done in two ways:
 
-The following sections discuss how to detect, enumerate capabilities and configure RDT resources for VMs in ACRN hypervisor.
+* Using a HV debug shell (See `Tuning RDT resources in HV debug shell`_)
+* Using a VM configuration (See `Configure RDT for VM using VM Configuration`_)
 
-For futher details, please refer to ACRN RDT high-level design :ref:`hv_rdt` and `Intel (R) 64 and IA-32 Architectures Software Developer's Manual, (Section 17.19 INTEL® RESOURCE DIRECTOR TECHNOLOGY ALLOCATION FEATURES) <https://software.intel.com/en-us/download/intel-64-and-ia-32-architectures-sdm-combined-volumes-3a-3b-3c-and-3d-system-programming-guide>`_
+The following sections discuss how to detect, enumerate capabilities, and
+configure RDT resources for VMs in the ACRN hypervisor.
+
+For further details, refer to the ACRN RDT high-level design :ref:`hv_rdt` and `Intel 64 and IA-32 Architectures Software Developer's Manual, (Section 17.19 Intel Resource Director Technology Allocation Features) <https://software.intel.com/en-us/download/intel-64-and-ia-32-architectures-sdm-combined-volumes-3a-3b-3c-and-3d-system-programming-guide>`_
 
 .. _rdt_detection_capabilities:
 
 RDT detection and resource capabilites
 **************************************
-From the ACRN HV debug shell, you can use ``cpuid`` to detect and identify the resource capabilities.  You can use the platform's serial port for the HV shell (refer to :ref:`getting-started-up2` for setup instructions).
+From the ACRN HV debug shell, use ``cpuid`` to detect and identify the
+resource capabilities. Use the platform's serial port for the HV shell
+(refer to :ref:`getting-started-up2` for setup instructions).
 
-Check if the platform supports RDT with ``cpuid``. First run ``cpuid 0x7 0x0``, the return value ebx[bit 15] should be set to 1 if the platform supports RDT. Then run ``cpuid 0x10 0x0``, and check EBX[3-1] bits. EBX[bit 1] set, represents L3 CAT is supported, EBX[bit 2] set, represents L2 CAT is supported and EBX[bit 3] set, represents MBA is supported. To query the capabilties of the supported resources, use the bit posistion as subleaf index. For example, run ``cpuid 0x10 0x2`` to query L2 CAT capability.
+Check if the platform supports RDT with ``cpuid``. First, run ``cpuid 0x7 0x0``; the return value ebx [bit 15] is set to 1 if the platform supports
+RDT. Next, run ``cpuid 0x10 0x0`` and check the EBX [3-1] bits. EBX [bit 1]
+indicates that L3 CAT is supported. EBX [bit 2] indicates that L2 CAT is
+supported. EBX [bit 3] indicates that MBA is supported. To query the
+capabilties of the supported resources, use the bit position as a subleaf
+index. For example, run ``cpuid 0x10 0x2`` to query the L2 CAT capability.
 
-    .. code-block:: none
+.. code-block:: none
 
-      ACRN:\>cpuid 0x7 0x0
-      cpuid leaf: 0x7, subleaf: 0x0, 0x0:0xd39ffffb:0x00000818:0xbc000400
+   ACRN:\>cpuid 0x7 0x0
+   cpuid leaf: 0x7, subleaf: 0x0, 0x0:0xd39ffffb:0x00000818:0xbc000400
 
-   For L3/L2, the following are the bit encoding,
-    * EAX[bit 4:0] reports the length of cache mask minus one. For example a value 0xa, means cache mask is 0x7ff.
-    * EBX[bit 31:0] reports a bit mask. Each set bit indicates the corresponding unit of the cache allocation may be used by other entities in the platform. (e.g. integrated graphics engine)
-    * ECX[bit 2] if set, indicates cache Code and Data Prioritization Technology is supported.
-    * EDX[bit 15:0] reports the maximum CLOS supported for the resource minus one.  For example a value of 0xf, means the max CLOS supported is 0x10.
+L3/L2 bit encoding:
 
-    .. code-block:: none
+* EAX [bit 4:0] reports the length of the cache mask minus one. For example, a value 0xa means the cache mask is 0x7ff.
+* EBX [bit 31:0] reports a bit mask. Each set bit indicates the corresponding unit of the cache allocation that can be used by other entities in the platform (e.g. integrated graphics engine).
+* ECX [bit 2] if set, indicates that cache Code and Data Prioritization Technology is supported.
+* EDX [bit 15:0] reports the maximum CLOS supported for the resource minus one. For example, a value of 0xf means the max CLOS supported is 0x10.
 
-      ACRN:\>cpuid 0x10 0x0
-      cpuid leaf: 0x10, subleaf: 0x0, 0x0:0xa:0x0:0x0
+  .. code-block:: none
 
-      ACRN:\>cpuid 0x10 **0x1**
-      cpuid leaf: 0x10, subleaf: 0x1, 0xa:0x600:0x4:0xf
+     ACRN:\>cpuid 0x10 0x0
+     cpuid leaf: 0x10, subleaf: 0x0, 0x0:0xa:0x0:0x0
 
-   For MBA, the following are the bit encoding,
-    * EAX[bit 11:0] reports the maximum MBA throttling value minus one. For example a value 0x59, means max delay value is 0x60.
-    * EBX[bit 31:0] reserved
-    * ECX[bit 2] reports whether the response of the delay values is linear.
-    * EDX[bit 15:0] reports the maximum CLOS supported for the resource minus one.  For example a value of 0x7, means the max CLOS supported is 0x8.
+     ACRN:\>cpuid 0x10 **0x1**
+     cpuid leaf: 0x10, subleaf: 0x1, 0xa:0x600:0x4:0xf
 
-    .. code-block:: none
+MBA bit encoding:
 
-      ACRN:\>cpuid 0x10 0x0
-      cpuid leaf: 0x10, subleaf: 0x0, 0x0:0xa:0x0:0x0
+* EAX [bit 11:0] reports the maximum MBA throttling value minus one. For example, a value 0x59 means the max delay value is 0x60.
+* EBX [bit 31:0] reserved.
+* ECX [bit 2] reports whether the response of the delay values is linear.
+* EDX [bit 15:0] reports the maximum CLOS supported for the resource minus one. For example, a value of 0x7 means the max CLOS supported is 0x8.
 
-      ACRN:\>cpuid 0x10 **0x3**
-      cpuid leaf: 0x10, subleaf: 0x3, 0x59:0x0:0x4:0x7
+  .. code-block:: none
+
+     ACRN:\>cpuid 0x10 0x0
+     cpuid leaf: 0x10, subleaf: 0x0, 0x0:0xa:0x0:0x0
+
+     ACRN:\>cpuid 0x10 **0x3**
+     cpuid leaf: 0x10, subleaf: 0x3, 0x59:0x0:0x4:0x7
 
 
 Tuning RDT resources in HV debug shell
 **************************************
-This section explains how to configure the RDT resources from HV debug shell.
+This section explains how to configure the RDT resources from the HV debug
+shell.
 
-#. Check PCPU IDs of each VM, the ``vcpu_list`` shows that VM0 is running on PCPU0,
-   and VM1 is running on PCPU1:
+#. Check the PCPU IDs of each VM; the ``vcpu_list`` below shows that VM0 is running on PCPU0, and VM1 is running on PCPU1:
 
    .. code-block:: none
 
@@ -76,14 +93,14 @@ This section explains how to configure the RDT resources from HV debug shell.
         0         0          0        PRIMARY       Running
         1         1          0        PRIMARY       Running
 
-#. Set resource mask array MSRs for each CLOS with ``wrmsr <reg_num> <value>``. For example if we want to restrict VM1 to use the lower 4 ways of LLC cache and allocate upper 7 ways of LLC access to VM0, first a CLOS is assigned for each VM. (say VM0 is assigned CLOS 0 and VM1 CLOS1). Then resource mask MSR corresponding to the CLOS0, in this case IA32_L3_MASK_BASE + 0 is programmed to 0x7f0 and resouce mask MSR corresponding to CLOS1, IA32_L3_MASK_BASE + 1 is set to 0xf.
+#. Set the resource mask array MSRs for each CLOS with a ``wrmsr <reg_num> <value>``. For example, if you want to restrict VM1 to use the lower 4 ways of LLC cache and you want to allocate the upper 7 ways of LLC to access to VM0, you must first assign a CLOS for each VM (e.g. VM0 is assigned CLOS0 and VM1 CLOS1). Next, resource mask the MSR that corresponds to the CLOS0. In our example, IA32_L3_MASK_BASE + 0 is programmed to 0x7f0. Finally, resource mask the MSR that corresponds to CLOS1. In our example, IA32_L3_MASK_BASE + 1 is set to 0xf.
 
    .. code-block:: none
 
       ACRN:\>wrmsr  -p1 0xc90  0x7f0
       ACRN:\>wrmsr  -p1 0xc91  0xf
 
-#. Assign CLOS1 to PCPU1 by programming the MSR IA32_PQR_ASSOC [bit 63:32] (0xc8f) to 0x100000000 to use CLOS1 and assign CLOS0 to PCPU 0 by programming MSR IA32_PQR_ASSOC [bit 63:32] to 0x0. Note that, IA32_PQR_ASSOC is per LP MSR and CLOS has to programmed on each LP.
+#. Assign CLOS1 to PCPU1 by programming the MSR IA32_PQR_ASSOC [bit 63:32] (0xc8f) to 0x100000000 to use CLOS1 and assign CLOS0 to PCPU 0 by programming MSR IA32_PQR_ASSOC [bit 63:32] to 0x0. Note that IA32_PQR_ASSOC is per LP MSR and CLOS must be programmed on each LP.
 
    .. code-block:: none
 
@@ -95,7 +112,7 @@ This section explains how to configure the RDT resources from HV debug shell.
 Configure RDT for VM using VM Configuration
 *******************************************
 
-#. RDT on ACRN is enabled by default on platforms that have the support. Thanks to offline tool approach which generates a platform specific xml file using which ACRN identifies if RDT is supported on the platform or not. But the feature can be also be toggled using CONFIG_RDT_ENABLED flag with ``make menuconfig`` command. The first step is to clone the ACRN source code (if you haven't done it already):
+#. RDT on ACRN is enabled by default on supported platforms. This information can be found using an offline tool that generates a platform-specific xml file that helps ACRN identify RDT-supported platforms. This feature can be also be toggled using the CONFIG_RDT_ENABLED flag with the ``make menuconfig`` command. The first step is to clone the ACRN source code (if you haven't already done so):
 
    .. code-block:: none
 
@@ -105,7 +122,7 @@ Configure RDT for VM using VM Configuration
    .. figure:: images/menuconfig-rdt.png
       :align: center
 
-#. The predefined cache masks can be found at ``hypervisor/arch/x86/configs/$(CONFIG_BOARD)/board.c``, for respective board. For example for apl-up2, it can found at ``hypervisor/arch/x86/configs/apl-up2/board.c``.
+#. The predefined cache masks can be found at ``hypervisor/arch/x86/configs/$(CONFIG_BOARD)/board.c`` for respective boards. For example, apl-up2 can found at ``hypervisor/arch/x86/configs/apl-up2/board.c``.
 
    .. code-block:: none
       :emphasize-lines: 3,7,11,15
@@ -129,10 +146,10 @@ Configure RDT for VM using VM Configuration
               },
       };
 
-.. note::
-   User can change the mask values, but cache mask must have **continuous bits**, or a #GP fault can be triggered. Similary when programming MBA delay value, care should taken to set the value to less than or equal to MAX dealy value.
+   .. note::
+      Users can change the mask values, but the cache mask must have **continuous bits** or a #GP fault can be triggered. Similary, when programming an MBA delay value, be sure to set the value to less than or equal to the MAX delay value.
 
-#. Set up CLOS in the VM config. Please follow `RDT detection and resource capabilites` to identify the MAX CLOS that can be used. In ACRN we a value between 0 to **the lowest common MAX CLOS** among all the RDT resources to avoid resource misconfigurations. We will take SOS on sharing mode as an example. Its configuration data can be found at ``hypervisor/arch/x86/configs/vm_config.c``
+#. Set up the CLOS in the VM config. Follow `RDT detection and resource capabilites`_ to identify the MAX CLOS that can be used. ACRN uses the **the lowest common MAX CLOS** value among all RDT resources to avoid resource misconfigurations. For example, configuration data for the Service VM sharing mode can be found at ``hypervisor/arch/x86/configs/vm_config.c``
 
    .. code-block:: none
       :emphasize-lines: 6
@@ -153,10 +170,10 @@ Configure RDT for VM using VM Configuration
               },
       };
 
-.. note::
-   In ACRN, Lower CLOS always means higher priority (clos 0 > clos 1 > clos 2>...clos n). So care should be taken to program the VMs CLOS accordingly.
+   .. note::
+      In ACRN, Lower CLOS always means higher priority (clos 0 > clos 1 > clos 2>...clos n). So, carefully program each VM's CLOS accordingly.
 
-#. Careful consideration should be made in assigning vCPU affinity. In cache isolation configuration, not only need to isolate CAT-capable caches, but need to isolate lower-level caches as well. In the following example, logical processor #0 and #2 share L1 and L2 caches. In this case, do not assign LP #0 and LP #2 to different VMs that need to do cache isolation. Assign LP #1 and LP #3 with similar consideration.
+#. Careful consideration should be made when assigning vCPU affinity. In a cache isolation configuration, in addition to isolating CAT-capable caches, you must also isolate lower-level caches. In the following example, logical processor #0 and #2 share L1 and L2 caches. In this case, do not assign LP #0 and LP #2 to different VMs that need to do cache isolation. Assign LP #1 and LP #3 with similar consideration:
 
    .. code-block:: none
       :emphasize-lines: 3
@@ -177,11 +194,11 @@ Configure RDT for VM using VM Configuration
                   PU L#2 (P#1)
                   PU L#3 (P#3)
 
-#. Similary bandwidth control is per-core (not per LP), so max delay values of per-LP CLOS is applied to the core. If HT is turned on, don’t place high priority threads on sibling LP running lower priority threads.
+#. Bandwidth control is per-core (not per LP), so max delay values of per-LP CLOS is applied to the core. If HT is turned on, don’t place high priority threads on sibling LPs running lower priority threads.
 
-#. Based on scenario, build the ACRN hypervisor and copy the artifact ``acrn.efi`` to the
+#. Based on our scenario, build the ACRN hypervisor and copy the artifact ``acrn.efi`` to the
    ``/boot/EFI/acrn`` directory. If needed, update the devicemodel ``acrn-dm`` as well in ``/usr/bin`` directory. see :ref:`getting-started-building` for building instructions.
-   
+
    .. code-block:: none
 
       $ make hypervisor BOARD=apl-up2 FIRMWARE=uefi
@@ -191,4 +208,4 @@ Configure RDT for VM using VM Configuration
       $ mount /dev/mmcblk0p0 /boot
       $ scp <acrn.efi-at-your-compile-PC> /boot/EFI/acrn
 
-#. Restart the platform
+#. Restart the platform.

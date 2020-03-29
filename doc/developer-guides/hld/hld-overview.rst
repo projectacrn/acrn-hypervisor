@@ -64,7 +64,7 @@ for its RT VM:
 - LAPIC pass-thru
 - Polling mode driver
 - ART (always running timer)
-- other TCC feautres like split lock detection, Pseudo locking for cache
+- other TCC features like split lock detection, Pseudo locking for cache
 
 
 Hardware Requirements
@@ -112,7 +112,7 @@ provides I/O mediation to VMs. Some of the PCIe devices function as a
 pass-through mode to User VMs according to VM configuration. In addition,
 the Service VM could run the IC applications and HV helper applications such
 as the Device Model, VM manager, etc. where the VM manager is responsible
-for VM start/stop/pause, virtual CPU pause/resume,etc.
+for VM start/stop/pause, virtual CPU pause/resume, etc.
 
 .. figure:: images/over-image34.png
    :align: center
@@ -130,7 +130,7 @@ and Real-Time (RT) VM.
 compared to ACRN 1.0 is that:
 
 -  a pre-launched VM is supported in ACRN 2.0, with isolated resources, including
-   CPU, memory, and HW devices etc
+   CPU, memory, and HW devices, etc
 
 -  ACRN 2.0 adds a few necessary device emulations in hypervisor like vPCI and vUART to avoid
    interference between different VMs
@@ -236,7 +236,7 @@ Hypervisor
 
 ACRN takes advantage of Intel Virtualization Technology (Intel VT).
 The ACRN HV runs in Virtual Machine Extension (VMX) root operation,
-host mode, or VMM mode, while the Serivce and User VM guests run
+host mode, or VMM mode, while the Service and User VM guests run
 in VMX non-root operation, or guest mode. (We'll use "root mode"
 and "non-root mode" for simplicity).
 
@@ -266,7 +266,7 @@ used by commercial OS).
    managing physical resources at runtime. Examples include handling
    physical interrupts and low power state changes.
 
--  A layer siting on top of hardware management enables virtual
+-  A layer sitting on top of hardware management enables virtual
    CPUs (or vCPUs), leveraging Intel VT. A vCPU loop runs a vCPU in
    non-root mode and handles VM exit events triggered by the vCPU.
    This layer handles CPU and memory-related VM
@@ -365,7 +365,7 @@ User VM
 
 Currently, ACRN can boot Linux and Android guest OSes. For Android guest OS, ACRN
 provides a VM environment with two worlds: normal world and trusty
-world. The Android OS runs in the the normal world. The trusty OS and
+world. The Android OS runs in the normal world. The trusty OS and
 security sensitive applications run in the trusty world. The trusty
 world can see the memory of normal world, but normal world cannot see
 trusty world.
@@ -436,10 +436,10 @@ to boot Linux or Android guest OS.
 
 The vSBL image is released as a part of the Service OS root
 filesystem (rootfs).  The vSBL is copied to the User VM memory by the VM manager
-in the Service VM while creating the the User VM virtual BSP of the User VM. The Service VM passes the
+in the Service VM while creating the User VM virtual BSP of the User VM. The Service VM passes the
 start of vSBL and related information to HV. HV sets the guest RIP of the User VM's
 virtual BSP as the start of vSBL and related guest registers, and
-launches the the User VM virtual BSP. The vSBL starts running in the virtual
+launches the User VM virtual BSP. The vSBL starts running in the virtual
 real mode within the User VM. Conceptually, vSBL is part of the User VM runtime.
 
 In the current design, the vSBL supports booting Android guest OS or
@@ -458,8 +458,8 @@ the EFI boot of the User VM on the ACRN hypervisor platform.
 The OVMF is copied to the User VM memory by the VM manager in the Service VM while creating
 the User VM virtual BSP of the User VM. The Service VM passes the start of OVMF and related
 information to HV. HV sets guest RIP of the User VM virtual BSP as the start of OVMF
-and related guest registers, and launches the the User VM virtual BSP. The OVMF starts
-running in the virtual real mode within the the User VM. Conceptually, OVMF is part of the User VM runtime.
+and related guest registers, and launches the User VM virtual BSP. The OVMF starts
+running in the virtual real mode within the User VM. Conceptually, OVMF is part of the User VM runtime.
 
 Freedom From Interference
 *************************
@@ -495,7 +495,7 @@ the following mechanisms:
 
    2. The User VM cannot access the memory of the Service VM and the hypervisor
 
-   3. The hypervisor does not unintendedly access the memory of the Serivce or User VM.
+   3. The hypervisor does not unintendedly access the memory of the Service or User VM.
 
 -  Destination of external interrupts are set to be the physical core
    where the VM that handles them is running.

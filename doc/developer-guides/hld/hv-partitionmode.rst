@@ -3,8 +3,8 @@
 Partition mode
 ##############
 
-ACRN is type-1 hypervisor that supports running multiple guest operating
-systems (OS). Typically, the platform BIOS/boot-loader boots ACRN, and
+ACRN is a type-1 hypervisor that supports running multiple guest operating
+systems (OS). Typically, the platform BIOS/bootloader boots ACRN, and
 ACRN loads single or multiple guest OSes. Refer to :ref:`hv-startup` for
 details on the start-up flow of the ACRN hypervisor.
 
@@ -21,12 +21,12 @@ Introduction
 
 In partition mode, ACRN provides guests with exclusive access to cores,
 memory, cache, and peripheral devices. Partition mode enables developers
-to dedicate resources exclusively among the guests. However there is no
+to dedicate resources exclusively among the guests. However, there is no
 support today in x86 hardware or in ACRN to partition resources such as
 peripheral buses (e.g. PCI). On x86 platforms that support Cache
 Allocation Technology (CAT) and Memory Bandwidth Allocation(MBA), resources
 such as Cache and memory bandwidth can be used by developers to partition
-L2, Last Level Cache (LLC) and memory bandwidth among the guests. Refer to
+L2, Last Level Cache (LLC), and memory bandwidth among the guests. Refer to
 :ref:`hv_rdt` for more details on ACRN RDT high-level design and
 :ref:`rdt_configuration` for RDT configuration.
 
@@ -34,7 +34,7 @@ L2, Last Level Cache (LLC) and memory bandwidth among the guests. Refer to
 ACRN expects static partitioning of resources either by code
 modification for guest configuration or through compile-time config
 options. All the devices exposed to the guests are either physical
-resources or emulated in the hypervisor. So, there is no need for
+resources or are emulated in the hypervisor. So, there is no need for a
 device-model and Service OS. :numref:`pmode2vms` shows a partition mode
 example of two VMs with exclusive access to physical resources.
 
@@ -47,7 +47,7 @@ example of two VMs with exclusive access to physical resources.
 Guest info
 **********
 
-ACRN uses multi-boot info passed from the platform boot-loader to know
+ACRN uses multi-boot info passed from the platform bootloader to know
 the location of each guest kernel in memory. ACRN creates a copy of each
 guest kernel into each of the guests' memory. Current implementation of
 ACRN requires developers to specify kernel parameters for the guests as
@@ -64,7 +64,7 @@ Cores
 =====
 
 ACRN requires the developer to specify the number of guests and the
-cores dedicated for each guest. Also the developer needs to specify
+cores dedicated for each guest. Also, the developer needs to specify
 the physical core used as the Boot Strap Processor (BSP) for each guest. As
 the processors are brought to life in the hypervisor, it checks if they are
 configured as BSP for any of the guests. If a processor is BSP of any of
@@ -90,7 +90,7 @@ for assigning host memory to the guests:
 1) Sum of guest PCI hole and guest "System RAM" is less than 4GB.
 
 2) Pick the starting address in the host physical address and the
-   size, so that it does not overlap with any reserved regions in
+   size so that it does not overlap with any reserved regions in
    host E820.
 
 ACRN creates EPT mapping for the guest between GPA (0, memory size) and
@@ -127,7 +127,7 @@ Platform info - mptable
 =======================
 
 ACRN, in partition mode, uses mptable to convey platform info to each
-guest.  Using this platform information, number of cores used for each
+guest. Using this platform information, number of cores used for each
 guest, and whether the guest needs devices with INTX, ACRN builds
 mptable and copies it to the guest memory. In partition mode, ACRN uses
 physical APIC IDs to pass to the guests.
@@ -137,7 +137,7 @@ I/O - Virtual devices
 
 Port I/O is supported for PCI device config space 0xcfc and 0xcf8, vUART
 0x3f8, vRTC 0x70 and 0x71, and vPIC ranges 0x20/21, 0xa0/a1, and
-0x4d0/4d1.  MMIO is supported for vIOAPIC. ACRN exposes a virtual
+0x4d0/4d1. MMIO is supported for vIOAPIC. ACRN exposes a virtual
 host-bridge at BDF (Bus Device Function) 0.0:0 to each guest. Access to
 256 bytes of config space for virtual host bridge is emulated.
 
@@ -150,11 +150,11 @@ the virtual host bridge. ACRN does not support either passing thru
 bridges or emulating virtual bridges. Pass-thru devices should be
 statically allocated to each guest using the guest configuration. ACRN
 expects the developer to provide the virtual BDF to BDF of the
-physical device mapping for all the pass-thru devices as
-part of each guest configuration.
+physical device mapping for all the pass-thru devices as part of each guest
+configuration.
 
-Run-time ACRN support for guests
-********************************
+Runtime ACRN support for guests
+*******************************
 
 ACRN, in partition mode, supports an option to pass-thru LAPIC of the
 physical CPUs to the guest. ACRN expects developers to specify if the
@@ -185,20 +185,20 @@ Guests w/o LAPIC pass-thru
 --------------------------
 
 For guests without LAPIC pass-thru, IPIs between guest CPUs are handled in
-the same way as sharing mode of ACRN. Refer to :ref:`virtual-interrupt-hld`
+the same way as sharing mode in ACRN. Refer to :ref:`virtual-interrupt-hld`
 for more details.
 
 Guests w/ LAPIC pass-thru
 -------------------------
 
 ACRN supports pass-thru if and only if the guest is using x2APIC mode
-for the vLAPIC. In LAPIC pass-thru mode, writes to Interrupt Command
-Register (ICR) x2APIC MSR is intercepted. Guest writes the IPI info
-including vector, destination APIC IDs to the ICR. Upon an IPI request
-from the guest, ACRN does sanity check on the destination processors
-programmed into ICR. If the destination is a valid target for the guest,
-ACRN sends IPI with the same vector from ICR to the physical CPUs
-corresponding to the destination processor info in ICR.
+for the vLAPIC. In LAPIC pass-thru mode, writes to the Interrupt Command
+Register (ICR) x2APIC MSR is intercepted. Guest writes the IPI info,
+including vector, and destination APIC IDs to the ICR. Upon an IPI request
+from the guest, ACRN does a sanity check on the destination processors
+programmed into the ICR. If the destination is a valid target for the guest,
+ACRN sends an IPI with the same vector from the ICR to the physical CPUs
+corresponding to the destination processor info in the ICR.
 
 .. figure:: images/partition-image14.png
    :align: center
@@ -217,7 +217,7 @@ Address registers (BAR), offsets starting from 0x10H to 0x24H, provide
 the information about the resources (I/O and MMIO) used by the PCI
 device. ACRN virtualizes the BAR registers and for the rest of the
 config space, forwards reads and writes to the physical config space of
-pass-thru devices.  Refer to `I/O`_ section below for more details.
+pass-thru devices.  Refer to the `I/O`_ section below for more details.
 
 .. figure:: images/partition-image1.png
    :align: center
@@ -237,14 +237,14 @@ I/O
 
 ACRN supports I/O for pass-thru devices with two restrictions.
 
-1) Supports only MMIO. So requires developers to expose I/O BARs as
+1) Supports only MMIO. Thus, this requires developers to expose I/O BARs as
    not present in the guest configuration.
 
 2) Supports only 32-bit MMIO BAR type.
 
-As guest PCI sub-system scans the PCI bus and assigns Guest Physical
-Address (GPA) to the MMIO BAR, ACRN maps GPA to the address in the
-physical BAR of the pass-thru device using EPT. Following timeline chart
+As the guest PCI sub-system scans the PCI bus and assigns a Guest Physical
+Address (GPA) to the MMIO BAR, ACRN maps the GPA to the address in the
+physical BAR of the pass-thru device using EPT. The following timeline chart
 explains how PCI devices are assigned to guest and BARs are mapped upon
 guest initialization.
 
@@ -265,7 +265,7 @@ ACRN expects developers to identify the interrupt line info (0x3CH) from
 the physical BAR of the pass-thru device and build an interrupt entry in
 the mptable for the corresponding guest. As guest configures the vIOAPIC
 for the interrupt RTE, ACRN writes the info from the guest RTE into the
-physical IOAPIC RTE. Upon guest kernel request to mask the interrupt,
+physical IOAPIC RTE. Upon the guest kernel request to mask the interrupt,
 ACRN writes to the physical RTE to mask the interrupt at the physical
 IOAPIC. When guest masks the RTE in vIOAPIC, ACRN masks the interrupt
 RTE in the physical IOAPIC. Level triggered interrupts are not
@@ -275,9 +275,9 @@ MSI support
 ~~~~~~~~~~~
 
 Guest reads/writes to PCI configuration space for configuring MSI
-interrupts using address. Data and control registers are pass-thru to
-the physical BAR of pass-thru device. Refer to `Configuration
-space access`_ for details on how PCI configuration space is emulated.
+interrupts using an address. Data and control registers are pass-thru to
+the physical BAR of the pass-thru device. Refer to `Configuration
+space access`_ for details on how the PCI configuration space is emulated.
 
 Virtual device support
 ======================
@@ -328,7 +328,7 @@ Hypervisor IPIs work the same way as in sharing mode.
 Guests w/ LAPIC pass-thru
 -------------------------
 
-Since external interrupts are pass-thru to guest IDT, IPIs do not
+Since external interrupts are pass-thru to the guest IDT, IPIs do not
 trigger vmexit. ACRN uses NMI delivery mode and the NMI exiting is
 chosen for vCPUs. At the time of NMI interrupt on the target processor,
 if the processor is in non-root mode, vmexit happens on the processor
@@ -341,8 +341,8 @@ For details on how hypervisor console works, refer to
 :ref:`hv-console`.
 
 For a guest console in partition mode, ACRN provides an option to pass
-``vmid`` as an argument to ``vm_console``. vmid is same as the one
-developer uses in the guest configuration.
+``vmid`` as an argument to ``vm_console``. vmid is the same as the one
+developers use in the guest configuration.
 
 Guests w/o LAPIC pass-thru
 --------------------------
@@ -352,18 +352,18 @@ Works the same way as sharing mode.
 Hypervisor Console
 ==================
 
-ACRN uses TSC deadline timer to provide timer service. Hypervisor
+ACRN uses the TSC deadline timer to provide a timer service. The hypervisor
 console uses a timer on CPU0 to poll characters on the serial device. To
-support LAPIC pass-thru, TSC deadline MSR is pass-thru and the local
-timer interrupt also delivered to the guest IDT. Instead of TSC deadline
-timer, ACRN uses VMX preemption timer to poll the serial device.
+support LAPIC pass-thru, the TSC deadline MSR is pass-thru and the local
+timer interrupt is also delivered to the guest IDT. Instead of the TSC
+deadline timer, ACRN uses the VMX preemption timer to poll the serial device.
 
 Guest Console
 =============
 
 ACRN exposes vUART to partition mode guests. vUART uses vPIC to inject
-interrupt to the guest BSP. In cases of guest having more than one core,
-during runtime, vUART might need to inject interrupt to guest BSP from
+interrupt to the guest BSP. In cases of the guest having more than one core,
+during runtime, vUART might need to inject an interrupt to the guest BSP from
 another core (other than BSP). As mentioned in section <Hypervisor IPI
-service>, ACRN uses NMI delivery mode for notifying the CPU running BSP
+service>, ACRN uses NMI delivery mode for notifying the CPU running the BSP
 of the guest.
