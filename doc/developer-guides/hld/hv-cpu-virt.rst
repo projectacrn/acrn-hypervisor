@@ -94,7 +94,7 @@ CPU management in the Service VM under flexing CPU sharing
 ==========================================================
 
 As all Service VM CPUs could share with different UOSs, ACRN can still pass-thru
-MADT to Service VM, and the Service VM is still able to see all physcial CPUs.
+MADT to Service VM, and the Service VM is still able to see all physical CPUs.
 
 But as under CPU sharing, the Service VM does not need offline/release the physical
 CPUs intended for UOS use.
@@ -102,8 +102,8 @@ CPUs intended for UOS use.
 CPU management in UOS
 =====================
 
-From the UOS point of view, CPU management is very simple - when DM do
-hypercall to create VM, the hypervisor will create its all virtual CPUs
+From the UOS point of view, CPU management is very simple - when DM does
+hypercalls to create VMs, the hypervisor will create its virtual CPUs
 based on the configuration in this UOS VM's ``vm config``.
 
 As mentioned in previous description, ``vcpu_affinity`` in ``vm config``
@@ -150,7 +150,7 @@ the major states are:
 -  **VPCU_ZOMBIE**: vCPU is being offline, and its vCPU thread is not
    running on its associated CPU
 
--  **VPCU_OFFLINE**: vCPU is offlined
+-  **VPCU_OFFLINE**: vCPU is offline
 
 .. figure:: images/hld-image17.png
    :align: center
