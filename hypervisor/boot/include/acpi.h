@@ -22,6 +22,13 @@
 #define ACPI_MADT_ENABLED           1U
 #define ACPI_MADT_TYPE_LOCAL_APIC_NMI 4U
 
+#define ACPI_DMAR_TYPE_HARDWARE_UNIT           0U
+#define ACPI_DMAR_TYPE_RESERVED_MEMORY           1U
+#define ACPI_DMAR_TYPE_ROOT_ATS           2U
+#define ACPI_DMAR_TYPE_HARDWARE_AFFINITY           3U
+#define ACPI_DMAR_TYPE_NAMESPACE           4U
+#define ACPI_DMAR_TYPE_RESERVED           5U
+
 /* FACP field offsets */
 #define OFFSET_FACS_ADDR        36U
 #define OFFSET_RESET_REGISTER   116U
@@ -152,15 +159,6 @@ struct acpi_madt_ioapic {
 	uint32_t  gsi_base;
 } __packed;
 
-enum acpi_dmar_type {
-	ACPI_DMAR_TYPE_HARDWARE_UNIT        = 0,
-	ACPI_DMAR_TYPE_RESERVED_MEMORY      = 1,
-	ACPI_DMAR_TYPE_ROOT_ATS             = 2,
-	ACPI_DMAR_TYPE_HARDWARE_AFFINITY    = 3,
-	ACPI_DMAR_TYPE_NAMESPACE            = 4,
-	ACPI_DMAR_TYPE_RESERVED             = 5
-};
-
 struct acpi_table_dmar {
 	/* Common ACPI table header */
 	struct acpi_table_header  header;
@@ -197,7 +195,6 @@ struct acpi_dmar_device_scope {
 	uint8_t                   enumeration_id;
 	uint8_t                   bus;
 } __packed;
-
 
 void *get_acpi_tbl(const char *signature);
 
