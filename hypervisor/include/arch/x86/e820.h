@@ -37,9 +37,7 @@ struct mem_range {
 /* HV read multiboot header to get e820 entries info and calc total RAM info */
 void init_e820(void);
 
-/* get some RAM below 1MB in e820 entries, hide it from sos_vm, return its start address */
-uint64_t e820_alloc_low_memory(uint32_t size_arg);
-
+uint64_t e820_alloc_memory(uint32_t size_arg, uint64_t max_addr);
 /* get total number of the e820 entries */
 uint32_t get_e820_entries_count(void);
 

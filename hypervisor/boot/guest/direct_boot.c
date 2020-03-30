@@ -11,13 +11,14 @@
 #include <cpu.h>
 #include <boot.h>
 #include <direct_boot.h>
+#include <mmu.h>
 
 /* AP trampoline code buffer base address. */
 static uint64_t ap_trampoline_buf;
 
 static void init_direct_boot(void)
 {
-	ap_trampoline_buf = e820_alloc_low_memory(CONFIG_LOW_RAM_SIZE);
+	ap_trampoline_buf = e820_alloc_memory(CONFIG_LOW_RAM_SIZE, MEM_1M);
 }
 
 /* @post: return != 0UL */
