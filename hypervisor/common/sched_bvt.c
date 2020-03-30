@@ -65,7 +65,7 @@ static void runqueue_add(struct thread_object *obj)
 		list_add(&data->list, &bvt_ctl->runqueue);
 	} else {
 		list_for_each(pos, &bvt_ctl->runqueue) {
-			iter_obj = list_entry(pos, struct thread_object, data);
+			iter_obj = container_of(pos, struct thread_object, data);
 			iter_data = (struct sched_bvt_data *)iter_obj->data;
 			if (iter_data->evt > data->evt) {
 				list_add_node(&data->list, pos->prev, pos);
@@ -240,7 +240,7 @@ static struct thread_object *sched_bvt_pick_next(struct sched_control *ctl)
 		first = bvt_ctl->runqueue.next;
 		sec = (first->next == &bvt_ctl->runqueue) ? NULL : first->next;
 
-		first_obj = list_entry(first, struct thread_object, data);
+		first_obj = container_of(first, struct thread_object, data);
 		first_data = (struct sched_bvt_data *)first_obj->data;
 
 		/* The run_countdown is used to store how may mcu the next thread
@@ -253,7 +253,7 @@ static struct thread_object *sched_bvt_pick_next(struct sched_control *ctl)
 		 * UINT64_MAX can make it run for >100 years before rescheduled.
 		 */
 		if (sec != NULL) {
-			second_obj = list_entry(sec, struct thread_object, data);
+			second_obj = container_of(sec, struct thread_object, data);
 			second_data = (struct sched_bvt_data *)second_obj->data;
 			delta_mcu = second_data->evt - first_data->evt;
 			first_data->run_countdown = v2p(delta_mcu, first_data->vt_ratio) + BVT_CSA_MCU;

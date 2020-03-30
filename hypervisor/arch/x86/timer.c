@@ -50,7 +50,7 @@ static inline void update_physical_timer(struct per_cpu_timers *cpu_timer)
 
 	/* find the next event timer */
 	if (!list_empty(&cpu_timer->timer_list)) {
-		timer = list_entry((&cpu_timer->timer_list)->next,
+		timer = container_of((&cpu_timer->timer_list)->next,
 			struct hv_timer, node);
 
 		/* it is okay to program a expired time */
@@ -70,7 +70,7 @@ static bool local_add_timer(struct per_cpu_timers *cpu_timer,
 
 	prev = &cpu_timer->timer_list;
 	list_for_each(pos, &cpu_timer->timer_list) {
-		tmp = list_entry(pos, struct hv_timer, node);
+		tmp = container_of(pos, struct hv_timer, node);
 		if (tmp->fire_tsc < tsc) {
 			prev = &tmp->node;
 		}
@@ -168,7 +168,7 @@ static void timer_softirq(uint16_t pcpu_id)
 	 * already passed due to previously func()'s delay.
 	 */
 	list_for_each_safe(pos, n, &cpu_timer->timer_list) {
-		timer = list_entry(pos, struct hv_timer, node);
+		timer = container_of(pos, struct hv_timer, node);
 		/* timer expried */
 		tries--;
 		if ((timer->fire_tsc <= current_tsc) && (tries != 0U)) {

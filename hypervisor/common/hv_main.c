@@ -17,7 +17,7 @@
 
 void vcpu_thread(struct thread_object *obj)
 {
-	struct acrn_vcpu *vcpu = list_entry(obj, struct acrn_vcpu, thread_obj);
+	struct acrn_vcpu *vcpu = container_of(obj, struct acrn_vcpu, thread_obj);
 	uint32_t basic_exit_reason = 0U;
 	int32_t ret = 0;
 
