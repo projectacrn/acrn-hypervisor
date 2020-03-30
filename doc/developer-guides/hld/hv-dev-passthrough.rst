@@ -155,10 +155,10 @@ directly. EPT mapping is not built for these pages having MSI-X table.
 Device configuration emulation
 ******************************
 
-PCI configuration space could been accessed by PCI-compatible Configuration Mechanism
-(IO port 0xCF8/CFC) and PCI Express Enhanced Configuration Access Mechanism (PCI MMCONFIG).
-ACRN hypervisor will trap these PCI configuration space access and emulate it. You may refer
-to :ref:`split-device-model` for detail.
+The PCI configuration space can be accessed by a PCI-compatible
+Configuration Mechanism (IO port 0xCF8/CFC) and the PCI Express Enhanced
+Configuration Access Mechanism (PCI MMCONFIG). The ACRN hypervisor traps
+this PCI configuration space access and emulate it. Refer to :ref:`split-device-model` for details.
 
 MSI-X table emulation
 *********************
@@ -223,7 +223,7 @@ Remapping of (virtual) PIC interrupts are set up in a similar sequence:
 
    Initialization of remapping of virtual MSI for Service VM
 
-This figure  illustrates how mappings of MSI or MSIX are set up for
+This figure illustrates how mappings of MSI or MSIX are set up for
 Service VM. Service VM is responsible for issuing a hypercall to notify the
 hypervisor before it configures the PCI configuration space to enable an
 MSI. The hypervisor takes this opportunity to set up a remapping for the
