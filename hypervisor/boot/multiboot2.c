@@ -14,7 +14,7 @@
 /**
  * @pre mbi != NULL && mb2_tag_mmap != NULL
  */
-static void mb2_mmap_to_mbi(struct acrn_multiboot_info *mbi, struct multiboot2_tag_mmap *mb2_tag_mmap)
+static void mb2_mmap_to_mbi(struct acrn_multiboot_info *mbi, const struct multiboot2_tag_mmap *mb2_tag_mmap)
 {
 	uint32_t i;
 
@@ -36,7 +36,7 @@ static void mb2_mmap_to_mbi(struct acrn_multiboot_info *mbi, struct multiboot2_t
  * @pre mbi != NULL && mb2_tag_mods != NULL
  */
 static void mb2_mods_to_mbi(struct acrn_multiboot_info *mbi,
-			uint32_t mbi_mod_idx, struct multiboot2_tag_module *mb2_tag_mods)
+			uint32_t mbi_mod_idx, const struct multiboot2_tag_module *mb2_tag_mods)
 {
 	if (mbi_mod_idx >= MAX_MODULE_COUNT) {
 		pr_err("unhandled multiboot2 module: 0x%x", mb2_tag_mods->mod_start);
@@ -52,7 +52,7 @@ static void mb2_mods_to_mbi(struct acrn_multiboot_info *mbi,
 /**
  * @pre mbi != NULL && mb2_tag_efi64 != 0
  */
-static void mb2_efi64_to_mbi(struct acrn_multiboot_info *mbi, struct multiboot2_tag_efi64 *mb2_tag_efi64)
+static void mb2_efi64_to_mbi(struct acrn_multiboot_info *mbi, const struct multiboot2_tag_efi64 *mb2_tag_efi64)
 {
 	mbi->mi_efi_info.efi_systab = (uint32_t)(uint64_t)mb2_tag_efi64->pointer;
 	mbi->mi_efi_info.efi_loader_signature = (uint32_t)(uint64_t)efiloader_sig;
@@ -62,7 +62,8 @@ static void mb2_efi64_to_mbi(struct acrn_multiboot_info *mbi, struct multiboot2_
 /**
  * @pre mbi != NULL && mb2_tag_efimmap != 0
  */
-static int32_t mb2_efimmap_to_mbi(struct acrn_multiboot_info *mbi, struct multiboot2_tag_efi_mmap *mb2_tag_efimmap)
+static int32_t mb2_efimmap_to_mbi(struct acrn_multiboot_info *mbi,
+			const struct multiboot2_tag_efi_mmap *mb2_tag_efimmap)
 {
 	int32_t ret = 0;
 
@@ -81,7 +82,7 @@ static int32_t mb2_efimmap_to_mbi(struct acrn_multiboot_info *mbi, struct multib
 }
 
 /**
- * @pre mbi != NULL && mb2_info != NULL
+ * @pre mbi != NULL
  */
 int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
 {
@@ -95,18 +96,12 @@ int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
 	mb2_tag_end = (struct multiboot2_tag *)((uint8_t *)mb2_info + mb2_info_size);
 
 	while ((mb2_tag->type != MULTIBOOT2_TAG_TYPE_END) && (mb2_tag < mb2_tag_end)) {
-		if (mb2_tag->size == 0U) {
-			pr_err("the multiboot2 tag size should not be 0!");
-			ret = -EINVAL;
-			break;
-		}
-
 		switch (mb2_tag->type) {
 		case MULTIBOOT2_TAG_TYPE_MMAP:
-			mb2_mmap_to_mbi(mbi, (struct multiboot2_tag_mmap *)mb2_tag);
+			mb2_mmap_to_mbi(mbi, (const struct multiboot2_tag_mmap *)mb2_tag);
 			break;
 		case MULTIBOOT2_TAG_TYPE_MODULE:
-			mb2_mods_to_mbi(mbi, mod_idx, (struct multiboot2_tag_module *)mb2_tag);
+			mb2_mods_to_mbi(mbi, mod_idx, (const struct multiboot2_tag_module *)mb2_tag);
 			mod_idx++;
 			break;
 		case MULTIBOOT2_TAG_TYPE_BOOT_LOADER_NAME:
@@ -116,10 +111,10 @@ int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
 			mbi->mi_acpi_rsdp = ((struct multiboot2_tag_new_acpi *)mb2_tag)->rsdp;
 			break;
 		case MULTIBOOT2_TAG_TYPE_EFI64:
-			mb2_efi64_to_mbi(mbi, (struct multiboot2_tag_efi64 *)mb2_tag);
+			mb2_efi64_to_mbi(mbi, (const struct multiboot2_tag_efi64 *)mb2_tag);
 			break;
 		case MULTIBOOT2_TAG_TYPE_EFI_MMAP:
-			ret = mb2_efimmap_to_mbi(mbi, (struct multiboot2_tag_efi_mmap *)mb2_tag);
+			ret = mb2_efimmap_to_mbi(mbi, (const struct multiboot2_tag_efi_mmap *)mb2_tag);
 			break;
 		default:
 			if (mb2_tag->type <= MULTIBOOT2_TAG_TYPE_LOAD_BASE_ADDR) {
@@ -130,12 +125,17 @@ int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
 			}
 			break;
 		}
+		if (mb2_tag->size == 0U) {
+			pr_err("the multiboot2 tag size should not be 0!");
+			ret = -EINVAL;
+		}
+
 		if (ret != 0) {
 			pr_err("multiboot2 info format error!");
 			break;
 		}
 		/*
-		 * tag->size is not including padding whearas each tag
+		 * tag->size does not include padding whearas each tag
 		 * start at 8-bytes aligned address.
 		 */
 		mb2_tag = (struct multiboot2_tag *)((uint8_t *)mb2_tag

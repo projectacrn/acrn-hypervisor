@@ -51,6 +51,9 @@ static inline bool boot_from_multiboot1(void)
 }
 
 #ifdef CONFIG_MULTIBOOT2
+/*
+ * @post boot_regs[1] stores the address pointer that point to a valid multiboot2 info
+ */
 static inline bool boot_from_multiboot2(void)
 {
 	/*
