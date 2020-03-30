@@ -64,7 +64,7 @@ static void remap_vmsi(const struct pci_vdev *vdev)
 {
 	struct ptirq_msi_info info = {};
 	union pci_bdf pbdf = vdev->pdev->bdf;
-	struct acrn_vm *vm = vdev->vpci->vm;
+	struct acrn_vm *vm = vpci2vm(vdev->vpci);
 	uint32_t capoff = vdev->msi.capoff;
 	uint32_t vmsi_msgdata, vmsi_addrlo, vmsi_addrhi = 0U;
 
@@ -130,7 +130,7 @@ void write_vmsi_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint
 void deinit_vmsi(const struct pci_vdev *vdev)
 {
 	if (has_msi_cap(vdev)) {
-		ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->bdf.value, 1U);
+		ptirq_remove_msix_remapping(vpci2vm(vdev->vpci), vdev->bdf.value, 1U);
 	}
 }
 

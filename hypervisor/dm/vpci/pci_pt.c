@@ -42,7 +42,6 @@ static void vdev_pt_unmap_msix(struct pci_vdev *vdev)
 	uint32_t i;
 	uint64_t addr_hi, addr_lo;
 	struct pci_msix *msix = &vdev->msix;
-	struct acrn_vm *vm = vdev->vpci->vm;
 
 	/* Mask all table entries */
 	for (i = 0U; i < msix->table_count; i++) {
@@ -56,7 +55,7 @@ static void vdev_pt_unmap_msix(struct pci_vdev *vdev)
 		addr_hi = addr_lo + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
 		addr_lo = round_page_down(addr_lo);
 		addr_hi = round_page_up(addr_hi);
-		unregister_mmio_emulation_handler(vm, addr_lo, addr_hi);
+		unregister_mmio_emulation_handler(vpci2vm(vdev->vpci), addr_lo, addr_hi);
 		msix->mmio_gpa = 0UL;
 	}
 }
@@ -71,10 +70,11 @@ void vdev_pt_map_msix(struct pci_vdev *vdev, bool hold_lock)
 	struct pci_vbar *vbar;
 	uint64_t addr_hi, addr_lo;
 	struct pci_msix *msix = &vdev->msix;
-	struct acrn_vm *vm = vdev->vpci->vm;
 
-	vbar = &vdev->vbars[vdev->msix.table_bar];
+	vbar = &vdev->vbars[msix->table_bar];
 	if (vbar->base_gpa != 0UL) {
+		struct acrn_vm *vm = vpci2vm(vdev->vpci);
+
 		addr_lo = vbar->base_gpa + msix->table_offset;
 		addr_hi = addr_lo + (msix->table_count * MSIX_TABLE_ENTRY_SIZE);
 		addr_lo = round_page_down(addr_lo);
@@ -93,12 +93,11 @@ void vdev_pt_map_msix(struct pci_vdev *vdev, bool hold_lock)
  */
 static void vdev_pt_unmap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
-	struct pci_vbar *vbar;
-	struct acrn_vm *vm = vdev->vpci->vm;
-
-	vbar = &vdev->vbars[idx];
+	struct pci_vbar *vbar = &vdev->vbars[idx];
 
 	if (vbar->base_gpa != 0UL) {
+		struct acrn_vm *vm = vpci2vm(vdev->vpci);
+
 		ept_del_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
 			vbar->base_gpa, /* GPA (old vbar) */
 			vbar->size);
@@ -116,12 +115,11 @@ static void vdev_pt_unmap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
  */
 static void vdev_pt_map_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
-	struct pci_vbar *vbar;
-	struct acrn_vm *vm = vdev->vpci->vm;
-
-	vbar = &vdev->vbars[idx];
+	struct pci_vbar *vbar = &vdev->vbars[idx];
 
 	if (vbar->base_gpa != 0UL) {
+		struct acrn_vm *vm = vpci2vm(vdev->vpci);
+
 		ept_add_mr(vm, (uint64_t *)(vm->arch_vm.nworld_eptp),
 			vbar->base_hpa, /* HPA (pbar) */
 			vbar->base_gpa, /* GPA (new vbar) */
@@ -142,11 +140,13 @@ static void vdev_pt_map_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
  */
 static void vdev_pt_allow_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
+	struct acrn_vm *vm = vpci2vm(vdev->vpci);
+
 	/* For SOS, all port IO access is allowed by default, so skip SOS here */
-	if (!is_sos_vm(vdev->vpci->vm)) {
+	if (!is_sos_vm(vm)) {
 		struct pci_vbar *vbar = &vdev->vbars[idx];
 		if (vbar->base_gpa != 0UL) {
-			allow_guest_pio_access(vdev->vpci->vm, (uint16_t)vbar->base_gpa, (uint32_t)(vbar->size));
+			allow_guest_pio_access(vm, (uint16_t)vbar->base_gpa, (uint32_t)(vbar->size));
 		}
 	}
 }
@@ -159,11 +159,13 @@ static void vdev_pt_allow_io_vbar(struct pci_vdev *vdev, uint32_t idx)
  */
 static void vdev_pt_deny_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
+	struct acrn_vm *vm = vpci2vm(vdev->vpci);
+
 	/* For SOS, all port IO access is allowed by default, so skip SOS here */
-	if (!is_sos_vm(vdev->vpci->vm)) {
+	if (!is_sos_vm(vm)) {
 		struct pci_vbar *vbar = &vdev->vbars[idx];
 		if (vbar->base_gpa != 0UL) {
-			deny_guest_pio_access(vdev->vpci->vm, (uint16_t)(vbar->base_gpa), (uint32_t)(vbar->size));
+			deny_guest_pio_access(vm, (uint16_t)(vbar->base_gpa), (uint32_t)(vbar->size));
 		}
 
 	}
@@ -294,7 +296,7 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 			vbar->fixed = lo & (~mask);
 			vbar->size = (uint64_t)size32 & mask;
 
-			if (is_prelaunched_vm(vdev->vpci->vm)) {
+			if (is_prelaunched_vm(vpci2vm(vdev->vpci))) {
 				lo = (uint32_t)vdev->pci_dev_config->vbar_base[idx];
 			}
 
@@ -322,7 +324,7 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 				vbar->mask = size32;
 				vbar->type = PCIBAR_MEM64HI;
 
-				if (is_prelaunched_vm(vdev->vpci->vm)) {
+				if (is_prelaunched_vm(vpci2vm(vdev->vpci))) {
 					hi = (uint32_t)(vdev->pci_dev_config->vbar_base[idx - 1U] >> 32U);
 				}
 				/* if it is parsing SRIOV VF BARs, no need to write vdev bars */
@@ -380,7 +382,7 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 	/* Initialize the vdev BARs except SRIOV VF, VF BARs are initialized directly from create_vf function */
 	if (vdev->phyfun == NULL) {
 		init_bars(vdev, is_pf_vdev);
-		if (is_prelaunched_vm(vdev->vpci->vm) && (!is_pf_vdev)) {
+		if (is_prelaunched_vm(vpci2vm(vdev->vpci)) && (!is_pf_vdev)) {
 			pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
 
 			/* Disable INTX */
@@ -388,7 +390,7 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 			pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
 		}
 	} else {
-		if (!is_own_device(vdev->phyfun->vpci->vm, vdev)) {
+		if (!is_own_device(vpci2vm(vdev->phyfun->vpci), vdev)) {
 			/* VF is assigned to a UOS */
 			uint32_t vid, did;
 
@@ -424,7 +426,7 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 void deinit_vdev_pt(struct pci_vdev *vdev) {
 
 	/* Check if the vdev is an unassigned SR-IOV VF device */
-	if ((vdev->phyfun != NULL) && (is_own_device(vdev->phyfun->vpci->vm, vdev))) {
+	if ((vdev->phyfun != NULL) && (is_own_device(vpci2vm(vdev->phyfun->vpci), vdev))) {
 		uint32_t bar_idx;
 
 		/* Delete VF MMIO from EPT table since the VF physical device has gone */

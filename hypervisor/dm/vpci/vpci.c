@@ -242,7 +242,6 @@ void vpci_init(struct acrn_vm *vm)
 	struct acrn_vm_config *vm_config;
 	uint64_t pci_mmcfg_base;
 
-	vm->vpci.vm = vm;
 	vm->iommu = create_iommu_domain(vm->vm_id, hva2hpa(vm->arch_vm.nworld_eptp), 48U);
 	/* Build up vdev list for vm */
 	vpci_init_vdevs(vm);
@@ -302,7 +301,7 @@ void vpci_cleanup(struct acrn_vm *vm)
 static void assign_vdev_pt_iommu_domain(struct pci_vdev *vdev)
 {
 	int32_t ret;
-	struct acrn_vm *vm = vdev->vpci->vm;
+	struct acrn_vm *vm = vpci2vm(vdev->vpci);
 
 	ret = move_pt_device(NULL, vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
 		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
@@ -320,7 +319,7 @@ static void assign_vdev_pt_iommu_domain(struct pci_vdev *vdev)
 static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 {
 	int32_t ret;
-	const struct acrn_vm *vm = vdev->vpci->vm;
+	const struct acrn_vm *vm = vpci2vm(vdev->vpci);
 
 	ret = move_pt_device(vm->iommu, NULL, (uint8_t)vdev->pdev->bdf.bits.b,
 		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
@@ -360,8 +359,8 @@ static struct pci_vdev *find_available_vdev(struct acrn_vpci *vpci, union pci_bd
 		/* In the case a device is assigned to a UOS and is not in a zombie state */
 		if ((vdev->new_owner != NULL) && (vdev->new_owner->vpci != NULL)) {
 			/* the SOS is able to access, if and only if the SOS has higher severity than the UOS. */
-			if (get_vm_severity(vpci->vm->vm_id) <
-					get_vm_severity(vdev->new_owner->vpci->vm->vm_id)) {
+			if (get_vm_severity(vpci2vm(vpci)->vm_id) <
+					get_vm_severity(vpci2vm(vdev->new_owner->vpci)->vm_id)) {
 				vdev = NULL;
 			}
 		} else {
@@ -554,7 +553,7 @@ static int32_t vpci_read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	if (vdev != NULL) {
 		ret = vdev->vdev_ops->read_vdev_cfg(vdev, offset, bytes, val);
 	} else {
-		if (is_postlaunched_vm(vpci->vm)) {
+		if (is_postlaunched_vm(vpci2vm(vpci))) {
 			ret = -ENODEV;
 		}
 	}
@@ -576,7 +575,7 @@ static int32_t vpci_write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	if (vdev != NULL) {
 		ret = vdev->vdev_ops->write_vdev_cfg(vdev, offset, bytes, val);
 	} else {
-		if (!is_postlaunched_vm(vpci->vm)) {
+		if (!is_postlaunched_vm(vpci2vm(vpci))) {
 			pr_acrnlog("%s %x:%x.%x not found! off: 0x%x, val: 0x%x\n", __func__,
 				bdf.bits.b, bdf.bits.d, bdf.bits.f, offset, val);
 		} else {
@@ -642,7 +641,7 @@ static void vpci_init_vdevs(struct acrn_vm *vm)
 {
 	uint32_t idx;
 	struct acrn_vpci *vpci = &(vm->vpci);
-	const struct acrn_vm_config *vm_config = get_vm_config(vpci->vm->vm_id);
+	const struct acrn_vm_config *vm_config = get_vm_config(vpci2vm(vpci)->vm_id);
 
 	for (idx = 0U; idx < vm_config->pci_dev_num; idx++) {
 		(void)vpci_init_vdev(vpci, &vm_config->pci_devs[idx], NULL);

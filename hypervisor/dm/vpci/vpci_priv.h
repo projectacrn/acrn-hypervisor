@@ -30,7 +30,13 @@
 #ifndef VPCI_PRIV_H_
 #define VPCI_PRIV_H_
 
+#include <list.h>
 #include <pci.h>
+
+static inline struct acrn_vm *vpci2vm(const struct acrn_vpci *vpci)
+{
+	return container_of(vpci, struct acrn_vm, vpci);
+}
 
 static inline bool is_quirk_ptdev(const struct pci_vdev *vdev)
 {
