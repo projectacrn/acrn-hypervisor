@@ -232,7 +232,7 @@ struct acrn_vcpu *get_running_vcpu(uint16_t pcpu_id)
 	struct acrn_vcpu *vcpu = NULL;
 
 	if ((curr != NULL) && (!is_idle_thread(curr))) {
-		vcpu = list_entry(curr, struct acrn_vcpu, thread_obj);
+		vcpu = container_of(curr, struct acrn_vcpu, thread_obj);
 	}
 
 	return vcpu;
@@ -746,7 +746,7 @@ void rstore_xsave_area(const struct ext_context *ectx)
  */
 static void context_switch_out(struct thread_object *prev)
 {
-	struct acrn_vcpu *vcpu = list_entry(prev, struct acrn_vcpu, thread_obj);
+	struct acrn_vcpu *vcpu = container_of(prev, struct acrn_vcpu, thread_obj);
 	struct ext_context *ectx = &(vcpu->arch.contexts[vcpu->arch.cur_context].ext_ctx);
 
 	/* We don't flush TLB as we assume each vcpu has different vpid */
@@ -762,7 +762,7 @@ static void context_switch_out(struct thread_object *prev)
 
 static void context_switch_in(struct thread_object *next)
 {
-	struct acrn_vcpu *vcpu = list_entry(next, struct acrn_vcpu, thread_obj);
+	struct acrn_vcpu *vcpu = container_of(next, struct acrn_vcpu, thread_obj);
 	struct ext_context *ectx = &(vcpu->arch.contexts[vcpu->arch.cur_context].ext_ctx);
 
 	load_vmcs(vcpu);
