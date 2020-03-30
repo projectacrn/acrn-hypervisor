@@ -48,12 +48,12 @@ union mtrr_fixed_range_reg {
 };
 
 struct acrn_vmtrr {
-	struct acrn_vcpu		*vcpu;
 	union mtrr_cap_reg		cap;
 	union mtrr_def_type_reg		def_type;
 	union mtrr_fixed_range_reg	fixed_range[FIXED_RANGE_MTRR_NUM];
 };
 
+struct acrn_vcpu;
 /**
  * @brief Virtual MTRR MSR write
  *
