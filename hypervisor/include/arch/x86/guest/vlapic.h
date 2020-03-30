@@ -61,9 +61,6 @@ struct acrn_vlapic {
 	 */
 	struct lapic_regs	apic_page;
 
-	struct acrn_vm		*vm;
-	struct acrn_vcpu	*vcpu;
-
 	uint32_t		esr_pending;
 	int32_t			esr_firing;
 
@@ -88,6 +85,8 @@ struct acrn_vlapic {
 	uint32_t	lvt_last[VLAPIC_MAXLVT_INDEX + 1];
 } __aligned(PAGE_SIZE);
 
+
+struct acrn_vcpu;
 struct acrn_apicv_ops {
 	void (*accept_intr)(struct acrn_vlapic *vlapic, uint32_t vector, bool level);
 	bool (*inject_intr)(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected);
