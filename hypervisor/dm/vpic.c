@@ -38,6 +38,11 @@
 
 static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t level);
 
+static inline struct acrn_vm *vpic2vm(const struct acrn_vpic *vpic)
+{
+	return container_of(container_of(vpic, struct vm_arch, vpic), struct acrn_vm, arch_vm);
+}
+
 struct acrn_vpic *vm_pic(const struct acrn_vm *vm)
 {
 	return (struct acrn_vpic *)&(vm->arch_vm.vpic);
@@ -172,6 +177,8 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 	i8259 = &vpic->i8259[0];
 	pin = vpic_get_highest_irrpin(i8259);
 	if (!i8259->intr_raised && (pin < NR_VPIC_PINS_PER_CHIP)) {
+		struct acrn_vm *vm = vpic2vm(vpic);
+
 		dev_dbg(DBG_LEVEL_PIC,
 		"pic master notify pin = %hhu (imr 0x%x irr 0x%x isr 0x%x)\n",
 		pin, i8259->mask, i8259->request, i8259->service);
@@ -202,21 +209,21 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 		 * interrupt.
 		 */
 		i8259->intr_raised = true;
-		if (vpic->vm->wire_mode == VPIC_WIRE_INTR) {
-			struct acrn_vcpu *bsp = vcpu_from_vid(vpic->vm, BSP_CPU_ID);
+		if (vm->wire_mode == VPIC_WIRE_INTR) {
+			struct acrn_vcpu *bsp = vcpu_from_vid(vm, BSP_CPU_ID);
 			vcpu_inject_extint(bsp);
 		} else {
 			/*
 			 * The input parameters here guarantee the return value of vlapic_set_local_intr is 0, means
 			 * success.
 			 */
-			(void)vlapic_set_local_intr(vpic->vm, BROADCAST_CPU_ID, APIC_LVT_LINT0);
+			(void)vlapic_set_local_intr(vm, BROADCAST_CPU_ID, APIC_LVT_LINT0);
 			/* notify vioapic pin0 if existing
 			 * For vPIC + vIOAPIC mode, vpic master irq connected
 			 * to vioapic pin0 (irq2)
 			 * From MPSpec session 5.1
 			 */
-			vioapic_set_irqline_lock(vpic->vm, 0U, GSI_RAISING_PULSE);
+			vioapic_set_irqline_lock(vm, 0U, GSI_RAISING_PULSE);
 		}
 	} else {
 		dev_dbg(DBG_LEVEL_PIC,
@@ -229,8 +236,7 @@ static int32_t vpic_icw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 {
 	int32_t ret;
 
-	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 icw1 0x%x\n",
-		vpic->vm, val);
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 icw1 0x%x\n", vpic2vm(vpic), val);
 
 	i8259->ready = false;
 
@@ -258,8 +264,7 @@ static int32_t vpic_icw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 static int32_t vpic_icw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
-	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 icw2 0x%x\n",
-		vpic->vm, val);
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 icw2 0x%x\n", vpic2vm(vpic), val);
 
 	i8259->irq_base = val & 0xf8U;
 
@@ -270,8 +275,7 @@ static int32_t vpic_icw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 static int32_t vpic_icw3(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
-	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 icw3 0x%x\n",
-		vpic->vm, val);
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 icw3 0x%x\n", vpic2vm(vpic), val);
 
 	i8259->icw_num++;
 
@@ -282,8 +286,7 @@ static int32_t vpic_icw4(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 {
 	int32_t ret;
 
-	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 icw4 0x%x\n",
-		vpic->vm, val);
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 icw4 0x%x\n", vpic2vm(vpic), val);
 
 	if ((val & ICW4_8086) == 0U) {
 		dev_dbg(DBG_LEVEL_PIC,
@@ -389,9 +392,9 @@ static int32_t vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 {
 	uint32_t pin, i, bit;
 	uint8_t old = i8259->mask;
+	struct acrn_vm *vm = vpic2vm(vpic);
 
-	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 ocw1 0x%x\n",
-		vpic->vm, val);
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 ocw1 0x%x\n", vm, val);
 
 	i8259->mask = val & 0xffU;
 	pin = (i8259->lowprio + 1U) & 0x7U;
@@ -418,8 +421,8 @@ static int32_t vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 			virt_pin = (master_pic(vpic, i8259)) ?
 					pin : (pin + 8U);
 
-			vgsi = vpin_to_vgsi(vpic->vm, virt_pin);
-			(void)ptirq_intx_pin_remap(vpic->vm, vgsi, INTX_CTLR_PIC);
+			vgsi = vpin_to_vgsi(vm, virt_pin);
+			(void)ptirq_intx_pin_remap(vm, vgsi, INTX_CTLR_PIC);
 		}
 		pin = (pin + 1U) & 0x7U;
 	}
@@ -429,8 +432,9 @@ static int32_t vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 static int32_t vpic_ocw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
-	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 ocw2 0x%x\n",
-		vpic->vm, val);
+	struct acrn_vm *vm = vpic2vm(vpic);
+
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 ocw2 0x%x\n", vm, val);
 
 	i8259->rotate = ((val & OCW2_R) != 0U);
 
@@ -456,8 +460,8 @@ static int32_t vpic_ocw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 		/* if level ack PTDEV */
 		if ((i8259->elc & (1U << (isr_bit & 0x7U))) != 0U) {
-			vgsi = vpin_to_vgsi(vpic->vm, (master_pic(vpic, i8259) ? isr_bit : isr_bit + 8U));
-			ptirq_intx_ack(vpic->vm, vgsi, INTX_CTLR_PIC);
+			vgsi = vpin_to_vgsi(vm, (master_pic(vpic, i8259) ? isr_bit : isr_bit + 8U));
+			ptirq_intx_ack(vm, vgsi, INTX_CTLR_PIC);
 		}
 	} else if (((val & OCW2_SL) != 0U) && i8259->rotate) {
 		/* specific priority */
@@ -471,8 +475,7 @@ static int32_t vpic_ocw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 static int32_t vpic_ocw3(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
-	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 ocw3 0x%x\n",
-		vpic->vm, val);
+	dev_dbg(DBG_LEVEL_PIC, "vm 0x%x: i8259 ocw3 0x%x\n", vpic2vm(vpic), val);
 
 	if ((val & OCW3_ESMM) != 0U) {
 		i8259->smm = ((val & OCW3_SMM) != 0U) ? 1U : 0U;
@@ -550,7 +553,7 @@ void vpic_set_irqline(struct acrn_vpic *vpic, uint32_t vgsi, uint32_t operation)
 		i8259 = &vpic->i8259[vgsi >> 3U];
 
 		if (i8259->ready) {
-			pin = vgsi_to_vpin(vpic->vm, vgsi);
+			pin = vgsi_to_vpin(vpic2vm(vpic), vgsi);
 			spinlock_irqsave_obtain(&(vpic->lock), &rflags);
 			switch (operation) {
 			case GSI_SET_HIGH:
@@ -593,7 +596,7 @@ vpic_pincount(void)
 void vpic_get_irqline_trigger_mode(const struct acrn_vpic *vpic, uint32_t vgsi,
 		enum vpic_trigger *trigger)
 {
-	uint32_t irqline = vgsi_to_vpin(vpic->vm, vgsi);
+	uint32_t irqline = vgsi_to_vpin(vpic2vm(vpic), vgsi);
 	
 	if ((vpic->i8259[irqline >> 3U].elc & (1U << (irqline & 0x7U))) != 0U) {
 		*trigger = LEVEL_TRIGGER;
@@ -986,7 +989,6 @@ void vpic_init(struct acrn_vm *vm)
 {
 	struct acrn_vpic *vpic = vm_pic(vm);
 	vpic_register_io_handler(vm);
-	vpic->vm = vm;
 	vpic->i8259[0].mask = 0xffU;
 	vpic->i8259[1].mask = 0xffU;
 
