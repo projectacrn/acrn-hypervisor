@@ -96,7 +96,7 @@ static void create_vf(struct pci_vdev *pf_vdev, union pci_bdf vf_bdf, uint16_t v
 
 		dev_cfg = init_one_dev_config(vf_pdev);
 		if (dev_cfg != NULL) {
-			vf_vdev = vpci_init_vdev(&pf_vdev->vpci->vm->vpci, dev_cfg, pf_vdev);
+			vf_vdev = vpci_init_vdev(&vpci2vm(pf_vdev->vpci)->vpci, dev_cfg, pf_vdev);
 		}
 	}
 
@@ -202,7 +202,7 @@ static void enable_vfs(struct pci_vdev *pf_vdev)
 			 * The VF maybe have already existed but it is a zombie instance that vf_vdev->vpci
 			 * is NULL, in this case, we need to make the vf_vdev available again in here.
 			 */
-			vf_vdev = pci_find_vdev(&pf_vdev->vpci->vm->vpci, vf_bdf);
+			vf_vdev = pci_find_vdev(&vpci2vm(pf_vdev->vpci)->vpci, vf_bdf);
 			if (vf_vdev == NULL) {
 				create_vf(pf_vdev, vf_bdf, idx);
 			} else {
@@ -248,7 +248,7 @@ static void disable_vfs(struct pci_vdev *pf_vdev)
 
 		bdf.fields.bus = get_vf_bus(pf_vdev, first, stride, idx);
 		bdf.fields.devfun = get_vf_devfun(pf_vdev, first, stride, idx);
-		vf_vdev = pci_find_vdev(&pf_vdev->vpci->vm->vpci, bdf);
+		vf_vdev = pci_find_vdev(&vpci2vm(pf_vdev->vpci)->vpci, bdf);
 		if ((vf_vdev != NULL) && (!is_zombie_vf(vf_vdev))) {
 			/* set disabled VF as zombie vdev instance */
 			vf_vdev->vdev_ops->deinit_vdev(vf_vdev);

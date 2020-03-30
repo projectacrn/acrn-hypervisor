@@ -139,12 +139,13 @@ union pci_cfg_addr_reg {
 
 struct acrn_vpci {
 	spinlock_t lock;
-	struct acrn_vm *vm;
 	union pci_cfg_addr_reg addr;
 	uint64_t pci_mmcfg_base;
 	uint32_t pci_vdev_cnt;
 	struct pci_vdev pci_vdevs[CONFIG_MAX_PCI_DEV_NUM];
 };
+
+struct acrn_vm;
 
 extern const struct pci_vdev_ops vhostbridge_ops;
 extern const struct pci_vdev_ops vpci_bridge_ops;

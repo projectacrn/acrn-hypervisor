@@ -113,7 +113,6 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 	enum pci_bar_type type;
 	uint64_t base = 0UL;
 	uint32_t lo, hi, offset;
-	struct acrn_vm *vm = vdev->vpci->vm;
 
 	vbar = &vdev->vbars[idx];
 	offset = pci_bar_offset(idx);
@@ -137,7 +136,7 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 		}
 	}
 
-	if ((base != 0UL) && !ept_is_mr_valid(vm, base, vdev->vbars[idx].size)) {
+	if ((base != 0UL) && !ept_is_mr_valid(vpci2vm(vdev->vpci), base, vdev->vbars[idx].size)) {
 		pr_fatal("%s, %x:%x.%x set invalid bar[%d] base: 0x%lx, size: 0x%lx\n", __func__,
 			vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, base, vdev->vbars[idx].size);
 		/* If guest set a invalid GPA, ignore it temporarily */
