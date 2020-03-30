@@ -1376,6 +1376,7 @@ int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, 
 	struct dmar_drhd_rt *dmar_unit;
 	union dmar_ir_entry *ir_table, *ir_entry;
 	union pci_bdf sid;
+	union dmar_ir_entry effective_irte = irte;
 	uint64_t trigger_mode;
 	int32_t ret = 0;
 
@@ -1385,7 +1386,7 @@ int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, 
 		trigger_mode = 0x0UL;
 	} else {
 		dmar_unit = ioapic_to_dmaru(intr_src.src.ioapic_id, &sid);
-		trigger_mode = irte.bits.trigger_mode;
+		trigger_mode = effective_irte.bits.trigger_mode;
 	}
 
 	if (dmar_unit == NULL) {
@@ -1399,17 +1400,17 @@ int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, 
 		ret = -EINVAL;
 	} else {
 		dmar_enable_intr_remapping(dmar_unit);
-		irte.bits.svt = 0x1UL;
-		irte.bits.sq = 0x0UL;
-		irte.bits.sid = sid.value;
-		irte.bits.present = 0x1UL;
-		irte.bits.mode = 0x0UL;
-		irte.bits.trigger_mode = trigger_mode;
-		irte.bits.fpd = 0x0UL;
+		effective_irte.bits.svt = 0x1UL;
+		effective_irte.bits.sq = 0x0UL;
+		effective_irte.bits.sid = sid.value;
+		effective_irte.bits.present = 0x1UL;
+		effective_irte.bits.mode = 0x0UL;
+		effective_irte.bits.trigger_mode = trigger_mode;
+		effective_irte.bits.fpd = 0x0UL;
 		ir_table = (union dmar_ir_entry *)hpa2hva(dmar_unit->ir_table_addr);
 		ir_entry = ir_table + index;
-		ir_entry->entry.hi_64 = irte.entry.hi_64;
-		ir_entry->entry.lo_64 = irte.entry.lo_64;
+		ir_entry->entry.hi_64 = effective_irte.entry.hi_64;
+		ir_entry->entry.lo_64 = effective_irte.entry.lo_64;
 
 		iommu_flush_cache(ir_entry, sizeof(union dmar_ir_entry));
 		dmar_invalid_iec(dmar_unit, index, 0U, false);
