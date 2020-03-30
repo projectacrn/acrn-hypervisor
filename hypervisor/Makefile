@@ -337,6 +337,9 @@ SYS_INIT_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(SYS_INIT_C_SRCS))
 ifneq ($(CONFIG_RELEASE),y)
 CFLAGS += -DHV_DEBUG -DPROFILING_ON -fno-omit-frame-pointer
 endif
+ifneq ($(FIRMWARE),uefi)
+CFLAGS += -DCONFIG_LAST_LEVEL_EPT_AT_BOOT
+endif
 PRE_BUILD_SRCS += pre_build/static_checks.c
 PRE_BUILD_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(PRE_BUILD_SRCS))
 

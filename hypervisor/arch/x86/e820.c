@@ -11,6 +11,7 @@
 #include <mmu.h>
 #include <boot.h>
 #include <logmsg.h>
+#include <ept.h>
 
 /*
  * e820.c contains the related e820 operations; like HV to get memory info for its MMU setup;
@@ -51,63 +52,75 @@ static void obtain_mem_range_info(void)
 	}
 }
 
-/* get some RAM below 1MB in e820 entries, hide it from sos_vm, return its start address */
-uint64_t e820_alloc_low_memory(uint32_t size_arg)
+/*
+ * @brief reserve some RAM, hide it from sos_vm, return its start address
+ * @param size_arg Amount of memory to be found and marked reserved
+ * @param max_addr Maximum address below which memory is to be identified
+ *
+ * @pre hv_e820_entries_nr > 0U
+ * @pre (size_arg & 0xFFFU) == 0U
+ * @return base address of the memory region
+ */
+uint64_t e820_alloc_memory(uint32_t size_arg, uint64_t max_addr)
 {
-	uint32_t i;
-	uint32_t size = size_arg;
-	uint64_t ret = ACRN_INVALID_HPA;
+	int32_t i;
+	uint64_t size = size_arg;
+	uint64_t ret = INVALID_HPA;
 	struct e820_entry *entry, *new_entry;
 
-	/* We want memory in page boundary and integral multiple of pages */
-	size = (((size + PAGE_SIZE) - 1U) >> PAGE_SHIFT) << PAGE_SHIFT;
-
-	for (i = 0U; i < hv_e820_entries_nr; i++) {
+	for (i = (int32_t)hv_e820_entries_nr - 1; i >= 0; i--) {
 		entry = &hv_e820[i];
 		uint64_t start, end, length;
 
 		start = round_page_up(entry->baseaddr);
 		end = round_page_down(entry->baseaddr + entry->length);
-		length = end - start;
-		length = (end > start) ? (end - start) : 0;
+		length = (end > start) ? (end - start) : 0UL;
 
-		/* Search for available low memory */
-		if ((entry->type != E820_TYPE_RAM) || (length < size) || ((start + size) > MEM_1M)) {
-			continue;
+		if ((entry->type == E820_TYPE_RAM) && (length >= size) && ((start + size) <= max_addr)) {
+
+
+			/* found exact size of e820 entry */
+			if (length == size) {
+				entry->type = E820_TYPE_RESERVED;
+				hv_mem_range.total_mem_size -= size;
+				ret = start;
+			} else {
+
+				/*
+				 * found entry with available memory larger than requested (length > size)
+				 * Reserve memory if
+				 * 1) hv_e820_entries_nr < E820_MAX_ENTRIES
+				 * 2) if end of this "entry" is <= max_addr
+				 *    use memory from end of this e820 "entry".
+				 */
+
+				if ((hv_e820_entries_nr < E820_MAX_ENTRIES) && (end <= max_addr)) {
+
+					new_entry = &hv_e820[hv_e820_entries_nr];
+					new_entry->type = E820_TYPE_RESERVED;
+					new_entry->baseaddr = end - size;
+					new_entry->length = (entry->baseaddr + entry->length) - new_entry->baseaddr;
+					/* Shrink the existing entry and total available memory */
+					entry->length -= new_entry->length;
+					hv_mem_range.total_mem_size -= new_entry->length;
+					hv_e820_entries_nr++;
+
+				        ret = new_entry->baseaddr;
+				}
+			}
+
+			if (ret != INVALID_HPA) {
+				break;
+			}
 		}
-
-		/* found exact size of e820 entry */
-		if (length == size) {
-			entry->type = E820_TYPE_RESERVED;
-			hv_mem_range.total_mem_size -= size;
-			ret = start;
-			break;
-		}
-
-		/*
-		 * found entry with available memory larger than requested
-		 * allocate memory from the end of this entry at page boundary
-		 */
-		new_entry = &hv_e820[hv_e820_entries_nr];
-		new_entry->type = E820_TYPE_RESERVED;
-		new_entry->baseaddr = end - size;
-		new_entry->length = (entry->baseaddr + entry->length) - new_entry->baseaddr;
-
-		/* Shrink the existing entry and total available memory */
-		entry->length -= new_entry->length;
-		hv_mem_range.total_mem_size -= new_entry->length;
-		hv_e820_entries_nr++;
-
-	        ret = new_entry->baseaddr;
-		break;
 	}
 
-	if (ret == ACRN_INVALID_HPA) {
-		pr_fatal("Can't allocate memory under 1M from E820\n");
+	if (ret == INVALID_HPA) {
+		panic("Requested memory from E820 cannot be reserved!!");
 	}
+
 	return ret;
 }
-
 /* HV read multiboot header to get e820 entries info and calc total RAM info */
 void init_e820(void)
 {

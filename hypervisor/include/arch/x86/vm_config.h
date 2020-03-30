@@ -38,9 +38,10 @@
  * POST_LAUNCHED_VM is launched by ACRN devicemodel, with/without LAPIC_PT depends on usecases.
  */
 enum acrn_vm_load_order {
-	PRE_LAUNCHED_VM = 1,
+	PRE_LAUNCHED_VM = 0,
 	SOS_VM,
-	POST_LAUNCHED_VM	/* Launched by Devicemodel in SOS_VM */
+	POST_LAUNCHED_VM,	/* Launched by Devicemodel in SOS_VM */
+	MAX_LOAD_ORDER
 };
 
 /* ACRN guest severity */
