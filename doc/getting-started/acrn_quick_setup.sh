@@ -59,7 +59,9 @@ function upgrade_sos()
     echo "Board name is: $BOARD_NAME"
  
     # set up mirror and proxy url while specified with m and p options
-    [[ -n $mirror ]] && echo "Setting swupd mirror to: $mirror" && swupd mirror -s $mirror
+    [[ -n $mirror ]] && echo "Setting swupd mirror to: $mirror" && \
+        sed -i 's/#allow_insecure_http=<true\/false>/allow_insecure_http=true/' /usr/share/defaults/swupd/config && \
+        swupd mirror -s $mirror
     [[ -n $proxy ]] && echo "Setting proxy to: $proxy" && export https_proxy=$proxy
 
     # Check that the EFI path exists.
@@ -79,11 +81,19 @@ function upgrade_sos()
 
     # Do the setups if previous process succeed.
     if [[ $? -eq 0 ]]; then
+        [[ -n $mirror ]] && sed -i 's/#allow_insecure_http=<true\/false>/allow_insecure_http=true/' /usr/share/defaults/swupd/config
         echo "Adding the service-os and systemd-networkd-autostart bundles..."
         swupd bundle-add service-os systemd-networkd-autostart 2>/dev/null
 
         # get acrn.efi path
         acrn_efi_path=/usr/lib/acrn/acrn.$BOARD_NAME.$scenario.efi
+        if [[ $BOARD_NAME == "wl10" ]] && [[ ! -f $acrn_efi_path ]]; then
+            echo "$acrn_efi_path does not exist."
+            echo "Using /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi instead."
+            set -x
+            cp -r /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi $acrn_efi_path
+            { set +x; } 2>/dev/null
+        fi
         if [[ ! -f $acrn_efi_path ]]; then
             echo "$acrn_efi_path doesn't exist."
             echo "Use one of these efi images from /usr/lib/acrn."
@@ -137,7 +147,7 @@ function upgrade_sos()
 
         echo "Add new ACRN efi boot events; uart is disabled by default."
         set -x
-        efibootmgr -c -l "\EFI\acrn\acrn.efi" -d $partition -p 1 -L "ACRN" -u "uart=disabled" >/dev/null
+        efibootmgr -c -l "\EFI\acrn\acrn.efi" -d $partition -p 1 -L "ACRN" -u "uart=disabled " >/dev/null
         { set +x; } 2>/dev/null
         echo "Service OS setup is complete!"
     else
