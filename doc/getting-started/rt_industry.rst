@@ -6,25 +6,26 @@ Getting Started Guide for ACRN Industry Scenario
 Verified version
 ****************
 
-- Clear Linux version: **32030**
-- ACRN-hypervisor tag: **v1.5 (acrn-2020w01.1-140000p)**
-- ACRN-Kernel (Service VM kernel): **4.19.78-98.iot-lts2018-sos**
+- Clear Linux version: **32680**
+- ACRN-hypervisor tag: **v1.6 (acrn-2020w12.5-140000p)**
+- ACRN-Kernel (Service VM kernel): **4.19.97-104.iot-lts2018-sos**
 
 Prerequisites
 *************
 
-The example below is based on the Intel Kaby Lake NUC platform with two
-disks, a SATA disk for the Clear Linux-based Service VM and an NVMe disk
+The example below is based on the Intel Whiskey Lake NUC platform with two
+disks, an NVMe disk for the Clear Linux-based Service VM and a SATA disk
 for the RTVM.
 
-- Intel Kaby Lake (aka KBL) NUC platform with two disks inside
+- Intel Whiskey Lake (aka WHL) NUC platform with two disks inside
   (refer to :ref:`the tables <hardware_setup>` for detailed information).
-- If you need to enable the serial port on the KBL NUC, navigate to the
+- `com1` is the serial port on WHL NUC.
+  If you are still using the KBL NUC and trying to enable the serial port on it, navigate to the
   :ref:`troubleshooting section <connect_serial_port>` that discusses how to prepare the cable.
-- Follow the steps below to install Clear Linux OS (ver: 31670) onto the SATA disk of the KBL NUC. In our example, we install Clear Linux with version 31670; the subsequent ACRN quick setup script will upgrade Clear Linux to version 32030:
+- Follow the steps below to install Clear Linux OS (ver: 32680) onto the NVMe disk of the WHL NUC.
 
 .. _Clear Linux OS Server image:
-   https://download.clearlinux.org/releases/31670/clear/clear-31670-live-server.iso
+   https://download.clearlinux.org/releases/32680/clear/clear-32680-live-server.iso
 
   #. Create a bootable USB drive on Linux*:
 
@@ -46,9 +47,9 @@ for the RTVM.
      #. Unmount all the ``/dev/sdc`` partitions and burn the image onto the USB drive::
 
         $ umount /dev/sdc* 2>/dev/null
-        $ sudo dd if=./clear-31670-live-server.iso of=/dev/sdc oflag=sync status=progress bs=4M
+        $ sudo dd if=./clear-32680-live-server.iso of=/dev/sdc oflag=sync status=progress bs=4M
 
-  #. Plug in the USB drive to the KBL NUC and boot from USB.
+  #. Plug in the USB drive to the WHL NUC and boot from USB.
   #. Launch the Clear Linux OS installer boot menu.
   #. With Clear Linux OS highlighted, select :kbd:`Enter`.
   #. Log in with your root account and new password.
@@ -57,13 +58,13 @@ for the RTVM.
      # clr-installer
 
   #. From the Main menu, select :kbd:`Configure Installation Media` and set
-     :kbd:`Destructive Installation` to your desired hard disk.
+     :kbd:`Destructive Installation` to the NVMe disk.
+  #. Select :kbd:`Manage User` and choose :kbd:`Add New User`.
   #. Select :kbd:`Telemetry` to set Tab to highlight your choice.
   #. Press :kbd:`A` to show the :kbd:`Advanced` options.
   #. Select :kbd:`Select additional bundles` and add bundles for
      **network-basic**, and **user-basic**.
   #. Select :kbd:`Automatic OS Updates` and choose :kbd:`No [Disable]`.
-  #. Select :kbd:`Manage User` and choose :kbd:`Add New User`.
   #. Select :kbd:`Install`.
   #. Select :kbd:`Confirm Install` in the :kbd:`Confirm Installation` window to start the installation.
 
@@ -84,14 +85,14 @@ Hardware Setup
    +----------------------+-------------------+----------------------+-----------------------------------------------------------+
    | Platform (Intel x86) | Product/kit name  | Hardware             | Descriptions                                              |
    +======================+===================+======================+===========================================================+
-   | Kaby Lake            | NUC7i7DNH         | Processor            | - Intel |reg| Core |trade| i7-8650U CPU @ 1.90GHz         |
+   | Whiskey Lake         | WHL-IPC-I7        | Processor            | - Intel |reg| Core |trade| i7-8565U CPU @ 1.80GHz         |
    |                      |                   +----------------------+-----------------------------------------------------------+
    |                      |                   | Graphics             | - UHD Graphics 620                                        |
-   |                      |                   |                      | - Two HDMI 2.0a ports supporting 4K at 60 Hz              |
+   |                      |                   |                      | - ONE HDMI\* 1.4a ports supporting 4K at 60 Hz            |
    |                      |                   +----------------------+-----------------------------------------------------------+
    |                      |                   | System memory        | - 8GiB SODIMM DDR4 2400 MHz [1]_                          |
    |                      |                   +----------------------+-----------------------------------------------------------+
-   |                      |                   | Storage capabilities | - SATA: 1TB WDC WD10SPZX-22Z                              |
+   |                      |                   | Storage capabilities | - SATA: 128G KINGSTON RBUSNS8                             |
    |                      |                   |                      | - NVMe: 256G Intel Corporation SSD Pro 7600p/760p/E 6100p |
    +----------------------+-------------------+----------------------+-----------------------------------------------------------+
 
@@ -117,65 +118,64 @@ Use the pre-installed industry ACRN hypervisor
 
 .. note:: Skip this section if you choose :ref:`Using the ACRN industry out-of-the-box image <use industry ootb image>`.
 
-#. Boot Clear Linux from SATA disk.
+#. Boot Clear Linux from NVMe disk.
 
-#. Login as root and download ACRN quick setup script:
+#. Login and download ACRN quick setup script:
 
    .. code-block:: none
 
-      # wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/getting-started/acrn_quick_setup.sh
-      # chmod +x acrn_quick_setup.sh
+      $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/getting-started/acrn_quick_setup.sh
+      $ sudo chmod +x acrn_quick_setup.sh
 
 #. Run the script to set up Service VM:
 
    .. code-block:: none
 
-      # ./acrn_quick_setup.sh -s 32030 -d -i
+      $ sudo ./acrn_quick_setup.sh -s 32680 -d -e /dev/nvme0n1p1 -i
 
-   .. note:: ``-i`` option means the industry scenario efi image will be used, e.g. ``acrn.nuc7i7dnb.industry.efi``. For the detailed usage of the ``acrn_quick_setup.sh`` script, refer to the :ref:`quick setup ACRN guide <quick-setup-guide>` or simply type ``./acrn_quick_setup.sh -h``.
+   .. note:: ``-i`` option means the industry scenario efi image will be used, e.g. ``acrn.nuc7i7dnb.industry.efi``.
+      For the detailed usage of the ``acrn_quick_setup.sh`` script, refer to the :ref:`quick setup ACRN guide <quick-setup-guide>`
+      or simply type ``./acrn_quick_setup.sh -h``.
 
 #. Use ``efibootmgr -v`` command to check the ACRN boot order:
 
    .. code-block:: none
-      :emphasize-lines: 3,5
+      :emphasize-lines: 3,4
 
-      BootCurrent: 000C
+      BootCurrent: 0005
       Timeout: 1 seconds
-      BootOrder: 0001,0002,000C,000D,0008,000E,000B,0003,0000,0004,0007
-      Boot0000* Windows Boot Manager	VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)WINDOWS.........x...B.C.D.O.B.J.E.C.T.=.{.9.d.e.a.8.6.2.c.-.5.c.d.d.-.4.e.7.0.-.a.c.c.1.-.f.3.2.b.3.4.4.d.4.7.9.5.}...o................
-      Boot0001* ACRN	HD(1,GPT,c6715698-0f6e-4e27-bb1b-bf7779c1486d,0x800,0x47000)/File(\EFI\acrn\acrn.efi)u.a.r.t.=.d.i.s.a.b.l.e.d.
-      Boot0002* Linux bootloader	HD(3,GPT,b537f16f-d70f-4f1b-83b4-0f11be83cd83,0xc1800,0xded3000)/File(\EFI\org.clearlinux\bootloaderx64.efi)
-      Boot0003* CentOS	VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)
-      Boot0004* CentOS Linux	VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)
-      Boot0007* Linux bootloader	VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)
-      Boot0008* UEFI : Built-in EFI Shell	VenMedia(5023b95c-db26-429b-a648-bd47664c8012)..BO
-      Boot000B* LAN : IBA CL Slot 00FE v0110	BBS(Network,,0x0)..BO
-      Boot000C* SATA : PORT 0 : KINGSTON SUV500120G : PART 0 : Boot Drive	BBS(HD,,0x0)..BO
-      Boot000D* INTEL SSDPEKKW256G8 : PART 0 : Boot Drive	BBS(HD,,0x0)..BO
-      Boot000E* UEFI : INTEL SSDPEKKW256G8 : PART 0 : OS Bootloader	PciRoot(0x0)/Pci(0x1d,0x0)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(1,GPT,8aa992f8-8149-4f6b-8b64-503998c776c1,0x800,0x47000)..BO
+      BootOrder: 0000,0003,0005,0001,0004
+      Boot0000* ACRN  HD(1,GPT,cb72266b-c83d-4c56-99e3-3e7d2f4bc175,0x800,0x47000)/File(\EFI\acrn\acrn.efi)u.a.r.t.=.d.i.s.a.b.l.e.d.
+      Boot0001* UEFI OS       HD(1,GPT,335d53f0-50c1-4b0a-b58e-3393dc0389a4,0x800,0x47000)/File(\EFI\BOOT\BOOTX64.EFI)..BO
+      Boot0003* Linux bootloader      HD(3,GPT,af681d62-3a96-43fb-92fc-e98e850f867f,0xc1800,0x1dc31800)/File(\EFI\org.clearlinux\bootloaderx64.efi)
+      Boot0004* Hard Drive    BBS(HD,,0x0)..GO..NO........o.K.I.N.G.S.T.O.N. .R.B.U.S.N.S.8.1.8.0.S.3.1.2.8.G.J...................A..........................>..Gd-.;.A..MQ..L.0.5.2.0.B.6.6.7.2.8.F.F.3.D.1.0. . . . .......BO..NO........m.F.O.R.E.S.E.E. .2.5.6.G.B. .S.S.D...................A......................................0..Gd-.;.A..MQ..L.J.2.7.1.0.0.R.0.0.0.9.6.9.......BO
+      Boot0005* UEFI OS       HD(1,GPT,cb72266b-c83d-4c56-99e3-3e7d2f4bc175,0x800,0x47000)/File(\EFI\BOOT\BOOTX64.EFI)..BO
 
    .. note:: Ensure that ACRN is first in the boot order, or you may use the
       ``efibootmgr -o 1`` command to move it to the first position. If you need to enable the serial port, run the following command before rebooting:
 
-      ``efibootmgr -c -l '\EFI\acrn\acrn.efi' -d /dev/sda -p 1 -L ACRN -u "uart=port@0x3f8 "``
+      ``efibootmgr -c -l '\EFI\acrn\acrn.efi' -d /dev/nvme0n1 -p 1 -L ACRN -u "uart=port@0x3f8 "``
 
       Note the extra space at the end of the EFI command-line options
       string. This is a workaround for a current `efi-stub bootloader name
       issue <https://github.com/projectacrn/acrn-hypervisor/issues/4520>`_.
       It ensures that the end of the string is properly detected.
 
-#. Reboot KBL NUC.
+#. Reboot WHL NUC.
 
 #. Use the ``dmesg`` command to ensure that the Service VM boots:
 
    .. code-block:: console
       :emphasize-lines: 2
 
-      # dmesg | grep ACRN
+      $ sudo dmesg | grep ACRN
       [    0.000000] Hypervisor detected: ACRN
       [    1.252840] ACRNTrace: Initialized acrn trace module with 4 cpu
       [    1.253291] ACRN HVLog: Failed to init last hvlog devs, errno -19
       [    1.253292] ACRN HVLog: Initialized hvlog module with 4
+
+.. note:: If you want to login the Service VM with root privileges, use ``sudo passwd`` to create a root user
+   so that you can login as root on the next reboot.
 
 .. _use industry ootb image:
 
@@ -185,31 +185,35 @@ Use the ACRN industry out-of-the-box image
 .. note:: If you are following the section above to set up the Service VM, jump to the next
    :ref:`section <install_rtvm>`.
 
-#. Boot Clear Linux from NVMe disk.
+#. Boot Clear Linux from SATA disk.
 
-#. Download the Service VM industry image::
+#. Download the Service VM industry image:
 
-   # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w01.1-140000p/sos-industry-32030.img.xz
+   .. code-block:: none
+
+      # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w12.5-140000p/sos-industry-32680.img.xz
+
+   .. note:: You may also follow :ref:`set_up_ootb_service_vm` to build the image by yourself.
 
 #. Decompress the .xz image::
 
-   # xz -d sos-industry-32030.img.xz
+   # xz -d sos-industry-32680.img.xz
 
-#. Burn the Service VM image onto the SATA disk::
+#. Burn the Service VM image onto the NVMe disk::
 
-   # dd if=sos-industry-32030.img of=/dev/sda bs=4M oflag=sync status=progress iflag=fullblock seek=0 conv=notrunc
+   # dd if=sos-industry-32680.img of=/dev/nvme0n1 bs=4M oflag=sync status=progress iflag=fullblock seek=0 conv=notrunc
 
 #. Configure the EFI firmware to boot the ACRN hypervisor by default:
 
    ::
 
-      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN" -u "uart=disabled "
+      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/nvme0n1 -p 1 -L "ACRN" -u "uart=disabled "
 
    Or use the following command to enable the serial port:
 
    ::
 
-      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN" -u "uart=port@0x3f8 "
+      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/nvme0n1 -p 1 -L "ACRN" -u "uart=port@0x3f8 "
 
    .. note:: Note the extra space at the end of the EFI command-line options
       strings above. This is a workaround for a current `efi-stub bootloader
@@ -224,49 +228,37 @@ Use the ACRN industry out-of-the-box image
 Install and launch the Preempt-RT VM
 ************************************
 
+In this section, we will use :ref:`virtio-blk` to launch the Preempt-RT VM.
+If you need a better performance, follow the :ref:`building-acrn-in-docker` to build the
+ACRN kernel for the Service VM, then :ref:`passthrough SATA disk <passthru rtvm>`
+to launch Preempt-RT VM.
+
 #. Log in to the Service VM with root privileges.
 
-#. Download the Preempt-RT VM image::
+#. Download the Preempt-RT VM image:
 
-   # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w01.1-140000p/preempt-rt-32030.img.xz
+   .. code-block:: none
+
+      # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w12.5-140000p/preempt-rt-32680.img.xz
+
+   .. note:: You may also follow the :ref:`set_up_ootb_rtvm` to build the Preempt-RT VM image by yourself.
 
 #. Decompress the xz image::
 
-   # xz -d preempt-rt-32030.img.xz
+   # xz -d preempt-rt-32680.img.xz
 
-#. Burn the Preempt-RT VM image onto the NVMe disk::
+#. Burn the Preempt-RT VM image onto the SATA disk::
 
-   # dd if=preempt-rt-32030.img of=/dev/nvme0n1 bs=4M oflag=sync status=progress iflag=fullblock seek=0 conv=notrunc
+   # dd if=preempt-rt-32680.img of=/dev/sda bs=4M oflag=sync status=progress iflag=fullblock seek=0 conv=notrunc
 
-#. Use the ``lspci`` command to ensure that the correct NVMe device IDs will
-   be used for the passthru before launching the script:
-
-   .. code-block:: none
-      :emphasize-lines: 5
-
-      # lspci -v | grep -iE 'nvm|ssd'
-      02:00.0 Non-Volatile memory controller: Intel Corporation Device f1a6 (rev 03) (prog-if 02 [NVM Express])
-
-      # lspci -nn | grep "Non-Volatile memory controller"
-      02:00.0 Non-Volatile memory controller [0108]: Intel Corporation Device [8086:f1a6] (rev 03)
-
-#. Modify the script to use the correct NVMe device IDs and bus number.
+#. Modify the script to use the virtio device.
 
    .. code-block:: none
-      :emphasize-lines: 6,11
 
-      # vim /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
-
-      passthru_vpid=(
-      ["eth"]="8086 156f"
-      ["sata"]="8086 9d03"
-      ["nvme"]="8086 f1a6"
-      )
-      passthru_bdf=(
-      ["eth"]="0000:00:1f.6"
-      ["sata"]="0000:00:17.0"
-      ["nvme"]="0000:02:00.0"
-      )
+      # NVME pass-through
+      #echo ${passthru_vpid["nvme"]} > /sys/bus/pci/drivers/pci-stub/new_id
+      #echo ${passthru_bdf["nvme"]} > /sys/bus/pci/devices/${passthru_bdf["nvme"]}/driver/unbind
+      #echo ${passthru_bdf["nvme"]} > /sys/bus/pci/drivers/pci-stub/bind
 
    .. code-block:: none
       :emphasize-lines: 6
@@ -276,16 +268,15 @@ Install and launch the Preempt-RT VM
          --rtvm \
          --virtio_poll 1000000 \
          -U 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 \
-         -s 2,passthru,02/00/0 \
+         -s 2,virtio-blk,/dev/sda \
          -s 3,virtio-console,@stdio:stdio_port \
-         -s 8,virtio-net,tap0 \
          $pm_channel $pm_by_vuart \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
          hard_rtvm
 
       }
 
-#. Upon deployment completion, launch the RTVM directly onto your KBL NUC::
+#. Upon deployment completion, launch the RTVM directly onto your WHL NUC::
 
    # /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
 
@@ -467,18 +458,18 @@ on an older Clear Linux OS ( < 31470 ):
 
 .. code-block:: console
 
-   /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi doesn't exist.
+   /usr/lib/acrn/acrn.wl10.industry.efi doesn't exist.
    Use one of these efi images from /usr/lib/acrn.
    ------
-   /usr/lib/acrn/acrn.kbl-nuc-i7.industry.efi
+   /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi
    ------
-   Copy the efi image to /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi, then run the script again.
+   Copy the efi image to /usr/lib/acrn/acrn.wl10.industry.efi, then run the script again.
 
-To fix it, just rename the existing efi image to ``/usr/lib/acrn/acrn.nuc7i7dnb.industry.efi`` and
+To fix it, just rename the existing efi image to ``/usr/lib/acrn/acrn.wl10.industry.efi`` and
 then run the script again::
 
-   # cp -r /usr/lib/acrn/acrn.kbl-nuc-i7.industry.efi /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi
-   # ./acrn_quick_setup.sh -s <target version> -i -d
+   $ sudo cp /usr/lib/acrn/acrn.nuc7i7dnb.industry.efi /usr/lib/acrn/acrn.wl10.industry.efi
+   $ sudo ./acrn_quick_setup.sh -s <target OS version> -d -e <target EFI partition> -i
 
 .. _enabling the network on RTVM:
 
@@ -503,4 +494,67 @@ If you need to access the internet, you must add the following command line to t
       --ovmf /usr/share/acrn/bios/OVMF.fd \
       hard_rtvm
    }
+
+.. _passthru rtvm:
+
+How to passthrough hard disk to RTVM
+====================================
+
+#. Use the ``lspci`` command to ensure that the correct SATA device IDs will
+   be used for the passthru before launching the script:
+
+   .. code-block:: none
+
+      # lspci -nn | grep -i sata
+      00:17.0 SATA controller [0106]: Intel Corporation Cannon Point-LP SATA Controller [AHCI Mode] [8086:9dd3] (rev 30)
+
+#. Modify the script to use the correct SATA device IDs and bus number.
+
+   .. code-block:: none
+      :emphasize-lines: 5, 10
+
+      # vim /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
+
+      passthru_vpid=(
+      ["eth"]="8086 156f"
+      ["sata"]="8086 9d03"
+      ["nvme"]="8086 f1a6"
+      )
+      passthru_bdf=(
+      ["eth"]="0000:00:1f.6"
+      ["sata"]="0000:00:17.0"
+      ["nvme"]="0000:02:00.0"
+      )
+
+      # SATA pass-through
+      echo ${passthru_vpid["sata"]} > /sys/bus/pci/drivers/pci-stub/new_id
+      echo ${passthru_bdf["sata"]} > /sys/bus/pci/devices/${passthru_bdf["sata"]}/driver/unbind
+      echo ${passthru_bdf["sata"]} > /sys/bus/pci/drivers/pci-stub/bind
+
+      # NVME pass-through
+      #echo ${passthru_vpid["nvme"]} > /sys/bus/pci/drivers/pci-stub/new_id
+      #echo ${passthru_bdf["nvme"]} > /sys/bus/pci/devices/${passthru_bdf["nvme"]}/driver/unbind
+      #echo ${passthru_bdf["nvme"]} > /sys/bus/pci/drivers/pci-stub/bind
+
+   .. code-block:: none
+      :emphasize-lines: 4
+
+         --rtvm \
+         --virtio_poll 1000000 \
+         -U 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 \
+         -s 2,passthru,00/17/0 \
+         -s 3,virtio-console,@stdio:stdio_port \
+         -s 8,virtio-net,tap0 \
+         $pm_channel $pm_by_vuart \
+         --ovmf /usr/share/acrn/bios/OVMF.fd \
+         hard_rtvm
+
+       }
+
+#. Upon deployment completion, launch the RTVM directly onto your WHL NUC:
+
+   .. code-block:: none
+
+      # /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
+
 

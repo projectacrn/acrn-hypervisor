@@ -8,9 +8,9 @@ ACRN hypervisor.
 
 Verified version
 ****************
-* Clear Linux version: 32030
-* ACRN-hypervisor tag: v1.5 (acrn-2020w01.1-140000p)
-* ACRN-kernel tag: acrn-2020w01.1-140000p
+* Clear Linux version: 32680
+* ACRN-hypervisor tag: v1.6 (acrn-2020w12.5-140000p)
+* ACRN-kernel tag: acrn-2020w12.5-140000p
 * Windows 10 Version:
 
   - Microsoft Windows 10 Enterprise, 10.0.17134 Build 17134
@@ -176,7 +176,7 @@ Install Windows 10
       :align: center
 
 #. Click **Browser** and go to the drive that includes the virtio win
-   drivers. Select **all** under **viostor\\w10\\amd64**. Install the
+   drivers. Select **all** under **vio\\w10\\amd64**. Install the
    following drivers into the image:
 
    - Virtio-balloon
