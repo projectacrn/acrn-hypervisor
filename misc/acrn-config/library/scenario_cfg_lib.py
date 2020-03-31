@@ -448,11 +448,8 @@ def mem_size_check(id_hpa_size_dic, prime_item, item):
         if hpa_sz_strip_ul not in common.START_HPA_SIZE_LIST and hpa_sz_strip_u not in \
                 common.START_HPA_SIZE_LIST:
             key = "vm:id={},{},{}".format(id_key, prime_item, item)
-            mem_max = 2 * 1024 * 1024 * 1024
             if '0x' not in hpa_size and '0X' not in hpa_size:
                 ERR_LIST[key] = "Mem size should be Hex format"
-            elif int(hpa_sz_strip_ul, 16) > mem_max  or int(hpa_sz_strip_u, 16) > mem_max:
-                ERR_LIST[key] = "Mem size should less than 2GB"
 
 
 def os_kern_name_check(id_kern_name_dic, prime_item, item):
