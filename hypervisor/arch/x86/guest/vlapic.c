@@ -1689,8 +1689,8 @@ vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops, enum 
 }
 
 /**
- * @pre vlapic-...->vm != NULL
- * @pre vlapic-...->vcpu->vcpu_id < MAX_VCPUS_PER_VM
+ * @pre vlapic2vcpu(vlapic)->vm != NULL
+ * @pre vlapic2vcpu(vlapic)->vcpu_id < MAX_VCPUS_PER_VM
  */
 void
 vlapic_init(struct acrn_vlapic *vlapic)
@@ -2208,7 +2208,7 @@ void vlapic_free(struct acrn_vcpu *vcpu)
 
 /**
  * APIC-v functions
- * @pre get_pi_desc(vlapic->vcpu) != NULL
+ * @pre get_pi_desc(vlapic2vcpu(vlapic)) != NULL
  */
 static bool
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
@@ -2217,7 +2217,7 @@ apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
 	uint32_t idx;
 	bool notify = false;
 
-	pid = get_pi_desc(vlapic->vcpu);
+	pid = get_pi_desc(vlapic2vcpu(vlapic));
 	idx = vector >> 6U;
 	if (!bitmap_test_and_set_lock((uint16_t)(vector & 0x3fU), &pid->pir[idx])) {
 		notify = (bitmap_test_and_set_lock(POSTED_INTR_ON, &pid->control.value) == false);
@@ -2268,7 +2268,7 @@ static bool apicv_basic_inject_intr(struct acrn_vlapic *vlapic,
 /*
  * Transfer the pending interrupts in the PIR descriptor to the IRR
  * in the virtual APIC page.
- * @pre get_pi_desc(vlapic->vcpu) != NULL
+ * @pre get_pi_desc(vlapic2vcpu(vlapic)) != NULL
  */
 static void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 {
@@ -2279,7 +2279,7 @@ static void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 	uint16_t intr_status_old, intr_status_new;
 	struct lapic_reg *irr = NULL;
 
-	pid = get_pi_desc(vlapic->vcpu);
+	pid = get_pi_desc(vlapic2vcpu(vlapic));
 	if (bitmap_test_and_clear_lock(POSTED_INTR_ON, &pid->control.value)) {
 		pirval = 0UL;
 		lapic = &(vlapic->apic_page);
