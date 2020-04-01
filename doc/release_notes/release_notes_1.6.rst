@@ -38,13 +38,13 @@ What's New in v1.6
 
   - The ACRN hypervisor allows an SRIOV-capable PCI device's Physical Function (PF) to be allocated to the Service VM.
 
-  - The ACRN hypervisor allows a SRIOV-capable PCI device's Virtual Functions(VFs) to be allocated to any VM.
+  - The ACRN hypervisor allows a SRIOV-capable PCI device's Virtual Functions (VFs) to be allocated to any VM.
 
-  - The ACRN Service VM supports the SRIOV ethernet device (through the PF driver), and ensures that the SRIOV VF device is able to be assigned (passthough) to a post-launched VM (launched by ACRN-DM).
+  - The ACRN Service VM supports the SRIOV ethernet device (through the PF driver), and ensures that the SRIOV VF device is able to be assigned (passthrough) to a post-launched VM (launched by ACRN-DM).
 
 * CPU sharing enhancement -  Halt/Pause emulation
 
-  - For a vCPU that uses the fairness CPU scheduler, the supported hypervisor yields to the vCPU during the vCPU's idle status (the vCPU is running 'HLT' or 'PAUSE' instructions).
+  - For a vCPU that uses the fairness CPU scheduler, the hypervisor supports yielding an idle vCPU (when it's running a 'HLT' or 'PAUSE' instruction).
 
 * PCI Config space access emulation for passthrough devices in the hypervisor
 
