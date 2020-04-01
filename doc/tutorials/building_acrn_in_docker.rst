@@ -32,9 +32,7 @@ This tutorial presents two ways to get the Clear Linux Docker image that's neede
 Build the Docker Image from Dockerfile
 ======================================
 .. note::
-
-   One known issue :acrn-issue:`4560` while building ACRN HV.
-   Please refer to "Get the Docker Image from Docker Hub" to get Docker Image for V1.6 release temporally. 
+   A known `issue <https://github.com/projectacrn/acrn-hypervisor/issues/4560>`_ exists while building the ACRN hypervisor. Refer to `Get the Docker Image from Docker Hub`_ as a temporary way to obtain the Docker Image for the v1.6 release.
 
 #. Download `Dockerfile <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/getting-started/Dockerfile>`_
    to your development machine.
