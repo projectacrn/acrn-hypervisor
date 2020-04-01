@@ -120,7 +120,7 @@ Use the pre-installed industry ACRN hypervisor
 
 #. Boot Clear Linux from NVMe disk.
 
-#. Login and download ACRN quick setup script:
+#. Log in and download ACRN quick setup script:
 
    .. code-block:: none
 
@@ -174,8 +174,8 @@ Use the pre-installed industry ACRN hypervisor
       [    1.253291] ACRN HVLog: Failed to init last hvlog devs, errno -19
       [    1.253292] ACRN HVLog: Initialized hvlog module with 4
 
-.. note:: If you want to login the Service VM with root privileges, use ``sudo passwd`` to create a root user
-   so that you can login as root on the next reboot.
+.. note:: If you want to log in to the Service VM with root privileges, use ``sudo passwd`` to create a root user
+   so that you can log in as root on the next reboot.
 
 .. _use industry ootb image:
 
@@ -229,9 +229,8 @@ Install and launch the Preempt-RT VM
 ************************************
 
 In this section, we will use :ref:`virtio-blk` to launch the Preempt-RT VM.
-If you need a better performance, follow the :ref:`building-acrn-in-docker` to build the
-ACRN kernel for the Service VM, then :ref:`passthrough SATA disk <passthru rtvm>`
-to launch Preempt-RT VM.
+If you need better performance, follow :ref:`building-acrn-in-docker` to
+build the ACRN kernel for the Service VM, and then :ref:`passthrough the SATA disk <passthru rtvm>` to launch the Preempt-RT VM.
 
 #. Log in to the Service VM with root privileges.
 
@@ -241,7 +240,7 @@ to launch Preempt-RT VM.
 
       # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w12.5-140000p/preempt-rt-32680.img.xz
 
-   .. note:: You may also follow the :ref:`set_up_ootb_rtvm` to build the Preempt-RT VM image by yourself.
+   .. note:: You may also follow :ref:`set_up_ootb_rtvm` to build the Preempt-RT VM image by yourself.
 
 #. Decompress the xz image::
 
@@ -497,18 +496,18 @@ If you need to access the internet, you must add the following command line to t
 
 .. _passthru rtvm:
 
-How to passthrough hard disk to RTVM
-====================================
+Passthrough a hard disk to the RTVM
+===================================
 
 #. Use the ``lspci`` command to ensure that the correct SATA device IDs will
-   be used for the passthru before launching the script:
+   be used for the passthrough before launching the script:
 
    .. code-block:: none
 
       # lspci -nn | grep -i sata
       00:17.0 SATA controller [0106]: Intel Corporation Cannon Point-LP SATA Controller [AHCI Mode] [8086:9dd3] (rev 30)
 
-#. Modify the script to use the correct SATA device IDs and bus number.
+#. Modify the script to use the correct SATA device IDs and bus number:
 
    .. code-block:: none
       :emphasize-lines: 5, 10
