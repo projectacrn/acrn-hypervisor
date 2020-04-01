@@ -6,8 +6,8 @@ ACRN v1.6 (Mar 2020)
 We are pleased to announce the release of ACRN version 1.6.
 
 ACRN is a flexible, lightweight reference hypervisor that is built with
-real-time and safety-criticality in mind. It is optimized to streamline embedded
-development through an open source platform. Check out the :ref:`introduction` for more information.
+real-time and safety-criticality in mind. It is optimized to streamline
+embedded development through an open source platform. Check out :ref:`introduction` for more information.
 All project ACRN source code is maintained in the https://github.com/projectacrn/acrn-hypervisor
 repository and includes folders for the ACRN hypervisor, the ACRN device
 model, tools, and documentation. You can either download this source code as
@@ -22,7 +22,7 @@ or use Git clone and checkout commands::
 The project's online technical documentation is also tagged to correspond
 with a specific release: generated v1.6 documents can be found at https://projectacrn.github.io/1.6/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
-ACRN v1.6 requires Clear Linux* OS version 32680. Follow the
+ACRN v1.6 requires Clear Linux OS version 32680. Follow the
 instructions in the :ref:`rt_industry_setup`.
 
 Version 1.6 major features
@@ -30,25 +30,25 @@ Version 1.6 major features
 
 What's New in v1.6
 ==================
-* Graphics pass-through support
+* Graphics passthrough support
 
-  - The hypervisor and Service OS support pass-through graphics device to target DM-launched guest VM, based on GVT-d.
+  - The hypervisor and Service VMs support allowing passthrough graphics devices to target DM-launched guest VMs, based on GVT-d.
 
 * SRIOV support
 
-  - ACRN  hypervisor allow a SRIOV capable PCI device's Physical Function (PF) to be allocated to Service VM.
+  - The ACRN hypervisor allows an SRIOV-capable PCI device's Physical Function (PF) to be allocated to the Service VM.
 
-  - ACRN hypervisor allow a SRIOV  capable PCI device's Virtual Functions(VFs) to be allocated to any VM.
+  - The ACRN hypervisor allows a SRIOV-capable PCI device's Virtual Functions(VFs) to be allocated to any VM.
 
-  - ACRN Service VM supported SRIOV ethernet device (thru PF driver), and  ensure SRIOV VF device is able to be assigned (pass-thru) to a post-launched VM( launched by ACRN-DM).
+  - The ACRN Service VM supports the SRIOV ethernet device (through the PF driver), and ensures that the SRIOV VF device is able to be assigned (passthough) to a post-launched VM (launched by ACRN-DM).
 
 * CPU sharing enhancement -  Halt/Pause emulation
 
-  - For VCPU using fairness CPU scheduler, the hypervisor supported yield this VCPU when it's under idle status - the VCPU is running 'HLT' or 'PAUSE' instructions
+  - For a vCPU that uses the fairness CPU scheduler, the supported hypervisor yields to the vCPU during the vCPU's idle status (the vCPU is running 'HLT' or 'PAUSE' instructions).
 
-* PCI Config space access emulation for Pass-thru devices in hypervisor
+* PCI Config space access emulation for passthrough devices in the hypervisor
 
-  - The hypervisor provided necessary emulation (like config space) of pass-thru PCI device during runtime for a DM-launched VM. Such runtime emulation shall be DM independent.
+  - The hypervisor provides the necessary emulation (such as config space) of the passthrough PCI device during runtime for a DM-launched VM. Such runtime emulation is DM-independent.
 
 * PCI bridge emulation in hypervisor
 
@@ -68,13 +68,13 @@ We recommend that all developers upgrade to ACRN release v1.6.
 New Features Details
 ********************
 
-- :acrn-issue:`3381` - Avoid interference: PCI bridges.
-- :acrn-issue:`3831` - Pass-thru PCI device in DM-launched VM.
-- :acrn-issue:`4282` - Graphics pass-through.
-- :acrn-issue:`4329` - CPU Sharing: Halt/Pause Emulation.
-- :acrn-issue:`4360` - Graphics pass-through.
-- :acrn-issue:`4433` - SRIOV for ethernet device.
-- :acrn-issue:`4433` - SRIOV Physical Function Allocated To Service OS VM.
+- :acrn-issue:`3381` - Avoid interference: PCI bridges
+- :acrn-issue:`3831` - Pass-thru PCI device in DM-launched VM
+- :acrn-issue:`4282` - Graphics passthrough
+- :acrn-issue:`4329` - CPU Sharing: Halt/Pause Emulation
+- :acrn-issue:`4360` - Graphics passthrough
+- :acrn-issue:`4433` - SRIOV for ethernet device
+- :acrn-issue:`4433` - SRIOV Physical Function Allocated To Service OS VM
 - :acrn-issue:`4433` - SRIOV Any Virtual Function Allocated To Any One VM under sharing mode
 
 Fixed Issues Details
@@ -90,10 +90,10 @@ Fixed Issues Details
 - :acrn-issue:`4212` -[KBL][acrn-configuration-tool][WaaG+RTVM]Need support pm_channel&pm_by_vuart setting for Board:nuc7i7dnb+WaaG&RTVM
 - :acrn-issue:`4229` -Add range check in Kconfig.
 - :acrn-issue:`4230` -Remove MAX_VCPUS_PER_VM in Kconfig
-- :acrn-issue:`4253` -[WHL][Function][WaaG]Meet error log and waag can`t boot up randomly after allocated 3 cores cpu to waag
+- :acrn-issue:`4253` -[WHL][Function][WaaG]Meet error log and waag can't boot up randomly after allocated 3 cores cpu to waag
 - :acrn-issue:`4255` -[acrn-configuration-tool][nuc7i7dnb][sdc]uos has no ip address
 - :acrn-issue:`4258` -[Community][External]cyclictest benchmark UOS geting high.
-- :acrn-issue:`4282` -ACRN-DM Pass-tru devices bars prefetchable property isn`t consistent with physical bars
+- :acrn-issue:`4282` -ACRN-DM Pass-tru devices bars prefetchable property isn't consistent with physical bars
 - :acrn-issue:`4286` -[acrn-configuration-tool] Remove VM1.vcpu_affinity.pcuid=3 for VM1 in sdc scenario
 - :acrn-issue:`4298` -[ConfigurationTool] mac address is not added to the launch script
 - :acrn-issue:`4301` -[WHL][Hybrid] WHL need support Hybrid mode
@@ -120,7 +120,7 @@ Change Log
 **********
 
 These commits have been added to the acrn-hypervisor repo since the v1.5
-release in Dec 2019 (click on the CommitID link to see details):
+release in Dec 2019 (click the CommitID link to see details):
 
 .. comment
 
@@ -182,7 +182,7 @@ release in Dec 2019 (click on the CommitID link to see details):
 - :acrn-commit:`2aaa050c` - HV: move out physical cfg write from vpci-bridge
 - :acrn-commit:`ad4d14e3` - HV: enable ARI if PCI bridge support it
 - :acrn-commit:`b6684f5b` - HV: sanitize config file for whl-ipc-i5
-- :acrn-commit:`64bf4fb8` - dm: don`t deassign pass through PCIe device in DM
+- :acrn-commit:`64bf4fb8` - dm: don't deassign pass through PCIe device in DM
 - :acrn-commit:`67cb1029` - hv: update the hypervisor 64-bit entry address for efi-stub
 - :acrn-commit:`49ffe168` - hv: fixup relocation delta for symbols belong to entry section
 - :acrn-commit:`2aa8c9e5` - hv: add multiboot2 tags to load relocatable raw binary
@@ -279,7 +279,7 @@ release in Dec 2019 (click on the CommitID link to see details):
 - :acrn-commit:`8896ba25` - Grammatical edits to Run Kata Containers doc
 - :acrn-commit:`88dfd8d4` - doc: update Kata and ACRN tutorial
 - :acrn-commit:`e1eedc99` - Doc: Style updates to Building from Source doc
-- :acrn-commit:`1f6c0cd4` - doc: update project`s target max LOC
+- :acrn-commit:`1f6c0cd4` - doc: update project's target max LOC
 - :acrn-commit:`8f9e4c2d` - Updated grammer in ACRN industry scenario doc
 - :acrn-commit:`54e9b562` - doc: Modify CL version from 32030 to 31670
 - :acrn-commit:`1b3754aa` - dm:passthrough opregion to uos gpu
