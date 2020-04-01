@@ -12,6 +12,7 @@
 #include <vtd.h>
 #include <security.h>
 #include <vm.h>
+#include <vm_configurations.h>
 
 static struct page ppt_pml4_pages[PML4_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
 static struct page ppt_pdpt_pages[PDPT_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
@@ -80,19 +81,15 @@ const struct memory_ops ppt_mem_ops = {
 static struct page sos_vm_pml4_pages[SOS_VM_NUM][PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
 static struct page sos_vm_pdpt_pages[SOS_VM_NUM][PDPT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
 static struct page sos_vm_pd_pages[SOS_VM_NUM][PD_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
-static struct page sos_vm_pt_pages[SOS_VM_NUM][PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
-
 /* pre_uos_nworld_pml4_pages */
 static struct page pre_uos_nworld_pml4_pages[PRE_VM_NUM][PML4_PAGE_NUM(PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
 static struct page pre_uos_nworld_pdpt_pages[PRE_VM_NUM][PDPT_PAGE_NUM(PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
 static struct page pre_uos_nworld_pd_pages[PRE_VM_NUM][PD_PAGE_NUM(PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
-static struct page pre_uos_nworld_pt_pages[PRE_VM_NUM][PT_PAGE_NUM(PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
 
 /* post_uos_nworld_pml4_pages */
 static struct page post_uos_nworld_pml4_pages[MAX_POST_VM_NUM][PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
 static struct page post_uos_nworld_pdpt_pages[MAX_POST_VM_NUM][PDPT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
 static struct page post_uos_nworld_pd_pages[MAX_POST_VM_NUM][PD_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
-static struct page post_uos_nworld_pt_pages[MAX_POST_VM_NUM][PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
 
 static struct page post_uos_sworld_pgtable_pages[MAX_POST_VM_NUM][TRUSTY_PGTABLE_PAGE_NUM(TRUSTY_RAM_SIZE)];
 /* pre-assumption: TRUSTY_RAM_SIZE is 2M aligned */
@@ -100,6 +97,39 @@ static struct page post_uos_sworld_memory[MAX_POST_VM_NUM][TRUSTY_RAM_SIZE >> PA
 
 /* ept: extended page table*/
 static union pgtable_pages_info ept_pages_info[CONFIG_MAX_VM_NUM];
+
+
+#ifdef CONFIG_LAST_LEVEL_EPT_AT_BOOT
+/* Array with address space size for each type of load order of VM */
+static const uint64_t vm_address_space_size[MAX_LOAD_ORDER] = {
+	PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE), /* for Pre-Launched VM */
+	EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE), /* for SOS VM */
+	EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE), /* for Post-Launched VM */
+};
+
+/*
+ * @brief Reserve space for EPT 4K pages from platform E820 table
+ */
+void reserve_buffer_for_ept_pages(void)
+{
+	uint64_t pt_base;
+	uint16_t vm_id;
+	uint32_t offset = 0U;
+	struct acrn_vm_config *vm_config;
+
+	pt_base = e820_alloc_memory(TOTAL_EPT_4K_PAGES_SIZE, ~0UL);
+	hv_access_memory_region_update(pt_base, TOTAL_EPT_4K_PAGES_SIZE);
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm_config = get_vm_config(vm_id);
+		ept_pages_info[vm_id].ept.nworld_pt_base = (struct page *)(void *)(pt_base + offset);
+		offset += PT_PAGE_NUM(vm_address_space_size[vm_config->load_order])*MEM_4K;
+	}
+}
+#else
+static struct page sos_vm_pt_pages[SOS_VM_NUM][PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
+static struct page pre_uos_nworld_pt_pages[PRE_VM_NUM][PT_PAGE_NUM(PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+static struct page post_uos_nworld_pt_pages[MAX_POST_VM_NUM][PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
+#endif
 
 void *get_reserve_sworld_memory_base(void)
 {
@@ -190,13 +220,17 @@ void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
 		ept_pages_info[vm_id].ept.nworld_pml4_base = sos_vm_pml4_pages[0U];
 		ept_pages_info[vm_id].ept.nworld_pdpt_base = sos_vm_pdpt_pages[0U];
 		ept_pages_info[vm_id].ept.nworld_pd_base = sos_vm_pd_pages[0U];
+#ifndef CONFIG_LAST_LEVEL_EPT_AT_BOOT
 		ept_pages_info[vm_id].ept.nworld_pt_base = sos_vm_pt_pages[0U];
+#endif
 	} else if (is_prelaunched_vm(vm)) {
-		ept_pages_info[vm_id].ept.top_address_space = EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE);
+		ept_pages_info[vm_id].ept.top_address_space = PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE);
 		ept_pages_info[vm_id].ept.nworld_pml4_base = pre_uos_nworld_pml4_pages[vm_id];
 		ept_pages_info[vm_id].ept.nworld_pdpt_base = pre_uos_nworld_pdpt_pages[vm_id];
 		ept_pages_info[vm_id].ept.nworld_pd_base = pre_uos_nworld_pd_pages[vm_id];
+#ifndef CONFIG_LAST_LEVEL_EPT_AT_BOOT
 		ept_pages_info[vm_id].ept.nworld_pt_base = pre_uos_nworld_pt_pages[vm_id];
+#endif
 	} else {
 		uint16_t sos_vm_id = (get_sos_vm())->vm_id;
 		uint16_t page_idx = vmid_2_rel_vmid(sos_vm_id, vm_id) - 1U;
@@ -205,7 +239,9 @@ void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
 		ept_pages_info[vm_id].ept.nworld_pml4_base = post_uos_nworld_pml4_pages[page_idx];
 		ept_pages_info[vm_id].ept.nworld_pdpt_base = post_uos_nworld_pdpt_pages[page_idx];
 		ept_pages_info[vm_id].ept.nworld_pd_base = post_uos_nworld_pd_pages[page_idx];
+#ifndef CONFIG_LAST_LEVEL_EPT_AT_BOOT
 		ept_pages_info[vm_id].ept.nworld_pt_base = post_uos_nworld_pt_pages[page_idx];
+#endif
 		ept_pages_info[vm_id].ept.sworld_pgtable_base = post_uos_sworld_pgtable_pages[page_idx];
 		ept_pages_info[vm_id].ept.sworld_memory_base = post_uos_sworld_memory[page_idx];
 		mem_ops->get_sworld_memory_base = ept_get_sworld_memory_base;

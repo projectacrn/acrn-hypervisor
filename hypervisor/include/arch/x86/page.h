@@ -40,6 +40,10 @@
 
 #define PRE_VM_EPT_ADDRESS_SPACE(size)	(PTDEV_HI_MMIO_START + PTDEV_HI_MMIO_SIZE)
 
+#define TOTAL_EPT_4K_PAGES_SIZE		(PRE_VM_NUM*(PT_PAGE_NUM(PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))*MEM_4K)) + \
+						(SOS_VM_NUM*(PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))*MEM_4K)) + \
+						(MAX_POST_VM_NUM*(PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))*MEM_4K))
+
 #define TRUSTY_PML4_PAGE_NUM(size)	(1UL)
 #define TRUSTY_PDPT_PAGE_NUM(size)	(1UL)
 #define TRUSTY_PD_PAGE_NUM(size)	(PD_PAGE_NUM(size))
@@ -90,4 +94,7 @@ extern const struct memory_ops ppt_mem_ops;
 void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id);
 void *get_reserve_sworld_memory_base(void);
 
+#ifdef CONFIG_LAST_LEVEL_EPT_AT_BOOT
+void reserve_buffer_for_ept_pages(void);
+#endif
 #endif /* PAGE_H */

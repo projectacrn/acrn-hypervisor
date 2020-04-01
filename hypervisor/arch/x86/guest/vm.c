@@ -320,7 +320,7 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 
 	/* unmap AP trampoline code for security
 	 * 'allocate_pages()' in depri boot mode or
-	 * 'e820_alloc_low_memory()' in direct boot
+	 * 'e820_alloc_memory()' in direct boot
 	 * mode will ensure the base address of tramploline
 	 * code be page-aligned.
 	 */
