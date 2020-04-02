@@ -264,12 +264,226 @@
 	rdt resource mask max: '0xff'
 	</CLOS_INFO>
 
-	<SYSTEM_RAM_INFO>
+	<IOMEM_INFO>
+	00000000-00000fff : Reserved
+	  00000000-00000000 : intel_punit_ipc
+	    00000000-00000000 : intel_punit_ipc
+	      00000000-00000000 : intel_punit_ipc
+	        00000000-00000000 : intel_punit_ipc
 	00001000-00097fff : System RAM
+	00098000-0009ffff : Reserved
+	000c0000-000fffff : Reserved
+	  000f0000-000fffff : System ROM
 	00100000-0fffffff : System RAM
+	10000000-121fffff : Reserved
 	12200000-7afd5fff : System RAM
+	  4c000000-4d0031d0 : Kernel code
+	  4d0031d1-4d9dc8ff : Kernel data
+	  4dc28000-4ddfffff : Kernel bss
+	7afd6000-7afdcfff : ACPI Tables
+	7afdd000-7afdffff : ACPI Non-volatile Storage
+	7afe0000-7fffffff : Reserved
+	  7b800001-7bffffff : PCI Bus 0000:00
+	  7c000001-7fffffff : PCI Bus 0000:00
+	    7c000001-7ffffffe : Graphics Stolen Memory
+	80000000-cfffffff : PCI Bus 0000:00
+	  80000000-801fffff : PCI Bus 0000:01
+	  80200000-803fffff : PCI Bus 0000:01
+	  80400000-805fffff : PCI Bus 0000:02
+	  80600000-809fffff : PCI Bus 0000:03
+	  80a00000-80bfffff : PCI Bus 0000:04
+	  80c00000-80dfffff : PCI Bus 0000:04
+	  80e00000-80e00fff : 0000:00:18.2
+	    80e00000-80e001ff : lpss_dev
+	      80e00000-80e0001f : serial
+	    80e00200-80e002ff : lpss_priv
+	  a0000000-afffffff : 0000:00:02.0
+	  b1000000-b1ffffff : .text.unlikely
+	  b2000000-b2ffffff : 0000:00:02.0
+	  b3000000-b31fffff : dwc_usb3
+	    b3000000-b31fffff : 0000:00:15.1
+	      b300c100-b31fffff : dwc_usb3
+	  b3200000-b33fffff : PCI Bus 0000:03
+	    b3200000-b32fffff : 0000:03:00.0
+	    b3300000-b33fffff : 0000:03:00.0
+	  b3400000-b34fffff : PCI Bus 0000:02
+	    b3400000-b347ffff : 0000:02:00.0
+	      b3400000-b347ffff : igb_avb
+	    b3480000-b3483fff : 0000:02:00.0
+	      b3480000-b3483fff : igb_avb
+	  b3500000-b35fffff : 0000:00:0e.0
+	    b3500000-b35fffff : Skylake HD audio
+	  b3600000-b360ffff : 0000:00:15.0
+	    b3600000-b360ffff : xhci-hcd
+	      b3608070-b360846f : intel_xhci_usb_sw
+	  b3610000-b3611fff : 0000:00:12.0
+	    b3610000-b3611fff : ahci
+	  b3618000-b361ffff : 0000:00:00.1
+	  b3620000-b3623fff : 0000:00:0e.0
+	    b3620000-b3623fff : Skylake HD audio
+	  b3624000-b3625fff : 0000:00:11.0
+	  b362a000-b362a0ff : 0000:00:1f.1
+	  b362b000-b362bfff : 0000:00:1e.0
+	  b362c000-b362cfff : 0000:00:1e.0
+	    b362c000-b362cfff : mmc2
+	  b362d000-b362dfff : 0000:00:1c.0
+	  b362e000-b362efff : 0000:00:1c.0
+	    b362e000-b362efff : mmc1
+	  b362f000-b362ffff : 0000:00:1b.0
+	  b3630000-b3630fff : 0000:00:1b.0
+	    b3630000-b3630fff : mmc0
+	  b3631000-b3631fff : 0000:00:1a.0
+	  b3632000-b3632fff : 0000:00:1a.0
+	    b3632000-b3632fff : 0000:00:1a.0
+	  b3633000-b3633fff : 0000:00:19.2
+	  b3634000-b3634fff : 0000:00:19.2
+	    b3634000-b36341ff : lpss_dev
+	      b3634000-b36341ff : lpss_dev
+	    b3634200-b36342ff : lpss_priv
+	    b3634800-b3634fff : idma64.14
+	      b3634800-b3634fff : idma64.14
+	  b3635000-b3635fff : 0000:00:19.1
+	  b3636000-b3636fff : 0000:00:19.1
+	    b3636000-b36361ff : lpss_dev
+	      b3636000-b36361ff : lpss_dev
+	    b3636200-b36362ff : lpss_priv
+	    b3636800-b3636fff : idma64.13
+	      b3636800-b3636fff : idma64.13
+	  b3637000-b3637fff : 0000:00:19.0
+	  b3638000-b3638fff : 0000:00:19.0
+	    b3638000-b36381ff : lpss_dev
+	      b3638000-b36381ff : lpss_dev
+	    b3638200-b36382ff : lpss_priv
+	    b3638800-b3638fff : idma64.12
+	      b3638800-b3638fff : idma64.12
+	  b3639000-b3639fff : 0000:00:18.3
+	  b363a000-b363afff : 0000:00:18.3
+	    b363a000-b363a1ff : lpss_dev
+	      b363a000-b363a01f : serial
+	    b363a200-b363a2ff : lpss_priv
+	  b363b000-b363bfff : 0000:00:18.2
+	  b363d000-b363dfff : 0000:00:18.1
+	  b363e000-b363efff : 0000:00:18.1
+	    b363e000-b363e1ff : lpss_dev
+	      b363e000-b363e01f : serial
+	    b363e200-b363e2ff : lpss_priv
+	    b363e800-b363efff : idma64.9
+	      b363e800-b363efff : idma64.9
+	  b363f000-b363ffff : 0000:00:18.0
+	  b3640000-b3640fff : 0000:00:18.0
+	    b3640000-b36401ff : lpss_dev
+	      b3640000-b364001f : serial
+	    b3640200-b36402ff : lpss_priv
+	    b3640800-b3640fff : idma64.8
+	      b3640800-b3640fff : idma64.8
+	  b3641000-b3641fff : 0000:00:17.3
+	  b3642000-b3642fff : 0000:00:17.3
+	    b3642000-b36421ff : lpss_dev
+	      b3642000-b36421ff : lpss_dev
+	    b3642200-b36422ff : lpss_priv
+	    b3642800-b3642fff : idma64.7
+	      b3642800-b3642fff : idma64.7
+	  b3643000-b3643fff : 0000:00:17.2
+	  b3644000-b3644fff : 0000:00:17.2
+	    b3644000-b36441ff : lpss_dev
+	      b3644000-b36441ff : lpss_dev
+	    b3644200-b36442ff : lpss_priv
+	    b3644800-b3644fff : idma64.6
+	      b3644800-b3644fff : idma64.6
+	  b3645000-b3645fff : 0000:00:17.1
+	  b3646000-b3646fff : 0000:00:17.1
+	    b3646000-b36461ff : lpss_dev
+	      b3646000-b36461ff : lpss_dev
+	    b3646200-b36462ff : lpss_priv
+	    b3646800-b3646fff : idma64.5
+	      b3646800-b3646fff : idma64.5
+	  b3647000-b3647fff : 0000:00:17.0
+	  b3648000-b3648fff : 0000:00:17.0
+	    b3648000-b36481ff : lpss_dev
+	      b3648000-b36481ff : lpss_dev
+	    b3648200-b36482ff : lpss_priv
+	    b3648800-b3648fff : idma64.4
+	      b3648800-b3648fff : idma64.4
+	  b3649000-b3649fff : 0000:00:16.3
+	  b364a000-b364afff : 0000:00:16.3
+	    b364a000-b364a1ff : lpss_dev
+	      b364a000-b364a1ff : lpss_dev
+	    b364a200-b364a2ff : lpss_priv
+	    b364a800-b364afff : idma64.3
+	      b364a800-b364afff : idma64.3
+	  b364b000-b364bfff : 0000:00:16.2
+	  b364c000-b364cfff : 0000:00:16.2
+	    b364c000-b364c1ff : lpss_dev
+	      b364c000-b364c1ff : lpss_dev
+	    b364c200-b364c2ff : lpss_priv
+	    b364c800-b364cfff : idma64.2
+	      b364c800-b364cfff : idma64.2
+	  b364d000-b364dfff : 0000:00:16.1
+	  b364e000-b364efff : 0000:00:16.1
+	    b364e000-b364e1ff : lpss_dev
+	      b364e000-b364e1ff : lpss_dev
+	    b364e200-b364e2ff : lpss_priv
+	    b364e800-b364efff : idma64.1
+	      b364e800-b364efff : idma64.1
+	  b364f000-b364ffff : 0000:00:16.0
+	  b3650000-b3650fff : 0000:00:16.0
+	    b3650000-b36501ff : lpss_dev
+	      b3650000-b36501ff : lpss_dev
+	    b3650200-b36502ff : lpss_priv
+	    b3650800-b3650fff : idma64.0
+	      b3650800-b3650fff : idma64.0
+	  b3652000-b36527ff : 0000:00:12.0
+	    b3652000-b36527ff : ahci
+	  b3653000-b36530ff : 0000:00:12.0
+	    b3653000-b36530ff : ahci
+	  b3654000-b3654fff : 0000:00:11.0
+	  b3655000-b3655fff : 0000:00:0f.2
+	  b3656000-b3656fff : 0000:00:0f.1
+	  b3657000-b3657fff : 0000:00:0f.0
+	    b3657000-b3657fff : mei_me
+	e0000000-efffffff : PCI MMCONFIG 0000 [bus 00-ff]
+	  e0000000-efffffff : Reserved
+	    e0000000-efffffff : PCI Bus 0000:00
+	      e0000000-efffffff : pnp 00:01
+	f8c00000-f8c00653 : INT3452:03
+	  f8c00000-f8c00653 : INT3452:03
+	f8c40000-f8c40763 : INT3452:01
+	  f8c40000-f8c40763 : INT3452:01
+	f8c50000-f8c5076b : INT3452:00
+	  f8c50000-f8c5076b : INT3452:00
+	f8c70000-f8c70673 : INT3452:02
+	  f8c70000-f8c70673 : INT3452:02
+	fe042000-fe043fff : INT34D2:00
+	  fe042000-fe043fff : INT34D2:00
+	fe044000-fe045fff : INT34D2:00
+	  fe045a00-fe045aef : intel_telemetry
+	    fe045a00-fe045aef : intel_telemetry
+	  fe045b00-fe045bef : intel_telemetry
+	    fe045b00-fe045bef : intel_telemetry
+	fea00000-feafffff : pnp 00:01
+	fec00000-fec003ff : IOAPIC 0
+	fed00000-fedfffff : Reserved
+	  fed00000-fed003ff : HPET 0
+	    fed00000-fed003ff : PNP0103:00
+	  fed01000-fed01fff : intel-spi
+	    fed01000-fed01fff : pnp 00:01
+	  fed03000-fed03fff : pnp 00:01
+	  fed06000-fed06fff : pnp 00:01
+	  fed08000-fed09fff : pnp 00:01
+	  fed17080-fed17083 : INT34D2:00
+	    fed17080-fed17083 : INT34D2:00
+	      fed17080-fed17083 : INT34D2:00
+	  fed17084-fed17087 : INT34D2:00
+	    fed17084-fed17087 : INT34D2:00
+	      fed17084-fed17087 : INT34D2:00
+	  fed1c000-fed1cfff : pnp 00:01
+	  fed40000-fed44fff : MSFT0101:00
+	  fed80000-fedbffff : pnp 00:01
+	fee00000-feefffff : pnp 00:01
+	  fee00000-fee00fff : Local APIC
+	ff800000-ffffffff : Unusable memory
 	100000000-27fffffff : System RAM
-	</SYSTEM_RAM_INFO>
+	</IOMEM_INFO>
 
 	<BLOCK_DEVICE_INFO>
 	/dev/mmcblk1p1: TYPE="ext4"

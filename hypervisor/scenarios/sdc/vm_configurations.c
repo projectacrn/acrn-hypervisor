@@ -18,7 +18,6 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 
 		/* Allow SOS to reboot the host since there is supposed to be the highest severity guest */
 		.guest_flags = 0UL,
-		.clos = 0U,
 		.severity = SEVERITY_SOS,
 		.memory = {
 			.start_hpa = 0UL,

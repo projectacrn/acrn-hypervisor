@@ -130,7 +130,7 @@ struct acrn_vm_config {
 	uint16_t pci_dev_num;				/* indicate how many PCI devices in VM */
 	struct acrn_vm_pci_dev_config *pci_devs;	/* point to PCI devices BDF list */
 	struct acrn_vm_os_config os_config;		/* OS information the VM */
-	uint16_t clos;					/* Class of Service, effective only if CONFIG_CAT_ENABLED
+	uint16_t clos[MAX_VCPUS_PER_VM];		/* Class of Service, effective only if CONFIG_RDT_ENABLED
 							 * is defined on CAT capable platforms
 							 */
 

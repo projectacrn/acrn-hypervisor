@@ -96,6 +96,23 @@ static bool check_vm_uuid_collision(uint16_t vm_id)
 	return ret;
 }
 
+static bool check_vm_clos_config(uint16_t vm_id)
+{
+	uint16_t i;
+	bool ret = true;
+	struct acrn_vm_config *vm_config = get_vm_config(vm_id);
+
+	for (i = 0U; i < vm_config->vcpu_num; i++) {
+		if (vm_config->clos[i] >= platform_clos_num) {
+			pr_err("vm%u: vcpu%u clos(%u) exceed the max clos(%u).",
+				vm_id, i, vm_config->clos[i], platform_clos_num);
+			ret = false;
+			break;
+		}
+	}
+	return ret;
+}
+
 /**
  * @pre vm_config != NULL
  */
@@ -192,11 +209,8 @@ bool sanitize_vm_config(void)
 			break;
 		}
 
-		if (ret &&
-		    is_platform_rdt_capable() &&
-		    (vm_config->clos >= platform_clos_num)) {
-			pr_err("%s set wrong CLOS. Please set below %d\n", __func__, platform_clos_num);
-			ret = false;
+		if (ret && is_platform_rdt_capable()) {
+			ret = check_vm_clos_config(vm_id);
 		}
 
 		if (ret &&

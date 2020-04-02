@@ -145,19 +145,17 @@ def dump_system_ram(config):
     """This will get systemd ram which are usable
     :param config: file pointer that opened for writing board config information
     """
-    print("\t<SYSTEM_RAM_INFO>", file=config)
+    print("\t<IOMEM_INFO>", file=config)
     with open(MEM_PATH[0], 'rt') as mem_info:
 
         while True:
-            line = mem_info.readline().strip()
+            line = mem_info.readline().strip('\n')
             if not line:
                 break
 
-            pat_type = line.split(':')[1].strip()
-            if pat_type == "System RAM":
-                print("\t{}".format(line), file=config)
+            print("\t{}".format(line), file=config)
 
-    print("\t</SYSTEM_RAM_INFO>", file=config)
+    print("\t</IOMEM_INFO>", file=config)
     print("", file=config)
 
 

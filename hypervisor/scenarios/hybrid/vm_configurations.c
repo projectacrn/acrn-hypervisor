@@ -17,7 +17,6 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.guest_flags = 0UL,
 		.vcpu_num = 1U,
 		.vcpu_affinity = VM0_CONFIG_VCPU_AFFINITY,
-		.clos = 0U,
 		.severity = SEVERITY_SAFETY_VM,
 		.memory = {
 			.start_hpa = VM0_CONFIG_MEM_START_HPA,
@@ -52,7 +51,6 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* dbbbd434-7a57-4216-a12c-2201f1ab0240 */
 
 		.guest_flags = 0UL,
-		.clos = 0U,
 		.severity = SEVERITY_SOS,
 		.memory = {
 			.start_hpa = 0UL,
