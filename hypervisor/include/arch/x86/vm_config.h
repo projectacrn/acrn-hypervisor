@@ -36,6 +36,9 @@
  * PRE_LAUNCHED_VM is launched by ACRN hypervisor, with LAPIC_PT;
  * SOS_VM is launched by ACRN hypervisor, without LAPIC_PT;
  * POST_LAUNCHED_VM is launched by ACRN devicemodel, with/without LAPIC_PT depends on usecases.
+ *
+ * Assumption: vm_configs array is completely initialized w.r.t. load_order member of
+ * 		acrn_vm_config for all the VMs.
  */
 enum acrn_vm_load_order {
 	PRE_LAUNCHED_VM = 0,
