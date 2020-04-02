@@ -28,6 +28,7 @@
 */
 
 #include <errno.h>
+#include <ptdev.h>
 #include <vm.h>
 #include <vtd.h>
 #include <io.h>
@@ -227,7 +228,7 @@ static int32_t vpci_mmio_cfg_access(struct io_request *io_req, void *private_dat
  * @pre vm != NULL
  * @pre vm->vm_id < CONFIG_MAX_VM_NUM
  */
-void vpci_init(struct acrn_vm *vm)
+void init_vpci(struct acrn_vm *vm)
 {
 	struct vm_io_range pci_cfgaddr_range = {
 		.base = PCI_CONFIG_ADDR,
@@ -270,7 +271,7 @@ void vpci_init(struct acrn_vm *vm)
  * @pre vm != NULL
  * @pre vm->vm_id < CONFIG_MAX_VM_NUM
  */
-void vpci_cleanup(struct acrn_vm *vm)
+void deinit_vpci(struct acrn_vm *vm)
 {
 	struct acrn_vm_config *vm_config;
 
@@ -290,6 +291,11 @@ void vpci_cleanup(struct acrn_vm *vm)
 		/* Unsupported VM type - Do nothing */
 		break;
 	}
+
+	ptdev_release_all_entries(vm);
+
+	/* Free iommu */
+	destroy_iommu_domain(vm->iommu);
 }
 
 /**

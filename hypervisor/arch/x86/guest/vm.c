@@ -444,15 +444,15 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 			vpic_init(vm);
 		}
 
-		/* Create virtual uart;*/
-		init_vuart(vm, vm_config->vuart);
-
 		if (is_rt_vm(vm) || !is_postlaunched_vm(vm)) {
 			vrtc_init(vm);
 		}
 
-		vpci_init(vm);
+		init_vpci(vm);
 		enable_iommu();
+
+		/* Create virtual uart;*/
+		init_vuart(vm, vm_config->vuart);
 
 		register_reset_port_handler(vm);
 
@@ -574,6 +574,20 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	if (vm->state == VM_PAUSED) {
 		vm->state = VM_POWERED_OFF;
 
+		vm_config = get_vm_config(vm->vm_id);
+		vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
+
+		if (is_sos_vm(vm)) {
+			sbuf_reset();
+		}
+
+		deinit_vuart(vm);
+
+		deinit_vpci(vm);
+
+		/* Free EPT allocated resources assigned to VM */
+		destroy_ept(vm);
+
 		mask = lapic_pt_enabled_pcpu_bitmap(vm);
 		if (mask != 0UL) {
 			ret = offline_lapic_pt_enabled_pcpus(vm, mask);
@@ -582,25 +596,6 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 		foreach_vcpu(i, vm, vcpu) {
 			offline_vcpu(vcpu);
 		}
-
-		vm_config = get_vm_config(vm->vm_id);
-		vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
-
-		if (is_sos_vm(vm)) {
-			sbuf_reset();
-		}
-
-		vpci_cleanup(vm);
-
-		deinit_vuart(vm);
-
-		ptdev_release_all_entries(vm);
-
-		/* Free iommu */
-		destroy_iommu_domain(vm->iommu);
-
-		/* Free EPT allocated resources assigned to VM */
-		destroy_ept(vm);
 	} else {
 		ret = -EINVAL;
 	}

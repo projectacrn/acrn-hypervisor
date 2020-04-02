@@ -149,8 +149,8 @@ struct acrn_vm;
 
 extern const struct pci_vdev_ops vhostbridge_ops;
 extern const struct pci_vdev_ops vpci_bridge_ops;
-void vpci_init(struct acrn_vm *vm);
-void vpci_cleanup(struct acrn_vm *vm);
+void init_vpci(struct acrn_vm *vm);
+void deinit_vpci(struct acrn_vm *vm);
 struct pci_vdev *pci_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf);
 struct acrn_assign_pcidev;
 int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pcidev);
