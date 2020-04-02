@@ -480,7 +480,7 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 		vcpu->arch.pid.control.bits.ndst = per_cpu(lapic_id, pcpu_id);
 
 		/* Create per vcpu vlapic */
-		vlapic_create(vcpu);
+		vlapic_create(vcpu, pcpu_id);
 
 		if (!vm_hide_mtrr(vm)) {
 			init_vmtrr(vcpu);

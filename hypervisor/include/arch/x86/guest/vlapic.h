@@ -61,6 +61,7 @@ struct acrn_vlapic {
 	 */
 	struct lapic_regs	apic_page;
 
+	uint32_t		vapic_id;
 	uint32_t		esr_pending;
 	int32_t			esr_firing;
 
@@ -163,17 +164,20 @@ int32_t vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg);
 void vlapic_receive_intr(struct acrn_vm *vm, bool level, uint32_t dest,
 		bool phys, uint32_t delmode, uint32_t vec, bool rh);
 
-uint32_t vlapic_get_apicid(const struct acrn_vlapic *vlapic);
-void vlapic_create(struct acrn_vcpu *vcpu);
+/**
+ *  @pre vlapic != NULL
+ */
+static inline uint32_t vlapic_get_apicid(const struct acrn_vlapic *vlapic)
+{
+	return vlapic->vapic_id;
+}
+
+void vlapic_create(struct acrn_vcpu *vcpu, uint16_t pcpu_id);
 /*
  *  @pre vcpu != NULL
  */
 void vlapic_free(struct acrn_vcpu *vcpu);
-/**
- * @pre vlapic->vm != NULL
- * @pre vlapic->vcpu->vcpu_id < MAX_VCPUS_PER_VM
- */
-void vlapic_init(struct acrn_vlapic *vlapic);
+
 void vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops, enum reset_mode mode);
 void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs);
 uint64_t vlapic_apicv_get_apic_access_addr(void);

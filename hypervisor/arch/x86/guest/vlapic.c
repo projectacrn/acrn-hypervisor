@@ -136,8 +136,7 @@ static uint16_t vm_apicid2vcpu_id(struct acrn_vm *vm, uint32_t lapicid)
 	uint16_t cpu_id = INVALID_CPU_ID;
 
 	foreach_vcpu(i, vm, vcpu) {
-		const struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
-		if (vlapic_get_apicid(vlapic) == lapicid) {
+		if (vcpu_vlapic(vcpu)->vapic_id == lapicid) {
 			cpu_id = vcpu->vcpu_id;
 			break;
 		}
@@ -151,57 +150,13 @@ static uint16_t vm_apicid2vcpu_id(struct acrn_vm *vm, uint32_t lapicid)
 
 }
 
-/*
- * @pre vlapic != NULL
- */
-uint32_t
-vlapic_get_apicid(const struct acrn_vlapic *vlapic)
-{
-	uint32_t apicid;
-	if (is_x2apic_enabled(vlapic)) {
-		apicid = vlapic->apic_page.id.v;
-	} else {
-		apicid = (vlapic->apic_page.id.v) >> APIC_ID_SHIFT;
-	}
-
-	return apicid;
-}
-
-static inline uint32_t
-vlapic_build_id(const struct acrn_vlapic *vlapic)
-{
-	const struct acrn_vcpu *vcpu = vlapic2vcpu(vlapic);
-	uint32_t vlapic_id, lapic_regs_id;
-
-	if (is_sos_vm(vcpu->vm)) {
-		/*
-		 * For SOS_VM type, pLAPIC IDs need to be used because
-		 * host ACPI tables are passthru to SOS.
-		 * Get APIC ID sequence format from cpu_storage
-		 */
-		vlapic_id = per_cpu(lapic_id, vcpu->vcpu_id);
-	} else {
-		vlapic_id = (uint32_t)vcpu->vcpu_id;
-	}
-
-	if (is_x2apic_enabled(vlapic)) {
-		lapic_regs_id = vlapic_id;
-	} else {
-		lapic_regs_id = vlapic_id << APIC_ID_SHIFT;
-	}
-
-	dev_dbg(DBG_LEVEL_VLAPIC, "vlapic APIC PAGE ID : 0x%08x", lapic_regs_id);
-
-	return lapic_regs_id;
-}
-
 static inline void vlapic_build_x2apic_id(struct acrn_vlapic *vlapic)
 {
 	struct lapic_regs *lapic;
 	uint32_t logical_id, cluster_id;
 
 	lapic = &(vlapic->apic_page);
-	lapic->id.v = vlapic_build_id(vlapic);
+	lapic->id.v = vlapic->vapic_id;
 	logical_id = lapic->id.v & LOGICAL_ID_MASK;
 	cluster_id = (lapic->id.v & CLUSTER_ID_MASK) >> 4U;
 	lapic->ldr.v = (cluster_id << 16U) | (1U << logical_id);
@@ -1667,7 +1622,10 @@ vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops, enum 
 			lapic->id.v = preserved_apic_id;
 		}
 	} else {
-		lapic->id.v = vlapic_build_id(vlapic);
+		lapic->id.v = vlapic->vapic_id;
+		if (!is_x2apic_enabled(vlapic)) {
+			lapic->id.v <<= APIC_ID_SHIFT;
+		}
 	}
 	lapic->version.v = VLAPIC_VERSION;
 	lapic->version.v |= (VLAPIC_MAXLVT_INDEX << MAXLVTSHIFT);
@@ -1686,16 +1644,6 @@ vlapic_reset(struct acrn_vlapic *vlapic, const struct acrn_apicv_ops *ops, enum 
 	vlapic->isrv = 0U;
 
 	vlapic->ops = ops;
-}
-
-/**
- * @pre vlapic2vcpu(vlapic)->vm != NULL
- * @pre vlapic2vcpu(vlapic)->vcpu_id < MAX_VCPUS_PER_VM
- */
-void
-vlapic_init(struct acrn_vlapic *vlapic)
-{
-	vlapic_init_timer(vlapic);
 }
 
 void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs)
@@ -2174,8 +2122,13 @@ int32_t vlapic_x2apic_write(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val)
 	return error;
 }
 
-void vlapic_create(struct acrn_vcpu *vcpu)
+/**
+ *  @pre vcpu != NULL
+ */
+void vlapic_create(struct acrn_vcpu *vcpu, uint16_t pcpu_id)
 {
+	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
+
 	if (is_vcpu_bsp(vcpu)) {
 		uint64_t *pml4_page =
 			(uint64_t *)vcpu->vm->arch_vm.nworld_eptp;
@@ -2191,7 +2144,20 @@ void vlapic_create(struct acrn_vcpu *vcpu)
 			EPT_WR | EPT_RD | EPT_UNCACHED);
 	}
 
-	vlapic_init(vcpu_vlapic(vcpu));
+	vlapic_init_timer(vlapic);
+
+	if (is_sos_vm(vcpu->vm)) {
+		/*
+		 * For SOS_VM type, pLAPIC IDs need to be used because
+		 * host ACPI tables are passthru to SOS.
+		 * Get APIC ID sequence format from cpu_storage
+		 */
+		vlapic->vapic_id = per_cpu(lapic_id, pcpu_id);
+	} else {
+		vlapic->vapic_id = (uint32_t)vcpu->vcpu_id;
+	}
+
+	dev_dbg(DBG_LEVEL_VLAPIC, "vlapic APIC ID : 0x%04x", vlapic->vapic_id);
 }
 
 /*
