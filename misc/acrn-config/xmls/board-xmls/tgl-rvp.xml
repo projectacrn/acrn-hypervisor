@@ -253,13 +253,163 @@
 	rdt resource mask max: '0xff'
 	</CLOS_INFO>
 
-	<SYSTEM_RAM_INFO>
+	<IOMEM_INFO>
+	00000000-00000fff : Reserved
 	00001000-0009efff : System RAM
-	00100000-1fdfffff : System RAM
-	20000000-30d48fff : System RAM
-	34c4f000-34c4ffff : System RAM
-	100000000-4c0bfffff : System RAM
-	</SYSTEM_RAM_INFO>
+	0009f000-000fffff : Reserved
+	  000a0000-000bffff : PCI Bus 0000:00
+	  000f0000-000fffff : System ROM
+	00100000-3f9f6fff : System RAM
+	3f9f7000-3fa23fff : Reserved
+	3fa24000-3fa2bfff : System RAM
+	3fa2c000-3fa2cfff : Reserved
+	3fa2d000-42d04fff : System RAM
+	42d05000-45e90fff : Reserved
+	45e91000-45f32fff : ACPI Non-volatile Storage
+	45f33000-45ffefff : ACPI Tables
+	45fff000-45ffffff : System RAM
+	46000000-49ffffff : Reserved
+	4ab00000-4abfffff : Reserved
+	4b000000-4fbfffff : Reserved
+	4fc00000-bfffffff : PCI Bus 0000:00
+	  4fc00000-4fc00fff : 0000:00:1f.5
+	  50000000-5c1fffff : PCI Bus 0000:7f
+	  5e000000-6a1fffff : PCI Bus 0000:55
+	  6c000000-781fffff : PCI Bus 0000:2b
+	  7a000000-861fffff : PCI Bus 0000:01
+	  86200000-862fffff : PCI Bus 0000:a9
+	    86200000-86203fff : 0000:a9:00.0
+	      86200000-86203fff : nvme
+	  86300000-8631ffff : 0000:00:1f.6
+	    86300000-8631ffff : e1000e
+	c0000000-cfffffff : PCI MMCONFIG 0000 [bus 00-ff]
+	fd000000-fd68ffff : pnp 00:06
+	fd690000-fd69ffff : INT34C5:00
+	  fd690000-fd69ffff : INT34C5:00
+	fd6a0000-fd6affff : INT34C5:00
+	  fd6a0000-fd6affff : INT34C5:00
+	fd6b0000-fd6cffff : pnp 00:06
+	fd6d0000-fd6dffff : INT34C5:00
+	  fd6d0000-fd6dffff : INT34C5:00
+	fd6e0000-fd6effff : INT34C5:00
+	  fd6e0000-fd6effff : INT34C5:00
+	fd6f0000-fdffffff : pnp 00:06
+	fe000000-fe01ffff : pnp 00:06
+	fe200000-fe7fffff : pnp 00:06
+	fec00000-fec003ff : IOAPIC 0
+	fed00000-fed003ff : HPET 0
+	  fed00000-fed003ff : PNP0103:00
+	fed20000-fed7ffff : Reserved
+	  fed40000-fed44fff : INTC6000:00
+	fed84000-fed84fff : dmar2
+	fed85000-fed85fff : dmar3
+	fed86000-fed86fff : dmar4
+	fed87000-fed87fff : dmar5
+	fed90000-fed90fff : dmar0
+	fed91000-fed91fff : dmar6
+	fed92000-fed92fff : dmar1
+	feda0000-feda0fff : pnp 00:05
+	feda1000-feda1fff : pnp 00:05
+	fedc0000-fedc7fff : pnp 00:05
+	fee00000-feefffff : pnp 00:05
+	  fee00000-fee00fff : Local APIC
+	ff400000-ffffffff : Reserved
+	100000000-2b03fffff : System RAM
+	  25b000000-25c202390 : Kernel code
+	  25c400000-25c9f9fff : Kernel rodata
+	  25ca00000-25cbed57f : Kernel data
+	  25cdd6000-25d9fffff : Kernel bss
+	2b0400000-2b3ffffff : RAM buffer
+	4000000000-7fffffffff : PCI Bus 0000:00
+	  4000000000-400fffffff : 0000:00:02.0
+	    4000000000-4001fa3fff : efifb
+	  4010000000-4016ffffff : 0000:00:02.0
+	  4017000000-4017000fff : 0000:00:10.0
+	    4017000000-40170001ff : lpss_dev
+	      4017000000-40170001ff : i2c_designware.0
+	    4017000200-40170002ff : lpss_priv
+	  4017001000-4017001fff : 0000:00:15.0
+	    4017001000-40170011ff : lpss_dev
+	      4017001000-40170011ff : i2c_designware.1
+	    4017001200-40170012ff : lpss_priv
+	    4017001800-4017001fff : idma64.1
+	      4017001800-4017001fff : idma64.1
+	  4017002000-4017002fff : 0000:00:15.1
+	    4017002000-40170021ff : lpss_dev
+	      4017002000-40170021ff : i2c_designware.2
+	    4017002200-40170022ff : lpss_priv
+	    4017002800-4017002fff : idma64.2
+	      4017002800-4017002fff : idma64.2
+	  4017003000-4017003fff : 0000:00:15.2
+	    4017003000-40170031ff : lpss_dev
+	      4017003000-40170031ff : i2c_designware.3
+	    4017003200-40170032ff : lpss_priv
+	    4017003800-4017003fff : idma64.3
+	      4017003800-4017003fff : idma64.3
+	  4017004000-4017004fff : 0000:00:15.3
+	    4017004000-40170041ff : lpss_dev
+	      4017004000-40170041ff : i2c_designware.4
+	    4017004200-40170042ff : lpss_priv
+	    4017004800-4017004fff : idma64.4
+	      4017004800-4017004fff : idma64.4
+	  4017005000-4017005fff : 0000:00:19.0
+	    4017005000-40170051ff : lpss_dev
+	      4017005000-40170051ff : i2c_designware.5
+	    4017005200-40170052ff : lpss_priv
+	    4017005800-4017005fff : idma64.5
+	      4017005800-4017005fff : idma64.5
+	  4017006000-4017006fff : 0000:00:19.1
+	    4017006000-40170061ff : lpss_dev
+	      4017006000-40170061ff : i2c_designware.6
+	    4017006200-40170062ff : lpss_priv
+	    4017006800-4017006fff : idma64.6
+	      4017006800-4017006fff : idma64.6
+	  4017007000-4017007fff : 0000:00:1e.0
+	    4017007000-40170071ff : lpss_dev
+	      4017007000-401700701f : serial
+	    4017007200-40170072ff : lpss_priv
+	    4017007800-4017007fff : idma64.7
+	      4017007800-4017007fff : idma64.7
+	  4017008000-4017008fff : 0000:00:1e.3
+	    4017008000-40170081ff : lpss_dev
+	      4017008000-40170081ff : pxa2xx-spi.8
+	    4017008200-40170082ff : lpss_priv
+	    4017008800-4017008fff : idma64.8
+	      4017008800-4017008fff : idma64.8
+	  4020000000-40ffffffff : 0000:00:02.0
+	  6000000000-601bffffff : PCI Bus 0000:01
+	  6020000000-603bffffff : PCI Bus 0000:2b
+	  6040000000-605bffffff : PCI Bus 0000:55
+	  6060000000-607bffffff : PCI Bus 0000:7f
+	  607c000000-607cffffff : 0000:00:05.0
+	  607d000000-607dffffff : 0000:00:02.0
+	  607e000000-607e0fffff : 0000:00:1f.3
+	    607e000000-607e0fffff : Audio DSP
+	  607e100000-607e13ffff : 0000:00:0d.3
+	  607e140000-607e17ffff : 0000:00:0d.2
+	  607e180000-607e19ffff : 0000:00:04.0
+	  607e1a0000-607e1affff : 0000:00:14.0
+	    607e1a0000-607e1affff : xhci-hcd
+	  607e1b0000-607e1bffff : 0000:00:12.0
+	    607e1b0000-607e1bffff : intel_ish_ipc
+	  607e1c0000-607e1cffff : 0000:00:0d.0
+	    607e1c0000-607e1cffff : xhci-hcd
+	  607e1d0000-607e1d7fff : 0000:00:10.7
+	  607e1d8000-607e1dffff : 0000:00:10.6
+	  607e1e0000-607e1e7fff : 0000:00:0a.0
+	  607e1e8000-607e1ebfff : 0000:00:1f.3
+	    607e1e8000-607e1ebfff : Audio DSP
+	  607e1ec000-607e1effff : 0000:00:14.3
+	    607e1ec000-607e1effff : iwlwifi
+	  607e1f0000-607e1f3fff : 0000:00:14.2
+	  607e1f4000-607e1f40ff : 0000:00:1f.4
+	  607e1f9000-607e1f9fff : 0000:00:16.0
+	    607e1f9000-607e1f9fff : mei_me
+	  607e1fe000-607e1fefff : 0000:00:14.2
+	  607e200000-607e200fff : 0000:00:0d.3
+	  607e201000-607e201fff : 0000:00:0d.2
+	  607e202000-607e202fff : 0000:00:08.0
+	</IOMEM_INFO>
 
 	<BLOCK_DEVICE_INFO>
 	/dev/nvme0n1p3: TYPE="ext4"
