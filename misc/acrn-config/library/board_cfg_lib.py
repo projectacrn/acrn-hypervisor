@@ -43,7 +43,7 @@ SIZE_K = common.SIZE_K
 SIZE_M = common.SIZE_M
 SIZE_2G = common.SIZE_2G
 SIZE_4G = common.SIZE_4G
-
+SIZE_G = common.SIZE_G
 
 def prepare():
     """ check environment """
