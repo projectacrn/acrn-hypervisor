@@ -14,10 +14,6 @@ PCI_END_HEADER = r"""
 #endif /* PCI_DEVICES_H_ */"""
 
 
-MEM_ALIGN = 2 * board_cfg_lib.SIZE_M
-#TODO: Support 64Bit Bar for huge MMIO than HUGE_MMIO_LIMIT
-SUPPORT_HUGE_HI_MMIO = False
-HUGE_MMIO_LIMIT = board_cfg_lib.SIZE_2G / 2
 HI_MMIO_OFFSET = 0
 
 class Bar_Mem:
@@ -62,7 +58,9 @@ def get_size(line):
 
     # get size string from format, Region n: Memory at x ... [size=NK]
     size_str = line.split()[-1].strip(']').split('=')[1]
-    if 'M' in size_str:
+    if 'G' in size_str:
+        size = int(size_str.strip('G')) * board_cfg_lib.SIZE_G
+    elif 'M' in size_str:
         size = int(size_str.strip('M')) * board_cfg_lib.SIZE_M
     elif 'K' in size_str:
         size = int(size_str.strip('K')) * board_cfg_lib.SIZE_K
@@ -71,13 +69,13 @@ def get_size(line):
 
     return size
 
-
+# round up the running bar_addr to the size of the incoming bar "line"
 def remap_bar_addr_to_high(bar_addr, line):
     """Generate vbar address"""
     global HI_MMIO_OFFSET
-    cur_addr = board_cfg_lib.round_up(bar_addr, MEM_ALIGN)
     size = get_size(line)
-    HI_MMIO_OFFSET = board_cfg_lib.round_up(cur_addr + size, MEM_ALIGN)
+    cur_addr = board_cfg_lib.round_up(bar_addr, size)
+    HI_MMIO_OFFSET = cur_addr + size
     return cur_addr
 
 
@@ -104,11 +102,6 @@ def parser_pci():
             bar_num = line.split()[1].strip(':')
             if bar_addr >= board_cfg_lib.SIZE_4G or bar_addr < board_cfg_lib.SIZE_2G:
                 if not tmp_bar_attr.remappable:
-                    continue
-                #TODO: Support 64Bit Bar for huge MMIO than HUGE_MMIO_LIMIT
-                if not SUPPORT_HUGE_HI_MMIO and get_size(line) >=  HUGE_MMIO_LIMIT:
-                    tmp_bar_attr.remappable = False
-                    PCI_DEV_BAR_DESC.pci_dev_dic[pci_bdf] = tmp_bar_attr
                     continue
 
                 bar_addr = remap_bar_addr_to_high(HI_MMIO_OFFSET, line)
