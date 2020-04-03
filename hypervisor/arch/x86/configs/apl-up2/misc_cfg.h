@@ -39,4 +39,8 @@
 
 #define MAX_HIDDEN_PDEVS_NUM	1U
 
+#define HI_MMIO_START		~0UL
+#define HI_MMIO_END		0UL
+
+
 #endif /* MISC_CFG_H */
