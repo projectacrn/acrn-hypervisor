@@ -29,7 +29,7 @@ SIZE_K = 1024
 SIZE_M = SIZE_K * 1024
 SIZE_2G = 2 * SIZE_M * SIZE_K
 SIZE_4G = 2 * SIZE_2G
-
+SIZE_G = SIZE_M * 1024
 
 class MultiItem():
 
