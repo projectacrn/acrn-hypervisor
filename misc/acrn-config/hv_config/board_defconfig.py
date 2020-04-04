@@ -6,6 +6,7 @@
 import sys
 import subprocess
 import board_cfg_lib
+import hv_cfg_lib
 import common
 
 
@@ -91,7 +92,7 @@ def get_serial_type():
         # Get ttySx from scenario config file which selected by user
         (err_dic, ttyn) = board_cfg_lib.parser_vuart_console()
         if err_dic:
-            board_cfg_lib.ERR_LIST.update(err_dic)
+            hv_cfg_lib.ERR_LIST.update(err_dic)
 
     # query the serial type from board config file
     for line in ttys_lines:
@@ -120,11 +121,8 @@ def is_rdt_supported():
         return True
 
 
-def generate_file(config):
-    """Start to generate board.c
-    :param config: it is a file pointer of board information for writing to
-    """
-    err_dic = {}
+def get_memory(hv_info, config):
+
     # this dictonary mapped with 'address start':'mem range'
     ram_range = {}
 
@@ -147,15 +145,18 @@ def generate_file(config):
     hv_start_addr = int(avl_start_addr, 16) + int(hex(reserved_ram), 16)
     hv_start_addr = common.round_up(hv_start_addr, MEM_ALIGN)
 
-    # add config scenario name
-    (err_dic, scenario_name) = common.get_scenario_name()
+    print("CONFIG_HV_RAM_START={}".format(hex(hv_start_addr)), file=config)
+    print("CONFIG_HV_RAM_SIZE={}".format(hex(hv_ram_size)), file=config)
+    print("CONFIG_PLATFORM_RAM_SIZE={}".format(hv_info.mem.platform_ram_size), file=config)
+    print("CONFIG_LOW_RAM_SIZE={}".format(hv_info.mem.low_ram_size), file=config)
+    print("CONFIG_SOS_RAM_SIZE={}".format(hv_info.mem.sos_ram_size), file=config)
+    print("CONFIG_UOS_RAM_SIZE={}".format(hv_info.mem.uos_ram_size), file=config)
+    print("CONFIG_STACK_SIZE={}".format(hv_info.mem.stack_size), file=config)
 
-    print("{}".format(DESC), file=config)
-    print("CONFIG_{}=y".format(scenario_name.upper()), file=config)
-    print('CONFIG_BOARD="{}"'.format(board_cfg_lib.BOARD_NAME), file=config)
+
+def get_serial_console(config):
 
     (serial_type, serial_value) = get_serial_type()
-
     if serial_type == "portio":
         print("CONFIG_SERIAL_LEGACY=y", file=config)
         print("CONFIG_SERIAL_PIO_BASE={}".format(serial_value), file=config)
@@ -163,17 +164,69 @@ def generate_file(config):
         print("CONFIG_SERIAL_PCI=y", file=config)
         print('CONFIG_SERIAL_PCI_BDF="{}"'.format(serial_value), file=config)
 
-    print("CONFIG_HV_RAM_START={}".format(hex(hv_start_addr)), file=config)
-    print("CONFIG_HV_RAM_SIZE={}".format(hex(hv_ram_size)), file=config)
 
-    cpu_core_num = len(board_cfg_lib.get_processor_info())
-    if scenario_name == "sdc" and cpu_core_num > 2:
-        print("CONFIG_MAX_KATA_VM_NUM=1", file=config)
-    else:
-        if cpu_core_num == 2:
-            print("# KATA VM is not supported on dual-core systems", file=config)
+def get_miscfg(hv_info, config):
 
-        print("CONFIG_MAX_KATA_VM_NUM=0", file=config)
+    print("CONFIG_GPU_SBDF={}".format(hv_info.mis.gpu_sbdf), file=config)
+    print('CONFIG_UEFI_OS_LOADER_NAME="{}"'.format(hv_info.mis.uefi_os_loader_name), file=config)
+
+
+def get_features(hv_info, config):
+
+    print("CONFIG_{}=y".format(hv_info.features.scheduler), file=config)
+    print("CONFIG_RELOC={}".format(hv_info.features.reloc), file=config)
+    print("CONFIG_MULTIBOOT2={}".format(hv_info.features.multiboot2), file=config)
+    print("CONFIG_HYPERV_ENABLED={}".format(hv_info.features.hyperv_enabled), file=config)
+    print("CONFIG_IOMMU_ENFORCE_SNP={}".format(hv_info.features.iommu_enforce_snp), file=config)
+    print("CONFIG_ACPI_PARSE_ENABLED={}".format(hv_info.features.acpi_parse_enabled), file=config)
+    print("CONFIG_L1D_FLUSH_VMENTRY_ENABLED={}".format(hv_info.features.l1d_flush_vmentry_enabled), file=config)
+    print("CONFIG_MCE_ON_PSC_WORKAROUND_DISABLED={}".format(hv_info.features.mce_on_psc_workaround_disabled), file=config)
+
+
+def get_capacities(hv_info, config):
+
+    print("CONFIG_IOMMU_BUS_NUM={}".format(hv_info.cap.iommu_bus_num), file=config)
+    print("CONFIG_MAX_IOAPIC_NUM={}".format(hv_info.cap.max_ioapic_num), file=config)
+    print("CONFIG_MAX_IR_ENTRIES={}".format(hv_info.cap.max_ir_entries), file=config)
+    print("CONFIG_MAX_PCI_DEV_NUM={}".format(hv_info.cap.max_pci_dev_num), file=config)
+    print("CONFIG_MAX_KATA_VM_NUM={}".format(hv_info.cap.max_kata_vm_num), file=config)
+    print("CONFIG_MAX_IOAPIC_LINES={}".format(hv_info.cap.max_ioapic_lines), file=config)
+    print("CONFIG_MAX_PT_IRQ_ENTRIES={}".format(hv_info.cap.max_pt_irq_entries), file=config)
+    print("CONFIG_MAX_MSIX_TABLE_NUM={}".format(hv_info.cap.max_msix_table_num), file=config)
+    print("CONFIG_MAX_EMULATED_MMIO_REGIONS={}".format(hv_info.cap.max_emu_mmio_regions), file=config)
+
+
+def get_log_opt(hv_info, config):
+
+    print("CONFIG_LOG_BUF_SIZE={}".format(hv_info.log.buf_size), file=config)
+    print("CONFIG_NPK_LOGLEVEL={}".format(hv_info.log.level.npk), file=config)
+    print("CONFIG_MEM_LOGLEVEL={}".format(hv_info.log.level.mem), file=config)
+    print("CONFIG_LOG_DESTINATION={}".format(hv_info.log.dest), file=config)
+    print("CONFIG_CONSOLE_LOGLEVEL={}".format(hv_info.log.level.console), file=config)
+
+
+def generate_file(hv_info, config):
+    """Start to generate board.c
+    :param config: it is a file pointer of board information for writing to
+    """
+    err_dic = {}
+
+    # add config scenario name
+    (err_dic, scenario_name) = common.get_scenario_name()
+    (err_dic, board_name) = common.get_board_name()
+
+    print("{}".format(DESC), file=config)
+    if hv_info.log.release == 'y':
+        print("CONFIG_RELEASE=y", file=config)
+    print('CONFIG_BOARD="{}"'.format(board_name), file=config)
+    print("CONFIG_{}=y".format(scenario_name.upper()), file=config)
+
+    get_memory(hv_info, config)
+    get_miscfg(hv_info, config)
+    get_features(hv_info, config)
+    get_capacities(hv_info, config)
+    get_serial_console(config)
+    get_log_opt(hv_info, config)
 
     if is_rdt_supported():
         print("CONFIG_RDT_ENABLED=y", file=config)

@@ -7,6 +7,7 @@ import os
 import sys
 import copy
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'hv_config'))
 from scenario_item import HwInfo, VmInfo
 import board_cfg_lib
 import scenario_cfg_lib
@@ -14,10 +15,14 @@ import vm_configurations_c
 import vm_configurations_h
 import pci_dev_c
 import common
+import hv_cfg_lib
+import board_defconfig
+from hv_item import HvInfo
 
 ACRN_PATH = common.SOURCE_ROOT_DIR
 ACRN_CONFIG_DEF = ACRN_PATH + 'hypervisor/scenarios/'
-GEN_FILE = ["vm_configurations.h", "vm_configurations.c", "pci_dev.c"]
+ACRN_CONFIGS = ACRN_PATH + "hypervisor/arch/x86/configs/"
+GEN_FILE = ["vm_configurations.h", "vm_configurations.c", "pci_dev.c", ".config"]
 
 
 def get_scenario_item_values(board_info, scenario_info):
@@ -27,6 +32,7 @@ def get_scenario_item_values(board_info, scenario_info):
     """
     scenario_item_values = {}
     hw_info = HwInfo(board_info)
+    hv_info = HvInfo(scenario_info)
 
     # get vm count
     common.BOARD_INFO_FILE = board_info
@@ -44,12 +50,31 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values.update(scenario_cfg_lib.avl_vuart_ui_select(scenario_info))
 
     # pre board_private
-    scenario_item_values["vm,board_private,rootfs"] = board_cfg_lib.get_rootfs(board_info)
-    scenario_item_values["vm,board_private,console"] = board_cfg_lib.get_ttys_info(board_info)
+    (scenario_item_values["vm,board_private,rootfs"], num) = board_cfg_lib.get_rootfs(board_info)
 
     # os config
-    scenario_item_values["vm,os_config,rootfs"] = board_cfg_lib.get_rootfs(board_info)
+    (scenario_item_values["vm,os_config,rootfs"], num) = board_cfg_lib.get_rootfs(board_info)
 
+    scenario_item_values["hv,DEBUG_OPTIONS,RELEASE"] = hv_cfg_lib.N_Y
+    scenario_item_values["hv,DEBUG_OPTIONS,NPK_LOGLEVEL"] = hv_cfg_lib.get_select_range("DEBUG_OPTIONS", "LOG_LEVEL")
+    scenario_item_values["hv,DEBUG_OPTIONS,MEM_LOGLEVEL"] = hv_cfg_lib.get_select_range("DEBUG_OPTIONS", "LOG_LEVEL")
+    scenario_item_values["hv,DEBUG_OPTIONS,CONSOLE_LOGLEVEL"] = hv_cfg_lib.get_select_range("DEBUG_OPTIONS", "LOG_LEVEL")
+    scenario_item_values["hv,DEBUG_OPTIONS,SERIAL_CONSOLE"] = board_cfg_lib.get_ttys_info(board_info)
+    scenario_item_values["hv,DEBUG_OPTIONS,LOG_DESTINATION"] = hv_cfg_lib.get_select_range("DEBUG_OPTIONS", "LOG_DESTINATION_BITMAP")
+
+    scenario_item_values["hv,CAPACITIES,MAX_KATA_VM_NUM"] = hv_cfg_lib.get_select_range("CAPACITIES", "KATA_VM_NUM")
+    scenario_item_values["hv,CAPACITIES,MAX_IOAPIC_NUM"] = hv_cfg_lib.get_select_range("CAPACITIES", "IOAPIC_NUM")
+
+    scenario_item_values["hv,FEATURES,MULTIBOOT2"] = hv_cfg_lib.N_Y
+    scenario_item_values["hv,FEATURES,SCHEDULER"] = hv_cfg_lib.SCHEDULER_TYPE
+    scenario_item_values["hv,FEATURES,RELOC"] = hv_cfg_lib.N_Y
+    scenario_item_values["hv,FEATURES,HYPERV_ENABLED"] = hv_cfg_lib.N_Y
+    scenario_item_values["hv,FEATURES,ACPI_PARSE_ENABLED"] = hv_cfg_lib.N_Y
+    scenario_item_values["hv,FEATURES,L1D_VMENTRY_ENABLED"] = hv_cfg_lib.N_Y
+    scenario_item_values["hv,FEATURES,MCE_ON_PSC_DISABLED"] = hv_cfg_lib.N_Y
+    scenario_item_values["hv,FEATURES,IOMMU_ENFORCE_SNP"] = hv_cfg_lib.N_Y
+
+    scenario_cfg_lib.ERR_LIST.update(hv_cfg_lib.ERR_LIST)
     return scenario_item_values
 
 
@@ -64,13 +89,20 @@ def validate_scenario_setting(board_info, scenario_info):
     common.BOARD_INFO_FILE = board_info
     common.SCENARIO_INFO_FILE = scenario_info
 
+    scenario_info_items = {}
     vm_info = VmInfo(board_info, scenario_info)
-
     vm_info.get_info()
-
     vm_info.check_item()
 
-    return (scenario_cfg_lib.ERR_LIST, vm_info)
+    hv_info = HvInfo(scenario_info)
+    hv_info.get_info()
+    hv_info.check_item()
+
+    scenario_info_items['vm'] = vm_info
+    scenario_info_items['hv'] = hv_info
+
+    scenario_cfg_lib.ERR_LIST.update(hv_cfg_lib.ERR_LIST)
+    return (scenario_cfg_lib.ERR_LIST, scenario_info_items)
 
 
 def main(args):
@@ -80,20 +112,22 @@ def main(args):
     """
     err_dic = {}
 
-    (err_dic, board_info_file, scenario_info_file, output_folder) = common.get_param(args)
+    (err_dic, params) = common.get_param(args)
     if err_dic:
         return err_dic
-
-    if output_folder:
-        common.ACRN_CONFIG_TARGET = os.path.abspath(output_folder) + '/'
 
     # check env
     err_dic = common.prepare()
     if err_dic:
         return err_dic
 
-    common.BOARD_INFO_FILE = board_info_file
-    common.SCENARIO_INFO_FILE = scenario_info_file
+    common.BOARD_INFO_FILE = params['--board']
+    common.SCENARIO_INFO_FILE = params['--scenario']
+    common.ACRN_CONFIG_TARGET= os.path.abspath(params['--out']) + '/'
+    common.get_vm_num(params['--scenario'])
+
+    # get board name
+    (err_dic, board_name) = common.get_board_name()
 
     # get scenario name
     (err_dic, scenario) = common.get_scenario_name()
@@ -103,13 +137,16 @@ def main(args):
     # check if this is the scenario config which matched board info
     (err_dic, status) = common.is_config_file_match()
     if not status:
-        err_dic['scenario config: Not match'] = "The board xml and scenario xml should be matched!"
+        err_dic['scenario config'] = "The board xml and scenario xml should be matched!"
         return err_dic
 
-    if common.ACRN_CONFIG_TARGET:
+    if params['--out']:
         scenario_dir = common.ACRN_CONFIG_TARGET + scenario + '/'
+        config_hv = common.ACRN_CONFIG_TARGET + board_name + GEN_FILE[3]
     else:
         scenario_dir = ACRN_CONFIG_DEF + scenario + '/'
+        config_hv = ACRN_CONFIGS + board_name + GEN_FILE[3]
+        common.print_yel("{}".format("Override board defconfig...", warn=True))
     common.mkdir(scenario_dir)
 
     vm_config_h = scenario_dir + GEN_FILE[0]
@@ -117,26 +154,31 @@ def main(args):
     pci_config_c = scenario_dir + GEN_FILE[2]
 
     # parse the scenario.xml
-    get_scenario_item_values(board_info_file, scenario_info_file)
-    (err_dic, vm_info) = validate_scenario_setting(board_info_file, scenario_info_file)
+    get_scenario_item_values(params['--board'], params['--scenario'])
+    (err_dic, scenario_items) = validate_scenario_setting(params['--board'], params['--scenario'])
     if err_dic:
-        common.print_red("Validate the scenario item failue", err=True)
+        common.print_red("Validate the scenario item failure", err=True)
         return err_dic
 
     # get kata vm count
-    if scenario != "logical_partition":
-        scenario_cfg_lib.KATA_VM_COUNT = common.VM_COUNT - scenario_cfg_lib.DEFAULT_VM_COUNT[scenario]
-        if scenario_cfg_lib.KATA_VM_COUNT > 1:
-            err_dic['scenario config: kata vm count err'] = "Only one kata vm is supported!"
+    scenario_cfg_lib.KATA_VM_COUNT = int(scenario_items['hv'].cap.max_kata_vm_num)
+    if scenario_cfg_lib.KATA_VM_COUNT > 1:
+        err_dic['scenario config'] = "Only one kata vm is supported!"
+        return err_dic
+
+    # generate board defconfig
+    with open(config_hv, 'w+') as config:
+        err_dic = board_defconfig.generate_file(scenario_items['hv'], config)
+        if err_dic:
             return err_dic
 
     # generate vm_configuration.h
     with open(vm_config_h, 'w') as config:
-        vm_configurations_h.generate_file(scenario, vm_info, config)
+        vm_configurations_h.generate_file(scenario, scenario_items['vm'], config)
 
     # generate vm_configuration.c
     with open(vm_config_c, 'w') as config:
-        err_dic = vm_configurations_c.generate_file(scenario, vm_info, config)
+        err_dic = vm_configurations_c.generate_file(scenario, scenario_items['vm'], config)
         if err_dic:
             return err_dic
 
