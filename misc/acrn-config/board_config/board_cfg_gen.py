@@ -12,7 +12,6 @@ import board_c
 import pci_devices_h
 import acpi_platform_h
 import misc_cfg_h
-import new_board_kconfig
 import common
 
 ACRN_PATH = common.SOURCE_ROOT_DIR
@@ -29,21 +28,18 @@ def main(args):
     """
     err_dic = {}
 
-    (err_dic, board_info_file, scenario_info_file, output_folder) = common.get_param(args)
+    (err_dic, params) = common.get_param(args)
     if err_dic:
         return err_dic
-
-    if output_folder:
-        common.ACRN_CONFIG_TARGET = os.path.abspath(output_folder) + '/'
 
     # check env
     err_dic = common.prepare()
     if err_dic:
         return err_dic
 
-    common.BOARD_INFO_FILE = board_info_file
-    common.SCENARIO_INFO_FILE = scenario_info_file
-    common.get_vm_num(scenario_info_file)
+    common.BOARD_INFO_FILE = params['--board']
+    common.SCENARIO_INFO_FILE = params['--scenario']
+    common.get_vm_num(params['--scenario'])
 
     # get board name
     (err_dic, board) = common.get_board_name()
@@ -89,12 +85,6 @@ def main(args):
     # generate misc_cfg.h
     with open(config_misc_cfg, 'w+') as config:
         err_dic = misc_cfg_h.generate_file(config)
-        if err_dic:
-            return err_dic
-
-    # generate ($board).config
-    with open(config_board_kconfig, 'w+') as config:
-        err_dic = new_board_kconfig.generate_file(config)
         if err_dic:
             return err_dic
 
