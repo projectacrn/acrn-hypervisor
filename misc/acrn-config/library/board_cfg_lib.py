@@ -256,19 +256,15 @@ def parser_vuart_console():
     ttys_n = ''
     (err_dic, scenario_name) = common.get_scenario_name()
 
-    if scenario_name != "logical_partition":
-        ttys = common.get_sub_leaf_tag(common.SCENARIO_INFO_FILE, "board_private", "console")
-    else:
-        ttys = common.get_sub_leaf_tag(common.SCENARIO_INFO_FILE, "os_config", "console")
+    ttys = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "DEBUG_OPTIONS", "SERIAL_CONSOLE")
 
-    if not ttys or ttys[0] == None:
+    if not ttys or ttys == None:
         return (err_dic, ttys_n)
 
-    if ttys and 'BDF' in ttys[0] or '/dev' in ttys[0]:
-        ttys_n = ttys[0].split('/')[2]
+    if ttys and 'BDF' in ttys or '/dev' in ttys:
+        ttys_n = ttys.split('/')[2]
     else:
-        # sdc/sdc2 is different from logical_partition
-        ttys_n = ttys[0]
+        ttys_n = ttys
 
     return (err_dic, ttys_n)
 

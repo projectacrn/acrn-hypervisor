@@ -466,7 +466,7 @@ def pt_devs_check_audio(audio_map, audio_codec_map):
 
 
 def check_block_mount(virtio_blk_dic):
-    blk_dev_list = board_cfg_lib.get_rootfs(common.BOARD_INFO_FILE)
+    (blk_dev_list, num) = board_cfg_lib.get_rootfs(common.BOARD_INFO_FILE)
     for vmid in list(virtio_blk_dic.keys()):
         mount_flags = []
         for blk in virtio_blk_dic[vmid]:

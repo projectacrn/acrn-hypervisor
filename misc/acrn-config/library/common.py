@@ -95,39 +95,36 @@ def get_param(args):
     :param args: this the command line of string for the script without script name
     """
     err_dic = {}
-    board_info_file = False
-    scenario_info_file = False
-    output_folder = False
-
-    if '--board' not in args or '--scenario' not in args:
-        usage(args[0])
-        err_dic['common error: get wrong parameter'] = "wrong usage"
-        return (err_dic, board_info_file, scenario_info_file, output_folder)
-
+    params = {'--board':'', '--scenario':'', '--out':''}
     args_list = args[1:]
-    (optlist, args_list) = getopt.getopt(args_list, '', ['board=', 'scenario=', 'out='])
+
+    try:
+        (optlist, args_list) = getopt.getopt(args_list, '', ['hv=', 'board=', 'scenario=', 'out='])
+    except getopt.GetoptError as err:
+        usage(args[0])
+        sys.exit(2)
     for arg_k, arg_v in optlist:
         if arg_k == '--board':
-            board_info_file = arg_v
+            params['--board'] = arg_v
         if arg_k == '--scenario':
-            scenario_info_file = arg_v
+            params['--scenario'] = arg_v
         if arg_k == '--out':
-            output_folder = arg_v
+            params['--out'] = arg_v
 
-    if not board_info_file or not scenario_info_file:
-        usage(args[0])
-        err_dic['common error: get wrong parameter'] = "wrong usage"
-        return (err_dic, board_info_file, scenario_info_file, output_folder)
+    for par_k, par_v in params.items():
+        if par_k == '--out':
+            continue
 
-    if not os.path.exists(board_info_file):
-        err_dic['common error: get wrong parameter'] = "{} is not exist!".format(board_info_file)
-        return (err_dic, board_info_file, scenario_info_file, output_folder)
+        if not par_v:
+            usage(args[0])
+            err_dic['wrong usage'] = "Parameter for {} should not empty".format(par_k)
+            return (err_dic, params)
 
-    if not os.path.exists(scenario_info_file):
-        err_dic['common error: get wrong parameter'] = "{} is not exist!".format(scenario_info_file)
-        return (err_dic, board_info_file, scenario_info_file, output_folder)
+        if not os.path.exists(par_v):
+            err_dic['wrong usage'] = "{} is not exist!".format(par_v)
+            return (err_dic, params)
 
-    return (err_dic, board_info_file, scenario_info_file, output_folder)
+    return (err_dic, params)
 
 
 def prepare():
@@ -167,7 +164,7 @@ def get_xml_attrib(config_file, attrib):
             if 'board=' in line or 'scenario=' in line:
 
                 if attrib not in line:
-                    err_dic['common error: Not match'] = "The root item is not in xml file"
+                    err_dic['common error'] = "The {} attribute is not in xml file".format(attrib)
                     return (err_dic, value)
 
                 attrib_list = line.split()
@@ -392,6 +389,8 @@ def get_leaf_tag_map(config_file, branch_tag, tag_str=''):
     tmp = TmpItem()
     root = get_config_root(config_file)
     for item in root:
+        if not 'id' in item.attrib.keys():
+            continue
         vm_id = int(item.attrib['id'])
         # for each 2th level item
         for sub in item:
@@ -418,6 +417,29 @@ def get_leaf_tag_map(config_file, branch_tag, tag_str=''):
                 get_sub_value(tmp, tag_str, vm_id)
 
     return tmp.tag
+
+
+def get_hv_item_tag(config_file, branch_tag, tag_str=''):
+
+    tmp = ''
+    root = get_config_root(config_file)
+    for item in root:
+        # for each 2th level item
+        for sub in item:
+            if sub.tag == branch_tag:
+                if not tag_str:
+                    if sub.text == None or not sub.text:
+                        tmp = ''
+                    else:
+                        tmp = sub.text
+                    continue
+
+                # for each 3rd level item
+                for leaf in sub:
+                    if leaf.tag == tag_str and leaf.text and leaf.text != None:
+                        tmp = leaf.text
+                    continue
+    return tmp
 
 
 def order_type_map_vmid(config_file, vm_count):
@@ -482,3 +504,18 @@ def mkdir(path):
             subprocess.check_call('mkdir -p {}'.format(path), shell=True, stdout=subprocess.PIPE)
         except subprocess.CalledProcessError:
             print_red("{} file create failed!".format(path), err=True)
+
+
+def num2int(str_value):
+
+    val = 0
+    if isinstance(str_value, int):
+        val = str_value
+        return val
+    if str_value.isnumeric():
+        val = int(str_value)
+    else:
+        # hex value
+        val = int(str_value, 16)
+
+    return val
