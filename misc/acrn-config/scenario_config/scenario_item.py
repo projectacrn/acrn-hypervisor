@@ -31,7 +31,7 @@ class HwInfo:
         Get root devices from board info
         :return: root devices list
         """
-        self.root_dev_val = common.get_rootfs(self.board_info)
+        (self.root_dev_val, num) = common.get_rootfs(self.board_info)
         return self.root_dev_val
 
     def get_ttys_val(self):
@@ -95,8 +95,8 @@ class CfgOsKern:
             self.scenario_info, "os_config", "kern_mod")
         self.kern_args = common.get_leaf_tag_map(
             self.scenario_info, "os_config", "bootargs")
-        self.kern_console = common.get_leaf_tag_map(
-            self.scenario_info, "os_config", "console")
+        self.kern_console = common.get_hv_item_tag(
+            self.scenario_info, "DEBUG_OPTIONS", "SERIAL_CONSOLE")
         self.kern_load_addr = common.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_load_addr")
         self.kern_entry_addr = common.get_leaf_tag_map(
@@ -117,48 +117,16 @@ class CfgOsKern:
         scenario_cfg_lib.os_kern_type_check(self.kern_type, "os_config", "kern_type")
         scenario_cfg_lib.os_kern_mod_check(self.kern_mod, "os_config", "kern_mod")
         scenario_cfg_lib.os_kern_args_check(self.kern_args, "os_config", "kern_args")
-        scenario_cfg_lib.os_kern_console_check(self.kern_console, "os_config", "console")
+        scenario_cfg_lib.os_kern_console_check(self.kern_console, "DEBUG_OPTIONS", "SERIAL_CONSOLE")
         scenario_cfg_lib.os_kern_load_addr_check(self.kern_load_addr, "os_config", "kern_load_addr")
         scenario_cfg_lib.os_kern_entry_addr_check(self.kern_entry_addr, "os_config", "kern_entry_addr")
         scenario_cfg_lib.os_kern_root_dev_check(self.kern_root_dev, "os_config", "rootdev")
 
 
-class VuartTarget:
-    """ This is Abstract of class of vm target vuart """
-    t_vm_id = []
-    t_vuart_id = []
-
-    def __init__(self):
-        self.t_vm_id = []
-
-    def style_check_1(self):
-        """ This is public method for style check"""
-        self.t_vm_id = []
-
-    def style_check_2(self):
-        """ This is public method for style check"""
-        self.t_vm_id = []
-
-
-class VuartCfg(VuartTarget):
-    """ This is Abstract of class of vm vuart configuration """
-    v_type = []
-    v_base = []
-    v_irq = []
-    target = VuartTarget()
-
-    def __init__(self):
-        self.v1_type = []
-
-    def style_check_1(self):
-        """ This is public method for style check"""
-        self.v1_type = []
-
-
 class VuartInfo:
     """ This is Abstract of class of vm vuart setting """
-    v0_vuart = VuartCfg()
-    v1_vuart = VuartCfg()
+    v0_vuart = {}
+    v1_vuart = {}
 
     def __init__(self, scenario_file):
         self.scenario_info = scenario_file

@@ -28,7 +28,7 @@ class AcrnDmArgs:
         self.args["xhci"] = common.get_leaf_tag_map(self.launch_info, "usb_xhci")
 
     def check_item(self):
-        rootfs = board_cfg_lib.get_rootfs(self.board_info)
+        (rootfs, num) = board_cfg_lib.get_rootfs(self.board_info)
         launch_cfg_lib.args_aval_check(self.args["uos_type"], "uos_type", launch_cfg_lib.UOS_TYPES)
         launch_cfg_lib.args_aval_check(self.args["rtos_type"], "rtos_type", launch_cfg_lib.RTOS_TYPE)
         launch_cfg_lib.mem_size_check(self.args["mem_size"], "mem_size")
