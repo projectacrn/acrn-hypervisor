@@ -224,8 +224,8 @@ $(VERSION_H):
 		PATCH=$(DM_BUILD_VERSION);\
 		DAILY_TAG=$(DM_BUILD_TAG);\
 	fi;\
-	TIME=`date "+%Y-%m-%d %H:%M:%S"`;\
-	USER=`id -u -n`; \
+	TIME=$$(date -u -d "@$${SOURCE_DATE_EPOCH:-$$(date +%s)}" "+%Y-%m-%d %H:%M:%S"); \
+	USER="$${USER:-$$(id -u -n)}"; \
 	echo "/*" > $(VERSION_H); \
 	sed 's/^/ * /' ../LICENSE >> $(VERSION_H);\
 	echo " */" >> $(VERSION_H);\
