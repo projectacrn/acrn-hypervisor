@@ -476,8 +476,8 @@ $(VERSION): $(HV_CONFIG_H)
 	DIRTY=`git diff-index --name-only HEAD`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
 	DAILY_TAG=`git tag --merged HEAD|grep "acrn"|tail -n 1`;\
-	TIME=`date "+%F %T"`;\
-	USER=`id -u -n`; \
+	TIME=$$(date -u -d "@$${SOURCE_DATE_EPOCH:-$$(date +%s)}" "+%F %T"); \
+	USER="$${USER:-$$(id -u -n)}"; \
 	if [ x$(CONFIG_RELEASE) = "xy" ];then BUILD_TYPE="REL";else BUILD_TYPE="DBG";fi;\
 	echo "/*" > $(VERSION); \
 	sed 's/^/ * /' ../LICENSE >> $(VERSION); \

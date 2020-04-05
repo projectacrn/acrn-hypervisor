@@ -66,8 +66,8 @@ $(VERSION_H):
 	@COMMIT=`git log -1 --pretty=format:%h . 2>/dev/null`;\
 	DIRTY=`git diff --name-only $(CURDIR)`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
-	TIME=`date "+%Y-%m-%d %H:%M:%S"`;\
-	USER=`id -u -n`; \
+	TIME=$$(date -u -d "@$${SOURCE_DATE_EPOCH:-$$(date +%s)}" "+%Y-%m-%d %H:%M:%S"); \
+	USER="$${USER:-$$(id -u -n)}"; \
 	cat $(CURDIR)/../license_header > $(VERSION_H);\
 	echo "#define AP_MAJOR_VERSION $(MAJOR_VERSION)" >> $(VERSION_H);\
 	echo "#define AP_MINOR_VERSION $(MINOR_VERSION)" >> $(VERSION_H);\
