@@ -18,7 +18,7 @@ TARGET		= $(BUILDDIR)/acrnprobe/bin/acrnprobe
 all: $(VERSION_H) check_dirs $(TARGET)
 	rm -f $(VERSION_H)
 
-$(BUILDDIR)/acrnprobe/obj/%.o:%.c
+$(BUILDDIR)/acrnprobe/obj/%.o:%.c $(VERSION_H)
 	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BUILDDIR)/acrnprobe/bin/acrnprobe: $(BUILDDIR)/acrnprobe/obj/main.o \
