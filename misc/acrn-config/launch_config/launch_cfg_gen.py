@@ -164,6 +164,7 @@ def main(args):
     common.BOARD_INFO_FILE = board_info_file
     common.SCENARIO_INFO_FILE = scenario_info_file
     common.LAUNCH_INFO_FILE = launch_info_file
+    common.get_vm_types()
 
     # get post vm dic
     post_num_list = launch_cfg_lib.get_post_num_list()

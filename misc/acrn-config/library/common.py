@@ -31,6 +31,7 @@ VM_COUNT = 0
 BOARD_INFO_FILE = ""
 SCENARIO_INFO_FILE = ""
 LAUNCH_INFO_FILE = ""
+VM_TYPES = {}
 
 class MultiItem():
 
@@ -204,36 +205,19 @@ def is_config_file_match():
         return (err_dic, False)
 
 
-def find_index_guest_flag(flag):
+def find_tmp_flag(flag):
     """
     Find the index in GUEST_FLAG by flag
     :param flag: flag contained by GUEST_FLAG
     :return: index of GUEST_FLAG
     """
-    if not flag or flag == '0':
-        return '0'
+    if flag == None or flag == '0':
+        return '0UL'
 
-    if not flag.isnumeric():
-        for i in range(len(GUEST_FLAG)):
-            if flag == GUEST_FLAG[i]:
-                flag_str = i
-                return flag_str
-
-def find_tmp_flag(leaf_text):
-    """
-    Get flag and append the value
-    :param leaf_text: it is a value of guest flag item
-    :return: a list of flag or none
-    """
-    tmp_flag = []
-    tmp_flag = find_index_guest_flag(leaf_text)
-    #flag_index = find_index_guest_flag(leaf_text)
-    #if flag_index == '0':
-    #    tmp_flag.append(0)
-    #else:
-    #    tmp_flag.append(flag_index)
-
-    return tmp_flag
+    flag_str = ''
+    for i in range(len(GUEST_FLAG)):
+        if flag == GUEST_FLAG[i]:
+            return flag_str
 
 
 def get_config_root(config_file):
@@ -266,67 +250,12 @@ def get_vm_num(config_file):
     VM_COUNT = vm_count
 
 
-# TODO: This will be abandonment in future
-def get_sub_leaf_tag(config_file, branch_tag, tag_str=''):
-    """
-     This is get tag value by tag_str from config file
-     :param config_file: it is a file what contains information for script to read from
-     :param branch_tag: it is key of patter to config file branch tag item
-     :param tag_str: it is key of pattern to config file leaf tag item
-     :return: value of tag_str item
-     """
-    tmp_tag = []
-    root = get_config_root(config_file)
-    for item in root:
-        # for each 2th level item
-        for sub in item:
-            tmp_flag = []
-            tmp_cpus = []
-            if sub.tag == branch_tag:
-                if not tag_str:
-                    tmp_tag.append(sub.text)
-                    continue
-
-                # for each 3rd level item
-                for leaf in sub:
-                    if leaf.tag == tag_str and tag_str not in MULTI_ITEM and sub.tag != "vuart":
-                        tmp_tag.append(leaf.text)
-                        continue
-
-                    # get guest flag for logical partition vm1
-                    if leaf.tag == "guest_flag" and tag_str == "guest_flag":
-                        t_flag = find_tmp_flag(leaf.text)
-                        tmp_flag.append(t_flag)
-                        #continue
-
-                    # get cpu for vm
-                    if leaf.tag == "pcpu_id" and tag_str == "pcpu_id":
-                        tmp_cpus.append(leaf.text)
-                        continue
-
-                    # get vcpu_clos for vm
-                    if leaf.tag == "vcpu_clos" and tag_str == "vcpu_clos":
-                        tmp_cpus.append(leaf.text)
-                        continue
-
-                # append guest flags for each vm
-                if tmp_flag and tag_str == "guest_flag":
-                    tmp_tag.append(tmp_flag)
-                    continue
-
-                # append cpus for vm
-                if tmp_cpus and tag_str == "pcpu_id":
-                    tmp_tag.append(tmp_cpus)
-                    continue
-
-    return tmp_tag
-
-
 def get_leaf_value(tmp, tag_str, leaf):
 
     # get guest flag for logical partition vm1
     if leaf.tag == "guest_flag" and tag_str == "guest_flag":
         t_flag = find_tmp_flag(leaf.text)
+        #print("--debug: tag:{},{}".format(tag_str), t_flag)
         tmp.multi.guest_flag.append(t_flag)
 
     # get cpu for vm
@@ -355,7 +284,6 @@ def get_sub_value(tmp, tag_str, vm_id):
     # append guest flags for each vm
     if tmp.multi.guest_flag and tag_str == "guest_flag":
         tmp.tag[vm_id] = tmp.multi.guest_flag
-        tmp.tag.append(tmp.multi.guest_flag)
 
     # append cpus for vm
     if tmp.multi.pcpu_id and tag_str == "pcpu_id":
@@ -442,37 +370,6 @@ def get_hv_item_tag(config_file, branch_tag, tag_str=''):
     return tmp
 
 
-def order_type_map_vmid(config_file, vm_count):
-    """
-    This is mapping table for {id:order type}
-    :param config_file: it is a file what contains information for script to read from
-    :param vm_count: vm number
-    :return: table of id:order type dictionary
-    """
-    order_id_dic = {}
-    load_type_list = get_sub_leaf_tag(config_file, "load_order")
-    for i in range(vm_count):
-        order_id_dic[i] = load_type_list[i]
-
-    return order_id_dic
-
-
-def get_load_order_by_vmid(config_file, vm_count, idx):
-    """
-    Get load order by vm id
-    :param config_file: it is a file what contains information for script to read from
-    :param vm_count: vm number
-    :param idx: index of vm id
-    :return: table of id:order type dictionary
-    """
-    err_dic = {}
-    order_id_dic = order_type_map_vmid(config_file, vm_count)
-    if idx >= vm_count or not order_id_dic:
-        err_dic['vm number: failue'] = "Toatal vm number is less than index number"
-
-    return (err_dic, order_id_dic[idx])
-
-
 def undline_name(name):
     """
     This convert name which has contain '-' to '_'
@@ -519,3 +416,8 @@ def num2int(str_value):
         val = int(str_value, 16)
 
     return val
+
+
+def get_vm_types():
+    global VM_TYPES
+    VM_TYPES = get_leaf_tag_map(SCENARIO_INFO_FILE, "load_order")
