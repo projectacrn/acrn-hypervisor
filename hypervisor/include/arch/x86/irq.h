@@ -108,6 +108,8 @@ uint32_t alloc_irq_vector(uint32_t irq);
 #define HV_ARCH_VCPU_RFLAGS_RF              (1UL<<16U)
 
 /* Interruptability State info */
+
+#define HV_ARCH_VCPU_BLOCKED_BY_NMI         (1UL<<3U)
 #define HV_ARCH_VCPU_BLOCKED_BY_MOVSS       (1UL<<1U)
 #define HV_ARCH_VCPU_BLOCKED_BY_STI         (1UL<<0U)
 
