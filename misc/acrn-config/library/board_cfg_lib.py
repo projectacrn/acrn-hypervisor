@@ -170,19 +170,6 @@ def clos_info_parser(board_info):
     return get_max_clos_mask(board_info)
 
 
-def get_order_type_by_vmid(idx):
-    """
-    This is get pre launched vm count
-    :param idx: index of vm id
-    :return: vm type of index to vmid
-    """
-    (err_dic, order_type) = common.get_load_order_by_vmid(common.SCENARIO_INFO_FILE, common.VM_COUNT, idx)
-    if err_dic:
-        ERR_LIST.update(err_dic)
-
-    return order_type
-
-
 def get_valid_irq(board_info):
     """
      This is get available irq from board info file
@@ -254,8 +241,7 @@ def parser_vuart_console():
     3. ttyS2
     """
     ttys_n = ''
-    (err_dic, scenario_name) = common.get_scenario_name()
-
+    err_dic = {}
     ttys = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "DEBUG_OPTIONS", "SERIAL_CONSOLE")
 
     if not ttys or ttys == None:
@@ -345,6 +331,9 @@ def get_vuart_info_id(config_file, idx):
     vm_id = 0
     root = common.get_config_root(config_file)
     for item in root:
+        if item.tag == "vm":
+            vm_id = int(item.attrib['id'])
+
         for sub in item:
             tmp_vuart = {}
             for leaf in sub:
@@ -354,9 +343,6 @@ def get_vuart_info_id(config_file, idx):
             # append vuart for each vm
             if tmp_vuart and sub.tag == "vuart":
                 tmp_tag[vm_id] = tmp_vuart
-
-        if item.tag == "vm":
-            vm_id += 1
 
     return tmp_tag
 

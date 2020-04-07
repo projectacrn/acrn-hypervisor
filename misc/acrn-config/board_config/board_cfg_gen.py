@@ -40,6 +40,7 @@ def main(args):
     common.BOARD_INFO_FILE = params['--board']
     common.SCENARIO_INFO_FILE = params['--scenario']
     common.get_vm_num(params['--scenario'])
+    common.get_vm_types()
 
     # get board name
     (err_dic, board) = common.get_board_name()
