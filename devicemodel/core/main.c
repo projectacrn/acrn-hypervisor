@@ -686,7 +686,7 @@ vm_loop(struct vmctx *ctx)
 	int error;
 
 	ctx->ioreq_client = vm_create_ioreq_client(ctx);
-	if (ctx->ioreq_client <= 0) {
+	if (ctx->ioreq_client < 0) {
 		pr_err("%s, failed to create IOREQ.\n", __func__);
 		return;
 	}
