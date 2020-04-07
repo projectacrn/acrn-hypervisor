@@ -217,6 +217,7 @@ html_static_path = ['static']
 
 def setup(app):
    app.add_stylesheet("acrn-custom.css")
+   app.add_javascript("https://www.googletagmanager.com/gtag/js?id=UA-831873-64")
    app.add_javascript("acrn-custom.js")
 
 # Custom sidebar templates, must be a dictionary that maps document names
