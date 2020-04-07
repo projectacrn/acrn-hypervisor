@@ -85,14 +85,10 @@ def get_serial_type():
     # Get ttySx information from board config file
     ttys_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<TTYS_INFO>", "</TTYS_INFO>")
 
-    (err_dic, scenario_name) = common.get_scenario_name()
-    if scenario_name == "logical_partition":
-        ttyn = 'ttyS0'
-    else:
-        # Get ttySx from scenario config file which selected by user
-        (err_dic, ttyn) = board_cfg_lib.parser_vuart_console()
-        if err_dic:
-            hv_cfg_lib.ERR_LIST.update(err_dic)
+    # Get ttySx from scenario config file which selected by user
+    (err_dic, ttyn) = board_cfg_lib.parser_vuart_console()
+    if err_dic:
+        hv_cfg_lib.ERR_LIST.update(err_dic)
 
     # query the serial type from board config file
     for line in ttys_lines:
@@ -189,7 +185,6 @@ def get_capacities(hv_info, config):
     print("CONFIG_MAX_IOAPIC_NUM={}".format(hv_info.cap.max_ioapic_num), file=config)
     print("CONFIG_MAX_IR_ENTRIES={}".format(hv_info.cap.max_ir_entries), file=config)
     print("CONFIG_MAX_PCI_DEV_NUM={}".format(hv_info.cap.max_pci_dev_num), file=config)
-    print("CONFIG_MAX_KATA_VM_NUM={}".format(hv_info.cap.max_kata_vm_num), file=config)
     print("CONFIG_MAX_IOAPIC_LINES={}".format(hv_info.cap.max_ioapic_lines), file=config)
     print("CONFIG_MAX_PT_IRQ_ENTRIES={}".format(hv_info.cap.max_pt_irq_entries), file=config)
     print("CONFIG_MAX_MSIX_TABLE_NUM={}".format(hv_info.cap.max_msix_table_num), file=config)
@@ -219,7 +214,6 @@ def generate_file(hv_info, config):
     if hv_info.log.release == 'y':
         print("CONFIG_RELEASE=y", file=config)
     print('CONFIG_BOARD="{}"'.format(board_name), file=config)
-    print("CONFIG_{}=y".format(scenario_name.upper()), file=config)
 
     get_memory(hv_info, config)
     get_miscfg(hv_info, config)

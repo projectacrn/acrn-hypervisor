@@ -29,7 +29,7 @@ def generate_file(config):
     print(" * The memory range of vBAR should exactly match with the e820 layout of VM.",
           file=config)
     print(" */", file=config)
-    for i in range(common.VM_COUNT):
+    for i in list(common.VM_TYPES.keys()):
         print("", file=config)
         print("struct acrn_vm_pci_dev_config " +
               "vm{}_pci_devs[VM{}_CONFIG_PCI_DEV_NUM] = {{".format(i, i), file=config)

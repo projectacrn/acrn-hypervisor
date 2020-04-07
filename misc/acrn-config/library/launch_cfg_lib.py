@@ -166,9 +166,8 @@ def post_vm_cnt(config_file):
     :return: number of post launched vm
     """
     post_launch_cnt = 0
-    load_type_list = common.get_sub_leaf_tag(config_file, "load_order")
 
-    for vm_type in load_type_list:
+    for vm_type in common.VM_TYPES.values():
         if vm_type == "POST_LAUNCHED_VM":
             post_launch_cnt += 1
 

@@ -14,7 +14,6 @@ START_HPA_LIST = ['0', '0x100000000', '0x120000000']
 KERN_TYPE_LIST = ['KERNEL_BZIMAGE', 'KERNEL_ZEPHYR']
 KERN_BOOT_ADDR_LIST = ['0x100000']
 
-GUEST_FLAG = common.GUEST_FLAG
 VM_SEVERITY = ['SEVERITY_SAFETY_VM', 'SEVERITY_RTVM', 'SEVERITY_SOS', 'SEVERITY_STANDARD_VM']
 VUART_TYPE = ['VUART_LEGACY_PIO', 'VUART_PCI']
 VUART_BASE = ['SOS_COM1_BASE', 'SOS_COM2_BASE', 'COM1_BASE',
@@ -36,58 +35,23 @@ COMMUNICATE_VM_ID = []
 
 ERR_LIST = {}
 
-DEFAULT_VM_COUNT = {
-    'sdc':2,
-    'sdc2':4,
-    'industry':3,
-    'hybrid':3,
-    'logical_partition':2,
-}
 KATA_VM_COUNT = 0
-
-
-def get_board_private_info(config_file):
-
-    (err_dic, scenario_name) = common.get_scenario_name()
-
-    if scenario_name == "logical_partition":
-        branch_tag = "os_config"
-    else:
-        branch_tag = "board_private"
-
-    private_info = {}
-    dev_private_tags = ['rootfs', 'console']
-    for tag_str in dev_private_tags:
-        dev_setting = common.get_sub_leaf_tag(config_file, branch_tag, tag_str)
-        if not dev_setting and tag_str == "console":
-            continue
-
-        private_info[tag_str] = dev_setting
-
-    return (err_dic, private_info)
 
 
 def check_board_private_info():
 
-    (err_dic, private_info) = get_board_private_info(common.SCENARIO_INFO_FILE)
+    if 'SOS_VM' not in common.VM_TYPES.values():
+        return
+    branch_tag = "board_private"
+    private_info = {}
+    dev_private_tags = ['rootfs']
+    for tag_str in dev_private_tags:
+        dev_setting = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, branch_tag, tag_str)
+        private_info[tag_str] = dev_setting
 
     if not private_info['rootfs'] and err_dic:
         ERR_LIST['vm:id=0,boot_private,rootfs'] = "The board have to chose one rootfs partition"
         ERR_LIST.update(err_dic)
-
-
-def get_order_type_by_vmid(idx):
-    """
-     Get load order by vm id
-
-     :param idx: index of vm id
-     :return: load order type of index to vmid
-     """
-    (err_dic, order_type) = common.get_load_order_by_vmid(common.SCENARIO_INFO_FILE, common.VM_COUNT, idx)
-    if err_dic:
-        ERR_LIST.update(err_dic)
-
-    return order_type
 
 
 def vm_name_check(vm_names, item):
@@ -163,24 +127,13 @@ def get_load_order_cnt(load_orders, type_name):
     return type_cnt
 
 
-def guest_flag_check(guest_flag_idx, branch_tag, leaf_tag):
+def guest_flag_check(guest_flags, branch_tag, leaf_tag):
 
-    guest_flag_len = len(common.GUEST_FLAG)
-    guest_num = len(guest_flag_idx)
-
-    for vm_i in range(guest_num):
-        flag_len = len(guest_flag_idx[vm_i])
-        if flag_len <= guest_flag_len:
-            continue
-        else:
-            key = "vm:id={},{},{}".format(vm_i, branch_tag, leaf_tag)
-            ERR_LIST[key] = "Unknow guest flag"
-    #    for flag_i in range(flag_len):
-    #        if guest_flag_idx[vm_i][flag_i] in common.GUEST_FLAG:
-    #            continue
-    #        else:
-    #            key = "vm:id={},{},{}".format(vm_i, branch_tag, leaf_tag)
-    #            ERR_LIST[key] = "Invalid guest flag"
+    for vm_i, flags in guest_flags.items():
+        for guest_flag in flags:
+            if guest_flag and guest_flag not in common.GUEST_FLAG:
+                key = "vm:id={},{},{}".format(vm_i, branch_tag, leaf_tag)
+                ERR_LIST[key] = "Unknow guest flag"
 
 
 def uuid_format_check(uuid_dic, item):
@@ -215,13 +168,19 @@ def cpus_per_vm_check(id_cpus_per_vm_dic, item):
     :param item: vm pcpu_id item in xml
     :return: None
     """
+    for vm_i, vm_type in common.VM_TYPES.items():
+        if vm_i not in id_cpus_per_vm_dic.keys() and vm_type == "SOS_VM":
+            continue
+        elif vm_i not in id_cpus_per_vm_dic.keys() and vm_type in ("PRE_LAUNCHED_VM", "POST_LAUNCHED"):
+            key = "vm:id={},{}".format(vm_i, item)
+            ERR_LIST[key] = "Pre launched_vm and Post launched vm should have cpus assignment"
+            return
 
-    for id_key in id_cpus_per_vm_dic.keys():
-        vm_type = get_order_type_by_vmid(id_key)
-        cpus_vm_i = id_cpus_per_vm_dic[id_key]
-        if not cpus_vm_i and vm_type == "PRE_LAUNCHED_VM":
-            key = "vm:id={},{}".format(id_key, item)
-            ERR_LIST[key] = "VM have no assignment cpus"
+        cpus_vm_i = id_cpus_per_vm_dic[vm_i]
+        if not cpus_vm_i:
+            key = "vm:id={},{}".format(vm_i, item)
+            ERR_LIST[key] = "{} VM have no assignment cpus".format(vm_type)
+            return
 
 
 def mem_start_hpa_check(id_start_hpa_dic, prime_item, item):
@@ -327,11 +286,12 @@ def os_kern_args_check(id_kern_args_dic, prime_item, item):
     :return: None
     """
 
-    for id_key, kern_args in id_kern_args_dic.items():
-        vm_type = get_order_type_by_vmid(id_key)
-
+    for vm_i,vm_type in common.VM_TYPES.items():
+        if vm_i not in id_kern_args_dic.keys():
+            continue
+        kern_args = id_kern_args_dic[vm_i]
         if vm_type == "SOS_VM" and kern_args != "SOS_VM_BOOTARGS":
-            key = "vm:id={},{},{}".format(id_key, prime_item, item)
+            key = "vm:id={},{},{}".format(vm_i, prime_item, item)
             ERR_LIST[key] = "VM os config kernel service os should be SOS_VM_BOOTARGS"
 
 
@@ -409,12 +369,13 @@ def pci_dev_num_check(id_dev_num_dic, item):
     :return: None
     """
 
-    for id_key, pci_dev_num in id_dev_num_dic.items():
-
-        vm_type = get_order_type_by_vmid(id_key)
+    for vm_i,vm_type in common.VM_TYPES.items():
+        if vm_i not in id_dev_num_dic.keys():
+            continue
+        pci_dev_num = id_dev_num_dic[vm_i]
         if vm_type != "POST_LAUNCHED_VM" and pci_dev_num:
             if pci_dev_num not in PCI_DEV_NUM_LIST:
-                key = "vm:id={},{}".format(id_key, item)
+                key = "vm:id={},{}".format(vm_i, item)
                 ERR_LIST[key] = "VM pci device number  shoud be one of {}".format(PCI_DEV_NUM_LIST)
 
 def pci_devs_check(id_devs_dic, item):
@@ -424,12 +385,13 @@ def pci_devs_check(id_devs_dic, item):
     :return: None
     """
 
-    for id_key, pci_dev in id_devs_dic.items():
-
-        vm_type = get_order_type_by_vmid(id_key)
+    for vm_i,vm_type in common.VM_TYPES.items():
+        if vm_i not in id_devs_dic.keys():
+            continue
+        pci_dev = id_devs_dic[vm_i]
         if vm_type != "POST_LAUNCHED_VM" and pci_dev:
             if pci_dev not in PCI_DEVS_LIST:
-                key = "vm:id={},{}".format(id_key, item)
+                key = "vm:id={},{}".format(vm_i, item)
                 ERR_LIST[key] = "VM pci device shoud be one of {}".format(PCI_DEVS_LIST)
 
 
@@ -440,7 +402,7 @@ def get_vuart1_vmid(vm_vuart1):
     :return: dictionary of vmid:vuart1
     """
     vm_id_dic = {}
-    for i in range(common.VM_COUNT):
+    for i in list(common.VM_TYPES.keys()):
         for key in vm_vuart1[i].keys():
             if key == "target_vm_id":
                 vm_id_dic[i] = vm_vuart1[i][key]
@@ -510,8 +472,7 @@ def clos_assignment(clos_per_vm, index):
 
 def avl_vuart_ui_select(scenario_info):
     tmp_vuart = {}
-    for vm_i in range(common.VM_COUNT):
-        vm_type = get_order_type_by_vmid(vm_i)
+    for vm_i,vm_type in common.VM_TYPES.items():
 
         if vm_type == "SOS_VM":
             key = "vm={},vuart=0,base".format(vm_i)
@@ -529,9 +490,10 @@ def avl_vuart_ui_select(scenario_info):
 
 def get_first_post_vm():
 
-    for i in range(common.VM_COUNT):
-        (err_dic, vm_type) = common.get_load_order_by_vmid(common.SCENARIO_INFO_FILE, common.VM_COUNT, i)
+    i = 0
+    for vm_i,vm_type in common.VM_TYPES.items():
         if vm_type == "POST_LAUNCHED_VM":
+            i = vm_i
             break
 
     return (err_dic, i)

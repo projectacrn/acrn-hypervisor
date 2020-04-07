@@ -249,7 +249,7 @@ class VmInfo:
     load_order = {}
     uuid = {}
     clos_per_vm = {}
-    guest_flag_idx = {}
+    guest_flags = {}
     cpus_per_vm = {}
     severity = {}
 
@@ -273,7 +273,7 @@ class VmInfo:
         self.name = common.get_leaf_tag_map(self.scenario_info, "name")
         self.load_order = common.get_leaf_tag_map(self.scenario_info, "load_order")
         self.uuid = common.get_leaf_tag_map(self.scenario_info, "uuid")
-        self.guest_flag_idx = common.get_sub_leaf_tag(
+        self.guest_flags = common.get_leaf_tag_map(
             self.scenario_info, "guest_flags", "guest_flag")
         self.cpus_per_vm = common.get_leaf_tag_map(
             self.scenario_info, "vcpu_affinity", "pcpu_id")
@@ -310,7 +310,7 @@ class VmInfo:
         scenario_cfg_lib.vm_name_check(self.name, "name")
         scenario_cfg_lib.load_order_check(self.load_order, "load_order")
         scenario_cfg_lib.uuid_format_check(self.uuid, "uuid")
-        scenario_cfg_lib.guest_flag_check(self.guest_flag_idx, "guest_flags", "guest_flag")
+        scenario_cfg_lib.guest_flag_check(self.guest_flags, "guest_flags", "guest_flag")
         scenario_cfg_lib.cpus_per_vm_check(self.cpus_per_vm, "pcpu_id")
 
         self.mem_info.check_item()
