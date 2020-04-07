@@ -34,7 +34,7 @@ debugger: $(BUILDDIR)/usercrash/obj/debugger.o \
 	$(BUILDDIR)/common/obj/strutils.o
 	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ $(LIBS) $(LDFLAGS)
 
-$(BUILDDIR)/usercrash/obj/%.o:%.c
+$(BUILDDIR)/usercrash/obj/%.o:%.c $(VERSION_H)
 	$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
 
 $(VERSION_H):
