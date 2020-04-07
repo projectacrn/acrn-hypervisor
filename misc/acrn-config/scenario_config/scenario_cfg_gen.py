@@ -38,9 +38,10 @@ def get_scenario_item_values(board_info, scenario_info):
     common.BOARD_INFO_FILE = board_info
     common.SCENARIO_INFO_FILE = scenario_info
     common.get_vm_num(scenario_info)
+    common.get_vm_types()
 
     # pre scenario
-    guest_flags = copy.deepcopy(scenario_cfg_lib.GUEST_FLAG)
+    guest_flags = copy.deepcopy(common.GUEST_FLAG)
     guest_flags.remove('0UL')
     scenario_item_values["vm,vcpu_affinity"] = hw_info.get_processor_val()
     scenario_item_values["vm,guest_flags"] = guest_flags
@@ -125,6 +126,7 @@ def main(args):
     common.SCENARIO_INFO_FILE = params['--scenario']
     common.ACRN_CONFIG_TARGET= os.path.abspath(params['--out']) + '/'
     common.get_vm_num(params['--scenario'])
+    common.get_vm_types()
 
     # get board name
     (err_dic, board_name) = common.get_board_name()
@@ -174,16 +176,16 @@ def main(args):
 
     # generate vm_configuration.h
     with open(vm_config_h, 'w') as config:
-        vm_configurations_h.generate_file(scenario, scenario_items['vm'], config)
+        vm_configurations_h.generate_file(scenario_items, config)
 
     # generate vm_configuration.c
     with open(vm_config_c, 'w') as config:
-        err_dic = vm_configurations_c.generate_file(scenario, scenario_items['vm'], config)
+        err_dic = vm_configurations_c.generate_file(scenario_items['vm'], config)
         if err_dic:
             return err_dic
 
-    # generate pci_dev.c if scenario is logical_partition
-    if scenario == 'logical_partition':
+    # generate pci_dev.c
+    if scenario_items['vm'].load_order_cnt.pre_vm >= 2:
         with open(pci_config_c, 'w') as config:
             pci_dev_c.generate_file(config)
 

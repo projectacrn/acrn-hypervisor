@@ -48,27 +48,18 @@ def sos_bootarg_diff(sos_cmdlines, config):
 def parse_boot_info():
 
     err_dic = {}
-    vm_types = []
 
-    (err_dic, scenario_name) = common.get_scenario_name()
-    if err_dic:
-        return (err_dic, sos_cmdlines, sos_rootfs, vuart0_dic, vuart1_dic, vm_types)
-
-    if scenario_name != "logical_partition":
-        sos_cmdlines = common.get_sub_leaf_tag(common.SCENARIO_INFO_FILE, "board_private", "bootargs")
-        sos_rootfs = common.get_sub_leaf_tag(common.SCENARIO_INFO_FILE, "board_private", "rootfs")
+    if 'SOS_VM' in common.VM_TYPES.values():
+        sos_cmdlines = list(common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "board_private", "bootargs").values())
+        sos_rootfs = list(common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "board_private", "rootfs").values())
         (err_dic, vuart0_dic, vuart1_dic) = board_cfg_lib.get_board_private_vuart("board_private", "console")
     else:
-        sos_cmdlines = common.get_sub_leaf_tag(common.SCENARIO_INFO_FILE, "os_config", "bootargs")
+        sos_cmdlines = list(common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "os_config", "bootargs").values())
 
-        sos_rootfs = common.get_sub_leaf_tag(common.SCENARIO_INFO_FILE, "os_config", "rootfs")
+        sos_rootfs = list(common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "os_config", "rootfs").values())
         (err_dic, vuart0_dic, vuart1_dic) = board_cfg_lib.get_board_private_vuart("os_config", "console")
 
-    for i in range(common.VM_COUNT):
-        vm_type = board_cfg_lib.get_order_type_by_vmid(i)
-        vm_types.append(vm_type)
-
-    return (err_dic, sos_cmdlines, sos_rootfs, vuart0_dic, vuart1_dic, vm_types)
+    return (err_dic, sos_cmdlines, sos_rootfs, vuart0_dic, vuart1_dic)
 
 
 def find_hi_mmio_window(config):
@@ -129,7 +120,7 @@ def generate_file(config):
         return err_dic
 
     # parse sos_bootargs/rootfs/console
-    (err_dic, sos_cmdlines, sos_rootfs, vuart0_dic, vuart1_dic, vm_types) = parse_boot_info()
+    (err_dic, sos_cmdlines, sos_rootfs, vuart0_dic, vuart1_dic) = parse_boot_info()
     if err_dic:
         return err_dic
 
@@ -176,7 +167,7 @@ def generate_file(config):
 
     # sos rootfs and console
     print("", file=config)
-    if "SOS_VM" in vm_types:
+    if "SOS_VM" in common.VM_TYPES.values():
         print('#define SOS_ROOTFS\t\t"root={} "'.format(sos_rootfs[0]), file=config)
         if ttys_n:
             print('#define SOS_CONSOLE\t\t"console={} "'.format(ttys_n), file=config)
@@ -185,12 +176,12 @@ def generate_file(config):
 
     # sos com base/irq
     i_type = 0
-    for vm_type in vm_types:
+    for vm_i,vm_type in common.VM_TYPES.items():
         if vm_type == "SOS_VM":
+            i_type = vm_i
             break
-        i_type += 1
 
-    if "SOS_VM" in vm_types:
+    if "SOS_VM" in common.VM_TYPES.values():
         if vuart0_dic:
             print("#define SOS_COM1_BASE\t\t{}U".format(vuart0_port_base), file=config)
             print("#define SOS_COM1_IRQ\t\t{}U".format(vuart0_irq), file=config)
@@ -204,7 +195,7 @@ def generate_file(config):
 
     # sos boot command line
     print("", file=config)
-    if "SOS_VM" in vm_types:
+    if "SOS_VM" in common.VM_TYPES.values():
         sos_bootarg_diff(sos_cmdlines, config)
 
     # set macro for HIDDEN PTDEVS

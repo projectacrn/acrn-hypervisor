@@ -75,7 +75,7 @@ def vuart0_output(i, vm_type, vm_info, config):
 def vuart_map_enable(vm_info):
 
     map_dic = {}
-    for i in range(common.VM_COUNT):
+    for i,vm_type in common.VM_TYPES.items():
         base_i = vm_info.vuart.v1_vuart[i]['base']
         src_t_vm_i = vm_info.vuart.v1_vuart[i]['target_vm_id']
         src_t_vuart_i = vm_info.vuart.v1_vuart[i]['target_uart_id']
@@ -124,8 +124,7 @@ def vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config):
             print("\t\t\t.t_vuart.vuart_id = {0}U,".format(
                 vm_info.vuart.v1_vuart[i]['target_uart_id']), file=config)
 
-
-def vuart_output(i, vm_info, config):
+def vuart_output(vm_type, i, vm_info, config):
     """
     This is generate vuart setting
     :param i: vm id number
@@ -135,7 +134,6 @@ def vuart_output(i, vm_info, config):
     """
     vuart1_vmid_dic = {}
     vuart1_vmid_dic = scenario_cfg_lib.get_vuart1_vmid(vm_info.vuart.v1_vuart)
-    vm_type = scenario_cfg_lib.get_order_type_by_vmid(i)
 
     vuart0_output(i, vm_type, vm_info, config)
     vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config)
@@ -148,8 +146,6 @@ def vuart_output(i, vm_info, config):
         if vm_info.cfg_pci.pci_devs[i] and vm_info.cfg_pci.pci_devs[i] != None:
             print("\t\t.pci_devs = {},".format(vm_info.cfg_pci.pci_devs[i]), file=config)
 
-    print("\t},", file=config)
-
 
 def is_need_epc(epc_section, i, config):
     """
@@ -160,7 +156,9 @@ def is_need_epc(epc_section, i, config):
     :return: None
     """
     # SOS_VM have not set epc section
-    vm_type = scenario_cfg_lib.get_order_type_by_vmid(i)
+    if i not in common.VM_TYPES.keys():
+        return
+    vm_type = list(common.VM_TYPES.keys())[i]
     if vm_type == "SOS_VM":
         return
 
@@ -204,34 +202,34 @@ def clos_output(vm_info, i, config):
     if len(rdt_res) != 0 and common_clos_max !=0 and i in vm_info.clos_per_vm:
         print("\t\t.clos = VM{}_VCPU_CLOS,".format(i), file=config)
 
-def get_guest_flag(flag_index):
+def get_guest_flag(flags):
     """
     This is get flag index list
-    :param flag_index:
+    :param flags:
     :return: flag index list in GUEST_FLAGS
     """
     err_dic = {}
     flag_str = ''
-    if not flag_index:
-        err_dic['guest flags'] = "No assign flag to the guest"
-        return (err_dic, flag_str)
+    for flag in flags:
+        if flags.count(flag) >= 2:
+            return (err_dic, flag)
 
-    for i in range(len(flag_index)):
+    for i in range(len(flags)):
         if i == 0:
-            if len(flag_index) == 1:
+            if len(flags) == 1:
                 # get the guest flag 0UL
-                if flag_index[0] == 0:
-                    return (err_dic, common.GUEST_FLAG[flag_index[0]])
-                flag_str = "{0}".format(common.GUEST_FLAG[int(flag_index[0])])
+                if flags[0] == '0UL':
+                    return (err_dic, flags[0])
+                flag_str = "{0}".format(flags[0])
             else:
-                flag_str = "({0}".format(common.GUEST_FLAG[int(flag_index[0])])
+                flag_str = "({0}".format(flags[0])
 
         else:
-            # flag_index lenght already minus 1
-            if i == len(flag_index) - 1:
-                flag_str = flag_str + " | {0})".format(common.GUEST_FLAG[int(flag_index[i])])
+            # flags lenght already minus 1
+            if i == len(flags) - 1:
+                flag_str = flag_str + " | {0})".format(flags[i])
             else:
-                flag_str = flag_str + " | {0}".format(common.GUEST_FLAG[int(flag_index[i])])
+                flag_str = flag_str + " | {0}".format(flags[i])
 
     return (err_dic, flag_str)
 
@@ -245,194 +243,119 @@ def gen_source_header(config):
     print("{0}".format(C_HEADER), file=config)
 
 
-def gen_sdc_source(vm_info, config):
-    """
-    Generate vm_configuration.c of sdc scenario
-    :param vm_info: it is the class which contain all user setting information
-    :param config: it is the pointer which file write to
-    :return: None
-    """
-    uuid_0 = uuid2str(vm_info.uuid[0])
-    uuid_1 = uuid2str(vm_info.uuid[1])
+def gen_sos_vm(vm_type, vm_i, vm_info, config):
 
-    (err_dic, sos_guest_flags) = get_guest_flag(vm_info.guest_flag_idx[0])
+    (err_dic, sos_guest_flags) = get_guest_flag(vm_info.guest_flags[vm_i])
     if err_dic:
         return err_dic
+    uuid_str = uuid2str(vm_info.uuid[vm_i])
 
-    gen_source_header(config)
-    # VM0
-    print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)
-    print("\t{", file=config)
+    print("\t{{\t/* VM{} */".format(vm_i), file=config)
     print("\t\t.load_order = {0},".format(
-        vm_info.load_order[0]), file=config)
-    print('\t\t.name = "{0}",'.format(vm_info.name[0]), file=config)
+        vm_info.load_order[vm_i]), file=config)
+    print('\t\t.name = "{0}",'.format(vm_info.name[vm_i]), file=config)
     # UUID
-    uuid_output(uuid_0, vm_info.uuid[0], config)
+    uuid_output(uuid_str, vm_info.uuid[vm_i], config)
     print("", file=config)
     print("\t\t/* Allow SOS to reboot the host since " +
           "there is supposed to be the highest severity guest */", file=config)
-    print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
-    vcpu_affinity_output(vm_info, 0, config)
-    print("\t\t.severity = {0},".format(vm_info.severity[0].strip()), file=config)
+    if sos_guest_flags:
+        print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
+    vcpu_affinity_output(vm_info, vm_i, config)
+    print("\t\t.severity = {0},".format(vm_info.severity[vm_i].strip()), file=config)
     print("\t\t.memory = {", file=config)
-    print("\t\t\t.start_hpa = {}UL,".format(vm_info.mem_info.mem_start_hpa[0]), file=config)
+    print("\t\t\t.start_hpa = {}UL,".format(vm_info.mem_info.mem_start_hpa[vm_i]), file=config)
     print("\t\t\t.size = {0},".format("CONFIG_SOS_RAM_SIZE"), file=config)
     print("\t\t},", file=config)
     print("\t\t.os_config = {", file=config)
-    print('\t\t\t.name = "{0}",'.format(vm_info.os_cfg.kern_name[0]), file=config)
-    print('\t\t\t.kernel_type = {0},'.format(vm_info.os_cfg.kern_type[0]), file=config)
+    print('\t\t\t.name = "{0}",'.format(vm_info.os_cfg.kern_name[vm_i]), file=config)
+    print('\t\t\t.kernel_type = {0},'.format(vm_info.os_cfg.kern_type[vm_i]), file=config)
     print('\t\t\t.kernel_mod_tag = "{0}",'.format(
-        vm_info.os_cfg.kern_mod[0]), file=config)
-    print('\t\t\t.bootargs = {0},'.format(vm_info.os_cfg.kern_args[0]), file=config)
-    if (vm_info.os_cfg.ramdisk_mod[0].strip()):
+        vm_info.os_cfg.kern_mod[vm_i]), file=config)
+    print('\t\t\t.bootargs = {0},'.format(vm_info.os_cfg.kern_args[vm_i]), file=config)
+    if (vm_info.os_cfg.ramdisk_mod[vm_i].strip()):
         print('\t\t\t.ramdisk_mod_tag = "{0}",'.format(
-            vm_info.os_cfg.ramdisk_mod[0]), file=config)
+            vm_info.os_cfg.ramdisk_mod[vm_i]), file=config)
     print("\t\t},", file=config)
     # VUART
-    err_dic = vuart_output(0, vm_info, config)
-    if err_dic:
-        return err_dic
-    # VM1
-    print("\t{", file=config)
-    print("\t\t.load_order = {0},".format(vm_info.load_order[1]), file=config)
-    # UUID
-    uuid_output(uuid_1, vm_info.uuid[1], config)
-    is_need_epc(vm_info.epc_section, 1, config)
-
-    vm1_id = 1
-    vm1_cpu_num = len(vm_info.cpus_per_vm[vm1_id])
-    print("\t\t.vcpu_num = {}U,".format(vm1_cpu_num), file=config)
-    print("\t\t.vcpu_affinity = VM{}_CONFIG_VCPU_AFFINITY,".format(vm1_id), file=config)
-    print("\t\t.severity = {0},".format(vm_info.severity[1].strip()), file=config)
-    # VUART
-    err_dic = vuart_output(1, vm_info, config)
+    err_dic = vuart_output(vm_type, vm_i, vm_info, config)
     if err_dic:
         return err_dic
 
-    # VM2
-    if scenario_cfg_lib.KATA_VM_COUNT == 1:
-        # Setup Kata vm configurations if more than 3 VMs in SDC config file
-        uuid_2 = uuid2str(vm_info.uuid[2])
-        print("#if CONFIG_MAX_KATA_VM_NUM > 0", file=config)
-        print("\t{", file=config)
-        print("\t\t.load_order = POST_LAUNCHED_VM,", file=config)
-        uuid_output(uuid_2, vm_info.uuid[2], config)
-        vcpu_affinity_output(vm_info, 2, config)
-        print("\t\t.severity = {0},".format(vm_info.severity[2].strip()), file=config)
-        is_need_epc(vm_info.epc_section, 2, config)
-        print("\t\t.vuart[0] = {", file=config)
-        print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
-        print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
-        print("\t\t},", file=config)
-        print("\t\t.vuart[1] = {", file=config)
-        print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
-        print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
-        print("\t\t}", file=config)
-        print("\t},", file=config)
-        print("#endif", file=config)
-
-    print("};", file=config)
-    return err_dic
-
-
-def gen_sdc2_source(vm_info, config):
-    """
-    Generate vm_configuration.c of sdc2 scenario
-    :param vm_info: it is the class which contain all user setting information
-    :param config: it is the pointer which file write to
-    :return: None
-    """
-    uuid_0 = uuid2str(vm_info.uuid[0])
-    uuid_1 = uuid2str(vm_info.uuid[1])
-    uuid_2 = uuid2str(vm_info.uuid[2])
-    uuid_3 = uuid2str(vm_info.uuid[3])
-
-    (err_dic, sos_guest_flags) = get_guest_flag(vm_info.guest_flag_idx[0])
-    if err_dic:
-        return err_dic
-
-    gen_source_header(config)
-
-    # VM0
-    print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)
-    print("\t{", file=config)
-    print("\t\t.load_order = {0},".format(
-        vm_info.load_order[0]), file=config)
-    print('\t\t.name = "{0}",'.format(vm_info.name[0]), file=config)
-    # UUID
-    uuid_output(uuid_0, vm_info.uuid[0], config)
-    print("", file=config)
-    print("\t\t/* Allow SOS to reboot the host since " +
-          "there is supposed to be the highest severity guest */", file=config)
-    print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
-    vcpu_affinity_output(vm_info, 0, config)
-    clos_output(vm_info, 0, config)
-    print("\t\t.severity = {0},".format(vm_info.severity[0].strip()), file=config)
-    print("\t\t.memory = {", file=config)
-    print("\t\t\t.start_hpa = {}UL,".format(vm_info.mem_info.mem_start_hpa[0]), file=config)
-    print("\t\t\t.size = {0},".format("CONFIG_SOS_RAM_SIZE"), file=config)
-    print("\t\t},", file=config)
-    print("\t\t.os_config = {", file=config)
-    print('\t\t\t.name = "{0}",'.format(vm_info.os_cfg.kern_name[0]), file=config)
-    print('\t\t\t.kernel_type = {0},'.format(vm_info.os_cfg.kern_type[0]), file=config)
-    print('\t\t\t.kernel_mod_tag = "{0}",'.format(
-        vm_info.os_cfg.kern_mod[0]), file=config)
-    print('\t\t\t.bootargs = {0},'.format(vm_info.os_cfg.kern_args[0]), file=config)
-    if (vm_info.os_cfg.ramdisk_mod[0].strip()):
-        print('\t\t\t.ramdisk_mod_tag = "{0}",'.format(
-            vm_info.os_cfg.ramdisk_mod[0]), file=config)
-    print("\t\t},", file=config)
-    # VUART
-    err_dic = vuart_output(0, vm_info, config)
-    if err_dic:
-        return err_dic
-
-    # VM1
-    print("\t{", file=config)
-    print("\t\t.load_order = {0},".format(vm_info.load_order[1]), file=config)
-    # UUID
-    uuid_output(uuid_1, vm_info.uuid[1], config)
-    vcpu_affinity_output(vm_info, 1, config)
-    print("\t\t.severity = {0},".format(vm_info.severity[1].strip()), file=config)
-    is_need_epc(vm_info.epc_section, 1, config)
-    # VUART
-    err_dic = vuart_output(1, vm_info, config)
-    if err_dic:
-        return err_dic
-
-    # VM2
-    print("\t{", file=config)
-    print("\t\t.load_order = {0},".format(vm_info.load_order[1]), file=config)
-    # UUID
-    uuid_output(uuid_2, vm_info.uuid[2], config)
-    vcpu_affinity_output(vm_info, 2, config)
-    print("\t\t.severity = {0},".format(vm_info.severity[2].strip()), file=config)
-    is_need_epc(vm_info.epc_section, 2, config)
-    # VUART
-    err_dic = vuart_output(1, vm_info, config)
-    if err_dic:
-        return err_dic
-    print("", file=config)
-
-    # VM3
-    print("\t{", file=config)
-    print("\t\t.load_order = POST_LAUNCHED_VM,", file=config)
-    uuid_output(uuid_3, vm_info.uuid[3], config)
-    is_need_epc(vm_info.epc_section, 3, config)
-    vcpu_affinity_output(vm_info, 3, config)
-    print("\t\t.severity = {0},".format(vm_info.severity[3].strip()), file=config)
-    print("\t\t.vuart[0] = {", file=config)
-    print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
-    print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
-    print("\t\t},", file=config)
-    print("\t\t.vuart[1] = {", file=config)
-    print("\t\t\t.type = VUART_LEGACY_PIO,", file=config)
-    print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
-    print("\t\t}", file=config)
     print("\t},", file=config)
-    print("};", file=config)
 
-    return err_dic
+
+def gen_pre_launch_vm(vm_type, vm_i, vm_info, config):
+
+    # guest flags
+    (err_dic, guest_flags) = get_guest_flag(vm_info.guest_flags[vm_i])
+    if err_dic:
+        return err_dic
+    uuid_str = uuid2str(vm_info.uuid[vm_i])
+
+    print("\t{{\t/* VM{} */".format(vm_i), file=config)
+    print("\t\t.load_order = {0},".format(vm_info.load_order[vm_i]), file=config)
+    print('\t\t.name = "{0}",'.format(vm_info.name[vm_i]), file=config)
+    # UUID
+    uuid_output(uuid_str, vm_info.uuid[vm_i], config)
+    vcpu_affinity_output(vm_info, vm_i, config)
+    if vm_i in vm_info.severity.keys():
+        print("\t\t.severity = {0},".format(vm_info.severity[vm_i].strip()), file=config)
+    if guest_flags:
+        print("\t\t.guest_flags = {0},".format(guest_flags), file=config)
+    clos_output(vm_info, vm_i, config)
+    print("\t\t.memory = {", file=config)
+    print("\t\t\t.start_hpa = VM{0}_CONFIG_MEM_START_HPA,".format(vm_i), file=config)
+    print("\t\t\t.size = VM{0}_CONFIG_MEM_SIZE,".format(vm_i), file=config)
+    print("\t\t\t.start_hpa2 = VM{0}_CONFIG_MEM_START_HPA2,".format(vm_i), file=config)
+    print("\t\t\t.size_hpa2 = VM{0}_CONFIG_MEM_SIZE_HPA2,".format(vm_i), file=config)
+    print("\t\t},", file=config)
+    is_need_epc(vm_info.epc_section, vm_i, config)
+    print("\t\t.os_config = {", file=config)
+    print('\t\t\t.name = "{0}",'.format(vm_info.os_cfg.kern_name[vm_i]), file=config)
+    print("\t\t\t.kernel_type = {0},".format(
+        vm_info.os_cfg.kern_type[vm_i]), file=config)
+    print('\t\t\t.kernel_mod_tag = "{0}",'.format(
+        vm_info.os_cfg.kern_mod[vm_i]), file=config)
+    if (vm_info.os_cfg.ramdisk_mod[vm_i].strip()):
+        print('\t\t\t.ramdisk_mod_tag = "{0}",'.format(
+            vm_info.os_cfg.ramdisk_mod[vm_i]), file=config)
+
+    if vm_i in vm_info.os_cfg.kern_load_addr.keys() and vm_info.os_cfg.kern_entry_addr[vm_i]:
+        print("\t\t\t.kernel_load_addr = {0},".format(vm_info.os_cfg.kern_load_addr[vm_i]), file=config)
+    if vm_i in vm_info.os_cfg.kern_entry_addr.keys() and vm_info.os_cfg.kern_entry_addr[vm_i]:
+        print("\t\t\t.kernel_entry_addr = {0},".format(vm_info.os_cfg.kern_entry_addr[vm_i]), file=config)
+
+    if vm_i in vm_info.os_cfg.kern_args.keys() and vm_info.os_cfg.kern_args[vm_i]:
+        print("\t\t\t.bootargs = VM{0}_CONFIG_OS_BOOTARG_CONSOLE\t\\".format(vm_i), file=config)
+        print("\t\t\t\tVM{0}_CONFIG_OS_BOOTARG_MAXCPUS\t\t\\".format(vm_i), file=config)
+        print("\t\t\t\tVM{0}_CONFIG_OS_BOOTARG_ROOT\t\t\\".format(vm_i), file=config)
+        split_cmdline(vm_info.os_cfg.kern_args[vm_i].strip(), config)
+    print("\t\t},", file=config)
+    # VUART
+    err_dic = vuart_output(vm_type, vm_i, vm_info, config)
+    if err_dic:
+        return err_dic
+
+    print("\t},", file=config)
+
+
+def gen_post_launch_vm(vm_type, vm_i, vm_info, config):
+
+    uuid_str = uuid2str(vm_info.uuid[vm_i])
+    print("\t{{\t/* VM{} */".format(vm_i), file=config)
+    print("\t\t.load_order = {0},".format(vm_info.load_order[vm_i]), file=config)
+    # UUID
+    uuid_output(uuid_str, vm_info.uuid[vm_i], config)
+    vcpu_affinity_output(vm_info, vm_i, config)
+    print("\t\t.severity = {0},".format(vm_info.severity[vm_i].strip()), file=config)
+    is_need_epc(vm_info.epc_section, vm_i, config)
+    # VUART
+    err_dic = vuart_output(vm_type, vm_i, vm_info, config)
+    if err_dic:
+        return err_dic
+
+    print("\t},", file=config)
 
 
 def split_cmdline(cmd_str, config):
@@ -458,233 +381,34 @@ def split_cmdline(cmd_str, config):
                 print('"', file=config)
 
 
+def pre_launch_definiation(vm_info, config):
 
-def gen_logical_partition_source(vm_info, config):
-    """
-    Generate vm_configuration.c of logical_partition scenario
-    :param vm_info: it is the class which contain all user setting information
-    :param config: it is the pointer which file write to
-    :return: None
-    """
-    err_dic = {}
-    gen_source_header(config)
-    for i in range(common.VM_COUNT):
+    for vm_i,vm_type in common.VM_TYPES.items():
+        if vm_type != "PRE_LAUNCHED_VM":
+            continue
         print("extern struct acrn_vm_pci_dev_config " +
-              "vm{0}_pci_devs[VM{1}_CONFIG_PCI_DEV_NUM];".format(i, i), file=config)
+              "vm{0}_pci_devs[VM{1}_CONFIG_PCI_DEV_NUM];".format(vm_i, vm_i), file=config)
     print("", file=config)
-    print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)
 
-    for i in range(common.VM_COUNT):
-        uuid = uuid2str(vm_info.uuid[i])
-        print("\t{{\t/* VM{0} */".format(i), file=config)
-        print("\t\t.load_order = {0},".format(vm_info.load_order[i]), file=config)
-        print('\t\t.name = "{0}",'.format(vm_info.name[i]), file=config)
-        # UUID
-        uuid_output(uuid, vm_info.uuid[i], config)
-        vcpu_affinity_output(vm_info, i, config)
-        # skip the vm0 for guest flag
-
-        # guest flags
-        (err_dic, guest_flags) = get_guest_flag(vm_info.guest_flag_idx[i])
-        if err_dic:
-            return err_dic
-
-        print("\t\t.guest_flags = {0},".format(guest_flags), file=config)
-        clos_output(vm_info, i, config)
-        print("\t\t.memory = {", file=config)
-        print("\t\t\t.start_hpa = VM{0}_CONFIG_MEM_START_HPA,".format(i), file=config)
-        print("\t\t\t.size = VM{0}_CONFIG_MEM_SIZE,".format(i), file=config)
-        print("\t\t\t.start_hpa2 = VM{0}_CONFIG_MEM_START_HPA2,".format(i), file=config)
-        print("\t\t\t.size_hpa2 = VM{0}_CONFIG_MEM_SIZE_HPA2,".format(i), file=config)
-        print("\t\t},", file=config)
-        is_need_epc(vm_info.epc_section, i, config)
-        print("\t\t.os_config = {", file=config)
-        print('\t\t\t.name = "{0}",'.format(vm_info.os_cfg.kern_name[i]), file=config)
-        print("\t\t\t.kernel_type = {0},".format(
-            vm_info.os_cfg.kern_type[i]), file=config)
-        print('\t\t\t.kernel_mod_tag = "{0}",'.format(
-            vm_info.os_cfg.kern_mod[i]), file=config)
-        if (vm_info.os_cfg.ramdisk_mod[i].strip()):
-            print('\t\t\t.ramdisk_mod_tag = "{0}",'.format(
-                vm_info.os_cfg.ramdisk_mod[i]), file=config)
-        print("\t\t\t.bootargs = VM{0}_CONFIG_OS_BOOTARG_CONSOLE\t\\".format(i), file=config)
-        print("\t\t\t\tVM{0}_CONFIG_OS_BOOTARG_MAXCPUS\t\t\\".format(i), file=config)
-        print("\t\t\t\tVM{0}_CONFIG_OS_BOOTARG_ROOT\t\t\\".format(i), file=config)
-        #print("\t\t\t\t{0}".format(vm_info.os_cfg.kern_args_append[i].strip()), file=config)
-        split_cmdline(vm_info.os_cfg.kern_args[i].strip(), config)
-        print("\t\t},", file=config)
-        # VUART
-        err_dic = vuart_output(i, vm_info, config)
-        if err_dic:
-            return err_dic
-
-    print("};", file=config)
-
-    return err_dic
-
-
-def gen_industry_source(vm_info, config):
-    """
-    Generate vm_configuration.c of industry scenario
-    :param vm_info: it is the class which contain all user setting information
-    :param config: it is the pointer which file write to
-    :return: None
-    """
-    err_dic = {}
-    gen_source_header(config)
-    print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)
-    for i in range(common.VM_COUNT):
-        uuid = uuid2str(vm_info.uuid[i])
-        print("\t{", file=config)
-        print("\t\t.load_order = {0},".format(vm_info.load_order[i]), file=config)
-        if i == 0:
-            print('\t\t.name = "{0}",'.format(vm_info.name[i]), file=config)
-
-        # UUID
-        uuid_output(uuid, vm_info.uuid[i], config)
-        is_need_epc(vm_info.epc_section, i, config)
-
-        if i == 0:
-            (err_dic, sos_guest_flags) = get_guest_flag(vm_info.guest_flag_idx[i])
-            if err_dic:
-                return err_dic
-            print("\t\t")
-            print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
-
-        vcpu_affinity_output(vm_info, i, config)
-        print("\t\t.severity = {0},".format(vm_info.severity[i].strip()), file=config)
-        clos_output(vm_info, i, config)
-
-        if i == 0:
-            print("\t\t.memory = {", file=config)
-            print("\t\t\t.start_hpa = 0UL,", file=config)
-            print("\t\t\t.size = CONFIG_SOS_RAM_SIZE,", file=config)
-            print("\t\t},", file=config)
-            print("\t\t.os_config = {", file=config)
-            print('\t\t\t.name = "{0}",'.format(vm_info.os_cfg.kern_name[i]), file=config)
-            print('\t\t\t.kernel_type = {0},'.format(
-                vm_info.os_cfg.kern_type[i]), file=config)
-            print('\t\t\t.kernel_mod_tag = "{0}",'.format(
-                vm_info.os_cfg.kern_mod[i]), file=config)
-            if (vm_info.os_cfg.ramdisk_mod[i].strip()):
-                print('\t\t\t.ramdisk_mod_tag = "{0}",'.format(
-                    vm_info.os_cfg.ramdisk_mod[i]), file=config)
-            print("\t\t\t.bootargs = {0}".format(
-               vm_info.os_cfg.kern_args[i]), file=config)
-            print("\t\t},", file=config)
-
-        if i == 2:
-            print("\t\t/* The hard RTVM must be launched as VM2 */", file=config)
-            (err_dic, vm_guest_flags) = get_guest_flag(vm_info.guest_flag_idx[i])
-            if err_dic:
-                return err_dic
-            print("\t\t.guest_flags = {0},".format(vm_guest_flags), file=config)
-        # VUART
-        err_dic = vuart_output(i, vm_info, config)
-        if err_dic:
-            return err_dic
-
-    print("};", file=config)
-
-    return err_dic
-
-
-def gen_hybrid_source(vm_info, config):
-    """
-    Generate vm_configuration.c of hybrid scenario
-    :param vm_info: it is the class which contain all user setting information
-    :param config: it is the pointer which file write to
-    :return: None
-    """
-    err_dic = {}
-    (err_dic, post_vm_i) = scenario_cfg_lib.get_first_post_vm()
-    if err_dic:
-        return err_dic
-
-    gen_source_header(config)
-    print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)
-
-    for i in range(common.VM_COUNT):
-        uuid = uuid2str(vm_info.uuid[i])
-        print("\t{{\t/* VM{0} */".format(i), file=config)
-        print("\t\t.load_order = {0},".format(vm_info.load_order[i]), file=config)
-        if i != 2:
-            print('\t\t.name = "{0}",'.format(vm_info.name[i]), file=config)
-
-        # UUID
-        uuid_output(uuid, vm_info.uuid[i], config)
-
-        if i != 2:
-            (err_dic, sos_guest_flags) = get_guest_flag(vm_info.guest_flag_idx[i])
-            if err_dic:
-                return err_dic
-            print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
-
-        vcpu_affinity_output(vm_info, i, config)
-        print("\t\t.severity = {0},".format(vm_info.severity[i].strip()), file=config)
-
-        if i != 2:
-            clos_output(vm_info, i, config)
-            print("\t\t.memory = {", file=config)
-            if i == 0:
-                print("\t\t\t.start_hpa = VM0_CONFIG_MEM_START_HPA,", file=config)
-                print("\t\t\t.size = VM0_CONFIG_MEM_SIZE,", file=config)
-                print("\t\t\t.start_hpa2 = VM0_CONFIG_MEM_START_HPA2,", file=config)
-                print("\t\t\t.size_hpa2 = VM0_CONFIG_MEM_SIZE_HPA2,", file=config)
-            elif i == 1:
-                print("\t\t\t.start_hpa = 0UL,", file=config)
-                print("\t\t\t.size = CONFIG_SOS_RAM_SIZE,", file=config)
-            print("\t\t},", file=config)
-            is_need_epc(vm_info.epc_section, i, config)
-            print("\t\t.os_config = {", file=config)
-            print('\t\t\t.name = "{0}",'.format(vm_info.os_cfg.kern_name[i]), file=config)
-            print('\t\t\t.kernel_type = {0},'.format(
-                vm_info.os_cfg.kern_type[i]), file=config)
-            print('\t\t\t.kernel_mod_tag = "{0}",'.format(
-                vm_info.os_cfg.kern_mod[i]), file=config)
-            if (vm_info.os_cfg.ramdisk_mod[i].strip()):
-                print('\t\t\t.ramdisk_mod_tag = "{0}",'.format(
-                vm_info.os_cfg.ramdisk_mod[i]), file=config)
-
-            if i < post_vm_i:
-                if not vm_info.os_cfg.kern_args[i] or not vm_info.os_cfg.kern_args[i].strip():
-                    print('\t\t\t.bootargs = "",', file=config)
-                else:
-                    print("\t\t\t.bootargs = {0},".format(
-                        vm_info.os_cfg.kern_args[i]), file=config)
-            if i == 0:
-                print("\t\t\t.kernel_load_addr = {0},".format(
-                    vm_info.os_cfg.kern_load_addr[i]), file=config)
-                print("\t\t\t.kernel_entry_addr = {0},".format(
-                    vm_info.os_cfg.kern_entry_addr[i]), file=config)
-
-            print("\t\t},", file=config)
-
-        # VUART
-        err_dic = vuart_output(i, vm_info, config)
-        if err_dic:
-            return err_dic
-    print("};", file=config)
-
-    return err_dic
-
-
-def generate_file(scenario, vm_info, config):
+def generate_file(vm_info, config):
     """
     Start to generate vm_configurations.c
     :param config: it is a file pointer of board information for writing to
     """
     err_dic = {}
-    if scenario == 'sdc':
-        err_dic = gen_sdc_source(vm_info, config)
-    elif scenario == 'sdc2':
-        err_dic = gen_sdc2_source(vm_info, config)
-    elif scenario == 'logical_partition':
-        err_dic = gen_logical_partition_source(vm_info, config)
-    elif scenario == 'industry':
-        err_dic = gen_industry_source(vm_info, config)
-    else:
-        # scenario is 'hybrid'
-        err_dic = gen_hybrid_source(vm_info, config)
+    gen_source_header(config)
+    if vm_info.load_order_cnt.pre_vm >= 2:
+        pre_launch_definiation(vm_info, config)
 
+    print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)
+    for vm_i, vm_type in common.VM_TYPES.items():
+
+        if vm_type == "SOS_VM":
+            gen_sos_vm(vm_type, vm_i, vm_info, config)
+        elif vm_type == "PRE_LAUNCHED_VM":
+            gen_pre_launch_vm(vm_type, vm_i, vm_info, config)
+        elif vm_type == "POST_LAUNCHED_VM":
+            gen_post_launch_vm(vm_type, vm_i, vm_info, config)
+
+    print("};", file=config)
     return err_dic
