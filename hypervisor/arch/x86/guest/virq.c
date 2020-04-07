@@ -105,6 +105,15 @@ static bool is_guest_irq_enabled(struct acrn_vcpu *vcpu)
 	return status;
 }
 
+static inline bool is_nmi_injectable(void)
+{
+	uint64_t guest_state;
+
+	guest_state = exec_vmread32(VMX_GUEST_INTERRUPTIBILITY_INFO);
+
+	return ((guest_state & (HV_ARCH_VCPU_BLOCKED_BY_STI |
+		HV_ARCH_VCPU_BLOCKED_BY_MOVSS | HV_ARCH_VCPU_BLOCKED_BY_NMI)) == 0UL);
+}
 void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid)
 {
 	bitmap_set_lock(eventid, &vcpu->arch.pending_req);
@@ -269,6 +278,7 @@ void vcpu_inject_extint(struct acrn_vcpu *vcpu)
 void vcpu_inject_nmi(struct acrn_vcpu *vcpu)
 {
 	vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
+	signal_event(&vcpu->events[VCPU_EVENT_VIRTUAL_INTERRUPT]);
 }
 
 /* Inject general protection exception(#GP) to guest */
@@ -385,11 +395,17 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		injected = vcpu_inject_exception(vcpu);
 		if (!injected) {
 			/* inject NMI before maskable hardware interrupt */
+
 			if (bitmap_test_and_clear_lock(ACRN_REQUEST_NMI, pending_req_bits)) {
-				/* Inject NMI vector = 2 */
-				exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
-						VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8U) | IDT_NMI);
-				injected = true;
+				if (is_nmi_injectable()) {
+					/* Inject NMI vector = 2 */
+					exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
+							VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8U) | IDT_NMI);
+					injected = true;
+				} else {
+					/* keep the NMI request for next vmexit */
+					bitmap_set_lock(ACRN_REQUEST_NMI, pending_req_bits);
+				}
 			} else {
 				/* handling pending vector injection:
 				 * there are many reason inject failed, we need re-inject again
@@ -422,7 +438,13 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		 * deliver is disabled.
 		 */
 		if (!arch->irq_window_enabled) {
+			/*
+			 * TODO: Currently, NMI exiting and virtual NMIs are not enabled,
+			 * so use interrupt window to inject NMI.
+			 * After enable virtual NMIs, we can use NMI-Window
+			 */
 			if (bitmap_test(ACRN_REQUEST_EXTINT, pending_req_bits) ||
+				bitmap_test(ACRN_REQUEST_NMI, pending_req_bits) ||
 				vlapic_has_pending_delivery_intr(vcpu)) {
 				tmp = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
 				tmp |= VMX_PROCBASED_CTLS_IRQ_WIN;
