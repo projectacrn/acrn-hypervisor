@@ -82,12 +82,12 @@ publish:
 	cd $(PUBLISHDIR)/..; git pull origin master
 	rm -fr $(PUBLISHDIR)/*
 	cp -r $(BUILDDIR)/html/* $(PUBLISHDIR)
+ifeq ($(RELEASE),latest)
 	cp scripts/publish-README.md $(PUBLISHDIR)/../README.md
 	cp scripts/publish-index.html $(PUBLISHDIR)/../index.html
 	cp scripts/publish-robots.txt $(PUBLISHDIR)/../robots.txt
-	ifeq ($(RELEASE),latest)
-	  cp _build/html/404.html $(PUBLISHDIR)/../404.html
-	endif
+	cp scripts/publish-404.html $(PUBLISHDIR)/../404.html
+endif
 	cd $(PUBLISHDIR)/..; git add -A; git commit -s -m "publish $(RELEASE)"; git push origin master;
 
 
