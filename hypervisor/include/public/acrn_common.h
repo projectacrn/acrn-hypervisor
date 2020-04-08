@@ -360,8 +360,15 @@ struct acrn_create_vm {
 
 	uint64_t req_buf;
 
+	/**
+	 *   The least significant set bit is the PCPU # the VCPU 0 maps to;
+	 *   second set least significant bit is the PCPU # the VCPU 1 maps to;
+	 *   and so on...
+	*/
+	uint64_t cpu_affinity;
+
 	/** Reserved for future use*/
-	uint8_t  reserved2[16];
+	uint8_t  reserved2[8];
 } __aligned(8);
 
 /**
