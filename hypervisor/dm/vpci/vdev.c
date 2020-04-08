@@ -137,10 +137,9 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 	}
 
 	if ((base != 0UL) && !ept_is_mr_valid(vpci2vm(vdev->vpci), base, vdev->vbars[idx].size)) {
-		pr_fatal("%s, %x:%x.%x set invalid bar[%d] base: 0x%lx, size: 0x%lx\n", __func__,
+		pr_warn("%s, %x:%x.%x set invalid bar[%d] base: 0x%lx, size: 0x%lx\n", __func__,
 			vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, base, vdev->vbars[idx].size);
-		/* If guest set a invalid GPA, ignore it temporarily */
-		base = 0UL;
+		base = 0UL;	/* 0UL means invalid GPA, so that EPT won't map */
 	}
 
 	vdev->vbars[idx].base_gpa = base;

@@ -7,6 +7,7 @@ import sys
 import enum
 import subprocess
 import board_cfg_lib
+import common
 
 class RDT(enum.Enum):
     L2 = 0
@@ -28,7 +29,7 @@ MSR_IA32_L3_MASK_END = 0x00000D0F
 def gen_dmar_structure(config):
     """Generate dmar structure information"""
 
-    dmar_info_lines = board_cfg_lib.get_info(board_cfg_lib.BOARD_INFO_FILE, "<DRHD_INFO>", "</DRHD_INFO>")
+    dmar_info_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<DRHD_INFO>", "</DRHD_INFO>")
     drhd_cnt = 0
     drhd_dev_scope_cnt = []
     dev_scope_type = []
@@ -119,7 +120,7 @@ def gen_rdt_res(config):
     err_dic = {}
     rdt_res_str =""
     res_present = [0, 0, 0]
-    (rdt_resources, rdt_res_clos_max, rdt_res_mask_max) = board_cfg_lib.clos_info_parser(board_cfg_lib.BOARD_INFO_FILE)
+    (rdt_resources, rdt_res_clos_max, rdt_res_mask_max) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
     if len(rdt_res_clos_max) != 0:
         common_clos_max = min(rdt_res_clos_max)
     else:
@@ -159,7 +160,7 @@ def gen_rdt_res(config):
                 print("};\n", file=config)
                 res_present[RDT.MBA.value] = 1
             else:
-                err_dic['board config: generate board.c failed'] = "The input of {} was corrupted!".format(board_cfg_lib.BOARD_INFO_FILE)
+                err_dic['board config: generate board.c failed'] = "The input of {} was corrupted!".format(common.BOARD_INFO_FILE)
                 return err_dic
 
         if res_present[RDT.L2.value] == 0:
@@ -201,9 +202,9 @@ def gen_px_cx(config):
     :param config: it is a file pointer of board information for writing to
     """
     cpu_brand_lines = board_cfg_lib.get_info(
-        board_cfg_lib.BOARD_INFO_FILE, "<CPU_BRAND>", "</CPU_BRAND>")
-    cx_lines = board_cfg_lib.get_info(board_cfg_lib.BOARD_INFO_FILE, "<CX_INFO>", "</CX_INFO>")
-    px_lines = board_cfg_lib.get_info(board_cfg_lib.BOARD_INFO_FILE, "<PX_INFO>", "</PX_INFO>")
+        common.BOARD_INFO_FILE, "<CPU_BRAND>", "</CPU_BRAND>")
+    cx_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<CX_INFO>", "</CX_INFO>")
+    px_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<PX_INFO>", "</PX_INFO>")
 
     gen_single_data(cx_lines, 'c', config)
     gen_single_data(px_lines, 'p', config)

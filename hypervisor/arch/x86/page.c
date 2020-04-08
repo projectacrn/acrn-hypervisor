@@ -12,7 +12,6 @@
 #include <vtd.h>
 #include <security.h>
 #include <vm.h>
-#include <vm_configurations.h>
 
 static struct page ppt_pml4_pages[PML4_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
 static struct page ppt_pdpt_pages[PDPT_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
@@ -104,7 +103,7 @@ static union pgtable_pages_info ept_pages_info[CONFIG_MAX_VM_NUM];
 static const uint64_t vm_address_space_size[MAX_LOAD_ORDER] = {
 	PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE), /* for Pre-Launched VM */
 	EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE), /* for SOS VM */
-	EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE), /* for Post-Launched VM */
+	EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE), /* for Post-Launched VM */
 };
 
 /*

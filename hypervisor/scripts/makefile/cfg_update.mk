@@ -12,26 +12,43 @@ ifneq ($$(BOARD_IN_XML),)
     endif
 endif
 
-ifeq ($$(CONFIG_XML_ENABLED),true)
-    override BOARD := $$(BOARD_IN_XML)
-    override SCENARIO := $$(SCENARIO_IN_XML)
-endif
-
-
 endef
 
-ifeq ($(CONFIG_XML_ENALBED),)
+ifeq ($(CONFIG_XML_ENABLED),)
     $(eval $(call check_xml_enabled,$(BOARD_FILE),$(SCENARIO_FILE)))
+endif
+
+ifeq ($(CONFIG_XML_ENABLED),true)
+    ifneq ($(BOARD_IN_KCONFIG),)
+        ifneq ($(BOARD_IN_XML),$(BOARD_IN_KCONFIG))
+            $(error BOARD $(BOARD_IN_XML) in $(BOARD_FILE) does not match BOARD $(BOARD_IN_KCONFIG) in $(KCONFIG_FILE))
+        endif
+    endif
+    ifneq ($(SCENARIO_IN_KCONFIG),)
+        ifneq ($(SCENARIO_IN_XML),$(SCENARIO_IN_KCONFIG))
+            $(error SCENARIO $(SCENARIO_IN_XML) in $(SCENARIO_FILE) does not match SCENARIO $(SCENARIO_IN_KCONFIG) in $(KCONFIG_FILE))
+        endif
+    endif
+    override BOARD := $(BOARD_IN_XML)
+    override SCENARIO := $(SCENARIO_IN_XML)
 endif
 
 update_config:
 ifeq ($(CONFIG_XML_ENABLED),true)
 	@if [ ! -f $(UPDATE_RESULT) ]; then \
 		mkdir -p $(dir $(UPDATE_RESULT));\
-		python3 ../misc/acrn-config/board_config/board_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) > $(UPDATE_RESULT);\
+		if [ "$(TARGET_DIR)" = "" ]; then \
+			python3 ../misc/acrn-config/board_config/board_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) > $(UPDATE_RESULT);\
+		else \
+			python3 ../misc/acrn-config/board_config/board_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) --out $(TARGET_DIR) > $(UPDATE_RESULT);\
+		fi;\
 		cat $(UPDATE_RESULT);\
 		if [ "`sed -n /successfully/p $(UPDATE_RESULT)`" = "" ]; then rm -f $(UPDATE_RESULT); exit 1;	fi;\
-		python3 ../misc/acrn-config/scenario_config/scenario_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) > $(UPDATE_RESULT);\
+		if [ "$(TARGET_DIR)" = "" ]; then \
+			python3 ../misc/acrn-config/scenario_config/scenario_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) > $(UPDATE_RESULT);\
+		else \
+			python3 ../misc/acrn-config/scenario_config/scenario_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) --out $(TARGET_DIR) > $(UPDATE_RESULT);\
+		fi;\
 		cat $(UPDATE_RESULT);\
 		if [ "`sed -n /successfully/p $(UPDATE_RESULT)`" = "" ]; then rm -f $(UPDATE_RESULT); exit 1;	fi;\
 		echo "Import hypervisor Board/VM configuration from XMLs, configurations in source code has been overwritten!";\

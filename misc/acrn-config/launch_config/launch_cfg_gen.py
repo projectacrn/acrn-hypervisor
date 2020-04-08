@@ -9,9 +9,10 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '
 from launch_item import AvailablePthru, PthruSelected, VirtioDeviceSelect, AcrnDmArgs
 import launch_cfg_lib
 import com
+import common
 
-ACRN_PATH = launch_cfg_lib.SOURCE_ROOT_DIR
-ACRN_CONFIG_TARGET = ACRN_PATH + '/misc/acrn-config/xmls/config-xmls/'
+ACRN_PATH = common.SOURCE_ROOT_DIR
+ACRN_CONFIG_DEF = ACRN_PATH + '/misc/acrn-config/xmls/config-xmls/'
 
 
 def get_launch_item_values(board_info):
@@ -60,9 +61,9 @@ def validate_launch_setting(board_info, scenario_info, launch_info):
     :return: return a dictionary contain errors
     """
     launch_cfg_lib.ERR_LIST = {}
-    launch_cfg_lib.BOARD_INFO_FILE = board_info
-    launch_cfg_lib.SCENARIO_INFO_FILE = scenario_info
-    launch_cfg_lib.LAUNCH_INFO_FILE = launch_info
+    common.BOARD_INFO_FILE = board_info
+    common.SCENARIO_INFO_FILE = scenario_info
+    common.LAUNCH_INFO_FILE = launch_info
 
     # init available pt devices and get selected pt devices
     pt_avl = AvailablePthru(board_info)
@@ -90,7 +91,7 @@ def ui_entry_api(board_info, scenario_info, launch_info):
     err_dic = {}
     arg_list = ['launch_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--launch', launch_info, '--uosid', '0']
 
-    err_dic = launch_cfg_lib.prepare()
+    err_dic = common.prepare()
     if err_dic:
         return err_dic
 
@@ -107,13 +108,13 @@ def get_names():
     names['uos_types'] = uos_types
 
     # get board name
-    (err_dic, board_name) = launch_cfg_lib.get_board_name()
+    (err_dic, board_name) = common.get_board_name()
     if err_dic:
         return (err_dic, names)
     names['board_name'] = board_name
 
     # get scenario name
-    (err_dic, scenario_name) = launch_cfg_lib.get_scenario_name()
+    (err_dic, scenario_name) = common.get_scenario_name()
     if err_dic:
         return (err_dic, names)
     names['scenario_name'] = scenario_name
@@ -142,17 +143,16 @@ def main(args):
     This is main function to start generate launch script
     :param args: it is a command line args for the script
     """
-    global ACRN_CONFIG_TARGET
     # get parameters
     (err_dic, board_info_file, scenario_info_file, launch_info_file, vm_th, output_folder) = launch_cfg_lib.get_param(args)
     if err_dic:
         return err_dic
 
     if output_folder:
-        ACRN_CONFIG_TARGET = os.path.abspath(output_folder) + '/'
+        common.ACRN_CONFIG_TARGET = os.path.abspath(output_folder) + '/'
 
     # check env
-    err_dic = launch_cfg_lib.prepare()
+    err_dic = common.prepare()
     if err_dic:
         return err_dic
 
@@ -161,9 +161,9 @@ def main(args):
     # 1: generate launch script for 1st post vm launch script
     # 2: generate launch script for 2nd post vm launch script
 
-    launch_cfg_lib.BOARD_INFO_FILE = board_info_file
-    launch_cfg_lib.SCENARIO_INFO_FILE = scenario_info_file
-    launch_cfg_lib.LAUNCH_INFO_FILE = launch_info_file
+    common.BOARD_INFO_FILE = board_info_file
+    common.SCENARIO_INFO_FILE = scenario_info_file
+    common.LAUNCH_INFO_FILE = launch_info_file
 
     # get post vm dic
     post_num_list = launch_cfg_lib.get_post_num_list()
@@ -200,8 +200,11 @@ def main(args):
 
     # create output directory
     board_name = names['board_name']
-    output = ACRN_CONFIG_TARGET + '/' + board_name + '/output/'
-    launch_cfg_lib.mkdir(output)
+    if common.ACRN_CONFIG_TARGET:
+        output = common.ACRN_CONFIG_TARGET + '/' + board_name + '/output/'
+    else:
+        output = ACRN_CONFIG_DEF + '/' + board_name + '/output/'
+    common.mkdir(output)
 
     # generate launch script
     if vm_th:
@@ -234,4 +237,4 @@ if __name__ == '__main__':
     err_dic = main(ARGS)
     if err_dic:
         for err_k, err_v in err_dic.items():
-            launch_cfg_lib.print_red("{}: {}".format(err_k, err_v), err=True)
+            common.print_red("{}: {}".format(err_k, err_v), err=True)

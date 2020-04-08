@@ -8,20 +8,16 @@ import sys
 import getopt
 import shutil
 import subprocess
-import re
 import xml.etree.ElementTree as ET
 
-SOURCE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../')
-HV_LICENSE_FILE = SOURCE_PATH + 'misc/acrn-config/library/hypervisor_license'
+ACRN_CONFIG_TARGET = ''
+SOURCE_ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../')
+HV_LICENSE_FILE = SOURCE_ROOT_DIR + 'misc/acrn-config/library/hypervisor_license'
 
 
 PY_CACHES = ["__pycache__", "../board_config/__pycache__", "../scenario_config/__pycache__"]
 GUEST_FLAG = ["0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTHROUGH",
               "GUEST_FLAG_IO_COMPLETION_POLLING", "GUEST_FLAG_HIDE_MTRR", "GUEST_FLAG_RT"]
-# Support 512M, 1G, 2G
-# pre launch less then 2G, sos vm less than 24G
-START_HPA_SIZE_LIST = ['0x20000000', '0x40000000', '0x80000000', 'CONFIG_SOS_RAM_SIZE']
-
 
 MULTI_ITEM = ["guest_flag", "pcpu_id", "vcpu_clos", "input", "block", "network"]
 
@@ -29,7 +25,12 @@ SIZE_K = 1024
 SIZE_M = SIZE_K * 1024
 SIZE_2G = 2 * SIZE_M * SIZE_K
 SIZE_4G = 2 * SIZE_2G
+SIZE_G = SIZE_M * 1024
 
+VM_COUNT = 0
+BOARD_INFO_FILE = ""
+SCENARIO_INFO_FILE = ""
+LAUNCH_INFO_FILE = ""
 
 class MultiItem():
 
@@ -55,7 +56,7 @@ def open_license():
         return license_s
 
 
-def print_if_yel(msg, warn=False):
+def print_yel(msg, warn=False):
     """
     Print the message with 'Warning' if warn is true
     :param msg: the stings which will be output to STDOUT
@@ -67,7 +68,7 @@ def print_if_yel(msg, warn=False):
         print("\033[1;33m{0}\033[0m".format(msg))
 
 
-def print_if_red(msg, err=False):
+def print_red(msg, err=False):
     """
     Print the message with 'Error' if err is true
     :param msg: the stings which will be output to STDOUT
@@ -129,7 +130,7 @@ def get_param(args):
     return (err_dic, board_info_file, scenario_info_file, output_folder)
 
 
-def check_env():
+def prepare():
     """ Prepare to check the environment """
     err_dic = {}
     bin_list = []
@@ -148,22 +149,6 @@ def check_env():
             shutil.rmtree(py_cache)
 
     return err_dic
-
-def check_hpa_size(hpa_size_list):
-    """
-    This is identify if the host physical size list is correct format
-    :param hpa_size_list: host physical size list
-    :return: True if good format
-    """
-    for hpa_size in hpa_size_list:
-        hpa_sz_strip_ul = hpa_size.strip('UL')
-        hpa_sz_strip_u = hpa_size.strip('U')
-        if hpa_sz_strip_u not in START_HPA_SIZE_LIST and hpa_sz_strip_ul not in START_HPA_SIZE_LIST:
-            if '0x' not in hpa_size and '0X' not in hpa_size:
-                return False
-
-    return True
-
 
 def get_xml_attrib(config_file, attrib):
     """
@@ -193,41 +178,33 @@ def get_xml_attrib(config_file, attrib):
     return (err_dic, value)
 
 
-def get_board_info(board_info, msg_s, msg_e):
+def get_board_name():
     """
-    Get information which specify by argument
+    Get board name from board.xml at fist line
     :param board_info: it is a file what contains board information for script to read from
-    :param msg_s: it is a pattern of key stings what start to match from board information
-    :param msg_e: it is a pattern of key stings what end to match from board information
     """
-    info_start = False
-    info_end = False
-    info_lines = []
-    num = len(msg_s.split())
+    (err_dic, board) = get_xml_attrib(BOARD_INFO_FILE, "board")
+    return (err_dic, board)
 
-    with open(board_info, 'rt') as f_board:
-        while True:
 
-            line = f_board.readline()
-            if not line:
-                break
+def get_scenario_name():
+    """
+    Get scenario name from scenario.xml at fist line
+    :param scenario_info: it is a file what contains board information for script to read from
+    """
+    (err_dic, scenario) = get_xml_attrib(SCENARIO_INFO_FILE, "scenario")
+    return (err_dic, scenario)
 
-            if " ".join(line.split()[0:num]) == msg_s:
-                info_start = True
-                info_end = False
-                continue
 
-            if " ".join(line.split()[0:num]) == msg_e:
-                info_start = False
-                info_end = True
-                continue
+def is_config_file_match():
 
-            if info_start and not info_end:
-                info_lines.append(line)
-                continue
+    (err_dic, scenario_for_board) = get_xml_attrib(SCENARIO_INFO_FILE, "board")
+    (err_dic, board_name) = get_xml_attrib(BOARD_INFO_FILE, "board")
 
-            if not info_start and info_end:
-                return info_lines
+    if scenario_for_board == board_name:
+        return (err_dic, True)
+    else:
+        return (err_dic, False)
 
 
 def find_index_guest_flag(flag):
@@ -276,73 +253,24 @@ def get_config_root(config_file):
     return root
 
 
-def get_vm_count(config_file):
+def get_vm_num(config_file):
     """
     Get vm number
     :param config_file: it is a file what contains information for script to read from
     :return: total vm number
     """
+    global VM_COUNT
     vm_count = 0
     root = get_config_root(config_file)
     for item in root:
         # vm number in scenario
         if item.tag == "vm":
             vm_count += 1
-
-    return vm_count
-
-
-def launch_vm_cnt(config_file):
-    """
-    Get post vm number
-    :param config_file: it is a file what contains information for script to read from
-    :return: total post vm number in launch file
-    """
-    post_vm_count = 0
-
-    # get post vm number
-    root = get_config_root(config_file)
-    for item in root:
-        if item.tag == "uos":
-            post_vm_count += 1
-
-    return post_vm_count
-
-
-def get_post_num_list(config_file):
-    """
-    Get post vm number list
-    :param config_file: it is a file what contains information for script to read from
-    :return: total post dic: {launch_id:scenario_id} in launch file
-    """
-    post_vm_list = []
-
-    # get post vm number
-    root = get_config_root(config_file)
-    for item in root:
-        if item.tag == "uos":
-            post_vm_list.append(int(item.attrib['id']))
-
-    return post_vm_list
-
-
-def get_tree_tag_val(config_file, tag_str):
-    """
-     This is get tag value by tag_str from config file
-     :param config_file: it is a file what contains information for script to read from
-     :param tag_str: it is key of pattern to config file item
-     :return: value of tag_str item
-     """
-    root = get_config_root(config_file)
-    for item in root:
-        if item.tag == tag_str:
-            return item.text
-
-    return False
+    VM_COUNT = vm_count
 
 
 # TODO: This will be abandonment in future
-def get_leaf_tag_val(config_file, branch_tag, tag_str=''):
+def get_sub_leaf_tag(config_file, branch_tag, tag_str=''):
     """
      This is get tag value by tag_str from config file
      :param config_file: it is a file what contains information for script to read from
@@ -453,7 +381,7 @@ def get_sub_value(tmp, tag_str, vm_id):
         tmp.tag[vm_id] = tmp.multi.vir_network
 
 
-def get_leaf_tag_map(config_file, branch_tag, tag_str):
+def get_leaf_tag_map(config_file, branch_tag, tag_str=''):
     """
      This is get tag value by tag_str from config file
      :param config_file: it is a file what contains information for script to read from
@@ -500,7 +428,7 @@ def order_type_map_vmid(config_file, vm_count):
     :return: table of id:order type dictionary
     """
     order_id_dic = {}
-    load_type_list = get_leaf_tag_val(config_file, "load_order")
+    load_type_list = get_sub_leaf_tag(config_file, "load_order")
     for i in range(vm_count):
         order_id_dic[i] = load_type_list[i]
 
@@ -523,75 +451,6 @@ def get_load_order_by_vmid(config_file, vm_count, idx):
     return (err_dic, order_id_dic[idx])
 
 
-def vm_pre_launch_cnt(config_file):
-    """
-    Calculate the pre launched vm number
-    :param config_file: it is a file what contains information for script to read from
-    :return: number of pre launched vm
-    """
-    pre_launch_cnt = 0
-    load_type_list = get_leaf_tag_val(config_file, "load_order")
-
-    for vm_type in load_type_list:
-        if vm_type == "PRE_LAUNCHED_VM":
-            pre_launch_cnt += 1
-
-    return pre_launch_cnt
-
-
-def post_vm_cnt(config_file):
-    """
-    Calculate the pre launched vm number
-    :param config_file: it is a file what contains information for script to read from
-    :return: number of post launched vm
-    """
-    post_launch_cnt = 0
-    load_type_list = get_leaf_tag_val(config_file, "load_order")
-
-    for vm_type in load_type_list:
-        if vm_type == "POST_LAUNCHED_VM":
-            post_launch_cnt += 1
-
-    return post_launch_cnt
-
-
-def handle_root_dev(line):
-    """Handle if it match root device information pattern
-    :param line: one line of information which had decoded to 'ASCII'
-    """
-    for root_type in line.split():
-        # only support ext4 rootfs
-        if "ext4" in root_type:
-            return True
-
-    return False
-
-
-def get_max_clos_mask(board_file):
-    """
-    Parse CLOS information
-    :param board_file: it is a file what contains board information for script to read from
-    :return: type of rdt resource supported and their corresponding clos max.
-    """
-    rdt_res=[]
-    rdt_res_clos_max=[]
-    rdt_res_mask_max=[]
-
-    clos_lines = get_board_info(board_file, "<CLOS_INFO>", "</CLOS_INFO>")
-    for line in clos_lines:
-        if line.split(':')[0].strip() == "rdt resources supported":
-            rdt_res = line.split(':')[1].strip()
-        elif line.split(':')[0].strip() == "rdt resource clos max":
-            rdt_res_clos_max = line.split(':')[1].strip()
-        elif line.split(':')[0].strip() == "rdt resource mask max":
-            rdt_res_mask_max = line.split(':')[1].strip()
-
-    if (len(rdt_res) == 0) or (len(rdt_res_clos_max) == 0):
-        return rdt_res, rdt_res_clos_max, rdt_res_mask_max
-    else:
-        return list(re.split(', |\s |,', rdt_res)), list(map(int, rdt_res_clos_max.split(','))), list(re.split(', |\s |,', rdt_res_mask_max))
-
-
 def undline_name(name):
     """
     This convert name which has contain '-' to '_'
@@ -608,56 +467,6 @@ def undline_name(name):
     return name_str
 
 
-def get_vuart_id(tmp_vuart, leaf_tag, leaf_text):
-    """
-    Get all vuart id member of class
-    :param tmp_vuart: a dictionary to store member:value
-    :param leaf_tag: key pattern of item tag
-    :param leaf_text: key pattern of item tag's value
-    :return: a dictionary to which stored member:value
-    """
-    if leaf_tag == "type":
-        tmp_vuart['type'] = leaf_text
-    if leaf_tag == "base":
-        tmp_vuart['base'] = leaf_text
-    if leaf_tag == "irq":
-        tmp_vuart['irq'] = leaf_text
-
-    if leaf_tag == "target_vm_id":
-        tmp_vuart['target_vm_id'] = leaf_text
-    if leaf_tag == "target_uart_id":
-        tmp_vuart['target_uart_id'] = leaf_text
-
-    return tmp_vuart
-
-
-def get_vuart_info_id(config_file, idx):
-    """
-    Get vuart information by vuart id indexx
-    :param config_file: it is a file what contains information for script to read from
-    :param idx: vuart index in range: [0,1]
-    :return: dictionary which stored the vuart-id
-    """
-    tmp_tag = {}
-    vm_id = 0
-    root = get_config_root(config_file)
-    for item in root:
-        for sub in item:
-            tmp_vuart = {}
-            for leaf in sub:
-                if sub.tag == "vuart" and int(sub.attrib['id']) == idx:
-                    tmp_vuart = get_vuart_id(tmp_vuart, leaf.tag, leaf.text)
-
-            # append vuart for each vm
-            if tmp_vuart and sub.tag == "vuart":
-                tmp_tag[vm_id] = tmp_vuart
-
-        if item.tag == "vm":
-            vm_id += 1
-
-    return tmp_tag
-
-
 def round_up(addr, mem_align):
     """Keep memory align"""
     return ((addr + (mem_align - 1)) & (~(mem_align - 1)))
@@ -669,4 +478,4 @@ def mkdir(path):
         try:
             subprocess.check_call('mkdir -p {}'.format(path), shell=True, stdout=subprocess.PIPE)
         except subprocess.CalledProcessError:
-            print_if_red("{} file create failed!".format(path), err=True)
+            print_red("{} file create failed!".format(path), err=True)

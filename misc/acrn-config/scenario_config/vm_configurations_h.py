@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import common
 import scenario_cfg_lib
 import board_cfg_lib
 
@@ -43,7 +44,7 @@ def clos_config_output(vm_info, i, config):
     :param i: the index of vm id
     :param config: file pointor to store the information
     """
-    (rdt_res, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(scenario_cfg_lib.BOARD_INFO_FILE)
+    (rdt_res, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
     if len(rdt_res_clos_max) != 0:
         common_clos_max = min(rdt_res_clos_max)
     else:
@@ -128,7 +129,7 @@ def gen_sdc2_header(vm_info, config):
     print("\t\t\t\t\tSOS_BOOTARGS_DIFF", file=config)
 
     print("", file=config)
-    for i in range(scenario_cfg_lib.VM_COUNT):
+    for i in range(common.VM_COUNT):
         cpu_affinity_output(vm_info, i, config)
         clos_config_output(vm_info, i, config)
     print("", file=config)
@@ -164,7 +165,6 @@ def gen_logical_partition_header(vm_info, config):
     :param config: it is the pointer which file write to
     :return: None
     """
-    scenario_cfg_lib.vms_count = scenario_cfg_lib.VM_COUNT
     gen_common_header(config)
     # map all the needed pci sub class
     print("#include <pci_devices.h>", file=config)
@@ -176,7 +176,7 @@ def gen_logical_partition_header(vm_info, config):
 
     logic_max_vm_num(vm_info, config)
 
-    for i in range(scenario_cfg_lib.VM_COUNT):
+    for i in range(common.VM_COUNT):
 
         cpu_bits = vm_info.get_cpu_bitmap(i)
         cpu_affinity_output(vm_info, i, config)
@@ -247,7 +247,7 @@ def gen_industry_header(vm_info, config):
     print("\t\t\t\t\tSOS_CONSOLE\t\\", file=config)
     print("\t\t\t\t\tSOS_BOOTARGS_DIFF", file=config)
     print("", file=config)
-    for i in range(scenario_cfg_lib.VM_COUNT):
+    for i in range(common.VM_COUNT):
         cpu_affinity_output(vm_info, i, config)
         clos_config_output(vm_info, i, config)
     print("", file=config)
@@ -272,7 +272,7 @@ def gen_hybrid_header(vm_info, config):
     print("", file=config)
     scenario_vm_num(vm_info.load_order_cnt, config)
     print("", file=config)
-    for i in range(scenario_cfg_lib.VM_COUNT):
+    for i in range(common.VM_COUNT):
         cpu_affinity_output(vm_info, i, config)
         clos_config_output(vm_info, i, config)
 

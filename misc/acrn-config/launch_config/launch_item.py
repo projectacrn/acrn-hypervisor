@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import common
+import board_cfg_lib
 import launch_cfg_lib
 
 class AcrnDmArgs:
@@ -14,19 +16,19 @@ class AcrnDmArgs:
         self.launch_info = launch_info
 
     def get_args(self):
-        self.args["uos_type"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "uos_type")
-        self.args["rtos_type"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "rtos_type")
-        self.args["mem_size"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "mem_size")
-        self.args["gvt_args"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "gvt_args")
-        self.args["vbootloader"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "vbootloader")
-        self.args["vuart0"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "vuart0")
-        self.args["cpu_sharing"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "cpu_sharing")
-        self.args["pm_channel"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "poweroff_channel")
-        self.args["off_pcpus"] = launch_cfg_lib.get_leaf_tag_map(self.scenario_info, "vcpu_affinity", "pcpu_id")
-        self.args["xhci"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "usb_xhci")
+        self.args["uos_type"] = common.get_leaf_tag_map(self.launch_info, "uos_type")
+        self.args["rtos_type"] = common.get_leaf_tag_map(self.launch_info, "rtos_type")
+        self.args["mem_size"] = common.get_leaf_tag_map(self.launch_info, "mem_size")
+        self.args["gvt_args"] = common.get_leaf_tag_map(self.launch_info, "gvt_args")
+        self.args["vbootloader"] = common.get_leaf_tag_map(self.launch_info, "vbootloader")
+        self.args["vuart0"] = common.get_leaf_tag_map(self.launch_info, "vuart0")
+        self.args["cpu_sharing"] = common.get_leaf_tag_map(self.launch_info, "cpu_sharing")
+        self.args["pm_channel"] = common.get_leaf_tag_map(self.launch_info, "poweroff_channel")
+        self.args["off_pcpus"] = common.get_leaf_tag_map(self.scenario_info, "vcpu_affinity", "pcpu_id")
+        self.args["xhci"] = common.get_leaf_tag_map(self.launch_info, "usb_xhci")
 
     def check_item(self):
-        rootfs = launch_cfg_lib.get_rootdev_info(self.board_info)
+        rootfs = board_cfg_lib.get_rootfs(self.board_info)
         launch_cfg_lib.args_aval_check(self.args["uos_type"], "uos_type", launch_cfg_lib.UOS_TYPES)
         launch_cfg_lib.args_aval_check(self.args["rtos_type"], "rtos_type", launch_cfg_lib.RTOS_TYPE)
         launch_cfg_lib.mem_size_check(self.args["mem_size"], "mem_size")
@@ -41,7 +43,7 @@ class AvailablePthru():
 
     def __init__(self, board_info):
         self.board_info = board_info
-        (self.bdf_desc_map, self.bdf_vpid_map) = launch_cfg_lib.get_pci_info(board_info)
+        (self.bdf_desc_map, self.bdf_vpid_map) = board_cfg_lib.get_pci_info(board_info)
 
     def get_bdf_vpid_map(self):
         return self.bdf_vpid_map
@@ -155,10 +157,10 @@ class VirtioDeviceSelect():
         self.launch_info = launch_info
 
     def get_virtio(self):
-        self.dev["input"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "virtio_devices", "input")
-        self.dev["block"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "virtio_devices", "block")
-        self.dev["network"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "virtio_devices", "network")
-        self.dev["console"] = launch_cfg_lib.get_leaf_tag_map(self.launch_info, "virtio_devices", "console")
+        self.dev["input"] = common.get_leaf_tag_map(self.launch_info, "virtio_devices", "input")
+        self.dev["block"] = common.get_leaf_tag_map(self.launch_info, "virtio_devices", "block")
+        self.dev["network"] = common.get_leaf_tag_map(self.launch_info, "virtio_devices", "network")
+        self.dev["console"] = common.get_leaf_tag_map(self.launch_info, "virtio_devices", "console")
 
     def check_virtio(self):
         launch_cfg_lib.check_block_mount(self.dev["block"])
