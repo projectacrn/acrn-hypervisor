@@ -17,7 +17,7 @@
 
 #define CONFIG_MAX_VM_NUM	(PRE_VM_NUM + SOS_VM_NUM + MAX_POST_VM_NUM)
 
-#define AFFINITY_CPU(n)		(1U << (n))
+#define AFFINITY_CPU(n)		(1UL << (n))
 #define MAX_VCPUS_PER_VM	MAX_PCPU_NUM
 #define MAX_VUART_NUM_PER_VM	2U
 #define MAX_VM_OS_NAME_LEN	32U
@@ -147,8 +147,9 @@ struct acrn_vm_config {
 	const uint8_t uuid[16];				/* UUID of the VM */
 	uint16_t vcpu_num;				/* Number of vCPUs for the VM */
 	uint8_t severity;				/* severity of the VM */
-
-	uint64_t vcpu_affinity[MAX_VCPUS_PER_VM];/* bitmaps for vCPUs' affinity */
+	uint64_t cpu_affinity_bitmap;			/* The set bits represent the pCPUs the vCPUs of
+							 * the VM may run on.
+							 */
 	uint64_t guest_flags;				/* VM flags that we want to configure for guest
 							 * Now we have two flags:
 							 *	GUEST_FLAG_SECURE_WORLD_ENABLED
@@ -160,6 +161,12 @@ struct acrn_vm_config {
 	uint16_t pci_dev_num;				/* indicate how many PCI devices in VM */
 	struct acrn_vm_pci_dev_config *pci_devs;	/* point to PCI devices BDF list */
 	struct acrn_vm_os_config os_config;		/* OS information the VM */
+
+	/*
+	 * below are varaible length members (per build).
+	 * SOS can get the vm_configs[] array through hypercall, but SOS may not
+	 * need to parse these members.
+	 */
 	uint16_t clos[MAX_VCPUS_PER_VM];		/* Class of Service, effective only if CONFIG_RDT_ENABLED
 							 * is defined on CAT capable platforms
 							 */
