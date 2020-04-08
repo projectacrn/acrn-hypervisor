@@ -28,7 +28,7 @@ CPU_VENDOR = "GenuineIntel"
 def check_permission():
     """Check if it is root permission"""
     if os.getuid():
-        parser_lib.print_red("You need run with sudo!")
+        parser_lib.print_red("You need run this tool with root privileges (sudo)!")
         sys.exit(1)
 
 
@@ -93,7 +93,7 @@ def check_env():
                 sys.exit(1)
 
     if not native_check():
-        parser_lib.print_red("Please run this tools on natvie OS!")
+        parser_lib.print_red("Please run this tools in a native OS environment!")
         sys.exit(1)
 
     if not os.path.exists(PCI_IDS[0]) and not os.path.exists(PCI_IDS[1]):
@@ -111,7 +111,7 @@ if __name__ == '__main__':
 
     # arguments to parse
     PARSER = argparse.ArgumentParser(usage='%(prog)s <board_name> [--out board_info_file]')
-    PARSER.add_argument('board_name', help=":  the name of board that run ACRN hypervisor")
+    PARSER.add_argument('board_name', help=":  the name of the board that runs the ACRN hypervisor")
     PARSER.add_argument('--out', help=":  the name of board info file.")
     ARGS = PARSER.parse_args()
 
@@ -142,4 +142,4 @@ if __name__ == '__main__':
     with open(BOARD_INFO, 'a+') as f:
         print("</acrn-config>", file=f)
 
-    print("{} is generaged successfully!".format(BOARD_INFO))
+    print("{} has been generated successfully!".format(BOARD_INFO))
