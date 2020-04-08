@@ -8,3 +8,9 @@ Disallow: /0.5/
 Disallow: /0.6/
 Disallow: /0.7/
 Disallow: /0.8/
+Disallow: /1.0/
+Disallow: /1.1/
+Disallow: /1.2/
+Disallow: /1.3/
+Disallow: /1.4/
+Disallow: /1.5/
