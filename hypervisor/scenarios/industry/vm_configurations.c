@@ -39,8 +39,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM1 */
 		CONFIG_POST_STD_VM(1),
-		.vcpu_num = 2U,
-		.vcpu_affinity = VM1_CONFIG_VCPU_AFFINITY,
+		.cpu_affinity_bitmap = VM1_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
@@ -54,8 +53,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	{	/* VM2 */
 		CONFIG_POST_RT_VM(1),
 		.guest_flags = 0UL,
-		.vcpu_num = 2U,
-		.vcpu_affinity = VM2_CONFIG_VCPU_AFFINITY,
+		.cpu_affinity_bitmap = VM2_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
@@ -71,8 +69,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM3 */
 		CONFIG_POST_STD_VM(2),
-		.vcpu_num = 1U,
-		.vcpu_affinity = VM3_CONFIG_VCPU_AFFINITY,
+		.cpu_affinity_bitmap = VM3_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
@@ -85,8 +82,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM4 */
 		CONFIG_POST_STD_VM(3),
-		.vcpu_num = 1U,
-		.vcpu_affinity = VM4_CONFIG_VCPU_AFFINITY,
+		.cpu_affinity_bitmap = VM4_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
@@ -99,8 +95,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM5 */
 		CONFIG_POST_STD_VM(4),
-		.vcpu_num = 1U,
-		.vcpu_affinity = VM5_CONFIG_VCPU_AFFINITY,
+		.cpu_affinity_bitmap = VM5_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
@@ -113,8 +108,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM6 */
 		CONFIG_POST_STD_VM(5),
-		.vcpu_num = 1U,
-		.vcpu_affinity = VM6_CONFIG_VCPU_AFFINITY,
+		.cpu_affinity_bitmap = VM6_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
@@ -127,8 +121,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM7 */
 		CONFIG_KATA_VM(1),
-		.vcpu_num = 1U,
-		.vcpu_affinity = VM7_CONFIG_VCPU_AFFINITY,
+		.cpu_affinity_bitmap = VM7_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,

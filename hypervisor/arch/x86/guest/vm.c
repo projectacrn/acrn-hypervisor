@@ -218,7 +218,8 @@ static inline uint16_t get_vm_bsp_pcpu_id(const struct acrn_vm_config *vm_config
 {
 	uint16_t cpu_id = INVALID_CPU_ID;
 
-	cpu_id = ffs64(vm_config->vcpu_affinity[BSP_CPU_ID]);
+	/* The set least significant bit represents the pCPU ID for BSP */
+	cpu_id = ffs64(vm_config->cpu_affinity_bitmap);
 
 	return (cpu_id < get_pcpu_nums()) ? cpu_id : INVALID_CPU_ID;
 }
@@ -401,7 +402,6 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 {
 	struct acrn_vm *vm = NULL;
 	int32_t status = 0;
-	uint32_t i;
 	uint16_t pcpu_id;
 
 	/* Allocate memory for virtual machine */
@@ -504,10 +504,12 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 	if (status == 0) {
 		/* We have assumptions:
 		 *   1) vcpus used by SOS has been offlined by DM before UOS re-use it.
-		 *   2) vcpu_affinity[] passed sanitization is OK for vcpu creating.
+		 *   2) cpu_affinity_bitmap passed sanitization is OK for vcpu creating.
 		 */
-		for (i = 0U; i < vm_config->vcpu_num; i++) {
-			pcpu_id = ffs64(vm_config->vcpu_affinity[i]);
+		uint64_t pcpu_bitmap = vm_config->cpu_affinity_bitmap;
+		while (pcpu_bitmap != 0UL) {
+			pcpu_id = ffs64(pcpu_bitmap);
+			bitmap_clear_nolock(pcpu_id, &pcpu_bitmap);
 			status = prepare_vcpu(vm, pcpu_id);
 			if (status != 0) {
 				break;

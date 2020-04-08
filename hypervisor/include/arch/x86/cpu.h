@@ -189,7 +189,8 @@
 
 #ifndef ASSEMBLER
 
-#define AP_MASK			(((1UL << get_pcpu_nums()) - 1UL) & ~(1UL << 0U))
+#define ALL_CPUS_MASK		((1UL << get_pcpu_nums()) - 1UL)
+#define AP_MASK			(ALL_CPUS_MASK & ~(1UL << BSP_CPU_ID))
 
 /**
  *

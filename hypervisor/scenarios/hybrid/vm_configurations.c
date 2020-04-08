@@ -13,8 +13,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		CONFIG_SAFETY_VM(1),
 		.name = "ACRN PRE-LAUNCHED VM0",
 		.guest_flags = 0UL,
-		.vcpu_num = 1U,
-		.vcpu_affinity = VM0_CONFIG_VCPU_AFFINITY,
+		.cpu_affinity_bitmap = VM0_CONFIG_CPU_AFFINITY,
 		.memory = {
 			.start_hpa = VM0_CONFIG_MEM_START_HPA,
 			.size = VM0_CONFIG_MEM_SIZE,
@@ -69,8 +68,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM2 */
 		CONFIG_POST_STD_VM(1),
-		.vcpu_num = 1U,
-		.vcpu_affinity = VM2_CONFIG_VCPU_AFFINITY,
+		.cpu_affinity_bitmap = VM2_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
