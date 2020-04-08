@@ -1,0 +1,24 @@
+:orphan:
+
+.. _page-not-found:
+
+Sorry, Page Not Found
+#####################
+
+.. image:: images/ACRN-fall-from-tree-small.png
+   :align: left
+   :scale: 50%
+
+|
+| Sorry, the page you requested was not found on this site.
+|
+|
+| Please check the address for misspellings.
+| It's also possible we've removed or renamed the page you're looking for.
+|
+| Please try using the navigation links on the left of this page to navigate
+| the major sections of our site, or use the document search box.
+
+.. raw:: html
+
+   <div style='clear:both'></div>
