@@ -1728,11 +1728,10 @@ static void ptapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, __un
 			vlapic->vm->vm_id, vlapic->vcpu->vcpu_id, vector);
 }
 
-static bool ptapic_inject_intr(struct acrn_vlapic *vlapic,
+static void ptapic_inject_intr(struct acrn_vlapic *vlapic,
 				__unused bool guest_irq_enabled, __unused bool injected)
 {
 	pr_err("Invalid op %s, VM%u, vCPU%u", __func__, vlapic->vm->vm_id, vlapic->vcpu->vcpu_id);
-	return injected;
 }
 
 static bool ptapic_has_pending_delivery_intr(__unused struct acrn_vcpu *vcpu)
@@ -2242,23 +2241,20 @@ vlapic_apicv_get_apic_page_addr(struct acrn_vlapic *vlapic)
 	return hva2hpa(&(vlapic->apic_page));
 }
 
-static bool apicv_basic_inject_intr(struct acrn_vlapic *vlapic,
+static void apicv_basic_inject_intr(struct acrn_vlapic *vlapic,
 		bool guest_irq_enabled, bool injected)
 {
 	uint32_t vector = 0U;
-	bool ret = injected;
+
 	if (guest_irq_enabled && (!injected)) {
 		vlapic_update_ppr(vlapic);
 		if (vlapic_find_deliverable_intr(vlapic, &vector)) {
 			exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID | vector);
 			vlapic_get_deliverable_intr(vlapic, vector);
-			ret = true;
 		}
 	}
 
 	vlapic_update_tpr_threshold(vlapic);
-
-	return ret;
 }
 
 /*
@@ -2328,8 +2324,8 @@ static void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 	}
 }
 
-static bool apicv_advanced_inject_intr(struct acrn_vlapic *vlapic,
-		__unused bool guest_irq_enabled, bool injected)
+static void apicv_advanced_inject_intr(struct acrn_vlapic *vlapic,
+		__unused bool guest_irq_enabled, __unused bool injected)
 {
 	/*
 	 * From SDM Vol3 26.3.2.5:
@@ -2345,13 +2341,11 @@ static bool apicv_advanced_inject_intr(struct acrn_vlapic *vlapic,
 	 * needed. And then try to handle vmcs event injection.
 	 */
 	vlapic_apicv_inject_pir(vlapic);
-
-	return injected;
 }
 
-bool vlapic_inject_intr(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected)
+void vlapic_inject_intr(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected)
 {
-	return vlapic->ops->inject_intr(vlapic, guest_irq_enabled, injected);
+	vlapic->ops->inject_intr(vlapic, guest_irq_enabled, injected);
 }
 
 static bool apicv_basic_has_pending_delivery_intr(struct acrn_vcpu *vcpu)
