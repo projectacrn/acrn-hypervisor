@@ -90,7 +90,7 @@ struct acrn_vlapic {
 
 struct acrn_apicv_ops {
 	void (*accept_intr)(struct acrn_vlapic *vlapic, uint32_t vector, bool level);
-	bool (*inject_intr)(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected);
+	void (*inject_intr)(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected);
 	bool (*has_pending_delivery_intr)(struct acrn_vcpu *vcpu);
 	bool (*has_pending_intr)(struct acrn_vcpu *vcpu);
 	bool (*apic_read_access_may_valid)(uint32_t offset);
@@ -110,7 +110,7 @@ void vlapic_set_apicv_ops(void);
  * @{
  */
 
-bool vlapic_inject_intr(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected);
+void vlapic_inject_intr(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected);
 bool vlapic_has_pending_delivery_intr(struct acrn_vcpu *vcpu);
 bool vlapic_has_pending_intr(struct acrn_vcpu *vcpu);
 

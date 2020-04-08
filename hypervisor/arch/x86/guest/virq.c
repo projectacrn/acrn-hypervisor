@@ -231,9 +231,15 @@ int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector_arg, uint32
 	return ret;
 }
 
-static void vcpu_inject_exception(struct acrn_vcpu *vcpu, uint32_t vector)
+/*
+ * @pre vcpu->arch.exception_info.exception < 0x20U
+ */
+static bool vcpu_inject_exception(struct acrn_vcpu *vcpu)
 {
+	bool injected = false;
+
 	if (bitmap_test_and_clear_lock(ACRN_REQUEST_EXCP, &vcpu->arch.pending_req)) {
+		uint32_t vector = vcpu->arch.exception_info.exception;
 	
 		if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
 			exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
@@ -255,31 +261,8 @@ static void vcpu_inject_exception(struct acrn_vcpu *vcpu, uint32_t vector)
 		if (get_exception_type(vector) == EXCEPTION_FAULT) {
 			vcpu_set_rflags(vcpu, vcpu_get_rflags(vcpu) | HV_ARCH_VCPU_RFLAGS_RF);
 		}
-	}
-}
 
-static bool vcpu_inject_hi_exception(struct acrn_vcpu *vcpu)
-{
-	bool injected = false;
-	uint32_t vector = vcpu->arch.exception_info.exception;
-
-	if ((vector == IDT_MC) || (vector == IDT_BP) || (vector == IDT_DB)) {
-		vcpu_inject_exception(vcpu, vector);
-		 injected = true;
-	}
-
-	return injected;
-}
-
-static bool vcpu_inject_lo_exception(struct acrn_vcpu *vcpu)
-{
-	uint32_t vector = vcpu->arch.exception_info.exception;
-	bool injected = false;
-
-	/* high priority exception already be injected */
-	if (vector <= NR_MAX_VECTOR) {
-		vcpu_inject_exception(vcpu, vector);
-	        injected = true;
+		injected = true;
 	}
 
 	return injected;
@@ -371,7 +354,7 @@ int32_t external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu)
 	return ret;
 }
 
-static inline bool acrn_inject_pending_intr(struct acrn_vcpu *vcpu,
+static inline void acrn_inject_pending_intr(struct acrn_vcpu *vcpu,
 		uint64_t *pending_req_bits, bool injected);
 
 int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
@@ -407,9 +390,10 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 			vcpu_set_vmcs_eoi_exit(vcpu);
 		}
 
-		/* SDM Vol 3 - table 6-2, inject high priority exception before
-		 * maskable hardware interrupt */
-		injected = vcpu_inject_hi_exception(vcpu);
+		/*
+		 * Inject pending exception prior pending interrupt to complete the previous instruction.
+		 */
+		injected = vcpu_inject_exception(vcpu);
 		if (!injected) {
 			/* inject NMI before maskable hardware interrupt */
 
@@ -439,11 +423,7 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 			}
 		}
 
-		if (!acrn_inject_pending_intr(vcpu, pending_req_bits, injected)) {
-			/* if there is no eligible vector before this point */
-			/* SDM Vol3 table 6-2, inject lowpri exception */
-			(void)vcpu_inject_lo_exception(vcpu);
-		}
+		acrn_inject_pending_intr(vcpu, pending_req_bits, injected);
 
 		/*
 		 * If "virtual-interrupt delivered" is enabled, CPU will evaluate
@@ -478,11 +458,7 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 	return ret;
 }
 
-/*
- * @retval true 1 when INT is injected to guest.
- * @retval false when there is no eligible pending vector.
- */
-static inline bool acrn_inject_pending_intr(struct acrn_vcpu *vcpu,
+static inline void acrn_inject_pending_intr(struct acrn_vcpu *vcpu,
 		uint64_t *pending_req_bits, bool injected)
 {
 	bool ret = injected;
@@ -497,10 +473,8 @@ static inline bool acrn_inject_pending_intr(struct acrn_vcpu *vcpu,
 	}
 
 	if (bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT, pending_req_bits)) {
-		ret = vlapic_inject_intr(vcpu_vlapic(vcpu), guest_irq_enabled, ret);
+		vlapic_inject_intr(vcpu_vlapic(vcpu), guest_irq_enabled, ret);
 	}
-
-	return ret;
 }
 
 /*
