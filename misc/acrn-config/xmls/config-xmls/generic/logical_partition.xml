@@ -94,8 +94,10 @@
         <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">1</target_vm_id>
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
     </vuart>
-    <pci_dev_num configurable="0" desc="pci devices number">VM0_CONFIG_PCI_DEV_NUM</pci_dev_num>
-    <pci_devs configurable="0" desc="pci devices list">vm0_pci_devs</pci_devs>
+    <pci_devs configurable="0" desc="pci devices list">
+        <pci_dev desc="pci device"></pci_dev>
+        <pci_dev desc="pci device"></pci_dev>
+    </pci_devs>
   </vm>
   <vm id="1">
     <load_order desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM." readonly="true">PRE_LAUNCHED_VM</load_order>
@@ -143,7 +145,9 @@
         <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
     </vuart>
-    <pci_dev_num configurable="0" desc="pci devices number">VM1_CONFIG_PCI_DEV_NUM</pci_dev_num>
-    <pci_devs configurable="0" desc="pci devices list">vm1_pci_devs</pci_devs>
+    <pci_devs configurable="0" desc="pci devices list">
+        <pci_dev desc="pci device"></pci_dev>
+        <pci_dev desc="pci device"></pci_dev>
+    </pci_devs>
   </vm>
 </acrn-config>
