@@ -59,6 +59,14 @@ struct per_cpu_region {
 #endif
 	uint16_t shutdown_vm_id;
 	uint64_t tsc_suspend;
+	/*
+	 * We maintain a per-pCPU array of vCPUs. vCPUs of a VM won't
+	 * share same pCPU. So the maximum possible # of vCPUs that can
+	 * run on a pCPU is CONFIG_MAX_VM_NUM.
+	 * vcpu_array address must be aligned to 64-bit for atomic access
+	 * to avoid contention between offline_vcpu and posted interrupt handler
+	 */
+	struct acrn_vcpu *vcpu_array[CONFIG_MAX_VM_NUM] __aligned(8);
 } __aligned(PAGE_SIZE); /* per_cpu_region size aligned with PAGE_SIZE */
 
 extern struct per_cpu_region per_cpu_data[MAX_PCPU_NUM];
