@@ -425,7 +425,7 @@ void set_vcpu_startup_entry(struct acrn_vcpu *vcpu, uint64_t entry)
 }
 
 /*
- *  @pre vm != NULL && rtn_vcpu_handle != NULL
+ * @pre vm != NULL && rtn_vcpu_handle != NULL
  */
 int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcpu_handle)
 {
@@ -473,7 +473,32 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 		 */
 		vcpu->arch.vpid = 1U + (vm->vm_id * MAX_VCPUS_PER_VM) + vcpu->vcpu_id;
 
-		vcpu->arch.pid.control.bits.nv = POSTED_INTR_VECTOR;
+		/*
+		 * ACRN uses the following approach to manage VT-d PI notification vectors:
+		 * Allocate unique Activation Notification Vectors (ANV) for each vCPU that
+		 * belongs to the same pCPU, the ANVs need only be unique within each pCPU,
+		 * not across all vCPUs. The max numbers of vCPUs may be running on top of
+		 * a pCPU is CONFIG_MAX_VM_NUM, since ACRN does not support 2 vCPUs of same
+		 * VM running on top of same pCPU. This reduces # of pre-allocated ANVs for
+		 * posted interrupts to CONFIG_MAX_VM_NUM, and enables ACRN to avoid switching
+		 * between active and wake-up vector values in the posted interrupt descriptor
+		 * on vCPU scheduling state changes.
+		 *
+		 * We maintain a per-pCPU array of vCPUs, and use vm_id as the index to the
+		 * vCPU array
+		 */
+		per_cpu(vcpu_array, pcpu_id)[vm->vm_id] = vcpu;
+
+		/*
+		 * Use vm_id as the index to indicate the posted interrupt IRQ/vector pair that are
+		 * assigned to this vCPU:
+		 * 0: first posted interrupt IRQs/vector pair (POSTED_INTR_IRQ/POSTED_INTR_VECTOR)
+		 * ...
+		 * CONFIG_MAX_VM_NUM-1: last posted interrupt IRQs/vector pair
+		 * ((POSTED_INTR_IRQ + CONFIG_MAX_VM_NUM - 1U)/(POSTED_INTR_VECTOR + CONFIG_MAX_VM_NUM - 1U)
+		 */
+		vcpu->arch.pid.control.bits.nv = POSTED_INTR_VECTOR + vm->vm_id;
+
 		/* ACRN does not support vCPU migration, one vCPU always runs on
 		 * the same pCPU, so PI's ndst is never changed after startup.
 		 */
@@ -641,6 +666,10 @@ void offline_vcpu(struct acrn_vcpu *vcpu)
 	if (vcpu->state == VCPU_ZOMBIE) {
 		vlapic_free(vcpu);
 		per_cpu(ever_run_vcpu, pcpuid_from_vcpu(vcpu)) = NULL;
+
+		/* This operation must be atomic to avoid contention with posted interrupt handler */
+		per_cpu(vcpu_array, pcpuid_from_vcpu(vcpu))[vcpu->vm->vm_id] = NULL;
+
 		vcpu->state = VCPU_OFFLINE;
 	}
 }
@@ -859,4 +888,39 @@ uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask)
 bool is_lapic_pt_enabled(struct acrn_vcpu *vcpu)
 {
 	return ((is_x2apic_enabled(vcpu_vlapic(vcpu))) && (is_lapic_pt_configured(vcpu->vm)));
+}
+
+/*
+ * @brief handle posted interrupts
+ *
+ * VT-d PI handler, find the corresponding vCPU for this IRQ,
+ * if the associated PID's bit ON is set, wake it up.
+ *
+ * shutdown_vm would unregister the devices before offline_vcpu is called,
+ * so spinlock is not needed to protect access to vcpu_array and vcpu.
+ *
+ * @pre (vcpu_index < CONFIG_MAX_VM_NUM) && (get_pi_desc(get_cpu_var(vcpu_array)[vcpu_index]) != NULL)
+ */
+void vcpu_handle_pi_notification(uint32_t vcpu_index)
+{
+	struct acrn_vcpu *vcpu = get_cpu_var(vcpu_array)[vcpu_index];
+
+	ASSERT(vcpu_index < CONFIG_MAX_VM_NUM, "");
+
+	if ((vcpu != NULL) && is_pi_capable(vcpu->vm)) {
+		struct pi_desc *pid = get_pi_desc(vcpu);
+
+		if (bitmap_test(POSTED_INTR_ON, &(pid->control.value))) {
+			/*
+			 * Perform same as vlapic_accept_intr():
+			 * Wake up the waiting thread, set the NEED_RESCHEDULE flag,
+			 * at a point schedule() will be called to make scheduling decisions.
+			 *
+			 * Record this request as ACRN_REQUEST_EVENT,
+			 * so that vlapic_inject_intr() will sync PIR to vIRR
+			 */
+			signal_event(&vcpu->events[VCPU_EVENT_VIRTUAL_INTERRUPT]);
+			vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
+		}
+	}
 }

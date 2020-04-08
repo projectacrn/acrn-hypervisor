@@ -98,11 +98,19 @@ void setup_notification(void)
 		notification_irq, irq_to_vector(notification_irq));
 }
 
-static void handle_pi_notification(__unused uint32_t irq, __unused void *data)
+/*
+ * posted interrupt handler
+ * @pre (irq - POSTED_INTR_IRQ) < CONFIG_MAX_VM_NUM
+ */
+static void handle_pi_notification(uint32_t irq, __unused void *data)
 {
+	uint32_t vcpu_index = irq - POSTED_INTR_IRQ;
+
+	ASSERT(vcpu_index < CONFIG_MAX_VM_NUM, "");
+	vcpu_handle_pi_notification(vcpu_index);
 }
 
-/*pre-conditon: be called only by BSP initialization proccess*/
+/*pre-condition: be called only by BSP initialization proccess*/
 void setup_pi_notification(void)
 {
 	uint32_t i;
