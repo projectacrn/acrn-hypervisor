@@ -81,7 +81,7 @@ Fixed Issues Details
 ********************
 - :acrn-issue:`3465` -[SIT][ISD] [AUTO]add reset in"-s 2,passthru,02/00/0 \", rtvm can not launch
 - :acrn-issue:`3789` -[Security][apl_sdc_stable]DM:The return value of snprintf is improperly checked.
-- :acrn-issue:`3886` -Lapic-pt vcpu notificaton issue
+- :acrn-issue:`3886` -Lapic-pt vcpu notification issue
 - :acrn-issue:`4032` -Modify License file.
 - :acrn-issue:`4042` -[KBL][HV]RTVM UOS result is invalid when run cpu2017 with 3 and 1 core
 - :acrn-issue:`4094` -Error parameter for intel_pstate in launch_hard_rt_vm.sh
@@ -92,8 +92,8 @@ Fixed Issues Details
 - :acrn-issue:`4230` -Remove MAX_VCPUS_PER_VM in Kconfig
 - :acrn-issue:`4253` -[WHL][Function][WaaG]Meet error log and waag can't boot up randomly after allocated 3 cores cpu to waag
 - :acrn-issue:`4255` -[acrn-configuration-tool][nuc7i7dnb][sdc]uos has no ip address
-- :acrn-issue:`4258` -[Community][External]cyclictest benchmark UOS geting high.
-- :acrn-issue:`4282` -ACRN-DM Pass-tru devices bars prefetchable property isn't consistent with physical bars
+- :acrn-issue:`4258` -[Community][External]cyclictest benchmark UOS getting high.
+- :acrn-issue:`4282` -ACRN-DM Pass-thru devices bars prefetchable property isn't consistent with physical bars
 - :acrn-issue:`4286` -[acrn-configuration-tool] Remove VM1.vcpu_affinity.pcuid=3 for VM1 in sdc scenario
 - :acrn-issue:`4298` -[ConfigurationTool] mac address is not added to the launch script
 - :acrn-issue:`4301` -[WHL][Hybrid] WHL need support Hybrid mode
@@ -102,13 +102,13 @@ Fixed Issues Details
 - :acrn-issue:`4325` -Do not wait pcpus offline when lapic pt is disabled.
 - :acrn-issue:`4402` -UEFI UP2 board boot APs failed with ACRN hypervisor
 - :acrn-issue:`4419` -[WHL][hybrid] SOS can not poweroff & reboot in hybrid mode of WHL board (multiboot2)
-- :acrn-issue:`4472` -[WHL][sdc2] HV launch fails with sdc2 screnario which support launching 3 Guest OS
-- :acrn-issue:`4492` -[acrn-configuartion-tool] miss include head file from logical partition
+- :acrn-issue:`4472` -[WHL][sdc2] HV launch fails with sdc2 scenario which support launching 3 Guest OS
+- :acrn-issue:`4492` -[acrn-configuration-tool] miss include head file from logical partition
 - :acrn-issue:`4495` -[acrn-configuration-tool] Missing passthru nvme parameter while using WebUI to generate RTVM launch script
 
 Known Issues
 ************
-- :acrn-issue:`4046` - [WHL][Function][WaaG] Error info popoup when run 3DMARK11 on Waag
+- :acrn-issue:`4046` - [WHL][Function][WaaG] Error info pop up when run 3DMARK11 on Waag
 - :acrn-issue:`4047` - [WHL][Function][WaaG] passthru usb, Windows will hang when reboot it
 - :acrn-issue:`4313` - [WHL][VxWorks] Failed to ping when VxWorks passthru network
 - :acrn-issue:`4520` - efi-stub could get wrong bootloader name
@@ -157,7 +157,7 @@ release in Dec 2019 (click the CommitID link to see details):
 - :acrn-commit:`f78558a4` - dm: add one api for sending shutdown to life_mngr on SOS
 - :acrn-commit:`8733abef` - dm:handle shutdown command from UOS
 - :acrn-commit:`4fdc2be1` - dm:replace shutdown_uos_thread with a new one
-- :acrn-commit:`7e9b7a8c` - dm:set pm-vuart attritutes
+- :acrn-commit:`7e9b7a8c` - dm:set pm-vuart attributes
 - :acrn-commit:`790614e9` - hv:rename several variables and api for ioapic
 - :acrn-commit:`fa74bf40` - hv: vpci: pass through stolen memory and opregion memory for GVT-D
 - :acrn-commit:`659e5420` - hv: add static check for CONFIG_HV_RAM_START and CONFIG_HV_RAM_SIZE
@@ -242,7 +242,7 @@ release in Dec 2019 (click the CommitID link to see details):
 - :acrn-commit:`520a0222` - HV: re-arch boot component header
 - :acrn-commit:`708cae7c` - HV: remove DBG_LEVEL_PARSE
 - :acrn-commit:`a46a7b35` - Makefile: Fix build issue if the ld is updated to 2.34
-- :acrn-commit:`ad606102` - hv: sched_bvt: add tick hanlder
+- :acrn-commit:`ad606102` - hv: sched_bvt: add tick handler
 - :acrn-commit:`77c64ecb` - hv: sched_bvt: add pick_next function
 - :acrn-commit:`a38f2cc9` - hv: sched_bvt: add wakeup and sleep handler
 - :acrn-commit:`e05eb42c` - hv: sched_bvt: add init and deinit function
@@ -251,7 +251,7 @@ release in Dec 2019 (click the CommitID link to see details):
 - :acrn-commit:`4adad73c` - hv: mmio: refine mmio access handle lock granularity
 - :acrn-commit:`fbe57d9f` - hv: vpci: restrict SOS access assigned PCI device
 - :acrn-commit:`9d3d9c3d` - dm: vpci: restrict SOS access assigned PCI device
-- :acrn-commit:`e8479f84` - hv: vPCI: remove passthrough PCI device unuse code
+- :acrn-commit:`e8479f84` - hv: vPCI: remove passthrough PCI device unused code
 - :acrn-commit:`9fa6eff3` - dm: vPCI: remove passthrough PCI device unused code
 - :acrn-commit:`dafa3da6` - vPCI: split passthrough PCI device from DM to HV
 - :acrn-commit:`aa38ed5b` - dm: vPCI: add assign/deassign PCI device IC APIs
@@ -280,7 +280,7 @@ release in Dec 2019 (click the CommitID link to see details):
 - :acrn-commit:`88dfd8d4` - doc: update Kata and ACRN tutorial
 - :acrn-commit:`e1eedc99` - Doc: Style updates to Building from Source doc
 - :acrn-commit:`1f6c0cd4` - doc: update project's target max LOC
-- :acrn-commit:`8f9e4c2d` - Updated grammer in ACRN industry scenario doc
+- :acrn-commit:`8f9e4c2d` - Updated grammar in ACRN industry scenario doc
 - :acrn-commit:`54e9b562` - doc: Modify CL version from 32030 to 31670
 - :acrn-commit:`1b3754aa` - dm:passthrough opregion to uos gpu
 - :acrn-commit:`4d882731` - dm:passthrough graphics stolen memory to uos gpu
@@ -322,7 +322,7 @@ release in Dec 2019 (click the CommitID link to see details):
 - :acrn-commit:`4303ccb1` - hv: HLT emulation in hypervisor
 - :acrn-commit:`a8f6bdd4` - hv: Add vlapic_has_pending_intr of apicv to check pending interrupts
 - :acrn-commit:`e3c30336` - hv: vcpu: wait and signal vcpu event support
-- :acrn-commit:`1f23fe3f` - hv: sched: simple event implemention
+- :acrn-commit:`1f23fe3f` - hv: sched: simple event implementation
 - :acrn-commit:`4115dd62` - hv: PAUSE-loop exiting support in hypervisor.
 - :acrn-commit:`bfecf30f` - HV: do not offline pcpu when lapic pt disabled.
 - :acrn-commit:`c59f12da` - doc: fix wrong Docker container image in tutorial.
@@ -351,7 +351,7 @@ release in Dec 2019 (click the CommitID link to see details):
 - :acrn-commit:`58b3a058` - hv: vpci: rename pci_bar to pci_vbar.
 - :acrn-commit:`d2089889` - hv: pci: minor fix of coding style about pci_read_cap.
 - :acrn-commit:`cdf9d6b3` - (ia) devicemodel: refactor CMD_OPT_LAPIC_PT case branch.
-- :acrn-commit:`77c3ce06` - acrn-config: remove uncessary split for `virtio-net`
+- :acrn-commit:`77c3ce06` - acrn-config: remove unnecessary split for `virtio-net`
 - :acrn-commit:`ce35a005` - acrn-config: add `cpu_sharing` support for launch config.
 - :acrn-commit:`3544f7c8` - acrn-config: add `cpu_sharing` info in launch xmls.
 - :acrn-commit:`57939730` - HV: search rsdp from e820 acpi reclaim region.
@@ -359,14 +359,14 @@ release in Dec 2019 (click the CommitID link to see details):
 - :acrn-commit:`8f9cda18` - DOC: Content edits to CPU Sharing doc.
 - :acrn-commit:`651510a8` - acrn-config: add `logger_setting` into launch script.
 - :acrn-commit:`7f74e6e9` - acrn-config: refine mount device for virtio-blk.
-- :acrn-commit:`fc357a77` - acrn-config: add `tap_` perfix for virtio-net.
+- :acrn-commit:`fc357a77` - acrn-config: add `tap_` prefix for virtio-net.
 - :acrn-commit:`5b6a33bb` - acrn-config: enable log_setting in all VMs.
 - :acrn-commit:`d4bf019d` - Doc: Added Whiskey Lake specs to hardware ref page.
 - :acrn-commit:`8a8438df` - remove no support OS parts and add whl build.
 - :acrn-commit:`58b3a058` - hv: vpci: rename pci_bar to pci_vbar.
 - :acrn-commit:`d2089889` - hv: pci: minor fix of coding style about pci_read_cap.
 - :acrn-commit:`cdf9d6b3` - (ia) devicemodel: refactor CMD_OPT_LAPIC_PT case branch.
-- :acrn-commit:`77c3ce06` - acrn-config: remove uncessary split for `virtio-net`
+- :acrn-commit:`77c3ce06` - acrn-config: remove unnecessary split for `virtio-net`
 - :acrn-commit:`ce35a005` - acrn-config: add `cpu_sharing` support for launch config.
 - :acrn-commit:`3544f7c8` - acrn-config: add `cpu_sharing` info in launch xmls.
 - :acrn-commit:`57939730` - HV: search rsdp from e820 acpi reclaim region.
@@ -374,9 +374,9 @@ release in Dec 2019 (click the CommitID link to see details):
 - :acrn-commit:`8f9cda18` - DOC: Content edits to CPU Sharing doc.
 - :acrn-commit:`651510a8` - acrn-config: add `logger_setting` into launch script.
 - :acrn-commit:`7f74e6e9` - acrn-config: refine mount device for virtio-blk.
-- :acrn-commit:`fc357a77` - acrn-config: add `tap_` perfix for virtio-net.
+- :acrn-commit:`fc357a77` - acrn-config: add `tap_` prefix for virtio-net.
 - :acrn-commit:`5b6a33bb` - acrn-config: enable log_setting in all VMs.
-- :acrn-commit:`bb6e28e1` - acrn-config: check pass-thruogh device for audio/audio_codec.
+- :acrn-commit:`bb6e28e1` - acrn-config: check pass-through device for audio/audio_codec.
 - :acrn-commit:`4234d2e4` - acrn-config: correct vuart1 setting in scenario config.
 - :acrn-commit:`d80a0dce` - acrn-config: fix a few formatting issues.
 - :acrn-commit:`051f277c` - acrn-config: modify hpa start size value for logical_partition scenario.

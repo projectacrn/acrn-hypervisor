@@ -6,7 +6,7 @@ Real-Time (RT) Performance Analysis on ACRN
 The document describes the methods to collect trace/data for ACRN Real-Time VM (RTVM)
 real-time performance analysis. Two parts are included:
 
-- Method to trace ``vmexit`` occurences for analysis.
+- Method to trace ``vmexit`` occurrences for analysis.
 - Method to collect Performance Monitoring Counters information for tuning based on Performance Monitoring Unit, or PMU.
 
 ``vmexit`` analysis for ACRN RT performance
@@ -65,7 +65,7 @@ Offline analysis
 
 #. Convert the raw trace data to human readable format.
 #. Merge the logs in the RTVM and the ACRN hypervisor trace based on timestamps (in TSC).
-#. Check to see if any ``vmexit`` occured within the critical sections. The pattern is as follows:
+#. Check to see if any ``vmexit`` occurred within the critical sections. The pattern is as follows:
 
    .. figure:: images/vm_exits_log.png
       :align: center

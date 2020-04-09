@@ -20,7 +20,7 @@ the mapping between physical and virtual interrupts for pass-through
 devices. However, a hard RT VM with LAPIC pass-through does own the physical
 maskable external interrupts. On its physical CPUs, interrupts are disabled
 in VMX root mode, while in VMX non-root mode, physical interrupts will be
-deliverd to RT VM directly.
+delivered to RT VM directly.
 
 Emulation for devices is inside the Service VM user space device model, i.e.,
 acrn-dm. However, for performance consideration, vLAPIC, vIOAPIC, and vPIC
@@ -72,7 +72,7 @@ target VCPU.
 Virtual LAPIC
 *************
 
-LAPIC is virtualized for all Guest types: Serice and User VMs. Given support
+LAPIC is virtualized for all Guest types: Service and User VMs. Given support
 by the physical processor, APICv Virtual Interrupt Delivery (VID) is enabled
 and will support Posted-Interrupt feature. Otherwise, it will fall back to
 the legacy virtual interrupt injection mode.
@@ -248,10 +248,10 @@ devices.
    VM via vLAPIC/vIOAPIC. See :ref:`device-assignment`.
 
 -  **For User VM assigned devices**: only PCI devices could be assigned to
-   Uer VM. For the standard VM and soft RT VM, the virtual interrupt
-   injection follows the same way as Servic VM. A virtual interrupt injection
+   User VM. For the standard VM and soft RT VM, the virtual interrupt
+   injection follows the same way as Service VM. A virtual interrupt injection
    operation is triggered when a device's physical interrupt occurs. For the
-   hard RT VM, the physical interrupts are delieverd to VM directly without
+   hard RT VM, the physical interrupts are delivered to VM directly without
    causing VM-exit.
 
 -  **For User VM emulated devices**: DM is responsible for the

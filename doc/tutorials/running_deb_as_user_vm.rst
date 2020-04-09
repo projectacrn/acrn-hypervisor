@@ -185,7 +185,7 @@ Re-use and modify the `launch_win.sh` script in order to launch the new Debian 1
       $ sudo cp /mnt/EFI/debian/grubx64.efi /mnt/EFI/boot/bootx64.efi
       $ sync && sudo umount /mnt
 
-#. Launch the Debian VM afer logging in to the Service VM:
+#. Launch the Debian VM after logging in to the Service VM:
 
    .. code-block:: none
 

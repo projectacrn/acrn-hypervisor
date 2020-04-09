@@ -96,7 +96,7 @@ Fixed Issues Details
 - :acrn-issue:`2976` - [GVT]don't register memory for gvt in acrn-dm
 - :acrn-issue:`2984` - HV will crash if  launch two UOS with same UUID
 - :acrn-issue:`2991` - Failed to boot normal vm on the pcpu which ever run lapic_pt vm
-- :acrn-issue:`3009` - When running new wokload on weston, the last workload animation not disappeared and screen flashed badly.
+- :acrn-issue:`3009` - When running new workload on weston, the last workload animation not disappeared and screen flashed badly.
 - :acrn-issue:`3028` - virtio gpio line fd not release
 - :acrn-issue:`3032` - Dump stack of mem allocation in irq_disabled after using mempool for ACRN VHM
 - :acrn-issue:`3050` - FYI: Kconfiglib major version bumped to 11
@@ -398,7 +398,7 @@ release in May 2019 (click on the CommitID link to see details):
 - :acrn-commit:`a3073175` - dm: e820: reserve memory range for EPC resource
 - :acrn-commit:`7a915dc3` - hv: vmsr: present sgx related msr to guest
 - :acrn-commit:`1724996b` - hv: vcpuid: present sgx capabilities to guest
-- :acrn-commit:`65d43728` - hv: vm: build ept for sgx epc reource
+- :acrn-commit:`65d43728` - hv: vm: build ept for sgx epc resource
 - :acrn-commit:`c078f90d` - hv: vm_config: add epc info in vm config
 - :acrn-commit:`245a7320` - hv: sgx: add basic support to init sgx resource for vm
 - :acrn-commit:`c5cfd7c2` - vm state: reset vm state to VM_CREATED when reset_vm is called
@@ -410,7 +410,7 @@ release in May 2019 (click on the CommitID link to see details):
 - :acrn-commit:`f2fe3547` - HV: remove mptable in vm_config
 - :acrn-commit:`26c7e372` - Doc: Add tutorial about using VxWorks as uos
 - :acrn-commit:`b10ad4b3` - DM USB: xHCI: refine the logic of CCS bit of PORTSC register
-- :acrn-commit:`ae066689` - DM USB: xHCI: re-implement the emulation of extented capabilities
+- :acrn-commit:`ae066689` - DM USB: xHCI: re-implement the emulation of extended capabilities
 - :acrn-commit:`5f9cd253` - Revert "DM: Get max vcpu per vm from HV instead of hardcode"
 - :acrn-commit:`8bca0b1a` - DM: remove unused function mptable_add_oemtbl
 - :acrn-commit:`bd3f34e9` - DM: remove unused function vm_get_device_fd
@@ -466,14 +466,14 @@ release in May 2019 (click on the CommitID link to see details):
 - :acrn-commit:`90f3ce44` - HV: remove unused UNDEFINED_VM
 - :acrn-commit:`73cff9ef` - HV: predefine pci vbar's base address for pre-launched VMs in vm_config
 - :acrn-commit:`4cdaa519` - HV: rename vdev_pt_cfgwrite_bar to vdev_pt_write_vbar and some misra-c fix
-- :acrn-commit:`aba357dd` - 1. fix cpu family calculation 2. Modifie the parameter 'fl' order
+- :acrn-commit:`aba357dd` - 1. fix cpu family calculation 2. Modify the parameter 'fl' order
 - :acrn-commit:`238d8bba` - reshuffle init_vm_boot_info
 - :acrn-commit:`0018da41` - HV: add missing @pre for some functions
 - :acrn-commit:`b9578021` - HV: unify the sharing_mode_cfgwrite and partition_mode_cfgwrite code
 - :acrn-commit:`7635a68f` - HV: unify the sharing_mode_cfgread and partition_mode_cfgread code
 - :acrn-commit:`19af3bc8` - HV: unify the sharing_mode_vpci_deinit and partition_mode_vpci_deinit code
 - :acrn-commit:`3a6c63f2` - HV: unify the sharing_mode_vpci_init and partition_mode_vpci_init code
-- :acrn-commit:`f873b843` - HV: cosmetix fix for pci_pt.c
+- :acrn-commit:`f873b843` - HV: cosmetic fix for pci_pt.c
 - :acrn-commit:`cf48b9c3` - HV: use is_prelaunched_vm/is_hostbridge to check if the code is only for pre-launched VMs
 - :acrn-commit:`a97e6e64` - HV: rename sharing_mode_find_vdev_sos to find_vdev_for_sos
 - :acrn-commit:`32d1a9da` - HV: move bar emulation initialization code to pci_pt.c
