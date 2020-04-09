@@ -21,6 +21,7 @@
 #include <version.h>
 #include <shell.h>
 #include <vmcs.h>
+#include <host_pm.h>
 
 #define TEMP_STR_SIZE		60U
 #define MAX_STR_SIZE		256U
@@ -48,7 +49,7 @@ static int32_t shell_show_vioapic_info(int32_t argc, char **argv);
 static int32_t shell_show_ioapic_info(__unused int32_t argc, __unused char **argv);
 static int32_t shell_loglevel(int32_t argc, char **argv);
 static int32_t shell_cpuid(int32_t argc, char **argv);
-static int32_t shell_trigger_crash(int32_t argc, char **argv);
+static int32_t shell_reboot(int32_t argc, char **argv);
 static int32_t shell_rdmsr(int32_t argc, char **argv);
 static int32_t shell_wrmsr(int32_t argc, char **argv);
 
@@ -141,7 +142,7 @@ static struct shell_cmd shell_cmds[] = {
 		.str		= SHELL_CMD_REBOOT,
 		.cmd_param	= SHELL_CMD_REBOOT_PARAM,
 		.help_str	= SHELL_CMD_REBOOT_HELP,
-		.fcn		= shell_trigger_crash,
+		.fcn		= shell_reboot,
 	},
 	{
 		.str		= SHELL_CMD_RDMSR,
@@ -1373,19 +1374,12 @@ static int32_t shell_cpuid(int32_t argc, char **argv)
 	return 0;
 }
 
-static int32_t shell_trigger_crash(int32_t argc, char **argv)
+static int32_t shell_reboot(int32_t argc, char **argv)
 {
-	char str[MAX_STR_SIZE] = {0};
-
 	(void)argc;
 	(void)argv;
-	snprintf(str, MAX_STR_SIZE, "trigger crash, divide by 0 ...\r\n");
-	shell_puts(str);
 
-	asm("movl $0x1, %eax");
-	asm("movl $0x0, %ecx");
-	asm("idiv  %ecx");
-
+	reset_host();
 	return 0;
 }
 
