@@ -12,7 +12,7 @@ higher priorities VMs (such as RTVMs) are not impacted.
 
 Using RDT includes three steps:
 
-1. Detect and enumerate RDT allocation capabilites on supported resources such as cache and memory bandwidth.
+1. Detect and enumerate RDT allocation capabilities on supported resources such as cache and memory bandwidth.
 #. Set up resource mask array MSRs (Model-Specific Registers) for each CLOS (Class of Service, which is a resource allocation), basically to limit or allow access to resource usage.
 #. Select the CLOS for the CPU associated with the VM that will apply the resource mask on the CP.
 
@@ -28,8 +28,8 @@ For further details, refer to the ACRN RDT high-level design :ref:`hv_rdt` and `
 
 .. _rdt_detection_capabilities:
 
-RDT detection and resource capabilites
-**************************************
+RDT detection and resource capabilities
+***************************************
 From the ACRN HV debug shell, use ``cpuid`` to detect and identify the
 resource capabilities. Use the platform's serial port for the HV shell
 (refer to :ref:`getting-started-up2` for setup instructions).
@@ -38,7 +38,7 @@ Check if the platform supports RDT with ``cpuid``. First, run ``cpuid 0x7 0x0``;
 RDT. Next, run ``cpuid 0x10 0x0`` and check the EBX [3-1] bits. EBX [bit 1]
 indicates that L3 CAT is supported. EBX [bit 2] indicates that L2 CAT is
 supported. EBX [bit 3] indicates that MBA is supported. To query the
-capabilties of the supported resources, use the bit position as a subleaf
+capabilities of the supported resources, use the bit position as a subleaf
 index. For example, run ``cpuid 0x10 0x2`` to query the L2 CAT capability.
 
 .. code-block:: none
@@ -149,7 +149,7 @@ Configure RDT for VM using VM Configuration
    .. note::
       Users can change the mask values, but the cache mask must have **continuous bits** or a #GP fault can be triggered. Similary, when programming an MBA delay value, be sure to set the value to less than or equal to the MAX delay value.
 
-#. Set up the CLOS in the VM config. Follow `RDT detection and resource capabilites`_ to identify the MAX CLOS that can be used. ACRN uses the **the lowest common MAX CLOS** value among all RDT resources to avoid resource misconfigurations. For example, configuration data for the Service VM sharing mode can be found at ``hypervisor/arch/x86/configs/vm_config.c``
+#. Set up the CLOS in the VM config. Follow `RDT detection and resource capabilities`_ to identify the MAX CLOS that can be used. ACRN uses the **the lowest common MAX CLOS** value among all RDT resources to avoid resource misconfigurations. For example, configuration data for the Service VM sharing mode can be found at ``hypervisor/arch/x86/configs/vm_config.c``
 
    .. code-block:: none
       :emphasize-lines: 6

@@ -70,7 +70,7 @@ Fixed Issues Details
 - :acrn-issue:`3993` - trampoline code in hypervisor potentially be accessible to service VM
 - :acrn-issue:`4005` - [WHL][Function][WaaG]Fail to create WaaG image using ISO only on WHL
 - :acrn-issue:`4007` - V1.3 E2E release binary failed to boot up on KBL NUC with 32G memory.
-- :acrn-issue:`4010` - [Community][External]Bootning in blind mode
+- :acrn-issue:`4010` - [Community][External]Booting in blind mode
 - :acrn-issue:`4012` - Error formatting flag for hypcall_id
 - :acrn-issue:`4020` - Refine print string format for 'uint64_t' type value in hypervisor
 - :acrn-issue:`4043` - [WHL][Function][WaaG]windows guest can not get normal IP after passthru Ethernet
@@ -94,7 +94,7 @@ Fixed Issues Details
 - :acrn-issue:`4164` - [acrn-configuration-tool] not support: –s n,xhci,1-1:1-2:2-1:2-2
 - :acrn-issue:`4165` -[WHL][acrn-configuration-tool]Configure epc_section is incorrect
 - :acrn-issue:`4172` - [acrn-configuration-tool] not support: –s n,virtio-blk, (/root/part.img---dd if=/dev/zero of=/root/part.img bs=1M count=10  all/part of img, one u-disk device, u-disk as rootfs and the n is special)
-- :acrn-issue:`4173` - [acrn-configuartion-tool]acrn-config tool not support parse default pci mmcfg base
+- :acrn-issue:`4173` - [acrn-configuration-tool]acrn-config tool not support parse default pci mmcfg base
 - :acrn-issue:`4175` - acrntrace fixes and improvement
 - :acrn-issue:`4185` - [acrn-configuration-tool] not support: –s n,virtio-net, (not set,error net, set 1 net, set multi-net, vhost net)
 - :acrn-issue:`4211` - [kbl nuc] acrn failed to boot when generate hypervisor config source from config app with HT enabled in BIOS
@@ -104,7 +104,7 @@ Fixed Issues Details
 - :acrn-issue:`4229` - Add range check in Kconfig.
 - :acrn-issue:`4230` - Remove MAX_VCPUS_PER_VM in Kconfig
 - :acrn-issue:`4232` - Set default KATA_VM_NUM to 1 for SDC
-- :acrn-issue:`4247` - [acrn-configuration-tool] Generate Scenario for VM0 communites with VM1 is incorrect.
+- :acrn-issue:`4247` - [acrn-configuration-tool] Generate Scenario for VM0 communities with VM1 is incorrect.
 - :acrn-issue:`4249` - [acrn-configuration-tool]Generated Launchscript but WebUI prompt error msg after we just select passthru-devices:audio_codec
 - :acrn-issue:`4255` - [acrn-configuration-tool][nuc7i7dnb][sdc]uos has no ip address
 - :acrn-issue:`4260` - [Community][External]webcam switch between 2 UOS.
@@ -142,9 +142,9 @@ release in Nov 2019 (click on the CommitID link to view details):
 - :acrn-commit:`29b7aff5` - HV: Use NMI-window exiting to address req missing issue
 - :acrn-commit:`d26d8bec` - HV: Don't make NMI injection req when notifying vCPU
 - :acrn-commit:`24c2c0ec` - HV: Use NMI to kick lapic-pt vCPU's thread
-- :acrn-commit:`23422713` - acrn-config: add `tap\_` perfix for virtio-net
+- :acrn-commit:`23422713` - acrn-config: add `tap\_` prefix for virtio-net
 - :acrn-commit:`6383394b` - acrn-config: enable log_setting in all vm
-- :acrn-commit:`0b44d64d` - acrn-config: check pass-thruogh device for audio/audio_codec
+- :acrn-commit:`0b44d64d` - acrn-config: check pass-through device for audio/audio_codec
 - :acrn-commit:`75ca1694` - acrn-config: correct vuart1 setting in scenario config
 - :acrn-commit:`d52b45c1` - hv:fix crash issue when handling HC_NOTIFY_REQUEST_FINISH
 - :acrn-commit:`78139b95` - HV: kconfig: add range check for memory setting
@@ -187,7 +187,7 @@ release in Nov 2019 (click on the CommitID link to view details):
 - :acrn-commit:`b39630a8` - hv: sched_iorr: add tick handler and runqueue operations
 - :acrn-commit:`f44aa4e4` - hv: sched_iorr: add init functions of sched_iorr
 - :acrn-commit:`ed400863` - hv: sched_iorr: Add IO sensitive Round-robin scheduler
-- :acrn-commit:`3c8d465a` - acrnboot: correct the calculation of the end boundry of _DYNAMIC region
+- :acrn-commit:`3c8d465a` - acrnboot: correct the calculation of the end boundary of _DYNAMIC region
 - :acrn-commit:`0bf03b41` - acrntrace: Set FLAG_CLEAR_BUF by default
 - :acrn-commit:`9e9e1f61` - acrntrace: Add opt to specify the cpus where we should capture the data
 - :acrn-commit:`366f4be4` - acrntrace: Use correct format for total run time

@@ -12,9 +12,9 @@ This tutorial describes how to run Xenomai as the User VM OS (Real-Time VM) on t
 Build the Xenomai kernel
 ************************
 
-Follow these instructions to buid the Xenomai kernel:
+Follow these instructions to build the Xenomai kernel:
 
-#. Clone the Xenomai kernel souce code::
+#. Clone the Xenomai kernel source code::
 
 	$ git clone -b F/4.19.59/base/ipipe/xenomai_3.1 https://github.com/intel/linux-stable-xenomai
 

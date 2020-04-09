@@ -158,7 +158,7 @@ the network:
    GVT-g feature for that VM.  Refer the :ref:`APL_GVT-g-hld` for
    detailed information.
 
-Here's a screen shot of the resuting launch of the Clear Linux and Ubuntu
+Here's a screen shot of the resulting launch of the Clear Linux and Ubuntu
 User VMs, with a Clear Linux Service VM:
 
 .. figure:: images/sdc2-launch-2-laag.png

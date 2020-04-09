@@ -63,9 +63,9 @@ Validated Versions
 Build the Ubuntu KVM Image
 **************************
 
-This tutorial uses the Ubuntu 18.04 destop ISO as the base image.
+This tutorial uses the Ubuntu 18.04 desktop ISO as the base image.
 
-#. Download the `Ubuntu 18.04 destop ISO <http://releases.ubuntu.com/18.04.3/ubuntu-18.04.3-desktop-amd64.iso?_ga=2.160010942.221344839.1566963570-491064742.1554370503>`_ on your development machine:
+#. Download the `Ubuntu 18.04 desktop ISO <http://releases.ubuntu.com/18.04.3/ubuntu-18.04.3-desktop-amd64.iso?_ga=2.160010942.221344839.1566963570-491064742.1554370503>`_ on your development machine:
 
 #. Install Ubuntu via the virt-manager tool:
 
@@ -165,7 +165,7 @@ Modify the `launch_win.sh` script in order to launch Ubuntu as the User VM.
       $ sed -i 3"s/$/ i915.enable_conformance_check=0/" /mnt/loader/entries/acrn.conf
       $ sudo sync && sudo umount /mnt && reboot
 
-#. Launch the Ubuntu VM afer logging in to the Service VM:
+#. Launch the Ubuntu VM after logging in to the Service VM:
 
    .. code-block:: none
 

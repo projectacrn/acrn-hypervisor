@@ -318,7 +318,7 @@ Step 3: Deploy the Service VM image
       The operation has completed successfully.
 
 #. Follow these steps to create two partitions on the U disk.
-   Keep 4GB in the first partition and leave free space in the second parition.
+   Keep 4GB in the first partition and leave free space in the second partition.
 
    .. code-block:: none
 
