@@ -30,6 +30,8 @@ struct rdt_info {
 			uint32_t bitmask;	/* A bitmask where each set bit indicates the corresponding cache way
 						   may be used by other entities in the platform (e.g. GPU) */
 			uint16_t cbm_len;	/* Length of Cache mask in bits */
+			bool is_cdp_enabled;	/* True if support CDP */
+			uint32_t msr_qos_cfg;	/* MSR addr to IA32_L3/L2_QOS_CFG */
 		} cache;
 		struct rdt_membw {
 			uint16_t mba_max;	/* Max MBA delay throttling value supported */
@@ -42,7 +44,7 @@ struct rdt_info {
 	struct platform_clos_info *platform_clos_array; /* user configured mask and MSR info for each CLOS*/
 };
 
-void init_rdt_cap_info(void);
+void init_rdt_info(void);
 void setup_clos(uint16_t pcpu_id);
 uint64_t clos2pqr_msr(uint16_t clos);
 bool is_platform_rdt_capable(void);

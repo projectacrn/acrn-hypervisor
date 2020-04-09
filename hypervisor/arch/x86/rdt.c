@@ -30,6 +30,7 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 		.res.cache = {
 			.bitmask = 0U,
 			.cbm_len = 0U,
+			.msr_qos_cfg = MSR_IA32_L3_QOS_CFG,
 		},
 		.clos_max = 0U,
 		.res_id = RDT_RESID_L3,
@@ -40,6 +41,7 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 		.res.cache = {
 			.bitmask = 0U,
 			.cbm_len = 0U,
+			.msr_qos_cfg = MSR_IA32_L2_QOS_CFG,
 		},
 		.clos_max = 0U,
 		.res_id = RDT_RESID_L2,
@@ -61,7 +63,7 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 /*
  * @pre res == RDT_RESOURCE_L3 || res == RDT_RESOURCE_L2
  */
-static void rdt_read_cat_capability(int res)
+static void init_cat_capability(int res)
 {
 	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
 
@@ -73,10 +75,23 @@ static void rdt_read_cat_capability(int res)
 	cpuid_subleaf(CPUID_RDT_ALLOCATION, res_cap_info[res].res_id, &eax, &ebx, &ecx, &edx);
 	res_cap_info[res].res.cache.cbm_len = (uint16_t)((eax & 0x1fU) + 1U);
 	res_cap_info[res].res.cache.bitmask = ebx;
-	res_cap_info[res].clos_max = (uint16_t)(edx & 0xffffU) + 1U;
+#ifdef CONFIG_CDP_ENABLED
+	res_cap_info[res].res.cache.is_cdp_enabled = ((ecx & 0x4U) != 0U);
+#else
+	res_cap_info[res].res.cache.is_cdp_enabled = false; 
+#endif
+	if (res_cap_info[res].res.cache.is_cdp_enabled) {
+		res_cap_info[res].clos_max = (uint16_t)((edx & 0xffffU) >> 1U) + 1U;
+		/* enable CDP before setting COS to simplify CAT mask rempping
+		 * and prevent unintended behavior.
+		 */
+		msr_write(res_cap_info[res].res.cache.msr_qos_cfg, 0x1UL);
+	} else {
+		res_cap_info[res].clos_max = (uint16_t)(edx & 0xffffU) + 1U;
+	}
 }
 
-static void rdt_read_mba_capability(int res)
+static void init_mba_capability(int res)
 {
 	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
 
@@ -94,7 +109,7 @@ static void rdt_read_mba_capability(int res)
 /*
  * @pre valid_clos_num > 0U 
  */
-void init_rdt_cap_info(void)
+void init_rdt_info(void)
 {
 	uint8_t i;
 	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
@@ -104,17 +119,17 @@ void init_rdt_cap_info(void)
 
 		/* If HW supports L3 CAT, EBX[1] is set */
 		if ((ebx & 2U) != 0U) {
-			rdt_read_cat_capability(RDT_RESOURCE_L3);
+			init_cat_capability(RDT_RESOURCE_L3);
 		}
 
 		/* If HW supports L2 CAT, EBX[2] is set */
 		if ((ebx & 4U) != 0U) {
-			rdt_read_cat_capability(RDT_RESOURCE_L2);
+			init_cat_capability(RDT_RESOURCE_L2);
 		}
 
 		/* If HW supports MBA, EBX[3] is set */
 		if ((ebx & 8U) != 0U) {
-			rdt_read_mba_capability(RDT_RESOURCE_MBA);
+			init_mba_capability(RDT_RESOURCE_MBA);
 		}
 
 		for (i = 0U; i < RDT_NUM_RESOURCES; i++) {
@@ -137,11 +152,14 @@ void init_rdt_cap_info(void)
  */
 static void setup_res_clos_msr(uint16_t pcpu_id, uint16_t res, struct platform_clos_info *res_clos_info)
 {
-	uint16_t i;
+	uint16_t i, mask_array_size = valid_clos_num;
 	uint32_t msr_index;
 	uint64_t val;
 
-	for (i = 0U; i < valid_clos_num; i++) {
+	if (res != RDT_RESOURCE_MBA && res_cap_info[res].res.cache.is_cdp_enabled) {
+		mask_array_size = mask_array_size << 1U;
+	}
+	for (i = 0U; i < mask_array_size; i++) {
 		switch (res) {
 		case RDT_RESOURCE_L3:
 		case RDT_RESOURCE_L2:
@@ -153,7 +171,7 @@ static void setup_res_clos_msr(uint16_t pcpu_id, uint16_t res, struct platform_c
 		default:
 			ASSERT(res < RDT_NUM_RESOURCES, "Support only 3 RDT resources. res=%d is invalid", res);
 		}
-		msr_index = res_clos_info->msr_index;
+		msr_index = res_cap_info[res].msr_base + i;
 		msr_write_pcpu(msr_index, val, pcpu_id);
 	}
 }
