@@ -49,18 +49,18 @@ class AvailablePthru():
         return self.bdf_vpid_map
 
     def get_pci_dev(self):
-        self.avl["usb_xdci"] = launch_cfg_lib.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['usb_xdci'])
-        self.avl["ipu"] = launch_cfg_lib.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['ipu'])
-        self.avl["ipu_i2c"] = launch_cfg_lib.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['ipu_i2c'])
-        self.avl["cse"] = launch_cfg_lib.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['cse'])
-        self.avl["audio"] = launch_cfg_lib.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['audio'])
-        self.avl["audio_codec"] = launch_cfg_lib.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['audio_codec'])
-        self.avl["sd_card"] = launch_cfg_lib.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['sd_card'])
-        self.avl["wifi"] = launch_cfg_lib.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['wifi'])
-        self.avl["ethernet"] = launch_cfg_lib.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['ethernet'])
-        self.avl["sata"] = launch_cfg_lib.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['sata'])
-        self.avl["nvme"] = launch_cfg_lib.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['nvme'])
-        self.avl["bluetooth"] = launch_cfg_lib.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['bluetooth'])
+        self.avl["usb_xdci"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['usb_xdci'])
+        self.avl["ipu"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['ipu'])
+        self.avl["ipu_i2c"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['ipu_i2c'])
+        self.avl["cse"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['cse'])
+        self.avl["audio"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['audio'])
+        self.avl["audio_codec"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['audio_codec'])
+        self.avl["sd_card"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['sd_card'])
+        self.avl["wifi"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['wifi'])
+        self.avl["ethernet"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['ethernet'])
+        self.avl["sata"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['sata'])
+        self.avl["nvme"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['nvme'])
+        self.avl["bluetooth"] = common.get_avl_dev_info(self.bdf_desc_map, launch_cfg_lib.PT_SUB_PCI['bluetooth'])
 
     def insert_nun(self):
         self.avl["usb_xdci"].insert(0, '')

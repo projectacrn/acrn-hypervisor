@@ -139,13 +139,6 @@ def vuart_output(vm_type, i, vm_info, config):
     vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config)
     print("\t\t},", file=config)
 
-    # pci_dev_num/pci_devs only for SOS_VM or logical_partition pre_launched_vm
-    if vm_type == "SOS_VM" or vm_type == "PRE_LAUNCHED_VM":
-        if vm_info.cfg_pci.pci_dev_num[i] and vm_info.cfg_pci.pci_dev_num[i] != None:
-            print("\t\t.pci_dev_num = {},".format(vm_info.cfg_pci.pci_dev_num[i]), file=config)
-        if vm_info.cfg_pci.pci_devs[i] and vm_info.cfg_pci.pci_devs[i] != None:
-            print("\t\t.pci_devs = {},".format(vm_info.cfg_pci.pci_devs[i]), file=config)
-
 
 def is_need_epc(epc_section, i, config):
     """
@@ -337,6 +330,10 @@ def gen_pre_launch_vm(vm_type, vm_i, vm_info, config):
     if err_dic:
         return err_dic
 
+    if vm_info.cfg_pci.pci_devs[vm_i] and vm_info.cfg_pci.pci_devs[vm_i] != None:
+        print("\t\t.pci_dev_num = {}U,".format(vm_info.cfg_pci.pci_dev_num[vm_i]), file=config)
+        print("\t\t.pci_devs = vm{}_pci_devs,".format(vm_i), file=config)
+
     print("\t},", file=config)
 
 
@@ -387,7 +384,7 @@ def pre_launch_definiation(vm_info, config):
         if vm_type != "PRE_LAUNCHED_VM":
             continue
         print("extern struct acrn_vm_pci_dev_config " +
-              "vm{0}_pci_devs[VM{1}_CONFIG_PCI_DEV_NUM];".format(vm_i, vm_i), file=config)
+              "vm{}_pci_devs[{}];".format(vm_i, vm_info.cfg_pci.pci_dev_num[vm_i]), file=config)
     print("", file=config)
 
 def generate_file(vm_info, config):
@@ -397,8 +394,10 @@ def generate_file(vm_info, config):
     """
     err_dic = {}
     gen_source_header(config)
-    if vm_info.load_order_cnt.pre_vm >= 2:
-        pre_launch_definiation(vm_info, config)
+    for vm_i,pci_dev_num in vm_info.cfg_pci.pci_dev_num.items():
+        if pci_dev_num >= 2:
+            pre_launch_definiation(vm_info, config)
+            break
 
     print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)
     for vm_i, vm_type in common.VM_TYPES.items():

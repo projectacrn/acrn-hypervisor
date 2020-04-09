@@ -142,8 +142,14 @@ class VuartInfo:
         """
         self.v0_vuart = board_cfg_lib.get_vuart_info_id(self.scenario_info, 0)
         self.v1_vuart = board_cfg_lib.get_vuart_info_id(self.scenario_info, 1)
-        scenario_cfg_lib.check_board_private_info()
 
+    def check_item(self):
+        """
+        Check all items in this class
+        :return: None
+        """
+        scenario_cfg_lib.check_board_private_info()
+        scenario_cfg_lib.check_vuart(self.v0_vuart, self.v1_vuart)
 
 class MemInfo:
     """ This is Abstract of class of memory setting information """
@@ -193,14 +199,15 @@ class CfgPci:
         Get pci device number items
         :return: None
         """
-        self.pci_dev_num = common.get_leaf_tag_map(self.scenario_info, "pci_dev_num")
+        self.pci_dev_num = scenario_cfg_lib.get_pci_num(self.pci_devs)
 
     def get_pci_devs(self):
         """
         Get pci devices items
         :return: None
         """
-        self.pci_devs = common.get_leaf_tag_map(self.scenario_info, "pci_devs")
+        pci_items = common.get_leaf_tag_map(self.scenario_info, "pci_devs", "pci_dev")
+        self.pci_devs = scenario_cfg_lib.get_pci_devs(pci_items)
 
 
     def get_info(self):
@@ -208,15 +215,14 @@ class CfgPci:
         Get all items which belong to this class
         :return: None
         """
-        self.get_pci_dev_num()
         self.get_pci_devs()
+        self.get_pci_dev_num()
 
     def check_item(self):
         """ Check all items in this class
         :return: None
         """
-        scenario_cfg_lib.pci_dev_num_check(self.pci_dev_num, "pci_dev_num")
-        scenario_cfg_lib.pci_devs_check(self.pci_devs, "pci_devs")
+        scenario_cfg_lib.pci_devs_check(self.pci_devs, "pci_devs", "pci_dev")
 
 
 class EpcSection:
@@ -316,3 +322,4 @@ class VmInfo:
         self.mem_info.check_item()
         self.os_cfg.check_item()
         self.cfg_pci.check_item()
+        self.vuart.check_item()
