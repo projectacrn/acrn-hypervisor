@@ -248,6 +248,15 @@ config RDT_ENABLED
 	  various amount of HW resources such as L2 or/and L3 to VMs to achieve
 	  different Class of Service (COS, or CLOS).
 
+config CDP_ENABLED
+	bool "Enable CDP (Code and Data Prioritization)"
+	depends on RDT_ENABLED
+	default n
+	help
+	  CDP is an extension of CAT. It enables isolation and separate
+	  prioritization of code and data fetches to the L2 or L3 cache in a
+	  software configurable manner, depending on hardware support.
+
 config GPU_SBDF
 	hex "Segment, Bus, Device, and function of the GPU"
 	depends on ACPI_PARSE_ENABLED

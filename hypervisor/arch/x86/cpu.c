@@ -167,7 +167,7 @@ void init_pcpu_pre(bool is_bsp)
 		}
 
 #ifdef CONFIG_RDT_ENABLED
-		init_rdt_cap_info();
+		init_rdt_info();
 #endif
 
 		/* NOTE: this must call after MMCONFIG is parsed in init_vboot and before APs are INIT.
