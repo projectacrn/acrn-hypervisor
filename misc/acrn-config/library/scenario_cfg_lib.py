@@ -25,8 +25,6 @@ AVALIBLE_COM2_BASE = ['INVALID_COM_BASE', 'COM2_BASE']
 VUART_IRQ = ['SOS_COM1_IRQ', 'SOS_COM2_IRQ', 'COM1_IRQ', 'COM2_IRQ', 'COM3_IRQ',
              'COM4_IRQ', 'CONFIG_COM_IRQ', '3', '4', '6', '7']
 
-PCI_DEV_NUM_LIST = ['SOS_EMULATED_PCI_DEV_NUM', 'VM0_CONFIG_PCI_DEV_NUM', 'VM1_CONFIG_PCI_DEV_NUM']
-PCI_DEVS_LIST = ['sos_pci_devs', 'vm0_pci_devs', 'vm1_pci_devs']
 # Support 512M, 1G, 2G
 # pre launch less then 2G, sos vm less than 24G
 START_HPA_SIZE_LIST = ['0x20000000', '0x40000000', '0x80000000', 'CONFIG_SOS_RAM_SIZE']
@@ -36,6 +34,43 @@ COMMUNICATE_VM_ID = []
 ERR_LIST = {}
 
 KATA_VM_COUNT = 0
+PT_SUB_PCI = {}
+PT_SUB_PCI['ethernet'] = ['Ethernet controller', 'Network controller', '802.1a controller',
+                        '802.1b controller', 'Wireless controller']
+PT_SUB_PCI['sata'] = ['SATA controller']
+PT_SUB_PCI['nvme'] = ['Non-Volatile memory controller']
+
+
+def get_pci_devs(pci_items):
+
+    pci_devs = {}
+    for vm_i,pci_descs in pci_items.items():
+        bdf_list = []
+        for pci_des in pci_descs:
+            if not pci_des:
+                continue
+            bdf = pci_des.split()[0]
+            bdf_list.append(bdf)
+
+        pci_devs[vm_i] = bdf_list
+
+    return pci_devs
+
+
+def get_pci_num(pci_devs):
+
+    pci_devs_num = {}
+    for vm_i,pci_devs_list in pci_devs.items():
+        # vhostbridge
+        cnt_dev = 1
+        for pci_dev in pci_devs_list:
+            if not pci_dev:
+                continue
+            cnt_dev += 1
+
+        pci_devs_num[vm_i] = cnt_dev
+
+    return pci_devs_num
 
 
 def check_board_private_info():
@@ -362,37 +397,18 @@ def os_kern_root_dev_check(id_kern_rootdev_dic, prime_item, item):
             ERR_LIST[key] = "VM os config kernel root device should not empty"
 
 
-def pci_dev_num_check(id_dev_num_dic, item):
-    """
-    Check vm pci device number
-    :param item: vm pci_dev_num item in xml
-    :return: None
-    """
-
-    for vm_i,vm_type in common.VM_TYPES.items():
-        if vm_i not in id_dev_num_dic.keys():
-            continue
-        pci_dev_num = id_dev_num_dic[vm_i]
-        if vm_type != "POST_LAUNCHED_VM" and pci_dev_num:
-            if pci_dev_num not in PCI_DEV_NUM_LIST:
-                key = "vm:id={},{}".format(vm_i, item)
-                ERR_LIST[key] = "VM pci device number  shoud be one of {}".format(PCI_DEV_NUM_LIST)
-
-def pci_devs_check(id_devs_dic, item):
+def pci_devs_check(pci_bdf_devs, branch_tag, tag_str):
     """
     Check vm pci devices
     :param item: vm pci_devs item in xml
     :return: None
     """
-
-    for vm_i,vm_type in common.VM_TYPES.items():
-        if vm_i not in id_devs_dic.keys():
-            continue
-        pci_dev = id_devs_dic[vm_i]
-        if vm_type != "POST_LAUNCHED_VM" and pci_dev:
-            if pci_dev not in PCI_DEVS_LIST:
-                key = "vm:id={},{}".format(vm_i, item)
-                ERR_LIST[key] = "VM pci device shoud be one of {}".format(PCI_DEVS_LIST)
+    (bdf_desc_map, bdf_vpid_map) = board_cfg_lib.get_pci_info(common.BOARD_INFO_FILE)
+    for id_key, pci_bdf_devs_list in pci_bdf_devs.items():
+        for pci_bdf_dev in pci_bdf_devs_list:
+            if pci_bdf_dev and pci_bdf_dev not in bdf_desc_map.keys():
+                key = "vm:id={},{},{}".format(id_key, branch_tag, tag_str)
+                ERR_LIST[key] = "The {} is unkonw device of PCI".format(pci_bdf_dev)
 
 
 def get_vuart1_vmid(vm_vuart1):
@@ -497,3 +513,48 @@ def get_first_post_vm():
             break
 
     return (err_dic, i)
+
+
+def avl_pci_devs():
+
+    pci_dev_list = []
+    (bdf_desc_map, bdf_vpid_map) = board_cfg_lib.get_pci_info(common.BOARD_INFO_FILE)
+    pci_dev_list = common.get_avl_dev_info(bdf_desc_map, PT_SUB_PCI['ethernet'])
+    tmp_pci_list = common.get_avl_dev_info(bdf_desc_map, PT_SUB_PCI['sata'])
+    pci_dev_list.extend(tmp_pci_list)
+    tmp_pci_list = common.get_avl_dev_info(bdf_desc_map, PT_SUB_PCI['nvme'])
+    pci_dev_list.extend(tmp_pci_list)
+
+    return pci_dev_list
+
+
+def check_vuart(v0_vuart, v1_vuart):
+
+    vm_target_id_dic = {}
+    for vm_i,vuart_dic in v1_vuart.items():
+        # check target vm id
+        if 'base' not in vuart_dic.keys():
+            key = "vm:id={},vuart:id=1,base".format(vm_i)
+            ERR_LIST[key] = "base should be in xml"
+            return
+
+        if not vuart_dic['base'] or vuart_dic['base'] not in VUART_BASE:
+            key = "vm:id={},vuart:id=1,base".format(vm_i)
+            ERR_LIST[key] = "base should be SOS/COM BASE"
+
+        if vuart_dic['base'] == "INVALID_COM_BASE":
+            continue
+
+        if 'target_vm_id' not in vuart_dic.keys():
+            key = "vm:id={},vuart:id=1,target_vm_id".format(vm_i)
+            ERR_LIST[key] = "target_vm_id should be in xml"
+
+        if not vuart_dic['target_vm_id'] or not vuart_dic['target_vm_id'].isnumeric():
+            key = "vm:id={},vuart:id=1,target_vm_id".format(vm_i)
+            ERR_LIST[key] = "target_vm_id should be numeric of vm id"
+        vm_target_id_dic[vm_i] = vuart_dic['target_vm_id']
+
+    for vm_i,t_vm_id in vm_target_id_dic.items():
+        if t_vm_id.isnumeric() and  int(t_vm_id) not in common.VM_TYPES.keys():
+            key = "vm:id={},vuart:id=1,target_vm_id".format(vm_i)
+            ERR_LIST[key] = "target_vm_id which specified does not exist"

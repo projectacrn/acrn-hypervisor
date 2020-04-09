@@ -126,7 +126,7 @@ def gen_header_file(vm_info, config):
 
 def get_dm_owned_guest_flag_mask(vm_info, config):
 
-    if vm_info.load_order_cnt.pre_vm >= 2:
+    if "SOS_VM" not in common.VM_TYPES.values():
         print("#define DM_OWNED_GUEST_FLAG_MASK\t0UL", file=config)
     else:
         print("/* Bits mask of guest flags that can be programmed by device model." +

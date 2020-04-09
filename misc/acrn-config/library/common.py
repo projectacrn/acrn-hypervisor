@@ -19,7 +19,7 @@ PY_CACHES = ["__pycache__", "../board_config/__pycache__", "../scenario_config/_
 GUEST_FLAG = ["0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTHROUGH",
               "GUEST_FLAG_IO_COMPLETION_POLLING", "GUEST_FLAG_HIDE_MTRR", "GUEST_FLAG_RT"]
 
-MULTI_ITEM = ["guest_flag", "pcpu_id", "vcpu_clos", "input", "block", "network"]
+MULTI_ITEM = ["guest_flag", "pcpu_id", "vcpu_clos", "input", "block", "network", "pci_dev"]
 
 SIZE_K = 1024
 SIZE_M = SIZE_K * 1024
@@ -43,6 +43,7 @@ class MultiItem():
         self.vir_block = []
         self.vir_console = []
         self.vir_network = []
+        self.pci_dev = []
 
 class TmpItem():
 
@@ -255,7 +256,6 @@ def get_leaf_value(tmp, tag_str, leaf):
     # get guest flag for logical partition vm1
     if leaf.tag == "guest_flag" and tag_str == "guest_flag":
         t_flag = find_tmp_flag(leaf.text)
-        #print("--debug: tag:{},{}".format(tag_str), t_flag)
         tmp.multi.guest_flag.append(t_flag)
 
     # get cpu for vm
@@ -277,6 +277,10 @@ def get_leaf_value(tmp, tag_str, leaf):
     # get virtio-net for vm
     if leaf.tag == "network" and tag_str == "network":
         tmp.multi.vir_network.append(leaf.text)
+
+    # get pci_dev for vm
+    if leaf.tag == "pci_dev" and tag_str == "pci_dev":
+        tmp.multi.pci_dev.append(leaf.text)
 
 
 def get_sub_value(tmp, tag_str, vm_id):
@@ -304,6 +308,10 @@ def get_sub_value(tmp, tag_str, vm_id):
     # append virtio network for vm
     if tmp.multi.vir_network and tag_str == "network":
         tmp.tag[vm_id] = tmp.multi.vir_network
+
+    # append pci_dev for vm
+    if tmp.multi.pci_dev and tag_str == "pci_dev":
+        tmp.tag[vm_id] = tmp.multi.pci_dev
 
 
 def get_leaf_tag_map(config_file, branch_tag, tag_str=''):
@@ -421,3 +429,15 @@ def num2int(str_value):
 def get_vm_types():
     global VM_TYPES
     VM_TYPES = get_leaf_tag_map(SCENARIO_INFO_FILE, "load_order")
+
+
+def get_avl_dev_info(bdf_desc_map, pci_sub_class):
+
+    tmp_pci_desc = []
+    for sub_class in pci_sub_class:
+        for pci_desc_value in bdf_desc_map.values():
+            pci_desc_sub_class = ' '.join(pci_desc_value.strip().split(':')[1].split()[1:])
+            if sub_class == pci_desc_sub_class:
+                tmp_pci_desc.append(pci_desc_value.strip())
+
+    return tmp_pci_desc
