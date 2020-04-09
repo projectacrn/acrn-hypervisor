@@ -86,7 +86,7 @@ ifeq ($(RELEASE),latest)
 	cp scripts/publish-README.md $(PUBLISHDIR)/../README.md
 	cp scripts/publish-index.html $(PUBLISHDIR)/../index.html
 	cp scripts/publish-robots.txt $(PUBLISHDIR)/../robots.txt
-	cp scripts/publish-404.html $(PUBLISHDIR)/../404.html
+	sed 's/<head>/<head>\n  <base href="https:\/\/projectacrn.github.io\/latest\/">/' $(BUILDDIR)/html/404.html > $(PUBLISHDIR)/../404.html
 endif
 	cd $(PUBLISHDIR)/..; git add -A; git commit -s -m "publish $(RELEASE)"; git push origin master;
 
