@@ -47,6 +47,7 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["vm,guest_flags"] = guest_flags
     scenario_item_values["vm,clos"] = hw_info.get_clos_val()
     scenario_item_values["vm,severity"] = scenario_cfg_lib.VM_SEVERITY
+    scenario_item_values["vm,pci_devs,pci_dev"] = scenario_cfg_lib.avl_pci_devs()
     scenario_item_values["vm,os_config,kern_type"] = scenario_cfg_lib.KERN_TYPE_LIST
     scenario_item_values.update(scenario_cfg_lib.avl_vuart_ui_select(scenario_info))
 
@@ -185,9 +186,11 @@ def main(args):
             return err_dic
 
     # generate pci_dev.c
-    if scenario_items['vm'].load_order_cnt.pre_vm >= 2:
-        with open(pci_config_c, 'w') as config:
-            pci_dev_c.generate_file(config)
+    for vm_i,pci_dev_num in scenario_items['vm'].cfg_pci.pci_dev_num.items():
+        if pci_dev_num >= 2:
+            with open(pci_config_c, 'w') as config:
+                pci_dev_c.generate_file(scenario_items['vm'], config)
+            break
 
     if not err_dic:
         print("Scenario configurations for {} is generated successfully.".format(scenario))
