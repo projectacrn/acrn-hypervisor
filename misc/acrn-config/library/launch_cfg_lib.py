@@ -184,18 +184,6 @@ def get_post_vm_cnt():
     return (launch_vm_count, post_vm_count)
 
 
-def get_avl_dev_info(bdf_desc_map, pci_sub_class):
-
-    tmp_pci_desc = []
-    for sub_class in pci_sub_class:
-        for pci_desc_value in bdf_desc_map.values():
-            pci_desc_sub_class = ' '.join(pci_desc_value.strip().split(':')[1].split()[1:])
-            if sub_class == pci_desc_sub_class:
-                tmp_pci_desc.append(pci_desc_value.strip())
-
-    return tmp_pci_desc
-
-
 def is_config_file_match():
 
     match = True
