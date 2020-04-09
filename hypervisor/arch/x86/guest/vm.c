@@ -620,7 +620,6 @@ void start_vm(struct acrn_vm *vm)
 
 	/* Only start BSP (vid = 0) and let BSP start other APs */
 	bsp = vcpu_from_vid(vm, BSP_CPU_ID);
-	vcpu_make_request(bsp, ACRN_REQUEST_INIT_VMCS);
 	launch_vcpu(bsp);
 }
 
@@ -703,8 +702,7 @@ void pause_vm(struct acrn_vm *vm)
  * To resume vm after guest enter S3 state:
  * - reset BSP
  * - BSP will be put to real mode with entry set as wakeup_vec
- * - init_vmcs BSP. We could call init_vmcs here because we know current
- *   pcpu is mapped to BSP of vm.
+ * - init_vmcs BSP.
  *
  * @vm[in]		vm pointer to vm data structure
  * @wakeup_vec[in]	The resume address of vm
@@ -724,7 +722,6 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 	 */
 	set_vcpu_startup_entry(bsp, wakeup_vec);
 
-	init_vmcs(bsp);
 	launch_vcpu(bsp);
 }
 

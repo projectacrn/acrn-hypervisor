@@ -546,6 +546,8 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 		pr_info("VM %d Starting VCPU %hu",
 				vcpu->vm->vm_id, vcpu->vcpu_id);
 
+		init_vmcs(vcpu);
+
 		if (vcpu->arch.vpid != 0U) {
 			exec_vmwrite16(VMX_VPID, vcpu->arch.vpid);
 		}

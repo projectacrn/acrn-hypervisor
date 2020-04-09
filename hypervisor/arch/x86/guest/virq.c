@@ -354,11 +354,6 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 	struct acrn_vcpu_arch *arch = &vcpu->arch;
 	uint64_t *pending_req_bits = &arch->pending_req;
 
-	/* make sure ACRN_REQUEST_INIT_VMCS handler as the first one */
-	if (bitmap_test_and_clear_lock(ACRN_REQUEST_INIT_VMCS, pending_req_bits)) {
-		init_vmcs(vcpu);
-	}
-
 	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TRP_FAULT, pending_req_bits)) {
 		pr_fatal("Triple fault happen -> shutdown!");
 		ret = -EFAULT;
