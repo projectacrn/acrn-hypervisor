@@ -9,6 +9,7 @@ Page Not Found
 
    .. image:: images/ACRN-fall-from-tree-small.png
       :align: left
+      :width: 320px
 
    Sorry. The page you requested was not found on this site.
 
