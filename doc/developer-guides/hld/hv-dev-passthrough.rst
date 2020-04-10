@@ -229,15 +229,15 @@ hypervisor before it configures the PCI configuration space to enable an
 MSI. The hypervisor takes this opportunity to set up a remapping for the
 given MSI or MSIX before it is actually enabled by Service VM.
 
-When the UOS needs to access the physical device by passthrough, it uses
+When the User VM needs to access the physical device by passthrough, it uses
 the following steps:
 
--  UOS gets a virtual interrupt
+-  User VM gets a virtual interrupt
 -  VM exit happens and the trapped vCPU is the target where the interrupt
    will be injected.
 -  Hypervisor will handle the interrupt and translate the vector
    according to ptirq_remapping_info.
--  Hypervisor delivers the interrupt to UOS.
+-  Hypervisor delivers the interrupt to User VM.
 
 When the Service VM needs to use the physical device, the passthrough is also
 active because the Service VM is the first VM. The detail steps are:
@@ -258,7 +258,7 @@ ACPI virtualization is designed in ACRN with these assumptions:
 
 -  HV has no knowledge of ACPI,
 -  Service VM owns all physical ACPI resources,
--  UOS sees virtual ACPI resources emulated by device model.
+-  User VM sees virtual ACPI resources emulated by device model.
 
 Some passthrough devices require physical ACPI table entry for
 initialization. The device model will create such device entry based on

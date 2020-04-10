@@ -28,8 +28,8 @@ as the two privileged VMs will mount the root filesystems via the SATA controlle
 and the USB controller respectively.
 This tutorial is verified on a tagged ACRN v0.6.
 
-Build kernel and modules for partition mode UOS
-***********************************************
+Build kernel and modules for partition mode User VM
+***************************************************
 
 #. On your development workstation, clone the ACRN kernel source tree, and
    build the Linux kernel image that will be used to boot the privileged VMs:
@@ -314,7 +314,7 @@ Enable partition mode in ACRN hypervisor
      $ sudo cp build/acrn.32.out /boot
 
 #. Modify the ``/etc/grub.d/40_custom`` file to create a new GRUB entry
-   that will multi-boot the ACRN hypervisor and the UOS kernel image
+   that will multi-boot the ACRN hypervisor and the User VM kernel image
 
    Append the following configuration to the ``/etc/grub.d/40_custom`` file:
 

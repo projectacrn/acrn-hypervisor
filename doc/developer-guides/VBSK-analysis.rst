@@ -35,11 +35,11 @@ background introduction, please refer to:
 
 virtio-echo is implemented as a virtio legacy device in the ACRN device
 model (DM), and  is registered as a PCI virtio device to the guest OS
-(UOS). The virtio-echo software  has three parts:
+(User VM). The virtio-echo software  has three parts:
 
--  **virtio-echo Frontend Driver**: This driver runs in the UOS. It prepares
+-  **virtio-echo Frontend Driver**: This driver runs in the User VM. It prepares
    the RXQ and notifies the backend for receiving incoming data when the
-   UOS starts. Second, it copies the received data from the RXQ to TXQ
+   User VM starts. Second, it copies the received data from the RXQ to TXQ
    and sends them to the backend. After receiving the message that the
    transmission is completed, it starts again another round of reception
    and transmission, and keeps running until a specified number of cycle
@@ -71,30 +71,30 @@ Virtualization Overhead Analysis
 ********************************
 
 Let's analyze the overhead of the VBS-K framework. As we know, the VBS-K
-handles notifications in the SOS kernel instead of in the SOS user space
+handles notifications in the Service VM kernel instead of in the Service VM user space
 DM. This can avoid overhead from switching between kernel space and user
-space. Virtqueues are allocated by UOS, and virtqueue information is
+space. Virtqueues are allocated by User VM, and virtqueue information is
 configured to VBS-K backend by the virtio-echo driver in DM, thus
-virtqueues can be shared between UOS and SOS. There is no copy overhead
+virtqueues can be shared between User VM and Service VM. There is no copy overhead
 in this sense. The overhead of VBS-K framework mainly contains two
 parts: kick overhead and notify overhead.
 
--  **Kick Overhead**: The UOS gets trapped when it executes sensitive
+-  **Kick Overhead**: The User VM gets trapped when it executes sensitive
    instructions that notify the hypervisor first. The notification is
    assembled into an IOREQ, saved in a shared IO page, and then
    forwarded to the VHM module by the hypervisor. The VHM notifies its
    client for this IOREQ, in this case, the client is the vbs-echo
    backend driver. Kick overhead is defined as the interval from the
-   beginning of UOS trap to a specific VBS-K driver e.g. when
+   beginning of User VM trap to a specific VBS-K driver e.g. when
    virtio-echo gets notified.
 -  **Notify Overhead**: After the data in virtqueue being processed by the
    backend driver, vbs-echo calls the VHM module to inject an interrupt
    into the frontend. The VHM then uses the hypercall provided by the
-   hypervisor, which causes a UOS VMEXIT. The hypervisor finally injects
-   an interrupt into the vLAPIC of the UOS and resumes it. The UOS
+   hypervisor, which causes a User VM VMEXIT. The hypervisor finally injects
+   an interrupt into the vLAPIC of the User VM and resumes it. The User VM
    therefore receives the interrupt notification.  Notify overhead is
    defined as the interval from the beginning of the interrupt injection
-   to when the UOS starts interrupt processing.
+   to when the User VM starts interrupt processing.
 
 The overhead of a specific application based on VBS-K includes two
 parts: VBS-K framework overhead and application-specific overhead.

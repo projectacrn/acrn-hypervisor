@@ -1,15 +1,15 @@
 .. _using_vxworks_as_uos:
 
-Using VxWorks* as User OS
+Using VxWorks* as User VM
 #########################
 
 `VxWorks`_\* is a real-time proprietary OS designed for use in embedded systems requiring real-time, deterministic
-performance. This tutorial describes how to run VxWorks as the User OS on the ACRN hypervisor
+performance. This tutorial describes how to run VxWorks as the User VM on the ACRN hypervisor
 based on Clear Linux 29970 (ACRN tag v1.1).
 
 .. note:: You'll need to be a WindRiver* customer and have purchased VxWorks to follow this tutorial.
 
-Steps for Using VxWorks as User OS
+Steps for Using VxWorks as User VM
 **********************************
 
 #. Build VxWorks
@@ -94,9 +94,9 @@ Steps for Using VxWorks as User OS
 
 #. Follow :ref:`kbl-nuc-sdc` to boot "The ACRN Service OS".
 
-#. Boot VxWorks as User OS.
+#. Boot VxWorks as User VM.
 
-   On the ACRN SOS, prepare a directory and populate it with VxWorks files.
+   On the ACRN Service VM, prepare a directory and populate it with VxWorks files.
 
    .. code-block:: none
 

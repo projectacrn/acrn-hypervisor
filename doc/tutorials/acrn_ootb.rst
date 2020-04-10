@@ -3,7 +3,10 @@
 Install ACRN Out-of-the-box
 ###########################
 
-In this tutorial, we will learn to generate an out-of-the-box (OOTB) Service VM or a Preempt-RT VM image so that we can use ACRN or RTVM immediately after installation without any configuration or modification.
+In this tutorial, we will learn to generate an out-of-the-box (OOTB)
+Service VM or a Preempt-RT VM image so that we can use ACRN or RTVM
+immediately after installation without any configuration or
+modification.
 
 Set up a Build Environment
 **************************
@@ -460,7 +463,7 @@ Step 3: Deploy the Service VM image
 
         # dd if=/mnt/sos-industry.img of=/dev/sda bs=4M oflag=sync status=progress iflag=fullblock seek=0 conv=notrunc
 
-.. note:: Given the large YAML size setting of over 100G, generating the SOS image and writing it to disk will take some time.
+.. note:: Given the large YAML size setting of over 100G, generating the Service VM image and writing it to disk will take some time.
 
 #. Configure the EFI firmware to boot the ACRN hypervisor by default:
 

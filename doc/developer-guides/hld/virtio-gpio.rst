@@ -4,7 +4,7 @@ Virtio-gpio
 ###########
 
 virtio-gpio provides a virtual GPIO controller, which will map part of
-native GPIOs to UOS, UOS can perform GPIO operations through it,
+native GPIOs to User VM, User VM can perform GPIO operations through it,
 including setting values, including set/get value, set/get direction and
 set configuration (only Open Source and Open Drain types are currently
 supported). GPIOs quite often be used as IRQs, typically for wakeup
@@ -21,7 +21,7 @@ The virtio-gpio architecture is shown below
 Virtio-gpio is implemented as a virtio legacy device in the ACRN device
 model (DM), and is registered as a PCI virtio device to the guest OS. No
 changes are required in the frontend Linux virtio-gpio except that the
-guest (UOS) kernel should be built with ``CONFIG_VIRTIO_GPIO=y``.
+guest (User VM) kernel should be built with ``CONFIG_VIRTIO_GPIO=y``.
 
 There are three virtqueues used between FE and BE, one for gpio
 operations, one for irq request and one for irq event notification.
@@ -42,24 +42,24 @@ GPIO mapping
 
    GPIO mapping
 
--  Each UOS has only one GPIO chip instance, its number of GPIO is based
-   on acrn-dm command line and GPIO base always start from 0.
+-  Each User VM has only one GPIO chip instance, its number of GPIO is
+   based on acrn-dm command line and GPIO base always start from 0.
 
--  Each GPIO is exclusive, uos can't map the same native gpio.
+-  Each GPIO is exclusive, User VM can’t map the same native gpio.
 
 -  Each acrn-dm maximum number of GPIO is 64.
 
 Usage
 *****
 
-add the following parameters into command line::
+Add the following parameters into the command line::
 
-        -s <slot>,virtio-gpio,<@controller_name{offset|name[=mapping_name]:offset|name[=mapping_name]:...}@controller_name{...}...]>
+        -s <slot>,virtio-gpio,<@controller_name{offset|name[=mapping_name]:offset|name[=mapping_name]:…}@controller_name{…}…]>
 
--  **controller_name**: Input ``ls /sys/bus/gpio/devices`` to check
-   native gpio controller information.Usually, the devices represent the
+-  **controller_name**: Input “ls /sys/bus/gpio/devices” to check native
+   gpio controller information.Usually, the devices represent the
    controller_name, you can use it as controller_name directly. You can
-   also input "cat /sys/bus/gpio/device/XXX/dev" to get device id that can
+   also input “cat /sys/bus/gpio/device/XXX/dev” to get device id that can
    be used to match /dev/XXX, then use XXX as the controller_name. On MRB
    and NUC platforms, the controller_name are gpiochip0, gpiochip1,
    gpiochip2.gpiochip3.
@@ -73,17 +73,17 @@ add the following parameters into command line::
 Example
 *******
 
--  Map three native gpio to UOS, they are native gpiochip0 with offset
-   of 1 and 6, and with the name ``reset``. In UOS, the three gpio has
-   no name, and base from 0 ::
+-  Map three native gpio to User VM, they are native gpiochip0 with
+   offset of 1 and 6, and with the name “reset”. In User VM, the three
+   gpio has no name, and base from 0.::
 
         -s 10,virtio-gpio,@gpiochip0{1:6:reset}
 
--  Map four native gpio to UOS, native gpiochip0's gpio with offset 1
+-  Map four native gpio to User VM, native gpiochip0’s gpio with offset 1
    and offset 6 map to FE virtual gpio with offset 0 and offset 1
-   without names, native gpiochip0's gpio with name ``reset`` maps to FE
-   virtual gpio with offset 2 and its name is ``shutdown``, native
-   gpiochip1's gpio with offset 0 maps to FE virtual gpio with offset 3 and
-   its name is ``reset`` ::
+   without names, native gpiochip0’s gpio with name “reset” maps to FE
+   virtual gpio with offset 2 and its name is “shutdown”, native
+   gpiochip1’s gpio with offset 0 maps to FE virtual gpio with offset 3 and
+   its name is “reset”.::
 
         -s 10,virtio-gpio,@gpiochip0{1:6:reset=shutdown}@gpiochip1{0=reset}

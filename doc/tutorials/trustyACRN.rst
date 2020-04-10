@@ -269,7 +269,7 @@ secure monitor to schedule in/out Trusty secure world.
    :name: trusty-isolated
 
 As shown in :numref:`trusty-isolated` above, the hypervisor creates an
-isolated secure world UOS to support a Trusty OS running in a UOS on
+isolated secure world User VM to support a Trusty OS running in a User VM on
 ACRN.
 
 :numref:`trusty-lhs-rhs` below shows further implementation details. The RHS
@@ -290,7 +290,7 @@ invoked. The WS Hypercall has parameters to specify the services cmd ID
 requested from the non-secure world.
 
 In the ACRN hypervisor design of the "one VM, two worlds"
-architecture, there is a single UOS/VM structure per-UOS in the
+architecture, there is a single User VM structure per-User VM in the
 Hypervisor, but two vCPU structures that save the LHS/RHS virtual
 logical processor states respectively.
 
@@ -311,7 +311,7 @@ implementation, secure storage is built in the RPMB partition in eMMC
 
 Currently the eMMC in the APL SoC platform only has a single RPMB
 partition for tamper-resistant and anti-replay secure storage. The
-secure storage (RPMB) is virtualized to support multiple guest UOS VMs.
+secure storage (RPMB) is virtualized to support multiple guest User VM VMs.
 Although newer generations of flash storage (e.g. UFS 3.0, and NVMe)
 support multiple RPMB partitions, this article only discusses the
 virtualization solution for single-RPMB flash storage device in APL SoC
@@ -328,11 +328,11 @@ high-level architecture.
 
 In :numref:`trusty-rpmb`, the rKey (RPMB AuthKey) is the physical RPMB
 authentication key used for data authenticated read/write access between
-SOS kernel and physical RPMB controller in eMMC device. The VrKey is the
-virtual RPMB authentication key used for authentication between SOS DM
-module and its corresponding UOS secure software. Each UOS (if secure
+Service VM kernel and physical RPMB controller in eMMC device. The VrKey is the
+virtual RPMB authentication key used for authentication between Service VM DM
+module and its corresponding User VM secure software. Each User VM (if secure
 storage is supported) has its own VrKey, generated randomly when the DM
-process starts, and is securely distributed to UOS secure world for each
+process starts, and is securely distributed to User VM secure world for each
 reboot. The rKey is fixed on a specific platform unless the eMMC is
 replaced with another one.
 
@@ -344,20 +344,20 @@ provisioning are out of scope for this document.)
 For each reboot, the BIOS/SBL retrieves the rKey from CSE FW (or
 generated from a special unique secret that is retrieved from CSE FW),
 and SBL hands it off to the ACRN hypervisor, and the hypervisor in turn
-sends the key to the SOS kernel.
+sends the key to the Service VM kernel.
 
 As an example, secure storage virtualization workflow for data write
 access is like this:
 
-#. UOS Secure world (e.g. Trusty) packs the encrypted data and signs it
+#. User VM Secure world (e.g. Trusty) packs the encrypted data and signs it
    with the vRPMB authentication key (VrKey), and sends the data along
-   with its signature over the RPMB FE driver in UOS non-secure world.
-#. After DM process in SOS receives the data and signature, the vRPMB
+   with its signature over the RPMB FE driver in User VM non-secure world.
+#. After DM process in Service VM receives the data and signature, the vRPMB
    module in DM verifies them with the shared secret (vRPMB
    authentication key, VrKey),
 #. If verification is success, the vRPMB module does data address
-   remapping (remembering that the multiple UOS VMs share a single
-   physical RPMB partition), and forwards those data to SOS kernel, then
+   remapping (remembering that the multiple User VM VMs share a single
+   physical RPMB partition), and forwards those data to Service VM kernel, then
    kernel packs the data and signs it with the physical RPMB
    authentication key (rKey). Eventually, the data and its signature
    will be sent to physical eMMC device.
@@ -372,17 +372,17 @@ Note that there are some security considerations in this architecture:
 -  The rKey protection is very critical in this system. If the key is
    leaked, an attacker can change/overwrite the data on RPMB, bypassing
    the "tamper-resistant & anti-replay" capability.
--  Typically, the vRPMB module in DM process of SOS system can filter
-   data access, i.e. it doesn't allow one UOS to perform read/write
-   access to the data from another UOS VM.
-   If the vRPMB module in DM process is compromised, a UOS could
-   change/overwrite the secure data of other UOSs.
+-  Typically, the vRPMB module in DM process of Service VM system can filter
+   data access, i.e. it doesn't allow one User VM to perform read/write
+   access to the data from another User VM.
+   If the vRPMB module in DM process is compromised, a User VM could
+   change/overwrite the secure data of other User VMs.
 
-Keeping SOS system as secure as possible is a very important goal in the
-system security design. In practice, the SOS designer and implementer
+Keeping Service VM system as secure as possible is a very important goal in the
+system security design. In practice, the Service VM designer and implementer
 should obey these following rules (and more):
 
--  Make sure the SOS is a closed system and doesn't allow users to
+-  Make sure the Service VM is a closed system and doesn't allow users to
    install any unauthorized 3rd party software or components.
 -  External peripherals are constrained.
 -  Enable kernel-based hardening techniques, e.g., dm-verity (to make

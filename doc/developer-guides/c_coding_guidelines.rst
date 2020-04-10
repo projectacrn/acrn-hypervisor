@@ -3364,8 +3364,8 @@ The data structure types include struct, union, and enum.
 This rule applies to the data structure with all the following properties:
 
 a) The data structure is used by multiple modules;
-b) The corresponding resource is exposed to external components, such as SOS or
-   UOS;
+b) The corresponding resource is exposed to external components, such as
+   the Service VM or a User VM;
 c) The name meaning is simplistic or common, such as vcpu or vm.
 
 Compliant example::

@@ -31,15 +31,18 @@ Console enable list
 +-----------------+-----------------------+--------------------+----------------+----------------+
 | Scenarios       | vm0                   | vm1                | vm2            | vm3            |
 +=================+=======================+====================+================+================+
-| SDC             | SOS (vuart enable)    | Post-launched      | Post-launched  |                |
+| SDC             | Service VM            | Post-launched      | Post-launched  |                |
+|                 | (vuart enable)        |                    |                |                |
+|                 |                       |                    |                |                |
 +-----------------+-----------------------+--------------------+----------------+----------------+
-| SDC2            | SOS (vuart enable)    | Post-launched      |                | Post-launched  |
-+-----------------+-----------------------+--------------------+----------------+----------------+
-| Hybrid          | Pre-launched (Zephyr) | SOS (vuart enable) | Post-launched  |                |
+| SDC2            | Service VM            | Post-launched      |                | Post-launched  |
 |                 | (vuart enable)        |                    |                |                |
 +-----------------+-----------------------+--------------------+----------------+----------------+
-| Industry        | SOS (vuart enable)    | Post-launched      | Post-launched  | Post-launched  |
-|                 |                       |                    | (vuart enable) |                |
+| Hybrid          | Pre-launched (Zephyr) | Service VM         | Post-launched  |                |
+|                 | (vuart enable)        | (vuart enable)     |                |                |
++-----------------+-----------------------+--------------------+----------------+----------------+
+| Industry        | Service VM            | Post-launched      | Post-launched  | Post-launched  |
+|                 | (vuart enable)        |                    | (vuart enable) |                |
 +-----------------+-----------------------+--------------------+----------------+----------------+
 | Logic_partition | Pre-launched          | Pre-launched RTVM  | Post-launched  |                |
 |                 | (vuart enable)        | (vuart enable)     | RTVM           |                |
@@ -106,14 +109,14 @@ Communication vUART enable list
 +-----------------+-----------------------+--------------------+---------------------+----------------+
 | Scenarios       | vm0                   | vm1                | vm2                 | vm3            |
 +=================+=======================+====================+=====================+================+
-| SDC             | SOS                   | Post-launched      | Post-launched       |                |
+| SDC             | Service VM            | Post-launched      | Post-launched       |                |
 +-----------------+-----------------------+--------------------+---------------------+----------------+
-| SDC2            | SOS                   | Post-launched      | Post-launched       | Post-launched  |
+| SDC2            | Service VM            | Post-launched      | Post-launched       | Post-launched  |
 +-----------------+-----------------------+--------------------+---------------------+----------------+
-| Hybrid          | Pre-launched (Zephyr) | SOS                | Post-launched       |                |
+| Hybrid          | Pre-launched (Zephyr) | Service VM         | Post-launched       |                |
 |                 | (vuart enable COM2)   | (vuart enable COM2)|                     |                |
 +-----------------+-----------------------+--------------------+---------------------+----------------+
-| Industry        | SOS                   | Post-launched      | Post-launched RTVM  | Post-launched  |
+| Industry        | Service VM            | Post-launched      | Post-launched RTVM  | Post-launched  |
 |                 | (vuart enable COM2)   |                    | (vuart enable COM2) |                |
 +-----------------+-----------------------+--------------------+---------------------+----------------+
 | Logic_partition | Pre-launched          | Pre-launched RTVM  |                     |                |

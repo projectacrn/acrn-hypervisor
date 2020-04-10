@@ -54,10 +54,10 @@ management. Please refer to ACRN power management design for more details.
 Post-launched User VMs
 ======================
 
-DM is taking control of post-launched User VMs' state transition after SOS
+DM is taking control of post-launched User VMs' state transition after Service VM
 boot up, and it calls VM APIs through hypercalls.
 
-SOS user level service like Life-Cycle-Service and tool like Acrnd may work
+Service VM user level service like Life-Cycle-Service and tool like Acrnd may work
 together with DM to launch or stop a User VM. Please refer to ACRN tool
 introduction for more details.
 

@@ -151,7 +151,7 @@ Virtual IOAPIC
 **************
 
 vIOAPIC is emulated by HV when Guest accesses MMIO GPA range:
-0xFEC00000-0xFEC01000. vIOAPIC for SOS should match to the native HW
+0xFEC00000-0xFEC01000. vIOAPIC for Service VM should match to the native HW
 IOAPIC Pin numbers. vIOAPIC for guest VM provides 48 pins. As the vIOAPIC is
 always associated with vLAPIC, the virtual interrupt injection from
 vIOAPIC will finally trigger a request for vLAPIC event by calling

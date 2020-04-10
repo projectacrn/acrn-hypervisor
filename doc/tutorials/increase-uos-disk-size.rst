@@ -1,11 +1,11 @@
-.. _Increase UOS disk size:
+.. _Increase User VM disk size:
 
-Increasing the User OS disk size
+Increasing the User VM disk size
 ################################
 
 This document builds on the :ref:`getting_started` and assumes you already have
 a system with ACRN installed and running correctly. The size of the pre-built
-Clear Linux User OS (UOS) virtual disk is typically only 8GB and this may not be
+Clear Linux User OS (User VM) virtual disk is typically only 8GB and this may not be
 sufficient for some applications. This guide explains a simple few steps to
 increase the size of that virtual disk.
 
@@ -21,7 +21,7 @@ broken down into three steps:
 
 .. note::
 
-   These steps are performed directly on the UOS disk image. The UOS VM **must**
+   These steps are performed directly on the User VM disk image. The User VM **must**
    be powered off during this operation.
 
 Increase the virtual disk size

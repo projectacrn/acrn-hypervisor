@@ -30,7 +30,7 @@ is active:
 
 .. note:: The console is only available in the debug version of the hypervisor,
    configured at compile time. In the release version, the console is
-   disabled and the physical UART is not used by the hypervisor or SOS.
+   disabled and the physical UART is not used by the hypervisor or Service VM.
 
 Hypervisor shell
 ****************
@@ -45,8 +45,8 @@ Virtual UART
 
 Currently UART 16550 is owned by the hypervisor itself and used for
 debugging purposes. Properties are configured by hypervisor command
-line. Hypervisor emulates a UART device with 0x3F8 address to SOS that
-acts as the console of SOS with these features:
+line. Hypervisor emulates a UART device with 0x3F8 address to Service VM that
+acts as the console of Service VM with these features:
 
 -  The vUART is exposed via I/O port 0x3f8.
 -  Incorporate a 256-byte RX buffer and 65536 TX buffer.
@@ -85,8 +85,8 @@ The workflows are described as follows:
    -  Characters are read from this sbuf and put to rxFIFO,
       triggered by vuart_console_rx_chars
 
-   -  A virtual interrupt is sent to SOS, triggered by a read from
-      SOS. Characters in rxFIFO are sent to SOS by emulation of
+   -  A virtual interrupt is sent to Service VM, triggered by a read from
+      Service VM. Characters in rxFIFO are sent to Service VM by emulation of
       read of register UART16550_RBR
 
 -  TX flow:
