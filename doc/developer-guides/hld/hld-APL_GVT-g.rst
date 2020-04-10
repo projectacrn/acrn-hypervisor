@@ -315,7 +315,7 @@ High Level Architecture
 ***********************
 
 :numref:`gvt-arch` shows the overall architecture of GVT-g, based on the
-ACRN hypervisor, with SOS as the privileged VM, and multiple user
+ACRN hypervisor, with Service VM as the privileged VM, and multiple user
 guests. A GVT-g device model working with the ACRN hypervisor,
 implements the policies of trap and pass-through. Each guest runs the
 native graphics driver and can directly access performance-critical
@@ -323,7 +323,7 @@ resources: the Frame Buffer and Command Buffer, with resource
 partitioning (as presented later). To protect privileged resources, that
 is, the I/O registers and PTEs, corresponding accesses from the graphics
 driver in user VMs are trapped and forwarded to the GVT device model in
-SOS for emulation. The device model leverages i915 interfaces to access
+Service VM for emulation. The device model leverages i915 interfaces to access
 the physical GPU.
 
 In addition, the device model implements a GPU scheduler that runs
@@ -338,7 +338,7 @@ direct GPU execution. With that, GVT-g can achieve near-native
 performance for a VM workload.
 
 In :numref:`gvt-arch`, the yellow GVT device model works as a client on
-top of an i915 driver in the SOS. It has a generic Mediated Pass-Through
+top of an i915 driver in the Service VM. It has a generic Mediated Pass-Through
 (MPT) interface, compatible with all types of hypervisors. For ACRN,
 some extra development work is needed for such MPT interfaces. For
 example, we need some changes in ACRN-DM to make ACRN compatible with
@@ -368,7 +368,7 @@ trap-and-emulation, including MMIO virtualization, interrupt
 virtualization, and display virtualization. It also handles and
 processes all the requests internally, such as, command scan and shadow,
 schedules them in the proper manner, and finally submits to
-the SOS i915 driver.
+the Service VM i915 driver.
 
 .. figure:: images/APL_GVT-g-DM.png
    :width: 800px
@@ -446,7 +446,7 @@ interrupts are categorized into three types:
    exception to this is the VBlank interrupt. Due to the demands of user
    space compositors, such as Wayland, which requires a flip done event
    to be synchronized with a VBlank, this interrupt is forwarded from
-   SOS to UOS when SOS receives it from the hardware.
+   Service VM to User VM when Service VM receives it from the hardware.
 
 -  Event-based GPU interrupts are emulated by the emulation logic. For
    example, AUX Channel Interrupt.
@@ -524,7 +524,7 @@ later after performing a few basic checks and verifications.
 Display Virtualization
 ----------------------
 
-GVT-g reuses the i915 graphics driver in the SOS to initialize the Display
+GVT-g reuses the i915 graphics driver in the Service VM to initialize the Display
 Engine, and then manages the Display Engine to show different VM frame
 buffers. When two vGPUs have the same resolution, only the frame buffer
 locations are switched.
@@ -550,7 +550,7 @@ A typical automotive use case is where there are two displays in the car
 and each one needs to show one domain's content, with the two domains
 being the Instrument cluster and the In Vehicle Infotainment (IVI). As
 shown in :numref:`direct-display`, this can be accomplished through the direct
-display model of GVT-g, where the SOS and UOS are each assigned all HW
+display model of GVT-g, where the Service VM and User VM are each assigned all HW
 planes of two different pipes. GVT-g has a concept of display owner on a
 per HW plane basis. If it determines that a particular domain is the
 owner of a HW plane, then it allows the domain's MMIO register write to
@@ -567,15 +567,15 @@ Indirect Display Model
 
    Indirect Display Model
 
-For security or fastboot reasons, it may be determined that the UOS is
+For security or fastboot reasons, it may be determined that the User VM is
 either not allowed to display its content directly on the HW or it may
 be too late before it boots up and displays its content. In such a
 scenario, the responsibility of displaying content on all displays lies
-with the SOS. One of the use cases that can be realized is to display the
-entire frame buffer of the UOS on a secondary display. GVT-g allows for this
-model by first trapping all MMIO writes by the UOS to the HW. A proxy
-application can then capture the address in GGTT where the UOS has written
-its frame buffer and using the help of the Hypervisor and the SOS's i915
+with the Service VM. One of the use cases that can be realized is to display the
+entire frame buffer of the User VM on a secondary display. GVT-g allows for this
+model by first trapping all MMIO writes by the User VM to the HW. A proxy
+application can then capture the address in GGTT where the User VM has written
+its frame buffer and using the help of the Hypervisor and the Service VM's i915
 driver, can convert the Guest Physical Addresses (GPAs) into Host
 Physical Addresses (HPAs) before making a texture source or EGL image
 out of the frame buffer and then either post processing it further or
@@ -585,33 +585,33 @@ GGTT-Based Surface Sharing
 --------------------------
 
 One of the major automotive use case is called "surface sharing". This
-use case requires that the SOS accesses an individual surface or a set of
-surfaces from the UOS without having to access the entire frame buffer of
-the UOS. Unlike the previous two models, where the UOS did not have to do
-anything to show its content and therefore a completely unmodified UOS
-could continue to run, this model requires changes to the UOS.
+use case requires that the Service VM accesses an individual surface or a set of
+surfaces from the User VM without having to access the entire frame buffer of
+the User VM. Unlike the previous two models, where the User VM did not have to do
+anything to show its content and therefore a completely unmodified User VM
+could continue to run, this model requires changes to the User VM.
 
 This model can be considered an extension of the indirect display model.
-Under the indirect display model, the UOS's frame buffer was temporarily
+Under the indirect display model, the User VM's frame buffer was temporarily
 pinned by it in the video memory access through the Global graphics
 translation table. This GGTT-based surface sharing model takes this a
-step further by having a compositor of the UOS to temporarily pin all
+step further by having a compositor of the User VM to temporarily pin all
 application buffers into GGTT. It then also requires the compositor to
 create a metadata table with relevant surface information such as width,
 height, and GGTT offset, and flip that in lieu of the frame buffer.
-In the SOS, the proxy application knows that the GGTT offset has been
+In the Service VM, the proxy application knows that the GGTT offset has been
 flipped, maps it, and through it can access the GGTT offset of an
 application that it wants to access. It is worth mentioning that in this
-model, UOS applications did not require any changes, and only the
+model, User VM applications did not require any changes, and only the
 compositor, Mesa, and i915 driver had to be modified.
 
 This model has a major benefit and a major limitation. The
 benefit is that since it builds on top of the indirect display model,
-there are no special drivers necessary for it on either SOS or UOS.
+there are no special drivers necessary for it on either Service VM or User VM.
 Therefore, any Real Time Operating System (RTOS) that use
 this model can simply do so without having to implement a driver, the
 infrastructure for which may not be present in their operating system.
-The limitation of this model is that video memory dedicated for a UOS is
+The limitation of this model is that video memory dedicated for a User VM is
 generally limited to a couple of hundred MBs. This can easily be
 exhausted by a few application buffers so the number and size of buffers
 is limited. Since it is not a highly-scalable model, in general, Intel
@@ -634,24 +634,24 @@ able to share its pages with another driver within one domain.
 Applications buffers are backed by i915 Graphics Execution Manager
 Buffer Objects (GEM BOs).  As in GGTT surface
 sharing, this model also requires compositor changes. The compositor of
-UOS requests i915 to export these application GEM BOs and then passes
+User VM requests i915 to export these application GEM BOs and then passes
 them on to a special driver called the Hyper DMA Buf exporter whose job
 is to create a scatter gather list of pages mapped by PDEs and PTEs and
 export a Hyper DMA Buf ID back to the compositor.
 
-The compositor then shares this Hyper DMA Buf ID with the SOS's Hyper DMA
+The compositor then shares this Hyper DMA Buf ID with the Service VM's Hyper DMA
 Buf importer driver which then maps the memory represented by this ID in
-the SOS. A proxy application in the SOS can then provide the ID of this driver
-to the SOS i915, which can create its own GEM BO. Finally, the application
+the Service VM. A proxy application in the Service VM can then provide the ID of this driver
+to the Service VM i915, which can create its own GEM BO. Finally, the application
 can use it as an EGL image and do any post processing required before
-either providing it to the SOS compositor or directly flipping it on a
+either providing it to the Service VM compositor or directly flipping it on a
 HW plane in the compositor's absence.
 
 This model is highly scalable and can be used to share up to 4 GB worth
 of pages. It is also not limited to only sharing graphics buffers. Other
 buffers for the IPU and others, can also be shared with it. However, it
-does require that the SOS port the Hyper DMA Buffer importer driver. Also,
-the SOS OS must comprehend and implement the DMA buffer sharing model.
+does require that the Service VM port the Hyper DMA Buffer importer driver. Also,
+the Service VM must comprehend and implement the DMA buffer sharing model.
 
 For detailed information about this model, please refer to the `Linux
 HYPER_DMABUF Driver High Level Design
@@ -669,13 +669,13 @@ Plane-Based Domain Ownership
 
    Plane-Based Domain Ownership
 
-Yet another mechanism for showing content of both the SOS and UOS on the
+Yet another mechanism for showing content of both the Service VM and User VM on the
 same physical display is called plane-based domain ownership. Under this
-model, both the SOS and UOS are provided a set of HW planes that they can
+model, both the Service VM and User VM are provided a set of HW planes that they can
 flip their contents on to. Since each domain provides its content, there
-is no need for any extra composition to be done through the SOS. The display
+is no need for any extra composition to be done through the Service VM. The display
 controller handles alpha blending contents of different domains on a
-single pipe. This saves on any complexity on either the SOS or the UOS
+single pipe. This saves on any complexity on either the Service VM or the User VM
 SW stack.
 
 It is important to provide only specific planes and have them statically
@@ -689,7 +689,7 @@ show the correct content on them. No other changes are necessary.
 While the biggest benefit of this model is that is extremely simple and
 quick to implement, it also has some drawbacks. First, since each domain
 is responsible for showing the content on the screen, there is no
-control of the UOS by the SOS. If the UOS is untrusted, this could
+control of the User VM by the Service VM. If the User VM is untrusted, this could
 potentially cause some unwanted content to be displayed. Also, there is
 no post processing capability, except that provided by the display
 controller (for example, scaling, rotation, and so on). So each domain
@@ -834,43 +834,43 @@ Different Schedulers and Their Roles
 
 In the system, there are three different schedulers for the GPU:
 
--  i915 UOS scheduler
+-  i915 User VM scheduler
 -  Mediator GVT scheduler
--  i915 SOS scheduler
+-  i915 Service VM scheduler
 
-Since UOS always uses the host-based command submission (ELSP) model,
+Since User VM always uses the host-based command submission (ELSP) model,
 and it never accesses the GPU or the Graphic Micro Controller (GuC)
 directly, its scheduler cannot do any preemption by itself.
 The i915 scheduler does ensure batch buffers are
 submitted in dependency order, that is, if a compositor had to wait for
 an application buffer to finish before its workload can be submitted to
-the GPU, then the i915 scheduler of the UOS ensures that this happens.
+the GPU, then the i915 scheduler of the User VM ensures that this happens.
 
-The UOS assumes that by submitting its batch buffers to the Execlist
+The User VM assumes that by submitting its batch buffers to the Execlist
 Submission Port (ELSP), the GPU will start working on them. However,
 the MMIO write to the ELSP is captured by the Hypervisor, which forwards
 these requests to the GVT module. GVT then creates a shadow context
-based on this batch buffer and submits the shadow context to the SOS
+based on this batch buffer and submits the shadow context to the Service VM
 i915 driver.
 
 However, it is dependent on a second scheduler called the GVT
 scheduler. This scheduler is time based and uses a round robin algorithm
-to provide a specific time for each UOS to submit its workload when it
-is considered as a "render owner". The workload of the UOSs that are not
+to provide a specific time for each User VM to submit its workload when it
+is considered as a "render owner". The workload of the User VMs that are not
 render owners during a specific time period end up waiting in the
 virtual GPU context until the GVT scheduler makes them render owners.
 The GVT shadow context submits only one workload at
 a time, and once the workload is finished by the GPU, it copies any
 context state back to DomU and sends the appropriate interrupts before
-picking up any other workloads from either this UOS or another one. This
+picking up any other workloads from either this User VM or another one. This
 also implies that this scheduler does not do any preemption of
 workloads.
 
-Finally, there is the i915 scheduler in the SOS. This scheduler uses the
-GuC or ELSP to do command submission of SOS local content as well as any
-content that GVT is submitting to it on behalf of the UOSs. This
+Finally, there is the i915 scheduler in the Service VM. This scheduler uses the
+GuC or ELSP to do command submission of Service VM local content as well as any
+content that GVT is submitting to it on behalf of the User VMs. This
 scheduler uses GuC or ELSP to preempt workloads. GuC has four different
-priority queues, but the SOS i915 driver uses only two of them. One of
+priority queues, but the Service VM i915 driver uses only two of them. One of
 them is considered high priority and the other is normal priority with a
 GuC rule being that any command submitted on the high priority queue
 would immediately try to preempt any workload submitted on the normal
@@ -893,8 +893,8 @@ preemption of lower-priority workload.
 
 Scheduling policies are customizable and left to customers to change if
 they are not satisfied with the built-in i915 driver policy, where all
-workloads of the SOS are considered higher priority than those of the
-UOS. This policy can be enforced through an SOS i915 kernel command line
+workloads of the Service VM are considered higher priority than those of the
+User VM. This policy can be enforced through an Service VM i915 kernel command line
 parameter, and can replace the default in-order command submission (no
 preemption) policy.
 
@@ -922,7 +922,7 @@ OS and an Android Guest OS.
 AcrnGT in kernel
 =================
 
-The AcrnGT module in the SOS kernel acts as an adaption layer to connect
+The AcrnGT module in the Service VM kernel acts as an adaption layer to connect
 between GVT-g in the i915, the VHM module, and the ACRN-DM user space
 application:
 
@@ -930,7 +930,7 @@ application:
    services to it, including set and unset trap areas, set and unset
    write-protection pages, etc.
 
--  It calls the VHM APIs provided by the ACRN VHM module in the SOS
+-  It calls the VHM APIs provided by the ACRN VHM module in the Service VM
    kernel, to eventually call into the routines provided by ACRN
    hypervisor through hyper-calls.
 

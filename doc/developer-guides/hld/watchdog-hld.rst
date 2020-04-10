@@ -29,27 +29,27 @@ Model following the PCI device framework. The following
 
    Watchdog device flow
 
-The DM in the Service OS (SOS) treats the watchdog as a passive device.
+The DM in the Service VM treats the watchdog as a passive device.
 It receives read/write commands from the watchdog driver, does the
-actions, and returns.  In ACRN, the commands are from User OS (UOS)
+actions, and returns.  In ACRN, the commands are from User VM
 watchdog driver.
 
-UOS watchdog work flow
-**********************
+User VM watchdog work flow
+**************************
 
-When the UOS does a read or write operation on the watchdog device's
+When the User VM does a read or write operation on the watchdog device's
 registers or memory space (Port IO or Memory map I/O), it will trap into
-the hypervisor.   The hypervisor delivers the operation to the SOS/DM
+the hypervisor.   The hypervisor delivers the operation to the Service VM/DM
 through IPI (inter-process interrupt) or shared memory, and the DM
 dispatches the operation to the watchdog emulation code.
 
 After the DM watchdog finishes emulating the read or write operation, it
-then calls ``ioctl`` to the SOS/kernel (``/dev/acrn_vhm``). VHM will call a
+then calls ``ioctl`` to the Service VM/kernel (``/dev/acrn_vhm``). VHM will call a
 hypercall to trap into the hypervisor to tell it the operation is done, and
-the hypervisor will set UOS-related VCPU registers and resume UOS so the
-UOS watchdog driver will get the return values (or return status). The
-:numref:`watchdog-workflow` below is a typical operation flow: 
-from UOS to SOS and return back:
+the hypervisor will set User VM-related VCPU registers and resume the User VM so the
+User VM watchdog driver will get the return values (or return status). The
+:numref:`watchdog-workflow` below is a typical operation flow:
+from a User VM to the Service VM and return back:
 
 .. figure:: images/watchdog-image1.png
    :align: center
@@ -82,18 +82,18 @@ emulation.
 
 The main part in the watchdog emulation is the timer thread. It emulates
 the watchdog device timeout management. When it gets the kick action
-from the UOS, it resets the timer. If the timer expires before getting a
-timely kick action, it will call DM API to reboot that UOS.
+from the User VM, it resets the timer. If the timer expires before getting a
+timely kick action, it will call DM API to reboot that User VM.
 
-In the UOS launch script, add: ``-s xx,wdt-i6300esb`` into DM parameters.
+In the User VM launch script, add: ``-s xx,wdt-i6300esb`` into DM parameters.
 (xx is the virtual PCI BDF number as with other PCI devices)
 
-Make sure the UOS kernel has the I6300ESB driver enabled:
-``CONFIG_I6300ESB_WDT=y``. After the UOS boots up, the watchdog device
+Make sure the User VM kernel has the I6300ESB driver enabled:
+``CONFIG_I6300ESB_WDT=y``. After the User VM boots up, the watchdog device
 will be created as node ``/dev/watchdog``, and can be used as a normal
 device file.
 
-Usually the UOS needs a watchdog service (daemon) to run in userland and
+Usually the User VM needs a watchdog service (daemon) to run in userland and
 kick the watchdog periodically. If something prevents the daemon from
-kicking the watchdog, for example the UOS system is hung, the watchdog
-will timeout and the DM will reboot the UOS.
+kicking the watchdog, for example the User VM system is hung, the watchdog
+will timeout and the DM will reboot the User VM.

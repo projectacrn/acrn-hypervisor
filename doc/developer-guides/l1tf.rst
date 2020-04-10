@@ -19,7 +19,7 @@ speculative access to data which is available in the Level 1 Data Cache
 when the page table entry controlling the virtual address, which is used
 for the access, has the Present bit cleared or reserved bits set.
 
-When the processor accesses a linear address, it first looks for a 
+When the processor accesses a linear address, it first looks for a
 translation to a physical address in the translation lookaside buffer (TLB).
 For an unmapped address this will not provide a physical address, so the
 processor performs a table walk of a hierarchical paging structure in
@@ -70,7 +70,7 @@ There is no additional action in ACRN hypervisor.
 Guest -> hypervisor Attack
 ==========================
 
-ACRN always enables EPT for all guests (SOS and UOS), thus a malicious
+ACRN always enables EPT for all guests (Service VM and User VM), thus a malicious
 guest can directly control guest PTEs to construct L1TF-based attack
 to hypervisor. Alternatively if ACRN EPT is not sanitized with some
 PTEs (with present bit cleared, or reserved bit set) pointing to valid
@@ -93,7 +93,7 @@ e.g. whether CPU partitioning is used, whether Hyper-Threading is on, etc.
 If CPU partitioning is enabled (default policy in ACRN), there is
 1:1 mapping between vCPUs and pCPUs i.e. no sharing of pCPU. There
 may be an attack possibility when Hyper-Threading is on, where
-logical processors of same physical core may be allocated to two 
+logical processors of same physical core may be allocated to two
 different guests. Then one guest may be able to attack the other guest
 on sibling thread due to shared L1D.
 
@@ -153,7 +153,7 @@ to current VM (in case of CPU sharing).
 
 Flushing the L1D evicts not only the data which should not be
 accessed by a potentially malicious guest, it also flushes the
-guest data. Flushing the L1D has a performance impact as the 
+guest data. Flushing the L1D has a performance impact as the
 processor has to bring the flushed guest data back into the L1D,
 and actual overhead is proportional to the frequency of vmentry.
 
@@ -188,7 +188,7 @@ platform seed. They are critical secrets to serve for guest keystore or
 other security usage, e.g. disk encryption, secure storage.
 
 If the critical secret data in ACRN is identified, then such
-data can be put into un-cached memory. As the content will 
+data can be put into un-cached memory. As the content will
 never go to L1D, it is immune to L1TF attack
 
 For example, after getting the physical seed from CSME, before any guest
@@ -240,8 +240,8 @@ Mitigation Recommendations
 There is no mitigation required on Apollo Lake based platforms.
 
 The majority use case for ACRN is in pre-configured environment,
-where the whole software stack (from ACRN hypervisor to guest 
-kernel to SOS root) is tightly controlled by solution provider
+where the whole software stack (from ACRN hypervisor to guest
+kernel to Service VM root) is tightly controlled by solution provider
 and not allowed for run-time change after sale (guest kernel is
 trusted). In that case solution provider will make sure that guest
 kernel is up-to-date including necessary page table sanitization,

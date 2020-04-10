@@ -241,7 +241,8 @@ Here is initial mode of vCPUs:
 +----------------------------------+----------------------------------------------------------+
 |  VM and Processor Type           |    Initial Mode                                          |
 +=================+================+==========================================================+
-| Service VM      |        BSP     |   Same as physical BSP, or Real Mode if SOS boot w/ OVMF |
+| Service VM      |        BSP     |   Same as physical BSP, or Real Mode if Service VM boot  |
+|                 |                |   w/ OVMF                                                |
 |                 +----------------+----------------------------------------------------------+
 |                 |        AP      |   Real Mode                                              |
 +-----------------+----------------+----------------------------------------------------------+

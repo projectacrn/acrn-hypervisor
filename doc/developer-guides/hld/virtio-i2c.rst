@@ -49,18 +49,18 @@ notifies the frontend. The msg process flow is shown in
 -s <slot>,virtio-i2c,<bus>[:<slave_addr>[@<node>]][:<slave_addr>[@<node>]][,<bus>[:<slave_addr>[@<node>]][:<slave_addr>][@<node>]]
 
    bus:
-   The bus number for the native I2C adapter; ``2`` means ``/dev/i2c-2``.
+   The bus number for the native I2C adapter; “2” means “/dev/i2c-2”.
 
    slave_addr:
-   he address for the native slave devices such as ``1C``, ``2F``...
+   he address for the native slave devices such as “1C”, “2F”...
 
    @:
    The prefix for the acpi node.
 
    node:
    The acpi node name supported in the current code. You can find the
-   supported name in the ``acpi_node_table[]`` from the source code. Currently,
-   only ``cam1``, ``cam2``, and ``hdac`` are supported for MRB. These nodes are
+   supported name in the acpi_node_table[] from the source code. Currently,
+   only ‘cam1’, ‘cam2’, and ‘hdac’ are supported for MRB. These nodes are
    platform-specific.
 
 

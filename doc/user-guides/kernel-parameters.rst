@@ -7,7 +7,7 @@ Generic kernel parameters
 *************************
 
 A number of kernel parameters control the behavior of ACRN-based systems. Some
-are applicable to the Service OS (SOS) kernel, others to the User OS (UOS)
+are applicable to the Service VM kernel, others to the User VM
 kernel, and some are applicable to both.
 
 This section focuses on generic parameters from the Linux kernel which are
@@ -18,12 +18,12 @@ relevant for configuring or debugging ACRN-based systems.
    :widths: 10,10,50,30
 
    * - Parameter
-     - Used in SOS or UOS
+     - Used in Service VM or User VM
      - Description
      - Usage example
 
    * - module_blacklist
-     - SOS
+     - Service VM
      - A comma-separated list of modules that should not be loaded.
        Useful to debug or work
        around issues related to specific modules.
@@ -32,14 +32,14 @@ relevant for configuring or debugging ACRN-based systems.
          module_blacklist=dwc3_pci
 
    * - no_timer_check
-     - SOS,UOS
+     - Service VM,User VM
      - Disables the code which tests for broken timer IRQ sources.
      - ::
 
          no_timer_check
 
    * - console
-     - SOS,UOS
+     - Service VM,User VM
      - Output console device and options.
 
        ``tty<n>``
@@ -65,7 +65,7 @@ relevant for configuring or debugging ACRN-based systems.
           console=hvc0
 
    * - loglevel
-     - SOS
+     - Service VM
      - All Kernel messages with a loglevel less than the console loglevel will
        be printed to the console. The loglevel can also be changed with
        ``klogd`` or other programs. The loglevels are defined as follows:
@@ -96,7 +96,7 @@ relevant for configuring or debugging ACRN-based systems.
           loglevel=7
 
    * - ignore_loglevel
-     - UOS
+     - User VM
      - Ignoring loglevel setting will print **all**
        kernel messages to the console. Useful for debugging.
        We also add it as printk module parameter, so users
@@ -108,7 +108,7 @@ relevant for configuring or debugging ACRN-based systems.
 
 
    * - log_buf_len
-     - UOS
+     - User VM
      - Sets the size of the printk ring buffer,
        in bytes.  n must be a power of two and greater
        than the minimal size. The minimal size is defined
@@ -121,7 +121,7 @@ relevant for configuring or debugging ACRN-based systems.
           log_buf_len=16M
 
    * - consoleblank
-     - SOS,UOS
+     - Service VM,User VM
      - The console blank (screen saver) timeout in
        seconds. Defaults to 600 (10 minutes). A value of 0
        disables the blank timer.
@@ -130,7 +130,7 @@ relevant for configuring or debugging ACRN-based systems.
           consoleblank=0
 
    * - rootwait
-     - SOS,UOS
+     - Service VM,User VM
      - Wait (indefinitely) for root device to show up.
        Useful for devices that are detected asynchronously
        (e.g. USB and MMC devices).
@@ -139,7 +139,7 @@ relevant for configuring or debugging ACRN-based systems.
           rootwait
 
    * - root
-     - SOS,UOS
+     - Service VM,User VM
      - Define the root filesystem
 
        ``/dev/<disk_name><decimal>``
@@ -166,14 +166,14 @@ relevant for configuring or debugging ACRN-based systems.
           root=PARTUUID=00112233-4455-6677-8899-AABBCCDDEEFF
 
    * - rw
-     - SOS,UOS
+     - Service VM,User VM
      - Mount root device read-write on boot
      - ::
 
           rw
 
    * - tsc
-     - UOS
+     - User VM
      - Disable clocksource stability checks for TSC.
 
        Format: <string>, where the only supported value is:
@@ -188,7 +188,7 @@ relevant for configuring or debugging ACRN-based systems.
           tsc=reliable
 
    * - cma
-     - SOS
+     - Service VM
      - Sets the size of the kernel global memory area for
        contiguous memory allocations, and optionally the
        placement constraint by the physical address range of
@@ -200,7 +200,7 @@ relevant for configuring or debugging ACRN-based systems.
           cma=64M@0
 
    * - hvlog
-     - SOS
+     - Service VM
      - Reserve memory for the ACRN hypervisor log. The reserved space should not
        overlap any other blocks (e.g.  hypervisor's reserved space).
      - ::
@@ -208,7 +208,7 @@ relevant for configuring or debugging ACRN-based systems.
           hvlog=2M@0x6de00000
 
    * - memmap
-     - SOS
+     - Service VM
      - Mark specific memory as reserved.
 
        ``memmap=nn[KMG]$ss[KMG]``
@@ -222,7 +222,7 @@ relevant for configuring or debugging ACRN-based systems.
    * - ramoops.mem_address
        ramoops.mem_size
        ramoops.console_size
-     - SOS
+     - Service VM
      - Ramoops is an oops/panic logger that writes its logs to RAM
        before the system crashes. Ramoops uses a predefined memory area
        to store the dump. See `Linux Kernel Ramoops oops/panic logger
@@ -236,7 +236,7 @@ relevant for configuring or debugging ACRN-based systems.
 
 
    * - reboot_panic
-     - SOS
+     - Service VM
      - Reboot in case of panic
 
        The comma-delimited parameters are:
@@ -258,7 +258,7 @@ relevant for configuring or debugging ACRN-based systems.
          reboot_panic=p,w
 
    * - maxcpus
-     - UOS
+     - User VM
      - Maximum number of processors that an SMP kernel
        will bring up during bootup.
 
@@ -275,14 +275,14 @@ relevant for configuring or debugging ACRN-based systems.
          maxcpus=1
 
    * - nohpet
-     - UOS
+     - User VM
      -  Don't use the HPET timer
      - ::
 
          nohpet
 
    * - intel_iommu
-     - UOS
+     - User VM
      - Intel IOMMU driver (DMAR) option
 
        ``on``:
@@ -314,34 +314,34 @@ section below has more details on a few select parameters.
    :widths: 10,10,50,30
 
    * - Parameter
-     - Used in SOS or UOS
+     - Used in Service VM or User VM
      - Description
      - Usage example
 
    * - i915.enable_gvt
-     - SOS
+     - Service VM
      - Enable Intel GVT-g graphics virtualization support in the host
      - ::
 
          i915.enable_gvt=1
 
    * - i915.enable_pvmmio
-     - SOS, UOS
+     - Service VM, User VM
      - Control Para-Virtualized MMIO (PVMMIO). It batches sequential MMIO writes
-       into a shared buffer between the SOS and UOS
+       into a shared buffer between the Service VM and User VM
      - ::
 
          i915.enable_pvmmio=0x1F
 
    * - i915.gvt_workload_priority
-     - SOS
-     - Define the priority level of UOS graphics workloads
+     - Service VM
+     - Define the priority level of User VM graphics workloads
      - ::
 
          i915.gvt_workload_priority=1
 
    * - i915.enable_initial_modeset
-     - SOS
+     - Service VM
      - On MRB, value must be ``1``.  On NUC or UP2 boards, value must be
        ``0``. See :ref:`i915-enable-initial-modeset`.
      - ::
@@ -350,63 +350,63 @@ section below has more details on a few select parameters.
          i915.enable_initial_modeset=0
 
    * - i915.nuclear_pageflip
-     - SOS,UOS
+     - Service VM,User VM
      - Force enable atomic functionality on platforms that don't have full support yet.
      - ::
 
          i915.nuclear_pageflip=1
 
    * - i915.avail_planes_per_pipe
-     - SOS
+     - Service VM
      - See :ref:`i915-avail-planes-owners`.
      - ::
 
          i915.avail_planes_per_pipe=0x01010F
 
    * - i915.domain_plane_owners
-     - SOS
+     - Service VM
      - See :ref:`i915-avail-planes-owners`.
      - ::
 
          i915.domain_plane_owners=0x011111110000
 
    * - i915.domain_scaler_owner
-     - SOS
+     - Service VM
      - See `i915.domain_scaler_owner`_
      - ::
 
          i915.domain_scaler_owner=0x021100
 
    * - i915.enable_guc
-     - SOS
+     - Service VM
      - Enable GuC load for HuC load.
      - ::
 
          i915.enable_guc=0x02
 
    * - i915.avail_planes_per_pipe
-     - UOS
+     - User VM
      - See :ref:`i915-avail-planes-owners`.
      - ::
 
          i915.avail_planes_per_pipe=0x070F00
 
    * - i915.enable_guc
-     - UOS
+     - User VM
      - Disable GuC
      - ::
 
          i915.enable_guc=0
 
    * - i915.enable_hangcheck
-     - UOS
+     - User VM
      - Disable check GPU activity for detecting hangs.
      - ::
 
          i915.enable_hangcheck=0
 
    * - i915.enable_fbc
-     - UOS
+     - User VM
      - Enable frame buffer compression for power savings
      - ::
 
@@ -425,8 +425,8 @@ i915.enable_gvt
 
 This option enables support for Intel GVT-g graphics virtualization
 support in the host. By default, it's not enabled, so we need to add
-``i915.enable_gvt=1`` in the SOS kernel command line.  This is a Service
-OS only parameter, and cannot be enabled in the User OS.
+``i915.enable_gvt=1`` in the Service VM kernel command line.  This is a Service
+OS only parameter, and cannot be enabled in the User VM.
 
 i915.enable_pvmmio
 ------------------
@@ -434,8 +434,8 @@ i915.enable_pvmmio
 We introduce the feature named **Para-Virtualized MMIO** (PVMMIO)
 to improve graphics performance of the GVT-g guest.
 This feature batches sequential MMIO writes into a
-shared buffer between the Service OS and User OS, and then submits a
-para-virtualized command to notify to GVT-g in Service OS. This
+shared buffer between the Service VM and User VM, and then submits a
+para-virtualized command to notify to GVT-g in Service VM. This
 effectively reduces the trap numbers of MMIO operations and improves
 overall graphics performance.
 
@@ -455,8 +455,8 @@ The PVMMIO optimization levels are:
 * PVMMIO_PPGTT_UPDATE = 0x10 - Use PVMMIO method to update the PPGTT table
   of guest.
 
-.. note:: This parameter works in both the Service OS and User OS, but
-   changes to one will affect the other. For example, if either SOS or UOS
+.. note:: This parameter works in both the Service VM and User VM, but
+   changes to one will affect the other. For example, if either Service VM or User VM
    disables the PVMMIO_PPGTT_UPDATE feature, this optimization will be
    disabled for both.
 
@@ -468,17 +468,17 @@ AcrnGT supports **Prioritized Rendering** as described in the
 configuration option controls the priority level of GVT-g guests.
 Priority levels range from -1023 to 1023.
 
-The default priority is zero, the same priority as the Service OS. If
+The default priority is zero, the same priority as the Service VM. If
 the level is less than zero, the guest's priority will be lower than the
-Service OS, so graphics preemption will work and the prioritized
+Service VM, so graphics preemption will work and the prioritized
 rendering feature will be enabled.  If the level is greater than zero,
-UOS graphics workloads will preempt most of the SOS graphics workloads,
+User VM graphics workloads will preempt most of the Service VM graphics workloads,
 except for display updating related workloads that use a default highest
 priority (1023).
 
-Currently, all UOSes share the same priority.
-This is a Service OS only parameters, and does
-not work in the User OS.
+Currently, all User VMs share the same priority.
+This is a Service VM only parameters, and does
+not work in the User VM.
 
 .. _i915-enable-initial-modeset:
 
@@ -494,14 +494,14 @@ initialized, so users would not be able to see the fb console on screen.
 If there is no graphics UI running by default, users will see black
 screens displayed.
 
-When ``i915.enable_initial_modeset=0`` in SOS, the plane restriction
+When ``i915.enable_initial_modeset=0`` in Service VM, the plane restriction
 (also known as plane-based domain ownership) feature will be disabled.
 (See the next section and :ref:`plane_restriction` in the ACRN GVT-g
 High Level Design for more information about this feature.)
 
 In the current configuration, we will set
-``i915.enable_initial_modeset=1`` in SOS and
-``i915.enable_initial_modeset=0`` in UOS.
+``i915.enable_initial_modeset=1`` in Service VM and
+``i915.enable_initial_modeset=0`` in User VM.
 
 This parameter is not used on UEFI platforms.
 
@@ -510,9 +510,9 @@ This parameter is not used on UEFI platforms.
 i915.avail_planes_per_pipe and i915.domain_plane_owners
 -------------------------------------------------------
 
-Both Service OS and User OS are provided a set of HW planes where they
+Both Service VM and User VM are provided a set of HW planes where they
 can display their contents.  Since each domain provides its content,
-there is no need for any extra composition to be done through SOS.
+there is no need for any extra composition to be done through Service VM.
 ``i915.avail_planes_per_pipe`` and ``i915.domain_plane_owners`` work
 together to provide the plane restriction (or plan-based domain
 ownership) feature.
@@ -528,9 +528,9 @@ ownership) feature.
   The ``i915.domain_plane_owners`` parameter controls the ownership of all
   the planes in the system, as shown in :numref:`i915-planes-pipes`. Each
   4-bit nibble identifies the domain id owner for that plane and a group
-  of 4 nibbles represents a pipe. This is a Service OS only configuration
-  and cannot be modified at runtime.  Domain ID 0x0 is for the Service OS,
-  the User OS use domain IDs from 0x1 to 0xF.
+  of 4 nibbles represents a pipe. This is a Service VM only configuration
+  and cannot be modified at runtime.  Domain ID 0x0 is for the Service VM,
+  the User VM use domain IDs from 0x1 to 0xF.
 
   .. figure:: images/i915-image1.png
      :width: 900px
@@ -540,8 +540,8 @@ ownership) feature.
      i915.domain_plane_owners
 
   For example, if we set ``i915.domain_plane_owners=0x010001101110``, the
-  plane ownership will be as shown in :numref:`i915-planes-example1` - SOS
-  (green) owns plane 1A, 1B, 4B, 1C, and 2C, and UOS #1 owns plane 2A, 3A,
+  plane ownership will be as shown in :numref:`i915-planes-example1` - Service VM
+  (green) owns plane 1A, 1B, 4B, 1C, and 2C, and User VM #1 owns plane 2A, 3A,
   4A, 2B, 3B and 3C.
 
   .. figure:: images/i915-image2.png
@@ -553,16 +553,16 @@ ownership) feature.
 
   Some other examples:
 
-  * i915.domain_plane_owners=0x022211110000 - SOS (0x0) owns planes on pipe A;
-    UOS #1 (0x1) owns all planes on pipe B; and UOS #2 (0x2) owns all
+  * i915.domain_plane_owners=0x022211110000 - Service VM (0x0) owns planes on pipe A;
+    User VM #1 (0x1) owns all planes on pipe B; and User VM #2 (0x2) owns all
     planes on pipe C (since, in the representation in
     :numref:`i915-planes-pipes` above, there are only 3 planes attached to
     pipe C).
 
-  * i915.domain_plane_owners=0x000001110000 - SOS owns all planes on pipe A
-    and pipe C; UOS #1 owns plane 1, 2 and 3 on pipe B. Plane 4 on pipe B
-    is owned by the SOS so that if it wants to display notice message, it
-    can display on top of the UOS.
+  * i915.domain_plane_owners=0x000001110000 - Service VM owns all planes on pipe A
+    and pipe C; User VM #1 owns plane 1, 2 and 3 on pipe B. Plane 4 on pipe B
+    is owned by the Service VM so that if it wants to display notice message, it
+    can display on top of the User VM.
 
 * i915.avail_planes_per_pipe
 
@@ -579,8 +579,8 @@ ownership) feature.
 
      i915.avail_planes_per_pipe
 
-  For example, if we set ``i915.avail_planes_per_pipe=0x030901`` in SOS
-  and ``i915.avail_planes_per_pipe=0x04060E`` in UOS, the planes will be as
+  For example, if we set ``i915.avail_planes_per_pipe=0x030901`` in Service VM
+  and ``i915.avail_planes_per_pipe=0x04060E`` in User VM, the planes will be as
   shown in :numref:`i915-avail-planes-example1` and
   :numref:`i915-avail-planes-example1`:
 
@@ -589,21 +589,21 @@ ownership) feature.
      :align: center
      :name: i915-avail-planes-example1
 
-     SOS i915.avail_planes_per_pipe
+     Service VM i915.avail_planes_per_pipe
 
   .. figure:: images/i915-image5.png
      :width: 500px
      :align: center
      :name: i915-avail-planes-example2
 
-     UOS i915.avail_planes_per_pipe
+     User VM i915.avail_planes_per_pipe
 
   ``i915.avail_planes_per_pipe`` controls the view of planes from i915 drivers
   inside of every domain, and ``i915.domain_plane_owners`` is the global
   arbiter controlling which domain can present its content onto the
   real hardware.  Generally, they are aligned. For example, we can set
   ``i915.domain_plane_owners= 0x011111110000``,
-  ``i915.avail_planes_per_pipe=0x00000F`` in SOS, and
+  ``i915.avail_planes_per_pipe=0x00000F`` in Service VM, and
   ``i915.avail_planes_per_pipe=0x070F00`` in domain 1, so every domain will
   only flip on the planes they owns.
 
@@ -611,9 +611,9 @@ ownership) feature.
   not be aligned with the
   setting of ``domain_plane_owners``. Consider this example:
   ``i915.domain_plane_owners=0x011111110000``,
-  ``i915.avail_planes_per_pipe=0x01010F`` in SOS and
+  ``i915.avail_planes_per_pipe=0x01010F`` in Service VM and
   ``i915.avail_planes_per_pipe=0x070F00`` in domain 1.
-  With this configuration, SOS will be able to render on plane 1B and
+  With this configuration, Service VM will be able to render on plane 1B and
   plane 1C, however, the content of plane 1B and plane 1C will not be
   flipped onto the real hardware.
 
@@ -636,12 +636,12 @@ guest OS.
 As with the parameter ``i915.domain_plane_owners``, each nibble of
 ``i915.domain_scaler_owner`` represents the domain id that owns the scaler;
 every nibble (4 bits) represents a scaler and every group of 2 nibbles
-represents a pipe. This is a Service OS only configuration and cannot be
-modified at runtime. Domain ID 0x0 is for the Service OS, the User OS
+represents a pipe. This is a Service VM only configuration and cannot be
+modified at runtime. Domain ID 0x0 is for the Service VM, the User VM
 use domain IDs from 0x1 to 0xF.
 
-For example, if we set ``i915.domain_scaler_owner=0x021100``, the SOS
-owns scaler 1A, 2A; UOS #1 owns scaler 1B, 2B; and UOS #2 owns scaler
+For example, if we set ``i915.domain_scaler_owner=0x021100``, the Service VM
+owns scaler 1A, 2A; User VM #1 owns scaler 1B, 2B; and User VM #2 owns scaler
 1C.
 
 i915.enable_hangcheck
@@ -651,8 +651,8 @@ This parameter enable detection of a GPU hang. When enabled, the i915
 will start a timer to check if the workload is completed in a specific
 time. If not, i915 will treat it as a GPU hang and trigger a GPU reset.
 
-In AcrnGT, the workload in SOS and UOS can be set to different
-priorities. If SOS is assigned a higher priority than the UOS, the UOS's
+In AcrnGT, the workload in Service VM and User VM can be set to different
+priorities. If Service VM is assigned a higher priority than the User VM, the User VM's
 workload might not be able to run on the HW on time. This may lead to
 the guest i915 triggering a hangcheck and lead to a guest GPU reset.
 This reset is unnecessary so we use ``i915.enable_hangcheck=0`` to

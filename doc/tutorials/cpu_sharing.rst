@@ -101,11 +101,11 @@ Example
 
 To support below configuration in industry scenario:
 
-+----------+-------+-------+--------+
-|pCPU0     |pCPU1  |pCPU2  |pCPU3   |
-+==========+=======+=======+========+
-|SOS WaaG  |RT Linux       |vxWorks |
-+----------+---------------+--------+
++-----------------+-------+-------+--------+
+|pCPU0            |pCPU1  |pCPU2  |pCPU3   |
++=================+=======+=======+========+
+|Service VM WaaG  |RT Linux       |vxWorks |
++-----------------+---------------+--------+
 
 Change the following three files:
 

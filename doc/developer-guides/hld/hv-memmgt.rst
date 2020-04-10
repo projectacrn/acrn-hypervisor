@@ -291,7 +291,8 @@ Virtual MTRR
 ************
 
 In ACRN, the hypervisor only virtualizes MTRRs fixed range (0~1MB).
-The HV sets MTRRs of the fixed range as Write-Back for UOS, and the SOS reads
+The HV sets MTRRs of the fixed range as Write-Back for a User VM, and
+the Service VM reads
 native MTRRs of the fixed range set by BIOS.
 
 If the guest physical address is not in the fixed range (0~1MB), the
@@ -489,7 +490,7 @@ almost all the system memory as shown here:
    :width: 900px
    :name: sos-mem-layout
 
-   SOS Physical Memory Layout
+   Service VM Physical Memory Layout
 
 Host to Guest Mapping
 =====================
@@ -521,4 +522,4 @@ must not be accessible by the Seervice/User VM normal world.
 .. figure:: images/mem-image18.png
    :align: center
 
-   UOS Physical Memory Layout with Trusty
+   User VM Physical Memory Layout with Trusty

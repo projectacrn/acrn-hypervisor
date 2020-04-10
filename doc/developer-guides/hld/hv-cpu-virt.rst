@@ -79,7 +79,7 @@ physical CPUs are initially assigned to the Service VM by creating the same
 number of virtual CPUs.
 
 When the Service VM boot is finished, it releases the physical CPUs intended
-for UOS use.
+for User VM use.
 
 Here is an example flow of CPU allocation on a multi-core platform.
 
@@ -93,18 +93,18 @@ Here is an example flow of CPU allocation on a multi-core platform.
 CPU management in the Service VM under flexing CPU sharing
 ==========================================================
 
-As all Service VM CPUs could share with different UOSs, ACRN can still pass-thru
+As all Service VM CPUs could share with different User VMs, ACRN can still pass-thru
 MADT to Service VM, and the Service VM is still able to see all physical CPUs.
 
 But as under CPU sharing, the Service VM does not need offline/release the physical
-CPUs intended for UOS use.
+CPUs intended for User VM use.
 
-CPU management in UOS
-=====================
+CPU management in User VM
+=========================
 
-From the UOS point of view, CPU management is very simple - when DM does
+From the User VM point of view, CPU management is very simple - when DM does
 hypercalls to create VMs, the hypervisor will create its virtual CPUs
-based on the configuration in this UOS VM's ``vm config``.
+based on the configuration in this User VM's ``vm config``.
 
 As mentioned in previous description, ``vcpu_affinity`` in ``vm config``
 tells which physical CPUs a VM's VCPU will use, and the scheduler policy
@@ -571,7 +571,7 @@ For a guest vCPU's state initialization:
       SW load based on different boot mode
 
 
-   -  UOS BSP: DM context initialization through hypercall
+   -  User VM BSP: DM context initialization through hypercall
 
 -  If it's AP, then it will always start from real mode, and the start
        vector will always come from vlapic INIT-SIPI emulation.
@@ -1103,7 +1103,7 @@ APIs to register its IO/MMIO range:
    for a hypervisor emulated device needs to first set its corresponding
    I/O bitmap to 1.
 
--  For UOS, the default I/O bitmap are all set to 1, which means UOS will trap
+-  For User VM, the default I/O bitmap are all set to 1, which means User VM will trap
    all I/O port access by default. Adding an I/O handler for a
    hypervisor emulated device does not need change its I/O bitmap.
    If the trapped I/O port access does not fall into a hypervisor
@@ -1115,7 +1115,7 @@ APIs to register its IO/MMIO range:
    default. Adding a MMIO handler for a hypervisor emulated
    device needs to first remove its MMIO range from EPT mapping.
 
--  For UOS, EPT only maps its system RAM to the UOS, which means UOS will
+-  For User VM, EPT only maps its system RAM to the User VM, which means User VM will
    trap all MMIO access by default. Adding a MMIO handler for a
    hypervisor emulated device does not need to change its EPT mapping.
    If the trapped MMIO access does not fall into a hypervisor

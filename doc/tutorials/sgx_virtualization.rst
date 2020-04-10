@@ -92,7 +92,7 @@ enable SGX support in the BIOS and in ACRN:
 
 #. Add the EPC config in the VM configuration.
 
-   Apply the patch to enable SGX support in UOS in the SDC scenario:
+   Apply the patch to enable SGX support in User VM in the SDC scenario:
 
    .. code-block:: bash
 

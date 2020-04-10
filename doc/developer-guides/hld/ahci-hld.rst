@@ -17,12 +17,12 @@ the below diagram.
 
 HBA is registered to the PCI system with device id 0x2821 and vendor id
 0x8086. Its memory registers are mapped in BAR 5. It only supports 6
-ports (refer to ICH8 AHCI). AHCI driver in the Guest OS can access HBA in DM
+ports (refer to ICH8 AHCI). AHCI driver in the User VM can access HBA in DM
 through the PCI BAR. And HBA can inject MSI interrupts through the PCI
 framework.
 
-When the application in the Guest OS reads data from /dev/sda, the request will
-send through the AHCI driver and then the PCI driver. The Guest VM will trap to
+When the application in the User VM reads data from /dev/sda, the request will
+send through the AHCI driver and then the PCI driver. The User VM will trap to
 hypervisor, and hypervisor dispatch the request to DM. According to the
 offset in the BAR, the request will dispatch to port control handler.
 Then the request is parse to a block I/O request which can be processed
@@ -39,6 +39,6 @@ regular file.
 
 For example,
 
-    SOS: -s 20,ahci,\ `hd:/dev/mmcblk0p1 <http://hd/dev/mmcblk0p1>`__
+    System VM: -s 20,ahci,\ `hd:/dev/mmcblk0p1 <http://hd/dev/mmcblk0p1>`__
 
-    UOS: /dev/sda
+    User VM: /dev/sda
