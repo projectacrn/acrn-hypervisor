@@ -33,24 +33,18 @@ struct page_walk_info {
 
 enum vm_paging_mode get_vcpu_paging_mode(struct acrn_vcpu *vcpu)
 {
-	enum vm_cpu_mode cpu_mode;
-	enum vm_paging_mode ret;
+	enum vm_paging_mode ret = PAGING_MODE_0_LEVEL;	/* non-paging */
 
-	cpu_mode = get_vcpu_mode(vcpu);
-
-	if (cpu_mode == CPU_MODE_REAL) {
-		ret = PAGING_MODE_0_LEVEL;
-
-	} else if (cpu_mode == CPU_MODE_PROTECTED) {
+	if (is_paging_enabled(vcpu)) {
 		if (is_pae(vcpu)) {
-			ret = PAGING_MODE_3_LEVEL;
-		} else if (is_paging_enabled(vcpu)) {
-			ret = PAGING_MODE_2_LEVEL;
+			if (is_long_mode(vcpu)) {
+				ret = PAGING_MODE_4_LEVEL;	/* 4-level paging */
+			} else {
+				ret = PAGING_MODE_3_LEVEL;	/* PAE paging */
+			}
 		} else {
-			ret = PAGING_MODE_0_LEVEL;
+			ret = PAGING_MODE_2_LEVEL;	/* 32-bit paging */
 		}
-	} else {	/* compatibility or 64bit mode */
-		ret = PAGING_MODE_4_LEVEL;
 	}
 
 	return ret;
