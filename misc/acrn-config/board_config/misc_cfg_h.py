@@ -106,8 +106,8 @@ def find_hi_mmio_window(config):
 
     print("", file=config)
     if is_hi_mmio:
-        print("#define HI_MMIO_START\t\t0x%xUL" % mmio_min, file=config)
-        print("#define HI_MMIO_END\t\t0x%xUL" % mmio_max, file=config)
+        print("#define HI_MMIO_START\t\t0x%xUL" % common.round_down(mmio_min, common.SIZE_G), file=config)
+        print("#define HI_MMIO_END\t\t0x%xUL" % common.round_up(mmio_max, common.SIZE_G), file=config)
     else:
         print("#define HI_MMIO_START\t\t~0UL", file=config)
         print("#define HI_MMIO_END\t\t0UL", file=config)

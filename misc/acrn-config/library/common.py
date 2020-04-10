@@ -466,6 +466,9 @@ def undline_name(name):
 
     return name_str
 
+def round_down(addr, mem_align):
+    """Keep memory align"""
+    return (addr & (~(mem_align - 1)))
 
 def round_up(addr, mem_align):
     """Keep memory align"""
