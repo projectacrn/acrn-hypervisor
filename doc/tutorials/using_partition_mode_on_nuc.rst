@@ -161,7 +161,7 @@ Update ACRN hypervisor Image
    * Set ACRN Scenario as "Logical Partition VMs";
    * Set Maximum number of VCPUs per VM as "2";
    * Set Maximum number of PCPU as "4";
-   * Clear/Disable “Enable hypervisor relocation”.
+   * Clear/Disable "Enable hypervisor relocation".
 
    We recommend keeping the default values of items not mentioned above.
 

@@ -35,7 +35,9 @@ Install Kata Containers
 
 The Kata Containers installation from Clear Linux's official repository does
 not work with ACRN at the moment. Therefore, you must install Kata
-Containers using the `manual installation <https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md>`_ instructions (using a ``rootfs`` image).
+Containers using the `manual installation
+<https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md>`_
+instructions (using a ``rootfs`` image).
 
 #. Install the build dependencies.
 
@@ -45,7 +47,8 @@ Containers using the `manual installation <https://github.com/kata-containers/do
 
 #. Install Kata Containers.
 
-   At a high level, the `manual installation <https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md>`_
+   At a high level, the `manual installation
+   <https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md>`_
    steps are:
 
    #. Build and install the Kata runtime.
@@ -89,7 +92,7 @@ outputs:
    $ kata-runtime kata-env | awk -v RS= '/\[Hypervisor\]/'
    [Hypervisor]
      MachineType = ""
-     Version = "DM version is: 1.5-unstable-”2020w02.5.140000p_261” (daily tag:”2020w02.5.140000p”), build by mockbuild@2020-01-12 08:44:52"
+     Version = "DM version is: 1.5-unstable-"2020w02.5.140000p_261" (daily tag:"2020w02.5.140000p"), build by mockbuild@2020-01-12 08:44:52"
      Path = "/usr/bin/acrn-dm"
      BlockDeviceDriver = "virtio-blk"
      EntropySource = "/dev/urandom"

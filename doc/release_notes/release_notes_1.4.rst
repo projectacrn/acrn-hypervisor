@@ -152,7 +152,7 @@ Fixed Issues Details
 - :acrn-issue:`3853` - [acrn-configuration-tool] Generated Launch script is incorrect when select audio&audio_codec for nuc7i7dnb with Scenario:SDC
 - :acrn-issue:`3859` - VM-Manager: the return value of "strtol" is not validated properly
 - :acrn-issue:`3863` - [acrn-configuration-tool]WebUI do not select audio&wifi devices by default for apl-mrb with LaunchSetting: sdc_launch_1uos_aaag
-- :acrn-issue:`3879` - [acrn-configuration-tool]The â€œ-k" parameter is unnecessary in launch_uos_id2.sh for RTVM.
+- :acrn-issue:`3879` - [acrn-configuration-tool]The "-k" parameter is unnecessary in launch_uos_id2.sh for RTVM.
 - :acrn-issue:`3880` - [acrn-configuration-tool]"--windows \" missing in launch_uos_id1.sh for waag.
 - :acrn-issue:`3900` - [WHL][acrn-configuration-tool]Same bdf in generated whl-ipc-i5.xml.
 - :acrn-issue:`3913` - [acrn-configuration-tool]WebUI do not give any prompt when generate launch_script for a new imported board

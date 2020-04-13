@@ -221,7 +221,7 @@ Use the ACRN industry out-of-the-box image
       It ensures that the end of the string is properly detected.
 
 #. Reboot the test machine. After the Clear Linux OS boots,
-   log in as “root” for the first time.
+   log in as ``root`` for the first time.
 
 .. _install_rtvm:
 
@@ -287,7 +287,15 @@ RT Performance Test
 Cyclictest introduction
 =======================
 
-The cyclictest is most commonly used for benchmarking RT systems. It is one of the most frequently used tools for evaluating the relative performance of real-time systems. Cyclictest accurately and repeatedly measures the difference between a thread's intended wake-up time and the time at which it actually wakes up in order to provide statistics about the system's latencies. It can measure latencies in real-time systems that are caused by hardware, firmware, and the operating system. The cyclictest is currently maintained by Linux Foundation and is part of the test suite rt-tests.
+The cyclictest is most commonly used for benchmarking RT systems. It is
+one of the most frequently used tools for evaluating the relative
+performance of real-time systems. Cyclictest accurately and repeatedly
+measures the difference between a thread's intended wake-up time and the
+time at which it actually wakes up in order to provide statistics about
+the system's latencies. It can measure latencies in real-time systems
+that are caused by hardware, firmware, and the operating system. The
+cyclictest is currently maintained by Linux Foundation and is part of
+the test suite rt-tests.
 
 Pre-Configurations
 ==================
@@ -555,5 +563,3 @@ Passthrough a hard disk to the RTVM
    .. code-block:: none
 
       # /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
-
-

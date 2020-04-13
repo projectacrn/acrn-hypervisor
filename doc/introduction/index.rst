@@ -6,7 +6,7 @@ What is ACRN
 Introduction to Project ACRN
 ****************************
 
-ACRN™ is a, flexible, lightweight reference hypervisor, built with
+ACRN |trade| is a, flexible, lightweight reference hypervisor, built with
 real-time and safety-criticality in mind, and optimized to streamline
 embedded development through an open source platform. ACRN defines a
 device hypervisor reference stack and an architecture for running
@@ -59,7 +59,7 @@ actions when system critical failures occur.
 
 Shown on the right of :numref:`V2-hl-arch`, the remaining hardware
 resources are shared among the service VM and user VMs.  The service VM
-is similar to Xen’s Dom0, and a user VM is similar to Xen’s DomU. The
+is similar to Xen's Dom0, and a user VM is similar to Xen's DomU. The
 service VM is the first VM launched by ACRN, if there is no pre-launched
 VM. The service VM can access hardware resources directly by running
 native drivers and it provides device sharing services to the user VMs
@@ -117,7 +117,7 @@ information about the vehicle, such as:
   fuel or tire pressure;
 - showing rear-view and surround-view cameras for parking assistance.
 
-An **In-Vehicle Infotainment (IVI)** system’s capabilities can include:
+An **In-Vehicle Infotainment (IVI)** system's capabilities can include:
 
 - navigation systems, radios, and other entertainment systems;
 - connection to mobile devices for phone calls, music, and applications
@@ -197,7 +197,7 @@ real-time OS needs, such as VxWorks* or RT-Linux*.
 
    ACRN Industrial Usage Architecture Overview
 
-:numref:`V2-industry-usage-arch` shows ACRN’s block diagram for an
+:numref:`V2-industry-usage-arch` shows ACRN's block diagram for an
 Industrial usage scenario:
 
 - ACRN boots from the SoC platform, and supports firmware such as the

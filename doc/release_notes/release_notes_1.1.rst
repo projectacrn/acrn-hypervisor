@@ -94,7 +94,7 @@ Fixed Issues Details
 - :acrn-issue:`2857` - FAQs for ACRN's memory usage need to be updated
 - :acrn-issue:`2971` - PCIE ECFG support for AcrnGT
 - :acrn-issue:`2976` - [GVT]don't register memory for gvt in acrn-dm
-- :acrn-issue:`2984` - HV will crash if  launch two UOS with same UUID
+- :acrn-issue:`2984` - HV will crash if  launch two UOS with same UUID
 - :acrn-issue:`2991` - Failed to boot normal vm on the pcpu which ever run lapic_pt vm
 - :acrn-issue:`3009` - When running new workload on weston, the last workload animation not disappeared and screen flashed badly.
 - :acrn-issue:`3028` - virtio gpio line fd not release
@@ -129,14 +129,14 @@ Known Issues
    After booting UOS with multiple USB devices plugged in,
    there's a 60% chance that one or more devices are not discovered.
 
-   **Impact:** Cannot use multiple USB devices at same time.
+   **Impact:** Cannot use multiple USB devices at same time.
 
-   **Workaround:** Unplug and plug-in the unrecognized device after booting.
+   **Workaround:** Unplug and plug-in the unrecognized device after booting.
 
 -----
 
 :acrn-issue:`1991` - Input not accepted in UART Console for corner case
-   Input is useless in UART Console for a corner case, demonstrated with these steps:
+   Input is useless in UART Console for a corner case, demonstrated with these steps:
 
    1) Boot to SOS
    2) ssh into the SOS.
@@ -144,18 +144,18 @@ Known Issues
    4) On the host, use ``minicom -D /dev/ttyUSB0``.
    5) Use ``sos_console 0`` to launch SOS.
 
-   **Impact:** Fails to use UART for input.
+   **Impact:** Fails to use UART for input.
 
-   **Workaround:** Enter other keys before typing :kbd:`Enter`.
+   **Workaround:** Enter other keys before typing :kbd:`Enter`.
 
 -----
 
 :acrn-issue:`2267` - [APLUP2][LaaG] LaaG can't detect 4k monitor
    After launching UOS on APL UP2 , 4k monitor cannot be detected.
 
-   **Impact:** UOS can't display on a 4k monitor.
+   **Impact:** UOS can't display on a 4k monitor.
 
-   **Workaround:** Use a monitor with less than 4k resolution.
+   **Workaround:** Use a monitor with less than 4k resolution.
 
 -----
 
@@ -173,18 +173,18 @@ Known Issues
    4) Exit UOS.
    5) SOS tries to access USB keyboard and mouse, and fails.
 
-   **Impact:** SOS cannot use USB keyboard and mouse in such case.
+   **Impact:** SOS cannot use USB keyboard and mouse in such case.
 
-   **Workaround:** Unplug and plug-in the USB keyboard and mouse after exiting UOS.
+   **Workaround:** Unplug and plug-in the USB keyboard and mouse after exiting UOS.
 
 -----
 
 :acrn-issue:`2753` - UOS cannot resume after suspend by pressing power key
    UOS cannot resume after suspend by pressing power key
 
-   **Impact:** UOS may failed to resume after suspend by pressing the power key.
+   **Impact:** UOS may failed to resume after suspend by pressing the power key.
 
-   **Workaround:** None
+   **Workaround:** None
 
 -----
 
@@ -203,7 +203,7 @@ Known Issues
 
    **Impact:** Launching Zephyr RTOS as a real-time UOS takes too long
 
-   **Workaround:** A different version of Grub is known to work correctly
+   **Workaround:** A different version of Grub is known to work correctly
 
 -----
 
@@ -239,11 +239,11 @@ Known Issues
 :acrn-issue:`3279` - AcrnGT causes display flicker in some situations.
    In current scaler ownership assignment logic, there's an issue that when SOS disables a plane,
    it will disable corresponding plane scalers; however, there's no scaler ownership checking there.
-   So the scalers owned by UOS may be disabled by SOS by accident.  
+   So the scalers owned by UOS may be disabled by SOS by accident.
 
-   **Impact:** AcrnGT causes display flicker in some situations
+   **Impact:** AcrnGT causes display flicker in some situations
 
-   **Workaround:** None
+   **Workaround:** None
 
 -----
 
