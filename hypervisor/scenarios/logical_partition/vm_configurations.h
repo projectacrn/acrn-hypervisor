@@ -20,6 +20,7 @@
 #define PRE_VM_NUM			2U
 #define SOS_VM_NUM			0U
 #define MAX_POST_VM_NUM			0U
+#define CONFIG_MAX_KATA_VM_NUM		0U
 
 /* The VM CONFIGs like:
  *	VMX_CONFIG_VCPU_AFFINITY
