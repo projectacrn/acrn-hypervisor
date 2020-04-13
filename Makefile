@@ -75,8 +75,7 @@ ifeq ($(KCONFIG_FILE), $(wildcard $(KCONFIG_FILE)))
     $(error no BOARD info in KCONFIG_FILE: $(KCONFIG_FILE))
   endif
 
-  SCENARIO_IN_KCONFIG := $(shell grep -E "SDC=y|SDC2=y|INDUSTRY=y|LOGICAL_PARTITION=y|HYBRID=y" \
-           $(KCONFIG_FILE) | grep -v '\#' | awk -F "=" '{print $$1}' | cut -d '_' -f 2- | tr A-Z a-z)
+  SCENARIO_IN_KCONFIG := $(shell grep CONFIG_SCENARIO= $(KCONFIG_FILE) | grep -v '\#' | awk -F '"' '{print $$2}')
   ifeq ($(SCENARIO_IN_KCONFIG),)
     $(error no SCENARIO info in KCONFIG_FILE: $(KCONFIG_FILE))
   endif
@@ -131,14 +130,13 @@ include $(T)/hypervisor/scripts/makefile/cfg_update.mk
 
 #help functions to build acrn and install acrn/acrn symbols
 define build_acrn
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(4) RELEASE=$(RELEASE) clean
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(4) RELEASE=$(RELEASE) defconfig
-	@echo "$(3)=y" >> $(HV_OUT)-$(1)/$(2)/.config
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(4) RELEASE=$(RELEASE) oldconfig
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(4) RELEASE=$(RELEASE)
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(3) RELEASE=$(RELEASE) clean
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(3) RELEASE=$(RELEASE) defconfig
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(3) RELEASE=$(RELEASE) oldconfig
+	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-$(1)/$(2) BOARD=$(2) FIRMWARE=$(1) SCENARIO=$(3) RELEASE=$(RELEASE)
 	echo "building hypervisor as EFI executable..."
 	@if [ "$(1)" = "uefi" ]; then \
-	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT)-$(1)/$(2) SCENARIO=$(4) EFI_OBJDIR=$(HV_OUT)-$(1)/$(2)/$(EFI_OUT); \
+	$(MAKE) -C $(T)/misc/efi-stub HV_OBJDIR=$(HV_OUT)-$(1)/$(2) SCENARIO=$(3) EFI_OBJDIR=$(HV_OUT)-$(1)/$(2)/$(EFI_OUT); \
 	fi
 endef
 
@@ -157,17 +155,12 @@ define install_acrn_debug
 endef
 
 hypervisor:
-	@if [ "$(SCENARIO)" != "sdc" ] && [ "$(SCENARIO)" != "sdc2" ] && [ "$(SCENARIO)" != "industry" ] \
-			&& [ "$(SCENARIO)" != "logical_partition" ] && [ "$(SCENARIO)" != "hybrid" ]; then \
-		echo "SCENARIO <$(SCENARIO)> is not supported. "; exit 1; \
-	fi
 	@if [ "$(BOARD_FILE)" != "" ] && [ -f $(BOARD_FILE) ] && [ "$(SCENARIO_FILE)" != "" ] && [ -f $(SCENARIO_FILE) ] && [ "$(TARGET_DIR)" = "" ]; then \
 		echo "No TARGET_DIR parameter is specified, the original configuration source is overwritten!";\
 	fi
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) clean;
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(abspath $(TARGET_DIR)) defconfig;
 	@if [ "$(CONFIG_XML_ENABLED)" != "true" ] && [ ! -f $(KCONFIG_FILE) ]; then \
-		echo "CONFIG_$(shell echo $(SCENARIO) | tr a-z A-Z)=y" >> $(HV_OUT)/.config; \
 		if [ "$(SCENARIO)" != "sdc" ]; then \
 			echo "CONFIG_MAX_KATA_VM_NUM=0" >> $(HV_OUT)/.config; \
 		fi; \
@@ -239,13 +232,13 @@ ifeq ($(FIRMWARE),uefi)
 endif
 
 apl-mrb-sbl-sdc:
-	$(call build_acrn,sbl,apl-mrb,CONFIG_SDC,sdc)
+	$(call build_acrn,sbl,apl-mrb,sdc)
 apl-up2-sbl-sdc:
-	$(call build_acrn,sbl,apl-up2,CONFIG_SDC,sdc)
+	$(call build_acrn,sbl,apl-up2,sdc)
 kbl-nuc-i7-uefi-industry:
-	$(call build_acrn,uefi,nuc7i7dnb,CONFIG_INDUSTRY,industry)
+	$(call build_acrn,uefi,nuc7i7dnb,industry)
 apl-up2-uefi-hybrid:
-	$(call build_acrn,uefi,apl-up2,CONFIG_HYBRID,hybrid)
+	$(call build_acrn,uefi,apl-up2,hybrid)
 
 sbl-hypervisor: apl-mrb-sbl-sdc \
                 apl-up2-sbl-sdc \
