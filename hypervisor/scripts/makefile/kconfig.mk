@@ -36,15 +36,9 @@ ifeq ($(shell [ $(HV_OBJDIR)/$(HV_CONFIG) -nt $(HV_OBJDIR)/$(HV_CONFIG_MK) ] && 
 # only happens when GNU make checks the prerequisites.
 -include $(HV_OBJDIR)/$(HV_CONFIG)
 endif
-
 $(eval $(call override_config,BOARD,apl-mrb))
+$(eval $(call override_config,SCENARIO,))
 $(eval $(call override_config,RELEASE,n))
-
-ifdef BOARD
-TARGET_BOARD=$(BOARD)
-else
-TARGET_BOARD=$(CONFIG_BOARD)
-endif
 
 $(eval $(call check_dep_exec,python3,KCONFIG_DEPS))
 $(eval $(call check_dep_py3lib,kconfiglib,KCONFIG_DEPS))
@@ -73,7 +67,7 @@ $(HV_OBJDIR)/$(HV_CONFIG_H): $(HV_OBJDIR)/$(HV_CONFIG)
 defconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
 	@if [ ! -f $(KCONFIG_FILE) ] && [ "$(CONFIG_XML_ENABLED)" != "true" ]; then \
-		BOARD=$(TARGET_BOARD) python3 $(KCONFIG_DIR)/defconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG); \
+		BOARD=$(CONFIG_BOARD) python3 $(KCONFIG_DIR)/defconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG); \
 	else \
 		if [ "$(KCONFIG_FILE)" != "" ] && [ -f $(KCONFIG_FILE) ]; then \
 			echo "Writing $(HV_OBJDIR)/$(HV_CONFIG) with $(KCONFIG_FILE)"; \
@@ -92,10 +86,10 @@ defconfig: $(KCONFIG_DEPS)
 .PHONY: oldconfig
 oldconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
-	@BOARD=$(TARGET_BOARD) \
+	@BOARD=$(CONFIG_BOARD) \
 	 python3 $(KCONFIG_DIR)/silentoldconfig.py Kconfig \
 		$(HV_OBJDIR)/$(HV_CONFIG) \
-		RELEASE=$(RELEASE)
+		SCENARIO=$(CONFIG_SCENARIO) RELEASE=$(RELEASE)
 
 # Minimize the current .config. This target can be used to generate a defconfig
 # for future use.

@@ -1,41 +1,18 @@
-choice
-	prompt "ACRN Scenario"
-	default SDC
+config SCENARIO
+	string "ACRN scenario"
+	default "sdc"
 	help
-	  Select the scenario name to load corresponding VM configuration.
-
-config SDC
-	bool "Software Defined Cockpit"
-	help
-	  SDC (Software Defined Cockpit) is a typical scenario that ACRN supported.
-	  SDC will have one pre-launched SOS VM and one post-launched VM.
-
-config SDC2
-        bool "Software Defined Cockpit 2"
-        help
-          SDC2 (Software Defined Cockpit 2) is an extended scenario for automotive SDC system.
-          SDC2 will have one pre-launched SOS VM and up to three post-launched VM.
-
-config LOGICAL_PARTITION
-	bool "Logical Partition VMs"
-	help
-	  This scenario will run two pre-launched VMs.
-
-config INDUSTRY
-	bool "Industry VMs"
-	help
-	  This scenario is a typical scenario for industry usage with 4 VMs:
-	  one pre-launched SOS VM, one post-launched Standard VM for HMI, one or two
-	  post-launched  RT VM for real-time control.
-
-config HYBRID
-	bool "Hybrid VMs"
-	help
-	  This scenario is a typical scenario for hybrid usage with 3 VMs:
-	  one pre-launched VM, one pre-launched SOS VM and one post-launched Standard
-	  VM.
-
-endchoice
+	  By specifying SCENARIO name, ACRN will load corresponding VM configurations
+	  to build the hypervisor. Currently ACRN provides below reference scenarios:
+	  sdc: Typical scenario for automotive Software Defined Cockpit system.
+	  sdc will have one pre-launched SOS VM and one post-launched VM;
+	  sdc2: Extended scenario for automotive Software Defined Cockpit system.
+	  sdc2 will have one pre-launched SOS VM and up to three post-launched VMs;
+	  industry: Typical scenario for industry usage with 3 VMs: one pre-launched SOS VM,
+	  one post-launched Standard VM for HMI, one post-launched RT VM for real-time control.
+	  hybrid: Typical scenario for hybrid usage with 3 VMs: one pre-launched VM,
+	  one pre-launched SOS VM and one post-launched Standard VM;
+	  logical_partition: Typical scenario that run two isolated pre-launched VMs;
 
 config MULTIBOOT2
 	bool "Multiboot2 support"
