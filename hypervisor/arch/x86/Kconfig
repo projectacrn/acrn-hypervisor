@@ -6,8 +6,6 @@ config SCENARIO
 	  to build the hypervisor. Currently ACRN provides below reference scenarios:
 	  sdc: Typical scenario for automotive Software Defined Cockpit system.
 	  sdc will have one pre-launched SOS VM and one post-launched VM;
-	  sdc2: Extended scenario for automotive Software Defined Cockpit system.
-	  sdc2 will have one pre-launched SOS VM and up to three post-launched VMs;
 	  industry: Typical scenario for industry usage with 8 VMs: one pre-launched SOS VM,
 	  one post-launched KATA VM, one post-launched RT VM for real-time control,
 	  and up to five post-launched Standard VMs;
