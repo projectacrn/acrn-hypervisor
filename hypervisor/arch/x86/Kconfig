@@ -8,8 +8,9 @@ config SCENARIO
 	  sdc will have one pre-launched SOS VM and one post-launched VM;
 	  sdc2: Extended scenario for automotive Software Defined Cockpit system.
 	  sdc2 will have one pre-launched SOS VM and up to three post-launched VMs;
-	  industry: Typical scenario for industry usage with 3 VMs: one pre-launched SOS VM,
-	  one post-launched Standard VM for HMI, one post-launched RT VM for real-time control.
+	  industry: Typical scenario for industry usage with 8 VMs: one pre-launched SOS VM,
+	  one post-launched KATA VM, one post-launched RT VM for real-time control,
+	  and up to five post-launched Standard VMs;
 	  hybrid: Typical scenario for hybrid usage with 3 VMs: one pre-launched VM,
 	  one pre-launched SOS VM and one post-launched Standard VM;
 	  logical_partition: Typical scenario that run two isolated pre-launched VMs;
@@ -194,8 +195,8 @@ config HV_RAM_START
 
 config HV_RAM_SIZE
 	hex "Size of the RAM region used by the hypervisor"
-	range 0x1000000 0x10000000
-	default 0x0b800000
+	range 0x1000000 0x20000000
+	default 0x14000000
 	help
 	  A 64-bit integer indicating the size of RAM used by the hypervisor.
 	  It is ensured at link time that the footprint of the hypervisor
