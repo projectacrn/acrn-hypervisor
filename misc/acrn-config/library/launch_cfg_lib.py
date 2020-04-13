@@ -499,7 +499,7 @@ def cpu_sharing_check(cpu_sharing, item):
     vm_cpu_share = []
     vm_cpu_share_consistent = True
 
-    cpu_affinity = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "vcpu_affinity", "pcpu_id")
+    cpu_affinity = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "cpu_affinity", "pcpu_id")
     for vm_i in cpu_affinity.keys():
         for cpu in cpu_affinity[vm_i]:
             if cpu in use_cpus:
