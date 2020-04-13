@@ -70,6 +70,14 @@ bool is_created_vm(const struct acrn_vm *vm)
 	return (vm->state == VM_CREATED);
 }
 
+/**
+ * @pre vm != NULL
+ */
+bool is_paused_vm(const struct acrn_vm *vm)
+{
+	return (vm->state == VM_PAUSED);
+}
+
 bool is_sos_vm(const struct acrn_vm *vm)
 {
 	return (vm != NULL)  && (get_vm_config(vm->vm_id)->load_order == SOS_VM);
@@ -575,6 +583,7 @@ static int32_t offline_lapic_pt_enabled_pcpus(const struct acrn_vm *vm, uint64_t
 
 /*
  * @pre vm != NULL
+ * @pre vm->state == VM_PAUSED
  */
 int32_t shutdown_vm(struct acrn_vm *vm)
 {
@@ -585,33 +594,29 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	int32_t ret = 0;
 
 	/* Only allow shutdown paused vm */
-	if (vm->state == VM_PAUSED) {
-		vm->state = VM_POWERED_OFF;
+	vm->state = VM_POWERED_OFF;
 
-		vm_config = get_vm_config(vm->vm_id);
-		vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
+	vm_config = get_vm_config(vm->vm_id);
+	vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
 
-		if (is_sos_vm(vm)) {
-			sbuf_reset();
-		}
+	if (is_sos_vm(vm)) {
+		sbuf_reset();
+	}
 
-		deinit_vuart(vm);
+	deinit_vuart(vm);
 
-		deinit_vpci(vm);
+	deinit_vpci(vm);
 
-		/* Free EPT allocated resources assigned to VM */
-		destroy_ept(vm);
+	/* Free EPT allocated resources assigned to VM */
+	destroy_ept(vm);
 
-		mask = lapic_pt_enabled_pcpu_bitmap(vm);
-		if (mask != 0UL) {
-			ret = offline_lapic_pt_enabled_pcpus(vm, mask);
-		}
+	mask = lapic_pt_enabled_pcpu_bitmap(vm);
+	if (mask != 0UL) {
+		ret = offline_lapic_pt_enabled_pcpus(vm, mask);
+	}
 
-		foreach_vcpu(i, vm, vcpu) {
-			offline_vcpu(vcpu);
-		}
-	} else {
-		ret = -EINVAL;
+	foreach_vcpu(i, vm, vcpu) {
+		offline_vcpu(vcpu);
 	}
 
 	if (is_ready_for_system_shutdown()) {
@@ -624,7 +629,8 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 }
 
 /**
- *  * @pre vm != NULL
+ * @pre vm != NULL
+ * @pre vm->state == VM_CREATED
  */
 void start_vm(struct acrn_vm *vm)
 {
@@ -639,7 +645,8 @@ void start_vm(struct acrn_vm *vm)
 }
 
 /**
- *  * @pre vm != NULL
+ * @pre vm != NULL
+ * @pre vm->state == VM_PAUSED
  */
 int32_t reset_vm(struct acrn_vm *vm)
 {
@@ -648,66 +655,49 @@ int32_t reset_vm(struct acrn_vm *vm)
 	struct acrn_vcpu *vcpu = NULL;
 	int32_t ret = 0;
 
-	if (vm->state == VM_PAUSED) {
-		mask = lapic_pt_enabled_pcpu_bitmap(vm);
-		if (mask != 0UL) {
-			ret = offline_lapic_pt_enabled_pcpus(vm, mask);
-		}
-
-		foreach_vcpu(i, vm, vcpu) {
-			reset_vcpu(vcpu, COLD_RESET);
-		}
-
-		/*
-		 * Set VM vLAPIC state to VM_VLAPIC_XAPIC
-		 */
-		vm->arch_vm.vlapic_state = VM_VLAPIC_XAPIC;
-
-		if (is_sos_vm(vm)) {
-			(void )vm_sw_loader(vm);
-		}
-
-		reset_vm_ioreqs(vm);
-		reset_vioapics(vm);
-		destroy_secure_world(vm, false);
-		vm->sworld_control.flag.active = 0UL;
-		vm->state = VM_CREATED;
-	} else {
-		ret = -EINVAL;
+	mask = lapic_pt_enabled_pcpu_bitmap(vm);
+	if (mask != 0UL) {
+		ret = offline_lapic_pt_enabled_pcpus(vm, mask);
 	}
+
+	foreach_vcpu(i, vm, vcpu) {
+		reset_vcpu(vcpu, COLD_RESET);
+	}
+
+	/*
+	 * Set VM vLAPIC state to VM_VLAPIC_XAPIC
+	 */
+	vm->arch_vm.vlapic_state = VM_VLAPIC_XAPIC;
+
+	if (is_sos_vm(vm)) {
+		(void)vm_sw_loader(vm);
+	}
+
+	reset_vm_ioreqs(vm);
+	reset_vioapics(vm);
+	destroy_secure_world(vm, false);
+	vm->sworld_control.flag.active = 0UL;
+	vm->state = VM_CREATED;
 
 	return ret;
 }
 
 /**
- *  * @pre vm != NULL
+ * @pre vm != NULL
  */
 void pause_vm(struct acrn_vm *vm)
 {
 	uint16_t i;
 	struct acrn_vcpu *vcpu = NULL;
 
-	if (vm->state != VM_PAUSED) {
-		if (is_rt_vm(vm)) {
-			/**
-			 * For RTVM, we can only pause its vCPUs when it stays at following states:
-			 *  - It is powering off by itself
-			 *  - It is created but doesn't start
-			 */
-			if ((vm->state == VM_READY_TO_POWEROFF) || (vm->state == VM_CREATED)) {
-				foreach_vcpu(i, vm, vcpu) {
-					pause_vcpu(vcpu, VCPU_ZOMBIE);
-				}
-
-				vm->state = VM_PAUSED;
-			}
-		} else {
-			foreach_vcpu(i, vm, vcpu) {
-				pause_vcpu(vcpu, VCPU_ZOMBIE);
-			}
-
-			vm->state = VM_PAUSED;
+	/* For RTVM, we can only pause its vCPUs when it is powering off by itself */
+	if (((!is_rt_vm(vm)) && (vm->state == VM_RUNNING)) ||
+			((is_rt_vm(vm)) && (vm->state == VM_READY_TO_POWEROFF)) ||
+			(vm->state == VM_CREATED)) {
+		foreach_vcpu(i, vm, vcpu) {
+			pause_vcpu(vcpu, VCPU_ZOMBIE);
 		}
+		vm->state = VM_PAUSED;
 	}
 }
 
@@ -724,6 +714,7 @@ void pause_vm(struct acrn_vm *vm)
  * @wakeup_vec[in]	The resume address of vm
  *
  * @pre vm != NULL
+ * @pre is_sos_vm(vm) && vm->state == VM_PAUSED
  */
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 {
@@ -759,7 +750,7 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 			build_vacpi(vm);
 		}
 
-		(void )vm_sw_loader(vm);
+		(void)vm_sw_loader(vm);
 
 		/* start vm BSP automatically */
 		start_vm(vm);
