@@ -50,11 +50,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = INVALID_COM_BASE,
 		}
-
 	},
 	{	/* VM2 */
 		CONFIG_POST_RT_VM(1),
-		/* The hard RTVM must be launched as VM2 */
 		.guest_flags = 0UL,
 		.vcpu_num = 2U,
 		.vcpu_affinity = VM2_CONFIG_VCPU_AFFINITY,
@@ -70,5 +68,75 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.t_vuart.vm_id = 0U,
 			.t_vuart.vuart_id = 1U,
 		},
+	},
+	{	/* VM3 */
+		CONFIG_POST_STD_VM(2),
+		.vcpu_num = 1U,
+		.vcpu_affinity = VM3_CONFIG_VCPU_AFFINITY,
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		}
+	},
+	{	/* VM4 */
+		CONFIG_POST_STD_VM(3),
+		.vcpu_num = 1U,
+		.vcpu_affinity = VM4_CONFIG_VCPU_AFFINITY,
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		}
+	},
+	{	/* VM5 */
+		CONFIG_POST_STD_VM(4),
+		.vcpu_num = 1U,
+		.vcpu_affinity = VM5_CONFIG_VCPU_AFFINITY,
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		}
+	},
+	{	/* VM6 */
+		CONFIG_POST_STD_VM(5),
+		.vcpu_num = 1U,
+		.vcpu_affinity = VM6_CONFIG_VCPU_AFFINITY,
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		}
+	},
+	{	/* VM7 */
+		CONFIG_KATA_VM(1),
+		.vcpu_num = 1U,
+		.vcpu_affinity = VM7_CONFIG_VCPU_AFFINITY,
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		}
 	},
 };
