@@ -42,7 +42,7 @@ Many new `reference documents <https://projectacrn.github.io>`_ are available, i
 * :ref:`run-kata-containers`
 * :ref:`hardware` (Addition of Whiskey Lake information)
 * :ref:`cpu_sharing`
-* :ref:`using_windows_as_uos` (Update to use ACRNGT GOP to install Windows)
+* :ref:`using_windows_as_uos` (Update to use ACRNGT GOP to install Windows)
 
 Fixed Issues Details
 ********************
@@ -90,13 +90,13 @@ Fixed Issues Details
 - :acrn-issue:`4135` - [Community][External]Invalid guest vCPUs (0) Ubuntu as SOS.
 - :acrn-issue:`4139` - [Community][External]mngr_client_new: Failed to accept from fd 38
 - :acrn-issue:`4143` - [acrn-configuration-tool] bus of DRHD scope devices is parsed incorrectly
-- :acrn-issue:`4163` - [acrn-configuration-tool] not support: –s n,virtio-input
-- :acrn-issue:`4164` - [acrn-configuration-tool] not support: –s n,xhci,1-1:1-2:2-1:2-2
+- :acrn-issue:`4163` - [acrn-configuration-tool] not support: -s n,virtio-input
+- :acrn-issue:`4164` - [acrn-configuration-tool] not support: -s n,xhci,1-1:1-2:2-1:2-2
 - :acrn-issue:`4165` -[WHL][acrn-configuration-tool]Configure epc_section is incorrect
-- :acrn-issue:`4172` - [acrn-configuration-tool] not support: –s n,virtio-blk, (/root/part.img---dd if=/dev/zero of=/root/part.img bs=1M count=10  all/part of img, one u-disk device, u-disk as rootfs and the n is special)
+- :acrn-issue:`4172` - [acrn-configuration-tool] not support: -s n,virtio-blk, (/root/part.img---dd if=/dev/zero of=/root/part.img bs=1M count=10  all/part of img, one u-disk device, u-disk as rootfs and the n is special)
 - :acrn-issue:`4173` - [acrn-configuration-tool]acrn-config tool not support parse default pci mmcfg base
 - :acrn-issue:`4175` - acrntrace fixes and improvement
-- :acrn-issue:`4185` - [acrn-configuration-tool] not support: –s n,virtio-net, (not set,error net, set 1 net, set multi-net, vhost net)
+- :acrn-issue:`4185` - [acrn-configuration-tool] not support: -s n,virtio-net, (not set,error net, set 1 net, set multi-net, vhost net)
 - :acrn-issue:`4211` - [kbl nuc] acrn failed to boot when generate hypervisor config source from config app with HT enabled in BIOS
 - :acrn-issue:`4212` - [KBL][acrn-configuration-tool][WaaG+RTVM]Need support pm_channel&pm_by_vuart setting for Board:nuc7i7dnb+WaaG&RTVM
 - :acrn-issue:`4227` - [ISD][Stability][WaaG][Regression] "Passmark8.0-Graphics3D-DirectX9Complex" test failed on WaaG due to driver error

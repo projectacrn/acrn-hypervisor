@@ -32,12 +32,12 @@ Usage:
 
 ***-s <slot>,ahci,<type:><filepath>***
 
-Type:  ‘hd’ and ‘cd’ are available.
+Type:  'hd' and 'cd' are available.
 
-Filepath:  the path for the backend file, could be a partition or a
+Filepath:  the path for the backend file, could be a partition or a
 regular file.
 
-E.g．
+For example,
 
     SOS: -s 20,ahci,\ `hd:/dev/mmcblk0p1 <http://hd/dev/mmcblk0p1>`__
 

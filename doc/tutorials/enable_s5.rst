@@ -6,7 +6,8 @@ Platform S5 Enable Guide
 Introduction
 ************
 
-S5 is one of the `ACPI sleep states <http://acpi.sourceforge.net/documentation/sleep.html>`_ that refers to the system being shut down (although some power may still be supplied to
+S5 is one of the `ACPI sleep states <http://acpi.sourceforge.net/documentation/sleep.html>`_
+that refers to the system being shut down (although some power may still be supplied to
 certain devices). In this document, S5 means the function to shut down the
 **User VMs**, **the Service VM**, the hypervisor, and the hardware. In most cases,
 directly shutting down the power of a computer system is not advisable because it can
@@ -30,14 +31,16 @@ The diagram below shows the overall architecture:
 
 - **Scenario I**:
 
-    The User VM's serial port device (``ttySn``) is emulated in the Device Model, the channel from the Service VM to the User VM:
+    The User VM's serial port device (``ttySn``) is emulated in the
+    Device Model, the channel from the Service VM to the User VM:
 
     .. graphviz:: images/s5-scenario-1.dot
        :name: s5-scenario-1
 
 - **Scenario II**:
 
-    The User VM's (like RT-Linux or other RT-VMs) serial port device (``ttySn``) is emulated in the Hypervisor,
+    The User VM's (like RT-Linux or other RT-VMs) serial port device
+    (``ttySn``) is emulated in the Hypervisor,
     the channel from the Service OS to the User VM:
 
     .. graphviz:: images/s5-scenario-2.dot
@@ -186,7 +189,7 @@ How to test
            Active: active (running) since Tue 2019-09-10 07:15:06 UTC; 1min 11s ago
            Main PID: 840 (life_mngr)
 
-   .. note:: For WaaG, we need to close ``windbg`` by using the ``"bcdedit /set debug off`` command
+   .. note:: For WaaG, we need to close ``windbg`` by using the ``bcdedit /set debug off`` command
       IF you executed the ``bcdedit /set debug on`` when you set up the WaaG, because it occupies the ``COM2``.
 
 #. Use the``acrnctl stop`` command on the Service VM to trigger S5 to the User VMs:

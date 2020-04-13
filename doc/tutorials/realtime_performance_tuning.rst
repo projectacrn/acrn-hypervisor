@@ -38,11 +38,11 @@ Here is example pseudocode of a cyclictest implementation.
 .. code-block:: none
 
    while (!shutdown) {
-         …
+         ...
          clock_nanosleep(&next)
          clock_gettime(&now)
          latency = calcdiff(now, next)
-         …
+         ...
          next += interval
    }
 
@@ -161,7 +161,9 @@ CPU hardware differences in Linux performance measurements and presents a
 simple command line interface. Perf is based on the ``perf_events`` interface
 exported by recent versions of the Linux kernel.
 
-**PMU** tools is a collection of tools for profile collection and performance analysis on Intel CPUs on top of Linux Perf. Refer to the following links for perf usage:
+**PMU** tools is a collection of tools for profile collection and
+performance analysis on Intel CPUs on top of Linux Perf. Refer to the
+following links for perf usage:
 
   - https://perf.wiki.kernel.org/index.php/Main_Page
   - https://perf.wiki.kernel.org/index.php/Tutorial
@@ -174,7 +176,8 @@ Top-down Micro-Architecture Analysis Method (TMAM)
 The Top-down Micro-Architecture Analysis Method (TMAM), based on Top-Down
 Characterization methodology, aims to provide an insight into whether you
 have made wise choices with your algorithms and data structures. See the
-Intel |reg| 64 and IA-32 `Architectures Optimization Reference Manual <http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf>`_,
+Intel |reg| 64 and IA-32 `Architectures Optimization Reference Manual
+<http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf>`_,
 Appendix B.1 for more details on TMAM. Refer to this `technical paper
 <https://fd.io/docs/whitepapers/performance_analysis_sw_data_planes_dec21_2017.pdf>`_
 which adopts TMAM for systematic performance benchmarking and analysis
@@ -197,4 +200,3 @@ Example: Using Perf to analyze TMAM level 1 on CPU core 1
       S0-C1 1 10.6%               1.5%           3.9%         84.0%
 
       0.006737123 seconds time elapsed
-

@@ -82,7 +82,7 @@ Fixed Issues Details
 - :acrn-issue:`3281` - AcrnGT emulation thread causes high cpu usage when shadowing ppgtt
 - :acrn-issue:`3283` - New scenario-based configurations lack documentation
 - :acrn-issue:`3341` - Documentation on how to run Windows as a Guest (WaaG)
-- :acrn-issue:`3370` - vm_console 2 cannot switch to VM2’s console in hybrid mode
+- :acrn-issue:`3370` - vm_console 2 cannot switch to VM2's console in hybrid mode
 - :acrn-issue:`3374` - Potential interrupt info overwrite in acrn_handle_pending_request
 - :acrn-issue:`3379` - DM: Increase hugetlbfs MAX_PATH_LEN from 128 to 256
 - :acrn-issue:`3392` - During run UnigenHeaven 3D gfx benchmark in WaaG, RTVM latency is much long
@@ -102,22 +102,22 @@ Known Issues
    with vpci bar emulation, vpci needs to reinit the physical bar base address to a
    valid address if a device reset is detected.
 
-   **Impact:** Fail to launch Clear Linux Preempt_RT VM with ``reset`` passthru parameter
+   **Impact:** Fail to launch Clear Linux Preempt_RT VM with ``reset`` passthru parameter
 
-   **Workaround:** Issue resolved on ACRN tag: ``acrn-2019w33.1-140000p``
+   **Workaround:** Issue resolved on ACRN tag: ``acrn-2019w33.1-140000p``
 
 -----
 
 :acrn-issue:`3520` - bundle of "VGPU unconformance guest" messages observed for "gvt" in SOS console while using UOS
-   After the need_force_wake is not removed in course of submitting VGPU workload,
+   After the need_force_wake is not removed in course of submitting VGPU workload,
    it will print a bundle of below messages while the User VM is started.
 
    | gvt: vgpu1 unconformance guest detected
    | gvt: vgpu1 unconformance mmio 0x2098:0xffffffff,0x0
 
-   **Impact:** Messy and repetitive output from the monitor
+   **Impact:** Messy and repetitive output from the monitor
 
-   **Workaround:** Need to rebuild and apply the latest Service VM kernel from the ``acrn-kernel`` source code.
+   **Workaround:** Need to rebuild and apply the latest Service VM kernel from the ``acrn-kernel`` source code.
 
 -----
 
@@ -131,35 +131,35 @@ Known Issues
    #) Reboot RTVM and then will restart the whole system
    #) After Service VM boot up, return to step 3
 
-   **Impact:** Cold boot operation is not stable for NUC platform
+   **Impact:** Cold boot operation is not stable for NUC platform
 
-   **Workaround:** Need to rebuild and apply the latest Service VM kernel from the ``acrn-kernel`` source code.
+   **Workaround:** Need to rebuild and apply the latest Service VM kernel from the ``acrn-kernel`` source code.
 
 -----
 
 :acrn-issue:`3576` - Expand default memory from 2G to 4G for WaaG
 
-   **Impact:** More memory size is required from Windows VM
+   **Impact:** More memory size is required from Windows VM
 
-   **Workaround:** Issue resolved on ACRN tag: ``acrn-2019w33.1-140000p``
+   **Workaround:** Issue resolved on ACRN tag: ``acrn-2019w33.1-140000p``
 
 -----
 
 :acrn-issue:`3609` - Sometimes fail to boot os while repeating the cold boot operation
 
-   **Workaround:** Please refer the PR information in this git issue
+   **Workaround:** Please refer the PR information in this git issue
 
 -----
 
 :acrn-issue:`3610` - LaaG hang while run some workloads loop with zephyr idle
 
-   **Workaround:** Revert commit ``bbb891728d82834ec450f6a61792f715f4ec3013`` from the kernel
+   **Workaround:** Revert commit ``bbb891728d82834ec450f6a61792f715f4ec3013`` from the kernel
 
 -----
 
 :acrn-issue:`3611` - OVMF launch UOS fail for Hybrid and industry scenario
 
-   **Workaround:** Please refer the PR information in this git issue
+   **Workaround:** Please refer the PR information in this git issue
 
 -----
 

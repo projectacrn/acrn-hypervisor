@@ -72,7 +72,7 @@ Build the Service VM Kernel
 
    $ WORKDIR=`pwd`;
    $ JOBS=`nproc`
-   $ git clone -b master https://github.com/projectacrn/acrn-kernel.git
+   $ git clone -b master https://github.com/projectacrn/acrn-kernel.git
    $ cd acrn-kernel && mkdir -p ${WORKDIR}/{build,build-rootfs}
    $ cp kernel_config_uefi_sos ${WORKDIR}/build/.config
    $ make olddefconfig O=${WORKDIR}/build && make -j${JOBS} O=${WORKDIR}/build
@@ -256,7 +256,7 @@ ACRN Windows verified feature list
                 , "Virtio input - keyboard",         "Working"
                 , "GOP & VNC remote display",        "Working"
     "GVT-g",      "GVT-g without local display",     "Working with 3D benchmark"
-           ,      "GVT-g  with local display",       "Working with 3D benchmark"
+           ,      "GVT-g  with local display",       "Working with 3D benchmark"
     "Tools",      "WinDbg",                          "Working"
     "Test cases", "Install Windows 10 from scratch", "OK"
                 , "Windows reboot",                  "OK"
