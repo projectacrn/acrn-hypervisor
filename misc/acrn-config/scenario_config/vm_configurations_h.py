@@ -25,7 +25,7 @@ def gen_common_header(config):
 
 def cpu_affinity_output(vm_info, i, config):
     """
-    Output the macro vcpu affinity
+    Output the macro pcpu affinity bitmap
     :param vm_info: the data structure have all the xml items values
     :param i: the index of vm id
     :param config: file pointor to store the information
@@ -34,7 +34,7 @@ def cpu_affinity_output(vm_info, i, config):
         return
 
     cpu_bits = vm_info.get_cpu_bitmap(i)
-    print("#define VM{0}_CONFIG_VCPU_AFFINITY\t\t{1}".format(
+    print("#define VM{0}_CONFIG_CPU_AFFINITY\t\t{1}".format(
         i, cpu_bits['cpu_map']), file=config)
 
 def clos_config_output(vm_info, i, config):
