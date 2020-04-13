@@ -228,7 +228,7 @@ the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[boa
                                         {{sub_elem.tag}}</label>
 
                                     {% if ','.join(['uos', elem.tag, sub_elem.tag]) not in launch_item_values
-                                    and elem.tag != 'vcpu_affinity'%}
+                                    and elem.tag != 'cpu_affinity'%}
                                     <div class="col-sm-5">
                                         {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                         <input type="text" class="form-control" readonly
@@ -254,7 +254,7 @@ the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[boa
                                     {% endif%}
 
                                     {% else %}
-                                    {% set item_key = ','.join(['uos', elem.tag, sub_elem.tag]) if elem.tag != 'vcpu_affinity'
+                                    {% set item_key = ','.join(['uos', elem.tag, sub_elem.tag]) if elem.tag != 'cpu_affinity'
                                     else ','.join(['uos', elem.tag]) %}
                                     <div class="dropdown col-sm-6">
                                         {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
@@ -273,7 +273,7 @@ the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[boa
                                             {% endif %}
                                         {% endfor %}
                                         </select>
-                                        {% if elem.tag == 'vcpu_affinity' %}
+                                        {% if elem.tag == 'cpu_affinity' %}
                                             <button type="button" class="btn" id="add_vcpu_{{first_child|length}}">+</button>
                                             {% if not first_child %}
                                             <button type="button" disabled class="btn" id="remove_vcpu_{{first_child|length}}">-</button>

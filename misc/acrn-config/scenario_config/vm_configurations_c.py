@@ -160,9 +160,9 @@ def is_need_epc(epc_section, i, config):
         print("\t\t},", file=config)
 
 
-def vcpu_affinity_output(vm_info, i, config):
+def cpu_affinity_output(vm_info, i, config):
     """
-    Output the vcpu affinity
+    Output the pcpu affinity bitmap
     :param vminfo: the data structure have all the xml items values
     :param i: the index of vm id
     :param config: file pointor to store the information
@@ -171,8 +171,7 @@ def vcpu_affinity_output(vm_info, i, config):
         return
 
     cpu_bits = vm_info.get_cpu_bitmap(i)
-    print("\t\t.vcpu_num = {}U,".format(cpu_bits['cpu_num']), file=config)
-    print("\t\t.vcpu_affinity = VM{}_CONFIG_VCPU_AFFINITY,".format(i), file=config)
+    print("\t\t.cpu_affinity_bitmap = VM{}_CONFIG_CPU_AFFINITY,".format(i), file=config)
 
 
 def clos_output(vm_info, i, config):
@@ -246,7 +245,7 @@ def gen_sos_vm(vm_type, vm_i, vm_info, config):
           "there is supposed to be the highest severity guest */", file=config)
     if sos_guest_flags:
         print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
-    vcpu_affinity_output(vm_info, vm_i, config)
+    cpu_affinity_output(vm_info, vm_i, config)
     print("\t\t.memory = {", file=config)
     print("\t\t\t.start_hpa = {}UL,".format(vm_info.mem_info.mem_start_hpa[vm_i]), file=config)
     print("\t\t\t.size = {0},".format("CONFIG_SOS_RAM_SIZE"), file=config)
@@ -280,7 +279,7 @@ def gen_pre_launch_vm(vm_type, vm_i, vm_info, config):
     print("\t{{\t/* VM{} */".format(vm_i), file=config)
     print("\t\t{},".format(pre_vm_type), file=config)
     print('\t\t.name = "{0}",'.format(vm_info.name[vm_i]), file=config)
-    vcpu_affinity_output(vm_info, vm_i, config)
+    cpu_affinity_output(vm_info, vm_i, config)
     if guest_flags:
         print("\t\t.guest_flags = {0},".format(guest_flags), file=config)
     clos_output(vm_info, vm_i, config)
@@ -329,7 +328,7 @@ def gen_post_launch_vm(vm_type, vm_i, vm_info, config):
     post_vm_type = get_post_vm_type(vm_type, vm_i)
     print("\t{{\t/* VM{} */".format(vm_i), file=config)
     print("\t\t{},".format(post_vm_type), file=config)
-    vcpu_affinity_output(vm_info, vm_i, config)
+    cpu_affinity_output(vm_info, vm_i, config)
     is_need_epc(vm_info.epc_section, vm_i, config)
     # VUART
     err_dic = vuart_output(vm_type, vm_i, vm_info, config)

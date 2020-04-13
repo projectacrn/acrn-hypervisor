@@ -227,7 +227,7 @@ the source files will be generated into default path and overwirte the previous 
                                             {{sub_elem.tag}}</label>
 
                                         {% if ','.join([vm.tag, elem.tag, sub_elem.tag]) not in scenario_item_values
-                                            and elem.tag != 'vcpu_affinity' and elem.tag != 'pci_devs' %}
+                                            and elem.tag != 'cpu_affinity' and elem.tag != 'pci_devs' %}
                                             {% if sub_elem.tag in ['bootargs', 'kern_args'] %}
                                                 <div class="col-sm-6">
                                                 {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
@@ -253,7 +253,7 @@ the source files will be generated into default path and overwirte the previous 
                                                 </div>
                                             {% endif %}
                                         {% else %}
-                                            {% set item_key = ','.join([vm.tag, elem.tag, sub_elem.tag]) if elem.tag != 'vcpu_affinity'
+                                            {% set item_key = ','.join([vm.tag, elem.tag, sub_elem.tag]) if elem.tag != 'cpu_affinity'
                                              and elem.tag != 'pci_devs' else ','.join([vm.tag, elem.tag]) %}
                                             <div class="dropdown col-sm-6">
                                                 {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
@@ -273,7 +273,7 @@ the source files will be generated into default path and overwirte the previous 
                                                 {% endfor %}
                                                 </select>
 
-                                                {% if elem.tag == 'vcpu_affinity' %}
+                                                {% if elem.tag == 'cpu_affinity' %}
                                                 <button type="button" class="btn" id="add_vcpu_{{first_child|length}}">+</button>
                                                 {% if not first_child %}
                                                 <button type="button" disabled class="btn" id="remove_vcpu_{{first_child|length}}">-</button>

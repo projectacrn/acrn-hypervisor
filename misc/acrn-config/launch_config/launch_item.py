@@ -24,7 +24,7 @@ class AcrnDmArgs:
         self.args["vuart0"] = common.get_leaf_tag_map(self.launch_info, "vuart0")
         self.args["cpu_sharing"] = common.get_leaf_tag_map(self.launch_info, "cpu_sharing")
         self.args["pm_channel"] = common.get_leaf_tag_map(self.launch_info, "poweroff_channel")
-        self.args["off_pcpus"] = common.get_leaf_tag_map(self.scenario_info, "vcpu_affinity", "pcpu_id")
+        self.args["off_pcpus"] = common.get_leaf_tag_map(self.scenario_info, "cpu_affinity", "pcpu_id")
         self.args["xhci"] = common.get_leaf_tag_map(self.launch_info, "usb_xhci")
 
     def check_item(self):
