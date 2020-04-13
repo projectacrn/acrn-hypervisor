@@ -244,6 +244,7 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config);
 void launch_vms(uint16_t pcpu_id);
 bool is_poweroff_vm(const struct acrn_vm *vm);
 bool is_created_vm(const struct acrn_vm *vm);
+bool is_paused_vm(const struct acrn_vm *vm);
 bool is_sos_vm(const struct acrn_vm *vm);
 bool is_postlaunched_vm(const struct acrn_vm *vm);
 bool is_prelaunched_vm(const struct acrn_vm *vm);
