@@ -160,11 +160,6 @@ hypervisor:
 	fi
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) clean;
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(abspath $(TARGET_DIR)) defconfig;
-	@if [ "$(CONFIG_XML_ENABLED)" != "true" ] && [ ! -f $(KCONFIG_FILE) ]; then \
-		if [ "$(SCENARIO)" != "sdc" ]; then \
-			echo "CONFIG_MAX_KATA_VM_NUM=0" >> $(HV_OUT)/.config; \
-		fi; \
-	fi; \
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(abspath $(TARGET_DIR)) oldconfig;
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(abspath $(TARGET_DIR))
 #ifeq ($(FIRMWARE),uefi)
