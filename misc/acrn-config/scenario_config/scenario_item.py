@@ -279,7 +279,7 @@ class VmInfo:
         self.guest_flags = common.get_leaf_tag_map(
             self.scenario_info, "guest_flags", "guest_flag")
         self.cpus_per_vm = common.get_leaf_tag_map(
-            self.scenario_info, "vcpu_affinity", "pcpu_id")
+            self.scenario_info, "cpu_affinity", "pcpu_id")
         self.clos_per_vm = common.get_leaf_tag_map(
             self.scenario_info, "clos", "vcpu_clos")
 

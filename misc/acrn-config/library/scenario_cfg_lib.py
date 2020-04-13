@@ -451,14 +451,14 @@ def cpus_assignment(cpus_per_vm, index):
     for i in range(len(cpus_per_vm[index])):
         if i == 0:
             if len(cpus_per_vm[index]) == 1:
-                cpu_str = "{{AFFINITY_CPU({0}U)}}".format(cpus_per_vm[index][0])
+                cpu_str = "(AFFINITY_CPU({0}U))".format(cpus_per_vm[index][0])
             else:
-                cpu_str = "{{AFFINITY_CPU({0}U)".format(cpus_per_vm[index][0])
+                cpu_str = "(AFFINITY_CPU({0}U)".format(cpus_per_vm[index][0])
         else:
             if i == len(cpus_per_vm[index]) - 1:
-                cpu_str = cpu_str + ", AFFINITY_CPU({0}U)}}".format(cpus_per_vm[index][i])
+                cpu_str = cpu_str + " | AFFINITY_CPU({0}U))".format(cpus_per_vm[index][i])
             else:
-                cpu_str = cpu_str + ", AFFINITY_CPU({0}U)".format(cpus_per_vm[index][i])
+                cpu_str = cpu_str + " | AFFINITY_CPU({0}U)".format(cpus_per_vm[index][i])
 
     vm_cpu_bmp['cpu_map'] = cpu_str
     vm_cpu_bmp['cpu_num'] = len(cpus_per_vm[index])
