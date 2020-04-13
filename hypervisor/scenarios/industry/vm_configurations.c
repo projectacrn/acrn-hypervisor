@@ -36,8 +36,6 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.t_vuart.vm_id = 2U,
 			.t_vuart.vuart_id = 1U,
 		},
-		.pci_dev_num = SOS_EMULATED_PCI_DEV_NUM,
-		.pci_devs = sos_pci_devs,
 	},
 	{	/* VM1 */
 		CONFIG_POST_STD_VM(1),
