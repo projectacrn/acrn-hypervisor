@@ -50,31 +50,11 @@ include scripts/makefile/deps.mk
 
 include scripts/makefile/kconfig.mk
 
-#initialize BOARD if it is not specified
-ifeq ($(BOARD),)
-    override BOARD := $(CONFIG_BOARD)
-endif
+#override BOARD from CONFIG_BOARD, which is specified in kconfig.mk
+override BOARD := $(shell echo $(CONFIG_BOARD) |sed 's/"//g')
 
-ifeq ($(CONFIG_SDC),y)
-  KCONFIG_SCENARIO := sdc
-else ifeq ($(CONFIG_SDC2),y)
-  KCONFIG_SCENARIO := sdc2
-else ifeq ($(CONFIG_LOGICAL_PARTITION),y)
-  KCONFIG_SCENARIO := logical_partition
-else ifeq ($(CONFIG_INDUSTRY),y)
-  KCONFIG_SCENARIO := industry
-else ifeq ($(CONFIG_HYBRID),y)
-  KCONFIG_SCENARIO := hybrid
-endif
-
-#initialize SCENARIO if it is not specified
-ifeq ($(SCENARIO),)
-  ifeq ($(KCONFIG_SCENARIO),)
-    override SCENARIO := sdc
-  else
-    override SCENARIO := $(KCONFIG_SCENARIO)
-  endif
-endif
+#override SCENARIO from CONFIG_SCENARIO, which is specified in kconfig.mk
+override SCENARIO := $(shell echo $(CONFIG_SCENARIO) |sed 's/"//g')
 
 ifeq ($(TARGET_DIR),)
   BOARD_CFG_DIR := arch/x86/configs/$(BOARD)
@@ -514,6 +494,8 @@ distclean:
 
 PHONY: (VERSION)
 $(VERSION):
+	@if  [ "$(SCENARIO)" = "" ]; then echo "Please specify SCENARIO for the build!"; exit 1; fi;
+	@if  [ "$(BOARD)" = "" ]; then echo "Please specify BOARD for the build!"; exit 1; fi;
 	@echo "SCENARIO <$(SCENARIO)> for BOARD <$(BOARD)> is specified."
 	@if [ ! -d $(BOARD_CFG_DIR) ]; then \
 		echo "Configurations for BOARD $(BOARD) is not found."; exit 1; \
