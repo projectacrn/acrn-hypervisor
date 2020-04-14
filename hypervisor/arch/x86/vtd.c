@@ -180,19 +180,6 @@ static inline void *get_ir_table(uint32_t dmar_index)
 	return (void *)ir_tables[dmar_index].tables[0].contents;
 }
 
-bool iommu_snoop_supported(const struct iommu_domain *iommu)
-{
-	bool ret;
-
-	if ((iommu == NULL) || (iommu->iommu_snoop)) {
-		ret =  true;
-	} else {
-		ret = false;
-	}
-
-	return ret;
-}
-
 static struct dmar_drhd_rt dmar_drhd_units[MAX_DRHDS];
 static bool iommu_page_walk_coherent = true;
 static struct dmar_info *platform_dmar_info = NULL;
@@ -1024,7 +1011,7 @@ static void resume_dmar(struct dmar_drhd_rt *dmar_unit)
 	dmar_enable_intr_remapping(dmar_unit);
 }
 
-static int32_t iommu_attach_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
+static int32_t iommu_attach_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	struct dmar_entry *root_table;
@@ -1052,8 +1039,6 @@ static int32_t iommu_attach_device(struct iommu_domain *domain, uint8_t bus, uin
 		ret = -EINVAL;
 	} else {
 		if (iommu_ecap_sc(dmar_unit->ecap) == 0U) {
-			/* TODO: remove iommu_snoop from iommu_domain */
-			domain->iommu_snoop = false;
 			dev_dbg(DBG_LEVEL_IOMMU, "vm=%d add %x:%x no snoop control!", domain->vm_id, bus, devfun);
 		}
 
@@ -1221,17 +1206,6 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 		domain->trans_table_ptr = translation_table;
 		domain->addr_width = addr_width;
 
-#ifdef CONFIG_IOMMU_ENFORCE_SNP
-		domain->iommu_snoop = true;
-#else
-		/* TODO: GPU IOMMU doesn't have snoop control capbility,
-		 * so set domain->iommu_snoop false to enable gvt-d by default.
-		 * If want to refine iommu snoop control policy,
-		 * need to change domain->iommu_snoop dynamically.
-		 */
-		domain->iommu_snoop = false;
-#endif
-
 		dev_dbg(DBG_LEVEL_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
 			vmid_to_domainid(domain->vm_id), domain->vm_id, domain->trans_table_ptr);
 	}
@@ -1252,7 +1226,7 @@ void destroy_iommu_domain(struct iommu_domain *domain)
  * @pre (from_domain != NULL) || (to_domain != NULL)
  */
 
-int32_t move_pt_device(const struct iommu_domain *from_domain, struct iommu_domain *to_domain, uint8_t bus, uint8_t devfun)
+int32_t move_pt_device(const struct iommu_domain *from_domain, const struct iommu_domain *to_domain, uint8_t bus, uint8_t devfun)
 {
 	int32_t status = 0;
 	uint16_t bus_local = bus;
