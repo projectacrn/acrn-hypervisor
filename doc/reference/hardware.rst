@@ -27,6 +27,15 @@ Known Limitations
 *****************
 Platforms with multiple PCI segments
 
+ACRN assumes the following conditions are satisfied from the Platform BIOS
+
+* All the PCI device BARs should be assigned resources, including SR-IOv VF BARs if a device supports.
+
+* Bridge windows for PCI bridge devices and the resources for root bus, should be programmed with values
+  that enclose resources used by all the downstream devices.
+
+* There should be no conflict in resources among the PCI devices and also between PCI devices and other platform devices.
+
 Verified Platforms According to ACRN Usage
 ******************************************
 
