@@ -54,6 +54,7 @@ PM_CHANNEL_DIC = {
 }
 
 MOUNT_FLAG_DIC = {}
+GPU_BDF = "00:02.0"
 
 
 def usage(file_name):
@@ -548,3 +549,13 @@ def bdf_duplicate_check(bdf_dic):
                 return
             else:
                 bdf_used.append(dev_bdf)
+
+
+def get_gpu_vpid():
+
+    vpid = ''
+    vpid_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<PCI_VID_PID>", "</PCI_VID_PID>")
+    for vpid_line in vpid_lines:
+        if GPU_BDF in vpid_line:
+            vpid = vpid_line.split()[2]
+    return vpid
