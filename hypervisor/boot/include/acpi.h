@@ -139,6 +139,19 @@ struct acpi_table_fadt {
 	uint8_t unused3[128];		/* ACRN doesn't use these fields */
 } __packed;
 
+struct acpi_table_mcfg {
+	struct acpi_table_header header;	/* Common ACPI table header */
+	uint8_t reserved[8];
+} __packed;
+
+struct acpi_mcfg_allocation {
+	uint64_t address;		/* Base address, processor-relative */
+	uint16_t pci_segment;		/* PCI segment group number */
+	uint8_t start_bus_number;	/* Starting PCI Bus number */
+	uint8_t end_bus_number;		/* Final PCI Bus number */
+	uint32_t reserved;
+} __packed;
+
 struct acpi_table_madt {
 	/* Common ACPI table header */
 	struct acpi_table_header     header;
