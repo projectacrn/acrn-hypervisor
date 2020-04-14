@@ -60,6 +60,21 @@ static struct acpi_table_info acpi_table_template[CONFIG_MAX_VM_NUM] = {
 			.oem_table_id = "ACRNMADT",
 			.asl_compiler_id = ACPI_ASL_COMPILER_ID,
 		},
+		.mcfg = {
+			.header.revision = 0x3U,
+			.header.oem_revision = 0x1U,
+			.header.asl_compiler_revision = ACPI_ASL_COMPILER_VERSION,
+			.header.signature = ACPI_SIG_MCFG,
+			.header.oem_id = ACPI_OEM_ID,
+			.header.oem_table_id = "ACRNMADT",
+			.header.asl_compiler_id = ACPI_ASL_COMPILER_ID,
+		},
+		.mcfg_entry = {
+			.address = VIRT_PCI_MMCFG_BASE,
+			.pci_segment = 0U,
+			.start_bus_number = 0x0U,
+			.end_bus_number = 0xFFU,
+		},
 		.madt = {
 			.header.revision = 0x3U,
 			.header.oem_revision = 0x1U,
@@ -99,6 +114,7 @@ void build_vacpi(struct acrn_vm *vm)
 	struct acpi_table_xsdt *xsdt;
 	struct acpi_table_fadt *fadp;
 	struct acpi_table_header *dsdt;
+	struct acpi_table_mcfg *mcfg;
 	struct acpi_table_madt *madt;
 	struct acpi_madt_local_apic *lapic;
 	uint16_t i;
@@ -115,9 +131,10 @@ void build_vacpi(struct acrn_vm *vm)
 	xsdt = (struct acpi_table_xsdt *)gpa2hva(vm, ACPI_XSDT_ADDR);
 	stac();
 	xsdt->table_offset_entry[0] = ACPI_FADT_ADDR;
-	xsdt->table_offset_entry[1] = ACPI_MADT_ADDR;
-	/* Currently XSDT table only pointers to 2 ACPI table entry (FADT/MADT) */
-	xsdt->header.length = sizeof(struct acpi_table_header) + (2U * sizeof(uint64_t));
+	xsdt->table_offset_entry[1] = ACPI_MCFG_ADDR;
+	xsdt->table_offset_entry[2] = ACPI_MADT_ADDR;
+	/* Currently XSDT table only pointers to 3 ACPI table entry (FADT/MCFG/MADT) */
+	xsdt->header.length = sizeof(struct acpi_table_header) + (3U * sizeof(uint64_t));
 	xsdt->header.checksum = calculate_checksum8(xsdt, xsdt->header.length);
 	clac();
 
@@ -132,6 +149,14 @@ void build_vacpi(struct acrn_vm *vm)
 
 	/* Copy DSDT table and its subtables to guest physical memory */
 	(void)copy_to_gpa(vm, dsdt, ACPI_DSDT_ADDR, dsdt->length);
+
+       mcfg = &acpi_table_template[vm->vm_id].mcfg;
+       mcfg->header.length = sizeof(struct acpi_table_mcfg)
+               + (1U * sizeof(struct acpi_mcfg_allocation));   /* We only support one mcfg allocation structure */
+       mcfg->header.checksum = calculate_checksum8(mcfg, mcfg->header.length);
+
+       /* Copy MCFG table and its subtables to guest physical memory */
+       (void)copy_to_gpa(vm, mcfg, ACPI_MCFG_ADDR, mcfg->header.length);
 
 	/* Fix up MADT LAPIC subtables */
 	for (i = 0U; i < vm->hw.created_vcpus; i++) {

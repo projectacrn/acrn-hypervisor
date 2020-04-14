@@ -33,6 +33,7 @@
 #include <vtd.h>
 #include <io.h>
 #include <mmu.h>
+#include <vacpi.h>
 #include <logmsg.h>
 #include "vpci_priv.h"
 #include "pci_dev.h"
@@ -248,13 +249,11 @@ void init_vpci(struct acrn_vm *vm)
 	vpci_init_vdevs(vm);
 
 	vm_config = get_vm_config(vm->vm_id);
-	if (vm_config->load_order != PRE_LAUNCHED_VM) {
-		/* PCI MMCONFIG for post-launched VM is fixed to 0xE0000000 */
-		pci_mmcfg_base = (vm_config->load_order == SOS_VM) ? get_mmcfg_base() : 0xE0000000UL;
-		vm->vpci.pci_mmcfg_base = pci_mmcfg_base;
-		register_mmio_emulation_handler(vm, vpci_mmio_cfg_access,
+	/* virtual PCI MMCONFIG for SOS is same with the physical value */
+	pci_mmcfg_base = (vm_config->load_order == SOS_VM) ? get_mmcfg_base() : VIRT_PCI_MMCFG_BASE;
+	vm->vpci.pci_mmcfg_base = pci_mmcfg_base;
+	register_mmio_emulation_handler(vm, vpci_mmio_cfg_access,
 			pci_mmcfg_base, pci_mmcfg_base + PCI_MMCONFIG_SIZE, &vm->vpci, false);
-	}
 
 	/* Intercept and handle I/O ports CF8h */
 	register_pio_emulation_handler(vm, PCI_CFGADDR_PIO_IDX, &pci_cfgaddr_range,
