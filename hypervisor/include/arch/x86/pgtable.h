@@ -108,8 +108,6 @@
 /* End of ept_mem_type */
 
 #define EPT_MT_MASK		(7UL << EPT_MT_SHIFT)
-/* VTD: Second-Level Paging Entries: Snoop Control */
-#define EPT_SNOOP_CTRL		(1UL << 11U)
 #define EPT_VE			(1UL << 63U)
 /* EPT leaf entry bits (bit 52 - bit 63) should be maksed  when calculate PFN */
 #define EPT_PFN_HIGH_MASK	0xFFF0000000000000UL
