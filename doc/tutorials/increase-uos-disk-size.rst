@@ -34,7 +34,7 @@ We will use the ``qemu-img`` tool to increase the size of the virtual disk
 
    $ sudo swupd bundle-add clr-installer
 
-As an example, let us add 10GB of storage to our virtual disk image called      
+As an example, let us add 10GB of storage to our virtual disk image called
 ``uos.img``.
 
 .. code-block:: none
@@ -78,23 +78,23 @@ Here is what the sequence looks like:
    GNU Parted 3.2
    Using /home/gvancuts/uos/uos.img
    Welcome to GNU Parted! Type 'help' to view a list of commands.
-   (parted) p                                                                
-   Warning: Not all of the space available to /home/gvancuts/uos/uos.img appears to be used, you can fix the GPT to use all of the space (an extra 20971520 blocks) or continue with the current setting? 
-   Fix/Ignore? Fix                                                           
+   (parted) p
+   Warning: Not all of the space available to /home/gvancuts/uos/uos.img appears to be used, you can fix the GPT to use all of the space (an extra 20971520 blocks) or continue with the current setting?
+   Fix/Ignore? Fix
    Model:  (file)
    Disk /home/gvancuts/uos/uos.img: 19.9GB
    Sector size (logical/physical): 512B/512B
    Partition Table: gpt
-   Disk Flags: 
+   Disk Flags:
 
    Number  Start   End     Size    File system     Name     Flags
     1      1049kB  537MB   536MB   fat16           primary  boot, esp
     2      537MB   570MB   33.6MB  linux-swap(v1)  primary
     3      570MB   9160MB  8590MB  ext4            primary
 
-   (parted) resizepart 3                                                     
+   (parted) resizepart 3
    End?  [9160MB]? 19.9GB
-   (parted) q                 
+   (parted) q
 
 Resize the filesystem
 *********************

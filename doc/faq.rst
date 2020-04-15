@@ -150,7 +150,7 @@ How to build ACRN on Fedora 29?
 There is a known issue when attempting to build ACRN on Fedora 29
 because of how ``gnu-efi`` is packaged in this Fedora release.
 (See the `ACRN GitHub issue
-<https://github.com/projectacrn/acrn-hypervisor/issues/2457>`_ 
+<https://github.com/projectacrn/acrn-hypervisor/issues/2457>`_
 for more information.)  The following patch to ``/efi-stub/Makefile``
 fixes the problem on Fedora 29 development systems (but should
 not be used on other Linux distros)::

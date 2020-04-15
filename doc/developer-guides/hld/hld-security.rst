@@ -386,7 +386,7 @@ three typical solutions exist:
    may even require the hypervisor to flush the TLB. This solution won't
    be used by the ACRN hypervisor.
 
-#. **Use CR0.WP (write-protection) bit.** 
+#. **Use CR0.WP (write-protection) bit.**
 
    This processor feature allows
    pages to be protected from supervisor-mode write access.

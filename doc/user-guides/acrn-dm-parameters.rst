@@ -257,12 +257,12 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        uses ``/usr/share/acrn/bios/OVMF.fd`` as the OVMF image
 
        ACRN supports option "w" of OVMF. To preserve any change of OVMF NV data
-       store section, using this option to enable NV data store section writeback. 
+       store section, using this option to enable NV data store section writeback.
 
        usage::
 
           --ovmf w,/usr/share/acrn/bios/OVMF.fd
-       
+
 
    * - :kbd:`--virtio_poll <poll_interval>`
      - Enable virtio poll mode with poll interval xxx ns.

@@ -111,7 +111,7 @@ Efficient: batching operation is encouraged
   high-performance I/O, since notification between FE and BE driver
   usually involves an expensive exit of the guest. Therefore batching
   operating and notification suppression are highly encouraged if
-  possible. This will give an efficient implementation for 
+  possible. This will give an efficient implementation for
   performance-critical devices.
 
 Standard: virtqueue
@@ -120,7 +120,7 @@ Standard: virtqueue
   queue of scatter-gather buffers. There are three important methods on
   virtqueues:
 
-  - **add_buf** is for adding a request/response buffer in a virtqueue, 
+  - **add_buf** is for adding a request/response buffer in a virtqueue,
   - **get_buf** is for getting a response/request in a virtqueue, and
   - **kick** is for notifying the other side for a virtqueue to consume buffers.
 

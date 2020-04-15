@@ -68,7 +68,7 @@ New Features Details
 - :acrn-issue:`3497` - Inject exception for invalid vmcall
 - :acrn-issue:`3498` - Return extended info in vCPUID leaf 0x40000001
 - :acrn-issue:`2934` - Use virtual APIC IDs for Pre-launched VMs
-- :acrn-issue:`3459` - dm: support VMs communication with virtio-console           
+- :acrn-issue:`3459` - dm: support VMs communication with virtio-console
 - :acrn-issue:`3190` - DM: handle SIGPIPE signal
 
 Fixed Issues Details

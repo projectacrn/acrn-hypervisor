@@ -1192,5 +1192,5 @@ S3.
 Pass-through in Device Model
 ****************************
 
-You may refer to :ref:`hv-device-passthrough` for pass-through realization 
+You may refer to :ref:`hv-device-passthrough` for pass-through realization
 in device model.

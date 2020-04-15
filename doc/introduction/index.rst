@@ -616,10 +616,10 @@ ACRN Device model incorporates these three aspects:
   from the User VM device, the I/O dispatcher sends this request to the
   corresponding device emulation routine.
 
-**I/O Path**: 
+**I/O Path**:
   see `ACRN-io-mediator`_ below
 
-**VHM**: 
+**VHM**:
   The Virtio and Hypervisor Service Module is a kernel module in the
   Service VM acting as a middle layer to support the device model. The VHM
   and its client handling flow is described below:
@@ -747,7 +747,7 @@ Following along with the numbered items in :numref:`io-emulation-path`:
    the module is invoked to execute its processing APIs.
 6. After the ACRN device module completes the emulation (port IO 20h access
    in this example), (say uDev1 here), uDev1 puts the result into the
-   shared page (in register AL in this example). 
+   shared page (in register AL in this example).
 7. ACRN device model then returns control to ACRN hypervisor to indicate the
    completion of an IO instruction emulation, typically thru VHM/hypercall.
 8. The ACRN hypervisor then knows IO emulation is complete, and copies

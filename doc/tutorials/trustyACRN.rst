@@ -250,7 +250,7 @@ section, we'll focus on two major components:
 
 * one is the basic idea of
   secure world and insecure world isolation (so called one-vm,
-  two-worlds), 
+  two-worlds),
 * the other one is the secure storage virtualization in ACRN.
 
 See :ref:`trusty_tee` for additional details of Trusty implementation in
