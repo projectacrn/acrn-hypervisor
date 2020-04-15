@@ -64,7 +64,7 @@ static int probe_disk_log_file(void)
 	DIR *dir;
 
 	if (stat(LOG_PATH_NODE, &st)) {
-		if (mkdir(LOG_PATH_NODE, 0644)) {
+		if (system("mkdir -p " LOG_PATH_NODE) < 0) {
 			pr_err(DISK_PREFIX"create path: %s failed! Error: %s\n",
 				LOG_PATH_NODE, strerror(errno));
 			return -1;
@@ -143,6 +143,9 @@ static void write_to_disk(const char *fmt, va_list args)
 	int len;
 	int write_cnt;
 	struct timespec times = {0, 0};
+	struct tm *lt;
+	time_t tt;
+
 
 	if ((disk_fd < 0) && disk_log_enabled) {
 		/**
@@ -160,8 +163,13 @@ static void write_to_disk(const char *fmt, va_list args)
 	if (len < 0)
 		return;
 
+	time(&tt);
+	lt = localtime(&tt);
 	clock_gettime(CLOCK_MONOTONIC, &times);
-	len = snprintf(buffer, DISK_LOG_MAX_LEN, "[%5lu.%06lu] ", times.tv_sec, times.tv_nsec / 1000);
+
+	len = snprintf(buffer, DISK_LOG_MAX_LEN, "[%4d-%02d-%02d %02d:%02d:%02d][%5lu.%06lu] ",
+		lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec,
+		times.tv_sec, times.tv_nsec / 1000);
 	if (len < 0 || len >= DISK_LOG_MAX_LEN) {
 		free(buf);
 		return;
