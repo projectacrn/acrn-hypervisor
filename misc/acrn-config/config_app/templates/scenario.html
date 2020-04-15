@@ -85,11 +85,19 @@
             {% if 'configurable' not in vm.attrib or vm.attrib['configurable'] != '0'%}
             <tr>
                 <td>
+                    {% if vm.tag != 'vm' %}
+                    {% set vm_type = 'hv' %}
+                    <div class="form-group">
+                        <label class="col-sm-1 control-label">HV </label>
+                    </div>
+                    {% else %}
+                    {% set vm_type = 'vm:id='+vm.attrib['id'] %}
                     <div class="form-group">
                         <label class="col-sm-1 control-label">VM: </label>
                         <label class="col-sm-1 control-label" id="vm">{{vm.attrib['id']}}</label>
 
                     </div>
+                    {% endif %}
                     {% if 'desc' in vm.attrib or vm.attrib['desc'] == 'specific for Kata'  %}
                     <div class="form-group">
                         <button type="button" class="btn" id="remove_vm_kata">Remove Kata VM</button>
@@ -106,13 +114,13 @@
                                title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">{{elem.tag}}</label>
                         <label class="col-sm-2 control-label"></label>
 
-                        {% if ','.join(['vm', elem.tag]) not in scenario_item_values %}
+                        {% if ','.join([vm.tag, elem.tag]) not in scenario_item_values %}
                         <div class="col-sm-6">
                             {% if 'readonly' in elem.attrib and elem.attrib['readonly'] == 'true' %}
-                            <input type="text" class="form-control" id="{{'vm:id='+vm.attrib['id']+','+elem.tag}}"
+                            <input type="text" class="form-control" id="{{vm_type+','+elem.tag}}"
                                    value="{{elem_text}}" readonly>
                             {% else %}
-                            <input type="text" class="form-control" id="{{'vm:id='+vm.attrib['id']+','+elem.tag}}"
+                            <input type="text" class="form-control" id="{{vm_type+','+elem.tag}}"
                                    value="{{elem_text}}">
                             {% endif %}
                         </div>
@@ -120,12 +128,12 @@
                         <div class="dropdown col-sm-6">
                             {% if 'readonly' in elem.attrib and elem.attrib['readonly'] == 'true' %}
                             <select class="selectpicker" data-width="auto"
-                                    id="{{'vm:id='+vm.attrib['id']+','+elem.tag}}" disabled>
+                                    id="{{vm_type+','+elem.tag}}" disabled>
                             {% else %}
                             <select class="selectpicker" data-width="auto"
-                                    id="{{'vm:id='+vm.attrib['id']+','+elem.tag}}">
+                                    id="{{vm_type+','+elem.tag}}">
                             {% endif %}
-                            {% for item_value in scenario_item_values[','.join(['vm', elem.tag])] %}
+                            {% for item_value in scenario_item_values[','.join([vm.tag, elem.tag])] %}
                                 {% if item_value == elem_text %}
                                 <option value="{{item_value}}" selected="selected">{{item_value}}</option>
                                 {% else %}
@@ -135,7 +143,7 @@
                             </select>
                         </div>
                         {% endif %}
-                        <p id="{{'vm:id='+vm.attrib['id']+','+elem.tag}}_err" class="col-sm-3"></p>
+                        <p id="{{vm_type+','+elem.tag}}_err" class="col-sm-3"></p>
                     </div>
                     {% elif elem.getchildren() != [] and ('configurable' not in elem.attrib or elem.attrib['configurable']
                     != '0')%}
@@ -159,41 +167,41 @@
                                                title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
                                             {{sub_elem.tag}}</label>
 
-                                        {% if ','.join(['vm', elem.tag, sub_elem.tag]) not in scenario_item_values and elem.tag != 'vcpu_affinity' %}
+                                        {% if ','.join([vm.tag, elem.tag, sub_elem.tag]) not in scenario_item_values and elem.tag != 'vcpu_affinity' %}
                                             {% if sub_elem.tag in ['bootargs', 'kern_args'] %}
                                                 <div class="col-sm-6">
                                                 {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                                 <textarea type="text" class="form-control" style="height:120px"
-                                                          id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}"
+                                                          id="{{vm_type+','+elem.tag+','+sub_elem.tag}}"
                                                           readonly>{{sub_elem_text}}</textarea>
                                                 {% else %}
                                                 <textarea type="text" class="form-control" style="height:120px"
-                                                          id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}">{{sub_elem_text}}</textarea>
+                                                          id="{{vm_type+','+elem.tag+','+sub_elem.tag}}">{{sub_elem_text}}</textarea>
                                                 {% endif %}
                                                 </div>
                                             {% else %}
                                                 <div class="col-sm-6">
                                                 {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                                 <input type="text" class="form-control"
-                                                       id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}"
+                                                       id="{{vm_type+','+elem.tag+','+sub_elem.tag}}"
                                                        value="{{sub_elem_text}}" readonly>
                                                 {% else %}
                                                 <input type="text" class="form-control"
-                                                       id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}"
+                                                       id="{{vm_type+','+elem.tag+','+sub_elem.tag}}"
                                                        value="{{sub_elem_text}}">
                                                 {% endif %}
                                                 </div>
                                             {% endif %}
                                         {% else %}
-                                            {% set item_key = ','.join(['vm', elem.tag, sub_elem.tag]) if elem.tag != 'vcpu_affinity' else
-                                            ','.join(['vm', elem.tag])%}
+                                            {% set item_key = ','.join([vm.tag, elem.tag, sub_elem.tag]) if elem.tag != 'vcpu_affinity' else
+                                            ','.join([vm.tag, elem.tag])%}
                                             <div class="dropdown col-sm-6">
                                                 {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                                 <select class="selectpicker" data-width="auto"
-                                                        id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}" disabled>
+                                                        id="{{vm_type+','+elem.tag+','+sub_elem.tag}}" disabled>
                                                 {% else %}
                                                 <select class="selectpicker" data-width="auto"
-                                                        id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}">
+                                                        id="{{vm_type+','+elem.tag+','+sub_elem.tag}}">
                                                 {% endif %}
                                                 {% for item_value in scenario_item_values[item_key] %}
                                                     {% if item_value == sub_elem_text %}
@@ -215,36 +223,36 @@
                                             </div>
                                         {% endif %}
                                         {% do first_child.append(1) %}
-                                        <p id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}_err" class="col-sm-3"></p>
+                                        <p id="{{vm_type+','+elem.tag+','+sub_elem.tag}}_err" class="col-sm-3"></p>
                                     {% else %}
                                         {% if not first_child %}
                                         {% do first_child.append(1) %}
                                         <label class="col-sm-1 control-label" data-toggle="tooltip"
-                                               id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_label1"
+                                               id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_label1"
                                                title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
                                             {{elem.tag+' '+elem.attrib['id']}}</label>
                                         {% else %}
                                         <label class="col-sm-1 control-label" data-toggle="tooltip"
-                                               id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_label1"
+                                               id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_label1"
                                                title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
                                         </label>
                                         {% endif %}
 
                                         <label class="col-sm-2 control-label" data-toggle="tooltip"
-                                               id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_label2"
+                                               id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_label2"
                                                title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
                                             {{sub_elem.tag}}</label>
-                                        {% if (','.join(['vm', elem.tag, sub_elem.tag]) not in scenario_item_values) and
+                                        {% if (','.join([vm.tag, elem.tag, sub_elem.tag]) not in scenario_item_values) and
                                         (elem.tag!='vuart' or sub_elem.tag!='base') %}
                                             <div class="col-sm-6"
-                                                 id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_config">
+                                                 id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_config">
                                                 {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                                 <input type="text" class="form-control"
-                                                       id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}"
+                                                       id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}"
                                                        value="{{sub_elem_text}}" readonly>
                                                 {% else %}
                                                 <input type="text" class="form-control"
-                                                       id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}"
+                                                       id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}"
                                                        value="{{sub_elem_text}}">
                                                 {% endif %}
                                             </div>
@@ -252,14 +260,14 @@
                                             <div class="dropdown col-sm-6">
                                                 {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                                 <select class="selectpicker" data-width="auto" disabled
-                                                        id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}">
+                                                        id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}">
                                                 {% else %}
                                                 <select class="selectpicker" data-width="auto"
-                                                        id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}">
+                                                        id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}">
                                                 {% endif %}
                                                 {% set key = ('vm='+vm.attrib['id']+','+elem.tag+'='+elem.attrib['id']+','+sub_elem.tag)
                                                 if (elem.tag=='vuart' and sub_elem.tag=='base')
-                                                else ','.join(['vm', elem.tag, sub_elem.tag]) %}
+                                                else ','.join([vm.tag, elem.tag, sub_elem.tag]) %}
                                                 {% for item_value in scenario_item_values[key] %}
                                                     {% if item_value == sub_elem_text %}
                                                     <option value="{{item_value}}" selected="selected">{{item_value}}</option>
@@ -270,7 +278,7 @@
                                                 </select>
                                             </div>
                                         {% endif %}
-                                        <p id="{{'vm:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_err"
+                                        <p id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_err"
                                            class="col-sm-3"></p>
                                     {% endif %}
                                 </div>
@@ -285,14 +293,14 @@
                                 <div class="dropdown col-sm-6">
                                     {% if 'readonly' in elem.attrib and elem.attrib['readonly'] == 'true' %}
                                     <select class="selectpicker" data-width="auto" disabled
-                                            id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+elem.tag[:-1]}}"
+                                            id="{{vm_type+','+elem.tag+','+elem.tag[:-1]}}"
                                             multiple>
                                     {% else %}
                                     <select class="selectpicker" data-width="auto"
-                                            id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+elem.tag[:-1]}}"
+                                            id="{{vm_type+','+elem.tag+','+elem.tag[:-1]}}"
                                             multiple>
                                     {% endif %}
-                                    {% if ','.join(['vm', elem.tag]) not in scenario_item_values %}
+                                    {% if ','.join([vm.tag, elem.tag]) not in scenario_item_values %}
                                         {% set x=1 %}
                                         {% for sub_elem in elem.getchildren() %}
                                         <option value="{{sub_elem.text}}" selected="selected">{{sub_elem.text}}</option>
@@ -302,7 +310,7 @@
                                         {% for sub_elem in elem.getchildren() %}
                                         {% do selected_list.append(sub_elem.text) %}
                                         {% endfor %}
-                                        {% for item_value in scenario_item_values[','.join(['vm', elem.tag])] %}
+                                        {% for item_value in scenario_item_values[','.join([vm.tag, elem.tag])] %}
                                             {% if item_value in selected_list %}
                                             <option value="{{item_value}}" selected="selected">{{item_value}}</option>
                                             {% else %}
@@ -312,7 +320,7 @@
                                     {% endif %}
                                     </select>
                                 </div>
-                                <p id="{{'vm:id='+vm.attrib['id']+','+elem.tag+','+elem.tag[:-1]}}_err" class="col-sm-3"></p>
+                                <p id="{{vm_type+','+elem.tag+','+elem.tag[:-1]}}_err" class="col-sm-3"></p>
                             </div>
                         {% endif %}
                     {% endif %}
