@@ -700,6 +700,19 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
  */
 uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask);
 bool is_lapic_pt_enabled(struct acrn_vcpu *vcpu);
+
+/**
+ * @brief handle posted interrupts
+ *
+ * VT-d PI handler, find the corresponding vCPU for this IRQ,
+ * if the associated PID's bit ON is set, wake it up.
+ *
+ * @param[in] vcpu_index a zero based index of where the vCPU is located in the vCPU list for current pCPU
+ * @pre vcpu_index < CONFIG_MAX_VM_NUM
+ *
+ * @return None
+ */
+void vcpu_handle_pi_notification(uint32_t vcpu_index);
 /**
  * @}
  */

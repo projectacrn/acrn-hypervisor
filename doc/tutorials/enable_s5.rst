@@ -92,7 +92,7 @@ The procedure for enabling S5 is specific to the particular OS:
 
   .. note:: For RT-Linux, the vUART is emulated in the hypervisor; expose the node as ``/dev/ttySn``.
 
-#. For LaaG and RT-Linux VMs, run the life-cycle manager deamon:
+#. For LaaG and RT-Linux VMs, run the life-cycle manager daemon:
 
    a. Use these commands to build the life-cycle manager daemon, ``life_mngr``.
 
@@ -116,7 +116,7 @@ The procedure for enabling S5 is specific to the particular OS:
          # systemctl enable life_mngr.service
          # reboot
 
-#. For the WaaG VM, run the life-cycle manager deamon:
+#. For the WaaG VM, run the life-cycle manager daemon:
 
    a) Build the ``life_mngr_win.exe`` application::
 

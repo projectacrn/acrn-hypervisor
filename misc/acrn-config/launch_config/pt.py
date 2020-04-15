@@ -200,7 +200,7 @@ def media_pt(uos_type, sel, vmid, config):
     audio_pt(uos_type, sel, vmid, config)
 
 
-def gen_pt(names, sel, vmid, config):
+def gen_pt(names, dm, sel, vmid, config):
 
     pt_none = True
     cap_pt = launch_cfg_lib.get_pt_dev()
@@ -212,6 +212,11 @@ def gen_pt(names, sel, vmid, config):
         return
 
     print("modprobe pci_stub", file=config)
+    # pass thru GPU
+    if dm['gvt_args'][vmid] == "gvtd":
+        print('echo ${passthru_vpid["gpu"]} > /sys/bus/pci/drivers/pci-stub/new_id', file=config)
+        print('echo ${passthru_bdf["gpu"]} > /sys/bus/pci/devices/${passthru_bdf["gpu"]}/driver/unbind', file=config)
+        print('echo ${passthru_bdf["gpu"]} > /sys/bus/pci/drivers/pci-stub/bind', file=config)
     for pt_dev in cap_pt:
         if pt_dev not in MEDIA_DEV:
             pass_through_dev(sel, pt_dev, vmid, config)
@@ -219,7 +224,7 @@ def gen_pt(names, sel, vmid, config):
 
     media_pt(uos_type, sel, vmid, config)
 
-def gen_pt_head(names, sel, vmid, config):
+def gen_pt_head(names, dm, sel, vmid, config):
 
     cap_pt = launch_cfg_lib.get_pt_dev()
     uos_type = names['uos_types'][vmid]
@@ -240,6 +245,9 @@ def gen_pt_head(names, sel, vmid, config):
     for pt_dev in cap_pt:
         if not sel.vpid[pt_dev] or not sel.vpid[pt_dev][vmid]:
             continue
+        if dm['gvt_args'][vmid] == "gvtd":
+            gpu_vpid = launch_cfg_lib.get_gpu_vpid()
+            print('["gpu"]="{}"'.format(gpu_vpid), file=config)
         print('["{}"]="{}"'.format(pt_dev, sel.vpid[pt_dev][vmid]), file=config)
     print(')', file=config)
 
@@ -247,6 +255,8 @@ def gen_pt_head(names, sel, vmid, config):
     for pt_dev in cap_pt:
         if not sel.bdf[pt_dev] or not sel.bdf[pt_dev][vmid]:
             continue
+        if dm['gvt_args'][vmid] == "gvtd":
+            print('["gpu"]="0000:{}"'.format(launch_cfg_lib.GPU_BDF), file=config)
         print('["{}"]="0000:{}"'.format(pt_dev, sel.bdf[pt_dev][vmid]), file=config)
     print(')', file=config)
 

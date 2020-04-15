@@ -26,7 +26,7 @@ user VM sharing optimizations for IoT and embedded devices.
 ACRN Open Source Roadmap 2020
 *****************************
 
-Stay informed on what's ahead for ACRN in 2020 by visting the `ACRN 2020 Roadmap <https://projectacrn.org/wp-content/uploads/sites/59/2020/03/ACRN-Roadmap-External-2020.pdf>`_.
+Stay informed on what's ahead for ACRN in 2020 by visiting the `ACRN 2020 Roadmap <https://projectacrn.org/wp-content/uploads/sites/59/2020/03/ACRN-Roadmap-External-2020.pdf>`_.
 
 For up-to-date happenings, visit the `ACRN blog <https://projectacrn.org/blog/>`_.
 

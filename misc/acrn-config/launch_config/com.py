@@ -231,7 +231,12 @@ def gvt_arg_set(dm, vmid, uos_type, config):
     if uos_type not in ('CLEARLINUX', 'ANDROID', 'ALIOS', 'WINDOWS'):
         return
     gvt_args = dm['gvt_args'][vmid]
-    if gvt_args:
+    if gvt_args == "gvtd":
+        bus = int(launch_cfg_lib.GPU_BDF.split(':')[0], 16)
+        dev = int(launch_cfg_lib.GPU_BDF.split('.')[0].split(':')[1], 16)
+        fun = int(launch_cfg_lib.GPU_BDF.split('.')[1], 16)
+        print('   -s 2,passthru,{}/{}/{},gpu  \\'.format(bus, dev, fun), file=config)
+    elif gvt_args:
         print('   -s 2,pci-gvt -G "$2"  \\', file=config)
 
 
@@ -318,17 +323,26 @@ def uos_launch(names, args, virt_io, vmid, config):
             print("fi", file=config)
         else:
             print("else", file=config)
-            print('    launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
+            if gvt_args == "gvtd":
+                print('    launch_{} 1'.format(launch_uos), file=config)
+            elif gvt_args:
+                print('    launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
             print("fi", file=config)
     else:
         if uos_type in ("VXWORKS", "PREEMPT-RT LINUX", "ZEPHYR"):
             print("launch_{} 1".format(launch_uos), file=config)
         if uos_type in ("CLEARLINUX", "WINDOWS"):
-            print('launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
+            if gvt_args == "gvtd":
+                print('launch_{} 1'.format(launch_uos), file=config)
+            else:
+                print('launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
 
     if is_mount_needed(virt_io, vmid):
         print("", file=config)
-        print('launch_{} {} "{}" "{}" $debug'.format(launch_uos, vmid, gvt_args, vmid), file=config)
+        if gvt_args == "gvtd":
+            print('launch_{} {} "{}" $debug'.format(launch_uos, vmid, vmid), file=config)
+        else:
+            print('launch_{} {} "{}" "{}" $debug'.format(launch_uos, vmid, gvt_args, vmid), file=config)
         print("", file=config)
 
         i = 0
@@ -603,14 +617,14 @@ def gen(names, pt_sel, virt_io, dm, vmid, config):
     uos_type = names['uos_types'][vmid]
 
     # passthrough bdf/vpid dictionay
-    pt.gen_pt_head(names, pt_sel, vmid, config)
+    pt.gen_pt_head(names, dm, pt_sel, vmid, config)
 
     # gen launch header
     launch_begin(names, virt_io, vmid, config)
     tap_uos_net(names, virt_io,  vmid, config)
 
     # passthrough device
-    pt.gen_pt(names, pt_sel, vmid, config)
+    pt.gen_pt(names, dm, pt_sel, vmid, config)
     wa_usage(uos_type, config)
     delay_use_usb_storage(uos_type, config)
     mem_size_set(dm, vmid, config)

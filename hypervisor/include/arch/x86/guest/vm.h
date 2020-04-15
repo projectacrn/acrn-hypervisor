@@ -130,6 +130,7 @@ struct acrn_vm {
 	enum vpic_wire_mode wire_mode;
 	struct iommu_domain *iommu;	/* iommu domain of this VM */
 	spinlock_t vm_lock;	/* Spin-lock used to protect vlapic_state modifications for a VM */
+	spinlock_t ept_lock;	/* Spin-lock used to protect ept add/modify/remove for a VM */
 
 	spinlock_t emul_mmio_lock;	/* Used to protect emulation mmio_node concurrent access for a VM */
 	uint16_t max_emul_mmio_regions;	/* max index of the emulated mmio_region */
@@ -262,6 +263,7 @@ void vrtc_init(struct acrn_vm *vm);
 
 bool is_lapic_pt_configured(const struct acrn_vm *vm);
 bool is_rt_vm(const struct acrn_vm *vm);
+bool is_pi_capable(const struct acrn_vm *vm);
 bool has_rt_vm(void);
 bool is_highest_severity_vm(const struct acrn_vm *vm);
 bool vm_hide_mtrr(const struct acrn_vm *vm);

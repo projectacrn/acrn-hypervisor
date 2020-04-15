@@ -352,7 +352,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 		exec_vmwrite64(VMX_EOI_EXIT3_FULL, 0UL);
 
 		exec_vmwrite16(VMX_GUEST_INTR_STATUS, 0U);
-		exec_vmwrite16(VMX_POSTED_INTR_VECTOR, POSTED_INTR_VECTOR);
+		exec_vmwrite16(VMX_POSTED_INTR_VECTOR, (uint16_t)vcpu->arch.pid.control.bits.nv);
 		exec_vmwrite64(VMX_PIR_DESC_ADDR_FULL, hva2hpa(get_pi_desc(vcpu)));
 	}
 
@@ -526,10 +526,8 @@ void init_vmcs(struct acrn_vcpu *vcpu)
 	(void)memcpy_s(vcpu->arch.vmcs, 4U, (void *)&vmx_rev_id, 4U);
 
 	/* Execute VMCLEAR VMCS of this vcpu */
-	if ((void *)vcpu->arch.vmcs != NULL) {
-		vmcs_pa = hva2hpa(vcpu->arch.vmcs);
-		exec_vmclear((void *)&vmcs_pa);
-	}
+	vmcs_pa = hva2hpa(vcpu->arch.vmcs);
+	exec_vmclear((void *)&vmcs_pa);
 
 	/* Load VMCS pointer */
 	vmcs_pa = hva2hpa(vcpu->arch.vmcs);

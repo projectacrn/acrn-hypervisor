@@ -12,7 +12,7 @@ Design Guides
 *************
 
 Read about ACRN's high-level design and architecture principles that led
-to the develoment of the ACRN hypervisor and its components.  You'll
+to the development of the ACRN hypervisor and its components.  You'll
 also find details about specific architecture topics.
 
 .. toctree::

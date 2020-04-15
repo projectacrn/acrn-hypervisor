@@ -14,7 +14,7 @@ VM structure
 The ``acrn_vm`` structure is defined to manage a VM instance, this structure
 maintained a VM's HW resources like vcpu, vpic, vioapic, vuart, vpci. And at
 the same time ``acrn_vm`` structure also recorded a bunch of SW information
-related with corresponding VM, like info for VM indentifier, info for SW
+related with corresponding VM, like info for VM identifier, info for SW
 loader, info for memory e820 entries, info for IO/MMIO handlers, info for
 platform level cpuid entries, and so on.
 

@@ -38,6 +38,7 @@
 #include <vm.h>
 #include <ld_sym.h>
 #include <logmsg.h>
+#include <misc_cfg.h>
 
 static void *ppt_mmu_pml4_addr;
 static uint8_t sanitized_page[PAGE_SIZE] __aligned(PAGE_SIZE);
@@ -281,6 +282,16 @@ void init_paging(void)
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_reserve_sworld_memory_base(),
 			TRUSTY_RAM_SIZE * MAX_POST_VM_NUM, PAGE_USER, 0UL, &ppt_mem_ops, MR_MODIFY);
 #endif
+
+	/*
+	 * Users of this MMIO region needs to use access memory using stac/clac
+	 */
+
+	if ((HI_MMIO_START != ~0UL) && (HI_MMIO_END != 0UL)) {
+		mmu_add((uint64_t *)ppt_mmu_pml4_addr, HI_MMIO_START, HI_MMIO_START,
+			(HI_MMIO_END - HI_MMIO_START), attr_uc, &ppt_mem_ops);
+	}
+
 	/* Enable paging */
 	enable_paging();
 

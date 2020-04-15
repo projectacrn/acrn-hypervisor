@@ -13,6 +13,7 @@
 #include <init.h>
 #include <logmsg.h>
 #include <dump.h>
+#include <reloc.h>
 
 #define CALL_TRACE_HIERARCHY_MAX    20U
 #define DUMP_STACK_SIZE 0x200U
@@ -148,6 +149,7 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp_arg, uint16_t pcpu_i
 	uint32_t cb_hierarchy = 0U;
 	uint64_t *sp = (uint64_t *)rsp;
 
+	pr_acrnlog("\r\n delta = (actual_load_address - CONFIG_HV_RAM_START) = 0x%llx\r\n", get_hv_image_delta());
 	pr_acrnlog("\r\nHost Stack: CPU_ID = %hu\r\n", pcpu_id);
 	for (i = 0U; i < (DUMP_STACK_SIZE >> 5U); i++) {
 		pr_acrnlog("addr(0x%lx)	0x%016lx  0x%016lx  0x%016lx  0x%016lx\r\n",

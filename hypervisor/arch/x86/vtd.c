@@ -22,6 +22,7 @@
 #include <board.h>
 #include <vm_config.h>
 #include <pci.h>
+#include <platform_caps.h>
 
 #define DBG_IOMMU 0
 
@@ -206,6 +207,7 @@ static inline uint16_t vmid_to_domainid(uint16_t vm_id)
 
 static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit);
 static struct dmar_drhd_rt *device_to_dmaru(uint8_t bus, uint8_t devfun);
+
 static int32_t register_hrhd_units(void)
 {
 	struct dmar_drhd_rt *drhd_rt;
@@ -223,6 +225,10 @@ static int32_t register_hrhd_units(void)
 		ret = dmar_register_hrhd(drhd_rt);
 		if (ret != 0) {
 			break;
+		}
+
+		if ((iommu_cap_pi(drhd_rt->cap) == 0U) || (!is_apicv_advanced_feature_supported())) {
+			platform_caps.pi = false;
 		}
 	}
 
@@ -1345,18 +1351,37 @@ int32_t dmar_assign_irte(const struct intr_source *intr_src, union dmar_ir_entry
 		ret = -EINVAL;
 	} else {
 		dmar_enable_intr_remapping(dmar_unit);
-		irte->bits.remap.svt = 0x1UL;
-		irte->bits.remap.sq = 0x0UL;
-		irte->bits.remap.sid = sid.value;
-		irte->bits.remap.present = 0x1UL;
-		irte->bits.remap.mode = 0x0UL;
-		irte->bits.remap.trigger_mode = trigger_mode;
-		irte->bits.remap.fpd = 0x0UL;
+
 		ir_table = (union dmar_ir_entry *)hpa2hva(dmar_unit->ir_table_addr);
 		ir_entry = ir_table + index;
-		ir_entry->value.hi_64 = irte->value.hi_64;
-		ir_entry->value.lo_64 = irte->value.lo_64;
 
+		if (intr_src->pid_paddr != 0UL) {
+			union dmar_ir_entry irte_pi;
+
+			/* irte is in remapped mode format, convert to posted mode format */
+			irte_pi.value.lo_64 = 0UL;
+			irte_pi.value.hi_64 = 0UL;
+
+			irte_pi.bits.post.vector = irte->bits.remap.vector;
+
+			irte_pi.bits.post.svt = 0x1UL;
+			irte_pi.bits.post.sid = sid.value;
+			irte_pi.bits.post.present = 0x1UL;
+			irte_pi.bits.post.mode = 0x1UL;
+
+			irte_pi.bits.post.pda_l = (intr_src->pid_paddr) >> 6U;
+			irte_pi.bits.post.pda_h = (intr_src->pid_paddr) >> 32U;
+
+			*ir_entry = irte_pi;
+		} else {
+			/* Fields that have not been initialized explicitly default to 0 */
+			irte->bits.remap.svt = 0x1UL;
+			irte->bits.remap.sid = sid.value;
+			irte->bits.remap.present = 0x1UL;
+			irte->bits.remap.trigger_mode = trigger_mode;
+
+			*ir_entry = *irte;
+		}
 		iommu_flush_cache(ir_entry, sizeof(union dmar_ir_entry));
 		dmar_invalid_iec(dmar_unit, index, 0U, false);
 	}

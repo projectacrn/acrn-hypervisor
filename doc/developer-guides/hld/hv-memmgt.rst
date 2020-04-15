@@ -96,7 +96,7 @@ After the application processor (AP) receives the IPI CPU startup
 interrupt, it uses the MMU page tables created by the BSP. In order to bring
 the memory access rights into effect, some other APIs are provided:
 enable_paging will enable IA32_EFER.NXE and CR0.WP, enable_smep will
-enable CR4.SMEP, and enable_smap will enale CR4.SMAP.
+enable CR4.SMEP, and enable_smap will enable CR4.SMAP.
 :numref:`hv-mem-init`  describes the hypervisor memory initialization for the BSP
 and APs.
 
@@ -380,7 +380,7 @@ VM Exit about EPT
 
 There are two VM exit handlers for EPT violation and EPT
 misconfiguration in the hypervisor. EPT page tables are
-always configured correctly for the Service ans User VMs. If an EPT misconfiguration is
+always configured correctly for the Service and User VMs. If an EPT misconfiguration is
 detected, a fatal error is reported by the HV. The hypervisor
 uses EPT violation to intercept MMIO access to do device emulation. EPT
 violation handling data flow is described in the

@@ -98,21 +98,28 @@ void setup_notification(void)
 		notification_irq, irq_to_vector(notification_irq));
 }
 
-static void posted_intr_notification(__unused uint32_t irq, __unused void *data)
+/*
+ * posted interrupt handler
+ * @pre (irq - POSTED_INTR_IRQ) < CONFIG_MAX_VM_NUM
+ */
+static void handle_pi_notification(uint32_t irq, __unused void *data)
 {
-	/* Dummy IRQ handler for case that Posted-Interrupt Notification
-	 * is sent to vCPU in root mode(isn't running),interrupt will be
-	 * picked up in next vmentry,do nothine here.
-	 */
+	uint32_t vcpu_index = irq - POSTED_INTR_IRQ;
+
+	ASSERT(vcpu_index < CONFIG_MAX_VM_NUM, "");
+	vcpu_handle_pi_notification(vcpu_index);
 }
 
-/*pre-conditon: be called only by BSP initialization proccess*/
-void setup_posted_intr_notification(void)
+/*pre-condition: be called only by BSP initialization proccess*/
+void setup_pi_notification(void)
 {
-	if (request_irq(POSTED_INTR_IRQ,
-			posted_intr_notification,
-			NULL, IRQF_NONE) < 0) {
-		pr_err("Failed to setup posted-intr notification");
+	uint32_t i;
+
+	for (i = 0U; i < CONFIG_MAX_VM_NUM; i++) {
+		if (request_irq(POSTED_INTR_IRQ + i, handle_pi_notification, NULL, IRQF_NONE) < 0) {
+			pr_err("Failed to setup pi notification");
+			break;
+		}
 	}
 }
 
