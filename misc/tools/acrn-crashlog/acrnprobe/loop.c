@@ -231,7 +231,7 @@ int loopdev_check_parname(const char *loopdev, const char *parname)
 		/* only look into the primary super block */
 		if (super.s_volume_name[0]) {
 			close(fd);
-			return !strcmp(super.s_volume_name, parname);
+			return !strcmp((const char *)super.s_volume_name, parname);
 		}
 		break;
 	}
