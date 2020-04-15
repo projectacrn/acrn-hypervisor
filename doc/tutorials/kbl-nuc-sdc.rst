@@ -90,7 +90,7 @@ Follow these steps:
 
 #. Open a terminal.
 
-#. Download the ``acrn_quick_setup.sh`` script to set up the Service VM. 
+#. Download the ``acrn_quick_setup.sh`` script to set up the Service VM.
    (If you don't need a proxy to get the script, skip the ``export`` command.)
 
    .. code-block:: none
@@ -113,7 +113,7 @@ Follow these steps:
       Service OS setup done!
       Rebooting Service OS to take effects.
       Rebooting.
-      
+
    .. note::
       This script is using ``/dev/sda1`` as the default EFI System Partition
       ESP). If the ESP is different based on your hardware, you can specify
@@ -127,7 +127,7 @@ Follow these steps:
 
          ``sudo sh acrn_quick_setup.sh -s 32080 -e /dev/nvme0n1p1 -d``
 
-#. After the system reboots, log in as the **clear** user. Verify that the Service VM 
+#. After the system reboots, log in as the **clear** user. Verify that the Service VM
    booted successfully by checking the ``dmesg`` log:
 
    .. code-block:: console
@@ -180,7 +180,7 @@ Follow these steps:
 
       clr-a632ec84744d4e02974fe1891130002e login:
 
-#. Log in as root. Specify the new password. Verify that you are running in the User VM 
+#. Log in as root. Specify the new password. Verify that you are running in the User VM
    by checking the kernel release version or seeing if acrn devices are visible:
 
    .. code-block:: console
@@ -214,7 +214,7 @@ and User VM manually. Follow these steps:
 #. Install Clear Linux on the NUC, log in as the **clear** user,
    and open a terminal window.
 
-#. Disable the auto-update feature. Clear Linux OS is set to automatically update itself. 
+#. Disable the auto-update feature. Clear Linux OS is set to automatically update itself.
    We recommend that you disable this feature to have more control over when updates happen. Use this command:
 
    .. code-block:: none
@@ -222,8 +222,8 @@ and User VM manually. Follow these steps:
       $ sudo swupd autoupdate --disable
 
    .. note::
-      When enabled, the Clear Linux OS installer automatically checks for updates and installs the latest version 
-      available on your system. To use a specific version (such as 32080), enter the following command after the 
+      When enabled, the Clear Linux OS installer automatically checks for updates and installs the latest version
+      available on your system. To use a specific version (such as 32080), enter the following command after the
       installation is complete:
 
       ``sudo swupd repair --picky -V 32080``
@@ -408,7 +408,7 @@ ACRN Network Bridge
 ===================
 
 The ACRN bridge has been set up as a part of systemd services for device
-communication. The default bridge creates ``acrn_br0`` which is the bridge and ``tap0`` as an initial setup. 
+communication. The default bridge creates ``acrn_br0`` which is the bridge and ``tap0`` as an initial setup.
 The files can be found in ``/usr/lib/systemd/network``. No additional setup is needed since **systemd-networkd** is
 automatically enabled after a system restart.
 
@@ -425,8 +425,8 @@ Set up Reference User VM
       $ cd uos
       $ curl https://download.clearlinux.org/releases/32080/clear/clear-32080-kvm.img.xz -o uos.img.xz
 
-   Note that if you want to use or try out a newer version of Clear Linux OS as the User VM, download the 
-   latest from `http://download.clearlinux.org/image/`. 
+   Note that if you want to use or try out a newer version of Clear Linux OS as the User VM, download the
+   latest from `http://download.clearlinux.org/image/`.
    Make sure to adjust the steps described below accordingly (image file name and kernel modules version).
 
 #. Uncompress it:
@@ -435,7 +435,7 @@ Set up Reference User VM
 
       $ unxz uos.img.xz
 
-#. Deploy the User VM kernel modules to the User VM virtual disk image (note that you'll need to 
+#. Deploy the User VM kernel modules to the User VM virtual disk image (note that you'll need to
    use the same **iot-lts2018** image version number noted in Step 1 above):
 
    .. code-block:: none

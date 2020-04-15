@@ -18,7 +18,7 @@ and about `Sphinx extensions`_ from their respective websites.
 
 .. _Sphinx extensions: https://www.sphinx-doc.org/en/stable/contents.html
 .. _reStructuredText: http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
-.. _Sphinx Inline Markup: https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html 
+.. _Sphinx Inline Markup: https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html
 .. _Project ACRN documentation:  https://projectacrn.github.io
 
 This document provides a quick reference for commonly used reST and
