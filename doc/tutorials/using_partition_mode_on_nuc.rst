@@ -1,7 +1,7 @@
 .. _using_partition_mode_on_nuc:
 
-Using partition mode on NUC
-###########################
+Getting Started Guide for ACRN Logical Partition mode
+#####################################################
 
 ACRN hypervisor supports logical partition scenario, in which the User OS (such
 as Clear Linux) running in a pre-launched VM can bypass the ACRN hypervisor and
@@ -18,11 +18,18 @@ scenario on Intel NUC is shown in
 
    The logical partition scenario on Intel NUC
 
+Validated Versions
+******************
+
+- Ubuntu version: **18.04**
+- Clear Linux version: **32680**
+- ACRN hypervisor tag: **v1.6**
+- ACRN kernel commit: **8c9a8695966d8c5c8c7ccb296b9c48671b14aa70**
+
 Prerequisites
 *************
 
-* `Intel NUC Kit NUC7i7DNHE <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_
-* Connecting to the serial port, described in :ref:`kbl-nuc-sdc`
+* `Intel Whiskey Lake <http://www.maxtangpc.com/industrialmotherboards/142.html#parameters>`_
 * NVMe disk
 * SATA disk
 * Storage device with USB interface (such as USB Flash
@@ -34,7 +41,7 @@ Prerequisites
   filesystem. Set up each VM by following the `Install Clear Linux
   OS on bare metal with live server
   <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_
-  and install Clear Linux OS (version: 29970) first on a SATA disk and then again
+  and install Clear Linux OS (version: 32680) first on a SATA disk and then again
   on a storage device with a USB interface. The two pre-launched
   VMs will mount the root file systems via the SATA controller and
   the USB controller respectively.
@@ -132,7 +139,7 @@ Update ACRN hypervisor Image
    .. note::
 
       Double check PCI devices BDF defined in the
-      ``hypervisor/arch/x86/configs/nuc7i7dnb/pci_devices.h``
+      ``hypervisor/arch/x86/configs/whl-ipc-i5/pci_devices.h``
       with the information reported by the ``lspci -vv`` command.
 
 #. Clone the ACRN source code and configure the build options
@@ -140,30 +147,23 @@ Update ACRN hypervisor Image
    Please refer :ref:`getting-started-building` to setup ACRN build environment
    on your development workstation.
 
-   Clone the ACRN source code and checkout to the tag v1.1:
+   Clone the ACRN source code and checkout to the tag v1.6:
 
    .. code-block:: none
 
       $ git clone https://github.com/projectacrn/acrn-hypervisor.git
       $ cd acrn-hypervisor
-      $ git checkout v1.1
-      $ cd hypervisor
+      $ git checkout v1.6
 
-   Configure the build options:
+   Build ACRN hypervisor with default xmls:
 
    .. code-block:: none
 
-      $ make defconfig BOARD=nuc7i7dnb
-      $ make menuconfig
+      $ make hypervisor BOARD_FILE=$PWD/misc/acrn-config/xmls/board-xmls/whl-ipc-i5.xml SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/whl-ipc-i5/logical_partition.xml RELEASE=0
 
-   Updates the following configure item:
+   .. note::
 
-   * Set ACRN Scenario as "Logical Partition VMs";
-   * Set Maximum number of VCPUs per VM as "2";
-   * Set Maximum number of PCPU as "4";
-   * Clear/Disable "Enable hypervisor relocation".
-
-   We recommend keeping the default values of items not mentioned above.
+      The ``acrn.32.out`` will be generated to ``./build/hypervisor/acrn.32.out``.
 
 #. Check Ubuntu boot loader name
 
@@ -178,16 +178,9 @@ Update ACRN hypervisor Image
    The above command output should contain the ``GRUB`` keyword.
 
 #. Check or update BDF information of PCI devices of each pre-launched VM;
-   Check it in the ``hypervisor/arch/x86/configs/nuc7i7dnb/pci_devices.h``.
+   Check it in the ``hypervisor/arch/x86/configs/whl-ipc-i5/pci_devices.h``.
 
-#. Build the ACRN hypervisor and copy the artifact ``acrn.32.out`` to the
-   ``/boot`` directory:
-
-   #. Build ACRN hypervisor:
-
-      .. code-block:: none
-
-         $ make
+#. copy the artifact ``acrn.32.out`` to the ``/boot`` directory:
 
    #. Copy ``acrn.32.out`` to a removable disk.
 
@@ -231,8 +224,11 @@ Update Ubuntu GRUB to Boot hypervisor and Load Kernel Image
 
    .. code-block:: none
 
-      #GRUB_HIDDEN_TIMEOUT=0
-      GRUB_HIDDEN_TIMEOUT_QUIET=false
+      GRUB_DEFAULT=3
+      GRUB_TIMEOUT=10
+      GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
+      GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
+      GRUB_CMDLINE_LINUX=""
 
 #. Update grub:
 
