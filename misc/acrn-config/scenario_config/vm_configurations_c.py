@@ -14,35 +14,31 @@ C_HEADER = scenario_cfg_lib.HEADER_LICENSE + r"""
 #include <pci_dev.h>
 """
 
+def get_pre_vm_type(vm_type, vm_i):
 
-def uuid2str(uuid):
-    """
-    This is convert uuid format string to string format
-    :param uuid: uuid number generate by uuid
-    :return: string uuid
-    """
-    str1 = ""
-    tmp_uuid = uuid.split('-')
-    tmp_uuid = str1.join(tmp_uuid)
-    return tmp_uuid
+    if vm_type == "SAFETY_VM":
+        return "CONFIG_SAFETY_VM(1)"
+
+    i_cnt = 0
+    for i,v_type in common.VM_TYPES.items():
+        if v_type == "PRE_STD_VM" and i <= vm_i:
+            i_cnt += 1
+    return "CONFIG_PRE_STD_VM({})".format(i_cnt)
 
 
-def uuid_output(uuid, uuid_string, config):
-    """
-    This is generate uuid information
-    :param uuid:
-    :param uuid_string:
-    :param config:
-    :return:
-    """
-    # UUID
-    print("\t\t.uuid = {{0x{0}U, 0x{1}U, 0x{2}U, 0x{3}U, 0x{4}U, 0x{5}U, 0x{6}U, 0x{7}U,\t\\".
-          format(uuid[0:2], uuid[2:4], uuid[4:6], uuid[6:8],
-                 uuid[8:10], uuid[10:12], uuid[12:14], uuid[14:16]), file=config)
-    print("\t\t\t 0x{0}U, 0x{1}U, 0x{2}U, 0x{3}U, 0x{4}U, 0x{5}U, 0x{6}U, 0x{7}U}},".
-          format(uuid[16:18], uuid[18:20], uuid[20:22], uuid[22:24],
-                 uuid[24:26], uuid[26:28], uuid[28:30], uuid[30:32]), file=config)
-    print("\t\t/* {0} */".format(uuid_string), file=config)
+def get_post_vm_type(vm_type, vm_i):
+
+    if vm_type == "KATA_VM":
+        return "CONFIG_KATA_VM(1)"
+
+    if vm_type == "POST_RT_VM":
+        return "CONFIG_POST_RT_VM(1)"
+
+    i_cnt = 0
+    for i,v_type in common.VM_TYPES.items():
+        if v_type == "POST_STD_VM" and i <= vm_i:
+            i_cnt += 1
+    return "CONFIG_POST_STD_VM({})".format(i_cnt)
 
 
 def vuart0_output(i, vm_type, vm_info, config):
@@ -57,13 +53,13 @@ def vuart0_output(i, vm_type, vm_info, config):
     # SOS_VM vuart[0]
     print("\t\t.vuart[0] = {", file=config)
     print("\t\t\t.type = {0},".format(vm_info.vuart.v0_vuart[i]['type']), file=config)
-    if vm_type == "SOS_VM":
+    if "SOS_" in vm_type:
         print("\t\t\t.addr.port_base = SOS_COM1_BASE,", file=config)
         print("\t\t\t.irq = SOS_COM1_IRQ,", file=config)
-    elif vm_type == "PRE_LAUNCHED_VM":
+    elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
         print("\t\t\t.addr.port_base = COM1_BASE,", file=config)
         print("\t\t\t.irq = COM1_IRQ,", file=config)
-    elif vm_type == "POST_LAUNCHED_VM":
+    elif "POST_LAUNCHED_VM" in scenario_cfg_lib.VM_DB[vm_type]['load_type']:
         print("\t\t\t.addr.port_base = {0},".format(
             vm_info.vuart.v0_vuart[i]['base']), file=config)
         if vm_info.vuart.v0_vuart[i]['base'] != "INVALID_COM_BASE":
@@ -111,7 +107,7 @@ def vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config):
         print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
 
     if vuart1_vmid_dic and i in vuart1_vmid_dic.keys():
-        if vm_type == "SOS_VM":
+        if "SOS_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             if vm_info.vuart.v1_vuart[i]['base'] != "INVALID_COM_BASE" and vuart_enable[i]:
                 print("\t\t\t.irq = SOS_COM2_IRQ,", file=config)
         else:
@@ -151,8 +147,8 @@ def is_need_epc(epc_section, i, config):
     # SOS_VM have not set epc section
     if i not in common.VM_TYPES.keys():
         return
-    vm_type = list(common.VM_TYPES.keys())[i]
-    if vm_type == "SOS_VM":
+    vm_type = list(common.VM_TYPES.values())[i]
+    if "SOS_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
         return
 
     if epc_section.base[i] == '0' and epc_section.size[i] == '0':
@@ -171,7 +167,7 @@ def vcpu_affinity_output(vm_info, i, config):
     :param i: the index of vm id
     :param config: file pointor to store the information
     """
-    if vm_info.load_order[i] == "SOS_VM":
+    if "SOS_VM" == scenario_cfg_lib.VM_DB[vm_info.load_vm[i]]['load_type']:
         return
 
     cpu_bits = vm_info.get_cpu_bitmap(i)
@@ -241,21 +237,16 @@ def gen_sos_vm(vm_type, vm_i, vm_info, config):
     (err_dic, sos_guest_flags) = get_guest_flag(vm_info.guest_flags[vm_i])
     if err_dic:
         return err_dic
-    uuid_str = uuid2str(vm_info.uuid[vm_i])
 
     print("\t{{\t/* VM{} */".format(vm_i), file=config)
-    print("\t\t.load_order = {0},".format(
-        vm_info.load_order[vm_i]), file=config)
+    print("\t\tCONFIG_SOS_VM,", file=config)
     print('\t\t.name = "{0}",'.format(vm_info.name[vm_i]), file=config)
-    # UUID
-    uuid_output(uuid_str, vm_info.uuid[vm_i], config)
     print("", file=config)
     print("\t\t/* Allow SOS to reboot the host since " +
           "there is supposed to be the highest severity guest */", file=config)
     if sos_guest_flags:
         print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
     vcpu_affinity_output(vm_info, vm_i, config)
-    print("\t\t.severity = {0},".format(vm_info.severity[vm_i].strip()), file=config)
     print("\t\t.memory = {", file=config)
     print("\t\t\t.start_hpa = {}UL,".format(vm_info.mem_info.mem_start_hpa[vm_i]), file=config)
     print("\t\t\t.size = {0},".format("CONFIG_SOS_RAM_SIZE"), file=config)
@@ -284,16 +275,12 @@ def gen_pre_launch_vm(vm_type, vm_i, vm_info, config):
     (err_dic, guest_flags) = get_guest_flag(vm_info.guest_flags[vm_i])
     if err_dic:
         return err_dic
-    uuid_str = uuid2str(vm_info.uuid[vm_i])
 
+    pre_vm_type = get_pre_vm_type(vm_type, vm_i)
     print("\t{{\t/* VM{} */".format(vm_i), file=config)
-    print("\t\t.load_order = {0},".format(vm_info.load_order[vm_i]), file=config)
+    print("\t\t{},".format(pre_vm_type), file=config)
     print('\t\t.name = "{0}",'.format(vm_info.name[vm_i]), file=config)
-    # UUID
-    uuid_output(uuid_str, vm_info.uuid[vm_i], config)
     vcpu_affinity_output(vm_info, vm_i, config)
-    if vm_i in vm_info.severity.keys():
-        print("\t\t.severity = {0},".format(vm_info.severity[vm_i].strip()), file=config)
     if guest_flags:
         print("\t\t.guest_flags = {0},".format(guest_flags), file=config)
     clos_output(vm_info, vm_i, config)
@@ -339,13 +326,10 @@ def gen_pre_launch_vm(vm_type, vm_i, vm_info, config):
 
 def gen_post_launch_vm(vm_type, vm_i, vm_info, config):
 
-    uuid_str = uuid2str(vm_info.uuid[vm_i])
+    post_vm_type = get_post_vm_type(vm_type, vm_i)
     print("\t{{\t/* VM{} */".format(vm_i), file=config)
-    print("\t\t.load_order = {0},".format(vm_info.load_order[vm_i]), file=config)
-    # UUID
-    uuid_output(uuid_str, vm_info.uuid[vm_i], config)
+    print("\t\t{},".format(post_vm_type), file=config)
     vcpu_affinity_output(vm_info, vm_i, config)
-    print("\t\t.severity = {0},".format(vm_info.severity[vm_i].strip()), file=config)
     is_need_epc(vm_info.epc_section, vm_i, config)
     # VUART
     err_dic = vuart_output(vm_type, vm_i, vm_info, config)
@@ -381,7 +365,7 @@ def split_cmdline(cmd_str, config):
 def pre_launch_definiation(vm_info, config):
 
     for vm_i,vm_type in common.VM_TYPES.items():
-        if vm_type != "PRE_LAUNCHED_VM":
+        if "PRE_LAUNCHED_VM" != scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             continue
         print("extern struct acrn_vm_pci_dev_config " +
               "vm{}_pci_devs[{}];".format(vm_i, vm_info.cfg_pci.pci_dev_num[vm_i]), file=config)
@@ -402,11 +386,11 @@ def generate_file(vm_info, config):
     print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)
     for vm_i, vm_type in common.VM_TYPES.items():
 
-        if vm_type == "SOS_VM":
+        if "SOS_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             gen_sos_vm(vm_type, vm_i, vm_info, config)
-        elif vm_type == "PRE_LAUNCHED_VM":
+        elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             gen_pre_launch_vm(vm_type, vm_i, vm_info, config)
-        elif vm_type == "POST_LAUNCHED_VM":
+        elif "POST_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             gen_post_launch_vm(vm_type, vm_i, vm_info, config)
 
     print("};", file=config)
