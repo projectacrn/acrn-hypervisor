@@ -50,9 +50,8 @@
   </hv>
 
   <vm id="0">
-    <load_order desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM." readonly="true">PRE_LAUNCHED_VM</load_order>
+    <vm_type desc="Specify the VM type" readonly="true">SAFETY_VM</vm_type>
     <name desc="Specify the VM name which will be shown in hypervisor console command: vm_list.">ACRN PRE-LAUNCHED VM0</name>
-    <uuid configurable="0" desc="vm uuid">fc836901-8685-4bc0-8b71-6e31dc36fa47</uuid>
     <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
         <guest_flag>0</guest_flag>
     </guest_flags>
@@ -62,7 +61,6 @@
     <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
         <vcpu_clos>0</vcpu_clos>
     </clos>
-    <severity desc="severity of the guest VM">SEVERITY_SAFETY_VM</severity>
     <epc_section desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>
         <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
@@ -99,16 +97,14 @@
     </pci_devs>
   </vm>
   <vm id="1">
-    <load_order desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM." readonly="true">SOS_VM</load_order>
+    <vm_type desc="Specify the VM type" readonly="true">SOS_VM</vm_type>
     <name desc="Specify the VM name which will be shown in hypervisor console command: vm_list.">ACRN SOS VM</name>
-    <uuid configurable="0" desc="vm uuid">dbbbd434-7a57-4216-a12c-2201f1ab0240</uuid>
     <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
         <guest_flag>0</guest_flag>
     </guest_flags>
     <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
         <vcpu_clos>0</vcpu_clos>
     </clos>
-    <severity desc="severity of the guest VM">SEVERITY_SOS</severity>
     <memory>
         <start_hpa configurable="0" desc="The start physical address in host for the VM">0</start_hpa>
         <size configurable="0" desc="The memory size in Bytes for the VM">CONFIG_SOS_RAM_SIZE</size>
@@ -146,8 +142,7 @@
     </board_private>
   </vm>
   <vm id="2">
-    <load_order desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM." readonly="true">POST_LAUNCHED_VM</load_order>
-    <uuid configurable="0" desc="vm uuid">d2795438-25d6-11e8-864e-cb7a18b34643</uuid>
+    <vm_type desc="Specify the VM type" readonly="true">POST_STD_VM</vm_type>
     <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
         <guest_flag>0</guest_flag>
     </guest_flags>
@@ -157,7 +152,6 @@
     <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
         <vcpu_clos>0</vcpu_clos>
     </clos>
-    <severity desc="severity of the guest VM">SEVERITY_STANDARD_VM</severity>
     <epc_section desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>
         <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
