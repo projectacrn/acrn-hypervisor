@@ -374,6 +374,9 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		pr_fatal("Triple fault happen -> shutdown!");
 		ret = -EFAULT;
 	} else {
+		if (bitmap_test_and_clear_lock(ACRN_REQUEST_WAIT_WBINVD, pending_req_bits)) {
+			wait_event(&vcpu->events[VCPU_EVENT_SYNC_WBINVD]);
+		}
 
 		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EPT_FLUSH, pending_req_bits)) {
 			invept(vcpu->vm->arch_vm.nworld_eptp);
