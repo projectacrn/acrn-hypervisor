@@ -87,6 +87,12 @@ static struct acpi_table_info acpi_table_template[CONFIG_MAX_VM_NUM] = {
 			.address = 0xFEE00000U, /* Local APIC Address */
 			.flags = 0x1U, /* PC-AT Compatibility=1 */
 		},
+		.ioapic_struct = {
+			.header.type = ACPI_MADT_TYPE_IOAPIC,
+			.header.length = sizeof(struct acpi_madt_ioapic),
+			.id = 0x1U,
+			.addr = VIOAPIC_BASE,
+		},
 		.lapic_nmi = {
 			.header.type = ACPI_MADT_TYPE_LOCAL_APIC_NMI,
 			.header.length = sizeof(struct acpi_madt_local_apic_nmi),
@@ -166,7 +172,7 @@ void build_vacpi(struct acrn_vm *vm)
 	}
 
 	madt = &acpi_table_template[vm->vm_id].madt;
-	madt->header.length = sizeof(struct acpi_table_madt)
+	madt->header.length = sizeof(struct acpi_table_madt) + sizeof(struct acpi_madt_ioapic)
 		+ sizeof(struct acpi_madt_local_apic_nmi)
 		+ (sizeof(struct acpi_madt_local_apic) * (size_t)vm->hw.created_vcpus);
 	madt->header.checksum = calculate_checksum8(madt, madt->header.length);
