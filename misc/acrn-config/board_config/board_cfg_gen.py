@@ -54,20 +54,22 @@ def main(args):
         err_dic['board config: Not match'] = "The board xml and scenario xml should be matched"
         return err_dic
 
-    if common.ACRN_CONFIG_TARGET:
-        board_dir = common.ACRN_CONFIG_TARGET + board + '/'
+    if params['--out']:
+        if os.path.isabs(params['--out']):
+            board_dir = os.path.join(params['--out'], board + '/')
+            config_board_kconfig = os.path.join(board_dir,  GEN_FILE[4])
+        else:
+            board_dir = os.path.join(ACRN_PATH + params['--out'], board + '/')
+            config_board_kconfig = os.path.join(board_dir, GEN_FILE[4])
     else:
-        board_dir = ACRN_CONFIG_DEF + board + '/'
+        board_dir = os.path.join(ACRN_CONFIG_DEF, board + '/')
+        config_board_kconfig = os.path.join(board_dir, GEN_FILE[4])
     common.mkdir(board_dir)
 
     config_pci = board_dir + GEN_FILE[0]
     config_board = board_dir + GEN_FILE[1]
     config_acpi = board_dir + board + GEN_FILE[2]
     config_misc_cfg = board_dir + GEN_FILE[3]
-    if common.ACRN_CONFIG_TARGET:
-        config_board_kconfig = common.ACRN_CONFIG_TARGET + board + GEN_FILE[4]
-    else:
-        config_board_kconfig = ACRN_CONFIG_DEF + board + GEN_FILE[4]
 
     # generate board.c
     with open(config_board, 'w+') as config:
@@ -97,9 +99,9 @@ def main(args):
     return err_dic
 
 
-def ui_entry_api(board_info, scenario_info):
+def ui_entry_api(board_info, scenario_info, out):
 
-    arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info]
+    arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--out', out]
 
     err_dic = common.prepare()
     if err_dic:

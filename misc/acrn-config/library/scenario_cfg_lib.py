@@ -8,13 +8,11 @@ import board_cfg_lib
 
 HEADER_LICENSE = common.open_license()
 
-LOAD_ORDER_TYPE = ['PRE_LAUNCHED_VM', 'SOS_VM', 'POST_LAUNCHED_VM']
 START_HPA_LIST = ['0', '0x100000000', '0x120000000']
 
 KERN_TYPE_LIST = ['KERNEL_BZIMAGE', 'KERNEL_ZEPHYR']
 KERN_BOOT_ADDR_LIST = ['0x100000']
 
-VM_SEVERITY = ['SEVERITY_SAFETY_VM', 'SEVERITY_RTVM', 'SEVERITY_SOS', 'SEVERITY_STANDARD_VM']
 VUART_TYPE = ['VUART_LEGACY_PIO', 'VUART_PCI']
 VUART_BASE = ['SOS_COM1_BASE', 'SOS_COM2_BASE', 'COM1_BASE',
               'COM2_BASE', 'COM3_BASE', 'COM4_BASE', 'INVALID_COM_BASE']
@@ -39,7 +37,24 @@ PT_SUB_PCI['ethernet'] = ['Ethernet controller', 'Network controller', '802.1a c
                         '802.1b controller', 'Wireless controller']
 PT_SUB_PCI['sata'] = ['SATA controller']
 PT_SUB_PCI['nvme'] = ['Non-Volatile memory controller']
+UUID_DB = {
+    'SOS_VM':'dbbbd434-7a57-4216-a12c-2201f1ab0240',
+    'SAFETY_VM':'fc836901-8685-4bc0-8b71-6e31dc36fa47',
+    'PRE_STD_VM':['26c5e0d8-8f8a-47d8-8109-f201ebd61a5e', 'dd87ce08-66f9-473d-bc58-7605837f935e'],
+    'POST_STD_VM':['d2795438-25d6-11e8-864e-cb7a18b34643', '615db82a-e189-4b4f-8dbb-d321343e4ab3', '38158821-5208-4005-b72a-8a609e4190d0'],
+    'POST_RT_VM':'495ae2e5-2603-4d64-af76-d4bc5a8ec0e5',
+    'KATA_VM':'a7ada506-1ab0-4b6b-a0da-e513ca9b8c2f',
+}
 
+VM_DB = {
+    'SOS_VM':{'load_type':'SOS_VM', 'severity':'SEVERITY_SOS', 'uuid':UUID_DB['SOS_VM']},
+    'SAFETY_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_SAFETY_VM', 'uuid':UUID_DB['SAFETY_VM']},
+    'PRE_STD_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM', 'uuid':UUID_DB['PRE_STD_VM']},
+    'POST_STD_VM':{'load_type':'POST_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM', 'uuid':UUID_DB['POST_STD_VM']},
+    'POST_RT_VM':{'load_type':'POST_LAUNCHED_VM', 'severity':'SEVERITY_RTVM', 'uuid':UUID_DB['POST_RT_VM']},
+    'KATA_VM':{'load_type':'POST_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM', 'uuid':UUID_DB['KATA_VM']},
+}
+LOAD_VM_TYPE = list(VM_DB.keys())
 
 def get_pci_devs(pci_items):
 
@@ -103,60 +118,73 @@ def vm_name_check(vm_names, item):
             ERR_LIST[key] = "VM name length should be in range [1,32] bytes"
 
 
-def load_order_check(load_orders, item):
+def load_vm_check(load_vms, item):
     """
     Check load order type
-    :param load_orders: dictionary of vm load_order
+    :param load_vms: dictionary of vm vm mode
     :param item: vm name item in xml
     :return: None
     """
     sos_vm_ids = []
     pre_vm_ids = []
     post_vm_ids = []
-    for order_i, load_str in load_orders.items():
-        if load_str == "SOS_VM":
-            sos_vm_ids.append(order_i)
-
-        if load_str == "PRE_LAUNCHED_VM":
-            pre_vm_ids.append(order_i)
-
-        if load_str == "POST_LAUNCHED_VM":
-            post_vm_ids.append(order_i)
-
+    kata_vm_ids = []
+    rt_vm_ids = []
+    for order_i, load_str in load_vms.items():
         if not load_str:
             key = "vm:id={},{}".format(order_i, item)
             ERR_LIST[key] = "VM load should not empty"
             return
 
-        if load_str not in LOAD_ORDER_TYPE:
+        if load_str not in LOAD_VM_TYPE:
             key = "vm:id={},{}".format(order_i, item)
             ERR_LIST[key] = "VM load order unknown"
 
+        if "SOS_VM" == VM_DB[load_str]['load_type']:
+            sos_vm_ids.append(order_i)
+
+        if "PRE_LAUNCHED_VM" == VM_DB[load_str]['load_type']:
+            pre_vm_ids.append(order_i)
+
+        if "POST_LAUNCHED_VM" == VM_DB[load_str]['load_type']:
+            post_vm_ids.append(order_i)
+
+        if "KATA_VM" == load_str:
+            kata_vm_ids.append(order_i)
+
+        if "POST_RT_VM" == load_str:
+            rt_vm_ids.append(order_i)
+
+    if len(kata_vm_ids) >=2:
+        key = "vm:id={},{}".format(kata_vm_ids[0], item)
+        ERR_LIST[key] = "KATA VM number should not be greater than 1"
+        return
+
+    if len(rt_vm_ids) >= 2:
+        key = "vm:id={},{}".format(rt_vm_ids[0], item)
+        ERR_LIST[key] = "POST RT VM number should not be greater than 1"
+        return
+
     if len(sos_vm_ids) >= 2:
         key = "vm:id={},{}".format(sos_vm_ids[0], item)
-        ERR_LIST[key] = "SOS_VM number should not be greater than 1"
+        ERR_LIST[key] = "SOS vm number should not be greater than 1"
+        return
 
     if post_vm_ids and sos_vm_ids:
         if post_vm_ids[0] < sos_vm_ids[-1]:
             key = "vm:id={},{}".format(post_vm_ids[0], item)
-            ERR_LIST[key] = "POST_LAUNCHED_VM should be configured after SOS_VM"
+            ERR_LIST[key] = "Post vm should be configured after SOS_VM"
 
     if pre_vm_ids and sos_vm_ids:
         if sos_vm_ids[-1] < pre_vm_ids[-1]:
             key = "vm:id={},{}".format(sos_vm_ids[0], item)
-            ERR_LIST[key] = "PRE_LAUNCHED_VM should be configured before SOS_VM"
+            ERR_LIST[key] = "Pre vm should be configured before SOS_VM"
 
 
-def get_load_order_cnt(load_orders, type_name):
-    """
-    Get load order type count
-    :param load_orders: dictionary of vm load_order
-    :param type_name: load order type for vm
-    :return: number for this load order type name
-    """
+def get_load_vm_cnt(load_vms, type_name):
     type_cnt = 0
-    for load_str in load_orders.values():
-        if type_name == load_str:
+    for load_str in load_vms.values():
+        if type_name == VM_DB[load_str]['load_type']:
             type_cnt += 1
 
     return type_cnt
@@ -171,32 +199,6 @@ def guest_flag_check(guest_flags, branch_tag, leaf_tag):
                 ERR_LIST[key] = "Unknow guest flag"
 
 
-def uuid_format_check(uuid_dic, item):
-    """
-    Check uuid
-    :param uuid_dic: dictionary of vm uuid
-    :param item: vm uuid item in xml
-    :return: None
-    """
-    uuid_len = 36
-
-    for uuid_i, uuid_str in uuid_dic.items():
-
-        if not uuid_str:
-            key = "vm:id={},{}".format(uuid_i, item)
-            ERR_LIST[key] = "VM uuid should not empty"
-            return
-
-        uuid_str_list = list(uuid_str)
-        key = "vm:id={},{}".format(uuid_i, item)
-
-        if len(uuid_str) != uuid_len:
-            ERR_LIST[key] = "VM uuid length should be 36 bytes"
-
-        if uuid_str_list[8] != '-':
-            ERR_LIST[key] = "VM uuid format unknown"
-
-
 def cpus_per_vm_check(id_cpus_per_vm_dic, item):
     """
     Check cpu number of per vm
@@ -204,9 +206,9 @@ def cpus_per_vm_check(id_cpus_per_vm_dic, item):
     :return: None
     """
     for vm_i, vm_type in common.VM_TYPES.items():
-        if vm_i not in id_cpus_per_vm_dic.keys() and vm_type == "SOS_VM":
+        if vm_i not in id_cpus_per_vm_dic.keys() and "SOS_VM" == VM_DB[vm_type]['load_type']:
             continue
-        elif vm_i not in id_cpus_per_vm_dic.keys() and vm_type in ("PRE_LAUNCHED_VM", "POST_LAUNCHED"):
+        elif vm_i not in id_cpus_per_vm_dic.keys() and VM_DB[vm_type]['load_type'] in ("PRE_LAUNCHED_VM", "POST_LAUNCHED_VM"):
             key = "vm:id={},{}".format(vm_i, item)
             ERR_LIST[key] = "Pre launched_vm and Post launched vm should have cpus assignment"
             return
@@ -325,7 +327,7 @@ def os_kern_args_check(id_kern_args_dic, prime_item, item):
         if vm_i not in id_kern_args_dic.keys():
             continue
         kern_args = id_kern_args_dic[vm_i]
-        if vm_type == "SOS_VM" and kern_args != "SOS_VM_BOOTARGS":
+        if "SOS_" in vm_type and kern_args != "SOS_VM_BOOTARGS":
             key = "vm:id={},{},{}".format(vm_i, prime_item, item)
             ERR_LIST[key] = "VM os config kernel service os should be SOS_VM_BOOTARGS"
 
@@ -490,7 +492,7 @@ def avl_vuart_ui_select(scenario_info):
     tmp_vuart = {}
     for vm_i,vm_type in common.VM_TYPES.items():
 
-        if vm_type == "SOS_VM":
+        if "SOS_VM" == VM_DB[vm_type]['load_type']:
             key = "vm={},vuart=0,base".format(vm_i)
             tmp_vuart[key] = ['SOS_COM1_BASE', 'INVALID_COM_BASE']
             key = "vm={},vuart=1,base".format(vm_i)
@@ -508,7 +510,7 @@ def get_first_post_vm():
 
     i = 0
     for vm_i,vm_type in common.VM_TYPES.items():
-        if vm_type == "POST_LAUNCHED_VM":
+        if "POST_LAUNCHED_VM" == VM_DB[vm_type]['load_type']:
             i = vm_i
             break
 
