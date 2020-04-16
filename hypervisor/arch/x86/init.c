@@ -56,16 +56,15 @@ static void init_guest_mode(uint16_t pcpu_id)
 	launch_vms(pcpu_id);
 }
 
-static void init_primary_pcpu_post(void)
+static void init_pcpu_comm_post(void)
 {
-	init_seed();
+	uint16_t pcpu_id;
 
-	init_pcpu_post(BSP_CPU_ID);
+	pcpu_id = get_pcpu_id();
 
-	init_debug_post(BSP_CPU_ID);
-
-	init_guest_mode(BSP_CPU_ID);
-
+	init_pcpu_post(pcpu_id);
+	init_debug_post(pcpu_id);
+	init_guest_mode(pcpu_id);
 	run_idle_thread();
 }
 
@@ -85,25 +84,16 @@ void init_primary_pcpu(void)
 
 	init_pcpu_pre(true);
 
+	init_seed();
+
 	/* Switch to run-time stack */
 	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
 	rsp &= ~(CPU_STACK_ALIGN - 1UL);
-	SWITCH_TO(rsp, init_primary_pcpu_post);
+	SWITCH_TO(rsp, init_pcpu_comm_post);
 }
 
 void init_secondary_pcpu(void)
 {
-	uint16_t pcpu_id;
-
 	init_pcpu_pre(false);
-
-	pcpu_id = get_pcpu_id();
-
-	init_pcpu_post(pcpu_id);
-
-	init_debug_post(pcpu_id);
-
-	init_guest_mode(pcpu_id);
-
-	run_idle_thread();
+	init_pcpu_comm_post();
 }
