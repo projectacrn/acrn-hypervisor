@@ -10,18 +10,62 @@
                 <h4 class="modal-title" id="myModalLabel">Save as</h4>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label for="new_launch_name" class="col-sm-3 control-label">Launch: </label>
+                <div class="form-group row">
+                    <label for="new_launch_name" class="col-sm-3 control-label">Launch Name: </label>
                     <div class="col-sm-6">
                         <input type="text" class="form-control" id="new_launch_name"
-                               value={{launch[13:] if launch.startswith('user_defined_') else launch}}>
+                               value={{launch}}>
+                    </div>
+                </div>
+                <div class="form-group row hidden" id="src_path_row">
+                    <label for="src_path" class="col-sm-3 control-label"
+                        title="the relative path of acrn-hypervisor; if no path is specified,
+the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[board]/output and overwirte the previous files.">
+                        Source Path: </label>
+                    <div class="col-sm-9">
+                        <input type="text" class="form-control" id="src_path" value=""
+                               placeholder="input the path to generate launch scripts">
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 <button type="button" id="remove_launch" class="btn btn-default" data-dismiss="modal">Remove</button>
-                <button type="button" id="save_launch" data-id="" class="btn btn-primary" data-dismiss="modal">Submit
+                <button type="button" id="save_launch" data-id="" class="btn btn-primary">Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_launch_modal" tabindex="-1" role="dialog" aria-labelledby="addlaunchModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="addlaunchModalLabel">Add a new VM</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <label for="add_launch_type" class="col-sm-3 control-label">VM type: </label>
+                    <div class="dropdown col-sm-6">
+                        <select class="selectpicker" data-width="auto" id="add_launch_type">
+                            <option value="LAUNCH_STANDARD_VM">LAUNCH_STANDARD_VM</option>
+                            <option value="LAUNCH_RTVM">LAUNCH_RTVM</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="new_launch_name2" class="col-sm-3 control-label">Launch Name: </label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control" id="new_launch_name2"
+                               value={{ launch }}>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" id="add_launch_submit" data-id="" class="btn btn-primary" data-dismiss="modal">Submit
                 </button>
             </div>
         </div>
@@ -40,20 +84,20 @@
             <label for="launch_file" class="btn btn-primary" id="scenario_file2"
                    style="border: 1px solid #ccc; display: inline-block; padding: 6px 12px;
                        cursor: pointer; border-radius:5px; ">
-                Import</label>
+                Import XML</label>
             <input type="file" name="file" id="launch_file" class="col-sm-1 btn btn-primary" style="display: none;">
             {% else %}
             <label class="btn"
                    style="border: 1px solid #ccc; display: inline-block; padding: 6px 12px;
                        cursor: pointer; border-radius:5px; ">
-                Import</label>
+                Import XML</label>
             <input type="file" name="file" class="col-sm-1" style="display: none;" disabled>
             {% endif %}
         </div>
         {% if board_info != None and root != None %}
         <div class="col-sm-1">
-            <button type="button" class="btn btn-primary" data-id="save" data-toggle="modal" data-target="#save_modal">
-                Export
+            <button type="button" class="btn btn-primary" data-id="save" data-toggle="modal" data-target="#save_modal"
+                id="export_launch_xml">Export XML
             </button>
         </div>
         <div class="col-sm-1">
@@ -63,7 +107,7 @@
         </div>
         {% else %}
         <div class="col-sm-1">
-            <button type="button" disabled class="btn btn-primary">Export</button>
+            <button type="button" disabled class="btn btn-primary">Export XML</button>
         </div>
         <div class="col-sm-1">
             <button type="button" disabled class="btn btn-primary">Generate Launch Script</button>
@@ -76,18 +120,12 @@
         <div class="dropdown col-sm-9">
             <select class="selectpicker" data-width="auto" id="scenario_name">
                 <option style="display:none">
-                {% for sc in scenarios[0] %}
-                    {% if root != None and root.attrib['scenario'] == sc %}
+                <option disabled selected value> -- Select an option -- </option>
+                {% for sc in scenarios[1] %}
+                    {% if root !=None and root.attrib['scenario'] == sc%}
                         <option value="{{sc}}" selected>{{sc}}</option>
                     {% else %}
                         <option value="{{sc}}">{{sc}}</option>
-                    {% endif %}
-                {% endfor %}
-                {% for sc in scenarios[1] %}
-                    {% if root !=None and root.attrib['scenario'] == 'user_defined_'+sc%}
-                        <option value="{{'user_defined_'+sc}}" selected>{{'user_defined_'+sc}}</option>
-                    {% else %}
-                        <option value="{{'user_defined_'+sc}}">{{'user_defined_'+sc}}</option>
                     {% endif %}
                 {% endfor %}
             </select>
@@ -102,6 +140,14 @@
                 <div class="form-group">
                     <label class="col-sm-2 control-label">UOS: </label>
                     <label class="col-sm-1 control-label" id="vm">{{vm.attrib['id']}}</label>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn" id="add_launch_vm" data-id="{{vm.attrib['id']}}" data-toggle="modal"
+                            data-target="#add_launch_modal">Add a VM below</button>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn" id="remove_launch_vm" data-id="{{vm.attrib['id']}}">
+                        Remove this VM</button>
                 </div>
             </td>
             <td>
@@ -142,6 +188,7 @@
                         <select class="selectpicker" data-width="auto" title=""
                                 id="{{'uos:id='+vm.attrib['id']+','+elem.tag}}">
                         {% endif %}
+                        <option disabled selected value> -- Select an option -- </option>
                         {% for item_value in launch_item_values[','.join(['uos', elem.tag])] %}
                             {% if item_value == elem_text %}
                             <option value="{{item_value}}" selected="selected">{{item_value}}</option>
@@ -164,7 +211,6 @@
                             <div class="form-group">
                                 {% if 'id' not in elem.attrib %}
                                     {% if not first_child %}
-                                    {% do first_child.append(1) %}
                                     <label class="col-sm-1 control-label" data-toggle="tooltip"
                                         title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
                                         {{elem.tag}}</label>
@@ -178,7 +224,8 @@
                                         title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
                                         {{sub_elem.tag}}</label>
 
-                                    {% if ','.join(['uos', elem.tag, sub_elem.tag]) not in launch_item_values %}
+                                    {% if ','.join(['uos', elem.tag, sub_elem.tag]) not in launch_item_values
+                                    and elem.tag != 'vcpu_affinity'%}
                                     <div class="col-sm-5">
                                         {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                         <input type="text" class="form-control" readonly
@@ -204,6 +251,8 @@
                                     {% endif%}
 
                                     {% else %}
+                                    {% set item_key = ','.join(['uos', elem.tag, sub_elem.tag]) if elem.tag != 'vcpu_affinity'
+                                    else ','.join(['uos', elem.tag]) %}
                                     <div class="dropdown col-sm-6">
                                         {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                         <select class="selectpicker" data-width="auto" disabled
@@ -212,7 +261,8 @@
                                         <select class="selectpicker" data-width="auto"
                                                 id="{{'uos:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}">
                                         {% endif %}
-                                        {% for item_value in launch_item_values[','.join(['uos', elem.tag, sub_elem.tag])] %}
+                                        <option disabled selected value> -- Select an option -- </option>
+                                        {% for item_value in launch_item_values[item_key] %}
                                             {% if item_value == sub_elem_text %}
                                             <option value="{{item_value}}" selected="selected">{{item_value}}</option>
                                             {% else %}
@@ -220,8 +270,17 @@
                                             {% endif %}
                                         {% endfor %}
                                         </select>
+                                        {% if elem.tag == 'vcpu_affinity' %}
+                                            <button type="button" class="btn" id="add_vcpu_{{first_child|length}}">+</button>
+                                            {% if not first_child %}
+                                            <button type="button" disabled class="btn" id="remove_vcpu_{{first_child|length}}">-</button>
+                                            {% else %}
+                                            <button type="button" class="btn" id="remove_vcpu_{{first_child|length}}">-</button>
+                                            {% endif %}
+                                        {% endif %}
                                     </div>
                                     {% endif %}
+                                    {% do first_child.append(1) %}
                                     <p id="{{'uos:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}_err" class="col-sm-3"></p>
                                 {% else %}
                                     {% if not first_child %}
@@ -260,6 +319,7 @@
                                         <select class="selectpicker" data-width="auto"
                                                 id="{{'uos:id='+vm.attrib['id']+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}">
                                         {% endif %}
+                                        <option disabled selected value> -- Select an option -- </option>
                                         {% for item_value in launch_item_values[','.join(['uos', elem.tag, sub_elem.tag])] %}
                                             {% if item_value == sub_elem_text %}
                                             <option value="{{item_value}}" selected="selected">{{item_value}}</option>
@@ -318,6 +378,10 @@
             </td>
         </tr>
         {% endfor %}
+        <tr><td>
+            <button type="button" class="btn" id="add_launch_script" data-toggle="modal" data-id="-1"
+                            data-target="#add_launch_modal">Add a New VM</button>
+        </td></tr>
     </table>
     {% else %}
     <text class="form-control" id="err_msg">No setting available. Select one board info and make sure the launch xml

@@ -46,9 +46,11 @@ def scenarios():
     """
     board_info, board_type, scenario_config, launch_config = get_xml_configs()
     print(board_info, scenario_config, launch_config)
+    (bios_info, base_board_info) = get_board_info(board_info)
 
     return render_template('scenario.html', board_info_list=get_board_list(),
                            board_info=board_info, board_type=board_type,
+                           bios_info=bios_info, base_board_info=base_board_info,
                            scenarios=scenario_config.list_all(xml_type='scenario'),
                            launches=launch_config.list_all(xml_type='uos_launcher'),
                            scenario='', root=None)
@@ -62,23 +64,18 @@ def scenario(scenario_name):
     :return: the render template of the specified scenario setting page
     """
 
-    board_info, board_type, scenario_config, launch_config = \
-        get_xml_configs(scenario_name.startswith('user_defined_'))
+    board_info, board_type, scenario_config, launch_config = get_xml_configs()
     print(board_info, scenario_config, launch_config)
+    (bios_info, base_board_info) = get_board_info(board_info)
+
     current_app.config.update(SCENARIO=scenario_name)
 
-    if scenario_name.startswith('user_defined_'):
-        scenario_config.set_curr(scenario_name[13:])
-    else:
-        scenario_config.set_curr(scenario_name)
+    scenario_config.set_curr(scenario_name)
 
     scenario_item_values = {}
     if board_info is not None and board_type is not None:
-        scenario_file_path = os.path.join(current_app.config.get('CONFIG_PATH'),
-                                          board_type, scenario_name + '.xml')
-        if scenario_name.startswith('user_defined_'):
-            scenario_file_path = os.path.join(current_app.config.get('CONFIG_PATH'), board_type,
-                                              'user_defined', scenario_name[13:] + '.xml')
+        scenario_file_path = os.path.join(current_app.config.get('CONFIG_PATH'), board_type,
+                                          'user_defined', scenario_name + '.xml')
         if os.path.isfile(scenario_file_path):
             scenario_item_values = get_scenario_item_values(
                 os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res', board_info+'.xml'),
@@ -88,6 +85,7 @@ def scenario(scenario_name):
 
     return render_template('scenario.html', board_info_list=get_board_list(),
                            board_info=board_info, board_type=board_type,
+                           bios_info=bios_info, base_board_info=base_board_info,
                            scenarios=scenario_config.list_all(xml_type='scenario'),
                            launches=launch_config.list_all(xml_type='uos_launcher'),
                            scenario=scenario_name, root=scenario_config.get_curr_root(),
@@ -102,9 +100,11 @@ def launches():
     """
     board_info, board_type, scenario_config, launch_config = get_xml_configs()
     print(board_info, scenario_config, launch_config)
+    (bios_info, base_board_info) = get_board_info(board_info)
 
     return render_template('launch.html', board_info_list=get_board_list(),
                            board_info=board_info, board_type=board_type,
+                           bios_info=bios_info, base_board_info=base_board_info,
                            scenarios=scenario_config.list_all(xml_type='scenario'),
                            launches=launch_config.list_all(xml_type='uos_launcher'),
                            launch='', root=None)
@@ -117,15 +117,11 @@ def launch(launch_name):
     :param launch_name: the launch type
     :return: the render template of specified launch setting page
     """
-    print('launch: ', launch_name)
-    board_info, board_type, scenario_config, launch_config = \
-        get_xml_configs(launch_name.startswith('user_defined_'))
+    board_info, board_type, scenario_config, launch_config = get_xml_configs()
     print(board_info, scenario_config, launch_config)
+    (bios_info, base_board_info) = get_board_info(board_info)
 
-    if launch_name.startswith('user_defined_'):
-        launch_config.set_curr(launch_name[13:])
-    else:
-        launch_config.set_curr(launch_name)
+    launch_config.set_curr(launch_name)
 
     launch_item_values = {}
     if board_info is not None:
@@ -136,6 +132,7 @@ def launch(launch_name):
 
     return render_template('launch.html', board_info_list=get_board_list(),
                            board_info=board_info, board_type=board_type,
+                           bios_info=bios_info, base_board_info=base_board_info,
                            scenarios=scenario_config.list_all(xml_type='scenario'),
                            launches=launch_config.list_all(xml_type='uos_launcher'),
                            launch=launch_name, root=launch_config.get_curr_root(),
@@ -150,11 +147,8 @@ def save_scenario():
     :return: the error list for the edited scenario setting.
     """
     scenario_config_data = request.json if request.method == "POST" else request.args
-    print("save_scenario")
-    print(scenario_config_data)
 
-    xml_configs = \
-        get_xml_configs(scenario_config_data['old_scenario_name'].startswith('user_defined_'))
+    xml_configs = get_xml_configs()
     board_type = xml_configs[1]
     scenario_config = xml_configs[3]
 
@@ -164,30 +158,63 @@ def save_scenario():
 
     scenario_path = os.path.join(current_app.config.get('CONFIG_PATH'), board_type)
     old_scenario_name = scenario_config_data['old_scenario_name']
-    if scenario_config_data['old_scenario_name'].startswith('user_defined_'):
-        old_scenario_name = scenario_config_data['old_scenario_name'][13:]
     scenario_config.set_curr(old_scenario_name)
     for key in scenario_config_data:
-        if key not in ['old_scenario_name', 'new_scenario_name', 'board_info_file',
-                       'board_info_upload', 'generator']:
+        if key not in ['old_scenario_name', 'new_scenario_name', 'generator', 'add_vm_type']:
             if isinstance(scenario_config_data[key], list):
                 scenario_config.set_curr_list(scenario_config_data[key], *tuple(key.split(',')))
             else:
                 scenario_config.set_curr_value(scenario_config_data[key], *tuple(key.split(',')))
 
-    if scenario_config_data['generator'] == 'remove_vm_kata':
-        scenario_config.delete_curr_key('vm:desc=specific for Kata')
-    elif scenario_config_data['generator'] == 'add_vm_kata':
-        # clone vm kata from generic config
-        generic_scenario_config = get_generic_scenario_config(scenario_config)
-        generic_scenario_config_root = generic_scenario_config.get_curr_root()
-        elem_kata = None
-        for vm in generic_scenario_config_root.getchildren():
-            if 'desc' in vm.attrib and vm.attrib['desc'] == 'specific for Kata':
-                elem_kata = vm
-                break
-        if elem_kata is not None:
-            scenario_config.clone_curr_elem(elem_kata)
+    generator = scenario_config_data['generator']
+    if generator is not None:
+        if generator == 'remove_vm_kata':
+            scenario_config.delete_curr_key('vm:desc=specific for Kata')
+        elif generator == 'add_vm_kata':
+            # clone vm kata from generic config
+            generic_scenario_config = get_generic_scenario_config(scenario_config)
+            generic_scenario_config_root = generic_scenario_config.get_curr_root()
+            elem_kata = None
+            for vm in generic_scenario_config_root.getchildren():
+                if 'desc' in vm.attrib and vm.attrib['desc'] == 'specific for Kata':
+                    elem_kata = vm
+                    break
+            if elem_kata is not None:
+                scenario_config.clone_curr_elem(elem_kata)
+        elif generator.startswith('add_vm:'):
+            vm_list = []
+            for vm in scenario_config.get_curr_root().getchildren():
+                if vm.tag == 'vm':
+                    vm_list.append(vm.attrib['id'])
+            if len(vm_list) >= 8:
+                return {'status': 'fail',
+                        'error_list': {'error': 'Can not add a new VM. Max VM number is 8.'}}
+            curr_vm_id = generator.split(':')[1]
+            add_vm_type = scenario_config_data['add_vm_type']
+            generic_scenario_config = get_generic_scenario_config(scenario_config, add_vm_type)
+            generic_scenario_config_root = generic_scenario_config.get_curr_root()
+            vm_to_add = []
+            if str(curr_vm_id) == '-1':
+                curr_vm_index = 1
+            else:
+                curr_vm_index = len(vm_list) + 1
+                for i in range(len(vm_list)):
+                    if curr_vm_id == vm_list[i]:
+                        curr_vm_index = i + 2
+                        break
+            for vm in generic_scenario_config_root.getchildren():
+                if vm.tag == 'vm':
+                    for i in range(0, 7):
+                        if str(i) not in vm_list:
+                            break
+                    vm.attrib['id'] = str(i)
+                    vm_to_add.append(vm)
+            for vm in vm_to_add:
+                scenario_config.insert_curr_elem(curr_vm_index, vm)
+                curr_vm_index += 1
+        elif generator.startswith('remove_vm:'):
+            remove_vm_id = generator.split(':')[1]
+            scenario_config.delete_curr_key('vm:id='+remove_vm_id.strip())
 
     tmp_scenario_file = os.path.join(scenario_path, 'user_defined',
                                      'tmp_'+scenario_config_data['new_scenario_name']+'.xml')
@@ -200,35 +227,21 @@ def save_scenario():
     new_scenario_name = scenario_config_data['new_scenario_name']
     rename = False
     try:
-        (error_list, vm_info) = validate_scenario_setting(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res', xml_configs[0]+'.xml'),
-            tmp_scenario_file)
-        print('vm_info: ', vm_info)
+        if generator is None or not (generator.startswith('add_vm:') or generator.startswith('remove_vm:')):
+            (error_list, vm_info) = validate_scenario_setting(
+                os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res', xml_configs[0]+'.xml'),
+                tmp_scenario_file)
+            print('vm_info: ', vm_info)
     except Exception as error:
         if os.path.isfile(tmp_scenario_file):
             os.remove(tmp_scenario_file)
         return {'status': 'fail', 'file_name': new_scenario_name,
                 'rename': rename, 'error_list': {'error': str(error)}}
 
-    print('error_list: ', error_list)
-
     if not error_list:
-        old_scenario_path = os.path.join(scenario_path, old_scenario_name + '.xml')
-        if scenario_config_data['old_scenario_name'].startswith('user_defined_'):
-            old_scenario_path = os.path.join(scenario_path, 'user_defined',
-                                             old_scenario_name + '.xml')
-
-        # check name conflict
-        new_scenario_path = os.path.join(scenario_path, 'user_defined',
-                                         scenario_config_data['new_scenario_name']+'.xml')
-        if old_scenario_path != new_scenario_path and os.path.isfile(new_scenario_path):
-            new_scenario_name = new_scenario_name + '_' + datetime.now().strftime('%Y%m%d%H%M%S')
-            rename = True
-
-        if os.path.isfile(old_scenario_path) \
-                and scenario_config_data['old_scenario_name'].startswith('user_defined_'):
-            os.remove(old_scenario_path)
         scenario_config.save(new_scenario_name)
+        if old_scenario_name != new_scenario_name:
+            os.remove(os.path.join(scenario_path, 'user_defined', old_scenario_name + '.xml'))
 
     if os.path.isfile(tmp_scenario_file):
         os.remove(tmp_scenario_file)
@@ -244,9 +257,8 @@ def save_launch():
     :return: the error list of the edited launch setting.
     """
     launch_config_data = request.json if request.method == "POST" else request.args
-
-    xml_configs = \
-        get_xml_configs(launch_config_data['old_launch_name'].startswith('user_defined_'))
+    print(launch_config_data)
+    xml_configs = get_xml_configs()
     launch_config = xml_configs[3]
 
     if xml_configs[1] is None or xml_configs[0] is None:
@@ -254,30 +266,61 @@ def save_launch():
                 'error_list': {'error': 'Please select the board info before this operation.'}}
 
     old_launch_name = launch_config_data['old_launch_name']
-    old_launch_path = os.path.join(current_app.config.get('CONFIG_PATH'), xml_configs[1],
-                                   old_launch_name + '.xml')
-    if launch_config_data['old_launch_name'].startswith('user_defined_'):
-        old_launch_name = launch_config_data['old_launch_name'][13:]
-        old_launch_path = os.path.join(current_app.config.get('CONFIG_PATH'), xml_configs[1],
-                                       'user_defined', old_launch_name + '.xml')
     launch_config.set_curr(old_launch_name)
 
     for key in launch_config_data:
-        if key not in ['old_launch_name', 'new_launch_name', 'board_info_file',
-                       'board_info_upload', 'scenario_name']:
+        if key not in ['old_launch_name', 'new_launch_name', 'generator', 'add_launch_type', 'scenario_name']:
             if isinstance(launch_config_data[key], list):
                 launch_config.set_curr_list(launch_config_data[key], *tuple(key.split(',')))
             else:
                 launch_config.set_curr_value(launch_config_data[key], *tuple(key.split(',')))
 
+    generator = launch_config_data['generator']
+    if generator is not None:
+        if generator.startswith('add_vm:'):
+            vm_list = []
+            for vm in launch_config.get_curr_root().getchildren():
+                if vm.tag == 'uos':
+                    vm_list.append(vm.attrib['id'])
+            if len(vm_list) >= 8:
+                return {'status': 'fail',
+                        'error_list': {'error': 'Can not add a new VM. Max VM number is 8.'}}
+            curr_vm_id = generator.split(':')[1].strip()
+            add_launch_type = launch_config_data['add_launch_type']
+            generic_scenario_config = get_generic_scenario_config(launch_config, add_launch_type)
+            generic_scenario_config_root = generic_scenario_config.get_curr_root()
+            vm_to_add = []
+            if str(curr_vm_id) == '-1':
+                curr_vm_index = len(vm_list)
+            else:
+                curr_vm_index = 0
+                for i in range(len(vm_list)):
+                    if curr_vm_id == vm_list[i]:
+                        curr_vm_index = i + 1
+                        break
+            for vm in generic_scenario_config_root.getchildren():
+                if vm.tag == 'uos':
+                    for i in range(1, 8):
+                        if str(i) not in vm_list:
+                            break
+                    vm.attrib['id'] = str(i)
+                    vm_to_add.append(vm)
+            # print('-'*100)
+            # print(generator)
+            # print(vm_list)
+            # print(curr_vm_id)
+            # print(curr_vm_index)
+            # print(i)
+            for vm in vm_to_add:
+                launch_config.insert_curr_elem(curr_vm_index, vm)
+        elif generator.startswith('remove_vm:'):
+            remove_vm_id = generator.split(':')[1]
+            launch_config.delete_curr_key('uos:id='+remove_vm_id.strip())
+
     scenario_name = launch_config_data['scenario_name']
     scenario_file_path = os.path.join(current_app.config.get('CONFIG_PATH'),
-                                      current_app.config.get('BOARD_TYPE'), scenario_name + '.xml')
-    if launch_config_data['scenario_name'].startswith('user_defined_'):
-        scenario_name = launch_config_data['scenario_name'][13:]
-        scenario_file_path = os.path.join(current_app.config.get('CONFIG_PATH'),
-                                          current_app.config.get('BOARD_TYPE'),
-                                          'user_defined', scenario_name + '.xml')
+                                      current_app.config.get('BOARD_TYPE'),
+                                      'user_defined', scenario_name + '.xml')
     launch_config.set_curr_attr('scenario', scenario_name)
 
     tmp_launch_file = os.path.join(current_app.config.get('CONFIG_PATH'), xml_configs[1],
@@ -288,41 +331,126 @@ def save_launch():
     launch_config.save('tmp_' + launch_config_data['new_launch_name'])
 
     # call validate function
+    error_list = {}
     rename = False
     try:
-        (error_list, pthru_sel, virtio, dm_value) = validate_launch_setting(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res', xml_configs[0]+'.xml'),
-            scenario_file_path,
-            tmp_launch_file)
-        print(pthru_sel, virtio, dm_value)
+        if generator is None or not (generator.startswith('add_vm:') or generator.startswith('remove_vm:')):
+            (error_list, pthru_sel, virtio, dm_value) = validate_launch_setting(
+                os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res', xml_configs[0]+'.xml'),
+                scenario_file_path,
+                tmp_launch_file)
+            print(pthru_sel, virtio, dm_value)
     except Exception as error:
         if os.path.isfile(tmp_launch_file):
             os.remove(tmp_launch_file)
         return {'status': 'fail', 'file_name': launch_config_data['new_launch_name'],
                 'rename': rename, 'error_list': {'launch config error': str(error)}}
 
-    print('error_list: ', error_list)
-
     if not error_list:
-        new_launch_path = os.path.join(current_app.config.get('CONFIG_PATH'),
-                                       xml_configs[1], 'user_defined',
-                                       launch_config_data['new_launch_name'] + '.xml')
-        # check name conflict
-        if old_launch_path != new_launch_path and os.path.isfile(new_launch_path):
-            launch_config_data['new_launch_name'] = launch_config_data['new_launch_name'] \
-                                                    + '_' + datetime.now().strftime('%Y%m%d%H%M%S')
-            rename = True
-
-        if os.path.isfile(old_launch_path) \
-                and launch_config_data['old_launch_name'].startswith('user_defined_'):
-            os.remove(old_launch_path)
         launch_config.save(launch_config_data['new_launch_name'])
+        if old_launch_name != launch_config_data['new_launch_name']:
+            os.remove(os.path.join(current_app.config.get('CONFIG_PATH'), xml_configs[1], old_launch_name + '.xml'))
 
     if os.path.isfile(tmp_launch_file):
         os.remove(tmp_launch_file)
 
     return {'status': 'success', 'file_name': launch_config_data['new_launch_name'],
             'rename': rename, 'error_list': error_list}
+
+
+@CONFIG_APP.route('/check_setting_exist', methods=['POST'])
+def check_setting_exist():
+    """
+    check the setting exist or not.
+    :return: setting exist or not.
+    """
+    config_data = request.json if request.method == "POST" else request.args
+
+    board_info = current_app.config.get('BOARD_TYPE')
+    setting_path = os.path.join(current_app.config.get('CONFIG_PATH'), board_info)
+    if 'old_scenario_name' in list(config_data.keys()) and 'new_scenario_name' in list(config_data.keys()):
+        if config_data['old_scenario_name'] != config_data['new_scenario_name'] and \
+           os.path.isfile(os.path.join(setting_path, 'user_defined', config_data['new_scenario_name'] + '.xml')):
+            return {'exist': 'yes'}
+        else:
+            return {'exist': 'no'}
+    elif 'old_launch_name' in list(config_data.keys()) and 'new_launch_name' in list(config_data.keys()):
+        if config_data['old_launch_name'] != config_data['new_launch_name'] and \
+           os.path.isfile(os.path.join(setting_path, 'user_defined', config_data['new_launch_name'] + '.xml')):
+            return {'exist': 'yes'}
+        else:
+            return {'exist': 'no'}
+    elif 'create_name' in list(config_data.keys()):
+        if os.path.isfile(os.path.join(setting_path, 'user_defined',  config_data['create_name'] + '.xml')):
+            return {'exist': 'yes'}
+        else:
+            return {'exist': 'no'}
+    else:
+        return {'exist': 'no'}
+
+
+@CONFIG_APP.route('/create_setting', methods=['POST'])
+def create_setting():
+    """
+    create a new scenario or launch setting.
+    :return: the status and error list of the created scenario or launch setting.
+    """
+    create_config_data = request.json if request.method == "POST" else request.args
+    mode = create_config_data['mode']
+    default_name = create_config_data['default_name']
+    create_name = create_config_data['create_name']
+
+    xml_configs = get_xml_configs(True)
+    board_type = xml_configs[1]
+    scenario_config = xml_configs[2]
+    launch_config = xml_configs[3]
+
+    if board_type is None or xml_configs[0] is None:
+        return {'status': 'fail',
+                'error_list': {'error': 'Please select the board info before this operation.'}}
+
+    setting_path = os.path.join(current_app.config.get('CONFIG_PATH'), board_type, 'user_defined')
+    if not os.path.isdir(setting_path):
+        os.makedirs(setting_path)
+
+    if create_config_data['type'] == 'launch':
+        launch_file = os.path.join(setting_path,  create_name + '.xml')
+        if os.path.isfile(launch_file):
+            os.remove(launch_file)
+
+        if mode == 'create':
+            template_file_name = 'LAUNCH_STANDARD_VM'
+            src_file_name = os.path.join(current_app.config.get('CONFIG_PATH'), 'template', template_file_name+'.xml')
+        else:
+            src_file_name = os.path.join(current_app.config.get('CONFIG_PATH'), board_type, default_name + '.xml')
+        copyfile(src_file_name,
+                 os.path.join(current_app.config.get('CONFIG_PATH'), board_type, 'user_defined', create_name + '.xml'))
+
+        launch_config.set_curr(create_name)
+        if mode == 'create':
+            launch_config.delete_curr_key('uos:id=1')
+        launch_config.save(create_name)
+        return {'status': 'success', 'setting': create_name, 'error_list': {}}
+
+    elif create_config_data['type'] == 'scenario':
+        scenario_file = os.path.join(setting_path, create_name + '.xml')
+        if os.path.isfile(scenario_file):
+            os.remove(scenario_file)
+
+        if mode == 'create':
+            template_file_name = 'HV'
+            src_file_name = os.path.join(current_app.config.get('CONFIG_PATH'), 'template', template_file_name+'.xml')
+        else:
+            src_file_name = os.path.join(current_app.config.get('CONFIG_PATH'), board_type, default_name + '.xml')
+        copyfile(src_file_name,
+                 os.path.join(current_app.config.get('CONFIG_PATH'), board_type, 'user_defined',
+                              create_name + '.xml'))
+
+        scenario_config.save(create_name)
+        return {'status': 'success', 'setting': create_name, 'error_list': {}}
+
+    else:
+        return {'status': 'fail', 'error_list': {'name': 'Unsupported setting type. '}}
 
 
 @CONFIG_APP.route('/remove_setting', methods=['POST'])
@@ -332,23 +460,16 @@ def remove_setting():
     :return: the return message
     """
     remove_config_data = request.json if request.method == "POST" else request.args
-    print("*"*100+"remove_setting")
-    print(remove_config_data)
 
     old_setting_name = remove_config_data['old_setting_name']
 
     if current_app.config.get('BOARD_TYPE') is None:
         return {'status': 'Board info not set before remove current setting'}
 
-    print(current_app.config.get('CONFIG_PATH'), current_app.config.get('BOARD_TYPE'))
     old_setting_path = os.path.join(current_app.config.get('CONFIG_PATH'),
                                     current_app.config.get('BOARD_TYPE'),
-                                    old_setting_name+'.xml')
-    if old_setting_name.startswith('user_defined_'):
-        old_setting_path = os.path.join(current_app.config.get('CONFIG_PATH'),
-                                        current_app.config.get('BOARD_TYPE'),
-                                        'user_defined',
-                                        old_setting_name[13:] + '.xml')
+                                    'user_defined',
+                                    old_setting_name + '.xml')
 
     if os.path.isfile(old_setting_path):
         os.remove(old_setting_path)
@@ -362,8 +483,6 @@ def generate_src():
     :return: the error message
     """
     generator_config_data = request.json if request.method == "POST" else request.args
-    print("generate_src")
-    print(generator_config_data)
 
     src_type = generator_config_data['type']
     board_info = generator_config_data['board_info']
@@ -373,6 +492,8 @@ def generate_src():
     scenario_setting = generator_config_data['scenario_setting']
     scenario_setting_xml = os.path.join(current_app.config.get('CONFIG_PATH'), board_type,
                                         'user_defined', scenario_setting+'.xml')
+    src_path = generator_config_data['src_path']
+    print(src_path)
     launch_setting_xml = None
     if 'launch_setting' in generator_config_data:
         launch_setting = generator_config_data['launch_setting']
@@ -384,14 +505,14 @@ def generate_src():
     if src_type == 'generate_config_src':
         try:
             from board_config.board_cfg_gen import ui_entry_api
-            error_list = ui_entry_api(board_info_xml, scenario_setting_xml)
+            error_list = ui_entry_api(board_info_xml, scenario_setting_xml, src_path)
         except Exception as error:
             status = 'fail'
             error_list = {'board setting error': str(error)}
 
         try:
             from scenario_config.scenario_cfg_gen import ui_entry_api
-            error_list = ui_entry_api(board_info_xml, scenario_setting_xml)
+            error_list = ui_entry_api(board_info_xml, scenario_setting_xml, src_path)
         except Exception as error:
             status = 'fail'
             error_list = {'scenario setting error': str(error)}
@@ -406,15 +527,15 @@ def generate_src():
 
         try:
             from launch_config.launch_cfg_gen import ui_entry_api
-            error_list = ui_entry_api(board_info_xml, scenario_setting_xml, launch_setting_xml)
+            error_list = ui_entry_api(board_info_xml, scenario_setting_xml, launch_setting_xml, src_path)
         except Exception as error:
             status = 'fail'
             error_list = {'launch setting error': str(error)}
     else:
         status = 'fail'
         error_list = {'error': 'generator type not specified'}
+
     msg = {'status': status, 'error_list': error_list}
-    print(msg)
     return msg
 
 
@@ -497,7 +618,7 @@ def select_board():
     board_info = data['board_info']
     current_app.config.update(BOARD_INFO=board_info)
 
-    board_type = get_board_info_type(board_info)
+    board_type = get_board_type(board_info)
     current_app.config.update(BOARD_TYPE=board_type)
     if board_type:
         return board_type
@@ -658,7 +779,7 @@ def get_board_list():
     return board_info_list
 
 
-def get_xml_configs(user_defined=False):
+def get_xml_configs(user_defined=True):
     """
     get xml config related variables
     :return: board_info, board_config, scenario_config, launch_config
@@ -666,22 +787,26 @@ def get_xml_configs(user_defined=False):
 
     config_path = None
     board_info = current_app.config.get('BOARD_INFO')
-
-    board_type = get_board_info_type(board_info)
+    board_type = get_board_type(board_info)
     if board_type is not None:
         config_path = os.path.join(current_app.config.get('CONFIG_PATH'), board_type)
 
-    if user_defined:
-        scenario_config = XmlConfig(config_path, False)
-        launch_config = XmlConfig(config_path, False)
-    else:
-        scenario_config = XmlConfig(config_path)
-        launch_config = XmlConfig(config_path)
+    scenario_config = XmlConfig(config_path, not user_defined)
+    launch_config = XmlConfig(config_path, not user_defined)
 
     return board_info, board_type, scenario_config, launch_config
 
 
-def get_generic_scenario_config(scenario_config):
+def get_generic_scenario_config(scenario_config, add_vm_type=None):
+
+    if add_vm_type is not None:
+        config_path = os.path.join(current_app.config.get('CONFIG_PATH'), 'template')
+        generic_scenario_config = XmlConfig(config_path)
+        if os.path.isfile(os.path.join(config_path, add_vm_type + '.xml')):
+            generic_scenario_config.set_curr(add_vm_type)
+            return generic_scenario_config
+        else:
+            return None
     config_path = os.path.join(current_app.config.get('CONFIG_PATH'), 'generic')
     generic_scenario_config = XmlConfig(config_path)
     for file in os.listdir(config_path):
@@ -698,19 +823,62 @@ def get_generic_scenario_config(scenario_config):
     return None
 
 
-def get_board_info_type(board_info):
+def get_board_config(board_info):
+    """
+    get board config
+    :param board_info: the board info file
+    :return: the board type
+    """
+    board_config = None
+    if board_info is not None:
+        board_config = XmlConfig(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res'))
+        board_config.set_curr(board_info)
+
+    return board_config
+
+
+def get_board_type(board_info):
     """
     get board info type
     :param board_info: the board info file
     :return: the board type
     """
+    board_config = get_board_config(board_info)
     board_type = None
-    if board_info is not None:
-        board_info_config = XmlConfig(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                                   'res'))
-        board_info_config.set_curr(board_info)
-        board_info_root = board_info_config.get_curr_root()
+    if board_config is not None:
+        board_info_root = board_config.get_curr_root()
         if board_info_root and 'board' in board_info_root.attrib:
             board_type = board_info_root.attrib['board']
 
     return board_type
+
+
+def get_board_info(board_info):
+    """
+    get board info type
+    :param board_info: the board info file
+    :return: the board type
+    """
+    board_config = get_board_config(board_info)
+    bios_info = None
+    base_board_info = None
+    if board_config is not None:
+        board_info_root = board_config.get_curr_root()
+        if board_info_root:
+            for item in board_info_root.getchildren():
+                if item.tag == 'BIOS_INFO':
+                    for line in item.text.split('\n'):
+                        if line.strip() != '':
+                            if bios_info is None:
+                                bios_info = line.strip()
+                            else:
+                                bios_info += ('\n' + line.strip())
+                elif item.tag == 'BASE_BOARD_INFO':
+                    for line in item.text.split('\n'):
+                        if line.strip() != '':
+                            if base_board_info is None:
+                                base_board_info = line.strip()
+                            else:
+                                base_board_info += ('\n' + line.strip())
+
+    return (bios_info, base_board_info)
