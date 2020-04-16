@@ -244,20 +244,18 @@ class LoadOrderNum:
         self.sos_vm = 0
         self.post_vm = 0
 
-    def get_info(self, load_order):
-        self.pre_vm = scenario_cfg_lib.get_load_order_cnt(load_order, "PRE_LAUNCHED_VM")
-        self.sos_vm = scenario_cfg_lib.get_load_order_cnt(load_order, "SOS_VM")
-        self.post_vm = scenario_cfg_lib.get_load_order_cnt(load_order, "POST_LAUNCHED_VM")
+    def get_info(self, load_vm):
+        self.pre_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "PRE_LAUNCHED_VM")
+        self.sos_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "SOS_VM")
+        self.post_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "POST_LAUNCHED_VM")
 
 class VmInfo:
     """ This is Abstract of class of VM setting """
     name = {}
-    load_order = {}
-    uuid = {}
+    load_vm = {}
     clos_per_vm = {}
     guest_flags = {}
     cpus_per_vm = {}
-    severity = {}
 
     def __init__(self, board_file, scenario_file):
         self.board_info = board_file
@@ -277,8 +275,7 @@ class VmInfo:
         :return: None
         """
         self.name = common.get_leaf_tag_map(self.scenario_info, "name")
-        self.load_order = common.get_leaf_tag_map(self.scenario_info, "load_order")
-        self.uuid = common.get_leaf_tag_map(self.scenario_info, "uuid")
+        self.load_vm= common.get_leaf_tag_map(self.scenario_info, "vm_type")
         self.guest_flags = common.get_leaf_tag_map(
             self.scenario_info, "guest_flags", "guest_flag")
         self.cpus_per_vm = common.get_leaf_tag_map(
@@ -286,13 +283,12 @@ class VmInfo:
         self.clos_per_vm = common.get_leaf_tag_map(
             self.scenario_info, "clos", "vcpu_clos")
 
-        self.severity = common.get_leaf_tag_map(self.scenario_info, "severity")
         self.epc_section.get_info()
         self.mem_info.get_info()
         self.os_cfg.get_info()
         self.vuart.get_info()
         self.cfg_pci.get_info()
-        self.load_order_cnt.get_info(self.load_order)
+        self.load_order_cnt.get_info(self.load_vm)
 
     def get_cpu_bitmap(self, index):
         """
@@ -314,8 +310,7 @@ class VmInfo:
         :return: None
         """
         scenario_cfg_lib.vm_name_check(self.name, "name")
-        scenario_cfg_lib.load_order_check(self.load_order, "load_order")
-        scenario_cfg_lib.uuid_format_check(self.uuid, "uuid")
+        scenario_cfg_lib.load_vm_check(self.load_vm, "load_vm")
         scenario_cfg_lib.guest_flag_check(self.guest_flags, "guest_flags", "guest_flag")
         scenario_cfg_lib.cpus_per_vm_check(self.cpus_per_vm, "pcpu_id")
 

@@ -43,10 +43,10 @@ def get_scenario_item_values(board_info, scenario_info):
     # pre scenario
     guest_flags = copy.deepcopy(common.GUEST_FLAG)
     guest_flags.remove('0UL')
+    scenario_item_values['vm,vm_type'] = scenario_cfg_lib.LOAD_VM_TYPE
     scenario_item_values["vm,vcpu_affinity"] = hw_info.get_processor_val()
     scenario_item_values["vm,guest_flags"] = guest_flags
     scenario_item_values["vm,clos"] = hw_info.get_clos_val()
-    scenario_item_values["vm,severity"] = scenario_cfg_lib.VM_SEVERITY
     scenario_item_values["vm,pci_devs,pci_dev"] = scenario_cfg_lib.avl_pci_devs()
     scenario_item_values["vm,os_config,kern_type"] = scenario_cfg_lib.KERN_TYPE_LIST
     scenario_item_values.update(scenario_cfg_lib.avl_vuart_ui_select(scenario_info))
@@ -125,7 +125,6 @@ def main(args):
 
     common.BOARD_INFO_FILE = params['--board']
     common.SCENARIO_INFO_FILE = params['--scenario']
-    common.ACRN_CONFIG_TARGET= os.path.abspath(params['--out']) + '/'
     common.get_vm_num(params['--scenario'])
     common.get_vm_types()
 
@@ -144,11 +143,15 @@ def main(args):
         return err_dic
 
     if params['--out']:
-        scenario_dir = common.ACRN_CONFIG_TARGET + scenario + '/'
-        config_hv = common.ACRN_CONFIG_TARGET + board_name + GEN_FILE[3]
+        if os.path.isabs(params['--out']):
+            scenario_dir = os.path.join(params['--out'], scenario + '/')
+            config_hv = os.path.join(params['--out'], board_name + GEN_FILE[3])
+        else:
+            scenario_dir = os.path.join(ACRN_PATH + params['--out'], scenario + '/')
+            config_hv = os.path.join(ACRN_PATH + params['--out'], board_name + GEN_FILE[3])
     else:
-        scenario_dir = ACRN_CONFIG_DEF + scenario + '/'
-        config_hv = ACRN_CONFIGS + board_name + GEN_FILE[3]
+        scenario_dir = os.path.join(ACRN_CONFIG_DEF, scenario + '/')
+        config_hv = os.path.join(ACRN_CONFIGS, board_name + GEN_FILE[3])
         common.print_yel("{}".format("Override board defconfig...", warn=True))
     common.mkdir(scenario_dir)
 
@@ -200,9 +203,9 @@ def main(args):
     return err_dic
 
 
-def ui_entry_api(board_info, scenario_info):
+def ui_entry_api(board_info, scenario_info, out):
 
-    arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info]
+    arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--out', out]
 
     err_dic = common.prepare()
     if err_dic:

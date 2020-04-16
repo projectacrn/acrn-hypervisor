@@ -86,10 +86,10 @@ def validate_launch_setting(board_info, scenario_info, launch_info):
     return (launch_cfg_lib.ERR_LIST, pt_sel, virtio, dm)
 
 
-def ui_entry_api(board_info, scenario_info, launch_info):
+def ui_entry_api(board_info, scenario_info, launch_info, out):
 
     err_dic = {}
-    arg_list = ['launch_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--launch', launch_info, '--uosid', '0']
+    arg_list = ['launch_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--launch', launch_info, '--uosid', '0', '--out', out]
 
     err_dic = common.prepare()
     if err_dic:
@@ -148,9 +148,6 @@ def main(args):
     if err_dic:
         return err_dic
 
-    if output_folder:
-        common.ACRN_CONFIG_TARGET = os.path.abspath(output_folder) + '/'
-
     # check env
     err_dic = common.prepare()
     if err_dic:
@@ -201,10 +198,13 @@ def main(args):
 
     # create output directory
     board_name = names['board_name']
-    if common.ACRN_CONFIG_TARGET:
-        output = common.ACRN_CONFIG_TARGET + '/' + board_name + '/output/'
+    if output_folder:
+        if os.path.isabs(output_folder):
+            output = os.path.join(output_folder + '/' + board_name, 'output/')
+        else:
+            output = os.path.join(ACRN_PATH + output_folder + '/' + board_name, 'output/')
     else:
-        output = ACRN_CONFIG_DEF + '/' + board_name + '/output/'
+        output = os.path.join(ACRN_CONFIG_DEF + board_name, 'output/')
     common.mkdir(output)
 
     # generate launch script

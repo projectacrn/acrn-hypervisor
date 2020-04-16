@@ -30,7 +30,7 @@ def cpu_affinity_output(vm_info, i, config):
     :param i: the index of vm id
     :param config: file pointor to store the information
     """
-    if vm_info.load_order[i] == "SOS_VM":
+    if "SOS_VM" == scenario_cfg_lib.VM_DB[vm_info.load_vm[i]]['load_type']:
         return
 
     cpu_bits = vm_info.get_cpu_bitmap(i)
@@ -70,7 +70,7 @@ def gen_pre_launch_vm(vm_info, config):
 
     vm_i = 0
     for vm_type in common.VM_TYPES.values():
-        if vm_type != "PRE_LAUNCHED_VM":
+        if "PRE_LAUNCHED_VM" != scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             vm_i += 1
             continue
 
@@ -100,7 +100,7 @@ def gen_pre_launch_vm(vm_info, config):
 def gen_post_launch_header(vm_info, config):
     vm_i = 0
     for vm_type in common.VM_TYPES.values():
-        if vm_type != "POST_LAUNCHED_VM":
+        if "POST_LAUNCHED_VM" != scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             vm_i += 1
             continue
         cpu_affinity_output(vm_info, vm_i, config)
@@ -148,8 +148,10 @@ def generate_file(scenario_items, config):
     gen_common_header(config)
 
     print("#include <misc_cfg.h>\n", file=config)
-    if 'PRE_LAUNCHED_VM' in common.VM_TYPES.values():
-        print("#include <pci_devices.h>", file=config)
+    for vm_i,pci_dev_num in vm_info.cfg_pci.pci_dev_num.items():
+        if pci_dev_num >= 2:
+            print("#include <pci_devices.h>", file=config)
+            break
     get_dm_owned_guest_flag_mask(vm_info, config)
     scenario_vm_num(scenario_items, config)
     print("", file=config)
