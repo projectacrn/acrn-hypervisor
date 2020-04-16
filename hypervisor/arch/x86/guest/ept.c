@@ -241,6 +241,17 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 					}
 				}
 			}
+			/*
+			 * Walk through the whole page tables of one VM is a time-consuming
+			 * operation. Preemption is not support by hypervisor scheduling
+			 * currently, so the walk through page tables operation might occupy
+			 * CPU for long time what starve other threads.
+			 *
+			 * Give chance to release CPU to make other threads happy.
+			 */
+			if (need_reschedule(get_pcpu_id())) {
+				schedule();
+			}
 		}
 	}
 }

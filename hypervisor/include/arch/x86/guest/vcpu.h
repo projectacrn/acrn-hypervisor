@@ -94,6 +94,11 @@
 #define ACRN_REQUEST_INIT_VMCS			8U
 
 /**
+ * @brief Request for sync waiting WBINVD
+ */
+#define ACRN_REQUEST_WAIT_WBINVD		9U
+
+/**
  * @}
  */
 /* End of virt_int_injection */
@@ -148,7 +153,8 @@ enum vm_cpu_mode {
 
 #define	VCPU_EVENT_IOREQ		0
 #define	VCPU_EVENT_VIRTUAL_INTERRUPT	1
-#define	VCPU_EVENT_NUM			2
+#define	VCPU_EVENT_SYNC_WBINVD		2
+#define	VCPU_EVENT_NUM			3
 
 enum reset_mode;
 
