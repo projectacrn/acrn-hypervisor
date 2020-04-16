@@ -35,8 +35,11 @@ if "RELEASE" in os.environ:
 # ones.
 
 sys.path.insert(0, os.path.join(os.path.abspath('.'), 'extensions'))
-extensions = ['breathe', 'sphinx.ext.graphviz', 'sphinx.ext.extlinks',
-              'kerneldoc', 'eager_only', 'html_redirects']
+extensions = [
+   'breathe', 'sphinx.ext.graphviz', 'sphinx.ext.extlinks',
+   'kerneldoc', 'eager_only', 'html_redirects',
+   'sphinx_tabs.tabs'
+]
 
 # extlinks provides a macro template
 
