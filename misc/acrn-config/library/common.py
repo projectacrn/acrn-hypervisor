@@ -428,7 +428,7 @@ def num2int(str_value):
 
 def get_vm_types():
     global VM_TYPES
-    VM_TYPES = get_leaf_tag_map(SCENARIO_INFO_FILE, "load_order")
+    VM_TYPES = get_leaf_tag_map(SCENARIO_INFO_FILE, "vm_type")
 
 
 def get_avl_dev_info(bdf_desc_map, pci_sub_class):
