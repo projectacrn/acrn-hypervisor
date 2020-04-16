@@ -10,18 +10,66 @@
                 <h4 class="modal-title" id="myModalLabel">Save as</h4>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label for="new_scenario_name" class="col-sm-3 control-label">Scenario: </label>
+                <div class="form-group row">
+                    <label for="new_scenario_name" class="col-sm-3 control-label">Scenario Name: </label>
                     <div class="col-sm-6">
                         <input type="text" class="form-control" id="new_scenario_name"
-                               value={{ scenario[13:] if scenario.startswith('user_defined_') else scenario }}>
+                               value={{ scenario }}>
+                    </div>
+                </div>
+                <div class="form-group row hidden" id="src_path_row">
+                    <label for="src_path" class="col-sm-3 control-label"
+                        title="the relative path of acrn-hypervisor; if no path is specified,
+the source files will be generated into default path and overwirte the previous files.">
+                        Source Path: </label>
+                    <div class="col-sm-9">
+                        <input type="text" class="form-control" id="src_path" value=""
+                               placeholder="input the path to generate source files">
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 <button type="button" id="remove_scenario" class="btn btn-default" data-dismiss="modal">Remove</button>
-                <button type="button" id="save_scenario" data-id="" class="btn btn-primary" data-dismiss="modal">Submit
+                <button type="button" id="save_scenario" data-id="" class="btn btn-primary">Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_vm_modal" tabindex="-1" role="dialog" aria-labelledby="addVMModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="addVMModalLabel">Add a new VM</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <label for="add_vm_type" class="col-sm-3 control-label">VM type: </label>
+                    <div class="dropdown col-sm-6">
+                        <select class="selectpicker" data-width="auto" id="add_vm_type">
+                            <option value="PRE_STD_VM">PRE_STD_VM</option>
+                            <option value="SAFETY_VM">SAFETY_VM</option>
+                            <option value="SOS_VM">SOS_VM</option>
+                            <option value="POST_STD_VM">POST_STD_VM</option>
+                            <option value="POST_RT_VM">POST_RT_VM</option>
+                            <option value="KATA_VM">KATA_VM</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="new_scenario_name2" class="col-sm-3 control-label">Scenario Name: </label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control" id="new_scenario_name2"
+                               value={{ scenario }}>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" id="add_vm_submit" data-id="" class="btn btn-primary" data-dismiss="modal">Submit
                 </button>
             </div>
         </div>
@@ -40,20 +88,20 @@
             <label for="scenario_file" class="btn btn-primary" id="scenario_file2"
                    style="border: 1px solid #ccc; display: inline-block; padding: 6px 12px;
                        cursor: pointer; border-radius:5px; ">
-                Import</label>
+                Import XML</label>
             <input type="file" name="file" id="scenario_file" class="col-sm-1 btn btn-primary" style="display: none;">
             {% else %}
             <label for="scenario_file" class="btn"
                    style="border: 1px solid #ccc; display: inline-block; padding: 6px 12px;
                        cursor: pointer; border-radius:5px; ">
-                Import</label>
+                Import XML</label>
             <input type="file" name="file" class="col-sm-1" style="display: none;" disabled>
             {% endif %}
         </div>
         {% if board_info != None and root != None and scenario_item_values %}
         <div class="col-sm-1">
-            <button type="button" data-id="save" class="btn btn-primary" data-toggle="modal" data-target="#save_modal">
-                Export
+            <button type="button" data-id="" class="btn btn-primary" data-toggle="modal" data-target="#save_modal"
+                id="export_scenario_xml">Export XML
             </button>
         </div>
         <div class="col-sm-2">
@@ -63,8 +111,7 @@
         </div>
         {% else %}
         <div class="col-sm-1">
-            <button type="button" disabled class="btn btn-primary" data-toggle="modal" data-target="#save_modal">
-                Export
+            <button type="button" disabled class="btn btn-primary" data-toggle="modal" data-target="#save_modal">Export XML
             </button>
         </div>
         <div class="col-sm-2">
@@ -90,12 +137,23 @@
                     <div class="form-group">
                         <label class="col-sm-1 control-label">HV </label>
                     </div>
+                    <div class="form-group">
+                        <button type="button" class="btn" id="add_vm" data-id="-1" data-toggle="modal"
+                                data-target="#add_vm_modal">Add a VM below</button>
+                    </div>
                     {% else %}
                     {% set vm_type = 'vm:id='+vm.attrib['id'] %}
                     <div class="form-group">
                         <label class="col-sm-1 control-label">VM: </label>
                         <label class="col-sm-1 control-label" id="vm">{{vm.attrib['id']}}</label>
-
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="btn" id="add_vm" data-id="{{vm.attrib['id']}}" data-toggle="modal"
+                                data-target="#add_vm_modal">Add a VM below</button>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="btn" id="remove_vm" data-id="{{vm.attrib['id']}}">
+                            Remove this VM</button>
                     </div>
                     {% endif %}
                     {% if 'desc' in vm.attrib or vm.attrib['desc'] == 'specific for Kata'  %}
@@ -133,6 +191,7 @@
                             <select class="selectpicker" data-width="auto"
                                     id="{{vm_type+','+elem.tag}}">
                             {% endif %}
+                            <option disabled selected value> -- Select an option -- </option>
                             {% for item_value in scenario_item_values[','.join([vm.tag, elem.tag])] %}
                                 {% if item_value == elem_text %}
                                 <option value="{{item_value}}" selected="selected">{{item_value}}</option>
@@ -167,7 +226,8 @@
                                                title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
                                             {{sub_elem.tag}}</label>
 
-                                        {% if ','.join([vm.tag, elem.tag, sub_elem.tag]) not in scenario_item_values and elem.tag != 'vcpu_affinity' %}
+                                        {% if ','.join([vm.tag, elem.tag, sub_elem.tag]) not in scenario_item_values
+                                            and elem.tag != 'vcpu_affinity' and elem.tag != 'pci_devs' %}
                                             {% if sub_elem.tag in ['bootargs', 'kern_args'] %}
                                                 <div class="col-sm-6">
                                                 {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
@@ -193,8 +253,8 @@
                                                 </div>
                                             {% endif %}
                                         {% else %}
-                                            {% set item_key = ','.join([vm.tag, elem.tag, sub_elem.tag]) if elem.tag != 'vcpu_affinity' else
-                                            ','.join([vm.tag, elem.tag])%}
+                                            {% set item_key = ','.join([vm.tag, elem.tag, sub_elem.tag]) if elem.tag != 'vcpu_affinity'
+                                             and elem.tag != 'pci_devs' else ','.join([vm.tag, elem.tag]) %}
                                             <div class="dropdown col-sm-6">
                                                 {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                                 <select class="selectpicker" data-width="auto"
@@ -203,6 +263,7 @@
                                                 <select class="selectpicker" data-width="auto"
                                                         id="{{vm_type+','+elem.tag+','+sub_elem.tag}}">
                                                 {% endif %}
+                                                <option disabled selected value> -- Select an option -- </option>
                                                 {% for item_value in scenario_item_values[item_key] %}
                                                     {% if item_value == sub_elem_text %}
                                                     <option value="{{item_value}}" selected="selected">{{item_value}}</option>
@@ -219,6 +280,14 @@
                                                 {% else %}
                                                 <button type="button" class="btn" id="remove_vcpu_{{first_child|length}}">-</button>
                                                 {% endif %}
+                                                {% elif elem.tag == 'pci_devs' %}
+                                                <button type="button" class="btn" id="add_pci_dev_{{first_child|length}}">+</button>
+                                                {% if not first_child %}
+                                                <button type="button" disabled class="btn" id="remove_pci_dev_{{first_child|length}}">-</button>
+                                                {% else %}
+                                                <button type="button" class="btn" id="remove_pci_dev_{{first_child|length}}">-</button>
+                                                {% endif %}
+                                                {% else %}
                                                 {% endif%}
                                             </div>
                                         {% endif %}
@@ -268,6 +337,7 @@
                                                 {% set key = ('vm='+vm.attrib['id']+','+elem.tag+'='+elem.attrib['id']+','+sub_elem.tag)
                                                 if (elem.tag=='vuart' and sub_elem.tag=='base')
                                                 else ','.join([vm.tag, elem.tag, sub_elem.tag]) %}
+                                                <option disabled selected value> -- Select an option -- </option>
                                                 {% for item_value in scenario_item_values[key] %}
                                                     {% if item_value == sub_elem_text %}
                                                     <option value="{{item_value}}" selected="selected">{{item_value}}</option>

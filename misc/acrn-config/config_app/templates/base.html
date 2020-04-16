@@ -15,6 +15,104 @@
 </head>
 
 <body>
+
+<div class="modal fade" id="create_modal" tabindex="-1" role="dialog" aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="createModalLabel"></h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <label for="create_name" class="col-sm-3 control-label">Name: </label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control" id="create_name"
+                               value="">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" id="create_btn" data-id="" class="btn btn-primary">OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="load_scenario_modal" tabindex="-1" role="dialog" aria-labelledby="loadScenarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="loadScenarioModalLabel">Load Scenario Setting</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <label for="load_scenario_name" class="col-sm-3 control-label">Default Scenario Setting: </label>
+                    <div class="dropdown col-sm-6">
+                        <select class="selectpicker" data-width="auto" id="load_scenario_name">
+                            {% if scenarios[0] %}
+                                {% for sc in scenarios[0] %}
+                                <option value="{{sc}}">{{sc}}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="load_scenario_name2" class="col-sm-3 control-label">Scenario Setting Name: </label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control" id="load_scenario_name2"
+                               value="{{scenarios[0][0] if scenarios[0] else ''}}">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" id="load_scenario_btn" data-id="scenario" class="btn btn-primary">OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="load_launch_modal" tabindex="-1" role="dialog" aria-labelledby="loadLaunchModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="loadLaunchModalLabel">Load Launch setting</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <label for="load_launch_name" class="col-sm-3 control-label">Default Launch Setting: </label>
+                    <div class="dropdown col-sm-6">
+                        <select class="selectpicker" data-width="auto" id="load_launch_name">
+                            {% if launches[0] %}
+                                {% for lc in launches[0] %}
+                                <option value="{{lc}}">{{lc}}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="load_launch_name2" class="col-sm-3 control-label">Launch Setting Name: </label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control" id="load_launch_name2"
+                               value="{{launches[0][0] if launches[0] else ''}}">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" id="load_launch_btn" data-id="launch" class="btn btn-primary">OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <nav class="navbar navbar-inverse">
     <div class="container-fluid">
         <div class="navbar-header">
@@ -26,13 +124,13 @@
                     Scenario Setting <span class="caret"></span></a>
                 <ul class="dropdown-menu">
                     {% if scenarios[0] %}
-                        <small class="text-muted">default</small>
-                        {% for sc in scenarios[0] %}
-                        <li><a href="{{ url_for('CONFIG_APP.scenario', scenario_name=sc) }}">{{sc}}</a></li>
-                        {% endfor %}
-                        <small class="text-muted">user-defined</small>
+                        <li><a href="" data-toggle="modal" data-target="#create_modal"  class="create_menu"
+                               data-id="scenario">Create a new scenario</a></li>
+                        <li><a href="" data-toggle="modal" data-target="#load_scenario_modal"  class="load_menu"
+                               data-id="scenario">Load a default scenario</a></li>
+                        <small class="text-muted">scenario setting list</small>
                         {% for sc in scenarios[1] %}
-                        <li><a href="{{ url_for('CONFIG_APP.scenario', scenario_name='user_defined_'+sc) }}">{{sc}}</a></li>
+                        <li><a href="{{ url_for('CONFIG_APP.scenario', scenario_name=sc) }}">{{sc}}</a></li>
                         {% endfor %}
                     {% else %}
                         <text class="form-control" id="err_msg" data-toggle="tooltip"
@@ -46,13 +144,13 @@
                         class="caret"></span></a>
                 <ul class="dropdown-menu">
                     {% if launches[0] %}
-                    <small class="text-muted">default</small>
-                        {% for lc in launches[0] %}
-                        <li><a href="{{ url_for('CONFIG_APP.launch', launch_name=lc) }}">{{lc}}</a></li>
-                        {% endfor %}
-                        <small class="text-muted">user-defined</small>
+                        <li><a href="" data-toggle="modal" data-target="#create_modal" class="create_menu"
+                               data-id="launch">Create a new Launch script</a></li>
+                        <li><a href="" data-toggle="modal" data-target="#load_launch_modal"  class="load_menu"
+                               data-id="launch">Load a default launch script</a></li>
+                        <small class="text-muted">launch setting list</small>
                         {% for lc in launches[1] %}
-                        <li><a href="{{ url_for('CONFIG_APP.launch', launch_name='user_defined_'+lc) }}">{{lc}}</a></li>
+                        <li><a href="{{ url_for('CONFIG_APP.launch', launch_name=lc) }}">{{lc}}</a></li>
                         {% endfor %}
                     {% else %}
                         <text class="form-control" id="err_msg" data-toggle="tooltip"
@@ -64,13 +162,13 @@
         </ul>
     </div>
 </nav>
-<form action="" enctype="multipart/form-data" method='POST'>
+<form class="form-horizontal" action="" enctype="multipart/form-data" method='POST'>
     <div class="form-group">
-        <label for="board_info" class="col-sm-1 control-label" style="text-align: left;">Board info:</label>
-        <div class="col-sm-3">
+        <label class="col-sm-1 control-label" style="text-align: left;">&nbsp;&nbsp;Board info:</label>
+        <div class="col-sm-2">
             <div class="dropdown">
                 <select class="selectpicker" id="board_info">
-                    <option style="display:none">
+                    <option disabled selected value> -- Select an option -- </option>
                     {% for bi in board_info_list %}
                         {% if bi==board_info %}
                         <option value="{{bi}}" selected="selected">{{bi}}</option>
@@ -81,7 +179,8 @@
                 </select>
             </div>
         </div>
-        <text class="col-sm-2" id="board_type">{{board_type if board_type != None else ''}}</text>
+        <label class="col-sm-1 control-label">&nbsp;&nbsp;Board type:</label>
+        <text class="col-sm-2 control-label" id="board_type" style="text-align: left;">{{board_type if board_type != None else ''}}</text>
         <div class="col-sm-6">
             <form action="" enctype="multipart/form-data" method='POST'>
                 <label for="board_info_file" class="custom-file-upload btn btn-primary" id="board_info_file2"
@@ -92,6 +191,12 @@
                        style="display: none;">
             </form>
         </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-1"></label>
+        <text class="col-sm-2 control-label" id="bios_info" style="white-space: pre-line">{{bios_info if bios_info != None else ''}}</text>
+        <label class="col-sm-1"></label>
+        <text class="col-sm-2" id="base_board_info" style="white-space: pre-line">{{base_board_info if base_board_info != None else ''}}</text>
     </div>
 </form>
 <hr class="col-sm-12">
