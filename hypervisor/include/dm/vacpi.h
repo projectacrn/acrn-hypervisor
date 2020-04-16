@@ -66,6 +66,7 @@ struct acpi_table_info {
 		struct acpi_table_mcfg mcfg;
 		struct acpi_mcfg_allocation mcfg_entry;	/* mcfg_entry msut be declared fellowing mcfg */
 		struct acpi_table_madt madt;
+		struct acpi_madt_ioapic ioapic_struct;
 		struct acpi_madt_local_apic_nmi lapic_nmi;
 		struct acpi_madt_local_apic lapic_array[MAX_PCPU_NUM];
 	} __packed;
