@@ -221,6 +221,20 @@ class XmlConfig:
         dest_node = self._get_dest_node(*args)
         dest_node.append(elem)
 
+    def insert_curr_elem(self, index, elem, *args):
+        """
+        insert elements for current path.
+        :param index: the location for the element to insert.
+        :param elem: the element to insert.
+        :param args: the path of the element.
+        :return: None.
+        """
+        if self._curr_xml_tree is None:
+            return
+
+        dest_node = self._get_dest_node(*args)
+        dest_node.insert(index, elem)
+
     def delete_curr_key(self, *args):
         """
         delete the element by its path.

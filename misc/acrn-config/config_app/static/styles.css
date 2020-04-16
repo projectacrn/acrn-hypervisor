@@ -1,3 +1,8 @@
+* {
+   font-size: 12px;
+   line-height: 1.428;
+}
+
 ul.nav li.dropdown:hover ul.dropdown-menu {
     display: block;
 }
