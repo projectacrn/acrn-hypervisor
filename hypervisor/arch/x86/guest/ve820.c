@@ -190,6 +190,8 @@ void create_prelaunched_vm_e820(struct acrn_vm *vm)
 	} else {
 		/* need to revise length of hpa1 entry to its actual size */
 		vm->e820_entries[ENTRY_HPA1].length = vm_config->memory.size - MEM_1M;
+		/* need to set gpa_start for hpa2 */
+		gpa_start = vm->e820_entries[ENTRY_HPA1].baseaddr + vm->e820_entries[ENTRY_HPA1].length;
 		if ((vm_config->memory.size < MEM_2G)
 				&& (remaining_hpa2_size > (MEM_2G - vm_config->memory.size))) {
 			/* need to split hpa2 and add an entry for hpa2_lo */
