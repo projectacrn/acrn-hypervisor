@@ -1,0 +1,30 @@
+<acrn-config board="" scenario="">
+  <vm id="0">
+    <vm_type desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM." readonly="true">POST_RT_VM</vm_type>
+    <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
+        <guest_flag></guest_flag>
+    </guest_flags>
+    <vcpu_affinity desc="vCPU affinity map. Each vCPU will pin to the selected pCPU ID. Please make sure each vCPU pin to different pCPU.">
+        <pcpu_id></pcpu_id>
+    </vcpu_affinity>
+    <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+        <vcpu_clos>0</vcpu_clos>
+    </clos>
+    <epc_section desc="epc section">
+        <base desc="SGX EPC section base, must be page aligned"></base>
+        <size desc="SGX EPC section size in Bytes, must be page aligned"></size>
+    </epc_section>
+    <vuart id="0">
+        <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address."></base>
+        <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
+    </vuart>
+    <vuart id="1">
+        <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address."></base>
+        <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
+        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to."></target_vm_id>
+        <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
+    </vuart>
+  </vm>
+</acrn-config>
