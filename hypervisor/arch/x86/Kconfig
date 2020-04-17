@@ -24,7 +24,7 @@ config MULTIBOOT2
 
 choice
 	prompt "ACRN Scheduler"
-	default SCHED_NOOP
+	default SCHED_BVT
 	help
 	  Select the CPU scheduler to be used by the hypervisor
 
