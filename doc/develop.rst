@@ -73,6 +73,7 @@ Debug
 
    tutorials/debug
    tutorials/realtime_performance_tuning
+   tutorials/rtvm_performance_tips
 
 Additional Tutorials
 ********************
