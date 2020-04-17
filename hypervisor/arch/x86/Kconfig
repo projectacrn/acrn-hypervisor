@@ -252,7 +252,10 @@ config ACPI_PARSE_ENABLED
 	bool "Enable ACPI runtime parsing"
 	default y
 	help
-	  Whether to parse the ACPI tables at runtime.
+	  Platform specific ACPI info may be retrieved thru boot-time parse
+	  of ACPI table, or thru parse of off-line tool. This option enables
+	  the boot-time parse of ACPI table, and overwrite the information
+	  from off-line tool.
 
 config HYPERV_ENABLED
 	bool "Enable Hyper-V enlightenment"
