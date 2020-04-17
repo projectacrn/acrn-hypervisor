@@ -554,5 +554,5 @@ def get_gpu_vpid():
     vpid_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<PCI_VID_PID>", "</PCI_VID_PID>")
     for vpid_line in vpid_lines:
         if GPU_BDF in vpid_line:
-            vpid = vpid_line.split()[2]
+            vpid = " ".join(vpid_line.split()[2].split(':'))
     return vpid
