@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-/* This is a template header file for platform ACPI info definition,
- * we should use a user space tool running on target to generate
- * board specific acpi info file named as $(CONFIG_BOARD)_acpi_info.h
- * and put it in hypervisor/arch/x86/configs/$(CONFIG_BOARD)/.
+/* This is a template header file for generic platform ACPI info definition,
+ * we should use acrn-config tool to generate board specific acpi info file
+ * which named as $(CONFIG_BOARD)_acpi_info.h and put it under
+ * hypervisor/arch/x86/configs/$(CONFIG_BOARD)/.
  */
 #ifndef PLATFORM_ACPI_INFO_H
 #define PLATFORM_ACPI_INFO_H
@@ -25,7 +25,7 @@
 #define RESET_REGISTER_SPACE_ID 0UL
 
 /* PCI mmcfg base of MCFG, pre-assumption is platform only has one PCI segment group */
-#define DEFAULT_PCI_MMCFG_BASE	0UL
+#define DEFAULT_PCI_MMCFG_BASE	0xE0000000UL
 
 /* DRHD of DMAR */
 #define DRHD_COUNT		8U
