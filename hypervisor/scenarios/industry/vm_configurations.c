@@ -39,7 +39,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM1 */
 		CONFIG_POST_STD_VM(1),
-		.vcpu_num = 1U,
+		.vcpu_num = 2U,
 		.vcpu_affinity = VM1_CONFIG_VCPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
