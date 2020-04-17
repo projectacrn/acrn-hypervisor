@@ -12,7 +12,7 @@
 
     <FEATURES>
         <RELOC desc="Enable hypervisor relocation">y</RELOC>
-        <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_NOOP</SCHEDULER>
+        <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
         <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
         <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
@@ -99,6 +99,7 @@
         <guest_flag>0</guest_flag>
     </guest_flags>
     <vcpu_affinity desc="vCPU affinity map. Each vCPU will pin to the selected pCPU ID. Please make sure each vCPU pin to different pCPU.">
+        <pcpu_id>0</pcpu_id>
         <pcpu_id>1</pcpu_id>
     </vcpu_affinity>
     <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
