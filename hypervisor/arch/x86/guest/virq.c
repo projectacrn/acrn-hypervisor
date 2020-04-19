@@ -272,6 +272,7 @@ static bool vcpu_inject_exception(struct acrn_vcpu *vcpu)
 void vcpu_inject_extint(struct acrn_vcpu *vcpu)
 {
 	vcpu_make_request(vcpu, ACRN_REQUEST_EXTINT);
+	signal_event(&vcpu->events[VCPU_EVENT_VIRTUAL_INTERRUPT]);
 }
 
 /* Inject NMI to guest */
