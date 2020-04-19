@@ -14,135 +14,6 @@ PCI_HEADER = r"""
 PCI_END_HEADER = r"""
 #endif /* PCI_DEVICES_H_ */"""
 
-
-HI_MMIO_OFFSET = 0
-
-class Bar_Mem:
-    def __init__(self):
-        self.addr = 0
-        self.remapped = False
-
-
-class Bar_Attr:
-    def __init__(self):
-        self.name = 0
-        self.remappable = True
-
-
-class Pci_Dev_Bar_Desc:
-    def __init__(self):
-        self.pci_dev_dic = {}
-        self.pci_bar_dic = {}
-
-PCI_DEV_BAR_DESC = Pci_Dev_Bar_Desc()
-
-
-def get_value_after_str(line, key):
-    """ Get the value after cstate string """
-    idx = 0
-    line_in_list = line.split()
-    for idx_key, val in enumerate(line_in_list):
-        if val == key:
-            idx = idx_key
-            break
-
-    return line_in_list[idx + 1]
-
-
-def check_bar_remappable(line):
-    #TODO: check device BAR remappable per ACPI table
-
-    return True
-
-
-def get_size(line):
-
-    # get size string from format, Region n: Memory at x ... [size=NK]
-    size_str = line.split()[-1].strip(']').split('=')[1]
-    if 'G' in size_str:
-        size = int(size_str.strip('G')) * common.SIZE_G
-    elif 'M' in size_str:
-        size = int(size_str.strip('M')) * common.SIZE_M
-    elif 'K' in size_str:
-        size = int(size_str.strip('K')) * common.SIZE_K
-    else:
-        size = int(size_str)
-
-    return size
-
-# round up the running bar_addr to the size of the incoming bar "line"
-def remap_bar_addr_to_high(bar_addr, line):
-    """Generate vbar address"""
-    global HI_MMIO_OFFSET
-    size = get_size(line)
-    cur_addr = common.round_up(bar_addr, size)
-    HI_MMIO_OFFSET = cur_addr + size
-    return cur_addr
-
-
-def parser_pci():
-    """ Parse PCI lines """
-    cur_bdf = 0
-    prev_bdf = 0
-    tmp_bar_dic = {}
-    bar_addr = bar_num = '0'
-    cal_sub_pci_name = []
-
-    pci_lines = board_cfg_lib.get_info(
-        common.BOARD_INFO_FILE, "<PCI_DEVICE>", "</PCI_DEVICE>")
-
-    for line in pci_lines:
-        tmp_bar_mem = Bar_Mem()
-        # get pci bar information into PCI_DEV_BAR_DESC
-        if "Region" in line and "Memory at" in line:
-            #ignore memory region from SR-IOV capabilities
-            if "size=" not in line:
-                 continue
-
-            bar_addr = int(get_value_after_str(line, "at"), 16)
-            bar_num = line.split()[1].strip(':')
-            if bar_addr >= common.SIZE_4G or bar_addr < common.SIZE_2G:
-                if not tmp_bar_attr.remappable:
-                    continue
-
-                bar_addr = remap_bar_addr_to_high(HI_MMIO_OFFSET, line)
-                tmp_bar_mem.remapped = True
-
-            tmp_bar_mem.addr = hex(bar_addr)
-            tmp_bar_dic[int(bar_num)] = tmp_bar_mem
-        else:
-            tmp_bar_attr = Bar_Attr()
-            prev_bdf = cur_bdf
-            pci_bdf = line.split()[0]
-            tmp_bar_attr.name = " ".join(line.split(':')[1].split()[1:])
-
-            # remove '[*]' in pci subname
-            if '[' in tmp_bar_attr.name:
-                tmp_bar_attr.name = tmp_bar_attr.name.rsplit('[', 1)[0]
-
-            cal_sub_pci_name.append(tmp_bar_attr.name)
-            tmp_bar_attr.remappable = check_bar_remappable(line)
-            PCI_DEV_BAR_DESC.pci_dev_dic[pci_bdf] = tmp_bar_attr
-            cur_bdf = pci_bdf
-
-            if not prev_bdf:
-                prev_bdf = cur_bdf
-
-            if tmp_bar_dic and cur_bdf != prev_bdf:
-                PCI_DEV_BAR_DESC.pci_bar_dic[prev_bdf] = tmp_bar_dic
-
-            # clear the tmp_bar_dic before store the next dic
-            tmp_bar_dic = {}
-
-    # output all the pci device list to pci_device.h
-    sub_name_count = collections.Counter(cal_sub_pci_name)
-
-    if tmp_bar_dic:
-        PCI_DEV_BAR_DESC.pci_bar_dic[cur_bdf] = tmp_bar_dic
-
-    return sub_name_count
-
-
 def write_pbdf(i_cnt, bdf, bar_attr, config):
     """
     Parser and generate pbdf
@@ -159,6 +30,8 @@ def write_pbdf(i_cnt, bdf, bar_attr, config):
             tmp_sub_name = common.undline_name(bar_attr.name) + "_" + str(i_cnt)
         else:
             tmp_sub_name = "_".join(bar_attr.name.split()).upper() + "_" + str(i_cnt)
+
+    board_cfg_lib.PCI_DEV_BAR_DESC.pci_dev_dic[bdf].name_w_i_cnt = tmp_sub_name
 
     bus = int(bdf.split(':')[0], 16)
     dev = int(bdf.split(':')[1].split('.')[0], 16)
@@ -227,14 +100,14 @@ def generate_file(config):
     # write the header into pci
     print("{0}".format(PCI_HEADER), file=config)
 
-    sub_name_count = parser_pci()
+    sub_name_count = board_cfg_lib.parser_pci()
 
-    print("#define %-32s" % "PTDEV_HI_MMIO_SIZE", "       {}UL".format(hex(HI_MMIO_OFFSET)), file=config)
+    print("#define %-32s" % "PTDEV_HI_MMIO_SIZE", "       {}UL".format(hex(board_cfg_lib.HI_MMIO_OFFSET)), file=config)
 
     compared_bdf = []
     for cnt_sub_name in sub_name_count.keys():
         i_cnt = 0
-        for bdf, bar_attr in PCI_DEV_BAR_DESC.pci_dev_dic.items():
+        for bdf, bar_attr in board_cfg_lib.PCI_DEV_BAR_DESC.pci_dev_dic.items():
             if cnt_sub_name == bar_attr.name and bdf not in compared_bdf:
                 compared_bdf.append(bdf)
             else:
@@ -242,7 +115,7 @@ def generate_file(config):
 
             print("",file=config)
             write_pbdf(i_cnt, bdf, bar_attr, config)
-            write_vbar(i_cnt, bdf, PCI_DEV_BAR_DESC.pci_bar_dic, bar_attr, config)
+            write_vbar(i_cnt, bdf, board_cfg_lib.PCI_DEV_BAR_DESC.pci_bar_dic, bar_attr, config)
 
             i_cnt += 1
 
