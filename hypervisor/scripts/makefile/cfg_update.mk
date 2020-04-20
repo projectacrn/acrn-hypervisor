@@ -31,6 +31,14 @@ ifeq ($(CONFIG_XML_ENABLED),true)
     endif
     override BOARD := $(BOARD_IN_XML)
     override SCENARIO := $(SCENARIO_IN_XML)
+    RELEASE_IN_XML := $(shell echo `sed -n '/<RELEASE/p' $(SCENARIO_FILE) | sed -r 's/.*<RELEASE(.*)>(.*)<(.*)/\2/g'`)
+    ifndef RELEASE
+        ifeq ($(RELEASE_IN_XML),y)
+            override RELEASE := 1
+        else
+            override RELEASE := 0
+        endif
+    endif
 endif
 
 update_config:
@@ -51,9 +59,10 @@ ifeq ($(CONFIG_XML_ENABLED),true)
 		fi;\
 		cat $(UPDATE_RESULT);\
 		if [ "`sed -n /successfully/p $(UPDATE_RESULT)`" = "" ]; then rm -f $(UPDATE_RESULT); exit 1;	fi;\
-		echo "Import hypervisor Board/VM configuration from XMLs, configurations in source code has been overwritten!";\
+		echo "Import hypervisor Board/VM configuration from XMLs.";\
+		if [ "$(TARGET_DIR)" = "" ]; then echo "Warning: configurations in source code has been overwritten!"; fi;\
 	elif [ "`sed -n /successfully/p $(UPDATE_RESULT)`" = "" ]; then \
-		echo "Problem is found on Board/VM configration patching, please rebuild."; rm -f $(UPDATE_RESULT); exit 1; \
+		echo "Problem is found on Board/VM configuration patching, please rebuild."; rm -f $(UPDATE_RESULT); exit 1; \
 	else \
 		echo "Configurations is patched already!";\
 	fi;
