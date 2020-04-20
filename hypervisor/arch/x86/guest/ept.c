@@ -180,6 +180,11 @@ void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t 
 	}
 }
 
+void ept_clear_accessed(uint64_t *pge, __unused uint64_t size)
+{
+	*pge &= ~EPT_ACCESSED;
+}
+
 /**
  * @pre pge != NULL && size > 0.
  */
@@ -195,6 +200,7 @@ void ept_flush_leaf_page(uint64_t *pge, uint64_t size)
 		flush_address_space(hva, size);
 		clac();
 	}
+	ept_clear_accessed(pge, size);
 }
 
 /**
@@ -217,7 +223,7 @@ void *get_ept_entry(struct acrn_vm *vm)
 /**
  * @pre vm != NULL && cb != NULL.
  */
-void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
+void walk_ept_table(struct acrn_vm *vm, pge_handler cb, bool only_accessed)
 {
 	const struct memory_ops *mem_ops = &vm->arch_vm.ept_mem_ops;
 	uint64_t *pml4e, *pdpte, *pde, *pte;
@@ -225,12 +231,14 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 
 	for (i = 0UL; i < PTRS_PER_PML4E; i++) {
 		pml4e = pml4e_offset((uint64_t *)get_ept_entry(vm), i << PML4E_SHIFT);
-		if (mem_ops->pgentry_present(*pml4e) == 0UL) {
+		if (mem_ops->pgentry_present(*pml4e) == 0UL ||
+				(only_accessed && mem_ops->pgentry_accessed(*pml4e) == 0UL)) {
 			continue;
 		}
 		for (j = 0UL; j < PTRS_PER_PDPTE; j++) {
 			pdpte = pdpte_offset(pml4e, j << PDPTE_SHIFT);
-			if (mem_ops->pgentry_present(*pdpte) == 0UL) {
+			if (mem_ops->pgentry_present(*pdpte) == 0UL ||
+					(only_accessed && mem_ops->pgentry_accessed(*pdpte) == 0UL)) {
 				continue;
 			}
 			if (pdpte_large(*pdpte) != 0UL) {
@@ -239,7 +247,8 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 			}
 			for (k = 0UL; k < PTRS_PER_PDE; k++) {
 				pde = pde_offset(pdpte, k << PDE_SHIFT);
-				if (mem_ops->pgentry_present(*pde) == 0UL) {
+				if (mem_ops->pgentry_present(*pde) == 0UL ||
+						(only_accessed && mem_ops->pgentry_accessed(*pde) == 0UL)) {
 					continue;
 				}
 				if (pde_large(*pde) != 0UL) {
@@ -248,7 +257,8 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 				}
 				for (m = 0UL; m < PTRS_PER_PTE; m++) {
 					pte = pte_offset(pde, m << PTE_SHIFT);
-					if (mem_ops->pgentry_present(*pte) != 0UL) {
+					if (mem_ops->pgentry_present(*pte) != 0UL ||
+							(only_accessed && mem_ops->pgentry_accessed(*pte) == 0UL)) {
 						cb(pte, PTE_SIZE);
 					}
 				}

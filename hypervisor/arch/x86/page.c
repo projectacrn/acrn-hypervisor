@@ -37,6 +37,11 @@ static inline void ppt_clflush_pagewalk(const void* entry __attribute__((unused)
 {
 }
 
+static inline uint64_t ppt_pgentry_accessed(uint64_t pte)
+{
+	return pte & PAGE_ACCESSED;
+}
+
 static inline uint64_t ppt_pgentry_present(uint64_t pte)
 {
 	return pte & PAGE_PRESENT;
@@ -71,6 +76,7 @@ const struct memory_ops ppt_mem_ops = {
 	.large_page_enabled = true,
 	.get_default_access_right = ppt_get_default_access_right,
 	.pgentry_present = ppt_pgentry_present,
+	.pgentry_accessed = ppt_pgentry_accessed,
 	.get_pml4_page = ppt_get_pml4_page,
 	.get_pdpt_page = ppt_get_pdpt_page,
 	.get_pd_page = ppt_get_pd_page,
@@ -145,6 +151,11 @@ static inline uint64_t ept_get_default_access_right(void)
 static inline uint64_t ept_pgentry_present(uint64_t pte)
 {
 	return pte & EPT_RWX;
+}
+
+static inline uint64_t ept_pgentry_accessed(uint64_t pte)
+{
+	return pte & EPT_ACCESSED;
 }
 
 static inline void ept_clflush_pagewalk(const void* etry)
@@ -250,6 +261,7 @@ void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
 	mem_ops->info = &ept_pages_info[vm_id];
 	mem_ops->get_default_access_right = ept_get_default_access_right;
 	mem_ops->pgentry_present = ept_pgentry_present;
+	mem_ops->pgentry_accessed = ept_pgentry_accessed;
 	mem_ops->get_pml4_page = ept_get_pml4_page;
 	mem_ops->get_pdpt_page = ept_get_pdpt_page;
 	mem_ops->get_pd_page = ept_get_pd_page;
