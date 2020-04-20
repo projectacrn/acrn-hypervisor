@@ -8,15 +8,7 @@ OS (such as Clear Linux) running in a pre-launched VM can bypass the ACRN
 hypervisor and directly access isolated PCI devices. The following
 guidelines provide step-by-step instructions on how to set up the ACRN
 hypervisor logical partition scenario on Intel NUC while running two
-pre-launched VMs. The logical partition scenario on the Intel NUC is shown in
-:numref:`logical_partition_scenario_on_nuc`.
-
-.. figure:: images/logical_partition_scenario_on_nuc.png
-   :align: center
-   :width: 400px
-   :name: logical_partition_scenario_on_nuc
-
-   The logical partition scenario on Intel NUC
+pre-launched VMs.
 
 Validated Versions
 ******************
