@@ -12,7 +12,7 @@
 
     <FEATURES>
         <RELOC desc="Enable hypervisor relocation">y</RELOC>
-        <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_NOOP</SCHEDULER>
+        <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
         <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
         <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
