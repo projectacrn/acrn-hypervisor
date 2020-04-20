@@ -11,7 +11,7 @@
     <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
         <vcpu_clos>0</vcpu_clos>
     </clos>
-    <epc_section desc="epc section">
+    <epc_section configurable="0" desc="epc section">
         <base desc="SGX EPC section base, must be page aligned"></base>
         <size desc="SGX EPC section size in Bytes, must be page aligned"></size>
     </epc_section>
