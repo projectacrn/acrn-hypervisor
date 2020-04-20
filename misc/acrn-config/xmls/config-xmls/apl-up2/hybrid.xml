@@ -61,7 +61,7 @@
     <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
         <vcpu_clos>0</vcpu_clos>
     </clos>
-    <epc_section desc="epc section">
+    <epc_section configurable="0" desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>
         <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
     </epc_section>
@@ -134,7 +134,7 @@
     <board_private>
         <rootfs desc="rootfs for Linux kernel">/dev/mmcblk0p3</rootfs>
         <bootargs desc="Specify kernel boot arguments">
-        rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3
+        rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3 idle=halt
         i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x01070F i915.domain_plane_owners=0x011100001111 i915.enable_gvt=1
         hvlog=2M@0x5de00000 memmap=0x600000$0x5da00000 ramoops.mem_address=0x5da00000 ramoops.mem_size=0x400000 ramoops.console_size=0x200000
         reboot_panic=p,w module_blacklist=dwc3_pci i915.enable_guc=0x02 cma=64M@0-
@@ -152,7 +152,7 @@
     <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
         <vcpu_clos>0</vcpu_clos>
     </clos>
-    <epc_section desc="epc section">
+    <epc_section configurable="0" desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>
         <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
     </epc_section>
