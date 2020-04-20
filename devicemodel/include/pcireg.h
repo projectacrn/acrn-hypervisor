@@ -1066,8 +1066,6 @@
 #define	PCIM_OSC_CTL_PCIE_CAP_STRUCT	0x10 /* Various Capability Structures */
 
 /* Graphics definitions */
-#define PCIR_BDSM			0x5C /* BDSM graphics base data of stolen memory register */
-#define PCIM_BDSM_GSM_MASK  		0xFFF00000 /* bits 31:20 contains the base address of stolen memory */
 #define PCIR_ASLS_CTL			0xFC /* Opregion start addr register */
 #define PCIM_ASLS_OPREGION_MASK	0xFFFFF000 /* opregion need 4KB aligned */
 #endif

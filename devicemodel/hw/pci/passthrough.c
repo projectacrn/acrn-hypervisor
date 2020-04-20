@@ -79,6 +79,8 @@ static pthread_mutex_t ref_cnt_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 uint32_t gsm_start_hpa = 0;
 uint32_t opregion_start_hpa = 0;
+/* BDSM graphics base data of stolen memory register */
+uint8_t pcir_bdsm = 0;
 
 struct passthru_dev {
 	struct pci_vdev *dev;
@@ -98,6 +100,8 @@ struct passthru_dev {
 	 *   need_reset - reset dev before passthrough
 	 */
 	bool need_reset;
+	void (*pci_cfg_set_gsm_addr)(struct pci_vdev *dev, int offset, uint32_t val);
+	bool (*is_gpu_gsm_opregion_reg)(struct pci_vdev *dev, int offset);
 };
 
 static uint32_t
@@ -401,6 +405,48 @@ pciaccess_init(void)
 	return 0;	/* success */
 }
 
+static void 
+pci_cfg_set_gsm_addr_by_ehl(struct pci_vdev *dev, int offset, uint32_t val)
+{
+	pci_set_cfgdata32(dev, offset, val);
+	/* write 0 to high 32-bits of BDSM on EHL platform */
+	pci_set_cfgdata32(dev, offset + 4, 0);
+}
+
+static void 
+pci_cfg_set_gsm_addr_by_default(struct pci_vdev *dev, int offset, uint32_t val)
+{
+	pci_set_cfgdata32(dev, offset, val);
+}
+
+static bool 
+is_ehl_gpu_gsm_opregion_reg(struct pci_vdev *dev, int offset)
+{
+	bool ret;
+
+	if ((PCI_BDF(dev->bus, dev->slot, dev->func) == PCI_BDF_GPU) &&
+		((offset == pcir_bdsm) || (offset == pcir_bdsm + 4) || (offset == PCIR_ASLS_CTL)))
+		ret = true;
+	else
+		ret = false;
+
+	return ret;
+}
+
+static bool 
+is_default_gpu_gsm_opregion_reg(struct pci_vdev *dev, int offset)
+{
+	bool ret;
+
+	if ((PCI_BDF(dev->bus, dev->slot, dev->func) == PCI_BDF_GPU) &&
+		((offset == pcir_bdsm) || (offset == PCIR_ASLS_CTL)))
+		ret = true;
+	else
+		ret = false;
+
+	return ret;
+}
+
 /*
  * Passthrough device initialization function:
  * - initialize virtual config space
@@ -524,10 +570,38 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		goto done;
 
 	if (ptdev->phys_bdf == PCI_BDF_GPU) {
-		uint32_t gsm_phys, opregion_phys;
-		/* get gsm hpa */
-		gsm_phys = read_config(ptdev->phys_dev, PCIR_BDSM, 4);
-		gsm_start_hpa = gsm_phys & PCIM_BDSM_GSM_MASK;
+		uint32_t opregion_phys;
+		uint64_t gsm_phys;
+		uint64_t pcim_bdsm_gsm_mask;
+
+		switch (device)
+		{
+		/* If is EHL platform */
+		case 0x4551:
+			pcir_bdsm = 0xC0;
+			/* On EHL platform, pcir_bdsm register has 64 bits.
+			 * bits 63:20 contains the base address of stolen memory
+			 */
+			pcim_bdsm_gsm_mask = 0xFFFFFFFFFFF00000;
+			/* get gsm register value */
+			gsm_phys = read_config(ptdev->phys_dev, pcir_bdsm, 4);
+			gsm_phys = (uint64_t)(read_config(ptdev->phys_dev, pcir_bdsm + 4, 4)) << 32 | gsm_phys;
+			ptdev->pci_cfg_set_gsm_addr = &pci_cfg_set_gsm_addr_by_ehl;
+			ptdev->is_gpu_gsm_opregion_reg = &is_ehl_gpu_gsm_opregion_reg;
+			break;
+		/* If is default platforms, such as KBL,WHL  */
+		default:
+			pcir_bdsm = 0x5C;
+			/* bits 31:20 contains the base address of stolen memory */
+			pcim_bdsm_gsm_mask = 0xFFF00000;
+			/* get gsm register value */
+			gsm_phys = read_config(ptdev->phys_dev, pcir_bdsm, 4);
+			ptdev->pci_cfg_set_gsm_addr = &pci_cfg_set_gsm_addr_by_default;
+			ptdev->is_gpu_gsm_opregion_reg = &is_default_gpu_gsm_opregion_reg;
+			break;
+		}
+
+		gsm_start_hpa = gsm_phys & pcim_bdsm_gsm_mask;
 		/* initialize the EPT mapping for passthrough GPU gsm region */
 		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_GSM_GPA, GPU_GSM_SIZE, gsm_start_hpa);
 
@@ -537,7 +611,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		/* initialize the EPT mapping for passthrough GPU opregion */
 		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
 
-		pci_set_cfgdata32(dev, PCIR_BDSM, GPU_GSM_GPA | (gsm_phys & ~PCIM_BDSM_GSM_MASK));
+		ptdev->pci_cfg_set_gsm_addr(dev, pcir_bdsm, (uint32_t)(GPU_GSM_GPA | (gsm_phys & ~pcim_bdsm_gsm_mask)));
 		pci_set_cfgdata32(dev, PCIR_ASLS_CTL, GPU_OPREGION_GPA | (opregion_phys & ~PCIM_ASLS_OPREGION_MASK));
 
 		pcidev.type = QUIRK_PTDEV;
@@ -654,8 +728,7 @@ passthru_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 {
 	struct passthru_dev *ptdev = dev->arg;
 
-	if ((PCI_BDF(dev->bus, dev->slot, dev->func) == PCI_BDF_GPU) &&
-		((coff == PCIR_BDSM) || (coff == PCIR_ASLS_CTL)))
+	if (ptdev->is_gpu_gsm_opregion_reg(dev, coff))
 		*rv = pci_get_cfgdata32(dev, coff);
 	else
 		*rv = read_config(ptdev->phys_dev, coff, bytes);
@@ -669,8 +742,7 @@ passthru_cfgwrite(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 {
 	struct passthru_dev *ptdev = dev->arg;
 
-	if (!((PCI_BDF(dev->bus, dev->slot, dev->func) == PCI_BDF_GPU) &&
-		((coff == PCIR_BDSM) || (coff == PCIR_ASLS_CTL))))
+	if (!ptdev->is_gpu_gsm_opregion_reg(dev, coff))
 		write_config(ptdev->phys_dev, coff, bytes, val);
 
 	return 0;
