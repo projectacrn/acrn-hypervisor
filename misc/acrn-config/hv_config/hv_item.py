@@ -157,8 +157,6 @@ class Memory:
     def check_item(self):
         hv_cfg_lib.hv_size_check(self.stack_size, "MEMORY", "STACK_SIZE")
         hv_cfg_lib.hv_size_check(self.low_ram_size, "MEMORY", "LOW_RAM_SIZE")
-        hv_cfg_lib.hv_size_check(self.hv_ram_size, "MEMORY", "HV_RAM_SIZE")
-        hv_cfg_lib.hv_size_check(self.hv_ram_start, "MEMORY", "HV_RAM_START")
         hv_cfg_lib.hv_size_check(self.platform_ram_size, "MEMORY", "PLATFORM_RAM_SIZE")
         hv_cfg_lib.hv_size_check(self.sos_ram_size, "MEMORY", "SOS_RAM_SIZE")
         hv_cfg_lib.hv_size_check(self.uos_ram_size, "MEMORY", "UOS_RAM_SIZE")
