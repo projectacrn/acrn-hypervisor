@@ -22,10 +22,12 @@ VM_NUM_MAP_TOTAL_HV_RAM_SIZE = {
     4:0xB400000,
     # 210M
     5:0xD200000,
-    # 240M
-    6:0xF000000,
-    # 270M
-    7:0x10E00000,
+    # 250M
+    6:0xFA00000,
+    # 280M
+    7:0x11800000,
+    # 320M
+    8:0x14000000,
 }
 
 MEM_ALIGN = 2 * common.SIZE_M
@@ -141,8 +143,15 @@ def get_memory(hv_info, config):
     hv_start_addr = int(avl_start_addr, 16) + int(hex(reserved_ram), 16)
     hv_start_addr = common.round_up(hv_start_addr, MEM_ALIGN)
 
-    print("CONFIG_HV_RAM_START={}".format(hex(hv_start_addr)), file=config)
-    print("CONFIG_HV_RAM_SIZE={}".format(hex(hv_ram_size)), file=config)
+    if not hv_info.mem.hv_ram_start:
+        print("CONFIG_HV_RAM_START={}".format(hex(hv_start_addr)), file=config)
+    else:
+        print("CONFIG_HV_RAM_START={}".format(hv_info.mem.hv_ram_start), file=config)
+    if not hv_info.mem.hv_ram_size:
+        print("CONFIG_HV_RAM_SIZE={}".format(hex(hv_ram_size)), file=config)
+    else:
+        print("CONFIG_HV_RAM_SIZE={}".format(hv_info.mem.hv_ram_size), file=config)
+
     print("CONFIG_PLATFORM_RAM_SIZE={}".format(hv_info.mem.platform_ram_size), file=config)
     print("CONFIG_LOW_RAM_SIZE={}".format(hv_info.mem.low_ram_size), file=config)
     print("CONFIG_SOS_RAM_SIZE={}".format(hv_info.mem.sos_ram_size), file=config)
