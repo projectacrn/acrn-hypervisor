@@ -38,7 +38,9 @@ ifeq ($(shell [ $(HV_OBJDIR)/$(HV_CONFIG) -nt $(HV_OBJDIR)/$(HV_CONFIG_MK) ] && 
 endif
 $(eval $(call override_config,BOARD,apl-mrb))
 $(eval $(call override_config,SCENARIO,))
-$(eval $(call override_config,RELEASE,n))
+$(eval $(call override_config,RELEASE,y))
+
+override RELEASE := $(CONFIG_RELEASE)
 
 $(eval $(call check_dep_exec,python3,KCONFIG_DEPS))
 $(eval $(call check_dep_py3lib,kconfiglib,KCONFIG_DEPS))
@@ -72,7 +74,10 @@ defconfig: $(KCONFIG_DEPS)
 		if [ "$(KCONFIG_FILE)" != "" ] && [ -f $(KCONFIG_FILE) ]; then \
 			echo "Writing $(HV_OBJDIR)/$(HV_CONFIG) with $(KCONFIG_FILE)"; \
 			cp $(KCONFIG_FILE) $(HV_OBJDIR)/$(HV_CONFIG); \
-		elif [ "$(CONFIG_XML_ENABLED)" = "true" ] && [ "$(TARGET_DIR)" != "" ] && [ -d $(TARGET_DIR) ]; then \
+		elif [ "$(TARGET_DIR)" != "" ] && [ -d $(TARGET_DIR) ]; then \
+			if [ ! -f $(TARGET_DIR)/$(BOARD).config ]; then \
+				echo "Board defconfig file $(BOARD).config is not found under $(TARGET_DIR)."; exit 1; \
+			fi; \
 			echo "Writing $(HV_OBJDIR)/$(HV_CONFIG) with $(TARGET_DIR)/$(BOARD).config"; \
 			cp $(TARGET_DIR)/$(BOARD).config $(HV_OBJDIR)/$(HV_CONFIG); \
 		fi; \
