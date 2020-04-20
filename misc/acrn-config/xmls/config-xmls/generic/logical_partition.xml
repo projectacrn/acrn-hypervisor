@@ -62,6 +62,8 @@
         <pcpu_id>2</pcpu_id>
     </vcpu_affinity>
     <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+        <vcpu_clos>0</vcpu_clos>
+    </clos>
     <epc_section desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>
         <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
@@ -112,6 +114,8 @@
         <pcpu_id>3</pcpu_id>
     </vcpu_affinity>
     <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+        <vcpu_clos>0</vcpu_clos>
+    </clos>
     <epc_section desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>
         <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
