@@ -635,6 +635,13 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 	uint64_t prot_set;
 	uint64_t prot_clr;
 
+	if ((!mem_aligned_check(wp->gpa, PAGE_SIZE)) ||
+		(!ept_is_mr_valid(vm, wp->gpa, PAGE_SIZE))) {
+		pr_err("%s,vm[%hu] gpa 0x%lx,GPA is invalid or not page size aligned.",
+			__func__, vm->vm_id, wp->gpa);
+		return  -EINVAL;
+	}
+
 	hpa = gpa2hpa(vm, wp->gpa);
 	if (hpa == INVALID_HPA) {
 		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
