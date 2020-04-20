@@ -23,8 +23,8 @@
 
     <MEMORY>
         <STACK_SIZE desc="Capacity of one stack, in bytes.">0x2000</STACK_SIZE>
-        <HV_RAM_SIZE desc="Size of the RAM region used by the hypervisor">0x0b800000</HV_RAM_SIZE>
-        <HV_RAM_START desc="2M-aligned Start physical address of the RAM region used by the hypervisor.">0x00400000</HV_RAM_START>
+        <HV_RAM_SIZE desc="Size of the RAM region used by the hypervisor"></HV_RAM_SIZE>
+        <HV_RAM_START desc="2M-aligned Start physical address of the RAM region used by the hypervisor."></HV_RAM_START>
         <LOW_RAM_SIZE desc="Size of the low RAM region">0x00010000</LOW_RAM_SIZE>
         <UOS_RAM_SIZE desc="Size of the User OS (UOS) RAM.">0x200000000</UOS_RAM_SIZE>
         <SOS_RAM_SIZE desc="Size of the Service OS (SOS) RAM.">0x400000000</SOS_RAM_SIZE>
