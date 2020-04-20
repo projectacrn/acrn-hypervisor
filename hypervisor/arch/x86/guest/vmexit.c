@@ -379,10 +379,10 @@ static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu)
 
 static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	if (has_rt_vm() == false) {
+	if (has_rt_vm() == false || is_rt_vm(vcpu->vm)) {
 		cache_flush_invalidate_all();
 	} else {
-		walk_ept_table(vcpu->vm, ept_flush_leaf_page);
+		walk_ept_table(vcpu->vm, ept_flush_leaf_page, true);
 	}
 
 	return 0;

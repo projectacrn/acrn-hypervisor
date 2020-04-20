@@ -107,6 +107,8 @@
  */
 /* End of ept_mem_type */
 
+#define EPT_ACCESSED		(1UL << 8U)
+
 #define EPT_MT_MASK		(7UL << EPT_MT_SHIFT)
 /* VTD: Second-Level Paging Entries: Snoop Control */
 #define EPT_SNOOP_CTRL		(1UL << 11U)

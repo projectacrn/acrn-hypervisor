@@ -80,6 +80,7 @@ struct memory_ops {
 	bool large_page_enabled;
 	uint64_t (*get_default_access_right)(void);
 	uint64_t (*pgentry_present)(uint64_t pte);
+	uint64_t (*pgentry_accessed)(uint64_t pte);
 	struct page *(*get_pml4_page)(const union pgtable_pages_info *info);
 	struct page *(*get_pdpt_page)(const union pgtable_pages_info *info, uint64_t gpa);
 	struct page *(*get_pd_page)(const union pgtable_pages_info *info, uint64_t gpa);
