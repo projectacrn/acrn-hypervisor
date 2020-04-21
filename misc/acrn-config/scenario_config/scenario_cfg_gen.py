@@ -144,14 +144,14 @@ def main(args):
 
     if params['--out']:
         if os.path.isabs(params['--out']):
-            scenario_dir = params['--out'] + scenario + '/'
-            config_hv = params['--out'] + board_name + GEN_FILE[3]
+            scenario_dir = os.path.join(params['--out'], scenario + '/')
+            config_hv = os.path.join(params['--out'], board_name + GEN_FILE[3])
         else:
-            scenario_dir = ACRN_PATH + scenario + '/'
-            config_hv = ACRN_PATH + board_name + GEN_FILE[3]
+            scenario_dir = os.path.join(ACRN_PATH + params['--out'], scenario + '/')
+            config_hv = os.path.join(ACRN_PATH + params['--out'], board_name + GEN_FILE[3])
     else:
-        scenario_dir = ACRN_CONFIG_DEF + scenario + '/'
-        config_hv = ACRN_CONFIGS + board_name + GEN_FILE[3]
+        scenario_dir = os.path.join(ACRN_CONFIG_DEF, scenario + '/')
+        config_hv = os.path.join(ACRN_CONFIGS, board_name + GEN_FILE[3])
         common.print_yel("{}".format("Override board defconfig...", warn=True))
     common.mkdir(scenario_dir)
 
