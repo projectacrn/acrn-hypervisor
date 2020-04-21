@@ -348,7 +348,7 @@ $().ready(function(){
 
     $(document).on('click', "#add_launch_submit", function() {
         var curr_vm_id = $(this).data('id');
-        save_launch('add_vm:'+curr_vm_id)
+        save_launch('add_vm:'+curr_vm_id);
     });
 
     $('#add_launch_script').on('click', function() {
@@ -362,6 +362,31 @@ $().ready(function(){
             var curr_vm_id = $(this).data('id');
             save_launch('remove_vm:'+curr_vm_id)
         }
+    });
+
+    $(document).on('change', "select#scenario_name", function() {
+        data = {scenario_name: $(this).val(),
+                launch_name: $('text#old_launch_name').text()};
+        $.ajax({
+            type : "POST",
+            contentType: "application/json;charset=UTF-8",
+            url : "../get_post_launch_vms",
+            data : JSON.stringify(data),
+            success : function(result) {
+                console.log(result);
+                vm_list = result.vm_list
+                $('select#add_launch_type').empty().selectpicker('refresh');
+                for(i in vm_list) {
+                    var option = vm_list[i][1]+' ( ID : '+vm_list[i][0]+' )'
+                    $('select#add_launch_type').append(
+                        '<option value="'+option+'">'+option+'</option>').selectpicker('refresh');
+                }
+            },
+            error : function(e){
+                console.log(e.status);
+                console.log(e.responseText);
+            }
+        });
     });
 
     $("select[ID$='vuart:id=1,base']").change(function(){
@@ -414,6 +439,11 @@ $().ready(function(){
         }
     });
 })
+
+
+$(window).load(function () {
+　　$("select#scenario_name").change();
+});
 
 
 function show_com_target(id, value) {
