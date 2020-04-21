@@ -196,7 +196,6 @@ bool iommu_snoop_supported(const struct iommu_domain *iommu)
 
 static struct dmar_drhd_rt dmar_drhd_units[MAX_DRHDS];
 static bool iommu_page_walk_coherent = true;
-static uint32_t qi_status = 0U;
 static struct dmar_info *platform_dmar_info = NULL;
 
 /* Domain id 0 is reserved in some cases per VT-d */
@@ -593,6 +592,7 @@ static struct dmar_drhd_rt *device_to_dmaru(uint8_t bus, uint8_t devfun)
 static void dmar_issue_qi_request(struct dmar_drhd_rt *dmar_unit, struct dmar_entry invalidate_desc)
 {
 	struct dmar_entry *invalidate_desc_ptr;
+	uint32_t qi_status = 0U;
 	__unused uint64_t start;
 
 	invalidate_desc_ptr = (struct dmar_entry *)(dmar_unit->qi_queue + dmar_unit->qi_tail);
@@ -611,12 +611,10 @@ static void dmar_issue_qi_request(struct dmar_drhd_rt *dmar_unit, struct dmar_en
 	iommu_write32(dmar_unit, DMAR_IQT_REG, dmar_unit->qi_tail);
 
 	start = rdtsc();
-	while (qi_status == DMAR_INV_STATUS_INCOMPLETE) {
-		if (qi_status == DMAR_INV_STATUS_COMPLETED) {
-			break;
-		}
+	while (qi_status != DMAR_INV_STATUS_COMPLETED) {
 		if ((rdtsc() - start) > CYCLES_PER_MS) {
 			pr_err("DMAR OP Timeout! @ %s", __func__);
+			break;
 		}
 		asm_pause();
 	}
