@@ -13,7 +13,7 @@
         <size configurable="0" desc="The memory size in Bytes for the VM">0x20000000</size>
     </memory>
     <os_config>
-        <name desc="Specify the OS name of VM, currently it is not referenced by hypervisor code.">ACRN Service OS</name>
+        <name desc="Specify the OS name of VM, currently it is not referenced by hypervisor code."></name>
         <kern_type desc="Specify the VM name which will be shown in hypervisor console command: vm_list."></kern_type>
         <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline."></kern_mod>
         <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline."></ramdisk_mod>
@@ -28,7 +28,7 @@
         <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
         <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
         <irq configurable="0" desc="vCOM2 irq">SOS_COM2_IRQ</irq>
-        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to."></target_vm_id>
+        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">2</target_vm_id>
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
     </vuart>
     <pci_devs configurable="0" desc="pci devices list">
