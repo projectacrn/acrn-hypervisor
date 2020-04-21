@@ -32,7 +32,8 @@
 					"i915.nuclear_pageflip=1 " \
 					"i915.avail_planes_per_pipe=0x01010F "	\
 					"i915.domain_plane_owners=0x011111110000 " \
-					"i915.enable_gvt=1 idle=halt "	\
+					"i915.enable_gvt=1 "	\
+					SOS_IDLE \
 					SOS_BOOTARGS_DIFF
 
 #if CONFIG_MAX_KATA_VM_NUM > 0
