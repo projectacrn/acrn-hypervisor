@@ -47,7 +47,7 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["vm,vcpu_affinity"] = hw_info.get_processor_val()
     scenario_item_values["vm,guest_flags"] = guest_flags
     scenario_item_values["vm,clos"] = hw_info.get_clos_val()
-    scenario_item_values["vm,pci_devs,pci_dev"] = scenario_cfg_lib.avl_pci_devs()
+    scenario_item_values["vm,pci_devs"] = scenario_cfg_lib.avl_pci_devs()
     scenario_item_values["vm,os_config,kern_type"] = scenario_cfg_lib.KERN_TYPE_LIST
     scenario_item_values.update(scenario_cfg_lib.avl_vuart_ui_select(scenario_info))
 
@@ -136,6 +136,10 @@ def main(args):
     if err_dic:
         return err_dic
 
+    if common.VM_COUNT > common.MAX_VM_NUM:
+        err_dic['vm count'] = "The vm count in config xml should be less or equal {}!".format(common.MAX_VM_NUM)
+        return err_dic
+
     # check if this is the scenario config which matched board info
     (err_dic, status) = common.is_config_file_match()
     if not status:
@@ -203,7 +207,7 @@ def main(args):
     return err_dic
 
 
-def ui_entry_api(board_info, scenario_info, out):
+def ui_entry_api(board_info, scenario_info, out=''):
 
     arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--out', out]
 

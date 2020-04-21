@@ -35,7 +35,7 @@ def sos_bootarg_diff(sos_cmdlines, config):
             i += 1
             if i == 1:
                 if sos_len == 1:
-                    print('#define SOS_BOOTARGS_DIFF\t{}'.format(sos_cmdline), file=config)
+                    print('#define SOS_BOOTARGS_DIFF\t"{}"'.format(sos_cmdline.strip('"')), file=config)
                 else:
                     print('#define SOS_BOOTARGS_DIFF\t"{} " \\'.format(sos_cmdline), file=config)
             else:
