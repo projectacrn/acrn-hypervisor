@@ -471,10 +471,12 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		/* vpic wire_mode default is INTR */
 		vm->wire_mode = VPIC_WIRE_INTR;
 
-		/* Init full emulated vIOAPIC instance */
-		if (!is_lapic_pt_configured(vm)) {
-			vioapic_init(vm);
-		}
+		/* Init full emulated vIOAPIC instance:
+		 * Present a virtual IOAPIC to guest, as a placeholder interrupt controller,
+		 * even if the guest uses PT LAPIC. This is to satisfy the guest OSes,
+		 * in some cases, though the functionality of vIOAPIC doesn't work.
+		 */
+		vioapic_init(vm);
 
 		/* Populate return VM handle */
 		*rtn_vm = vm;
