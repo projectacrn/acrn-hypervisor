@@ -86,7 +86,7 @@ def validate_launch_setting(board_info, scenario_info, launch_info):
     return (launch_cfg_lib.ERR_LIST, pt_sel, virtio, dm)
 
 
-def ui_entry_api(board_info, scenario_info, launch_info, out):
+def ui_entry_api(board_info, scenario_info, launch_info, out=''):
 
     err_dic = {}
     arg_list = ['launch_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--launch', launch_info, '--uosid', '0', '--out', out]

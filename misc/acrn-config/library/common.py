@@ -32,6 +32,7 @@ BOARD_INFO_FILE = ""
 SCENARIO_INFO_FILE = ""
 LAUNCH_INFO_FILE = ""
 VM_TYPES = {}
+MAX_VM_NUM = 8
 
 class MultiItem():
 
@@ -352,7 +353,7 @@ def get_leaf_tag_map(config_file, branch_tag, tag_str=''):
 
                 get_sub_value(tmp, tag_str, vm_id)
 
-    return tmp.tag
+    return dict(sorted(tmp.tag.items()))
 
 
 def get_hv_item_tag(config_file, branch_tag, tag_str=''):

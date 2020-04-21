@@ -42,6 +42,11 @@ def main(args):
     common.get_vm_num(params['--scenario'])
     common.get_vm_types()
 
+    if common.VM_COUNT > common.MAX_VM_NUM:
+        err_dic['vm count'] = "The vm count in config xml should be less or equal {}!".format(common.MAX_VM_NUM)
+        return err_dic
+
+    # check if this is the scenario config which matched board info
     # get board name
     (err_dic, board) = common.get_board_name()
     if err_dic:
@@ -99,7 +104,7 @@ def main(args):
     return err_dic
 
 
-def ui_entry_api(board_info, scenario_info, out):
+def ui_entry_api(board_info, scenario_info, out=''):
 
     arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--out', out]
 
