@@ -37,6 +37,7 @@
 					"i915.avail_planes_per_pipe=0x010700 "	\
 					"i915.domain_plane_owners=0x011100001111 " \
 					"i915.enable_gvt=1 "	\
+					SOS_IDLE \
 					SOS_BOOTARGS_DIFF
 
 #define VM2_CONFIG_VCPU_AFFINITY	{AFFINITY_CPU(2U)}
