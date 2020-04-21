@@ -84,7 +84,7 @@ class XmlConfig:
         :return: None.
         :raises: ValueError, OSError, SyntaxError.
         """
-        if self._xml_path is None:
+        if self._xml_path is None or xml is None:
             return
         try:
             self._curr_xml = xml
