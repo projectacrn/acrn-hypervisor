@@ -272,17 +272,17 @@ basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 		EFPRINTF(fp, "\n");
 	}
 
-	if (!is_rtvm) {
-		/* Always a single IOAPIC entry, with ID 0 */
-		EFPRINTF(fp, "[0001]\t\tSubtable Type : 01\n");
-		EFPRINTF(fp, "[0001]\t\tLength : 0C\n");
-		/* iasl expects a hex value for the i/o apic id */
-		EFPRINTF(fp, "[0001]\t\tI/O Apic ID : %02x\n", 0);
-		EFPRINTF(fp, "[0001]\t\tReserved : 00\n");
-		EFPRINTF(fp, "[0004]\t\tAddress : fec00000\n");
-		EFPRINTF(fp, "[0004]\t\tInterrupt : 00000000\n");
-		EFPRINTF(fp, "\n");
+	/* Always a single IOAPIC entry, with ID 0 */
+	EFPRINTF(fp, "[0001]\t\tSubtable Type : 01\n");
+	EFPRINTF(fp, "[0001]\t\tLength : 0C\n");
+	/* iasl expects a hex value for the i/o apic id */
+	EFPRINTF(fp, "[0001]\t\tI/O Apic ID : %02x\n", 0);
+	EFPRINTF(fp, "[0001]\t\tReserved : 00\n");
+	EFPRINTF(fp, "[0004]\t\tAddress : fec00000\n");
+	EFPRINTF(fp, "[0004]\t\tInterrupt : 00000000\n");
+	EFPRINTF(fp, "\n");
 
+	if (!is_rtvm) {
 		/* Legacy IRQ0 is connected to pin 2 of the IOAPIC */
 		EFPRINTF(fp, "[0001]\t\tSubtable Type : 02\n");
 		EFPRINTF(fp, "[0001]\t\tLength : 0A\n");

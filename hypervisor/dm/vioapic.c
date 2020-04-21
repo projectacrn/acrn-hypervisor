@@ -150,7 +150,6 @@ vgsi_to_vioapic_and_vpin(const struct acrn_vm *vm, uint32_t vgsi, uint32_t *vpin
  *
  * @pre vgsi < get_vm_gsicount(vm)
  * @pre vm != NULL
- * @pre vioapic->ready == true
  * @return None
  */
 void
@@ -204,11 +203,9 @@ vioapic_set_irqline_lock(const struct acrn_vm *vm, uint32_t vgsi, uint32_t opera
 	struct acrn_single_vioapic *vioapic;
 
 	vioapic = vgsi_to_vioapic_and_vpin(vm, vgsi, NULL);
-	if (vioapic->ready) {
-		spinlock_irqsave_obtain(&(vioapic->lock), &rflags);
-		vioapic_set_irqline_nolock(vm, vgsi, operation);
-		spinlock_irqrestore_release(&(vioapic->lock), rflags);
-	}
+	spinlock_irqsave_obtain(&(vioapic->lock), &rflags);
+	vioapic_set_irqline_nolock(vm, vgsi, operation);
+	spinlock_irqrestore_release(&(vioapic->lock), rflags);
 }
 
 static uint32_t
@@ -420,7 +417,6 @@ vioapic_mmio_rw(struct acrn_single_vioapic *vioapic, uint64_t gpa,
 
 /*
  * @pre vm != NULL
- * @pre vioapic->ready == true
  */
 static void
 vioapic_process_eoi(struct acrn_single_vioapic *vioapic, uint32_t vector)
@@ -537,7 +533,6 @@ vioapic_init(struct acrn_vm *vm)
 		register_mmio_emulation_handler(vm, vioapic_mmio_access_handler, (uint64_t)vioapic->chipinfo.addr,
 					(uint64_t)vioapic->chipinfo.addr + VIOAPIC_SIZE, (void *)vioapic, false);
 		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, (uint64_t)vioapic->chipinfo.addr, VIOAPIC_SIZE);
-		vioapic->ready = true;
 	}
 
 	/*
@@ -557,7 +552,6 @@ get_vm_gsicount(const struct acrn_vm *vm)
 
 /*
  * @pre handler_private_data != NULL
- * @pre vioapic->ready == true
  */
 int32_t vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
 {
