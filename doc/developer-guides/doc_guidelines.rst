@@ -533,6 +533,83 @@ We've also included the ``graphviz`` Sphinx extension to let you use a text
 description language to render drawings.  See :ref:`graphviz-examples` for more
 information.
 
+Alternative Tabbed Content
+**************************
+
+Instead of creating multiple documents with common material except for
+some specific sections, you can write one document and provide alternative
+content to the reader via a tabbed interface. When the reader clicks on
+a tab, the content for that tab is displayed, for example::
+
+   .. tabs::
+
+      .. tab:: Apples
+
+         Apples are green, or sometimes red.
+
+      .. tab:: Pears
+
+         Pears are green.
+
+      .. tab:: Oranges
+
+         Oranges are orange.
+
+will display as:
+
+.. tabs::
+
+   .. tab:: Apples
+
+      Apples are green, or sometimes red.
+
+   .. tab:: Pears
+
+      Pears are green.
+
+   .. tab:: Oranges
+
+      Oranges are orange.
+
+Tabs can also be grouped, so that changing the current tab in one area
+changes all tabs with the same name throughout the page.  For example:
+
+.. tabs::
+
+   .. group-tab:: Linux
+
+      Linux Line 1
+
+   .. group-tab:: macOS
+
+      macOS Line 1
+
+   .. group-tab:: Windows
+
+      Windows Line 1
+
+.. tabs::
+
+   .. group-tab:: Linux
+
+      Linux Line 2
+
+   .. group-tab:: macOS
+
+      macOS Line 2
+
+   .. group-tab:: Windows
+
+      Windows Line 2
+
+In this latter case, we're using a ``.. group-tab::`` directive instead of
+a ``.. tab::`` directive.  Under the hood, we're using the `sphinx-tabs
+<https://github.com/djungelorm/sphinx-tabs>`_ extension that's included
+in the ACRN (requirements.txt)  setup.  Within a tab, you can have most
+any content *other than a heading* (code-blocks, ordered and unordered
+lists, pictures, paragraphs, and such).  You can read more about
+sphinx-tabs from the link above.
+
 Instruction Steps
 *****************
 
