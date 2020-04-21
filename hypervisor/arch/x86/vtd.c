@@ -547,7 +547,7 @@ static void dmar_issue_qi_request(struct dmar_drhd_rt *dmar_unit, struct dmar_en
 {
 	struct dmar_entry *invalidate_desc_ptr;
 	uint32_t qi_status = 0U;
-	__unused uint64_t start;
+	uint64_t start;
 
 	invalidate_desc_ptr = (struct dmar_entry *)(dmar_unit->qi_queue + dmar_unit->qi_tail);
 
@@ -565,12 +565,10 @@ static void dmar_issue_qi_request(struct dmar_drhd_rt *dmar_unit, struct dmar_en
 	iommu_write32(dmar_unit, DMAR_IQT_REG, dmar_unit->qi_tail);
 
 	start = rdtsc();
-	while (qi_status == DMAR_INV_STATUS_INCOMPLETE) {
-		if (qi_status == DMAR_INV_STATUS_COMPLETED) {
-			break;
-		}
+	while (qi_status != DMAR_INV_STATUS_COMPLETED) {
 		if ((rdtsc() - start) > CYCLES_PER_MS) {
 			pr_err("DMAR OP Timeout! @ %s", __func__);
+			break;
 		}
 		asm_pause();
 	}
