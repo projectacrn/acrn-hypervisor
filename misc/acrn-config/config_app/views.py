@@ -204,7 +204,7 @@ def save_scenario():
                         break
             for vm in generic_scenario_config_root.getchildren():
                 if vm.tag == 'vm':
-                    for i in range(0, 7):
+                    for i in range(0, 8):
                         if str(i) not in vm_list:
                             break
                     vm.attrib['id'] = str(i)
@@ -215,6 +215,9 @@ def save_scenario():
         elif generator.startswith('remove_vm:'):
             remove_vm_id = generator.split(':')[1]
             scenario_config.delete_curr_key('vm:id='+remove_vm_id.strip())
+
+    scenario_config.set_curr_attr('board', board_type)
+    scenario_config.set_curr_attr('scenario', scenario_config_data['new_scenario_name'])
 
     tmp_scenario_file = os.path.join(scenario_path, 'user_defined',
                                      'tmp_'+scenario_config_data['new_scenario_name']+'.xml')
@@ -305,12 +308,7 @@ def save_launch():
                             break
                     vm.attrib['id'] = str(i)
                     vm_to_add.append(vm)
-            # print('-'*100)
-            # print(generator)
-            # print(vm_list)
-            # print(curr_vm_id)
-            # print(curr_vm_index)
-            # print(i)
+
             for vm in vm_to_add:
                 launch_config.insert_curr_elem(curr_vm_index, vm)
         elif generator.startswith('remove_vm:'):
@@ -322,6 +320,9 @@ def save_launch():
                                       current_app.config.get('BOARD_TYPE'),
                                       'user_defined', scenario_name + '.xml')
     launch_config.set_curr_attr('scenario', scenario_name)
+    launch_config.set_curr_attr('board', current_app.config.get('BOARD_TYPE'))
+
+    launch_config.set_curr_attr('uos_launcher', str(len(launch_config.get_curr_root().getchildren())))
 
     tmp_launch_file = os.path.join(current_app.config.get('CONFIG_PATH'), xml_configs[1],
                                    'user_defined',
