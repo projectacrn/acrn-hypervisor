@@ -200,11 +200,11 @@ def main(args):
     board_name = names['board_name']
     if output_folder:
         if os.path.isabs(output_folder):
-            output = output_folder + '/' + board_name + '/output/'
+            output = os.path.join(output_folder + '/' + board_name, 'output/')
         else:
-            output = ACRN_PATH  + board_name + '/output/'
+            output = os.path.join(ACRN_PATH + output_folder + '/' + board_name, 'output/')
     else:
-        output = ACRN_CONFIG_DEF + '/' + board_name + '/output/'
+        output = os.path.join(ACRN_CONFIG_DEF + board_name, 'output/')
     common.mkdir(output)
 
     # generate launch script

@@ -56,14 +56,14 @@ def main(args):
 
     if params['--out']:
         if os.path.isabs(params['--out']):
-            board_dir = params['--out'] + board + '/'
-            config_board_kconfig = board_dir + GEN_FILE[4]
+            board_dir = os.path.join(params['--out'], board + '/')
+            config_board_kconfig = os.path.join(board_dir,  GEN_FILE[4])
         else:
-            board_dir = ACRN_PATH + params['--out'] + board + '/'
-            config_board_kconfig = board_dir + GEN_FILE[4]
+            board_dir = os.path.join(ACRN_PATH + params['--out'], board + '/')
+            config_board_kconfig = os.path.join(board_dir, GEN_FILE[4])
     else:
-        board_dir = ACRN_CONFIG_DEF + board + '/'
-        config_board_kconfig = board_dir + GEN_FILE[4]
+        board_dir = os.path.join(ACRN_CONFIG_DEF, board + '/')
+        config_board_kconfig = os.path.join(board_dir, GEN_FILE[4])
     common.mkdir(board_dir)
 
     config_pci = board_dir + GEN_FILE[0]
