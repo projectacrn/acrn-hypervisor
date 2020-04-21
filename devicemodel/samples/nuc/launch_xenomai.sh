@@ -6,10 +6,11 @@
 
 usage()
 {
-	echo "$0 [-b disk | -f img] [-k kernel.tar.gz] {-n ethernet} {-B mem_size}"
+	echo "$0 [-b disk | -f img] [-k kernel.tar.gz] {-n ethernet} {-B mem_size} {-r}"
 	echo "   example:"
 	echo "   $0 -b /dev/sdb3 -k ~/linux-4.19.tar.gz -n eth0"
 	echo "   $0 -f clearlinux.img -k ../linux-5.2.tar -n eth0 -B 512M"
+	echo "   $0 -f clearlinux.img -k ../linux-5.2.tar -n eth0 -r # restore passthroughed eth0 when script returns"
 	exit
 }
 
@@ -83,20 +84,21 @@ function de_passthru_pci_devs()
 	done
 }
 
-# restore pci device driver on exit
-trap de_passthru_pci_devs EXIT
-
 mem_size=1024M
 eth=
 disk=
 img=
 kernel=
 passthrus=()
-while getopts hn:b:f:k:B: opt
+while getopts hn:b:f:k:B:r opt
 do
 	case "${opt}" in
 		h)
 			usage;
+			;;
+		r)
+			# restore pci device driver on exit
+			trap de_passthru_pci_devs EXIT
 			;;
 		n)
 			eth=${OPTARG}
