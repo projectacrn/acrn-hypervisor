@@ -23,6 +23,12 @@
 #define MAX_VM_OS_NAME_LEN	32U
 #define MAX_MOD_TAG_LEN		32U
 
+#ifdef CONFIG_SCHED_NOOP
+#define SOS_IDLE		""
+#else
+#define SOS_IDLE		"idle=halt "
+#endif
+
 #define PCI_DEV_TYPE_PTDEV	(1U << 0U)
 #define PCI_DEV_TYPE_HVEMUL	(1U << 1U)
 #define PCI_DEV_TYPE_SOSEMUL	(1U << 2U)
