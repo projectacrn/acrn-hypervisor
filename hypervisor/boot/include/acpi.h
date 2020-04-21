@@ -56,6 +56,7 @@
 #define ACPI_SIG_MADT            "APIC" /* Multiple APIC Description Table */
 #define ACPI_SIG_DMAR            "DMAR"
 #define ACPI_SIG_MCFG            "MCFG" /* Memory Mapped Configuration table */
+#define ACPI_SIG_DSDT            "DSDT" /* Differentiated System Description Table */
 
 struct packed_gas {
 	uint8_t 	space_id;
@@ -119,6 +120,23 @@ struct acpi_table_xsdt {
 	struct acpi_table_header    header;
 	/* Array of pointers to ACPI tables */
 	uint64_t                    table_offset_entry[1];
+} __packed;
+
+struct acpi_table_fadt {
+	struct acpi_table_header header;/* Common ACPI table header */
+	uint32_t facs;			/* 32-bit physical address of FACS */
+	uint32_t dsdt;			/* 32-bit physical address of DSDT */
+	uint8_t unused0[12];		/* ACRN doesn't use these fields */
+	uint32_t pm1a_event_block;	/* 32-bit port address of Power Mgt 1a Event Reg Blk */
+	uint32_t pm1b_event_block;	/* 32-bit port address of Power Mgt 1b Event Reg Blk */
+	uint32_t pm1a_control_block;	/* 32-bit port address of Power Mgt 1a Control Reg Blk */
+	uint32_t pm1b_control_block;	/* 32-bit port address of Power Mgt 1b Control Reg Blk */
+	uint8_t unused1[16];		/* ACRN doesn't use these fields */
+	uint8_t pm1_event_length;	/* Byte Length of ports at pm1x_event_block */
+	uint8_t pm1_control_length;	/* Byte Length of ports at pm1x_control_block */
+	uint8_t unused2[22];		/* ACRN doesn't use these fields */
+	uint32_t flags;			/* Miscellaneous flag bits (see below for individual flags) */
+	uint8_t unused3[128];		/* ACRN doesn't use these fields */
 } __packed;
 
 struct acpi_table_madt {
