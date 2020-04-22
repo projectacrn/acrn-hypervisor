@@ -73,7 +73,7 @@ using LAPIC passthrough. A few exceptions exist:
 - NMI - ACRN uses NMI for system-level notification.
 
 You should avoid VM-exits triggered by operations initiated by the
-vCPU. Refer to the `Intel Software Developer Manuals (SMD)
+vCPU. Refer to the `Intel Software Developer Manuals (SDM)
 <https://software.intel.com/en-us/articles/intel-sdm>`_ "Instructions
 Cause VM-exits Unconditionally" (SDM V3, 25.1.2) and "Instructions That
 Cause VM-exits Conditionally" (SDM V3, 25.1.3).
@@ -130,7 +130,7 @@ Tip: Utilize Preempt-RT Linux mechanisms to reduce the access of ICR from the RT
 
    .. note::
       If an ICR access is inevitable within the RT critical section, be
-      aware of the extra 3~4 microsecont latency for each access.
+      aware of the extra 3~4 microsecond latency for each access.
 
 Tip: Create and initialize the RT tasks at the beginning to avoid runtime access to control registers.
    Accessing Control Registers is another cause of a VM-exit. An ACRN access
