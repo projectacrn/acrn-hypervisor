@@ -24,3 +24,4 @@ Hypervisor high-level design
    Hypercall / VHM upcall <hv-hypercall>
    Compile-time configuration <hv-config>
    RDT support <hv-rdt>
+   Split-locked Access handling <hld-splitlock>
