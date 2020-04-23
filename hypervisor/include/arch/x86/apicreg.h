@@ -435,6 +435,9 @@ union ioapic_rte {
 #define IOAPIC_REDTBL22		(IOAPIC_REDTBL+0x2cU)
 #define IOAPIC_REDTBL23		(IOAPIC_REDTBL+0x2eU)
 
+#define IOAPIC_ID_MASK		0x0f000000U
+#define IOAPIC_ID_SHIFT		24U
+
 /* fields in VER, for redirection entry */
 #define IOAPIC_MAX_RTE_MASK	0x00ff0000U
 #define MAX_RTE_SHIFT		16U

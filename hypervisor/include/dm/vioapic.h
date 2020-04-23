@@ -38,6 +38,7 @@
  */
 
 #include <apicreg.h>
+#include <ioapic.h>
 #include <util.h>
 
 #define	VIOAPIC_BASE	0xFEC00000UL
@@ -55,10 +56,7 @@
 struct acrn_single_vioapic {
 	spinlock_t	mtx;
 	struct acrn_vm  *vm;
-	uint32_t	base_addr;
-	uint32_t	nr_pins;
-	uint32_t	gsi_base;
-	uint32_t	id;
+	struct ioapic_info chipinfo;
 	bool		ready;
 	uint32_t	ioregsel;
 	union ioapic_rte rtbl[REDIR_ENTRIES_HW];
