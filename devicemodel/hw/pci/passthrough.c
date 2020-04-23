@@ -59,9 +59,9 @@
 
 #define PCI_BDF_GPU			0x00000010	/* 00:02.0 */
 
-#define GPU_GSM_SIZE			0x4000000
-/* set gsm gpa=0xDB000000, which is reserved in e820 table */
-#define GPU_GSM_GPA  			0xDB000000
+#define GPU_DSM_SIZE			0x4000000
+/* set dsm gpa=0xDB000000, which is reserved in e820 table */
+#define GPU_DSM_GPA  			0xDB000000
 
 #define GPU_OPREGION_SIZE		0x3000
 /* set opregion gpa=0xDFFFD000, which is reserved in e820 table.
@@ -77,7 +77,7 @@ extern uint64_t audio_nhlt_len;
 static int pciaccess_ref_cnt;
 static pthread_mutex_t ref_cnt_mtx = PTHREAD_MUTEX_INITIALIZER;
 
-uint32_t gsm_start_hpa = 0;
+uint32_t dsm_start_hpa = 0;
 uint32_t opregion_start_hpa = 0;
 
 struct passthru_dev {
@@ -524,12 +524,12 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		goto done;
 
 	if (ptdev->phys_bdf == PCI_BDF_GPU) {
-		uint32_t gsm_phys, opregion_phys;
-		/* get gsm hpa */
-		gsm_phys = read_config(ptdev->phys_dev, PCIR_BDSM, 4);
-		gsm_start_hpa = gsm_phys & PCIM_BDSM_GSM_MASK;
-		/* initialize the EPT mapping for passthrough GPU gsm region */
-		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_GSM_GPA, GPU_GSM_SIZE, gsm_start_hpa);
+		uint32_t dsm_phys, opregion_phys;
+		/* get dsm hpa */
+		dsm_phys = read_config(ptdev->phys_dev, PCIR_BDSM, 4);
+		dsm_start_hpa = dsm_phys & PCIM_BDSM_MASK;
+		/* initialize the EPT mapping for passthrough GPU dsm region */
+		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_DSM_GPA, GPU_DSM_SIZE, dsm_start_hpa);
 
 		/* get opregion hpa */
 		opregion_phys = read_config(ptdev->phys_dev, PCIR_ASLS_CTL, 4);
@@ -537,7 +537,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		/* initialize the EPT mapping for passthrough GPU opregion */
 		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
 
-		pci_set_cfgdata32(dev, PCIR_BDSM, GPU_GSM_GPA | (gsm_phys & ~PCIM_BDSM_GSM_MASK));
+		pci_set_cfgdata32(dev, PCIR_BDSM, GPU_DSM_GPA | (dsm_phys & ~PCIM_BDSM_MASK));
 		pci_set_cfgdata32(dev, PCIR_ASLS_CTL, GPU_OPREGION_GPA | (opregion_phys & ~PCIM_ASLS_OPREGION_MASK));
 
 		pcidev.type = QUIRK_PTDEV;
@@ -608,7 +608,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	if (ptdev->phys_bdf == PCI_BDF_GPU) {
-		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, GPU_GSM_GPA, GPU_GSM_SIZE, gsm_start_hpa);
+		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, GPU_DSM_GPA, GPU_DSM_SIZE, dsm_start_hpa);
 		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
 	}
 
