@@ -209,40 +209,6 @@ local_parse_madt(struct acpi_table_madt *madt, uint32_t lapic_id_array[MAX_PCPU_
 	return pcpu_num;
 }
 
-static uint8_t
-ioapic_parse_madt(void *madt, struct ioapic_info *ioapic_id_array)
-{
-	struct acpi_madt_ioapic *ioapic;
-	struct acpi_table_madt *madt_ptr;
-	void *first, *end, *iterator;
-	struct acpi_subtable_header *entry;
-	uint8_t ioapic_idx = 0U;
-
-	madt_ptr = (struct acpi_table_madt *)madt;
-
-	first = madt_ptr + 1;
-	end = (void *)madt_ptr + madt_ptr->header.length;
-
-	for (iterator = first; (iterator) < (end); iterator += entry->length) {
-		entry = (struct acpi_subtable_header *)iterator;
-		if (entry->length < sizeof(struct acpi_subtable_header)) {
-			break;
-		}
-
-		if (entry->type == ACPI_MADT_TYPE_IOAPIC) {
-			ioapic = (struct acpi_madt_ioapic *)iterator;
-			if (ioapic_idx < CONFIG_MAX_IOAPIC_NUM) {
-				ioapic_id_array[ioapic_idx].id = ioapic->id;
-				ioapic_id_array[ioapic_idx].addr = ioapic->addr;
-				ioapic_id_array[ioapic_idx].gsi_base = ioapic->gsi_base;
-			}
-			ioapic_idx++;
-		}
-	}
-
-	return ioapic_idx;
-}
-
 /* The lapic_id info gotten from madt will be returned in lapic_id_array */
 uint16_t parse_madt(uint32_t lapic_id_array[MAX_PCPU_NUM])
 {
@@ -263,17 +229,31 @@ uint16_t parse_madt(uint32_t lapic_id_array[MAX_PCPU_NUM])
 
 uint8_t parse_madt_ioapic(struct ioapic_info *ioapic_id_array)
 {
-	uint8_t ret = 0U;
-	struct acpi_table_rsdp *rsdp = NULL;
+	uint8_t ioapic_idx = 0U;
+	uint64_t entry, end;
+	const struct acpi_madt_ioapic *ioapic;
+	const struct acpi_table_madt *madt;
 
-	rsdp = get_rsdp();
-	if (rsdp != NULL) {
-		void *madt = get_acpi_tbl(ACPI_SIG_MADT);
+	if (get_rsdp() != NULL) {
+		madt = (const struct acpi_table_madt *)get_acpi_tbl(ACPI_SIG_MADT);
 
 		if (madt != NULL) {
-			ret = ioapic_parse_madt(madt, ioapic_id_array);
+			end = (uint64_t)madt + madt->header.length;
+
+			for (entry = (uint64_t)(madt + 1); entry < end; entry += ioapic->header.length) {
+				ioapic = (const struct acpi_madt_ioapic *)entry;
+
+				if (ioapic->header.type == ACPI_MADT_TYPE_IOAPIC) {
+					if (ioapic_idx < CONFIG_MAX_IOAPIC_NUM) {
+						ioapic_id_array[ioapic_idx].id = ioapic->id;
+						ioapic_id_array[ioapic_idx].addr = ioapic->addr;
+						ioapic_id_array[ioapic_idx].gsi_base = ioapic->gsi_base;
+					}
+					ioapic_idx++;
+				}
+			}
 		}
 	}
 
-	return ret;
+	return ioapic_idx;
 }
