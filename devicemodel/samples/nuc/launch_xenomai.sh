@@ -189,6 +189,9 @@ fi
 
 passthru_pci_devs
 
+#logger_setting, format: logger_name,level; like following
+logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"
+
 /usr/bin/acrn-dm -A -m $mem_size -s 0:0,hostbridge \
 -k /tmp/bzImage.xenomai \
 -U 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 \
@@ -197,6 +200,7 @@ passthru_pci_devs
 --virtio_poll 1000000 \
 -s 1,virtio-console,@stdio:stdio_port \
 $dev_opts \
+$logger_setting \
 -B "root=$vdisk rw rootwait nohpet console=hvc0 consoleblank=0 \
 no_timer_check ignore_loglevel log_buf_len=16M nmi_watchdog=0 nosoftlockup \
 processor.max_cstate=0 intel_idle.max_cstate=0 intel_pstate=disable idle=poll \
