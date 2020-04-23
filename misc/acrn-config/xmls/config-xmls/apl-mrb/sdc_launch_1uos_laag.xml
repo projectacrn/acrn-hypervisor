@@ -6,9 +6,11 @@
 	<gvt_args desc="GVT arguments. Recommendation is 64 448 8. Leave it blank to disable GVT.">64 448 8</gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<vuart0 desc="vUART0 which emulated by device model">Enable</vuart0>
-	<cpu_sharing desc="Whether the binding pCPUs are sharing with other VMs.">Disabled</cpu_sharing>
 	<poweroff_channel desc="the method of power off uos">IOC</poweroff_channel>
 	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"></usb_xhci>
+	<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
+		<pcpu_id></pcpu_id>
+	</cpu_affinity>
 
 	<passthrough_devices>
 		<usb_xdci desc="vm usb_xdci device">00:15.1 USB controller: Intel Corporation Device 5aaa (rev 0b)</usb_xdci>
