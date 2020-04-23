@@ -7,6 +7,7 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
 from launch_item import AvailablePthru, PthruSelected, VirtioDeviceSelect, AcrnDmArgs
+import board_cfg_lib
 import launch_cfg_lib
 import com
 import common
@@ -47,8 +48,8 @@ def get_launch_item_values(board_info):
 
     launch_item_values["uos,vbootloader"] = launch_cfg_lib.BOOT_TYPE
     launch_item_values['uos,vuart0'] = launch_cfg_lib.DM_VUART0
-    launch_item_values['uos,cpu_sharing'] = launch_cfg_lib.CPU_SHARING
     launch_item_values['uos,poweroff_channel'] = launch_cfg_lib.PM_CHANNEL
+    launch_item_values["uos,cpu_affinity"] = board_cfg_lib.get_processor_info()
 
     return launch_item_values
 

@@ -6,6 +6,7 @@
 import common
 import board_cfg_lib
 import launch_cfg_lib
+import scenario_cfg_lib
 
 class AcrnDmArgs:
     args = {}
@@ -22,9 +23,9 @@ class AcrnDmArgs:
         self.args["gvt_args"] = common.get_leaf_tag_map(self.launch_info, "gvt_args")
         self.args["vbootloader"] = common.get_leaf_tag_map(self.launch_info, "vbootloader")
         self.args["vuart0"] = common.get_leaf_tag_map(self.launch_info, "vuart0")
-        self.args["cpu_sharing"] = common.get_leaf_tag_map(self.launch_info, "cpu_sharing")
+        self.args["cpu_sharing"] = common.get_hv_item_tag(self.scenario_info, "FEATURES", "SCHEDULER")
         self.args["pm_channel"] = common.get_leaf_tag_map(self.launch_info, "poweroff_channel")
-        self.args["off_pcpus"] = common.get_leaf_tag_map(self.scenario_info, "cpu_affinity", "pcpu_id")
+        self.args["cpu_affinity"] = common.get_leaf_tag_map(self.launch_info, "cpu_affinity", "pcpu_id")
         self.args["xhci"] = common.get_leaf_tag_map(self.launch_info, "usb_xhci")
 
     def check_item(self):
@@ -34,7 +35,8 @@ class AcrnDmArgs:
         launch_cfg_lib.mem_size_check(self.args["mem_size"], "mem_size")
         launch_cfg_lib.args_aval_check(self.args["vbootloader"], "vbootloader", launch_cfg_lib.BOOT_TYPE)
         launch_cfg_lib.args_aval_check(self.args["vuart0"], "vuart0", launch_cfg_lib.DM_VUART0)
-        launch_cfg_lib.cpu_sharing_check(self.args["cpu_sharing"], "cpu_sharing")
+        err_dic = scenario_cfg_lib.cpus_per_vm_check(self.launch_info, self.args["cpu_affinity"], "pcpu_id")
+        launch_cfg_lib.ERR_LIST.update(err_dic)
 
 
 class AvailablePthru():

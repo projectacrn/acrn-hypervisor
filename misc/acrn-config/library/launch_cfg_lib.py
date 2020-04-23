@@ -13,7 +13,6 @@ ERR_LIST = {}
 BOOT_TYPE = ['no', 'vsbl', 'ovmf']
 RTOS_TYPE = ['no', 'Soft RT', 'Hard RT']
 DM_VUART0 = ['Disable', 'Enable']
-CPU_SHARING = ['Disabled', 'Enabled']
 UOS_TYPES = ['CLEARLINUX', 'ANDROID', 'ALIOS', 'PREEMPT-RT LINUX', 'VXWORKS', 'WINDOWS', 'ZEPHYR', 'GENERIC LINUX']
 
 PT_SUB_PCI = {}
@@ -485,45 +484,6 @@ def check_block_mount(virtio_blk_dic):
                 mount_flags.append(False)
 
         MOUNT_FLAG_DIC[vmid] = mount_flags
-
-
-def cpu_sharing_check(cpu_sharing, item):
-    """
-    Check cpu sharing status with cpu affinity setting
-    :param cpu_share_status:
-    :param item:
-    :return: None
-    """
-    use_cpus = []
-    use_same_cpu = False
-    vm_cpu_share = []
-    vm_cpu_share_consistent = True
-
-    cpu_affinity = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "cpu_affinity", "pcpu_id")
-    for vm_i in cpu_affinity.keys():
-        for cpu in cpu_affinity[vm_i]:
-            if cpu in use_cpus:
-                use_same_cpu = True
-            else:
-                use_cpus.append(cpu)
-
-    for vm_i in cpu_sharing.keys():
-        cpu_share = cpu_sharing[vm_i]
-        stat_len = len(vm_cpu_share)
-        if stat_len != 0 and cpu_share not in vm_cpu_share:
-            vm_cpu_share_consistent = False
-        else:
-            vm_cpu_share.append(cpu_share)
-
-        if not vm_cpu_share_consistent:
-            key = "uos:id={},{}".format(vm_i, item)
-            ERR_LIST[key] = "CPU sharing for all VMs should be consistent to 'Disabled' or 'Enabled'"
-            return
-
-        if cpu_sharing[vm_i] == "Disabled" and use_same_cpu:
-            key = "uos:id={},{}".format(vm_i, item)
-            ERR_LIST[key] = "The same pcpu was configurated in scenario config, and not allow to set the cpu_sharing to 'Disabled'!"
-            return
 
 
 def bdf_duplicate_check(bdf_dic):
