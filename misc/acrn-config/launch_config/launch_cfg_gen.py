@@ -21,6 +21,7 @@ def get_launch_item_values(board_info):
     Get items which capable multi select for user
     :param board_info: it is a file what contains board information for script to read from
     """
+    common.BOARD_INFO_FILE = board_info
     launch_item_values = {}
 
     # passthrough devices
