@@ -21,10 +21,9 @@
 #define SOS_COM2_IRQ		10U
 
 #ifndef CONFIG_RELEASE
-#define BOOTARG_DEBUG		"hvlog=2M@0x6de00000 "	\
-				"memmap=0x200000$0x6de00000 "	\
-				"memmap=0x400000$0x6da00000 "	\
-				"ramoops.mem_address=0x6da00000 "	\
+#define BOOTARG_DEBUG		"hvlog=2M@0xe00000 "	\
+				"memmap=0x600000$0xa00000 "	\
+				"ramoops.mem_address=0xa00000 "	\
 				"ramoops.mem_size=0x400000 "	\
 				"ramoops.console_size=0x200000 "	\
 				"reboot_panic=p,w "
