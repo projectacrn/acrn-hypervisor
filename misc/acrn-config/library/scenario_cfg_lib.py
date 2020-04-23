@@ -200,25 +200,47 @@ def guest_flag_check(guest_flags, branch_tag, leaf_tag):
                 ERR_LIST[key] = "Unknow guest flag"
 
 
-def cpus_per_vm_check(id_cpus_per_vm_dic, item):
+def cpus_per_vm_check(config_file, id_cpus_per_vm_dic, item):
     """
     Check cpu number of per vm
     :param item: vm pcpu_id item in xml
-    :return: None
+    :return: error informations
     """
+    err_dic = {}
+    use_cpus = []
+    cpu_sharing_enabled = True
+
+    cpu_sharing = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "SCHEDULER")
+    if cpu_sharing == "SCHED_NOOP":
+        cpu_sharing_enabled = False
+
+    cpu_affinity = common.get_leaf_tag_map(config_file, "cpu_affinity", "pcpu_id")
+    for vm_i in id_cpus_per_vm_dic.keys():
+        for cpu in id_cpus_per_vm_dic[vm_i]:
+            if cpu in use_cpus and not cpu_sharing_enabled:
+                key = "vm:id={},{}".format(vm_i, item)
+                err_dic[key] = "The same pcpu was configurated in <pcpu_id>/<cpu_affinity>, but CPU sharing is disabled by 'SCHED_NOOP'. Please re-configurate them!"
+                return err_dic
+            else:
+                use_cpus.append(cpu)
+
     for vm_i, vm_type in common.VM_TYPES.items():
         if vm_i not in id_cpus_per_vm_dic.keys() and "SOS_VM" == VM_DB[vm_type]['load_type']:
             continue
         elif vm_i not in id_cpus_per_vm_dic.keys() and VM_DB[vm_type]['load_type'] in ("PRE_LAUNCHED_VM", "POST_LAUNCHED_VM"):
             key = "vm:id={},{}".format(vm_i, item)
-            ERR_LIST[key] = "Pre launched_vm and Post launched vm should have cpus assignment"
-            return
+            err_dic[key] = "Pre launched_vm and Post launched vm should have cpus assignment"
+            return err_dic
 
+        # duplicate cpus assign the same VM check
         cpus_vm_i = id_cpus_per_vm_dic[vm_i]
-        if not cpus_vm_i:
-            key = "vm:id={},{}".format(vm_i, item)
-            ERR_LIST[key] = "{} VM have no assignment cpus".format(vm_type)
-            return
+        for cpu_id in cpus_vm_i:
+            if cpus_vm_i.count(cpu_id) >= 2:
+                key = "vm:id={},{}".format(vm_i, item)
+                err_dic[key] = "VM should not use the same pcpu id:{}".format(cpu_id)
+                return err_dic
+
+    return err_dic
 
 
 def mem_start_hpa_check(id_start_hpa_dic, prime_item, item):
