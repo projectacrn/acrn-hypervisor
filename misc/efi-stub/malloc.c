@@ -96,7 +96,7 @@ failed:
 
 EFI_STATUS
 emalloc_reserved_aligned(EFI_PHYSICAL_ADDRESS *addr, UINTN size, UINTN align,
-		EFI_PHYSICAL_ADDRESS maxaddr)
+		EFI_PHYSICAL_ADDRESS minaddr, EFI_PHYSICAL_ADDRESS maxaddr)
 {
 	UINTN msize, mkey, desc_sz, desc_addr, pages;
 	UINT32 desc_version;
@@ -137,6 +137,10 @@ emalloc_reserved_aligned(EFI_PHYSICAL_ADDRESS *addr, UINTN size, UINTN align,
 		if (start < 4096) {
 			start = 4096;
 		}
+
+		if (start < minaddr) {
+			start = minaddr;
+		}
 		start = (start + align - 1) & ~(align - 1);
 
 		 /* Since this routine is called during booting, memory block is large
@@ -151,7 +155,6 @@ emalloc_reserved_aligned(EFI_PHYSICAL_ADDRESS *addr, UINTN size, UINTN align,
 				break;
 			}
 		}
-
 	}
 	if (desc_addr < (UINTN)mbuf) {
 		err = EFI_OUT_OF_RESOURCES;

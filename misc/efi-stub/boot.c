@@ -481,9 +481,13 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	 * hypervisor is able to do relocation, the only requirement is that
 	 * it need to reside in memory below 4GB, call emalloc_reserved_mem()
 	 * instead.
+	 *
+	 * Don't relocate hypervisor binary under 256MB, which could be where
+	 * guest Linux kernel boots from, and other usage, e.g. hvlog buffer
 	 */
 #ifdef CONFIG_RELOC
-	err = emalloc_reserved_aligned(&hv_hpa, CONFIG_HV_RAM_SIZE, 1 << 21, MEM_ADDR_4GB);
+	err = emalloc_reserved_aligned(&hv_hpa, CONFIG_HV_RAM_SIZE, 2U * MEM_ADDR_1MB,
+		256U * MEM_ADDR_1MB, MEM_ADDR_4GB);
 #else
 	err = emalloc_fixed_addr(&hv_hpa, CONFIG_HV_RAM_SIZE, CONFIG_HV_RAM_START);
 #endif
