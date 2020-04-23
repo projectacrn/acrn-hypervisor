@@ -43,7 +43,6 @@
 #define DBG_LEVEL_VIOAPIC	6U
 #define ACRN_IOAPIC_VERSION	0x11U
 
-#define IOAPIC_ID_MASK		0x0f000000U
 #define MASK_ALL_INTERRUPTS   0x0001000000010000UL
 
 static inline struct acrn_vioapics *vm_ioapics(const struct acrn_vm *vm)
@@ -52,7 +51,7 @@ static inline struct acrn_vioapics *vm_ioapics(const struct acrn_vm *vm)
 }
 
 /**
- * @pre pin < vioapic->nr_pins
+ * @pre pin < vioapic->chipinfo.nr_pins
  */
 static void
 vioapic_generate_intr(struct acrn_single_vioapic *vioapic, uint32_t pin)
@@ -85,7 +84,7 @@ vioapic_generate_intr(struct acrn_single_vioapic *vioapic, uint32_t pin)
 }
 
 /**
- * @pre pin < vioapic->nr_pins
+ * @pre pin < vioapic->chipinfo.nr_pins
  */
 static void
 vioapic_set_pinstate(struct acrn_single_vioapic *vioapic, uint32_t pin, uint32_t level)
@@ -93,7 +92,7 @@ vioapic_set_pinstate(struct acrn_single_vioapic *vioapic, uint32_t pin, uint32_t
 	uint32_t old_lvl;
 	union ioapic_rte rte;
 
-	if (pin < vioapic->nr_pins) {
+	if (pin < vioapic->chipinfo.nr_pins) {
 		rte = vioapic->rtbl[pin];
 		old_lvl = (uint32_t)bitmap_test((uint16_t)(pin & 0x3FU), &vioapic->pin_state[pin >> 6U]);
 		if (level == 0U) {
@@ -216,18 +215,18 @@ static uint32_t
 vioapic_indirect_read(const struct acrn_single_vioapic *vioapic, uint32_t addr)
 {
 	uint32_t regnum, ret = 0U;
-	uint32_t pin, pincount = vioapic->nr_pins;
+	uint32_t pin, pincount = vioapic->chipinfo.nr_pins;
 
 	regnum = addr & 0xffU;
 	switch (regnum) {
 	case IOAPIC_ID:
-		ret = vioapic->id;
+		ret = (uint32_t)vioapic->chipinfo.id << IOAPIC_ID_SHIFT;
 		break;
 	case IOAPIC_VER:
 		ret = ((pincount - 1U) << MAX_RTE_SHIFT) | ACRN_IOAPIC_VERSION;
 		break;
 	case IOAPIC_ARB:
-		ret = vioapic->id;
+		ret = (uint32_t)vioapic->chipinfo.id << IOAPIC_ID_SHIFT;
 		break;
 	default:
 		/*
@@ -261,7 +260,7 @@ static inline bool vioapic_need_intr(const struct acrn_single_vioapic *vioapic, 
 	union ioapic_rte rte;
 	bool ret = false;
 
-	if (pin < vioapic->nr_pins) {
+	if (pin < vioapic->chipinfo.nr_pins) {
 		rte = vioapic->rtbl[pin];
 		lvl = (uint32_t)bitmap_test(pin & 0x3FU, &vioapic->pin_state[pin >> 6U]);
 		ret = !!(((rte.bits.intr_polarity == IOAPIC_RTE_INTPOL_ALO) && lvl == 0U) ||
@@ -280,12 +279,12 @@ static void vioapic_indirect_write(struct acrn_single_vioapic *vioapic, uint32_t
 {
 	union ioapic_rte last, new, changed;
 	uint32_t regnum;
-	uint32_t pin, pincount = vioapic->nr_pins;
+	uint32_t pin, pincount = vioapic->chipinfo.nr_pins;
 
 	regnum = addr & 0xffUL;
 	switch (regnum) {
 	case IOAPIC_ID:
-		vioapic->id = data & IOAPIC_ID_MASK;
+		vioapic->chipinfo.id = (uint8_t)((data & IOAPIC_ID_MASK) >> IOAPIC_ID_SHIFT);
 		break;
 	case IOAPIC_VER:
 	case IOAPIC_ARB:
@@ -359,7 +358,7 @@ static void vioapic_indirect_write(struct acrn_single_vioapic *vioapic, uint32_t
 				/* VM enable intr */
 				/* NOTE: only support max 256 pin */
 				
-				(void)ptirq_intx_pin_remap(vioapic->vm, vioapic->gsi_base + pin, INTX_CTLR_IOAPIC);
+				(void)ptirq_intx_pin_remap(vioapic->vm, vioapic->chipinfo.gsi_base + pin, INTX_CTLR_IOAPIC);
 			}
 
 			/*
@@ -385,7 +384,7 @@ vioapic_mmio_rw(struct acrn_single_vioapic *vioapic, uint64_t gpa,
 	uint32_t offset;
 	uint64_t rflags;
 
-	offset = (uint32_t)(gpa - vioapic->base_addr);
+	offset = (uint32_t)(gpa - vioapic->chipinfo.addr);
 
 	spinlock_irqsave_obtain(&(vioapic->mtx), &rflags);
 
@@ -426,7 +425,7 @@ vioapic_mmio_rw(struct acrn_single_vioapic *vioapic, uint64_t gpa,
 static void
 vioapic_process_eoi(struct acrn_single_vioapic *vioapic, uint32_t vector)
 {
-	uint32_t pin, pincount = vioapic->nr_pins;
+	uint32_t pin, pincount = vioapic->chipinfo.nr_pins;
 	union ioapic_rte rte;
 	uint64_t rflags;
 
@@ -444,7 +443,7 @@ vioapic_process_eoi(struct acrn_single_vioapic *vioapic, uint32_t vector)
 			continue;
 		}
 
-		ptirq_intx_ack(vioapic->vm, vioapic->gsi_base + pin, INTX_CTLR_IOAPIC);
+		ptirq_intx_ack(vioapic->vm, vioapic->chipinfo.gsi_base + pin, INTX_CTLR_IOAPIC);
 	}
 
 	/*
@@ -490,11 +489,11 @@ static void reset_one_vioapic(struct acrn_single_vioapic *vioapic)
 	uint32_t pin, pincount;
 
 	/* Initialize all redirection entries to mask all interrupts */
-	pincount = vioapic->nr_pins;
+	pincount = vioapic->chipinfo.nr_pins;
 	for (pin = 0U; pin < pincount; pin++) {
 		vioapic->rtbl[pin].full = MASK_ALL_INTERRUPTS;
 	}
-	vioapic->id = 0U;
+	vioapic->chipinfo.id = 0U;
 	vioapic->ioregsel = 0U;
 }
 
@@ -511,60 +510,42 @@ void reset_vioapics(const struct acrn_vm *vm)
 void
 vioapic_init(struct acrn_vm *vm)
 {
-	struct ioapic_info *platform_ioapic_info;
-	uint8_t platform_ioapic_num;
+	static struct ioapic_info virt_ioapic_info = {
+		.nr_pins = VIOAPIC_RTE_NUM,
+		.addr = VIOAPIC_BASE
+	};
+
+	struct ioapic_info *vioapic_info;
 	uint8_t vioapic_index;
-	struct acrn_single_vioapic *vioapic;
+	struct acrn_single_vioapic *vioapic = NULL;
 
 	if (is_sos_vm(vm)) {
-		platform_ioapic_num = get_platform_ioapic_info(&platform_ioapic_info);
-		vm->arch_vm.vioapics.ioapic_num = platform_ioapic_num;
-		for (vioapic_index = 0U; vioapic_index < platform_ioapic_num; vioapic_index++) {
-			vioapic = &vm->arch_vm.vioapics.vioapic_array[vioapic_index];
-			spinlock_init(&(vioapic->mtx));
-			vioapic->nr_pins = platform_ioapic_info[vioapic_index].nr_pins;
-			vioapic->base_addr = platform_ioapic_info[vioapic_index].addr;
-			vioapic->gsi_base = platform_ioapic_info[vioapic_index].gsi_base;
-
-			vioapic->vm = vm;
-			reset_one_vioapic(vioapic);
-
-			register_mmio_emulation_handler(vm,
-					vioapic_mmio_access_handler,
-					(uint64_t)vioapic->base_addr,
-					(uint64_t)vioapic->base_addr + VIOAPIC_SIZE,
-					(void *)vioapic, false);
-			ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-					(uint64_t)vioapic->base_addr, VIOAPIC_SIZE);
-			vioapic->ready = true;
-		}
-		/*
-		 * Maximum number of GSI is computed as GSI base of the IOAPIC i.e. enumerated last in ACPI MADT
-		 * plus the number of interrupt pins of that IOAPIC.
-		 */
-		vm->arch_vm.vioapics.nr_gsi = platform_ioapic_info[platform_ioapic_num - 1U].gsi_base +
-						platform_ioapic_info[platform_ioapic_num - 1U].nr_pins;
+		vm->arch_vm.vioapics.ioapic_num = get_platform_ioapic_info(&vioapic_info);
 	} else {
 		vm->arch_vm.vioapics.ioapic_num = 1U;
-		vioapic = &vm->arch_vm.vioapics.vioapic_array[0U];
+		vioapic_info = &virt_ioapic_info;
+	}
+
+	for (vioapic_index = 0U; vioapic_index < vm->arch_vm.vioapics.ioapic_num; vioapic_index++) {
+		vioapic = &vm->arch_vm.vioapics.vioapic_array[vioapic_index];
 		spinlock_init(&(vioapic->mtx));
-		vioapic->nr_pins = VIOAPIC_RTE_NUM;
-		vioapic->base_addr = VIOAPIC_BASE;
-		vioapic->gsi_base = 0U;
+		vioapic->chipinfo = vioapic_info[vioapic_index];
+
 		vioapic->vm = vm;
-		reset_one_vioapic(&vm->arch_vm.vioapics.vioapic_array[0U]);
+		reset_one_vioapic(vioapic);
 
-
-		register_mmio_emulation_handler(vm,
-				vioapic_mmio_access_handler,
-				(uint64_t)vioapic->base_addr,
-				(uint64_t)vioapic->base_addr + VIOAPIC_SIZE,
-				(void *)vioapic, false);
-		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-				(uint64_t)vioapic->base_addr, VIOAPIC_SIZE);
+		register_mmio_emulation_handler(vm, vioapic_mmio_access_handler, (uint64_t)vioapic->chipinfo.addr,
+					(uint64_t)vioapic->chipinfo.addr + VIOAPIC_SIZE, (void *)vioapic, false);
+		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, (uint64_t)vioapic->chipinfo.addr, VIOAPIC_SIZE);
 		vioapic->ready = true;
+	}
 
-		vm->arch_vm.vioapics.nr_gsi = VIOAPIC_RTE_NUM;
+	/*
+	 * Maximum number of GSI is computed as GSI base of the IOAPIC i.e. enumerated last in ACPI MADT
+	 * plus the number of interrupt pins of that IOAPIC.
+	 */
+	if (vioapic != NULL) {
+		vm->arch_vm.vioapics.nr_gsi = vioapic->chipinfo.gsi_base + vioapic->chipinfo.nr_pins;
 	}
 }
 
