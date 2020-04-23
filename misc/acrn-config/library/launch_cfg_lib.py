@@ -203,20 +203,23 @@ def is_config_file_match():
     return (err_dic, match)
 
 
+def get_vm_uuid_idx(vm_type, uosid):
+
+    i_cnt = 0
+    for vm_i,vm_t in common.VM_TYPES.items():
+        if vm_t == vm_type and vm_i <= uosid:
+            i_cnt += 1
+    if i_cnt > 0:
+        i_cnt -= 1
+
+    return i_cnt
+
+
 def get_scenario_uuid(uosid):
     # {id_num:uuid} (id_num:0~max)
     scenario_uuid = ''
-    if common.VM_TYPES[uosid] == "KATA_VM" or common.VM_TYPES[uosid] == "POST_RT_VM":
-        return scenario_cfg_lib.VM_DB[common.VM_TYPES[uosid]]['uuid']
-
-    i_cnt = 0
-    for vm_i,vm_type in common.VM_TYPES.items():
-        if vm_type == "POST_STD_VM" and vm_i <= uosid:
-            i_cnt += 1
-    if i_cnt > 0:
-        i_cnt = 0
-
-    scenario_uuid = scenario_cfg_lib.VM_DB["POST_STD_VM"]['uuid'][i_cnt]
+    i_cnt = get_vm_uuid_idx(common.VM_TYPES[uosid], uosid)
+    scenario_uuid = scenario_cfg_lib.VM_DB[common.VM_TYPES[uosid]]['uuid'][i_cnt]
     return scenario_uuid
 
 
