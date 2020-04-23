@@ -96,7 +96,7 @@
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
     </vuart>
     <pci_dev_num configurable="0" desc="pci devices number">VM0_CONFIG_PCI_DEV_NUM</pci_dev_num>
-    <pci_devs configurable="0" desc="pci devices list">
+    <pci_devs desc="pci devices list">
         <pci_dev desc="pci device">00:17.0 SATA controller: Intel Corporation Sunrise Point-LP SATA Controller [AHCI mode] (rev 21)</pci_dev>
         <pci_dev desc="pci device">00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection I219-LM (rev 21)</pci_dev>
     </pci_devs>
@@ -149,7 +149,7 @@
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
     </vuart>
     <pci_dev_num configurable="0" desc="pci devices number">VM1_CONFIG_PCI_DEV_NUM</pci_dev_num>
-    <pci_devs configurable="0" desc="pci devices list">
+    <pci_devs desc="pci devices list">
         <pci_dev desc="pci device">00:14.0 USB controller: Intel Corporation Sunrise Point-LP USB 3.0 xHCI Controller (rev 21)</pci_dev>
         <pci_dev desc="pci device">01:00.0 Network controller: Intel Corporation Wireless 8265 / 8275 (rev 78)</pci_dev>
     </pci_devs>
