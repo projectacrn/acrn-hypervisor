@@ -164,7 +164,7 @@ usage(int code)
 #endif
 		"       --vsbl: vsbl file path\n"
 		"       --ovmf: ovmf file path\n"
-		"       --pcpu_list: list of pCPUs assigned to this VM\n"
+		"       --cpu_affinity: list of pCPUs assigned to this VM\n"
 		"       --part_info: guest partition info file path\n"
 		"       --enable_trusty: enable trusty for guest\n"
 		"       --debugexit: enable debug exit function\n"
@@ -719,7 +719,7 @@ sig_handler_term(int signo)
 enum {
 	CMD_OPT_VSBL = 1000,
 	CMD_OPT_OVMF,
-	CMD_OPT_PCPU_LIST,
+	CMD_OPT_CPU_AFFINITY,
 	CMD_OPT_PART_INFO,
 	CMD_OPT_TRUSTY_ENABLE,
 	CMD_OPT_VIRTIO_POLL_ENABLE,
@@ -759,7 +759,7 @@ static struct option long_options[] = {
 #endif
 	{"vsbl",		required_argument,	0, CMD_OPT_VSBL},
 	{"ovmf",		required_argument,	0, CMD_OPT_OVMF},
-	{"pcpu_list",		required_argument,	0, CMD_OPT_PCPU_LIST},
+	{"cpu_affinity",	required_argument,	0, CMD_OPT_CPU_AFFINITY},
 	{"part_info",		required_argument,	0, CMD_OPT_PART_INFO},
 	{"enable_trusty",	no_argument,		0,
 					CMD_OPT_TRUSTY_ENABLE},
@@ -877,8 +877,8 @@ main(int argc, char *argv[])
 				errx(EX_USAGE, "invalid ovmf param %s", optarg);
 			skip_pci_mem64bar_workaround = true;
 			break;
-		case CMD_OPT_PCPU_LIST:
-			if (acrn_parse_pcpu_list(optarg) != 0)
+		case CMD_OPT_CPU_AFFINITY:
+			if (acrn_parse_cpu_affinity(optarg) != 0)
 				errx(EX_USAGE, "invalid pcpu param %s", optarg);
 			break;
 		case CMD_OPT_PART_INFO:
