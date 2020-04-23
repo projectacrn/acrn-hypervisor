@@ -99,12 +99,12 @@ static void add_one_pcpu(int pcpu_id)
 
 /*
  * example options:
- *   --pcpu_list 1,2,3
- *   --pcpu_list 1-3
- *   --pcpu_list 1,3,4-6
- *   --pcpu_list 1,3,4-6,9
+ *   --cpu_affinity 1,2,3
+ *   --cpu_affinity 1-3
+ *   --cpu_affinity 1,3,4-6
+ *   --cpu_affinity 1,3,4-6,9
  */
-int acrn_parse_pcpu_list(char *opt)
+int acrn_parse_cpu_affinity(char *opt)
 {
 	char *str, *cp;
 	int pcpu_id;
