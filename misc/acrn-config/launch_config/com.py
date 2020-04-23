@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import scenario_cfg_lib
 import launch_cfg_lib
 import common
 import pt
@@ -85,10 +86,14 @@ def off_line_cpus(args, vmid, uos_type, config):
     :param uos_type: the type of UOS
     :param config: it is a file pointer to write offline cpu information
     """
-    cpus = ''
-    cpus = '..'.join(list(args["off_pcpus"][vmid]))
-    if not cpus.strip():
-        key = "launch script error:"
+    pcpu_id_list = get_cpu_affinity_list(args["cpu_affinity"], vmid)
+    if not pcpu_id_list:
+        sos_vmid = launch_cfg_lib.get_sos_vmid()
+        cpu_affinity = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "cpu_affinity", "pcpu_id")
+        pcpu_id_list = get_cpu_affinity_list(cpu_affinity, sos_vmid+vmid)
+
+    if not pcpu_id_list:
+        key = "scenario config error"
         launch_cfg_lib.ERR_LIST[key] = "No available cpu to offline and pass it to vm {}".format(vmid)
 
     print('offline_path="/sys/class/vhm/acrn_vhm"', file=config)
@@ -100,7 +105,7 @@ def off_line_cpus(args, vmid, uos_type, config):
     print('fi', file=config)
     print("", file=config)
     print("# offline pinned vCPUs from SOS before launch UOS", file=config)
-    print("for i in `ls -d /sys/devices/system/cpu/cpu[{}]`; do".format(cpus), file=config)
+    print("for i in `ls -d /sys/devices/system/cpu/cpu[{}]`; do".format('..'.join(pcpu_id_list)), file=config)
     print("        online=`cat $i/online`", file=config)
     print('        idx=`echo $i | tr -cd "[1-99]"`', file=config)
     print("        echo cpu$idx online=$online", file=config)
@@ -397,7 +402,8 @@ def launch_end(names, args, virt_io, vmid, config):
             print("", file=config)
             i += 1
 
-    if args['cpu_sharing'][vmid] == "Disabled":
+    sos_vmid = launch_cfg_lib.get_sos_vmid()
+    if args['cpu_sharing'] == "SCHED_NOOP" or common.VM_TYPES[vmid+sos_vmid] == "POST_RT_VM":
         off_line_cpus(args, vmid, uos_type, config)
 
     uos_launch(names, args, virt_io, vmid, config)
@@ -506,6 +512,22 @@ def virtio_args_set(dm, virt_io, vmid, config):
             launch_cfg_lib.virtual_dev_slot("virtio-console"),
                 virt_io['console'][vmid]), file=config)
 
+def get_cpu_affinity_list(cpu_affinity, vmid):
+    pcpu_id_list = ''
+    for uos_id,cpus in cpu_affinity.items():
+        if vmid == uos_id:
+            pcpu_id_list = [id for id in list(cpu_affinity[uos_id]) if id != None]
+    return pcpu_id_list
+
+
+def pcpu_arg_set(dm, vmid, config):
+
+    if dm['cpu_sharing'] == "SCHED_NOOP":
+        return
+    pcpu_id_list = get_cpu_affinity_list(dm["cpu_affinity"], vmid)
+    if pcpu_id_list:
+        print("   --cpu_affinity {} \\".format(','.join(pcpu_id_list)), file=config)
+
 
 def dm_arg_set(names, sel, virt_io, dm, vmid, config):
 
@@ -581,6 +603,9 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
 
     # vbootloader setting
     vboot_arg_set(dm, vmid, config)
+
+    # pcpu-list args set
+    pcpu_arg_set(dm, vmid, config)
 
     # redirect console
     if dm['vuart0'][vmid] == "Enable":
