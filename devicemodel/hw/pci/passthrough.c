@@ -402,6 +402,32 @@ pciaccess_init(void)
 }
 
 /*
+ * passthrough GPU DSM(Data Stolen Memory) and Opregion to guest
+ */
+void
+passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
+				struct acrn_assign_pcidev *pcidev)
+{
+	uint32_t dsm_phys, opregion_phys;
+	/* get dsm hpa */
+	dsm_phys = read_config(ptdev->phys_dev, PCIR_BDSM, 4);
+	dsm_start_hpa = dsm_phys & PCIM_BDSM_MASK;
+	/* initialize the EPT mapping for passthrough GPU dsm region */
+	vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_DSM_GPA, GPU_DSM_SIZE, dsm_start_hpa);
+
+	/* get opregion hpa */
+	opregion_phys = read_config(ptdev->phys_dev, PCIR_ASLS_CTL, 4);
+	opregion_start_hpa = opregion_phys & PCIM_ASLS_OPREGION_MASK;
+	/* initialize the EPT mapping for passthrough GPU opregion */
+	vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
+
+	pci_set_cfgdata32(ptdev->dev, PCIR_BDSM, GPU_DSM_GPA | (dsm_phys & ~PCIM_BDSM_MASK));
+	pci_set_cfgdata32(ptdev->dev, PCIR_ASLS_CTL, GPU_OPREGION_GPA | (opregion_phys & ~PCIM_ASLS_OPREGION_MASK));
+
+	pcidev->type = QUIRK_PTDEV;
+}
+
+/*
  * Passthrough device initialization function:
  * - initialize virtual config space
  * - read physical info via libpciaccess
@@ -523,25 +549,8 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (error < 0)
 		goto done;
 
-	if (ptdev->phys_bdf == PCI_BDF_GPU) {
-		uint32_t dsm_phys, opregion_phys;
-		/* get dsm hpa */
-		dsm_phys = read_config(ptdev->phys_dev, PCIR_BDSM, 4);
-		dsm_start_hpa = dsm_phys & PCIM_BDSM_MASK;
-		/* initialize the EPT mapping for passthrough GPU dsm region */
-		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_DSM_GPA, GPU_DSM_SIZE, dsm_start_hpa);
-
-		/* get opregion hpa */
-		opregion_phys = read_config(ptdev->phys_dev, PCIR_ASLS_CTL, 4);
-		opregion_start_hpa = opregion_phys & PCIM_ASLS_OPREGION_MASK;
-		/* initialize the EPT mapping for passthrough GPU opregion */
-		vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
-
-		pci_set_cfgdata32(dev, PCIR_BDSM, GPU_DSM_GPA | (dsm_phys & ~PCIM_BDSM_MASK));
-		pci_set_cfgdata32(dev, PCIR_ASLS_CTL, GPU_OPREGION_GPA | (opregion_phys & ~PCIM_ASLS_OPREGION_MASK));
-
-		pcidev.type = QUIRK_PTDEV;
-	}
+	if (ptdev->phys_bdf == PCI_BDF_GPU)
+		passthru_gpu_dsm_opregion(ctx, ptdev, &pcidev);
 
 	pcidev.virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
 	pcidev.phys_bdf = ptdev->phys_bdf;
