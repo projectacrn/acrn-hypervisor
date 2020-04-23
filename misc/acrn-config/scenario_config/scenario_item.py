@@ -312,9 +312,10 @@ class VmInfo:
         scenario_cfg_lib.vm_name_check(self.name, "name")
         scenario_cfg_lib.load_vm_check(self.load_vm, "load_vm")
         scenario_cfg_lib.guest_flag_check(self.guest_flags, "guest_flags", "guest_flag")
-        scenario_cfg_lib.cpus_per_vm_check(self.cpus_per_vm, "pcpu_id")
+        err_dic = scenario_cfg_lib.cpus_per_vm_check(self.scenario_info, self.cpus_per_vm, "pcpu_id")
 
         self.mem_info.check_item()
         self.os_cfg.check_item()
         self.cfg_pci.check_item()
         self.vuart.check_item()
+        scenario_cfg_lib.ERR_LIST.update(err_dic)
