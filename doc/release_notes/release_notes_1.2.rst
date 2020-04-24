@@ -52,8 +52,8 @@ defined **Usage Scenarios** in this release, including:
 * :ref:`Introduction to Project ACRN <introduction>`
 * :ref:`Build ACRN from Source <getting-started-building>`
 * :ref:`Supported Hardware <hardware>`
-* :ref:`Using Hybrid mode on NUC <using_hybrid_mode_on_nuc>`
-* :ref:`Launch Two User VMs on NUC using SDC2 Scenario <using_sdc2_mode_on_nuc>`
+* Using Hybrid mode on NUC (removed in v1.7)
+* Launch Two User VMs on NUC using SDC2 Scenario (removed in v1.7)
 
 New Features Details
 ********************

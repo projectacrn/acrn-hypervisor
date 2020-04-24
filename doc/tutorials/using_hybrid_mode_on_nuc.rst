@@ -1,7 +1,7 @@
 .. _using_hybrid_mode_on_nuc:
 
-Using Hybrid Mode on the NUC
-############################
+Getting Started Guide for ACRN hybrid mode
+##########################################
 ACRN hypervisor supports a hybrid scenario where the User VM (such as Zephyr
 or Clear Linux) runs in a pre-launched VM or in a post-launched VM that is
 launched by a Device model in the Service VM. The following guidelines
