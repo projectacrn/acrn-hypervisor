@@ -19,33 +19,30 @@
 /*
  * Definition of an 16 byte IDT selector.
  */
-union idt_64_descriptor {
-	uint64_t value;
-	struct {
-		union {
-			uint32_t value;
-			struct {
-				uint32_t offset_15_0:16;
-				uint32_t seg_sel:16;
-			} bits;
-		} low32;
-		union {
-			uint32_t value;
-			struct {
-				uint32_t ist:3;
-				uint32_t bit_3_clr:1;
-				uint32_t bit_4_clr:1;
-				uint32_t bits_5_7_clr:3;
-				uint32_t type:4;
-				uint32_t bit_12_clr:1;
-				uint32_t dpl:2;
-				uint32_t present:1;
-				uint32_t offset_31_16:16;
-			} bits;
-		} high32;
-		uint32_t offset_63_32;
-		uint32_t rsvd;
-	} fields;
+struct idt_64_descriptor {
+	union {
+		uint32_t value;
+		struct {
+			uint32_t offset_15_0:16;
+			uint32_t seg_sel:16;
+		} bits;
+	} low32;
+	union {
+		uint32_t value;
+		struct {
+			uint32_t ist:3;
+			uint32_t bit_3_clr:1;
+			uint32_t bit_4_clr:1;
+			uint32_t bits_5_7_clr:3;
+			uint32_t type:4;
+			uint32_t bit_12_clr:1;
+			uint32_t dpl:2;
+			uint32_t present:1;
+			uint32_t offset_31_16:16;
+		} bits;
+	} high32;
+	uint32_t offset_63_32;
+	uint32_t rsvd;
 } __aligned(8);
 
 /*****************************************************************************
@@ -54,7 +51,7 @@ union idt_64_descriptor {
  *
  *****************************************************************************/
 struct host_idt {
-	union idt_64_descriptor host_idt_descriptors[HOST_IDT_ENTRIES];
+	struct idt_64_descriptor host_idt_descriptors[HOST_IDT_ENTRIES];
 } __aligned(8);
 
 /*

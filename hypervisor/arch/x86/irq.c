@@ -480,16 +480,16 @@ void init_default_irqs(uint16_t cpu_id)
 static inline void fixup_idt(const struct host_idt_descriptor *idtd)
 {
 	uint32_t i;
-	union idt_64_descriptor *idt_desc = (union idt_64_descriptor *)idtd->idt;
+	struct idt_64_descriptor *idt_desc = idtd->idt->host_idt_descriptors;
 	uint32_t entry_hi_32, entry_lo_32;
 
 	for (i = 0U; i < HOST_IDT_ENTRIES; i++) {
-		entry_lo_32 = idt_desc[i].fields.offset_63_32;
-		entry_hi_32 = idt_desc[i].fields.rsvd;
-		idt_desc[i].fields.rsvd = 0U;
-		idt_desc[i].fields.offset_63_32 = entry_hi_32;
-		idt_desc[i].fields.high32.bits.offset_31_16 = entry_lo_32 >> 16U;
-		idt_desc[i].fields.low32.bits.offset_15_0 = entry_lo_32 & 0xffffUL;
+		entry_lo_32 = idt_desc[i].offset_63_32;
+		entry_hi_32 = idt_desc[i].rsvd;
+		idt_desc[i].rsvd = 0U;
+		idt_desc[i].offset_63_32 = entry_hi_32;
+		idt_desc[i].high32.bits.offset_31_16 = entry_lo_32 >> 16U;
+		idt_desc[i].low32.bits.offset_15_0 = entry_lo_32 & 0xffffUL;
 	}
 }
 
