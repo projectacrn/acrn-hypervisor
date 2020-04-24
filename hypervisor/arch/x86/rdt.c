@@ -19,7 +19,7 @@
 
 static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 	[RDT_RESOURCE_L3] = {
-		.cache = {
+		.res.cache = {
 			.bitmask = 0U,
 			.cbm_len = 0U,
 		},
@@ -29,7 +29,7 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 		.platform_clos_array = NULL
 	},
 	[RDT_RESOURCE_L2] = {
-		.cache = {
+		.res.cache = {
 			.bitmask = 0U,
 			.cbm_len = 0U,
 		},
@@ -39,7 +39,7 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 		.platform_clos_array = NULL
 	},
 	[RDT_RESOURCE_MBA] = {
-		.membw = {
+		.res.membw = {
 			.mba_max = 0U,
 			.delay_linear = true,
 		},
@@ -67,8 +67,8 @@ static void rdt_read_cat_capability(int res)
 	 * CPUID.(EAX=0x10,ECX=ResID):EDX[15:0] reports the maximun CLOS supported
 	 */
 	cpuid_subleaf(CPUID_RDT_ALLOCATION, res_cap_info[res].res_id, &eax, &ebx, &ecx, &edx);
-	res_cap_info[res].cache.cbm_len = (uint16_t)((eax & 0x1fU) + 1U);
-	res_cap_info[res].cache.bitmask = ebx;
+	res_cap_info[res].res.cache.cbm_len = (uint16_t)((eax & 0x1fU) + 1U);
+	res_cap_info[res].res.cache.bitmask = ebx;
 	res_cap_info[res].clos_max = (uint16_t)(edx & 0xffffU) + 1U;
 }
 
@@ -82,8 +82,8 @@ static void rdt_read_mba_capability(int res)
 	 * CPUID.(EAX=0x10,ECX=ResID):EDX[15:0] reports the maximun CLOS supported
 	 */
 	cpuid_subleaf(CPUID_RDT_ALLOCATION, res_cap_info[res].res_id, &eax, &ebx, &ecx, &edx);
-	res_cap_info[res].membw.mba_max = (uint16_t)((eax & 0xfffU) + 1U);
-	res_cap_info[res].membw.delay_linear = ((ecx & 0x4U) != 0U) ? true : false;
+	res_cap_info[res].res.membw.mba_max = (uint16_t)((eax & 0xfffU) + 1U);
+	res_cap_info[res].res.membw.delay_linear = ((ecx & 0x4U) != 0U) ? true : false;
 	res_cap_info[res].clos_max = (uint16_t)(edx & 0xffffU) + 1U;
 }
 
@@ -152,7 +152,7 @@ static bool setup_res_clos_msr(uint16_t pcpu_id, uint16_t res, struct platform_c
 		switch (res) {
 		case RDT_RESOURCE_L3:
 		case RDT_RESOURCE_L2:
-			if ((fls32(res_clos_info->clos_mask) >= res_cap_info[res].cache.cbm_len) ||
+			if ((fls32(res_clos_info->clos_mask) >= res_cap_info[res].res.cache.cbm_len) ||
 				(res_clos_info->msr_index != (res_cap_info[res].msr_base + i))) {
 				ret = false;
 				pr_err("Fix CLOS %d mask=0x%x and(/or) MSR index=0x%x for Res_ID %d in board.c",
@@ -162,7 +162,7 @@ static bool setup_res_clos_msr(uint16_t pcpu_id, uint16_t res, struct platform_c
 			}
 			break;
 		case RDT_RESOURCE_MBA:
-			if ((res_clos_info->mba_delay > res_cap_info[res].membw.mba_max) ||
+			if ((res_clos_info->mba_delay > res_cap_info[res].res.membw.mba_max) ||
 				(res_clos_info->msr_index != (res_cap_info[res].msr_base + i))) {
 				ret = false;
 				pr_err("Fix CLOS %d delay=0x%x and(/or) MSR index=0x%x for Res_ID %d in board.c",
