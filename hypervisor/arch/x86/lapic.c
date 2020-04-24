@@ -75,14 +75,9 @@ void early_init_lapic(void)
 void init_lapic(uint16_t pcpu_id)
 {
 	per_cpu(lapic_ldr, pcpu_id) = (uint32_t) msr_read(MSR_IA32_EXT_APIC_LDR);
-	/* Mask all LAPIC LVT entries before enabling the local APIC */
-	msr_write(MSR_IA32_EXT_APIC_LVT_CMCI, APIC_LVT_M);
-	msr_write(MSR_IA32_EXT_APIC_LVT_TIMER, APIC_LVT_M);
-	msr_write(MSR_IA32_EXT_APIC_LVT_THERMAL, APIC_LVT_M);
-	msr_write(MSR_IA32_EXT_APIC_LVT_PMI, APIC_LVT_M);
-	msr_write(MSR_IA32_EXT_APIC_LVT_LINT0, APIC_LVT_M);
-	msr_write(MSR_IA32_EXT_APIC_LVT_LINT1, APIC_LVT_M);
-	msr_write(MSR_IA32_EXT_APIC_LVT_ERROR, APIC_LVT_M);
+
+	/* Set the mask bits for all the LVT entries by disabling a local APIC software. */
+	msr_write(MSR_IA32_EXT_APIC_SIVR, 0UL);
 
 	/* Enable Local APIC */
 	/* TODO: add spurious-interrupt handler */
