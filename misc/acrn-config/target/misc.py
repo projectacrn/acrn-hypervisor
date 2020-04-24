@@ -11,9 +11,12 @@ TTY_PATH = '/sys/class/tty/'
 SYS_IRQ_PATH = '/proc/interrupts'
 CPU_INFO_PATH = '/sys/devices/system/cpu/possible'
 
+# Please refer kernel_src/include/linux/serial_core.h
 ttys_type = {
-    '0': 'PORT',
-    '3': 'MMIO',
+    '0': 'PORT', # 8b I/O port access
+    '2': 'MMIO', # driver-specific
+    '3': 'MMIO', # 32b little endian
+    '6': 'MMIO', # 32b big endian
 }
 
 
