@@ -5,6 +5,8 @@ Building ACRN in Docker
 
 This tutorial shows how to build ACRN in a Clear Linux Docker image.
 
+.. rst-class:: numbered-step
+
 Install Docker
 **************
 
@@ -24,25 +26,45 @@ Install Docker
       choose not to, add `sudo` in front of every `docker` command in
       this tutorial.
 
+.. rst-class:: numbered-step
+
 Get the Docker Image
 ********************
 
-This tutorial presents two ways to get the Clear Linux Docker image that's needed to build ACRN.
+Pick one of these two ways to get the Clear Linux Docker image needed to build ACRN.
+
+Get the Docker Image from Docker Hub
+====================================
+
+If you're not working behind a corporate proxy server, you can pull a
+pre-built Docker image from Docker Hub to your development machine using
+this command:
+
+.. code-block:: none
+
+   $ docker pull acrn/clearlinux-acrn-builder:latest
 
 Build the Docker Image from Dockerfile
 ======================================
+
+Alternatively, you can build your own local Docker image using the
+provided Dockerfile build instructions by following these steps.  You'll
+need to this this if you're working behind a corporate proxy.
+
 .. note::
-   A known `issue <https://github.com/projectacrn/acrn-hypervisor/issues/4560>`_ exists while building the ACRN hypervisor. Refer to `Get the Docker Image from Docker Hub`_ as a temporary way to obtain the Docker Image for the v1.6 release.
+   A known `issue
+   <https://github.com/projectacrn/acrn-hypervisor/issues/4560>`_ exists
+   while building the ACRN hypervisor. Refer to `Get the Docker Image from
+   Docker Hub`_ as a temporary way to obtain the Docker Image for the v1.6
+   release.
 
 #. Download `Dockerfile <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/getting-started/Dockerfile>`_
    to your development machine.
 #. Build the Docker image:
 
-   .. code-block:: none
-
-      $ docker build -t clearlinux-acrn-builder:latest -f <path/to/Dockerfile> .
-
-   if you are behind an HTTP or HTTPS proxy server, use this command instead:
+   If you are behind an HTTP proxy server, use this command,
+   with your proxy settings, to let docker build know about the proxy
+   configuration for the docker image:
 
    .. code-block:: none
 
@@ -50,15 +72,14 @@ Build the Docker Image from Dockerfile
       --build-arg HTTPS_PROXY=https://<proxy_host>:<proxy_port> \
       -t clearlinux-acrn-builder:latest -f <path/to/Dockerfile> .
 
+   Otherwise, you can simply use this command:
 
-Get the Docker Image from Docker Hub
-====================================
+   .. code-block:: none
 
-As an alternative, you can pull a pre-built Docker image from Docker Hub to your development machine. Use this command:
+      $ docker build -t clearlinux-acrn-builder:latest -f <path/to/Dockerfile> .
 
-.. code-block:: none
 
-   $ docker pull acrn/clearlinux-acrn-builder:latest
+.. rst-class:: numbered-step
 
 Build ACRN from Source in Docker
 ********************************
@@ -88,6 +109,8 @@ Build ACRN from Source in Docker
         acrn/clearlinux-acrn-builder:latest bash -c "make clean && make"
 
    The build artifacts are found in the `build` directory.
+
+.. rst-class:: numbered-step
 
 Build the ACRN Service VM Kernel in Docker
 ******************************************
@@ -123,6 +146,8 @@ Build the ACRN Service VM Kernel in Docker
    The commands build the bootable kernel image as ``arch/x86/boot/bzImage``,
    and the loadable kernel modules under the ``./out/`` folder.
 
+.. rst-class:: numbered-step
+
 Build the ACRN User VM PREEMPT_RT Kernel in Docker
 **************************************************
 
@@ -157,11 +182,14 @@ Build the ACRN User VM PREEMPT_RT Kernel in Docker
    The commands build the bootable kernel image as ``arch/x86/boot/bzImage``,
    and the loadable kernel modules under the ``./out/`` folder.
 
+.. rst-class:: numbered-step
+
 Build the ACRN documentation
 ****************************
 
-#. Make sure you have both the ``acrn-hypervisor`` and ``acrn-kernel`` repositories already available in your workspace
-   (see steps above for instructions on how to clone them).
+#. Make sure you have both the ``acrn-hypervisor`` and ``acrn-kernel``
+   repositories already available in your workspace (see steps above for
+   instructions on how to clone them).
 
 #. Build the ACRN documentation:
 
@@ -173,4 +201,3 @@ Build the ACRN documentation
         bash -c "cd acrn-hypervisor && make clean && make doc"
 
    The HTML documentation can be found in ``acrn-hypervisor/build/doc/html``
-      
