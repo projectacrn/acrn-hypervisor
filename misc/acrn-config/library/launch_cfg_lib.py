@@ -519,3 +519,12 @@ def get_gpu_vpid():
         if GPU_BDF in vpid_line:
             vpid = " ".join(vpid_line.split()[2].split(':'))
     return vpid
+
+
+def uos_cpu_affinity(uosid_cpu_affinity):
+
+    cpu_affinity = {}
+    sos_vm_id = get_sos_vmid()
+    for uosid,cpu_affinity_list in uosid_cpu_affinity.items():
+        cpu_affinity[uosid + sos_vm_id] = cpu_affinity_list
+    return cpu_affinity

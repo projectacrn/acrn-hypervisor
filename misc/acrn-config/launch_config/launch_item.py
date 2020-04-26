@@ -35,7 +35,8 @@ class AcrnDmArgs:
         launch_cfg_lib.mem_size_check(self.args["mem_size"], "mem_size")
         launch_cfg_lib.args_aval_check(self.args["vbootloader"], "vbootloader", launch_cfg_lib.BOOT_TYPE)
         launch_cfg_lib.args_aval_check(self.args["vuart0"], "vuart0", launch_cfg_lib.DM_VUART0)
-        err_dic = scenario_cfg_lib.cpus_per_vm_check(self.launch_info, self.args["cpu_affinity"], "pcpu_id")
+        cpu_affinity = launch_cfg_lib.uos_cpu_affinity(self.args["cpu_affinity"])
+        err_dic = scenario_cfg_lib.vm_cpu_affinity_check(self.launch_info, cpu_affinity, "pcpu_id")
         launch_cfg_lib.ERR_LIST.update(err_dic)
 
 
