@@ -210,7 +210,7 @@ def guest_flag_check(guest_flags, branch_tag, leaf_tag):
                 ERR_LIST[key] = "Unknow guest flag"
 
 
-def cpus_per_vm_check(config_file, id_cpus_per_vm_dic, item):
+def vm_cpu_affinity_check(config_file, id_cpus_per_vm_dic, item):
     """
     Check cpu number of per vm
     :param item: vm pcpu_id item in xml
@@ -234,13 +234,17 @@ def cpus_per_vm_check(config_file, id_cpus_per_vm_dic, item):
             else:
                 use_cpus.append(cpu)
 
+    pre_launch_cpus = []
+    post_launch_cpus = []
     for vm_i, vm_type in common.VM_TYPES.items():
-        if vm_i not in id_cpus_per_vm_dic.keys() and "SOS_VM" == VM_DB[vm_type]['load_type']:
+        if vm_i not in id_cpus_per_vm_dic.keys():
             continue
-        elif vm_i not in id_cpus_per_vm_dic.keys() and VM_DB[vm_type]['load_type'] in ("PRE_LAUNCHED_VM", "POST_LAUNCHED_VM"):
-            key = "vm:id={},{}".format(vm_i, item)
-            err_dic[key] = "Pre launched_vm and Post launched vm should have cpus assignment"
-            return err_dic
+        elif VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
+            cpus = [x for x in id_cpus_per_vm_dic[vm_i] if not None]
+            pre_launch_cpus.extend(cpus)
+        elif VM_DB[vm_type]['load_type'] == "POST_LAUNCHED_VM":
+            cpus = [x for x in id_cpus_per_vm_dic[vm_i] if not None]
+            post_launch_cpus.extend(cpus)
 
         # duplicate cpus assign the same VM check
         cpus_vm_i = id_cpus_per_vm_dic[vm_i]
@@ -249,6 +253,15 @@ def cpus_per_vm_check(config_file, id_cpus_per_vm_dic, item):
                 key = "vm:id={},{}".format(vm_i, item)
                 err_dic[key] = "VM should not use the same pcpu id:{}".format(cpu_id)
                 return err_dic
+
+    if pre_launch_cpus:
+        for pcpu in pre_launch_cpus:
+            if pre_launch_cpus.count(pcpu) >= 2:
+                key = "Pre launched VM cpu_affinity"
+                err_dic[key] = "Pre_launched_vm vm should not have the same cpus assignment"
+            if pcpu in post_launch_cpus:
+                key = "Pre launched vm and Post launchded VM cpu_affinity"
+                err_dic[key] = "Pre launched_vm and Post launched vm should not have the same cpus assignment"
 
     return err_dic
 
