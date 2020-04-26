@@ -2,8 +2,8 @@
 	<BIOS_INFO>
 	BIOS Information
 	Vendor: Intel Corporation
-	Version: TGLSFWI1.R00.2321.A08.1909162051
-	Release Date: 09/16/2019
+	Version: TGLSFWI1.R00.2457.A16.1912270059
+	Release Date: 12/27/2019
 	</BIOS_INFO>
 
 	<BASE_BOARD_INFO>
@@ -16,72 +16,83 @@
 	<PCI_DEVICE>
 	00:00.0 Host bridge: Intel Corporation Device 9a14
 	00:02.0 VGA compatible controller: Intel Corporation Device 9a49
-	Region 0: Memory at ab000000 (64-bit, non-prefetchable) [size=16M]
-	Region 2: Memory at 80000000 (64-bit, prefetchable) [size=256M]
-	Region 0: Memory at 00000000ad000000 (64-bit, non-prefetchable)
-	Region 2: Memory at 0000000000000000 (64-bit, prefetchable)
+	Region 0: Memory at 607d000000 (64-bit, non-prefetchable) [size=16M]
+	Region 2: [virtual] Memory at 4000000000 (64-bit, prefetchable) [size=256M]
+	Region 0: Memory at 0000004010000000 (64-bit, non-prefetchable)
+	Region 2: Memory at 0000004020000000 (64-bit, prefetchable)
 	00:04.0 Signal processing controller: Intel Corporation Device 9a03
-	Region 0: Memory at ac280000 (64-bit, non-prefetchable) [disabled] [size=128K]
+	Region 0: Memory at 607e180000 (64-bit, non-prefetchable) [disabled] [size=128K]
+	00:05.0 Multimedia controller: Intel Corporation Device 9a19
+	Region 0: Memory at 607c000000 (64-bit, non-prefetchable) [disabled] [size=16M]
 	00:07.0 PCI bridge: Intel Corporation Device 9a23
 	00:07.1 PCI bridge: Intel Corporation Device 9a25
 	00:07.2 PCI bridge: Intel Corporation Device 9a27
 	00:07.3 PCI bridge: Intel Corporation Device 9a29
 	00:08.0 System peripheral: Intel Corporation Device 9a11
-	Region 0: Memory at ac300000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	Region 0: Memory at 607e202000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:0a.0 Signal processing controller: Intel Corporation Device 9a0d (rev 01)
-	Region 0: Memory at ac2f0000 (64-bit, non-prefetchable) [size=32K]
+	Region 0: Memory at 607e1e0000 (64-bit, non-prefetchable) [size=32K]
 	00:0d.0 USB controller: Intel Corporation Device 9a13
-	Region 0: Memory at ac2c0000 (64-bit, non-prefetchable) [size=64K]
+	Region 0: Memory at 607e1c0000 (64-bit, non-prefetchable) [size=64K]
 	00:0d.2 System peripheral: Intel Corporation Device 9a1b
-	Region 0: Memory at ac200000 (64-bit, non-prefetchable) [size=256K]
-	Region 2: Memory at ac301000 (64-bit, non-prefetchable) [size=4K]
+	Region 0: Memory at 607e140000 (64-bit, non-prefetchable) [size=256K]
+	Region 2: Memory at 607e201000 (64-bit, non-prefetchable) [size=4K]
 	00:0d.3 System peripheral: Intel Corporation Device 9a1d
-	Region 0: Memory at ac240000 (64-bit, non-prefetchable) [size=256K]
-	Region 2: Memory at ac302000 (64-bit, non-prefetchable) [size=4K]
-	00:12.0 Serial controller: Intel Corporation Device a0fc
-	Region 0: Memory at ac2d0000 (64-bit, non-prefetchable) [size=64K]
-	00:14.0 USB controller: Intel Corporation Device a0ed
-	Region 0: Memory at ac2e0000 (64-bit, non-prefetchable) [size=64K]
-	00:14.2 RAM memory: Intel Corporation Device a0ef
-	Region 0: Memory at ac2f8000 (64-bit, non-prefetchable) [disabled] [size=16K]
-	Region 2: Memory at ac303000 (64-bit, non-prefetchable) [disabled] [size=4K]
-	00:15.0 Serial bus controller [0c80]: Intel Corporation Device a0e8
-	Region 0: Memory at 3f400000 (64-bit, non-prefetchable) [disabled] [size=4K]
-	00:15.1 Serial bus controller [0c80]: Intel Corporation Device a0e9
-	Region 0: Memory at 3f401000 (64-bit, non-prefetchable) [disabled] [size=4K]
-	00:15.2 Serial bus controller [0c80]: Intel Corporation Device a0ea
-	Region 0: Memory at 3f402000 (64-bit, non-prefetchable) [disabled] [size=4K]
-	00:15.3 Serial bus controller [0c80]: Intel Corporation Device a0eb
-	Region 0: Memory at 3f403000 (64-bit, non-prefetchable) [disabled] [size=4K]
-	00:16.0 Communication controller: Intel Corporation Device a0e0
-	Region 0: Memory at ac308000 (64-bit, non-prefetchable) [size=4K]
-	00:19.0 Serial bus controller [0c80]: Intel Corporation Device a0c5
-	Region 0: Memory at 3f404000 (64-bit, non-prefetchable) [disabled] [size=4K]
-	00:19.1 Serial bus controller [0c80]: Intel Corporation Device a0c6
-	Region 0: Memory at 3f405000 (64-bit, non-prefetchable) [disabled] [size=4K]
-	00:1d.0 PCI bridge: Intel Corporation Device a0b0
-	00:1e.0 Communication controller: Intel Corporation Device a0a8
-	Region 0: Memory at 3f406000 (64-bit, non-prefetchable) [disabled] [size=4K]
-	00:1e.3 Serial bus controller [0c80]: Intel Corporation Device a0ab
-	Region 0: Memory at 3f407000 (64-bit, non-prefetchable) [disabled] [size=4K]
-	00:1f.0 ISA bridge: Intel Corporation Device a082
-	00:1f.3 Multimedia audio controller: Intel Corporation Device a0c8
-	Region 0: Memory at ac2fc000 (64-bit, non-prefetchable) [disabled] [size=16K]
-	Region 4: Memory at ac000000 (64-bit, non-prefetchable) [disabled] [size=1M]
-	00:1f.4 SMBus: Intel Corporation Device a0a3
-	Region 0: Memory at ac30d000 (64-bit, non-prefetchable) [disabled] [size=256]
-	00:1f.5 Serial bus controller [0c80]: Intel Corporation Device a0a4
-	Region 0: Memory at 3f408000 (32-bit, non-prefetchable) [size=4K]
-	00:1f.6 Ethernet controller: Intel Corporation Device 15fc
-	Region 0: Memory at ac2a0000 (32-bit, non-prefetchable) [disabled] [size=128K]
-	ad:00.0 Non-Volatile memory controller: Intel Corporation Device f1a8 (rev 03)
-	Region 0: Memory at ac100000 (64-bit, non-prefetchable) [size=16K]
+	Region 0: Memory at 607e100000 (64-bit, non-prefetchable) [size=256K]
+	Region 2: Memory at 607e200000 (64-bit, non-prefetchable) [size=4K]
+	00:10.0 Serial bus controller [0c80]: Intel Corporation Device a0d8 (rev 10)
+	Region 0: Memory at 4017000000 (64-bit, non-prefetchable) [size=4K]
+	00:10.6 Digitizer Pen: Intel Corporation Device a0d0 (rev 10)
+	Region 0: Memory at 607e1d8000 (64-bit, non-prefetchable) [disabled] [size=32K]
+	00:10.7 Digitizer Pen: Intel Corporation Device a0d1 (rev 10)
+	Region 0: Memory at 607e1d0000 (64-bit, non-prefetchable) [disabled] [size=32K]
+	00:12.0 Serial controller: Intel Corporation Device a0fc (rev 10)
+	Region 0: Memory at 607e1b0000 (64-bit, non-prefetchable) [size=64K]
+	00:14.0 USB controller: Intel Corporation Device a0ed (rev 10)
+	Region 0: Memory at 607e1a0000 (64-bit, non-prefetchable) [size=64K]
+	00:14.2 RAM memory: Intel Corporation Device a0ef (rev 10)
+	Region 0: Memory at 607e1f0000 (64-bit, non-prefetchable) [disabled] [size=16K]
+	Region 2: Memory at 607e1fe000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	00:14.3 Network controller: Intel Corporation Device a0f0 (rev 10)
+	Region 0: Memory at 607e1ec000 (64-bit, non-prefetchable) [size=16K]
+	00:15.0 Serial bus controller [0c80]: Intel Corporation Device a0e8 (rev 10)
+	Region 0: [virtual] Memory at 4017001000 (64-bit, non-prefetchable) [size=4K]
+	00:15.1 Serial bus controller [0c80]: Intel Corporation Device a0e9 (rev 10)
+	Region 0: [virtual] Memory at 4017002000 (64-bit, non-prefetchable) [size=4K]
+	00:15.2 Serial bus controller [0c80]: Intel Corporation Device a0ea (rev 10)
+	Region 0: [virtual] Memory at 4017003000 (64-bit, non-prefetchable) [size=4K]
+	00:15.3 Serial bus controller [0c80]: Intel Corporation Device a0eb (rev 10)
+	Region 0: [virtual] Memory at 4017004000 (64-bit, non-prefetchable) [size=4K]
+	00:16.0 Communication controller: Intel Corporation Device a0e0 (rev 10)
+	Region 0: Memory at 607e1f9000 (64-bit, non-prefetchable) [size=4K]
+	00:19.0 Serial bus controller [0c80]: Intel Corporation Device a0c5 (rev 10)
+	Region 0: [virtual] Memory at 4017005000 (64-bit, non-prefetchable) [size=4K]
+	00:19.1 Serial bus controller [0c80]: Intel Corporation Device a0c6 (rev 10)
+	Region 0: [virtual] Memory at 4017006000 (64-bit, non-prefetchable) [size=4K]
+	00:1d.0 PCI bridge: Intel Corporation Device a0b0 (rev 10)
+	00:1e.0 Communication controller: Intel Corporation Device a0a8 (rev 10)
+	Region 0: [virtual] Memory at 4017007000 (64-bit, non-prefetchable) [size=4K]
+	00:1e.3 Serial bus controller [0c80]: Intel Corporation Device a0ab (rev 10)
+	Region 0: [virtual] Memory at 4017008000 (64-bit, non-prefetchable) [size=4K]
+	00:1f.0 ISA bridge: Intel Corporation Device a082 (rev 10)
+	00:1f.3 Multimedia audio controller: Intel Corporation Device a0c8 (rev 10)
+	Region 0: Memory at 607e1e8000 (64-bit, non-prefetchable) [size=16K]
+	Region 4: Memory at 607e000000 (64-bit, non-prefetchable) [size=1M]
+	00:1f.4 SMBus: Intel Corporation Device a0a3 (rev 10)
+	Region 0: Memory at 607e1f4000 (64-bit, non-prefetchable) [size=256]
+	00:1f.5 Serial bus controller [0c80]: Intel Corporation Device a0a4 (rev 10)
+	Region 0: Memory at 4fc00000 (32-bit, non-prefetchable) [size=4K]
+	00:1f.6 Ethernet controller: Intel Corporation Device 15fc (rev 10)
+	Region 0: Memory at 86300000 (32-bit, non-prefetchable) [size=128K]
+	a9:00.0 Non-Volatile memory controller: Intel Corporation Device f1a8 (rev 03)
+	Region 0: Memory at 86200000 (64-bit, non-prefetchable) [size=16K]
 	</PCI_DEVICE>
 
 	<PCI_VID_PID>
 	00:00.0 0600: 8086:9a14
 	00:02.0 0300: 8086:9a49
 	00:04.0 1180: 8086:9a03
+	00:05.0 0480: 8086:9a19
 	00:07.0 0604: 8086:9a23
 	00:07.1 0604: 8086:9a25
 	00:07.2 0604: 8086:9a27
@@ -91,30 +102,34 @@
 	00:0d.0 0c03: 8086:9a13
 	00:0d.2 0880: 8086:9a1b
 	00:0d.3 0880: 8086:9a1d
-	00:12.0 0700: 8086:a0fc
-	00:14.0 0c03: 8086:a0ed
-	00:14.2 0500: 8086:a0ef
-	00:15.0 0c80: 8086:a0e8
-	00:15.1 0c80: 8086:a0e9
-	00:15.2 0c80: 8086:a0ea
-	00:15.3 0c80: 8086:a0eb
-	00:16.0 0780: 8086:a0e0
-	00:19.0 0c80: 8086:a0c5
-	00:19.1 0c80: 8086:a0c6
-	00:1d.0 0604: 8086:a0b0
-	00:1e.0 0780: 8086:a0a8
-	00:1e.3 0c80: 8086:a0ab
-	00:1f.0 0601: 8086:a082
-	00:1f.3 0401: 8086:a0c8
-	00:1f.4 0c05: 8086:a0a3
-	00:1f.5 0c80: 8086:a0a4
-	00:1f.6 0200: 8086:15fc
-	ad:00.0 0108: 8086:f1a8 (rev 03)
+	00:10.0 0c80: 8086:a0d8 (rev 10)
+	00:10.6 0901: 8086:a0d0 (rev 10)
+	00:10.7 0901: 8086:a0d1 (rev 10)
+	00:12.0 0700: 8086:a0fc (rev 10)
+	00:14.0 0c03: 8086:a0ed (rev 10)
+	00:14.2 0500: 8086:a0ef (rev 10)
+	00:14.3 0280: 8086:a0f0 (rev 10)
+	00:15.0 0c80: 8086:a0e8 (rev 10)
+	00:15.1 0c80: 8086:a0e9 (rev 10)
+	00:15.2 0c80: 8086:a0ea (rev 10)
+	00:15.3 0c80: 8086:a0eb (rev 10)
+	00:16.0 0780: 8086:a0e0 (rev 10)
+	00:19.0 0c80: 8086:a0c5 (rev 10)
+	00:19.1 0c80: 8086:a0c6 (rev 10)
+	00:1d.0 0604: 8086:a0b0 (rev 10)
+	00:1e.0 0780: 8086:a0a8 (rev 10)
+	00:1e.3 0c80: 8086:a0ab (rev 10)
+	00:1f.0 0601: 8086:a082 (rev 10)
+	00:1f.3 0401: 8086:a0c8 (rev 10)
+	00:1f.4 0c05: 8086:a0a3 (rev 10)
+	00:1f.5 0c80: 8086:a0a4 (rev 10)
+	00:1f.6 0200: 8086:15fc (rev 10)
+	a9:00.0 0108: 8086:f1a8 (rev 03)
 	</PCI_VID_PID>
 
 	<WAKE_VECTOR_INFO>
-	#define WAKE_VECTOR_32          0x3498700CUL
-	#define WAKE_VECTOR_64          0x34987018UL
+	#define WAKE_VECTOR_32          0x45EF900CUL
+	#define WAKE_VECTOR_64          0x45EF9018UL
 	</WAKE_VECTOR_INFO>
 
 	<RESET_REGISTER_INFO>
@@ -159,7 +174,7 @@
 	</S5_INFO>
 
 	<DRHD_INFO>
-	#define DRHD_COUNT              6U
+	#define DRHD_COUNT              7U
 
 	#define DRHD0_DEV_CNT           0x1U
 	#define DRHD0_SEGMENT           0x0U
@@ -174,72 +189,79 @@
 	#define DRHD1_DEV_CNT           0x1U
 	#define DRHD1_SEGMENT           0x0U
 	#define DRHD1_FLAGS             0x0U
-	#define DRHD1_REG_BASE          0xFED84000UL
+	#define DRHD1_REG_BASE          0xFED92000UL
 	#define DRHD1_IGNORE            false
-	#define DRHD1_DEVSCOPE0_TYPE    0x2U
+	#define DRHD1_DEVSCOPE0_TYPE    0x1U
 	#define DRHD1_DEVSCOPE0_ID      0x0U
 	#define DRHD1_DEVSCOPE0_BUS     0x0U
-	#define DRHD1_DEVSCOPE0_PATH    0x38U
+	#define DRHD1_DEVSCOPE0_PATH    0x28U
 
 	#define DRHD2_DEV_CNT           0x1U
 	#define DRHD2_SEGMENT           0x0U
 	#define DRHD2_FLAGS             0x0U
-	#define DRHD2_REG_BASE          0xFED85000UL
+	#define DRHD2_REG_BASE          0xFED84000UL
 	#define DRHD2_IGNORE            false
 	#define DRHD2_DEVSCOPE0_TYPE    0x2U
 	#define DRHD2_DEVSCOPE0_ID      0x0U
 	#define DRHD2_DEVSCOPE0_BUS     0x0U
-	#define DRHD2_DEVSCOPE0_PATH    0x39U
+	#define DRHD2_DEVSCOPE0_PATH    0x38U
 
 	#define DRHD3_DEV_CNT           0x1U
 	#define DRHD3_SEGMENT           0x0U
 	#define DRHD3_FLAGS             0x0U
-	#define DRHD3_REG_BASE          0xFED86000UL
+	#define DRHD3_REG_BASE          0xFED85000UL
 	#define DRHD3_IGNORE            false
 	#define DRHD3_DEVSCOPE0_TYPE    0x2U
 	#define DRHD3_DEVSCOPE0_ID      0x0U
 	#define DRHD3_DEVSCOPE0_BUS     0x0U
-	#define DRHD3_DEVSCOPE0_PATH    0x3aU
+	#define DRHD3_DEVSCOPE0_PATH    0x39U
 
 	#define DRHD4_DEV_CNT           0x1U
 	#define DRHD4_SEGMENT           0x0U
 	#define DRHD4_FLAGS             0x0U
-	#define DRHD4_REG_BASE          0xFED87000UL
+	#define DRHD4_REG_BASE          0xFED86000UL
 	#define DRHD4_IGNORE            false
 	#define DRHD4_DEVSCOPE0_TYPE    0x2U
 	#define DRHD4_DEVSCOPE0_ID      0x0U
 	#define DRHD4_DEVSCOPE0_BUS     0x0U
-	#define DRHD4_DEVSCOPE0_PATH    0x3bU
+	#define DRHD4_DEVSCOPE0_PATH    0x3aU
 
-	#define DRHD5_DEV_CNT           0x0U
+	#define DRHD5_DEV_CNT           0x1U
 	#define DRHD5_SEGMENT           0x0U
-	#define DRHD5_FLAGS             0x1U
-	#define DRHD5_REG_BASE          0xFED91000UL
+	#define DRHD5_FLAGS             0x0U
+	#define DRHD5_REG_BASE          0xFED87000UL
 	#define DRHD5_IGNORE            false
+	#define DRHD5_DEVSCOPE0_TYPE    0x2U
+	#define DRHD5_DEVSCOPE0_ID      0x0U
+	#define DRHD5_DEVSCOPE0_BUS     0x0U
+	#define DRHD5_DEVSCOPE0_PATH    0x3bU
+
+	#define DRHD6_DEV_CNT           0x2U
+	#define DRHD6_SEGMENT           0x0U
+	#define DRHD6_FLAGS             0x1U
+	#define DRHD6_REG_BASE          0xFED91000UL
+	#define DRHD6_IGNORE            false
+	#define DRHD6_DEVSCOPE0_TYPE    0x3U
+	#define DRHD6_DEVSCOPE0_ID      0x2U
+	#define DRHD6_DEVSCOPE0_BUS     0x0U
+	#define DRHD6_DEVSCOPE0_PATH    0xf7U
+	#define DRHD6_DEVSCOPE1_TYPE    0x4U
+	#define DRHD6_DEVSCOPE1_ID      0x0U
+	#define DRHD6_DEVSCOPE1_BUS     0x0U
+	#define DRHD6_DEVSCOPE1_PATH    0xf6U
 
 	</DRHD_INFO>
 
 	<CPU_BRAND>
-	"Genuine Intel(R) CPU 0000 @ 1.00GHz"
+	"Genuine Intel(R) CPU 0000 @ 2.30GHz"
 	</CPU_BRAND>
 
 	<CX_INFO>
-	{{SPACE_FFixedHW, 0x00U, 0x00U, 0x00U, 0x00UL}, 0x01U, 0x01U, 0x00U},	/* C1 */
-	{{SPACE_SYSTEM_IO, 0x08U, 0x00U, 0x00U, 0x1816UL}, 0x02U, 0x61U, 0x00U},	/* C2 */
-	{{SPACE_SYSTEM_IO, 0x08U, 0x00U, 0x00U, 0x1819UL}, 0x03U, 0x40AU, 0x00U},	/* C3 */
+	/* Cx data is not available */
 	</CX_INFO>
 
 	<PX_INFO>
-	{0x4B1UL, 0x00UL, 0x0AUL, 0x0AUL, 0x002400UL, 0x002400UL},	/* P0 */
-	{0x4B0UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000C00UL, 0x000C00UL},	/* P1 */
-	{0x44CUL, 0x00UL, 0x0AUL, 0x0AUL, 0x000B00UL, 0x000B00UL},	/* P2 */
-	{0x3E8UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000A00UL, 0x000A00UL},	/* P3 */
-	{0x384UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000900UL, 0x000900UL},	/* P4 */
-	{0x320UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000800UL, 0x000800UL},	/* P5 */
-	{0x2BCUL, 0x00UL, 0x0AUL, 0x0AUL, 0x000700UL, 0x000700UL},	/* P6 */
-	{0x258UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000600UL, 0x000600UL},	/* P7 */
-	{0x1F4UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000500UL, 0x000500UL},	/* P8 */
-	{0x190UL, 0x00UL, 0x0AUL, 0x0AUL, 0x000400UL, 0x000400UL},	/* P9 */
+	/* Px data is not available */
 	</PX_INFO>
 
 	<MMCFG_BASE_INFO>
@@ -248,9 +270,6 @@
 	</MMCFG_BASE_INFO>
 
 	<CLOS_INFO>
-	rdt resources supported: L2
-	rdt resource clos max: 8
-	rdt resource mask max: '0xff'
 	</CLOS_INFO>
 
 	<IOMEM_INFO>
@@ -417,14 +436,15 @@
 
 	<TTYS_INFO>
 	seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
+	seri:/dev/ttyS1 type:mmio base:0x4017007000 irq:34 bdf:"00:1e.0"
 	</TTYS_INFO>
 
 	<AVAILABLE_IRQ_INFO>
-	3, 5, 6, 7, 10, 11, 12, 13, 14, 15
+	3, 5, 6, 7, 10, 11, 12, 13, 15
 	</AVAILABLE_IRQ_INFO>
 
 	<TOTAL_MEM_INFO>
-	16155896 kB
+	7928416 kB
 	</TOTAL_MEM_INFO>
 
 	<CPU_PROCESSOR_INFO>
