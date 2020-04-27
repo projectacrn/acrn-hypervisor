@@ -39,11 +39,9 @@ PT_SLOT = {
         "lpc":1,
         "pci-gvt":2,
         "virtio-blk":3,
-        "audio_codec":24
     }
 
 
-POST_UUID_DIC = {}
 PM_CHANNEL = ['', 'IOC', 'PowerButton', 'vuart1(pty)', 'vuart1(tty)']
 PM_CHANNEL_DIC = {
     None:'',
@@ -528,3 +526,31 @@ def uos_cpu_affinity(uosid_cpu_affinity):
     for uosid,cpu_affinity_list in uosid_cpu_affinity.items():
         cpu_affinity[uosid + sos_vm_id] = cpu_affinity_list
     return cpu_affinity
+
+
+def check_slot(slot_db):
+
+    slot_values = {}
+    # init list of slot values for Post VM
+    for dev in slot_db.keys():
+        for uosid in slot_db[dev].keys():
+            slot_values[uosid] = []
+        break
+
+    # get slot values for Passthrough devices
+    for dev in PASSTHRU_DEVS:
+        for uosid,slot_str in slot_db[dev].items():
+            if not slot_str:
+                continue
+            slot_values[uosid].append(slot_str)
+
+    # update slot values and replace the fun=0 if there is no fun 0 in bdf list
+    for dev in PASSTHRU_DEVS:
+        for uosid,slot_str in slot_db[dev].items():
+            if not slot_str or ':' not in str(slot_str):
+                continue
+            bus_slot = slot_str[0:-1]
+            bus_slot_fun0 = bus_slot + "0"
+            if bus_slot_fun0 not in slot_values[uosid]:
+                slot_db[dev][uosid] = bus_slot_fun0
+                slot_values[uosid].append(bus_slot_fun0)
