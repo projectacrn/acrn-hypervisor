@@ -151,6 +151,7 @@ class PthruSelected():
         # check connections between several pass-through devices
         launch_cfg_lib.pt_devs_check_audio(self.bdf['audio'], self.bdf['audio_codec'])
         launch_cfg_lib.bdf_duplicate_check(self.bdf)
+        launch_cfg_lib.check_slot(self.slot)
 
 
 class VirtioDeviceSelect():
