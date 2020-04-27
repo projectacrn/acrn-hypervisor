@@ -132,46 +132,47 @@ int acrn_parse_cpu_affinity(char *opt)
 		return -1;
 	}
 
-	while (cp) {
+	/* white spaces within the commane line are invalid */
+	while (cp && isdigit(cp[0])) {
 		str = strpbrk(cp, ",-");
 
 		/* no more entries delimited by ',' or '-' */
 		if (!str) {
 			if (!dm_strtoi(cp, NULL, 10, &pcpu_id)) {
 				add_one_pcpu(pcpu_id);
-				break;
 			}
-		}
+			break;
+		} else {
+			if (*str == ',') {
+				/* after this, 'cp' points to the character after ',' */
+				str = strsep(&cp, ",");
 
-		if (*str == ',') {
-			/* after this, 'cp' points to the character after ',' */
-			str = strsep(&cp, ",");
-
-			/* parse the entry before ',' */
-			if (dm_strtoi(str, NULL, 10, &pcpu_id)) {
-				return -1;
-			}
-			add_one_pcpu(pcpu_id);
-		}
-
-		if (*str == '-') {
-			str = strsep(&cp, "-");
-
-			/* parse the entry before and after '-' respectively */
-			if (dm_strtoi(str, NULL, 10, &pcpu_start) || dm_strtoi(cp, NULL, 10, &pcpu_end)) {
-				return -1;
+				/* parse the entry before ',' */
+				if (dm_strtoi(str, NULL, 10, &pcpu_id)) {
+					return -1;
+				}
+				add_one_pcpu(pcpu_id);
 			}
 
-			if (pcpu_end <= pcpu_start) {
-				return -1;
-			}
+			if (*str == '-') {
+				str = strsep(&cp, "-");
 
-			for (; pcpu_start <= pcpu_end; pcpu_start++) {
-				add_one_pcpu(pcpu_start);
-			}
+				/* parse the entry before and after '-' respectively */
+				if (dm_strtoi(str, NULL, 10, &pcpu_start) || dm_strtoi(cp, NULL, 10, &pcpu_end)) {
+					return -1;
+				}
 
-			/* skip the ',' after pcpu_end */
-			str = strsep(&cp, ",");
+				if (pcpu_end <= pcpu_start) {
+					return -1;
+				}
+
+				for (; pcpu_start <= pcpu_end; pcpu_start++) {
+					add_one_pcpu(pcpu_start);
+				}
+
+				/* skip the ',' after pcpu_end */
+				str = strsep(&cp, ",");
+			}
 		}
 	}
 
