@@ -403,10 +403,12 @@ The ACRN configuration app is a web user interface application that performs the
 
 - reads board info
 - configures and validates scenario settings
-- automatically generates patches for board-related configurations and
+- automatically generates source codes for board-related configurations and
   scenario-based VM configurations
 - configures and validates launch settings
 - generates launch scripts for the specified post-launched User VMs.
+- dynamically creates a new sceanrio setting, add or delete VM settings in sceanrio settings
+- dynamically creates a new launch setting, add or delete UOS settings in launch settings
 
 Prerequisites
 =============
@@ -466,19 +468,31 @@ Instructions
       .. figure:: images/select_board_info.png
          :align: center
 
-#. Choose a scenario from the **Scenario Setting** menu which lists all the scenarios,
-   including the default scenarios and the user-defined scenarios for the board you selected
-   in the previous step. The scenario configuration xmls are located at
+#. Load or create the scenario setting by: 
+
+   - choosing a scenario from the **Scenario Setting** menu which lists all the user defined
+     scenarios for the board you selected in the previous step.
+
+   - clicking the **Create a new scenario** from the **Scenario Setting** menu to dynamically
+     create a new scenario setting for the current board.
+
+   - clicking the **Load a default scenario** from the **Scenario Setting** menu, and then select
+     one default scenario setting to load a default scenario setting for the current board.
+
+   The default scenario configuration xmls are located at
    ``acrn-hypervisor/misc/acrn-config/xmls/config-xmls/[board]/``.
+   We can edit the scenario name when creating or loading a sceanrio. If the current scenario
+   name is duplicated with an existed scenario setting name, we can rename the current scenario
+   name or overwrite the existed one after the confirmation message.
 
    .. figure:: images/choose_scenario.png
       :align: center
 
-   Note that you can also use a customized scenario xml by clicking **Import**.
+   Note that you can also use a customized scenario xml by clicking **Import XML**.
    The configuration app automatically directs to the new scenario xml once the import is complete.
 
-#. The configurable items display after one scenario is selected. Here is
-   the example of "SDC" scenario:
+#. The configurable items display after one scenario is created or loaded or selected. Here is
+   the example of "industry" scenario:
 
    .. figure:: images/configure_scenario.png
       :align: center
@@ -490,7 +504,20 @@ Instructions
 
    - Hover the mouse pointer over the item to display the description.
 
-#. Click **Export** to save the scenario xml; you can rename it in the pop-up modal.
+#. To dynamically add or delete VMs, 
+
+   - click **Add a VM below** in one VM setting, and then select one VM type to add a new VM under
+     current VM.
+
+   - click **Remove this VM** in one VM setting to remove current VM for the scenario setting.
+
+   When one VM is added or removed in the scenario setting, the configuration app will re-assign
+   the VM IDs for remaning VMs by the order of Pre-launched VMs, SOS VMs, Post-launched VMs.
+
+   .. figure:: images/configure_vm_add.png
+      :align: center
+
+#. Click **Export XML** to save the scenario xml; you can rename it in the pop-up modal.
 
    .. note:: All customized scenario xmls will be in user-defined groups which located in
       ``acrn-hypervisor/misc/acrn-config/xmls/config-xmls/[board]/user_defined/``.
@@ -503,28 +530,46 @@ Instructions
       :align: center
 
    After the scenario is saved, the page automatically directs to the saved scenario xmls.
-   You can delete the configured scenario by clicking **Export** -> **Remove**.
+   You can delete the configured scenario by clicking **Export XML** -> **Remove**.
 
-#. Click **Generate Board SRC** to save the current scenario setting and then generate
-   a patch for the board-related configuration source codes in
-   ``acrn-hypervisor/hypervisor/arch/x86/configs/[board]/``.
+#. Click **Generate configuration files** to save the current scenario setting and then
+   generate files for the board-related configuration source codes and scenario-based VM
+   configraution source codes.
 
-#. Click **Generate Scenario SRC** to save the current scenario setting and then generate
-   a patch for the scenario-based VM configuration scenario source codes in
+   If **Source Path** in the pop-up modal is edited, the source codes are generated into
+   the edited Source Path relative to ``acrn-hypervisor``; otherwise the source codes are
+   generated into the default folders and overwrite the old ones, where the board-releated
+   configuration source codes are in
+   ``acrn-hypervisor/hypervisor/arch/x86/configs/[board]/``,
+   the scenario-based VM configuration source codes are in
    ``acrn-hypervisor/hypervisor/scenarios/[scenario]/``.
 
 The **Launch Setting** is quite similar to the **Scenario Setting**:
 
 #. Upload board info or select one board as the current board.
 
-#. Import your local launch setting xml by clicking **Import** or selecting one launch setting xml from the menu.
+#. Load or create one launch setting by
+
+   - clicking **Create a new lauch script** from the **Launch Setting** menu,
+
+   - clicking **Load a default launch script** from the **Launch Setting** menu,
+
+   - selecting one launch setting xml from the menu.
+
+   - importing the local launch setting xml by clicking **Import XML**,
 
 #. Select one scenario for the current launch setting from the **Select Scenario** drop down box.
 
 #. Configure the items for the current launch setting.
 
+#. To dynamically add or remove UOS launch scripts,
+
+   - add an UOS launch script by clicking **Configure an UOS below** for the current launch setting.
+
+   - remove an UOS launch script by clicking **Remove this VM** for current launch setting.
+
 #. Save the current launch setting to the user-defined xml files by
-   clicking **Export**. The configuration app validates the current
+   clicking **Export XML**. The configuration app validates the current
    configuration and lists all wrong configurable items and shows errors.
 
 #. Click **Generate Launch Script** to save the current launch setting and then generate the launch script.
