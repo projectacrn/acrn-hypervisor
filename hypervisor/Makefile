@@ -472,10 +472,15 @@ distclean:
 PHONY: (VERSION)
 $(VERSION): $(HV_CONFIG_H)
 	touch $(VERSION)
-	@COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
-	DIRTY=`git diff-index --name-only HEAD`;\
-	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
-	DAILY_TAG=`git tag --merged HEAD|grep "acrn"|tail -n 1`;\
+	@if [ "$(BUILD_VERSION)"x = x -o "$(BUILD_TAG)"x = x ];then \
+		COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
+		DIRTY=`git diff-index --name-only HEAD`;\
+		if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
+		DAILY_TAG=`git tag --merged HEAD|grep "acrn"|tail -n 1`;\
+	else \
+		PATCH="$(BUILD_VERSION)"; \
+		DAILY_TAG="$(BUILD_TAG)"; \
+	fi; \
 	TIME=$$(date -u -d "@$${SOURCE_DATE_EPOCH:-$$(date +%s)}" "+%F %T"); \
 	USER="$${USER:-$$(id -u -n)}"; \
 	if [ x$(CONFIG_RELEASE) = "xy" ];then BUILD_TYPE="REL";else BUILD_TYPE="DBG";fi;\

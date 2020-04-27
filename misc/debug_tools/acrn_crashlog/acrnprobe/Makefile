@@ -63,9 +63,13 @@ $(VERSION_H):
 		mkdir -p $(BUILDDIR)/include/acrnprobe ; \
 	fi
 	touch $(VERSION_H)
-	@COMMIT=`git log -1 --pretty=format:%h . 2>/dev/null`;\
-	DIRTY=`git diff --name-only $(CURDIR)`;\
-	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
+	@if [ "$(BUILD_VERSION)"x = x ];then \
+		COMMIT=`git log -1 --pretty=format:%h . 2>/dev/null`;\
+		DIRTY=`git diff --name-only $(CURDIR)`;\
+		if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
+	else \
+		PATCH="$(BUILD_VERSION)"; \
+	fi; \
 	TIME=$$(date -u -d "@$${SOURCE_DATE_EPOCH:-$$(date +%s)}" "+%Y-%m-%d %H:%M:%S"); \
 	USER="$${USER:-$$(id -u -n)}"; \
 	cat $(CURDIR)/../license_header > $(VERSION_H);\
