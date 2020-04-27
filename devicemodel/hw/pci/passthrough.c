@@ -642,6 +642,9 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	struct passthru_dev *ptdev;
 	uint16_t virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
 	struct acrn_assign_pcidev pcidev = {};
+	uint16_t phys_bdf = 0;
+	char reset_path[60];
+	int fd;
 
 	if (!dev->arg) {
 		warnx("%s: passthru_dev is NULL", __func__);
@@ -655,6 +658,9 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (dev->lintr.pin != 0) {
 		vm_reset_ptdev_intx_info(ctx, virt_bdf, ptdev->phys_bdf, dev->lintr.ioapic_irq, false);
 	}
+
+	if (ptdev)
+		phys_bdf = ptdev->phys_bdf;
 
 	if (ptdev->phys_bdf == PCI_BDF_GPU) {
 		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, GPU_DSM_GPA, GPU_DSM_SIZE, dsm_start_hpa);
@@ -671,6 +677,22 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		 * could still be alive if DM died.
 		 */
 		vm_deassign_pcidev(ctx, &pcidev);
+	}
+	if (!is_rtvm && phys_bdf) {
+		memset(reset_path, 0, sizeof(reset_path));
+		snprintf(reset_path, 40,
+			"/sys/bus/pci/devices/0000:%02x:%02x.%x/reset",
+			(phys_bdf >> 8) & 0xFF,
+			(phys_bdf >> 3) & 0x1F,
+			(phys_bdf & 0x7));
+
+		fd = open(reset_path, O_WRONLY);
+		if (fd >= 0) {
+			if (write(fd, "1", 1) < 0)
+				warnx("reset dev %x failed!\n",
+				      phys_bdf);
+			close(fd);
+		}
 	}
 }
 
