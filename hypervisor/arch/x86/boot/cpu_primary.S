@@ -237,10 +237,8 @@ cpu_primary_start_64:
 
 primary_start_long_mode:
 
-    /* Initialize temporary stack pointer */
-    lea     ld_bss_end(%rip), %rsp
-    /*0x1000 = PAGE_SIZE*/
-    add     $0x1000,%rsp
+    /* Initialize temporary stack pointer, size = 0x1000 */
+    lea     stack_for_boot(%rip), %rsp
     /* 16 = CPU_STACK_ALIGN */
     and     $(~(16 - 1)),%rsp
 

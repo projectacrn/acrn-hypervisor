@@ -71,6 +71,14 @@ SECTIONS
 
     } > ram
 
+    .boot_stack :
+    {
+    /* 4K for the boot stack */
+        . += 4096;
+        stack_for_boot = .;
+        . = ALIGN(4);
+    } > ram
+
     .bss_noinit (NOLOAD):
     {
 	. = ALIGN(4) ;
