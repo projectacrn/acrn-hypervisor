@@ -59,11 +59,10 @@ def clos_config_output(vm_info, i, config):
 def scenario_vm_num(scenario_items, config):
 
     load_type_cnt = scenario_items['vm'].load_order_cnt
-    kata_vm_num = scenario_items['hv'].cap.max_kata_vm_num
     print("#define PRE_VM_NUM\t\t{}U".format(load_type_cnt.pre_vm), file=config)
     print("#define SOS_VM_NUM\t\t{}U".format(load_type_cnt.sos_vm), file=config)
     print("#define MAX_POST_VM_NUM\t\t{}U".format(load_type_cnt.post_vm), file=config)
-    print("#define CONFIG_MAX_KATA_VM_NUM\t\t{}U".format(kata_vm_num), file=config)
+    print("#define CONFIG_MAX_KATA_VM_NUM\t\t{}U".format(scenario_cfg_lib.KATA_VM_COUNT), file=config)
 
 
 def gen_pre_launch_vm(vm_info, config):

@@ -126,6 +126,7 @@ def load_vm_check(load_vms, item):
     :param item: vm name item in xml
     :return: None
     """
+    global KATA_VM_COUNT
     sos_vm_ids = []
     pre_vm_ids = []
     post_vm_ids = []
@@ -147,7 +148,7 @@ def load_vm_check(load_vms, item):
         if "PRE_LAUNCHED_VM" == VM_DB[load_str]['load_type']:
             pre_vm_ids.append(order_i)
 
-        if "POST_LAUNCHED_VM" == VM_DB[load_str]['load_type']:
+        if "POST_STD_VM" == load_str:
             post_vm_ids.append(order_i)
 
         if "KATA_VM" == load_str:
@@ -156,6 +157,7 @@ def load_vm_check(load_vms, item):
         if "POST_RT_VM" == load_str:
             rt_vm_ids.append(order_i)
 
+    KATA_VM_COUNT = len(kata_vm_ids)
     if len(kata_vm_ids) > len(UUID_DB["KATA_VM"]):
         key = "vm:id={},{}".format(kata_vm_ids[0], item)
         ERR_LIST[key] = "KATA VM number should not be greater than {}".format(len(UUID_DB["KATA_VM"]))
