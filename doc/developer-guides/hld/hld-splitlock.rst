@@ -1,118 +1,137 @@
 .. _hld_splitlock:
 
-Handling Split-locked Access in Acrn
+Handling Split-locked Access in ACRN
 ####################################
 
-This document explains what is Split-locked Access, how to detect it and what
-Acrn do for handling it.
+A split lock is any atomic operation whose operand crosses two cache
+lines. Because the operation must be atomic, the system locks the bus
+while the CPU accesses the two cache lines.  Blocking bus access from
+other CPUs plus the bus locking protocol overhead degrades overall
+system performance.
+
+This document explains Split-locked Access, how to detect it, and how
+ACRN handles it.
 
 Split-locked Access Introduction
 ********************************
-The Intel-64 and IA32 multiple-processor systems support locked atomic
+Intel-64 and IA32 multiple-processor systems support locked atomic
 operations on locations in system memory. For example, The LOCK instruction
-prefix be prepended to the following instructions: ADD, ADC, AND, BTC, BTR, BTS,
+prefix can be prepended to the following instructions: ADD, ADC, AND, BTC, BTR, BTS,
 CMPXCHG, CMPXCH8B, CMPXCHG16B, DEC, INC, NEG, NOT, OR, SBB, SUB, XOR, XADD,
-XCHG. and these instructions must with memory destination operand forms.
-Reading or writing a byte in system memory are always guaranteed to be handled
-atomically, otherwise, these locked atomic operations can impact system in two
+and XCHG, when these instructions use memory destination operand forms.
+Reading or writing a byte in system memory is always guaranteed to be
+atomic, otherwise, these locked atomic operations can impact system in two
 ways:
 
-- The destination operand located in same cache line. Cache coherency protocols
-  that ensure that atomic operations can be carried out on cached data
-  structures with cache lock.
+- **The destination operand is located in the same cache line.**
 
-- The destination operand located in two cache line. This atomic operation is
-  called a Split-locked Access. For this situation, LOCK# bus signal is asserted
-  to lock the system bus, to ensure they are atomic. See `Intel 64 and IA-32 Architectures Software Developer's Manual(SDM), Volume 3, (Section 8.1.2 Bus Locking) <https://software.intel.com/en-us/download/intel-64-and-ia-32-architectures-sdm-combined-volumes-3a-3b-3c-and-3d-system-programming-guide>`_.
+   Cache coherency protocols ensure that atomic operations can be
+   carried out on cached data structures with cache lock.
 
-Split-locked Access may lead to long latency, to ordinary memory operations on
-other CPUs, which is hard to investigate.
+- **The destination operand is located in two cache lines.**
+
+   This atomic operation is called a Split-locked Access. For this situation,
+   the LOCK# bus signal is asserted to lock the system bus, to ensure
+   the operation is atomic. See `Intel 64 and IA-32 Architectures Software Developer's Manual(SDM), Volume 3, (Section 8.1.2 Bus Locking) <https://software.intel.com/en-us/download/intel-64-and-ia-32-architectures-sdm-combined-volumes-3a-3b-3c-and-3d-system-programming-guide>`_.
+
+Split-locked Access can cause unexpected long latency to ordinary memory
+operations by other CPUs while the bus is locked. This degraded system
+performance can be hard to investigate.
 
 Split-locked Access Detection
 *****************************
-From the Microarchitecture Tremont, a new CPU capability is introduced for
-detection of Split-locked Access. When this feature is enabled, an alignment
-check exception(#AC) with error code 0 is raised for instructions which are
-doing Split-locked Access. #AC is a fault, the instruction is not executed,
-there is a chance to decide what to do with this instruction in the #AC handler:
+The `Intel Tremont Microarchitecture
+<https://newsroom.intel.com/news/intel-introduces-tremont-microarchitecture>`_
+introduced a new CPU capability for detecting Split-locked Access. When
+this feature is enabled, an alignment check exception (#AC) with error
+code 0 is raised for instructions causing a Split-locked Access. Because
+#AC is a fault, the instruction is not executed, giving the #AC handler
+an opportunity to decide how to handle this instruction:
 
-- Allow the instruction to run with LOCK# bus signal, may have impact to other
-  CPUs.
-- Disable LOCK# assertion for split locked access. That is not right because
-  instruction becomes non-atomic, and Intel plans to remove this CPU feature
-  from select products starting from a specific year. See `SDM, Volume 1, (Section 2.4 PROPOSED REMOVAL FROM UPCOMING PRODUCTS) <https://software.intel.com/en-us/download/intel-64-and-ia-32-architectures-software-developers-manual-volume-1-basic-architecture>`_.
-- Terminate the software at this instruction.
+- It can allow the instruction to run with LOCK# bus signal potentially
+  impacting performance of other CPUs.
+- It can disable LOCK# assertion for split locked access, but
+  improperly makes the instruction non-atomic. (Intel plans to remove this CPU feature
+  from upcoming products as documented in
+  `SDM, Volume 1, (Section 2.4 PROPOSED REMOVAL FROM UPCOMING PRODUCTS.) <https://software.intel.com/en-us/download/intel-64-and-ia-32-architectures-software-developers-manual-volume-1-basic-architecture>`_
+- It can terminate the software at this instruction.
 
 Feature Enumeration and Control
 *******************************
-#AC for Split-locked Access feature is enumarated and controled via CPUID and
+#AC for Split-locked Access feature is enumerated and controlled via CPUID and
 MSR registers.
 
 - CPUID.(EAX=0x7, ECX=0):EDX[30], the 30th bit of output value in EDX indicates
   if the platform has IA32_CORE_CAPABILITIES MSR.
 
 - The 5th bit of IA32_CORE_CAPABILITIES MSR(0xcf), enumerates whether the CPU
-  support #AC for Split-locked Access(And has TEST_CTRL MSR).
+  supports #AC for Split-locked Access (and has TEST_CTRL MSR).
 
-- The 29th bit of TEST_CTL MSR(0x33) control enable/disable #AC for Split-locked
+- The 29th bit of TEST_CTL MSR(0x33) controls enabling and disabling #AC for Split-locked
   Access.
 
-Acrn Handling Split-locked Access
+ACRN Handling Split-locked Access
 *********************************
-Split-locked Access is not expected in Acrn hypervisor, should never happen. But
-that is not guaranteed inside VMs. Acrn support use this CPU capability, that
-are design principles:
+Split-locked Access is not expected in the ACRN hypervisor itself, and
+should never happen. However, such access could happen inside a VM. ACRN
+support for handling split-locked access follows these design principles:
 
-- Always enable #AC on Split-locked Access in physical side.
+- Always enable #AC on Split-locked Access for the physical processors.
 
-- Present virtual split lock capability to guest, and directly deliver #AC to
-  guest (virtual split-lock capability helps the guest to isolate violations
-  from user land).
+- Present a virtual split lock capability to guest (VMs), and directly
+  deliver the alignment check exception (#AC) to the guest. (This
+  virtual split-lock capability helps the guest isolate violations from
+  user land).
 
-- Guest write of MSR_TEST_CTL is ignored, guest read gets the written value.
+- Guest write of MSR_TEST_CTL is ignored, and guest read gets the written value.
 
-- If Split-locked Access happens in ACRN, this is a software bug we must fix it.
+- Any Split-locked Access in the ACRN hypervisor is a software bug we must fix.
 
-- If split-locked Access happens in guest kernel, the guest may not be able to
-  fix the issue gracefully (the guest may behavior differently with that of
-  native OS). The RT guest should avoid the Split-locked Access, otherwise it is
-  a software bug.
+- If split-locked Access happens in a guest kernel, the guest may not be able to
+  fix the issue gracefully. (The guest may behave differently than the
+  native OS). The real-time (RT) guest must avoid a Split-locked Access
+  and consider it a software bug.
 
-Fore Enable This Feature
-========================
-This feature is enumerated at PCPU pre-initialization stage, where Acrn detects
- CPU capabilities. If the PCPU supports this feature:
+Enable Split-Locked Access handling early
+==========================================
+This feature is enumerated at the Physical CPU (pCPU) pre-initialization
+stage, where ACRN detects CPU capabilities. If the pCPU supports this
+feature:
 
-- Enabled at each PCPU post-initialization stage.
+- Enable it at each pCPU post-initialization stage.
 
-- Acrn hypervisor presents virtual emulated TEST_CTRL MSR to each VCPU.
-  Setting/clearing TEST_CTRL[bit 29] from VCPU, has no any effect.
+- ACRN hypervisor presents a virtual emulated TEST_CTRL MSR to each
+  Virtual CPU (vCPU).
+  Setting or clearing TEST_CTRL[bit 29] in a vCPU, has no effect.
 
-If PCPU does not have this capability, VCPU does not have the virtual TEST_CTRL
-neither.
+If pCPU does not have this capability, a vCPU does not have the virtual
+TEST_CTRL either.
 
-Expected Behavior in Acrn
+Expected Behavior in ACRN
 =========================
-Acrn HV should never trigger Split-locked Access, it is not allowed to run with
-Split-locked Access. If it does trigger split-lock, Acrn report #AC at the
-instruction and stop running. This HV instruction is considered as a bug, must
-fix it.
+The ACRN hypervisor should never trigger Split-locked Access and it is
+not allowed to run with Split-locked Access. If ACRN does trigger a
+split-locked access, ACRN reports #AC at the instruction and stops
+running. The offending HV instruction is considered a bug that must be
+fixed.
 
 Expected Behavior in VM
 =======================
-If VM process have a Split-locked Access at user space, it will be terminated by
-SIGBUS. When debug inside VM for a reason, you may find it triggers an #AC, no
-matter alignment checking is enabled or not.
-If VM kernel have a Split-locked Access, it would hang or oops for #AC. VM
-kernel may try disable #AC for Split-locked Access and continue, but it will not
-make it. For that case, you may find HV warning message that says VM tries
-writing to TEST_CTRL MSR, and help to identify the problem.
+If a VM process has a Split-locked Access in user space, it will be
+terminated by SIGBUS. When debugging inside a VM, you may find it
+triggers an #AC even if alignment checking is disabled.
+
+If a VM kernel has a Split-locked Access, it will hang or oops on an
+#AC. A VM kernel may try to disable #AC for Split-locked Access and
+continue, but it will fail. The ACRN hypervisor helps identify the
+problem by reporting a warning message that the VM tried writing to
+TEST_CTRL MSR.
 
 
 Disable Split-locked Access Detection
 =====================================
-When the CPU support Split-locked Access detection, Acrn HV will use it to
-prevent any VM to run a burden software(which contains split-locked instructions). Sometimes customer may really want to run the software and does not care
-about performance of entire system, he can configure this feature out of Acrn
-code.
-The next work in the plan is to use Acrn Configuration Tools to disable split lock detection, that will be done later.
+If the CPU supports Split-locked Access detection, the ACRN hypervisor
+uses it to prevent any VM running with potential system performance
+impacting split-locked instructions.  This detection can be disabled
+(eventually by using the ACRN configuration tools) for customers not
+caring about system performance.
