@@ -105,22 +105,23 @@ Create a Windows 10 image to install Windows 10 onto a virtual disk.
 
 Download Win10 ISO and Drivers
 ------------------------------
-* Download `Windows 10 LTSC ISO <https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise>`_.
-*  Select **ISO-LTSC**, then click **Continue**.
-*  Complete the required info then click **Continue**.
-*  Select the language and **x86 64 bit**, then click **Download ISO** and save as ``windows10-LTSC-17763.iso``.
+#. Download `Windows 10 LTSC ISO <https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise>`_.
+   
+   - Select **ISO-LTSC**, then click **Continue**.
+   - Complete the required info then click **Continue**.
+   - Select the language and **x86 64 bit**, then click **Download ISO** and save as ``windows10-LTSC-17763.iso``.
 
-* Download the `Intel DCH Graphics Driver <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`_.
+#. Download the `Intel DCH Graphics Driver <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`_.
 
-* Download the `Oracle Windows driver <https://edelivery.oracle.com/osdc/faces/SoftwareDelivery>`_.
-*  Sign in. If you do not have an Oracle account, register for one.
-*  Select **Download Package**. Key in **Oracle Linux 7.6** and click **Search**.
-*  Click **DLP: Oracle Linux 7.6**; it will be added to your Cart.
-*  Click **Checkout** which is located at the top right corner.
-*  Under **Platforms/Language**, select **x86 64 bit**, and click **Continue**.
-*  Check **I accept the terms in the license agreement**; click **Continue**.
-*  In the list, right check the item labeled **Oracle VirtIO Drivers Version for Microsoft Windows 1.x.x, yy MB**, and then **Save link as ...**.  Currently, it is named **V982789-01.zip**.
-*  Click **Download**. When the download is complete, unzip the file. You will see an ISO named **winvirtio.iso**.
+#. Download the `Oracle Windows driver <https://edelivery.oracle.com/osdc/faces/SoftwareDelivery>`_.
+   - Sign in. If you do not have an Oracle account, register for one.
+   - Select **Download Package**. Key in **Oracle Linux 7.6** and click **Search**.
+   - Click **DLP: Oracle Linux 7.6**; it will be added to your Cart.
+   - Click **Checkout** which is located at the top right corner.
+   - Under **Platforms/Language**, select **x86 64 bit**, and click **Continue**.
+   - Check **I accept the terms in the license agreement**; click **Continue**.
+   - In the list, right check the item labeled **Oracle VirtIO Drivers Version for Microsoft Windows 1.x.x, yy MB**, and then **Save link as ...**.  Currently, it is named **V982789-01.zip**.
+   - Click **Download**. When the download is complete, unzip the file. You will see an ISO named **winvirtio.iso**.
 
 Create Raw Disk
 ---------------
@@ -140,6 +141,7 @@ Prepare Script to Create Image
 
 
 #. Edit the ``acrn-dm`` command line in ``install_win.sh`` as follows:
+   .. note:: Make sure you use Gvt-g ``-s 2,pci-gvt -G "$2"`` in acrn-dm command line. Now we cannot support to create windows image by Gvt-d.
 
    - Change ``-s 3,virtio-blk,./win10-ltsc.img`` to your path to the Windows 10 image.
 
@@ -149,8 +151,8 @@ Prepare Script to Create Image
 
    - Add ``-s 9,ahci,cd:./winvirtio.iso`` to point to your path to the winvirtio iso.
 
-Install Windows 10
-------------------
+Install Windows 10 by Gvt-g
+---------------------------
 .. note:: Make sure you have configured your monitor and display according to **3** of
       :ref:`Boot Windows with GVT-g on ACRN <waag_display_conf_lable>`.
 
@@ -212,8 +214,6 @@ Install Windows 10
    .. figure:: images/windows_install_9.png
       :align: center
 
-   .. note:: You must connect two monitors to the KBL NUC in order to launch Windows with the default configurations above.
-
 #. The Windows installation is completed after a few configuration steps; the Windows desktop displays.
 
    .. figure:: images/windows_install_10.png
@@ -224,23 +224,15 @@ Install Windows 10
 
 .. _waag_display_conf_lable:
 
-Boot Windows with GVT-g on ACRN
-===============================
+Boot Windows on ACRN with default configuration
+===============================================
 #. Modify the ``/usr/share/acrn/samples/nuc/launch_win.sh`` script to specify the Windows image generated above.
 
 #. Run the ``launch_win.sh``. The WaaG desktop displays on the HDMI monitor.
 
-   .. note:: Use the following command to disable the GNOME Display Manager (GDM) if it is enabled::
-
-      # sudo systemctl mask gdm.service
-
-   .. note:: You must connect two monitors to the KBL NUC in order to launch
-      Windows with the default configurations above. The second monitor must
-      include the Weston desktop. If you have set up Weston in the Service
-      VM, follow the steps in :ref:`skl-nuc-gpu-passthrough` to set up
-      Weston as the desktop environment in the Service VM to
-      experience Windows with the AcrnGT local display feature.
-
+   .. note:: We support Gvt-g and Gvt-d while launching Windows guest. If you use Gvt-g, you can set up Weston in the Service VM, 
+      and follow the steps in :ref:`skl-nuc-gpu-passthrough` to set up Weston as the desktop environment in the Service VM to
+      experience Windows with the AcrnGT local display feature. If you use Gvt-d, then only Windows has display.
 
 ACRN Windows verified feature list
 **********************************
@@ -254,9 +246,10 @@ ACRN Windows verified feature list
                 , "Virtio network",                  "Working"
                 , "Virtio input - mouse",            "Working"
                 , "Virtio input - keyboard",         "Working"
-                , "GOP & VNC remote display",        "Working"
+                , "GVT-g GOP & VNC remote display",  "Working"
     "GVT-g",      "GVT-g without local display",     "Working with 3D benchmark"
-           ,      "GVT-g  with local display",       "Working with 3D benchmark"
+           ,      "GVT-g with local display",        "Working with 3D benchmark"
+    "GVT-d",      "GVT-d with local display",        "Working"
     "Tools",      "WinDbg",                          "Working"
     "Test cases", "Install Windows 10 from scratch", "OK"
                 , "Windows reboot",                  "OK"
@@ -274,6 +267,10 @@ Explanation for acrn-dm popular command lines
 *********************************************
 
 .. note:: You can use these acrn-dm command lines according to your real requirements.
+
+* *-s 2,passthru,0/2/0,gpu*:
+  This is GVT-d, to passthrough VGA controller to Windows.
+  You may need to change 0/2/0 to match the bdf of the VGA controller on your platform.
 
 * *-s 3,ahci,hd:/root/img/win10.img*:
   This is the hard disk onto which to install Windows 10.
@@ -302,8 +299,7 @@ Explanation for acrn-dm popular command lines
 
 * *-s 9,passthru,0/14/0*:
   This is to passthrough USB controller to Windows.
-  You may need to change 0/14/0 to match the bdf of the USB controller on
-  your platform.
+  You may need to change 0/14/0 to match the bdf of the USB controller on your platform.
 
 * *--ovmf /usr/share/acrn/bios/OVMF.fd*:
   Make sure it points to your OVMF binary path.
