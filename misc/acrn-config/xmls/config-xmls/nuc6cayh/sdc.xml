@@ -35,7 +35,6 @@
         <IOMMU_BUS_NUM desc="Highest PCI bus ID used during IOMMU initialization.">0x100</IOMMU_BUS_NUM>
         <MAX_IR_ENTRIES desc="Maximum number of Interrupt Remapping Entries.">256</MAX_IR_ENTRIES>
         <MAX_IOAPIC_NUM desc="Maximum number of IO-APICs.">1</MAX_IOAPIC_NUM>
-        <MAX_KATA_VM_NUM desc="Maximum number of Kata Containers in SOS.">1</MAX_KATA_VM_NUM>
         <MAX_PCI_DEV_NUM desc="Maximum number of PCI devices.">96</MAX_PCI_DEV_NUM>
         <MAX_IOAPIC_LINES desc="Maximum number of interrupt lines per IOAPIC.">120</MAX_IOAPIC_LINES>
         <MAX_PT_IRQ_ENTRIES desc="Maximum number of interrupt source for PT devices.">64</MAX_PT_IRQ_ENTRIES>
@@ -138,12 +137,12 @@
     <vuart id="0">
         <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
         <base configurable="0" desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
-        <irq configurable="0" desc="vCOM1 irq">COM1_BASE</irq>
+        <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
     </vuart>
     <vuart id="1">
         <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
         <base configurable="0" desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
-        <irq configurable="0" desc="vCOM2 irq">COM2_BASE</irq>
+        <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
         <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">0</target_uart_id>
     </vuart>

@@ -170,12 +170,6 @@ def main(args):
         common.print_red("Validate the scenario item failure", err=True)
         return err_dic
 
-    # get kata vm count
-    scenario_cfg_lib.KATA_VM_COUNT = int(scenario_items['hv'].cap.max_kata_vm_num)
-    if scenario_cfg_lib.KATA_VM_COUNT > 1:
-        err_dic['scenario config'] = "Only one kata vm is supported!"
-        return err_dic
-
     # generate board defconfig
     with open(config_hv, 'w+') as config:
         err_dic = board_defconfig.generate_file(scenario_items['hv'], config)
