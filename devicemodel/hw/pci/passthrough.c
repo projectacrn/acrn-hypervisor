@@ -426,6 +426,7 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 
 	switch (device) {
 	case INTEL_ELKHARTLAKE:
+	case INTEL_TIGERLAKE:
 		/* BDSM register has 64 bits.
 		 * bits 63:20 contains the base address of stolen memory
 		 */
