@@ -437,5 +437,6 @@ int32_t copy_from_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
 /* gpa --> hpa -->hva */
 void *gpa2hva(struct acrn_vm *vm, uint64_t x)
 {
-	return hpa2hva(gpa2hpa(vm, x));
+	uint64_t hpa = gpa2hpa(vm, x);
+	return (hpa == INVALID_HPA) ? NULL : hpa2hva(hpa);
 }

@@ -55,6 +55,7 @@ static uint32_t create_zeropage_e820(struct zero_page *zp, const struct acrn_vm 
 
 /**
  * @pre vm != NULL
+ * @pre (vm->min_mem_addr <= kernel_load_addr) && (kernel_load_addr < vm->max_mem_addr)
  */
 static uint64_t create_zero_page(struct acrn_vm *vm)
 {
