@@ -37,7 +37,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
      - Enable guest to write io port 0xf4 to exit guest. It's mainly used by
        guest unit test.
 
-   * - :kbd:`-E <elf image path>`
+   * - :kbd:`-E, --elf_file <elf image path>`
      - This option is to define a static elf binary which could be loaded by
        DM. DM will run elf as guest of ACRN.
 
@@ -158,13 +158,6 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
    * - :kbd:`--part_info <part_info_name>`
      - Set guest partition info path.
 
-   * - :kbd:`--ptdev_no_reset`
-     - Disable reset check for pci device.
-       When assigning a PCI device as a passthrough device, we will reset it
-       first to get it to a valid device state. So if the device doesn't have
-       the reset capability, the passthrough will fail. The PCI device reset
-       can be disabled using this option.
-
    * - :kbd:`-r, --ramdisk <ramdisk_image_path>`
      - Set the ramdisk (full path) for the User VM. The maximum length is 1023.
        The supported ramdisk format depends on your User VM kernel configuration.
@@ -264,6 +257,16 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
           --ovmf w,/usr/share/acrn/bios/OVMF.fd
 
 
+
+   * - :kbd:`--cpu_affinity <list of pCPUs>`
+     - list of pCPUs assigned to this VM.
+
+       Example::
+
+          --cpu_affinity 1,3
+
+       to assign physical CPUs (pCPUs) 1 and 3 to this VM.
+
    * - :kbd:`--virtio_poll <poll_interval>`
      - Enable virtio poll mode with poll interval xxx ns.
 
@@ -350,3 +353,11 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
           --pm_notify_channel uart --pm_by_vuart tty,/dev/ttyS1
 
        For different User VM, it can be configured as needed.
+
+   * - :kbd:`--windows`
+     - This option is used to run Windows User VMs. It supports Oracle
+       ``virtio-blk``, ``virtio-net`` and ``virtio-input`` devices for Windows
+       guests with secure boot.
+
+       usage::
+          --windows
