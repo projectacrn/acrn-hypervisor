@@ -4,20 +4,21 @@ Device Passthrough
 ##################
 
 A critical part of virtualization is virtualizing devices: exposing all
-aspects of a device including its I/O, interrupts, DMA, and configuration.
-There are three typical device
-virtualization methods: emulation, para-virtualization, and passthrough.
-All emulation, para-virtualization and passthrough are used in ACRN project.  Device
-emulation is discussed in :ref:`hld-io-emulation`, para-virtualization is discussed
-in :ref:`hld-virtio-devices` and device passthrough will be discussed here.
+aspects of a device including its I/O, interrupts, DMA, and
+configuration.  There are three typical device virtualization methods:
+emulation, para-virtualization, and passthrough.  All emulation,
+para-virtualization and passthrough are used in ACRN project. Device
+emulation is discussed in :ref:`hld-io-emulation`, para-virtualization
+is discussed in :ref:`hld-virtio-devices` and device passthrough will be
+discussed here.
 
-In the ACRN project, device emulation means emulating all existing hardware
-resource through a software component device model running in the
-Service OS (SOS). Device
-emulation must maintain the same SW interface as a native device,
-providing transparency to the VM software stack. Passthrough implemented in
-hypervisor assigns a physical device to a VM so the VM can access
-the hardware device directly with minimal (if any) VMM involvement.
+In the ACRN project, device emulation means emulating all existing
+hardware resource through a software component device model running in
+the Service OS (SOS). Device emulation must maintain the same SW
+interface as a native device, providing transparency to the VM software
+stack. Passthrough implemented in hypervisor assigns a physical device
+to a VM so the VM can access the hardware device directly with minimal
+(if any) VMM involvement.
 
 The difference between device emulation and passthrough is shown in
 :numref:`emu-passthru-diff`. You can notice device emulation has
@@ -75,7 +76,7 @@ one the following 4 cases:
   to any VM. For now, UART is the only pci device could be owned by hypervisor.
 - **Pre-launched VM**: The passthrough devices will be used in a pre-launched VM is
   pre-defined in VM configuration. These passthrough devices are owned by the
-  pre-launched VM after   the VM is created. These devices will not be removed
+  pre-launched VM after the VM is created. These devices will not be removed
   from the pre-launched VM. There could be pre-launched VM(s) in logical partition
   mode and hybrid mode.
 - **Service VM**: All the passthrough devices except these described above (owned by
@@ -142,6 +143,102 @@ remaps the interrupt index in the VT-d interrupt-remapping table to the physical
 interrupt vector after checking the external interrupt request is valid. Translation
 physical vector to virtual vector is still needed to be done by hypervisor, which is
 also described in the below section :ref:`interrupt-remapping`.
+
+VT-d posted interrupt (PI) enables direct delivery of external interrupts from
+passthrough devices to VMs without having to exit to hypervisor, thereby improving
+interrupt performance. ACRN uses VT-d posted interrupts if the platform
+supports them. VT-d distinguishes between remapped
+and posted interrupt modes by bit 15 in the low 64-bit of the IRTE. If cleared the
+entry is remapped, if set it's posted.
+The idea for posted interrupt is to keep a Posted Interrupt Descriptor (PID) in memory.
+The PID is a 64-byte data structure that contains several fields:
+
+Posted Interrupt Request (PIR):
+   a 256-bit field, one bit per request vector;
+   this is where the interrupts are posted;
+
+Suppress Notification (SN):
+   determines whether to notify (``SN=0``) or not notify (``SN=1``)
+   the CPU for non-urgent interrupts. For ACRN,
+   all interrupts are treated as non-urgent. ACRN sets SN=0 during initialization
+   and then never changes it at runtime;
+
+Notification Vector (NV):
+   the CPU must be notified with an interrupt and this
+   field specifies the vector for notification;
+
+Notification Destination (NDST):
+   the physical APIC-ID of the destination.
+   ACRN does not support vCPU migration, one vCPU always runs on the same pCPU,
+   so for ACRN, NDST is never changed after initialization.
+
+Outstanding Notification (ON):
+   indicates if a notification event is outstanding
+
+The ACRN scheduler supports vCPU scheduling, where two or more vCPUs can
+share the same pCPU using a time sharing technique. One issue emerges
+here for VT-d posted interrupt handling process, where IRQs could happen
+when the target vCPU is in a halted state. We need to handle the case
+where the running vCPU disrupted by the external interrupt, is not the
+target vCPU that an external interrupt should be delivered.
+
+Consider this scenario:
+
+* vCPU0 runs on pCPU0 and then enters a halted state,
+* ACRN scheduler now chooses vCPU1 to run on pCPU0.
+
+If an external interrupt from an assigned device destined to vCPU0
+happens at this time, we do not want this interrupt to be incorrectly
+consumed by vCPU1 currently running on pCPU0. This would happen if we
+allocate the same Activation Notification Vector (ANV) to all vCPUs.
+
+To circumvent this issue, ACRN allocates unique ANVs for each vCPU that
+belongs to the same pCPU. The ANVs need only be unique within each pCPU,
+not across all vCPUs. Since vCPU0's ANV is different from vCPU1's ANV,
+if a vCPU0 is in a halted state, external interrupts from an assigned
+device destined to vCPU0 delivered through the PID will not trigger the
+posted interrupt processing. Instead, a VMExit to ACRN happens that can
+then process the event such as waking up the halted vCPU0 and kick it
+to run on pCPU0.
+
+For ACRN, ``CONFIG_MAX_VM_NUM`` vCPUs may be running on top of a pCPU. ACRN
+does not support two vCPUs of the same VM running on top of the same
+pCPU. This reduces the number of pre-allocated ANVs for posted
+interrupts to ``CONFIG_MAX_VM_NUM``, and enables ACRN to avoid switching
+between active and wake-up vector values in the posted interrupt
+descriptor on vCPU scheduling state changes. ACRN uses the following
+formula to assign posted interrupt vectors to vCPUs::
+
+   NV = POSTED_INTR_VECTOR + vcpu->vm->vm_id
+
+where ``POSTED_INTR_VECTOR`` is the starting vector (0xe3) for posted interrupts.
+
+ACRN maintains a per-PCPU vCPU array that stores the pointers to
+assigned vCPUs for each pCPU and is indexed by ``vcpu->vm->vm_id``.
+When the vCPU is created, ACRN adds the vCPU to the containing pCPU's
+vCPU array. When the vCPU is offline, ACRN removes the vCPU from the
+related vCPU array.
+
+An example to illustrate our solution:
+
+.. figure:: images/passthru-image50.png
+  :align: center
+
+ACRN sets ``SN=0`` during initialization and then never change it at
+runtime. This means posted interrupt notification is never suppressed.
+After posting the interrupt in Posted Interrupt Request (PIR), VT-d will
+always notify the CPU using the interrupt vector NV, in both root and
+non-root mode. With this scheme, if the target vCPU is running under
+VMX non-root mode, it will receive the interrupts coming from
+passed-through device without a VMExit (and therefore without any
+intervention of the ACRN hypervisor).
+
+If the target vCPU is in a halted state (under VMX non-root mode), a
+scheduling request will be raised to wake it up. This is needed to
+achieve real time behavior. If an RT-VM is waiting for an event, when
+the event is fired (a PI interrupt fires), we need to wake up the VM
+immediately.
+
 
 MMIO Remapping
 **************
