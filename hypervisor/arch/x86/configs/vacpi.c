@@ -113,6 +113,7 @@ static struct acpi_table_info acpi_table_template[CONFIG_MAX_VM_NUM] = {
 /**
  * @pre vm != NULL
  * @pre vm->vm_id < CONFIG_MAX_VM_NUM
+ * @pre (vm->min_mem_addr <= ACPI_XSDT_ADDR) && (ACPI_XSDT_ADDR < vm->max_mem_addr)
  */
 void build_vacpi(struct acrn_vm *vm)
 {
