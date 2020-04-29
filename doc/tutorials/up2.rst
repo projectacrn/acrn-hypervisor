@@ -77,6 +77,13 @@ You will need to keep these in mind in a few places:
      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/mmcblk0 -p 1 -L "ACRN Hypervisor" \
          -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=bdf@0:18.1"
 
+  .. note::
+     There have been reports that the UP2 EFI firmware does not always keep
+     these settings during a reboot. Make sure to always double-check the
+     settings if ACRN is not running correctly. There is no reliable way to
+     set this boot order and you may want to remove other, unused boot entries
+     and also change the boot order (``-o`` option).
+
 UP2 serial port setting
 =======================
 
