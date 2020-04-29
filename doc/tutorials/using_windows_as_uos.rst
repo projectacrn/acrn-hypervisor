@@ -106,7 +106,7 @@ Create a Windows 10 image to install Windows 10 onto a virtual disk.
 Download Win10 ISO and Drivers
 ------------------------------
 #. Download `Windows 10 LTSC ISO <https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise>`_.
-   
+
    - Select **ISO-LTSC**, then click **Continue**.
    - Complete the required info then click **Continue**.
    - Select the language and **x86 64 bit**, then click **Download ISO** and save as ``windows10-LTSC-17763.iso``.
@@ -114,13 +114,15 @@ Download Win10 ISO and Drivers
 #. Download the `Intel DCH Graphics Driver <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`_.
 
 #. Download the `Oracle Windows driver <https://edelivery.oracle.com/osdc/faces/SoftwareDelivery>`_.
+
    - Sign in. If you do not have an Oracle account, register for one.
    - Select **Download Package**. Key in **Oracle Linux 7.6** and click **Search**.
    - Click **DLP: Oracle Linux 7.6**; it will be added to your Cart.
    - Click **Checkout** which is located at the top right corner.
    - Under **Platforms/Language**, select **x86 64 bit**, and click **Continue**.
    - Check **I accept the terms in the license agreement**; click **Continue**.
-   - In the list, right check the item labeled **Oracle VirtIO Drivers Version for Microsoft Windows 1.x.x, yy MB**, and then **Save link as ...**.  Currently, it is named **V982789-01.zip**.
+   - In the list, right check the item labeled **Oracle VirtIO Drivers Version for Microsoft Windows 1.x.x, yy MB**,
+     and then **Save link as ...**.  Currently, it is named **V982789-01.zip**.
    - Click **Download**. When the download is complete, unzip the file. You will see an ISO named **winvirtio.iso**.
 
 Create Raw Disk
@@ -141,17 +143,20 @@ Prepare Script to Create Image
 
 
 #. Edit the ``acrn-dm`` command line in ``install_win.sh`` as follows:
-   .. note:: Make sure you use Gvt-g ``-s 2,pci-gvt -G "$2"`` in acrn-dm command line. Now we cannot support to create windows image by Gvt-d.
+
+   .. note:: Make sure you use GVT-g ``-s 2,pci-gvt -G "$2"`` in acrn-dm
+      command line. Now we cannot support creating windows image by GVT-d.
 
    - Change ``-s 3,virtio-blk,./win10-ltsc.img`` to your path to the Windows 10 image.
 
-   - Add ``-s 6,xhci,1-5:1-9``. You may need to change 1-5:1-9 to match the ports of the USB keyboard/Mouse and flash on your platform.
+   - Add ``-s 6,xhci,1-5:1-9``. You may need to change 1-5:1-9 to match the ports of
+     the USB keyboard/Mouse and flash on your platform.
 
    - Add ``-s 8,ahci,cd:./windows10-LTSC-17763.iso`` to point to the Win10 ISO.
 
    - Add ``-s 9,ahci,cd:./winvirtio.iso`` to point to your path to the winvirtio iso.
 
-Install Windows 10 by Gvt-g
+Install Windows 10 by GVT-g
 ---------------------------
 .. note:: Make sure you have configured your monitor and display according to **3** of
       :ref:`Boot Windows with GVT-g on ACRN <waag_display_conf_lable>`.
@@ -160,8 +165,8 @@ Install Windows 10 by Gvt-g
 
 #. Select **Boot Manager** and boot up from Win10 ISO.
 
-#. When the display reads **Press any key to boot from CD or DVD** on the monitor, press any key in the terminal on the
-   **Host** side.
+#. When the display reads **Press any key to boot from CD or DVD** on the monitor,
+   press any key in the terminal on the **Host** side.
 
    .. figure:: images/windows_install_1.png
       :align: center
@@ -189,7 +194,8 @@ Install Windows 10 by Gvt-g
    - Virtio-block
    - Virtio-input
 
-   .. note:: Be sure to unselect **Hide Drivers that aren't compatible with this computer's hardware** near the bottom of the page.
+   .. note:: Be sure to unselect **Hide Drivers that aren't compatible with this computer's hardware**
+      near the bottom of the page.
 
    .. figure:: images/windows_install_5.png
       :align: center
@@ -220,7 +226,8 @@ Install Windows 10 by Gvt-g
       :align: center
 
 
-#. Copy `Intel DCH Graphics Driver <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`_ into Windows and install; the display driver is updated to 7212.
+#. Copy `Intel DCH Graphics Driver <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`_ into
+   Windows and install; the display driver is updated to 7212.
 
 .. _waag_display_conf_lable:
 
@@ -230,9 +237,12 @@ Boot Windows on ACRN with default configuration
 
 #. Run the ``launch_win.sh``. The WaaG desktop displays on the HDMI monitor.
 
-   .. note:: We support Gvt-g and Gvt-d while launching Windows guest. If you use Gvt-g, you can set up Weston in the Service VM, 
-      and follow the steps in :ref:`skl-nuc-gpu-passthrough` to set up Weston as the desktop environment in the Service VM to
-      experience Windows with the AcrnGT local display feature. If you use Gvt-d, then only Windows has display.
+   .. note:: We support GVT-g and GVT-d while launching Windows guest.
+         If you use GVT-g, you can set up Weston in the Service VM, and follow
+         the steps in :ref:`skl-nuc-gpu-passthrough` to set up Weston as the
+         desktop environment in the Service VM to experience Windows with the
+         AcrnGT local display feature. If you use GVT-d, then only Windows has
+         display.
 
 ACRN Windows verified feature list
 **********************************
@@ -261,7 +271,7 @@ ACRN Windows verified feature list
 
 Known Limitations
 *****************
-* The cursor is not visible with the GVG-g local display.
+* The cursor is not visible with the GVT-g local display.
 
 Explanation for acrn-dm popular command lines
 *********************************************
@@ -311,7 +321,10 @@ secure boot enabling.
 
 Activate Windows 10
 ********************
-If you are using a trial version of Windows 10, you may find that some apps and features do not work or that Windows 10 automatically gets shut down by the Windows licensing monitoring service. To avoid these issues, obtain a licensed version of Windows.
+If you are using a trial version of Windows 10, you may find that some
+apps and features do not work or that Windows 10 automatically gets shut
+down by the Windows licensing monitoring service. To avoid these issues,
+obtain a licensed version of Windows.
 
-For Windows 10 activation steps, refer to "`Activate Windows 10 <https://support.microsoft.com/en-us/help/12440/windows-10-activate>`__"
-
+For Windows 10 activation steps, refer to
+"`Activate Windows 10 <https://support.microsoft.com/en-us/help/12440/windows-10-activate>`__"
