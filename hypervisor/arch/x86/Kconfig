@@ -337,3 +337,10 @@ config IOMMU_ENFORCE_SNP
 	help
 	  GPU IOMMU doesn't support snoop control capability,
 	  To enable gvt-d,disable IOMMU snoop control by default.
+
+config ENFORCE_TURNOFF_AC
+	bool "Force to disable #AC for Split-locked Access"
+	default n
+	help
+	  If CPU has #AC for split-locked access, HV enable it and VMs can't disable.
+	  Set this to enforce turn off that #AC, for community developer only.

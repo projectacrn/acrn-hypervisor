@@ -100,6 +100,7 @@ uint64_t get_active_pcpu_bitmap(void)
 
 static void enable_ac_for_splitlock(void)
 {
+#ifdef CONFIG_ENFORCE_TURNOFF_AC
 	uint64_t test_ctl;
 
 	if (has_core_cap(1U << 5U)) {
@@ -107,6 +108,7 @@ static void enable_ac_for_splitlock(void)
 		test_ctl |= (1U << 29U);
 		msr_write(MSR_TEST_CTL, test_ctl);
 	}
+#endif /*CONFIG_ENFORCE_TURNOFF_AC*/
 }
 
 void init_pcpu_pre(bool is_bsp)
