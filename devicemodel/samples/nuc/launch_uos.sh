@@ -102,8 +102,15 @@ pm_vuart_node=" -s 1:0,lpc -l com2,/run/acrn/life_mngr_"$vm_name
 #for memsize setting
 mem_size=2048M
 
+#add GPU passthrough device
+gpudevice=`cat /sys/bus/pci/devices/0000:00:02.0/device`
+
+echo "8086 $gpudevice" > /sys/bus/pci/drivers/pci-stub/new_id
+echo "0000:00:02.0" > /sys/bus/pci/devices/0000:00:02.0/driver/unbind
+echo "0000:00:02.0" > /sys/bus/pci/drivers/pci-stub/bind
+
 acrn-dm -A -m $mem_size -s 0:0,hostbridge \
-  -s 2,pci-gvt -G "$2" \
+  -s 2,passthru,0/2/0,gpu \
   -s 5,virtio-console,@stdio:stdio_port \
   -s 6,virtio-hyper_dmabuf \
   -s 3,virtio-blk,/home/clear/uos/uos.img \
