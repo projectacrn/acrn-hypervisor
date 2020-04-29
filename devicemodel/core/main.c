@@ -777,7 +777,7 @@ static struct option long_options[] = {
 	{0,			0,			0,  0  },
 };
 
-static char optstr[] = "hAWYvE:k:r:B:p:s:m:l:U:G:i:";
+static char optstr[] = "hAWYvE:k:r:B:s:m:l:U:G:i:";
 
 int
 main(int argc, char *argv[])
