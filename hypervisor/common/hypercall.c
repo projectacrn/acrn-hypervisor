@@ -170,9 +170,7 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 			vm_config->guest_flags |= (cv.vm_flag & DM_OWNED_GUEST_FLAG_MASK);
 
 			/* post-launched VM is allowed to choose pCPUs from vm_config->cpu_affinity_bitmap only */
-			if ((cv.cpu_affinity & ~(vm_config->cpu_affinity_bitmap)) != 0UL) {
-				pr_err("%s: Post-launch VM can't share PCPU with Pre-launch VM!", __func__);
-			} else {
+			if ((cv.cpu_affinity & ~(vm_config->cpu_affinity_bitmap)) == 0UL) {
 				/* DM could overwrite the statically configured PCPU bitmap */
 				if (bitmap_weight(cv.cpu_affinity) != 0U) {
 					vm_config->vcpu_num = bitmap_weight(cv.cpu_affinity);
@@ -198,6 +196,8 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 
 					ret = copy_to_gpa(vm, &cv, param, sizeof(cv));
 				}
+			} else {
+				pr_err("Post-launched VM%u chooses invalid pCPUs(0x%llx).", vm_id, cv.cpu_affinity);
 			}
 		}
 	}
