@@ -166,14 +166,14 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 			/* Filter out the bits should not set by DM and then assign it to guest_flags */
 			vm_config->guest_flags |= (cv.vm_flag & DM_OWNED_GUEST_FLAG_MASK);
 
-			/* post-launched VM is allowed to choose pCPUs from vm_config->cpu_affinity_bitmap only */
-			if ((cv.cpu_affinity & ~(vm_config->cpu_affinity_bitmap)) != 0UL) {
-				pr_err("%s: Post-launch VM can't share PCPU with Pre-launch VM!", __func__);
-			} else {
-				/* DM could overwrite the statically configured PCPU bitmap */
-				if (bitmap_weight(cv.cpu_affinity) != 0U) {
-					vm_config->vcpu_num = bitmap_weight(cv.cpu_affinity);
-					vm_config->cpu_affinity_bitmap = cv.cpu_affinity;
+			/* post-launched VM is allowed to choose pCPUs from vm_config->cpu_affinity only */
+			if ((cv.cpu_affinity & ~(vm_config->cpu_affinity)) == 0UL) {
+				/* By default launch VM with all the configured pCPUs */
+				uint64_t pcpu_bitmap = vm_config->cpu_affinity;
+
+				if (cv.cpu_affinity != 0UL) {
+					/* overwrite the statically configured CPU affinity */
+					pcpu_bitmap = cv.cpu_affinity;
 				}
 
 				/*
@@ -184,17 +184,19 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 					&& ((vm_config->guest_flags & GUEST_FLAG_RT) == 0UL)) {
 					pr_err("Wrong guest flags 0x%lx\n", vm_config->guest_flags);
 				} else {
-					if (create_vm(vm_id, vm_config, &target_vm) != 0) {
-						dev_dbg(DBG_LEVEL_HYCALL, "HCALL: Create VM failed");
-						cv.vmid = ACRN_INVALID_VMID;
-					} else {
+					if (create_vm(vm_id, pcpu_bitmap, vm_config, &target_vm) == 0) {
 						/* return a relative vm_id from SOS view */
 						cv.vmid = vmid_2_rel_vmid(vm->vm_id, vm_id);
-						cv.vcpu_num = vm_config->vcpu_num;
+						cv.vcpu_num = target_vm->hw.created_vcpus;
+					} else {
+						dev_dbg(DBG_LEVEL_HYCALL, "HCALL: Create VM failed");
+						cv.vmid = ACRN_INVALID_VMID;
 					}
 
 					ret = copy_to_gpa(vm, &cv, param, sizeof(cv));
 				}
+			} else {
+				pr_err("Post-launched VM%u chooses invalid pCPUs(0x%llx).", vm_id, cv.cpu_affinity);
 			}
 		}
 	}

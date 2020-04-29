@@ -214,14 +214,13 @@ struct acrn_vm *get_sos_vm(void)
 /**
  * @pre vm_config != NULL
  */
-static inline uint16_t get_vm_bsp_pcpu_id(const struct acrn_vm_config *vm_config)
+static inline uint16_t get_configured_bsp_pcpu_id(const struct acrn_vm_config *vm_config)
 {
-	uint16_t cpu_id = INVALID_CPU_ID;
-
-	/* The set least significant bit represents the pCPU ID for BSP */
-	cpu_id = ffs64(vm_config->cpu_affinity_bitmap);
-
-	return (cpu_id < get_pcpu_nums()) ? cpu_id : INVALID_CPU_ID;
+	/*
+	 * The set least significant bit represents the pCPU ID for BSP
+	 * vm_config->cpu_affinity has been sanitized to contain valid pCPU IDs
+	 */
+	return ffs64(vm_config->cpu_affinity);
 }
 
 /**
@@ -398,7 +397,7 @@ static uint64_t lapic_pt_enabled_pcpu_bitmap(struct acrn_vm *vm)
  * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL && rtn_vm != NULL
  * @pre vm->state == VM_POWERED_OFF
  */
-int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm)
+int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm)
 {
 	struct acrn_vm *vm = NULL;
 	int32_t status = 0;
@@ -504,12 +503,14 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 	if (status == 0) {
 		/* We have assumptions:
 		 *   1) vcpus used by SOS has been offlined by DM before UOS re-use it.
-		 *   2) cpu_affinity_bitmap passed sanitization is OK for vcpu creating.
+		 *   2) pcpu_bitmap passed sanitization is OK for vcpu creating.
 		 */
-		uint64_t pcpu_bitmap = vm_config->cpu_affinity_bitmap;
-		while (pcpu_bitmap != 0UL) {
-			pcpu_id = ffs64(pcpu_bitmap);
-			bitmap_clear_nolock(pcpu_id, &pcpu_bitmap);
+		vm->hw.cpu_affinity = pcpu_bitmap;
+
+		uint64_t tmp64 = pcpu_bitmap;
+		while (tmp64 != 0UL) {
+			pcpu_id = ffs64(tmp64);
+			bitmap_clear_nolock(pcpu_id, &tmp64);
 			status = prepare_vcpu(vm, pcpu_id);
 			if (status != 0) {
 				break;
@@ -745,7 +746,8 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 	int32_t err = 0;
 	struct acrn_vm *vm = NULL;
 
-	err = create_vm(vm_id, vm_config, &vm);
+	/* SOS and pre-launched VMs launch on all pCPUs defined in vm_config->cpu_affinity */
+	err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
 
 	if (err == 0) {
 		if (is_prelaunched_vm(vm)) {
@@ -766,7 +768,7 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
  */
 void launch_vms(uint16_t pcpu_id)
 {
-	uint16_t vm_id, bsp_id;
+	uint16_t vm_id;
 	struct acrn_vm_config *vm_config;
 
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
@@ -776,8 +778,7 @@ void launch_vms(uint16_t pcpu_id)
 				sos_vm_ptr = &vm_array[vm_id];
 			}
 
-			bsp_id = get_vm_bsp_pcpu_id(vm_config);
-			if (pcpu_id == bsp_id) {
+			if (pcpu_id == get_configured_bsp_pcpu_id(vm_config)) {
 				prepare_vm(vm_id, vm_config);
 			}
 		}

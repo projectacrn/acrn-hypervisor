@@ -42,6 +42,7 @@ struct vm_hw_info {
 	/* vcpu array of this VM */
 	struct acrn_vcpu vcpu_array[MAX_VCPUS_PER_VM];
 	uint16_t created_vcpus;	/* Number of created vcpus */
+	uint64_t cpu_affinity;	/* Actual pCPUs this VM runs on. The set bits represent the pCPU IDs */
 } __aligned(PAGE_SIZE);
 
 struct sw_module_info {
@@ -239,7 +240,7 @@ void pause_vm(struct acrn_vm *vm);
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec);
 void start_vm(struct acrn_vm *vm);
 int32_t reset_vm(struct acrn_vm *vm);
-int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
+int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
 void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config);
 void launch_vms(uint16_t pcpu_id);
 bool is_poweroff_vm(const struct acrn_vm *vm);
