@@ -501,6 +501,8 @@ pci_igd_lpc_init(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 	pci_set_cfgdata16(pi, PCIR_SUBVEND_0, *(uint16_t *)(host_config + PCIR_SUBVEND_0));
 	pci_set_cfgdata16(pi, PCIR_SUBDEV_0, *(uint16_t *)(host_config + PCIR_SUBDEV_0));
 
+	pci_set_cfgdata8(pi, PCIR_CLASS, PCIC_BRIDGE);
+	pci_set_cfgdata8(pi, PCIR_SUBCLASS, PCIS_BRIDGE_ISA);
 	return 0;
 }
 
