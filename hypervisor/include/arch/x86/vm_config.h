@@ -145,9 +145,11 @@ struct acrn_vm_config {
 	enum acrn_vm_load_order load_order;		/* specify the load order of VM */
 	char name[MAX_VM_OS_NAME_LEN];			/* VM name identifier, useful for debug. */
 	const uint8_t uuid[16];				/* UUID of the VM */
-	uint16_t vcpu_num;				/* Number of vCPUs for the VM */
+	uint8_t reserved[2];				/* Temporarily reserve it so that don't need to update
+							 * the users of get_platform_info frequently.
+							 */
 	uint8_t severity;				/* severity of the VM */
-	uint64_t cpu_affinity_bitmap;			/* The set bits represent the pCPUs the vCPUs of
+	uint64_t cpu_affinity;				/* The set bits represent the pCPUs the vCPUs of
 							 * the VM may run on.
 							 */
 	uint64_t guest_flags;				/* VM flags that we want to configure for guest
