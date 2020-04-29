@@ -17,6 +17,14 @@
 #include <vm_config.h>
 #include <msr.h>
 
+const uint16_t hv_clos = 0U;
+/* RDT features can support different numbers of CLOS. Set the lowers numerical
+ * clos value (valid_clos_num) that is common between the resources as
+ * each resource's clos max value to have consistent allocation.
+ */
+uint16_t valid_clos_num = MAX_PLATFORM_CLOS_NUM;
+
+#ifdef CONFIG_RDT_ENABLED
 static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 	[RDT_RESOURCE_L3] = {
 		.res.cache = {
@@ -26,7 +34,7 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 		.clos_max = 0U,
 		.res_id = RDT_RESID_L3,
 		.msr_base = MSR_IA32_L3_MASK_BASE,
-		.platform_clos_array = NULL
+		.platform_clos_array = platform_l3_clos_array, 
 	},
 	[RDT_RESOURCE_L2] = {
 		.res.cache = {
@@ -36,7 +44,7 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 		.clos_max = 0U,
 		.res_id = RDT_RESID_L2,
 		.msr_base = MSR_IA32_L2_MASK_BASE,
-		.platform_clos_array = NULL
+		.platform_clos_array = platform_l2_clos_array,
 	},
 	[RDT_RESOURCE_MBA] = {
 		.res.membw = {
@@ -46,17 +54,13 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 		.clos_max = 0U,
 		.res_id = RDT_RESID_MBA,
 		.msr_base = MSR_IA32_MBA_MASK_BASE,
-		.platform_clos_array = NULL
+		.platform_clos_array = platform_mba_clos_array, 
 	},
 };
-const uint16_t hv_clos = 0U;
-/* RDT features can support different numbers of CLOS. Set  the lowers numerical
- * clos value (platform_clos_num) that is common between the resources as
- * each resource's clos max value to have consistent allocation.
- */
-const uint16_t platform_clos_num = MAX_PLATFORM_CLOS_NUM;
 
-#ifdef CONFIG_RDT_ENABLED
+/*
+ * @pre res == RDT_RESOURCE_L3 || res == RDT_RESOURCE_L2
+ */
 static void rdt_read_cat_capability(int res)
 {
 	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
@@ -87,11 +91,13 @@ static void rdt_read_mba_capability(int res)
 	res_cap_info[res].clos_max = (uint16_t)(edx & 0xffffU) + 1U;
 }
 
-int32_t init_rdt_cap_info(void)
+/*
+ * @pre valid_clos_num > 0U 
+ */
+void init_rdt_cap_info(void)
 {
 	uint8_t i;
 	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
-	int32_t ret = 0;
 
 	if (pcpu_has_cap(X86_FEATURE_RDT_A)) {
 		cpuid_subleaf(CPUID_RDT_ALLOCATION, 0U, &eax, &ebx, &ecx, &edx);
@@ -112,85 +118,48 @@ int32_t init_rdt_cap_info(void)
 		}
 
 		for (i = 0U; i < RDT_NUM_RESOURCES; i++) {
-			/* If clos_max == 0, the resource is not supported
-			 * so skip checking and updating the clos_max
+			/* If clos_max == 0, the resource is not supported. Set the
+			 * valid_clos_num as the minimal clos_max of all support rdt resource.
 			 */
 			if (res_cap_info[i].clos_max > 0U) {
-				if ((platform_clos_num == 0U) || (res_cap_info[i].clos_max < platform_clos_num)) {
-					pr_err("Invalid Res_ID %d clos max:platform_clos_max=%d, res_clos_max=%d\n",
-						res_cap_info[i].res_id, platform_clos_num, res_cap_info[i].clos_max);
-					ret = -EINVAL;
-					break;
-				}
-				/*Store user configured platform clos mask and MSR in the rdt_info struct*/
-				if (res_cap_info[i].res_id == RDT_RESID_L3) {
-					res_cap_info[i].platform_clos_array = platform_l3_clos_array;
-				} else if (res_cap_info[i].res_id == RDT_RESID_L2) {
-					res_cap_info[i].platform_clos_array = platform_l2_clos_array;
-				} else if (res_cap_info[i].res_id == RDT_RESID_MBA) {
-					res_cap_info[i].platform_clos_array = platform_mba_clos_array;
-				} else {
-					res_cap_info[i].platform_clos_array = NULL;
+				if (res_cap_info[i].clos_max < valid_clos_num) {
+					valid_clos_num = res_cap_info[i].clos_max;
 				}
 			}
 		}
 	}
-	return ret;
 }
 
 /*
  * @pre res < RDT_NUM_RESOURCES
+ * @pre res_clos_info[i].mba_delay <= res_cap_info[res].res.membw.mba_max
+ * @pre length of res_clos_info[i].clos_mask <= cbm_len && all 1's in clos_mask is continuous 
  */
-static bool setup_res_clos_msr(uint16_t pcpu_id, uint16_t res, struct platform_clos_info *res_clos_info)
+static void setup_res_clos_msr(uint16_t pcpu_id, uint16_t res, struct platform_clos_info *res_clos_info)
 {
-	bool ret = true;
 	uint16_t i;
 	uint32_t msr_index;
 	uint64_t val;
 
-	for (i = 0U; i < platform_clos_num; i++) {
+	for (i = 0U; i < valid_clos_num; i++) {
 		switch (res) {
 		case RDT_RESOURCE_L3:
 		case RDT_RESOURCE_L2:
-			if ((fls32(res_clos_info->clos_mask) >= res_cap_info[res].res.cache.cbm_len) ||
-				(res_clos_info->msr_index != (res_cap_info[res].msr_base + i))) {
-				ret = false;
-				pr_err("Fix CLOS %d mask=0x%x and(/or) MSR index=0x%x for Res_ID %d in board.c",
-						i, res_clos_info->clos_mask, res_clos_info->msr_index, res);
-			} else {
-				val = (uint64_t)res_clos_info->clos_mask;
-			}
+			val = (uint64_t)res_clos_info[i].clos_mask;
 			break;
 		case RDT_RESOURCE_MBA:
-			if ((res_clos_info->mba_delay > res_cap_info[res].res.membw.mba_max) ||
-				(res_clos_info->msr_index != (res_cap_info[res].msr_base + i))) {
-				ret = false;
-				pr_err("Fix CLOS %d delay=0x%x and(/or) MSR index=0x%x for Res_ID %d in board.c",
-						i, res_clos_info->mba_delay, res_clos_info->msr_index, res);
-			} else {
-				val = (uint64_t)res_clos_info->mba_delay;
-			}
+			val = (uint64_t)res_clos_info[i].mba_delay;
 			break;
 		default:
-			ret = false;
 			ASSERT(res < RDT_NUM_RESOURCES, "Support only 3 RDT resources. res=%d is invalid", res);
-			break;
-		}
-
-		if (!ret) {
-			break;
 		}
 		msr_index = res_clos_info->msr_index;
 		msr_write_pcpu(msr_index, val, pcpu_id);
-		res_clos_info++;
 	}
-
-	return ret;
 }
 
-bool setup_clos(uint16_t pcpu_id)
+void setup_clos(uint16_t pcpu_id)
 {
-	bool ret = true;
 	uint16_t i;
 
 	for (i = 0U; i < RDT_NUM_RESOURCES; i++) {
@@ -198,18 +167,12 @@ bool setup_clos(uint16_t pcpu_id)
 		 * so skip setting up resource MSR.
 		 */
 		if (res_cap_info[i].clos_max > 0U) {
-			ret = setup_res_clos_msr(pcpu_id, i, res_cap_info[i].platform_clos_array);
-			if (!ret)
-				break;
+			setup_res_clos_msr(pcpu_id, i, res_cap_info[i].platform_clos_array);
 		}
 	}
 
-	if (ret) {
-		/* set hypervisor RDT resource clos */
-		msr_write_pcpu(MSR_IA32_PQR_ASSOC, clos2pqr_msr(hv_clos), pcpu_id);
-	}
-
-	return ret;
+	/* set hypervisor RDT resource clos */
+	msr_write_pcpu(MSR_IA32_PQR_ASSOC, clos2pqr_msr(hv_clos), pcpu_id);
 }
 
 uint64_t clos2pqr_msr(uint16_t clos)
@@ -221,13 +184,6 @@ uint64_t clos2pqr_msr(uint16_t clos)
 
 	return pqr_assoc;
 }
-#else
-uint64_t clos2pqr_msr(uint16_t clos)
-{
-	(void)(clos);
-	return 0UL;
-}
-#endif
 
 bool is_platform_rdt_capable(void)
 {
@@ -241,3 +197,15 @@ bool is_platform_rdt_capable(void)
 
 	return ret;
 }
+#else
+uint64_t clos2pqr_msr(uint16_t clos)
+{
+	(void)(clos);
+	return 0UL;
+}
+
+bool is_platform_rdt_capable(void)
+{
+	return false;
+}
+#endif

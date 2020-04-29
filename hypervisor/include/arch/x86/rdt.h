@@ -21,7 +21,7 @@ enum {
 #define RDT_RESID_MBA   3U
 
 extern const uint16_t hv_clos;
-extern const uint16_t platform_clos_num;
+extern uint16_t valid_clos_num;
 
 /* The intel Resource Director Tech(RDT) based Allocation Tech support */
 struct rdt_info {
@@ -42,8 +42,8 @@ struct rdt_info {
 	struct platform_clos_info *platform_clos_array; /* user configured mask and MSR info for each CLOS*/
 };
 
-int32_t init_rdt_cap_info(void);
-bool setup_clos(uint16_t pcpu_id);
+void init_rdt_cap_info(void);
+void setup_clos(uint16_t pcpu_id);
 uint64_t clos2pqr_msr(uint16_t clos);
 bool is_platform_rdt_capable(void);
 

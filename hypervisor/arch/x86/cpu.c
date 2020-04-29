@@ -167,10 +167,7 @@ void init_pcpu_pre(bool is_bsp)
 		}
 
 #ifdef CONFIG_RDT_ENABLED
-		ret = init_rdt_cap_info();
-		if (ret != 0) {
-			panic("Platform RDT info is incorrect!");
-		}
+		init_rdt_cap_info();
 #endif
 
 		/* NOTE: this must call after MMCONFIG is parsed in init_vboot and before APs are INIT.
@@ -288,9 +285,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 	init_sched(pcpu_id);
 
 #ifdef CONFIG_RDT_ENABLED
-	if (!setup_clos(pcpu_id)) {
-		panic("CLOS resource MSRs setup incorrectly!");
-	}
+	setup_clos(pcpu_id);
 #endif
 
 	enable_smep();

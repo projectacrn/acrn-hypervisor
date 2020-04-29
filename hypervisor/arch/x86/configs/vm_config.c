@@ -103,9 +103,9 @@ static bool check_vm_clos_config(uint16_t vm_id)
 	struct acrn_vm_config *vm_config = get_vm_config(vm_id);
 
 	for (i = 0U; i < vm_config->vcpu_num; i++) {
-		if (vm_config->clos[i] >= platform_clos_num) {
+		if (vm_config->clos[i] >= valid_clos_num) {
 			pr_err("vm%u: vcpu%u clos(%u) exceed the max clos(%u).",
-				vm_id, i, vm_config->clos[i], platform_clos_num);
+				vm_id, i, vm_config->clos[i], valid_clos_num);
 			ret = false;
 			break;
 		}
