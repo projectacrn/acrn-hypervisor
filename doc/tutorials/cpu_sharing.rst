@@ -6,28 +6,54 @@ ACRN CPU Sharing
 Introduction
 ************
 
-The goal of CPU Sharing is to fully utilize the physical CPU resource to support more virtual machines. Currently, ACRN only supports 1 to 1 mapping mode between virtual CPUs (vCPUs) and physical CPUs (pCPUs). Because of the lack of CPU sharing ability, the number of VMs is limited. To support CPU Sharing, we have introduced a scheduling framework and implemented two simple small scheduling algorithms to satisfy embedded device requirements. Note that, CPU Sharing is not available for VMs with local APIC passthrough (``--lapic_pt`` option).
+The goal of CPU Sharing is to fully utilize the physical CPU resource to
+support more virtual machines. Currently, ACRN only supports 1 to 1 mapping
+mode between virtual CPUs (vCPUs) and physical CPUs (pCPUs). Because of the
+lack of CPU sharing ability, the number of VMs is limited. To support CPU
+Sharing, we have introduced a scheduling framework and implemented two simple
+small scheduling algorithms to satisfy embedded device requirements. Note
+that, CPU Sharing is not available for VMs with local APIC passthrough
+(``--lapic_pt`` option).
 
 Scheduling Framework
 ********************
 
-To satisfy the modularization design concept, the scheduling framework layer isolates the vCPU layer and scheduler algorithm. It does not have a vCPU concept so it is only aware of the thread object instance. The thread object state machine is maintained in the framework. The framework abstracts the scheduler algorithm object, so this architecture can easily extend to new scheduler algorithms.
+To satisfy the modularization design concept, the scheduling framework layer
+isolates the vCPU layer and scheduler algorithm. It does not have a vCPU
+concept so it is only aware of the thread object instance. The thread object
+state machine is maintained in the framework. The framework abstracts the
+scheduler algorithm object, so this architecture can easily extend to new
+scheduler algorithms.
 
 .. figure:: images/cpu_sharing_framework.png
    :align: center
 
-The below diagram shows that the vCPU layer invokes APIs provided by scheduling framework for vCPU scheduling. The scheduling framework also provides some APIs for schedulers. The scheduler mainly implements some callbacks in an ``acrn_scheduler`` instance for scheduling framework. Scheduling initialization is invoked in the hardware management layer.
+The below diagram shows that the vCPU layer invokes APIs provided by scheduling
+framework for vCPU scheduling. The scheduling framework also provides some APIs
+for schedulers. The scheduler mainly implements some callbacks in an
+``acrn_scheduler`` instance for scheduling framework. Scheduling initialization
+is invoked in the hardware management layer.
 
 .. figure:: images/cpu_sharing_api.png
    :align: center
 
-vCPU affinity
+CPU affinity
 *************
 
-Currently, we do not support vCPU migration; the assignment of vCPU mapping to pCPU is statically configured in the VM configuration via a vcpu_affinity array. The item number of the array matches the vCPU number of this VM. Each item has one bit to indicate the assigned pCPU of the corresponding vCPU. Use these rules to configure the vCPU affinity:
+Currently, we do not support vCPU migration; the assignment of vCPU mapping to
+pCPU is fixed at the time the VM is launched. The statically configured
+cpu_affinity_bitmap in the VM configuration defines a superset of pCPUs that
+the VM is allowed to run on. One bit in this bitmap indicates that one pCPU
+could be assigned to this VM, and the bit number is the pCPU ID. A pre-launched
+VM is supposed to be launched on exact number of pCPUs that are assigned in
+this bitmap. and the vCPU to pCPU mapping is implicitly indicated: vCPU0 maps
+to the pCPU with lowest pCPU ID, vCPU1 maps to the second lowest pCPU ID, and
+so on.
 
-- Only one bit can be set for each affinity item of vCPU.
-- vCPUs in the same VM cannot be assigned to the same pCPU.
+For post-launched VMs, acrn-dm could choose to launch a subset of pCPUs that
+are defined in cpu_affinity_bitmap by specifying the assigned pCPUs
+(``--cpu_affinity`` option). But it can't assign any pCPUs that are not
+included in the VM's cpu_affinity_bitmap.
 
 Here is an example for affinity:
 
@@ -46,26 +72,47 @@ The thread object contains three states: RUNNING, RUNNABLE, and BLOCKED.
 .. figure:: images/cpu_sharing_state.png
    :align: center
 
-After a new vCPU is created, the corresponding thread object is initiated. The vCPU layer invokes a wakeup operation. After wakeup, the state for the new thread object is set to RUNNABLE, and then follows its algorithm to determine whether or not to preempt the current running thread object. If yes, it turns to the RUNNING state. In RUNNING state, the thread object may turn back to the RUNNABLE state when it runs out of its timeslice, or it might yield the pCPU by itself, or be preempted. The thread object under RUNNING state may trigger sleep to transfer to BLOCKED state.
+After a new vCPU is created, the corresponding thread object is initiated.
+The vCPU layer invokes a wakeup operation. After wakeup, the state for the
+new thread object is set to RUNNABLE, and then follows its algorithm to
+determine whether or not to preempt the current running thread object. If
+yes, it turns to the RUNNING state. In RUNNING state, the thread object may
+turn back to the RUNNABLE state when it runs out of its timeslice, or it
+might yield the pCPU by itself, or be preempted. The thread object under
+RUNNING state may trigger sleep to transfer to BLOCKED state.
 
 Scheduler
 *********
 
-The below block diagram shows the basic concept for the scheduler. There are two kinds of scheduler in the diagram: NOOP (No-Operation) scheduler and IORR (IO sensitive Round-Robin) scheduler.
+The below block diagram shows the basic concept for the scheduler. There are
+two kinds of scheduler in the diagram: NOOP (No-Operation) scheduler and IORR
+(IO sensitive Round-Robin) scheduler.
 
 
 - **No-Operation scheduler**:
 
-  The NOOP (No-operation) scheduler has the same policy as the original 1-1 mapping previously used; every pCPU can run only two thread objects: one is the idle thread, and another is the thread of the assigned vCPU. With this scheduler, vCPU works in Work-Conserving mode, which always try to keep resource busy, and will run once it is ready. Idle thread can run when the vCPU thread is blocked.
+The NOOP (No-operation) scheduler has the same policy as the original 1-1
+mapping previously used; every pCPU can run only two thread objects: one is
+the idle thread, and another is the thread of the assigned vCPU. With this
+scheduler, vCPU works in Work-Conserving mode, which always try to keep
+resource busy, and will run once it is ready. Idle thread can run when the
+vCPU thread is blocked.
 
 - **IO sensitive round-robin scheduler**:
 
-  The IORR (IO sensitive round-robin) scheduler is implemented with the per-pCPU runqueue and the per-pCPU tick timer; it supports more than one vCPU running on a pCPU. It basically schedules thread objects in a round-robin policy and supports preemption by timeslice counting.
+The IORR (IO sensitive round-robin) scheduler is implemented with the per-pCPU
+runqueue and the per-pCPU tick timer; it supports more than one vCPU running
+on a pCPU. It basically schedules thread objects in a round-robin policy and
+supports preemption by timeslice counting.
 
   - Every thread object has an initial timeslice (ex: 10ms)
-  - The timeslice is consumed with time and be counted in the context switch and tick handler
-  - If the timeslice is positive or zero, then switch out the current thread object and put it to tail of runqueue. Then, pick the next runnable one from runqueue to run.
-  - Threads with an IO request will preempt current running threads on the same pCPU.
+  - The timeslice is consumed with time and be counted in the context switch
+    and tick handler
+  - If the timeslice is positive or zero, then switch out the current thread
+    object and put it to tail of runqueue. Then, pick the next runnable one
+    from runqueue to run.
+  - Threads with an IO request will preempt current running threads on the
+    same pCPU.
 
 Scheduler configuration
 ***********************
@@ -79,19 +126,20 @@ Two places in the code decide the usage for the scheduler.
      :name: Kconfig for Scheduler
      :caption: Kconfig for Scheduler
      :linenos:
-     :lines: 40-58
+     :lines: 25-52
      :emphasize-lines: 3
      :language: c
 
-The default scheduler is **SCHED_NOOP**. To use the IORR, change it to **SCHED_IORR** in the **ACRN Scheduler**.
+The default scheduler is **SCHED_NOOP**. To use the IORR, change it to
+**SCHED_IORR** in the **ACRN Scheduler**.
 
-* The affinity for VMs are set in  ``hypervisor/scenarios/<scenario_name>/vm_configurations.h``
+* The VM CPU affinities are defined in  ``hypervisor/scenarios/<scenario_name>/vm_configurations.h``
 
   .. literalinclude:: ../../../..//hypervisor/scenarios/industry/vm_configurations.h
      :name: Affinity for VMs
      :caption: Affinity for VMs
      :linenos:
-     :lines: 31-32
+     :lines: 39-45
      :language: c
 
 * vCPU number corresponding to affinity is set in ``hypervisor/scenarios/<scenario_name>/vm_configurations.c`` by the **vcpu_num**
@@ -142,9 +190,9 @@ Change the following three files:
                                           "i915.enable_gvt=1 "    \
                                           SOS_BOOTARGS_DIFF
 
-  #define VM1_CONFIG_VCPU_AFFINITY        {AFFINITY_CPU(0U)}
-  #define VM2_CONFIG_VCPU_AFFINITY        {AFFINITY_CPU(1U), AFFINITY_CPU(2U)}
-  #define VM3_CONFIG_VCPU_AFFINITY        {AFFINITY_CPU(3U)}
+  #define VM1_CONFIG_CPU_AFFINITY        (AFFINITY_CPU(0U))
+  #define VM2_CONFIG_CPU_AFFINITY        (AFFINITY_CPU(1U) | AFFINITY_CPU(2U))
+  #define VM3_CONFIG_CPU_AFFINITY        (AFFINITY_CPU(3U))
 
 3. ``hypervisor/scenarios/industry/vm_configurations.c``
 
@@ -187,8 +235,7 @@ Change the following three files:
                  .load_order = POST_LAUNCHED_VM,
                  .uuid = {0xd2U, 0x79U, 0x54U, 0x38U, 0x25U, 0xd6U, 0x11U, 0xe8U,        \
                           0x86U, 0x4eU, 0xcbU, 0x7aU, 0x18U, 0xb3U, 0x46U, 0x43U},
-                 .vcpu_num = 1U,
-                 .vcpu_affinity = VM1_CONFIG_VCPU_AFFINITY,
+                 .cpu_affinity_bitmap = VM1_CONFIG_CPU_AFFINITY,
                  .vuart[0] = {
                          .type = VUART_LEGACY_PIO,
                          .addr.port_base = COM1_BASE,
@@ -206,8 +253,7 @@ Change the following three files:
                           0xafU, 0x76U, 0xd4U, 0xbcU, 0x5aU, 0x8eU, 0xc0U, 0xe5U},
 
                  .guest_flags = GUEST_FLAG_HIGHEST_SEVERITY,
-                 .vcpu_num = 2U,
-                 .vcpu_affinity = VM2_CONFIG_VCPU_AFFINITY,
+                 .cpu_affinity_bitmap = VM2_CONFIG_CPU_AFFINITY,
                  .vuart[0] = {
                          .type = VUART_LEGACY_PIO,
                          .addr.port_base = COM1_BASE,
@@ -225,8 +271,7 @@ Change the following three files:
                  .load_order = POST_LAUNCHED_VM,
                  .uuid = {0x38U, 0x15U, 0x88U, 0x21U, 0x52U, 0x08U, 0x40U, 0x05U,        \
                           0xb7U, 0x2aU, 0x8aU, 0x60U, 0x9eU, 0x41U, 0x90U, 0xd0U},
-                 .vcpu_num = 1U,
-                 .vcpu_affinity = VM3_CONFIG_VCPU_AFFINITY,
+                 .cpu_affinity_bitmap = VM3_CONFIG_CPU_AFFINITY,
                  .vuart[0] = {
                          .type = VUART_LEGACY_PIO,
                          .addr.port_base = COM1_BASE,
