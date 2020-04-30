@@ -132,9 +132,8 @@ Additional scenario XML elements:
   The order of severity from high to low is:
   ``SEVERITY_SAFETY_VM``, ``SEVERITY_RTVM``, ``SEVERITY_SOS``, ``SEVERITY_STANDARD_VM``.
 
-``vcpu_affinity``:
-  vCPU affinity map. Each vCPU will be mapped to the selected pCPU ID. A different vCPU in the same VM cannot be mapped to the same pCPU.
-  If the pCPU is mapped by different VMs, ``cpu_sharing`` of the VM must be set to ``Enabled`` in the launch XML.
+``cpu_affinity``:
+  List of pCPUs: the guest VM is allowed to create vCPUs from all or a subset of this list.
 
 ``base`` (a child node of ``epc_section``):
   SGX EPC section base; must be page aligned.
