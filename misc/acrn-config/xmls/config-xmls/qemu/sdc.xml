@@ -1,0 +1,122 @@
+<acrn-config board="qemu" scenario="sdc">
+  <hv>
+    <DEBUG_OPTIONS desc="Debug options for ACRN hypervisor, only valid on debug version">
+        <RELEASE desc="Release build. 'y' for Release, 'n' for Debug.">n</RELEASE>
+        <SERIAL_CONSOLE desc="The serial device which is used for hypervisor debug, only valid on Debug version.">/dev/ttyS0</SERIAL_CONSOLE>
+        <MEM_LOGLEVEL desc="Default loglevel in memory">5</MEM_LOGLEVEL>
+        <NPK_LOGLEVEL desc="Default loglevel for the hypervisor NPK log">5</NPK_LOGLEVEL>
+        <CONSOLE_LOGLEVEL desc="Default loglevel on the serial console">3</CONSOLE_LOGLEVEL>
+        <LOG_DESTINATION desc="Bitmap of consoles where logs are printed.">7</LOG_DESTINATION>
+        <LOG_BUF_SIZE desc="Capacity of logbuf for each physical cpu.">0x40000</LOG_BUF_SIZE>
+    </DEBUG_OPTIONS>
+
+    <FEATURES>
+        <RELOC desc="Enable hypervisor relocation">y</RELOC>
+        <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
+        <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+        <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
+        <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
+        <ACPI_PARSE_ENABLED desc="Enable ACPI runtime parsing.">y</ACPI_PARSE_ENABLED>
+        <L1D_VMENTRY_ENABLED desc="Enable L1 cache flush before VM entry.">n</L1D_VMENTRY_ENABLED>
+        <MCE_ON_PSC_DISABLED desc="Force to disable software workaround for Machine Check Error on Page Size Change.">n</MCE_ON_PSC_DISABLED>
+    </FEATURES>
+
+    <MEMORY>
+        <STACK_SIZE desc="Capacity of one stack, in bytes.">0x2000</STACK_SIZE>
+        <HV_RAM_SIZE desc="Size of the RAM region used by the hypervisor">0x07800000</HV_RAM_SIZE>
+        <HV_RAM_START desc="2M-aligned Start physical address of the RAM region used by the hypervisor.">0x11000000</HV_RAM_START>
+        <LOW_RAM_SIZE desc="Size of the low RAM region">0x00010000</LOW_RAM_SIZE>
+        <UOS_RAM_SIZE desc="Size of the User OS (UOS) RAM.">0x20000000</UOS_RAM_SIZE>
+        <SOS_RAM_SIZE desc="Size of the Service OS (SOS) RAM.">0x100000000</SOS_RAM_SIZE>
+        <PLATFORM_RAM_SIZE desc="Size of the physical platform RAM">0x100000000</PLATFORM_RAM_SIZE>
+    </MEMORY>
+
+    <CAPACITIES desc="Capacity limits for static assigned data struct or maximum supported resouce">
+        <IOMMU_BUS_NUM desc="Highest PCI bus ID used during IOMMU initialization.">0x100</IOMMU_BUS_NUM>
+        <MAX_IR_ENTRIES desc="Maximum number of Interrupt Remapping Entries.">256</MAX_IR_ENTRIES>
+        <MAX_IOAPIC_NUM desc="Maximum number of IO-APICs.">1</MAX_IOAPIC_NUM>
+        <MAX_PCI_DEV_NUM desc="Maximum number of PCI devices.">96</MAX_PCI_DEV_NUM>
+        <MAX_IOAPIC_LINES desc="Maximum number of interrupt lines per IOAPIC.">120</MAX_IOAPIC_LINES>
+        <MAX_PT_IRQ_ENTRIES desc="Maximum number of interrupt source for PT devices.">64</MAX_PT_IRQ_ENTRIES>
+        <MAX_MSIX_TABLE_NUM desc="Maximum number of MSI-X tables per device.">16</MAX_MSIX_TABLE_NUM>
+        <MAX_EMULATED_MMIO desc="Maximum number of emulated MMIO regions.">16</MAX_EMULATED_MMIO>
+    </CAPACITIES>
+
+    <MISC_CFG>
+        <GPU_SBDF desc="Segment, Bus, Device, and function of the GPU.">0x00000010</GPU_SBDF>
+        <UEFI_OS_LOADER_NAME desc="UEFI OS loader name.">\\EFI\\org.clearlinux\\bootloaderx64.efi</UEFI_OS_LOADER_NAME>
+    </MISC_CFG>
+  </hv>
+
+  <vm id="0">
+    <vm_type desc="Specify the VM type" readonly="true">SOS_VM</vm_type>
+    <name desc="Specify the VM name which will be shown in hypervisor console command: vm_list.">ACRN SOS VM</name>
+    <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
+        <guest_flag>0</guest_flag>
+    </guest_flags>
+    <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+        <vcpu_clos>0</vcpu_clos>
+    </clos>
+    <memory>
+        <start_hpa configurable="0" desc="The start physical address in host for the VM">0</start_hpa>
+        <size configurable="0" desc="The memory size in Bytes for the VM">CONFIG_SOS_RAM_SIZE</size>
+    </memory>
+    <os_config>
+        <name desc="Specify the OS name of VM, currently it is not referenced by hypervisor code.">ACRN Service OS</name>
+        <kern_type desc="Specify the kernel image type so that hypervisor could load it correctly. Currently support KERNEL_BZIMAGE and KERNEL_ZEPHYR.">KERNEL_BZIMAGE</kern_type>
+        <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline.">Linux_bzImage</kern_mod>
+        <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline."></ramdisk_mod>
+        <bootargs configurable="0" desc="Specify kernel boot arguments">SOS_VM_BOOTARGS</bootargs>
+    </os_config>
+    <vuart id="0">
+        <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address." readonly="true">SOS_COM1_BASE</base>
+        <irq configurable="0" desc="vCOM1 irq">SOS_COM1_IRQ</irq>
+    </vuart>
+    <vuart id="1">
+        <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
+        <irq configurable="0" desc="vCOM2 irq">SOS_COM2_IRQ</irq>
+        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">1</target_vm_id>
+        <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
+    </vuart>
+    <pci_devs configurable="0" desc="pci devices list">
+        <pci_dev desc="pci device"></pci_dev>
+    </pci_devs>
+    <board_private>
+        <rootfs desc="rootfs for Linux kernel">/dev/vda1</rootfs>
+        <bootargs desc="Specify kernel boot arguments">
+        earlyprintk=serial,ttyS0,115200n8 rw rootwait console=tty0 consoleblank=0 no_timer_check ignore_loglevel
+        ignore_loglevel no_timer_check intel_iommu=off tsc=reliable hvlog=2M@0x1FE00000
+        </bootargs>
+    </board_private>
+  </vm>
+  <vm id="1">
+    <vm_type desc="Specify the VM type" readonly="true">POST_STD_VM</vm_type>
+    <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
+        <guest_flag>0</guest_flag>
+    </guest_flags>
+    <cpu_affinity desc="List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.">
+        <pcpu_id>1</pcpu_id>
+    </cpu_affinity>
+    <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+        <vcpu_clos>0</vcpu_clos>
+    </clos>
+    <epc_section configurable="0" desc="epc section">
+        <base desc="SGX EPC section base, must be page aligned">0</base>
+        <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
+    </epc_section>
+    <vuart id="0">
+        <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
+        <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
+    </vuart>
+    <vuart id="1">
+        <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
+        <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
+        <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
+        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
+        <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
+    </vuart>
+  </vm>
+</acrn-config>

@@ -1,0 +1,70 @@
+<acrn-config board="qemu">
+	<BIOS_INFO>
+	</BIOS_INFO>
+
+	<BASE_BOARD_INFO>
+	</BASE_BOARD_INFO>
+
+	<PCI_DEVICE>
+	</PCI_DEVICE>
+
+	<PCI_VID_PID>
+	</PCI_VID_PID>
+
+	<WAKE_VECTOR_INFO>
+	</WAKE_VECTOR_INFO>
+
+	<RESET_REGISTER_INFO>
+	</RESET_REGISTER_INFO>
+
+	<PM_INFO>
+	</PM_INFO>
+
+	<S3_INFO>
+	</S3_INFO>
+
+	<S5_INFO>
+	</S5_INFO>
+
+	<DRHD_INFO>
+	</DRHD_INFO>
+
+	<CPU_BRAND>
+	</CPU_BRAND>
+
+	<CX_INFO>
+	</CX_INFO>
+
+	<PX_INFO>
+	</PX_INFO>
+
+	<MMCFG_BASE_INFO>
+	</MMCFG_BASE_INFO>
+
+	<CLOS_INFO>
+	</CLOS_INFO>
+
+	<IOMEM_INFO>
+	</IOMEM_INFO>
+
+	<BLOCK_DEVICE_INFO>
+	/dev/vda1: TYPE="ext4"
+	</BLOCK_DEVICE_INFO>
+
+	<TTYS_INFO>
+	seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
+	seri:/dev/ttyS1 type:portio base:0x2F8 irq:3
+	</TTYS_INFO>
+
+	<AVAILABLE_IRQ_INFO>
+	</AVAILABLE_IRQ_INFO>
+
+	<TOTAL_MEM_INFO>
+	4194304 kB
+	</TOTAL_MEM_INFO>
+
+	<CPU_PROCESSOR_INFO>
+	0, 1, 2, 3
+	</CPU_PROCESSOR_INFO>
+
+</acrn-config>
