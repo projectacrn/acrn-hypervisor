@@ -2228,75 +2228,21 @@ static void apicv_basic_inject_intr(struct acrn_vlapic *vlapic,
 }
 
 /*
- * Transfer the pending interrupts in the PIR descriptor to the IRR
- * in the virtual APIC page.
- * @pre get_pi_desc(vlapic2vcpu(vlapic)) != NULL
+ * @brief Send a Posted Interrupt to itself.
+ *
+ * Interrupts are disabled on pCPU at this point of time.
+ * Upon the next VMEnter the self-IPI is serviced by the logical processor.
+ * Since the IPI vector is Posted Interrupt vector, logical processor syncs
+ * PIR to vIRR and updates RVI.
+ *
+ * @pre get_pi_desc(vlapic->vcpu) != NULL
  */
-static void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
-{
-	struct pi_desc *pid;
-	struct lapic_regs *lapic;
-	uint64_t val, pirval;
-	uint16_t rvi, pirbase = 0U, i;
-	uint16_t intr_status_old, intr_status_new;
-	struct lapic_reg *irr = NULL;
-
-	pid = get_pi_desc(vlapic2vcpu(vlapic));
-	if (bitmap_test_and_clear_lock(POSTED_INTR_ON, &pid->control.value)) {
-		pirval = 0UL;
-		lapic = &(vlapic->apic_page);
-		irr = &lapic->irr[0];
-
-		for (i = 0U; i < 4U; i++) {
-			val = atomic_readandclear64(&pid->pir[i]);
-			if (val != 0UL) {
-				irr[i * 2U].v |= (uint32_t)val;
-				irr[(i * 2U) + 1U].v |= (uint32_t)(val >> 32U);
-
-				pirbase = 64U * i;
-				pirval = val;
-			}
-		}
-
-		/*
-		 * Update RVI so the processor can evaluate pending virtual
-		 * interrupts on VM-entry.
-		 *
-		 * It is possible for pirval to be 0 here, even though the
-		 * pending bit has been set. The scenario is:
-		 * CPU-Y is sending a posted interrupt to CPU-X, which
-		 * is running a guest and processing posted interrupts in h/w.
-		 * CPU-X will eventually exit and the state seen in s/w is
-		 * the pending bit set, but no PIR bits set.
-		 *
-		 *      CPU-X                      CPU-Y
-		 *   (vm running)                (host running)
-		 *   rx posted interrupt
-		 *   CLEAR pending bit
-		 *				 SET PIR bit
-		 *   READ/CLEAR PIR bits
-		 *				 SET pending bit
-		 *   (vm exit)
-		 *   pending bit set, PIR 0
-		 */
-		if (pirval != 0UL) {
-			rvi = pirbase + fls64(pirval);
-
-			intr_status_old = 0xFFFFU &
-					exec_vmread16(VMX_GUEST_INTR_STATUS);
-
-			intr_status_new = (intr_status_old & 0xFF00U) | rvi;
-			if (intr_status_new > intr_status_old) {
-				exec_vmwrite16(VMX_GUEST_INTR_STATUS,
-						intr_status_new);
-			}
-		}
-	}
-}
 
 static void apicv_advanced_inject_intr(struct acrn_vlapic *vlapic,
 		__unused bool guest_irq_enabled, __unused bool injected)
 {
+	struct acrn_vcpu *vcpu = vlapic2vcpu(vlapic);
+	struct pi_desc *pid = get_pi_desc(vcpu);
 	/*
 	 * From SDM Vol3 26.3.2.5:
 	 * Once the virtual interrupt is recognized, it will be delivered
@@ -2307,10 +2253,12 @@ static void apicv_advanced_inject_intr(struct acrn_vlapic *vlapic,
 	 * evaluation/delivery of apicv virtual interrupts in one time
 	 * vm-entry.
 	 *
-	 * Here to sync the pending interrupts to irr and update rvi if
-	 * needed. And then try to handle vmcs event injection.
+	 * Here to sync the pending interrupts to irr and update rvi
+	 * self-IPI with Posted Interrupt Notification Vector is sent.
 	 */
-	vlapic_apicv_inject_pir(vlapic);
+	if (bitmap_test(POSTED_INTR_ON, &(pid->control.value))) {
+		apicv_trigger_pi_anv(pcpuid_from_vcpu(vcpu), (uint32_t)(vcpu->arch.pid.control.bits.nv));
+	}
 }
 
 void vlapic_inject_intr(struct acrn_vlapic *vlapic, bool guest_irq_enabled, bool injected)
