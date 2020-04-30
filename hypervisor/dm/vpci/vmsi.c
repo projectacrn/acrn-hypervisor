@@ -62,7 +62,7 @@ static inline void enable_disable_msi(const struct pci_vdev *vdev, bool enable)
  */
 static void remap_vmsi(const struct pci_vdev *vdev)
 {
-	struct ptirq_msi_info info = {};
+	struct msi_info info = {};
 	union pci_bdf pbdf = vdev->pdev->bdf;
 	struct acrn_vm *vm = vpci2vm(vdev->vpci);
 	uint32_t capoff = vdev->msi.capoff;
@@ -76,17 +76,17 @@ static void remap_vmsi(const struct pci_vdev *vdev)
 	} else {
 		vmsi_msgdata = pci_vdev_read_vcfg(vdev, (capoff + PCIR_MSI_DATA), 2U);
 	}
-	info.vmsi_addr.full = (uint64_t)vmsi_addrlo | ((uint64_t)vmsi_addrhi << 32U);
-	info.vmsi_data.full = vmsi_msgdata;
+	info.addr.full = (uint64_t)vmsi_addrlo | ((uint64_t)vmsi_addrhi << 32U);
+	info.data.full = vmsi_msgdata;
 
 	if (ptirq_prepare_msix_remap(vm, vdev->bdf.value, pbdf.value, 0U, &info) == 0) {
-		pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR, 0x4U, (uint32_t)info.pmsi_addr.full);
+		pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR, 0x4U, (uint32_t)info.addr.full);
 		if (vdev->msi.is_64bit) {
 			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR_HIGH, 0x4U,
-					(uint32_t)(info.pmsi_addr.full >> 32U));
-			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_DATA_64BIT, 0x2U, (uint16_t)info.pmsi_data.full);
+					(uint32_t)(info.addr.full >> 32U));
+			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_DATA_64BIT, 0x2U, (uint16_t)info.data.full);
 		} else {
-			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_DATA, 0x2U, (uint16_t)info.pmsi_data.full);
+			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_DATA, 0x2U, (uint16_t)info.data.full);
 		}
 
 		/* If MSI Enable is being set, make sure INTxDIS bit is set */

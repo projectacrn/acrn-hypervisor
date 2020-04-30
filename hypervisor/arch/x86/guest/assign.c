@@ -25,21 +25,21 @@
  *
  * @pre (vm != NULL) && (info != NULL)
  */
-static struct acrn_vcpu *is_single_destination(struct acrn_vm *vm, const struct ptirq_msi_info *info)
+static struct acrn_vcpu *is_single_destination(struct acrn_vm *vm, const struct msi_info *info)
 {
 	uint64_t vdmask;
 	uint16_t vid;
 	struct acrn_vcpu *vcpu = NULL;
 
-	vlapic_calc_dest(vm, &vdmask, false, (uint32_t)(info->vmsi_addr.bits.dest_field),
-		(bool)(info->vmsi_addr.bits.dest_mode == MSI_ADDR_DESTMODE_PHYS),
-		(bool)(info->vmsi_data.bits.delivery_mode == MSI_DATA_DELMODE_LOPRI));
+	vlapic_calc_dest(vm, &vdmask, false, (uint32_t)(info->addr.bits.dest_field),
+		(bool)(info->addr.bits.dest_mode == MSI_ADDR_DESTMODE_PHYS),
+		(bool)(info->data.bits.delivery_mode == MSI_DATA_DELMODE_LOPRI));
 
 	vid = ffs64(vdmask);
 
 	/* Can only post fixed and Lowpri IRQs */
-	if ((info->vmsi_data.bits.delivery_mode == MSI_DATA_DELMODE_FIXED)
-		|| (info->vmsi_data.bits.delivery_mode == MSI_DATA_DELMODE_LOPRI)) {
+	if ((info->data.bits.delivery_mode == MSI_DATA_DELMODE_FIXED)
+		|| (info->data.bits.delivery_mode == MSI_DATA_DELMODE_LOPRI)) {
 		/* Can only post single-destination IRQs */
 		if (vdmask == (1UL << vid)) {
 			vcpu = vcpu_from_vid(vm, vid);
@@ -122,8 +122,8 @@ static void ptirq_free_irte(const struct ptirq_remapping_info *entry)
  * pid_paddr != 0: physical address of posted interrupt descriptor, indicate
  * that posted mode shall be used
  */
-static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *info,
-		const struct ptirq_remapping_info *entry, uint32_t vector, uint64_t pid_paddr)
+static void ptirq_build_physical_msi(struct acrn_vm *vm,
+	struct ptirq_remapping_info *entry, uint32_t vector, uint64_t pid_paddr)
 {
 	uint64_t vdmask, pdmask;
 	uint32_t dest, delmode, dest_mask;
@@ -134,14 +134,14 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *
 	struct intr_source intr_src;
 
 	/* get physical destination cpu mask */
-	dest = info->vmsi_addr.bits.dest_field;
-	phys = (info->vmsi_addr.bits.dest_mode == MSI_ADDR_DESTMODE_PHYS);
+	dest = entry->vmsi.addr.bits.dest_field;
+	phys = (entry->vmsi.addr.bits.dest_mode == MSI_ADDR_DESTMODE_PHYS);
 
 	vlapic_calc_dest(vm, &vdmask, false, dest, phys, false);
 	pdmask = vcpumask2pcpumask(vm, vdmask);
 
 	/* get physical delivery mode */
-	delmode = info->vmsi_data.bits.delivery_mode;
+	delmode = entry->vmsi.data.bits.delivery_mode;
 	if ((delmode != MSI_DATA_DELMODE_FIXED) && (delmode != MSI_DATA_DELMODE_LOPRI)) {
 		delmode = MSI_DATA_DELMODE_LOPRI;
 	}
@@ -168,32 +168,32 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *
 		 * SHV is set to 0 as ACRN disables MMC (Multi-Message Capable
 		 * for MSI devices.
 		 */
-		info->pmsi_data.full = 0U;
+		entry->pmsi.data.full = 0U;
 		ir_index.index = (uint16_t)entry->allocated_pirq;
 
-		info->pmsi_addr.full = 0UL;
-		info->pmsi_addr.ir_bits.intr_index_high = ir_index.bits.index_high;
-		info->pmsi_addr.ir_bits.shv = 0U;
-		info->pmsi_addr.ir_bits.intr_format = 0x1U;
-		info->pmsi_addr.ir_bits.intr_index_low = ir_index.bits.index_low;
-		info->pmsi_addr.ir_bits.constant = 0xFEEU;
+		entry->pmsi.addr.full = 0UL;
+		entry->pmsi.addr.ir_bits.intr_index_high = ir_index.bits.index_high;
+		entry->pmsi.addr.ir_bits.shv = 0U;
+		entry->pmsi.addr.ir_bits.intr_format = 0x1U;
+		entry->pmsi.addr.ir_bits.intr_index_low = ir_index.bits.index_low;
+		entry->pmsi.addr.ir_bits.constant = 0xFEEU;
 	} else {
 		/* In case there is no corresponding IOMMU, for example, if the
 		 * IOMMU is ignored, pass the MSI info in Compatibility Format
 		 */
-		info->pmsi_data = info->vmsi_data;
-		info->pmsi_data.bits.delivery_mode = delmode;
-		info->pmsi_data.bits.vector = vector;
+		entry->pmsi.data = entry->vmsi.data;
+		entry->pmsi.data.bits.delivery_mode = delmode;
+		entry->pmsi.data.bits.vector = vector;
 
-		info->pmsi_addr = info->vmsi_addr;
-		info->pmsi_addr.bits.dest_field = dest_mask;
-		info->pmsi_addr.bits.rh = MSI_ADDR_RH;
-		info->pmsi_addr.bits.dest_mode = MSI_ADDR_DESTMODE_LOGICAL;
+		entry->pmsi.addr = entry->vmsi.addr;
+		entry->pmsi.addr.bits.dest_field = dest_mask;
+		entry->pmsi.addr.bits.rh = MSI_ADDR_RH;
+		entry->pmsi.addr.bits.dest_mode = MSI_ADDR_DESTMODE_LOGICAL;
 	}
 	dev_dbg(DBG_LEVEL_IRQ, "MSI %s addr:data = 0x%lx:%x(V) -> 0x%lx:%x(P)",
-		(info->pmsi_addr.ir_bits.intr_format != 0U) ? " Remappable Format" : "Compatibility Format",
-		info->vmsi_addr.full, info->vmsi_data.full,
-		info->pmsi_addr.full, info->pmsi_data.full);
+		(entry->pmsi.addr.ir_bits.intr_format != 0U) ? " Remappable Format" : "Compatibility Format",
+		entry->vmsi.addr.full, entry->vmsi.data.full,
+		entry->pmsi.addr.full, entry->pmsi.data.full);
 }
 
 static union ioapic_rte
@@ -539,13 +539,13 @@ void ptirq_softirq(uint16_t pcpu_id)
 {
 	while (1) {
 		struct ptirq_remapping_info *entry = ptirq_dequeue_softirq(pcpu_id);
-		struct ptirq_msi_info *msi;
+		struct msi_info *vmsi;
 
 		if (entry == NULL) {
 			break;
 		}
 
-		msi = &entry->msi;
+		vmsi = &entry->vmsi;
 
 		/* skip any inactive entry */
 		if (!is_entry_active(entry)) {
@@ -557,16 +557,14 @@ void ptirq_softirq(uint16_t pcpu_id)
 		if (entry->intr_type == PTDEV_INTR_INTX) {
 			ptirq_handle_intx(entry->vm, entry);
 		} else {
-			if (msi != NULL) {
-				/* TODO: msi destmode check required */
-				(void)vlapic_intr_msi(entry->vm, msi->vmsi_addr.full, msi->vmsi_data.full);
+			if (vmsi != NULL) {
+				/* TODO: vmsi destmode check required */
+				(void)vlapic_intr_msi(entry->vm, vmsi->addr.full, vmsi->data.full);
 				dev_dbg(DBG_LEVEL_PTIRQ, "dev-assign: irq=0x%x MSI VR: 0x%x-0x%x",
-					entry->allocated_pirq,
-					msi->vmsi_data.bits.vector,
+					entry->allocated_pirq, vmsi->data.bits.vector,
 					irq_to_vector(entry->allocated_pirq));
 				dev_dbg(DBG_LEVEL_PTIRQ, " vmsi_addr: 0x%lx vmsi_data: 0x%x",
-					msi->vmsi_addr.full,
-					msi->vmsi_data.full);
+					vmsi->addr.full, vmsi->data.full);
 			}
 		}
 	}
@@ -618,7 +616,7 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ctlr vgsi_c
  * user must provide bdf and entry_nr
  */
 int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
-				uint16_t entry_nr, struct ptirq_msi_info *info)
+				uint16_t entry_nr, struct msi_info *info)
 {
 	struct ptirq_remapping_info *entry;
 	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
@@ -641,6 +639,8 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 
 	if (entry != NULL) {
 		ret = 0;
+		entry->vmsi = *info;
+
 		/* build physical config MSI, update to info->pmsi_xxx */
 		if (is_lapic_pt_configured(vm)) {
 			enum vm_vlapic_state vlapic_state = check_vm_vlapic_state(vm);
@@ -650,13 +650,13 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 				 * All the vCPUs are in x2APIC mode and LAPIC is Pass-through
 				 * Use guest vector to program the interrupt source
 				 */
-				ptirq_build_physical_msi(vm, info, entry, (uint32_t)info->vmsi_data.bits.vector, 0UL);
+				ptirq_build_physical_msi(vm, entry, (uint32_t)info->data.bits.vector, 0UL);
 			} else if (vlapic_state == VM_VLAPIC_XAPIC) {
 				/*
 				 * All the vCPUs are in xAPIC mode and LAPIC is emulated
 				 * Use host vector to program the interrupt source
 				 */
-				ptirq_build_physical_msi(vm, info, entry, irq_to_vector(entry->allocated_pirq), 0UL);
+				ptirq_build_physical_msi(vm, entry, irq_to_vector(entry->allocated_pirq), 0UL);
 			} else if (vlapic_state == VM_VLAPIC_TRANSITION) {
 				/*
 				 * vCPUs are in middle of transition, so do not program interrupt source
@@ -673,19 +673,19 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 			struct acrn_vcpu *vcpu = is_single_destination(vm, info);
 
 			if (is_pi_capable(vm) && (vcpu != NULL)) {
-				ptirq_build_physical_msi(vm, info, entry,
-					(uint32_t)info->vmsi_data.bits.vector, hva2hpa(get_pi_desc(vcpu)));
+				ptirq_build_physical_msi(vm, entry,
+					(uint32_t)info->data.bits.vector, hva2hpa(get_pi_desc(vcpu)));
 			} else {
 				/* Go with remapped mode if we cannot handle it in posted mode */
-				ptirq_build_physical_msi(vm, info, entry, irq_to_vector(entry->allocated_pirq), 0UL);
+				ptirq_build_physical_msi(vm, entry, irq_to_vector(entry->allocated_pirq), 0UL);
 			}
 		}
 
 		if (ret == 0) {
-			entry->msi = *info;
+			*info = entry->pmsi;
 			vbdf.value = virt_bdf;
 			dev_dbg(DBG_LEVEL_IRQ, "PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
-				vbdf.bits.b, vbdf.bits.d, vbdf.bits.f, entry_nr, info->vmsi_data.bits.vector,
+				vbdf.bits.b, vbdf.bits.d, vbdf.bits.f, entry_nr, entry->vmsi.data.bits.vector,
 				irq_to_vector(entry->allocated_pirq), entry->vm->vm_id);
 		}
 	}

@@ -79,14 +79,14 @@ static void remap_one_vmsix_entry(const struct pci_vdev *vdev, uint32_t index)
 {
 	const struct msix_table_entry *ventry;
 	struct msix_table_entry *pentry;
-	struct ptirq_msi_info info = {};
+	struct msi_info info = {};
 	int32_t ret;
 
 	mask_one_msix_vector(vdev, index);
 	ventry = &vdev->msix.table_entries[index];
 	if ((ventry->vector_control & PCIM_MSIX_VCTRL_MASK) == 0U) {
-		info.vmsi_addr.full = vdev->msix.table_entries[index].addr;
-		info.vmsi_data.full = vdev->msix.table_entries[index].data;
+		info.addr.full = vdev->msix.table_entries[index].addr;
+		info.data.full = vdev->msix.table_entries[index].data;
 
 		ret = ptirq_prepare_msix_remap(vpci2vm(vdev->vpci), vdev->bdf.value, vdev->pdev->bdf.value, (uint16_t)index, &info);
 		if (ret == 0) {
@@ -99,10 +99,10 @@ static void remap_one_vmsix_entry(const struct pci_vdev *vdev, uint32_t index)
 			 * write only
 			 */
 			stac();
-			mmio_write32((uint32_t)(info.pmsi_addr.full), (void *)&(pentry->addr));
-			mmio_write32((uint32_t)(info.pmsi_addr.full >> 32U), (void *)((char *)&(pentry->addr) + 4U));
+			mmio_write32((uint32_t)(info.addr.full), (void *)&(pentry->addr));
+			mmio_write32((uint32_t)(info.addr.full >> 32U), (void *)((char *)&(pentry->addr) + 4U));
 
-			mmio_write32(info.pmsi_data.full, (void *)&(pentry->data));
+			mmio_write32(info.data.full, (void *)&(pentry->data));
 			mmio_write32(vdev->msix.table_entries[index].vector_control, (void *)&(pentry->vector_control));
 			clac();
 		}

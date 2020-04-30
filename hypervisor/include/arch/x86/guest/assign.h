@@ -62,7 +62,7 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ctlr vgsi_c
  *
  */
 int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,  uint16_t phys_bdf,
-				uint16_t entry_nr, struct ptirq_msi_info *info);
+				uint16_t entry_nr, struct msi_info *info);
 
 
 /**

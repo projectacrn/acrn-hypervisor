@@ -106,12 +106,9 @@ union msi_data_reg {
 	} bits __packed;
 };
 
-/* entry per guest virt vector */
-struct ptirq_msi_info {
-	union msi_addr_reg vmsi_addr; /* virt msi_addr */
-	union msi_data_reg vmsi_data; /* virt msi_data */
-	union msi_addr_reg pmsi_addr; /* phys msi_addr */
-	union msi_data_reg pmsi_data; /* phys msi_data */
+struct msi_info {
+	union msi_addr_reg addr;
+	union msi_data_reg data;
 };
 
 struct ptirq_remapping_info;
@@ -132,7 +129,8 @@ struct ptirq_remapping_info {
 	uint32_t allocated_pirq;
 	uint32_t polarity; /* 0=active high, 1=active low*/
 	struct list_head softirq_node;
-	struct ptirq_msi_info msi;
+	struct msi_info vmsi;
+	struct msi_info pmsi;
 
 	uint64_t intr_count;
 	struct hv_timer intr_delay_timer; /* used for delay intr injection */
