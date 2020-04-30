@@ -3,7 +3,7 @@
 	<uos_type desc="UOS type">WINDOWS</uos_type>
 	<rtos_type desc="UOS Realtime capability">no</rtos_type>
 	<mem_size desc="UOS memory size in MByte">4096</mem_size>
-	<gvt_args desc="GVT arguments. Recommendation is 64 448 8. Leave it blank to disable GVT.">64 448 8</gvt_args>
+	<gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT.">gvtd</gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<vuart0 desc="vUART0 which emulated by device model">Enable</vuart0>
 	<poweroff_channel desc="the method of power off uos"></poweroff_channel>
@@ -39,7 +39,7 @@
 	<uos_type desc="UOS type">PREEMPT-RT LINUX</uos_type>
 	<rtos_type desc="UOS Realtime capability">Hard RT</rtos_type>
 	<mem_size desc="UOS memory size in MByte">1024</mem_size>
-	<gvt_args configurable="0" desc="GVT arguments. Recommendation is 64 448 8. Leave it blank to disable GVT."></gvt_args>
+	<gvt_args configurable="0" desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
 	<poweroff_channel desc="the method of power off uos">vuart1(tty)</poweroff_channel>
