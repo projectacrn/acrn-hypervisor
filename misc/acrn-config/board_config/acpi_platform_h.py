@@ -91,10 +91,18 @@ def multi_info_parser(config, default_platform, msg_s, msg_e):
     pm_ac_sz = OverridAccessSize()
     multi_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, msg_s, msg_e)
 
+    msg_name = msg_s.split('_')[0].strip('<')
+
+    # Set defaults for PM1A registers if not present in target xml file
+    if not multi_lines and msg_name in ("PM1A"):
+        print("#define PM1A_EVT_ACCESS_SIZE\t0U", file=config)
+        print("#define PM1A_EVT_ADDRESS\t0UL", file=config)
+        print("#define PM1A_CNT_ADDRESS\t0UL", file=config)
+        return
+
     # S3/S5 not supported by BIOS
-    sx_name = msg_s.split('_')[0].strip('<')
-    if not multi_lines and sx_name in ("S3", "S5"):
-        print("/* {} is not supported by BIOS */".format(sx_name), file=config)
+    if not multi_lines and msg_name in ("S3", "S5"):
+        print("/* {} is not supported by BIOS */".format(msg_name), file=config)
         return
 
     for s_line in multi_lines:
@@ -131,6 +139,23 @@ def write_direct_info_parser(config, msg_s, msg_e):
     :param msg_e: it is a pattern of key stings what end to match from board information
     """
     vector_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, msg_s, msg_e)
+    msg_name = msg_s.split('_')[0].strip('<')
+
+    # Set defaults if not present in target xml file
+    if not vector_lines and msg_name in ("WAKE"):
+        print("\n#define WAKE_VECTOR_32\t\t0UL", file=config)
+        print("#define WAKE_VECTOR_64\t\t0UL", file=config)
+        return
+
+    if not vector_lines and msg_name in ("RESET"):
+        print("\n#define RESET_REGISTER_ADDRESS\t0UL", file=config)
+        print("#define RESET_REGISTER_VALUE\t0UL", file=config)
+        print("#define RESET_REGISTER_SPACE_ID\t0UL", file=config)
+        return
+
+    if not vector_lines and msg_name in ("MMCFG"):
+        print("\n#define DEFAULT_PCI_MMCFG_BASE\t0UL", file=config)
+        return
 
     for vector in vector_lines:
         print("{}".format(vector.strip()), file=config)
@@ -150,6 +175,11 @@ def drhd_info_parser(config):
 
     # write DRHD
     print("/* DRHD of DMAR */", file=config)
+
+    if not drhd_lines:
+        print("\n#define DRHD_COUNT\t\t8U", file=config)
+        return
+
     for drhd in drhd_lines:
         print(drhd.strip(), file=config)
 

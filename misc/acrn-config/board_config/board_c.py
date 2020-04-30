@@ -34,6 +34,15 @@ def gen_dmar_structure(config):
     drhd_dev_scope_cnt = []
     dev_scope_type = []
 
+    if not dmar_info_lines:
+        print("\n#ifndef CONFIG_ACPI_PARSE_ENABLED", file=config)
+        print("#error \"DMAR info is not available, please set ACPI_PARSE_ENABLED to y in Kconfig. \\", file=config)
+        print("\tOr use acrn-config tool to generate platform DMAR info.\"", file=config)
+        print("#endif\n", file=config)
+
+        print("struct dmar_info plat_dmar_info;\n", file=config)
+        return
+
     # parse to get DRHD count and dev scope count
     for dmar_line in dmar_info_lines:
         if "DRHD_COUNT" in dmar_line and not drhd_cnt:
@@ -180,6 +189,10 @@ def gen_single_data(data_lines, domain_str, config):
     line_i = 0
     data_statues = True
     data_len = len(data_lines)
+
+    if data_len == 0:
+        return
+
     for data_l in data_lines:
         if line_i == 0:
             if "not available" in data_l:
@@ -208,6 +221,10 @@ def gen_px_cx(config):
 
     gen_single_data(cx_lines, 'c', config)
     gen_single_data(px_lines, 'p', config)
+
+    if not cpu_brand_lines:
+        print("\nconst struct cpu_state_table board_cpu_state_tbl;\n", file=config)
+        return
 
     for brand_line in cpu_brand_lines:
         cpu_brand = brand_line
