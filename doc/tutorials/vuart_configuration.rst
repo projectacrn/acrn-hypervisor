@@ -33,10 +33,6 @@ Console enable list
 +=================+=======================+====================+================+================+
 | SDC             | Service VM            | Post-launched      | Post-launched  |                |
 |                 | (vuart enable)        |                    |                |                |
-|                 |                       |                    |                |                |
-+-----------------+-----------------------+--------------------+----------------+----------------+
-| SDC2            | Service VM            | Post-launched      |                | Post-launched  |
-|                 | (vuart enable)        |                    |                |                |
 +-----------------+-----------------------+--------------------+----------------+----------------+
 | Hybrid          | Pre-launched (Zephyr) | Service VM         | Post-launched  |                |
 |                 | (vuart enable)        | (vuart enable)     |                |                |
@@ -110,8 +106,6 @@ Communication vUART enable list
 | Scenarios       | vm0                   | vm1                | vm2                 | vm3            |
 +=================+=======================+====================+=====================+================+
 | SDC             | Service VM            | Post-launched      | Post-launched       |                |
-+-----------------+-----------------------+--------------------+---------------------+----------------+
-| SDC2            | Service VM            | Post-launched      | Post-launched       | Post-launched  |
 +-----------------+-----------------------+--------------------+---------------------+----------------+
 | Hybrid          | Pre-launched (Zephyr) | Service VM         | Post-launched       |                |
 |                 | (vuart enable COM2)   | (vuart enable COM2)|                     |                |
