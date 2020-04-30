@@ -450,6 +450,8 @@ static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 	dmar_unit->cap_num_fault_regs = iommu_cap_num_fault_regs(dmar_unit->cap);
 	dmar_unit->cap_fault_reg_offset = iommu_cap_fault_reg_offset(dmar_unit->cap);
 	dmar_unit->ecap_iotlb_offset = iommu_ecap_iro(dmar_unit->ecap) * 16U;
+	dmar_unit->root_table_addr = hva2hpa(get_root_table(dmar_unit->index));
+	dmar_unit->ir_table_addr = hva2hpa(get_ir_table(dmar_unit->index));
 
 #if DBG_IOMMU
 	pr_info("version:0x%x, cap:0x%lx, ecap:0x%lx",
@@ -675,6 +677,7 @@ static void dmar_invalid_iotlb_global(struct dmar_drhd_rt *dmar_unit)
 	dmar_invalid_iotlb(dmar_unit, 0U, 0UL, 0U, false, DMAR_IIRG_GLOBAL);
 }
 
+/* @pre dmar_unit->ir_table_addr != NULL */
 static void dmar_set_intr_remap_table(struct dmar_drhd_rt *dmar_unit)
 {
 	uint64_t address;
@@ -683,15 +686,9 @@ static void dmar_set_intr_remap_table(struct dmar_drhd_rt *dmar_unit)
 
 	spinlock_obtain(&(dmar_unit->lock));
 
-	if (dmar_unit->ir_table_addr == 0UL) {
-		dmar_unit->ir_table_addr = hva2hpa(get_ir_table(dmar_unit->index));
-	}
-
-	address = dmar_unit->ir_table_addr | DMAR_IR_ENABLE_EIM;
-
 	/* Set number of bits needed to represent the entries minus 1 */
 	size = (uint8_t) fls32(CONFIG_MAX_IR_ENTRIES) - 1U;
-	address = address | size;
+	address = dmar_unit->ir_table_addr | DMAR_IR_ENABLE_EIM | size;
 
 	iommu_write64(dmar_unit, DMAR_IRTA_REG, address);
 
@@ -730,28 +727,13 @@ static void dmar_invalid_iec_global(struct dmar_drhd_rt *dmar_unit)
 	dmar_invalid_iec(dmar_unit, 0U, 0U, true);
 }
 
+/* @pre dmar_unit->root_table_addr != NULL */
 static void dmar_set_root_table(struct dmar_drhd_rt *dmar_unit)
 {
-	uint64_t address;
 	uint32_t status;
 
 	spinlock_obtain(&(dmar_unit->lock));
-
-	/*
-	 * dmar_set_root_table is called from init_iommu and
-	 * resume_iommu. So NULL check on this pointer is needed
-	 * so that we do not change the root table pointer in the
-	 * resume flow.
-	 */
-
-	if (dmar_unit->root_table_addr == 0UL) {
-		dmar_unit->root_table_addr = hva2hpa(get_root_table(dmar_unit->index));
-	}
-
-	/* Currently don't support extended root table */
-	address = dmar_unit->root_table_addr;
-
-	iommu_write64(dmar_unit, DMAR_RTADDR_REG, address);
+	iommu_write64(dmar_unit, DMAR_RTADDR_REG, dmar_unit->root_table_addr);
 
 	iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd | DMA_GCMD_SRTP);
 
