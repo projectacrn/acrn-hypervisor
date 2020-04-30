@@ -18,7 +18,7 @@ are discussed in the following sections.
 Hypervisor configuration
 ========================
 
-The hypervisor configuration configures a working scenario and target
+The hypervisor configuration defines a working scenario and target
 board by configuring the hypervisor image features and capabilities such as
 setting up the log and the serial port.
 
@@ -49,9 +49,9 @@ VMs on each user scenario. It also includes **launch script-based** VM
 configuration information, where parameters are passed to the device model
 to launch post-launched User VMs.
 
-Scenario based VM configurations are organized as ``*.c/*.h`` files, the
-reference are located in the ``acrn-hypervisor/hypervisor/scenarios/$(SCENARIO)/``
-folder.
+Scenario based VM configurations are organized as ``*.c/*.h`` files. The
+reference scenarios are located in the
+``acrn-hypervisor/hypervisor/scenarios/$(SCENARIO)/`` folder.
 
 User VM launch script samples are located in the
 ``acrn-hypervisor/devicemodel/samples/`` folder.
@@ -107,7 +107,7 @@ Additional scenario XML elements:
   Specify the final build is for Release or Debug.
 
 ``SERIAL_CONSOLE`` (a child node of ``DEBUG_OPTIONS``):
-  Specify the host serial device which is used for hypervisor debug.
+  Specify the host serial device is used for hypervisor debugging.
 
 ``MEM_LOGLEVEL`` (a child node of ``DEBUG_OPTIONS``):
   Specify the default log level in memory.
@@ -122,33 +122,34 @@ Additional scenario XML elements:
   Specify the bitmap of consoles where logs are printed.
 
 ``LOG_BUF_SIZE`` (a child node of ``DEBUG_OPTIONS``):
-  Specify the capacity of log buffer for each physical CPU.
+  Specify the capacity of the log buffer for each physical CPU.
 
 ``RELOC`` (a child node of ``FEATURES``):
-  Specify whether enable hypervisor image relocation when boot.
+  Specify whether hypervisor image relocation is enabled on booting.
 
 ``SCHEDULER`` (a child node of ``FEATURES``):
-  Specify the CPU scheduler to be used by the hypervisor.
+  Specify the CPU scheduler used by the hypervisor.
   Supported schedulers are: ``SCHED_NOOP``, ``SCHED_BVT`` and ``SCHED_IORR``.
 
 ``MULTIBOOT2`` (a child node of ``FEATURES``):
-  Specify whether support boot ACRN hypervisor image from multiboot2 protocol.
-  ACRN hypervisor support boot from multiboot protocol always.
+  Specify whether ACRN hypervisor image can be booted using multiboot2 protocol.
+  If not set, GRUB's multiboot2 is not available as a boot option.
 
 ``HYPERV_ENABLED`` (a child node of ``FEATURES``):
-  Specify whether enable Hyper-V enlightenment.
+  Specify whether Hyper-V is enabled.
 
 ``IOMMU_ENFORCE_SNP`` (a child node of ``FEATURES``):
-  Specify whether IOMMU enforce snoop behavior of DMA operation.
+  Specify whether IOMMU enforces snoop behavior of DMA operation.
 
 ``ACPI_PARSE_ENABLED`` (a child node of ``FEATURES``):
-  Specify whether enable ACPI runtime parsing.
+  Specify whether ACPI runtime parsing is enabled..
 
 ``L1D_VMENTRY_ENABLED`` (a child node of ``FEATURES``):
-  Specify whether enable L1 cache flush before VM entry.
+  Specify whether L1 cache flush before VM entry is enabled.
 
 ``MCE_ON_PSC_DISABLED`` (a child node of ``FEATURE``):
-  Specify whether force to disable software workaround for Machine Check Error on Page Size Change.
+  Specify whether force to disable software workaround for Machine Check
+  Error on Page Size Change is enabled.
 
 ``STACK_SIZE`` (a child node of ``MEMORY``):
   Specify the size of stacks used by physical cores. Each core uses one stack
@@ -203,36 +204,27 @@ Additional scenario XML elements:
   Specify the VM with VMID by its "id" attribute.
 
 ``vm_type``:
-  Current support VM type:
+  Current supported VM types are:
 
-  ``SAFETY_VM`` pre-launched Safety VM
-
-  ``PRE_STD_VM`` pre-launched Standard VM
-
-  ``SOS_VM`` pre-launched Service VM
-
-  ``POST_STD_VM`` post-launched Standard VM
-
-  ``POST_RT_VM`` post-launched Realtime capable VM
-
-  ``KATA_VM`` post-launched Kata Container VM
+  - ``SAFETY_VM`` pre-launched Safety VM
+  - ``PRE_STD_VM`` pre-launched Standard VM
+  - ``SOS_VM`` pre-launched Service VM
+  - ``POST_STD_VM`` post-launched Standard VM
+  - ``POST_RT_VM`` post-launched realtime capable VM
+  - ``KATA_VM`` post-launched Kata Container VM
 
 ``name`` (a child node of ``vm``):
-  Specify the VM name which will be shown in the hypervisor console command: vm_list.
+  Specify the VM name shown in the hypervisor console command: vm_list.
 
 ``guest_flags``:
   Select all applicable flags for the VM:
 
-  ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify whether secure world is enabled
-
-  ``GUEST_FLAG_LAPIC_PASSTHROUGH`` specify whether LAPIC is passed through
-
-  ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify whether the hypervisor needs
-  IO polling to completion
-
-  ``GUEST_FLAG_HIDE_MTRR`` specify whether to hide MTRR from the VM
-
-  ``GUEST_FLAG_RT`` specify whether the vm is RT-VM
+  - ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify whether secure world is enabled
+  - ``GUEST_FLAG_LAPIC_PASSTHROUGH`` specify whether LAPIC is passed through
+  - ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify whether the hypervisor needs
+    IO polling to completion
+  - ``GUEST_FLAG_HIDE_MTRR`` specify whether to hide MTRR from the VM
+  - ``GUEST_FLAG_RT`` specify whether the VM is RT-VM (realtime)
 
 ``cpu_affinity``:
   List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.
@@ -260,10 +252,12 @@ Additional scenario XML elements:
   Currently supports ``KERNEL_BZIMAGE`` and ``KERNEL_ZEPHYR``.
 
 ``kern_mod`` (a child node of ``os_config``):
-  The tag for the kernel image that acts as a multiboot module; it must exactly match the module tag in the GRUB multiboot cmdline.
+  The tag for the kernel image that acts as a multiboot module; it must
+  exactly match the module tag in the GRUB multiboot cmdline.
 
 ``ramdisk_mod`` (a child node of ``os_config``):
-  The tag for the ramdisk image which acts as a multiboot module; it must exactly match the module tag in the GRUB multiboot cmdline.
+  The tag for the ramdisk image which acts as a multiboot module; it
+  must exactly match the module tag in the GRUB multiboot cmdline.
 
 ``bootargs`` (a child node of ``os_config``):
   For internal use and is not configurable. Specify the kernel boot arguments
@@ -290,16 +284,19 @@ Additional scenario XML elements:
   vCOM irq.
 
 ``target_vm_id`` (a child node of ``vuart1``):
-  COM2 is used for VM communications. When it is enabled, specify which target VM the current VM connects to.
+  COM2 is used for VM communications. When it is enabled, specify which
+  target VM the current VM connects to.
 
 ``target_uart_id`` (a child node of ``vuart1``):
   Target vUART ID that vCOM2 connects to.
 
 ``pci_dev_num``:
-  PCI devices number of the VM; it is hard-coded for each scenario so it is not configurable for now.
+  PCI devices number of the VM; it is hard-coded for each scenario so it
+  is not configurable for now.
 
 ``pci_devs``:
-  PCI devices list of the VM; it is hard-coded for each scenario so it is not configurable for now.
+  PCI devices list of the VM; it is hard-coded for each scenario so it
+  is not configurable for now.
 
 ``board_private``:
   Stores scenario-relevant board configuration.
@@ -338,24 +335,27 @@ current scenario has:
   Specify the User VM memory size in Mbyte.
 
 ``gvt_args``:
-  GVT arguments for the VM. Set it to ``gvtd`` for GVTd, otherwise stand for GVTg arguments.
-  The GVTg Input format: ``low_gm_size high_gm_size fence_sz``, The recommendation is ``64 448 8``.
-  Leave it blank to disable the GVT.
+  GVT arguments for the VM. Set it to ``gvtd`` for GVTd, otherwise stand
+  for GVTg arguments.  The GVTg Input format: ``low_gm_size high_gm_size fence_sz``,
+  The recommendation is ``64 448 8``.  Leave it blank to disable the GVT.
 
 ``vbootloader``:
   Virtual bootloader type; currently only supports OVMF.
 
 ``vuart0``:
-  Specify whether the device model emulates the vUART0(vCOM1); refer to :ref:`vuart_config` for details.
-  If set to ``Enable``, the vUART0 is emulated by the device model;
-  if set to ``Disable``, the vUART0 is emulated by the hypervisor if it is configured in the scenario XML.
+  Specify whether the device model emulates the vUART0(vCOM1); refer to
+  :ref:`vuart_config` for details.  If set to ``Enable``, the vUART0 is
+  emulated by the device model; if set to ``Disable``, the vUART0 is
+  emulated by the hypervisor if it is configured in the scenario XML.
 
 ``poweroff_channel``:
-  Specify whether the User VM power off channel is through the IOC, Powerbutton, or vUART.
+  Specify whether the User VM power off channel is through the IOC,
+  Powerbutton, or vUART.
 
 ``usb_xhci``:
-  USB xHCI mediator configuration. Input format: ``bus#-port#[:bus#-port#: ...]``. e.g.: ``1-2:2-4``.
-  refer to :ref:`usb_virtualization` for details.
+  USB xHCI mediator configuration. Input format:
+  ``bus#-port#[:bus#-port#: ...]``, e.g.: ``1-2:2-4``.
+  Refer to :ref:`usb_virtualization` for details.
 
 ``passthrough_devices``:
   Select the passthrough device from the lspci list; currently we support:
@@ -372,7 +372,8 @@ current scenario has:
 
 ``console`` (a child node of ``virtio_devices``):
   The virtio console device setting.
-  Input format: ``[@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]``.
+  Input format:
+  ``[@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]``.
 
 .. note::
 
