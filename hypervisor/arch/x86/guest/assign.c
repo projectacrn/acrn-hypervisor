@@ -59,7 +59,7 @@ static struct acrn_vcpu *is_single_destination(struct acrn_vm *vm, const struct 
  * vm must not be NULL when lookup by virtual sid.
  */
 static inline struct ptirq_remapping_info *
-ptirq_lookup_entry_by_sid(uint32_t intr_type,
+find_ptirq_entry(uint32_t intr_type,
 		const union source_id *sid, const struct acrn_vm *vm)
 {
 	uint16_t idx;
@@ -311,9 +311,9 @@ static struct ptirq_remapping_info *add_msix_remapping(struct acrn_vm *vm,
 	DEFINE_MSI_SID(phys_sid, phys_bdf, entry_nr);
 	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
 
-	entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_MSI, &phys_sid, NULL);
+	entry = find_ptirq_entry(PTDEV_INTR_MSI, &phys_sid, NULL);
 	if (entry == NULL) {
-		if (ptirq_lookup_entry_by_sid(PTDEV_INTR_MSI, &virt_sid, vm) != NULL) {
+		if (find_ptirq_entry(PTDEV_INTR_MSI, &virt_sid, vm) != NULL) {
 			pr_err("MSIX re-add vbdf%x", virt_bdf);
 		} else {
 			entry = ptirq_alloc_entry(vm, PTDEV_INTR_MSI);
@@ -361,7 +361,7 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entr
 	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
 	struct intr_source intr_src;
 
-	entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_MSI, &virt_sid, vm);
+	entry = find_ptirq_entry(PTDEV_INTR_MSI, &virt_sid, vm);
 	if (entry != NULL) {
 		if (is_entry_active(entry)) {
 			/*TODO: disable MSIX device when HV can in future */
@@ -395,9 +395,9 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 	DEFINE_INTX_SID(virt_sid, virt_gsi, vgsi_ctlr);
 	uint32_t phys_irq = ioapic_gsi_to_irq(phys_gsi);
 
-	entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_INTX, &phys_sid, NULL);
+	entry = find_ptirq_entry(PTDEV_INTR_INTX, &phys_sid, NULL);
 	if (entry == NULL) {
-		if (ptirq_lookup_entry_by_sid(PTDEV_INTR_INTX, &virt_sid, vm) == NULL) {
+		if (find_ptirq_entry(PTDEV_INTR_INTX, &virt_sid, vm) == NULL) {
 			entry = ptirq_alloc_entry(vm, PTDEV_INTR_INTX);
 			if (entry != NULL) {
 				entry->phys_sid.value = phys_sid.value;
@@ -450,7 +450,7 @@ static void remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_gsi, e
 	struct intr_source intr_src;
 	DEFINE_INTX_SID(virt_sid, virt_gsi, vgsi_ctlr);
 
-	entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_INTX, &virt_sid, vm);
+	entry = find_ptirq_entry(PTDEV_INTR_INTX, &virt_sid, vm);
 	if (entry != NULL) {
 		if (is_entry_active(entry)) {
 			phys_irq = entry->allocated_pirq;
@@ -578,7 +578,7 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ctlr vgsi_c
 	struct ptirq_remapping_info *entry;
 	DEFINE_INTX_SID(virt_sid, virt_gsi, vgsi_ctlr);
 
-	entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_INTX, &virt_sid, vm);
+	entry = find_ptirq_entry(PTDEV_INTR_INTX, &virt_sid, vm);
 	if (entry != NULL) {
 		phys_irq = entry->allocated_pirq;
 
@@ -630,7 +630,7 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 	 * entry already be held by others, return error.
 	 */
 	spinlock_obtain(&ptdev_lock);
-	entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_MSI, &virt_sid, vm);
+	entry = find_ptirq_entry(PTDEV_INTR_MSI, &virt_sid, vm);
 	if (entry == NULL) {
 		entry = add_msix_remapping(vm, virt_bdf, phys_bdf, entry_nr);
 		if (entry == NULL) {
@@ -748,7 +748,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ct
 	if (!is_vuart_intx(vm, virt_sid.intx_id.gsi)) {
 		/* query if we have virt to phys mapping */
 		spinlock_obtain(&ptdev_lock);
-		entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_INTX, &virt_sid, vm);
+		entry = find_ptirq_entry(PTDEV_INTR_INTX, &virt_sid, vm);
 		if (entry == NULL) {
 			if (is_sos_vm(vm)) {
 
@@ -767,7 +767,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ct
 						alt_virt_sid.intx_id.ctlr = INTX_CTLR_PIC;
 					}
 
-					entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_INTX, &alt_virt_sid, vm);
+					entry = find_ptirq_entry(PTDEV_INTR_INTX, &alt_virt_sid, vm);
 					if (entry != NULL) {
 						entry->virt_sid.value = virt_sid.value;
 						dev_dbg(DBG_LEVEL_IRQ,
