@@ -50,12 +50,12 @@ def tap_uos_net(names, virt_io, vmid, config):
 
         print("#vm-name used to generate uos-mac address", file=config)
         print("mac=$(cat /sys/class/net/e*/address)", file=config)
-        print("vm_name=vm$1", file=config)
+        print("vm_name=post_vm_id$1", file=config)
         print("mac_seed=${mac:9:8}-${vm_name}", file=config)
         print("", file=config)
 
     if uos_type in ("VXWORKS", "ZEPHYR", "WINDOWS", "PREEMPT-RT LINUX"):
-        print("vm_name={}_vm$1".format(vm_name), file=config)
+        print("vm_name=post_vm_id$1", file=config)
 
     for net in virt_io['network'][vmid]:
         if net:
@@ -329,18 +329,18 @@ def uos_launch(names, args, virt_io, vmid, config):
         else:
             print("else", file=config)
             if gvt_args == "gvtd":
-                print('    launch_{} 1'.format(launch_uos), file=config)
+                print('    launch_{} {}'.format(launch_uos, vmid), file=config)
             elif gvt_args:
-                print('    launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
+                print('    launch_{} {} "{}"'.format(launch_uos, vmid, gvt_args), file=config)
             print("fi", file=config)
     else:
         if uos_type in ("VXWORKS", "PREEMPT-RT LINUX", "ZEPHYR"):
-            print("launch_{} 1".format(launch_uos), file=config)
+            print("launch_{} {}".format(launch_uos, vmid), file=config)
         if uos_type in ("CLEARLINUX", "WINDOWS"):
             if gvt_args == "gvtd":
-                print('launch_{} 1'.format(launch_uos), file=config)
+                print('launch_{} {}'.format(launch_uos, vmid), file=config)
             else:
-                print('launch_{} 1 "{}"'.format(launch_uos, gvt_args), file=config)
+                print('launch_{} {} "{}"'.format(launch_uos, vmid, gvt_args), file=config)
 
     if is_mount_needed(virt_io, vmid):
         print("", file=config)
