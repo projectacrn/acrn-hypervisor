@@ -18,15 +18,14 @@ are discussed in the following sections.
 Hypervisor configuration
 ========================
 
-The hypervisor configuration selects a working scenario and target
+The hypervisor configuration configures a working scenario and target
 board by configuring the hypervisor image features and capabilities such as
 setting up the log and the serial port.
 
-The hypervisor configuration uses the ``Kconfig`` ``make
-menuconfig`` mechanism.  The configuration file is located in the
-``acrn-hypervisor/hypervisor/arch/x86/configs/`` folder.
+The hypervisor configuration uses the ``Kconfig`` mechanism.  The configuration
+file is located at ``acrn-hypervisor/hypervisor/arch/x86/Kconfig``.
 
-The board-specific ``defconfig`` file,
+A board-specific ``defconfig`` file, for example
 ``acrn-hypervisor/hypervisor/arch/x86/configs/$(BOARD).config``
 is loaded first; it is the default ``Kconfig`` for the specified board.
 
@@ -37,7 +36,7 @@ The board configuration stores board-specific settings referenced by the
 ACRN hypervisor. This includes **scenario-relevant** information such as
 board settings, root device selection, and the kernel cmdline. It also includes
 **scenario-irrelevant** hardware-specific information such as ACPI/PCI
-and BDF information. The board configuration is organized as
+and BDF information. The reference board configuration is organized as
 ``*.c/*.h`` files located in the
 ``acrn-hypervisor/hypervisor/arch/x86/configs/$(BOARD)/`` folder.
 
@@ -50,8 +49,8 @@ VMs on each user scenario. It also includes **launch script-based** VM
 configuration information, where parameters are passed to the device model
 to launch post-launched User VMs.
 
-Scenario based VM configurations are organized as ``*.c/*.h`` files
-located in the ``acrn-hypervisor/hypervisor/scenarios/$(SCENARIO)/``
+Scenario based VM configurations are organized as ``*.c/*.h`` files, the
+reference are located in the ``acrn-hypervisor/hypervisor/scenarios/$(SCENARIO)/``
 folder.
 
 User VM launch script samples are located in the
@@ -101,17 +100,125 @@ and ``scenario`` attributes:
 
 Additional scenario XML elements:
 
+``hv``:
+  Specify the global attributes for all VMs.
+
+``RELEASE`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the final build is for Release or Debug.
+
+``SERIAL_CONSOLE`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the host serial device which is used for hypervisor debug.
+
+``MEM_LOGLEVEL`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the default log level in memory.
+
+``NPK_LOGLEVEL`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the default log level for the hypervisor NPK log.
+
+``CONSOLE_LOGLEVEL`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the default log level on the serial console.
+
+``LOG_DESTINATION`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the bitmap of consoles where logs are printed.
+
+``LOG_BUF_SIZE`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the capacity of log buffer for each physical CPU.
+
+``RELOC`` (a child node of ``FEATURES``):
+  Specify whether enable hypervisor image relocation when boot.
+
+``SCHEDULER`` (a child node of ``FEATURES``):
+  Specify the CPU scheduler to be used by the hypervisor.
+  Supported schedulers are: ``SCHED_NOOP``, ``SCHED_BVT`` and ``SCHED_IORR``.
+
+``MULTIBOOT2`` (a child node of ``FEATURES``):
+  Specify whether support boot ACRN hypervisor image from multiboot2 protocol.
+  ACRN hypervisor support boot from multiboot protocol always.
+
+``HYPERV_ENABLED`` (a child node of ``FEATURES``):
+  Specify whether enable Hyper-V enlightenment.
+
+``IOMMU_ENFORCE_SNP`` (a child node of ``FEATURES``):
+  Specify whether IOMMU enforce snoop behavior of DMA operation.
+
+``ACPI_PARSE_ENABLED`` (a child node of ``FEATURES``):
+  Specify whether enable ACPI runtime parsing.
+
+``L1D_VMENTRY_ENABLED`` (a child node of ``FEATURES``):
+  Specify whether enable L1 cache flush before VM entry.
+
+``MCE_ON_PSC_DISABLED`` (a child node of ``FEATURE``):
+  Specify whether force to disable software workaround for Machine Check Error on Page Size Change.
+
+``STACK_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of stacks used by physical cores. Each core uses one stack
+  for normal operations and another three for specific exceptions.
+
+``HV_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of the RAM region used by the hypervisor.
+
+``LOW_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify size of RAM region below address 0x10000, starting from address 0x0.
+
+``SOS_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of Service OS VM RAM region.
+
+``UOS_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of User OS VM RAM region.
+
+``PLATFORM_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of the physical platform RAM region.
+
+``IOMMU_BUS_NUM`` (a child node of ``CAPACITIES``):
+  Specify the highest PCI bus ID used during IOMMU initialization.
+
+``MAX_IR_ENTRIES`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of Interrupt Remapping Entries.
+
+``MAX_IOAPIC_NUM`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of IO-APICs.
+
+``MAX_PCI_DEV_NUM`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of PCI devices.
+
+``MAX_IOAPIC_LINES`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of interrupt lines per IOAPIC.
+
+``MAX_PT_IRQ_ENTRIES`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of interrupt source for PT devices.
+
+``MAX_MSIX_TABLE_NUM`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of MSI-X tables per device.
+
+``MAX_EMULATED_MMIO`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of emulated MMIO regions.
+
+``GPU_SBDF`` (a child node of ``MISC_CFG``):
+  Specify the Segment, Bus, Device, and function of the GPU.
+
+``UEFI_OS_LOADER_NAME`` (a child node of ``MISC_CFG``):
+  Specify the UEFI OS loader name.
+
 ``vm``:
   Specify the VM with VMID by its "id" attribute.
 
-``load_order``:
-  Specify the VM by its load order: ``PRE_LAUNCHED_VM``, ``SOS_VM`` or ``POST_LAUNCHED_VM``.
+``vm_type``:
+  Current support VM type:
+
+  ``SAFETY_VM`` pre-launched Safety VM
+
+  ``PRE_STD_VM`` pre-launched Standard VM
+
+  ``SOS_VM`` pre-launched Service VM
+
+  ``POST_STD_VM`` post-launched Standard VM
+
+  ``POST_RT_VM`` post-launched Realtime capable VM
+
+  ``KATA_VM`` post-launched Kata Container VM
 
 ``name`` (a child node of ``vm``):
   Specify the VM name which will be shown in the hypervisor console command: vm_list.
-
-``uuid``:
-  UUID of the VM. It is for internal use and is not configurable.
 
 ``guest_flags``:
   Select all applicable flags for the VM:
@@ -127,15 +234,8 @@ Additional scenario XML elements:
 
   ``GUEST_FLAG_RT`` specify whether the vm is RT-VM
 
-``severity``:
-  Severity of the guest VM; the lower severity VM should not impact the higher severity VM.
-
-  The order of severity from high to low is:
-  ``SEVERITY_SAFETY_VM``, ``SEVERITY_RTVM``, ``SEVERITY_SOS``, ``SEVERITY_STANDARD_VM``.
-
-``vcpu_affinity``:
-  vCPU affinity map. Each vCPU will be mapped to the selected pCPU ID. A different vCPU in the same VM cannot be mapped to the same pCPU.
-  If the pCPU is mapped by different VMs, ``cpu_sharing`` of the VM must be set to ``Enabled`` in the launch XML.
+``cpu_affinity``:
+  List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.
 
 ``base`` (a child node of ``epc_section``):
   SGX EPC section base; must be page aligned.
@@ -204,11 +304,8 @@ Additional scenario XML elements:
 ``board_private``:
   Stores scenario-relevant board configuration.
 
-``rootfs``:
+``rootfs`` (a child node of ``board_private``):
   rootfs for the Linux kernel.
-
-``console``:
-  ttyS console for the Linux kernel.
 
 ``bootargs`` (a child node of ``board_private``):
   Specify kernel boot arguments.
@@ -241,14 +338,12 @@ current scenario has:
   Specify the User VM memory size in Mbyte.
 
 ``gvt_args``:
-  GVT arguments for the VM. Input format: ``low_gm_size high_gm_size fence_sz``.
-  Recommendation is: ``64 448 8``. Leave it blank to disable the GVT.
+  GVT arguments for the VM. Set it to ``gvtd`` for GVTd, otherwise stand for GVTg arguments.
+  The GVTg Input format: ``low_gm_size high_gm_size fence_sz``, The recommendation is ``64 448 8``.
+  Leave it blank to disable the GVT.
 
 ``vbootloader``:
   Virtual bootloader type; currently only supports OVMF.
-
-``cpu_sharing``:
-  Specify whether the pCPUs listed can be shared with other VMs.
 
 ``vuart0``:
   Specify whether the device model emulates the vUART0(vCOM1); refer to :ref:`vuart_config` for details.
@@ -293,11 +388,12 @@ Configuration tool workflow
 Hypervisor configuration workflow
 ==================================
 
-The hypervisor configuration is based on the ``Kconfig`` ``make menuconfig``
+The hypervisor configuration is based on the ``Kconfig``
 mechanism. Begin by creating a board-specific ``defconfig`` file to
 set up the default ``Kconfig`` values for the specified board.
 Next, configure the hypervisor build options using the ``make
-menuconfig`` graphical interface. The resulting ``.config`` file is
+menuconfig`` graphical interface or ``make defconfig`` to generate
+a ``.config`` file. The resulting ``.config`` file is
 used by the ACRN build process to create a configured scenario- and
 board-specific hypervisor image.
 
