@@ -64,7 +64,6 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["hv,DEBUG_OPTIONS,SERIAL_CONSOLE"] = board_cfg_lib.get_ttys_info(board_info)
     scenario_item_values["hv,DEBUG_OPTIONS,LOG_DESTINATION"] = hv_cfg_lib.get_select_range("DEBUG_OPTIONS", "LOG_DESTINATION_BITMAP")
 
-    scenario_item_values["hv,CAPACITIES,MAX_KATA_VM_NUM"] = hv_cfg_lib.get_select_range("CAPACITIES", "KATA_VM_NUM")
     scenario_item_values["hv,CAPACITIES,MAX_IOAPIC_NUM"] = hv_cfg_lib.get_select_range("CAPACITIES", "IOAPIC_NUM")
 
     scenario_item_values["hv,FEATURES,MULTIBOOT2"] = hv_cfg_lib.N_Y
@@ -168,12 +167,6 @@ def main(args):
     (err_dic, scenario_items) = validate_scenario_setting(params['--board'], params['--scenario'])
     if err_dic:
         common.print_red("Validate the scenario item failure", err=True)
-        return err_dic
-
-    # get kata vm count
-    scenario_cfg_lib.KATA_VM_COUNT = int(scenario_items['hv'].cap.max_kata_vm_num)
-    if scenario_cfg_lib.KATA_VM_COUNT > 1:
-        err_dic['scenario config'] = "Only one kata vm is supported!"
         return err_dic
 
     # generate board defconfig

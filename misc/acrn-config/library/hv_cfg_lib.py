@@ -16,7 +16,6 @@ SCHEDULER_TYPE = ['SCHED_NOOP', 'SCHED_IORR', 'SCHED_BVT']
 RANGE_DB = {
     'LOG_LEVEL':{'min':0,'max':6},
     'LOG_DESTINATION_BITMAP':{'min':0,'max':7},
-    'KATA_VM_NUM':{'min':0,'max':1},
     'EMULATED_MMIO_REGIONS':{'min':0,'max':128},
     'PT_IRQ_ENTRIES':{'min':0,'max':256},
     'IOAPIC_NUM':{'min':1,'max':10},
