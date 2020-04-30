@@ -131,19 +131,14 @@ SDC:
    automotive use case that includes one pre-launched Service VM and one
    post-launched User VM.
 
-SDC2:
-   SDC2 (Software Defined Cockpit 2) is an extended scenario for an
-   automotive SDC system.  SDC2 defines one pre-launched Service VM and up
-   to three post-launched VMs.
-
 LOGICAL_PARTITION:
     This scenario defines two pre-launched VMs.
 
 INDUSTRY:
-   This is a typical scenario for industrial usage with up to four VMs:
-   one pre-launched Service VM, one post-launched Standard VM for Human
-   interaction (HMI), and one or two post-launched RT VMs for real-time
-   control.
+   This is a typical scenario for industrial usage with up to eight VMs:
+   one pre-launched Service VM, five post-launched Standard VMs (for Human
+   interaction etc.), one post-launched RT VMs (for real-time control),
+   and one Kata container VM.
 
 HYBRID:
    This scenario defines a hybrid use case with three VMs: one
