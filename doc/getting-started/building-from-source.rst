@@ -6,7 +6,10 @@ Build ACRN from Source
 Introduction
 ************
 
-Following a general embedded-system programming model, the ACRN hypervisor is designed to be customized at build time per hardware platform and per usage scenario, rather than one binary for all scenarios.
+Following a general embedded-system programming model, the ACRN
+hypervisor is designed to be customized at build time per hardware
+platform and per usage scenario, rather than one binary for all
+scenarios.
 
 The hypervisor binary is generated based on Kconfig configuration
 settings. Instructions about these settings can be found in
@@ -46,10 +49,16 @@ these steps.
 
 .. _install-build-tools-dependencies:
 
-Step 1: Install build tools and dependencies
-********************************************
+.. rst-class:: numbered-step
 
-ACRN development is supported on popular Linux distributions, each with their own way to install development tools. This user guide covers the different steps to configure and build ACRN natively on your distribution. Refer to the :ref:`building-acrn-in-docker` user guide for instructions on how to build ACRN using a container.
+Install build tools and dependencies
+************************************
+
+ACRN development is supported on popular Linux distributions, each with
+their own way to install development tools. This user guide covers the
+different steps to configure and build ACRN natively on your
+distribution. Refer to the :ref:`building-acrn-in-docker` user guide for
+instructions on how to build ACRN using a container.
 
 .. note::
    ACRN uses ``menuconfig``, a python3 text-based user interface (TUI) for configuring hypervisor options and using python's ``kconfiglib`` library.
@@ -88,7 +97,9 @@ Install the necessary tools for the following systems:
      $ sudo pip3 install kconfiglib
 
   .. note::
-     Use ``gcc`` version 7.3.* or higher to avoid gcc compilation issues. Follow these instructions to install the ``gcc-7`` package on Ubuntu 18.04:
+     Use ``gcc`` version 7.3.* or higher to avoid gcc compilation
+     issues. Follow these instructions to install the ``gcc-7`` package on
+     Ubuntu 18.04:
 
      .. code-block:: none
 
@@ -103,8 +114,10 @@ Install the necessary tools for the following systems:
      Verify your version of ``binutils`` with the command ``apt show binutils``.
 
 
-Step 2: Get the ACRN hypervisor source code
-*******************************************
+.. rst-class:: numbered-step
+
+Get the ACRN hypervisor source code
+***********************************
 
 The `acrn-hypervisor <https://github.com/projectacrn/acrn-hypervisor/>`_
 repository contains four main components:
@@ -121,8 +134,10 @@ Enter the following to get the acrn-hypervisor source code:
    $ git clone https://github.com/projectacrn/acrn-hypervisor
 
 
-Step 3: Build with the ACRN scenario
-************************************
+.. rst-class:: numbered-step
+
+Build with the ACRN scenario
+****************************
 
 Currently, the ACRN hypervisor defines these typical usage scenarios:
 
@@ -148,7 +163,7 @@ HYBRID:
 Assuming that you are at the top level of the acrn-hypervisor directory, perform the following:
 
 .. note::
-   The release version is built by default, 'RELEASE=0' builds the debug version.
+   The release version is built by default, ``RELEASE=0`` builds the debug version.
 
 * Build the ``INDUSTRY`` scenario on the ``nuc7i7dnb``:
 
@@ -156,14 +171,11 @@ Assuming that you are at the top level of the acrn-hypervisor directory, perform
 
      $ make all BOARD=nuc7i7dnb SCENARIO=industry RELEASE=0
 
-* Build the ``INDUSTRY`` scenario on the ``whl-ipc-i5``:
+* Build the ``HYBRID`` scenario on the ``whl-ipc-i5``:
 
   .. code-block:: none
 
-     $ make all BOARD=whl-ipc-i5 SCENARIO=industry BOARD_FILE=/absolute_path/
-     acrn-hypervisor/misc/acrn-config/xmls/board-xmls/whl-ipc-i5.xml SCENARIO_FILE=
-     /absolute_patch/acrn-hypervisor/misc/acrn-config/xmls/config-xmls/whl-ipc-i5/industry.xml
-     RELEASE=0
+     $ make all BOARD=whl-ipc-i5 SCENARIO=hybrid RELEASE=0
 
 * Build the ``SDC`` scenario on the ``nuc6cayh``:
 
@@ -176,8 +188,10 @@ for each scenario.
 
 .. _getting-started-hypervisor-configuration:
 
-Step 4: Build the hypervisor configuration
-******************************************
+.. rst-class:: numbered-step
+
+Build the hypervisor configuration
+**********************************
 
 Modify the hypervisor configuration
 ===================================
@@ -200,7 +214,8 @@ top level of the acrn-hypervisor directory. The configuration file, named
    $ make defconfig BOARD=nuc6cayh
 
 The BOARD specified is used to select a ``defconfig`` under
-``arch/x86/configs/``. The other command line-based options (e.g. ``RELEASE``) take no effect when generating a defconfig.
+``arch/x86/configs/``. The other command line-based options (e.g.
+``RELEASE``) take no effect when generating a defconfig.
 
 To modify the hypervisor configurations, you can either edit ``.config``
 manually, or you can invoke a TUI-based menuconfig--powered by kconfiglib--by
@@ -213,7 +228,7 @@ configurations and build the hypervisor using the updated ``.config``:
 
    # Modify the configurations per your needs
    $ cd ../         # Enter top-level folder of acrn-hypervisor source
-   $ make menuconfig -C hypervisor BOARD=kbl-nuc-i7   <select industry scenario>
+   $ make menuconfig -C hypervisor BOARD=kbl-nuc-i7   <input scenario name>
 
 
 Note that ``menuconfig`` is python3 only.
@@ -224,8 +239,10 @@ Refer to the help on menuconfig for a detailed guide on the interface:
 
    $ pydoc3 menuconfig
 
-Step 5: Build the hypervisor, device model, and tools
-*****************************************************
+.. rst-class:: numbered-step
+
+Build the hypervisor, device model, and tools
+*********************************************
 
 Now you can build all these components at once as follows:
 
@@ -247,17 +264,24 @@ If you only need the hypervisor, use this command:
 
 The ``acrn.efi`` will be generated in the ``./hypervisor/build/acrn.efi`` directory hypervisor.
 
-As mentioned in :ref:`ACRN Configuration Tool <vm_config_workflow>`, the Board configuration and VM configuration can be imported from XML files.
-If you want to build the hypervisor with XML configuration files, specify
-the file location as follows:
+As mentioned in :ref:`ACRN Configuration Tool <vm_config_workflow>`, the
+Board configuration and VM configuration can be imported from XML files.
+If you want to build the hypervisor with XML configuration files,
+specify the file location as follows (assuming you're current directory
+is at the top level of the acrn-hypervisor directory):
 
 .. code-block:: none
 
    $ make BOARD_FILE=$PWD/misc/acrn-config/xmls/board-xmls/nuc7i7dnb.xml \
-   SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/nuc7i7dnb/industry.xml FIRMWARE=uefi
+   SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/nuc7i7dnb/industry.xml FIRMWARE=uefi TARGET_DIR=xxx
 
 
-Note that the file path must be absolute. Both of the ``BOARD`` and ``SCENARIO`` parameters are not needed because the information is retrieved from the XML file. Adjust the example above to your own environment path.
+.. note::
+   The ``BOARD`` and ``SCENARIO`` parameters are not needed because the
+   information is retrieved from the corresponding ``BOARD_FILE`` and
+   ``SCENARIO_FILE`` XML configuration files.  The ``TARGET_DIR`` parameter
+   specifies what directory is used to  store configuration files imported
+   from XML files. If the ``TARGED_DIR`` it is not specified, the original
+   configuration files of acrn-hypervisor would be overridden.
 
 Follow the same instructions to boot and test the images you created from your build.
-
