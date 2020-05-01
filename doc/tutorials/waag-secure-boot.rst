@@ -1,7 +1,7 @@
 .. _how-to-enable-secure-boot-for-windows:
 
-How to enable secure boot for Windows
-#####################################
+Enable Secure Boot in Windows
+#############################
 
 This document shows how to enable secure boot to launch Windows 10
 as a guest through OVMF on ACRNGT, including:

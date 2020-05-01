@@ -1,8 +1,8 @@
 .. _using_windows_as_uos:
 
 
-Using Windows as Guest VM on ACRN
-#################################
+Launch Windows as the Guest VM on ACRN
+######################################
 This tutorial describes how to launch Windows as a Guest (WaaG) VM on the
 ACRN hypervisor.
 
@@ -321,7 +321,7 @@ secure boot enabling.
 
 Activate Windows 10
 ********************
-If you are using a trial version of Windows 10, you may find that some
+If you are using a trial version of Windows 10, you might find that some
 apps and features do not work or that Windows 10 automatically gets shut
 down by the Windows licensing monitoring service. To avoid these issues,
 obtain a licensed version of Windows.

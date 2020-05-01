@@ -1,7 +1,7 @@
 .. _kbl-nuc-sdc:
 
-Using SDC Mode on the NUC
-#########################
+Use SDC Mode on the NUC
+#######################
 
 The Intel |reg| NUC is the primary tested platform for ACRN development,
 and its setup is described below.

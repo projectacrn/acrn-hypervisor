@@ -1,7 +1,7 @@
 .. _running_ubun_as_user_vm:
 
-Running Ubuntu as the User VM
-#############################
+Run Ubuntu as the User VM
+#########################
 
 Prerequisites
 *************

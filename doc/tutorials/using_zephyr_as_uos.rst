@@ -1,7 +1,7 @@
 .. _using_zephyr_as_uos:
 
-Using Zephyr as User VM
-#######################
+Run Zephyr as the User VM
+#########################
 
 This tutorial describes how to run Zephyr as the User VM on the ACRN hypervisor. We are using
 Kaby Lake-based NUC (model NUC7i5DNHE) in this tutorial.

@@ -1,7 +1,7 @@
 .. _acrn-dm_qos:
 
-Enable QoS based on runC container
-##################################
+Enable QoS based on runC Containers
+###################################
 This document describes how ACRN supports Device-Model Quality of Service (QoS)
 based on using runC containers to control the Service VM resources
 (CPU, Storage, Memory, Network) by modifying the runC configuration file.

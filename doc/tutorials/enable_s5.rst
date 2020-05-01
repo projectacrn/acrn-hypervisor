@@ -1,21 +1,22 @@
 .. _enable-s5:
 
-Platform S5 Enable Guide
-########################
+Enable S5 in ACRN
+#################
 
 Introduction
 ************
 
 S5 is one of the `ACPI sleep states <http://acpi.sourceforge.net/documentation/sleep.html>`_
-that refers to the system being shut down (although some power may still be supplied to
-certain devices). In this document, S5 means the function to shut down the
-**User VMs**, **the Service VM**, the hypervisor, and the hardware. In most cases,
-directly shutting down the power of a computer system is not advisable because it can
-damage some components. It can cause corruption and put the system in an unknown or
-unstable state. On ACRN, the User VM must be shut down before powering off the Service VM.
-Especially for some use cases, where User VMs could be used in industrial control or other
-high safety requirement environment, a graceful system shutdown such as the ACRN S5
-function is required.
+that refers to the system being shut down (although some power may still be
+supplied to certain devices). In this document, S5 means the function to
+shut down the **User VMs**, **the Service VM**, the hypervisor, and the
+hardware. In most cases, directly shutting down the power of a computer
+system is not advisable because it can damage some components. It can cause
+corruption and put the system in an unknown or unstable state. On ACRN, the
+User VM must be shut down before powering off the Service VM. Especially for
+some use cases, where User VMs could be used in industrial control or other
+high safety requirement environment, a graceful system shutdown such as the
+ACRN S5 function is required.
 
 S5 Architecture
 ***************

@@ -1,6 +1,6 @@
 .. _acrn_ootb:
 
-Install ACRN Out-of-the-box
+Install ACRN Out of the Box
 ###########################
 
 In this tutorial, we will learn to generate an out-of-the-box (OOTB)

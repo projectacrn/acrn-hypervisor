@@ -1,7 +1,7 @@
 .. _enable_laag_secure_boot:
 
-Secure Boot enabling for Clear Linux User VM
-############################################
+Enable Secure Boot in the Clear Linux User VM
+#############################################
 
 Prerequisites
 *************

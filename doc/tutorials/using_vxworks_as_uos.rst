@@ -1,7 +1,7 @@
 .. _using_vxworks_as_uos:
 
-Using VxWorks* as User VM
-#########################
+Run VxWorks as the User VM
+##########################
 
 `VxWorks`_\* is a real-time proprietary OS designed for use in embedded systems requiring real-time, deterministic
 performance. This tutorial describes how to run VxWorks as the User VM on the ACRN hypervisor
@@ -92,7 +92,7 @@ Steps for Using VxWorks as User VM
 
    You now have a virtual disk image with bootable VxWorks in ``VxWorks.img``.
 
-#. Follow :ref:`kbl-nuc-sdc` to boot "The ACRN Service OS".
+#. Follow :ref:`kbl-nuc-sdc` to boot the ACRN Service VM.
 
 #. Boot VxWorks as User VM.
 
@@ -106,7 +106,7 @@ Steps for Using VxWorks as User VM
    You will also need to copy the ``VxWorks.img`` created in the VxWorks build environment into directory
    ``vxworks`` (via, e.g. a USB stick or network).
 
-   Run the ``launch_vxworks.sh`` script to launch VxWorks as Uos.
+   Run the ``launch_vxworks.sh`` script to launch VxWorks as the User VM.
 
    .. code-block:: none
 

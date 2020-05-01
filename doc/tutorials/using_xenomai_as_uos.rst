@@ -1,7 +1,7 @@
 .. _using_xenomai_as_uos:
 
-Using Xenomai as User VM OS (Real-Time VM)
-##########################################
+Run Xenomai as the User VM OS (Real-Time VM)
+############################################
 
 `Xenomai`_ is a versatile real-time framework that provides support to user space applications that are seamlessly integrated into Linux environments.
 

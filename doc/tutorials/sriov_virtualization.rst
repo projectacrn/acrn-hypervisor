@@ -1,7 +1,7 @@
 .. _sriov_virtualization:
 
-SR-IOV Virtualization
-=====================
+Enable SR-IOV Virtualization
+############################
 
 SR-IOV (Single Root Input/Output Virtualization) can isolate PCIe devices
 to improve performance that is similar to bare-metal levels. SR-IOV consists
@@ -15,7 +15,7 @@ For details, refer to Chapter 9 of PCI-SIG's
 <https://pcisig.com/pci-express-architecture-configuration-space-test-specification-revision-40-version-10>`_.
 
 SR-IOV Architectural Overview
------------------------------
+*****************************
 
 .. figure:: images/sriov-image1.png
    :align: center
@@ -101,7 +101,7 @@ SR-IOV Capabilities.
 
 For details, refer to the *PCI Express Base Specification Revision 4.0, Version 1.0 Chapter 9.3.3*.
 
-SR-IOV Architecture In ACRN
+SR-IOV Architecture in ACRN
 ---------------------------
 
 .. figure:: images/sriov-image3.png

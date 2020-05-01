@@ -1,7 +1,7 @@
 .. _rt_performance_tuning:
 
-Real-Time (RT) Performance Analysis on ACRN
-###########################################
+ACRN Real-Time (RT) Performance Analysis
+########################################
 
 The document describes the methods to collect trace/data for ACRN Real-Time VM (RTVM)
 real-time performance analysis. Two parts are included:
