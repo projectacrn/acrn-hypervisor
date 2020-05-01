@@ -1,7 +1,7 @@
 .. _cpu_sharing:
 
-ACRN CPU Sharing
-################
+Enable CPU Sharing in ACRN
+##########################
 
 Introduction
 ************

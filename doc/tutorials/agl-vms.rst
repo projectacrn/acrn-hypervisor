@@ -2,8 +2,8 @@
 
 .. _agl-vms:
 
-Running AGL as VMs
-##################
+Run two AGL images as User VMs
+##############################
 
 This document describes how to run two Automotive Grade Linux (AGL)
 images as VMs on the ACRN hypervisor. This serves as the baseline for

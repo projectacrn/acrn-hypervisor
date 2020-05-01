@@ -1,9 +1,9 @@
 .. _Increase User VM disk size:
 
-Increasing the User VM disk size
-################################
+Increase the User VM Disk Size
+##############################
 
-This document builds on the :ref:`getting_started` and assumes you already have
+This document builds on :ref:`getting_started` and assumes you already have
 a system with ACRN installed and running correctly. The size of the pre-built
 Clear Linux User OS (User VM) virtual disk is typically only 8GB and this may not be
 sufficient for some applications. This guide explains a simple few steps to
@@ -112,4 +112,4 @@ partition space.
    $ sudo losetup -d $LOOP_DEV
 
 Congratulations! You have successfully resized the disk, partition, and
-filesystem of your User OS.
+filesystem of your User VM.

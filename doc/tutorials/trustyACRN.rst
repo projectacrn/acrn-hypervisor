@@ -1,7 +1,7 @@
 .. _trusty-security-services:
 
-Trusty and Security Services in ACRN
-####################################
+Trusty and Security Services Reference
+######################################
 
 This document provides an overview of the Trusty architecture for
 Linux-based system, what security services Trusty provides, and how

@@ -1,7 +1,7 @@
 .. _getting-started-up2:
 
-Getting started guide for UP2 board
-###################################
+Getting Started Guide for the UP2 Board
+#######################################
 
 Hardware setup
 **************

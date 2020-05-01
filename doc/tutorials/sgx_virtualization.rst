@@ -1,7 +1,7 @@
 .. _sgx_virt:
 
-SGX Virtualization
-##################
+Enable SGX Virtualization
+#########################
 
 SGX refers to `Intel® Software Guard Extensions <https://software.intel.com/
 en-us/sgx>`_ (Intel® SGX). This is a set of instructions that can be used by

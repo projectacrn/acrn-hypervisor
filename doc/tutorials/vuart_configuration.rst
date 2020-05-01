@@ -1,7 +1,7 @@
 .. _vuart_config:
 
-vUART Configuration
-###################
+Enable vUART Configurations
+###########################
 
 Introduction
 ============

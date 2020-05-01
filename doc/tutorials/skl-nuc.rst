@@ -1,8 +1,7 @@
 .. _skl-nuc-gpu-passthrough:
 
-GPU Passthrough on Skylake NUC
-##############################
-
+Enable GPU Passthrough on the Skylake NUC
+#########################################
 
 This community reference release for the Skylake NUC with GPU
 passthrough is a one-time snapshot release and is not supported

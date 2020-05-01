@@ -1,10 +1,10 @@
 .. _using-sbl-up2:
 
-Using SBL on UP2 Board
-######################
+Enable SBL on the UP2 Board
+###########################
 
-This document builds on the :ref:`getting-started-up2`, and explains how to use
-SBL instead of UEFI to boot UP2 board.
+This document builds on :ref:`getting-started-up2`, and explains how to use
+SBL instead of UEFI to boot the UP2 board.
 
 Slim Bootloader is an open-source boot firmware solution,
 built from the ground up to be secure, lightweight, and highly

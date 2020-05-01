@@ -1,7 +1,7 @@
 .. _building-acrn-in-docker:
 
-Building ACRN in Docker
-#######################
+Build ACRN in Docker
+####################
 
 This tutorial shows how to build ACRN in a Clear Linux Docker image.
 

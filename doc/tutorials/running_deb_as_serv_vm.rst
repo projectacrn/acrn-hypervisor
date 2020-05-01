@@ -1,7 +1,7 @@
  .. _running_deb_as_serv_vm:
 
-Running Debian as the Service VM
-##################################
+Run Debian as the Service VM
+############################
 
 The `Debian Project <https://www.debian.org/>`_ is an association of individuals who have made common cause to create a `free <https://www.debian.org/intro/free>`_ operating system. The `latest stable Debian release <https://www.debian.org/releases/stable/>`_ is 10.0.
 

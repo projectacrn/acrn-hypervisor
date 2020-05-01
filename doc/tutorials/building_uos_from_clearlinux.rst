@@ -1,15 +1,15 @@
 .. _build User VM from Clearlinux:
 
-Building User VM from Clear Linux OS
-####################################
+Build a User VM from the Clear Linux OS
+#######################################
 
-This document builds on the :ref:`getting_started`,
+This document builds on :ref:`getting_started`,
 and explains how to build a User VM from Clear Linux OS.
 
-Build User VM image in Clear Linux OS
-*************************************
+Build User VM image from Clear Linux OS
+***************************************
 
-Follow these steps to build a User VM image from Clear Linux OS:
+Follow these steps to build a User VM image from the Clear Linux OS:
 
 #. In Clear Linux OS, install ``ister`` (a template-based
    installer for Linux) included in the Clear Linux OS bundle

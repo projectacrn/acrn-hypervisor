@@ -1,19 +1,19 @@
 .. _static_ip:
 
-Using a static IP address
-#########################
+Set Up a Static IP Address
+##########################
 
-When you install ACRN on your system following the :ref:`getting_started`, a
-bridge called ``acrn-br0`` will be created and attached to the Ethernet network
+When you install ACRN on your system following :ref:`getting_started`, a
+bridge called ``acrn-br0`` is created and attached to the Ethernet network
 interface of the platform. By default, the bridge gets its network configuration
-using DHCP. This guide will explain how to modify the system to use a static IP
+using DHCP. This guide explains how to modify the system to use a static IP
 address. You need ``root`` privileges to make these changes to the system.
 
 ACRN Network Setup
 ******************
 
-The ACRN Service OS is based on `Clear Linux OS`_ and it uses `systemd-networkd`_
-to set up the Service OS networking. A few files are responsible for setting up the
+The ACRN Service VM is based on `Clear Linux OS`_ and it uses `systemd-networkd`_
+to set up the Service VM networking. A few files are responsible for setting up the
 ACRN bridge (``acrn-br0``), the TAP device (``tap0``), and how these are all
 connected. Those files are installed in ``/usr/lib/systemd/network``
 on the target device and can also be found under ``misc/acrnbridge`` in the source code.

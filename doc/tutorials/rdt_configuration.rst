@@ -1,7 +1,7 @@
 .. _rdt_configuration:
 
-RDT Configuration
-#################
+Enable RDT Configuration
+########################
 
 On x86 platforms that support Intel Resource Director Technology (RDT)
 allocation features such as Cache Allocation Technology (CAT) and Memory

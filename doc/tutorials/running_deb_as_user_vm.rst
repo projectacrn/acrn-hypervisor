@@ -1,7 +1,7 @@
 .. _running_deb_as_user_vm:
 
-Running Debian as the User VM
-#############################
+Run Debian as the User VM
+#########################
 
 Prerequisites
 *************
