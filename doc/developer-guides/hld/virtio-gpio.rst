@@ -45,7 +45,7 @@ GPIO mapping
 -  Each User VM has only one GPIO chip instance, its number of GPIO is
    based on acrn-dm command line and GPIO base always start from 0.
 
--  Each GPIO is exclusive, User VM can’t map the same native gpio.
+-  Each GPIO is exclusive, User VM can't map the same native gpio.
 
 -  Each acrn-dm maximum number of GPIO is 64.
 
@@ -54,12 +54,12 @@ Usage
 
 Add the following parameters into the command line::
 
-        -s <slot>,virtio-gpio,<@controller_name{offset|name[=mapping_name]:offset|name[=mapping_name]:…}@controller_name{…}…]>
+        -s <slot>,virtio-gpio,<@controller_name{offset|name[=mapping_name]:offset|name[=mapping_name]:...}@controller_name{...}...]>
 
--  **controller_name**: Input “ls /sys/bus/gpio/devices” to check native
-   gpio controller information.Usually, the devices represent the
+-  **controller_name**: Input ``ls /sys/bus/gpio/devices`` to check native
+   gpio controller information. Usually, the devices represent the
    controller_name, you can use it as controller_name directly. You can
-   also input “cat /sys/bus/gpio/device/XXX/dev” to get device id that can
+   also input ``cat /sys/bus/gpio/device/XXX/dev`` to get device id that can
    be used to match /dev/XXX, then use XXX as the controller_name. On MRB
    and NUC platforms, the controller_name are gpiochip0, gpiochip1,
    gpiochip2.gpiochip3.
@@ -74,16 +74,16 @@ Example
 *******
 
 -  Map three native gpio to User VM, they are native gpiochip0 with
-   offset of 1 and 6, and with the name “reset”. In User VM, the three
+   offset of 1 and 6, and with the name ``reset``. In User VM, the three
    gpio has no name, and base from 0.::
 
         -s 10,virtio-gpio,@gpiochip0{1:6:reset}
 
--  Map four native gpio to User VM, native gpiochip0’s gpio with offset 1
+-  Map four native gpio to User VM, native gpiochip0's gpio with offset 1
    and offset 6 map to FE virtual gpio with offset 0 and offset 1
-   without names, native gpiochip0’s gpio with name “reset” maps to FE
-   virtual gpio with offset 2 and its name is “shutdown”, native
-   gpiochip1’s gpio with offset 0 maps to FE virtual gpio with offset 3 and
-   its name is “reset”.::
+   without names, native gpiochip0's gpio with name ``reset`` maps to FE
+   virtual gpio with offset 2 and its name is ``shutdown``, native
+   gpiochip1's gpio with offset 0 maps to FE virtual gpio with offset 3 and
+   its name is ``reset`` ::
 
         -s 10,virtio-gpio,@gpiochip0{1:6:reset=shutdown}@gpiochip1{0=reset}
