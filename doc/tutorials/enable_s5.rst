@@ -185,7 +185,7 @@ How to test
 
       .. code-block:: console
 
-           ● life_mngr.service - ACRN lifemngr daemon
+           * life_mngr.service - ACRN lifemngr daemon
            Loaded: loaded (/usr/lib/systemd/system/life_mngr.service; enabled; vendor p>
            Active: active (running) since Tue 2019-09-10 07:15:06 UTC; 1min 11s ago
            Main PID: 840 (life_mngr)

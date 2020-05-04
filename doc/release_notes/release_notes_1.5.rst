@@ -31,7 +31,7 @@ Version 1.5 major features
 What's New in v1.5
 ==================
 * Basic CPU sharing: Fairness Round-Robin CPU Scheduling has been added to support basic CPU sharing (the Service VM and WaaG share one CPU core).
-* 8th Gen Intel® Core ™ Processors (code name Whiskey Lake) are now supported and validated.
+* 8th Gen Intel® Core™ Processors (code name Whiskey Lake) are now supported and validated.
 * Overall stability and performance has been improved.
 * An offline configuration tool has been created to help developers port ACRN to different hardware boards.
 
