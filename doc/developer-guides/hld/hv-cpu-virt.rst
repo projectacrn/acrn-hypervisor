@@ -56,18 +56,22 @@ ACRN then forces a fixed 1:1 mapping between a VCPU and this physical CPU
 when creating a VCPU for the guest Operating System. This makes the VCPU
 management code much simpler.
 
-``vcpu_affinity`` in ``vm config`` help to decide which physical CPU a
-VCPU in a VM affine to, then finalize the fixed mapping.
+``cpu_affinity_bitmap`` in ``vm config`` helps to decide which physical CPU a
+VCPU in a VM affines to, then finalize the fixed mapping. When launching an
+user VM, need to choose pCPUs from the VM's cpu_affinity_bitmap that are not
+used by any other VMs.
 
 Flexible CPU Sharing
 ********************
 
-This is a TODO feature.
-To enable CPU sharing, the ACRN hypervisor could configure "round-robin
-scheduler" as the schedule policy for corresponding physical CPU.
+To enable CPU sharing, ACRN hypervisor could configure IORR
+(IO sensitive Round-Robin) or BVT (Borrowed Virtual Time) scheduler policy.
 
-``vcpu_affinity`` in ``vm config`` help to decide which physical CPU two
-or more VCPUs from different VMs are sharing.
+``cpu_affinity_bitmap`` in ``vm config`` helps to decide which physical CPU two
+or more vCPUs from different VMs are sharing. A pCPU can be shared among Service OS
+and any user VMs as long as local APIC passthrough is not enabled in that user VM.
+
+see :ref:`cpu_sharing` for more information.
 
 CPU management in the Service VM under static CPU partitioning
 ==============================================================
@@ -79,7 +83,7 @@ physical CPUs are initially assigned to the Service VM by creating the same
 number of virtual CPUs.
 
 When the Service VM boot is finished, it releases the physical CPUs intended
-for User VM use.
+for UOS use.
 
 Here is an example flow of CPU allocation on a multi-core platform.
 
@@ -90,40 +94,29 @@ Here is an example flow of CPU allocation on a multi-core platform.
 
    CPU allocation on a multi-core platform
 
-CPU management in the Service VM under flexing CPU sharing
-==========================================================
+CPU management in the Service VM under flexible CPU sharing
+===========================================================
 
-As all Service VM CPUs could share with different User VMs, ACRN can still pass-thru
+As all Service VM CPUs could share with different UOSs, ACRN can still pass-thru
 MADT to Service VM, and the Service VM is still able to see all physical CPUs.
 
 But as under CPU sharing, the Service VM does not need offline/release the physical
-CPUs intended for User VM use.
+CPUs intended for UOS use.
 
-CPU management in User VM
-=========================
+CPU management in UOS
+=====================
 
-From the User VM point of view, CPU management is very simple - when DM does
-hypercalls to create VMs, the hypervisor will create its virtual CPUs
-based on the configuration in this User VM's ``vm config``.
-
-As mentioned in previous description, ``vcpu_affinity`` in ``vm config``
-tells which physical CPUs a VM's VCPU will use, and the scheduler policy
-associated with corresponding physical CPU decide this VCPU will run in
-partition or sharing mode.
-
+``cpu_affinity_bitmap`` in ``vm config`` defines a set of pCPUs that an User VM
+is allowed to run on. acrn-dm could choose to launch on only a subset of the pCPUs
+or on all pCPUs listed in cpu_affinity_bitmap, but it can't assign
+any pCPU that is not included in it.
 
 CPU assignment management in HV
 ===============================
 
-The physical CPU assignment is pre-defined by ``vcpu_affinity`` in
-``vm config``, necessary sanitize check should be done to ensure
-
--  in one VM, each VCPU will have only one prefer physical CPU
-
--  in one VM, its VCPUs will not share same physical CPU
-
--  in one VM, if a VCPU is using "noop scheduler", corresponding
-   physical CPU will not be shared with any other VM's VCPU
+The physical CPU assignment is pre-defined by ``cpu_affinity_bitmap`` in
+``vm config``, while post-launched VMs could be launched on pCPUs that are
+a subset of it.
 
 Currently, the ACRN hypervisor does not support virtual CPU migration to
 different physical CPUs. This means no changes to the virtual CPU to
@@ -571,7 +564,7 @@ For a guest vCPU's state initialization:
       SW load based on different boot mode
 
 
-   -  User VM BSP: DM context initialization through hypercall
+   -  UOS BSP: DM context initialization through hypercall
 
 -  If it's AP, then it will always start from real mode, and the start
        vector will always come from vlapic INIT-SIPI emulation.
@@ -1103,7 +1096,7 @@ APIs to register its IO/MMIO range:
    for a hypervisor emulated device needs to first set its corresponding
    I/O bitmap to 1.
 
--  For User VM, the default I/O bitmap are all set to 1, which means User VM will trap
+-  For UOS, the default I/O bitmap are all set to 1, which means UOS will trap
    all I/O port access by default. Adding an I/O handler for a
    hypervisor emulated device does not need change its I/O bitmap.
    If the trapped I/O port access does not fall into a hypervisor
@@ -1115,7 +1108,7 @@ APIs to register its IO/MMIO range:
    default. Adding a MMIO handler for a hypervisor emulated
    device needs to first remove its MMIO range from EPT mapping.
 
--  For User VM, EPT only maps its system RAM to the User VM, which means User VM will
+-  For UOS, EPT only maps its system RAM to the UOS, which means UOS will
    trap all MMIO access by default. Adding a MMIO handler for a
    hypervisor emulated device does not need to change its EPT mapping.
    If the trapped MMIO access does not fall into a hypervisor
