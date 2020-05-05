@@ -641,7 +641,7 @@ Instructions
 
 #. Click **Generate configuration files** to save the current scenario
    setting and then generate files for the board-related configuration
-   source code and the scenario-based VM configration source code.
+   source code and the scenario-based VM configuration source code.
 
    If **Source Path** in the pop-up model is edited, the source code is
    generated into the edited Source Path relative to ``acrn-hypervisor``;
@@ -658,7 +658,7 @@ The **Launch Setting** is quite similar to the **Scenario Setting**:
 
 #. Load or create one launch setting by selecting among the following:
 
-   - Click **Create a new lauch script** from the **Launch Setting** menu.
+   - Click **Create a new launch script** from the **Launch Setting** menu.
 
    - Click **Load a default launch script** from the **Launch Setting** menu.
 
