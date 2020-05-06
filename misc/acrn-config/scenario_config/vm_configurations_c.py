@@ -171,7 +171,7 @@ def cpu_affinity_output(vm_info, i, config):
         return
 
     cpu_bits = vm_info.get_cpu_bitmap(i)
-    print("\t\t.cpu_affinity_bitmap = VM{}_CONFIG_CPU_AFFINITY,".format(i), file=config)
+    print("\t\t.cpu_affinity = VM{}_CONFIG_CPU_AFFINITY,".format(i), file=config)
 
 
 def clos_output(vm_info, i, config):

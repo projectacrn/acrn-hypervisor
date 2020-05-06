@@ -14,7 +14,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	{	/* VM0 */
 		CONFIG_PRE_STD_VM(1),
 		.name = "ACRN PRE-LAUNCHED VM0",
-		.cpu_affinity_bitmap = VM0_CONFIG_CPU_AFFINITY,
+		.cpu_affinity = VM0_CONFIG_CPU_AFFINITY,
 		.memory = {
 			.start_hpa = VM0_CONFIG_MEM_START_HPA,
 			.size = VM0_CONFIG_MEM_SIZE,
@@ -48,7 +48,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	{	/* VM1 */
 		CONFIG_PRE_STD_VM(2),
 		.name = "ACRN PRE-LAUNCHED VM1",
-		.cpu_affinity_bitmap = VM1_CONFIG_CPU_AFFINITY,
+		.cpu_affinity = VM1_CONFIG_CPU_AFFINITY,
 		.guest_flags = (GUEST_FLAG_RT | GUEST_FLAG_LAPIC_PASSTHROUGH),
 		.memory = {
 			.start_hpa = VM1_CONFIG_MEM_START_HPA,

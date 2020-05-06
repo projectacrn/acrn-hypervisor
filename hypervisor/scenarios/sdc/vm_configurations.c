@@ -37,7 +37,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM1 */
 		CONFIG_POST_STD_VM(1),
-		.cpu_affinity_bitmap = VM1_CONFIG_CPU_AFFINITY,
+		.cpu_affinity = VM1_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = INVALID_COM_BASE,
@@ -51,7 +51,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 #if CONFIG_MAX_KATA_VM_NUM > 0
 	{	/* VM2 */
 		CONFIG_KATA_VM(1),
-		.cpu_affinity_bitmap = VM2_CONFIG_CPU_AFFINITY,
+		.cpu_affinity = VM2_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = INVALID_COM_BASE,
