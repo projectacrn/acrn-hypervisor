@@ -1672,6 +1672,8 @@ static int32_t vie_init(struct instr_emul_vie *vie, struct acrn_vcpu *vcpu)
 		ret = copy_from_gva(vcpu, vie->inst, guest_rip_gva, inst_len, &err_code, &fault_addr);
 		if (ret < 0) {
 			if (ret == -EFAULT) {
+				err_code = PAGE_FAULT_ID_FLAG;
+				copy_from_gva_dbg(vcpu, vie->inst, guest_rip_gva, inst_len, &err_code, &fault_addr);
 				vcpu_inject_pf(vcpu, fault_addr, err_code);
 			}
 		} else {

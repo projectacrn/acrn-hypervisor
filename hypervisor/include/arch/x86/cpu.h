@@ -680,6 +680,18 @@ static inline void clac(void)
 	asm volatile ("clac" : : : "memory");
 }
 
+static inline void stac_save(uint64_t *p_rflags)
+{
+	CPU_RFLAGS_SAVE(p_rflags);
+	asm volatile ("stac" : : : "memory");
+}
+
+static inline void clac_restore(uint64_t rflags)
+{
+	if ((rflags & RFLAGS_AC) == 0)
+		asm volatile ("clac" : : : "memory");
+}
+
 /*
  * @post return <= MAX_PCPU_NUM
  */
