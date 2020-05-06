@@ -2383,7 +2383,7 @@ int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 		}
 		TRACE_2L(TRACE_VMEXIT_APICV_ACCESS, qual, (uint64_t)vlapic);
 	} else {
-		pr_err("%s, unhandled access type: %lu\n", __func__, access_type);
+		pr_err("%s, unhandled access type: %lu, exit_qualification: 0x%lx\n", __func__, access_type, qual);
 		err = -EINVAL;
 	}
 

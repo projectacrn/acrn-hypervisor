@@ -30,6 +30,8 @@ enum vm_paging_mode {
  * VM related APIs
  */
 int32_t gva2gpa(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa, uint32_t *err_code);
+int32_t copy_from_gva_dbg(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
+	uint32_t size, uint32_t *err_code, uint64_t *fault_addr);
 
 enum vm_paging_mode get_vcpu_paging_mode(struct acrn_vcpu *vcpu);
 

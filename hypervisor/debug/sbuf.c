@@ -48,8 +48,9 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 	uint32_t next_tail;
 	uint32_t ele_size;
 	bool trigger_overwrite = false;
+	uint64_t rflags;
 
-	stac();
+	stac_save(&rflags);
 	next_tail = sbuf_next_ptr(sbuf->tail, sbuf->ele_size, sbuf->size);
 	/* if this write would trigger overrun */
 	if (next_tail == sbuf->head) {
@@ -57,7 +58,7 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 		sbuf->overrun_cnt += sbuf->flags & OVERRUN_CNT_EN;
 		if ((sbuf->flags & OVERWRITE_EN) == 0U) {
 			/* if not enable over write, return here. */
-			clac();
+			clac_restore(rflags);
 			return 0;
 		}
 		trigger_overwrite = true;
@@ -74,7 +75,7 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 	sbuf->tail = next_tail;
 
 	ele_size = sbuf->ele_size;
-	clac();
+	clac_restore(rflags);
 
 	return ele_size;
 }

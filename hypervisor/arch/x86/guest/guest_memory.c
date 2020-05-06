@@ -440,3 +440,333 @@ void *gpa2hva(struct acrn_vm *vm, uint64_t x)
 	uint64_t hpa = gpa2hpa(vm, x);
 	return (hpa == INVALID_HPA) ? NULL : hpa2hva(hpa);
 }
+
+/********************************debug funcs *******************************/
+/* using return value INVALID_HPA as error code */
+
+static const uint64_t *lookup_address_dbg(uint64_t *pml4_page, uint64_t addr, uint64_t *pg_size, const struct memory_ops *mem_ops)
+{
+	const uint64_t *pret = NULL;
+	bool present = true;
+	uint64_t *pml4e, *pdpte, *pde, *pte;
+
+	pml4e = pml4e_offset(pml4_page, addr);
+	present = (mem_ops->pgentry_present(*pml4e) != 0UL);
+	pr_err(" ept pml4e value: 0x%lx, addr: 0x%lx, present: %d", *pml4e, addr, present);
+
+	if (present) {
+		pdpte = pdpte_offset(pml4e, addr);
+		present = (mem_ops->pgentry_present(*pdpte) != 0UL);
+		pr_err(" ept pdpte value: 0x%lx, present: %d", *pdpte, present);
+		if (present) {
+			if (pdpte_large(*pdpte) != 0UL) {
+				*pg_size = PDPTE_SIZE;
+				pret = pdpte;
+			} else {
+				pde = pde_offset(pdpte, addr);
+				present = (mem_ops->pgentry_present(*pde) != 0UL);
+				pr_err(" ept pde value: 0x%lx, present: %d", *pde, present);
+				if (present) {
+					if (pde_large(*pde) != 0UL) {
+						*pg_size = PDE_SIZE;
+						pret = pde;
+					} else {
+						pte = pte_offset(pde, addr);
+						present = (mem_ops->pgentry_present(*pte) != 0UL);
+						pr_err(" ept pte value: 0x%lx, present: %d", *pte, present);
+						if (present) {
+							*pg_size = PTE_SIZE;
+							pret = pte;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return pret;
+}
+
+static uint64_t local_gpa2hpa_dbg(struct acrn_vm *vm, uint64_t gpa, uint32_t *size)
+{
+	/* using return value INVALID_HPA as error code */
+	uint64_t hpa = INVALID_HPA;
+	const uint64_t *pgentry;
+	uint64_t pg_size = 0UL;
+	void *eptp;
+
+	eptp = get_ept_entry(vm);
+	pgentry = lookup_address_dbg((uint64_t *)eptp, gpa, &pg_size, &vm->arch_vm.ept_mem_ops);
+	if (pgentry != NULL) {
+		hpa = (((*pgentry & (~EPT_PFN_HIGH_MASK)) & (~(pg_size - 1UL)))
+				| (gpa & (pg_size - 1UL)));
+	}
+
+	/**
+	 * If specified parameter size is not NULL and
+	 * the HPA of parameter gpa is found, pg_size shall
+	 * be returned through parameter size.
+	 */
+	if ((size != NULL) && (hpa != INVALID_HPA)) {
+		*size = (uint32_t)pg_size;
+	}
+
+	return hpa;
+}
+
+static uint64_t gpa2hpa_dbg(struct acrn_vm *vm, uint64_t gpa)
+{
+	return local_gpa2hpa_dbg(vm, gpa, NULL);
+}
+
+/* gpa --> hpa -->hva */
+static void *gpa2hva_dbg(struct acrn_vm *vm, uint64_t x)
+{
+	uint64_t hpa = gpa2hpa_dbg(vm, x);
+	return (hpa == INVALID_HPA) ? NULL : hpa2hva(hpa);
+}
+
+static int32_t local_gva2gpa_common_dbg(struct acrn_vcpu *vcpu, const struct page_walk_info *pw_info,
+	uint64_t gva, uint64_t *gpa, uint32_t *err_code)
+{
+	uint32_t i;
+	uint64_t index;
+	uint32_t shift = 0U;
+	void *base;
+	uint64_t entry = 0U;
+	uint64_t addr;
+	uint64_t page_size = PAGE_SIZE_4K;
+	int32_t ret = 0;
+	int32_t fault = 0;
+	bool is_user_mode_addr = true;
+	bool is_page_rw_flags_on = true;
+
+	if (pw_info->level < 1U) {
+		ret = -EINVAL;
+	} else {
+		addr = pw_info->top_entry;
+		i = pw_info->level;
+		stac();
+
+		while ((i != 0U) && (fault == 0)) {
+			i--;
+
+			addr = addr & IA32E_REF_MASK;
+			base = gpa2hva_dbg(vcpu->vm, addr);
+			pr_err(" page_walk dump: level: %d, addr_gpa: 0x%lx, base: 0x%lx", i, addr, (uint64_t)base);
+			pr_err("\n");
+
+			if (base == NULL) {
+				fault = 1;
+			} else {
+				shift = (i * pw_info->width) + 12U;
+				index = (gva >> shift) & ((1UL << pw_info->width) - 1UL);
+				page_size = 1UL << shift;
+
+				if (pw_info->width == 10U) {
+					uint32_t *base32 = (uint32_t *)base;
+					/* 32bit entry */
+					entry = (uint64_t)(*(base32 + index));
+				} else {
+					uint64_t *base64 = (uint64_t *)base;
+					entry = *(base64 + index);
+				}
+
+				/* check if the entry present */
+				if ((entry & PAGE_PRESENT) == 0U) {
+					fault = 1;
+				}
+
+					/* check for R/W */
+				if ((fault == 0) && ((entry & PAGE_RW) == 0U)) {
+					if (pw_info->is_write_access  &&
+					    (pw_info->is_user_mode_access || pw_info->wp)) {
+						/* Case1: Supermode and wp is 1
+						 * Case2: Usermode */
+						fault = 1;
+					}
+					is_page_rw_flags_on = false;
+				}
+			}
+
+			/* check for nx, since for 32-bit paing, the XD bit is
+			 * reserved(0), use the same logic as PAE/4-level paging */
+			if ((fault == 0) && pw_info->is_inst_fetch && pw_info->nxe &&
+				    ((entry & PAGE_NX) != 0U)) {
+				fault = 1;
+			}
+
+			/* check for U/S */
+			if ((fault == 0) && ((entry & PAGE_USER) == 0U)) {
+				is_user_mode_addr = false;
+
+				if (pw_info->is_user_mode_access) {
+					fault = 1;
+				}
+			}
+
+
+			if ((fault == 0) && pw_info->pse &&
+				((i > 0U) && ((entry & PAGE_PSE) != 0U))) {
+					break;
+			}
+			addr = entry;
+			pr_err("entry: 0x%lx, inst_fetch: %d, user_access: %d, pse: %d, nxe: %d, wp: %d, write_access: %d",
+				entry, pw_info->is_inst_fetch, pw_info->is_user_mode_access, pw_info->pse,
+				pw_info->nxe, pw_info->wp, pw_info->is_write_access);
+			pr_err("smep: %d, smap: %d", pw_info->is_smap_on, pw_info->is_smep_on);
+		}
+
+		/* When SMAP/SMEP is on, we only need to apply check when address is
+		 * user-mode address.
+		 * Also SMAP/SMEP only impact the supervisor-mode access.
+		 */
+		/* if smap is enabled and supervisor-mode access */
+		if ((fault == 0) && pw_info->is_smap_on && (!pw_info->is_user_mode_access) &&
+			is_user_mode_addr) {
+			bool acflag = ((vcpu_get_rflags(vcpu) & RFLAGS_AC) != 0UL);
+
+			/* read from user mode address, eflags.ac = 0 */
+			if ((!pw_info->is_write_access) && (!acflag)) {
+				fault = 1;
+			} else if (pw_info->is_write_access) {
+				/* write to user mode address */
+
+				/* cr0.wp = 0, eflags.ac = 0 */
+				if ((!pw_info->wp) && (!acflag)) {
+					fault = 1;
+				}
+
+				/* cr0.wp = 1, eflags.ac = 1, r/w flag is 0
+				 * on any paging structure entry
+				 */
+				if (pw_info->wp && acflag && (!is_page_rw_flags_on)) {
+					fault = 1;
+				}
+
+				/* cr0.wp = 1, eflags.ac = 0 */
+				if (pw_info->wp && (!acflag)) {
+					fault = 1;
+				}
+			} else {
+				/* do nothing */
+			}
+		}
+
+		/* instruction fetch from user-mode address, smep on */
+		if ((fault == 0) && pw_info->is_smep_on && (!pw_info->is_user_mode_access) &&
+			is_user_mode_addr && pw_info->is_inst_fetch) {
+			fault = 1;
+		}
+
+		if (fault == 0) {
+			entry >>= shift;
+			/* shift left 12bit more and back to clear XD/Prot Key/Ignored bits */
+			entry <<= (shift + 12U);
+			entry >>= 12U;
+			*gpa = entry | (gva & (page_size - 1UL));
+		}
+
+		clac();
+		if (fault != 0) {
+			ret = -EFAULT;
+			*err_code |= PAGE_FAULT_P_FLAG;
+		}
+	}
+	return ret;
+}
+
+static int32_t gva2gpa_dbg(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa,
+	uint32_t *err_code)
+{
+	enum vm_paging_mode pm = get_vcpu_paging_mode(vcpu);
+	struct page_walk_info pw_info;
+	int32_t ret = 0;
+
+	if ((gpa == NULL) || (err_code == NULL)) {
+		ret = -EINVAL;
+	} else {
+		*gpa = 0UL;
+
+		pw_info.top_entry = exec_vmread(VMX_GUEST_CR3);
+		pw_info.level = (uint32_t)pm;
+		pw_info.is_write_access = ((*err_code & PAGE_FAULT_WR_FLAG) != 0U);
+		pw_info.is_inst_fetch = ((*err_code & PAGE_FAULT_ID_FLAG) != 0U);
+
+		/* SDM vol3 27.3.2
+		 * If the segment register was unusable, the base, select and some
+		 * bits of access rights are undefined. With the exception of
+		 * DPL of SS
+		 * and others.
+		 * So we use DPL of SS access rights field for guest DPL.
+		 */
+		pw_info.is_user_mode_access = (((exec_vmread32(VMX_GUEST_SS_ATTR) >> 5U) & 0x3U) == 3U);
+		pw_info.pse = true;
+		pw_info.nxe = ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_NXE_BIT) != 0UL);
+		pw_info.wp = ((vcpu_get_cr0(vcpu) & CR0_WP) != 0UL);
+		pw_info.is_smap_on = ((vcpu_get_cr4(vcpu) & CR4_SMAP) != 0UL);
+		pw_info.is_smep_on = ((vcpu_get_cr4(vcpu) & CR4_SMEP) != 0UL);
+
+		*err_code &=  ~PAGE_FAULT_P_FLAG;
+
+		if (pm == PAGING_MODE_4_LEVEL) {
+			pw_info.width = 9U;
+			ret = local_gva2gpa_common_dbg(vcpu, &pw_info, gva, gpa, err_code);
+		} else if (pm == PAGING_MODE_3_LEVEL) {
+			pw_info.width = 9U;
+			ret = local_gva2gpa_pae(vcpu, &pw_info, gva, gpa, err_code);
+		} else if (pm == PAGING_MODE_2_LEVEL) {
+			pw_info.width = 10U;
+			pw_info.pse = ((vcpu_get_cr4(vcpu) & CR4_PSE) != 0UL);
+			pw_info.nxe = false;
+			ret = local_gva2gpa_common_dbg(vcpu, &pw_info, gva, gpa, err_code);
+		} else {
+			*gpa = gva;
+		}
+
+		if (ret == -EFAULT) {
+			if (pw_info.is_user_mode_access) {
+				*err_code |= PAGE_FAULT_US_FLAG;
+			}
+		}
+	}
+
+	return ret;
+}
+
+static inline int32_t copy_gva_dbg(struct acrn_vcpu *vcpu, void *h_ptr_arg, uint64_t gva_arg,
+	uint32_t size_arg, uint32_t *err_code, uint64_t *fault_addr,
+	bool cp_from_vm)
+{
+	void *h_ptr = h_ptr_arg;
+	uint64_t gpa = 0UL;
+	int32_t ret = 0;
+	uint32_t len;
+	uint64_t gva = gva_arg;
+	uint32_t size = size_arg;
+
+	while ((size > 0U) && (ret == 0)) {
+		ret = gva2gpa_dbg(vcpu, gva, &gpa, err_code);
+		if (ret >= 0) {
+			len = local_copy_gpa(vcpu->vm, h_ptr, gpa, size, PAGE_SIZE_4K, cp_from_vm);
+			if (len != 0U) {
+				gva += len;
+				h_ptr += len;
+				size -= len;
+			} else {
+				ret =  -EINVAL;
+			}
+		} else {
+			*fault_addr = gva;
+			pr_err("error[%d] in GVA2GPA, err_code=0x%x", ret, *err_code);
+		}
+	}
+
+	return ret;
+}
+
+int32_t copy_from_gva_dbg(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
+	uint32_t size, uint32_t *err_code, uint64_t *fault_addr)
+{
+	return copy_gva_dbg(vcpu, h_ptr, gva, size, err_code, fault_addr, 1);
+}
