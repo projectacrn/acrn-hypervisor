@@ -1,6 +1,6 @@
 .. _rtvm_workload_guideline:
 
-Real time VM application design guidelines
+Real-Time VM Application Design Guidelines
 ##########################################
 
 An RTOS developer must be aware of the differences between running applications on a native

@@ -34,16 +34,16 @@ https://projectacrn.github.io/0.5/.  Documentation for the latest
 Version 0.5 new features
 ************************
 
-**OVMF support initial patches merged in ACRN**: 
+**OVMF support initial patches merged in ACRN**:
 To support booting Windows as a Guest OS, we are
-using Open source Virtual Machine Firmware (OVMF). 
-Initial patches to support OVMF have been merged in ACRN hypervisor. 
+using Open source Virtual Machine Firmware (OVMF).
+Initial patches to support OVMF have been merged in ACRN hypervisor.
 More patches for ACRN and patches upstreaming to OVMF work will be continuing.
 
-**UP2 board serial port support**: 
+**UP2 board serial port support**:
 This release enables serial port debugging on UP2 boards during SOS and UOS boot.
 
-**One E2E binary to support all UEFI platform**: 
+**One E2E binary to support all UEFI platform**:
 ACRN can support both Apollo Lake (APL) and Kaby Lake (KBL) NUCs.
 Instead of having separate builds, this release offers community
 developers a single end-to-end reference build that supports both
@@ -52,11 +52,11 @@ See :ref:`getting_started` for more information.
 
 **APL UP2 board with SBL firmware**: With this 0.5 release, ACRN
 now supports APL UP2 board with slim Bootloader (SBL) firmware.
-Slim Bootloader is a modern, flexible, light-weight, open source 
-reference boot loader with key benefits such as being fast, small, 
-customizable, and secure. An end-to-end reference build with 
-ACRN hypervisor, Clear Linux OS as SOS, and Clear Linux OS as UOS has been 
-verified on UP2/SBL board. See the :ref:`using-sbl-up2` documentation 
+Slim Bootloader is a modern, flexible, light-weight, open source
+reference boot loader with key benefits such as being fast, small,
+customizable, and secure. An end-to-end reference build with
+ACRN hypervisor, Clear Linux OS as SOS, and Clear Linux OS as UOS has been
+verified on UP2/SBL board. See the :ref:`using-sbl-up2` documentation
 for step-by-step instructions.
 
 **Document updates**: Several new documents have been added in this release, including:
@@ -68,35 +68,35 @@ for step-by-step instructions.
 - :acrn-issue:`892`  - Power Management: VMM control
 - :acrn-issue:`894`  - Power Management: S5
 - :acrn-issue:`914`  - GPU Passthrough
-- :acrn-issue:`1124` - MMU code reshuffle                           
-- :acrn-issue:`1179` - RPMB key passing                                 
-- :acrn-issue:`1180` - vFastboot release version 0.9                             
-- :acrn-issue:`1181` - Integrate enabling Crash OS feature as default in VSBL debugversion           
-- :acrn-issue:`1182` - vSBL to support ACPI customization                           
+- :acrn-issue:`1124` - MMU code reshuffle
+- :acrn-issue:`1179` - RPMB key passing
+- :acrn-issue:`1180` - vFastboot release version 0.9
+- :acrn-issue:`1181` - Integrate enabling Crash OS feature as default in VSBL debugversion
+- :acrn-issue:`1182` - vSBL to support ACPI customization
 - :acrn-issue:`1240` - [APL][IO Mediator] Enable VHOST_NET & VHOST to accelerate guest networking with virtio_net.
-- :acrn-issue:`1284` - [DeviceModel]Enable NHLT table in DM for audio passthrough                               
-- :acrn-issue:`1313` - [APL][IO Mediator] Remove unused netmap/vale in virtio-net                                 
-- :acrn-issue:`1330` - combine VM creating and ioreq shared page setup                                   
-- :acrn-issue:`1364` - [APL][IO Mediator] virtio code reshuffle                           
-- :acrn-issue:`1496` - provide a string convert api and remove banned function for virtio-blk                                  
-- :acrn-issue:`1546` - hv: timer: add debug information for add_timer                      
-- :acrn-issue:`1579` - vSBL to Support Ramoops                           
-- :acrn-issue:`1580` - vSBL to support crash mode with vFastboot                              
-- :acrn-issue:`1626` - support x2APIC mode for ACRN guests                              
-- :acrn-issue:`1672` - L1TF mitigation                            
-- :acrn-issue:`1747` - Replace function like macro with inline function                               
-- :acrn-issue:`1821` - Optimize IO request path  
+- :acrn-issue:`1284` - [DeviceModel]Enable NHLT table in DM for audio passthrough
+- :acrn-issue:`1313` - [APL][IO Mediator] Remove unused netmap/vale in virtio-net
+- :acrn-issue:`1330` - combine VM creating and ioreq shared page setup
+- :acrn-issue:`1364` - [APL][IO Mediator] virtio code reshuffle
+- :acrn-issue:`1496` - provide a string convert api and remove banned function for virtio-blk
+- :acrn-issue:`1546` - hv: timer: add debug information for add_timer
+- :acrn-issue:`1579` - vSBL to Support Ramoops
+- :acrn-issue:`1580` - vSBL to support crash mode with vFastboot
+- :acrn-issue:`1626` - support x2APIC mode for ACRN guests
+- :acrn-issue:`1672` - L1TF mitigation
+- :acrn-issue:`1747` - Replace function like macro with inline function
+- :acrn-issue:`1821` - Optimize IO request path
 - :acrn-issue:`1832` - Add OVMF booting support for booting as an alternative to vSBL.
-- :acrn-issue:`1882` - Extend the SOS CMA range from 64M to 128M                                 
+- :acrn-issue:`1882` - Extend the SOS CMA range from 64M to 128M
 - :acrn-issue:`1995` - Support SBL firmware as boot loader on Apollo Lake UP2.
-- :acrn-issue:`2011` - support DISCARD command for virtio-blk                                   
+- :acrn-issue:`2011` - support DISCARD command for virtio-blk
 - :acrn-issue:`2036` - Update and complete `acrn-dm` parameters description in the user guide and HLD
-- :acrn-issue:`2037` - Set correct name for each pthread in DM                                  
-- :acrn-issue:`2079` - Replace banned API with permitted API function in a crn device-model                                  
-- :acrn-issue:`2120` - Optimize trusty logic to meet MISRA-C rules                             
-- :acrn-issue:`2145` - Reuse linux common virtio header file for virtio                                                   
-- :acrn-issue:`2170` -  For UEFI based hardware platforms, one Clear Linux OS E2E build binary can be used for all platform's installation 
-- :acrn-issue:`2187` - Complete the cleanup of unbounded APIs usage 
+- :acrn-issue:`2037` - Set correct name for each pthread in DM
+- :acrn-issue:`2079` - Replace banned API with permitted API function in a crn device-model
+- :acrn-issue:`2120` - Optimize trusty logic to meet MISRA-C rules
+- :acrn-issue:`2145` - Reuse linux common virtio header file for virtio
+- :acrn-issue:`2170` -  For UEFI based hardware platforms, one Clear Linux OS E2E build binary can be used for all platform's installation
+- :acrn-issue:`2187` - Complete the cleanup of unbounded APIs usage
 
 Fixed Issues
 ************
@@ -187,7 +187,7 @@ Known Issues
    **Impact:** Failed to use UART for input in corner case.
 
    **Workaround:** Enter other keys before typing :kbd:`Enter`.
- 
+
 :acrn-issue:`1996` - There is an error log when using "acrnd&" to boot UOS
    An error log is printed when starting acrnd as a background job
    (``acrnd&``) to boot UOS. The UOS still boots up
@@ -198,7 +198,7 @@ Known Issues
 
    **Workaround:** None.
 
-:acrn-issue:`2267` - [APLUP2][LaaG]LaaG can't detect 4k monitor 
+:acrn-issue:`2267` - [APLUP2][LaaG]LaaG can't detect 4k monitor
    After launching UOS on APL UP2 , 4k monitor cannot be detected.
 
    **Impact:** UOS hasn't display with 4k monitor.
@@ -206,7 +206,7 @@ Known Issues
    **Workaround:** None.
 
 :acrn-issue:`2276` - OVMF failed to launch UOS on UP2.
-   UP2 failed to launch UOS using OVMF as virtual bootloader with acrn-dm. 
+   UP2 failed to launch UOS using OVMF as virtual bootloader with acrn-dm.
 
    **Impact:** UOS cannot boot up using OVMF
 
@@ -224,9 +224,9 @@ Known Issues
 
    **Impact:** Power Management states related operations cannot be using in SOS/UOS on KBLNUC
 
-   **Workaround:** None 
+   **Workaround:** None
 
-:acrn-issue:`2279` - [APLNUC]After exiting UOS with mediator Usb_KeyBoard and Mouse, SOS cannot use the 
+:acrn-issue:`2279` - [APLNUC]After exiting UOS with mediator Usb_KeyBoard and Mouse, SOS cannot use the
    Usb_KeyBoard and Mouse
    After exiting UOS with mediator Usb_KeyBoard and Mouse, SOS cannot use the Usb_KeyBoard and Mouse.
    Reproduce Steps as below:
@@ -240,7 +240,7 @@ Known Issues
 
    4) Exit UOS.
 
-   5) SOS access USB keyboard and mouse. 
+   5) SOS access USB keyboard and mouse.
 
    **Impact:** SOS cannot use USB keyboard and mouse in such case.
 

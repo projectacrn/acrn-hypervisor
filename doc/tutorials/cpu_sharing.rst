@@ -1,59 +1,51 @@
 .. _cpu_sharing:
 
-ACRN CPU Sharing
-################
+Enable CPU Sharing in ACRN
+##########################
 
 Introduction
 ************
 
 The goal of CPU Sharing is to fully utilize the physical CPU resource to
-support more virtual machines. Currently, ACRN only supports 1 to 1 mapping
-mode between virtual CPUs (vCPUs) and physical CPUs (pCPUs). Because of the
-lack of CPU sharing ability, the number of VMs is limited. To support CPU
-Sharing, we have introduced a scheduling framework and implemented two simple
-small scheduling algorithms to satisfy embedded device requirements. Note
-that, CPU Sharing is not available for VMs with local APIC passthrough
-(``--lapic_pt`` option).
+support more virtual machines. Currently, ACRN only supports 1 to 1
+mapping mode between virtual CPUs (vCPUs) and physical CPUs (pCPUs).
+Because of the lack of CPU sharing ability, the number of VMs is
+limited. To support CPU Sharing, we have introduced a scheduling
+framework and implemented two simple small scheduling algorithms to
+satisfy embedded device requirements. Note that, CPU Sharing is not
+available for VMs with local APIC passthrough (``--lapic_pt`` option).
 
 Scheduling Framework
 ********************
 
-To satisfy the modularization design concept, the scheduling framework layer
-isolates the vCPU layer and scheduler algorithm. It does not have a vCPU
-concept so it is only aware of the thread object instance. The thread object
-state machine is maintained in the framework. The framework abstracts the
-scheduler algorithm object, so this architecture can easily extend to new
-scheduler algorithms.
+To satisfy the modularization design concept, the scheduling framework
+layer isolates the vCPU layer and scheduler algorithm. It does not have
+a vCPU concept so it is only aware of the thread object instance. The
+thread object state machine is maintained in the framework. The
+framework abstracts the scheduler algorithm object, so this architecture
+can easily extend to new scheduler algorithms.
 
 .. figure:: images/cpu_sharing_framework.png
    :align: center
 
-The below diagram shows that the vCPU layer invokes APIs provided by scheduling
-framework for vCPU scheduling. The scheduling framework also provides some APIs
-for schedulers. The scheduler mainly implements some callbacks in an
-``acrn_scheduler`` instance for scheduling framework. Scheduling initialization
-is invoked in the hardware management layer.
+The below diagram shows that the vCPU layer invokes APIs provided by
+scheduling framework for vCPU scheduling. The scheduling framework also
+provides some APIs for schedulers. The scheduler mainly implements some
+callbacks in an ``acrn_scheduler`` instance for scheduling framework.
+Scheduling initialization is invoked in the hardware management layer.
 
 .. figure:: images/cpu_sharing_api.png
    :align: center
 
-CPU affinity
+vCPU affinity
 *************
 
-Currently, we do not support vCPU migration; the assignment of vCPU mapping to
-pCPU is fixed at the time the VM is launched. The statically configured
-cpu_affinity_bitmap in the VM configuration defines a superset of pCPUs that
-the VM is allowed to run on. One bit in this bitmap indicates that one pCPU
-could be assigned to this VM, and the bit number is the pCPU ID. A pre-launched
-VM is supposed to be launched on exact number of pCPUs that are assigned in
-this bitmap. and the vCPU to pCPU mapping is implicitly indicated: vCPU0 maps
-to the pCPU with lowest pCPU ID, vCPU1 maps to the second lowest pCPU ID, and
-so on.
+Currently, we do not support vCPU migration; the assignment of vCPU
+mapping to pCPU is statically configured by acrn-dm through
+``--cpu_affinity``. Use these rules to configure the vCPU affinity:
 
-For post-launched VMs, acrn-dm could choose to launch a subset of pCPUs that
-are defined in cpu_affinity_bitmap by specifying the assigned pCPUs
-(``--cpu_affinity`` option). But it can't assign any pCPUs that are not
-included in the VM's cpu_affinity_bitmap.
+- Only one bit can be set for each affinity item of vCPU.
+- vCPUs in the same VM cannot be assigned to the same pCPU.
 
 Here is an example for affinity:
 
@@ -72,47 +64,59 @@ The thread object contains three states: RUNNING, RUNNABLE, and BLOCKED.
 .. figure:: images/cpu_sharing_state.png
    :align: center
 
-After a new vCPU is created, the corresponding thread object is initiated.
-The vCPU layer invokes a wakeup operation. After wakeup, the state for the
-new thread object is set to RUNNABLE, and then follows its algorithm to
-determine whether or not to preempt the current running thread object. If
-yes, it turns to the RUNNING state. In RUNNING state, the thread object may
-turn back to the RUNNABLE state when it runs out of its timeslice, or it
-might yield the pCPU by itself, or be preempted. The thread object under
-RUNNING state may trigger sleep to transfer to BLOCKED state.
+After a new vCPU is created, the corresponding thread object is
+initiated. The vCPU layer invokes a wakeup operation. After wakeup, the
+state for the new thread object is set to RUNNABLE, and then follows its
+algorithm to determine whether or not to preempt the current running
+thread object. If yes, it turns to the RUNNING state. In RUNNING state,
+the thread object may turn back to the RUNNABLE state when it runs out
+of its timeslice, or it might yield the pCPU by itself, or be preempted.
+The thread object under RUNNING state may trigger sleep to transfer to
+BLOCKED state.
 
 Scheduler
 *********
 
-The below block diagram shows the basic concept for the scheduler. There are
-two kinds of scheduler in the diagram: NOOP (No-Operation) scheduler and IORR
-(IO sensitive Round-Robin) scheduler.
+The below block diagram shows the basic concept for the scheduler. There
+are two kinds of schedulers in the diagram: NOOP (No-Operation) scheduler
+and BVT (Borrowed Virtual Time) scheduler.
 
 
 - **No-Operation scheduler**:
 
-The NOOP (No-operation) scheduler has the same policy as the original 1-1
-mapping previously used; every pCPU can run only two thread objects: one is
-the idle thread, and another is the thread of the assigned vCPU. With this
-scheduler, vCPU works in Work-Conserving mode, which always try to keep
-resource busy, and will run once it is ready. Idle thread can run when the
-vCPU thread is blocked.
+  The NOOP (No-operation) scheduler has the same policy as the original
+  1-1 mapping previously used; every pCPU can run only two thread objects:
+  one is the idle thread, and another is the thread of the assigned vCPU.
+  With this scheduler, vCPU works in Work-Conserving mode, which always
+  try to keep resource busy, and will run once it is ready. Idle thread
+  can run when the vCPU thread is blocked.
 
-- **IO sensitive round-robin scheduler**:
+- **Borrowed Virtual Time scheduler**:
 
-The IORR (IO sensitive round-robin) scheduler is implemented with the per-pCPU
-runqueue and the per-pCPU tick timer; it supports more than one vCPU running
-on a pCPU. It basically schedules thread objects in a round-robin policy and
-supports preemption by timeslice counting.
+  BVT (Borrowed Virtual time) is a virtual time based scheduling
+  algorithm, it dispatching the runnable thread with the earliest
+  effective virtual time.
 
-  - Every thread object has an initial timeslice (ex: 10ms)
-  - The timeslice is consumed with time and be counted in the context switch
-    and tick handler
-  - If the timeslice is positive or zero, then switch out the current thread
-    object and put it to tail of runqueue. Then, pick the next runnable one
-    from runqueue to run.
-  - Threads with an IO request will preempt current running threads on the
-    same pCPU.
+  TODO: BVT scheduler will be built on top of prioritized scheduling
+  mechanism, i.e. higher priority threads get scheduled first, and same
+  priority tasks are scheduled per BVT.
+
+  - **Virtual time**: The thread with the earliest effective virtual
+    time (EVT) is dispatched first.
+  - **Warp**: a latency-sensitive thread is allowed to warp back in
+    virtual time to make it appear earlier. It borrows virtual time from
+    its future CPU allocation and thus does not disrupt long-term CPU
+    sharing
+  - **MCU**: minimum charging unit, the scheduler account for running time
+    in units of MCU.
+  - **Weighted fair sharing**: each runnable thread receives a share of
+    the processor in proportion to its weight over a scheduling
+    window of some number of MCU.
+  - **C**: context switch allowance.  Real time by which the current
+    thread is allowed to advance beyond another runnable thread with
+    equal claim on the CPU. C is similar to the quantum in conventional
+    timesharing.
+
 
 Scheduler configuration
 ***********************
@@ -122,180 +126,58 @@ Two places in the code decide the usage for the scheduler.
 * The option in Kconfig decides the only scheduler used in runtime.
   ``hypervisor/arch/x86/Kconfig``
 
-  .. literalinclude:: ../../../../hypervisor/arch/x86/Kconfig
-     :name: Kconfig for Scheduler
-     :caption: Kconfig for Scheduler
-     :linenos:
-     :lines: 25-52
-     :emphasize-lines: 3
-     :language: c
+.. code-block:: none
 
-The default scheduler is **SCHED_NOOP**. To use the IORR, change it to
-**SCHED_IORR** in the **ACRN Scheduler**.
+  config SCHED_BVT
+          bool "BVT scheduler"
+          help
+          BVT (Borrowed Virtual time) is virtual time based scheduling algorithm. It
+          dispatches the runnable thread with the earliest effective virtual time.
+          TODO: BVT scheduler will be built on top of prioritized scheduling mechanism,
+          i.e. higher priority threads get scheduled first, and same priority tasks are
+          scheduled per BVT.
 
-* The VM CPU affinities are defined in  ``hypervisor/scenarios/<scenario_name>/vm_configurations.h``
+The default scheduler is **SCHED_NOOP**. To use the BVT, change it to
+**SCHED_BVT** in the **ACRN Scheduler**.
 
-  .. literalinclude:: ../../../..//hypervisor/scenarios/industry/vm_configurations.h
-     :name: Affinity for VMs
-     :caption: Affinity for VMs
-     :linenos:
-     :lines: 39-45
-     :language: c
+* The cpu_affinity is configured by acrn-dm command.
 
-* vCPU number corresponding to affinity is set in ``hypervisor/scenarios/<scenario_name>/vm_configurations.c`` by the **vcpu_num**
+  For example, assign physical CPUs (pCPUs) 1 and 3 to this VM using::
+
+    --cpu_affinity 1,3
+
 
 Example
 *******
 
-To support below configuration in industry scenario:
+Use the following settings to support this configuration in the industry scenario:
 
-+----------+-------+-------+--------+
-|pCPU0     |pCPU1  |pCPU2  |pCPU3   |
-+==========+=======+=======+========+
-|SOS WaaG  |RT Linux       |vxWorks |
-+----------+---------------+--------+
++---------+-------+-------+-------+
+|pCPU0    |pCPU1  |pCPU2  |pCPU3  |
++=========+=======+=======+=======+
+|SOS + WaaG       |RT Linux       |
++-----------------+---------------+
 
-Change the following three files:
+- offline pcpu2-3 in SOS.
 
-1. ``hypervisor/arch/x86/Kconfig``
+- launch guests.
 
-.. code-block:: none
+  - launch WaaG with "--cpu_affinity=0,1"
+  - launch RT with "--cpu_affinity=2,3"
 
-   choice
-       prompt "ACRN Scheduler"
-       -default SCHED_NOOP
-       +default SCHED_IORR
-       help
-          Select the CPU scheduler to be used by the hypervisor
 
-2. ``hypervisor/scenarios/industry/vm_configurations.h``
+After you start all VMs, check the vCPU affinities from the Hypervisor
+console with the ``vcpu_list`` command:
 
-.. code-block:: none
+.. code-block:: console
 
-  #define CONFIG_MAX_VM_NUM               (4U)
+   ACRN:\>vcpu_list
 
-  #define DM_OWNED_GUEST_FLAG_MASK        (GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH | \
-                                                  GUEST_FLAG_RT | GUEST_FLAG_IO_COMPLETION_POLLING)
-
-  #define SOS_VM_BOOTARGS                 SOS_ROOTFS      \
-                                          "rw rootwait "  \
-                                          "console=tty0 " \
-                                          SOS_CONSOLE     \
-                                          "consoleblank=0 "       \
-                                          "no_timer_check "       \
-                                          "quiet loglevel=3 "     \
-                                          "i915.nuclear_pageflip=1 " \
-                                          "i915.avail_planes_per_pipe=0x01010F "  \
-                                          "i915.domain_plane_owners=0x011111110000 " \
-                                          "i915.enable_gvt=1 "    \
-                                          SOS_BOOTARGS_DIFF
-
-  #define VM1_CONFIG_CPU_AFFINITY        (AFFINITY_CPU(0U))
-  #define VM2_CONFIG_CPU_AFFINITY        (AFFINITY_CPU(1U) | AFFINITY_CPU(2U))
-  #define VM3_CONFIG_CPU_AFFINITY        (AFFINITY_CPU(3U))
-
-3. ``hypervisor/scenarios/industry/vm_configurations.c``
-
-.. code-block:: none
-
- struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
-         {
-                 .load_order = SOS_VM,
-                 .name = "ACRN SOS VM",
-                 .uuid = {0xdbU, 0xbbU, 0xd4U, 0x34U, 0x7aU, 0x57U, 0x42U, 0x16U,        \
-                          0xa1U, 0x2cU, 0x22U, 0x01U, 0xf1U, 0xabU, 0x02U, 0x40U},
-                 .guest_flags = 0UL,
-                 .clos = 0U,
-                 .memory = {
-                         .start_hpa = 0UL,
-                         .size = CONFIG_SOS_RAM_SIZE,
-                 },
-                 .os_config = {
-                         .name = "ACRN Service OS",
-                         .kernel_type = KERNEL_BZIMAGE,
-                         .kernel_mod_tag = "Linux_bzImage",
-                         .bootargs = SOS_VM_BOOTARGS
-                 },
-                 .vuart[0] = {
-                         .type = VUART_LEGACY_PIO,
-                         .addr.port_base = SOS_COM1_BASE,
-                         .irq = SOS_COM1_IRQ,
-                 },
-                 .vuart[1] = {
-                         .type = VUART_LEGACY_PIO,
-                         .addr.port_base = SOS_COM2_BASE,
-                         .irq = SOS_COM2_IRQ,
-                         .t_vuart.vm_id = 2U,
-                         .t_vuart.vuart_id = 1U,
-                 },
-                 .pci_dev_num = SOS_EMULATED_PCI_DEV_NUM,
-                 .pci_devs = sos_pci_devs,
-         },
-         {
-                 .load_order = POST_LAUNCHED_VM,
-                 .uuid = {0xd2U, 0x79U, 0x54U, 0x38U, 0x25U, 0xd6U, 0x11U, 0xe8U,        \
-                          0x86U, 0x4eU, 0xcbU, 0x7aU, 0x18U, 0xb3U, 0x46U, 0x43U},
-                 .cpu_affinity_bitmap = VM1_CONFIG_CPU_AFFINITY,
-                 .vuart[0] = {
-                         .type = VUART_LEGACY_PIO,
-                         .addr.port_base = COM1_BASE,
-                         .irq = COM1_IRQ,
-                 },
-                 .vuart[1] = {
-                         .type = VUART_LEGACY_PIO,
-                         .addr.port_base = INVALID_COM_BASE,
-                 }
-
-         },
-         {
-                 .load_order = POST_LAUNCHED_VM,
-                 .uuid = {0x49U, 0x5aU, 0xe2U, 0xe5U, 0x26U, 0x03U, 0x4dU, 0x64U,        \
-                          0xafU, 0x76U, 0xd4U, 0xbcU, 0x5aU, 0x8eU, 0xc0U, 0xe5U},
-
-                 .guest_flags = GUEST_FLAG_HIGHEST_SEVERITY,
-                 .cpu_affinity_bitmap = VM2_CONFIG_CPU_AFFINITY,
-                 .vuart[0] = {
-                         .type = VUART_LEGACY_PIO,
-                         .addr.port_base = COM1_BASE,
-                         .irq = COM1_IRQ,
-                 },
-                 .vuart[1] = {
-                         .type = VUART_LEGACY_PIO,
-                         .addr.port_base = COM2_BASE,
-                         .irq = COM2_IRQ,
-                         .t_vuart.vm_id = 0U,
-                         .t_vuart.vuart_id = 1U,
-                 },
-         },
-         {
-                 .load_order = POST_LAUNCHED_VM,
-                 .uuid = {0x38U, 0x15U, 0x88U, 0x21U, 0x52U, 0x08U, 0x40U, 0x05U,        \
-                          0xb7U, 0x2aU, 0x8aU, 0x60U, 0x9eU, 0x41U, 0x90U, 0xd0U},
-                 .cpu_affinity_bitmap = VM3_CONFIG_CPU_AFFINITY,
-                 .vuart[0] = {
-                         .type = VUART_LEGACY_PIO,
-                         .addr.port_base = COM1_BASE,
-                         .irq = COM1_IRQ,
-                 },
-                 .vuart[1] = {
-                         .type = VUART_LEGACY_PIO,
-                         .addr.port_base = INVALID_COM_BASE,
-                 }
-
-         },
-
- };
-
-After you start all VMs, check the vCPU affinities from the Hypervisor console:
-
-.. code-block:: none
-
-  ACRN:\>vcpu_list
-
-  VM ID    PCPU ID    VCPU ID    VCPU ROLE    VCPU STATE
-  =====    =======    =======    =========    ==========
-    0         0          0       PRIMARY      Running
-    1         0          0       PRIMARY      Running
-    2         1          0       PRIMARY      Running
-    2         2          1       SECONDARY    Running
-    3         3          0       PRIMARY      Running
+   VM ID    PCPU ID    VCPU ID    VCPU ROLE    VCPU STATE    THREAD STATE
+   =====    =======    =======    =========    ==========    ==========
+     0         0          0       PRIMARY      Running          BLOCKED
+     0         1          0       SECONDARY    Running          BLOCKED
+     1         0          0       PRIMARY      Running          RUNNING
+     1         1          0       SECONDARY    Running          RUNNING
+     2         2          0       PRIMARY      Running          RUNNING
+     2         3          1       SECONDARY    Running          RUNNING

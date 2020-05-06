@@ -1,48 +1,47 @@
 .. _using_partition_mode_on_nuc:
 
-Using partition mode on NUC
-###########################
+Getting Started Guide for ACRN logical partition mode
+#####################################################
 
-ACRN hypervisor supports logical partition scenario, in which the User OS (such
-as Clear Linux) running in a pre-launched VM can bypass the ACRN hypervisor and
-directly access isolated PCI devices. The following guidelines provide step by
-step instructions on how to set up the ACRN hypervisor logical partition
-scenario on Intel NUC running two pre-launched VMs. The logical partition
-scenario on Intel NUC is shown in
-:numref:`logical_partition_scenario_on_nuc`.
+The ACRN hypervisor supports a logical partition scenario in which the User
+OS (such as Clear Linux) running in a pre-launched VM can bypass the ACRN
+hypervisor and directly access isolated PCI devices. The following
+guidelines provide step-by-step instructions on how to set up the ACRN
+hypervisor logical partition scenario on Intel NUC while running two
+pre-launched VMs.
 
-.. figure:: images/logical_partition_scenario_on_nuc.png
-   :align: center
-   :width: 400px
-   :name: logical_partition_scenario_on_nuc
+Validated Versions
+******************
 
-   The logical partition scenario on Intel NUC
+- Ubuntu version: **18.04**
+- Clear Linux version: **32680**
+- ACRN hypervisor tag: **v1.6**
+- ACRN kernel commit: **8c9a8695966d8c5c8c7ccb296b9c48671b14aa70**
 
 Prerequisites
 *************
 
-* `Intel NUC Kit NUC7i7DNHE <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_
-* Connecting to the serial port, described in :ref:`kbl-nuc-sdc`
+* `Intel Whiskey Lake <http://www.maxtangpc.com/industrialmotherboards/142.html#parameters>`_
 * NVMe disk
 * SATA disk
 * Storage device with USB interface (such as USB Flash
-  or SATA disk connected with a USB3.0 SATA converter etc)
-* Disable "Intel Hyper Threading Technology" in the BIOS, to avoid
+  or SATA disk connected with a USB3.0 SATA converter).
+* Disable **Intel Hyper Threading Technology** in the BIOS to avoid
   interference from logical cores for the logical partition scenario.
 * In the logical partition scenario, two VMs (running Clear Linux)
-  are started by the ACRN hypervisor.  Each VM has its own root
+  are started by the ACRN hypervisor. Each VM has its own root
   filesystem. Set up each VM by following the `Install Clear Linux
   OS on bare metal with live server
-  <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_
-  and install Clear Linux OS (version: 29970) first on a SATA disk and then again
-  on a storage device with a USB interface. The two pre-launched
+  <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_ instructions
+  and install Clear Linux OS (version: 32680) first on a SATA disk and then
+  again on a storage device with a USB interface. The two pre-launched
   VMs will mount the root file systems via the SATA controller and
   the USB controller respectively.
 
-Update kernel image and modules of Pre-launched VM
+Update kernel image and modules of pre-launched VM
 **************************************************
-#. On your development workstation, clone the ACRN kernel source tree, and build
-   the Linux kernel image that will be used to boot the pre-launched VMs:
+#. On your development workstation, clone the ACRN kernel source tree, and
+   build the Linux kernel image that will be used to boot the pre-launched VMs:
 
    .. code-block:: none
 
@@ -63,24 +62,25 @@ Update kernel image and modules of Pre-launched VM
    ``arch/x86/boot/bzImage``, and loadable kernel modules under the ``./out/``
    folder. Copy these files to a removable disk for installing on the NUC later.
 
-#. Current ACRN logical partition scenario implementation requires a multi-boot
-   capable bootloader to boot both the ACRN hypervisor and the bootable kernel
-   image built from the previous step. Install Ubuntu OS to the on-board NVMe
-   SSD by following the `Ubuntu desktop installation instructions
-   <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop>`_ The
+#. The current ACRN logical partition scenario implementation requires a
+   multi-boot capable bootloader to boot both the ACRN hypervisor and the
+   bootable kernel image built from the previous step. Install the Ubuntu OS
+   on the on-board NVMe SSD by following the `Ubuntu desktop installation
+   instructions <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop>`_ The
    Ubuntu installer creates 3 disk partitions on the on-board NVMe SSD. By
-   default, the GRUB bootloader is installed on the EFI System Partition (ESP),
-   used to bootstrap the ACRN hypervisor.
-#. After installing the Ubuntu OS, power off the NUC, attach the
-   SATA disk and storage device with USB interface to the NUC. Power on the
-   NUC and make sure it boots the Ubuntu OS from the NVMe SSD. Plug in the
-   removable disk with kernel image into the NUC, then copy the loadable
-   kernel modules built in Step 1 to the ``/lib/modules/`` folder on both the
-   mounted SATA disk and storage device with USB interface. For example,
-   assuming the SATA disk and storage device with USB interface are assigned to
-   ``/dev/sda`` and ``/dev/sdb`` respectively, the following commands set up the
-   partition mode loadable kernel modules onto the root file systems to be
-   loaded by the pre-launched VMs:
+   default, the GRUB bootloader is installed on the EFI System Partition
+   (ESP) that's used to bootstrap the ACRN hypervisor.
+
+#. After installing the Ubuntu OS, power off the NUC. Attach the
+   SATA disk and storage device with the USB interface to the NUC. Power on
+   the NUC and make sure it boots the Ubuntu OS from the NVMe SSD. Plug in
+   the removable disk with the kernel image into the NUC and then copy the
+   loadable kernel modules built in Step 1 to the ``/lib/modules/`` folder
+   on both the mounted SATA disk and storage device with USB interface. For
+   example, assuming the SATA disk and storage device with USB interface are
+   assigned to ``/dev/sda`` and ``/dev/sdb`` respectively, the following
+   commands set up the partition mode loadable kernel modules onto the root
+   file systems to be loaded by the pre-launched VMs:
 
    .. code-block:: none
 
@@ -99,15 +99,15 @@ Update kernel image and modules of Pre-launched VM
 
       $ sudo cp <path-to-kernel-image-built-in-step1>/bzImage /boot/
 
-Update ACRN hypervisor Image
+Update ACRN hypervisor image
 ****************************
 
-#. Before building the ACRN hypervisor, you need to figure out the I/O
-   address of the serial port, and the PCI BDF addresses of the SATA controller
-   and the USB controllers on the NUC. Enter the following command to get the
-   I/O addresses of the serial port. The NUC supports one serial port ttyS0.
-   You'll need to connect the serial port to the development workstation, in
-   order to access the ACRN serial console to switch between pre-launched VMs:
+#. Before building the ACRN hypervisor, find the I/O address of the serial
+   port and the PCI BDF addresses of the SATA controller nd the USB
+   controllers on the NUC. Enter the following command to get the
+   I/O addresses of the serial port. The NUC supports one serial port, **ttyS0**.
+   Connect the serial port to the development workstation in order to access
+   the ACRN serial console to switch between pre-launched VMs:
 
    .. code-block:: none
 
@@ -130,46 +130,37 @@ Update ACRN hypervisor Image
               Subsystem: Intel Corporation Ethernet Connection I219-LM
 
    .. note::
-
-      Double check PCI devices BDF defined in the
-      ``hypervisor/arch/x86/configs/nuc7i7dnb/pci_devices.h``
+      Verify the PCI devices BDF defined in the
+      ``hypervisor/arch/x86/configs/whl-ipc-i5/pci_devices.h``
       with the information reported by the ``lspci -vv`` command.
 
-#. Clone the ACRN source code and configure the build options
+#. Clone the ACRN source code and configure the build options.
 
-   Please refer :ref:`getting-started-building` to setup ACRN build environment
-   on your development workstation.
+   Refer to :ref:`getting-started-building` to set up the ACRN build
+   environment on your development workstation.
 
-   Clone the ACRN source code and checkout to the tag v1.1:
+   Clone the ACRN source code and check out to the tag v1.6:
 
    .. code-block:: none
 
       $ git clone https://github.com/projectacrn/acrn-hypervisor.git
       $ cd acrn-hypervisor
-      $ git checkout v1.1
-      $ cd hypervisor
+      $ git checkout v1.6
 
-   Configure the build options:
+   Build the ACRN hypervisor with default xmls:
 
    .. code-block:: none
 
-      $ make defconfig BOARD=nuc7i7dnb
-      $ make menuconfig
+      $ make hypervisor BOARD_FILE=$PWD/misc/acrn-config/xmls/board-xmls/whl-ipc-i5.xml SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/whl-ipc-i5/logical_partition.xml RELEASE=0
 
-   Updates the following configure item:
+   .. note::
+      The ``acrn.32.out`` will be generated to ``./build/hypervisor/acrn.32.out``.
 
-   * Set ACRN Scenario as "Logical Partition VMs";
-   * Set Maximum number of VCPUs per VM as "2";
-   * Set Maximum number of PCPU as "4";
-   * Clear/Disable “Enable hypervisor relocation”.
+#. Check the Ubuntu boot loader name.
 
-   We recommend keeping the default values of items not mentioned above.
-
-#. Check Ubuntu boot loader name
-
-   On the current design, logical partition depends on the GRUB boot loader,
-   otherwise, the hypervisor will fail to boot. Double check the default boot
-   loader is GRUB:
+   In the current design, the logical partition depends on the GRUB boot
+   loader; otherwise, the hypervisor will fail to boot. Verify that the
+   default boot loader is GRUB:
 
    .. code-block:: none
 
@@ -177,25 +168,19 @@ Update ACRN hypervisor Image
 
    The above command output should contain the ``GRUB`` keyword.
 
-#. Check or update BDF information of PCI devices of each pre-launched VM;
-   Check it in the ``hypervisor/arch/x86/configs/nuc7i7dnb/pci_devices.h``.
+#. Check or update the BDF information of the PCI devices for each
+   pre-launched VM; check it in the ``hypervisor/arch/x86/configs/whl-ipc-i5/pci_devices.h``.
 
-#. Build the ACRN hypervisor and copy the artifact ``acrn.32.out`` to the
-   ``/boot`` directory:
-
-   #. Build ACRN hypervisor:
-
-      .. code-block:: none
-
-         $ make
+#. Copy the artifact ``acrn.32.out`` to the ``/boot`` directory:
 
    #. Copy ``acrn.32.out`` to a removable disk.
 
-   #. Plug in the removable disk into the NUC's USB port.
+   #. Plug the removable disk into the NUC's USB port.
 
-   #. Copy the ``acrn.32.out`` from removable disk to ``/boot`` directory.
+   #. Copy the ``acrn.32.out`` from the removable disk to ``/boot``
+      directory.
 
-Update Ubuntu GRUB to Boot hypervisor and Load Kernel Image
+Update Ubuntu GRUB to boot hypervisor and load kernel image
 ***********************************************************
 
 #. Append the following configuration to the ``/etc/grub.d/40_custom`` file:
@@ -216,49 +201,51 @@ Update Ubuntu GRUB to Boot hypervisor and Load Kernel Image
       }
 
    .. note::
-
       The kernel command line arguments used to boot the pre-launched VMs is
-      located in header file
-      ``hypervisor/scenarios/logical_partition/vm_configurations.h`` and
-      configured by ``VMx_CONFIG_OS_BOOTARG_*`` MACROs (where x is the VM id
-      number and ``*`` are arguments).
-      The multiboot module param ``XXXXXX`` is the bzImage tag and must
-      exactly match the ``kernel_mod_tag`` configured in file
-      ``hypervisor/scenarios/logical_partition/vm_configurations.c``.
+      located in the ``hypervisor/scenarios/logical_partition/vm_configurations.h`` header file and is configured by ``VMx_CONFIG_OS_BOOTARG_*`` MACROs (where x is the VM id
+      number and ``*`` are arguments). The multiboot module param ``XXXXXX``
+      is the bzImage tag and must exactly match the ``kernel_mod_tag``
+      configured in the
+      ``hypervisor/scenarios/logical_partition/vm_configurations.c`` file.
 
-#. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu
+#. Modify the `/etc/default/grub` file as follows to make the GRUB menu
    visible when booting:
 
    .. code-block:: none
 
-      #GRUB_HIDDEN_TIMEOUT=0
-      GRUB_HIDDEN_TIMEOUT_QUIET=false
+      GRUB_DEFAULT=3
+      GRUB_TIMEOUT=10
+      GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
+      GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
+      GRUB_CMDLINE_LINUX=""
 
-#. Update grub:
+#. Update GRUB:
 
    .. code-block:: none
 
       $ sudo update-grub
 
-#. Reboot the NUC. Select the "ACRN hypervisor Logical Partition
-   Scenario" entry to boot the logical partition of the ACRN hypervisor on the
-   NUC's display. The GRUB loader will boot the hypervisor, and the
-   hypervisor will start two pre-launched VMs automatically.
+#. Reboot the NUC. Select the **ACRN hypervisor Logical Partition
+   Scenario** entry to boot the logical partition of the ACRN hypervisor on
+   the NUC's display. The GRUB loader will boot the hypervisor, and the
+   hypervisor will automatically start the two pre-launched VMs.
 
-Logical Partition Scenario Startup Checking
+Logical partition scenario startup checking
 *******************************************
 
-#. Use these steps to verify the hypervisor is properly running:
+#. Use these steps to verify that the hypervisor is properly running:
 
-   #. Login ACRN hypervisor shell from serial console.
-   #. Use the ``vm_list`` check pre-launched VMs.
-#. Use these steps to verify the two pre-launched VMs are running properly:
+   #. Log in to the ACRN hypervisor shell from the serial console.
+   #. Use the ``vm_list`` to check the pre-launched VMs.
+
+#. Use these steps to verify that the two pre-launched VMs are running
+   properly:
 
    #. Use the ``vm_console 0`` to switch to VM0's console.
-   #. The VM0's clearlinux OS could boot up and login in.
+   #. The VM0's Clear Linux OS should boot up and log in.
    #. Use a ``Ctrl-Spacebar`` to return to the Acrn hypervisor shell.
    #. Use the ``vm_console 1`` to switch to VM1's console.
-   #. The VM1's clearlinux OS could boot up and login in.
+   #. The VM1's Clear Linux OS should boot up and log in.
 
 Refer to the :ref:`ACRN hypervisor shell user guide <acrnshell>`
 for more information about available commands.

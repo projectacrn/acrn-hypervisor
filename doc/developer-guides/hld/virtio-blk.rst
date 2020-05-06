@@ -4,8 +4,8 @@ Virtio-blk
 ##########
 
 The virtio-blk device is a simple virtual block device. The FE driver
-(in the UOS space) places read, write, and other requests onto the
-virtqueue, so that the BE driver (in the SOS space) can process them
+(in the User VM space) places read, write, and other requests onto the
+virtqueue, so that the BE driver (in the Service VM space) can process them
 accordingly.  Communication between the FE and BE is based on the virtio
 kick and notify mechanism.
 
@@ -86,7 +86,7 @@ The device model configuration command syntax for virtio-blk is::
 
 A simple example for virtio-blk:
 
-1. Prepare a file in SOS folder::
+1. Prepare a file in Service VM folder::
 
       dd if=/dev/zero of=test.img bs=1M count=1024
       mkfs.ext4 test.img
@@ -96,15 +96,15 @@ A simple example for virtio-blk:
 
       -s 9,virtio-blk,/root/test.img
 
-#. Launch UOS, you can find ``/dev/vdx`` in UOS.
+#. Launch User VM, you can find ``/dev/vdx`` in User VM.
 
    The ``x`` in ``/dev/vdx`` is related to the slot number used.  If
    If you start DM with two virtio-blks, and the slot numbers are 9 and 10,
    then, the device with slot 9 will be recognized as ``/dev/vda``, and
    the device with slot 10 will be ``/dev/vdb``
 
-#. Mount ``/dev/vdx`` to a folder in the UOS, and then you can access it.
+#. Mount ``/dev/vdx`` to a folder in the User VM, and then you can access it.
 
 
-Successful booting of the User OS verifies the correctness of the
+Successful booting of the User VM verifies the correctness of the
 device.

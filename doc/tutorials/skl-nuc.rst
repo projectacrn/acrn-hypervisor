@@ -1,8 +1,7 @@
 .. _skl-nuc-gpu-passthrough:
 
-GPU Passthrough on Skylake NUC
-##############################
-
+Enable GPU Passthrough on the Skylake NUC
+#########################################
 
 This community reference release for the Skylake NUC with GPU
 passthrough is a one-time snapshot release and is not supported
@@ -21,7 +20,7 @@ Software Configuration
   <https://github.com/projectacrn/acrn-hypervisor/releases/tag/acrn-2018w39.6-140000p>`_
 * `acrn-kernel tag acrn-2018w39.6-140000p
   <https://github.com/projectacrn/acrn-kernel/releases/tag/acrn-2018w39.6-140000p>`_
-* Clear Linux OS: version: 25130 (UOS and SOS use this version)
+* Clear Linux OS: version: 25130 (User VM and Service VM use this version)
 
 Source code patches are provided in `skl-patches-for-acrn.tar file
 <../_static/downloads/skl-patches-for-acrn.tar>`_ to work around or add support for
@@ -95,10 +94,10 @@ Please follow the :ref:`kbl-nuc-sdc`, with the following changes:
 #. Don't Enable weston service (skip this step found in the NUC's getting
    started guide).
 
-#. Set up Reference UOS by running the modified ``launch_uos.sh`` in
+#. Set up Reference User VM by running the modified ``launch_uos.sh`` in
    ``acrn-hypervisor/devicemodel/samples/nuc/launch_uos.sh``
 
-#. After UOS is launched, do these steps to run GFX workloads:
+#. After User VM is launched, do these steps to run GFX workloads:
 
    a) install weston and glmark2::
 

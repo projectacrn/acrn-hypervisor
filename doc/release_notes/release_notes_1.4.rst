@@ -52,8 +52,8 @@ We recommend that all developers upgrade to this v1.4 release, which
 addresses the following security issues that were discovered in previous releases:
 
 Mitigation for Machine Check Error on Page Size Change
-   Improper invalidation for page table updates by a virtual guest operating system for multiple 
-   Intel |reg| Processors may allow an authenticated user to potentially enable denial of service 
+   Improper invalidation for page table updates by a virtual guest operating system for multiple
+   Intel |reg| Processors may allow an authenticated user to potentially enable denial of service
    of the host system via local access. Malicious guest kernel could trigger this issue, CVE-2018-12207.
 
 AP Trampoline Is Accessible to the Service VM
@@ -152,7 +152,7 @@ Fixed Issues Details
 - :acrn-issue:`3853` - [acrn-configuration-tool] Generated Launch script is incorrect when select audio&audio_codec for nuc7i7dnb with Scenario:SDC
 - :acrn-issue:`3859` - VM-Manager: the return value of "strtol" is not validated properly
 - :acrn-issue:`3863` - [acrn-configuration-tool]WebUI do not select audio&wifi devices by default for apl-mrb with LaunchSetting: sdc_launch_1uos_aaag
-- :acrn-issue:`3879` - [acrn-configuration-tool]The â€œ-k" parameter is unnecessary in launch_uos_id2.sh for RTVM.
+- :acrn-issue:`3879` - [acrn-configuration-tool]The "-k" parameter is unnecessary in launch_uos_id2.sh for RTVM.
 - :acrn-issue:`3880` - [acrn-configuration-tool]"--windows \" missing in launch_uos_id1.sh for waag.
 - :acrn-issue:`3900` - [WHL][acrn-configuration-tool]Same bdf in generated whl-ipc-i5.xml.
 - :acrn-issue:`3913` - [acrn-configuration-tool]WebUI do not give any prompt when generate launch_script for a new imported board
@@ -178,9 +178,9 @@ Known Issues
 - :acrn-issue:`4042` - RTVM UOS result is invalid when run cpu2017 with 3 and 1 core.
 - :acrn-issue:`4043` - Windows guest can not get normal IP after passthru Ethernet
 - :acrn-issue:`4045` - Adding USB mediator in launch script, it takes a long time to start windows, about 13 minutes.
-- :acrn-issue:`4046` - Error info popoup when run 3DMARK11 on Waag
+- :acrn-issue:`4046` - Error info pop up when run 3DMARK11 on Waag
 - :acrn-issue:`4047` - passthru usb, when WaaG boot at "windows boot manager" menu, the usb keyboard does not work.
-- :acrn-issue:`4048` - Scalling the media player while playing a video, then the video playback is not smooth
+- :acrn-issue:`4048` - Scaling the media player while playing a video, then the video playback is not smooth
 - :acrn-issue:`4049` - Only slot-2 can work in "-s n,passthru,02/00/0 \" for RTVM, other slots are not functional
 
 Change Log
@@ -217,7 +217,7 @@ release in Sep 2019 (click on the CommitID link to see details):
 - :acrn-commit:`2d0739bf` - doc: fix error in building_from_source doc
 - :acrn-commit:`3b977eef` - doc: clean up the docs in try using acrn table.
 - :acrn-commit:`2a3178aa` - doc: Update Using Windows as Guest VM on ACRN
-- :acrn-commit:`9bd274ae` - doc:modfiy ubuntu build on 18.04
+- :acrn-commit:`9bd274ae` - doc:modify ubuntu build on 18.04
 - :acrn-commit:`7d818c82` - doc: Stop using kconfig to make a customized efi.
 - :acrn-commit:`67c64522` - dm: fix memory free issue for xhci
 - :acrn-commit:`3fb1021d` - Doc: Minor grammatical edits on various files.
@@ -332,7 +332,7 @@ release in Sep 2019 (click on the CommitID link to see details):
 - :acrn-commit:`048155d3` - hv: support minimum set of TLFS
 - :acrn-commit:`009d835b` - acrn-config: modify board info of block device info
 - :acrn-commit:`96dede43` - acrn-config: modify ipu/ipu_i2c device launch config of apl-up2
-- :acrn-commit:`001c929d` - acrn-config: correct launch config info for audio/wifi defice of apl-mrb
+- :acrn-commit:`001c929d` - acrn-config: correct launch config info for audio/wifi device of apl-mrb
 - :acrn-commit:`2a647fa1` - acrn-config: define vm name for Preempt-RT Linux in launch script
 - :acrn-commit:`a2430f13` - acrn-config: refine board name with undline_name api
 - :acrn-commit:`95b9ba36` - acrn-config: acrn-config: add white list to skip item check
@@ -360,13 +360,13 @@ release in Sep 2019 (click on the CommitID link to see details):
 - :acrn-commit:`d8deaa4b` - dm: close filepointer before exiting acrn_load_elf()
 - :acrn-commit:`b5f77c07` - doc: add socket console backend for virtio-console
 - :acrn-commit:`d3ac30c6` - hv: modify SOS i915 plane setting for hybrid scenario
-- :acrn-commit:`c74a197c` - acrn-config: modify SOS i915 plane setting for hybird xmls
+- :acrn-commit:`c74a197c` - acrn-config: modify SOS i915 plane setting for hybrid xmls
 - :acrn-commit:`e1a2ed17` - hv: fix a bug that tpr threshold is not updated
 - :acrn-commit:`afb3608b` - acrn-config: add confirmation for commit of generated source in config app
 - :acrn-commit:`8eaee3b0` - acrn-config: add "enable_commit" parameter for config tool
 - :acrn-commit:`780a53a1` - tools: acrn-crashlog: refine crash complete code
 - :acrn-commit:`43b2327e` - dm: validation for input to public functions
-- :acrn-commit:`477f8331` - dm: modify DIR handler reference postion
+- :acrn-commit:`477f8331` - dm: modify DIR handler reference position
 - :acrn-commit:`de157ab9` - hv: sched: remove runqueue from current schedule logic
 - :acrn-commit:`837e4d87` - hv: sched: rename schedule related structs and vars
 - :acrn-commit:`89f53a40` - acrn-config: supply optional passthrough device for vm
@@ -379,7 +379,7 @@ release in Sep 2019 (click on the CommitID link to see details):
 - :acrn-commit:`44c11ce6` - acrn-config: fix the issue some select boxes disappear after edited
 - :acrn-commit:`c7ecdf47` - Corrected number issue in GSG for ACRN Ind Scenario file
 - :acrn-commit:`051a8e4a` - doc: update Oracle driver install
-- :acrn-commit:`b73b0fc2` - doc: ioc: remove two unuse parts
+- :acrn-commit:`b73b0fc2` - doc: ioc: remove two unused parts
 - :acrn-commit:`6f7ba36e` - doc: move the "Building ACRN in Docker" user guide
 - :acrn-commit:`1794d994` - doc: update doc generation tooling to only work within the $BUILDDIR
 - :acrn-commit:`0dac373d` - hv: vpci: remove pci_msi_cap in pci_pdev

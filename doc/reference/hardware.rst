@@ -12,7 +12,7 @@ Minimum System Requirements for Installing ACRN
 +------------------------+-----------------------------------+---------------------------------------------------------------------------------+
 | Hardware               | Minimum Requirements              | Recommended                                                                     |
 +========================+===================================+=================================================================================+
-| Processor              | Compatible x86 64-bit processor   | 2 core with “Intel Hyper Threading Technology” enabled in the BIOS or more core |
+| Processor              | Compatible x86 64-bit processor   | 2 core with Intel Hyper Threading Technology enabled in the BIOS or more cores  |
 +------------------------+-----------------------------------+---------------------------------------------------------------------------------+
 | System memory          | 4GB RAM                           | 8GB or more (< 32G)                                                             |
 +------------------------+-----------------------------------+---------------------------------------------------------------------------------+
@@ -26,6 +26,15 @@ Minimum Requirements for Processor
 Known Limitations
 *****************
 Platforms with multiple PCI segments
+
+ACRN assumes the following conditions are satisfied from the Platform BIOS
+
+* All the PCI device BARs should be assigned resources, including SR-IOv VF BARs if a device supports.
+
+* Bridge windows for PCI bridge devices and the resources for root bus, should be programmed with values
+  that enclose resources used by all the downstream devices.
+
+* There should be no conflict in resources among the PCI devices and also between PCI devices and other platform devices.
 
 Verified Platforms According to ACRN Usage
 ******************************************
@@ -109,7 +118,7 @@ Verified Hardware Specifications Detail
 |                                |                        | System memory          | -  Two DDR3L SO-DIMM sockets                              |
 |                                |                        |                        |    (up to 8 GB, 1866 MHz), 1.35V                          |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Storage capabilities   | -  SDXC slot with UHS-I support on the side               |
+|                                |                        | Storage capabilities   | -  SDXC slot with UHS-I support on the side               |
 |                                |                        |                        | -  One SATA3 port for connection to 2.5" HDD or SSD       |
 |                                |                        |                        |    (up to 9.5 mm thickness)                               |
 |                                |                        +------------------------+-----------------------------------------------------------+

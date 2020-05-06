@@ -34,7 +34,7 @@ https://projectacrn.github.io/0.4/.  Documentation for the latest
 Version 0.4 new features
 ************************
 
-- :acrn-issue:`1824` - implement "wbinvd" emulation 
+- :acrn-issue:`1824` - implement "wbinvd" emulation
 - :acrn-issue:`1859` - Doc: update GSG guide to avoid issue "black screen"
 - :acrn-issue:`1878` - The "Using Ubuntu as the Service OS" tutorial is outdated and needs to be refreshed
 - :acrn-issue:`1926` - `kernel-doc` causing `make doc` failure (because of upcoming Perl changes)
@@ -147,7 +147,7 @@ Known Issues
    **Impact:** Failed to use UART for input in corner case.
 
    **Workaround:** Enter other keys before typing :kbd:`Enter`.
- 
+
 :acrn-issue:`1996` - There is an error log when using "acrnd&" to boot UOS
    An error log is printed when starting acrnd as a background job
    (``acrnd&``) to boot UOS. The UOS still boots up

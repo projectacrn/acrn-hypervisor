@@ -1,7 +1,7 @@
 .. _sgx_virt:
 
-SGX Virtualization
-##################
+Enable SGX Virtualization
+#########################
 
 SGX refers to `Intel® Software Guard Extensions <https://software.intel.com/
 en-us/sgx>`_ (Intel® SGX). This is a set of instructions that can be used by
@@ -92,7 +92,7 @@ enable SGX support in the BIOS and in ACRN:
 
 #. Add the EPC config in the VM configuration.
 
-   Apply the patch to enable SGX support in UOS in the SDC scenario:
+   Apply the patch to enable SGX support in User VM in the SDC scenario:
 
    .. code-block:: bash
 

@@ -64,13 +64,6 @@ through an open source platform.
            </a>
            <p>Supported hardware platforms and boards</p>
        </li>
-       <li class="grid-item">
-           <a href="glossary.html">
-               <img alt="" src="_static/images/ACRNlogo80w.png"/>
-               <h2>Glossary<br/>of Terms</h2>
-           </a>
-           <p>Glossary of useful terms</p>
-       </li>
    </ul>
 
 

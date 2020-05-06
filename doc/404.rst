@@ -1,0 +1,28 @@
+:orphan:
+
+.. _page-not-found:
+
+Page Not Found
+##############
+
+.. rst-class:: rst-columns
+
+   .. image:: images/ACRN-fall-from-tree-small.png
+      :align: left
+      :width: 320px
+
+   Sorry. The page you requested was not found on this site.
+
+   Check the address for misspellings.
+   It's also possible we've removed or renamed the page you're looking for.
+
+   Try using the navigation links on the left of this page to navigate
+   the major sections of our site, or use the document search box.
+
+   If you got this error by following a link, please let us know by sending
+   us a message to `info@projectacrn.org
+   <mailto:info@projectacrn.org?subject=projectacrn.github.io%20broken%20link>`_.
+
+.. raw:: html
+
+   <div style='clear:both'></div>

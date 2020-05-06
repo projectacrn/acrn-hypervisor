@@ -1,11 +1,11 @@
 .. _using_celadon_as_uos:
 
-Using Celadon as the User OS
-############################
+Run Celadon as the User VM
+##########################
 
-`Celadon <https://01.org/projectceladon/>`_ is an open source Android* software reference stack
+`Celadon <https://01.org/projectceladon/>`_ is an open source Android software reference stack
 for Intel architecture. It builds upon a vanilla Android stack and incorporates open sourced components
-that are optimized for the hardware. This tutorial describes how to run Celadon as the User OS
+that are optimized for the hardware. This tutorial describes how to run Celadon as the User VM
 on the ACRN hypervisor. We are using the Kaby Lake-based NUC (model NUC7i7DNHE) in this tutorial.
 
 Prerequisites
@@ -76,10 +76,10 @@ Build Celadon from source
    in order to build the source code with parallel tasks. The Celadon gptimage will be
    generated to ``out/target/product/cel_apl/cel_apl_gptimage.img``
 
-Steps for Using Celadon as the User OS
+Steps for Using Celadon as the User VM
 **************************************
 
-#. Follow :ref:`kbl-nuc-sdc` to boot the ACRN Service OS based on Clear Linux 29880.
+#. Follow :ref:`kbl-nuc-sdc` to boot the ACRN Service VM based on Clear Linux 29880.
 
 #. Prepare dependencies on your NUC::
 

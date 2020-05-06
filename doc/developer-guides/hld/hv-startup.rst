@@ -139,7 +139,7 @@ The main steps include:
    VM ID is picked, EPT is initialized, e820 table for this VM is prepared,
    I/O bitmap is set up, virtual PIC/IOAPIC/PCI/UART is initialized, EPC for
    virtual SGX is prepared, guest PM IO is set up, IOMMU for PT dev support
-   is enabled, virtual CPUID entries are filled, and vCPUs configred in this VM's
+   is enabled, virtual CPUID entries are filled, and vCPUs configured in this VM's
    ``vm config`` are prepared. For post-launched User VM, the EPT page table and
    e820 table is actually prepared by DM instead of hypervisor.
 
@@ -214,7 +214,7 @@ SW configuration for post-launched User VMs (OVMF SW load as example):
    F-Segment. Refer to :ref:`hld-io-emulation` for details.
 
 -  **E820**: the virtual E820 table is built by the DM then passed to
-   the virtual bootloader. Refer to :ref:`hld-io-emulation` for detais.
+   the virtual bootloader. Refer to :ref:`hld-io-emulation` for details.
 
 -  **Entry address**: the DM will copy User OS kernel(OVMF) image to
    OVMF_NVSTORAGE_OFFSET - normally is @(4G - 2M), and set the entry
@@ -241,7 +241,8 @@ Here is initial mode of vCPUs:
 +----------------------------------+----------------------------------------------------------+
 |  VM and Processor Type           |    Initial Mode                                          |
 +=================+================+==========================================================+
-| Service VM      |        BSP     |   Same as physical BSP, or Real Mode if SOS boot w/ OVMF |
+| Service VM      |        BSP     |   Same as physical BSP, or Real Mode if Service VM boot  |
+|                 |                |   w/ OVMF                                                |
 |                 +----------------+----------------------------------------------------------+
 |                 |        AP      |   Real Mode                                              |
 +-----------------+----------------+----------------------------------------------------------+

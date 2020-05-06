@@ -1,7 +1,7 @@
 .. _getting-started-up2:
 
-Getting started guide for UP2 board
-###################################
+Getting Started Guide for the UP2 Board
+#######################################
 
 Hardware setup
 **************
@@ -19,26 +19,26 @@ SoCs. Both have been confirmed to work with ACRN.
 Connecting to the serial port
 =============================
 
-The UP2 board has two serial ports. The following figure shows the UP2 board's 
+The UP2 board has two serial ports. The following figure shows the UP2 board's
 40-pin HAT connector we'll be using as documented in the  `UP2 Datasheet
 <https://up-board.org/wp-content/uploads/datasheets/UP-Square-DatasheetV0.5.pdf>`_.
 
 .. image:: images/the-bottom-side-of-UP2-board.png
    :align: center
-   
-We'll access the serial port through the I/O pins in the 
+
+We'll access the serial port through the I/O pins in the
 40-pin HAT connector using a `USB TTL serial cable
-<http://www.ftdichip.com/Products/USBTTLSerial.htm>`_, 
-and show how to connect a serial port with 
-``PL2303TA USB to TTL serial cable`` for example: 
+<http://www.ftdichip.com/Products/USBTTLSerial.htm>`_,
+and show how to connect a serial port with
+``PL2303TA USB to TTL serial cable`` for example:
 
 .. image:: images/USB-to-TTL-serial-cable.png
    :align: center
 
-Connect pin 6 (``Ground``), pin 8 (``UART_TXD``) and pin 10 (``UART_RXD``) of the HAT 
-connector to respectively the ``GND``, ``RX`` and ``TX`` pins of your 
-USB serial cable. Plug the USB TTL serial cable into your PC and use a 
-console emulation tool such as ``minicom`` or ``putty`` to communicate 
+Connect pin 6 (``Ground``), pin 8 (``UART_TXD``) and pin 10 (``UART_RXD``) of the HAT
+connector to respectively the ``GND``, ``RX`` and ``TX`` pins of your
+USB serial cable. Plug the USB TTL serial cable into your PC and use a
+console emulation tool such as ``minicom`` or ``putty`` to communicate
 with the UP2 board for debugging.
 
 .. image:: images/the-connection-of-serial-port.png
@@ -76,6 +76,13 @@ You will need to keep these in mind in a few places:
 
      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/mmcblk0 -p 1 -L "ACRN Hypervisor" \
          -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=bdf@0:18.1"
+
+  .. note::
+     There have been reports that the UP2 EFI firmware does not always keep
+     these settings during a reboot. Make sure to always double-check the
+     settings if ACRN is not running correctly. There is no reliable way to
+     set this boot order and you may want to remove other, unused boot entries
+     and also change the boot order (``-o`` option).
 
 UP2 serial port setting
 =======================

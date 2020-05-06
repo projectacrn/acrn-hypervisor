@@ -52,8 +52,8 @@ defined **Usage Scenarios** in this release, including:
 * :ref:`Introduction to Project ACRN <introduction>`
 * :ref:`Build ACRN from Source <getting-started-building>`
 * :ref:`Supported Hardware <hardware>`
-* :ref:`Using Hybrid mode on NUC <using_hybrid_mode_on_nuc>`
-* :ref:`Launch Two User VMs on NUC using SDC2 Scenario <using_sdc2_mode_on_nuc>`
+* Using Hybrid mode on NUC (removed in v1.7)
+* Launch Two User VMs on NUC using SDC2 Scenario (removed in v1.7)
 
 New Features Details
 ********************
@@ -82,10 +82,10 @@ Fixed Issues Details
 - :acrn-issue:`3281` - AcrnGT emulation thread causes high cpu usage when shadowing ppgtt
 - :acrn-issue:`3283` - New scenario-based configurations lack documentation
 - :acrn-issue:`3341` - Documentation on how to run Windows as a Guest (WaaG)
-- :acrn-issue:`3370` - vm_console 2 cannot switch to VM2’s console in hybrid mode
+- :acrn-issue:`3370` - vm_console 2 cannot switch to VM2's console in hybrid mode
 - :acrn-issue:`3374` - Potential interrupt info overwrite in acrn_handle_pending_request
 - :acrn-issue:`3379` - DM: Increase hugetlbfs MAX_PATH_LEN from 128 to 256
-- :acrn-issue:`3392` - During run UnigenHeaven 3D gfx benchmark in WaaG, RTVM lantency is much long
+- :acrn-issue:`3392` - During run UnigenHeaven 3D gfx benchmark in WaaG, RTVM latency is much long
 - :acrn-issue:`3466` - Buffer overflow will happen in 'strncmp' when 'n_arg' is 0
 - :acrn-issue:`3467` - Potential risk in virtioi_i2c.c & virtio_console.c
 - :acrn-issue:`3469` - [APL NUC] Display goes black while booting; when only one display monitor is connected
@@ -102,22 +102,22 @@ Known Issues
    with vpci bar emulation, vpci needs to reinit the physical bar base address to a
    valid address if a device reset is detected.
 
-   **Impact:** Fail to launch Clear Linux Preempt_RT VM with ``reset`` passthru parameter
+   **Impact:** Fail to launch Clear Linux Preempt_RT VM with ``reset`` passthru parameter
 
-   **Workaround:** Issue resolved on ACRN tag: ``acrn-2019w33.1-140000p``
+   **Workaround:** Issue resolved on ACRN tag: ``acrn-2019w33.1-140000p``
 
 -----
 
 :acrn-issue:`3520` - bundle of "VGPU unconformance guest" messages observed for "gvt" in SOS console while using UOS
-   After the need_force_wake is not removed in course of submitting VGPU workload,
+   After the need_force_wake is not removed in course of submitting VGPU workload,
    it will print a bundle of below messages while the User VM is started.
 
    | gvt: vgpu1 unconformance guest detected
    | gvt: vgpu1 unconformance mmio 0x2098:0xffffffff,0x0
 
-   **Impact:** Messy and repetitive output from the monitor
+   **Impact:** Messy and repetitive output from the monitor
 
-   **Workaround:** Need to rebuild and apply the latest Service VM kernel from the ``acrn-kernel`` source code.
+   **Workaround:** Need to rebuild and apply the latest Service VM kernel from the ``acrn-kernel`` source code.
 
 -----
 
@@ -131,35 +131,35 @@ Known Issues
    #) Reboot RTVM and then will restart the whole system
    #) After Service VM boot up, return to step 3
 
-   **Impact:** Cold boot operation is not stable for NUC platform
+   **Impact:** Cold boot operation is not stable for NUC platform
 
-   **Workaround:** Need to rebuild and apply the latest Service VM kernel from the ``acrn-kernel`` source code.
+   **Workaround:** Need to rebuild and apply the latest Service VM kernel from the ``acrn-kernel`` source code.
 
 -----
 
 :acrn-issue:`3576` - Expand default memory from 2G to 4G for WaaG
 
-   **Impact:** More memory size is required from Windows VM
+   **Impact:** More memory size is required from Windows VM
 
-   **Workaround:** Issue resolved on ACRN tag: ``acrn-2019w33.1-140000p``
+   **Workaround:** Issue resolved on ACRN tag: ``acrn-2019w33.1-140000p``
 
 -----
 
 :acrn-issue:`3609` - Sometimes fail to boot os while repeating the cold boot operation
 
-   **Workaround:** Please refer the PR information in this git issue
+   **Workaround:** Please refer the PR information in this git issue
 
 -----
 
 :acrn-issue:`3610` - LaaG hang while run some workloads loop with zephyr idle
 
-   **Workaround:** Revert commit ``bbb891728d82834ec450f6a61792f715f4ec3013`` from the kernel
+   **Workaround:** Revert commit ``bbb891728d82834ec450f6a61792f715f4ec3013`` from the kernel
 
 -----
 
 :acrn-issue:`3611` - OVMF launch UOS fail for Hybrid and industry scenario
 
-   **Workaround:** Please refer the PR information in this git issue
+   **Workaround:** Please refer the PR information in this git issue
 
 -----
 
@@ -237,16 +237,16 @@ release in June 2019 (click on the CommitID link to see details):
 - :acrn-commit:`d0f7563d` - Corrected images and formatting
 - :acrn-commit:`ce7a126f` - Added 3 SGX images
 - :acrn-commit:`01504ecf` - Initial SGX Virt doc upload
-- :acrn-commit:`a9c38a5c` - HV:Acrn-hypvervisor Root Directory Clean-up and create misc/ folder for Acrn daemons, services and tools.
+- :acrn-commit:`a9c38a5c` - HV:Acrn-hypervisor Root Directory Clean-up and create misc/ folder for Acrn daemons, services and tools.
 - :acrn-commit:`555a03db` - HV: add board specific cpu state table to support Px Cx
 - :acrn-commit:`cd3b8ed7` - HV: fix MISRA violation of cpu state table
 - :acrn-commit:`a092f400` - HV: make the functions void
 - :acrn-commit:`d6bf0605` - HV: remove redundant function calling
 - :acrn-commit:`c175141c` - dm: bugfix for remote launch guest issue
-- :acrn-commit:`4a27d083` - hv: schedule: schedule to idel after SOS resume form S3
+- :acrn-commit:`4a27d083` - hv: schedule: schedule to idle after SOS resume form S3
 - :acrn-commit:`7b224567` - HV: Remove the mixed usage of inline assembly in wait_sync_change
 - :acrn-commit:`baf7d90f` - HV: Refine the usage of monitor/mwait to avoid the possible lockup
-- :acrn-commit:`11cf9a4a` - hv: mmu: add hpa2hva_early API for earlt boot
+- :acrn-commit:`11cf9a4a` - hv: mmu: add hpa2hva_early API for early boot
 - :acrn-commit:`40475e22` - hv: debug: use printf to debug on early boot
 - :acrn-commit:`cc47dbe7` - hv: uart: enable early boot uart
 - :acrn-commit:`3945bc4c` - dm: array bound and NULL pointer issue fix
@@ -255,7 +255,7 @@ release in June 2019 (click on the CommitID link to see details):
 - :acrn-commit:`18ecdc12` - hv: uart: make uart base address more readable
 - :acrn-commit:`49e60ae1` - hv: refine handler to 'rdpmc' vmexit
 - :acrn-commit:`0887eecd` - doc: remove deprecated sos_bootargs
-- :acrn-commit:`2e79501e` - doc:udpate using_partition_mode_on_nuc nuc7i7bnh to nuc7i7dnb
+- :acrn-commit:`2e79501e` - doc:update using_partition_mode_on_nuc nuc7i7bnh to nuc7i7dnb
 - :acrn-commit:`a7b6fc74` - HV: allow write 0 to MSR_IA32_MCG_STATUS
 - :acrn-commit:`3cf1daa4` - HV: move vbar info to board specific pci_devices.h
 - :acrn-commit:`ce4d71e0` - vpci: fix coding style issue

@@ -1,9 +1,9 @@
 .. _acrn-dm_qos:
 
-Enable QoS based on runC container
-##################################
+Enable QoS based on runC Containers
+###################################
 This document describes how ACRN supports Device-Model Quality of Service (QoS)
-based on using runC containers to control the SOS resources
+based on using runC containers to control the Service VM resources
 (CPU, Storage, Memory, Network) by modifying the runC configuration file.
 
 What is QoS
@@ -28,7 +28,7 @@ to the `Open Container Initiative (OCI)
 ACRN-DM QoS architecture
 ************************
 In ACRN-DM QoS design, we run the ACRN-DM in a runC container environment.
-Every time we start a UOS, we first start a runC container and
+Every time we start a User VM, we first start a runC container and
 then launch the ACRN-DM within that container.
 The ACRN-DM QoS can manage these resources for Device-Model:
 
@@ -108,7 +108,7 @@ How to use ACRN-DM QoS
    .. note:: For configuration details, refer to the `Open Containers configuration documentation
       <https://github.com/opencontainers/runtime-spec/blob/master/config.md>`_.
 
-#. Add the UOS by ``acrnctl add`` command:
+#. Add the User VM by ``acrnctl add`` command:
 
    .. code-block:: none
 
@@ -118,13 +118,13 @@ How to use ACRN-DM QoS
       <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/devicemodel/samples/nuc/launch_uos.sh>`_
       that supports the ``-C``  (``run_container`` function) option.
 
-#. Start the UOS by ``acrnd``
+#. Start the User VM by ``acrnd``
 
    .. code-block:: none
 
       # acrnd -t
 
-#. After UOS boots, you may use ``runc list`` command to check the container status in SOS:
+#. After User VM boots, you may use ``runc list`` command to check the container status in Service VM:
 
    .. code-block:: none
 

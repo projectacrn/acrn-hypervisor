@@ -106,7 +106,7 @@ Virtualization architecture
 ---------------------------
 
 In the virtualization architecture, the IOC Device Model (DM) is
-responsible for communication between the UOS and IOC firmware. The IOC
+responsible for communication between the User VM and IOC firmware. The IOC
 DM communicates with several native CBC char devices and a PTY device.
 The native CBC char devices only include ``/dev/cbc-lifecycle``,
 ``/dev/cbc-signals``, and ``/dev/cbc-raw0`` - ``/dev/cbc-raw11``. Others
@@ -133,7 +133,7 @@ There are five parts in this high-level design:
 * Power management involves boot/resume/suspend/shutdown flows
 * Emulated CBC commands introduces some commands work flow
 
-IOC mediator has three threads to transfer data between UOS and SOS. The
+IOC mediator has three threads to transfer data between User VM and Service VM. The
 core thread is responsible for data reception, and Tx and Rx threads are
 used for data transmission. Each of the transmission threads has one
 data queue as a buffer, so that the IOC mediator can read data from CBC
@@ -154,7 +154,7 @@ char devices and UART DM immediately.
    data comes from a raw channel, the data will be passed forward. Before
    transmitting to the virtual UART interface, all data needs to be
    packed with an address header and link header.
--  For Rx direction, the data comes from the UOS. The IOC mediator receives link
+-  For Rx direction, the data comes from the User VM. The IOC mediator receives link
    data from the virtual UART interface. The data will be unpacked by Core
    thread, and then forwarded to Rx queue, similar to how the Tx direction flow
    is done except that the heartbeat and RTC are only used by the IOC
@@ -176,10 +176,10 @@ IOC mediator has four states and five events for state transfer.
    IOC Mediator - State Transfer
 
 -  **INIT state**: This state is the initialized state of the IOC mediator.
-   All CBC protocol packets are handled normally. In this state, the UOS
+   All CBC protocol packets are handled normally. In this state, the User VM
    has not yet sent an active heartbeat.
 -  **ACTIVE state**: Enter this state if an HB ACTIVE event is triggered,
-   indicating that the UOS state has been active and need to set the bit
+   indicating that the User VM state has been active and need to set the bit
    23 (SoC bit) in the wakeup reason.
 -  **SUSPENDING state**: Enter this state if a RAM REFRESH event or HB
    INACTIVE event is triggered. The related event handler needs to mask
@@ -219,17 +219,17 @@ The difference between the native and virtualization architectures is
 that the IOC mediator needs to re-compute the checksum and reset
 priority. Currently, priority is not supported by IOC firmware; the
 priority setting by the IOC mediator is based on the priority setting of
-the CBC driver. The SOS and UOS use the same CBC driver.
+the CBC driver. The Service VM and User VM use the same CBC driver.
 
 Power management virtualization
 -------------------------------
 
 In acrn-dm, the IOC power management architecture involves PM DM, IOC
-DM, and UART DM modules. PM DM is responsible for UOS power management,
+DM, and UART DM modules. PM DM is responsible for User VM power management,
 and IOC DM is responsible for heartbeat and wakeup reason flows for IOC
 firmware. The heartbeat flow is used to control IOC firmware power state
 and wakeup reason flow is used to indicate IOC power state to the OS.
-UART DM transfers all IOC data between the SOS and UOS. These modules
+UART DM transfers all IOC data between the Service VM and User VM. These modules
 complete boot/suspend/resume/shutdown functions.
 
 Boot flow
@@ -243,13 +243,13 @@ Boot flow
    IOC Virtualizaton - Boot flow
 
 #. Press ignition button for booting.
-#. SOS lifecycle service gets a "booting" wakeup reason.
-#. SOS lifecycle service notifies wakeup reason to VM Manager, and VM
+#. Service VM lifecycle service gets a "booting" wakeup reason.
+#. Service VM lifecycle service notifies wakeup reason to VM Manager, and VM
    Manager starts VM.
 #. VM Manager sets the VM state to "start".
-#. IOC DM forwards the wakeup reason to UOS.
-#. PM DM starts UOS.
-#. UOS lifecycle gets a "booting" wakeup reason.
+#. IOC DM forwards the wakeup reason to User VM.
+#. PM DM starts User VM.
+#. User VM lifecycle gets a "booting" wakeup reason.
 
 Suspend & Shutdown flow
 +++++++++++++++++++++++
@@ -262,23 +262,23 @@ Suspend & Shutdown flow
    IOC Virtualizaton - Suspend and Shutdown by Ignition
 
 #. Press ignition button to suspend or shutdown.
-#. SOS lifecycle service gets a 0x800000 wakeup reason, then keeps
+#. Service VM lifecycle service gets a 0x800000 wakeup reason, then keeps
    sending a shutdown delay heartbeat to IOC firmware, and notifies a
    "stop" event to VM Manager.
-#. IOC DM forwards the wakeup reason to UOS lifecycle service.
-#. SOS lifecycle service sends a "stop" event to VM Manager, and waits for
+#. IOC DM forwards the wakeup reason to User VM lifecycle service.
+#. Service VM lifecycle service sends a "stop" event to VM Manager, and waits for
    the stop response before timeout.
-#. UOS lifecycle service gets a 0x800000 wakeup reason and sends inactive
+#. User VM lifecycle service gets a 0x800000 wakeup reason and sends inactive
    heartbeat with suspend or shutdown SUS_STAT to IOC DM.
-#. UOS lifecycle service gets a 0x000000 wakeup reason, then enters
+#. User VM lifecycle service gets a 0x000000 wakeup reason, then enters
    suspend or shutdown kernel PM flow based on SUS_STAT.
-#. PM DM executes UOS suspend/shutdown request based on ACPI.
+#. PM DM executes User VM suspend/shutdown request based on ACPI.
 #. VM Manager queries each VM state from PM DM. Suspend request maps
    to a paused state and shutdown request maps to a stop state.
-#. VM Manager collects all VMs state, and reports it to SOS lifecycle
+#. VM Manager collects all VMs state, and reports it to Service VM lifecycle
    service.
-#. SOS lifecycle sends inactive heartbeat to IOC firmware with
-   suspend/shutdown SUS_STAT, based on the SOS' own lifecycle service
+#. Service VM lifecycle sends inactive heartbeat to IOC firmware with
+   suspend/shutdown SUS_STAT, based on the Service VM's own lifecycle service
    policy.
 
 Resume flow
@@ -297,33 +297,33 @@ the same flow blocks.
 For ignition resume flow:
 
 #. Press ignition button to resume.
-#. SOS lifecycle service gets an initial wakeup reason from the IOC
+#. Service VM lifecycle service gets an initial wakeup reason from the IOC
    firmware. The wakeup reason is 0x000020, from which the ignition button
    bit is set. It then sends active or initial heartbeat to IOC firmware.
-#. SOS lifecycle forwards the wakeup reason and sends start event to VM
+#. Service VM lifecycle forwards the wakeup reason and sends start event to VM
    Manager. The VM Manager starts to resume VMs.
-#. IOC DM gets the wakeup reason from the VM Manager and forwards it to UOS
+#. IOC DM gets the wakeup reason from the VM Manager and forwards it to User VM
    lifecycle service.
 #. VM Manager sets the VM state to starting for PM DM.
-#. PM DM resumes UOS.
-#. UOS lifecycle service gets wakeup reason 0x000020, and then sends an initial
-   or active heartbeat. The UOS gets wakeup reason 0x800020 after
+#. PM DM resumes User VM.
+#. User VM lifecycle service gets wakeup reason 0x000020, and then sends an initial
+   or active heartbeat. The User VM gets wakeup reason 0x800020 after
    resuming.
 
 For RTC resume flow
 
 #. RTC timer expires.
-#. SOS lifecycle service gets initial wakeup reason from the IOC
+#. Service VM lifecycle service gets initial wakeup reason from the IOC
    firmware. The wakeup reason is 0x000200, from which RTC bit is set.
    It then sends active or initial heartbeat to IOC firmware.
-#. SOS lifecycle forwards the wakeup reason and sends start event to VM
+#. Service VM lifecycle forwards the wakeup reason and sends start event to VM
    Manager. VM Manager begins resuming VMs.
 #. IOC DM gets the wakeup reason from the VM Manager, and forwards it to
-   the UOS lifecycle service.
+   the User VM lifecycle service.
 #. VM Manager sets the VM state to starting for PM DM.
-#. PM DM resumes UOS.
-#. UOS lifecycle service gets the wakeup reason 0x000200, and sends
-   initial or active heartbeat. The UOS gets wakeup reason 0x800200
+#. PM DM resumes User VM.
+#. User VM lifecycle service gets the wakeup reason 0x000200, and sends
+   initial or active heartbeat. The User VM gets wakeup reason 0x800200
    after resuming..
 
 System control data
@@ -413,19 +413,19 @@ Currently the wakeup reason bits are supported by sources shown here:
 
    * - wakeup_button
      - 5
-     - Get from IOC FW, forward to UOS
+     - Get from IOC FW, forward to User VM
 
    * - RTC wakeup
      - 9
-     - Get from IOC FW, forward to UOS
+     - Get from IOC FW, forward to User VM
 
    * - car door wakeup
      - 11
-     - Get from IOC FW, forward to UOS
+     - Get from IOC FW, forward to User VM
 
    * - SoC wakeup
      - 23
-     - Emulation (Depends on UOS's heartbeat message
+     - Emulation (Depends on User VM's heartbeat message
 
 -  CBC_WK_RSN_BTN (bit 5): ignition button.
 -  CBC_WK_RSN_RTC (bit 9): RTC timer.
@@ -522,7 +522,7 @@ definition is as below.
    :align: center
 
 -  The RTC command contains a relative time but not an absolute time.
--  SOS lifecycle service will re-compute the time offset before it is
+-  Service VM lifecycle service will re-compute the time offset before it is
    sent to the IOC firmware.
 
 .. figure:: images/ioc-image10.png
@@ -560,10 +560,10 @@ IOC signal type definitions are as below.
    IOC Mediator - Signal flow
 
 -  The IOC backend needs to emulate the channel open/reset/close message which
-   shouldn't be forward to the native cbc signal channel. The SOS signal
+   shouldn't be forward to the native cbc signal channel. The Service VM signal
    related services should do a real open/reset/close signal channel.
 -  Every backend should maintain a whitelist for different VMs. The
-   whitelist can be stored in the SOS file system (Read only) in the
+   whitelist can be stored in the Service VM file system (Read only) in the
    future, but currently it is hard coded.
 
 IOC mediator has two whitelist tables, one is used for rx
@@ -582,9 +582,9 @@ new multi signal, which contains the signals in the whitelist.
 Raw data
 --------
 
-OEM raw channel only assigns to a specific UOS following that OEM
+OEM raw channel only assigns to a specific User VM following that OEM
 configuration. The IOC Mediator will directly forward all read/write
-message from IOC firmware to UOS without any modification.
+message from IOC firmware to User VM without any modification.
 
 
 IOC Mediator Usage
@@ -600,14 +600,14 @@ The "ioc_channel_path" is an absolute path for communication between
 IOC mediator and UART DM.
 
 The "lpc_port" is "com1" or "com2", IOC mediator needs one unassigned
-lpc port for data transfer between UOS and SOS.
+lpc port for data transfer between User VM and Service VM.
 
 The "wakeup_reason" is IOC mediator boot up reason, each bit represents
 one wakeup reason.
 
 For example, the following commands are used to enable IOC feature, the
 initial wakeup reason is the ignition button and cbc_attach uses ttyS1
-for TTY line discipline in UOS::
+for TTY line discipline in User VM::
 
    -i /run/acrn/ioc_$vm_name,0x20
    -l com2,/run/acrn/ioc_$vm_name

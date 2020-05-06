@@ -228,7 +228,7 @@ UEFI Secure Boot implementations use these keys:
 #. Platform Key (PK) is the top-level key in Secure Boot; UEFI supports a single PK,
    which is generally provided by the manufacturer.
 #. Key Exchange Key (KEK) is used to sign Signature and Forbidden Signature Database updates.
-#. Signature Database (db) contains kyes and/or hashes of allowed EFI binaries.
+#. Signature Database (db) contains keys and/or hashes of allowed EFI binaries.
 
 And keys and certificates are in multiple format:
 
@@ -386,7 +386,7 @@ three typical solutions exist:
    may even require the hypervisor to flush the TLB. This solution won't
    be used by the ACRN hypervisor.
 
-#. **Use CR0.WP (write-protection) bit.** 
+#. **Use CR0.WP (write-protection) bit.**
 
    This processor feature allows
    pages to be protected from supervisor-mode write access.

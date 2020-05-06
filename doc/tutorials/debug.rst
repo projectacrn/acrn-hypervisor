@@ -21,7 +21,7 @@ An example
 As an example, we'll show how to obtain the interrupts of a pass-through USB device.
 
 First, we can get the USB controller BDF number (0:15.0) through the
-following command in the SOS console::
+following command in the Service VM console::
 
    lspci | grep "USB controller"
 
@@ -110,7 +110,7 @@ Then we use the command, on the ACRN console::
 
    vm_console
 
-to switch to the SOS console. Then we use the command::
+to switch to the Service VM console. Then we use the command::
 
    cat /tmp/acrnlog/acrnlog_cur.0
 
@@ -125,7 +125,7 @@ and we will see the following log:
 ACRN Trace
 **********
 
-ACRN trace is a tool running on the Service OS (SOS) to capture trace
+ACRN trace is a tool running on the Service VM to capture trace
 data. We can use the existing trace information to analyze, and we can
 add self-defined tracing to analyze code which we care about.
 
@@ -135,7 +135,7 @@ Using Existing trace event id to analyze trace
 As an example, we can use the existing vm_exit trace to analyze the
 reason and times of each vm_exit after we have done some operations.
 
-1. Run the following SOS console command to collect
+1. Run the following Service VM console command to collect
    trace data::
 
       # acrntrace -c
@@ -208,7 +208,7 @@ shown in the following example:
    :ref:`getting-started-building` and :ref:`kbl-nuc-sdc` for
    detailed instructions on how to do that.
 
-5. Now we can use the following command in the SOS console
+5. Now we can use the following command in the Service VM console
    to generate acrntrace data into the current directory::
 
       acrntrace -c

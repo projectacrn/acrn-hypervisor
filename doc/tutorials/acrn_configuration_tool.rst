@@ -5,8 +5,9 @@ ACRN Configuration Tool
 
 The ACRN configuration tool is designed for System Integrators / Tier 1s to
 customize ACRN to meet their own needs. It consists of two tools, the
-``Kconfig`` tool and the ``acrn-config`` tool. The latter allows users to provision
-VMs via a web interface and configure the hypervisor from XML files at build time.
+``Kconfig`` tool and the ``acrn-config`` tool. The latter allows users to
+provision VMs via a web interface and configure the hypervisor from XML
+files at build time.
 
 Introduction
 ************
@@ -17,15 +18,14 @@ are discussed in the following sections.
 Hypervisor configuration
 ========================
 
-The hypervisor configuration selects a working scenario and target
+The hypervisor configuration defines a working scenario and target
 board by configuring the hypervisor image features and capabilities such as
 setting up the log and the serial port.
 
-The hypervisor configuration uses the ``Kconfig`` ``make
-menuconfig`` mechanism.  The configuration file is located in the
-``acrn-hypervisor/hypervisor/arch/x86/configs/`` folder.
+The hypervisor configuration uses the ``Kconfig`` mechanism.  The configuration
+file is located at ``acrn-hypervisor/hypervisor/arch/x86/Kconfig``.
 
-The board-specific ``defconfig`` file,
+A board-specific ``defconfig`` file, for example
 ``acrn-hypervisor/hypervisor/arch/x86/configs/$(BOARD).config``
 is loaded first; it is the default ``Kconfig`` for the specified board.
 
@@ -36,7 +36,7 @@ The board configuration stores board-specific settings referenced by the
 ACRN hypervisor. This includes **scenario-relevant** information such as
 board settings, root device selection, and the kernel cmdline. It also includes
 **scenario-irrelevant** hardware-specific information such as ACPI/PCI
-and BDF information. The board configuration is organized as
+and BDF information. The reference board configuration is organized as
 ``*.c/*.h`` files located in the
 ``acrn-hypervisor/hypervisor/arch/x86/configs/$(BOARD)/`` folder.
 
@@ -49,9 +49,9 @@ VMs on each user scenario. It also includes **launch script-based** VM
 configuration information, where parameters are passed to the device model
 to launch post-launched User VMs.
 
-Scenario based VM configurations are organized as ``*.c/*.h`` files
-located in the ``acrn-hypervisor/hypervisor/scenarios/$(SCENARIO)/``
-folder.
+Scenario based VM configurations are organized as ``*.c/*.h`` files. The
+reference scenarios are located in the
+``acrn-hypervisor/hypervisor/scenarios/$(SCENARIO)/`` folder.
 
 User VM launch script samples are located in the
 ``acrn-hypervisor/devicemodel/samples/`` folder.
@@ -100,40 +100,134 @@ and ``scenario`` attributes:
 
 Additional scenario XML elements:
 
+``hv``:
+  Specify the global attributes for all VMs.
+
+``RELEASE`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the final build is for Release or Debug.
+
+``SERIAL_CONSOLE`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the host serial device is used for hypervisor debugging.
+
+``MEM_LOGLEVEL`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the default log level in memory.
+
+``NPK_LOGLEVEL`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the default log level for the hypervisor NPK log.
+
+``CONSOLE_LOGLEVEL`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the default log level on the serial console.
+
+``LOG_DESTINATION`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the bitmap of consoles where logs are printed.
+
+``LOG_BUF_SIZE`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the capacity of the log buffer for each physical CPU.
+
+``RELOC`` (a child node of ``FEATURES``):
+  Specify whether hypervisor image relocation is enabled on booting.
+
+``SCHEDULER`` (a child node of ``FEATURES``):
+  Specify the CPU scheduler used by the hypervisor.
+  Supported schedulers are: ``SCHED_NOOP``, ``SCHED_BVT`` and ``SCHED_IORR``.
+
+``MULTIBOOT2`` (a child node of ``FEATURES``):
+  Specify whether ACRN hypervisor image can be booted using multiboot2 protocol.
+  If not set, GRUB's multiboot2 is not available as a boot option.
+
+``HYPERV_ENABLED`` (a child node of ``FEATURES``):
+  Specify whether Hyper-V is enabled.
+
+``IOMMU_ENFORCE_SNP`` (a child node of ``FEATURES``):
+  Specify whether IOMMU enforces snoop behavior of DMA operation.
+
+``ACPI_PARSE_ENABLED`` (a child node of ``FEATURES``):
+  Specify whether ACPI runtime parsing is enabled..
+
+``L1D_VMENTRY_ENABLED`` (a child node of ``FEATURES``):
+  Specify whether L1 cache flush before VM entry is enabled.
+
+``MCE_ON_PSC_DISABLED`` (a child node of ``FEATURE``):
+  Specify whether force to disable software workaround for Machine Check
+  Error on Page Size Change is enabled.
+
+``STACK_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of stacks used by physical cores. Each core uses one stack
+  for normal operations and another three for specific exceptions.
+
+``HV_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of the RAM region used by the hypervisor.
+
+``LOW_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify size of RAM region below address 0x10000, starting from address 0x0.
+
+``SOS_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of Service OS VM RAM region.
+
+``UOS_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of User OS VM RAM region.
+
+``PLATFORM_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of the physical platform RAM region.
+
+``IOMMU_BUS_NUM`` (a child node of ``CAPACITIES``):
+  Specify the highest PCI bus ID used during IOMMU initialization.
+
+``MAX_IR_ENTRIES`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of Interrupt Remapping Entries.
+
+``MAX_IOAPIC_NUM`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of IO-APICs.
+
+``MAX_PCI_DEV_NUM`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of PCI devices.
+
+``MAX_IOAPIC_LINES`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of interrupt lines per IOAPIC.
+
+``MAX_PT_IRQ_ENTRIES`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of interrupt source for PT devices.
+
+``MAX_MSIX_TABLE_NUM`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of MSI-X tables per device.
+
+``MAX_EMULATED_MMIO`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of emulated MMIO regions.
+
+``GPU_SBDF`` (a child node of ``MISC_CFG``):
+  Specify the Segment, Bus, Device, and function of the GPU.
+
+``UEFI_OS_LOADER_NAME`` (a child node of ``MISC_CFG``):
+  Specify the UEFI OS loader name.
+
 ``vm``:
   Specify the VM with VMID by its "id" attribute.
 
-``load_order``:
-  Specify the VM by its load order: ``PRE_LAUNCHED_VM``, ``SOS_VM`` or ``POST_LAUNCHED_VM``.
+``vm_type``:
+  Current supported VM types are:
+
+  - ``SAFETY_VM`` pre-launched Safety VM
+  - ``PRE_STD_VM`` pre-launched Standard VM
+  - ``SOS_VM`` pre-launched Service VM
+  - ``POST_STD_VM`` post-launched Standard VM
+  - ``POST_RT_VM`` post-launched realtime capable VM
+  - ``KATA_VM`` post-launched Kata Container VM
 
 ``name`` (a child node of ``vm``):
-  Specify the VM name which will be shown in the hypervisor console command: vm_list.
-
-``uuid``:
-  UUID of the VM. It is for internal use and is not configurable.
+  Specify the VM name shown in the hypervisor console command: vm_list.
 
 ``guest_flags``:
   Select all applicable flags for the VM:
 
-  ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify whether secure world is enabled
-
-  ``GUEST_FLAG_LAPIC_PASSTHROUGH`` specify whether LAPIC is passed through
-
-  ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify whether the hypervisor needs
-  IO polling to completion
-
-  ``GUEST_FLAG_HIDE_MTRR`` specify whether to hide MTRR from the VM
-
-  ``GUEST_FLAG_RT`` specify whether the vm is RT-VM
-
-``severity``:
-  Severity of the guest VM; the lower severity VM should not impact the higher severity VM.
-
-  The order of severity from high to low is:
-  ``SEVERITY_SAFETY_VM``, ``SEVERITY_RTVM``, ``SEVERITY_SOS``, ``SEVERITY_STANDARD_VM``.
+  - ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify whether secure world is enabled
+  - ``GUEST_FLAG_LAPIC_PASSTHROUGH`` specify whether LAPIC is passed through
+  - ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify whether the hypervisor needs
+    IO polling to completion
+  - ``GUEST_FLAG_HIDE_MTRR`` specify whether to hide MTRR from the VM
+  - ``GUEST_FLAG_RT`` specify whether the VM is RT-VM (realtime)
 
 ``cpu_affinity``:
-  List of pCPUs: the guest VM is allowed to create vCPUs from all or a subset of this list.
+  List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.
 
 ``base`` (a child node of ``epc_section``):
   SGX EPC section base; must be page aligned.
@@ -158,10 +252,12 @@ Additional scenario XML elements:
   Currently supports ``KERNEL_BZIMAGE`` and ``KERNEL_ZEPHYR``.
 
 ``kern_mod`` (a child node of ``os_config``):
-  The tag for the kernel image that acts as a multiboot module; it must exactly match the module tag in the GRUB multiboot cmdline.
+  The tag for the kernel image that acts as a multiboot module; it must
+  exactly match the module tag in the GRUB multiboot cmdline.
 
 ``ramdisk_mod`` (a child node of ``os_config``):
-  The tag for the ramdisk image which acts as a multiboot module; it must exactly match the module tag in the GRUB multiboot cmdline.
+  The tag for the ramdisk image which acts as a multiboot module; it
+  must exactly match the module tag in the GRUB multiboot cmdline.
 
 ``bootargs`` (a child node of ``os_config``):
   For internal use and is not configurable. Specify the kernel boot arguments
@@ -188,25 +284,25 @@ Additional scenario XML elements:
   vCOM irq.
 
 ``target_vm_id`` (a child node of ``vuart1``):
-  COM2 is used for VM communications. When it is enabled, specify which target VM the current VM connects to.
+  COM2 is used for VM communications. When it is enabled, specify which
+  target VM the current VM connects to.
 
 ``target_uart_id`` (a child node of ``vuart1``):
   Target vUART ID that vCOM2 connects to.
 
 ``pci_dev_num``:
-  PCI devices number of the VM; it is hard-coded for each scenario so it is not configurable for now.
+  PCI devices number of the VM; it is hard-coded for each scenario so it
+  is not configurable for now.
 
 ``pci_devs``:
-  PCI devices list of the VM; it is hard-coded for each scenario so it is not configurable for now.
+  PCI devices list of the VM; it is hard-coded for each scenario so it
+  is not configurable for now.
 
 ``board_private``:
   Stores scenario-relevant board configuration.
 
-``rootfs``:
+``rootfs`` (a child node of ``board_private``):
   rootfs for the Linux kernel.
-
-``console``:
-  ttyS console for the Linux kernel.
 
 ``bootargs`` (a child node of ``board_private``):
   Specify kernel boot arguments.
@@ -222,7 +318,8 @@ The launch XML has an ``acrn-config`` root element as well as
 
    <acrn-config board="BOARD" scenario="SCENARIO" uos_launcher="UOS_NUMBER">
 
-Attributes of the ``uos_launcher`` specify the number of User VMs that the current scenario has:
+Attributes of the ``uos_launcher`` specify the number of User VMs that the
+current scenario has:
 
 ``uos``:
   Specify the User VM with its relative ID to Service VM by the "id" attribute.
@@ -238,26 +335,27 @@ Attributes of the ``uos_launcher`` specify the number of User VMs that the curre
   Specify the User VM memory size in Mbyte.
 
 ``gvt_args``:
-  GVT arguments for the VM. Input format: ``low_gm_size high_gm_size fence_sz``.
-  Recommendation is: ``64 448 8``. Leave it blank to disable the GVT.
+  GVT arguments for the VM. Set it to ``gvtd`` for GVTd, otherwise stand
+  for GVTg arguments.  The GVTg Input format: ``low_gm_size high_gm_size fence_sz``,
+  The recommendation is ``64 448 8``.  Leave it blank to disable the GVT.
 
 ``vbootloader``:
   Virtual bootloader type; currently only supports OVMF.
 
-``cpu_sharing``:
-  Specify whether the pCPUs listed can be shared with other VMs.
-
 ``vuart0``:
-  Specify whether the device model emulates the vUART0(vCOM1); refer to :ref:`vuart_config` for details.
-  If set to ``Enable``, the vUART0 is emulated by the device model;
-  if set to ``Disable``, the vUART0 is emulated by the hypervisor if it is configured in the scenario XML.
+  Specify whether the device model emulates the vUART0(vCOM1); refer to
+  :ref:`vuart_config` for details.  If set to ``Enable``, the vUART0 is
+  emulated by the device model; if set to ``Disable``, the vUART0 is
+  emulated by the hypervisor if it is configured in the scenario XML.
 
 ``poweroff_channel``:
-  Specify whether the User VM power off channel is through the IOC, Powerbutton, or vUART.
+  Specify whether the User VM power off channel is through the IOC,
+  Powerbutton, or vUART.
 
 ``usb_xhci``:
-  USB xHCI mediator configuration. Input format: ``bus#-port#[:bus#-port#: ...]``. e.g.: ``1-2:2-4``.
-  refer to :ref:`usb_virtualization` for details.
+  USB xHCI mediator configuration. Input format:
+  ``bus#-port#[:bus#-port#: ...]``, e.g.: ``1-2:2-4``.
+  Refer to :ref:`usb_virtualization` for details.
 
 ``passthrough_devices``:
   Select the passthrough device from the lspci list; currently we support:
@@ -274,7 +372,8 @@ Attributes of the ``uos_launcher`` specify the number of User VMs that the curre
 
 ``console`` (a child node of ``virtio_devices``):
   The virtio console device setting.
-  Input format: ``[@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]``.
+  Input format:
+  ``[@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]``.
 
 .. note::
 
@@ -290,11 +389,12 @@ Configuration tool workflow
 Hypervisor configuration workflow
 ==================================
 
-The hypervisor configuration is based on the ``Kconfig`` ``make menuconfig``
+The hypervisor configuration is based on the ``Kconfig``
 mechanism. Begin by creating a board-specific ``defconfig`` file to
 set up the default ``Kconfig`` values for the specified board.
 Next, configure the hypervisor build options using the ``make
-menuconfig`` graphical interface. The resulting ``.config`` file is
+menuconfig`` graphical interface or ``make defconfig`` to generate
+a ``.config`` file. The resulting ``.config`` file is
 used by the ACRN build process to create a configured scenario- and
 board-specific hypervisor image.
 
@@ -308,8 +408,8 @@ board-specific hypervisor image.
 
    menuconfig interface sample
 
-Refer to :ref:`getting-started-hypervisor-configuration` for
-detailed configuration steps.
+Refer to :ref:`getting-started-hypervisor-configuration` for detailed
+configuration steps.
 
 
 .. _vm_config_workflow:
@@ -402,10 +502,14 @@ The ACRN configuration app is a web user interface application that performs the
 
 - reads board info
 - configures and validates scenario settings
-- automatically generates patches for board-related configurations and
+- automatically generates source code for board-related configurations and
   scenario-based VM configurations
 - configures and validates launch settings
 - generates launch scripts for the specified post-launched User VMs.
+- dynamically creates a new scenario setting and adds or deletes VM settings
+  in scenario settings
+- dynamically creates a new launch setting and adds or deletes User VM
+  settings in launch settings
 
 Prerequisites
 =============
@@ -459,74 +563,127 @@ Instructions
 
    #. Upload the board info you have generated from the ACRN config tool.
 
-   #. After board info is uploaded, you will see the board name from the Board
-      info list. Select the board name to be configured.
+   #. After board info is uploaded, you will see the board name from the
+      Board info list. Select the board name to be configured.
 
       .. figure:: images/select_board_info.png
          :align: center
 
-#. Choose a scenario from the **Scenario Setting** menu which lists all the scenarios,
-   including the default scenarios and the user-defined scenarios for the board you selected
-   in the previous step. The scenario configuration xmls are located at
+#. Load or create the scenario setting by selecting among the following:
+
+   - Choose a scenario from the **Scenario Setting** menu which lists all
+     user-defined scenarios for the board you selected in the previous step.
+
+   - Click the **Create a new scenario** from the **Scenario Setting**
+     menu to dynamically create a new scenario setting for the current board.
+
+   - Click the **Load a default scenario** from the **Scenario Setting**
+     menu, and then select one default scenario setting to load a default
+     scenario setting for the current board.
+
+   The default scenario configuration xmls are located at
    ``acrn-hypervisor/misc/acrn-config/xmls/config-xmls/[board]/``.
+   We can edit the scenario name when creating or loading a scenario. If the
+   current scenario name is duplicated with an existing scenario setting
+   name, rename the current scenario name or overwrite the existing one
+   after the confirmation message.
 
    .. figure:: images/choose_scenario.png
       :align: center
 
-   Note that you can also use a customized scenario xml by clicking **Import**.
-   The configuration app automatically directs to the new scenario xml once the import is complete.
+   Note that you can also use a customized scenario xml by clicking **Import
+   XML**. The configuration app automatically directs to the new scenario
+   xml once the import is complete.
 
-#. The configurable items display after one scenario is selected. Here is
-   the example of "SDC" scenario:
+#. The configurable items display after one scenario is created/loaded/
+   selected. Following is an industry scenario:
 
    .. figure:: images/configure_scenario.png
       :align: center
 
-   - You can edit these items directly in the text boxes, cor you can choose single or even multiple
-     items from the drop down list.
+   - You can edit these items directly in the text boxes, or you can choose
+     single or even multiple items from the drop down list.
 
    - Read-only items are marked as grey.
 
    - Hover the mouse pointer over the item to display the description.
 
-#. Click **Export** to save the scenario xml; you can rename it in the pop-up modal.
+#. To dynamically add or delete VMs:
 
-   .. note:: All customized scenario xmls will be in user-defined groups which located in
-      ``acrn-hypervisor/misc/acrn-config/xmls/config-xmls/[board]/user_defined/``.
+   - Click **Add a VM below** in one VM setting, and then select one VM type
+     to add a new VM under the current VM.
 
-   Before saving the scenario xml, the configuration app will validate
-   the configurable items. If errors exist, the configuration app lists all
-   wrong configurable items and shows the errors as below:
+   - Click **Remove this VM** in one VM setting to remove the current VM for
+     the scenario setting.
+
+   When one VM is added or removed in the scenario setting, the
+   configuration app reassigns the VM IDs for the remaining VMs by the order of Pre-launched VMs, Service VMs, and Post-launched VMs.
+
+   .. figure:: images/configure_vm_add.png
+      :align: center
+
+#. Click **Export XML** to save the scenario xml; you can rename it in the
+   pop-up model.
+
+   .. note::
+      All customized scenario xmls will be in user-defined groups which are
+      located in ``acrn-hypervisor/misc/acrn-config/xmls/config-xmls/[board]/user_defined/``.
+
+   Before saving the scenario xml, the configuration app validates the
+   configurable items. If errors exist, the configuration app lists all
+   incorrect configurable items and shows the errors as below:
 
    .. figure:: images/err_acrn_configuration.png
       :align: center
 
-   After the scenario is saved, the page automatically directs to the saved scenario xmls.
-   You can delete the configured scenario by clicking **Export** -> **Remove**.
+   After the scenario is saved, the page automatically directs to the saved
+   scenario xmls. Delete the configured scenario by clicking **Export XML** -> **Remove**.
 
-#. Click **Generate Board SRC** to save the current scenario setting and then generate
-   a patch for the board-related configuration source codes in
-   ``acrn-hypervisor/hypervisor/arch/x86/configs/[board]/``.
+#. Click **Generate configuration files** to save the current scenario
+   setting and then generate files for the board-related configuration
+   source code and the scenario-based VM configuration source code.
 
-#. Click **Generate Scenario SRC** to save the current scenario setting and then generate
-   a patch for the scenario-based VM configuration scenario source codes in
+   If **Source Path** in the pop-up model is edited, the source code is
+   generated into the edited Source Path relative to ``acrn-hypervisor``;
+   otherwise, the source code is generated into default folders and
+   overwrite the old ones. The board-related configuration source
+   code is located at
+   ``acrn-hypervisor/hypervisor/arch/x86/configs/[board]/`` and the
+   scenario-based VM configuration source code is located at
    ``acrn-hypervisor/hypervisor/scenarios/[scenario]/``.
 
 The **Launch Setting** is quite similar to the **Scenario Setting**:
 
 #. Upload board info or select one board as the current board.
 
-#. Import your local launch setting xml by clicking **Import** or selecting one launch setting xml from the menu.
+#. Load or create one launch setting by selecting among the following:
+
+   - Click **Create a new launch script** from the **Launch Setting** menu.
+
+   - Click **Load a default launch script** from the **Launch Setting** menu.
+
+   - Select one launch setting xml from the menu.
+
+   - Importing the local launch setting xml by clicking **Import XML**.
 
 #. Select one scenario for the current launch setting from the **Select Scenario** drop down box.
 
 #. Configure the items for the current launch setting.
 
-#. Save the current launch setting to the user-defined xml files by
-   clicking **Export**. The configuration app validates the current
-   configuration and lists all wrong configurable items and shows errors.
+#. To dynamically add or remove User VM (UOS) launch scripts:
 
-#. Click **Generate Launch Script** to save the current launch setting and then generate the launch script.
+   - Add a UOS launch script by clicking **Configure an UOS below** for the
+     current launch setting.
+
+   - Remove a UOS launch script by clicking **Remove this VM** for the
+     current launch setting.
+
+#. Save the current launch setting to the user-defined xml files by
+   clicking **Export XML**. The configuration app validates the current
+   configuration and lists all incorrect configurable items and shows errors.
+
+#. Click **Generate Launch Script** to save the current launch setting and
+   then generate the launch script.
 
    .. figure:: images/generate_launch_script.png
       :align: center
