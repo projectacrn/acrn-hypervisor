@@ -1,7 +1,7 @@
 .. _Ubuntu Service OS:
 
-Running Ubuntu in the Service VM
-################################
+Run Ubuntu as the Service VM
+############################
 
 This document builds on the :ref:`getting_started` series and explains how
 to use Ubuntu instead of `Clear Linux OS`_ as the Service VM with the ACRN

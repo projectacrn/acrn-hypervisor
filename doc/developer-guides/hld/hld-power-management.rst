@@ -137,7 +137,7 @@ will be dispatched to Device Model and Device Model will emulate the User VM
 power state (pause User VM for S3 and power off User VM for S5)
 
 The VM Manager monitors all User VMs. If all active User VMs are in required
-power state, VM Manager will notify lifecyle manager of Service VM to start
+power state, VM Manager will notify lifecycle manager of Service VM to start
 Service VM power state transition. lifecycle manager of Service VM follows
 a very similar process as User VM for power state transition. The difference
 is Service VM ACPI register writing is trapped to ACRN HV. And ACRN HV will
@@ -163,10 +163,10 @@ For system power state entry:
 1. Service VM received S5 request.
 2. Lifecycle manager in Service VM notify User VM1 and RTVM through
    vUART for S5 request.
-3. Guest lifecycle manager initliaze S5 action. And guest enter S5.
+3. Guest lifecycle manager initialize S5 action. And guest enter S5.
 4. RTOS cleanup rt task, send response of S5 request back to Service
    VM and RTVM enter S5.
-5. After get response from RTVM and all User VM are shutdown, Sevice VM
+5. After get response from RTVM and all User VM are shutdown, Service VM
    enter S5.
 6. OSPM in ACRN hypervisor check all guest in S5 state and shutdown
    whole system.

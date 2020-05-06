@@ -199,7 +199,7 @@ sets up CLOS for VMs and the hypervisor itself per the "vm configuration"(:ref:`
 
 - The RDT capabilities are enumerated on the bootstrap processor (BSP) during
   the pCPU pre-initialize stage. The global data structure ``res_cap_info``
-  stores the capabilites of the supported resources.
+  stores the capabilities of the supported resources.
 
 - If CAT or/and MBA is supported, then setup masks array on all APs at the
   pCPU post-initialize stage. The mask values are written to

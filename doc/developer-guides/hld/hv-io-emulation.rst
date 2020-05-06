@@ -4,7 +4,7 @@ I/O Emulation high-level design
 ###############################
 
 As discussed in :ref:`intro-io-emulation`, there are multiple ways and
-places to handle I/O emulation, including HV, SOS Kernel VHM, and SOS
+places to handle I/O emulation, including HV, Service VM Kernel VHM, and Service VM
 user-land device model (acrn-dm).
 
 I/O emulation in the hypervisor provides these functionalities:
@@ -12,7 +12,7 @@ I/O emulation in the hypervisor provides these functionalities:
 -  Maintain lists of port I/O or MMIO handlers in the hypervisor for
    emulating trapped I/O accesses in a certain range.
 
--  Forward I/O accesses to SOS when they cannot be handled by the
+-  Forward I/O accesses to Service VM when they cannot be handled by the
    hypervisor by any registered handlers.
 
 :numref:`io-control-flow` illustrates the main control flow steps of I/O emulation
@@ -26,7 +26,7 @@ inside the hypervisor:
    access, or ignore the access if the access crosses the boundary.
 
 3. If the range of the I/O access does not overlap the range of any I/O
-   handler, deliver an I/O request to SOS.
+   handler, deliver an I/O request to Service VM.
 
 .. figure:: images/ioem-image101.png
    :align: center
@@ -92,16 +92,16 @@ following cases exist:
    -  Otherwise it is implied that the access crosses the boundary of
       multiple devices which the hypervisor does not emulate. Thus
       no handler is called and no I/O request will be delivered to
-      SOS. I/O reads get all 1's and I/O writes are dropped.
+      Service VM. I/O reads get all 1's and I/O writes are dropped.
 
 -  If the range of the I/O access does not overlap with any range of the
-   handlers, the I/O access is delivered to SOS as an I/O request
+   handlers, the I/O access is delivered to Service VM as an I/O request
    for further processing.
 
 I/O Requests
 ************
 
-An I/O request is delivered to SOS vCPU 0 if the hypervisor does not
+An I/O request is delivered to Service VM vCPU 0 if the hypervisor does not
 find any handler that overlaps the range of a trapped I/O access. This
 section describes the initialization of the I/O request mechanism and
 how an I/O access is emulated via I/O requests in the hypervisor.
@@ -109,11 +109,11 @@ how an I/O access is emulated via I/O requests in the hypervisor.
 Initialization
 ==============
 
-For each UOS the hypervisor shares a page with SOS to exchange I/O
+For each User VM the hypervisor shares a page with Service VM to exchange I/O
 requests. The 4-KByte page consists of 16 256-Byte slots, indexed by
 vCPU ID. It is required for the DM to allocate and set up the request
-buffer on VM creation, otherwise I/O accesses from UOS cannot be
-emulated by SOS, and all I/O accesses not handled by the I/O handlers in
+buffer on VM creation, otherwise I/O accesses from User VM cannot be
+emulated by Service VM, and all I/O accesses not handled by the I/O handlers in
 the hypervisor will be dropped (reads get all 1's).
 
 Refer to the following sections for details on I/O requests and the
@@ -145,7 +145,7 @@ There are four types of I/O requests:
 
 
 For port I/O accesses, the hypervisor will always deliver an I/O request
-of type PIO to SOS. For MMIO accesses, the hypervisor will deliver an
+of type PIO to Service VM. For MMIO accesses, the hypervisor will deliver an
 I/O request of either MMIO or WP, depending on the mapping of the
 accessed address (in GPA) in the EPT of the vCPU. The hypervisor will
 never deliver any I/O request of type PCI, but will handle such I/O
@@ -170,11 +170,11 @@ The four states are:
 
 FREE
    The I/O request slot is not used and new I/O requests can be
-   delivered. This is the initial state on UOS creation.
+   delivered. This is the initial state on User VM creation.
 
 PENDING
    The I/O request slot is occupied with an I/O request pending
-   to be processed by SOS.
+   to be processed by Service VM.
 
 PROCESSING
    The I/O request has been dispatched to a client but the
@@ -185,19 +185,19 @@ COMPLETE
    has not consumed the results yet.
 
 The contents of an I/O request slot are owned by the hypervisor when the
-state of an I/O request slot is FREE or COMPLETE. In such cases SOS can
+state of an I/O request slot is FREE or COMPLETE. In such cases Service VM can
 only access the state of that slot. Similarly the contents are owned by
-SOS when the state is PENDING or PROCESSING, when the hypervisor can
+Service VM when the state is PENDING or PROCESSING, when the hypervisor can
 only access the state of that slot.
 
 The states are transferred as follow:
 
 1. To deliver an I/O request, the hypervisor takes the slot
    corresponding to the vCPU triggering the I/O access, fills the
-   contents, changes the state to PENDING and notifies SOS via
+   contents, changes the state to PENDING and notifies Service VM via
    upcall.
 
-2. On upcalls, SOS dispatches each I/O request in the PENDING state to
+2. On upcalls, Service VM dispatches each I/O request in the PENDING state to
    clients and changes the state to PROCESSING.
 
 3. The client assigned an I/O request changes the state to COMPLETE
@@ -211,7 +211,7 @@ The states are transferred as follow:
 States are accessed using atomic operations to avoid getting unexpected
 states on one core when it is written on another.
 
-Note that there is no state to represent a 'failed' I/O request. SOS
+Note that there is no state to represent a 'failed' I/O request. Service VM
 should return all 1's for reads and ignore writes whenever it cannot
 handle the I/O request, and change the state of the request to COMPLETE.
 
@@ -224,7 +224,7 @@ hypervisor re-enters the vCPU thread every time a vCPU is scheduled back
 in, rather than switching to where the vCPU is scheduled out. As a result,
 post-work is introduced for this purpose.
 
-The hypervisor pauses a vCPU before an I/O request is delivered to SOS.
+The hypervisor pauses a vCPU before an I/O request is delivered to Service VM.
 Once the I/O request emulation is completed, a client notifies the
 hypervisor by a hypercall. The hypervisor will pick up that request, do
 the post-work, and resume the guest vCPU. The post-work takes care of
@@ -236,9 +236,9 @@ updating the vCPU guest state to reflect the effect of the I/O reads.
    Workflow of MMIO I/O request completion
 
 The figure above illustrates the workflow to complete an I/O
-request for MMIO. Once the I/O request is completed, SOS makes a
-hypercall to notify the hypervisor which resumes the UOS vCPU triggering
-the access after requesting post-work on that vCPU. After the UOS vCPU
+request for MMIO. Once the I/O request is completed, Service VM makes a
+hypercall to notify the hypervisor which resumes the User VM vCPU triggering
+the access after requesting post-work on that vCPU. After the User VM vCPU
 resumes, it does the post-work first to update the guest registers if
 the access reads an address, changes the state of the corresponding I/O
 request slot to FREE, and continues execution of the vCPU.
@@ -255,7 +255,7 @@ similar to the MMIO case, except the post-work is done before resuming
 the vCPU. This is because the post-work for port I/O reads need to update
 the general register eax of the vCPU, while the post-work for MMIO reads
 need further emulation of the trapped instruction.  This is much more
-complex and may impact the performance of SOS.
+complex and may impact the performance of the Service VM.
 
 .. _io-structs-interfaces:
 

@@ -89,7 +89,7 @@ vcpu_dumpreg
 registers values, etc.
 
 In the following example, we dump vCPU0 RIP register value and get into
-the SOS to search for the currently running function, using these
+the Service VM to search for the currently running function, using these
 commands::
 
    cat /proc/kallsyms | grep RIP_value

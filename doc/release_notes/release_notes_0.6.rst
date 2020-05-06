@@ -153,7 +153,7 @@ Known Issues
 
    **Workaround:** None.
 
-:acrn-issue:`2267` - [APLUP2][LaaG]LaaG can't detect 4k monitor 
+:acrn-issue:`2267` - [APLUP2][LaaG]LaaG can't detect 4k monitor
    After launching UOS on APL UP2 , 4k monitor cannot be detected.
 
    **Impact:** UOS can't display on a 4k monitor.
@@ -161,7 +161,7 @@ Known Issues
    **Workaround:** Use a monitor with less than 4k resolution.
 
 :acrn-issue:`2276` - OVMF failed to launch UOS on UP2.
-   UP2 failed to launch UOS using OVMF as virtual bootloader with acrn-dm. 
+   UP2 failed to launch UOS using OVMF as virtual bootloader with acrn-dm.
 
    **Impact:** UOS cannot boot up using OVMF
 
@@ -172,7 +172,7 @@ Known Issues
 
    **Impact:** Power Management states related operations cannot be using in SOS/UOS on KBLNUC
 
-   **Workaround:** None 
+   **Workaround:** None
 
 :acrn-issue:`2279` - [APLNUC]After exiting UOS with mediator Usb_KeyBoard and Mouse, SOS cannot use the Usb_KeyBoard and Mouse
    After exiting UOS with mediator Usb_KeyBoard and Mouse, SOS cannot use the Usb_KeyBoard and Mouse.
@@ -188,7 +188,7 @@ Known Issues
 
    4) Exit UOS.
 
-   5) SOS access USB keyboard and mouse. 
+   5) SOS access USB keyboard and mouse.
 
    **Impact:** SOS cannot use USB keyboard and mouse in such case.
 
@@ -208,9 +208,9 @@ Known Issues
 
    **Workaround:** Remove enable_initial_modeset for UP2 platform. You can apply :acrn-commit:`4b53ed67` to rebuild UP2 images.
 
-:acrn-issue:`2522` - [NUC7i7BNH]After starting ias in SOS, there is no display 
-   On NUC7i7BNH, after starting IAS in SOS, there is no display if the monitor is 
-   connected with a TPC to VGA connector. 
+:acrn-issue:`2522` - [NUC7i7BNH]After starting ias in SOS, there is no display
+   On NUC7i7BNH, after starting IAS in SOS, there is no display if the monitor is
+   connected with a TPC to VGA connector.
 
    **Impact:** Special model [NUC7i7BNH] has no display in SOS.
 
@@ -221,7 +221,7 @@ Known Issues
 
    **Impact:** Cannot use ias weston in UOS.
 
-   **Workaround:** 
+   **Workaround:**
 
    1) Use weston instead of IAS weston: ``swupd install x11-server``
    2) Use acrn-kernel to rebuild SOS kernel to replace integrated kernel. To confirm "DRM_FBDEV_EMULATION" related configs in kernel_config_sos should as below:
@@ -240,7 +240,7 @@ Known Issues
    **Impact:** launching UOS hang, and then no display in UOS.
 
    **Workaround:** Use acrn-kernel to rebuild SOS kernel to replace the
-   integrated kernel. Confirm "DRM_FBDEV_EMULATION" related 
+   integrated kernel. Confirm "DRM_FBDEV_EMULATION" related
    configs in kernel_config_sos are as below:
 
    .. code-block:: bash
@@ -254,14 +254,14 @@ Known Issues
 :acrn-issue:`2527` - [KBLNUC][HV]System will crash when run crashme (SOS/UOS)
    System will crash after a few minutes running stress test crashme tool in SOS/UOS.
 
-   **Impact:** System may crash in some stress situation. 
+   **Impact:** System may crash in some stress situation.
 
    **Workaround:** None
 
 :acrn-issue:`2528` - [APLUP2] SBL (built by SBL latest code) failed to boot ACRN hypervisor
    SBL built by latest slimbootloader code (HEAD->ad42a2bd6e4a6364358b9c712cb54e821ee7ee42) failed to boot acrn hypervisor.
 
-   **Impact:** UP2 with SBL cannot boot acrn hypervisor. 
+   **Impact:** UP2 with SBL cannot boot acrn hypervisor.
 
    **Workaround:** Use SBL built by earlier slimbootloader code (commit id:edc112328cf3e414523162dd75dc3614e42579fe).
    This folder version can boot acrn hypervisor normally.

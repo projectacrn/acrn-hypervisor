@@ -1,20 +1,22 @@
 .. _enable-s5:
 
-Platform S5 Enable Guide
-########################
+Enable S5 in ACRN
+#################
 
 Introduction
 ************
 
-S5 is one of the `ACPI sleep states <http://acpi.sourceforge.net/documentation/sleep.html>`_ that refers to the system being shut down (although some power may still be supplied to
-certain devices). In this document, S5 means the function to shut down the
-**User VMs**, **the Service VM**, the hypervisor, and the hardware. In most cases,
-directly shutting down the power of a computer system is not advisable because it can
-damage some components. It can cause corruption and put the system in an unknown or
-unstable state. On ACRN, the User VM must be shut down before powering off the Service VM.
-Especially for some use cases, where User VMs could be used in industrial control or other
-high safety requirement environment, a graceful system shutdown such as the ACRN S5
-function is required.
+S5 is one of the `ACPI sleep states <http://acpi.sourceforge.net/documentation/sleep.html>`_
+that refers to the system being shut down (although some power may still be
+supplied to certain devices). In this document, S5 means the function to
+shut down the **User VMs**, **the Service VM**, the hypervisor, and the
+hardware. In most cases, directly shutting down the power of a computer
+system is not advisable because it can damage some components. It can cause
+corruption and put the system in an unknown or unstable state. On ACRN, the
+User VM must be shut down before powering off the Service VM. Especially for
+some use cases, where User VMs could be used in industrial control or other
+high safety requirement environment, a graceful system shutdown such as the
+ACRN S5 function is required.
 
 S5 Architecture
 ***************
@@ -30,14 +32,16 @@ The diagram below shows the overall architecture:
 
 - **Scenario I**:
 
-    The User VM's serial port device (``ttySn``) is emulated in the Device Model, the channel from the Service VM to the User VM:
+    The User VM's serial port device (``ttySn``) is emulated in the
+    Device Model, the channel from the Service VM to the User VM:
 
     .. graphviz:: images/s5-scenario-1.dot
        :name: s5-scenario-1
 
 - **Scenario II**:
 
-    The User VM's (like RT-Linux or other RT-VMs) serial port device (``ttySn``) is emulated in the Hypervisor,
+    The User VM's (like RT-Linux or other RT-VMs) serial port device
+    (``ttySn``) is emulated in the Hypervisor,
     the channel from the Service OS to the User VM:
 
     .. graphviz:: images/s5-scenario-2.dot
@@ -92,7 +96,7 @@ The procedure for enabling S5 is specific to the particular OS:
 
   .. note:: For RT-Linux, the vUART is emulated in the hypervisor; expose the node as ``/dev/ttySn``.
 
-#. For LaaG and RT-Linux VMs, run the life-cycle manager deamon:
+#. For LaaG and RT-Linux VMs, run the life-cycle manager daemon:
 
    a. Use these commands to build the life-cycle manager daemon, ``life_mngr``.
 
@@ -116,7 +120,7 @@ The procedure for enabling S5 is specific to the particular OS:
          # systemctl enable life_mngr.service
          # reboot
 
-#. For the WaaG VM, run the life-cycle manager deamon:
+#. For the WaaG VM, run the life-cycle manager daemon:
 
    a) Build the ``life_mngr_win.exe`` application::
 
@@ -181,12 +185,12 @@ How to test
 
       .. code-block:: console
 
-           ● life_mngr.service - ACRN lifemngr daemon
+           * life_mngr.service - ACRN lifemngr daemon
            Loaded: loaded (/usr/lib/systemd/system/life_mngr.service; enabled; vendor p>
            Active: active (running) since Tue 2019-09-10 07:15:06 UTC; 1min 11s ago
            Main PID: 840 (life_mngr)
 
-   .. note:: For WaaG, we need to close ``windbg`` by using the ``"bcdedit /set debug off`` command
+   .. note:: For WaaG, we need to close ``windbg`` by using the ``bcdedit /set debug off`` command
       IF you executed the ``bcdedit /set debug on`` when you set up the WaaG, because it occupies the ``COM2``.
 
 #. Use the``acrnctl stop`` command on the Service VM to trigger S5 to the User VMs:

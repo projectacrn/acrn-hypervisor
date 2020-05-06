@@ -3,8 +3,8 @@
 Device Model high-level design
 ##############################
 
-Hypervisor Device Model (DM) is a QEMU-like application in SOS
-responsible for creating a UOS VM and then performing devices emulation
+Hypervisor Device Model (DM) is a QEMU-like application in Service VM
+responsible for creating a User VM and then performing devices emulation
 based on command line configurations.
 
 .. figure:: images/dm-image75.png
@@ -14,18 +14,18 @@ based on command line configurations.
    Device Model Framework
 
 :numref:`dm-framework` above gives a big picture overview of DM
-framework. There are 3 major subsystems in SOS:
+framework. There are 3 major subsystems in Service VM:
 
 -  **Device Emulation**: DM provides backend device emulation routines for
-   frontend UOS device drivers. These routines register their I/O
+   frontend User VM device drivers. These routines register their I/O
    handlers to the I/O dispatcher inside the DM. When the VHM
    assigns any I/O request to the DM, the I/O dispatcher
    dispatches this request to the corresponding device emulation
    routine to do the emulation.
 
--  I/O Path in SOS:
+-  I/O Path in Service VM:
 
-   -  HV initializes an I/O request and notifies VHM driver in SOS
+   -  HV initializes an I/O request and notifies VHM driver in Service VM
       through upcall.
    -  VHM driver dispatches I/O requests to I/O clients and notifies the
       clients (in this case the client is the DM which is notified
@@ -34,9 +34,9 @@ framework. There are 3 major subsystems in SOS:
    -  I/O dispatcher notifies VHM driver the I/O request is completed
       through char device
    -  VHM driver notifies HV on the completion through hypercall
-   -  DM injects VIRQ to UOS frontend device through hypercall
+   -  DM injects VIRQ to User VM frontend device through hypercall
 
--  VHM: Virtio and Hypervisor Service Module is a kernel module in SOS as a
+-  VHM: Virtio and Hypervisor Service Module is a kernel module in Service VM as a
    middle layer to support DM. Refer to :ref:`virtio-APIs` for details
 
 This section introduces how the acrn-dm application is configured and
@@ -136,7 +136,7 @@ DM Initialization
 
 -  **Option Parsing**: DM parse options from command line inputs.
 
--  **VM Create**: DM calls ioctl to SOS VHM, then SOS VHM makes
+-  **VM Create**: DM calls ioctl to Service VM VHM, then Service VM VHM makes
    hypercalls to HV to create a VM, it returns a vmid for a
    dedicated VM.
 
@@ -147,8 +147,8 @@ DM Initialization
    with VHM and HV.  Refer to :ref:`hld-io-emulation` and
    :ref:`IO-emulation-in-sos` for more details.
 
--  **Memory Setup**: UOS memory is allocated from SOS
-   memory. This section of memory will use SOS hugetlbfs to allocate
+-  **Memory Setup**: User VM memory is allocated from Service VM
+   memory. This section of memory will use Service VM hugetlbfs to allocate
    linear continuous host physical address for guest memory. It will
    try to get the page size as big as possible to guarantee maximum
    utilization of TLB. It then invokes a hypercall to HV for its EPT
@@ -175,7 +175,7 @@ DM Initialization
    according to acrn-dm command line configuration and derived from
    their default value.
 
--  **SW Load**: DM prepares UOS VM's SW configuration such as kernel,
+-  **SW Load**: DM prepares User VM's SW configuration such as kernel,
    ramdisk, and zeropage, according to these memory locations:
 
    .. code-block:: c
@@ -186,7 +186,7 @@ DM Initialization
       #define ZEROPAGE_LOAD_OFF(ctx) (ctx->lowmem - 4*KB)
       #define KERNEL_LOAD_OFF(ctx)   (16*MB)
 
-   For example, if the UOS memory is set as 800M size, then **SW Load**
+   For example, if the User VM memory is set as 800M size, then **SW Load**
    will prepare its ramdisk (if there is) at 0x31c00000 (796M), bootargs at
    0x31ffe000 (800M - 8K), kernel entry at 0x31ffe800(800M - 6K) and zero
    page at 0x31fff000 (800M - 4K). The hypervisor will finally run VM based
@@ -277,8 +277,8 @@ VHM
 VHM overview
 ============
 
-Device Model manages UOS VM by accessing interfaces exported from VHM
-module. VHM module is an SOS kernel driver. The ``/dev/acrn_vhm`` node is
+Device Model manages User VM by accessing interfaces exported from VHM
+module. VHM module is an Service VM kernel driver. The ``/dev/acrn_vhm`` node is
 created when VHM module is initialized. Device Model follows the standard
 Linux char device API (ioctl) to access the functionality of VHM.
 
@@ -287,8 +287,8 @@ hypercall to the hypervisor. There are two exceptions:
 
 -  I/O request client management is implemented in VHM.
 
--  For memory range management of UOS VM, VHM needs to save all memory
-   range info of UOS VM. The subsequent memory mapping update of UOS VM
+-  For memory range management of User VM, VHM needs to save all memory
+   range info of User VM. The subsequent memory mapping update of User VM
    needs this information.
 
 .. figure:: images/dm-image108.png
@@ -306,10 +306,10 @@ VHM ioctl interfaces
 
 .. _IO-emulation-in-sos:
 
-I/O Emulation in SOS
-********************
+I/O Emulation in Service VM
+***************************
 
-I/O requests from the hypervisor are dispatched by VHM in the SOS kernel
+I/O requests from the hypervisor are dispatched by VHM in the Service VM kernel
 to a registered client, responsible for further processing the
 I/O access and notifying the hypervisor on its completion.
 
@@ -317,8 +317,8 @@ Initialization of Shared I/O Request Buffer
 ===========================================
 
 For each VM, there is a shared 4-KByte memory region used for I/O request
-communication between the hypervisor and SOS. Upon initialization
-of a VM, the DM (acrn-dm) in SOS userland first allocates a 4-KByte
+communication between the hypervisor and Service VM. Upon initialization
+of a VM, the DM (acrn-dm) in Service VM userland first allocates a 4-KByte
 page and passes the GPA of the buffer to HV via hypercall. The buffer is
 used as an array of 16 I/O request slots with each I/O request being
 256 bytes. This array is indexed by vCPU ID. Thus, each vCPU of the VM
@@ -330,7 +330,7 @@ cannot issue multiple I/O requests at the same time.
 I/O Clients
 ===========
 
-An I/O client is either a SOS userland application or a SOS kernel space
+An I/O client is either a Service VM userland application or a Service VM kernel space
 module responsible for handling I/O access whose address
 falls in a certain range. Each VM has an array of registered I/O
 clients which are initialized with a fixed I/O address range, plus a PCI
@@ -389,14 +389,14 @@ Processing I/O Requests
    :align: center
    :name: io-sequence-sos
 
-   I/O request handling sequence in SOS
+   I/O request handling sequence in Service VM
 
 :numref:`io-sequence-sos` above illustrates the interactions among the
 hypervisor, VHM,
 and the device model for handling I/O requests. The main interactions
 are as follows:
 
-1. The hypervisor makes an upcall to SOS as an interrupt
+1. The hypervisor makes an upcall to Service VM as an interrupt
    handled by the upcall handler in VHM.
 
 2. The upcall handler schedules the execution of the I/O request
@@ -616,11 +616,11 @@ to destination emulated devices:
 
 .. code-block:: c
 
-   /* Generate one msi interrupt to UOS, the index parameter indicates
+   /* Generate one msi interrupt to User VM, the index parameter indicates
     * the msi number from its PCI msi capability. */
    void    pci_generate_msi(struct pci_vdev *pi, int index);
 
-   /* Generate one msix interrupt to UOS, the index parameter indicates
+   /* Generate one msix interrupt to User VM, the index parameter indicates
     * the msix number from its PCI msix bar. */
    void    pci_generate_msix(struct pci_vdev *pi, int index);
 
@@ -984,11 +984,11 @@ potentially error-prone.
 ACPI Emulation
 --------------
 
-An alternative ACPI resource abstraction option is for the SOS (SOS_VM) to
-own all devices and emulate a set of virtual devices for the UOS (POST_LAUNCHED_VM).
+An alternative ACPI resource abstraction option is for the Service VM to
+own all devices and emulate a set of virtual devices for the User VM (POST_LAUNCHED_VM).
 This is the most popular ACPI resource model for virtualization,
 as shown in the picture below. ACRN currently
-uses device emulation plus some device passthrough for UOS.
+uses device emulation plus some device passthrough for User VM.
 
 .. figure:: images/dm-image52.png
    :align: center
@@ -1001,11 +1001,11 @@ different components:
 -  **Hypervisor** - ACPI is transparent to the Hypervisor, and has no knowledge
    of ACPI at all.
 
--  **SOS** - All ACPI resources are physically owned by SOS, and enumerates
+-  **Service VM** - All ACPI resources are physically owned by Service VM, and enumerates
    all ACPI tables and devices.
 
--  **UOS** - Virtual ACPI resources, exposed by device model, are owned by
-   UOS.
+-  **User VM** - Virtual ACPI resources, exposed by device model, are owned by
+   User VM.
 
 ACPI emulation code of device model is found in
 ``hw/platform/acpi/acpi.c``
@@ -1095,10 +1095,10 @@ basl_compile for each table. basl_compile does the following:
             basl_end(&io[0], &io[1]);
         }
 
-After handling each entry, virtual ACPI tables are present in UOS
+After handling each entry, virtual ACPI tables are present in User VM
 memory.
 
-For passthrough dev in UOS, we may need to add some ACPI description
+For passthrough dev in User VM, we may need to add some ACPI description
 in virtual DSDT table. There is one hook (passthrough_write_dsdt) in
 ``hw/pci/passthrough.c`` for this.  The following source code, shows
 calls different functions to add different contents for each vendor and
@@ -1142,7 +1142,7 @@ device id:
     }
 
 For instance, write_dsdt_urt1 provides ACPI contents for Bluetooth
-UART device when passthroughed to UOS. It provides virtual PCI
+UART device when passthroughed to User VM. It provides virtual PCI
 device/function as _ADR. With other description, it could be used for
 Bluetooth UART enumeration.
 
@@ -1174,23 +1174,23 @@ Bluetooth UART enumeration.
 PM in Device Model
 ******************
 
-PM module in Device Model emulate the UOS low power state transition.
+PM module in Device Model emulate the User VM low power state transition.
 
-Each time UOS writes an ACPI control register to initialize low power
+Each time User VM writes an ACPI control register to initialize low power
 state transition, the writing operation is trapped to DM as an I/O
 emulation request by the I/O emulation framework.
 
-To emulate UOS S5 entry, DM will destroy I/O request client, release
-allocated UOS memory, stop all created threads, destroy UOS VM, and exit
+To emulate User VM S5 entry, DM will destroy I/O request client, release
+allocated User VM memory, stop all created threads, destroy User VM, and exit
 DM.  To emulate S5 exit, a fresh DM start by VM manager is used.
 
-To emulate UOS S3 entry, DM pauses the UOS VM, stops the UOS watchdog,
-and waits for a resume signal. When the UOS should exit from S3, DM will
-get a wakeup signal and reset the UOS VM to emulate the UOS exit from
+To emulate User VM S3 entry, DM pauses the User VM, stops the User VM watchdog,
+and waits for a resume signal. When the User VM should exit from S3, DM will
+get a wakeup signal and reset the User VM to emulate the User VM exit from
 S3.
 
 Pass-through in Device Model
 ****************************
 
-You may refer to :ref:`hv-device-passthrough` for pass-through realization 
+You may refer to :ref:`hv-device-passthrough` for pass-through realization
 in device model.

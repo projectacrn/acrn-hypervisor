@@ -290,7 +290,7 @@ Power Management support for S3
 *******************************
 
 During platform S3 suspend and resume, the VT-d register values are
-lost. ACRN VT-d provides APIs tthat are called during S3 suspend and resume.
+lost. ACRN VT-d provides APIs that are called during S3 suspend and resume.
 
 During S3 suspend, some register values are saved in the memory, and
 DMAR translation is disabled. During S3 resume, the register values

@@ -1,7 +1,7 @@
 .. _sign_clear_linux_image:
 
-How to sign binaries of the Clear Linux image
-#############################################
+Sign Clear Linux Image Binaries
+###############################
 
 In this tutorial, you will see how to sign the binaries of a Clear Linux image so that you can
 boot it through a secure boot enabled OVMF.

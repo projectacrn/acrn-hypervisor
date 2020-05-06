@@ -33,7 +33,7 @@ The virtio-console architecture diagram in ACRN is shown below.
 Virtio-console is implemented as a virtio legacy device in the ACRN
 device model (DM), and is registered as a PCI virtio device to the guest
 OS. No changes are required in the frontend Linux virtio-console except
-that the guest (UOS) kernel should be built with
+that the guest (User VM) kernel should be built with
 ``CONFIG_VIRTIO_CONSOLE=y``.
 
 The virtio console FE driver registers a HVC console to the kernel if
@@ -152,7 +152,7 @@ PTY
 TTY
 ===
 
-1. Identify your tty that will be used as the UOS console:
+1. Identify your tty that will be used as the User VM console:
 
    - If you're connected to your device over the network via ssh, use
      the linux ``tty`` command, and it will report the node (may be

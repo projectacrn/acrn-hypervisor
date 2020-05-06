@@ -2,8 +2,8 @@
 
 .. _agl-vms:
 
-Running AGL as VMs
-##################
+Run two AGL images as User VMs
+##############################
 
 This document describes how to run two Automotive Grade Linux (AGL)
 images as VMs on the ACRN hypervisor. This serves as the baseline for
@@ -67,9 +67,10 @@ The following hardware is used for demo development:
        <https://www.gorite.com/intel-nuc-dawson-canyon-edp-cable-4-lanes>`_
      - Other eDP pin cables work as well
    * - HDMI touch displays
-     - `GeChic 1303I
-       <https://www.gechic.com/en-portable-touch-monitor-onlap1303i-view.html>`_
-     -
+     - `GeChic portable touch monitor
+       <https://www.gechic.com/en/touch-monitor>`_
+     - Tested with 1303I (no longer available), but others such as 1102I should also
+       work.
    * - Serial cable
      - `Serial DB9 header cable
        <https://www.gorite.com/serial-db9-header-cable-for-nuc-dawson-canyon>`_

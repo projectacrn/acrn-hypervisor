@@ -1,7 +1,7 @@
 .. _open_vswitch:
 
-How to enable OVS in ACRN
-#########################
+Enable OVS in ACRN
+##################
 Hypervisors need the ability to bridge network traffic between VMs
 and with the outside world. This tutorial describes how to
 use `Open Virtual Switch (OVS)

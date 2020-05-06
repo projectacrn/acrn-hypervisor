@@ -6,7 +6,7 @@ Hostbridge emulation
 Overview
 ********
 
-Hostbridge emulation is based on PCI emulation; however, the hostbridge emulation only sets the PCI configuration space. The device model sets the PCI configuration space for hostbridge in the Service VM ans then exposes it to the User VM to detect the PCI hostbridge.
+Hostbridge emulation is based on PCI emulation; however, the hostbridge emulation only sets the PCI configuration space. The device model sets the PCI configuration space for hostbridge in the Service VM and then exposes it to the User VM to detect the PCI hostbridge.
 
 PCI Host Bridge and hierarchy
 *****************************

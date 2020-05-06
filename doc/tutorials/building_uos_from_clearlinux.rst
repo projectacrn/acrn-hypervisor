@@ -1,15 +1,15 @@
-.. _build UOS from Clearlinux:
+.. _build User VM from Clearlinux:
 
-Building UOS from Clear Linux OS
-################################
+Build a User VM from the Clear Linux OS
+#######################################
 
-This document builds on the :ref:`getting_started`,
-and explains how to build UOS from Clear Linux OS.
+This document builds on :ref:`getting_started`,
+and explains how to build a User VM from Clear Linux OS.
 
-Build UOS image in Clear Linux OS
-*********************************
+Build User VM image from Clear Linux OS
+***************************************
 
-Follow these steps to build a UOS image from Clear Linux OS:
+Follow these steps to build a User VM image from the Clear Linux OS:
 
 #. In Clear Linux OS, install ``ister`` (a template-based
    installer for Linux) included in the Clear Linux OS bundle
@@ -22,7 +22,7 @@ Follow these steps to build a UOS image from Clear Linux OS:
       $ sudo swupd bundle-add os-installer
 
 #. After installation is complete, use ``ister.py`` to
-   generate the image for UOS with the configuration in
+   generate the image for a User VM with the configuration in
    ``uos-image.json``:
 
    .. code-block:: none
@@ -81,7 +81,7 @@ Follow these steps to build a UOS image from Clear Linux OS:
       ``"Version": "latest"`` for example.
 
    Here we will use ``"Version": 26550`` for example,
-   and the UOS image called ``uos.img`` will be generated
+   and the User VM image called ``uos.img`` will be generated
    after successful installation. An example output log is:
 
    .. code-block:: none
@@ -118,10 +118,10 @@ Follow these steps to build a UOS image from Clear Linux OS:
       Reboot Into Firmware Interface
 
 
-Start the User OS (UOS)
-***********************
+Start the User VM
+*****************
 
-#. Mount the UOS image and check the UOS kernel:
+#. Mount the User VM image and check the User VM kernel:
 
    .. code-block:: none
 
@@ -146,10 +146,10 @@ Start the User OS (UOS)
       -k /mnt/usr/lib/kernel/default-iot-lts2018  \
 
    .. note::
-      UOS image ``uos.img`` is in the directory ``~/``
-      and UOS kernel ``default-iot-lts2018`` is in ``/mnt/usr/lib/kernel/``.
+      User VM image ``uos.img`` is in the directory ``~/``
+      and User VM kernel ``default-iot-lts2018`` is in ``/mnt/usr/lib/kernel/``.
 
-#. You are now all set to start the User OS (UOS):
+#. You are now all set to start the User OS (User VM):
 
    .. code-block:: none
 

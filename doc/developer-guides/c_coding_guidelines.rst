@@ -2916,12 +2916,12 @@ Compliant example::
    Non-compliant example::
 
        /*
-        * The example here uses the char ␣ to stand for the space at the end of the line
+        * The example here uses the char ~ to stand for the space at the end of the line
         * in order to highlight the non-compliant part.
         */
-       uint32_t a;␣␣␣␣
-       uint32_t b;␣␣␣␣
-       uint32_t c;␣␣␣␣
+       uint32_t a;~~~~
+       uint32_t b;~~~~
+       uint32_t c;~~~~
 
 
 C-CS-06: A single space shall exist between non-function-like keywords and opening brackets
@@ -3364,8 +3364,8 @@ The data structure types include struct, union, and enum.
 This rule applies to the data structure with all the following properties:
 
 a) The data structure is used by multiple modules;
-b) The corresponding resource is exposed to external components, such as SOS or
-   UOS;
+b) The corresponding resource is exposed to external components, such as
+   the Service VM or a User VM;
 c) The name meaning is simplistic or common, such as vcpu or vm.
 
 Compliant example::

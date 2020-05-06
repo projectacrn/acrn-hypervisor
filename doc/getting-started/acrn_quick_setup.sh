@@ -43,6 +43,8 @@ skip_download_uos=0
 disable_reboot=0
 # set default scenario name
 scenario=sdc
+# swupd config file path
+swupd_config=/usr/share/defaults/swupd/config
 
 function upgrade_sos()
 {
@@ -60,7 +62,7 @@ function upgrade_sos()
  
     # set up mirror and proxy url while specified with m and p options
     [[ -n $mirror ]] && echo "Setting swupd mirror to: $mirror" && \
-        sed -i 's/#allow_insecure_http=<true\/false>/allow_insecure_http=true/' /usr/share/defaults/swupd/config && \
+        sed -i 's/#allow_insecure_http=<true\/false>/allow_insecure_http=true/' $swupd_config && \
         swupd mirror -s $mirror
     [[ -n $proxy ]] && echo "Setting proxy to: $proxy" && export https_proxy=$proxy
 
@@ -76,12 +78,12 @@ function upgrade_sos()
         echo "Clear Linux version $sos_ver is already installed. Continuing to set up the Service VM..."
     else
         echo "Upgrading the Clear Linux version from $VERSION_ID to $sos_ver ..."
-        swupd repair --picky -V $sos_ver 2>/dev/null
+        swupd repair -x --picky -V $sos_ver 2>/dev/null
     fi
 
     # Do the setups if previous process succeed.
     if [[ $? -eq 0 ]]; then
-        [[ -n $mirror ]] && sed -i 's/#allow_insecure_http=<true\/false>/allow_insecure_http=true/' /usr/share/defaults/swupd/config
+        [[ -n $mirror ]] && sed -i 's/#allow_insecure_http=<true\/false>/allow_insecure_http=true/' $swupd_config
         echo "Adding the service-os and systemd-networkd-autostart bundles..."
         swupd bundle-add service-os systemd-networkd-autostart 2>/dev/null
 
@@ -127,7 +129,7 @@ function upgrade_sos()
 
         # Rename Clear-linux-iot-lts2018-sos conf to acrn.conf
         conf_directory=/mnt/loader/entries/
-        conf=`sed -n 2p /mnt/loader/loader.conf | sed "s/default //"`
+        conf=`sed -n 2p /mnt/loader/loader.conf | sed "s/default //" | sed "s/.conf$//"`
         cp -r ${conf_directory}${conf}.conf ${conf_directory}acrn.conf 2>/dev/null || \
         { echo "${conf_directory}${conf}.conf does not exist." && exit 1; }
         sed -i 2"s/$conf/acrn/" /mnt/loader/loader.conf
@@ -210,8 +212,14 @@ function upgrade_uos()
     mount ${uos_loop_device}p3 /mnt || { echo "Failed to mount the User VM rootfs partition" && exit 1; }
     mount ${uos_loop_device}p1 /mnt/boot || { echo "Failed to mount the User VM EFI partition" && exit 1; }
 
+    # set up mirror and proxy url while specified with m and p options
+    [[ -n $mirror ]] && echo "Setting swupd mirror to: $mirror" && \
+        sed -i 's/#allow_insecure_http=<true\/false>/allow_insecure_http=true/' /mnt$swupd_config && \
+        swupd mirror -s $mirror --path=/mnt
+
     echo "Install kernel-iot-lts2018 to $uos_img"
-    swupd bundle-add --path=/mnt kernel-iot-lts2018 || { echo "Failed to install kernel-iot-lts2018" && exit 1; }
+    swupd bundle-add --path=/mnt kernel-iot-lts2018 || { echo "Failed to install kernel-iot-lts2018" && \
+	    sync && umount /mnt/boot /mnt && exit 1; }
 
     echo "Configure kernel-ios-lts2018 as $uos_img default boot kernel"
     uos_kernel_conf=`ls -t /mnt/boot/loader/entries/ | grep Clear-linux-iot-lts2018 | head -n1`

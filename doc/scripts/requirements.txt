@@ -3,3 +3,4 @@ sphinx==1.7.7
 docutils==0.14
 sphinx_rtd_theme==0.4.0
 kconfiglib>=10.2
+sphinx-tabs

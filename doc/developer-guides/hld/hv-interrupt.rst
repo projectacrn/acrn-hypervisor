@@ -63,7 +63,9 @@ to support this. The ACRN hypervisor also initializes all the interrupt
 related modules like IDT, PIC, IOAPIC, and LAPIC.
 
 HV does not own any host devices (except UART). All devices are by
-default assigned to the Service VM. Any interrupts received by Guest VM (Service VM or User VM) device drivers are virtual interrupts injected by HV (via vLAPIC).
+default assigned to the Service VM. Any interrupts received by VM
+(Service VM or User VM) device drivers are virtual interrupts injected
+by HV (via vLAPIC).
 HV manages a Host-to-Guest mapping. When a native IRQ/interrupt occurs,
 HV decides whether this IRQ/interrupt should be forwarded to a VM and
 which VM to forward to (if any). Refer to
@@ -357,15 +359,15 @@ IPI vector 0xF3 upcall. The virtual interrupt injection uses IPI vector 0xF0.
 0xF3 upcall
    A Guest vCPU VM Exit exits due to EPT violation or IO instruction trap.
    It requires Device Module to emulate the MMIO/PortIO instruction.
-   However it could be that the Service OS (SOS) vCPU0 is still in non-root
+   However it could be that the Service VM vCPU0 is still in non-root
    mode. So an IPI (0xF3 upcall vector) should be sent to the physical CPU0
-   (with non-root mode as vCPU0 inside SOS) to force vCPU0 to VM Exit due
+   (with non-root mode as vCPU0 inside the Service VM) to force vCPU0 to VM Exit due
    to the external interrupt. The virtual upcall vector is then injected to
-   SOS, and the vCPU0 inside SOS then will pick up the IO request and do
+   the Service VM, and the vCPU0 inside the Service VM then will pick up the IO request and do
    emulation for other Guest.
 
 0xF0 IPI flow
-   If Device Module inside SOS needs to inject an interrupt to other Guest
+   If Device Module inside the Service VM needs to inject an interrupt to other Guest
    such as vCPU1, it will issue an IPI first to kick CPU1 (assuming CPU1 is
    running on vCPU1) to root-hv_interrupt-data-apmode. CPU1 will inject the
    interrupt before VM Enter.

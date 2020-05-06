@@ -2,7 +2,7 @@
 
 /* make the page width fill the window */
 .wy-nav-content {
-   max-width: none;
+   max-width: 1100px;
 }
 
 /* (temporarily) add an under development tagline to the bread crumb 
@@ -256,3 +256,39 @@ kbd
    font-size: 4rem;
    color: #114B4F;
 }
+
+
+/* add a class for multi-column support
+ * in docs to replace use of .hlist with
+ * a .. rst-class:: rst-columns
+ */
+
+.rst-columns2 {
+   column-width: 28em;
+   column-fill: balance;
+}
+.rst-columns3 .rst-columns {
+   column-width: 18em;
+   column-fill: balance;
+}
+
+/* numbered "h2" steps */
+
+body {
+   counter-reset: step-count;
+}
+
+div.numbered-step h2::before {
+  counter-increment: step-count;
+  content: counter(step-count);
+  background: #cccccc;
+  border-radius: 0.8em;
+  -moz-border-radius: 0.8em;
+  -webkit-border-radius: 0.8em;
+  color: #ffffff;
+  display: inline-block;
+  font-weight: bold;
+  line-height: 1.6em;
+  margin-right: 5px;
+  text-align: center;
+  width: 1.6em;}

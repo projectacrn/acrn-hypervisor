@@ -33,7 +33,7 @@ power state transition:
 -  Pauses Service VM.
 -  Wait all other guests enter low power state.
 -  Offlines all physical APs.
--  Save the context of console, ioapic of Service VM, I/O MMU, lapic of 
+-  Save the context of console, ioapic of Service VM, I/O MMU, lapic of
    Service VM, virtual BSP.
 -  Save the context of physical BSP.
 

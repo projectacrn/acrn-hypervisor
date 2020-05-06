@@ -35,8 +35,11 @@ if "RELEASE" in os.environ:
 # ones.
 
 sys.path.insert(0, os.path.join(os.path.abspath('.'), 'extensions'))
-extensions = ['breathe', 'sphinx.ext.graphviz', 'sphinx.ext.extlinks',
-              'kerneldoc', 'eager_only', 'html_redirects']
+extensions = [
+   'breathe', 'sphinx.ext.graphviz', 'sphinx.ext.extlinks',
+   'kerneldoc', 'eager_only', 'html_redirects',
+   'sphinx_tabs.tabs'
+]
 
 # extlinks provides a macro template
 
@@ -186,6 +189,7 @@ else:
 html_context = {
    'current_version': current_version,
    'versions': ( ("latest", "/latest/"),
+                 ("1.6", "/1.6/"),
                  ("1.5", "/1.5/"),
                  ("1.4", "/1.4/"),
                  ("1.3", "/1.3/"),
@@ -216,6 +220,8 @@ html_static_path = ['static']
 
 def setup(app):
    app.add_stylesheet("acrn-custom.css")
+   app.add_javascript("https://www.googletagmanager.com/gtag/js?id=UA-831873-64")
+   # note more GA tag manager calls are in acrn-custom.js
    app.add_javascript("acrn-custom.js")
 
 # Custom sidebar templates, must be a dictionary that maps document names

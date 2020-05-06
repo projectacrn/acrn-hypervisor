@@ -96,7 +96,7 @@ After the application processor (AP) receives the IPI CPU startup
 interrupt, it uses the MMU page tables created by the BSP. In order to bring
 the memory access rights into effect, some other APIs are provided:
 enable_paging will enable IA32_EFER.NXE and CR0.WP, enable_smep will
-enable CR4.SMEP, and enable_smap will enale CR4.SMAP.
+enable CR4.SMEP, and enable_smap will enable CR4.SMAP.
 :numref:`hv-mem-init`  describes the hypervisor memory initialization for the BSP
 and APs.
 
@@ -291,7 +291,8 @@ Virtual MTRR
 ************
 
 In ACRN, the hypervisor only virtualizes MTRRs fixed range (0~1MB).
-The HV sets MTRRs of the fixed range as Write-Back for UOS, and the SOS reads
+The HV sets MTRRs of the fixed range as Write-Back for a User VM, and
+the Service VM reads
 native MTRRs of the fixed range set by BIOS.
 
 If the guest physical address is not in the fixed range (0~1MB), the
@@ -380,7 +381,7 @@ VM Exit about EPT
 
 There are two VM exit handlers for EPT violation and EPT
 misconfiguration in the hypervisor. EPT page tables are
-always configured correctly for the Service ans User VMs. If an EPT misconfiguration is
+always configured correctly for the Service and User VMs. If an EPT misconfiguration is
 detected, a fatal error is reported by the HV. The hypervisor
 uses EPT violation to intercept MMIO access to do device emulation. EPT
 violation handling data flow is described in the
@@ -489,7 +490,7 @@ almost all the system memory as shown here:
    :width: 900px
    :name: sos-mem-layout
 
-   SOS Physical Memory Layout
+   Service VM Physical Memory Layout
 
 Host to Guest Mapping
 =====================
@@ -521,4 +522,4 @@ must not be accessible by the Seervice/User VM normal world.
 .. figure:: images/mem-image18.png
    :align: center
 
-   UOS Physical Memory Layout with Trusty
+   User VM Physical Memory Layout with Trusty

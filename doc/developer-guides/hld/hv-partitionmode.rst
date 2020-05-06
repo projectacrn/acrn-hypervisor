@@ -176,7 +176,7 @@ Guest SMP boot flow
 The core APIC IDs are reported to the guest using mptable info. SMP boot
 flow is similar to sharing mode. Refer to :ref:`vm-startup`
 for guest SMP boot flow in ACRN. Partition mode guests startup is same as
-the SOS startup in sharing mode.
+the Service VM startup in sharing mode.
 
 Inter-processor Interrupt (IPI) Handling
 ========================================

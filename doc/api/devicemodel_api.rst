@@ -3,7 +3,7 @@
 Device Model APIs
 #################
 
-This section contains APIs for the SOS Device Model services.  Sources
+This section contains APIs for the Service VM Device Model services.  Sources
 for the Device Model are found in the devicemodel folder of the `ACRN
 hypervisor GitHub repo`_
 

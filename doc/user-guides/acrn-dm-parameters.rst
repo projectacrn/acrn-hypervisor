@@ -4,7 +4,7 @@ Device Model Parameters
 #######################
 
 Hypervisor Device Model (DM) is a QEMU-like application in the Service
-OS (SOS) responsible for creating a UOS VM and then performing devices
+VM responsible for creating a User VM and then performing devices
 emulation based on command line configurations, as introduced in
 :ref:`hld-devicemodel`.
 
@@ -23,7 +23,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        default value.
 
    * - :kbd:`-B, --bootargs <bootargs>`
-     - Set the UOS kernel command line arguments.
+     - Set the User VM kernel command line arguments.
        The maximum length is 1023.
        The bootargs string will be passed to the kernel as its cmdline.
 
@@ -37,7 +37,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
      - Enable guest to write io port 0xf4 to exit guest. It's mainly used by
        guest unit test.
 
-   * - :kbd:`-E <elf image path>`
+   * - :kbd:`-E, --elf_file <elf image path>`
      - This option is to define a static elf binary which could be loaded by
        DM. DM will run elf as guest of ACRN.
 
@@ -105,14 +105,14 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
        As an example, the following commands are used to enable IOC feature, the
        initial wakeup reason is ignition button, and cbc_attach uses ttyS1 for
-       TTY line discipline in UOS::
+       TTY line discipline in User VM::
 
           -i /run/acrn/ioc_$vm_name,0x20
           -l com2,/run/acrn/ioc_$vm_name
 
    * - :kbd:`--intr_monitor <intr_monitor_params>`
-     - Enable interrupt storm monitor for UOS. Use this option to prevent an interrupt
-       storm from the UOS.
+     - Enable interrupt storm monitor for User VM. Use this option to prevent an interrupt
+       storm from the User VM.
 
        usage: ``--intr_monitor threshold/s probe-period(s) delay_time(ms) delay_duration(ms)``
 
@@ -129,7 +129,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
          to normal.
 
    * - :kbd:`-k, --kernel <kernel_image_path>`
-     - Set the kernel (full path) for the UOS kernel. The maximum path length is
+     - Set the kernel (full path) for the User VM kernel. The maximum path length is
        1023 characters. The DM handles bzImage image format.
 
        usage: ``-k /path/to/your/kernel_image``
@@ -138,12 +138,12 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
      - (See :kbd:`-i, --ioc_node`)
 
    * - :kbd:`-m, --memsize <memory_size>`
-     - Setup total memory size for UOS.
+     - Setup total memory size for User VM.
 
        memory_size format is: "<size>{K/k, B/b, M/m, G/g}", and size is an
        integer.
 
-       usage: ``-m 4g``: set UOS memory to 4 gigabytes.
+       usage: ``-m 4g``: set User VM memory to 4 gigabytes.
 
    * - :kbd:`--mac_seed <seed_string>`
      - Set a platform unique string as a seed to generate the mac address.
@@ -158,16 +158,9 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
    * - :kbd:`--part_info <part_info_name>`
      - Set guest partition info path.
 
-   * - :kbd:`--ptdev_no_reset`
-     - Disable reset check for pci device.
-       When assigning a PCI device as a passthrough device, we will reset it
-       first to get it to a valid device state. So if the device doesn't have
-       the reset capability, the passthrough will fail. The PCI device reset
-       can be disabled using this option.
-
    * - :kbd:`-r, --ramdisk <ramdisk_image_path>`
-     - Set the ramdisk (full path) for the UOS. The maximum length is 1023.
-       The supported ramdisk format depends on your UOS kernel configuration.
+     - Set the ramdisk (full path) for the User VM. The maximum length is 1023.
+       The supported ramdisk format depends on your User VM kernel configuration.
 
        usage: ``-r /path/to/your/ramdisk_image``
 
@@ -192,10 +185,10 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
          -s 7,xhci,1-2,2-2
 
        This configuration means the virtual xHCI will appear in PCI slot 7
-       in UOS. Any physical USB device attached on 1-2 (bus 1, port 2) or
-       2-2 (bus 2, port 2) will be detected by UOS and be used as expected. To
+       in User VM. Any physical USB device attached on 1-2 (bus 1, port 2) or
+       2-2 (bus 2, port 2) will be detected by User VM and be used as expected. To
        determine which bus and port a USB device is attached, you could run
-       ``lsusb -t`` in SOS.
+       ``lsusb -t`` in Service VM.
 
        ::
 
@@ -221,7 +214,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
    * - :kbd:`--vsbl <vsbl_file_path>`
      - Virtual Slim bootloader (vSBL) is the virtual bootloader supporting
-       booting of the UOS on the ACRN hypervisor platform. The vSBL design is
+       booting of the User VM on the ACRN hypervisor platform. The vSBL design is
        derived from Slim Bootloader, which follows a staged design approach
        that provides hardware initialization and launching a payload that
        provides the boot logic.
@@ -257,12 +250,22 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        uses ``/usr/share/acrn/bios/OVMF.fd`` as the OVMF image
 
        ACRN supports option "w" of OVMF. To preserve any change of OVMF NV data
-       store section, using this option to enable NV data store section writeback. 
+       store section, using this option to enable NV data store section writeback.
 
        usage::
 
           --ovmf w,/usr/share/acrn/bios/OVMF.fd
-       
+
+
+
+   * - :kbd:`--cpu_affinity <list of pCPUs>`
+     - list of pCPUs assigned to this VM.
+
+       Example::
+
+          --cpu_affinity 1,3
+
+       to assign physical CPUs (pCPUs) 1 and 3 to this VM.
 
    * - :kbd:`--virtio_poll <poll_interval>`
      - Enable virtio poll mode with poll interval xxx ns.
@@ -308,7 +311,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        ``GUEST_FLAG_IO_COMPLETION_POLLING`` mode. This kind of VM is
        generally used for soft realtime scenarios (without ``--lapic_pt``) or
        hard realtime scenarios (with ``--lapic_pt``). With ``GUEST_FLAG_RT``,
-       the Service OS (SOS) cannot interfere with this kind of VM when it is
+       the Service VM cannot interfere with this kind of VM when it is
        running. It can only be powered off from inside the VM itself.
 
        By default, this option is not enabled.
@@ -343,10 +346,18 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
        Example::
 
-        for general UOS, like LaaG or WaaG, it need set:
+        for general User VM, like LaaG or WaaG, it need set:
           --pm_notify_channel uart --pm_by_vuart pty,/run/acrn/life_mngr_vm1
           -l com2,/run/acrn/life_mngr_vm1
         for RTVM, like RT-Linux:
           --pm_notify_channel uart --pm_by_vuart tty,/dev/ttyS1
 
-       For different UOS, it can be configured as needed.
+       For different User VM, it can be configured as needed.
+
+   * - :kbd:`--windows`
+     - This option is used to run Windows User VMs. It supports Oracle
+       ``virtio-blk``, ``virtio-net`` and ``virtio-input`` devices for Windows
+       guests with secure boot.
+
+       usage::
+          --windows
