@@ -155,10 +155,10 @@ The default scheduler is **SCHED_BVT**.
 * The cpu_affinity could be configured by one of these approaches:
 
   - Without ``cpu_affinity`` option in acrn-dm. This launches the user VM
-    on all the pCPUs that are included in the statically configured cpu_affinity_bitmap.
+    on all the pCPUs that are included in the statically configured cpu_affinity.
 
   - With ``cpu_affinity`` option in acrn-dm. This launches the user VM on
-    a subset of the configured cpu_affinity_bitmap pCPUs.
+    a subset of the configured cpu_affinity pCPUs.
     
   For example, assign physical CPUs 0 and 1 to this VM::
 
