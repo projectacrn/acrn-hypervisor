@@ -313,56 +313,36 @@ static struct ptirq_remapping_info *add_msix_remapping(struct acrn_vm *vm,
 
 	entry = find_ptirq_entry(PTDEV_INTR_MSI, &phys_sid, NULL);
 	if (entry == NULL) {
-		if (find_ptirq_entry(PTDEV_INTR_MSI, &virt_sid, vm) != NULL) {
-			pr_err("MSIX re-add vbdf%x", virt_bdf);
-		} else {
-			entry = ptirq_alloc_entry(vm, PTDEV_INTR_MSI);
-			if (entry != NULL) {
-				entry->phys_sid.value = phys_sid.value;
-				entry->virt_sid.value = virt_sid.value;
-				entry->release_cb = ptirq_free_irte;
+		entry = ptirq_alloc_entry(vm, PTDEV_INTR_MSI);
+		if (entry != NULL) {
+			entry->phys_sid.value = phys_sid.value;
+			entry->virt_sid.value = virt_sid.value;
+			entry->release_cb = ptirq_free_irte;
 
-				/* update msi source and active entry */
-				if (ptirq_activate_entry(entry, IRQ_INVALID) < 0) {
-					ptirq_release_entry(entry);
-					entry = NULL;
-				}
+			/* update msi source and active entry */
+			if (ptirq_activate_entry(entry, IRQ_INVALID) < 0) {
+				ptirq_release_entry(entry);
+				entry = NULL;
 			}
 		}
-	} else if (entry->vm != vm) {
-		if (is_sos_vm(entry->vm)) {
-			entry->vm = vm;
-			entry->virt_sid.msi_id.bdf = virt_bdf;
-		} else {
-			pr_err("MSIX pbdf%x idx=%d already in vm%d with vbdf%x, not able to add into vm%d with vbdf%x",
-				entry->phys_sid.msi_id.bdf, entry->phys_sid.msi_id.entry_nr, entry->vm->vm_id,
-				entry->virt_sid.msi_id.bdf, vm->vm_id, virt_bdf);
 
-			pr_err("msix entry pbdf%x idx%d already in vm%d", phys_bdf, entry_nr, entry->vm->vm_id);
-			entry = NULL;
-		}
-	} else {
-		/* The mapping has already been added to the VM. No action
-		 * required.
-		 */
+		dev_dbg(DBG_LEVEL_IRQ, "VM%d MSIX add vector mapping vbdf%x:pbdf%x idx=%d",
+			vm->vm_id, virt_bdf, phys_bdf, entry_nr);
 	}
-
-	dev_dbg(DBG_LEVEL_IRQ, "VM%d MSIX add vector mapping vbdf%x:pbdf%x idx=%d",
-		vm->vm_id, virt_bdf, phys_bdf, entry_nr);
 
 	return entry;
 }
 
 /* deactive & remove mapping entry of vbdf:entry_nr for vm */
 static void
-remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entry_nr)
+remove_msix_remapping(const struct acrn_vm *vm, uint16_t phys_bdf, uint32_t entry_nr)
 {
 	struct ptirq_remapping_info *entry;
-	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
+	DEFINE_MSI_SID(phys_sid, phys_bdf, entry_nr);
 	struct intr_source intr_src;
 
-	entry = find_ptirq_entry(PTDEV_INTR_MSI, &virt_sid, vm);
-	if (entry != NULL) {
+	entry = find_ptirq_entry(PTDEV_INTR_MSI, &phys_sid, NULL);
+	if ((entry != NULL) && (entry->vm == vm)) {
 		if (is_entry_active(entry)) {
 			/*TODO: disable MSIX device when HV can in future */
 			ptirq_deactivate_entry(entry);
@@ -372,10 +352,8 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entr
 		intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
 		dmar_free_irte(&intr_src, (uint16_t)entry->allocated_pirq);
 
-		dev_dbg(DBG_LEVEL_IRQ,
-			"VM%d MSIX remove vector mapping vbdf-pbdf:0x%x-0x%x idx=%d",
-			entry->vm->vm_id, virt_bdf,
-			entry->phys_sid.msi_id.bdf, entry_nr);
+		dev_dbg(DBG_LEVEL_IRQ, "VM%d MSIX remove vector mapping vbdf-pbdf:0x%x-0x%x idx=%d",
+			vm->vm_id, entry->virt_sid.msi_id.bdf, phys_bdf, entry_nr);
 
 		ptirq_release_entry(entry);
 	}
@@ -619,7 +597,6 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 				uint16_t entry_nr, struct msi_info *info)
 {
 	struct ptirq_remapping_info *entry;
-	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
 	int32_t ret = -ENODEV;
 	union pci_bdf vbdf;
 
@@ -628,13 +605,7 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 	 * entry already be held by others, return error.
 	 */
 	spinlock_obtain(&ptdev_lock);
-	entry = find_ptirq_entry(PTDEV_INTR_MSI, &virt_sid, vm);
-	if (entry == NULL) {
-		entry = add_msix_remapping(vm, virt_bdf, phys_bdf, entry_nr);
-		if (entry == NULL) {
-			pr_err("dev-assign: msi entry exist in others");
-		}
-	}
+	entry = add_msix_remapping(vm, virt_bdf, phys_bdf, entry_nr);
 	spinlock_release(&ptdev_lock);
 
 	if (entry != NULL) {
@@ -846,14 +817,14 @@ void ptirq_remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_gsi, bo
 /*
  * @pre vm != NULL
  */
-void ptirq_remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf,
+void ptirq_remove_msix_remapping(const struct acrn_vm *vm, uint16_t phys_bdf,
 		uint32_t vector_count)
 {
 	uint32_t i;
 
 	for (i = 0U; i < vector_count; i++) {
 		spinlock_obtain(&ptdev_lock);
-		remove_msix_remapping(vm, virt_bdf, i);
+		remove_msix_remapping(vm, phys_bdf, i);
 		spinlock_release(&ptdev_lock);
 	}
 }

@@ -130,7 +130,7 @@ void ptirq_remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_gsi, bo
  * Remove the mapping of given number of vectors of the given virtual BDF for the given vm.
  *
  * @param[in] vm pointer to acrn_vm
- * @param[in] virt_bdf virtual bdf associated with the passthrough device
+ * @param[in] phys_bdf physical bdf associated with the passthrough device
  * @param[in] vector_count number of vectors
  *
  * @return None
@@ -138,7 +138,7 @@ void ptirq_remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_gsi, bo
  * @pre vm != NULL
  *
  */
-void ptirq_remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t vector_count);
+void ptirq_remove_msix_remapping(const struct acrn_vm *vm, uint16_t phys_bdf, uint32_t vector_count);
 
 /**
   * @}
