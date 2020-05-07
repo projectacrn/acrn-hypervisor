@@ -65,7 +65,7 @@ Enable ACRN Features
    tutorials/run_kata_containers
    tutorials/trustyACRN
    tutorials/rtvm_workload_design_guideline
-   tutorials/setup_openstack_libvert
+   tutorials/setup_openstack_libvirt
 
 Debug
 *****
