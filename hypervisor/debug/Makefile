@@ -7,10 +7,10 @@ SRCS += $(wildcard $(FILE_PATH)/*.c)
 OBJS += $(patsubst %.c,$(HV_OBJDIR)/%.o,$(SRCS))
 
 .PHONY: default
-default: lib
+default: $(LIB_DEBUG)
 
 ifneq ($(CONFIG_RELEASE),y)
-lib: $(OBJS)
+$(LIB_DEBUG): $(OBJS)
 	$(AR) $(ARFLAGS) $(LIB_DEBUG) $(OBJS)
 endif
 
