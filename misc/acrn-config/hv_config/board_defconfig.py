@@ -88,7 +88,7 @@ def get_serial_type():
     ttys_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<TTYS_INFO>", "</TTYS_INFO>")
 
     # Get ttySx from scenario config file which selected by user
-    (err_dic, ttyn) = board_cfg_lib.parser_vuart_console()
+    (err_dic, ttyn) = board_cfg_lib.parser_hv_console()
     if err_dic:
         hv_cfg_lib.ERR_LIST.update(err_dic)
 

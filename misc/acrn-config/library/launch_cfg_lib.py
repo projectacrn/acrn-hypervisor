@@ -443,7 +443,7 @@ def get_pt_dev():
 
 def get_vuart1_from_scenario(vmid):
     """Get the vmid's  vuart1 base"""
-    vuart1 = board_cfg_lib.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
+    vuart1 = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
     return vuart1[vmid]['base']
 
 
