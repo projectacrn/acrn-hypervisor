@@ -18,7 +18,6 @@ BASEDIR := $(shell pwd)
 HV_OBJDIR ?= $(CURDIR)/build
 HV_MODDIR ?= $(HV_OBJDIR)/modules
 HV_FILE := acrn
-SUB_MAKEFILES := $(wildcard */Makefile)
 
 LIB_MOD = $(HV_MODDIR)/lib_mod.a
 BOOT_MOD = $(HV_MODDIR)/boot_mod.a
@@ -354,12 +353,14 @@ MODULES += $(VP_TRUSTY_MOD)
 MODULES += $(VP_HCALL_MOD)
 ifeq ($(CONFIG_RELEASE),y)
 MODULES += $(LIB_RELEASE)
+LIB_BUILD = $(LIB_RELEASE)
+LIB_MK = release/Makefile
 else
 MODULES += $(LIB_DEBUG)
+LIB_BUILD = $(LIB_DEBUG)
+LIB_MK = debug/Makefile
 endif
 MODULES += $(SYS_INIT_MOD)
-
-.PHONY: $(MODULES)
 
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 VERSION := $(HV_OBJDIR)/include/version.h
@@ -415,58 +416,52 @@ pre_build: $(PRE_BUILD_OBJS)
 header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
 
 .PHONY: lib-mod boot-mod hw-mod vp-base-mod vp-dm-mod vp-trusty-mod vp-hcall-mod sys-init-mod
-lib-mod: $(LIB_C_OBJS) $(LIB_S_OBJS)
+$(LIB_MOD): $(LIB_C_OBJS) $(LIB_S_OBJS)
 	$(AR) $(ARFLAGS) $(LIB_MOD) $(LIB_C_OBJS) $(LIB_S_OBJS)
 
-$(LIB_MOD): lib-mod
+lib-mod: $(LIB_MOD)
 
-boot-mod: $(BOOT_S_OBJS) $(BOOT_C_OBJS)
+$(BOOT_MOD): $(BOOT_S_OBJS) $(BOOT_C_OBJS)
 	$(AR) $(ARFLAGS) $(BOOT_MOD) $(BOOT_S_OBJS) $(BOOT_C_OBJS)
 
-$(BOOT_MOD): boot-mod
+boot-mod: $(BOOT_MOD)
 
-hw-mod: $(HW_S_OBJS) $(HW_C_OBJS)
+$(HW_MOD): $(HW_S_OBJS) $(HW_C_OBJS)
 	$(AR) $(ARFLAGS) $(HW_MOD) $(HW_S_OBJS) $(HW_C_OBJS)
 
-$(HW_MOD): hw-mod
+hw-mod: $(HW_MOD)
 
-vp-base-mod: $(VP_BASE_S_OBJS) $(VP_BASE_C_OBJS)
+$(VP_BASE_MOD): $(VP_BASE_S_OBJS) $(VP_BASE_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_BASE_MOD) $(VP_BASE_S_OBJS) $(VP_BASE_C_OBJS)
 
-$(VP_BASE_MOD): vp-base-mod
+vp-base-mod: $(VP_BASE_MOD)
 
-vp-dm-mod: $(VP_DM_C_OBJS)
+$(VP_DM_MOD): $(VP_DM_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_DM_MOD) $(VP_DM_C_OBJS)
 
-$(VP_DM_MOD): vp-dm-mod
+vp-dm-mod: $(VP_DM_MOD)
 
-vp-trusty-mod: $(VP_TRUSTY_C_OBJS)
+$(VP_TRUSTY_MOD): $(VP_TRUSTY_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_TRUSTY_MOD) $(VP_TRUSTY_C_OBJS)
 
-$(VP_TRUSTY_MOD): vp-trusty-mod
+vp-trusty-mod: $(VP_TRUSTY_MOD)
 
-vp-hcall-mod: $(VP_HCALL_C_OBJS)
+$(VP_HCALL_MOD): $(VP_HCALL_C_OBJS)
 	$(AR) $(ARFLAGS) $(VP_HCALL_MOD) $(VP_HCALL_C_OBJS)
 
-$(VP_HCALL_MOD): vp-hcall-mod
+vp-hcall-mod: $(VP_HCALL_MOD)
 
-sys-init-mod: $(SYS_INIT_C_OBJS)
+$(SYS_INIT_MOD): $(SYS_INIT_C_OBJS)
 	$(AR) $(ARFLAGS) $(SYS_INIT_MOD) $(SYS_INIT_C_OBJS)
 
-$(SYS_INIT_MOD): sys-init-mod
+sys-init-mod: $(SYS_INIT_MOD)
 
 .PHONY: lib
-lib: $(SUB_MAKEFILES)
 
-.PHONY: $(SUB_MAKEFILES)
-$(SUB_MAKEFILES): header
-	for Makefile in $(SUB_MAKEFILES); do \
-		$(MAKE) -f $$Makefile MKFL_NAME=$$Makefile; \
-	done
+$(LIB_BUILD): header
+	$(MAKE) -f $(LIB_MK) MKFL_NAME=$(LIB_MK)
 
-$(LIB_RELEASE): lib
-
-$(LIB_DEBUG): lib
+lib: $(LIB_BUILD)
 
 $(HV_OBJDIR)/$(HV_FILE).32.out: $(HV_OBJDIR)/$(HV_FILE).out
 	$(OBJCOPY) -S --section-alignment=0x1000 -O elf32-i386 $< $@
