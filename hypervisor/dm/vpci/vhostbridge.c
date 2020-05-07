@@ -42,7 +42,6 @@
 /**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  */
 static void init_vhostbridge(struct pci_vdev *vdev)
 {
@@ -101,7 +100,6 @@ static void deinit_vhostbridge(__unused struct pci_vdev *vdev)
 /**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  */
 static int32_t read_vhostbridge_cfg(const struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
@@ -114,7 +112,6 @@ static int32_t read_vhostbridge_cfg(const struct pci_vdev *vdev, uint32_t offset
 /**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  */
 static int32_t write_vhostbridge_cfg(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t val)

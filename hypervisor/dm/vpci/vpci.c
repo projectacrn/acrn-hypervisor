@@ -299,8 +299,7 @@ void deinit_vpci(struct acrn_vm *vm)
 /**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
- * @pre vdev->vpci->vm->iommu != NULL
+ * @pre vpci2vm(vdev->vpci)->iommu != NULL
  */
 static void assign_vdev_pt_iommu_domain(struct pci_vdev *vdev)
 {
@@ -317,8 +316,7 @@ static void assign_vdev_pt_iommu_domain(struct pci_vdev *vdev)
 /**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
- * @pre vdev->vpci->vm->iommu != NULL
+ * @pre vpci2vm(vdev->vpci)->iommu != NULL
  */
 static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
 {
@@ -351,7 +349,6 @@ static void remove_vdev_pt_iommu_domain(const struct pci_vdev *vdev)
  * @param bdf  Indicate the vdev's BDF
  *
  * @pre vpci != NULL
- * @pre vpci->vm != NULL
  *
  * @return Return a available vdev instance, otherwise return NULL
  */

@@ -72,7 +72,6 @@ static void mask_one_msix_vector(const struct pci_vdev *vdev, uint32_t index)
 /**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  * @pre vdev->pdev != NULL
  */
 static void remap_one_vmsix_entry(const struct pci_vdev *vdev, uint32_t index)
@@ -260,7 +259,6 @@ void init_vmsix(struct pci_vdev *vdev)
 /**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  */
 void deinit_vmsix(struct pci_vdev *vdev)
 {

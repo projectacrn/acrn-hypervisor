@@ -57,7 +57,6 @@ static inline void enable_disable_msi(const struct pci_vdev *vdev, bool enable)
  *
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  * @pre vdev->pdev != NULL
  */
 static void remap_vmsi(const struct pci_vdev *vdev)
@@ -125,7 +124,6 @@ void write_vmsi_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint
 /**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  */
 void deinit_vmsi(struct pci_vdev *vdev)
 {
