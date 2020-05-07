@@ -123,8 +123,16 @@ struct pci_vdev {
 	/* Pointer to corressponding operations */
 	const struct pci_vdev_ops *vdev_ops;
 
-	/* For SOS, if the device is latterly assigned to a UOS, we use this field to track the new owner. */
-	struct pci_vdev *new_owner;
+	/*
+	 * vdev in    |   HV       |   pre-VM       |               SOS                   | post-VM
+	 *            |            |                |vdev used by SOS|vdev used by post-VM|
+	 * -----------------------------------------------------------------------------------------------
+	 * parent_user| NULL(HV)   |   NULL(HV)     |   NULL(HV)     |   NULL(HV)         | vdev in SOS
+	 * -----------------------------------------------------------------------------------------------
+	 * user       | vdev in HV | vdev in pre-VM |   vdev in SOS  |   vdev in post-VM  | vdev in post-VM
+	 */
+	struct pci_vdev *parent_user;
+	struct pci_vdev *user;
 };
 
 union pci_cfg_addr_reg {

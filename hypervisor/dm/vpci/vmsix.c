@@ -195,7 +195,7 @@ int32_t vmsix_handle_table_mmio_access(struct io_request *io_req, void *handler_
 
 	vdev = (struct pci_vdev *)handler_private_data;
 	/* This device has not be assigned to other OS */
-	if (vdev->new_owner == NULL) {
+	if (vdev->user == vdev) {
 		offset = mmio->address - vdev->msix.mmio_gpa;
 
 		if (msixtable_access(vdev, (uint32_t)offset)) {
