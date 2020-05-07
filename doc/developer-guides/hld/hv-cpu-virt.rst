@@ -56,9 +56,9 @@ ACRN then forces a fixed 1:1 mapping between a VCPU and this physical CPU
 when creating a VCPU for the guest Operating System. This makes the VCPU
 management code much simpler.
 
-``cpu_affinity_bitmap`` in ``vm config`` helps to decide which physical CPU a
+``cpu_affinity`` in ``vm config`` helps to decide which physical CPU a
 VCPU in a VM affines to, then finalize the fixed mapping. When launching an
-user VM, need to choose pCPUs from the VM's cpu_affinity_bitmap that are not
+user VM, need to choose pCPUs from the VM's cpu_affinity that are not
 used by any other VMs.
 
 Flexible CPU Sharing
@@ -67,9 +67,9 @@ Flexible CPU Sharing
 To enable CPU sharing, ACRN hypervisor could configure IORR
 (IO sensitive Round-Robin) or BVT (Borrowed Virtual Time) scheduler policy.
 
-``cpu_affinity_bitmap`` in ``vm config`` helps to decide which physical CPU two
-or more vCPUs from different VMs are sharing. A pCPU can be shared among Service OS
-and any user VMs as long as local APIC passthrough is not enabled in that user VM.
+``cpu_affinity`` in ``vm config`` indicates all the physical CPUs this VM
+is allowed to run on. A pCPU can be shared among Service OS and any user VMs
+as long as local APIC passthrough is not enabled in that user VM.
 
 see :ref:`cpu_sharing` for more information.
 
@@ -106,15 +106,15 @@ CPUs intended for UOS use.
 CPU management in UOS
 =====================
 
-``cpu_affinity_bitmap`` in ``vm config`` defines a set of pCPUs that an User VM
+``cpu_affinity`` in ``vm config`` defines a set of pCPUs that an User VM
 is allowed to run on. acrn-dm could choose to launch on only a subset of the pCPUs
-or on all pCPUs listed in cpu_affinity_bitmap, but it can't assign
+or on all pCPUs listed in cpu_affinity, but it can't assign
 any pCPU that is not included in it.
 
 CPU assignment management in HV
 ===============================
 
-The physical CPU assignment is pre-defined by ``cpu_affinity_bitmap`` in
+The physical CPU assignment is pre-defined by ``cpu_affinity`` in
 ``vm config``, while post-launched VMs could be launched on pCPUs that are
 a subset of it.
 
