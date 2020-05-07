@@ -318,6 +318,7 @@ You are now all set to start the User VM:
 
 **Congratulations**, you are now watching the User VM booting up!
 
+.. _enable-network-sharing-user-vm:
 
 Enable network sharing
 **********************
