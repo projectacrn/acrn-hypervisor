@@ -360,12 +360,12 @@ static struct pci_vdev *find_available_vdev(struct acrn_vpci *vpci, union pci_bd
 {
 	struct pci_vdev *vdev = pci_find_vdev(vpci, bdf);
 
-	if ((vdev != NULL) && (vdev->vpci != vpci)) {
+	if ((vdev != NULL) && (vdev->user != vdev)) {
 		/* In the case a device is assigned to a UOS and is not in a zombie state */
-		if ((vdev->new_owner != NULL) && (vdev->new_owner->vpci != NULL)) {
+		if ((vdev->user != NULL) && (vdev->user->vpci != NULL)) {
 			/* the SOS is able to access, if and only if the SOS has higher severity than the UOS. */
 			if (get_vm_severity(vpci2vm(vpci)->vm_id) <
-					get_vm_severity(vpci2vm(vdev->new_owner->vpci)->vm_id)) {
+					get_vm_severity(vpci2vm(vdev->user->vpci)->vm_id)) {
 				vdev = NULL;
 			}
 		} else {
@@ -378,6 +378,9 @@ static struct pci_vdev *find_available_vdev(struct acrn_vpci *vpci, union pci_bd
 
 static void vpci_init_pt_dev(struct pci_vdev *vdev)
 {
+	vdev->parent_user = NULL;
+	vdev->user = vdev;
+
 	/*
 	 * Here init_vdev_pt() needs to be called after init_vmsix() for the following reason:
 	 * init_vdev_pt() will indirectly call has_msix_cap(), which
@@ -397,6 +400,9 @@ static void vpci_deinit_pt_dev(struct pci_vdev *vdev)
 	remove_vdev_pt_iommu_domain(vdev);
 	deinit_vmsix(vdev);
 	deinit_vmsi(vdev);
+
+	vdev->user = NULL;
+	vdev->parent_user = NULL;
 }
 
 struct cfg_header_perm {
@@ -704,7 +710,7 @@ static void deinit_postlaunched_vm_vpci(struct acrn_vm *vm)
 		/* Only deinit the VM's own devices */
 		if (is_own_device(vm, vdev)) {
 			spinlock_obtain(&vm->vpci.lock);
-			target_vdev = vdev->new_owner;
+			target_vdev = vdev->user;
 			ret = move_pt_device(vm->iommu, sos_vm->iommu, (uint8_t)target_vdev->pdev->bdf.bits.b,
 					(uint8_t)(target_vdev->pdev->bdf.value & 0xFFU));
 			if (ret != 0) {
@@ -717,7 +723,7 @@ static void deinit_postlaunched_vm_vpci(struct acrn_vm *vm)
 
 			/* Move vdev pointers back to SOS*/
 			vdev->vpci = (struct acrn_vpci *) &sos_vm->vpci;
-			vdev->new_owner = NULL;
+			vdev->user = NULL;
 			spinlock_release(&vm->vpci.lock);
 		}
 	}
@@ -783,8 +789,9 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pc
 
 			vdev->flags |= pcidev->type;
 			vdev->bdf.value = pcidev->virt_bdf;
+			vdev->parent_user = vdev_in_sos;
 			spinlock_release(&tgt_vm->vpci.lock);
-			vdev_in_sos->new_owner = vdev;
+			vdev_in_sos->user = vdev;
 		}
 	} else {
 		pr_fatal("%s, can't find PCI device %x:%x.%x for vm[%d] %x:%x.%x\n", __func__,
@@ -816,7 +823,7 @@ int32_t vpci_deassign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *
 	spinlock_obtain(&sos_vm->vpci.lock);
 	vdev_in_sos = pci_find_vdev(&sos_vm->vpci, bdf);
 	if ((vdev_in_sos != NULL) && is_own_device(tgt_vm, vdev_in_sos) && (vdev_in_sos->pdev != NULL)) {
-		vdev = vdev_in_sos->new_owner;
+		vdev = vdev_in_sos->user;
 
 		spinlock_obtain(&tgt_vm->vpci.lock);
 
@@ -834,7 +841,7 @@ int32_t vpci_deassign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *
 		spinlock_release(&tgt_vm->vpci.lock);
 
 		vdev_in_sos->vpci = &sos_vm->vpci;
-		vdev_in_sos->new_owner = NULL;
+		vdev_in_sos->user = NULL;
 	} else {
 		pr_fatal("%s, can't find PCI device %x:%x.%x for vm[%d] %x:%x.%x\n", __func__,
 			pcidev->phys_bdf >> 8U, (pcidev->phys_bdf >> 3U) & 0x1fU, pcidev->phys_bdf & 0x7U,

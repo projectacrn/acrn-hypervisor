@@ -70,10 +70,15 @@ static void init_vpci_bridge(struct pci_vdev *vdev)
 	pci_vdev_write_vcfg(vdev, PCIR_HDRTYPE, 1U, (PCIM_HDRTYPE_BRIDGE | PCIM_MFDEV));
 	pci_vdev_write_vcfg(vdev, PCIR_CLASS, 1U, PCIC_BRIDGE);
 	pci_vdev_write_vcfg(vdev, PCIR_SUBCLASS, 1U, PCIS_BRIDGE_PCI);
+
+	vdev->parent_user = NULL;
+	vdev->user = vdev;
 }
 
 static void deinit_vpci_bridge(__unused struct pci_vdev *vdev)
 {
+	vdev->parent_user = NULL;
+	vdev->user = NULL;
 }
 
 static int32_t read_vpci_bridge_cfg(const struct pci_vdev *vdev, uint32_t offset,

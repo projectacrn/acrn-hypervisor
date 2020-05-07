@@ -86,10 +86,15 @@ static void init_vhostbridge(struct pci_vdev *vdev)
 	pci_vdev_write_vcfg(vdev, 0xf5U, 1U, 0xfU);
 	pci_vdev_write_vcfg(vdev, 0xf6U, 1U, 0x1cU);
 	pci_vdev_write_vcfg(vdev, 0xf7U, 1U, 0x1U);
+
+	vdev->parent_user = NULL;
+	vdev->user = vdev;
 }
 
 static void deinit_vhostbridge(__unused struct pci_vdev *vdev)
 {
+	vdev->parent_user = NULL;
+	vdev->user = NULL;
 }
 
 
