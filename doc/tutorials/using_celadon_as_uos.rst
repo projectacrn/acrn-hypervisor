@@ -25,9 +25,9 @@ Prerequisites
   to identify the USB 3.0 port header on the main board.
 
 .. note::
-   This document uses the SDC scenario (default). You may need a serial port connection to your platform
-   or change the configuration of the User VM that will run Celadon to see its console if you use a different
-   scenario.
+   This document uses the (default) SDC scenario. If you use a different
+   scenario, to see its console, you will need a serial port connection to your platform
+   or change the configuration of the User VM that will run Celadon.
 
 Build Celadon from source
 *************************
@@ -36,8 +36,10 @@ Build Celadon from source
    <https://01.org/projectceladon/documentation/getting-started/build-source>`_ guide
    to set up the Celadon project source code.
 
-   .. note:: The master branch is based on the Google Android 10 pre-Production Early Release.
-      Use the following command to specify a stable Celadon branch based on the Google Android 9 source code in order to apply those patches in the :ref:`ACRN patch list`::
+   .. note:: The master branch is based on the Google Android 10
+      pre-Production Early Release.  Use the following command to specify a
+      stable Celadon branch based on the Google Android 9 source code in order
+      to apply those patches in the :ref:`ACRN patch list`::
 
       $ repo init -u https://github.com/projectceladon/manifest.git -b celadon/p/mr0/master -m stable-build/ww201925_H.xml
 
