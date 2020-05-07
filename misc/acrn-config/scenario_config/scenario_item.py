@@ -39,7 +39,7 @@ class HwInfo:
         Get ttySn from board info
         :return: serial console list
         """
-        self.ttys_val = board_cfg_lib.get_ttys_info(self.board_info)
+        self.ttys_val = board_cfg_lib.get_native_ttys_info(self.board_info)
         return self.ttys_val
 
     def get_clos_val(self):
@@ -140,8 +140,8 @@ class VuartInfo:
         Get all items which belong to this class
         :return: None
         """
-        self.v0_vuart = board_cfg_lib.get_vuart_info_id(self.scenario_info, 0)
-        self.v1_vuart = board_cfg_lib.get_vuart_info_id(self.scenario_info, 1)
+        self.v0_vuart = common.get_vuart_info_id(self.scenario_info, 0)
+        self.v1_vuart = common.get_vuart_info_id(self.scenario_info, 1)
 
     def check_item(self):
         """

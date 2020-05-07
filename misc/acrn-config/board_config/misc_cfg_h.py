@@ -11,6 +11,7 @@ MISC_CFG_HEADER = """
 #define MISC_CFG_H
 """
 
+NATIVE_TTYS_DIC = {}
 MISC_CFG_END = """#endif /* MISC_CFG_H */"""
 
 
@@ -21,6 +22,83 @@ class Vuart:
     v_type = {}
     v_base = {}
     v_irq = {}
+
+
+def get_valid_ttys_for_vuart(ttys_n):
+    """
+    Get available ttysn list for vuart0/vuart1
+    :param ttys_n: the serial port was chosen as hv console
+     """
+    vuart0_valid = []
+    vuart1_valid = ['ttyS0', 'ttyS1', 'ttyS2', 'ttyS3']
+    ttys_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<TTYS_INFO>", "</TTYS_INFO>")
+    if ttys_lines:
+        vuart0_valid.clear()
+        for tty_line in ttys_lines:
+            tmp_dic = {}
+            #seri:/dev/ttySx type:mmio base:0x91526000 irq:4 bdf:"00:18.0"
+            #seri:/dev/ttySy type:portio base:0x2f8 irq:5
+            tty = tty_line.split('/')[2].split()[0]
+            ttys_irq = tty_line.split()[3].split(':')[1].strip()
+            ttys_type = tty_line.split()[1].split(':')[1].strip()
+            tmp_dic['irq'] = int(ttys_irq)
+            tmp_dic['type'] = ttys_type
+            NATIVE_TTYS_DIC[tty] = tmp_dic
+            vuart0_valid.append(tty)
+            if tty and tty in vuart1_valid:
+                vuart1_valid.remove(tty)
+
+    if not vuart1_valid:
+        common.print_yel("ttyS are fully used. ttyS0 is used for hv_console, ttyS1 is used for vuart1!", warn=True)
+        vuart1_valid = ['ttyS0', 'ttyS1', 'ttyS2', 'ttyS3']
+        if ttys_n in vuart1_valid:
+            vuart1_valid.remove(ttys_n)
+
+    return (vuart0_valid, vuart1_valid)
+
+
+def get_vuart_settings():
+    """
+    Get vuart setting from scenario setting
+    :return: vuart0/vuart1 setting dictionary
+    """
+    err_dic = {}
+    vuart0_setting = {}
+    vuart1_setting = {}
+
+    (err_dic, ttys_n) = board_cfg_lib.parser_hv_console()
+    if err_dic:
+        return err_dic
+
+    if ttys_n:
+        (vuart0_valid, vuart1_valid) = get_valid_ttys_for_vuart(ttys_n)
+
+        # VUART0 setting
+        if ttys_n not in list(NATIVE_TTYS_DIC.keys()):
+            vuart0_setting['ttyS0'] = board_cfg_lib.alloc_irq()
+        else:
+            if int(NATIVE_TTYS_DIC[ttys_n]['irq']) >= 16:
+                vuart0_setting[ttys_n] = board_cfg_lib.alloc_irq()
+            else:
+                vuart0_setting[ttys_n] = NATIVE_TTYS_DIC[ttys_n]['irq']
+    else:
+        vuart1_valid = ['ttyS1']
+
+    # VUART1 setting
+    # The IRQ of vUART1(COM2) might be hard-coded by SOS ACPI table(i.e. host ACPI),
+    # so we had better follow native COM2 IRQ assignment for vUART1 if COM2 is a legacy ttyS,
+    # otherwise function of vUART1 would be failed. If host COM2 does not exist or it is a PCI ttyS,
+    # then we could allocate a free IRQ for vUART1.
+
+    if 'ttyS1' in NATIVE_TTYS_DIC.keys() \
+        and NATIVE_TTYS_DIC['ttyS1']['type'] == "portio" \
+        and 'irq' in list(NATIVE_TTYS_DIC['ttyS1'].keys()) \
+        and NATIVE_TTYS_DIC['ttyS1']['irq'] < 16:
+        vuart1_setting['ttyS1'] = NATIVE_TTYS_DIC['ttyS1']['irq']
+    else:
+        vuart1_setting[vuart1_valid[0]] = board_cfg_lib.alloc_irq()
+
+    return (err_dic, vuart0_setting, vuart1_setting)
 
 
 def sos_bootarg_diff(sos_cmdlines, config):
@@ -52,12 +130,12 @@ def parse_boot_info():
     if 'SOS_VM' in common.VM_TYPES.values():
         sos_cmdlines = list(common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "board_private", "bootargs").values())
         sos_rootfs = list(common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "board_private", "rootfs").values())
-        (err_dic, vuart0_dic, vuart1_dic) = board_cfg_lib.get_board_private_vuart("board_private", "console")
+        (err_dic, vuart0_dic, vuart1_dic) = get_vuart_settings()
     else:
         sos_cmdlines = list(common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "os_config", "bootargs").values())
 
         sos_rootfs = list(common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "os_config", "rootfs").values())
-        (err_dic, vuart0_dic, vuart1_dic) = board_cfg_lib.get_board_private_vuart("os_config", "console")
+        (err_dic, vuart0_dic, vuart1_dic) = get_vuart_settings()
 
     return (err_dic, sos_cmdlines, sos_rootfs, vuart0_dic, vuart1_dic)
 
@@ -115,7 +193,7 @@ def generate_file(config):
     max_cpu_num = len(cpu_list)
 
     # get the vuart0/vuart1 which user chosed from scenario.xml of board_private section
-    (err_dic, ttys_n) = board_cfg_lib.parser_vuart_console()
+    (err_dic, ttys_n) = board_cfg_lib.parser_hv_console()
     if err_dic:
         return err_dic
 
@@ -135,8 +213,8 @@ def generate_file(config):
     # parse the setting ttys vuatx dic: {vmid:base/irq}
     vuart0_setting = Vuart()
     vuart1_setting = Vuart()
-    vuart0_setting = board_cfg_lib.get_vuart_info_id(common.SCENARIO_INFO_FILE, 0)
-    vuart1_setting = board_cfg_lib.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
+    vuart0_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 0)
+    vuart1_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
 
     # sos command lines information
     sos_cmdlines = [i for i in sos_cmdlines[0].split() if i != '']

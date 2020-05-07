@@ -19,7 +19,6 @@ LEGACY_TTYS = {
     'ttyS3':'0x2E8',
 }
 
-NATIVE_CONSOLE_DIC = {}
 VALID_LEGACY_IRQ = []
 ERR_LIST = {}
 
@@ -196,45 +195,7 @@ def alloc_irq():
     return irq_val
 
 
-def get_valid_console():
-    """ Get valid console with mapping {ttyS:irq} returned """
-    used_console_lines = get_info(common.BOARD_INFO_FILE, "<TTYS_INFO>", "</TTYS_INFO>")
-
-    vuart0_valid_console = []
-    vuart1_valid_console = ['ttyS0', 'ttyS1', 'ttyS2', 'ttyS3', 'ttyS4', 'ttyS5', 'ttyS6', 'ttyS7']
-    if used_console_lines:
-        vuart0_valid_console.clear()
-        for console in used_console_lines:
-            #seri:/dev/ttySx type:mmio base:0x91526000 irq:4 bdf:"00:18.0"
-            #seri:/dev/ttySy type:portio base:0x2f8 irq:5
-            tty = console.split('/')[2].split()[0]
-            ttys_irq = console.split()[3].split(':')[1].strip()
-            NATIVE_CONSOLE_DIC[tty] = ttys_irq
-            vuart0_valid_console.append(tty)
-            if tty:
-                vuart1_valid_console.remove(tty)
-
-    return (vuart0_valid_console, vuart1_valid_console)
-
-
-def console_to_show(board_info):
-    """
-     This is get available console from board info file
-     :param board_info:  it is a file what contains board information for script to read from
-     :return: available console
-     """
-    show_vuart1 = False
-    (vuart0_valid_console, vuart1_valid_console) = get_valid_console()
-    if not vuart1_valid_console:
-        print_yel("Console are full used, sos_console/vuart1 have to chose one:", warn=True)
-        vuart0_valid_console = ['ttyS0', 'ttyS1', 'ttyS2', 'ttyS3']
-        vuart1_valid_console = ['ttyS0', 'ttyS1', 'ttyS2', 'ttyS3']
-        show_vuart1 = True
-
-    return (vuart0_valid_console, vuart1_valid_console, show_vuart1)
-
-
-def parser_vuart_console():
+def parser_hv_console():
     """
     There may be 3 types in the console item
     1. BDF:(00:18.2) seri:/dev/ttyS2
@@ -254,98 +215,6 @@ def parser_vuart_console():
         ttys_n = ttys
 
     return (err_dic, ttys_n)
-
-
-def get_board_private_vuart(branch_tag, tag_console):
-    """
-    Get vuart_console from board setting
-    :param tag_console: TTYS_INFO
-    :return: vuart0/vuart1 console dictionary
-    """
-    err_dic = {}
-    vuart0_console_dic = {}
-    vuart1_console_dic = {}
-
-    (err_dic, ttys_n) = parser_vuart_console()
-    if err_dic:
-        return err_dic
-
-    if ttys_n:
-
-        (vuart0_valid_console, vuart1_valid_console, show_vuart1) = console_to_show(common.BOARD_INFO_FILE)
-
-        # VUART0
-        if ttys_n not in list(NATIVE_CONSOLE_DIC.keys()):
-            vuart0_console_dic[ttys_n] = alloc_irq()
-        else:
-            if int(NATIVE_CONSOLE_DIC[ttys_n]) >= 16:
-                vuart0_console_dic[ttys_n] = alloc_irq()
-            else:
-                vuart0_console_dic[ttys_n] = NATIVE_CONSOLE_DIC[ttys_n]
-    else:
-        vuart1_valid_console = ['ttyS1']
-
-    # VUART1
-    if len(NATIVE_CONSOLE_DIC) >= 2 and 'ttyS1' in NATIVE_CONSOLE_DIC.keys():
-        # There are more than 1 serial port in native, we need to use native ttyS1 info for vuart1 which include
-        # base ioport and irq number.
-        vuart1_console_dic['ttyS1'] = NATIVE_CONSOLE_DIC['ttyS1']
-    else:
-        # There is only one native serial port. We hardcode base ioport for vuart1 and allocate a irq which is
-        # free in native env and use it for vuart1 irq number
-        vuart1_console_dic[vuart1_valid_console[0]] = alloc_irq()
-
-    return (err_dic, vuart0_console_dic, vuart1_console_dic)
-
-
-def get_vuart_id(tmp_vuart, leaf_tag, leaf_text):
-    """
-    Get all vuart id member of class
-    :param tmp_vuart: a dictionary to store member:value
-    :param leaf_tag: key pattern of item tag
-    :param leaf_text: key pattern of item tag's value
-    :return: a dictionary to which stored member:value
-    """
-    if leaf_tag == "type":
-        tmp_vuart['type'] = leaf_text
-    if leaf_tag == "base":
-        tmp_vuart['base'] = leaf_text
-    if leaf_tag == "irq":
-        tmp_vuart['irq'] = leaf_text
-
-    if leaf_tag == "target_vm_id":
-        tmp_vuart['target_vm_id'] = leaf_text
-    if leaf_tag == "target_uart_id":
-        tmp_vuart['target_uart_id'] = leaf_text
-
-    return tmp_vuart
-
-
-def get_vuart_info_id(config_file, idx):
-    """
-    Get vuart information by vuart id indexx
-    :param config_file: it is a file what contains information for script to read from
-    :param idx: vuart index in range: [0,1]
-    :return: dictionary which stored the vuart-id
-    """
-    tmp_tag = {}
-    vm_id = 0
-    root = common.get_config_root(config_file)
-    for item in root:
-        if item.tag == "vm":
-            vm_id = int(item.attrib['id'])
-
-        for sub in item:
-            tmp_vuart = {}
-            for leaf in sub:
-                if sub.tag == "vuart" and int(sub.attrib['id']) == idx:
-                    tmp_vuart = get_vuart_id(tmp_vuart, leaf.tag, leaf.text)
-
-            # append vuart for each vm
-            if tmp_vuart and sub.tag == "vuart":
-                tmp_tag[vm_id] = tmp_vuart
-
-    return tmp_tag
 
 
 def get_processor_info():
@@ -375,11 +244,11 @@ def get_processor_info():
     return tmp_list
 
 
-def get_ttys_info(board_info):
+def get_native_ttys_info(board_info):
     """
     Get ttySn from board info
     :param board_info: it is a file what contains board information for script to read from
-    :return: serial console list
+    :return: serial port list
     """
     ttys_list = []
     ttys_info = get_info(board_info, "<TTYS_INFO>", "</TTYS_INFO>")
