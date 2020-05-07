@@ -65,6 +65,7 @@ Enable ACRN Features
    tutorials/run_kata_containers
    tutorials/trustyACRN
    tutorials/rtvm_workload_design_guideline
+   tutorials/setup_openstack_libvert
 
 Debug
 *****
@@ -90,6 +91,7 @@ Additional Tutorials
    tutorials/sign_clear_linux_image
    tutorials/enable_laag_secure_boot
    tutorials/kbl-nuc-sdc
+
 
 
 
