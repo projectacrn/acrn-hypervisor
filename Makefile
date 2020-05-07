@@ -160,7 +160,6 @@ hypervisor:
 	@if [ "$(BOARD_FILE)" != "" ] && [ -f $(BOARD_FILE) ] && [ "$(SCENARIO_FILE)" != "" ] && [ -f $(SCENARIO_FILE) ] && [ "$(TARGET_DIR)" = "" ]; then \
 		echo "No TARGET_DIR parameter is specified, the original configuration source is overwritten!";\
 	fi
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) clean;
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(abspath $(TARGET_DIR)) defconfig;
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(abspath $(TARGET_DIR)) oldconfig;
 	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(abspath $(TARGET_DIR))
@@ -198,7 +197,6 @@ hypervisor:
 	@cat $(HV_CFG_LOG)
 
 devicemodel: tools
-	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) RELEASE=$(RELEASE) clean
 	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) DM_BUILD_VERSION=$(BUILD_VERSION) DM_BUILD_TAG=$(BUILD_TAG) DM_ASL_COMPILER=$(ASL_COMPILER) RELEASE=$(RELEASE)
 
 tools:
