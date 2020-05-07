@@ -201,11 +201,25 @@ relevant for configuring or debugging ACRN-based systems.
 
    * - hvlog
      - Service VM
-     - Reserve memory for the ACRN hypervisor log. The reserved space should not
-       overlap any other blocks (e.g.  hypervisor's reserved space).
+     - Sets the guest physical address and size of the dedicated hypervisor
+       log ring buffer between the hypervisor and Service VM.
+       A ``memmap`` parameter is also required to reserve the specified memory
+       from the guest VM.
+
+       If hypervisor relocation is disabled, verify that
+       :option:`CONFIG_HV_RAM_START` and :option:`CONFIG_HV_RAM_SIZE`
+       does not overlap with the hypervisor's reserved buffer space allocated
+       in the Service VM. Service VM GPA and HPA are a 1:1 mapping.
+
+       If hypervisor relocation is enabled, reserve the memory below 256MB,
+       since hypervisor could be relocated anywhere between 256MB and 4GB.
+
+       You should enable ASLR on SOS. This ensures that when guest Linux is
+       relocating kernel image, it will avoid this buffer address.
+       
      - ::
 
-          hvlog=2M@0x6de00000
+          hvlog=2M@0xe00000
 
    * - memmap
      - Service VM
@@ -217,7 +231,7 @@ relevant for configuring or debugging ACRN-based systems.
          Gigabytes, respectively.
      - ::
 
-         memmap=0x400000$0x6da00000
+         memmap=0x400000$0xa00000
 
    * - ramoops.mem_address
        ramoops.mem_size
@@ -228,9 +242,12 @@ relevant for configuring or debugging ACRN-based systems.
        to store the dump. See `Linux Kernel Ramoops oops/panic logger
        <https://www.kernel.org/doc/html/v4.19/admin-guide/ramoops.html#ramoops-oops-panic-logger>`_
        for details.
+
+       This buffer should not overlap with hypervisor reserved memory and
+       guest kernel image. See ``hvlog``.
      - ::
 
-         ramoops.mem_address=0x6da00000
+         ramoops.mem_address=0xa00000
          ramoops.mem_size=0x400000
          ramoops.console_size=0x200000
 
