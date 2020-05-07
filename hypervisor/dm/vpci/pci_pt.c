@@ -35,7 +35,6 @@
 /*
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  */
 static void vdev_pt_unmap_msix(struct pci_vdev *vdev)
 {
@@ -63,7 +62,6 @@ static void vdev_pt_unmap_msix(struct pci_vdev *vdev)
 /*
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  */
 void vdev_pt_map_msix(struct pci_vdev *vdev, bool hold_lock)
 {
@@ -89,7 +87,6 @@ void vdev_pt_map_msix(struct pci_vdev *vdev, bool hold_lock)
 /**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  */
 static void vdev_pt_unmap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
@@ -111,7 +108,6 @@ static void vdev_pt_unmap_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 /**
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  */
 static void vdev_pt_map_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
@@ -136,7 +132,6 @@ static void vdev_pt_map_mem_vbar(struct pci_vdev *vdev, uint32_t idx)
  * @brief Allow IO bar access
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  */
 static void vdev_pt_allow_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
@@ -155,7 +150,6 @@ static void vdev_pt_allow_io_vbar(struct pci_vdev *vdev, uint32_t idx)
  * @brief Deny IO bar access
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  */
 static void vdev_pt_deny_io_vbar(struct pci_vdev *vdev, uint32_t idx)
 {
@@ -242,7 +236,6 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
  *
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  * @pre vdev->pdev != NULL
  *
  * @return None
@@ -365,7 +358,6 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
  *
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
- * @pre vdev->vpci->vm != NULL
  * @pre vdev->pdev != NULL
  *
  * @return None
