@@ -24,6 +24,11 @@ Prerequisites
   <https://www.intel.com/content/dam/support/us/en/documents/mini-pcs/nuc-kits/NUC7i5DN_TechProdSpec.pdf>`_
   to identify the USB 3.0 port header on the main board.
 
+.. note::
+   This document uses the SDC scenario (default). You may need a serial port connection to your platform
+   or change the configuration of the User VM that will run Celadon to see its console if you use a different
+   scenario.
+
 Build Celadon from source
 *************************
 
