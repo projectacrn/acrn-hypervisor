@@ -88,11 +88,11 @@ LDFLAGS=-T $(LDSCRIPT) -Bsymbolic -shared -nostdlib -znocombreloc \
 		-L$(LIBDIR) $(CRT0)
 EFIBIN=$(HV_OBJDIR)/$(HV_FILE).efi
 BOOT=$(EFI_OBJDIR)/boot.efi
+HV_BIN=$(HV_OBJDIR)/$(HV_FILE).bin
 
 CONF_FILE=$(CURDIR)/clearlinux/acrn.conf
 
 all: $(EFIBIN)
-	$(OBJCOPY)  --add-section .hv="$(HV_OBJDIR)/$(HV_FILE).bin"  --change-section-vma .hv=0x6e000 --set-section-flags .hv=alloc,data,contents,load  --section-alignment 0x1000 $(EFI_OBJDIR)/boot.efi  $(EFIBIN)
 
 install: $(EFIBIN) install-conf
 	install -D $(EFIBIN) $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(SCENARIO).efi
@@ -101,26 +101,29 @@ install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
 	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(SCENARIO).efi.out
 	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)/usr/lib/acrn/$(HV_FILE).$(BOARD).$(SCENARIO).efi.map
 
-$(EFIBIN): $(BOOT)
+$(EFIBIN): $(BOOT) $(HV_BIN)
+	$(OBJCOPY) --add-section .hv="$(HV_BIN)"  --change-section-vma .hv=0x6e000 --set-section-flags .hv=alloc,data,contents,load  --section-alignment 0x1000 $(BOOT) $(EFIBIN)
 
-$(EFI_OBJDIR)/boot.efi: $(EFI_OBJDIR)/boot.so
+$(BOOT): $(EFI_OBJDIR)/boot.so
 
-$(EFI_OBJDIR)/boot.so: $(ACRN_OBJS) $(FS)
+$(EFI_OBJDIR)/boot.so: $(ACRN_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $^  -lgnuefi -lefi $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 install-conf: $(CONF_FILE)
 	install -D --mode=0644 $^ $(DESTDIR)/usr/share/acrn/samples/nuc/acrn.conf
 
 clean:
-	rm -f $(BOOT) $(HV_OBJDIR)/$(HV_FILE).efi $(EFI_OBJDIR)/boot.so $(ACRN_OBJS) $(FS)
+	rm -f $(BOOT) $(HV_OBJDIR)/$(HV_FILE).efi $(EFI_OBJDIR)/boot.so $(ACRN_OBJS)
 
-$(EFI_OBJDIR)/%.o:%.S $(HV_OBJDIR)/$(HV_CONFIG_H)
-	[ ! -e $@ ] && mkdir -p $(dir $@); \
-	$(CC) $(CFLAGS)   -c -o $@ $<
+-include $(ACRN_OBJS:.o=.d)
 
-$(EFI_OBJDIR)/%.o: %.c $(HV_OBJDIR)/$(HV_CONFIG_H)
+$(EFI_OBJDIR)/%.o:%.S
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
-	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@
+	$(CC) $(CFLAGS)   -c -o $@ $< -MMD -MT $@
+
+$(EFI_OBJDIR)/%.o: %.c
+	[ ! -e $@ ] && mkdir -p $(dir $@); \
+	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@ -MMD -MT $@
 
 %.efi: %.so
 	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel \

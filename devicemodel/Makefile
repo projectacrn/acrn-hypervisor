@@ -221,9 +221,11 @@ $(VERSION_H):
 	echo "#define DM_BUILD_TIME "\""$$TIME"\""" >> $(VERSION_H);\
 	echo "#define DM_BUILD_USER "\""$$USER"\""" >> $(VERSION_H)
 
+-include $(OBJS:.o=.d)
+
 $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ -MMD -MT $@
 
 install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-samples-mrb install-bios install-samples-up2
 	install -D --mode=0755 $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)/usr/bin/$(PROGRAM)
