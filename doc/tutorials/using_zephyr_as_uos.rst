@@ -7,6 +7,11 @@ This tutorial describes how to run Zephyr as the User VM on the ACRN hypervisor.
 Kaby Lake-based NUC (model NUC7i5DNHE) in this tutorial.
 Other :ref:`ACRN supported platforms <hardware>` should work as well.
 
+.. note::
+   This tutorial uses the (default) SDC scenario. If you use a different
+   scenario, you will need a serial port connection to your platform to see
+   Zephyr console output.
+
 Introduction to Zephyr
 **********************
 

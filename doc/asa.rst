@@ -3,6 +3,22 @@
 Security Advisory
 #################
 
+Addressed in ACRN v1.6.1
+************************
+
+We recommend that all developers upgrade to this v1.6.1 release (or later), which
+addresses the following security issue that was discovered in previous releases:
+
+------
+
+- Service VM kernel Crashes When Fuzzing HC_ASSIGN_PCIDEV and HC_DEASSIGN_PCIDEV
+   NULL pointer dereference due to invalid address of PCI device to be assigned or
+   de-assigned may result in kernel crash. The return value of 'pci_find_bus()' shall
+   be validated before using in 'update_assigned_vf_state()'.
+
+   **Affected Release:** v1.6.
+
+
 Addressed in ACRN v1.6
 **********************
 
