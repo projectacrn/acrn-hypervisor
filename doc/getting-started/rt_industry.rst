@@ -6,9 +6,9 @@ Getting Started Guide for ACRN Industry Scenario
 Verified version
 ****************
 
-- Clear Linux version: **32680**
-- ACRN-hypervisor tag: **v1.6 (acrn-2020w12.5-140000p)**
-- ACRN-Kernel (Service VM kernel): **4.19.97-104.iot-lts2018-sos**
+- Clear Linux version: **33050**
+- ACRN-hypervisor tag: **v1.6.1 (acrn-2020w18.4-140000p)**
+- ACRN-Kernel (Service VM kernel): **4.19.120-108.iot-lts2018-sos**
 
 Prerequisites
 *************
@@ -19,13 +19,13 @@ for the RTVM.
 
 - Intel Whiskey Lake (aka WHL) NUC platform with two disks inside
   (refer to :ref:`the tables <hardware_setup>` for detailed information).
-- `com1` is the serial port on WHL NUC.
+- **com1** is the serial port on WHL NUC.
   If you are still using the KBL NUC and trying to enable the serial port on it, navigate to the
   :ref:`troubleshooting section <connect_serial_port>` that discusses how to prepare the cable.
-- Follow the steps below to install Clear Linux OS (ver: 32680) onto the NVMe disk of the WHL NUC.
+- Follow the steps below to install Clear Linux OS (ver: 33050) onto the NVMe disk of the WHL NUC.
 
 .. _Clear Linux OS Server image:
-   https://download.clearlinux.org/releases/32680/clear/clear-32680-live-server.iso
+   https://download.clearlinux.org/releases/33050/clear/clear-33050-live-server.iso
 
   #. Create a bootable USB drive on Linux*:
 
@@ -47,7 +47,7 @@ for the RTVM.
      #. Unmount all the ``/dev/sdc`` partitions and burn the image onto the USB drive::
 
         $ umount /dev/sdc* 2>/dev/null
-        $ sudo dd if=./clear-32680-live-server.iso of=/dev/sdc oflag=sync status=progress bs=4M
+        $ sudo dd if=./clear-33050-live-server.iso of=/dev/sdc oflag=sync status=progress bs=4M
 
   #. Plug in the USB drive to the WHL NUC and boot from USB.
   #. Launch the Clear Linux OS installer boot menu.
@@ -131,7 +131,7 @@ Use the pre-installed industry ACRN hypervisor
 
    .. code-block:: none
 
-      $ sudo ./acrn_quick_setup.sh -s 32680 -d -e /dev/nvme0n1p1 -i
+      $ sudo ./acrn_quick_setup.sh -s 33050 -d -e /dev/nvme0n1p1 -i
 
    .. note:: ``-i`` option means the industry scenario efi image will be used, e.g. ``acrn.nuc7i7dnb.industry.efi``.
       For the detailed usage of the ``acrn_quick_setup.sh`` script, refer to the :ref:`quick setup ACRN guide <quick-setup-guide>`
@@ -145,7 +145,7 @@ Use the pre-installed industry ACRN hypervisor
       BootCurrent: 0005
       Timeout: 1 seconds
       BootOrder: 0000,0003,0005,0001,0004
-      Boot0000* ACRN  HD(1,GPT,cb72266b-c83d-4c56-99e3-3e7d2f4bc175,0x800,0x47000)/File(\EFI\acrn\acrn.efi)u.a.r.t.=.d.i.s.a.b.l.e.d.
+      Boot0000* ACRN  HD(1,GPT,cb72266b-c83d-4c56-99e3-3e7d2f4bc175,0x800,0x47000)/File(\EFI\acrn\acrn.efi)u.a.r.t.=.d.i.s.a.b.l.e.d. .
       Boot0001* UEFI OS       HD(1,GPT,335d53f0-50c1-4b0a-b58e-3393dc0389a4,0x800,0x47000)/File(\EFI\BOOT\BOOTX64.EFI)..BO
       Boot0003* Linux bootloader      HD(3,GPT,af681d62-3a96-43fb-92fc-e98e850f867f,0xc1800,0x1dc31800)/File(\EFI\org.clearlinux\bootloaderx64.efi)
       Boot0004* Hard Drive    BBS(HD,,0x0)..GO..NO........o.K.I.N.G.S.T.O.N. .R.B.U.S.N.S.8.1.8.0.S.3.1.2.8.G.J...................A..........................>..Gd-.;.A..MQ..L.0.5.2.0.B.6.6.7.2.8.F.F.3.D.1.0. . . . .......BO..NO........m.F.O.R.E.S.E.E. .2.5.6.G.B. .S.S.D...................A......................................0..Gd-.;.A..MQ..L.J.2.7.1.0.0.R.0.0.0.9.6.9.......BO
@@ -191,17 +191,17 @@ Use the ACRN industry out-of-the-box image
 
    .. code-block:: none
 
-      # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w12.5-140000p/sos-industry-32680.img.xz
+      # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w18.4-140000p/sos-industry-33050.img.xz
 
    .. note:: You may also follow :ref:`set_up_ootb_service_vm` to build the image by yourself.
 
 #. Decompress the .xz image::
 
-   # xz -d sos-industry-32680.img.xz
+   # xz -d sos-industry-33050.img.xz
 
 #. Burn the Service VM image onto the NVMe disk::
 
-   # dd if=sos-industry-32680.img of=/dev/nvme0n1 bs=4M oflag=sync status=progress iflag=fullblock seek=0 conv=notrunc
+   # dd if=sos-industry-33050.img of=/dev/nvme0n1 bs=4M oflag=sync status=progress iflag=fullblock seek=0 conv=notrunc
 
 #. Configure the EFI firmware to boot the ACRN hypervisor by default:
 
@@ -238,17 +238,17 @@ build the ACRN kernel for the Service VM, and then :ref:`passthrough the SATA di
 
    .. code-block:: none
 
-      # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w12.5-140000p/preempt-rt-32680.img.xz
+      # wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w18.4-140000p/preempt-rt-33050.img.xz
 
    .. note:: You may also follow :ref:`set_up_ootb_rtvm` to build the Preempt-RT VM image by yourself.
 
 #. Decompress the xz image::
 
-   # xz -d preempt-rt-32680.img.xz
+   # xz -d preempt-rt-33050.img.xz
 
 #. Burn the Preempt-RT VM image onto the SATA disk::
 
-   # dd if=preempt-rt-32680.img of=/dev/sda bs=4M oflag=sync status=progress iflag=fullblock seek=0 conv=notrunc
+   # dd if=preempt-rt-33050.img of=/dev/sda bs=4M oflag=sync status=progress iflag=fullblock seek=0 conv=notrunc
 
 #. Modify the script to use the virtio device.
 
@@ -397,7 +397,7 @@ Run cyclictest
 
 #. Install the ``cyclictest`` tool::
 
-   # swupd bundle-add dev-utils
+   # swupd bundle-add dev-utils --skip-diskspace-check
 
 #. Use the following command to start cyclictest::
 
@@ -410,8 +410,137 @@ Run cyclictest
     :-m:                             lock current and future memory allocations
     :-N:                             print results in ns instead of us (default us)
     :-D 1h:                          to run for 1 hour, you can change it to other values
-    :-q:                             quiee mode; print a summary only on exit
+    :-q:                             quiet mode; print a summary only on exit
     :-H 30000 --histfile=test.log:   dump the latency histogram to a local file
+
+Launch additional User VMs
+**************************
+
+With the :ref:`CPU sharing <cpu_sharing>` feature enabled, the Industry
+scenario supports a maximum of 6 post-launched VMs, including 1 post
+Real-Time VM (Preempt-RT, VxWorks\*, Xenomai\*) and 5 post standard VMs
+(Clear Linux\*, Android\*, Windows\*).
+
+You should follow the steps below to launch those post standard VMs.
+
+Prepare the launch scripts
+==========================
+
+#. Install :ref:`dependencies <install-build-tools-dependencies>` on your workspace
+   and get the acrn-hypervisor source code::
+
+   $ git clone https://github.com/projectacrn/acrn-hypervisor
+
+#. Generate launch scripts by :ref:`acrn-configuration-tool <acrn_configuration_tool>`::
+
+      $ cd acrn-hypervisor
+      $ export board_file=$PWD/misc/acrn-config/xmls/board-xmls/whl-ipc-i5.xml
+      $ export scenario_file=$PWD/misc/acrn-config/xmls/config-xmls/whl-ipc-i5/industry.xml
+      $ export launch_file=$PWD/misc/acrn-config/xmls/config-xmls/whl-ipc-i5/industry_launch_6uos.xml
+      $ python misc/acrn-config/launch_config/launch_cfg_gen.py --board $board_file --scenario $scenario_file --launch $launch_file --uosid 0
+
+#. Launch scripts will be generated in
+   ``misc/acrn-config/xmls/config-xmls/whl-ipc-i5/output`` directory.
+
+   The launch scripts are:
+
+   +-------------------+--------------------+---------------------+
+   | For Windows:      | For Preempt-RT:    | For other VMs:      |
+   +===================+====================+=====================+
+   | launch_uos_id1.sh | launch_uos_id2.sh  | | launch_uos_id3.sh |
+   |                   |                    | | launch_uos_id4.sh |
+   |                   |                    | | launch_uos_id5.sh |
+   |                   |                    | | launch_uos_id6.sh |
+   +-------------------+--------------------+---------------------+
+
+#. Copy those files to your WHL board::
+
+      $ scp -r misc/acrn-config/xmls/config-xmls/whl-ipc-i5/output <board address>:~/
+
+
+Launch Windows VM
+=================
+
+#. Follow this :ref:`guide <using_windows_as_uos>` to prepare the Windows image file,
+   update Service VM kernel and then reboot with new ``acrngt.conf``.
+
+#. Modify ``launch_uos_id1.sh`` script as following and then launch Windows VM as one of the post-launched standard VMs:
+
+   .. code-block:: none
+      :emphasize-lines: 4,6
+
+      acrn-dm -A -m $mem_size -s 0:0,hostbridge -U d2795438-25d6-11e8-864e-cb7a18b34643 \
+         --windows \
+         $logger_setting \
+         -s 5,virtio-blk,<your win img directory>/win10-ltsc.img \
+         -s 6,virtio-net,tap_WaaG \
+         -s 2,passthru,0/2/0,gpu  \
+         --ovmf /usr/share/acrn/bios/OVMF.fd \
+         -s 1:0,lpc \
+         -l com1,stdio \
+         $boot_audio_option \
+         $vm_name
+      }
+
+   .. note:: ``-s 2,passthru,0/2/0,gpu`` means Windows VM will be launched as GVT-d mode, which is passthrough VGA
+      controller to the Windows. You may find more details in :ref:`using_windows_as_uos`.
+
+Launch other standard VMs
+=========================
+
+If you want to launch other VMs such as Clearlinux\* or Android\*, then you should use one of these scripts:
+``launch_uos_id3.sh``, ``launch_uos_id4.sh``, ``launch_uos_id5.sh``,
+``launch_uos_id6.sh``.
+
+Here is an example to launch a Clear Linux VM:
+
+#. Download Clear Linux KVM image::
+
+      $ cd ~/output && curl https://cdn.download.clearlinux.org/releases/33050/clear/clear-33050-kvm.img.xz -o clearlinux.img.xz
+      $ unxz clearlinux.img.xz
+
+#. Modify ``launch_uos_id3.sh`` script to launch Clear Linux VM:
+
+   .. code-block:: none
+      :emphasize-lines: 1,2,3,5,16,17,23
+
+      #echo ${passthru_vpid["gpu"]} > /sys/bus/pci/drivers/pci-stub/new_id
+      #echo ${passthru_bdf["gpu"]} > /sys/bus/pci/devices/${passthru_bdf["gpu"]}/driver/unbind
+      #echo ${passthru_bdf["gpu"]} > /sys/bus/pci/drivers/pci-stub/bind
+      echo 100 > /sys/bus/usb/drivers/usb-storage/module/parameters/delay_use
+      mem_size=200M
+      #interrupt storm monitor for pass-through devices, params order:
+      #threshold/s,probe-period(s),intr-inject-delay-time(ms),delay-duration(ms)
+      intr_storm_monitor="--intr_monitor 10000,10,1,100"
+
+      #logger_setting, format: logger_name,level; like following
+      logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"
+
+      acrn-dm -A -m $mem_size -s 0:0,hostbridge -U 615db82a-e189-4b4f-8dbb-d321343e4ab3 \
+         --mac_seed $mac_seed \
+         $logger_setting \
+         -s 2,virtio-blk,./clearlinux.img \
+         -s 3,virtio-console,@stdio:stdio_port \
+         --ovmf /usr/share/acrn/bios/OVMF.fd \
+         -s 8,virtio-hyper_dmabuf \
+         $intr_storm_monitor \
+         $vm_name
+      }
+      launch_clearlinux 3
+
+   .. note::
+
+      Remove ``-s 2,passthru,0/2/0,gpu`` parameter before you launch Clear Linux VM
+      because the VGA controller is already passthrough to the Windows
+      VM and it's no longer visible for other VMs.
+
+      Before launching VMs, check available free memory using ``free -m``
+      and update the ``mem_size`` value.
+
+      If you will run multiple Clear Linux User VMs, also make sure
+      the VM names don't conflict
+      with others or you must change the number in the last line of
+      the script, such as ``launch_clearlinux 3``.
 
 Troubleshooting
 ***************
@@ -452,8 +581,9 @@ or an `RS232 DB9 female/female (NULL modem) cross-over cable
 <https://www.amazon.com/SF-Cable-Null-Modem-RS232/dp/B006W0I3BA>`_
 to connect to your host system.
 
-Note that If you want to use the RS232 DB9 female/female cable, choose the ``cross-over``
-type rather than ``straight-through`` type.
+Note that If you want to use the RS232 DB9 female/female cable, choose
+the **cross-over**
+type rather than **straight-through** type.
 
 .. _efi image not exist:
 
@@ -524,7 +654,7 @@ Passthrough a hard disk to the RTVM
 
       passthru_vpid=(
       ["eth"]="8086 156f"
-      ["sata"]="8086 9d03"
+      ["sata"]="8086 9dd3"
       ["nvme"]="8086 f1a6"
       )
       passthru_bdf=(
@@ -544,8 +674,9 @@ Passthrough a hard disk to the RTVM
       #echo ${passthru_bdf["nvme"]} > /sys/bus/pci/drivers/pci-stub/bind
 
    .. code-block:: none
-      :emphasize-lines: 4
+      :emphasize-lines: 5
 
+         --lapic_pt \
          --rtvm \
          --virtio_poll 1000000 \
          -U 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 \
