@@ -212,11 +212,6 @@ static inline uint8_t iommu_ecap_pt(uint64_t ecap)
 	return ((uint8_t)(ecap >> 6U) & 1U);
 }
 
-static inline uint8_t iommu_ecap_sc(uint64_t ecap)
-{
-	return ((uint8_t)(ecap >> 7U) & 1U);
-}
-
 static inline uint16_t iommu_ecap_iro(uint64_t ecap)
 {
 	return ((uint16_t)(ecap >> 8U) & 0x3ffU);

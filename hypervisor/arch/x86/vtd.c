@@ -278,6 +278,11 @@ static inline uint8_t iommu_cap_rwbf(uint64_t cap)
 	return ((uint8_t)(cap >> 4U) & 1U);
 }
 
+static inline uint8_t iommu_ecap_sc(uint64_t ecap)
+{
+	return ((uint8_t)(ecap >> 7U) & 1U);
+}
+
 static void dmar_unit_show_capability(struct dmar_drhd_rt *dmar_unit)
 {
 	pr_info("dmar unit[0x%x]", dmar_unit->drhd->reg_base_addr);
@@ -482,17 +487,6 @@ static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 		if ((iommu_ecap_c(dmar_unit->ecap) == 0U) && (!dmar_unit->drhd->ignore)) {
 			iommu_page_walk_coherent = false;
 		}
-
-		/* when the hardware support snoop control,
-		 * to make sure snoop control is always enabled,
-		 * the SNP filed in the leaf PTE should be set.
-		 * How to guarantee it when EPT is used as second-level
-		 * translation paging structures?
-		 */
-		if (iommu_ecap_sc(dmar_unit->ecap) == 0U) {
-			dev_dbg(DBG_LEVEL_IOMMU, "dmar uint doesn't support snoop control!");
-		}
-
 		dmar_disable_translation(dmar_unit);
 	}
 
@@ -1020,10 +1014,6 @@ static int32_t iommu_attach_device(const struct iommu_domain *domain, uint8_t bu
 		pr_err("invalid dmar unit");
 		ret = -EINVAL;
 	} else {
-		if (iommu_ecap_sc(dmar_unit->ecap) == 0U) {
-			dev_dbg(DBG_LEVEL_IOMMU, "vm=%d add %x:%x no snoop control!", domain->vm_id, bus, devfun);
-		}
-
 		root_table = (struct dmar_entry *)hpa2hva(dmar_unit->root_table_addr);
 
 		root_entry = root_table + bus;
