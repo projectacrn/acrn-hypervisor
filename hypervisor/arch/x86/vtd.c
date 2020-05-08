@@ -1002,6 +1002,7 @@ static bool is_dmar_unit_valid(const struct dmar_drhd_rt *dmar_unit, union pci_b
 	return valid;
 }
 
+/* @pre bus < CONFIG_IOMMU_BUS_NUM */
 static int32_t iommu_attach_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
@@ -1023,7 +1024,6 @@ static int32_t iommu_attach_device(const struct iommu_domain *domain, uint8_t bu
 	if (is_dmar_unit_valid(dmar_unit, sid) && dmar_unit_support_aw(dmar_unit, domain->addr_width)) {
 		root_table = (struct dmar_entry *)hpa2hva(dmar_unit->root_table_addr);
 		root_entry = root_table + bus;
-		ret = 0;
 
 		if (dmar_get_bitslice(root_entry->lo_64,
 					ROOT_ENTRY_LOWER_PRESENT_MASK,
@@ -1051,10 +1051,7 @@ static int32_t iommu_attach_device(const struct iommu_domain *domain, uint8_t bu
 		context = (struct dmar_entry *)hpa2hva(context_table_addr);
 		context_entry = context + devfun;
 
-		if (context_entry == NULL) {
-			pr_err("dmar context entry is invalid");
-			ret = -EINVAL;
-		} else if (dmar_get_bitslice(context_entry->lo_64, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS) != 0UL) {
+		if (dmar_get_bitslice(context_entry->lo_64, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS) != 0UL) {
 			/* the context entry should not be present */
 			pr_err("%s: context entry@0x%lx (Lower:%x) ", __func__, context_entry, context_entry->lo_64);
 			pr_err("already present for %x:%x.%x", bus, sid.bits.d, sid.bits.f);
@@ -1062,28 +1059,27 @@ static int32_t iommu_attach_device(const struct iommu_domain *domain, uint8_t bu
 		} else {
 			/* setup context entry for the devfun */
 			/* TODO: add Device TLB support */
-			hi_64 = dmar_set_bitslice(hi_64,
-					CTX_ENTRY_UPPER_AW_MASK, CTX_ENTRY_UPPER_AW_POS, (uint64_t)width_to_agaw(domain->addr_width));
-			lo_64 = dmar_set_bitslice(lo_64,
-					CTX_ENTRY_LOWER_TT_MASK, CTX_ENTRY_LOWER_TT_POS, DMAR_CTX_TT_UNTRANSLATED);
+			hi_64 = dmar_set_bitslice(hi_64, CTX_ENTRY_UPPER_AW_MASK, CTX_ENTRY_UPPER_AW_POS,
+					(uint64_t)width_to_agaw(domain->addr_width));
+			lo_64 = dmar_set_bitslice(lo_64, CTX_ENTRY_LOWER_TT_MASK, CTX_ENTRY_LOWER_TT_POS,
+					DMAR_CTX_TT_UNTRANSLATED);
+			hi_64 = dmar_set_bitslice(hi_64, CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS,
+				(uint64_t)vmid_to_domainid(domain->vm_id));
+			lo_64 = dmar_set_bitslice(lo_64, CTX_ENTRY_LOWER_SLPTPTR_MASK, CTX_ENTRY_LOWER_SLPTPTR_POS,
+				domain->trans_table_ptr >> PAGE_SHIFT);
+			lo_64 = dmar_set_bitslice(lo_64, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS, 1UL);
 
-			if (ret == 0) {
-				hi_64 = dmar_set_bitslice(hi_64,
-						CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS, (uint64_t)vmid_to_domainid(domain->vm_id));
-				lo_64 = dmar_set_bitslice(lo_64,
-						CTX_ENTRY_LOWER_SLPTPTR_MASK, CTX_ENTRY_LOWER_SLPTPTR_POS, domain->trans_table_ptr >> PAGE_SHIFT);
-				lo_64 = dmar_set_bitslice(lo_64, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS, 1UL);
-
-				context_entry->hi_64 = hi_64;
-				context_entry->lo_64 = lo_64;
-				iommu_flush_cache(context_entry, sizeof(struct dmar_entry));
-			}
+			context_entry->hi_64 = hi_64;
+			context_entry->lo_64 = lo_64;
+			iommu_flush_cache(context_entry, sizeof(struct dmar_entry));
+			ret = 0;
 		}
 	}
 
 	return ret;
 }
 
+/* @pre bus < CONFIG_IOMMU_BUS_NUM */
 static int32_t iommu_detach_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
@@ -1106,35 +1102,30 @@ static int32_t iommu_detach_device(const struct iommu_domain *domain, uint8_t bu
 		root_entry = root_table + bus;
 		ret = 0;
 
-		if (root_entry == NULL) {
-			pr_err("dmar root table entry is invalid\n");
+		context_table_addr = dmar_get_bitslice(root_entry->lo_64,  ROOT_ENTRY_LOWER_CTP_MASK,
+							ROOT_ENTRY_LOWER_CTP_POS);
+		context_table_addr = context_table_addr << PAGE_SHIFT;
+		context = (struct dmar_entry *)hpa2hva(context_table_addr);
+
+		context_entry = context + devfun;
+
+		if ((context == NULL) || (context_entry == NULL)) {
+			pr_err("dmar context entry is invalid");
 			ret = -EINVAL;
+		} else if ((uint16_t)dmar_get_bitslice(context_entry->hi_64, CTX_ENTRY_UPPER_DID_MASK,
+						CTX_ENTRY_UPPER_DID_POS) != vmid_to_domainid(domain->vm_id)) {
+			pr_err("%s: domain id mismatch", __func__);
+			ret = -EPERM;
 		} else {
-			context_table_addr = dmar_get_bitslice(root_entry->lo_64,  ROOT_ENTRY_LOWER_CTP_MASK,
-								ROOT_ENTRY_LOWER_CTP_POS);
-			context_table_addr = context_table_addr << PAGE_SHIFT;
-			context = (struct dmar_entry *)hpa2hva(context_table_addr);
+			/* clear the present bit first */
+			context_entry->lo_64 = 0UL;
+			context_entry->hi_64 = 0UL;
+			iommu_flush_cache(context_entry, sizeof(struct dmar_entry));
 
-			context_entry = context + devfun;
-
-			if ((context == NULL) || (context_entry == NULL)) {
-				pr_err("dmar context entry is invalid");
-				ret = -EINVAL;
-			} else if ((uint16_t)dmar_get_bitslice(context_entry->hi_64, CTX_ENTRY_UPPER_DID_MASK,
-							CTX_ENTRY_UPPER_DID_POS) != vmid_to_domainid(domain->vm_id)) {
-				pr_err("%s: domain id mismatch", __func__);
-				ret = -EPERM;
-			} else {
-				/* clear the present bit first */
-				context_entry->lo_64 = 0UL;
-				context_entry->hi_64 = 0UL;
-				iommu_flush_cache(context_entry, sizeof(struct dmar_entry));
-
-				dmar_invalid_context_cache(dmar_unit, vmid_to_domainid(domain->vm_id), sid.value, 0U,
-								DMAR_CIRG_DEVICE);
-				dmar_invalid_iotlb(dmar_unit, vmid_to_domainid(domain->vm_id), 0UL, 0U, false,
-								DMAR_IIRG_DOMAIN);
-			}
+			dmar_invalid_context_cache(dmar_unit, vmid_to_domainid(domain->vm_id), sid.value, 0U,
+							DMAR_CIRG_DEVICE);
+			dmar_invalid_iotlb(dmar_unit, vmid_to_domainid(domain->vm_id), 0UL, 0U, false,
+							DMAR_IIRG_DOMAIN);
 		}
 	}
 	return ret;
