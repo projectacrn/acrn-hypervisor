@@ -338,8 +338,6 @@ static void name(struct mngr_msg *msg, int client_fd, void *param)	\
 }
 
 DEFINE_HANDLER(handle_suspend, suspend);
-DEFINE_HANDLER(handle_pause, pause);
-DEFINE_HANDLER(handle_continue, unpause);
 
 static void handle_stop(struct mngr_msg *msg, int client_fd, void *param)
 {
@@ -489,8 +487,6 @@ int monitor_init(struct vmctx *ctx)
 	ret += mngr_add_handler(monitor_fd, DM_STOP, handle_stop, NULL);
 	ret += mngr_add_handler(monitor_fd, DM_SUSPEND, handle_suspend, NULL);
 	ret += mngr_add_handler(monitor_fd, DM_RESUME, handle_resume, NULL);
-	ret += mngr_add_handler(monitor_fd, DM_PAUSE, handle_pause, NULL);
-	ret += mngr_add_handler(monitor_fd, DM_CONTINUE, handle_continue, NULL);
 	ret += mngr_add_handler(monitor_fd, DM_QUERY, handle_query, NULL);
 	ret += mngr_add_handler(monitor_fd, DM_BLKRESCAN, handle_blkrescan, NULL);
 
