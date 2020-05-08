@@ -37,21 +37,29 @@ Scheduling initialization is invoked in the hardware management layer.
 .. figure:: images/cpu_sharing_api.png
    :align: center
 
-vCPU affinity
+CPU affinity
 *************
 
-Currently, we do not support vCPU migration; the assignment of vCPU
-mapping to pCPU is statically configured by acrn-dm through
-``--cpu_affinity``. Use these rules to configure the vCPU affinity:
+Currently, we do not support vCPU migration; the assignment of vCPU mapping to
+pCPU is fixed at the time the VM is launched. The statically configured
+cpu_affinity in the VM configuration defines a superset of pCPUs that
+the VM is allowed to run on. One bit in this bitmap indicates that one pCPU
+could be assigned to this VM, and the bit number is the pCPU ID. A pre-launched
+VM is supposed to be launched on exact number of pCPUs that are assigned in
+this bitmap. The vCPU to pCPU mapping is implicitly indicated: vCPU0 maps
+to the pCPU with lowest pCPU ID, vCPU1 maps to the second lowest pCPU ID, and
+so on.
 
-- Only one bit can be set for each affinity item of vCPU.
-- vCPUs in the same VM cannot be assigned to the same pCPU.
+For post-launched VMs, acrn-dm could choose to launch a subset of pCPUs that
+are defined in cpu_affinity by specifying the assigned pCPUs
+(``--cpu_affinity`` option). But it can't assign any pCPUs that are not
+included in the VM's cpu_affinity.
 
 Here is an example for affinity:
 
 - VM0: 2 vCPUs, pinned to pCPU0 and pCPU1
-- VM1: 2 vCPUs, pinned to pCPU2 and pCPU3
-- VM2: 2 vCPUs, pinned to pCPU0 and pCPU1
+- VM1: 2 vCPUs, pinned to pCPU0 and pCPU1
+- VM2: 2 vCPUs, pinned to pCPU2 and pCPU3
 
 .. figure:: images/cpu_sharing_affinity.png
    :align: center
@@ -119,14 +127,19 @@ and BVT (Borrowed Virtual Time) scheduler.
 
 
 Scheduler configuration
-***********************
 
-Two places in the code decide the usage for the scheduler.
+***********************
 
 * The option in Kconfig decides the only scheduler used in runtime.
   ``hypervisor/arch/x86/Kconfig``
 
 .. code-block:: none
+
+  choice
+          prompt "ACRN Scheduler"
+          default SCHED_BVT
+          help
+          Select the CPU scheduler to be used by the hypervisor
 
   config SCHED_BVT
           bool "BVT scheduler"
@@ -137,14 +150,19 @@ Two places in the code decide the usage for the scheduler.
           i.e. higher priority threads get scheduled first, and same priority tasks are
           scheduled per BVT.
 
-The default scheduler is **SCHED_NOOP**. To use the BVT, change it to
-**SCHED_BVT** in the **ACRN Scheduler**.
+The default scheduler is **SCHED_BVT**.
 
-* The cpu_affinity is configured by acrn-dm command.
+* The cpu_affinity could be configured by one of these approaches:
 
-  For example, assign physical CPUs (pCPUs) 1 and 3 to this VM using::
+  - Without ``cpu_affinity`` option in acrn-dm. This launches the user VM
+    on all the pCPUs that are included in the statically configured cpu_affinity_bitmap.
 
-    --cpu_affinity 1,3
+  - With ``cpu_affinity`` option in acrn-dm. This launches the user VM on
+    a subset of the configured cpu_affinity_bitmap pCPUs.
+    
+  For example, assign physical CPUs 0 and 1 to this VM::
+
+	--cpu_affinity 0,1
 
 
 Example
@@ -152,32 +170,36 @@ Example
 
 Use the following settings to support this configuration in the industry scenario:
 
-+---------+-------+-------+-------+
-|pCPU0    |pCPU1  |pCPU2  |pCPU3  |
-+=========+=======+=======+=======+
-|SOS + WaaG       |RT Linux       |
-+-----------------+---------------+
++---------+--------+-------+-------+
+|pCPU0    |pCPU1   |pCPU2  |pCPU3  |
++=========+========+=======+=======+
+|Service VM + Waag |RT Linux       |
++------------------+---------------+
 
-- offline pcpu2-3 in SOS.
+- offline pcpu2-3 in Service VM.
+
 
 - launch guests.
 
-  - launch WaaG with "--cpu_affinity=0,1"
-  - launch RT with "--cpu_affinity=2,3"
+  - launch WaaG with "--cpu_affinity 0,1"
+  - launch RT with "--cpu_affinity 2,3"
 
 
-After you start all VMs, check the vCPU affinities from the Hypervisor
+After you start all VMs, check the CPU affinities from the Hypervisor
 console with the ``vcpu_list`` command:
 
-.. code-block:: console
+.. code-block:: none
 
-   ACRN:\>vcpu_list
+	ACRN:\>vcpu_list
 
-   VM ID    PCPU ID    VCPU ID    VCPU ROLE    VCPU STATE    THREAD STATE
-   =====    =======    =======    =========    ==========    ==========
-     0         0          0       PRIMARY      Running          BLOCKED
-     0         1          0       SECONDARY    Running          BLOCKED
-     1         0          0       PRIMARY      Running          RUNNING
-     1         1          0       SECONDARY    Running          RUNNING
-     2         2          0       PRIMARY      Running          RUNNING
-     2         3          1       SECONDARY    Running          RUNNING
+	VM ID    PCPU ID    VCPU ID    VCPU ROLE    VCPU STATE    THREAD STATE
+	=====    =======    =======    =========    ==========    ==========
+	  0         0          0       PRIMARY      Running          RUNNING
+	  0         1          1       SECONDARY    Running          RUNNING
+	  1         0          0       PRIMARY      Running          RUNNABLE
+	  1         1          1       SECONDARY    Running          BLOCKED
+	  2         2          0       PRIMARY      Running          RUNNING
+	  2         3          1       SECONDARY    Running          RUNNING
+
+Note: the THREAD STATE are instant states, they will change at any time.
+
