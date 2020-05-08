@@ -987,6 +987,21 @@ static void resume_dmar(struct dmar_drhd_rt *dmar_unit)
 	dmar_enable_intr_remapping(dmar_unit);
 }
 
+static bool is_dmar_unit_valid(const struct dmar_drhd_rt *dmar_unit, union pci_bdf sid)
+{
+	bool valid = false;
+
+	if (dmar_unit == NULL) {
+		pr_err("no dmar unit found for device: %x:%x.%x", sid.bits.b, sid.bits.d, sid.bits.f);
+	} else if (dmar_unit->drhd->ignore) {
+		dev_dbg(DBG_LEVEL_IOMMU, "device is ignored : %x:%x.%x", sid.bits.b, sid.bits.d, sid.bits.f);
+	} else {
+		valid = true;
+	}
+
+	return valid;
+}
+
 static int32_t iommu_attach_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
@@ -997,7 +1012,7 @@ static int32_t iommu_attach_device(const struct iommu_domain *domain, uint8_t bu
 	struct dmar_entry *context_entry;
 	uint64_t hi_64 = 0UL;
 	uint64_t lo_64 = 0UL;
-	int32_t ret = 0;
+	int32_t ret = -EINVAL;
 	/* source id */
 	union pci_bdf sid;
 
@@ -1005,18 +1020,10 @@ static int32_t iommu_attach_device(const struct iommu_domain *domain, uint8_t bu
 	sid.fields.devfun = devfun;
 
 	dmar_unit = device_to_dmaru(bus, devfun);
-	if (dmar_unit == NULL) {
-		pr_err("no dmar unit found for device: %x:%x.%x", bus, sid.bits.d, sid.bits.f);
-		ret = -EINVAL;
-	} else if (dmar_unit->drhd->ignore) {
-		dev_dbg(DBG_LEVEL_IOMMU, "device is ignored :0x%x:%x.%x", bus, sid.bits.d, sid.bits.f);
-	} else if ((!dmar_unit_support_aw(dmar_unit, domain->addr_width)) || (dmar_unit->root_table_addr == 0UL)) {
-		pr_err("invalid dmar unit");
-		ret = -EINVAL;
-	} else {
+	if (is_dmar_unit_valid(dmar_unit, sid) && dmar_unit_support_aw(dmar_unit, domain->addr_width)) {
 		root_table = (struct dmar_entry *)hpa2hva(dmar_unit->root_table_addr);
-
 		root_entry = root_table + bus;
+		ret = 0;
 
 		if (dmar_get_bitslice(root_entry->lo_64,
 					ROOT_ENTRY_LOWER_PRESENT_MASK,
@@ -1087,21 +1094,17 @@ static int32_t iommu_detach_device(const struct iommu_domain *domain, uint8_t bu
 	struct dmar_entry *context_entry;
 	/* source id */
 	union pci_bdf sid;
-	int32_t ret = 0;
+	int32_t ret = -EINVAL;
 
 	dmar_unit = device_to_dmaru(bus, devfun);
 
 	sid.fields.bus = bus;
 	sid.fields.devfun = devfun;
 
-	if (dmar_unit == NULL) {
-		pr_err("no dmar unit found for device: %x:%x.%x", bus, sid.bits.d, sid.bits.f);
-		ret = -EINVAL;
-	} else if (dmar_unit->drhd->ignore) {
-		dev_dbg(DBG_LEVEL_IOMMU, "device is ignored :0x%x:%x.%x", bus, sid.bits.d, sid.bits.f);
-	} else {
+	if (is_dmar_unit_valid(dmar_unit, sid)) {
 		root_table = (struct dmar_entry *)hpa2hva(dmar_unit->root_table_addr);
 		root_entry = root_table + bus;
+		ret = 0;
 
 		if (root_entry == NULL) {
 			pr_err("dmar root table entry is invalid\n");
@@ -1275,7 +1278,7 @@ int32_t dmar_assign_irte(const struct intr_source *intr_src, union dmar_ir_entry
 	union dmar_ir_entry *ir_table, *ir_entry;
 	union pci_bdf sid;
 	uint64_t trigger_mode;
-	int32_t ret = 0;
+	int32_t ret = -EINVAL;
 
 	if (intr_src->is_msi) {
 		dmar_unit = device_to_dmaru((uint8_t)intr_src->src.msi.bits.b, intr_src->src.msi.fields.devfun);
@@ -1286,16 +1289,8 @@ int32_t dmar_assign_irte(const struct intr_source *intr_src, union dmar_ir_entry
 		trigger_mode = irte->bits.remap.trigger_mode;
 	}
 
-	if (dmar_unit == NULL) {
-		pr_err("no dmar unit found for device: %x:%x.%x", sid.bits.b, sid.bits.d, sid.bits.f);
-		ret = -EINVAL;
-	} else if (dmar_unit->drhd->ignore) {
-		dev_dbg(DBG_LEVEL_IOMMU, "device is ignored :0x%x:%x.%x", sid.bits.b, sid.bits.d, sid.bits.f);
-		ret = -EINVAL;
-	} else if (dmar_unit->ir_table_addr == 0UL) {
-		pr_err("IR table is not set for dmar unit");
-		ret = -EINVAL;
-	} else {
+	if (is_dmar_unit_valid(dmar_unit, sid)) {
+		ret = 0;
 		dmar_enable_intr_remapping(dmar_unit);
 
 		ir_table = (union dmar_ir_entry *)hpa2hva(dmar_unit->ir_table_addr);
@@ -1346,15 +1341,7 @@ void dmar_free_irte(const struct intr_source *intr_src, uint16_t index)
 		dmar_unit = ioapic_to_dmaru(intr_src->src.ioapic_id, &sid);
 	}
 
-	if (dmar_unit == NULL) {
-		pr_err("no dmar unit found for device: %x:%x.%x", intr_src->src.msi.bits.b,
-			intr_src->src.msi.bits.d, intr_src->src.msi.bits.f);
-	} else if (dmar_unit->drhd->ignore) {
-		dev_dbg(DBG_LEVEL_IOMMU, "device is ignored :0x%x:%x.%x", intr_src->src.msi.bits.b,
-			intr_src->src.msi.bits.d, intr_src->src.msi.bits.f);
-	} else if (dmar_unit->ir_table_addr == 0UL) {
-		pr_err("IR table is not set for dmar unit");
-	} else {
+	if (is_dmar_unit_valid(dmar_unit, sid)) {
 		ir_table = (union dmar_ir_entry *)hpa2hva(dmar_unit->ir_table_addr);
 		ir_entry = ir_table + index;
 		ir_entry->bits.remap.present = 0x0UL;
