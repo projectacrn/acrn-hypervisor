@@ -29,6 +29,10 @@ typedef int32_t CAT_(CTA_DummyType,__LINE__)[(expr) ? 1 : -1]
 #error "CONFIG_HV_RAM_SIZE must be integral multiple of 2MB"
 #endif
 
+#if ((CONFIG_MAX_IR_ENTRIES < 256U) || (CONFIG_MAX_IR_ENTRIES & (CONFIG_MAX_IR_ENTRIES -1)) != 0U)
+#error "CONFIG_MAX_IR_ENTRIES must >=256 and be 2^n"
+#endif
+
 /* Build time sanity checks to make sure hard-coded offset
 *  is matching the actual offset!
 */

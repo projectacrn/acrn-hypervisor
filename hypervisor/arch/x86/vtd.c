@@ -128,6 +128,7 @@ struct dmar_drhd_rt {
 
 	uint64_t root_table_addr;
 	uint64_t ir_table_addr;
+	uint64_t irte_alloc_bitmap[CONFIG_MAX_IR_ENTRIES/64U];
 	uint64_t qi_queue;
 	uint16_t qi_tail;
 
@@ -1261,7 +1262,30 @@ int32_t init_iommu(void)
 	return ret;
 }
 
-int32_t dmar_assign_irte(const struct intr_source *intr_src, union dmar_ir_entry *irte, uint16_t index)
+/* Allocate continuous IRTEs specified by num, num can be 1, 2, 4, 8, 16, 32 */
+static uint16_t alloc_irtes(struct dmar_drhd_rt *dmar_unit, const uint16_t num)
+{
+	uint16_t irte_idx;
+	uint64_t mask = (1UL << num) - 1U;
+	uint64_t test_mask;
+
+	ASSERT((bitmap_weight(num) == 1U) && (num <= 32U));
+
+	spinlock_obtain(&dmar_unit->lock);
+	for (irte_idx = 0U; irte_idx < CONFIG_MAX_IR_ENTRIES; irte_idx += num) {
+		test_mask = mask << (irte_idx & 0x3FU);
+		if ((dmar_unit->irte_alloc_bitmap[irte_idx >> 6U] & test_mask) == 0UL) {
+			dmar_unit->irte_alloc_bitmap[irte_idx >> 6U] |= test_mask;
+			break;
+		}
+	}
+	spinlock_release(&dmar_unit->lock);
+
+	return (irte_idx < CONFIG_MAX_IR_ENTRIES) ? irte_idx: INVALID_IRTE_ID;
+}
+
+int32_t dmar_assign_irte(const struct intr_source *intr_src, union dmar_ir_entry *irte,
+	uint16_t idx_in, uint16_t *idx_out)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	union dmar_ir_entry *ir_table, *ir_entry;
@@ -1279,42 +1303,49 @@ int32_t dmar_assign_irte(const struct intr_source *intr_src, union dmar_ir_entry
 	}
 
 	if (is_dmar_unit_valid(dmar_unit, sid)) {
-		ret = 0;
 		dmar_enable_intr_remapping(dmar_unit);
 
 		ir_table = (union dmar_ir_entry *)hpa2hva(dmar_unit->ir_table_addr);
-		ir_entry = ir_table + index;
-
-		if (intr_src->pid_paddr != 0UL) {
-			union dmar_ir_entry irte_pi;
-
-			/* irte is in remapped mode format, convert to posted mode format */
-			irte_pi.value.lo_64 = 0UL;
-			irte_pi.value.hi_64 = 0UL;
-
-			irte_pi.bits.post.vector = irte->bits.remap.vector;
-
-			irte_pi.bits.post.svt = 0x1UL;
-			irte_pi.bits.post.sid = sid.value;
-			irte_pi.bits.post.present = 0x1UL;
-			irte_pi.bits.post.mode = 0x1UL;
-
-			irte_pi.bits.post.pda_l = (intr_src->pid_paddr) >> 6U;
-			irte_pi.bits.post.pda_h = (intr_src->pid_paddr) >> 32U;
-
-			*ir_entry = irte_pi;
-		} else {
-			/* Fields that have not been initialized explicitly default to 0 */
-			irte->bits.remap.svt = 0x1UL;
-			irte->bits.remap.sid = sid.value;
-			irte->bits.remap.present = 0x1UL;
-			irte->bits.remap.trigger_mode = trigger_mode;
-
-			*ir_entry = *irte;
+		*idx_out = idx_in;
+		if (idx_in == INVALID_IRTE_ID) {
+			*idx_out = alloc_irtes(dmar_unit, 1U);
 		}
-		iommu_flush_cache(ir_entry, sizeof(union dmar_ir_entry));
-		dmar_invalid_iec(dmar_unit, index, 0U, false);
+		if (*idx_out < CONFIG_MAX_IR_ENTRIES) {
+			ir_entry = ir_table + *idx_out;
+
+			if (intr_src->pid_paddr != 0UL) {
+				union dmar_ir_entry irte_pi;
+
+				/* irte is in remapped mode format, convert to posted mode format */
+				irte_pi.value.lo_64 = 0UL;
+				irte_pi.value.hi_64 = 0UL;
+
+				irte_pi.bits.post.vector = irte->bits.remap.vector;
+
+				irte_pi.bits.post.svt = 0x1UL;
+				irte_pi.bits.post.sid = sid.value;
+				irte_pi.bits.post.present = 0x1UL;
+				irte_pi.bits.post.mode = 0x1UL;
+
+				irte_pi.bits.post.pda_l = (intr_src->pid_paddr) >> 6U;
+				irte_pi.bits.post.pda_h = (intr_src->pid_paddr) >> 32U;
+
+				*ir_entry = irte_pi;
+			} else {
+				/* Fields that have not been initialized explicitly default to 0 */
+				irte->bits.remap.svt = 0x1UL;
+				irte->bits.remap.sid = sid.value;
+				irte->bits.remap.present = 0x1UL;
+				irte->bits.remap.trigger_mode = trigger_mode;
+
+				*ir_entry = *irte;
+			}
+			iommu_flush_cache(ir_entry, sizeof(union dmar_ir_entry));
+			dmar_invalid_iec(dmar_unit, *idx_out, 0U, false);
+		}
+		ret = 0;
 	}
+
 	return ret;
 }
 
@@ -1338,4 +1369,5 @@ void dmar_free_irte(const struct intr_source *intr_src, uint16_t index)
 		iommu_flush_cache(ir_entry, sizeof(union dmar_ir_entry));
 		dmar_invalid_iec(dmar_unit, index, 0U, false);
 	}
+
 }
