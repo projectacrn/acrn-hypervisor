@@ -32,8 +32,6 @@
 #define STOP_DESC      "Stop virtual machine VM_NAME, [--force/-f, force to stop VM]"
 #define DEL_DESC       "Delete virtual machine VM_NAME"
 #define ADD_DESC       "Add one virtual machine with SCRIPTS and OPTIONS"
-#define PAUSE_DESC     "Block all vCPUs of virtual machine VM_NAME"
-#define CONTINUE_DESC  "Start virtual machine from pause state"
 #define SUSPEND_DESC   "Switch virtual machine to suspend state"
 #define RESUME_DESC    "Resume virtual machine from suspend state"
 #define RESET_DESC     "Stop and then start virtual machine VM_NAME"
@@ -572,55 +570,6 @@ static int acrnctl_do_start(int argc, char *argv[])
 
 }
 
-static int acrnctl_do_pause(int argc, char *argv[])
-{
-	struct vmmngr_struct *s;
-	int ret = -1;
-
-	s = vmmngr_find(argv[1]);
-	if (!s) {
-		printf("Can't find vm %s\n", argv[1]);
-		return ret;
-	}
-
-	/* Send pause cmd to arcn-dm only when vm is in VM_STARTED */
-	switch (s->state) {
-		case VM_STARTED:
-			ret = pause_vm(argv[1]);
-			break;
-		default:
-			printf("%s current state %s, can't pause\n", argv[1], state_str[s->state]);
-	}
-
-	return ret;
-}
-
-static int acrnctl_do_continue(int argc, char *argv[])
-{
-	struct vmmngr_struct *s;
-	int ret = -1;
-
-	s = vmmngr_find(argv[1]);
-	if (!s) {
-		printf("Can't find vm %s\n", argv[1]);
-		return ret;
-	}
-
-	/* Per current implemention, we can't know if vm is in paused
-	   state. Send continue cmd to acrn-dm when VM_STARTED and will
-           correct it later when we have a way to check if vm has been
-	   paused */
-	switch (s->state) {
-		case VM_STARTED:
-			ret = continue_vm(argv[1]);
-			break;
-		default:
-			printf("%s current state %s, can't continue\n", argv[1], state_str[s->state]);
-	}
-
-	return ret;
-}
-
 static int acrnctl_do_suspend(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
@@ -795,8 +744,6 @@ struct acrnctl_cmd acmds[] = {
 	ACMD("stop", acrnctl_do_stop, STOP_DESC, df_valid_args),
 	ACMD("del", acrnctl_do_del, DEL_DESC, df_valid_args),
 	ACMD("add", acrnctl_do_add, ADD_DESC, valid_add_args),
-	ACMD("pause", acrnctl_do_pause, PAUSE_DESC, df_valid_args),
-	ACMD("continue", acrnctl_do_continue, CONTINUE_DESC, df_valid_args),
 	ACMD("suspend", acrnctl_do_suspend, SUSPEND_DESC, df_valid_args),
 	ACMD("resume", acrnctl_do_resume, RESUME_DESC, df_valid_args),
 	ACMD("reset", acrnctl_do_reset, RESET_DESC, df_valid_args),
