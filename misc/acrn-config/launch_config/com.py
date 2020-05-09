@@ -541,41 +541,27 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     sos_vmid = launch_cfg_lib.get_sos_vmid()
 
     # clearlinux/android/alios
-    dm_str = 'acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {}'.format(scenario_uuid)
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
-        if uos_type == "CLEARLINUX":
-            print("{} \\".format(dm_str), file=config)
-        else:
-            print('{} $npk_virt \\'.format(dm_str), file=config)
-
+    print('acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {} \\'.format(scenario_uuid), file=config)
     if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
         if uos_type in ("ANDROID", "ALIOS"):
+            print('   $npk_virt \\', file=config)
             print("   -s {},virtio-rpmb \\".format(launch_cfg_lib.virtual_dev_slot("virtio-rpmb")), file=config)
-
-    # mac_seed
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
+            print("   --enable_trusty \\", file=config)
+        # mac_seed
         print("   --mac_seed $mac_seed \\", file=config)
 
-    # hard rt os
-    if uos_type == "PREEMPT-RT LINUX":
-        print("{} \\".format(dm_str), file=config)
-        print("   --lapic_pt \\", file=config)
-        print("   --rtvm \\", file=config)
-        print("   --virtio_poll 1000000 \\", file=config)
+    if dm['rtos_type'][vmid] != "no":
+        if virt_io:
+            print("   --virtio_poll 1000000 \\", file=config)
 
-    # vxworks
-    if uos_type == "VXWORKS":
-        print("{} \\".format(dm_str), file=config)
-        print("   --virtio_poll 1000000 \\", file=config)
-        print("   --lapic_pt \\", file=config)
+        if dm['rtos_type'][vmid] == "Soft RT":
+            print("   --rtvm \\", file=config)
 
-    # zephyr
-    if uos_type == "ZEPHYR":
-        print("{} \\".format(dm_str), file=config)
+        if dm['rtos_type'][vmid] == "Hard RT":
+            print("   --lapic_pt \\", file=config)
 
     # windows
     if uos_type == "WINDOWS":
-        print("{} \\".format(dm_str), file=config)
         print("   --windows \\", file=config)
 
     # pm_channel set
@@ -607,6 +593,11 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     # pcpu-list args set
     pcpu_arg_set(dm, vmid, config)
 
+    for value in sel.bdf.values():
+        if value[vmid]:
+            print("   $intr_storm_monitor \\", file=config)
+            break
+
     # redirect console
     if dm['vuart0'][vmid] == "Enable":
         print("   -s 1:0,lpc \\", file=config)
@@ -618,14 +609,8 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
             print("   -i /run/acrn/ioc_$vm_name,0x20 \\", file=config)
             print("   -l com2,/run/acrn/ioc_$vm_name \\", file=config)
 
-        if sel:
-            print("   $intr_storm_monitor \\", file=config)
-
         if not is_nuc_whl_clr(names, vmid):
             print("   -s {},wdt-i6300esb \\".format(launch_cfg_lib.virtual_dev_slot("wdt-i6300esb")), file=config)
-
-    if uos_type in ("ANDROID", "ALIOS"):
-        print("   --enable_trusty \\", file=config)
 
     set_dm_pt(names, sel, vmid, config)
     print("   $vm_name", file=config)
