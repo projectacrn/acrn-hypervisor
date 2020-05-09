@@ -126,23 +126,23 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm,
 	intr_src.is_msi = true;
 	intr_src.pid_paddr = pid_paddr;
 	intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
-	ret = dmar_assign_irte(&intr_src, &irte, (uint16_t)entry->allocated_pirq);
+	ret = dmar_assign_irte(&intr_src, &irte, (uint16_t)entry->allocated_pirq, &ir_index.index);
 
 	if (ret == 0) {
-		/*
-		 * Update the MSI interrupt source to point to the IRTE
-		 * SHV is set to 0 as ACRN disables MMC (Multi-Message Capable
-		 * for MSI devices.
-		 */
 		entry->pmsi.data.full = 0U;
-		ir_index.index = (uint16_t)entry->allocated_pirq;
-
 		entry->pmsi.addr.full = 0UL;
-		entry->pmsi.addr.ir_bits.intr_index_high = ir_index.bits.index_high;
-		entry->pmsi.addr.ir_bits.shv = 0U;
-		entry->pmsi.addr.ir_bits.intr_format = 0x1U;
-		entry->pmsi.addr.ir_bits.intr_index_low = ir_index.bits.index_low;
-		entry->pmsi.addr.ir_bits.constant = 0xFEEU;
+		if (ir_index.index != INVALID_IRTE_ID) {
+			/*
+			 * Update the MSI interrupt source to point to the IRTE
+			 * SHV is set to 0 as ACRN disables MMC (Multi-Message Capable
+			 * for MSI devices.
+			 */
+			entry->pmsi.addr.ir_bits.intr_index_high = ir_index.bits.index_high;
+			entry->pmsi.addr.ir_bits.shv = 0U;
+			entry->pmsi.addr.ir_bits.intr_format = 0x1U;
+			entry->pmsi.addr.ir_bits.intr_index_low = ir_index.bits.index_low;
+			entry->pmsi.addr.ir_bits.constant = 0xFEEU;
+		}
 	} else {
 		/* In case there is no corresponding IOMMU, for example, if the
 		 * IOMMU is ignored, pass the MSI info in Compatibility Format
@@ -223,15 +223,18 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 		intr_src.is_msi = false;
 		intr_src.pid_paddr = 0UL;
 		intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(phys_irq);
-		ret = dmar_assign_irte(&intr_src, &irte, (uint16_t)phys_irq);
+		ret = dmar_assign_irte(&intr_src, &irte, (uint16_t)phys_irq, &ir_index.index);
 
 		if (ret == 0) {
-			ir_index.index = (uint16_t)phys_irq;
-			rte.ir_bits.vector = vector;
-			rte.ir_bits.constant = 0U;
-			rte.ir_bits.intr_index_high = ir_index.bits.index_high;
-			rte.ir_bits.intr_format = 1U;
-			rte.ir_bits.intr_index_low = ir_index.bits.index_low;
+			if (ir_index.index != INVALID_IRTE_ID) {
+				rte.ir_bits.vector = vector;
+				rte.ir_bits.constant = 0U;
+				rte.ir_bits.intr_index_high = ir_index.bits.index_high;
+				rte.ir_bits.intr_format = 1U;
+				rte.ir_bits.intr_index_low = ir_index.bits.index_low;
+			} else {
+				rte.bits.intr_mask = 1;
+			}
 		} else {
 			rte.bits.dest_mode = IOAPIC_RTE_DESTMODE_LOGICAL;
 			rte.bits.delivery_mode = delmode;
