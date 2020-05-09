@@ -39,7 +39,7 @@ struct mngr_msg {
 		/* Arguments to rescan virtio-blk device */
 		char devargs[PARAM_LEN];
 
-		/* ack of DM_STOP, DM_SUSPEND, DM_RESUME, DM_PAUSE, DM_CONTINUE,
+		/* ack of DM_STOP, DM_SUSPEND, DM_RESUME,
 		   ACRND_TIMER, ACRND_STOP, ACRND_RESUME, RTC_TIMER */
 		int err;
 
@@ -94,8 +94,6 @@ enum dm_msgid {
 	DM_STOP = MSG_MAX + 1,	/* Stop this UOS */
 	DM_SUSPEND,		/* Suspend this UOS from running state */
 	DM_RESUME,		/* Resume this UOS from suspend state */
-	DM_PAUSE,		/* Freeze this virtual machine */
-	DM_CONTINUE,		/* Unfreeze this virtual machine */
 	DM_QUERY,		/* Ask power state of this UOS */
 	DM_BLKRESCAN,		/* Rescan virtio-blk device for any changes in UOS */
 	DM_MAX,
