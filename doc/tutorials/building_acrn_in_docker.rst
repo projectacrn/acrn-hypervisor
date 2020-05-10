@@ -49,14 +49,7 @@ Build the Docker Image from Dockerfile
 
 Alternatively, you can build your own local Docker image using the
 provided Dockerfile build instructions by following these steps.  You'll
-need to this this if you're working behind a corporate proxy.
-
-.. note::
-   A known `issue
-   <https://github.com/projectacrn/acrn-hypervisor/issues/4560>`_ exists
-   while building the ACRN hypervisor. Refer to `Get the Docker Image from
-   Docker Hub`_ as a temporary way to obtain the Docker Image for the v1.6
-   release.
+need this if you're working behind a corporate proxy.
 
 #. Download `Dockerfile <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/getting-started/Dockerfile>`_
    to your development machine.
