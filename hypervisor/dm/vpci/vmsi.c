@@ -31,6 +31,7 @@
 #include <ptdev.h>
 #include <assign.h>
 #include <vpci.h>
+#include <vtd.h>
 #include "vpci_priv.h"
 
 
@@ -78,7 +79,7 @@ static void remap_vmsi(const struct pci_vdev *vdev)
 	info.addr.full = (uint64_t)vmsi_addrlo | ((uint64_t)vmsi_addrhi << 32U);
 	info.data.full = vmsi_msgdata;
 
-	if (ptirq_prepare_msix_remap(vm, vdev->bdf.value, pbdf.value, 0U, &info) == 0) {
+	if (ptirq_prepare_msix_remap(vm, vdev->bdf.value, pbdf.value, 0U, &info, INVALID_IRTE_ID) == 0) {
 		pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR, 0x4U, (uint32_t)info.addr.full);
 		if (vdev->msi.is_64bit) {
 			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR_HIGH, 0x4U,

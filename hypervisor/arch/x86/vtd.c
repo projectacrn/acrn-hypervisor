@@ -128,7 +128,8 @@ struct dmar_drhd_rt {
 
 	uint64_t root_table_addr;
 	uint64_t ir_table_addr;
-	uint64_t irte_alloc_bitmap[CONFIG_MAX_IR_ENTRIES/64U];
+	uint64_t irte_alloc_bitmap[CONFIG_MAX_IR_ENTRIES / 64U];
+	uint64_t irte_reserved_bitmap[CONFIG_MAX_IR_ENTRIES / 64U];
 	uint64_t qi_queue;
 	uint16_t qi_tail;
 
@@ -1284,6 +1285,11 @@ static uint16_t alloc_irtes(struct dmar_drhd_rt *dmar_unit, const uint16_t num)
 	return (irte_idx < CONFIG_MAX_IR_ENTRIES) ? irte_idx: INVALID_IRTE_ID;
 }
 
+static bool is_irte_reserved(const struct dmar_drhd_rt *dmar_unit, uint16_t index)
+{
+	return ((dmar_unit->irte_reserved_bitmap[index >> 6U] & (1UL << (index & 0x3FU))) != 0UL);
+}
+
 int32_t dmar_assign_irte(const struct intr_source *intr_src, union dmar_ir_entry *irte,
 	uint16_t idx_in, uint16_t *idx_out)
 {
@@ -1368,6 +1374,12 @@ void dmar_free_irte(const struct intr_source *intr_src, uint16_t index)
 
 		iommu_flush_cache(ir_entry, sizeof(union dmar_ir_entry));
 		dmar_invalid_iec(dmar_unit, index, 0U, false);
+
+		if (!is_irte_reserved(dmar_unit, index)) {
+			spinlock_obtain(&dmar_unit->lock);
+			bitmap_clear_nolock(index & 0x3FU, &dmar_unit->irte_alloc_bitmap[index >> 6U]);
+			spinlock_release(&dmar_unit->lock);
+		}
 	}
 
 }

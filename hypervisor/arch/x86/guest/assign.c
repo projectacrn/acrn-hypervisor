@@ -71,15 +71,16 @@ static void ptirq_free_irte(const struct ptirq_remapping_info *entry)
 {
 	struct intr_source intr_src;
 
-	if (entry->intr_type == PTDEV_INTR_MSI) {
-		intr_src.is_msi = true;
-		intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
-	} else {
-		intr_src.is_msi = false;
-		intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(entry->allocated_pirq);
+	if (entry->irte_idx < CONFIG_MAX_IR_ENTRIES) {
+		if (entry->intr_type == PTDEV_INTR_MSI) {
+			intr_src.is_msi = true;
+			intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
+		} else {
+			intr_src.is_msi = false;
+			intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(entry->allocated_pirq);
+		}
+		dmar_free_irte(&intr_src, entry->irte_idx);
 	}
-
-	dmar_free_irte(&intr_src, (uint16_t)entry->allocated_pirq);
 }
 
 /*
@@ -89,7 +90,7 @@ static void ptirq_free_irte(const struct ptirq_remapping_info *entry)
  * that posted mode shall be used
  */
 static void ptirq_build_physical_msi(struct acrn_vm *vm,
-	struct ptirq_remapping_info *entry, uint32_t vector, uint64_t pid_paddr)
+	struct ptirq_remapping_info *entry, uint32_t vector, uint64_t pid_paddr, uint16_t irte_idx)
 {
 	uint64_t vdmask, pdmask;
 	uint32_t dest, delmode, dest_mask;
@@ -126,11 +127,15 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm,
 	intr_src.is_msi = true;
 	intr_src.pid_paddr = pid_paddr;
 	intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
-	ret = dmar_assign_irte(&intr_src, &irte, (uint16_t)entry->allocated_pirq, &ir_index.index);
+	if (entry->irte_idx == INVALID_IRTE_ID) {
+		entry->irte_idx = irte_idx;
+	}
+	ret = dmar_assign_irte(&intr_src, &irte, entry->irte_idx, &ir_index.index);
 
 	if (ret == 0) {
 		entry->pmsi.data.full = 0U;
 		entry->pmsi.addr.full = 0UL;
+		entry->irte_idx = ir_index.index;
 		if (ir_index.index != INVALID_IRTE_ID) {
 			/*
 			 * Update the MSI interrupt source to point to the IRTE
@@ -223,9 +228,10 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 		intr_src.is_msi = false;
 		intr_src.pid_paddr = 0UL;
 		intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(phys_irq);
-		ret = dmar_assign_irte(&intr_src, &irte, (uint16_t)phys_irq, &ir_index.index);
+		ret = dmar_assign_irte(&intr_src, &irte, entry->irte_idx, &ir_index.index);
 
 		if (ret == 0) {
+			entry->irte_idx = ir_index.index;
 			if (ir_index.index != INVALID_IRTE_ID) {
 				rte.ir_bits.vector = vector;
 				rte.ir_bits.constant = 0U;
@@ -319,7 +325,7 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t phys_bdf, uint32_t entr
 
 		intr_src.is_msi = true;
 		intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
-		dmar_free_irte(&intr_src, (uint16_t)entry->allocated_pirq);
+		dmar_free_irte(&intr_src, entry->irte_idx);
 
 		dev_dbg(DBG_LEVEL_IRQ, "VM%d MSIX remove vector mapping vbdf-pbdf:0x%x-0x%x idx=%d",
 			vm->vm_id, entry->virt_sid.msi_id.bdf, phys_bdf, entry_nr);
@@ -408,7 +414,7 @@ static void remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_gsi, e
 			intr_src.is_msi = false;
 			intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(phys_irq);
 
-			dmar_free_irte(&intr_src, (uint16_t)phys_irq);
+			dmar_free_irte(&intr_src, entry->irte_idx);
 			dev_dbg(DBG_LEVEL_IRQ,
 				"deactive %s intx entry:pgsi=%d, pirq=%d ",
 				(vgsi_ctlr == INTX_CTLR_PIC) ? "vPIC" : "vIOAPIC",
@@ -563,7 +569,7 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ctlr vgsi_c
  * user must provide bdf and entry_nr
  */
 int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
-				uint16_t entry_nr, struct msi_info *info)
+				uint16_t entry_nr, struct msi_info *info, uint16_t irte_idx)
 {
 	struct ptirq_remapping_info *entry;
 	int32_t ret = -ENODEV;
@@ -590,13 +596,13 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 				 * All the vCPUs are in x2APIC mode and LAPIC is Pass-through
 				 * Use guest vector to program the interrupt source
 				 */
-				ptirq_build_physical_msi(vm, entry, (uint32_t)info->data.bits.vector, 0UL);
+				ptirq_build_physical_msi(vm, entry, (uint32_t)info->data.bits.vector, 0UL, irte_idx);
 			} else if (vlapic_state == VM_VLAPIC_XAPIC) {
 				/*
 				 * All the vCPUs are in xAPIC mode and LAPIC is emulated
 				 * Use host vector to program the interrupt source
 				 */
-				ptirq_build_physical_msi(vm, entry, irq_to_vector(entry->allocated_pirq), 0UL);
+				ptirq_build_physical_msi(vm, entry, irq_to_vector(entry->allocated_pirq), 0UL, irte_idx);
 			} else if (vlapic_state == VM_VLAPIC_TRANSITION) {
 				/*
 				 * vCPUs are in middle of transition, so do not program interrupt source
@@ -614,10 +620,10 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 
 			if (is_pi_capable(vm) && (vcpu != NULL)) {
 				ptirq_build_physical_msi(vm, entry,
-					(uint32_t)info->data.bits.vector, hva2hpa(get_pi_desc(vcpu)));
+					(uint32_t)info->data.bits.vector, hva2hpa(get_pi_desc(vcpu)), irte_idx);
 			} else {
 				/* Go with remapped mode if we cannot handle it in posted mode */
-				ptirq_build_physical_msi(vm, entry, irq_to_vector(entry->allocated_pirq), 0UL);
+				ptirq_build_physical_msi(vm, entry, irq_to_vector(entry->allocated_pirq), 0UL, irte_idx);
 			}
 		}
 

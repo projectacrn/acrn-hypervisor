@@ -11,6 +11,7 @@
 #include <ptdev.h>
 #include <irq.h>
 #include <logmsg.h>
+#include <vtd.h>
 
 #define PTIRQ_ENTRY_HASHBITS	9U
 #define PTIRQ_ENTRY_HASHSIZE	(1U << PTIRQ_ENTRY_HASHBITS)
@@ -127,6 +128,7 @@ struct ptirq_remapping_info *ptirq_alloc_entry(struct acrn_vm *vm, uint32_t intr
 		entry->intr_type = intr_type;
 		entry->vm = vm;
 		entry->intr_count = 0UL;
+		entry->irte_idx = INVALID_IRTE_ID;
 
 		INIT_LIST_HEAD(&entry->softirq_node);
 
