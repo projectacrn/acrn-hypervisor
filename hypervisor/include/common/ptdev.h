@@ -133,6 +133,7 @@ struct ptirq_remapping_info {
 	struct list_head softirq_node;
 	struct msi_info vmsi;
 	struct msi_info pmsi;
+	uint16_t irte_idx;
 
 	uint64_t intr_count;
 	struct hv_timer intr_delay_timer; /* used for delay intr injection */
