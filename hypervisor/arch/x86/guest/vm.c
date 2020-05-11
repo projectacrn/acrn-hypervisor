@@ -801,9 +801,6 @@ void launch_vms(uint16_t pcpu_id)
  * VM_VLAPIC_DISABLED - All the online vCPUs/vLAPICs of this VM are in Disabled mode
  * VM_VLAPIC_TRANSITION - Online vCPUs/vLAPICs of this VM are in between transistion
  *
- * TODO: offline_vcpu need to call this API to reflect the status of rest of the
- * vLAPICs that are online.
- *
  * @pre vm != NULL
  */
 void update_vm_vlapic_state(struct acrn_vm *vm)
@@ -817,14 +814,17 @@ void update_vm_vlapic_state(struct acrn_vm *vm)
 	vcpus_in_xapic = 0U;
 	spinlock_obtain(&vm->vm_lock);
 	foreach_vcpu(i, vm, vcpu) {
-		if (is_x2apic_enabled(vcpu_vlapic(vcpu))) {
-			vcpus_in_x2apic++;
-		} else if (is_xapic_enabled(vcpu_vlapic(vcpu))) {
-			vcpus_in_xapic++;
-		} else {
-			/*
-			 * vCPU is using vLAPIC in Disabled mode
-			 */
+		/* Skip vCPU in state outside of VCPU_RUNNING as it may be offline. */
+		if (vcpu->state == VCPU_RUNNING) {
+			if (is_x2apic_enabled(vcpu_vlapic(vcpu))) {
+				vcpus_in_x2apic++;
+			} else if (is_xapic_enabled(vcpu_vlapic(vcpu))) {
+				vcpus_in_xapic++;
+			} else {
+				/*
+				 * vCPU is using vLAPIC in Disabled mode
+				 */
+			}
 		}
 	}
 
