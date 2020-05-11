@@ -238,8 +238,7 @@ Boot Windows on ACRN with default configuration
 #. Run the ``launch_win.sh``. The WaaG desktop displays on the HDMI monitor.
 
    .. note:: We support GVT-g and GVT-d while launching Windows guest. 
-        If you use GVT-g, you can set up Weston in the Service VM,
-        and follow the steps in :ref:`skl-nuc-gpu-passthrough` to set up Weston as the 
+	If you use GVT-g, you can set up Weston in the Service VM, and set up Weston as the
         desktop environment in the Service VM to experience Windows with the 
         AcrnGT local display feature. If you use GVT-d, please set 64MB for DVMT Pre-Allocated and 
         Enabled for PM Support in BIOS at first, then only Windows has display.

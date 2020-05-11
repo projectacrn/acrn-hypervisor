@@ -202,7 +202,7 @@ Document updates
 We have many reference documents `available
 <https://projectacrn.github.io>`_, including:
 
-* :ref:`GPU Passthrough on Skylake NUC <skl-nuc-gpu-passthrough>`
+* :ref:`Enable GVT-d in ACRN <gpu-passthrough>`
 * :ref:`Device Model Parameters <acrn-dm_parameters>`
 * :ref:`Running Automotive Grade Linux as a VM <agl-vms>`
 * Using PREEMPT_RT-Linux for real-time UOS
