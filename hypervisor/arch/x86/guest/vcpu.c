@@ -513,7 +513,7 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 
 		/* Populate the return handle */
 		*rtn_vcpu_handle = vcpu;
-		vcpu->state = VCPU_INIT;
+		vcpu_set_state(vcpu, VCPU_INIT);
 
 		init_xsave(vcpu);
 		vcpu_reset_internal(vcpu, POWER_ON_RESET);
@@ -670,7 +670,7 @@ void offline_vcpu(struct acrn_vcpu *vcpu)
 	/* This operation must be atomic to avoid contention with posted interrupt handler */
 	per_cpu(vcpu_array, pcpuid_from_vcpu(vcpu))[vcpu->vm->vm_id] = NULL;
 
-	vcpu->state = VCPU_OFFLINE;
+	vcpu_set_state(vcpu, VCPU_OFFLINE);
 }
 
 void kick_vcpu(const struct acrn_vcpu *vcpu)
@@ -716,7 +716,7 @@ void reset_vcpu(struct acrn_vcpu *vcpu, enum reset_mode mode)
 	pr_dbg("vcpu%hu reset", vcpu->vcpu_id);
 
 	vcpu_reset_internal(vcpu, mode);
-	vcpu->state = VCPU_INIT;
+	vcpu_set_state(vcpu, VCPU_INIT);
 }
 
 void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
@@ -727,7 +727,7 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 
 	if (((vcpu->state == VCPU_RUNNING) || (vcpu->state == VCPU_INIT)) && (new_state == VCPU_ZOMBIE)) {
 		vcpu->prev_state = vcpu->state;
-		vcpu->state = new_state;
+		vcpu_set_state(vcpu, new_state);
 
 		if (vcpu->prev_state == VCPU_RUNNING) {
 			sleep_thread(&vcpu->thread_obj);
@@ -747,7 +747,7 @@ int32_t resume_vcpu(struct acrn_vcpu *vcpu)
 	pr_dbg("vcpu%hu resumed", vcpu->vcpu_id);
 
 	if (vcpu->state == VCPU_PAUSED) {
-		vcpu->state = vcpu->prev_state;
+		vcpu_set_state(vcpu, vcpu->prev_state);
 		if (vcpu->state == VCPU_RUNNING) {
 			wake_thread(&vcpu->thread_obj);
 		}
@@ -818,7 +818,7 @@ void launch_vcpu(struct acrn_vcpu *vcpu)
 	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
 
 	pr_dbg("vcpu%hu scheduled on pcpu%hu", vcpu->vcpu_id, pcpu_id);
-	vcpu->state = VCPU_RUNNING;
+	vcpu_set_state(vcpu, VCPU_RUNNING);
 	wake_thread(&vcpu->thread_obj);
 
 }
@@ -921,4 +921,18 @@ void vcpu_handle_pi_notification(uint32_t vcpu_index)
 			vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 		}
 	}
+}
+
+/*
+ * @brief Update the state of vCPU and state of vlapic
+ *
+ * The vlapic state of VM shall be updated for some vCPU
+ * state update cases, such as from VCPU_INIT to VCPU_RUNNING.
+
+ * @pre (vcpu != NULL)
+ */
+void vcpu_set_state(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
+{
+	vcpu->state = new_state;
+	update_vm_vlapic_state(vcpu->vm);
 }
