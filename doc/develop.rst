@@ -61,7 +61,7 @@ Enable ACRN Features
    tutorials/enable_s5
    tutorials/cpu_sharing
    tutorials/sriov_virtualization
-   tutorials/skl-nuc
+   tutorials/gpu-passthru
    tutorials/run_kata_containers
    tutorials/trustyACRN
    tutorials/rtvm_workload_design_guideline

@@ -61,7 +61,7 @@ for step-by-step instructions.
 
 **Document updates**: Several new documents have been added in this release, including:
 
-* :ref:`skl-nuc-gpu-passthrough`
+* :ref:`gpu-passthrough`
 * :ref:`acrn-dm_parameters`
 
 - :acrn-issue:`878`  - Virtualization HLD

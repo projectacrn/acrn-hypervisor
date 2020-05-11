@@ -1,0 +1,62 @@
+From 8bb9e3e2015bea8e45431b31752e56e2e3797640 Mon Sep 17 00:00:00 2001
+From: Junming Liu <junming.liu@intel.com>
+Date: Thu, 30 Apr 2020 00:44:11 +0800
+Subject: [PATCH 2/2] Integrate IntelGopDriver into OVMF
+
+Tracked-On: projectacrn/acrn-hypervisor#4365
+
+Signed-off-by: Xiong Zhang <xiong.y.zhang@intel.com>
+Signed-off-by: Junming Liu <junming.liu@intel.com>
+---
+ OvmfPkg/IntelGop/IntelGopDriver.inf | 17 +++++++++++++++++
+ OvmfPkg/OvmfPkgX64.dsc              |  1 +
+ OvmfPkg/OvmfPkgX64.fdf              |  1 +
+ 3 files changed, 19 insertions(+)
+ create mode 100644 OvmfPkg/IntelGop/IntelGopDriver.inf
+
+Index: acrn-edk2/OvmfPkg/IntelGop/IntelGopDriver.inf
+===================================================================
+--- /dev/null
++++ acrn-edk2/OvmfPkg/IntelGop/IntelGopDriver.inf
+@@ -0,0 +1,17 @@
++## @file
++#  IntelGopDriver Binary
++#
++#  Copyright (c) 2006 - 2011, Intel Corporation. All rights reserved.<BR>
++#  SPDX-License-Identifier: BSD-2-Clause-Patent
++#
++##
++
++[Defines]
++  INF_VERSION                    = 0x00010005
++  BASE_NAME                      = IntelGopDriver
++  FILE_GUID                      = 1647B4F3-3E8A-4FDD-81C8-328ED647AB1A
++  MODULE_TYPE                    = UEFI_DRIVER
++  VERSION_STRING                 = 1.0
++
++[Binaries.X64]
++  PE32|IntelGopDriver.efi|*
+Index: acrn-edk2/OvmfPkg/OvmfPkgX64.dsc
+===================================================================
+--- acrn-edk2.orig/OvmfPkg/OvmfPkgX64.dsc
++++ acrn-edk2/OvmfPkg/OvmfPkgX64.dsc
+@@ -756,6 +756,7 @@
+   #OvmfPkg/XenIoPciDxe/XenIoPciDxe.inf
+   #OvmfPkg/XenBusDxe/XenBusDxe.inf
+   #OvmfPkg/XenPvBlkDxe/XenPvBlkDxe.inf
++  OvmfPkg/IntelGop/IntelGopDriver.inf
+   OvmfPkg/Vbt/Vbt.inf
+   OvmfPkg/PlatformGopPolicy/PlatformGopPolicy.inf
+   MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
+Index: acrn-edk2/OvmfPkg/OvmfPkgX64.fdf
+===================================================================
+--- acrn-edk2.orig/OvmfPkg/OvmfPkgX64.fdf
++++ acrn-edk2/OvmfPkg/OvmfPkgX64.fdf
+@@ -235,6 +235,7 @@ INF  OvmfPkg/GvtGopDxe/GvtGopDxe.inf
+ #INF  OvmfPkg/XenIoPciDxe/XenIoPciDxe.inf
+ #INF  OvmfPkg/XenBusDxe/XenBusDxe.inf
+ #INF  OvmfPkg/XenPvBlkDxe/XenPvBlkDxe.inf
++INF  OvmfPkg/IntelGop/IntelGopDriver.inf
+ INF  RuleOverride=CSM OvmfPkg/Vbt/Vbt.inf
+ INF  OvmfPkg/PlatformGopPolicy/PlatformGopPolicy.inf
+ 
