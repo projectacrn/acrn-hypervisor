@@ -8,9 +8,9 @@ ACRN hypervisor.
 
 Verified version
 ****************
-* Clear Linux version: 32680
-* ACRN-hypervisor tag: v1.6 (acrn-2020w12.5-140000p)
-* ACRN-kernel tag: acrn-2020w12.5-140000p
+* Clear Linux version: 33050
+* ACRN-hypervisor tag: v1.6.1 (acrn-2020w18.4-140000p)
+* ACRN-Kernel (Service VM kernel): 4.19.120-108.iot-lts2018-sos
 * Windows 10 Version:
 
   - Microsoft Windows 10 Enterprise, 10.0.17134 Build 17134
@@ -227,7 +227,7 @@ Install Windows 10 by GVT-g
 
 
 #. Copy `Intel DCH Graphics Driver <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`_ into
-   Windows and install; the display driver is updated to 7212.
+   Windows and install in safe mode, the display driver is updated to 7212.
 
 .. _waag_display_conf_lable:
 
@@ -237,12 +237,12 @@ Boot Windows on ACRN with default configuration
 
 #. Run the ``launch_win.sh``. The WaaG desktop displays on the HDMI monitor.
 
-   .. note:: We support GVT-g and GVT-d while launching Windows guest.
-         If you use GVT-g, you can set up Weston in the Service VM, and follow
-         the steps in :ref:`skl-nuc-gpu-passthrough` to set up Weston as the
-         desktop environment in the Service VM to experience Windows with the
-         AcrnGT local display feature. If you use GVT-d, then only Windows has
-         display.
+   .. note:: We support GVT-g and GVT-d while launching Windows guest. 
+        If you use GVT-g, you can set up Weston in the Service VM,
+        and follow the steps in :ref:`skl-nuc-gpu-passthrough` to set up Weston as the 
+        desktop environment in the Service VM to experience Windows with the 
+        AcrnGT local display feature. If you use GVT-d, please set 64MB for DVMT Pre-Allocated and 
+        Enabled for PM Support in BIOS at first, then only Windows has display.
 
 ACRN Windows verified feature list
 **********************************
