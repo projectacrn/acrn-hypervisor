@@ -20,9 +20,10 @@ or use Git clone and checkout commands::
    git checkout v1.6.1
 
 The project's online technical documentation is also tagged to correspond
-with a specific release: generated v1.6.1 documents can be found at https://projectacrn.github.io/1.6.1/.
+with a specific release: generated v1.6.1 documents can be found at
+https://projectacrn.github.io/1.6.1/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
-ACRN v1.6.1 requires Clear Linux OS version 33050. Follow thedd
+ACRN v1.6.1 requires Clear Linux OS version 33050. Follow the
 instructions in the :ref:`rt_industry_setup`.
 
 Version 1.6.1 major features
@@ -30,18 +31,20 @@ Version 1.6.1 major features
 
 What's New in v1.6.1
 ====================
-* ACRN ensured Libvirt to support VM orchestration based on OpenStack
+* ACRN ensures libvirt supports VM orchestration based on OpenStack
 
-   - Libvirt is an open-source API, daemon and management tool as a layer to decouple various orchestrator and hypervisors.
+   - libvirt is an open-source API, daemon, and management tool as a
+     layer to decouple orchestrators and hypervisors.
      By adding a "ACRN driver", libvirt can support ACRN. Please refer to ACRN-libvirt.
 
-   - Supported Libvirt based orchestrator to configure a guest domain's CPU configuration during its creation.
+   - Supports the libvirt-based orchestrator to configure a guest
+     domain's CPU configuration during VM creation.
 
-   - Supported dynamic configuration for vCPU affinity via acrn-dm
+   - Supports dynamic configuration for vCPU affinity via acrn-dm
 
    - ACRN configuration tool updated based on VM orchestration support.
 
-* Enable CPU sharing and GVT-d by default.
+* Enable CPU sharing and GVT-d Graphics virtualization by default.
 
 * Supported platforms with multiple IO-APICs
 
