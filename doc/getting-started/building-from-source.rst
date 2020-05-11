@@ -267,8 +267,8 @@ The ``acrn.efi`` will be generated in the ``./hypervisor/build/acrn.efi`` direct
 As mentioned in :ref:`ACRN Configuration Tool <vm_config_workflow>`, the
 Board configuration and VM configuration can be imported from XML files.
 If you want to build the hypervisor with XML configuration files,
-specify the file location as follows (assuming you're current directory
-is at the top level of the acrn-hypervisor directory):
+specify the file location as follows (assuming you're at the top level
+of the acrn-hypervisor directory):
 
 .. code-block:: none
 
@@ -281,7 +281,7 @@ is at the top level of the acrn-hypervisor directory):
    information is retrieved from the corresponding ``BOARD_FILE`` and
    ``SCENARIO_FILE`` XML configuration files.  The ``TARGET_DIR`` parameter
    specifies what directory is used to  store configuration files imported
-   from XML files. If the ``TARGED_DIR`` it is not specified, the original
+   from XML files. If the ``TARGED_DIR`` is not specified, the original
    configuration files of acrn-hypervisor would be overridden.
 
 Follow the same instructions to boot and test the images you created from your build.
