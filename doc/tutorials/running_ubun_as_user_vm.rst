@@ -60,6 +60,8 @@ Validated Versions
 -  **ACRN hypervisor tag:** acrn-2019w36.2-140000p
 -  **Service VM Kernel version:** 4.19.68-84.iot-lts2018-sos
 
+.. _build-the-ubuntu-kvm-image:
+
 Build the Ubuntu KVM Image
 **************************
 
