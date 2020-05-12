@@ -96,7 +96,7 @@ struct pci_vdev_ops {
 };
 
 struct pci_vdev {
-	const struct acrn_vpci *vpci;
+	struct acrn_vpci *vpci;
 	/* The bus/device/function triple of the virtual PCI device. */
 	union pci_bdf bdf;
 
