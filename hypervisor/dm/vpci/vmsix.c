@@ -262,11 +262,12 @@ void init_vmsix(struct pci_vdev *vdev)
  * @pre vdev->vpci != NULL
  * @pre vdev->vpci->vm != NULL
  */
-void deinit_vmsix(const struct pci_vdev *vdev)
+void deinit_vmsix(struct pci_vdev *vdev)
 {
 	if (has_msix_cap(vdev)) {
 		if (vdev->msix.table_count != 0U) {
 			ptirq_remove_msix_remapping(vpci2vm(vdev->vpci), vdev->bdf.value, vdev->msix.table_count);
+			(void)memset((void *)&vdev->msix, 0U, sizeof(struct pci_msix));
 		}
 	}
 }

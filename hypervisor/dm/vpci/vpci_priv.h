@@ -120,13 +120,13 @@ void vdev_pt_map_msix(struct pci_vdev *vdev, bool hold_lock);
 void init_vmsi(struct pci_vdev *vdev);
 void read_vmsi_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 void write_vmsi_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
-void deinit_vmsi(const struct pci_vdev *vdev);
+void deinit_vmsi(struct pci_vdev *vdev);
 
 void init_vmsix(struct pci_vdev *vdev);
 int32_t vmsix_handle_table_mmio_access(struct io_request *io_req, void *handler_private_data);
 void read_vmsix_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 void write_vmsix_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
-void deinit_vmsix(const struct pci_vdev *vdev);
+void deinit_vmsix(struct pci_vdev *vdev);
 
 void init_vsriov(struct pci_vdev *vdev);
 void read_sriov_cap_reg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
