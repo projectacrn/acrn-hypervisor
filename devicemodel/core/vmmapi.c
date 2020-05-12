@@ -60,6 +60,22 @@
 #define SUPPORT_VHM_API_VERSION_MAJOR	1
 #define SUPPORT_VHM_API_VERSION_MINOR	0
 
+#define VM_STATE_STR_LEN                16
+static const char vm_state_str[VM_SUSPEND_LAST][VM_STATE_STR_LEN] = {
+	[VM_SUSPEND_NONE]		= "RUNNING",
+	[VM_SUSPEND_SYSTEM_RESET]	= "SYSTEM_RESET",
+	[VM_SUSPEND_FULL_RESET]		= "FULL_RESET",
+	[VM_SUSPEND_POWEROFF]		= "POWEROFF",
+	[VM_SUSPEND_SUSPEND]		= "SUSPEND",
+	[VM_SUSPEND_HALT]		= "HALT",
+	[VM_SUSPEND_TRIPLEFAULT]	= "TRIPLEFAULT"
+};
+
+const char *vm_state_to_str(enum vm_suspend_how idx)
+{
+	return (idx < VM_SUSPEND_LAST) ? vm_state_str[idx] : "UNKNOWN";
+}
+
 static int
 check_api(int fd)
 {
@@ -494,12 +510,12 @@ vm_clear_ioreq(struct vmctx *ctx)
 	ioctl(ctx->fd, IC_CLEAR_VM_IOREQ, NULL);
 }
 
-static int suspend_mode = VM_SUSPEND_NONE;
+static enum vm_suspend_how suspend_mode = VM_SUSPEND_NONE;
 
 void
 vm_set_suspend_mode(enum vm_suspend_how how)
 {
-	pr_notice("vm mode changed from %d to %d\n", suspend_mode, how);
+	pr_notice("VM state changed from[ %s ] to [ %s ]\n", vm_state_to_str(suspend_mode), vm_state_to_str(how));
 	suspend_mode = how;
 }
 
@@ -512,6 +528,7 @@ vm_get_suspend_mode(void)
 int
 vm_suspend(struct vmctx *ctx, enum vm_suspend_how how)
 {
+	pr_info("%s: setting VM state to %s\n", __func__, vm_state_to_str(how));
 	vm_set_suspend_mode(how);
 	mevent_notify();
 
