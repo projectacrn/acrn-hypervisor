@@ -74,6 +74,7 @@ Enable ACRN Features
    tutorials/trustyACRN
    tutorials/rtvm_workload_design_guideline
    tutorials/setup_openstack_libvirt
+   tutorials/acrn_on_qemu
 
 Debug
 *****
