@@ -68,35 +68,35 @@ We recommend that all developers upgrade to ACRN release v1.6.1.
 
 Fixed Issues Details
 ********************
-- :acrn-issue: '1773'- [APLNUC][IO][LaaG]USB Mediator USB3.0 and USB2.0 flash disk boot up UOS, quickly hot plug USB and Can not recognize all the devices
-- :acrn-issue: '3291'- Update documentation and helper scripts to use newer `swupd` commands.
-- :acrn-issue: '3697'- Secure timer check failed in trusty which would cause unlock failure after resume from S3
-- :acrn-issue: '3715'- Add support for multiple RDT resource allocation and fix L3 CAT config overwrite by L2
-- :acrn-issue: '3758'- Documentation: add a tutorial (or information) on how to change the Linux kernel parameters for User VMs
-- :acrn-issue: '3770'- Warning when building the ACRN hypervisor `SDC (defined at arch/x86/Kconfig:7) set more than once`
-- :acrn-issue: '3773'- [Community][Internal] suspicious logic in vhost.c.
-- :acrn-issue: '3918'- Change active_hp_work position for code cleaning and add a module parameter to disable hp work.
-- :acrn-issue: '3939'- [Community][Internal]zero-copy non-functional with vhost.
-- :acrn-issue: '3946'- [Community][External]Cannot boot VxWorks as UOS on KabyLake.
-- :acrn-issue: '4017'- hv: rename vuart operations
-- :acrn-issue: '4072'- [Community-dev][External]hv: add printf "not support the value of vuart index parameter" in function vuart_register_io_handler.
-- :acrn-issue: '4191'- [Community-dev][External]acrnboot: the end address of _DYNAME region is not calculated correct
-- :acrn-issue: '4200'- In APCIv advanced mode, a target vCPU (in not-root mode) may get wrong TMR or EOI exit bitmap when another vPCU try to send an interrupt to it if this interrupt trigger mode has changed.
-- :acrn-issue: '4250'- [Community-dev][external]acrnboot: parse hv cmdline incorrectly when containing any trailing white-spaces
-- :acrn-issue: '4283'- [Community-dev][External]devicemodel: refactor CMD_OPT_LAPIC_PT case branch
-- :acrn-issue: '4322'- [ACRN_V1.5][Document] Build cmd error in "Build the ACRN User VM PREEMPT_RT Kernel in Docker" document
-- :acrn-issue: '4569'- [acrn-configuration-tool]find 64-bit mmio to generate HI_MMIO_START/HI_MMIO_END
-- :acrn-issue: '4620'- [WHL][Function][WaaG] WaaG will fail to reboot with 2 cores.
-- :acrn-issue: '4625'- [WHL][ConfigurationTool][WAAG] Need to support passthrough GVT to WaaG by default
-- :acrn-issue: '4634'- [acrn-configuration-tool]move new_board_config to board_def config and support to parse it
-- :acrn-issue: '4636'- compile crashlog error with latest clearlinux
-- :acrn-issue: '4641'- [WHL][acrn-configuration-tool]error "board/scenario xml not match" for created scenario setting
-- :acrn-issue: '4664'- Wake up vCPU for interrupts from vPIC
-- :acrn-issue: '4666'- Fix offline tool to generate info in pci_dev file for logical partition scenario
-- :acrn-issue: '4688'- [WHL][acrn-configuration-tool] RELEASE=n does not take effect while using xml to make hypervisor
-- :acrn-issue: '4719'- [WHL][Function][LaaG]Garbage display when shutdown LaaG with CPU sharing GVT-D
-- :acrn-issue: '4752'- [WHL][acrn-configuration-tool] console loglevel is not changed if building hypervisor by xml
-- :acrn-issue: '4753'- [KBLNUCi7][libvirt][HV] in acrn.efi which enable 4vcpu for laag, with libvirtd.service enabled, SOS kernel panic and reboot
+- :acrn-issue:`1773` - [APLNUC][IO][LaaG]USB Mediator USB3.0 and USB2.0 flash disk boot up UOS, quickly hot plug USB and Can not recognize all the devices
+- :acrn-issue:`3291` - Update documentation and helper scripts to use newer `swupd` commands.
+- :acrn-issue:`3697` - Secure timer check failed in trusty which would cause unlock failure after resume from S3
+- :acrn-issue:`3715` - Add support for multiple RDT resource allocation and fix L3 CAT config overwrite by L2
+- :acrn-issue:`3758` - Documentation: add a tutorial (or information) on how to change the Linux kernel parameters for User VMs
+- :acrn-issue:`3770` - Warning when building the ACRN hypervisor `SDC (defined at arch/x86/Kconfig:7) set more than once`
+- :acrn-issue:`3773` - [Community][Internal] suspicious logic in vhost.c.
+- :acrn-issue:`3918` - Change active_hp_work position for code cleaning and add a module parameter to disable hp work.
+- :acrn-issue:`3939` - [Community][Internal]zero-copy non-functional with vhost.
+- :acrn-issue:`3946` - [Community][External]Cannot boot VxWorks as UOS on KabyLake.
+- :acrn-issue:`4017` - hv: rename vuart operations
+- :acrn-issue:`4072` - [Community-dev][External]hv: add printf "not support the value of vuart index parameter" in function vuart_register_io_handler.
+- :acrn-issue:`4191` - [Community-dev][External]acrnboot: the end address of _DYNAME region is not calculated correct
+- :acrn-issue:`4200` - In APCIv advanced mode, a target vCPU (in not-root mode) may get wrong TMR or EOI exit bitmap when another vPCU try to send an interrupt to it if this interrupt trigger mode has changed.
+- :acrn-issue:`4250` - [Community-dev][external]acrnboot: parse hv cmdline incorrectly when containing any trailing white-spaces
+- :acrn-issue:`4283` - [Community-dev][External]devicemodel: refactor CMD_OPT_LAPIC_PT case branch
+- :acrn-issue:`4322` - [ACRN_V1.5][Document] Build cmd error in "Build the ACRN User VM PREEMPT_RT Kernel in Docker" document
+- :acrn-issue:`4569` - [acrn-configuration-tool]find 64-bit mmio to generate HI_MMIO_START/HI_MMIO_END
+- :acrn-issue:`4620` - [WHL][Function][WaaG] WaaG will fail to reboot with 2 cores.
+- :acrn-issue:`4625` - [WHL][ConfigurationTool][WAAG] Need to support passthrough GVT to WaaG by default
+- :acrn-issue:`4634` - [acrn-configuration-tool]move new_board_config to board_def config and support to parse it
+- :acrn-issue:`4636` - compile crashlog error with latest clearlinux
+- :acrn-issue:`4641` - [WHL][acrn-configuration-tool]error "board/scenario xml not match" for created scenario setting
+- :acrn-issue:`4664` - Wake up vCPU for interrupts from vPIC
+- :acrn-issue:`4666` - Fix offline tool to generate info in pci_dev file for logical partition scenario
+- :acrn-issue:`4688` - [WHL][acrn-configuration-tool] RELEASE=n does not take effect while using xml to make hypervisor
+- :acrn-issue:`4719` - [WHL][Function][LaaG]Garbage display when shutdown LaaG with CPU sharing GVT-D
+- :acrn-issue:`4752` - [WHL][acrn-configuration-tool] console loglevel is not changed if building hypervisor by xml
+- :acrn-issue:`4753` - [KBLNUCi7][libvirt][HV] in acrn.efi which enable 4vcpu for laag, with libvirtd.service enabled, SOS kernel panic and reboot
 
 
 Known Issues
