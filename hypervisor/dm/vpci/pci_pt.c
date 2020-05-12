@@ -390,7 +390,7 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 			pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
 		}
 	} else {
-		if (!is_own_device(vpci2vm(vdev->phyfun->vpci), vdev)) {
+		if (vdev->phyfun->vpci != vdev->vpci) {
 			/* VF is assigned to a UOS */
 			uint32_t vid, did;
 
@@ -426,7 +426,7 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 void deinit_vdev_pt(struct pci_vdev *vdev) {
 
 	/* Check if the vdev is an unassigned SR-IOV VF device */
-	if ((vdev->phyfun != NULL) && (is_own_device(vpci2vm(vdev->phyfun->vpci), vdev))) {
+	if ((vdev->phyfun != NULL) && (vdev->phyfun->vpci == vdev->vpci)) {
 		uint32_t bar_idx;
 
 		/* Delete VF MMIO from EPT table since the VF physical device has gone */
