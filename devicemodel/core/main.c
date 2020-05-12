@@ -615,6 +615,7 @@ vm_system_reset(struct vmctx *ctx)
 
 	vm_reset_vdevs(ctx);
 	vm_reset(ctx);
+	pr_info("%s: setting VM state to %s\n", __func__, vm_state_to_str(VM_SUSPEND_NONE));
 	vm_set_suspend_mode(VM_SUSPEND_NONE);
 
 	/* set the BSP init state */
@@ -711,7 +712,8 @@ num_vcpus_allowed(struct vmctx *ctx)
 static void
 sig_handler_term(int signo)
 {
-	printf("Receive SIGINT to terminate application...\n");
+	pr_info("Received SIGINT to terminate application...\n");
+	pr_info("%s: setting VM state to %s\n", __func__, vm_state_to_str(VM_SUSPEND_POWEROFF));
 	vm_set_suspend_mode(VM_SUSPEND_POWEROFF);
 	mevent_notify();
 }
@@ -1065,6 +1067,7 @@ main(int argc, char *argv[])
 		vm_destroy(ctx);
 		_ctx = 0;
 
+		pr_info("%s: setting VM state to %s\n", __func__, vm_state_to_str(VM_SUSPEND_NONE));
 		vm_set_suspend_mode(VM_SUSPEND_NONE);
 	}
 

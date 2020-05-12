@@ -56,7 +56,7 @@
 #define IDT_XF		19	/* #XF: SIMD Floating-Point Exception */
 
 enum vm_suspend_how {
-	VM_SUSPEND_NONE,
+	VM_SUSPEND_NONE = 0,
 	VM_SUSPEND_SYSTEM_RESET,
 	VM_SUSPEND_FULL_RESET,
 	VM_SUSPEND_POWEROFF,
