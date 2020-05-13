@@ -1405,6 +1405,77 @@ write_dsdt_sdc(struct pci_vdev *dev)
 }
 
 static void
+write_dsdt_tsn(struct pci_vdev *dev, uint16_t device)
+{
+	char device_name[4];
+	uint16_t pcs_id;
+
+	if (device == 0x4b32) {
+		strncpy(device_name, "GTSN", 4);
+		pcs_id = 0;
+	} else if (device == 0x4ba0) {
+		strncpy(device_name, "OTN0", 4);
+		pcs_id = 1;
+	} else if (device == 0x4bb0) {
+		strncpy(device_name, "OTN1", 4);
+		pcs_id = 2;
+	} else {
+		return;
+	}
+
+	pr_info("write TSN-%x:%x.%x in dsdt for TSN-%d\n", dev->bus, dev->slot, dev->func, pcs_id);
+
+	dsdt_line("");
+	dsdt_line("Device (%.4s)", device_name);
+	dsdt_line("{");
+	dsdt_line("    Name (_ADR, 0x%04X%04X)", dev->slot, dev->func);  // _ADR: Address
+	dsdt_line("    OperationRegion (TSRT, PCI_Config, Zero, 0x0100)");
+	dsdt_line("    Field (TSRT, AnyAcc, NoLock, Preserve)");
+	dsdt_line("    {");
+	dsdt_line("        DVID,   16,");
+	dsdt_line("        Offset (0x10),");
+	dsdt_line("        TADL,   32,");
+	dsdt_line("        TADH,   32");
+	dsdt_line("    }");
+	dsdt_line("}");
+	dsdt_line("");
+	dsdt_line("Scope (_SB)");
+	dsdt_line("{");
+	dsdt_line("    Device (PCS%01X)", pcs_id);
+	dsdt_line("    {");
+	dsdt_line("        Name (_HID, \"INTC1033\")");  // _HID: Hardware ID
+	dsdt_line("        Name (_UID, Zero)");  // _UID: Unique ID
+	dsdt_line("        Method (_STA, 0, NotSerialized)");  // _STA: Status
+	dsdt_line("        {");
+	dsdt_line("");
+	dsdt_line("            Return (0x0F)");
+	dsdt_line("        }");
+	dsdt_line("");
+	dsdt_line("        Method (_CRS, 0, Serialized)");  // _CRS: Current Resource Settings
+	dsdt_line("        {");
+	dsdt_line("            Name (PCSR, ResourceTemplate ()");
+	dsdt_line("            {");
+	dsdt_line("                Memory32Fixed (ReadWrite,");
+	dsdt_line("                    0x00000000,");         // Address Base
+	dsdt_line("                    0x00000004,");         // Address Length
+	dsdt_line("                    _Y55)");
+	dsdt_line("                Memory32Fixed (ReadWrite,");
+	dsdt_line("                    0x00000000,");         // Address Base
+	dsdt_line("                    0x00000004,");         // Address Length
+	dsdt_line("                    _Y56)");
+	dsdt_line("            })");
+	dsdt_line("            CreateDWordField (PCSR, \\_SB.PCS%01X._CRS._Y55._BAS, MAL0)", pcs_id);  // _BAS: Base Address
+	dsdt_line("            MAL0 = ((^^PCI0.%.4s.TADL & 0xFFFFF000) + 0x0200)", device_name);
+	dsdt_line("            CreateDWordField (PCSR, \\_SB.PCS%01X._CRS._Y56._BAS, MDL0)", pcs_id);  // _BAS: Base Address
+	dsdt_line("            MDL0 = ((^^PCI0.%.4s.TADL & 0xFFFFF000) + 0x0204)", device_name);
+	dsdt_line("            Return (PCSR)"); /* \_SB_.PCS0._CRS.PCSR */
+	dsdt_line("        }");
+	dsdt_line("    }");
+	dsdt_line("}");
+	dsdt_line("");
+}
+
+static void
 passthru_write_dsdt(struct pci_vdev *dev)
 {
 	uint16_t vendor = 0, device = 0;
@@ -1435,7 +1506,8 @@ passthru_write_dsdt(struct pci_vdev *dev)
 	else if (device == 0x5aca)
 		/* SDC @ 00:1b.0 */
 		write_dsdt_sdc(dev);
-
+	else if ((device == 0x4b32) || (device == 0x4ba0) || (device == 0x4bb0))
+		write_dsdt_tsn(dev, device);
 }
 
 struct pci_vdev_ops passthru = {
