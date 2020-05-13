@@ -467,6 +467,22 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 	pcidev->type = QUIRK_PTDEV;
 }
 
+static int
+parse_vmsix_on_msi_bar_id(char *s, int *id, int base)
+{
+	char *str, *cp;
+	int ret = 0;
+
+	if (s == NULL)
+		return -EINVAL;
+
+	str = cp = strdup(s);
+	ret = dm_strtoi(cp, &cp, base, id);
+	free(str);
+
+	return ret;
+}
+
 /*
  * Passthrough device initialization function:
  * - initialize virtual config space
@@ -488,6 +504,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	char *opt;
 	bool keep_gsi = false;
 	bool need_reset = true;
+	int vmsix_on_msi_bar_id = -1;
 	struct acrn_assign_pcidev pcidev = {};
 	uint16_t vendor = 0, device = 0;
 
@@ -519,6 +536,13 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			/* Create the dedicated "igd-lpc" on 00:1f.0 for IGD passthrough */
 			if (pci_parse_slot("31,igd-lpc") != 0)
 				warnx("faild to create igd-lpc");
+		} else if (!strncmp(opt, "vmsix_on_msi", 12)) {
+			opt = strsep(&opts, ",");
+			if (parse_vmsix_on_msi_bar_id(opt, &vmsix_on_msi_bar_id, 10) != 0) {
+				warnx("faild to parse msix emulation bar id");
+				return -EINVAL;
+			}
+
 		} else
 			warnx("Invalid passthru options:%s", opt);
 	}
@@ -589,6 +613,13 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (error < 0)
 		goto done;
 
+	if (vmsix_on_msi_bar_id != -1) {
+		error = pci_emul_alloc_pbar(dev, vmsix_on_msi_bar_id, 0, PCIBAR_MEM32, 4096);
+		if (error < 0)
+			goto done;
+		error = IRQ_MSI;
+	}
+
 	if (ptdev->phys_bdf == PCI_BDF_GPU)
 		passthru_gpu_dsm_opregion(ctx, ptdev, &pcidev, device);
 
@@ -602,7 +633,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 * Forge Guest to use MSI/MSIX in this case to mitigate IRQ sharing
 	 * issue
 	 */
-	if (error != IRQ_MSI && !keep_gsi) {
+	if (error != IRQ_MSI || keep_gsi) {
 		/* Allocates the virq if ptdev only support INTx */
 		pci_lintr_request(dev);
 
