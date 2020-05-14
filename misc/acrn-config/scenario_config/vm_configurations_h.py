@@ -86,9 +86,6 @@ def gen_pre_launch_vm(vm_info, config):
             print("#define VM{0}_CONFIG_MEM_SIZE_HPA2\t\t{1}UL".format(
                 vm_i, vm_info.mem_info.mem_size_hpa2[vm_i]), file=config)
 
-        print('#define VM{0}_CONFIG_OS_BOOTARG_MAXCPUS\t\t"maxcpus={1} "'.format(vm_i, cpu_bits['cpu_num']), file=config)
-        if vm_info.os_cfg.kern_console:
-            print('#define VM{0}_CONFIG_OS_BOOTARG_CONSOLE\t\t"console={1} "'.format(vm_i, vm_info.os_cfg.kern_console.strip('/dev/')), file=config)
         print("", file=config)
         vm_i += 1
 
