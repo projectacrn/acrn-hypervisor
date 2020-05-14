@@ -381,19 +381,6 @@ def os_kern_args_check(id_kern_args_dic, prime_item, item):
             ERR_LIST[key] = "VM os config kernel service os should be SOS_VM_BOOTARGS"
 
 
-def os_kern_console_check(tty_console, prime_item, item):
-    """
-    Check os kernel console
-    :param prime_item: the prime item in xml file
-    :param item: vm os config console item in xml
-    :return: None
-    """
-
-    if tty_console and "ttyS" not in tty_console:
-        key = "hv:{},{}".format(prime_item, item)
-        ERR_LIST[key] = "VM os config kernel console should be ttyS[0..3]"
-
-
 def os_kern_load_addr_check(id_kern_load_addr_dic, prime_item, item):
     """
     Check os kernel load address
