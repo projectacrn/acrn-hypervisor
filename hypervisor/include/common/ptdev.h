@@ -120,6 +120,8 @@ typedef void (*ptirq_arch_release_fn_t)(const struct ptirq_remapping_info *entry
  * with interrupt handler and softirq.
  */
 struct ptirq_remapping_info {
+	struct hlist_node phys_link;
+	struct hlist_node virt_link;
 	uint16_t ptdev_entry_id;
 	uint32_t intr_type;
 	union source_id phys_sid;
@@ -158,6 +160,22 @@ extern spinlock_t ptdev_lock;
  * @{
  */
 
+
+/*
+ * @brief Find a ptdev entry by sid
+ *
+ * param[in] intr_type interrupt type of the ptirq entry
+ * param[in] sid source id of the ptirq entry
+ * param[in] vm vm pointer of the ptirq entry if find the ptdev entry by virtual sid
+ *
+ * @retval NULL when \p when no ptirq entry match the sid
+ * @retval ptirq entry when \p there is available ptirq entry match the sid
+ *
+ * @pre: vm must be NULL when lookup by physical sid, otherwise,
+ * vm must not be NULL when lookup by virtual sid.
+ */
+struct ptirq_remapping_info *find_ptirq_entry(uint32_t intr_type,
+		const union source_id *sid, const struct acrn_vm *vm);
 
 /**
  * @brief Handler of softirq for passthrough device.
