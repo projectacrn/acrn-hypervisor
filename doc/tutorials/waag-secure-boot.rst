@@ -436,9 +436,12 @@ Compile OVMF with secure boot support
 
 ::
 
-    git clone -b ovmf-acrn-waag ssh://git@gitlab.devtools.intel.com:29418/projectacrn/edk2.git
+    git clone https://github.com/projectacrn/acrn-edk2.git
 
-    cd edk2
+    cd acrn-edk2
+
+    git checkout -b ovmf b64fe247c434e2a4228b9804c522575804550f82
+
     git submodule update --init CryptoPkg/Library/OpensslLib/openssl
 
     source edksetup.sh
