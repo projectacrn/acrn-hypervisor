@@ -49,40 +49,6 @@ static struct acrn_vcpu *is_single_destination(struct acrn_vm *vm, const struct 
 	return vcpu;
 }
 
-/*
- * lookup a ptdev entry by sid
- * Before adding a ptdev remapping, should lookup by physical sid to check
- * whether the resource has been token by others.
- * When updating a ptdev remapping, should lookup by virtual sid to check
- * whether this resource is valid.
- * @pre: vm must be NULL when lookup by physical sid, otherwise,
- * vm must not be NULL when lookup by virtual sid.
- */
-static inline struct ptirq_remapping_info *
-find_ptirq_entry(uint32_t intr_type,
-		const union source_id *sid, const struct acrn_vm *vm)
-{
-	uint16_t idx;
-	struct ptirq_remapping_info *entry;
-	struct ptirq_remapping_info *entry_found = NULL;
-
-	for (idx = 0U; idx < CONFIG_MAX_PT_IRQ_ENTRIES; idx++) {
-		entry = &ptirq_entries[idx];
-		if (!is_entry_active(entry)) {
-			continue;
-		}
-		if ((intr_type == entry->intr_type) &&
-			((vm == NULL) ?
-			(sid->value == entry->phys_sid.value) :
-			((vm == entry->vm) &&
-			(sid->value == entry->virt_sid.value)))) {
-			entry_found = entry;
-			break;
-		}
-	}
-	return entry_found;
-}
-
 static uint32_t calculate_logical_dest_mask(uint64_t pdmask)
 {
 	uint32_t dest_mask = 0UL;

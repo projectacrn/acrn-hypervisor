@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <hash.h>
 #include <per_cpu.h>
 #include <vm.h>
 #include <softirq.h>
@@ -11,10 +12,17 @@
 #include <irq.h>
 #include <logmsg.h>
 
+#define PTIRQ_ENTRY_HASHBITS	9U
+#define PTIRQ_ENTRY_HASHSIZE	(1U << PTIRQ_ENTRY_HASHBITS)
+
 #define PTIRQ_BITMAP_ARRAY_SIZE	INT_DIV_ROUNDUP(CONFIG_MAX_PT_IRQ_ENTRIES, 64U)
 struct ptirq_remapping_info ptirq_entries[CONFIG_MAX_PT_IRQ_ENTRIES];
 static uint64_t ptirq_entry_bitmaps[PTIRQ_BITMAP_ARRAY_SIZE];
 spinlock_t ptdev_lock;
+
+static struct ptirq_entry_head {
+	struct hlist_head list;
+} ptirq_entry_heads[PTIRQ_ENTRY_HASHSIZE];
 
 static inline uint16_t ptirq_alloc_entry_id(void)
 {
@@ -28,6 +36,35 @@ static inline uint16_t ptirq_alloc_entry_id(void)
 	}
 
 	return (id < CONFIG_MAX_PT_IRQ_ENTRIES) ? id: INVALID_PTDEV_ENTRY_ID;
+}
+
+struct ptirq_remapping_info *find_ptirq_entry(uint32_t intr_type,
+		const union source_id *sid, const struct acrn_vm *vm)
+{
+	struct hlist_node *p;
+	struct ptirq_remapping_info *n, *entry = NULL;
+	uint64_t key = hash64(sid->value, PTIRQ_ENTRY_HASHBITS);
+	struct ptirq_entry_head *b = &ptirq_entry_heads[key];
+
+	hlist_for_each(p, &b->list) {
+		if (vm == NULL) {
+			n = hlist_entry(p, struct ptirq_remapping_info, phys_link);
+		} else {
+			n = hlist_entry(p, struct ptirq_remapping_info, virt_link);
+		}
+
+		if (is_entry_active(n)) {
+			if ((intr_type == n->intr_type) &&
+				((vm == NULL) ?
+				(sid->value == n->phys_sid.value) :
+				((vm == n->vm) && (sid->value == n->virt_sid.value)))) {
+				entry = n;
+				break;
+			}
+		}
+	}
+
+	return entry;
 }
 
 static void ptirq_enqueue_softirq(struct ptirq_remapping_info *entry)
@@ -154,6 +191,7 @@ static void ptirq_interrupt_handler(__unused uint32_t irq, void *data)
 int32_t ptirq_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_irq)
 {
 	int32_t retval;
+	uint64_t key;
 
 	/* register and allocate host vector/irq */
 	retval = request_irq(phys_irq, ptirq_interrupt_handler, (void *)entry, IRQF_PT);
@@ -163,6 +201,11 @@ int32_t ptirq_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_i
 	} else {
 		entry->allocated_pirq = (uint32_t)retval;
 		entry->active = true;
+
+		key = hash64(entry->phys_sid.value, PTIRQ_ENTRY_HASHBITS);
+		hlist_add_head(&entry->phys_link, &(ptirq_entry_heads[key].list));
+		key = hash64(entry->virt_sid.value, PTIRQ_ENTRY_HASHBITS);
+		hlist_add_head(&entry->virt_link, &(ptirq_entry_heads[key].list));
 	}
 
 	return retval;
@@ -170,6 +213,8 @@ int32_t ptirq_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_i
 
 void ptirq_deactivate_entry(struct ptirq_remapping_info *entry)
 {
+	hlist_del(&entry->phys_link);
+	hlist_del(&entry->virt_link);
 	entry->active = false;
 	free_irq(entry->allocated_pirq);
 }

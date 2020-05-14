@@ -29,8 +29,18 @@
 #ifndef LIST_H_
 #define LIST_H_
 
+#include <types.h>
+
 struct list_head {
 	struct list_head *next, *prev;
+};
+
+struct hlist_head {
+	struct hlist_node *first;
+};
+
+struct hlist_node {
+	struct hlist_node *next, **pprev;
 };
 
 #define INIT_LIST_HEAD(ptr) do { (ptr)->next = (ptr); (ptr)->prev = (ptr); } \
@@ -120,5 +130,32 @@ static inline void list_splice_init(struct list_head *list,
 
 #define get_first_item(attached, type, member) \
 	((type *)((char *)((attached)->next)-(uint64_t)(&((type *)0)->member)))
+
+static inline void
+hlist_del(struct hlist_node *n)
+{
+
+        if (n->next != NULL) {
+                n->next->pprev = n->pprev;
+	}
+        *n->pprev = n->next;
+}
+
+static inline void
+hlist_add_head(struct hlist_node *n, struct hlist_head *h)
+{
+
+	n->next = h->first;
+	if (h->first != NULL) {
+		h->first->pprev = &n->next;
+	}
+	h->first = n;
+	n->pprev = &h->first;
+}
+
+#define hlist_entry(ptr, type, member) container_of(ptr,type,member)
+
+#define hlist_for_each(pos, head) \
+	for (pos = (head)->first; (pos) != NULL; pos = (pos)->next)
 
 #endif /* LIST_H_ */
