@@ -186,11 +186,8 @@ def main(args):
             return err_dic
 
     # generate pci_dev.c
-    for vm_i,pci_dev_num in scenario_items['vm'].cfg_pci.pci_dev_num.items():
-        if pci_dev_num >= 2:
-            with open(pci_config_c, 'w') as config:
-                pci_dev_c.generate_file(scenario_items['vm'], config)
-            break
+    with open(pci_config_c, 'w') as config:
+        pci_dev_c.generate_file(scenario_items['vm'], config)
 
     if not err_dic:
         print("Scenario configurations for {} is generated successfully.".format(scenario))
