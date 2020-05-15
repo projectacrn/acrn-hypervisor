@@ -2521,6 +2521,16 @@ done:
 	return cmderr;
 }
 
+#define XHCI_GET_SLOT(xdev, trb, slot, cmderr)			\
+	do {								\
+		slot = (XHCI_TRB_3_SLOT_GET(trb->dwTrb3)) ? 0 :		\
+			XHCI_TRB_3_SLOT_GET(trb->dwTrb3);		\
+		if (!slot)						\
+			cmderr = XHCI_TRB_ERROR_INVALID;		\
+		else if (!xdev->slot_allocated[slot])			\
+			cmderr = XHCI_TRB_ERROR_SLOT_NOT_ON;		\
+	} while (0)							\
+
 static int
 pci_xhci_complete_commands(struct pci_xhci_vdev *xdev)
 {
@@ -2567,49 +2577,62 @@ pci_xhci_complete_commands(struct pci_xhci_vdev *xdev)
 			break;
 
 		case XHCI_TRB_TYPE_ENABLE_SLOT:			/* 0x09 */
+			/*
+			 *From xHCI spec 4.5.3.2, the only command that
+			 *software is allowed to issue for the slot in
+			 *disabled state is the Enable Slot Command.
+			 * */
 			cmderr = pci_xhci_cmd_enable_slot(xdev, &slot);
 			break;
 
 		case XHCI_TRB_TYPE_DISABLE_SLOT:		/* 0x0A */
-			slot = XHCI_TRB_3_SLOT_GET(trb->dwTrb3);
-			cmderr = pci_xhci_cmd_disable_slot(xdev, slot);
+			XHCI_GET_SLOT(xdev, trb, slot, cmderr);
+			if (slot)
+				cmderr = pci_xhci_cmd_disable_slot(xdev, slot);
 			break;
 
 		case XHCI_TRB_TYPE_ADDRESS_DEVICE:		/* 0x0B */
-			slot = XHCI_TRB_3_SLOT_GET(trb->dwTrb3);
-			cmderr = pci_xhci_cmd_address_device(xdev, slot, trb);
+			XHCI_GET_SLOT(xdev, trb, slot, cmderr);
+			if (slot)
+				cmderr = pci_xhci_cmd_address_device(xdev, slot, trb);
 			break;
 
 		case XHCI_TRB_TYPE_CONFIGURE_EP:		/* 0x0C */
-			slot = XHCI_TRB_3_SLOT_GET(trb->dwTrb3);
-			cmderr = pci_xhci_cmd_config_ep(xdev, slot, trb);
+			XHCI_GET_SLOT(xdev, trb, slot, cmderr);
+			if (slot)
+				cmderr = pci_xhci_cmd_config_ep(xdev, slot, trb);
 			break;
 
 		case XHCI_TRB_TYPE_EVALUATE_CTX:		/* 0x0D */
-			slot = XHCI_TRB_3_SLOT_GET(trb->dwTrb3);
-			cmderr = pci_xhci_cmd_eval_ctx(xdev, slot, trb);
+			XHCI_GET_SLOT(xdev, trb, slot, cmderr);
+			if (slot)
+				cmderr = pci_xhci_cmd_eval_ctx(xdev, slot, trb);
 			break;
 
 		case XHCI_TRB_TYPE_RESET_EP:			/* 0x0E */
 			UPRINTF(LDBG, "Reset Endpoint on slot %d\r\n", slot);
-			slot = XHCI_TRB_3_SLOT_GET(trb->dwTrb3);
-			cmderr = pci_xhci_cmd_reset_ep(xdev, slot, trb);
+			XHCI_GET_SLOT(xdev, trb, slot, cmderr);
+			if (slot)
+				cmderr = pci_xhci_cmd_reset_ep(xdev, slot, trb);
 			break;
 
 		case XHCI_TRB_TYPE_STOP_EP:			/* 0x0F */
 			UPRINTF(LDBG, "Stop Endpoint on slot %d\r\n", slot);
-			slot = XHCI_TRB_3_SLOT_GET(trb->dwTrb3);
-			cmderr = pci_xhci_cmd_reset_ep(xdev, slot, trb);
+			XHCI_GET_SLOT(xdev, trb, slot, cmderr);
+			if (slot)
+				cmderr = pci_xhci_cmd_reset_ep(xdev, slot, trb);
 			break;
 
 		case XHCI_TRB_TYPE_SET_TR_DEQUEUE:		/* 0x10 */
-			slot = XHCI_TRB_3_SLOT_GET(trb->dwTrb3);
-			cmderr = pci_xhci_cmd_set_tr(xdev, slot, trb);
+			XHCI_GET_SLOT(xdev, trb, slot, cmderr);
+			if (slot)
+				cmderr = pci_xhci_cmd_set_tr(xdev, slot, trb);
 			break;
 
 		case XHCI_TRB_TYPE_RESET_DEVICE:		/* 0x11 */
-			slot = XHCI_TRB_3_SLOT_GET(trb->dwTrb3);
-			cmderr = pci_xhci_cmd_reset_device(xdev, slot);
+			XHCI_GET_SLOT(xdev, trb, slot, cmderr);
+			if (slot)
+				cmderr = pci_xhci_cmd_reset_device(xdev, slot);
 			break;
 
 		case XHCI_TRB_TYPE_FORCE_EVENT:			/* 0x12 */
