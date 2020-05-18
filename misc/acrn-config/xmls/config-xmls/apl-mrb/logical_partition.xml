@@ -76,9 +76,8 @@
         <kern_type desc="Specify the kernel image type so that hypervisor could load it correctly. Currently support KERNEL_BZIMAGE and KERNEL_ZEPHYR.">KERNEL_BZIMAGE</kern_type>
         <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline.">Linux_bzImage</kern_mod>
         <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline."></ramdisk_mod>
-        <rootfs desc="rootfs for Linux kernel">/dev/mmcblk1p1</rootfs>
         <bootargs desc="Specify kernel boot arguments">
-        rw rootwait noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable
+        rw root=/dev/mmcblk1p1 rootwait noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable
         </bootargs>
     </os_config>
     <vuart id="0">
@@ -127,9 +126,8 @@
         <kern_type desc="kernel name">KERNEL_BZIMAGE</kern_type>
         <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline.">Linux_bzImage</kern_mod>
         <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline."></ramdisk_mod>
-        <rootfs desc="rootfs for Linux kernel" readonly="true">/dev/sda3</rootfs>
         <bootargs desc="Specify kernel boot arguments">
-        rw rootwait noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
+        rw rootwait root=/dev/sda3 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
         consoleblank=0 tsc=reliable
         </bootargs>
     </os_config>

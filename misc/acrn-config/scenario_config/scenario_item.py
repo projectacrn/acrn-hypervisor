@@ -76,8 +76,6 @@ class CfgOsKern:
     kern_console = {}
     kern_load_addr = {}
     kern_entry_addr = {}
-    kern_root_dev = {}
-    kern_args_append = {}
     ramdisk_mod = {}
 
     def __init__(self, scenario_file):
@@ -101,12 +99,8 @@ class CfgOsKern:
             self.scenario_info, "os_config", "kern_load_addr")
         self.kern_entry_addr = common.get_leaf_tag_map(
             self.scenario_info, "os_config", "kern_entry_addr")
-        self.kern_root_dev = common.get_leaf_tag_map(
-            self.scenario_info, "os_config", "rootfs")
         self.ramdisk_mod = common.get_leaf_tag_map(
             self.scenario_info, "os_config", "ramdisk_mod")
-        self.kern_args_append = common.get_leaf_tag_map(
-            self.scenario_info, "boot_private", "bootargs")
 
     def check_item(self):
         """
@@ -120,7 +114,6 @@ class CfgOsKern:
         scenario_cfg_lib.os_kern_console_check(self.kern_console, "DEBUG_OPTIONS", "SERIAL_CONSOLE")
         scenario_cfg_lib.os_kern_load_addr_check(self.kern_load_addr, "os_config", "kern_load_addr")
         scenario_cfg_lib.os_kern_entry_addr_check(self.kern_entry_addr, "os_config", "kern_entry_addr")
-        scenario_cfg_lib.os_kern_root_dev_check(self.kern_root_dev, "os_config", "rootdev")
 
 
 class VuartInfo:

@@ -26,7 +26,6 @@
         <kern_type desc="Specify the kernel image type so that hypervisor could load it correctly. Currently support KERNEL_BZIMAGE and KERNEL_ZEPHYR."></kern_type>
         <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline."></kern_mod>
         <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline."></ramdisk_mod>
-        <rootfs desc="rootfs for Linux kernel"></rootfs>
         <bootargs desc="Specify kernel boot arguments"></bootargs>
     </os_config>
     <vuart id="0">
