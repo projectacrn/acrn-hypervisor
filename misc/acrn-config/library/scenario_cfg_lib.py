@@ -37,6 +37,7 @@ PT_SUB_PCI['ethernet'] = ['Ethernet controller', 'Network controller', '802.1a c
                         '802.1b controller', 'Wireless controller']
 PT_SUB_PCI['sata'] = ['SATA controller']
 PT_SUB_PCI['nvme'] = ['Non-Volatile memory controller']
+PT_SUB_PCI['usb'] = ['USB controller']
 UUID_DB = {
     'SOS_VM':['dbbbd434-7a57-4216-a12c-2201f1ab0240'],
     'SAFETY_VM':['fc836901-8685-4bc0-8b71-6e31dc36fa47'],
@@ -574,6 +575,9 @@ def avl_pci_devs():
     pci_dev_list.extend(tmp_pci_list)
     tmp_pci_list = common.get_avl_dev_info(bdf_desc_map, PT_SUB_PCI['nvme'])
     pci_dev_list.extend(tmp_pci_list)
+    tmp_pci_list = common.get_avl_dev_info(bdf_desc_map, PT_SUB_PCI['usb'])
+    pci_dev_list.extend(tmp_pci_list)
+    pci_dev_list.insert(0, '')
 
     return pci_dev_list
 
