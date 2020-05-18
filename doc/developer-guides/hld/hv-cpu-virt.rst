@@ -9,81 +9,83 @@ CPU Virtualization
 
    ACRN Hypervisor CPU Virtualization Components
 
-The following sections discuss the major modules (shown in blue) in the
-CPU virtualization overview shown in :numref:`hv-cpu-virt-components`.
+The following sections discuss the major modules (indicated above in blue)
+in the CPU virtualization overview shown in :numref:`hv-cpu-virt-components`.
 
 Based on Intel VT-x virtualization technology, ACRN emulates a virtual CPU
 (vCPU) with the following methods:
 
 -  **core partition**: one vCPU is dedicated and associated with one
    physical CPU (pCPU),
-   making much of hardware register emulation simply
-   pass-through and provides good isolation for physical interrupt
+   making much of the hardware register emulation simply
+   passthrough. This provides good isolation for physical interrupts
    and guest execution.  (See `Static CPU Partitioning`_ for more
    information.)
 
--  **core sharing** (to be added): two or more vCPUs are sharing one
-   physical CPU (pCPU); a more complicated context switch is needed
-   between different vCPUs' switching, and provides flexible computing
-   resources sharing for low performance demand vCPU tasks.
+-  **core sharing** (to be added): two or more vCPUs share one
+   physical CPU (pCPU). A more complicated context switch is needed
+   between different vCPUs' switching. This provides flexible computing
+   resources sharing for low-performance demand vCPU tasks.
    (See `Flexible CPU Sharing`_ for more information.)
 
--  **simple schedule**: a well-designed scheduler framework allows ACRN
-   to adopt different scheduling policy, for example - noop & round-robin:
+-  **simple schedule**: a well-designed scheduler framework that allows ACRN
+   to adopt different scheduling policies, such as the **noop** and **round-robin**:
 
-   noop scheduler - only two thread loops are maintained for a CPU -
-   vCPU thread and default idle thread. A CPU runs most of the time in
-   the vCPU thread for emulating a guest CPU, switching between VMX root
-   mode and non-root mode. A CPU schedules out to default idle when an
-   operation needs it to stay in VMX root mode, such as when waiting for
-   an I/O request from DM or ready to destroy.
+   - **noop scheduler**: only two thread loops are maintained for a CPU: a 
+     vCPU thread and a default idle thread. A CPU runs most of the time in
+     the vCPU thread for emulating a guest CPU, switching between VMX root
+     mode and non-root mode. A CPU schedules out to default idle when an
+     operation needs it to stay in VMX root mode, such as when waiting for
+     an I/O request from the DM or when ready to destroy.
 
-   round-robin scheduler (to be added) - allow more vcpu thread loops
-   running on a CPU. A CPU switches among different vCPU thread and default
-   idle thread, upon running out corresponding timeslice or necessary
-   scheduling out such as waiting for an I/O request. A vCPU could yield
-   itself as well, for example when it executes "PAUSE" instruction.
+   - **round-robin scheduler** (to be added): allows more vCPU thread loops
+     to run on a CPU. A CPU switches among different vCPU threads and default
+     idle threads as it runs out corresponding timeslices or necessary
+     scheduling outs such as waiting for an I/O request. A vCPU can yield
+     itself as well, such as when it executes "PAUSE" instruction.
 
 
-Static CPU Partitioning
+Static CPU partitioning
 ***********************
 
 CPU partitioning is a policy for mapping a virtual
-CPU (VCPU) to a physical CPU. To enable this, the ACRN hypervisor could
-configure "noop scheduler" as the schedule policy for this physical CPU.
+CPU (vCPU) to a physical CPU. To enable this, the ACRN hypervisor can
+configure a noop scheduler as the schedule policy for this physical CPU.
 
-ACRN then forces a fixed 1:1 mapping between a VCPU and this physical CPU
-when creating a VCPU for the guest Operating System. This makes the VCPU
+ACRN then forces a fixed 1:1 mapping between a vCPU and this physical CPU
+when creating a vCPU for the guest Operating System. This makes the vCPU
 management code much simpler.
 
 ``cpu_affinity`` in ``vm config`` helps to decide which physical CPU a
-VCPU in a VM affines to, then finalize the fixed mapping. When launching an
-user VM, need to choose pCPUs from the VM's cpu_affinity that are not
+VCPU in a VM affines to, then finalize the fixed mapping. When launching a
+User VM, need to choose pCPUs from the VM's cpu_affinity that are not
 used by any other VMs.
 
 Flexible CPU Sharing
 ********************
 
-To enable CPU sharing, ACRN hypervisor could configure IORR
-(IO sensitive Round-Robin) or BVT (Borrowed Virtual Time) scheduler policy.
+To enable CPU sharing, ACRN hypervisor can configure IORR
+(IO sensitive Round-Robin) or the BVT (Borrowed Virtual Time) scheduler
+policy.
 
-``cpu_affinity`` in ``vm config`` indicates all the physical CPUs this VM
-is allowed to run on. A pCPU can be shared among Service OS and any user VMs
-as long as local APIC passthrough is not enabled in that user VM.
+``cpu_affinity`` in ``vm config`` indicates all the physical CPUs on which
+this VM is allowed to run. A pCPU can be shared among a Service VM and any
+User VM as long as the local APIC passthrough is not enabled in that User
+VM.
 
-see :ref:`cpu_sharing` for more information.
+See :ref:`cpu_sharing` for more information.
 
 CPU management in the Service VM under static CPU partitioning
 ==============================================================
 
-With ACRN, all ACPI table entries are pass-thru to the Service VM, including
+With ACRN, all ACPI table entries are passthrough to the Service VM, including
 the Multiple Interrupt Controller Table (MADT). The Service VM sees all
 physical CPUs by parsing the MADT when the Service VM kernel boots. All
 physical CPUs are initially assigned to the Service VM by creating the same
 number of virtual CPUs.
 
 When the Service VM boot is finished, it releases the physical CPUs intended
-for UOS use.
+for User VM use.
 
 Here is an example flow of CPU allocation on a multi-core platform.
 
@@ -97,16 +99,16 @@ Here is an example flow of CPU allocation on a multi-core platform.
 CPU management in the Service VM under flexible CPU sharing
 ===========================================================
 
-As all Service VM CPUs could share with different UOSs, ACRN can still pass-thru
+As all Service VM CPUs could share with different User VMs, ACRN can still passthrough
 MADT to Service VM, and the Service VM is still able to see all physical CPUs.
 
 But as under CPU sharing, the Service VM does not need offline/release the physical
-CPUs intended for UOS use.
+CPUs intended for User VM use.
 
-CPU management in UOS
-=====================
+CPU management in the User VM
+=============================
 
-``cpu_affinity`` in ``vm config`` defines a set of pCPUs that an User VM
+``cpu_affinity`` in ``vm config`` defines a set of pCPUs that a User VM
 is allowed to run on. acrn-dm could choose to launch on only a subset of the pCPUs
 or on all pCPUs listed in cpu_affinity, but it can't assign
 any pCPU that is not included in it.
@@ -564,7 +566,7 @@ For a guest vCPU's state initialization:
       SW load based on different boot mode
 
 
-   -  UOS BSP: DM context initialization through hypercall
+   -  User VM BSP: DM context initialization through hypercall
 
 -  If it's AP, then it will always start from real mode, and the start
        vector will always come from vlapic INIT-SIPI emulation.
@@ -855,7 +857,7 @@ handler is *rdmsr_vmexit_handler* or *wrmsr_vmexit_handler*.
 
 This table shows the predefined MSRs ACRN will trap for all the guests. For
 the MSRs whose bitmap are not set in the MSR bitmap, guest access will be
-pass-through directly:
+passthrough directly:
 
 .. list-table::
    :widths: 33 33 33
@@ -1091,12 +1093,12 @@ Emulation" section for more details.
 For an emulated device done in the hypervisor, ACRN provide some basic
 APIs to register its IO/MMIO range:
 
--  For the Service VM, the default I/O bitmap are all set to 0, which means the Service VM will pass
-   through all I/O port access by default. Adding an I/O handler
+-  For the Service VM, the default I/O bitmap are all set to 0, which means
+   the Service VM will passthrough all I/O port access by default. Adding an I/O handler
    for a hypervisor emulated device needs to first set its corresponding
    I/O bitmap to 1.
 
--  For UOS, the default I/O bitmap are all set to 1, which means UOS will trap
+-  For the User VM, the default I/O bitmap are all set to 1, which means the User Vm will trap
    all I/O port access by default. Adding an I/O handler for a
    hypervisor emulated device does not need change its I/O bitmap.
    If the trapped I/O port access does not fall into a hypervisor
@@ -1104,12 +1106,12 @@ APIs to register its IO/MMIO range:
    DM.
 
 -  For the Service VM, EPT maps all range of memory to the Service VM except for ACRN hypervisor
-   area. This means the Service VM will pass through all MMIO access by
+   area. This means the Service VM will passthrough all MMIO access by
    default. Adding a MMIO handler for a hypervisor emulated
    device needs to first remove its MMIO range from EPT mapping.
 
--  For UOS, EPT only maps its system RAM to the UOS, which means UOS will
-   trap all MMIO access by default. Adding a MMIO handler for a
+-  For the User VM, EPT only maps its system RAM to the User VM, which means the User VM will
+   trap all MMIO access by default. Adding an MMIO handler for a
    hypervisor emulated device does not need to change its EPT mapping.
    If the trapped MMIO access does not fall into a hypervisor
    emulated device, it will create an I/O request and pass it to the Service VM
@@ -1270,7 +1272,7 @@ ACRN emulates XSAVE features through the following rules:
 2. If yes for step 1, enable XSAVE in hypervisor by CR4.OSXSAVE
 3. Emulates XSAVE related CPUID.01H & CPUID.0DH to guest
 4. Emulates XCR0 access through *xsetbv_vmexit_handler*
-5. ACRN pass-through the access of IA32_XSS MSR to guest
+5. ACRN passthrough the access of IA32_XSS MSR to guest
 6. ACRN hypervisor does NOT use any feature of XSAVE
 7. As ACRN emulate vCPU with partition mode, so based on above rules 5
    and 6, a guest vCPU will fully control the XSAVE feature in
