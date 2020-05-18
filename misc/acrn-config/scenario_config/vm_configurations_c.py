@@ -308,7 +308,6 @@ def gen_pre_launch_vm(vm_type, vm_i, vm_info, config):
     if vm_i in vm_info.os_cfg.kern_args.keys() and vm_info.os_cfg.kern_args[vm_i]:
         print("\t\t\t.bootargs = VM{0}_CONFIG_OS_BOOTARG_CONSOLE\t\\".format(vm_i), file=config)
         print("\t\t\t\tVM{0}_CONFIG_OS_BOOTARG_MAXCPUS\t\t\\".format(vm_i), file=config)
-        print("\t\t\t\tVM{0}_CONFIG_OS_BOOTARG_ROOT\t\t\\".format(vm_i), file=config)
         split_cmdline(vm_info.os_cfg.kern_args[vm_i].strip(), config)
     print("\t\t},", file=config)
     # VUART

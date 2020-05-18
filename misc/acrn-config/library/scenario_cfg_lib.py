@@ -434,20 +434,6 @@ def os_kern_entry_addr_check(id_kern_entry_addr_dic, prime_item, item):
             ERR_LIST[key] = "VM os config kernel entry address should Hex format"
 
 
-def os_kern_root_dev_check(id_kern_rootdev_dic, prime_item, item):
-    """
-    Check os kernel rootfs partitions
-    :param prime_item: the prime item in xml file
-    :param item: vm os config rootdev item in xml
-    :return: None
-    """
-
-    for id_key, kern_rootdev in id_kern_rootdev_dic.items():
-        if not kern_rootdev:
-            key = "vm:id={},{},{}".format(id_key, prime_item, item)
-            ERR_LIST[key] = "VM os config kernel root device should not empty"
-
-
 def pci_devs_check(pci_bdf_devs, branch_tag, tag_str):
     """
     Check vm pci devices
