@@ -698,7 +698,7 @@ void pause_vm(struct acrn_vm *vm)
 			((is_rt_vm(vm)) && (vm->state == VM_READY_TO_POWEROFF)) ||
 			(vm->state == VM_CREATED)) {
 		foreach_vcpu(i, vm, vcpu) {
-			pause_vcpu(vcpu, VCPU_ZOMBIE);
+			zombie_vcpu(vcpu, VCPU_ZOMBIE);
 		}
 		vm->state = VM_PAUSED;
 	}

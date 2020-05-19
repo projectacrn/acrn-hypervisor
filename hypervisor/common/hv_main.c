@@ -35,7 +35,7 @@ void vcpu_thread(struct thread_object *obj)
 		ret = acrn_handle_pending_request(vcpu);
 		if (ret < 0) {
 			pr_fatal("vcpu handling pending request fail");
-			pause_vcpu(vcpu, VCPU_ZOMBIE);
+			zombie_vcpu(vcpu, VCPU_ZOMBIE);
 			/* Fatal error happened (triple fault). Stop the vcpu running. */
 			continue;
 		}
@@ -47,7 +47,7 @@ void vcpu_thread(struct thread_object *obj)
 		ret = run_vcpu(vcpu);
 		if (ret != 0) {
 			pr_fatal("vcpu resume failed");
-			pause_vcpu(vcpu, VCPU_ZOMBIE);
+			zombie_vcpu(vcpu, VCPU_ZOMBIE);
 			/* Fatal error happened (resume vcpu failed). Stop the vcpu running. */
 			continue;
 		}

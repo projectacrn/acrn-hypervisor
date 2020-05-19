@@ -719,17 +719,18 @@ void reset_vcpu(struct acrn_vcpu *vcpu, enum reset_mode mode)
 	vcpu_set_state(vcpu, VCPU_INIT);
 }
 
-void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
+void zombie_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 {
+	enum vcpu_state prev_state;
 	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
 
 	pr_dbg("vcpu%hu paused, new state: %d",	vcpu->vcpu_id, new_state);
 
 	if (((vcpu->state == VCPU_RUNNING) || (vcpu->state == VCPU_INIT)) && (new_state == VCPU_ZOMBIE)) {
-		vcpu->prev_state = vcpu->state;
+		prev_state = vcpu->state;
 		vcpu_set_state(vcpu, new_state);
 
-		if (vcpu->prev_state == VCPU_RUNNING) {
+		if (prev_state == VCPU_RUNNING) {
 			sleep_thread(&vcpu->thread_obj);
 		}
 		if (pcpu_id != get_pcpu_id()) {
@@ -738,22 +739,6 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 			}
 		}
 	}
-}
-
-int32_t resume_vcpu(struct acrn_vcpu *vcpu)
-{
-	int32_t ret = -1;
-
-	pr_dbg("vcpu%hu resumed", vcpu->vcpu_id);
-
-	if (vcpu->state == VCPU_PAUSED) {
-		vcpu_set_state(vcpu, vcpu->prev_state);
-		if (vcpu->state == VCPU_RUNNING) {
-			wake_thread(&vcpu->thread_obj);
-		}
-		ret = 0;
-	}
-	return ret;
 }
 
 void save_xsave_area(struct ext_context *ectx)
