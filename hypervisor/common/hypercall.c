@@ -64,7 +64,7 @@ int32_t hcall_sos_offline_cpu(struct acrn_vm *vm, uint64_t lapicid)
 				ret = -1;
 				break;
 			}
-			pause_vcpu(vcpu, VCPU_ZOMBIE);
+			zombie_vcpu(vcpu, VCPU_ZOMBIE);
 			offline_vcpu(vcpu);
 		}
 	}
