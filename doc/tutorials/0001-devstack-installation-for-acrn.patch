@@ -1,0 +1,160 @@
+From 4bdc2468318fbc3368db29d1ad3750ade1875a45 Mon Sep 17 00:00:00 2001
+From: Peter Fang <peter.fang@intel.com>
+Date: Fri, 17 Apr 2020 04:59:51 +0000
+Subject: [PATCH] devstack installation for acrn
+
+---
+ files/debs/baremetal                |  2 +-
+ files/debs/nova                     | 12 ++++++------
+ lib/nova_plugins/functions-libvirt  | 20 ++++++++++----------
+ lib/nova_plugins/hypervisor-libvirt |  9 ++++++++-
+ stackrc                             |  6 +++---
+ 5 files changed, 28 insertions(+), 21 deletions(-)
+
+diff --git a/files/debs/baremetal b/files/debs/baremetal
+index 06ffab65..e349a1f7 100644
+--- a/files/debs/baremetal
++++ b/files/debs/baremetal
+@@ -3,6 +3,6 @@ dnsmasq
+ ipmitool
+ make
+ open-iscsi
+-qemu-kvm
++#qemu-kvm
+ syslinux
+ tgt
+diff --git a/files/debs/nova b/files/debs/nova
+index 5e14aec8..b3887548 100644
+--- a/files/debs/nova
++++ b/files/debs/nova
+@@ -10,16 +10,16 @@ iputils-arping
+ kpartx
+ libjs-jquery-tablesorter # Needed for coverage html reports
+ libmysqlclient-dev
+-libvirt-bin # dist:xenial NOPRIME
+-libvirt-clients # not:xenial NOPRIME
+-libvirt-daemon-system # not:xenial NOPRIME
+-libvirt-dev # NOPRIME
++#libvirt-bin # dist:xenial NOPRIME
++#libvirt-clients # not:xenial NOPRIME
++#libvirt-daemon-system # not:xenial NOPRIME
++#libvirt-dev # NOPRIME
+ mysql-server # NOPRIME
+ parted
+ pm-utils
+ python-mysqldb
+-qemu # dist:wheezy,jessie NOPRIME
+-qemu-kvm # NOPRIME
++#qemu # dist:wheezy,jessie NOPRIME
++#qemu-kvm # NOPRIME
+ rabbitmq-server # NOPRIME
+ socat # used by ajaxterm
+ sqlite3
+diff --git a/lib/nova_plugins/functions-libvirt b/lib/nova_plugins/functions-libvirt
+index 914ee7bc..e07e665b 100644
+--- a/lib/nova_plugins/functions-libvirt
++++ b/lib/nova_plugins/functions-libvirt
+@@ -61,12 +61,12 @@ EOF
+ function install_libvirt {
+ 
+     if is_ubuntu; then
+-        install_package qemu-system
+-        if [[ ${DISTRO} == "xenial" ]]; then
+-            install_package libvirt-bin libvirt-dev
+-        else
+-            install_package libvirt-clients libvirt-daemon-system libvirt-dev
+-        fi
++        #install_package qemu-system
++        #if [[ ${DISTRO} == "xenial" ]]; then
++        #    install_package libvirt-bin libvirt-dev
++        #else
++        #    install_package libvirt-clients libvirt-daemon-system libvirt-dev
++        #fi
+         # uninstall in case the libvirt version changed
+         pip_uninstall libvirt-python
+         pip_install_gr libvirt-python
+@@ -77,9 +77,9 @@ function install_libvirt {
+         # repositories (qemu-kvm-ev ... which provides this package)
+         # as the base system version is too old.  We should have
+         # pre-installed these
+-        install_package qemu-kvm
++        #install_package qemu-kvm
+ 
+-        install_package libvirt libvirt-devel
++        #install_package libvirt libvirt-devel
+         pip_uninstall libvirt-python
+         pip_install_gr libvirt-python
+     fi
+@@ -136,9 +136,9 @@ EOF
+             # source file paths, not relative paths. This screws with the matching
+             # of '1:libvirt' making everything turn on. So use libvirt.c for now.
+             # This will have to be re-visited when Ubuntu ships libvirt >= 1.2.3
+-            local log_filters="1:libvirt.c 1:qemu 1:conf 1:security 3:object 3:event 3:json 3:file 1:util 1:cpu"
++            local log_filters="1:libvirt 1:acrn 1:conf 1:security 3:object 3:event 3:json 3:file 1:util 1:cpu"
+         else
+-            local log_filters="1:libvirt 1:qemu 1:conf 1:security 3:object 3:event 3:json 3:file 1:util 1:cpu"
++            local log_filters="1:libvirt 1:acrn 1:conf 1:security 3:object 3:event 3:json 3:file 1:util 1:cpu"
+         fi
+         local log_outputs="1:file:/var/log/libvirt/libvirtd.log"
+         if ! sudo grep -q "^log_filters=\"$log_filters\"" /etc/libvirt/libvirtd.conf; then
+diff --git a/lib/nova_plugins/hypervisor-libvirt b/lib/nova_plugins/hypervisor-libvirt
+index 3d676b9b..aa87ff25 100644
+--- a/lib/nova_plugins/hypervisor-libvirt
++++ b/lib/nova_plugins/hypervisor-libvirt
+@@ -42,7 +42,7 @@ function configure_nova_hypervisor {
+     iniset $NOVA_CONF libvirt cpu_mode "none"
+     # Do not enable USB tablet input devices to avoid QEMU CPU overhead.
+     iniset $NOVA_CONF DEFAULT pointer_model "ps2mouse"
+-    iniset $NOVA_CONF libvirt live_migration_uri "qemu+ssh://$STACK_USER@%s/system"
++    #iniset $NOVA_CONF libvirt live_migration_uri "qemu+ssh://$STACK_USER@%s/system"
+     iniset $NOVA_CONF DEFAULT default_ephemeral_format "ext4"
+     iniset $NOVA_CONF DEFAULT compute_driver "libvirt.LibvirtDriver"
+     LIBVIRT_FIREWALL_DRIVER=${LIBVIRT_FIREWALL_DRIVER:-"nova.virt.libvirt.firewall.IptablesFirewallDriver"}
+@@ -81,6 +81,13 @@ function configure_nova_hypervisor {
+             iniset $NOVA_CONF libvirt volume_clear "$LVM_VOLUME_CLEAR"
+         fi
+     fi
++    if [[ "$LIBVIRT_TYPE" = "acrn" ]]; then
++        iniset $NOVA_CONF libvirt connection_uri "acrn:///system"
++        iniset $NOVA_CONF libvirt images_type "raw"
++        iniset $NOVA_CONF libvirt xen_hvmloader_path "/opt/stack/OVMF.fd"
++        iniset $NOVA_CONF DEFAULT force_raw_images  "True"
++        iniset $NOVA_CONF DEFAULT use_cow_images  "False"
++    fi
+ }
+ 
+ # install_nova_hypervisor() - Install external components
+diff --git a/stackrc b/stackrc
+index 8b2a90d5..d1bce2ff 100644
+--- a/stackrc
++++ b/stackrc
+@@ -65,7 +65,7 @@ if ! isset ENABLED_SERVICES ; then
+     # Keystone - nothing works without keystone
+     ENABLED_SERVICES=key
+     # Nova - services to support libvirt based openstack clouds
+-    ENABLED_SERVICES+=,n-api,n-cpu,n-cond,n-sch,n-novnc,n-api-meta
++    ENABLED_SERVICES+=,n-api,n-cpu,n-cond,n-sch,n-api-meta
+     # Placement service needed for Nova
+     ENABLED_SERVICES+=,placement-api,placement-client
+     # Glance services needed for Nova
+@@ -291,7 +291,7 @@ NEUTRON_FWAAS_REPO=${NEUTRON_FWAAS_REPO:-${GIT_BASE}/openstack/neutron-fwaas.git
+ NEUTRON_FWAAS_BRANCH=${NEUTRON_FWAAS_BRANCH:-$TARGET_BRANCH}
+ 
+ # compute service
+-NOVA_REPO=${NOVA_REPO:-${GIT_BASE}/openstack/nova.git}
++NOVA_REPO=https://github.com/peterfang/acrn-nova.git
+ NOVA_BRANCH=${NOVA_BRANCH:-$TARGET_BRANCH}
+ 
+ # object storage service
+@@ -309,7 +309,7 @@ PLACEMENT_BRANCH=${PLACEMENT_BRANCH:-$TARGET_BRANCH}
+ ##############
+ 
+ # consolidated openstack requirements
+-REQUIREMENTS_REPO=${REQUIREMENTS_REPO:-${GIT_BASE}/openstack/requirements.git}
++REQUIREMENTS_REPO=https://github.com/peterfang/acrn-requirements.git
+ REQUIREMENTS_BRANCH=${REQUIREMENTS_BRANCH:-$TARGET_BRANCH}
+ 
+ # Tempest test suite
+-- 
+2.25.0
+
