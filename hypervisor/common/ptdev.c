@@ -149,8 +149,7 @@ void ptirq_release_entry(struct ptirq_remapping_info *entry)
 	del_timer(&entry->intr_delay_timer);
 	CPU_INT_ALL_RESTORE(rflags);
 
-	bitmap_clear_nolock((entry->ptdev_entry_id) & 0x3FU,
-		&ptirq_entry_bitmaps[((entry->ptdev_entry_id) & 0x3FU) >> 6U]);
+	bitmap_clear_lock((entry->ptdev_entry_id) & 0x3FU, &ptirq_entry_bitmaps[entry->ptdev_entry_id >> 6U]);
 
 	(void)memset((void *)entry, 0U, sizeof(struct ptirq_remapping_info));
 }
