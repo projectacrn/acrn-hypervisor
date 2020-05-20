@@ -213,10 +213,11 @@ Use DevStack to install OpenStack. Refer to the `DevStack instructions <https://
 
      $ git clone https://opendev.org/openstack/devstack.git -b stable/train
 
-2. Go to the devstack directory (``cd devstack``) and apply the following
-   patch:
+2. Go into the ``devstack`` directory and apply an ACRN patch::
 
-   ``0001-devstack-installation-for-acrn.patch``
+      $ cd devstack
+      $ curl https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/0001-devstack-installation-for-acrn.patch \
+        | git apply
 
 3. Edit ``lib/nova_plugins/hypervisor-libvirt``:
 
@@ -224,8 +225,8 @@ Use DevStack to install OpenStack. Refer to the `DevStack instructions <https://
    file. A stock image is included in the ACRN source tree
    (``devicemodel/bios/OVMF.fd``).
 
-4. Create a ``devstack/local.conf`` file as shown below (setting the password as
-   appropriate):
+4. Create a ``devstack/local.conf`` file as shown below (setting the
+   passwords as appropriate):
 
    .. code-block:: none
 
@@ -285,59 +286,356 @@ Use DevStack to install OpenStack. Refer to the `DevStack instructions <https://
 
         $ sudo iptables -t nat -A POSTROUTING -s 172.24.4.1/24 -o br-ex -j SNAT --to-source 192.168.1.104
 
+Configure and create OpenStack Instance
+***************************************
+
+We'll be using the Clear Linux Cloud Guest as the OS image (qcow2
+format). Download the Cloud Guest image from
+https://clearlinux.org/downloads and uncompress it, for example::
+
+   $ wget https://cdn.download.clearlinux.org/releases/33110/clear/clear-33110-cloudguest.img.xz
+   $ unxz clear-33110-cloudguest.img.xz
+
+This will leave you with the uncompressed OS image
+``clear-33110-cloudguest.img`` we'll use later.
+
+Use the OpenStack management interface URL reported in a previous step
+to finish setting up the network and configure and create an OpenStack
+instance.
+
+1. Begin by using your browser to login as **admin** to the OpenStack management
+   dashboard (using the URL reported previously). Use the admin
+   password you set in the ``devstack/local.conf`` file:
+
+   .. figure:: images/OpenStack-01-login.png
+      :align: center
+      :width: 1200px
+      :name: os-01-login
+
+   Click on the **Project / Network Topology** and then the **Topology** tab
+   to view the existing **public** (external) and **shared** (internal) networks:
+
+   .. figure:: images/OpenStack-02-topology.png
+      :align: center
+      :width: 1200px
+      :name: os-02-topology
+
+#. A **router** acts as a bridge between the internal and external
+   networks. Create a router using **Project / Network / Routers /
+   +Create Router**:
+
+   .. figure:: images/OpenStack-03-create-router.png
+      :align: center
+      :width: 1200px
+      :name: os-03-router
+
+   Give it a name (**acrn_router**), select **public** for the external network,
+   and select create router:
+
+   .. figure:: images/OpenStack-03a-create-router.png
+      :align: center
+      :width: 1200px
+      :name: os-03a-router
+
+   That added the external network to the router.  Now add
+   the internal network too. Click on the acrn_router name:
+
+   .. figure:: images/OpenStack-03b-created-router.png
+      :align: center
+      :width: 1200px
+      :name: os-03b-router
+
+   Go to the interfaces tab, and click on **+Add interface**:
+
+   .. figure:: images/OpenStack-04a-add-interface.png
+      :align: center
+      :width: 1200px
+      :name: os-04a-add-interface
+
+   Select the subnet of the shared (private) network and click submit:
+
+   .. figure:: images/OpenStack-04b-add-interface.png
+      :align: center
+      :width: 1200px
+      :name: os-04b-add-interface
+
+   The router now has interfaces between the external and internal
+   networks:
+
+   .. figure:: images/OpenStack-04c-add-interface.png
+      :align: center
+      :width: 1200px
+      :name: os-04c-add-interface
+
+   View the router graphically by clicking on the "Network Topology" tab:
+
+   .. figure:: images/OpenStack-05-topology.png
+      :align: center
+      :width: 1200px
+      :name: os-05-topology
+
+   With the router set up, we've completed configuring the OpenStack
+   networking.
+
+#. Next, we'll prepare for launching an OpenStack instance.
+   Click on the **Admin / Compute/ Image** tab and then the **+Create
+   image** button:
+
+   .. figure:: images/OpenStack-06-create-image.png
+      :align: center
+      :width: 1200px
+      :name: os-06-create-image
+
+   Browse for and select the Clear Linux Cloud Guest image file we
+   downloaded earlier:
+
+   .. figure:: images/OpenStack-06a-create-image-browse.png
+      :align: center
+      :width: 1200px
+      :name: os-06a-create-image
+
+   .. figure:: images/OpenStack-06b-create-image-select.png
+      :align: center
+      :width: 1200px
+      :name: os-06b-create-image
+
+   Give the image a name (**acrnImage**), select the **QCOW2 - QEMU
+   Emulator** format, and click on **Create Image** :
+
+   .. figure:: images/OpenStack-06e-create-image.png
+      :align: center
+      :width: 1200px
+      :name: os-063-create-image
+
+   This will take a few minutes to complete.
+
+#. Next, click on the **Admin / Computer / Flavors** tabs and then the
+   **+Create Flavor** button.  This is where you'll define a machine flavor name
+   (**acrn4vcpu**), and specify its resource requirements: the number of vCPUs (**4**), RAM size
+   (**256MB**), and root disk size (**2GB**):
+
+   .. figure:: images/OpenStack-07a-create-flavor.png
+      :align: center
+      :width: 1200px
+      :name: os-07a-create-flavor
+
+   Click on **Create Flavor** and you'll return to see a list of
+   available flavors plus the new one you created (**acrn4vcpu**):
+
+   .. figure:: images/OpenStack-07b-flavor-created.png
+      :align: center
+      :width: 1200px
+      :name: os-07b-create-flavor
+
+#. OpenStack security groups act as a virtual firewall controlling
+   connections between instances, allowing connections such as SSH, and
+   HTTPS. These next steps create a security group allowing SSH and ICMP
+   connections.
+
+   Go to **Project / Network / Security Groups** and click on the **+Create
+   Security Group** button:
+
+   .. figure:: images/OpenStack-08-security-group.png
+      :align: center
+      :width: 1200px
+      :name: os-08-security-group
+
+   Name this security group (**acrnSecuGroup**) and click **Create
+   Security Group**:
+
+   .. figure:: images/OpenStack-08a-create-security-group.png
+      :align: center
+      :width: 1200px
+      :name: os-08a-security-group
+
+   You'll return to a rule management screen for this new group.  Click
+   on the **+Add Rule** button:
+
+   .. figure:: images/OpenStack-08b-add-rule.png
+      :align: center
+      :width: 1200px
+      :name: os-08b-security-group
+
+   Select **SSH** from the Rule list and click **Add**:
+
+   .. figure:: images/OpenStack-08c-add-SSH-rule.png
+      :align: center
+      :width: 1200px
+      :name: os-08c-security-group
+
+   Similarly, add another rule to add a **All ICMP** rule too:
+
+   .. figure:: images/OpenStack-08d-add-All-ICMP-rule.png
+      :align: center
+      :width: 1200px
+      :name: os-08d-security-group
+
+#. Create a public/private key pair used to access the created instance.
+   Go to **Project / Compute / Key Pairs** and click on **+Create Key
+   Pair**, give the key pair a name (**acrnKeyPair**) and Key Type
+   (**SSH Key**) and click on **Create Key Pair**:
+
+   .. figure:: images/OpenStack-09a-create-key-pair.png
+      :align: center
+      :width: 1200px
+      :name: os-09a-key-pair
+
+   You should save the **private** key pair file safely,
+   for future use:
+
+   .. figure:: images/OpenStack-09c-key-pair-private-key.png
+      :align: center
+      :width: 1200px
+      :name: os-09c-key-pair
+
+#. Now we're ready to launch an instance.  Go to **Project / Compute /
+   Instance**, click on the **Launch Instance** button, give it a name
+   (**acrn4vcpuVM**) and click **Next**:
+
+   .. figure:: images/OpenStack-10a-launch-instance-name.png
+      :align: center
+      :width: 1200px
+      :name: os-10a-launch
+
+   Select **No** for "Create New Volume", and click the up-arrow button
+   for uploaded (**acrnImage**) image as the "Available source" for this
+   instance:
+
+   .. figure:: images/OpenStack-10b-no-new-vol-select-allocated.png
+      :align: center
+      :width: 1200px
+      :name: os-10b-launch
+
+   Click **Next**, and select the machine flavor you created earlier
+   (**acrn4vcpu**):
+
+   .. figure:: images/OpenStack-10c-select-flavor.png
+      :align: center
+      :width: 1200px
+      :name: os-10c-launch
+
+   Click on **>** next to the Allocated **acrn4vcpu** flavor and see
+   details about your choice:
+
+   .. figure:: images/OpenStack-10d-flavor-selected.png
+      :align: center
+      :width: 1200px
+      :name: os-10d-launch
+
+   Click on the **Networks** tab, and select the internal **shared**
+   network from the "Available" list:
+
+   .. figure:: images/OpenStack-10e-select-network.png
+      :align: center
+      :width: 1200px
+      :name: os-10e-launch
+
+   Click on the **Security Groups** tab and select
+   the **acrnSecuGroup**  security group you created earlier. Remove the
+   **default** security group if its in the "Allocated" list:
+
+   .. figure:: images/OpenStack-10d-only-acrn-security-group.png
+      :align: center
+      :width: 1200px
+      :name: os-10d-security
+
+   Click on the **Key Pair** tab and verify the **acrnKeyPair** you
+   created earlier is in the "Allocated" list, and click on **Launch
+   Instance**:
+
+   .. figure:: images/OpenStack-10g-show-keypair-launch.png
+      :align: center
+      :width: 1200px
+      :name: os-10g-launch
+
+   It will take a few minutes to complete launching the instance.
+
+#. Click on the **Project / Compute / Instances** tab to monitor
+   progress. When the instance status is "Active" and power state is
+   "Running", associate a floating IP to the instance
+   so you can access it:
+
+   .. figure:: images/OpenStack-11-wait-for-running-create-snapshot.png
+      :align: center
+      :width: 1200px
+      :name: os-11-running
+
+   On the **Manage Floating IP Associations** screen, click on the **+**
+   to add an association:
+
+   .. figure:: images/OpenStack-11a-manage-floating-ip.png
+      :align: center
+      :width: 1200px
+      :name: os-11a-running
+
+   Select **public** pool, and click on **Allocate IP**:
+
+   .. figure:: images/OpenStack-11b-allocate-floating-ip.png
+      :align: center
+      :width: 1200px
+      :name: os-11b-running
+
+   Finally, click **Associate** after the IP address is assigned:
+
+   .. figure:: images/OpenStack-11c-allocate-floating-ip-success-associate.png
+      :align: center
+      :width: 1200px
+      :name: os-11c-running
+
+
 Final Steps
 ***********
 
-1. Create OpenStack instances.
+With that, the OpenStack instance is running and connected to the
+network.  You can graphically see this by returning to the **Project /
+Network / Network Topology** view:
 
-   - OpenStack logs to systemd journal
-   - libvirt logs to /var/log/libvirt/libvirtd.log
+.. figure:: images/OpenStack-12b-running-topology-instance.png
+   :align: center
+   :width: 1200px
+   :name: os-12b-running
 
-   You can now use the URL to manage OpenStack in your native Ubuntu
-   as admin and using the password set in the local.conf file when you
-   set up OpenStack earlier.
+You can also see a hypervisor summary by clicking on **Admin / Compute /
+Hypervisors**:
 
-2. Create a router between **public** (external network) and **shared**
-   (internal network) using `OpenStack's network instructions
-   <https://docs.openstack.org/openstackdocstheme/latest/demo/create_and_manage_networks.html>`_.
+.. figure:: images/OpenStack-12d-compute-hypervisor.png
+   :align: center
+   :width: 1200px
+   :name: os-12d-running
 
+.. note::
+   OpenStack logs to the systemd journal and libvirt logs to
+   ``/var/log/libvirt/libvirtd.log``
 
-3. Launch an ACRN instance using `OpenStack's launch instructions
-   <https://docs.openstack.org/horizon/latest/user/launch-instances.html>`_.
+Here are some other tasks you can try when the instance is created and
+running:
 
-   - Use Clear Linux Cloud Guest as the image (qcow2 format):
-     https://clearlinux.org/downloads
-   - Skip **Create Key Pair** as it's not supported by Clear Linux.
-   - Select **No** for **Create New Volume** when selecting the instance
-     boot source image.
-   - Use **shared** as the instance's network.
+* Use the hypervisor console to verify the instance is running by using
+  the ``vm_list`` command.
 
-4. After the instance is created, use the hypervisor console to verify that
-   it is running (``vm_list``).
+* Ping the instance inside the container using the instance's floating IP
+  address.
 
-5. Ping the instance inside the container using the instance's floating IP
-   address.
-
-6. Clear Linux prohibits root SSH login by default. Use libvirt's ``virsh``
-   console to configure the instance. Inside the container, run::
+* Clear Linux prohibits root SSH login by default. Use libvirt's ``virsh``
+  console to configure the instance. Inside the container, using::
 
      $ sudo virsh -c acrn:///system
      list   #you should see the instance listed as running
      console <instance_name>
 
-7. Log in to the Clear Linux instance and set up the root SSH. Refer to
-   the Clear Linux instructions on `enabling root login
-   <https://docs.01.org/clearlinux/latest/guides/network/openssh-server.html#enable-root-login>`_.
+  Log in to the Clear Linux instance and set up the root SSH. Refer to
+  the Clear Linux instructions on `enabling root login
+  <https://docs.01.org/clearlinux/latest/guides/network/openssh-server.html#enable-root-login>`_.
 
-   a. If needed, set up the proxy inside the instance.
-   b. Configure ``systemd-resolved`` to use the correct DNS server.
-   c. Install ping: ``swupd bundle-add clr-network-troubleshooter``.
+  - If needed, set up the proxy inside the instance.
+  - Configure ``systemd-resolved`` to use the correct DNS server.
+  - Install ping: ``swupd bundle-add clr-network-troubleshooter``.
 
    The ACRN instance should now be able to ping ``acrn-br0`` and another
    ACRN instance. It should also be accessible inside the container via SSH
    and its floating IP address.
 
-   The ACRN instance can be deleted via the OpenStack management interface.
+The ACRN instance can be deleted via the OpenStack management interface.
 
 For more advanced CLI usage, refer to this `OpenStack cheat sheet
 <https://docs.openstack.org/ocata/user-guide/cli-cheat-sheet.html>`_.
