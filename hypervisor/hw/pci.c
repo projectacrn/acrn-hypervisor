@@ -610,6 +610,9 @@ void init_pci_pdev_list(void)
 	uint16_t bus;
 	bool was_visited = false;
 
+	/* explicitly init the lock before using it */
+	spinlock_init(&pci_device_lock);
+
 	pci_parse_iommu_devscopes(&bdfs_from_drhds, &drhd_idx_pci_all);
 
 	/* TODO: iterate over list of PCI Host Bridges found in ACPI namespace */

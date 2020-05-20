@@ -29,6 +29,8 @@ void init_logmsg(uint32_t flags)
 {
 	logmsg_ctl.flags = flags;
 	logmsg_ctl.seq = 0;
+
+	spinlock_init(&(logmsg_ctl.lock));
 }
 
 void do_logmsg(uint32_t severity, const char *fmt, ...)
