@@ -102,6 +102,9 @@ class Features:
         self.hv_file = hv_file
         self.reloc = ''
         self.multiboot2 = ''
+        self.rdt_enabled = ''
+        self.cdp_enabled = ''
+        self.cat_max_mask = []
         self.scheduler = ''
         self.hyperv_enabled = ''
         self.iommu_enforce_snp = ''
@@ -111,6 +114,9 @@ class Features:
 
     def get_info(self):
         self.multiboot2 = common.get_hv_item_tag(self.hv_file, "FEATURES", "MULTIBOOT2")
+        self.rdt_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "RDT_ENABLED")
+        self.cdp_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "CDP_ENABLED")
+        self.cat_max_mask = common.get_hv_item_tag(self.hv_file, "FEATURES", "RDT", "CLOS_MASK")
         self.scheduler = common.get_hv_item_tag(self.hv_file, "FEATURES", "SCHEDULER")
         self.reloc = common.get_hv_item_tag(self.hv_file, "FEATURES", "RELOC")
         self.hyperv_enabled = common.get_hv_item_tag(self.hv_file, "FEATURES", "HYPERV_ENABLED")
@@ -121,6 +127,9 @@ class Features:
 
     def check_item(self):
         hv_cfg_lib.ny_support_check(self.multiboot2, "FEATURES", "MULTIBOOT2")
+        hv_cfg_lib.ny_support_check(self.rdt_enabled, "FEATURES", "RDT", "RDT_ENABLED")
+        hv_cfg_lib.ny_support_check(self.cdp_enabled, "FEATURES", "RDT", "CDP_ENABLED")
+        hv_cfg_lib.cat_max_mask_check(self.cat_max_mask, "FEATURES", "RDT", "CLOS_MASK")
         hv_cfg_lib.scheduler_check(self.scheduler, "FEATURES", "SCHEDULER")
         hv_cfg_lib.ny_support_check(self.reloc, "FEATURES", "RELOC")
         hv_cfg_lib.ny_support_check(self.hyperv_enabled, "FEATURES", "HYPERV_ENABLED")

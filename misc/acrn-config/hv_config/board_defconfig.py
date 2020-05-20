@@ -108,17 +108,6 @@ def get_serial_type():
     return (ttys_type, ttys_value)
 
 
-def is_rdt_supported():
-    """
-    Returns True if platform supports RDT else False
-    """
-    (rdt_resources, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
-    if len(rdt_resources) == 0 or len(rdt_res_clos_max) == 0:
-        return False
-    else:
-        return True
-
-
 def get_memory(hv_info, config):
 
     # this dictonary mapped with 'address start':'mem range'
@@ -181,6 +170,11 @@ def get_features(hv_info, config):
     print("CONFIG_{}=y".format(hv_info.features.scheduler), file=config)
     print("CONFIG_RELOC={}".format(hv_info.features.reloc), file=config)
     print("CONFIG_MULTIBOOT2={}".format(hv_info.features.multiboot2), file=config)
+    print("CONFIG_RDT_ENABLED={}".format(hv_info.features.rdt_enabled), file=config)
+    if hv_info.features.rdt_enabled == 'y':
+        print("CONFIG_CDP_ENABLED={}".format(hv_info.features.cdp_enabled), file=config)
+    else:
+        print("CONFIG_CDP_ENABLED=n", file=config)
     print("CONFIG_HYPERV_ENABLED={}".format(hv_info.features.hyperv_enabled), file=config)
     print("CONFIG_IOMMU_ENFORCE_SNP={}".format(hv_info.features.iommu_enforce_snp), file=config)
     print("CONFIG_ACPI_PARSE_ENABLED={}".format(hv_info.features.acpi_parse_enabled), file=config)
@@ -230,11 +224,6 @@ def generate_file(hv_info, config):
     get_capacities(hv_info, config)
     get_serial_console(config)
     get_log_opt(hv_info, config)
-
-    if is_rdt_supported():
-        print("CONFIG_RDT_ENABLED=y", file=config)
-    else:
-        print("CONFIG_RDT_ENABLED=n", file=config)
 
     print("CONFIG_ENFORCE_VALIDATED_ACPI_INFO=y", file=config)
 

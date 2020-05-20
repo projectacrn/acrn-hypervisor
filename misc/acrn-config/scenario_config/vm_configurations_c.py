@@ -197,20 +197,17 @@ def cpu_affinity_output(vm_info, i, config):
     print("\t\t.cpu_affinity = VM{}_CONFIG_CPU_AFFINITY,".format(i), file=config)
 
 
-def clos_output(vm_info, i, config):
+def clos_output(scenario_items, i, config):
     """
     This is generate clos setting
-    :param vm_info: it is the class which contain all user setting information
+    :param scenario_items: it is the class which contain all user setting information
     :param i: vm id number
     :param config: it is the pointer which file write to
     :return: None
     """
-    (rdt_res, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
-    if len(rdt_res_clos_max) != 0:
-        common_clos_max = min(rdt_res_clos_max)
-    else:
-        common_clos_max = 0
-    if len(rdt_res) != 0 and common_clos_max !=0 and i in vm_info.clos_per_vm:
+    hv_info = scenario_items['hv']
+
+    if board_cfg_lib.is_rdt_supported() and hv_info.features.rdt_enabled == 'y':
         print("\t\t.clos = VM{}_VCPU_CLOS,".format(i), file=config)
 
 def get_guest_flag(flags):
@@ -254,8 +251,9 @@ def gen_source_header(config):
     print("{0}".format(C_HEADER), file=config)
 
 
-def gen_sos_vm(vm_type, vm_i, vm_info, config):
+def gen_sos_vm(vm_type, vm_i, scenario_items, config):
 
+    vm_info = scenario_items['vm']
     (err_dic, sos_guest_flags) = get_guest_flag(vm_info.guest_flags[vm_i])
     if err_dic:
         return err_dic
@@ -268,6 +266,7 @@ def gen_sos_vm(vm_type, vm_i, vm_info, config):
           "there is supposed to be the highest severity guest */", file=config)
     if sos_guest_flags:
         print("\t\t.guest_flags = {0},".format(sos_guest_flags), file=config)
+    clos_output(scenario_items, vm_i, config)
     cpu_affinity_output(vm_info, vm_i, config)
     print("\t\t.memory = {", file=config)
     print("\t\t\t.start_hpa = {}UL,".format(vm_info.mem_info.mem_start_hpa[vm_i]), file=config)
@@ -291,8 +290,9 @@ def gen_sos_vm(vm_type, vm_i, vm_info, config):
     print("\t},", file=config)
 
 
-def gen_pre_launch_vm(vm_type, vm_i, vm_info, config):
+def gen_pre_launch_vm(vm_type, vm_i, scenario_items, config):
 
+    vm_info = scenario_items['vm']
     # guest flags
     (err_dic, guest_flags) = get_guest_flag(vm_info.guest_flags[vm_i])
     if err_dic:
@@ -305,7 +305,7 @@ def gen_pre_launch_vm(vm_type, vm_i, vm_info, config):
     cpu_affinity_output(vm_info, vm_i, config)
     if guest_flags:
         print("\t\t.guest_flags = {0},".format(guest_flags), file=config)
-    clos_output(vm_info, vm_i, config)
+    clos_output(scenario_items, vm_i, config)
     print("\t\t.memory = {", file=config)
     print("\t\t\t.start_hpa = VM{0}_CONFIG_MEM_START_HPA,".format(vm_i), file=config)
     print("\t\t\t.size = VM{0}_CONFIG_MEM_SIZE,".format(vm_i), file=config)
@@ -344,11 +344,13 @@ def gen_pre_launch_vm(vm_type, vm_i, vm_info, config):
     print("\t},", file=config)
 
 
-def gen_post_launch_vm(vm_type, vm_i, vm_info, config):
+def gen_post_launch_vm(vm_type, vm_i, scenario_items, config):
 
+    vm_info = scenario_items['vm']
     post_vm_type = get_post_vm_type(vm_type, vm_i)
     print("\t{{\t/* VM{} */".format(vm_i), file=config)
     print("\t\t{},".format(post_vm_type), file=config)
+    clos_output(scenario_items, vm_i, config)
     cpu_affinity_output(vm_info, vm_i, config)
     is_need_epc(vm_info.epc_section, vm_i, config)
     # VUART
@@ -368,12 +370,13 @@ def pre_launch_definiation(vm_info, config):
               "vm{}_pci_devs[{}];".format(vm_i, vm_info.cfg_pci.pci_dev_num[vm_i]), file=config)
     print("", file=config)
 
-def generate_file(vm_info, config):
+def generate_file(scenario_items, config):
     """
     Start to generate vm_configurations.c
     :param config: it is a file pointer of board information for writing to
     """
     err_dic = {}
+    vm_info = scenario_items['vm']
     gen_source_header(config)
     for vm_i,pci_dev_num in vm_info.cfg_pci.pci_dev_num.items():
         if pci_dev_num >= 2:
@@ -384,11 +387,11 @@ def generate_file(vm_info, config):
     for vm_i, vm_type in common.VM_TYPES.items():
 
         if "SOS_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
-            gen_sos_vm(vm_type, vm_i, vm_info, config)
+            gen_sos_vm(vm_type, vm_i, scenario_items, config)
         elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
-            gen_pre_launch_vm(vm_type, vm_i, vm_info, config)
+            gen_pre_launch_vm(vm_type, vm_i, scenario_items, config)
         elif "POST_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
-            gen_post_launch_vm(vm_type, vm_i, vm_info, config)
+            gen_post_launch_vm(vm_type, vm_i, scenario_items, config)
 
     print("};", file=config)
     return err_dic

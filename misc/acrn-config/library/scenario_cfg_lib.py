@@ -585,3 +585,35 @@ def check_vuart(v0_vuart, v1_vuart):
         if t_vm_id.isnumeric() and  int(t_vm_id) not in common.VM_TYPES.keys():
             key = "vm:id={},vuart:id=1,target_vm_id".format(vm_i)
             ERR_LIST[key] = "target_vm_id which specified does not exist"
+
+
+def vcpu_clos_check(cpus_per_vm, clos_per_vm, prime_item, item):
+    common_clos_max = 0
+    cdp_enabled = cdp_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "CDP_ENABLED")
+    (rdt_resources, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
+    if len(rdt_resources) != 0 and len(rdt_res_clos_max) != 0:
+        common_clos_max = min(rdt_res_clos_max)
+        if cdp_enabled == 'y':
+            common_clos_max //= 2
+
+    for vm_i,vcpus in cpus_per_vm.items():
+        clos_per_vm_len = 0
+        if vm_i in clos_per_vm:
+            clos_per_vm_len = len(clos_per_vm[vm_i])
+
+        if clos_per_vm_len != len(vcpus):
+            key = "vm:id={},{},{}".format(vm_i, prime_item, item)
+            ERR_LIST[key] = "'vcpu_clos' number should be equal 'pcpu_id' number for VM{}".format(vm_i)
+            return
+
+        if cdp_enabled == 'y' and common_clos_max != 0:
+            for clos_val in clos_per_vm[vm_i]:
+                if not clos_val or clos_val == None:
+                    key = "vm:id={},{},{}".format(vm_i, prime_item, item)
+                    ERR_LIST[key] = "'vcpu_clos' should be not None"
+                    return
+
+                if int(clos_val) >= common_clos_max:
+                    key = "vm:id={},{},{}".format(vm_i, prime_item, item)
+                    ERR_LIST[key] = "CDP_ENABLED=y, the clos value should not be greater than {} for VM{}".format(common_clos_max - 1, vm_i)
+                    return
