@@ -13,6 +13,8 @@ These chapters describe the ACRN architecture, high-level design,
 background, and motivation for specific areas within the ACRN hypervisor
 system.
 
+.. rst-class:: rst-columns
+
 .. toctree::
    :maxdepth: 2
 

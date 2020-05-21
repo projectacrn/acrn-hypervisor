@@ -5,7 +5,7 @@
    max-width: 1100px;
 }
 
-/* (temporarily) add an under development tagline to the bread crumb 
+/* (temporarily) add an under development tagline to the bread crumb
 .wy-breadcrumbs::after {
    content: " (Content reorganization in progress)";
    background-color: #FFFACD;
@@ -266,10 +266,12 @@ kbd
 .rst-columns2 {
    column-width: 28em;
    column-fill: balance;
+   margin-bottom: 1em;
 }
-.rst-columns3 .rst-columns {
+.rst-columns3, .rst-columns {
    column-width: 18em;
    column-fill: balance;
+   margin-bottom: 1em;
 }
 
 /* numbered "h2" steps */
@@ -292,3 +294,8 @@ div.numbered-step h2::before {
   margin-right: 5px;
   text-align: center;
   width: 1.6em;}
+
+/* bold the level1 headings in on-page toctree displays */
+.rst-content  .toctree-l1 > a {
+  font-weight: bold;
+}

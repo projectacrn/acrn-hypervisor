@@ -12,6 +12,8 @@ The project ACRN reference code can be found on GitHub in
 https://github.com/projectacrn.  It includes the ACRN hypervisor, the
 ACRN device model, and documentation.
 
+.. rst-class:: rst-columns
+
 .. toctree::
    :maxdepth: 1
    :glob:
