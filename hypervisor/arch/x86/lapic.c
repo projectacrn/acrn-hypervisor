@@ -167,50 +167,36 @@ uint32_t get_cur_lapic_id(void)
 	return lapic_id;
 }
 
-/**
- * @pre cpu_startup_shorthand < INTR_CPU_STARTUP_UNKNOWN
- */
 void
-send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
-	uint16_t dest_pcpu_id, uint64_t cpu_startup_start_address)
+send_startup_ipi(uint16_t dest_pcpu_id, uint64_t cpu_startup_start_address)
 {
 	union apic_icr icr;
-	uint8_t shorthand;
 	struct cpuinfo_x86 *cpu_info = get_pcpu_info();
 
 	icr.value = 0U;
-	icr.bits.destination_mode = INTR_LAPIC_ICR_PHYSICAL;
-
-	if (cpu_startup_shorthand == INTR_CPU_STARTUP_USE_DEST) {
-		shorthand = INTR_LAPIC_ICR_USE_DEST_ARRAY;
-		icr.value_32.hi_32 = per_cpu(lapic_id, dest_pcpu_id);
-	} else {		/* Use destination shorthand */
-		shorthand = INTR_LAPIC_ICR_ALL_EX_SELF;
-		icr.value_32.hi_32 = 0U;
-	}
+	icr.value_32.hi_32 = per_cpu(lapic_id, dest_pcpu_id);
 
 	/* Assert INIT IPI */
-	icr.bits.shorthand = shorthand;
+	icr.bits.destination_mode = INTR_LAPIC_ICR_PHYSICAL;
+	icr.bits.shorthand = INTR_LAPIC_ICR_USE_DEST_ARRAY;
 	icr.bits.delivery_mode = INTR_LAPIC_ICR_INIT;
-	icr.bits.level = INTR_LAPIC_ICR_ASSERT;
-	icr.bits.trigger_mode = INTR_LAPIC_ICR_LEVEL;
 	msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
 
 	/* Give 10ms for INIT sequence to complete for old processors.
-	 * Modern processors (family == 6) don't need to wait here.
+	 * BWG states that a delay cannot be avoided between the INIT IPI
+	 * and first Startup IPI, so on Modern processors (family == 6)
+	 * setting a delay value of 10us.
 	 */
 	if (cpu_info->family != 6U) {
 		/* delay 10ms */
 		udelay(10000U);
+	} else {
+		udelay(10U); /* 10us is enough for Modern processors */
 	}
-
-	/* De-assert INIT IPI */
-	icr.bits.level = INTR_LAPIC_ICR_DEASSERT;
-	msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
 
 	/* Send Start IPI with page number of secondary reset code */
 	icr.value_32.lo_32 = 0U;
-	icr.bits.shorthand = shorthand;
+	icr.bits.shorthand = INTR_LAPIC_ICR_USE_DEST_ARRAY;
 	icr.bits.delivery_mode = INTR_LAPIC_ICR_STARTUP;
 	icr.bits.vector = (uint8_t)(cpu_startup_start_address >> 12U);
 	msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);

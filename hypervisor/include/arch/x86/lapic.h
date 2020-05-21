@@ -131,15 +131,11 @@ void send_lapic_eoi(void);
  *
  * Send an Startup IPI to a specific cpu, to notify the cpu to start booting.
  *
- * @param[in]	cpu_startup_shorthand The startup_shorthand
  * @param[in]	dest_pcpu_id The id of destination physical cpu
  * @param[in]	cpu_startup_start_address The address for the dest pCPU to start running
  *
- * @pre cpu_startup_shorthand < INTR_CPU_STARTUP_UNKNOWN
  */
-void send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
-		uint16_t dest_pcpu_id,
-		uint64_t cpu_startup_start_address);
+void send_startup_ipi(uint16_t dest_pcpu_id, uint64_t cpu_startup_start_address);
 
 /**
  * @brief Send an IPI to multiple pCPUs
