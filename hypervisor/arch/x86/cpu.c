@@ -317,7 +317,7 @@ static void start_pcpu(uint16_t pcpu_id)
 	write_trampoline_stack_sym(pcpu_id);
 	clac();
 
-	send_startup_ipi(INTR_CPU_STARTUP_USE_DEST, pcpu_id, startup_paddr);
+	send_startup_ipi(pcpu_id, startup_paddr);
 
 	/* Wait until the pcpu with pcpu_id is running and set the active bitmap or
 	 * configured time-out has expired
