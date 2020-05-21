@@ -496,7 +496,7 @@ static int32_t write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 	if (cfg_header_access(offset)) {
 		write_cfg_header(vdev, offset, bytes, val);
 	} else if (msicap_access(vdev, offset)) {
-		write_vmsi_cfg(vdev, offset, bytes, val);
+		write_vmsi_cap_reg(vdev, offset, bytes, val);
 	} else if (msixcap_access(vdev, offset)) {
 		write_vmsix_cfg(vdev, offset, bytes, val);
 	} else if (sriovcap_access(vdev, offset)) {
@@ -521,7 +521,7 @@ static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
 	if (cfg_header_access(offset)) {
 		read_cfg_header(vdev, offset, bytes, val);
 	} else if (msicap_access(vdev, offset)) {
-		read_vmsi_cfg(vdev, offset, bytes, val);
+		read_vmsi_cap_reg(vdev, offset, bytes, val);
 	} else if (msixcap_access(vdev, offset)) {
 		read_vmsix_cfg(vdev, offset, bytes, val);
 	} else if (sriovcap_access(vdev, offset)) {

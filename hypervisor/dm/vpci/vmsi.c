@@ -97,7 +97,7 @@ static void remap_vmsi(const struct pci_vdev *vdev)
 /**
  * @pre vdev != NULL
  */
-void read_vmsi_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
+void read_vmsi_cap_reg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	/* For PIO access, we emulate Capability Structures only */
 	*val = pci_vdev_read_vcfg(vdev, offset, bytes);
@@ -108,16 +108,24 @@ void read_vmsi_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
  *
  * @pre vdev != NULL
  */
-void write_vmsi_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
+void write_vmsi_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
-	uint32_t msgctrl;
+	/* Capability ID, Next Capability Pointer and Message Control
+	 * (Except MSI Enable bit and Multiple Message Enable) are RO */
+	static const uint8_t msi_ro_mask[0xEU] = { 0xffU, 0xffU, 0x1eU, 0xffU };
+	uint32_t msgctrl, old, ro_mask = ~0U;
 
 	enable_disable_msi(vdev, false);
-	pci_vdev_write_vcfg(vdev, offset, bytes, val);
 
-	msgctrl = pci_vdev_read_vcfg(vdev, vdev->msi.capoff + PCIR_MSI_CTRL, 2U);
-	if ((msgctrl & PCIM_MSICTRL_MSI_ENABLE) != 0U) {
-		remap_vmsi(vdev);
+	(void)memcpy_s((void *)&ro_mask, bytes, (void *)&msi_ro_mask[offset - vdev->msi.capoff], bytes);
+	if (ro_mask != ~0U) {
+		old = pci_vdev_read_vcfg(vdev, offset, bytes);
+		pci_vdev_write_vcfg(vdev, offset, bytes, (old & ro_mask) | (val & ~ro_mask));
+
+		msgctrl = pci_vdev_read_vcfg(vdev, vdev->msi.capoff + PCIR_MSI_CTRL, 2U);
+		if ((msgctrl & (PCIM_MSICTRL_MSI_ENABLE | PCIM_MSICTRL_MME_MASK)) == PCIM_MSICTRL_MSI_ENABLE) {
+			remap_vmsi(vdev);
+		}
 	}
 }
 
@@ -146,11 +154,12 @@ void init_vmsi(struct pci_vdev *vdev)
 
 	if (has_msi_cap(vdev)) {
 		val = pci_pdev_read_cfg(pdev->bdf, vdev->msi.capoff, 4U);
-		vdev->msi.caplen = ((val & (PCIM_MSICTRL_64BIT << 16U)) != 0U) ? 14U : 10U;
+		vdev->msi.caplen = ((val & (PCIM_MSICTRL_64BIT << 16U)) != 0U) ? 0xEU : 0xAU;
 		vdev->msi.is_64bit = ((val & (PCIM_MSICTRL_64BIT << 16U)) != 0U);
 
 		val &= ~((uint32_t)PCIM_MSICTRL_MMC_MASK << 16U);
 		val &= ~((uint32_t)PCIM_MSICTRL_MME_MASK << 16U);
+
 		pci_vdev_write_vcfg(vdev, vdev->msi.capoff, 4U, val);
 	}
 }
