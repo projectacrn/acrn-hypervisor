@@ -7,6 +7,8 @@ Advanced Guides
 Configuration and Tools
 ***********************
 
+.. rst-class:: rst-columns2
+
 .. toctree::
    :glob:
    :maxdepth: 1
@@ -23,6 +25,8 @@ Configuration and Tools
 Service VM Tutorials
 ********************
 
+.. rst-class:: rst-columns2
+
 .. toctree::
    :maxdepth: 1
 
@@ -31,6 +35,8 @@ Service VM Tutorials
 
 User VM Tutorials
 *****************
+
+.. rst-class:: rst-columns2
 
 .. toctree::
    :maxdepth: 1
@@ -47,6 +53,8 @@ User VM Tutorials
 
 Enable ACRN Features
 ********************
+
+.. rst-class:: rst-columns2
 
 .. toctree::
    :maxdepth: 1
@@ -70,6 +78,8 @@ Enable ACRN Features
 Debug
 *****
 
+.. rst-class:: rst-columns2
+
 .. toctree::
    :maxdepth: 1
 
@@ -79,6 +89,8 @@ Debug
 
 Additional Tutorials
 ********************
+
+.. rst-class:: rst-columns2
 
 .. toctree::
    :maxdepth: 1
@@ -91,7 +103,3 @@ Additional Tutorials
    tutorials/sign_clear_linux_image
    tutorials/enable_laag_secure_boot
    tutorials/kbl-nuc-sdc
-
-
-
-

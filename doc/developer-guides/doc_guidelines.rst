@@ -197,10 +197,11 @@ would be rendered as:
    * space on
    * the page
 
-A maximum of three columns will be displayed, and change based on the
-available width of the display window, reducing to one column on narrow
-(phone) screens if necessary.  We've deprecated use of the ``hlist``
-directive because it misbehaves on smaller screens.
+A maximum of three columns will be displayed if you use ``rst-columns``
+or ``rst-columns3`` (and two columns for ``rst-columns2``), and change
+based on the available width of the display window, reducing to one
+column on narrow (phone) screens if necessary.  We've deprecated use of
+the ``hlist`` directive because it misbehaves on smaller screens.
 
 Tables
 ******
