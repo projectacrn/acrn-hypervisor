@@ -144,7 +144,7 @@ usage(int code)
 		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
 		"       %*s [--vmcfg sub_options] [--dump vm_idx] [--debugexit] \n"
 		"       %*s [--logger-setting param_setting] [--pm_notify_channel]\n"
-		"       %*s [--pm_by_vuart vuart_node] <vm>\n"
+		"       %*s [--pm_by_vuart vuart_node] [--acpi_ssdt ssdt_aml_path] <vm>\n"
 		"       -A: create ACPI tables\n"
 		"       -B: bootargs for kernel\n"
 		"       -E: elf image path\n"
@@ -168,6 +168,7 @@ usage(int code)
 		"       --vsbl: vsbl file path\n"
 		"       --ovmf: ovmf file path\n"
 		"       --cpu_affinity: list of pCPUs assigned to this VM\n"
+		"       --acpi_ssdt: acpi SSDT aml file path\n"
 		"       --part_info: guest partition info file path\n"
 		"       --enable_trusty: enable trusty for guest\n"
 		"       --debugexit: enable debug exit function\n"
@@ -736,6 +737,7 @@ enum {
 	CMD_OPT_VSBL = 1000,
 	CMD_OPT_OVMF,
 	CMD_OPT_CPU_AFFINITY,
+	CMD_OPT_ACPI_SSDT,
 	CMD_OPT_PART_INFO,
 	CMD_OPT_TRUSTY_ENABLE,
 	CMD_OPT_VIRTIO_POLL_ENABLE,
@@ -778,6 +780,7 @@ static struct option long_options[] = {
 	{"vsbl",		required_argument,	0, CMD_OPT_VSBL},
 	{"ovmf",		required_argument,	0, CMD_OPT_OVMF},
 	{"cpu_affinity",	required_argument,	0, CMD_OPT_CPU_AFFINITY},
+	{"acpi_ssdt",		required_argument,	0, CMD_OPT_ACPI_SSDT},
 	{"part_info",		required_argument,	0, CMD_OPT_PART_INFO},
 	{"enable_trusty",	no_argument,		0,
 					CMD_OPT_TRUSTY_ENABLE},
@@ -900,6 +903,10 @@ main(int argc, char *argv[])
 		case CMD_OPT_CPU_AFFINITY:
 			if (acrn_parse_cpu_affinity(optarg) != 0)
 				errx(EX_USAGE, "invalid pcpu param %s", optarg);
+			break;
+		case CMD_OPT_ACPI_SSDT:
+			if (acrn_parse_acpiargs(optarg))
+				errx(EX_USAGE, "invalid acpi_ssdt param %s", optarg);
 			break;
 		case CMD_OPT_PART_INFO:
 			if (acrn_parse_guest_part_info(optarg) != 0) {

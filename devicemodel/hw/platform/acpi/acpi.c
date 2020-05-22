@@ -47,7 +47,8 @@
  *       HPET  ->   0xf2740  (56 bytes)
  *       MCFG  ->   0xf2780  (60 bytes)
  *         FACS  ->   0xf27C0 (64 bytes)
- *         DSDT  ->   0xf2800 (variable - can go up to 0x100000)
+ *         DSDT  ->   0xf3240 (variable, max 36288 bytes)
+ *     SSDT  ->   0xfc000 (optional, variable, max 16386 bytes)
  */
 
 #include <sys/param.h>
@@ -86,6 +87,7 @@
 #define NHLT_OFFSET		0x400
 #define TPM2_OFFSET		0xC00
 #define DSDT_OFFSET		0xE40
+#define SSDT_OFFSET		0x9C00    /* Max size 16KB */
 
 #define	ASL_TEMPLATE	"dm.XXXXXXX"
 #define ASL_SUFFIX	".aml"
@@ -124,6 +126,28 @@ struct basl_fio {
 #define EFFLUSH(x) fflush(x)
 
 static bool acpi_table_is_valid(int num);
+static char acpi_ssdt_path[MAXPATHLEN];
+
+int
+acrn_parse_acpiargs(char *arg)
+{
+	int error = -1, fd;
+	size_t len = strnlen(arg, MAXPATHLEN);
+
+	if (len < MAXPATHLEN) {
+		strncpy(acpi_ssdt_path, arg, len + 1);
+
+		fd = open(acpi_ssdt_path, O_RDONLY);
+		if (fd >= 0) {
+			acpi_table_enable(SSDT_ENTRY_NO);
+			printf("ACPI: SSDT path%s\n", acpi_ssdt_path);
+			error = 0;
+			close(fd);
+		}
+	}
+
+	return error;
+}
 
 static int
 basl_fwrite_rsdp(FILE *fp, struct vmctx *ctx)
@@ -186,6 +210,11 @@ basl_fwrite_rsdt(FILE *fp, struct vmctx *ctx)
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
 		    basl_acpi_base + TPM2_OFFSET);
 
+	if (acpi_table_is_valid(SSDT_ENTRY_NO)) {
+		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
+			basl_acpi_base + SSDT_OFFSET);
+	}
+
 	EFFLUSH(fp);
 
 	return 0;
@@ -227,6 +256,11 @@ basl_fwrite_xsdt(FILE *fp, struct vmctx *ctx)
 	if (ctx->tpm_dev || pt_tpm2)
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
 		    basl_acpi_base + TPM2_OFFSET);
+
+	if (acpi_table_is_valid(SSDT_ENTRY_NO)) {
+		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
+			basl_acpi_base + SSDT_OFFSET);
+	}
 
 	EFFLUSH(fp);
 
@@ -873,6 +907,43 @@ basl_fwrite_dsdt(FILE *fp, struct vmctx *ctx)
 }
 
 static int
+basl_fwrite_ssdt(FILE *fp, struct vmctx *ctx)
+{
+	FILE *asl_fp;
+	char *buf;
+	long size;
+	int err = -1;
+
+	asl_fp = fopen(acpi_ssdt_path, "r");
+	if (asl_fp == NULL) {
+		fprintf(stderr, "Open SSDT source file fail! %s\n", strerror(errno));
+		goto exit;
+	}
+
+	if (fseek(asl_fp, 0, SEEK_END) < 0)
+		goto exit;
+	size = ftell(asl_fp);
+	if (size <= 0 || size > ACPI_LENGTH - SSDT_OFFSET)
+		goto exit;
+	rewind(asl_fp);
+
+	buf = malloc(size);
+	if (buf == NULL)
+		goto exit;
+
+	if (fread(buf, 1, size, asl_fp) != size || fwrite(buf, 1, size, fp) != size)
+		goto free;
+
+	EFFLUSH(fp);
+	err = 0;
+free:
+	free(buf);
+exit:
+	fclose(asl_fp);
+	return err;
+}
+
+static int
 basl_open(struct basl_fio *bf, int suffix)
 {
 	int err;
@@ -1061,7 +1132,8 @@ static struct {
 	{ basl_fwrite_facs, FACS_OFFSET, true  },
 	{ basl_fwrite_nhlt, NHLT_OFFSET, false }, /*valid with audio ptdev*/
 	{ basl_fwrite_tpm2, TPM2_OFFSET, false },
-	{ basl_fwrite_dsdt, DSDT_OFFSET, true  }
+	{ basl_fwrite_dsdt, DSDT_OFFSET, true  },
+	{ basl_fwrite_ssdt, SSDT_OFFSET, false }
 };
 
 void

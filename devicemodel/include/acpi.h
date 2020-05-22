@@ -41,7 +41,9 @@
 
 /* All dynamic table entry no. */
 #define NHLT_ENTRY_NO		8
+#define SSDT_ENTRY_NO		11
 
+int acrn_parse_acpiargs(char *arg);
 void acpi_table_enable(int num);
 uint32_t get_acpi_base(void);
 uint32_t get_acpi_table_length(void);
