@@ -9,6 +9,7 @@
 
 #define MAX_PCPU_NUM	4U
 #define MAX_PLATFORM_CLOS_NUM	0U
+#define MAX_VMSIX_ON_MSI_PDEVS_NUM	0U
 
 #define ROOTFS_0		"root=/dev/sda3 "
 

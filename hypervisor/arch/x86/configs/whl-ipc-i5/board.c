@@ -96,3 +96,4 @@ const struct cpu_state_table board_cpu_state_tbl = {
 	(uint8_t)ARRAY_SIZE(board_cpu_cx), board_cpu_cx}
 };
 const union pci_bdf plat_hidden_pdevs[MAX_HIDDEN_PDEVS_NUM];
+const struct vmsix_on_msi_info vmsix_on_msi_devs[MAX_VMSIX_ON_MSI_PDEVS_NUM];
