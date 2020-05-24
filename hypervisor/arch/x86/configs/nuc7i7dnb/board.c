@@ -64,3 +64,4 @@ struct platform_clos_info platform_mba_clos_array[MAX_PLATFORM_CLOS_NUM];
 
 const struct cpu_state_table board_cpu_state_tbl;
 const union pci_bdf plat_hidden_pdevs[MAX_HIDDEN_PDEVS_NUM];
+const struct vmsix_on_msi_info vmsix_on_msi_devs[MAX_VMSIX_ON_MSI_PDEVS_NUM];
