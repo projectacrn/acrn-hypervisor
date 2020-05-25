@@ -599,9 +599,6 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	/* Only allow shutdown paused vm */
 	vm->state = VM_POWERED_OFF;
 
-	vm_config = get_vm_config(vm->vm_id);
-	vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
-
 	if (is_sos_vm(vm)) {
 		sbuf_reset();
 	}
@@ -621,6 +618,10 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	foreach_vcpu(i, vm, vcpu) {
 		offline_vcpu(vcpu);
 	}
+
+	/* after guest_flags not used, then clear it */
+	vm_config = get_vm_config(vm->vm_id);
+	vm_config->guest_flags &= ~DM_OWNED_GUEST_FLAG_MASK;
 
 	if (is_ready_for_system_shutdown()) {
 		/* If no any guest running, shutdown system */
