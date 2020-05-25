@@ -1478,6 +1478,90 @@ write_dsdt_sdc(struct pci_vdev *dev)
 	dsdt_line("}");
 }
 
+static void write_dsdt_i2c(struct pci_vdev *dev, uint32_t bus_num)
+{
+	dsdt_line("Device (I2C%u)", bus_num);
+	dsdt_line("{");
+	dsdt_line("    Name (_ADR, 0x%04X%04X)", dev->slot, dev->func);
+	dsdt_line("    Name (_DDN, \"Intel(R) I2C Controller #%u\")", bus_num);
+	dsdt_line("    Name (_UID, One)");
+	dsdt_line("    Name (LINK, \"\\\\_SB.PCI%u.I2C%u\")", dev->bus, bus_num);
+	dsdt_line("    Name (RBUF, ResourceTemplate ()");
+	dsdt_line("    {");
+	dsdt_line("    })");
+	dsdt_line("    Name (IC0S, 0x00061A80)");
+	dsdt_line("    Name (_DSD, Package (0x02)");
+	dsdt_line("    {");
+	dsdt_line("        ToUUID (\"daffd814-6eba-4d8c-8a91-bc9bbf4aa301\")"
+				" ,");
+	dsdt_line("        Package (0x01)");
+	dsdt_line("        {");
+	dsdt_line("            Package (0x02)");
+	dsdt_line("            {");
+	dsdt_line("                \"clock-frequency\", ");
+	dsdt_line("                IC0S");
+	dsdt_line("            }");
+	dsdt_line("        }");
+	dsdt_line("    })");
+
+	dsdt_line("    Method (FMCN, 0, Serialized)");
+	dsdt_line("    {");
+	dsdt_line("        Name (PKG, Package (0x03)");
+	dsdt_line("        {");
+	dsdt_line("            0x64, ");
+	dsdt_line("            0xD6, ");
+	dsdt_line("            0x1C");
+	dsdt_line("        })");
+	dsdt_line("        Return (PKG)");
+	dsdt_line("    }");
+	dsdt_line("");
+
+	dsdt_line("    Method (FPCN, 0, Serialized)");
+	dsdt_line("    {");
+	dsdt_line("        Name (PKG, Package (0x03)");
+	dsdt_line("        {");
+	dsdt_line("            0x26, ");
+	dsdt_line("            0x50, ");
+	dsdt_line("            0x0C");
+	dsdt_line("        })");
+	dsdt_line("        Return (PKG)");
+	dsdt_line("    }");
+	dsdt_line("");
+
+	dsdt_line("    Method (HSCN, 0, Serialized)");
+	dsdt_line("    {");
+	dsdt_line("        Name (PKG, Package (0x03)");
+	dsdt_line("        {");
+	dsdt_line("            0x05, ");
+	dsdt_line("            0x18, ");
+	dsdt_line("            0x0C");
+	dsdt_line("        })");
+	dsdt_line("        Return (PKG)");
+	dsdt_line("    }");
+	dsdt_line("");
+
+	dsdt_line("    Method (SSCN, 0, Serialized)");
+	dsdt_line("    {");
+	dsdt_line("        Name (PKG, Package (0x03)");
+	dsdt_line("        {");
+	dsdt_line("            0x0244, ");
+	dsdt_line("            0x02DA, ");
+	dsdt_line("            0x1C");
+	dsdt_line("        })");
+	dsdt_line("        Return (PKG)");
+	dsdt_line("    }");
+	dsdt_line("");
+
+	dsdt_line("    Method (_CRS, 0, NotSerialized)");
+	dsdt_line("    {");
+	dsdt_line("        Return (RBUF)");
+	dsdt_line("    }");
+	dsdt_line("");
+
+	dsdt_line("}");
+	dsdt_line("");
+}
+
 static void
 write_dsdt_tsn(struct pci_vdev *dev, uint16_t device)
 {
@@ -1565,6 +1649,30 @@ passthru_write_dsdt(struct pci_vdev *dev)
 	if (device == 0x5aaa)
 		/* XDCI @ 00:15.1 to enable ADB */
 		write_dsdt_xdci(dev);
+	else if (device == 0x5aac)
+		/* I2C0 */
+		write_dsdt_i2c(dev, 0);
+	else if (device == 0x5aae)
+		/* I2C1 */
+		write_dsdt_i2c(dev, 1);
+	else if (device == 0x5ab0)
+		/* I2C2 */
+		write_dsdt_i2c(dev, 2);
+	else if (device == 0x5ab2)
+		/* I2C3 */
+		write_dsdt_i2c(dev, 3);
+	else if (device == 0x5ab4)
+		/* I2C4 */
+		write_dsdt_i2c(dev, 4);
+	else if (device == 0x5ab6)
+		/* I2C5 */
+		write_dsdt_i2c(dev, 5);
+	else if (device == 0x5ab8)
+		/* I2C6 */
+		write_dsdt_i2c(dev, 6);
+	else if (device == 0x5aba)
+		/* I2C7 */
+		write_dsdt_i2c(dev, 7);
 	else if (device == 0x5ab4)
 		/* HDAC @ 00:17.0 as codec */
 		write_dsdt_hdac(dev);
