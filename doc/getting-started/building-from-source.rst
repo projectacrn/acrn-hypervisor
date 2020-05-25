@@ -92,7 +92,6 @@ Install the necessary tools for the following systems:
           libblkid-dev \
           e2fslibs-dev \
           pkg-config \
-          zlib1g-dev \
           libnuma-dev
      $ sudo pip3 install kconfiglib
 
