@@ -97,6 +97,7 @@ SRCS += hw/platform/ioc_cbc.c
 SRCS += hw/platform/pty_vuart.c
 SRCS += hw/platform/acpi/acpi.c
 SRCS += hw/platform/acpi/acpi_pm.c
+SRCS += hw/platform/acpi/acpi_device.c
 SRCS += hw/platform/rpmb/rpmb_sim.c
 SRCS += hw/platform/rpmb/rpmb_backend.c
 SRCS += hw/platform/rpmb/att_keybox.c
