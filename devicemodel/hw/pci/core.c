@@ -46,6 +46,7 @@
 #include "lpc.h"
 #include "sw_load.h"
 #include "log.h"
+#include "acpi_device.h"
 
 #define CONF1_ADDR_PORT    0x0cf8
 #define CONF1_DATA_PORT    0x0cfc
@@ -1826,6 +1827,7 @@ pci_write_dsdt(void)
 	dsdt_line("{");
 	for (bus = 0; bus < MAXBUSES; bus++)
 		pci_bus_write_dsdt(bus);
+	acpi_device_write_dsdt();
 	dsdt_line("}");
 	dsdt_unindent(1);
 }
