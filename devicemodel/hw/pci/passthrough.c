@@ -47,6 +47,7 @@
 #include "acpi.h"
 #include "dm.h"
 #include "passthrough.h"
+#include "acpi_device.h"
 
 /* Some audio drivers get topology data from ACPI NHLT table.
  * For such drivers, we need to copy the host NHLT table to make it
@@ -679,6 +680,17 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pcidev.intr_line = pci_get_cfgdata8(dev, PCIR_INTLINE);
 	pcidev.intr_pin = pci_get_cfgdata8(dev, PCIR_INTPIN);
 	error = vm_assign_pcidev(ctx, &pcidev);
+	if (error) {
+		goto done;
+	}
+
+	error = acpi_device_bind(dev, vendor, device);
+	if (error) {
+		warnx("ACPI device bind to ptdev %x/%x/%x fail!",
+		    bus, slot, func);
+		goto done;
+	}
+
 done:
 	if (error && (ptdev != NULL)) {
 			free(ptdev);
@@ -712,6 +724,8 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	ptdev = (struct passthru_dev *) dev->arg;
+
+	acpi_device_unbind(dev);
 
 	pr_info("vm_reset_ptdev_intx:0x%x-%x, ioapic virpin=%d.\n",
 			virt_bdf, ptdev->phys_bdf, dev->lintr.ioapic_irq);
