@@ -96,22 +96,10 @@ Install the necessary tools for the following systems:
      $ sudo pip3 install kconfiglib
 
   .. note::
-     Use ``gcc`` version 7.3.* or higher to avoid gcc compilation
-     issues. Follow these instructions to install the ``gcc-7`` package on
-     Ubuntu 18.04:
-
-     .. code-block:: none
-
-        $ sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-        $ sudo apt update
-        $ sudo apt install g++-7 -y
-        $ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 \
-                             --slave /usr/bin/g++ g++ /usr/bin/g++-7
-
-
-     ACRN development requires ``binutils`` version 2.27 (or higher).
-     Verify your version of ``binutils`` with the command ``apt show binutils``.
-
+     ACRN requires ``gcc`` version 7.3.* (or higher) and ``binutils`` version
+     2.27 (or higher). Check your development environment to ensure you have
+     appropriate versions of these packages by using the commands: ``gcc -v``
+     and ``ld -v``.
 
 .. rst-class:: numbered-step
 
