@@ -37,12 +37,24 @@ LIFEMNGR_LDFLAGS += -Wl,-z,relro,-z,now
 LIFEMNGR_LDFLAGS += -pie
 LIFEMNGR_LDFLAGS += $(LDFLAGS)
 
-all:
+# set cross compiler for Windows
+MINGWIN_CC := x86_64-w64-mingw32-gcc
+
+all: all-linux all-win
+
+all-linux:
 	$(CC) -g life_mngr.c -o $(OUT_DIR)/life_mngr -lpthread $(LIFEMNGR_CFLAGS) $(LIFEMNGR_LDFLAGS)
 	cp life_mngr.service $(OUT_DIR)/life_mngr.service
 
-	-x86_64-w64-mingw32-gcc -g life_mngr_win.c -o $(OUT_DIR)/life_mngr_win.exe -Wall -O2 $(LDFLAGS)
+# only build for Windows if cross compiler is installed
+ifneq ($(shell which $(MINGWIN_CC)),)
+all-win:
+	$(MINGWIN_CC) -g life_mngr_win.c -o $(OUT_DIR)/life_mngr_win.exe -Wall -O2 $(LDFLAGS)
 	cp COPYING.MinGW-w64-runtime.txt $(OUT_DIR)/COPYING.MinGW-w64-runtime.txt
+else
+all-win:
+	@echo "WARN: $(MINGWIN_CC) not installed, skipping life_mngr_win.exe" >&2
+endif
 
 clean:
 	rm -f $(OUT_DIR)/life_mngr
@@ -55,3 +67,4 @@ endif
 install:
 	install -d $(DESTDIR)/usr/bin
 	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/life_mngr
+	install -p -D -m 0644 $(OUT_DIR)/life_mngr.service $(DESTDIR)$(systemd_unitdir)/system/
