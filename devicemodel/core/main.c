@@ -1039,22 +1039,23 @@ main(int argc, char *argv[])
 		 * Add CPU 0
 		 */
 		pr_notice("add_cpu\n");
-		error = add_cpu(ctx, guest_ncpus);
+/*		error = add_cpu(ctx, guest_ncpus);
 		if (error) {
 			pr_err("add_cpu failed, error=%d\n", error);
 			goto vm_fail;
 		}
-
+*/
 		/* Make a copy for ctx */
 		_ctx = ctx;
 
 		/*
 		 * Head off to the main event dispatch loop
 		 */
+		vm_set_suspend_mode(VM_SUSPEND_SYSTEM_RESET);
 		mevent_dispatch();
 
 		vm_pause(ctx);
-		delete_cpu(ctx, BSP);
+//		delete_cpu(ctx, BSP);
 
 		if (vm_get_suspend_mode() != VM_SUSPEND_FULL_RESET){
 			ret = 0;
