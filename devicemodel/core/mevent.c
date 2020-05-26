@@ -427,6 +427,12 @@ mevent_dispatch(void)
 	for (;;) {
 		int suspend_mode;
 
+		suspend_mode = vm_get_suspend_mode();
+		if ((suspend_mode != VM_SUSPEND_NONE) &&
+		    (suspend_mode != VM_SUSPEND_SYSTEM_RESET) &&
+		    (suspend_mode != VM_SUSPEND_SUSPEND))
+			break;
+
 		/*
 		 * Block awaiting events
 		 */
