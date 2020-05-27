@@ -263,7 +263,7 @@ Bring-up User VM (L2 Guest)
 
    .. code-block:: none
 
-      virt-install \
+      $ virt-install \
       --name UOS \
       --ram 2048 \
       --disk path=/var/lib/libvirt/images/UOSUbuntu.img,size=8 \
