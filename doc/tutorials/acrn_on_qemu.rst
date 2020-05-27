@@ -46,7 +46,7 @@ Prepare Service VM (L1 Guest)
 
    .. code-block:: none
 
-      virt-install \
+      $ virt-install \
       --connect qemu:///system \
       --name ACRNSOS \
       --machine q35 \
