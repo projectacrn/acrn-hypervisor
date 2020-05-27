@@ -97,12 +97,15 @@ def get_serial_type():
         if ttyn in line:
             # line format:
             # seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
-            # seri:/dev/ttyS0 type:mmio base:0xB3640000 irq:4 bdf:"0:x.y"
+            # seri:/dev/ttyS0 type:mmio base:0xB3640000 irq:4 [bdf:"0:x.y"]
             ttys_type = line.split()[1].split(':')[1]
             if ttys_type == "portio":
                 ttys_value = line.split()[2].split(':')[1]
             elif ttys_type == "mmio":
-                ttys_value = line.split()[-1].split('"')[1:-1][0]
+                if 'bdf' in line:
+                    ttys_value = line.split()[-1].split('"')[1:-1][0]
+                else:
+                    common.print_yel("You have chosen a MMIO PCI serial that BDF does not existed for HV console.", warn=True)
             break
 
     return (ttys_type, ttys_value)
@@ -156,7 +159,8 @@ def get_serial_console(config):
         print("CONFIG_SERIAL_PIO_BASE={}".format(serial_value), file=config)
     if serial_type == "mmio":
         print("CONFIG_SERIAL_PCI=y", file=config)
-        print('CONFIG_SERIAL_PCI_BDF="{}"'.format(serial_value), file=config)
+        if serial_value:
+            print('CONFIG_SERIAL_PCI_BDF="{}"'.format(serial_value), file=config)
 
 
 def get_miscfg(hv_info, config):
