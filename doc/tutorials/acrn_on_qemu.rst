@@ -188,7 +188,7 @@ Install ACRN Hypervisor
 
    .. code-block:: none
 
-      virsh destroy ACRNSOS # where ACRNSOS is the virsh domain name.
+      $ virsh destroy ACRNSOS # where ACRNSOS is the virsh domain name.
 
 
 Service VM Networking updates for User VM
