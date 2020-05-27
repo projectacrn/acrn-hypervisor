@@ -36,7 +36,7 @@ def get_valid_ttys_for_vuart(ttys_n):
         vuart0_valid.clear()
         for tty_line in ttys_lines:
             tmp_dic = {}
-            #seri:/dev/ttySx type:mmio base:0x91526000 irq:4 bdf:"00:18.0"
+            #seri:/dev/ttySx type:mmio base:0x91526000 irq:4 [bdf:"00:18.0"]
             #seri:/dev/ttySy type:portio base:0x2f8 irq:5
             tty = tty_line.split('/')[2].split()[0]
             ttys_irq = tty_line.split()[3].split(':')[1].strip()

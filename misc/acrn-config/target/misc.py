@@ -51,29 +51,33 @@ def detected_ttys():
     return tty_used_list
 
 
-def irq2bdf(irq_n):
-    cmd = 'lspci -vv'
-    res = parser_lib.cmd_execute(cmd)
+def is_bdf_format(bdf):
+    is_bdf = False
+
+    if len(bdf) == 7 and len(bdf.split(':')[0]) == 2 and len(bdf.split(':')[1].split('.')[0]) == 2 and len(bdf.split(".")[1]) == 1:
+        is_bdf = True
+
+    return is_bdf
+
+
+def iomem2bdf(base):
     bdf = ''
-    irq = 0
-    while True:
-        line = res.stdout.readline().decode('ascii')
-        if not line:
-            break
+    base_iomem = base.strip('0x').lower()
+    with open(MEM_PATH[0], 'rt') as mem_info:
 
-        if ':' not in line:
-            continue
-
-        if '.' in line.split()[0]:
-            bdf = line.split()[0]
-
-        if "Interrupt:" in line.strip():
-            irq = line.split()[-1]
-            if irq == irq_n and bdf:
+        while True:
+            line = mem_info.readline().strip('\n')
+            if not line:
                 break
 
-    return bdf
+            if base_iomem in line and '0000:' in line:
+                bdf = line.split(" ")[-1].lstrip("0000").lstrip(":")
+                if not is_bdf_format(bdf):
+                    continue
+                else:
+                    break
 
+    return bdf
 
 def dump_ttys_info(ttys_list, config):
     for ttys in ttys_list:
@@ -92,8 +96,11 @@ def dump_ttys_info(ttys_list, config):
         elif ttys_type[serial_type] == 'MMIO':
             base_path = '{}{}/iomem_base'.format(TTY_PATH, ttys_n)
             base = read_ttys_node(base_path)
-            bdf = irq2bdf(irq)
-            print('\tseri:{} type:mmio base:{} irq:{} bdf:"{}"'.format(ttys, base, irq, bdf), file=config)
+            bdf = iomem2bdf(base)
+            if bdf:
+                print('\tseri:{} type:mmio base:{} irq:{} bdf:"{}"'.format(ttys, base, irq, bdf), file=config)
+            else:
+                print('\tseri:{} type:mmio base:{} irq:{}'.format(ttys, base, irq), file=config)
 
 
 def dump_ttys(config):
