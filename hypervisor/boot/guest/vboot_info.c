@@ -40,55 +40,6 @@ static void init_vm_ramdisk_info(struct acrn_vm *vm, const struct multiboot_modu
 	}
 }
 
-/* There are two sources for sos_vm kernel cmdline:
- * - cmdline from direct boot mbi->cmdline
- * - cmdline from acrn stitching tool. mod[0].mm_string
- * We need to merge them together
- */
-static char kernel_cmdline[MAX_BOOTARGS_SIZE + 1U];
-
-/**
- * @pre vm != NULL && cmdline != NULL && cmdstr != NULL
- */
-static void merge_cmdline(const struct acrn_vm *vm, const char *cmdline, const char *cmdstr)
-{
-	char *cmd_dst = kernel_cmdline;
-	uint32_t cmdline_len, cmdstr_len;
-	uint32_t dst_avail; /* available room for cmd_dst[] */
-	uint32_t dst_len; /* the actual number of characters that are copied */
-
-	/*
-	 * Append seed argument for SOS
-	 * seed_arg string ends with a white space and '\0', so no aditional delimiter is needed
-	 */
-	append_seed_arg(cmd_dst, is_sos_vm(vm));
-	dst_len = strnlen_s(cmd_dst, MAX_BOOTARGS_SIZE);
-	dst_avail = MAX_BOOTARGS_SIZE + 1U - dst_len;
-	cmd_dst += dst_len;
-
-	cmdline_len = strnlen_s(cmdline, MAX_BOOTARGS_SIZE);
-	cmdstr_len = strnlen_s(cmdstr, MAX_BOOTARGS_SIZE);
-
-	/* reserve one character for the delimiter between 2 strings (one white space) */
-	if ((cmdline_len + cmdstr_len + 1U) >= dst_avail) {
-		panic("Multiboot bootarg string too long");
-	} else {
-		/* copy mbi->mi_cmdline */
-		(void)strncpy_s(cmd_dst, dst_avail, cmdline, cmdline_len);
-		dst_len = strnlen_s(cmd_dst, dst_avail);
-		dst_avail -= dst_len;
-		cmd_dst += dst_len;
-
-		/* overwrite '\0' with a white space */
-		(void)strncpy_s(cmd_dst, dst_avail, " ", 1U);
-		dst_avail -= 1U;
-		cmd_dst += 1U;
-
-		/* copy vm_config->os_config.bootargs */
-		(void)strncpy_s(cmd_dst, dst_avail, cmdstr, cmdstr_len);
-	}
-}
-
 /**
  * @pre vm != NULL
  */
@@ -156,26 +107,37 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_multiboo
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	char *bootargs = vm_config->os_config.bootargs;
 
-	if (vm_config->load_order == PRE_LAUNCHED_VM) {
+	if ((vm_config->load_order == PRE_LAUNCHED_VM) || (vm_config->load_order == SOS_VM)) {
 		vm->sw.bootargs_info.src_addr = bootargs;
-		vm->sw.bootargs_info.size = strnlen_s(bootargs, MAX_BOOTARGS_SIZE);
-	} else {
-		/* vm_config->load_order == SOS_VM */
-		if (((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U)
-				&& (*(mbi->mi_cmdline) != '\0')) {
-			/*
-			 * If there is cmdline from mbi->mi_cmdline, merge it with
-			 * vm_config->os_config.bootargs
-			 */
-			merge_cmdline(vm, mbi->mi_cmdline, bootargs);
-
-			vm->sw.bootargs_info.src_addr = kernel_cmdline;
-			vm->sw.bootargs_info.size = strnlen_s(kernel_cmdline, MAX_BOOTARGS_SIZE);
-		} else {
-			vm->sw.bootargs_info.src_addr = bootargs;
-			vm->sw.bootargs_info.size = strnlen_s(bootargs, MAX_BOOTARGS_SIZE);
-		}
 	}
+
+	if (vm_config->load_order == SOS_VM) {
+		if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE, " ", 1U) == 0) {
+			char seed_args[MAX_SEED_ARG_SIZE];
+
+			append_seed_arg(seed_args, true);
+			/* Append seed argument for SOS
+			 * seed_args string ends with a white space and '\0', so no aditional delimiter is needed
+			 */
+			if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE,
+					seed_args, (MAX_BOOTARGS_SIZE - 1U)) != 0) {
+				pr_err("failed to apend seed arg to SOS bootargs!");
+			}
+
+			/* If there is cmdline from mbi->mi_cmdline, merge it with configured SOS bootargs. */
+			if (((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) && (*(mbi->mi_cmdline) != '\0')) {
+				if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE,
+						mbi->mi_cmdline, (MAX_BOOTARGS_SIZE - 1U)) != 0) {
+					pr_err("failed to merge mbi cmdline to SOS bootargs!");
+				}
+			}
+		} else {
+			pr_err("no space to append SOS bootargs!");
+		}
+
+	}
+
+	vm->sw.bootargs_info.size = strnlen_s((const char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE);
 
 	/* Kernel bootarg and zero page are right before the kernel image */
 	if (vm->sw.bootargs_info.size > 0U) {

@@ -262,3 +262,44 @@ char *strstr_s(const char *str1, size_t maxlen1, const char *str2, size_t maxlen
 
 	return (char *)pret;
 }
+
+/*
+ * strncat_s
+ *
+ * description:
+ *    append src string to the end of dest string
+ *
+ * input:
+ *    dest      pointer to the string to be appended.
+ *
+ *    dmax      maximum length of dest buffer including the NULL char.
+ *
+ *    src       pointer to the string that to be concatenated to string dest.
+ *
+ *    slen      maximum characters to append.
+ *
+ * return value:
+ *     0 for success, -1 for failure.
+ */
+int32_t strncat_s(char *dest, size_t dmax, const char *src, size_t slen)
+{
+	int32_t ret = -1;
+	size_t len_d, len_s;
+	char *d = dest, *start;
+
+	len_d = strnlen_s(dest, dmax);
+	len_s = strnlen_s(src, slen);
+	start = dest + len_d;
+
+	if ((dest != NULL) && (src != NULL) && (dmax > (len_d + len_s))
+			&& ((dest > (src + len_s)) || (src > (dest + len_d)))) {
+		(void)memcpy_s(start, (dmax - len_d), src, len_s);
+		*(start + len_s) = '\0';
+		ret = 0;
+	} else {
+		if (dest != NULL) {
+			*d = '\0';	/* set dest[0] to NULL char on runtime-constraint violation */
+		}
+	}
+	return ret;
+}
