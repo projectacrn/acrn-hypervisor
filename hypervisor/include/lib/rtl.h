@@ -39,7 +39,7 @@ void *memset(void *base, uint8_t v, size_t n);
 int32_t memcpy_s(void *d, size_t dmax, const void *s, size_t slen);
 int64_t strtol_deci(const char *nptr);
 uint64_t strtoul_hex(const char *nptr);
-char *strstr_s(const char *str1, size_t maxlen1,
-			const char *str2, size_t maxlen2);
+char *strstr_s(const char *str1, size_t maxlen1, const char *str2, size_t maxlen2);
+int32_t strncat_s(char *dest, size_t dmax, const char *src, size_t slen);
 
 #endif /* RTL_H */
