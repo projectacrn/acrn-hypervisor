@@ -32,7 +32,7 @@ static inline bool is_space(char c)
 /* Function prototypes */
 int32_t strcmp(const char *s1_arg, const char *s2_arg);
 int32_t strncmp(const char *s1_arg, const char *s2_arg, size_t n_arg);
-char *strncpy_s(char *d_arg, size_t dmax, const char *s_arg, size_t slen_arg);
+int32_t strncpy_s(char *d, size_t dmax, const char *s, size_t slen);
 char *strchr(char *s_arg, char ch);
 size_t strnlen_s(const char *str_arg, size_t maxlen_arg);
 void *memset(void *base, uint8_t v, size_t n);
