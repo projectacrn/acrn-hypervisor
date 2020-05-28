@@ -9,6 +9,7 @@
 
 #define BOOTLOADER_SEED_MAX_ENTRIES     10U
 #define BUP_MKHI_BOOTLOADER_SEED_LEN    64U
+#define MAX_SEED_ARG_SIZE		1024U
 
 /* Structure of seed info */
 struct seed_info {
