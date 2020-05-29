@@ -30,6 +30,13 @@ KNOWN_HIDDEN_PDEVS_BOARD_DB = {
     'apl-up2':['00:0d:0'],
 }
 
+TSN_DEVS = ["8086:4b30", "8086:4b31", "8086:4b32", "8086:4ba0", "8086:4ba1", "8086:4ba2",
+            "8086:4bb0", "8086:4bb1", "8086:4bb2", "8086:a0ac", "8086:43ac", "8086:43a2"]
+KNOWN_CAPS_PCI_DEVS_DB = {
+    "TSN":TSN_DEVS,
+}
+KNOWN_CAPS_PCI_DEVS = {}
+
 def get_info(board_info, msg_s, msg_e):
     """
     Get information which specify by argument
