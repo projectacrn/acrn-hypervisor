@@ -672,6 +672,21 @@ void resume_iommu(void);
 int32_t init_iommu(void);
 
 /**
+ * @brief Reserve num continuous IRTEs.
+ *
+ * @param[in] intr_src filled with type of interrupt source and the source
+ * @param[in] num number of IRTEs to reserve
+ * @param[out] start_id stard index of reserved IRTEs, caller should check the value is INVALID_IRTE_ID or not.
+ *
+ * @retval 0 on success, caller should check whether the returned start index is valid or not.
+ * @retval -EINVAL if corresponding DMAR is not preset.
+ *
+ * @pre num can only be 2, 4, 8, 16 or 32
+ *
+ */
+int32_t dmar_reserve_irte(const struct intr_source *intr_src, uint16_t num, uint16_t *start_id);
+
+/**
  * @brief Assign RTE for Interrupt Remapping Table.
  *
  * @param[in] intr_src filled with type of interrupt source and the source
