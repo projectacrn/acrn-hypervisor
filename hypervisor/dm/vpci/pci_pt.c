@@ -374,6 +374,7 @@ void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev)
 	/* Initialize the vdev BARs except SRIOV VF, VF BARs are initialized directly from create_vf function */
 	if (vdev->phyfun == NULL) {
 		init_bars(vdev, is_pf_vdev);
+		init_vmsix_on_msi(vdev);
 		if (is_prelaunched_vm(vpci2vm(vdev->vpci)) && (!is_pf_vdev)) {
 			pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
 

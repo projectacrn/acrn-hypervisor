@@ -128,6 +128,10 @@ void read_vmsix_cap_reg(const struct pci_vdev *vdev, uint32_t offset, uint32_t b
 void write_vmsix_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 void deinit_vmsix(struct pci_vdev *vdev);
 
+void init_vmsix_on_msi(struct pci_vdev *vdev);
+void write_vmsix_cap_reg_on_msi(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
+void remap_one_vmsix_entry_on_msi(struct pci_vdev *vdev, uint32_t index);
+
 void init_vsriov(struct pci_vdev *vdev);
 void read_sriov_cap_reg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 void write_sriov_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
