@@ -260,6 +260,41 @@ def gen_pci_hide(config):
         print("const union pci_bdf plat_hidden_pdevs[MAX_HIDDEN_PDEVS_NUM];", file=config)
 
 
+def gen_known_caps_pci_devs(config):
+    """Generate information for known capabilities of pci devices"""
+
+    vpid_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<PCI_VID_PID>", "</PCI_VID_PID>")
+    for dev,known_dev in board_cfg_lib.KNOWN_CAPS_PCI_DEVS_DB.items():
+        if dev not in board_cfg_lib.KNOWN_CAPS_PCI_DEVS:
+            board_cfg_lib.KNOWN_CAPS_PCI_DEVS[dev] = []
+        for k_dev in known_dev:
+            for vpid_line in vpid_lines:
+                if k_dev in vpid_line:
+                    bdf = vpid_line.split()[0]
+                    board_cfg_lib.KNOWN_CAPS_PCI_DEVS[dev].append(bdf)
+                    break
+
+    for dev,bdf_list in board_cfg_lib.KNOWN_CAPS_PCI_DEVS.items():
+        if dev == "TSN":
+            print("", file=config)
+            bdf_list_len = len(bdf_list)
+            if bdf_list_len == 0:
+                print("const struct vmsix_on_msi_info vmsix_on_msi_devs[MAX_VMSIX_ON_MSI_PDEVS_NUM];", file=config)
+                break
+            for i in range(bdf_list_len):
+                b = bdf_list[i].split(":")[0]
+                d = bdf_list[i].split(":")[1].split(".")[0]
+                f = bdf_list[i].split(".")[1]
+                print("#define VMSIX_ON_MSI_DEV{}\t.bdf.bits = {{.b = 0x{}U, .d = 0x{}U, .f =0x{}U}},".format(i, b, d, f), file=config)
+
+            for i in range(bdf_list_len):
+                if i == 0:
+                    print("const struct vmsix_on_msi_info vmsix_on_msi_devs[MAX_VMSIX_ON_MSI_PDEVS_NUM] = {", file=config)
+                print("\t{{VMSIX_ON_MSI_DEV{}}},".format(i), file=config)
+                if i == (bdf_list_len - 1):
+                    print("};", file=config)
+
+
 def generate_file(config):
     """
     Start to generate board.c
@@ -285,5 +320,8 @@ def generate_file(config):
 
     # gen hide pci info for platform
     gen_pci_hide(config)
+
+    # gen known caps of pci dev info for platform
+    gen_known_caps_pci_devs(config)
 
     return err_dic

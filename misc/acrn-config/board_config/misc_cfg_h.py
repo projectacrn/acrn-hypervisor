@@ -181,6 +181,14 @@ def find_hi_mmio_window(config):
         print("#define HI_MMIO_START\t\t~0UL", file=config)
         print("#define HI_MMIO_END\t\t0UL", file=config)
 
+def gen_known_caps_pci_head(config):
+
+    for dev,bdf_list in board_cfg_lib.KNOWN_CAPS_PCI_DEVS.items():
+        if dev == "TSN":
+            bdf_list_len = len(bdf_list)
+            print("#define MAX_VMSIX_ON_MSI_PDEVS_NUM\t{}U".format(bdf_list_len), file=config)
+
+
 def generate_file(config):
     """
     Start to generate board.c
@@ -237,6 +245,7 @@ def generate_file(config):
         common_clos_max = 0
 
     print("#define MAX_PLATFORM_CLOS_NUM\t{}U".format(common_clos_max), file=config)
+    gen_known_caps_pci_head(config)
 
 
     # define rootfs with macro
