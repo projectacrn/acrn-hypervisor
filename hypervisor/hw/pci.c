@@ -767,6 +767,7 @@ struct pci_pdev *init_pdev(uint16_t pbdf, uint32_t drhd_index)
 
 			pdev->drhd_index = drhd_index;
 			num_pci_pdev++;
+			reserve_vmsix_on_msi_irtes(pdev);
 		} else {
 			pr_err("%s, %x:%x.%x unsupported headed type: 0x%x\n",
 				__func__, bdf.bits.b, bdf.bits.d, bdf.bits.f, hdr_type);
