@@ -183,7 +183,6 @@
 #define PCIR_AF_CTRL          0x4U
 #define PCIM_AF_FLR           0x1U
 
-#define HOST_BRIDGE_BDF		0U
 #define PCI_STD_NUM_BARS        6U
 
 union pci_bdf {
