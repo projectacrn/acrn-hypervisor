@@ -495,7 +495,7 @@
 	<TTYS_INFO>
 	seri:/dev/ttyS0 type:mmio base:0xB3640000 irq:4 bdf:"00:18.0"
 	seri:/dev/ttyS2 type:mmio base:0x80E00000 irq:6 bdf:"00:18.2"
-	seri:/dev/ttyS3 type:mmio base:0xB363A000 irq:7 bdf:"00:18.2"
+	seri:/dev/ttyS3 type:mmio base:0xB363A000 irq:7 bdf:"00:18.3"
 	</TTYS_INFO>
 
 	<AVAILABLE_IRQ_INFO>
