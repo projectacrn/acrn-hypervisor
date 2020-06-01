@@ -349,8 +349,8 @@
 	</BLOCK_DEVICE_INFO>
 
 	<TTYS_INFO>
-	seri:/dev/ttyS0 type:mmio base:0xFE040000 irq:17 bdf:"00:10.1"
-	seri:/dev/ttyS1 type:mmio base:0x6FC09000 irq:16 bdf:"00:10.0"
+	seri:/dev/ttyS0 type:mmio base:0xFE040000 irq:17
+	seri:/dev/ttyS1 type:mmio base:0x6FC09000 irq:16 bdf:"00:1e.0"
 	</TTYS_INFO>
 
 	<AVAILABLE_IRQ_INFO>
