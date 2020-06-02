@@ -328,7 +328,7 @@ def uos_launch(names, args, virt_io, vmid, config):
             print("fi", file=config)
         else:
             print("else", file=config)
-            if gvt_args == "gvtd":
+            if gvt_args == "gvtd" or not gvt_args:
                 print('    launch_{} {}'.format(launch_uos, vmid), file=config)
             elif gvt_args:
                 print('    launch_{} {} "{}"'.format(launch_uos, vmid, gvt_args), file=config)
@@ -337,14 +337,14 @@ def uos_launch(names, args, virt_io, vmid, config):
         if uos_type in ("VXWORKS", "PREEMPT-RT LINUX", "ZEPHYR"):
             print("launch_{} {}".format(launch_uos, vmid), file=config)
         if uos_type in ("CLEARLINUX", "WINDOWS"):
-            if gvt_args == "gvtd":
+            if gvt_args == "gvtd" or not gvt_args:
                 print('launch_{} {}'.format(launch_uos, vmid), file=config)
             else:
                 print('launch_{} {} "{}"'.format(launch_uos, vmid, gvt_args), file=config)
 
     if is_mount_needed(virt_io, vmid):
         print("", file=config)
-        if gvt_args == "gvtd":
+        if gvt_args == "gvtd" or not gvt_args:
             print('launch_{} {} "{}" $debug'.format(launch_uos, vmid, vmid), file=config)
         else:
             print('launch_{} {} "{}" "{}" $debug'.format(launch_uos, vmid, gvt_args, vmid), file=config)
