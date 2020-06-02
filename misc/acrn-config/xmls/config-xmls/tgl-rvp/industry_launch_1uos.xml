@@ -4,7 +4,7 @@
         <uos_type desc="UOS type">CLEARLINUX</uos_type>
         <rtos_type desc="UOS Realtime capability">no</rtos_type>
         <mem_size desc="UOS memory size in MByte">2000</mem_size>
-        <gvt_args desc="GVT arguments. Recommendation is 64 448 8. Leave it blank to disable GVT.">64 448 8</gvt_args>
+        <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT.">gvtd</gvt_args>
         <vbootloader desc="">ovmf</vbootloader>
         <rootfs_dev desc="">/dev/nvme0n1p3</rootfs_dev>
         <rootfs_img desc="">/root/uos/uos.img</rootfs_img>
