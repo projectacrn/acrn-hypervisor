@@ -4,9 +4,9 @@ RELEASE ?= 0
 
 .PHONY: all acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge life_mngr
 ifeq ($(RELEASE),0)
-all: acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge
+all: acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge life_mngr
 else
-all: acrn-manager acrnbridge
+all: acrn-manager acrnbridge life_mngr
 endif
 
 acrn-crashlog:
@@ -38,9 +38,10 @@ clean:
 
 .PHONY: install
 ifeq ($(RELEASE),0)
-install: acrn-crashlog-install acrnlog-install acrn-manager-install acrntrace-install acrnbridge-install
+install: acrn-crashlog-install acrnlog-install acrn-manager-install acrntrace-install acrnbridge-install \
+	acrn-life-mngr-install
 else
-install: acrn-manager-install acrnbridge-install
+install: acrn-manager-install acrnbridge-install acrn-life-mngr-install
 endif
 
 acrn-crashlog-install:
@@ -57,3 +58,6 @@ acrntrace-install:
 
 acrnbridge-install:
 	$(MAKE) -C $(T)/acrnbridge OUT_DIR=$(OUT_DIR) install
+
+acrn-life-mngr-install:
+	$(MAKE) -C $(T)/life_mngr OUT_DIR=$(OUT_DIR) install
