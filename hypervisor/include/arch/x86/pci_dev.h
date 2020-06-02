@@ -9,8 +9,6 @@
 
 #include <vm_config.h>
 
-#define SOS_EMULATED_PCI_DEV_NUM	1U
-
 extern struct acrn_vm_pci_dev_config sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM];
 
 struct pci_pdev;

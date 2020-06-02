@@ -223,6 +223,8 @@ struct pci_sriov_cap {
 
 struct pci_pdev {
 	uint8_t hdr_type;
+	uint8_t base_class;
+	uint8_t sub_class;
 
 	/* IOMMU responsible for DMA and Interrupt Remapping for this device */
 	uint32_t drhd_index;
@@ -249,6 +251,16 @@ struct pci_cfg_ops {
 	uint32_t (*pci_read_cfg)(union pci_bdf bdf, uint32_t offset, uint32_t bytes);
 	void (*pci_write_cfg)(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 };
+
+static inline bool is_host_bridge(const struct pci_pdev *pdev)
+{
+	return (pdev->base_class == PCIC_BRIDGE) && (pdev->sub_class == PCIS_BRIDGE_HOST);
+}
+
+static inline bool is_bridge(const struct pci_pdev *pdev)
+{
+	return pdev->hdr_type == PCIM_HDRTYPE_BRIDGE;
+}
 
 static inline uint32_t pci_bar_offset(uint32_t idx)
 {

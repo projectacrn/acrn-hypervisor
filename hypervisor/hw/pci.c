@@ -760,6 +760,8 @@ struct pci_pdev *init_pdev(uint16_t pbdf, uint32_t drhd_index)
 			pdev = &pci_pdev_array[num_pci_pdev];
 			pdev->bdf.value = pbdf;
 			pdev->hdr_type = hdr_type;
+			pdev->base_class = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_CLASS, 1U);
+			pdev->sub_class = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_SUBCLASS, 1U);
 			pdev->nr_bars = pci_pdev_get_nr_bars(hdr_type);
 			if (hdr_type == PCIM_HDRTYPE_NORMAL) {
 				pdev_save_bar(pdev);

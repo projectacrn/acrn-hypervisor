@@ -36,7 +36,7 @@
 #define CONFIG_SOS_VM		.load_order = SOS_VM,	\
 				.uuid = SOS_VM_UUID,	\
 				.severity = SEVERITY_SOS,	\
-				.pci_dev_num = SOS_EMULATED_PCI_DEV_NUM,	\
+				.pci_dev_num = 0U,	\
 				.pci_devs = sos_pci_devs
 
 #define CONFIG_SAFETY_VM(idx)	.load_order = PRE_LAUNCHED_VM,	\
