@@ -9,19 +9,14 @@
 #include <boot.h>
 #include <pgtable.h>
 #include <dbg_cmd.h>
-#include <logmsg.h>
 
 void parse_hv_cmdline(void)
 {
-	const char *start = NULL;
-	const char *end = NULL;
+	const char *start = NULL, *end = NULL;
+	struct acrn_multiboot_info *mbi = &acrn_mbi;
 
-	if (boot_from_multiboot1()) {
-		struct multiboot_info *mbi = (struct multiboot_info *)(hpa2hva_early((uint64_t)boot_regs[1]));
-
-		if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
-			start = (char *)hpa2hva_early((uint64_t)mbi->mi_cmdline);
-		}
+	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
+		start = mbi->mi_cmdline;
 	}
 
 	while ((start != NULL) && ((*start) != '\0')) {

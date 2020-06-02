@@ -72,6 +72,10 @@ int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
 
 	while ((mb2_tag->type != MULTIBOOT2_TAG_TYPE_END) && (mb2_tag < mb2_tag_end)) {
 		switch (mb2_tag->type) {
+		case MULTIBOOT2_TAG_TYPE_CMDLINE:
+			mbi->mi_cmdline = ((struct multiboot2_tag_string *)mb2_tag)->string;
+			mbi->mi_flags |= MULTIBOOT_INFO_HAS_CMDLINE;
+			break;
 		case MULTIBOOT2_TAG_TYPE_MMAP:
 			mb2_mmap_to_mbi(mbi, (const struct multiboot2_tag_mmap *)mb2_tag);
 			break;
