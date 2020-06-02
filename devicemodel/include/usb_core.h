@@ -188,6 +188,7 @@ struct usb_native_devinfo {
 	uint16_t bcd;
 	uint16_t pid;
 	uint16_t vid;
+	uint32_t slot;
 	enum usb_native_devtype type;
 	struct usb_devpath path;
 	void *priv_data;
