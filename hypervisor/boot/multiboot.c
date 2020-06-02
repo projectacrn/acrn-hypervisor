@@ -11,7 +11,7 @@
 #include <rtl.h>
 #include <logmsg.h>
 
-static struct acrn_multiboot_info acrn_mbi = { 0U };
+struct acrn_multiboot_info acrn_mbi = { 0U };
 
 static int32_t mbi_status;
 
@@ -50,8 +50,10 @@ int32_t sanitize_multiboot_info(void)
 	} else if (boot_from_multiboot2()) {
 		pr_info("Multiboot2 detected.");
 		mmap_entry_size = sizeof(struct multiboot2_mmap_entry);
-	}
 #endif
+	} else {
+		/* mbi_status is still -ENODEV, nothing to do here */
+	}
 
 	if ((acrn_mbi.mi_mmap_entries != 0U) && (acrn_mbi.mi_mmap_va != NULL)) {
 		if (acrn_mbi.mi_mmap_entries > E820_MAX_ENTRIES) {

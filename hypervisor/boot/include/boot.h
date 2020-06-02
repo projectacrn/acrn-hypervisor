@@ -73,6 +73,11 @@ static inline bool boot_from_multiboot2(void)
 int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info);
 #endif
 
+/*
+ * The extern declaration for acrn_mbi is for cmdline.c use only, other functions should use
+ * get_multiboot_info() API to access struct acrn_mbi because it has explict @post condition
+ */
+extern struct acrn_multiboot_info acrn_mbi;
 struct acrn_multiboot_info *get_multiboot_info(void);
 void init_acrn_multiboot_info(void);
 int32_t sanitize_multiboot_info(void);
