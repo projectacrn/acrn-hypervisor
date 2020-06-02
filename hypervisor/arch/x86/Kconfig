@@ -325,7 +325,7 @@ config L1D_FLUSH_VMENTRY_ENABLED
 
 config UEFI_OS_LOADER_NAME
 	string "UEFI OS loader name"
-	default "\\EFI\\org.clearlinux\\bootloaderx64.efi"
+	default "\\EFI\\BOOT\\bootx64.efi"
 	help
 	  Name of the UEFI bootloader that starts the Service VM. This is
 	  typically the systemd-boot or Grub bootloader but could be any other
