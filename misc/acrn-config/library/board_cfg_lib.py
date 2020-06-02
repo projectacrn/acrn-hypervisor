@@ -462,3 +462,33 @@ def parser_pci():
         PCI_DEV_BAR_DESC.pci_bar_dic[cur_bdf] = tmp_bar_dic
 
     return sub_name_count
+
+
+def is_rdt_supported():
+    """
+    Returns True if platform supports RDT else False
+    """
+    (rdt_resources, rdt_res_clos_max, _) = clos_info_parser(common.BOARD_INFO_FILE)
+    if len(rdt_resources) == 0 or len(rdt_res_clos_max) == 0:
+        return False
+    else:
+        return True
+
+
+def get_rdt_select_opt():
+
+    support_sel = ['n']
+    if is_rdt_supported():
+        support_sel.append('y')
+    return support_sel
+
+
+def get_clos_mask_num():
+    clos_mask_num = 0
+    (rdt_resources, rdt_res_clos_max, _) = clos_info_parser(common.BOARD_INFO_FILE)
+    if len(rdt_resources) == 0 or len(rdt_res_clos_max) == 0:
+        clos_mask_num = 0
+    else:
+        clos_mask_num = min(rdt_res_clos_max)
+
+    return clos_mask_num

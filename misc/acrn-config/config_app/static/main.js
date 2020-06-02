@@ -401,6 +401,18 @@ $().ready(function(){
         show_com_target(id, value);
     });
 
+    $("select[ID$='FEATURES,RDT,CDP_ENABLED']").change(function(){
+        var id = $(this).attr('id');
+        var value = $(this).val();
+        update_vcpu_clos_option(id, value);
+    });
+
+    $("select[ID$='FEATURES,RDT,CDP_ENABLED']").each(function(index, item) {
+        var id = $(this).attr('id');
+        var value = $(item).val();
+        update_vcpu_clos_option(id, value);
+    });
+
     $(document).on('click', "button:contains('+')", function() {
         if($(this).text() != '+')
             return;
@@ -408,7 +420,21 @@ $().ready(function(){
         var curr_id = curr_item_id.substr(curr_item_id.lastIndexOf('_')+1);
         var config_item = $(this).parent().parent();
         var config_item_added = config_item.clone();
-        var id_added = (parseInt(curr_id)+1).toString();
+        var config_vm = config_item.parent();
+        var vcpu_index_list = [];
+        config_vm.children().each(function(){
+            if($(this).find("button:contains('+')").size() > 0) {
+                var btn_add_vm_id = $(this).find("button:contains('+')").attr('id');
+                vcpu_index_list.push(parseInt(btn_add_vm_id.substr(btn_add_vm_id.lastIndexOf('_')+1)));
+            }
+        });
+        var id_added = 0;
+        for (i=0; i<100; i++) {
+            if (!vcpu_index_list.includes(i)) {
+                id_added = i;
+                break
+            }
+        }
         var id_pre_added = curr_item_id.substr(0, curr_item_id.lastIndexOf('_'));
         config_item_added.find("button:contains('+')").attr('id', id_pre_added+'_'+id_added);
         config_item_added.find("button:contains('-')").attr('id', id_pre_added.replace('add_', 'remove_')+'_'+id_added);
@@ -418,12 +444,50 @@ $().ready(function(){
         config_item_added.find('.selectpicker').val('default').selectpicker('deselectAll');;
         config_item_added.find('.selectpicker').selectpicker('render');
         config_item_added.insertAfter(config_item);
+
+        if(curr_item_id.indexOf('add_vcpu')>=0) {
+            var config_vm = config_item.parent();
+            var curr_vcpu_index = vcpu_index_list.indexOf(parseInt(curr_id))
+            var vcpu_clos_item = config_vm.find("label:contains('vcpu_clos')").first().parent();
+            while(curr_vcpu_index > 0) {
+                vcpu_clos_item = vcpu_clos_item.next();
+                curr_vcpu_index -= 1;
+            }
+
+            var vcpu_clos_item_added = vcpu_clos_item.clone();
+            vcpu_clos_item_added.find("label:first").text("");
+            vcpu_clos_item_added.find('.bootstrap-select').replaceWith(function() { return $('select', this); });
+            vcpu_clos_item_added.find('.selectpicker').val('default').selectpicker('deselectAll');;
+            vcpu_clos_item_added.find('.selectpicker').selectpicker('render');
+            vcpu_clos_item_added.insertAfter(vcpu_clos_item);
+        }
     });
 
     $(document).on('click', "button:contains('-')", function() {
         if($(this).text() != '-')
             return;
         var config_item = $(this).parent().parent();
+        var curr_item_id = $(this).attr('id');
+        if(curr_item_id.indexOf('remove_vcpu')>=0) {
+            var config_vm = config_item.parent();
+            var vcpu_index_list = [];
+            config_vm.children().each(function(){
+                if($(this).find("button:contains('+')").size() > 0) {
+                    var btn_del_vm_id = $(this).find("button:contains('+')").attr('id');
+                    vcpu_index_list.push(parseInt(btn_del_vm_id.substr(btn_del_vm_id.lastIndexOf('_')+1)));
+                }
+            });
+            var curr_item_id = $(this).attr('id');
+            var curr_id = parseInt(curr_item_id.substr(curr_item_id.lastIndexOf('_')+1));
+            curr_vcpu_index = vcpu_index_list.indexOf(curr_id);
+
+            var vcpu_clos_item = config_vm.find("label:contains('vcpu_clos')").first().parent();
+            while(curr_vcpu_index > 0) {
+                vcpu_clos_item = vcpu_clos_item.next();
+                curr_vcpu_index -= 1;
+            }
+            vcpu_clos_item.remove();
+        }
         config_item.remove();
     });
 
@@ -469,6 +533,35 @@ function show_com_target(id, value) {
         $('#'+id2+'_label2').show();
         $('#'+id2+'_config').show();
         $('#'+id2+'_err').show();
+    }
+}
+
+
+function update_vcpu_clos_option(id, value) {
+    if(value == 'y') {
+        $("select[ID$='clos,vcpu_clos']").each(function(){
+            len = $(this).find('option').length;
+            option = $(this).find('option').first();
+            for(i=0; i<len; i++){
+                if(i>(len-1)/2){
+                   option.attr('disabled','disabled');
+                }
+                option = option.next();
+            }
+            $(this).selectpicker('render');
+        });
+    } else {
+        $("select[ID$='clos,vcpu_clos']").each(function(){
+            len = $(this).find('option').length;
+            option = $(this).find('option').first();
+            for(i=0; i<len; i++){
+                if(i>(len-1)/2){
+                   option.removeAttr('disabled');
+                }
+                option = option.next();
+            }
+            $(this).selectpicker('render');
+        });
     }
 }
 
@@ -570,7 +663,13 @@ function save_scenario(generator=null){
     $("input").each(function(){
         var id = $(this).attr('id');
         var value = $(this).val();
-        if(id!='new_scenario_name' && id!='new_scenario_name2' && id!='board_info_file' && id!='board_info_upload'
+        if(id.indexOf('CLOS_MASK')>=0 ) {
+            if(id in scenario_config) {
+                scenario_config[id].push(value);
+            } else {
+                scenario_config[id] = [value];
+            }
+        } else if(id!='new_scenario_name' && id!='new_scenario_name2' && id!='board_info_file' && id!='board_info_upload'
             && id!='scenario_file' && id!='create_name' && id!='load_scenario_name2' && id!='load_launch_name2'
             && id!='src_path') {
             scenario_config[id] = value;
@@ -586,7 +685,7 @@ function save_scenario(generator=null){
     $("select").each(function(){
         var id = $(this).attr('id');
         var value = $(this).val();
-        if(id.indexOf('pcpu_id')>=0 || id.indexOf('pci_dev')>=0) {
+        if(id.indexOf('pcpu_id')>=0 || id.indexOf('pci_dev')>=0 || id.indexOf('vcpu_clos')>=0) {
             if(id in scenario_config) {
                 scenario_config[id].push(value);
             } else {

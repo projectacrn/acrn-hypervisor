@@ -210,6 +210,76 @@ the source files will be generated into default path and overwirte the previous 
                             {% set first_child = [] %}
                             {% for sub_elem in elem.getchildren() %}
                                 {% set sub_elem_text = sub_elem.text if sub_elem.text != None else '' %}
+
+                                {% if sub_elem.tag == 'RDT' %}
+                                    {% for sub_elem_2 in sub_elem.getchildren() %}
+                                    {% if ','.join([vm.tag, elem.tag, sub_elem.tag, sub_elem_2.tag]) not in scenario_item_values %}
+                                    <div class="form-group">
+                                        <label class="col-sm-1 control-label" data-toggle="tooltip"
+                                               title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
+                                        </label>
+                                        <label class="col-sm-2 control-label" data-toggle="tooltip"
+                                               title="{{sub_elem_2.attrib['desc'] if 'desc' in sub_elem_2.attrib else sub_elem.attrib['desc']}}">
+                                        {{sub_elem.tag}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{sub_elem_2.tag}}</label>
+                                        <div class="col-sm-6">
+                                        {% if 'readonly' in sub_elem_2.attrib and sub_elem_2.attrib['readonly'] == 'true' %}
+                                        <input type="text" class="form-control"
+                                               id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}"
+                                               readonly vaule={{sub_elem_2.text}}></input>
+                                        {% else %}
+                                        <input type="text" class="form-control"
+				               id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}" value={{sub_elem_2.text}}></input>
+                                        {% endif %}
+                                        </div>
+                                        <p id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}_err" class="col-sm-3"></p>
+                                    </div>
+                                    {% elif sub_elem_2.tag != 'CLOS_MASK' %}
+                                    <div class="form-group">
+                                        <label class="col-sm-1 control-label" data-toggle="tooltip"
+                                               title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
+                                        </label>
+                                        <label class="col-sm-2 control-label" data-toggle="tooltip"
+                                               title="{{sub_elem_2.attrib['desc'] if 'desc' in sub_elem_2.attrib else sub_elem.attrib['desc']}}">
+                                            {{sub_elem.tag}}&nbsp;&nbsp;&nbsp;&nbsp;{{sub_elem_2.tag}}</label>
+                                        <div class="dropdown col-sm-6">
+                                        {% if 'readonly' in sub_elem_2.attrib and sub_elem_2.attrib['readonly'] == 'true' %}
+                                        <select class="selectpicker" data-width="auto"
+                                                id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}" disabled>
+                                        {% else %}
+                                        <select class="selectpicker" data-width="auto"
+                                                id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}">
+                                        {% endif %}
+                                        <option disabled selected value> -- Select an option -- </option>
+                                        {% for item_value in scenario_item_values[vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag] %}
+                                            {% if item_value == sub_elem_2.text %}
+                                            <option value="{{item_value}}" selected="selected">{{item_value}}</option>
+                                            {% else %}
+                                            <option value="{{item_value}}">{{item_value}}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                        </select>
+                                        </div>
+                                        <p id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}_err" class="col-sm-3"></p>
+                                    </div>
+				    {% else %}
+                                    <div class="form-group">
+                                        <label class="col-sm-1 control-label" data-toggle="tooltip"
+                                               title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
+                                        </label>
+                                        <label class="col-sm-2 control-label" data-toggle="tooltip"
+				               title={{sub_elem_2.attrib['desc'] if 'desc' in sub_elem_2.attrib else sub_elem.attrib['desc']}}>
+                                               {{sub_elem.tag}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{sub_elem_2.tag}}</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control"
+				                   id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}" value={{sub_elem_2.text}}></input>
+                                        </div>
+                                        <p id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}_err" class="col-sm-3"></p>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+
+                                {% else %}
+
                                 {% if 'configurable' not in sub_elem.attrib or sub_elem.attrib['configurable'] != '0' %}
                                 <div class="form-group">
                                     {% if 'id' not in elem.attrib %}
@@ -222,6 +292,7 @@ the source files will be generated into default path and overwirte the previous 
                                                title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
                                         </label>
                                         {% endif %}
+
                                         <label class="col-sm-2 control-label" data-toggle="tooltip"
                                                title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
                                             {{sub_elem.tag}}</label>
@@ -352,6 +423,7 @@ the source files will be generated into default path and overwirte the previous 
                                            class="col-sm-3"></p>
                                     {% endif %}
                                 </div>
+                                {% endif %}
                                 {% endif %}
                             {% endfor %}
                         {% elif 'configurable' not in elem.attrib or elem.attrib['configurable'] != '0' %}

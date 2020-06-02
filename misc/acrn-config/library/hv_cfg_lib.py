@@ -7,6 +7,7 @@ import os
 import sys
 import common
 import getopt
+import board_cfg_lib
 
 
 ERR_LIST = {}
@@ -25,10 +26,14 @@ RANGE_DB = {
 }
 
 
-def empty_check(val, prime_item, item):
+def empty_check(val, prime_item, item, sub_item=''):
     if not val or val == None:
-        key = 'hv,{},{}'.format(prime_item, item)
-        ERR_LIST[key] = "{} should not empty".format(item)
+        if sub_item:
+            key = 'hv,{},{},{}'.format(prime_item, item, sub_item)
+            ERR_LIST[key] = "{} should not empty".format(sub_item)
+        else:
+            key = 'hv,{},{}'.format(prime_item, item)
+            ERR_LIST[key] = "{} should not empty".format(item)
         return True
 
     return False
@@ -100,8 +105,8 @@ def uefi_load_name_check(str_name, mis, mis_uefi_name):
         ERR_LIST[key] = "{} length should be in range[1, 256]".format(mis_uefi_name)
 
 
-def ny_support_check(sel_str, feat, feat_item):
-    if empty_check(sel_str, feat, feat_item):
+def ny_support_check(sel_str, feat, feat_item, feat_sub_leaf=''):
+    if empty_check(sel_str, feat, feat_item, feat_sub_leaf):
         return
     if sel_str not in N_Y:
         key = 'hv,{},{}'.format(feat, feat_item)
@@ -128,3 +133,66 @@ def get_select_range(branch_tag, range_key):
         range_list.append(str(range_i))
 
     return range_list
+
+
+def is_contiguous_bit_set(value):
+
+    bit_1_cnt = 0
+    tmp_val = value
+    is_contiguous = False
+
+    first_p = 0
+    last_p = 0
+
+    while tmp_val > 0:
+        tmp_val &= (tmp_val - 1)
+        bit_1_cnt += 1
+
+    for shift_i in range(32):
+        mask = (0x1 << shift_i)
+        if value & mask:
+            if first_p == 0 and last_p == 0:
+                first_p = shift_i + 1
+            elif first_p != 0:
+                last_p = shift_i + 1
+        else:
+            if first_p == 0 and last_p == 0:
+                continue
+            break
+
+
+    contiguous_cnt = last_p - first_p + 1
+    if bit_1_cnt == contiguous_cnt or bit_1_cnt in (0, 1):
+        is_contiguous = True
+
+    return is_contiguous
+
+
+def cat_max_mask_check(cat_mask_list, feature, cat_str, max_mask_str):
+
+    if not board_cfg_lib.is_rdt_supported():
+        return
+
+    cpu_num = len(board_cfg_lib.get_processor_info())
+    cat_max_mask_settings_len = len(cat_mask_list)
+    if cpu_num != cat_max_mask_settings_len:
+        key = 'hv,{},{},{}'.format(feature, cat_str, max_mask_str)
+        ERR_LIST[key] = "Total {} CPU cores, should set the same number for CLOS_MASK.".format(cpu_num)
+        return
+
+    (_, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
+    clos_max_mask_str = clos_max_mask_list[0].strip('"').strip("'")
+    clos_max_mask = common.num2int(clos_max_mask_str)
+    for val_str in cat_mask_list:
+        if empty_check(val_str, feature, cat_str, max_mask_str):
+            return
+        value = common.num2int(val_str)
+        if value < 0 or value > clos_max_mask:
+            key = 'hv,{},{},{}'.format(feature, cat_str, max_mask_str)
+            ERR_LIST[key] = "{} should be in range[0,{}]".format(max_mask_str, clos_max_mask_str)
+            return
+
+        if not is_contiguous_bit_set(value):
+            key = 'hv,{},{},{}'.format(feature, cat_str, max_mask_str)
+            ERR_LIST[key] = "CLOS_MASK {} should be contiguous bit set.".format(max_mask_str, clos_max_mask_str)
+            return

@@ -48,9 +48,11 @@ class HwInfo:
         :return: clos support list
         """
         self.clos_val = []
+
         (rdt_resources, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(self.board_info)
         if len(rdt_resources) != 0 and len(rdt_res_clos_max) != 0:
             common_clos_max = min(rdt_res_clos_max)
+
             for i_cnt in range(common_clos_max):
                 self.clos_val.append(str(i_cnt))
 
@@ -302,6 +304,7 @@ class VmInfo:
         scenario_cfg_lib.load_vm_check(self.load_vm, "load_vm")
         scenario_cfg_lib.guest_flag_check(self.guest_flags, "guest_flags", "guest_flag")
         err_dic = scenario_cfg_lib.vm_cpu_affinity_check(self.scenario_info, self.cpus_per_vm, "pcpu_id")
+        scenario_cfg_lib.vcpu_clos_check(self.cpus_per_vm, self.clos_per_vm, "clos", "vcpu_clos")
 
         self.mem_info.check_item()
         self.os_cfg.check_item()

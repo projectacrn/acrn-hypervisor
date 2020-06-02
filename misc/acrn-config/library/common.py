@@ -406,7 +406,7 @@ def get_vuart_info_id(config_file, idx):
     return tmp_tag
 
 
-def get_hv_item_tag(config_file, branch_tag, tag_str=''):
+def get_hv_item_tag(config_file, branch_tag, tag_str='', leaf_str=''):
 
     tmp = ''
     root = get_config_root(config_file)
@@ -423,9 +423,25 @@ def get_hv_item_tag(config_file, branch_tag, tag_str=''):
 
                 # for each 3rd level item
                 for leaf in sub:
-                    if leaf.tag == tag_str and leaf.text and leaf.text != None:
-                        tmp = leaf.text
-                    continue
+                    if leaf.tag == tag_str:
+                        if not leaf_str:
+                            if leaf.tag == tag_str and leaf.text and leaf.text != None:
+                                tmp = leaf.text
+                        else:
+                            # for each 4rd level item
+                            tmp_list = []
+                            for leaf_s in leaf:
+                                if leaf_s.tag == leaf_str and leaf_s.text and leaf_s.text != None:
+                                    if leaf_str == "CLOS_MASK":
+                                        tmp_list.append(leaf_s.text)
+                                    else:
+                                        tmp = leaf_s.text
+                                continue
+
+                            if leaf_str == "CLOS_MASK":
+                                tmp = tmp_list
+                                break
+
     return tmp
 
 

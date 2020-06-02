@@ -14,6 +14,26 @@
             <RELOC desc="Enable hypervisor relocation">y</RELOC>
             <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
             <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+            <RDT desc="Intel RDT (Resource Director Technology).">
+                <RDT_ENABLED desc="Enable RDT">n</RDT_ENABLED>
+                <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+            </RDT>
             <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
             <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
             <ACPI_PARSE_ENABLED desc="Enable ACPI runtime parsing.">y</ACPI_PARSE_ENABLED>
@@ -53,7 +73,7 @@
         <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
             <pcpu_id>3</pcpu_id>
         </cpu_affinity>
-        <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+        <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
             <vcpu_clos>0</vcpu_clos>
         </clos>
         <epc_section configurable="0" desc="epc section">
@@ -142,7 +162,7 @@
         <cpu_affinity desc="List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.">
             <pcpu_id>2</pcpu_id>
         </cpu_affinity>
-        <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+        <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
             <vcpu_clos>0</vcpu_clos>
         </clos>
         <epc_section configurable="0" desc="epc section">

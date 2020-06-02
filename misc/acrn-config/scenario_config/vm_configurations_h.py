@@ -37,24 +37,19 @@ def cpu_affinity_output(vm_info, i, config):
     print("#define VM{0}_CONFIG_CPU_AFFINITY\t\t{1}".format(
         i, cpu_bits['cpu_map']), file=config)
 
-def clos_config_output(vm_info, i, config):
+def clos_config_output(scenario_items, i, config):
     """
     Output the macro vcpu affinity
-    :param vm_info: the data structure have all the xml items values
+    :param scenario_items: the data structure have all the xml items values
     :param i: the index of vm id
     :param config: file pointor to store the information
     """
-    (rdt_res, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
-    if len(rdt_res_clos_max) != 0:
-        common_clos_max = min(rdt_res_clos_max)
-    else:
-        common_clos_max = 0
+    vm_info = scenario_items['vm']
+    hv_info = scenario_items['hv']
 
-    if common_clos_max == 0:
-        return
-
-    clos_config = vm_info.get_clos_bitmap(i)
-    print("#define VM{0}_VCPU_CLOS\t\t{1}".format(i, clos_config['clos_map']), file=config)
+    if board_cfg_lib.is_rdt_supported() and hv_info.features.rdt_enabled == 'y':
+        clos_config = vm_info.get_clos_bitmap(i)
+        print("#define VM{0}_VCPU_CLOS\t\t{1}".format(i, clos_config['clos_map']), file=config)
 
 def scenario_vm_num(scenario_items, config):
 
@@ -65,8 +60,9 @@ def scenario_vm_num(scenario_items, config):
     print("#define CONFIG_MAX_KATA_VM_NUM\t\t{}U".format(scenario_cfg_lib.KATA_VM_COUNT), file=config)
 
 
-def gen_pre_launch_vm(vm_info, config):
+def gen_pre_launch_vm(scenario_items, config):
 
+    vm_info = scenario_items['vm']
     vm_i = 0
     for vm_type in common.VM_TYPES.values():
         if "PRE_LAUNCHED_VM" != scenario_cfg_lib.VM_DB[vm_type]['load_type']:
@@ -75,7 +71,7 @@ def gen_pre_launch_vm(vm_info, config):
 
         cpu_bits = vm_info.get_cpu_bitmap(vm_i)
         cpu_affinity_output(vm_info, vm_i, config)
-        clos_config_output(vm_info, vm_i, config)
+        clos_config_output(scenario_items, vm_i, config)
         print("#define VM{0}_CONFIG_MEM_START_HPA\t\t{1}UL".format(
             vm_i, vm_info.mem_info.mem_start_hpa[vm_i]), file=config)
         print("#define VM{0}_CONFIG_MEM_SIZE\t\t\t{1}UL".format(
@@ -90,17 +86,18 @@ def gen_pre_launch_vm(vm_info, config):
         vm_i += 1
 
 
-def gen_post_launch_header(vm_info, config):
+def gen_post_launch_header(scenario_items, config):
     vm_i = 0
+    vm_info = scenario_items['vm']
     for vm_type in common.VM_TYPES.values():
         if "POST_LAUNCHED_VM" != scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             vm_i += 1
             continue
         cpu_affinity_output(vm_info, vm_i, config)
-        clos_config_output(vm_info, vm_i, config)
+        clos_config_output(scenario_items, vm_i, config)
         vm_i += 1
 
-def gen_sos_header(vm_info, config):
+def gen_sos_header(scenario_items, config):
 
     if 'SOS_VM' not in common.VM_TYPES.values():
         return
@@ -109,12 +106,16 @@ def gen_sos_header(vm_info, config):
     print("\t\t\t\t\tSOS_CONSOLE\t\\", file=config)
     print("\t\t\t\t\tSOS_BOOTARGS_DIFF", file=config)
 
+    for vm_i,vm_type in common.VM_TYPES.items():
+        if vm_type == 'SOS_VM':
+            clos_config_output(scenario_items, vm_i, config)
 
-def gen_header_file(vm_info, config):
 
-    gen_post_launch_header(vm_info, config)
-    gen_pre_launch_vm(vm_info, config)
-    gen_sos_header(vm_info, config)
+def gen_header_file(scenario_items, config):
+
+    gen_pre_launch_vm(scenario_items, config)
+    gen_sos_header(scenario_items, config)
+    gen_post_launch_header(scenario_items, config)
 
 
 def get_dm_owned_guest_flag_mask(vm_info, config):
@@ -149,6 +150,6 @@ def generate_file(scenario_items, config):
     scenario_vm_num(scenario_items, config)
     print("", file=config)
 
-    gen_header_file(vm_info, config)
+    gen_header_file(scenario_items, config)
     print("", file=config)
     print("{0}".format(VM_END_DEFINE), file=config)

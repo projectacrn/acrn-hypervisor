@@ -46,7 +46,7 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values['vm,vm_type'] = scenario_cfg_lib.LOAD_VM_TYPE
     scenario_item_values["vm,cpu_affinity"] = hw_info.get_processor_val()
     scenario_item_values["vm,guest_flags"] = guest_flags
-    scenario_item_values["vm,clos"] = hw_info.get_clos_val()
+    scenario_item_values["vm,clos,vcpu_clos"] = hw_info.get_clos_val()
     scenario_item_values["vm,pci_devs"] = scenario_cfg_lib.avl_pci_devs()
     scenario_item_values["vm,os_config,kern_type"] = scenario_cfg_lib.KERN_TYPE_LIST
     scenario_item_values.update(scenario_cfg_lib.avl_vuart_ui_select(scenario_info))
@@ -64,6 +64,9 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["hv,CAPACITIES,MAX_IOAPIC_NUM"] = hv_cfg_lib.get_select_range("CAPACITIES", "IOAPIC_NUM")
 
     scenario_item_values["hv,FEATURES,MULTIBOOT2"] = hv_cfg_lib.N_Y
+    scenario_item_values["hv,FEATURES,RDT,RDT_ENABLED"] = board_cfg_lib.get_rdt_select_opt()
+    scenario_item_values["hv,FEATURES,RDT,CDP_ENABLED"] = board_cfg_lib.get_rdt_select_opt()
+    scenario_item_values["hv,FEATURES,RDT,CLOS_MASK"] = board_cfg_lib.get_clos_mask_num()
     scenario_item_values["hv,FEATURES,SCHEDULER"] = hv_cfg_lib.SCHEDULER_TYPE
     scenario_item_values["hv,FEATURES,RELOC"] = hv_cfg_lib.N_Y
     scenario_item_values["hv,FEATURES,HYPERV_ENABLED"] = hv_cfg_lib.N_Y
@@ -178,7 +181,7 @@ def main(args):
 
     # generate vm_configuration.c
     with open(vm_config_c, 'w') as config:
-        err_dic = vm_configurations_c.generate_file(scenario_items['vm'], config)
+        err_dic = vm_configurations_c.generate_file(scenario_items, config)
         if err_dic:
             return err_dic
 

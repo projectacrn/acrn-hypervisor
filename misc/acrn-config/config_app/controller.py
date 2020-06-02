@@ -208,6 +208,18 @@ class XmlConfig:
             new_node = ElementTree.SubElement(dest_node, key, attrib={'desc': desc})
             new_node.text = value
 
+    def get_curr_elem(self, *args):
+        """
+        get elements for current path.
+        :param args: the path of the element.
+        :return: current element.
+        """
+        if self._curr_xml_tree is None:
+            return
+
+        dest_node = self._get_dest_node(*args)
+        return dest_node
+
     def clone_curr_elem(self, elem, *args):
         """
         clone elements for current path.
@@ -234,6 +246,18 @@ class XmlConfig:
 
         dest_node = self._get_dest_node(*args)
         dest_node.insert(index, elem)
+
+    def delete_curr_elem(self, *args):
+        """
+        delete the element by its path.
+        :param args: the path of the element.
+        :return: None.
+        """
+        if self._curr_xml_tree is None:
+            return
+        father_node = self._get_dest_node(*args[:-1])
+        dest_node = self._get_dest_node(*args)
+        father_node.remove(dest_node)
 
     def delete_curr_key(self, *args):
         """

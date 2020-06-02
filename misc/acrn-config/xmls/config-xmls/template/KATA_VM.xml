@@ -1,12 +1,12 @@
 <acrn-config board="" scenario="">
   <vm id="0" configurable="1" desc="specific for Kata">
     <vm_type readonly="true" desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM.">KATA_VM</vm_type>
-    <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
-        <vcpu_clos>0</vcpu_clos>
-    </clos>
     <cpu_affinity desc="List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.">
         <pcpu_id></pcpu_id>
     </cpu_affinity>
+    <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+        <vcpu_clos>0</vcpu_clos>
+    </clos>
     <epc_section configurable="0" desc="epc section">
         <base desc="SGX EPC section base, must be page aligned">0</base>
         <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>

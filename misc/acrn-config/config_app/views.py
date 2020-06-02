@@ -147,7 +147,6 @@ def save_scenario():
     :return: the error list for the edited scenario setting.
     """
     scenario_config_data = request.json if request.method == "POST" else request.args
-
     xml_configs = get_xml_configs()
     board_type = xml_configs[1]
     scenario_config = xml_configs[3]
@@ -426,6 +425,7 @@ def create_setting():
     create_name = create_config_data['create_name']
 
     xml_configs = get_xml_configs(True)
+    board_info = xml_configs[0]
     board_type = xml_configs[1]
     scenario_config = xml_configs[2]
     launch_config = xml_configs[3]
@@ -470,7 +470,16 @@ def create_setting():
         copyfile(src_file_name,
                  os.path.join(current_app.config.get('CONFIG_PATH'), board_type, 'user_defined',
                               create_name + '.xml'))
-
+        if mode == 'create':
+            # update RDT->CLOS_MASK according to board xml
+            scenario_config.set_curr(create_name)
+            rdt_clos_max = get_board_rdt_clos_max(board_info)
+            elem_clos_max = scenario_config.get_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
+            if rdt_clos_max > 0:
+                for i in range(rdt_clos_max - 1):
+                    scenario_config.clone_curr_elem(elem_clos_max, 'hv', 'FEATURES', 'RDT')
+            else:
+                scenario_config.delete_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
         scenario_config.save(create_name)
         return {'status': 'success', 'setting': create_name, 'error_list': {}}
 
@@ -616,6 +625,17 @@ def upload_board_info():
                                                             board_type))
                         xml_config.set_curr(generic_name[:-4])
                         xml_config.set_curr_attr('board', board_type)
+                        # update RDT->CLOS_MASK according to board xml
+                        xml_config_root = xml_config.get_curr_root()
+                        if 'board' in xml_config_root.attrib and 'scenario' in xml_config_root.attrib \
+                                and 'uos_launcher' not in xml_config_root.attrib:
+                            rdt_clos_max = get_board_rdt_clos_max(filename.rsplit('.', 1)[0])
+                            elem_clos_max = xml_config.get_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
+                            if rdt_clos_max > 0:
+                                for i in range(rdt_clos_max-1):
+                                    xml_config.clone_curr_elem(elem_clos_max, 'hv', 'FEATURES', 'RDT')
+                            else:
+                                xml_config.delete_curr_elem('hv', 'FEATURES', 'RDT', 'CLOS_MASK')
                         xml_config.save(generic_name[:-4], user_defined=False)
 
             board_info = os.path.splitext(file.filename)[0]
@@ -924,7 +944,7 @@ def get_board_info(board_info):
     """
     get board info type
     :param board_info: the board info file
-    :return: the board type
+    :return: the board info
     """
     board_config = get_board_config(board_info)
     bios_info = None
@@ -949,6 +969,32 @@ def get_board_info(board_info):
                                 base_board_info += ('\n' + line.strip())
 
     return (bios_info, base_board_info)
+
+
+def get_board_rdt_clos_max(board_info):
+    """
+    get board info type
+    :param board_info: the board info file
+    :return: the rdt clos max
+    """
+    board_config = get_board_config(board_info)
+    rdt_clos_max = 0
+
+    if board_config is not None:
+        board_info_root = board_config.get_curr_root()
+        if board_info_root:
+            for item in board_info_root.getchildren():
+                if item.tag == 'CLOS_INFO':
+                    for line in item.text.split('\n'):
+                        line = line.strip()
+                        if line.startswith('rdt resource clos max:'):
+                            try:
+                                rdt_clos_max = int(line.split(':')[1].strip())
+                                break
+                            except:
+                                pass
+
+    return rdt_clos_max
 
 
 def assign_vm_id(scenario_config):

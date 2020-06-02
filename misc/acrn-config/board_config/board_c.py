@@ -91,17 +91,21 @@ def gen_dmar_structure(config):
     print("};", file=config)
 
 
-def populate_clos_mask_msr(rdt_res, common_clos_max, mask, config):
+def populate_clos_mask_msr(rdt_res, common_clos_max, config):
     """
     Populate the clos bitmask and msr index for a given RDT resource
     :param rdt_res: it is a string representing the RDT resource
     :param common_clos_max: Least common clos supported by all RDT resource
-    :param mask: Max CLOS mask supported by the RDT resource
     :param config: it is a file pointer of board information for writing to
     """
+    cat_mask_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "CLOS_MASK")
+    cat_max_mask_settings_len = len(cat_mask_list)
     for idx in range(common_clos_max):
         print("\t{", file=config)
-        print("\t\t.clos_mask = {0}U,".format(hex(mask)), file=config)
+        if idx < cat_max_mask_settings_len:
+            print("\t\t.clos_mask = {0}U,".format(cat_mask_list[idx]), file=config)
+        else:
+            print("\t\t.clos_mask = 0xffU,", file=config)
         print("\t\t.msr_index = MSR_IA32_{0}_MASK_BASE + {1},".format(
               rdt_res, idx), file=config)
         print("\t},", file=config)
@@ -129,7 +133,7 @@ def gen_rdt_res(config):
     err_dic = {}
     rdt_res_str =""
     res_present = [0, 0, 0]
-    (rdt_resources, rdt_res_clos_max, rdt_res_mask_max) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
+    (rdt_resources, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
     if len(rdt_res_clos_max) != 0:
         common_clos_max = min(rdt_res_clos_max)
     else:
@@ -151,14 +155,14 @@ def gen_rdt_res(config):
                 rdt_res_str = "l2"
                 print("struct platform_clos_info platform_{0}_clos_array[{1}] = {{".format(rdt_res_str,
                       "MAX_PLATFORM_CLOS_NUM"), file=config)
-                populate_clos_mask_msr(rdt_res, common_clos_max, int(rdt_res_mask_max[idx].strip('\''), 16), config)
+                populate_clos_mask_msr(rdt_res, common_clos_max, config)
                 print("};\n", file=config)
                 res_present[RDT.L2.value] = 1
             elif rdt_res == "L3":
                 rdt_res_str = "l3"
                 print("struct platform_clos_info platform_{0}_clos_array[{1}] = {{".format(rdt_res_str,
                       "MAX_PLATFORM_CLOS_NUM"), file=config)
-                populate_clos_mask_msr(rdt_res, common_clos_max, int(rdt_res_mask_max[idx].strip('\''), 16), config)
+                populate_clos_mask_msr(rdt_res, common_clos_max, config)
                 print("};\n", file=config)
                 res_present[RDT.L3.value] = 1
             elif rdt_res == "MBA":
