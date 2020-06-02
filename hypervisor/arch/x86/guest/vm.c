@@ -138,15 +138,12 @@ bool is_pi_capable(const struct acrn_vm *vm)
 	return (platform_caps.pi && (!is_lapic_pt_configured(vm)));
 }
 
-static struct acrn_vm *get_highest_severity_vm(void)
+struct acrn_vm *get_highest_severity_vm(bool runtime)
 {
 	uint16_t vm_id, highest_vm_id = 0U;
-	struct acrn_vm *vm = NULL;
 
 	for (vm_id = 1U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
-		vm = get_vm_from_vmid(vm_id);
-
-		if (is_poweroff_vm(vm)) {
+		if (runtime && is_poweroff_vm(get_vm_from_vmid(vm_id))) {
 			/* If vm is non-existed or shutdown, it's not highest severity VM */
 			continue;
 		}
@@ -157,14 +154,6 @@ static struct acrn_vm *get_highest_severity_vm(void)
 	}
 
 	return get_vm_from_vmid(highest_vm_id);
-}
-
-/**
- * @pre vm != NULL && vm_config != NULL && vm->vmid < CONFIG_MAX_VM_NUM
- */
-bool is_highest_severity_vm(const struct acrn_vm *vm)
-{
-	return (get_highest_severity_vm() == vm);
 }
 
 /**

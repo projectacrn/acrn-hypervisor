@@ -229,7 +229,7 @@ bool pdev_need_bar_restore(const struct pci_pdev *pdev)
 	bool need_restore = false;
 	uint32_t idx, bar;
 
-	for (idx = 0U; idx < PCI_STD_NUM_BARS; idx++) {
+	for (idx = 0U; idx < pdev->nr_bars; idx++) {
 		bar = pci_pdev_read_cfg(pdev->bdf, pci_bar_offset(idx), 4U);
 		if (bar != pdev->bars[idx]) {
 			need_restore = true;
@@ -244,7 +244,7 @@ static inline void pdev_save_bar(struct pci_pdev *pdev)
 {
 	uint32_t idx;
 
-	for (idx = 0U; idx < PCI_STD_NUM_BARS; idx++) {
+	for (idx = 0U; idx < pdev->nr_bars; idx++) {
 		pdev->bars[idx] = pci_pdev_read_cfg(pdev->bdf, pci_bar_offset(idx), 4U);
 	}
 }
@@ -253,7 +253,7 @@ void pdev_restore_bar(const struct pci_pdev *pdev)
 {
 	uint32_t idx;
 
-	for (idx = 0U; idx < PCI_STD_NUM_BARS; idx++) {
+	for (idx = 0U; idx < pdev->nr_bars; idx++) {
 		pci_pdev_write_cfg(pdev->bdf, pci_bar_offset(idx), 4U, pdev->bars[idx]);
 	}
 }

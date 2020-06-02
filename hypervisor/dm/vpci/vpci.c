@@ -441,6 +441,7 @@ static void read_cfg_header(const struct pci_vdev *vdev,
 			*val = ~0U;
 		}
 	} else {
+		/* ToDo: add cfg_hdr_perm for Type 1 device */
 		if (bitmap32_test(((uint16_t)offset) >> 2U, &cfg_hdr_perm.pt_mask)) {
 			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
 
@@ -478,6 +479,7 @@ static void write_cfg_header(struct pci_vdev *vdev,
 			}
 		}
 
+		/* ToDo: add cfg_hdr_perm for Type 1 device */
 		if (!bitmap32_test(((uint16_t)offset) >> 2U, &cfg_hdr_perm.ro_mask)) {
 			if (bitmap32_test(((uint16_t)offset) >> 2U, &cfg_hdr_perm.pt_mask)) {
 				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
@@ -624,12 +626,16 @@ struct pci_vdev *vpci_init_vdev(struct acrn_vpci *vpci, struct acrn_vm_pci_dev_c
 	if (dev_config->vdev_ops != NULL) {
 		vdev->vdev_ops = dev_config->vdev_ops;
 	} else {
-		if (is_bridge(vdev->pdev)) {
-			vdev->vdev_ops = &vpci_bridge_ops;
-		} else if (is_host_bridge(vdev->pdev)) {
-			vdev->vdev_ops = &vhostbridge_ops;
-		} else {
+		if (get_highest_severity_vm(false) == vpci2vm(vpci)) {
 			vdev->vdev_ops = &pci_pt_dev_ops;
+		} else {
+			if (is_bridge(vdev->pdev)) {
+				vdev->vdev_ops = &vpci_bridge_ops;
+			} else if (is_host_bridge(vdev->pdev)) {
+				vdev->vdev_ops = &vhostbridge_ops;
+			} else {
+				vdev->vdev_ops = &pci_pt_dev_ops;
+			}
 		}
 
 		ASSERT(dev_config->emu_type == PCI_DEV_TYPE_PTDEV,
@@ -682,7 +688,8 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pc
 	 * For now, we don't support assignment of PF to a UOS.
 	 */
 	if ((vdev_in_sos != NULL) && (vdev_in_sos->user == vdev_in_sos) &&
-			(vdev_in_sos->pdev != NULL) && (!has_sriov_cap(vdev_in_sos))) {
+			(vdev_in_sos->pdev != NULL) && (!has_sriov_cap(vdev_in_sos)) &&
+			!is_host_bridge(vdev_in_sos->pdev) && !is_bridge(vdev_in_sos->pdev)) {
 		/* ToDo: Each PT device must support one type reset */
 		if (!vdev_in_sos->pdev->has_pm_reset && !vdev_in_sos->pdev->has_flr &&
 				!vdev_in_sos->pdev->has_af_flr) {

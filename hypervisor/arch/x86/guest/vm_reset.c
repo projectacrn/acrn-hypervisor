@@ -84,7 +84,7 @@ static bool handle_common_reset_reg_write(struct acrn_vm *vm, bool reset)
 	bool ret = true;
 
 	if (reset) {
-		if (is_highest_severity_vm(vm)) {
+		if (get_highest_severity_vm(true) == vm) {
 			reset_host();
 		} else if (is_postlaunched_vm(vm)) {
 			/* re-inject to DM */
