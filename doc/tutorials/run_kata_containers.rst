@@ -4,7 +4,8 @@ Run Kata Containers on a Service VM
 ###################################
 
 This tutorial describes how to install, configure, and run `Kata Containers
-<https://katacontainers.io/>`_ on the ACRN Service VM. In this configuration,
+<https://katacontainers.io/>`_ on the Ubuntu based Service VM with the ACRN
+hypervisor. In this configuration,
 Kata Containers leverage the ACRN hypervisor instead of QEMU which is used by
 default. Refer to the `Kata Containers with ACRN
 <https://drive.google.com/file/d/1ZrqM5ouWUJA0FeIWhU_aitEJe8781rpe/view?usp=sharing>`_
@@ -18,54 +19,68 @@ Prerequisites
 #. Refer to the :ref:`ACRN supported hardware <hardware>`.
 #. For a default prebuilt ACRN binary in the E2E package, you must have 4
    CPU cores or enable "CPU Hyper-Threading" in order to have 4 CPU threads for 2 CPU cores.
-#. Follow :ref:`these instructions <kbl-nuc-sdc>` to set up the ACRN Service VM.
+#. Follow :ref:`these instructions <Ubuntu Service OS>` to set up the ACRN Service VM
+   based on Ubuntu. Please note that only ACRN hypervisors compiled for
+   SDC scenario support Kata Containers currently.
 
 
 Install Docker
 **************
 
-.. code-block:: none
+The following instructions install Docker* on the Ubuntu Service VM.
+Refer to the `Get Docker Engine - Community for Ubuntu
+<https://docs.docker.com/engine/install/ubuntu/>`_
+installation guide for detailed information.
 
-   $ sudo swupd bundle-add containers-basic
-   $ sudo systemctl enable docker
-   $ sudo systemctl start docker
+#. Install the following prerequisite packages:
+
+   .. code-block:: none
+
+      $ sudo apt-get install apt-transport-https ca-certificates curl
+
+#. Run the following commands to add Docker's official GPG key,
+   set up the repository, and install the Docker Engine - Community
+   from the repository:
+
+   .. code-block:: none
+
+      $ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+      $ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+      $ sudo apt-get update
+      $ sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
 Install Kata Containers
 ***********************
 
-The Kata Containers installation from Clear Linux's official repository does
-not work with ACRN at the moment. Therefore, you must install Kata
-Containers using the `manual installation
-<https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md>`__
-instructions (using a ``rootfs`` image).
+Kata Containers provide a variety of installation methods, this guide uses
+:command:`kata-manager` to automate the Kata Containers installation procedure.
 
-#. Install the build dependencies.
+#. Install Kata Containers packages:
 
    .. code-block:: none
 
-      $ sudo swupd bundle-add go-basic devpkg-elfutils
+      $ bash -c "$(curl -fsSL https://raw.githubusercontent.com/kata-containers/tests/master/cmd/kata-manager/kata-manager.sh) install-packages"
 
-#. Install Kata Containers.
+#. Add the following settings to :file:`/etc/docker/daemon.json` to configure
+   Docker to use Kata Containers by default. You may need to create the
+   file if it doesn't exist.
 
-   At a high level, the `manual installation
-   <https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md>`__
-   steps are:
+   .. code-block:: none
 
-   #. Build and install the Kata runtime.
-   #. Create and install a ``rootfs``.
-   #. Build and install the Kata Containers kernel.
-   #. Build and install the Kata proxy.
-   #. Build and install the Kata shim.
+      {
+        "storage-driver": "devicemapper",
+        "default-runtime": "kata-runtime",
+        "runtimes": {
+            "kata-runtime": {
+                "path": "/usr/bin/kata-runtime"
+            }
+        }
+      }
 
-Configure Kata on ACRN
-**********************
-
-After the core components are installed on the system, the next step is to
-configure them to work seamlessly together. This includes two parts.
-
-#. `Configure Docker <https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md#run-kata-containers-with-docker>`_
-   to recognize the ``kata-runtime`` as an additional runtime available for
-   use.
+   In order to run Kata with ACRN, the container stack must provide block-based
+   storage, such as :file:`device-mapper`. Since Docker may be configured to
+   use :file:`overlay2` storage driver, the above configuration also instructs
+   Docker to use :file:`devive-mapper` storage driver.
 
 #. Configure Kata to use ACRN.
 
@@ -73,6 +88,12 @@ configure them to work seamlessly together. This includes two parts.
 
       $ sudo mkdir -p /etc/kata-containers
       $ sudo cp /usr/share/defaults/kata-containers/configuration-acrn.toml /etc/kata-containers/configuration.toml
+
+#. Restart the Docker service.
+
+   .. code-block:: none
+
+      $ sudo systemctl restart docker
 
 Verify that these configurations are effective by checking the following
 outputs:
