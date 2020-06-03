@@ -19,6 +19,8 @@
             <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
             <CLOS_MASK desc="Cache Capacity Bitmask">0xff</CLOS_MASK>
             <CLOS_MASK desc="Cache Capacity Bitmask">0xff</CLOS_MASK>
+            <CLOS_MASK desc="Cache Capacity Bitmask">0xff</CLOS_MASK>
+            <CLOS_MASK desc="Cache Capacity Bitmask">0xff</CLOS_MASK>
 	</RDT>
         <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
         <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
