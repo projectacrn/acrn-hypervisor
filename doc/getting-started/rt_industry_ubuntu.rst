@@ -239,7 +239,7 @@ Update Grub for the Ubuntu Service VM
    .. note::
 
       Adjust this to your uuid and PARTUUID for the root= parameter with
-      lbkid cmdline (or use the device node directly).
+      ``blkid`` command (or use the device node directly).
 
       Update the kernel name if you used a different name as the source
       for your Service VM kernel.
