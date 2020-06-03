@@ -113,15 +113,15 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_multiboo
 
 	if (vm_config->load_order == SOS_VM) {
 		if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE, " ", 1U) == 0) {
-			char seed_args[MAX_SEED_ARG_SIZE];
+			char seed_args[MAX_SEED_ARG_SIZE] = "";
 
-			append_seed_arg(seed_args, true);
-			/* Append seed argument for SOS
+			fill_seed_arg(seed_args, true);
+			/* Fill seed argument for SOS
 			 * seed_args string ends with a white space and '\0', so no aditional delimiter is needed
 			 */
 			if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE,
 					seed_args, (MAX_BOOTARGS_SIZE - 1U)) != 0) {
-				pr_err("failed to apend seed arg to SOS bootargs!");
+				pr_err("failed to fill seed arg to SOS bootargs!");
 			}
 
 			/* If there is cmdline from mbi->mi_cmdline, merge it with configured SOS bootargs. */
