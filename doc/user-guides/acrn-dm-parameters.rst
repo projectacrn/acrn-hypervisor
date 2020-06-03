@@ -332,6 +332,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        ACRN supports three channels: ``ioc``, ``power button`` and ``uart``.
 
        usage::
+
           --pm_notify_channel ioc
 
        Use ioc as power management event motify channel.
@@ -360,4 +361,5 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        guests with secure boot.
 
        usage::
+
           --windows

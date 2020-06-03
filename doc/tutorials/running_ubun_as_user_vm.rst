@@ -9,8 +9,11 @@ Prerequisites
 This tutorial assumes you have already set up the ACRN Service VM on an
 Intel NUC Kit. If you have not, refer to the following instructions:
 
-- Install a `Clear Linux OS <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_ on your NUC kit.
-- Follow the instructions at :ref:`quick-setup-guide` to set up the Service VM automatically on your NUC kit. Follow steps 1 - 4.
+- Install a `Clear Linux OS
+  <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_
+  on your NUC kit.
+- Follow the instructions at :ref:`quick-setup-guide` to set up the
+  Service VM automatically on your NUC kit. Follow steps 1 - 4.
 
 Before you start this tutorial, make sure the KVM tools are installed on the
 development machine and set **IGD Aperture Size to 512** in the BIOS
@@ -67,7 +70,9 @@ Build the Ubuntu KVM Image
 
 This tutorial uses the Ubuntu 18.04 desktop ISO as the base image.
 
-#. Download the `Ubuntu 18.04 desktop ISO <http://releases.ubuntu.com/18.04.3/ubuntu-18.04.3-desktop-amd64.iso?_ga=2.160010942.221344839.1566963570-491064742.1554370503>`_ on your development machine:
+#. Download the `Ubuntu 18.04 desktop ISO
+   <http://releases.ubuntu.com/18.04.3/ubuntu-18.04.3-desktop-amd64.iso?_ga=2.160010942.221344839.1566963570-491064742.1554370503>`_
+   on your development machine:
 
 #. Install Ubuntu via the virt-manager tool:
 
@@ -85,7 +90,9 @@ This tutorial uses the Ubuntu 18.04 desktop ISO as the base image.
 
 #. Right-click **QEMU/KVM** and select **New**.
 
-   a. Choose **Local install media (ISO image or CDROM)** and then click **Forward**. A **Create a new virtual machine** box displays, as shown in :numref:`newVM-ubun` below.
+   a. Choose **Local install media (ISO image or CDROM)** and then click
+      **Forward**. A **Create a new virtual machine** box displays, as shown
+      in :numref:`newVM-ubun` below.
 
       .. figure:: images/ubuntu-uservm-2.png
          :align: center
@@ -93,15 +100,17 @@ This tutorial uses the Ubuntu 18.04 desktop ISO as the base image.
 
          Create a New Virtual Machine
 
-    b. Choose **Use ISO image** and click **Browse** - **Browse Local**. Select the ISO which you get from Step 2 above.
+   #. Choose **Use ISO image** and click **Browse** - **Browse Local**. Select the ISO which you get from Step 2 above.
 
-    c. Choose the **OS type:** Linux, **Version:** Ubuntu 18.04 LTS and then click **Forward**.
+   #. Choose the **OS type:** Linux, **Version:** Ubuntu 18.04 LTS and then click **Forward**.
 
-    d. Select **Forward** if you do not need to make customized CPU settings.
+   #. Select **Forward** if you do not need to make customized CPU settings.
 
-    e. Choose **Create a disk image for virtual machine**. Set the storage to 20 GB or more if necessary and click **Forward**.
+   #. Choose **Create a disk image for virtual machine**. Set the
+       storage to 20 GB or more if necessary and click **Forward**.
 
-    f. Rename the image if you desire. You must check the **customize configuration before install** option before you finish all stages.
+   #. Rename the image if you desire. You must check the
+      **customize configuration before install** option before you finish all stages.
 
 #. Verify that you can see the Overview screen as set up, as shown in :numref:`ubun-setup` below:
 
@@ -118,7 +127,8 @@ This tutorial uses the Ubuntu 18.04 desktop ISO as the base image.
 
 #. Upon installation completion, click **Restart** Now to make sure the Ubuntu OS boots successfully.
 
-#. The KVM image is created in the ``/var/lib/libvirt/images`` folder. Convert the `gcow2` format to `img` **as the root user**:
+#. The KVM image is created in the ``/var/lib/libvirt/images`` folder.
+   Convert the ``gcow2`` format to ``img`` **as the root user**:
 
    .. code-block:: none
 
@@ -128,11 +138,13 @@ This tutorial uses the Ubuntu 18.04 desktop ISO as the base image.
 Launch the Ubuntu Image as the User VM
 **************************************
 
-Modify the `launch_win.sh` script in order to launch Ubuntu as the User VM.
+Modify the ``launch_win.sh`` script in order to launch Ubuntu as the User VM.
 
-.. note:: This tutorial assumes SATA is the default boot drive; replace "/dev/sda1" mentioned below with "/dev/nvme0n1p1" if you are using SSD.
+.. note:: This tutorial assumes SATA is the default boot drive; replace
+   ``/dev/sda1`` mentioned below with ``/dev/nvme0n1p1`` if you are
+   using an SSD.
 
-1. Copy the uos.img to your NUC:
+1. Copy the ``uos.img`` to your NUC:
 
    .. code-block:: none
 
@@ -155,9 +167,15 @@ Modify the `launch_win.sh` script in order to launch Ubuntu as the User VM.
       <Add below as the acrn-dm parameter>
       -s 7,xhci,1-2:1-3:1-4:1-5 \
 
-   .. note:: This will assign all USB ports (2 front and 2 rear) to the User VM. If you want to only assign the USB ports at the front, use "-s 7,xhci,1-2:1-3 \" instead. Refer to :ref:`acrn-dm_parameters` for ACRN for more information.
+   .. note:: This will assign all USB ports (2 front and 2 rear) to the
+      User VM. If you want to only assign the USB ports at the front,
+      use this instead::
 
-#. Modify acrn.conf and reboot the Service VM:
+         -s 7,xhci,1-2:1-3 \
+
+      Refer to :ref:`acrn-dm_parameters` for ACRN for more information.
+
+#. Modify ``acrn.conf`` and reboot the Service VM:
 
    .. code-block:: none
 
@@ -184,11 +202,12 @@ Modify the `launch_win.sh` script in order to launch Ubuntu as the User VM.
 Enable the Ubuntu Console instead of the User Interface
 *******************************************************
 
-After the Ubuntu VM reboots, follow the steps below to enable the Ubuntu VM console so you can make command-line entries directly from it.
+After the Ubuntu VM reboots, follow the steps below to enable the Ubuntu
+VM console so you can make command-line entries directly from it.
 
 1. Log in to the Ubuntu user interface and launch **Terminal** from the Application list.
 
-#. Add "console=ttyS0,115200" to the grub file on the terminal:
+#. Add ``console=ttyS0,115200`` to the grub file on the terminal:
 
    .. code-block:: none
 
@@ -198,7 +217,7 @@ After the Ubuntu VM reboots, follow the steps below to enable the Ubuntu VM cons
       $ sudo update-grub
       $ sudo poweroff
 
-#. Modify the launch script to enable `virtio-console` for the Ubuntu VM:
+#. Modify the launch script to enable ``virtio-console`` for the Ubuntu VM:
 
    .. code-block:: none
 
@@ -206,14 +225,11 @@ After the Ubuntu VM reboots, follow the steps below to enable the Ubuntu VM cons
       <add below to the acrn-dm command line>
       -s 9,virtio-console,@stdio:stdio_port \
 
-#. Log in to the Service VM and launch Ubuntu. Verify that you see the console output shown in :numref:`console output-ubun` below:
+#. Log in to the Service VM and launch Ubuntu. Verify that you see the
+   console output shown in :numref:`console output-ubun` below:
 
     .. figure:: images/ubuntu-uservm-5.png
        :align: center
        :name: console output-ubun
 
        Ubuntu VM console output
-
-
-
-

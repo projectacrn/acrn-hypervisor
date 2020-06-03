@@ -880,7 +880,7 @@ passthrough directly:
 
    * - MSR_IA32_BIOS_SIGN_ID
      - BIOS update signature ID
-     - "
+     - \"
 
    * - MSR_IA32_TIME_STAMP_COUNTER
      - Time-stamp counter
@@ -924,24 +924,24 @@ passthrough directly:
      - Handled by MTRR emulation.
 
    * - MSR_IA32_MTRR_DEF_TYPE
-     - "
-     - "
+     - \"
+     - \"
 
    * - MSR_IA32_MTRR_PHYSBASE_0~9
-     - "
-     - "
+     - \"
+     - \"
 
    * - MSR_IA32_MTRR_FIX64K_00000
-     - "
-     - "
+     - \"
+     - \"
 
    * - MSR_IA32_MTRR_FIX16K_80000/A0000
-     - "
-     - "
+     - \"
+     - \"
 
    * - MSR_IA32_MTRR_FIX4K_C0000~F8000
-     - "
-     - "
+     - \"
+     - \"
 
    * - MSR_IA32_X2APIC_*
      - x2APIC related MSRs (offset from 0x800 to 0x900)

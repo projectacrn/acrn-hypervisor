@@ -432,16 +432,23 @@ bootloader used by the Operating System (OS).
 
 .. note::
 
-   The `Slim Bootloader <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`_
-   is an alternative boot firmware that can be used to boot ACRN. The `Boot ACRN Hyervisor <https://slimbootloader.github.io/how-tos/boot-acrn.html>`_
-   tutorial provides more information on how to use SBL with ACRN.
+   The `Slim Bootloader
+   <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`__
+   is an alternative boot firmware that can be used to boot ACRN. The `Boot
+   ACRN Hyervisor
+   <https://slimbootloader.github.io/how-tos/boot-acrn.html>`_ tutorial
+   provides more information on how to use SBL with ACRN.
 
 .. note::
 
-   A virtual `Slim Bootloader <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`_, called ``vSBL``,
-   can also be used to start User VMs. The :ref:`acrn-dm_parameters` provides more information
-   on how to boot a User VM using ``vSBL``. Note that in this case, the kernel command-line parameters are
-   defined by the combination of the ``cmdline.txt`` passed on to the ``iasimage`` script and in the launch script, via the ``-B`` option.
+   A virtual `Slim Bootloader
+   <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`__,
+   called ``vSBL``, can also be used to start User VMs. The
+   :ref:`acrn-dm_parameters` provides more information on how to boot a
+   User VM using ``vSBL``. Note that in this case, the kernel command-line
+   parameters are defined by the combination of the ``cmdline.txt`` passed
+   on to the ``iasimage`` script and in the launch script, via the ``-B``
+   option.
 
 Direct boot mode
 ================

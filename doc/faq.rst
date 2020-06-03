@@ -1,7 +1,7 @@
 .. _faq:
 
-FAQ
-###
+Frequently Asked Questions
+##########################
 
 Here are some frequently asked questions about the ACRN project.
 

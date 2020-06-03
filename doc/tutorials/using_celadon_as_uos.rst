@@ -33,7 +33,7 @@ Build Celadon from source
 *************************
 
 #. Follow the instructions in the `Build Celadon from source
-   <https://01.org/projectceladon/documentation/getting-started/build-source>`_ guide
+   <https://01.org/projectceladon/documentation/getting-started/build-source>`__ guide
    to set up the Celadon project source code.
 
    .. note:: The master branch is based on the Google Android 10

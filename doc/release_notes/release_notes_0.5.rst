@@ -234,7 +234,7 @@ Known Issues
    1) Insert USB keyboard and mouse in standard A port (USB3.0 port)
 
    2) Boot UOS by sharing the USB keyboard and mouse in cmd line:
-   -s n,xhci,1-1:1-2:1-3:1-4:2-1:2-2:2-3:2-4 \
+      -s n,xhci,1-1:1-2:1-3:1-4:2-1:2-2:2-3:2-4 \
 
    3) UOS access USB keyboard and mouse.
 

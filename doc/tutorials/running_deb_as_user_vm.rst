@@ -9,8 +9,11 @@ Prerequisites
 This tutorial assumes you have already set up the ACRN Service VM on an
 Intel NUC Kit. If you have not, refer to the following instructions:
 
-- Install a `Clear Linux OS <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_ on your NUC kit.
-- Follow the instructions at :ref:`quick-setup-guide` to set up the Service VM automatically on your NUC kit. Follow steps 1 - 4.
+- Install a `Clear Linux OS
+  <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_
+  on your NUC kit.
+- Follow the instructions at :ref:`quick-setup-guide` to set up the
+  Service VM automatically on your NUC kit. Follow steps 1 - 4.
 
 We are using Intel Kaby Lake NUC (NUC7i7DNHE) and Debian 10 as the User VM in this tutorial.
 
@@ -92,7 +95,9 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
 
 #. Right-click **QEMU/KVM** and select **New**.
 
-   a. Choose **Local install media (ISO image or CDROM)** and then click **Forward**. A **Create a new virtual machine** box displays, as shown in :numref:`newVM-debian` below.
+   a. Choose **Local install media (ISO image or CDROM)** and then click
+      **Forward**. A **Create a new virtual machine** box displays, as shown
+      in :numref:`newVM-debian` below.
 
       .. figure:: images/debian-uservm-2.png
          :align: center
@@ -100,15 +105,17 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
 
          Create a New Virtual Machine
 
-    b. Choose **Use ISO image** and click **Browse** - **Browse Local**. Select the ISO which you get from Step 1 above.
+   #. Choose **Use ISO image** and click **Browse** - **Browse Local**. Select the ISO which you get from Step 1 above.
 
-    c. Choose the **OS type:** Linux, **Version:** Debian Stretch and then click **Forward**.
+   #. Choose the **OS type:** Linux, **Version:** Debian Stretch and then click **Forward**.
 
-    d. Select **Forward** if you do not need to make customized CPU settings.
+   #. Select **Forward** if you do not need to make customized CPU settings.
 
-    e. Choose **Create a disk image for virtual machine**. Set the storage to 20 GB or more if necessary and click **Forward**.
+   #. Choose **Create a disk image for virtual machine**. Set the
+      storage to 20 GB or more if necessary and click **Forward**.
 
-    f. Rename the image if you desire. You must check the **customize configuration before install** option before you finish all stages.
+   #. Rename the image if you desire. You must check the **customize
+      configuration before install** option before you finish all stages.
 
 #. Verify that you can see the Overview screen as set up, as shown in :numref:`debian10-setup` below:
 
@@ -118,7 +125,8 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
 
        Debian Setup Overview
 
-#. Complete the Debian installation. Verify that you have set up a vda disk partition, as shown in :numref:`partition-vda` below:
+#. Complete the Debian installation. Verify that you have set up a vda
+   disk partition, as shown in :numref:`partition-vda` below:
 
     .. figure:: images/debian-uservm-4.png
        :align: center
@@ -126,7 +134,9 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
 
        Virtual Disk (vda) partition
 
-#. Upon installation completion, the KVM image is created in the ``/var/lib/libvirt/images`` folder. Convert the `gcow2` format to `img` **as the root user**:
+#. Upon installation completion, the KVM image is created in the
+   ``/var/lib/libvirt/images`` folder. Convert the `gcow2` format to `img`
+   **as the root user**:
 
    .. code-block:: none
 
@@ -138,7 +148,9 @@ Launch the Debian Image as the User VM
 
 Re-use and modify the `launch_win.sh` script in order to launch the new Debian 10 User VM.
 
-.. note:: This tutorial assumes SATA is the default boot drive; replace "/dev/sda1" mentioned below with "/dev/nvme0n1p1" if you are using an NVMe drive.
+.. note:: This tutorial assumes SATA is the default boot drive; replace
+   "/dev/sda1" mentioned below with "/dev/nvme0n1p1" if you are using an
+   NVMe drive.
 
 1. Copy the debian.img to your NUC:
 
@@ -163,9 +175,16 @@ Re-use and modify the `launch_win.sh` script in order to launch the new Debian 1
       <Add below as the acrn-dm parameter>
       -s 7,xhci,1-2:1-3:1-4:1-5 \
 
-   .. note:: This will assign all USB ports (2 front and 2 rear) to the User VM. If you want to only assign the USB ports at the front, use "-s 7,xhci,1-2:1-3 \" instead. Refer to :ref:`acrn-dm_parameters` for ACRN for more information.
+   .. note:: This will assign all USB ports (2 front and 2 rear) to the
+      User VM. If you want to only assign the USB ports at the front,
+      use this instead::
 
-#. Modify acrn.conf and reboot the Service VM to assign the Pipe A monitor to the Debian VM and the Pipe B monitor to the Service VM:
+         -s 7,xhci,1-2:1-3 \
+
+      Refer to :ref:`acrn-dm_parameters` for ACRN for more information.
+
+#. Modify acrn.conf and reboot the Service VM to assign the Pipe A
+   monitor to the Debian VM and the Pipe B monitor to the Service VM:
 
    .. code-block:: none
 
@@ -206,7 +225,8 @@ Re-use and modify the `launch_win.sh` script in order to launch the new Debian 1
 Enable the ttyS0 Console on the Debian VM
 *****************************************
 
-After the Debian VM reboots, follow the steps below to enable the ttyS0 console so you can make command-line entries directly from it.
+After the Debian VM reboots, follow the steps below to enable the ttyS0
+console so you can make command-line entries directly from it.
 
 1. Log in to the Debian user interface and launch **Terminal** from the Application list.
 
@@ -219,7 +239,8 @@ After the Debian VM reboots, follow the steps below to enable the ttyS0 console 
       GRUB_CMDLINE_LINUX="console=ttyS0,115200"
       $ sudo update-grub
 
-#. Add `virtio_console` to `/etc/initramfs-tools/modules`. **Power OFF** the Debian VM after `initramfs` is updated:
+#. Add `virtio_console` to `/etc/initramfs-tools/modules`. **Power OFF**
+   the Debian VM after `initramfs` is updated:
 
    .. code-block:: none
 
@@ -227,7 +248,8 @@ After the Debian VM reboots, follow the steps below to enable the ttyS0 console 
       $ sudo update-initramfs -u
       $ sudo poweroff
 
-#. Log in to the Service VM and the modify the launch script to add the `virtio-console` parameter to the Device Model for the Debian VM:
+#. Log in to the Service VM and the modify the launch script to add the
+   `virtio-console` parameter to the Device Model for the Debian VM:
 
    .. code-block:: none
 
@@ -235,7 +257,8 @@ After the Debian VM reboots, follow the steps below to enable the ttyS0 console 
       <add below to the acrn-dm command line>
       -s 9,virtio-console,@stdio:stdio_port \
 
-#. Launch Debian using the modified script. Verify that you see the console output shown in :numref:`console output-debian` below:
+#. Launch Debian using the modified script. Verify that you see the
+   console output shown in :numref:`console output-debian` below:
 
     .. figure:: images/debian-uservm-7.png
        :align: center
