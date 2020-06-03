@@ -68,7 +68,7 @@ $(HV_OBJDIR)/$(HV_CONFIG_H): $(HV_OBJDIR)/$(HV_CONFIG)
 .PHONY: defconfig
 defconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
-	@if [ ! -f $(KCONFIG_FILE) ] && [ "$(CONFIG_XML_ENABLED)" != "true" ]; then \
+	@if ([ "$(KCONFIG_FILE)" == "" ] || ([ "$(KCONFIG_FILE)" != "" ] && [ ! -f $(KCONFIG_FILE) ])) && [ "$(CONFIG_XML_ENABLED)" != "true" ]; then \
 		BOARD=$(CONFIG_BOARD) python3 $(KCONFIG_DIR)/defconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG); \
 	else \
 		if [ "$(KCONFIG_FILE)" != "" ] && [ -f $(KCONFIG_FILE) ]; then \

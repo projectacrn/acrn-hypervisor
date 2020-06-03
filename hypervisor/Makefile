@@ -489,7 +489,7 @@ distclean:
 	rm -f tags TAGS cscope.files cscope.in.out cscope.out cscope.po.out GTAGS GPATH GRTAGS GSYMS
 
 PHONY: (VERSION)
-$(VERSION):
+$(VERSION): $(HV_OBJDIR)/$(HV_CONFIG_H)
 	@if  [ "$(SCENARIO)" = "" ]; then echo "Please specify SCENARIO for the build!"; exit 1; fi;
 	@if  [ "$(BOARD)" = "" ]; then echo "Please specify BOARD for the build!"; exit 1; fi;
 	@echo "SCENARIO <$(SCENARIO)> for BOARD <$(BOARD)> is specified."
