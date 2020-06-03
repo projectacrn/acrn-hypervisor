@@ -76,46 +76,42 @@ static uint32_t parse_seed_arg(void)
 }
 
 /*
- * append_seed_arg
+ * fill_seed_arg
  *
  * description:
- *     append seed argument to Guest's cmdline
+ *     fill seed argument to cmdline buffer which has MAX size of MAX_SEED_ARG_SIZE
  *
  * input:
- *    vm        pointer to target VM
+ *    cmd_dst   pointer to cmdline buffer
+ *    cmd_sz    size of cmd_dst buffer
  *
  * output:
- *    cmd_dst   pointer to cmdline for Guest
+ *    cmd_dst   pointer to cmdline buffer
  *
  * return value:
  *    none
+ *
+ * @pre cmd_dst != NULL
  */
-void append_seed_arg(char *cmd_dst, bool vm_is_sos)
+void fill_seed_arg(char *cmd_dst, size_t cmd_sz)
 {
 	uint32_t i;
-	char buf[MEM_1K];
 
-	if ((cmd_dst != NULL) && vm_is_sos) {
-		for (i = 0U; seed_arg[i].str != NULL; i++) {
-			if (seed_arg[i].addr != 0UL) {
-				(void)memset(buf, 0U, sizeof(buf));
+	for (i = 0U; seed_arg[i].str != NULL; i++) {
+		if (seed_arg[i].addr != 0UL) {
 
-				snprintf(buf, sizeof(buf), "%s0x%X ", seed_arg[i].str,
-						sos_vm_hpa2gpa(seed_arg[i].addr));
+			snprintf(cmd_dst, cmd_sz, "%s0x%X ", seed_arg[i].str, sos_vm_hpa2gpa(seed_arg[i].addr));
 
-				if (seed_arg[i].bootloader_id == BOOTLOADER_SBL) {
-					struct image_boot_params *boot_params =
-						(struct image_boot_params *)hpa2hva(seed_arg[i].addr);
+			if (seed_arg[i].bootloader_id == BOOTLOADER_SBL) {
+				struct image_boot_params *boot_params =
+					(struct image_boot_params *)hpa2hva(seed_arg[i].addr);
 
-					boot_params->p_seed_list = sos_vm_hpa2gpa(boot_params->p_seed_list);
+				boot_params->p_seed_list = sos_vm_hpa2gpa(boot_params->p_seed_list);
 
-					boot_params->p_platform_info = sos_vm_hpa2gpa(boot_params->p_platform_info);
-				}
-
-				(void)strncpy_s(cmd_dst, MAX_BOOTARGS_SIZE, buf, strnlen_s(buf, MEM_1K));
-
-				break;
+				boot_params->p_platform_info = sos_vm_hpa2gpa(boot_params->p_platform_info);
 			}
+
+			break;
 		}
 	}
 }

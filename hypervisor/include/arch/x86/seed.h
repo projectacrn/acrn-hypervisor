@@ -28,7 +28,7 @@ struct physical_seed {
 
 void init_seed(void);
 
-void append_seed_arg(char *cmd_dst, bool vm_is_sos);
+void fill_seed_arg(char *cmd_dst, size_t cmd_sz);
 
 bool derive_virtual_seed(struct seed_info *seed_list, uint32_t *num_seeds,
 			 const uint8_t *salt, size_t salt_len, const uint8_t *info, size_t info_len);
