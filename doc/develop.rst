@@ -32,6 +32,7 @@ Service VM Tutorials
 
    tutorials/using_ubuntu_as_sos
    tutorials/running_deb_as_serv_vm
+   tutorials/cl_servicevm
 
 User VM Tutorials
 *****************

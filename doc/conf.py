@@ -321,5 +321,6 @@ html_redirect_pages = [
    ('getting-started/index', 'try'),
    ('user-guides/index', 'develop'),
    ('hardware', 'reference/hardware'),
-   ('release_notes', 'release_notes/index')
+   ('release_notes', 'release_notes/index'),
+   ('getting-started/rt_industry', 'tutorials/cl_servicevm')
    ]

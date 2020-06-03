@@ -1,12 +1,13 @@
 .. _rt_industry_setup:
+.. _clear_service_vm:
 
-Getting Started Guide for ACRN Industry Scenario
-################################################
+Run Clear Linux as the Service VM
+#################################
 
 Verified version
 ****************
 
-- Clear Linux version: **33050**
+- Clear Linux\* version: **33050**
 - ACRN-hypervisor tag: **v1.6.1 (acrn-2020w18.4-140000p)**
 - ACRN-Kernel (Service VM kernel): **4.19.120-108.iot-lts2018-sos**
 
