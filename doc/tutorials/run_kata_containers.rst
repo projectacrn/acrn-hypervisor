@@ -36,7 +36,7 @@ Install Kata Containers
 The Kata Containers installation from Clear Linux's official repository does
 not work with ACRN at the moment. Therefore, you must install Kata
 Containers using the `manual installation
-<https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md>`_
+<https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md>`__
 instructions (using a ``rootfs`` image).
 
 #. Install the build dependencies.
@@ -48,7 +48,7 @@ instructions (using a ``rootfs`` image).
 #. Install Kata Containers.
 
    At a high level, the `manual installation
-   <https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md>`_
+   <https://github.com/kata-containers/documentation/blob/master/Developer-Guide.md>`__
    steps are:
 
    #. Build and install the Kata runtime.

@@ -107,7 +107,7 @@ be updated.
 .. figure:: images/ept-hierarchy.png
    :align: center
    :width: 800px
-   :name: EPT hierarchy
+   :name: EPT hierarchy pic
 
 API
 ===

@@ -82,7 +82,7 @@ license.
    contribute
    release_notes/index
    asa
-   faq
+   FAQ <faq>
    glossary
 
 .. _BSD 3-clause license:

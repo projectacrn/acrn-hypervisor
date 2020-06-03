@@ -453,7 +453,7 @@ Here is the offline configuration tool workflow:
    .. note:: Refer to :ref:`acrn_config_tool_ui` for more details on
       the configuration tool UI.
 
-3. Auto generate the code.
+#. Auto generate the code.
 
    Python tools are used to generate configurations in patch format.
    The patches are applied to your local ``acrn-hypervisor`` git tree

@@ -121,7 +121,8 @@ Download Win10 ISO and drivers
    - Complete the required info. Click **Continue**.
    - Select the language and **x86 64 bit**. Click **Download ISO** and save as ``windows10-LTSC-17763.iso``.
 
-#. Download the `Intel DCH Graphics Driver <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`_.
+#. Download the `Intel DCH Graphics Driver
+   <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`__.
 
 #. Download the `Oracle Windows driver <https://edelivery.oracle.com/osdc/faces/SoftwareDelivery>`_.
 
@@ -244,7 +245,8 @@ Install Windows 10 by GVT-g
    .. figure:: images/windows_install_10.png
       :align: center
 
-#. Copy the `Intel DCH Graphics Driver <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`_ into
+#. Copy the `Intel DCH Graphics Driver
+   <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`__ into
    Windows and install in safe mode. The display driver is updated to 7212.
 
 .. _waag_display_conf_lable:
