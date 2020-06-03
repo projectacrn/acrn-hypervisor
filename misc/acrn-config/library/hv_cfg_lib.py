@@ -172,14 +172,15 @@ def cat_max_mask_check(cat_mask_list, feature, cat_str, max_mask_str):
     if not board_cfg_lib.is_rdt_supported():
         return
 
-    cpu_num = len(board_cfg_lib.get_processor_info())
+    (_, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
+
+    clos_max = common.num2int(min(rdt_res_clos_max))
     cat_max_mask_settings_len = len(cat_mask_list)
-    if cpu_num != cat_max_mask_settings_len:
+    if clos_max != cat_max_mask_settings_len:
         key = 'hv,{},{},{}'.format(feature, cat_str, max_mask_str)
-        ERR_LIST[key] = "Total {} CPU cores, should set the same number for CLOS_MASK.".format(cpu_num)
+        ERR_LIST[key] = "clso max: {} in board xml, should set the same number for CLOS_MASK.".format(clos_max)
         return
 
-    (_, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
     clos_max_mask_str = clos_max_mask_list[0].strip('"').strip("'")
     clos_max_mask = common.num2int(clos_max_mask_str)
     for val_str in cat_mask_list:
