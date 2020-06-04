@@ -328,11 +328,13 @@ static bool is_hv_owned_pdev(union pci_bdf pbdf)
 	return hidden;
 }
 
-static void pci_init_pdev(union pci_bdf pbdf, uint32_t drhd_index)
+static struct pci_pdev *pci_init_pdev(union pci_bdf pbdf, uint32_t drhd_index)
 {
+	struct pci_pdev *pdev = NULL;
 	if (!is_hv_owned_pdev(pbdf)) {
-		(void)init_pdev(pbdf.value, drhd_index);
+		pdev = init_pdev(pbdf.value, drhd_index);
 	}
+	return pdev;
 }
 
 /*
@@ -365,8 +367,8 @@ struct pci_bus_num_to_drhd_index_mapping {
 };
 
 static uint32_t pci_check_override_drhd_index(union pci_bdf pbdf,
-						const struct pci_bdf_mapping_group *const bdfs_from_drhds,
-						uint32_t current_drhd_index)
+		const struct pci_bdf_mapping_group *const bdfs_from_drhds,
+		uint32_t current_drhd_index)
 {
 	uint16_t bdfi;
 	uint32_t bdf_drhd_index = current_drhd_index;
@@ -376,9 +378,9 @@ static uint32_t pci_check_override_drhd_index(union pci_bdf pbdf,
 			/*
 			 * Override current_drhd_index
 			 */
-				bdf_drhd_index =
-					bdfs_from_drhds->bdf_map[bdfi].dev_scope_drhd_index;
-			}
+			bdf_drhd_index =
+				bdfs_from_drhds->bdf_map[bdfi].dev_scope_drhd_index;
+		}
 	}
 
 	return bdf_drhd_index;
@@ -391,14 +393,14 @@ static uint32_t pci_check_override_drhd_index(union pci_bdf pbdf,
  * configuration(acrn_vm_pci_dev_config), call init_one_dev_config or init_all_dev_config to do this.
  */
 static void scan_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_LEN],
-				const struct pci_bdf_mapping_group *const bdfs_from_drhds, uint32_t drhd_index)
+		const struct pci_bdf_mapping_group *const bdfs_from_drhds, uint32_t drhd_index)
 {
-	bool is_mfdev;
 	uint32_t vendor;
-	uint8_t hdr_type, dev, func;
+	uint8_t hdr_type, dev, func, func_max;
 	union pci_bdf pbdf;
 	uint8_t current_bus_index;
 	uint32_t current_drhd_index, bdf_drhd_index;
+	struct pci_pdev *pdev;
 
 	struct pci_bus_num_to_drhd_index_mapping bus_map[PCI_BUSMAX + 1U]; /* FIFO queue of buses to walk */
 	uint32_t s = 0U, e = 0U; /* start and end index into queue */
@@ -417,27 +419,18 @@ static void scan_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_
 		pbdf.bits.b = current_bus_index;
 		for (dev = 0U; dev <= PCI_SLOTMAX; dev++) {
 			pbdf.bits.d = dev;
-			is_mfdev = false;
+			pbdf.bits.f = 0U;
+			hdr_type = (uint8_t)pci_pdev_read_cfg(pbdf, PCIR_HDRTYPE, 1U);
 
-			for (func = 0U; func <= PCI_FUNCMAX; func++) {
+			/* Do not probe beyond function 0 if not a multi-function device
+			 * unless device supports ARI or SR-IOV (PCIe spec r5.0 §7.5.1.1.9)
+			 */
+			func_max = is_pci_cfg_multifunction(hdr_type) ? PCI_FUNCMAX : 0U;
+			for (func = 0U; func <= func_max; func++) {
 
 				pbdf.bits.f = func;
 
-				vendor = read_pci_pdev_cfg_vendor(pbdf);
-				hdr_type = read_pci_pdev_cfg_headertype(pbdf);
-
-				if (func == 0U) {
-					is_mfdev = is_pci_cfg_multifunction(hdr_type);
-				}
-
-				/* Do not probe beyond function 0 if not a multi-function device
-				 * TODO unless device supports ARI or SR-IOV
-				 * (PCIe spec r5.0 §7.5.1.1.9)
-				 */
-				if (((func == 0U) && !is_pci_vendor_valid(vendor)) ||
-						((func > 0U) && (!is_mfdev))) {
-					break;
-				}
+				vendor = pci_pdev_read_cfg(pbdf, PCIR_VENDOR, 2U);
 
 				if (!is_pci_vendor_valid(vendor)) {
 					continue;
@@ -445,10 +438,11 @@ static void scan_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_
 
 				bdf_drhd_index = pci_check_override_drhd_index(pbdf, bdfs_from_drhds,
 									current_drhd_index);
-				pci_init_pdev(pbdf, bdf_drhd_index);
-
-				if (is_pci_cfg_bridge(hdr_type)) {
-					bus_map[e].bus_under_scan = read_pci_pdev_cfg_secbus(pbdf);
+				pdev = pci_init_pdev(pbdf, bdf_drhd_index);
+				/* NOTE: This touch logic change: if a bridge own by HV as its children */
+				if ((pdev != NULL) && is_bridge(pdev)) {
+					bus_map[e].bus_under_scan =
+						(uint8_t)pci_pdev_read_cfg(pbdf, PCIR_SECBUS_1, 1U);
 					bus_map[e].bus_drhd_index = bdf_drhd_index;
 					e = e + 1U;
 				}
@@ -569,7 +563,7 @@ static void init_all_dev_config(void)
 	for (idx = 0U; idx < num_pci_pdev; idx++) {
 		pdev = &pci_pdev_array[idx];
 
-		if (pdev->hdr_type == PCIM_HDRTYPE_BRIDGE) {
+		if (is_bridge(pdev)) {
 			config_pci_bridge(pdev);
 		}
 
@@ -629,7 +623,7 @@ static inline uint32_t pci_pdev_get_nr_bars(uint8_t hdr_type)
 {
 	uint32_t nr_bars = 0U;
 
-	switch (hdr_type) {
+	switch (hdr_type & PCIM_HDRTYPE) {
 	case PCIM_HDRTYPE_NORMAL:
 		nr_bars = PCI_STD_NUM_BARS;
 		break;
@@ -747,23 +741,23 @@ static void pci_enumerate_cap(struct pci_pdev *pdev)
  */
 struct pci_pdev *init_pdev(uint16_t pbdf, uint32_t drhd_index)
 {
-	uint8_t hdr_type;
+	uint8_t hdr_type, hdr_layout;
 	union pci_bdf bdf;
 	struct pci_pdev *pdev = NULL;
 
 	if (num_pci_pdev < CONFIG_MAX_PCI_DEV_NUM) {
 		bdf.value = pbdf;
 		hdr_type = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_HDRTYPE, 1U);
-		hdr_type &= PCIM_HDRTYPE;
+		hdr_layout = (hdr_type & PCIM_HDRTYPE);
 
-		if ((hdr_type == PCIM_HDRTYPE_NORMAL) || (hdr_type == PCIM_HDRTYPE_BRIDGE)) {
+		if ((hdr_layout == PCIM_HDRTYPE_NORMAL) || (hdr_layout == PCIM_HDRTYPE_BRIDGE)) {
 			pdev = &pci_pdev_array[num_pci_pdev];
 			pdev->bdf.value = pbdf;
 			pdev->hdr_type = hdr_type;
 			pdev->base_class = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_CLASS, 1U);
 			pdev->sub_class = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_SUBCLASS, 1U);
 			pdev->nr_bars = pci_pdev_get_nr_bars(hdr_type);
-			if (hdr_type == PCIM_HDRTYPE_NORMAL) {
+			if (hdr_layout == PCIM_HDRTYPE_NORMAL) {
 				pdev_save_bar(pdev);
 			}
 
