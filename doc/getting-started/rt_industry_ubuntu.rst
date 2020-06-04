@@ -64,7 +64,7 @@ Install the Native Ubuntu OS on the SATA disk
 
    a. Select the ``/dev/sda`` partition, not ``/dev/nvme0p1``.
    b. Select ``/dev/sda`` **ATA KINGSTON RBUSNS4** as the device for the
-      boot loader installation. Note that the label depends on the on the SATA disk used.
+      bootloader installation. Note that the label depends on the SATA disk used.
 
 #. Continue with the Ubuntu Service VM installation in ``/dev/sda``.
 
@@ -89,7 +89,7 @@ Install the Ubuntu Service VM on the NVMe disk
 
    a. Select the ``/dev/nvme0n1`` partition, not ``/dev/sda``.
    b. Select ``/dev/nvme0n1`` **FORESEE 256GB SSD** as the device for the
-      boot loader installation. Note that the label depends on the on the NVMe disk used.
+      bootloader installation. Note that the label depends on the NVMe disk used.
 
 #. Complete the Ubuntu installation and reboot the system.
 
@@ -138,12 +138,11 @@ Build the ACRN Hypervisor on Ubuntu
         libblkid-dev \
         e2fslibs-dev \
         pkg-config \
-        zlib1g-dev \
         libnuma-dev \
 
         liblz4-tool
 
-      $ pip3 install kconfiglib
+      $ sudo pip3 install kconfiglib
 
 #. Get the ACRN source code:
 
@@ -159,9 +158,7 @@ Build the ACRN Hypervisor on Ubuntu
 
       $ git checkout -b v2.0 remotes/origin/release_2.0
 
-4. Apply CAT and other patches if necessary [optional].
-
-5. Build ACRN:
+#. Build ACRN:
 
    .. code-block:: none
 
@@ -180,7 +177,7 @@ Enable network sharing for the User VM
 Build and install the ACRN kernel
 =================================
 
-#. Build the Service VM kernel from opensource:
+#. Build the Service VM kernel from the ACRN repo:
 
    .. code-block:: none
 
@@ -193,7 +190,7 @@ Build and install the ACRN kernel
 
       $ git checkout -b v2.0 remotes/origin/release_2.0
       $ cp kernel_config_uefi_sos .config
-      $ make oldconfig
+      $ make olddefconfig
       $ make all
       $ sudo make modules_install
 
@@ -202,7 +199,6 @@ Install the Service VM kernel and modules
 
 .. code-block:: none
 
-   $ sudo cp -r ~/sos-kernel-build/usr/lib/modules/4.19.78-98.iot-lts2018-sos/ /lib/modules
    $ sudo mkdir /boot/acrn/
    $ sudo cp ~/sos-kernel-build/usr/lib/kernel/lts2018-sos.4.19.78-98  /boot/bzImage
 
@@ -211,7 +207,7 @@ Copy the Service VM kernel files located at ``arch/x86/boot/bzImage`` to the ``/
 Update Grub for the Ubuntu Service VM
 =====================================
 
-#. Update the ``/etc/grub.d/40_custom`` file as shown below. 
+#. Update the ``/etc/grub.d/40_custom`` file as shown below.
 
    .. note::
       Enter the command line for the kernel in ``/etc/grub.d/40_custom`` as
@@ -220,7 +216,7 @@ Update Grub for the Ubuntu Service VM
 
    **menuentry 'ACRN Multiboot Ubuntu Service VM' --id ubuntu-service-vm**
 
-   .. code-block:: bash
+   .. code-block:: none
 
       {
 
@@ -238,8 +234,8 @@ Update Grub for the Ubuntu Service VM
 
    .. note::
 
-      Adjust this to your uuid and PARTUUID for the root= parameter with
-      ``blkid`` command (or use the device node directly).
+      Adjust this to your UUID and PARTUUID for the root= parameter using
+      the ``blkid`` command (or use the device node directly).
 
       Update the kernel name if you used a different name as the source
       for your Service VM kernel.
@@ -258,18 +254,18 @@ Update Grub for the Ubuntu Service VM
 
    .. code-block:: none
 
-      sudo update-grub
+      $ sudo update-grub
 
 Reboot the system
 =================
 
-Reboot the system. You should see the Grub menu with the new **ACRN ubuntu-service-os** entry. Select it and proceed to booting the platform. The system will start Ubuntu and you can now log in (as before).
+Reboot the system. You should see the Grub menu with the new **ACRN ubuntu-service-vm** entry. Select it and proceed to booting the platform. The system will start Ubuntu and you can now log in (as before).
 
 To verify that the hypervisor is effectively running, check ``dmesg``. The typical output of a successful installation resembles the following:
 
 .. code-block:: none
 
-   dmesg | grep ACRN
+   $ dmesg | grep ACRN
    [    0.000000] Hypervisor detected: ACRN
    [    0.862942] ACRN HVLog: acrn_hvlog_init
 
@@ -286,7 +282,7 @@ BIOS settings of GVT-d for WaaG
 Go to **Chipset** -> **System Agent (SA) Configuration** -> **Graphics
 Configuration** and make the following settings:
 
-The **DVMT Pre-Allocated** to **64MB**:
+Set **DVMT Pre-Allocated** to **64MB**:
 
 .. figure:: images/DVMT-reallocated-64mb.png
 
@@ -294,8 +290,8 @@ Set **PM Support** to **Enabled**:
 
 .. figure:: images/PM-support-enabled.png
 
-OVMF for User VM launching
---------------------------
+Use OVMF to launch the User VM
+------------------------------
 
 The User VM will be launched by OVMF, so copy it to the specific folder:
 
@@ -321,6 +317,38 @@ following steps:
    $ make clean && make iasl
    $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
 
+Build and Install the RT kernel for the Ubuntu User VM
+------------------------------------------------------
+
+Follow these instructions to build the RT kernel.
+
+#. Clone the RT kernel source code:
+
+   .. code-block:: none
+
+      $ git clone https://github.com/projectacrn/acrn-kernel
+      $ cd acrn-kernel
+      $ git checkout 4.19/preempt-rt
+
+#. Build the kernel:
+
+   .. code-block:: none
+
+      $ make olddefconfig
+      $ make targz-pkg
+
+#. Copy the kernel and modules:
+
+   .. code-block:: none
+
+      $ sudo mount /dev/sda1 /mnt
+      $ sudo cp bzImage /mnt/EFI/
+      $ sudo umount /mnt
+      $ sudo mount /dev/sda2 /mnt
+      $ sudo cp kernel.tar.gz -P /mnt/usr/lib/modules/ && cd /mnt/usr/lib/modules/
+      $ sudo tar zxvf kernel.tar.gz
+      $ sudo cd ~ && umount /mnt && sync
+
 Launch the RTVM
 ***************
 
@@ -336,7 +364,7 @@ Update the Grub file
 
    **menuentry 'ACRN Ubuntu User VM' --id ubuntu-user-vm**
 
-   .. code-block:: bash
+   .. code-block:: none
 
       {
 
@@ -349,20 +377,20 @@ Update the Grub file
         search --no-floppy --fs-uuid --set b2ae4879-c0b6-4144-9d28-d916b578f2eb
         echo 'loading ACRN...'
 
-        linux  /boot/bzImage root=root=PARTUUID=<UUID of rootfs partition> rw rootwait nohpet console=hvc0 console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 clocksource=tsc tsc=reliable x2apic_phys processor.max_cstate=0 intel_idle.max_cstate=0 intel_pstate=disable mce=ignore_ce audit=0 isolcpus=nohz,domain,1 nohz_full=1 rcu_nocbs=1 nosoftlockup idle=poll irqaffinity=0
+        linux  /boot/bzImage root=PARTUUID=<UUID of rootfs partition> rw rootwait nohpet console=hvc0 console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 clocksource=tsc tsc=reliable x2apic_phys processor.max_cstate=0 intel_idle.max_cstate=0 intel_pstate=disable mce=ignore_ce audit=0 isolcpus=nohz,domain,1 nohz_full=1 rcu_nocbs=1 nosoftlockup idle=poll irqaffinity=0
 
       }
 
    .. note::
 
-      Update this to use your uuid and PARTUUID for the root= parameter (or
+      Update this to use your UUID and PARTUUID for the root= parameter (or
       use the device node directly).
 
       Update the kernel name if you used a different name as the source
       for your Service VM kernel.
 
 #. Modify the ``/etc/default/grub`` file to make the grub menu visible when
-   booting and make it load the Service VM kernel by default. Modify the
+   booting and make it load the RT kernel by default. Modify the
    lines shown below:
 
    .. code-block:: none
@@ -375,7 +403,7 @@ Update the Grub file
 
    .. code-block:: none
 
-      sudo update-grub
+      $ sudo update-grub
 
 Recommended BIOS settings for RTVM
 ----------------------------------
@@ -412,7 +440,7 @@ Recommended kernel cmdline for RTVM
 
 .. code-block:: none
 
-   root=root=PARTUUID=<UUID of rootfs partition> rw rootwait nohpet console=hvc0 console=ttyS0 \
+   root=PARTUUID=<UUID of rootfs partition> rw rootwait nohpet console=hvc0 console=ttyS0 \
    no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 \
    clocksource=tsc tsc=reliable x2apic_phys processor.max_cstate=0 \
    intel_idle.max_cstate=0 intel_pstate=disable mce=ignore_ce audit=0 \
@@ -436,13 +464,15 @@ In our recommended configuration, two cores are allocated to the RTVM:
 core 0 for housekeeping and core 1 for RT tasks. In order to achieve
 this, follow the below steps to allocate all housekeeping tasks to core 0:
 
-#. Launch the RTVM::
+#. Launch the RTVM:
 
-   # /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
+   .. code-block:: none
+
+      # /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
 
 #. Log in to the RTVM as root and run the script as below:
 
-   .. code-block:: bash
+   .. code-block:: none
 
       #!/bin/bash
       # Copyright (C) 2019 Intel Corporation.
@@ -479,13 +509,16 @@ Run cyclictest
 
 #. Launch the RTVM and log in as root.
 
-#. Install the ``cyclictest`` tool::
+#. Install the ``rt-tests`` tool::
 
-   # swupd bundle-add dev-utils --skip-diskspace-check
+   $ sudo apt install rt-tests
 
-#. Use the following command to start cyclictest::
+#. Use the following command to start cyclictest:
 
-   # cyclictest -a 1 -p 80 -m -N -D 1h -q -H 30000 --histfile=test.log
+   .. code-block:: none
+
+      # cyclictest -a 1 -p 80 -m -N -D 1h -q -H 30000 --histfile=test.log
+
 
    Parameter descriptions:
 
@@ -501,7 +534,7 @@ Launch the Windows VM
 *********************
 
 #. Follow this :ref:`guide <using_windows_as_uos>` to prepare the Windows
-   image file, update the Service VM kernel, and then reboot with a new ``acrngt.conf``.
+   image file and then reboot with a new ``acrngt.conf``.
 
 #. Modify the ``launch_uos_id1.sh`` script as follows and then launch
    the Windows VM as one of the post-launched standard VMs:
