@@ -46,7 +46,7 @@
 
 static spinlock_t pci_device_lock;
 static uint32_t num_pci_pdev;
-static struct pci_pdev pci_pdev_array[CONFIG_MAX_PCI_DEV_NUM];
+static struct pci_pdev pci_pdevs[CONFIG_MAX_PCI_DEV_NUM];
 static uint64_t pci_mmcfg_base = DEFAULT_PCI_MMCFG_BASE;
 
 #ifdef CONFIG_ACPI_PARSE_ENABLED
@@ -259,12 +259,12 @@ void pdev_restore_bar(const struct pci_pdev *pdev)
 }
 
 /* @brief: Find the DRHD index corresponding to a PCI device
- * Runs through the pci_pdev_array and returns the value in drhd_idx
+ * Runs through the pci_pdevs and returns the value in drhd_idx
  * member from pdev structure that matches matches B:D.F
  *
  * @pbdf[in]	B:D.F of a PCI device
  *
- * @return if there is a matching pbdf in pci_pdev_array, pdev->drhd_idx, else INVALID_DRHD_INDEX
+ * @return if there is a matching pbdf in pci_pdevs, pdev->drhd_idx, else INVALID_DRHD_INDEX
  */
 
 uint32_t pci_lookup_drhd_for_pbdf(uint16_t pbdf)
@@ -273,8 +273,8 @@ uint32_t pci_lookup_drhd_for_pbdf(uint16_t pbdf)
 	uint32_t index;
 
 	for (index = 0U; index < num_pci_pdev; index++) {
-		if (pci_pdev_array[index].bdf.value == pbdf) {
-			drhd_index = pci_pdev_array[index].drhd_index;
+		if (pci_pdevs[index].bdf.value == pbdf) {
+			drhd_index = pci_pdevs[index].drhd_index;
 			break;
 		}
 	}
@@ -561,7 +561,7 @@ static void init_all_dev_config(void)
 	struct pci_pdev *pdev = NULL;
 
 	for (idx = 0U; idx < num_pci_pdev; idx++) {
-		pdev = &pci_pdev_array[idx];
+		pdev = &pci_pdevs[idx];
 
 		if (is_bridge(pdev)) {
 			config_pci_bridge(pdev);
@@ -751,7 +751,7 @@ struct pci_pdev *init_pdev(uint16_t pbdf, uint32_t drhd_index)
 		hdr_layout = (hdr_type & PCIM_HDRTYPE);
 
 		if ((hdr_layout == PCIM_HDRTYPE_NORMAL) || (hdr_layout == PCIM_HDRTYPE_BRIDGE)) {
-			pdev = &pci_pdev_array[num_pci_pdev];
+			pdev = &pci_pdevs[num_pci_pdev];
 			pdev->bdf.value = pbdf;
 			pdev->hdr_type = hdr_type;
 			pdev->base_class = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_CLASS, 1U);
