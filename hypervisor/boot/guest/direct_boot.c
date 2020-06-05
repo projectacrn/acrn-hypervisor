@@ -27,12 +27,12 @@ static uint64_t get_direct_boot_ap_trampoline(void)
 	return ap_trampoline_buf;
 }
 
-static void* get_direct_boot_rsdp(void)
+static const void* get_direct_boot_rsdp(void)
 {
 #ifdef CONFIG_MULTIBOOT2
 	struct acrn_multiboot_info *mbi = get_multiboot_info();
 
-	return mbi->mi_acpi_rsdp;
+	return mbi->mi_acpi_rsdp_va;
 #else
 	return NULL;
 #endif

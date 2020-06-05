@@ -39,7 +39,7 @@ static struct physical_seed g_phy_seed;
 
 static uint32_t parse_seed_arg(void)
 {
-	char *cmd_src = NULL;
+	const char *cmd_src = NULL;
 	char *arg, *arg_end;
 	struct acrn_multiboot_info *mbi = get_multiboot_info();
 	uint32_t i = SEED_ARG_NUM - 1U;
