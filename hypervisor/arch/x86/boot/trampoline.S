@@ -179,8 +179,7 @@ trampoline_gdt_ptr:
     .short  (trampoline_gdt_end - trampoline_gdt) - 1
     .quad   trampoline_gdt
 
-/* PML4 and PDPT tables initialized to map first 4 GBytes of memory */
-/* Assumes CPU supports 1GB large pages */
+/* PML4, PDPT, and PD tables initialized to map first 4 GBytes of memory */
     .align  4
     .global cpu_boot_page_tables_ptr
 cpu_boot_page_tables_ptr:
@@ -198,9 +197,19 @@ cpu_boot_page_tables_start:
 trampoline_pdpt_addr:
     address = 0
     .rept   4
-    /* 0x83 = (PAGE_PRESENT | PAGE_PSE | PAGE_RW) */
-    .quad   address + 0x83
-    address = address + 0x40000000
+    /* 0x3 = (PAGE_PRESENT | PAGE_RW) */
+    .quad   trampoline_pdt_addr + address + 0x3
+    /*0x1000 = PAGE_SIZE*/
+    address = address + 0x1000
+    .endr
+    /*0x1000 = PAGE_SIZE*/
+    .align  0x1000
+trampoline_pdt_addr:
+    address = 0
+    .rept  2048
+    /* 0x83 = (PAGE_PSE | PAGE_PRESENT | PAGE_RW) */
+    .quad  address + 0x83
+    address = address + 0x200000
     .endr
 
     .end
