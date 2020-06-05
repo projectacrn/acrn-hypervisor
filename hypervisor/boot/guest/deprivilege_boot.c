@@ -54,9 +54,9 @@ static uint64_t get_depri_boot_ap_trampoline(void)
 	return depri_boot_ctx.ap_trampoline_buf;
 }
 
-static void* get_depri_boot_rsdp(void)
+static const void* get_depri_boot_rsdp(void)
 {
-	return hpa2hva((uint64_t)(depri_boot_ctx.rsdp));
+	return (const void*)hpa2hva((uint64_t)(depri_boot_ctx.rsdp));
 }
 
 static void init_depri_boot_irq(void)

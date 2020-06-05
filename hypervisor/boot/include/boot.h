@@ -24,19 +24,21 @@
 struct acrn_multiboot_info {
 	uint32_t		mi_flags;	/* the flags is back-compatible with multiboot1 */
 
-	char			*mi_cmdline;
-	char			*mi_loader_name;
+	const char		*mi_cmdline;
+	const char		*mi_loader_name;
 
 	uint32_t		mi_mods_count;
+	const void		*mi_mods_va;
 	struct multiboot_module	mi_mods[MAX_MODULE_COUNT];
 
 	uint32_t 		mi_drives_length;
 	uint32_t		mi_drives_addr;
 
 	uint32_t		mi_mmap_entries;
+	const void		*mi_mmap_va;
 	struct multiboot_mmap	mi_mmap_entry[E820_MAX_ENTRIES];
 
-	void			*mi_acpi_rsdp;
+	const void		*mi_acpi_rsdp_va;
 	struct efi_info		mi_efi_info;
 };
 
@@ -72,6 +74,7 @@ int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info);
 #endif
 
 struct acrn_multiboot_info *get_multiboot_info(void);
+void init_acrn_multiboot_info(void);
 int32_t sanitize_multiboot_info(void);
 void parse_hv_cmdline(void);
 
