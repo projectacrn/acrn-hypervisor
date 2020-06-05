@@ -29,6 +29,11 @@ static inline bool is_space(char c)
 	return ((c == ' ') || (c == '\t'));
 }
 
+static inline bool is_eol(char c)
+{
+	return ((c == 0x0d) || (c == 0x0a) || (c == '\0'));
+}
+
 /* Function prototypes */
 int32_t strcmp(const char *s1_arg, const char *s2_arg);
 int32_t strncmp(const char *s1_arg, const char *s2_arg, size_t n_arg);

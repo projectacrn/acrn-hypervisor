@@ -25,7 +25,7 @@ static void mb2_mmap_to_mbi(struct acrn_multiboot_info *mbi, const struct multib
 static void mb2_mods_to_mbi(struct acrn_multiboot_info *mbi,
 			uint32_t mbi_mod_idx, const struct multiboot2_tag_module *mb2_tag_mods)
 {
-	if (mbi_mod_idx < MAX_MODULE_COUNT) {
+	if (mbi_mod_idx < MAX_MODULE_NUM) {
 		mbi->mi_mods[mbi_mod_idx].mm_mod_start = mb2_tag_mods->mod_start;
 		mbi->mi_mods[mbi_mod_idx].mm_mod_end = mb2_tag_mods->mod_end;
 		mbi->mi_mods[mbi_mod_idx].mm_string = (uint32_t)(uint64_t)mb2_tag_mods->cmdline;
