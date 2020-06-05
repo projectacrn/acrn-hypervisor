@@ -51,6 +51,28 @@
 #define TRUSTY_PGTABLE_PAGE_NUM(size)	\
 (TRUSTY_PML4_PAGE_NUM(size) + TRUSTY_PDPT_PAGE_NUM(size) + TRUSTY_PD_PAGE_NUM(size) + TRUSTY_PT_PAGE_NUM(size))
 
+/**
+ * @brief Page tables level in IA32 paging mode
+ */
+enum _page_table_level {
+        /**
+         * @brief The PML4 level in the page tables
+         */
+	IA32E_PML4 = 0,
+        /**
+         * @brief The Page-Directory-Pointer-Table level in the page tables
+         */
+	IA32E_PDPT = 1,
+        /**
+         * @brief The Page-Directory level in the page tables
+         */
+	IA32E_PD = 2,
+        /**
+         * @brief The Page-Table level in the page tables
+         */
+	IA32E_PT = 3,
+};
+
 struct acrn_vm;
 
 struct page {
@@ -77,7 +99,7 @@ union pgtable_pages_info {
 
 struct memory_ops {
 	union pgtable_pages_info *info;
-	bool large_page_enabled;
+	bool (*large_page_support)(enum _page_table_level level);
 	uint64_t (*get_default_access_right)(void);
 	uint64_t (*pgentry_present)(uint64_t pte);
 	struct page *(*get_pml4_page)(const union pgtable_pages_info *info);
