@@ -76,28 +76,6 @@ static inline uint64_t round_pde_down(uint64_t val)
 	return (val & PDE_MASK);
 }
 
-/**
- * @brief Page tables level in IA32 paging mode
- */
-enum _page_table_level {
-        /**
-         * @brief The PML4 level in the page tables
-         */
-	IA32E_PML4 = 0,
-        /**
-         * @brief The Page-Directory-Pointer-Table level in the page tables
-         */
-	IA32E_PDPT = 1,
-        /**
-         * @brief The Page-Directory level in the page tables
-         */
-	IA32E_PD = 2,
-        /**
-         * @brief The Page-Table level in the page tables
-         */
-	IA32E_PT = 3,
-};
-
 /* Page size */
 #define PAGE_SIZE_4K	MEM_4K
 #define PAGE_SIZE_2M	MEM_2M
