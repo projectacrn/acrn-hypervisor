@@ -13,9 +13,11 @@
 #endif
 #include <e820.h>
 #include <zeropage.h>
+#include <vm_configurations.h>
 
 #define MAX_BOOTARGS_SIZE		2048U
-#define MAX_MODULE_COUNT		4U
+/* The modules in multiboot are for kernel and ramdisk of pre-launched VMs and SOS VM */
+#define MAX_MODULE_NUM			(2U * PRE_VM_NUM + 2U * SOS_VM_NUM)
 
 /* extended flags for acrn multiboot info from multiboot2  */
 #define	MULTIBOOT_INFO_HAS_EFI_MMAP	0x00010000U
@@ -29,7 +31,7 @@ struct acrn_multiboot_info {
 
 	uint32_t		mi_mods_count;
 	const void		*mi_mods_va;
-	struct multiboot_module	mi_mods[MAX_MODULE_COUNT];
+	struct multiboot_module	mi_mods[MAX_MODULE_NUM];
 
 	uint32_t 		mi_drives_length;
 	uint32_t		mi_drives_addr;
