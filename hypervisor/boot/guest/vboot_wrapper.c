@@ -42,7 +42,6 @@ void init_vboot(void)
 		{"PXELINUX", DIRECT_BOOT_MODE},
 	};
 
-	printf("Detect bootloader: %s\n", mbi->mi_loader_name);
 	for (i = 0U; i < BOOTLOADER_NUM; i++) {
 		if (strncmp(mbi->mi_loader_name, vboot_bootloader_maps[i].bootloader_name,
 			strnlen_s(vboot_bootloader_maps[i].bootloader_name, BOOTLOADER_NAME_SIZE)) == 0) {
@@ -79,7 +78,7 @@ uint64_t get_ap_trampoline_buf(void)
 }
 
 /* @pre: vboot_ops->get_rsdp != NULL */
-void *get_rsdp_ptr(void)
+const void *get_rsdp_ptr(void)
 {
 	return vboot_ops->get_rsdp();
 }

@@ -78,6 +78,8 @@ void init_primary_pcpu(void)
 	/* Clear BSS */
 	(void)memset(&ld_bss_start, 0U, (size_t)(&ld_bss_end - &ld_bss_start));
 
+	init_acrn_multiboot_info();
+
 	parse_hv_cmdline();
 
 	init_debug_pre();
