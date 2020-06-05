@@ -20,12 +20,13 @@ Prerequisites
 #. For a default prebuilt ACRN binary in the E2E package, you must have 4
    CPU cores or enable "CPU Hyper-Threading" in order to have 4 CPU threads for 2 CPU cores.
 #. Follow :ref:`these instructions <Ubuntu Service OS>` to set up the ACRN Service VM
-   based on Ubuntu, this article is validated on the following configurations.
-   Please note that only ACRN hypervisors compiled for
-   SDC scenario support Kata Containers currently.
+   based on Ubuntu.
+#. This tutorial is validated on the following configurations:
 
    - ACRN v1.6.1 (tag: acrn-2020w18.4-140000p)
    - Ubuntu 18.04.4
+#. Kata Containers are only supported for ACRN hypervisors configured for
+   the SDC scenario.
 
 
 Install Docker
