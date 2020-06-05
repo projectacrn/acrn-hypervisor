@@ -69,9 +69,9 @@ int32_t sanitize_multiboot_info(void)
 		acrn_mbi.mi_flags &= ~MULTIBOOT_INFO_HAS_MMAP;
 	}
 
-	if (acrn_mbi.mi_mods_count > MAX_MODULE_COUNT) {
+	if (acrn_mbi.mi_mods_count > MAX_MODULE_NUM) {
 		pr_err("Too many multiboot modules %d\n", acrn_mbi.mi_mods_count);
-		acrn_mbi.mi_mods_count = MAX_MODULE_COUNT;
+		acrn_mbi.mi_mods_count = MAX_MODULE_NUM;
 	}
 	if (acrn_mbi.mi_mods_count != 0U) {
 		if (boot_from_multiboot1() && (acrn_mbi.mi_mods_va != NULL)) {

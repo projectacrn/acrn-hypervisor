@@ -22,7 +22,6 @@
 
 #define DBG_LEVEL_BOOT	6U
 
-#define MAX_BOOT_PARAMS_LEN 64U
 #define INVALID_MOD_IDX		0xFFFFU
 
 /**
@@ -99,6 +98,9 @@ static int32_t init_vm_kernel_info(struct acrn_vm *vm, const struct multiboot_mo
 	return (vm->sw.kernel_info.kernel_load_addr == NULL) ? (-EINVAL) : 0;
 }
 
+/* cmdline parsed from multiboot module string, for pre-launched VMs and SOS VM only. */
+static char mod_cmdline[PRE_VM_NUM + SOS_VM_NUM][MAX_BOOTARGS_SIZE] = { '\0' };
+
 /**
  * @pre vm != NULL && mbi != NULL
  */
@@ -108,7 +110,14 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_multiboo
 	char *bootargs = vm_config->os_config.bootargs;
 
 	if ((vm_config->load_order == PRE_LAUNCHED_VM) || (vm_config->load_order == SOS_VM)) {
-		vm->sw.bootargs_info.src_addr = bootargs;
+		if (mod_cmdline[vm->vm_id][0] == '\0') {
+			vm->sw.bootargs_info.src_addr = bootargs;
+		} else {
+			/* override build-in bootargs with multiboot module string which is configurable
+			 * at bootloader boot time. e.g. GRUB menu
+			 */
+			vm->sw.bootargs_info.src_addr = &mod_cmdline[vm->vm_id][0];
+		}
 	}
 
 	if (vm_config->load_order == SOS_VM) {
@@ -157,12 +166,13 @@ static uint32_t get_mod_idx_by_tag(const struct multiboot_module *mods, uint32_t
 	for (i = 0U; i < mods_count; i++) {
 		const char *mm_string = (char *)hpa2hva((uint64_t)mods[i].mm_string);
 		uint32_t mm_str_len = strnlen_s(mm_string, MAX_MOD_TAG_LEN);
+		const char *p_chr = mm_string + tag_len; /* point to right after the end of tag */
 
-		/* when do file stitch by tool, the tag in mm_string might be followed with 0x0d or 0x0a */
+		/* The tag must be located at the first word in mm_string and end with SPACE/TAB or EOL since
+		 * when do file stitch by tool, the tag in mm_string might be followed by EOL(0x0d/0x0a).
+		 */
 		if ((mm_str_len >= tag_len) && (strncmp(mm_string, tag, tag_len) == 0)
-				&& ((*(mm_string + tag_len) == 0x0d)
-				|| (*(mm_string + tag_len) == 0x0a)
-				|| (*(mm_string + tag_len) == 0))){
+				&& (is_space(*p_chr) || is_eol(*p_chr))) {
 			ret = i;
 			break;
 		}
@@ -182,8 +192,20 @@ static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct acrn_multiboot_i
 	dev_dbg(DBG_LEVEL_BOOT, "mod counts=%d\n", mbi->mi_mods_count);
 
 	if (mods != NULL) {
+		/* find kernel module first */
 		mod_idx = get_mod_idx_by_tag(mods, mbi->mi_mods_count, vm_config->os_config.kernel_mod_tag);
 		if (mod_idx != INVALID_MOD_IDX) {
+			const char *mm_string = (char *)hpa2hva((uint64_t)mods[mod_idx].mm_string);
+			uint32_t mm_str_len = strnlen_s(mm_string, MAX_BOOTARGS_SIZE);
+			uint32_t tag_len = strnlen_s(vm_config->os_config.kernel_mod_tag, MAX_MOD_TAG_LEN);
+			const char *p_chr = mm_string + tag_len + 1; /* point to the possible start of cmdline */
+
+			/* check whether there is a cmdline configured in module string */
+			if (((mm_str_len > (tag_len + 1U))) && (is_space(*(p_chr - 1))) && (!is_eol(*p_chr))) {
+				(void)strncpy_s(&mod_cmdline[vm->vm_id][0], MAX_BOOTARGS_SIZE,
+						p_chr, (MAX_BOOTARGS_SIZE - 1U));
+			}
+
 			ret = init_vm_kernel_info(vm, &mods[mod_idx]);
 		}
 	}
