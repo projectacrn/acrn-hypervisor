@@ -43,10 +43,16 @@
 #include <bits.h>
 #include <board.h>
 #include <platform_acpi_info.h>
+#include <hash.h>
+#include <util.h>
+
+#define PDEV_HLIST_HASHBITS 6U
+#define PDEV_HLIST_HASHSIZE (1U << PDEV_HLIST_HASHBITS)
 
 static spinlock_t pci_device_lock;
 static uint32_t num_pci_pdev;
 static struct pci_pdev pci_pdevs[CONFIG_MAX_PCI_DEV_NUM];
+static struct hlist_head pdevs_hlist_heads[PDEV_HLIST_HASHSIZE];
 static uint64_t pci_mmcfg_base = DEFAULT_PCI_MMCFG_BASE;
 
 #ifdef CONFIG_ACPI_PARSE_ENABLED
@@ -258,6 +264,21 @@ void pdev_restore_bar(const struct pci_pdev *pdev)
 	}
 }
 
+static const struct pci_pdev *pci_find_pdev(uint16_t pbdf)
+{
+	struct hlist_node *n;
+	const struct pci_pdev *found = NULL, *tmp;
+
+	hlist_for_each (n, &pdevs_hlist_heads[hash64(pbdf, PDEV_HLIST_HASHBITS)]) {
+		tmp = hlist_entry(n, struct pci_pdev, link);
+		if (pbdf == tmp->bdf.value) {
+			found = tmp;
+			break;
+		}
+	}
+	return found;
+}
+
 /* @brief: Find the DRHD index corresponding to a PCI device
  * Runs through the pci_pdevs and returns the value in drhd_idx
  * member from pdev structure that matches matches B:D.F
@@ -269,17 +290,8 @@ void pdev_restore_bar(const struct pci_pdev *pdev)
 
 uint32_t pci_lookup_drhd_for_pbdf(uint16_t pbdf)
 {
-	uint32_t drhd_index = INVALID_DRHD_INDEX;
-	uint32_t index;
-
-	for (index = 0U; index < num_pci_pdev; index++) {
-		if (pci_pdevs[index].bdf.value == pbdf) {
-			drhd_index = pci_pdevs[index].drhd_index;
-			break;
-		}
-	}
-
-	return drhd_index;
+	const struct pci_pdev *pdev = pci_find_pdev(pbdf);
+	return (pdev != NULL) ? pdev->drhd_index : INVALID_DRHD_INDEX;
 }
 
 /* enable: 1: enable INTx; 0: Disable INTx */
@@ -765,6 +777,7 @@ struct pci_pdev *init_pdev(uint16_t pbdf, uint32_t drhd_index)
 				pci_enumerate_cap(pdev);
 			}
 
+			hlist_add_head(&pdev->link, &pdevs_hlist_heads[hash64(pbdf, PDEV_HLIST_HASHBITS)]);
 			pdev->drhd_index = drhd_index;
 			num_pci_pdev++;
 			reserve_vmsix_on_msi_irtes(pdev);

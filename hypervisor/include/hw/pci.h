@@ -31,6 +31,8 @@
 #ifndef PCI_H_
 #define PCI_H_
 
+#include <list.h>
+
 /*
  * PCIM_xxx: mask to locate subfield in register
  * PCIR_xxx: config register offset
@@ -248,6 +250,7 @@ struct pci_pdev {
 	bool has_pm_reset;
 	bool has_flr;
 	bool has_af_flr;
+	struct hlist_node link;
 };
 
 struct pci_cfg_ops {
