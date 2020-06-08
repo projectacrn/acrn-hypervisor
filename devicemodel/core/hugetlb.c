@@ -44,7 +44,7 @@ extern char *vmname;
 
 #define HUGETLB_LV1		0
 #define HUGETLB_LV2		1
-#define HUGETLB_LV_MAX	2
+#define HUGETLB_LV_MAX		2
 
 #define MAX_PATH_LEN 256
 
@@ -653,16 +653,13 @@ bool init_hugetlb(void)
 			return false;
 	}
 
-	for (level = HUGETLB_LV1; level < HUGETLB_LV_MAX; level++) {
-		if (mount_hugetlbfs(level) < 0) {
-			level--;
+	for (level = HUGETLB_LV1; level < HUGETLB_LV_MAX; level++)
+		if (mount_hugetlbfs(level) < 0)
 			break;
-		}
-	}
 
-	if (level < HUGETLB_LV1) /* mount fail for level 1 */
+	if (level == HUGETLB_LV1) /* mount fail for level 1 */
 		return false;
-	else if (level == HUGETLB_LV1) /* mount fail for level 2 */
+	else if (level == HUGETLB_LV2) /* mount fail for level 2 */
 		pr_warn("WARNING: only level 1 hugetlb supported");
 
 	lock_fd = open(ACRN_HUGETLB_LOCK_FILE, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
