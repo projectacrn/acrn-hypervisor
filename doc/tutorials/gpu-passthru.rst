@@ -66,11 +66,11 @@ Passthrough the GPU to Guest
 
      cp /usr/share/acrn/samples/nuc/launch_win.sh ~/install_win.sh
 
-#. Modify the ``install_win.sh`` script to specify the Windows image you use.
+2. Modify the ``install_win.sh`` script to specify the Windows image you use.
 
-#. Modify the ``install_win.sh`` script to enable GVT-d.
+3. Modify the ``install_win.sh`` script to enable GVT-d:
 
-#. Add the following commands before ``acrn-dm -A -m $mem_size -s 0:0,hostbridge \``
+   Add the following commands before ``acrn-dm -A -m $mem_size -s 0:0,hostbridge \``
 
    ::
 
@@ -80,9 +80,9 @@ Passthrough the GPU to Guest
      echo "0000:00:02.0" > /sys/bus/pci/devices/0000:00:02.0/driver/unbind
      echo "0000:00:02.0" > /sys/bus/pci/drivers/pci-stub/bind
 
-#. Replace ``-s 2,pci-gvt -G "$2" \`` with ``-s 2,passthru,0/2/0,gpu \``
+   Replace ``-s 2,pci-gvt -G "$2" \`` with ``-s 2,passthru,0/2/0,gpu \``
 
-#. Run ``launch_win.sh``.
+4. Run ``launch_win.sh``.
 
 .. note:: If you want to passthrough the GPU to a Clear Linux User VM, the
    steps are the same as above except your script.
