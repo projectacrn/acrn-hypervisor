@@ -196,3 +196,28 @@ def cat_max_mask_check(cat_mask_list, feature, cat_str, max_mask_str):
             key = 'hv,{},{},{}'.format(feature, cat_str, max_mask_str)
             ERR_LIST[key] = "CLOS_MASK {} should be contiguous bit set.".format(max_mask_str, clos_max_mask_str)
             return
+
+def mba_delay_check(mba_delay_list, feature, mba_str, max_mask_str):
+
+    if not board_cfg_lib.is_rdt_supported():
+        return
+
+    (_, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
+
+    clos_max = common.num2int(min(rdt_res_clos_max))
+    mba_delay_settings_len = len(mba_delay_list)
+    if clos_max != mba_delay_settings_len:
+        key = 'hv,{},{},{}'.format(feature, mba_str, max_mask_str)
+        ERR_LIST[key] = "MBA_DELAY values in scenaio xml should equal to MAX_PLATFORM_CLOS_NUM.".format(clos_max)
+        return
+
+    mba_delay_str = clos_max_mask_list[1].strip('"').strip("'")
+    mba_delay = common.num2int(mba_delay_str)
+    for val_str in mba_delay_list:
+        if empty_check(val_str, feature, mba_str, max_mask_str):
+            return
+        value = common.num2int(val_str)
+        if value > mba_delay:
+            key = 'hv,{},{},{}'.format(feature, mba_str, max_mask_str)
+            ERR_LIST[key] = "{} should be in range[0,{}]".format(max_mask_str, mba_delay_str)
+            return

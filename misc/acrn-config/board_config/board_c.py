@@ -117,12 +117,27 @@ def populate_mba_delay_mask(rdt_res, common_clos_max, config):
     :param common_clos_max: Least common clos supported by all RDT resource
     :param config: it is a file pointer of board information for writing to
     """
+    err_dic = {}
+    mba_delay_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "MBA_DELAY")
+    mba_max_delay_settings_len = len(mba_delay_list)
+    if mba_max_delay_settings_len != 0 and \
+       mba_max_delay_settings_len != common_clos_max:
+        err_dic["board config: generate board.c failed"] = "Number of \
+        MBA_DELAY values in scenaio xml should equal to MAX_PLATFORM_CLOS_NUM"
+        return err_dic
+
     for idx in range(common_clos_max):
         print("\t{", file=config)
-        print("\t\t.mba_delay = 0U,", file=config)
+        if idx < mba_max_delay_settings_len:
+            print("\t\t.mba_delay = {0}U,".format(mba_delay_list[idx]), file=config)
+        else:
+            print("\t\t.mba_delay = 0U,", file=config)
+
         print("\t\t.msr_index = MSR_IA32_{0}_MASK_BASE + {1},".format(
               rdt_res, idx), file=config)
         print("\t},", file=config)
+
+    return err_dic
 
 
 def gen_rdt_res(config):
@@ -169,7 +184,7 @@ def gen_rdt_res(config):
                 rdt_res_str = "mba"
                 print("struct platform_clos_info platform_{0}_clos_array[{1}] = {{".format(rdt_res_str,
                       "MAX_PLATFORM_CLOS_NUM"), file=config)
-                populate_mba_delay_mask(rdt_res, common_clos_max, config)
+                err_dic = populate_mba_delay_mask(rdt_res, common_clos_max, config)
                 print("};\n", file=config)
                 res_present[RDT.MBA.value] = 1
             else:
