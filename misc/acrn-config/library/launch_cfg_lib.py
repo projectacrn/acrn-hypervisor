@@ -13,7 +13,8 @@ ERR_LIST = {}
 BOOT_TYPE = ['no', 'vsbl', 'ovmf']
 RTOS_TYPE = ['no', 'Soft RT', 'Hard RT']
 DM_VUART0 = ['Disable', 'Enable']
-UOS_TYPES = ['CLEARLINUX', 'ANDROID', 'ALIOS', 'PREEMPT-RT LINUX', 'VXWORKS', 'WINDOWS', 'ZEPHYR', 'GENERIC LINUX']
+UOS_TYPES = ['CLEARLINUX', 'ANDROID', 'ALIOS', 'PREEMPT-RT LINUX', 'VXWORKS', 'WINDOWS', 'ZEPHYR', 'YOCTO', 'UBUNTU', 'GENERIC LINUX']
+LINUX_LIKE_OS = ['CLEARLINUX', 'PREEMPT-RT LINUX', 'YOCTO', 'UBUNTU', 'GENERIC LINUX']
 
 PT_SUB_PCI = {}
 PT_SUB_PCI['usb_xdci'] = ['USB controller']
@@ -554,3 +555,12 @@ def check_slot(slot_db):
             if bus_slot_fun0 not in slot_values[uosid]:
                 slot_db[dev][uosid] = bus_slot_fun0
                 slot_values[uosid].append(bus_slot_fun0)
+
+
+def is_linux_like(uos_type):
+
+    is_linux = False
+    if uos_type in LINUX_LIKE_OS:
+        is_linux = True
+
+    return is_linux
