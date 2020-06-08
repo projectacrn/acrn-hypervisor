@@ -588,6 +588,10 @@ def check_vuart(v0_vuart, v1_vuart):
 
 
 def vcpu_clos_check(cpus_per_vm, clos_per_vm, prime_item, item):
+
+    if not board_cfg_lib.is_rdt_supported():
+        return
+
     common_clos_max = 0
     cdp_enabled = cdp_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "CDP_ENABLED")
     (rdt_resources, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
