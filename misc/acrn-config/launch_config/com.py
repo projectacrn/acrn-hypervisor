@@ -9,11 +9,11 @@ import common
 import pt
 
 
-def is_nuc_whl_clr(names, vmid):
+def is_nuc_whl_linux(names, vmid):
     uos_type = names['uos_types'][vmid]
     board_name = names['board_name']
 
-    if uos_type == "CLEARLINUX" and board_name not in ("apl-mrb", "apl-up2"):
+    if launch_cfg_lib.is_linux_like(uos_type) and board_name not in ("apl-mrb", "apl-up2"):
         return True
 
     return False
@@ -33,7 +33,7 @@ def tap_uos_net(names, virt_io, vmid, config):
 
     vm_name = common.undline_name(uos_type).lower()
 
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
+    if launch_cfg_lib.is_linux_like(uos_type) or uos_type in ("ANDROID", "ALIOS"):
         i = 0
         for mount_flag in launch_cfg_lib.MOUNT_FLAG_DIC[vmid]:
             if not mount_flag:
@@ -48,14 +48,12 @@ def tap_uos_net(names, virt_io, vmid, config):
             print("", file=config)
             i += 1
 
-        print("#vm-name used to generate uos-mac address", file=config)
-        print("mac=$(cat /sys/class/net/e*/address)", file=config)
-        print("vm_name=post_vm_id$1", file=config)
-        print("mac_seed=${mac:9:8}-${vm_name}", file=config)
-        print("", file=config)
+    print("#vm-name used to generate uos-mac address", file=config)
+    print("mac=$(cat /sys/class/net/e*/address)", file=config)
+    print("vm_name=post_vm_id$1", file=config)
+    print("mac_seed=${mac:9:8}-${vm_name}", file=config)
+    print("", file=config)
 
-    if uos_type in ("VXWORKS", "ZEPHYR", "WINDOWS", "PREEMPT-RT LINUX"):
-        print("vm_name=post_vm_id$1", file=config)
 
     for net in virt_io['network'][vmid]:
         if net:
@@ -72,11 +70,6 @@ def tap_uos_net(names, virt_io, vmid, config):
     print("  exit", file=config)
     print("fi", file=config)
     print("", file=config)
-
-
-def delay_use_usb_storage(uos_type, config):
-    if uos_type == "CLEARLINUX":
-        print("echo 100 > /sys/bus/usb/drivers/usb-storage/module/parameters/delay_use", file=config)
 
 
 def off_line_cpus(args, vmid, uos_type, config):
@@ -135,7 +128,7 @@ def run_container(board_name, uos_type, config):
     if 'nuc' in board_name:
         board_name = 'nuc'
 
-    if board_name not in ("apl-mrb", "nuc") or uos_type != "CLEARLINUX":
+    if board_name not in ("apl-mrb", "nuc") or not launch_cfg_lib.is_linux_like(uos_type):
         return
 
     print("function run_container()", file=config)
@@ -233,8 +226,6 @@ def interrupt_storm(pt_sel, config):
 
 def gvt_arg_set(dm, vmid, uos_type, config):
 
-    if uos_type not in ('CLEARLINUX', 'ANDROID', 'ALIOS', 'WINDOWS'):
-        return
     gvt_args = dm['gvt_args'][vmid]
     if gvt_args == "gvtd":
         bus = int(launch_cfg_lib.GPU_BDF.split(':')[0], 16)
@@ -326,6 +317,21 @@ def uos_launch(names, args, virt_io, vmid, config):
         if board_name == "apl-mrb":
             print("    exit", file=config)
             print("fi", file=config)
+            if is_mount_needed(virt_io, vmid):
+                print("", file=config)
+                if gvt_args == "gvtd" or not gvt_args:
+                    print('launch_{} {} "{}" $debug'.format(launch_uos, vmid, vmid), file=config)
+                else:
+                    print('launch_{} {} "{}" "{}" $debug'.format(launch_uos, vmid, gvt_args, vmid), file=config)
+                print("", file=config)
+                i = 0
+                for mount_flag in launch_cfg_lib.MOUNT_FLAG_DIC[vmid]:
+                    if not mount_flag:
+                        i += 1
+                        continue
+                    print("umount /data{}".format(i), file=config)
+                    i += 1
+
         else:
             print("else", file=config)
             if gvt_args == "gvtd" or not gvt_args:
@@ -333,23 +339,19 @@ def uos_launch(names, args, virt_io, vmid, config):
             elif gvt_args:
                 print('    launch_{} {} "{}"'.format(launch_uos, vmid, gvt_args), file=config)
             print("fi", file=config)
+            return
+    elif not is_mount_needed(virt_io, vmid):
+        if gvt_args == "gvtd" or not gvt_args:
+            print('launch_{} {}'.format(launch_uos, vmid), file=config)
+        else:
+            print('launch_{} {} "{}"'.format(launch_uos, vmid, gvt_args), file=config)
     else:
-        if uos_type in ("VXWORKS", "PREEMPT-RT LINUX", "ZEPHYR"):
-            print("launch_{} {}".format(launch_uos, vmid), file=config)
-        if uos_type in ("CLEARLINUX", "WINDOWS"):
-            if gvt_args == "gvtd" or not gvt_args:
-                print('launch_{} {}'.format(launch_uos, vmid), file=config)
-            else:
-                print('launch_{} {} "{}"'.format(launch_uos, vmid, gvt_args), file=config)
-
-    if is_mount_needed(virt_io, vmid):
         print("", file=config)
         if gvt_args == "gvtd" or not gvt_args:
             print('launch_{} {} "{}" $debug'.format(launch_uos, vmid, vmid), file=config)
         else:
             print('launch_{} {} "{}" "{}" $debug'.format(launch_uos, vmid, gvt_args, vmid), file=config)
         print("", file=config)
-
         i = 0
         for mount_flag in launch_cfg_lib.MOUNT_FLAG_DIC[vmid]:
             if not mount_flag:
@@ -365,7 +367,7 @@ def launch_end(names, args, virt_io, vmid, config):
     uos_type = names['uos_types'][vmid]
     mem_size = args["mem_size"][vmid]
 
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_whl_clr(names, vmid):
+    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS") and not is_nuc_whl_linux(names, vmid):
         print("debug=0", file=config)
         print("", file=config)
         print('while getopts "hdC" opt', file=config)
@@ -542,7 +544,7 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
 
     # clearlinux/android/alios
     print('acrn-dm -A -m $mem_size -s 0:0,hostbridge -U {} \\'.format(scenario_uuid), file=config)
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
+    if launch_cfg_lib.is_linux_like(uos_type) or uos_type in ("ANDROID", "ALIOS"):
         if uos_type in ("ANDROID", "ALIOS"):
             print('   $npk_virt \\', file=config)
             print("   -s {},virtio-rpmb \\".format(launch_cfg_lib.virtual_dev_slot("virtio-rpmb")), file=config)
@@ -603,13 +605,14 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
         print("   -s 1:0,lpc \\", file=config)
         print("   -l com1,stdio \\", file=config)
 
-    if uos_type in ("CLEARLINUX", "ANDROID", "ALIOS"):
-        print("   -s {},virtio-hyper_dmabuf \\".format(launch_cfg_lib.virtual_dev_slot("virtio-hyper_dmabuf")), file=config)
+    if launch_cfg_lib.is_linux_like(uos_type) or uos_type in ("ANDROID", "ALIOS"):
+        if uos_type != "PREEMPT-RT LINUX":
+            print("   -s {},virtio-hyper_dmabuf \\".format(launch_cfg_lib.virtual_dev_slot("virtio-hyper_dmabuf")), file=config)
         if board_name == "apl-mrb":
             print("   -i /run/acrn/ioc_$vm_name,0x20 \\", file=config)
             print("   -l com2,/run/acrn/ioc_$vm_name \\", file=config)
 
-        if not is_nuc_whl_clr(names, vmid):
+        if not is_nuc_whl_linux(names, vmid):
             print("   -s {},wdt-i6300esb \\".format(launch_cfg_lib.virtual_dev_slot("wdt-i6300esb")), file=config)
 
     set_dm_pt(names, sel, vmid, config)
@@ -632,7 +635,6 @@ def gen(names, pt_sel, virt_io, dm, vmid, config):
     # passthrough device
     pt.gen_pt(names, dm, pt_sel, vmid, config)
     wa_usage(uos_type, config)
-    delay_use_usb_storage(uos_type, config)
     mem_size_set(dm, vmid, config)
     interrupt_storm(pt_sel, config)
     log_level_set(uos_type, config)
