@@ -432,13 +432,13 @@ def get_hv_item_tag(config_file, branch_tag, tag_str='', leaf_str=''):
                             tmp_list = []
                             for leaf_s in leaf:
                                 if leaf_s.tag == leaf_str and leaf_s.text and leaf_s.text != None:
-                                    if leaf_str == "CLOS_MASK":
+                                    if leaf_str == "CLOS_MASK" or leaf_str == "MBA_DELAY":
                                         tmp_list.append(leaf_s.text)
                                     else:
                                         tmp = leaf_s.text
                                 continue
 
-                            if leaf_str == "CLOS_MASK":
+                            if leaf_str == "CLOS_MASK" or leaf_str == "MBA_DELAY":
                                 tmp = tmp_list
                                 break
 

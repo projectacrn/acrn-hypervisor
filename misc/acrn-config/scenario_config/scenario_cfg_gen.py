@@ -67,6 +67,7 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["hv,FEATURES,RDT,RDT_ENABLED"] = board_cfg_lib.get_rdt_select_opt()
     scenario_item_values["hv,FEATURES,RDT,CDP_ENABLED"] = board_cfg_lib.get_rdt_select_opt()
     scenario_item_values["hv,FEATURES,RDT,CLOS_MASK"] = board_cfg_lib.get_clos_mask_num()
+    scenario_item_values["hv,FEATURES,RDT,MBA_DELAY"] = board_cfg_lib.get_clos_mask_num()
     scenario_item_values["hv,FEATURES,SCHEDULER"] = hv_cfg_lib.SCHEDULER_TYPE
     scenario_item_values["hv,FEATURES,RELOC"] = hv_cfg_lib.N_Y
     scenario_item_values["hv,FEATURES,HYPERV_ENABLED"] = hv_cfg_lib.N_Y
