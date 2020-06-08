@@ -41,29 +41,31 @@ void init_acrn_multiboot_info(void)
 
 int32_t sanitize_multiboot_info(void)
 {
-	uint32_t mmap_entry_size = 0U;
-
-	if (boot_from_multiboot1()) {
-		pr_info("Multiboot1 detected.");
-		mmap_entry_size = sizeof(struct multiboot_mmap);
-#ifdef CONFIG_MULTIBOOT2
-	} else if (boot_from_multiboot2()) {
-		pr_info("Multiboot2 detected.");
-		mmap_entry_size = sizeof(struct multiboot2_mmap_entry);
-#endif
-	} else {
-		/* mbi_status is still -ENODEV, nothing to do here */
-	}
-
 	if ((acrn_mbi.mi_mmap_entries != 0U) && (acrn_mbi.mi_mmap_va != NULL)) {
 		if (acrn_mbi.mi_mmap_entries > E820_MAX_ENTRIES) {
 			pr_err("Too many E820 entries %d\n", acrn_mbi.mi_mmap_entries);
 			acrn_mbi.mi_mmap_entries = E820_MAX_ENTRIES;
 		}
-		(void)memcpy_s((void *)(&acrn_mbi.mi_mmap_entry[0]),
-			(acrn_mbi.mi_mmap_entries * mmap_entry_size),
-			(const void *)acrn_mbi.mi_mmap_va,
-			(acrn_mbi.mi_mmap_entries * mmap_entry_size));
+		if (boot_from_multiboot1()) {
+			uint32_t mmap_entry_size = sizeof(struct multiboot_mmap);
+
+			(void)memcpy_s((void *)(&acrn_mbi.mi_mmap_entry[0]),
+				(acrn_mbi.mi_mmap_entries * mmap_entry_size),
+				(const void *)acrn_mbi.mi_mmap_va,
+				(acrn_mbi.mi_mmap_entries * mmap_entry_size));
+		}
+#ifdef CONFIG_MULTIBOOT2
+		if (boot_from_multiboot2()) {
+			uint32_t i;
+			struct multiboot2_mmap_entry *mb2_mmap = (struct multiboot2_mmap_entry *)acrn_mbi.mi_mmap_va;
+
+			for (i = 0U; i < acrn_mbi.mi_mmap_entries; i++) {
+				acrn_mbi.mi_mmap_entry[i].baseaddr = (mb2_mmap + i)->addr;
+				acrn_mbi.mi_mmap_entry[i].length = (mb2_mmap + i)->len;
+				acrn_mbi.mi_mmap_entry[i].type = (mb2_mmap + i)->type;
+			}
+		}
+#endif
 		acrn_mbi.mi_flags |= MULTIBOOT_INFO_HAS_MMAP;
 	} else {
 		acrn_mbi.mi_flags &= ~MULTIBOOT_INFO_HAS_MMAP;
@@ -106,7 +108,7 @@ int32_t sanitize_multiboot_info(void)
 		pr_err("no bootloader name found!");
 		mbi_status = -EINVAL;
 	} else {
-		printf("Detect bootloader: %s\n", acrn_mbi.mi_loader_name);
+		printf("Multiboot%s Bootloader: %s\n", boot_from_multiboot1() ? "" : "2", acrn_mbi.mi_loader_name);
 	}
 
 	return mbi_status;
