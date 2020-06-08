@@ -28,14 +28,14 @@ VMs.
    would work for both pre-launched and post-launched VMs.
 
 
-ivshmem dm:
+ivshmem hv:
    The ivshmem device model implements register virtualization
-   and shared memory mapping. Will support notification/interrupt mechanism
-   in future.
+   and shared memory mapping in the hypervisor (not the acrn-dm).
+   Will support notification/interrupt mechanism in the future.
 
 ivshmem server:
    A daemon for inter-VM notification capability,
-   This is currently not implemented, so the inter-VM communication
+   This is currently **not implemented**, so the inter-VM communication
    doesn't support a notification mechanism.
 
 Ivshmem Device Introduction
@@ -98,7 +98,7 @@ Usage
 To support two post-launched VMs communicating via an ``ivshmem`` device,
 add this line as an acrn-dm boot parameter::
 
-  -s slot, ivshmem, shm_name, shm_size
+  -s slot,ivshmem,shm_name,shm_size
 
 where
 
