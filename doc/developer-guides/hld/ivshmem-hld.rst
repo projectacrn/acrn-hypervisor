@@ -116,53 +116,62 @@ where
 Inter-VM Communication Example
 ******************************
 
-Using inter-vm communication between two linux-based post-launched VMs (VM1 and
-VM2) as an example.
+The following example uses inter-vm communication between two Linux-based post-launched VMs (VM1 and
+VM2).
 
-Firstly, we need to add a new virtual PCI device for both of VMs, the device type
-is ``ivshmem``, shared memory name is test and shared memory size is 4096 bytes.
+1. Add a new virtual PCI device for both VMs: the device type is
+   ``ivshmem``, shared memory name is ``test`` and shared memory size is
+   4096 bytes. Both VMs must have the same shared memory name and size:
 
-.. note:: both VMs should have same shared memory name and size
+   - VM1 Launch Script Sample
 
-- VM1 Launch Script Sample::
+     .. code-block:: none
+        :emphasize-lines: 7
 
-	acrn-dm -A -m $mem_size -s 0:0,hostbridge
-	-s 2,pci-gvt -G "$2"
-	-s 5,virtio-console,@stdio:stdio_port
-	-s 6,virtio-hyper_dmabuf
-	-s 3,virtio-blk,/home/clear/uos/uos1.img
-	-s 4,virtio-net,tap0
-	``-s 6,ivshmem,test,4096``
-	-s 7,virtio-rnd
-	--ovmf /usr/share/acrn/bios/OVMF.fd
-	$vm_name
+        acrn-dm -A -m $mem_size -s 0:0,hostbridge \
+         -s 2,pci-gvt -G "$2" \
+         -s 5,virtio-console,@stdio:stdio_port \
+         -s 6,virtio-hyper_dmabuf \
+         -s 3,virtio-blk,/home/clear/uos/uos1.img \
+         -s 4,virtio-net,tap0 \
+         -s 6,ivshmem,test,4096 \
+         -s 7,virtio-rnd \
+         --ovmf /usr/share/acrn/bios/OVMF.fd \
+         $vm_name
 
 
-- VM2 Launch Script Sample::
+   - VM2 Launch Script Sample
 
-	acrn-dm -A -m $mem_size -s 0:0,hostbridge
-	-s 2,pci-gvt -G "$2"
-	-s 3,virtio-blk,/home/clear/uos/uos2.img
-	-s 4,virtio-net,tap0
-	``-s 5,ivshmem,test,4096``
-	--ovmf /usr/share/acrn/bios/OVMF.fd
-	$vm_name
+     .. code-block:: none
+        :emphasize-lines: 5
 
-Secondly, boot two VMs and use ``lspci`` to check the virtual device is ready for each VM.
+        acrn-dm -A -m $mem_size -s 0:0,hostbridge \
+         -s 2,pci-gvt -G "$2" \
+         -s 3,virtio-blk,/home/clear/uos/uos2.img \
+         -s 4,virtio-net,tap0 \
+         -s 5,ivshmem,test,4096 \
+         --ovmf /usr/share/acrn/bios/OVMF.fd \
+         $vm_name
 
--  For VM1, it is ``00:06.0 RAM memory: Red Hat, Inc. Inter-VM shared memory (rev 01)``
--  For VM2, it is ``00:05.0 RAM memory: Red Hat, Inc. Inter-VM shared memory (rev 01)``
+2. Boot two VMs and use ``lspci | grep "shared memory"`` to check the virtual device is ready for each VM.
 
-Thirdly, using below commands to probe the device::
+   -  For VM1, it shows ``00:06.0 RAM memory: Red Hat, Inc. Inter-VM shared memory (rev 01)``
+   -  For VM2, it shows ``00:05.0 RAM memory: Red Hat, Inc. Inter-VM shared memory (rev 01)``
 
-  sudo modprobe uio
-  sudo modprobe uio_pci_generic
-  sudo echo "1af4 1110" > /sys/bus/pci/drivers/uio_pci_generic/new_id
+3. Use these commands to probe the device::
 
-Finally, user application can get shared memory base address from ``ivshmem`` device
-BAR resource (``/sys/class/uio/uioX/device/resource2``) and shared memory size from
-``ivshmem`` device config resource (``/sys/class/uio/uioX/device/config``).
+     $ sudo modprobe uio
+     $ sudo modprobe uio_pci_generic
+     $ sudo echo "1af4 1110" > /sys/bus/pci/drivers/uio_pci_generic/new_id
 
-.. note:: the X in uioX is a number that can be retrieved using the ``ls`` command.
-	VM1 can use ``ls -lh /sys/bus/pci/devices/0000\:00\:06.0/uio`` and VM2 can use
-	``ls -lh /sys/bus/pci/devices/0000\:00\:05.0/uio``.
+4. Finally, a user application can get the shared memory base address from
+   the ``ivshmem`` device BAR resource
+   (``/sys/class/uio/uioX/device/resource2``) and the shared memory size from
+   the ``ivshmem`` device config resource
+   (``/sys/class/uio/uioX/device/config``).
+
+   The ``X`` in ``uioX`` above, is a number that can be retrieved using the
+   ``ls`` command:
+
+   - For VM1 use ``ls -lh /sys/bus/pci/devices/0000:00:06.0/uio``
+   - For VM2 use ``ls -lh /sys/bus/pci/devices/0000:00:05.0/uio``
