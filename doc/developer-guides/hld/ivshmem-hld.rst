@@ -4,14 +4,14 @@ ACRN Shared Memory Based Inter-VM Communication
 ###############################################
 
 ACRN supports inter-virtual machine communication based on a shared
-memory mechanism, The ACRN device model and hypervisor emulate a virtual
+memory mechanism. The ACRN device model or hypervisor emulate a virtual
 PCI device (called an ``ivshmem`` device) to expose the base address and
 size of this shared memory.
 
 Inter-VM Communication Overview
 *******************************
 
-.. figure:: images/ivshmem-image1.png
+.. figure:: images/ivshmem-architecture.png
    :align: center
    :name: ivshmem-architecture-overview
 
@@ -27,15 +27,19 @@ VMs.
    memory regions reserved in the hypervisor's memory space.  This solution
    would work for both pre-launched and post-launched VMs.
 
-
 ivshmem hv:
-   The ivshmem device model implements register virtualization
-   and shared memory mapping in the hypervisor (not the acrn-dm).
-   Will support notification/interrupt mechanism in the future.
+   The **ivshmem hv** implements register virtualization
+   and shared memory mapping in the ACRN hypervisor.
+   It will support notification/interrupt mechanism in the future.
+
+ivshmem dm:
+   The **ivshmem dm** implements register virtualization
+   and shared memory mapping in the ACRN Device Model (``acrn-dm``).
+   It will support notification/interrupt mechanism in the future.
 
 ivshmem server:
-   A daemon for inter-VM notification capability,
-   This is currently **not implemented**, so the inter-VM communication
+   A daemon for inter-VM notification capability, that will work with **ivshmem
+   dm**. This is currently **not implemented**, so the inter-VM communication
    doesn't support a notification mechanism.
 
 Ivshmem Device Introduction
@@ -96,7 +100,7 @@ Usage
 *****
 
 To support two post-launched VMs communicating via an ``ivshmem`` device,
-add this line as an acrn-dm boot parameter::
+add this line as an ``acrn-dm`` boot parameter::
 
   -s slot,ivshmem,shm_name,shm_size
 
@@ -112,12 +116,15 @@ where
 -  ``shm_size`` - Specify a shared memory size. The two communicating
    VMs must define the same size.
 
+.. note:: This device can be used with Real-Time VM (RTVM) as well.
 
 Inter-VM Communication Example
 ******************************
 
 The following example uses inter-vm communication between two Linux-based post-launched VMs (VM1 and
 VM2).
+
+.. note:: An ``ivshmem`` Windows driver exists and can be found `here <https://github.com/virtio-win/kvm-guest-drivers-windows/tree/master/ivshmem>`_
 
 1. Add a new virtual PCI device for both VMs: the device type is
    ``ivshmem``, shared memory name is ``test`` and shared memory size is
