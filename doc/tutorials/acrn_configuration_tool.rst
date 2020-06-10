@@ -135,6 +135,21 @@ Additional scenario XML elements:
   Specify whether ACRN hypervisor image can be booted using multiboot2 protocol.
   If not set, GRUB's multiboot2 is not available as a boot option.
 
+``RDT_ENABLED`` (a child node of ``FEATURES/RDT``):
+  Specify whether enable Resource Director Technology(RDT) allocation feature.
+  Set to 'y' to enable the feature or 'n' to disable it.
+  The 'y' will be ignored when hardware does not support RDT.
+
+``CDP_ENABLED`` (a child node of ``FEATURES/RDT``):
+  Specify whether enable Code and Data Prioritization(CDP). CDP is an extension
+  of CAT.
+  Set to 'y' to enable the feature or 'n' to disable it.
+  The 'y' will be ignored when hardware does not support CDP.
+
+``CLOS_MASK`` (a child node of ``FEATURES/RDT``):
+  Specify cache capacity bitmask for the CLOS, only continuous '1' bits are allowed.
+  The value will be ignored when hardware does not support RDT.
+
 ``HYPERV_ENABLED`` (a child node of ``FEATURES``):
   Specify whether Hyper-V is enabled.
 
@@ -326,7 +341,8 @@ current scenario has:
 
 ``uos_type``:
   Specify the User VM type, such as ``CLEARLINUX``, ``ANDROID``, ``ALIOS``,
-  ``PREEMPT-RT LINUX``, ``GENERIC LINUX``, ``WINDOWS``, ``ZEPHYR`` or ``VXWORKS``.
+  ``PREEMPT-RT LINUX``, ``GENERIC LINUX``, ``WINDOWS``, ``YOCTO``, ``UBUNTU``,
+  ``ZEPHYR`` or ``VXWORKS``.
 
 ``rtos_type``:
   Specify the User VM Realtime capability: Soft RT, Hard RT, or none of them.
