@@ -78,6 +78,9 @@ CFLAGS += -m64 -mno-mmx -mno-sse -mno-sse2 -mno-80387 -mno-fp-ret-in-387
 CFLAGS += -mno-red-zone -mpopcnt
 CFLAGS += -nostdinc -nostdlib -fno-common
 CFLAGS += -Werror
+
+# ACRN depends on zero length array. Silence the gcc if Warrary-bounds is default option
+CFLAGS += -Wno-array-bounds
 CFLAGS += -O2
 ifeq (y, $(CONFIG_RELOC))
 CFLAGS += -fpie
