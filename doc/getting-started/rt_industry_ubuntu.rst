@@ -8,9 +8,9 @@ Verified version
 
 - Ubuntu version: **18.04**
 - GCC version: **9.0**
-- ACRN-hypervisor tag: **v1.6.1 (acrn-2020w18.4-140000p)**
-- ACRN-Kernel (Service VM kernel): **4.19.120-108.iot-lts2018-sos**
-- RT kernel for Ubuntu User OS:
+- ACRN-hypervisor branch: **release_2.0 (acrn-2020w23.6-180000p)**
+- ACRN-Kernel (Service VM kernel): **release_2.0 (5.4.43-PKT-200203T060100Z)**
+- RT kernel for Ubuntu User OS: **4.19/preempt-rt (4.19.72-rt25)**
 - HW: Maxtang Intel WHL-U i7-8665U (`AX8665U-A2 <http://www.maxtangpc.com/fanlessembeddedcomputers/140.html>`_)
 
 Prerequisites
@@ -45,8 +45,8 @@ Connect the WHL Maxtang with the appropriate external devices.
 Install the Ubuntu User VM (RTVM) on the SATA disk
 ==================================================
 
-Install the Native Ubuntu OS on the SATA disk
----------------------------------------------
+Install Ubuntu on the SATA disk
+-------------------------------
 
 .. note:: The WHL Maxtang machine contains both an NVMe and SATA disk.
 
@@ -66,10 +66,16 @@ Install the Native Ubuntu OS on the SATA disk
    b. Select ``/dev/sda`` **ATA KINGSTON RBUSNS4** as the device for the
       bootloader installation. Note that the label depends on the SATA disk used.
 
-#. Continue with the Ubuntu Service VM installation in ``/dev/sda``.
+#. Complete the Ubuntu installation on ``/dev/sda``.
+
+This Ubuntu installation will be modified later (see `Build and Install the RT kernel for the Ubuntu User VM`_)
+to turn it into a Real-Time User VM (RTVM).
 
 Install the Ubuntu Service VM on the NVMe disk
-----------------------------------------------
+==============================================
+
+Install Ubuntu on the NVMe disk
+-------------------------------
 
 .. note:: Before you install the Ubuntu Service VM on the NVMe disk, either
    remove the SATA disk or disable it in the BIOS. Disable it by going to:
@@ -139,8 +145,9 @@ Build the ACRN Hypervisor on Ubuntu
         e2fslibs-dev \
         pkg-config \
         libnuma-dev \
-
-        liblz4-tool
+        liblz4-tool \
+        flex \
+        bison
 
       $ sudo pip3 install kconfiglib
 
@@ -150,7 +157,7 @@ Build the ACRN Hypervisor on Ubuntu
 
       $ cd /home/acrn/work
       $ git clone https://github.com/projectacrn/acrn-hypervisor
-      $ cd acrn-hypvervisor
+      $ cd acrn-hypervisor
 
 #. Switch to the v2.0 version:
 
@@ -163,11 +170,13 @@ Build the ACRN Hypervisor on Ubuntu
    .. code-block:: none
 
       $ make all BOARD_FILE=misc/acrn-config/xmls/board-xmls/whl-ipc-i7.xml SCENARIO_FILE=misc/acrn-config/xmls/config-xmls/whl-ipc-i7/industry.xml RELEASE=0
-
       $ sudo make install
+      $ sudo cp build/hypervisor/acrn.bin /boot/acrn/
 
 Enable network sharing for the User VM
 ======================================
+
+In the Ubuntu Service VM, enable network sharing for the User VM:
 
 .. code-block:: none
 
@@ -183,6 +192,7 @@ Build and install the ACRN kernel
 
       $ cd /home/acrn/work/
       $ git clone https://github.com/projectacrn/acrn-kernel
+      $ cd acrn-kernel
 
 #. Switch to the 5.4 kernel:
 
@@ -192,17 +202,14 @@ Build and install the ACRN kernel
       $ cp kernel_config_uefi_sos .config
       $ make olddefconfig
       $ make all
-      $ sudo make modules_install
 
 Install the Service VM kernel and modules
 =========================================
 
 .. code-block:: none
 
-   $ sudo mkdir /boot/acrn/
-   $ sudo cp ~/sos-kernel-build/usr/lib/kernel/lts2018-sos.4.19.78-98  /boot/bzImage
-
-Copy the Service VM kernel files located at ``arch/x86/boot/bzImage`` to the ``/boot/`` folder.
+   $ sudo make modules_install
+   $ sudo cp arch/x86/boot/bzImage /boot/bzImage
 
 Update Grub for the Ubuntu Service VM
 =====================================
@@ -214,12 +221,9 @@ Update Grub for the Ubuntu Service VM
       a single line and not as multiple lines. Otherwise, the kernel will
       fail to boot.
 
-   **menuentry 'ACRN Multiboot Ubuntu Service VM' --id ubuntu-service-vm**
-
    .. code-block:: none
 
-      {
-
+      menuentry "ACRN Multiboot Ubuntu Service VM" --id ubuntu-service-vm {
         load_video
         insmod gzio
         insmod part_gpt
@@ -227,15 +231,14 @@ Update Grub for the Ubuntu Service VM
 
         search --no-floppy --fs-uuid --set 9bd58889-add7-410c-bdb7-1fbc2af9b0e1
         echo 'loading ACRN...'
-        multiboot2 /boot/acrn.bin  root=PARTUUID="e515916d-aac4-4439-aaa0-33231a9f4d83"
+        multiboot2 /boot/acrn/acrn.bin  root=PARTUUID="e515916d-aac4-4439-aaa0-33231a9f4d83"
         module2 /boot/bzImage Linux_bzImage
-
       }
 
    .. note::
-
-      Adjust this to your UUID and PARTUUID for the root= parameter using
-      the ``blkid`` command (or use the device node directly).
+      Update this to use the UUID (``--set``) and PARTUUID (``root=`` parameter)
+      (or use the device node directly) of the root partition (e.g.
+      ``/dev/nvme0n1p2). Hint: use ``sudo blkid /dev/sda*``.
 
       Update the kernel name if you used a different name as the source
       for your Service VM kernel.
@@ -259,9 +262,12 @@ Update Grub for the Ubuntu Service VM
 Reboot the system
 =================
 
-Reboot the system. You should see the Grub menu with the new **ACRN ubuntu-service-vm** entry. Select it and proceed to booting the platform. The system will start Ubuntu and you can now log in (as before).
+Reboot the system. You should see the Grub menu with the new **ACRN
+ubuntu-service-vm** entry. Select it and proceed to booting the platform. The
+system will start Ubuntu and you can now log in (as before).
 
-To verify that the hypervisor is effectively running, check ``dmesg``. The typical output of a successful installation resembles the following:
+To verify that the hypervisor is effectively running, check ``dmesg``. The
+typical output of a successful installation resembles the following:
 
 .. code-block:: none
 
@@ -309,7 +315,7 @@ following steps:
 
 .. code-block:: none
 
-   $ sudo -E apt-get install iasl bison flex
+   $ sudo -E apt-get install iasl
    $ cd /home/acrn/work
    $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
    $ tar zxvf acpica-unix-20191018.tar.gz
@@ -324,11 +330,22 @@ Follow these instructions to build the RT kernel.
 
 #. Clone the RT kernel source code:
 
+   .. note::
+      This guide assumes you are doing this within the Service VM. This
+      **acrn-kernel** repository was already cloned under ``/home/acrn/work``
+      earlier on so you can just ``cd`` into it and perform the ``git checkout``
+      directly.
+
    .. code-block:: none
 
       $ git clone https://github.com/projectacrn/acrn-kernel
       $ cd acrn-kernel
       $ git checkout 4.19/preempt-rt
+      $ make mrproper
+
+   .. note::
+      The ``make mrproper`` is to make sure there is no ``.config`` file
+      left from any previous build (e.g. the one for the Service VM kernel).
 
 #. Build the kernel:
 
@@ -342,18 +359,24 @@ Follow these instructions to build the RT kernel.
    .. code-block:: none
 
       $ sudo mount /dev/sda1 /mnt
-      $ sudo cp bzImage /mnt/EFI/
+      $ sudo cp arch/x86/boot/bzImage /mnt/EFI/
       $ sudo umount /mnt
       $ sudo mount /dev/sda2 /mnt
-      $ sudo cp kernel.tar.gz -P /mnt/usr/lib/modules/ && cd /mnt/usr/lib/modules/
-      $ sudo tar zxvf kernel.tar.gz
-      $ sudo cd ~ && umount /mnt && sync
+      $ sudo cp linux-4.19.72-rt25-x86.tar.gz -P /mnt/usr/lib/modules/ && cd /mnt/usr/lib/modules/
+      $ sudo tar zxvf linux-4.19.72-rt25-x86.tar.gz
+      $ sudo cd ~ && sudo umount /mnt && sync
 
 Launch the RTVM
 ***************
 
+Grub in the Ubuntu User VM (RTVM) needs to be configured to use the new RT
+kernel that was just built and installed on the rootfs. Follow these steps to
+perform this operation.
+
 Update the Grub file
 ====================
+
+#. Reboot into the Ubuntu User VM located on the SATA drive and log on.
 
 #. Update the ``/etc/grub.d/40_custom`` file as shown below.
 
@@ -362,29 +385,24 @@ Update the Grub file
       a single line and not as multiple lines. Otherwise, the kernel will
       fail to boot.
 
-   **menuentry 'ACRN Ubuntu User VM' --id ubuntu-user-vm**
-
    .. code-block:: none
 
-      {
-
+      menuentry "ACRN Ubuntu User VM" --id ubuntu-user-vm {
         load_video
         insmod gzio
         insmod part_gpt
         insmod ext2
-        set root=hd0,gpt2
 
         search --no-floppy --fs-uuid --set b2ae4879-c0b6-4144-9d28-d916b578f2eb
         echo 'loading ACRN...'
 
         linux  /boot/bzImage root=PARTUUID=<UUID of rootfs partition> rw rootwait nohpet console=hvc0 console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 clocksource=tsc tsc=reliable x2apic_phys processor.max_cstate=0 intel_idle.max_cstate=0 intel_pstate=disable mce=ignore_ce audit=0 isolcpus=nohz,domain,1 nohz_full=1 rcu_nocbs=1 nosoftlockup idle=poll irqaffinity=0
-
       }
 
    .. note::
-
-      Update this to use your UUID and PARTUUID for the root= parameter (or
-      use the device node directly).
+      Update this to use the UUID (``--set``) and PARTUUID (``root=`` parameter)
+      (or use the device node directly) of the root partition (e.g. ``/dev/sda2).
+      Hint: use ``sudo blkid /dev/sda*``.
 
       Update the kernel name if you used a different name as the source
       for your Service VM kernel.
@@ -404,6 +422,15 @@ Update the Grub file
    .. code-block:: none
 
       $ sudo update-grub
+
+#. Reboot into the Ubuntu Service VM
+
+Launch the RTVM
+===============
+
+  .. code-block:: none
+
+     $ sudo /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
 
 Recommended BIOS settings for RTVM
 ----------------------------------
@@ -464,11 +491,16 @@ In our recommended configuration, two cores are allocated to the RTVM:
 core 0 for housekeeping and core 1 for RT tasks. In order to achieve
 this, follow the below steps to allocate all housekeeping tasks to core 0:
 
+#. Prepare the RTVM launch script
+
+   Follow the `Passthrough a hard disk to RTVM`_ section to make adjustments to
+   the ``/usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh`` launch script.
+
 #. Launch the RTVM:
 
    .. code-block:: none
 
-      # /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
+      $ sudo /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
 
 #. Log in to the RTVM as root and run the script as below:
 
@@ -505,13 +537,16 @@ this, follow the below steps to allocate all housekeeping tasks to core 0:
 Run cyclictest
 --------------
 
-#. Refer to the :ref:`troubleshooting section <enabling the network on the RTVM>` below that discusses how to enable the network connection for RTVM.
+#. Refer to the :ref:`troubleshooting section <enabling the network on the RTVM>`
+   below that discusses how to enable the network connection for RTVM.
 
 #. Launch the RTVM and log in as root.
 
-#. Install the ``rt-tests`` tool::
+#. Install the ``rt-tests`` tool:
 
-   $ sudo apt install rt-tests
+   .. code-block:: none
+
+      # apt install rt-tests
 
 #. Use the following command to start cyclictest:
 
@@ -634,4 +669,4 @@ Passthrough a hard disk to RTVM
 
    .. code-block:: none
 
-      # /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
+      $ sudo /usr/share/acrn/samples/nuc/launch_hard_rt_vm.sh
