@@ -71,7 +71,7 @@
 	</virtio_devices>
     </uos>
     <uos id="3">
-        <uos_type desc="UOS type">CLEARLINUX</uos_type>
+        <uos_type desc="UOS type">YOCTO</uos_type>
         <rtos_type desc="UOS Realtime capability">no</rtos_type>
         <mem_size desc="UOS memory size in MByte">512</mem_size>
         <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
@@ -104,7 +104,7 @@
         </virtio_devices>
     </uos>
     <uos id="4">
-        <uos_type desc="UOS type">CLEARLINUX</uos_type>
+        <uos_type desc="UOS type">YOCTO</uos_type>
         <rtos_type desc="UOS Realtime capability">no</rtos_type>
         <mem_size desc="UOS memory size in MByte">512</mem_size>
         <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
@@ -137,7 +137,7 @@
         </virtio_devices>
     </uos>
     <uos id="5">
-        <uos_type desc="UOS type">CLEARLINUX</uos_type>
+        <uos_type desc="UOS type">YOCTO</uos_type>
         <rtos_type desc="UOS Realtime capability">no</rtos_type>
         <mem_size desc="UOS memory size in MByte">512</mem_size>
         <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
@@ -170,7 +170,7 @@
         </virtio_devices>
     </uos>
     <uos id="6">
-        <uos_type desc="UOS type">CLEARLINUX</uos_type>
+        <uos_type desc="UOS type">YOCTO</uos_type>
         <rtos_type desc="UOS Realtime capability">no</rtos_type>
         <mem_size desc="UOS memory size in MByte">512</mem_size>
         <gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT."></gvt_args>
