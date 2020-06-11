@@ -528,6 +528,8 @@ $(VERSION): $(HV_OBJDIR)/$(HV_CONFIG_H)
 	echo "#define HV_BUILD_TYPE "\""$$BUILD_TYPE"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_TIME "\""$$TIME"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_USER "\""$$USER"\""" >> $(VERSION);\
+	echo "#define HV_BUILD_SCENARIO "\"$(SCENARIO)\""" >> $(VERSION);\
+	echo "#define HV_BUILD_BOARD "\"$(BOARD)\""" >> $(VERSION);\
 	if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
 		echo "#define HV_CONFIG_TOOL \" with acrn-config\"" >> $(VERSION);\
 	else	\

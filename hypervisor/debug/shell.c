@@ -574,12 +574,9 @@ static int32_t shell_version(__unused int32_t argc, __unused char **argv)
 {
 	char temp_str[MAX_STR_SIZE];
 
-	snprintf(temp_str, MAX_STR_SIZE, "HV version %s-%s-%s %s (daily tag: %s) build by %s\r\n",
-			HV_FULL_VERSION, HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE, HV_DAILY_TAG, HV_BUILD_USER);
-	shell_puts(temp_str);
-
-	(void)memset((void *)temp_str, 0, MAX_STR_SIZE);
-	snprintf(temp_str, MAX_STR_SIZE, "API version %u.%u\r\n", HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);
+	snprintf(temp_str, MAX_STR_SIZE, "HV %s-%s-%s %s (daily tag: %s) %s@%s build by %s%s\nAPI %u.%u\r\n",
+		HV_FULL_VERSION, HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE, HV_DAILY_TAG, HV_BUILD_SCENARIO,
+		HV_BUILD_BOARD, HV_BUILD_USER, HV_CONFIG_TOOL, HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);
 	shell_puts(temp_str);
 
 	return 0;
