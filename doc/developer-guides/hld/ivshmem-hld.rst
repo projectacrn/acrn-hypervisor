@@ -4,7 +4,7 @@ ACRN Shared Memory Based Inter-VM Communication
 ###############################################
 
 ACRN supports inter-virtual machine communication based on a shared
-memory mechanism. The ACRN device model or hypervisor emulate a virtual
+memory mechanism. The ACRN device model or hypervisor emulates a virtual
 PCI device (called an ``ivshmem`` device) to expose the base address and
 size of this shared memory.
 
@@ -19,12 +19,12 @@ Inter-VM Communication Overview
 
 The ``ivshmem`` device is emulated in the ACRN device model (dm-land)
 and its shared memory region is allocated from the Service VM's memory
-space.  This solution only supports communication between post-launched
+space. This solution only supports communication between post-launched
 VMs.
 
 .. note:: In a future implementation, the ``ivshmem`` device could
    instead be emulated in the hypervisor (hypervisor-land) and the shared
-   memory regions reserved in the hypervisor's memory space.  This solution
+   memory regions reserved in the hypervisor's memory space. This solution
    would work for both pre-launched and post-launched VMs.
 
 ivshmem hv:
@@ -38,7 +38,7 @@ ivshmem dm:
    It will support notification/interrupt mechanism in the future.
 
 ivshmem server:
-   A daemon for inter-VM notification capability, that will work with **ivshmem
+   A daemon for inter-VM notification capability that will work with **ivshmem
    dm**. This is currently **not implemented**, so the inter-VM communication
    doesn't support a notification mechanism.
 
@@ -46,9 +46,8 @@ Ivshmem Device Introduction
 ***************************
 
 The ``ivshmem`` device is a virtual standard PCI device consisting of
-two Base Address Registers (BARs): BAR0 is used for emulating interrupt related registers,
-and BAR2 is used for exposing shared memory region. The ``ivshmem`` device
-doesn't support any extra capabilities.
+two Base Address Registers (BARs): BAR0 is used for emulating interrupt
+related registers, and BAR2 is used for exposing shared memory region. The ``ivshmem`` device doesn't support any extra capabilities.
 
 Configuration Space Definition
 
@@ -121,13 +120,13 @@ where
 Inter-VM Communication Example
 ******************************
 
-The following example uses inter-vm communication between two Linux-based post-launched VMs (VM1 and
-VM2).
+The following example uses inter-vm communication between two Linux-based
+post-launched VMs (VM1 and VM2).
 
 .. note:: An ``ivshmem`` Windows driver exists and can be found `here <https://github.com/virtio-win/kvm-guest-drivers-windows/tree/master/ivshmem>`_
 
 1. Add a new virtual PCI device for both VMs: the device type is
-   ``ivshmem``, shared memory name is ``test`` and shared memory size is
+   ``ivshmem``, shared memory name is ``test``, and shared memory size is
    4096 bytes. Both VMs must have the same shared memory name and size:
 
    - VM1 Launch Script Sample
@@ -160,7 +159,7 @@ VM2).
          --ovmf /usr/share/acrn/bios/OVMF.fd \
          $vm_name
 
-2. Boot two VMs and use ``lspci | grep "shared memory"`` to check the virtual device is ready for each VM.
+2. Boot two VMs and use ``lspci | grep "shared memory"`` to verify that the virtual device is ready for each VM.
 
    -  For VM1, it shows ``00:06.0 RAM memory: Red Hat, Inc. Inter-VM shared memory (rev 01)``
    -  For VM2, it shows ``00:05.0 RAM memory: Red Hat, Inc. Inter-VM shared memory (rev 01)``
