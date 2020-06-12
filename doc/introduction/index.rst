@@ -33,10 +33,10 @@ For up-to-date happenings, visit the `ACRN blog <https://projectacrn.org/blog/>`
 ACRN High-Level Architecture
 ****************************
 
-The ACRN architecture has evolved since it's initial v0.1 release in
+The ACRN architecture has evolved since its initial v0.1 release in
 July 2018. Beginning with the v1.1 release, the ACRN architecture has
 flexibility to support partition mode, sharing mode, and a mixed hybrid
-mode.  As shown in :numref:`V2-hl-arch`, hardware resources can be
+mode. As shown in :numref:`V2-hl-arch`, hardware resources can be
 partitioned into two parts:
 
 .. figure:: images/ACRN-V2-high-level-arch.png
