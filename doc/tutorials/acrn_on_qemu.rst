@@ -30,7 +30,7 @@ Pre-Requisites
       INFO: /dev/kvm exists
       KVM acceleration can be used
 
-2. Ensure the Ubuntu18.04 Host kernel version is **atleast 5.3.0** and above.
+2. Ensure the Ubuntu18.04 Host kernel version is **at least 5.3.0** and above.
 
 3. Make sure KVM and the following utilities are installed.
 
