@@ -192,8 +192,9 @@ int32_t parse_dmar_table(struct dmar_info *plat_dmar_info)
 
 			/* Only support single PCI Segment */
 			if (acpi_drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK) {
-				ASSERT(!is_include_all_emulated,
-						"DRHD with INCLUDE_PCI_ALL flag should be the last one");
+				if (!is_include_all_emulated) {
+					pr_warn("DRHD with INCLUDE_PCI_ALL flag is NOT the last one!");
+				}
 				is_include_all_emulated = true;
 			}
 

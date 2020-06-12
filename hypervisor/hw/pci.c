@@ -522,11 +522,11 @@ static void pci_parse_iommu_devscopes(struct pci_bdf_mapping_group *const bdfs_f
 				 */
 			}
 		}
-	}
 
-	if ((plat_dmar_info.drhd_units[plat_dmar_info.drhd_count - 1U].flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK)
-			== DRHD_FLAG_INCLUDE_PCI_ALL_MASK) {
-		*drhd_idx_pci_all = plat_dmar_info.drhd_count - 1U;
+		if ((plat_dmar_info.drhd_units[drhd_index].flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK)
+				== DRHD_FLAG_INCLUDE_PCI_ALL_MASK) {
+			*drhd_idx_pci_all = drhd_index;
+		}
 	}
 }
 
