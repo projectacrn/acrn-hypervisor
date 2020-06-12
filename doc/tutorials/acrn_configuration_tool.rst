@@ -125,42 +125,42 @@ Additional scenario XML elements:
   Specify the capacity of the log buffer for each physical CPU.
 
 ``RELOC`` (a child node of ``FEATURES``):
-  Specify whether hypervisor image relocation is enabled on booting.
+  Specify whether the hypervisor image relocation is enabled on booting.
 
 ``SCHEDULER`` (a child node of ``FEATURES``):
   Specify the CPU scheduler used by the hypervisor.
   Supported schedulers are: ``SCHED_NOOP``, ``SCHED_BVT`` and ``SCHED_IORR``.
 
 ``MULTIBOOT2`` (a child node of ``FEATURES``):
-  Specify whether ACRN hypervisor image can be booted using multiboot2 protocol.
-  If not set, GRUB's multiboot2 is not available as a boot option.
+  Specify whether the ACRN hypervisor image can be booted using the
+  multiboot2 protocol. If not set, GRUB's multiboot2 is not available as a
+  boot option.
 
 ``RDT_ENABLED`` (a child node of ``FEATURES/RDT``):
-  Specify whether enable Resource Director Technology(RDT) allocation feature.
-  Set to 'y' to enable the feature or 'n' to disable it.
+  Specify whether to enable the Resource Director Technology (RDT)
+  allocation feature. Set to 'y' to enable the feature or 'n' to disable it.
   The 'y' will be ignored when hardware does not support RDT.
 
 ``CDP_ENABLED`` (a child node of ``FEATURES/RDT``):
-  Specify whether enable Code and Data Prioritization(CDP). CDP is an extension
-  of CAT.
-  Set to 'y' to enable the feature or 'n' to disable it.
+  Specify whether to enable Code and Data Prioritization (CDP). CDP is an
+  extension of CAT. Set to 'y' to enable the feature or 'n' to disable it.
   The 'y' will be ignored when hardware does not support CDP.
 
 ``CLOS_MASK`` (a child node of ``FEATURES/RDT``):
-  Specify cache capacity bitmask for the CLOS, only continuous '1' bits are allowed.
-  The value will be ignored when hardware does not support RDT.
+  Specify the cache capacity bitmask for the CLOS; only continuous '1' bits
+  are allowed. The value will be ignored when hardware does not support RDT.
 
 ``HYPERV_ENABLED`` (a child node of ``FEATURES``):
   Specify whether Hyper-V is enabled.
 
 ``IOMMU_ENFORCE_SNP`` (a child node of ``FEATURES``):
-  Specify whether IOMMU enforces snoop behavior of DMA operation.
+  Specify whether IOMMU enforces snoop behavior of the DMA operation.
 
 ``ACPI_PARSE_ENABLED`` (a child node of ``FEATURES``):
-  Specify whether ACPI runtime parsing is enabled..
+  Specify whether ACPI runtime parsing is enabled.
 
 ``L1D_VMENTRY_ENABLED`` (a child node of ``FEATURES``):
-  Specify whether L1 cache flush before VM entry is enabled.
+  Specify whether the L1 cache flush before VM entry is enabled.
 
 ``MCE_ON_PSC_DISABLED`` (a child node of ``FEATURE``):
   Specify whether force to disable software workaround for Machine Check
@@ -174,13 +174,13 @@ Additional scenario XML elements:
   Specify the size of the RAM region used by the hypervisor.
 
 ``LOW_RAM_SIZE`` (a child node of ``MEMORY``):
-  Specify size of RAM region below address 0x10000, starting from address 0x0.
+  Specify the size of the RAM region below address 0x10000, starting from address 0x0.
 
 ``SOS_RAM_SIZE`` (a child node of ``MEMORY``):
-  Specify the size of Service OS VM RAM region.
+  Specify the size of the Service OS VM RAM region.
 
 ``UOS_RAM_SIZE`` (a child node of ``MEMORY``):
-  Specify the size of User OS VM RAM region.
+  Specify the size of the User OS VM RAM region.
 
 ``PLATFORM_RAM_SIZE`` (a child node of ``MEMORY``):
   Specify the size of the physical platform RAM region.
@@ -234,7 +234,8 @@ Additional scenario XML elements:
 ``guest_flags``:
   Select all applicable flags for the VM:
 
-  - ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify whether secure world is enabled
+  - ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify whether the secure world is
+    enabled
   - ``GUEST_FLAG_LAPIC_PASSTHROUGH`` specify whether LAPIC is passed through
   - ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify whether the hypervisor needs
     IO polling to completion
@@ -285,11 +286,11 @@ Additional scenario XML elements:
   The entry address in host memory for the VM kernel.
 
 ``vuart``:
-  Specify the vuart (A.K.A COM) with the vUART ID by its "id" attribute.
+  Specify the vuart (aka COM) with the vUART ID by its "id" attribute.
   Refer to :ref:`vuart_config` for detailed vUART settings.
 
 ``type`` (a child node of ``vuart``):
-  vUART (A.K.A COM) type, currently only supports the legacy PIO mode.
+  vUART (aka COM) type; currently only supports the legacy PIO mode.
 
 ``base`` (a child node of ``vuart``):
   vUART (A.K.A COM) enabling switch. Enable by exposing its COM_BASE
@@ -303,7 +304,7 @@ Additional scenario XML elements:
   target VM the current VM connects to.
 
 ``target_uart_id`` (a child node of ``vuart1``):
-  Target vUART ID that vCOM2 connects to.
+  Target vUART ID to which the vCOM2 connects.
 
 ``pci_dev_num``:
   PCI devices number of the VM; it is hard-coded for each scenario so it
@@ -374,7 +375,7 @@ current scenario has:
   Refer to :ref:`usb_virtualization` for details.
 
 ``passthrough_devices``:
-  Select the passthrough device from the lspci list; currently we support:
+  Select the passthrough device from the lspci list. Currently we support:
   usb_xdci, audio, audio_codec, ipu, ipu_i2c, cse, wifi, Bluetooth, sd_card,
   ethernet, wifi, sata, and nvme.
 
@@ -396,7 +397,7 @@ current scenario has:
    The ``configurable`` and ``readonly`` attributes are used to mark
    whether the items is configurable for users. When ``configurable="0"``
    and ``readonly="true"``, the item is not configurable from the web
-   interface. When ``configurable="0"``. the item does not appear on the
+   interface. When ``configurable="0"``, the item does not appear on the
    interface.
 
 Configuration tool workflow
@@ -444,8 +445,8 @@ Here is the offline configuration tool workflow:
    #. Copy the ``target`` folder into the target file system and then run the
       ``sudo python3 board_parser.py $(BOARD)`` command.
    #. A $(BOARD).xml that includes all needed hardware-specific information
-      is generated in the ``./out/`` folder. (Here ``$(BOARD)`` is the
-      specified board name)
+      is generated in the ``./out/`` folder. Here, ``$(BOARD)`` is the
+      specified board name.
 
       | **Native Linux requirement:**
       | **Release:** Ubuntu 18.04+ or Clear Linux 30210+
@@ -680,7 +681,7 @@ The **Launch Setting** is quite similar to the **Scenario Setting**:
 
    - Select one launch setting xml from the menu.
 
-   - Importing the local launch setting xml by clicking **Import XML**.
+   - Import the local launch setting xml by clicking **Import XML**.
 
 #. Select one scenario for the current launch setting from the **Select Scenario** drop down box.
 
