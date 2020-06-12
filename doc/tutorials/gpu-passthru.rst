@@ -13,9 +13,11 @@ Introduction
 ************
 
 Intel GVT-d is a graphics virtualization approach that is also known as
-the Intel-Graphics-Device passthrough feature. Based on Intel VT-d technology, it offers useful special graphics-related configurations.
-It allows for direct assignment of an entire GPU’s prowess to a single user,
-passing the native driver capabilities through to the hypervisor without any limitations.
+the Intel-Graphics-Device passthrough feature. Based on Intel VT-d
+technology, it offers useful special graphics-related configurations.
+It allows for direct assignment of an entire GPU's prowess to a single
+user, passing the native driver capabilities through to the hypervisor
+without any limitations.
 
 Verified version
 *****************
@@ -44,18 +46,25 @@ BIOS settings
 Kaby Lake platform
 ==================
 
-* Set **IGD Minimum Memory** to **64MB** in **Devices** → **Video** → **IGD Minimum Memory**.
+* Set **IGD Minimum Memory** to **64MB** in **Devices** &rarr;
+  **Video** &rarr; **IGD Minimum Memory**.
 
 Whiskey Lake platform
 =====================
 
-* Set **PM Support**  to **Enabled** in **Chipset** → **System Agent (SA) Configuration** → **Graphics Configuration** → **PM support**.
-* Set **DVMT Pre-Allocated** to **64MB** in **Chipset** → **System Agent (SA) Configuration** → **Graphics Configuration** → **DVMT Pre-Allocated**.
+* Set **PM Support**  to **Enabled** in **Chipset** &rarr; **System
+  Agent (SA) Configuration** &rarr; **Graphics Configuration** &rarr;
+  **PM support**.
+* Set **DVMT Pre-Allocated** to **64MB** in **Chipset** &rarr;
+  **System Agent (SA) Configuration**
+  &rarr; **Graphics Configuration** &rarr; **DVMT Pre-Allocated**.
 
 Elkhart Lake platform
 =====================
 
-* Set **DMVT Pre-Allocated** to **64MB** in **Intel Advanced Menu** → **System Agent(SA) Configuration** → **Graphics Configuration** → **DMVT Pre-Allocated**.
+* Set **DMVT Pre-Allocated** to **64MB** in **Intel Advanced Menu**
+  &rarr; **System Agent(SA) Configuration** &rarr;
+  **Graphics Configuration** &rarr; **DMVT Pre-Allocated**.
 
 Passthrough the GPU to Guest
 ****************************
@@ -90,8 +99,11 @@ Passthrough the GPU to Guest
 Enable the GVT-d GOP driver
 ***************************
 
-When enabling GVT-d, the Guest OS cannot light up the physical screen before
-the OS driver loads. As a result, the Guest BIOS and the Grub UI is not visible on the physical screen. The occurs because the physical display is initialized by the GOP driver or VBIOS before the OS driver loads, and the Guest BIOS doesn’t have them.
+When enabling GVT-d, the Guest OS cannot light up the physical screen
+before the OS driver loads. As a result, the Guest BIOS and the Grub UI
+is not visible on the physical screen. The occurs because the physical
+display is initialized by the GOP driver or VBIOS before the OS driver
+loads, and the Guest BIOS doesn't have them.
 
 The solution is to integrate the GOP driver binary into the OVMF as a DXE
 driver. Then the Guest OVMF can see the GOP driver and run it in the graphic
@@ -109,7 +121,8 @@ Steps
 
 #. Fetch the vbt and gop drivers.
 
-   Fetch the **vbt** and **gop** drivers from the board manufacturer according to your CPU model name.
+   Fetch the **vbt** and **gop** drivers from the board manufacturer
+   according to your CPU model name.
 
 #. Add the **vbt** and **gop** drivers to the OVMF:
 
@@ -154,5 +167,4 @@ Keep in mind the following:
    -  This will generate the binary at
       ``Build/OvmfX64/DEBUG_GCC5/FV/OVMF.fd``. Transfer the binary to
       your target machine.
-
    -  Modify the launch script to specify the OVMF you built just now.

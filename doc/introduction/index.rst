@@ -198,7 +198,7 @@ Industrial usage scenario:
 
   - a Service VM such as Ubuntu*,
   - a Human Machine Interface (HMI) application OS such as Windows*,
-  - an Artifical Intelligence (AI) application on Linux*,
+  - an Artificial Intelligence (AI) application on Linux*,
   - a Kata Container application, and
   - a real-time control OS such as Zephyr*, VxWorks* or RT-Linux*.
 
