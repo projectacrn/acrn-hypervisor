@@ -13,88 +13,16 @@
 #include "vtd.h"
 #include "acpi.h"
 
-
-struct find_iter_args {
-	uint32_t i;
-	struct acpi_dmar_hardware_unit *res;
-};
-
-typedef int32_t (*dmar_iter_t)(struct acpi_dmar_header*, void*);
-
 static uint32_t dmar_unit_cnt;
 static struct dmar_drhd drhd_info_array[MAX_DRHDS];
 static struct dmar_dev_scope drhd_dev_scope[MAX_DRHDS][MAX_DRHD_DEVSCOPES];
 
+/*
+ * @post return != NULL
+ */
 static void *get_dmar_table(void)
 {
 	return get_acpi_tbl(ACPI_SIG_DMAR);
-}
-
-static void
-dmar_iterate_tbl(dmar_iter_t iter, void *arg)
-{
-	struct acpi_table_dmar *dmar_tbl;
-	struct acpi_dmar_header *dmar_header;
-	char *ptr, *ptr_end;
-
-	dmar_tbl = (struct acpi_table_dmar *)get_dmar_table();
-	ASSERT(dmar_tbl != NULL, "");
-
-	ptr = (char *)dmar_tbl + sizeof(*dmar_tbl);
-	ptr_end = (char *)dmar_tbl + dmar_tbl->header.length;
-
-	for (;;) {
-		if (ptr >= ptr_end)
-			break;
-		dmar_header = (struct acpi_dmar_header *)ptr;
-		if (dmar_header->length <= 0) {
-			pr_err("drhd: corrupted DMAR table, l %d\n",
-				dmar_header->length);
-			break;
-		}
-		ptr += dmar_header->length;
-		if (!iter(dmar_header, arg))
-			break;
-	}
-}
-
-static int32_t
-drhd_count_iter(struct acpi_dmar_header *dmar_header, __unused void *arg)
-{
-	if (dmar_header->type == ACPI_DMAR_TYPE_HARDWARE_UNIT)
-		dmar_unit_cnt++;
-	return 1;
-}
-
-static int32_t
-drhd_find_iter(struct acpi_dmar_header *dmar_header, void *arg)
-{
-	struct find_iter_args *args;
-	int32_t ret = 1;
-
-	if (dmar_header->type == ACPI_DMAR_TYPE_HARDWARE_UNIT){
-		args = arg;
-		if (args->i == 0U) {
-			args->res = (struct acpi_dmar_hardware_unit *)dmar_header;
-			ret = 0;
-		}
-		else{
-			args->i--;
-			ret = 1;
-		}
-	}
-	return ret;
-}
-
-static struct acpi_dmar_hardware_unit *
-drhd_find_by_index(uint32_t idx)
-{
-	struct find_iter_args args;
-
-	args.i = idx;
-	args.res = NULL;
-	dmar_iterate_tbl(drhd_find_iter, &args);
-	return args.res;
 }
 
 static uint8_t get_secondary_bus(uint8_t bus, uint8_t dev, uint8_t func)
@@ -109,9 +37,7 @@ static uint8_t get_secondary_bus(uint8_t bus, uint8_t dev, uint8_t func)
 	return (data >> 8U) & 0xffU;
 }
 
-static union pci_bdf
-dmar_path_bdf(int32_t path_len, int32_t busno,
-	const struct acpi_dmar_pci_path *path)
+static union pci_bdf dmar_path_bdf(int32_t path_len, int32_t busno, const struct acpi_dmar_pci_path *path)
 {
 	int32_t i;
 	union pci_bdf dmar_bdf;
@@ -129,9 +55,7 @@ dmar_path_bdf(int32_t path_len, int32_t busno,
 }
 
 
-static int32_t
-handle_dmar_devscope(struct dmar_dev_scope *dev_scope,
-	void *addr, int32_t remaining)
+static int32_t handle_dmar_devscope(struct dmar_dev_scope *dev_scope, void *addr, int32_t remaining)
 {
 	int32_t path_len;
 	union pci_bdf dmar_bdf;
@@ -158,8 +82,7 @@ handle_dmar_devscope(struct dmar_dev_scope *dev_scope,
 	return apci_devscope->length;
 }
 
-static uint32_t
-get_drhd_dev_scope_cnt(struct acpi_dmar_hardware_unit *drhd)
+static uint32_t get_drhd_dev_scope_cnt(struct acpi_dmar_hardware_unit *drhd)
 {
 	struct acpi_dmar_device_scope *scope;
 	char *start;
@@ -183,9 +106,7 @@ get_drhd_dev_scope_cnt(struct acpi_dmar_hardware_unit *drhd)
  * @Application constraint: The dedicated DMAR unit for Intel integrated GPU
  * shall be available on the physical platform.
  */ 
-static int32_t
-handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
-		struct dmar_drhd *drhd)
+static int32_t handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd, struct dmar_drhd *drhd)
 {
 	struct dmar_dev_scope *dev_scope;
 	struct acpi_dmar_device_scope *ads;
@@ -230,10 +151,9 @@ handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 		if ((ads->entry_type != ACPI_DMAR_SCOPE_TYPE_NOT_USED) &&
 			(ads->entry_type < ACPI_DMAR_SCOPE_TYPE_RESERVED)) {
 			dev_scope++;
+		} else {
+			pr_dbg("drhd: skip dev_scope type %d", ads->entry_type);
 		}
-		else
-			pr_dbg("drhd: skip dev_scope type %d",
-				ads->entry_type);
 	}
 
 	return 0;
@@ -241,26 +161,48 @@ handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 
 int32_t parse_dmar_table(struct dmar_info *plat_dmar_info)
 {
-	uint32_t i;
+	struct acpi_table_dmar *dmar_tbl;
+	struct acpi_dmar_header *dmar_header;
 	struct acpi_dmar_hardware_unit *acpi_drhd;
+	char *ptr, *ptr_end;
+	bool is_include_all_emulated = false;
 
-	/* find out how many dmar units */
-	dmar_iterate_tbl(drhd_count_iter, NULL);
-	ASSERT(dmar_unit_cnt <= MAX_DRHDS, "parsed dmar_unit_cnt > MAX_DRHDS");
+	dmar_tbl = (struct acpi_table_dmar *)get_dmar_table();
+	ASSERT(dmar_tbl != NULL, "");
 
-	plat_dmar_info->drhd_count = dmar_unit_cnt;
+	ptr = (char *)dmar_tbl + sizeof(*dmar_tbl);
+	ptr_end = (char *)dmar_tbl + dmar_tbl->header.length;
+
 	plat_dmar_info->drhd_units = drhd_info_array;
+	for (; ptr < ptr_end; ptr += dmar_header->length) {
+		dmar_header = (struct acpi_dmar_header *)ptr;
+		if (dmar_header->length <= 0U) {
+			pr_err("drhd: corrupted DMAR table, l %d\n", dmar_header->length);
+			break;
+		}
 
-	for (i = 0U; i < dmar_unit_cnt; i++) {
-		acpi_drhd = drhd_find_by_index(i);
-		if (acpi_drhd == NULL)
-			continue;
-		if (acpi_drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK)
-			ASSERT((i + 1U) == dmar_unit_cnt,
-				"drhd with flags set should be the last one");
-		plat_dmar_info->drhd_units[i].devices = drhd_dev_scope[i];
-		handle_one_drhd(acpi_drhd, &(plat_dmar_info->drhd_units[i]));
+		if (dmar_header->type == ACPI_DMAR_TYPE_HARDWARE_UNIT) {
+			acpi_drhd = (struct acpi_dmar_hardware_unit *)dmar_header;
+			/* Treat a valid DRHD has a non-zero base address */
+			if (acpi_drhd->address == 0UL) {
+				pr_warn("drhd: a zero base address DRHD. Please fix the BIOS!");
+				continue;
+			}
+			dmar_unit_cnt++;
+
+			/* Only support single PCI Segment */
+			if (acpi_drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK) {
+				ASSERT(!is_include_all_emulated,
+						"DRHD with INCLUDE_PCI_ALL flag should be the last one");
+				is_include_all_emulated = true;
+			}
+
+			plat_dmar_info->drhd_units[dmar_unit_cnt - 1].devices = drhd_dev_scope[dmar_unit_cnt - 1];
+			handle_one_drhd(acpi_drhd, &(plat_dmar_info->drhd_units[dmar_unit_cnt - 1]));
+		}
 	}
+	ASSERT(dmar_unit_cnt <= MAX_DRHDS, "parsed dmar_unit_cnt > MAX_DRHDS");
+	plat_dmar_info->drhd_count = dmar_unit_cnt;
 
 	return 0;
 }
