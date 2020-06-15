@@ -240,6 +240,10 @@ html_show_sourcelink = False
 # using the given strftime format.
 html_last_updated_fmt = '%b %d, %Y'
 
+# The name of a javascript file (relative to the configuration directory) that
+# implements a search results scorer. If empty, the default will be used.
+html_search_scorer = 'scorer.js'
+
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
