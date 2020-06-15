@@ -233,7 +233,7 @@ the source files will be generated into default path and overwirte the previous 
                                         </div>
                                         <p id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}_err" class="col-sm-3"></p>
                                     </div>
-                                    {% elif sub_elem_2.tag != 'CLOS_MASK' %}
+                                    {% elif sub_elem_2.tag not in ['CLOS_MASK', 'MBA_DELAY'] %}
                                     <div class="form-group">
                                         <label class="col-sm-1 control-label" data-toggle="tooltip"
                                                title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
@@ -271,7 +271,7 @@ the source files will be generated into default path and overwirte the previous 
                                                {{sub_elem.tag}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{sub_elem_2.tag}}</label>
                                         <div class="col-sm-6">
                                             <input type="text" class="form-control"
-				                   id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}" value={{sub_elem_2.text}}></input>
+				                   id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}" value={{'' if sub_elem_2.text == None else sub_elem_2.text}}></input>
                                         </div>
                                         <p id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}_err" class="col-sm-3"></p>
                                     </div>

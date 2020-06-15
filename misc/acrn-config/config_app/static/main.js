@@ -405,12 +405,14 @@ $().ready(function(){
         var id = $(this).attr('id');
         var value = $(this).val();
         update_vcpu_clos_option(id, value);
+        update_rdt_clos_mask(id, value);
     });
 
     $("select[ID$='FEATURES,RDT,CDP_ENABLED']").each(function(index, item) {
         var id = $(this).attr('id');
         var value = $(item).val();
         update_vcpu_clos_option(id, value);
+        update_rdt_clos_mask(id, value);
     });
 
     $(document).on('click', "button:contains('+')", function() {
@@ -565,6 +567,69 @@ function update_vcpu_clos_option(id, value) {
     }
 }
 
+function update_rdt_clos_mask(id, value) {
+    $.ajax({
+        type : "POST",
+        contentType: "application/json;charset=UTF-8",
+        url : "../get_num_of_rdt_res_entries",
+        data : JSON.stringify({'cdp_enabled': value}),
+        success : function(result) {
+            console.log(result);
+            num_clos_mask = result.num_clos_mask;
+            num_mba_delay = result.num_mba_delay;
+            clos_mask_entries = [null];
+            index = 0;
+            $("input[ID$='hv,FEATURES,RDT,CLOS_MASK']").each(function(){
+                index += 1;
+                if(index<=num_clos_mask) {
+                    clos_mask_entries[0] = $(this).parent().parent();
+                }
+                if(index>num_clos_mask) {
+                    clos_mask_entries.push($(this).parent().parent());
+                }
+            });
+            if(index<=num_clos_mask) {
+                last_clos_mask_entry = clos_mask_entries[0];
+                for(i=0; i<num_clos_mask-index; i++) {
+                    clos_mask_entry_added = last_clos_mask_entry.clone();
+                    clos_mask_entry_added.insertAfter(last_clos_mask_entry);
+                }
+            } else {
+                for(i=clos_mask_entries.length-1; i>0; i--) {
+                    clos_mask_entries[i].remove();
+                }
+            }
+            mba_delay_entries = [null];
+            index = 0;
+            $("input[ID$='hv,FEATURES,RDT,MBA_DELAY']").each(function(){
+                index += 1;
+                if(index<=num_mba_delay) {
+                    mba_delay_entries[0] = $(this).parent().parent();
+                }
+                if(index>num_mba_delay) {
+                    mba_delay_entries.push($(this).parent().parent());
+                }
+            });
+            if(index<=num_mba_delay) {
+                last_mba_delay_entry = mba_delay_entries[0];
+                for(i=0; i<num_mba_delay-index; i++) {
+                    mba_delay_entry_added = last_mba_delay_entry.clone();
+                    mba_delay_entry_added.insertAfter(last_mba_delay_entry);
+                }
+            } else {
+                for(i=mba_delay_entries.length-1; i>0; i--) {
+                    mba_delay_entries[i].remove();
+                }
+            }
+        },
+        error : function(e){
+            console.log(e.status);
+            console.log(e.responseText);
+            alert(e.responseText);
+        }
+    });
+}
+
 function create_setting(type, default_name, name, mode){
     var board_info = $("text#board_type").text();
     if (board_info==null || board_info=='') {
@@ -663,7 +728,7 @@ function save_scenario(generator=null){
     $("input").each(function(){
         var id = $(this).attr('id');
         var value = $(this).val();
-        if(id.indexOf('CLOS_MASK')>=0 ) {
+        if(id.indexOf('CLOS_MASK')>=0 || id.indexOf('MBA_DELAY')>=0) {
             if(id in scenario_config) {
                 scenario_config[id].push(value);
             } else {
