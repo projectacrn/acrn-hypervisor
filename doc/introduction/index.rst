@@ -360,6 +360,7 @@ Boot Sequence
 
 .. _systemd-boot: https://www.freedesktop.org/software/systemd/man/systemd-boot.html
 .. _grub: https://www.gnu.org/software/grub/manual/grub/
+.. _Slim Bootloader: https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html
 
 ACRN supports two kinds of boots: **De-privilege boot mode** and **Direct
 boot mode**.
@@ -397,23 +398,10 @@ bootloader used by the Operating System (OS).
 
 * In the case of Clear Linux, the EFI bootloader is `systemd-boot`_ and the Linux
   kernel command-line parameters are defined in the ``.conf`` files.
-* Another popular EFI bootloader used by Linux distributions is `grub`_.
-  Distributions like Ubuntu/Debian, Fedora/CentOS use `grub`_.
 
 .. note::
 
-   The `Slim Bootloader
-   <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`__
-   is an alternative boot firmware that can be used to boot ACRN. The `Boot
-   ACRN Hyervisor
-   <https://slimbootloader.github.io/how-tos/boot-acrn.html>`_ tutorial
-   provides more information on how to use SBL with ACRN.
-
-.. note::
-
-   A virtual `Slim Bootloader
-   <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`__,
-   called ``vSBL``, can also be used to start User VMs. The
+   A virtual `Slim Bootloader`_ called ``vSBL``, can also be used to start User VMs. The
    :ref:`acrn-dm_parameters` provides more information on how to boot a
    User VM using ``vSBL``. Note that in this case, the kernel command-line
    parameters are defined by the combination of the ``cmdline.txt`` passed
@@ -422,6 +410,12 @@ bootloader used by the Operating System (OS).
 
 Direct boot mode
 ================
+
+The ACRN hypervisor could be boot from a third-party bootloader directly and we
+called this **Direct boot mode**. The most popular bootloader is `grub`_, it is
+also widely used by Linux distributions.
+
+:ref:`using_grub` has a introduction on how to boot ACRN hypervisor with GRUB.
 
 In :numref:`boot-flow-2`, we show the **Direct boot mode** sequence:
 
@@ -442,7 +436,16 @@ The Boot process proceeds as follows:
 #. The virtual bootloader starts the User-side verified boot process.
 
 In this boot mode, the boot options are defined via the ``VM{x}_CONFIG_OS_BOOTARGS``
-macro in the source code (replace ``{x}`` with the VM number).
+macro in the source code (replace ``{x}`` with the VM number) by default. But they
+could be overridden by GRUB menu also. Please check :ref:`using_grub` for details.
+
+.. note::
+
+   `Slim Bootloader`_ is an alternative boot firmware that can be used to
+   boot ACRN with **Direct boot mode**. The `Boot ACRN Hyervisor
+   <https://slimbootloader.github.io/how-tos/boot-acrn.html>`_ tutorial
+   provides more information on how to use SBL with ACRN.
+
 
 ACRN Hypervisor Architecture
 ****************************
