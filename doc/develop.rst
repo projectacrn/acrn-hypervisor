@@ -15,6 +15,7 @@ Configuration and Tools
 
    tutorials/acrn_configuration_tool
    reference/kconfig/index
+   user-guides/hv-parameters
    user-guides/kernel-parameters
    user-guides/acrn-shell
    user-guides/acrn-dm-parameters
@@ -99,6 +100,7 @@ Additional Tutorials
 
    tutorials/up2
    tutorials/building_acrn_in_docker
+   tutorials/using_grub
    tutorials/acrn_ootb
    tutorials/static-ip
    tutorials/increase-uos-disk-size
