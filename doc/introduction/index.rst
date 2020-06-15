@@ -26,7 +26,8 @@ user VM sharing optimizations for IoT and embedded devices.
 ACRN Open Source Roadmap 2020
 *****************************
 
-Stay informed on what's ahead for ACRN in 2020 by visiting the `ACRN 2020 Roadmap <https://projectacrn.org/wp-content/uploads/sites/59/2020/03/ACRN-Roadmap-External-2020.pdf>`_.
+Stay informed on what's ahead for ACRN in 2020 by visiting the
+`ACRN 2020 Roadmap <https://projectacrn.org/wp-content/uploads/sites/59/2020/03/ACRN-Roadmap-External-2020.pdf>`_.
 
 For up-to-date happenings, visit the `ACRN blog <https://projectacrn.org/blog/>`_.
 
@@ -411,8 +412,8 @@ bootloader used by the Operating System (OS).
 Direct boot mode
 ================
 
-The ACRN hypervisor could be boot from a third-party bootloader directly and we
-called this **Direct boot mode**. The most popular bootloader is `grub`_, it is
+The ACRN hypervisor can be booted from a third-party bootloader
+directly, called **Direct boot mode**. A popular bootloader is `grub`_ and is
 also widely used by Linux distributions.
 
 :ref:`using_grub` has a introduction on how to boot ACRN hypervisor with GRUB.
@@ -435,14 +436,18 @@ The Boot process proceeds as follows:
    the ACRN Device Model and Virtual bootloader through ``dm-verity``.
 #. The virtual bootloader starts the User-side verified boot process.
 
-In this boot mode, the boot options are defined via the ``VM{x}_CONFIG_OS_BOOTARGS``
-macro in the source code (replace ``{x}`` with the VM number) by default. But they
-could be overridden by GRUB menu also. Please check :ref:`using_grub` for details.
+In this boot mode, the boot options of pre-launched VM and service VM are defined
+in the variable of ``bootargs`` of struct ``vm_configs[vm id].os_config``
+in the source code ``hypervisor/$(SCENARIO)/vm_configurations.c`` by default.
+Their boot options can be overridden by the GRUB menu. See :ref:`using_grub` for
+details. The boot options of post-launched VM is not covered by hypervisor
+source code or GRUB menu, it is defined in guest image file or specified by
+launch scripts.
 
 .. note::
 
    `Slim Bootloader`_ is an alternative boot firmware that can be used to
-   boot ACRN with **Direct boot mode**. The `Boot ACRN Hyervisor
+   boot ACRN in **Direct boot mode**. The `Boot ACRN Hypervisor
    <https://slimbootloader.github.io/how-tos/boot-acrn.html>`_ tutorial
    provides more information on how to use SBL with ACRN.
 

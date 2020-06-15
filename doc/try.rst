@@ -21,7 +21,6 @@ Follow these getting started guides to give ACRN a try:
 
    reference/hardware
    getting-started/building-from-source
-   tutorials/using_grub
    getting-started/rt_industry_ubuntu
    tutorials/using_hybrid_mode_on_nuc
    tutorials/using_partition_mode_on_nuc
