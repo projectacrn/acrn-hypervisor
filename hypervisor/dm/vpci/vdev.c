@@ -31,6 +31,7 @@
 #include "vpci_priv.h"
 #include <ept.h>
 #include <logmsg.h>
+#include <hash.h>
 
 /**
  * @pre vdev != NULL
@@ -78,14 +79,12 @@ void pci_vdev_write_vcfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
  */
 struct pci_vdev *pci_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf)
 {
-	struct pci_vdev *vdev, *tmp;
-	uint32_t i;
+	struct pci_vdev *vdev = NULL, *tmp;
+	struct hlist_node *n;
 
-	vdev = NULL;
-	for (i = 0U; i < vpci->pci_vdev_cnt; i++) {
-		tmp = &(vpci->pci_vdevs[i]);
-
-		if (bdf_is_equal(tmp->bdf, vbdf)) {
+	hlist_for_each(n, &vpci->vdevs_hlist_heads[hash64(vbdf.value, VDEV_LIST_HASHBITS)]) {
+		tmp = hlist_entry(n, struct pci_vdev, link);
+		if (bdf_is_equal(vbdf, tmp->bdf)) {
 			vdev = tmp;
 			break;
 		}
