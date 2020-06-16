@@ -294,11 +294,15 @@ pci_ivshmem_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		close(vdev->fd);
 	if (vdev->name) {
 		/*
-		 * unlink will only remove the shared memory file object,
+		 * shm_unlink will only remove the shared memory file object,
 		 * the shared memory will be released until all processes
-		 * which opened the shared memory file close the file.
+		 * which opened the shared memory close the file.
+		 *
+		 * Don't invoke shm_unlink(vdev->name) to remove file object now,
+		 * so that the acrn-dm can communicate with the peer again after
+		 * rebooting/shutdown, the side effect is that the shared memory
+		 * will not be released even if all peers exit.
 		 */
-		shm_unlink(vdev->name);
 		free(vdev->name);
 	}
 	free(vdev);
