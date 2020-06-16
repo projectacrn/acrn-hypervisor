@@ -80,7 +80,7 @@ to automate the Kata Containers installation procedure.
 
 #. Modify the :ref:`daemon.json` file in order to:
 
-   #. Add a ``kata-acrn`` runtime (``runtimes`` section).
+   a. Add a ``kata-acrn`` runtime (``runtimes`` section).
 
       .. note:: In order to run Kata with ACRN, the container stack must provide
          block-based storage, such as :file:`device-mapper`. Since Docker may be
@@ -151,7 +151,7 @@ to automate the Kata Containers installation procedure.
 Verify that these configurations are effective by checking the following
 outputs:
 
-.. code-block:: none
+.. code-block:: console
 
    $ sudo docker info | grep -i runtime
    WARNING: the devicemapper storage-driver is deprecated, and will be removed in a future release.
@@ -160,7 +160,7 @@ outputs:
     Runtimes: kata-clh kata-fc kata-qemu kata-qemu-virtiofs runc kata-acrn
     Default Runtime: kata-acrn
 
-.. code-block:: none
+.. code-block:: console
 
    $ /opt/kata/bin/kata-runtime --kata-config /opt/kata/share/defaults/kata-containers/configuration-acrn.toml kata-env | awk -v RS= '/\[Hypervisor\]/'
    [Hypervisor]
@@ -198,6 +198,7 @@ Start a Kata Container on ACRN:
 
    $ sudo docker run -ti busybox sh
 
-If you run into problems, contact us on the ACRN mailing list and provide as
+If you run into problems, contact us on the `ACRN mailing list
+<https://lists.projectacrn.org/g/acrn-dev>`_ and provide as
 much detail as possible about the issue. The output of ``sudo docker info``
 and ``kata-runtime kata-env`` is useful.
