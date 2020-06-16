@@ -37,6 +37,7 @@
 #include <logmsg.h>
 #include "vpci_priv.h"
 #include "pci_dev.h"
+#include <hash.h>
 
 static void vpci_init_vdevs(struct acrn_vm *vm);
 static int32_t vpci_read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t *val);
@@ -627,6 +628,7 @@ struct pci_vdev *vpci_init_vdev(struct acrn_vpci *vpci, struct acrn_vm_pci_dev_c
 	vdev->pci_dev_config = dev_config;
 	vdev->phyfun = parent_pf_vdev;
 
+	hlist_add_head(&vdev->link, &vpci->vdevs_hlist_heads[hash64(dev_config->vbdf.value, VDEV_LIST_HASHBITS)]);
 	if (dev_config->vdev_ops != NULL) {
 		vdev->vdev_ops = dev_config->vdev_ops;
 	} else {
@@ -726,6 +728,9 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pc
 
 		vdev->flags |= pcidev->type;
 		vdev->bdf.value = pcidev->virt_bdf;
+		/*We should re-add the vdev to hashlist since its vbdf has changed */
+		hlist_del(&vdev->link);
+		hlist_add_head(&vdev->link, &vpci->vdevs_hlist_heads[hash64(vdev->bdf.value, VDEV_LIST_HASHBITS)]);
 		vdev->parent_user = vdev_in_sos;
 		spinlock_release(&tgt_vm->vpci.lock);
 		vdev_in_sos->user = vdev;
