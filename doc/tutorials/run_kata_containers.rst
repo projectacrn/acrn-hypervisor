@@ -8,7 +8,7 @@ This tutorial describes how to install, configure, and run `Kata Containers
 hypervisor. In this configuration,
 Kata Containers leverage the ACRN hypervisor instead of QEMU which is used by
 default. Refer to the `Kata Containers with ACRN
-<https://drive.google.com/file/d/1ZrqM5ouWUJA0FeIWhU_aitEJe8781rpe/view?usp=sharing>`_
+<https://www.slideshare.net/ProjectACRN/acrn-kata-container-on-acrn>`_
 presentation from a previous ACRN Project Technical Community Meeting for
 more details on Kata Containers and how the integration with ACRN has been
 done.
@@ -19,14 +19,15 @@ Prerequisites
 #. Refer to the :ref:`ACRN supported hardware <hardware>`.
 #. For a default prebuilt ACRN binary in the E2E package, you must have 4
    CPU cores or enable "CPU Hyper-Threading" in order to have 4 CPU threads for 2 CPU cores.
-#. Follow :ref:`these instructions <Ubuntu Service OS>` to set up the ACRN Service VM
+#. Follow the :ref:`rt_industry_ubuntu_setup` to set up the ACRN Service VM
    based on Ubuntu.
 #. This tutorial is validated on the following configurations:
 
-   - ACRN v1.6.1 (tag: acrn-2020w18.4-140000p)
-   - Ubuntu 18.04.4
-#. Kata Containers are only supported for ACRN hypervisors configured for
-   the SDC scenario.
+   - ACRN v2.0 (branch: ``release_2.0``)
+   - Ubuntu 20.04
+
+#. Kata Containers are supported for ACRN hypervisors configured for
+   the Industry or SDC scenarios.
 
 
 Install Docker
@@ -58,41 +59,88 @@ Install Kata Containers
 ***********************
 
 Kata Containers provide a variety of installation methods, this guide uses
-:command:`kata-manager` to automate the Kata Containers installation procedure.
+`kata-deploy <https://github.com/kata-containers/packaging/tree/master/kata-deploy>`_
+to automate the Kata Containers installation procedure.
 
-#. Install Kata Containers packages:
+#. Install Kata Containers:
+
+   .. code-block:: none
+
+      $ sudo docker run -v /opt/kata:/opt/kata -v /var/run/dbus:/var/run/dbus -v /run/systemd:/run/systemd -v /etc/docker:/etc/docker -it katadocker/kata-deploy kata-deploy-docker install
+
+#. Install the ``acrnctl`` tool:
 
    .. code-block:: none
 
-      $ bash -c "$(curl -fsSL https://raw.githubusercontent.com/kata-containers/tests/master/cmd/kata-manager/kata-manager.sh) install-packages"
+      $ cd /home/acrn/work/acrn-hypervisor
+      $ sudo cp build/misc/tools/acrnctl /usr/bin/
 
-#. Add the following settings to :file:`/etc/docker/daemon.json` to configure
-   Docker to use Kata Containers by default. You may need to create the
-   file if it doesn't exist.
+   .. note:: This assumes you have built ACRN on this machine following the
+      instructions in the :ref:`rt_industry_ubuntu_setup`.
+
+#. Modify the :ref:`daemon.json` file in order to:
+
+   #. Add a ``kata-acrn`` runtime (``runtimes`` section).
+
+      .. note:: In order to run Kata with ACRN, the container stack must provide
+         block-based storage, such as :file:`device-mapper`. Since Docker may be
+         configured to use :file:`overlay2` storage driver, the above
+         configuration also instructs Docker to use :file:`device-mapper`
+         storage driver.
+
+   #. Use the ``device-mapper`` storage driver.
+
+   #. Make Docker use Kata Containers by default.
+
+   These changes are highlighted below.
 
    .. code-block:: none
+      :emphasize-lines: 2,3,21-24
+      :name: daemon.json
+      :caption: /etc/docker/daemon.json
 
       {
         "storage-driver": "devicemapper",
-        "default-runtime": "kata-runtime",
+        "default-runtime": "kata-acrn",
         "runtimes": {
-            "kata-runtime": {
-                "path": "/usr/bin/kata-runtime"
-            }
+          "kata-qemu": {
+            "path": "/opt/kata/bin/kata-runtime",
+            "runtimeArgs": [ "--kata-config", "/opt/kata/share/defaults/kata-containers/configuration-qemu.toml" ]
+          },
+          "kata-qemu-virtiofs": {
+            "path": "/opt/kata/bin/kata-runtime",
+            "runtimeArgs": [ "--kata-config", "/opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml" ]
+          },
+          "kata-fc": {
+            "path": "/opt/kata/bin/kata-runtime",
+            "runtimeArgs": [ "--kata-config", "/opt/kata/share/defaults/kata-containers/configuration-fc.toml" ]
+          },
+          "kata-clh": {
+            "path": "/opt/kata/bin/kata-runtime",
+            "runtimeArgs": [ "--kata-config", "/opt/kata/share/defaults/kata-containers/configuration-clh.toml" ]
+          },
+          "kata-acrn": {
+            "path": "/opt/kata/bin/kata-runtime",
+            "runtimeArgs": [ "--kata-config", "/opt/kata/share/defaults/kata-containers/configuration-acrn.toml" ]
+          }
         }
       }
 
-   In order to run Kata with ACRN, the container stack must provide block-based
-   storage, such as :file:`device-mapper`. Since Docker may be configured to
-   use :file:`overlay2` storage driver, the above configuration also instructs
-   Docker to use :file:`devive-mapper` storage driver.
-
 #. Configure Kata to use ACRN.
 
-   .. code-block:: none
+   Modify the ``[hypervisor.acrn]`` section in the ``/opt/kata/share/defaults/kata-containers/configuration-acrn.toml``
+   file.
 
-      $ sudo mkdir -p /etc/kata-containers
-      $ sudo cp /usr/share/defaults/kata-containers/configuration-acrn.toml /etc/kata-containers/configuration.toml
+   .. code-block:: none
+      :emphasize-lines: 2,3
+      :name: configuration-acrn.toml
+      :caption: /opt/kata/share/defaults/kata-containers/configuration-acrn.toml
+
+      [hypervisor.acrn]
+      path = "/usr/bin/acrn-dm"
+      ctlpath = "/usr/bin/acrnctl"
+      kernel = "/opt/kata/share/kata-containers/vmlinuz.container"
+      image = "/opt/kata/share/kata-containers/kata-containers.img"
 
 #. Restart the Docker service.
 
@@ -105,28 +153,30 @@ outputs:
 
 .. code-block:: none
 
-   $ sudo docker info | grep runtime
-   WARNING: the devicemapper storage-driver is deprecated, and will be
-   removed in a future release.
-   WARNING: devicemapper: usage of loopback devices is strongly discouraged
-   for production use.
+   $ sudo docker info | grep -i runtime
+   WARNING: the devicemapper storage-driver is deprecated, and will be removed in a future release.
+   WARNING: devicemapper: usage of loopback devices is strongly discouraged for production use.
             Use `--storage-opt dm.thinpooldev` to specify a custom block storage device.
-   Runtimes: kata-runtime runc
+    Runtimes: kata-clh kata-fc kata-qemu kata-qemu-virtiofs runc kata-acrn
+    Default Runtime: kata-acrn
 
 .. code-block:: none
 
-   $ kata-runtime kata-env | awk -v RS= '/\[Hypervisor\]/'
+   $ /opt/kata/bin/kata-runtime --kata-config /opt/kata/share/defaults/kata-containers/configuration-acrn.toml kata-env | awk -v RS= '/\[Hypervisor\]/'
    [Hypervisor]
      MachineType = ""
-     Version = "DM version is: 1.5-unstable-"2020w02.5.140000p_261" (daily tag:"2020w02.5.140000p"), build by mockbuild@2020-01-12 08:44:52"
+     Version = "DM version is: 2.0-unstable-7c7bf767-dirty (daily tag:acrn-2020w23.5-180000p), build by acrn@2020-06-11 17:11:17"
      Path = "/usr/bin/acrn-dm"
      BlockDeviceDriver = "virtio-blk"
      EntropySource = "/dev/urandom"
+     SharedFS = ""
+     VirtioFSDaemon = ""
      Msize9p = 0
      MemorySlots = 10
+     PCIeRootPort = 0
+     HotplugVFIOOnRootBus = false
      Debug = false
      UseVSock = false
-     SharedFS = ""
 
 Run a Kata Container with ACRN
 ******************************
@@ -146,7 +196,7 @@ Start a Kata Container on ACRN:
 
 .. code-block:: none
 
-   $ sudo docker run -ti --runtime=kata-runtime busybox sh
+   $ sudo docker run -ti busybox sh
 
 If you run into problems, contact us on the ACRN mailing list and provide as
 much detail as possible about the issue. The output of ``sudo docker info``
