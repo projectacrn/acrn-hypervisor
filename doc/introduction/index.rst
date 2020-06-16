@@ -233,7 +233,7 @@ application scenario needs.
      - SDC
      - Service VM
      - Post-launched VM
-     -
+     - One Kata Containers VM
      -
 
    * - Industry Usage Config
