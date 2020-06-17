@@ -571,6 +571,9 @@
 /* Miscellaneous data */
 #define MSR_IA32_MISC_UNRESTRICTED_GUEST	(1U<<5U)
 
+/* Width of physical address used by VMX related region */
+#define MSR_IA32_VMX_BASIC_ADDR_WIDTH		(1UL << 48U)
+
 /* 5 high-order bits in every field are reserved */
 #define PAT_FIELD_RSV_BITS			(0xF8UL)
 
