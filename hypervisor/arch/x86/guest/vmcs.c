@@ -530,7 +530,6 @@ void init_vmcs(struct acrn_vcpu *vcpu)
 	exec_vmclear((void *)&vmcs_pa);
 
 	/* Load VMCS pointer */
-	vmcs_pa = hva2hpa(vcpu->arch.vmcs);
 	exec_vmptrld((void *)&vmcs_pa);
 	*vmcs_ptr = (void *)vcpu->arch.vmcs;
 
