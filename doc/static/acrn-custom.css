@@ -299,3 +299,10 @@ div.numbered-step h2::before {
 .rst-content  .toctree-l1 > a {
   font-weight: bold;
 }
+
+/* add icon on external links */
+a.reference.external::after {
+   font-family: 'FontAwesome';
+   font-size: 80%;
+   content: " \f08e";
+}
