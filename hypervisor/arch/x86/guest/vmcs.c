@@ -84,9 +84,7 @@ static void init_host_state(void)
 	uint64_t gdt_base;
 	uint64_t idt_base;
 
-	pr_dbg("*********************");
 	pr_dbg("Initialize host state");
-	pr_dbg("*********************");
 
 	/***************************************************
 	 * 16 - Bit fields
@@ -241,9 +239,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	struct acrn_vm *vm = vcpu->vm;
 
 	/* Log messages to show initializing VMX execution controls */
-	pr_dbg("*****************************");
 	pr_dbg("Initialize execution control ");
-	pr_dbg("*****************************");
 
 	/* Set up VM Execution control to enable Set VM-exits on external
 	 * interrupts preemption timer - pg 2899 24.6.1
@@ -437,9 +433,7 @@ static void init_entry_ctrl(const struct acrn_vcpu *vcpu)
 	uint32_t value32;
 
 	/* Log messages to show initializing VMX entry controls */
-	pr_dbg("*************************");
 	pr_dbg("Initialize Entry control ");
-	pr_dbg("*************************");
 
 	/* Set up VMX entry controls - pg 2908 24.8.1 * Set IA32e guest mode -
 	 * on VM entry processor is in IA32e 64 bitmode * Start guest with host
@@ -479,9 +473,7 @@ static void init_exit_ctrl(const struct acrn_vcpu *vcpu)
 	uint32_t value32;
 
 	/* Log messages to show initializing VMX entry controls */
-	pr_dbg("************************");
 	pr_dbg("Initialize Exit control ");
-	pr_dbg("************************");
 
 	/* Set up VM exit controls - pg 2907 24.7.1 for: Host address space
 	 * size is 64 bit Set up to acknowledge interrupt on exit, if 1 the HW
