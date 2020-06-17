@@ -433,11 +433,6 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 		*ecx &= ~CPUID_ECX_MONITOR;
 	}
 
-	/*no xsave support for guest if it is not enabled on host*/
-	if ((*ecx & CPUID_ECX_OSXSAVE) == 0U) {
-		*ecx &= ~CPUID_ECX_XSAVE;
-	}
-
 	*ecx &= ~CPUID_ECX_OSXSAVE;
 	if ((*ecx & CPUID_ECX_XSAVE) != 0U) {
 		uint64_t cr4;
