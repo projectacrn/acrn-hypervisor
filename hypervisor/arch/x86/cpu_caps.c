@@ -206,6 +206,11 @@ static void detect_vmx_mmu_cap(void)
 	cpu_caps.vmx_vpid = (uint32_t) (val >> 32U);
 }
 
+static bool pcpu_vmx_set_32bit_addr_width(void)
+{
+	return ((msr_read(MSR_IA32_VMX_BASIC) & MSR_IA32_VMX_BASIC_ADDR_WIDTH) != 0UL);
+}
+
 static void detect_xsave_cap(void)
 {
 	uint32_t unused;
@@ -463,6 +468,9 @@ int32_t detect_hardware_support(void)
 		ret = -ENODEV;
 	} else if (is_vmx_disabled()) {
 		printf("%s, VMX can not be enabled\n", __func__);
+		ret = -ENODEV;
+	} else if (pcpu_vmx_set_32bit_addr_width()) {
+		printf("%s, Only support Intel 64 architecture.\n", __func__);
 		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_X2APIC)) {
 		printf("%s, x2APIC not supported\n", __func__);
