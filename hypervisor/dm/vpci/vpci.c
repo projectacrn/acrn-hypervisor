@@ -100,21 +100,6 @@ static bool vpci_pio_cfgaddr_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 	return ret;
 }
 
-static inline bool vpci_is_valid_access_offset(uint32_t offset, uint32_t bytes)
-{
-	return ((offset & (bytes - 1U)) == 0U);
-}
-
-static inline bool vpci_is_valid_access_byte(uint32_t bytes)
-{
-	return ((bytes == 1U) || (bytes == 2U) || (bytes == 4U));
-}
-
-static inline bool vpci_is_valid_access(uint32_t offset, uint32_t bytes)
-{
-	return (vpci_is_valid_access_byte(bytes) && vpci_is_valid_access_offset(offset, bytes));
-}
-
 /**
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
@@ -138,7 +123,7 @@ static bool vpci_pio_cfgdata_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t 
 
 	cfg_addr.value = atomic_readandclear32(&vpci->addr.value);
 	if (cfg_addr.bits.enable != 0U) {
-		if (vpci_is_valid_access(cfg_addr.bits.reg_num + offset, bytes)) {
+		if (pci_is_valid_access(cfg_addr.bits.reg_num + offset, bytes)) {
 			bdf.value = cfg_addr.bits.bdf;
 			ret = vpci_read_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, &val);
 		}
@@ -169,7 +154,7 @@ static bool vpci_pio_cfgdata_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 
 	cfg_addr.value = atomic_readandclear32(&vpci->addr.value);
 	if (cfg_addr.bits.enable != 0U) {
-		if (vpci_is_valid_access(cfg_addr.bits.reg_num + offset, bytes)) {
+		if (pci_is_valid_access(cfg_addr.bits.reg_num + offset, bytes)) {
 			bdf.value = cfg_addr.bits.bdf;
 			ret = vpci_write_cfg(vpci, bdf, cfg_addr.bits.reg_num + offset, bytes, val);
 		}
