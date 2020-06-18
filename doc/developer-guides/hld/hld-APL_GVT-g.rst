@@ -17,7 +17,7 @@ SoCs.
 This document describes:
 
 -  The different GPU virtualization techniques
--  GVT-g mediated pass-through
+-  GVT-g mediated passthrough
 -  High level design
 -  Key components
 -  GVT-g new architecture differentiation
@@ -47,7 +47,7 @@ Background
 
 Intel GVT-g is an enabling technology in emerging graphics
 virtualization scenarios. It adopts a full GPU virtualization approach
-based on mediated pass-through technology, to achieve good performance,
+based on mediated passthrough technology, to achieve good performance,
 scalability and secure isolation among Virtual Machines (VMs). A virtual
 GPU (vGPU), with full GPU features, is presented to each VM so that a
 native graphics driver can run directly inside a VM.
@@ -161,10 +161,10 @@ also suffers from the following intrinsic limitations:
    exhibit quite different performance, which gives rise to a need for a
    fine-grained graphics tuning effort.
 
-Direct Pass-Through
+Direct Passthrough
 -------------------
 
-"Direct pass-through" dedicates the GPU to a single VM, providing full
+"Direct passthrough" dedicates the GPU to a single VM, providing full
 features and good performance, but at the cost of device sharing
 capability among VMs. Only one VM at a time can use the hardware
 acceleration capability of the GPU, which is a major limitation of this
@@ -177,7 +177,7 @@ solution. Intel GVT-d uses this mechanism.
    :align: center
    :name: gvt-pass-through
 
-   Pass-Through
+   Passthrough
 
 SR-IOV
 ------
@@ -188,16 +188,16 @@ with each VF directly assignable to a VM.
 
 .. _Graphic_mediation:
 
-Mediated Pass-Through
+Mediated Passthrough
 *********************
 
 Intel GVT-g achieves full GPU virtualization using a "mediated
-pass-through" technique.
+passthrough" technique.
 
 Concept
 =======
 
-Mediated pass-through allows a VM to access performance-critical I/O
+Mediated passthrough allows a VM to access performance-critical I/O
 resources (usually partitioned) directly, without intervention from the
 hypervisor in most cases. Privileged operations from this VM are
 trapped-and-emulated to provide secure isolation among VMs.
@@ -207,7 +207,7 @@ trapped-and-emulated to provide secure isolation among VMs.
    :align: center
    :name: mediated-pass-through
 
-   Mediated Pass-Through
+   Mediated Passthrough
 
 The Hypervisor must ensure that no vulnerability is exposed when
 assigning performance-critical resource to each VM. When a
@@ -229,7 +229,7 @@ Examples of performance-critical I/O resources include the following:
    Performance-Critical I/O Resources
 
 
-The key to implementing mediated pass-through for a specific device is
+The key to implementing mediated passthrough for a specific device is
 to define the right policy for various I/O resources.
 
 Virtualization Policies for GPU Resources
@@ -317,7 +317,7 @@ High Level Architecture
 :numref:`gvt-arch` shows the overall architecture of GVT-g, based on the
 ACRN hypervisor, with Service VM as the privileged VM, and multiple user
 guests. A GVT-g device model working with the ACRN hypervisor,
-implements the policies of trap and pass-through. Each guest runs the
+implements the policies of trap and passthrough. Each guest runs the
 native graphics driver and can directly access performance-critical
 resources: the Frame Buffer and Command Buffer, with resource
 partitioning (as presented later). To protect privileged resources, that
@@ -331,14 +331,14 @@ concurrently with the CPU scheduler in ACRN to share the physical GPU
 timeslot among the VMs. GVT-g uses the physical GPU to directly execute
 all the commands submitted from a VM, so it avoids the complexity of
 emulating the Render Engine, which is the most complex part of the GPU.
-In the meantime, the resource pass-through of both the Frame Buffer and
+In the meantime, the resource passthrough of both the Frame Buffer and
 Command Buffer minimizes the hypervisor's intervention of CPU accesses,
 while the GPU scheduler guarantees every VM a quantum time-slice for
 direct GPU execution. With that, GVT-g can achieve near-native
 performance for a VM workload.
 
 In :numref:`gvt-arch`, the yellow GVT device model works as a client on
-top of an i915 driver in the Service VM. It has a generic Mediated Pass-Through
+top of an i915 driver in the Service VM. It has a generic Mediated Passthrough
 (MPT) interface, compatible with all types of hypervisors. For ACRN,
 some extra development work is needed for such MPT interfaces. For
 example, we need some changes in ACRN-DM to make ACRN compatible with
@@ -795,7 +795,7 @@ the shadow PTE entries.
 Per-VM Shadow PPGTT
 -------------------
 
-To support local graphics memory access pass-through, GVT-g implements
+To support local graphics memory access passthrough, GVT-g implements
 per-VM shadow local page tables. The local graphics memory is only
 accessible from the Render Engine. The local page tables have two-level
 paging structures, as shown in :numref:`per-vm-shadow`.

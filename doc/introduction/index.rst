@@ -585,7 +585,7 @@ hypervisor, or in user space within an independent VM, overhead exists.
 This overhead is worthwhile as long as the devices need to be shared by
 multiple guest operating systems. If sharing is not necessary, then
 there are more efficient methods for accessing devices, for example
-"pass-through".
+"passthrough".
 
 ACRN device model is a placeholder of the User VM. It allocates memory for
 the User OS, configures and initializes the devices used by the User VM,
@@ -635,10 +635,10 @@ ACRN Device model incorporates these three aspects:
 
 .. _pass-through:
 
-Device pass through
-*******************
+Device passthrough
+******************
 
-At the highest level, device pass-through is about providing isolation
+At the highest level, device passthrough is about providing isolation
 of a device to a given guest operating system so that the device can be
 used exclusively by that guest.
 
@@ -662,8 +662,8 @@ Finally, there may be specialized PCI devices that only one guest domain
 uses, so they should be passed through to the guest. Individual USB
 ports could be isolated to a given domain too, or a serial port (which
 is itself not shareable) could be isolated to a particular guest. In
-ACRN hypervisor, we support USB controller Pass through only and we
-don't support pass through for a legacy serial port, (for example
+ACRN hypervisor, we support USB controller passthrough only and we
+don't support passthrough for a legacy serial port, (for example
 0x3f8).
 
 
@@ -671,7 +671,7 @@ Hardware support for device passthrough
 =======================================
 
 Intel's current processor architectures provides support for device
-pass-through with VT-d. VT-d maps guest physical address to machine
+passthrough with VT-d. VT-d maps guest physical address to machine
 physical address, so device can use guest physical address directly.
 When this mapping occurs, the hardware takes care of access (and
 protection), and the guest operating system can use the device as if it
@@ -694,9 +694,9 @@ Hypervisor support for device passthrough
 
 By using the latest virtualization-enhanced processor architectures,
 hypervisors and virtualization solutions can support device
-pass-through (using VT-d), including Xen, KVM, and ACRN hypervisor.
+passthrough (using VT-d), including Xen, KVM, and ACRN hypervisor.
 In most cases, the guest operating system (User
-OS) must be compiled to support pass-through, by using
+OS) must be compiled to support passthrough, by using
 kernel build-time options. Hiding the devices from the host VM may also
 be required (as is done with Xen using pciback). Some restrictions apply
 in PCI, for example, PCI devices behind a PCIe-to-PCI bridge must be
