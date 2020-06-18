@@ -17,7 +17,6 @@
 
 #define MICRO_CODE_SIZE_MAX    0x40000U
 static uint8_t micro_code[MICRO_CODE_SIZE_MAX];
-static spinlock_t micro_code_lock = { .head = 0U, .tail = 0U };
 
 uint64_t get_microcode_version(void)
 {
@@ -40,6 +39,9 @@ static inline size_t get_ucode_data_size(const struct ucode_header *uhdr)
 	return ((uhdr->data_size != 0U) ? uhdr->data_size : 2000U);
 }
 
+/* the guest operating system should guarantee it won't issue 2nd micro code update
+ * when the 1st micro code update is on-going.
+ */
 void acrn_update_ucode(struct acrn_vcpu *vcpu, uint64_t v)
 {
 	uint64_t gva, fault_addr = 0UL;
@@ -48,7 +50,6 @@ void acrn_update_ucode(struct acrn_vcpu *vcpu, uint64_t v)
 	int32_t err;
 	uint32_t err_code;
 
-	spinlock_obtain(&micro_code_lock);
 	gva = v - sizeof(struct ucode_header);
 
 	err_code = 0U;
@@ -78,5 +79,4 @@ void acrn_update_ucode(struct acrn_vcpu *vcpu, uint64_t v)
 			}
 		}
 	}
-	spinlock_release(&micro_code_lock);
 }
