@@ -106,11 +106,19 @@ int32_t ept_misconfig_vmexit_handler(__unused struct acrn_vcpu *vcpu)
 	return status;
 }
 
-void ept_add_mr(struct acrn_vm *vm, uint64_t *pml4_page,
-	uint64_t hpa, uint64_t gpa, uint64_t size, uint64_t prot_orig)
+static inline void ept_flush_guest(struct acrn_vm *vm)
 {
 	uint16_t i;
 	struct acrn_vcpu *vcpu;
+	/* Here doesn't do the real flush, just makes the request which will be handled before vcpu vmenter */
+	foreach_vcpu(i, vm, vcpu) {
+		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
+	}
+}
+
+void ept_add_mr(struct acrn_vm *vm, uint64_t *pml4_page,
+	uint64_t hpa, uint64_t gpa, uint64_t size, uint64_t prot_orig)
+{
 	uint64_t prot = prot_orig;
 
 	dev_dbg(DBG_LEVEL_EPT, "%s, vm[%d] hpa: 0x%016lx gpa: 0x%016lx size: 0x%016lx prot: 0x%016x\n",
@@ -122,17 +130,13 @@ void ept_add_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 
 	spinlock_release(&vm->ept_lock);
 
-	foreach_vcpu(i, vm, vcpu) {
-		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
-	}
+	ept_flush_guest(vm);
 }
 
 void ept_modify_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 		uint64_t gpa, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr)
 {
-	struct acrn_vcpu *vcpu;
-	uint16_t i;
 	uint64_t local_prot = prot_set;
 
 	dev_dbg(DBG_LEVEL_EPT, "%s,vm[%d] gpa 0x%lx size 0x%lx\n", __func__, vm->vm_id, gpa, size);
@@ -143,18 +147,13 @@ void ept_modify_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 
 	spinlock_release(&vm->ept_lock);
 
-	foreach_vcpu(i, vm, vcpu) {
-		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
-	}
+	ept_flush_guest(vm);
 }
 /**
  * @pre [gpa,gpa+size) has been mapped into host physical memory region
  */
 void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t size)
 {
-	struct acrn_vcpu *vcpu;
-	uint16_t i;
-
 	dev_dbg(DBG_LEVEL_EPT, "%s,vm[%d] gpa 0x%lx size 0x%lx\n", __func__, vm->vm_id, gpa, size);
 
 	spinlock_obtain(&vm->ept_lock);
@@ -163,9 +162,7 @@ void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t 
 
 	spinlock_release(&vm->ept_lock);
 
-	foreach_vcpu(i, vm, vcpu) {
-		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
-	}
+	ept_flush_guest(vm);
 }
 
 /**
