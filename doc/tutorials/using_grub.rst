@@ -29,13 +29,13 @@ ELF format when ``CONFIG_RELOC`` is not set, or RAW format when
 ``CONFIG_RELOC`` is set.
 
 .. note::
-   ``CONFIG_RELOC`` is set by default, so use ``acrn.32.out`` in multiboot
-   protocol and ``acrn.bin`` in multiboot2 protocol.
+   * ``CONFIG_RELOC`` is set by default, so use ``acrn.32.out`` in multiboot
+     protocol and ``acrn.bin`` in multiboot2 protocol.
 
-   Per ACPI specification, the RSDP pointer is described in the EFI System
-   Table instead of legacy ACPI RSDP area on a UEFI enabled platform. To make
-   sure ACRN hypervisor gets the correct ACPI RSDP info, we recommend using
-   ``acrn.bin`` with multiboot2 protocol to load hypervisor on a UEFI platform.
+   * Per ACPI specification, the RSDP pointer is described in the EFI System
+     Table instead of legacy ACPI RSDP area on a UEFI enabled platform. To make
+     sure ACRN hypervisor gets the correct ACPI RSDP info, we recommend using
+     ``acrn.bin`` with multiboot2 protocol to load hypervisor on a UEFI platform.
 
 .. _pre-installed-grub:
 
@@ -88,29 +88,35 @@ pre-launched VMs (the SOS_VM is also a kind of pre-launched VM):
 
 
    .. note::
-      The module ``/boot/kernel4vm0`` is the VM0 kernel file. The param ``xxxxxx`` is
-      VM0's kernel file tag and must exactly match the ``kernel_mod_tag`` of VM0
-      configured in the ``hypervisor/scenarios/$(SCENARIO)/vm_configurations.c``
-      file. The multiboot module ``/boot/kernel4vm1`` is the VM1 kernel file and the param
-      ``yyyyyy`` is its tag and must exactly match the ``kernel_mod_tag`` of VM1 in the
+      The module ``/boot/kernel4vm0`` is the VM0 kernel file. The param
+      ``xxxxxx`` is VM0's kernel file tag and must exactly match the
+      ``kernel_mod_tag`` of VM0 configured in the
+      ``hypervisor/scenarios/$(SCENARIO)/vm_configurations.c`` file. The
+      multiboot module ``/boot/kernel4vm1`` is the VM1 kernel file and the
+      param ``yyyyyy`` is its tag and must exactly match the
+      ``kernel_mod_tag`` of VM1 in the
       ``hypervisor/scenarios/$(SCENARIO)/vm_configurations.c`` file.
 
-      The guest kernel command line arguments is configured in the hypervisor source code by default
-      if no ``$(VMx bootargs)`` is present. If ``$(VMx bootargs)`` is present, the default
-      command line arguments is overridden by the ``$(VMx bootargs)`` parameters.
+      The guest kernel command line arguments is configured in the
+      hypervisor source code by default if no ``$(VMx bootargs)`` is present.
+      If ``$(VMx bootargs)`` is present, the default command line arguments
+      are overridden by the ``$(VMx bootargs)`` parameters.
 
-      The ``$(Service VM bootargs)`` parameter in the multiboot command is appended to the end of Service
-      VM kernel command line. This is useful to override some Service VM kernel cmdline parameters because
-      the later one would win if same parameters configured in Linux kernel cmdline. For example,
-      adding ``root=/dev/sda3`` will override the original root device
-      to ``/dev/sda3`` for the Service VM kernel.
+      The ``$(Service VM bootargs)`` parameter in the multiboot command
+      is appended to the end of the Service VM kernel command line. This is
+      useful to override some Service VM kernel cmdline parameters because the
+      later one would win if the same parameters were configured in the Linux
+      kernel cmdline. For example, adding ``root=/dev/sda3`` will override the
+      original root device to ``/dev/sda3`` for the Service VM kernel.
 
-      All parameters after ``#`` character are ignored since GRUB treat them as comments.
+      All parameters after a ``#`` character are ignored since GRUB
+      treat them as comments.
 
-      ``\``, ``$``, ``#`` are special characters in GRUB, a escape character ``\`` must be added
-      before these special characters if they are included in ``$(HV bootargs)`` or ``$(VM bootargs)``.
-      For example, ``memmap=0x200000$0xE00000`` for guest kernel cmdline
-      must be written as ``memmap=0x200000\$0xE00000``
+      ``\``, ``$``, ``#`` are special characters in GRUB. An escape
+      character ``\`` must be added before these special characters if they
+      are included in ``$(HV bootargs)`` or ``$(VM bootargs)``.  For example,
+      ``memmap=0x200000$0xE00000`` for guest kernel cmdline must be written as
+      ``memmap=0x200000\$0xE00000``
 
 
 #. Update GRUB::
