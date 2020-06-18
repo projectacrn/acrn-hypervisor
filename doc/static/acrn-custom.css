@@ -73,8 +73,8 @@ div.non-compliant-code div.highlight {
     color: rgba(255,255,255,1);
 }
 
-/* squish the space between a paragraph before a list */
-div > p + ul, div > p + ol {
+/* squish the space between a paragraph before a list but not in a note */
+div:not(.admonition) > p + ul, div:not(.admonition) > p + ol {
    margin-top: -20px;
 }
 
