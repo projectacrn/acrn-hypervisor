@@ -20,7 +20,6 @@
 #include <logmsg.h>
 #include <vmx.h>
 
-static spinlock_t exception_spinlock = { .head = 0U, .tail = 0U, };
 static spinlock_t irq_alloc_spinlock = { .head = 0U, .tail = 0U, };
 
 uint64_t irq_alloc_bitmap[IRQ_ALLOC_BITMAP_SIZE];
@@ -214,8 +213,8 @@ int32_t request_irq(uint32_t req_irq, irq_action_t action_fn, void *priv_data,
 			ret = -EINVAL;
 		} else {
 			desc = &irq_desc_array[irq];
-			spinlock_irqsave_obtain(&desc->lock, &rflags);
 			if (desc->action == NULL) {
+				spinlock_irqsave_obtain(&desc->lock, &rflags);
 				desc->flags = flags;
 				desc->priv_data = priv_data;
 				desc->action = action_fn;
@@ -224,8 +223,6 @@ int32_t request_irq(uint32_t req_irq, irq_action_t action_fn, void *priv_data,
 				ret = (int32_t)irq;
 				dev_dbg(DBG_LEVEL_IRQ, "[%s] irq%d vr:0x%x", __func__, irq, desc->vector);
 			} else {
-				spinlock_irqrestore_release(&desc->lock, rflags);
-
 				ret = -EBUSY;
 				pr_err("%s: request irq(%u) vr(%u) failed, already requested", __func__,
 						irq, irq_to_vector(irq));
@@ -372,14 +369,8 @@ void dispatch_exception(struct intr_excp_ctx *ctx)
 {
 	uint16_t pcpu_id = get_pcpu_id();
 
-	/* Obtain lock to ensure exception dump doesn't get corrupted */
-	spinlock_obtain(&exception_spinlock);
-
 	/* Dump exception context */
 	dump_exception(ctx, pcpu_id);
-
-	/* Release lock to let other CPUs handle exception */
-	spinlock_release(&exception_spinlock);
 
 	/* Halt the CPU */
 	cpu_dead();
