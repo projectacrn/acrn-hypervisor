@@ -551,6 +551,8 @@ static void dmar_issue_qi_request(struct dmar_drhd_rt *dmar_unit, struct dmar_en
 	uint32_t qi_status = 0U;
 	uint64_t start;
 
+	spinlock_obtain(&(dmar_unit->lock));
+
 	invalidate_desc_ptr = (struct dmar_entry *)(dmar_unit->qi_queue + dmar_unit->qi_tail);
 
 	invalidate_desc_ptr->hi_64 = invalidate_desc.hi_64;
@@ -574,6 +576,8 @@ static void dmar_issue_qi_request(struct dmar_drhd_rt *dmar_unit, struct dmar_en
 		}
 		asm_pause();
 	}
+
+	spinlock_release(&(dmar_unit->lock));
 }
 
 /*
@@ -606,11 +610,7 @@ static void dmar_invalid_context_cache(struct dmar_drhd_rt *dmar_unit,
 	}
 
 	if (invalidate_desc.lo_64 != 0UL) {
-		spinlock_obtain(&(dmar_unit->lock));
-
 		dmar_issue_qi_request(dmar_unit, invalidate_desc);
-
-		spinlock_release(&(dmar_unit->lock));
 	}
 }
 
@@ -653,11 +653,7 @@ static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_unit, uint16_t did, uin
 	}
 
 	if (invalidate_desc.lo_64 != 0UL) {
-		spinlock_obtain(&(dmar_unit->lock));
-
 		dmar_issue_qi_request(dmar_unit, invalidate_desc);
-
-		spinlock_release(&(dmar_unit->lock));
 	}
 }
 
@@ -708,11 +704,7 @@ static void dmar_invalid_iec(struct dmar_drhd_rt *dmar_unit, uint16_t intr_index
 	}
 
 	if (invalidate_desc.lo_64 != 0UL) {
-		spinlock_obtain(&(dmar_unit->lock));
-
 		dmar_issue_qi_request(dmar_unit, invalidate_desc);
-
-		spinlock_release(&(dmar_unit->lock));
 	}
 }
 
