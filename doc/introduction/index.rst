@@ -629,9 +629,8 @@ ACRN Device model incorporates these three aspects:
      notifying it that the IOREQ has completed.
 
 .. note::
-   Userland: dm as ACRN Device Model.
-
-   Kernel space: VBS-K, MPT Service, VHM itself
+   * Userland: dm as ACRN Device Model.
+   * Kernel space: VBS-K, MPT Service, VHM itself
 
 .. _pass-through:
 
