@@ -589,21 +589,21 @@ int32_t ptirq_prepare_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t
 
 		/* build physical config MSI, update to info->pmsi_xxx */
 		if (is_lapic_pt_configured(vm)) {
-			enum vm_vlapic_state vlapic_state = check_vm_vlapic_state(vm);
+			enum vm_vlapic_mode vlapic_mode = check_vm_vlapic_mode(vm);
 
-			if (vlapic_state == VM_VLAPIC_X2APIC) {
+			if (vlapic_mode == VM_VLAPIC_X2APIC) {
 				/*
 				 * All the vCPUs are in x2APIC mode and LAPIC is Pass-through
 				 * Use guest vector to program the interrupt source
 				 */
 				ptirq_build_physical_msi(vm, entry, (uint32_t)info->data.bits.vector, 0UL, irte_idx);
-			} else if (vlapic_state == VM_VLAPIC_XAPIC) {
+			} else if (vlapic_mode == VM_VLAPIC_XAPIC) {
 				/*
 				 * All the vCPUs are in xAPIC mode and LAPIC is emulated
 				 * Use host vector to program the interrupt source
 				 */
 				ptirq_build_physical_msi(vm, entry, irq_to_vector(entry->allocated_pirq), 0UL, irte_idx);
-			} else if (vlapic_state == VM_VLAPIC_TRANSITION) {
+			} else if (vlapic_mode == VM_VLAPIC_TRANSITION) {
 				/*
 				 * vCPUs are in middle of transition, so do not program interrupt source
 				 * TODO: Devices programmed during transistion do not work after transition
