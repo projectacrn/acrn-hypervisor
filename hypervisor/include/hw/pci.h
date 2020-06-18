@@ -361,6 +361,21 @@ static inline bool is_pci_cfg_multifunction(uint8_t header_type)
 	return ((header_type & PCIM_MFDEV) == PCIM_MFDEV);
 }
 
+static inline bool pci_is_valid_access_offset(uint32_t offset, uint32_t bytes)
+{
+	return ((offset & (bytes - 1U)) == 0U);
+}
+
+static inline bool pci_is_valid_access_byte(uint32_t bytes)
+{
+	return ((bytes == 1U) || (bytes == 2U) || (bytes == 4U));
+}
+
+static inline bool pci_is_valid_access(uint32_t offset, uint32_t bytes)
+{
+	return (pci_is_valid_access_byte(bytes) && pci_is_valid_access_offset(offset, bytes));
+}
+
 bool is_plat_hidden_pdev(union pci_bdf bdf);
 bool pdev_need_bar_restore(const struct pci_pdev *pdev);
 void pdev_restore_bar(const struct pci_pdev *pdev);
