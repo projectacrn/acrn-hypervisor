@@ -21,9 +21,9 @@ orchestrators such as OpenStack to manage ACRN virtual machines. Kata
 Containers, a secure container runtime, has also been enabled on ACRN
 and can be orchestrated via Docker or Kubernetes.
 
-Rounding things out, we’ve also made significant improvements in
+Rounding things out, we've also made significant improvements in
 configuration tools, added many new tutorial documents, and enabled ACRN
-on the QEMU machine emulator make it easier to try out and develop with
+on the QEMU machine emulator making it easier to try out and develop with
 ACRN.
 
 ACRN is a flexible, lightweight reference hypervisor that is built with
@@ -45,8 +45,9 @@ The project's online technical documentation is also tagged to
 correspond with a specific release: generated v2.0 documents can be
 found at https://projectacrn.github.io/2.0/.  Documentation for the
 latest (master) branch is found at
-https://projectacrn.github.io/latest/. 
-Follow the instructions in the :ref:`rt_industry_setup`.
+https://projectacrn.github.io/latest/.
+Follow the instructions in the :ref:`rt_industry_ubuntu_setup` to get
+started with ACRN.
 
 We recommend that all developers upgrade to ACRN release v2.0.
 
@@ -102,80 +103,79 @@ Pre-launched Safety VM Support
 ACRN supports a pre-launched partitioned safety VM, isolated from the
 Service VM and other post-launched VM by using partitioned HW resources.
 For example, in the hybrid mode, a real-time Zephyr RTOS VM can be
-“pre-launched” by the hypervisor even before the Service VM is launched,
+"pre-launched" by the hypervisor even before the Service VM is launched,
 and with its own dedicated resources to achieve a high level of
-isolation. This is designed to meet the needs of a Functional Safety OS. 
+isolation. This is designed to meet the needs of a Functional Safety OS.
 
 Post-launched VM support via OVMF
 =================================
 
 ACRN supports Open Virtual Machine Firmware (OVMF) as a virtual boot
 loader for the Service VM to launch post-launched VMs such as Windows,
-Linux, VxWorks, or Zephyr RTOS. Secure boot is also supported. 
+Linux, VxWorks, or Zephyr RTOS. Secure boot is also supported.
 
-Post-launched Real-time VM Support
+Post-launched Real-Time VM Support
 ==================================
 
-ACRN supports a post-launched RTVM, which also uses partitioned hardware
-resources to ensure good real-time performance, as required for
+ACRN supports a post-launched RTVM, which also uses partitioned hardware
+resources to ensure adequate real-time performance, as required for
 industrial use cases.
 
 Real-Time VM Performance Optimizations
 ======================================
 
-ACRN 2.0 improves (preempt-RT kernel-based) RTVM’s performance with
-these optimizations:
+ACRN 2.0 improves RTVM performance with these optimizations:
 
-* **Reduce the impact of VM-Exit overhead:**
+* **Eliminate use of VM-Exit and its performance overhead:**
    Use Local APIC (LAPIC) passthrough, Virtio Polling Mode Drivers (PMD),
-   and NMI interrupt notification technologies. 
+   and NMI interrupt notification technologies.
 
 * **Isolate the RTVM from the Service VM:**
-   Use Cache Isolation via Catch Allocation Technology (CAT) to ensure the
-   RTVM’s CPU using dedicated cache resource, avoiding interference from
-   other VMs  
+   The ACRN hypervisor uses RDT (Resource Director Technology)
+   allocation features such as CAT (Cache Allocation Technology), CDP (Code
+   Data Prioritization), and MBA (Memory Bandwidth Allocation) to provide
+   better isolation and prioritize critical resources, such as cache and
+   memory bandwidth, for RTVMs over other VMs.
 
 * **PCI Configuration space access emulation for passthrough devices in the hypervisor:**
    The hypervisor provides the necessary emulation (such as config space)
    of the passthrough PCI device during runtime for a DM-launched VM from
-   Service VM.  
+   Service VM.
 
 * **PCI bridge emulation inside hypervisor**
 
 * **ART (Always Running Timer Virtualization):**
-   Ensure time is synchronized between Ptdev and vART 
+   Ensure time is synchronized between Ptdev and vART
 
 CPU Sharing Support
 ===================
 
 ACRN supports CPU Sharing to fully utilize the physical CPU resource
 across more virtual machines. ACRN enables a borrowed virtual time CPU
-scheduler in the hypervisor to make sure the physical CPU can be shared
-between VMs and support for yielding an idle vCPU when it’s running a
-‘HLT’ or ‘PAUSE’ instruction. 
+scheduler in the hypervisor to make sure the physical CPU can be shared
+between VMs and support for yielding an idle vCPU when it's running a
+'HLT' or 'PAUSE' instruction.
 
 Many choices for User VM OS
 ===========================
 
 ACRN now supports Windows* 10, Android*, Ubuntu*, Xenomai, VxWorks*,
-Real-Time Linux*, and Zephyr* RTOS.  ACRN’s Windows support now conforms
+Real-Time Linux*, and Zephyr* RTOS.  ACRN's Windows support now conforms
 to the Microsoft* Hypervisor Top-Level Functional Specification (TLFS).
 ACRN 2.0 also improves overall Windows as a Guest (WaaG) stability and
-performance. 
+performance.
 
-Single Root I/O Virtualization (SR-IOV) Support
-===============================================
+SR-IOV Support
+==============
 
-SR-IOV allows a device to separate access to its resources among various
-PCIe hardware functions. For a network adapter, this enables network
-traffic to bypass the software switch layer in the virtualization stack
-and achieve network performance that is nearly the same as in a
-nonvirtualized environment. An SR-IOV capable PCI device’s Physical
-Function (PF) can be allocated to the Service VM, and its Virtual
-Functions (VFs) can be allocated to any User VM. For example, the ACRN
-Service VM supports a SR-IOV ethernet device (through the PF driver) and
-ensures that the SR-IOV VF device can be assigned (passthrough) to a
-post-launched VM (launched by ACRN-DM in Service VM). 
+SR-IOV (Single Root Input/Output Virtualization) can isolate PCIe
+devices to offer performance similar to bare-metal levels. For a
+network adapter, for example, this enables network traffic to bypass the
+software switch layer in the virtualization stack and achieve network
+performance that is nearly the same as in a nonvirtualized environment.
+In this example, the ACRN Service VM supports a SR-IOV ethernet device
+through the Physical Function (PF) driver, and ensures that the SR-IOV
+Virtual Function (VF) device can passthrough to a post-launched VM.
 
 Graphics passthrough support
 ============================
@@ -188,26 +188,26 @@ Shared memory based Inter-VM communication
 ==========================================
 
 ACRN supports Inter-VM communication based on shared memory for
-post-launched VMs communicating via a UIO interface. 
+post-launched VMs communicating via a Userspace I/O (UIO) interface.
 
 Configuration Tool Support
 ==========================
 
 A new offline configuration tool helps developers deploy ACRN to
-different hardware systems with its own customization. 
+different hardware systems with its own customization.
 
 Kata Containers Support
 =======================
 
-ACRN can launch a Kata container, a secure container runtime,  as a User VM. 
+ACRN can launch a Kata container, a secure container runtime,  as a User VM.
 
 VM orchestration
 ================
 
 Libvirt is an open-source API, daemon, and management tool as a layer to
-decouple orchestrators and hypervisors. By adding a “ACRN driver”, ACRN
-supports the libvirt-based orchestrator to configure a User VM’s CPU
-configuration during VM creation. 
+decouple orchestrators and hypervisors. By adding a "ACRN driver", ACRN
+supports libvirt-based tools and orchestrators to configure a User VM's CPU
+configuration during VM creation.
 
 Document updates
 ================
