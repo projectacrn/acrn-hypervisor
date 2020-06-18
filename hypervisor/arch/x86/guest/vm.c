@@ -438,11 +438,11 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	if (status == 0) {
 		prepare_epc_vm_memmap(vm);
 
-		spinlock_init(&vm->vm_lock);
+		spinlock_init(&vm->vlapic_mode_lock);
 		spinlock_init(&vm->ept_lock);
 		spinlock_init(&vm->emul_mmio_lock);
 
-		vm->arch_vm.vlapic_state = VM_VLAPIC_XAPIC;
+		vm->arch_vm.vlapic_mode = VM_VLAPIC_XAPIC;
 		vm->intr_inject_delay_delta = 0UL;
 
 		/* Set up IO bit-mask such that VM exit occurs on
@@ -660,7 +660,7 @@ int32_t reset_vm(struct acrn_vm *vm)
 	/*
 	 * Set VM vLAPIC state to VM_VLAPIC_XAPIC
 	 */
-	vm->arch_vm.vlapic_state = VM_VLAPIC_XAPIC;
+	vm->arch_vm.vlapic_mode = VM_VLAPIC_XAPIC;
 
 	if (is_sos_vm(vm)) {
 		(void)vm_sw_loader(vm);
@@ -798,11 +798,11 @@ void update_vm_vlapic_state(struct acrn_vm *vm)
 	uint16_t i;
 	struct acrn_vcpu *vcpu;
 	uint16_t vcpus_in_x2apic, vcpus_in_xapic;
-	enum vm_vlapic_state vlapic_state = VM_VLAPIC_XAPIC;
+	enum vm_vlapic_mode vlapic_mode = VM_VLAPIC_XAPIC;
 
 	vcpus_in_x2apic = 0U;
 	vcpus_in_xapic = 0U;
-	spinlock_obtain(&vm->vm_lock);
+	spinlock_obtain(&vm->vlapic_mode_lock);
 	foreach_vcpu(i, vm, vcpu) {
 		/* Skip vCPU in state outside of VCPU_RUNNING as it may be offline. */
 		if (vcpu->state == VCPU_RUNNING) {
@@ -823,42 +823,42 @@ void update_vm_vlapic_state(struct acrn_vm *vm)
 		 * Check if the counts vcpus_in_x2apic and vcpus_in_xapic are zero
 		 * VM_VLAPIC_DISABLED
 		 */
-		vlapic_state = VM_VLAPIC_DISABLED;
+		vlapic_mode = VM_VLAPIC_DISABLED;
 	} else if ((vcpus_in_x2apic != 0U) && (vcpus_in_xapic != 0U)) {
 		/*
 		 * Check if the counts vcpus_in_x2apic and vcpus_in_xapic are non-zero
 		 * VM_VLAPIC_TRANSITION
 		 */
-		vlapic_state = VM_VLAPIC_TRANSITION;
+		vlapic_mode = VM_VLAPIC_TRANSITION;
 	} else if (vcpus_in_x2apic != 0U) {
 		/*
 		 * Check if the counts vcpus_in_x2apic is non-zero
 		 * VM_VLAPIC_X2APIC
 		 */
-		vlapic_state = VM_VLAPIC_X2APIC;
+		vlapic_mode = VM_VLAPIC_X2APIC;
 	} else {
 		/*
 		 * Count vcpus_in_xapic is non-zero
 		 * VM_VLAPIC_XAPIC
 		 */
-		vlapic_state = VM_VLAPIC_XAPIC;
+		vlapic_mode = VM_VLAPIC_XAPIC;
 	}
 
-	vm->arch_vm.vlapic_state = vlapic_state;
-	spinlock_release(&vm->vm_lock);
+	vm->arch_vm.vlapic_mode = vlapic_mode;
+	spinlock_release(&vm->vlapic_mode_lock);
 }
 
 /*
- * @brief Check state of vLAPICs of a VM
+ * @brief Check mode of vLAPICs of a VM
  *
  * @pre vm != NULL
  */
-enum vm_vlapic_state check_vm_vlapic_state(const struct acrn_vm *vm)
+enum vm_vlapic_mode check_vm_vlapic_mode(const struct acrn_vm *vm)
 {
-	enum vm_vlapic_state vlapic_state;
+	enum vm_vlapic_mode vlapic_mode;
 
-	vlapic_state = vm->arch_vm.vlapic_state;
-	return vlapic_state;
+	vlapic_mode = vm->arch_vm.vlapic_mode;
+	return vlapic_mode;
 }
 
 /**
