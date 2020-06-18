@@ -33,7 +33,7 @@ The ACRN hypervisor shell supports the following commands:
    * - int
      - List interrupt information per CPU
    * - pt
-     - Show pass-through device information
+     - Show passthrough device information
    * - vioapic <vm_id>
      - Show virtual IOAPIC (vIOAPIC) information for a specific VM
    * - dump_ioapic
@@ -184,7 +184,7 @@ IRQ vector number, etc.
 pt
 ==
 
-``pt`` provides pass-through detailed information, such as the virtual
+``pt`` provides passthrough detailed information, such as the virtual
 machine number, interrupt type, interrupt request, interrupt vector,
 trigger mode, etc.
 

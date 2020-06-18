@@ -19,7 +19,7 @@ for the Device Model to build a virtual ACPI table.
 The Px/Cx data includes four
 ACPI objects: _PCT, _PPC, and _PSS for P-state management, and _CST for
 C-state management. All these ACPI data must be consistent with the
-native data because the control method is a kind of pass through.
+native data because the control method is a kind of passthrough.
 
 These ACPI objects data are parsed by an offline tool and hard-coded in a
 Hypervisor module named CPU state table:

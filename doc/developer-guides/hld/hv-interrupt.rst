@@ -11,10 +11,10 @@ to manage interrupts and exceptions, as shown in
 :numref:`interrupt-modules-overview`. In its native layer, it configures
 the physical PIC, IOAPIC, and LAPIC to support different interrupt
 sources from the local timer/IPI to the external INTx/MSI. In its virtual guest
-layer, it emulates virtual PIC, virtual IOAPIC, and virtual LAPIC/pass-thru
+layer, it emulates virtual PIC, virtual IOAPIC, and virtual LAPIC/passthrough
 LAPIC. It provides full APIs, allowing virtual interrupt injection from
-emulated or pass-thru devices. The contents in this section do not include
-the pass-thru LAPIC case. For the pass-thru LAPIC, refer to
+emulated or passthrough devices. The contents in this section do not include
+the passthrough LAPIC case. For the passthrough LAPIC, refer to
 :ref:`lapic_passthru`
 
 .. figure:: images/interrupt-image3.png
@@ -29,10 +29,10 @@ the ACRN hypervisor sets up the physical interrupt in its basic
 interrupt modules (e.g., IOAPIC/LAPIC/IDT). It dispatches the interrupt
 in the hypervisor interrupt flow control layer to the corresponding
 handlers; this could be pre-defined IPI notification, timer, or runtime
-registered pass-thru devices. The ACRN hypervisor then uses its VM
+registered passthrough devices. The ACRN hypervisor then uses its VM
 interfaces based on vPIC, vIOAPIC, and vMSI modules, to inject the
 necessary virtual interrupt into the specific VM, or directly deliver
-interrupt to the specific RT VM with pass-thru LAPIC.
+interrupt to the specific RT VM with passthrough LAPIC.
 
 .. figure:: images/interrupt-image2.png
    :align: center
@@ -100,7 +100,7 @@ Physical Interrupt Initialization
 After ACRN hypervisor gets control from the bootloader, it
 initializes all physical interrupt-related modules for all the CPUs. ACRN
 hypervisor creates a framework to manage the physical interrupt for
-hypervisor local devices, pass-thru devices, and IPI between CPUs, as
+hypervisor local devices, passthrough devices, and IPI between CPUs, as
 shown in :numref:`hv-interrupt-init`:
 
 .. figure:: images/interrupt-image66.png
@@ -323,7 +323,7 @@ there are three different handling flows according to flags:
 
 -  ``IRQF_LEVEL && IRQF_PT``
 
-   For pass-thru devices, to avoid continuous interrupt triggers, it masks
+   For passthrough devices, to avoid continuous interrupt triggers, it masks
    the IOAPIC pin and leaves it unmasked until corresponding vIOAPIC
    pin gets an explicit EOI ACK from guest.
 

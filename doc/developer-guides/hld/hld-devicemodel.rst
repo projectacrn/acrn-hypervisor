@@ -1189,8 +1189,8 @@ and waits for a resume signal. When the User VM should exit from S3, DM will
 get a wakeup signal and reset the User VM to emulate the User VM exit from
 S3.
 
-Pass-through in Device Model
+Passthrough in Device Model
 ****************************
 
-You may refer to :ref:`hv-device-passthrough` for pass-through realization
+You may refer to :ref:`hv-device-passthrough` for passthrough realization
 in device model.
