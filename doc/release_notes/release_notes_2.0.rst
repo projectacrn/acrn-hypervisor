@@ -15,6 +15,10 @@ resource partitioning. A wide range of User VM OSs (such as Windows 10,
 Ubuntu, Android, and VxWorks) can run on ACRN, running different
 workloads and applications on the same hardware platform.
 
+A new hybrid-mode architecture adds flexibility to simultaneously
+support both traditional resource sharing among VMs and complete VM
+resource partitioning required for functional safety requirements.
+
 Workload management and orchestration, rather standard and mature in
 cloud environments, are enabled now in ACRN, allowing open source
 orchestrators such as OpenStack to manage ACRN virtual machines. Kata
@@ -103,7 +107,7 @@ Pre-launched Safety VM Support
 ACRN supports a pre-launched partitioned safety VM, isolated from the
 Service VM and other post-launched VM by using partitioned HW resources.
 For example, in the hybrid mode, a real-time Zephyr RTOS VM can be
-"pre-launched" by the hypervisor even before the Service VM is launched,
+*pre-launched* by the hypervisor even before the Service VM is launched,
 and with its own dedicated resources to achieve a high level of
 isolation. This is designed to meet the needs of a Functional Safety OS.
 
@@ -142,7 +146,8 @@ ACRN 2.0 improves RTVM performance with these optimizations:
    of the passthrough PCI device during runtime for a DM-launched VM from
    Service VM.
 
-* **PCI bridge emulation inside hypervisor**
+* **More hypervisor-emulated devices:**
+   This includes vPCI and vPCI bridge emulation, and vUART.
 
 * **ART (Always Running Timer Virtualization):**
    Ensure time is synchronized between Ptdev and vART
@@ -156,14 +161,21 @@ scheduler in the hypervisor to make sure the physical CPU can be shared
 between VMs and support for yielding an idle vCPU when it's running a
 'HLT' or 'PAUSE' instruction.
 
-Many choices for User VM OS
-===========================
+Large selection of OSs for User VMs
+===================================
 
 ACRN now supports Windows* 10, Android*, Ubuntu*, Xenomai, VxWorks*,
 Real-Time Linux*, and Zephyr* RTOS.  ACRN's Windows support now conforms
 to the Microsoft* Hypervisor Top-Level Functional Specification (TLFS).
 ACRN 2.0 also improves overall Windows as a Guest (WaaG) stability and
 performance.
+
+GRUB bootloader
+===============
+
+The ACRN hypervisor can boot from the popular GRUB bootloader using
+either the multiboot or multiboot2 prococol (the latter adding UEFI
+support). GRUB provides developers with booting flexibility.
 
 SR-IOV Support
 ==============
@@ -260,6 +272,7 @@ Many new and updated `reference documents <https://projectacrn.github.io>`_ are 
   * :ref:`setup_openstack_libvirt`
   * :ref:`acrn_on_qemu`
   * :ref:`gpu-passthrough`
+  * :ref:`using_grub`
 
 * Debug
 

@@ -77,6 +77,7 @@ Enable ACRN Features
    tutorials/rtvm_workload_design_guideline
    tutorials/setup_openstack_libvirt
    tutorials/acrn_on_qemu
+   tutorials/using_grub
 
 Debug
 *****
@@ -100,7 +101,6 @@ Additional Tutorials
 
    tutorials/up2
    tutorials/building_acrn_in_docker
-   tutorials/using_grub
    tutorials/acrn_ootb
    tutorials/static-ip
    tutorials/increase-uos-disk-size
