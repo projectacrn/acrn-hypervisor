@@ -112,6 +112,20 @@ static inline bool msicap_access(const struct pci_vdev *vdev, uint32_t offset)
 	return (has_msi_cap(vdev) && in_range(offset, vdev->msi.capoff, vdev->msi.caplen));
 }
 
+/**
+ * @brief Check if the specified vdev is a zombie VF instance
+ *
+ * @pre: The vdev is a VF instance
+ *
+ * @param vdev Pointer to vdev instance
+ *
+ * @return If the vdev is a zombie VF instance return true, otherwise return false
+ */
+static inline bool is_zombie_vf(const struct pci_vdev *vdev)
+{
+	return (vdev->user == NULL);
+}
+
 void init_vdev_pt(struct pci_vdev *vdev, bool is_pf_vdev);
 void deinit_vdev_pt(struct pci_vdev *vdev);
 void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val);
