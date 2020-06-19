@@ -118,7 +118,7 @@ The demo setup uses these software components and versions:
    * - AGL
      - Funky Flounder (6.02)
      - `intel-corei7-x64 image
-       <https://download.automotivelinux.org/AGL/release/flounder/6.0.2/intel-corei7-64/deploy/images/intel-corei7-64/agl-demo-platform-crosssdk-intel-corei7-64-20181112133144.rootfs.wic.xz>`_
+       <https://mirrors.edge.kernel.org/AGL/release/flounder/6.0.2/intel-corei7-64/deploy/images/intel-corei7-64/agl-demo-platform-crosssdk-intel-corei7-64-20200318141526.rootfs.wic.xz>`_
    * - acrn-kernel
      - revision acrn-2019w39.1-140000p
      - `acrn-kernel <https://github.com/projectacrn/acrn-kernel>`_
