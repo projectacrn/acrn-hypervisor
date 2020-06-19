@@ -137,7 +137,7 @@ struct pci_vdev {
 	 * user       | vdev in HV | vdev in pre-VM |   vdev in SOS  |   vdev in post-VM  | vdev in post-VM
 	 */
 	struct pci_vdev *parent_user;
-	struct pci_vdev *user;
+	struct pci_vdev *user;	/* NULL means this device is not used or is a zombie VF */
 	struct hlist_node link;
 };
 
