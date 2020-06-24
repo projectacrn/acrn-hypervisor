@@ -50,11 +50,12 @@ Install Ubuntu on the SATA disk
 
 .. note:: The WHL Maxtang machine contains both an NVMe and SATA disk.
    Before you install the Ubuntu User VM on the SATA disk, either
-   remove the NVME disk or delete it's blocks.
+   remove the NVMe disk or delete its blocks.
 
 #. Insert the Ubuntu USB boot disk into the WHL Maxtang machine.
 #. Power on the machine, then press F11 to select the USB disk as the boot
-   device. Select **UEFI: SanDisk**. Note that the label depends on the brand/make of the USB stick, and must start with **UEFI**.
+   device. Select **UEFI: SanDisk** to boot using **UEFI**. Note that the
+   label depends on the brand/make of the USB stick.
 #. Install the Ubuntu OS.
 #. Select **Something else** to create the partition.
 
@@ -85,7 +86,8 @@ Install Ubuntu on the NVMe disk
 
 #. Insert the Ubuntu USB boot disk into the WHL Maxtang machine.
 #. Power on the machine, then press F11 to select the USB disk as the boot
-   device. Select **UEFI: SanDisk**. Note that the label depends on the brand/make of the USB stick, and must start with **UEFI**.
+   device. Select **UEFI: SanDisk** to boot using **UEFI**. Note that the
+   label depends on the brand/make of the USB stick.
 #. Install the Ubuntu OS.
 #. Select **Something else** to create the partition.
 
