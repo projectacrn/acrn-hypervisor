@@ -73,8 +73,8 @@ div.non-compliant-code div.highlight {
     color: rgba(255,255,255,1);
 }
 
-/* squish the space between a paragraph before a list */
-div > p + ul, div > p + ol {
+/* squish the space between a paragraph before a list but not in a note */
+div:not(.admonition) > p + ul, div:not(.admonition) > p + ol {
    margin-top: -20px;
 }
 
@@ -298,4 +298,11 @@ div.numbered-step h2::before {
 /* bold the level1 headings in on-page toctree displays */
 .rst-content  .toctree-l1 > a {
   font-weight: bold;
+}
+
+/* add icon on external links */
+a.reference.external::after {
+   font-family: 'FontAwesome';
+   font-size: 80%;
+   content: " \f08e";
 }

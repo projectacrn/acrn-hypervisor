@@ -83,8 +83,8 @@ responses to user space modules, notified by vIRQ injections.
 
 .. _MPT_interface:
 
-AcrnGT mediated pass-through (MPT) interface
-**************************************************
+AcrnGT mediated passthrough (MPT) interface
+*******************************************
 
 AcrnGT receives request from GVT module through MPT interface. Refer to the
 :ref:`Graphic_mediation` page.

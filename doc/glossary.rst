@@ -122,9 +122,9 @@ Glossary of Terms
    OSPM
       Operating System Power Management
 
-   Pass-Through Device
+   Passthrough Device
       Physical devices (typically PCI) exclusively assigned to a guest.  In
-      the Project ACRN architecture, pass-through devices are owned by the
+      the Project ACRN architecture, passthrough devices are owned by the
       foreground OS.
 
    Partition Mode

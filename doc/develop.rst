@@ -15,6 +15,7 @@ Configuration and Tools
 
    tutorials/acrn_configuration_tool
    reference/kconfig/index
+   user-guides/hv-parameters
    user-guides/kernel-parameters
    user-guides/acrn-shell
    user-guides/acrn-dm-parameters
@@ -76,6 +77,7 @@ Enable ACRN Features
    tutorials/rtvm_workload_design_guideline
    tutorials/setup_openstack_libvirt
    tutorials/acrn_on_qemu
+   tutorials/using_grub
 
 Debug
 *****

@@ -5,7 +5,7 @@
 Page Not Found
 ##############
 
-.. rst-class:: rst-columns
+.. rst-class:: rst-columns2
 
    .. image:: images/ACRN-fall-from-tree-small.png
       :align: left

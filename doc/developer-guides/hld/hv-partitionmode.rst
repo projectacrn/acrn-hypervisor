@@ -141,26 +141,26 @@ Port I/O is supported for PCI device config space 0xcfc and 0xcf8, vUART
 host-bridge at BDF (Bus Device Function) 0.0:0 to each guest. Access to
 256 bytes of config space for virtual host bridge is emulated.
 
-I/O - Pass-thru devices
-=======================
+I/O - Passthrough devices
+=========================
 
 ACRN, in partition mode, supports passing thru PCI devices on the
-platform. All the pass-thru devices are exposed as child devices under
+platform. All the passthrough devices are exposed as child devices under
 the virtual host bridge. ACRN does not support either passing thru
-bridges or emulating virtual bridges. Pass-thru devices should be
+bridges or emulating virtual bridges. Passthrough devices should be
 statically allocated to each guest using the guest configuration. ACRN
 expects the developer to provide the virtual BDF to BDF of the
-physical device mapping for all the pass-thru devices as part of each guest
+physical device mapping for all the passthrough devices as part of each guest
 configuration.
 
 Runtime ACRN support for guests
 *******************************
 
-ACRN, in partition mode, supports an option to pass-thru LAPIC of the
+ACRN, in partition mode, supports an option to passthrough LAPIC of the
 physical CPUs to the guest. ACRN expects developers to specify if the
-guest needs LAPIC pass-thru using guest configuration. When guest
+guest needs LAPIC passthrough using guest configuration. When guest
 configures vLAPIC as x2APIC, and if the guest configuration has LAPIC
-pass-thru enabled, ACRN passes the LAPIC to the guest. Guest can access
+passthrough enabled, ACRN passes the LAPIC to the guest. Guest can access
 the LAPIC hardware directly without hypervisor interception. During
 runtime of the guest, this option differentiates how ACRN supports
 inter-processor interrupt handling and device interrupt handling. This
@@ -181,18 +181,18 @@ the Service VM startup in sharing mode.
 Inter-processor Interrupt (IPI) Handling
 ========================================
 
-Guests w/o LAPIC pass-thru
---------------------------
+Guests w/o LAPIC passthrough
+----------------------------
 
-For guests without LAPIC pass-thru, IPIs between guest CPUs are handled in
+For guests without LAPIC passthrough, IPIs between guest CPUs are handled in
 the same way as sharing mode in ACRN. Refer to :ref:`virtual-interrupt-hld`
 for more details.
 
-Guests w/ LAPIC pass-thru
--------------------------
+Guests w/ LAPIC passthrough
+---------------------------
 
-ACRN supports pass-thru if and only if the guest is using x2APIC mode
-for the vLAPIC. In LAPIC pass-thru mode, writes to the Interrupt Command
+ACRN supports passthrough if and only if the guest is using x2APIC mode
+for the vLAPIC. In LAPIC passthrough mode, writes to the Interrupt Command
 Register (ICR) x2APIC MSR is intercepted. Guest writes the IPI info,
 including vector, and destination APIC IDs to the ICR. Upon an IPI request
 from the guest, ACRN does a sanity check on the destination processors
@@ -204,8 +204,8 @@ corresponding to the destination processor info in the ICR.
    :align: center
 
 
-Pass-thru device support
-========================
+Passthrough device support
+==========================
 
 Configuration space access
 --------------------------
@@ -217,7 +217,7 @@ Address registers (BAR), offsets starting from 0x10H to 0x24H, provide
 the information about the resources (I/O and MMIO) used by the PCI
 device. ACRN virtualizes the BAR registers and for the rest of the
 config space, forwards reads and writes to the physical config space of
-pass-thru devices.  Refer to the `I/O`_ section below for more details.
+passthrough devices.  Refer to the `I/O`_ section below for more details.
 
 .. figure:: images/partition-image1.png
    :align: center
@@ -226,16 +226,16 @@ pass-thru devices.  Refer to the `I/O`_ section below for more details.
 DMA
 ---
 
-ACRN developers need to statically define the pass-thru devices for each
+ACRN developers need to statically define the passthrough devices for each
 guest using the guest configuration. For devices to DMA to/from guest
-memory directly, ACRN parses the list of pass-thru devices for each
+memory directly, ACRN parses the list of passthrough devices for each
 guest and creates context entries in the VT-d remapping hardware. EPT
 page tables created for the guest are used for VT-d page tables.
 
 I/O
 ---
 
-ACRN supports I/O for pass-thru devices with two restrictions.
+ACRN supports I/O for passthrough devices with two restrictions.
 
 1) Supports only MMIO. Thus, this requires developers to expose I/O BARs as
    not present in the guest configuration.
@@ -244,7 +244,7 @@ ACRN supports I/O for pass-thru devices with two restrictions.
 
 As the guest PCI sub-system scans the PCI bus and assigns a Guest Physical
 Address (GPA) to the MMIO BAR, ACRN maps the GPA to the address in the
-physical BAR of the pass-thru device using EPT. The following timeline chart
+physical BAR of the passthrough device using EPT. The following timeline chart
 explains how PCI devices are assigned to guest and BARs are mapped upon
 guest initialization.
 
@@ -255,14 +255,14 @@ guest initialization.
 Interrupt Configuration
 -----------------------
 
-ACRN supports both legacy (INTx) and MSI interrupts for pass-thru
+ACRN supports both legacy (INTx) and MSI interrupts for passthrough
 devices.
 
 INTx support
 ~~~~~~~~~~~~
 
 ACRN expects developers to identify the interrupt line info (0x3CH) from
-the physical BAR of the pass-thru device and build an interrupt entry in
+the physical BAR of the passthrough device and build an interrupt entry in
 the mptable for the corresponding guest. As guest configures the vIOAPIC
 for the interrupt RTE, ACRN writes the info from the guest RTE into the
 physical IOAPIC RTE. Upon the guest kernel request to mask the interrupt,
@@ -275,8 +275,8 @@ MSI support
 ~~~~~~~~~~~
 
 Guest reads/writes to PCI configuration space for configuring MSI
-interrupts using an address. Data and control registers are pass-thru to
-the physical BAR of the pass-thru device. Refer to `Configuration
+interrupts using an address. Data and control registers are passthrough to
+the physical BAR of the passthrough device. Refer to `Configuration
 space access`_ for details on how the PCI configuration space is emulated.
 
 Virtual device support
@@ -291,8 +291,8 @@ writes are discarded.
 Interrupt delivery
 ==================
 
-Guests w/o LAPIC pass-thru
---------------------------
+Guests w/o LAPIC passthrough
+----------------------------
 
 In partition mode of ACRN, interrupts stay disabled after a vmexit.  The
 processor does not take interrupts when it is executing in VMX root
@@ -307,10 +307,10 @@ for device interrupts.
    :align: center
 
 
-Guests w/ LAPIC pass-thru
--------------------------
+Guests w/ LAPIC passthrough
+---------------------------
 
-For guests with LAPIC pass-thru, ACRN does not configure vmexit upon
+For guests with LAPIC passthrough, ACRN does not configure vmexit upon
 external interrupts. There is no vmexit upon device interrupts and they are
 handled by the guest IDT.
 
@@ -320,15 +320,15 @@ Hypervisor IPI service
 ACRN needs IPIs for events such as flushing TLBs across CPUs, sending virtual
 device interrupts (e.g. vUART to vCPUs), and others.
 
-Guests w/o LAPIC pass-thru
---------------------------
+Guests w/o LAPIC passthrough
+----------------------------
 
 Hypervisor IPIs work the same way as in sharing mode.
 
-Guests w/ LAPIC pass-thru
--------------------------
+Guests w/ LAPIC passthrough
+---------------------------
 
-Since external interrupts are pass-thru to the guest IDT, IPIs do not
+Since external interrupts are passthrough to the guest IDT, IPIs do not
 trigger vmexit. ACRN uses NMI delivery mode and the NMI exiting is
 chosen for vCPUs. At the time of NMI interrupt on the target processor,
 if the processor is in non-root mode, vmexit happens on the processor
@@ -344,8 +344,8 @@ For a guest console in partition mode, ACRN provides an option to pass
 ``vmid`` as an argument to ``vm_console``. vmid is the same as the one
 developers use in the guest configuration.
 
-Guests w/o LAPIC pass-thru
---------------------------
+Guests w/o LAPIC passthrough
+----------------------------
 
 Works the same way as sharing mode.
 
@@ -354,7 +354,7 @@ Hypervisor Console
 
 ACRN uses the TSC deadline timer to provide a timer service. The hypervisor
 console uses a timer on CPU0 to poll characters on the serial device. To
-support LAPIC pass-thru, the TSC deadline MSR is pass-thru and the local
+support LAPIC passthrough, the TSC deadline MSR is passthrough and the local
 timer interrupt is also delivered to the guest IDT. Instead of the TSC
 deadline timer, ACRN uses the VMX preemption timer to poll the serial device.
 
