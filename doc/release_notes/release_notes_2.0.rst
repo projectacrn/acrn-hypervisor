@@ -287,12 +287,43 @@ Many new and updated `reference documents <https://projectacrn.github.io>`_ are 
   * :ref:`vtd-posted-interrupt`
 
 
-Fixed Issues
-************
 
-.. comment- :acrn-issue:`1773` - [APLNUC][IO][LaaG]USB Mediator USB3.0 and USB2.0 flash disk boot up UOS, quickly hot plug USB and Can not recognize all the devices
+Fixed Issues Details
+********************
+- :acrn-issue:`3715` -  Add support for multiple RDT resource allocation and fix L3 CAT config overwrite by L2
+- :acrn-issue:`3770` -  Warning when building the ACRN hypervisor \`SDC (defined at arch/x86/Kconfig:7) set more than once`
+- :acrn-issue:`3773` -  suspicious logic in vhost.c
+- :acrn-issue:`3918` -  Change active_hp_work position for code cleaning and add a module parameter to disable hp work.
+- :acrn-issue:`3939` -  zero-copy non-functional with vhost
+- :acrn-issue:`3946` -  Cannot boot VxWorks as UOS on KabyLake
+- :acrn-issue:`4017` -  hv: rename vuart operations
+- :acrn-issue:`4046` -  Error info popoup when run 3DMARK11 on Waag
+- :acrn-issue:`4072` -  hv: add printf "not support the value of vuart index parameter" in function vuart_register_io_handler
+- :acrn-issue:`4191` -  acrnboot: the end address of _DYNAME region is not calculated correct
+- :acrn-issue:`4250` -  acrnboot: parse hv cmdline incorrectly when containing any trailing white-spaces
+- :acrn-issue:`4283` -  devicemodel: refactor CMD_OPT_LAPIC_PT case branch
+- :acrn-issue:`4314` -  RTVM boot up fail due to init_hugetlb failed during S5 testing
+- :acrn-issue:`4365` -  Enable GOP driver work in GVT-d scenario
+- :acrn-issue:`4520` -  efi-stub could get wrong bootloader name
+- :acrn-issue:`4628` -  HV: guest: fix bug in get_vcpu_paging_mode
+- :acrn-issue:`4630` -  The \`board_parser.py` tool contains a few grammatical mistakes and typos
+- :acrn-issue:`4664` -  Wake up vCPU for interrupts from vPIC
+- :acrn-issue:`4666` -  Fix offline tool to generate info in pci_dev file for logical partition scenario
+- :acrn-issue:`4680` -  Fix potential dead loop if VT-d QI request timeout
+- :acrn-issue:`4688` -  RELEASE=n does not take effect while using xml to make hypervisor
+- :acrn-issue:`4703` -  Failed to launch WaaG at a high probablity if enable CPU sharing in GVT-d.
+- :acrn-issue:`4711` -  WaaG reboot will core dump with USB mediator
+- :acrn-issue:`4797` -  [acrn-configuration-tool] The VM name is always 1 when using web app to generate the launch script
+- :acrn-issue:`4799` -  [acrn-configuration-tool]wrong parameter for Soft RT/Hard RT vm in launch script
+- :acrn-issue:`4827` -  Missing explicit initialization of pci_device_lock
+- :acrn-issue:`4868` -  [acrn-configuation-tool]efi bootloader image file of Yocto industry build not match with default xmls
+- :acrn-issue:`4889` -  [WHL][QEMU][HV] With latest master branch HV, build ACRN for Qemu fail
 
 Known Issues
 ************
-
-.. comment- :acrn-issue:`4046` - [WHL][Function][WaaG] Error info popoup when run 3DMARK11 on Waag
+- :acrn-issue:`4047` - [WHL][Function][WaaG] passthru usb, Windows will hang when reboot it
+- :acrn-issue:`4313` - [WHL][VxWorks] Failed to ping when VxWorks passthru network
+- :acrn-issue:`4557` - [WHL][Performance][WaaG] Failed to run 3D directX9 during Passmark9.0 performance test with 7212 gfx driver
+- :acrn-issue:`4558` - [WHL][Performance][WaaG] WaaG reboot automatically during run 3D directX12 with 7212 gfx driver
+- :acrn-issue:`4982` - [WHL]ivshmemTest transfer file failed after UOS shutdown or reboot
+- :acrn-issue:`4983` - [WHL][RTVM]without any virtio device, with only pass-through devices, RTVM can't boot from SATA
