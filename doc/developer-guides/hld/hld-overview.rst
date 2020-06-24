@@ -61,7 +61,7 @@ for its RT VM:
 
 - CAT (Cache Allocation Technology)
 - MBA (Memory Bandwidth Allocation)
-- LAPIC pass-thru
+- LAPIC passthrough
 - Polling mode driver
 - ART (always running timer)
 - other TCC features like split lock detection, Pseudo locking for cache
@@ -109,7 +109,7 @@ separate instrument cluster VM is started after the User VM is booted.
 :numref:`overview-arch1.0` shows the architecture of ACRN 1.0 together with
 the IC VM and Service VM. As shown, the Service VM owns most of platform devices and
 provides I/O mediation to VMs. Some of the PCIe devices function as a
-pass-through mode to User VMs according to VM configuration. In addition,
+passthrough mode to User VMs according to VM configuration. In addition,
 the Service VM could run the IC applications and HV helper applications such
 as the Device Model, VM manager, etc. where the VM manager is responsible
 for VM start/stop/pause, virtual CPU pause/resume, etc.
@@ -136,7 +136,7 @@ compared to ACRN 1.0 is that:
    interference between different VMs
 
 -  ACRN 2.0 supports RT VM for a post-launched User VM, with assistant features like LAPIC
-   pass-thru and PMD virtio driver
+   passthrough and PMD virtio driver
 
 ACRN 2.0 is still WIP, and some of its features are already merged in the master.
 
@@ -162,12 +162,12 @@ ACRN adopts various approaches for emulating devices for the User VM:
    -  para-virtualized, requiring front-end drivers in
       the User VM to function.
 
--  **Pass-through device**: A device passed through to the User VM is fully
+-  **Passthrough device**: A device passed through to the User VM is fully
    accessible to the User VM without interception. However, interrupts
    are first handled by the hypervisor before
    being injected to the User VM.
 
--  **Mediated pass-through device**: A mediated pass-through device is a
+-  **Mediated passthrough device**: A mediated passthrough device is a
    hybrid of the previous two approaches. Performance-critical
    resources (mostly data-plane related) are passed-through to the User VMs and
    others (mostly control-plane related) are emulated.
@@ -275,7 +275,7 @@ used by commercial OS).
 
 -  On top of vCPUs are three components for device emulation: one for
    emulation inside the hypervisor, another for communicating with
-   the Service VM for mediation, and the third for managing pass-through
+   the Service VM for mediation, and the third for managing passthrough
    devices.
 
 -  The highest layer is a VM management module providing
@@ -311,7 +311,7 @@ based on command line configurations.
 Based on a VHM kernel module, DM interacts with VM manager to create the User
 VM. It then emulates devices through full virtualization on the DM user
 level, or para-virtualized based on kernel mediator (such as virtio,
-GVT), or pass-through based on kernel VHM APIs.
+GVT), or passthrough based on kernel VHM APIs.
 
 Refer to :ref:`hld-devicemodel` for more details.
 
@@ -592,6 +592,6 @@ Some details about the ACPI table for the User and Service VMs:
    knows which register the User VM writes to trigger power state
    transitions. Device Model must register an I/O handler for it.
 
--  The ACPI table in the Service VM is passthru. There is no ACPI parser
+-  The ACPI table in the Service VM is passthrough. There is no ACPI parser
    in ACRN HV. The power management related ACPI table is
    generated offline and hardcoded in ACRN HV.

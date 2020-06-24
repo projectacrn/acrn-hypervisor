@@ -26,17 +26,18 @@ user VM sharing optimizations for IoT and embedded devices.
 ACRN Open Source Roadmap 2020
 *****************************
 
-Stay informed on what's ahead for ACRN in 2020 by visiting the `ACRN 2020 Roadmap <https://projectacrn.org/wp-content/uploads/sites/59/2020/03/ACRN-Roadmap-External-2020.pdf>`_.
+Stay informed on what's ahead for ACRN in 2020 by visiting the
+`ACRN 2020 Roadmap <https://projectacrn.org/wp-content/uploads/sites/59/2020/03/ACRN-Roadmap-External-2020.pdf>`_.
 
 For up-to-date happenings, visit the `ACRN blog <https://projectacrn.org/blog/>`_.
 
 ACRN High-Level Architecture
 ****************************
 
-The ACRN architecture has evolved since it's initial v0.1 release in
+The ACRN architecture has evolved since its initial v0.1 release in
 July 2018. Beginning with the v1.1 release, the ACRN architecture has
 flexibility to support partition mode, sharing mode, and a mixed hybrid
-mode.  As shown in :numref:`V2-hl-arch`, hardware resources can be
+mode. As shown in :numref:`V2-hl-arch`, hardware resources can be
 partitioned into two parts:
 
 .. figure:: images/ACRN-V2-high-level-arch.png
@@ -65,10 +66,10 @@ VM. The service VM can access hardware resources directly by running
 native drivers and it provides device sharing services to the user VMs
 through the Device Model.  Currently, the service VM is based on Linux,
 but it can also use other operating systems as long as the ACRN Device
-Model is ported into it. A user VM can be Clear Linux*, Android*,
+Model is ported into it. A user VM can be Clear Linux*, Ubuntu*, Android*,
 Windows* or VxWorks*.  There is one special user VM, called a
 post-launched Real-Time VM (RTVM), designed to run a hard real-time OS,
-such as VxWorks*, or Xenomai*. Because of its real-time capability, RTVM
+such as Zephyr*, VxWorks*, or Xenomai*. Because of its real-time capability, RTVM
 can be used for soft programmable logic controller (PLC), inter-process
 communication (IPC), or Robotics applications.
 
@@ -94,7 +95,7 @@ for building Automotive Software Defined Cockpit (SDC) and In-Vehicle
 Experience (IVE) solutions.
 
 .. figure:: images/ACRN-V2-SDC-scenario.png
-   :width: 400px
+   :width: 600px
    :align: center
    :name: V2-SDC-scenario
 
@@ -103,10 +104,10 @@ Experience (IVE) solutions.
 As a reference implementation, ACRN provides the basis for embedded
 hypervisor vendors to build solutions with a reference I/O mediation
 solution.  In this scenario, an automotive SDC system consists of the
-Instrument Cluster (IC) system in VM1, the In-Vehicle Infotainment (IVI)
-system in VM2, and one or more Rear Seat Entertainment (RSE) systems in
-VM3. Each system is running as an isolated Virtual Machine (VM) for
-overall system safety considerations.
+Instrument Cluster (IC) system running in the Service VM and the In-Vehicle
+Infotainment (IVI) system is running the post-launched User VM. Additionally,
+one could modify the SDC scenario to add more post-launched User VMs that can
+host Rear Seat Entertainment (RSE) systems (not shown on the picture).
 
 An **Instrument Cluster (IC)** system is used to show the driver operational
 information about the vehicle, such as:
@@ -140,15 +141,8 @@ reference stack to run their own VMs, together with IC, IVI, and RSE
 VMs. The Service VM runs in the background and the User VMs run as
 Post-Launched VMs.
 
-.. figure:: images/ACRN-V2-SDC-Usage-Architecture-Overview.png
-   :width: 700px
-   :align: center
-   :name: V2-SDC-usage-arch
-
-   ACRN SDC usage architecture overview
-
 A block diagram of ACRN's SDC usage scenario is shown in
-:numref:`V2-SDC-usage-arch` above.
+:numref:`V2-SDC-scenario` above.
 
 - The ACRN hypervisor sits right on top of the bootloader for fast booting
   capabilities.
@@ -156,24 +150,24 @@ A block diagram of ACRN's SDC usage scenario is shown in
   non-safety-critical domains are able to coexist on one platform.
 - Rich I/O mediators allows sharing of various I/O devices across VMs,
   delivering a comprehensive user experience.
-- Multiple operating systems are supported by one SoC through efficient virtualization.
+- Multiple operating systems are supported by one SoC through efficient
+  virtualization.
 
 Industrial Workload Consolidation
 =================================
 
 .. figure:: images/ACRN-V2-industrial-scenario.png
-   :width: 400px
+   :width: 600px
    :align: center
    :name: V2-industrial-scenario
 
    ACRN Industrial Workload Consolidation scenario
 
 Supporting Workload consolidation for industrial applications is even
-more challenging. The ACRN hypervisor needs to run both safety-critical
-and non-safety workloads with no interference, increase security
-functions that safeguard the system, run hard real-time sensitive
-workloads together with general computing workloads, and conduct data
-analytics for timely actions and predictive maintenance.
+more challenging. The ACRN hypervisor needs to run different workloads with no
+interference, increase security functions that safeguard the system, run hard
+real-time sensitive workloads together with general computing workloads, and
+conduct data analytics for timely actions and predictive maintenance.
 
 Virtualization is especially important in industrial environments
 because of device and application longevity. Virtualization enables
@@ -181,37 +175,34 @@ factories to modernize their control system hardware by using VMs to run
 older control systems and operating systems far beyond their intended
 retirement dates.
 
-As shown in :numref:`V2-industry-usage-arch`, the Safety VM has
-functional safety applications running inside it to monitor the overall
-system health status. This Safety VM is partitioned from other VMs and
-is pre-launched before the Service VM. Service VM provides devices
-sharing capability across user VMs and can launch additional user VMs.
-In this usage example, VM2 provides Human Machine Interface (HMI)
-capability, and VM3 is optimized to support industrial workload
-real-time OS needs, such as VxWorks* or RT-Linux*.
+As shown in :numref:`V2-industrial-scenario`, the Service VM can start a number
+of post-launched User VMs and can provide device sharing capabilities to these.
+In total, up to 7 post-launched User VMs can be started:
 
-.. figure:: images/ACRN-V2-Industrial-Usage-Architecture-Overview.png
-   :width: 700px
-   :align: center
-   :name: V2-industry-usage-arch
+- 5 regular User VMs,
+- One `Kata Containers <https://katacontainers.io>`_ User VM (see
+  :ref:`run-kata-containers` for more details), and
+- One Real-Time VM (RTVM).
 
-   ACRN Industrial Usage Architecture Overview
+In this example, one post-launched User VM provides Human Machine Interface
+(HMI) capability, another provides Artificial Intelligence (AI) capability, some
+compute function is run the Kata Container and the RTVM runs the soft
+Programmable Logic Controller (PLC) that requires hard real-time
+characteristics.
 
-:numref:`V2-industry-usage-arch` shows ACRN's block diagram for an
+:numref:`V2-industrial-scenario` shows ACRN's block diagram for an
 Industrial usage scenario:
 
 - ACRN boots from the SoC platform, and supports firmware such as the
   UEFI BIOS.
-- The ACRN hypervisor can create four VMs to run four different OSes:
+- The ACRN hypervisor can create VMs that run different OSes:
 
-  - A safety VM such as Zephyr*,
-  - a service VM such as Clear Linux*,
-  - a Human Machine Interface (HMI) application OS such as Windows*, and
-  - a real-time control OS such as VxWorks or RT-Linux*.
+  - a Service VM such as Ubuntu*,
+  - a Human Machine Interface (HMI) application OS such as Windows*,
+  - an Artificial Intelligence (AI) application on Linux*,
+  - a Kata Container application, and
+  - a real-time control OS such as Zephyr*, VxWorks* or RT-Linux*.
 
-- The Safety VM (VM0) is launched by ACRN before any other VM. The
-  functional safety code inside VM0 checks the overall system health
-  status.
 - The Service VM, provides device sharing functionalities, such as
   disk and network mediation, to other virtual machines.
   It can also run an orchestration agent allowing User VM orchestration
@@ -227,8 +218,7 @@ Best Known Configurations
 The ACRN Github codebase defines five best known configurations (BKC)
 targeting SDC and Industry usage scenarios. Developers can start with
 one of these pre-defined configurations and customize it to their own
-application scenario needs.  (These configurations assume there is at
-most one Safety VM and it is pre-launched.)
+application scenario needs.
 
 .. list-table:: Scenario-based Best Known Configurations
    :header-rows: 1
@@ -240,33 +230,26 @@ most one Safety VM and it is pre-launched.)
      - VM2
      - VM3
 
-   * - Software Defined Cockpit 1
+   * - Software Defined Cockpit
      - SDC
      - Service VM
-     - Post-launched VM (Android)
-     -
+     - Post-launched VM
+     - One Kata Containers VM
      -
 
-   * - Software Defined Cockpit 2
-     - SDC
-     - Service VM
-     - Post-launched VM (Android)
-     - Post-launched VM (Android)
-     - Post-launched VM (Android)
-
-   * - Industry Usage Config 1
+   * - Industry Usage Config
      - Industry
      - Service VM
-     - Post-launched VM (HMI)
-     - Post-launched VM (Hard RTVM)
-     - Post-launched VM (Soft RTVM)
+     - Up to 5 Post-launched VMs
+     - One Kata Containers VM
+     - Post-launched RTVM (Soft or Hard realtime)
 
-   * - Industry Usage Config 2
-     - Industry
+   * - Hybrid Usage Config
+     - Hybrid
      - Pre-launched VM (Safety VM)
      - Service VM
-     - Post-launched VM (HMI)
-     - Post-launched VM (Hard/Soft RTVM)
+     - Post-launched VM
+     -
 
    * - Logical Partition
      - Logical Partition
@@ -275,73 +258,61 @@ most one Safety VM and it is pre-launched.)
      -
      -
 
-Here are block diagrams for each of these five scenarios.
+Here are block diagrams for each of these four scenarios.
 
-SDC scenario with two VMs
-=========================
+SDC scenario
+============
 
 In this SDC scenario, an Instrument Cluster (IC) system runs with the
 Service VM and an In-Vehicle Infotainment (IVI) system runs in a user
 VM.
 
-.. figure:: images/SDC-2VM.png
+.. figure:: images/ACRN-V2-SDC-scenario.png
    :width: 600px
    :align: center
-   :name: SDC-2VM
+   :name: ACRN-SDC
 
    SDC scenario with two VMs
 
-SDC scenario with four VMs
-==========================
-
-In this SDC scenario, an Instrument Cluster (IC) system runs with the
-Service VM. An In-Vehicle Infotainment (IVI) is User VM1 and two Rear
-Seat Entertainment (RSE) systems run in User VM2 and User VM3.
-
-.. figure:: images/SDC-4VM.png
-   :width: 600px
-   :align: center
-   :name: SDC-4VM
-
-   SDC scenario with four VMs
-
-Industry scenario without a safety VM
-======================================
+Industry scenario
+=================
 
 In this Industry scenario, the Service VM provides device sharing capability for
-a Windows-based HMI User VM. The other two post-launched User VMs
-support either hard or soft Real-time OS applications.
+a Windows-based HMI User VM. One post-launched User VM can run a Kata Container
+application. Another User VM supports either hard or soft Real-time OS
+applications. Up to five additional post-launched User VMs support functions
+such as Human Machine Interface (HMI), Artificial Intelligence (AI), Computer
+Vision, etc.
 
-.. figure:: images/Industry-wo-safetyVM.png
+.. figure:: images/ACRN-Industry.png
    :width: 600px
    :align: center
-   :name: Industry-wo-safety
+   :name: Industry
 
-   Industry scenario without a safety VM
+   Industry scenario
 
-Industry scenario with a safety VM
-==================================
+Hybrid scenario
+===============
 
-In this Industry scenario, a Pre-launched VM is included as a Safety VM.
-The Service VM provides device sharing capability for the HMI User VM. The
-remaining User VM can support either a hard or soft Real-time OS
-application.
+In this Hybrid scenario, a pre-launched Safety/RTVM is started by the
+hypervisor. The Service VM runs a post-launched User VM that runs non-safety or
+non-real-time tasks.
 
-.. figure:: images/Industry-w-safetyVM.png
+.. figure:: images/ACRN-Hybrid.png
    :width: 600px
    :align: center
-   :name: Industry-w-safety
+   :name: ACRN-Hybrid
 
-   Industry scenario with a safety VM
+   Hybrid scenario
 
-Logical Partitioning scenario
-=============================
+Logical Partition scenario
+==========================
 
 This scenario is a simplified VM configuration for VM logical
 partitioning: one is the Safety VM and the other is a Linux-based User
 VM.
 
-.. figure:: images/Logical-partition.png
+.. figure:: images/ACRN-Logical-Partition.png
    :width: 600px
    :align: center
    :name: logical-partition
@@ -390,6 +361,7 @@ Boot Sequence
 
 .. _systemd-boot: https://www.freedesktop.org/software/systemd/man/systemd-boot.html
 .. _grub: https://www.gnu.org/software/grub/manual/grub/
+.. _Slim Bootloader: https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html
 
 ACRN supports two kinds of boots: **De-privilege boot mode** and **Direct
 boot mode**.
@@ -427,23 +399,10 @@ bootloader used by the Operating System (OS).
 
 * In the case of Clear Linux, the EFI bootloader is `systemd-boot`_ and the Linux
   kernel command-line parameters are defined in the ``.conf`` files.
-* Another popular EFI bootloader used by Linux distributions is `grub`_.
-  Distributions like Ubuntu/Debian, Fedora/CentOS use `grub`_.
 
 .. note::
 
-   The `Slim Bootloader
-   <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`__
-   is an alternative boot firmware that can be used to boot ACRN. The `Boot
-   ACRN Hyervisor
-   <https://slimbootloader.github.io/how-tos/boot-acrn.html>`_ tutorial
-   provides more information on how to use SBL with ACRN.
-
-.. note::
-
-   A virtual `Slim Bootloader
-   <https://www.intel.com/content/www/us/en/design/products-and-solutions/technologies/slim-bootloader/overview.html>`__,
-   called ``vSBL``, can also be used to start User VMs. The
+   A virtual `Slim Bootloader`_ called ``vSBL``, can also be used to start User VMs. The
    :ref:`acrn-dm_parameters` provides more information on how to boot a
    User VM using ``vSBL``. Note that in this case, the kernel command-line
    parameters are defined by the combination of the ``cmdline.txt`` passed
@@ -452,6 +411,12 @@ bootloader used by the Operating System (OS).
 
 Direct boot mode
 ================
+
+The ACRN hypervisor can be booted from a third-party bootloader
+directly, called **Direct boot mode**. A popular bootloader is `grub`_ and is
+also widely used by Linux distributions.
+
+:ref:`using_grub` has a introduction on how to boot ACRN hypervisor with GRUB.
 
 In :numref:`boot-flow-2`, we show the **Direct boot mode** sequence:
 
@@ -471,8 +436,21 @@ The Boot process proceeds as follows:
    the ACRN Device Model and Virtual bootloader through ``dm-verity``.
 #. The virtual bootloader starts the User-side verified boot process.
 
-In this boot mode, the boot options are defined via the ``VM{x}_CONFIG_OS_BOOTARGS``
-macro in the source code (replace ``{x}`` with the VM number).
+In this boot mode, the boot options of pre-launched VM and service VM are defined
+in the variable of ``bootargs`` of struct ``vm_configs[vm id].os_config``
+in the source code ``hypervisor/$(SCENARIO)/vm_configurations.c`` by default.
+Their boot options can be overridden by the GRUB menu. See :ref:`using_grub` for
+details. The boot options of post-launched VM is not covered by hypervisor
+source code or GRUB menu, it is defined in guest image file or specified by
+launch scripts.
+
+.. note::
+
+   `Slim Bootloader`_ is an alternative boot firmware that can be used to
+   boot ACRN in **Direct boot mode**. The `Boot ACRN Hypervisor
+   <https://slimbootloader.github.io/how-tos/boot-acrn.html>`_ tutorial
+   provides more information on how to use SBL with ACRN.
+
 
 ACRN Hypervisor Architecture
 ****************************
@@ -481,20 +459,28 @@ ACRN hypervisor is a Type 1 hypervisor, running directly on bare-metal
 hardware. It implements a hybrid VMM architecture, using a privileged
 service VM, running the Service VM that manages the I/O devices and
 provides I/O mediation. Multiple User VMs are supported, with each of
-them running Linux\* or Android\* OS as the User VM .
+them running different OSs.
 
 Running systems in separate VMs provides isolation between other VMs and
 their applications, reducing potential attack surfaces and minimizing
 safety interference.  However, running the systems in separate VMs may
 introduce additional latency for applications.
 
-:numref:`ACRN-architecture` shows the ACRN hypervisor architecture, with
-the automotive example IC VM and service VM together. The Service VM
-owns most of the devices including the platform devices, and
-provides I/O mediation. Some of the PCIe devices may be passed through
-to the User OSes via the VM configuration. The Service VM runs the IC
-applications and hypervisor-specific applications together, such as the
-ACRN device model, and ACRN VM manager.
+:numref:`V2-hl-arch` shows the ACRN hypervisor architecture, with
+all types of Virtual Machines (VMs) represented:
+
+- Pre-launched User VM (Safety/RTVM)
+- Pre-launched Service VM
+- Post-launched User VM
+- Kata Container VM (post-launched)
+- Real-Time VM (RTVM)
+
+The Service VM owns most of the devices including the platform devices, and
+provides I/O mediation. The notable exceptions are the devices assigned to the
+pre-launched User VM. Some of the PCIe devices may be passed through
+to the post-launched User OSes via the VM configuration. The Service VM runs
+hypervisor-specific applications together, such as the ACRN device model, and
+ACRN VM manager.
 
 ACRN hypervisor also runs the ACRN VM manager to collect running
 information of the User OS, and controls the User VM such as starting,
@@ -599,7 +585,7 @@ hypervisor, or in user space within an independent VM, overhead exists.
 This overhead is worthwhile as long as the devices need to be shared by
 multiple guest operating systems. If sharing is not necessary, then
 there are more efficient methods for accessing devices, for example
-"pass-through".
+"passthrough".
 
 ACRN device model is a placeholder of the User VM. It allocates memory for
 the User OS, configures and initializes the devices used by the User VM,
@@ -643,16 +629,15 @@ ACRN Device model incorporates these three aspects:
      notifying it that the IOREQ has completed.
 
 .. note::
-   Userland: dm as ACRN Device Model.
-
-   Kernel space: VBS-K, MPT Service, VHM itself
+   * Userland: dm as ACRN Device Model.
+   * Kernel space: VBS-K, MPT Service, VHM itself
 
 .. _pass-through:
 
-Device pass through
-*******************
+Device passthrough
+******************
 
-At the highest level, device pass-through is about providing isolation
+At the highest level, device passthrough is about providing isolation
 of a device to a given guest operating system so that the device can be
 used exclusively by that guest.
 
@@ -676,8 +661,8 @@ Finally, there may be specialized PCI devices that only one guest domain
 uses, so they should be passed through to the guest. Individual USB
 ports could be isolated to a given domain too, or a serial port (which
 is itself not shareable) could be isolated to a particular guest. In
-ACRN hypervisor, we support USB controller Pass through only and we
-don't support pass through for a legacy serial port, (for example
+ACRN hypervisor, we support USB controller passthrough only and we
+don't support passthrough for a legacy serial port, (for example
 0x3f8).
 
 
@@ -685,7 +670,7 @@ Hardware support for device passthrough
 =======================================
 
 Intel's current processor architectures provides support for device
-pass-through with VT-d. VT-d maps guest physical address to machine
+passthrough with VT-d. VT-d maps guest physical address to machine
 physical address, so device can use guest physical address directly.
 When this mapping occurs, the hardware takes care of access (and
 protection), and the guest operating system can use the device as if it
@@ -708,9 +693,9 @@ Hypervisor support for device passthrough
 
 By using the latest virtualization-enhanced processor architectures,
 hypervisors and virtualization solutions can support device
-pass-through (using VT-d), including Xen, KVM, and ACRN hypervisor.
+passthrough (using VT-d), including Xen, KVM, and ACRN hypervisor.
 In most cases, the guest operating system (User
-OS) must be compiled to support pass-through, by using
+OS) must be compiled to support passthrough, by using
 kernel build-time options. Hiding the devices from the host VM may also
 be required (as is done with Xen using pciback). Some restrictions apply
 in PCI, for example, PCI devices behind a PCIe-to-PCI bridge must be

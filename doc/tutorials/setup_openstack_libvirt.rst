@@ -176,7 +176,9 @@ Set up libvirt
 1. Install the required packages::
 
      $ sudo apt install libdevmapper-dev libnl-route-3-dev libnl-3-dev python \
-       automake autoconf autopoint libtool xsltproc libxml2-utils gettext
+       automake autoconf autopoint libtool xsltproc libxml2-utils gettext \
+       libxml2-dev libpciaccess-dev
+
 
 2. Download libvirt/ACRN::
 

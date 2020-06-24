@@ -8,16 +8,16 @@ management, which includes:
 
 - VCPU request for virtual interrupt kick off,
 - vPIC/vIOAPIC/vLAPIC for virtual interrupt injection interfaces,
-- physical-to-virtual interrupt mapping for a pass-thru device, and
+- physical-to-virtual interrupt mapping for a passthrough device, and
 - the process of VMX interrupt/exception injection.
 
 A standard VM never owns any physical interrupts; all interrupts received by the
 Guest OS come from a virtual interrupt injected by vLAPIC, vIOAPIC, or
-vPIC. Such virtual interrupts are triggered either from a pass-through
+vPIC. Such virtual interrupts are triggered either from a passthrough
 device or from I/O mediators in the Service VM via hypercalls. The
 :ref:`interrupt-remapping` section discusses how the hypervisor manages
-the mapping between physical and virtual interrupts for pass-through
-devices. However, a hard RT VM with LAPIC pass-through does own the physical
+the mapping between physical and virtual interrupts for passthrough
+devices. However, a hard RT VM with LAPIC passthrough does own the physical
 maskable external interrupts. On its physical CPUs, interrupts are disabled
 in VMX root mode, while in VMX non-root mode, physical interrupts will be
 delivered to RT VM directly.
@@ -64,7 +64,7 @@ will send an IPI to kick it out, which leads to an external-interrupt
 VM-Exit. In some cases, there is no need to send IPI when making a request,
 because the CPU making the request itself is the target VCPU. For
 example, the #GP exception request always happens on the current CPU when it
-finds an invalid emulation has happened. An external interrupt for a pass-thru
+finds an invalid emulation has happened. An external interrupt for a passthrough
 device always happens on the VCPUs of the VM which this device is belonged to,
 so after it triggers an external-interrupt VM-Exit, the current CPU is the very
 target VCPU.
@@ -93,7 +93,7 @@ APIs are invoked when an interrupt source from vLAPIC needs to inject
 an interrupt, for example:
 
 - from LVT like LAPIC timer
-- from vIOAPIC for a pass-thru device interrupt
+- from vIOAPIC for a passthrough device interrupt
 - from an emulated device for a MSI
 
 These APIs will finish by making a vCPU request.
@@ -134,7 +134,7 @@ LAPIC passthrough based on vLAPIC
 
 LAPIC passthrough is supported based on vLAPIC, the guest OS first boots with
 vLAPIC in xAPIC mode and then switches to x2APIC mode to enable the LAPIC
-pass-through.
+passthrough.
 
 In case of LAPIC passthrough based on vLAPIC, the system will have the
 following characteristics.

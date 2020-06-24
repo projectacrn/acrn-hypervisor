@@ -18,7 +18,7 @@ the ``help`` command within the ACRN shell.
 An example
 **********
 
-As an example, we'll show how to obtain the interrupts of a pass-through USB device.
+As an example, we'll show how to obtain the interrupts of a passthrough USB device.
 
 First, we can get the USB controller BDF number (0:15.0) through the
 following command in the Service VM console::

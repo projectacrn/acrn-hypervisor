@@ -126,6 +126,9 @@ a passthrough device to/from a post-launched VM is shown in the following figure
 
    ptdev de-assignment control flow
 
+.. _vtd-posted-interrupt:
+
+
 VT-d Interrupt-remapping
 ************************
 

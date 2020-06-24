@@ -83,7 +83,7 @@ Use the ``list`` command to display VMs and their state:
 
    # acrnctl list
    vm1-14:59:30            untracked
-   vm-yocto                stopped
+   vm-ubuntu               stopped
    vm-android              stopped
 
 Start VM
@@ -94,7 +94,7 @@ command:
 
 .. code-block:: none
 
-   # acrnctl start vm-yocto
+   # acrnctl start vm-ubuntu
 
 Stop VM
 =======
@@ -103,7 +103,7 @@ Use the ``stop`` command to stop one or more running VM:
 
 .. code-block:: none
 
-   # acrnctl stop vm-yocto vm1-14:59:30 vm-android
+   # acrnctl stop vm-ubuntu vm1-14:59:30 vm-android
 
 Use the optional ``-f`` or ``--force`` argument to force the stop operation.
 This will trigger an immediate shutdown of the User VM by the ACRN Device Model
@@ -112,7 +112,7 @@ gracefully by itself.
 
 .. code-block:: none
 
-   # acrnctl stop -f vm-yocto
+   # acrnctl stop -f vm-ubuntu
 
 RESCAN BLOCK DEVICE
 ===================

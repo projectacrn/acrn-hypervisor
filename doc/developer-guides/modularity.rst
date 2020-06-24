@@ -92,7 +92,7 @@ The components are listed as follows.
 * **Device Emulation** This component implements devices that are emulated in
   the hypervisor itself, such as the virtual programmable interrupt controllers
   including vPIC, vLAPIC and vIOAPIC.
-* **Passthru Management** This component manages devices that are passed-through
+* **Passthrough Management** This component manages devices that are passed-through
   to specific VMs.
 * **Extended Device Emulation** This component implements an I/O request
   mechanism that allow the hypervisor to forward I/O accesses from a User

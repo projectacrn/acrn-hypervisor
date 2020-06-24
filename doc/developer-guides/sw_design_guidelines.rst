@@ -581,7 +581,7 @@ The following table shows some use cases of module level configuration design:
    * - Configuration data provided by BSP
      - This module is used to virtualize LAPIC, and the configuration data is
        provided by BSP.
-       For example, some VMs use LAPIC pass-through and the other VMs use
+       For example, some VMs use LAPIC passthrough and the other VMs use
        vLAPIC.
      - If a function pointer is used, the prerequisite is
        "hv_operation_mode == OPERATIONAL".
