@@ -20,7 +20,6 @@ PY_CACHE = "__pycache__"
 
 # This file store information which query from hw board
 BIN_LIST = ['cpuid', 'rdmsr', 'lspci', ' dmidecode', 'blkid', 'stty']
-PCI_IDS = ["/usr/share/hwdata/pci.ids", "/usr/share/misc/pci.ids"]
 
 CPU_VENDOR = "GenuineIntel"
 
@@ -94,10 +93,6 @@ def check_env():
 
     if not native_check():
         parser_lib.print_red("Please run this tools in a native OS environment!")
-        sys.exit(1)
-
-    if not os.path.exists(PCI_IDS[0]) and not os.path.exists(PCI_IDS[1]):
-        parser_lib.print_yel("pci.ids not found, please make sure lspci is installed correctly!")
         sys.exit(1)
 
     if os.path.exists(OUTPUT):
