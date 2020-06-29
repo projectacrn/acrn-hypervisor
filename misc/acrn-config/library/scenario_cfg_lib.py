@@ -581,10 +581,24 @@ def check_vuart(v0_vuart, v1_vuart):
             ERR_LIST[key] = "target_vm_id should be numeric of vm id"
         vm_target_id_dic[vm_i] = vuart_dic['target_vm_id']
 
+    connect_set = False
+    target_id_keys = list(vm_target_id_dic.keys())
+    i = 0
     for vm_i,t_vm_id in vm_target_id_dic.items():
-        if t_vm_id.isnumeric() and  int(t_vm_id) not in common.VM_TYPES.keys():
+        if t_vm_id.isnumeric() and int(t_vm_id) not in common.VM_TYPES.keys():
             key = "vm:id={},vuart:id=1,target_vm_id".format(vm_i)
             ERR_LIST[key] = "target_vm_id which specified does not exist"
+
+        idx = target_id_keys.index(vm_i)
+        i = idx
+        for j in range(idx + 1, len(target_id_keys)):
+            vm_j = target_id_keys[j]
+            if int(vm_target_id_dic[vm_i]) == vm_j and int(vm_target_id_dic[vm_j]) == vm_i:
+                connect_set = True
+
+    if not connect_set and len(target_id_keys) >= 2:
+        key = "vm:id={},vuart:id=1,target_vm_id".format(i)
+        ERR_LIST[key] = "Creating the wrong configuration for target_vm_id."
 
 
 def vcpu_clos_check(cpus_per_vm, clos_per_vm, prime_item, item):
