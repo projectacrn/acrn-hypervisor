@@ -54,7 +54,7 @@
  */
 
 struct acrn_single_vioapic {
-	spinlock_t	mtx;
+	spinlock_t	lock;
 	struct acrn_vm  *vm;
 	struct ioapic_info chipinfo;
 	bool		ready;
