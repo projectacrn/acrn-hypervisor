@@ -9,6 +9,7 @@
 #include <pci.h>
 #include <uart16550.h>
 #include <dbg_cmd.h>
+#include <vm_config.h>
 
 #define MAX_PORT			0x10000  /* port 0 - 64K */
 #define DEFAULT_UART_PORT	0x3F8
@@ -29,6 +30,40 @@ enum IDX_CMD_DBG {
 	IDX_MAX_CMD,
 };
 
+static void update_sos_vm_config_uart_irq(uint64_t irq)
+{
+	uint16_t vm_id;
+	struct acrn_vm_config *vm_config;
+
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm_config = get_vm_config(vm_id);
+		if (vm_config->load_order == SOS_VM) {
+			break;
+		}
+	}
+
+	if (vm_id != CONFIG_MAX_VM_NUM) {
+		vm_config->vuart[0].irq = irq & 0xFFFFU;
+	}
+}
+
+static void update_sos_vm_config_uart_ioport(uint64_t addr)
+{
+	uint16_t vm_id;
+	struct acrn_vm_config *vm_config;
+
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm_config = get_vm_config(vm_id);
+		if (vm_config->load_order == SOS_VM) {
+			break;
+		}
+	}
+
+	if (vm_id != CONFIG_MAX_VM_NUM) {
+		vm_config->vuart[0].addr.port_base = addr & 0xFFFFU;
+	}
+}
+
 bool handle_dbg_cmd(const char *cmd, int32_t len)
 {
 	int32_t i;
@@ -48,12 +83,23 @@ bool handle_dbg_cmd(const char *cmd, int32_t len)
 			/* set uart disabled*/
 			uart16550_set_property(false, false, 0UL);
 		} else if (i == IDX_PORT_UART) {
-			uint64_t addr = strtoul_hex(cmd + tmp);
+			char *pos, *start = (char *)cmd + tmp;
+			uint64_t addr, irq;
+
+			pos = strchr(start, ',');
+			if (pos != NULL) {
+				*pos = '\0';
+				pos++;
+				irq = strtoul_hex(pos);
+				update_sos_vm_config_uart_irq(irq);
+			}
+			addr = strtoul_hex(start);
 
 			if (addr > MAX_PORT) {
 				addr = DEFAULT_UART_PORT;
 			}
 
+			update_sos_vm_config_uart_ioport(addr);
 			uart16550_set_property(true, true, addr);
 
 		} else if (i == IDX_PCI_UART) {
