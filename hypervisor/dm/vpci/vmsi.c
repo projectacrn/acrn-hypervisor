@@ -134,11 +134,10 @@ void write_vmsi_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, 
  * @pre vdev != NULL
  * @pre vdev->vpci != NULL
  */
-void deinit_vmsi(struct pci_vdev *vdev)
+void deinit_vmsi(const struct pci_vdev *vdev)
 {
 	if (has_msi_cap(vdev)) {
 		ptirq_remove_msix_remapping(vpci2vm(vdev->vpci), vdev->pdev->bdf.value, 1U);
-		(void)memset((void *)&vdev->msi, 0U, sizeof(struct pci_msi));
 	}
 }
 

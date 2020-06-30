@@ -284,7 +284,8 @@ void deinit_vmsix(struct pci_vdev *vdev)
 	if (has_msix_cap(vdev)) {
 		if (vdev->msix.table_count != 0U) {
 			ptirq_remove_msix_remapping(vpci2vm(vdev->vpci), vdev->pdev->bdf.value, vdev->msix.table_count);
-			(void)memset((void *)&vdev->msix, 0U, sizeof(struct pci_msix));
+			(void)memset((void *)&vdev->msix.table_entries, 0U, sizeof(vdev->msix.table_entries));
+			vdev->msix.is_vmsix_on_msi_programmed = false;
 		}
 	}
 }
