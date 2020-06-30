@@ -30,6 +30,7 @@ def get_scenario_item_values(board_info, scenario_info):
     Get items which capable multi select for user
     :param board_info: it is a file what contains board information for script to read from
     """
+    hv_cfg_lib.ERR_LIST = {}
     scenario_item_values = {}
     hw_info = HwInfo(board_info)
     hv_info = HvInfo(scenario_info)
@@ -66,8 +67,6 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["hv,FEATURES,MULTIBOOT2"] = hv_cfg_lib.N_Y
     scenario_item_values["hv,FEATURES,RDT,RDT_ENABLED"] = board_cfg_lib.get_rdt_select_opt()
     scenario_item_values["hv,FEATURES,RDT,CDP_ENABLED"] = board_cfg_lib.get_rdt_select_opt()
-    scenario_item_values["hv,FEATURES,RDT,CLOS_MASK"] = board_cfg_lib.get_clos_mask_num()
-    scenario_item_values["hv,FEATURES,RDT,MBA_DELAY"] = board_cfg_lib.get_clos_mask_num()
     scenario_item_values["hv,FEATURES,SCHEDULER"] = hv_cfg_lib.SCHEDULER_TYPE
     scenario_item_values["hv,FEATURES,RELOC"] = hv_cfg_lib.N_Y
     scenario_item_values["hv,FEATURES,HYPERV_ENABLED"] = hv_cfg_lib.N_Y
@@ -87,6 +86,7 @@ def validate_scenario_setting(board_info, scenario_info):
     :param scenario_info: it is a file what user have already setting to
     :return: return a dictionary contain errors
     """
+    hv_cfg_lib.ERR_LIST = {}
     scenario_cfg_lib.ERR_LIST = {}
     common.BOARD_INFO_FILE = board_info
     common.SCENARIO_INFO_FILE = scenario_info

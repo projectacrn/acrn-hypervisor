@@ -482,6 +482,28 @@ def is_rdt_supported():
         return True
 
 
+def is_rdt_enabled():
+    """
+    Returns True if RDT enabled else False
+    """
+    rdt_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "RDT_ENABLED")
+    if is_rdt_supported() and rdt_enabled == 'y':
+        return True
+    return False
+
+
+def is_cdp_enabled():
+    """
+    Returns True if platform supports RDT/CDP else False
+    """
+    rdt_enabled = is_rdt_enabled()
+    cdp_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "CDP_ENABLED")
+    if rdt_enabled and cdp_enabled == 'y':
+        return True
+
+    return False
+
+
 def get_rdt_select_opt():
 
     support_sel = ['n']
@@ -490,12 +512,20 @@ def get_rdt_select_opt():
     return support_sel
 
 
-def get_clos_mask_num():
-    clos_mask_num = 0
-    (rdt_resources, rdt_res_clos_max, _) = clos_info_parser(common.BOARD_INFO_FILE)
-    if len(rdt_resources) == 0 or len(rdt_res_clos_max) == 0:
-        clos_mask_num = 0
-    else:
-        clos_mask_num = min(rdt_res_clos_max)
+def get_common_clos_max():
 
-    return clos_mask_num
+    common_clos_max = 0
+    (res_info, rdt_res_clos_max, clos_max_mask_list) = clos_info_parser(common.BOARD_INFO_FILE)
+    if is_rdt_enabled() and not is_cdp_enabled():
+        common_clos_max = min(rdt_res_clos_max)
+
+    if is_cdp_enabled():
+        tmp_clos_max_list = []
+        for res, clos_max in zip(res_info, rdt_res_clos_max):
+            if res == 'MBA':
+                tmp_clos_max_list.append(clos_max)
+            else:
+                tmp_clos_max_list.append(clos_max//2)
+        common_clos_max = min(tmp_clos_max_list)
+
+    return common_clos_max

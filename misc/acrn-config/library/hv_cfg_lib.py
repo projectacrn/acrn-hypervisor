@@ -169,16 +169,19 @@ def is_contiguous_bit_set(value):
 
 def cat_max_mask_check(cat_mask_list, feature, cat_str, max_mask_str):
 
-    if not board_cfg_lib.is_rdt_supported():
+    (res_info, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
+    if not board_cfg_lib.is_rdt_enabled() or ("L2" not in res_info and "L3" not in res_info):
         return
 
-    (_, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
+    if board_cfg_lib.is_cdp_enabled():
+        clos_max_set_entry = 2 * board_cfg_lib.get_common_clos_max()
+    else:
+        clos_max_set_entry = board_cfg_lib.get_common_clos_max()
 
-    clos_max = common.num2int(min(rdt_res_clos_max))
     cat_max_mask_settings_len = len(cat_mask_list)
-    if clos_max != cat_max_mask_settings_len:
+    if clos_max_set_entry != cat_max_mask_settings_len:
         key = 'hv,{},{},{}'.format(feature, cat_str, max_mask_str)
-        ERR_LIST[key] = "clso max: {} in board xml, should set the same number for CLOS_MASK.".format(clos_max)
+        ERR_LIST[key] = "Number of Cache mask entries should be equal to MAX_CACHE_CLOS_NUM_ENTRIES={}".format(clos_max_set_entry)
         return
 
     clos_max_mask_str = clos_max_mask_list[0].strip('"').strip("'")
@@ -197,21 +200,22 @@ def cat_max_mask_check(cat_mask_list, feature, cat_str, max_mask_str):
             ERR_LIST[key] = "CLOS_MASK {} should be contiguous bit set.".format(max_mask_str, clos_max_mask_str)
             return
 
+
 def mba_delay_check(mba_delay_list, feature, mba_str, max_mask_str):
 
-    if not board_cfg_lib.is_rdt_supported():
+    (res_info, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
+    if not board_cfg_lib.is_rdt_enabled() or "MBA" not in res_info:
         return
 
-    (_, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
-
-    clos_max = common.num2int(min(rdt_res_clos_max))
+    clos_max = board_cfg_lib.get_common_clos_max()
     mba_delay_settings_len = len(mba_delay_list)
     if clos_max != mba_delay_settings_len:
         key = 'hv,{},{},{}'.format(feature, mba_str, max_mask_str)
-        ERR_LIST[key] = "MBA_DELAY values in scenaio xml should equal to MAX_PLATFORM_CLOS_NUM.".format(clos_max)
+        ERR_LIST[key] = "Number of MBA delay entries should be equal to MAX_MBA_CLOS_NUM_ENTRIES={}".format(clos_max)
         return
 
-    mba_delay_str = clos_max_mask_list[1].strip('"').strip("'")
+    mba_idx = res_info.index("MBA")
+    mba_delay_str = clos_max_mask_list[mba_idx].strip('"').strip("'")
     mba_delay = common.num2int(mba_delay_str)
     for val_str in mba_delay_list:
         if empty_check(val_str, feature, mba_str, max_mask_str):
