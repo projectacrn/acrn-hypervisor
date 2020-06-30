@@ -548,7 +548,6 @@ void vpic_set_irqline(struct acrn_vpic *vpic, uint32_t vgsi, uint32_t operation)
 	uint32_t pin;
 	uint64_t rflags;
 
-
 	if (vgsi < NR_VPIC_PINS_TOTAL) {
 		i8259 = &vpic->i8259[vgsi >> 3U];
 
@@ -619,10 +618,11 @@ void vpic_pending_intr(struct acrn_vpic *vpic, uint32_t *vecptr)
 {
 	struct i8259_reg_state *i8259;
 	uint32_t pin;
+	uint64_t rflags;
 
 	i8259 = &vpic->i8259[0];
 
-	spinlock_obtain(&(vpic->lock));
+	spinlock_irqsave_obtain(&(vpic->lock), &rflags);
 
 	pin = vpic_get_highest_irrpin(i8259);
 	if (pin == 2U) {
@@ -642,7 +642,7 @@ void vpic_pending_intr(struct acrn_vpic *vpic, uint32_t *vecptr)
 		dev_dbg(DBG_LEVEL_PIC, "Got pending vector 0x%x\n", *vecptr);
 	}
 
-	spinlock_release(&(vpic->lock));
+	spinlock_irqrestore_release(&(vpic->lock), rflags);
 }
 
 static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint32_t pin)
@@ -677,8 +677,9 @@ static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint32_t pin)
 void vpic_intr_accepted(struct acrn_vpic *vpic, uint32_t vector)
 {
 	uint32_t pin;
+	uint64_t rflags;
 
-	spinlock_obtain(&(vpic->lock));
+	spinlock_irqsave_obtain(&(vpic->lock), &rflags);
 
 	pin = (vector & 0x7U);
 
@@ -695,15 +696,16 @@ void vpic_intr_accepted(struct acrn_vpic *vpic, uint32_t vector)
 
 	vpic_notify_intr(vpic);
 
-	spinlock_release(&(vpic->lock));
+	spinlock_irqrestore_release(&(vpic->lock), rflags);
 }
 
 static int32_t vpic_read(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 		uint16_t port, uint32_t *eax)
 {
 	uint32_t pin;
+	uint64_t rflags;
 
-	spinlock_obtain(&(vpic->lock));
+	spinlock_irqsave_obtain(&(vpic->lock), &rflags);
 
 	if (i8259->poll) {
 		i8259->poll = false;
@@ -729,7 +731,7 @@ static int32_t vpic_read(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 		}
 	}
 
-	spinlock_release(&(vpic->lock));
+	spinlock_irqrestore_release(&(vpic->lock), rflags);
 
 	return 0;
 }
@@ -739,11 +741,12 @@ static int32_t vpic_write(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 {
 	int32_t error;
 	uint8_t val;
+	uint64_t rflags;
 
 	error = 0;
 	val = (uint8_t)*eax;
 
-	spinlock_obtain(&(vpic->lock));
+	spinlock_irqsave_obtain(&(vpic->lock), &rflags);
 
 	if ((port & ICU_IMR_OFFSET) != 0U) {
 		switch (i8259->icw_num) {
@@ -778,7 +781,7 @@ static int32_t vpic_write(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 		vpic_notify_intr(vpic);
 	}
 
-	spinlock_release(&(vpic->lock));
+	spinlock_irqrestore_release(&(vpic->lock), rflags);
 
 	return error;
 }
@@ -895,7 +898,9 @@ static int32_t vpic_elc_handler(struct acrn_vpic *vpic, bool in, uint16_t port, 
 	is_master = (port == IO_ELCR1);
 
 	if (bytes == 1U) {
-		spinlock_obtain(&(vpic->lock));
+		uint64_t rflags;
+
+		spinlock_irqsave_obtain(&(vpic->lock), &rflags);
 
 		if (in) {
 			if (is_master) {
@@ -921,7 +926,7 @@ static int32_t vpic_elc_handler(struct acrn_vpic *vpic, bool in, uint16_t port, 
 			}
 		}
 
-		spinlock_release(&(vpic->lock));
+		spinlock_irqrestore_release(&(vpic->lock), rflags);
 		ret = 0;
 	} else {
 	        ret = -1;
