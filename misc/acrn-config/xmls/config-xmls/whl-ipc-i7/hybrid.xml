@@ -42,7 +42,7 @@
         <MAX_PCI_DEV_NUM desc="Maximum number of PCI devices.">96</MAX_PCI_DEV_NUM>
         <MAX_IOAPIC_LINES desc="Maximum number of interrupt lines per IOAPIC.">120</MAX_IOAPIC_LINES>
         <MAX_PT_IRQ_ENTRIES desc="Maximum number of interrupt source for PT devices.">64</MAX_PT_IRQ_ENTRIES>
-        <MAX_MSIX_TABLE_NUM desc="Maximum number of MSI-X tables per device.">16</MAX_MSIX_TABLE_NUM>
+        <MAX_MSIX_TABLE_NUM desc="Maximum number of MSI-X tables per device. Please leave it blank if not sure.">64</MAX_MSIX_TABLE_NUM>
         <MAX_EMULATED_MMIO desc="Maximum number of emulated MMIO regions.">16</MAX_EMULATED_MMIO>
     </CAPACITIES>
 
