@@ -7,12 +7,24 @@ Launch Windows as the Guest VM on ACRN
 This tutorial describes how to launch Windows as a Guest (WaaG) VM on the
 ACRN hypervisor.
 
-Verified version
-****************
 
-* Clear Linux version: 33050
-* ACRN-hypervisor tag: v1.6.1 (acrn-2020w18.4-140000p)
-* ACRN-Kernel (Service VM kernel): 4.19.120-108.iot-lts2018-sos
+ACRN Service VM Setup
+*********************
+
+Refer to the steps in :ref:`guide <rt_industry_ubuntu_setup>` to set up ACRN
+based on Ubuntu. Once complete, you should be able to launch the Service VM
+successfully.
+
+Setup for Using Windows as the Guest VM
+***************************************
+
+In the following steps, you'll first create a Windows image
+in the Service VM, and then launch that image as a Guest VM.
+
+
+Verified version
+================
+
 * Windows 10 Version:
 
   - Microsoft Windows 10 Enterprise, 10.0.17134 Build 17134
@@ -22,90 +34,6 @@ Verified version
 
   - igfx_win10_100.7212.zip
 
-Hardware setup
-**************
-
-The following Intel Kaby Lake NUCs are verified:
-
-.. csv-table::
-   :header: "Platform Model", "BIOS Version", "BIOS Download Link"
-
-   "NUC7i7DNHE", "DNKBLi7v.86A.0052.2018.0808.1344", "`link <https://downloadcenter.intel.com/download/28886?v=t>`__"
-   "NUC7i5DNHE", "DNKBLi5v.86A.0060.2018.1220.1536", "`link <https://downloadcenter.intel.com/download/28885?v=t>`__"
-
-ACRN Service VM Setup
-*********************
-
-If necessary, refer to the steps in :ref:`kbl-nuc-sdc` to set up ACRN on the
-KBL NUC. Once complete, you should be able to launch the Service VM
-successfully.
-
-Setup for Using Windows as the Guest VM
-***************************************
-
-All patches to support WaaG have been upstreamed; download them from the
-``acrn-hypervisor`` repository.
-
-Build ACRN EFI Images
-=====================
-
-#. Follow the steps described at :ref:`getting-started-building` to set up the build environment.
-#. Use the ``make`` command to compile ``acrn.efi`` and ``acrn-dm``::
-
-   $ git clone https://github.com/projectacrn/acrn-hypervisor.git
-   $ cd acrn-hypervisor
-   $ make FIRMWARE=uefi BOARD=kbl-nuc-i7
-
-#. Get outputs from the following::
-
-   $ build/hypervisor/acrn.efi
-   $ build/devicemodel/acrn-dm
-
-#. Replace ``acrn.efi`` and ``acrn-dm`` on your NUC:
-
-   a. Log in to the ACRN Service VM and then ``mount`` the EFI partition to ``/boot``
-   #. ``scp`` both ``acrn.efi`` and ``acrn-dm`` from your host::
-
-      # scp <acrn.efi from your host> /boot/EFI/acrn/
-      # scp <acrn-dm from your host> /usr/bin/
-      # chmod +x /usr/bin/acrn-dm && sync
-
-Build the Service VM kernel
-===========================
-
-#. Follow the steps described at :ref:`getting-started-building` to set up
-   the build environment.
-#. Follow the steps below to build the ACRN kernel::
-
-   $ WORKDIR=`pwd`;
-   $ JOBS=`nproc`
-   $ git clone -b master https://github.com/projectacrn/acrn-kernel.git
-   $ cd acrn-kernel && mkdir -p ${WORKDIR}/{build,build-rootfs}
-   $ cp kernel_config_uefi_sos ${WORKDIR}/build/.config
-   $ make olddefconfig O=${WORKDIR}/build && make -j${JOBS} O=${WORKDIR}/build
-   $ make modules_install INSTALL_MOD_PATH=${WORKDIR}/build-rootfs O=${WORKDIR}/build -j${JOBS}
-
-Update the KBL NUC kernel
-=========================
-
-#. Copy the new kernel image (bzImage) and its modules to the target machine::
-
-   # scp <your host>:$WORKDIR/build/arch/x86/boot/bzImage /boot/bzImage
-   # scp -r <your host>:$WORKDIR/build-rootfs/lib/modules/* /lib/modules/
-   # cp /boot/loader/entries/acrn.conf  /boot/loader/entries/acrngt.conf
-
-#. Modify ``acrngt.conf`` to the content as shown below:
-
-   .. code-block:: none
-
-      title The ACRNGT Service VM
-      linux /bzImage
-      options console=tty0 console=ttyS0 root=/dev/sda3 rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x010101 i915.domain_plane_owners=0x011100001111 i915.enable_gvt=1 i915.enable_conformance_check=0 i915.enable_guc=0 hvlog=2M@0x1FE00000
-
-   .. note:: Change ``/dev/sda3`` to your file system partition.
-
-#. Reboot the Service VM and select ``The ACRNGT Service VM`` from the
-   boot menu to apply the ACRN kernel and hypervisor updates.
 
 Create a Windows 10 image in the Service VM
 ===========================================
@@ -144,17 +72,17 @@ Create a raw disk
 
 Run these commands on the Service VM::
 
-   # swupd bundle-add kvm-host
-   # mkdir /root/img
-   # cd /root/img
-   # qemu-img create -f raw win10-ltsc.img 30G
+   $ sudo apt-get install qemu-utils
+   $ mkdir /home/acrn/img
+   $ cd /home/acrn/img
+   $ qemu-img create -f raw win10-ltsc.img 30G
 
 Prepare the script to create an image
 -------------------------------------
 
 #. Copy ``/usr/share/acrn/samples/nuc/launch_win.sh`` to ``install_win.sh``::
 
-   # cp /usr/share/acrn/samples/nuc/launch_win.sh ~/install_win.sh
+   $ cp /usr/share/acrn/samples/nuc/launch_win.sh /home/acrn/img/install_win.sh
 
 
 #. Edit the ``acrn-dm`` command line in ``install_win.sh`` as follows:
@@ -290,6 +218,7 @@ ACRN Windows verified feature list
                    , "Maps",                         "OK"
                    , "Microsoft Store",              "OK"
                    , "3D Viewer",                    "OK"
+
 
 Known limitations
 *****************
