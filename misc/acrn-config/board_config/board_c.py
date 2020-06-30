@@ -91,53 +91,37 @@ def gen_dmar_structure(config):
     print("};", file=config)
 
 
-def populate_clos_mask_msr(rdt_res, common_clos_max, config):
+def populate_clos_mask_msr(rdt_res, cat_mask_list, config):
     """
     Populate the clos bitmask and msr index for a given RDT resource
     :param rdt_res: it is a string representing the RDT resource
-    :param common_clos_max: Least common clos supported by all RDT resource
+    :param cat_mask_list: cache mask list corresponding to each CLOS
     :param config: it is a file pointer of board information for writing to
     """
-    cat_mask_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "CLOS_MASK")
-    cat_max_mask_settings_len = len(cat_mask_list)
-    for idx in range(common_clos_max):
+    idx = 0
+    for cat_mask in cat_mask_list:
         print("\t{", file=config)
-        if idx < cat_max_mask_settings_len:
-            print("\t\t.clos_mask = {0}U,".format(cat_mask_list[idx]), file=config)
-        else:
-            print("\t\t.clos_mask = 0xffU,", file=config)
+        print("\t\t.clos_mask = {0}U,".format(cat_mask), file=config)
         print("\t\t.msr_index = MSR_IA32_{0}_MASK_BASE + {1},".format(
               rdt_res, idx), file=config)
         print("\t},", file=config)
+        idx += 1
 
-def populate_mba_delay_mask(rdt_res, common_clos_max, config):
+def populate_mba_delay_mask(rdt_res, mba_delay_list, config):
     """
     Populate the mba delay mask and msr index for memory resource
     :param rdt_res: it is a string representing the RDT resource
-    :param common_clos_max: Least common clos supported by all RDT resource
+    :param mba_delay_list: mba delay value list corresponding to each CLOS
     :param config: it is a file pointer of board information for writing to
     """
-    err_dic = {}
-    mba_delay_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "MBA_DELAY")
-    mba_max_delay_settings_len = len(mba_delay_list)
-    if mba_max_delay_settings_len != 0 and \
-       mba_max_delay_settings_len != common_clos_max:
-        err_dic["board config: generate board.c failed"] = "Number of \
-        MBA_DELAY values in scenaio xml should equal to MAX_PLATFORM_CLOS_NUM"
-        return err_dic
-
-    for idx in range(common_clos_max):
+    idx = 0
+    for mba_delay_mask in mba_delay_list:
         print("\t{", file=config)
-        if idx < mba_max_delay_settings_len:
-            print("\t\t.mba_delay = {0}U,".format(mba_delay_list[idx]), file=config)
-        else:
-            print("\t\t.mba_delay = 0U,", file=config)
-
+        print("\t\t.mba_delay = {0}U,".format(mba_delay_mask), file=config)
         print("\t\t.msr_index = MSR_IA32_{0}_MASK_BASE + {1},".format(
               rdt_res, idx), file=config)
         print("\t},", file=config)
-
-    return err_dic
+        idx += 1
 
 
 def gen_rdt_res(config):
@@ -149,10 +133,10 @@ def gen_rdt_res(config):
     rdt_res_str =""
     res_present = [0, 0, 0]
     (rdt_resources, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
-    if len(rdt_res_clos_max) != 0:
-        common_clos_max = min(rdt_res_clos_max)
-    else:
-        common_clos_max = 0
+    common_clos_max = board_cfg_lib.get_common_clos_max()
+
+    cat_mask_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "CLOS_MASK")
+    mba_delay_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "MBA_DELAY")
 
     if common_clos_max > MSR_IA32_L2_MASK_END - MSR_IA32_L2_MASK_BASE or\
         common_clos_max > MSR_IA32_L3_MASK_END - MSR_IA32_L3_MASK_BASE:
@@ -169,22 +153,22 @@ def gen_rdt_res(config):
             if rdt_res == "L2":
                 rdt_res_str = "l2"
                 print("struct platform_clos_info platform_{0}_clos_array[{1}] = {{".format(rdt_res_str,
-                      "MAX_PLATFORM_CLOS_NUM"), file=config)
-                populate_clos_mask_msr(rdt_res, common_clos_max, config)
+                      "MAX_CACHE_CLOS_NUM_ENTRIES"), file=config)
+                populate_clos_mask_msr(rdt_res, cat_mask_list, config)
                 print("};\n", file=config)
                 res_present[RDT.L2.value] = 1
             elif rdt_res == "L3":
                 rdt_res_str = "l3"
                 print("struct platform_clos_info platform_{0}_clos_array[{1}] = {{".format(rdt_res_str,
-                      "MAX_PLATFORM_CLOS_NUM"), file=config)
-                populate_clos_mask_msr(rdt_res, common_clos_max, config)
+                      "MAX_CACHE_CLOS_NUM_ENTRIES"), file=config)
+                populate_clos_mask_msr(rdt_res, cat_mask_list, config)
                 print("};\n", file=config)
                 res_present[RDT.L3.value] = 1
             elif rdt_res == "MBA":
                 rdt_res_str = "mba"
                 print("struct platform_clos_info platform_{0}_clos_array[{1}] = {{".format(rdt_res_str,
-                      "MAX_PLATFORM_CLOS_NUM"), file=config)
-                err_dic = populate_mba_delay_mask(rdt_res, common_clos_max, config)
+                      "MAX_MBA_CLOS_NUM_ENTRIES"), file=config)
+                err_dic = populate_mba_delay_mask(rdt_res, mba_delay_list, config)
                 print("};\n", file=config)
                 res_present[RDT.MBA.value] = 1
             else:

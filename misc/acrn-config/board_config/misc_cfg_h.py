@@ -238,15 +238,16 @@ def generate_file(config):
     print("#define MAX_PCPU_NUM\t{}U".format(max_cpu_num), file=config)
 
     # set macro of max clos number
-    (_, clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
-    if len(clos_max) != 0:
-        common_clos_max = min(clos_max)
-    else:
-        common_clos_max = 0
+    common_clos_max = board_cfg_lib.get_common_clos_max()
+    max_cache_clos_entries = common_clos_max
+    max_mba_clos_entries = common_clos_max
+    if board_cfg_lib.is_cdp_enabled():
+        max_cache_clos_entries = 2 * common_clos_max
 
+    print("#define MAX_CACHE_CLOS_NUM_ENTRIES\t{}U".format(max_cache_clos_entries), file=config)
+    print("#define MAX_MBA_CLOS_NUM_ENTRIES\t{}U".format(max_mba_clos_entries), file=config)
     print("#define MAX_PLATFORM_CLOS_NUM\t{}U".format(common_clos_max), file=config)
     gen_known_caps_pci_head(config)
-
 
     # define rootfs with macro
     for i in range(root_dev_num):
