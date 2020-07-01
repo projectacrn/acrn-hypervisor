@@ -172,20 +172,20 @@ void uart16550_init(bool early_boot)
 char uart16550_getc(void)
 {
 	char ret = -1;
+	uint64_t rflags;
 
 	if (!uart.enabled) {
 		return ret;
 	}
 
-	spinlock_obtain(&uart.rx_lock);
-
+	spinlock_irqsave_obtain(&uart.rx_lock, &rflags);
 	/* If a character has been received, read it */
 	if ((uart16550_read_reg(uart, UART16550_LSR) & LSR_DR) == LSR_DR) {
 		/* Read a character */
 		ret = uart16550_read_reg(uart, UART16550_RBR);
 
 	}
-	spinlock_release(&uart.rx_lock);
+	spinlock_irqrestore_release(&uart.rx_lock, rflags);
 	return ret;
 }
 
@@ -210,10 +210,13 @@ static void uart16550_putc(char c)
 size_t uart16550_puts(const char *buf, uint32_t len)
 {
 	uint32_t i;
+	uint64_t rflags;
+
 	if (!uart.enabled) {
 		return len;
 	}
-	spinlock_obtain(&uart.tx_lock);
+
+	spinlock_irqsave_obtain(&uart.tx_lock, &rflags);
 	for (i = 0U; i < len; i++) {
 		/* Transmit character */
 		uart16550_putc(*buf);
@@ -223,7 +226,7 @@ size_t uart16550_puts(const char *buf, uint32_t len)
 		}
 		buf++;
 	}
-	spinlock_release(&uart.tx_lock);
+	spinlock_irqrestore_release(&uart.tx_lock, rflags);
 	return len;
 }
 
