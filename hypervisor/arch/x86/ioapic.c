@@ -19,7 +19,7 @@
 
 static struct gsi_table gsi_table_data[NR_MAX_GSI];
 static uint32_t ioapic_max_nr_gsi;
-static spinlock_t ioapic_lock;
+static spinlock_t ioapic_lock = { .head = 0U, .tail = 0U, };
 
 static union ioapic_rte saved_rte[CONFIG_MAX_IOAPIC_NUM][CONFIG_MAX_IOAPIC_LINES];
 
@@ -424,8 +424,6 @@ void ioapic_setup_irqs(void)
 	uint8_t ioapic_id;
 	uint32_t gsi = 0U;
 	uint32_t vr;
-
-	spinlock_init(&ioapic_lock);
 
 	for (ioapic_id = 0U;
 	     ioapic_id < ioapic_num; ioapic_id++) {
