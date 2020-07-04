@@ -11,9 +11,8 @@ ACRN hypervisor.
 ACRN Service VM Setup
 *********************
 
-Refer to the steps in :ref:`guide <rt_industry_ubuntu_setup>` to set up ACRN
-based on Ubuntu. Once complete, you should be able to launch the Service VM
-successfully.
+Follow the steps in this :ref:`rt_industry_ubuntu_setup` to set up ACRN
+based on Ubuntu and launch the Service VM.
 
 Setup for Using Windows as the Guest VM
 ***************************************
