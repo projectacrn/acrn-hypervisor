@@ -120,7 +120,7 @@ Repository layout
 To clone the ACRN hypervisor repository (including the hypervisor,
 devicemodel, and doc folders) use::
 
-    git clone https://github.com/projectacrn/acrn-hypervisor
+   $ git clone https://github.com/projectacrn/acrn-hypervisor
 
 In addition to the ACRN hypervisor and device model itself,
 you'll also find the sources for technical documentation available from
@@ -163,6 +163,21 @@ your submitted issues as well, or to add additional comments.
 Contribution Tools and Git Setup
 ********************************
 
+.. _Git send-email documentation:
+   https://git-scm.com/docs/git-send-email
+
+git-send-email
+==============
+
+If you'll be submitting code patches, you may need to install
+the git-email package for easier patch submission.  On Ubuntu,
+for example use::
+
+   $ sudo apt install git-email
+
+and then configure Git` with your SMTP server information as
+described in the `Git send-email documentation`_.
+
 Signed-off-by
 =============
 
@@ -172,8 +187,8 @@ is set up correctly by using:
 
 .. code-block:: none
 
-   git config --global user.name "David Developer"
-   git config --global user.email "david.developer@company.com"
+   $ git config --global user.name "David Developer"
+   $ git config --global user.email "david.developer@company.com"
 
 Tracked-On
 ==========
@@ -227,11 +242,26 @@ When contributing to project ACRN, it is also important you provide as much
 information as you can about your change, update appropriate documentation,
 and test your changes thoroughly before submitting.
 
+Documentation changes should also be checked for technical accuracy,
+spelling, grammar, and clarity and that the :ref:`doc_guidelines` are
+being followed. It's also good practice to do a local documentation build to
+verify the changes don't cause the build to fail. See :ref:`acrn_doc`
+for details.
+
 The general GitHub workflow used by project ACRN developers uses a combination of
 command line Git commands and browser interaction with GitHub.  As it is with
 Git, there are multiple ways of getting a task done.  We'll describe a typical
 workflow here for the acrn-hypervisor repo, which includes the
-source files for the hypervisor, devicemodel, and documentation:
+source files for the hypervisor, devicemodel, and documentation.
+
+.. important:: Both code and documentation changes follow the same steps
+   shown here, with one exception: before submitting a GitHub pull request
+   (PR) with your changes, all **code** changes are first sent to the ACRN
+   developer mailing list for discussion and review.  After obtaining the
+   proper **Reviewed-by:** and **Acked-by:** approvals, code patches may
+   then be submitted as a GitHub PR.  Documentation changes should be
+   submitted separately from code changes, and are reviewed via GitHub
+   comments to the PR.
 
 .. _Create a Fork of acrn-hypervisor:
    https://github.com/projectacrn/acrn-hypervisor#fork-destination-box
@@ -245,21 +275,21 @@ source files for the hypervisor, devicemodel, and documentation:
 
 #. On your development computer, clone the fork you just made::
 
-     git clone https://github.com/<your github id>/acrn-hypervisor
+     $ git clone https://github.com/<your github id>/acrn-hypervisor
 
    This would be a good time to let Git know about the upstream repo too::
 
-     git remote add upstream https://github.com/projectacrn/acrn-hypervisor.git
+     $ git remote add upstream https://github.com/projectacrn/acrn-hypervisor.git
 
    and verify the remote repos::
 
-     git remote -v
+     $ git remote -v
 
 #. Create a topic branch (off of master) for your work (if you're addressing
    an issue, we suggest including the issue number in the branch name)::
 
-     git checkout master
-     git checkout -b fix_comment_typo
+     $ git checkout master
+     $ git checkout -b fix_comment_typo
 
    Give your branch a short descriptive name.
 
@@ -268,23 +298,23 @@ source files for the hypervisor, devicemodel, and documentation:
 #. When things look good, start the pull request process by checking
    which files have not been staged::
 
-     git status
+     $ git status
 
    Then add the changed files::
 
-     git add [file(s) that changed]
+     $ git add [file(s) that changed]
 
    (or to have all changed files staged, use)::
 
-     git add -A
+     $ git add -A
 
 #. Verify changes to be committed look as you expected::
 
-     git diff --cached
+     $ git diff --cached
 
 #. Commit your changes to your local repo::
 
-     git commit -s
+     $ git commit -s
 
    The ``-s`` option automatically adds your ``Signed-off-by:`` to your commit
    message.  Your commit will be rejected without this line that indicates your
@@ -297,10 +327,42 @@ source files for the hypervisor, devicemodel, and documentation:
 
       Tracked-On: #1420
 
-#. Push your topic branch with your changes to your fork in your personal
+
+   If only **documentation changes** are made, your PR can be submitted
+   without review on the ACRN developer mailing list, so you can skip
+   directly to step 9.
+
+8. As mentioned earlier, all **code changes** must first be reviewed and
+   approved via the developer mailing list.  This review process is
+   started by sending a patch file for each commit, as created by the ``git
+   format-patch`` command.  For example if your change is contained in one
+   commit, create a patch file (in ``/tmp``, or some other location) with
+   the command::
+
+      $ git format-patch -o /tmp/ -1
+
+   Then email the generated ``.patch`` file(s) to the ACRN developer
+   mailing list, acrn-dev@lists.projectacrn.org using the ``git
+   send-email`` command. (See the `Git send-email documentation`_
+   for details. For example::
+
+      $ git send-email /tmp/000*.patch --to acrn-dev@lists.projectacrn.org
+
+   You can see examples of change requests and discussions in the
+   `ACRN developer mailing list archive <https://lists.projectacrn.org/g/acrn-dev>`_.
+
+   After all review issues have been resolved, amend your commit with
+   necessary changes and also update the commit message with approvals
+   given in the mailing list discussion by adding
+   **Reviewed-by:** and **Acked-by:** tags.
+
+   You can then proceed to the next step and submit a Git pull request
+   to the repo.
+
+9. Push your topic branch with your changes to your fork in your personal
    GitHub account::
 
-     git push origin fix_comment_typo
+     $ git push origin fix_comment_typo
 
 #. In your web browser, go to your personal forked repo and click on the Compare & pull
    request button for the branch you just worked on and you want to
@@ -316,6 +378,8 @@ source files for the hypervisor, devicemodel, and documentation:
    assign reviewers as appropriate.
 
 #. Click on the submit button and your pull request is sent and awaits review.
+   For code changes, this review should be cursory since any issues were
+   handled via the mailing list review.
    Email will be sent as review comments are made, or you can check on your
    pull request at https://github.com/projectacrn/acrn-hypervisor/pulls.
 
@@ -323,8 +387,8 @@ source files for the hypervisor, devicemodel, and documentation:
    create another branch to work on another issue. (Be sure to make your new branch
    off of master and not the previous branch.)::
 
-     git checkout master
-     git checkout -b fix_another_issue
+     $ git checkout master
+     $ git checkout -b fix_another_issue
 
    and use the same process described above to work on this new topic branch.
 
@@ -332,12 +396,12 @@ source files for the hypervisor, devicemodel, and documentation:
    commit(s) to fix review issues. In your development repo, make the
    needed changes on the branch you made the initial submission::
 
-     git checkout fix-comment-typo
+     $ git checkout fix-comment-typo
 
    make the requested changes, and then::
 
-     git fetch --all
-     git rebase --ignore-whitespace upstream/master
+     $ git fetch --all
+     $ git rebase --ignore-whitespace upstream/master
 
    This is an important step to make sure your changes are properly
    merged with changes from other developers that may have happened while you
@@ -347,7 +411,7 @@ source files for the hypervisor, devicemodel, and documentation:
    any whitespace. If any merging issues are detected you can address them
    with::
 
-     git rebase -i <offending-commit-id>
+     $ git rebase -i <offending-commit-id>
 
    In the interactive rebase editor, replace pick with edit to select a specific
    commit (if there's more than one in your pull request), or remove the line to
@@ -356,12 +420,12 @@ source files for the hypervisor, devicemodel, and documentation:
    As before, inspect and test your changes. When ready, continue the
    patch submission::
 
-      git add [file(s)]
-      git rebase --continue
+      $ git add [file(s)]
+      $ git rebase --continue
 
    Update commit comment if needed, and continue::
 
-      git push --force origin fix_comment_typo
+      $ git push --force origin fix_comment_typo
 
    By force pushing your update, your original pull request will be updated with
    your changes so you won't need to resubmit the pull request.
@@ -405,7 +469,7 @@ does and why it's needed. A change summary of ``"Fixes stuff"`` will be rejected
 
 .. warning::
    An empty change summary body is not permitted. Even for trivial changes, please
-   include a summary body in the commmit message.
+   include a summary body in the commit message.
 
 The description body of the commit message must include:
 
