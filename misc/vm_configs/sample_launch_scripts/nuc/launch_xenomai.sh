@@ -180,7 +180,7 @@ elif [ ! -z $disk ];then
 
 	# detect partition information
 	disk_part_nr=$(basename $disk| sed 's/.*\([0-9]$\)/\1/')
-	if grep -q "nvme" "$disk"; then
+    if [[ $disk =~ "nvme" ]]; then
     	vdisk=/dev/nvme0n1p$disk_part_nr
     else
     	vdisk=/dev/sda$disk_part_nr
