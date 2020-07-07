@@ -154,3 +154,15 @@ def dump_execute(cmd, desc, config):
         print("\t{}".format(line.strip()), file=config)
 
     print("\t</{0}>".format(desc), file=config)
+
+
+def get_output_lines(cmd):
+    res_lines = []
+    res = cmd_execute(cmd)
+    while True:
+        line = res.stdout.readline().decode('ascii')
+        if not line:
+            break
+        res_lines.append(line.strip())
+
+    return res_lines
