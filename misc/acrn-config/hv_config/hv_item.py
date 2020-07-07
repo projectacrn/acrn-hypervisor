@@ -78,7 +78,7 @@ class CapHv:
         hv_cfg_lib.ir_entries_check(self.max_ir_entries, "CAPACITIES", "MAX_IR_ENTRIES")
         hv_cfg_lib.hv_size_check(self.iommu_bus_num, "CAPACITIES", "IOMMU_BUS_NUM")
         hv_cfg_lib.hv_range_check(self.max_pci_dev_num, "CAPACITIES", "MAX_PCI_DEV_NUM", hv_cfg_lib.RANGE_DB['PCI_DEV_NUM'])
-        hv_cfg_lib.hv_range_check(self.max_msix_table_num, "CAPACITIES", "MAX_MSIX_TABLE_NUM", hv_cfg_lib.RANGE_DB['MSIX_TABLE_NUM'])
+        hv_cfg_lib.max_msix_table_num_check(self.max_msix_table_num, "CAPACITIES", "MAX_MSIX_TABLE_NUM")
 
 
 class MisCfg:

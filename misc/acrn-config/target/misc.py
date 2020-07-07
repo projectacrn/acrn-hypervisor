@@ -217,6 +217,27 @@ def dump_cpu_core_info(config):
     print("\t</CPU_PROCESSOR_INFO>", file=config)
     print("", file=config)
 
+def dump_max_msix_table_num(config):
+
+    msix_table_num_list = []
+    max_msix_table_num = 1
+    cmd = 'lspci -vv | grep "MSI-X" | grep "Count="'
+    res_lines = parser_lib.get_output_lines(cmd)
+    for line in res_lines:
+        tmp_num = line.split('=')[1].split()[0]
+        msix_table_num_list.append(tmp_num)
+
+    if msix_table_num_list:
+        max_msix_table_num = max(msix_table_num_list)
+    print("\t<MAX_MSIX_TABLE_NUM>", file=config)
+    print("\t{}".format(max_msix_table_num), file=config)
+    print("\t</MAX_MSIX_TABLE_NUM>", file=config)
+
+
+def dump_dev_config_info(config):
+
+    dump_max_msix_table_num(config)
+    print("", file=config)
 
 def generate_info(board_info):
     """Get System Ram information
@@ -235,3 +256,5 @@ def generate_info(board_info):
         dump_total_mem(config)
 
         dump_cpu_core_info(config)
+
+        dump_dev_config_info(config)

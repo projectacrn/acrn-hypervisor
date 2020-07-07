@@ -71,10 +71,11 @@ def release_check(sel_str, dbg_opt, rel_str):
         ERR_LIST[key] = "{} should be in {}".format(rel_str, N_Y)
 
 
-def hv_range_check(str_val, branch_tag, item, range_db):
+def hv_range_check(str_val, branch_tag, item, range_db, empty_check_enable=True):
 
-    if empty_check(str_val, branch_tag, item):
-        return
+    if empty_check_enable:
+        if empty_check(str_val, branch_tag, item):
+            return
     if not is_numeric_check(str_val, branch_tag, item):
         return
     range_check(str_val, branch_tag, item, range_db)
@@ -225,3 +226,16 @@ def mba_delay_check(mba_delay_list, feature, mba_str, max_mask_str):
             key = 'hv,{},{},{}'.format(feature, mba_str, max_mask_str)
             ERR_LIST[key] = "{} should be in range[0,{}]".format(max_mask_str, mba_delay_str)
             return
+
+
+def max_msix_table_num_check(max_msix_table_num, cap_str, max_msi_num_str):
+    native_max_msix_line = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<MAX_MSIX_TABLE_NUM>", "</MAX_MSIX_TABLE_NUM>")
+    if not native_max_msix_line and not max_msix_table_num:
+        empty_check(max_msix_table_num, cap_str, max_msi_num_str)
+        return
+
+    if max_msix_table_num:
+        hv_range_check(max_msix_table_num, cap_str, max_msi_num_str, RANGE_DB['MSIX_TABLE_NUM'], False)
+    if native_max_msix_line:
+        native_max_msix_num = native_max_msix_line[0].strip()
+        range_check(native_max_msix_num, "In board xml", max_msi_num_str, RANGE_DB['MSIX_TABLE_NUM'])
