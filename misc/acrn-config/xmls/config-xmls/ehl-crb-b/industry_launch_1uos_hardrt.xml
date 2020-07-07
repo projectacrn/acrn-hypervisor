@@ -24,7 +24,7 @@
 		<sd_card desc="vm sd card device"></sd_card>
 		<ethernet desc="vm ethernet device"></ethernet>
 		<sata desc="vm sata device"></sata>
-		<nvme desc="vm nvme device">02:00.0 Non-Volatile memory controller: Silicon Motion, Inc. Device 2263 (rev 03)</nvme>
+		<nvme desc="vm nvme device"></nvme>
 	</passthrough_devices>
 
 	<virtio_devices>
