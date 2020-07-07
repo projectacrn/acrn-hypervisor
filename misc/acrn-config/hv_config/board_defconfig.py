@@ -26,8 +26,8 @@ VM_NUM_MAP_TOTAL_HV_RAM_SIZE = {
     6:0xFA00000,
     # 280M
     7:0x11800000,
-    # 320M
-    8:0x14000000,
+    # 328M
+    8:0x14800000,
 }
 
 MEM_ALIGN = 2 * common.SIZE_M
