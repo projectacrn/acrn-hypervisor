@@ -80,7 +80,7 @@ static const uint32_t mtrr_msrs[NUM_MTRR_MSRS] = {
 };
 
 /* Following MSRs are intercepted, but it throws GPs for any guest accesses */
-#define NUM_UNSUPPORTED_MSRS	104U
+#define NUM_UNSUPPORTED_MSRS	111U
 static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	/* Variable MTRRs are not supported */
 	MSR_IA32_MTRR_PHYSBASE_0,
@@ -221,6 +221,19 @@ static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	MSR_PRMRR_VALID_CONFIG,
 	MSR_UNCORE_PRMRR_PHYS_BASE,
 	MSR_UNCORE_PRMRR_PHYS_MASK,
+
+	/*
+	 * CET disabled:
+	 * 	CPUID.07H.ECX[7] (CPUID_ECX_CET_SS)
+	 * 	CPUID.07H.EDX[20] (CPUID_ECX_CET_IBT)
+	 */
+	MSR_IA32_U_CET,
+	MSR_IA32_S_CET,
+	MSR_IA32_PL0_SSP,
+	MSR_IA32_PL1_SSP,
+	MSR_IA32_PL2_SSP,
+	MSR_IA32_PL3_SSP,
+	MSR_IA32_INTERRUPT_SSP_TABLE_ADDR,
 };
 
 /* emulated_guest_msrs[] shares same indexes with array vcpu->arch->guest_msrs[] */

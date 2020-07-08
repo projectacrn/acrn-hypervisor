@@ -128,6 +128,10 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 
 			/* mask Intel Processor Trace, since 14h is disabled */
 			entry->ebx &= ~CPUID_EBX_PROC_TRC;
+
+			/* mask CET shadow stack and indirect branch tracking */
+			entry->ecx &= ~CPUID_ECX_CET_SS;
+			entry->edx &= ~CPUID_EDX_CET_IBT;
 		} else {
 			entry->eax = 0U;
 			entry->ebx = 0U;
@@ -494,12 +498,26 @@ static void guest_cpuid_0dh(__unused struct acrn_vcpu *vcpu, uint32_t *eax, uint
 				*edx = 0U;
 	} else {
 		cpuid_subleaf(0x0dU, subleaf, eax, ebx, ecx, edx);
-		if (subleaf == 0U) {
+		switch (subleaf) {
+		case 0U:
 			/* SDM Vol.1 17-2, On processors that do not support Intel MPX,
 			 * CPUID.(EAX=0DH,ECX=0):EAX[3] and
 			 * CPUID.(EAX=0DH,ECX=0):EAX[4] will both be 0 */
-			*eax &= ~ CPUID_EAX_XCR0_BNDREGS;
-			*eax &= ~ CPUID_EAX_XCR0_BNDCSR;
+			*eax &= ~(CPUID_EAX_XCR0_BNDREGS | CPUID_EAX_XCR0_BNDCSR);
+			break;
+		case 1U:
+			*ecx &= ~(CPUID_ECX_CET_U_STATE | CPUID_ECX_CET_S_STATE);
+			break;
+		case 11U:
+		case 12U:
+			*eax = 0U;
+			*ebx = 0U;
+			*ecx = 0U;
+			*edx = 0U;
+			break;
+		default:
+			/* No emulation for other leaves */
+			break;
 		}
 	}
 }

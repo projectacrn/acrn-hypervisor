@@ -27,13 +27,13 @@
 			   CR0_NE |  CR0_ET | CR0_TS | CR0_EM | CR0_MP | CR0_PE)
 
 /* CR4 bits hv want to trap to track status change */
-#define CR4_TRAP_MASK (CR4_PSE | CR4_PAE | CR4_VMXE | CR4_SMEP | CR4_SMAP | CR4_PKE)
+#define CR4_TRAP_MASK (CR4_PSE | CR4_PAE | CR4_VMXE | CR4_SMEP | CR4_SMAP | CR4_PKE | CR4_CET)
 #define	CR4_RESERVED_MASK ~(CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_PSE | \
 				CR4_PAE | CR4_MCE | CR4_PGE | CR4_PCE |     \
 				CR4_OSFXSR | CR4_PCIDE | CR4_OSXSAVE |       \
 				CR4_SMEP | CR4_FSGSBASE | CR4_VMXE |         \
 				CR4_OSXMMEXCPT | CR4_SMAP | CR4_PKE |        \
-				CR4_SMXE | CR4_UMIP)
+				CR4_SMXE | CR4_UMIP | CR4_CET)
 
 /* PAE PDPTE bits 1 ~ 2, 5 ~ 8 are always reserved */
 #define PAE_PDPTE_FIXED_RESVD_BITS	0x00000000000001E6UL
@@ -256,7 +256,7 @@ static bool is_cr4_write_valid(struct acrn_vcpu *vcpu, uint64_t cr4)
 		ret = false;
 	} else {
 		/* Do NOT support nested guest, nor SMX */
-		if (((cr4 & CR4_VMXE) != 0UL) || ((cr4 & CR4_SMXE) != 0UL)) {
+		if (((cr4 & CR4_VMXE) != 0UL) || ((cr4 & CR4_SMXE) != 0UL) || ((cr4 & CR4_CET) != 0UL)) {
 			ret = false;
 		} else {
 			if (is_long_mode(vcpu)) {
@@ -304,6 +304,7 @@ static bool is_cr4_write_valid(struct acrn_vcpu *vcpu, uint64_t cr4)
  *   - SMEP (20) Flexible to guest
  *   - SMAP (21) Flexible to guest
  *   - PKE (22) Flexible to guest
+ *   - CET (23) Trapped to hide from guest
  */
 static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 {

@@ -84,6 +84,7 @@
 #define CR4_SMEP                (1UL<<20U)
 #define CR4_SMAP                (1UL<<21U)
 #define CR4_PKE                 (1UL<<22U)	/* Protect-key-enable */
+#define CR4_CET                 (1UL<<23U)	/* Control-flow Enforcement Technology enable */
 
 /* XCR0_SSE */
 #define XCR0_SSE		(1UL<<1U)
