@@ -124,8 +124,9 @@ th,td {
     vertical-align: top !important;
 }
 
-/* dbk tweak for doxygen-generated API headings (for RTD theme) */
-.rst-content dl.group>dt, .rst-content dl.group>dd>p {
+/* dbk tweak for doxygen-generated API headings (for RTD theme)
+   hide the "group" name provided by breathe, but keep the description */
+.rst-content dl.group>dt {
    display:none !important;
 }
 .rst-content dl.group {
