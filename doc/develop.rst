@@ -20,6 +20,7 @@ Configuration and Tools
    user-guides/acrn-shell
    user-guides/acrn-dm-parameters
    misc/tools/acrn-crashlog/README
+   misc/packaging/README
    misc/tools/**
    misc/acrn-manager/**
 
