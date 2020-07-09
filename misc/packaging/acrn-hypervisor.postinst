@@ -1,0 +1,120 @@
+#!/bin/bash
+#* Copyright (c) 2020 Intel Corporation All rights reserved.
+# postinst script for acrn-hypervisor
+set -e
+
+
+echo "please choose <scenario> ,<board> ,<disk type>"
+
+echo "Scenario is ->
+        1. industry
+        2. hybrid
+        3. logical_partition"
+read num
+
+if [[ $num -eq 1 ]]
+then
+        echo "Scenario is industry"
+        SCENARIO="industry"
+elif [[ $num -eq 2 ]]
+then
+        echo "Scenario is hybrid"
+        SCENARIO="hybrid"
+
+elif [[ $num -eq 3 ]]
+then
+        echo "Scenario is logical_partition"
+        SCENARIO="logical_partition"
+fi
+
+echo "Board is ->
+        1. nuc7i7dnb
+        2. whl-ipc-i5"
+read num2
+
+if [[ $num2 -eq 1 ]]
+then
+        echo "Board is nuc7i7dnb"
+        BOARD="nuc7i7dnb"
+elif [[ $num2 -eq 2 ]]
+then
+        echo "Board is whl-ipc-i5"
+        BOARD="whl-ipc-i5"
+fi
+
+ACRNBIN="/boot/acrn.${SCENARIO}.${BOARD}.bin"
+
+echo "Your acrn bin is ->"
+echo $ACRNBIN
+
+
+echo "disk type is ->
+        1. nvme
+        2. sda"
+read num3
+
+if [[ $num3 -eq 1 ]]
+then
+        echo "disk type is nvme"
+        type="nvme"
+elif [[ $num3 -eq 2 ]]
+then
+        echo "disk type is sda"
+        type="sda"
+fi
+
+
+str=$(blkid |grep ext4 |grep ${type})
+
+uuid=$(echo $str |cut -d " " -f 2|cut -d "=" -f 2)
+
+str=$(blkid |grep ext4 |grep ${type})
+
+partuuid=$(echo ${str##*PARTUUID=})
+
+filename="/etc/grub.d/40_custom"
+
+kernelimg=$(grep module ${filename}|| true)
+kernelimg2='/boot/'
+
+if [ "$kernelimg" ]
+then
+    kernelimg2=$(echo $kernelimg |cut -d ' ' -f 2)
+fi
+
+cat>"${filename}"<<EOF
+#!/bin/sh
+exec tail -n +3 \$0
+menuentry 'ACRN multiboot2 ' --id ACRN_deb_multiboot2 {
+    load_video
+    insmod gzio
+    insmod part_gpt
+    insmod ext2
+    search --no-floppy --fs-uuid  --set $uuid
+multiboot2 $ACRNBIN root=PARTUUID=$partuuid i915.modeset=0 video=efifb:off
+$kernelimg
+
+}
+
+menuentry 'ACRN efi' --id ACRN_deb_efi {
+    recordfail
+    load_video
+    insmod gzio
+    insmod part_gpt
+    insmod ext2
+    linux $kernelimg2 pci_devices_ignore=(0:18:1) console=tty0 console=ttyS0 root=PARTUUID=$partuuid rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_gvt=1 i915.enable_guc=0 hvlog=2M@0xE00000
+
+}
+EOF
+
+filename='/etc/default/grub'
+sed -i '/GRUB_DEFAULT/d' ${filename}
+sed -i '/GRUB_TIMEOUT/d' ${filename}
+sed -i '/GRUB_HIDDEN_TIMEOUT/d' ${filename}
+sed -i '$a GRUB_DEFAULT=ACRN_deb_multiboot2' ${filename}
+sed -i '$a GRUB_TIMEOUT=20' ${filename}
+
+sync
+update-grub
+
+exit 0
