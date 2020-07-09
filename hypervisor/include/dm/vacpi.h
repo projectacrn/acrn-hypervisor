@@ -47,6 +47,7 @@
 #define ACPI_DSDT_ADDR    (ACPI_BASE + 0x200U)
 #define ACPI_MCFG_ADDR    (ACPI_BASE + 0x300U)
 #define ACPI_MADT_ADDR    (ACPI_BASE + 0x340U)
+#define ACPI_TPM2_ADDR    (ACPI_BASE + 0x1000U)
 
 #define ACPI_OEM_ID           "ACRN  "
 #define ACPI_ASL_COMPILER_ID  "INTL"

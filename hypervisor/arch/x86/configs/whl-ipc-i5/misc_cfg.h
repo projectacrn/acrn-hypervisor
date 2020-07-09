@@ -33,5 +33,8 @@
 #define HI_MMIO_START		~0UL
 #define HI_MMIO_END		0UL
 
+#define VM0_PASSTHROUGH_TPM
+#define VM0_TPM_BUFFER_BASE_ADDR    0xFED40000UL
+#define VM0_TPM_BUFFER_SIZE         0x5000UL
 
 #endif /* MISC_CFG_H */

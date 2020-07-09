@@ -178,6 +178,7 @@ struct acrn_vm_config {
 
 	struct vuart_config vuart[MAX_VUART_NUM_PER_VM];/* vuart configuration for VM */
 
+	bool pt_tpm2;
 	struct acrn_mmiodev mmiodevs[MAX_MMIO_DEV_NUM];
 } __aligned(8);
 

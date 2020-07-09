@@ -37,7 +37,15 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.irq = COM2_IRQ,
 			.t_vuart.vm_id = 1U,
 			.t_vuart.vuart_id = 1U,
-		}
+		},
+	#ifdef VM0_PASSTHROUGH_TPM
+		.pt_tpm2 = true,
+		.mmiodevs[0] = {
+			.base_gpa = VM0_TPM_BUFFER_BASE_ADDR,
+			.base_hpa = 0xFED40000UL,
+			.size = VM0_TPM_BUFFER_SIZE,
+		},
+	#endif
 	},
 	{	/* VM1 */
 		CONFIG_SOS_VM,
