@@ -10,6 +10,19 @@
 #include <pgtable.h>
 #include <platform_acpi_info.h>
 
+#define ACPI_TABLE_HEADER(SIGNATURE, LENGTH, REVISION, OEM_ID,			\
+	OEM_TABLE_ID, OEM_REVISION, ASL_COMPILER_ID, ASL_COMPILER_REVISION) 	\
+	{									\
+		.signature = (SIGNATURE),					\
+		.length = (LENGTH),						\
+		.revision = (REVISION),						\
+		.oem_id = (OEM_ID),						\
+		.oem_table_id = (OEM_TABLE_ID),					\
+		.oem_revision = (OEM_REVISION),					\
+		.asl_compiler_id = (ASL_COMPILER_ID),				\
+		.asl_compiler_revision = (ASL_COMPILER_REVISION),		\
+	}
+
 /* ACPI tables for pre-launched VM and SOS */
 static struct acpi_table_info acpi_table_template[CONFIG_MAX_VM_NUM] = {
 	[0U ... (CONFIG_MAX_VM_NUM - 1U)] = {
@@ -21,25 +34,14 @@ static struct acpi_table_info acpi_table_template[CONFIG_MAX_VM_NUM] = {
 			.xsdt_physical_address = ACPI_XSDT_ADDR,
 		},
 		.xsdt = {
-			.header.revision = 0x1U,
-			.header.oem_revision = 0x1U,
-			.header.asl_compiler_revision = ACPI_ASL_COMPILER_VERSION,
-			.header.signature = ACPI_SIG_XSDT,
-			.header.oem_id = ACPI_OEM_ID,
-			.header.oem_table_id = "ACRNXSDT",
-			.header.asl_compiler_id = ACPI_ASL_COMPILER_ID,
+			.header = ACPI_TABLE_HEADER(ACPI_SIG_XSDT, 0U, 0x1U, ACPI_OEM_ID,
+					"ACRNXSDT", 0x1U, ACPI_ASL_COMPILER_ID, ACPI_ASL_COMPILER_VERSION),
 
 			.table_offset_entry[0] = ACPI_MADT_ADDR,
 		},
 		.fadt = {
-			.header.revision = 0x3U,
-			.header.length = 0xF4U,
-			.header.oem_revision = 0x1U,
-			.header.asl_compiler_revision = ACPI_ASL_COMPILER_VERSION,
-			.header.signature = ACPI_SIG_FADT,
-			.header.oem_id = ACPI_OEM_ID,
-			.header.oem_table_id = "ACRNMADT",
-			.header.asl_compiler_id = ACPI_ASL_COMPILER_ID,
+			.header = ACPI_TABLE_HEADER(ACPI_SIG_FADT, 0xF4U, 0x3U, ACPI_OEM_ID,
+					"ACRNFADT", 0x1U, ACPI_ASL_COMPILER_ID, ACPI_ASL_COMPILER_VERSION),
 
 			.dsdt = ACPI_DSDT_ADDR,
 
@@ -50,24 +52,11 @@ static struct acpi_table_info acpi_table_template[CONFIG_MAX_VM_NUM] = {
 
 			.flags = 0x00001125U,	/* HEADLESS | TMR_VAL_EXT | SLP_BUTTON | PROC_C1 | WBINVD */
 		},
-		.dsdt = {
-			.revision = 0x3U,
-			.length = sizeof(struct acpi_table_header),
-			.oem_revision = 0x1U,
-			.asl_compiler_revision = ACPI_ASL_COMPILER_VERSION,
-			.signature = ACPI_SIG_DSDT,
-			.oem_id = ACPI_OEM_ID,
-			.oem_table_id = "ACRNMADT",
-			.asl_compiler_id = ACPI_ASL_COMPILER_ID,
-		},
+		.dsdt = ACPI_TABLE_HEADER(ACPI_SIG_DSDT, sizeof(struct acpi_table_header), 0x3U, ACPI_OEM_ID,
+					"ACRNDSDT", 0x1U, ACPI_ASL_COMPILER_ID, ACPI_ASL_COMPILER_VERSION),
 		.mcfg = {
-			.header.revision = 0x3U,
-			.header.oem_revision = 0x1U,
-			.header.asl_compiler_revision = ACPI_ASL_COMPILER_VERSION,
-			.header.signature = ACPI_SIG_MCFG,
-			.header.oem_id = ACPI_OEM_ID,
-			.header.oem_table_id = "ACRNMADT",
-			.header.asl_compiler_id = ACPI_ASL_COMPILER_ID,
+			.header = ACPI_TABLE_HEADER(ACPI_SIG_MCFG, 0U, 0x3U, ACPI_OEM_ID,
+					"ACRNMCFG", 0x1U, ACPI_ASL_COMPILER_ID, ACPI_ASL_COMPILER_VERSION),
 		},
 		.mcfg_entry = {
 			.address = VIRT_PCI_MMCFG_BASE,
@@ -76,13 +65,8 @@ static struct acpi_table_info acpi_table_template[CONFIG_MAX_VM_NUM] = {
 			.end_bus_number = 0xFFU,
 		},
 		.madt = {
-			.header.revision = 0x3U,
-			.header.oem_revision = 0x1U,
-			.header.asl_compiler_revision = ACPI_ASL_COMPILER_VERSION,
-			.header.signature = ACPI_SIG_MADT,
-			.header.oem_id = ACPI_OEM_ID,
-			.header.oem_table_id = "ACRNMADT",
-			.header.asl_compiler_id = ACPI_ASL_COMPILER_ID,
+			.header = ACPI_TABLE_HEADER(ACPI_SIG_MADT, 0U, 0x3U, ACPI_OEM_ID,
+					"ACRNMADT", 0x1U, ACPI_ASL_COMPILER_ID, ACPI_ASL_COMPILER_VERSION),
 
 			.address = 0xFEE00000U, /* Local APIC Address */
 			.flags = 0x1U, /* PC-AT Compatibility=1 */
