@@ -79,7 +79,7 @@
     </vuart>
     <vuart id="1">
         <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
-        <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
+        <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">SOS_COM2_BASE</base>
         <irq configurable="0" desc="vCOM2 irq">SOS_COM2_IRQ</irq>
         <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">2</target_vm_id>
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
@@ -154,7 +154,6 @@
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
     </vuart>
   </vm>
-
   <vm id="3">
     <vm_type desc="Specify the VM type" readonly="true">POST_STD_VM</vm_type>
     <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
@@ -185,121 +184,5 @@
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
     </vuart>
   </vm>
-  <vm id="4">
-    <vm_type desc="Specify the VM type" readonly="true">POST_STD_VM</vm_type>
-    <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
-        <guest_flag>0</guest_flag>
-    </guest_flags>
-    <cpu_affinity desc="List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.">
-        <pcpu_id>0</pcpu_id>
-        <pcpu_id>1</pcpu_id>
-    </cpu_affinity>
-    <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
-        <vcpu_clos>0</vcpu_clos>
-        <vcpu_clos>0</vcpu_clos>
-    </clos>
-    <epc_section configurable="0" desc="epc section">
-        <base desc="SGX EPC section base, must be page aligned">0</base>
-        <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
-    </epc_section>
-    <vuart id="0">
-        <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
-        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">COM1_BASE</base>
-        <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
-    </vuart>
-    <vuart id="1">
-        <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
-        <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
-        <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
-        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
-        <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
-    </vuart>
-  </vm>
-  <vm id="5">
-    <vm_type desc="Specify the VM type" readonly="true">POST_STD_VM</vm_type>
-    <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
-        <guest_flag>0</guest_flag>
-    </guest_flags>
-    <cpu_affinity desc="List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.">
-        <pcpu_id>0</pcpu_id>
-        <pcpu_id>1</pcpu_id>
-    </cpu_affinity>
-    <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
-        <vcpu_clos>0</vcpu_clos>
-        <vcpu_clos>0</vcpu_clos>
-    </clos>
-    <epc_section configurable="0" desc="epc section">
-        <base desc="SGX EPC section base, must be page aligned">0</base>
-        <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
-    </epc_section>
-    <vuart id="0">
-        <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
-        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">COM1_BASE</base>
-        <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
-    </vuart>
-    <vuart id="1">
-        <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
-        <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
-        <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
-        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
-        <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
-    </vuart>
-  </vm>
-  <vm id="6">
-    <vm_type desc="Specify the VM type" readonly="true">POST_STD_VM</vm_type>
-    <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
-        <guest_flag>0</guest_flag>
-    </guest_flags>
-    <cpu_affinity desc="List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.">
-        <pcpu_id>0</pcpu_id>
-        <pcpu_id>1</pcpu_id>
-    </cpu_affinity>
-    <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
-        <vcpu_clos>0</vcpu_clos>
-        <vcpu_clos>0</vcpu_clos>
-    </clos>
-    <epc_section configurable="0" desc="epc section">
-        <base desc="SGX EPC section base, must be page aligned">0</base>
-        <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
-    </epc_section>
-    <vuart id="0">
-        <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
-        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">COM1_BASE</base>
-        <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
-    </vuart>
-    <vuart id="1">
-        <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
-        <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
-        <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
-        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
-        <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
-    </vuart>
-  </vm>
-  <vm id="7" configurable="1" desc="specific for Kata">
-    <vm_type readonly="true" desc="Specify the VM type">KATA_VM</vm_type>
-    <cpu_affinity desc="List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.">
-        <pcpu_id>0</pcpu_id>
-        <pcpu_id>1</pcpu_id>
-    </cpu_affinity>
-    <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
-        <vcpu_clos>0</vcpu_clos>
-        <vcpu_clos>0</vcpu_clos>
-    </clos>
-    <epc_section configurable="0" desc="epc section">
-        <base desc="SGX EPC section base, must be page aligned">0</base>
-        <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
-    </epc_section>
-    <vuart id="0">
-        <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
-        <base configurable="0" desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
-        <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
-    </vuart>
-    <vuart id="1">
-        <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
-        <base configurable="0" desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
-        <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
-        <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
-        <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">0</target_uart_id>
-    </vuart>
-  </vm>
+
 </acrn-config>
