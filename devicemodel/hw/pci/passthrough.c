@@ -59,17 +59,35 @@
 
 #define PCI_BDF_GPU			0x00000010	/* 00:02.0 */
 
-#define GPU_DSM_SIZE			0x4000000
-/* set dsm gpa=0xDB000000, which is reserved in e820 table */
-#define GPU_DSM_GPA  			0xDB000000
-
-#define GPU_OPREGION_SIZE		0x3000
-/* set opregion gpa=0xDFFFD000, which is reserved in e820 table.
- * [0xDFFFD000, 0XE0000000] 12K opregion has reserved for GVT-g,
- * because GVT-d is not compatible with GVT-g,
- * so here can use [0xDFFFD000, 0XE0000000] region.
+/* Reserved [0x DF000000, 0x E0000000] 16M in e820 table for GVT
+ * [0xDB000000, 0xDF000000) 64M, DSM, used by native GOP and gfx driver
+ * for GVT-g use:
+ * [0xDF000000, 0xDF800000)  8M, GOP FB, used OvmfPkg/GvtGopDxe for 1080p@30
+ * [0xDFFFD000, 0xDFFFF000)  8K, OpRegion, used by GvtGopDxe and GVT-g
+ * [0xDFFFF000, 0XE0000000)  4K, Reserved, not used
+ * for GVT-d use:
+ * [0xDFFFC000, 0xDFFFE000)  8K, OpRegion, used by native GOP and gfx driver
+ * [0xDFFFE000, 0XE0000000]  8K, Extended OpRegion, store raw VBT
+ * 
+ * OpRegion: 8KB(0x2000)
+ * [ OpRegion Header      ] Offset: 0x0
+ * [ Mailbox #1: ACPI     ] Offset: 0x100
+ * [ Mailbox #2: SWSCI    ] Offset: 0x200
+ * [ Mailbox #3: ASLE     ] Offset: 0x300
+ * [ Mailbox #4: VBT      ] Offset: 0x400
+ * [ Mailbox #5: ASLE EXT ] Offset: 0x1C00
+ * Extended OpRegion: 8KB(0x2000)
+ * [ Raw VBT              ] Offset: 0x0
+ * If VBT <= 6KB, stores in Mailbox #4
+ * If VBT > 6KB, stores in Extended OpRegion
+ * ASLE.rvda stores the location of VBT.
+ * For OpRegion 2.1+: ASLE.rvda = offset to OpRegion base address
+ * For OpRegion 2.0:  ASLE.rvda = physical address, not support currently
  */
-#define GPU_OPREGION_GPA  		0xDFFFD000
+#define GPU_DSM_GPA  			0xDB000000
+#define GPU_DSM_SIZE			0x4000000
+#define GPU_OPREGION_GPA  		0xDFFFC000
+#define GPU_OPREGION_SIZE		0x4000
 
 extern uint64_t audio_nhlt_len;
 
