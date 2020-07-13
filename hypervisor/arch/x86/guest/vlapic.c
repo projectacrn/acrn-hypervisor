@@ -1101,6 +1101,7 @@ vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, bool is_broadcast
 static void
 vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode, uint32_t icr_low)
 {
+	get_vm_lock(target_vcpu->vm);
 	if (mode == APIC_DELMODE_INIT) {
 		if ((icr_low & APIC_LEVEL_MASK) != APIC_LEVEL_DEASSERT) {
 
@@ -1144,6 +1145,7 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode, uint32_t 
 	} else {
 		/* No other state currently, do nothing */
 	}
+	put_vm_lock(target_vcpu->vm);
 	return;
 }
 

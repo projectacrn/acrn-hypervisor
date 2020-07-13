@@ -119,6 +119,10 @@ struct vm_arch {
 } __aligned(PAGE_SIZE);
 
 struct acrn_vm {
+	/* vm_state_lock MUST be the first field in VM structure it will not clear zero when creating VM
+	 * this lock initialization depends on the clear BSS section
+	 */
+	spinlock_t vm_state_lock;/* Spin-lock used to protect vm/vcpu state transition for a VM */
 	struct vm_arch arch_vm; /* Reference to this VM's arch information */
 	struct vm_hw_info hw;	/* Reference to this VM's HW information */
 	struct vm_sw_info sw;	/* Reference to SW associated with this VM */
@@ -132,7 +136,6 @@ struct acrn_vm {
 	struct iommu_domain *iommu;	/* iommu domain of this VM */
 	spinlock_t vlapic_mode_lock;	/* Spin-lock used to protect vlapic_mode modifications for a VM */
 	spinlock_t ept_lock;	/* Spin-lock used to protect ept add/modify/remove for a VM */
-
 	spinlock_t emul_mmio_lock;	/* Used to protect emulation mmio_node concurrent access for a VM */
 	uint16_t max_emul_mmio_regions;	/* max index of the emulated mmio_region */
 	struct mem_io_node emul_mmio[CONFIG_MAX_EMULATED_MMIO_REGIONS];
@@ -152,7 +155,6 @@ struct acrn_vm {
 	uint32_t vcpuid_entry_nr, vcpuid_level, vcpuid_xlevel;
 	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
 	struct acrn_vpci vpci;
-
 	uint8_t vrtc_offset;
 
 	uint64_t intr_inject_delay_delta; /* delay of intr injection */
@@ -246,6 +248,15 @@ struct acrn_vm *get_highest_severity_vm(bool runtime);
 bool vm_hide_mtrr(const struct acrn_vm *vm);
 void update_vm_vlapic_state(struct acrn_vm *vm);
 enum vm_vlapic_mode check_vm_vlapic_mode(const struct acrn_vm *vm);
+/*
+ * @pre vm != NULL
+ */
+void get_vm_lock(struct acrn_vm *vm);
+
+/*
+ * @pre vm != NULL
+ */
+void put_vm_lock(struct acrn_vm *vm);
 #endif /* !ASSEMBLER */
 
 #endif /* VM_H_ */

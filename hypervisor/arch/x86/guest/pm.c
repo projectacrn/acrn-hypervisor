@@ -152,6 +152,7 @@ static bool pm1ab_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 
 static inline void enter_s5(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
+	get_vm_lock(vm);
 	/*
 	 * It's possible that ACRN come here from SOS and pre-launched VM. Currently, we
 	 * assume SOS has full ACPI power management stack. That means the value from SOS
@@ -162,12 +163,14 @@ static inline void enter_s5(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t 
 	}
 	pause_vm(vm);
 	(void)shutdown_vm(vm);
+	put_vm_lock(vm);
 }
 
 static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
 	uint32_t guest_wakeup_vec32;
 
+	get_vm_lock(vm);
 	/* Save the wakeup vec set by guest OS. Will return to guest
 	 * with this wakeup vec as entry.
 	 */
@@ -178,6 +181,7 @@ static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t 
 	pause_vm(vm);	/* pause sos_vm before suspend system */
 	host_enter_s3(vm->pm.sx_state_data, pm1a_cnt_val, pm1b_cnt_val);
 	resume_vm_from_s3(vm, guest_wakeup_vec32);	/* jump back to vm */
+	put_vm_lock(vm);
 }
 
 /**

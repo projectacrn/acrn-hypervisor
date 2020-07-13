@@ -394,7 +394,8 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 
 	/* Allocate memory for virtual machine */
 	vm = &vm_array[vm_id];
-	(void)memset((void *)vm, 0U, sizeof(struct acrn_vm));
+	/* the vm_state lock field need to remain unchanged in vm data structure */
+	(void)memset((void *)&vm->arch_vm, 0U, (sizeof(struct acrn_vm) - sizeof(spinlock_t)));
 	vm->vm_id = vm_id;
 	vm->hw.created_vcpus = 0U;
 
@@ -437,7 +438,6 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 
 	if (status == 0) {
 		prepare_epc_vm_memmap(vm);
-
 		spinlock_init(&vm->vlapic_mode_lock);
 		spinlock_init(&vm->ept_lock);
 		spinlock_init(&vm->emul_mmio_lock);
@@ -890,4 +890,19 @@ void make_shutdown_vm_request(uint16_t pcpu_id)
 bool need_shutdown_vm(uint16_t pcpu_id)
 {
 	return bitmap_test_and_clear_lock(NEED_SHUTDOWN_VM, &per_cpu(pcpu_flag, pcpu_id));
+}
+
+/*
+ * @pre vm != NULL
+ */
+void get_vm_lock(struct acrn_vm *vm)
+{
+	spinlock_obtain(&vm->vm_state_lock);
+}
+/*
+ * @pre vm != NULL
+ */
+void put_vm_lock(struct acrn_vm *vm)
+{
+	spinlock_release(&vm->vm_state_lock);
 }
