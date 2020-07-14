@@ -2523,7 +2523,8 @@ done:
 
 #define XHCI_GET_SLOT(xdev, trb, slot, cmderr)			\
 	do {								\
-		slot = (XHCI_TRB_3_SLOT_GET(trb->dwTrb3)) ? 0 :		\
+		slot = (XHCI_TRB_3_SLOT_GET(trb->dwTrb3) >              \
+			XHCI_MAX_SLOTS) ? 0 :   			\
 			XHCI_TRB_3_SLOT_GET(trb->dwTrb3);		\
 		if (!slot)						\
 			cmderr = XHCI_TRB_ERROR_INVALID;		\
