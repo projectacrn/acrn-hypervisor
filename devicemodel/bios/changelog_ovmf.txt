@@ -1,3 +1,11 @@
+OVMF release v2.1
+
+- Enable AcrnLapicTimerDxe
+- Enable AcrnTscTimerLib
+- Lapic Timer Driver
+- Change LVT timer register structure of Lapic
+- Add AcrnTscTimerLib
+
 OVMF release v2.0
 
 - Add Platform GOP Policy
