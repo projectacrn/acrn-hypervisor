@@ -7,7 +7,7 @@
 #define BOARD_H
 
 #include <types.h>
-#include <misc_cfg.h>
+#include <board_info.h>
 #include <host_pm.h>
 #include <pci.h>
 
