@@ -600,9 +600,11 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
             print("   $intr_storm_monitor \\", file=config)
             break
 
+    if uos_type != "PREEMPT-RT LINUX":
+        print("   -s 1:0,lpc \\", file=config)
+
     # redirect console
     if dm['vuart0'][vmid] == "Enable":
-        print("   -s 1:0,lpc \\", file=config)
         print("   -l com1,stdio \\", file=config)
 
     if launch_cfg_lib.is_linux_like(uos_type) or uos_type in ("ANDROID", "ALIOS"):
