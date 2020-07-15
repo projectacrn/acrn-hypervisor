@@ -494,11 +494,13 @@ static int32_t write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 	} else if (sriovcap_access(vdev, offset)) {
 		write_sriov_cap_reg(vdev, offset, bytes, val);
 	} else {
-		if (!is_quirk_ptdev(vdev)) {
-			/* passthru to physical device */
-			pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
-		} else {
-			ret = -ENODEV;
+		if (offset != vdev->pdev->sriov.pre_pos) {
+			if (!is_quirk_ptdev(vdev)) {
+				/* passthru to physical device */
+				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+			} else {
+				ret = -ENODEV;
+			}
 		}
 	}
 
@@ -519,7 +521,9 @@ static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
 	} else if (sriovcap_access(vdev, offset)) {
 		read_sriov_cap_reg(vdev, offset, bytes, val);
 	} else {
-		if (!is_quirk_ptdev(vdev)) {
+		if (offset == vdev->pdev->sriov.pre_pos) {
+			*val = pci_vdev_read_vcfg(vdev, offset, bytes);
+		} else if (!is_quirk_ptdev(vdev)) {
 			/* passthru to physical device */
 			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
 		} else {

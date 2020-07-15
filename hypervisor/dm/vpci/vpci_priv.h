@@ -156,4 +156,6 @@ void pci_vdev_write_vcfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 
 uint32_t pci_vdev_read_vbar(const struct pci_vdev *vdev, uint32_t idx);
 void pci_vdev_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val);
+
+void vdev_pt_hide_sriov_cap(struct pci_vdev *vdev);
 #endif /* VPCI_PRIV_H_ */
