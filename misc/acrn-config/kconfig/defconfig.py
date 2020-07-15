@@ -21,6 +21,7 @@ def main():
         sys.exit(1)
 
     target_board = os.environ['BOARD']
+    target_scenario = os.environ['SCENARIO']
 
     kconfig_path = sys.argv[1]
     if not os.path.isfile(kconfig_path):
@@ -30,7 +31,7 @@ def main():
     kconfig = kconfiglib.Kconfig(kconfig_path)
     defconfig_path = kconfig.defconfig_filename
     if not defconfig_path or not os.path.isfile(defconfig_path):
-        sys.stderr.write("No defconfig found for board %s.\n" % target_board)
+        sys.stderr.write("No defconfig found for BOARD %s on SCENARIO %s.\n" % (target_board, target_scenario))
         sys.exit(1)
 
     kconfig.load_config(defconfig_path)

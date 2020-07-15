@@ -19,6 +19,10 @@ HV_OBJDIR ?= $(CURDIR)/build
 HV_MODDIR ?= $(HV_OBJDIR)/modules
 HV_FILE := acrn
 
+ifeq ($(TARGET_DIR),)
+  override TARGET_DIR := $(realpath ../misc/vm_configs)
+endif
+
 LIB_MOD = $(HV_MODDIR)/lib_mod.a
 BOOT_MOD = $(HV_MODDIR)/boot_mod.a
 HW_MOD = $(HV_MODDIR)/hw_mod.a
@@ -55,13 +59,9 @@ override BOARD := $(shell echo $(CONFIG_BOARD) |sed 's/"//g')
 #override SCENARIO from CONFIG_SCENARIO, which is specified in kconfig.mk
 override SCENARIO := $(shell echo $(CONFIG_SCENARIO) |sed 's/"//g')
 
-ifeq ($(TARGET_DIR),)
-  BOARD_CFG_DIR := arch/x86/configs/$(BOARD)
-  SCENARIO_CFG_DIR := scenarios/$(SCENARIO)
-else
-  BOARD_CFG_DIR := $(TARGET_DIR)/$(BOARD)
-  SCENARIO_CFG_DIR := $(TARGET_DIR)/$(SCENARIO)
-endif
+BOARD_INFO_DIR := $(TARGET_DIR)/boards/$(BOARD)
+SCENARIO_CFG_DIR := $(TARGET_DIR)/scenarios/$(SCENARIO)
+BOARD_CFG_DIR := $(SCENARIO_CFG_DIR)/$(BOARD)
 
 include ../paths.make
 
@@ -162,6 +162,7 @@ INCLUDE_PATH += include/hw
 INCLUDE_PATH += boot/include
 INCLUDE_PATH += boot/include/guest
 INCLUDE_PATH += $(HV_OBJDIR)/include
+INCLUDE_PATH += $(BOARD_INFO_DIR)
 INCLUDE_PATH += $(BOARD_CFG_DIR)
 INCLUDE_PATH += $(SCENARIO_CFG_DIR)
 
@@ -250,11 +251,6 @@ HW_C_SRCS += common/sched_bvt.c
 endif
 HW_C_SRCS += hw/pci.c
 HW_C_SRCS += arch/x86/configs/vm_config.c
-HW_C_SRCS += $(BOARD_CFG_DIR)/board.c
-HW_C_SRCS += $(SCENARIO_CFG_DIR)/vm_configurations.c
-ifneq (,$(wildcard $(SCENARIO_CFG_DIR)/pci_dev.c))
-HW_C_SRCS += $(SCENARIO_CFG_DIR)/pci_dev.c
-endif
 HW_C_SRCS += boot/acpi_base.c
 HW_C_SRCS += boot/cmdline.c
 # ACPI parsing component
@@ -266,6 +262,13 @@ endif
 HW_C_SRCS += boot/guest/vboot_wrapper.c
 HW_C_SRCS += boot/guest/deprivilege_boot.c
 HW_C_SRCS += boot/guest/direct_boot.c
+
+# VM Configuration
+VM_CFG_C_SRCS += $(BOARD_INFO_DIR)/board.c
+VM_CFG_C_SRCS += $(SCENARIO_CFG_DIR)/vm_configurations.c
+ifneq (,$(wildcard $(BOARD_CFG_DIR)/pci_dev.c))
+VM_CFG_C_SRCS += $(BOARD_CFG_DIR)/pci_dev.c
+endif
 
 # virtual platform base component
 VP_BASE_C_SRCS += arch/x86/guest/vcpuid.c
@@ -335,6 +338,7 @@ BOOT_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(BOOT_C_SRCS))
 BOOT_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(BOOT_S_SRCS))
 HW_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(HW_C_SRCS))
 HW_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(HW_S_SRCS))
+VM_CFG_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(realpath $(VM_CFG_C_SRCS)))
 VP_BASE_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_BASE_C_SRCS))
 VP_BASE_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(VP_BASE_S_SRCS))
 VP_DM_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_DM_C_SRCS))
@@ -374,8 +378,8 @@ VERSION := $(HV_OBJDIR)/include/version.h
 
 # Create platform_acpi_info.h
 TEMPLATE_ACPI_INFO_HEADER := arch/x86/configs/platform_acpi_info.h
-BOARDTEMPLATE_ACPI_INFO_HEADER := arch/x86/configs/$(BOARD)/platform_acpi_info.h
-SOURCE_ACPI_INFO_HEADER := $(BOARD_CFG_DIR)/$(BOARD)_acpi_info.h
+BOARDTEMPLATE_ACPI_INFO_HEADER := $(BOARD_INFO_DIR)/platform_acpi_info.h
+SOURCE_ACPI_INFO_HEADER := $(BOARD_INFO_DIR)/$(BOARD)_acpi_info.h
 TARGET_ACPI_INFO_HEADER := $(HV_OBJDIR)/include/platform_acpi_info.h
 
 $(TARGET_ACPI_INFO_HEADER): $(HV_OBJDIR)/$(HV_CONFIG)
@@ -434,8 +438,8 @@ $(BOOT_MOD): $(BOOT_S_OBJS) $(BOOT_C_OBJS)
 
 boot-mod: $(BOOT_MOD)
 
-$(HW_MOD): $(HW_S_OBJS) $(HW_C_OBJS)
-	$(AR) $(ARFLAGS) $(HW_MOD) $(HW_S_OBJS) $(HW_C_OBJS)
+$(HW_MOD): $(HW_S_OBJS) $(HW_C_OBJS) $(VM_CFG_C_OBJS)
+	$(AR) $(ARFLAGS) $(HW_MOD) $(HW_S_OBJS) $(HW_C_OBJS) $(VM_CFG_C_OBJS)
 
 hw-mod: $(HW_MOD)
 

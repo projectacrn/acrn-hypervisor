@@ -36,8 +36,8 @@ ifeq ($(shell [ $(HV_OBJDIR)/$(HV_CONFIG) -nt $(HV_OBJDIR)/$(HV_CONFIG_MK) ] && 
 # only happens when GNU make checks the prerequisites.
 -include $(HV_OBJDIR)/$(HV_CONFIG)
 endif
-$(eval $(call override_config,BOARD,apl-mrb))
-$(eval $(call override_config,SCENARIO,))
+$(eval $(call override_config,BOARD,nuc7i7dnb))
+$(eval $(call override_config,SCENARIO,industry))
 $(eval $(call override_config,RELEASE,y))
 
 override RELEASE := $(CONFIG_RELEASE)
@@ -68,18 +68,19 @@ $(HV_OBJDIR)/$(HV_CONFIG_H): $(HV_OBJDIR)/$(HV_CONFIG)
 .PHONY: defconfig
 defconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
-	@if ([ "$(KCONFIG_FILE)" == "" ] || ([ "$(KCONFIG_FILE)" != "" ] && [ ! -f $(KCONFIG_FILE) ])) && [ "$(CONFIG_XML_ENABLED)" != "true" ]; then \
-		BOARD=$(CONFIG_BOARD) python3 $(KCONFIG_DIR)/defconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG); \
+	@BOARD=$(CONFIG_BOARD) SCENARIO=$(CONFIG_SCENARIO); \
+	if ([ "$(KCONFIG_FILE)" = "" ] || ([ "$(KCONFIG_FILE)" != "" ] && [ ! -f $(KCONFIG_FILE) ])) && [ "$(CONFIG_XML_ENABLED)" != "true" ]; then \
+		python3 $(KCONFIG_DIR)/defconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG); \
 	else \
 		if [ "$(KCONFIG_FILE)" != "" ] && [ -f $(KCONFIG_FILE) ]; then \
 			echo "Writing $(HV_OBJDIR)/$(HV_CONFIG) with $(KCONFIG_FILE)"; \
 			cp $(KCONFIG_FILE) $(HV_OBJDIR)/$(HV_CONFIG); \
 		elif [ "$(TARGET_DIR)" != "" ] && [ -d $(TARGET_DIR) ]; then \
-			if [ ! -f $(TARGET_DIR)/$(BOARD).config ]; then \
-				echo "Board defconfig file $(BOARD).config is not found under $(TARGET_DIR)."; exit 1; \
+			if [ ! -f $(TARGET_DIR)/scenarios/$(SCENARIO)/$(BOARD)/$(BOARD).config ]; then \
+				echo "Board defconfig file $(BOARD).config is not found under $(TARGET_DIR)/scenarios/$(SCENARIO)/$(BOARD)/."; exit 1; \
 			fi; \
-			echo "Writing $(HV_OBJDIR)/$(HV_CONFIG) with $(TARGET_DIR)/$(BOARD).config"; \
-			cp $(TARGET_DIR)/$(BOARD).config $(HV_OBJDIR)/$(HV_CONFIG); \
+			echo "Writing $(HV_OBJDIR)/$(HV_CONFIG) with $(BOARD_CFG_DIR)/$(BOARD).config"; \
+			cp $(TARGET_DIR)/scenarios/$(SCENARIO)/$(BOARD)/$(BOARD).config $(HV_OBJDIR)/$(HV_CONFIG); \
 		fi; \
 		python3 $(KCONFIG_DIR)/silentoldconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG) RELEASE=$(RELEASE); \
 	fi
@@ -91,7 +92,7 @@ defconfig: $(KCONFIG_DEPS)
 .PHONY: oldconfig
 oldconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
-	@BOARD=$(CONFIG_BOARD) \
+	@BOARD=$(CONFIG_BOARD) SCENARIO=$(CONFIG_SCENARIO) \
 	 python3 $(KCONFIG_DIR)/silentoldconfig.py Kconfig \
 		$(HV_OBJDIR)/$(HV_CONFIG) \
 		SCENARIO=$(CONFIG_SCENARIO) RELEASE=$(RELEASE)

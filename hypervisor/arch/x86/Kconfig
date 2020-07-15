@@ -59,7 +59,7 @@ config BOARD
 config DEFCONFIG_LIST
 	string
 	option defconfig_list
-	default "arch/x86/configs/$BOARD.config"
+	default "../misc/vm_configs/scenarios/$SCENARIO/$(BOARD)/$BOARD.config"
 
 config RELEASE
 	bool "Release build"
