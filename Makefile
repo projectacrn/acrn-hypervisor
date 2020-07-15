@@ -3,7 +3,6 @@
 # global helper variables
 T := $(CURDIR)
 
-# $(TARGET_DIR) must be relative path under $(T)
 TARGET_DIR ?=
 
 # BOARD/SCENARIO/BOARD_FILE/SCENARIO_FILE/KCONFIG_FILE parameters sanity check:
@@ -44,12 +43,15 @@ ifneq ($(BOARD)$(SCENARIO),)
   endif
 endif
 
-ifeq ($(BOARD_FILE)$(SCENARIO_FILE),)
-  ifneq ($(TARGET_DIR),)
-    ifneq ($(TARGET_DIR), $(wildcard $(TARGET_DIR)))
+ifneq ($(TARGET_DIR),)
+  CFG_DIR := $(realpath $(TARGET_DIR))
+  ifeq ($(CFG_DIR),)
+    ifeq ($(BOARD_FILE)$(SCENARIO_FILE),)
       $(error TARGET_DIR $(TARGET_DIR) does not exist)
     endif
   endif
+
+  override TARGET_DIR := $(abspath $(TARGET_DIR))
 endif
 
 ifneq ($(BOARD_FILE)$(SCENARIO_FILE),)
@@ -95,6 +97,12 @@ endif
 
 BOARD ?= kbl-nuc-i7
 
+ifeq ($(BOARD), apl-nuc)
+  override BOARD := nuc6cayh
+else ifeq ($(BOARD), kbl-nuc-i7)
+  override BOARD := nuc7i7dnb
+endif
+
 ifneq (,$(filter $(BOARD),apl-mrb))
 	FIRMWARE ?= sbl
 else
@@ -112,21 +120,16 @@ TOOLS_OUT := $(ROOT_OUT)/misc/tools
 DOC_OUT := $(ROOT_OUT)/doc
 BUILD_VERSION ?=
 BUILD_TAG ?=
-GENED_ACPI_INFO_HEADER = $(T)/hypervisor/arch/x86/configs/$(BOARD)/$(BOARD)_acpi_info.h
 HV_CFG_LOG = $(HV_OUT)/cfg.log
-DEFAULT_DEFCONFIG_DIR = $(T)/hypervisor/arch/x86/configs
+VM_CONFIGS_DIR = $(T)/misc/vm_configs
+DEFCONFIG_FILE = scenarios/$(SCENARIO)/$(BOARD)/$(BOARD).config
+GENED_ACPI_INFO_HEADER = $(VM_CONFIGS_DIR)/boards/$(BOARD)/$(BOARD)_acpi_info.h
 
 export TOOLS_OUT BOARD SCENARIO FIRMWARE RELEASE
 
 .PHONY: all hypervisor devicemodel tools doc
 all: hypervisor devicemodel tools
 	@cat $(HV_CFG_LOG)
-
-ifeq ($(BOARD), apl-nuc)
-  override BOARD := nuc6cayh
-else ifeq ($(BOARD), kbl-nuc-i7)
-  override BOARD := nuc7i7dnb
-endif
 
 include $(T)/hypervisor/scripts/makefile/cfg_update.mk
 
@@ -160,9 +163,9 @@ hypervisor:
 	@if [ "$(BOARD_FILE)" != "" ] && [ -f $(BOARD_FILE) ] && [ "$(SCENARIO_FILE)" != "" ] && [ -f $(SCENARIO_FILE) ] && [ "$(TARGET_DIR)" = "" ]; then \
 		echo "No TARGET_DIR parameter is specified, the original configuration source is overwritten!";\
 	fi
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(abspath $(TARGET_DIR)) defconfig;
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(abspath $(TARGET_DIR)) oldconfig;
-	$(MAKE) -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(abspath $(TARGET_DIR))
+	$(MAKE) -C $(T)/hypervisor BOARD=$(BOARD) HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(TARGET_DIR) defconfig;
+	$(MAKE) -C $(T)/hypervisor BOARD=$(BOARD) HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(TARGET_DIR) oldconfig;
+	$(MAKE) -C $(T)/hypervisor BOARD=$(BOARD) HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(TARGET_DIR)
 #ifeq ($(FIRMWARE),uefi)
 	@if [ "$(SCENARIO)" != "logical_partition" ] && [ "$(SCENARIO)" != "hybrid" ]; then \
 		echo "building hypervisor as EFI executable..."; \
@@ -175,21 +178,22 @@ hypervisor:
 	if [ -f $(KCONFIG_FILE) ]; then \
 		echo -e "Hypervisor configuration is based on:\n\tKconfig file:\t$(KCONFIG_FILE);" >> $(HV_CFG_LOG); \
 	fi; \
+	echo -e "Hypervisor configuration is based on:" >> $(HV_CFG_LOG); \
 	if [ "$(TARGET_DIR)" = "" ]; then \
 		if [ ! -f $(KCONFIG_FILE) ]; then \
-			echo -e "Hypervisor configuration is based on:\n\t$(BOARD) " \
-				"defconfig file:\t$(DEFAULT_DEFCONFIG_DIR)/$(BOARD).config;" >> $(HV_CFG_LOG); \
+			echo -e "\tdefconfig file:\t\t\t$(VM_CONFIGS_DIR)/$(DEFCONFIG_FILE);" >> $(HV_CFG_LOG); \
 		fi; \
 	elif [ ! -f $(KCONFIG_FILE) ]; then \
-		echo -e "Hypervisor configuration is based on:\n\t$(BOARD) " \
-			"defconfig file:\t$(abspath $(TARGET_DIR))/$(BOARD).config;" >> $(HV_CFG_LOG); \
+		echo -e "\tdefconfig file:\t\t\t$(TARGET_DIR)/$(DEFCONFIG_FILE);" >> $(HV_CFG_LOG); \
 	fi; \
 	echo -e "\tOthers are set by default in:\t$(T)/hypervisor/arch/x86/Kconfig;" >> $(HV_CFG_LOG); \
+	echo -e "VM configuration is based on:" >> $(HV_CFG_LOG); \
 	if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
-		echo -e "VM configuration is based on:\n\tBOARD File:\t$(BOARD_FILE);" \
-			"\n\tSCENARIO File:\t$(SCENARIO_FILE);" >> $(HV_CFG_LOG); \
+		echo -e "\tBOARD File:\t\t$(BOARD_FILE);\n\t\tSCENARIO File:\t$(SCENARIO_FILE);" >> $(HV_CFG_LOG); \
+	elif [ "$(TARGET_DIR)" = "" ]; then \
+		echo -e "\tSource code at:\t\t\t$(VM_CONFIGS_DIR)" >> $(HV_CFG_LOG); \
 	else \
-		echo "VM configuration is based on current code base;" >> $(HV_CFG_LOG); \
+		echo -e "\tSource code at:\t\t\t$(TARGET_DIR)" >> $(HV_CFG_LOG); \
 	fi; \
 	if [ -f $(GENED_ACPI_INFO_HEADER) ] && [ "$(CONFIG_XML_ENABLED)" != "true" ] && [ "TARGET_DIR" = "" ]; then \
 		echo -e "\033[33mWarning: The platform ACPI info is based on acrn-config generated $(GENED_ACPI_INFO_HEADER), please make sure its validity.\033[0m" >> $(HV_CFG_LOG); \

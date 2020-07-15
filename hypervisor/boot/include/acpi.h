@@ -7,8 +7,7 @@
 #ifndef ACPI_H
 #define ACPI_H
 
-#include <vm_configurations.h>
-
+#include <board_info.h>
 
 #define ACPI_RSDP_CHECKSUM_LENGTH   20U
 #define ACPI_RSDP_XCHECKSUM_LENGTH  36U
