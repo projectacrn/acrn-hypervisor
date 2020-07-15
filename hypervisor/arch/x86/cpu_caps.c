@@ -481,6 +481,9 @@ int32_t detect_hardware_support(void)
 	} else if (!pcpu_has_cap(X86_FEATURE_XSAVES)) {
 		printf("%s, XSAVES not supported\n", __func__);
 		ret = -ENODEV;
+	} else if (!pcpu_has_cap(X86_FEATURE_SSE)) {
+		printf("%s, SSE not supported\n", __func__);
+		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_COMPACTION_EXT)) {
 		printf("%s, Compaction extensions in XSAVE is not supported\n", __func__);
 		ret = -ENODEV;

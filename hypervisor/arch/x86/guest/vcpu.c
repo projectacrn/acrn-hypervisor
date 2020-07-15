@@ -754,14 +754,16 @@ void save_xsave_area(struct ext_context *ectx)
 {
 	ectx->xcr0 = read_xcr(0);
 	ectx->xss = msr_read(MSR_IA32_XSS);
+	write_xcr(0, ectx->xcr0 | XSAVE_SSE);
 	xsaves(&ectx->xs_area, UINT64_MAX);
 }
 
 void rstore_xsave_area(const struct ext_context *ectx)
 {
-	write_xcr(0, ectx->xcr0);
+	write_xcr(0, ectx->xcr0 | XSAVE_SSE);
 	msr_write(MSR_IA32_XSS, ectx->xss);
 	xrstors(&ectx->xs_area, UINT64_MAX);
+	write_xcr(0, ectx->xcr0);
 }
 
 /* TODO:
