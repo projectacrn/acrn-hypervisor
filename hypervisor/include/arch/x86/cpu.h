@@ -158,6 +158,7 @@
 #define XSAVE_COMPACTED_FORMAT			(1UL << 63U)
 
 #define XSAVE_FPU				(1UL << 0U)
+#define XSAVE_SSE				(1UL << 1U)
 
 #define	CPU_CONTEXT_OFFSET_RAX			0U
 #define	CPU_CONTEXT_OFFSET_RCX			8U
