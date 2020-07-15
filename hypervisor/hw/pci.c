@@ -663,7 +663,7 @@ static inline uint32_t pci_pdev_get_nr_bars(uint8_t hdr_type)
  */
 static void pci_enumerate_ext_cap(struct pci_pdev *pdev) {
 
-	uint32_t hdr, pos;
+	uint32_t hdr, pos, pre_pos = 0U;
 
 	pos = PCI_ECAP_BASE_PTR;
 
@@ -673,12 +673,13 @@ static void pci_enumerate_ext_cap(struct pci_pdev *pdev) {
 		if (PCI_ECAP_ID(hdr) == PCIZ_SRIOV) {
 			pdev->sriov.capoff = pos;
 			pdev->sriov.caplen = PCI_SRIOV_CAP_LEN;
+			pdev->sriov.pre_pos = pre_pos;
 		}
+		pre_pos = pos;
 		pos = PCI_ECAP_NEXT(hdr);
 		if (pos == 0U) {
 			break;
 		}
-
 		hdr = pci_pdev_read_cfg(pdev->bdf, pos, 4U);
 	};
 }

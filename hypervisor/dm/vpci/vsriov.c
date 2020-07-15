@@ -273,8 +273,12 @@ void init_vsriov(struct pci_vdev *vdev)
  */
 void read_sriov_cap_reg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
-	/* no need to do emulation, passthrough to physical device directly */
-	*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+	if (!vdev->pdev->sriov.hide_sriov) {
+		/* no need to do emulation, passthrough to physical device directly */
+		*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
+	} else {
+		*val = 0xffffffffU;
+	}
 }
 
 /**
@@ -287,41 +291,43 @@ void write_sriov_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 	uint32_t reg;
 
 	reg = offset - vdev->sriov.capoff;
-	if (reg == PCIR_SRIOV_CONTROL) {
-		bool enable;
+	if (!vdev->pdev->sriov.hide_sriov) {
+		if (reg == PCIR_SRIOV_CONTROL) {
+			bool enable;
 
-		enable = (((val & PCIM_SRIOV_VF_ENABLE) != 0U) ? true : false);
-		if (enable != is_vf_enabled(vdev)) {
-			if (enable) {
-				/*
-				 * set VF_ENABLE to PF physical device before enable_vfs
-				 * since need to ask hardware to create VF physical
-				 * devices firstly
-				 */
-				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
-				enable_vfs(vdev);
+			enable = (((val & PCIM_SRIOV_VF_ENABLE) != 0U) ? true : false);
+			if (enable != is_vf_enabled(vdev)) {
+				if (enable) {
+					/*
+					 * set VF_ENABLE to PF physical device before enable_vfs
+					 * since need to ask hardware to create VF physical
+					 * devices firstly
+					 */
+					pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+					enable_vfs(vdev);
+				} else {
+					disable_vfs(vdev);
+					pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+				}
 			} else {
-				disable_vfs(vdev);
+				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
+			}
+		} else if (reg == PCIR_SRIOV_NUMVFS) {
+			uint16_t total;
+
+			total = read_sriov_reg(vdev, PCIR_SRIOV_TOTAL_VFS);
+			/*
+			 * sanity check for NumVFs register based on PCE Express Base 4.0 9.3.3.7 chapter
+			 * The results are undefined if NumVFs is set to a value greater than TotalVFs
+			 * NumVFs may only be written while VF Enable is Clear
+			 * If NumVFs is written when VF Enable is Set, the results are undefined
+			 */
+			if ((((uint16_t)(val & 0xFFU)) <= total) && (!is_vf_enabled(vdev))) {
 				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
 			}
 		} else {
 			pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
 		}
-	} else if (reg == PCIR_SRIOV_NUMVFS) {
-		uint16_t total;
-
-		total = read_sriov_reg(vdev, PCIR_SRIOV_TOTAL_VFS);
-		/*
-		 * sanity check for NumVFs register based on PCE Express Base 4.0 9.3.3.7 chapter
-		 * The results are undefined if NumVFs is set to a value greater than TotalVFs
-		 * NumVFs may only be written while VF Enable is Clear
-		 * If NumVFs is written when VF Enable is Set, the results are undefined
-		 */
-		if ((((uint16_t)(val & 0xFFU)) <= total) && (!is_vf_enabled(vdev))) {
-			pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
-		}
-	} else {
-		pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
 	}
 }
 

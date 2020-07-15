@@ -345,6 +345,21 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 	}
 }
 
+void vdev_pt_hide_sriov_cap(struct pci_vdev *vdev)
+{
+	uint32_t pre_pos = vdev->pdev->sriov.pre_pos;
+	uint32_t pre_hdr, hdr, vhdr;
+
+	pre_hdr = pci_pdev_read_cfg(vdev->pdev->bdf, pre_pos, 4U);
+	hdr = pci_pdev_read_cfg(vdev->pdev->bdf, vdev->pdev->sriov.capoff, 4U);
+
+	vhdr = pre_hdr & 0xfffffU;
+	vhdr |= hdr & 0xfff00000U;
+	pci_vdev_write_vcfg(vdev, pre_pos, 4U, vhdr);
+	vdev->pdev->sriov.hide_sriov = true;
+
+	pr_acrnlog("Hide sriov cap for %02x:%02x.%x", vdev->pdev->bdf.bits.b, vdev->pdev->bdf.bits.d, vdev->pdev->bdf.bits.f);
+}
 /*
  * @brief Initialize a specified passthrough vdev structure.
  *

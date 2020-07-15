@@ -221,6 +221,8 @@ struct pci_msix_cap {
 struct pci_sriov_cap {
 	uint32_t  capoff;
 	uint32_t  caplen;
+	uint32_t  pre_pos;
+	bool hide_sriov;
 };
 
 struct pci_pdev {
