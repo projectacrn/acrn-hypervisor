@@ -123,7 +123,6 @@ BUILD_TAG ?=
 HV_CFG_LOG = $(HV_OUT)/cfg.log
 VM_CONFIGS_DIR = $(T)/misc/vm_configs
 DEFCONFIG_FILE = scenarios/$(SCENARIO)/$(BOARD)/$(BOARD).config
-GENED_ACPI_INFO_HEADER = $(VM_CONFIGS_DIR)/boards/$(BOARD)/$(BOARD)_acpi_info.h
 
 export TOOLS_OUT BOARD SCENARIO FIRMWARE RELEASE
 
@@ -194,10 +193,7 @@ hypervisor:
 		echo -e "\tSource code at:\t\t\t$(VM_CONFIGS_DIR)" >> $(HV_CFG_LOG); \
 	else \
 		echo -e "\tSource code at:\t\t\t$(TARGET_DIR)" >> $(HV_CFG_LOG); \
-	fi; \
-	if [ -f $(GENED_ACPI_INFO_HEADER) ] && [ "$(CONFIG_XML_ENABLED)" != "true" ] && [ "TARGET_DIR" = "" ]; then \
-		echo -e "\033[33mWarning: The platform ACPI info is based on acrn-config generated $(GENED_ACPI_INFO_HEADER), please make sure its validity.\033[0m" >> $(HV_CFG_LOG); \
-	fi
+	fi;
 	@cat $(HV_CFG_LOG)
 
 devicemodel: tools
