@@ -275,6 +275,32 @@ int32_t hcall_assign_pcidev(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 int32_t hcall_deassign_pcidev(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 
 /**
+ * @brief Assign one MMIO dev to VM.
+ *
+ * @param vm Pointer to VM data structure
+ * @param vmid ID of the VM
+ * @param param guest physical address. This gpa points to data structure of
+ *              acrn_mmiodev including assign MMIO device info
+ *
+ * @pre Pointer vm shall point to SOS_VM
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_assign_mmiodev(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
+
+/**
+ * @brief Deassign one MMIO dev to VM.
+ *
+ * @param vm Pointer to VM data structure
+ * @param vmid ID of the VM
+ * @param param guest physical address. This gpa points to data structure of
+ *              acrn_mmiodev including deassign MMIO device info
+ *
+ * @pre Pointer vm shall point to SOS_VM
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_deassign_mmiodev(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
+
+/**
  * @brief Set interrupt mapping info of ptdev.
  *
  * @param vm Pointer to VM data structure
