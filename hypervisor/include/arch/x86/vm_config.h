@@ -14,6 +14,7 @@
 #include <vm_uuids.h>
 #include <vm_configurations.h>
 #include <sgx.h>
+#include <acrn_hv_defs.h>
 
 #define CONFIG_MAX_VM_NUM	(PRE_VM_NUM + SOS_VM_NUM + MAX_POST_VM_NUM)
 
@@ -32,6 +33,8 @@
 #define PCI_DEV_TYPE_PTDEV	(1U << 0U)
 #define PCI_DEV_TYPE_HVEMUL	(1U << 1U)
 #define PCI_DEV_TYPE_SOSEMUL	(1U << 2U)
+
+#define MAX_MMIO_DEV_NUM	2U
 
 #define CONFIG_SOS_VM		.load_order = SOS_VM,	\
 				.uuid = SOS_VM_UUID,	\
@@ -174,6 +177,8 @@ struct acrn_vm_config {
 							 */
 
 	struct vuart_config vuart[MAX_VUART_NUM_PER_VM];/* vuart configuration for VM */
+
+	struct acrn_mmiodev mmiodevs[MAX_MMIO_DEV_NUM];
 } __aligned(8);
 
 struct acrn_vm_config *get_vm_config(uint16_t vm_id);
