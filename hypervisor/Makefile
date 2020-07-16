@@ -376,40 +376,6 @@ MODULES += $(SYS_INIT_MOD)
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 VERSION := $(HV_OBJDIR)/include/version.h
 
-# Create platform_acpi_info.h
-TEMPLATE_ACPI_INFO_HEADER := arch/x86/configs/platform_acpi_info.h
-BOARDTEMPLATE_ACPI_INFO_HEADER := $(BOARD_INFO_DIR)/platform_acpi_info.h
-SOURCE_ACPI_INFO_HEADER := $(BOARD_INFO_DIR)/$(BOARD)_acpi_info.h
-TARGET_ACPI_INFO_HEADER := $(HV_OBJDIR)/include/platform_acpi_info.h
-
-$(TARGET_ACPI_INFO_HEADER): $(HV_OBJDIR)/$(HV_CONFIG)
-ifeq ($(CONFIG_ENFORCE_VALIDATED_ACPI_INFO),y)
-	@if [ ! -f $(SOURCE_ACPI_INFO_HEADER) ]; then	\
-	 echo "******* No ACPI info found *******" && \
-	 echo "Expected ACPI info header at $(SOURCE_ACPI_INFO_HEADER)" && \
-	 echo "" && \
-	 echo "The ACPI info header for this board is not available. Please use" && \
-	 echo "acrn-config tool for the target board to generate a validated one." && \
-	 echo "If you want to build the hypervisor with the template ACPI info," && \
-	 echo "unset ENFORCE_VALIDATED_ACPI_INFO using 'make menuconfig'." && \
-	 false;	\
-	else	\
-	 echo "Found validated ACPI info file : $(SOURCE_ACPI_INFO_HEADER)";	\
-	 cp $(SOURCE_ACPI_INFO_HEADER) $(TARGET_ACPI_INFO_HEADER);	\
-	fi
-else
-	@if [ -f $(SOURCE_ACPI_INFO_HEADER) ]; then   \
-	 echo "Found validated ACPI info file : $(SOURCE_ACPI_INFO_HEADER)";	\
-	 cp $(SOURCE_ACPI_INFO_HEADER) $(TARGET_ACPI_INFO_HEADER);	\
-	elif [ -f $(BOARDTEMPLATE_ACPI_INFO_HEADER) ]; then \
-	 echo "No ACPI info found, using the template at $(BOARDTEMPLATE_ACPI_INFO_HEADER) instead"; \
-	 cp $(BOARDTEMPLATE_ACPI_INFO_HEADER) $(TARGET_ACPI_INFO_HEADER);	\
-	else	\
-	 echo "No ACPI info found, using the template at $(TEMPLATE_ACPI_INFO_HEADER) instead"; \
-	 cp $(TEMPLATE_ACPI_INFO_HEADER) $(TARGET_ACPI_INFO_HEADER);	\
-	fi
-endif
-
 .PHONY: all
 all: pre_build $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
@@ -425,7 +391,7 @@ install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
 pre_build: $(PRE_BUILD_OBJS)
 
 .PHONY: header
-header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
+header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H)
 
 .PHONY: lib-mod boot-mod hw-mod vp-base-mod vp-dm-mod vp-trusty-mod vp-hcall-mod sys-init-mod
 $(LIB_MOD): $(LIB_C_OBJS) $(LIB_S_OBJS)
@@ -548,7 +514,7 @@ $(VERSION): $(HV_OBJDIR)/$(HV_CONFIG_H)
 -include $(C_OBJS:.o=.d)
 -include $(S_OBJS:.o=.d)
 
-$(HV_OBJDIR)/%.o: %.c $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
+$(HV_OBJDIR)/%.o: %.c $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H)
 	[ ! -e $@ ] && mkdir -p $(dir $@) && mkdir -p $(HV_MODDIR); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@ -MMD -MT $@
 
