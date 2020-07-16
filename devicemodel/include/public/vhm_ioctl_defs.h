@@ -107,6 +107,8 @@
 #define IC_RESET_PTDEV_INTR_INFO       _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x04)
 #define IC_ASSIGN_PCIDEV               _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x05)
 #define IC_DEASSIGN_PCIDEV             _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x06)
+#define IC_ASSIGN_MMIODEV              _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x07)
+#define IC_DEASSIGN_MMIODEV            _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x08)
 
 /* Power management */
 #define IC_ID_PM_BASE                   0x60UL
@@ -179,6 +181,24 @@ struct acrn_assign_pcidev {
 
 	/** reserved for extension */
 	uint32_t rsvd2[6];
+
+} __attribute__((aligned(8)));
+
+/**
+ * @brief Info to assign or deassign a MMIO device for a VM
+ */
+struct acrn_mmiodev {
+	/** the gpa of the MMIO region for the MMIO device */
+	uint64_t base_gpa;
+
+	/** the hpa of the MMIO region for the MMIO device */
+	uint64_t base_hpa;
+
+	/** the size of the MMIO region for the MMIO device */
+	uint64_t size;
+
+	/** reserved for extension */
+	uint64_t reserved[13];
 
 } __attribute__((aligned(8)));
 

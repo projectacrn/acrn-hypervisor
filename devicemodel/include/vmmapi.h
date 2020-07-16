@@ -126,6 +126,8 @@ int	vm_lapic_msi(struct vmctx *ctx, uint64_t addr, uint64_t msg);
 int	vm_set_gsi_irq(struct vmctx *ctx, int gsi, uint32_t operation);
 int	vm_assign_pcidev(struct vmctx *ctx, struct acrn_assign_pcidev *pcidev);
 int	vm_deassign_pcidev(struct vmctx *ctx, struct acrn_assign_pcidev *pcidev);
+int	vm_assign_mmiodev(struct vmctx *ctx, struct acrn_mmiodev *mmiodev);
+int	vm_deassign_mmiodev(struct vmctx *ctx, struct acrn_mmiodev *mmiodev);
 int	vm_map_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
 			  vm_paddr_t gpa, size_t len, vm_paddr_t hpa);
 int	vm_unmap_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
