@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <logmsg.h>
 #include <ioapic.h>
+#include <mmio_dev.h>
 
 #define DBG_LEVEL_HYCALL	6U
 
@@ -888,6 +889,70 @@ int32_t hcall_deassign_pcidev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 		}
 	} else {
 		pr_err("%s, vm[%d] is not a postlaunched VM, or not in PAUSED/CREATED status to be deassigned from a pcidev\n", __func__, vm->vm_id);
+	}
+
+	return ret;
+}
+
+/**
+ * @brief Assign one MMIO dev to a VM.
+ *
+ * @param vm Pointer to VM data structure
+ * @param vmid ID of the VM
+ * @param param guest physical address. This gpa points to data structure of
+ *              acrn_mmiodev including assign MMIO device info
+ *
+ * @pre Pointer vm shall point to SOS_VM
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_assign_mmiodev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
+{
+	int32_t ret = -EINVAL;
+	struct acrn_mmiodev mmiodev;
+	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
+
+	/* We should only assign a device to a post-launched VM at creating time for safety, not runtime or other cases*/
+	if (is_created_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+		if (copy_from_gpa(vm, &mmiodev, param, sizeof(mmiodev)) == 0) {
+			ret = deassign_mmio_dev(vm, &mmiodev);
+			if (ret == 0) {
+				ret = assign_mmio_dev(target_vm, &mmiodev);
+			}
+		}
+	} else {
+		pr_err("vm[%d] %s failed!\n",target_vm->vm_id,  __func__);
+	}
+
+	return ret;
+}
+
+/**
+ * @brief Deassign one MMIO dev from a VM.
+ *
+ * @param vm Pointer to VM data structure
+ * @param vmid ID of the VM
+ * @param param guest physical address. This gpa points to data structure of
+ *              acrn_mmiodev including deassign MMIO device info
+ *
+ * @pre Pointer vm shall point to SOS_VM
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_deassign_mmiodev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
+{
+	int32_t ret = -EINVAL;
+	struct acrn_mmiodev mmiodev;
+	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
+
+	/* We should only de-assign a device from a post-launched VM at creating/shutdown/reset time */
+	if ((is_paused_vm(target_vm) || is_created_vm(target_vm)) && is_postlaunched_vm(target_vm)) {
+		if (copy_from_gpa(vm, &mmiodev, param, sizeof(mmiodev)) == 0) {
+			ret = deassign_mmio_dev(target_vm, &mmiodev);
+			if (ret == 0) {
+				ret = assign_mmio_dev(vm, &mmiodev);
+			}
+		}
+	} else {
+		pr_err("vm[%d] %s failed!\n",target_vm->vm_id,  __func__);
 	}
 
 	return ret;
