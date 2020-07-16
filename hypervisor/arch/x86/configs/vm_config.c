@@ -155,9 +155,7 @@ bool sanitize_vm_config(void)
 			}
 			break;
 		case SOS_VM:
-			/* Deduct pcpus of PRE_LAUNCHED_VMs */
-			vm_config->cpu_affinity = ALL_CPUS_MASK ^ pre_launch_pcpu_bitmap;
-			if ((vm_config->cpu_affinity == 0UL) || (vm_config->severity != (uint8_t)SEVERITY_SOS) ||
+			if ((vm_config->severity != (uint8_t)SEVERITY_SOS) ||
 				((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)) {
 				ret = false;
 			}
