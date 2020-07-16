@@ -770,6 +770,7 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 
 /**
  * @pre vm_config != NULL
+ * @Application constraint: The validity of vm_config->cpu_affinity should be guaranteed before run-time.
  */
 void launch_vms(uint16_t pcpu_id)
 {
@@ -779,11 +780,10 @@ void launch_vms(uint16_t pcpu_id)
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
 		if ((vm_config->load_order == SOS_VM) || (vm_config->load_order == PRE_LAUNCHED_VM)) {
-			if (vm_config->load_order == SOS_VM) {
-				sos_vm_ptr = &vm_array[vm_id];
-			}
-
 			if (pcpu_id == get_configured_bsp_pcpu_id(vm_config)) {
+				if (vm_config->load_order == SOS_VM) {
+					sos_vm_ptr = &vm_array[vm_id];
+				}
 				prepare_vm(vm_id, vm_config);
 			}
 		}
