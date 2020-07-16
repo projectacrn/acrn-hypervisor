@@ -761,12 +761,22 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 void launch_vms(uint16_t pcpu_id)
 {
 	uint16_t vm_id;
+	uint64_t pre_vm_cpu_affinity = 0UL;
 	struct acrn_vm_config *vm_config;
 
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
 		if ((vm_config->load_order == SOS_VM) || (vm_config->load_order == PRE_LAUNCHED_VM)) {
-			if (vm_config->load_order == SOS_VM) {
+			if (vm_config->load_order == PRE_LAUNCHED_VM) {
+				pre_vm_cpu_affinity |= vm_config->cpu_affinity;
+			} else if (vm_config->load_order == SOS_VM) {
+				/* Deduct pcpus of PRE_LAUNCHED_VMs */
+				vm_config->cpu_affinity = ALL_CPUS_MASK ^ pre_vm_cpu_affinity;
+				if (vm_config->cpu_affinity == 0UL) {
+				/* in case physical cores are not all up as expected */
+					pr_err("no vCPUs for SOS VM (vm id: %d)", vm_id);
+					break;
+				}
 				sos_vm_ptr = &vm_array[vm_id];
 			}
 
