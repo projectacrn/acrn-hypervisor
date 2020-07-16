@@ -1,11 +1,9 @@
 config SCENARIO
 	string "ACRN scenario"
-	default "sdc"
+	default "industry"
 	help
 	  By specifying SCENARIO name, ACRN will load corresponding VM configurations
 	  to build the hypervisor. Currently ACRN provides below reference scenarios:
-	  sdc: Typical scenario for automotive Software Defined Cockpit system.
-	  sdc will have one pre-launched SOS VM and one post-launched VM;
 	  industry: Typical scenario for industry usage with 8 VMs: one pre-launched SOS VM,
 	  one post-launched KATA VM, one post-launched RT VM for real-time control,
 	  and up to five post-launched Standard VMs;
