@@ -666,7 +666,7 @@ void launch_vcpu(struct acrn_vcpu *vcpu);
  *
  * @return None
  */
-void kick_vcpu(const struct acrn_vcpu *vcpu);
+void kick_vcpu(struct acrn_vcpu *vcpu);
 
 /**
  * @brief create a vcpu for the vm and mapped to the pcpu.

@@ -17,6 +17,7 @@
 #include <vmcs.h>
 #include <mmu.h>
 #include <sprintf.h>
+#include <lapic.h>
 
 /* stack_frame is linked with the sequence of stack operation in arch_switch_to() */
 struct stack_frame {
@@ -672,9 +673,19 @@ void offline_vcpu(struct acrn_vcpu *vcpu)
 	vcpu_set_state(vcpu, VCPU_OFFLINE);
 }
 
-void kick_vcpu(const struct acrn_vcpu *vcpu)
+void kick_vcpu(struct acrn_vcpu *vcpu)
 {
-	kick_thread(&vcpu->thread_obj);
+	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
+
+	if ((get_pcpu_id() != pcpu_id) &&
+		(per_cpu(vmcs_run, pcpu_id) == vcpu->arch.vmcs)) {
+		if (is_lapic_pt_enabled(vcpu)) {
+			/* For lapic-pt vCPUs */
+			send_single_nmi(pcpu_id);
+		} else {
+			send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
+		}
+	}
 }
 
 /*

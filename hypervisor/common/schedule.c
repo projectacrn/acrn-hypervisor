@@ -24,11 +24,6 @@ static inline bool is_blocked(const struct thread_object *obj)
 	return obj->status == THREAD_STS_BLOCKED;
 }
 
-static inline bool is_runnable(const struct thread_object *obj)
-{
-	return obj->status == THREAD_STS_RUNNABLE;
-}
-
 static inline bool is_running(const struct thread_object *obj)
 {
 	return obj->status == THREAD_STS_RUNNING;
@@ -235,34 +230,6 @@ void wake_thread(struct thread_object *obj)
 		}
 		set_thread_status(obj, THREAD_STS_RUNNABLE);
 		make_reschedule_request(pcpu_id, DEL_MODE_IPI);
-	}
-	release_schedule_lock(pcpu_id, rflag);
-}
-
-void kick_thread(const struct thread_object *obj)
-{
-	uint16_t pcpu_id = obj->pcpu_id;
-	uint64_t rflag;
-
-	obtain_schedule_lock(pcpu_id, &rflag);
-	if (is_running(obj)) {
-		if (get_pcpu_id() != pcpu_id) {
-			if (obj->notify_mode == SCHED_NOTIFY_IPI) {
-				send_single_ipi(pcpu_id, NOTIFY_VCPU_VECTOR);
-			} else {
-				/* For lapic-pt vCPUs */
-				send_single_nmi(pcpu_id);
-			}
-		}
-	} else if (is_runnable(obj)) {
-		if (obj->notify_mode == SCHED_NOTIFY_IPI) {
-			make_reschedule_request(pcpu_id, DEL_MODE_IPI);
-		} else {
-			/* For lapic-pt vCPUs */
-			make_reschedule_request(pcpu_id, DEL_MODE_NMI);
-		}
-	} else {
-		/* do nothing */
 	}
 	release_schedule_lock(pcpu_id, rflag);
 }
