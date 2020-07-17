@@ -37,6 +37,7 @@ struct thread_object {
 	struct sched_control *sched_ctl;
 	thread_entry_t thread_entry;
 	volatile enum thread_object_state status;
+	bool be_blocking;
 	enum sched_notify_mode notify_mode;
 
 	uint64_t host_sp;
