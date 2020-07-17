@@ -169,25 +169,26 @@ void schedule(void)
 	}
 	bitmap_clear_lock(NEED_RESCHEDULE, &ctl->flags);
 
-	/* Don't change prev object's status if it's not running */
-	if (is_running(prev)) {
-		set_thread_status(prev, THREAD_STS_RUNNABLE);
-	}
-	set_thread_status(next, THREAD_STS_RUNNING);
-	ctl->curr_obj = next;
-	release_schedule_lock(pcpu_id, rflag);
-
 	/* If we picked different sched object, switch context */
 	if (prev != next) {
-		if ((prev != NULL) && (prev->switch_out != NULL)) {
-			prev->switch_out(prev);
+		if (prev != NULL) {
+			if (prev->switch_out != NULL) {
+				prev->switch_out(prev);
+			}
+			set_thread_status(prev, prev->be_blocking ? THREAD_STS_BLOCKED : THREAD_STS_RUNNABLE);
+			prev->be_blocking = false;
 		}
 
-		if ((next != NULL) && (next->switch_in != NULL)) {
+		if (next->switch_in != NULL) {
 			next->switch_in(next);
 		}
+		set_thread_status(next, THREAD_STS_RUNNING);
 
+		ctl->curr_obj = next;
+		release_schedule_lock(pcpu_id, rflag);
 		arch_switch_to(&prev->host_sp, &next->host_sp);
+	} else {
+		release_schedule_lock(pcpu_id, rflag);
 	}
 }
 
@@ -208,7 +209,7 @@ void sleep_thread(struct thread_object *obj)
 			make_reschedule_request(pcpu_id, DEL_MODE_IPI);
 		}
 	}
-	set_thread_status(obj, THREAD_STS_BLOCKED);
+	obj->be_blocking = true;
 	release_schedule_lock(pcpu_id, rflag);
 }
 
