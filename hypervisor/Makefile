@@ -166,6 +166,8 @@ INCLUDE_PATH += $(BOARD_INFO_DIR)
 INCLUDE_PATH += $(BOARD_CFG_DIR)
 INCLUDE_PATH += $(SCENARIO_CFG_DIR)
 
+override INCLUDE_PATH := $(realpath $(INCLUDE_PATH))
+
 CC ?= gcc
 AS ?= as
 AR ?= ar
@@ -352,8 +354,6 @@ endif
 ifneq ($(FIRMWARE),uefi)
 CFLAGS += -DCONFIG_LAST_LEVEL_EPT_AT_BOOT
 endif
-PRE_BUILD_SRCS += pre_build/static_checks.c
-PRE_BUILD_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(PRE_BUILD_SRCS))
 
 MODULES += $(LIB_MOD)
 MODULES += $(BOOT_MOD)
@@ -376,6 +376,8 @@ MODULES += $(SYS_INIT_MOD)
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 VERSION := $(HV_OBJDIR)/include/version.h
 
+PRE_BUILD_DIR := ../misc/hv_prebuild
+
 .PHONY: all
 all: pre_build $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
@@ -388,7 +390,10 @@ install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
 	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)$(libdir)/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).map
 
 .PHONY: pre_build
-pre_build: $(PRE_BUILD_OBJS)
+pre_build: $(HV_OBJDIR)/$(HV_CONFIG_H)
+	@echo "Start pre-build static check ..."
+	$(MAKE) -C $(PRE_BUILD_DIR) BOARD=$(BOARD) SCENARIO=$(SCENARIO) TARGET_DIR=$(TARGET_DIR)
+	@$(HV_OBJDIR)/hv_prebuild_check.out
 
 .PHONY: header
 header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H)
@@ -467,19 +472,6 @@ distclean:
 
 PHONY: (VERSION)
 $(VERSION): $(HV_OBJDIR)/$(HV_CONFIG_H)
-	@if  [ "$(SCENARIO)" = "" ]; then echo "Please specify SCENARIO for the build!"; exit 1; fi;
-	@if  [ "$(BOARD)" = "" ]; then echo "Please specify BOARD for the build!"; exit 1; fi;
-	@echo "SCENARIO <$(SCENARIO)> for BOARD <$(BOARD)> is specified."
-	@if [ ! -d $(BOARD_CFG_DIR) ]; then \
-		echo "Configurations for BOARD $(BOARD) is not found."; exit 1; \
-	else \
-		echo "Found BOARD configurations under $(BOARD_CFG_DIR)"; \
-	fi;
-	@if [ ! -d $(SCENARIO_CFG_DIR) ]; then \
-		echo "Configurations for SCENARIO $(SCENARIO) is not found."; exit 1; \
-	else \
-		echo "Found SCENARIO configurations under $(SCENARIO_CFG_DIR)"; \
-	fi;
 	touch $(VERSION)
 	@COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
 	DIRTY=`git diff-index --name-only HEAD`;\
