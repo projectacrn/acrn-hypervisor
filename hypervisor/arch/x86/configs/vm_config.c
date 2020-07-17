@@ -23,7 +23,7 @@ uint8_t get_vm_severity(uint16_t vm_id)
 	return vm_configs[vm_id].severity;
 }
 
-static inline bool uuid_is_equal(const uint8_t *uuid1, const uint8_t *uuid2)
+bool uuid_is_equal(const uint8_t *uuid1, const uint8_t *uuid2)
 {
 	uint64_t uuid1_h = *(const uint64_t *)uuid1;
 	uint64_t uuid1_l = *(const uint64_t *)(uuid1 + 8);
