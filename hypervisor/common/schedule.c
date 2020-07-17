@@ -213,6 +213,14 @@ void sleep_thread(struct thread_object *obj)
 	release_schedule_lock(pcpu_id, rflag);
 }
 
+void sleep_thread_sync(struct thread_object *obj)
+{
+	sleep_thread(obj);
+	while (!is_blocked(obj)) {
+		asm_pause();
+	}
+}
+
 void wake_thread(struct thread_object *obj)
 {
 	uint16_t pcpu_id = obj->pcpu_id;

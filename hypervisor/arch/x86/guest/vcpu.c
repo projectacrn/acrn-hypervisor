@@ -200,7 +200,6 @@ static void vcpu_reset_internal(struct acrn_vcpu *vcpu, enum reset_mode mode)
 	struct acrn_vlapic *vlapic;
 
 	vcpu->launched = false;
-	vcpu->running = false;
 	vcpu->arch.nr_sipi = 0U;
 
 	vcpu->arch.exception_info.exception = VECTOR_INVALID;
@@ -731,11 +730,10 @@ void zombie_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 		vcpu_set_state(vcpu, new_state);
 
 		if (prev_state == VCPU_RUNNING) {
-			sleep_thread(&vcpu->thread_obj);
-		}
-		if (pcpu_id != get_pcpu_id()) {
-			while (vcpu->running) {
-				asm_pause();
+			if (pcpu_id == get_pcpu_id()) {
+				sleep_thread(&vcpu->thread_obj);
+			} else {
+				sleep_thread_sync(&vcpu->thread_obj);
 			}
 		}
 	}
@@ -772,8 +770,6 @@ static void context_switch_out(struct thread_object *prev)
 	ectx->ia32_kernel_gs_base = msr_read(MSR_IA32_KERNEL_GS_BASE);
 
 	save_xsave_area(ectx);
-
-	vcpu->running = false;
 }
 
 static void context_switch_in(struct thread_object *next)
@@ -789,8 +785,6 @@ static void context_switch_in(struct thread_object *next)
 	msr_write(MSR_IA32_KERNEL_GS_BASE, ectx->ia32_kernel_gs_base);
 
 	rstore_xsave_area(ectx);
-
-	vcpu->running = true;
 }
 
 
