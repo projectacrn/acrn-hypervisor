@@ -107,6 +107,9 @@ struct passthru_dev {
 	struct {
 		int		capoff;
 	} msix;
+	struct {
+		int 		capoff;
+	} pmcap;
 	bool pcie_cap;
 	struct pcisel sel;
 	int phys_pin;
@@ -116,6 +119,7 @@ struct passthru_dev {
 	 *   need_reset - reset dev before passthrough
 	 */
 	bool need_reset;
+	bool d3hot_reset;
 	bool (*has_virt_pcicfg_regs)(int offset);
 };
 
@@ -183,14 +187,35 @@ cfginit_cap(struct vmctx *ctx, struct passthru_dev *ptdev)
 				ptdev->msi.capoff = ptr;
 			} else if (cap == PCIY_MSIX) {
 				ptdev->msix.capoff = ptr;
-			} else if (cap == PCIY_EXPRESS)
+			} else if (cap == PCIY_EXPRESS) {
 				ptdev->pcie_cap = true;
+			} else if (cap == PCIY_PMG)
+				ptdev->pmcap.capoff = ptr;
 
 			ptr = read_config(phys_dev, ptr + PCICAP_NEXTPTR, 1);
 		}
 	}
 
 	return 0;
+}
+
+static int
+passthru_set_power_state(struct passthru_dev *ptdev, uint16_t dpsts) {
+	int ret = -1;
+	uint32_t val;
+
+	dpsts &= PCIM_PSTAT_DMASK;
+	if (ptdev->pmcap.capoff != 0) {
+		val = read_config(ptdev->phys_dev,
+				ptdev->pmcap.capoff + PCIR_POWER_STATUS, 2);
+		val = (val & ~PCIM_PSTAT_DMASK) | dpsts;
+
+		write_config(ptdev->phys_dev,
+				ptdev->pmcap.capoff + PCIR_POWER_STATUS, 2, val);
+
+		ret = 0;
+	}
+	return ret;
 }
 
 static inline int ptdev_msix_table_bar(struct passthru_dev *ptdev)
@@ -362,6 +387,12 @@ cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 		}
 	}
 
+	if (ptdev->d3hot_reset) {
+		if ((passthru_set_power_state(ptdev, PCIM_PSTAT_D3) != 0) ||
+				passthru_set_power_state(ptdev, PCIM_PSTAT_D0) != 0)
+			warnx("ptdev %x/%x/%x do d3hot_reset failed!\n", bus, slot, func);
+	}
+
 	if (cfginitbar(ctx, ptdev) != 0) {
 		warnx("failed to initialize BARs for PCI %x/%x/%x",
 		    bus, slot, func);
@@ -523,6 +554,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	char *opt;
 	bool keep_gsi = false;
 	bool need_reset = true;
+	bool d3hot_reset = false;
 	int vmsix_on_msi_bar_id = -1;
 	struct acrn_assign_pcidev pcidev = {};
 	uint16_t vendor = 0, device = 0;
@@ -551,6 +583,8 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			keep_gsi = true;
 		else if (!strncmp(opt, "no_reset", 8))
 			need_reset = false;
+		else if (!strncmp(opt, "d3hot_reset", 11))
+			d3hot_reset = true;
 		else if (!strncmp(opt, "gpu", 3)) {
 			/* Create the dedicated "igd-lpc" on 00:1f.0 for IGD passthrough */
 			if (pci_parse_slot("31,igd-lpc") != 0)
@@ -575,6 +609,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	ptdev->phys_bdf = PCI_BDF(bus, slot, func);
 	ptdev->need_reset = need_reset;
+	ptdev->d3hot_reset = d3hot_reset;
 	update_pt_info(ptdev->phys_bdf);
 
 	error = pciaccess_init();
