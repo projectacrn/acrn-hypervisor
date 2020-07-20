@@ -70,8 +70,8 @@ ACRN Device Model and virtio-net Backend Driver:
    the virtio-net backend driver to process the request. The backend driver
    receives the data in a shared virtqueue and sends it to the TAP device.
 
-Bridge and Tap Device:
-   Bridge and Tap are standard virtual network infrastructures. They play
+Bridge and TAP Device:
+   Bridge and TAP are standard virtual network infrastructures. They play
    an important role in communication among the Service VM, the User VM, and the
    outside world.
 
@@ -108,7 +108,7 @@ Initialization in Device Model
 - Present frontend for a virtual PCI based NIC
 - Setup control plan callbacks
 - Setup data plan callbacks, including TX, RX
-- Setup tap backend
+- Setup TAP backend
 
 Initialization in virtio-net Frontend Driver
 ============================================
@@ -365,7 +365,7 @@ cases.)
 .. code-block:: c
 
    vring_interrupt -->              // virtio-net frontend driver interrupt handler
-       skb_recv_done -->            //registed by virtnet_probe-->init_vqs-->virtnet_find_vqs
+       skb_recv_done -->            // registered by virtnet_probe-->init_vqs-->virtnet_find_vqs
            virtqueue_napi_schedule -->
                __napi_schedule -->
                    virtnet_poll -->
@@ -406,13 +406,13 @@ cases.)
 
                    sk->sk_data_ready --> // application will get notified
 
-How to Use
-==========
+How to Use TAP Interface
+========================
 
 The network infrastructure shown in :numref:`net-virt-infra` needs to be
 prepared in the Service VM before we start. We need to create a bridge and at
-least one tap device (two tap devices are needed to create a dual
-virtual NIC) and attach a physical NIC and tap device to the bridge.
+least one TAP device (two TAP devices are needed to create a dual
+virtual NIC) and attach a physical NIC and TAP device to the bridge.
 
 .. figure:: images/network-virt-sos-infrastruct.png
    :align: center
@@ -508,6 +508,32 @@ is the virtual NIC created by acrn-dm:
       TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
       collisions:0 txqueuelen:1000
       RX bytes:0 (0.0 b) TX bytes:0 (0.0 b)
+
+How to Use MacVTap Interface
+============================
+In addition to TAP interface, ACRN also supports MacVTap interface.
+MacVTap replaces the combination of the TAP and bridge drivers with
+a single module based on MacVLan driver. With MacVTap, each
+virtual network interface is assigned its own MAC and IP address
+and is directly attached to the physical interface of the host machine
+to improve throughput and latencies.
+
+Create a MacVTap interface in the Service VM as shown here:
+
+.. code-block:: none
+
+   sudo ip link add link eth0 name macvtap0 type macvtap
+
+where ``eth0`` is the name of the physical network interface, and
+``macvtap0`` is the name of the MacVTap interface being created. (Make
+sure the MacVTap interface name includes the keyword ``tap``.)
+
+Once the MacVTap interface is created, the User VM can be launched by adding
+a PCI slot to the device model acrn-dm as shown below.
+
+.. code-block:: none
+
+   -s 4,virtio-net,<macvtap_name>,[mac=<XX:XX:XX:XX:XX:XX>]
 
 Performance Estimation
 ======================
