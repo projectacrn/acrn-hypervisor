@@ -19,6 +19,9 @@ def get_pre_vm_type(vm_type, vm_i):
     if vm_type == "SAFETY_VM":
         return "CONFIG_SAFETY_VM(1)"
 
+    if vm_type == "PRE_RT_VM":
+        return "CONFIG_PRE_RT_VM(1)"
+
     i_cnt = 0
     for i,v_type in common.VM_TYPES.items():
         if v_type == "PRE_STD_VM" and i <= vm_i:

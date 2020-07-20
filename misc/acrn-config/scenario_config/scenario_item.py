@@ -110,8 +110,8 @@ class CfgOsKern:
         scenario_cfg_lib.os_kern_type_check(self.kern_type, "os_config", "kern_type")
         scenario_cfg_lib.os_kern_mod_check(self.kern_mod, "os_config", "kern_mod")
         scenario_cfg_lib.os_kern_args_check(self.kern_args, "os_config", "kern_args")
-        scenario_cfg_lib.os_kern_load_addr_check(self.kern_load_addr, "os_config", "kern_load_addr")
-        scenario_cfg_lib.os_kern_entry_addr_check(self.kern_entry_addr, "os_config", "kern_entry_addr")
+        scenario_cfg_lib.os_kern_load_addr_check(self.kern_type, self.kern_load_addr, "os_config", "kern_load_addr")
+        scenario_cfg_lib.os_kern_entry_addr_check(self.kern_type, self.kern_entry_addr, "os_config", "kern_entry_addr")
 
 
 class VuartInfo:
