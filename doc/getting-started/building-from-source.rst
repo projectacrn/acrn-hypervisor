@@ -121,6 +121,8 @@ Enter the following to get the acrn-hypervisor source code:
    $ git clone https://github.com/projectacrn/acrn-hypervisor
 
 
+.. _build-with-acrn-scenario:
+
 .. rst-class:: numbered-step
 
 Build with the ACRN scenario
