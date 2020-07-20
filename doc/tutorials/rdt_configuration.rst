@@ -89,6 +89,13 @@ MBA bit encoding:
      ACRN:\>cpuid 0x10 **0x3**
      cpuid leaf: 0x10, subleaf: 0x3, 0x59:0x0:0x4:0x7
 
+.. note::
+   ACRN takes the lowest common CLOS max value between the supported
+   resources as maximum supported CLOS ID. For example, if max CLOS
+   supported by L3 is 16 and MBA is 8, ACRN programs MAX_PLATFORM_CLOS_NUM
+   to 8. ACRN recommends to have consistent capabilities across all RDT
+   resources by using a common subset CLOS. This is done in order to minimize
+   misconfiguration errors.
 
 Tuning RDT resources in HV debug shell
 **************************************
@@ -136,46 +143,51 @@ shell.
 Configure RDT for VM using VM Configuration
 *******************************************
 
-#. RDT on ACRN is enabled by default on supported platforms. This
+#. RDT hardware feature is enabled by default on supported platforms. This
    information can be found using an offline tool that generates a
    platform-specific xml file that helps ACRN identify RDT-supported
-   platforms. This feature can be also be toggled using the
-   CONFIG_RDT_ENABLED flag with the ``make menuconfig`` command. The first
-   step is to clone the ACRN source code (if you haven't already done so):
+   platforms. RDT on ACRN is enabled by configuring the ``FEATURES``
+   sub-section of the scenario xml file as in the below example. For
+   details on building ACRN with scenario refer  to :ref:`build-with-acrn-scenario`.
 
    .. code-block:: none
+      :emphasize-lines: 6
 
-      $ git clone https://github.com/projectacrn/acrn-hypervisor.git
-      $ cd acrn-hypervisor/
+      <FEATURES>
+         <RELOC desc="Enable hypervisor relocation">y</RELOC>
+         <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
+         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+         <RDT desc="Intel RDT (Resource Director Technology).">
+            <RDT_ENABLED desc="Enable RDT">*y*</RDT_ENABLED>
+            <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
+            <CLOS_MASK desc="Cache Capacity Bitmask"></CLOS_MASK>
+            <MBA_DELAY desc="Memory Bandwidth Allocation delay value"></MBA_DELAY>
+         </RDT>
 
-   .. figure:: images/menuconfig-rdt.png
-      :align: center
-
-#. The predefined cache masks can be found at
-   ``hypervisor/arch/x86/configs/$(CONFIG_BOARD)/board.c`` for respective boards.
-   For example, apl-up2 can found at ``hypervisor/arch/x86/configs/apl-up2/board.c``.
+#. Once RDT is enabled in the scenario xml file, the next step is to program
+   the desired cache mask or/and the MBA delay value as needed in the 
+   scenario file. Each cache mask or MBA delay configuration corresponds 
+   to a CLOS ID. For example, if the maximum supported CLOS ID is 4, then 4 
+   cache mask settings needs to be in place where each setting corresponds
+   to a CLOS ID starting from 0. To set the cache masks for 4 CLOS ID and 
+   use default delay value for MBA, it can be done as shown in the example below.
 
    .. code-block:: none
-      :emphasize-lines: 3,7,11,15
+      :emphasize-lines: 8,9,10,11,12
 
-      struct platform_clos_info platform_l2_clos_array[MAX_PLATFORM_CLOS_NUM] = {
-              {
-                      .clos_mask = 0xff,
-                      .msr_index = MSR_IA32_L3_MASK_BASE + 0,
-              },
-              {
-                      .clos_mask = 0xff,
-                      .msr_index = MSR_IA32_L3_MASK_BASE + 1,
-              },
-              {
-                      .clos_mask = 0xff,
-                      .msr_index = MSR_IA32_L3_MASK_BASE + 2,
-              },
-              {
-                      .clos_mask = 0xff,
-                      .msr_index = MSR_IA32_L3_MASK_BASE + 3,
-              },
-      };
+      <FEATURES>
+         <RELOC desc="Enable hypervisor relocation">y</RELOC>
+         <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
+         <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+         <RDT desc="Intel RDT (Resource Director Technology).">
+            <RDT_ENABLED desc="Enable RDT">y</RDT_ENABLED>
+            <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
+            <CLOS_MASK desc="Cache Capacity Bitmask">*0xff*</CLOS_MASK>
+            <CLOS_MASK desc="Cache Capacity Bitmask">*0x3f*</CLOS_MASK>
+            <CLOS_MASK desc="Cache Capacity Bitmask">*0xf*</CLOS_MASK>
+            <CLOS_MASK desc="Cache Capacity Bitmask">*0x3*</CLOS_MASK>
+            <MBA_DELAY desc="Memory Bandwidth Allocation delay value">*0*</MBA_DELAY>
+         </RDT>
 
    .. note::
       Users can change the mask values, but the cache mask must have
@@ -183,31 +195,24 @@ Configure RDT for VM using VM Configuration
       programming an MBA delay value, be sure to set the value to less than or
       equal to the MAX delay value.
 
-#. Set up the CLOS in the VM config. Follow `RDT detection and resource capabilities`_
-   to identify the MAX CLOS that can be used. ACRN uses the
+#. Configure each CPU in VMs to a desired CLOS ID in the ``VM`` section of the
+   scenario file. Follow `RDT detection and resource capabilities`_
+   to identify the maximum supported CLOS ID that can be used. ACRN uses the
    **the lowest common MAX CLOS** value among all RDT resources to avoid
-   resource misconfigurations. For example, configuration data for the
-   Service VM sharing mode can be found at
-   ``hypervisor/arch/x86/configs/vm_config.c``
+   resource misconfigurations.
 
    .. code-block:: none
-      :emphasize-lines: 6
+      :emphasize-lines: 5,6,7,8
 
-      struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE) = {
-              {
-                      .type = SOS_VM,
-                      .name = SOS_VM_CONFIG_NAME,
-                      .guest_flags = 0UL,
-                      .clos = 1,
-                      .memory = {
-                              .start_hpa = 0x0UL,
-                              .size = CONFIG_SOS_RAM_SIZE,
-                      },
-                      .os_config = {
-                              .name = SOS_VM_CONFIG_OS_NAME,
-                      },
-              },
-      };
+      <vm id="0">
+         <vm_type desc="Specify the VM type" readonly="true">PRE_STD_VM</vm_type>
+         <name desc="Specify the VM name which will be shown in hypervisor console command: vm_list.">ACRN PRE-LAUNCHED VM0</name>
+         <uuid configurable="0" desc="vm uuid">26c5e0d8-8f8a-47d8-8109-f201ebd61a5e</uuid>
+         <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+            <vcpu_clos>*0*</vcpu_clos>
+            <vcpu_clos>*1*</vcpu_clos>
+         </clos>
+      </vm>
 
    .. note::
       In ACRN, Lower CLOS always means higher priority (clos 0 > clos 1 > clos 2> ...clos n).
