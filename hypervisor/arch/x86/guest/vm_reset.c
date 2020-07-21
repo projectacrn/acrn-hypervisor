@@ -38,15 +38,19 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 			for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 				struct acrn_vm *pl_vm = get_vm_from_vmid(vm_id);
 
+				get_vm_lock(pl_vm);
 				if (!is_poweroff_vm(pl_vm) && is_postlaunched_vm(pl_vm) && !is_rt_vm(pl_vm)) {
 					pause_vm(pl_vm);
 					(void)shutdown_vm(pl_vm);
 				}
+				put_vm_lock(pl_vm);
 			}
 		}
 
 		/* Either SOS or pre-launched VMs */
+		get_vm_lock(vm);
 		pause_vm(vm);
+		put_vm_lock(vm);
 
 		per_cpu(shutdown_vm_id, pcpuid_from_vcpu(vcpu)) = vm->vm_id;
 		make_shutdown_vm_request(pcpuid_from_vcpu(vcpu));
@@ -83,6 +87,7 @@ static bool handle_common_reset_reg_write(struct acrn_vm *vm, bool reset)
 {
 	bool ret = true;
 
+	get_vm_lock(vm);
 	if (reset) {
 		if (get_highest_severity_vm(true) == vm) {
 			reset_host();
@@ -115,6 +120,7 @@ static bool handle_common_reset_reg_write(struct acrn_vm *vm, bool reset)
                  * equivalent to hide this port from guests.
                  */
 	}
+	put_vm_lock(vm);
 
 	return ret;
 }

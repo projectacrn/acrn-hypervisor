@@ -14,11 +14,6 @@
 #include <trace.h>
 #include <logmsg.h>
 
-static spinlock_t vmm_hypercall_lock = {
-	.head = 0U,
-	.tail = 0U,
-};
-
 static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 {
 	struct acrn_vm *sos_vm = vcpu->vm;
@@ -36,9 +31,7 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 
 	switch (hypcall_id) {
 	case HC_SOS_OFFLINE_CPU:
-		spinlock_obtain(&vmm_hypercall_lock);
 		ret = hcall_sos_offline_cpu(sos_vm, param1);
-		spinlock_release(&vmm_hypercall_lock);
 		break;
 	case HC_GET_API_VERSION:
 		ret = hcall_get_api_version(sos_vm, param1);
@@ -54,44 +47,34 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 		break;
 
 	case HC_CREATE_VM:
-		spinlock_obtain(&vmm_hypercall_lock);
 		ret = hcall_create_vm(sos_vm, param1);
-		spinlock_release(&vmm_hypercall_lock);
 		break;
 
 	case HC_DESTROY_VM:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
 		if (vmid_is_valid) {
-			spinlock_obtain(&vmm_hypercall_lock);
 			ret = hcall_destroy_vm(vm_id);
-			spinlock_release(&vmm_hypercall_lock);
 		}
 		break;
 
 	case HC_START_VM:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
 		if (vmid_is_valid) {
-			spinlock_obtain(&vmm_hypercall_lock);
 			ret = hcall_start_vm(vm_id);
-			spinlock_release(&vmm_hypercall_lock);
 		}
 		break;
 
 	case HC_RESET_VM:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
 		if (vmid_is_valid) {
-			spinlock_obtain(&vmm_hypercall_lock);
 			ret = hcall_reset_vm(vm_id);
-			spinlock_release(&vmm_hypercall_lock);
 		}
 		break;
 
 	case HC_PAUSE_VM:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
 		if (vmid_is_valid) {
-			spinlock_obtain(&vmm_hypercall_lock);
 			ret = hcall_pause_vm(vm_id);
-			spinlock_release(&vmm_hypercall_lock);
 		}
 		break;
 
@@ -102,9 +85,7 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 	case HC_SET_VCPU_REGS:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
 		if (vmid_is_valid) {
-			spinlock_obtain(&vmm_hypercall_lock);
 			ret = hcall_set_vcpu_regs(sos_vm, vm_id, param2);
-			spinlock_release(&vmm_hypercall_lock);
 		}
 		break;
 
@@ -126,9 +107,7 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 	case HC_SET_IOREQ_BUFFER:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
 		if (vmid_is_valid) {
-			spinlock_obtain(&vmm_hypercall_lock);
 			ret = hcall_set_ioreq_buffer(sos_vm, vm_id, param2);
-			spinlock_release(&vmm_hypercall_lock);
 		}
 		break;
 

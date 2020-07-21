@@ -55,6 +55,7 @@ int32_t hcall_sos_offline_cpu(struct acrn_vm *vm, uint64_t lapicid)
 	uint16_t i;
 	int32_t ret = 0;
 
+	get_vm_lock(vm);
 	pr_info("sos offline cpu with lapicid %ld", lapicid);
 
 	foreach_vcpu(i, vm, vcpu) {
@@ -68,6 +69,7 @@ int32_t hcall_sos_offline_cpu(struct acrn_vm *vm, uint64_t lapicid)
 			offline_vcpu(vcpu);
 		}
 	}
+	put_vm_lock(vm);
 
 	return ret;
 }
@@ -159,45 +161,50 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 
 	if (copy_from_gpa(vm, &cv, param, sizeof(cv)) == 0) {
 		vm_id = get_vmid_by_uuid(&cv.uuid[0]);
-		if ((vm_id > vm->vm_id) && (vm_id < CONFIG_MAX_VM_NUM)
-			&& (is_poweroff_vm(get_vm_from_vmid(vm_id)))) {
-			vm_config = get_vm_config(vm_id);
+		if ((vm_id > vm->vm_id) && (vm_id < CONFIG_MAX_VM_NUM)) {
+			get_vm_lock(get_vm_from_vmid(vm_id));
+			if (is_poweroff_vm(get_vm_from_vmid(vm_id))) {
 
-			/* Filter out the bits should not set by DM and then assign it to guest_flags */
-			vm_config->guest_flags |= (cv.vm_flag & DM_OWNED_GUEST_FLAG_MASK);
+				vm_config = get_vm_config(vm_id);
 
-			/* post-launched VM is allowed to choose pCPUs from vm_config->cpu_affinity only */
-			if ((cv.cpu_affinity & ~(vm_config->cpu_affinity)) == 0UL) {
-				/* By default launch VM with all the configured pCPUs */
-				uint64_t pcpu_bitmap = vm_config->cpu_affinity;
+				/* Filter out the bits should not set by DM and then assign it to guest_flags */
+				vm_config->guest_flags |= (cv.vm_flag & DM_OWNED_GUEST_FLAG_MASK);
 
-				if (cv.cpu_affinity != 0UL) {
-					/* overwrite the statically configured CPU affinity */
-					pcpu_bitmap = cv.cpu_affinity;
-				}
+				/* post-launched VM is allowed to choose pCPUs from vm_config->cpu_affinity only */
+				if ((cv.cpu_affinity & ~(vm_config->cpu_affinity)) == 0UL) {
+					/* By default launch VM with all the configured pCPUs */
+					uint64_t pcpu_bitmap = vm_config->cpu_affinity;
 
-				/*
-				 * GUEST_FLAG_RT must be set if we have GUEST_FLAG_LAPIC_PASSTHROUGH
-				 * set in guest_flags
-				 */
-				if (((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0UL)
-					&& ((vm_config->guest_flags & GUEST_FLAG_RT) == 0UL)) {
-					pr_err("Wrong guest flags 0x%lx\n", vm_config->guest_flags);
-				} else {
-					if (create_vm(vm_id, pcpu_bitmap, vm_config, &target_vm) == 0) {
-						/* return a relative vm_id from SOS view */
-						cv.vmid = vmid_2_rel_vmid(vm->vm_id, vm_id);
-						cv.vcpu_num = target_vm->hw.created_vcpus;
-					} else {
-						dev_dbg(DBG_LEVEL_HYCALL, "HCALL: Create VM failed");
-						cv.vmid = ACRN_INVALID_VMID;
+					if (cv.cpu_affinity != 0UL) {
+						/* overwrite the statically configured CPU affinity */
+						pcpu_bitmap = cv.cpu_affinity;
 					}
 
-					ret = copy_to_gpa(vm, &cv, param, sizeof(cv));
+					/*
+					 * GUEST_FLAG_RT must be set if we have GUEST_FLAG_LAPIC_PASSTHROUGH
+					 * set in guest_flags
+					 */
+					if (((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0UL)
+							&& ((vm_config->guest_flags & GUEST_FLAG_RT) == 0UL)) {
+						pr_err("Wrong guest flags 0x%lx\n", vm_config->guest_flags);
+					} else {
+						if (create_vm(vm_id, pcpu_bitmap, vm_config, &target_vm) == 0) {
+							/* return a relative vm_id from SOS view */
+							cv.vmid = vmid_2_rel_vmid(vm->vm_id, vm_id);
+							cv.vcpu_num = target_vm->hw.created_vcpus;
+						} else {
+							dev_dbg(DBG_LEVEL_HYCALL, "HCALL: Create VM failed");
+							cv.vmid = ACRN_INVALID_VMID;
+						}
+
+						ret = copy_to_gpa(vm, &cv, param, sizeof(cv));
+					}
+				} else {
+					pr_err("Post-launched VM%u chooses invalid pCPUs(0x%llx).",
+							vm_id, cv.cpu_affinity);
 				}
-			} else {
-				pr_err("Post-launched VM%u chooses invalid pCPUs(0x%llx).", vm_id, cv.cpu_affinity);
 			}
+			put_vm_lock(get_vm_from_vmid(vm_id));
 		}
 	}
 
@@ -219,11 +226,12 @@ int32_t hcall_destroy_vm(uint16_t vmid)
 	int32_t ret = -1;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
+	get_vm_lock(target_vm);
 	if (is_paused_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		/* TODO: check target_vm guest_flags */
 		ret = shutdown_vm(target_vm);
 	}
-
+	put_vm_lock(target_vm);
 	return ret;
 }
 
@@ -243,11 +251,13 @@ int32_t hcall_start_vm(uint16_t vmid)
 	int32_t ret = -1;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
+	get_vm_lock(target_vm);
 	if ((is_created_vm(target_vm)) && (is_postlaunched_vm(target_vm)) && (target_vm->sw.io_shared_page != NULL)) {
 		/* TODO: check target_vm guest_flags */
 		start_vm(target_vm);
 		ret = 0;
 	}
+	put_vm_lock(target_vm);
 
 	return ret;
 }
@@ -268,12 +278,13 @@ int32_t hcall_pause_vm(uint16_t vmid)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	int32_t ret = -1;
 
+	get_vm_lock(target_vm);
 	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		/* TODO: check target_vm guest_flags */
 		pause_vm(target_vm);
 		ret = 0;
 	}
-
+	put_vm_lock(target_vm);
 	return ret;
 }
 
@@ -294,10 +305,12 @@ int32_t hcall_reset_vm(uint16_t vmid)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	int32_t ret = -1;
 
+	get_vm_lock(target_vm);
 	if (is_paused_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		/* TODO: check target_vm guest_flags */
 		ret = reset_vm(target_vm);
 	}
+	put_vm_lock(target_vm);
 	return ret;
 }
 
@@ -323,6 +336,7 @@ int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct acrn_vcpu *vcpu;
 	int32_t ret = -1;
 
+	get_vm_lock(target_vm);
 	/* Only allow setup init ctx while target_vm is inactive */
 	if ((!is_poweroff_vm(target_vm)) && (param != 0U) && (is_postlaunched_vm(target_vm)) &&
 			(target_vm->state != VM_RUNNING)) {
@@ -337,6 +351,7 @@ int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 			}
 		}
 	}
+	put_vm_lock(target_vm);
 
 	return ret;
 }
@@ -508,6 +523,7 @@ int32_t hcall_set_ioreq_buffer(struct acrn_vm *vm, uint16_t vmid, uint64_t param
 	uint16_t i;
 	int32_t ret = -1;
 
+	get_vm_lock(target_vm);
 	if (is_created_vm(target_vm) && is_postlaunched_vm(target_vm)) {
 		struct acrn_set_ioreq_buffer iobuf;
 
@@ -529,6 +545,7 @@ int32_t hcall_set_ioreq_buffer(struct acrn_vm *vm, uint16_t vmid, uint64_t param
 			}
 		}
 	}
+	put_vm_lock(target_vm);
 
 	return ret;
 }
