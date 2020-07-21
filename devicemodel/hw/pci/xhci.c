@@ -1187,14 +1187,28 @@ pci_xhci_set_evtrb(struct xhci_trb *evtrb, uint64_t port, uint32_t errcode,
 static void
 pci_xhci_reset(struct pci_xhci_vdev *xdev)
 {
-	int i;
+	int i, j;
 
 	xdev->rtsregs.er_enq_idx = 0;
 	xdev->rtsregs.er_enq_seg = 0;
 	xdev->rtsregs.event_pcs = 1;
+	struct pci_xhci_dev_emu *dev;
 
 	for (i = 1; i <= XHCI_MAX_SLOTS; i++)
+	{
 		pci_xhci_reset_slot(xdev, i);
+		dev = xdev->slots[i];
+		if (dev) {
+			for (j = 0; j < XHCI_MAX_DEVS; j++)
+			{
+				if(xdev->devices[j] == dev)
+					xdev->devices[j] = NULL;
+			}
+			pci_xhci_dev_destroy(dev);
+			xdev->slots[i] = NULL;
+			xdev->ndevices--;
+		}
+	}
 }
 
 static uint32_t
