@@ -18,7 +18,8 @@ INCLUDE_HEADER = """
 #include <board.h>
 #include <vtd.h>
 #include <msr.h>
-#include <pci.h>"""
+#include <pci.h>
+"""
 
 MSR_IA32_L2_MASK_BASE = 0x00000D10
 MSR_IA32_L2_MASK_END = 0x00000D4F
@@ -101,7 +102,7 @@ def populate_clos_mask_msr(rdt_res, cat_mask_list, config):
     idx = 0
     for cat_mask in cat_mask_list:
         print("\t{", file=config)
-        print("\t\t.clos_mask = {0}U,".format(cat_mask), file=config)
+        print("\t\t.clos_mask = CLOS_MASK_{},".format(idx), file=config)
         print("\t\t.msr_index = MSR_IA32_{0}_MASK_BASE + {1},".format(
               rdt_res, idx), file=config)
         print("\t},", file=config)
@@ -117,7 +118,7 @@ def populate_mba_delay_mask(rdt_res, mba_delay_list, config):
     idx = 0
     for mba_delay_mask in mba_delay_list:
         print("\t{", file=config)
-        print("\t\t.mba_delay = {0}U,".format(mba_delay_mask), file=config)
+        print("\t\t.mba_delay = MBA_MASK_{},".format(idx), file=config)
         print("\t\t.msr_index = MSR_IA32_{0}_MASK_BASE + {1},".format(
               rdt_res, idx), file=config)
         print("\t},", file=config)
@@ -147,7 +148,7 @@ def gen_rdt_res(config):
     if len(rdt_resources) == 0 or common_clos_max == 0:
         print("struct platform_clos_info platform_{0}_clos_array[MAX_PLATFORM_CLOS_NUM];".format("l2"), file=config)
         print("struct platform_clos_info platform_{0}_clos_array[MAX_PLATFORM_CLOS_NUM];".format("l3"), file=config)
-        print("struct platform_clos_info platform_{0}_clos_array[MAX_PLATFORM_CLOS_NUM];".format("mba"), file=config)
+        print("struct platform_clos_info platform_{0}_clos_array[MAX_MBA_CLOS_NUM_ENTRIES];".format("mba"), file=config)
     else:
         for idx, rdt_res in enumerate(rdt_resources):
             if rdt_res == "L2":
@@ -180,7 +181,7 @@ def gen_rdt_res(config):
         if res_present[RDT.L3.value] == 0:
             print("struct platform_clos_info platform_{0}_clos_array[{1}];".format("l3", "MAX_PLATFORM_CLOS_NUM"), file=config)
         if res_present[RDT.MBA.value] == 0:
-            print("struct platform_clos_info platform_{0}_clos_array[{1}];".format("mba", "MAX_PLATFORM_CLOS_NUM"), file=config)
+            print("struct platform_clos_info platform_{0}_clos_array[{1}];".format("mba", "MAX_MBA_CLOS_NUM_ENTRIES"), file=config)
 
     print("#endif", file=config)
 
@@ -261,19 +262,8 @@ def gen_pci_hide(config):
 
 def gen_known_caps_pci_devs(config):
     """Generate information for known capabilities of pci devices"""
-
-    vpid_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<PCI_VID_PID>", "</PCI_VID_PID>")
-    for dev,known_dev in board_cfg_lib.KNOWN_CAPS_PCI_DEVS_DB.items():
-        if dev not in board_cfg_lib.KNOWN_CAPS_PCI_DEVS:
-            board_cfg_lib.KNOWN_CAPS_PCI_DEVS[dev] = []
-        for k_dev in known_dev:
-            for vpid_line in vpid_lines:
-                if k_dev in vpid_line:
-                    bdf = vpid_line.split()[0]
-                    board_cfg_lib.KNOWN_CAPS_PCI_DEVS[dev].append(bdf)
-                    break
-
-    for dev,bdf_list in board_cfg_lib.KNOWN_CAPS_PCI_DEVS.items():
+    known_caps_pci_devs = board_cfg_lib.get_known_caps_pci_devs()
+    for dev,bdf_list in known_caps_pci_devs.items():
         if dev == "TSN":
             print("", file=config)
             bdf_list_len = len(bdf_list)

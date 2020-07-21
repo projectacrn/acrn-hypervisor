@@ -26,11 +26,11 @@ def generate_file(vm_info, config):
     :param config: it is pointer for for file write to
     :return: None
     """
-    sub_name_count = board_cfg_lib.parser_pci()
+    board_cfg_lib.parser_pci()
 
     compared_bdf = []
 
-    for cnt_sub_name in sub_name_count.keys():
+    for cnt_sub_name in board_cfg_lib.SUB_NAME_COUNT.keys():
         i_cnt = 0
         for bdf, bar_attr in board_cfg_lib.PCI_DEV_BAR_DESC.pci_dev_dic.items():
             if cnt_sub_name == bar_attr.name and bdf not in compared_bdf:
@@ -42,34 +42,32 @@ def generate_file(vm_info, config):
 
             i_cnt += 1
 
+    idx = 0
     print("{}".format(scenario_cfg_lib.HEADER_LICENSE), file=config)
     print("", file=config)
     print("#include <vm_config.h>", file=config)
     print("#include <pci_devices.h>", file=config)
     print("#include <vpci.h>", file=config)
+    print("#include <vbar_base.h>", file=config)
     print("#include <mmu.h>", file=config)
     print("#include <page.h>", file=config)
-    print("", file=config)
-    print("/* The vbar_base info of pt devices is included in device MACROs which defined in",
-          file=config)
-    print(" *           arch/x86/configs/$(CONFIG_BOARD)/pci_devices.h.", file=config)
-    print(" * The memory range of vBAR should exactly match with the e820 layout of VM.",
-          file=config)
-    print(" */", file=config)
     for vm_i, pci_bdf_devs_list in vm_info.cfg_pci.pci_devs.items():
-        pci_cnt = 1
         if not pci_bdf_devs_list:
             continue
-
+        pci_cnt = 1
+        if idx == 0:
+            print("", file=config)
+            print("#define PTDEV(PCI_DEV)\t\tPCI_DEV, PCI_DEV##_VBAR",file=config)
         print("", file=config)
         print("struct acrn_vm_pci_dev_config " +
-              "vm{}_pci_devs[{}] = {{".format(vm_i, vm_info.cfg_pci.pci_dev_num[vm_i]), file=config)
+              "vm{}_pci_devs[VM{}_CONFIG_PCI_DEV_NUM] = {{".format(vm_i, vm_i), file=config)
         print("\t{", file=config)
         print("\t\t.emu_type = {},".format(PCI_DEV_TYPE[0]), file=config)
         print("\t\t.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},", file=config)
         print("\t\t.vdev_ops = &vhostbridge_ops,", file=config)
         print("\t},", file=config)
 
+        idx += 1
         for pci_bdf_dev in pci_bdf_devs_list:
             if not pci_bdf_dev:
                 continue
@@ -81,7 +79,7 @@ def generate_file(vm_info, config):
             print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x0{}U, .f = 0x00U}},".format(pci_cnt), file=config)
             for bdf, bar_attr in board_cfg_lib.PCI_DEV_BAR_DESC.pci_dev_dic.items():
                 if bdf == pci_bdf_dev:
-                    print("\t\t{},".format(board_cfg_lib.PCI_DEV_BAR_DESC.pci_dev_dic[bdf].name_w_i_cnt), file=config)
+                    print("\t\tPTDEV({}),".format(board_cfg_lib.PCI_DEV_BAR_DESC.pci_dev_dic[bdf].name_w_i_cnt), file=config)
                 else:
                     continue
             print("\t},", file=config)

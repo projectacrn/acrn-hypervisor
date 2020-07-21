@@ -235,6 +235,4 @@ def generate_file(hv_info, config):
     get_serial_console(config)
     get_log_opt(hv_info, config)
 
-    print("CONFIG_ENFORCE_VALIDATED_ACPI_INFO=y", file=config)
-
     return err_dic
