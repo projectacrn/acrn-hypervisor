@@ -9,16 +9,19 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
 import board_cfg_lib
 import board_c
+import board_info_h
 import pci_devices_h
 import acpi_platform_h
 import misc_cfg_h
 import common
+import vbar_base_h
 
 ACRN_PATH = common.SOURCE_ROOT_DIR
-ACRN_CONFIG_DEF = ACRN_PATH + "hypervisor/arch/x86/configs/"
+ACRN_CONFIG_DEF = ACRN_PATH + "misc/vm_configs/"
 
 ACRN_DEFAULT_ACPI = ACRN_PATH + "hypervisor/include/arch/x86/default_acpi_info.h"
-GEN_FILE = ["pci_devices.h", "board.c", "_acpi_info.h", "misc_cfg.h", ".config"]
+GEN_FILE = ["pci_devices.h", "board.c", "platform_acpi_info.h", "misc_cfg.h",
+            "board_info.h", "vbar_base.h"]
 
 
 def main(args):
@@ -51,6 +54,10 @@ def main(args):
     (err_dic, board) = common.get_board_name()
     if err_dic:
         return err_dic
+
+    (err_dic, scenario) = common.get_scenario_name()
+    if err_dic:
+        return err_dic
     board_cfg_lib.BOARD_NAME = board
 
     # check if this is the scenario config which matched board info
@@ -59,22 +66,36 @@ def main(args):
         err_dic['board config: Not match'] = "The board xml and scenario xml should be matched"
         return err_dic
 
+    output = ''
     if params['--out']:
         if os.path.isabs(params['--out']):
-            board_dir = os.path.join(params['--out'], board + '/')
-            config_board_kconfig = os.path.join(board_dir,  GEN_FILE[4])
+            output = params['--out']
         else:
-            board_dir = os.path.join(ACRN_PATH + params['--out'], board + '/')
-            config_board_kconfig = os.path.join(board_dir, GEN_FILE[4])
+            output = ACRN_PATH + params['--out']
     else:
-        board_dir = os.path.join(ACRN_CONFIG_DEF, board + '/')
-        config_board_kconfig = os.path.join(board_dir, GEN_FILE[4])
-    common.mkdir(board_dir)
+        output = ACRN_CONFIG_DEF
 
-    config_pci = board_dir + GEN_FILE[0]
-    config_board = board_dir + GEN_FILE[1]
-    config_acpi = board_dir + board + GEN_FILE[2]
-    config_misc_cfg = board_dir + GEN_FILE[3]
+    board_fix_dir = os.path.join(output, "boards/" + board + '/')
+    scen_board_dir = os.path.join(output, "scenarios/" + scenario + "/" + board + '/')
+    common.mkdir(board_fix_dir)
+    common.mkdir(scen_board_dir)
+
+    config_pci = board_fix_dir + GEN_FILE[0]
+    config_board = board_fix_dir + GEN_FILE[1]
+    config_acpi =  board_fix_dir + GEN_FILE[2]
+    config_board_h =  board_fix_dir + GEN_FILE[4]
+    config_misc_cfg = scen_board_dir + GEN_FILE[3]
+    config_vbar_base = scen_board_dir + GEN_FILE[5]
+
+    # generate pci_devices.h
+    with open(config_pci, 'w+') as config:
+        pci_devices_h.generate_file(config)
+
+    # generate board_info.h
+    with open(config_board_h, 'w+') as config:
+        err_dic = board_info_h.generate_file(config)
+        if err_dic:
+            return err_dic
 
     # generate board.c
     with open(config_board, 'w+') as config:
@@ -82,11 +103,11 @@ def main(args):
         if err_dic:
             return err_dic
 
-    # generate pci_devices.h
-    with open(config_pci, 'w+') as config:
-        pci_devices_h.generate_file(config)
+    # generate vbar_base.h
+    with open(config_vbar_base, 'w+') as config:
+        vbar_base_h.generate_file(config)
 
-    # generate ($board)_acpi_info.h
+    # generate platform_acpi_info.h
     with open(config_acpi, 'w+') as config:
         acpi_platform_h.generate_file(config, ACRN_DEFAULT_ACPI)
 

@@ -6,10 +6,8 @@
 import common
 import board_cfg_lib
 
-MISC_CFG_HEADER = """
-#ifndef MISC_CFG_H
-#define MISC_CFG_H
-"""
+MISC_CFG_HEADER = """#ifndef MISC_CFG_H
+#define MISC_CFG_H"""
 
 NATIVE_TTYS_DIC = {}
 MISC_CFG_END = """#endif /* MISC_CFG_H */"""
@@ -140,65 +138,12 @@ def parse_boot_info():
     return (err_dic, sos_cmdlines, sos_rootfs, vuart0_dic, vuart1_dic)
 
 
-def find_hi_mmio_window(config):
-
-    i_cnt = 0
-    mmio_min = 0
-    mmio_max = 0
-    is_hi_mmio = False
-
-    iomem_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
-
-    for line in iomem_lines:
-        if "PCI Bus" not in line:
-            continue
-
-        line_start_addr = int(line.split('-')[0], 16)
-        line_end_addr = int(line.split('-')[1].split()[0], 16)
-        if line_start_addr < common.SIZE_4G and line_end_addr < common.SIZE_4G:
-            continue
-        elif line_start_addr < common.SIZE_4G and line_end_addr >= common.SIZE_4G:
-            i_cnt += 1
-            is_hi_mmio = True
-            mmio_min = common.SIZE_4G
-            mmio_max = line_end_addr
-            continue
-
-        is_hi_mmio = True
-        if i_cnt == 0:
-            mmio_min = line_start_addr
-            mmio_max = line_end_addr
-
-        if mmio_max < line_end_addr:
-            mmio_max = line_end_addr
-        i_cnt += 1
-
-    print("", file=config)
-    if is_hi_mmio:
-        print("#define HI_MMIO_START\t\t0x%xUL" % common.round_down(mmio_min, common.SIZE_G), file=config)
-        print("#define HI_MMIO_END\t\t0x%xUL" % common.round_up(mmio_max, common.SIZE_G), file=config)
-    else:
-        print("#define HI_MMIO_START\t\t~0UL", file=config)
-        print("#define HI_MMIO_END\t\t0UL", file=config)
-
-def gen_known_caps_pci_head(config):
-
-    for dev,bdf_list in board_cfg_lib.KNOWN_CAPS_PCI_DEVS.items():
-        if dev == "TSN":
-            bdf_list_len = len(bdf_list)
-            print("#define MAX_VMSIX_ON_MSI_PDEVS_NUM\t{}U".format(bdf_list_len), file=config)
-
-
 def generate_file(config):
     """
     Start to generate board.c
     :param config: it is a file pointer of board information for writing to
     """
     board_cfg_lib.get_valid_irq(common.BOARD_INFO_FILE)
-
-    # get cpu processor list
-    cpu_list = board_cfg_lib.get_processor_info()
-    max_cpu_num = len(cpu_list)
 
     # get the vuart0/vuart1 which user chosed from scenario.xml of board_private section
     (err_dic, ttys_n) = board_cfg_lib.parser_hv_console()
@@ -233,28 +178,13 @@ def generate_file(config):
     # start to generate misc_cfg.h
     print("{0}".format(board_cfg_lib.HEADER_LICENSE), file=config)
     print("{}".format(MISC_CFG_HEADER), file=config)
-
-    # define CONFIG_MAX_PCPCU_NUM
-    print("#define MAX_PCPU_NUM\t{}U".format(max_cpu_num), file=config)
-
-    # set macro of max clos number
-    common_clos_max = board_cfg_lib.get_common_clos_max()
-    max_cache_clos_entries = common_clos_max
-    max_mba_clos_entries = common_clos_max
-    if board_cfg_lib.is_cdp_enabled():
-        max_cache_clos_entries = 2 * common_clos_max
-
-    print("#define MAX_CACHE_CLOS_NUM_ENTRIES\t{}U".format(max_cache_clos_entries), file=config)
-    print("#define MAX_MBA_CLOS_NUM_ENTRIES\t{}U".format(max_mba_clos_entries), file=config)
-    print("#define MAX_PLATFORM_CLOS_NUM\t{}U".format(common_clos_max), file=config)
-    gen_known_caps_pci_head(config)
+    print("", file=config)
 
     # define rootfs with macro
-    for i in range(root_dev_num):
-        print('#define ROOTFS_{}\t\t"root={} "'.format(i, root_devs[i]), file=config)
+    #for i in range(root_dev_num):
+    #    print('#define ROOTFS_{}\t\t"root={} "'.format(i, root_devs[i]), file=config)
 
     # sos rootfs and console
-    print("", file=config)
     if "SOS_VM" in common.VM_TYPES.values():
         print('#define SOS_ROOTFS\t\t"root={} "'.format(sos_rootfs[0]), file=config)
         if ttys_n:
@@ -281,22 +211,35 @@ def generate_file(config):
             print("#define SOS_COM2_BASE\t\t{}U".format(vuart1_port_base), file=config)
             print("#define SOS_COM2_IRQ\t\t{}U".format(vuart1_irq), file=config)
 
-    # sos boot command line
-    print("", file=config)
+        # sos boot command line
+        print("", file=config)
+
     if "SOS_VM" in common.VM_TYPES.values():
         sos_bootarg_diff(sos_cmdlines, config)
+        print("", file=config)
 
-    # set macro for HIDDEN PTDEVS
-    print("", file=config)
-    if board_cfg_lib.BOARD_NAME in list(board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB):
-        print("#define MAX_HIDDEN_PDEVS_NUM	{}U".format(len(board_cfg_lib.KNOWN_HIDDEN_PDEVS_BOARD_DB[board_cfg_lib.BOARD_NAME])), file=config)
-    else:
-        print("#define MAX_HIDDEN_PDEVS_NUM	0U", file=config)
+    if board_cfg_lib.is_rdt_supported():
+        print("", file=config)
+        common_clos_max = board_cfg_lib.get_common_clos_max()
+        max_cache_clos_entries = common_clos_max
+        if board_cfg_lib.is_cdp_enabled():
+            max_cache_clos_entries = 2 * common_clos_max
+        print("#define MAX_CACHE_CLOS_NUM_ENTRIES\t{}U".format(max_cache_clos_entries), file=config)
 
-    # generate HI_MMIO_START/HI_MMIO_END
-    find_hi_mmio_window(config)
+        (rdt_resources, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
+        cat_mask_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "CLOS_MASK")
+        mba_delay_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "MBA_DELAY")
+        idx = 0
+        for mba_delay_mask in mba_delay_list:
+            print("#define MBA_MASK_{}\t{}U".format(idx, mba_delay_mask), file=config)
+            idx += 1
 
-    print("", file=config)
+        idx = 0
+        for cat_mask in cat_mask_list:
+            print("#define CLOS_MASK_{}\t{}U".format(idx, cat_mask), file=config)
+            idx += 1
+
+        print("", file=config)
 
     print("{}".format(MISC_CFG_END), file=config)
 
