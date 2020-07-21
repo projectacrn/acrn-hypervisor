@@ -20,8 +20,7 @@ import board_defconfig
 from hv_item import HvInfo
 
 ACRN_PATH = common.SOURCE_ROOT_DIR
-ACRN_CONFIG_DEF = ACRN_PATH + 'hypervisor/scenarios/'
-ACRN_CONFIGS = ACRN_PATH + "hypervisor/arch/x86/configs/"
+ACRN_CONFIG_DEF = ACRN_PATH + 'misc/vm_configs/scenarios/'
 GEN_FILE = ["vm_configurations.h", "vm_configurations.c", "pci_dev.c", ".config"]
 
 
@@ -148,20 +147,20 @@ def main(args):
 
     if params['--out']:
         if os.path.isabs(params['--out']):
-            scenario_dir = os.path.join(params['--out'], scenario + '/')
-            config_hv = os.path.join(params['--out'], board_name + GEN_FILE[3])
+            scen_output = params['--out'] + "/scenarios/" + scenario + "/"
         else:
-            scenario_dir = os.path.join(ACRN_PATH + params['--out'], scenario + '/')
-            config_hv = os.path.join(ACRN_PATH + params['--out'], board_name + GEN_FILE[3])
+            scen_output = ACRN_PATH + params['--out'] + "/scenarios/" + scenario + "/"
     else:
-        scenario_dir = os.path.join(ACRN_CONFIG_DEF, scenario + '/')
-        config_hv = os.path.join(ACRN_CONFIGS, board_name + GEN_FILE[3])
-        common.print_yel("{}".format("Override board defconfig...", warn=True))
-    common.mkdir(scenario_dir)
+        scen_output = ACRN_CONFIG_DEF + "/scenarios/" + scenario + "/"
 
-    vm_config_h = scenario_dir + GEN_FILE[0]
-    vm_config_c = scenario_dir + GEN_FILE[1]
-    pci_config_c = scenario_dir + GEN_FILE[2]
+    scen_board = scen_output + board_name + "/"
+    common.mkdir(scen_board)
+    common.mkdir(scen_output)
+
+    vm_config_h  = scen_output + GEN_FILE[0]
+    vm_config_c  = scen_output + GEN_FILE[1]
+    pci_config_c = scen_board + GEN_FILE[2]
+    config_hv = scen_board + board_name + GEN_FILE[3]
 
     # parse the scenario.xml
     get_scenario_item_values(params['--board'], params['--scenario'])

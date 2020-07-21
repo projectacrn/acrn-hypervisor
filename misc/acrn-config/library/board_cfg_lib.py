@@ -35,7 +35,6 @@ TSN_DEVS = ["8086:4b30", "8086:4b31", "8086:4b32", "8086:4ba0", "8086:4ba1", "80
 KNOWN_CAPS_PCI_DEVS_DB = {
     "TSN":TSN_DEVS,
 }
-KNOWN_CAPS_PCI_DEVS = {}
 
 def get_info(board_info, msg_s, msg_e):
     """
@@ -364,6 +363,7 @@ class Pci_Dev_Bar_Desc:
         self.pci_bar_dic = {}
 
 PCI_DEV_BAR_DESC = Pci_Dev_Bar_Desc()
+SUB_NAME_COUNT = {}
 
 
 def get_value_after_str(line, key):
@@ -411,6 +411,7 @@ def remap_bar_addr_to_high(bar_addr, line):
 
 def parser_pci():
     """ Parse PCI lines """
+    global SUB_NAME_COUNT, HI_MMIO_OFFSET
     cur_bdf = 0
     prev_bdf = 0
     tmp_bar_dic = {}
@@ -463,12 +464,10 @@ def parser_pci():
             tmp_bar_dic = {}
 
     # output all the pci device list to pci_device.h
-    sub_name_count = collections.Counter(cal_sub_pci_name)
+    SUB_NAME_COUNT = collections.Counter(cal_sub_pci_name)
 
     if tmp_bar_dic:
         PCI_DEV_BAR_DESC.pci_bar_dic[cur_bdf] = tmp_bar_dic
-
-    return sub_name_count
 
 
 def is_rdt_supported():
@@ -529,3 +528,32 @@ def get_common_clos_max():
         common_clos_max = min(tmp_clos_max_list)
 
     return common_clos_max
+
+
+def get_sub_pci_name(i_cnt, bar_attr):
+    tmp_sub_name = ''
+    # if there is only one host bridge, then will discard the index of suffix
+    if i_cnt == 0 and bar_attr.name.upper() == "HOST BRIDGE":
+        tmp_sub_name = "_".join(bar_attr.name.split()).upper()
+    else:
+        if '-' in bar_attr.name:
+            tmp_sub_name = common.undline_name(bar_attr.name) + "_" + str(i_cnt)
+        else:
+            tmp_sub_name = "_".join(bar_attr.name.split()).upper() + "_" + str(i_cnt)
+
+    return tmp_sub_name
+
+def get_known_caps_pci_devs():
+    known_caps_pci_devs = {}
+    vpid_lines = get_info(common.BOARD_INFO_FILE, "<PCI_VID_PID>", "</PCI_VID_PID>")
+    for dev,known_dev in KNOWN_CAPS_PCI_DEVS_DB.items():
+        if dev not in known_caps_pci_devs:
+            known_caps_pci_devs[dev] = []
+        for k_dev in known_dev:
+            for vpid_line in vpid_lines:
+                if k_dev in vpid_line:
+                    bdf = vpid_line.split()[0]
+                    known_caps_pci_devs[dev].append(bdf)
+                    break
+
+    return known_caps_pci_devs
