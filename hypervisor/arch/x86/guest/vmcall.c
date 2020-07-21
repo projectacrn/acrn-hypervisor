@@ -26,7 +26,6 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 	/* hypercall param1 is a relative vm id from SOS view */
 	uint16_t relative_vm_id = (uint16_t)param1;
 	uint16_t vm_id = rel_vmid_2_vmid(sos_vm->vm_id, relative_vm_id);
-	bool vmid_is_valid = (vm_id < CONFIG_MAX_VM_NUM) ? true : false;
 	int32_t ret = -1;
 
 	switch (hypcall_id) {
@@ -52,28 +51,28 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 
 	case HC_DESTROY_VM:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_destroy_vm(vm_id);
 		}
 		break;
 
 	case HC_START_VM:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_start_vm(vm_id);
 		}
 		break;
 
 	case HC_RESET_VM:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_reset_vm(vm_id);
 		}
 		break;
 
 	case HC_PAUSE_VM:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_pause_vm(vm_id);
 		}
 		break;
@@ -84,14 +83,14 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 
 	case HC_SET_VCPU_REGS:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_set_vcpu_regs(sos_vm, vm_id, param2);
 		}
 		break;
 
 	case HC_SET_IRQLINE:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_set_irqline(sos_vm, vm_id,
 					(struct acrn_irqline_ops *)&param2);
 		}
@@ -99,14 +98,14 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 
 	case HC_INJECT_MSI:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_inject_msi(sos_vm, vm_id, param2);
 		}
 		break;
 
 	case HC_SET_IOREQ_BUFFER:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_set_ioreq_buffer(sos_vm, vm_id, param2);
 		}
 		break;
@@ -114,7 +113,7 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 	case HC_NOTIFY_REQUEST_FINISH:
 		/* param1: relative vmid to sos, vm_id: absolute vmid
 		 * param2: vcpu_id */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_notify_ioreq_finish(vm_id,
 				(uint16_t)param2);
 		}
@@ -126,7 +125,7 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 
 	case HC_VM_WRITE_PROTECT_PAGE:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_write_protect_page(sos_vm, vm_id, param2);
 		}
 		break;
@@ -141,49 +140,49 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 
 	case HC_VM_GPA2HPA:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if ((vm_id < CONFIG_MAX_VM_NUM) && !is_prelaunched_vm(get_vm_from_vmid(vm_id))) {
 			ret = hcall_gpa_to_hpa(sos_vm, vm_id, param2);
 		}
 		break;
 
 	case HC_ASSIGN_PCIDEV:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_assign_pcidev(sos_vm, vm_id, param2);
 		}
 		break;
 
 	case HC_DEASSIGN_PCIDEV:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_deassign_pcidev(sos_vm, vm_id, param2);
 		}
 		break;
 
 	case HC_ASSIGN_MMIODEV:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_assign_mmiodev(sos_vm, vm_id, param2);
 		}
 		break;
 
 	case HC_DEASSIGN_MMIODEV:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_deassign_mmiodev(sos_vm, vm_id, param2);
 		}
 		break;
 
 	case HC_SET_PTDEV_INTR_INFO:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_set_ptdev_intr_info(sos_vm, vm_id, param2);
 		}
 		break;
 
 	case HC_RESET_PTDEV_INTR_INFO:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_reset_ptdev_intr_info(sos_vm, vm_id, param2);
 		}
 		break;
@@ -194,7 +193,7 @@ static int32_t dispatch_sos_hypercall(const struct acrn_vcpu *vcpu)
 
 	case HC_VM_INTR_MONITOR:
 		/* param1: relative vmid to sos, vm_id: absolute vmid */
-		if (vmid_is_valid) {
+		if (is_valid_postlaunched_vmid(vm_id)) {
 			ret = hcall_vm_intr_monitor(sos_vm, vm_id, param2);
 		}
 		break;

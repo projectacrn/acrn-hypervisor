@@ -228,7 +228,7 @@ int32_t hcall_destroy_vm(uint16_t vmid)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	get_vm_lock(target_vm);
-	if (is_paused_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+	if (is_paused_vm(target_vm)) {
 		/* TODO: check target_vm guest_flags */
 		ret = shutdown_vm(target_vm);
 	}
@@ -253,7 +253,7 @@ int32_t hcall_start_vm(uint16_t vmid)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	get_vm_lock(target_vm);
-	if ((is_created_vm(target_vm)) && (is_postlaunched_vm(target_vm)) && (target_vm->sw.io_shared_page != NULL)) {
+	if ((is_created_vm(target_vm)) && (target_vm->sw.io_shared_page != NULL)) {
 		/* TODO: check target_vm guest_flags */
 		start_vm(target_vm);
 		ret = 0;
@@ -280,7 +280,7 @@ int32_t hcall_pause_vm(uint16_t vmid)
 	int32_t ret = -1;
 
 	get_vm_lock(target_vm);
-	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+	if (!is_poweroff_vm(target_vm)) {
 		/* TODO: check target_vm guest_flags */
 		pause_vm(target_vm);
 		ret = 0;
@@ -307,7 +307,7 @@ int32_t hcall_reset_vm(uint16_t vmid)
 	int32_t ret = -1;
 
 	get_vm_lock(target_vm);
-	if (is_paused_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+	if (is_paused_vm(target_vm)) {
 		/* TODO: check target_vm guest_flags */
 		ret = reset_vm(target_vm);
 	}
@@ -339,8 +339,7 @@ int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 
 	get_vm_lock(target_vm);
 	/* Only allow setup init ctx while target_vm is inactive */
-	if ((!is_poweroff_vm(target_vm)) && (param != 0U) && (is_postlaunched_vm(target_vm)) &&
-			(target_vm->state != VM_RUNNING)) {
+	if ((!is_poweroff_vm(target_vm)) && (param != 0U) && (target_vm->state != VM_RUNNING)) {
 		if (copy_from_gpa(vm, &vcpu_regs, param, sizeof(vcpu_regs)) != 0) {
 		} else if (vcpu_regs.vcpu_id >= MAX_VCPUS_PER_VM) {
 			pr_err("%s: invalid vcpu_id for set_vcpu_regs\n", __func__);
@@ -378,7 +377,7 @@ int32_t hcall_set_irqline(const struct acrn_vm *vm, uint16_t vmid,
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	int32_t ret = -1;
 
-	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+	if (!is_poweroff_vm(target_vm)) {
 		if (ops->gsi < get_vm_gsicount(vm)) {
 			if (ops->gsi < vpic_pincount()) {
 				/*
@@ -467,7 +466,7 @@ int32_t hcall_inject_msi(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	int32_t ret = -1;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+	if (!is_poweroff_vm(target_vm)) {
 		struct acrn_msi_entry msi;
 
 		if (copy_from_gpa(vm, &msi, param, sizeof(msi)) == 0) {
@@ -525,7 +524,7 @@ int32_t hcall_set_ioreq_buffer(struct acrn_vm *vm, uint16_t vmid, uint64_t param
 	int32_t ret = -1;
 
 	get_vm_lock(target_vm);
-	if (is_created_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+	if (is_created_vm(target_vm)) {
 		struct acrn_set_ioreq_buffer iobuf;
 
 		if (copy_from_gpa(vm, &iobuf, param, sizeof(iobuf)) == 0) {
@@ -569,7 +568,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 	int32_t ret = -1;
 
 	/* make sure we have set req_buf */
-	if ((!is_poweroff_vm(target_vm)) && (is_postlaunched_vm(target_vm)) && (target_vm->sw.io_shared_page != NULL)) {
+	if ((!is_poweroff_vm(target_vm)) && (target_vm->sw.io_shared_page != NULL)) {
 		dev_dbg(DBG_LEVEL_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
 			vmid, vcpu_id);
 
@@ -787,7 +786,7 @@ int32_t hcall_write_protect_page(struct acrn_vm *vm, uint16_t vmid, uint64_t wp_
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	int32_t ret = -1;
 
-	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+	if (!is_poweroff_vm(target_vm)) {
 		struct wp_data wp;
 
 		if (copy_from_gpa(vm, &wp, wp_gpa, sizeof(wp)) == 0) {
@@ -820,8 +819,8 @@ int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	(void)memset((void *)&v_gpa2hpa, 0U, sizeof(v_gpa2hpa));
-	if (!is_poweroff_vm(target_vm) && (!is_prelaunched_vm(target_vm))
-			&& (copy_from_gpa(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa)) == 0)) {
+	if (!is_poweroff_vm(target_vm) &&
+			(copy_from_gpa(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa)) == 0)) {
 		v_gpa2hpa.hpa = gpa2hpa(target_vm, v_gpa2hpa.gpa);
 		if (v_gpa2hpa.hpa == INVALID_HPA) {
 			pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
@@ -854,7 +853,7 @@ int32_t hcall_assign_pcidev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	/* We should only assign a device to a post-launched VM at creating time for safety, not runtime or other cases*/
-	if (is_created_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+	if (is_created_vm(target_vm)) {
 		if (copy_from_gpa(vm, &pcidev, param, sizeof(pcidev)) == 0) {
 			ret = vpci_assign_pcidev(target_vm, &pcidev);
 		}
@@ -883,7 +882,7 @@ int32_t hcall_deassign_pcidev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	/* We should only de-assign a device from a post-launched VM at creating/shutdown/reset time */
-	if ((is_paused_vm(target_vm) || is_created_vm(target_vm)) && is_postlaunched_vm(target_vm)) {
+	if ((is_paused_vm(target_vm) || is_created_vm(target_vm))) {
 		if (copy_from_gpa(vm, &pcidev, param, sizeof(pcidev)) == 0) {
 			ret = vpci_deassign_pcidev(target_vm, &pcidev);
 		}
@@ -912,7 +911,7 @@ int32_t hcall_assign_mmiodev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	/* We should only assign a device to a post-launched VM at creating time for safety, not runtime or other cases*/
-	if (is_created_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+	if (is_created_vm(target_vm)) {
 		if (copy_from_gpa(vm, &mmiodev, param, sizeof(mmiodev)) == 0) {
 			ret = deassign_mmio_dev(vm, &mmiodev);
 			if (ret == 0) {
@@ -944,7 +943,7 @@ int32_t hcall_deassign_mmiodev(struct acrn_vm *vm, uint16_t vmid, uint64_t param
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	/* We should only de-assign a device from a post-launched VM at creating/shutdown/reset time */
-	if ((is_paused_vm(target_vm) || is_created_vm(target_vm)) && is_postlaunched_vm(target_vm)) {
+	if ((is_paused_vm(target_vm) || is_created_vm(target_vm))) {
 		if (copy_from_gpa(vm, &mmiodev, param, sizeof(mmiodev)) == 0) {
 			ret = deassign_mmio_dev(target_vm, &mmiodev);
 			if (ret == 0) {
@@ -974,7 +973,7 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t pa
 	int32_t ret = -1;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+	if (!is_poweroff_vm(target_vm)) {
 		struct hc_ptdev_irq irq;
 
 		if (copy_from_gpa(vm, &irq, param, sizeof(irq)) == 0) {
@@ -1026,7 +1025,7 @@ hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	int32_t ret = -1;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+	if (!is_poweroff_vm(target_vm)) {
 		struct hc_ptdev_irq irq;
 
 		if (copy_from_gpa(vm, &irq, param, sizeof(irq)) == 0) {
@@ -1162,7 +1161,7 @@ int32_t hcall_vm_intr_monitor(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	uint64_t hpa;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (!is_poweroff_vm(target_vm) && is_postlaunched_vm(target_vm)) {
+	if (!is_poweroff_vm(target_vm)) {
 		/* the param for this hypercall is page aligned */
 		hpa = gpa2hpa(vm, param);
 		if (hpa != INVALID_HPA) {
@@ -1208,14 +1207,11 @@ int32_t hcall_vm_intr_monitor(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
  * @pre Pointer vm shall point to SOS_VM
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_callback_vector(const struct acrn_vm *vm, uint64_t param)
+int32_t hcall_set_callback_vector(__unused const struct acrn_vm *vm, uint64_t param)
 {
 	int32_t ret;
 
-	if (!is_sos_vm(vm)) {
-		pr_err("%s: Targeting to service vm", __func__);
-		ret = -EPERM;
-	} else if ((param > NR_MAX_VECTOR) || (param < VECTOR_DYNAMIC_START)) {
+	if ((param > NR_MAX_VECTOR) || (param < VECTOR_DYNAMIC_START)) {
 		pr_err("%s: Invalid passed vector\n", __func__);
 		ret = -EINVAL;
 	} else {

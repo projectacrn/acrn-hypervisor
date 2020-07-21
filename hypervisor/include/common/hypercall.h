@@ -435,7 +435,7 @@ int32_t hcall_save_restore_sworld_ctx(struct acrn_vcpu *vcpu);
  * @pre Pointer vm shall point to SOS_VM
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_callback_vector(const struct acrn_vm *vm, uint64_t param);
+int32_t hcall_set_callback_vector(__unused const struct acrn_vm *vm, uint64_t param);
 
 /**
  * @}
