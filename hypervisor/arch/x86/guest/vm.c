@@ -93,6 +93,10 @@ bool is_postlaunched_vm(const struct acrn_vm *vm)
 	return (get_vm_config(vm->vm_id)->load_order == POST_LAUNCHED_VM);
 }
 
+bool is_valid_postlaunched_vmid(uint16_t vm_id)
+{
+	return ((vm_id < CONFIG_MAX_VM_NUM) && is_postlaunched_vm(get_vm_from_vmid(vm_id)));
+}
 /**
  * @pre vm != NULL
  * @pre vm->vmid < CONFIG_MAX_VM_NUM
