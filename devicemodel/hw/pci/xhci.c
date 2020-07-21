@@ -1192,9 +1192,26 @@ pci_xhci_reset(struct pci_xhci_vdev *xdev)
 	xdev->rtsregs.er_enq_idx = 0;
 	xdev->rtsregs.er_enq_seg = 0;
 	xdev->rtsregs.event_pcs = 1;
+	struct pci_xhci_dev_emu *dev;
+
+	for (i = 1; i <= XHCI_MAX_DEVS; i++)
+	{
+		dev = xdev->devices[i];
+		if (dev) {
+			xdev->devices[i] = NULL;
+			pci_xhci_dev_destroy(dev);
+			/* FIXME: The ndevices hasn't
+			 * aligned between ++ and --
+			 * */
+			xdev->ndevices--;
+		}
+	}
 
 	for (i = 1; i <= XHCI_MAX_SLOTS; i++)
-		pci_xhci_reset_slot(xdev, i);
+	{
+		xdev->slots[i] = NULL;
+		xdev->slot_allocated[i] = false;
+	}
 }
 
 static uint32_t
