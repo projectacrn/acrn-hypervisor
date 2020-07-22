@@ -575,6 +575,12 @@
 #define MSR_IA32_MISC_ENABLE_xTPR		(1UL << 23U)
 #define MSR_IA32_MISC_ENABLE_XD_DISABLE		(1UL << 34U)
 
+/* MSR_IA32_XSS bits */
+#define MSR_IA32_XSS_PT				(1UL << 8U)
+#define MSR_IA32_XSS_CET_U			(1UL << 11U)
+#define MSR_IA32_XSS_CET_S			(1UL << 12U)
+#define MSR_IA32_XSS_HDC			(1UL << 13U)
+
 /* Miscellaneous data */
 #define MSR_IA32_MISC_UNRESTRICTED_GUEST	(1U<<5U)
 

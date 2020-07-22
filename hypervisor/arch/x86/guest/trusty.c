@@ -194,7 +194,7 @@ static void save_world_ctx(struct acrn_vcpu *vcpu, struct ext_context *ext_ctx)
 	ext_ctx->ia32_kernel_gs_base = msr_read(MSR_IA32_KERNEL_GS_BASE);
 
 	/* XSAVE area */
-	save_xsave_area(ext_ctx);
+	save_xsave_area(vcpu, ext_ctx);
 
 	/* For MSRs need isolation between worlds */
 	for (i = 0U; i < NUM_WORLD_MSRS; i++) {
@@ -246,7 +246,7 @@ static void load_world_ctx(struct acrn_vcpu *vcpu, const struct ext_context *ext
 	msr_write(MSR_IA32_KERNEL_GS_BASE, ext_ctx->ia32_kernel_gs_base);
 
 	/* XSAVE area */
-	rstore_xsave_area(ext_ctx);
+	rstore_xsave_area(vcpu, ext_ctx);
 
 	/* For MSRs need isolation between worlds */
 	for (i = 0U; i < NUM_WORLD_MSRS; i++) {

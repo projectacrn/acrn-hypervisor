@@ -164,7 +164,7 @@ enum reset_mode;
 #define SECURE_WORLD	1
 
 #define NUM_WORLD_MSRS		2U
-#define NUM_COMMON_MSRS		16U
+#define NUM_COMMON_MSRS		17U
 #define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS)
 
 #define EOI_EXIT_BITMAP_SIZE	256U
@@ -578,8 +578,8 @@ static inline bool is_pae(struct acrn_vcpu *vcpu)
 struct acrn_vcpu *get_running_vcpu(uint16_t pcpu_id);
 struct acrn_vcpu *get_ever_run_vcpu(uint16_t pcpu_id);
 
-void save_xsave_area(struct ext_context *ectx);
-void rstore_xsave_area(const struct ext_context *ectx);
+void save_xsave_area(struct acrn_vcpu *vcpu, struct ext_context *ectx);
+void rstore_xsave_area(const struct acrn_vcpu *vcpu, const struct ext_context *ectx);
 
 /**
  * @brief create a vcpu for the target vm

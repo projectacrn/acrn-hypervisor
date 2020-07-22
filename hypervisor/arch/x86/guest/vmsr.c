@@ -59,6 +59,8 @@ static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 	/* Read only */
 	MSR_IA32_SGX_SVN_STATUS,
 
+	MSR_IA32_XSS,
+
 	MSR_TEST_CTL,
 };
 
@@ -359,6 +361,7 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 
 	/* don't need to intercept rdmsr for these MSRs */
 	enable_msr_interception(msr_bitmap, MSR_IA32_TIME_STAMP_COUNTER, INTERCEPT_WRITE);
+	enable_msr_interception(msr_bitmap, MSR_IA32_XSS, INTERCEPT_WRITE);
 
 	/* Setup MSR bitmap - Intel SDM Vol3 24.6.9 */
 	value64 = hva2hpa(vcpu->arch.msr_bitmap);
@@ -827,6 +830,16 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_MISC_ENABLE:
 	{
 		set_guest_ia32_misc_enalbe(vcpu, v);
+		break;
+	}
+	case MSR_IA32_XSS:
+	{
+		if ((v & ~(MSR_IA32_XSS_PT | MSR_IA32_XSS_HDC)) != 0UL) {
+			err = -EACCES;
+		} else {
+			vcpu_set_guest_msr(vcpu, MSR_IA32_XSS, v);
+			msr_write(msr, v);
+		}
 		break;
 	}
 	case MSR_TEST_CTL:
