@@ -2300,6 +2300,30 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 	type = XHCI_TRB_3_TYPE_GET(trb->dwTrb3);
 
 	dev = XHCI_SLOTDEV_PTR(xdev, slot);
+	/* There have three scenarios the pointer will be NULL.
+	 * 1.Enable slot command not received.
+	 * 2.Enable slot command have been received but not receive
+	 * address device command.
+	 * 3.After received disable slot command.
+	 * In scenario 1 and 3 the slot state should be Disabled.
+	 * In scenario 2, the slot state should be Enabled.
+	 * Fllow xHCI spec 4.6.8 and 4.6.9, for stop and reset endpoint
+	 * command, when the slot state is Disabled the error code should
+	 * be Slot Not Enabled Error, when the slot have been enabled by
+	 * an Enable Slot Command the error code should be Context State Error.
+	 * TODO: The dev_slotstate should move from pci_xhci_dev_emu to
+	 * pci_xhci_vdev, and slot_allocated need to removed.
+	 */
+
+	if (!dev)
+	{
+		if (xdev->slot_allocated[slot] == true)
+			cmderr = XHCI_TRB_ERROR_CONTEXT_STATE;
+		else
+			cmderr = XHCI_TRB_ERROR_SLOT_NOT_ON;
+		goto done;
+	}
+
 
 	if (type == XHCI_TRB_TYPE_STOP_EP &&
 	   (trb->dwTrb3 & XHCI_TRB_3_SUSP_EP_BIT) != 0) {
