@@ -1086,7 +1086,7 @@ def assign_vm_id(scenario_config):
         if vm.tag == 'vm':
             for item in vm.getchildren():
                 if item.tag == 'vm_type':
-                    if item.text in ['PRE_STD_VM', 'SAFETY_VM']:
+                    if item.text in ['PRE_STD_VM', 'SAFETY_VM', 'PRE_RT_VM']:
                         pre_launched_vm_num += 1
                     elif item.text in ['SOS_VM']:
                         sos_vm_num += 1
@@ -1100,7 +1100,7 @@ def assign_vm_id(scenario_config):
         if vm.tag == 'vm':
             for item in vm.getchildren():
                 if item.tag == 'vm_type':
-                    if item.text in ['PRE_STD_VM', 'SAFETY_VM']:
+                    if item.text in ['PRE_STD_VM', 'SAFETY_VM', 'PRE_RT_VM']:
                         vm.attrib['id'] = str(pre_launched_vm_index)
                         pre_launched_vm_index += 1
                     elif item.text in ['SOS_VM']:
