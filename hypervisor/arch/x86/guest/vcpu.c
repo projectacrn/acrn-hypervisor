@@ -266,7 +266,6 @@ static void init_xsave(struct acrn_vcpu *vcpu)
 	struct xsave_area *area = &ectx->xs_area;
 
 	ectx->xcr0 = XSAVE_FPU;
-	ectx->xss = 0U;
 	(void)memset((void *)area, 0U, XSAVE_STATE_AREA_SIZE);
 
 	/* xsaves only support compacted format, so set it in xcomp_bv[63],
@@ -750,18 +749,17 @@ void zombie_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 	}
 }
 
-void save_xsave_area(struct ext_context *ectx)
+void save_xsave_area(__unused struct acrn_vcpu *vcpu, struct ext_context *ectx)
 {
 	ectx->xcr0 = read_xcr(0);
-	ectx->xss = msr_read(MSR_IA32_XSS);
 	write_xcr(0, ectx->xcr0 | XSAVE_SSE);
 	xsaves(&ectx->xs_area, UINT64_MAX);
 }
 
-void rstore_xsave_area(const struct ext_context *ectx)
+void rstore_xsave_area(const struct acrn_vcpu *vcpu, const struct ext_context *ectx)
 {
 	write_xcr(0, ectx->xcr0 | XSAVE_SSE);
-	msr_write(MSR_IA32_XSS, ectx->xss);
+	msr_write(MSR_IA32_XSS, vcpu_get_guest_msr(vcpu, MSR_IA32_XSS));
 	xrstors(&ectx->xs_area, UINT64_MAX);
 	write_xcr(0, ectx->xcr0);
 }
@@ -782,7 +780,7 @@ static void context_switch_out(struct thread_object *prev)
 	ectx->ia32_fmask = msr_read(MSR_IA32_FMASK);
 	ectx->ia32_kernel_gs_base = msr_read(MSR_IA32_KERNEL_GS_BASE);
 
-	save_xsave_area(ectx);
+	save_xsave_area(vcpu, ectx);
 }
 
 static void context_switch_in(struct thread_object *next)
@@ -797,7 +795,7 @@ static void context_switch_in(struct thread_object *next)
 	msr_write(MSR_IA32_FMASK, ectx->ia32_fmask);
 	msr_write(MSR_IA32_KERNEL_GS_BASE, ectx->ia32_kernel_gs_base);
 
-	rstore_xsave_area(ectx);
+	rstore_xsave_area(vcpu, ectx);
 }
 
 
