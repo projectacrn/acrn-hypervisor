@@ -10,4 +10,4 @@ import os
 BOARD_INFO = None
 BOARD_TYPE = None
 SCENARIO = None
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'xmls', 'config-xmls')
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'vm_configs', 'xmls', 'config-xmls')
