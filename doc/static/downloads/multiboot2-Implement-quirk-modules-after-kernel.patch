@@ -1,0 +1,217 @@
+From 90b20565e459939ba3fcb23ca06ecad8240fb31a Mon Sep 17 00:00:00 2001
+From: Zide Chen <zide.chen@intel.com>
+Date: Tue, 24 Mar 2020 16:44:45 -0700
+Subject: [PATCH] multiboot2: Implement quirk-modules-after-kernel
+
+In contrast to Mulitboot, in Mulitboot2, there is currently no way to
+control where to load the modules to. This could be a problem, e.g., the
+OS loaded by Multiboot2 needs to reserve low address for some particular
+purposes and not for loading modules.
+
+This patch implements the quirk quirk-modules-after-kernel to load modules
+to address after the kernel for Multiboot2 by reusing the implementation
+for Multiboot:
+
+- remove "ifndef GRUB_USE_MULTIBOOT2" that is handling this quirk.
+- define separate variables for both Multiboot and Multiboot2, e.g.,
+  grub_multiboot_quirks, highest_load, etc.
+- in grub_multiboot2_load(): calculate the highest load address of raw
+  image and assign it to grub_multiboot2_highest_load.
+- the existing code in multiboot_elfxx.c is able to calculate the
+  highest_load for Mutiboot2 already.
+
+Currently, lowest address for Multiboot2 modules allocation was 0x0.
+With this patch, the lowest module load address is set to 1MB even if this
+quirk is not enabled.
+
+Tested on KBL NUC loading ACRN Hypervisor.
+
+Signed-off-by: Zide Chen <zide.chen@intel.com>
+---
+ grub-core/loader/i386/multiboot_mbi.c |  1 -
+ grub-core/loader/multiboot.c          | 31 ++++++++++++++++++---------
+ grub-core/loader/multiboot_elfxx.c    |  7 +++---
+ grub-core/loader/multiboot_mbi2.c     |  2 ++
+ include/grub/multiboot.h              |  1 +
+ include/grub/multiboot2.h             |  8 +++++++
+ 6 files changed, 36 insertions(+), 14 deletions(-)
+
+diff --git a/grub-core/loader/i386/multiboot_mbi.c b/grub-core/loader/i386/multiboot_mbi.c
+index ad3cc292fd18..18aaac847011 100644
+--- a/grub-core/loader/i386/multiboot_mbi.c
++++ b/grub-core/loader/i386/multiboot_mbi.c
+@@ -63,7 +63,6 @@ static int bootdev_set;
+ static grub_size_t elf_sec_num, elf_sec_entsize;
+ static unsigned elf_sec_shstrndx;
+ static void *elf_sections;
+-grub_multiboot_quirks_t grub_multiboot_quirks;
+ 
+ static grub_err_t
+ load_kernel (grub_file_t file, const char *filename,
+diff --git a/grub-core/loader/multiboot.c b/grub-core/loader/multiboot.c
+index 4a98d7082598..1227960f7bf3 100644
+--- a/grub-core/loader/multiboot.c
++++ b/grub-core/loader/multiboot.c
+@@ -32,6 +32,8 @@
+ #include <grub/multiboot2.h>
+ #define GRUB_MULTIBOOT_CONSOLE_FRAMEBUFFER GRUB_MULTIBOOT2_CONSOLE_FRAMEBUFFER
+ #define GRUB_MULTIBOOT_CONSOLE_EGA_TEXT GRUB_MULTIBOOT2_CONSOLE_EGA_TEXT
++#define GRUB_MULTIBOOT_QUIRKS_NONE GRUB_MULTIBOOT2_QUIRKS_NONE
++#define GRUB_MULTIBOOT_QUIRK_MODULES_AFTER_KERNEL GRUB_MULTIBOOT2_QUIRK_MODULES_AFTER_KERNEL
+ #define GRUB_MULTIBOOT(x) grub_multiboot2_ ## x
+ #else
+ #include <grub/multiboot.h>
+@@ -210,7 +212,8 @@ grub_multiboot_unload (void)
+   return GRUB_ERR_NONE;
+ }
+ 
+-static grub_uint64_t highest_load;
++GRUB_MULTIBOOT (quirks_t) GRUB_MULTIBOOT (quirks);
++grub_uint64_t GRUB_MULTIBOOT (highest_load);
+ 
+ #define MULTIBOOT_LOAD_ELF64
+ #include "multiboot_elfxx.c"
+@@ -291,32 +294,32 @@ grub_cmd_multiboot (grub_command_t cmd __attribute__ ((unused)),
+ 
+   grub_loader_unset ();
+ 
+-  highest_load = 0;
++  GRUB_MULTIBOOT (highest_load) = 0;
+ 
+-#ifndef GRUB_USE_MULTIBOOT2
+-  grub_multiboot_quirks = GRUB_MULTIBOOT_QUIRKS_NONE;
++  GRUB_MULTIBOOT (quirks) = GRUB_MULTIBOOT_QUIRKS_NONE;
+   int option_found = 0;
+ 
+   do
+     {
+       option_found = 0;
++#ifndef GRUB_USE_MULTIBOOT2
+       if (argc != 0 && grub_strcmp (argv[0], "--quirk-bad-kludge") == 0)
+ 	{
+ 	  argc--;
+ 	  argv++;
+ 	  option_found = 1;
+-	  grub_multiboot_quirks |= GRUB_MULTIBOOT_QUIRK_BAD_KLUDGE;
++	  GRUB_MULTIBOOT (quirks) |= GRUB_MULTIBOOT_QUIRK_BAD_KLUDGE;
+ 	}
++#endif
+ 
+       if (argc != 0 && grub_strcmp (argv[0], "--quirk-modules-after-kernel") == 0)
+ 	{
+ 	  argc--;
+ 	  argv++;
+ 	  option_found = 1;
+-	  grub_multiboot_quirks |= GRUB_MULTIBOOT_QUIRK_MODULES_AFTER_KERNEL;
++	  GRUB_MULTIBOOT (quirks) |= GRUB_MULTIBOOT_QUIRK_MODULES_AFTER_KERNEL;
+ 	}
+     } while (option_found);
+-#endif
+ 
+   if (argc == 0)
+     return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("filename expected"));
+@@ -392,11 +395,19 @@ grub_cmd_module (grub_command_t cmd __attribute__ ((unused)),
+   if (! file)
+     return grub_errno;
+ 
+-#ifndef GRUB_USE_MULTIBOOT2
+   lowest_addr = 0x100000;
+-  if (grub_multiboot_quirks & GRUB_MULTIBOOT_QUIRK_MODULES_AFTER_KERNEL)
+-    lowest_addr = ALIGN_UP (highest_load + 1048576, 4096);
++  if (GRUB_MULTIBOOT (quirks) & GRUB_MULTIBOOT_QUIRK_MODULES_AFTER_KERNEL) {
++#ifdef GRUB_USE_MULTIBOOT2
++    lowest_addr = GRUB_MULTIBOOT (highest_load);
++#else
++    /*
++     * Either Multiboot or Multiboot2, supposedly there is no requirement for this
++     * address round up. But not sure if there was any historical reason why it
++     * was here.
++     */
++    lowest_addr = ALIGN_UP (GRUB_MULTIBOOT (highest_load) + 1048576, 4096);
+ #endif
++  }
+ 
+   size = grub_file_size (file);
+   if (size)
+diff --git a/grub-core/loader/multiboot_elfxx.c b/grub-core/loader/multiboot_elfxx.c
+index 70cd1db513e6..8adce7b3489b 100644
+--- a/grub-core/loader/multiboot_elfxx.c
++++ b/grub-core/loader/multiboot_elfxx.c
+@@ -89,17 +89,18 @@ CONCAT(grub_multiboot_load_elf, XX) (mbi_load_data_t *mld)
+     if (phdr(i)->p_type == PT_LOAD)
+       {
+ 	mld->link_base_addr = grub_min (mld->link_base_addr, phdr(i)->p_paddr);
+-	highest_load = grub_max (highest_load, phdr(i)->p_paddr + phdr(i)->p_memsz);
++	GRUB_MULTIBOOT (highest_load) = grub_max (GRUB_MULTIBOOT (highest_load),
++			phdr(i)->p_paddr + phdr(i)->p_memsz);
+       }
+ 
+ #ifdef MULTIBOOT_LOAD_ELF64
+-  if (highest_load >= 0x100000000)
++  if (GRUB_MULTIBOOT(highest_load) >= 0x100000000)
+     return grub_error (GRUB_ERR_BAD_OS, "segment crosses 4 GiB border");
+ #endif
+ 
+   if (mld->relocatable)
+     {
+-      load_size = highest_load - mld->link_base_addr;
++      load_size = GRUB_MULTIBOOT(highest_load) - mld->link_base_addr;
+ 
+       grub_dprintf ("multiboot_loader", "align=0x%lx, preference=0x%x, "
+ 		    "load_size=0x%x, avoid_efi_boot_services=%d\n",
+diff --git a/grub-core/loader/multiboot_mbi2.c b/grub-core/loader/multiboot_mbi2.c
+index 18e766c7b31c..3883732df531 100644
+--- a/grub-core/loader/multiboot_mbi2.c
++++ b/grub-core/loader/multiboot_mbi2.c
+@@ -315,8 +315,10 @@ grub_multiboot2_load (grub_file_t file, const char *filename)
+ 	  grub_free (mld.buffer);
+ 	  return err;
+ 	}
++
+       mld.link_base_addr = load_addr;
+       mld.load_base_addr = get_physical_target_address (ch);
++      grub_multiboot2_highest_load = mld.load_base_addr + code_size;
+       source = get_virtual_current_address (ch);
+ 
+       grub_dprintf ("multiboot_loader", "link_base_addr=0x%x, load_base_addr=0x%x, "
+diff --git a/include/grub/multiboot.h b/include/grub/multiboot.h
+index bd0a9873e6c1..3d7c5ad29318 100644
+--- a/include/grub/multiboot.h
++++ b/include/grub/multiboot.h
+@@ -107,6 +107,7 @@ grub_multiboot_load_elf (mbi_load_data_t *mld);
+ extern grub_size_t grub_multiboot_pure_size;
+ extern grub_size_t grub_multiboot_alloc_mbi;
+ extern grub_uint32_t grub_multiboot_payload_eip;
++extern grub_uint64_t grub_multiboot_highest_load;
+ 
+ 
+ #endif /* ! GRUB_MULTIBOOT_HEADER */
+diff --git a/include/grub/multiboot2.h b/include/grub/multiboot2.h
+index 502d34ef1804..fa74508afcda 100644
+--- a/include/grub/multiboot2.h
++++ b/include/grub/multiboot2.h
+@@ -27,6 +27,13 @@
+ #include <grub/types.h>
+ #include <grub/err.h>
+ 
++typedef enum
++  {
++    GRUB_MULTIBOOT2_QUIRKS_NONE = 0,
++    GRUB_MULTIBOOT2_QUIRK_MODULES_AFTER_KERNEL = 1
++  } grub_multiboot2_quirks_t;
++extern grub_multiboot2_quirks_t grub_multiboot2_quirks;
++
+ extern struct grub_relocator *grub_multiboot2_relocator;
+ 
+ void grub_multiboot2 (int argc, char *argv[]);
+@@ -99,6 +106,7 @@ grub_multiboot2_load_elf (mbi_load_data_t *mld);
+ extern grub_size_t grub_multiboot2_pure_size;
+ extern grub_size_t grub_multiboot2_alloc_mbi;
+ extern grub_uint32_t grub_multiboot2_payload_eip;
++extern grub_uint64_t grub_multiboot2_highest_load;
+ 
+ 
+ #endif /* ! GRUB_MULTIBOOT_HEADER */
+-- 
+2.17.1
+

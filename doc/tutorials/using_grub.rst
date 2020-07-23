@@ -128,6 +128,7 @@ pre-launched VMs (the SOS_VM is also a kind of pre-launched VM):
    The GRUB loader will boot the hypervisor, and the hypervisor will
    start the VMs automatically.
 
+.. _self-built-grub:
 
 Installing self-built GRUB
 **************************
@@ -191,3 +192,35 @@ Here we provide another simple method to build GRUB in efi application format:
 #. Copy ACRN binary and guest kernel images to the GRUB-configured folder, e.g. ``/boot/`` folder on ``/dev/sda3/``;
 
 #. Run ``/EFI/boot/grub_x86_64.efi`` in the EFI shell.
+
+Enable quirk-modules-after-kernel for Multiboot2
+************************************************
+
+With the released GRUB (up to v2.06), SOS may not boot if the size of the SOS
+kernel image is larger than 15MB, or the total size of all the mutiboot2 modules,
+which includes all guest kernel images and ramdisk images, is larger than 15MB.
+This is because by default GRUB loads multiboot2 modules to host physical address
+starting from 1MB, which may be overlapped with the SOS Linux kernel preferred
+address which is confiugred at 16MB by default. (``CONFIG_PHYSICAL_START`` in
+Linux kernel config).
+
+This can be resolved by enabling ``quirk-modules-after-kernel`` in GURB and
+change the multiboot2 load command. Refer to :ref:`self-built-grub` section to
+download, build and install GRUB boot loader with the following extra steps:
+
+#. Download and apply the following patch before building GRUB:
+
+   `multiboot2-Implement-quirk-modules-after-kernel.patch
+   <../_static/downloads/multiboot2-Implement-quirk-modules-after-kernel.patch>`_
+
+#. In ``grub.cfg``, append ``--quirk-modules-after-kernel`` to the multiboot2
+   command. This is to instruct GRUB to load multiboot2 modules to addresses
+   that are higher than where the ACRN hypervisor binary is loaded. For example:
+
+   .. code-block:: none
+
+      menuentry 'Boot ACRN hypervisor from multiboot2' {
+	 ...
+         multiboot2 --quirk-modules-after-kernel /boot/acrn.bin $(HV bootargs) $(Service VM bootargs)
+	 ...
+      }
