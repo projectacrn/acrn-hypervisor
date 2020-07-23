@@ -51,7 +51,7 @@ def tap_uos_net(names, virt_io, vmid, config):
     print("#vm-name used to generate uos-mac address", file=config)
     print("mac=$(cat /sys/class/net/e*/address)", file=config)
     print("vm_name=post_vm_id$1", file=config)
-    print("mac_seed=${mac}-${vm_name}", file=config)
+    print("mac_seed=${mac:0:17}-${vm_name}", file=config)
     print("", file=config)
 
 
