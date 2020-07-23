@@ -6,9 +6,17 @@ labels: 'status: new'
 assignees: ''
 
 ---
-
 **Describe the bug**
 A clear and concise description of what the bug is.
+
+**Platform**
+Describe the platform information, 
+
+**Codebase**
+Describe which codebase is used.
+
+**Scenario**
+Describe the scenario: Hybrid, Industry or logical_partition
 
 **To Reproduce**
 Steps to reproduce the behavior:
