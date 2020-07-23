@@ -56,6 +56,7 @@ options:
                [-l lpc] [-m mem] [-p vcpu:hostcpu] [-r ramdisk_image_path]
                [-s pci] [-U uuid] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]
                [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]
+               [--acpidev_pt HID] [--mmiodev_pt MMIO_regions]
                [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]
                [--ptdev_no_reset] [--debugexit]
                [--lapic_pt] <vm>
@@ -86,6 +87,8 @@ options:
        --intr_monitor: enable interrupt storm monitor
             its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms),
        --virtio_poll: enable virtio poll mode with poll interval with ns
+       --acpidev_pt: acpi device ID args: HID in ACPI Table
+       --mmiodev_pt: MMIO resources args: physical MMIO regions
        --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET
        --lapic_pt: enable local apic passthrough
        --rtvm: indicate that the guest is rtvm
@@ -104,6 +107,7 @@ Here's an example showing how to run a VM with:
 -  GPU device on PCI 00:02.0
 -  Virtio-block device on PCI 00:03.0
 -  Virtio-net device on PCI 00:04.0
+-  TPM2 MSFT0101
 
 .. code-block:: bash
 
@@ -113,6 +117,7 @@ Here's an example showing how to run a VM with:
      -s 5,virtio-console,@pty:pty_port \
      -s 3,virtio-blk,b,/data/clearlinux/clearlinux.img \
      -s 4,virtio-net,tap_LaaG --vsbl /usr/share/acrn/bios/VSBL.bin \
+     --acpidev_pt MSFT0101 \
      --intr_monitor 10000,10,1,100 \
      -B "root=/dev/vda2 rw rootwait maxcpus=3 nohpet console=hvc0 \
      console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
@@ -1193,4 +1198,5 @@ Passthrough in Device Model
 ****************************
 
 You may refer to :ref:`hv-device-passthrough` for passthrough realization
-in device model.
+in device model and :ref:`mmio-device-passthrough` for MMIO passthrough realization
+in device model and ACRN Hypervisor..
