@@ -62,6 +62,7 @@
 #include "pm.h"
 #include "atomic.h"
 #include "tpm.h"
+#include "mmio_dev.h"
 #include "virtio.h"
 #include "pm_vuart.h"
 #include "log.h"
@@ -87,6 +88,7 @@ char *mac_seed;
 bool stdio_in_use;
 bool lapic_pt;
 bool is_rtvm;
+bool pt_tpm2;
 bool is_winvm;
 bool skip_pci_mem64bar_workaround = false;
 
@@ -138,6 +140,7 @@ usage(int code)
 		"       %*s [-l lpc] [-m mem] [-r ramdisk_image_path]\n"
 		"       %*s [-s pci] [-U uuid] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]\n"
 		"       %*s [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]\n"
+		"       %*s [--acpidev_pt HID] [--mmiodev_pt MMIO_Regions]\n"
 		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
 		"       %*s [--vmcfg sub_options] [--dump vm_idx] [--debugexit] \n"
 		"       %*s [--logger-setting param_setting] [--pm_notify_channel]\n"
@@ -171,6 +174,8 @@ usage(int code)
 		"       --intr_monitor: enable interrupt storm monitor\n"
 		"            its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)\n"
 		"       --virtio_poll: enable virtio poll mode with poll interval with ns\n"
+		"       --acpidev_pt: acpi device ID args: HID in ACPI Table\n"
+		"       --mmiodev_pt: MMIO resources args: physical MMIO regions\n"
 		"       --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET\n"
 		"       --lapic_pt: enable local apic passthrough\n"
 		"       --rtvm: indicate that the guest is rtvm\n"
@@ -179,7 +184,8 @@ usage(int code)
 		"       --pm_by_vuart:pty,/run/acrn/vuart_vmname or tty,/dev/ttySn\n"
 		"       --windows: support Oracle virtio-blk, virtio-net and virtio-input devices\n"
 		"            for windows guest with secure boot\n",
-		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
+		progname, (int)strnlen(progname, PATH_MAX), "",
+		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "");
@@ -478,15 +484,22 @@ vm_init_vdevs(struct vmctx *ctx)
 	if (ret < 0)
 		goto monitor_fail;
 
+	ret = init_mmio_devs(ctx);
+	if (ret < 0)
+		goto mmio_dev_fail;
+
 	ret = init_pci(ctx);
 	if (ret < 0)
 		goto pci_fail;
 
+	/* FIXME: if we plan to support pass through a TPM device and emulate another b TPM device */
 	init_vtpm2(ctx);
 
 	return 0;
 
 pci_fail:
+	deinit_mmio_devs(ctx);
+mmio_dev_fail:
 	monitor_close();
 monitor_fail:
 	if (debugexit_enabled)
@@ -515,6 +528,7 @@ vm_deinit_vdevs(struct vmctx *ctx)
 	acrn_writeback_ovmf_nvstorage(ctx);
 
 	deinit_pci(ctx);
+	deinit_mmio_devs(ctx);
 	monitor_close();
 
 	if (debugexit_enabled)
@@ -730,6 +744,8 @@ enum {
 	CMD_OPT_VMCFG,
 	CMD_OPT_DUMP,
 	CMD_OPT_INTR_MONITOR,
+	CMD_OPT_ACPIDEV_PT,
+	CMD_OPT_MMIODEV_PT,
 	CMD_OPT_VTPM2,
 	CMD_OPT_LAPIC_PT,
 	CMD_OPT_RTVM,
@@ -769,6 +785,8 @@ static struct option long_options[] = {
 	{"mac_seed",		required_argument,	0, CMD_OPT_MAC_SEED},
 	{"debugexit",		no_argument,		0, CMD_OPT_DEBUGEXIT},
 	{"intr_monitor",	required_argument,	0, CMD_OPT_INTR_MONITOR},
+	{"apcidev_pt",		required_argument,	0, CMD_OPT_ACPIDEV_PT},
+	{"mmiodev_pt",		required_argument,	0, CMD_OPT_MMIODEV_PT},
 	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
 	{"lapic_pt",		no_argument,		0, CMD_OPT_LAPIC_PT},
 	{"rtvm",		no_argument,		0, CMD_OPT_RTVM},
@@ -915,8 +933,16 @@ main(int argc, char *argv[])
 		case CMD_OPT_RTVM:
 			is_rtvm = true;
 			break;
+		case CMD_OPT_ACPIDEV_PT:
+			if (parse_pt_acpidev(optarg) != 0)
+				errx(EX_USAGE, "invalid pt acpi dev param %s", optarg);
+			break;
+		case CMD_OPT_MMIODEV_PT:
+			if (parse_pt_mmiodev(optarg) != 0)
+				errx(EX_USAGE, "invalid pt mmio dev param %s", optarg);
+			break;
 		case CMD_OPT_VTPM2:
-			if (acrn_parse_vtpm2(optarg) != 0)
+			if (pt_tpm2 || acrn_parse_vtpm2(optarg) != 0)
 				errx(EX_USAGE, "invalid vtpm2 param %s", optarg);
 			break;
 		case CMD_OPT_INTR_MONITOR:

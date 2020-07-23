@@ -182,7 +182,7 @@ basl_fwrite_rsdt(FILE *fp, struct vmctx *ctx)
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
 		    basl_acpi_base + NHLT_OFFSET);
 
-	if (ctx->tpm_dev)
+	if (ctx->tpm_dev || pt_tpm2)
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
 		    basl_acpi_base + TPM2_OFFSET);
 
@@ -224,7 +224,7 @@ basl_fwrite_xsdt(FILE *fp, struct vmctx *ctx)
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
 		    basl_acpi_base + NHLT_OFFSET);
 
-	if (ctx->tpm_dev)
+	if (ctx->tpm_dev || pt_tpm2)
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
 		    basl_acpi_base + TPM2_OFFSET);
 
@@ -859,7 +859,7 @@ basl_fwrite_dsdt(FILE *fp, struct vmctx *ctx)
 
 	pm_write_dsdt(ctx, basl_ncpu);
 
-	if (ctx->tpm_dev)
+	if (ctx->tpm_dev || pt_tpm2)
 		tpm2_crb_fwrite_dsdt();
 
 	dsdt_line("}");
@@ -1124,7 +1124,7 @@ acpi_build(struct vmctx *ctx, int ncpu)
 	 */
 	while (!err && (i < ARRAY_SIZE(basl_ftables))) {
 		if ((basl_ftables[i].offset == TPM2_OFFSET) &&
-			(ctx->tpm_dev != NULL)) {
+			(ctx->tpm_dev != NULL || pt_tpm2)) {
 				basl_ftables[i].valid = true;
 		}
 

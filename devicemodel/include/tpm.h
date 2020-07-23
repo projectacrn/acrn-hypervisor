@@ -9,7 +9,7 @@
 #define _TPM_H_
 
 #define TPM_CRB_MMIO_ADDR 0xFED40000UL
-#define TPM_CRB_MMIO_SIZE 0x1000U
+#define TPM_CRB_MMIO_SIZE 0x5000U
 
 /* TPM CRB registers */
 enum {
