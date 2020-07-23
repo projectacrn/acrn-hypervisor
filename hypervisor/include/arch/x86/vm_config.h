@@ -50,6 +50,10 @@
 				.uuid = PRE_STANDARD_VM_UUID##idx,	\
 				.severity = SEVERITY_STANDARD_VM
 
+#define CONFIG_PRE_RT_VM(idx)	.load_order = PRE_LAUNCHED_VM,	\
+				.uuid = PRE_RTVM_UUID##idx,	\
+				.severity = SEVERITY_RTVM
+
 #define CONFIG_POST_STD_VM(idx)	.load_order = POST_LAUNCHED_VM,	\
 				.uuid = POST_STANDARD_VM_UUID##idx,	\
 				.severity = SEVERITY_STANDARD_VM
