@@ -521,7 +521,7 @@ static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
 	} else if (sriovcap_access(vdev, offset)) {
 		read_sriov_cap_reg(vdev, offset, bytes, val);
 	} else {
-		if (offset == vdev->pdev->sriov.pre_pos) {
+		if ((offset == vdev->pdev->sriov.pre_pos) && (vdev->pdev->sriov.hide_sriov)) {
 			*val = pci_vdev_read_vcfg(vdev, offset, bytes);
 		} else if (!is_quirk_ptdev(vdev)) {
 			/* passthru to physical device */
