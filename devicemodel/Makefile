@@ -132,6 +132,7 @@ SRCS += hw/pci/uart.c
 SRCS += hw/pci/gvt.c
 SRCS += hw/pci/npk.c
 SRCS += hw/pci/ivshmem.c
+SRCS += hw/mmio/core.c
 
 # core
 #SRCS += core/bootrom.c
