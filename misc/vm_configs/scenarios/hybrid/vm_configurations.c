@@ -1,9 +1,8 @@
 /*
- * Copyright (C) 2018 Intel Corporation. All rights reserved.
+ * Copyright (C) 2020 Intel Corporation. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
 #include <vm_config.h>
 #include <vuart.h>
 #include <pci_dev.h>
@@ -12,17 +11,18 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	{	/* VM0 */
 		CONFIG_SAFETY_VM(1),
 		.name = "ACRN PRE-LAUNCHED VM0",
-		.guest_flags = 0UL,
 		.cpu_affinity = VM0_CONFIG_CPU_AFFINITY,
+		.guest_flags = 0UL,
 		.memory = {
 			.start_hpa = VM0_CONFIG_MEM_START_HPA,
 			.size = VM0_CONFIG_MEM_SIZE,
+			.start_hpa2 = VM0_CONFIG_MEM_START_HPA2,
+			.size_hpa2 = VM0_CONFIG_MEM_SIZE_HPA2,
 		},
 		.os_config = {
 			.name = "Zephyr",
 			.kernel_type = KERNEL_ZEPHYR,
 			.kernel_mod_tag = "Zephyr_RawImage",
-			.bootargs = "",
 			.kernel_load_addr = 0x100000,
 			.kernel_entry_addr = 0x100000,
 		},
@@ -38,18 +38,12 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.t_vuart.vm_id = 1U,
 			.t_vuart.vuart_id = 1U,
 		},
-	#ifdef VM0_PASSTHROUGH_TPM
-		.pt_tpm2 = true,
-		.mmiodevs[0] = {
-			.base_gpa = VM0_TPM_BUFFER_BASE_ADDR,
-			.base_hpa = 0xFED40000UL,
-			.size = VM0_TPM_BUFFER_SIZE,
-		},
-	#endif
 	},
 	{	/* VM1 */
 		CONFIG_SOS_VM,
 		.name = "ACRN SOS VM",
+
+		/* Allow SOS to reboot the host since there is supposed to be the highest severity guest */
 		.guest_flags = 0UL,
 		.memory = {
 			.start_hpa = 0UL,
@@ -85,6 +79,6 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.vuart[1] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = INVALID_COM_BASE,
-		}
-	}
+		},
+	},
 };

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef MISC_CFG_H
-#define MISC_CFG_H
+#ifndef VBAR_BASE_H_
+#define VBAR_BASE_H_
 
-#endif /* MISC_CFG_H */
+#endif /* VBAR_BASE_H_ */
