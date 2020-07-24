@@ -5,6 +5,7 @@
 
 import common
 import board_cfg_lib
+import scenario_cfg_lib
 
 MISC_CFG_HEADER = """#ifndef MISC_CFG_H
 #define MISC_CFG_H"""
@@ -238,6 +239,18 @@ def generate_file(config):
         for cat_mask in cat_mask_list:
             print("#define CLOS_MASK_{}\t\t\t{}U".format(idx, cat_mask), file=config)
             idx += 1
+        print("", file=config)
+
+    vm0_pre_launch = False
+    common.get_vm_types()
+    for vm_idx,vm_type in common.VM_TYPES.items():
+        if vm_idx == 0 and scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
+            vm0_pre_launch = True
+
+    if vm0_pre_launch and board_cfg_lib.is_tpm_passthru():
+        print("#define VM0_PASSTHROUGH_TPM", file=config)
+        print("#define VM0_TPM_BUFFER_BASE_ADDR   0xFED40000UL", file=config)
+        print("#define VM0_TPM_BUFFER_SIZE        0x5000UL", file=config)
 
         print("", file=config)
 
