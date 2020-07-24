@@ -1,16 +1,12 @@
 /*
- * Copyright (C) 2019 Intel Corporation. All rights reserved.
+ * Copyright (C) 2020 Intel Corporation. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-/* This is a template header file for nuc7i7dnb platform ACPI info definition
- * works when Kconfig of ENFORCE_VALIDATED_ACPI_INFO is disabled.
- * When ENFORCE_VALIDATED_ACPI_INFO is enabled, we should use
- * ./misc/acrn-config/target/board_parser.py running on target
- * to generate nuc7i7dnb specific acpi info file named as nuc7i7dnb_acpi_info.h
- * and put it in hypervisor/arch/x86/configs/nuc7i7dnb/.
+/* DO NOT MODIFY THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
  */
+
 #ifndef PLATFORM_ACPI_INFO_H
 #define PLATFORM_ACPI_INFO_H
 
@@ -32,18 +28,14 @@
 #define PM1A_EVT_ACCESS_SIZE    0x2U
 #define PM1A_CNT_ADDRESS        0x1804UL
 
-#define WAKE_VECTOR_32          0x7FA22F8CUL
-#define WAKE_VECTOR_64          0x7FA22F98UL
+#define WAKE_VECTOR_32          0x8AA09F8CUL
+#define WAKE_VECTOR_64          0x8AA09F98UL
 
 #define RESET_REGISTER_ADDRESS  0xCF9UL
 #define RESET_REGISTER_SPACE_ID SPACE_SYSTEM_IO
 #define RESET_REGISTER_VALUE    0x6U
 
-/* PCI mmcfg base of MCFG */
-#define DEFAULT_PCI_MMCFG_BASE	0xE0000000UL
-
 /* DRHD of DMAR */
-
 #define DRHD_COUNT              2U
 
 #define DRHD0_DEV_CNT           0x1U
@@ -69,5 +61,8 @@
 #define DRHD1_DEVSCOPE1_ID      0x0U
 #define DRHD1_DEVSCOPE1_BUS     0x0U
 #define DRHD1_DEVSCOPE1_PATH    0xf8U
+
+/* PCI mmcfg base of MCFG */
+#define DEFAULT_PCI_MMCFG_BASE   0xe0000000UL
 
 #endif /* PLATFORM_ACPI_INFO_H */
