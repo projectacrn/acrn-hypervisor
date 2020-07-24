@@ -7,7 +7,7 @@
 #ifndef PAGE_H
 #define PAGE_H
 
-#include <pci_devices.h>
+#include <board_info.h>
 
 #define PAGE_SHIFT	12U
 #define PAGE_SIZE	(1U << PAGE_SHIFT)
@@ -31,14 +31,14 @@
  * - Guest OS won't re-program device MMIO bars to the address not covered by
  *   this EPT_ADDRESS_SPACE.
  */
-#define EPT_ADDRESS_SPACE(size)		((size > MEM_2G) ?	\
+#define EPT_ADDRESS_SPACE(size)		(((size) > MEM_2G) ?	\
 			((size) + PLATFORM_LO_MMIO_SIZE + PLATFORM_HI_MMIO_SIZE)	\
 			: (MEM_2G + PLATFORM_LO_MMIO_SIZE + PLATFORM_HI_MMIO_SIZE))
 
 #define PTDEV_HI_MMIO_START		((CONFIG_UOS_RAM_SIZE > MEM_2G) ?	\
 			(CONFIG_UOS_RAM_SIZE + PLATFORM_LO_MMIO_SIZE) : (MEM_2G + PLATFORM_LO_MMIO_SIZE))
 
-#define PRE_VM_EPT_ADDRESS_SPACE(size)	(PTDEV_HI_MMIO_START + PTDEV_HI_MMIO_SIZE)
+#define PRE_VM_EPT_ADDRESS_SPACE(size)	(PTDEV_HI_MMIO_START + HI_MMIO_SIZE)
 
 #define TOTAL_EPT_4K_PAGES_SIZE		(PRE_VM_NUM*(PT_PAGE_NUM(PRE_VM_EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))*MEM_4K)) + \
 						(SOS_VM_NUM*(PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))*MEM_4K)) + \
