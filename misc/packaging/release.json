@@ -1,38 +1,68 @@
 {
-	"//":"release ubuntu as sos verion",
-	"install_package":"true",
-	"gcc_version":"7.3.0",
-	"binutils":"2.27",
-	"//":"acrn-hypervisor config",
-	"build_acrn":"true",
-	"sync_acrn_code":"true",
-	"acrn_repo":"https://github.com/projectacrn/acrn-hypervisor.git",
-	"release_version":"remotes/origin/release_2.0",
-	"acrn_deb_package":"true",
-	"install_acrn_deb":"false",
-	"build_cmd":
-	{
-		"scenario":
-		{
-			"industry":"true",
-			"hybrid":"true",
-			"logical_partition":"true"
+   "//":"Configuration for packaging ACRN and Ubuntu for simple installation",
 
-		},
-		"board":
-		{
-			"nuc7i7dnb":"true",
-			"whl-ipc-i5":"true"
-		},
-		"release":"0"
-	},
-	"//":"kernel config",
-	"build_acrn_kernel":"true",
-	"sync_acrn_kernel_code":"true",
-	"kernel_release_version":"remotes/origin/release_2.0",
-	"sos_kernel_repo":"https://github.com/projectacrn/acrn-kernel.git",
-	"acrn_kernel_deb_package":"true",
-	"install_acrn_kernel_deb":"false",
-	"//":"misc",
-	"auto_reboot":"false"
+   "//":"if true, the script will first install all needed apps and libraries and verify gcc and binutils versions ",
+   "install_package":"true",
+   "gcc_version":"7.3.0",
+   "binutils":"2.27",
+
+   "//":"acrn-hypervisor config -------------------------------------",
+
+   "//":"if true, uses make to build ACRN from source for the scenarios and boards specified by build_cmd below",
+   "build_acrn":"true",
+
+   "//":"if true, (and build_acrn is true) clone a local copy of the specified release version of the ACRN hypervisor repo",
+   "//":"if false, assume the repo's local copy is OK",
+   "sync_acrn_code":"true",
+   "acrn_repo":"https://github.com/projectacrn/acrn-hypervisor.git",
+   "release_version":"remotes/origin/release_2.0",
+
+   "//":"if true, build the acrn_deb_package.deb with the ACRN hypervisor and tools",
+   "//":"(if build_acrn is false, the package contents won't be recompiled before packaging)",
+   "acrn_deb_package":"true",
+
+   "//":"if true, install the acrn_deb package locally after it's built",
+   "//":"(normally the package is copied to the target and installed there, so default is false)",
+   "install_acrn_deb":"false",
+
+   "//":"This is the list of scenario and board combinations that will be built into the package",
+   "//":"(each scenario for each board) use release=0 for debug build, and 1 for production build",
+   "build_cmd":
+   {
+      "scenario":
+      {
+         "industry":"true",
+         "hybrid":"true",
+         "logical_partition":"true"
+      },
+      "board":
+      {
+         "nuc7i7dnb":"true",
+         "whl-ipc-i5":"true"
+      },
+      "release":"0"
+   },
+
+   "//":"kernel config ----------------------------------------------",
+
+   "//":"if true, uses make to build the ACRN-patched kernel from source",
+   "build_acrn_kernel":"true",
+
+   "//":"if true, (and build_acrn_kernel  is true) clone a local copy of the specified release version of the ACRN kernel repo",
+   "//":"if false, assume the repo's local copy is OK",
+   "sync_acrn_kernel_code":"true",
+   "kernel_release_version":"remotes/origin/release_2.0",
+   "sos_kernel_repo":"https://github.com/projectacrn/acrn-kernel.git",
+
+   "//":"if true, build the acrn_kernel_deb_package.deb with the ACRN kernel",
+   "//":"(if build_acrn_kernel is false, the package contents won't be recompiled before packaging)",
+   "acrn_kernel_deb_package":"true",
+
+   "//":"if true, install the acrn_kernel_deb package locally after it's built",
+   "//":"(normally the package is copied to the target and installed there, so default is false)",
+   "install_acrn_kernel_deb":"false",
+
+   "//":"misc -------------------------------------------------------",
+
+   "auto_reboot":"false"
 }
