@@ -3,7 +3,8 @@
     <vm_type desc="Specify the VM by its load order: PRE_LAUNCHED_VM, SOS_VM or POST_LAUNCHED_VM." readonly="true">PRE_RT_VM</vm_type>
     <name desc="Specify the VM name which will be shown in hypervisor console command: vm_list."></name>
     <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
-        <guest_flag></guest_flag>
+        <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
+        <guest_flag>GUEST_FLAG_RT</guest_flag>
     </guest_flags>
     <cpu_affinity desc="List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.">
         <pcpu_id></pcpu_id>
