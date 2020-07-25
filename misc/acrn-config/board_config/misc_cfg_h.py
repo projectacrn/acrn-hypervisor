@@ -231,12 +231,12 @@ def generate_file(config):
         mba_delay_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "MBA_DELAY")
         idx = 0
         for mba_delay_mask in mba_delay_list:
-            print("#define MBA_MASK_{}\t{}U".format(idx, mba_delay_mask), file=config)
+            print("#define MBA_MASK_{}\t\t\t{}U".format(idx, mba_delay_mask), file=config)
             idx += 1
 
         idx = 0
         for cat_mask in cat_mask_list:
-            print("#define CLOS_MASK_{}\t{}U".format(idx, cat_mask), file=config)
+            print("#define CLOS_MASK_{}\t\t\t{}U".format(idx, cat_mask), file=config)
             idx += 1
 
         print("", file=config)

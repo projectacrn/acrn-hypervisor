@@ -49,7 +49,7 @@ def clos_config_output(scenario_items, i, config):
 
     if board_cfg_lib.is_rdt_supported() and hv_info.features.rdt_enabled == 'y':
         clos_config = vm_info.get_clos_bitmap(i)
-        print("#define VM{0}_VCPU_CLOS\t\t{1}".format(i, clos_config['clos_map']), file=config)
+        print("#define VM{0}_VCPU_CLOS\t\t\t{1}".format(i, clos_config['clos_map']), file=config)
 
 def scenario_vm_num(scenario_items, config):
 
