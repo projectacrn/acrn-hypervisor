@@ -56,9 +56,11 @@
     <vm_type desc="Specify the VM type" readonly="true">PRE_RT_VM</vm_type>
     <name desc="Specify the VM name which will be shown in hypervisor console command: vm_list.">ACRN PRE-LAUNCHED VM0</name>
     <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
-        <guest_flag>0</guest_flag>
+        <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
+        <guest_flag>GUEST_FLAG_RT</guest_flag>
     </guest_flags>
     <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
+        <pcpu_id>2</pcpu_id>
         <pcpu_id>3</pcpu_id>
     </cpu_affinity>
     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
@@ -147,7 +149,7 @@
         <guest_flag>0</guest_flag>
     </guest_flags>
     <cpu_affinity desc="List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.">
-        <pcpu_id>2</pcpu_id>
+        <pcpu_id>1</pcpu_id>
     </cpu_affinity>
     <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
         <vcpu_clos>0</vcpu_clos>

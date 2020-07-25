@@ -216,10 +216,9 @@ def find_tmp_flag(flag):
     if flag == None or flag == '0':
         return '0UL'
 
-    flag_str = ''
     for i in range(len(GUEST_FLAG)):
         if flag == GUEST_FLAG[i]:
-            return flag_str
+            return flag
 
 
 def get_config_root(config_file):
