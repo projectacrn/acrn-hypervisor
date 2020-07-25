@@ -416,8 +416,11 @@ def set_dm_pt(names, sel, vmid, config):
     uos_type = names['uos_types'][vmid]
 
     if sel.bdf['usb_xdci'][vmid] and sel.slot['usb_xdci'][vmid]:
-        print('   -s {},passthru,{}/{}/{} \\'.format(sel.slot["usb_xdci"][vmid], sel.bdf["usb_xdci"][vmid][0:2],\
-            sel.bdf["usb_xdci"][vmid][3:5], sel.bdf["usb_xdci"][vmid][6:7]), file=config)
+        sub_attr = ''
+        if uos_type == "WINDOWS":
+            sub_attr = ',d3hot_reset'
+        print('   -s {},passthru,{}/{}/{}{} \\'.format(sel.slot["usb_xdci"][vmid], sel.bdf["usb_xdci"][vmid][0:2],\
+            sel.bdf["usb_xdci"][vmid][3:5], sel.bdf["usb_xdci"][vmid][6:7], sub_attr), file=config)
 
     # pass through audio/audio_codec
     if sel.bdf['audio'][vmid]:
