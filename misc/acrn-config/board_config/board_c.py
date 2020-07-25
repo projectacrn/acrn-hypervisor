@@ -19,6 +19,7 @@ INCLUDE_HEADER = """
 #include <vtd.h>
 #include <msr.h>
 #include <pci.h>
+#include <misc_cfg.h>
 """
 
 MSR_IA32_L2_MASK_BASE = 0x00000D10
