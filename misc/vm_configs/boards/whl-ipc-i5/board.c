@@ -21,6 +21,7 @@
 #include <vtd.h>
 #include <msr.h>
 #include <pci.h>
+#include <misc_cfg.h>
 
 static struct dmar_dev_scope drhd0_dev_scope[DRHD0_DEV_CNT] = {
 	{
