@@ -1,0 +1,37 @@
+<acrn-config board="tgl-rvp" scenario="sdc" uos_launcher="1">
+    <uos id="1">
+	<uos_type desc="UOS type">YOCTO</uos_type>
+	<rtos_type desc="UOS Realtime capability">no</rtos_type>
+	<mem_size desc="UOS memory size in MByte">2048</mem_size>
+	<gvt_args desc="GVT settings. Set it to gvtd for GVTd, otherwise is GVTg arguments. The recommendation arguments for GVTg is 64 448 8. Leave it blank to disable GVT.">gvtd</gvt_args>
+	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
+	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
+	<poweroff_channel desc="the method of power off uos">vuart1(pty)</poweroff_channel>
+	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"></usb_xhci>
+	<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
+		<pcpu_id></pcpu_id>
+	</cpu_affinity>
+
+	<passthrough_devices>
+		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
+		<audio desc="vm audio device"></audio>
+		<audio_codec desc="vm audio codec device"></audio_codec>
+		<ipu desc="vm ipu device"></ipu>
+		<ipu_i2c desc="vm ipu_i2c device"></ipu_i2c>
+		<cse desc="vm cse device"></cse>
+		<wifi desc="vm wifi device"></wifi>
+		<bluetooth desc="vm bluetooth"></bluetooth>
+		<sd_card desc="vm sd card device"></sd_card>
+		<ethernet desc="vm ethernet device"></ethernet>
+		<sata desc="vm sata device"></sata>
+		<nvme desc="vm nvme device"></nvme>
+	</passthrough_devices>
+
+	<virtio_devices>
+		<network desc="virtio network devices setting. Input format: tap_name,[vhost],[mac=XX:XX:XX:XX:XX:XX].">LaaG</network>
+		<input desc="virtio input device"></input>
+		<block desc="virtio block device setting. format: [blk partition:][img path] e.g.: /dev/sda3:./a/b.img">/home/clear/uos/uos.img</block>
+		<console desc="virtio console device,input format: [@]stdio|tty|pty|sock:portname[=portpath][,[@]stdio|tty|pty:portname[=portpath]]">@stdio:stdio_port</console>
+	</virtio_devices>
+    </uos>
+</acrn-config>
