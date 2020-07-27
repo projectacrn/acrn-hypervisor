@@ -13,7 +13,7 @@ import com
 import common
 
 ACRN_PATH = common.SOURCE_ROOT_DIR
-ACRN_CONFIG_DEF = ACRN_PATH + '/misc/acrn-config/xmls/config-xmls/'
+ACRN_CONFIG_DEF = ACRN_PATH + '/misc/vm_configs/xmls/config-xmls/'
 
 
 def get_launch_item_values(board_info):
