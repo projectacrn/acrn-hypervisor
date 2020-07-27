@@ -79,6 +79,7 @@ Enable ACRN Features
    tutorials/setup_openstack_libvirt
    tutorials/acrn_on_qemu
    tutorials/using_grub
+   tutorials/pre-launched-rt
 
 Debug
 *****
