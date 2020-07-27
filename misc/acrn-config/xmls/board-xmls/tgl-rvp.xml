@@ -2,8 +2,8 @@
 	<BIOS_INFO>
 	BIOS Information
 	Vendor: Intel Corporation
-	Version: TGLSFWI1.R00.2457.A16.1912270059
-	Release Date: 12/27/2019
+	Version: TGLIFUI1.R00.3243.A01.2006181302
+	Release Date: 06/18/2020
 	</BIOS_INFO>
 
 	<BASE_BOARD_INFO>
@@ -14,122 +14,124 @@
 	</BASE_BOARD_INFO>
 
 	<PCI_DEVICE>
-	00:00.0 Host bridge: Intel Corporation Device 9a14
-	00:02.0 VGA compatible controller: Intel Corporation Device 9a49
-	Region 0: Memory at 607d000000 (64-bit, non-prefetchable) [size=16M]
-	Region 2: [virtual] Memory at 4000000000 (64-bit, prefetchable) [size=256M]
-	Region 0: Memory at 0000004010000000 (64-bit, non-prefetchable)
-	Region 2: Memory at 0000004020000000 (64-bit, prefetchable)
-	00:04.0 Signal processing controller: Intel Corporation Device 9a03
-	Region 0: Memory at 607e180000 (64-bit, non-prefetchable) [disabled] [size=128K]
-	00:05.0 Multimedia controller: Intel Corporation Device 9a19
-	Region 0: Memory at 607c000000 (64-bit, non-prefetchable) [disabled] [size=16M]
-	00:07.0 PCI bridge: Intel Corporation Device 9a23
-	00:07.1 PCI bridge: Intel Corporation Device 9a25
-	00:07.2 PCI bridge: Intel Corporation Device 9a27
-	00:07.3 PCI bridge: Intel Corporation Device 9a29
-	00:08.0 System peripheral: Intel Corporation Device 9a11
-	Region 0: Memory at 607e202000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	00:00.0 Host bridge: Intel Corporation Device 9a14 (rev 01)
+	00:02.0 VGA compatible controller: Intel Corporation Device 9a49 (rev 01)
+	Region 0: Memory at ab000000 (64-bit, non-prefetchable) [size=16M]
+	Region 2: Memory at 80000000 (64-bit, prefetchable) [size=256M]
+	Region 0: Memory at 00000000ae000000 (64-bit, non-prefetchable)
+	Region 2: Memory at 0000000000000000 (64-bit, prefetchable)
+	00:04.0 Signal processing controller: Intel Corporation Device 9a03 (rev 01)
+	Region 0: Memory at ad580000 (64-bit, non-prefetchable) [disabled] [size=128K]
+	00:05.0 Multimedia controller: Intel Corporation Device 9a19 (rev 01)
+	Region 0: Memory at ac000000 (64-bit, non-prefetchable) [disabled] [size=16M]
+	00:06.0 PCI bridge: Intel Corporation Device 9a09 (rev 01)
+	00:07.0 PCI bridge: Intel Corporation Device 9a23 (rev 01)
+	00:07.1 PCI bridge: Intel Corporation Device 9a25 (rev 01)
+	00:07.2 PCI bridge: Intel Corporation Device 9a27 (rev 01)
+	00:07.3 PCI bridge: Intel Corporation Device 9a29 (rev 01)
+	00:08.0 System peripheral: Intel Corporation Device 9a11 (rev 01)
+	Region 0: Memory at ad5fe000 (64-bit, non-prefetchable) [disabled] [size=4K]
 	00:0a.0 Signal processing controller: Intel Corporation Device 9a0d (rev 01)
-	Region 0: Memory at 607e1e0000 (64-bit, non-prefetchable) [size=32K]
-	00:0d.0 USB controller: Intel Corporation Device 9a13
-	Region 0: Memory at 607e1c0000 (64-bit, non-prefetchable) [size=64K]
-	00:0d.2 System peripheral: Intel Corporation Device 9a1b
-	Region 0: Memory at 607e140000 (64-bit, non-prefetchable) [size=256K]
-	Region 2: Memory at 607e201000 (64-bit, non-prefetchable) [size=4K]
-	00:0d.3 System peripheral: Intel Corporation Device 9a1d
-	Region 0: Memory at 607e100000 (64-bit, non-prefetchable) [size=256K]
-	Region 2: Memory at 607e200000 (64-bit, non-prefetchable) [size=4K]
-	00:10.0 Serial bus controller [0c80]: Intel Corporation Device a0d8 (rev 10)
-	Region 0: Memory at 4017000000 (64-bit, non-prefetchable) [size=4K]
-	00:10.6 Digitizer Pen: Intel Corporation Device a0d0 (rev 10)
-	Region 0: Memory at 607e1d8000 (64-bit, non-prefetchable) [disabled] [size=32K]
-	00:10.7 Digitizer Pen: Intel Corporation Device a0d1 (rev 10)
-	Region 0: Memory at 607e1d0000 (64-bit, non-prefetchable) [disabled] [size=32K]
-	00:12.0 Serial controller: Intel Corporation Device a0fc (rev 10)
-	Region 0: Memory at 607e1b0000 (64-bit, non-prefetchable) [size=64K]
-	00:14.0 USB controller: Intel Corporation Device a0ed (rev 10)
-	Region 0: Memory at 607e1a0000 (64-bit, non-prefetchable) [size=64K]
-	00:14.2 RAM memory: Intel Corporation Device a0ef (rev 10)
-	Region 0: Memory at 607e1f0000 (64-bit, non-prefetchable) [disabled] [size=16K]
-	Region 2: Memory at 607e1fe000 (64-bit, non-prefetchable) [disabled] [size=4K]
-	00:14.3 Network controller: Intel Corporation Device a0f0 (rev 10)
-	Region 0: Memory at 607e1ec000 (64-bit, non-prefetchable) [size=16K]
-	00:15.0 Serial bus controller [0c80]: Intel Corporation Device a0e8 (rev 10)
-	Region 0: [virtual] Memory at 4017001000 (64-bit, non-prefetchable) [size=4K]
-	00:15.1 Serial bus controller [0c80]: Intel Corporation Device a0e9 (rev 10)
-	Region 0: [virtual] Memory at 4017002000 (64-bit, non-prefetchable) [size=4K]
-	00:15.2 Serial bus controller [0c80]: Intel Corporation Device a0ea (rev 10)
-	Region 0: [virtual] Memory at 4017003000 (64-bit, non-prefetchable) [size=4K]
-	00:15.3 Serial bus controller [0c80]: Intel Corporation Device a0eb (rev 10)
-	Region 0: [virtual] Memory at 4017004000 (64-bit, non-prefetchable) [size=4K]
-	00:16.0 Communication controller: Intel Corporation Device a0e0 (rev 10)
-	Region 0: Memory at 607e1f9000 (64-bit, non-prefetchable) [size=4K]
-	00:19.0 Serial bus controller [0c80]: Intel Corporation Device a0c5 (rev 10)
-	Region 0: [virtual] Memory at 4017005000 (64-bit, non-prefetchable) [size=4K]
-	00:19.1 Serial bus controller [0c80]: Intel Corporation Device a0c6 (rev 10)
-	Region 0: [virtual] Memory at 4017006000 (64-bit, non-prefetchable) [size=4K]
-	00:1d.0 PCI bridge: Intel Corporation Device a0b0 (rev 10)
-	00:1e.0 Communication controller: Intel Corporation Device a0a8 (rev 10)
-	Region 0: [virtual] Memory at 4017007000 (64-bit, non-prefetchable) [size=4K]
-	00:1e.3 Serial bus controller [0c80]: Intel Corporation Device a0ab (rev 10)
-	Region 0: [virtual] Memory at 4017008000 (64-bit, non-prefetchable) [size=4K]
-	00:1f.0 ISA bridge: Intel Corporation Device a082 (rev 10)
-	00:1f.3 Multimedia audio controller: Intel Corporation Device a0c8 (rev 10)
-	Region 0: Memory at 607e1e8000 (64-bit, non-prefetchable) [size=16K]
-	Region 4: Memory at 607e000000 (64-bit, non-prefetchable) [size=1M]
-	00:1f.4 SMBus: Intel Corporation Device a0a3 (rev 10)
-	Region 0: Memory at 607e1f4000 (64-bit, non-prefetchable) [size=256]
-	00:1f.5 Serial bus controller [0c80]: Intel Corporation Device a0a4 (rev 10)
-	Region 0: Memory at 4fc00000 (32-bit, non-prefetchable) [size=4K]
-	00:1f.6 Ethernet controller: Intel Corporation Device 15fc (rev 10)
-	Region 0: Memory at 86300000 (32-bit, non-prefetchable) [size=128K]
-	a9:00.0 Non-Volatile memory controller: Intel Corporation Device f1a8 (rev 03)
-	Region 0: Memory at 86200000 (64-bit, non-prefetchable) [size=16K]
+	Region 0: Memory at ad5f0000 (64-bit, non-prefetchable) [size=32K]
+	00:0d.0 USB controller: Intel Corporation Device 9a13 (rev 01)
+	Region 0: Memory at ad5c0000 (64-bit, non-prefetchable) [size=64K]
+	00:0d.1 USB controller: Intel Corporation Device 9a15 (rev 01)
+	Region 0: Memory at ad000000 (64-bit, non-prefetchable) [disabled] [size=2M]
+	Region 2: Memory at ad5ff000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	00:0d.2 USB controller: Intel Corporation Device 9a1b (rev 01)
+	Region 0: Memory at ad500000 (64-bit, non-prefetchable) [size=256K]
+	Region 2: Memory at ad600000 (64-bit, non-prefetchable) [size=4K]
+	00:0d.3 USB controller: Intel Corporation Device 9a1d (rev 01)
+	Region 0: Memory at ad540000 (64-bit, non-prefetchable) [size=256K]
+	Region 2: Memory at ad601000 (64-bit, non-prefetchable) [size=4K]
+	00:10.0 Serial bus controller [0c80]: Intel Corporation Device a0d8 (rev 20)
+	Region 0: Memory at 3f800000 (64-bit, non-prefetchable) [size=4K]
+	00:10.5 Host bridge: Intel Corporation Device a0af (rev 20)
+	00:12.0 Serial controller: Intel Corporation Device a0fc (rev 20)
+	Region 0: Memory at ad5d0000 (64-bit, non-prefetchable) [size=64K]
+	00:14.0 USB controller: Intel Corporation Device a0ed (rev 20)
+	Region 0: Memory at ad5e0000 (64-bit, non-prefetchable) [size=64K]
+	00:14.1 USB controller: Intel Corporation Device a0ee (rev 20)
+	Region 0: Memory at ad200000 (64-bit, non-prefetchable) [size=2M]
+	Region 2: Memory at ad603000 (64-bit, non-prefetchable) [size=4K]
+	00:14.2 RAM memory: Intel Corporation Device a0ef (rev 20)
+	Region 0: Memory at ad5f8000 (64-bit, non-prefetchable) [disabled] [size=16K]
+	Region 2: Memory at ad604000 (64-bit, non-prefetchable) [disabled] [size=4K]
+	00:15.0 Serial bus controller [0c80]: Intel Corporation Device a0e8 (rev 20)
+	Region 0: Memory at 3f801000 (64-bit, non-prefetchable) [virtual] [size=4K]
+	00:15.1 Serial bus controller [0c80]: Intel Corporation Device a0e9 (rev 20)
+	Region 0: Memory at 3f802000 (64-bit, non-prefetchable) [virtual] [size=4K]
+	00:15.2 Serial bus controller [0c80]: Intel Corporation Device a0ea (rev 20)
+	Region 0: Memory at 3f803000 (64-bit, non-prefetchable) [virtual] [size=4K]
+	00:15.3 Serial bus controller [0c80]: Intel Corporation Device a0eb (rev 20)
+	Region 0: Memory at 3f804000 (64-bit, non-prefetchable) [virtual] [size=4K]
+	00:16.0 Communication controller: Intel Corporation Device a0e0 (rev 20)
+	Region 0: Memory at ad609000 (64-bit, non-prefetchable) [size=4K]
+	00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)
+	Region 0: Memory at ad5fc000 (32-bit, non-prefetchable) [size=8K]
+	Region 1: Memory at ad611000 (32-bit, non-prefetchable) [size=256]
+	Region 5: Memory at ad610000 (32-bit, non-prefetchable) [size=2K]
+	00:19.0 Serial bus controller [0c80]: Intel Corporation Device a0c5 (rev 20)
+	Region 0: Memory at 3f805000 (64-bit, non-prefetchable) [virtual] [size=4K]
+	00:19.1 Serial bus controller [0c80]: Intel Corporation Device a0c6 (rev 20)
+	Region 0: Memory at 3f806000 (64-bit, non-prefetchable) [virtual] [size=4K]
+	00:1e.0 Communication controller: Intel Corporation Device a0a8 (rev 20)
+	Region 0: Memory at 3f807000 (64-bit, non-prefetchable) [size=4K]
+	00:1e.3 Serial bus controller [0c80]: Intel Corporation Device a0ab (rev 20)
+	Region 0: Memory at 3f808000 (64-bit, non-prefetchable) [virtual] [size=4K]
+	00:1f.0 ISA bridge: Intel Corporation Device a082 (rev 20)
+	00:1f.4 SMBus: Intel Corporation Device a0a3 (rev 20)
+	Region 0: Memory at ad60e000 (64-bit, non-prefetchable) [size=256]
+	00:1f.5 Serial bus controller [0c80]: Intel Corporation Device a0a4 (rev 20)
+	Region 0: Memory at 3f809000 (32-bit, non-prefetchable) [size=4K]
+	00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (13) I219-V (rev 20)
+	Region 0: Memory at ad5a0000 (32-bit, non-prefetchable) [size=128K]
+	01:00.0 Non-Volatile memory controller: Intel Corporation SSD Pro 7600p/760p/E 6100p Series (rev 03)
+	Region 0: Memory at ad400000 (64-bit, non-prefetchable) [size=16K]
 	</PCI_DEVICE>
 
 	<PCI_VID_PID>
-	00:00.0 0600: 8086:9a14
-	00:02.0 0300: 8086:9a49
-	00:04.0 1180: 8086:9a03
-	00:05.0 0480: 8086:9a19
-	00:07.0 0604: 8086:9a23
-	00:07.1 0604: 8086:9a25
-	00:07.2 0604: 8086:9a27
-	00:07.3 0604: 8086:9a29
-	00:08.0 0880: 8086:9a11
+	00:00.0 0600: 8086:9a14 (rev 01)
+	00:02.0 0300: 8086:9a49 (rev 01)
+	00:04.0 1180: 8086:9a03 (rev 01)
+	00:05.0 0480: 8086:9a19 (rev 01)
+	00:06.0 0604: 8086:9a09 (rev 01)
+	00:07.0 0604: 8086:9a23 (rev 01)
+	00:07.1 0604: 8086:9a25 (rev 01)
+	00:07.2 0604: 8086:9a27 (rev 01)
+	00:07.3 0604: 8086:9a29 (rev 01)
+	00:08.0 0880: 8086:9a11 (rev 01)
 	00:0a.0 1180: 8086:9a0d (rev 01)
-	00:0d.0 0c03: 8086:9a13
-	00:0d.2 0880: 8086:9a1b
-	00:0d.3 0880: 8086:9a1d
-	00:10.0 0c80: 8086:a0d8 (rev 10)
-	00:10.6 0901: 8086:a0d0 (rev 10)
-	00:10.7 0901: 8086:a0d1 (rev 10)
-	00:12.0 0700: 8086:a0fc (rev 10)
-	00:14.0 0c03: 8086:a0ed (rev 10)
-	00:14.2 0500: 8086:a0ef (rev 10)
-	00:14.3 0280: 8086:a0f0 (rev 10)
-	00:15.0 0c80: 8086:a0e8 (rev 10)
-	00:15.1 0c80: 8086:a0e9 (rev 10)
-	00:15.2 0c80: 8086:a0ea (rev 10)
-	00:15.3 0c80: 8086:a0eb (rev 10)
-	00:16.0 0780: 8086:a0e0 (rev 10)
-	00:19.0 0c80: 8086:a0c5 (rev 10)
-	00:19.1 0c80: 8086:a0c6 (rev 10)
-	00:1d.0 0604: 8086:a0b0 (rev 10)
-	00:1e.0 0780: 8086:a0a8 (rev 10)
-	00:1e.3 0c80: 8086:a0ab (rev 10)
-	00:1f.0 0601: 8086:a082 (rev 10)
-	00:1f.3 0401: 8086:a0c8 (rev 10)
-	00:1f.4 0c05: 8086:a0a3 (rev 10)
-	00:1f.5 0c80: 8086:a0a4 (rev 10)
-	00:1f.6 0200: 8086:15fc (rev 10)
-	a9:00.0 0108: 8086:f1a8 (rev 03)
+	00:0d.0 0c03: 8086:9a13 (rev 01)
+	00:0d.1 0c03: 8086:9a15 (rev 01)
+	00:0d.2 0c03: 8086:9a1b (rev 01)
+	00:0d.3 0c03: 8086:9a1d (rev 01)
+	00:10.0 0c80: 8086:a0d8 (rev 20)
+	00:10.5 0600: 8086:a0af (rev 20)
+	00:12.0 0700: 8086:a0fc (rev 20)
+	00:14.0 0c03: 8086:a0ed (rev 20)
+	00:14.1 0c03: 8086:a0ee (rev 20)
+	00:14.2 0500: 8086:a0ef (rev 20)
+	00:15.0 0c80: 8086:a0e8 (rev 20)
+	00:15.1 0c80: 8086:a0e9 (rev 20)
+	00:15.2 0c80: 8086:a0ea (rev 20)
+	00:15.3 0c80: 8086:a0eb (rev 20)
+	00:16.0 0780: 8086:a0e0 (rev 20)
+	00:17.0 0106: 8086:a0d3 (rev 20)
+	00:19.0 0c80: 8086:a0c5 (rev 20)
+	00:19.1 0c80: 8086:a0c6 (rev 20)
+	00:1e.0 0780: 8086:a0a8 (rev 20)
+	00:1e.3 0c80: 8086:a0ab (rev 20)
+	00:1f.0 0601: 8086:a082 (rev 20)
+	00:1f.4 0c05: 8086:a0a3 (rev 20)
+	00:1f.5 0c80: 8086:a0a4 (rev 20)
+	00:1f.6 0200: 8086:15fc (rev 20)
+	01:00.0 0108: 8086:f1a6 (rev 03)
 	</PCI_VID_PID>
 
 	<WAKE_VECTOR_INFO>
-	#define WAKE_VECTOR_32          0x45EF900CUL
-	#define WAKE_VECTOR_64          0x45EF9018UL
+	#define WAKE_VECTOR_32          0x36EE300CUL
+	#define WAKE_VECTOR_64          0x36EE3018UL
 	</WAKE_VECTOR_INFO>
 
 	<RESET_REGISTER_INFO>
@@ -253,7 +255,7 @@
 	</DRHD_INFO>
 
 	<CPU_BRAND>
-	"Genuine Intel(R) CPU 0000 @ 2.30GHz"
+	"11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz"
 	</CPU_BRAND>
 
 	<CX_INFO>
@@ -278,173 +280,167 @@
 	0009f000-000fffff : Reserved
 	  000a0000-000bffff : PCI Bus 0000:00
 	  000f0000-000fffff : System ROM
-	00100000-3f9f6fff : System RAM
-	3f9f7000-3fa23fff : Reserved
-	3fa24000-3fa2bfff : System RAM
-	3fa2c000-3fa2cfff : Reserved
-	3fa2d000-42d04fff : System RAM
-	42d05000-45e90fff : Reserved
-	45e91000-45f32fff : ACPI Non-volatile Storage
-	45f33000-45ffefff : ACPI Tables
-	45fff000-45ffffff : System RAM
-	46000000-49ffffff : Reserved
-	4ab00000-4abfffff : Reserved
-	4b000000-4fbfffff : Reserved
-	4fc00000-bfffffff : PCI Bus 0000:00
-	  4fc00000-4fc00fff : 0000:00:1f.5
-	  50000000-5c1fffff : PCI Bus 0000:7f
-	  5e000000-6a1fffff : PCI Bus 0000:55
-	  6c000000-781fffff : PCI Bus 0000:2b
-	  7a000000-861fffff : PCI Bus 0000:01
-	  86200000-862fffff : PCI Bus 0000:a9
-	    86200000-86203fff : 0000:a9:00.0
-	      86200000-86203fff : nvme
-	  86300000-8631ffff : 0000:00:1f.6
-	    86300000-8631ffff : e1000e
+	00100000-2f8fdfff : System RAM
+	2f8fe000-2f8fefff : Reserved
+	2f8ff000-33b74fff : System RAM
+	33b75000-33be0fff : Unknown E820 type
+	33be1000-36e90fff : Reserved
+	36e91000-36f32fff : ACPI Non-volatile Storage
+	  36eda000-36edafff : USBC000:00
+	36f33000-36ffefff : ACPI Tables
+	36fff000-36ffffff : System RAM
+	37000000-3f7fffff : Reserved
+	  3b800000-3f7fffff : Graphics Stolen Memory
+	3f800000-bfffffff : PCI Bus 0000:00
+	  3f800000-3f800fff : 0000:00:10.0
+	    3f800000-3f8001ff : lpss_dev
+	      3f800000-3f8001ff : i2c_designware.0
+	    3f800200-3f8002ff : lpss_priv
+	  3f801000-3f801fff : 0000:00:15.0
+	    3f801000-3f8011ff : lpss_dev
+	      3f801000-3f8011ff : i2c_designware.1
+	    3f801200-3f8012ff : lpss_priv
+	    3f801800-3f801fff : idma64.1
+	      3f801800-3f801fff : idma64.1
+	  3f802000-3f802fff : 0000:00:15.1
+	    3f802000-3f8021ff : lpss_dev
+	      3f802000-3f8021ff : i2c_designware.2
+	    3f802200-3f8022ff : lpss_priv
+	    3f802800-3f802fff : idma64.2
+	      3f802800-3f802fff : idma64.2
+	  3f803000-3f803fff : 0000:00:15.2
+	    3f803000-3f8031ff : lpss_dev
+	      3f803000-3f8031ff : i2c_designware.3
+	    3f803200-3f8032ff : lpss_priv
+	    3f803800-3f803fff : idma64.3
+	      3f803800-3f803fff : idma64.3
+	  3f804000-3f804fff : 0000:00:15.3
+	    3f804000-3f8041ff : lpss_dev
+	      3f804000-3f8041ff : i2c_designware.4
+	    3f804200-3f8042ff : lpss_priv
+	    3f804800-3f804fff : idma64.4
+	      3f804800-3f804fff : idma64.4
+	  3f805000-3f805fff : 0000:00:19.0
+	    3f805000-3f8051ff : lpss_dev
+	      3f805000-3f8051ff : i2c_designware.5
+	    3f805200-3f8052ff : lpss_priv
+	    3f805800-3f805fff : idma64.5
+	      3f805800-3f805fff : idma64.5
+	  3f806000-3f806fff : 0000:00:19.1
+	    3f806000-3f8061ff : lpss_dev
+	      3f806000-3f8061ff : i2c_designware.6
+	    3f806200-3f8062ff : lpss_priv
+	    3f806800-3f806fff : idma64.6
+	      3f806800-3f806fff : idma64.6
+	  3f807000-3f807fff : 0000:00:1e.0
+	    3f807000-3f8071ff : lpss_dev
+	      3f807000-3f80701f : serial
+	    3f807200-3f8072ff : lpss_priv
+	    3f807800-3f807fff : idma64.7
+	      3f807800-3f807fff : idma64.7
+	  3f808000-3f808fff : 0000:00:1e.3
+	    3f808000-3f8081ff : lpss_dev
+	      3f808000-3f8081ff : pxa2xx-spi.8
+	    3f808200-3f8082ff : lpss_priv
+	    3f808800-3f808fff : idma64.8
+	      3f808800-3f808fff : idma64.8
+	  3f809000-3f809fff : 0000:00:1f.5
+	  3f900000-3fafffff : PCI Bus 0000:80
+	  3fb00000-3fcfffff : PCI Bus 0000:80
+	  3fd00000-3fefffff : PCI Bus 0000:56
+	  40000000-5bffffff : PCI Bus 0000:02
+	  5c000000-5c1fffff : PCI Bus 0000:56
+	  60000000-7bffffff : PCI Bus 0000:2c
+	  80000000-8fffffff : 0000:00:02.0
+	  90000000-9c1fffff : PCI Bus 0000:2c
+	  9e000000-aa1fffff : PCI Bus 0000:02
+	  ab000000-abffffff : 0000:00:02.0
+	  ac000000-acffffff : 0000:00:05.0
+	  ad000000-ad1fffff : 0000:00:0d.1
+	  ad200000-ad3fffff : dwc_usb3
+	    ad200000-ad3fffff : 0000:00:14.1
+	      ad20c100-ad3fffff : dwc3.1.auto
+	  ad400000-ad4fffff : PCI Bus 0000:01
+	    ad400000-ad403fff : 0000:01:00.0
+	      ad400000-ad403fff : nvme
+	  ad500000-ad53ffff : 0000:00:0d.2
+	  ad540000-ad57ffff : 0000:00:0d.3
+	  ad580000-ad59ffff : 0000:00:04.0
+	  ad5a0000-ad5bffff : 0000:00:1f.6
+	    ad5a0000-ad5bffff : e1000e
+	  ad5c0000-ad5cffff : 0000:00:0d.0
+	    ad5c0000-ad5cffff : xhci-hcd
+	  ad5d0000-ad5dffff : 0000:00:12.0
+	  ad5e0000-ad5effff : 0000:00:14.0
+	    ad5e0000-ad5effff : xhci-hcd
+	  ad5f0000-ad5f7fff : 0000:00:0a.0
+	  ad5f8000-ad5fbfff : 0000:00:14.2
+	  ad5fc000-ad5fdfff : 0000:00:17.0
+	    ad5fc000-ad5fdfff : ahci
+	  ad5fe000-ad5fefff : 0000:00:08.0
+	  ad5ff000-ad5fffff : 0000:00:0d.1
+	  ad600000-ad600fff : 0000:00:0d.2
+	  ad601000-ad601fff : 0000:00:0d.3
+	  ad603000-ad603fff : 0000:00:14.1
+	  ad604000-ad604fff : 0000:00:14.2
+	  ad609000-ad609fff : 0000:00:16.0
+	    ad609000-ad609fff : mei_me
+	  ad60e000-ad60e0ff : 0000:00:1f.4
+	  ad610000-ad6107ff : 0000:00:17.0
+	    ad610000-ad6107ff : ahci
+	  ad611000-ad6110ff : 0000:00:17.0
+	    ad611000-ad6110ff : ahci
+	  ae000000-b4ffffff : 0000:00:02.0
 	c0000000-cfffffff : PCI MMCONFIG 0000 [bus 00-ff]
 	fd000000-fd68ffff : pnp 00:06
 	fd690000-fd69ffff : INT34C5:00
-	  fd690000-fd69ffff : INT34C5:00
 	fd6a0000-fd6affff : INT34C5:00
-	  fd6a0000-fd6affff : INT34C5:00
 	fd6b0000-fd6cffff : pnp 00:06
 	fd6d0000-fd6dffff : INT34C5:00
-	  fd6d0000-fd6dffff : INT34C5:00
 	fd6e0000-fd6effff : INT34C5:00
-	  fd6e0000-fd6effff : INT34C5:00
 	fd6f0000-fdffffff : pnp 00:06
-	fe000000-fe01ffff : pnp 00:06
+	fe001210-fe001247 : INTC1023:00
+	fe001310-fe001347 : INTC1024:00
+	fe04c000-fe04ffff : pnp 00:06
+	fe050000-fe0affff : pnp 00:06
+	fe0d0000-fe0fffff : pnp 00:06
 	fe200000-fe7fffff : pnp 00:06
 	fec00000-fec003ff : IOAPIC 0
 	fed00000-fed003ff : HPET 0
 	  fed00000-fed003ff : PNP0103:00
 	fed20000-fed7ffff : Reserved
 	  fed40000-fed44fff : INTC6000:00
-	fed84000-fed84fff : dmar2
-	fed85000-fed85fff : dmar3
-	fed86000-fed86fff : dmar4
-	fed87000-fed87fff : dmar5
-	fed90000-fed90fff : dmar0
-	fed91000-fed91fff : dmar6
-	fed92000-fed92fff : dmar1
+	    fed40000-fed44fff : INTC6000:00
+	fed90000-fed93fff : pnp 00:05
 	feda0000-feda0fff : pnp 00:05
 	feda1000-feda1fff : pnp 00:05
 	fedc0000-fedc7fff : pnp 00:05
 	fee00000-feefffff : pnp 00:05
 	  fee00000-fee00fff : Local APIC
 	ff400000-ffffffff : Reserved
-	100000000-2b03fffff : System RAM
-	  25b000000-25c202390 : Kernel code
-	  25c400000-25c9f9fff : Kernel rodata
-	  25ca00000-25cbed57f : Kernel data
-	  25cdd6000-25d9fffff : Kernel bss
-	2b0400000-2b3ffffff : RAM buffer
-	4000000000-7fffffffff : PCI Bus 0000:00
-	  4000000000-400fffffff : 0000:00:02.0
-	    4000000000-4001fa3fff : efifb
-	  4010000000-4016ffffff : 0000:00:02.0
-	  4017000000-4017000fff : 0000:00:10.0
-	    4017000000-40170001ff : lpss_dev
-	      4017000000-40170001ff : i2c_designware.0
-	    4017000200-40170002ff : lpss_priv
-	  4017001000-4017001fff : 0000:00:15.0
-	    4017001000-40170011ff : lpss_dev
-	      4017001000-40170011ff : i2c_designware.1
-	    4017001200-40170012ff : lpss_priv
-	    4017001800-4017001fff : idma64.1
-	      4017001800-4017001fff : idma64.1
-	  4017002000-4017002fff : 0000:00:15.1
-	    4017002000-40170021ff : lpss_dev
-	      4017002000-40170021ff : i2c_designware.2
-	    4017002200-40170022ff : lpss_priv
-	    4017002800-4017002fff : idma64.2
-	      4017002800-4017002fff : idma64.2
-	  4017003000-4017003fff : 0000:00:15.2
-	    4017003000-40170031ff : lpss_dev
-	      4017003000-40170031ff : i2c_designware.3
-	    4017003200-40170032ff : lpss_priv
-	    4017003800-4017003fff : idma64.3
-	      4017003800-4017003fff : idma64.3
-	  4017004000-4017004fff : 0000:00:15.3
-	    4017004000-40170041ff : lpss_dev
-	      4017004000-40170041ff : i2c_designware.4
-	    4017004200-40170042ff : lpss_priv
-	    4017004800-4017004fff : idma64.4
-	      4017004800-4017004fff : idma64.4
-	  4017005000-4017005fff : 0000:00:19.0
-	    4017005000-40170051ff : lpss_dev
-	      4017005000-40170051ff : i2c_designware.5
-	    4017005200-40170052ff : lpss_priv
-	    4017005800-4017005fff : idma64.5
-	      4017005800-4017005fff : idma64.5
-	  4017006000-4017006fff : 0000:00:19.1
-	    4017006000-40170061ff : lpss_dev
-	      4017006000-40170061ff : i2c_designware.6
-	    4017006200-40170062ff : lpss_priv
-	    4017006800-4017006fff : idma64.6
-	      4017006800-4017006fff : idma64.6
-	  4017007000-4017007fff : 0000:00:1e.0
-	    4017007000-40170071ff : lpss_dev
-	      4017007000-401700701f : serial
-	    4017007200-40170072ff : lpss_priv
-	    4017007800-4017007fff : idma64.7
-	      4017007800-4017007fff : idma64.7
-	  4017008000-4017008fff : 0000:00:1e.3
-	    4017008000-40170081ff : lpss_dev
-	      4017008000-40170081ff : pxa2xx-spi.8
-	    4017008200-40170082ff : lpss_priv
-	    4017008800-4017008fff : idma64.8
-	      4017008800-4017008fff : idma64.8
-	  4020000000-40ffffffff : 0000:00:02.0
-	  6000000000-601bffffff : PCI Bus 0000:01
-	  6020000000-603bffffff : PCI Bus 0000:2b
-	  6040000000-605bffffff : PCI Bus 0000:55
-	  6060000000-607bffffff : PCI Bus 0000:7f
-	  607c000000-607cffffff : 0000:00:05.0
-	  607d000000-607dffffff : 0000:00:02.0
-	  607e000000-607e0fffff : 0000:00:1f.3
-	    607e000000-607e0fffff : Audio DSP
-	  607e100000-607e13ffff : 0000:00:0d.3
-	  607e140000-607e17ffff : 0000:00:0d.2
-	  607e180000-607e19ffff : 0000:00:04.0
-	  607e1a0000-607e1affff : 0000:00:14.0
-	    607e1a0000-607e1affff : xhci-hcd
-	  607e1b0000-607e1bffff : 0000:00:12.0
-	    607e1b0000-607e1bffff : intel_ish_ipc
-	  607e1c0000-607e1cffff : 0000:00:0d.0
-	    607e1c0000-607e1cffff : xhci-hcd
-	  607e1d0000-607e1d7fff : 0000:00:10.7
-	  607e1d8000-607e1dffff : 0000:00:10.6
-	  607e1e0000-607e1e7fff : 0000:00:0a.0
-	  607e1e8000-607e1ebfff : 0000:00:1f.3
-	    607e1e8000-607e1ebfff : Audio DSP
-	  607e1ec000-607e1effff : 0000:00:14.3
-	    607e1ec000-607e1effff : iwlwifi
-	  607e1f0000-607e1f3fff : 0000:00:14.2
-	  607e1f4000-607e1f40ff : 0000:00:1f.4
-	  607e1f9000-607e1f9fff : 0000:00:16.0
-	    607e1f9000-607e1f9fff : mei_me
-	  607e1fe000-607e1fefff : 0000:00:14.2
-	  607e200000-607e200fff : 0000:00:0d.3
-	  607e201000-607e201fff : 0000:00:0d.2
-	  607e202000-607e202fff : 0000:00:08.0
+	100000000-4c07fffff : System RAM
+	  2eb000000-2ec0010f0 : Kernel code
+	  2ec0010f1-2ec779dff : Kernel data
+	  2ec947000-2ecbfffff : Kernel bss
+	4c0800000-4c3ffffff : RAM buffer
 	</IOMEM_INFO>
 
 	<BLOCK_DEVICE_INFO>
 	/dev/nvme0n1p3: TYPE="ext4"
+	/dev/sda3: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
 
 	<TTYS_INFO>
 	seri:/dev/ttyS0 type:portio base:0x3F8 irq:4
-	seri:/dev/ttyS1 type:mmio base:0x4017007000 irq:34 bdf:"00:1e.0"
+	seri:/dev/ttyS1 type:mmio base:0x3F807000 irq:16 bdf:"00:1e.0"
 	</TTYS_INFO>
 
 	<AVAILABLE_IRQ_INFO>
-	3, 5, 6, 7, 10, 11, 12, 13, 15
+	3, 5, 6, 7, 10, 11, 12, 13, 14, 15
 	</AVAILABLE_IRQ_INFO>
 
 	<TOTAL_MEM_INFO>
-	7928416 kB
+	16203192 kB
 	</TOTAL_MEM_INFO>
 
 	<CPU_PROCESSOR_INFO>
