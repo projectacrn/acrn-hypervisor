@@ -177,7 +177,7 @@ Tip: Disable the Intel processor C-State and P-State of the RTVM.
    Power management of a processor could save power, but it could also impact
    the RT performance because the power state is changing. C-State and P-State
    PM mechanism can be disabled by adding ``processor.max_cstate=0
-   intel_idle.max_cstate=0  intel_pstate=disabled`` to the kernel parameters.
+   intel_idle.max_cstate=0  intel_pstate=disable`` to the kernel parameters.
 
 Tip: Exercise caution when setting ``/proc/sys/kernel/sched_rt_runtime_us``.
    Setting ``/proc/sys/kernel/sched_rt_runtime_us`` to ``-1`` can be a
