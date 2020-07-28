@@ -27,6 +27,7 @@
 #include <vboot.h>
 #include <sgx.h>
 #include <uart16550.h>
+#include <ivshmem.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */
@@ -244,6 +245,9 @@ void init_pcpu_post(uint16_t pcpu_id)
 		}
 
 		hv_access_memory_region_update(get_mmcfg_base(), PCI_MMCONFIG_SIZE);
+#ifdef CONFIG_IVSHMEM_ENABLED
+		init_ivshmem_shared_memory();
+#endif
 		init_pci_pdev_list(); /* init_iommu must come before this */
 		ptdev_init();
 
