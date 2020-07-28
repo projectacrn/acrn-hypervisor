@@ -336,3 +336,11 @@ config ENFORCE_TURNOFF_AC
 	help
 	  If CPU has #AC for split-locked access, HV enable it and VMs can't disable.
 	  Set this to enforce turn off that #AC, for community developer only.
+
+config IVSHMEM_ENABLED
+	bool "Enable ivshmem inter-vm communication based on hypervisor shared memory"
+	default n
+	help
+	  Ivshmem shared memory is located in the hypervisor, it can provide multiple
+	  memory regions as communication channels between pre-launched or post-launched
+	  VMs.
