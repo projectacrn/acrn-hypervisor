@@ -407,8 +407,13 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 
 	/* Allocate memory for virtual machine */
 	vm = &vm_array[vm_id];
-	/* the vm_state lock field need to remain unchanged in vm data structure */
-	(void)memset((void *)&vm->arch_vm, 0U, (sizeof(struct acrn_vm) - sizeof(spinlock_t)));
+	/*
+	 * the vm_state lock field need to remain unchanged in vm data structure
+	 * Since arch_vm struct is page aligned, size used for memset should consider
+	 * subtracting 4K from the total size of acrn_vm.
+	 * Using offset_of macro to avoid hardcoding 4k here.
+	 */
+	(void)memset((void *)&vm->arch_vm, 0U, (sizeof(struct acrn_vm) - offsetof(struct acrn_vm, arch_vm)));
 	vm->vm_id = vm_id;
 	vm->hw.created_vcpus = 0U;
 
