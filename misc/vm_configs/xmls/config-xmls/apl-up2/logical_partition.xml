@@ -111,8 +111,7 @@
     <vm_type desc="Specify the VM type" readonly="true">PRE_STD_VM</vm_type>
     <name desc="vm_name">ACRN PRE-LAUNCHED VM1</name>
     <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
-        <guest_flag>GUEST_FLAG_RT</guest_flag>
-        <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
+        <guest_flag></guest_flag>
     </guest_flags>
     <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
         <pcpu_id>1</pcpu_id>
