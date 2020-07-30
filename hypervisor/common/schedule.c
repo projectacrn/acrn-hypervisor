@@ -203,8 +203,10 @@ void sleep_thread(struct thread_object *obj)
 		} else {
 			make_reschedule_request(pcpu_id, DEL_MODE_IPI);
 		}
+		obj->be_blocking = true;
+	} else {
+		set_thread_status(obj, THREAD_STS_BLOCKED);
 	}
-	obj->be_blocking = true;
 	release_schedule_lock(pcpu_id, rflag);
 }
 
