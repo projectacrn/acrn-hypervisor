@@ -240,6 +240,7 @@ def vm_cpu_affinity_check(config_file, id_cpus_per_vm_dic, item):
             else:
                 use_cpus.append(cpu)
 
+    sos_vm_cpus = []
     pre_launch_cpus = []
     post_launch_cpus = []
     for vm_i, vm_type in common.VM_TYPES.items():
@@ -251,6 +252,9 @@ def vm_cpu_affinity_check(config_file, id_cpus_per_vm_dic, item):
         elif VM_DB[vm_type]['load_type'] == "POST_LAUNCHED_VM":
             cpus = [x for x in id_cpus_per_vm_dic[vm_i] if not None]
             post_launch_cpus.extend(cpus)
+        elif VM_DB[vm_type]['load_type'] == "SOS_VM":
+            cpus = [x for x in id_cpus_per_vm_dic[vm_i] if not None]
+            sos_vm_cpus.extend(cpus)
 
         # duplicate cpus assign the same VM check
         cpus_vm_i = id_cpus_per_vm_dic[vm_i]
@@ -261,6 +265,10 @@ def vm_cpu_affinity_check(config_file, id_cpus_per_vm_dic, item):
                 return err_dic
 
     if pre_launch_cpus:
+        if "SOS_VM" in common.VM_TYPES and not sos_vm_cpus:
+            key = "SOS VM cpu_affinity"
+            err_dic[key] = "Should assign CPU id for SOS VM"
+
         for pcpu in pre_launch_cpus:
             if pre_launch_cpus.count(pcpu) >= 2:
                 key = "Pre launched VM cpu_affinity"
@@ -475,6 +483,10 @@ def cpus_assignment(cpus_per_vm, index):
     :return: cpu assignment string
     """
     vm_cpu_bmp = {}
+    if "SOS_VM" == common.VM_TYPES[index]:
+        if index not in cpus_per_vm:
+            sos_extend_all_cpus = board_cfg_lib.get_processor_info()
+            cpus_per_vm[index] = sos_extend_all_cpus
 
     for i in range(len(cpus_per_vm[index])):
         if i == 0:

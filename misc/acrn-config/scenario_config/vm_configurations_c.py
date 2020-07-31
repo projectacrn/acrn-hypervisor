@@ -193,11 +193,11 @@ def cpu_affinity_output(vm_info, i, config):
     :param i: the index of vm id
     :param config: file pointor to store the information
     """
-    if "SOS_VM" == scenario_cfg_lib.VM_DB[vm_info.load_vm[i]]['load_type']:
-        return
 
-    cpu_bits = vm_info.get_cpu_bitmap(i)
-    print("\t\t.cpu_affinity = VM{}_CONFIG_CPU_AFFINITY,".format(i), file=config)
+    if "SOS_VM" == common.VM_TYPES[i]:
+        print("\t\t.cpu_affinity = SOS_VM_CONFIG_CPU_AFFINITY,", file=config)
+    else:
+        print("\t\t.cpu_affinity = VM{}_CONFIG_CPU_AFFINITY,".format(i), file=config)
 
 
 def clos_output(scenario_items, i, config):

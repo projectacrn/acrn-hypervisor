@@ -30,12 +30,15 @@ def cpu_affinity_output(vm_info, i, config):
     :param i: the index of vm id
     :param config: file pointor to store the information
     """
-    if "SOS_VM" == scenario_cfg_lib.VM_DB[vm_info.load_vm[i]]['load_type']:
-        return
 
     cpu_bits = vm_info.get_cpu_bitmap(i)
-    print("#define VM{0}_CONFIG_CPU_AFFINITY         {1}".format(
-        i, cpu_bits['cpu_map']), file=config)
+    if "SOS_VM" == common.VM_TYPES[i]:
+        print("", file=config)
+        print("#define SOS_VM_CONFIG_CPU_AFFINITY      {0}".format(
+            cpu_bits['cpu_map']), file=config)
+    else:
+        print("#define VM{0}_CONFIG_CPU_AFFINITY         {1}".format(
+            i, cpu_bits['cpu_map']), file=config)
 
 def clos_config_output(scenario_items, i, config):
     """
@@ -120,8 +123,10 @@ def gen_sos_header(scenario_items, config):
     print("\t\t\t\t\tSOS_IDLE\t\\", file=config)
     print("\t\t\t\t\tSOS_BOOTARGS_DIFF", file=config)
 
+    vm_info = scenario_items['vm']
     for vm_i,vm_type in common.VM_TYPES.items():
         if vm_type == 'SOS_VM':
+            cpu_affinity_output(vm_info, vm_i, config)
             clos_config_output(scenario_items, vm_i, config)
     print("", file=config)
 

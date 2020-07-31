@@ -105,6 +105,10 @@
     <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
         <guest_flag>0</guest_flag>
     </guest_flags>
+    <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
+        <pcpu_id>0</pcpu_id>
+        <pcpu_id>1</pcpu_id>
+    </cpu_affinity>
     <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
         <vcpu_clos>0</vcpu_clos>
     </clos>
