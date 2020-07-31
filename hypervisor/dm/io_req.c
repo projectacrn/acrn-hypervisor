@@ -475,7 +475,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	size = mmio_req->size;
 
 	spinlock_obtain(&vcpu->vm->emul_mmio_lock);
-	for (idx = 0U; idx <= vcpu->vm->max_emul_mmio_regions; idx++) {
+	for (idx = 0U; idx <= vcpu->vm->nr_emul_mmio_regions; idx++) {
 		mmio_handler = &(vcpu->vm->emul_mmio[idx]);
 		if (mmio_handler->read_write != NULL) {
 			base = mmio_handler->range_start;
@@ -657,8 +657,8 @@ static inline struct mem_io_node *find_free_mmio_node(struct acrn_vm *vm)
 
 	if (mmio_node != NULL) {
 		idx = (uint16_t)(uint64_t)(mmio_node - &(vm->emul_mmio[0U]));
-		if (vm->max_emul_mmio_regions < idx) {
-			vm->max_emul_mmio_regions = idx;
+		if (vm->nr_emul_mmio_regions < idx) {
+			vm->nr_emul_mmio_regions = idx;
 		}
 	}
 
@@ -723,4 +723,10 @@ void unregister_mmio_emulation_handler(struct acrn_vm *vm,
 		(void)memset(mmio_node, 0U, sizeof(struct mem_io_node));
 	}
 	spinlock_release(&vm->emul_mmio_lock);
+}
+
+void deinit_emul_io(struct acrn_vm *vm)
+{
+	(void)memset(vm->emul_mmio, 0U, sizeof(vm->emul_mmio));
+	(void)memset(vm->emul_pio, 0U, sizeof(vm->emul_pio));
 }

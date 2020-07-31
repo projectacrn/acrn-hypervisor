@@ -81,7 +81,7 @@ struct vm_pm_info {
 
 /* Enumerated type for VM states */
 enum vm_state {
-	VM_POWERED_OFF = 0,
+	VM_POWERED_OFF = 0,   /* MUST set 0 because vm_state's initialization depends on clear BSS section */
 	VM_CREATED,	/* VM created / awaiting start (boot) */
 	VM_RUNNING,	/* VM running */
 	VM_READY_TO_POWEROFF,     /* RTVM only, it is trying to poweroff by itself */
@@ -119,10 +119,6 @@ struct vm_arch {
 } __aligned(PAGE_SIZE);
 
 struct acrn_vm {
-	/* vm_state_lock MUST be the first field in VM structure it will not clear zero when creating VM
-	 * this lock initialization depends on the clear BSS section
-	 */
-	spinlock_t vm_state_lock;/* Spin-lock used to protect vm/vcpu state transition for a VM */
 	struct vm_arch arch_vm; /* Reference to this VM's arch information */
 	struct vm_hw_info hw;	/* Reference to this VM's HW information */
 	struct vm_sw_info sw;	/* Reference to SW associated with this VM */
@@ -134,10 +130,14 @@ struct acrn_vm {
 	struct acrn_vuart vuart[MAX_VUART_NUM_PER_VM];		/* Virtual UART */
 	enum vpic_wire_mode wire_mode;
 	struct iommu_domain *iommu;	/* iommu domain of this VM */
+	/* vm_state_lock used to protect vm/vcpu state transition,
+	 * the initialization depends on the clear BSS section
+	 */
+	spinlock_t vm_state_lock;
 	spinlock_t vlapic_mode_lock;	/* Spin-lock used to protect vlapic_mode modifications for a VM */
 	spinlock_t ept_lock;	/* Spin-lock used to protect ept add/modify/remove for a VM */
 	spinlock_t emul_mmio_lock;	/* Used to protect emulation mmio_node concurrent access for a VM */
-	uint16_t max_emul_mmio_regions;	/* max index of the emulated mmio_region */
+	uint16_t nr_emul_mmio_regions;	/* the emulated mmio_region number */
 	struct mem_io_node emul_mmio[CONFIG_MAX_EMULATED_MMIO_REGIONS];
 
 	struct vm_io_handler_desc emul_pio[EMUL_PIO_IDX_MAX];
