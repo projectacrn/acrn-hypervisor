@@ -113,7 +113,7 @@ void write_vmsi_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, 
 {
 	/* Capability ID, Next Capability Pointer and Message Control
 	 * (Except MSI Enable bit and Multiple Message Enable) are RO */
-	static const uint8_t msi_ro_mask[0xEU] = { 0xffU, 0xffU, 0x1eU, 0xffU };
+	static const uint8_t msi_ro_mask[0xEU] = { 0xffU, 0xffU, 0x8eU, 0xffU };
 	uint32_t msgctrl, old, ro_mask = ~0U;
 
 	enable_disable_msi(vdev, false);
