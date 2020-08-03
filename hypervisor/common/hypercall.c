@@ -60,6 +60,11 @@ bool is_hypercall_from_ring0(void)
 	return ret;
 }
 
+inline static bool is_severity_pass(uint16_t target_vmid)
+{
+	return SEVERITY_SOS >= get_vm_severity(target_vmid);
+}
+
 /**
  * @brief offline vcpu from SOS
  *
@@ -391,7 +396,7 @@ int32_t hcall_set_irqline(struct acrn_vm *vm, struct acrn_vm *target_vm, __unuse
 	int32_t ret = -1;
 	struct acrn_irqline_ops *ops = (struct acrn_irqline_ops *)&param2;
 
-	if (!is_poweroff_vm(target_vm)) {
+	if (is_severity_pass(target_vm->vm_id) && !is_poweroff_vm(target_vm)) {
 		if (ops->gsi < get_vm_gsicount(vm)) {
 			if (ops->gsi < vpic_pincount()) {
 				/*
@@ -479,7 +484,7 @@ int32_t hcall_inject_msi(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused
 {
 	int32_t ret = -1;
 
-	if (!is_poweroff_vm(target_vm)) {
+	if (is_severity_pass(target_vm->vm_id) && !is_poweroff_vm(target_vm)) {
 		struct acrn_msi_entry msi;
 
 		if (copy_from_gpa(vm, &msi, param2, sizeof(msi)) == 0) {
@@ -579,7 +584,8 @@ int32_t hcall_notify_ioreq_finish(__unused struct acrn_vm *vm, struct acrn_vm *t
 	uint16_t vcpu_id = (uint16_t)param2;
 
 	/* make sure we have set req_buf */
-	if ((!is_poweroff_vm(target_vm)) && (target_vm->sw.io_shared_page != NULL)) {
+	if (is_severity_pass(target_vm->vm_id) &&
+	    (!is_poweroff_vm(target_vm)) && (target_vm->sw.io_shared_page != NULL)) {
 		dev_dbg(DBG_LEVEL_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
 			target_vm->vm_id, vcpu_id);
 
@@ -713,7 +719,8 @@ int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, struct acrn_vm *target_v
 
 	if (copy_from_gpa(vm, &regions, param1, sizeof(regions)) == 0) {
 
-		if (!is_poweroff_vm(target_vm)) {
+		if (!is_poweroff_vm(target_vm) &&
+		    (is_severity_pass(target_vm->vm_id) || (target_vm->state != VM_RUNNING))) {
 			idx = 0U;
 			while (idx < regions.mr_num) {
 				if (copy_from_gpa(vm, &mr, regions.regions_gpa + idx * sizeof(mr), sizeof(mr)) != 0) {
@@ -745,31 +752,33 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 	uint64_t prot_clr;
 	int32_t ret = -EINVAL;
 
-	if ((!mem_aligned_check(wp->gpa, PAGE_SIZE)) ||
-		(!ept_is_mr_valid(vm, wp->gpa, PAGE_SIZE))) {
-		pr_err("%s,vm[%hu] gpa 0x%lx,GPA is invalid or not page size aligned.",
-			__func__, vm->vm_id, wp->gpa);
-	} else {
-		hpa = gpa2hpa(vm, wp->gpa);
-		if (hpa == INVALID_HPA) {
-			pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
-				__func__, vm->vm_id, wp->gpa);
+	if (is_severity_pass(vm->vm_id)) {
+		if ((!mem_aligned_check(wp->gpa, PAGE_SIZE)) ||
+				(!ept_is_mr_valid(vm, wp->gpa, PAGE_SIZE))) {
+			pr_err("%s,vm[%hu] gpa 0x%lx,GPA is invalid or not page size aligned.",
+					__func__, vm->vm_id, wp->gpa);
 		} else {
-			dev_dbg(DBG_LEVEL_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x",
-				vm->vm_id, wp->gpa, hpa);
-
-			base_paddr = hva2hpa((void *)(get_hv_image_base()));
-			if (((hpa <= base_paddr) && ((hpa + PAGE_SIZE) > base_paddr)) ||
-				((hpa >= base_paddr) &&
-				(hpa < (base_paddr + CONFIG_HV_RAM_SIZE)))) {
-				pr_err("%s: overlap the HV memory region.", __func__);
+			hpa = gpa2hpa(vm, wp->gpa);
+			if (hpa == INVALID_HPA) {
+				pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
+						__func__, vm->vm_id, wp->gpa);
 			} else {
-				prot_set = (wp->set != 0U) ? 0UL : EPT_WR;
-				prot_clr = (wp->set != 0U) ? EPT_WR : 0UL;
+				dev_dbg(DBG_LEVEL_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x",
+						vm->vm_id, wp->gpa, hpa);
 
-				ept_modify_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-					wp->gpa, PAGE_SIZE, prot_set, prot_clr);
-				ret = 0;
+				base_paddr = hva2hpa((void *)(get_hv_image_base()));
+				if (((hpa <= base_paddr) && ((hpa + PAGE_SIZE) > base_paddr)) ||
+						((hpa >= base_paddr) &&
+						 (hpa < (base_paddr + CONFIG_HV_RAM_SIZE)))) {
+					pr_err("%s: overlap the HV memory region.", __func__);
+				} else {
+					prot_set = (wp->set != 0U) ? 0UL : EPT_WR;
+					prot_clr = (wp->set != 0U) ? EPT_WR : 0UL;
+
+					ept_modify_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+							wp->gpa, PAGE_SIZE, prot_set, prot_clr);
+					ret = 0;
+				}
 			}
 		}
 	}
