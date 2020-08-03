@@ -68,8 +68,8 @@ $(HV_OBJDIR)/$(HV_CONFIG_H): $(HV_OBJDIR)/$(HV_CONFIG)
 .PHONY: defconfig
 defconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
-	@BOARD=$(CONFIG_BOARD) SCENARIO=$(CONFIG_SCENARIO); \
-	if ([ "$(KCONFIG_FILE)" = "" ] || ([ "$(KCONFIG_FILE)" != "" ] && [ ! -f $(KCONFIG_FILE) ])) && [ "$(CONFIG_XML_ENABLED)" != "true" ]; then \
+	@if ([ "$(KCONFIG_FILE)" = "" ] || ([ "$(KCONFIG_FILE)" != "" ] && [ ! -f $(KCONFIG_FILE) ])) && [ "$(CONFIG_XML_ENABLED)" != "true" ]; then \
+		BOARD=$(CONFIG_BOARD) SCENARIO=$(CONFIG_SCENARIO) \
 		python3 $(KCONFIG_DIR)/defconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG); \
 	else \
 		if [ "$(KCONFIG_FILE)" != "" ] && [ -f $(KCONFIG_FILE) ]; then \
@@ -82,6 +82,7 @@ defconfig: $(KCONFIG_DEPS)
 			echo "Writing $(HV_OBJDIR)/$(HV_CONFIG) with $(BOARD_CFG_DIR)/$(BOARD).config"; \
 			cp $(TARGET_DIR)/scenarios/$(SCENARIO)/$(BOARD)/$(BOARD).config $(HV_OBJDIR)/$(HV_CONFIG); \
 		fi; \
+		BOARD=$(CONFIG_BOARD) SCENARIO=$(CONFIG_SCENARIO) \
 		python3 $(KCONFIG_DIR)/silentoldconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG) RELEASE=$(RELEASE); \
 	fi
 
