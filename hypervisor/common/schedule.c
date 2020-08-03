@@ -225,13 +225,16 @@ void wake_thread(struct thread_object *obj)
 	uint64_t rflag;
 
 	obtain_schedule_lock(pcpu_id, &rflag);
-	if (is_blocked(obj)) {
+	if (is_blocked(obj) || obj->be_blocking) {
 		scheduler = get_scheduler(pcpu_id);
 		if (scheduler->wake != NULL) {
 			scheduler->wake(obj);
 		}
-		set_thread_status(obj, THREAD_STS_RUNNABLE);
-		make_reschedule_request(pcpu_id, DEL_MODE_IPI);
+		if (is_blocked(obj)) {
+			set_thread_status(obj, THREAD_STS_RUNNABLE);
+			make_reschedule_request(pcpu_id, DEL_MODE_IPI);
+		}
+		obj->be_blocking = false;
 	}
 	release_schedule_lock(pcpu_id, rflag);
 }
