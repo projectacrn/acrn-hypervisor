@@ -360,9 +360,12 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 			case 0x12U:
 				result = set_vcpuid_sgx(vm);
 				break;
-			/* These features are disabled */
-			/* PMU is not supported */
 			case 0x0aU:
+				if (is_pmu_pt_configured(vm)) {
+					init_vcpuid_entry(i, 0U, 0U, &entry);
+					result = set_vcpuid_entry(vm, &entry);
+				}
+				break;
 			/* Intel RDT */
 			case 0x0fU:
 			case 0x10U:

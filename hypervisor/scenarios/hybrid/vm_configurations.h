@@ -11,7 +11,8 @@
 
 /* Bits mask of guest flags that can be programmed by device model. Other bits are set by hypervisor only */
 #define DM_OWNED_GUEST_FLAG_MASK	(GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH | \
-						GUEST_FLAG_RT | GUEST_FLAG_IO_COMPLETION_POLLING)
+						GUEST_FLAG_RT | GUEST_FLAG_IO_COMPLETION_POLLING | \
+						GUEST_FLAG_PMU_PASSTHROUGH)
 
 /* SOS_VM_NUM can only be 0U or 1U;
  * When SOS_VM_NUM is 0U, MAX_POST_VM_NUM must be 0U too;
