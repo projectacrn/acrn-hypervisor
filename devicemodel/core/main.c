@@ -89,6 +89,7 @@ bool lapic_pt;
 bool is_rtvm;
 bool is_winvm;
 bool skip_pci_mem64bar_workaround = false;
+bool is_pmu_pt = false;
 
 static int guest_ncpus;
 static int virtio_msix = 1;
@@ -178,7 +179,8 @@ usage(int code)
 		"       --pm_notify_channel: define the channel used to notify guest about power event\n"
 		"       --pm_by_vuart:pty,/run/acrn/vuart_vmname or tty,/dev/ttySn\n"
 		"       --windows: support Oracle virtio-blk, virtio-net and virtio-input devices\n"
-		"            for windows guest with secure boot\n",
+		"            for windows guest with secure boot\n"
+		"       --pmu: passthrough performance monitor unit to VM\n",
 		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
@@ -737,6 +739,7 @@ enum {
 	CMD_OPT_PM_NOTIFY_CHANNEL,
 	CMD_OPT_PM_BY_VUART,
 	CMD_OPT_WINDOWS,
+	CMD_OPT_PMU,
 };
 
 static struct option long_options[] = {
@@ -776,6 +779,7 @@ static struct option long_options[] = {
 	{"pm_notify_channel",	required_argument,	0, CMD_OPT_PM_NOTIFY_CHANNEL},
 	{"pm_by_vuart",	required_argument,	0, CMD_OPT_PM_BY_VUART},
 	{"windows",		no_argument,		0, CMD_OPT_WINDOWS},
+	{"pmu",		no_argument,		0, CMD_OPT_PMU},
 	{0,			0,			0,  0  },
 };
 
@@ -942,6 +946,9 @@ main(int argc, char *argv[])
 			break;
 		case CMD_OPT_WINDOWS:
 			is_winvm = true;
+			break;
+		case CMD_OPT_PMU:
+			is_pmu_pt = true;
 			break;
 		case 'h':
 			usage(0);
