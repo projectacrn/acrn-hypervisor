@@ -127,7 +127,8 @@ def get_dm_owned_guest_flag_mask(vm_info, config):
               " Other bits are set by hypervisor only */", file=config)
         print("#define DM_OWNED_GUEST_FLAG_MASK\t" +
               "(GUEST_FLAG_SECURE_WORLD_ENABLED | GUEST_FLAG_LAPIC_PASSTHROUGH | \\\n" +
-              "\t\t\t\t\t\tGUEST_FLAG_RT | GUEST_FLAG_IO_COMPLETION_POLLING)", file=config)
+              "\t\t\t\t\t\tGUEST_FLAG_RT | GUEST_FLAG_IO_COMPLETION_POLLING | \\\n" +
+              "\t\t\t\t\t\tGUEST_FLAG_PMU_PASSTHROUGH)", file=config)
 
     print("", file=config)
 
