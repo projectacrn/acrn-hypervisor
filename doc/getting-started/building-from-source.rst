@@ -15,13 +15,6 @@ The hypervisor binary is generated based on Kconfig configuration
 settings. Instructions about these settings can be found in
 :ref:`getting-started-hypervisor-configuration`.
 
-.. note::
-   A generic configuration named ``hypervisor/arch/x86/configs/generic.config``
-   is provided to help developers try out ACRN more easily.
-   This configuration works for most x86-based platforms; it is supported
-   with limited features. It can be enabled by specifying ``BOARD=generic``
-   in the ``make`` command line.
-
 One binary for all platforms and all usage scenarios is currently not
 supported, primarily because dynamic configuration parsing is restricted in
 the ACRN hypervisor for the following reasons:
@@ -146,7 +139,12 @@ INDUSTRY:
 
 HYBRID:
    This scenario defines a hybrid use case with three VMs: one
-   pre-launched VM, one pre-launched Service VM, and one post-launched
+   pre-launched Safety VM, one pre-launched Service VM, and one post-launched
+   Standard VM.
+
+HYBRID_RT:
+   This scenario defines a hybrid use case with three VMs: one
+   pre-launched RTVM, one pre-launched Service VM, and one post-launched
    Standard VM.
 
 Assuming that you are at the top level of the acrn-hypervisor directory, perform the following:
@@ -166,11 +164,19 @@ Assuming that you are at the top level of the acrn-hypervisor directory, perform
 
      $ make all BOARD=whl-ipc-i5 SCENARIO=hybrid RELEASE=0
 
+* Build the ``HYBRID_RT`` scenario on the ``whl-ipc-i7``:
+
+  .. code-block:: none
+
+     $ make all BOARD=whl-ipc-i7 SCENARIO=hybrid_rt RELEASE=0
+
 * Build the ``SDC`` scenario on the ``nuc6cayh``:
 
   .. code-block:: none
 
-     $ make all BOARD=nuc6cayh SCENARIO=sdc RELEASE=0
+    $ make all BOARD_FILE=$PWD/misc/vm_configs/xmls/board-xmls/nuc6cayh.xml \
+    SCENARIO_FILE=$PWD/misc/vm_configs/xmls/config-xmls/nuc6cayh/sdc.xml
+
 
 See the :ref:`hardware` document for information about platform needs
 for each scenario.
@@ -200,10 +206,10 @@ top level of the acrn-hypervisor directory. The configuration file, named
 .. code-block:: none
 
    $ cd hypervisor
-   $ make defconfig BOARD=nuc6cayh
+   $ make defconfig BOARD=nuc7i7dnb SCENARIO=industry
 
 The BOARD specified is used to select a ``defconfig`` under
-``arch/x86/configs/``. The other command line-based options (e.g.
+``misc/vm_configs/scenarios/``. The other command line-based options (e.g.
 ``RELEASE``) take no effect when generating a defconfig.
 
 To modify the hypervisor configurations, you can either edit ``.config``
@@ -217,8 +223,9 @@ configurations and build the hypervisor using the updated ``.config``:
 
    # Modify the configurations per your needs
    $ cd ../         # Enter top-level folder of acrn-hypervisor source
-   $ make menuconfig -C hypervisor BOARD=kbl-nuc-i7   <input scenario name>
-
+   $ make menuconfig -C hypervisor
+   # modify your own "ACRN Scenario" and "Target board" that want to build
+   # in pop up menu
 
 Note that ``menuconfig`` is python3 only.
 
@@ -261,8 +268,8 @@ of the acrn-hypervisor directory):
 
 .. code-block:: none
 
-   $ make BOARD_FILE=$PWD/misc/acrn-config/xmls/board-xmls/nuc7i7dnb.xml \
-   SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/nuc7i7dnb/industry.xml FIRMWARE=uefi TARGET_DIR=xxx
+   $ make BOARD_FILE=$PWD/misc/vm_configs/xmls/board-xmls/nuc7i7dnb.xml \
+   SCENARIO_FILE=$PWD/misc/vm_configs/xmls/config-xmls/nuc7i7dnb/industry.xml FIRMWARE=uefi TARGET_DIR=xxx
 
 
 .. note::
