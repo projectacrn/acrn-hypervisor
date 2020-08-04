@@ -62,5 +62,16 @@ def generate_file(config):
 
             i_cnt += 1
 
+    ivshmem_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
+    raw_shmem_regions = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
+    if ivshmem_enabled == 'y':
+        shmem_cnt = 0
+        for raw_shmem_region in raw_shmem_regions:
+            if raw_shmem_region and raw_shmem_region.strip != '':
+                name = raw_shmem_region.split(',')[0].strip()
+                print("", file=config)
+                print("#define IVSHMEM_SHM_REGION_%-21d"%shmem_cnt, end="", file=config)
+                print('"{}"'.format(name), file=config)
+                shmem_cnt += 1
     # write the end to the pci devices
     print("{0}".format(PCI_END_HEADER), file=config)

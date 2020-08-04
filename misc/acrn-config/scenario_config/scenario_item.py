@@ -228,6 +228,38 @@ class EpcSection:
         self.size = common.get_leaf_tag_map(self.scenario_info, "epc_section", "size")
 
 
+class ShareMem:
+    """ This is the class to get Share Memory regions for VMs """
+    shmem_enabled = 'n'
+    raw_shmem_regions = []
+    shmem_regions = {}
+    shmem_num = {}
+
+    def __init__(self, scenario_info):
+        self.scenario_info = scenario_info
+
+    def set_ivshmem(self, ivshmem_regions):
+        """
+        set ivshmem regions for VMs.
+        :param ivshmem_regions:
+        :return:
+        """
+        self.raw_shmem_regions = ivshmem_regions
+        self.shmem_enabled = common.get_hv_item_tag(self.scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
+        self.shmem_regions = scenario_cfg_lib.get_shmem_regions(ivshmem_regions)
+        self.shmem_num = scenario_cfg_lib.get_shmem_num(self.shmem_regions)
+
+    def check_items(self):
+        '''
+        check the configurations for share memories.
+        :return:
+        '''
+        if self.shmem_enabled == 'y':
+            vm_type_info = common.get_leaf_tag_map(self.scenario_info, "vm_type")
+            scenario_cfg_lib.share_mem_check(self.shmem_regions, self.raw_shmem_regions, vm_type_info,
+                                         "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
+
+
 class LoadOrderNum:
     """ This is Abstract of VM number for different load order """
     def __init__(self):
@@ -259,6 +291,7 @@ class VmInfo:
         self.vuart = VuartInfo(self.scenario_info)
         self.cfg_pci = CfgPci(self.scenario_info)
         self.load_order_cnt = LoadOrderNum()
+        self.shmem = ShareMem(self.scenario_info)
 
     def get_info(self):
         """
@@ -280,6 +313,14 @@ class VmInfo:
         self.vuart.get_info()
         self.cfg_pci.get_info()
         self.load_order_cnt.get_info(self.load_vm)
+
+    def set_ivshmem(self, ivshmem_regions):
+        """
+        set ivshmem regions for VMs
+        :param ivshmem_regions:
+        :return:
+        """
+        self.shmem.set_ivshmem(ivshmem_regions)
 
     def get_cpu_bitmap(self, index):
         """
@@ -310,4 +351,5 @@ class VmInfo:
         self.os_cfg.check_item()
         self.cfg_pci.check_item()
         self.vuart.check_item()
+        self.shmem.check_items()
         scenario_cfg_lib.ERR_LIST.update(err_dic)

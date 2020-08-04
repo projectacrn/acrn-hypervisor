@@ -19,7 +19,7 @@ PY_CACHES = ["__pycache__", "../board_config/__pycache__", "../scenario_config/_
 GUEST_FLAG = ["0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTHROUGH",
               "GUEST_FLAG_IO_COMPLETION_POLLING", "GUEST_FLAG_HIDE_MTRR", "GUEST_FLAG_RT"]
 
-MULTI_ITEM = ["guest_flag", "pcpu_id", "vcpu_clos", "input", "block", "network", "pci_dev"]
+MULTI_ITEM = ["guest_flag", "pcpu_id", "vcpu_clos", "input", "block", "network", "pci_dev", "shmem_region"]
 
 SIZE_K = 1024
 SIZE_M = SIZE_K * 1024
@@ -45,6 +45,7 @@ class MultiItem():
         self.vir_console = []
         self.vir_network = []
         self.pci_dev = []
+        self.shmem_region = []
 
 class TmpItem():
 
@@ -282,6 +283,10 @@ def get_leaf_value(tmp, tag_str, leaf):
     if leaf.tag == "pci_dev" and tag_str == "pci_dev":
         tmp.multi.pci_dev.append(leaf.text)
 
+    # get shmem_region for vm
+    if leaf.tag == "shmem_region" and tag_str == "shmem_region":
+        tmp.multi.shmem_region.append(leaf.text)
+
 
 def get_sub_value(tmp, tag_str, vm_id):
 
@@ -312,6 +317,10 @@ def get_sub_value(tmp, tag_str, vm_id):
     # append pci_dev for vm
     if tmp.multi.pci_dev and tag_str == "pci_dev":
         tmp.tag[vm_id] = tmp.multi.pci_dev
+
+    # append shmem_region for vm
+    if tmp.multi.shmem_region and tag_str == "shmem_region":
+        tmp.tag[vm_id] = tmp.multi.shmem_region
 
 
 def get_leaf_tag_map(config_file, branch_tag, tag_str=''):
@@ -409,6 +418,7 @@ def get_hv_item_tag(config_file, branch_tag, tag_str='', leaf_str=''):
 
     tmp = ''
     root = get_config_root(config_file)
+
     for item in root:
         # for each 2th level item
         for sub in item:
@@ -421,25 +431,34 @@ def get_hv_item_tag(config_file, branch_tag, tag_str='', leaf_str=''):
                     continue
 
                 # for each 3rd level item
+                tmp_list = []
                 for leaf in sub:
                     if leaf.tag == tag_str:
                         if not leaf_str:
                             if leaf.tag == tag_str and leaf.text and leaf.text != None:
-                                tmp = leaf.text
+                                if tag_str == "IVSHMEM_REGION":
+                                    tmp_list.append(leaf.text)
+                                else:
+                                    tmp = leaf.text
+
                         else:
                             # for each 4rd level item
                             tmp_list = []
                             for leaf_s in leaf:
                                 if leaf_s.tag == leaf_str and leaf_s.text and leaf_s.text != None:
-                                    if leaf_str == "CLOS_MASK" or leaf_str == "MBA_DELAY":
+                                    if leaf_str == "CLOS_MASK" or leaf_str == "MBA_DELAY" or leaf_str == "IVSHMEM_REGION":
                                         tmp_list.append(leaf_s.text)
                                     else:
                                         tmp = leaf_s.text
                                 continue
 
-                            if leaf_str == "CLOS_MASK" or leaf_str == "MBA_DELAY":
+                            if leaf_str == "CLOS_MASK" or leaf_str == "MBA_DELAY" or leaf_str == "IVSHMEM_REGION":
                                 tmp = tmp_list
                                 break
+
+                if tag_str == "IVSHMEM_REGION":
+                    tmp = tmp_list
+                    break
 
     return tmp
 

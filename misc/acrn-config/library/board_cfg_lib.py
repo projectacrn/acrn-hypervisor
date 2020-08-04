@@ -21,6 +21,7 @@ LEGACY_TTYS = {
 
 VALID_LEGACY_IRQ = []
 ERR_LIST = {}
+USED_RAM_RANGE = {}
 
 HEADER_LICENSE = common.open_license() + "\n"
 
@@ -363,6 +364,7 @@ class Pci_Dev_Bar_Desc:
     def __init__(self):
         self.pci_dev_dic = {}
         self.pci_bar_dic = {}
+        self.shm_bar_dic = {}
 
 PCI_DEV_BAR_DESC = Pci_Dev_Bar_Desc()
 SUB_NAME_COUNT = {}
@@ -472,6 +474,47 @@ def parser_pci():
         PCI_DEV_BAR_DESC.pci_bar_dic[cur_bdf] = tmp_bar_dic
 
 
+def parse_mem():
+    raw_shmem_regions = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
+
+    global USED_RAM_RANGE
+    for shm_name, shm_bar_dic in PCI_DEV_BAR_DESC.shm_bar_dic.items():
+        if 0 in shm_bar_dic.keys() and int(shm_bar_dic[0].addr, 16) in USED_RAM_RANGE.keys():
+            del USED_RAM_RANGE[int(shm_bar_dic[0].addr, 16)]
+        if 2 in shm_bar_dic.keys() and int(shm_bar_dic[2].addr, 16)-0xC in USED_RAM_RANGE.keys():
+            del USED_RAM_RANGE[int(shm_bar_dic[2].addr, 16)-0xC]
+
+    idx = 0
+    for shm in raw_shmem_regions:
+        if shm is None or shm.strip() == '':
+            continue
+        shm_splited = shm.split(',')
+        name = shm_splited[0].strip()
+        size = shm_splited[1].strip()
+
+        if size.isdecimal():
+            int_size = int(size)
+        else:
+            int_size = int(size, 16)
+        ram_range = get_ram_range()
+        tmp_bar_dict  = {}
+        hv_start_offset = 0x80000000
+        ret_start_addr = find_avl_memory(ram_range, str(0x200100), hv_start_offset)
+        bar_mem_0 = Bar_Mem()
+        bar_mem_0.addr = hex(common.round_up(int(ret_start_addr, 16), 0x200000))
+        USED_RAM_RANGE[int(bar_mem_0.addr, 16)] = 0x100
+        tmp_bar_dict[0] = bar_mem_0
+        ram_range = get_ram_range()
+        hv_start_offset2 = 0x100000000
+        ret_start_addr2 = find_avl_memory(ram_range, str(int_size + 0x200000), hv_start_offset2)
+        bar_mem_2 = Bar_Mem()
+        bar_mem_2.addr = hex(common.round_up(int(ret_start_addr2, 16), 0x200000) + 0xC)
+        USED_RAM_RANGE[common.round_up(int(ret_start_addr2, 16), 0x20000)] = int_size
+        tmp_bar_dict[2] = bar_mem_2
+        PCI_DEV_BAR_DESC.shm_bar_dic[str(idx)+'_'+name] = tmp_bar_dict
+        idx += 1
+
+
 def is_rdt_supported():
     """
     Returns True if platform supports RDT else False
@@ -569,3 +612,71 @@ def is_tpm_passthru():
         tpm_passthru = True
 
     return tpm_passthru
+
+
+def find_avl_memory(ram_range, hpa_size, hv_start_offset):
+    """
+    This is get hv address from System RAM as host physical size
+    :param ram_range: System RAM mapping
+    :param hpa_size: fixed host physical size
+    :param hv_start_offset: base address of HV RAM start
+    :return: start host physical address
+    """
+    ret_start_addr = 0
+    tmp_order_key = 0
+    int_hpa_size = int(hpa_size, 10)
+
+    tmp_order_key = sorted(ram_range)
+    for start_addr in tmp_order_key:
+        mem_range = ram_range[start_addr]
+        if start_addr <= hv_start_offset and hv_start_offset + int_hpa_size <= start_addr + mem_range:
+            ret_start_addr = hv_start_offset
+            break
+        elif start_addr >= hv_start_offset and mem_range >= int_hpa_size:
+            ret_start_addr = start_addr
+            break
+
+    return hex(ret_start_addr)
+
+
+def get_ram_range():
+    """ Get System RAM range mapping """
+    # read system ram from board_info.xml
+    ram_range = {}
+
+    io_mem_lines = get_info(
+        common.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
+
+    for line in io_mem_lines:
+        if 'System RAM' not in line:
+            continue
+        start_addr = int(line.split('-')[0], 16)
+        end_addr = int(line.split('-')[1].split(':')[0], 16)
+        mem_range = end_addr - start_addr
+        ram_range[start_addr] = mem_range
+
+    global USED_RAM_RANGE
+    tmp_order_key_used = sorted(USED_RAM_RANGE)
+    for start_addr_used in tmp_order_key_used:
+        mem_range_used = USED_RAM_RANGE[start_addr_used]
+        tmp_order_key = sorted(ram_range)
+        for start_addr in tmp_order_key:
+            mem_range = ram_range[start_addr]
+            if start_addr < start_addr_used and start_addr_used + mem_range_used < start_addr + mem_range:
+                ram_range[start_addr] = start_addr_used - start_addr
+                ram_range[start_addr_used+mem_range_used] = start_addr + mem_range - start_addr_used - mem_range_used
+                break
+            elif start_addr == start_addr_used and start_addr_used + mem_range_used < start_addr + mem_range:
+                del ram_range[start_addr]
+                ram_range[start_addr_used + mem_range_used] = start_addr + mem_range - start_addr_used - mem_range_used
+                break
+            elif start_addr < start_addr_used and start_addr_used + mem_range_used == start_addr + mem_range:
+                ram_range[start_addr] = start_addr_used - start_addr
+                break
+            elif start_addr == start_addr_used and start_addr_used + mem_range_used == start_addr + mem_range:
+                del ram_range[start_addr]
+                break
+            else:
+                continue
+
+    return ram_range

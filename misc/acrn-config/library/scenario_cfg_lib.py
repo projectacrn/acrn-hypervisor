@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import math
 import common
 import board_cfg_lib
 
@@ -90,6 +91,41 @@ def get_pci_num(pci_devs):
         pci_devs_num[vm_i] = cnt_dev
 
     return pci_devs_num
+
+
+def get_shmem_regions(raw_shmem_regions):
+    shmem_regions = {'err': []}
+    for raw_shmem_region in raw_shmem_regions:
+        if raw_shmem_region and raw_shmem_region.strip():
+            shm_splited = raw_shmem_region.split(',')
+            if len(shm_splited) == 3 and (shm_splited[0].strip() != '' and shm_splited[1].strip() != ''
+                                          and len(shm_splited[2].split(':')) >= 2):
+                name = shm_splited[0].strip()
+                size = shm_splited[1].strip()
+                vmid_list = shm_splited[2].split(':')
+                for i in range(len(vmid_list)):
+                    try:
+                        int_vm_id = int(vmid_list[i])
+                    except:
+                        shmem_regions['err'].append(raw_shmem_region)
+                        break
+                    if int_vm_id not in shmem_regions.keys():
+                        shmem_regions[int_vm_id] = [','.join([name, size, ':'.join(vmid_list[0:i]+vmid_list[i+1:])])]
+                    else:
+                        shmem_regions[int_vm_id].append(','.join([name, size, ':'.join(vmid_list[0:i]+vmid_list[i+1:])]))
+            elif raw_shmem_region.strip() != '':
+                shmem_regions['err'].append(raw_shmem_region)
+
+    return shmem_regions
+
+
+def get_shmem_num(shmem_regions):
+
+    shmem_num = {}
+    for shm_i, shm_list in shmem_regions.items():
+        shmem_num[shm_i] = len(shm_list)
+
+    return shmem_num
 
 
 def check_board_private_info():
@@ -647,4 +683,112 @@ def vcpu_clos_check(cpus_per_vm, clos_per_vm, prime_item, item):
                 if int(clos_val) >= common_clos_max:
                     key = "vm:id={},{},{}".format(vm_i, prime_item, item)
                     ERR_LIST[key] = "CDP_ENABLED=y, the clos value should not be greater than {} for VM{}".format(common_clos_max - 1, vm_i)
+                    return
+
+
+def share_mem_check(shmem_regions, raw_shmem_regions, vm_type_info, prime_item, item, sub_item):
+
+    shmem_names = {}
+    for shm_i, shm_list in shmem_regions.items():
+        for shm_str in shm_list:
+            index = -1
+            if shm_i == 'err':
+                for i in range(len(raw_shmem_regions)):
+                    if raw_shmem_regions[i] == shm_str:
+                        index = i
+                        break
+            if index == -1:
+                try:
+                    for i in range(len(raw_shmem_regions)):
+                        if raw_shmem_regions[i].split(',')[0].strip() == shm_str.split(',')[0].strip():
+                            index = i
+                            break
+                except:
+                    index = 0
+            key = "hv,{},{},{}".format(prime_item, item, sub_item, index)
+
+            shm_str_splited = shm_str.split(',')
+            if len(shm_str_splited) < 3:
+                ERR_LIST[key] = "The name, size, communication VM IDs of the share memory should be separated " \
+                                "by comma and not be empty."
+                return
+            try:
+                curr_vm_id = int(shm_i)
+            except:
+                ERR_LIST[key] = "share memory region should be configure with format like this: VM0_VM2,0x20000,0:2"
+                return
+            name = shm_str_splited[0].strip()
+            size = shm_str_splited[1].strip()
+            vmid_list = shm_str_splited[2].split(':')
+            int_vmid_list = []
+            for vmid in vmid_list:
+                try:
+                    int_vmid = int(vmid)
+                    int_vmid_list.append(int_vmid)
+                except:
+                    ERR_LIST[key] = "The communication VM IDs of the share memory should be decimal and separated by comma."
+                    return
+            if not int_vmid_list:
+                ERR_LIST[key] = "The communication VM IDs of the share memory should be decimal and separated by comma."
+                return
+            if curr_vm_id in int_vmid_list or len(set(int_vmid_list)) != len(int_vmid_list):
+                ERR_LIST[key] = "The communication VM IDs of the share memory should not be duplicated."
+                return
+            for target_vm_id in int_vmid_list:
+                if curr_vm_id not in vm_type_info.keys() or target_vm_id not in vm_type_info.keys() \
+                        or vm_type_info[curr_vm_id] in ['SOS_VM'] or vm_type_info[target_vm_id] in ['SOS_VM']:
+                    ERR_LIST[key] = "Shared Memory can be only configured for existed Pre-launched VMs and Post-launched VMs."
+                    return
+
+            if name =='' or size == '':
+                ERR_LIST[key] = "The name, size of the share memory should not be empty."
+                return
+            name_len = len(name)
+            if name_len > 32 or name_len == 0:
+                ERR_LIST[key] = "The size of share Memory name should be in range [1,32] bytes."
+                return
+
+            int_size = 0
+            try:
+                if size.isdecimal():
+                    int_size = int(size)
+                else:
+                    int_size = int(size, 16)
+            except:
+                ERR_LIST[key] = "The size of share Memory region should be decimal or hexadecimal."
+                return
+            if int_size < 0x200000 or int_size > 0x40000000:
+                ERR_LIST[key] = "The size of share Memory region should be in [2M, 1G]."
+                return
+            if not math.log(int_size, 2).is_integer():
+                ERR_LIST[key] = "The size of share Memory region should be a power of 2."
+                return
+
+            if name in shmem_names.keys():
+                shmem_names[name] += 1
+            else:
+                shmem_names[name] = 1
+            if shmem_names[name] > len(vmid_list)+1:
+                ERR_LIST[key] = "The names of share memory regions should not be duplicated: {}".format(name)
+                return
+
+    board_cfg_lib.parse_mem()
+    for shm_i, shm_list in shmem_regions.items():
+        for shm_str in shm_list:
+            shm_str_splited = shm_str.split(',')
+            name = shm_str_splited[0].strip()
+            index = 0
+            try:
+                for i in range(len(raw_shmem_regions)):
+                    if raw_shmem_regions[i].split(',')[0].strip() == shm_str.split(',')[0].strip():
+                        index = i
+                        break
+            except:
+                index = 0
+            key = "hv,{},{},{}".format(prime_item, item, sub_item, index)
+            if 'IVSHMEM_'+name in board_cfg_lib.PCI_DEV_BAR_DESC.shm_bar_dic.keys():
+                bar_attr_dic = board_cfg_lib.PCI_DEV_BAR_DESC.shm_bar_dic['IVSHMEM_'+name]
+                if (0 in bar_attr_dic.keys() and int(bar_attr_dic[0].addr, 16) < 0x80000000) \
+                    or (2 in bar_attr_dic.keys() and int(bar_attr_dic[2].addr, 16) < 0x100000000):
+                    ERR_LIST[key] = "Failed to get the start address of the shared memory, please check the size of it."
                     return

@@ -14,6 +14,7 @@ import scenario_cfg_lib
 import vm_configurations_c
 import vm_configurations_h
 import pci_dev_c
+import ivshmem_cfg_h
 import common
 import hv_cfg_lib
 import board_defconfig
@@ -21,7 +22,7 @@ from hv_item import HvInfo
 
 ACRN_PATH = common.SOURCE_ROOT_DIR
 ACRN_CONFIG_DEF = ACRN_PATH + 'misc/vm_configs/scenarios/'
-GEN_FILE = ["vm_configurations.h", "vm_configurations.c", "pci_dev.c", ".config"]
+GEN_FILE = ["vm_configurations.h", "vm_configurations.c", "pci_dev.c", ".config", "ivshmem_cfg.h"]
 
 
 def get_scenario_item_values(board_info, scenario_info):
@@ -73,6 +74,7 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["hv,FEATURES,L1D_VMENTRY_ENABLED"] = hv_cfg_lib.N_Y
     scenario_item_values["hv,FEATURES,MCE_ON_PSC_DISABLED"] = hv_cfg_lib.N_Y
     scenario_item_values["hv,FEATURES,IOMMU_ENFORCE_SNP"] = hv_cfg_lib.N_Y
+    scenario_item_values["hv,FEATURES,IVSHMEM,IVSHMEM_ENABLED"] = hv_cfg_lib.N_Y
 
     scenario_cfg_lib.ERR_LIST.update(hv_cfg_lib.ERR_LIST)
     return scenario_item_values
@@ -90,14 +92,15 @@ def validate_scenario_setting(board_info, scenario_info):
     common.BOARD_INFO_FILE = board_info
     common.SCENARIO_INFO_FILE = scenario_info
 
-    scenario_info_items = {}
-    vm_info = VmInfo(board_info, scenario_info)
-    vm_info.get_info()
-    vm_info.check_item()
-
     hv_info = HvInfo(scenario_info)
     hv_info.get_info()
     hv_info.check_item()
+
+    scenario_info_items = {}
+    vm_info = VmInfo(board_info, scenario_info)
+    vm_info.get_info()
+    vm_info.set_ivshmem(hv_info.mem.ivshmem_region)
+    vm_info.check_item()
 
     scenario_info_items['vm'] = vm_info
     scenario_info_items['hv'] = hv_info
@@ -151,7 +154,7 @@ def main(args):
         else:
             scen_output = ACRN_PATH + params['--out'] + "/scenarios/" + scenario + "/"
     else:
-        scen_output = ACRN_CONFIG_DEF + "/scenarios/" + scenario + "/"
+        scen_output = ACRN_CONFIG_DEF + "/" + scenario + "/"
 
     scen_board = scen_output + board_name + "/"
     common.mkdir(scen_board)
@@ -161,6 +164,7 @@ def main(args):
     vm_config_c  = scen_output + GEN_FILE[1]
     pci_config_c = scen_board + GEN_FILE[2]
     config_hv = scen_board + board_name + GEN_FILE[3]
+    ivshmem_config_h = scen_board + GEN_FILE[4]
 
     # parse the scenario.xml
     get_scenario_item_values(params['--board'], params['--scenario'])
@@ -184,6 +188,11 @@ def main(args):
         err_dic = vm_configurations_c.generate_file(scenario_items, config)
         if err_dic:
             return err_dic
+
+    # generate ivshmem_cfg.h
+    print(ivshmem_config_h)
+    with open(ivshmem_config_h, 'w') as config:
+        ivshmem_cfg_h.generate_file(scenario_items, config)
 
     # generate pci_dev.c
     with open(pci_config_c, 'w') as config:
