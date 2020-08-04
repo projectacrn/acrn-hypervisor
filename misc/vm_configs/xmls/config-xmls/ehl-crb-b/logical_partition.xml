@@ -39,6 +39,10 @@
             <ACPI_PARSE_ENABLED desc="Enable ACPI runtime parsing.">y</ACPI_PARSE_ENABLED>
             <L1D_VMENTRY_ENABLED desc="Enable L1 cache flush before VM entry.">n</L1D_VMENTRY_ENABLED>
             <MCE_ON_PSC_DISABLED desc="Force to disable software workaround for Machine Check Error on Page Size Change.">n</MCE_ON_PSC_DISABLED>
+            <IVSHMEM desc="IVSHMEM configuration">
+                <IVSHMEM_ENABLED desc="Enable Share Memory between VMs by IVSHMEM.">n</IVSHMEM_ENABLED>
+                <IVSHMEM_REGION desc="the name, size, colon separated IDs of communication VMs of share memory region, separated by comma like this: hv:/shm_region_0, 0x200000, 0:2"></IVSHMEM_REGION>
+            </IVSHMEM>
         </FEATURES>
         <MEMORY>
             <STACK_SIZE desc="Capacity of one stack, in bytes.">0x2000</STACK_SIZE>
