@@ -251,6 +251,10 @@ vm_create(const char *name, uint64_t req_buf, int *vcpu_num)
 		create_vm.vm_flag |= GUEST_FLAG_IO_COMPLETION_POLLING;
 	}
 
+	if (is_pmu_pt) {
+		create_vm.vm_flag |= GUEST_FLAG_PMU_PASSTHROUGH;
+	}
+
 	create_vm.req_buf = req_buf;
 	while (retry > 0) {
 		error = ioctl(ctx->fd, IC_CREATE_VM, &create_vm);
