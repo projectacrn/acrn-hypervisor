@@ -347,6 +347,43 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 	/* don't need to intercept rdmsr for these MSRs */
 	enable_msr_interception(msr_bitmap, MSR_IA32_TIME_STAMP_COUNTER, INTERCEPT_WRITE);
 
+
+	if (is_pmu_pt_configured(vcpu->vm)) {
+	       /* Passthru PMU related MSRs to guest */
+	       enable_msr_interception(msr_bitmap, MSR_IA32_FIXED_CTR_CTL, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PERF_GLOBAL_CTRL, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PERF_GLOBAL_STATUS, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PERF_GLOBAL_OVF_CTRL, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PERF_GLOBAL_STATUS_SET, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PERF_GLOBAL_INUSE, INTERCEPT_DISABLE);
+
+	       enable_msr_interception(msr_bitmap, MSR_IA32_FIXED_CTR0, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_FIXED_CTR1, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_FIXED_CTR2, INTERCEPT_DISABLE);
+
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PMC0, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PMC1, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PMC2, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PMC3, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PMC4, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PMC5, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PMC6, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PMC7, INTERCEPT_DISABLE);
+
+	       enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC0, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC1, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC2, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC3, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC4, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC5, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC6, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_A_PMC7, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PERFEVTSEL0, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PERFEVTSEL1, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PERFEVTSEL2, INTERCEPT_DISABLE);
+	       enable_msr_interception(msr_bitmap, MSR_IA32_PERFEVTSEL3, INTERCEPT_DISABLE);
+	}
+
 	/* Setup MSR bitmap - Intel SDM Vol3 24.6.9 */
 	value64 = hva2hpa(vcpu->arch.msr_bitmap);
 	exec_vmwrite64(VMX_MSR_BITMAP_FULL, value64);

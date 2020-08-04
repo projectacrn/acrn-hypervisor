@@ -124,6 +124,13 @@ bool is_rt_vm(const struct acrn_vm *vm)
 	return ((vm_config->guest_flags & GUEST_FLAG_RT) != 0U);
 }
 
+bool is_pmu_pt_configured(const struct acrn_vm *vm)
+{
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+
+	return ((vm_config->guest_flags & GUEST_FLAG_PMU_PASSTHROUGH) != 0U);
+}
+
 /**
  * @brief VT-d PI posted mode can possibly be used for PTDEVs assigned
  * to this VM if platform supports VT-d PI AND lapic passthru is not configured
