@@ -340,7 +340,9 @@ def gen_pre_launch_vm(vm_type, vm_i, scenario_items, config):
     if err_dic:
         return err_dic
 
-    if vm_info.cfg_pci.pci_devs[vm_i] and vm_info.cfg_pci.pci_devs[vm_i] != None:
+    if (vm_i in vm_info.cfg_pci.pci_devs.keys() and vm_info.cfg_pci.pci_devs[vm_i]) or \
+        (vm_info.shmem.shmem_enabled == 'y' and vm_i in vm_info.shmem.shmem_regions.keys() \
+                 and vm_info.shmem.shmem_regions[vm_i]):
         print("\t\t.pci_dev_num = VM{}_CONFIG_PCI_DEV_NUM,".format(vm_i), file=config)
         print("\t\t.pci_devs = vm{}_pci_devs,".format(vm_i), file=config)
 
@@ -363,6 +365,11 @@ def gen_post_launch_vm(vm_type, vm_i, scenario_items, config):
     print("\t{{\t/* VM{} */".format(vm_i), file=config)
     print("\t\t{},".format(post_vm_type), file=config)
     clos_output(scenario_items, vm_i, config)
+    if vm_info.shmem.shmem_enabled == 'y' and vm_i in vm_info.shmem.shmem_regions.keys() \
+            and vm_info.shmem.shmem_regions[vm_i]:
+        print("\t\t/* The PCI device configuration is only for in-hypervisor vPCI devices. */", file=config)
+        print("\t\t.pci_dev_num = VM{}_CONFIG_PCI_DEV_NUM,".format(vm_i), file=config)
+        print("\t\t.pci_devs = vm{}_pci_devs,".format(vm_i), file=config)
     cpu_affinity_output(vm_info, vm_i, config)
     is_need_epc(vm_info.epc_section, vm_i, config)
     # VUART
@@ -376,10 +383,13 @@ def gen_post_launch_vm(vm_type, vm_i, scenario_items, config):
 def pre_launch_definiation(vm_info, config):
 
     for vm_i,vm_type in common.VM_TYPES.items():
-        if "PRE_LAUNCHED_VM" != scenario_cfg_lib.VM_DB[vm_type]['load_type']:
+        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] not in ["PRE_LAUNCHED_VM", "POST_LAUNCHED_VM"]:
             continue
-        print("extern struct acrn_vm_pci_dev_config " +
-              "vm{}_pci_devs[VM{}_CONFIG_PCI_DEV_NUM];".format(vm_i, vm_i), file=config)
+        if (vm_i in vm_info.cfg_pci.pci_devs.keys() and vm_info.cfg_pci.pci_devs[vm_i]) \
+                or (vm_info.shmem.shmem_enabled == 'y' and vm_i in vm_info.shmem.shmem_regions.keys() \
+                    and vm_info.shmem.shmem_regions[vm_i]):
+            print("extern struct acrn_vm_pci_dev_config " +
+                "vm{}_pci_devs[VM{}_CONFIG_PCI_DEV_NUM];".format(vm_i, vm_i), file=config)
     print("", file=config)
 
 def generate_file(scenario_items, config):

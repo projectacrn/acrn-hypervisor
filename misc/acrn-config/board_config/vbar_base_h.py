@@ -78,4 +78,26 @@ def generate_file(config):
 
             i_cnt += 1
 
+    ivshmem_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
+    if ivshmem_enabled == 'y':
+        board_cfg_lib.parse_mem()
+        for shm_name, bar_attr_dic in board_cfg_lib.PCI_DEV_BAR_DESC.shm_bar_dic.items():
+            index = shm_name[:shm_name.find('_')]
+            i_cnt = 0
+            for bar_i, bar_attr in bar_attr_dic.items():
+                i_cnt += 1
+                if bar_i == 0:
+                    if len(bar_attr_dic.keys()) == 1:
+                        print("#define IVSHMEM_DEVICE_%-23s" % (str(index) + "_VBAR"),
+                              "       .vbar_base[{}] = {}UL".format(bar_i, bar_attr.addr), file=config)
+                    else:
+                        print("#define IVSHMEM_DEVICE_%-23s" % (str(index) + "_VBAR"),
+                              "       .vbar_base[{}] = {}UL, \\".format(bar_i, bar_attr.addr), file=config)
+                elif i_cnt == len(bar_attr_dic.keys()):
+                    print("{}.vbar_base[{}] = {}UL".format(' ' * 54, bar_i, bar_attr.addr), file=config)
+                else:
+                    print("{}.vbar_base[{}] = {}UL, \\".format(' ' * 54, bar_i, bar_attr.addr), file=config)
+
+            print("", file=config)
+
     print(VBAR_INFO_ENDIF, file=config)
