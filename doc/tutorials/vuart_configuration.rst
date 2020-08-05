@@ -8,7 +8,8 @@ Introduction
 
 The virtual universal asynchronous receiver-transmitter (vUART) supports two functions: one is the console, the other is communication. vUART only works on a single function.
 
-Currently, only two vUART configurations are added to the ``hypervisor/scenarios/<xxx>/vm_configuration.c`` file, but you can change the value in it.
+Currently, only two vUART configurations are added to the
+``misc/vm_configs/scenarios/<xxx>/vm_configuration.c`` file, but you can change the value in it.
 
 .. code-block:: none
 
