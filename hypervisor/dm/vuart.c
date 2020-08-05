@@ -515,7 +515,7 @@ static bool vuart_read(struct acrn_vcpu *vcpu, uint16_t offset_arg, __unused siz
 }
 
 /*
- * @pre: vuart_idx = 0 or 1
+ * @pre: vuart_idx = 0, 1, 2 or 3
  */
 static bool vuart_register_io_handler(struct acrn_vm *vm, uint16_t port_base, uint32_t vuart_idx)
 {
@@ -532,6 +532,12 @@ static bool vuart_register_io_handler(struct acrn_vm *vm, uint16_t port_base, ui
 		break;
 	case 1U:
 		pio_idx = UART_PIO_IDX1;
+		break;
+	case 2U:
+		pio_idx = UART_PIO_IDX2;
+		break;
+	case 3U:
+		pio_idx = UART_PIO_IDX3;
 		break;
 	default:
 		printf("Not support vuart index %d, will not register \n", vuart_idx);
@@ -638,6 +644,7 @@ void init_vuart(struct acrn_vm *vm, const struct vuart_config *vu_config)
 		/* This vuart is not exist */
 		if ((vu_config[i].type == VUART_LEGACY_PIO) &&
 				(vu_config[i].addr.port_base == INVALID_COM_BASE)) {
+			pr_info("vm %d vuart %d is invalid", vm->vm_id, i);
 			continue;
 		}
 		setup_vuart(vm, &vu_config[i], i);

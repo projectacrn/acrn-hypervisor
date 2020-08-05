@@ -18,7 +18,9 @@
 /* When MAX_VUART_NUM_PER_VM is larger than 2, UART_PIO_IDXn should also be added here */
 #define UART_PIO_IDX0			(PCI_CFGDATA_PIO_IDX + 1U)
 #define UART_PIO_IDX1			(UART_PIO_IDX0 + 1U)
-#define PM1A_EVT_PIO_IDX		(UART_PIO_IDX1 + 1U)
+#define UART_PIO_IDX2			(UART_PIO_IDX1 + 1U)
+#define UART_PIO_IDX3			(UART_PIO_IDX2 + 1U)
+#define PM1A_EVT_PIO_IDX		(UART_PIO_IDX3 + 1U)
 #define PM1A_CNT_PIO_IDX		(PM1A_EVT_PIO_IDX + 1U)
 #define PM1B_EVT_PIO_IDX		(PM1A_CNT_PIO_IDX + 1U)
 #define PM1B_CNT_PIO_IDX		(PM1B_EVT_PIO_IDX + 1U)
