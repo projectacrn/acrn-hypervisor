@@ -21,7 +21,7 @@
 
 #define AFFINITY_CPU(n)		(1UL << (n))
 #define MAX_VCPUS_PER_VM	MAX_PCPU_NUM
-#define MAX_VUART_NUM_PER_VM	2U
+#define MAX_VUART_NUM_PER_VM	4U
 #define MAX_VM_OS_NAME_LEN	32U
 #define MAX_MOD_TAG_LEN		32U
 
