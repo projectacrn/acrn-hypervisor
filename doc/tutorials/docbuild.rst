@@ -25,8 +25,8 @@ The project's documentation contains the following items:
 
 * ReStructuredText source files used to generate documentation found at the
   http://projectacrn.github.io website. All of the reStructuredText sources
-  are found in the acrn-hypervisor/doc folder, or pulled in from sibling
-  folders (such as /misc/) by the build scripts.
+  are found in the ``acrn-hypervisor/doc`` folder, or pulled in from sibling
+  folders (such as ``misc/``) by the build scripts.
 
 * Doxygen-generated material used to create all API-specific documents
   found at http://projectacrn.github.io/latest/api/.  The doc build
@@ -67,6 +67,7 @@ folder setup for documentation contributions and generation:
          devicemodel/
          doc/
          hypervisor/
+         misc/
       acrn-kernel/
 
 The parent projectacrn folder is there because we'll also be creating a
