@@ -91,11 +91,11 @@ pre-launched VMs (the SOS_VM is also a kind of pre-launched VM):
       The module ``/boot/kernel4vm0`` is the VM0 kernel file. The param
       ``xxxxxx`` is VM0's kernel file tag and must exactly match the
       ``kernel_mod_tag`` of VM0 configured in the
-      ``hypervisor/scenarios/$(SCENARIO)/vm_configurations.c`` file. The
+      ``misc/vm_configs/scenarios/$(SCENARIO)/vm_configurations.c`` file. The
       multiboot module ``/boot/kernel4vm1`` is the VM1 kernel file and the
       param ``yyyyyy`` is its tag and must exactly match the
       ``kernel_mod_tag`` of VM1 in the
-      ``hypervisor/scenarios/$(SCENARIO)/vm_configurations.c`` file.
+      ``misc/vm_configs/scenarios/$(SCENARIO)/vm_configurations.c`` file.
 
       The guest kernel command line arguments is configured in the
       hypervisor source code by default if no ``$(VMx bootargs)`` is present.
