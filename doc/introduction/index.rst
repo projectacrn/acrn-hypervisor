@@ -439,7 +439,7 @@ The Boot process proceeds as follows:
 
 In this boot mode, the boot options of pre-launched VM and service VM are defined
 in the variable of ``bootargs`` of struct ``vm_configs[vm id].os_config``
-in the source code ``hypervisor/$(SCENARIO)/vm_configurations.c`` by default.
+in the source code ``misc/vm_configs/$(SCENARIO)/vm_configurations.c`` by default.
 Their boot options can be overridden by the GRUB menu. See :ref:`using_grub` for
 details. The boot options of post-launched VM is not covered by hypervisor
 source code or GRUB menu, it is defined in guest image file or specified by
