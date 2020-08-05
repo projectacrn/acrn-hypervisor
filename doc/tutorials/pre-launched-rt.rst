@@ -73,10 +73,10 @@ ethernet 03:00.0 devices to the Pre-Launched RT VM, build ACRN with:
 
 .. code-block:: none
 
-   make BOARD_FILE=$PWD/misc/acrn-config/xmls/board-xmls/whl-ipc-i5.xml SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml
+   make BOARD_FILE=$PWD/misc/acrn-config/xmls/board-xmls/whl-ipc-i5.xml SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml RELEASE=0
 
 After the build completes, please update ACRN on NVMe. It is
-/boot/EFI/BOOT/acrn.32.out, if /dev/nvme0n1p1 is mounted at /boot.
+/boot/EFI/BOOT/acrn.bin, if /dev/nvme0n1p1 is mounted at /boot.
 
 Add Pre-Launched RT Kernel Image to GRUB Config
 ===============================================
@@ -88,12 +88,11 @@ like this:
 
 .. code-block:: none
 
-   menuentry 'ACRN Hybrid' {
-       set root=hd1,gpt1
-       echo 'loading hybrid...'
-       multiboot --quirk-modules-after-kernel /EFI/BOOT/acrn.32.out root=/dev/nvme0n1p3
-       module /EFI/BOOT/bzImage_RT RT_bzImage
-       module /EFI/BOOT/bzImage Linux_bzImage
+   menuentry 'ACRN multiboot2 hybrid'{
+       echo 'loading multiboot2 hybrid...'
+       multiboot2 /EFI/BOOT/acrn.bin
+       module2 /EFI/BOOT/bzImage_RT RT_bzImage
+       module2 /EFI/BOOT/bzImage Linux_bzImage
    }
 
 Reboot the system, and it will boot into Pre-Launched RT Mode
@@ -106,3 +105,14 @@ Reboot the system, and it will boot into Pre-Launched RT Mode
    26c5e0d88f8a47d88109f201ebd61a5e   0   ACRN PRE-LAUNCHED VM0            Running
    dbbbd4347a574216a12c2201f1ab0240   1   ACRN SOS VM                      Running
    ACRN:\>
+
+Connect console of VM0, via 'vm_console' ACRN shell command (Use 'Ctrl + Space' key to
+escape VM0 console)
+
+.. code-block:: none
+
+   ACRN:\>vm_console 0
+
+   ----- Entering VM 0 Shell -----
+
+   root@clr-85a5e9fbac604fbbb92644991f6315df ~ #
