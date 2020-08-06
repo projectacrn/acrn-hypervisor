@@ -342,14 +342,6 @@ section below has more details on a few select parameters.
 
          i915.enable_gvt=1
 
-   * - i915.enable_pvmmio
-     - Service VM, User VM
-     - Control Para-Virtualized MMIO (PVMMIO). It batches sequential MMIO writes
-       into a shared buffer between the Service VM and User VM
-     - ::
-
-         i915.enable_pvmmio=0x1F
-
    * - i915.gvt_workload_priority
      - Service VM
      - Define the priority level of User VM graphics workloads
@@ -373,20 +365,6 @@ section below has more details on a few select parameters.
 
          i915.nuclear_pageflip=1
 
-   * - i915.avail_planes_per_pipe
-     - Service VM
-     - See :ref:`i915-avail-planes-owners`.
-     - ::
-
-         i915.avail_planes_per_pipe=0x01010F
-
-   * - i915.domain_plane_owners
-     - Service VM
-     - See :ref:`i915-avail-planes-owners`.
-     - ::
-
-         i915.domain_plane_owners=0x011111110000
-
    * - i915.domain_scaler_owner
      - Service VM
      - See `i915.domain_scaler_owner`_
@@ -400,13 +378,6 @@ section below has more details on a few select parameters.
      - ::
 
          i915.enable_guc=0x02
-
-   * - i915.avail_planes_per_pipe
-     - User VM
-     - See :ref:`i915-avail-planes-owners`.
-     - ::
-
-         i915.avail_planes_per_pipe=0x070F00
 
    * - i915.enable_guc
      - User VM
@@ -444,38 +415,6 @@ This option enables support for Intel GVT-g graphics virtualization
 support in the host. By default, it's not enabled, so we need to add
 ``i915.enable_gvt=1`` in the Service VM kernel command line.  This is a Service
 OS only parameter, and cannot be enabled in the User VM.
-
-i915.enable_pvmmio
-------------------
-
-We introduce the feature named **Para-Virtualized MMIO** (PVMMIO)
-to improve graphics performance of the GVT-g guest.
-This feature batches sequential MMIO writes into a
-shared buffer between the Service VM and User VM, and then submits a
-para-virtualized command to notify to GVT-g in Service VM. This
-effectively reduces the trap numbers of MMIO operations and improves
-overall graphics performance.
-
-The ``i915.enable_pvmmio`` option controls
-the optimization levels of the PVMMIO feature: each bit represents a
-sub-feature of the optimization. By default, all
-sub-features of PVMMIO are enabled. They can also be selectively
-enabled or disabled..
-
-The PVMMIO optimization levels are:
-
-* PVMMIO_ELSP_SUBMIT = 0x1 - Batch submission of the guest graphics
-  workloads
-* PVMMIO_PLANE_UPDATE = 0x2 - Batch plane register update operations
-* PVMMIO_PLANE_WM_UPDATE = 0x4 - Batch watermark registers update operations
-* PVMMIO_MASTER_IRQ = 0x8 - Batch IRQ related registers
-* PVMMIO_PPGTT_UPDATE = 0x10 - Use PVMMIO method to update the PPGTT table
-  of guest.
-
-.. note:: This parameter works in both the Service VM and User VM, but
-   changes to one will affect the other. For example, if either Service VM or User VM
-   disables the PVMMIO_PPGTT_UPDATE feature, this optimization will be
-   disabled for both.
 
 i915.gvt_workload_priority
 --------------------------
@@ -521,118 +460,6 @@ In the current configuration, we will set
 ``i915.enable_initial_modeset=0`` in User VM.
 
 This parameter is not used on UEFI platforms.
-
-.. _i915-avail-planes-owners:
-
-i915.avail_planes_per_pipe and i915.domain_plane_owners
--------------------------------------------------------
-
-Both Service VM and User VM are provided a set of HW planes where they
-can display their contents.  Since each domain provides its content,
-there is no need for any extra composition to be done through Service VM.
-``i915.avail_planes_per_pipe`` and ``i915.domain_plane_owners`` work
-together to provide the plane restriction (or plan-based domain
-ownership) feature.
-
-* i915.domain_plane_owners
-
-  On Intel's display hardware, each pipeline contains several planes, which are
-  blended
-  together by their Z-order and rendered to the display monitors. In
-  AcrnGT, we can control each planes' ownership so that the domains can
-  display contents on the planes they own.
-
-  The ``i915.domain_plane_owners`` parameter controls the ownership of all
-  the planes in the system, as shown in :numref:`i915-planes-pipes`. Each
-  4-bit nibble identifies the domain id owner for that plane and a group
-  of 4 nibbles represents a pipe. This is a Service VM only configuration
-  and cannot be modified at runtime.  Domain ID 0x0 is for the Service VM,
-  the User VM use domain IDs from 0x1 to 0xF.
-
-  .. figure:: images/i915-image1.png
-     :width: 900px
-     :align: center
-     :name: i915-planes-pipes
-
-     i915.domain_plane_owners
-
-  For example, if we set ``i915.domain_plane_owners=0x010001101110``, the
-  plane ownership will be as shown in :numref:`i915-planes-example1` - Service VM
-  (green) owns plane 1A, 1B, 4B, 1C, and 2C, and User VM #1 owns plane 2A, 3A,
-  4A, 2B, 3B and 3C.
-
-  .. figure:: images/i915-image2.png
-     :width: 900px
-     :align: center
-     :name: i915-planes-example1
-
-     i915.domain_plane_owners example
-
-  Some other examples:
-
-  * i915.domain_plane_owners=0x022211110000 - Service VM (0x0) owns planes on pipe A;
-    User VM #1 (0x1) owns all planes on pipe B; and User VM #2 (0x2) owns all
-    planes on pipe C (since, in the representation in
-    :numref:`i915-planes-pipes` above, there are only 3 planes attached to
-    pipe C).
-
-  * i915.domain_plane_owners=0x000001110000 - Service VM owns all planes on pipe A
-    and pipe C; User VM #1 owns plane 1, 2 and 3 on pipe B. Plane 4 on pipe B
-    is owned by the Service VM so that if it wants to display notice message, it
-    can display on top of the User VM.
-
-* i915.avail_planes_per_pipe
-
-  Option ``i915.avail_planes_per_pipe`` is a bitmask (shown in
-  :numref:`i915-avail-planes`) that tells the i915
-  driver which planes are available and can be exposed to the compositor.
-  This is a parameter that must to be set in each domain. If
-  ``i915.avail_planes_per_pipe=0``, the plane restriction feature is disabled.
-
-  .. figure:: images/i915-image3.png
-     :width: 600px
-     :align: center
-     :name: i915-avail-planes
-
-     i915.avail_planes_per_pipe
-
-  For example, if we set ``i915.avail_planes_per_pipe=0x030901`` in Service VM
-  and ``i915.avail_planes_per_pipe=0x04060E`` in User VM, the planes will be as
-  shown in :numref:`i915-avail-planes-example1` and
-  :numref:`i915-avail-planes-example1`:
-
-  .. figure:: images/i915-image4.png
-     :width: 500px
-     :align: center
-     :name: i915-avail-planes-example1
-
-     Service VM i915.avail_planes_per_pipe
-
-  .. figure:: images/i915-image5.png
-     :width: 500px
-     :align: center
-     :name: i915-avail-planes-example2
-
-     User VM i915.avail_planes_per_pipe
-
-  ``i915.avail_planes_per_pipe`` controls the view of planes from i915 drivers
-  inside of every domain, and ``i915.domain_plane_owners`` is the global
-  arbiter controlling which domain can present its content onto the
-  real hardware.  Generally, they are aligned. For example, we can set
-  ``i915.domain_plane_owners= 0x011111110000``,
-  ``i915.avail_planes_per_pipe=0x00000F`` in Service VM, and
-  ``i915.avail_planes_per_pipe=0x070F00`` in domain 1, so every domain will
-  only flip on the planes they owns.
-
-  However, we don't force alignment: ``avail_planes_per_pipe`` might
-  not be aligned with the
-  setting of ``domain_plane_owners``. Consider this example:
-  ``i915.domain_plane_owners=0x011111110000``,
-  ``i915.avail_planes_per_pipe=0x01010F`` in Service VM and
-  ``i915.avail_planes_per_pipe=0x070F00`` in domain 1.
-  With this configuration, Service VM will be able to render on plane 1B and
-  plane 1C, however, the content of plane 1B and plane 1C will not be
-  flipped onto the real hardware.
 
 i915.domain_scaler_owner
 ========================
