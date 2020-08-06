@@ -186,7 +186,7 @@ Inter-VM Communication Security hardening (BKMs)
 ************************************************
 
 As previously highlighted, ACRN 2.0 provides the capability to create shared
-memory regions between Post-Launch user VMs known as “Inter-VM Communication”. 
+memory regions between Post-Launch user VMs known as "Inter-VM Communication".
 This mechanism is based on ivshmem v1.0 exposing virtual PCI devices for the
 shared regions (in Service VM's memory for this release). This feature adopts a
 community-approved design for shared memory between VMs, following same
@@ -194,7 +194,7 @@ specification for KVM/QEMU (`Link <https://git.qemu.org/?p=qemu.git;a=blob_plain
 
 Following the ACRN threat model, the policy definition for allocation and
 assignment of these regions is controlled by the Service VM, which is part of
-ACRN’s Trusted Computing Base (TCB). However, to secure inter-VM communication
+ACRN's Trusted Computing Base (TCB). However, to secure inter-VM communication
 between any userspace applications that harness this channel, applications will
 face more requirements for the confidentiality, integrity, and authenticity of
 shared or transferred data. It is the application development team's
@@ -218,17 +218,17 @@ architecture and threat model for your application.
    - Add restrictions based on behavior or subject and object rules around information flow and accesses.
    - In Service VM, consider the ``/dev/shm`` device node as a critical interface with special access requirement. Those requirements can be fulfilled using any of the existing opensource MAC technologies or even ACLs depending on the OS compatibility (Ubuntu, Windows, etc..) and integration complexity.
    - In the User VM, the shared memory region can be accessed using ``mmap()`` of UIO device node. Other complementary info can be found under:
-   
+
       - ``/sys/class/uio/uioX/device/resource2`` --> shared memory base address
       - ``/sys/class/uio/uioX/device/config`` --> shared memory Size.
-    
+
    - For Linux-based User VMs, we recommend using the standard ``UIO`` and ``UIO_PCI_GENERIC`` drivers through the device node (for example, ``/dev/uioX``).
    - Reference: `AppArmor <https://wiki.ubuntuusers.de/AppArmor/>`_, `SELinux <https://selinuxproject.org/page/Main_Page>`_, `UIO driver-API <https://www.kernel.org/doc/html/v4.12/driver-api/uio-howto.html>`_
 
 
 3. **Crypto Support and Secure Applied Crypto**
 
-   - According to the application’s threat model and the defined assets that need to be shared securely, define the requirements for crypto algorithms.Those algorithms should enable operations such as authenticated encryption and decryption, secure key exchange, true random number generation, and seed extraction. In addition, consider the landscape of your attack surface and define the need for security engine (for example CSME services.
+   - According to the application's threat model and the defined assets that need to be shared securely, define the requirements for crypto algorithms.Those algorithms should enable operations such as authenticated encryption and decryption, secure key exchange, true random number generation, and seed extraction. In addition, consider the landscape of your attack surface and define the need for security engine (for example CSME services.
    - Don't implement your own crypto functions. Use available compliant crypto libraries as applicable, such as. (`Intel IPP <https://github.com/intel/ipp-crypto>`_ or `TinyCrypt <https://01.org/tinycrypt>`_)
    - Utilize the platform/kernel infrastructure and services (e.g., :ref:`hld-security` , `Kernel Crypto backend/APIs <https://www.kernel.org/doc/html/v5.4/crypto/index.html>`_ , `keyring subsystem <https://www.man7.org/linux/man-pages/man7/keyrings.7.html>`_, etc..).
    - Implement necessary flows for key lifecycle management including wrapping,revocation and migration, depending on the crypto key type used and if there are requirements for key persistence across system and power management events.

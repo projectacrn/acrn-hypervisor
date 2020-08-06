@@ -84,11 +84,11 @@ Hybrid Scenario Startup Checking
 #. Use these steps to verify all VMs are running properly:
 
    a. Use the ``vm_console 0`` to switch to VM0 (Zephyr) console. It will display **Hello world! acrn**.
-   #. Enter :kbd:`Ctrl+Spacebar` to return to the ACRN hypervisor shell.
+   #. Enter :kbd:`Ctrl` + :kbd:`Space` to return to the ACRN hypervisor shell.
    #. Use the ``vm_console 1`` command to switch to the VM1 (Service VM) console.
    #. Verify that the VM1's Service VM can boot up and you can log in.
    #. ssh to VM1 and launch the post-launched VM2 using the ACRN device model launch script.
-   #. Go to the Service VM console, and enter :kbd:`Ctrl+Spacebar` to return to the ACRN hypervisor shell.
+   #. Go to the Service VM console, and enter :kbd:`Ctrl` + :kbd:`Space` to return to the ACRN hypervisor shell.
    #. Use the ``vm_console 2`` command to switch to the VM2 (User VM) console.
    #. Verify that VM2 can boot up and you can log in.
 

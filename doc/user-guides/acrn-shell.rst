@@ -28,7 +28,7 @@ The ACRN hypervisor shell supports the following commands:
      - Dump a User VM (guest) memory region based on the VM ID (``vm_id``, in decimal),
        the start of the memory region ``gva`` (in hexadecimal) and its length ``length`` (in bytes, decimal number).
    * - vm_console <vm_id>
-     - Switch to the VM's console. Use :kbd:`Ctrl+Spacebar` to return to the ACRN
+     - Switch to the VM's console. Use :kbd:`Ctrl` + :kbd:`Space` to return to the ACRN
        shell console
    * - int
      - List interrupt information per CPU
@@ -156,7 +156,7 @@ vm_console
 ===========
 
 The ``vm_console`` command switches the ACRN's console to become the VM's console.
-Use a :kbd:`Ctrl-Spacebar` to return to the ACRN shell console.
+Press :kbd:`Ctrl` + :kbd:`Space` to return to the ACRN shell console.
 
 vioapic
 =======
