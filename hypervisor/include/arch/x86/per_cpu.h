@@ -19,6 +19,8 @@
 #include <security.h>
 #include <vm_config.h>
 
+#include <acrn_common.h>
+
 struct per_cpu_region {
 	/* vmxon_region MUST be 4KB-aligned */
 	uint8_t vmxon_region[PAGE_SIZE];
@@ -26,6 +28,12 @@ struct per_cpu_region {
 #ifdef HV_DEBUG
 	struct shared_buf *sbuf[ACRN_SBUF_ID_MAX];
 	char logbuf[LOG_MESSAGE_MAX_SIZE];
+
+	uint64_t vmexit_cnt[64][TOTAL_ARRAY_LEVEL];
+	uint64_t vmexit_time[64][2]; /*0 for total latency, 1 for max latency */
+
+	uint64_t resched_times;
+
 	uint32_t npk_log_ref;
 #endif
 	uint64_t irq_count[NR_IRQS];
