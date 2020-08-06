@@ -54,23 +54,52 @@ static struct ivshmem_shm_region *find_shm_region(const char *name)
 
 static int32_t read_ivshmem_vdev_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
-	/* Implementation in next patch */
-	(void) vdev;
-	(void) offset;
-	(void) bytes;
-	(void) val;
+	if (cfg_header_access(offset)) {
+		if (vbar_access(vdev, offset)) {
+			*val = pci_vdev_read_vbar(vdev, pci_bar_index(offset));
+		} else {
+			*val = pci_vdev_read_vcfg(vdev, offset, bytes);
+		}
+	}
+
 	return 0;
+}
+
+static void ivshmem_vbar_unmap(struct pci_vdev *vdev, uint32_t idx)
+{
+	struct acrn_vm *vm = vpci2vm(vdev->vpci);
+	struct pci_vbar *vbar = &vdev->vbars[idx];
+
+	if ((idx == IVSHMEM_SHM_BAR) && (vbar->base_gpa != 0UL)) {
+		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, vbar->size);
+	}
+}
+
+static void ivshmem_vbar_map(struct pci_vdev *vdev, uint32_t idx)
+{
+	struct acrn_vm *vm = vpci2vm(vdev->vpci);
+	struct pci_vbar *vbar = &vdev->vbars[idx];
+
+	if ((idx == IVSHMEM_SHM_BAR) && (vbar->base_hpa != INVALID_HPA) && (vbar->base_gpa != 0UL)) {
+		ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_hpa,
+				vbar->base_gpa, vbar->size, EPT_RD | EPT_WR | EPT_WB);
+	}
 }
 
 static int32_t write_ivshmem_vdev_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
-	/* Implementation in next patch */
-	(void) vdev;
-	(void) offset;
-	(void) bytes;
-	(void) val;
+	if (cfg_header_access(offset)) {
+		if (vbar_access(vdev, offset)) {
+			vpci_update_one_vbar(vdev, pci_bar_index(offset), val,
+					ivshmem_vbar_map, ivshmem_vbar_unmap);
+		} else {
+			pci_vdev_write_vcfg(vdev, offset, bytes, val);
+		}
+	}
+
 	return 0;
 }
+
 /*
  * @pre vdev != NULL
  * @pre bar_idx < PCI_BAR_COUNT
