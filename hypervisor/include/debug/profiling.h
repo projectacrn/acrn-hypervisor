@@ -18,4 +18,8 @@ void profiling_pre_vmexit_handler(struct acrn_vcpu *vcpu);
 void profiling_post_vmexit_handler(struct acrn_vcpu *vcpu);
 void profiling_setup(void);
 
+/* for vmexit sample */
+void sample_vmexit_end(uint32_t basic_exit_reason, struct acrn_vcpu *vcpu);
+void sample_vmexit_begin(uint32_t basic_exit_reason, struct acrn_vcpu *vcpu);
+
 #endif /* PROFILING_H */
