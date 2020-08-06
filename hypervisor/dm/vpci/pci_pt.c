@@ -170,20 +170,11 @@ static void vdev_pt_deny_io_vbar(struct pci_vdev *vdev, uint32_t idx)
  */
 void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 {
-	uint32_t update_idx = idx;
-	uint32_t offset = pci_bar_offset(idx);
 	struct pci_vbar *vbar = &vdev->vbars[idx];
 
 	switch (vbar->type) {
 	case PCIBAR_IO_SPACE:
-		vdev_pt_deny_io_vbar(vdev, update_idx);
-		if (val != ~0U) {
-			pci_vdev_write_vbar(vdev, idx, val);
-			vdev_pt_allow_io_vbar(vdev, update_idx);
-		} else {
-			pci_vdev_write_vcfg(vdev, offset, 4U, val);
-			vdev->vbars[update_idx].base_gpa = 0UL;
-		}
+		vpci_update_one_vbar(vdev, idx, val, vdev_pt_allow_io_vbar, vdev_pt_deny_io_vbar);
 		break;
 
 	case PCIBAR_NONE:
@@ -191,17 +182,7 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 		break;
 
 	default:
-		if (vbar->type == PCIBAR_MEM64HI) {
-			update_idx -= 1U;
-		}
-		vdev_pt_unmap_mem_vbar(vdev, update_idx);
-		if (val != ~0U) {
-			pci_vdev_write_vbar(vdev, idx, val);
-			vdev_pt_map_mem_vbar(vdev, update_idx);
-		} else {
-			pci_vdev_write_vcfg(vdev, offset, 4U, val);
-			vdev->vbars[update_idx].base_gpa = 0UL;
-		}
+		vpci_update_one_vbar(vdev, idx, val, vdev_pt_map_mem_vbar, vdev_pt_unmap_mem_vbar);
 		break;
 	}
 }
