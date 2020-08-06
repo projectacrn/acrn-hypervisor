@@ -207,7 +207,7 @@ Update Ubuntu GRUB to boot hypervisor and load kernel image
       The multiboot2 module param ``XXXXXX`` is the bzImage tag and must exactly match the ``kernel_mod_tag``
       configured in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.c`` file.
 
-#. Modify the `/etc/default/grub` file as follows to make the GRUB menu
+#. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu
    visible when booting:
 
    .. code-block:: none
@@ -242,7 +242,7 @@ Logical partition scenario startup checking
 
    #. Use the ``vm_console 0`` to switch to VM0's console.
    #. The VM0's Clear Linux OS should boot up and log in.
-   #. Use a :kbd:`CTRL` + :kbd:`Space` to return to the Acrn hypervisor shell.
+   #. Use a :kbd:`Ctrl` + :kbd:`Space` to return to the ACRN hypervisor shell.
    #. Use the ``vm_console 1`` to switch to VM1's console.
    #. The VM1's Clear Linux OS should boot up and log in.
 

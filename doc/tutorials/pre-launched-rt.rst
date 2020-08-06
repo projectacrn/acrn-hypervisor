@@ -106,8 +106,8 @@ Reboot the system, and it will boot into Pre-Launched RT Mode
    dbbbd4347a574216a12c2201f1ab0240   1   ACRN SOS VM                      Running
    ACRN:\>
 
-Connect console of VM0, via 'vm_console' ACRN shell command (Use 'Ctrl + Space' key to
-escape VM0 console)
+Connect console of VM0, via 'vm_console' ACRN shell command (Press
+:kbd:`Ctrl` + :kbd:`Space` to return to the ACRN shell.)
 
 .. code-block:: none
 
