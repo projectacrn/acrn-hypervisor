@@ -163,6 +163,10 @@ void schedule(void)
 	struct thread_object *prev = ctl->curr_obj;
 	uint64_t rflag;
 
+#ifdef HV_DEBUG
+	get_cpu_var(resched_times)++;
+#endif
+
 	obtain_schedule_lock(pcpu_id, &rflag);
 	if (ctl->scheduler->pick_next != NULL) {
 		next = ctl->scheduler->pick_next(ctl);
