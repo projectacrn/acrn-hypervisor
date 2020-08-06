@@ -51,7 +51,7 @@ ifeq ($(CONFIG_XML_ENABLED),true)
 		if [ "$(TARGET_DIR)" = "" ]; then \
 			python3 ../misc/acrn-config/scenario_config/scenario_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) > $(UPDATE_RESULT);\
 		else \
-			python3 ../misc/acrn-config/scenario_config/scenario_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) --out $(realpath $(TARGET_DIR)) > $(UPDATE_RESULT);\
+			python3 ../misc/acrn-config/scenario_config/scenario_cfg_gen.py --board $(BOARD_FILE) --scenario $(SCENARIO_FILE) --out $(abspath $(TARGET_DIR)) > $(UPDATE_RESULT);\
 		fi;\
 		cat $(UPDATE_RESULT);\
 		if [ "`sed -n /successfully/p $(UPDATE_RESULT)`" = "" ]; then rm -f $(UPDATE_RESULT); exit 1;	fi;\
