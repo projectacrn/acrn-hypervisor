@@ -307,6 +307,14 @@ struct acrn_vcpu {
 	uint64_t reg_updated;
 
 	struct sched_event events[VCPU_EVENT_NUM];
+
+#ifdef HV_DEBUG
+	uint64_t vmexit_begin;
+
+	uint64_t vmexit_cnt[64][TOTAL_ARRAY_LEVEL];
+	uint64_t vmexit_time[64][2]; /*0 for total latency, 1 for max latency */
+#endif
+
 } __aligned(PAGE_SIZE);
 
 struct vcpu_dump {
