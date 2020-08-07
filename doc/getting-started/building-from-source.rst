@@ -54,7 +54,9 @@ distribution. Refer to the :ref:`building-acrn-in-docker` user guide for
 instructions on how to build ACRN using a container.
 
 .. note::
-   ACRN uses ``menuconfig``, a python3 text-based user interface (TUI) for configuring hypervisor options and using python's ``kconfiglib`` library.
+   ACRN uses ``menuconfig``, a python3 text-based user interface (TUI)
+   for configuring hypervisor options and using python's ``kconfiglib``
+   library.
 
 Install the necessary tools for the following systems:
 
@@ -213,7 +215,7 @@ The BOARD specified is used to select a ``defconfig`` under
 ``RELEASE``) take no effect when generating a defconfig.
 
 To modify the hypervisor configurations, you can either edit ``.config``
-manually, or you can invoke a TUI-based menuconfig--powered by kconfiglib--by
+manually, or you can invoke a TUI-based menuconfig (powered by kconfiglib) by
 executing ``make menuconfig``. As an example, the following commands
 (assuming that you are at the top level of the acrn-hypervisor directory)
 generate a default configuration file for UEFI, allowing you to modify some
@@ -248,7 +250,7 @@ Now you can build all these components at once as follows:
 
 The build results are found in the ``build`` directory. You can specify
 a different Output folder by setting the ``O`` ``make`` parameter,
-for example: ``make O=build-nuc BOARD=nuc6cayh``.
+for example: ``make O=build-nuc BOARD=nuc7i7dnb``.
 
 If you only need the hypervisor, use this command:
 
@@ -277,7 +279,10 @@ of the acrn-hypervisor directory):
    information is retrieved from the corresponding ``BOARD_FILE`` and
    ``SCENARIO_FILE`` XML configuration files.  The ``TARGET_DIR`` parameter
    specifies what directory is used to  store configuration files imported
-   from XML files. If the ``TARGED_DIR`` is not specified, the original
+   from XML files. If the ``TARGET_DIR`` is not specified, the original
    configuration files of acrn-hypervisor would be overridden.
+
+   In the 2.1 release, there is a known issue (:acrn-issue:`5157`) that
+   ``TARGET_DIR=xxx`` does not work.
 
 Follow the same instructions to boot and test the images you created from your build.
