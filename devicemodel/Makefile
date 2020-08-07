@@ -135,6 +135,10 @@ SRCS += hw/pci/npk.c
 SRCS += hw/pci/ivshmem.c
 SRCS += hw/mmio/core.c
 
+# acpi device
+SRCS += hw/platform/acpi/intel/hdac.c
+SRCS += hw/platform/acpi/intel/ipu_camera.c
+
 # core
 #SRCS += core/bootrom.c
 SRCS += core/monitor.c
