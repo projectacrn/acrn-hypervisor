@@ -309,9 +309,6 @@ def vm_cpu_affinity_check(config_file, id_cpus_per_vm_dic, item):
             if pre_launch_cpus.count(pcpu) >= 2:
                 key = "Pre launched VM cpu_affinity"
                 err_dic[key] = "Pre_launched_vm vm should not have the same cpus assignment"
-            if pcpu in post_launch_cpus:
-                key = "Pre launched vm and Post launchded VM cpu_affinity"
-                err_dic[key] = "Pre launched_vm and Post launched vm should not have the same cpus assignment"
 
     return err_dic
 
