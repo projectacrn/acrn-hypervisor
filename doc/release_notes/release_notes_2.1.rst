@@ -46,7 +46,9 @@ What's new in v2.1
 
 * Open Virtual Machine Firmware (OVMF) now uses a Local Advanced
   Programmable Interrupt Controller (LAPIC) timer as its local time
-  instead of the High Precision Event Timer (HPET).
+  instead of the High Precision Event Timer (HPET). This provides the
+  working timer service for the realtime virtual machine (RTVM) booting
+  process.
 
 * Grub is the recommended bootloader for ACRN.  For more information,
   see :ref:`using_grub`.
