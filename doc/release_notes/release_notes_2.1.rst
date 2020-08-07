@@ -36,7 +36,8 @@ We recommend that all developers upgrade to ACRN release v2.1.
 What's new in v2.1
 ******************
 
-* Preempt-RT Linux has been validated as a pre-launched realtime VM.
+* Preempt-RT Linux has been validated as a pre-launched realtime VM. See
+  :ref:`pre_launched_rt` for more details.
 
 * A Trusted Platform Module (TPM) MMIO device can be passthroughed to a
   pre-launched VM (with some limitations discussed in
@@ -47,6 +48,8 @@ What's new in v2.1
   Programmable Interrupt Controller (LAPIC) timer as its local time
   instead of the High Precision Event Timer (HPET).
 
+* Grub is the recommended bootloader for ACRN.  For more information,
+  see :ref:`using_grub`.
 
 Improvements, updates, and corrections have been made throughout our documentation,
 including these:
@@ -67,9 +70,40 @@ including these:
 
 Fixed Issues Details
 ********************
-
-.. comment Issues should be carefully formatted like this
-   - :acrn-issue:`3715` -  Add support for multiple RDT resource allocation and fix L3 CAT config overwrite by L2
+- :acrn-issue:`4047` -  [WHL][Function][WaaG] passthru usb, Windows will hang when reboot it
+- :acrn-issue:`4691` -  [WHL][Function][RTVM]without any virtio device, with only pass-through devices, RTVM can't boot from SATA
+- :acrn-issue:`4711` -  [WHL][Stabilty][WaaG]Failed to boot up WaaG with core dumped in WaaG reboot test in GVT-d & CPU sharing env.
+- :acrn-issue:`4897` -  [WHL][Yocto][GVT-d]WaaG reboot failed due to USB mediator trouble in WaaG reboot stability test.
+- :acrn-issue:`4937` -  [EHL][Yocto] Fail to boot ACRN on Yocto
+- :acrn-issue:`4958` -  cleanup spin lock in hypervisor
+- :acrn-issue:`4989` -  [WHL][Yocto][acrn-configuration-tool] Fail to generate board xml on Yocto build
+- :acrn-issue:`4991` -  [WHL][acrn-configuration-tool] vuart1 of VM1 does not change correctly
+- :acrn-issue:`4994` -  Default max MSIx table is too small
+- :acrn-issue:`5013` -  [TGL][Yocto][YaaG] Can't enter console #1 via HV console
+- :acrn-issue:`5015` -  [EHL][TGL][acrn-configuration-tool] default industry xml is only support 2 user vms
+- :acrn-issue:`5016` -  [EHL][acrn-configuration-tool] Need update pci devices for ehl industry launch xmls
+- :acrn-issue:`5029` -  [TGL][Yocto][GVT] can not boot and login waag with GVT-D
+- :acrn-issue:`5039` -  [acrn-configuration-tool]minor fix for launch config tool
+- :acrn-issue:`5041` -  Pre-Launched VM boot not successful if SR-IOV PF is passed to
+- :acrn-issue:`5049` -  [WHL][Yocto][YaaG] Display stay on openembedded screen when launch YaaG with GVT-G
+- :acrn-issue:`5056` -  [EHL][Yocto]Can't enable SRIOV on EHL SOS
+- :acrn-issue:`5062` -  [EHL] WaaG cannot boot on EHL when CPU sharing is enabled
+- :acrn-issue:`5066` -  [WHL][Function] Fail to launch YaaG with usb mediator enabled
+- :acrn-issue:`5067` -  [WHL][Function][WaaG] passthru usb, Windows will hang when reboot it
+- :acrn-issue:`5085` -  [EHL][Function]Can't enable SRIOV  when add memmap=64M$0xc0000000 in cmdline on EHL SOS
+- :acrn-issue:`5091` -  [TGL][acrn-configuration-tool] generate tgl launch script fail
+- :acrn-issue:`5092` -  [EHL][acrn-config-tool]After WebUI Enable CDP_ENABLED=y ,build hypervisor fail
+- :acrn-issue:`5094` -  [TGL][acrn-configuration-tool] Board xml does not contain SATA information
+- :acrn-issue:`5095` -  [TGL][acrn-configuration-tool] Missing some default launch script xmls
+- :acrn-issue:`5107` -  Fix size issue used for memset in create_vm
+- :acrn-issue:`5115` -  [REG][WHL][WAAG] Shutdown waag fails under CPU sharing status
+- :acrn-issue:`5122` -  [WHL][Stabilty][WaaG][GVT-g & GVT-d]Failed to boot up SOS in cold boot test.
 
 Known Issues
 ************
+- :acrn-issue:`4313` - [WHL][VxWorks] Failed to ping when VxWorks passthru network
+- :acrn-issue:`5150` - [REG][WHL][[Yocto][Passthru] Launch RTVM fails with usb passthru
+- :acrn-issue:`5151` - [WHL][VxWorks] Launch VxWorks fails due to no suitable video mode found
+- :acrn-issue:`5152` - [WHL][Yocto][Hybrid] in hybrid mode ACRN HV env, can not shutdown pre-lanuched RTVM
+- :acrn-issue:`5154` - [TGL][Yocto][PM] 148213_PM_SystemS5 with life_mngr fail
+- :acrn-issue:`5157` - [build from source] during build HV with XML, “TARGET_DIR=xxx” does not work
