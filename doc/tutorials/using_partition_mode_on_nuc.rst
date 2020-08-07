@@ -136,7 +136,7 @@ Update ACRN hypervisor image
    Refer to :ref:`getting-started-building` to set up the ACRN build
    environment on your development workstation.
 
-   Clone the ACRN source code and check out to the tag v1.6:
+   Clone the ACRN source code and check out to the tag v2.1:
 
    .. code-block:: none
 
