@@ -728,7 +728,7 @@ function save_scenario(generator=null){
     $("input").each(function(){
         var id = $(this).attr('id');
         var value = $(this).val();
-        if(id.indexOf('CLOS_MASK')>=0 || id.indexOf('MBA_DELAY')>=0) {
+        if(id.indexOf('CLOS_MASK')>=0 || id.indexOf('MBA_DELAY')>=0 || id.indexOf('IVSHMEM_REGION')>=0) {
             if(id in scenario_config) {
                 scenario_config[id].push(value);
             } else {
@@ -795,7 +795,7 @@ function save_scenario(generator=null){
                                 index = index.replace(new RegExp(jquerySpecialChars[i],
                                     "g"), "\\" + jquerySpecialChars[i]);
                             }
-                            $("#"+index).parents(".form-group").addClass("has-error");
+                            $("#"+index+"_err").parents(".form-group").addClass("has-error");
                             $("#"+index+"_err").text(item);
                         })
                         if(no_err == true && status == 'success') {

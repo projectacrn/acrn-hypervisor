@@ -209,32 +209,13 @@ the source files will be generated into default path and overwirte the previous 
                     != '0')%}
                         {% if 'multiselect' not in elem.attrib or elem.attrib['multiselect'] != 'true' %}
                             {% set first_child = [] %}
+                            {% set first_multi_child = {'IVSHMEM_REGION': 0} %}
                             {% for sub_elem in elem.getchildren() %}
                                 {% set sub_elem_text = sub_elem.text if sub_elem.text != None else '' %}
 
-                                {% if sub_elem.tag == 'RDT' %}
+                                {% if sub_elem.tag in ['RDT', 'IVSHMEM'] %}
                                     {% for sub_elem_2 in sub_elem.getchildren() %}
-                                    {% if ','.join([vm.tag, elem.tag, sub_elem.tag, sub_elem_2.tag]) not in scenario_item_values %}
-                                    <div class="form-group">
-                                        <label class="col-sm-1 control-label" data-toggle="tooltip"
-                                               title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
-                                        </label>
-                                        <label class="col-sm-2 control-label" data-toggle="tooltip"
-                                               title="{{sub_elem_2.attrib['desc'] if 'desc' in sub_elem_2.attrib else sub_elem.attrib['desc']}}">
-                                        {{sub_elem.tag}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{sub_elem_2.tag}}</label>
-                                        <div class="col-sm-6">
-                                        {% if 'readonly' in sub_elem_2.attrib and sub_elem_2.attrib['readonly'] == 'true' %}
-                                        <input type="text" class="form-control"
-                                               id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}"
-                                               readonly vaule={{sub_elem_2.text}}></input>
-                                        {% else %}
-                                        <input type="text" class="form-control"
-				               id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}" value={{sub_elem_2.text}}></input>
-                                        {% endif %}
-                                        </div>
-                                        <p id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}_err" class="col-sm-3"></p>
-                                    </div>
-                                    {% elif sub_elem_2.tag not in ['CLOS_MASK', 'MBA_DELAY'] %}
+                                    {% if ','.join([vm.tag, elem.tag, sub_elem.tag, sub_elem_2.tag]) in scenario_item_values %}
                                     <div class="form-group">
                                         <label class="col-sm-1 control-label" data-toggle="tooltip"
                                                title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
@@ -262,19 +243,44 @@ the source files will be generated into default path and overwirte the previous 
                                         </div>
                                         <p id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}_err" class="col-sm-3"></p>
                                     </div>
-				    {% else %}
+				                    {% else %}
                                     <div class="form-group">
                                         <label class="col-sm-1 control-label" data-toggle="tooltip"
                                                title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
                                         </label>
                                         <label class="col-sm-2 control-label" data-toggle="tooltip"
-				               title={{sub_elem_2.attrib['desc'] if 'desc' in sub_elem_2.attrib else sub_elem.attrib['desc']}}>
-                                               {{sub_elem.tag}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{sub_elem_2.tag}}</label>
+                                               title="{{sub_elem_2.attrib['desc'] if 'desc' in sub_elem_2.attrib else sub_elem.attrib['desc']}}">
+                                        {{sub_elem.tag}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{sub_elem_2.tag}}</label>
+                                        {% if sub_elem_2.tag in ['IVSHMEM_REGION'] %}
+                                        <div class="col-sm-5">
+                                        {% else %}
                                         <div class="col-sm-6">
-                                            <input type="text" class="form-control"
-				                   id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}" value={{'' if sub_elem_2.text == None else sub_elem_2.text}}></input>
+                                        {% endif %}
+                                        {% if 'readonly' in sub_elem_2.attrib and sub_elem_2.attrib['readonly'] == 'true' %}
+                                        <input type="text" class="form-control"
+                                               id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}"
+                                               readonly vaule="{{sub_elem_2.text}}"></input>
+                                        {% else %}
+                                        <input type="text" class="form-control"
+				                            id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}" value="{{sub_elem_2.text}}"></input>
+                                        {% endif %}
                                         </div>
+                                        {% if sub_elem_2.tag in ['IVSHMEM_REGION'] %}
+                                            <div class="col-sm-1">
+                                                <button type="button" class="btn" id="add_ivshmem_{{sub_elem.tag}}_{{first_multi_child[sub_elem_2.tag]}}">+</button>
+                                                {% if first_multi_child[sub_elem_2.tag] == 0 %}
+                                                <button type="button" disabled class="btn" id="remove_ivshmem_{{sub_elem.tag}}_{{first_multi_child[sub_elem_2.tag]}}">-</button>
+                                                {% else %}
+                                                <button type="button" class="btn" id="remove_ivshmem_{{sub_elem.tag}}_{{first_multi_child[sub_elem_2.tag]}}">-</button>
+                                                {% endif %}
+                                            </div>
+                                            {% do first_multi_child.update({sub_elem_2.tag: first_multi_child[sub_elem_2.tag]+1}) %}
+                                        {% endif%}
+                                        {% if sub_elem_2.tag in ['IVSHMEM_REGION'] %}
+                                        <p id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+(first_multi_child[sub_elem_2.tag]-1)|string()}}_err" class="col-sm-3"></p>
+                                        {% else %}
                                         <p id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}_err" class="col-sm-3"></p>
+                                        {% endif %}
                                     </div>
                                     {% endif %}
                                     {% endfor %}
@@ -323,6 +329,7 @@ the source files will be generated into default path and overwirte the previous 
                                                        value="{{sub_elem_text}}">
                                                 {% endif %}
                                                 </div>
+
                                             {% endif %}
                                         {% else %}
                                             {% set item_key = ','.join([vm.tag, elem.tag, sub_elem.tag]) if elem.tag != 'cpu_affinity'
