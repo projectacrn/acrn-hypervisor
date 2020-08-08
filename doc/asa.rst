@@ -3,6 +3,23 @@
 Security Advisory
 #################
 
+Addressed in ACRN v2.1
+************************
+
+We recommend that all developers upgrade to this v2.1 release (or later), which
+addresses the following security issue that was discovered in previous releases:
+
+------
+
+- Missing access control restrictions in the Hypervisor component
+   A malicious entity with root access in the Service VM
+   userspace could abuse the PCIe assign/de-assign Hypercalls via crafted
+   ioctls and payloads.  This attack can result in a corrupt state and Denial
+   of Service (DoS) for previously assigned PCIe devices to the Service VM
+   at runtime.
+
+   **Affected Release:** v2.0 and v1.6.1.
+
 Addressed in ACRN v1.6.1
 ************************
 

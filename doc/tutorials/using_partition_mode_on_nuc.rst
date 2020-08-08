@@ -4,7 +4,7 @@ Getting Started Guide for ACRN logical partition mode
 #####################################################
 
 The ACRN hypervisor supports a logical partition scenario in which the User
-OS (such as Clear Linux) running in a pre-launched VM can bypass the ACRN
+OS (such as Ubuntu OS) running in a pre-launched VM can bypass the ACRN
 hypervisor and directly access isolated PCI devices. The following
 guidelines provide step-by-step instructions on how to set up the ACRN
 hypervisor logical partition scenario on Intel NUC while running two
@@ -14,9 +14,8 @@ Validated Versions
 ******************
 
 - Ubuntu version: **18.04**
-- Clear Linux version: **32680**
-- ACRN hypervisor tag: **v1.6**
-- ACRN kernel commit: **8c9a8695966d8c5c8c7ccb296b9c48671b14aa70**
+- ACRN hypervisor tag: **v2.1**
+- ACRN kernel tag: **v2.1**
 
 Prerequisites
 *************
@@ -28,14 +27,12 @@ Prerequisites
   or SATA disk connected with a USB3.0 SATA converter).
 * Disable **Intel Hyper Threading Technology** in the BIOS to avoid
   interference from logical cores for the logical partition scenario.
-* In the logical partition scenario, two VMs (running Clear Linux)
+* In the logical partition scenario, two VMs (running Ubuntu OS)
   are started by the ACRN hypervisor. Each VM has its own root
-  filesystem. Set up each VM by following the `Install Clear Linux
-  OS on bare metal with live server
-  <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_ instructions
-  and install Clear Linux OS (version: 32680) first on a SATA disk and then
-  again on a storage device with a USB interface. The two pre-launched
-  VMs will mount the root file systems via the SATA controller and
+  filesystem. Set up each VM by following the `Ubuntu desktop installation
+  <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop>`_ instructions
+  first on a SATA disk and then again on a storage device with a USB interface.
+  The two pre-launched VMs will mount the root file systems via the SATA controller and
   the USB controller respectively.
 
 Update kernel image and modules of pre-launched VM
@@ -84,11 +81,11 @@ Update kernel image and modules of pre-launched VM
 
    .. code-block:: none
 
-      # Mount the Clear Linux OS root filesystem on the SATA disk
+      # Mount the Ubuntu OS root filesystem on the SATA disk
       $ sudo mount /dev/sda3 /mnt
       $ sudo cp -r <kernel-modules-folder-built-in-step1>/lib/modules/* /mnt/lib/modules
       $ sudo umount /mnt
-      # Mount the Clear Linux OS root filesystem on the USB flash disk
+      # Mount the Ubuntu OS root filesystem on the USB flash disk
       $ sudo mount /dev/sdb3 /mnt
       $ sudo cp -r <path-to-kernel-module-folder-built-in-step1>/lib/modules/* /mnt/lib/modules
       $ sudo umount /mnt
@@ -139,13 +136,13 @@ Update ACRN hypervisor image
    Refer to :ref:`getting-started-building` to set up the ACRN build
    environment on your development workstation.
 
-   Clone the ACRN source code and check out to the tag v1.6:
+   Clone the ACRN source code and check out to the tag v2.1:
 
    .. code-block:: none
 
       $ git clone https://github.com/projectacrn/acrn-hypervisor.git
       $ cd acrn-hypervisor
-      $ git checkout v1.6
+      $ git checkout v2.1
 
    Build the ACRN hypervisor with default xmls:
 
@@ -154,7 +151,7 @@ Update ACRN hypervisor image
       $ make hypervisor BOARD_FILE=$PWD/misc/acrn-config/xmls/board-xmls/whl-ipc-i5.xml SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/whl-ipc-i5/logical_partition.xml RELEASE=0
 
    .. note::
-      The ``acrn.32.out`` will be generated to ``./build/hypervisor/acrn.32.out``.
+      The ``acrn.bin`` will be generated to ``./build/hypervisor/acrn.bin``.
 
 #. Check the Ubuntu boot loader name.
 
@@ -171,13 +168,13 @@ Update ACRN hypervisor image
 #. Check or update the BDF information of the PCI devices for each
    pre-launched VM; check it in the ``hypervisor/arch/x86/configs/whl-ipc-i5/pci_devices.h``.
 
-#. Copy the artifact ``acrn.32.out`` to the ``/boot`` directory:
+#. Copy the artifact ``acrn.bin`` to the ``/boot`` directory:
 
-   #. Copy ``acrn.32.out`` to a removable disk.
+   #. Copy ``acrn.bin`` to a removable disk.
 
    #. Plug the removable disk into the NUC's USB port.
 
-   #. Copy the ``acrn.32.out`` from the removable disk to ``/boot``
+   #. Copy the ``acrn.bin`` from the removable disk to ``/boot``
       directory.
 
 Update Ubuntu GRUB to boot hypervisor and load kernel image
@@ -187,7 +184,7 @@ Update Ubuntu GRUB to boot hypervisor and load kernel image
 
    .. code-block:: none
 
-      menuentry 'ACRN hypervisor Logical Partition Scenario' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-e23c76ae-b06d-4a6e-ad42-46b8eedfd7d3' {
+      menuentry 'ACRN hypervisor Logical Partition Scenario' --id ACRN_Logical_Partition --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-e23c76ae-b06d-4a6e-ad42-46b8eedfd7d3' {
               recordfail
               load_video
               gfxmode $linux_gfx_mode
@@ -195,25 +192,27 @@ Update Ubuntu GRUB to boot hypervisor and load kernel image
               insmod part_gpt
               insmod ext2
 
+              search --no-floppy --fs-uuid --set 9bd58889-add7-410c-bdb7-1fbc2af9b0e1
               echo 'Loading hypervisor logical partition scenario ...'
-              multiboot --quirk-modules-after-kernel /boot/acrn.32.out
-              module /boot/bzImage XXXXXX
+              multiboot2  /boot/acrn.bin root=PARTUUID="e515916d-aac4-4439-aaa0-33231a9f4d83"
+              module2 /boot/bzImage XXXXXX
       }
 
    .. note::
+      Update this to use the UUID (``--set``) and PARTUUID (``root=`` parameter)
+      (or use the device node directly) of the root partition (e.g.``/dev/nvme0n1p2). Hint: use ``sudo blkid``.
       The kernel command line arguments used to boot the pre-launched VMs is
-      located in the ``hypervisor/scenarios/logical_partition/vm_configurations.h`` header file and is configured by ``VMx_CONFIG_OS_BOOTARG_*`` MACROs (where x is the VM id
-      number and ``*`` are arguments). The multiboot module param ``XXXXXX``
-      is the bzImage tag and must exactly match the ``kernel_mod_tag``
-      configured in the
-      ``hypervisor/scenarios/logical_partition/vm_configurations.c`` file.
+      located in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.h`` header file
+      and is configured by ``VMx_CONFIG_OS_BOOTARG_*`` MACROs (where x is the VM id number and ``*`` are arguments).
+      The multiboot2 module param ``XXXXXX`` is the bzImage tag and must exactly match the ``kernel_mod_tag``
+      configured in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.c`` file.
 
-#. Modify the `/etc/default/grub` file as follows to make the GRUB menu
+#. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu
    visible when booting:
 
    .. code-block:: none
 
-      GRUB_DEFAULT=3
+      GRUB_DEFAULT=ACRN_Logical_Partition
       GRUB_TIMEOUT=10
       GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
       GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
@@ -243,7 +242,7 @@ Logical partition scenario startup checking
 
    #. Use the ``vm_console 0`` to switch to VM0's console.
    #. The VM0's Clear Linux OS should boot up and log in.
-   #. Use a ``Ctrl-Spacebar`` to return to the Acrn hypervisor shell.
+   #. Use a :kbd:`Ctrl` + :kbd:`Space` to return to the ACRN hypervisor shell.
    #. Use the ``vm_console 1`` to switch to VM1's console.
    #. The VM1's Clear Linux OS should boot up and log in.
 

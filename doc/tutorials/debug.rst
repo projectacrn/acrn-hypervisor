@@ -151,7 +151,7 @@ reason and times of each vm_exit after we have done some operations.
       # acrnalyze.py -i /home/trace/acrntrace/20190219-001529/1 -o vmexit --vm_exit
 
    .. note:: The acrnalyze.py script is in the
-      ``acrn-hypervisor/misc/tools/acrntrace/scripts`` folder.  The location
+      ``misc/tools/acrntrace/scripts`` folder.  The location
       of the trace files produced by ``acrntrace`` may be different in your system.
 
    .. figure:: images/debug_image28.png
@@ -174,7 +174,7 @@ shown in the following example:
       trace event id
 
 2. Add the following format to
-   ``acrn-hypervisor/misc/tools/acrntrace/scripts/formats``:
+   ``misc/tools/acrntrace/scripts/formats``:
 
    .. figure:: images/debug_image1.png
       :align: center
@@ -224,7 +224,7 @@ shown in the following example:
         formats /home/trace/acrntrace/20190219-001529/1 | grep "trace test"
 
    .. note:: The acrnalyze.py script is in the
-      ``acrn-hypervisor/misc/tools/acrntrace/scripts`` folder.  The location
+      ``misc/tools/acrntrace/scripts`` folder.  The location
       of the trace files produced by ``acrntrace`` may be different in your system.
 
    and we will get the following log:
