@@ -70,7 +70,7 @@ Specifically:
    the hypervisor shell. Inputs to the physical UART will be
    redirected to the vUART starting from the next timer event.
 
--  The vUART is deactivated after a :kbd:`Ctrl + Space` hotkey is received
+-  The vUART is deactivated after a :kbd:`Ctrl` + :kbd:`Space` hotkey is received
    from the physical UART. Inputs to the physical UART will be
    handled by the hypervisor shell starting from the next timer
    event.

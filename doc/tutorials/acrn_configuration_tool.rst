@@ -26,7 +26,7 @@ The hypervisor configuration uses the ``Kconfig`` mechanism.  The configuration
 file is located at ``acrn-hypervisor/hypervisor/arch/x86/Kconfig``.
 
 A board-specific ``defconfig`` file, for example
-``acrn-hypervisor/hypervisor/arch/x86/configs/$(BOARD).config``
+``misc/vm_configs/scenarios/$(SCENARIO)/$(BOARD)/$(BOARD).config``
 is loaded first; it is the default ``Kconfig`` for the specified board.
 
 Board configuration
@@ -38,7 +38,7 @@ board settings, root device selection, and the kernel cmdline. It also includes
 **scenario-irrelevant** hardware-specific information such as ACPI/PCI
 and BDF information. The reference board configuration is organized as
 ``*.c/*.h`` files located in the
-``acrn-hypervisor/hypervisor/arch/x86/configs/$(BOARD)/`` folder.
+``misc/vm_configs/boards/$(BOARD)/`` folder.
 
 VM configuration
 =================
@@ -51,10 +51,12 @@ to launch post-launched User VMs.
 
 Scenario based VM configurations are organized as ``*.c/*.h`` files. The
 reference scenarios are located in the
-``acrn-hypervisor/hypervisor/scenarios/$(SCENARIO)/`` folder.
+``misc/vm_configs/scenarios/$(SCENARIO)/`` folder.
+The board specific configurations on this scenario is stored in the
+``misc/vm_configs/scenarios/$(SCENARIO)/$(BOARD)/`` folder.
 
 User VM launch script samples are located in the
-``acrn-hypervisor/devicemodel/samples/`` folder.
+``misc/vm_configs/sample_launch_scripts/`` folder.
 
 ACRN configuration XMLs
 ***********************
@@ -77,7 +79,7 @@ Board XML format
 ================
 
 The board XMLs are located in the
-``acrn-hypervisor/misc/acrn-config/xmls/board-xmls/`` folder.
+``misc/vm_configs/xmls/board-xmls/`` folder.
 The board XML has an ``acrn-config`` root element and a ``board`` attribute:
 
 .. code-block:: xml
@@ -90,7 +92,7 @@ about the format of board XML and should not modify it.
 Scenario XML format
 ===================
 The scenario XMLs are located in the
-``acrn-hypervisor/misc/acrn-config/xmls/config-xmls/`` folder.  The
+``misc/vm_configs/xmls/config-xmls/`` folder.  The
 scenario XML has an ``acrn-config`` root element as well as ``board``
 and ``scenario`` attributes:
 
@@ -326,7 +328,7 @@ Additional scenario XML elements:
 Launch XML format
 =================
 The launch XMLs are located in the
-``acrn-hypervisor/misc/acrn-config/xmls/config-xmls/`` folder.
+``misc/vm_configs/xmls/config-xmls/`` folder.
 The launch XML has an ``acrn-config`` root element as well as
 ``board``, ``scenario`` and ``uos_launcher`` attributes:
 
@@ -435,7 +437,7 @@ Board and VM configuration workflow
 ===================================
 
 Python offline tools are provided to configure Board and VM configurations.
-The tool source folder is ``acrn-hypervisor/misc/acrn-config/``.
+The tool source folder is ``misc/acrn-config/``.
 
 Here is the offline configuration tool workflow:
 
@@ -599,7 +601,7 @@ Instructions
      scenario setting for the current board.
 
    The default scenario configuration xmls are located at
-   ``acrn-hypervisor/misc/acrn-config/xmls/config-xmls/[board]/``.
+   ``misc/vm_configs/xmls/config-xmls/[board]/``.
    We can edit the scenario name when creating or loading a scenario. If the
    current scenario name is duplicated with an existing scenario setting
    name, rename the current scenario name or overwrite the existing one
@@ -644,7 +646,7 @@ Instructions
 
    .. note::
       All customized scenario xmls will be in user-defined groups which are
-      located in ``acrn-hypervisor/misc/acrn-config/xmls/config-xmls/[board]/user_defined/``.
+      located in ``misc/vm_configs/xmls/config-xmls/[board]/user_defined/``.
 
    Before saving the scenario xml, the configuration app validates the
    configurable items. If errors exist, the configuration app lists all
@@ -665,9 +667,9 @@ Instructions
    otherwise, the source code is generated into default folders and
    overwrite the old ones. The board-related configuration source
    code is located at
-   ``acrn-hypervisor/hypervisor/arch/x86/configs/[board]/`` and the
+   ``misc/vm_configs/boards/[board]/`` and the
    scenario-based VM configuration source code is located at
-   ``acrn-hypervisor/hypervisor/scenarios/[scenario]/``.
+   ``misc/vm_configs/scenarios/[scenario]/``.
 
 The **Launch Setting** is quite similar to the **Scenario Setting**:
 

@@ -1,4 +1,6 @@
 #! /usr/bin/env python3
+# Copyright (c) 2017, Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 """
 Filters a file, classifying output in errors, warnings and discarding
 the rest.

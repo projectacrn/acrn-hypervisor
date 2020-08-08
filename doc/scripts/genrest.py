@@ -1,3 +1,5 @@
+# Copyright (c) 2017, Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 # Generates a Kconfig symbol reference in RST format, with a separate
 # CONFIG_FOO.rst file for each symbol, and an alphabetical index with links in
 # index.rst.
