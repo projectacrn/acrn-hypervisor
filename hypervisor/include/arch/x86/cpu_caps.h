@@ -32,7 +32,10 @@
 #define	FEATURE_WORDS		15U
 
 struct cpuinfo_x86 {
-	uint8_t family, model;
+	/* SDM 2-2 Vol.4 Table 2-1 uses DisplayFamily_DisplayModel to
+	 * distinguish Processor Families/Processor Number Series.
+	 */
+	uint8_t displayfamily, displaymodel;
 	uint8_t virt_bits;
 	uint8_t phys_bits;
 	uint32_t cpuid_level;
