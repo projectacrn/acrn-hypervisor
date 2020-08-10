@@ -1,7 +1,7 @@
 .. _release_notes_1.1:
 
-ACRN v1.1 (June 2019)
-#####################
+ACRN v1.1 (Jun 2019)
+####################
 
 We are pleased to announce the release of ACRN version 1.1.
 

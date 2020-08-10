@@ -1,7 +1,7 @@
 .. _release_notes_2.0:
 
-ACRN v2.0 (June 2020)
-#####################
+ACRN v2.0 (Jun 2020)
+####################
 
 We are pleased to announce the second major release of the Project ACRN
 hypervisor.

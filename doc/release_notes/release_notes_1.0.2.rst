@@ -1,7 +1,7 @@
 .. _release_notes_1.0.2:
 
-ACRN v1.0.2 (November 2019)
-###########################
+ACRN v1.0.2 (Nov 2019)
+######################
 
 We are pleased to announce the release of ACRN version 1.0.2. This is a
 maintenance release based on the v1.0 branch that primarily fixes some
