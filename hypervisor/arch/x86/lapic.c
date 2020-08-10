@@ -187,7 +187,7 @@ send_startup_ipi(uint16_t dest_pcpu_id, uint64_t cpu_startup_start_address)
 	 * and first Startup IPI, so on Modern processors (family == 6)
 	 * setting a delay value of 10us.
 	 */
-	if (cpu_info->family != 6U) {
+	if (cpu_info->displayfamily != 6U) {
 		/* delay 10ms */
 		udelay(10000U);
 	} else {
@@ -201,7 +201,7 @@ send_startup_ipi(uint16_t dest_pcpu_id, uint64_t cpu_startup_start_address)
 	icr.bits.vector = (uint8_t)(cpu_startup_start_address >> 12U);
 	msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
 
-	if (cpu_info->family == 6U) {
+	if (cpu_info->displayfamily == 6U) {
 		udelay(10U); /* 10us is enough for Modern processors */
 	} else {
 		udelay(200U); /* 200us for old processors */

@@ -61,7 +61,7 @@ bool monitor_cap_buggy(void)
 {
 	bool buggy = false;
 
-	if ((boot_cpu_data.family == 0x6U) && (boot_cpu_data.model == 0x5cU)) {
+	if ((boot_cpu_data.displayfamily == 0x6U) && (boot_cpu_data.displaymodel == 0x5cU)) {
 		buggy = true;
 	}
 
@@ -118,7 +118,7 @@ bool is_apl_platform(void)
 {
 	bool ret = false;
 
-	if ((boot_cpu_data.family == 0x6U) && (boot_cpu_data.model == 0x92U)) {
+	if ((boot_cpu_data.displayfamily == 0x6U) && (boot_cpu_data.displaymodel == 0x92U)) {
 		ret = true;
 	}
 
@@ -251,7 +251,7 @@ static uint64_t get_address_mask(uint8_t limit)
 void init_pcpu_capabilities(void)
 {
 	uint32_t eax, unused;
-	uint32_t family, model;
+	uint32_t family_id, model_id, displayfamily, displaymodel;
 
 	cpuid_subleaf(CPUID_VENDORSTRING, 0x0U,
 		&boot_cpu_data.cpuid_level,
@@ -260,17 +260,21 @@ void init_pcpu_capabilities(void)
 	cpuid_subleaf(CPUID_FEATURES, 0x0U, &eax, &unused,
 		&boot_cpu_data.cpuid_leaves[FEAT_1_ECX],
 		&boot_cpu_data.cpuid_leaves[FEAT_1_EDX]);
-	family = (eax >> 8U) & 0xfU;
-	if (family == 0xFU) {
-		family += ((eax >> 20U) & 0xffU) << 4U;
-	}
-	boot_cpu_data.family = (uint8_t)family;
 
-	model = (eax >> 4U) & 0xfU;
-	if (family == 0x06U || family == 0xFU) {
-		model += ((eax >> 16U) & 0xfU) << 4U;
+	/* SDM Vol.2A 3-211 states the algorithm to calculate DisplayFamily and DisplayModel */
+	family_id = (eax >> 8U) & 0xfU;
+	displayfamily = family_id;
+	if (family_id == 0xFU) {
+		displayfamily += ((eax >> 20U) & 0xffU);
 	}
-	boot_cpu_data.model = (uint8_t)model;
+	boot_cpu_data.displayfamily = (uint8_t)displayfamily;
+
+	model_id = (eax >> 4U) & 0xfU;
+	displaymodel = model_id;
+	if ((family_id == 0x06U) || (family_id == 0xFU)) {
+		displaymodel += ((eax >> 16U) & 0xfU) << 4U;
+	}
+	boot_cpu_data.displaymodel = (uint8_t)displaymodel;
 
 
 	cpuid_subleaf(CPUID_EXTEND_FEATURE, 0x0U, &unused,
