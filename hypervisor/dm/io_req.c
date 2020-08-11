@@ -633,7 +633,7 @@ static inline struct mem_io_node *find_match_mmio_node(struct acrn_vm *vm,
 	}
 
 	if (!found) {
-		pr_fatal("%s, vm[%d] no match mmio region [0x%lx, 0x%lx] is found",
+		pr_info("%s, vm[%d] no match mmio region [0x%lx, 0x%lx] is found",
 				__func__, vm->vm_id, start, end);
 		mmio_node = NULL;
 	}
