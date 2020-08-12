@@ -29,6 +29,7 @@
 #define VM0_CONFIG_MEM_SIZE_HPA2        0x0UL
 #define VM0_CONFIG_PCI_DEV_NUM          3U
 
+/* SOS_VM == VM1 */
 #define SOS_VM_BOOTARGS			SOS_ROOTFS	\
 					SOS_CONSOLE	\
 					SOS_IDLE	\
