@@ -4,6 +4,9 @@ import os,sys,copy,json
 import subprocess
 import datetime
 import time
+import shlex
+import glob
+import multiprocessing
 
 #parse json file
 with open("release.json","r") as load_f:
@@ -14,11 +17,40 @@ with open("deb.json","r") as load_fdeb:
 	load_dictdeb = json.load(load_fdeb)
 load_fdeb.close()
 
+def run_command(cmd, path):
+	ret_code = 0
+	print("cmd = %s, path = %s" % (cmd, path))
+	cmd_proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd = path, universal_newlines=True)
 
+	while True:
+		output = cmd_proc.stdout.readline()
+		print(output.strip())
+
+		ret_code = cmd_proc.poll()
+		if ret_code is not None:
+			for output in cmd_proc.stdout.readlines():
+				print(output.strip())
+			break
+
+	return ret_code
+
+def add_cmd_list(cmd_list, cmd_str, dir_str):
+	cmd = {}
+	cmd['cmd'] = cmd_str
+	cmd['dir'] = dir_str
+	cmd_list.append(cmd)
+
+def run_cmd_list(cmd_list):
+	for i, cmd in enumerate(cmd_list):
+		ret = run_command(cmd['cmd'], cmd['dir'])
+		if ret != 0:
+			print("cmd(%s) run in dir(%s) failed and exit" % (cmd['cmd'], cmd['dir']))
+			exit(-1)
+	return
 # install compile package
 def install_compile_package():
 	#check compile env
-	os.system('apt install gcc \
+	os.system('sudo apt install gcc \
      git \
      make \
      gnu-efi \
@@ -44,28 +76,47 @@ def install_compile_package():
 	binutils_version = binutils_version_out.read().split(" ")
 	if tuple(binutils_version[-1].split("\n")[0].split(".")) < tuple(load_dict['binutils'].split('.')):
 		print("your binutils version is too old")
-	os.system('apt install python-pip -y')
-	os.system('pip3 install kconfiglib')
-	os.system('apt-get install bison -y')
-	os.system('apt-get install flex -y')
-	os.system('apt install liblz4-tool -y')
-
+	os.system('sudo apt install python-pip -y')
+	os.system('sudo pip3 install kconfiglib')
+	os.system('sudo apt-get install bison -y')
+	os.system('sudo apt-get install flex -y')
+	os.system('sudo apt install liblz4-tool -y')
+	os.system('sudo apt install bc -y')
 
 # build acrn
 def build_acrn():
+	cmd_list = []
+	cur_dir = os.getcwd()
+	hv_dir = cur_dir + '/' + 'acrn-hypervisor'
 	if os.path.exists('acrn_release_img'):
-		os.system('rm -rf acrn_release_img')
-	os.system('mkdir -p acrn_release_img')
+		add_cmd_list(cmd_list, 'rm -rf acrn_release_img', cur_dir)
+	add_cmd_list(cmd_list, 'mkdir -p acrn_release_img', cur_dir)
 
 	if load_dict['sync_acrn_code'] == 'true':
 		if os.path.exists('acrn-hypervisor'):
-			os.system('rm -rf acrn-hypervisor')
-		cmd = 'git clone %s' % load_dict['acrn_repo']
-		os.system(cmd)
-		cmd = 'cd acrn-hypervisor' + "&&" +'git checkout -b mybranch %s'% load_dict['release_version']
-		os.system(cmd)
+			add_cmd_list(cmd_list, 'rm -rf acrn-hypervisor', cur_dir)
+		add_cmd_list(cmd_list, 'git clone %s' % load_dict['acrn_repo'], cur_dir)
+		add_cmd_list(cmd_list, 'git checkout -b mybranch %s'% load_dict['release_version'], hv_dir)
+
+	else:
+		#clean git code directory
+		if os.path.exists('acrn-hypervisor'):
+			add_cmd_list(cmd_list, 'git reset --hard HEAD', hv_dir)
+			add_cmd_list(cmd_list, 'git checkout master', hv_dir)
+			add_cmd_list(cmd_list, 'git branch -D mybranch', hv_dir)
+			add_cmd_list(cmd_list, 'git checkout -b mybranch %s' % load_dict['release_version'], hv_dir)
 
 
+	if load_dict['acrn_patch']['patch_need'] == 'true':
+		#Need to apply additional acrn patch
+		patch_path = os.getcwd() + '/' + load_dict['acrn_patch']['patch_dir']
+
+		for patch in load_dict['acrn_patch']['patch_list']:
+			patch_full_name = patch_path + '/' + patch
+			add_cmd_list(cmd_list, 'git am %s/%s' % (patch_path, patch), hv_dir)
+
+	run_cmd_list(cmd_list)
+	cmd_list = []
 	make_cmd_list =[]
 
 	release = load_dict['build_cmd']['release']
@@ -78,42 +129,48 @@ def build_acrn():
 			for j in board:
 				if board[j] == 'true':
 					info_list.append((i,j))
-					make_cmd = 'make all BOARD_FILE=misc/acrn-config/xmls/board-xmls/%s.xml SCENARIO_FILE=misc/acrn-config/xmls/config-xmls/%s/%s.xml RELEASE=%s'%(j,j,i,release)
+					if load_dict['build_cmd']['build_method']['use_xml'] == 'true':
+						make_cmd = 'make all BOARD_FILE=misc/acrn-config/xmls/board-xmls/%s.xml SCENARIO_FILE=misc/acrn-config/xmls/config-xmls/%s/%s.xml RELEASE=%s'%(j,j,i,release)
+					else:
+						make_cmd = 'make all BOARD=%s SCENARIO=%s RELEASE=%s'%(j,i,release)
+
 					make_cmd_list.append(make_cmd)
 
 	for i in range(len(make_cmd_list)):
-		cmd = 'cd acrn-hypervisor' + "&&" +'make clean'
-		os.system(cmd)
 
-		cmd = 'cd acrn-hypervisor' + "&&" +'%s'% make_cmd_list[i]
-		os.system(cmd)
+		add_cmd_list(cmd_list, 'make clean', hv_dir)
+		add_cmd_list(cmd_list, make_cmd_list[i], hv_dir)
 
 		bin_name ='acrn.%s.%s.bin' % (info_list[i][0],info_list[i][1])
 		out_name ='acrn.%s.%s.32.out' % (info_list[i][0],info_list[i][1])
 		efi_name ='acrn.%s.%s.efi' % (info_list[i][0],info_list[i][1])
 
-		cmd = 'cp %s acrn_release_img/%s' %(load_dictdeb['acrn.bin']['source'],bin_name)
-		os.system(cmd)
+		add_cmd_list(cmd_list, 'cp %s acrn_release_img/%s' %(load_dictdeb['acrn.bin']['source'],bin_name), cur_dir)
+		add_cmd_list(cmd_list, 'cp %s acrn_release_img/%s' %(load_dictdeb['acrn.32.out']['source'],out_name), cur_dir)
 
-		cmd = 'cp %s acrn_release_img/%s' %(load_dictdeb['acrn.32.out']['source'],out_name)
-		os.system(cmd)
 
 		if os.path.exists(load_dictdeb['acrn.efi']['source']):
-				cmd = 'cp %s acrn_release_img/%s' %(load_dictdeb['acrn.efi']['source'],efi_name)
-				os.system(cmd)
+				add_cmd_list(cmd_list, 'cp %s acrn_release_img/%s' %(load_dictdeb['acrn.efi']['source'],efi_name), cur_dir)
+	run_cmd_list(cmd_list)
+	return
 
 def create_acrn_kernel_deb():
 
+	cmd_list = []
+	cur_dir = os.getcwd()
+	kernel_dir = cur_dir + '/' + 'acrn-kernel'
+	kernel_deb_dir = cur_dir + '/' + 'acrn_kernel_deb'
+	kernel_boot_dir = kernel_dir + '/' + 'boot'
 	if os.path.exists('acrn_kernel_deb'):
-		os.system('rm -rf acrn_kernel_deb')
+		add_cmd_list(cmd_list, 'rm -rf acrn_kernel_deb', cur_dir)
 
-	os.system('mkdir -p acrn_kernel_deb')
+	add_cmd_list(cmd_list, 'mkdir -p acrn_kernel_deb', cur_dir)
+	add_cmd_list(cmd_list, 'mkdir DEBIAN', kernel_deb_dir)
+	add_cmd_list(cmd_list, 'touch DEBIAN/control', kernel_deb_dir)
 
-	cmd = "cd acrn_kernel_deb" + "&&" +"mkdir DEBIAN"
-	os.system(cmd)
-
-	cmd = "cd acrn_kernel_deb" + "&&" +"touch DEBIAN/control"
-	os.system(cmd)
+	# following operations depends on the previous cmmd. Run and clear cmd list here
+	run_cmd_list(cmd_list)
+	cmd_list = []
 
 	#control file description
 
@@ -125,12 +182,11 @@ def create_acrn_kernel_deb():
 
 	cmd = 'cd acrn-kernel' + '&&' + 'ls *.gz'
 	filename = os.popen(cmd).read().replace('\n', '').replace('\r', '')
-	cmd = 'cp acrn-kernel/%s acrn_kernel_deb/' % filename
-	os.system(cmd)
-
-	cmd = 'cd acrn_kernel_deb' + '&&' + 'tar -zvxf %s' % filename
-	os.system(cmd)
-
+	add_cmd_list(cmd_list, 'cp acrn-kernel/%s acrn_kernel_deb/' % filename, cur_dir)
+	add_cmd_list(cmd_list, 'tar -zvxf %s' % filename, kernel_deb_dir)
+	# following operations depends on the previous cmmd. Run and clear cmd list here
+	run_cmd_list(cmd_list)
+	cmd_list = []
 
 	cmd = 'cd acrn_kernel_deb/boot' + '&&' + 'ls vmlinuz*'
 	version = os.popen(cmd)
@@ -139,38 +195,47 @@ def create_acrn_kernel_deb():
 	f.write(version.read())
 	f.close()
 
-	os.system('cp acrn-kernel.postinst acrn_kernel_deb/DEBIAN/postinst' )
+	add_cmd_list(cmd_list, 'cp acrn-kernel.postinst acrn_kernel_deb/DEBIAN/postinst', cur_dir)
+	add_cmd_list(cmd_list, 'chmod +x acrn_kernel_deb/DEBIAN/postinst', cur_dir)
+	add_cmd_list(cmd_list, 'sed -i \'s/\r//\' acrn_kernel_deb/DEBIAN/postinst', cur_dir)
+	add_cmd_list(cmd_list, 'rm acrn_kernel_deb/%s' % filename, cur_dir)
+	add_cmd_list(cmd_list, 'dpkg -b acrn_kernel_deb acrn_kernel_deb_package.deb ', cur_dir)
 
-	os.system('chmod +x acrn_kernel_deb/DEBIAN/postinst')
-
-	os.system('sed -i \'s/\r//\' acrn_kernel_deb/DEBIAN/postinst')
-
-	os.system('rm acrn_kernel_deb/%s' % filename)
-
-	os.system('dpkg -b acrn_kernel_deb acrn_kernel_deb_package.deb ')
-
+	run_cmd_list(cmd_list)
+	cmd_list = []
+	return
 
 def build_acrn_kernel(acrn_repo,acrn_version):
+
+	cmd_list = []
+	cur_dir = os.getcwd()
+	kernel_dir = cur_dir + '/' + 'acrn-kernel'
+
 	if load_dict['sync_acrn_kernel_code'] == 'true':
 		if os.path.exists('acrn-kernel'):
-			os.system('rm -rf acrn-kernel')
+			add_cmd_list(cmd_list, 'rm -rf acrn-kernel', cur_dir)
 
-		os.system('git clone %s' % acrn_repo)
+		add_cmd_list(cmd_list, 'git clone %s' % acrn_repo, cur_dir)
+		add_cmd_list(cmd_list, 'git checkout %s'% acrn_version, kernel_dir)
 
-		cmd = 'cd acrn-kernel' + "&&" +'git checkout %s'% acrn_version
-		os.system(cmd)
+	if load_dict['kernel_patch']['patch_need'] == 'true':
+		#Need to apply additional acrn patch
+		patch_path = os.getcwd() + '/' + load_dict['kernel_patch']['patch_dir']
 
-	cmd = 'cd acrn-kernel' + "&&" +'make clean'
-	os.system(cmd)
-	# build kernel
-	cmd = 'cd acrn-kernel' + "&&" +'cp kernel_config_uefi_sos .config'
-	os.system(cmd)
+		for patch in load_dict['kernel_patch']['patch_list']:
+			patch_full_name = patch_path + '/' + patch
+			add_cmd_list(cmd_list, 'git am %s/%s' % (patch_path, patch), hv_dir)
+	add_cmd_list(cmd_list, 'make clean', kernel_dir)
+	add_cmd_list(cmd_list, 'cp kernel_config_uefi_sos .config', kernel_dir)
+	add_cmd_list(cmd_list, 'make olddefconfig', kernel_dir)
 
-	cmd = 'cd acrn-kernel' + "&&" +'make olddefconfig'
-	os.system(cmd)
+	cpu_cnt = multiprocessing.cpu_count()
+	cmd = 'make targz-pkg' + " -j%s" % str(cpu_cnt)
+	add_cmd_list(cmd_list, cmd, kernel_dir)
 
-	cmd = 'cd acrn-kernel' + "&&" +'make targz-pkg -j4'
-	os.system(cmd)
+	run_cmd_list(cmd_list)
+	cmd_list = []
+	return
 
 
 
@@ -187,20 +252,51 @@ def install_acrn_kernel_deb():
 
 
 def create_acrn_deb():
-
+	cmd_list = []
+	cur_dir = os.getcwd()
+	hv_dir = cur_dir + '/' + 'acrn_release_deb'
 	path = 'acrn_release_deb'
 	if os.path.exists(path):
-		os.system('rm -rf acrn_release_deb')
-	os.system('mkdir -p acrn_release_deb')
-	cmd = "cd acrn_release_deb" + "&&" +"mkdir DEBIAN"
-	os.system(cmd)
+		add_cmd_list(cmd_list, 'rm -rf acrn_release_deb', cur_dir)
+	add_cmd_list(cmd_list, 'mkdir -p acrn_release_deb', cur_dir)
+	add_cmd_list(cmd_list, 'mkdir DEBIAN', hv_dir)
+	add_cmd_list(cmd_list, 'touch DEBIAN/control', hv_dir)
 
-	cmd = "cd acrn_release_deb" + "&&" +"touch DEBIAN/control"
-	os.system(cmd)
-
+	# following operations depends on the previous cmmd. Run and clear cmd list here
+	run_cmd_list(cmd_list)
+	cmd_list = []
 	#control file description
 	acrn_info = load_dict['release_version']
+	scenario = load_dict['build_cmd']['scenario']
+	board = load_dict['build_cmd']['board']
 
+	scenario_info=""
+	board_info=""
+	for i in scenario:
+		scenario_info = scenario_info + i +" "
+
+	for i in board:
+		board_info = board_info + i +" "
+
+
+	lines=[]
+	f=open("acrn-hypervisor.postinst",'r')
+	for line in f:
+		lines.append(line)
+	f.close()
+
+	start = lines.index('echo "please choose <scenario> ,<board> ,<disk type>"\n')
+
+	end = lines.index('echo "Scenario is ->"\n')
+
+	del lines[(start+1):(end-1)]
+
+	lines.insert(start+1,"\nscenario_info=(%s)\n"%scenario_info)
+	lines.insert(start+2,"\nboard_info=(%s)\n"%board_info)
+	with open("acrn-hypervisor.postinst", "w") as f:
+		for line in lines:
+			f.write(line)
+	f.close()
 	listcontrol=['Package: acrn-package\n','version: %s \n'% datetime.date.today(),'Section: free \n','Priority: optional \n','Architecture: amd64 \n','Installed-Size: 66666 \n','Maintainer: Intel\n','Description: %s \n' % acrn_info,'\n']
 
 
@@ -222,24 +318,34 @@ def create_acrn_deb():
 		if target == 'boot':
 			continue
 		if os.path.exists(target):
-			os.system('cp %s %s' % (source,target))
+			add_cmd_list(cmd_list, 'cp %s %s' % (source,target), cur_dir)
 		else:
-			os.system('mkdir -p %s' % target)
-			os.system('cp %s %s' % (source,target))
+			add_cmd_list(cmd_list, 'mkdir -p %s' % target, cur_dir)
+			add_cmd_list(cmd_list, 'cp %s %s' % (source,target), cur_dir)
 
-	os.system('cp -r usr acrn_release_deb')
-	os.system('rm -rf usr')
+	add_cmd_list(cmd_list, 'mkdir -p %s' % target, cur_dir)
+	add_cmd_list(cmd_list, 'cp %s %s' % (source,target), cur_dir)
 
-	os.system('mkdir -p acrn_release_deb/boot')
-	cmd = "cp acrn_release_img/acrn.* acrn_release_deb/boot"
-	os.system(cmd)
+	add_cmd_list(cmd_list, 'cp -r usr acrn_release_deb', cur_dir)
+	add_cmd_list(cmd_list, 'rm -rf usr', cur_dir)
+	add_cmd_list(cmd_list, 'mkdir -p acrn_release_deb/boot', cur_dir)
 
 
-	os.system('cp acrn-hypervisor.postinst acrn_release_deb/DEBIAN/postinst' )
-	os.system('chmod +x acrn_release_deb/DEBIAN/postinst')
-	os.system('sed -i \'s/\r//\' acrn_release_deb/DEBIAN/postinst')
 
-	os.system('dpkg -b acrn_release_deb acrn_deb_package.deb ')
+	for filename in glob.glob(r'acrn_release_img/acrn.*'):
+		add_cmd_list(cmd_list, 'cp %s acrn_release_deb/boot' % filename, cur_dir)
+
+	add_cmd_list(cmd_list, 'cp acrn-hypervisor.postinst acrn_release_deb/DEBIAN/postinst', cur_dir)
+	add_cmd_list(cmd_list, 'chmod +x acrn_release_deb/DEBIAN/postinst', cur_dir)
+	add_cmd_list(cmd_list, 'sed -i \'s/\r//\' acrn_release_deb/DEBIAN/postinst', cur_dir)
+
+	add_cmd_list(cmd_list, 'cp acrn-hypervisor.preinst acrn_release_deb/DEBIAN/preinst', cur_dir)
+	add_cmd_list(cmd_list, 'chmod +x acrn_release_deb/DEBIAN/preinst', cur_dir)
+	add_cmd_list(cmd_list, 'sed -i \'s/\r//\' acrn_release_deb/DEBIAN/preinst', cur_dir)
+
+	add_cmd_list(cmd_list, 'dpkg -b acrn_release_deb acrn_deb_package.deb ', cur_dir)
+	run_cmd_list(cmd_list)
+	return
 
 
 
@@ -273,6 +379,10 @@ def install_process():
 	if load_dict['install_acrn_kernel_deb'] == 'true':
 		print('start install install_acrn_kernel_deb')
 		install_acrn_kernel_deb()
+
+	if load_dict['auto_reboot'] == 'true':
+		print('start reboot')
+		os.system("sudo reboot")
 
 if __name__ == "__main__":
 		install_process()
