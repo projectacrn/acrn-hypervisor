@@ -276,6 +276,31 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
        enable virtio poll mode with poll interval 1ms.
 
+   * - :kbd:`--acpidev_pt <HID>`
+     - This option is to enable ACPI device passthrough support. The ``HID`` is a
+       mandatory parameter for this option which is the Hardware ID of the ACPI
+       device.
+
+       Example::
+
+          --acpidev_pt MSFT0101
+
+       To pass through a TPM (which HID is MSFT0101) ACPI device to a User VM.
+
+   * - :kbd:`--mmiodev_pt <MMIO_Region>`
+     - This option is to enable MMIO device passthrough support. The ``MMIO_Region``
+       is a mandatory parameter for this option which is the MMIO resource of the
+       MMIO device. The ``MMIO_Region`` needs to be the base address followed by
+       the length of the region, both separated by a comma.
+
+       Example::
+
+          --mmiodev_pt 0xFED40000,0x00005000
+
+       To pass through a MMIO device to a User VM. The MMIO device has a MMIO region.
+       The base address of this region is 0xFED40000 and the size of the region
+       is 0x00005000.
+
    * - :kbd:`--vtpm2 <sock_path>`
      - This option is to enable virtual TPM support. The sock_path is a mandatory
        parameter for this option which is the path of swtpm socket fd.
