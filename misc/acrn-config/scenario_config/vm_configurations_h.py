@@ -118,6 +118,11 @@ def gen_sos_header(scenario_items, config):
 
     if 'SOS_VM' not in common.VM_TYPES.values():
         return
+
+    for vm_i,vm_type in common.VM_TYPES.items():
+        if vm_type == 'SOS_VM':
+            print("/* SOS_VM == VM{0} */".format(vm_i), file=config)
+
     print("#define SOS_VM_BOOTARGS\t\t\tSOS_ROOTFS\t\\", file=config)
     print("\t\t\t\t\tSOS_CONSOLE\t\\", file=config)
     print("\t\t\t\t\tSOS_IDLE\t\\", file=config)
