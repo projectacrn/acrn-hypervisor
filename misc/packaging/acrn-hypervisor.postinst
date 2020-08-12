@@ -1,46 +1,72 @@
 #!/bin/bash
-#* Copyright (c) 2020 Intel Corporation All rights reserved.
+#* Copyright (c) 2020 Intel Corporation SPDX-License-Identifier: BSD-3-Clause
 # postinst script for acrn-hypervisor
+# please NOTE ！！！  scenario_info/board_info changed by python scripts, so do not add content there!!!
+# please NOTE ！！！  scenario_info/board_info please add in release.json if needed !!!
 set -e
 
 
 echo "please choose <scenario> ,<board> ,<disk type>"
 
-echo "Scenario is ->
-        1. industry
-        2. hybrid
-        3. logical_partition"
-read num
+scenario_info=(industry hybrid logical_partition )
 
-if [[ $num -eq 1 ]]
-then
-        echo "Scenario is industry"
-        SCENARIO="industry"
-elif [[ $num -eq 2 ]]
-then
-        echo "Scenario is hybrid"
-        SCENARIO="hybrid"
+board_info=(nuc7i7dnb whl-ipc-i5 )
 
-elif [[ $num -eq 3 ]]
-then
-        echo "Scenario is logical_partition"
-        SCENARIO="logical_partition"
-fi
+echo "Scenario is ->"
 
-echo "Board is ->
-        1. nuc7i7dnb
-        2. whl-ipc-i5"
-read num2
+scenario_num=${#scenario_info[@]}
 
-if [[ $num2 -eq 1 ]]
-then
-        echo "Board is nuc7i7dnb"
-        BOARD="nuc7i7dnb"
-elif [[ $num2 -eq 2 ]]
-then
-        echo "Board is whl-ipc-i5"
-        BOARD="whl-ipc-i5"
-fi
+for ((i=0;i<scenario_num;i++))
+
+{
+    let s_num=i+1
+    echo  $s_num ${scenario_info[i]};
+
+}
+
+
+while :
+do
+    read num
+    if [ $num = 0 ] || [ $num -gt ${scenario_num} ]; then
+
+        echo "out of scenario scope,please retry"
+    else
+        c=$(($num-1))
+        echo "scenario is" ${scenario_info[c]};
+        SCENARIO="${scenario_info[c]}"
+        break
+    fi
+
+done
+
+echo "Board is ->"
+board_num=${#board_info[@]}
+
+for ((i=0;i<board_num;i++))
+
+{
+    let b_num=i+1
+    echo  $b_num ${board_info[i]};
+
+}
+
+
+while :
+do
+    read num2
+    if [ $num2 = 0 ] || [ $num2 -gt ${board_num} ]; then
+
+        echo "out of board scope,please retry"
+    else
+        c1=$(($num2-1))
+        echo "board is" ${board_info[c1]};
+        BOARD="${board_info[c1]}"
+        break
+    fi
+
+done
+
 
 ACRNBIN="/boot/acrn.${SCENARIO}.${BOARD}.bin"
 
@@ -48,21 +74,34 @@ echo "Your acrn bin is ->"
 echo $ACRNBIN
 
 
-echo "disk type is ->
-        1. nvme
-        2. sda"
-read num3
+echo "disk type is ->"
 
-if [[ $num3 -eq 1 ]]
-then
-        echo "disk type is nvme"
-        type="nvme"
-elif [[ $num3 -eq 2 ]]
-then
-        echo "disk type is sda"
-        type="sda"
-fi
+disk_info=(nvme sda)
+disk_num=${#disk_info[@]}
 
+for ((i=0;i<disk_num;i++))
+
+{
+    let d_num=i+1
+    echo  $d_num ${disk_info[i]};
+
+}
+
+
+while :
+do
+    read num3
+    if [ $num3 = 0 ] || [ $num3 -gt ${disk_num} ]; then
+
+        echo "out of disk scope,please retry"
+    else
+        c3=$(($num3-1))
+        echo "disk is" ${disk_info[c3]};
+        type="${disk_info[c3]}"
+        break
+    fi
+
+done
 
 str=$(blkid |grep ext4 |grep ${type})
 
