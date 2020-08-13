@@ -20,6 +20,7 @@
  */
 
 #define BASE_HC_ID(x, y) (((x)<<24U)|(y))
+#define HC_IDX(id) ((id)&(0xFFUL))
 
 #define HC_ID 0x80UL
 

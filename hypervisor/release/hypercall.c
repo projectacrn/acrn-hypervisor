@@ -8,8 +8,26 @@
 #include <errno.h>
 #include <vm.h>
 
-int32_t hcall_debug(__unused struct acrn_vm *vm, __unused uint64_t param1, __unused uint64_t param2,
-			__unused uint64_t hypcall_id)
+int32_t hcall_setup_sbuf(__unused struct acrn_vm *vm, __unused struct acrn_vm *target_vm,
+		__unused uint64_t param1, __unused uint64_t param2)
+{
+	return -EPERM;
+}
+
+int32_t hcall_setup_hv_npk_log(__unused struct acrn_vm *vm, __unused struct acrn_vm *target_vm,
+		__unused uint64_t param1, __unused uint64_t param2)
+{
+	return -EPERM;
+}
+
+int32_t hcall_get_hw_info(__unused struct acrn_vm *vm, __unused struct acrn_vm *target_vm,
+		__unused uint64_t param1, __unused uint64_t param2)
+{
+	return -EPERM;
+}
+
+int32_t hcall_profiling_ops(__unused struct acrn_vm *vm, __unused struct acrn_vm *target_vm,
+		__unused uint64_t param1, __unused uint64_t param2)
 {
 	return -EPERM;
 }
