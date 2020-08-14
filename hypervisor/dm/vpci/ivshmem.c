@@ -23,8 +23,29 @@
 #define IVSHMEM_MMIO_BAR	0U
 #define IVSHMEM_SHM_BAR	2U
 
+/* The device-specific registers of ivshmem device */
+#define	IVSHMEM_IRQ_MASK_REG	0x0U
+#define	IVSHMEM_IRQ_STA_REG	0x4U
+#define	IVSHMEM_IV_POS_REG	0x8U
+#define	IVSHMEM_DOORBELL_REG	0xcU
+
+struct ivshmem_device {
+	struct pci_vdev* pcidev;
+	union {
+		uint32_t data[4];
+		struct {
+			uint32_t irq_mask;
+			uint32_t irq_state;
+			uint32_t ivpos;
+			uint32_t doorbell;
+		} regs;
+	} mmio;
+};
+
 /* IVSHMEM_SHM_SIZE is provided by offline tool */
 static uint8_t ivshmem_base[IVSHMEM_SHM_SIZE] __aligned(PDE_SIZE);
+static struct ivshmem_device ivshmem_dev[IVSHMEM_DEV_NUM];
+static spinlock_t ivshmem_dev_lock = { .head = 0U, .tail = 0U, };
 
 void init_ivshmem_shared_memory()
 {
@@ -52,6 +73,57 @@ static struct ivshmem_shm_region *find_shm_region(const char *name)
 	return ((i < num) ? &mem_regions[i] : NULL);
 }
 
+/*
+ * @post vdev->priv_data != NULL
+ */
+static void create_ivshmem_device(struct pci_vdev *vdev)
+{
+	uint32_t i;
+
+	spinlock_obtain(&ivshmem_dev_lock);
+	for (i = 0U; i < IVSHMEM_DEV_NUM; i++) {
+		if (ivshmem_dev[i].pcidev == NULL) {
+			ivshmem_dev[i].pcidev = vdev;
+			vdev->priv_data = &ivshmem_dev[i];
+			break;
+		}
+	}
+	spinlock_release(&ivshmem_dev_lock);
+	ASSERT((i < IVSHMEM_DEV_NUM), "failed to find and set ivshmem device");
+}
+
+/*
+ * @pre vdev->priv_data != NULL
+ */
+static int32_t ivshmem_mmio_handler(struct io_request *io_req, void *data)
+{
+	struct mmio_request *mmio = &io_req->reqs.mmio;
+	struct pci_vdev *vdev = (struct pci_vdev *) data;
+	struct ivshmem_device *ivs_dev = (struct ivshmem_device *) vdev->priv_data;
+	uint64_t offset = mmio->address - vdev->vbars[IVSHMEM_MMIO_BAR].base_gpa;
+
+	if ((mmio->size == 4U) && ((offset & 0x3U) == 0U)) {
+		/*
+		 * IVSHMEM_IRQ_MASK_REG and IVSHMEM_IRQ_STA_REG are R/W registers
+		 * they are useless for ivshmem Rev.1.
+		 * IVSHMEM_IV_POS_REG is Read-Only register and IVSHMEM_DOORBELL_REG
+		 * is Write-Only register, they are used for interrupt.
+		 */
+		if (mmio->direction == REQUEST_READ) {
+			if (offset != IVSHMEM_DOORBELL_REG) {
+				mmio->value = ivs_dev->mmio.data[offset >> 2U];
+			} else {
+				mmio->value = 0UL;
+			}
+		} else {
+			if (offset != IVSHMEM_IV_POS_REG) {
+				ivs_dev->mmio.data[offset >> 2U] = mmio->value;
+			}
+		}
+	}
+	return 0;
+}
+
 static int32_t read_ivshmem_vdev_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	if (cfg_header_access(offset)) {
@@ -72,17 +144,27 @@ static void ivshmem_vbar_unmap(struct pci_vdev *vdev, uint32_t idx)
 
 	if ((idx == IVSHMEM_SHM_BAR) && (vbar->base_gpa != 0UL)) {
 		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, vbar->size);
+	} else if ((idx == IVSHMEM_MMIO_BAR) && (vbar->base_gpa != 0UL)) {
+		unregister_mmio_emulation_handler(vm, vbar->base_gpa, (vbar->base_gpa + vbar->size));
 	}
 }
 
+/*
+ * @pre vdev->priv_data != NULL
+ */
 static void ivshmem_vbar_map(struct pci_vdev *vdev, uint32_t idx)
 {
 	struct acrn_vm *vm = vpci2vm(vdev->vpci);
 	struct pci_vbar *vbar = &vdev->vbars[idx];
+	struct ivshmem_device *ivs_dev = (struct ivshmem_device *) vdev->priv_data;
 
 	if ((idx == IVSHMEM_SHM_BAR) && (vbar->base_hpa != INVALID_HPA) && (vbar->base_gpa != 0UL)) {
 		ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_hpa,
 				vbar->base_gpa, vbar->size, EPT_RD | EPT_WR | EPT_WB);
+	} else if ((idx == IVSHMEM_MMIO_BAR) && (vbar->base_gpa != 0UL)) {
+		(void)memset(&ivs_dev->mmio, 0U, sizeof(ivs_dev->mmio));
+		register_mmio_emulation_handler(vm, ivshmem_mmio_handler, vbar->base_gpa,
+				(vbar->base_gpa + vbar->size), vdev, false);
 	}
 }
 
@@ -144,6 +226,8 @@ static void init_ivshmem_bar(struct pci_vdev *vdev, uint32_t bar_idx)
 
 static void init_ivshmem_vdev(struct pci_vdev *vdev)
 {
+	create_ivshmem_device(vdev);
+
 	/* initialize ivshmem config */
 	pci_vdev_write_vcfg(vdev, PCIR_VENDOR, 2U, IVSHMEM_VENDOR_ID);
 	pci_vdev_write_vcfg(vdev, PCIR_DEVICE, 2U, IVSHMEM_DEVICE_ID);
@@ -158,8 +242,15 @@ static void init_ivshmem_vdev(struct pci_vdev *vdev)
 	vdev->user = vdev;
 }
 
+/*
+ * @pre vdev->priv_data != NULL
+ */
 static void deinit_ivshmem_vdev(struct pci_vdev *vdev)
 {
+	struct ivshmem_device *ivs_dev = (struct ivshmem_device *) vdev->priv_data;
+
+	ivs_dev->pcidev = NULL;
+	vdev->priv_data = NULL;
 	vdev->user = NULL;
 }
 
