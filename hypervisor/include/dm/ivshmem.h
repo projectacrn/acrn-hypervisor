@@ -14,6 +14,8 @@ struct ivshmem_shm_region {
 	uint64_t size;
 };
 
+extern const struct pci_vdev_ops vpci_ivshmem_ops;
+
 /**
  * @brief Initialize ivshmem shared memory regions
  *
