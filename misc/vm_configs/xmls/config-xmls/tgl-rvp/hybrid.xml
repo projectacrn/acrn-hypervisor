@@ -31,8 +31,8 @@
         <HV_RAM_START desc="2M-aligned Start physical address of the RAM region used by the hypervisor."></HV_RAM_START>
         <LOW_RAM_SIZE desc="Size of the low RAM region">0x00010000</LOW_RAM_SIZE>
         <UOS_RAM_SIZE desc="Size of the User OS (UOS) RAM.">0x200000000</UOS_RAM_SIZE>
-        <SOS_RAM_SIZE desc="Size of the Service OS (SOS) RAM.">0x400000000</SOS_RAM_SIZE>
-        <PLATFORM_RAM_SIZE desc="Size of the physical platform RAM">0x400000000</PLATFORM_RAM_SIZE>
+        <SOS_RAM_SIZE desc="Size of the Service OS (SOS) RAM.">0x440000000</SOS_RAM_SIZE>
+        <PLATFORM_RAM_SIZE desc="Size of the physical platform RAM">0x440000000</PLATFORM_RAM_SIZE>
     </MEMORY>
 
     <CAPACITIES desc="Capacity limits for static assigned data struct or maximum supported resouce">
