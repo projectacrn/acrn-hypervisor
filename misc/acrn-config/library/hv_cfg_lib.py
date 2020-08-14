@@ -182,7 +182,7 @@ def cat_max_mask_check(cat_mask_list, feature, cat_str, max_mask_str):
     cat_max_mask_settings_len = len(cat_mask_list)
     if clos_max_set_entry != cat_max_mask_settings_len:
         key = 'hv,{},{},{}'.format(feature, cat_str, max_mask_str)
-        ERR_LIST[key] = "Number of Cache mask entries should be equal to MAX_CACHE_CLOS_NUM_ENTRIES={}".format(clos_max_set_entry)
+        ERR_LIST[key] = "Number of Cache mask entries should be equal to MAX_PLATFORM_CLOS_NUM={}".format(clos_max_set_entry)
         return
 
     clos_max_mask_str = clos_max_mask_list[0].strip('"').strip("'")
@@ -212,7 +212,7 @@ def mba_delay_check(mba_delay_list, feature, mba_str, max_mask_str):
     mba_delay_settings_len = len(mba_delay_list)
     if clos_max != mba_delay_settings_len:
         key = 'hv,{},{},{}'.format(feature, mba_str, max_mask_str)
-        ERR_LIST[key] = "Number of MBA delay entries should be equal to MAX_MBA_CLOS_NUM_ENTRIES={}".format(clos_max)
+        ERR_LIST[key] = "Number of MBA delay entries should be equal to MAX_PLATFORM_CLOS_NUM={}".format(clos_max)
         return
 
     mba_idx = res_info.index("MBA")

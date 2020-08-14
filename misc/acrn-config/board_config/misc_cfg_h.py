@@ -220,13 +220,6 @@ def generate_file(config):
         print("", file=config)
 
     if board_cfg_lib.is_rdt_supported():
-        print("", file=config)
-        common_clos_max = board_cfg_lib.get_common_clos_max()
-        max_cache_clos_entries = common_clos_max
-        if board_cfg_lib.is_cdp_enabled():
-            max_cache_clos_entries = 2 * common_clos_max
-        print("#define MAX_CACHE_CLOS_NUM_ENTRIES\t{}U".format(max_cache_clos_entries), file=config)
-
         (rdt_resources, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
         cat_mask_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "CLOS_MASK")
         mba_delay_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "MBA_DELAY")
