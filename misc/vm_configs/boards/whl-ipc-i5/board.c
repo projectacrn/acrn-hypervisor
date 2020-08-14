@@ -74,7 +74,7 @@ struct dmar_info plat_dmar_info = {
 #ifdef CONFIG_RDT_ENABLED
 struct platform_clos_info platform_l2_clos_array[MAX_PLATFORM_CLOS_NUM];
 struct platform_clos_info platform_l3_clos_array[MAX_PLATFORM_CLOS_NUM];
-struct platform_clos_info platform_mba_clos_array[MAX_MBA_CLOS_NUM_ENTRIES];
+struct platform_clos_info platform_mba_clos_array[MAX_PLATFORM_CLOS_NUM];
 #endif
 
 static const struct cpu_cx_data board_cpu_cx[3] = {
