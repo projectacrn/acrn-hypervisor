@@ -139,6 +139,8 @@ def gen_rdt_res(config):
 
     cat_mask_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "CLOS_MASK")
     mba_delay_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "MBA_DELAY")
+    # TODO: Since use the MAX_PLATFORM_CLOS_NUM for L2/L3/MBA, so use the minimal number of them
+    common_clos_max = min(len(cat_mask_list), len(mba_delay_list))
 
     if common_clos_max > MSR_IA32_L2_MASK_END - MSR_IA32_L2_MASK_BASE or\
         common_clos_max > MSR_IA32_L3_MASK_END - MSR_IA32_L3_MASK_BASE:
@@ -149,27 +151,27 @@ def gen_rdt_res(config):
     if len(rdt_resources) == 0 or common_clos_max == 0:
         print("struct platform_clos_info platform_{0}_clos_array[MAX_PLATFORM_CLOS_NUM];".format("l2"), file=config)
         print("struct platform_clos_info platform_{0}_clos_array[MAX_PLATFORM_CLOS_NUM];".format("l3"), file=config)
-        print("struct platform_clos_info platform_{0}_clos_array[MAX_MBA_CLOS_NUM_ENTRIES];".format("mba"), file=config)
+        print("struct platform_clos_info platform_{0}_clos_array[MAX_PLATFORM_CLOS_NUM];".format("mba"), file=config)
     else:
         for idx, rdt_res in enumerate(rdt_resources):
             if rdt_res == "L2":
                 rdt_res_str = "l2"
                 print("struct platform_clos_info platform_{0}_clos_array[{1}] = {{".format(rdt_res_str,
-                      "MAX_CACHE_CLOS_NUM_ENTRIES"), file=config)
+                      "MAX_PLATFORM_CLOS_NUM"), file=config)
                 populate_clos_mask_msr(rdt_res, cat_mask_list, config)
                 print("};\n", file=config)
                 res_present[RDT.L2.value] = 1
             elif rdt_res == "L3":
                 rdt_res_str = "l3"
                 print("struct platform_clos_info platform_{0}_clos_array[{1}] = {{".format(rdt_res_str,
-                      "MAX_CACHE_CLOS_NUM_ENTRIES"), file=config)
+                      "MAX_PLATFORM_CLOS_NUM"), file=config)
                 populate_clos_mask_msr(rdt_res, cat_mask_list, config)
                 print("};\n", file=config)
                 res_present[RDT.L3.value] = 1
             elif rdt_res == "MBA":
                 rdt_res_str = "mba"
                 print("struct platform_clos_info platform_{0}_clos_array[{1}] = {{".format(rdt_res_str,
-                      "MAX_MBA_CLOS_NUM_ENTRIES"), file=config)
+                      "MAX_PLATFORM_CLOS_NUM"), file=config)
                 err_dic = populate_mba_delay_mask(rdt_res, mba_delay_list, config)
                 print("};\n", file=config)
                 res_present[RDT.MBA.value] = 1
@@ -182,7 +184,7 @@ def gen_rdt_res(config):
         if res_present[RDT.L3.value] == 0:
             print("struct platform_clos_info platform_{0}_clos_array[{1}];".format("l3", "MAX_PLATFORM_CLOS_NUM"), file=config)
         if res_present[RDT.MBA.value] == 0:
-            print("struct platform_clos_info platform_{0}_clos_array[{1}];".format("mba", "MAX_MBA_CLOS_NUM_ENTRIES"), file=config)
+            print("struct platform_clos_info platform_{0}_clos_array[{1}];".format("mba", "MAX_PLATFORM_CLOS_NUM"), file=config)
 
     print("#endif", file=config)
 
