@@ -139,6 +139,7 @@ struct pci_vdev {
 	struct pci_vdev *parent_user;
 	struct pci_vdev *user;	/* NULL means this device is not used or is a zombie VF */
 	struct hlist_node link;
+	void *priv_data;
 };
 
 union pci_cfg_addr_reg {
