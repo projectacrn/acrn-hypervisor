@@ -985,7 +985,7 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, struct acrn_vm *target_vm,
 {
 	int32_t ret = -1;
 
-	if (!is_poweroff_vm(target_vm)) {
+	if (is_created_vm(target_vm)) {
 		struct hc_ptdev_irq irq;
 
 		if (copy_from_gpa(vm, &irq, param2, sizeof(irq)) == 0) {
@@ -1036,7 +1036,7 @@ int32_t hcall_reset_ptdev_intr_info(struct acrn_vm *vm, struct acrn_vm *target_v
 {
 	int32_t ret = -1;
 
-	if (!is_poweroff_vm(target_vm)) {
+	if (is_created_vm(target_vm) || is_paused_vm(target_vm)) {
 		struct hc_ptdev_irq irq;
 
 		if (copy_from_gpa(vm, &irq, param2, sizeof(irq)) == 0) {
@@ -1087,7 +1087,7 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, struct acrn_vm *target_vm, ui
 	int32_t ret = -1;
 	uint64_t cmd = param1;
 
-	if (!is_poweroff_vm(target_vm)) {
+	if (is_created_vm(target_vm)) {
 		switch (cmd & PMCMD_TYPE_MASK) {
 		case PMCMD_GET_PX_CNT: {
 			if (target_vm->pm.px_cnt != 0U) {
