@@ -23,7 +23,7 @@ b) Mixed-use of ## or # operators shall not be allowed.
 Compliant example::
 
     #define CONCAT(x, y) x ## y
-
+    
     uint32_t ab = 32U;
     printf("%d \n", CONCAT(a, b));
 
@@ -32,7 +32,7 @@ Compliant example::
    Non-compliant example::
 
        #define CONCAT(x, y, z) x ## y ## z
-
+       
        uint32_t abc = 32U;
        printf("%d \n", CONCAT(a, b, c));
 
@@ -1856,6 +1856,39 @@ Compliant example::
        uint32_t showcase = 0xff000000U;
 
 
+C-EP-23: Pointer arithmetic shall be used with restrictions
+===========================================================
+
+Pointer arithmetic shall be performed on an array if it is possible. If not, the
+data type and the value range of this pointer shall be checked before access to
+ensure that the pointer reference is within the correct address space.
+
+Compliant example::
+
+    #define SHOWCASE_SIZE 32U
+    
+    uint32_t showcase_arr[SHOWCASE_SIZE];
+    uint32_t i;
+    
+    for (i = 0U; i < SHOWCASE_SIZE; i++) {
+            showcase_arr[i] = i;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       #define SHOWCASE_SIZE 32U
+       
+       uint32_t *showcase_ptr;
+       uint32_t i;
+       
+       for (i = 0U; i < SHOWCASE_SIZE; i++) {
+               *showcase_ptr = i;
+               showcase_ptr = showcase_ptr + 1U;
+       }
+
+
 
 Types
 *****
@@ -3364,8 +3397,8 @@ The data structure types include struct, union, and enum.
 This rule applies to the data structure with all the following properties:
 
 a) The data structure is used by multiple modules;
-b) The corresponding resource is exposed to external components, such as
-   the Service VM or a User VM;
+b) The corresponding resource is exposed to external components, such as the
+   Service VM or a User VM;
 c) The name meaning is simplistic or common, such as vcpu or vm.
 
 Compliant example::
@@ -3609,43 +3642,44 @@ bytes, long is 8 bytes, and long long is not used.
 Language Extensions
 *******************
 
-Refer to the `GCC 7.3 Manual, Section 6 Extensions to the C Language Family <https://gcc.gnu.org/onlinedocs/gcc-7.3.0/gcc/C-Extensions.html#C-Extensions/>`_.
+Refer to the `GCC 8.3 Manual, Section 6 Extensions to the C Language Family <https://gcc.gnu.org/onlinedocs/gcc-8.3.0/gcc/C-Extensions.html#C-Extensions/>`_.
+
 
 C-LE-01: Use of inline Assembly language in C Code is allowed
 =============================================================
 
-This feature refers to section 6.45 in GCC 7.3 Manual.
+This feature refers to section 6.45 in GCC 8.3 Manual.
 
 C-LE-02: Use of builtin-type '__builtin_va_list' is allowed
 ===========================================================
 
-This feature refers to section 6.20 in GCC 7.3 Manual.
+This feature refers to section 6.20 in GCC 8.3 Manual.
 
 C-LE-03: Use of extended type attribute is allowed
 ==================================================
 
 This rule applies to the following type attributes:
 
-a) 'aligned', refers to section 6.33.1 in GCC 7.3 Manual.
-b) 'packed', refers to section 6.33.1 in GCC 7.3 Manual.
-c) 'unused', refers to section 6.33.1 in GCC 7.3 Manual.
-d) 'section', refers to section 6.32.1 in GCC 7.3 Manual.
+a) 'aligned', refers to section 6.33.1 in GCC 8.3 Manual.
+b) 'packed', refers to section 6.33.1 in GCC 8.3 Manual.
+c) 'unused', refers to section 6.33.1 in GCC 8.3 Manual.
+d) 'section', refers to section 6.32.1 in GCC 8.3 Manual.
 
 C-LE-04: Use of extended builtin-function is allowed
 ====================================================
 
 This rule applies to the following builtin-functions:
 
-a) '__builtin_va_arg', refers to section 6.20 in GCC 7.3 Manual.
-b) '__builtin_va_start', refers to section 6.20 in GCC 7.3 Manual.
-c) '__builtin_va_end', refers to section 6.20 in GCC 7.3 Manual.
-d) '__builtin_offsetof', refers to section 6.51 in GCC 7.3 Manual.
+a) '__builtin_va_arg', refers to section 6.20 in GCC 8.3 Manual.
+b) '__builtin_va_start', refers to section 6.20 in GCC 8.3 Manual.
+c) '__builtin_va_end', refers to section 6.20 in GCC 8.3 Manual.
+d) '__builtin_offsetof', refers to section 6.51 in GCC 8.3 Manual.
 
 C-LE-05: Use of extended designated initializers is allowed
 ===========================================================
 
 This rule applies to the following designated initializer: writing '[first ...
 last] = value' to initialize a range of elements to the same value, refers to
-section 6.27 in GCC 7.3 Manual.
+section 6.27 in GCC 8.3 Manual.
 
 
