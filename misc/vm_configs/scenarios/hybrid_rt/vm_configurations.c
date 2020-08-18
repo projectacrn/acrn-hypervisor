@@ -8,6 +8,7 @@
 #include <pci_dev.h>
 
 extern struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM];
+extern struct acrn_vm_pci_dev_config vm2_pci_devs[VM2_CONFIG_PCI_DEV_NUM];
 
 struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	{	/* VM0 */
@@ -84,6 +85,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM2 */
 		CONFIG_POST_STD_VM(1),
+		/* The PCI device configuration is only for in-hypervisor vPCI devices. */
+		.pci_dev_num = VM2_CONFIG_PCI_DEV_NUM,
+		.pci_devs = vm2_pci_devs,
 		.cpu_affinity = VM2_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,

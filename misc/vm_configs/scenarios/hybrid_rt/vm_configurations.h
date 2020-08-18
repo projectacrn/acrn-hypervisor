@@ -27,7 +27,7 @@
 #define VM0_CONFIG_MEM_SIZE             0x40000000UL
 #define VM0_CONFIG_MEM_START_HPA2       0x0UL
 #define VM0_CONFIG_MEM_SIZE_HPA2        0x0UL
-#define VM0_CONFIG_PCI_DEV_NUM          3U
+#define VM0_CONFIG_PCI_DEV_NUM          4U
 
 /* SOS_VM == VM1 */
 #define SOS_VM_BOOTARGS			SOS_ROOTFS	\
@@ -38,5 +38,6 @@
 #define SOS_VM_CONFIG_CPU_AFFINITY      (AFFINITY_CPU(0U) | AFFINITY_CPU(1U))
 
 #define VM2_CONFIG_CPU_AFFINITY         (AFFINITY_CPU(1U))
+#define VM2_CONFIG_PCI_DEV_NUM          1U
 
 #endif /* VM_CONFIGURATIONS_H */

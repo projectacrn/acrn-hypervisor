@@ -140,10 +140,14 @@ struct acrn_vm_os_config {
 	uint64_t kernel_ramdisk_addr;
 } __aligned(8);
 
+/* the vbdf is assgined by device model */
+#define UNASSIGNED_VBDF        0xFFFFU
+
 struct acrn_vm_pci_dev_config {
 	uint32_t emu_type;				/* the type how the device is emulated. */
 	union pci_bdf vbdf;				/* virtual BDF of PCI device */
 	union pci_bdf pbdf;				/* physical BDF of PCI device */
+	char shm_region_name[32];			/* TODO: combine pbdf and shm_region_name into a union member */
 	uint64_t vbar_base[PCI_BAR_COUNT];		/* vbar base address of PCI device */
 	struct pci_pdev *pdev;				/* the physical PCI device if it's a PT device */
 	const struct pci_vdev_ops *vdev_ops;		/* operations for PCI CFG read/write */
