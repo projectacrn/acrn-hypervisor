@@ -653,7 +653,10 @@ static void vpci_init_vdevs(struct acrn_vm *vm)
 	const struct acrn_vm_config *vm_config = get_vm_config(vpci2vm(vpci)->vm_id);
 
 	for (idx = 0U; idx < vm_config->pci_dev_num; idx++) {
-		(void)vpci_init_vdev(vpci, &vm_config->pci_devs[idx], NULL);
+		/* the vdev whose vBDF is unassigned will be created by hypercall */
+		if ((!is_postlaunched_vm(vm)) || (vm_config->pci_devs[idx].vbdf.value != UNASSIGNED_VBDF)) {
+			(void)vpci_init_vdev(vpci, &vm_config->pci_devs[idx], NULL);
+		}
 	}
 }
 
