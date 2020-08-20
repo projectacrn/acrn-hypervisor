@@ -11,6 +11,9 @@
 	<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
 		<pcpu_id></pcpu_id>
 	</cpu_affinity>
+	<shm_regions desc="List of shared memrory regions for inter-VM communication.">
+		<shm_region desc="configure the shm regions for current VM, formated as hv:/shm_region_0,2097152"></shm_region>
+	</shm_regions>
 
 	<passthrough_devices>
 		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
@@ -47,6 +50,9 @@
 	<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
 		<pcpu_id></pcpu_id>
 	</cpu_affinity>
+	<shm_regions desc="List of shared memrory regions for inter-VM communication.">
+		<shm_region desc="configure the shm regions for current VM, formated as hv:/shm_region_0,2097152"></shm_region>
+	</shm_regions>
 
 	<passthrough_devices>
 		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
@@ -82,6 +88,9 @@
         <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
             <pcpu_id />
         </cpu_affinity>
+        <shm_regions desc="List of shared memrory regions for inter-VM communication.">
+            <shm_region desc="configure the shm regions for current VM, formated as hv:/shm_region_0,2097152"></shm_region>
+        </shm_regions>
         <passthrough_devices>
             <usb_xdci desc="vm usb_xdci device" />
             <audio desc="vm audio device" />
@@ -115,6 +124,9 @@
         <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
             <pcpu_id />
         </cpu_affinity>
+        <shm_regions desc="List of shared memrory regions for inter-VM communication.">
+            <shm_region desc="configure the shm regions for current VM, formated as hv:/shm_region_0,2097152"></shm_region>
+        </shm_regions>
         <passthrough_devices>
             <usb_xdci desc="vm usb_xdci device" />
             <audio desc="vm audio device" />
@@ -148,6 +160,9 @@
         <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
             <pcpu_id />
         </cpu_affinity>
+        <shm_regions desc="List of shared memrory regions for inter-VM communication.">
+            <shm_region desc="configure the shm regions for current VM, formated as hv:/shm_region_0,2097152"></shm_region>
+        </shm_regions>
         <passthrough_devices>
             <usb_xdci desc="vm usb_xdci device" />
             <audio desc="vm audio device" />
@@ -181,6 +196,9 @@
         <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
             <pcpu_id />
         </cpu_affinity>
+	    <shm_regions desc="List of shared memrory regions for inter-VM communication.">
+		    <shm_region desc="configure the shm regions for current VM, formated as hv:/shm_region_0,2097152"></shm_region>
+	    </shm_regions>
         <passthrough_devices>
             <usb_xdci desc="vm usb_xdci device" />
             <audio desc="vm audio device" />
