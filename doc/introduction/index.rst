@@ -101,6 +101,65 @@ folder in the source code. XML examples for some platforms can also be found und
 The :ref:`acrn_configuration_tool` tutorial explains how to use the ACRN
 Configuration tool to create your own scenario or modify an existing one.
 
+Industrial Workload Consolidation
+=================================
+
+.. figure:: images/ACRN-V2-industrial-scenario.png
+   :width: 600px
+   :align: center
+   :name: V2-industrial-scenario
+
+   ACRN Industrial Workload Consolidation scenario
+
+Supporting Workload consolidation for industrial applications is even
+more challenging. The ACRN hypervisor needs to run different workloads with no
+interference, increase security functions that safeguard the system, run hard
+real-time sensitive workloads together with general computing workloads, and
+conduct data analytics for timely actions and predictive maintenance.
+
+Virtualization is especially important in industrial environments
+because of device and application longevity. Virtualization enables
+factories to modernize their control system hardware by using VMs to run
+older control systems and operating systems far beyond their intended
+retirement dates.
+
+As shown in :numref:`V2-industrial-scenario`, the Service VM can start a number
+of post-launched User VMs and can provide device sharing capabilities to these.
+In total, up to 7 post-launched User VMs can be started:
+
+- 5 regular User VMs,
+- One `Kata Containers <https://katacontainers.io>`_ User VM (see
+  :ref:`run-kata-containers` for more details), and
+- One Real-Time VM (RTVM).
+
+In this example, one post-launched User VM provides Human Machine Interface
+(HMI) capability, another provides Artificial Intelligence (AI) capability, some
+compute function is run the Kata Container and the RTVM runs the soft
+Programmable Logic Controller (PLC) that requires hard real-time
+characteristics.
+
+:numref:`V2-industrial-scenario` shows ACRN's block diagram for an
+Industrial usage scenario:
+
+- ACRN boots from the SoC platform, and supports firmware such as the
+  UEFI BIOS.
+- The ACRN hypervisor can create VMs that run different OSes:
+
+  - a Service VM such as Ubuntu*,
+  - a Human Machine Interface (HMI) application OS such as Windows*,
+  - an Artificial Intelligence (AI) application on Linux*,
+  - a Kata Container application, and
+  - a real-time control OS such as Zephyr*, VxWorks* or RT-Linux*.
+
+- The Service VM, provides device sharing functionalities, such as
+  disk and network mediation, to other virtual machines.
+  It can also run an orchestration agent allowing User VM orchestration
+  with tools such as Kubernetes*.
+- The HMI Application OS can be Windows* or Linux*. Windows is dominant
+  in Industrial HMI environments.
+- ACRN can support a soft Real-time OS such as preempt-rt Linux for
+  soft-PLC control, or a hard Real-time OS that offers less jitter.
+
 Automotive Application Scenarios
 ================================
 
@@ -167,65 +226,6 @@ A block diagram of ACRN's SDC usage scenario is shown in
 - Multiple operating systems are supported by one SoC through efficient
   virtualization.
 
-Industrial Workload Consolidation
-=================================
-
-.. figure:: images/ACRN-V2-industrial-scenario.png
-   :width: 600px
-   :align: center
-   :name: V2-industrial-scenario
-
-   ACRN Industrial Workload Consolidation scenario
-
-Supporting Workload consolidation for industrial applications is even
-more challenging. The ACRN hypervisor needs to run different workloads with no
-interference, increase security functions that safeguard the system, run hard
-real-time sensitive workloads together with general computing workloads, and
-conduct data analytics for timely actions and predictive maintenance.
-
-Virtualization is especially important in industrial environments
-because of device and application longevity. Virtualization enables
-factories to modernize their control system hardware by using VMs to run
-older control systems and operating systems far beyond their intended
-retirement dates.
-
-As shown in :numref:`V2-industrial-scenario`, the Service VM can start a number
-of post-launched User VMs and can provide device sharing capabilities to these.
-In total, up to 7 post-launched User VMs can be started:
-
-- 5 regular User VMs,
-- One `Kata Containers <https://katacontainers.io>`_ User VM (see
-  :ref:`run-kata-containers` for more details), and
-- One Real-Time VM (RTVM).
-
-In this example, one post-launched User VM provides Human Machine Interface
-(HMI) capability, another provides Artificial Intelligence (AI) capability, some
-compute function is run the Kata Container and the RTVM runs the soft
-Programmable Logic Controller (PLC) that requires hard real-time
-characteristics.
-
-:numref:`V2-industrial-scenario` shows ACRN's block diagram for an
-Industrial usage scenario:
-
-- ACRN boots from the SoC platform, and supports firmware such as the
-  UEFI BIOS.
-- The ACRN hypervisor can create VMs that run different OSes:
-
-  - a Service VM such as Ubuntu*,
-  - a Human Machine Interface (HMI) application OS such as Windows*,
-  - an Artificial Intelligence (AI) application on Linux*,
-  - a Kata Container application, and
-  - a real-time control OS such as Zephyr*, VxWorks* or RT-Linux*.
-
-- The Service VM, provides device sharing functionalities, such as
-  disk and network mediation, to other virtual machines.
-  It can also run an orchestration agent allowing User VM orchestration
-  with tools such as Kubernetes*.
-- The HMI Application OS can be Windows* or Linux*. Windows is dominant
-  in Industrial HMI environments.
-- ACRN can support a soft Real-time OS such as preempt-rt Linux for
-  soft-PLC control, or a hard Real-time OS that offers less jitter.
-
 Best Known Configurations
 *************************
 
@@ -261,6 +261,13 @@ application scenario needs.
    * - Hybrid Usage Config
      - Hybrid
      - Pre-launched VM (Safety VM)
+     - Service VM
+     - Post-launched VM
+     -
+
+   * - Hybrid Real-Time Usage Config
+     - Hybrid RT
+     - Pre-launched VM (Real-Time VM)
      - Service VM
      - Post-launched VM
      -
@@ -318,6 +325,20 @@ non-real-time tasks.
    :name: ACRN-Hybrid
 
    Hybrid scenario
+
+Hybrid Real-Time (RT) scenario
+==============================
+
+In this Hybrid Real-Time (RT) scenario, a pre-launched RTVM is started by the
+hypervisor. The Service VM runs a post-launched User VM that runs non-safety or
+non-real-time tasks.
+
+.. figure:: images/ACRN-Hybrid-RT.png
+   :width: 600px
+   :align: center
+   :name: ACRN-Hybrid-RT
+
+   Hybrid RT scenario
 
 Logical Partition scenario
 ==========================
