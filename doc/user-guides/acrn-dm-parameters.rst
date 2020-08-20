@@ -93,7 +93,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
          mediator and UART DM.
        - ``lpc_port`` is com1 or com2. IOC mediator needs one unassigned lpc
          port for data transfer between User OS and Service OS.
-       - ``wakeup_reason`` is IOC mediator boot up reason, where each bit represents
+       - ``wakeup_reason`` is IOC mediator boot reason, where each bit represents
          one wakeup reason.
 
          Currently the wakeup reason bits supported by IOC firmware are:

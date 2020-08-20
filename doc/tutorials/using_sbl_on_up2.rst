@@ -299,4 +299,4 @@ Run the ``launch_uos.sh`` script to launch the User VM:
    $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/launch_uos.sh
    $ sudo ./launch_uos.sh -V 1
 
-**Congratulations**, you are now watching the User VM booting up!
+**Congratulations**, you are now watching the User VM booting!

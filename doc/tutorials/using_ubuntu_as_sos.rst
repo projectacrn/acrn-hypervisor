@@ -316,14 +316,14 @@ You are now all set to start the User VM:
 
    sudo /usr/share/acrn/samples/nuc/launch_uos.sh
 
-**Congratulations**, you are now watching the User VM booting up!
+**Congratulations**, you are now watching the User VM booting!
 
 .. _enable-network-sharing-user-vm:
 
 Enable network sharing
 **********************
 
-After booting up the Service VM and User VM, network sharing must be enabled
+After booting the Service VM and User VM, network sharing must be enabled
 to give network access to the Service VM by enabling the TAP and networking
 bridge in the Service VM. The following script example shows how to set
 this up (verified in Ubuntu 16.04 and 18.04 as the Service VM).

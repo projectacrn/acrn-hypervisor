@@ -3,37 +3,49 @@
 Run Debian as the Service VM
 ############################
 
-The `Debian Project <https://www.debian.org/>`_ is an association of individuals who have made common cause to create a `free <https://www.debian.org/intro/free>`_ operating system. The `latest stable Debian release <https://www.debian.org/releases/stable/>`_ is 10.0.
+The `Debian Project <https://www.debian.org/>`_ is an association of
+individuals who have made common cause to create a `free
+<https://www.debian.org/intro/free>`_ operating system. The `latest
+stable Debian release <https://www.debian.org/releases/stable/>`_ is
+10.0.
 
-This tutorial describes how to use Debian 10.0 instead of `Clear Linux OS <https://clearlinux.org>`_ as the Service VM with the ACRN hypervisor.
+This tutorial describes how to use Debian 10.0 instead of `Clear Linux
+OS <https://clearlinux.org>`_ as the Service VM with the ACRN
+hypervisor.
 
 Prerequisites
 *************
 
 Use the following instructions to install Debian.
 
--  Navigate to `Debian 10 iso <https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/>`_. Select and download **debian-10.1.0-amd64-netinst.iso** (scroll down to the bottom of the page).
--  Follow the `Debian installation guide <https://www.debian.org/releases/stable/amd64/index.en.html>`_ to install it on your NUC; we are using an Intel Kaby Lake NUC (NUC7i7DNHE) in this tutorial.
--  :ref:`install-build-tools-dependencies` for ACRN.
--  Update to the latest iASL (required by the ACRN Device Model):
+- Navigate to `Debian 10 iso
+  <https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/>`_.
+  Select and download **debian-10.1.0-amd64-netinst.iso** (scroll down to
+  the bottom of the page).
+- Follow the `Debian installation guide
+  <https://www.debian.org/releases/stable/amd64/index.en.html>`_ to
+  install it on your NUC; we are using an Intel Kaby Lake NUC (NUC7i7DNHE)
+  in this tutorial.
+- :ref:`install-build-tools-dependencies` for ACRN.
+- Update to the latest iASL (required by the ACRN Device Model):
 
-   .. code-block:: bash
+  .. code-block:: bash
 
-      $ sudo apt update
-      $ sudo apt install m4 bison flex zlib1g-dev
-      $ cd ~
-      $ wget https://acpica.org/sites/acpica/files/acpica-unix-20190816.tar.gz
-      $ tar zxvf acpica-unix-20190816.tar.gz
-      $ cd acpica-unix-20190816
-      $ make clean && make iasl
-      $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
+     $ sudo apt update
+     $ sudo apt install m4 bison flex zlib1g-dev
+     $ cd ~
+     $ wget https://acpica.org/sites/acpica/files/acpica-unix-20190816.tar.gz
+     $ tar zxvf acpica-unix-20190816.tar.gz
+     $ cd acpica-unix-20190816
+     $ make clean && make iasl
+     $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
 
 Validated Versions
 ******************
 
--  **Debian version:** 10.0 (buster)
--  **ACRN hypervisor tag:** acrn-2019w35.1-140000p
--  **Debian Service VM Kernel version:** 4.19.68-84.iot-lts2018-sos
+- **Debian version:** 10.0 (buster)
+- **ACRN hypervisor tag:** acrn-2019w35.1-140000p
+- **Debian Service VM Kernel version:** 4.19.68-84.iot-lts2018-sos
 
 Install ACRN on the Debian VM
 *****************************
@@ -55,7 +67,12 @@ Install ACRN on the Debian VM
       $ sudo make install
 
 #. Install the hypervisor.
-   The ACRN Device Model and tools were installed as part of a previous step. However, make install does not install the hypervisor (acrn.efi) on your EFI System Partition (ESP), nor does it configure your EFI firmware to boot it automatically. Follow the steps below to perform these operations and complete the ACRN installation. Note that we are using a SATA disk in this section.
+   The ACRN Device Model and tools were installed as part of a previous
+   step. However, make install does not install the hypervisor (acrn.efi)
+   on your EFI System Partition (ESP), nor does it configure your EFI
+   firmware to boot it automatically. Follow the steps below to perform
+   these operations and complete the ACRN installation. Note that we are
+   using a SATA disk in this section.
 
    a. Add the ACRN hypervisor (as the root user):
 
@@ -106,7 +123,9 @@ Install ACRN on the Debian VM
          $ sudo update-grub
          $ sudo reboot
 
-      You should see the Grub menu with the new "ACRN Debian Service VM" entry. Select it and proceed to booting the platform. The system will start the Debian Desktop and you can now log in (as before).
+      You should see the Grub menu with the new "ACRN Debian Service VM"
+      entry. Select it and proceed to booting the platform. The system will
+      start the Debian Desktop and you can now log in (as before).
 
 #. Log in to the Debian Service VM and check the ACRN status:
 

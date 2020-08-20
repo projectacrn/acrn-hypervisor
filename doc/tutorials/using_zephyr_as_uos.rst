@@ -111,7 +111,7 @@ Steps for Using Zephyr as User VM
 
       $ sudo ./launch_zephyr.sh
 
-   Then Zephyr will boot up automatically. You will see a console message from the hello_world sample application:
+   Then Zephyr will boot automatically. You will see a console message from the hello_world sample application:
 
    .. code-block:: console
 

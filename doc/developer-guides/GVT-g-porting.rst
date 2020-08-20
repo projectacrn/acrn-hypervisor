@@ -108,7 +108,7 @@ PVINFO, GTT, DISPLAY, and Execlists, and calls back to the AcrnGT
 module through the :ref:`MPT_interface` ``attach_vgpu``. Then, the
 AcrnGT module sets up an I/O request server and asks to trap the PCI
 configure space of the vGPU (virtual device 0:2:0) via VHM's APIs.
-Finally, the AcrnGT module launches a AcrnGT emulation thread to
+Finally, the AcrnGT module launches an AcrnGT emulation thread to
 listen to I/O trap notifications from HVM and ACRN hypervisor.
 
 vGPU destroy scenario

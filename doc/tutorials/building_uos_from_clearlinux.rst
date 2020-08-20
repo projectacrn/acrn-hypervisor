@@ -155,4 +155,4 @@ Start the User VM
 
       $ sudo /usr/share/acrn/samples/nuc/launch_uos.sh
 
-   You are now watching the User OS booting up!
+   You are now watching the User OS booting!

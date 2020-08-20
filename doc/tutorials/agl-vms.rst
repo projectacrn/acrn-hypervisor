@@ -161,7 +161,7 @@ Service OS
 
 #. Reboot the system, choose **ACRN Hypervisor**, and launch the Clear Linux OS
    Service VM. If the EFI boot order is not right, use :kbd:`F10`
-   on boot up to enter the EFI menu and choose **ACRN Hypervisor**.
+   on boot to enter the EFI menu and choose **ACRN Hypervisor**.
 
 
 #. Install the graphics UI if necessary. Use only one of the two

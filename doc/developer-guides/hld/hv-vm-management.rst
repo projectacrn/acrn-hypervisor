@@ -54,10 +54,9 @@ management. Please refer to ACRN power management design for more details.
 Post-launched User VMs
 ======================
 
-DM is taking control of post-launched User VMs' state transition after Service VM
-boot up, and it calls VM APIs through hypercalls.
+DM takes control of post-launched User VMs' state transition after the Service VM
+boots, by calling VM APIs through hypercalls.
 
-Service VM user level service like Life-Cycle-Service and tool like Acrnd may work
-together with DM to launch or stop a User VM. Please refer to ACRN tool
-introduction for more details.
-
+Service VM user level service such as Life-Cycle-Service and tools such
+as Acrnd may work together with DM to launch or stop a User VM. Please
+refer to ACRN tool introduction for more details.

@@ -69,7 +69,7 @@ As shown in the above figure, here are some details about the Trusty boot flow p
    #. Resume to Secure World
 #. Trusty
 
-   a. Booting up
+   a. Booting
    #. Call ``hcall_world_switch`` to switch back to Normal World if boot completed
 #. ACRN (``hcall_world_switch``)
 

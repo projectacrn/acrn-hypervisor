@@ -62,7 +62,7 @@ supports the User VM network.
 
 How to use OVS bridge
 *********************
-#. Disable acrn network configuration::
+#. Disable the ACRN network configuration::
 
    # cd /usr/lib/systemd/network/
    # mv 50-acrn.network 50-acrn.network_bak
@@ -106,12 +106,13 @@ How to use OVS bridge
 Example for VLAN network based on OVS in ACRN
 *********************************************
 We will use the OVS bridge VLAN feature to support network isolation
-between VMs. :numref:`ovs-example1` shows an example with four VMs in two hosts,
-with the hosts directly connected by a network cable. The VMs are interconnected
-through statically configured IP addresses, and use VLAN id to put VM1 of
-HOST1 and VM1 of HOST2 into a VLAN. Similarly, VM2 of HOST1 and VM2 of
-HOST2 are put into a VLAN. In this configuration, the VM1s can communicate with each other,
-and VM2s can directly communicate with each other, but VM1s and VM2s cannot connect.
+between VMs. :numref:`ovs-example1` shows an example with four VMs in
+two hosts, with the hosts directly connected by a network cable. The VMs
+are interconnected through statically configured IP addresses, and use
+VLAN id to put VM1 of HOST1 and VM1 of HOST2 into a VLAN. Similarly, VM2
+of HOST1 and VM2 of HOST2 are put into a VLAN. In this configuration,
+the VM1s can communicate with each other, and VM2s can directly
+communicate with each other, but VM1s and VM2s cannot connect.
 
 .. figure:: images/example-of-OVS-usage.png
    :align: center
@@ -135,7 +136,7 @@ Follow these steps to set up OVS networks on both HOSTs:
       # sed -i "s/virtio-net,tap0/virtio-net,tap2/" <2nd launch_uos script>
       # reboot
 
-#. Configure the static IP address on both HOSTs and it's VMs::
+#. Configure the static IP address on both HOSTs and its VMs::
 
    # <HOST_1 Service VM>:
    # ifconfig ovs-br0 192.168.1.100
@@ -151,5 +152,5 @@ Follow these steps to set up OVS networks on both HOSTs:
    # <HOST_2 User VM2>:
    # ifconfig enp0s4 192.168.1.202
 
-#. After that, it will succeed to ``ping`` from VM1 of HOST1 to VM1 of HOST2,
-   but fail to ``ping`` from VM1 of HOST1 to VM2 of HOST2.
+#. After that, a ``ping`` from VM1 of HOST1 to **VM1** of HOST2 will succeed,
+   but a ``ping`` from VM1 of HOST1 to **VM2** of HOST2 will fail.

@@ -384,7 +384,7 @@ partition. Follow these steps:
       Clear Linux OS (Clear-linux-native.5.4.11-890)
       Reboot Into Firmware Interface
 
-#. After booting up the ACRN hypervisor, the Service OS launches
+#. After booting the ACRN hypervisor, the Service OS launches
    automatically by default, and the Clear Linux OS desktop show with the **clear** user (or you can login remotely with an "ssh" client).
    If there is any issue which makes the GNOME desktop not successfully display,, then the system will go to the shell console.
 
