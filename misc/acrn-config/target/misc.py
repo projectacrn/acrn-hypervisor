@@ -225,7 +225,7 @@ def dump_max_msix_table_num(config):
     res_lines = parser_lib.get_output_lines(cmd)
     for line in res_lines:
         tmp_num = line.split('=')[1].split()[0]
-        msix_table_num_list.append(tmp_num)
+        msix_table_num_list.append(int(tmp_num))
 
     if msix_table_num_list:
         max_msix_table_num = max(msix_table_num_list)
