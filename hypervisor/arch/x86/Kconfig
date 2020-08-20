@@ -126,6 +126,11 @@ config SERIAL_LEGACY
 	  Select this if the serial port shall be accessed via legacy port in/out
 	  instructions.
 
+config SERIAL_MMIO
+	bool "MMIO"
+	help
+	  Select this if the serial port shall be accessed via MMIO registers.
+
 endchoice
 
 config SERIAL_PCI_BDF
@@ -143,6 +148,13 @@ config SERIAL_PIO_BASE
 	help
 	  The base address of the serial ports. This is logically 16-bit but used
 	  as a 64-bit integer.
+
+config SERIAL_MMIO_BASE
+	hex "Base address of MMIO UART"
+	depends on SERIAL_MMIO
+	default 0xfe040000
+	help
+	  The base address of the MMIO serial port.
 
 config CONSOLE_LOGLEVEL_DEFAULT
 	int "Default loglevel on the serial console"
