@@ -112,7 +112,7 @@ Steps for Using VxWorks as User VM
 
       $ sudo ./launch_vxworks.sh
 
-   Then VxWorks will boot up automatically. You will see the prompt.
+   Then VxWorks will boot automatically. You will see the prompt.
 
    .. code-block:: console
 

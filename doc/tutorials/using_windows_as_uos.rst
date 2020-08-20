@@ -110,7 +110,7 @@ Install Windows 10 by GVT-g
 
 #. Run ``install_win.sh``. When you see the UEFI shell, input **exit**.
 
-#. Select **Boot Manager** and boot up from Win10 ISO.
+#. Select **Boot Manager** and boot from Win10 ISO.
 
 #. When the display reads **Press any key to boot from CD or DVD** on the
    monitor, press any key in the terminal on the **Host** side.

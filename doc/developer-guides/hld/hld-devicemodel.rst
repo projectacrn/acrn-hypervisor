@@ -129,7 +129,7 @@ Here's an example showing how to run a VM with:
 DM Initialization
 *****************
 
-:numref:`dm-boot-flow` shows the overall flow for the DM boot up:
+:numref:`dm-boot-flow` shows the overall flow for the DM boot:
 
 .. figure:: images/dm-image80.png
    :align: center

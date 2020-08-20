@@ -602,7 +602,7 @@ IOC mediator and UART DM.
 The "lpc_port" is "com1" or "com2", IOC mediator needs one unassigned
 lpc port for data transfer between User VM and Service VM.
 
-The "wakeup_reason" is IOC mediator boot up reason, each bit represents
+The "wakeup_reason" is IOC mediator boot reason, each bit represents
 one wakeup reason.
 
 For example, the following commands are used to enable IOC feature, the

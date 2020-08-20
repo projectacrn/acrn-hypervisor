@@ -5,9 +5,8 @@ Getting Started
 
 After reading the :ref:`introduction`, use these guides to get started
 using ACRN in a reference setup.  We'll show how to set up your
-development and target hardware, and then how to boot up the ACRN
-hypervisor and the `Clear Linux`_ Service VM and User VM on the Intel
-(EFI) platform.
+development and target hardware, and then how to boot the ACRN
+hypervisor, the Service VM, and a User VM on the Intel platform.
 
 .. _Clear Linux: https://clearlinux.org
 

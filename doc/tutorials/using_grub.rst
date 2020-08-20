@@ -2,16 +2,21 @@
 
 Using GRUB to boot ACRN
 #######################
+
 `GRUB <http://www.gnu.org/software/grub/>`_ is a multiboot boot loader
 used by many popular Linux distributions. It also supports booting the
-ACRN hypervisor.
-See `<http://www.gnu.org/software/grub/grub-download.html>`_
-to get the latest GRUB source code and `<https://www.gnu.org/software/grub/grub-documentation.html>`_
-for detailed documentation.
+ACRN hypervisor.  See
+`<http://www.gnu.org/software/grub/grub-download.html>`_ to get the
+latest GRUB source code and
+`<https://www.gnu.org/software/grub/grub-documentation.html>`_ for
+detailed documentation.
 
-The ACRN hypervisor can boot from `multiboot protocol <http://www.gnu.org/software/grub/manual/multiboot/multiboot.html>`_
-or `multiboot2 protocol <http://www.gnu.org/software/grub/manual/multiboot2/multiboot.html>`_.
-Comparing with multiboot protocol, the multiboot2 protocol adds UEFI support.
+The ACRN hypervisor can boot from `multiboot protocol
+<http://www.gnu.org/software/grub/manual/multiboot/multiboot.html>`_ or
+`multiboot2 protocol
+<http://www.gnu.org/software/grub/manual/multiboot2/multiboot.html>`_.
+Comparing with multiboot protocol, the multiboot2 protocol adds UEFI
+support.
 
 The multiboot protocol is supported by the ACRN hypervisor natively.
 The multiboot2 protocol is supported when ``CONFIG_MULTIBOOT2`` is
@@ -49,9 +54,11 @@ higher.
 Here's an example using Ubuntu to load ACRN on a scenario with two
 pre-launched VMs (the SOS_VM is also a kind of pre-launched VM):
 
-#. Copy ACRN hypervisor binary ``acrn.32.out`` (or ``acrn.bin``) and the pre-launched VM kernel images to ``/boot/``;
+#. Copy ACRN hypervisor binary ``acrn.32.out`` (or ``acrn.bin``) and the
+   pre-launched VM kernel images to ``/boot/``;
 
-#. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu visible when booting:
+#. Modify the ``/etc/default/grub`` file as follows to make the GRUB
+   menu visible when booting:
 
    .. code-block:: none
 
@@ -158,7 +165,8 @@ Here we provide another simple method to build GRUB in efi application format:
             gfxterm_background gfxterm_menu legacycfg video_bochs video_cirrus \
             video_colors video_fb videoinfo video net tftp
 
-   This will build a ``grub_x86_64.efi`` binary in the current directory, copy it to ``/EFI/boot/`` folder
+   This will build a ``grub_x86_64.efi`` binary in the current
+   directory, copy it to ``/EFI/boot/`` folder
    on the EFI partition (it is typically mounted under ``/boot/efi/`` folder on rootfs).
 
 #. Create ``/EFI/boot/grub.cfg`` file containing the following:
@@ -188,6 +196,7 @@ Here we provide another simple method to build GRUB in efi application format:
          module2 /boot/kernel4vm1 yyyyyy $(VM1 bootargs)
       }
 
-#. Copy ACRN binary and guest kernel images to the GRUB-configured folder, e.g. ``/boot/`` folder on ``/dev/sda3/``;
+#. Copy the ACRN binary and guest kernel images to the GRUB-configured
+   folder, e.g. ``/boot/`` folder on ``/dev/sda3/``;
 
 #. Run ``/EFI/boot/grub_x86_64.efi`` in the EFI shell.

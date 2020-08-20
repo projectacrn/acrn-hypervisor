@@ -186,7 +186,7 @@ a vCPU with VCPU_PAUSED or VCPU_ZOMBIE state runs in default_idle
 loop. The detail behaviors in vcpu_thread and default_idle threads
 are illustrated in :numref:`hv-vcpu-schedule`:
 
--  The **vcpu_thread** loop will do the loop of handling vm exits,
+-  The **vcpu_thread** loop will do the loop of handling VM exits,
    and pending requests around the VM entry/exit.
    It will also check the reschedule request then schedule out to
    default_idle if necessary. See `vCPU Thread`_ for more details
@@ -251,10 +251,10 @@ The vCPU thread flow is a loop as shown and described below:
 3. VM Enter by calling *start/run_vcpu*, then enter non-root mode to do
    guest execution.
 
-4. VM Exit from *start/run_vcpu* when guest trigger vm exit reason in
+4. VM Exit from *start/run_vcpu* when guest trigger VM exit reason in
    non-root mode.
 
-5. Handle vm exit based on specific reason.
+5. Handle VM exit based on specific reason.
 
 6. Loop back to step 1.
 
@@ -270,16 +270,16 @@ the vCPU is saved and restored using this structure:
 The vCPU handles runtime context saving by three different
 categories:
 
--  Always save/restore during vm exit/entry:
+-  Always save/restore during VM exit/entry:
 
-   -  These registers must be saved every time vm exit, and restored
-      every time vm entry
+   -  These registers must be saved every time VM exit, and restored
+      every time VM entry
    -  Registers include: general purpose registers, CR2, and
       IA32_SPEC_CTRL
    -  Definition in *vcpu->run_context*
    -  Get/Set them through *vcpu_get/set_xxx*
 
--  On-demand cache/update during vm exit/entry:
+-  On-demand cache/update during VM exit/entry:
 
    -  These registers are used frequently. They should be cached from
       VMCS on first time access after a VM exit, and updated to VMCS on
@@ -432,7 +432,7 @@ that will trigger an error message and return without handling:
      - APIC write for APICv
 
 
-Details of each vm exit reason handler are described in other sections.
+Details of each VM exit reason handler are described in other sections.
 
 .. _pending-request-handlers:
 
@@ -849,7 +849,7 @@ ACRN always enables MSR bitmap in *VMX_PROC_VM_EXEC_CONTROLS* VMX
 execution control field. This bitmap marks the MSRs to cause a VM
 exit upon guest access for both read and write. The VM
 exit reason for reading or writing these MSRs is respectively
-*VMX_EXIT_REASON_RDMSR* or *VMX_EXIT_REASON_WRMSR* and the vm exit
+*VMX_EXIT_REASON_RDMSR* or *VMX_EXIT_REASON_WRMSR* and the VM exit
 handler is *rdmsr_vmexit_handler* or *wrmsr_vmexit_handler*.
 
 This table shows the predefined MSRs ACRN will trap for all the guests. For
@@ -1002,7 +1002,7 @@ hypervisor on CR writes.
 
 For ``mov to cr0`` and ``mov to cr4``, ACRN sets
 *cr0_host_mask/cr4_host_mask* into *VMX_CR0_MASK/VMX_CR4_MASK*
-for the bitmask causing vm exit.
+for the bitmask causing VM exit.
 
 As ACRN always enables ``unrestricted guest`` in
 *VMX_PROC_VM_EXEC_CONTROLS2*, *CR0.PE* and *CR0.PG* can be

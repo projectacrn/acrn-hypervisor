@@ -52,7 +52,7 @@ ACRN Log
 
 ACRN log provides console log and mem log for a user to analyze.
 We can use console log to debug directly, while mem log is a userland tool
-used to capture a ACRN hypervisor log.
+used to capture an ACRN hypervisor log.
 
 Turn on the logging info
 ========================

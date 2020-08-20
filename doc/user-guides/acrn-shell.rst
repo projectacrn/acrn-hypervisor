@@ -43,7 +43,7 @@ The ACRN hypervisor shell supports the following commands:
          logging for the console, memory and npk
        * Give (up to) three parameters between ``0`` (none) and ``6`` (verbose)
          to set the loglevel for the console, memory, and npk (in
-         that order). If less than three parameters are given, the
+         that order). If fewer than three parameters are given, the
          loglevels for the remaining areas will not be changed
    * - cpuid <leaf> [subleaf]
      - Display the CPUID leaf [subleaf], in hexadecimal

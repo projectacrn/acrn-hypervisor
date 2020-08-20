@@ -20,7 +20,7 @@ supported, primarily because dynamic configuration parsing is restricted in
 the ACRN hypervisor for the following reasons:
 
 - **Maintain functional safety requirements.** Implementing dynamic parsing
-  introduces dynamic objects, which violates functional safety requirements.
+  introduces dynamic objects, which violate functional safety requirements.
 
 - **Reduce complexity.** ACRN is a lightweight reference hypervisor, built for
   embedded IoT. As new platforms for embedded systems are rapidly introduced,
@@ -32,9 +32,9 @@ the ACRN hypervisor for the following reasons:
   helps keep the hypervisor's Lines of Code (LOC) in a desirable range (less
   than 40K).
 
-- **Improve boot up time.** Dynamic parsing at runtime increases the boot
-  up time. Using a build-time configuration and not dynamic parsing
-  helps improve the boot up time of the hypervisor.
+- **Improve boot time.** Dynamic parsing at runtime increases the boot
+  time. Using a build-time configuration and not dynamic parsing
+  helps improve the boot time of the hypervisor.
 
 
 Build the ACRN hypervisor, device model, and tools from source by following

@@ -520,7 +520,7 @@ to import PK, KEK, and DB into OVMF, Ubuntu 16.04 used.
            -hda fat:hda-contents \
            -net none
 
-      After boot up, you can see the UEFI shell.
+      After booting, you can see the UEFI shell.
 
       .. image:: images/waag_secure_boot_image5.png
          :align: center
