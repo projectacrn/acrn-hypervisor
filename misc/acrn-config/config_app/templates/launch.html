@@ -206,14 +206,19 @@ the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[boa
                 </div>
                 {% elif elem.getchildren() != [] %}
                     {% if 'multiselect' not in elem.attrib or elem.attrib['multiselect'] != 'true' %}
-                    {% set first_child = [] %}
-                    {% set first_multi_child = {'block': 0, 'network': 0, 'input': 0} %}
+                        {% set first_multi_child = {'block': 0, 'network': 0, 'input': 0, 'pcpu_id': 0, 'shm_region': 0,
+                        'passthrough_devices': 0, 'virtio_devices': 0} %}
                         {% for sub_elem in elem.getchildren() %}
                             {% set sub_elem_text = '' if sub_elem.text == None else sub_elem.text %}
                             {% if 'configurable' not in sub_elem.attrib or sub_elem.attrib['configurable'] != '0' %}
                             <div class="form-group">
                                 {% if 'id' not in elem.attrib %}
-                                    {% if not first_child %}
+                                    {% if elem.tag in first_multi_child.keys() and first_multi_child[elem.tag] == 0 %}
+                                    <label class="col-sm-1 control-label" data-toggle="tooltip"
+                                        title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
+                                        {{elem.tag}}</label>
+                                    {% do first_multi_child.update({elem.tag: first_multi_child[elem.tag]+1}) %}
+                                    {% elif sub_elem.tag in ['pcpu_id', 'shm_region'] and first_multi_child[sub_elem.tag] == 0 %}
                                     <label class="col-sm-1 control-label" data-toggle="tooltip"
                                         title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
                                         {{elem.tag}}</label>
@@ -228,7 +233,7 @@ the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[boa
                                         {{sub_elem.tag}}</label>
 
                                     {% if ','.join(['uos', elem.tag, sub_elem.tag]) not in launch_item_values
-                                    and elem.tag != 'cpu_affinity'%}
+                                    and elem.tag != 'cpu_affinity' and elem.tag != 'shm_regions'%}
                                     <div class="col-sm-5">
                                         {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                         <input type="text" class="form-control" readonly
@@ -254,8 +259,14 @@ the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[boa
                                     {% endif%}
 
                                     {% else %}
-                                    {% set item_key = ','.join(['uos', elem.tag, sub_elem.tag]) if elem.tag != 'cpu_affinity'
-                                    else ','.join(['uos', elem.tag]) %}
+
+                                    {% if elem.tag == 'cpu_affinity' %}
+                                        {% set item_key = ','.join(['uos', elem.tag]) %}
+                                    {% elif elem.tag == 'shm_regions' %}
+                                        {% set item_key = ','.join(['uos:id='+vm.attrib['id'], elem.tag, sub_elem.tag]) %}
+                                    {% else %}
+                                        {% set item_key = ','.join(['uos', elem.tag, sub_elem.tag]) %}
+                                    {% endif %}
                                     <div class="dropdown col-sm-6">
                                         {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                         <select class="selectpicker" data-width="auto" disabled
@@ -273,21 +284,21 @@ the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[boa
                                             {% endif %}
                                         {% endfor %}
                                         </select>
-                                        {% if elem.tag == 'cpu_affinity' %}
-                                            <button type="button" class="btn" id="add_vcpu_{{first_child|length}}">+</button>
-                                            {% if not first_child %}
-                                            <button type="button" disabled class="btn" id="remove_vcpu_{{first_child|length}}">-</button>
+                                        {% if elem.tag in ['cpu_affinity', 'shm_regions']  %}
+                                            <button type="button" class="btn" id="add_shm_{{first_multi_child[sub_elem.tag]}}">+</button>
+                                            {% if not first_multi_child[sub_elem.tag] %}
+                                            <button type="button" disabled class="btn" id="remove_shm_{{first_multi_child[sub_elem.tag]}}">-</button>
                                             {% else %}
-                                            <button type="button" class="btn" id="remove_vcpu_{{first_child|length}}">-</button>
+                                            <button type="button" class="btn" id="remove_shm_{{first_multi_child[sub_elem.tag]}}">-</button>
                                             {% endif %}
+                                            {% do first_multi_child.update({sub_elem.tag: first_multi_child[sub_elem.tag]+1}) %}
                                         {% endif %}
                                     </div>
                                     {% endif %}
-                                    {% do first_child.append(1) %}
                                     <p id="{{'uos:id='+vm.attrib['id']+','+elem.tag+','+sub_elem.tag}}_err" class="col-sm-3"></p>
                                 {% else %}
-                                    {% if not first_child %}
-                                    {% do first_child.append(1) %}
+                                    {% if elem.tag in first_multi_child.keys() and first_multi_child[elem.tag] == 0 %}
+                                    {% do first_multi_child.update({elem.tag: first_multi_child[elem.tag]+1}) %}
                                     <label class="col-sm-1 control-label" data-toggle="tooltip"
                                            title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
                                         {{elem.tag+' '+elem.attrib['id']}}</label>

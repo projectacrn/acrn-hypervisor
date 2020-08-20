@@ -119,9 +119,20 @@ def launch(launch_name):
     launch_config.set_curr(launch_name)
 
     launch_item_values = {}
-    if board_info is not None:
+    scenario_name = launch_config.get_curr_root().attrib['scenario']
+    current_app.config.update(SCENARIO=scenario_name)
+    scenario_name = current_app.config.get('SCENARIO')
+    scenario_file = None
+    if board_info is not None and scenario_name is not None:
+        scenario_file = os.path.join(current_app.config.get('CONFIG_PATH'), board_type, 'user_defined',
+                                     scenario_name+'.xml')
+        if not os.path.isfile(scenario_file):
+            scenario_file = os.path.join(current_app.config.get('CONFIG_PATH'), board_type,
+                                         scenario_name + '.xml')
+            if not os.path.isfile(scenario_file):
+                scenario_file = None
         launch_item_values = get_launch_item_values(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res', board_info + '.xml'))
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res', board_info + '.xml'), scenario_file)
 
     scenario_name = None
     launch_config_root = launch_config.get_curr_root()
@@ -819,6 +830,8 @@ def get_post_launch_vms():
     """
     data = request.json if request.method == "POST" else request.args
     scenario_name = data['scenario_name']
+    current_app.config.update(SCENARIO=scenario_name)
+
     vm_list = get_post_launch_vm_list(scenario_name)
 
     uos_id_list = []

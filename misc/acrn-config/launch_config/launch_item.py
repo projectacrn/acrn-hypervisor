@@ -26,6 +26,13 @@ class AcrnDmArgs:
         self.args["cpu_sharing"] = common.get_hv_item_tag(self.scenario_info, "FEATURES", "SCHEDULER")
         self.args["pm_channel"] = common.get_leaf_tag_map(self.launch_info, "poweroff_channel")
         self.args["cpu_affinity"] = common.get_leaf_tag_map(self.launch_info, "cpu_affinity", "pcpu_id")
+        self.args["shm_enabled"] = common.get_hv_item_tag(self.scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
+        self.args["shm_regions"] = common.get_leaf_tag_map(self.launch_info, "shm_regions", "shm_region")
+        for vmid, shm_regions in self.args["shm_regions"].items():
+            if self.args["shm_enabled"] == 'y':
+                self.args["shm_regions"][vmid] = [x for x in shm_regions if (x is not None and x.strip != '')]
+            else:
+                self.args["shm_regions"][vmid] = []
         self.args["xhci"] = common.get_leaf_tag_map(self.launch_info, "usb_xhci")
 
     def check_item(self):
@@ -38,6 +45,7 @@ class AcrnDmArgs:
         cpu_affinity = launch_cfg_lib.uos_cpu_affinity(self.args["cpu_affinity"])
         err_dic = scenario_cfg_lib.vm_cpu_affinity_check(self.launch_info, cpu_affinity, "pcpu_id")
         launch_cfg_lib.ERR_LIST.update(err_dic)
+        launch_cfg_lib.check_shm_regions(self.args["shm_regions"], self.scenario_info)
 
 
 class AvailablePthru():

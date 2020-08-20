@@ -525,7 +525,7 @@ def uos_cpu_affinity(uosid_cpu_affinity):
     cpu_affinity = {}
     sos_vm_id = get_sos_vmid()
     for uosid,cpu_affinity_list in uosid_cpu_affinity.items():
-        cpu_affinity[uosid + sos_vm_id] = cpu_affinity_list
+        cpu_affinity[int(uosid) + int(sos_vm_id)] = cpu_affinity_list
     return cpu_affinity
 
 
@@ -564,3 +564,51 @@ def is_linux_like(uos_type):
         is_linux = True
 
     return is_linux
+
+
+def set_shm_regions(launch_item_values, scenario_info):
+
+    raw_shmem_regions = common.get_hv_item_tag(scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
+    vm_types = common.get_leaf_tag_map(scenario_info, "vm_type")
+    shm_enabled = common.get_hv_item_tag(scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
+
+    sos_vm_id = 0
+    for vm_id, vm_type in vm_types.items():
+        if vm_type in ['SOS_VM']:
+            sos_vm_id = vm_id
+        elif vm_type in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:
+            uos_id = vm_id - sos_vm_id
+            shm_region_key = 'uos:id={},shm_regions,shm_region'.format(uos_id)
+            launch_item_values[shm_region_key] = ['']
+            if shm_enabled == 'y':
+                for shmem_region in raw_shmem_regions:
+                    if shmem_region is None or shmem_region.strip() == '':
+                        continue
+                    try:
+                        shm_splited = shmem_region.split(',')
+                        name = shm_splited[0].strip()
+                        size = shm_splited[1].strip()
+                        if size.isdecimal():
+                            int_size = int(size)
+                        else:
+                            int_size = int(size, 16)
+                        vm_id_list = [x.strip() for x in shm_splited[2].split(':')]
+                        if str(vm_id) in vm_id_list:
+                            launch_item_values[shm_region_key].append(','.join([name, str(int_size)]))
+                    except Exception as e:
+                        print(e)
+
+
+def check_shm_regions(launch_shm_regions, scenario_info):
+    launch_item_values = {}
+    set_shm_regions(launch_item_values, scenario_info)
+
+    for uos_id, shm_regions in launch_shm_regions.items():
+        shm_region_key = 'uos:id={},shm_regions,shm_region'.format(uos_id)
+        for shm_region in shm_regions:
+            print(shm_region)
+            print(launch_item_values[shm_region_key])
+            if shm_region_key not in launch_item_values.keys() or shm_region not in launch_item_values[shm_region_key]:
+                ERR_LIST[shm_region_key] = "shm {} should be configured in scenario setting and the size should be decimal" \
+                                           " and spaces should not exist.".format(shm_region)
+                return

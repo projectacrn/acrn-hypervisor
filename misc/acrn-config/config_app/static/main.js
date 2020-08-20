@@ -440,6 +440,8 @@ $().ready(function(){
         var id_pre_added = curr_item_id.substr(0, curr_item_id.lastIndexOf('_'));
         config_item_added.find("button:contains('+')").attr('id', id_pre_added+'_'+id_added);
         config_item_added.find("button:contains('-')").attr('id', id_pre_added.replace('add_', 'remove_')+'_'+id_added);
+        var curr_err_id = config_item_added.find("p").attr('id');
+        config_item_added.find("p").attr('id', curr_err_id.replace(','+curr_id+'_', ','+id_added+'_'));
         config_item_added.find("button:contains('-')").prop("disabled", false);
         config_item_added.find("label:first").text("");
         config_item_added.find('.bootstrap-select').replaceWith(function() { return $('select', this); });
@@ -922,7 +924,7 @@ function save_launch(generator=null) {
     $("select").each(function(){
         var id = $(this).attr('id');
         var value = $(this).val();
-        if(id.indexOf('pcpu_id')>=0 || id.indexOf('pci_dev')>=0) {
+        if(id.indexOf('pcpu_id')>=0 || id.indexOf('shm_region')>=0 || id.indexOf('pci_dev')>=0) {
             if(id in launch_config) {
                 launch_config[id].push(value);
             } else {
