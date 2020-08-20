@@ -215,6 +215,7 @@ the source files will be generated into default path and overwirte the previous 
 
                                 {% if sub_elem.tag in ['RDT', 'IVSHMEM'] %}
                                     {% for sub_elem_2 in sub_elem.getchildren() %}
+                                    {% set sub_elem_2_text = sub_elem_2.text if sub_elem_2.text != None else '' %}
                                     {% if ','.join([vm.tag, elem.tag, sub_elem.tag, sub_elem_2.tag]) in scenario_item_values %}
                                     <div class="form-group">
                                         <label class="col-sm-1 control-label" data-toggle="tooltip"
@@ -259,10 +260,10 @@ the source files will be generated into default path and overwirte the previous 
                                         {% if 'readonly' in sub_elem_2.attrib and sub_elem_2.attrib['readonly'] == 'true' %}
                                         <input type="text" class="form-control"
                                                id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}"
-                                               readonly vaule="{{sub_elem_2.text}}"></input>
+                                               readonly vaule="{{sub_elem_2_text}}"></input>
                                         {% else %}
                                         <input type="text" class="form-control"
-				                            id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}" value="{{sub_elem_2.text}}"></input>
+				                            id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}" value="{{sub_elem_2_text}}"></input>
                                         {% endif %}
                                         </div>
                                         {% if sub_elem_2.tag in ['IVSHMEM_REGION'] %}
@@ -277,7 +278,7 @@ the source files will be generated into default path and overwirte the previous 
                                             {% do first_multi_child.update({sub_elem_2.tag: first_multi_child[sub_elem_2.tag]+1}) %}
                                         {% endif%}
                                         {% if sub_elem_2.tag in ['IVSHMEM_REGION'] %}
-                                        <p id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+(first_multi_child[sub_elem_2.tag]-1)|string()}}_err" class="col-sm-3"></p>
+                                        <p id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag+','+(first_multi_child[sub_elem_2.tag]-1)|string()}}_err" class="col-sm-3"></p>
                                         {% else %}
                                         <p id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}_err" class="col-sm-3"></p>
                                         {% endif %}

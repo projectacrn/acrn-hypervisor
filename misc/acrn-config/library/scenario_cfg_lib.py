@@ -711,7 +711,7 @@ def share_mem_check(shmem_regions, raw_shmem_regions, vm_type_info, prime_item, 
                             break
                 except:
                     index = 0
-            key = "hv,{},{},{}".format(prime_item, item, sub_item, index)
+            key = "hv,{},{},{},{}".format(prime_item, item, sub_item, index)
 
             shm_str_splited = shm_str.split(',')
             if len(shm_str_splited) < 3:
@@ -721,7 +721,7 @@ def share_mem_check(shmem_regions, raw_shmem_regions, vm_type_info, prime_item, 
             try:
                 curr_vm_id = int(shm_i)
             except:
-                ERR_LIST[key] = "share memory region should be configure with format like this: VM0_VM2,0x20000,0:2"
+                ERR_LIST[key] = "share memory region should be configured with format like this: hv:/shm_region_0, 0x200000, 0:2"
                 return
             name = shm_str_splited[0].strip()
             size = shm_str_splited[1].strip()
@@ -791,7 +791,7 @@ def share_mem_check(shmem_regions, raw_shmem_regions, vm_type_info, prime_item, 
                         break
             except:
                 index = 0
-            key = "hv,{},{},{}".format(prime_item, item, sub_item, index)
+            key = "hv,{},{},{},{}".format(prime_item, item, sub_item, index)
             if 'IVSHMEM_'+name in board_cfg_lib.PCI_DEV_BAR_DESC.shm_bar_dic.keys():
                 bar_attr_dic = board_cfg_lib.PCI_DEV_BAR_DESC.shm_bar_dic['IVSHMEM_'+name]
                 if (0 in bar_attr_dic.keys() and int(bar_attr_dic[0].addr, 16) < 0x80000000) \

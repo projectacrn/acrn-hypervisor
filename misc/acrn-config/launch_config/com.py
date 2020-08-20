@@ -483,6 +483,15 @@ def xhci_args_set(dm, vmid, config):
             launch_cfg_lib.virtual_dev_slot("xhci"), dm['xhci'][vmid]), file=config)
 
 
+def shm_arg_set(dm, vmid, config):
+
+    if dm['shm_enabled'] == "n":
+        return
+    for shm_region in dm["shm_regions"][vmid]:
+        print("   -s {},ivshmem,{} \\".format(
+            launch_cfg_lib.virtual_dev_slot("shm_region_{}".format(shm_region)), shm_region), file=config)
+
+
 def virtio_args_set(dm, virt_io, vmid, config):
 
     # virtio-input set, the value type is a list
@@ -597,6 +606,9 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
 
     # pcpu-list args set
     pcpu_arg_set(dm, vmid, config)
+
+    # shm regions args set
+    shm_arg_set(dm, vmid, config)
 
     for value in sel.bdf.values():
         if value[vmid]:

@@ -20,7 +20,7 @@ PY_CACHES = ["__pycache__", "../board_config/__pycache__", "../scenario_config/_
 GUEST_FLAG = ["0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTHROUGH",
               "GUEST_FLAG_IO_COMPLETION_POLLING", "GUEST_FLAG_HIDE_MTRR", "GUEST_FLAG_RT"]
 
-MULTI_ITEM = ["guest_flag", "pcpu_id", "vcpu_clos", "input", "block", "network", "pci_dev", "shmem_region"]
+MULTI_ITEM = ["guest_flag", "pcpu_id", "vcpu_clos", "input", "block", "network", "pci_dev", "shm_region"]
 
 SIZE_K = 1024
 SIZE_M = SIZE_K * 1024
@@ -46,7 +46,7 @@ class MultiItem():
         self.vir_console = []
         self.vir_network = []
         self.pci_dev = []
-        self.shmem_region = []
+        self.shm_region = []
 
 class TmpItem():
 
@@ -284,9 +284,9 @@ def get_leaf_value(tmp, tag_str, leaf):
     if leaf.tag == "pci_dev" and tag_str == "pci_dev":
         tmp.multi.pci_dev.append(leaf.text)
 
-    # get shmem_region for vm
-    if leaf.tag == "shmem_region" and tag_str == "shmem_region":
-        tmp.multi.shmem_region.append(leaf.text)
+    # get shm_region for vm
+    if leaf.tag == "shm_region" and tag_str == "shm_region":
+        tmp.multi.shm_region.append(leaf.text)
 
 
 def get_sub_value(tmp, tag_str, vm_id):
@@ -319,9 +319,9 @@ def get_sub_value(tmp, tag_str, vm_id):
     if tmp.multi.pci_dev and tag_str == "pci_dev":
         tmp.tag[vm_id] = tmp.multi.pci_dev
 
-    # append shmem_region for vm
-    if tmp.multi.shmem_region and tag_str == "shmem_region":
-        tmp.tag[vm_id] = tmp.multi.shmem_region
+    # append shm_region for vm
+    if tmp.multi.shm_region and tag_str == "shm_region":
+        tmp.tag[vm_id] = tmp.multi.shm_region
 
 
 def get_leaf_tag_map(config_file, branch_tag, tag_str=''):

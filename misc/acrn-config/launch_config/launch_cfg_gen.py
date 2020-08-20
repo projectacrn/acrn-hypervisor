@@ -16,10 +16,11 @@ ACRN_PATH = common.SOURCE_ROOT_DIR
 ACRN_CONFIG_DEF = ACRN_PATH + '/misc/vm_configs/xmls/config-xmls/'
 
 
-def get_launch_item_values(board_info):
+def get_launch_item_values(board_info, scenario_info=None):
     """
     Get items which capable multi select for user
     :param board_info: it is a file what contains board information for script to read from
+    :param sceanrio_info: it is a file what contains scenario information for script to read from
     """
     common.BOARD_INFO_FILE = board_info
     launch_item_values = {}
@@ -51,6 +52,7 @@ def get_launch_item_values(board_info):
     launch_item_values['uos,vuart0'] = launch_cfg_lib.DM_VUART0
     launch_item_values['uos,poweroff_channel'] = launch_cfg_lib.PM_CHANNEL
     launch_item_values["uos,cpu_affinity"] = board_cfg_lib.get_processor_info()
+    launch_cfg_lib.set_shm_regions(launch_item_values, scenario_info)
 
     return launch_item_values
 
@@ -62,6 +64,9 @@ def validate_launch_setting(board_info, scenario_info, launch_info):
     :param scenario_info: it is a file what user have already setting to
     :return: return a dictionary contain errors
     """
+    common.SCENARIO_INFO_FILE = scenario_info
+    common.get_vm_types()
+
     launch_cfg_lib.ERR_LIST = {}
     common.BOARD_INFO_FILE = board_info
     common.SCENARIO_INFO_FILE = scenario_info
