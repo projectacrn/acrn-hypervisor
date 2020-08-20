@@ -127,10 +127,17 @@
 /* UART oscillator clock */
 #define UART_CLOCK_RATE	1843200U	/* 1.8432 MHz */
 
+enum serial_dev_type {
+	INVALID,
+	PIO,
+	PCI,
+	MMIO,
+};
+
 void uart16550_init(bool early_boot);
 char uart16550_getc(void);
 size_t uart16550_puts(const char *buf, uint32_t len);
-void uart16550_set_property(bool enabled, bool port_mapped, uint64_t base_addr);
+void uart16550_set_property(bool enabled, enum serial_dev_type uart_type, uint64_t base_addr);
 bool is_pci_dbg_uart(union pci_bdf bdf_value);
 
 #endif /* !UART16550_H */
