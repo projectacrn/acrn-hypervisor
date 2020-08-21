@@ -3,7 +3,7 @@
     <hv>
         <DEBUG_OPTIONS desc="Debug options for ACRN hypervisor, only valid on debug version">
             <RELEASE desc="Release build. 'y' for Release, 'n' for Debug.">n</RELEASE>
-            <SERIAL_CONSOLE desc="The serial device which is used for hypervisor debug, only valid on Debug version.">/dev/ttyS0</SERIAL_CONSOLE>
+            <SERIAL_CONSOLE desc="The serial device which is used for hypervisor debug, only valid on Debug version.">/dev/ttyS3</SERIAL_CONSOLE>
             <MEM_LOGLEVEL desc="Default loglevel in memory">5</MEM_LOGLEVEL>
             <NPK_LOGLEVEL desc="Default loglevel for the hypervisor NPK log">5</NPK_LOGLEVEL>
             <CONSOLE_LOGLEVEL desc="Default loglevel on the serial console">3</CONSOLE_LOGLEVEL>

@@ -397,10 +397,11 @@
 	seri:/dev/ttyS0 type:mmio base:0x83449000 irq:33 bdf:"00:19.2"
 	seri:/dev/ttyS1 type:mmio base:0x8344A000 irq:16 bdf:"00:1e.0"
 	seri:/dev/ttyS2 type:mmio base:0x8344B000 irq:17 bdf:"00:1e.1"
+	seri:/dev/ttyS3 type:mmio base:0xfe042000 irq:3
 	</TTYS_INFO>
 
 	<AVAILABLE_IRQ_INFO>
-	3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15
+	4, 5, 6, 7, 10, 11, 12, 13, 14, 15
 	</AVAILABLE_IRQ_INFO>
 
 	<TOTAL_MEM_INFO>
