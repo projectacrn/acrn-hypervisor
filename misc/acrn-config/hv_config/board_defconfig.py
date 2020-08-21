@@ -37,6 +37,7 @@ def get_serial_type():
     """ Get serial console type specified by user """
     ttys_type = ''
     ttys_value = ''
+    pci_mmio = False
 
     # Get ttySx information from board config file
     ttys_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<TTYS_INFO>", "</TTYS_INFO>")
@@ -58,11 +59,12 @@ def get_serial_type():
             elif ttys_type == "mmio":
                 if 'bdf' in line:
                     ttys_value = line.split()[-1].split('"')[1:-1][0]
+                    pci_mmio = True
                 else:
-                    common.print_yel("You have chosen a MMIO PCI serial that BDF does not existed for HV console.", warn=True)
+                    ttys_value = line.split()[2].split(':')[1]
             break
 
-    return (ttys_type, ttys_value)
+    return (ttys_type, ttys_value, pci_mmio)
 
 
 def get_memory(hv_info, config):
@@ -111,14 +113,18 @@ def get_memory(hv_info, config):
 
 def get_serial_console(config):
 
-    (serial_type, serial_value) = get_serial_type()
+    (serial_type, serial_value, pci_mmio) = get_serial_type()
     if serial_type == "portio":
         print("CONFIG_SERIAL_LEGACY=y", file=config)
         print("CONFIG_SERIAL_PIO_BASE={}".format(serial_value), file=config)
-    if serial_type == "mmio":
+    elif serial_type == "mmio" and pci_mmio:
         print("CONFIG_SERIAL_PCI=y", file=config)
         if serial_value:
             print('CONFIG_SERIAL_PCI_BDF="{}"'.format(serial_value), file=config)
+    else:
+        print("CONFIG_SERIAL_MMIO=y", file=config)
+        if serial_value:
+            print('CONFIG_SERIAL_MMIO_BASE={}'.format(serial_value), file=config)
 
 
 def get_miscfg(hv_info, config):
