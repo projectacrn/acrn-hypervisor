@@ -115,7 +115,7 @@ Here's an example showing how to run a VM with:
      -s 0:0,hostbridge \
      -s 1:0,lpc -l com1,stdio \
      -s 5,virtio-console,@pty:pty_port \
-     -s 3,virtio-blk,b,/data/clearlinux/clearlinux.img \
+     -s 3,virtio-blk,b,/home/acrn/uos.img \
      -s 4,virtio-net,tap_LaaG --vsbl /usr/share/acrn/bios/VSBL.bin \
      --acpidev_pt MSFT0101 \
      --intr_monitor 10000,10,1,100 \
@@ -769,7 +769,7 @@ example:
      -s 0:0,hostbridge \
      -s 1:0,lpc -l com1,stdio \
      -s 5,virtio-console,@pty:pty_port \
-     -s 3,virtio-blk,b,/data/clearlinux/clearlinux.img \
+     -s 3,virtio-blk,b,/home/acrn/uos.img \
      -s 4,virtio-net,tap_LaaG --vsbl /usr/share/acrn/bios/VSBL.bin \
      -B "root=/dev/vda2 rw rootwait maxcpus=3 nohpet console=hvc0 \
      console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
@@ -788,9 +788,6 @@ the bus hierarchy would be:
    00:03.0 SCSI storage controller: Red Hat, Inc. Virtio block device
    00:04.0 Ethernet controller: Red Hat, Inc. Virtio network device
    00:05.0 Serial controller: Red Hat, Inc. Virtio console
-
-.. note:: For Clear Linux OS, the ``lspci`` command can be installed
-   from the "sysadmin-basic" bundle.
 
 ACPI Virtualization
 *******************

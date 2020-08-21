@@ -17,7 +17,7 @@ There is PCI host bridge emulation in DM. The bus hierarchy is determined by ``a
         -s 2,pci-gvt -G "$2" \
         -s 5,virtio-console,@stdio:stdio_port \
         -s 6,virtio-hyper_dmabuf \
-        -s 3,virtio-blk,/home/clear/uos/uos.img \
+        -s 3,virtio-blk,/home/acrn/uos.img \
         -s 4,virtio-net,tap0 \
         -s 7,virtio-rnd \
         --ovmf /usr/share/acrn/bios/OVMF.fd \
@@ -38,5 +38,3 @@ the bus hierarchy would be:
    00:06.0 RAM memory: Intel Corporation Device 8606
    00:08.0 Network and computing encryption device: Red Hat, Inc. Virtio RNG
    00:09.0 Ethernet controller: Red Hat, Inc. Virtio network device
-
-.. note:: For Clear Linux OS, the ``lspci`` command can be installed from the ``sysadmin-basic`` bundle.

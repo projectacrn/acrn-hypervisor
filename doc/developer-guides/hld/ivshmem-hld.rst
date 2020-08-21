@@ -138,7 +138,7 @@ post-launched VMs (VM1 and VM2).
          -s 2,pci-gvt -G "$2" \
          -s 5,virtio-console,@stdio:stdio_port \
          -s 6,virtio-hyper_dmabuf \
-         -s 3,virtio-blk,/home/clear/uos/uos1.img \
+         -s 3,virtio-blk,/home/acrn/uos1.img \
          -s 4,virtio-net,tap0 \
          -s 6,ivshmem,test,4096 \
          -s 7,virtio-rnd \
@@ -153,7 +153,7 @@ post-launched VMs (VM1 and VM2).
 
         acrn-dm -A -m $mem_size -s 0:0,hostbridge \
          -s 2,pci-gvt -G "$2" \
-         -s 3,virtio-blk,/home/clear/uos/uos2.img \
+         -s 3,virtio-blk,/home/acrn/uos2.img \
          -s 4,virtio-net,tap0 \
          -s 5,ivshmem,test,4096 \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
@@ -247,7 +247,7 @@ architecture and threat model for your application.
 
    - The previously highlighted technologies rely on the kernel, as a secure component, to enforce such policies. Because of this, we strongly recommend enabling secure boot for the Service VM, and extend the secureboot chain to any post-launched VM kernels.
    - To ensure no malicious software is introduced or persists, utilize the filesystem (FS) verification methods on every boot to extend the secure boot chain for post-launch VMs (kernel/FS).
-   - Reference: ACRN secure boot extension guide (`ClearLinux <https://projectacrn.github.io/latest/tutorials/enable_laag_secure_boot.html?highlight=secure%20boot>`_, `Windows <https://projectacrn.github.io/latest/tutorials/waag-secure-boot.html>`_)
+   - Reference: :ref:`how-to-enable-secure-boot-for-windows`
    - Reference Stack:  `dm-verity <https://www.kernel.org/doc/html/latest/admin-guide/device-mapper/verity.html>`_
 
 .. note:: All the mentioned hardening techniques might require minor extra development efforts.

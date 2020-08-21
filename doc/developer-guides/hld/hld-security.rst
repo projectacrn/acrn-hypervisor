@@ -255,7 +255,7 @@ In ACRN, User VM Secure Boot can be enabled by below steps.
 Service VM Hardening
 --------------------
 
-In the ACRN project, the reference Service VM is based on the Clear Linux OS.
+In the ACRN project, the reference Service VM is based on Ubuntu.
 Customers may choose to use different open source OSes or their own
 proprietary OS systems. To minimize the attack surfaces and achieve the
 goal of "defense in depth", there are many common guidelines to ensure the
