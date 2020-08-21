@@ -37,7 +37,7 @@ ACRN High-Level Architecture
 
 The ACRN architecture has evolved since its initial v0.1 release in
 July 2018. Beginning with the v1.1 release, the ACRN architecture has
-flexibility to support partition mode, sharing mode, and a mixed hybrid
+flexibility to support *logical partitioning*, *sharing*, and a *hybrid*
 mode. As shown in :numref:`V2-hl-arch`, hardware resources can be
 partitioned into two parts:
 
@@ -87,6 +87,19 @@ platform to run both safety-critical applications and non-safety
 applications, together with security functions that safeguard the
 system.
 
+There are a number of pre-defined scenarios included in ACRN's source code. They
+all build upon the three fundamental modes of operation that have been explained
+above, i.e. the *logical partitioning*, *sharing*, and *hybrid* modes. They
+further specify the number of VMs that can be run, their attributes and the
+resources they have access to, either shared with other VMs or exclusively.
+
+The predefined scenarios are in the `misc/vm_configs/scenarios
+<https://github.com/projectacrn/acrn-hypervisor/tree/master/misc/vm_configs/scenarios>`_
+folder in the source code. XML examples for some platforms can also be found under
+`misc/vm_configs/xmls/config-xmls <https://github.com/projectacrn/acrn-hypervisor/tree/master/misc/vm_configs/xmls/config-xmls/>`_.
+
+The :ref:`acrn_configuration_tool` tutorial explains how to use the ACRN
+Configuration tool to create your own scenario or modify an existing one.
 
 Automotive Application Scenarios
 ================================
