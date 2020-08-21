@@ -177,7 +177,7 @@ shown in :numref:`rules_arch_level` below.
    | External resource  | Invalid E820 table or   | Yes          | The hypervisor shall      | Invalid E820 table or   |
    | provided by        | invalid boot information|              | panic during platform     | invalid boot information|
    | bootloader         |                         |              | initialization            |                         |
-   | (UEFI or SBL)      |                         |              |                           |                         |
+   | (GRUB or SBL)      |                         |              |                           |                         |
    +--------------------+-------------------------+--------------+---------------------------+-------------------------+
    | Physical resource  | 1GB page is not         | Yes          | The hypervisor shall      | 1GB page is not         |
    | used by the        | available on the        |              | panic during platform     | available on the        |
@@ -574,7 +574,6 @@ The following table shows some use cases of module level configuration design:
    * - Configuration data provided by firmware
      - This module is used to interact with firmware (UEFI or SBL), and the
        configuration data is provided by firmware.
-       For example, UP2 uses SBL and KBL NUC uses UEFI.
      - If a function pointer is used, the prerequisite is
        "hv_operation_mode != DETECT".
 

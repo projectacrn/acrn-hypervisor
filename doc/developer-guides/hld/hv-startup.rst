@@ -6,7 +6,7 @@ Hypervisor Startup
 This section is an overview of the ACRN hypervisor startup.
 The ACRN hypervisor
 compiles to a 32-bit multiboot-compliant ELF file.
-The bootloader (ABL/SBL or UEFI) loads the hypervisor according to the
+The bootloader (ABL/SBL or GRUB) loads the hypervisor according to the
 addresses specified in the ELF header. The BSP starts the hypervisor
 with an initial state compliant to multiboot 1 specification, after the
 bootloader prepares full configurations including ACPI, E820, etc.
@@ -158,14 +158,10 @@ The main steps include:
 -  **SW Load:** Prepares for each VM's SW configuration according to guest OS
    requirement, which may include kernel entry address, ramdisk address,
    bootargs, or zero page for launching bzImage etc.
-   This is done by the hypervisor for pre-launched or Service VM, while by DM
-   for post-launched User VMs.
-   Meanwhile, there are two kinds of boot modes - de-privilege and direct boot
-   mode. The de-privilege boot mode is combined with ACRN UEFI-stub, and only
-   applies to the Service VM, which ensures that the native UEFI environment could be restored
-   and keep running in the Service VM. The direct boot mode is applied to both the
-   pre-launched and Service VM. In this mode, the VM will start from the standard
-   real or protected mode which is not related to the native environment.
+   This is done by the hypervisor for pre-launched or Service VM, and the VM will
+   start from the standard real or protected mode which is not related to the
+   native environment. For post-launched VMs, the VM's SW configuration is done
+   by DM.
 
 -  **Start VM:** The vBSP of vCPUs in this VM is kick to do schedule.
 

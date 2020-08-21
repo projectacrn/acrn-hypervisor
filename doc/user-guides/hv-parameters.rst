@@ -32,34 +32,3 @@ For example:
          module /boot/bzImage Linux_bzImage
          module /boot/bzImage2 Linux_bzImage2
       }
-
-For de-privilege mode, the parameters are specified in the ``efibootmgr -u`` command:
-
-   .. code-block:: none
-      :emphasize-lines: 2
-
-      $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
-            -u "uart=disabled"
-
-
-De-privilege mode hypervisor parameters
-***************************************
-
-The de-privilege mode hypervisor parameters can only be specified in the efibootmgr command.
-Currently we support the ``bootloader=`` parameter:
-
-+-----------------+-------------------------------------------------+-------------------------------------------------------------------------+
-|   Parameter     |     Value                                       |            Description                                                  |
-+=================+=================================================+=========================================================================+
-| bootloader=     | ``\EFI\org.clearlinux\bootloaderx64.efi``       | This sets the EFI executable to be loaded once the hypervisor is up     |
-|                 |                                                 | and running. This is typically the bootloader of the Service OS.        |
-|                 |                                                 | i.e. : ``\EFI\org.clearlinux\bootloaderx64.efi``                        |
-+-----------------+-------------------------------------------------+-------------------------------------------------------------------------+
-
-For example:
-
-   .. code-block:: none
-      :emphasize-lines: 2
-
-      $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
-            -u "bootloader=\EFI\boot\bootloaderx64.efi"

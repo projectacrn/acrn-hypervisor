@@ -459,8 +459,6 @@ In the current configuration, we will set
 ``i915.enable_initial_modeset=1`` in Service VM and
 ``i915.enable_initial_modeset=0`` in User VM.
 
-This parameter is not used on UEFI platforms.
-
 i915.domain_scaler_owner
 ========================
 

@@ -60,13 +60,6 @@ instructions on how to build ACRN using a container.
 
 Install the necessary tools for the following systems:
 
-* Clear Linux OS development system:
-
-  .. code-block:: none
-
-     $ sudo swupd bundle-add os-clr-on-clr os-core-dev python3-basic
-     $ pip3 install --user kconfiglib
-
 * Ubuntu development system:
 
   .. code-block:: none
@@ -218,7 +211,7 @@ To modify the hypervisor configurations, you can either edit ``.config``
 manually, or you can invoke a TUI-based menuconfig (powered by kconfiglib) by
 executing ``make menuconfig``. As an example, the following commands
 (assuming that you are at the top level of the acrn-hypervisor directory)
-generate a default configuration file for UEFI, allowing you to modify some
+generate a default configuration file, allowing you to modify some
 configurations and build the hypervisor using the updated ``.config``:
 
 .. code-block:: none
@@ -246,7 +239,7 @@ Now you can build all these components at once as follows:
 
 .. code-block:: none
 
-   $ make FIRMWARE=uefi       # Build the UEFI hypervisor with the new .config
+   $ make 	# Build hypervisor with the new .config
 
 The build results are found in the ``build`` directory. You can specify
 a different Output folder by setting the ``O`` ``make`` parameter,
@@ -271,7 +264,7 @@ of the acrn-hypervisor directory):
 .. code-block:: none
 
    $ make BOARD_FILE=$PWD/misc/vm_configs/xmls/board-xmls/nuc7i7dnb.xml \
-   SCENARIO_FILE=$PWD/misc/vm_configs/xmls/config-xmls/nuc7i7dnb/industry.xml FIRMWARE=uefi TARGET_DIR=xxx
+   SCENARIO_FILE=$PWD/misc/vm_configs/xmls/config-xmls/nuc7i7dnb/industry.xml TARGET_DIR=xxx
 
 
 .. note::

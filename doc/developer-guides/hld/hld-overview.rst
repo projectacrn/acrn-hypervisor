@@ -42,7 +42,7 @@ A typical In-Vehicle Infotainment (IVI) system supports:
   - connection to IVI front system and mobile devices (cloud
     connectivity)
 
-ACRN supports guest OSes of Clear Linux OS and Android. OEMs can use the ACRN
+ACRN supports guest OSes of Linux and Android. OEMs can use the ACRN
 hypervisor and the Linux or Android guest OS reference code to implement their own
 VMs for a customized IC/IVI/RSE.
 
@@ -88,8 +88,8 @@ ACRN is a type-I hypervisor that runs on top of bare metal. It supports
 Intel APL & KBL platforms and can be easily extended to support future
 platforms. ACRN implements a hybrid VMM architecture, using a privileged
 service VM to manage I/O devices and
-provide I/O mediation. Multiple user VMs can be supported, running Clear
-Linux OS or Android OS as the User VM.
+provide I/O mediation. Multiple user VMs can be supported, running Ubuntu
+or Android OS as the User VM.
 
 ACRN 1.0
 ========

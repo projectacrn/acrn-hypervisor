@@ -214,9 +214,6 @@ Additional scenario XML elements:
 ``GPU_SBDF`` (a child node of ``MISC_CFG``):
   Specify the Segment, Bus, Device, and function of the GPU.
 
-``UEFI_OS_LOADER_NAME`` (a child node of ``MISC_CFG``):
-  Specify the UEFI OS loader name.
-
 ``vm``:
   Specify the VM with VMID by its "id" attribute.
 
