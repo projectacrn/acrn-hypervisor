@@ -206,7 +206,6 @@ We have many reference documents `available
 * :ref:`Device Model Parameters <acrn-dm_parameters>`
 * :ref:`Running Automotive Grade Linux as a VM <agl-vms>`
 * Using PREEMPT_RT-Linux for real-time UOS
-* :ref:`Frequently Asked Questions <faq>`
 * :ref:`An introduction to Trusty and Security services on ACRN <trusty-security-services>`
 * A Wiki article about `Porting Clear Linux/ACRN to support Yocto Project/ACRN
   <https://github.com/projectacrn/acrn-hypervisor/wiki/Yocto-based-Service-OS-(SOS)-and-User-OS-(UOS)-on-ACRN>`_
@@ -223,7 +222,6 @@ We have many reference documents `available
 * :ref:`Zephyr RTOS as Guest OS <using_zephyr_as_uos>`
 * :ref:`Enable cache QoS with CAT <rdt_configuration>`
 * :ref:`ACRN kernel parameter introduction <kernel-parameters>`
-* :ref:`FAQ update for two issues <faq>`
 * :ref:`ACRN Debug introduction <acrn-debug>`
 * :ref:`Converged Security Engine (CSE) <hld-security>`
 

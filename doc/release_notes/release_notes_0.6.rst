@@ -46,7 +46,6 @@ published a tutorial.  More patches for ACRN real time support will continue.
 
 * :ref:`Running Automotive Grade Linux as a VM <agl-vms>`
 * Using PREEMPT_RT-Linux for real-time UOS
-* :ref:`Frequently Asked Questions <faq>`
 * :ref:`An introduction to Trusty and Security services on ACRN
   <trusty-security-services>`
 * A Wiki article about `Porting ClearLinux/ACRN to support Yocto/ACRN
