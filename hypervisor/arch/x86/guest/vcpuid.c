@@ -362,7 +362,7 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 
 		for (i = 1U; i <= limit; i++) {
 			/* cpuid 1/0xb is percpu related */
-			if ((i == 1U) || (i == 0xbU) || (i == 0xdU)) {
+			if ((i == 1U) || (i == 0xbU) || (i == 0xdU) || (i == 0x19U)) {
 				continue;
 			}
 
@@ -426,7 +426,7 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 
 static inline bool is_percpu_related(uint32_t leaf)
 {
-	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU) || (leaf == 0x80000001U));
+	return ((leaf == 0x1U) || (leaf == 0xbU) || (leaf == 0xdU) || (leaf == 0x19U) || (leaf == 0x80000001U));
 }
 
 static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
@@ -581,6 +581,23 @@ static void guest_cpuid_0dh(__unused struct acrn_vcpu *vcpu, uint32_t *eax, uint
 	}
 }
 
+static void guest_cpuid_19h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
+{
+	if (pcpu_has_cap(X86_FEATURE_KEYLOCKER)) {
+		/* Host CR4.KL should be enabled at boot time */
+		cpuid_subleaf(0x19U, 0U, eax, ebx, ecx, edx);
+		/* Guest CR4.KL determines KL_AES_ENABLED */
+		*ebx &= ~(vcpu->arch.cr4_kl_enabled ? 0U : CPUID_EBX_KL_AES_EN);
+		/* Don't support nobackup and randomization parameter of LOADIWKEY */
+		*ecx &= ~(CPUID_ECX_KL_NOBACKUP | CPUID_ECX_KL_RANDOM_KS);
+	} else {
+		*eax = 0U;
+		*ebx = 0U;
+		*ecx = 0U;
+		*edx = 0U;
+	}
+}
+
 static void guest_cpuid_80000001h(const struct acrn_vcpu *vcpu,
 	uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
@@ -658,6 +675,10 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 
 		case 0x0dU:
 			guest_cpuid_0dh(vcpu, eax, ebx, ecx, edx);
+			break;
+
+		case 0x19U:
+			guest_cpuid_19h(vcpu, eax, ebx, ecx, edx);
 			break;
 
 		case 0x80000001U:
