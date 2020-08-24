@@ -139,6 +139,16 @@ def parse_boot_info():
     return (err_dic, sos_cmdlines, sos_rootfs, vuart0_dic, vuart1_dic)
 
 
+def clos_per_vm_gen(config):
+
+    clos_per_vm = {}
+    clos_per_vm = common.get_leaf_tag_map(
+            common.SCENARIO_INFO_FILE, "clos", "vcpu_clos")
+    for i,clos_list_i in clos_per_vm.items():
+        clos_config = scenario_cfg_lib.clos_assignment(clos_per_vm, i)
+        print("#define VM{0}_VCPU_CLOS\t\t\t{1}".format(i, clos_config['clos_map']), file=config)
+
+
 def generate_file(config):
     """
     Start to generate board.c
@@ -241,6 +251,34 @@ def generate_file(config):
         sos_bootarg_diff(sos_cmdlines, config)
         print("", file=config)
 
+    common_clos_max = board_cfg_lib.get_common_clos_max()
+    max_mba_clos_entries = common_clos_max
+    max_cache_clos_entries = common_clos_max
+
+    if board_cfg_lib.is_cdp_enabled():
+        max_cache_clos_entries_cdp_enable = 2 * common_clos_max
+        (res_info, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
+        common_clos_max_cdp_disable = min(rdt_res_clos_max)
+
+        print("#ifdef CONFIG_RDT_ENABLED", file=config)
+        print("#ifdef CONFIG_CDP_ENABLED", file=config)
+        print("#define HV_SUPPORTED_MAX_CLOS\t{}U".format(common_clos_max), file=config)
+        print("#define MAX_CACHE_CLOS_NUM_ENTRIES\t{}U".format(max_cache_clos_entries_cdp_enable), file=config)
+        print("#else", file=config)
+        print("#define HV_SUPPORTED_MAX_CLOS\t{}U".format(common_clos_max_cdp_disable), file=config)
+        print("#define MAX_CACHE_CLOS_NUM_ENTRIES\t{}U".format(max_cache_clos_entries), file=config)
+        print("#endif", file=config)
+        print("#define MAX_MBA_CLOS_NUM_ENTRIES\t{}U".format(max_mba_clos_entries), file=config)
+    else:
+        print("#ifdef CONFIG_RDT_ENABLED", file=config)
+        print("#define HV_SUPPORTED_MAX_CLOS\t{}U".format(common_clos_max), file=config)
+        print("#define MAX_MBA_CLOS_NUM_ENTRIES\t{}U".format(max_mba_clos_entries), file=config)
+        print("#define MAX_CACHE_CLOS_NUM_ENTRIES\t{}U".format(max_cache_clos_entries), file=config)
+        if not board_cfg_lib.is_rdt_supported():
+            print("#endif", file=config)
+
+    print("", file=config)
+
     if board_cfg_lib.is_rdt_supported():
         (rdt_resources, rdt_res_clos_max, _) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
         cat_mask_list = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "RDT", "CLOS_MASK")
@@ -256,6 +294,10 @@ def generate_file(config):
             idx += 1
         print("", file=config)
 
+        clos_per_vm_gen(config)
+        print("#endif", file=config)
+        print("", file=config)
+
     vm0_pre_launch = False
     common.get_vm_types()
     for vm_idx,vm_type in common.VM_TYPES.items():
@@ -266,7 +308,6 @@ def generate_file(config):
         print("#define VM0_PASSTHROUGH_TPM", file=config)
         print("#define VM0_TPM_BUFFER_BASE_ADDR   0xFED40000UL", file=config)
         print("#define VM0_TPM_BUFFER_SIZE        0x5000UL", file=config)
-
         print("", file=config)
 
     print("{}".format(MISC_CFG_END), file=config)
