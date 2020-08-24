@@ -80,8 +80,9 @@
 #define CR4_SMXE                (1UL<<14U)	/* SMX enable */
 #define CR4_FSGSBASE            (1UL<<16U)	/* RD(FS|GS|FS)BASE inst */
 #define CR4_PCIDE               (1UL<<17U)	/* PCID enable */
-#define CR4_OSXSAVE             (1UL<<18U)
 /* XSAVE and Processor Extended States enable bit */
+#define CR4_OSXSAVE             (1UL<<18U)
+#define CR4_KL                  (1UL<<19U)      /* KeyLocker enable */
 #define CR4_SMEP                (1UL<<20U)
 #define CR4_SMAP                (1UL<<21U)
 #define CR4_PKE                 (1UL<<22U)	/* Protect-key-enable */
