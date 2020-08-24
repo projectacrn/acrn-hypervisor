@@ -210,8 +210,10 @@ def clos_output(scenario_items, i, config):
     """
     hv_info = scenario_items['hv']
 
-    if board_cfg_lib.is_rdt_supported() and hv_info.features.rdt_enabled == 'y':
+    if board_cfg_lib.is_rdt_supported():
+        print("#ifdef CONFIG_RDT_ENABLED", file=config)
         print("\t\t.clos = VM{}_VCPU_CLOS,".format(i), file=config)
+        print("#endif", file=config)
 
 def get_guest_flag(flags):
     """

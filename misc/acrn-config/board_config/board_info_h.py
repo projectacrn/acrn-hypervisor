@@ -71,17 +71,12 @@ def generate_file(config):
     cpu_list = board_cfg_lib.get_processor_info()
     max_cpu_num = len(cpu_list)
 
-    # set macro of max clos number
-    common_clos_max = board_cfg_lib.get_common_clos_max()
-    max_mba_clos_entries = common_clos_max
-
     # start to generate board_info.h
     print("{0}".format(board_cfg_lib.HEADER_LICENSE), file=config)
     print(BOARD_INFO_DEFINE, file=config)
 
     # define CONFIG_MAX_PCPCU_NUM
     print("#define MAX_PCPU_NUM\t\t\t{}U".format(max_cpu_num), file=config)
-    print("#define HV_SUPPORTED_MAX_CLOS\t\t{}U".format(common_clos_max), file=config)
 
     # define MAX_VMSIX_ON_MSI_PDEVS_NUM
     gen_known_caps_pci_head(config)
