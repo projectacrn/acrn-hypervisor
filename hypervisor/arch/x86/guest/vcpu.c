@@ -10,6 +10,7 @@
 #include <bits.h>
 #include <vmx.h>
 #include <logmsg.h>
+#include <cpufeatures.h>
 #include <cpu_caps.h>
 #include <per_cpu.h>
 #include <init.h>
@@ -194,6 +195,19 @@ void vcpu_reset_eoi_exit_bitmaps(struct acrn_vcpu *vcpu)
 	vcpu_make_request(vcpu, ACRN_REQUEST_EOI_EXIT_BITMAP_UPDATE);
 }
 
+static void init_iwkey(struct acrn_vcpu *vcpu)
+{
+	/* Initial a random iwkey */
+	if (pcpu_has_cap(X86_FEATURE_KEYLOCKER)) {
+		vcpu->arch.IWKey.integrity_key[0] = get_random_value();
+		vcpu->arch.IWKey.integrity_key[1] = get_random_value();
+		vcpu->arch.IWKey.encryption_key[0] = get_random_value();
+		vcpu->arch.IWKey.encryption_key[1] = get_random_value();
+		vcpu->arch.IWKey.encryption_key[2] = get_random_value();
+		vcpu->arch.IWKey.encryption_key[3] = get_random_value();
+	}
+}
+
 /* As a vcpu reset internal API, DO NOT touch any vcpu state transition in this function. */
 static void vcpu_reset_internal(struct acrn_vcpu *vcpu, enum reset_mode mode)
 {
@@ -225,6 +239,8 @@ static void vcpu_reset_internal(struct acrn_vcpu *vcpu, enum reset_mode mode)
 	for (i = 0; i < VCPU_EVENT_NUM; i++) {
 		reset_event(&vcpu->events[i]);
 	}
+
+	init_iwkey(vcpu);
 }
 
 struct acrn_vcpu *get_running_vcpu(uint16_t pcpu_id)

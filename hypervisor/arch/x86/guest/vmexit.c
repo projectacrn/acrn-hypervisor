@@ -17,6 +17,7 @@
 #include <splitlock.h>
 #include <ept.h>
 #include <vtd.h>
+#include <cpuid.h>
 #include <vcpuid.h>
 #include <trace.h>
 #include <rtcm.h>
@@ -25,7 +26,7 @@
  * According to "SDM APPENDIX C VMX BASIC EXIT REASONS",
  * there are 65 Basic Exit Reasons.
  */
-#define NR_VMX_EXIT_REASONS	65U
+#define NR_VMX_EXIT_REASONS	70U
 
 static int32_t triple_fault_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t unhandled_vmexit_handler(struct acrn_vcpu *vcpu);
@@ -35,6 +36,7 @@ static int32_t undefined_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t pause_vmexit_handler(__unused struct acrn_vcpu *vcpu);
 static int32_t hlt_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t mtf_vmexit_handler(struct acrn_vcpu *vcpu);
+static int32_t loadiwkey_vmexit_handler(struct acrn_vcpu *vcpu);
 
 /* VM Dispatch table for Exit condition handling */
 static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
@@ -169,7 +171,9 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_XSAVES] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_XRSTORS] = {
-		.handler = unhandled_vmexit_handler}
+		.handler = unhandled_vmexit_handler},
+	[VMX_EXIT_REASON_LOADIWKEY] = {
+		.handler = loadiwkey_vmexit_handler}
 };
 
 int32_t vmexit_handler(struct acrn_vcpu *vcpu)
@@ -425,6 +429,31 @@ static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu)
 				}
 			}
 		}
+	}
+
+	return 0;
+}
+
+static int32_t loadiwkey_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	uint64_t xmm[6] = {0};
+
+	/* Wrapping key nobackup and randomization are not supported */
+	if ((vcpu_get_gpreg(vcpu, CPU_REG_RAX) != 0UL)) {
+		vcpu_inject_gp(vcpu, 0);
+	} else {
+		asm volatile ("movdqu %%xmm0, %0\n"
+			      "movdqu %%xmm1, %1\n"
+			      "movdqu %%xmm2, %2\n"
+			      : : "m"(xmm[0]), "m"(xmm[2]), "m"(xmm[4]));
+		vcpu->arch.IWKey.encryption_key[0] = xmm[2];
+		vcpu->arch.IWKey.encryption_key[1] = xmm[3];
+		vcpu->arch.IWKey.encryption_key[2] = xmm[4];
+		vcpu->arch.IWKey.encryption_key[3] = xmm[5];
+		vcpu->arch.IWKey.integrity_key[0] = xmm[0];
+		vcpu->arch.IWKey.integrity_key[1] = xmm[1];
+
+		loadiwkey(0);
 	}
 
 	return 0;
