@@ -6,7 +6,7 @@
 import common
 import board_cfg_lib
 import scenario_cfg_lib
-
+import re
 
 class HwInfo:
     """ This is Abstract of class of Hardware information """
@@ -295,6 +295,57 @@ class MmioResourcesInfo:
         scenario_cfg_lib.check_p2sb(self.p2sb)
 
 
+class PtIntxInfo:
+    """ This is Abstract of class of pt intx setting information """
+    phys_gsi = {}
+    virt_gsi = {}
+
+    def __init__(self, scenario_file):
+        self.scenario_info = scenario_file
+
+    def get_info(self):
+        """
+        Get all items which belong to this class
+        :return: None
+        """
+        pt_intx_map = common.get_leaf_tag_map(self.scenario_info, "pt_intx")
+
+        # translation table to normalize the paired phys_gsi and virt_gsi string
+        table = {ord('[') : ord('('), ord(']') : ord(')'), ord('{') : ord('('),
+            ord('}') : ord(')'), ord(';') : ord(','),
+            ord('\n') : None, ord('\r') : None, ord(' ') : None}
+
+        for vm_i, s in pt_intx_map.items():
+            #normalize the phys_gsi and virt_gsi pair string
+            s = s.translate(table)
+
+            #extract the phys_gsi and virt_gsi pairs between parenthesis to a list
+            s = re.findall(r'\(([^)]+)', s)
+
+            self.phys_gsi[vm_i] = [];
+            self.virt_gsi[vm_i] = [];
+
+            for part in s:
+                if not part: continue
+                assert ',' in part, "you need to use ',' to separate phys_gsi and virt_gsi!"
+                a, b = part.split(',')
+                if not a and not b: continue
+                assert a and b, "you need to specify both phys_gsi and virt_gsi!"
+                a, b = common.str2int(a), common.str2int(b)
+
+                self.phys_gsi[vm_i].append(a)
+                self.virt_gsi[vm_i].append(b)
+
+
+    def check_item(self):
+        """
+        Check all items in this class
+        :return: None
+        """
+
+        scenario_cfg_lib.check_pt_intx(self.phys_gsi, self.virt_gsi)
+
+
 class VmInfo:
     """ This is Abstract of class of VM setting """
     name = {}
@@ -316,6 +367,7 @@ class VmInfo:
         self.load_order_cnt = LoadOrderNum()
         self.shmem = ShareMem(self.scenario_info)
         self.mmio_resource_info = MmioResourcesInfo(self.scenario_info)
+        self.pt_intx_info = PtIntxInfo(self.scenario_info)
 
 
     def get_info(self):
@@ -339,6 +391,7 @@ class VmInfo:
         self.cfg_pci.get_info()
         self.load_order_cnt.get_info(self.load_vm)
         self.mmio_resource_info.get_info()
+        self.pt_intx_info.get_info()
 
     def set_ivshmem(self, ivshmem_regions):
         """
@@ -379,4 +432,5 @@ class VmInfo:
         self.vuart.check_item()
         self.shmem.check_items()
         self.mmio_resource_info.check_item()
+        self.pt_intx_info.check_item()
         scenario_cfg_lib.ERR_LIST.update(err_dic)

@@ -80,6 +80,8 @@
         <mmio_resources desc="MMIO resources.">
             <p2sb>n</p2sb>
         </mmio_resources>
+        <pt_intx desc="pt intx mapping.">
+        </pt_intx>
         <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
             <vcpu_clos>0</vcpu_clos>
         </clos>

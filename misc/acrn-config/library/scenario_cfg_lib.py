@@ -819,3 +819,42 @@ def check_p2sb(enable_p2sb):
         if p2sb and board_cfg_lib.is_tpm_passthru():
             ERR_LIST["vm:id=0,p2sb"] = "Cannot enable p2sb and tpm passthru at the same time"
             return
+
+
+def check_pt_intx(phys_gsi, virt_gsi):
+
+    if not phys_gsi and not virt_gsi:
+        return
+
+    if not board_cfg_lib.is_matched_board(('ehl-crb-b')):
+        ERR_LIST["pt_intx"] = "only board ehl-crb-b is supported"
+        return
+
+    if not VM_DB[common.VM_TYPES[0]]['load_type'] == "PRE_LAUNCHED_VM":
+       ERR_LIST["pt_intx"] = "pt_intx can only be specified for pre-launched VM"
+       return
+
+    for (id1,p), (id2,v) in zip(phys_gsi.items(), virt_gsi.items()):
+        if id1 != 0 or id2 != 0:
+            ERR_LIST["pt_intx"] = "virt_gsi and phys_gsi can only be specified for VM0"
+            return
+
+        if len(p) != len(v):
+            ERR_LIST["vm:id=0,pt_intx"] = "virt_gsi and phys_gsi must have same length"
+            return
+
+        if len(p) != len(set(p)):
+            ERR_LIST["vm:id=0,pt_intx"] = "phys_gsi contains duplicates"
+            return
+
+        if len(v) != len(set(v)):
+            ERR_LIST["vm:id=0,pt_intx"] = "virt_gsi contains duplicates"
+            return
+
+        if len(p) > 120:
+            ERR_LIST["vm:id=0,pt_intx"] = "# of phys_gsi and virt_gsi pairs must not be greater than 120"
+            return
+
+        if not all(pin < 120 for pin in v):
+            ERR_LIST["vm:id=0,pt_intx"] = "virt_gsi must be less than 120"
+            return
