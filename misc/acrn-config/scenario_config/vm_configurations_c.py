@@ -382,7 +382,7 @@ def gen_post_launch_vm(vm_type, vm_i, scenario_items, config):
     print("\t},", file=config)
 
 
-def pre_launch_definiation(vm_info, config):
+def pre_launch_definition(vm_info, config):
 
     for vm_i,vm_type in common.VM_TYPES.items():
         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] not in ["PRE_LAUNCHED_VM", "POST_LAUNCHED_VM"]:
@@ -404,7 +404,7 @@ def generate_file(scenario_items, config):
     gen_source_header(config)
     for vm_i,pci_dev_num in vm_info.cfg_pci.pci_dev_num.items():
         if pci_dev_num >= 2:
-            pre_launch_definiation(vm_info, config)
+            pre_launch_definition(vm_info, config)
             break
 
     print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)

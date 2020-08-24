@@ -27,8 +27,10 @@ GEN_FILE = ["vm_configurations.h", "vm_configurations.c", "pci_dev.c", ".config"
 
 def get_scenario_item_values(board_info, scenario_info):
     """
-    Get items which capable multi select for user
-    :param board_info: it is a file what contains board information for script to read from
+    Glue code to provide user selectable options to config UI tool.
+    Return a dictionary of key-value pairs containing features and corresponding lists of
+    user selectable values to the config UI tool.
+    :param board_info: file that contains board information
     """
     hv_cfg_lib.ERR_LIST = {}
     scenario_item_values = {}
@@ -41,7 +43,7 @@ def get_scenario_item_values(board_info, scenario_info):
     common.get_vm_num(scenario_info)
     common.get_vm_types()
 
-    # pre scenario
+    # per scenario
     guest_flags = copy.deepcopy(common.GUEST_FLAG)
     guest_flags.remove('0UL')
     scenario_item_values['vm,vm_type'] = scenario_cfg_lib.LOAD_VM_TYPE
@@ -52,7 +54,7 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["vm,os_config,kern_type"] = scenario_cfg_lib.KERN_TYPE_LIST
     scenario_item_values.update(scenario_cfg_lib.avl_vuart_ui_select(scenario_info))
 
-    # pre board_private
+    # board
     (scenario_item_values["vm,board_private,rootfs"], num) = board_cfg_lib.get_rootfs(board_info)
 
     scenario_item_values["hv,DEBUG_OPTIONS,RELEASE"] = hv_cfg_lib.N_Y
@@ -82,10 +84,10 @@ def get_scenario_item_values(board_info, scenario_info):
 
 def validate_scenario_setting(board_info, scenario_info):
     """
-    This is validate the data setting from scenario xml
-    :param board_info: it is a file what contains board information for script to read from
-    :param scenario_info: it is a file what user have already setting to
-    :return: return a dictionary contain errors
+    Validate settings in scenario xml
+    :param board_info: board file
+    :param scenario_info: scenario file
+    :return: return a dictionary that contains errors
     """
     hv_cfg_lib.ERR_LIST = {}
     scenario_cfg_lib.ERR_LIST = {}
@@ -111,8 +113,8 @@ def validate_scenario_setting(board_info, scenario_info):
 
 def main(args):
     """
-    This is main function to start generate source code related with board
-    :param args: it is a command line args for the script
+    Generate board related source code
+    :param args: command line args
     """
     err_dic = {}
 
@@ -139,13 +141,13 @@ def main(args):
         return err_dic
 
     if common.VM_COUNT > common.MAX_VM_NUM:
-        err_dic['vm count'] = "The vm count in config xml should be less or equal {}!".format(common.MAX_VM_NUM)
+        err_dic['vm count'] = "Number of VMs in scenario xml file should be no greater than {}!".format(common.MAX_VM_NUM)
         return err_dic
 
-    # check if this is the scenario config which matched board info
+    # check if this is the scenario config which matches board info
     (err_dic, status) = common.is_config_file_match()
     if not status:
-        err_dic['scenario config'] = "The board xml and scenario xml should be matched!"
+        err_dic['scenario config'] = "The board xml file does not match scenario xml file!"
         return err_dic
 
     if params['--out']:
@@ -170,7 +172,7 @@ def main(args):
     get_scenario_item_values(params['--board'], params['--scenario'])
     (err_dic, scenario_items) = validate_scenario_setting(params['--board'], params['--scenario'])
     if err_dic:
-        common.print_red("Validate the scenario item failure", err=True)
+        common.print_red("Scenario xml file validation failed:", err=True)
         return err_dic
 
     # generate board defconfig
@@ -199,9 +201,9 @@ def main(args):
         pci_dev_c.generate_file(scenario_items['vm'], config)
 
     if not err_dic:
-        print("Scenario configurations for {} is generated successfully.".format(scenario))
+        print("Scenario configuration files were created successfully.")
     else:
-        print("Scenario configurations for {} is generated failed.".format(scenario))
+        print("Failed to create scenario configuration files.")
 
     return err_dic
 
