@@ -171,7 +171,7 @@ enum reset_mode;
 #define SECURE_WORLD	1
 
 #define NUM_WORLD_MSRS		2U
-#define NUM_COMMON_MSRS		17U
+#define NUM_COMMON_MSRS		21U
 #define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS)
 
 #define EOI_EXIT_BITMAP_SIZE	256U
@@ -270,6 +270,12 @@ struct acrn_vcpu_arch {
 	/* Keylocker */
 	struct iwkey IWKey;
 	bool cr4_kl_enabled;
+	/*
+	 * Keylocker spec 4.4:
+	 * Bit 0 - Status of most recent copy to or from IWKeyBackup.
+	 * Bit 63:1 - Reserved.
+	 */
+	uint64_t iwkey_copy_status;
 } __aligned(PAGE_SIZE);
 
 struct acrn_vm;

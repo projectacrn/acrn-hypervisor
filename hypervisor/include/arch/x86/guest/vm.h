@@ -116,6 +116,18 @@ struct vm_arch {
 #endif
 	enum vm_vlapic_mode vlapic_mode; /* Represents vLAPIC mode across vCPUs*/
 
+	/*
+	 * Keylocker spec 4.5:
+	 * Bit 0 - Backup/restore valid.
+	 * Bit 1 - Reserved.
+	 * Bit 2 - Backup key storage read/write error.
+	 * Bit 3 - IWKeyBackup consumed.
+	 * Bit 63:4 - Reserved.
+	 */
+	uint64_t iwkey_backup_status;
+	spinlock_t iwkey_backup_lock;	/* Spin-lock used to protect internal key backup/restore */
+	struct iwkey iwkey_backup;
+
 	/* reference to virtual platform to come here (as needed) */
 } __aligned(PAGE_SIZE);
 
