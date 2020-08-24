@@ -30,10 +30,10 @@ def empty_check(val, prime_item, item, sub_item=''):
     if not val or val == None:
         if sub_item:
             key = 'hv,{},{},{}'.format(prime_item, item, sub_item)
-            ERR_LIST[key] = "{} should not empty".format(sub_item)
+            ERR_LIST[key] = "{} should not be empty".format(sub_item)
         else:
             key = 'hv,{},{}'.format(prime_item, item)
-            ERR_LIST[key] = "{} should not empty".format(item)
+            ERR_LIST[key] = "{} should not be empty".format(item)
         return True
 
     return False

@@ -170,7 +170,7 @@ def main(args):
     get_scenario_item_values(params['--board'], params['--scenario'])
     (err_dic, scenario_items) = validate_scenario_setting(params['--board'], params['--scenario'])
     if err_dic:
-        common.print_red("Validate the scenario item failure", err=True)
+        common.print_red("Scenario xml file validation failed:", err=True)
         return err_dic
 
     # generate board defconfig
