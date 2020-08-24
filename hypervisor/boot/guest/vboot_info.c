@@ -17,7 +17,6 @@
 #include <mmu.h>
 #include <vm.h>
 #include <logmsg.h>
-#include <deprivilege_boot.h>
 #include <vboot_info.h>
 #include <vacpi.h>
 
