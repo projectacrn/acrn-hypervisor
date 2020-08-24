@@ -5,6 +5,7 @@
 
 import common
 import board_cfg_lib
+import scenario_cfg_lib
 
 BOARD_INFO_DEFINE="""#ifndef BOARD_INFO_H
 #define BOARD_INFO_H
@@ -89,5 +90,11 @@ def generate_file(config):
 
     # generate HI_MMIO_START/HI_MMIO_END
     find_hi_mmio_window(config)
+
+    if (common.VM_TYPES.get(0) is not None and
+        scenario_cfg_lib.VM_DB[common.VM_TYPES[0]]['load_type'] == "PRE_LAUNCHED_VM"
+        and board_cfg_lib.is_p2sb_passthru_possible()):
+        print("", file=config)
+        print("#define P2SB_BAR_ADDR\t\t\t0x{:X}UL".format(board_cfg_lib.find_p2sb_bar_addr()), file=config)
 
     print(BOARD_INFO_ENDIF, file=config)

@@ -39,6 +39,8 @@ KNOWN_CAPS_PCI_DEVS_DB = {
     "TSN":TSN_DEVS,
 }
 
+P2SB_PASSTHRU_BOARD = ('ehl-crb-b')
+
 def get_info(board_info, msg_s, msg_e):
     """
     Get information which specify by argument
@@ -680,3 +682,36 @@ def get_ram_range():
                 continue
 
     return ram_range
+
+
+def is_p2sb_passthru_possible():
+
+    p2sb_passthru = False
+    (_, board) = common.get_board_name()
+    if board in P2SB_PASSTHRU_BOARD:
+        p2sb_passthru = True
+
+    return p2sb_passthru
+
+
+def is_matched_board(boardlist):
+
+    (_, board) = common.get_board_name()
+
+    return board in boardlist
+
+
+def find_p2sb_bar_addr():
+    if not is_matched_board(('ehl-crb-b')):
+        common.print_red('find_p2sb_bar_addr() can only be called for board ehl-crb-b', err=True)
+        sys.exit(1)
+
+    iomem_lines = get_info(common.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
+
+    for line in iomem_lines:
+        if 'INTC1020:' in line:
+            start_addr = int(line.split('-')[0], 16) & 0xFF000000
+            return start_addr
+
+    common.print_red('p2sb device is not found in board file %s!\n' % common.BOARD_INFO_FILE, err=True)
+    sys.exit(1)

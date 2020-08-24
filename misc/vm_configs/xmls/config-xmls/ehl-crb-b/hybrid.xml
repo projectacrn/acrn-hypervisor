@@ -77,6 +77,9 @@
         <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
             <pcpu_id>3</pcpu_id>
         </cpu_affinity>
+        <mmio_resources desc="MMIO resources.">
+            <p2sb>n</p2sb>
+        </mmio_resources>
         <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
             <vcpu_clos>0</vcpu_clos>
         </clos>

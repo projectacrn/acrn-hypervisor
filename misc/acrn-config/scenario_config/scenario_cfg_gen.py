@@ -52,6 +52,7 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["vm,clos,vcpu_clos"] = hw_info.get_clos_val()
     scenario_item_values["vm,pci_devs"] = scenario_cfg_lib.avl_pci_devs()
     scenario_item_values["vm,os_config,kern_type"] = scenario_cfg_lib.KERN_TYPE_LIST
+    scenario_item_values["vm,mmio_resources,p2sb"] = hv_cfg_lib.N_Y
     scenario_item_values.update(scenario_cfg_lib.avl_vuart_ui_select(scenario_info))
 
     # board
