@@ -35,6 +35,7 @@
 #define X86_FEATURE_XSAVE	((FEAT_1_ECX << 5U) + 26U)
 #define X86_FEATURE_OSXSAVE	((FEAT_1_ECX << 5U) + 27U)
 #define X86_FEATURE_AVX		((FEAT_1_ECX << 5U) + 28U)
+#define X86_FEATURE_RDRAND	((FEAT_1_ECX << 5U) + 30U)
 
 /* Intel-defined CPU features, CPUID level 0x00000001 (EDX)*/
 #define X86_FEATURE_FPU		((FEAT_1_EDX << 5U) +  0U)

@@ -162,10 +162,9 @@ void cpu_internal_buffers_clear(void)
 	}
 }
 
-#ifdef STACK_PROTECTOR
-static uint64_t get_random_value(void)
+uint64_t get_random_value(void)
 {
-	uint64_t random = 0UL;
+	uint64_t random;
 
 	asm volatile ("1: rdrand %%rax\n"
 			"jnc 1b\n"
@@ -176,6 +175,7 @@ static uint64_t get_random_value(void)
 	return random;
 }
 
+#ifdef STACK_PROTECTOR
 void set_fs_base(void)
 {
 	struct stack_canary *psc = &get_cpu_var(stk_canary);

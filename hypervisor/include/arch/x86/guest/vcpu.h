@@ -203,6 +203,13 @@ struct msr_store_area {
 	uint32_t count;	/* actual count of entries to be loaded/restored during VMEntry/VMExit */
 };
 
+struct iwkey {
+	/* 256bit encryption key */
+	uint64_t encryption_key[4];
+	/* 128bit integration key */
+	uint64_t integrity_key[2];
+};
+
 struct acrn_vcpu_arch {
 	/* vmcs region for this vcpu, MUST be 4KB-aligned */
 	uint8_t vmcs[PAGE_SIZE];
@@ -261,6 +268,7 @@ struct acrn_vcpu_arch {
 	uint64_t eoi_exit_bitmap[EOI_EXIT_BITMAP_SIZE >> 6U];
 
 	/* Keylocker */
+	struct iwkey IWKey;
 	bool cr4_kl_enabled;
 } __aligned(PAGE_SIZE);
 
