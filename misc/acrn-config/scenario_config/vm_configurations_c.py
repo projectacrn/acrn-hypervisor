@@ -357,6 +357,19 @@ def gen_pre_launch_vm(vm_type, vm_i, scenario_items, config):
         print("\t\t\t.size = VM0_TPM_BUFFER_SIZE,", file=config)
         print("\t\t},", file=config)
         print("#endif", file=config)
+
+    if (vm_i == 0 and vm_info.mmio_resource_info.p2sb.get(vm_i) is not None
+        and vm_info.mmio_resource_info.p2sb[vm_i]):
+        print("#ifdef P2SB_BAR_ADDR", file=config)
+        print("\t\t.pt_p2sb_bar = true,", file=config)
+        print("\t\t.mmiodevs[0] = {", file=config)
+        gpa = common.hpa2gpa(0, board_cfg_lib.find_p2sb_bar_addr(), 0x1000000)
+        print("\t\t\t.base_gpa = 0x{:X}UL,".format(gpa), file=config)
+        print("\t\t\t.base_hpa = P2SB_BAR_ADDR,", file=config)
+        print("\t\t\t.size = 0x1000000UL,", file=config)
+        print("\t\t},", file=config)
+        print("#endif", file=config)
+
     print("\t},", file=config)
 
 

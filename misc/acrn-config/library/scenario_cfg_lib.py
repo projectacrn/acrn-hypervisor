@@ -798,3 +798,24 @@ def share_mem_check(shmem_regions, raw_shmem_regions, vm_type_info, prime_item, 
                     or (2 in bar_attr_dic.keys() and int(bar_attr_dic[2].addr, 16) < 0x100000000):
                     ERR_LIST[key] = "Failed to get the start address of the shared memory, please check the size of it."
                     return
+
+
+def check_p2sb(enable_p2sb):
+
+    for vm_i,p2sb in enable_p2sb.items():
+        if vm_i != 0:
+            key = "vm:id={},p2sb".format(vm_i)
+            ERR_LIST[key] = "Can only specify p2sb passthru for VM0"
+            return
+
+        if p2sb and not VM_DB[common.VM_TYPES[0]]['load_type'] == "PRE_LAUNCHED_VM":
+            ERR_LIST["vm:id=0,p2sb"] = "p2sb passthru can only be enabled for Pre-launched VM"
+            return
+
+        if p2sb and not board_cfg_lib.is_p2sb_passthru_possible():
+            ERR_LIST["vm:id=0,p2sb"] = "p2sb passthru is not allowed for this board"
+            return
+
+        if p2sb and board_cfg_lib.is_tpm_passthru():
+            ERR_LIST["vm:id=0,p2sb"] = "Cannot enable p2sb and tpm passthru at the same time"
+            return

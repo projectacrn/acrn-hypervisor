@@ -526,3 +526,25 @@ def get_avl_dev_info(bdf_desc_map, pci_sub_class):
                 tmp_pci_desc.append(pci_desc_value.strip())
 
     return tmp_pci_desc
+
+
+def str2bool(v):
+    return v.lower() in ("yes", "true", "t", "y", "1") if v else False
+
+
+def get_leaf_tag_map_bool(config_file, branch_tag, tag_str=''):
+    """
+    This convert and return map's value from string to bool
+    """
+
+    result = {}
+
+    tag_map = get_leaf_tag_map(config_file, branch_tag, tag_str)
+    for vm_i, s in tag_map.items():
+        result[vm_i] = str2bool(s)
+
+    return result
+
+
+def hpa2gpa(vm_id, hpa, size):
+    return hpa
