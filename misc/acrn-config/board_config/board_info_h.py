@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import sys
 import common
 import board_cfg_lib
 
@@ -66,6 +67,18 @@ def find_hi_mmio_window(config):
     print("#define HI_MMIO_SIZE\t\t\t{}UL".format(hex(board_cfg_lib.HI_MMIO_OFFSET)), file=config)
 
 
+def find_p2sb_bar_addr():
+    iomem_lines = board_cfg_lib.get_info(common.BOARD_INFO_FILE, "<IOMEM_INFO>", "</IOMEM_INFO>")
+
+    for line in iomem_lines:
+        if 'INTC1020:' in line:
+            start_addr = int(line.split('-')[0], 16) & 0xFF000000
+            return start_addr
+
+    common.print_red('"INTC1020:" is not found in board file %s!\n' % common.BOARD_INFO_FILE, err=True)
+    sys.exit(1)
+
+
 def generate_file(config):
     # get cpu processor list
     cpu_list = board_cfg_lib.get_processor_info()
@@ -94,5 +107,9 @@ def generate_file(config):
 
     # generate HI_MMIO_START/HI_MMIO_END
     find_hi_mmio_window(config)
+
+    if board_cfg_lib.is_p2sb_passthru_possible():
+        print("", file=config)
+        print("#define P2SB_BAR_ADDR\t\t\t0x{:X}UL".format(find_p2sb_bar_addr()), file=config)
 
     print(BOARD_INFO_ENDIF, file=config)

@@ -39,6 +39,9 @@ KNOWN_CAPS_PCI_DEVS_DB = {
     "TSN":TSN_DEVS,
 }
 
+P2SB_PASSTHRU_BOARD = ('ehl-crb-b')
+P2SB_PASSTHRU_SCENARIO = ('hybrid', 'hybrid_rt')
+
 def get_info(board_info, msg_s, msg_e):
     """
     Get information which specify by argument
@@ -680,3 +683,14 @@ def get_ram_range():
                 continue
 
     return ram_range
+
+
+def is_p2sb_passthru_possible():
+
+    p2sb_passthru = False
+    (_, board) = common.get_board_name()
+    (_, scenario) = common.get_scenario_name()
+    if board in P2SB_PASSTHRU_BOARD and scenario in P2SB_PASSTHRU_SCENARIO:
+        p2sb_passthru = True
+
+    return p2sb_passthru

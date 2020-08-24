@@ -272,6 +272,29 @@ class LoadOrderNum:
         self.sos_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "SOS_VM")
         self.post_vm = scenario_cfg_lib.get_load_vm_cnt(load_vm, "POST_LAUNCHED_VM")
 
+
+class MmioResourcesInfo:
+    """ This is Abstract of class of mmio resource setting information """
+    p2sb = False
+
+    def __init__(self, scenario_file):
+        self.scenario_info = scenario_file
+
+    def get_info(self):
+        """
+        Get all items which belong to this class
+        :return: None
+        """
+        self.p2sb = common.get_leaf_tag_map_bool(self.scenario_info, "mmio_resources", "p2sb")
+
+    def check_item(self):
+        """
+        Check all items in this class
+        :return: None
+        """
+        scenario_cfg_lib.check_p2sb(self.p2sb)
+
+
 class VmInfo:
     """ This is Abstract of class of VM setting """
     name = {}
@@ -292,6 +315,8 @@ class VmInfo:
         self.cfg_pci = CfgPci(self.scenario_info)
         self.load_order_cnt = LoadOrderNum()
         self.shmem = ShareMem(self.scenario_info)
+        self.mmio_resource_info = MmioResourcesInfo(self.scenario_info)
+
 
     def get_info(self):
         """
@@ -313,6 +338,7 @@ class VmInfo:
         self.vuart.get_info()
         self.cfg_pci.get_info()
         self.load_order_cnt.get_info(self.load_vm)
+        self.mmio_resource_info.get_info()
 
     def set_ivshmem(self, ivshmem_regions):
         """
@@ -352,4 +378,5 @@ class VmInfo:
         self.cfg_pci.check_item()
         self.vuart.check_item()
         self.shmem.check_items()
+        self.mmio_resource_info.check_item()
         scenario_cfg_lib.ERR_LIST.update(err_dic)
