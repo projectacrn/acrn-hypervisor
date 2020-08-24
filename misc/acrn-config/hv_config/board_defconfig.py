@@ -160,7 +160,6 @@ def get_serial_console(config):
 def get_miscfg(hv_info, config):
 
     print("CONFIG_GPU_SBDF={}".format(hv_info.mis.gpu_sbdf), file=config)
-    print('CONFIG_UEFI_OS_LOADER_NAME="{}"'.format(hv_info.mis.uefi_os_loader_name), file=config)
 
 
 def get_features(hv_info, config):

@@ -97,14 +97,6 @@ def ir_entries_check(str_num, cap, cap_ir_entries):
         ERR_LIST[key] = "{} should be a value of 2^n".format(cap_ir_entries)
 
 
-def uefi_load_name_check(str_name, mis, mis_uefi_name):
-
-    name_len = len(str_name)
-    if name_len > 256 or name_len < 0:
-        key = 'hv,{},{}'.format(mis, mis_uefi_name)
-        ERR_LIST[key] = "{} length should be in range[0, 256]".format(mis_uefi_name)
-
-
 def ny_support_check(sel_str, feat, feat_item, feat_sub_leaf=''):
     if empty_check(sel_str, feat, feat_item, feat_sub_leaf):
         return

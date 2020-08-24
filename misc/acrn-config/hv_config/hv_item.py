@@ -86,15 +86,12 @@ class MisCfg:
     def __init__(self, hv_file):
         self.hv_file = hv_file
         self.gpu_sbdf = 0
-        self.uefi_os_loader_name = ''
 
     def get_info(self):
         self.gpu_sbdf =  common.get_hv_item_tag(self.hv_file, "MISC_CFG", "GPU_SBDF")
-        self.uefi_os_loader_name = common.get_hv_item_tag(self.hv_file, "MISC_CFG", "UEFI_OS_LOADER_NAME")
 
     def check_item(self):
         hv_cfg_lib.hv_size_check(self.gpu_sbdf, "MISC_CFG", "GPU_SBDF")
-        hv_cfg_lib.uefi_load_name_check(self.uefi_os_loader_name, "MISC_CFG", "UEFI_OS_LOADER_NAME")
 
 
 class Features:
