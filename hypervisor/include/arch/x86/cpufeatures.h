@@ -78,6 +78,9 @@
 #define X86_FEATURE_SMAP	((FEAT_7_0_EBX << 5U) + 20U)
 #define X86_FEATURE_CLFLUSHOPT	((FEAT_7_0_EBX << 5U) + 23U)
 
+/* Intel-defined CPU features, CPUID level 0x00000007 (ECX)*/
+#define X86_FEATURE_KEYLOCKER	((FEAT_7_0_ECX << 5U) + 23U)
+
 /* Intel-defined CPU features, CPUID level 0x00000007 (EDX)*/
 #define X86_FEATURE_MDS_CLEAR	((FEAT_7_0_EDX << 5U) + 10U)
 #define X86_FEATURE_IBRS_IBPB	((FEAT_7_0_EDX << 5U) + 26U)
