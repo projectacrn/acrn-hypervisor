@@ -14,6 +14,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 
 		/* Allow SOS to reboot the host since there is supposed to be the highest severity guest */
 		.guest_flags = 0UL,
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM0_VCPU_CLOS,
+#endif
 		.cpu_affinity = SOS_VM_CONFIG_CPU_AFFINITY,
 		.memory = {
 			.start_hpa = 0UL,
@@ -40,6 +43,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM1 */
 		CONFIG_POST_STD_VM(1),
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM1_VCPU_CLOS,
+#endif
 		.cpu_affinity = VM1_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
@@ -53,6 +59,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM2 */
 		CONFIG_POST_RT_VM(1),
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM2_VCPU_CLOS,
+#endif
 		.cpu_affinity = VM2_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
@@ -69,6 +78,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM3 */
 		CONFIG_POST_STD_VM(2),
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM3_VCPU_CLOS,
+#endif
 		.cpu_affinity = VM3_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
@@ -82,6 +94,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM4 */
 		CONFIG_POST_STD_VM(3),
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM4_VCPU_CLOS,
+#endif
 		.cpu_affinity = VM4_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
@@ -95,6 +110,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM5 */
 		CONFIG_POST_STD_VM(4),
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM5_VCPU_CLOS,
+#endif
 		.cpu_affinity = VM5_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
@@ -108,6 +126,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM6 */
 		CONFIG_POST_STD_VM(5),
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM6_VCPU_CLOS,
+#endif
 		.cpu_affinity = VM6_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
@@ -121,6 +142,9 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	},
 	{	/* VM7 */
 		CONFIG_KATA_VM(1),
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM7_VCPU_CLOS,
+#endif
 		.cpu_affinity = VM7_CONFIG_CPU_AFFINITY,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
