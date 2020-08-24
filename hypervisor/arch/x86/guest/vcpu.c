@@ -270,6 +270,7 @@ static void vcpu_reset_internal(struct acrn_vcpu *vcpu, enum reset_mode mode)
 	}
 
 	init_iwkey(vcpu);
+	vcpu->arch.iwkey_copy_status = 0UL;
 }
 
 struct acrn_vcpu *get_running_vcpu(uint16_t pcpu_id)

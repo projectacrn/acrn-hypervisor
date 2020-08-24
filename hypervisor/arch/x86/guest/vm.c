@@ -468,6 +468,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		spinlock_init(&vm->vlapic_mode_lock);
 		spinlock_init(&vm->ept_lock);
 		spinlock_init(&vm->emul_mmio_lock);
+		spinlock_init(&vm->arch_vm.iwkey_backup_lock);
 
 		vm->arch_vm.vlapic_mode = VM_VLAPIC_XAPIC;
 		vm->intr_inject_delay_delta = 0UL;
@@ -717,6 +718,7 @@ int32_t reset_vm(struct acrn_vm *vm)
 	reset_vioapics(vm);
 	destroy_secure_world(vm, false);
 	vm->sworld_control.flag.active = 0UL;
+	vm->arch_vm.iwkey_backup_status = 0UL;
 	vm->state = VM_CREATED;
 
 	return ret;
