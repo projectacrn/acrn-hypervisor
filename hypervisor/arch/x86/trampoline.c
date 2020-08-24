@@ -9,7 +9,6 @@
 #include <per_cpu.h>
 #include <trampoline.h>
 #include <reloc.h>
-#include <vboot.h>
 #include <ld_sym.h>
 
 static uint64_t trampoline_start16_paddr;
@@ -110,7 +109,7 @@ uint64_t prepare_trampoline(void)
 	uint64_t size, dest_pa, i;
 
 	size = (uint64_t)(&ld_trampoline_end - &ld_trampoline_start);
-	dest_pa = get_ap_trampoline_buf();
+	dest_pa = e820_alloc_memory(CONFIG_LOW_RAM_SIZE, MEM_1M);
 
 	pr_dbg("trampoline code: %lx size %x", dest_pa, size);
 

@@ -181,7 +181,7 @@ static void prepare_loading_rawimage(struct acrn_vm *vm)
 /**
  * @pre vm != NULL
  */
-int32_t direct_boot_sw_loader(struct acrn_vm *vm)
+int32_t vm_sw_loader(struct acrn_vm *vm)
 {
 	int32_t ret = 0;
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);

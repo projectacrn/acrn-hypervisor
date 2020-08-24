@@ -25,7 +25,6 @@
 #include <mmu.h>
 #include <logmsg.h>
 #include <vboot_info.h>
-#include <vboot.h>
 #include <board.h>
 #include <sgx.h>
 #include <sbuf.h>
@@ -33,10 +32,9 @@
 #include <vacpi.h>
 #include <platform_caps.h>
 #include <mmio_dev.h>
+#include <trampoline.h>
 #include <assign.h>
 #include <vgpio.h>
-
-vm_sw_loader_t vm_sw_loader;
 
 /* Local variables */
 
@@ -349,12 +347,9 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	}
 
 	/* unmap AP trampoline code for security
-	 * 'allocate_pages()' in depri boot mode or
-	 * 'e820_alloc_memory()' in direct boot
-	 * mode will ensure the base address of tramploline
-	 * code be page-aligned.
+	 * This buffer is guaranteed to be page aligned.
 	 */
-	ept_del_mr(vm, pml4_page, get_ap_trampoline_buf(), CONFIG_LOW_RAM_SIZE);
+	ept_del_mr(vm, pml4_page, get_trampoline_start16_paddr(), CONFIG_LOW_RAM_SIZE);
 
 	/* unmap PCIe MMCONFIG region since it's owned by hypervisor */
 	pci_mmcfg = get_mmcfg_region();

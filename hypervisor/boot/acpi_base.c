@@ -28,7 +28,6 @@
  */
 #include <types.h>
 #include <rtl.h>
-#include <vboot.h>
 #include "acpi.h"
 #include <pgtable.h>
 #include <ioapic.h>
@@ -36,6 +35,7 @@
 #include <acrn_common.h>
 #include <util.h>
 #include <e820.h>
+#include <boot.h>
 
 static struct acpi_table_rsdp *acpi_rsdp;
 
