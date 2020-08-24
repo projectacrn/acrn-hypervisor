@@ -22,9 +22,9 @@ const uint16_t hv_clos = 0U;
  * clos value (valid_clos_num) that is common between the resources as
  * each resource's clos max value to have consistent allocation.
  */
+#ifdef CONFIG_RDT_ENABLED
 uint16_t valid_clos_num = HV_SUPPORTED_MAX_CLOS;
 
-#ifdef CONFIG_RDT_ENABLED
 static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 	[RDT_RESOURCE_L3] = {
 		.res.cache = {
@@ -35,7 +35,7 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 		.clos_max = 0U,
 		.res_id = RDT_RESID_L3,
 		.msr_base = MSR_IA32_L3_MASK_BASE,
-		.platform_clos_array = platform_l3_clos_array, 
+		.platform_clos_array = platform_l3_clos_array,
 	},
 	[RDT_RESOURCE_L2] = {
 		.res.cache = {
@@ -56,7 +56,7 @@ static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {
 		.clos_max = 0U,
 		.res_id = RDT_RESID_MBA,
 		.msr_base = MSR_IA32_MBA_MASK_BASE,
-		.platform_clos_array = platform_mba_clos_array, 
+		.platform_clos_array = platform_mba_clos_array,
 	},
 };
 
@@ -78,11 +78,11 @@ static void init_cat_capability(int res)
 #ifdef CONFIG_CDP_ENABLED
 	res_cap_info[res].res.cache.is_cdp_enabled = ((ecx & 0x4U) != 0U);
 #else
-	res_cap_info[res].res.cache.is_cdp_enabled = false; 
+	res_cap_info[res].res.cache.is_cdp_enabled = false;
 #endif
 	if (res_cap_info[res].res.cache.is_cdp_enabled) {
 		res_cap_info[res].clos_max = (uint16_t)((edx & 0xffffU) >> 1U) + 1U;
-		/* enable CDP before setting COS to simplify CAT mask rempping
+		/* enable CDP before setting COS to simplify CAT mask remapping
 		 * and prevent unintended behavior.
 		 */
 		msr_write(res_cap_info[res].res.cache.msr_qos_cfg, 0x1UL);
@@ -107,7 +107,7 @@ static void init_mba_capability(int res)
 }
 
 /*
- * @pre valid_clos_num > 0U 
+ * @pre valid_clos_num > 0U
  */
 void init_rdt_info(void)
 {
@@ -148,7 +148,7 @@ void init_rdt_info(void)
 /*
  * @pre res < RDT_NUM_RESOURCES
  * @pre res_clos_info[i].mba_delay <= res_cap_info[res].res.membw.mba_max
- * @pre length of res_clos_info[i].clos_mask <= cbm_len && all 1's in clos_mask is continuous 
+ * @pre length of res_clos_info[i].clos_mask <= cbm_len && all 1's in clos_mask is continuous
  */
 static void setup_res_clos_msr(uint16_t pcpu_id, uint16_t res, struct platform_clos_info *res_clos_info)
 {
@@ -163,10 +163,10 @@ static void setup_res_clos_msr(uint16_t pcpu_id, uint16_t res, struct platform_c
 		switch (res) {
 		case RDT_RESOURCE_L3:
 		case RDT_RESOURCE_L2:
-			val = (uint64_t)res_clos_info[i].clos_mask;
+			val = (uint64_t)res_clos_info[i].value.clos_mask;
 			break;
 		case RDT_RESOURCE_MBA:
-			val = (uint64_t)res_clos_info[i].mba_delay;
+			val = (uint64_t)res_clos_info[i].value.mba_delay;
 			break;
 		default:
 			ASSERT(res < RDT_NUM_RESOURCES, "Support only 3 RDT resources. res=%d is invalid", res);
