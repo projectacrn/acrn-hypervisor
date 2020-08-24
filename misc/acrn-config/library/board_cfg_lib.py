@@ -694,3 +694,10 @@ def is_p2sb_passthru_possible():
         p2sb_passthru = True
 
     return p2sb_passthru
+
+
+def is_matched_board(boardlist):
+
+    (_, board) = common.get_board_name()
+
+    return board in boardlist

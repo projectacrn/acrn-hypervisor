@@ -809,3 +809,56 @@ def check_p2sb(enable_p2sb):
         if p2sb and board_cfg_lib.is_tpm_passthru():
             ERR_LIST["vm:id=0,p2sb"] = "Cannot enable p2sb and tpm passthru at the same time"
             return
+
+
+def check_pt_intx(phys_pin, virt_pin):
+
+    if not phys_pin and not virt_pin:
+        return
+
+    (_, board) = common.get_board_name()
+    if board != "ehl-crb-b":
+        ERR_LIST["pt_intx"] = "only board ehl-crb-b is supported"
+        return
+
+    (_, scenario) = common.get_scenario_name()
+    if scenario != "hybrid" and scenario != "hybrid_rt":
+        ERR_LIST["pt_intx"] = "only scenario hybrid/hybrid_rt is supported"
+        return
+
+    if not phys_pin and virt_pin:
+        ERR_LIST["pt_intx"] = "phys_pin is not specified"
+        return
+
+    if phys_pin and not virt_pin:
+        ERR_LIST["pt_intx"] = "virt_pin is not specified"
+        return
+
+    for (id1,p), (id2,v) in zip(phys_pin.items(), virt_pin.items()):
+        if id1 != 0 or id2 != 0:
+            ERR_LIST["pt_intx"] = "virt_pin and phys_pin can only be specified for VM0"
+            return
+
+        if len(p) != len(v):
+            ERR_LIST["pt_intx"] = "virt_pin and phys_pin must have same length"
+            return
+
+        if len(p) != len(set(p)):
+            ERR_LIST["pt_intx"] = "phys_pin contains duplicates"
+            return
+
+        if len(v) != len(set(v)):
+            ERR_LIST["pt_intx"] = "virt_pin contains duplicates"
+            return
+
+        if len(p) > 120:
+            ERR_LIST["pt_intx"] = "# of phys_pin must not be greater than 120"
+            return
+
+        if not all(pin < 120 for pin in p):
+            ERR_LIST["pt_intx"] = "phys_pin must be less than 120"
+            return
+
+        if not all(pin < 120 for pin in v):
+            ERR_LIST["pt_intx"] = "virt_pin must be less than 120"
+            return
