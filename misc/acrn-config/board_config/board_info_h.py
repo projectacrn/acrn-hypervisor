@@ -97,4 +97,9 @@ def generate_file(config):
         print("", file=config)
         print("#define P2SB_BAR_ADDR\t\t\t0x{:X}UL".format(board_cfg_lib.find_p2sb_bar_addr()), file=config)
 
+    if board_cfg_lib.is_matched_board(("ehl-crb-b")):
+        print("", file=config)
+        print("#define BASE_GPIO_PORT_ID\t\t0x69U", file=config)
+        print("#define MAX_GPIO_COMMUNITIES\t0x6U", file=config)
+
     print(BOARD_INFO_ENDIF, file=config)

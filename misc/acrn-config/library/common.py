@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import xml.etree.ElementTree as ET
 
+
 ACRN_CONFIG_TARGET = ''
 SOURCE_ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../')
 HV_LICENSE_FILE = SOURCE_ROOT_DIR + 'misc/acrn-config/library/hypervisor_license'
@@ -548,3 +549,14 @@ def get_leaf_tag_map_bool(config_file, branch_tag, tag_str=''):
 
 def hpa2gpa(vm_id, hpa, size):
     return hpa
+
+
+def str2int(x):
+    s = x.replace(" ", "").lower()
+
+    if s:
+        base = 10
+        if s.startswith('0x'): base = 16
+        return int(s, base)
+
+    return 0
