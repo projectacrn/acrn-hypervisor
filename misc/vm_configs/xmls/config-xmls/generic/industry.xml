@@ -54,7 +54,6 @@
 
     <MISC_CFG>
         <GPU_SBDF desc="Segment, Bus, Device, and function of the GPU.">0x00000010</GPU_SBDF>
-        <UEFI_OS_LOADER_NAME desc="UEFI OS loader name.">\\EFI\\BOOT\\bootx64.efi</UEFI_OS_LOADER_NAME>
     </MISC_CFG>
   </hv>
 
