@@ -617,6 +617,18 @@ vm_unmap_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
 }
 
 int
+vm_create_hv_vdev(struct vmctx *ctx, struct acrn_emul_dev *dev)
+{
+	return ioctl(ctx->fd, IC_CREATE_HV_VDEV, dev);
+}
+
+int
+vm_destroy_hv_vdev(struct vmctx *ctx, struct acrn_emul_dev *dev)
+{
+	return ioctl(ctx->fd, IC_DESTROY_HV_VDEV, dev);
+}
+
+int
 vm_set_ptdev_intx_info(struct vmctx *ctx, uint16_t virt_bdf, uint16_t phys_bdf,
 		       int virt_pin, int phys_pin, bool pic_pin)
 {
