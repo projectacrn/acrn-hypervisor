@@ -76,6 +76,7 @@ static bool check_vm_uuid_collision(uint16_t vm_id)
 	return ret;
 }
 
+#ifdef CONFIG_RDT_ENABLED
 static bool check_vm_clos_config(uint16_t vm_id)
 {
 	uint16_t i;
@@ -95,6 +96,7 @@ static bool check_vm_clos_config(uint16_t vm_id)
 	}
 	return ret;
 }
+#endif
 
 /**
  * @pre vm_config != NULL
@@ -157,9 +159,11 @@ bool sanitize_vm_config(void)
 			}
 		}
 
+#ifdef CONFIG_RDT_ENABLED
 		if (ret) {
 			ret = check_vm_clos_config(vm_id);
 		}
+#endif
 
 		if (ret &&
 		    (((vm_config->epc.size | vm_config->epc.base) & ~PAGE_MASK) != 0UL)) {
