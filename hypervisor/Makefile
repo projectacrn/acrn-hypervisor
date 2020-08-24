@@ -261,9 +261,6 @@ ifeq ($(CONFIG_ACPI_PARSE_ENABLED),y)
 HW_C_SRCS += acpi_parser/dmar_parse.c
 HW_C_SRCS += acpi_parser/acpi_ext.c
 endif
-HW_C_SRCS += boot/guest/vboot_wrapper.c
-HW_C_SRCS += boot/guest/deprivilege_boot.c
-HW_C_SRCS += boot/guest/direct_boot.c
 
 # VM Configuration
 VM_CFG_C_SRCS += $(BOARD_INFO_DIR)/board.c

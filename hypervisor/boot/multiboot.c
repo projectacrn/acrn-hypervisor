@@ -123,3 +123,16 @@ struct acrn_multiboot_info *get_multiboot_info(void)
 {
 	return &acrn_mbi;
 }
+
+const void* get_rsdp_ptr(void)
+{
+	const void *rsdp_ptr;
+
+	if (boot_from_multiboot2()) {
+		rsdp_ptr = acrn_mbi.mi_acpi_rsdp_va;
+	} else {
+		rsdp_ptr = NULL;
+	}
+
+	return rsdp_ptr;
+}
