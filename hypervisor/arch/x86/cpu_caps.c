@@ -491,6 +491,9 @@ int32_t detect_hardware_support(void)
 	} else if (!pcpu_has_cap(X86_FEATURE_COMPACTION_EXT)) {
 		printf("%s, Compaction extensions in XSAVE is not supported\n", __func__);
 		ret = -ENODEV;
+	} else if (!pcpu_has_cap(X86_FEATURE_RDRAND)) {
+		printf("%s, RDRAND is not supported\n", __func__);
+		ret = -ENODEV;
 	} else {
 		ret = check_vmx_mmu_cap();
 	}
