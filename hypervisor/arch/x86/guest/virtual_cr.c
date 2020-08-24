@@ -54,7 +54,7 @@
 				CR4_UMIP | CR4_LA57)
 static uint64_t cr4_passthru_mask = CR4_PASSTHRU_BITS;	/* bound to flexible bits */
 
-#define CR4_TRAP_AND_PASSTHRU_BITS	(CR4_PSE | CR4_PAE | CR4_SMEP | CR4_SMAP | CR4_PKE | CR4_PKS)
+#define CR4_TRAP_AND_PASSTHRU_BITS	(CR4_PSE | CR4_PAE | CR4_SMEP | CR4_SMAP | CR4_PKE | CR4_PKS | CR4_KL)
 static uint64_t	cr4_trap_and_passthru_mask = CR4_TRAP_AND_PASSTHRU_BITS; /* bound to flexible bits */
 
 #define CR4_TRAP_AND_EMULATE_BITS	CR4_MCE /* software emulated bits even if host is fixed */
@@ -385,6 +385,14 @@ static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 					err_found = true;
 					vcpu_inject_gp(vcpu, 0U);
 				}
+			}
+		}
+
+		if (!err_found && ((cr4_changed_bits & CR4_KL) != 0UL)) {
+			if ((cr4 & CR4_KL) != 0UL) {
+				vcpu->arch.cr4_kl_enabled = true;
+			} else {
+				vcpu->arch.cr4_kl_enabled = false;
 			}
 		}
 
