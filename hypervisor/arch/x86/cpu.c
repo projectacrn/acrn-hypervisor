@@ -42,6 +42,7 @@ static uint64_t startup_paddr = 0UL;
 static volatile uint64_t pcpu_active_bitmap = 0UL;
 
 static void init_pcpu_xsave(void);
+static void init_keylocker(void);
 static void set_current_pcpu_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
 static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id);
@@ -291,6 +292,8 @@ void init_pcpu_post(uint16_t pcpu_id)
 	enable_smep();
 
 	enable_smap();
+
+	init_keylocker();
 }
 
 static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id)
@@ -543,6 +546,17 @@ static void init_pcpu_xsave(void)
 	}
 }
 
+static void init_keylocker(void)
+{
+	uint64_t val64;
+
+	/* Enable host CR4.KL if keylocker feature is supported */
+	if (pcpu_has_cap(X86_FEATURE_KEYLOCKER)) {
+		CPU_CR_READ(cr4, &val64);
+		val64 |= CR4_KL;
+		CPU_CR_WRITE(cr4, val64);
+	}
+}
 
 static void smpcall_write_msr_func(void *data)
 {
