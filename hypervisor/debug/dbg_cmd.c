@@ -10,6 +10,7 @@
 #include <uart16550.h>
 #include <dbg_cmd.h>
 #include <vm_config.h>
+#include <shell.h>
 
 #define MAX_PORT			0x10000  /* port 0 - 64K */
 #define DEFAULT_UART_PORT	0x3F8
@@ -20,6 +21,7 @@ static const char * const cmd_list[] = {
 	"uart=disabled",	/* to disable uart */
 	"uart=port@",		/* like uart=port@0x3F8 */
 	"uart=bdf@",	/*like: uart=bdf@0:18.2, it is for ttyS2 */
+	"vmexit=enable"
 };
 
 enum IDX_CMD_DBG {
@@ -27,6 +29,7 @@ enum IDX_CMD_DBG {
 	IDX_PORT_UART,
 	IDX_PCI_UART,
 
+	IDX_SET_VMEXIT,
 	IDX_MAX_CMD,
 };
 
@@ -104,6 +107,9 @@ bool handle_dbg_cmd(const char *cmd, int32_t len)
 
 		} else if (i == IDX_PCI_UART) {
 			uart16550_set_property(true, false, (uint64_t)(cmd+tmp));
+		} else if (i == IDX_SET_VMEXIT) {
+
+			set_vmexit_sample_flag(true);
 		} else {
 			/* No other state currently, do nothing */
 		}
