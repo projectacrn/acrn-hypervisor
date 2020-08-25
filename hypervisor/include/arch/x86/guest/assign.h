@@ -142,6 +142,20 @@ void ptirq_remove_intx_remapping(const struct acrn_vm *vm, uint32_t virt_gsi, bo
 void ptirq_remove_msix_remapping(const struct acrn_vm *vm, uint16_t phys_bdf, uint32_t vector_count);
 
 /**
+ * @brief Remove all interrupt remappings for INTx which are defined in VM config.
+ *
+ * Deactivate & remove all mapping entries of the virt_gsis defined in VM config for given vm.
+ *
+ * @param[in] vm pointer to acrn_vm
+ *
+ * @return None
+ *
+ * @pre vm != NULL
+ *
+ */
+void ptirq_remove_configured_intx_remappings(const struct acrn_vm *vm);
+
+/**
   * @}
   */
 
