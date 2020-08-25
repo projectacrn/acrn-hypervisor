@@ -173,6 +173,28 @@ def generate_file(config):
     # sos command lines information
     sos_cmdlines = [i for i in sos_cmdlines[0].split() if i != '']
 
+    # add maxcpus parameter into sos cmdlines if there are pre-launched VMs
+    pcpu_list = board_cfg_lib.get_processor_info()
+    cpu_affinity = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "cpu_affinity", "pcpu_id")
+    pre_cpu_list = []
+    sos_cpu_num = 0
+    for vmid, cpu_list in cpu_affinity.items():
+        if vmid in common.VM_TYPES and cpu_list != [None]:
+            vm_type = common.VM_TYPES[vmid]
+            load_type = ''
+            if vm_type in scenario_cfg_lib.VM_DB:
+                load_type = scenario_cfg_lib.VM_DB[vm_type]['load_type']
+            if load_type == "PRE_LAUNCHED_VM":
+                pre_cpu_list += cpu_list
+            elif load_type == "SOS_VM":
+                sos_cpu_num += len(cpu_list)
+    if sos_cpu_num == 0:
+        sos_cpu_num_max = len(list(set(pcpu_list) - set(pre_cpu_list)))
+    else:
+        sos_cpu_num_max = sos_cpu_num
+    if sos_cpu_num_max > 0:
+        sos_cmdlines.append('maxcpus='+str(sos_cpu_num_max))
+
     # get native rootfs list from board_info.xml
     (root_devs, root_dev_num) = board_cfg_lib.get_rootfs(common.BOARD_INFO_FILE)
 
