@@ -517,9 +517,18 @@ def cpus_assignment(cpus_per_vm, index):
     """
     vm_cpu_bmp = {}
     if "SOS_VM" == common.VM_TYPES[index]:
-        if index not in cpus_per_vm:
+        if index not in cpus_per_vm or cpus_per_vm[index] == [None]:
             sos_extend_all_cpus = board_cfg_lib.get_processor_info()
-            cpus_per_vm[index] = sos_extend_all_cpus
+            pre_all_cpus = []
+            for vmid, cpu_list in cpus_per_vm.items():
+                if vmid in common.VM_TYPES:
+                    vm_type = common.VM_TYPES[vmid]
+                    load_type = ''
+                    if vm_type in VM_DB:
+                        load_type = VM_DB[vm_type]['load_type']
+                    if load_type == "PRE_LAUNCHED_VM":
+                        pre_all_cpus += cpu_list
+            cpus_per_vm[index] = list(set(sos_extend_all_cpus) - set(pre_all_cpus))
 
     for i in range(len(cpus_per_vm[index])):
         if i == 0:

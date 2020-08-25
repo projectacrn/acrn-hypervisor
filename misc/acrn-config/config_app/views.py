@@ -159,6 +159,8 @@ def save_scenario():
     old_scenario_name = scenario_config_data['old_scenario_name']
     scenario_config.set_curr(old_scenario_name)
     for key in scenario_config_data:
+        if scenario_config_data[key] in [None, 'None']:
+            scenario_config_data[key] = ''
         if key not in ['old_scenario_name', 'new_scenario_name', 'generator', 'add_vm_type']:
             if isinstance(scenario_config_data[key], list):
                 scenario_config.set_curr_list(scenario_config_data[key], *tuple(key.split(',')))
@@ -285,6 +287,8 @@ def save_launch():
                                       'user_defined', scenario_name + '.xml')
 
     for key in launch_config_data:
+        if launch_config_data[key] in [None, 'None']:
+            launch_config_data[key] = ''
         if key not in ['old_launch_name', 'new_launch_name', 'generator', 'add_launch_type', 'scenario_name']:
             if isinstance(launch_config_data[key], list):
                 launch_config.set_curr_list(launch_config_data[key], *tuple(key.split(',')))
