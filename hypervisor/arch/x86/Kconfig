@@ -334,14 +334,6 @@ config L1D_FLUSH_VMENTRY_ENABLED
 	bool "Enable L1 cache flush before VM entry"
 	default n
 
-config UEFI_OS_LOADER_NAME
-	string "UEFI OS loader name"
-	default "\\EFI\\BOOT\\bootx64.efi"
-	help
-	  Name of the UEFI bootloader that starts the Service VM. This is
-	  typically the systemd-boot or Grub bootloader but could be any other
-	  UEFI executable.
-
 config MCE_ON_PSC_WORKAROUND_DISABLED
 	bool "Force to disable software workaround for Machine Check Error on Page Size Change"
 	default n
