@@ -14,6 +14,7 @@
 #include <sprintf.h>
 #include <trace.h>
 #include <logmsg.h>
+#include <shell.h>
 
 void vcpu_thread(struct thread_object *obj)
 {
@@ -47,31 +48,33 @@ void vcpu_thread(struct thread_object *obj)
 		profiling_vmenter_handler(vcpu);
 
 #ifdef HV_DEBUG
-		vmexit_end = rdtsc();
-		if (vmexit_begin != 0UL) {
-			uint64_t delta = vmexit_end - vmexit_begin;
-			uint32_t us = (uint32_t)ticks_to_us(delta);
-			uint16_t fls = (uint16_t)(fls32(us) + 1); /* to avoid us = 0 case, then fls=0xFFFF */
-			uint16_t index = 0;
+		if (is_vmexit_sample_enabled()) {
+			vmexit_end = rdtsc();
+			if (vmexit_begin != 0UL) {
+				uint64_t delta = vmexit_end - vmexit_begin;
+				uint32_t us = (uint32_t)ticks_to_us(delta);
+				uint16_t fls = (uint16_t)(fls32(us) + 1); /* to avoid us = 0 case, then fls=0xFFFF */
+				uint16_t index = 0;
 
-			if (fls >= MAX_VMEXIT_LEVEL) {
-				index = MAX_VMEXIT_LEVEL - 1;
-			} else if (fls > 0) { //if fls == 0, it means the us = 0
-				index = fls - 1;
-			}
+				if (fls >= MAX_VMEXIT_LEVEL) {
+					index = MAX_VMEXIT_LEVEL - 1;
+				} else if (fls > 0) { //if fls == 0, it means the us = 0
+					index = fls - 1;
+				}
 
-			get_cpu_var(vmexit_cnt)[basic_exit_reason][index]++;
-			get_cpu_var(vmexit_time)[basic_exit_reason][0] += delta;
+				get_cpu_var(vmexit_cnt)[basic_exit_reason][index]++;
+				get_cpu_var(vmexit_time)[basic_exit_reason][0] += delta;
 
-			vcpu->vmexit_cnt[basic_exit_reason][index]++;
-			vcpu->vmexit_time[basic_exit_reason][0] += delta;
+				vcpu->vmexit_cnt[basic_exit_reason][index]++;
+				vcpu->vmexit_time[basic_exit_reason][0] += delta;
 
-			if (us > get_cpu_var(vmexit_time)[basic_exit_reason][1]) {
-				get_cpu_var(vmexit_time)[basic_exit_reason][1] = us;
-			}
+				if (us > get_cpu_var(vmexit_time)[basic_exit_reason][1]) {
+					get_cpu_var(vmexit_time)[basic_exit_reason][1] = us;
+				}
 
-			if (us > vcpu->vmexit_time[basic_exit_reason][1]) {
-				vcpu->vmexit_time[basic_exit_reason][1] = us;
+				if (us > vcpu->vmexit_time[basic_exit_reason][1]) {
+					vcpu->vmexit_time[basic_exit_reason][1] = us;
+				}
 			}
 		}
 #endif
@@ -87,9 +90,11 @@ void vcpu_thread(struct thread_object *obj)
 		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason, vcpu_get_rip(vcpu));
 
 #ifdef HV_DEBUG
-		vmexit_begin = rdtsc();
-		get_cpu_var(vmexit_cnt)[basic_exit_reason][TOTAL_ARRAY_LEVEL - 1]++;
-		vcpu->vmexit_cnt[basic_exit_reason][TOTAL_ARRAY_LEVEL - 1]++;
+		if (is_vmexit_sample_enabled()) {
+			vmexit_begin = rdtsc();
+			get_cpu_var(vmexit_cnt)[basic_exit_reason][TOTAL_ARRAY_LEVEL - 1]++;
+			vcpu->vmexit_cnt[basic_exit_reason][TOTAL_ARRAY_LEVEL - 1]++;
+		}
 #endif
 		vcpu->arch.nrexits++;
 

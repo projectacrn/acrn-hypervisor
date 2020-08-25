@@ -1913,10 +1913,17 @@ static void clear_vmexit_info_buffer(void)
 
 }
 
+/* used to control sample vmexit data */
+static bool vmexit_sample_flag = false;
+
 static int shell_show_vmexit_profile(__unused int argc, __unused char **argv)
 {
 	if ((argc == 2) && (strcmp(argv[1], "clear") == 0)) {
 		clear_vmexit_info_buffer();
+	}
+
+	if (!vmexit_sample_flag) {
+		printf("not enable to sample vmexit data!");
 	}
 
 	get_vmexit_profile_per_pcpu(shell_log_buf, SHELL_LOG_BUF_SIZE);
@@ -1932,4 +1939,14 @@ static int shell_show_vmexit_profile(__unused int argc, __unused char **argv)
 	shell_puts(shell_log_buf);
 
 	return 0;
+}
+
+void set_vmexit_sample_flag(bool to_enable)
+{
+	vmexit_sample_flag = to_enable;
+}
+
+bool is_vmexit_sample_enabled(void)
+{
+	return vmexit_sample_flag;
 }

@@ -10,4 +10,7 @@
 void shell_init(void);
 void shell_kick(void);
 
+void set_vmexit_sample_flag(bool to_enable);
+bool is_vmexit_sample_enabled(void);
+
 #endif /* SHELL_H */
