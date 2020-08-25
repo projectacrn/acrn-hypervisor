@@ -20,6 +20,7 @@
 #include <logmsg.h>
 #include <ioapic.h>
 #include <mmio_dev.h>
+#include <ivshmem.h>
 
 #define DBG_LEVEL_HYCALL	6U
 
@@ -36,7 +37,11 @@ struct emul_dev_ops {
 };
 
 static struct emul_dev_ops emul_dev_ops_tbl[] = {
-	{0, NULL, NULL}, /* implemented in next patch */
+#ifdef CONFIG_IVSHMEM_ENABLED
+	{(IVSHMEM_VENDOR_ID | (IVSHMEM_DEVICE_ID << 16U)), create_ivshmem_vdev , destroy_ivshmem_vdev},
+#else
+	{(IVSHMEM_VENDOR_ID | (IVSHMEM_DEVICE_ID << 16U)), NULL, NULL},
+#endif
 };
 
 bool is_hypercall_from_ring0(void)
