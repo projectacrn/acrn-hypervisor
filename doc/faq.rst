@@ -14,22 +14,8 @@ Here are some frequently asked questions about the ACRN project.
 What hardware does ACRN support?
 ********************************
 
-ACRN runs on Intel Apollo Lake and Kaby Lake boards, as documented in
+ACRN runs on Intel boards, as documented in
 our :ref:`hardware` documentation.
-
-Clear Linux* OS fails to boot on my NUC
-***************************************
-
-If you're following the :ref:`getting_started` documentation and the NUC
-fails to boot, here are some options to try:
-
-* Upgrade your platform to the latest BIOS
-* Verify Secure Boot is disabled in the BIOS settings:
-
-  - Depending on your platform, press for example, :kbd:`F2` while
-    booting to enter the BIOS options menu, and verify "Secure Boot" is
-    not checked in the "Boot Options"
-* Make sure you are using EFI (and not legacy BIOS)
 
 .. _config_32GB_memory:
 
@@ -47,7 +33,7 @@ details:
 
 For example, if the NUC's physical memory size is 32G, you may follow these steps
 to make the new uefi ACRN hypervisor, and then deploy it onto the NUC board to boot
-ACRN Service VM with the 32G memory size.
+the ACRN Service VM with the 32G memory size.
 
 #. Use ``make menuconfig`` to change the ``RAM_SIZE``::
 
@@ -65,19 +51,7 @@ ACRN Service VM with the 32G memory size.
 
 #. Press :kbd:`ESC` to leave the menu.
 
-#. Use these command lines to build the new efi image for KBL NUC::
-
-   $ make -C hypervisor
-   $ make -C misc/efi-stub HV_OBJDIR=$PWD/hypervisor/build EFI_OBJDIR=$PWD/hypervisor/build
-
-#. Log in to your KBL NUC (assumes all the ACRN configurations are set up), then copy
-   the new efi image into the EFI partition::
-
-   # mount /dev/sda1 /mnt
-   # scp -r <user name>@<host address>:<your workspace>/acrn-hypervisor/hypervisor/build/acrn.efi /mnt/EFI/acrn/
-   # sync && umount /mnt
-
-#. Reboot KBL NUC to enjoy the ACRN with 32G memory.
+#. Then continue building the ACRN Service VM as usual.
 
 How to modify the default display output for a User VM?
 *******************************************************
@@ -120,11 +94,9 @@ these parameters:
 
     i915.avail_planes_per_pipe=0x000F0F
 
-.. note::
-
-   The careful reader may have noticed that in all examples given above, the Service VM
-   always has at least one plane per pipe. This is intentional, and the driver
-   will enforce this if the parameters do not do this.
+.. note:: The Service VM always has at least one plane per pipe. This is
+   intentional, and the driver will enforce this if the parameters do not
+   do this.
 
 Why does ACRN need to know how much RAM the system has?
 *******************************************************
@@ -142,39 +114,3 @@ static memory allocation. This is why ACRN removed all ``malloc()``-type code,
 and why it needs to pre-identify the size of all buffers and structures used in
 the Virtual Memory Manager. For this reason, knowing the available RAM size at
 compile time is necessary to statically allocate memory usage.
-
-
-How to build ACRN on Fedora 29?
-*******************************
-
-There is a known issue when attempting to build ACRN on Fedora 29
-because of how ``gnu-efi`` is packaged in this Fedora release.
-(See the `ACRN GitHub issue
-<https://github.com/projectacrn/acrn-hypervisor/issues/2457>`_
-for more information.)  The following patch to ``/efi-stub/Makefile``
-fixes the problem on Fedora 29 development systems (but should
-not be used on other Linux distros)::
-
-   diff --git a/efi-stub/Makefile b/efi-stub/Makefile
-   index 5b87d49b..dfc64843 100644
-   --- a/efi-stub/Makefile
-   +++ b/efi-stub/Makefile
-   @@ -52,14 +52,14 @@ endif
-    # its tools and libraries in different folders. The next couple of
-    # variables will determine and set the right path for both the
-    # tools $(GNUEFI_DIR) and libraries $(LIBDIR)
-   -GNUEFI_DIR := $(shell find $(SYSROOT)/usr/lib* -name elf_$(ARCH)_efi.lds -type f | xargs dirname)
-   +GNUEFI_DIR := $(shell find $(SYSROOT)/usr/lib* -name elf_x64_efi.lds -type f | xargs dirname)
-   LIBDIR := $(subst gnuefi,,$(GNUEFI_DIR))
-   -CRT0 := $(GNUEFI_DIR)/crt0-efi-$(ARCH).o
-   -LDSCRIPT := $(GNUEFI_DIR)/elf_$(ARCH)_efi.lds
-   +CRT0 := $(GNUEFI_DIR)/crt0-efi-x64.o
-   +LDSCRIPT := $(GNUEFI_DIR)/elf_x64_efi.lds
-
-    INCDIR := $(SYSROOT)/usr/include
-
-   -CFLAGS=-I. -I.. -I../hypervisor/include/arch/x86/guest -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
-   +CFLAGS=-I. -I.. -I../hypervisor/include/arch/x86/guest -I$(INCDIR)/efi -I$(INCDIR)/efi/x64 \
-                    -I../hypervisor/include/public -I../hypervisor/include/lib -I../hypervisor/bsp/include/uefi \
-                    -DEFI_FUNCTION_WRAPPER -fPIC -fshort-wchar -ffreestanding \
-                    -Wall -I../fs/ -D$(ARCH) -O2 \
