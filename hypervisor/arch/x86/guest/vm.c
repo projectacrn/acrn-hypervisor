@@ -33,6 +33,7 @@
 #include <vacpi.h>
 #include <platform_caps.h>
 #include <mmio_dev.h>
+#include <assign.h>
 
 vm_sw_loader_t vm_sw_loader;
 
@@ -519,6 +520,18 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		}
 	}
 
+	if (status == 0) {
+		uint32_t i;
+		for (i = 0; i < vm_config->pt_intx_num; i++) {
+			status = ptirq_add_intx_remapping(vm, vm_config->pt_intx[i].virt_gsi,
+								vm_config->pt_intx[i].phys_gsi, false);
+			if (status != 0) {
+				ptirq_remove_configured_intx_remappings(vm);
+				break;
+			}
+		}
+	}
+
 	if ((status != 0) && (vm->arch_vm.nworld_eptp != NULL)) {
 		(void)memset(vm->arch_vm.nworld_eptp, 0U, PAGE_SIZE);
 	}
@@ -603,6 +616,8 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	if (is_sos_vm(vm)) {
 		sbuf_reset();
 	}
+
+	ptirq_remove_configured_intx_remappings(vm);
 
 	deinit_vuart(vm);
 
