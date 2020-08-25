@@ -9,13 +9,12 @@
 #include <mmu.h>
 #include <ept.h>
 #include <logmsg.h>
+#include <errno.h>
 #include <ivshmem.h>
 #include <ivshmem_cfg.h>
 #include "vpci_priv.h"
 
 /* config space of ivshmem device */
-#define	IVSHMEM_VENDOR_ID	0x1af4U
-#define	IVSHMEM_DEVICE_ID	0x1110U
 #define	IVSHMEM_CLASS		0x05U
 #define	IVSHMEM_REV		0x01U
 
@@ -252,6 +251,63 @@ static void deinit_ivshmem_vdev(struct pci_vdev *vdev)
 	ivs_dev->pcidev = NULL;
 	vdev->priv_data = NULL;
 	vdev->user = NULL;
+}
+
+/**
+ * @pre vm != NULL
+ * @pre dev != NULL
+ */
+int32_t create_ivshmem_vdev(struct acrn_vm *vm, struct acrn_emul_dev *dev)
+{
+	uint32_t i;
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+	struct acrn_vm_pci_dev_config *dev_config = NULL;
+	int32_t ret = -EINVAL;
+
+	for (i = 0U; i < vm_config->pci_dev_num; i++) {
+		dev_config = &vm_config->pci_devs[i];
+		if (strncmp(dev_config->shm_region_name, (char *)dev->args, sizeof(dev_config->shm_region_name)) == 0) {
+			struct ivshmem_shm_region *region = find_shm_region(dev_config->shm_region_name);
+			if ((region != NULL) && (region->size == dev->io_size[IVSHMEM_SHM_BAR])) {
+				spinlock_obtain(&vm->vpci.lock);
+				dev_config->vbdf.value = (uint16_t) dev->slot;
+				dev_config->vbar_base[IVSHMEM_MMIO_BAR] = (uint64_t) dev->io_addr[IVSHMEM_MMIO_BAR];
+				dev_config->vbar_base[IVSHMEM_SHM_BAR] = (uint64_t) dev->io_addr[IVSHMEM_SHM_BAR];
+				dev_config->vbar_base[IVSHMEM_SHM_BAR] |= ((uint64_t) dev->io_addr[IVSHMEM_SHM_BAR + 1U]) << 32U;
+				(void) vpci_init_vdev(&vm->vpci, dev_config, NULL);
+				spinlock_release(&vm->vpci.lock);
+				ret = 0;
+			} else {
+				pr_warn("%s, failed to create ivshmem device %x:%x.%x\n", __func__,
+				dev->slot >> 8U, (dev->slot >> 3U) & 0x1fU, dev->slot & 0x7U);
+			}
+			break;
+		}
+	}
+	return ret;
+}
+
+/**
+ * @pre vm != NULL
+ * @pre dev != NULL
+ */
+int32_t destroy_ivshmem_vdev(struct acrn_vm *vm, struct acrn_emul_dev *dev)
+{
+	struct pci_vdev *vdev;
+	union pci_bdf bdf;
+	int32_t ret = 0;
+
+	bdf.value = (uint16_t) dev->slot;
+	vdev = pci_find_vdev(&vm->vpci, bdf);
+	if (vdev != NULL) {
+		vdev->pci_dev_config->vbdf.value = UNASSIGNED_VBDF;
+		(void)memset(vdev->pci_dev_config->vbar_base, 0U, sizeof(vdev->pci_dev_config->vbar_base));
+	} else {
+		pr_warn("%s, failed to destroy ivshmem device %x:%x.%x\n",
+			__func__, bdf.bits.b, bdf.bits.d, bdf.bits.f);
+		ret = -EINVAL;
+	}
+	return ret;
 }
 
 const struct pci_vdev_ops vpci_ivshmem_ops = {
