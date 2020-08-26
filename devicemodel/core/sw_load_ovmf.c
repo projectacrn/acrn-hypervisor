@@ -99,7 +99,7 @@ acrn_parse_ovmf(char *arg)
 				if (check_image(ovmf_path, OVMF_SZ_LIMIT, &ovmf_size) != 0)
 					break;
 				ovmf_file_name = ovmf_path;
-				printf("SW_LOAD: get ovmf path %s, size 0x%lx\n",
+				pr_notice("SW_LOAD: get ovmf path %s, size 0x%lx\n",
 					ovmf_path, ovmf_size);
 				error = 0;
 			}

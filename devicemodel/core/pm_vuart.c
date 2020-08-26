@@ -179,7 +179,7 @@ int parse_pm_by_vuart(const char *opts)
 		}
 	}
 
-	printf("pm by vuart node-index = %d\n", node_index);
+	pr_dbg("pm by vuart node-index = %d\n", node_index);
 	strncpy(node_path, str, MAX_NODE_PATH - 1);
 
 	free(cpy);

@@ -128,14 +128,14 @@ acrn_parse_kernel(char *arg)
 	if (len < STR_LEN) {
 		strncpy(kernel_path, arg, len + 1);
 		if (check_image(kernel_path, 0, &kernel_size) != 0){
-			fprintf(stderr, "SW_LOAD: check_image failed for '%s'\n",
+			pr_err("SW_LOAD: check_image failed for '%s'\n",
 				kernel_path);
 			exit(10); /* Non-zero */
 		}
 		kernel_file_name = kernel_path;
 
 		with_kernel = 1;
-		printf("SW_LOAD: get kernel path %s\n", kernel_path);
+		pr_notice("SW_LOAD: get kernel path %s\n", kernel_path);
 		return 0;
 	} else
 		return -1;
@@ -149,13 +149,13 @@ acrn_parse_ramdisk(char *arg)
 	if (len < STR_LEN) {
 		strncpy(ramdisk_path, arg, len + 1);
 		if (check_image(ramdisk_path, 0, &ramdisk_size) != 0){
-			fprintf(stderr, "SW_LOAD: check_image failed for '%s'\n",
+			pr_err("SW_LOAD: check_image failed for '%s'\n",
 				ramdisk_path);
 			exit(11); /* Non-zero */
 		}
 
 		with_ramdisk = 1;
-		printf("SW_LOAD: get ramdisk path %s\n", ramdisk_path);
+		pr_notice("SW_LOAD: get ramdisk path %s\n", ramdisk_path);
 		return 0;
 	} else
 		return -1;
@@ -170,7 +170,7 @@ acrn_prepare_ramdisk(struct vmctx *ctx)
 
 	fp = fopen(ramdisk_path, "r");
 	if (fp == NULL) {
-		printf("SW_LOAD ERR: could not open ramdisk file %s\n",
+		pr_err("SW_LOAD ERR: could not open ramdisk file %s\n",
 				ramdisk_path);
 		return -1;
 	}
@@ -220,7 +220,7 @@ acrn_prepare_kernel(struct vmctx *ctx)
 
 	fp = fopen(kernel_path, "r");
 	if (fp == NULL) {
-		printf("SW_LOAD ERR: could not open kernel file %s\n",
+		pr_err("SW_LOAD ERR: could not open kernel file %s\n",
 				kernel_path);
 		return -1;
 	}
@@ -236,7 +236,7 @@ acrn_prepare_kernel(struct vmctx *ctx)
 	}
 
 	if ((len + KERNEL_LOAD_OFF(ctx)) > RAMDISK_LOAD_OFF(ctx)) {
-		printf("SW_LOAD ERR: need big system memory to fit image\n");
+		pr_err("SW_LOAD ERR: need big system memory to fit image\n");
 		fclose(fp);
 		return -1;
 	}
@@ -245,13 +245,13 @@ acrn_prepare_kernel(struct vmctx *ctx)
 	read = fread(ctx->baseaddr + KERNEL_LOAD_OFF(ctx),
 			sizeof(char), len, fp);
 	if (read < len) {
-		printf("SW_LOAD ERR: could not read the whole kernel file,"
+		pr_err("SW_LOAD ERR: could not read the whole kernel file,"
 				" file len=%ld, read %lu\n", len, read);
 		fclose(fp);
 		return -1;
 	}
 	fclose(fp);
-	printf("SW_LOAD: kernel %s size %lu copied to guest 0x%lx\n",
+	pr_info("SW_LOAD: kernel %s size %lu copied to guest 0x%lx\n",
 			kernel_path, kernel_size, KERNEL_LOAD_OFF(ctx));
 
 	return 0;
