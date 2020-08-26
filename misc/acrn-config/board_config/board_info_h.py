@@ -81,7 +81,7 @@ def generate_file(config):
 
     # define CONFIG_MAX_PCPCU_NUM
     print("#define MAX_PCPU_NUM\t\t\t{}U".format(max_cpu_num), file=config)
-    print("#define MAX_PLATFORM_CLOS_NUM\t\t{}U".format(common_clos_max), file=config)
+    print("#define HV_SUPPORTED_MAX_CLOS\t\t{}U".format(common_clos_max), file=config)
 
     # define MAX_VMSIX_ON_MSI_PDEVS_NUM
     gen_known_caps_pci_head(config)
