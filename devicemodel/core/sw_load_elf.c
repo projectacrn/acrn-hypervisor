@@ -103,7 +103,7 @@ acrn_parse_elf(char *arg)
 		strncpy(elf_path, arg, len + 1);
 		if (check_image(elf_path, 0, &elfsz) == 0) {
 			elf_file_name = elf_path;
-			printf("SW_LOAD: get elf path %s\n", elf_path);
+			pr_notice("SW_LOAD: get elf path %s\n", elf_path);
 			err = 0;
 		}
 	}
