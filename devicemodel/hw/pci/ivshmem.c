@@ -62,12 +62,16 @@
 #define	IVSHMEM_DOORBELL_REG	0x0c
 #define	IVSHMEM_RESERVED_REG	0x0f
 
+#define hv_land_prefix	"hv:/"
+#define dm_land_prefix	"sos:/"
+
 struct pci_ivshmem_vdev {
 	struct pci_vdev	*dev;
 	char		*name;
 	int		fd;
 	void		*addr;
 	uint32_t	size;
+	bool		is_hv_land;
 };
 
 static int
@@ -133,6 +137,28 @@ err:
 	if (fd > 0)
 		close(fd);
 	return -1;
+}
+
+static int
+create_ivshmem_from_hv(struct vmctx *ctx, struct pci_vdev *vdev,
+		const char *shm_name, uint32_t shm_size)
+{
+	struct acrn_emul_dev dev = {};
+	uint64_t addr = 0;
+
+	dev.dev_id.fields.vendor_id = IVSHMEM_VENDOR_ID;
+	dev.dev_id.fields.device_id = IVSHMEM_DEVICE_ID;
+	dev.slot = PCI_BDF(vdev->bus, vdev->slot, vdev->func);
+	dev.io_addr[IVSHMEM_MMIO_BAR] = pci_get_cfgdata32(vdev,
+			PCIR_BAR(IVSHMEM_MMIO_BAR));
+	addr = pci_get_cfgdata32(vdev, PCIR_BAR(IVSHMEM_MEM_BAR));
+	addr |= 0x0c; /* 64bit, prefetchable */
+	dev.io_addr[IVSHMEM_MEM_BAR] = addr;
+	addr = pci_get_cfgdata32(vdev, PCIR_BAR(IVSHMEM_MEM_BAR + 1));
+	dev.io_addr[IVSHMEM_MEM_BAR + 1] = addr;
+	dev.io_size[IVSHMEM_MEM_BAR] = shm_size;
+	strncpy((char*)dev.args, shm_name, 32);
+	return vm_create_hv_vdev(ctx, &dev);
 }
 
 static void
@@ -217,6 +243,8 @@ pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	uint32_t size;
 	char *tmp, *name, *orig;
 	struct pci_ivshmem_vdev *ivshmem_vdev = NULL;
+	bool is_hv_land;
+	int rc;
 
 	/* ivshmem device usage: "-s N,ivshmem,shm_name,shm_size" */
 	tmp = orig = strdup(opts);
@@ -229,6 +257,17 @@ pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		pr_warn("the shared memory size is not set\n");
 		goto err;
 	}
+
+	if (!strncmp(name, hv_land_prefix, strlen(hv_land_prefix))) {
+		is_hv_land = true;
+	} else if (!strncmp(name, dm_land_prefix, strlen(dm_land_prefix))) {
+		is_hv_land = false;
+		name += strlen(dm_land_prefix);
+	} else {
+		pr_warn("the ivshmem memory prefix name is incorrect\n");
+		goto err;
+	}
+
 	if (dm_strtoui(tmp, &tmp, 10, &size) != 0) {
 		pr_warn("the shared memory size is incorrect, %s\n", tmp);
 		goto err;
@@ -247,6 +286,7 @@ pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	ivshmem_vdev->dev = dev;
+	ivshmem_vdev->is_hv_land = is_hv_land;
 	dev->arg = ivshmem_vdev;
 
 	/* initialize config space */
@@ -258,12 +298,17 @@ pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_emul_alloc_bar(dev, IVSHMEM_MMIO_BAR, PCIBAR_MEM32, IVSHMEM_REG_SIZE);
 	pci_emul_alloc_bar(dev, IVSHMEM_MEM_BAR, PCIBAR_MEM64, size);
 
-	/*
-	 * TODO: If UOS reprograms ivshmem BAR2, the shared memory will be
-	 * unavailable for UOS, so we need to remap GPA and HPA of shared
-	 * memory in this case.
-	 */
-	if (create_ivshmem_from_dm(ctx, dev, name, size) < 0)
+	if (is_hv_land) {
+		rc = create_ivshmem_from_hv(ctx, dev, name, size);
+	} else {
+		/*
+		 * TODO: If UOS reprograms ivshmem BAR2, the shared memory will be
+		 * unavailable for UOS, so we need to remap GPA and HPA of shared
+		 * memory in this case.
+		 */
+		rc = create_ivshmem_from_dm(ctx, dev, name, size);
+	}
+	if (rc < 0)
 		goto err;
 
 	free(orig);
@@ -288,6 +333,18 @@ destroy_ivshmem_from_dm(struct pci_ivshmem_vdev *vdev)
 }
 
 static void
+destroy_ivshmem_from_hv(struct vmctx *ctx, struct pci_vdev *vdev)
+{
+
+	struct acrn_emul_dev emul_dev = {};
+
+	emul_dev.dev_id.fields.vendor_id = IVSHMEM_VENDOR_ID;
+	emul_dev.dev_id.fields.device_id = IVSHMEM_DEVICE_ID;
+	emul_dev.slot = PCI_BDF(vdev->bus, vdev->slot, vdev->func);
+	vm_destroy_hv_vdev(ctx, &emul_dev);
+}
+
+static void
 pci_ivshmem_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct pci_ivshmem_vdev *vdev;
@@ -297,7 +354,11 @@ pci_ivshmem_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		pr_warn("%s, invalid ivshmem instance\n", __func__);
 		return;
 	}
-	destroy_ivshmem_from_dm(vdev);
+	if (vdev->is_hv_land)
+		destroy_ivshmem_from_hv(ctx, dev);
+	else
+		destroy_ivshmem_from_dm(vdev);
+
 	if (vdev->name) {
 		/*
 		 * shm_unlink will only remove the shared memory file object,
@@ -311,6 +372,7 @@ pci_ivshmem_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		 */
 		free(vdev->name);
 	}
+
 	free(vdev);
 	dev->arg = NULL;
 }
