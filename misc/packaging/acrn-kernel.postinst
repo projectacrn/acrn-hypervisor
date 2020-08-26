@@ -23,30 +23,12 @@ cat>"${filename}"<<EOF
 
         }
 
-    menuentry 'ACRN efi' --id ACRN_deb_efi {
-            recordfail
-        load_video
-        insmod gzio
-        insmod part_gpt
-        insmod ext2
-        linux /boot/kernelimg pci_devices_ignore=(0:18:1) console=tty0 console=ttyS0 root=PARTUUID=$partuuid rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_gvt=1 i915.enable_guc=0 hvlog=2M@0xE00000
-
-        }
 EOF
     fi
 
     sed -i '/module/d' ${filename} || true
     bzImage=$(cat /boot/version.txt)
     sed -i '/multiboot2 \/boot/a\module2 /boot/'${bzImage}' Linux_bzImage' ${filename}
-
-    str=$(grep hvlog=2M@0xE00000 ${filename} || true)
-
-    old=${str%pci*}
-    echo $old
-    bzImage=$(cat /boot/version.txt)
-    new=$(echo linux \/boot\/${bzImage})
-    echo $new
-    sed -i "s:$old:$new :" ${filename}
 
 sync
 update-grub
