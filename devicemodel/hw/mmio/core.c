@@ -65,12 +65,12 @@ int parse_pt_mmiodev(char *opt)
 
 	if((!dm_strtoul(opt, &cp, 16, &base_hpa) && *cp == ',') &&
 		(!dm_strtoul(cp + 1, &cp, 16, &size))) {
-		printf("%s pt mmiodev base: 0x%lx, size: 0x%lx\n", __func__, base_hpa, size);
+		pr_dbg("%s pt mmiodev base: 0x%lx, size: 0x%lx\n", __func__, base_hpa, size);
 		strncpy(mmio_devs[1].name, pt_mmiodev.name, 8);
 		pt_mmiodev.base_hpa = base_hpa;
 		pt_mmiodev.size = size;
 	} else {
-		printf("%s, %s invalid, please check!\n", __func__, opt);
+		pr_err("%s, %s invalid, please check!\n", __func__, opt);
 	}
 
 	return err;
