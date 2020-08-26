@@ -334,6 +334,34 @@ int32_t hcall_assign_mmiodev(struct acrn_vm *vm, struct acrn_vm *target_vm, uint
 int32_t hcall_deassign_mmiodev(struct acrn_vm *vm, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
 
 /**
+ * @brief Create an emulated device in hypervisor.
+ *
+ * @param vm Pointer to VM data structure
+ * @param target_vm Pointer to target VM data structure
+ * @param param1 not used
+ * @param param2 guest physical address. This gpa points to data structure of
+ *              acrn_emul_dev including information about PCI or legacy devices
+ *
+ * @pre Pointer vm shall point to SOS_VM
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_create_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
+
+/**
+ * @brief Destroy an emulated device in hypervisor.
+ *
+ * @param vm Pointer to VM data structure
+ * @param target_vm Pointer to target VM data structure
+ * @param param1 not used
+ * @param param2 guest physical address. This gpa points to data structure of
+ *              acrn_emul_dev including information about PCI or legacy devices
+ *
+ * @pre Pointer vm shall point to SOS_VM
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_destroy_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
+
+/**
  * @brief Set interrupt mapping info of ptdev.
  *
  * @param vm Pointer to VM data structure
