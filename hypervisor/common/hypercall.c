@@ -23,6 +23,22 @@
 
 #define DBG_LEVEL_HYCALL	6U
 
+typedef int32_t (*emul_dev_op) (struct acrn_vm *vm, struct acrn_emul_dev *dev);
+struct emul_dev_ops {
+	/*
+	 * The low 32 bits represent the vendor id and device id of PCI device,
+	 * and the high 32 bits represent the device number of the legacy device
+	 */
+	uint64_t dev_id;
+	emul_dev_op create;
+	emul_dev_op destroy;
+
+};
+
+static struct emul_dev_ops emul_dev_ops_tbl[] = {
+	{0, NULL, NULL}, /* implemented in next patch */
+};
+
 bool is_hypercall_from_ring0(void)
 {
 	uint16_t cs_sel;
@@ -1195,5 +1211,84 @@ int32_t hcall_set_callback_vector(__unused struct acrn_vm *vm, __unused struct a
 		ret = 0;
 	}
 
+	return ret;
+}
+
+/*
+ * @pre dev != NULL
+ */
+static struct emul_dev_ops *find_emul_dev_ops(struct acrn_emul_dev *dev)
+{
+	struct emul_dev_ops *op = NULL;
+	uint32_t i;
+
+	for (i = 0U; i < ARRAY_SIZE(emul_dev_ops_tbl); i++) {
+		if (emul_dev_ops_tbl[i].dev_id == dev->dev_id.value) {
+			op = &emul_dev_ops_tbl[i];
+			break;
+		}
+	}
+	return op;
+}
+
+/**
+ * @brief Create an emulated device in hypervisor.
+ *
+ * @param vm pointer to VM data structure
+ * @param vmid ID of the VM
+ * @param param guest physical address. This gpa points to data structure of
+ *              acrn_emul_dev including information about PCI or legacy devices
+ *
+ * @pre Pointer vm shall point to SOS_VM
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_create_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+{
+	int32_t ret = -EINVAL;
+	struct acrn_emul_dev dev;
+	struct emul_dev_ops *op;
+
+	/* We should only create a device to a post-launched VM at creating time for safety, not runtime or other cases*/
+	if (is_created_vm(target_vm)) {
+		if (copy_from_gpa(vm, &dev, param2, sizeof(dev)) == 0) {
+			op = find_emul_dev_ops(&dev);
+			if ((op != NULL) && (op->create != NULL)) {
+				ret = op->create(target_vm, &dev);
+			}
+		}
+	} else {
+		pr_err("%s, vm[%d] is not a postlaunched VM, or not in CREATED status to create a vdev\n", __func__, target_vm->vm_id);
+	}
+	return ret;
+}
+
+/**
+ * @brief Destroy an emulated device in hypervisor.
+ *
+ * @param vm pointer to VM data structure
+ * @param vmid ID of the VM
+ * @param param guest physical address. This gpa points to data structure of
+ *              acrn_emul_dev including information about PCI or legacy devices
+ *
+ * @pre Pointer vm shall point to SOS_VM
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_destroy_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+{
+	int32_t ret = -EINVAL;
+	struct acrn_emul_dev dev;
+	struct emul_dev_ops *op;
+
+	/* We should only destroy a device to a post-launched VM at creating or pausing time for safety, not runtime or other cases*/
+	if (is_created_vm(target_vm) || is_paused_vm(target_vm)) {
+		if (copy_from_gpa(vm, &dev, param2, sizeof(dev)) == 0) {
+		op = find_emul_dev_ops(&dev);
+		if ((op != NULL) && (op->destroy != NULL)) {
+			ret = op->destroy(target_vm, &dev);
+		}
+	}
+	} else {
+		pr_err("%s, vm[%d] is not a postlaunched VM, or not in CREATED/PAUSED status to destroy a vdev\n", __func__, target_vm->vm_id);
+	}
 	return ret;
 }
