@@ -71,13 +71,15 @@ struct pci_ivshmem_vdev {
 };
 
 static int
-create_shared_memory(struct vmctx *ctx, struct pci_ivshmem_vdev *vdev,
-		const char *name, uint32_t size, uint64_t bar_addr)
+create_ivshmem_from_dm(struct vmctx *ctx, struct pci_vdev *vdev,
+		const char *name, uint32_t size)
 {
 	struct stat st;
 	int fd = -1;
 	void *addr = NULL;
 	bool is_shm_creator = false;
+	struct pci_ivshmem_vdev *ivshmem_vdev = (struct pci_ivshmem_vdev *) vdev->arg;
+	uint64_t bar_addr;
 
 	fd = shm_open(name, O_CREAT | O_EXCL | O_RDWR, 0600);
 	if (fd > 0)
@@ -105,6 +107,9 @@ create_shared_memory(struct vmctx *ctx, struct pci_ivshmem_vdev *vdev,
 
 	addr = (void *)mmap(NULL, size, PROT_READ | PROT_WRITE,
 			MAP_SHARED, fd, 0);
+	bar_addr = pci_get_cfgdata32(vdev, PCIR_BAR(IVSHMEM_MEM_BAR));
+	bar_addr |= ((uint64_t)pci_get_cfgdata32(vdev, PCIR_BAR(IVSHMEM_MEM_BAR + 1)) << 32);
+	bar_addr &= PCIM_BAR_MEM_BASE;
 	pr_dbg("shm configuration, vma 0x%lx, ivshmem bar 0x%lx, size 0x%x\n",
 			(uint64_t)addr, bar_addr, size);
 	if (!addr || vm_map_memseg_vma(ctx, size, bar_addr,
@@ -113,14 +118,14 @@ create_shared_memory(struct vmctx *ctx, struct pci_ivshmem_vdev *vdev,
 		goto err;
 	}
 
-	vdev->name = strdup(name);
-	if (!vdev->name) {
+	ivshmem_vdev->name = strdup(name);
+	if (!ivshmem_vdev->name) {
 		pr_warn("No memory for shm_name\n");
 		goto err;
 	}
-	vdev->fd = fd;
-	vdev->addr = addr;
-	vdev->size = size;
+	ivshmem_vdev->fd = fd;
+	ivshmem_vdev->addr = addr;
+	ivshmem_vdev->size = size;
 	return 0;
 err:
 	if (addr)
@@ -210,7 +215,6 @@ static int
 pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	uint32_t size;
-	uint64_t addr;
 	char *tmp, *name, *orig;
 	struct pci_ivshmem_vdev *ivshmem_vdev = NULL;
 
@@ -229,9 +233,9 @@ pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		pr_warn("the shared memory size is incorrect, %s\n", tmp);
 		goto err;
 	}
-	if (size < 4096 || size > 128 * 1024 * 1024 ||
+	if (size < 0x200000 || size >= 0x40000000 ||
 			(size & (size - 1)) != 0) {
-		pr_warn("invalid shared memory size %u, the size range is [4K,128M] bytes and value must be a power of 2\n",
+		pr_warn("invalid shared memory size %u, the size range is [2M,1G) bytes and value must be a power of 2\n",
 			size);
 		goto err;
 	}
@@ -254,16 +258,12 @@ pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_emul_alloc_bar(dev, IVSHMEM_MMIO_BAR, PCIBAR_MEM32, IVSHMEM_REG_SIZE);
 	pci_emul_alloc_bar(dev, IVSHMEM_MEM_BAR, PCIBAR_MEM64, size);
 
-	addr = pci_get_cfgdata32(dev, PCIR_BAR(IVSHMEM_MEM_BAR));
-	addr |= ((uint64_t)pci_get_cfgdata32(dev, PCIR_BAR(IVSHMEM_MEM_BAR + 1)) << 32);
-	addr &= PCIM_BAR_MEM_BASE;
-
 	/*
 	 * TODO: If UOS reprograms ivshmem BAR2, the shared memory will be
 	 * unavailable for UOS, so we need to remap GPA and HPA of shared
 	 * memory in this case.
 	 */
-	if (create_shared_memory(ctx, ivshmem_vdev, name, size, addr) < 0)
+	if (create_ivshmem_from_dm(ctx, dev, name, size) < 0)
 		goto err;
 
 	free(orig);
@@ -279,6 +279,15 @@ err:
 }
 
 static void
+destroy_ivshmem_from_dm(struct pci_ivshmem_vdev *vdev)
+{
+	if (vdev->addr && vdev->size)
+		munmap(vdev->addr, vdev->size);
+	if (vdev->fd > 0)
+		close(vdev->fd);
+}
+
+static void
 pci_ivshmem_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct pci_ivshmem_vdev *vdev;
@@ -288,10 +297,7 @@ pci_ivshmem_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		pr_warn("%s, invalid ivshmem instance\n", __func__);
 		return;
 	}
-	if (vdev->addr && vdev->size)
-		munmap(vdev->addr, vdev->size);
-	if (vdev->fd > 0)
-		close(vdev->fd);
+	destroy_ivshmem_from_dm(vdev);
 	if (vdev->name) {
 		/*
 		 * shm_unlink will only remove the shared memory file object,
