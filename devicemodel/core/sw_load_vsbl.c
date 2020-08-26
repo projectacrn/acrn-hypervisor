@@ -149,8 +149,7 @@ acrn_prepare_guest_part_info(struct vmctx *ctx)
 
 	fp = fopen(guest_part_info_path, "r");
 	if (fp == NULL) {
-		fprintf(stderr,
-			"SW_LOAD ERR: could not open partition blob %s\n",
+		pr_err("SW_LOAD ERR: could not open partition blob %s\n",
 			guest_part_info_path);
 		return -1;
 	}
@@ -159,15 +158,13 @@ acrn_prepare_guest_part_info(struct vmctx *ctx)
 	len = ftell(fp);
 
 	if (len != guest_part_info_size) {
-		fprintf(stderr,
-			"SW_LOAD ERR: partition blob changed\n");
+		pr_err("SW_LOAD ERR: partition blob changed\n");
 		fclose(fp);
 		return -1;
 	}
 
 	if ((len + GUEST_PART_INFO_OFF(ctx)) > BOOTARGS_OFF(ctx)) {
-		fprintf(stderr,
-			"SW_LOAD ERR: too large partition blob\n");
+		pr_err("SW_LOAD ERR: too large partition blob\n");
 		fclose(fp);
 		return -1;
 	}
@@ -176,13 +173,12 @@ acrn_prepare_guest_part_info(struct vmctx *ctx)
 	read = fread(ctx->baseaddr + GUEST_PART_INFO_OFF(ctx),
 		sizeof(char), len, fp);
 	if (read < len) {
-		fprintf(stderr,
-			"SW_LOAD ERR: could not read whole partition blob\n");
+		pr_err("SW_LOAD ERR: could not read whole partition blob\n");
 		fclose(fp);
 		return -1;
 	}
 	fclose(fp);
-	printf("SW_LOAD: partition blob %s size %lu copy to guest 0x%lx\n",
+	pr_info("SW_LOAD: partition blob %s size %lu copy to guest 0x%lx\n",
 		guest_part_info_path, guest_part_info_size,
 		GUEST_PART_INFO_OFF(ctx));
 
@@ -199,7 +195,7 @@ acrn_parse_vsbl(char *arg)
 		strncpy(vsbl_path, arg, len + 1);
 		if (check_image(vsbl_path, 8 * MB, &vsbl_size) == 0) {
 			vsbl_file_name = vsbl_path;
-			printf("SW_LOAD: get vsbl path %s\n", vsbl_path);
+			pr_notice("SW_LOAD: get vsbl path %s\n", vsbl_path);
 			error = 0;
 		}
 	}

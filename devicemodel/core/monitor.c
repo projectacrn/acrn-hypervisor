@@ -211,9 +211,9 @@ int acrn_parse_intr_monitor(const char *opt)
 		(!dm_strtoui(cp + 1, &cp, 10, &period) && *cp == ',') &&
 		(!dm_strtoui(cp + 1, &cp, 10, &delay) && *cp == ',') &&
 		(!dm_strtoui(cp + 1, &cp, 10, &duration))) {
-		printf("interrupt storm monitor params: %d, %d, %d, %d\n", threshold, period, delay, duration);
+		pr_dbg("interrupt storm monitor params: %d, %d, %d, %d\n", threshold, period, delay, duration);
 	} else {
-		printf("%s: not correct, it should be like: --intr_monitor 10000,10,1,100, please check!\n", opt);
+		pr_err("%s: not correct, it should be like: --intr_monitor 10000,10,1,100, please check!\n", opt);
 		return -1;
 	}
 
