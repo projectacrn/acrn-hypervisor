@@ -22,7 +22,7 @@ const uint16_t hv_clos = 0U;
  * clos value (valid_clos_num) that is common between the resources as
  * each resource's clos max value to have consistent allocation.
  */
-uint16_t valid_clos_num = MAX_PLATFORM_CLOS_NUM;
+uint16_t valid_clos_num = HV_SUPPORTED_MAX_CLOS;
 
 #ifdef CONFIG_RDT_ENABLED
 static struct rdt_info res_cap_info[RDT_NUM_RESOURCES] = {

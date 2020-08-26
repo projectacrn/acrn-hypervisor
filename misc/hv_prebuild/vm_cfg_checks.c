@@ -79,7 +79,7 @@ static bool check_vm_uuid_collision(uint16_t vm_id)
 static bool check_vm_clos_config(uint16_t vm_id)
 {
 	uint16_t i;
-	uint16_t platform_clos_num = MAX_PLATFORM_CLOS_NUM;
+	uint16_t platform_clos_num = HV_SUPPORTED_MAX_CLOS;
 	bool ret = true;
 	struct acrn_vm_config *vm_config = get_vm_config(vm_id);
 	uint16_t vcpu_num = bitmap_weight(vm_config->cpu_affinity);
