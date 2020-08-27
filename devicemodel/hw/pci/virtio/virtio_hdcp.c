@@ -200,8 +200,8 @@ static struct virtio_ops virtio_hdcp_ops = {
 
 /* Debug printf */
 static int virtio_hdcp_debug;
-#define DPRINTF(params) do { if (virtio_hdcp_debug) printf params; } while (0)
-#define WPRINTF(params) (printf params)
+#define DPRINTF(params) do { if (virtio_hdcp_debug) pr_dbg params; } while (0)
+#define WPRINTF(params) (pr_err params)
 
 static void
 virtio_hdcp_reset(void *vdev)

@@ -94,28 +94,8 @@
  */
 
 static int gpio_debug;
-static FILE *dbg_file;
-#define VIRTIO_GPIO_LOG_INIT do {					\
-	if (gpio_debug && !dbg_file) {					\
-		dbg_file = fopen("/tmp/log.gpio", "w+");		\
-		if (!dbg_file)						\
-			printf("virtio_gpio log open failed\r\n");	\
-	}								\
-} while (0)
-
-#define VIRTIO_GPIO_LOG_DEINIT	do {					\
-	if (dbg_file) {							\
-		fclose(dbg_file);					\
-		dbg_file = NULL;					\
-	}								\
-} while (0)
-
-#define DPRINTF(format, arg...) do {					\
-	if (gpio_debug && dbg_file) {					\
-		fprintf(dbg_file, format, arg);				\
-		fflush(dbg_file);					\
-	}								\
-} while (0)
+#define DPRINTF(params) do { if (gpio_debug) pr_dbg params; } while (0)
+#define WPRINTF(params) (pr_err params)
 
 #define BIT(x) (1 << (x))
 
@@ -311,8 +291,8 @@ native_gpio_update_line_info(struct gpio_line *line)
 	info.line_offset = line->offset;
 	rc = ioctl(line->chip->fd, GPIO_GET_LINEINFO_IOCTL, &info);
 	if (rc) {
-		DPRINTF("ioctl GPIO_GET_LINEINFO_IOCTL error %s\n",
-				strerror(errno));
+		WPRINTF(("ioctl GPIO_GET_LINEINFO_IOCTL error %s\n",
+				strerror(errno)));
 		return;
 	}
 
@@ -388,8 +368,8 @@ native_gpio_open_line(struct gpio_line *line, unsigned int flags,
 	}
 	rc = ioctl(line->chip->fd, GPIO_GET_LINEHANDLE_IOCTL, &req);
 	if (rc < 0) {
-		DPRINTF("ioctl GPIO_GET_LINEHANDLE_IOCTL error %s\n",
-				strerror(errno));
+		WPRINTF(("ioctl GPIO_GET_LINEHANDLE_IOCTL error %s\n",
+				strerror(errno)));
 		return -1;
 	}
 
@@ -416,8 +396,8 @@ gpio_set_value(struct virtio_gpio *gpio, unsigned int offset,
 
 	line = gpio->vlines[offset];
 	if (line->busy || line->fd < 0) {
-		DPRINTF("failed to set gpio%d value, busy:%d, fd:%d\n",
-				offset, line->busy, line->fd);
+		WPRINTF(("failed to set gpio%d value, busy:%d, fd:%d\n",
+				offset, line->busy, line->fd));
 		return -1;
 	}
 
@@ -425,8 +405,8 @@ gpio_set_value(struct virtio_gpio *gpio, unsigned int offset,
 	data.values[0] = value;
 	rc = ioctl(line->fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &data);
 	if (rc < 0) {
-		DPRINTF("ioctl GPIOHANDLE_SET_LINE_VALUES_IOCTL error %s\n",
-				strerror(errno));
+		WPRINTF(("ioctl GPIOHANDLE_SET_LINE_VALUES_IOCTL error %s\n",
+				strerror(errno)));
 		return -1;
 	}
 	line->value = value;
@@ -442,7 +422,7 @@ gpio_get_value(struct virtio_gpio *gpio, unsigned int offset)
 
 	line = gpio->vlines[offset];
 	if (line->busy) {
-		DPRINTF("failed to get gpio %d value, it is busy\n", offset);
+		WPRINTF(("failed to get gpio %d value, it is busy\n", offset));
 		return -1;
 	}
 
@@ -455,8 +435,8 @@ gpio_get_value(struct virtio_gpio *gpio, unsigned int offset)
 		 * the value.
 		 */
 		if (line->irq->fd < 0) {
-			DPRINTF("failed to get gpio %d value, fd is invalid\n",
-				offset);
+			WPRINTF(("failed to get gpio %d value, fd is invalid\n",
+				offset));
 			return -1;
 		}
 		fd = line->irq->fd;
@@ -465,8 +445,8 @@ gpio_get_value(struct virtio_gpio *gpio, unsigned int offset)
 	memset(&data, 0, sizeof(data));
 	rc = ioctl(fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &data);
 	if (rc < 0) {
-		DPRINTF("ioctl GPIOHANDLE_GET_LINE_VALUES_IOCTL error %s\n",
-				strerror(errno));
+		WPRINTF(("ioctl GPIOHANDLE_GET_LINE_VALUES_IOCTL error %s\n",
+				strerror(errno)));
 		return -1;
 	}
 	return data.values[0];
@@ -536,8 +516,8 @@ gpio_request_handler(struct virtio_gpio *gpio, struct virtio_gpio_request *req,
 	int rc;
 
 	if (req->cmd >= GPIO_REQ_MAX || req->offset >= gpio->nvline) {
-		DPRINTF("discards the gpio request, command:%u, offset:%u\n",
-				req->cmd, req->offset);
+		WPRINTF(("discards the gpio request, command:%u, offset:%u\n",
+				req->cmd, req->offset));
 		rsp->err = -1;
 		return;
 	}
@@ -568,7 +548,7 @@ gpio_request_handler(struct virtio_gpio *gpio, struct virtio_gpio_request *req,
 		rc = gpio_set_config(gpio, req->offset, req->data);
 		break;
 	default:
-		DPRINTF("invalid gpio request command:%d\n", req->cmd);
+		WPRINTF(("invalid gpio request command:%d\n", req->cmd));
 		rc = -1;
 		break;
 	}
@@ -583,7 +563,7 @@ static void virtio_gpio_reset(void *vdev)
 
 	gpio = vdev;
 
-	DPRINTF("%s", "virtio_gpio: device reset requested!\n");
+	DPRINTF(("%s", "virtio_gpio: device reset requested!\n"));
 	virtio_reset_dev(&gpio->base);
 }
 
@@ -595,7 +575,7 @@ virtio_gpio_cfgwrite(void *vdev, int offset, int size, uint32_t value)
 	cfg_size = sizeof(struct virtio_gpio_config);
 	offset -= cfg_size;
 	if (offset < 0 || offset >= GPIO_PIO_SIZE) {
-		DPRINTF("virtio_gpio: write to invalid reg %d\n", offset);
+		WPRINTF(("virtio_gpio: write to invalid reg %d\n", offset));
 		return -1;
 	}
 
@@ -613,7 +593,7 @@ virtio_gpio_cfgread(void *vdev, int offset, int size, uint32_t *retval)
 
 	cfg_size = sizeof(struct virtio_gpio_config);
 	if (offset < 0 || offset >= cfg_size + GPIO_PIO_SIZE) {
-		DPRINTF("virtio_gpio: read from invalid reg %d\n", offset);
+		WPRINTF(("virtio_gpio: read from invalid reg %d\n", offset));
 		return -1;
 	} else if (offset < cfg_size) {
 		ptr = (uint8_t *)&gpio->config + offset;
@@ -651,7 +631,7 @@ virtio_gpio_proc(struct virtio_gpio *gpio, struct iovec *iov, int n)
 		data = iov[0].iov_base;
 		len = iov[0].iov_len;
 		if (len != gpio->nvline * sizeof(*data)) {
-			DPRINTF("virtio gpio, invalid virtual gpio %d\n", len);
+			WPRINTF(("virtio gpio, invalid virtual gpio %d\n", len));
 			return 0;
 		}
 
@@ -675,21 +655,21 @@ virtio_gpio_proc(struct virtio_gpio *gpio, struct iovec *iov, int n)
 		req = iov[0].iov_base;
 		len = iov[0].iov_len;
 		if (len != sizeof(*req)) {
-			DPRINTF("virtio gpio, invalid req size %d\n", len);
+			WPRINTF(("virtio gpio, invalid req size %d\n", len));
 			return 0;
 		}
 
 		rsp = iov[1].iov_base;
 		len = iov[1].iov_len;
 		if (len != sizeof(*rsp)) {
-			DPRINTF("virtio gpio, invalid rsp size %d\n", len);
+			WPRINTF(("virtio gpio, invalid rsp size %d\n", len));
 			return 0;
 		}
 
 		gpio_request_handler(gpio, req, rsp);
 		rc = sizeof(*rsp);
 	} else {
-		DPRINTF("virtio gpio: number of buffer error %d\n", n);
+		WPRINTF(("virtio gpio: number of buffer error %d\n", n));
 		rc = 0;
 	}
 
@@ -709,7 +689,7 @@ virtio_gpio_notify(void *vdev, struct virtio_vq_info *vq)
 	if (vq_has_descs(vq)) {
 		n = vq_getchain(vq, &idx, iov, 2, NULL);
 		if (n >= 3) {
-			DPRINTF("virtio gpio, invalid chain number %d\n", n);
+			WPRINTF(("virtio gpio, invalid chain number %d\n", n));
 			virtio_gpio_abort(vq, idx);
 			return;
 		}
@@ -734,23 +714,23 @@ native_gpio_open_chip(struct native_gpio_chip *chip, const char *name)
 	snprintf(path, sizeof(path), "/dev/%s", name);
 	fd = open(path, O_RDWR);
 	if (fd < 0) {
-		DPRINTF("Can't open gpio device: %s, error %s\n",
-				path, strerror(errno));
+		WPRINTF(("Can't open gpio device: %s, error %s\n",
+				path, strerror(errno)));
 		return -1;
 	}
 
 	memset(&info, 0, sizeof(info));
 	rc = ioctl(fd, GPIO_GET_CHIPINFO_IOCTL, &info);
 	if (rc < 0) {
-		DPRINTF("Can't ioctl gpio device: %s, error %s\n",
-				path, strerror(errno));
+		WPRINTF(("Can't ioctl gpio device: %s, error %s\n",
+				path, strerror(errno)));
 		goto fail;
 	}
 
 	chip->lines = calloc(1, info.lines * sizeof(*chip->lines));
 	if (!chip->lines) {
-		DPRINTF("Alloc chip lines error, %s:%d, error %s\n",
-				path, chip->ngpio, strerror(errno));
+		WPRINTF(("Alloc chip lines error, %s:%d, error %s\n",
+				path, chip->ngpio, strerror(errno)));
 		goto fail;
 	}
 	chip->fd = fd;
@@ -819,8 +799,8 @@ native_gpio_find_line(struct native_gpio_chip *chip, const char *name)
 	/* find the line's offset in the chip by name or number */
 	offset = native_gpio_get_offset(chip, c);
 	if (offset < 0) {
-		DPRINTF("the %s line has not been found in %s chip\n",
-				c, chip->dev_name);
+		WPRINTF(("the %s line has not been found in %s chip\n",
+				c, chip->dev_name));
 		goto out;
 	}
 
@@ -864,8 +844,8 @@ native_gpio_init(struct virtio_gpio *gpio, char *opts)
 		/* discard subsequent chips */
 		if (cn >= VIRTIO_GPIO_MAX_CHIPS ||
 				ln >= VIRTIO_GPIO_MAX_VLINES) {
-			DPRINTF("gpio chips or lines reach max, cn %d, ln %d\n",
-					cn, ln);
+			WPRINTF(("gpio chips or lines reach max, cn %d, ln %d\n",
+					cn, ln));
 			break;
 		}
 
@@ -897,8 +877,8 @@ native_gpio_init(struct virtio_gpio *gpio, char *opts)
 
 			/* discard subsequent lines */
 			if (ln >= VIRTIO_GPIO_MAX_VLINES) {
-				DPRINTF("Virtual gpio lines reach max:%d\n",
-						ln);
+				WPRINTF(("Virtual gpio lines reach max:%d\n",
+						ln));
 				break;
 			}
 
@@ -935,8 +915,8 @@ gpio_irq_deliver_intr(struct virtio_gpio *gpio, uint64_t mask)
 		vq_getchain(vq, &idx, iov, 1, NULL);
 		data = iov[0].iov_base;
 		if (sizeof(*data) != iov[0].iov_len) {
-			DPRINTF("virtio gpio, invalid gpio data size %lu\n",
-					iov[0].iov_len);
+			WPRINTF(("virtio gpio, invalid gpio data size %lu\n",
+					iov[0].iov_len));
 			virtio_gpio_abort(vq, idx);
 			return;
 		}
@@ -955,7 +935,7 @@ gpio_irq_deliver_intr(struct virtio_gpio *gpio, uint64_t mask)
 		record_intr_statistics(&gpio->irq_chip, mask);
 
 	} else
-		DPRINTF("virtio gpio failed to send an IRQ, mask %lu", mask);
+		WPRINTF(("virtio gpio failed to send an IRQ, mask %lu", mask));
 }
 
 static void
@@ -1007,8 +987,8 @@ gpio_irq_set_pin_state(int fd __attribute__((unused)),
 	memset(&data, 0, sizeof(data));
 	err = read(desc->fd, &data, sizeof(data));
 	if (err != sizeof(data)) {
-		DPRINTF("virtio gpio, gpio mevent read error %s, len %d\n",
-				strerror(errno), err);
+		WPRINTF(("virtio gpio, gpio mevent read error %s, len %d\n",
+				strerror(errno), err));
 		return;
 	}
 
@@ -1033,7 +1013,7 @@ gpio_irq_set_pin_state(int fd __attribute__((unused)),
 			gpio_irq_generate_intr(gpio, desc->pin);
 		}
 	} else
-		DPRINTF("virtio gpio, undefined GPIO event id %d\n", data.id);
+		WPRINTF(("virtio gpio, undefined GPIO event id %d\n", data.id));
 }
 
 static void
@@ -1042,12 +1022,12 @@ gpio_irq_disable(struct gpio_irq_chip *chip, unsigned int pin)
 	struct gpio_irq_desc *desc;
 
 	if (pin >= VIRTIO_GPIO_MAX_VLINES) {
-		DPRINTF(" gpio irq disable pin %d is invalid\n", pin);
+		WPRINTF((" gpio irq disable pin %d is invalid\n", pin));
 		return;
 	}
 	desc = &chip->descs[pin];
-	DPRINTF("disable IRQ pin %d <-> native chip %s, GPIO %d\n",
-		pin, desc->gpio->chip->dev_name, desc->gpio->offset);
+	DPRINTF(("disable IRQ pin %d <-> native chip %s, GPIO %d\n",
+		pin, desc->gpio->chip->dev_name, desc->gpio->offset));
 
 	/* Release the mevent, mevent teardown handles IRQ desc reset */
 	if (desc->mevt) {
@@ -1062,7 +1042,7 @@ gpio_irq_teardown(void *param)
 {
 	struct gpio_irq_desc *desc;
 
-	DPRINTF("%s", "virtio gpio tear down\n");
+	DPRINTF(("%s", "virtio gpio tear down\n"));
 	desc = (struct gpio_irq_desc *) param;
 	desc->mask = false;
 	desc->mode = IRQ_TYPE_NONE;
@@ -1089,8 +1069,8 @@ gpio_irq_enable(struct virtio_gpio *gpio, unsigned int pin,
 	chip = &gpio->irq_chip;
 	desc = &chip->descs[pin];
 	line = desc->gpio;
-	DPRINTF("enable IRQ pin %d, mode %lu <-> chip %s, GPIO %d\n",
-		pin, mode, desc->gpio->chip->dev_name, desc->gpio->offset);
+	DPRINTF(("enable IRQ pin %d, mode %lu <-> chip %s, GPIO %d\n",
+		pin, mode, desc->gpio->chip->dev_name, desc->gpio->offset));
 
 	/*
 	 * Front-end should set the gpio direction to input before
@@ -1116,8 +1096,8 @@ gpio_irq_enable(struct virtio_gpio *gpio, unsigned int pin,
 	if (mode & IRQ_TYPE_LEVEL_MASK)
 		req.eventflags |= GPIOEVENT_REQUEST_BOTH_EDGES;
 	if (!req.eventflags) {
-		DPRINTF("failed to enable pin %d to IRQ with invalid flags\n",
-				pin);
+		WPRINTF(("failed to enable pin %d to IRQ with invalid flags\n",
+				pin));
 		return;
 	}
 
@@ -1127,8 +1107,8 @@ gpio_irq_enable(struct virtio_gpio *gpio, unsigned int pin,
 			sizeof(req.consumer_label) - 1);
 	err = ioctl(line->chip->fd, GPIO_GET_LINEEVENT_IOCTL, &req);
 	if (err < 0) {
-		DPRINTF("ioctl GPIO_GET_LINEEVENT_IOCTL error %s\n",
-				strerror(errno));
+		WPRINTF(("ioctl GPIO_GET_LINEEVENT_IOCTL error %s\n",
+				strerror(errno)));
 		goto error;
 	}
 
@@ -1137,8 +1117,8 @@ gpio_irq_enable(struct virtio_gpio *gpio, unsigned int pin,
 			gpio_irq_set_pin_state, desc,
 			gpio_irq_teardown, desc);
 	if (!desc->mevt) {
-		DPRINTF("failed to enable IRQ pin %d, mevent add error\n",
-				pin);
+		WPRINTF(("failed to enable IRQ pin %d, mevent add error\n",
+				pin));
 		goto error;
 	}
 
@@ -1185,13 +1165,13 @@ virtio_gpio_irq_proc(struct virtio_gpio *gpio, struct iovec *iov, uint16_t flag)
 	req = iov[0].iov_base;
 	len = iov[0].iov_len;
 	if (len != sizeof(*req)) {
-		DPRINTF("virtio gpio, invalid req size %d\n", len);
+		WPRINTF(("virtio gpio, invalid req size %d\n", len));
 		return;
 	}
 
 	if (req->pin >= gpio->nvline) {
-		DPRINTF("virtio gpio, invalid IRQ pin %d, ignore action %d\n",
-			req->pin, req->action);
+		WPRINTF(("virtio gpio, invalid IRQ pin %d, ignore action %d\n",
+			req->pin, req->action));
 		return;
 	}
 
@@ -1233,7 +1213,7 @@ virtio_gpio_irq_proc(struct virtio_gpio *gpio, struct iovec *iov, uint16_t flag)
 			gpio_irq_generate_intr(gpio, req->pin);
 		break;
 	default:
-		DPRINTF("virtio gpio, unknown IRQ action %d\n", req->action);
+		WPRINTF(("virtio gpio, unknown IRQ action %d\n", req->action));
 	}
 }
 
@@ -1241,7 +1221,7 @@ static void
 virtio_irq_evt_notify(void *vdev, struct virtio_vq_info *vq)
 {
 	/* The front-end driver does not make a kick, just avoid warning */
-	DPRINTF("%s", "virtio gpio irq_evt_notify\n");
+	WPRINTF(("%s", "virtio gpio irq_evt_notify\n"));
 }
 
 static void
@@ -1257,7 +1237,7 @@ virtio_irq_notify(void *vdev, struct virtio_vq_info *vq)
 	if (vq_has_descs(vq)) {
 		n = vq_getchain(vq, &idx, iov, 1, &flag);
 		if (n != 1) {
-			DPRINTF("virtio gpio, invalid irq chain %d\n", n);
+			WPRINTF(("virtio gpio, invalid irq chain %d\n", n));
 			virtio_gpio_abort(vq, idx);
 			return;
 		}
@@ -1305,7 +1285,7 @@ gpio_irq_init(struct virtio_gpio *gpio)
 	chip = &gpio->irq_chip;
 	rc = pthread_mutex_init(&chip->intr_mtx, NULL);
 	if (rc) {
-		DPRINTF("IRQ pthread_mutex_init failed with error %d!\n", rc);
+		WPRINTF(("IRQ pthread_mutex_init failed with error %d!\n", rc));
 		return -1;
 	}
 	for (i = 0; i < gpio->nvline; i++) {
@@ -1332,48 +1312,46 @@ virtio_gpio_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (virtio_gpio_is_active)
 		return -1;
 
-	VIRTIO_GPIO_LOG_INIT;
-
 	if (!opts) {
-		DPRINTF("%s", "virtio gpio: needs gpio information\n");
+		WPRINTF(("%s", "virtio gpio: needs gpio information\n"));
 		rc = -EINVAL;
 		goto init_fail;
 	}
 
 	gpio = calloc(1, sizeof(struct virtio_gpio));
 	if (!gpio) {
-		DPRINTF("%s", "virtio gpio: failed to calloc virtio_gpio\n");
+		WPRINTF(("%s", "virtio gpio: failed to calloc virtio_gpio\n"));
 		rc = -ENOMEM;
 		goto init_fail;
 	}
 
 	rc = native_gpio_init(gpio, opts);
 	if (rc) {
-		DPRINTF("%s", "virtio gpio: failed to initialize gpio\n");
+		WPRINTF(("%s", "virtio gpio: failed to initialize gpio\n"));
 		goto gpio_fail;
 	}
 
 	rc = gpio_irq_init(gpio);
 	if (rc) {
-		DPRINTF("%s", "virtio gpio: failed to initialize gpio irq\n");
+		WPRINTF(("%s", "virtio gpio: failed to initialize gpio irq\n"));
 		goto irq_fail;
 	}
 
 	/* init mutex attribute properly to avoid deadlock */
 	rc = pthread_mutexattr_init(&attr);
 	if (rc) {
-		DPRINTF("mutexattr init failed with error %d!\n", rc);
+		WPRINTF(("mutexattr init failed with error %d!\n", rc));
 		goto mtx_fail;
 	}
 	rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 	if (rc) {
-		DPRINTF("mutexattr_settype failed with error %d!\n", rc);
+		WPRINTF(("mutexattr_settype failed with error %d!\n", rc));
 		goto fail;
 	}
 
 	rc = pthread_mutex_init(&gpio->mtx, &attr);
 	if (rc) {
-		DPRINTF("pthread_mutex_init failed with error %d!\n", rc);
+		WPRINTF(("pthread_mutex_init failed with error %d!\n", rc));
 		goto fail;
 	}
 
@@ -1438,7 +1416,6 @@ gpio_fail:
 	dev->arg = NULL;
 
 init_fail:
-	VIRTIO_GPIO_LOG_DEINIT;
 	return rc;
 }
 
@@ -1448,7 +1425,7 @@ virtio_gpio_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	struct virtio_gpio *gpio;
 	int i;
 
-	DPRINTF("%s", "virtio gpio: pci_gpio_deinit\r\n");
+	DPRINTF(("%s", "virtio gpio: pci_gpio_deinit\r\n"));
 	virtio_gpio_is_active = false;
 	gpio = (struct virtio_gpio *)dev->arg;
 	if (gpio) {
@@ -1459,8 +1436,6 @@ virtio_gpio_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		free(gpio);
 		dev->arg = NULL;
 	}
-
-	VIRTIO_GPIO_LOG_DEINIT;
 }
 
 static void
@@ -1512,8 +1487,8 @@ gpio_pio_write(struct virtio_gpio *gpio, int n, uint64_t reg)
 	uint16_t config;
 
 	if (n >= gpio->nvline) {
-		DPRINTF("pio write is invalid, n %d, nvline %d\n",
-				n, gpio->nvline);
+		WPRINTF(("pio write is invalid, n %d, nvline %d\n",
+				n, gpio->nvline));
 		return;
 	}
 
@@ -1525,12 +1500,12 @@ gpio_pio_write(struct virtio_gpio *gpio, int n, uint64_t reg)
 
 	/* 0 means GPIO, 1 means IRQ */
 	if (mode == 1) {
-		DPRINTF("pio write failure, gpio %d is in IRQ mode\n", n);
+		WPRINTF(("pio write failure, gpio %d is in IRQ mode\n", n));
 		return;
 	}
 
-	DPRINTF("pio write n %d, reg 0x%lX, val %d, dir %d, mod %d, cfg 0x%x\n",
-			n, reg, value, dir, mode, config);
+	DPRINTF(("pio write n %d, reg 0x%lX, val %d, dir %d, mod %d, cfg 0x%x\n",
+			n, reg, value, dir, mode, config));
 
 	if (config != line->config)
 		gpio_set_config(gpio, n, config);
@@ -1549,8 +1524,8 @@ gpio_pio_read(struct virtio_gpio *gpio, int n)
 	uint32_t reg = 0;
 
 	if (n >= gpio->nvline) {
-		DPRINTF("pio read is invalid, n %d, nvline %d\n",
-				n, gpio->nvline);
+		WPRINTF(("pio read is invalid, n %d, nvline %d\n",
+				n, gpio->nvline));
 		return 0xFFFFFFFF;
 	}
 
@@ -1562,7 +1537,7 @@ gpio_pio_read(struct virtio_gpio *gpio, int n)
 	if (line->irq->fd > 0)
 		reg |= 1 << PIO_GPIO_MODE_OFFSET;
 
-	DPRINTF("pio read n %d, reg 0x%X\n", n, reg);
+	DPRINTF(("pio read n %d, reg 0x%X\n", n, reg));
 	return reg;
 }
 
@@ -1582,26 +1557,26 @@ print_gpio_info(struct virtio_gpio *gpio)
 	struct gpio_line *line;
 	int i;
 
-	DPRINTF("=== virtual lines(%u) mapping ===\n", gpio->nvline);
+	DPRINTF(("=== virtual lines(%u) mapping ===\n", gpio->nvline));
 	for (i = 0; i < gpio->nvline; i++) {
 		line = gpio->vlines[i];
-		DPRINTF("%d: (vname:%8s, name:%8s) <=> %s, gpio=%d\n",
+		DPRINTF(("%d: (vname:%8s, name:%8s) <=> %s, gpio=%d\n",
 				i,
 				line->vname,
 				line->name,
 				line->chip->dev_name,
-				line->offset);
+				line->offset));
 	}
 
-	DPRINTF("=== native gpio chips(%u) info ===\n", gpio->nchip);
+	DPRINTF(("=== native gpio chips(%u) info ===\n", gpio->nchip));
 	for (i = 0; i < gpio->nchip; i++) {
 		chip = &gpio->chips[i];
-		DPRINTF("index:%d, name:%s, dev_name:%s, label:%s, ngpio:%u\n",
+		DPRINTF(("index:%d, name:%s, dev_name:%s, label:%s, ngpio:%u\n",
 				i,
 				chip->name,
 				chip->dev_name,
 				chip->label,
-				chip->ngpio);
+				chip->ngpio));
 	}
 }
 
@@ -1629,17 +1604,17 @@ print_virtio_gpio_info(struct virtio_gpio_request *req,
 	else
 		item = "data";
 	if (in)
-		DPRINTF("<<<< gpio=%u, %s, %s=%lu\n",
+		DPRINTF(("<<<< gpio=%u, %s, %s=%lu\n",
 				req->offset,
 				cmd_map[req->cmd],
 				item,
-				req->data);
+				req->data));
 	else
-		DPRINTF(">>>> gpio=%u, err=%d, %s=%d\n",
+		DPRINTF((">>>> gpio=%u, err=%d, %s=%d\n",
 				req->offset,
 				rsp->err,
 				item,
-				rsp->data);
+				rsp->data));
 }
 
 static void
@@ -1662,14 +1637,14 @@ print_intr_statistics(struct gpio_irq_chip *chip)
 	struct gpio_irq_desc *desc;
 	int i;
 
-	DPRINTF("virtio gpio generated interrupts %lu\n", chip->intr_stat);
+	DPRINTF(("virtio gpio generated interrupts %lu\n", chip->intr_stat));
 	for (i = 0; i < VIRTIO_GPIO_MAX_VLINES; i++) {
 		desc = &chip->descs[i];
 		if (!desc->gpio || desc->intr_stat == 0)
 			continue;
-		DPRINTF("Chip %s GPIO %d generated interrupts %lu\n",
+		DPRINTF(("Chip %s GPIO %d generated interrupts %lu\n",
 				desc->gpio->chip->dev_name, desc->gpio->offset,
-				desc->intr_stat);
+				desc->intr_stat));
 	}
 }
 

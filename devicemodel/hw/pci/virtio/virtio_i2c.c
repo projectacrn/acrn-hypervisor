@@ -60,8 +60,8 @@
 static int virtio_i2c_debug=0;
 #define VIRTIO_I2C_PREF "virtio_i2c: "
 #define DPRINTF(fmt, args...) \
-	do { if (virtio_i2c_debug) printf(VIRTIO_I2C_PREF fmt, ##args); } while (0)
-#define WPRINTF(fmt, args...) printf(VIRTIO_I2C_PREF fmt, ##args)
+       do { if (virtio_i2c_debug) pr_dbg(VIRTIO_I2C_PREF fmt, ##args); } while (0)
+#define WPRINTF(fmt, args...) pr_err(VIRTIO_I2C_PREF fmt, ##args)
 
 #define MAX_NODE_NAME_LEN	20
 #define MAX_I2C_VDEV		128

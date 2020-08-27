@@ -10,10 +10,11 @@
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include "virtio_kernel.h"
+#include "log.h"
 
 static int virtio_kernel_debug;
-#define DPRINTF(params) do { if (virtio_kernel_debug) printf params; } while (0)
-#define WPRINTF(params) (printf params)
+#define DPRINTF(params) do { if (virtio_kernel_debug) pr_dbg params; } while (0)
+#define WPRINTF(params) (pr_err params)
 
 static int
 vbs_dev_info_set(int fd, void *arg)
