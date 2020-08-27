@@ -296,7 +296,7 @@ pci_parse_slot(char *opt)
 	error = -1;
 	str = strdup(opt);
 	if (!str) {
-		fprintf(stderr, "%s: strdup returns NULL\n", __func__);
+		pr_err("%s: strdup returns NULL\n", __func__);
 		return -1;
 	}
 
@@ -331,13 +331,13 @@ pci_parse_slot(char *opt)
 	si = &bi->slotinfo[snum];
 
 	if (si->si_funcs[fnum].fi_name != NULL) {
-		fprintf(stderr, "pci slot %d:%d already occupied!\n",
+		pr_err("pci slot %d:%d already occupied!\n",
 			snum, fnum);
 		goto done;
 	}
 
 	if (pci_emul_finddev(emul) == NULL) {
-		fprintf(stderr, "pci slot %d:%d: unknown device \"%s\"\n",
+		pr_err("pci slot %d:%d: unknown device \"%s\"\n",
 			snum, fnum, emul);
 		goto done;
 	}
@@ -603,7 +603,7 @@ modify_bar_registration(struct pci_vdev *dev, int idx, int registration)
 	struct mem_range mr;
 
 	if (is_pt_pci(dev)) {
-		printf("%s: bypass for pci-passthru %x:%x.%x\n", __func__, dev->bus, dev->slot, dev->func);
+		pr_dbg("%s: bypass for pci-passthru %x:%x.%x\n", __func__, dev->bus, dev->slot, dev->func);
 		return 0;
 	}
 
