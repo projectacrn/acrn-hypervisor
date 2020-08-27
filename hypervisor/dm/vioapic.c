@@ -114,7 +114,7 @@ vioapic_set_pinstate(struct acrn_single_vioapic *vioapic, uint32_t pin, uint32_t
 }
 
 
-static struct acrn_single_vioapic *
+struct acrn_single_vioapic *
 vgsi_to_vioapic_and_vpin(const struct acrn_vm *vm, uint32_t vgsi, uint32_t *vpin)
 {
 	struct acrn_single_vioapic *vioapic;
