@@ -42,7 +42,7 @@ update_gsi_sharing_info(char *dev_name, uint8_t gsi)
 			continue;
 
 		if (group->shared_dev_num >= MAX_DEV_PER_GSI) {
-			warnx("max %d devices share one GSI", MAX_DEV_PER_GSI);
+			pr_err("max %d devices share one GSI", MAX_DEV_PER_GSI);
 			return -EINVAL;
 		}
 
@@ -53,7 +53,7 @@ update_gsi_sharing_info(char *dev_name, uint8_t gsi)
 	if (gsi_shared == 0) {
 		group = calloc(1, sizeof(struct gsi_sharing_group));
 		if (!group) {
-			warnx("%s: calloc FAIL!", __func__);
+			pr_err("%s: calloc FAIL!", __func__);
 			return -ENOMEM;
 		}
 
@@ -213,12 +213,12 @@ check_gsi_sharing_violation(void)
 			continue;
 
 		/* reject the passthrough since gsi sharing violation occurs */
-		warnx("GSI SHARING VIOLATION!");
-		warnx("following physical devices are sharing same GSI, please "
+		pr_err("GSI SHARING VIOLATION!");
+		pr_err("following physical devices are sharing same GSI, please "
 			"assign them to same VM to avoid physical GSI sharing "
 			"between multiple VMs");
 		for (i = 0; i < (group->shared_dev_num); i++) {
-			warnx("device %s \t assigned_to_this_vm %d",
+			pr_info("device %s \t assigned_to_this_vm %d",
 				group->dev[i].dev_name,
 				group->dev[i].assigned_to_this_vm);
 		}
