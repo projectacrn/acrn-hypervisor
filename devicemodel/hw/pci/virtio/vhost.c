@@ -28,8 +28,8 @@
 static int vhost_debug;
 #define LOG_TAG "vhost: "
 #define DPRINTF(fmt, args...) \
-	do { if (vhost_debug) printf(LOG_TAG fmt, ##args); } while (0)
-#define WPRINTF(fmt, args...) printf(LOG_TAG fmt, ##args)
+       do { if (vhost_debug) pr_dbg(LOG_TAG fmt, ##args); } while (0)
+#define WPRINTF(fmt, args...) pr_err(LOG_TAG fmt, ##args)
 
 static inline
 int vhost_kernel_ioctl(struct vhost_dev *vdev,

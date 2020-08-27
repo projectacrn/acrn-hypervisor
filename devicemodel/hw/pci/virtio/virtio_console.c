@@ -70,11 +70,11 @@
 	VIRTIO_CONSOLE_F_EMERG_WRITE)
 
 static int virtio_console_debug;
-#define DPRINTF(params) do {		\
-	if (virtio_console_debug)	\
-		printf params;		\
+#define DPRINTF(params) do {           \
+       if (virtio_console_debug)       \
+               pr_dbg params;          \
 } while (0)
-#define WPRINTF(params) (printf params)
+#define WPRINTF(params) (pr_err params)
 
 struct virtio_console;
 struct virtio_console_port;
