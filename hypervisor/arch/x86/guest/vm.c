@@ -233,26 +233,23 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 			break;
 		}
 
-		/* Do EPT mapping for GPAs that are backed by physical memory */
-		if ((entry->type == E820_TYPE_RAM) && (remaining_hpa_size >= entry->length)) {
-			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, entry->baseaddr,
-				entry->length, EPT_RWX | EPT_WB);
+		if (remaining_hpa_size >= entry->length) {
+			/* Do EPT mapping for GPAs that are backed by physical memory */
+			if ((entry->type == E820_TYPE_RAM) || (entry->type == E820_TYPE_ACPI_RECLAIM)
+					|| (entry->type == E820_TYPE_ACPI_NVS)) {
+				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, entry->baseaddr,
+					entry->length, EPT_RWX | EPT_WB);
+			}
 
+			/* GPAs under 1MB are always backed by physical memory */
+			if ((entry->type != E820_TYPE_RAM) && (entry->baseaddr < (uint64_t)MEM_1M)) {
+				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, entry->baseaddr,
+					entry->length, EPT_RWX | EPT_UNCACHED);
+			}
 			base_hpa += entry->length;
 			remaining_hpa_size -= entry->length;
-		} else if ((entry->type == E820_TYPE_RAM) && (remaining_hpa_size < entry->length)) {
-                         pr_warn("%s: HPA size incorrectly configured in v820\n", __func__);
-		}
-
-
-		/* GPAs under 1MB are always backed by physical memory */
-		if ((entry->type != E820_TYPE_RAM) && (entry->baseaddr < (uint64_t)MEM_1M) &&
-			(remaining_hpa_size >= entry->length)) {
-			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, base_hpa, entry->baseaddr,
-				entry->length, EPT_RWX | EPT_UNCACHED);
-
-			base_hpa += entry->length;
-			remaining_hpa_size -= entry->length;
+		} else if (entry->type == E820_TYPE_RAM) {
+			pr_warn("%s: HPA size incorrectly configured in v820\n", __func__);
 		}
 
 		if ((remaining_hpa_size == 0UL) && (is_hpa1)) {
