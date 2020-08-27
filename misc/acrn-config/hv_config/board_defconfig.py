@@ -149,7 +149,11 @@ def get_serial_console(config):
     elif serial_type == "mmio" and pci_mmio:
         print("CONFIG_SERIAL_PCI=y", file=config)
         if serial_value:
-            print('CONFIG_SERIAL_PCI_BDF="{}"'.format(serial_value), file=config)
+            bus = int(serial_value.strip("'").split(':')[0], 16)
+            dev = int(serial_value.strip("'").split(':')[1].split(".")[0], 16)
+            fun = int(serial_value.strip("'").split('.')[1], 16)
+            value = ((bus & 0xFF) << 8) | ((dev & 0x1F) << 3) | (fun & 0x7)
+            print('CONFIG_SERIAL_PCI_BDF={}'.format(hex(value)), file=config)
     else:
         print("CONFIG_SERIAL_MMIO=y", file=config)
         if serial_value:
