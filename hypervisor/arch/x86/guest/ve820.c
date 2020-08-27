@@ -8,10 +8,11 @@
 #include <mmu.h>
 #include <vm.h>
 #include <reloc.h>
+#include <vacpi.h>
 #include <logmsg.h>
 
 #define ENTRY_HPA1		2U
-#define ENTRY_HPA1_HI		4U
+#define ENTRY_HPA1_HI		6U
 
 static struct e820_entry sos_vm_e820[E820_MAX_ENTRIES];
 static struct e820_entry pre_vm_e820[PRE_VM_NUM][E820_MAX_ENTRIES];
@@ -124,15 +125,25 @@ static const struct e820_entry pre_ve820_template[E820_MAX_ENTRIES] = {
 		.length   = 0xF0000UL,		/* 960KB */
 		.type     = E820_TYPE_RAM
 	},
-	{	/* mptable */
+	{	/* mptable/RSDP */
 		.baseaddr = 0xF0000UL,		/* 960KB */
 		.length   = 0x10000UL,		/* 64KB */
 		.type     = E820_TYPE_RESERVED
 	},
 	{	/* hpa1 */
 		.baseaddr = 0x100000UL,		/* 1MB */
-		.length   = (MEM_2G - MEM_1M),
+		.length   = (MEM_2G - MEM_2M),
 		.type     = E820_TYPE_RAM
+	},
+	{	/* ACPI Reclaim */
+		.baseaddr = VIRT_ACPI_DATA_ADDR,/* consecutive from 0x7fff0000UL */
+		.length   = (960U * MEM_1K),	/* 960KB */
+		.type	  = E820_TYPE_ACPI_RECLAIM
+	},
+	{	/* ACPI NVS */
+		.baseaddr = VIRT_ACPI_NVS_ADDR,	/* consecutive after ACPI Reclaim */
+		.length   = 0x10000, 		/* 64KB */
+		.type	  = E820_TYPE_ACPI_NVS
 	},
 	{	/* 32bit PCI hole */
 		.baseaddr = 0x80000000UL,	/* 2048MB */
@@ -158,14 +169,16 @@ static inline uint64_t add_ram_entry(struct e820_entry *entry, uint64_t gpa, uin
  * ve820 layout for pre-launched VM:
  *
  *	 entry0: usable under 1MB
- *	 entry1: reserved for MP Table from 0xf0000 to 0xfffff
+ *	 entry1: reserved for MP Table/ACPI RSDP from 0xf0000 to 0xfffff
  *	 entry2: usable for hpa1 or hpa1_lo from 0x100000
- *	 entry3: reserved for 32bit PCI hole from 0x80000000 to 0xffffffff
- *	 (entry4): usable for
+ *	 entry3: ACPI Reclaim from 0x7ff00000 to 0x7ffeffff
+ *	 entry4: ACPI NVS from 0x7fff0000 to 0x7fffffff
+ *	 entry5: reserved for 32bit PCI hole from 0x80000000 to 0xffffffff
+ *	 (entry6): usable for
  *                                         a) hpa1_hi, if hpa1 > 2GB
  *                                         b) hpa2, if (hpa1 + hpa2) < 2GB
  *                                         c) hpa2_lo, if hpa1 < 2GB and (hpa1 + hpa2) > 2GB
- *	 (entry5): usable for
+ *	 (entry7): usable for
  *                                         a) hpa2, if hpa1 > 2GB
  *                                         b) hpa2_hi, if hpa1 < 2GB and (hpa1 + hpa2) > 2GB
  */
@@ -188,8 +201,8 @@ void create_prelaunched_vm_e820(struct acrn_vm *vm)
 		gpa_start = add_ram_entry((vm->e820_entries + entry_idx), gpa_start, hpa1_hi_size);
 		entry_idx++;
 	} else {
-		/* need to revise length of hpa1 entry to its actual size */
-		vm->e820_entries[ENTRY_HPA1].length = vm_config->memory.size - MEM_1M;
+		/* need to revise length of hpa1 entry to its actual size, excluding size of low 1MB and ACPI space */
+		vm->e820_entries[ENTRY_HPA1].length = vm_config->memory.size - MEM_2M;
 		/* need to set gpa_start for hpa2 */
 		gpa_start = vm->e820_entries[ENTRY_HPA1].baseaddr + vm->e820_entries[ENTRY_HPA1].length;
 		if ((vm_config->memory.size < MEM_2G)

@@ -53,6 +53,9 @@
 #define ACPI_ASL_COMPILER_ID  "INTL"
 #define ACPI_ASL_COMPILER_VERSION  0x20190802U
 
+#define VIRT_ACPI_DATA_ADDR	0x7ff00000UL
+#define VIRT_ACPI_NVS_ADDR	0x7fff0000UL
+
 /* virtual PCI MMCFG address base for pre/post-launched VM. */
 #define VIRT_PCI_MMCFG_BASE	0xE0000000UL
 
