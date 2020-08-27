@@ -763,10 +763,10 @@ def share_mem_check(shmem_regions, raw_shmem_regions, vm_type_info, prime_item, 
             except:
                 ERR_LIST[key] = "The size of share Memory region should be decimal or hexadecimal."
                 return
-            if int_size < 0x200000 or int_size > 0x40000000:
-                ERR_LIST[key] = "The size of share Memory region should be in [2M, 1G]."
+            if int_size < 0x200000 or int_size >= 0x40000000:
+                ERR_LIST[key] = "The size of share Memory region should be in [2M, 1G)."
                 return
-            if not math.log(int_size, 2).is_integer():
+            if not ((int_size & (int_size-1) == 0) and int_size != 0):
                 ERR_LIST[key] = "The size of share Memory region should be a power of 2."
                 return
 

@@ -30,6 +30,8 @@ VM_NUM_MAP_TOTAL_HV_RAM_SIZE = {
     8:0x14800000,
 }
 
+HV_RAM_SIZE_MAX = 0x40000000
+
 MEM_ALIGN = 2 * common.SIZE_M
 
 
@@ -77,6 +79,33 @@ def get_memory(hv_info, config):
     else:
         common.print_red("VM num should not be greater than 8", err=True)
         err_dic["board config: total vm number error"] = "VM num should not be greater than 8"
+        return err_dic
+
+    ivshmem_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
+    total_shm_size = 0
+    if ivshmem_enabled == 'y':
+        raw_shmem_regions = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
+        for raw_shm in raw_shmem_regions:
+            if raw_shm is None or raw_shm.strip() == '':
+                continue
+            raw_shm_splited = raw_shm.split(',')
+            if len(raw_shm_splited) == 3 and raw_shm_splited[0].strip() != '' \
+                    and raw_shm_splited[1].strip() != '' and len(raw_shm_splited[2].strip().split(':')) >= 1:
+                try:
+                    size = raw_shm_splited[1].strip()
+                    if size.isdecimal():
+                        int_size = int(size)
+                    else:
+                        int_size = int(size, 16)
+                    total_shm_size += int_size
+                except Exception as e:
+                    print(e)
+
+    hv_ram_size += total_shm_size
+    if hv_ram_size > HV_RAM_SIZE_MAX:
+        common.print_red("requested RAM size should be smaller then {}".format(HV_RAM_SIZE_MAX), err=True)
+        err_dic["board config: total vm number error"] = \
+            "requested RAM size should be smaller then {}".format(HV_RAM_SIZE_MAX)
         return err_dic
 
     # reseve 16M memory for hv sbuf, ramoops, etc.
