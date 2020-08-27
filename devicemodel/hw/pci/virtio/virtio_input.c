@@ -23,8 +23,8 @@
 #include <linux/input.h>
 
 static int virtio_input_debug;
-#define DPRINTF(params) do { if (virtio_input_debug) printf params; } while (0)
-#define WPRINTF(params) (printf params)
+#define DPRINTF(params) do { if (virtio_input_debug) pr_dbg params; } while (0)
+#define WPRINTF(params) (pr_err params)
 
 /*
  * Queue definitions.

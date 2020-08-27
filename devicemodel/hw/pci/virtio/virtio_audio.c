@@ -26,6 +26,7 @@
 #include "virtio.h"
 #include "virtio_kernel.h"
 #include "vmmapi.h"			/* for vmctx */
+#include "log.h"
 
 /*
  * Size of queue was chosen experimentaly in a way
@@ -44,8 +45,8 @@
 const char *vbs_k_audio_dev_path = "/dev/vbs_k_audio";
 
 static int virtio_audio_debug = 1;
-#define DPRINTF(params) do { if (virtio_audio_debug) printf params; } while (0)
-#define WPRINTF(params) (printf params)
+#define DPRINTF(params) do { if (virtio_audio_debug) pr_dbg params; } while (0)
+#define WPRINTF(params) (pr_err params)
 
 struct virtio_audio {
 	struct virtio_base base;

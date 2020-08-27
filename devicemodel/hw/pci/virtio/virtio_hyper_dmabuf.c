@@ -39,11 +39,11 @@ const char *hyper_dmabuf_vbs_dev_path = "/dev/vbs_hyper_dmabuf";
 static int virtio_hyper_dmabuf_debug;
 #define DPRINTF(...)\
 do {\
-	if (virtio_hyper_dmabuf_debug)\
-		printf(__VA_ARGS__);\
+       if (virtio_hyper_dmabuf_debug)\
+               pr_dbg(__VA_ARGS__);\
 } while (0)
 
-#define WPRINTF(...) printf(__VA_ARGS__)
+#define WPRINTF(...) pr_err(__VA_ARGS__)
 
 static enum VBS_K_STATUS kstatus = VIRTIO_DEV_INITIAL;
 static int vbs_k_hyper_dmabuf_fd = -1;

@@ -111,8 +111,8 @@ static struct virtio_ops virtio_coreu_ops = {
 
 /* Debug printf */
 static int virtio_coreu_debug;
-#define DPRINTF(params) do { if (virtio_coreu_debug) printf params; } while (0)
-#define WPRINTF(params) (printf params)
+#define DPRINTF(params) do { if (virtio_coreu_debug) pr_dbg params; } while (0)
+#define WPRINTF(params) (pr_err params)
 
 static void
 virtio_coreu_reset(void *vdev)
