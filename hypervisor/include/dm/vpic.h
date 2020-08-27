@@ -51,13 +51,13 @@
 /* No definitions, it is the base vector of the IDT for 8086 mode */
 
 /* Initialization control word 3. Written to the odd address. */
-/* For a master PIC, bitfield indicating a slave 8259 on given input */
-/* For slave, lower 3 bits are the slave's ID binary id on master */
+/* For a primary PIC, bitfield indicating a secondary PIC on given input */
+/* For a secondary PIC, lower 3 bits are the PIC's ID binary id on primary PIC */
 
 /* Initialization control word 4. Written to the odd address. */
 #define	ICW4_8086	0x01U		/* 1 = 8086, 0 = 8080 */
 #define	ICW4_AEOI	0x02U		/* 1 = Auto EOI */
-#define	ICW4_MS		0x04U		/* 1 = buffered master, 0 = slave */
+#define	ICW4_MS		0x04U		/* 1 = buffered primary PIC, 0 = secondary PIC*/
 #define	ICW4_BUF	0x08U		/* 1 = enable buffer mode */
 #define	ICW4_SFNM	0x10U		/* 1 = special fully nested mode */
 

@@ -680,7 +680,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ct
 	DEFINE_INTX_SID(alt_virt_sid, virt_gsi, vgsi_ctlr);
 
 	/*
-	 * virt pin could come from vpic master, vpic slave or vioapic
+	 * virt pin could come from primary vPIC, secondary vPIC or vIOAPIC
 	 * while phys pin is always means for physical IOAPIC.
 	 *
 	 * Device Model should pre-hold the mapping entries by calling

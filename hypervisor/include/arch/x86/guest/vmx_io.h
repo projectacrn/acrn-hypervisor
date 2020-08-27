@@ -10,9 +10,9 @@
 #include <types.h>
 
 /* Define emulated port IO index */
-#define PIC_MASTER_PIO_IDX		0U
-#define PIC_SLAVE_PIO_IDX		(PIC_MASTER_PIO_IDX + 1U)
-#define PIC_ELC_PIO_IDX			(PIC_SLAVE_PIO_IDX + 1U)
+#define PIC_PRIMARY_PIO_IDX		0U
+#define PIC_SECONDARY_PIO_IDX		(PIC_PRIMARY_PIO_IDX + 1U)
+#define PIC_ELC_PIO_IDX			(PIC_SECONDARY_PIO_IDX + 1U)
 #define PCI_CFGADDR_PIO_IDX		(PIC_ELC_PIO_IDX + 1U)
 #define PCI_CFGDATA_PIO_IDX		(PCI_CFGADDR_PIO_IDX + 1U)
 /* When MAX_VUART_NUM_PER_VM is larger than 2, UART_PIO_IDXn should also be added here */
