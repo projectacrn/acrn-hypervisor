@@ -69,8 +69,8 @@ struct virtio_rnd {
 };
 
 static int virtio_rnd_debug;
-#define DPRINTF(params) do { if (virtio_rnd_debug) printf params; } while (0)
-#define WPRINTF(params) (printf params)
+#define DPRINTF(params) do { if (virtio_rnd_debug) pr_dbg params; } while (0)
+#define WPRINTF(params) (pr_err params)
 
 /* VBS-K interface functions */
 static int virtio_rnd_kernel_init(struct virtio_rnd *);	/* open VBS-K chardev */
