@@ -28,6 +28,7 @@ static struct uart_cmd {
 bool handle_dbg_cmd(const char *cmd, int32_t len)
 {
 	uint32_t i;
+	uint64_t data;
 
 	for (i = 0; i < ARRAY_SIZE(cmd_list); i++) {
 		int32_t tmp = strnlen_s(cmd_list[i].str, MAX_CMD_LEN);
@@ -44,18 +45,16 @@ bool handle_dbg_cmd(const char *cmd, int32_t len)
 			/* set uart disabled*/
 			uart16550_set_property(false, type, 0UL);
 		} else if (type == PIO) {
-			uint64_t addr = strtoul_hex(cmd + tmp);
+			data = strtoul_hex(cmd + tmp);
 
-			if (addr > MAX_PORT) {
-				addr = DEFAULT_UART_PORT;
+			if (data > MAX_PORT) {
+				data = DEFAULT_UART_PORT;
 			}
 
-			uart16550_set_property(true, type, addr);
-		} else if (type == PCI) {
-			uart16550_set_property(true, type, (uint64_t)(cmd+tmp));
+			uart16550_set_property(true, type, data);
 		} else {
-			uint64_t addr = strtoul_hex(cmd + tmp);
-			uart16550_set_property(true, type, addr);
+			data = strtoul_hex(cmd + tmp);
+			uart16550_set_property(true, type, data);
 		}
 	}
 

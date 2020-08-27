@@ -134,11 +134,12 @@ config SERIAL_MMIO
 endchoice
 
 config SERIAL_PCI_BDF
-	string "BDF of serial PCI device"
+	hex "BDF of serial PCI device"
 	depends on SERIAL_PCI
-	default "0:18.2"
+	default 0x00c2
 	help
-	  BDF: bus, device and function of the serial PCI device; for an example,
+	  BDF: bus, device and function of the serial PCI device. The BDF is packed
+	  into a 16bit WORD with format (B:8, D:5, F:3). For an example,
 	  PCI device ttyS2: 0:18.2.
 
 config SERIAL_PIO_BASE
