@@ -69,22 +69,12 @@
 #include "ioc.h"
 #include "vmmapi.h"
 #include "monitor.h"
+#include "log.h"
 
-/* For debugging log to a file */
 static int ioc_debug;
-static FILE *dbg_file;
-#define IOC_LOG_INIT do { if (ioc_debug) {\
-	dbg_file = fopen("/tmp/ioc_log", "w+");\
-if (!dbg_file)\
-	printf("ioc log open failed\r\n"); else cbc_set_log_file(dbg_file);\
-} } while (0)
-#define IOC_LOG_DEINIT do { if (dbg_file) fclose(dbg_file); dbg_file = NULL;\
-cbc_set_log_file(dbg_file);\
-} while (0)
 #define DPRINTF(format, arg...) \
-do { if (ioc_debug && dbg_file) { fprintf(dbg_file, format, arg);\
-	fflush(dbg_file); } } while (0)
-#define	WPRINTF(format, arg...) printf(format, ##arg)
+do { if (ioc_debug) { pr_dbg(format, arg); } } while (0)
+#define	WPRINTF(format, arg...) pr_err(format, ##arg)
 
 /*
  * For debugging only, to generate lifecycle, signal and oem-raw data
@@ -1528,8 +1518,6 @@ ioc_init(struct vmctx *ctx)
 	int rc;
 	struct ioc_dev *ioc;
 
-	IOC_LOG_INIT;
-
 	if (ioc_is_platform_supported() != 0)
 		goto ioc_err;
 
@@ -1695,7 +1683,6 @@ alloc_err:
 	free(ioc->pool);
 	free(ioc);
 ioc_err:
-	IOC_LOG_DEINIT;
 	DPRINTF("%s", "ioc mediator startup failed!!\r\n");
 	return -1;
 }
@@ -1720,7 +1707,6 @@ ioc_deinit(struct vmctx *ctx)
 	free(ioc->evts);
 	free(ioc->pool);
 	free(ioc);
-	IOC_LOG_DEINIT;
 
 	ctx->ioc_dev = NULL;
 }
