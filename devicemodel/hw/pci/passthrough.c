@@ -139,7 +139,7 @@ read_config(struct pci_device *phys_dev, long reg, int width)
 		pci_device_cfg_read_u32(phys_dev, &temp, reg);
 		break;
 	default:
-		warnx("%s: invalid reg width", __func__);
+		pr_warn("%s: invalid reg width", __func__);
 		return -1;
 	}
 
@@ -162,7 +162,7 @@ write_config(struct pci_device *phys_dev, long reg, int width, uint32_t data)
 		temp = pci_device_cfg_write_u32(phys_dev, data, reg);
 		break;
 	default:
-		warnx("%s: invalid reg width", __func__);
+		pr_warn("%s: invalid reg width", __func__);
 	}
 
 	return temp;
@@ -270,7 +270,7 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 		if (bartype != PCIBAR_IO) {
 			/* note here PAGE_MASK is 0xFFFFF000 */
 			if ((base & ~PAGE_MASK) != 0) {
-				warnx("passthru device %x/%x/%x BAR %d: "
+				pr_info("passthru device %x/%x/%x BAR %d: "
 				    "base %#lx not page aligned\n",
 				    ptdev->sel.bus, ptdev->sel.dev,
 				    ptdev->sel.func, i, base);
@@ -278,7 +278,7 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 			}
 			/* roundup to PAGE_SIZE for bar size */
 			if ((size & ~PAGE_MASK) != 0) {
-				warnx("passthru device %x/%x/%x BAR %d: "
+				pr_info("passthru device %x/%x/%x BAR %d: "
 					"size[%lx] is expanded to page aligned [%lx]\n",
 				    ptdev->sel.bus, ptdev->sel.dev,
 				    ptdev->sel.func, i, size, roundup2(size, PAGE_SIZE));
@@ -324,7 +324,7 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 		if (bartype == PCIBAR_MEM64) {
 			i++;
 			if (i > PCI_BARMAX) {
-				warnx("BAR count out of range\n");
+				pr_err("BAR count out of range\n");
 				return -1;
 			}
 
@@ -355,14 +355,14 @@ cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 	ptdev->sel.func = func;
 
 	if (cfginit_cap(ctx, ptdev) != 0) {
-		warnx("Capability check fails for PCI %x/%x/%x",
+		pr_err("Capability check fails for PCI %x/%x/%x",
 		    bus, slot, func);
 		return -1;
 	}
 
 	/* Check MSI or MSIX capabilities */
 	if (ptdev->msi.capoff == 0 && ptdev->msix.capoff == 0) {
-		warnx("MSI not supported for PCI %x/%x/%x",
+		pr_dbg("MSI not supported for PCI %x/%x/%x",
 		    bus, slot, func);
 		irq_type = IRQ_INTX;
 	}
@@ -381,7 +381,7 @@ cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 		fd = open(reset_path, O_WRONLY);
 		if (fd >= 0) {
 			if (write(fd, "1", 1) < 0)
-				warnx("reset dev %x/%x/%x failed!\n",
+				pr_err("reset dev %x/%x/%x failed!\n",
 				      bus, slot, func);
 			close(fd);
 		}
@@ -390,11 +390,11 @@ cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 	if (ptdev->d3hot_reset) {
 		if ((passthru_set_power_state(ptdev, PCIM_PSTAT_D3) != 0) ||
 				passthru_set_power_state(ptdev, PCIM_PSTAT_D0) != 0)
-			warnx("ptdev %x/%x/%x do d3hot_reset failed!\n", bus, slot, func);
+			pr_warn("ptdev %x/%x/%x do d3hot_reset failed!\n", bus, slot, func);
 	}
 
 	if (cfginitbar(ctx, ptdev) != 0) {
-		warnx("failed to initialize BARs for PCI %x/%x/%x",
+		pr_err("failed to initialize BARs for PCI %x/%x/%x",
 		    bus, slot, func);
 		return -1;
 	} else
@@ -439,7 +439,7 @@ pciaccess_init(void)
 	if (!pciaccess_ref_cnt) {
 		error = native_pci_system_init();
 		if (error < 0) {
-			warnx("libpciaccess couldn't access PCI system");
+			pr_err("libpciaccess couldn't access PCI system");
 			pthread_mutex_unlock(&ref_cnt_mtx);
 			return error;
 		}
@@ -563,18 +563,18 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	error = -EINVAL;
 
 	if (opts == NULL) {
-		warnx("Empty passthru options\n");
+		pr_err("Empty passthru options\n");
 		return -EINVAL;
 	}
 
 	opt = strsep(&opts, ",");
 	if (parse_bdf(opt, &bus, &slot, &func, 16) != 0) {
-		warnx("Invalid passthru BDF options:%s", opt);
+		pr_err("Invalid passthru BDF options:%s", opt);
 		return -EINVAL;
 	}
 
 	if (is_rtvm && (PCI_BDF(bus, slot, func) == PCI_BDF_GPU)) {
-		warnx("%s RTVM doesn't support GVT-D.", __func__);
+		pr_err("%s RTVM doesn't support GVT-D.", __func__);
 		return -EINVAL;
 	}
 
@@ -588,21 +588,21 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		else if (!strncmp(opt, "gpu", 3)) {
 			/* Create the dedicated "igd-lpc" on 00:1f.0 for IGD passthrough */
 			if (pci_parse_slot("31,igd-lpc") != 0)
-				warnx("faild to create igd-lpc");
+				pr_warn("faild to create igd-lpc");
 		} else if (!strncmp(opt, "vmsix_on_msi", 12)) {
 			opt = strsep(&opts, ",");
 			if (parse_vmsix_on_msi_bar_id(opt, &vmsix_on_msi_bar_id, 10) != 0) {
-				warnx("faild to parse msix emulation bar id");
+				pr_err("faild to parse msix emulation bar id");
 				return -EINVAL;
 			}
 
 		} else
-			warnx("Invalid passthru options:%s", opt);
+			pr_warn("Invalid passthru options:%s", opt);
 	}
 
 	ptdev = calloc(1, sizeof(struct passthru_dev));
 	if (ptdev == NULL) {
-		warnx("%s: calloc FAIL!", __func__);
+		pr_err("%s: calloc FAIL!", __func__);
 		error = -ENOMEM;
 		goto done;
 	}
@@ -629,7 +629,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_iterator_destroy(iter);
 
 	if (error < 0) {
-		warnx("No physical PCI device %x:%x.%x!", bus, slot, func);
+		pr_err("No physical PCI device %x:%x.%x!", bus, slot, func);
 		goto done;
 	}
 
@@ -694,7 +694,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		ptdev->phys_pin = read_config(ptdev->phys_dev, PCIR_INTLINE, 1);
 
 		if (ptdev->phys_pin == -1 || ptdev->phys_pin > 256) {
-			warnx("ptdev %x/%x/%x has wrong phys_pin %d, likely fail!",
+			pr_err("ptdev %x/%x/%x has wrong phys_pin %d, likely fail!",
 				bus, slot, func, ptdev->phys_pin);
 			error = -1;
 			goto done;
@@ -732,7 +732,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	int fd;
 
 	if (!dev->arg) {
-		warnx("%s: passthru_dev is NULL", __func__);
+		pr_warn("%s: passthru_dev is NULL", __func__);
 		return;
 	}
 
@@ -774,7 +774,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		fd = open(reset_path, O_WRONLY);
 		if (fd >= 0) {
 			if (write(fd, "1", 1) < 0)
-				warnx("reset dev %x failed!\n",
+				pr_warn("reset dev %x failed!\n",
 				      phys_bdf);
 			close(fd);
 		}
