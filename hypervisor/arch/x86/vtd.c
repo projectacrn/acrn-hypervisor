@@ -979,6 +979,17 @@ static void resume_dmar(struct dmar_drhd_rt *dmar_unit)
 	dmar_enable_intr_remapping(dmar_unit);
 }
 
+static inline bool is_dmar_unit_ignored(const struct dmar_drhd_rt *dmar_unit)
+{
+	bool ignored = false;
+
+	if ((dmar_unit != NULL) && (dmar_unit->drhd->ignore)) {
+		ignored = true;
+	}
+
+	return ignored;
+}
+
 static bool is_dmar_unit_valid(const struct dmar_drhd_rt *dmar_unit, union pci_bdf sid)
 {
 	bool valid = false;
@@ -1066,6 +1077,8 @@ static int32_t iommu_attach_device(const struct iommu_domain *domain, uint8_t bu
 			iommu_flush_cache(context_entry, sizeof(struct dmar_entry));
 			ret = 0;
 		}
+	} else if (is_dmar_unit_ignored(dmar_unit)) {
+	       ret = 0;
 	}
 
 	return ret;
@@ -1119,7 +1132,10 @@ static int32_t iommu_detach_device(const struct iommu_domain *domain, uint8_t bu
 			dmar_invalid_iotlb(dmar_unit, vmid_to_domainid(domain->vm_id), 0UL, 0U, false,
 							DMAR_IIRG_DOMAIN);
 		}
+	} else if (is_dmar_unit_ignored(dmar_unit)) {
+	       ret = 0;
 	}
+
 	return ret;
 }
 
