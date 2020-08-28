@@ -70,8 +70,8 @@
  * Debug printf
  */
 static int block_if_debug;
-#define DPRINTF(params) do { if (block_if_debug) printf params; } while (0)
-#define WPRINTF(params) (printf params)
+#define DPRINTF(params) do { if (block_if_debug) pr_dbg params; } while (0)
+#define WPRINTF(params) (pr_err params)
 
 enum blockop {
 	BOP_READ,
@@ -600,12 +600,12 @@ blockif_open(const char *optstr, const char *ident)
 	}
 
 	if (fd < 0) {
-		warn("Could not open backing file: %s", nopt);
+		pr_err("Could not open backing file: %s", nopt);
 		goto err;
 	}
 
 	if (fstat(fd, &sbuf) < 0) {
-		warn("Could not stat backing file %s", nopt);
+		pr_err("Could not stat backing file %s", nopt);
 		goto err;
 	}
 
