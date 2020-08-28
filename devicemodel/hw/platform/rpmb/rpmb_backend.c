@@ -37,10 +37,11 @@
 #include "rpmb_sim.h"
 #include "vrpmb.h"
 #include "rpmb_backend.h"
+#include "log.h"
 
 static int virtio_rpmb_debug = 1;
-#define DPRINTF(params) do { if (virtio_rpmb_debug) printf params; } while (0)
-#define WPRINTF(params) (printf params)
+#define DPRINTF(params) do { if (virtio_rpmb_debug) pr_dbg params; } while (0)
+#define WPRINTF(params) (pr_err params)
 
 #define READ_STR_LEN 10
 #define WRITE_STR_LEN 11
