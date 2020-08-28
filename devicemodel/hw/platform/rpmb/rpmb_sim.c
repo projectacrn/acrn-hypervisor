@@ -35,6 +35,7 @@
 
 #include "rpmb.h"
 #include "rpmb_sim.h"
+#include "log.h"
 
 static FILE *rpmb_fd = NULL;
 
@@ -58,8 +59,8 @@ static FILE *rpmb_fd = NULL;
 #define offsetof(s, m)		(size_t) &(((s *) 0)->m)
 
 static int virtio_rpmb_debug = 1;
-#define DPRINTF(params) do { if (virtio_rpmb_debug) printf params; } while (0)
-#define WPRINTF(params) (printf params)
+#define DPRINTF(params) do { if (virtio_rpmb_debug) pr_dbg params; } while (0)
+#define WPRINTF(params) (pr_err params)
 
 /* Make rpmb_mac compatible for different openssl versions */
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
