@@ -23,9 +23,9 @@ static int pci_gvt_debug;
 
 static struct pci_vdev *gvt_dev;
 
-#define DPRINTF(params) do { if (pci_gvt_debug) printf params; } while (0)
+#define DPRINTF(params) do { if (pci_gvt_debug) pr_dbg params; } while (0)
 
-#define WPRINTF(params) (printf params)
+#define WPRINTF(params) (pr_err params)
 
 struct PCIHostDeviceAddress {
 	uint32_t domain;
