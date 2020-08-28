@@ -17,13 +17,14 @@
 #include "mem.h"
 #include "tpm.h"
 #include "tpm_internal.h"
+#include "log.h"
 
 static int tpm_crb_debug;
 #define LOG_TAG "tpm_crb: "
 #define DPRINTF(fmt, args...) \
-	do { if (tpm_crb_debug) printf(LOG_TAG "%s: " fmt, __func__, ##args); } while (0)
+	do { if (tpm_crb_debug) pr_dbg(LOG_TAG "%s: " fmt, __func__, ##args); } while (0)
 #define WPRINTF(fmt, args...) \
-	do { printf(LOG_TAG "%s: " fmt, __func__, ##args); } while (0)
+	do { pr_err(LOG_TAG "%s: " fmt, __func__, ##args); } while (0)
 
 #define __packed __attribute__((packed))
 
