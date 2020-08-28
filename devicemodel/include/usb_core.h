@@ -33,6 +33,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include "types.h"
+#include "log.h"
 
 /* FIXME:
  * There are some huge data requests which need more than 256 TRBs in a single
@@ -215,7 +216,7 @@ enum USB_ERRCODE {
 #define LDBG 3
 #define LVRB 4
 #define UPRINTF(lvl, fmt, args...) \
-	do { if (lvl <= usb_log_level) printf(LOG_TAG fmt, ##args); } while (0)
+	do { if (lvl <= usb_log_level) pr_dbg(LOG_TAG fmt, ##args); } while (0)
 
 #define NATIVE_USBSYS_DEVDIR "/sys/bus/usb/devices"
 #define NATIVE_USB2_SPEED "480"
