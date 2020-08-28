@@ -1019,7 +1019,7 @@ pci_emul_init(struct vmctx *ctx, struct pci_vdev_ops *ops, int bus, int slot,
 	pci_set_cfgdata8(pdi, PCIR_INTPIN, 0);
 
 	pci_set_cfgdata8(pdi, PCIR_COMMAND,
-		    PCIM_CMD_PORTEN | PCIM_CMD_MEMEN | PCIM_CMD_BUSMASTEREN);
+		    PCIM_CMD_PORTEN | PCIM_CMD_MEMEN | PCIM_CMD_BUSHOSTEN);
 
 	if (fi->fi_param_saved)
 		fi->fi_param = strdup(fi->fi_param_saved);

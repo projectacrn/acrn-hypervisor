@@ -47,14 +47,14 @@ static int check_dir(const char *file)
 }
 
 /*
- * Open PTY master device to used by caller and the PTY slave device for virtual
- * UART. The pair(master/slave) can work as a communication channel between
+ * Open PTY host device to used by caller and the PTY client device for virtual
+ * UART. The pair(host/client) can work as a communication channel between
  * the caller and virtual UART.
  */
 int pty_open_virtual_uart(const char *dev_name)
 {
 	int fd;
-	char *slave_name;
+	char *client_name;
 	struct termios attr;
 
 	fd = open("/dev/ptmx", O_RDWR | O_NOCTTY | O_NONBLOCK);
@@ -64,8 +64,8 @@ int pty_open_virtual_uart(const char *dev_name)
 		goto pty_err;
 	if (unlockpt(fd) < 0)
 		goto pty_err;
-	slave_name = ptsname(fd);
-	if (!slave_name)
+	client_name = ptsname(fd);
+	if (!client_name)
 		goto pty_err;
 	if ((unlink(dev_name) < 0) && errno != ENOENT)
 		goto pty_err;
@@ -75,7 +75,7 @@ int pty_open_virtual_uart(const char *dev_name)
 	 */
 	if (check_dir(dev_name) < 0)
 		goto pty_err;
-	if (symlink(slave_name, dev_name) < 0)
+	if (symlink(client_name, dev_name) < 0)
 		goto pty_err;
 	if (chmod(dev_name, 0660) < 0)
 		goto attr_err;
