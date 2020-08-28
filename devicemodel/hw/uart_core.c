@@ -46,6 +46,7 @@
 #include "ns16550.h"
 #include "dm.h"
 #include "dm_string.h"
+#include "log.h"
 
 #define	COM1_BASE	0x3F8
 #define COM1_IRQ	4
@@ -70,8 +71,8 @@
 #define	SOCK_FIFOSZ	(32 * 1024)
 
 static int uart_debug;
-#define DPRINTF(params) do { if (uart_debug) printf params; } while (0)
-#define WPRINTF(params) (printf params)
+#define DPRINTF(params) do { if (uart_debug) pr_dbg params; } while (0)
+#define WPRINTF(params) (pr_err params)
 
 static struct termios tio_stdio_orig;
 
