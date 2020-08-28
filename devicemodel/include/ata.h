@@ -197,7 +197,7 @@ struct ata_params {
 /*089*/ u_int16_t	erase_time;		/* time req'd in 2min units */
 /*090*/ u_int16_t	enhanced_erase_time;	/* time req'd in 2min units */
 /*091*/ u_int16_t	apm_value;
-/*092*/ u_int16_t	master_passwd_revision;	/* password revision code */
+/*092*/ u_int16_t	host_passwd_revision;	/* password revision code */
 /*093*/ u_int16_t	hwres;
 #define ATA_CABLE_ID			0x2000
 
@@ -301,8 +301,6 @@ struct ata_params {
  * bit 3-0 In LBA mode, 27-24 of address. In CHS mode, head number
  */
 
-#define ATA_DEV_MASTER		0x00
-#define ATA_DEV_SLAVE		0x10
 #define ATA_DEV_LBA		0x40
 
 /* ATA limits */
@@ -516,7 +514,7 @@ struct ata_params {
 #define ATAPI_SEND_OPC_INFO		0x54	/* send OPC structurek */
 #define ATAPI_MODE_SELECT_BIG		0x55	/* set device parameters */
 #define ATAPI_REPAIR_TRACK		0x58	/* repair track */
-#define ATAPI_READ_MASTER_CUE		0x59	/* read master CUE info */
+#define ATAPI_READ_HOST_CUE		0x59	/* read host CUE info */
 #define ATAPI_MODE_SENSE_BIG		0x5a	/* get device parameters */
 #define ATAPI_CLOSE_TRACK		0x5b	/* close track/session */
 #define ATAPI_READ_BUFFER_CAPACITY	0x5c	/* get buffer capicity */
@@ -943,7 +941,7 @@ struct ata_ioc_request {
 struct ata_security_password {
 	u_int16_t		ctrl;
 #define ATA_SECURITY_PASSWORD_USER	0x0000
-#define ATA_SECURITY_PASSWORD_MASTER	0x0001
+#define ATA_SECURITY_PASSWORD_HOST	0x0001
 #define ATA_SECURITY_ERASE_NORMAL	0x0000
 #define ATA_SECURITY_ERASE_ENHANCED	0x0002
 #define ATA_SECURITY_LEVEL_HIGH		0x0000

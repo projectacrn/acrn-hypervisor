@@ -212,7 +212,7 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 * +--sw_bar for host   +--sw_bar for UOS#x
 	 */
 
-	/* get the master offset and the number for this guest */
+	/* get the host offset and the number for this guest */
 	if ((opts == NULL) || dm_strtoui(opts, &cp, 10, &m_off) || *cp != '/' ||
 			dm_strtoui(cp + 1, &cp, 10, &m_num) || !valid_param(m_off, m_num)) {
 		m_off = 256;

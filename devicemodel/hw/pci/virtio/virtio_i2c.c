@@ -52,9 +52,9 @@
  * Hardware      +----------+
  *               |          |
  *          bus 0v          v      ....
- *         +-----+---+ +----+----+
- *         |i2c slave| |i2c slave| ....
- *         +---------+ +---------+
+ *         +-----+----+ +----+-----+
+ *         |i2c client| |i2c client| ....
+ *         +----------+ +----------+
  */
 
 static int virtio_i2c_debug=0;
@@ -91,7 +91,7 @@ static struct acpi_node acpi_node_table[] = {
 };
 
 struct virtio_i2c_hdr {
-	uint16_t addr;      /* slave address */
+	uint16_t addr;      /* client address */
 	uint16_t flags;
 	uint16_t len;       /*msg length*/
 }__attribute__((packed));
@@ -366,13 +366,13 @@ acpi_add_default(struct pci_vdev *dev, int i2c_bus)
 }
 
 static bool
-native_slave_access_ok(struct native_i2c_adapter *adapter, uint16_t addr)
+native_client_access_ok(struct native_i2c_adapter *adapter, uint16_t addr)
 {
 	if (ioctl(adapter->fd, I2C_SLAVE, addr) < 0) {
 		if (errno == EBUSY) {
-			WPRINTF("i2c_core: slave device %x is busy!\n", addr);
+			WPRINTF("i2c_core: client device %x is busy!\n", addr);
 		} else {
-			WPRINTF("i2c_core: slave device %d is not exsit!\n", addr);
+			WPRINTF("i2c_core: client device %d is not exsit!\n", addr);
 		}
 		return false;
 	}
@@ -427,7 +427,7 @@ native_adapter_proc(struct virtio_i2c *vi2c, struct i2c_msg *msg)
 }
 
 static struct native_i2c_adapter *
-native_adapter_create(int bus, uint16_t slave_addr[], int n_slave)
+native_adapter_create(int bus, uint16_t client_addr[], int n_client)
 {
 	int fd;
 	struct native_i2c_adapter *native_adapter;
@@ -453,15 +453,15 @@ native_adapter_create(int bus, uint16_t slave_addr[], int n_slave)
 	}
 	native_adapter->fd = fd;
 	native_adapter->bus = bus;
-	for (i = 0; i < n_slave; i++) {
-		if (slave_addr[i]) {
-			if (native_slave_access_ok(native_adapter, slave_addr[i])) {
-				if (native_adapter->i2cdev_enable[slave_addr[i]]) {
-					WPRINTF("slave addr 0x%x repeat, not allowed.\n", slave_addr[i]);
+	for (i = 0; i < n_client; i++) {
+		if (client_addr[i]) {
+			if (native_client_access_ok(native_adapter, client_addr[i])) {
+				if (native_adapter->i2cdev_enable[client_addr[i]]) {
+					WPRINTF("client addr 0x%x repeat, not allowed.\n", client_addr[i]);
 					goto fail;
 				}
-				native_adapter->i2cdev_enable[slave_addr[i]] = true;
-				DPRINTF("virtio_i2c: add slave 0x%x\n", slave_addr[i]);
+				native_adapter->i2cdev_enable[client_addr[i]] = true;
+				DPRINTF("virtio_i2c: add client 0x%x\n", client_addr[i]);
 			} else {
 				goto fail;
 			}
@@ -556,11 +556,11 @@ virtio_i2c_proc_thread(void *arg)
 static int
 virtio_i2c_map(struct virtio_i2c *vi2c)
 {
-	int i, slave_addr;
+	int i, client_addr;
 	struct native_i2c_adapter *native_adapter;
 
 	/*
-	 * Flatten the map for slave address and native adapter to the array:
+	 * Flatten the map for client address and native adapter to the array:
 	 *
 	 * adapter_map[MAX_I2C_VDEV]:
 	 *
@@ -571,16 +571,16 @@ virtio_i2c_map(struct virtio_i2c *vi2c)
 	 */
 	for (i = 0; i < vi2c->native_adapter_num; i++) {
 		native_adapter = vi2c->native_adapter[i];
-		for (slave_addr = 0; slave_addr < MAX_I2C_VDEV; slave_addr++) {
-			if (native_adapter->i2cdev_enable[slave_addr]) {
-				if (vi2c->adapter_map[slave_addr]) {
-					WPRINTF("slave addr %x repeat, not support!\n", slave_addr);
+		for (client_addr = 0; client_addr < MAX_I2C_VDEV; client_addr++) {
+			if (native_adapter->i2cdev_enable[client_addr]) {
+				if (vi2c->adapter_map[client_addr]) {
+					WPRINTF("client addr %x repeat, not support!\n", client_addr);
 					return -1;
 				}
 				/* As 0 is the initiate value, + 1 for index */
-				vi2c->adapter_map[slave_addr] = i + 1;
-				DPRINTF("slave:%d -> native adapter: %d \n",
-							slave_addr,
+				vi2c->adapter_map[client_addr] = i + 1;
+				DPRINTF("client:%d -> native adapter: %d\n",
+							client_addr,
 							native_adapter->bus);
 			}
 		}
@@ -592,29 +592,29 @@ static int
 virtio_i2c_parse(struct virtio_i2c *vi2c, char *optstr)
 {
 	char *cp, *t, *dsdt_str, *p;
-	uint16_t slave_addr[MAX_I2C_VDEV];
-	int addr, bus, n_adapter, n_slave;
+	uint16_t client_addr[MAX_I2C_VDEV];
+	int addr, bus, n_adapter, n_client;
 
 	/*
-	 * virtio-i2c,<bus>:<slave_addr[@<node>]>[:<slave_addr[@<node>]>],
-	 * 	[<bus>:<slave_addr[@<node>]>[:<slave_addr>[@<node>]]]
+	 * virtio-i2c,<bus>:<client_addr[@<node>]>[:<client_addr[@<node>]>],
+	 * [<bus>:<client_addr[@<node>]>[:<client_addr>[@<node>]]]
 	 *
 	 * bus (dec): native adatper bus number.
 	 * 	e.g. 2 for /dev/i2c-2
-	 * slave_addr (hex): address for native slave device
+	 * client_addr (hex): address for native client device
 	 * 	e.g. 0x1C or 1C
 	 * @<node>: node is the acpi node name defined in acpi_node_table[]
 	 * 	e.g. @cam1 means adding 'cam1' node to dsdt table.
 	 *
-	 * Note: slave address can not repeat.
+	 * Note: client address can not repeat.
 	 */
 	n_adapter = 0;
 	while (optstr != NULL) {
 		cp = strsep(&optstr, ",");
 		/*
-		 * <bus>:<slave_addr>[:<slave_addr>]...
+		 * <bus>:<client_addr>[:<client_addr>]...
 		 */
-		n_slave = 0;
+		n_client = 0;
 		bus = -1;
 		while (cp != NULL && *cp !='\0') {
 			if (*cp == ':')
@@ -626,12 +626,12 @@ virtio_i2c_parse(struct virtio_i2c *vi2c, char *optstr)
 			} else {
 				if (dm_strtoi(cp, &t, 16, &addr) || addr < 0)
 					return -1;
-				if (n_slave > MAX_I2C_VDEV) {
+				if (n_client > MAX_I2C_VDEV) {
 					WPRINTF("too many devices, only support %d \n", MAX_I2C_VDEV);
 					return -1;
 				}
-				slave_addr[n_slave] = (uint16_t)(addr & (MAX_I2C_VDEV - 1));
-				p = &vi2c->acpi_nodes[slave_addr[n_slave]][0];
+				client_addr[n_client] = (uint16_t)(addr & (MAX_I2C_VDEV - 1));
+				p = &vi2c->acpi_nodes[client_addr[n_client]][0];
 				if (t != NULL && *t == '@') {
 					t++;
 					dsdt_str = strsep(&t, ":,");
@@ -641,9 +641,9 @@ virtio_i2c_parse(struct virtio_i2c *vi2c, char *optstr)
 				}
 				DPRINTF("native i2c adapter %d:0x%x (%s)\n",
 						bus,
-						slave_addr[n_slave],
+						client_addr[n_client],
 						p);
-				n_slave++;
+				n_client++;
 			}
 			cp = t;
 		}
@@ -651,7 +651,7 @@ virtio_i2c_parse(struct virtio_i2c *vi2c, char *optstr)
 			WPRINTF("too many adapter, only support %d \n", MAX_NATIVE_I2C_ADAPTER);
 			return -1;
 		}
-		vi2c->native_adapter[n_adapter] = native_adapter_create(bus, slave_addr, n_slave);
+		vi2c->native_adapter[n_adapter] = native_adapter_create(bus, client_addr, n_client);
 		if (!vi2c->native_adapter[n_adapter])
 			return -1;
 		n_adapter++;
@@ -676,7 +676,7 @@ virtio_i2c_dsdt(struct pci_vdev *dev)
 	acpi_add_i2c_adapter(dev, i2c_bus);
 	DPRINTF("add dsdt for i2c adapter %d\n", i2c_bus);
 
-	/* add slave devices */
+	/* add client devices */
 	node_num = sizeof(acpi_node_table) / sizeof(struct acpi_node);
 	for (i = 0; i < MAX_I2C_VDEV; i++) {
 		if (!native_adapter_find(vi2c, i))

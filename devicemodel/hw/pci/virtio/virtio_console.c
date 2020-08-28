@@ -692,7 +692,7 @@ virtio_console_config_backend(struct virtio_console_backend *be)
 {
 	int fd, flags;
 	char *pts_name = NULL;
-	int slave_fd = -1;
+	int client_fd = -1;
 	struct termios tio, saved_tio;
 	struct sockaddr_un addr;
 
@@ -709,17 +709,17 @@ virtio_console_config_backend(struct virtio_console_backend *be)
 			return -1;
 		}
 
-		slave_fd = open(pts_name, O_RDWR);
-		if (slave_fd == -1) {
-			WPRINTF(("vtcon: slave_fd open failed, errno = %d\n",
+		client_fd = open(pts_name, O_RDWR);
+		if (client_fd == -1) {
+			WPRINTF(("vtcon: client_fd open failed, errno = %d\n",
 				errno));
 			return -1;
 		}
 
-		tcgetattr(slave_fd, &tio);
+		tcgetattr(client_fd, &tio);
 		cfmakeraw(&tio);
-		tcsetattr(slave_fd, TCSAFLUSH, &tio);
-		be->pts_fd = slave_fd;
+		tcsetattr(client_fd, TCSAFLUSH, &tio);
+		be->pts_fd = client_fd;
 
 		WPRINTF(("***********************************************\n"));
 		WPRINTF(("virt-console backend redirected to %s\n", pts_name));

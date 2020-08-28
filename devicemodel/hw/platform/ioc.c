@@ -119,8 +119,8 @@ static uint8_t cbc_open_channel_command[] = {0xFD, 0x00, 0x00, 0x00};
 static uint32_t ioc_boot_reason;
 
 /*
- * Dummy pty slave fd is to maintain the pty active,
- * to avoid EIO error when close the slave pty.
+ * Dummy pty client fd is to maintain the pty active,
+ * to avoid EIO error when close the client pty.
  */
 static int dummy0_sfd = -1;
 static int dummy1_sfd = -1;
