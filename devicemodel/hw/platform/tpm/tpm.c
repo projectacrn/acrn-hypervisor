@@ -13,13 +13,14 @@
 #include "vmmapi.h"
 #include "tpm.h"
 #include "tpm_internal.h"
+#include "log.h"
 
 static int tpm_debug;
 #define LOG_TAG "tpm: "
 #define DPRINTF(fmt, args...) \
-	do { if (tpm_debug) printf(LOG_TAG "%s:" fmt, __func__, ##args); } while (0)
+	do { if (tpm_debug) pr_dbg(LOG_TAG "%s:" fmt, __func__, ##args); } while (0)
 #define WPRINTF(fmt, args...) \
-	do { printf(LOG_TAG "%s:" fmt, __func__, ##args); } while (0)
+	do { pr_err(LOG_TAG "%s:" fmt, __func__, ##args); } while (0)
 
 #define STR_MAX_LEN 1024U
 static char *sock_path = NULL;
