@@ -177,7 +177,7 @@ struct acrn_vm_config {
 	struct acrn_vm_os_config os_config;		/* OS information the VM */
 
 	/*
-	 * below are varaible length members (per build).
+	 * below are variable length members (per build).
 	 * SOS can get the vm_configs[] array through hypercall, but SOS may not
 	 * need to parse these members.
 	 */
@@ -189,6 +189,8 @@ struct acrn_vm_config {
 
 	bool pt_tpm2;
 	struct acrn_mmiodev mmiodevs[MAX_MMIO_DEV_NUM];
+
+	bool pt_p2sb_bar; /* whether to passthru p2sb bridge to pre-launched VM or not */
 } __aligned(8);
 
 struct acrn_vm_config *get_vm_config(uint16_t vm_id);
