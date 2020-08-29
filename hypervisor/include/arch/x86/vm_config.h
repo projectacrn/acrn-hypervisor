@@ -153,6 +153,11 @@ struct acrn_vm_pci_dev_config {
 	const struct pci_vdev_ops *vdev_ops;		/* operations for PCI CFG read/write */
 } __aligned(8);
 
+struct pt_intx_config {
+	uint32_t phys_gsi;	/* physical IOAPIC gsi to be forwarded to the VM */
+	uint32_t virt_gsi;	/* virtual IOAPIC gsi triggered on the vIOAPIC */
+} __aligned(8);
+
 struct acrn_vm_config {
 	enum acrn_vm_load_order load_order;		/* specify the load order of VM */
 	char name[MAX_VM_OS_NAME_LEN];			/* VM name identifier, useful for debug. */
@@ -191,6 +196,9 @@ struct acrn_vm_config {
 	struct acrn_mmiodev mmiodevs[MAX_MMIO_DEV_NUM];
 
 	bool pt_p2sb_bar; /* whether to passthru p2sb bridge to pre-launched VM or not */
+
+	uint16_t pt_intx_num; /* number of pt_intx_config entries pointed by pt_intx */
+	struct pt_intx_config *pt_intx; /* stores the base address of struct pt_intx_config array */
 } __aligned(8);
 
 struct acrn_vm_config *get_vm_config(uint16_t vm_id);
