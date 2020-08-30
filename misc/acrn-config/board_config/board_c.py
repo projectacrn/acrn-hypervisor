@@ -265,7 +265,7 @@ def gen_known_caps_pci_devs(config):
     """Generate information for known capabilities of pci devices"""
     known_caps_pci_devs = board_cfg_lib.get_known_caps_pci_devs()
     for dev,bdf_list in known_caps_pci_devs.items():
-        if dev == "TSN":
+        if dev == "VMSIX":
             print("", file=config)
             bdf_list_len = len(bdf_list)
             if bdf_list_len == 0:
