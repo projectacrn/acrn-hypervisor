@@ -26,6 +26,10 @@
 	Region 0: Memory at 83444000 (64-bit, non-prefetchable) [virtual] [size=4K]
 	00:13.0 Serial bus controller [0c80]: Intel Corporation Device 4b84
 	Region 0: Memory at 834d8000 (64-bit, non-prefetchable) [disabled] [size=8K]
+	00:13.4 Communication controller: Intel Corporation Device 4b88
+	Region 0: Memory at 84600000 (64-bit, non-prefetchable) [size=16K]
+	00:13.5 Communication controller: Intel Corporation Device 4b89
+	Region 0: Memory at 845fc000 (64-bit, non-prefetchable) [size=16K]
 	00:14.0 USB controller: Intel Corporation Device 4b7d
 	Region 0: Memory at 834c0000 (64-bit, non-prefetchable) [size=64K]
 	00:14.2 RAM memory: Intel Corporation Device 4b7f
@@ -93,6 +97,8 @@
 	00:10.0 0c80: 8086:4b44
 	00:10.1 0c80: 8086:4b45
 	00:13.0 0c80: 8086:4b84
+	00:13.4 0780: 8086:4b88
+	00:13.5 0780: 8086:4b89
 	00:14.0 0c03: 8086:4b7d
 	00:14.2 0500: 8086:4b7f
 	00:15.0 0c80: 8086:4b78

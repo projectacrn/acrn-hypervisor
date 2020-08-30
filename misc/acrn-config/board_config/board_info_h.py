@@ -19,7 +19,7 @@ def gen_known_caps_pci_head(config):
     bdf_list_len = 0
     known_caps_pci_devs = board_cfg_lib.get_known_caps_pci_devs()
     for dev,bdf_list in known_caps_pci_devs.items():
-        if dev == "TSN":
+        if dev == "VMSIX":
             bdf_list_len = len(bdf_list)
     print("#define MAX_VMSIX_ON_MSI_PDEVS_NUM\t{}U".format(bdf_list_len), file=config)
 
