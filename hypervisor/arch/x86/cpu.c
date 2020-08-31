@@ -244,7 +244,6 @@ void init_pcpu_post(uint16_t pcpu_id)
 			panic("failed to initialize iommu!");
 		}
 
-		hv_access_memory_region_update(get_mmcfg_base(), PCI_MMCONFIG_SIZE);
 #ifdef CONFIG_IVSHMEM_ENABLED
 		init_ivshmem_shared_memory();
 #endif

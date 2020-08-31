@@ -174,7 +174,7 @@ static int32_t vpci_mmio_cfg_access(struct io_request *io_req, void *private_dat
 	int32_t ret = 0;
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	struct acrn_vpci *vpci = (struct acrn_vpci *)private_data;
-	uint64_t pci_mmcofg_base = vpci->pci_mmcfg_base;
+	uint64_t pci_mmcofg_base = vpci->pci_mmcfg.address;
 	uint64_t address = mmio->address;
 	uint32_t reg_num = (uint32_t)(address & 0xfffUL);
 	union pci_bdf bdf;
@@ -216,7 +216,7 @@ void init_vpci(struct acrn_vm *vm)
 	};
 
 	struct acrn_vm_config *vm_config;
-	uint64_t pci_mmcfg_base;
+	struct pci_mmcfg_region *pci_mmcfg;
 
 	vm->iommu = create_iommu_domain(vm->vm_id, hva2hpa(vm->arch_vm.nworld_eptp), 48U);
 	/* Build up vdev list for vm */
@@ -224,10 +224,17 @@ void init_vpci(struct acrn_vm *vm)
 
 	vm_config = get_vm_config(vm->vm_id);
 	/* virtual PCI MMCONFIG for SOS is same with the physical value */
-	pci_mmcfg_base = (vm_config->load_order == SOS_VM) ? get_mmcfg_base() : VIRT_PCI_MMCFG_BASE;
-	vm->vpci.pci_mmcfg_base = pci_mmcfg_base;
-	register_mmio_emulation_handler(vm, vpci_mmio_cfg_access,
-			pci_mmcfg_base, pci_mmcfg_base + PCI_MMCONFIG_SIZE, &vm->vpci, false);
+	if (vm_config->load_order == SOS_VM) {
+		pci_mmcfg = get_mmcfg_region();
+		vm->vpci.pci_mmcfg = *pci_mmcfg;
+	} else {
+		vm->vpci.pci_mmcfg.address = UOS_VIRT_PCI_MMCFG_BASE;
+		vm->vpci.pci_mmcfg.start_bus = UOS_VIRT_PCI_MMCFG_START_BUS;
+		vm->vpci.pci_mmcfg.end_bus = UOS_VIRT_PCI_MMCFG_END_BUS;
+	}
+
+	register_mmio_emulation_handler(vm, vpci_mmio_cfg_access, vm->vpci.pci_mmcfg.address,
+		vm->vpci.pci_mmcfg.address + get_pci_mmcfg_size(&vm->vpci.pci_mmcfg), &vm->vpci, false);
 
 	/* Intercept and handle I/O ports CF8h */
 	register_pio_emulation_handler(vm, PCI_CFGADDR_PIO_IDX, &pci_cfgaddr_range,

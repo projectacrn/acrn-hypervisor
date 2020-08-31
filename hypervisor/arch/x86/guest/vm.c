@@ -292,6 +292,7 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	uint32_t entries_count = vm->e820_entry_num;
 	const struct e820_entry *p_e820 = vm->e820_entries;
 	const struct mem_range *p_mem_range_info = get_mem_range_info();
+	struct pci_mmcfg_region *pci_mmcfg;
 
 	pr_dbg("sos_vm: bottom memory - 0x%lx, top memory - 0x%lx\n",
 		p_mem_range_info->mem_bottom, p_mem_range_info->mem_top);
@@ -354,7 +355,8 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	ept_del_mr(vm, pml4_page, get_ap_trampoline_buf(), CONFIG_LOW_RAM_SIZE);
 
 	/* unmap PCIe MMCONFIG region since it's owned by hypervisor */
-	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, get_mmcfg_base(), PCI_MMCONFIG_SIZE);
+	pci_mmcfg = get_mmcfg_region();
+	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, pci_mmcfg->address, get_pci_mmcfg_size(pci_mmcfg));
 }
 
 /* Add EPT mapping of EPC reource for the VM */

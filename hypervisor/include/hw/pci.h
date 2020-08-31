@@ -208,6 +208,13 @@ enum pci_bar_type {
 	PCIBAR_MEM64HI,
 };
 
+struct pci_mmcfg_region {
+	uint64_t address;	/* Base address, processor-relative */
+	uint16_t pci_segment;	/* PCI segment group number */
+	uint8_t start_bus;	/* Starting PCI Bus number */
+	uint8_t end_bus;	/* Final PCI Bus number */
+} __packed;
+
 /* Basic MSIX capability info */
 struct pci_msix_cap {
 	uint32_t  capoff;
@@ -324,10 +331,15 @@ static inline bool bdf_is_equal(union pci_bdf a, union pci_bdf b)
 	return (a.value == b.value);
 }
 
+static inline uint64_t get_pci_mmcfg_size(struct pci_mmcfg_region *pci_mmcfg)
+{
+	return 0x100000UL * (pci_mmcfg->end_bus - pci_mmcfg->start_bus + 1U);
+}
+
 #ifdef CONFIG_ACPI_PARSE_ENABLED
-void set_mmcfg_base(uint64_t mmcfg_base);
+void set_mmcfg_region(struct pci_mmcfg_region *region);
 #endif
-uint64_t get_mmcfg_base(void);
+struct pci_mmcfg_region *get_mmcfg_region(void);
 
 struct pci_pdev *init_pdev(uint16_t pbdf, uint32_t drhd_index);
 uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes);

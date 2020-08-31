@@ -113,24 +113,24 @@ static void *get_facs_table(const uint8_t *facp_addr)
 }
 
 /* @pre mcfg_addr != NULL */
-static uint64_t parse_mmcfg_base(const uint8_t *mcfg_addr)
+static struct acpi_mcfg_allocation *parse_mcfg_allocation_tables(const uint8_t *mcfg_addr)
 {
-	uint64_t base = 0UL;
+	struct acpi_mcfg_allocation *mcfg_table = NULL;
 	uint32_t length = get_acpi_dt_dword(mcfg_addr, OFFSET_MCFG_LENGTH);
 
 	if (length > OFFSET_MCFG_ENTRY1) {
 		pr_fatal("Multiple PCI segment groups is not supported!");
 	} else {
-		base = get_acpi_dt_qword(mcfg_addr, OFFSET_MCFG_ENTRY0_BASE);
+		mcfg_table = (struct acpi_mcfg_allocation *)(mcfg_addr + OFFSET_MCFG_ENTRY0_BASE);
 	}
-	return base;
+	return mcfg_table;
 }
 
 /* put all ACPI fix up code here */
 int32_t acpi_fixup(void)
 {
 	uint8_t *facp_addr = NULL, *facs_addr = NULL, *mcfg_addr = NULL;
-	uint64_t def_mmcfg_base = 0UL;
+	struct acpi_mcfg_allocation *mcfg_table = NULL;
 	int32_t ret = 0;
 	struct acpi_generic_address pm1a_cnt, pm1a_evt;
 	struct pm_s_state_data *sx_data = get_host_sstate_data();
@@ -162,12 +162,14 @@ int32_t acpi_fixup(void)
 
 	mcfg_addr = (uint8_t *)get_acpi_tbl(ACPI_SIG_MCFG);
 	if (mcfg_addr != NULL) {
-		def_mmcfg_base = parse_mmcfg_base(mcfg_addr);
-		set_mmcfg_base(def_mmcfg_base);
+		mcfg_table = parse_mcfg_allocation_tables(mcfg_addr);
+		if (mcfg_table != NULL) {
+			set_mmcfg_region((struct pci_mmcfg_region*)mcfg_table);
+		}
 	}
 
 	if ((facp_addr == NULL) || (facs_addr == NULL)
-				|| (mcfg_addr == NULL) || (def_mmcfg_base == 0UL)) {
+				|| (mcfg_addr == NULL) || (mcfg_table == NULL)) {
 		ret = -1;
 	}
 

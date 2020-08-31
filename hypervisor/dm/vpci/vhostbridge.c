@@ -113,8 +113,10 @@ static void init_vhostbridge(struct pci_vdev *vdev)
 	pci_vdev_write_vcfg(vdev, 0xf4U, 4U, 0x011c0f00U);
 
 	if (is_prelaunched_vm(container_of(vdev->vpci, struct acrn_vm, vpci))) {
-		/* For pre-launched VMs, we only need to write an GPA that's reserved in guest ve820, and VIRT_PCI_MMCFG_BASE(0xE0000000) is fine. The trailing 1 is a ECAM enable-bit */
-		pciexbar_low = VIRT_PCI_MMCFG_BASE | 0x1U;
+		/* For pre-launched VMs, we only need to write an GPA that's reserved in guest ve820,
+		 * and UOS_VIRT_PCI_MMCFG_BASE(0xE0000000) is fine. The trailing 1 is a ECAM enable-bit
+		 */
+		pciexbar_low = UOS_VIRT_PCI_MMCFG_BASE | 0x1U;
 	}
 	else {
 		/*Inject physical ECAM value to SOS vhostbridge since SOS may check PCIe-MMIO Base Address with it */
