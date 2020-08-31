@@ -13,7 +13,7 @@ include:
 * **Understandability** A modular design is easier to understand due to
   encapsulation.
 * **Testability** Modules can be integrated and tested in the reverse order of
-  dependencies among them. White-box integration tests help improve the coverage
+  dependencies among them. Modular integration tests help improve the coverage
   of tests and identify corner cases that are hard to trigger when testing the
   hypervisor as a whole.
 * **Configurability** Modular design makes it easy to configure certain

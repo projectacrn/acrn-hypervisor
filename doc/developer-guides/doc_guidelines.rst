@@ -407,7 +407,7 @@ For example:
 
 Note the blank line between the ``code-block`` directive and the first
 line of the code-block body, and the body content is indented three
-spaces (to the first non-white space of the directive name).
+spaces (to the first non-blank space of the directive name).
 
 This would be rendered as:
 
@@ -478,7 +478,7 @@ Tabs, spaces, and indenting
 Indenting is significant in reST file content, and using spaces is
 preferred.  Extra indenting can (unintentionally) change the way content
 is rendered too.  For lists and directives, indent the content text to
-the first non-white space in the preceding line.  For example:
+the first non-blank space in the preceding line.  For example:
 
 .. code-block:: rest
 

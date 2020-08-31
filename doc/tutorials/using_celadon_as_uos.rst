@@ -36,7 +36,7 @@ Build Celadon from source
    <https://01.org/projectceladon/documentation/getting-started/build-source>`__ guide
    to set up the Celadon project source code.
 
-   .. note:: The master branch is based on the Google Android 10
+   .. note:: The main branch is based on the Google Android 10
       pre-Production Early Release.  Use the following command to specify a
       stable Celadon branch based on the Google Android 9 source code in order
       to apply those patches in the :ref:`ACRN patch list`::

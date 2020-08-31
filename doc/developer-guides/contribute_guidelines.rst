@@ -271,7 +271,7 @@ source files for the hypervisor, devicemodel, and documentation.
    right corner of the project acrn-hypervisor repo page in GitHub.)
    When you want to submit a pull request with your changes, you'll
    first submit them to your personal branch, and then to the project's
-   master branch for review and merging by the ACRN maintainers.
+   main branch for review and merging by the ACRN maintainers.
 
 #. On your development computer, clone the fork you just made::
 
@@ -285,7 +285,7 @@ source files for the hypervisor, devicemodel, and documentation.
 
      $ git remote -v
 
-#. Create a topic branch (off of master) for your work (if you're addressing
+#. Create a topic branch (off of the main branch) for your work (if you're addressing
    an issue, we suggest including the issue number in the branch name)::
 
      $ git checkout master
@@ -385,7 +385,7 @@ source files for the hypervisor, devicemodel, and documentation.
 
 #. While you're waiting for your pull request to be accepted and merged, you can
    create another branch to work on another issue. (Be sure to make your new branch
-   off of master and not the previous branch.)::
+   off of the main branch and not the previous branch.)::
 
      $ git checkout master
      $ git checkout -b fix_another_issue
@@ -406,9 +406,9 @@ source files for the hypervisor, devicemodel, and documentation.
    This is an important step to make sure your changes are properly
    merged with changes from other developers that may have happened while you
    were working on your changes.
-   The ``--ignore-whitespace`` option
-   stops ``git apply`` (called by rebase) from changing
-   any whitespace. If any merging issues are detected you can address them
+   The ``--ignore-whitespace`` option stops ``git apply`` (called by
+   rebase) from changing any whitespace characters (such as spaces, tabs, and
+   newlines). If any merging issues are detected you can address them
    with::
 
      $ git rebase -i <offending-commit-id>
