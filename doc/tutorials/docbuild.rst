@@ -280,7 +280,7 @@ folder.  Note that there's no direct selection to go to a newer version
 from an older one, without going to ``latest`` first.
 
 By default, doc build and publishing assumes we're generating
-documentation for the master branch and publishing to the ``/latest/``
+documentation for the main branch and publishing to the ``/latest/``
 area on https://projectacrn.github.io. When we're generating the
 documentation for a tagged version (e.g., 0.2), check out that version
 of the repo, and add some extra flags to the make commands:

@@ -236,10 +236,10 @@ architecture and threat model for your application.
    - References: `NIST Crypto Standards and Guidelines <https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines>`_, `OpenSSL <https://www.openssl.org/>`_
 
 
-4. **Applications Whitelisting**
+4. **Applications Passlisting**
 
-   - For use cases implemented in static environments (for example, Industrial and Automotive usages), follow application whitelist techniques and disable any third-party or native app stores.
-   - This mechanism can be chained with the access control policies to protect access to whitelisting rules and configuration files (refer to opensource or implement your custom solution).
+   - For use cases implemented in static environments (for example, Industrial and Automotive usages), follow application approval techniques and disable any third-party or native app stores.
+   - This mechanism can be chained with the access control policies to protect access to passlisting rules and configuration files (refer to opensource or implement your custom solution).
    - References: `NIST SP800-167 <https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-167.pdf>`_, `fapolicyd <https://github.com/linux-application-whitelisting/fapolicyd>`_
 
 

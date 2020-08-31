@@ -112,7 +112,8 @@ This concludes setting up of Service VM and preparing it to boot ACRN hypervisor
 Install ACRN Hypervisor
 ***********************
 
-1. Clone ACRN repo with ``tag: acrn-2020w19.5-140000p`` or latest master. Below steps show our tested version,
+1. Clone ACRN repo with ``tag: acrn-2020w19.5-140000p`` or the latest
+   (main) branch. Below steps show our tested version,
 
    .. code-block:: none
 
@@ -244,7 +245,7 @@ Bring-up User VM (L2 Guest)
 3. Install latest `IASL tool <https://acpica.org/downloads>`_ and copy the binary to ``/usr/sbin/iasl``.
    For this setup, used IASL 20200326 version but anything after 20190215 should be good.
 
-4. Clone latest stable version or master and build ACRN User VM Kernel.
+4. Clone latest stable version or main branch and build ACRN User VM Kernel.
 
    .. code-block:: none
 

@@ -23,7 +23,7 @@ user OS can directly reuse native CBC driver.
 
 The IOC Mediator has several virtualization requirements, such as S3/S5
 wakeup reason emulation, CBC link frame packing/unpacking, signal
-whitelist, and RTC configuration.
+passlist, and RTC configuration.
 
 IOC Mediator Design
 *******************
@@ -111,7 +111,7 @@ DM communicates with several native CBC char devices and a PTY device.
 The native CBC char devices only include ``/dev/cbc-lifecycle``,
 ``/dev/cbc-signals``, and ``/dev/cbc-raw0`` - ``/dev/cbc-raw11``. Others
 are not used by the IOC DM.  IOC DM opens the ``/dev/ptmx`` device to
-create a pair of devices (master and slave), The IOC DM uses these
+create a pair of devices (primary and secondary), The IOC DM uses these
 devices to communicate with UART DM since UART DM needs a TTY capable
 device as its backend.
 
@@ -150,7 +150,7 @@ char devices and UART DM immediately.
    receives service data from native CBC char devices such as
    ``/dev/cbc-lifecycle``. If service data is CBC wakeup reason, some wakeup
    reason bits will be masked. If service data is CBC signal, the data
-   will be dropped and will not be defined in the whitelist. If service
+   will be dropped and will not be defined in the passlist. If service
    data comes from a raw channel, the data will be passed forward. Before
    transmitting to the virtual UART interface, all data needs to be
    packed with an address header and link header.
@@ -562,22 +562,22 @@ IOC signal type definitions are as below.
 -  The IOC backend needs to emulate the channel open/reset/close message which
    shouldn't be forward to the native cbc signal channel. The Service VM signal
    related services should do a real open/reset/close signal channel.
--  Every backend should maintain a whitelist for different VMs. The
-   whitelist can be stored in the Service VM file system (Read only) in the
+-  Every backend should maintain a passlist for different VMs. The
+   passlist can be stored in the Service VM file system (Read only) in the
    future, but currently it is hard coded.
 
-IOC mediator has two whitelist tables, one is used for rx
+IOC mediator has two passlist tables, one is used for rx
 signals(SOC->IOC), and the other one is used for tx signals. The IOC
 mediator drops the single signals and group signals if the signals are
-not defined in the whitelist. For multi signal, IOC mediator generates a
-new multi signal, which contains the signals in the whitelist.
+not defined in the passlist. For multi signal, IOC mediator generates a
+new multi signal, which contains the signals in the passlist.
 
 .. figure:: images/ioc-image3.png
    :width: 600px
    :align: center
    :name: ioc-med-multi-signal
 
-   IOC Mediator - Multi-Signal whitelist
+   IOC Mediator - Multi-Signal passlist
 
 Raw data
 --------
