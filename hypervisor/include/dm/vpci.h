@@ -155,7 +155,7 @@ union pci_cfg_addr_reg {
 struct acrn_vpci {
 	spinlock_t lock;
 	union pci_cfg_addr_reg addr;
-	uint64_t pci_mmcfg_base;
+	struct pci_mmcfg_region pci_mmcfg;
 	uint32_t pci_vdev_cnt;
 	struct pci_vdev pci_vdevs[CONFIG_MAX_PCI_DEV_NUM];
 	struct hlist_head vdevs_hlist_heads [VDEV_LIST_HASHSIZE];

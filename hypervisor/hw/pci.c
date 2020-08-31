@@ -35,6 +35,7 @@
 #include <spinlock.h>
 #include <io.h>
 #include <pgtable.h>
+#include <mmu.h>
 #include <pci.h>
 #include <uart16550.h>
 #include <logmsg.h>
@@ -52,18 +53,23 @@
 static uint32_t num_pci_pdev;
 static struct pci_pdev pci_pdevs[CONFIG_MAX_PCI_DEV_NUM];
 static struct hlist_head pdevs_hlist_heads[PDEV_HLIST_HASHSIZE];
-static uint64_t pci_mmcfg_base = DEFAULT_PCI_MMCFG_BASE;
+
+static struct pci_mmcfg_region phys_pci_mmcfg = {
+	.address = DEFAULT_PCI_MMCFG_BASE,
+	.start_bus = DEFAULT_PCI_MMCFG_START_BUS,
+	.end_bus = DEFAULT_PCI_MMCFG_END_BUS,
+};
 
 #ifdef CONFIG_ACPI_PARSE_ENABLED
-void set_mmcfg_base(uint64_t mmcfg_base)
+void set_mmcfg_region(struct pci_mmcfg_region *region)
 {
-	pci_mmcfg_base = mmcfg_base;
+	phys_pci_mmcfg = *region;
 }
 #endif
 
-uint64_t get_mmcfg_base(void)
+struct pci_mmcfg_region *get_mmcfg_region(void)
 {
-	return pci_mmcfg_base;
+	return &phys_pci_mmcfg;
 }
 
 #if defined(HV_DEBUG)
@@ -143,11 +149,11 @@ static const struct pci_cfg_ops pci_pio_cfg_ops = {
 
 /*
  * @pre offset < 0x1000U
- * @pre pci_mmcfg_base 4K-byte alignment
+ * @pre phys_pci_mmcfg.address 4K-byte alignment
  */
 static inline uint32_t mmcfg_off_to_address(union pci_bdf bdf, uint32_t offset)
 {
-	return (uint32_t)pci_mmcfg_base + (((uint32_t)bdf.value << 12U) | offset);
+	return (uint32_t)phys_pci_mmcfg.address + (((uint32_t)bdf.value << 12U) | offset);
 }
 
 /*
@@ -438,6 +444,10 @@ static void scan_pci_hierarchy(uint8_t bus, uint64_t buses_visited[BUSES_BITMAP_
 					&buses_visited[current_bus_index >> 6U]);
 
 		pbdf.bits.b = current_bus_index;
+		if (pbdf.bits.b < phys_pci_mmcfg.start_bus || pbdf.bits.b > phys_pci_mmcfg.end_bus) {
+			continue;
+		}
+
 		for (dev = 0U; dev <= PCI_SLOTMAX; dev++) {
 			pbdf.bits.d = dev;
 			pbdf.bits.f = 0U;
@@ -624,6 +634,8 @@ void init_pci_pdev_list(void)
 	uint32_t drhd_idx_pci_all = INVALID_DRHD_INDEX;
 	uint16_t bus;
 	bool was_visited = false;
+
+	hv_access_memory_region_update(phys_pci_mmcfg.address, get_pci_mmcfg_size(&phys_pci_mmcfg));
 
 	pci_parse_iommu_devscopes(&bdfs_from_drhds, &drhd_idx_pci_all);
 

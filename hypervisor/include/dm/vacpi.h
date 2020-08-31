@@ -23,7 +23,9 @@
 #define VIRT_XSDT_ADDR		0x7ff00080UL
 
 /* virtual PCI MMCFG address base for pre/post-launched VM. */
-#define VIRT_PCI_MMCFG_BASE	0xE0000000UL
+#define UOS_VIRT_PCI_MMCFG_BASE		0xE0000000UL
+#define UOS_VIRT_PCI_MMCFG_START_BUS	0x0U
+#define UOS_VIRT_PCI_MMCFG_END_BUS	0xFFU
 
 void build_vrsdp(struct acrn_vm *vm);
 
