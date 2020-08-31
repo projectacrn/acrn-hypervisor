@@ -386,6 +386,9 @@ all: pre_build $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 install: $(HV_OBJDIR)/$(HV_FILE).32.out
 	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)$(libdir)/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).32.out
 	install -D $(HV_OBJDIR)/$(HV_FILE).bin $(DESTDIR)$(libdir)/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).bin
+	@if [ -e "$(HV_OBJDIR)/acpi" ];then \
+		install -D $(HV_OBJDIR)/acpi/*.bin -t $(DESTDIR)$(libdir)/acrn/acpi/; \
+	fi
 
 install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
 	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)$(libdir)/acrn/$(HV_FILE).$(BOARD).$(FIRMWARE).$(SCENARIO).out
@@ -396,6 +399,8 @@ pre_build: $(HV_OBJDIR)/$(HV_CONFIG_H)
 	@echo "Start pre-build static check ..."
 	$(MAKE) -C $(PRE_BUILD_DIR) BOARD=$(BOARD) SCENARIO=$(SCENARIO) TARGET_DIR=$(TARGET_DIR)
 	@$(HV_OBJDIR)/hv_prebuild_check.out
+	@echo "generate the binary of ACPI tables for pre-launched VMs ..."
+	python3 ../misc/acrn-config/acpi_gen/bin_gen.py --board $(BOARD) --scenario $(SCENARIO) --asl $(TARGET_DIR) --out $(HV_OBJDIR)/acpi
 
 .PHONY: header
 header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H)
