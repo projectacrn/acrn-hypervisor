@@ -250,7 +250,7 @@ Many new and updated `reference documents <https://projectacrn.github.io>`_ are 
 
   * :ref:`using_zephyr_as_uos`
   * :ref:`running_deb_as_user_vm`
-  * :ref:`using_celadon_as_uos`
+  * Run Celadon as the User VM
   * :ref:`using_windows_as_uos`
   * :ref:`using_vxworks_as_uos`
   * :ref:`using_xenomai_as_uos`
@@ -259,7 +259,7 @@ Many new and updated `reference documents <https://projectacrn.github.io>`_ are 
 
   .. rst-class:: rst-columns2
 
-  * :ref:`open_vswitch`
+  * Enable OVS in ACRN
   * :ref:`rdt_configuration`
   * :ref:`sriov_virtualization`
   * :ref:`cpu_sharing`
@@ -268,7 +268,7 @@ Many new and updated `reference documents <https://projectacrn.github.io>`_ are 
   * :ref:`enable-s5`
   * :ref:`vuart_config`
   * :ref:`sgx_virt`
-  * :ref:`acrn-dm_qos`
+  * Enable QoS based on runC Containers
   * :ref:`setup_openstack_libvirt`
   * :ref:`acrn_on_qemu`
   * :ref:`gpu-passthrough`

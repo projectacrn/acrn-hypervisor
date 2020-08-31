@@ -22,8 +22,7 @@ or use Git clone and checkout commands::
 The project's online technical documentation is also tagged to correspond
 with a specific release: generated v1.1 documents can be found at https://projectacrn.github.io/1.1/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
-ACRN v1.1 requires Clear Linux* OS version 29970. Please follow the
-instructions in the :ref:`kbl-nuc-sdc`.
+ACRN v1.1 requires Clear Linux* OS version 29970.
 
 Version 1.1 major features
 **************************
@@ -48,8 +47,8 @@ We have many `reference documents available <https://projectacrn.github.io>`_, i
 * Update: Using PREEMPT_RT-Linux for real-time UOS
 * :ref:`Zephyr RTOS as Guest OS <using_zephyr_as_uos>`
 * :ref:`Using VxWorks* as User OS <using_vxworks_as_uos>`
-* :ref:`How to enable OVS in ACRN <open_vswitch>`
-* :ref:`Enable QoS based on runC container <acrn-dm_qos>`
+* How to enable OVS in ACRN
+* Enable QoS based on runC container
 * :ref:`Using partition mode on NUC <using_partition_mode_on_nuc>`
 
 New Features Details

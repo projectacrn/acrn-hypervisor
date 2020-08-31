@@ -38,8 +38,7 @@ Manual, (Section 17.19 Intel Resource Director Technology Allocation Features)
 RDT detection and resource capabilities
 ***************************************
 From the ACRN HV debug shell, use ``cpuid`` to detect and identify the
-resource capabilities. Use the platform's serial port for the HV shell
-(refer to :ref:`getting-started-up2` for setup instructions).
+resource capabilities. Use the platform's serial port for the HV shell.
 
 Check if the platform supports RDT with ``cpuid``. First, run ``cpuid 0x7 0x0``; the return value ebx [bit 15] is set to 1 if the platform supports
 RDT. Next, run ``cpuid 0x10 0x0`` and check the EBX [3-1] bits. EBX [bit 1]

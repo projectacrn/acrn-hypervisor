@@ -44,15 +44,16 @@ kernels are loaded as multiboot modules. The ACRN hypervisor, Service
 VM, and Pre-Launched RT kernel images are all located on the NVMe drive.
 We recommend installing Ubuntu on the NVMe drive as the Service VM OS,
 which also has the required GRUB image to launch Pre-Launched RT mode.
-Refer to :ref:`Run Ubuntu as the Service VM <Ubuntu Service OS>`, to
+Refer to :ref:`rt_industry_ubuntu_setup`, to
 install Ubuntu on the NVMe drive, and use grub to launch the Service VM.
 
 Install Pre-Launched RT Filesystem on SATA and Kernel Image on NVMe
 ===================================================================
 
-The Pre-Launched Preempt RT Linux use Clearlinux as rootfs. Refer to
-:ref:`Burn the Preempt-RT VM image onto the SATA disk <install_rtvm>` to
-download the RTVM image and burn it to the SATA drive. The Kernel should
+.. important:: Need to add instructions to download the RTVM image and burn it to the
+   SATA drive.
+
+The Kernel should
 be on the NVMe drive along with GRUB. You'll need to copy the RT kernel
 to the NVMe drive. Once you have successfully installed and booted
 Ubuntu from the NVMe drive, you'll then need to copy the RT kernel from

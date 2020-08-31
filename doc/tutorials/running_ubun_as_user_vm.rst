@@ -12,8 +12,11 @@ Intel NUC Kit. If you have not, refer to the following instructions:
 - Install a `Clear Linux OS
   <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_
   on your NUC kit.
-- Follow the instructions at :ref:`quick-setup-guide` to set up the
+- Follow the instructions at XXX to set up the
   Service VM automatically on your NUC kit. Follow steps 1 - 4.
+
+  .. important:: need updated instructions that aren't Clear Linux
+     dependent
 
 Before you start this tutorial, make sure the KVM tools are installed on the
 development machine and set **IGD Aperture Size to 512** in the BIOS

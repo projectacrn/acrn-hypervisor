@@ -22,8 +22,7 @@ or use Git clone and checkout commands::
 The project's online technical documentation is also tagged to correspond
 with a specific release: generated v1.3 documents can be found at https://projectacrn.github.io/1.3/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
-ACRN v1.3 requires Clear Linux* OS version 31080. Please follow the
-instructions in the :ref:`kbl-nuc-sdc`.
+ACRN v1.3 requires Clear Linux* OS version 31080.
 
 Version 1.3 major features
 **************************
@@ -43,10 +42,10 @@ Document updates
 ================
 We have many new `reference documents available <https://projectacrn.github.io>`_, including:
 
-* :ref:`Getting Started Guide for Industry scenario <rt_industry_setup>`
+* Getting Started Guide for Industry scenario
 * :ref:`ACRN Configuration Tool Manual <acrn_configuration_tool>`
 * :ref:`Trace and Data Collection for ACRN Real-Time(RT) Performance Tuning <rt_performance_tuning>`
-* :ref:`Building ACRN in Docker <building-acrn-in-docker>`
+* Building ACRN in Docker
 * :ref:`Running Ubuntu as the User VM <running_ubun_as_user_vm>`
 * :ref:`Running Debian as the User VM <running_deb_as_user_vm>`
 * :ref:`Running Debian as the Service VM <running_deb_as_serv_vm>`

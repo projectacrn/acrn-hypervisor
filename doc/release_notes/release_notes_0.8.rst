@@ -30,8 +30,7 @@ with a specific release: generated v0.8 documents can be found at
 https://projectacrn.github.io/0.8/.  Documentation for the latest
 (master) branch is found at https://projectacrn.github.io/latest/.
 
-ACRN v0.8 requires Clear Linux OS version 28600. Please follow the
-instructions in the :ref:`kbl-nuc-sdc`.
+ACRN v0.8 requires Clear Linux OS version 28600.
 
 Version 0.8 new features
 ************************

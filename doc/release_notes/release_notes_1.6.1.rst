@@ -23,8 +23,7 @@ The project's online technical documentation is also tagged to correspond
 with a specific release: generated v1.6.1 documents can be found at
 https://projectacrn.github.io/1.6.1/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
-ACRN v1.6.1 requires Clear Linux OS version 33050. Follow the
-instructions in the :ref:`rt_industry_setup`.
+ACRN v1.6.1 requires Clear Linux OS version 33050.
 
 Version 1.6.1 major features
 ****************************
@@ -61,7 +60,7 @@ Many new and updated `reference documents <https://projectacrn.github.io>`_ are 
 * :ref:`hv-device-passthrough`
 * :ref:`cpu_sharing`
 * :ref:`getting-started-building`
-* :ref:`rt_industry_setup`
+* Run Clear Linux as the Service VM
 * :ref:`using_windows_as_uos`
 
 We recommend that all developers upgrade to ACRN release v1.6.1.

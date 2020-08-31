@@ -31,8 +31,7 @@ or use Git clone and checkout commands::
 The project's online technical documentation is also tagged to correspond
 with a specific release: generated v1.0 documents can be found at https://projectacrn.github.io/1.0/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
-ACRN v1.0 requires Clear Linux* OS version 29070. Please follow the
-instructions in the :ref:`kbl-nuc-sdc`.
+ACRN v1.0 requires Clear Linux* OS version 29070.
 
 Version 1.0 major features
 **************************
@@ -50,7 +49,7 @@ Slim Bootloader is a modern, flexible, light-weight,
 open source reference bootloader that is also  fast, small,
 customizable, and secure. An end-to-end reference build has been verified
 on UP2/SBL board using ACRN hypervisor, Clear Linux OS as SOS, and Clear
-Linux OS as UOS. See the :ref:`using-sbl-up2` for step-by-step instructions.
+Linux OS as UOS.
 
 Enable post-launched RTVM support for real-time UOS in ACRN
 ===========================================================
@@ -204,7 +203,7 @@ We have many reference documents `available
 
 * :ref:`Enable GVT-d in ACRN <gpu-passthrough>`
 * :ref:`Device Model Parameters <acrn-dm_parameters>`
-* :ref:`Running Automotive Grade Linux as a VM <agl-vms>`
+* Running Automotive Grade Linux as a VM
 * Using PREEMPT_RT-Linux for real-time UOS
 * :ref:`Frequently Asked Questions <faq>`
 * :ref:`An introduction to Trusty and Security services on ACRN <trusty-security-services>`

@@ -17,8 +17,10 @@ Ubuntu 16.04 or 18.04.
 Install ACRN
 ************
 
-#. Install ACRN using Ubuntu 16.04 or 18.04 as its Service VM. Refer to
-   :ref:`Ubuntu Service OS`.
+#. Install ACRN using Ubuntu 16.04 or 18.04 as its Service VM.
+
+   .. important:: Need instructions from deleted document (using ubuntu
+      as SOS)
 
 #. Make the acrn-kernel using the `kernel_config_uefi_sos
    <https://raw.githubusercontent.com/projectacrn/acrn-kernel/master/kernel_config_uefi_sos>`_
@@ -38,8 +40,10 @@ Install ACRN
    <https://maslosoft.com/kb/how-to-clean-old-snaps/>`_ to clean up old
    snap revisions if you're running out of loop devices.
 #. Make sure the networking bridge ``acrn-br0`` is created. If not,
-   create it using the instructions in
-   :ref:`Enable network sharing <enable-network-sharing-user-vm>`.
+   create it using the instructions in XXX.
+
+   .. important:: need instructions from deleted document (using ubuntu
+      as SOS)
 
 Set up and launch LXC/LXD
 *************************
@@ -168,7 +172,10 @@ Set up ACRN prerequisites inside the container
 
    Install only the user-space components: acrn-dm, acrnctl, and acrnd
 
-3. Download, compile, and install ``iasl``. Refer to :ref:`Prepare the User VM <prepare-UOS>`.
+3. Download, compile, and install ``iasl``. Refer to XXX.
+
+   .. important:: need instructions from deleted document (using ubuntu
+      as SOS)
 
 Set up libvirt
 **************

@@ -22,8 +22,7 @@ or use Git clone and checkout commands::
 The project's online technical documentation is also tagged to correspond
 with a specific release: generated v1.2 documents can be found at https://projectacrn.github.io/1.2/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
-ACRN v1.2 requires Clear Linux* OS version 30690. Please follow the
-instructions in the :ref:`kbl-nuc-sdc`.
+ACRN v1.2 requires Clear Linux* OS version 30690.
 
 Version 1.2 major features
 **************************
@@ -42,8 +41,8 @@ Document updates
 We have many `reference documents available <https://projectacrn.github.io>`_, including:
 
 * :ref:`Using Windows as User VM <using_windows_as_uos>`
-* :ref:`How to sign binaries of the Clear Linux image <sign_clear_linux_image>`
-* :ref:`Using Celadon as User VM <using_celadon_as_uos>`
+* How to sign binaries of the Clear Linux image
+* Using Celadon as User VM
 * :ref:`SGX Virtualization <sgx_virt>`
 
 We also updated the following documents based on the newly

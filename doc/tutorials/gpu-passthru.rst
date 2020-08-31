@@ -29,7 +29,8 @@ Verified version
 Prerequisites
 *************
 
-Follow :ref:`these instructions <kbl-nuc-sdc>` to set up the ACRN Service VM.
+Follow :ref:`these instructions <rt_industry_ubuntu_setup>` to set up
+Ubuntu as the ACRN Service VM.
 
 Supported hardware platform
 ***************************

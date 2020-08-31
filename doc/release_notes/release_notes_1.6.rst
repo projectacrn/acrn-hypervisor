@@ -22,8 +22,7 @@ or use Git clone and checkout commands::
 The project's online technical documentation is also tagged to correspond
 with a specific release: generated v1.6 documents can be found at https://projectacrn.github.io/1.6/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
-ACRN v1.6 requires Clear Linux OS version 32680. Follow the
-instructions in the :ref:`rt_industry_setup`.
+ACRN v1.6 requires Clear Linux OS version 32680.
 
 Version 1.6 major features
 **************************
