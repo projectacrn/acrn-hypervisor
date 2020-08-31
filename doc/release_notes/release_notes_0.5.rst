@@ -56,8 +56,7 @@ Slim Bootloader is a modern, flexible, light-weight, open source
 reference boot loader with key benefits such as being fast, small,
 customizable, and secure. An end-to-end reference build with
 ACRN hypervisor, Clear Linux OS as SOS, and Clear Linux OS as UOS has been
-verified on UP2/SBL board. See the :ref:`using-sbl-up2` documentation
-for step-by-step instructions.
+verified on UP2/SBL board.
 
 **Document updates**: Several new documents have been added in this release, including:
 

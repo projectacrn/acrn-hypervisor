@@ -12,8 +12,10 @@ Intel NUC Kit. If you have not, refer to the following instructions:
 - Install a `Clear Linux OS
   <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_
   on your NUC kit.
-- Follow the instructions at :ref:`quick-setup-guide` to set up the
+- Follow the instructions at XXX to set up the
   Service VM automatically on your NUC kit. Follow steps 1 - 4.
+
+  .. important:: need updated instructions that aren't Clear Linux dependent
 
 We are using Intel Kaby Lake NUC (NUC7i7DNHE) and Debian 10 as the User VM in this tutorial.
 

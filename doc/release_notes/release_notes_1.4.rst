@@ -22,8 +22,7 @@ or use Git clone and checkout commands::
 The project's online technical documentation is also tagged to correspond
 with a specific release: generated v1.4 documents can be found at https://projectacrn.github.io/1.4/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
-ACRN v1.4 requires Clear Linux* OS version 31670. Follow the
-instructions in the :ref:`rt_industry_setup`.
+ACRN v1.4 requires Clear Linux* OS version 31670.
 
 Version 1.4 major features
 **************************
@@ -41,7 +40,7 @@ Many new `reference documents <https://projectacrn.github.io>`_ are available, i
 
 * :ref:`ACRN high-level design <hld>` documents.
 * :ref:`enable-s5`
-* :ref:`enable_laag_secure_boot`
+* Enable Secure Boot in the Clear Linux User VM
 * :ref:`How-to-enable-secure-boot-for-windows`
 * :ref:`asa`
 

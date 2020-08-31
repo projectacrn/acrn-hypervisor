@@ -30,8 +30,7 @@ with a specific release: generated v0.6 documents can be found at
 https://projectacrn.github.io/0.6/.  Documentation for the latest
 (master) branch is found at https://projectacrn.github.io/latest/.
 
-ACRN v0.6 requires Clear Linux OS version 27600. Please follow the
-instructions in the :ref:`kbl-nuc-sdc`.
+ACRN v0.6 requires Clear Linux OS version 27600.
 
 Version 0.6 new features
 ************************
@@ -44,7 +43,7 @@ published a tutorial.  More patches for ACRN real time support will continue.
 
 **Document updates**: Several new documents have been added in this release, including:
 
-* :ref:`Running Automotive Grade Linux as a VM <agl-vms>`
+* Running Automotive Grade Linux as a VM
 * Using PREEMPT_RT-Linux for real-time UOS
 * :ref:`Frequently Asked Questions <faq>`
 * :ref:`An introduction to Trusty and Security services on ACRN

@@ -147,4 +147,6 @@ Install ACRN on the Debian VM
       $ sudo systemctl enable systemd-networkd
       $ sudo systemctl start systemd-networkd
 
-#. Follow :ref:`prepare-UOS` to start a User VM.
+#. Prepare and Start a User VM.
+
+   .. important:: Need instructions for this.

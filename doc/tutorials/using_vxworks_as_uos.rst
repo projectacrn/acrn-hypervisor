@@ -92,7 +92,10 @@ Steps for Using VxWorks as User VM
 
    You now have a virtual disk image with bootable VxWorks in ``VxWorks.img``.
 
-#. Follow :ref:`kbl-nuc-sdc` to boot the ACRN Service VM.
+#. Follow XXX to boot the ACRN Service VM.
+
+   .. important:: need instructions from deleted document (using sdc
+      mode on the NUC)
 
 #. Boot VxWorks as User VM.
 

@@ -32,9 +32,7 @@ Service VM Tutorials
 .. toctree::
    :maxdepth: 1
 
-   tutorials/using_ubuntu_as_sos
    tutorials/running_deb_as_serv_vm
-   tutorials/cl_servicevm
 
 User VM Tutorials
 *****************
@@ -44,15 +42,12 @@ User VM Tutorials
 .. toctree::
    :maxdepth: 1
 
-   tutorials/building_uos_from_clearlinux
    tutorials/using_windows_as_uos
    tutorials/running_ubun_as_user_vm
    tutorials/running_deb_as_user_vm
    tutorials/using_xenomai_as_uos
-   tutorials/using_celadon_as_uos
    tutorials/using_vxworks_as_uos
    tutorials/using_zephyr_as_uos
-   tutorials/agl-vms
 
 Enable ACRN Features
 ********************
@@ -62,12 +57,9 @@ Enable ACRN Features
 .. toctree::
    :maxdepth: 1
 
-   tutorials/acrn-dm_QoS
-   tutorials/open_vswitch
    tutorials/sgx_virtualization
    tutorials/vuart_configuration
    tutorials/rdt_configuration
-   tutorials/using_sbl_on_up2
    tutorials/waag-secure-boot
    tutorials/enable_s5
    tutorials/cpu_sharing
@@ -89,23 +81,7 @@ Debug
 .. toctree::
    :maxdepth: 1
 
+   tutorials/using_serial_port
    tutorials/debug
    tutorials/realtime_performance_tuning
    tutorials/rtvm_performance_tips
-
-Additional Tutorials
-********************
-
-.. rst-class:: rst-columns2
-
-.. toctree::
-   :maxdepth: 1
-
-   tutorials/up2
-   tutorials/building_acrn_in_docker
-   tutorials/acrn_ootb
-   tutorials/static-ip
-   tutorials/increase-uos-disk-size
-   tutorials/sign_clear_linux_image
-   tutorials/enable_laag_secure_boot
-   tutorials/kbl-nuc-sdc

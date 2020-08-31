@@ -91,8 +91,11 @@ Steps for Using Zephyr as User VM
    You now have a virtual disk image with a bootable Zephyr in ``zephyr.img``. If the Zephyr build system is not
    the ACRN Service VM, then you will need to transfer this image to the ACRN Service VM (via, e.g, a USB stick or network )
 
-#. Follow :ref:`kbl-nuc-sdc` to boot "The ACRN Service OS" based on Clear Linux OS 28620
+#. Follow XXX to boot "The ACRN Service OS" based on Clear Linux OS 28620
    (ACRN tag: acrn-2019w14.3-140000p)
+
+   .. important:: need to remove reference to Clear Linux and reference
+      to deleted document (use SDC mode on the NUC)
 
 #. Boot Zephyr as User VM
 
