@@ -2845,11 +2845,14 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
 		if (err == XHCI_TRB_ERROR_SUCCESS && rem_len > 0)
 			err = XHCI_TRB_ERROR_SHORT_PKT;
 
-		/* Only interrupt if IOC or short packet */
-		if (!(trb->dwTrb3 & XHCI_TRB_3_IOC_BIT) &&
-		    !((err == XHCI_TRB_ERROR_SHORT_PKT) &&
-		      (trb->dwTrb3 & XHCI_TRB_3_ISP_BIT))) {
-
+		/* When transfer success and IOC bit not set or
+		 * transfer is short packet and ISP bit is not set.
+		 * */
+		if (((err == XHCI_TRB_ERROR_SUCCESS) &&
+			!(trb->dwTrb3 & XHCI_TRB_3_IOC_BIT)) ||
+			((err == XHCI_TRB_ERROR_SHORT_PKT) &&
+			(!(trb->dwTrb3 & XHCI_TRB_3_ISP_BIT) &&
+			!(trb->dwTrb3 & XHCI_TRB_3_IOC_BIT)))) {
 			i = index_inc(i, xfer->max_blk_cnt);
 			continue;
 		}
@@ -2871,8 +2874,10 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
 
 		*do_intr = 1;
 
-		err = pci_xhci_insert_event(xdev, &evtrb, 0);
-		if (err != XHCI_TRB_ERROR_SUCCESS)
+		pci_xhci_insert_event(xdev, &evtrb, *do_intr);
+		/* The xHC stop on the TRB in error.*/
+		if (err != XHCI_TRB_ERROR_SUCCESS &&
+			err != XHCI_TRB_ERROR_SHORT_PKT)
 			break;
 
 		i = index_inc(i, xfer->max_blk_cnt);
