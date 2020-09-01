@@ -8,6 +8,7 @@ import sys
 import copy
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'hv_config'))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'acpi_gen'))
 from scenario_item import HwInfo, VmInfo
 import board_cfg_lib
 import scenario_cfg_lib
@@ -19,6 +20,7 @@ import common
 import hv_cfg_lib
 import board_defconfig
 from hv_item import HvInfo
+import asl_gen
 
 ACRN_PATH = common.SOURCE_ROOT_DIR
 ACRN_CONFIG_DEF = ACRN_PATH + 'misc/vm_configs/scenarios/'
@@ -53,6 +55,7 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["vm,pci_devs"] = scenario_cfg_lib.avl_pci_devs()
     scenario_item_values["vm,os_config,kern_type"] = scenario_cfg_lib.KERN_TYPE_LIST
     scenario_item_values["vm,mmio_resources,p2sb"] = hv_cfg_lib.N_Y
+    scenario_item_values["vm,mmio_resources,TPM2"] = hv_cfg_lib.N_Y
     scenario_item_values.update(scenario_cfg_lib.avl_vuart_ui_select(scenario_info))
 
     # board
@@ -201,6 +204,9 @@ def main(args):
     with open(pci_config_c, 'w') as config:
         pci_dev_c.generate_file(scenario_items['vm'], config)
 
+    # generate ASL code of ACPI tables for Pre-launched VMs
+    asl_gen.main(args)
+
     if not err_dic:
         print("Scenario configuration files were created successfully.")
     else:
@@ -211,7 +217,7 @@ def main(args):
 
 def ui_entry_api(board_info, scenario_info, out=''):
 
-    arg_list = ['board_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--out', out]
+    arg_list = ['scenario_cfg_gen.py', '--board', board_info, '--scenario', scenario_info, '--out', out]
 
     err_dic = common.prepare()
     if err_dic:

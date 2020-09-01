@@ -337,6 +337,9 @@ def gen_pre_launch_vm(vm_type, vm_i, scenario_items, config):
         print("\t\t\t.bootargs = ", end="", file=config)
         split_cmdline(vm_info.os_cfg.kern_args[vm_i].strip(), config)
     print("\t\t},", file=config)
+    print("\t\t.acpi_config = {", file=config)
+    print('\t\t\t.acpi_mod_tag = "ACPI_VM{}",'.format(vm_i), file=config)
+    print("\t\t},", file=config)
     # VUART
     err_dic = vuart_output(vm_type, vm_i, vm_info, config)
     if err_dic:

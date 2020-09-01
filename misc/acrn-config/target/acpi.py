@@ -591,6 +591,21 @@ def store_mmcfg_base_data(mmcfg_node, config):
         print("\t#define DEFAULT_PCI_MMCFG_BASE   {}UL".format(hex(mmcfg_base_addr)), file=config)
 
 
+def read_tpm_data(config):
+    '''get TPM information from ACPI tables
+    :param config: file pointer that opened for writing board config information
+    :return:
+    '''
+    try:
+        acpi_table_output = subprocess.check_output(['ls -l /sys/firmware/acpi/tables/']).decode('utf8')
+    except:
+        acpi_table_output = ''
+    if 'TPM2' in acpi_table_output:
+        print("\tTPM2", file=config)
+    else:
+        print("\t/* no TPM device */", file=config)
+
+
 def gen_acpi_info(config):
     """This will parser the sys node form SYS_PATH and generate ACPI info
     :param config: file pointer that opened for writing board config information
@@ -624,6 +639,10 @@ def gen_acpi_info(config):
     print("{0}".format("\t<MMCFG_BASE_INFO>"), file=config)
     store_mmcfg_base_data(SYS_PATH[1] + 'MCFG', config)
     print("{0}".format("\t</MMCFG_BASE_INFO>\n"), file=config)
+
+    print("{0}".format("\t<TPM_INFO>"), file=config)
+    read_tpm_data(config)
+    print("{0}".format("\t</TPM_INFO>\n"), file=config)
 
 
 def generate_info(board_file):
