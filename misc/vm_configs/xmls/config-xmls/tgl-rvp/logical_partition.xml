@@ -106,6 +106,9 @@
         <pci_dev desc="pci device">00:17.0 SATA controller: Intel Corporation Device a0d3 (rev 20)</pci_dev>
         <pci_dev desc="pci device">00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (13) I219-V (rev 20)</pci_dev>
     </pci_devs>
+    <mmio_resources desc="mmio devices list to passthrough">
+        <TPM2 desc="TPM2 device">y</TPM2>
+    </mmio_resources>
   </vm>
   <vm id="1">
     <vm_type desc="Specify the VM type" readonly="true">PRE_STD_VM</vm_type>
