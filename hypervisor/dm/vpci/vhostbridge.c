@@ -53,10 +53,11 @@
 		KBL(7/8-gen)			|	0x59
 		CFL/CFL-R(8/9-gen)		|	0x3e
 		ICL(10-gen)			|	0x9b
-		EHL/TGL(11-gen)			|	0x9a
+		EHL(11-gen)			|	0x45
+		TGL(11-gen)			|	0x9a
 	--------------------------------------------------------------------------------------
 */
-static const uint32_t hostbridge_did_highbytes[] = {0x19U, 0x5aU, 0x59U, 0x3eU, 0x9aU, 0x9bU};
+static const uint32_t hostbridge_did_highbytes[] = {0x19U, 0x5aU, 0x59U, 0x3eU, 0x9aU, 0x45U, 0x9bU};
 
 /*
 	The vhostbridge we currently emulated is "Celeron N3350/Pentium N4200/Atom E3900 Series Host Bridge",
