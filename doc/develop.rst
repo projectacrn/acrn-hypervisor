@@ -73,6 +73,7 @@ Enable ACRN Features
    tutorials/acrn_on_qemu
    tutorials/using_grub
    tutorials/pre-launched-rt
+   tutorials/enable_ivshmem
 
 Debug
 *****
