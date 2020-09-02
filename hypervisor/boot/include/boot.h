@@ -16,8 +16,11 @@
 #include <vm_configurations.h>
 
 #define MAX_BOOTARGS_SIZE		2048U
-/* The modules in multiboot are for kernel and ramdisk of pre-launched VMs and SOS VM */
-#define MAX_MODULE_NUM			(2U * PRE_VM_NUM + 2U * SOS_VM_NUM)
+/* The modules in multiboot are: Pre-launched VM: kernel/ramdisk/acpi; SOS VM: kernel/ramdisk */
+#define MAX_MODULE_NUM			(3U * PRE_VM_NUM + 2U * SOS_VM_NUM)
+
+/* The vACPI module size is fixed to 1MB */
+#define ACPI_MODULE_SIZE		MEM_1M
 
 /* extended flags for acrn multiboot info from multiboot2  */
 #define	MULTIBOOT_INFO_HAS_EFI_MMAP	0x00010000U

@@ -187,6 +187,7 @@ int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
 	struct sw_module_info *bootargs_info = &(vm->sw.bootargs_info);
 	struct sw_module_info *ramdisk_info = &(vm->sw.ramdisk_info);
+	struct sw_module_info *acpi_info = &(vm->sw.acpi_info);
 	/* get primary vcpu */
 	struct acrn_vcpu *vcpu = vcpu_from_vid(vm, BSP_CPU_ID);
 
@@ -215,6 +216,10 @@ int32_t direct_boot_sw_loader(struct acrn_vm *vm)
 		(void)copy_to_gpa(vm, bootargs_info->src_addr,
 			(uint64_t)bootargs_info->load_addr,
 			(strnlen_s((char *)bootargs_info->src_addr, MAX_BOOTARGS_SIZE) + 1U));
+	}
+	/* Copy Guest OS ACPI to its load location */
+	if (acpi_info->size == ACPI_MODULE_SIZE) {
+		(void)copy_to_gpa(vm, acpi_info->src_addr, (uint64_t)acpi_info->load_addr, ACPI_MODULE_SIZE);
 	}
 	switch (vm->sw.kernel_type) {
 	case KERNEL_BZIMAGE:
