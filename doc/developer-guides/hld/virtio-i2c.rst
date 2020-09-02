@@ -4,10 +4,10 @@ Virtio-i2c
 ##########
 
 Virtio-i2c provides a virtual I2C adapter that supports mapping multiple
-secondary devices under multiple native I2C adapters to one virtio I2C
-adapter. The address for the secondary device is not changed. Virtio-i2c
-also provides an interface to add an acpi node for secondary devices so that
-the secondary device driver in the guest OS does not need to change.
+client devices under multiple native I2C adapters to one virtio I2C
+adapter. The address for the client device is not changed. Virtio-i2c
+also provides an interface to add an acpi node for client devices so that
+the client device driver in the guest OS does not need to change.
 
 :numref:`virtio-i2c-1` below shows the virtio-i2c architecture.
 
@@ -46,13 +46,13 @@ notifies the frontend. The msg process flow is shown in
    Message Process Flow
 
 **Usage:**
--s <slot>,virtio-i2c,<bus>[:<secondary_addr>[@<node>]][:<secondary_addr>[@<node>]][,<bus>[:<secondary_addr>[@<node>]][:<secondary_addr>][@<node>]]
+-s <slot>,virtio-i2c,<bus>[:<client_addr>[@<node>]][:<client_addr>[@<node>]][,<bus>[:<client_addr>[@<node>]][:<client_addr>][@<node>]]
 
    bus:
    The bus number for the native I2C adapter; ``2`` means ``/dev/i2c-2``.
 
-   secondary_addr:
-   The address for the native secondary devices such as ``1C``, ``2F`` ...
+   client_addr:
+   The address for the native client devices such as ``1C``, ``2F`` ...
 
    @:
    The prefix for the acpi node.
@@ -68,7 +68,7 @@ notifies the frontend. The msg process flow is shown in
 
   -s 19,virtio-i2c,0:70@cam1:2F,4:1C
 
-This adds secondary devices 0x70 and 0x2F under the native adapter
+This adds client devices 0x70 and 0x2F under the native adapter
 /dev/i2c-0, and 0x1C under /dev/i2c-6 to the virtio-i2c adapter. Since
 0x70 includes '@cam1', acpi info is also added to it. Since 0x2F and
 0x1C have '@<node>', no acpi info is added to them.
@@ -93,7 +93,7 @@ a virtual I2C adapter will appear in the guest OS:
    i2c-0   i2c            i915 gmbus dpb                I2C adapter
    i2c-5   i2c            DPDDC-C                       I2C adapter
 
-You can find the secondary device 0x1C under the virtio I2C adapter i2c-6:
+You can find the client device 0x1C under the virtio I2C adapter i2c-6:
 
 .. code-block:: none
 
