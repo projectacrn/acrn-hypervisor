@@ -19,6 +19,7 @@
 #include <logmsg.h>
 #include <deprivilege_boot.h>
 #include <vboot_info.h>
+#include <vacpi.h>
 
 #define DBG_LEVEL_BOOT	6U
 
@@ -35,6 +36,16 @@ static void init_vm_ramdisk_info(struct acrn_vm *vm, const struct multiboot_modu
 		vm->sw.ramdisk_info.load_addr = (void *)round_page_up((uint64_t)vm->sw.ramdisk_info.load_addr);
 		vm->sw.ramdisk_info.size = mod->mm_mod_end - mod->mm_mod_start;
 	}
+}
+
+/**
+ * @pre vm != NULL && mod != NULL
+ */
+static void init_vm_acpi_info(struct acrn_vm *vm, const struct multiboot_module *mod)
+{
+	vm->sw.acpi_info.src_addr = hpa2hva((uint64_t)mod->mm_mod_start);
+	vm->sw.acpi_info.load_addr = (void *)VIRT_ACPI_DATA_ADDR;
+	vm->sw.acpi_info.size = ACPI_MODULE_SIZE;
 }
 
 /**
@@ -222,6 +233,16 @@ static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct acrn_multiboot_i
 		if (mod != NULL) {
 			init_vm_ramdisk_info(vm, mod);
 		}
+
+		if (is_prelaunched_vm(vm)) {
+			mod = get_mod_by_tag(mbi, vm_config->acpi_config.acpi_mod_tag);
+			if ((mod != NULL) && ((mod->mm_mod_end - mod->mm_mod_start) == ACPI_MODULE_SIZE)) {
+				init_vm_acpi_info(vm, mod);
+			} else {
+				pr_err("failed to load VM %d acpi module", vm->vm_id);
+			}
+		}
+
 	} else {
 		pr_err("failed to load VM %d kernel module", vm->vm_id);
 	}
