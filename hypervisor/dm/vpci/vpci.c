@@ -191,19 +191,9 @@ static int32_t vpci_mmio_cfg_access(struct io_request *io_req, void *private_dat
 	bdf.value = (uint16_t)((address - pci_mmcofg_base) >> 12U);
 
 	if (mmio->direction == REQUEST_READ) {
-		if (!is_plat_hidden_pdev(bdf)) {
-			ret = vpci_read_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t *)&mmio->value);
-		} else {
-			/* expose and pass through platform hidden devices to SOS */
-			mmio->value = (uint64_t)pci_pdev_read_cfg(bdf, reg_num, (uint32_t)mmio->size);
-		}
+		ret = vpci_read_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t *)&mmio->value);
 	} else {
-		if (!is_plat_hidden_pdev(bdf)) {
-			ret = vpci_write_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);
-		} else {
-			/* expose and pass through platform hidden devices to SOS */
-			pci_pdev_write_cfg(bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);
-		}
+		ret = vpci_write_cfg(vpci, bdf, reg_num, (uint32_t)mmio->size, (uint32_t)mmio->value);
 	}
 
 	return ret;
@@ -557,6 +547,11 @@ static int32_t vpci_read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	} else {
 		if (is_postlaunched_vm(vpci2vm(vpci))) {
 			ret = -ENODEV;
+		} else if (is_plat_hidden_pdev(bdf)) {
+			/* expose and pass through platform hidden devices */
+			*val = pci_pdev_read_cfg(bdf, offset, bytes);
+		} else {
+			/* no action: e.g., PCI scan */
 		}
 	}
 	spinlock_release(&vpci->lock);
@@ -577,11 +572,14 @@ static int32_t vpci_write_cfg(struct acrn_vpci *vpci, union pci_bdf bdf,
 	if (vdev != NULL) {
 		ret = vdev->vdev_ops->write_vdev_cfg(vdev, offset, bytes, val);
 	} else {
-		if (!is_postlaunched_vm(vpci2vm(vpci))) {
+		if (is_postlaunched_vm(vpci2vm(vpci))) {
+			ret = -ENODEV;
+		} else if (is_plat_hidden_pdev(bdf)) {
+			/* expose and pass through platform hidden devices */
+			pci_pdev_write_cfg(bdf, offset, bytes, val);
+		} else {
 			pr_acrnlog("%s %x:%x.%x not found! off: 0x%x, val: 0x%x\n", __func__,
 				bdf.bits.b, bdf.bits.d, bdf.bits.f, offset, val);
-		} else {
-			ret = -ENODEV;
 		}
 	}
 	spinlock_release(&vpci->lock);
