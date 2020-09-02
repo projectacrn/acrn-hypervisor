@@ -95,11 +95,12 @@ def generate_file(config):
         scenario_cfg_lib.VM_DB[common.VM_TYPES[0]]['load_type'] == "PRE_LAUNCHED_VM"
         and board_cfg_lib.is_p2sb_passthru_possible()):
         print("", file=config)
+        print("#define P2SB_VGPIO_DM_ENABLED", file=config)
         print("#define P2SB_BAR_ADDR\t\t\t0x{:X}UL".format(board_cfg_lib.find_p2sb_bar_addr()), file=config)
 
     if board_cfg_lib.is_matched_board(("ehl-crb-b")):
         print("", file=config)
-        print("#define BASE_GPIO_PORT_ID\t\t0x69U", file=config)
-        print("#define MAX_GPIO_COMMUNITIES\t0x6U", file=config)
+        print("#define P2SB_BASE_GPIO_PORT_ID\t\t0x69U", file=config)
+        print("#define P2SB_MAX_GPIO_COMMUNITIES\t0x6U", file=config)
 
     print(BOARD_INFO_ENDIF, file=config)
