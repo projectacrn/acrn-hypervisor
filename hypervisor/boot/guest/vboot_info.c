@@ -22,8 +22,6 @@
 
 #define DBG_LEVEL_BOOT	6U
 
-#define INVALID_MOD_IDX		0xFFFFU
-
 /**
  * @pre vm != NULL && mbi != NULL
  */
@@ -156,15 +154,17 @@ static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_multiboo
 	}
 }
 
-/* @pre mods != NULL
+/* @pre mbi != NULL && tag != NULL
  */
-static uint32_t get_mod_idx_by_tag(const struct multiboot_module *mods, uint32_t mods_count, const char *tag)
+static struct multiboot_module *get_mod_by_tag(const struct acrn_multiboot_info *mbi, const char *tag)
 {
-	uint32_t i, ret = INVALID_MOD_IDX;
+	uint8_t i;
+	struct multiboot_module *mod = NULL;
+	struct multiboot_module *mods = (struct multiboot_module *)(&mbi->mi_mods[0]);
 	uint32_t tag_len = strnlen_s(tag, MAX_MOD_TAG_LEN);
 
-	for (i = 0U; i < mods_count; i++) {
-		const char *mm_string = (char *)hpa2hva((uint64_t)mods[i].mm_string);
+	for (i = 0U; i < mbi->mi_mods_count; i++) {
+		const char *mm_string = (char *)hpa2hva((uint64_t)(mods + i)->mm_string);
 		uint32_t mm_str_len = strnlen_s(mm_string, MAX_MOD_TAG_LEN);
 		const char *p_chr = mm_string + tag_len; /* point to right after the end of tag */
 
@@ -173,11 +173,19 @@ static uint32_t get_mod_idx_by_tag(const struct multiboot_module *mods, uint32_t
 		 */
 		if ((mm_str_len >= tag_len) && (strncmp(mm_string, tag, tag_len) == 0)
 				&& (is_space(*p_chr) || is_eol(*p_chr))) {
-			ret = i;
+			mod = mods + i;
 			break;
 		}
 	}
-	return ret;
+	/* GRUB might put module at address 0 or under 1MB in the case that the module size is less then 1MB
+	 * ACRN will not support these cases
+	 */
+	if ((mod != NULL) && ((mod->mm_mod_start == 0U) || (mod->mm_mod_end <= MEM_1M))) {
+		pr_err("Unsupported multiboot module: start at 0x%x, end at 0x%x", mod->mm_mod_start, mod->mm_mod_end);
+		mod = NULL;
+	}
+
+	return mod;
 }
 
 /* @pre vm != NULL && mbi != NULL
@@ -185,38 +193,34 @@ static uint32_t get_mod_idx_by_tag(const struct multiboot_module *mods, uint32_t
 static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct acrn_multiboot_info *mbi)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-	struct multiboot_module *mods = (struct multiboot_module *)(&mbi->mi_mods[0]);
-	uint32_t mod_idx;
+	struct multiboot_module *mod;
 	int32_t ret = -EINVAL;
 
 	dev_dbg(DBG_LEVEL_BOOT, "mod counts=%d\n", mbi->mi_mods_count);
 
-	if (mods != NULL) {
-		/* find kernel module first */
-		mod_idx = get_mod_idx_by_tag(mods, mbi->mi_mods_count, vm_config->os_config.kernel_mod_tag);
-		if (mod_idx != INVALID_MOD_IDX) {
-			const char *mm_string = (char *)hpa2hva((uint64_t)mods[mod_idx].mm_string);
-			uint32_t mm_str_len = strnlen_s(mm_string, MAX_BOOTARGS_SIZE);
-			uint32_t tag_len = strnlen_s(vm_config->os_config.kernel_mod_tag, MAX_MOD_TAG_LEN);
-			const char *p_chr = mm_string + tag_len + 1; /* point to the possible start of cmdline */
+	/* find kernel module first */
+	mod = get_mod_by_tag(mbi, vm_config->os_config.kernel_mod_tag);
+	if (mod != NULL) {
+		const char *mm_string = (char *)hpa2hva((uint64_t)mod->mm_string);
+		uint32_t mm_str_len = strnlen_s(mm_string, MAX_BOOTARGS_SIZE);
+		uint32_t tag_len = strnlen_s(vm_config->os_config.kernel_mod_tag, MAX_MOD_TAG_LEN);
+		const char *p_chr = mm_string + tag_len + 1; /* point to the possible start of cmdline */
 
-			/* check whether there is a cmdline configured in module string */
-			if (((mm_str_len > (tag_len + 1U))) && (is_space(*(p_chr - 1))) && (!is_eol(*p_chr))) {
-				(void)strncpy_s(&mod_cmdline[vm->vm_id][0], MAX_BOOTARGS_SIZE,
-						p_chr, (MAX_BOOTARGS_SIZE - 1U));
-			}
-
-			ret = init_vm_kernel_info(vm, &mods[mod_idx]);
+		/* check whether there is a cmdline configured in module string */
+		if (((mm_str_len > (tag_len + 1U))) && (is_space(*(p_chr - 1))) && (!is_eol(*p_chr))) {
+			(void)strncpy_s(&mod_cmdline[vm->vm_id][0], MAX_BOOTARGS_SIZE,
+					p_chr, (MAX_BOOTARGS_SIZE - 1U));
 		}
+
+		ret = init_vm_kernel_info(vm, mod);
 	}
 
 	if (ret == 0) {
 		init_vm_bootargs_info(vm, mbi);
 		/* check whether there is a ramdisk module */
-		mod_idx = get_mod_idx_by_tag(mods, mbi->mi_mods_count, vm_config->os_config.ramdisk_mod_tag);
-		if (mod_idx != INVALID_MOD_IDX) {
-			init_vm_ramdisk_info(vm, &mods[mod_idx]);
-			/* TODO: prepare other modules like firmware, seedlist */
+		mod = get_mod_by_tag(mbi, vm_config->os_config.ramdisk_mod_tag);
+		if (mod != NULL) {
+			init_vm_ramdisk_info(vm, mod);
 		}
 	} else {
 		pr_err("failed to load VM %d kernel module", vm->vm_id);
