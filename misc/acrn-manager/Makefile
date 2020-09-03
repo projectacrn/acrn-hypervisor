@@ -65,11 +65,7 @@ MANAGER_LDFLAGS += -lacrn-mngr
 MANAGER_LDFLAGS += $(LDFLAGS)
 
 .PHONY: all
-ifeq ($(RELEASE),0)
 all: $(OUT_DIR)/libacrn-mngr.a $(OUT_DIR)/acrn_mngr.h $(OUT_DIR)/acrnctl $(OUT_DIR)/acrnd
-else
-all: $(OUT_DIR)/libacrn-mngr.a $(OUT_DIR)/acrn_mngr.h $(OUT_DIR)/acrnd
-endif
 
 $(OUT_DIR)/libacrn-mngr.a: acrn_mngr.c acrn_mngr.h $(MANAGER_HEADERS)
 	$(CC) $(MANAGER_CFLAGS) -c acrn_mngr.c -o $(OUT_DIR)/acrn_mngr.o
@@ -107,9 +103,7 @@ install:
 	install -d $(DESTDIR)$(systemd_unitdir)/system
 	install -d $(DESTDIR)$(libdir)
 	install -d $(DESTDIR)$(includedir)/acrn
-ifeq ($(RELEASE),0)
 	install -t $(DESTDIR)$(bindir) $(OUT_DIR)/acrnctl
-endif
 	install -t $(DESTDIR)$(bindir) $(OUT_DIR)/acrnd
 	install -m 0644 -t $(DESTDIR)$(libdir) $(OUT_DIR)/libacrn-mngr.a
 	install -m 0644 -t $(DESTDIR)$(includedir)/acrn $(OUT_DIR)/acrn_mngr.h
