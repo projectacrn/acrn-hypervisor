@@ -164,7 +164,7 @@
             <rootfs desc="rootfs for Linux kernel">/dev/sda3</rootfs>
             <bootargs desc="Specify kernel boot arguments">
         rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3
-        i915.nuclear_pageflip=1
+        i915.nuclear_pageflip=1 swiotlb=131072
         </bootargs>
         </board_private>
     </vm>
