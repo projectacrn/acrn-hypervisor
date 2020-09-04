@@ -26,7 +26,7 @@ hbm_ver=`cat /sys/class/mei/mei0/hbm_ver`
 major_ver=`echo $hbm_ver | cut -d '.' -f1`
 minor_ver=`echo $hbm_ver | cut -d '.' -f2`
 if [[ "$major_ver" -lt "2" ]] || \
-   [[ "$major_ver" == "2" && "$minor_ver" -lt "2" ]]; then
+   [[ "$major_ver" == "2" && "$minor_ver" -le "2" ]]; then
     cse_passthrough=1
 fi
 
