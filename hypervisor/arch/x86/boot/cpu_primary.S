@@ -21,6 +21,7 @@
  * the macros involved are changed.
  */
 
+#include <config.h>
 #include <multiboot.h>
 #ifdef CONFIG_MULTIBOOT2
 #include <multiboot2.h>
@@ -103,7 +104,7 @@ relocatable_tag_start:
     .short  MULTIBOOT2_HEADER_TAG_RELOCATABLE
     .short  0
     .long   relocatable_tag_end - relocatable_tag_start
-    .long   0x10000000   /* min_addr. TODO: change it to 2MB after fixing the load_addr issue */
+    .long   CONFIG_HV_RAM_START   /* min_addr */
     .long   0x80000000   /* max_addr */
     .long   0x200000     /* image alignment */
     .long   1            /* preference: lowest possible address */
