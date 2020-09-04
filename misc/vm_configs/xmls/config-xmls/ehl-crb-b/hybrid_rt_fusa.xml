@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<acrn-config board="ehl-crb-b" scenario="hybrid_rt">
+<acrn-config board="ehl-crb-b" scenario="hybrid_rt_fusa">
     <hv>
         <DEBUG_OPTIONS desc="Debug options for ACRN hypervisor, only valid on debug version">
             <RELEASE desc="Release build. 'y' for Release, 'n' for Debug.">n</RELEASE>
@@ -72,7 +72,6 @@
         <vm_type desc="Specify the VM type" readonly="true">PRE_RT_VM</vm_type>
         <name desc="Specify the VM name which will be shown in hypervisor console command: vm_list.">ACRN PRE-LAUNCHED VM0</name>
         <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
-            <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
             <guest_flag>GUEST_FLAG_RT</guest_flag>
         </guest_flags>
         <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
@@ -113,7 +112,14 @@
         </vuart>
         <pci_devs desc="pci devices list">
             <pci_dev desc="pci device">00:17.0 SATA controller: Intel Corporation Device 4b63</pci_dev>
+            <pci_dev desc="pci device">00:1a.3 Non-VGA unclassified device [0000]: Intel Corporation Device 4b4a</pci_dev>
         </pci_devs>
+        <mmio_resources desc="MMIO resources.">
+            <p2sb>true</p2sb>
+        </mmio_resources>
+        <pt_intx desc="pt intx mapping.">
+            (14, 0)
+        </pt_intx>
     </vm>
     <vm id="1">
         <vm_type desc="Specify the VM type" readonly="true">SOS_VM</vm_type>
@@ -158,7 +164,7 @@
             <rootfs desc="rootfs for Linux kernel">/dev/mmcblk0p2</rootfs>
             <bootargs desc="Specify kernel boot arguments">
             rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3
-            i915.nuclear_pageflip=1
+            i915.nuclear_pageflip=1 swiotlb=131072 modprobe.blacklist=pinctrl_elkhartlake,intel_ehl_gpio
             </bootargs>
         </board_private>
     </vm>
