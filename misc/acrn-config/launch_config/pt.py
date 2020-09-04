@@ -98,7 +98,7 @@ def cse_pt(sel, vmid, config):
         print("major_ver=`echo $hbm_ver | cut -d '.' -f1`", file=config)
         print("minor_ver=`echo $hbm_ver | cut -d '.' -f2`", file=config)
         print('if [[ "$major_ver" -lt "2" ]] || \\', file=config)
-        print('   [[ "$major_ver" == "2" && "$minor_ver" -lt "2" ]]; then', file=config)
+        print('   [[ "$major_ver" == "2" && "$minor_ver" -le "2" ]]; then', file=config)
         print("    cse_passthrough=1", file=config)
         print("fi", file=config)
         print('boot_cse_option=""', file=config)
