@@ -157,6 +157,28 @@ def write_direct_info_parser(config, msg_s, msg_e):
         print("\n#define DEFAULT_PCI_MMCFG_BASE\t0UL", file=config)
         return
 
+    if msg_name in ("IOMEM"):
+        if vector_lines:
+            for vector in vector_lines:
+                if "MMCONFIG" in vector:
+                    try:
+                        bus_list = vector.split("bus")[1].strip().split("-")
+                        start_bus_number = int(bus_list[0].strip(), 16)
+                        end_bus_number = int(bus_list[1].strip("]"), 16)
+                        print("/* PCI mmcfg bus number of MCFG */", file=config)
+                        print("#define DEFAULT_PCI_MMCFG_START_BUS \t 0x{:X}U".format(start_bus_number), file=config)
+                        print("#define DEFAULT_PCI_MMCFG_END_BUS   \t 0x{:X}U\n".format(end_bus_number), file=config)
+                        print("", file=config)
+                        return
+                    except:
+                        pass
+
+        print("/* PCI mmcfg bus number of MCFG */", file=config)
+        print("#define DEFAULT_PCI_MMCFG_START_BUS\t0U", file=config)
+        print("#define DEFAULT_PCI_MMCFG_END_BUS\t0U", file=config)
+        print("", file=config)
+        return
+
     for vector in vector_lines:
         print("{}".format(vector.strip()), file=config)
 
@@ -200,6 +222,7 @@ def platform_info_parser(config, default_platform):
     write_direct_info_parser(config, "<RESET_REGISTER_INFO>", "</RESET_REGISTER_INFO>")
     drhd_info_parser(config)
     write_direct_info_parser(config, "<MMCFG_BASE_INFO>", "</MMCFG_BASE_INFO>")
+    write_direct_info_parser(config, "<IOMEM_INFO>", "</IOMEM_INFO>")
 
 
 def generate_file(config, default_platform):
