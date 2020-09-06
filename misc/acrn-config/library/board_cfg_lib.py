@@ -365,12 +365,12 @@ class Bar_Attr:
 
 class Pci_Dev_Bar_Desc:
     def __init__(self):
-        self.pci_dev_dic = {}
-        self.pci_bar_dic = {}
-        self.shm_bar_dic = {}
+        self.pci_dev_dic = collections.OrderedDict()
+        self.pci_bar_dic = collections.OrderedDict()
+        self.shm_bar_dic = collections.OrderedDict()
 
 PCI_DEV_BAR_DESC = Pci_Dev_Bar_Desc()
-SUB_NAME_COUNT = {}
+SUB_NAME_COUNT = collections.OrderedDict()
 
 
 def get_value_after_str(line, key):
@@ -471,7 +471,8 @@ def parser_pci():
             tmp_bar_dic = {}
 
     # output all the pci device list to pci_device.h
-    SUB_NAME_COUNT = collections.Counter(cal_sub_pci_name)
+    for item in cal_sub_pci_name:
+        SUB_NAME_COUNT[item] = SUB_NAME_COUNT.get(item, 0) + 1
 
     if tmp_bar_dic:
         PCI_DEV_BAR_DESC.pci_bar_dic[cur_bdf] = tmp_bar_dic

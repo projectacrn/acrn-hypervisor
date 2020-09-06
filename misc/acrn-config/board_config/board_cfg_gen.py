@@ -63,7 +63,7 @@ def main(args):
     # check if this is the scenario config which matched board info
     (err_dic, status) = common.is_config_file_match()
     if not status:
-        err_dic['board config: Not match'] = "The board xml and scenario xml should be matched"
+        err_dic['board config'] = "The board xml file does not match scenario xml file!"
         return err_dic
 
     output = ''
