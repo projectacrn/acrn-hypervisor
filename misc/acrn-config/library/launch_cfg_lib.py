@@ -84,7 +84,7 @@ def get_param(args):
 
         if arg_str not in args:
             usage(args[0])
-            err_dic['common error: get wrong parameter'] = "wrong usage"
+            err_dic['common error: wrong parameter'] = "wrong usage"
             return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     args_list = args[1:]
@@ -102,24 +102,24 @@ def get_param(args):
             if arg_k == '--uosid':
                 vm_th = arg_v
                 if not vm_th.isnumeric():
-                    err_dic['common error: get wrong parameter'] = "--uosid should be a number"
+                    err_dic['common error: wrong parameter'] = "--uosid should be a number"
                     return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     if not board_info_file or not scenario_info_file or not launch_info_file:
         usage(args[0])
-        err_dic['common error: get wrong parameter'] = "wrong usage"
+        err_dic['common error: wrong parameter'] = "wrong usage"
         return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     if not os.path.exists(board_info_file):
-        err_dic['common error: get wrong parameter'] = "{} is not exist!".format(board_info_file)
+        err_dic['common error: wrong parameter'] = "{} does not exist!".format(board_info_file)
         return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     if not os.path.exists(scenario_info_file):
-        err_dic['common error: get wrong parameter'] = "{} is not exist!".format(scenario_info_file)
+        err_dic['common error: wrong parameter'] = "{} does not exist!".format(scenario_info_file)
         return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     if not os.path.exists(launch_info_file):
-        err_dic['common error: get wrong parameter'] = "{} is not exist!".format(launch_info_file)
+        err_dic['common error: wrong parameter'] = "{} does not exist!".format(launch_info_file)
         return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
 
     return (err_dic, board_info_file, scenario_info_file, launch_info_file, int(vm_th), output_folder)
@@ -190,13 +190,13 @@ def is_config_file_match():
     (err_dic, scenario_for_board) = common.get_xml_attrib(common.SCENARIO_INFO_FILE, "board")
     (err_dic, board_name) = common.get_xml_attrib(common.BOARD_INFO_FILE, "board")
     if scenario_for_board != board_name:
-        err_dic['scenario config: Not match'] = "The board xml and scenario xml should be matched!"
+        err_dic['scenario config'] = "The board xml file does not match scenario xml file!"
         match = False
 
     # check if the board config match launch config
     (err_dic, launch_for_board) = common.get_xml_attrib(common.LAUNCH_INFO_FILE, "board")
     if launch_for_board != board_name:
-        err_dic['launch config: Not match'] = "The board xml and launch xml should be matched!"
+        err_dic['launch config'] = "The board xml file does not match scenario xml file!"
         match = False
 
     return (err_dic, match)

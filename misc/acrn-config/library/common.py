@@ -126,7 +126,7 @@ def get_param(args):
             return (err_dic, params)
 
         if not os.path.exists(par_v):
-            err_dic['wrong usage'] = "{} is not exist!".format(par_v)
+            err_dic['wrong usage'] = "{} does not exist!".format(par_v)
             return (err_dic, params)
 
     return (err_dic, params)
