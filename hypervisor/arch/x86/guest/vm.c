@@ -411,6 +411,13 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 
 	/* Allocate memory for virtual machine */
 	vm = &vm_array[vm_id];
+	/*
+	 * the vm_state lock field need to remain unchanged in vm data structure
+	 * Since arch_vm struct is page aligned, size used for memset should consider
+	 * subtracting 4K from the total size of acrn_vm.
+	 * Using offset_of macro to avoid hardcoding 4k here.
+	 */
+	(void)memset((void *)&vm->arch_vm, 0U, (sizeof(struct acrn_vm) - offsetof(struct acrn_vm, arch_vm)));
 	vm->vm_id = vm_id;
 	vm->hw.created_vcpus = 0U;
 
@@ -459,8 +466,6 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 
 		vm->arch_vm.vlapic_mode = VM_VLAPIC_XAPIC;
 		vm->intr_inject_delay_delta = 0UL;
-		vm->nr_emul_mmio_regions = 0U;
-		vm->vcpuid_entry_nr = 0U;
 
 		/* Set up IO bit-mask such that VM exit occurs on
 		 * selected IO ranges
@@ -628,8 +633,6 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 	deinit_vuart(vm);
 
 	deinit_vpci(vm);
-
-	deinit_emul_io(vm);
 
 	/* Free EPT allocated resources assigned to VM */
 	destroy_ept(vm);
