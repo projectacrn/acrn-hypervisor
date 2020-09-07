@@ -23,24 +23,6 @@ def gen_common_header(config):
     print("{0}".format(VM_HEADER_DEFINE), file=config)
 
 
-def cpu_affinity_output(vm_info, i, config):
-    """
-    Output the macro pcpu affinity bitmap
-    :param vm_info: the data structure have all the xml items values
-    :param i: the index of vm id
-    :param config: file pointor to store the information
-    """
-
-    cpu_bits = vm_info.get_cpu_bitmap(i)
-    if "SOS_VM" == common.VM_TYPES[i]:
-        print("", file=config)
-        print("#define SOS_VM_CONFIG_CPU_AFFINITY      {0}".format(
-            cpu_bits['cpu_map']), file=config)
-    else:
-        print("#define VM{0}_CONFIG_CPU_AFFINITY         {1}".format(
-            i, cpu_bits['cpu_map']), file=config)
-
-
 def scenario_vm_num(scenario_items, config):
 
     print("", file=config)
@@ -65,8 +47,6 @@ def gen_pre_launch_vm(scenario_items, config):
             vm_i += 1
             continue
 
-        cpu_bits = vm_info.get_cpu_bitmap(vm_i)
-        cpu_affinity_output(vm_info, vm_i, config)
         print("#define VM{0}_CONFIG_MEM_START_HPA        {1}UL".format(
             vm_i, vm_info.mem_info.mem_start_hpa[vm_i]), file=config)
         print("#define VM{0}_CONFIG_MEM_SIZE             {1}UL".format(
@@ -97,7 +77,6 @@ def gen_post_launch_header(scenario_items, config):
             continue
 
         is_post_vm_available = True
-        cpu_affinity_output(vm_info, vm_i, config)
 
         if vm_info.shmem.shmem_enabled == 'y' and vm_i in vm_info.shmem.shmem_num.keys():
             print("#define VM{}_CONFIG_PCI_DEV_NUM          {}U".format(vm_i,
@@ -122,10 +101,6 @@ def gen_sos_header(scenario_items, config):
     print("\t\t\t\t\tSOS_IDLE\t\\", file=config)
     print("\t\t\t\t\tSOS_BOOTARGS_DIFF", file=config)
 
-    vm_info = scenario_items['vm']
-    for vm_i,vm_type in common.VM_TYPES.items():
-        if vm_type == 'SOS_VM':
-            cpu_affinity_output(vm_info, vm_i, config)
     print("", file=config)
 
 

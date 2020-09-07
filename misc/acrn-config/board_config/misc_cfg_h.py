@@ -149,6 +149,29 @@ def clos_per_vm_gen(config):
         print("#define VM{0}_VCPU_CLOS\t\t\t{1}".format(i, clos_config['clos_map']), file=config)
 
 
+def cpu_affinity_output(cpu_bits, i, config):
+
+    if "SOS_VM" == common.VM_TYPES[i]:
+        print("", file=config)
+        print("#define SOS_VM_CONFIG_CPU_AFFINITY      {0}".format(
+            cpu_bits['cpu_map']), file=config)
+    else:
+        print("#define VM{0}_CONFIG_CPU_AFFINITY         {1}".format(
+            i, cpu_bits['cpu_map']), file=config)
+
+
+def cpu_affinity_per_vm_gen(config):
+
+    cpus_per_vm = common.get_leaf_tag_map(
+        common.SCENARIO_INFO_FILE, "cpu_affinity", "pcpu_id")
+
+    for vm_i,_ in common.VM_TYPES.items():
+        cpu_bits = scenario_cfg_lib.cpus_assignment(cpus_per_vm, vm_i)
+        cpu_affinity_output(cpu_bits, vm_i, config)
+
+    print("", file=config)
+
+
 def generate_file(config):
     """
     Start to generate board.c
@@ -250,6 +273,8 @@ def generate_file(config):
     if "SOS_VM" in common.VM_TYPES.values():
         sos_bootarg_diff(sos_cmdlines, config)
         print("", file=config)
+
+    cpu_affinity_per_vm_gen(config)
 
     common_clos_max = board_cfg_lib.get_common_clos_max()
     max_mba_clos_entries = common_clos_max
