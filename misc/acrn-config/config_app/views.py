@@ -388,7 +388,8 @@ def save_launch():
     if not error_list:
         launch_config.save(launch_config_data['new_launch_name'])
         if old_launch_name != launch_config_data['new_launch_name']:
-            os.remove(os.path.join(current_app.config.get('CONFIG_PATH'), xml_configs[1], old_launch_name + '.xml'))
+            os.remove(os.path.join(current_app.config.get('CONFIG_PATH'), xml_configs[1], 'user_defined',
+                                   old_launch_name + '.xml'))
 
     if os.path.isfile(tmp_launch_file):
         os.remove(tmp_launch_file)
