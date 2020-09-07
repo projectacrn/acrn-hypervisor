@@ -39,7 +39,7 @@ def write_shmem_regions(config):
     print("", file=config)
     print("/*", file=config)
     print(" * The IVSHMEM_SHM_SIZE is the sum of all memory regions.", file=config)
-    print(" * The size range of each memory region is [2M, 1G) and is a power of 2.", file=config)
+    print(" * The size range of each memory region is [2MB, 512MB] and is a power of 2.", file=config)
     print(" */", file=config)
     total_shm_size = 0
     if len(shmem_regions) > 0:

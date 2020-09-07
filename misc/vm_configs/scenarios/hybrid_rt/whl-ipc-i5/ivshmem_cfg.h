@@ -12,7 +12,7 @@
 
 /*
  * The IVSHMEM_SHM_SIZE is the sum of all memory regions.
- * The size range of each memory region is [2M, 1G) and is a power of 2.
+ * The size range of each memory region is [2MB, 512MB] and is a power of 2.
  */
 #define IVSHMEM_SHM_SIZE	0x200000UL
 #define IVSHMEM_DEV_NUM		2UL
