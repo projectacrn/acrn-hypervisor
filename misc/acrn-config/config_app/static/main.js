@@ -30,7 +30,7 @@ $().ready(function(){
                     alert(result.status);
                }
 
-               window.location.reload();
+               window.location = 'http://'+ window.location.host+"/scenario";
            },
            error: function(e){
                console.log(e.status);
@@ -141,7 +141,7 @@ $().ready(function(){
             data : JSON.stringify(data),
             success : function(result) {
                 console.log(result);
-                window.location.reload(true);
+                window.location = 'http://'+ window.location.host+"/scenario";
             },
             error : function(e){
                 console.log(e.status);

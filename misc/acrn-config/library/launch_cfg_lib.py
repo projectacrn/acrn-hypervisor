@@ -568,9 +568,12 @@ def is_linux_like(uos_type):
 
 def set_shm_regions(launch_item_values, scenario_info):
 
-    raw_shmem_regions = common.get_hv_item_tag(scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
-    vm_types = common.get_leaf_tag_map(scenario_info, "vm_type")
-    shm_enabled = common.get_hv_item_tag(scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
+    try:
+        raw_shmem_regions = common.get_hv_item_tag(scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
+        vm_types = common.get_leaf_tag_map(scenario_info, "vm_type")
+        shm_enabled = common.get_hv_item_tag(scenario_info, "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
+    except:
+        return
 
     sos_vm_id = 0
     for vm_id, vm_type in vm_types.items():
