@@ -286,6 +286,7 @@ class MmioResourcesInfo:
         :return: None
         """
         self.p2sb = common.get_leaf_tag_map_bool(self.scenario_info, "mmio_resources", "p2sb")
+        self.tpm2 = common.get_leaf_tag_map_bool(self.scenario_info, "mmio_resources", "TPM2")
 
     def check_item(self):
         """

@@ -115,6 +115,7 @@
             <pci_dev desc="pci device">00:1a.3 Non-VGA unclassified device [0000]: Intel Corporation Device 4b4a</pci_dev>
         </pci_devs>
         <mmio_resources desc="MMIO resources.">
+            <TPM2 desc="TPM2 device">n</TPM2>
             <p2sb>true</p2sb>
         </mmio_resources>
         <pt_intx desc="pt intx mapping.">

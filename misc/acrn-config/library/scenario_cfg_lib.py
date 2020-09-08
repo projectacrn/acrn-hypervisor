@@ -529,6 +529,7 @@ def cpus_assignment(cpus_per_vm, index):
                     if load_type == "PRE_LAUNCHED_VM":
                         pre_all_cpus += cpu_list
             cpus_per_vm[index] = list(set(sos_extend_all_cpus) - set(pre_all_cpus))
+            cpus_per_vm[index].sort()
 
     for i in range(len(cpus_per_vm[index])):
         if i == 0:

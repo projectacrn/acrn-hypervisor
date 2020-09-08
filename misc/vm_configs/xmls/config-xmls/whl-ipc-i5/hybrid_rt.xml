@@ -104,7 +104,7 @@
         <pci_dev desc="pci device">03:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)</pci_dev>
     </pci_devs>
     <mmio_resources desc="mmio devices list to passthrough">
-        <TPM2 desc="TPM2 device">n</TPM2>
+        <TPM2 desc="TPM2 device">y</TPM2>
     </mmio_resources>
   </vm>
   <vm id="1">

@@ -107,7 +107,7 @@
         <pci_dev desc="pci device">00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (13) I219-V (rev 20)</pci_dev>
     </pci_devs>
     <mmio_resources desc="mmio devices list to passthrough">
-        <TPM2 desc="TPM2 device">y</TPM2>
+        <TPM2 desc="TPM2 device">n</TPM2>
     </mmio_resources>
   </vm>
   <vm id="1">
@@ -159,5 +159,8 @@
     <pci_devs desc="pci devices list">
         <pci_dev desc="pci device">00:14.0 USB controller: Intel Corporation Device a0ed (rev 20)</pci_dev>
     </pci_devs>
+    <mmio_resources desc="mmio devices list to passthrough">
+        <TPM2 desc="TPM2 device">n</TPM2>
+    </mmio_resources>
   </vm>
 </acrn-config>
