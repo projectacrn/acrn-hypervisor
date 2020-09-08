@@ -172,6 +172,34 @@ def cpu_affinity_per_vm_gen(config):
     print("", file=config)
 
 
+def pci_dev_num_per_vm_gen(config):
+
+    pci_items = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "pci_devs", "pci_dev")
+    pci_devs = scenario_cfg_lib.get_pci_devs(pci_items)
+    pci_dev_num = scenario_cfg_lib.get_pci_num(pci_devs)
+
+    ivshmem_region = common.get_hv_item_tag(common.SCENARIO_INFO_FILE,
+        "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
+
+    shmem_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE,
+        "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
+
+    shmem_regions = scenario_cfg_lib.get_shmem_regions(ivshmem_region)
+    shmem_num = scenario_cfg_lib.get_shmem_num(shmem_regions)
+
+    for vm_i,vm_type in common.VM_TYPES.items():
+        if "POST_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
+           if shmem_enabled == 'y' and vm_i in shmem_num.keys():
+                print("#define VM{}_CONFIG_PCI_DEV_NUM          {}U".format(vm_i, shmem_num[vm_i]), file=config)
+        elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
+            shmem_num_i = 0
+            if shmem_enabled == 'y' and vm_i in shmem_num.keys():
+                shmem_num_i = shmem_num[vm_i]
+            print("#define VM{}_CONFIG_PCI_DEV_NUM          {}U".format(vm_i, pci_dev_num[vm_i] + shmem_num_i), file=config)
+
+    print("", file=config)
+
+
 def generate_file(config):
     """
     Start to generate board.c
@@ -334,6 +362,8 @@ def generate_file(config):
         print("#define VM0_TPM_BUFFER_BASE_ADDR   0xFED40000UL", file=config)
         print("#define VM0_TPM_BUFFER_SIZE        0x5000UL", file=config)
         print("", file=config)
+
+    pci_dev_num_per_vm_gen(config)
 
     print("{}".format(MISC_CFG_END), file=config)
 
