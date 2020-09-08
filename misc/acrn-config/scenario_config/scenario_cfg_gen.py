@@ -196,7 +196,6 @@ def main(args):
             return err_dic
 
     # generate ivshmem_cfg.h
-    print(ivshmem_config_h)
     with open(ivshmem_config_h, 'w') as config:
         ivshmem_cfg_h.generate_file(scenario_items, config)
 

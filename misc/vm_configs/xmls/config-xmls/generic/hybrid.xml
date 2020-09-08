@@ -104,6 +104,9 @@
     <pci_devs desc="pci devices list">
         <pci_dev desc="pci device"></pci_dev>
     </pci_devs>
+    <mmio_resources desc="mmio devices list to passthrough">
+        <TPM2 desc="TPM2 device">n</TPM2>
+    </mmio_resources>
   </vm>
   <vm id="1">
     <vm_type desc="Specify the VM type" readonly="true">SOS_VM</vm_type>

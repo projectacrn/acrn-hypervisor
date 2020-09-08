@@ -45,7 +45,7 @@
         <pci_dev desc="pci device"></pci_dev>
     </pci_devs>
     <mmio_resources desc="mmio devices list to passthrough">
-        <TPM2 desc="TPM2 device">n</TPM2>
+        <TPM2 desc="TPM2 device">y</TPM2>
     </mmio_resources>
   </vm>
 </acrn-config>
