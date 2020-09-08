@@ -33,6 +33,7 @@ Service VM Tutorials
    :maxdepth: 1
 
    tutorials/running_deb_as_serv_vm
+   tutorials/using_yp
 
 User VM Tutorials
 *****************
