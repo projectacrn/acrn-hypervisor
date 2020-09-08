@@ -57,34 +57,8 @@ def gen_pre_launch_vm(scenario_items, config):
             print("#define VM{0}_CONFIG_MEM_SIZE_HPA2        {1}UL".format(
                 vm_i, vm_info.mem_info.mem_size_hpa2[vm_i]), file=config)
 
-        shmem_num_i = 0
-        if vm_info.shmem.shmem_enabled == 'y' and vm_i in vm_info.shmem.shmem_num.keys():
-            shmem_num_i = vm_info.shmem.shmem_num[vm_i]
-
-        print("#define VM{}_CONFIG_PCI_DEV_NUM          {}U".format(vm_i,
-            vm_info.cfg_pci.pci_dev_num[vm_i] + shmem_num_i), file=config)
         print("", file=config)
         vm_i += 1
-
-
-def gen_post_launch_header(scenario_items, config):
-    vm_i = 0
-    vm_info = scenario_items['vm']
-    is_post_vm_available = False
-    for vm_type in common.VM_TYPES.values():
-        if "POST_LAUNCHED_VM" != scenario_cfg_lib.VM_DB[vm_type]['load_type']:
-            vm_i += 1
-            continue
-
-        is_post_vm_available = True
-
-        if vm_info.shmem.shmem_enabled == 'y' and vm_i in vm_info.shmem.shmem_num.keys():
-            print("#define VM{}_CONFIG_PCI_DEV_NUM          {}U".format(vm_i,
-                vm_info.shmem.shmem_num[vm_i]), file=config)
-        vm_i += 1
-
-    if is_post_vm_available:
-        print("", file=config)
 
 
 def gen_sos_header(scenario_items, config):
@@ -108,7 +82,6 @@ def gen_header_file(scenario_items, config):
 
     gen_pre_launch_vm(scenario_items, config)
     gen_sos_header(scenario_items, config)
-    gen_post_launch_header(scenario_items, config)
 
 
 def get_dm_owned_guest_flag_mask(vm_info, config):
