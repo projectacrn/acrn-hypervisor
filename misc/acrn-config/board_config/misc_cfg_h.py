@@ -353,6 +353,26 @@ def generate_file(config):
     max_mba_clos_entries = common_clos_max
     max_cache_clos_entries = common_clos_max
 
+    comments_max_clos = '''
+/*
+ * The maximum CLOS that is allowed by ACRN hypervisor,
+ * its value is set to be least common Max CLOS (CPUID.(EAX=0x10,ECX=ResID):EDX[15:0])
+ * among all supported RDT resources in the platform. In other words, it is
+ * min(maximum CLOS of L2, L3 and MBA). This is done in order to have consistent
+ * CLOS allocations between all the RDT resources.
+ */'''
+
+    comments_max_mba_clos = '''
+/*
+ * Max number of Cache Mask entries corresponding to each CLOS.
+ * This can vary if CDP is enabled vs disabled, as each CLOS entry
+ * will have corresponding cache mask values for Data and Code when
+ * CDP is enabled.
+ */'''
+
+    comments_max_cache_clos = '''
+/* Max number of MBA delay entries corresponding to each CLOS. */'''
+
     if board_cfg_lib.is_cdp_enabled():
         max_cache_clos_entries_cdp_enable = 2 * common_clos_max
         (res_info, rdt_res_clos_max, clos_max_mask_list) = board_cfg_lib.clos_info_parser(common.BOARD_INFO_FILE)
@@ -360,17 +380,31 @@ def generate_file(config):
 
         print("#ifdef CONFIG_RDT_ENABLED", file=config)
         print("#ifdef CONFIG_CDP_ENABLED", file=config)
+        print(comments_max_clos, file=config)
         print("#define HV_SUPPORTED_MAX_CLOS\t{}U".format(common_clos_max), file=config)
+
+        print(comments_max_cache_clos, file=config)
         print("#define MAX_CACHE_CLOS_NUM_ENTRIES\t{}U".format(max_cache_clos_entries_cdp_enable), file=config)
+
         print("#else", file=config)
+        print(comments_max_clos, file=config)
         print("#define HV_SUPPORTED_MAX_CLOS\t{}U".format(common_clos_max_cdp_disable), file=config)
+
+        print(comments_max_cache_clos, file=config)
         print("#define MAX_CACHE_CLOS_NUM_ENTRIES\t{}U".format(max_cache_clos_entries), file=config)
         print("#endif", file=config)
+
+        print(comments_max_mba_clos, file=config)
         print("#define MAX_MBA_CLOS_NUM_ENTRIES\t{}U".format(max_mba_clos_entries), file=config)
     else:
         print("#ifdef CONFIG_RDT_ENABLED", file=config)
+        print(comments_max_clos, file=config)
         print("#define HV_SUPPORTED_MAX_CLOS\t{}U".format(common_clos_max), file=config)
+
+        print(comments_max_mba_clos, file=config)
         print("#define MAX_MBA_CLOS_NUM_ENTRIES\t{}U".format(max_mba_clos_entries), file=config)
+
+        print(comments_max_cache_clos, file=config)
         print("#define MAX_CACHE_CLOS_NUM_ENTRIES\t{}U".format(max_cache_clos_entries), file=config)
         if not board_cfg_lib.is_rdt_supported():
             print("#endif", file=config)
