@@ -19,6 +19,6 @@
 [0004]        Asl Compiler Revision : 20190703
 
 [0008]       ACPI Table Address   0 : 000000007FF00100
-[0008]       ACPI Table Address   1 : 000000007FF00300
-[0008]       ACPI Table Address   2 : 000000007FF00340
-[0008]       ACPI Table Address   3 : 000000007FF01000
+[0008]       ACPI Table Address   1 : 000000007FF00400
+[0008]       ACPI Table Address   2 : 000000007FF00440
+[0008]       ACPI Table Address   3 : 000000007FF01100
