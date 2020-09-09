@@ -347,10 +347,8 @@ def gen_pre_launch_vm(vm_type, vm_i, scenario_items, config):
         print("\t\t},", file=config)
         print("#endif", file=config)
 
-    if (vm_i == 0 and board_cfg_lib.is_matched_board(("ehl-crb-b"))
-        and vm_info.pt_intx_info.phys_gsi.get(vm_i) is not None
-        and len(vm_info.pt_intx_info.phys_gsi[vm_i]) > 0):
-        print("\t\t.pt_intx_num = {}U,".format(len(vm_info.pt_intx_info.phys_gsi[vm_i])), file=config)
+    if vm_i == 0:
+        print("\t\t.pt_intx_num = VM0_PT_INTX_NUM,", file=config)
         print("\t\t.pt_intx = &vm0_pt_intx[0U],", file=config)
 
     print("\t},", file=config)
@@ -415,16 +413,11 @@ def generate_file(scenario_items, config):
     if (board_cfg_lib.is_matched_board(("ehl-crb-b"))
         and vm_info.pt_intx_info.phys_gsi.get(0) is not None
         and len(vm_info.pt_intx_info.phys_gsi[0]) > 0):
+        print("extern struct pt_intx_config vm0_pt_intx[{}U];".format(len(vm_info.pt_intx_info.phys_gsi[0])), file=config)
+    else:
+        print("extern struct pt_intx_config vm0_pt_intx[1U];", file=config)
 
-        print("static struct pt_intx_config vm0_pt_intx[{}U] = {{".format(len(vm_info.pt_intx_info.phys_gsi[0])), file=config)
-        for i, (p_pin, v_pin) in enumerate(zip(vm_info.pt_intx_info.phys_gsi[0], vm_info.pt_intx_info.virt_gsi[0])):
-            print("\t[{}U] = {{".format(i), file=config)
-            print("\t\t.phys_gsi = {}U,".format(p_pin), file=config)
-            print("\t\t.virt_gsi = {}U,".format(v_pin), file=config)
-            print("\t},", file=config)
-
-        print("};", file=config)
-        print("", file=config)
+    print("", file=config)
 
     print("struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {", file=config)
     for vm_i, vm_type in common.VM_TYPES.items():

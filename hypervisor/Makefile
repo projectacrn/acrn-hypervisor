@@ -268,6 +268,7 @@ HW_C_SRCS += boot/guest/direct_boot.c
 # VM Configuration
 VM_CFG_C_SRCS += $(BOARD_INFO_DIR)/board.c
 VM_CFG_C_SRCS += $(SCENARIO_CFG_DIR)/vm_configurations.c
+VM_CFG_C_SRCS += $(BOARD_CFG_DIR)/pt_intx.c
 ifneq (,$(wildcard $(BOARD_CFG_DIR)/pci_dev.c))
 VM_CFG_C_SRCS += $(BOARD_CFG_DIR)/pci_dev.c
 endif

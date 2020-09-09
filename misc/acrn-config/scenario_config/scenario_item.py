@@ -6,7 +6,6 @@
 import common
 import board_cfg_lib
 import scenario_cfg_lib
-import re
 
 class HwInfo:
     """ This is Abstract of class of Hardware information """
@@ -309,34 +308,7 @@ class PtIntxInfo:
         Get all items which belong to this class
         :return: None
         """
-        pt_intx_map = common.get_leaf_tag_map(self.scenario_info, "pt_intx")
-
-        # translation table to normalize the paired phys_gsi and virt_gsi string
-        table = {ord('[') : ord('('), ord(']') : ord(')'), ord('{') : ord('('),
-            ord('}') : ord(')'), ord(';') : ord(','),
-            ord('\n') : None, ord('\r') : None, ord(' ') : None}
-
-        for vm_i, s in pt_intx_map.items():
-            #normalize the phys_gsi and virt_gsi pair string
-            s = s.translate(table)
-
-            #extract the phys_gsi and virt_gsi pairs between parenthesis to a list
-            s = re.findall(r'\(([^)]+)', s)
-
-            self.phys_gsi[vm_i] = [];
-            self.virt_gsi[vm_i] = [];
-
-            for part in s:
-                if not part: continue
-                assert ',' in part, "you need to use ',' to separate phys_gsi and virt_gsi!"
-                a, b = part.split(',')
-                if not a and not b: continue
-                assert a and b, "you need to specify both phys_gsi and virt_gsi!"
-                a, b = common.str2int(a), common.str2int(b)
-
-                self.phys_gsi[vm_i].append(a)
-                self.virt_gsi[vm_i].append(b)
-
+        self.phys_gsi, self.virt_gsi = common.get_pt_intx_table(self.scenario_info)
 
     def check_item(self):
         """
