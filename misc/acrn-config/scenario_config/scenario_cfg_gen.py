@@ -15,6 +15,7 @@ import scenario_cfg_lib
 import vm_configurations_c
 import vm_configurations_h
 import pci_dev_c
+import pt_intx_c
 import ivshmem_cfg_h
 import common
 import hv_cfg_lib
@@ -24,7 +25,7 @@ import asl_gen
 
 ACRN_PATH = common.SOURCE_ROOT_DIR
 ACRN_CONFIG_DEF = ACRN_PATH + 'misc/vm_configs/scenarios/'
-GEN_FILE = ["vm_configurations.h", "vm_configurations.c", "pci_dev.c", ".config", "ivshmem_cfg.h"]
+GEN_FILE = ["vm_configurations.h", "vm_configurations.c", "pci_dev.c", ".config", "ivshmem_cfg.h", "pt_intx.c"]
 
 
 def get_scenario_item_values(board_info, scenario_info):
@@ -171,6 +172,7 @@ def main(args):
     pci_config_c = scen_board + GEN_FILE[2]
     config_hv = scen_board + board_name + GEN_FILE[3]
     ivshmem_config_h = scen_board + GEN_FILE[4]
+    pt_intx_config_c = scen_board + GEN_FILE[5]
 
     # parse the scenario.xml
     get_scenario_item_values(params['--board'], params['--scenario'])
@@ -202,6 +204,11 @@ def main(args):
     # generate pci_dev.c
     with open(pci_config_c, 'w') as config:
         pci_dev_c.generate_file(scenario_items['vm'], config)
+
+    # generate pt_intx.c
+    with open(pt_intx_config_c, 'w') as config:
+        pt_intx_c.generate_file(scenario_items['vm'], config)
+
 
     # generate ASL code of ACPI tables for Pre-launched VMs
     asl_gen.main(args)

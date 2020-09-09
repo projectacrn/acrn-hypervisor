@@ -231,6 +231,20 @@ def boot_args_per_vm_gen(config):
     print("", file=config)
 
 
+def pt_intx_num_vm0_gen(config):
+
+    phys_gsi, virt_gsi = common.get_pt_intx_table(common.SCENARIO_INFO_FILE)
+
+    if (board_cfg_lib.is_matched_board(("ehl-crb-b"))
+        and phys_gsi.get(0) is not None
+        and len(phys_gsi[0]) > 0):
+        print("#define VM0_PT_INTX_NUM\t{}U".format(len(phys_gsi[0])), file=config)
+    else:
+        print("#define VM0_PT_INTX_NUM\t0U", file=config)
+
+    print("", file=config)
+
+
 def generate_file(config):
     """
     Start to generate board.c
@@ -399,6 +413,8 @@ def generate_file(config):
     pci_dev_num_per_vm_gen(config)
 
     boot_args_per_vm_gen(config)
+
+    pt_intx_num_vm0_gen(config)
 
     print("{}".format(MISC_CFG_END), file=config)
 
