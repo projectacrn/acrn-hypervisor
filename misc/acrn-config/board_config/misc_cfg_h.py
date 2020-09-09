@@ -391,6 +391,8 @@ def generate_file(config):
     if vm0_pre_launch and board_cfg_lib.is_tpm_passthru():
         print("#define VM0_PASSTHROUGH_TPM", file=config)
         print("#define VM0_TPM_BUFFER_BASE_ADDR   0xFED40000UL", file=config)
+        gpa = common.hpa2gpa(0, 0xFED40000, 0x5000)
+        print("#define VM0_TPM_BUFFER_BASE_ADDR_GPA   0x{:X}UL".format(gpa), file=config)
         print("#define VM0_TPM_BUFFER_SIZE        0x5000UL", file=config)
         print("", file=config)
 
