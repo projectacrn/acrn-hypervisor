@@ -139,29 +139,6 @@ def vuart_output(vm_type, i, vm_info, config):
     print("\t\t},", file=config)
 
 
-def split_cmdline(cmd_str, config):
-
-    cmd_list = [i for i in cmd_str.strip('"').split() if i != '']
-
-    if cmd_list:
-        cmd_len = len(cmd_list)
-        i = 0
-        for cmd_arg in cmd_list:
-            if not cmd_arg.strip():
-                continue
-
-            if i == 0:
-                print('"', end="", file=config)
-
-            if i % 4 == 0 and i != 0:
-                print("\\\n\t\t\t\t", end="", file=config)
-
-            print('{} '.format(cmd_arg), end="", file=config)
-            i += 1
-            if i == cmd_len:
-                print('"', file=config)
-
-
 def is_need_epc(epc_section, i, config):
     """
     Check if it is need epc section
@@ -334,8 +311,8 @@ def gen_pre_launch_vm(vm_type, vm_i, scenario_items, config):
         print("\t\t\t.kernel_entry_addr = {0},".format(vm_info.os_cfg.kern_entry_addr[vm_i]), file=config)
 
     if vm_i in vm_info.os_cfg.kern_args.keys() and vm_info.os_cfg.kern_args[vm_i]:
-        print("\t\t\t.bootargs = ", end="", file=config)
-        split_cmdline(vm_info.os_cfg.kern_args[vm_i].strip(), config)
+        print("\t\t\t.bootargs = VM{0}_BOOT_ARGS,".format(vm_i), file=config)
+
     print("\t\t},", file=config)
     print("\t\t.acpi_config = {", file=config)
     print('\t\t\t.acpi_mod_tag = "ACPI_VM{}",'.format(vm_i), file=config)
