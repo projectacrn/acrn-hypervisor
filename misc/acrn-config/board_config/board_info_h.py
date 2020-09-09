@@ -96,7 +96,12 @@ def generate_file(config):
         and board_cfg_lib.is_p2sb_passthru_possible()):
         print("", file=config)
         print("#define P2SB_VGPIO_DM_ENABLED", file=config)
-        print("#define P2SB_BAR_ADDR\t\t\t0x{:X}UL".format(board_cfg_lib.find_p2sb_bar_addr()), file=config)
+
+        hpa = board_cfg_lib.find_p2sb_bar_addr()
+        print("#define P2SB_BAR_ADDR\t\t\t0x{:X}UL".format(hpa), file=config)
+        gpa = common.hpa2gpa(0, hpa, 0x1000000)
+        print("#define P2SB_BAR_ADDR_GPA\t\t0x{:X}UL".format(gpa), file=config)
+        print("#define P2SB_BAR_SIZE\t\t\t0x1000000UL", file=config)
 
     if board_cfg_lib.is_matched_board(("ehl-crb-b")):
         print("", file=config)
