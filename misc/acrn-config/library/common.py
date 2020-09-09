@@ -9,6 +9,7 @@ import getopt
 import shutil
 import subprocess
 import xml.etree.ElementTree as ET
+import re
 
 
 ACRN_CONFIG_TARGET = ''
@@ -560,3 +561,38 @@ def str2int(x):
         return int(s, base)
 
     return 0
+
+
+def get_pt_intx_table(config_file):
+    pt_intx_map = get_leaf_tag_map(config_file, "pt_intx")
+
+    # translation table to normalize the paired phys_gsi and virt_gsi string
+    table = {ord('[') : ord('('), ord(']') : ord(')'), ord('{') : ord('('),
+        ord('}') : ord(')'), ord(';') : ord(','),
+        ord('\n') : None, ord('\r') : None, ord(' ') : None}
+
+    phys_gsi = {}
+    virt_gsi = {}
+
+    for vm_i, s in pt_intx_map.items():
+        #normalize the phys_gsi and virt_gsi pair string
+        s = s.translate(table)
+
+        #extract the phys_gsi and virt_gsi pairs between parenthesis to a list
+        s = re.findall(r'\(([^)]+)', s)
+
+        phys_gsi[vm_i] = [];
+        virt_gsi[vm_i] = [];
+
+        for part in s:
+            if not part: continue
+            assert ',' in part, "you need to use ',' to separate phys_gsi and virt_gsi!"
+            a, b = part.split(',')
+            if not a and not b: continue
+            assert a and b, "you need to specify both phys_gsi and virt_gsi!"
+            a, b = str2int(a), str2int(b)
+
+            phys_gsi[vm_i].append(a)
+            virt_gsi[vm_i].append(b)
+
+    return phys_gsi, virt_gsi
