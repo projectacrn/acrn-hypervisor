@@ -153,10 +153,10 @@ def cpu_affinity_output(cpu_bits, i, config):
 
     if "SOS_VM" == common.VM_TYPES[i]:
         print("", file=config)
-        print("#define SOS_VM_CONFIG_CPU_AFFINITY      {0}".format(
+        print("#define SOS_VM_CONFIG_CPU_AFFINITY\t{0}".format(
             cpu_bits['cpu_map']), file=config)
     else:
-        print("#define VM{0}_CONFIG_CPU_AFFINITY         {1}".format(
+        print("#define VM{0}_CONFIG_CPU_AFFINITY\t{1}".format(
             i, cpu_bits['cpu_map']), file=config)
 
 
@@ -190,12 +190,43 @@ def pci_dev_num_per_vm_gen(config):
     for vm_i,vm_type in common.VM_TYPES.items():
         if "POST_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
            if shmem_enabled == 'y' and vm_i in shmem_num.keys():
-                print("#define VM{}_CONFIG_PCI_DEV_NUM          {}U".format(vm_i, shmem_num[vm_i]), file=config)
+                print("#define VM{}_CONFIG_PCI_DEV_NUM\t{}U".format(vm_i, shmem_num[vm_i]), file=config)
         elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             shmem_num_i = 0
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
-            print("#define VM{}_CONFIG_PCI_DEV_NUM          {}U".format(vm_i, pci_dev_num[vm_i] + shmem_num_i), file=config)
+            print("#define VM{}_CONFIG_PCI_DEV_NUM\t{}U".format(vm_i, pci_dev_num[vm_i] + shmem_num_i), file=config)
+
+    print("", file=config)
+
+
+def split_cmdline(cmd_str, config):
+
+    cmd_list = [i for i in cmd_str.strip('"').split()]
+    if not cmd_list: return
+
+    last_idx = len(cmd_list) - 1
+    for idx, cmd_arg in enumerate(cmd_list):
+        if idx == 0:
+            print('"', end="", file=config)
+        elif idx % 4 == 0:
+            print("\\\n", end="", file=config)
+
+        if idx == last_idx:
+            print('{}"'.format(cmd_arg), file=config)
+        else:
+            print('{} '.format(cmd_arg), end="", file=config)
+
+
+def boot_args_per_vm_gen(config):
+    kern_args = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "os_config", "bootargs")
+
+    for vm_i,vm_type in common.VM_TYPES.items():
+        if "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
+            if vm_i in kern_args.keys() and kern_args[vm_i]:
+                print("#define VM{}_BOOT_ARGS\t".format(vm_i), end="", file=config)
+                split_cmdline(kern_args[vm_i].strip(), config)
+                print("", file=config)
 
     print("", file=config)
 
@@ -364,6 +395,8 @@ def generate_file(config):
         print("", file=config)
 
     pci_dev_num_per_vm_gen(config)
+
+    boot_args_per_vm_gen(config)
 
     print("{}".format(MISC_CFG_END), file=config)
 
