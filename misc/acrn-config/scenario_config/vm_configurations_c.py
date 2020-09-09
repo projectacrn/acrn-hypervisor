@@ -327,11 +327,11 @@ def gen_pre_launch_vm(vm_type, vm_i, scenario_items, config):
         print("\t\t.pci_dev_num = VM{}_CONFIG_PCI_DEV_NUM,".format(vm_i), file=config)
         print("\t\t.pci_devs = vm{}_pci_devs,".format(vm_i), file=config)
 
-    if vm_i == 0 and board_cfg_lib.is_tpm_passthru():
+    if vm_i == 0:
         print("#ifdef VM0_PASSTHROUGH_TPM", file=config)
         print("\t\t.pt_tpm2 = true,", file=config)
         print("\t\t.mmiodevs[0] = {", file=config)
-        print("\t\t\t.base_gpa = 0xFED40000UL,", file=config)
+        print("\t\t\t.base_gpa = VM0_TPM_BUFFER_BASE_ADDR_GPA,", file=config)
         print("\t\t\t.base_hpa = VM0_TPM_BUFFER_BASE_ADDR,", file=config)
         print("\t\t\t.size = VM0_TPM_BUFFER_SIZE,", file=config)
         print("\t\t},", file=config)
