@@ -91,9 +91,11 @@ def generate_file(config):
     # generate HI_MMIO_START/HI_MMIO_END
     find_hi_mmio_window(config)
 
+    p2sb = common.get_leaf_tag_map_bool(common.SCENARIO_INFO_FILE, "mmio_resources", "p2sb")
     if (common.VM_TYPES.get(0) is not None and
         scenario_cfg_lib.VM_DB[common.VM_TYPES[0]]['load_type'] == "PRE_LAUNCHED_VM"
-        and board_cfg_lib.is_p2sb_passthru_possible()):
+        and board_cfg_lib.is_p2sb_passthru_possible()
+        and p2sb.get(0, False)):
         print("", file=config)
         print("#define P2SB_VGPIO_DM_ENABLED", file=config)
 
