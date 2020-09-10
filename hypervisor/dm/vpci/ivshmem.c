@@ -28,6 +28,10 @@
 #define	IVSHMEM_IV_POS_REG	0x8U
 #define	IVSHMEM_DOORBELL_REG	0xcU
 
+static struct ivshmem_shm_region mem_regions[8] = {
+	IVSHMEM_SHM_REGIONS
+};
+
 struct ivshmem_device {
 	struct pci_vdev* pcidev;
 	union {
