@@ -63,7 +63,7 @@
 #define	IVSHMEM_RESERVED_REG	0x0f
 
 #define hv_land_prefix	"hv:/"
-#define dm_land_prefix	"sos:/"
+#define dm_land_prefix	"dm:/"
 
 struct pci_ivshmem_vdev {
 	struct pci_vdev	*dev;
@@ -272,10 +272,11 @@ pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		pr_warn("the shared memory size is incorrect, %s\n", tmp);
 		goto err;
 	}
+	size *= 0x100000; /* convert to megabytes */
 	if (size < 0x200000 || size >= 0x40000000 ||
 			(size & (size - 1)) != 0) {
-		pr_warn("invalid shared memory size %u, the size range is [2M,1G) bytes and value must be a power of 2\n",
-			size);
+		pr_warn("Invalid shared memory size %u, the size range is [2MB,512MB], the unit is megabyte and the value must be a power of 2\n",
+			size/0x100000);
 		goto err;
 	}
 
