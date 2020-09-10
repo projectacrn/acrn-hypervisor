@@ -19,11 +19,10 @@
 
 /* All user defined memory regions */
 
-struct ivshmem_shm_region mem_regions[] = {
-	{
-		.name = IVSHMEM_SHM_REGION_0,
-		.size = 0x200000UL,		/* 2M */
+#define IVSHMEM_SHM_REGIONS \
+	{ \
+		.name = IVSHMEM_SHM_REGION_0,\
+		.size = 0x200000UL, /* 2MB */\
 	},
-};
 
 #endif /* IVSHMEM_CFG_H */
