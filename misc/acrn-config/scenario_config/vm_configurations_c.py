@@ -404,7 +404,7 @@ def gen_post_launch_vm(vm_type, vm_i, scenario_items, config):
     print("\t},", file=config)
 
 
-def pre_launch_definition(vm_info, config):
+def declare_pci_devs(vm_info, config):
 
     for vm_i,vm_type in common.VM_TYPES.items():
         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] not in ["PRE_LAUNCHED_VM", "POST_LAUNCHED_VM"]:
@@ -424,10 +424,19 @@ def generate_file(scenario_items, config):
     err_dic = {}
     vm_info = scenario_items['vm']
     gen_source_header(config)
+
+    pci_dev_config_flag = False
     for vm_i,pci_dev_num in vm_info.cfg_pci.pci_dev_num.items():
         if pci_dev_num >= 2:
-            pre_launch_definition(vm_info, config)
+            pci_dev_config_flag = True
             break
+    if vm_info.shmem.shmem_enabled == 'y':
+        for vm_id, shm_num in vm_info.shmem.shmem_num.items():
+            if shm_num > 0:
+                pci_dev_config_flag = True
+                break
+    if pci_dev_config_flag:
+        declare_pci_devs(vm_info, config)
 
     if (board_cfg_lib.is_matched_board(("ehl-crb-b"))
         and vm_info.pt_intx_info.phys_gsi.get(0) is not None
