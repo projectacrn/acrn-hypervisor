@@ -40,4 +40,7 @@
 #define ETHERNET_CONTROLLER_1_VBAR                    .vbar_base[0] = 0xa1100000UL, \
                                                       .vbar_base[3] = 0xa1120000UL
 
+#define IVSHMEM_DEVICE_0_VBAR                         .vbar_base[0] = 0x80000000UL, \
+                                                      .vbar_base[2] = 0x10000000cUL
+
 #endif /* VBAR_BASE_H_ */

@@ -70,7 +70,8 @@
 #define DEFAULT_PCI_MMCFG_BASE   0xe0000000UL
 
 /* PCI mmcfg bus number of MCFG */
-#define DEFAULT_PCI_MMCFG_START_BUS     0x0U
-#define DEFAULT_PCI_MMCFG_END_BUS       0xFFU
+#define DEFAULT_PCI_MMCFG_START_BUS 	 0x0U
+#define DEFAULT_PCI_MMCFG_END_BUS   	 0xFFU
+
 
 #endif /* PLATFORM_ACPI_INFO_H */

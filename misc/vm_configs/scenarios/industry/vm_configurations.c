@@ -7,6 +7,8 @@
 #include <vuart.h>
 #include <pci_dev.h>
 
+extern struct pt_intx_config vm0_pt_intx[1U];
+
 struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	{	/* VM0 */
 		CONFIG_SOS_VM,

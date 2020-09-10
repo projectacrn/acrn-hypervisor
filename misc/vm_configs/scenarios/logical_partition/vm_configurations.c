@@ -10,12 +10,17 @@
 extern struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM];
 extern struct acrn_vm_pci_dev_config vm1_pci_devs[VM1_CONFIG_PCI_DEV_NUM];
 
+extern struct pt_intx_config vm0_pt_intx[1U];
+
 struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 	{	/* VM0 */
 		CONFIG_PRE_STD_VM(1),
 		.name = "ACRN PRE-LAUNCHED VM0",
 		.cpu_affinity = VM0_CONFIG_CPU_AFFINITY,
 		.guest_flags = 0UL,
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM0_VCPU_CLOS,
+#endif
 		.memory = {
 			.start_hpa = VM0_CONFIG_MEM_START_HPA,
 			.size = VM0_CONFIG_MEM_SIZE,
@@ -26,9 +31,10 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.name = "YOCTO",
 			.kernel_type = KERNEL_BZIMAGE,
 			.kernel_mod_tag = "Linux_bzImage",
-			.bootargs = "rw rootwait root=/dev/sda3 console=ttyS0 \
-				noxsave nohpet no_timer_check ignore_loglevel \
-				log_buf_len=16M consoleblank=0 tsc=reliable "
+			.bootargs = VM0_BOOT_ARGS,
+		},
+		.acpi_config = {
+			.acpi_mod_tag = "ACPI_VM0",
 		},
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
@@ -44,12 +50,33 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		},
 		.pci_dev_num = VM0_CONFIG_PCI_DEV_NUM,
 		.pci_devs = vm0_pci_devs,
+#ifdef VM0_PASSTHROUGH_TPM
+		.pt_tpm2 = true,
+		.mmiodevs[0] = {
+			.base_gpa = VM0_TPM_BUFFER_BASE_ADDR_GPA,
+			.base_hpa = VM0_TPM_BUFFER_BASE_ADDR,
+			.size = VM0_TPM_BUFFER_SIZE,
+		},
+#endif
+#ifdef P2SB_BAR_ADDR
+		.pt_p2sb_bar = true,
+		.mmiodevs[0] = {
+			.base_gpa = P2SB_BAR_ADDR_GPA,
+			.base_hpa = P2SB_BAR_ADDR,
+			.size = P2SB_BAR_SIZE,
+		},
+#endif
+		.pt_intx_num = VM0_PT_INTX_NUM,
+		.pt_intx = &vm0_pt_intx[0U],
 	},
 	{	/* VM1 */
 		CONFIG_PRE_STD_VM(2),
 		.name = "ACRN PRE-LAUNCHED VM1",
 		.cpu_affinity = VM1_CONFIG_CPU_AFFINITY,
 		.guest_flags = 0UL,
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM1_VCPU_CLOS,
+#endif
 		.memory = {
 			.start_hpa = VM1_CONFIG_MEM_START_HPA,
 			.size = VM1_CONFIG_MEM_SIZE,
@@ -60,9 +87,10 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.name = "YOCTO",
 			.kernel_type = KERNEL_BZIMAGE,
 			.kernel_mod_tag = "Linux_bzImage",
-			.bootargs = "rw rootwait root=/dev/sda3 console=ttyS0 \
-				noxsave nohpet no_timer_check ignore_loglevel \
-				log_buf_len=16M consoleblank=0 tsc=reliable "
+			.bootargs = VM1_BOOT_ARGS,
+		},
+		.acpi_config = {
+			.acpi_mod_tag = "ACPI_VM1",
 		},
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
