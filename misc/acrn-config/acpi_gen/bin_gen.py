@@ -132,9 +132,19 @@ def check_iasl():
     :return: True if iasl installed.
     '''
     try:
-        output = subprocess.check_output(['iasl', '-h']).decode('utf8')
-        if 'Usage: iasl [Options] [Files]' in output:
-            return True
+        p_version = 'ASL+ Optimizing Compiler/Disassembler version'
+        min_version = 20190703
+        output = subprocess.check_output(['iasl', '-v']).decode('utf8')
+        if p_version in output:
+            try:
+                for line in output.split('\n'):
+                    if line.find(p_version) >= 0:
+                        version = int(line.split(p_version)[1].strip())
+                        if version >= min_version:
+                            return True
+            except:
+                pass
+            return False
         elif 'command not found' in output:
             return False
         else:
@@ -154,7 +164,7 @@ def main(args):
     else:
         DEST_ACPI_PATH = os.path.join(common.SOURCE_ROOT_DIR, args.asl, 'scenarios', scenario_name, board_type)
     if args.out is None:
-        DEST_ACPI_BIN_PATH = os.path.join(os.getcwd(), 'build', 'acpi')
+        DEST_ACPI_BIN_PATH = os.path.join(common.SOURCE_ROOT_DIR, 'build', 'hypervisor', 'acpi')
     else:
         DEST_ACPI_BIN_PATH = args.out
 
@@ -162,7 +172,7 @@ def main(args):
         shutil.rmtree(DEST_ACPI_BIN_PATH)
 
     if not check_iasl():
-        print("Please install iasl tool from https://www.acpica.org/downloads before ACPI generation.")
+        print("Please install iasl tool with version >= 20190703 from https://www.acpica.org/downloads before ACPI generation.")
         return 1
 
     for config in os.listdir(DEST_ACPI_PATH):
@@ -186,7 +196,7 @@ if __name__ == '__main__':
     parser.add_argument("--asl", default=None, help="the input folder to store the ACPI ASL code. "
                                                     "If not specified, the path for the ASL code is"
                                                     "misc/vm_configs/scenarios/[scenario]/[board]/")
-    parser.add_argument("--out", default="build/hypervisor/", help="the output folder to store the ACPI binary code. "
+    parser.add_argument("--out", default=None, help="the output folder to store the ACPI binary code. "
                                                     "If not specified, the path for the binary code is"
                                                     "build/acpi/")
 

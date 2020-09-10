@@ -22,10 +22,10 @@ ACPI_BASE = 0x7ff00000
 ACPI_RSDP_ADDR_OFFSET = 0x0         # (36 bytes fixed)
 ACPI_XSDT_ADDR_OFFSET = 0x80        # (36 bytes + 8*7 table addrs)
 ACPI_FADT_ADDR_OFFSET = 0x100       # (244 bytes)
-ACPI_MCFG_ADDR_OFFSET = 0x300       # (60 bytes)
-ACPI_MADT_ADDR_OFFSET = 0x340       # (depends on #CPUs)
-ACPI_TPM2_ADDR_OFFSET = 0x1000      # (52 bytes)
-ACPI_DSDT_ADDR_OFFSET = 0x200       # (variable - can go up to 0x100000)
+ACPI_DSDT_ADDR_OFFSET = 0x200       # (variable)
+ACPI_MCFG_ADDR_OFFSET = 0x400       # (60 bytes)
+ACPI_MADT_ADDR_OFFSET = 0x440       # (depends on #CPUs)
+ACPI_TPM2_ADDR_OFFSET = 0x1100      # (52 bytes)
 
 ACPI_RSDP_ADDR = (ACPI_BASE + ACPI_RSDP_ADDR_OFFSET)
 ACPI_XSDT_ADDR = (ACPI_BASE + ACPI_XSDT_ADDR_OFFSET)
@@ -47,3 +47,7 @@ VIOAPIC_BASE = 0xFEC00000
 
 ACPI_MADT_TYPE_LOCAL_APIC = 0
 ACPI_MADT_TYPE_LOCAL_APIC_NMI = 4
+
+TSN_DEVICE_LIST = ['8086:4ba0',
+                   '8086:4bb0',
+                   '8086:4b32']
