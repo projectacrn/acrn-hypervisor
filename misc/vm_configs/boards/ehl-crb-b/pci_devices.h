@@ -49,17 +49,21 @@
 
 #define SERIAL_BUS_CONTROLLER_10                .pbdf.bits = {.b = 0x00U, .d = 0x1FU, .f = 0x05U}
 
+#define COMMUNICATION_CONTROLLER_0              .pbdf.bits = {.b = 0x00U, .d = 0x13U, .f = 0x04U}
+
+#define COMMUNICATION_CONTROLLER_1              .pbdf.bits = {.b = 0x00U, .d = 0x13U, .f = 0x05U}
+
+#define COMMUNICATION_CONTROLLER_2              .pbdf.bits = {.b = 0x00U, .d = 0x16U, .f = 0x00U}
+
+#define COMMUNICATION_CONTROLLER_3              .pbdf.bits = {.b = 0x00U, .d = 0x19U, .f = 0x02U}
+
+#define COMMUNICATION_CONTROLLER_4              .pbdf.bits = {.b = 0x00U, .d = 0x1EU, .f = 0x00U}
+
+#define COMMUNICATION_CONTROLLER_5              .pbdf.bits = {.b = 0x00U, .d = 0x1EU, .f = 0x01U}
+
 #define USB_CONTROLLER_0                        .pbdf.bits = {.b = 0x00U, .d = 0x14U, .f = 0x00U}
 
 #define RAM_MEMORY_0                            .pbdf.bits = {.b = 0x00U, .d = 0x14U, .f = 0x02U}
-
-#define COMMUNICATION_CONTROLLER_0              .pbdf.bits = {.b = 0x00U, .d = 0x16U, .f = 0x00U}
-
-#define COMMUNICATION_CONTROLLER_1              .pbdf.bits = {.b = 0x00U, .d = 0x19U, .f = 0x02U}
-
-#define COMMUNICATION_CONTROLLER_2              .pbdf.bits = {.b = 0x00U, .d = 0x1EU, .f = 0x00U}
-
-#define COMMUNICATION_CONTROLLER_3              .pbdf.bits = {.b = 0x00U, .d = 0x1EU, .f = 0x01U}
 
 #define SATA_CONTROLLER_0                       .pbdf.bits = {.b = 0x00U, .d = 0x17U, .f = 0x00U}
 
