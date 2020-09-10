@@ -58,6 +58,4 @@
 
 #define ETHERNET_CONTROLLER_1                   .pbdf.bits = {.b = 0x04U, .d = 0x00U, .f = 0x00U}
 
-#define IVSHMEM_SHM_REGION_0                    "hv:/shm_region_0"
-
 #endif /* PCI_DEVICES_H_ */

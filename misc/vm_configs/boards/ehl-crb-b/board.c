@@ -192,8 +192,12 @@ const union pci_bdf plat_hidden_pdevs[MAX_HIDDEN_PDEVS_NUM];
 #define VMSIX_ON_MSI_DEV0	.bdf.bits = {.b = 0x00U, .d = 0x1eU, .f =0x4U},
 #define VMSIX_ON_MSI_DEV1	.bdf.bits = {.b = 0x00U, .d = 0x1dU, .f =0x1U},
 #define VMSIX_ON_MSI_DEV2	.bdf.bits = {.b = 0x00U, .d = 0x1dU, .f =0x2U},
+#define VMSIX_ON_MSI_DEV3	.bdf.bits = {.b = 0x00U, .d = 0x13U, .f =0x4U},
+#define VMSIX_ON_MSI_DEV4	.bdf.bits = {.b = 0x00U, .d = 0x13U, .f =0x5U},
 const struct vmsix_on_msi_info vmsix_on_msi_devs[MAX_VMSIX_ON_MSI_PDEVS_NUM] = {
 	{VMSIX_ON_MSI_DEV0},
 	{VMSIX_ON_MSI_DEV1},
 	{VMSIX_ON_MSI_DEV2},
+	{VMSIX_ON_MSI_DEV3},
+	{VMSIX_ON_MSI_DEV4},
 };
