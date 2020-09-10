@@ -8,6 +8,7 @@
 import os, re, argparse, shutil
 import xml.etree.ElementTree as ElementTree
 from acpi_const import *
+import board_cfg_lib
 
 def calculate_checksum8():
     '''
@@ -31,7 +32,6 @@ def gen_rsdp(dest_vm_acpi_path):
         with open(os.path.join(TEMPLATE_ACPI_PATH, rsdp_asl), 'r') as src:
             for line in src.readlines():
                 if re.search(p_xsdt_addr, line):
-                    print('ACPI_XSDT_ADDR: ', ACPI_XSDT_ADDR)
                     lines.append(re.sub(p_xsdt_addr, 'XSDT Address : {0:016X}'.format(ACPI_XSDT_ADDR), line))
                 else:
                     lines.append(line)
@@ -349,7 +349,7 @@ def gen_tpm2(dest_vm_acpi_path, passthru_devices):
         dest.writelines(lines)
 
 
-def gen_dsdt(dest_vm_acpi_path, passthru_devices):
+def gen_dsdt(dest_vm_acpi_path, passthru_devices, board_info):
     '''
     generate dsdt.asl
     :param dest_vm_acpi_path: the path to store generated ACPI asl code
@@ -358,6 +358,7 @@ def gen_dsdt(dest_vm_acpi_path, passthru_devices):
     '''
     dsdt_asl = 'dsdt.asl'
     p_dsdt_start = r'{'
+    (bdf_desc_map, bdf_vpid_map) = board_cfg_lib.get_pci_info(board_info)
     with open(os.path.join(dest_vm_acpi_path, dsdt_asl), 'w') as dest:
         lines = []
         with open(os.path.join(TEMPLATE_ACPI_PATH, dsdt_asl), 'r') as src:
@@ -365,10 +366,16 @@ def gen_dsdt(dest_vm_acpi_path, passthru_devices):
                 lines.append(line)
                 if line.startswith(p_dsdt_start):
                     for passthru_device in passthru_devices:
+                        passthru_bdf = None
+                        passthru_vpid = None
+                        for bdf in bdf_desc_map.keys():
+                            if bdf_desc_map[bdf].find(passthru_device) >= 0:
+                                passthru_bdf = bdf
+                                break
+                        if passthru_bdf is not None and passthru_bdf in bdf_vpid_map.keys():
+                            passthru_vpid = bdf_vpid_map[passthru_bdf]
                         if passthru_device in ['TPM2']:
-                            tpm2_asl = os.path.join(dest_vm_acpi_path, 'dsdt_tpm2.asl')
-                            if not os.path.isfile(tpm2_asl):
-                                tpm2_asl = os.path.join(TEMPLATE_ACPI_PATH, 'dsdt_tpm2.asl')
+                            tpm2_asl = os.path.join(TEMPLATE_ACPI_PATH, 'dsdt_tpm2.asl')
                             start = False
                             with open(tpm2_asl, 'r') as tpm2_src:
                                 for tpm2_line in tpm2_src.readlines():
@@ -380,6 +387,19 @@ def gen_dsdt(dest_vm_acpi_path, passthru_devices):
                                         continue
                                     if start:
                                         lines.append(tpm2_line)
+                        elif passthru_vpid is not None and passthru_vpid == TSN_DEVICE_LIST[1]:
+                            otn1_asl = os.path.join(TEMPLATE_ACPI_PATH, 'dsdt_tsn_otn1.asl')
+                            start = False
+                            with open(otn1_asl, 'r') as otn1_src:
+                                for otn1_line in otn1_src.readlines():
+                                    if otn1_line.startswith('{'):
+                                        start = True
+                                        continue
+                                    if otn1_line.startswith('}'):
+                                        start = False
+                                        continue
+                                    if start:
+                                        lines.append(otn1_line)
                         else:
                             pass
         dest.writelines(lines)
@@ -452,7 +472,7 @@ def main(args):
             err_dic['vm,cpu_affinity,pcpu_id'] = emsg
         gen_madt(dest_vm_acpi_path, vcpu_len)
         gen_tpm2(dest_vm_acpi_path, passthru_devices)
-        gen_dsdt(dest_vm_acpi_path, passthru_devices)
+        gen_dsdt(dest_vm_acpi_path, passthru_devices, board)
         print('generate ASL code of ACPI tables for VM {} into {}'.format(vm_id, dest_vm_acpi_path))
 
     return err_dic
