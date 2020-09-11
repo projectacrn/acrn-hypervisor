@@ -71,7 +71,6 @@
     <vm id="0">
         <vm_type desc="Specify the VM type" readonly="true">PRE_STD_VM</vm_type>
         <name desc="Specify the VM name which will be shown in hypervisor console command: vm_list.">ACRN PRE-LAUNCHED VM0</name>
-        <uuid configurable="0" desc="vm uuid">26c5e0d8-8f8a-47d8-8109-f201ebd61a5e</uuid>
         <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
             <guest_flag />
             <guest_flag />
@@ -126,7 +125,6 @@
     <vm id="1">
         <vm_type desc="Specify the VM type" readonly="true">PRE_STD_VM</vm_type>
         <name desc="vm_name">ACRN PRE-LAUNCHED VM1</name>
-        <uuid configurable="0" desc="vm uuid">dd87ce08-66f9-473d-bc58-7605837f935e</uuid>
         <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
             <guest_flag></guest_flag>
         </guest_flags>
