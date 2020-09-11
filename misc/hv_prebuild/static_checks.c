@@ -5,7 +5,6 @@
  */
 
 #include <util.h>
-#include <boot_context.h>
 #include <acrn_common.h>
 #include <vcpu.h>
 #include <mmu.h>
@@ -36,23 +35,6 @@ typedef int32_t CAT_(CTA_DummyType,__LINE__)[(expr) ? 1 : -1]
 /* Build time sanity checks to make sure hard-coded offset
 *  is matching the actual offset!
 */
-CTASSERT(BOOT_CTX_CR0_OFFSET       == offsetof(struct acrn_vcpu_regs, cr0));
-CTASSERT(BOOT_CTX_CR3_OFFSET       == offsetof(struct acrn_vcpu_regs, cr3));
-CTASSERT(BOOT_CTX_CR4_OFFSET       == offsetof(struct acrn_vcpu_regs, cr4));
-CTASSERT(BOOT_CTX_IDT_OFFSET       == offsetof(struct acrn_vcpu_regs, idt));
-CTASSERT(BOOT_CTX_GDT_OFFSET       == offsetof(struct acrn_vcpu_regs, gdt));
-CTASSERT(BOOT_CTX_LDT_SEL_OFFSET   == offsetof(struct acrn_vcpu_regs, ldt_sel));
-CTASSERT(BOOT_CTX_TR_SEL_OFFSET    == offsetof(struct acrn_vcpu_regs, tr_sel));
-CTASSERT(BOOT_CTX_CS_SEL_OFFSET    == offsetof(struct acrn_vcpu_regs, cs_sel));
-CTASSERT(BOOT_CTX_SS_SEL_OFFSET    == offsetof(struct acrn_vcpu_regs, ss_sel));
-CTASSERT(BOOT_CTX_DS_SEL_OFFSET    == offsetof(struct acrn_vcpu_regs, ds_sel));
-CTASSERT(BOOT_CTX_ES_SEL_OFFSET    == offsetof(struct acrn_vcpu_regs, es_sel));
-CTASSERT(BOOT_CTX_FS_SEL_OFFSET    == offsetof(struct acrn_vcpu_regs, fs_sel));
-CTASSERT(BOOT_CTX_GS_SEL_OFFSET    == offsetof(struct acrn_vcpu_regs, gs_sel));
-CTASSERT(BOOT_CTX_CS_AR_OFFSET     == offsetof(struct acrn_vcpu_regs, cs_ar));
-CTASSERT(BOOT_CTX_EFER_LOW_OFFSET  == offsetof(struct acrn_vcpu_regs, ia32_efer));
-CTASSERT(BOOT_CTX_EFER_HIGH_OFFSET == offsetof(struct acrn_vcpu_regs, ia32_efer) + 4);
-
 CTASSERT(CPU_CONTEXT_OFFSET_RAX    == offsetof(struct acrn_gp_regs, rax));
 CTASSERT(CPU_CONTEXT_OFFSET_RBX    == offsetof(struct acrn_gp_regs, rbx));
 CTASSERT(CPU_CONTEXT_OFFSET_RCX    == offsetof(struct acrn_gp_regs, rcx));
