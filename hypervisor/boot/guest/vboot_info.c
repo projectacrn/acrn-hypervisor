@@ -9,7 +9,6 @@
 #include <errno.h>
 #include <per_cpu.h>
 #include <irq.h>
-#include <boot_context.h>
 #include <boot.h>
 #include <pgtable.h>
 #include <zeropage.h>

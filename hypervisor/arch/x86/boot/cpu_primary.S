@@ -160,7 +160,7 @@ cpu_primary_start_32:
     test     $0x400, %eax
 
     /* jump to 64bit entry if it is already in long mode */
-    jne      cpu_primary_start_64
+    jne      primary_start_long_mode
 
     /* Disable paging */
     mov     %cr0, %ebx
@@ -219,23 +219,7 @@ jmpbuf_32:
     /* 0x0008 = HOST_GDT_RING0_CODE_SEL */
     .word 0x0008
 
-    /*
-     * Offset from the beginning of the entry section.
-     * This is to make sure that cpu_primary_start_64 is linked to a known address
-     * so that efi-stub knows where to pass control to hypervisor.
-     */
-    .org 0x200
-    .code64
-    .global     cpu_primary_start_64
-cpu_primary_start_64:
-    /* save the MULTBOOT magic number & MBI */
-    lea     boot_regs(%rip), %rax
-    movl    %edi, (%rax)
-    movl    %esi, 4(%rax)
-
-    /* Save boot context from 64bit mode */
-    call cpu_primary_save_64
-
+.code64
 primary_start_long_mode:
 
     /* Initialize temporary stack pointer, size = 0x1000 */
