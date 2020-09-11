@@ -53,7 +53,7 @@ def generate_file(vm_info, config):
     print("#include <mmu.h>", file=config)
     print("#include <page.h>", file=config)
     if vm_info.shmem.shmem_enabled == 'y':
-        print("#include <ivshmem.h>", file=config)
+        print("#include <ivshmem_cfg.h>", file=config)
     for vm_i, pci_bdf_devs_list in vm_info.cfg_pci.pci_devs.items():
         if not pci_bdf_devs_list:
             continue
