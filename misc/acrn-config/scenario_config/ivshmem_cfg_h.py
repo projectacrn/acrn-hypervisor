@@ -36,6 +36,13 @@ def write_shmem_regions(config):
             shmem_regions.append((raw_shm_splited[0].strip(), raw_shm_splited[1].strip(), raw_shm_splited[2].strip().split(':')))
             shmem_dev_num += len(raw_shm_splited[2].strip().split(':'))
 
+    if len(shmem_regions) > 0:
+        shmem_cnt = 0
+        print("", file=config)
+        for shmem_region in shmem_regions:
+            print("#define IVSHMEM_SHM_REGION_%d\t"%shmem_cnt, end="", file=config)
+            print('"{}"'.format(shmem_region[0]), file=config)
+            shmem_cnt += 1
     print("", file=config)
     print("/*", file=config)
     print(" * The IVSHMEM_SHM_SIZE is the sum of all memory regions.", file=config)
@@ -59,22 +66,27 @@ def write_shmem_regions(config):
     print("#define IVSHMEM_DEV_NUM\t\t{}UL".format(shmem_dev_num), file=config)
     print("", file=config)
     print("/* All user defined memory regions */", file=config)
-    print("\nstruct ivshmem_shm_region mem_regions[] = {", file=config)
-    shmem_cnt = 0
-    for shmem in shmem_regions:
-        print("\t{", file=config)
-        print('\t\t.name = IVSHMEM_SHM_REGION_{},'.format(shmem_cnt), file=config)
-        try:
-            if shmem[1].isdecimal():
-                int_m_size = int(int(shmem[1])/0x100000)
+    if len(shmem_regions) == 0:
+        print("#define IVSHMEM_SHM_REGIONS", file=config)
+    else:
+        print("#define IVSHMEM_SHM_REGIONS \\", file=config)
+        shmem_cnt = 0
+        for shmem in shmem_regions:
+            print("\t{ \\", file=config)
+            print('\t\t.name = IVSHMEM_SHM_REGION_{}, \\'.format(shmem_cnt), file=config)
+            try:
+                if shmem[1].isdecimal():
+                    int_m_size = int(int(shmem[1])/0x100000)
+                else:
+                    int_m_size = int(int(shmem[1], 16)/0x100000)
+            except:
+                int_m_size = 0
+            print('\t\t.size = {}UL,\t\t/* {}M */ \\'.format(shmem[1], int_m_size), file=config)
+            if shmem_cnt < len(shmem_regions) - 1:
+                print("\t}, \\", file=config)
             else:
-                int_m_size = int(int(shmem[1], 16)/0x100000)
-        except:
-            int_m_size = 0
-        print('\t\t.size = {}UL,\t\t/* {}M */'.format(shmem[1], int_m_size), file=config)
-        print("\t},", file=config)
-        shmem_cnt += 1
-    print("};", file=config)
+                print("\t},", file=config)
+            shmem_cnt += 1
     print("", file=config)
 
 
@@ -90,7 +102,6 @@ def generate_file(scenario_items, config):
     if vm_info.shmem.shmem_enabled == 'y':
         print("#include <ivshmem.h>", file=config)
         print("#include <pgtable.h>", file=config)
-        print("#include <pci_devices.h>", file=config)
         write_shmem_regions(config)
 
     print("{0}".format(IVSHMEM_END_DEFINE), file=config)

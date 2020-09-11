@@ -698,6 +698,17 @@ def vcpu_clos_check(cpus_per_vm, clos_per_vm, prime_item, item):
 def share_mem_check(shmem_regions, raw_shmem_regions, vm_type_info, prime_item, item, sub_item):
 
     shmem_names = {}
+
+    MAX_SHMEM_REGION_NUM = 8
+    shmem_region_num = 0
+    for raw_shmem_region in raw_shmem_regions:
+        if raw_shmem_region is not None and  raw_shmem_region.strip() != '':
+            shmem_region_num += 1
+    if shmem_region_num > MAX_SHMEM_REGION_NUM:
+        key = "hv,{},{},{},{}".format(prime_item, item, sub_item, MAX_SHMEM_REGION_NUM)
+        ERR_LIST[key] = "The number of hv-land shmem regions should not be greater than {}.".format(MAX_SHMEM_REGION_NUM)
+        return
+
     for shm_i, shm_list in shmem_regions.items():
         for shm_str in shm_list:
             index = -1
