@@ -101,4 +101,5 @@ struct ptcm_mem_region
 
 extern uint64_t psram_area_bottom;
 extern uint64_t psram_area_top;
+void init_psram(bool is_bsp);
 #endif	/* PTCT_H */

@@ -216,7 +216,9 @@ void init_paging(void)
 	uint32_t i;
 	uint64_t low32_max_ram = 0UL;
 	uint64_t high64_max_ram;
-	uint64_t attr_uc = (PAGE_PRESENT | PAGE_RW | PAGE_USER | PAGE_CACHE_UC | PAGE_NX);
+	//uint64_t attr_uc = (PAGE_PRESENT | PAGE_RW | PAGE_USER | PAGE_CACHE_UC | PAGE_NX);
+	/* FIXME: use IA32_EFER.NXE to fix this issue */
+	uint64_t attr_uc = (PAGE_PRESENT | PAGE_RW | PAGE_USER | PAGE_CACHE_UC);
 
 	const struct e820_entry *entry;
 	uint32_t entries_count = get_e820_entries_count();
