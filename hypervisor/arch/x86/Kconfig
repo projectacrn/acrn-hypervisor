@@ -276,6 +276,15 @@ config CDP_ENABLED
 	  prioritization of code and data fetches to the L2 or L3 cache in a
 	  software configurable manner, depending on hardware support.
 
+config PTCM_ENABLED
+	bool "Enable PTCM (Platform Tuning Configuration Manager)"
+	depends on !CDP_ENABLED
+	default y
+	help
+	  PCTM supports RTVM to make use of pSRAM to improve the performance
+	  of RT APPs. pSRAM is a block of cache, which is separated and protected by
+	  CAT and other methods. PTCM and CDP cannot be co-existing.
+
 config GPU_SBDF
 	hex "Segment, Bus, Device, and function of the GPU"
 	depends on ACPI_PARSE_ENABLED

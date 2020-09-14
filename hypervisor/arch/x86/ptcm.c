@@ -8,8 +8,8 @@
 #include <misc_cfg.h>
 #include <ptcm.h>
 
-uint64_t psram_area_bottom = PSRAM_BASE_HPA;
-uint64_t psram_area_top = PSRAM_BASE_HPA;
+uint64_t psram_area_bottom;
+uint64_t psram_area_top;
 
 #ifdef CONFIG_PTCM_ENABLED
 
@@ -31,6 +31,8 @@ static void parse_ptct(void)
 
 	entry = &acpi_ptct->ptct_first_entry;	//&acpi_ptct->ptct_entries[0];
 	pr_fatal("find PTCT base entry, in HPA %llx", entry);
+
+	psram_area_bottom = PSRAM_BASE_HPA;
 
 	while (((uint64_t)entry - (uint64_t)acpi_ptct) < acpi_ptct->header.length) {
 		switch (entry->type) {
@@ -109,40 +111,42 @@ void init_psram(bool is_bsp)
 	uint32_t magic,version;
 	int ret;
 
-	if (is_bsp) {
-		parse_ptct();
-		pr_fatal("PTCT is parsed by BSP");
-		ptct_base_entry = (struct ptct_entry*)((uint64_t)get_acpi_tbl(ACPI_SIG_PTCT) + 0x24);
-		pr_fatal("ptct_base_entry is found by BSP at %llx", ptct_base_entry);
-		magic = ((uint32_t *)ptcm_binary.address)[0];
-		version = ((uint32_t *)ptcm_binary.address)[1];
-		ptcm_command_interface_offset =*(uint64_t *)(ptcm_binary.address + 0x8);
-		pr_fatal("ptcm_bin_address:%llx", ptcm_binary.address);
-		pr_fatal("ptcm_command_interface_offset is %llx", ptcm_command_interface_offset);
-		pr_fatal("magic:%x", magic);
-		pr_fatal("version:%x", version);
+	if (get_acpi_tbl(ACPI_SIG_PTCT) != NULL) {
+		if (is_bsp) {
+			parse_ptct();
+			pr_fatal("PTCT is parsed by BSP");
+			ptct_base_entry = (struct ptct_entry*)((uint64_t)get_acpi_tbl(ACPI_SIG_PTCT) + 0x24);
+			pr_fatal("ptct_base_entry is found by BSP at %llx", ptct_base_entry);
+			magic = ((uint32_t *)ptcm_binary.address)[0];
+			version = ((uint32_t *)ptcm_binary.address)[1];
+			ptcm_command_interface_offset =*(uint64_t *)(ptcm_binary.address + 0x8);
+			pr_fatal("ptcm_bin_address:%llx", ptcm_binary.address);
+			pr_fatal("ptcm_command_interface_offset is %llx", ptcm_command_interface_offset);
+			pr_fatal("magic:%x", magic);
+			pr_fatal("version:%x", version);
 
-		ptcm_command_interface = (ptcm_command_abi)(ptcm_binary.address + ptcm_command_interface_offset);
-		pr_fatal("ptcm_command_interface is found at %llx",ptcm_command_interface);
-	} else {
-		//all AP should wait until BSP finishes parsing PTCT and finding the command interface.
-		while (!ptcm_command_interface) {
-			continue;
+			ptcm_command_interface = (ptcm_command_abi)(ptcm_binary.address + ptcm_command_interface_offset);
+			pr_fatal("ptcm_command_interface is found at %llx",ptcm_command_interface);
+		} else {
+			//all AP should wait until BSP finishes parsing PTCT and finding the command interface.
+			while (!ptcm_command_interface) {
+				continue;
+			}
 		}
-	}
 
-	ret = ptcm_command_interface(PTCM_CMD_INIT_PSRAM, (void *)ptct_base_entry);
-	pr_fatal("PTCM initialization for core %d with return code %d!!!!!!!!!!!!!", get_pcpu_id(), ret);
-	/* TODO: to handle the return errno gracefully */
-	ASSERT(ret == PTCM_STATUS_SUCCESS);
+		ret = ptcm_command_interface(PTCM_CMD_INIT_PSRAM, (void *)ptct_base_entry);
+		pr_fatal("PTCM initialization for core %d with return code %d!!!!!!!!!!!!!", get_pcpu_id(), ret);
+		/* TODO: to handle the return errno gracefully */
+		ASSERT(ret == PTCM_STATUS_SUCCESS);
 
-	/* wait until all cores finishes pSRAM initialization*/
-	if (is_bsp){
-		psram_is_initialized = true;
-		pr_fatal("BSP pSRAM has been initialized\n");
-	} else{
-		while (psram_is_initialized) {
-			continue;
+		/* wait until all cores finishes pSRAM initialization*/
+		if (is_bsp){
+			psram_is_initialized = true;
+			pr_fatal("BSP pSRAM has been initialized\n");
+		} else{
+			while (psram_is_initialized) {
+				continue;
+			}
 		}
 	}
 }
