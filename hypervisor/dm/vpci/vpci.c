@@ -274,6 +274,7 @@ void deinit_vpci(struct acrn_vm *vm)
 	}
 
 	ptdev_release_all_entries(vm);
+	(void)memset(&vm->vpci, 0U, sizeof(struct acrn_vpci));
 
 	/* Free iommu */
 	destroy_iommu_domain(vm->iommu);
