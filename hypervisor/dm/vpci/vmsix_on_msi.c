@@ -11,6 +11,7 @@
 #include <vtd.h>
 #include <board.h>
 #include "vpci_priv.h"
+#include <logmsg.h>
 
 #define PER_VECTOR_MASK_CAP 0x0100U
 
@@ -112,6 +113,19 @@ void init_vmsix_on_msi(struct pci_vdev *vdev)
 			vdev->vbars[i].mask = 0xFFFFF000U & PCI_BASE_ADDRESS_MEM_MASK;
 			/* fixed for memory, 32bit, non-prefetchable */
 			vdev->vbars[i].fixed = 0U;
+
+			if (vdev->vbars[i].base_gpa == 0UL) {
+				if (is_prelaunched_vm(vpci2vm(vdev->vpci))) {
+					/*
+					 * we have predefined e820 table for pre-launched VM,
+					 * 0x80000000UL is the base addr of 32bit PCI hole
+					 */
+					vdev->vbars[i].base_gpa = 0x80000000UL;
+					pr_acrnlog("%s: vm_id = %d, vbdf = %d:%d.%d",
+						__func__, vpci2vm(vdev->vpci)->vm_id,
+						vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f);
+				}
+			}
 
 			/* About MSI-x bar GPA:
 			 * - For Service VM: when first time init, it is programmed as 0, then OS will program
