@@ -107,6 +107,10 @@ struct shell {
 #define SHELL_CMD_WRMSR_HELP		"Write value (in hexadecimal) to the MSR at msr_index (in hexadecimal) for CPU"\
 					" ID pcpu_id"
 
+#define SHELL_CMD_INJ_GUEST_EXP		"inj_guest_exp"
+#define SHELL_CMD_INJ_GUEST_EXP_PARAM	"<vm id, vcpu id, exception_num>"
+#define SHELL_CMD_INJ_GUEST_EXP_HELP	"Inject an exception to a specific vCPU"
+
 #define SHELL_CMD_VMEXIT		"vmexit"
 #define SHELL_CMD_VMEXIT_PARAM		NULL
 #define SHELL_CMD_VMEXIT_HELP	"show vmexit profiling, use: vmexit [clear | enable | disable] enabled by default"

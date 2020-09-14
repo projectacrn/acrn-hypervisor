@@ -329,6 +329,11 @@ struct guest_mem_dump {
 	uint64_t len;
 };
 
+struct vcpu_inject_exception {
+	struct acrn_vcpu *vcpu;
+	uint32_t exception;
+};
+
 static inline bool is_vcpu_bsp(const struct acrn_vcpu *vcpu)
 {
 	return (vcpu->vcpu_id == BSP_CPU_ID);

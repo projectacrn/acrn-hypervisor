@@ -21,6 +21,7 @@
 #include <version.h>
 #include <shell.h>
 #include <asm/guest/vmcs.h>
+#include <asm/guest/virq.h>
 #include <asm/host_pm.h>
 #include <asm/tsc.h>
 
@@ -53,6 +54,7 @@ static int32_t shell_cpuid(int32_t argc, char **argv);
 static int32_t shell_reboot(int32_t argc, char **argv);
 static int32_t shell_rdmsr(int32_t argc, char **argv);
 static int32_t shell_wrmsr(int32_t argc, char **argv);
+static int32_t shell_vcpu_inject_exception(int32_t argc, char **argv);
 static int32_t shell_show_vmexit_profile(__unused int argc, __unused char **argv);
 
 static struct shell_cmd shell_cmds[] = {
@@ -97,6 +99,12 @@ static struct shell_cmd shell_cmds[] = {
 		.cmd_param	= SHELL_CMD_DUMP_GUEST_MEM_PARAM,
 		.help_str	= SHELL_CMD_DUMP_GUEST_MEM_HELP,
 		.fcn		= shell_dump_guest_mem,
+	},
+	{
+		.str		= SHELL_CMD_INJ_GUEST_EXP,
+		.cmd_param	= SHELL_CMD_INJ_GUEST_EXP_PARAM,
+		.help_str	= SHELL_CMD_INJ_GUEST_EXP_HELP,
+		.fcn		= shell_vcpu_inject_exception,
 	},
 	{
 		.str		= SHELL_CMD_VM_CONSOLE,
@@ -1453,6 +1461,84 @@ static int32_t shell_wrmsr(int32_t argc, char **argv)
 	}
 
 	return ret;
+}
+
+static void inject_vcpu_exception(void *data)
+{
+	struct vcpu_inject_exception *inject = data;
+	struct acrn_vcpu *vcpu = inject->vcpu;
+	uint32_t exception = inject->exception;
+
+	(void)vcpu_queue_exception(vcpu, exception, 0);
+
+	return;
+}
+
+static int32_t shell_vcpu_inject_exception(int32_t argc, char **argv)
+{
+	char temp_str[MAX_STR_SIZE];
+	int32_t status = 0;
+	uint16_t vm_id;
+	uint16_t vcpu_id, pcpu_id;
+	uint32_t exception;
+	struct acrn_vm *vm;
+	struct acrn_vcpu *vcpu;
+	uint64_t mask = 0UL;
+	struct vcpu_inject_exception inject;
+
+	/* User input invalidation */
+	if (argc != 4) {
+		shell_puts("Please enter cmd with <vm_id, vcpu_id, exception_num>\r\n");
+		status = -EINVAL;
+		goto out;
+	}
+
+	status = strtol_deci(argv[1]);
+	if (status < 0) {
+		goto out;
+	}
+	vm_id = sanitize_vmid((uint16_t)status);
+	vcpu_id = (uint16_t)strtol_deci(argv[2]);
+	exception = (uint32_t)strtol_deci(argv[3]);
+
+	vm = get_vm_from_vmid(vm_id);
+	if (is_poweroff_vm(vm)) {
+		shell_puts("No vm found in the input <vm_id, vcpu_id>\r\n");
+		status = -EINVAL;
+		goto out;
+	}
+
+	if (vcpu_id >= vm->hw.created_vcpus) {
+		shell_puts("vcpu id is out of range\r\n");
+		status = -EINVAL;
+		goto out;
+	}
+
+	vcpu = vcpu_from_vid(vm, vcpu_id);
+	if (vcpu->state == VCPU_OFFLINE) {
+		shell_puts("vcpu is offline\r\n");
+		status = -EINVAL;
+		goto out;
+	}
+
+	if (exception > 31U) {
+		shell_puts("invalid exception number\r\n");
+		status = -EINVAL;
+		goto out;
+	}
+
+	pcpu_id = pcpuid_from_vcpu(vcpu);
+	inject.vcpu = vcpu;
+	inject.exception = exception;
+	bitmap_set_nolock(pcpu_id, &mask);
+	smp_call_function(mask, inject_vcpu_exception, &inject);
+	snprintf(temp_str, MAX_STR_SIZE, "Exception %02x is injected to vm(0x%d): vcpu(0x%d)\r\n",
+		exception, vm->vm_id, vcpu->vcpu_id);
+	shell_puts(temp_str);
+	status = 0;
+
+out:
+	return status;
 }
 
 static void get_vmexit_profile_per_pcpu(char *str_arg, size_t str_max)
