@@ -591,13 +591,9 @@ def set_shm_regions(launch_item_values, scenario_info):
                         shm_splited = shmem_region.split(',')
                         name = shm_splited[0].strip()
                         size = shm_splited[1].strip()
-                        if size.isdecimal():
-                            int_size = int(size)
-                        else:
-                            int_size = int(size, 16)
                         vm_id_list = [x.strip() for x in shm_splited[2].split(':')]
                         if str(vm_id) in vm_id_list:
-                            launch_item_values[shm_region_key].append(','.join([name, str(int_size)]))
+                            launch_item_values[shm_region_key].append(','.join([name, size]))
                     except Exception as e:
                         print(e)
 
@@ -609,9 +605,7 @@ def check_shm_regions(launch_shm_regions, scenario_info):
     for uos_id, shm_regions in launch_shm_regions.items():
         shm_region_key = 'uos:id={},shm_regions,shm_region'.format(uos_id)
         for shm_region in shm_regions:
-            print(shm_region)
-            print(launch_item_values[shm_region_key])
             if shm_region_key not in launch_item_values.keys() or shm_region not in launch_item_values[shm_region_key]:
                 ERR_LIST[shm_region_key] = "shm {} should be configured in scenario setting and the size should be decimal" \
-                                           " and spaces should not exist.".format(shm_region)
+                                           "in MB and spaces should not exist.".format(shm_region)
                 return
