@@ -724,7 +724,7 @@ def share_mem_check(shmem_regions, raw_shmem_regions, vm_type_info, prime_item, 
             try:
                 curr_vm_id = int(shm_i)
             except:
-                ERR_LIST[key] = "share memory region should be configured with format like this: hv:/shm_region_0, 0x200000, 0:2"
+                ERR_LIST[key] = "share memory region should be configured with format like this: hv:/shm_region_0, 2, 0:2"
                 return
             name = shm_str_splited[0].strip()
             size = shm_str_splited[1].strip()
@@ -759,12 +759,9 @@ def share_mem_check(shmem_regions, raw_shmem_regions, vm_type_info, prime_item, 
 
             int_size = 0
             try:
-                if size.isdecimal():
-                    int_size = int(size)
-                else:
-                    int_size = int(size, 16)
+                int_size = int(size) * 0x100000
             except:
-                ERR_LIST[key] = "The size of share Memory region should be decimal or hexadecimal."
+                ERR_LIST[key] = "The size of share Memory region should be decimal."
                 return
             if int_size < 0x200000 or int_size > 0x20000000:
                 ERR_LIST[key] = "The size of share Memory region should be in [2MB, 512MB]."
