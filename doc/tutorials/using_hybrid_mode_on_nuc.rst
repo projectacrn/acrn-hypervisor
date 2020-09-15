@@ -29,7 +29,7 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
 #. Append the following configuration in the ``/etc/grub.d/40_custom`` file:
 
    .. code-block:: bash
-      :emphasize-lines: 10,11
+      :emphasize-lines: 10,11,12
 
       menuentry 'ACRN hypervisor Hybrid Scenario' --id ACRN_Hybrid --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-e23c76ae-b06d-4a6e-ad42-46b8eedfd7d3' {
          recordfail
@@ -42,6 +42,7 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
          multiboot2 /boot/acrn.bin
          module2 /boot/zephyr.bin xxxxxx
          module2 /boot/bzImage yyyyyy
+         module2 /boot/ACPI_VM0.bin ACPI_VM0
 
       }
 
@@ -55,6 +56,8 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
       file. The kernel command line arguments used to boot the Service VM are
       located in the header file ``misc/vm_configs/scenarios/hybrid/vm_configurations.h``
       and are configured by the `SOS_VM_BOOTARGS` macro.
+      The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0 (Zephyr).
+      The parameter ``ACPI_VM0`` is VM0's ACPI tag and should not be modified.
 
 #. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu
    visible when booting:
