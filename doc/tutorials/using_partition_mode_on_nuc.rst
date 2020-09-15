@@ -144,7 +144,7 @@ Update ACRN hypervisor image
       $ cd acrn-hypervisor
       $ git checkout v2.1
 
-   Build the ACRN hypervisor with default xmls:
+   Build the ACRN hypervisor and ACPI binaries for pre-launched VMs with default xmls:
 
    .. code-block:: none
 
@@ -152,6 +152,7 @@ Update ACRN hypervisor image
 
    .. note::
       The ``acrn.bin`` will be generated to ``./build/hypervisor/acrn.bin``.
+      The ``ACPI_VM0.bin`` and ``ACPI_VM1.bin`` will be generated to ``./build/hypervisor/acpi/``.
 
 #. Check the Ubuntu boot loader name.
 
@@ -168,13 +169,13 @@ Update ACRN hypervisor image
 #. Check or update the BDF information of the PCI devices for each
    pre-launched VM; check it in the ``hypervisor/arch/x86/configs/whl-ipc-i5/pci_devices.h``.
 
-#. Copy the artifact ``acrn.bin`` to the ``/boot`` directory:
+#. Copy the artifact ``acrn.bin``, ``ACPI_VM0.bin``, and ``ACPI_VM1.bin`` to the ``/boot`` directory:
 
-   #. Copy ``acrn.bin`` to a removable disk.
+   #. Copy ``acrn.bin``, ``ACPI_VM1.bin`` and ``ACPI_VM0.bin`` to a removable disk.
 
    #. Plug the removable disk into the NUC's USB port.
 
-   #. Copy the ``acrn.bin`` from the removable disk to ``/boot``
+   #. Copy the ``acrn.bin``, ``ACPI_VM0.bin``, and ``ACPI_VM1.bin`` from the removable disk to ``/boot``
       directory.
 
 Update Ubuntu GRUB to boot hypervisor and load kernel image
@@ -196,6 +197,8 @@ Update Ubuntu GRUB to boot hypervisor and load kernel image
               echo 'Loading hypervisor logical partition scenario ...'
               multiboot2  /boot/acrn.bin root=PARTUUID="e515916d-aac4-4439-aaa0-33231a9f4d83"
               module2 /boot/bzImage XXXXXX
+              module2 /boot/ACPI_VM0.bin ACPI_VM0
+              module2 /boot/ACPI_VM1.bin ACPI_VM1
       }
 
    .. note::
@@ -206,6 +209,10 @@ Update Ubuntu GRUB to boot hypervisor and load kernel image
       and is configured by ``VMx_CONFIG_OS_BOOTARG_*`` MACROs (where x is the VM id number and ``*`` are arguments).
       The multiboot2 module param ``XXXXXX`` is the bzImage tag and must exactly match the ``kernel_mod_tag``
       configured in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.c`` file.
+      The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0, the parameter ``ACPI_VM0`` is
+      VM0's ACPI tag and should not be modified.
+      The module ``/boot/ACPI_VM1.bin`` is the binary of ACPI tables for pre-launched VM1 the parameter ``ACPI_VM1`` is
+      VM1's ACPI tag and should not be modified.
 
 #. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu
    visible when booting:
