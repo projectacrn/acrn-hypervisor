@@ -94,9 +94,6 @@ Passthrough the GPU to Guest
 
 4. Run ``launch_win.sh``.
 
-.. note:: If you want to passthrough the GPU to a Clear Linux User VM, the
-   steps are the same as above except your script.
-
 Enable the GVT-d GOP driver
 ***************************
 

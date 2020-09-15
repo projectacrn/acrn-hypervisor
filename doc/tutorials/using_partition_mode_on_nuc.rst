@@ -248,10 +248,10 @@ Logical partition scenario startup checking
    properly:
 
    #. Use the ``vm_console 0`` to switch to VM0's console.
-   #. The VM0's Clear Linux OS should boot and log in.
+   #. The VM0's OS should boot and log in.
    #. Use a :kbd:`Ctrl` + :kbd:`Space` to return to the ACRN hypervisor shell.
    #. Use the ``vm_console 1`` to switch to VM1's console.
-   #. The VM1's Clear Linux OS should boot and log in.
+   #. The VM1's OS should boot and log in.
 
 Refer to the :ref:`ACRN hypervisor shell user guide <acrnshell>`
 for more information about available commands.
