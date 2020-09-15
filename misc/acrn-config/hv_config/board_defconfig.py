@@ -93,10 +93,7 @@ def get_memory(hv_info, config):
                     and raw_shm_splited[1].strip() != '' and len(raw_shm_splited[2].strip().split(':')) >= 1:
                 try:
                     size = raw_shm_splited[1].strip()
-                    if size.isdecimal():
-                        int_size = int(size)
-                    else:
-                        int_size = int(size, 16)
+                    int_size = int(size) * 0x100000
                     total_shm_size += int_size
                 except Exception as e:
                     print(e)

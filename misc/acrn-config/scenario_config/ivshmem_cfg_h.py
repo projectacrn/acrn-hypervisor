@@ -54,10 +54,7 @@ def write_shmem_regions(config):
             int_size = 0
             size = shmem_region[1]
             try:
-                if size.isdecimal():
-                    int_size = int(size)
-                else:
-                    int_size = int(size, 16)
+                int_size = int(size) * 0x100000
             except Exception as e:
                 print('the format of shm size error: ', str(e))
             total_shm_size += int_size
@@ -75,13 +72,10 @@ def write_shmem_regions(config):
             print("\t{ \\", file=config)
             print('\t\t.name = IVSHMEM_SHM_REGION_{}, \\'.format(shmem_cnt), file=config)
             try:
-                if shmem[1].isdecimal():
-                    int_m_size = int(int(shmem[1])/0x100000)
-                else:
-                    int_m_size = int(int(shmem[1], 16)/0x100000)
+                int_size = int(shmem[1]) * 0x100000
             except:
-                int_m_size = 0
-            print('\t\t.size = {}UL,\t\t/* {}M */ \\'.format(shmem[1], int_m_size), file=config)
+                int_size = 0
+            print('\t\t.size = {}UL,\t\t/* {}M */ \\'.format(hex(int_size), shmem[1]), file=config)
             if shmem_cnt < len(shmem_regions) - 1:
                 print("\t}, \\", file=config)
             else:
