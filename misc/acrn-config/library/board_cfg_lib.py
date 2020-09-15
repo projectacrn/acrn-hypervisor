@@ -34,7 +34,7 @@ KNOWN_HIDDEN_PDEVS_BOARD_DB = {
 TSN_DEVS = ["8086:4b30", "8086:4b31", "8086:4b32", "8086:4ba0", "8086:4ba1", "8086:4ba2",
             "8086:4bb0", "8086:4bb1", "8086:4bb2", "8086:a0ac", "8086:43ac", "8086:43a2"]
 GPIO_DEVS = ["8086:4b88", "8086:4b89"]
-TPM_PASSTHRU_BOARD = ['whl-ipc-i5', 'whl-ipc-i7', 'tgl-rvp', 'ehl-crb-b']
+TPM_PASSTHRU_BOARD = ['whl-ipc-i5', 'whl-ipc-i7', 'tgl-rvp']
 
 KNOWN_CAPS_PCI_DEVS_DB = {
     "VMSIX":TSN_DEVS + GPIO_DEVS,
@@ -496,10 +496,10 @@ def parse_mem():
         name = shm_splited[0].strip()
         size = shm_splited[1].strip()
 
-        if size.isdecimal():
-            int_size = int(size)
-        else:
-            int_size = int(size, 16)
+        try:
+            int_size = int(size) * 0x100000
+        except:
+            int_size = 0
         ram_range = get_ram_range()
         tmp_bar_dict  = {}
         hv_start_offset = 0x80000000
