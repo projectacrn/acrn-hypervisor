@@ -25,7 +25,7 @@
         <MCE_ON_PSC_DISABLED desc="Force to disable software workaround for Machine Check Error on Page Size Change.">n</MCE_ON_PSC_DISABLED>
         <IVSHMEM desc="IVSHMEM configuration">
             <IVSHMEM_ENABLED desc="Enable Share Memory between VMs by IVSHMEM.">y</IVSHMEM_ENABLED>
-            <IVSHMEM_REGION desc="the name, size, colon separated IDs of communication VMs of share memory region, separated by comma like this: hv:/shm_region_0, 0x200000, 0:2">hv:/shm_region_0, 0x200000, 0:2</IVSHMEM_REGION>
+            <IVSHMEM_REGION desc="the shared memory region name (starting with hv:/, size (in MB), and IDs of all VMs (separated by a colon) sharing this region, for example hv:/sharename,2,0:2">hv:/shm_region_0, 2, 0:2</IVSHMEM_REGION>
         </IVSHMEM>
     </FEATURES>
 
