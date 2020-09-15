@@ -12,7 +12,7 @@
 		<pcpu_id></pcpu_id>
 	</cpu_affinity>
 	<shm_regions desc="List of shared memrory regions for inter-VM communication.">
-		<shm_region desc="configure the shm regions for current VM, formated as hv:/shm_region_0,2097152"></shm_region>
+		<shm_region desc="configure the shm regions for current VM, input format: hv:/&lt;shm name&gt;,&lt;shm size in MB&gt;"></shm_region>
 	</shm_regions>
 	<passthrough_devices>
 		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
@@ -50,7 +50,7 @@
 		<pcpu_id></pcpu_id>
 	</cpu_affinity>
 	<shm_regions desc="List of shared memrory regions for inter-VM communication.">
-		<shm_region desc="configure the shm regions for current VM, formated as hv:/shm_region_0,2097152"></shm_region>
+		<shm_region desc="configure the shm regions for current VM, input format: hv:/&lt;shm name&gt;,&lt;shm size in MB&gt;"></shm_region>
 	</shm_regions>
 	<passthrough_devices>
 		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
@@ -87,7 +87,7 @@
             <pcpu_id />
         </cpu_affinity>
         <shm_regions desc="List of shared memrory regions for inter-VM communication.">
-            <shm_region desc="configure the shm regions for current VM, formated as hv:/shm_region_0,2097152"></shm_region>
+            <shm_region desc="configure the shm regions for current VM, input format: hv:/&lt;shm name&gt;,&lt;shm size in MB&gt;"></shm_region>
         </shm_regions>
         <passthrough_devices>
             <usb_xdci desc="vm usb_xdci device" />
@@ -123,7 +123,7 @@
             <pcpu_id />
         </cpu_affinity>
         <shm_regions desc="List of shared memrory regions for inter-VM communication.">
-            <shm_region desc="configure the shm regions for current VM, formated as hv:/shm_region_0,2097152"></shm_region>
+            <shm_region desc="configure the shm regions for current VM, input format: hv:/&lt;shm name&gt;,&lt;shm size in MB&gt;"></shm_region>
         </shm_regions>
         <passthrough_devices>
             <usb_xdci desc="vm usb_xdci device" />
@@ -159,7 +159,7 @@
             <pcpu_id />
         </cpu_affinity>
         <shm_regions desc="List of shared memrory regions for inter-VM communication.">
-		    <shm_region desc="configure the shm regions for current VM, formated as hv:/shm_region_0,2097152"></shm_region>
+		    <shm_region desc="configure the shm regions for current VM, input format: hv:/&lt;shm name&gt;,&lt;shm size in MB&gt;"></shm_region>
 	    </shm_regions>
         <passthrough_devices>
             <usb_xdci desc="vm usb_xdci device" />
@@ -195,7 +195,7 @@
             <pcpu_id />
         </cpu_affinity>
         <shm_regions desc="List of shared memrory regions for inter-VM communication.">
-            <shm_region desc="configure the shm regions for current VM, formated as hv:/shm_region_0,2097152"></shm_region>
+            <shm_region desc="configure the shm regions for current VM, input format: hv:/&lt;shm name&gt;,&lt;shm size in MB&gt;"></shm_region>
         </shm_regions>
         <passthrough_devices>
             <usb_xdci desc="vm usb_xdci device" />
