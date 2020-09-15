@@ -56,7 +56,7 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
       file. The kernel command line arguments used to boot the Service VM are
       located in the header file ``misc/vm_configs/scenarios/hybrid/vm_configurations.h``
       and are configured by the `SOS_VM_BOOTARGS` macro.
-      The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0(Zephyr).
+      The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0 (Zephyr).
       The parameter ``ACPI_VM0`` is VM0's ACPI tag and should not be modified.
 
 #. Modify the ``/etc/default/grub`` file as follows to make the GRUB menu
