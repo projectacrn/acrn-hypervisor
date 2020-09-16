@@ -168,6 +168,24 @@ Additional scenario XML elements:
   Specify whether force to disable software workaround for Machine Check
   Error on Page Size Change is enabled.
 
+``IVSHMEM`` (a child node of ``FEATURE``):
+  Specify the inter-VM shared memory configuration
+
+``IVSHMEM_ENABLED`` (a child node of ``FEATURE/IVSHMEM``):
+  Specify if the inter-VM shared memory feature is enabled.
+
+``IVSHMEM_REGION`` (a child node of ``FEATURE/IVSHMEM``):
+  Specify a comma-separated list of the inter-VM shared memory region name,
+  size, and VM IDs that may communicate using this shared region.
+
+    Prefix the region ``name`` with ``hv:/`` (for an hv-land solution).
+    (See :ref:`ivshmem-hld` for details.)
+    Specify the region ``size`` in MB, and a power of 2 (e.g., 2, 4, 8, 16)
+    up to 512.
+    Specify the two VM IDs that may use this shared memory area,
+    separated by a ``:``, for example, ``0:2`` (to share this area between
+    VMs 0 and 2), or ``0:1:2`` (to let VMs 0, 1, and 2 share this area).
+
 ``STACK_SIZE`` (a child node of ``MEMORY``):
   Specify the size of stacks used by physical cores. Each core uses one stack
   for normal operations and another three for specific exceptions.
@@ -313,6 +331,18 @@ Additional scenario XML elements:
   PCI devices list of the VM; it is hard-coded for each scenario so it
   is not configurable for now.
 
+``mmio_resources``:
+  MMIO resources to passthrough.
+
+``TPM2`` (a child node of ``mmio_resources``):
+  TPM2 device to passthrough.
+
+``p2sb`` (a child node of ``mmio_resources``):
+  Exposing the P2SB (Primary-to-Sideband) bridge to the pre-launched VM.
+
+``pt_intx``:
+  Forward specific IOAPIC interrupts (with interrupt line remapping) to the pre-launched VM.
+
 ``board_private``:
   Stores scenario-relevant board configuration.
 
@@ -372,6 +402,13 @@ current scenario has:
   USB xHCI mediator configuration. Input format:
   ``bus#-port#[:bus#-port#: ...]``, e.g.: ``1-2:2-4``.
   Refer to :ref:`usb_virtualization` for details.
+
+``shm_regions``:
+  List of shared memory regions for inter-VM communication.
+
+``shm_region`` (a child node of ``shm_regions``):
+  configure the shm regions for current VM, input format: hv:/<;shm name>;,
+  <;shm size in MB>;. Refer to :ref:`ivshmem-hld` for details.
 
 ``passthrough_devices``:
   Select the passthrough device from the lspci list. Currently we support:
