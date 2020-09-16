@@ -10,7 +10,7 @@
 #include <vbar_base.h>
 #include <mmu.h>
 #include <page.h>
-#include <ivshmem.h>
+#include <ivshmem_cfg.h>
 
 /*
  * TODO: remove PTDEV macro and add DEV_PRIVINFO macro to initialize pbdf for

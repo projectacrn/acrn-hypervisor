@@ -8,7 +8,8 @@
 
 #include <ivshmem.h>
 #include <pgtable.h>
-#include <pci_devices.h>
+
+#define IVSHMEM_SHM_REGION_0	"hv:/shm_region_0"
 
 /*
  * The IVSHMEM_SHM_SIZE is the sum of all memory regions.
@@ -18,11 +19,10 @@
 #define IVSHMEM_DEV_NUM		2UL
 
 /* All user defined memory regions */
-
 #define IVSHMEM_SHM_REGIONS \
 	{ \
-		.name = IVSHMEM_SHM_REGION_0,\
-		.size = 0x200000UL, /* 2MB */\
+		.name = IVSHMEM_SHM_REGION_0, \
+		.size = 0x200000UL,		/* 2M */ \
 	},
 
 #endif /* IVSHMEM_CFG_H */
