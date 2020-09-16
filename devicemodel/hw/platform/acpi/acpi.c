@@ -50,6 +50,8 @@
  *         DSDT  ->   0xf2800 (variable - can go up to 0x100000)
  */
 
+#include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -69,6 +71,9 @@
 #include "vmmapi.h"
 #include "hpet.h"
 #include "log.h"
+#include "ptct.h"
+#include "vhm_ioctl_defs.h"
+#include "vmmapi.h"
 
 /*
  * Define the base address of the ACPI tables, and the offsets to
@@ -1084,6 +1089,16 @@ int create_and_inject_vptct(struct vmctx *ctx)
 	size_t native_ptct_len;
 	size_t vptct_len;
 	uint8_t buf[PTCT_BUF_LEN] = {0};
+	struct vm_memmap memmap = {
+		.type = VM_MMIO,
+		.gpa = PSRAM_BASE_GPA,
+		.hpa = PSRAM_BASE_HPA,
+		/* TODO: the .len should be set as the psram_size passed-in via the DM argument "psram <psram_size>"*/
+		.len = 0x208000UL,
+		.prot = PROT_ALL
+	};
+
+
 
 	native_ptct_fd = open(PTCT_NATIVE_FILE_PATH_IN_SOS, O_RDONLY);
 	if (native_ptct_fd < 0){
@@ -1107,7 +1122,9 @@ int create_and_inject_vptct(struct vmctx *ctx)
 	vptct_len = native_ptct_len;
 
 	memcpy(vm_map_gpa(ctx, ACPI_BASE + PTCT_OFFSET, vptct_len), buf, vptct_len);
-	return 0;
+
+	ioctl(ctx->fd, IC_UNSET_MEMSEG, &memmap);
+	return ioctl(ctx->fd, IC_SET_MEMSEG, &memmap);
 };
 
 void
