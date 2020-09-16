@@ -268,6 +268,9 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 			removed++;
 		}
 	} else {
+		/* Fix-Me: e820[LOWRAM_E820_ENTRY+2] can be used as RAM 
+			only when ctx->lowmem is higher than PSRAM area.
+			also, the length should be adjusted to ctx->lowmem-baseaddr */
 		e820[LOWRAM_E820_ENTRY+2].type = E820_TYPE_RAM;
 	}
 
