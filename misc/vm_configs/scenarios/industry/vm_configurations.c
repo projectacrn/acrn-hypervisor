@@ -78,4 +78,83 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.t_vuart.vuart_id = 1U,
 		},
 	},
+	{	/* VM3 */
+		CONFIG_POST_STD_VM(2),
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM3_VCPU_CLOS,
+#endif
+		.cpu_affinity = VM3_CONFIG_CPU_AFFINITY,
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		},
+	},
+	{	/* VM4 */
+		CONFIG_POST_STD_VM(3),
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM4_VCPU_CLOS,
+#endif
+		.cpu_affinity = VM4_CONFIG_CPU_AFFINITY,
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		},
+	},
+	{	/* VM5 */
+		CONFIG_POST_STD_VM(4),
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM5_VCPU_CLOS,
+#endif
+		.cpu_affinity = VM5_CONFIG_CPU_AFFINITY,
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		},
+	},
+	{	/* VM6 */
+		CONFIG_POST_STD_VM(5),
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM6_VCPU_CLOS,
+#endif
+		.cpu_affinity = VM6_CONFIG_CPU_AFFINITY,
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		},
+	},
+	{	/* VM7 */
+		CONFIG_KATA_VM(1),
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM7_VCPU_CLOS,
+#endif
+		.cpu_affinity = VM7_CONFIG_CPU_AFFINITY,
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		},
+	},
 };
