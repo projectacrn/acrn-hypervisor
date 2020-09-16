@@ -34,6 +34,7 @@
 #include "sw_load.h"
 #include "dm.h"
 #include "pci_core.h"
+#include "ptct.h"
 
 int with_bootargs;
 static char bootargs[BOOT_ARG_LEN];
@@ -77,8 +78,14 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 
 	{	/* 1MB to lowmem */
 		.baseaddr = 0x100000,
-		.length   = 0x48f00000,
+		.length   = 0x3ff00000,
 		.type     = E820_TYPE_RAM
+	},
+
+	{	/* PTCT */
+		.baseaddr = PSRAM_BASE_GPA,
+		.length   = PSRAM_MAX_SIZE,
+		.type     = E820_TYPE_RESERVED
 	},
 
 	{	/* lowmem to lowmem_limit */
@@ -245,19 +252,23 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 	uint32_t removed = 0, k;
 
 	memcpy(e820, e820_default_entries, sizeof(e820_default_entries));
-	e820[LOWRAM_E820_ENTRY].length = ctx->lowmem -
-			e820[LOWRAM_E820_ENTRY].baseaddr;
+	if (!pt_ptct) {
+		e820[LOWRAM_E820_ENTRY].length = ctx->lowmem -
+				e820[LOWRAM_E820_ENTRY].baseaddr;
 
-	/* remove [lowmem, lowmem_limit) if it's empty */
-	if (ctx->lowmem_limit > ctx->lowmem) {
-		e820[LOWRAM_E820_ENTRY+1].baseaddr = ctx->lowmem;
-		e820[LOWRAM_E820_ENTRY+1].length =
-			ctx->lowmem_limit - ctx->lowmem;
+		/* remove [lowmem, lowmem_limit) if it's empty */
+		if (ctx->lowmem_limit > ctx->lowmem) {
+			e820[LOWRAM_E820_ENTRY+1].baseaddr = ctx->lowmem;
+			e820[LOWRAM_E820_ENTRY+1].length =
+				ctx->lowmem_limit - ctx->lowmem;
+		} else {
+			memmove(&e820[LOWRAM_E820_ENTRY+1], &e820[LOWRAM_E820_ENTRY+2],
+					sizeof(e820[LOWRAM_E820_ENTRY+2]) *
+					(NUM_E820_ENTRIES - (LOWRAM_E820_ENTRY+2)));
+			removed++;
+		}
 	} else {
-		memmove(&e820[LOWRAM_E820_ENTRY+1], &e820[LOWRAM_E820_ENTRY+2],
-				sizeof(e820[LOWRAM_E820_ENTRY+2]) *
-				(NUM_E820_ENTRIES - (LOWRAM_E820_ENTRY+2)));
-		removed++;
+		e820[LOWRAM_E820_ENTRY+2].type = E820_TYPE_RAM;
 	}
 
 	/* remove [5GB, highmem) if it's empty */
