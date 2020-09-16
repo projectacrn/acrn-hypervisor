@@ -1,5 +1,6 @@
 OVMF release v2.2
 
+- ovmf: reserve e820 table for PTCM
 - GvtGopDxe: Adjust the offset of gop in pvinfo page
 
 OVMF release v2.1
