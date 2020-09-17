@@ -62,6 +62,8 @@ enable it using the  :ref:`acrn_configuration_tool` with these steps:
 	   communication and separate it with ``:``. For example, the
 	   communication between VM0 and VM2, it can be written as ``0:2``
 
+   .. note:: You can define up to eight ``ivshmem`` hv-land shared regions.
+
 - Build the XML configuration, refer to :ref:`getting-started-building`
 
 Inter-VM Communication Examples
