@@ -214,11 +214,12 @@ def get_vm_uuid_idx(vm_type, uosid):
     return i_cnt
 
 
-def get_scenario_uuid(uosid):
+def get_scenario_uuid(uosid, sos_vmid):
     # {id_num:uuid} (id_num:0~max)
     scenario_uuid = ''
-    i_cnt = get_vm_uuid_idx(common.VM_TYPES[uosid], uosid)
-    scenario_uuid = scenario_cfg_lib.VM_DB[common.VM_TYPES[uosid]]['uuid'][i_cnt]
+    vm_id = uosid + sos_vmid
+    i_cnt = get_vm_uuid_idx(common.VM_TYPES[vm_id], vm_id)
+    scenario_uuid = scenario_cfg_lib.VM_DB[common.VM_TYPES[vm_id]]['uuid'][i_cnt]
     return scenario_uuid
 
 
