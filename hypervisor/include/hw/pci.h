@@ -74,6 +74,7 @@
 #define PCIR_STATUS           0x06U
 #define PCIM_STATUS_CAPPRESENT    0x0010U
 #define PCIR_REVID            0x08U
+#define PCIR_CLASS_CODE	      0x09U
 #define PCIR_SUBCLASS         0x0AU
 #define PCIR_CLASS            0x0BU
 #define PCIR_HDRTYPE          0x0EU
@@ -91,6 +92,7 @@
 #define PCIM_BAR_MEM_64       0x04U
 #define PCIM_BAR_MEM_BASE     0xFFFFFFF0U
 #define PCIV_SUB_VENDOR_ID    0x2CU
+#define PCIV_SUB_SYSTEM_ID    0x2EU
 #define PCIR_CAP_PTR          0x34U
 #define PCIR_CAP_PTR_CARDBUS  0x14U
 #define PCI_BASE_ADDRESS_MEM_MASK (~0x0fUL)
@@ -98,6 +100,7 @@
 #define PCIR_INTERRUPT_LINE   0x3cU
 #define PCIR_INTERRUPT_PIN    0x3dU
 
+#define PCIC_SIMPLECOMM       0x07U
 /* config registers for header type 1 (PCI-to-PCI bridge) devices */
 #define PCIR_PRIBUS_1         0x18U
 #define PCIR_SECBUS_1         0x19U
