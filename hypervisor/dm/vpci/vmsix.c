@@ -136,7 +136,7 @@ void write_vmsix_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 
 	(void)memcpy_s((void *)&ro_mask, bytes, (void *)&msix_ro_mask[offset - vdev->msix.capoff], bytes);
 	if (ro_mask != ~0U) {
-		old = pci_vdev_read_vcfg(vdev, vdev->msix.capoff, bytes);
+		old = pci_vdev_read_vcfg(vdev, offset, bytes);
 		pci_vdev_write_vcfg(vdev, offset, bytes, (old & ro_mask) | (val & ~ro_mask));
 
 		msgctrl = pci_vdev_read_vcfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
@@ -144,7 +144,7 @@ void write_vmsix_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 		if ((msgctrl & PCIM_MSIXCTRL_MSIX_ENABLE) != 0U) {
 			enable_disable_pci_intx(vdev->pdev->bdf, false);
 		}
-		pci_pdev_write_cfg(vdev->pdev->bdf, offset, 2U, msgctrl);
+		pci_pdev_write_cfg(vdev->pdev->bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U, msgctrl);
 	}
 }
 
