@@ -10,6 +10,7 @@
 #include <rdt.h>
 #include <vuart.h>
 #include <ivshmem.h>
+#include <vmcs9900.h>
 #include <vpci.h>
 #include <hv_prebuild.h>
 
@@ -23,6 +24,7 @@ static uint8_t safety_vm_uuid1[16] = SAFETY_VM_UUID1;
 struct acrn_vm_pci_dev_config sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM];
 const struct pci_vdev_ops vhostbridge_ops;
 const struct pci_vdev_ops vpci_ivshmem_ops;
+const struct pci_vdev_ops vmcs9900_ops;
 
 #define PLATFORM_CPUS_MASK             ((1UL << MAX_PCPU_NUM) - 1UL)
 

@@ -309,6 +309,7 @@ VP_DM_C_SRCS += dm/vpci/vmsi.c
 VP_DM_C_SRCS += dm/vpci/vmsix.c
 VP_DM_C_SRCS += dm/vpci/vmsix_on_msi.c
 VP_DM_C_SRCS += dm/vpci/vsriov.c
+VP_DM_C_SRCS += dm/vpci/vmcs9900.c
 VP_DM_C_SRCS += dm/mmio_dev.c
 VP_DM_C_SRCS += dm/vgpio.c
 VP_DM_C_SRCS += arch/x86/guest/vlapic.c
