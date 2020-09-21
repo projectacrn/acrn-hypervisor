@@ -28,7 +28,7 @@
 #include <sgx.h>
 #include <uart16550.h>
 #include <ivshmem.h>
-#include <ptct.h>
+#include <ptcm.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */

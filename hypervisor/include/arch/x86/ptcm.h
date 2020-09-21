@@ -18,6 +18,8 @@ typedef int32_t MSABI (*ptcm_command_abi)(uint32_t command, void *command_struct
 #define PTCM_CMD_RDMSR (int32_t)3U
 #define PTCM_CMD_WRMSR (int32_t)4U
 
+#define PTCM_MAGIC 0x5054434dU
+
 #define PCTM_L2_CLOS_MASK_MAX_NUM 8U
 #define PCTM_L3_CLOS_MASK_MAX_NUM 4U
 
@@ -37,4 +39,5 @@ struct ptcm_header
     uint64_t command_interface_offset;
 };
 
+int32_t init_psram(bool is_bsp);
 #endif /* PTCM_H */
