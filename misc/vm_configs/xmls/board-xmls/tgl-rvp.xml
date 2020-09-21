@@ -88,6 +88,9 @@
 	Region 0: Memory at ad5a0000 (32-bit, non-prefetchable) [size=128K]
 	01:00.0 Non-Volatile memory controller: Intel Corporation SSD Pro 7600p/760p/E 6100p Series (rev 03)
 	Region 0: Memory at ad400000 (64-bit, non-prefetchable) [size=16K]
+	aa:00.0 Ethernet controller: Intel Corporation Device 15f2 (rev 03)
+	Region 0: Memory at ac400000 (32-bit, non-prefetchable) [size=1M]
+	Region 3: Memory at ac500000 (32-bit, non-prefetchable) [size=16K]
 	</PCI_DEVICE>
 
 	<PCI_VID_PID>
@@ -127,6 +130,7 @@
 	00:1f.5 0c80: 8086:a0a4 (rev 20)
 	00:1f.6 0200: 8086:15fc (rev 20)
 	01:00.0 0108: 8086:f1a6 (rev 03)
+	aa:00.0 0200: 8086:15f2 (rev 03)
 	</PCI_VID_PID>
 
 	<WAKE_VECTOR_INFO>
