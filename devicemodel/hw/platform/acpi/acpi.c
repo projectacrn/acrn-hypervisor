@@ -1093,8 +1093,9 @@ int create_and_inject_vptct(struct vmctx *ctx)
 		.type = VM_MMIO,
 		.gpa = PSRAM_BASE_GPA,
 		.hpa = PSRAM_BASE_HPA,
-		/* TODO: the .len should be set as the psram_size passed-in via the DM argument "psram <psram_size>"*/
-		.len = 0x208000UL,
+		/* Extra 32 KB is for PTCM binary image*/
+		/* TODO: .len should be psram_size+32kb. we need to modify guest E820 to adapt to real config */
+		.len = 0x400000U + 32 * KB,
 		.prot = PROT_ALL
 	};
 

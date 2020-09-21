@@ -145,7 +145,7 @@ usage(int code)
 		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
 		"       %*s [--vmcfg sub_options] [--dump vm_idx] [--debugexit] \n"
 		"       %*s [--logger-setting param_setting] [--pm_notify_channel]\n"
-		"       %*s [--psram psram_size]\n"
+		"       %*s [--psram]\n"
 		"       %*s [--pm_by_vuart vuart_node] <vm>\n"
 		"       -A: create ACPI tables\n"
 		"       -B: bootargs for kernel\n"
@@ -168,7 +168,7 @@ usage(int code)
 		"       --dump: show build-in VM configurations\n"
 #endif
 		"       --vsbl: vsbl file path\n"
-		"       --psram: <psram_size in MB> Allocate pSRAM of psram_size MB for this VM. This VM must be an RTVM\n"
+		"       --psram: Enable support for pSRAM for this VM. This VM must be an RTVM\n"
 		"       --ovmf: ovmf file path\n"
 		"       --cpu_affinity: list of pCPUs assigned to this VM\n"
 		"       --part_info: guest partition info file path\n"
@@ -794,7 +794,7 @@ static struct option long_options[] = {
 	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
 	{"lapic_pt",		no_argument,		0, CMD_OPT_LAPIC_PT},
 	{"rtvm",		no_argument,		0, CMD_OPT_RTVM},
-	{"psram",                no_argument,            0, CMD_OPT_PSRAM}, /* TODO: Need argument*/
+	{"psram",		no_argument,		0, CMD_OPT_PSRAM},
 	{"logger_setting",	required_argument,	0, CMD_OPT_LOGGER_SETTING},
 	{"pm_notify_channel",	required_argument,	0, CMD_OPT_PM_NOTIFY_CHANNEL},
 	{"pm_by_vuart",	required_argument,	0, CMD_OPT_PM_BY_VUART},
@@ -939,6 +939,7 @@ main(int argc, char *argv[])
 			is_rtvm = true;
 			break;
 		case CMD_OPT_PSRAM:
+			/* TODO: we need to support parameter to specify pSRAM size in the future */
 			pt_ptct = true;
 			break;
 		case CMD_OPT_ACPIDEV_PT:
