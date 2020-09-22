@@ -178,11 +178,11 @@ Additional scenario XML elements:
   Specify a comma-separated list of the inter-VM shared memory region name,
   size, and VM IDs that may communicate using this shared region.
 
-    Prefix the region ``name`` with ``hv:/`` (for an hv-land solution).
+  * Prefix the region ``name`` with ``hv:/`` (for an hv-land solution).
     (See :ref:`ivshmem-hld` for details.)
-    Specify the region ``size`` in MB, and a power of 2 (e.g., 2, 4, 8, 16)
+  * Specify the region ``size`` in MB, and a power of 2 (e.g., 2, 4, 8, 16)
     up to 512.
-    Specify the two VM IDs that may use this shared memory area,
+  * Specify all VM IDs that may use this shared memory area,
     separated by a ``:``, for example, ``0:2`` (to share this area between
     VMs 0 and 2), or ``0:1:2`` (to let VMs 0, 1, and 2 share this area).
 
