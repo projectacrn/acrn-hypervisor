@@ -766,7 +766,7 @@ virtio_pci_legacy_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	const char *name;
 	uint32_t newoff;
 	uint32_t value;
-	int error;
+	int error = -1;
 
 
 	if (base->mtx)
@@ -794,8 +794,11 @@ virtio_pci_legacy_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		max = vops->cfgsize ? vops->cfgsize : 0x100000000;
 		if (newoff + size > max)
 			goto bad;
-		error = (*vops->cfgread)(DEV_STRUCT(base), newoff,
-					 size, &value);
+
+		if (vops->cfgread) {
+			error = (*vops->cfgread)(DEV_STRUCT(base), newoff,
+						 size, &value);
+		}
 		if (!error)
 			goto done;
 	}
@@ -876,7 +879,7 @@ virtio_pci_legacy_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	uint64_t virtio_config_size, max;
 	const char *name;
 	uint32_t newoff;
-	int error;
+	int error = -1;
 
 
 	if (base->mtx)
@@ -902,8 +905,10 @@ virtio_pci_legacy_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		max = vops->cfgsize ? vops->cfgsize : 0x100000000;
 		if (newoff + size > max)
 			goto bad;
-		error = (*vops->cfgwrite)(DEV_STRUCT(base), newoff,
-					  size, value);
+		if (vops->cfgwrite) {
+			error = (*vops->cfgwrite)(DEV_STRUCT(base), newoff,
+						  size, value);
+		}
 		if (!error)
 			goto done;
 	}
@@ -965,7 +970,7 @@ bad:
 		base->status = value;
 		if (vops->set_status)
 			(*vops->set_status)(DEV_STRUCT(base), value);
-		if (value == 0)
+		if ((value == 0) && (vops->reset))
 			(*vops->reset)(DEV_STRUCT(base));
 		if ((value & VIRTIO_CONFIG_S_DRIVER_OK) &&
 		     base->backend_type == BACKEND_VBSU &&
@@ -1393,7 +1398,7 @@ virtio_common_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 		base->status = value & 0xff;
 		if (vops->set_status)
 			(*vops->set_status)(DEV_STRUCT(base), value);
-		if (base->status == 0)
+		if ((base->status == 0) && (vops->reset))
 			(*vops->reset)(DEV_STRUCT(base));
 		/* TODO: virtio poll mode for modern devices */
 		break;
@@ -1490,7 +1495,7 @@ virtio_device_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
 	const char *name;
 	uint32_t value;
 	uint64_t max;
-	int error;
+	int error = -1;
 
 	vops = base->vops;
 	name = vops->name;
@@ -1503,7 +1508,9 @@ virtio_device_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
 		return value;
 	}
 
-	error = (*vops->cfgread)(DEV_STRUCT(base), offset, size, &value);
+	if (vops->cfgread) {
+		error = (*vops->cfgread)(DEV_STRUCT(base), offset, size, &value);
+	}
 	if (error) {
 		pr_err("%s: reading from 0x%lx size %d failed %d\r\n",
 			name, offset, size, error);
@@ -1521,7 +1528,7 @@ virtio_device_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 	struct virtio_ops *vops;
 	const char *name;
 	uint64_t max;
-	int error;
+	int error = -1;
 
 	vops = base->vops;
 	name = vops->name;
@@ -1533,7 +1540,9 @@ virtio_device_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 		return;
 	}
 
-	error = (*vops->cfgwrite)(DEV_STRUCT(base), offset, size, value);
+	if (vops->cfgwrite) {
+		error = (*vops->cfgwrite)(DEV_STRUCT(base), offset, size, value);
+	}
 	if (error)
 		pr_err("%s: writing ot 0x%lx size %d failed %d\r\n",
 			name, offset, size, error);
