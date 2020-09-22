@@ -8,9 +8,9 @@ Verified version
 
 - Ubuntu version: **18.04**
 - GCC version: **9.0**
-- ACRN-hypervisor branch: **release_2.0 (acrn-2020w23.6-180000p)**
-- ACRN-Kernel (Service VM kernel): **release_2.0 (5.4.43-PKT-200203T060100Z)**
-- RT kernel for Ubuntu User OS: **4.19/preempt-rt (4.19.72-rt25)**
+- ACRN-hypervisor branch: **release_2.2 (acrn-2020w40.2-180000p)**
+- ACRN-Kernel (Service VM kernel): **release_2.2 (5.4.57-linux-intel-ese-lts-acrn-sos)**
+- RT kernel for Ubuntu User OS: **5.4.52-linux-intel-ese-lts-preempt-rt-acrn-uos**
 - HW: Maxtang Intel WHL-U i7-8665U (`AX8665U-A2 <http://www.maxtangpc.com/fanlessembeddedcomputers/140.html>`_)
 
 Prerequisites
@@ -155,6 +155,21 @@ Build the ACRN Hypervisor on Ubuntu
 
       $ sudo pip3 install kconfiglib
 
+#. Install IASL in Ubuntu for User VM launch
+
+ACRN uses ``iasl`` to parse **User VM ACPI** information. The original ``iasl``
+in Ubuntu 18.04 is too old ; update it using the following steps:
+
+.. code-block:: none
+
+   $ sudo -E apt-get install iasl
+   $ cd /home/acrn/work
+   $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
+   $ tar zxvf acpica-unix-20191018.tar.gz
+   $ cd acpica-unix-20191018
+   $ make clean && make iasl
+   $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
+
 #. Get the ACRN source code:
 
    .. code-block:: none
@@ -163,11 +178,11 @@ Build the ACRN Hypervisor on Ubuntu
       $ git clone https://github.com/projectacrn/acrn-hypervisor
       $ cd acrn-hypervisor
 
-#. Switch to the v2.0 version:
+#. Switch to the v2.2 version:
 
    .. code-block:: none
 
-      $ git checkout -b v2.0 remotes/origin/release_2.0
+      $ git checkout -b v2.2 remotes/origin/release_2.2
 
 #. Build ACRN:
 
@@ -202,7 +217,7 @@ Build and install the ACRN kernel
 
    .. code-block:: none
 
-      $ git checkout -b v2.0 remotes/origin/release_2.0
+      $ git checkout -b v2.2 remotes/origin/release_2.2
       $ cp kernel_config_uefi_sos .config
       $ make olddefconfig
       $ make all
@@ -310,22 +325,6 @@ The User VM will be launched by OVMF, so copy it to the specific folder:
    $ sudo mkdir -p /usr/share/acrn/bios
    $ sudo cp /home/acrn/work/acrn-hypervisor/devicemodel/bios/OVMF.fd  /usr/share/acrn/bios
 
-Install IASL in Ubuntu for User VM launch
------------------------------------------
-
-ACRN uses ``iasl`` to parse **User VM ACPI** information. The original ``iasl``
-in Ubuntu 18.04 is too old to match with ``acrn-dm``; update it using the
-following steps:
-
-.. code-block:: none
-
-   $ sudo -E apt-get install iasl
-   $ cd /home/acrn/work
-   $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
-   $ tar zxvf acpica-unix-20191018.tar.gz
-   $ cd acpica-unix-20191018
-   $ make clean && make iasl
-   $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
 
 Build and Install the RT kernel for the Ubuntu User VM
 ------------------------------------------------------
@@ -344,7 +343,7 @@ Follow these instructions to build the RT kernel.
 
       $ git clone https://github.com/projectacrn/acrn-kernel
       $ cd acrn-kernel
-      $ git checkout 4.19/preempt-rt
+      $ git checkout 5.4/preempt-rt
       $ make mrproper
 
    .. note::
@@ -355,7 +354,8 @@ Follow these instructions to build the RT kernel.
 
    .. code-block:: none
 
-      $ cp x86-64_defconfig .config
+      $ wget https://projectacrn.github.io/latest/getting-started/rt_kernel_config.html
+      $ cp rt_kernel_config .config
       $ make olddefconfig
       $ make targz-pkg
 

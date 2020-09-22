@@ -23,6 +23,7 @@ Configuration and Tools
    misc/packaging/README
    misc/tools/**
    misc/acrn-manager/**
+   getting-started/rt_kernel_config
 
 Service VM Tutorials
 ********************
