@@ -36,6 +36,18 @@ ACRN assumes the following conditions are satisfied from the Platform BIOS
 
 * There should be no conflict in resources among the PCI devices and also between PCI devices and other platform devices.
 
+
+New Processor Families
+**********************
+
+Here are announced Intel processor architectures that are supported by ACRN v2.2, but don't yet have a recommended platform available:
+
+* `Tiger Lake <https://ark.intel.com/content/www/us/en/ark/products/codename/88759/tiger-lake.html#@Embedded>`_
+  (Q3'2020 Launch Date)
+* `Elkhart Lake <https://ark.intel.com/content/www/us/en/ark/products/codename/128825/elkhart-lake.html#@Embedded>`_
+  (Q1'2021 Launch Date)
+
+
 Verified Platforms According to ACRN Usage
 ******************************************
 
@@ -69,7 +81,7 @@ For general instructions setting up ACRN on supported hardware platforms, visit 
 
 
 +--------------------------------+-------------------------+-----------+-----------+-------------+------------+
-|   Platform (Intel x86)         |   Product/Kit Name      |               Usage Scenerio - BKC Examples      |
+|   Platform (Intel x86)         |   Product/Kit Name      |               Usage Scenario - BKC Examples      |
 |                                |                         +-----------+-----------+-------------+------------+
 |                                |                         | SDC with  | IU without| IU with     | Logical    |
 |                                |                         | 2 VMs     | Safety VM | Safety VM   | Partition  |
@@ -127,7 +139,7 @@ Verified Hardware Specifications Detail
 | | **Apollo Lake**              | | UP2 - N3350          | Processor              | -  Intel® Celeron™ N3350 (2C2T, up to 2.4 GHz)            |
 |                                | | UP2 - N4200          |                        | -  Intel® Pentium™ N4200 (4C4T, up to 2.5 GHz)            |
 |                                | | UP2 - x5-E3940       |                        | -  Intel® Atom ™ x5-E3940 (4C4T)                          |
-|                                |                        |                        |    (up to 1.8Ghz)/x7-E3950 (4C4T, up to 2.0GHz)           |
+|                                |                        |                        |    (up to 1.8GHz)/x7-E3950 (4C4T, up to 2.0GHz)           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Graphics               | -  2GB ( single channel) LPDDR4                           |
 |                                |                        |                        | -  4GB/8GB ( dual channel) LPDDR4                         |
