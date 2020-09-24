@@ -79,8 +79,16 @@ Install the necessary tools for the following systems:
           libblkid-dev \
           e2fslibs-dev \
           pkg-config \
-          libnuma-dev
+          libnuma-dev \
+          liblz4-tool \
+          flex \
+          bison
+
      $ sudo pip3 install kconfiglib
+     $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
+     $ tar zxvf acpica-unix-20191018.tar.gz
+     $ cd acpica-unix-20191018
+     $ make clean && make iasl && make install
 
   .. note::
      ACRN requires ``gcc`` version 7.3.* (or higher) and ``binutils`` version

@@ -154,6 +154,10 @@ Build the ACRN Hypervisor on Ubuntu
         bison
 
       $ sudo pip3 install kconfiglib
+      $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
+      $ tar zxvf acpica-unix-20191018.tar.gz
+      $ cd acpica-unix-20191018
+      $ make clean && make iasl && make install
 
 #. Get the ACRN source code:
 
