@@ -649,6 +649,11 @@ static int32_t add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_v
 			} else {
 				prot |= EPT_UNCACHED;
 			}
+#ifdef CONFIG_PTCM_ENABLED
+			if (hpa == PSRAM_BASE_HPA) {
+				prot |= EPT_WB;
+			}
+#endif
 			/* create gpa to hpa EPT mapping */
 			ept_add_mr(target_vm, pml4_page, hpa,
 					region->gpa, region->size, prot);
