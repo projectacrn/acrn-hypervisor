@@ -13,7 +13,7 @@ SoC and back, as well as signals the SoC uses to control onboard
 peripherals.
 
 .. note::
-   NUC and UP2 platforms do not support IOC hardware, and as such, IOC
+   Intel NUC and UP2 platforms do not support IOC hardware, and as such, IOC
    virtualization is not supported on these platforms.
 
 The main purpose of IOC virtualization is to transfer data between
@@ -131,7 +131,7 @@ There are five parts in this high-level design:
 * State transfer introduces IOC mediator work states
 * CBC protocol illustrates the CBC data packing/unpacking
 * Power management involves boot/resume/suspend/shutdown flows
-* Emulated CBC commands introduces some commands work flow
+* Emulated CBC commands introduces some commands workflow
 
 IOC mediator has three threads to transfer data between User VM and Service VM. The
 core thread is responsible for data reception, and Tx and Rx threads are

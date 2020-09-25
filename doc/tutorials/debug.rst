@@ -186,7 +186,7 @@ shown in the following example:
       Formats:
         0x00000005: event id for trace test
 
-        %(cpu)d: corresponding cpu index with 'decimal' format
+        %(cpu)d: corresponding CPU index with 'decimal' format
 
         %(event)016x: corresponding event id with 'hex' format
 

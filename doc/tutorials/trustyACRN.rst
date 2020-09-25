@@ -61,7 +61,7 @@ Space Layout Randomization), and stack overflow protector.
 
 There are a couple of built-in Trusted Apps running in user mode of
 Trusty OS. However, an OEM can add more Trusted Apps in Trusty OS to
-serve any other customized security services.For security reasons and
+serve any other customized security services. For security reasons and
 for serving early-boot time security requests (e.g. disk decryption),
 Trusty OS and Apps are typically started before Normal world OS.
 
@@ -102,7 +102,7 @@ malware detection.
 
 In embedded products such as an automotive IVI system, the most important
 security services requested by customers are keystore and secure
-storage. In this article we will focus on these two services.
+storage. In this article, we will focus on these two services.
 
 Keystore
 ========
@@ -126,14 +126,14 @@ and are permanently bound to the key, ensuring the key cannot be used in
 any other way.
 
 In addition to the list above, there is one more service that Keymaster
-implementations provide, but which is not exposed as an API: Random
+implementations provide, but is not exposed as an API: Random
 number generation. This is used internally for generation of keys,
 Initialization Vectors (IVs), random padding, and other elements of
 secure protocols that require randomness.
 
 Using Android as an example, Keystore functions are explained in greater
 details in this `Android keymaster functions document
-<https://source.android.com/security/keystore/implementer-ref>`_
+<https://source.android.com/security/keystore/implementer-ref>`_.
 
 .. figure:: images/trustyacrn-image3.png
    :align: center
@@ -161,7 +161,7 @@ You can read the `eMMC/UFS JEDEC specification
 to understand that.
 
 This secure storage can provide data confidentiality, integrity, and
-anti-replay protection.Confidentiality is guaranteed by data encryption
+anti-replay protection. Confidentiality is guaranteed by data encryption
 with a root key derived from the platform chipset's unique key/secret.
 
 RPMB partition is a fixed size partition (128KB ~ 16MB) in eMMC (or UFS)
@@ -178,11 +178,11 @@ key).  See `Android Key and ID Attestation
 for details.
 
 In Trusty, the secure storage architecture is shown in the figure below.
-In the secure world, there is a SS (Secure Storage) TA, which has an
+In the secure world, there is an SS (Secure Storage) TA, which has an
 RPMB authentication key (AuthKey, an HMAC key) and uses this Authkey to
 talk with the RPMB controller in the eMMC device. Since the eMMC device
 is controlled by normal world driver, Trusty needs to send an RPMB data
-frame ( encrypted by hardware-backed unique encryption key and signed by
+frame (encrypted by hardware-backed unique encryption key and signed by
 AuthKey) over Trusty IPC channel to Trusty SS proxy daemon, which then
 forwards RPMB data frame to physical RPMB partition in eMMC.
 
@@ -260,7 +260,7 @@ One-VM, Two-Worlds
 ==================
 
 As previously mentioned, Trusty Secure Monitor could be any
-hypervisor. In the ACRN project the ACRN hypervisor will behave as the
+hypervisor. In the ACRN project, the ACRN hypervisor will behave as the
 secure monitor to schedule in/out Trusty secure world.
 
 .. figure:: images/trustyacrn-image4.png
@@ -364,7 +364,7 @@ access is like this:
 #. If the verification is successful in the eMMC RPMB controller, the
    data will be written into the storage device.
 
-The work flow of authenticated data read is very similar to this flow
+The workflow of authenticated data read is very similar to this flow
 above in reverse order.
 
 Note that there are some security considerations in this architecture:
@@ -383,7 +383,7 @@ system security design. In practice, the Service VM designer and implementer
 should obey these following rules (and more):
 
 -  Make sure the Service VM is a closed system and doesn't allow users to
-   install any unauthorized 3rd party software or components.
+   install any unauthorized third-party software or components.
 -  External peripherals are constrained.
 -  Enable kernel-based hardening techniques, e.g., dm-verity (to make
    sure integrity of DM and vBIOS/vOSloaders), kernel module signing,

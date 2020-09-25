@@ -22,7 +22,7 @@ relevant for configuring or debugging ACRN-based systems.
      - Description
      - Usage example
 
-   * - module_blacklist
+   * - ``module_blacklist``
      - Service VM
      - A comma-separated list of modules that should not be loaded.
        Useful to debug or work
@@ -31,14 +31,14 @@ relevant for configuring or debugging ACRN-based systems.
 
          module_blacklist=dwc3_pci
 
-   * - no_timer_check
+   * - ``no_timer_check``
      - Service VM,User VM
      - Disables the code which tests for broken timer IRQ sources.
      - ::
 
          no_timer_check
 
-   * - console
+   * - ``console``
      - Service VM,User VM
      - Output console device and options.
 
@@ -64,7 +64,7 @@ relevant for configuring or debugging ACRN-based systems.
           console=ttyS0
           console=hvc0
 
-   * - loglevel
+   * - ``loglevel``
      - Service VM
      - All Kernel messages with a loglevel less than the console loglevel will
        be printed to the console. The loglevel can also be changed with
@@ -95,7 +95,7 @@ relevant for configuring or debugging ACRN-based systems.
 
           loglevel=7
 
-   * - ignore_loglevel
+   * - ``ignore_loglevel``
      - User VM
      - Ignoring loglevel setting will print **all**
        kernel messages to the console. Useful for debugging.
@@ -107,7 +107,7 @@ relevant for configuring or debugging ACRN-based systems.
           ignore_loglevel
 
 
-   * - log_buf_len
+   * - ``log_buf_len``
      - User VM
      - Sets the size of the printk ring buffer,
        in bytes.  n must be a power of two and greater
@@ -120,7 +120,7 @@ relevant for configuring or debugging ACRN-based systems.
 
           log_buf_len=16M
 
-   * - consoleblank
+   * - ``consoleblank``
      - Service VM,User VM
      - The console blank (screen saver) timeout in
        seconds. Defaults to 600 (10 minutes). A value of 0
@@ -129,7 +129,7 @@ relevant for configuring or debugging ACRN-based systems.
 
           consoleblank=0
 
-   * - rootwait
+   * - ``rootwait``
      - Service VM,User VM
      - Wait (indefinitely) for root device to show up.
        Useful for devices that are detected asynchronously
@@ -138,7 +138,7 @@ relevant for configuring or debugging ACRN-based systems.
 
           rootwait
 
-   * - root
+   * - ``root``
      - Service VM,User VM
      - Define the root filesystem
 
@@ -165,14 +165,14 @@ relevant for configuring or debugging ACRN-based systems.
           root=/dev/vda2
           root=PARTUUID=00112233-4455-6677-8899-AABBCCDDEEFF
 
-   * - rw
+   * - ``rw``
      - Service VM,User VM
-     - Mount root device read-write on boot
+     - Mount root device read/write on boot
      - ::
 
           rw
 
-   * - tsc
+   * - ``tsc``
      - User VM
      - Disable clocksource stability checks for TSC.
 
@@ -180,14 +180,14 @@ relevant for configuring or debugging ACRN-based systems.
 
        ``reliable``:
           Mark TSC clocksource as reliable, and disables clocksource
-          verification at runtime, and the stability checks done at bootup.
+          verification at runtime, and the stability checks done at boot.
           Used to enable high-resolution timer mode on older hardware, and in
           virtualized environments.
      - ::
 
           tsc=reliable
 
-   * - cma
+   * - ``cma``
      - Service VM
      - Sets the size of the kernel global memory area for
        contiguous memory allocations, and optionally the
@@ -199,7 +199,7 @@ relevant for configuring or debugging ACRN-based systems.
 
           cma=64M@0
 
-   * - hvlog
+   * - ``hvlog``
      - Service VM
      - Sets the guest physical address and size of the dedicated hypervisor
        log ring buffer between the hypervisor and Service VM.
@@ -216,26 +216,26 @@ relevant for configuring or debugging ACRN-based systems.
 
        You should enable ASLR on SOS. This ensures that when guest Linux is
        relocating kernel image, it will avoid this buffer address.
-       
+
      - ::
 
           hvlog=2M@0xe00000
 
-   * - memmap
+   * - ``memmap``
      - Service VM
      - Mark specific memory as reserved.
 
        ``memmap=nn[KMG]$ss[KMG]``
          Region of memory to be reserved is from ``ss`` to ``ss+nn``,
-         using ``K``, ``M``, and ``G`` representing Kilobytes, Megabytes, and
-         Gigabytes, respectively.
+         using ``K``, ``M``, and ``G`` representing kilobytes, megabytes, and
+         gigabytes, respectively.
      - ::
 
          memmap=0x400000$0xa00000
 
-   * - ramoops.mem_address
-       ramoops.mem_size
-       ramoops.console_size
+   * - ``ramoops.mem_address``
+       ``ramoops.mem_size``
+       ``ramoops.console_size``
      - Service VM
      - Ramoops is an oops/panic logger that writes its logs to RAM
        before the system crashes. Ramoops uses a predefined memory area
@@ -252,21 +252,21 @@ relevant for configuring or debugging ACRN-based systems.
          ramoops.console_size=0x200000
 
 
-   * - reboot_panic
+   * - ``reboot_panic``
      - Service VM
      - Reboot in case of panic
 
        The comma-delimited parameters are:
 
        reboot_mode:
-         ``w`` (warm), ``s`` (soft), ``c`` (cold), or ``g`` (gpio)
+         ``w`` (warm), ``s`` (soft), ``c`` (cold), or ``g`` (GPIO)
 
        reboot_type:
-         ``b`` (bios), ``a`` (acpi), ``k`` (kbd), ``t`` (triple), ``e`` (efi),
-         or ``p`` (pci)
+         ``b`` (BIOS), ``a`` (ACPI), ``k`` (kbd), ``t`` (triple), ``e`` (EFI),
+         or ``p`` (PCI)
 
        reboot_cpu:
-         ``s###`` (smp, and processor number to be used for rebooting)
+         ``s###`` (SMP, and processor number to be used for rebooting)
 
        reboot_force:
          ``f`` (force), or not specified.
@@ -274,17 +274,17 @@ relevant for configuring or debugging ACRN-based systems.
 
          reboot_panic=p,w
 
-   * - maxcpus
+   * - ``maxcpus``
      - User VM
      - Maximum number of processors that an SMP kernel
-       will bring up during bootup.
+       will bring up during boot.
 
        ``maxcpus=n`` where n >= 0 limits
-       the kernel to bring up ``n`` processors during system bootup.
+       the kernel to bring up ``n`` processors during system boot.
        Giving n=0 is a special case, equivalent to ``nosmp``,which
        also disables the I/O APIC.
 
-       After bootup, you can bring up additional plugged CPUs by executing
+       After booting, you can bring up additional plugged CPUs by executing
 
        ``echo 1 > /sys/devices/system/cpu/cpuX/online``
      - ::
@@ -298,7 +298,7 @@ relevant for configuring or debugging ACRN-based systems.
 
          nohpet
 
-   * - intel_iommu
+   * - ``intel_iommu``
      - User VM
      - Intel IOMMU driver (DMAR) option
 
@@ -351,7 +351,7 @@ section below has more details on a few select parameters.
 
    * - i915.enable_initial_modeset
      - Service VM
-     - On MRB, value must be ``1``.  On NUC or UP2 boards, value must be
+     - On MRB, value must be ``1``.  On Intel NUC or UP2 boards, value must be
        ``0``. See :ref:`i915-enable-initial-modeset`.
      - ::
 

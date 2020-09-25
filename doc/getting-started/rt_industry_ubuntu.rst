@@ -34,7 +34,7 @@ Hardware Connection
 Connect the WHL Maxtang with the appropriate external devices.
 
 #. Connect the WHL Maxtang board to a monitor via an HDMI cable.
-#. Connect the mouse, keyboard, ethernet cable, and power supply cable to
+#. Connect the mouse, keyboard, Ethernet cable, and power supply cable to
    the WHL Maxtang board.
 #. Insert the Ubuntu 18.04 USB boot disk into the USB port.
 
@@ -55,7 +55,7 @@ Install Ubuntu on the SATA disk
 #. Insert the Ubuntu USB boot disk into the WHL Maxtang machine.
 #. Power on the machine, then press F11 to select the USB disk as the boot
    device. Select **UEFI: SanDisk** to boot using **UEFI**. Note that the
-   label depends on the brand/make of the USB stick.
+   label depends on the brand/make of the USB drive.
 #. Install the Ubuntu OS.
 #. Select **Something else** to create the partition.
 
@@ -72,7 +72,7 @@ Install Ubuntu on the SATA disk
 #. Complete the Ubuntu installation on ``/dev/sda``.
 
 This Ubuntu installation will be modified later (see `Build and Install the RT kernel for the Ubuntu User VM`_)
-to turn it into a Real-Time User VM (RTVM).
+to turn it into a real-time User VM (RTVM).
 
 Install the Ubuntu Service VM on the NVMe disk
 ==============================================
@@ -87,7 +87,7 @@ Install Ubuntu on the NVMe disk
 #. Insert the Ubuntu USB boot disk into the WHL Maxtang machine.
 #. Power on the machine, then press F11 to select the USB disk as the boot
    device. Select **UEFI: SanDisk** to boot using **UEFI**. Note that the
-   label depends on the brand/make of the USB stick.
+   label depends on the brand/make of the USB drive.
 #. Install the Ubuntu OS.
 #. Select **Something else** to create the partition.
 
@@ -103,7 +103,7 @@ Install Ubuntu on the NVMe disk
 
 #. Complete the Ubuntu installation and reboot the system.
 
-   .. note:: Set **acrn** as the username for the Ubuntu Service VM.
+   .. note:: Set ``acrn`` as the username for the Ubuntu Service VM.
 
 
 Build and Install ACRN on Ubuntu
@@ -287,7 +287,7 @@ BIOS settings of GVT-d for WaaG
 -------------------------------
 
 .. note::
-   Skip this step if you are using a Kaby Lake (KBL) NUC.
+   Skip this step if you are using a Kaby Lake (KBL) Intel NUC.
 
 Go to **Chipset** -> **System Agent (SA) Configuration** -> **Graphics
 Configuration** and make the following settings:
@@ -441,7 +441,7 @@ Recommended BIOS settings for RTVM
 .. csv-table::
    :widths: 15, 30, 10
 
-   "Hyper-Threading", "Intel Advanced Menu -> CPU Configuration", "Disabled"
+   "Hyper-threading", "Intel Advanced Menu -> CPU Configuration", "Disabled"
    "Intel VMX", "Intel Advanced Menu -> CPU Configuration", "Enable"
    "Speed Step", "Intel Advanced Menu -> Power & Performance -> CPU - Power Management Control", "Disabled"
    "Speed Shift", "Intel Advanced Menu -> Power & Performance -> CPU - Power Management Control", "Disabled"
@@ -458,7 +458,7 @@ Recommended BIOS settings for RTVM
    "Delay Enable DMI ASPM", "Intel Advanced Menu -> PCH-IO Configuration -> PCI Express Configuration", "Disabled"
    "DMI Link ASPM", "Intel Advanced Menu -> PCH-IO Configuration -> PCI Express Configuration", "Disabled"
    "Aggressive LPM Support", "Intel Advanced Menu -> PCH-IO Configuration -> SATA And RST Configuration", "Disabled"
-   "USB Periodic Smi", "Intel Advanced Menu -> LEGACY USB Configuration", "Disabled"
+   "USB Periodic SMI", "Intel Advanced Menu -> LEGACY USB Configuration", "Disabled"
    "ACPI S3 Support", "Intel Advanced Menu -> ACPI Settings", "Disabled"
    "Native ASPM", "Intel Advanced Menu -> ACPI Settings", "Disabled"
 
@@ -522,13 +522,13 @@ this, follow the below steps to allocate all housekeeping tasks to core 0:
       # Move all rcu tasks to core 0.
       for i in `pgrep rcu`; do taskset -pc 0 $i; done
 
-      # Change realtime attribute of all rcu tasks to SCHED_OTHER and priority 0
+      # Change real-time attribute of all rcu tasks to SCHED_OTHER and priority 0
       for i in `pgrep rcu`; do chrt -v -o -p 0 $i; done
 
-      # Change realtime attribute of all tasks on core 1 to SCHED_OTHER and priority 0
+      # Change real-time attribute of all tasks on core 1 to SCHED_OTHER and priority 0
       for i in `pgrep /1`; do chrt -v -o -p 0 $i; done
 
-      # Change realtime attribute of all tasks to SCHED_OTHER and priority 0
+      # Change real-time attribute of all tasks to SCHED_OTHER and priority 0
       for i in `ps -A -o pid`; do chrt -v -o -p 0 $i; done
 
       echo disabling timer migration
@@ -668,7 +668,8 @@ Passthrough a hard disk to RTVM
          --ovmf /usr/share/acrn/bios/OVMF.fd \
          hard_rtvm
 
-#. Upon deployment completion, launch the RTVM directly onto your WHL NUC:
+#. Upon deployment completion, launch the RTVM directly onto your WHL
+   Intel NUC:
 
    .. code-block:: none
 

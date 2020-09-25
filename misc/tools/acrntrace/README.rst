@@ -78,7 +78,7 @@ Options:
      - input file name
 
    * - :kbd:`-o, --ofile=string`
-     - output filename
+     - output file name
 
    * - :kbd:`-f, --frequency=unsigned_int`
      - TSC frequency in MHz
@@ -155,7 +155,7 @@ data to your Linux system, and run the analysis tool.
            -o /home/xxxx/trace_data/20171115-101605/cpu0 --vm_exit --irq
 
    - The analysis report is written to stdout, or to a CSV file if
-     a filename is specified using ``-o filename``.
+     a file name is specified using ``-o filename``.
    - The scripts require Python3.
 
 Build and Install

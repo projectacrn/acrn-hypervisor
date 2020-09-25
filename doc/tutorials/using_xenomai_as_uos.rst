@@ -1,11 +1,11 @@
 .. _using_xenomai_as_uos:
 
-Run Xenomai as the User VM OS (Real-Time VM)
+Run Xenomai as the User VM OS (Real-time VM)
 ############################################
 
 `Xenomai`_ is a versatile real-time framework that provides support to user space applications that are seamlessly integrated into Linux environments.
 
-This tutorial describes how to run Xenomai as the User VM OS (Real-Time VM) on the ACRN hypervisor.
+This tutorial describes how to run Xenomai as the User VM OS (real-time VM) on the ACRN hypervisor.
 
 .. _Xenomai: https://gitlab.denx.de/Xenomai/xenomai/-/wikis/home
 
@@ -60,21 +60,21 @@ Launch the RTVM
 
 #. Prepare a dedicated disk (NVMe or SATA) for the RTVM; in this example, we use ``/dev/sda``.
 
-   a. Download the Preempt-RT VM image:
+   a. Download the Preempt-RT VM image::
 
-	    $ wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w01.1-140000p/preempt-rt-32030.img.xz
+      $ wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w01.1-140000p/preempt-rt-32030.img.xz
 
-   #. Decompress the xz image:
+   #. Decompress the xz image::
 
-	    $ xz -d preempt-rt-32030.img.xz
+      $ xz -d preempt-rt-32030.img.xz
 
-   #. Burn the Preempt-RT VM image onto the SATA disk:
+   #. Burn the Preempt-RT VM image onto the SATA disk::
 
-	    $ sudo dd if=preempt-rt-32030.img of=/dev/sda bs=4M oflag=sync status=progress iflag=fullblock seek=0 conv=notrunc
+      $ sudo dd if=preempt-rt-32030.img of=/dev/sda bs=4M oflag=sync status=progress iflag=fullblock seek=0 conv=notrunc
 
 #. Launch the RTVM via our script. Indicate the location of the root partition (sda3 in our example) and the kernel tarball::
 
-	 $ sudo /usr/share/acrn/samples/nuc/launch_xenomai.sh -b /dev/sda3 -k /path/to/linux-4.19.59-xenomai-3.1-acrn+-x86.tar.gz
+   $ sudo /usr/share/acrn/samples/nuc/launch_xenomai.sh -b /dev/sda3 -k /path/to/linux-4.19.59-xenomai-3.1-acrn+-x86.tar.gz
 
 #. Verify that a login prompt displays::
 
@@ -95,5 +95,6 @@ Launch the RTVM
 Install the Xenomai libraries and tools
 ***************************************
 
-To build and install Xenomai tools or its libraries in the RVTM, refer to the official `Xenomai documentation <https://gitlab.denx.de/Xenomai/xenomai/-/wikis/Installing_Xenomai_3#library-install>`_.
+To build and install Xenomai tools or its libraries in the RVTM, refer to the official
+`Xenomai documentation <https://gitlab.denx.de/Xenomai/xenomai/-/wikis/Installing_Xenomai_3#library-install>`_.
 Note that the current supported version is Xenomai-3.1 with the 4.19.59 kernel.

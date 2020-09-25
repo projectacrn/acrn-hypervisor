@@ -44,7 +44,7 @@ We have many new `reference documents available <https://projectacrn.github.io>`
 
 * Getting Started Guide for Industry scenario
 * :ref:`ACRN Configuration Tool Manual <acrn_configuration_tool>`
-* :ref:`Trace and Data Collection for ACRN Real-Time(RT) Performance Tuning <rt_performance_tuning>`
+* :ref:`Trace and Data Collection for ACRN real-time (RT) Performance Tuning <rt_performance_tuning>`
 * Building ACRN in Docker
 * :ref:`Running Ubuntu as the User VM <running_ubun_as_user_vm>`
 * :ref:`Running Debian as the User VM <running_deb_as_user_vm>`

@@ -8,7 +8,7 @@ collaboration project that helps developers create custom Linux-based
 systems.  The project provides a flexible set of tools and a space where
 embedded developers worldwide can share technologies, software stacks,
 configurations, and best practices used to create tailored Linux images
-for embedded and IOT devices, or anywhere a customized Linux OS is
+for embedded and IoT devices, or anywhere a customized Linux OS is
 needed.
 
 Yocto Project layers support the inclusion of technologies, hardware

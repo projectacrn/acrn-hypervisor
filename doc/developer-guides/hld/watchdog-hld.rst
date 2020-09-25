@@ -34,8 +34,8 @@ It receives read/write commands from the watchdog driver, does the
 actions, and returns.  In ACRN, the commands are from User VM
 watchdog driver.
 
-User VM watchdog work flow
-**************************
+User VM watchdog workflow
+*************************
 
 When the User VM does a read or write operation on the watchdog device's
 registers or memory space (Port IO or Memory map I/O), it will trap into

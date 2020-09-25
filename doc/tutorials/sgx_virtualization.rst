@@ -135,7 +135,7 @@ CPUID Leaf 12H
 **Intel SGX Capability Enumeration**
 
 * CPUID_12H.0.EAX[0] SGX1: If 1, indicates that Intel SGX supports the
-  collection of SGX1 leaf functions.If is_sgx_supported and the section count
+  collection of SGX1 leaf functions. If is_sgx_supported and the section count
   is initialized for the VM, this bit will be set.
 * CPUID_12H.0.EAX[1] SGX2: If 1, indicates that Intel SGX supports the
   collection of SGX2 leaf functions. If hardware supports it and SGX enabled
@@ -149,7 +149,7 @@ CPUID Leaf 12H
   Extended feature (same structure as XCR0).
 
 The hypervisor may change the allow-1 setting of XFRM in ATTRIBUTES for VM.
-If some feature is disabled for the VM, the bit is also cleared, eg. MPX.
+If some feature is disabled for the VM, the bit is also cleared, e.g. MPX.
 
 **Intel SGX EPC Enumeration**
 

@@ -151,7 +151,7 @@ Depending on your Linux version, install the needed tools:
 
      sudo dnf install doxygen python3-pip python3-wheel make graphviz
 
-And for any of these Linux environments, install the remaining python-based
+And for any of these Linux environments, install the remaining Python-based
 tools:
 
 .. code-block:: bash
@@ -160,7 +160,7 @@ tools:
    pip3 install --user -r scripts/requirements.txt
 
 Add ``$HOME/.local/bin`` to the front of your ``PATH`` so the system will
-find expected versions of python utilities such as ``sphinx-build`` and
+find expected versions of Python utilities such as ``sphinx-build`` and
 ``breathe``:
 
 .. code-block:: bash
@@ -304,7 +304,7 @@ Sphinx/Breathe, we've added a post-processing filter on the output of
 the documentation build process to check for "expected" messages from the
 generation process output.
 
-The output from the Sphinx build is processed by the python script
+The output from the Sphinx build is processed by the Python script
 ``scripts/filter-known-issues.py`` together with a set of filter
 configuration files in the ``.known-issues/doc`` folder.  (This
 filtering is done as part of the ``Makefile``.)

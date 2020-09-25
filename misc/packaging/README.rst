@@ -14,8 +14,8 @@ acrn-kernel, install them on your target system, and boot running ACRN.
 
 .. rst-class:: numbered-step
 
-Set up Pre-requisites
-*********************
+Set up prerequisites
+********************
 
 Your development system should be running Ubuntu
 18.04 and be connected to the internet. (You'll be installing software
@@ -66,7 +66,7 @@ Here's the default ``release.json`` configuration:
 Run the package-building script
 *******************************
 
-The ``install_uSoS.py`` python script does all the work to install
+The ``install_uSoS.py`` Python script does all the work to install
 needed tools (such as make, gnu-efi, libssl-dev, libpciaccess-dev,
 uuid-dev, and more).  It also verifies that tool versions (such as the
 gcc compiler) are appropriate (as configured in the ``release.json``
@@ -89,7 +89,7 @@ When done, it creates two Debian packages:
   * ``acrn_kernel_deb_package.deb`` with the ACRN-patched Linux kernel.
 
 You'll need to copy these two files onto your target system, either via
-the network or simply by using a thumbdrive.
+the network or simply by using a USB drive.
 
 
 .. rst-class:: numbered-step
@@ -112,7 +112,7 @@ Install Debian packages on your target system
 *********************************************
 
 Copy the Debian packages you created on your development system, for
-example, using a thumbdrive.  Then install the ACRN Debian package::
+example, using a USB drive.  Then install the ACRN Debian package::
 
    sudo dpkg -i acrn_deb_package.deb
 
@@ -228,4 +228,4 @@ by looking at the dmesg log:
 
    4.python3 compile_iasl.py
    =========================
-   this scriptrs is help compile iasl and cp to /usr/sbin
+   this script helps compile iasl and cp to /usr/sbin

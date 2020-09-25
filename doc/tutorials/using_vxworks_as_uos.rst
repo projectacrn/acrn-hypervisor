@@ -7,7 +7,7 @@ Run VxWorks as the User VM
 performance. This tutorial describes how to run VxWorks as the User VM on the ACRN hypervisor
 based on Clear Linux 29970 (ACRN tag v1.1).
 
-.. note:: You'll need to be a WindRiver* customer and have purchased VxWorks to follow this tutorial.
+.. note:: You'll need to be a Wind River* customer and have purchased VxWorks to follow this tutorial.
 
 Steps for Using VxWorks as User VM
 **********************************
@@ -15,7 +15,7 @@ Steps for Using VxWorks as User VM
 #. Build VxWorks
 
    Follow the `VxWorks Getting Started Guide <https://docs.windriver.com/bundle/vxworks_7_tutorial_kernel_application_workbench_sr0610/page/rbu1422461642318.html>`_
-   to setup the VxWorks development environment and build the VxWorks Image.
+   to set up the VxWorks development environment and build the VxWorks Image.
 
    .. note::
       The following kernel configuration should be **excluded**:
@@ -31,7 +31,7 @@ Steps for Using VxWorks as User VM
         * CONSOLE_BAUD_RATE = 115200
         * SYS_CLK_RATE_MAX = 1000
 
-#. Build GRUB2 BootLoader Image
+#. Build GRUB2 bootloader Image
 
    We use grub-2.02 as the bootloader of VxWorks in this tutorial; other versions may also work.
 
@@ -95,7 +95,7 @@ Steps for Using VxWorks as User VM
 #. Follow XXX to boot the ACRN Service VM.
 
    .. important:: need instructions from deleted document (using sdc
-      mode on the NUC)
+      mode on the Intel NUC)
 
 #. Boot VxWorks as User VM.
 
@@ -107,7 +107,7 @@ Steps for Using VxWorks as User VM
       $ cp /usr/share/acrn/samples/nuc/launch_vxworks.sh .
 
    You will also need to copy the ``VxWorks.img`` created in the VxWorks build environment into directory
-   ``vxworks`` (via, e.g. a USB stick or network).
+   ``vxworks`` (via, e.g. a USB drive or network).
 
    Run the ``launch_vxworks.sh`` script to launch VxWorks as the User VM.
 
@@ -134,7 +134,7 @@ Steps for Using VxWorks as User VM
 
       ->
 
-   Finally, you can type ``help`` to check whether the VxWorks works well.
+   Finally, you can type ``help`` to see available VxWorks commands.
 
    .. code-block:: console
 

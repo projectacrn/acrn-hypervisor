@@ -31,7 +31,7 @@ where
    For example, to set up a shared memory of 2 megabytes, use ``2``
    instead of ``shm_size``. The two communicating VMs must define the same size.
 
-.. note:: This device can be used with Real-Time VM (RTVM) as well.
+.. note:: This device can be used with real-time VM (RTVM) as well.
 
 ivshmem hv-land usage
 *********************

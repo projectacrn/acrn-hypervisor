@@ -24,7 +24,7 @@ Use the following instructions to install Debian.
   the bottom of the page).
 - Follow the `Debian installation guide
   <https://www.debian.org/releases/stable/amd64/index.en.html>`_ to
-  install it on your NUC; we are using an Intel Kaby Lake NUC (NUC7i7DNHE)
+  install it on your Intel NUC; we are using a Kaby Lake Intel NUC (NUC7i7DNHE)
   in this tutorial.
 - :ref:`install-build-tools-dependencies` for ACRN.
 - Update to the latest iASL (required by the ACRN Device Model):

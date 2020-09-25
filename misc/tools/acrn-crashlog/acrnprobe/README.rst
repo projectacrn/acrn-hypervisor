@@ -42,7 +42,7 @@ Architecture
 Terms
 =====
 
-- channel :
+channel
   Channel represents a way of detecting the system's events. There are 3
   channels:
 
@@ -50,33 +50,33 @@ Terms
   + polling: run a detecting job with fixed time interval.
   + inotify: monitor the change of file or dir.
 
-- trigger :
+trigger
   Essentially, trigger represents one section of content. It could be
-  a file's content, a directory's content, or a memory's content which can be
-  obtained. By monitoring it ``acrnprobe`` could detect certain events which
-  happened in the system.
+  a file's content, a directory's content, or a memory's content, which can be
+  obtained. By monitoring it, ``acrnprobe`` could detect certain events
+  that happened in the system.
 
-- crash :
+crash
   A subtype of event. It often corresponds to a crash of programs, system, or
   hypervisor. ``acrnprobe`` detects it and reports it as ``CRASH``.
 
-- info :
+info
   A subtype of event. ``acrnprobe`` detects it and reports it as ``INFO``.
 
-- event queue :
+event queue
   There is a global queue to receive all events detected.
   Generally, events are enqueued in channel, and dequeued in event handler.
 
-- event handler :
+event handler
   Event handler is a thread to handle events detected by channel.
   It's awakened by an enqueued event.
 
-- sender :
+sender
   The sender corresponds to an exit of event.
   There are two senders:
 
-  + Crashlog is responsible for collecting logs and saving it locally.
-  + Telemd is responsible for sending log records to telemetrics client.
+  + ``crashlog`` is responsible for collecting logs and saving it locally.
+  + ``telemd`` is responsible for sending log records to telemetrics client.
 
 Description
 ===========
@@ -86,30 +86,30 @@ As a log collection mechanism to record critical events on the platform,
 
 1. detect event
 
-   From experience, the occurrence of an system event is usually accompanied
+   From experience, the occurrence of a system event is usually accompanied
    by some effects. The effects could be a generated file, an error message in
    kernel's log, or a system reboot. To get these effects, for some of them we
-   can monitor a directory, for other of them we might need to do a detection
+   can monitor a directory, for others, we might need to do detection
    in a time loop.
-   *So we implement the channel, which represents a common method of detection.*
+   So we implement the channel, which represents a common method of detection.
 
 2. analyze event and determine the event type
 
-   Generally, a specific effect correspond to a particular type of events.
+   Generally, a specific effect corresponds to a particular type of events.
    However, it is the icing on the cake for analyzing the detailed event types
-   according to some phenomena. *Crash reclassify is implemented for this
-   purpose.*
+   according to some phenomena. Crash reclassifying is implemented for this
+   purpose.
 
 3. collect information for detected events
 
    This is for debug purpose. Events without information are meaningless,
-   and developers need to use this information to improve their system. *Sender
-   crashlog is implemented for this purpose.*
+   and developers need to use this information to improve their system. Sender
+   ``crashlog`` is implemented for this purpose.
 
 4. archive these information as logs, and generate records
 
    There must be a central place to tell user what happened in system.
-   *Sender telemd is implemented for this purpose.*
+   Sender ``telemd`` is implemented for this purpose.
 
 Diagram
 =======
@@ -172,7 +172,7 @@ Source files
   This file provides the function to get system reboot reason from kernel
   command line.
 - android_events.c
-  Sync events detected by android crashlog.
+  Sync events detected by Android ``crashlog``.
 - loop.c
   This file provides interfaces to read from image.
 
