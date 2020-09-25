@@ -11,18 +11,18 @@ Intel NUC Kit. If you have not, refer to the following instructions:
 
 - Install a `Clear Linux OS
   <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_
-  on your NUC kit.
+  on your Intel NUC kit.
 - Follow the instructions at XXX to set up the
-  Service VM automatically on your NUC kit. Follow steps 1 - 4.
+  Service VM automatically on your Intel NUC kit. Follow steps 1 - 4.
 
   .. important:: need updated instructions that aren't Clear Linux dependent
 
-We are using Intel Kaby Lake NUC (NUC7i7DNHE) and Debian 10 as the User VM in this tutorial.
+We are using a Kaby Lake Intel NUC (NUC7i7DNHE) and Debian 10 as the User VM in this tutorial.
 
 Before you start this tutorial, make sure the KVM tools are installed on the
 development machine and set **IGD Aperture Size to 512** in the BIOS
 settings (refer to :numref:`intel-bios-deb`). Connect two monitors to your
-NUC:
+Intel NUC:
 
 .. code-block:: none
 
@@ -47,7 +47,7 @@ Hardware Configurations
 |                          |                      |      Graphics        | - UHD Graphics 620                           |
 |                          |                      |                      | - Two HDMI 2.0a ports supporting 4K at 60 Hz |
 |                          |                      +----------------------+----------------------------------------------+
-|                          |                      |    System memory     | - 8GiB SODIMM DDR4 2400 MHz                  |
+|                          |                      |    System memory     | - 8GiB SO-DIMM DDR4 2400 MHz                 |
 |                          |                      +----------------------+----------------------------------------------+
 |                          |                      | Storage capabilities | - 1TB WDC WD10SPZX-22Z                       |
 +--------------------------+----------------------+----------------------+----------------------------------------------+
@@ -97,7 +97,7 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
 
 #. Right-click **QEMU/KVM** and select **New**.
 
-   a. Choose **Local install media (ISO image or CDROM)** and then click
+   a. Choose **Local install media (ISO image or CD-ROM)** and then click
       **Forward**. A **Create a new virtual machine** box displays, as shown
       in :numref:`newVM-debian` below.
 
@@ -119,7 +119,7 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
    #. Rename the image if you desire. You must check the **customize
       configuration before install** option before you finish all stages.
 
-#. Verify that you can see the Overview screen as set up, as shown in :numref:`debian10-setup` below:
+#. Verify that you can see the Overview screen as set up, shown in :numref:`debian10-setup` below:
 
     .. figure:: images/debian-uservm-3.png
        :align: center
@@ -127,14 +127,14 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
 
        Debian Setup Overview
 
-#. Complete the Debian installation. Verify that you have set up a vda
+#. Complete the Debian installation. Verify that you have set up a VDA
    disk partition, as shown in :numref:`partition-vda` below:
 
     .. figure:: images/debian-uservm-4.png
        :align: center
        :name: partition-vda
 
-       Virtual Disk (vda) partition
+       Virtual Disk (VDA) partition
 
 #. Upon installation completion, the KVM image is created in the
    ``/var/lib/libvirt/images`` folder. Convert the `gcow2` format to `img`
@@ -154,7 +154,7 @@ Re-use and modify the `launch_win.sh` script in order to launch the new Debian 1
    "/dev/sda1" mentioned below with "/dev/nvme0n1p1" if you are using an
    NVMe drive.
 
-1. Copy the debian.img to your NUC:
+1. Copy the debian.img to your Intel NUC:
 
    .. code-block:: none
 

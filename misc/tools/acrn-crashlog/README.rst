@@ -29,7 +29,7 @@ The ``ACRN-Crashlog`` tool depends on the following libraries
 - libblkid
 - e2fsprogs
 
-Refer to the :ref:`getting_started` for instructions on how to set-up your
+Refer to the :ref:`getting_started` for instructions on how to set up your
 build environment, and follow the instructions below to build and configure the
 ``ACRN-Crashlog`` tool.
 
@@ -163,7 +163,7 @@ telemetrics-client on the system:
    of the telemetrics-client: it runs as a daemon autostarted when the system
    boots, and sends the crashlog path to the telemetrics-client that records
    events of interest and reports them to the backend using ``telemd`` the
-   telemetrics daemon. The work flow of ``acrnprobe`` and
+   telemetrics daemon. The workflow of ``acrnprobe`` and
    telemetrics-client is shown in :numref:`crashlog-workflow`:
 
 .. graphviz:: images/crashlog-workflow.dot
@@ -217,7 +217,7 @@ The source code structure:
   like ``ipanic``, ``pstore`` and etc. For the log on AaaG, it's collected with
   monitoring the change of related folders on the sos image, like
   ``/data/logs/``. ``acrnprobe`` also provides a flexible way to allow users to
-  configure which crash or event they want to collect through the xml file
+  configure which crash or event they want to collect through the XML file
   easily.
 - ``common``: some utils for logs, command and string.
 - ``data``: configuration file, service files and shell script.

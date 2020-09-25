@@ -12,7 +12,7 @@ Minimum System Requirements for Installing ACRN
 +------------------------+-----------------------------------+---------------------------------------------------------------------------------+
 | Hardware               | Minimum Requirements              | Recommended                                                                     |
 +========================+===================================+=================================================================================+
-| Processor              | Compatible x86 64-bit processor   | 2 core with Intel Hyper Threading Technology enabled in the BIOS or more cores  |
+| Processor              | Compatible x86 64-bit processor   | 2 core with Intel Hyper-threading Technology enabled in the BIOS or more cores  |
 +------------------------+-----------------------------------+---------------------------------------------------------------------------------+
 | System memory          | 4GB RAM                           | 8GB or more (< 32G)                                                             |
 +------------------------+-----------------------------------+---------------------------------------------------------------------------------+
@@ -29,7 +29,7 @@ Platforms with multiple PCI segments
 
 ACRN assumes the following conditions are satisfied from the Platform BIOS
 
-* All the PCI device BARs should be assigned resources, including SR-IOv VF BARs if a device supports.
+* All the PCI device BARs should be assigned resources, including SR-IOV VF BARs if a device supports.
 
 * Bridge windows for PCI bridge devices and the resources for root bus, should be programmed with values
   that enclose resources used by all the downstream devices.
@@ -98,16 +98,16 @@ For general instructions setting up ACRN on supported hardware platforms, visit 
 |                                |                         |           |           |             |            |
 +--------------------------------+-------------------------+-----------+-----------+-------------+------------+
 | | **Kaby Lake**                | | `NUC7i5BNH`_          | V         |           |             |            |
-| | (Codename: Baby Canyon)      | | (Board: NUC7i5BNB)    |           |           |             |            |
+| | (Code name: Baby Canyon)     | | (Board: NUC7i5BNB)    |           |           |             |            |
 +--------------------------------+-------------------------+-----------+-----------+-------------+------------+
 | | **Kaby Lake**                | | `NUC7i7BNH`_          | V         |           |             |            |
-| | (Codename: Baby Canyon)      | | (Board: NUC7i7BNB     |           |           |             |            |
+| | (Code name: Baby Canyon)     | | (Board: NUC7i7BNB     |           |           |             |            |
 +--------------------------------+-------------------------+-----------+-----------+-------------+------------+
 | | **Kaby Lake**                | | `NUC7i5DNH`_          | V         |           |             |            |
-| | (Codename: Dawson Canyon)    | | (Board: NUC7i5DNB)    |           |           |             |            |
+| | (Code name: Dawson Canyon)   | | (Board: NUC7i5DNB)    |           |           |             |            |
 +--------------------------------+-------------------------+-----------+-----------+-------------+------------+
 | | **Kaby Lake**                | | `NUC7i7DNH`_          | V         | V         | V           | V          |
-| | (Codename: Dawson Canyon)    | | (Board: NUC7i7DNB)    |           |           |             |            |
+| | (Code name: Dawson Canyon)   | | (Board: NUC7i7DNB)    |           |           |             |            |
 +--------------------------------+-------------------------+-----------+-----------+-------------+------------+
 | | **Whiskey Lake**             | | `WHL-IPC-I5`_         | V         | V         | V           | V          |
 | |                              | | (Board: WHL-IPC-I5)   |           |           |             |            |
@@ -141,8 +141,8 @@ Verified Hardware Specifications Detail
 |                                | | UP2 - x5-E3940       |                        | -  Intel® Atom ™ x5-E3940 (4C4T)                          |
 |                                |                        |                        |    (up to 1.8GHz)/x7-E3950 (4C4T, up to 2.0GHz)           |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Graphics               | -  2GB ( single channel) LPDDR4                           |
-|                                |                        |                        | -  4GB/8GB ( dual channel) LPDDR4                         |
+|                                |                        | Graphics               | -  2GB (single channel) LPDDR4                            |
+|                                |                        |                        | -  4GB/8GB (dual channel) LPDDR4                          |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | System memory          | -  Intel® Gen 9 HD, supporting 4K Codec                   |
 |                                |                        |                        |    Decode and Encode for HEVC4, H.264, VP8                |
@@ -152,16 +152,16 @@ Verified Hardware Specifications Detail
 |                                |                        | Serial Port            | -  Yes                                                    |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
 | | **Kaby Lake**                | | NUC7i5BNH            | Processor              | -  Intel® Core™ i5-7260U CPU @ 2.20GHz (2C4T)             |
-| | (Codename: Baby Canyon)      | | (Board: NUC7i5BNB)   |                        |                                                           |
+| | (Code name: Baby Canyon)     | | (Board: NUC7i5BNB)   |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Graphics               | -  Intel® Iris™ Plus Graphics 640                         |
+|                                |                        | Graphics               | -  Intel® Iris® Plus Graphics 640                         |
 |                                |                        |                        | -  One HDMI\* 2.0 port with 4K at 60 Hz                   |
 |                                |                        |                        | -  Thunderbolt™ 3 port with support for USB\* 3.1         |
 |                                |                        |                        |    Gen 2, DisplayPort\* 1.2 and 40 Gb/s Thunderbolt       |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | System memory          | -  Two DDR4 SO-DIMM sockets (up to 32 GB, 2133 MHz), 1.2V |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Storage capabilities   | -  Micro SDXC slot with UHS-I support on the side         |
+|                                |                        | Storage capabilities   | -  microSDXC slot with UHS-I support on the side          |
 |                                |                        |                        | -  One M.2 connector supporting 22x42 or 22x80 M.2 SSD    |
 |                                |                        |                        | -  One SATA3 port for connection to 2.5" HDD or SSD       |
 |                                |                        |                        |    (up to 9.5 mm thickness)                               |
@@ -169,16 +169,16 @@ Verified Hardware Specifications Detail
 |                                |                        | Serial Port            | -  Yes                                                    |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
 | | **Kaby Lake**                | | NUC7i7BNH            | Processor              | -  Intel® Core™ i7-7567U CPU @ 3.50GHz (2C4T)             |
-| | (Codename: Baby Canyon)      | | (Board: NUC7i7BNB)   |                        |                                                           |
+| | (Code name: Baby Canyon)     | | (Board: NUC7i7BNB)   |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Graphics               | -  Intel® Iris™ Plus Graphics 650                         |
+|                                |                        | Graphics               | -  Intel® Iris® Plus Graphics 650                         |
 |                                |                        |                        | -  One HDMI\* 2.0 port with 4K at 60 Hz                   |
 |                                |                        |                        | -  Thunderbolt™ 3 port with support for USB\* 3.1 Gen 2,  |
 |                                |                        |                        |    DisplayPort\* 1.2 and 40 Gb/s Thunderbolt              |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | System memory          | -  Two DDR4 SO-DIMM sockets (up to 32 GB, 2133 MHz), 1.2V |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Storage capabilities   | -  Micro SDXC slot with UHS-I support on the side         |
+|                                |                        | Storage capabilities   | -  microSDXC slot with UHS-I support on the side          |
 |                                |                        |                        | -  One M.2 connector supporting 22x42 or 22x80 M.2 SSD    |
 |                                |                        |                        | -  One SATA3 port for connection to 2.5" HDD or SSD       |
 |                                |                        |                        |    (up to 9.5 mm thickness)                               |
@@ -186,7 +186,7 @@ Verified Hardware Specifications Detail
 |                                |                        | Serial Port            | -  No                                                     |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
 | | **Kaby Lake**                | | NUC7i5DNH            | Processor              | -  Intel® Core™ i5-7300U CPU @ 2.64GHz (2C4T)             |
-| | (Codename: Dawson Canyon)    | | (Board: NUC7i5DNB)   |                        |                                                           |
+| | (Code name: Dawson Canyon)   | | (Board: NUC7i5DNB)   |                        |                                                           |
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | Graphics               | -  Intel® HD Graphics 620                                 |
 |                                |                        |                        | -  Two HDMI\* 2.0a ports supporting 4K at 60 Hz           |
@@ -209,7 +209,7 @@ Verified Hardware Specifications Detail
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | System memory          | -  Two DDR4 SO-DIMM sockets (up to 32 GB, 2400 MHz), 1.2V |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Storage capabilities   | -  One M.2 connector for WIFI                             |
+|                                |                        | Storage capabilities   | -  One M.2 connector for Wi-Fi                            |
 |                                |                        |                        | -  One M.2 connector for 3G/4G module, supporting         |
 |                                |                        |                        |    LTE Category 6 and above                               |
 |                                |                        |                        | -  One M.2 connector for 2242 SSD                         |
@@ -225,7 +225,7 @@ Verified Hardware Specifications Detail
 |                                |                        +------------------------+-----------------------------------------------------------+
 |                                |                        | System memory          | -  Two DDR4 SO-DIMM sockets (up to 32 GB, 2400 MHz), 1.2V |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Storage capabilities   | -  One M.2 connector for WIFI                             |
+|                                |                        | Storage capabilities   | -  One M.2 connector for Wi-Fi                            |
 |                                |                        |                        | -  One M.2 connector for 3G/4G module, supporting         |
 |                                |                        |                        |    LTE Category 6 and above                               |
 |                                |                        |                        | -  One M.2 connector for 2242 SSD                         |

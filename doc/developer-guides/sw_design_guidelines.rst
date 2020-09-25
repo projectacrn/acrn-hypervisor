@@ -566,7 +566,7 @@ The following table shows some use cases of module level configuration design:
      - This module is used to virtualize part of LAPIC functionalities.
        It can be done via APICv or software emulation depending on CPU
        capabilities.
-       For example, KBL NUC doesn't support virtual-interrupt delivery, while
+       For example, KBL Intel NUC doesn't support virtual-interrupt delivery, while
        other platforms support it.
      - If a function pointer is used, the prerequisite is
        "hv_operation_mode == OPERATIONAL".

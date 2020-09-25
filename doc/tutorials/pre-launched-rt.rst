@@ -70,7 +70,7 @@ Build ACRN with Pre-Launched RT Mode
 
 The ACRN VM configuration framework can easily configure resources for
 Pre-Launched VMs. On Whiskey Lake WHL-IPC-I5, to passthrough SATA and
-ethernet 03:00.0 devices to the Pre-Launched RT VM, build ACRN with:
+Ethernet 03:00.0 devices to the Pre-Launched RT VM, build ACRN with:
 
 .. code-block:: none
 

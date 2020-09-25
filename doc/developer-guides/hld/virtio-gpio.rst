@@ -61,7 +61,7 @@ Add the following parameters into the command line::
    controller_name, you can use it as controller_name directly. You can
    also input ``cat /sys/bus/gpio/device/XXX/dev`` to get device id that can
    be used to match /dev/XXX, then use XXX as the controller_name. On MRB
-   and NUC platforms, the controller_name are gpiochip0, gpiochip1,
+   and Intel NUC platforms, the controller_name are gpiochip0, gpiochip1,
    gpiochip2.gpiochip3.
 
 -  **offset|name**: you can use gpio offset or its name to locate one

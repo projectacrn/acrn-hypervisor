@@ -358,7 +358,7 @@ general workflow of ioeventfd.
    :align: center
    :name: ioeventfd-workflow
 
-   ioeventfd general work flow
+   ioeventfd general workflow
 
 The workflow can be summarized as:
 

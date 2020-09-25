@@ -23,7 +23,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        default value.
 
    * - :kbd:`-B, --bootargs <bootargs>`
-     - Set the User VM kernel command line arguments.
+     - Set the User VM kernel command-line arguments.
        The maximum length is 1023.
        The bootargs string will be passed to the kernel as its cmdline.
 
@@ -326,16 +326,16 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
      - This option is to create a VM with the local APIC (LAPIC) passed-through.
        With this option, a VM is created with ``LAPIC_PASSTHROUGH`` and
        ``IO_COMPLETION_POLLING`` mode. This option is typically used for hard
-       realtime scenarios.
+       real-time scenarios.
 
        By default, this option is not enabled.
 
    * - :kbd:`--rtvm`
-     - This option is used to create a VM with realtime attributes.
+     - This option is used to create a VM with real-time attributes.
        With this option, a VM is created with ``GUEST_FLAG_RT`` and
        ``GUEST_FLAG_IO_COMPLETION_POLLING`` mode. This kind of VM is
-       generally used for soft realtime scenarios (without ``--lapic_pt``) or
-       hard realtime scenarios (with ``--lapic_pt``). With ``GUEST_FLAG_RT``,
+       generally used for soft real-time scenarios (without ``--lapic_pt``) or
+       hard real-time scenarios (with ``--lapic_pt``). With ``GUEST_FLAG_RT``,
        the Service VM cannot interfere with this kind of VM when it is
        running. It can only be powered off from inside the VM itself.
 

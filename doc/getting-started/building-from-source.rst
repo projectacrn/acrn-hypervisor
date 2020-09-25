@@ -54,7 +54,7 @@ distribution.
 
 .. note::
    ACRN uses ``menuconfig``, a python3 text-based user interface (TUI)
-   for configuring hypervisor options and using python's ``kconfiglib``
+   for configuring hypervisor options and using Python's ``kconfiglib``
    library.
 
 Install the necessary tools for the following systems:

@@ -69,7 +69,7 @@ through the Device Model.  Currently, the service VM is based on Linux,
 but it can also use other operating systems as long as the ACRN Device
 Model is ported into it. A user VM can be Ubuntu*, Android*,
 Windows* or VxWorks*.  There is one special user VM, called a
-post-launched Real-Time VM (RTVM), designed to run a hard real-time OS,
+post-launched real-time VM (RTVM), designed to run a hard real-time OS,
 such as Zephyr*, VxWorks*, or Xenomai*. Because of its real-time capability, RTVM
 can be used for soft programmable logic controller (PLC), inter-process
 communication (IPC), or Robotics applications.
@@ -130,7 +130,7 @@ In total, up to 7 post-launched User VMs can be started:
 - 5 regular User VMs,
 - One `Kata Containers <https://katacontainers.io>`_ User VM (see
   :ref:`run-kata-containers` for more details), and
-- One Real-Time VM (RTVM).
+- One real-time VM (RTVM).
 
 In this example, one post-launched User VM provides Human Machine Interface
 (HMI) capability, another provides Artificial Intelligence (AI) capability, some
@@ -157,15 +157,15 @@ Industrial usage scenario:
   with tools such as Kubernetes*.
 - The HMI Application OS can be Windows* or Linux*. Windows is dominant
   in Industrial HMI environments.
-- ACRN can support a soft Real-time OS such as preempt-rt Linux for
-  soft-PLC control, or a hard Real-time OS that offers less jitter.
+- ACRN can support a soft real-time OS such as preempt-rt Linux for
+  soft-PLC control, or a hard real-time OS that offers less jitter.
 
 Automotive Application Scenarios
 ================================
 
 As shown in :numref:`V2-SDC-scenario`, the ACRN hypervisor can be used
-for building Automotive Software Defined Cockpit (SDC) and In-Vehicle
-Experience (IVE) solutions.
+for building Automotive Software Defined Cockpit (SDC) and in-vehicle
+experience (IVE) solutions.
 
 .. figure:: images/ACRN-V2-SDC-scenario.png
    :width: 600px
@@ -177,12 +177,12 @@ Experience (IVE) solutions.
 As a reference implementation, ACRN provides the basis for embedded
 hypervisor vendors to build solutions with a reference I/O mediation
 solution.  In this scenario, an automotive SDC system consists of the
-Instrument Cluster (IC) system running in the Service VM and the In-Vehicle
-Infotainment (IVI) system is running the post-launched User VM. Additionally,
+instrument cluster (IC) system running in the Service VM and the in-vehicle
+infotainment (IVI) system is running the post-launched User VM. Additionally,
 one could modify the SDC scenario to add more post-launched User VMs that can
-host Rear Seat Entertainment (RSE) systems (not shown on the picture).
+host rear seat entertainment (RSE) systems (not shown on the picture).
 
-An **Instrument Cluster (IC)** system is used to show the driver operational
+An **instrument cluster (IC)** system is used to show the driver operational
 information about the vehicle, such as:
 
 - the speed, fuel level, trip mileage, and other driving information of
@@ -191,14 +191,14 @@ information about the vehicle, such as:
   fuel or tire pressure;
 - showing rear-view and surround-view cameras for parking assistance.
 
-An **In-Vehicle Infotainment (IVI)** system's capabilities can include:
+An **in-vehicle infotainment (IVI)** system's capabilities can include:
 
 - navigation systems, radios, and other entertainment systems;
 - connection to mobile devices for phone calls, music, and applications
   via voice recognition;
 - control interaction by gesture recognition or touch.
 
-A **Rear Seat Entertainment (RSE)** system could run:
+A **rear seat entertainment (RSE)** system could run:
 
 - entertainment system;
 - virtual office;
@@ -265,9 +265,9 @@ application scenario needs.
      - Post-launched VM
      -
 
-   * - Hybrid Real-Time Usage Config
+   * - Hybrid real-time Usage Config
      - Hybrid RT
-     - Pre-launched VM (Real-Time VM)
+     - Pre-launched VM (real-time VM)
      - Service VM
      - Post-launched VM
      -
@@ -284,8 +284,8 @@ Here are block diagrams for each of these four scenarios.
 SDC scenario
 ============
 
-In this SDC scenario, an Instrument Cluster (IC) system runs with the
-Service VM and an In-Vehicle Infotainment (IVI) system runs in a user
+In this SDC scenario, an instrument cluster (IC) system runs with the
+Service VM and an in-vehicle infotainment (IVI) system runs in a user
 VM.
 
 .. figure:: images/ACRN-V2-SDC-scenario.png
@@ -300,10 +300,10 @@ Industry scenario
 
 In this Industry scenario, the Service VM provides device sharing capability for
 a Windows-based HMI User VM. One post-launched User VM can run a Kata Container
-application. Another User VM supports either hard or soft Real-time OS
+application. Another User VM supports either hard or soft real-time OS
 applications. Up to five additional post-launched User VMs support functions
-such as Human Machine Interface (HMI), Artificial Intelligence (AI), Computer
-Vision, etc.
+such as human/machine interface (HMI), artificial intelligence (AI), computer
+vision, etc.
 
 .. figure:: images/ACRN-Industry.png
    :width: 600px
@@ -326,10 +326,10 @@ non-real-time tasks.
 
    Hybrid scenario
 
-Hybrid Real-Time (RT) scenario
+Hybrid real-time (RT) scenario
 ==============================
 
-In this Hybrid Real-Time (RT) scenario, a pre-launched RTVM is started by the
+In this Hybrid real-time (RT) scenario, a pre-launched RTVM is started by the
 hypervisor. The Service VM runs a post-launched User VM that runs non-safety or
 non-real-time tasks.
 
@@ -458,7 +458,7 @@ all types of Virtual Machines (VMs) represented:
 - Pre-launched Service VM
 - Post-launched User VM
 - Kata Container VM (post-launched)
-- Real-Time VM (RTVM)
+- real-time VM (RTVM)
 
 The Service VM owns most of the devices including the platform devices, and
 provides I/O mediation. The notable exceptions are the devices assigned to the
@@ -557,11 +557,11 @@ emulation:
 
 * The third variation on hypervisor-based device emulation is
   **paravirtualized (PV) drivers**. In this model introduced by the `XEN
-  project`_, the hypervisor includes the physical drivers, and each guest
+  Project`_, the hypervisor includes the physical drivers, and each guest
   operating system includes a hypervisor-aware driver that works in
   concert with the hypervisor drivers.
 
-.. _XEN project:
+.. _XEN Project:
    https://wiki.xenproject.org/wiki/Understanding_the_Virtualization_Spectrum
 
 In the device emulation models discussed above, there's a price to pay
@@ -717,7 +717,7 @@ Following along with the numbered items in :numref:`io-emulation-path`:
    module is activated to execute its processing APIs. Otherwise, the VHM
    module leaves the IO request in the shared page and wakes up the
    device model thread to process.
-5. The ACRN device model follow the same mechanism as the VHM. The I/O
+5. The ACRN device model follows the same mechanism as the VHM. The I/O
    processing thread of device model queries the IO request ring to get the
    PIO instruction details and checks to see if any (guest) device emulation
    module claims ownership of the IO port: if a module claimed it,
@@ -813,7 +813,8 @@ here:
   The BE drivers only need to parse the virtqueue structures to obtain
   the requests and get the requests done. Virtqueue organization is
   specific to the User OS. In the implementation of Virtio in Linux, the
-  virtqueue is implemented as a ring buffer structure called vring.
+  virtqueue is implemented as a ring buffer structure called
+  ``vring``.
 
   In ACRN, the virtqueue APIs can be leveraged
   directly so users don't need to worry about the details of the
@@ -841,8 +842,8 @@ space as shown in :numref:`virtio-framework-userland`:
 In the Virtio user-land framework, the implementation is compatible with
 Virtio Spec 0.9/1.0. The VBS-U is statically linked with the Device Model,
 and communicates with the Device Model through the PCIe interface: PIO/MMIO
-or MSI/MSIx. VBS-U accesses Virtio APIs through the user space vring service
-API helpers. User space vring service API helpers access shared ring
+or MSI/MSIx. VBS-U accesses Virtio APIs through the user space ``vring`` service
+API helpers. User space ``vring`` service API helpers access shared ring
 through a remote memory map (mmap). VHM maps User VM memory with the help of
 ACRN Hypervisor.
 

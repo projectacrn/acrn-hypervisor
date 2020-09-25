@@ -24,7 +24,7 @@ Prerequisites
 * NVMe disk
 * SATA disk
 * Storage device with USB interface (such as USB Flash
-  or SATA disk connected with a USB3.0 SATA converter).
+  or SATA disk connected with a USB 3.0 SATA converter).
 * Disable **Intel Hyper Threading Technology** in the BIOS to avoid
   interference from logical cores for the logical partition scenario.
 * In the logical partition scenario, two VMs (running Ubuntu OS)
@@ -57,7 +57,8 @@ Update kernel image and modules of pre-launched VM
 
    The last two commands build the bootable kernel image as
    ``arch/x86/boot/bzImage``, and loadable kernel modules under the ``./out/``
-   folder. Copy these files to a removable disk for installing on the NUC later.
+   folder. Copy these files to a removable disk for installing on the
+   Intel NUC later.
 
 #. The current ACRN logical partition scenario implementation requires a
    multi-boot capable bootloader to boot both the ACRN hypervisor and the
@@ -68,10 +69,10 @@ Update kernel image and modules of pre-launched VM
    default, the GRUB bootloader is installed on the EFI System Partition
    (ESP) that's used to bootstrap the ACRN hypervisor.
 
-#. After installing the Ubuntu OS, power off the NUC. Attach the
-   SATA disk and storage device with the USB interface to the NUC. Power on
-   the NUC and make sure it boots the Ubuntu OS from the NVMe SSD. Plug in
-   the removable disk with the kernel image into the NUC and then copy the
+#. After installing the Ubuntu OS, power off the Intel NUC. Attach the
+   SATA disk and storage device with the USB interface to the Intel NUC. Power on
+   the Intel NUC and make sure it boots the Ubuntu OS from the NVMe SSD. Plug in
+   the removable disk with the kernel image into the Intel NUC and then copy the
    loadable kernel modules built in Step 1 to the ``/lib/modules/`` folder
    on both the mounted SATA disk and storage device with USB interface. For
    example, assuming the SATA disk and storage device with USB interface are
@@ -101,8 +102,8 @@ Update ACRN hypervisor image
 
 #. Before building the ACRN hypervisor, find the I/O address of the serial
    port and the PCI BDF addresses of the SATA controller nd the USB
-   controllers on the NUC. Enter the following command to get the
-   I/O addresses of the serial port. The NUC supports one serial port, **ttyS0**.
+   controllers on the Intel NUC. Enter the following command to get the
+   I/O addresses of the serial port. The Intel NUC supports one serial port, **ttyS0**.
    Connect the serial port to the development workstation in order to access
    the ACRN serial console to switch between pre-launched VMs:
 
@@ -173,7 +174,7 @@ Update ACRN hypervisor image
 
    #. Copy ``acrn.bin``, ``ACPI_VM1.bin`` and ``ACPI_VM0.bin`` to a removable disk.
 
-   #. Plug the removable disk into the NUC's USB port.
+   #. Plug the removable disk into the Intel NUC's USB port.
 
    #. Copy the ``acrn.bin``, ``ACPI_VM0.bin``, and ``ACPI_VM1.bin`` from the removable disk to ``/boot``
       directory.
@@ -204,7 +205,7 @@ Update Ubuntu GRUB to boot hypervisor and load kernel image
    .. note::
       Update this to use the UUID (``--set``) and PARTUUID (``root=`` parameter)
       (or use the device node directly) of the root partition (e.g.``/dev/nvme0n1p2). Hint: use ``sudo blkid``.
-      The kernel command line arguments used to boot the pre-launched VMs is
+      The kernel command-line arguments used to boot the pre-launched VMs is
       located in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.h`` header file
       and is configured by ``VMx_CONFIG_OS_BOOTARG_*`` MACROs (where x is the VM id number and ``*`` are arguments).
       The multiboot2 module param ``XXXXXX`` is the bzImage tag and must exactly match the ``kernel_mod_tag``
@@ -231,9 +232,9 @@ Update Ubuntu GRUB to boot hypervisor and load kernel image
 
       $ sudo update-grub
 
-#. Reboot the NUC. Select the **ACRN hypervisor Logical Partition
+#. Reboot the Intel NUC. Select the **ACRN hypervisor Logical Partition
    Scenario** entry to boot the logical partition of the ACRN hypervisor on
-   the NUC's display. The GRUB loader will boot the hypervisor, and the
+   the Intel NUC's display. The GRUB loader will boot the hypervisor, and the
    hypervisor will automatically start the two pre-launched VMs.
 
 Logical partition scenario startup checking

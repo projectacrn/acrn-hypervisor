@@ -15,7 +15,7 @@ Inter-VM Communication Overview
    :align: center
    :name: ivshmem-architecture-overview
 
-   ACRN shared memory based inter-vm communication architecture
+   ACRN shared memory based inter-VM communication architecture
 
 There are two ways ACRN can emulate the ``ivshmem`` device:
 
