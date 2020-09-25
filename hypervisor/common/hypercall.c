@@ -1094,9 +1094,7 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 	if (is_created_vm(target_vm)) {
 		switch (cmd & PMCMD_TYPE_MASK) {
 		case ACRN_PMCMD_GET_PX_CNT: {
-			if (target_vm->pm.px_cnt != 0U) {
-				ret = copy_to_gpa(vm, &(target_vm->pm.px_cnt), param2, sizeof(target_vm->pm.px_cnt));
-			}
+			ret = copy_to_gpa(vm, &(target_vm->pm.px_cnt), param2, sizeof(target_vm->pm.px_cnt));
 			break;
 		}
 		case ACRN_PMCMD_GET_PX_DATA: {
@@ -1121,9 +1119,7 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm
 			break;
 		}
 		case ACRN_PMCMD_GET_CX_CNT: {
-			if (target_vm->pm.cx_cnt != 0U) {
-				ret = copy_to_gpa(vm, &(target_vm->pm.cx_cnt), param2, sizeof(target_vm->pm.cx_cnt));
-			}
+			ret = copy_to_gpa(vm, &(target_vm->pm.cx_cnt), param2, sizeof(target_vm->pm.cx_cnt));
 			break;
 		}
 		case ACRN_PMCMD_GET_CX_DATA: {
