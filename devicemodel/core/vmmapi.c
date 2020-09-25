@@ -472,6 +472,7 @@ vm_map_gpa(struct vmctx *ctx, vm_paddr_t gaddr, size_t len)
 		}
 	}
 
+	pr_dbg("%s context memory is not valid!\n", __func__);
 	return NULL;
 }
 
