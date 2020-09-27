@@ -11,6 +11,7 @@
 
 uint64_t psram_area_bottom;
 uint64_t psram_area_top;
+volatile bool psram_is_initialized = false;
 
 #ifdef CONFIG_PTCM_ENABLED
 
@@ -28,82 +29,87 @@ static void parse_ptct(void)
 	struct ptct_entry_data_psram *psram_entry;
 	struct ptct_entry_data_ptcm_binary* ptcm_binary_entry;
 	struct acpi_table_ptct* acpi_ptct = (struct acpi_table_ptct *)get_acpi_tbl(ACPI_SIG_PTCT);
-	pr_info("found PTCT subtable in HPA %llx, length: %d", acpi_ptct, acpi_ptct->header.length);
 
-	entry = &acpi_ptct->ptct_first_entry;	//&acpi_ptct->ptct_entries[0];
+	if (acpi_ptct == NULL){
+		pr_fatal("Cannot find PTCT pointer!!!!");
+	}
+	else {
+		pr_info("found PTCT subtable in HPA %llx, length: %d", acpi_ptct, acpi_ptct->header.length);
 
-	psram_area_bottom = PSRAM_BASE_HPA;
+		entry = &acpi_ptct->ptct_first_entry;
 
-	while (((uint64_t)entry - (uint64_t)acpi_ptct) < acpi_ptct->header.length) {
-		switch (entry->type) {
-		case PTCT_ENTRY_TYPE_PTCM_BINARY:
-			ptcm_binary_entry = (struct ptct_entry_data_ptcm_binary *)entry->data;
-			ptcm_binary.address = ptcm_binary_entry->address;
-			ptcm_binary.size = ptcm_binary_entry->size;
-			if (psram_area_top < ptcm_binary.address + ptcm_binary.size) {
-				psram_area_top = ptcm_binary.address + ptcm_binary.size;
-			}
-			pr_info("found PTCM bin, in HPA %llx, size %llx", ptcm_binary.address, ptcm_binary.size);
-			break;
-		
-		case PTCT_ENTRY_TYPE_PSRAM:
-			psram_entry = (struct ptct_entry_data_psram *)entry->data;
-			if (psram_entry->apic_id_0 >= MAX_PCPU_NUM) {
+		psram_area_bottom = PSRAM_BASE_HPA;
+
+		while (((uint64_t)entry - (uint64_t)acpi_ptct) < acpi_ptct->header.length) {
+			switch (entry->type) {
+			case PTCT_ENTRY_TYPE_PTCM_BINARY:
+				ptcm_binary_entry = (struct ptct_entry_data_ptcm_binary *)entry->data;
+				ptcm_binary.address = ptcm_binary_entry->address;
+				ptcm_binary.size = ptcm_binary_entry->size;
+				if (psram_area_top < ptcm_binary.address + ptcm_binary.size) {
+					psram_area_top = ptcm_binary.address + ptcm_binary.size;
+				}
+				pr_info("found PTCM bin, in HPA %llx, size %llx", ptcm_binary.address, ptcm_binary.size);
+				break;
+
+			case PTCT_ENTRY_TYPE_PSRAM:
+				psram_entry = (struct ptct_entry_data_psram *)entry->data;
+				if (psram_entry->apic_id_0 >= MAX_PCPU_NUM) {
+					break;
+				}
+
+				p_mem_region = &ptcm_mem_regions[psram_entry->apic_id_0];
+				if (psram_entry->cache_level == 3) {
+					if (l3_psram_regions_count >= MAX_L3_PSRAM_REGIONS){
+						pr_err("Too many L3 regions!");
+						break;
+					}
+
+					p_mem_region->l3_valid = true;
+					p_mem_region->l3_base = psram_entry->base;
+					p_mem_region->l3_size = psram_entry->size;
+					p_mem_region->l3_ways = psram_entry->ways;
+					p_mem_region->l3_clos[PTCM_CLOS_INDEX_SETUP] = p_mem_region->l3_ways;
+					p_mem_region->l3_clos[PTCM_CLOS_INDEX_LOCK] ^= p_mem_region->l3_ways;
+					if (psram_area_top < p_mem_region->l3_base + p_mem_region->l3_size) {
+						psram_area_top = p_mem_region->l3_base + p_mem_region->l3_size;
+					}
+					l3_psram_regions_count++;
+					pr_info("found L3 psram, in HPA %llx, size %llx", p_mem_region->l3_base, p_mem_region->l3_size);
+				} else if (psram_entry->cache_level == 2) {
+					if (l2_psram_regions_count >= MAX_L2_PSRAM_REGIONS){
+						pr_err("Too many L2 regions!");
+						break;
+					}
+					p_mem_region->l2_valid = true;
+					p_mem_region->l2_base = psram_entry->base;
+					p_mem_region->l2_size = psram_entry->size;
+					p_mem_region->l2_ways = psram_entry->ways;
+					p_mem_region->l2_clos[PTCM_CLOS_INDEX_SETUP] = p_mem_region->l2_ways;
+					p_mem_region->l2_clos[PTCM_CLOS_INDEX_LOCK] ^= p_mem_region->l2_ways;
+					if (psram_area_top < p_mem_region->l2_base + p_mem_region->l2_size) {
+						psram_area_top = p_mem_region->l2_base + p_mem_region->l2_size;
+					}
+					l2_psram_regions_count++;
+					pr_info("found L2 psram, in HPA %llx, size %llx", psram_entry->base, psram_entry->size);
+				}
+				break;
+			/* In current phase, we ignore other entries like gt_clos and wrc_close */
+			default:
 				break;
 			}
-
-			p_mem_region = &ptcm_mem_regions[psram_entry->apic_id_0];
-			if (psram_entry->cache_level == 3) {
-				if (l3_psram_regions_count >= MAX_L3_PSRAM_REGIONS){
-					pr_err("Too many L3 regions!");
-					break;
-				}
-
-				p_mem_region->l3_valid = true;
-				p_mem_region->l3_base = psram_entry->base;
-				p_mem_region->l3_size = psram_entry->size;
-				p_mem_region->l3_ways = psram_entry->ways;
-				p_mem_region->l3_clos[PTCM_CLOS_INDEX_SETUP] = p_mem_region->l3_ways;
-				p_mem_region->l3_clos[PTCM_CLOS_INDEX_LOCK] ^= p_mem_region->l3_ways;
-				if (psram_area_top < p_mem_region->l3_base + p_mem_region->l3_size) {
-					psram_area_top = p_mem_region->l3_base + p_mem_region->l3_size;
-				}
-				l3_psram_regions_count++;
-				pr_info("found L3 psram, in HPA %llx, size %llx", p_mem_region->l3_base, p_mem_region->l3_size);
-			} else if (psram_entry->cache_level == 2) {
-				if (l2_psram_regions_count >= MAX_L2_PSRAM_REGIONS){
-					pr_err("Too many L2 regions!");
-					break;
-				}
-				p_mem_region->l2_valid = true;
-				p_mem_region->l2_base = psram_entry->base;
-				p_mem_region->l2_size = psram_entry->size;
-				p_mem_region->l2_ways = psram_entry->ways;
-				p_mem_region->l2_clos[PTCM_CLOS_INDEX_SETUP] = p_mem_region->l2_ways;
-				p_mem_region->l2_clos[PTCM_CLOS_INDEX_LOCK] ^= p_mem_region->l2_ways;
-				if (psram_area_top < p_mem_region->l2_base + p_mem_region->l2_size) {
-					psram_area_top = p_mem_region->l2_base + p_mem_region->l2_size;
-				}
-				l2_psram_regions_count++;
-				pr_info("found L2 psram, in HPA %llx, size %llx", psram_entry->base, psram_entry->size);
-			}
-			break;
-		/* In current phase, we ignore other entries like gt_clos and wrc_close */
-		default: 
-			break;
+			/* point to next ptct entry */
+			entry = (struct ptct_entry *)((uint64_t)entry + entry->size);
 		}
-		/* point to next ptct entry */
-		entry = (struct ptct_entry *)((uint64_t)entry + entry->size);
+		psram_area_top = round_page_up(psram_area_top);
+		psram_area_bottom = round_page_down(psram_area_bottom);
 	}
-	psram_area_top = round_page_up(psram_area_top);
-	psram_area_bottom = round_page_down(psram_area_bottom);
 }
 
 static volatile uint64_t ptcm_command_interface_offset;
 static volatile struct ptct_entry* ptct_base_entry;
 static volatile ptcm_command_abi ptcm_command_interface = NULL;
 /* psram_is_initialized is used to tell whether psram is successfully initialized for all cores */
-static volatile bool psram_is_initialized = false;
 
 int32_t init_psram(bool is_bsp)
 {
