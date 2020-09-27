@@ -150,6 +150,9 @@ void flush_address_space(void *addr, uint64_t size);
  */
 void invept(const void *eptp);
 
+/* FIX-ME:
+ * this is an workaround for pSRAM protection. We should implement full emulation for WBINVD
+ */
 extern volatile bool psram_is_initialized;
 static inline void cache_flush_invalidate_all(void)
 {
