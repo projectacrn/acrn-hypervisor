@@ -53,7 +53,7 @@ int32_t memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
 			memcpy_erms(d, s, slen);
 		}
 		ret = 0;
-	} else {
+	} else if (d != NULL) {
 		(void)memset(d, 0U, dmax);
 	}
 
