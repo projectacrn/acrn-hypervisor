@@ -150,9 +150,11 @@ void flush_address_space(void *addr, uint64_t size);
  */
 void invept(const void *eptp);
 
+extern volatile bool psram_is_initialized;
 static inline void cache_flush_invalidate_all(void)
 {
-	asm volatile ("   wbinvd\n" : : : "memory");
+	if (psram_is_initialized == false)
+		asm volatile ("   wbinvd\n" : : : "memory");
 }
 
 static inline void clflush(const volatile void *p)
