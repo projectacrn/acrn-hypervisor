@@ -154,10 +154,8 @@ Build the ACRN Hypervisor on Ubuntu
         bison
 
       $ sudo pip3 install kconfiglib
-      $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
-      $ tar zxvf acpica-unix-20191018.tar.gz
-      $ cd acpica-unix-20191018
-      $ make clean && make iasl && make install
+
+   Follow the `Install IASL in Ubuntu for User VM launch`_ section to install ``iasl``.
 
 #. Get the ACRN source code:
 
@@ -317,14 +315,11 @@ The User VM will be launched by OVMF, so copy it to the specific folder:
 Install IASL in Ubuntu for User VM launch
 -----------------------------------------
 
-ACRN uses ``iasl`` to parse **User VM ACPI** information. The original ``iasl``
-in Ubuntu 18.04 is too old to match with ``acrn-dm``; update it using the
-following steps:
+ACRN uses ``iasl`` to parse **User VM ACPI** information. or to generate
+ACPI binary for pre-launched VMs.
 
 .. code-block:: none
 
-   $ sudo -E apt-get install iasl
-   $ cd /home/acrn/work
    $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
    $ tar zxvf acpica-unix-20191018.tar.gz
    $ cd acpica-unix-20191018

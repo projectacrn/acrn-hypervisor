@@ -88,7 +88,8 @@ Install the necessary tools for the following systems:
      $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
      $ tar zxvf acpica-unix-20191018.tar.gz
      $ cd acpica-unix-20191018
-     $ make clean && make iasl && make install
+     $ make clean && make iasl
+     $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
 
   .. note::
      ACRN requires ``gcc`` version 7.3.* (or higher) and ``binutils`` version
