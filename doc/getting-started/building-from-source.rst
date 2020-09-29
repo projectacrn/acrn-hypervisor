@@ -274,7 +274,4 @@ of the acrn-hypervisor directory):
    from XML files. If the ``TARGET_DIR`` is not specified, the original
    configuration files of acrn-hypervisor would be overridden.
 
-   In the 2.1 release, there is a known issue (:acrn-issue:`5157`) that
-   ``TARGET_DIR=xxx`` does not work.
-
 Follow the same instructions to boot and test the images you created from your build.
