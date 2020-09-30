@@ -49,7 +49,8 @@ Elkhart Lake and Tiger Lake processor support.
     Time Coordinated Computing and Time Sensitive Networking
   * Support for functional safety with new features e.g., Intel Safety Island
 
-**On Elkhart Lake, ACRN can boot using `Slim Bootloader <https://slimbootloader.github.io/>`_ (an alternative bootloader to UEFI BIOS).**
+On Elkhart Lake, ACRN can boot using Slim Bootloader
+  `Slim Bootloader <https://slimbootloader.github.io/>`_ is an alternative bootloader to UEFI BIOS
 
 Shared memory based inter-VM communication (ivshmem) is extended
   ivshmem now supports all kinds of VMs including pre-launched VM, Service VM, and
