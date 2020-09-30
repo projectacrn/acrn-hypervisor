@@ -7,9 +7,9 @@ Verified version
 ****************
 
 - Ubuntu version: **18.04**
-- GCC version: **9.0**
-- ACRN-hypervisor branch: **release_2.0 (acrn-2020w23.6-180000p)**
-- ACRN-Kernel (Service VM kernel): **release_2.0 (5.4.43-PKT-200203T060100Z)**
+- GCC version: **7.4**
+- ACRN-hypervisor branch: **release_2.2 (acrn-2020w40.1-180000p)**
+- ACRN-Kernel (Service VM kernel): **release_2.2 (5.4.43-PKT-200203T060100Z)**
 - RT kernel for Ubuntu User OS: **4.19/preempt-rt (4.19.72-rt25)**
 - HW: Maxtang Intel WHL-U i7-8665U (`AX8665U-A2 <http://www.maxtangpc.com/fanlessembeddedcomputers/140.html>`_)
 
@@ -155,7 +155,27 @@ Build the ACRN Hypervisor on Ubuntu
 
       $ sudo pip3 install kconfiglib
 
-   Follow the `Install IASL in Ubuntu for User VM launch`_ section to install ``iasl``.
+#. Starting with the ACRN v2.2 release, we use the ``iasl`` tool to
+   compile an offline ACPI binary for pre-launched VMs while building ACRN,
+   so we need to install the ``iasl`` tool in the ACRN build environment.
+
+   Follow these steps to install ``iasl`` (and its dependencies) and
+   then update the ``iasl`` binary with a newer version not available
+   in Ubuntu 18.04:
+
+   .. code-block:: none
+
+      $ sudo -E apt-get install iasl
+      $ cd /home/acrn/work
+      $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
+      $ tar zxvf acpica-unix-20191018.tar.gz
+      $ cd acpica-unix-20191018
+      $ make clean && make iasl
+      $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
+
+   .. note:: While there are newer versions of software available from
+      the `ACPICA downloads site <https://acpica.org/downloads>`_, this
+      20191018 version has been verified to work.
 
 #. Get the ACRN source code:
 
@@ -165,29 +185,19 @@ Build the ACRN Hypervisor on Ubuntu
       $ git clone https://github.com/projectacrn/acrn-hypervisor
       $ cd acrn-hypervisor
 
-#. Switch to the v2.0 version:
+#. Switch to the v2.2 version:
 
    .. code-block:: none
 
-      $ git checkout -b v2.0 remotes/origin/release_2.0
+      $ git checkout -b v2.2 remotes/origin/release_2.2
 
 #. Build ACRN:
 
    .. code-block:: none
 
-      $ make all BOARD_FILE=misc/acrn-config/xmls/board-xmls/whl-ipc-i7.xml SCENARIO_FILE=misc/acrn-config/xmls/config-xmls/whl-ipc-i7/industry.xml RELEASE=0
+      $ make all BOARD_FILE=misc/vm-configs/xmls/board-xmls/whl-ipc-i7.xml SCENARIO_FILE=misc/vm-configs/xmls/config-xmls/whl-ipc-i7/industry.xml RELEASE=0
       $ sudo make install
       $ sudo cp build/hypervisor/acrn.bin /boot/acrn/
-
-Enable network sharing for the User VM
-======================================
-
-In the Ubuntu Service VM, enable network sharing for the User VM:
-
-.. code-block:: none
-
-   $ sudo systemctl enable systemd-networkd
-   $ sudo systemctl start systemd-networkd
 
 Build and install the ACRN kernel
 =================================
@@ -204,7 +214,7 @@ Build and install the ACRN kernel
 
    .. code-block:: none
 
-      $ git checkout -b v2.0 remotes/origin/release_2.0
+      $ git checkout -b v2.2 remotes/origin/release_2.2
       $ cp kernel_config_uefi_sos .config
       $ make olddefconfig
       $ make all
@@ -258,12 +268,24 @@ Update Grub for the Ubuntu Service VM
       GRUB_DEFAULT=ubuntu-service-vm
       #GRUB_TIMEOUT_STYLE=hidden
       GRUB_TIMEOUT=5
+      GRUB_CMDLINE_LINUX="text"
 
 #. Update Grub on your system:
 
    .. code-block:: none
 
       $ sudo update-grub
+
+Enable network sharing for the User VM
+======================================
+
+In the Ubuntu Service VM, enable network sharing for the User VM:
+
+.. code-block:: none
+
+   $ sudo systemctl enable systemd-networkd
+   $ sudo systemctl start systemd-networkd
+
 
 Reboot the system
 =================
@@ -315,16 +337,28 @@ The User VM will be launched by OVMF, so copy it to the specific folder:
 Install IASL in Ubuntu for User VM launch
 -----------------------------------------
 
-ACRN uses ``iasl`` to parse **User VM ACPI** information. or to generate
-ACPI binary for pre-launched VMs.
+Starting with the ACRN v2.2 release, we use the ``iasl`` tool to
+compile an offline ACPI binary for pre-launched VMs while building ACRN,
+so we need to install the ``iasl`` tool in the ACRN build environment.
+
+Follow these steps to install ``iasl`` (and its dependencies) and
+then update the ``iasl`` binary with a newer version not available
+in Ubuntu 18.04:
 
 .. code-block:: none
 
+   $ sudo -E apt-get install iasl
+   $ cd /home/acrn/work
    $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
    $ tar zxvf acpica-unix-20191018.tar.gz
    $ cd acpica-unix-20191018
    $ make clean && make iasl
    $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
+
+.. note:: While there are newer versions of software available from
+   the `ACPICA downloads site <https://acpica.org/downloads>`_, this
+   20191018 version has been verified to work.
+
 
 Build and Install the RT kernel for the Ubuntu User VM
 ------------------------------------------------------
