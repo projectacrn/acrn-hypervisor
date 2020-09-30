@@ -195,7 +195,7 @@ Build the ACRN Hypervisor on Ubuntu
 
    .. code-block:: none
 
-      $ make all BOARD_FILE=misc/vm-configs/xmls/board-xmls/whl-ipc-i7.xml SCENARIO_FILE=misc/vm-configs/xmls/config-xmls/whl-ipc-i7/industry.xml RELEASE=0
+      $ make all BOARD_FILE=misc/vm_configs/xmls/board-xmls/whl-ipc-i7.xml SCENARIO_FILE=misc/vm_configs/xmls/config-xmls/whl-ipc-i7/industry.xml RELEASE=0
       $ sudo make install
       $ sudo cp build/hypervisor/acrn.bin /boot/acrn/
 
