@@ -32,25 +32,26 @@ ACRN v2.2 requires Ubuntu 18.04.  Follow the instructions in the
 :ref:`rt_industry_ubuntu_setup` to get started with ACRN.
 
 
-What’s New in v2.2
+What's New in v2.2
 ******************
 
 Elkhart Lake and Tiger Lake processor support.
   At `Intel Industrial iSummit 2020
   <https://newsroom.intel.com/press-kits/intel-industrial-summit-2020>`_,
   Intel announced the latest additions to their
-  enhanced-for-IoT Edge portfolio: the Intel® Atom® x6000E Series, Intel®
-  Pentium® and Intel® Celeron® N and J Series (all code named Elkhart Lake),
-  and 11th Gen Intel® Core™ processors (code named Tiger Lake-UP3). The ACRN
+  enhanced-for-IoT Edge portfolio: the Intel |reg| Atom |reg| x6000E Series, Intel |reg|
+  Pentium |reg| and Intel |reg| Celeron |reg| N and J Series (all codenamed Elkhart Lake),
+  and 11th Gen Intel |reg| Core |trade| processors (codenamed Tiger Lake-UP3). The ACRN
   team is pleased to announce that this ACRN v2.2 release already supports
   these processors.
 
-  * Support for time deterministic applications with new features e.g.,
+  * Support for time deterministic applications with new features, e.g.,
     Time Coordinated Computing and Time Sensitive Networking
-  * Support for functional safety with new features e.g., Intel Safety Island
+  * Support for functional safety with new features, e.g., Intel Safety Island
 
 On Elkhart Lake, ACRN can boot using Slim Bootloader
-  `Slim Bootloader <https://slimbootloader.github.io/>`_ is an alternative bootloader to UEFI BIOS
+  `Slim Bootloader <https://slimbootloader.github.io/>`_ is an
+  alternative bootloader to UEFI firmware.
 
 Shared memory based inter-VM communication (ivshmem) is extended
   ivshmem now supports all kinds of VMs including pre-launched VM, Service VM, and
@@ -58,7 +59,7 @@ Shared memory based inter-VM communication (ivshmem) is extended
 
 **CPU sharing supports pre-launched VM.**
 
-**RTLinux with preempt-RT linux kernel 5.4 is validated both as a pre-launched and post-launched VM.**
+**RTLinux with preempt-RT Linux kernel 5.4 is validated both as a pre-launched and post-launched VM.**
 
 **ACRN hypervisor can emulate MSI-X based on physical MSI with multiple vectors.**
 
@@ -67,9 +68,9 @@ Staged removal of deprivileged boot mode support.
   Linux distributions such as Clear Linux. Unfortunately, deprivileged boot
   mode limits ACRN's scalability and is unsuitable for ACRN's hybrid
   hypervisor mode. In ACRN v2.2, deprivileged boot mode is no longer the default
-  and will be complete removed in ACRN v2.3. We're focusing instead
+  and will be completely removed in ACRN v2.3. We're focusing instead
   on using multiboot2 boot (via Grub). Multiboot2 is not supported in
-  Clearlinux though, so we have chosen Ubuntu (and Yocto Project) as the
+  Clear Linux though, so we have chosen Ubuntu (and Yocto Project) as the
   preferred Service VM OSs moving forward.
 
 Document updates
@@ -77,7 +78,7 @@ Document updates
 
 New and updated reference documents are available, including:
 
-.. rst-class:: rst-columns
+.. rst-class:: rst-columns2
 
 * :ref:`develop_acrn`
 * :ref:`asm_coding_guidelines`
@@ -124,8 +125,8 @@ Fixed Issues Details
 - :acrn-issue:`5157` -  [build from source] during build HV with XML, "TARGET_DIR=xxx" does not work
 - :acrn-issue:`5165` -  [WHL][Yocto][YaaG] No UI display when launch Yaag gvt-g with acrn kernel
 - :acrn-issue:`5215` -  [UPsquared N3350 board] Solution to Bootloader issue
-- :acrn-issue:`5233` -  Boot Acrn failed on Dell-OptiPlex 5040 with Intel i5-6500T
-- :acrn-issue:`5238` -  acrn-config: add hybrid_rt scenario xml config for ehl-crb-b
+- :acrn-issue:`5233` -  Boot ACRN failed on Dell-OptiPlex 5040 with Intel i5-6500T
+- :acrn-issue:`5238` -  acrn-config: add hybrid_rt scenario XML config for ehl-crb-b
 - :acrn-issue:`5240` -  passthrough DHRD-ignored device
 - :acrn-issue:`5242` -  acrn-config: add pse-gpio to vmsix_on_msi devices list
 - :acrn-issue:`4691` -  hv: add vgpio device model support
@@ -137,7 +138,7 @@ Fixed Issues Details
 
 Known Issues
 ************
-- :acrn-issue:`5150` - [REG][WHL][[Yocto][Passthru] Launch RTVM fails with usb passthru
+- :acrn-issue:`5150` - [REG][WHL][[Yocto][Passthru] Launch RTVM fails with USB passthru
 - :acrn-issue:`5151` - [WHL][VxWorks] Launch VxWorks fails due to no suitable video mode found
 - :acrn-issue:`5154` - [TGL][Yocto][PM] 148213_PM_SystemS5 with life_mngr fail
 - :acrn-issue:`5368` - [TGL][Yocto][Passthru] Audio does not work on TGL
