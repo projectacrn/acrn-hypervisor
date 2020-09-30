@@ -1,6 +1,6 @@
 .. _rt_perf_tips_rtvm:
 
-ACRN Real-Time VM Performance Tips
+ACRN Real-time VM Performance Tips
 ##################################
 
 Background
@@ -50,7 +50,7 @@ Tip: Apply the acrn-dm option ``--lapic_pt``
 Tip: Use virtio polling mode
    Polling mode prevents the frontend of the VM-exit from sending a
    notification to the backend.  We recommend that you passthrough a
-   physical peripheral device (such as block or an ethernet device), to an
+   physical peripheral device (such as block or an Ethernet device), to an
    RTVM. If no physical device is available, ACRN supports virtio devices
    and enables polling mode to avoid a VM-exit at the frontend. Enable
    virtio polling mode via the option ``--virtio_poll [polling interval]``.

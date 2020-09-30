@@ -23,7 +23,7 @@ the client. The client is responsible for collecting crash information
 and saving it in the crashlog file. After the saving work is done, the
 client notifies server and the server will clean up.
 
-The work flow diagram:
+The workflow diagram:
 
 ::
 

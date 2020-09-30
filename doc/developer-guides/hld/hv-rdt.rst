@@ -39,7 +39,7 @@ resource allocator.) The user can check the cache capabilities such as cache
 mask and max supported CLOS as described in :ref:`rdt_detection_capabilities`
 and then program the IA32_type_MASK_n and IA32_PQR_ASSOC MSR with a
 CLOS ID, to select a cache mask to take effect. These configurations can be 
-done in scenario xml file under ``FEATURES`` section as shown in the below example.
+done in scenario XML file under ``FEATURES`` section as shown in the below example.
 ACRN uses VMCS MSR loads on every VM Entry/VM Exit for non-root and root modes
 to enforce the settings.
 
@@ -52,7 +52,7 @@ to enforce the settings.
             <CLOS_MASK desc="Cache Capacity Bitmask">0xF</CLOS_MASK>
 
 Once the cache mask is set of each individual CPU, the respective CLOS ID
-needs to be set in the scenario xml file under ``VM`` section. If user desires
+needs to be set in the scenario XML file under ``VM`` section. If user desires
 to use CDP feature, CDP_ENABLED should be set to ``y``.
 
    .. code-block:: none
@@ -106,7 +106,7 @@ that corresponds to each CLOS and then setting IA32_PQR_ASSOC MSR with CLOS
 users can check the MBA capabilities such as mba delay values and
 max supported CLOS as described in :ref:`rdt_detection_capabilities` and
 then program the IA32_MBA_MASK_n and IA32_PQR_ASSOC MSR with the CLOS ID.
-These configurations can be done in scenario xml file under ``FEATURES`` section
+These configurations can be done in scenario XML file under ``FEATURES`` section
 as shown in the below example. ACRN uses VMCS MSR loads on every VM Entry/VM Exit
 for non-root and root modes to enforce the settings.
 
@@ -120,7 +120,7 @@ for non-root and root modes to enforce the settings.
             <MBA_DELAY desc="Memory Bandwidth Allocation delay value">0</MBA_DELAY>
 
 Once the cache mask is set of each individual CPU, the respective CLOS ID
-needs to be set in the scenario xml file under ``VM`` section.
+needs to be set in the scenario XML file under ``VM`` section.
 
    .. code-block:: none
       :emphasize-lines: 2

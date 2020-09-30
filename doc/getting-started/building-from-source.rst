@@ -54,7 +54,7 @@ distribution.
 
 .. note::
    ACRN uses ``menuconfig``, a python3 text-based user interface (TUI)
-   for configuring hypervisor options and using python's ``kconfiglib``
+   for configuring hypervisor options and using Python's ``kconfiglib``
    library.
 
 Install the necessary tools for the following systems:
@@ -79,8 +79,17 @@ Install the necessary tools for the following systems:
           libblkid-dev \
           e2fslibs-dev \
           pkg-config \
-          libnuma-dev
+          libnuma-dev \
+          liblz4-tool \
+          flex \
+          bison
+
      $ sudo pip3 install kconfiglib
+     $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
+     $ tar zxvf acpica-unix-20191018.tar.gz
+     $ cd acpica-unix-20191018
+     $ make clean && make iasl
+     $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
 
   .. note::
      ACRN requires ``gcc`` version 7.3.* (or higher) and ``binutils`` version
@@ -273,8 +282,5 @@ of the acrn-hypervisor directory):
    specifies what directory is used to  store configuration files imported
    from XML files. If the ``TARGET_DIR`` is not specified, the original
    configuration files of acrn-hypervisor would be overridden.
-
-   In the 2.1 release, there is a known issue (:acrn-issue:`5157`) that
-   ``TARGET_DIR=xxx`` does not work.
 
 Follow the same instructions to boot and test the images you created from your build.

@@ -7,9 +7,9 @@ Verified version
 ****************
 
 - Ubuntu version: **18.04**
-- GCC version: **9.0**
-- ACRN-hypervisor branch: **release_2.0 (acrn-2020w23.6-180000p)**
-- ACRN-Kernel (Service VM kernel): **release_2.0 (5.4.43-PKT-200203T060100Z)**
+- GCC version: **7.4**
+- ACRN-hypervisor branch: **release_2.2 (acrn-2020w40.1-180000p)**
+- ACRN-Kernel (Service VM kernel): **release_2.2 (5.4.43-PKT-200203T060100Z)**
 - RT kernel for Ubuntu User OS: **4.19/preempt-rt (4.19.72-rt25)**
 - HW: Maxtang Intel WHL-U i7-8665U (`AX8665U-A2 <http://www.maxtangpc.com/fanlessembeddedcomputers/140.html>`_)
 
@@ -34,7 +34,7 @@ Hardware Connection
 Connect the WHL Maxtang with the appropriate external devices.
 
 #. Connect the WHL Maxtang board to a monitor via an HDMI cable.
-#. Connect the mouse, keyboard, ethernet cable, and power supply cable to
+#. Connect the mouse, keyboard, Ethernet cable, and power supply cable to
    the WHL Maxtang board.
 #. Insert the Ubuntu 18.04 USB boot disk into the USB port.
 
@@ -55,7 +55,7 @@ Install Ubuntu on the SATA disk
 #. Insert the Ubuntu USB boot disk into the WHL Maxtang machine.
 #. Power on the machine, then press F11 to select the USB disk as the boot
    device. Select **UEFI: SanDisk** to boot using **UEFI**. Note that the
-   label depends on the brand/make of the USB stick.
+   label depends on the brand/make of the USB drive.
 #. Install the Ubuntu OS.
 #. Select **Something else** to create the partition.
 
@@ -72,7 +72,7 @@ Install Ubuntu on the SATA disk
 #. Complete the Ubuntu installation on ``/dev/sda``.
 
 This Ubuntu installation will be modified later (see `Build and Install the RT kernel for the Ubuntu User VM`_)
-to turn it into a Real-Time User VM (RTVM).
+to turn it into a real-time User VM (RTVM).
 
 Install the Ubuntu Service VM on the NVMe disk
 ==============================================
@@ -87,7 +87,7 @@ Install Ubuntu on the NVMe disk
 #. Insert the Ubuntu USB boot disk into the WHL Maxtang machine.
 #. Power on the machine, then press F11 to select the USB disk as the boot
    device. Select **UEFI: SanDisk** to boot using **UEFI**. Note that the
-   label depends on the brand/make of the USB stick.
+   label depends on the brand/make of the USB drive.
 #. Install the Ubuntu OS.
 #. Select **Something else** to create the partition.
 
@@ -103,7 +103,7 @@ Install Ubuntu on the NVMe disk
 
 #. Complete the Ubuntu installation and reboot the system.
 
-   .. note:: Set **acrn** as the username for the Ubuntu Service VM.
+   .. note:: Set ``acrn`` as the username for the Ubuntu Service VM.
 
 
 Build and Install ACRN on Ubuntu
@@ -155,6 +155,28 @@ Build the ACRN Hypervisor on Ubuntu
 
       $ sudo pip3 install kconfiglib
 
+#. Starting with the ACRN v2.2 release, we use the ``iasl`` tool to
+   compile an offline ACPI binary for pre-launched VMs while building ACRN,
+   so we need to install the ``iasl`` tool in the ACRN build environment.
+
+   Follow these steps to install ``iasl`` (and its dependencies) and
+   then update the ``iasl`` binary with a newer version not available
+   in Ubuntu 18.04:
+
+   .. code-block:: none
+
+      $ sudo -E apt-get install iasl
+      $ cd /home/acrn/work
+      $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
+      $ tar zxvf acpica-unix-20191018.tar.gz
+      $ cd acpica-unix-20191018
+      $ make clean && make iasl
+      $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
+
+   .. note:: While there are newer versions of software available from
+      the `ACPICA downloads site <https://acpica.org/downloads>`_, this
+      20191018 version has been verified to work.
+
 #. Get the ACRN source code:
 
    .. code-block:: none
@@ -163,29 +185,19 @@ Build the ACRN Hypervisor on Ubuntu
       $ git clone https://github.com/projectacrn/acrn-hypervisor
       $ cd acrn-hypervisor
 
-#. Switch to the v2.0 version:
+#. Switch to the v2.2 version:
 
    .. code-block:: none
 
-      $ git checkout -b v2.0 remotes/origin/release_2.0
+      $ git checkout -b v2.2 remotes/origin/release_2.2
 
 #. Build ACRN:
 
    .. code-block:: none
 
-      $ make all BOARD_FILE=misc/acrn-config/xmls/board-xmls/whl-ipc-i7.xml SCENARIO_FILE=misc/acrn-config/xmls/config-xmls/whl-ipc-i7/industry.xml RELEASE=0
+      $ make all BOARD_FILE=misc/vm-configs/xmls/board-xmls/whl-ipc-i7.xml SCENARIO_FILE=misc/vm-configs/xmls/config-xmls/whl-ipc-i7/industry.xml RELEASE=0
       $ sudo make install
       $ sudo cp build/hypervisor/acrn.bin /boot/acrn/
-
-Enable network sharing for the User VM
-======================================
-
-In the Ubuntu Service VM, enable network sharing for the User VM:
-
-.. code-block:: none
-
-   $ sudo systemctl enable systemd-networkd
-   $ sudo systemctl start systemd-networkd
 
 Build and install the ACRN kernel
 =================================
@@ -202,7 +214,7 @@ Build and install the ACRN kernel
 
    .. code-block:: none
 
-      $ git checkout -b v2.0 remotes/origin/release_2.0
+      $ git checkout -b v2.2 remotes/origin/release_2.2
       $ cp kernel_config_uefi_sos .config
       $ make olddefconfig
       $ make all
@@ -256,12 +268,24 @@ Update Grub for the Ubuntu Service VM
       GRUB_DEFAULT=ubuntu-service-vm
       #GRUB_TIMEOUT_STYLE=hidden
       GRUB_TIMEOUT=5
+      GRUB_CMDLINE_LINUX="text"
 
 #. Update Grub on your system:
 
    .. code-block:: none
 
       $ sudo update-grub
+
+Enable network sharing for the User VM
+======================================
+
+In the Ubuntu Service VM, enable network sharing for the User VM:
+
+.. code-block:: none
+
+   $ sudo systemctl enable systemd-networkd
+   $ sudo systemctl start systemd-networkd
+
 
 Reboot the system
 =================
@@ -287,7 +311,7 @@ BIOS settings of GVT-d for WaaG
 -------------------------------
 
 .. note::
-   Skip this step if you are using a Kaby Lake (KBL) NUC.
+   Skip this step if you are using a Kaby Lake (KBL) Intel NUC.
 
 Go to **Chipset** -> **System Agent (SA) Configuration** -> **Graphics
 Configuration** and make the following settings:
@@ -313,9 +337,13 @@ The User VM will be launched by OVMF, so copy it to the specific folder:
 Install IASL in Ubuntu for User VM launch
 -----------------------------------------
 
-ACRN uses ``iasl`` to parse **User VM ACPI** information. The original ``iasl``
-in Ubuntu 18.04 is too old to match with ``acrn-dm``; update it using the
-following steps:
+Starting with the ACRN v2.2 release, we use the ``iasl`` tool to
+compile an offline ACPI binary for pre-launched VMs while building ACRN,
+so we need to install the ``iasl`` tool in the ACRN build environment.
+
+Follow these steps to install ``iasl`` (and its dependencies) and
+then update the ``iasl`` binary with a newer version not available
+in Ubuntu 18.04:
 
 .. code-block:: none
 
@@ -326,6 +354,11 @@ following steps:
    $ cd acpica-unix-20191018
    $ make clean && make iasl
    $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
+
+.. note:: While there are newer versions of software available from
+   the `ACPICA downloads site <https://acpica.org/downloads>`_, this
+   20191018 version has been verified to work.
+
 
 Build and Install the RT kernel for the Ubuntu User VM
 ------------------------------------------------------
@@ -441,7 +474,7 @@ Recommended BIOS settings for RTVM
 .. csv-table::
    :widths: 15, 30, 10
 
-   "Hyper-Threading", "Intel Advanced Menu -> CPU Configuration", "Disabled"
+   "Hyper-threading", "Intel Advanced Menu -> CPU Configuration", "Disabled"
    "Intel VMX", "Intel Advanced Menu -> CPU Configuration", "Enable"
    "Speed Step", "Intel Advanced Menu -> Power & Performance -> CPU - Power Management Control", "Disabled"
    "Speed Shift", "Intel Advanced Menu -> Power & Performance -> CPU - Power Management Control", "Disabled"
@@ -458,7 +491,7 @@ Recommended BIOS settings for RTVM
    "Delay Enable DMI ASPM", "Intel Advanced Menu -> PCH-IO Configuration -> PCI Express Configuration", "Disabled"
    "DMI Link ASPM", "Intel Advanced Menu -> PCH-IO Configuration -> PCI Express Configuration", "Disabled"
    "Aggressive LPM Support", "Intel Advanced Menu -> PCH-IO Configuration -> SATA And RST Configuration", "Disabled"
-   "USB Periodic Smi", "Intel Advanced Menu -> LEGACY USB Configuration", "Disabled"
+   "USB Periodic SMI", "Intel Advanced Menu -> LEGACY USB Configuration", "Disabled"
    "ACPI S3 Support", "Intel Advanced Menu -> ACPI Settings", "Disabled"
    "Native ASPM", "Intel Advanced Menu -> ACPI Settings", "Disabled"
 
@@ -522,13 +555,13 @@ this, follow the below steps to allocate all housekeeping tasks to core 0:
       # Move all rcu tasks to core 0.
       for i in `pgrep rcu`; do taskset -pc 0 $i; done
 
-      # Change realtime attribute of all rcu tasks to SCHED_OTHER and priority 0
+      # Change real-time attribute of all rcu tasks to SCHED_OTHER and priority 0
       for i in `pgrep rcu`; do chrt -v -o -p 0 $i; done
 
-      # Change realtime attribute of all tasks on core 1 to SCHED_OTHER and priority 0
+      # Change real-time attribute of all tasks on core 1 to SCHED_OTHER and priority 0
       for i in `pgrep /1`; do chrt -v -o -p 0 $i; done
 
-      # Change realtime attribute of all tasks to SCHED_OTHER and priority 0
+      # Change real-time attribute of all tasks to SCHED_OTHER and priority 0
       for i in `ps -A -o pid`; do chrt -v -o -p 0 $i; done
 
       echo disabling timer migration
@@ -668,7 +701,8 @@ Passthrough a hard disk to RTVM
          --ovmf /usr/share/acrn/bios/OVMF.fd \
          hard_rtvm
 
-#. Upon deployment completion, launch the RTVM directly onto your WHL NUC:
+#. Upon deployment completion, launch the RTVM directly onto your WHL
+   Intel NUC:
 
    .. code-block:: none
 

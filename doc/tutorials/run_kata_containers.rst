@@ -18,7 +18,7 @@ Prerequisites
 
 #. Refer to the :ref:`ACRN supported hardware <hardware>`.
 #. For a default prebuilt ACRN binary in the E2E package, you must have 4
-   CPU cores or enable "CPU Hyper-Threading" in order to have 4 CPU threads for 2 CPU cores.
+   CPU cores or enable "CPU Hyper-threading" in order to have 4 CPU threads for 2 CPU cores.
 #. Follow the :ref:`rt_industry_ubuntu_setup` to set up the ACRN Service VM
    based on Ubuntu.
 #. This tutorial is validated on the following configurations:

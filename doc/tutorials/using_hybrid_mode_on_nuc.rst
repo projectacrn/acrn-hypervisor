@@ -19,7 +19,8 @@ Prerequisites
 *************
 - Use the `Intel NUC Kit NUC7i7DNHE <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_.
 - Connect to the serial port as described in :ref:`Connecting to the serial port <connect_serial_port>`.
-- Install Ubuntu 18.04 on your SATA device or on the NVME disk of your NUC.
+- Install Ubuntu 18.04 on your SATA device or on the NVME disk of your
+  Intel NUC.
 
 Update Ubuntu GRUB
 ******************
@@ -49,11 +50,11 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
 
    .. note:: The module ``/boot/zephyr.bin`` is the VM0 (Zephyr) kernel file.
       The param ``xxxxxx`` is VM0's kernel file tag and must exactly match the
-      ``kernel_mod_tag`` of VM0 which is configured in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.c``
+      ``kernel_mod_tag`` of VM0, which is configured in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.c``
       file. The multiboot module ``/boot/bzImage`` is the Service VM kernel
       file. The param ``yyyyyy`` is the bzImage tag and must exactly match the
       ``kernel_mod_tag`` of VM1 in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.c``
-      file. The kernel command line arguments used to boot the Service VM are
+      file. The kernel command-line arguments used to boot the Service VM are
       located in the header file ``misc/vm_configs/scenarios/hybrid/vm_configurations.h``
       and are configured by the `SOS_VM_BOOTARGS` macro.
       The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0 (Zephyr).
@@ -73,8 +74,8 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
 
    $ sudo update-grub
 
-#. Reboot the NUC. Select the **ACRN hypervisor Hybrid Scenario** entry to boot
-   the ACRN hypervisor on the NUC's display. The GRUB loader will boot the
+#. Reboot the Intel NUC. Select the **ACRN hypervisor Hybrid Scenario** entry to boot
+   the ACRN hypervisor on the Intel NUC's display. The GRUB loader will boot the
    hypervisor, and the hypervisor will start the VMs automatically.
 
 Hybrid Scenario Startup Checking
@@ -86,7 +87,7 @@ Hybrid Scenario Startup Checking
 
 #. Use these steps to verify all VMs are running properly:
 
-   a. Use the ``vm_console 0`` to switch to VM0 (Zephyr) console. It will display **Hello world! acrn**.
+   a. Use the ``vm_console 0`` to switch to VM0 (Zephyr) console. It will display ``Hello world! acrn``.
    #. Enter :kbd:`Ctrl` + :kbd:`Space` to return to the ACRN hypervisor shell.
    #. Use the ``vm_console 1`` command to switch to the VM1 (Service VM) console.
    #. Verify that the VM1's Service VM can boot and you can log in.

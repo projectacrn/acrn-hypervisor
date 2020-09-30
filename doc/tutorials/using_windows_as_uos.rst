@@ -46,7 +46,7 @@ Download Win10 ISO and drivers
 
    - Select **ISO-LTSC** and click **Continue**.
    - Complete the required info. Click **Continue**.
-   - Select the language and **x86 64 bit**. Click **Download ISO** and save as ``windows10-LTSC-17763.iso``.
+   - Select the language and **x86 64-bit**. Click **Download ISO** and save as ``windows10-LTSC-17763.iso``.
 
 #. Download the `Intel DCH Graphics Driver
    <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`__.
@@ -57,8 +57,8 @@ Download Win10 ISO and drivers
    - Select **Download Package**. Key in **Oracle Linux 7.6** and click
      **Search**.
    - Click **DLP: Oracle Linux 7.6** to add to your Cart.
-   - Click **Checkout** which is located at the top-right corner.
-   - Under **Platforms/Language**, select **x86 64 bit**. Click **Continue**.
+   - Click **Checkout**, which is located at the top-right corner.
+   - Under **Platforms/Language**, select **x86 64-bit**. Click **Continue**.
    - Check **I accept the terms in the license agreement**. Click **Continue**.
    - From the list, right check the item labeled **Oracle VirtIO Drivers
      Version for Microsoft Windows 1.x.x, yy MB**, and then **Save link as
@@ -129,8 +129,8 @@ Install Windows 10 by GVT-g
    .. figure:: images/windows_install_4.png
       :align: center
 
-#. Click **Browser** and go to the drive that includes the virtio win
-   drivers. Select **all** under **vio\\w10\\amd64**. Install the
+#. Click **Browser** and go to the drive that includes the virtio
+   Windows drivers. Select **all** under **vio\\w10\\amd64**. Install the
    following drivers into the image:
 
    - Virtio-balloon
@@ -201,7 +201,7 @@ ACRN Windows verified feature list
 
     "IO Devices", "Virtio block as the boot device", "Working"
                 , "AHCI as the boot device",         "Working"
-                , "AHCI cdrom",                      "Working"
+                , "AHCI CD-ROM",                     "Working"
                 , "Virtio network",                  "Working"
                 , "Virtio input - mouse",            "Working"
                 , "Virtio input - keyboard",         "Working"
@@ -235,7 +235,7 @@ Explanation for acrn-dm popular command lines
   You may need to change 0/2/0 to match the bdf of the VGA controller on your platform.
 
 * **-s 3,ahci,hd:/root/img/win10.img**:
-  This is the hard disk onto which to install Windows 10.
+  This is the hard disk where Windows 10 should be installed..
   Make sure that the slot ID **3** points to your win10 img path.
 
 * **-s 4,virtio-net,tap0**:
@@ -253,11 +253,11 @@ Explanation for acrn-dm popular command lines
    # cat /proc/bus/input/devices | grep mouse
 
 * **-s 7,ahci,cd:/root/img/Windows10.iso**:
-  This is the IOS image used to install Windows 10. It appears as a cdrom
+  This is the IOS image used to install Windows 10. It appears as a CD-ROM
   device. Make sure that the slot ID **7** points to your win10 ISO path.
 
 * **-s 8,ahci,cd:/root/img/winvirtio.iso**:
-  This is cdrom device to install the virtio Windows driver. Make sure it points to your VirtIO ISO path.
+  This is CD-ROM device to install the virtio Windows driver. Make sure it points to your VirtIO ISO path.
 
 * **-s 9,passthru,0/14/0**:
   This is to passthrough the USB controller to Windows.

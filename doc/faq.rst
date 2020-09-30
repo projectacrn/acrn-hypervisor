@@ -31,8 +31,8 @@ details:
 * :option:`CONFIG_UOS_RAM_SIZE`
 * :option:`CONFIG_HV_RAM_SIZE`
 
-For example, if the NUC's physical memory size is 32G, you may follow these steps
-to make the new uefi ACRN hypervisor, and then deploy it onto the NUC board to boot
+For example, if the Intel NUC's physical memory size is 32G, you may follow these steps
+to make the new UEFI ACRN hypervisor, and then deploy it onto the Intel NUC to boot
 the ACRN Service VM with the 32G memory size.
 
 #. Use ``make menuconfig`` to change the ``RAM_SIZE``::

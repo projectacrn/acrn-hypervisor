@@ -22,4 +22,4 @@ documented in this section.
    Hostbridge emulation <hostbridge-virt-hld>
    AT keyboard controller emulation <atkbdc-virt-hld>
    Split Device Model <split-dm>
-   Shared memory based inter-vm communication <ivshmem-hld>
+   Shared memory based inter-VM communication <ivshmem-hld>

@@ -11,9 +11,9 @@ Intel NUC Kit. If you have not, refer to the following instructions:
 
 - Install a `Clear Linux OS
   <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_
-  on your NUC kit.
+  on your Intel NUC kit.
 - Follow the instructions at XXX to set up the
-  Service VM automatically on your NUC kit. Follow steps 1 - 4.
+  Service VM automatically on your Intel NUC kit. Follow steps 1 - 4.
 
   .. important:: need updated instructions that aren't Clear Linux
      dependent
@@ -21,7 +21,7 @@ Intel NUC Kit. If you have not, refer to the following instructions:
 Before you start this tutorial, make sure the KVM tools are installed on the
 development machine and set **IGD Aperture Size to 512** in the BIOS
 settings (refer to :numref:`intel-bios-ubun`). Connect two monitors to your
-NUC:
+Intel NUC:
 
 .. code-block:: none
 
@@ -46,7 +46,7 @@ Hardware Configurations
 |                          |                      |      Graphics        | - UHD Graphics 620                           |
 |                          |                      |                      | - Two HDMI 2.0a ports supporting 4K at 60 Hz |
 |                          |                      +----------------------+----------------------------------------------+
-|                          |                      |    System memory     | - 8GiB SODIMM DDR4 2400 MHz                  |
+|                          |                      |    System memory     | - 8GiB SO-DIMM DDR4 2400 MHz                 |
 |                          |                      +----------------------+----------------------------------------------+
 |                          |                      | Storage capabilities | - 1TB WDC WD10SPZX-22Z                       |
 +--------------------------+----------------------+----------------------+----------------------------------------------+
@@ -147,7 +147,7 @@ Modify the ``launch_win.sh`` script in order to launch Ubuntu as the User VM.
    ``/dev/sda1`` mentioned below with ``/dev/nvme0n1p1`` if you are
    using an SSD.
 
-1. Copy the ``uos.img`` to your NUC:
+1. Copy the ``uos.img`` to your Intel NUC:
 
    .. code-block:: none
 

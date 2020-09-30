@@ -118,14 +118,14 @@ ACRN supports Open Virtual Machine Firmware (OVMF) as a virtual boot
 loader for the Service VM to launch post-launched VMs such as Windows,
 Linux, VxWorks, or Zephyr RTOS. Secure boot is also supported.
 
-Post-launched Real-Time VM Support
+Post-launched real-time VM Support
 ==================================
 
 ACRN supports a post-launched RTVM, which also uses partitioned hardware
 resources to ensure adequate real-time performance, as required for
 industrial use cases.
 
-Real-Time VM Performance Optimizations
+Real-time VM Performance Optimizations
 ======================================
 
 ACRN 2.0 improves RTVM performance with these optimizations:
@@ -165,7 +165,7 @@ Large selection of OSs for User VMs
 ===================================
 
 ACRN now supports Windows* 10, Android*, Ubuntu*, Xenomai, VxWorks*,
-Real-Time Linux*, and Zephyr* RTOS.  ACRN's Windows support now conforms
+real-time Linux*, and Zephyr* RTOS.  ACRN's Windows support now conforms
 to the Microsoft* Hypervisor Top-Level Functional Specification (TLFS).
 ACRN 2.0 also improves overall Windows as a Guest (WaaG) stability and
 performance.

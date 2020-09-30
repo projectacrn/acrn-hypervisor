@@ -4,7 +4,7 @@ Run Zephyr as the User VM
 #########################
 
 This tutorial describes how to run Zephyr as the User VM on the ACRN hypervisor. We are using
-Kaby Lake-based NUC (model NUC7i5DNHE) in this tutorial.
+Kaby Lake-based Intel NUC (model NUC7i5DNHE) in this tutorial.
 Other :ref:`ACRN supported platforms <hardware>` should work as well.
 
 .. note::
@@ -24,7 +24,7 @@ Steps for Using Zephyr as User VM
 #. Build Zephyr
 
    Follow the `Zephyr Getting Started Guide <https://docs.zephyrproject.org/latest/getting_started/>`_ to
-   setup the Zephyr development environment.
+   set up the Zephyr development environment.
 
    The build process for ACRN User VM target is similar to other boards. We will build the `Hello World
    <https://docs.zephyrproject.org/latest/samples/hello_world/README.html>`_ sample for ACRN:
@@ -40,8 +40,8 @@ Steps for Using Zephyr as User VM
 
 #. Build grub2 boot loader image
 
-   We can build grub2 bootloader for Zephyr using ``boards/x86/common/scripts/build_grub.sh``
-   which locate in `Zephyr Sourcecode <https://github.com/zephyrproject-rtos/zephyr>`_.
+   We can build the grub2 bootloader for Zephyr using ``boards/x86/common/scripts/build_grub.sh``
+   found in the `Zephyr source code <https://github.com/zephyrproject-rtos/zephyr>`_.
 
    .. code-block:: none
 
@@ -89,13 +89,14 @@ Steps for Using Zephyr as User VM
       $ sudo umount /mnt
 
    You now have a virtual disk image with a bootable Zephyr in ``zephyr.img``. If the Zephyr build system is not
-   the ACRN Service VM, then you will need to transfer this image to the ACRN Service VM (via, e.g, a USB stick or network )
+   the ACRN Service VM, then you will need to transfer this image to the
+   ACRN Service VM (via, e.g, a USB drive or network )
 
 #. Follow XXX to boot "The ACRN Service OS" based on Clear Linux OS 28620
    (ACRN tag: acrn-2019w14.3-140000p)
 
    .. important:: need to remove reference to Clear Linux and reference
-      to deleted document (use SDC mode on the NUC)
+      to deleted document (use SDC mode on the Intel NUC)
 
 #. Boot Zephyr as User VM
 
