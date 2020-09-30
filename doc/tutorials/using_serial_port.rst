@@ -1,22 +1,22 @@
 .. _connect_serial_port:
 
-Using the Serial Port on KBL NUC
-================================
+Using the Serial Port on KBL Intel NUC
+======================================
 
 You can enable the serial console on the
-`KBL NUC <https://www.amazon.com/Intel-Business-Mini-Technology-BLKNUC7i7DNH1E/dp/B07CCQ8V4R>`_
-(NUC7i7DNH). The KBL NUC has a serial port header you can
-expose with a serial DB9 header cable. (The NUC has a punch out hole for
+`KBL Intel NUC <https://www.amazon.com/Intel-Business-Mini-Technology-BLKNUC7i7DNH1E/dp/B07CCQ8V4R>`_
+(NUC7i7DNH). The KBL Intel NUC has a serial port header you can
+expose with a serial DB9 header cable. (The Intel NUC has a punch out hole for
 mounting the serial connector.)
 
 .. figure:: images/NUC-serial-port.jpg
 
-   KBL NUC with populated serial port punchout
+   KBL Intel NUC with populated serial port punchout
 
 You can `purchase
 <https://www.amazon.com/dp/B07BV1W6N8/ref=cm_sw_r_cp_ep_dp_wYm0BbABD5AK6>`_
 such a cable or you can build it yourself;
-refer to the `KBL NUC product specification
+refer to the `KBL Intel NUC product specification
 <https://www.intel.com/content/dam/support/us/en/documents/mini-pcs/nuc-kits/NUC7i7DN_TechProdSpec.pdf>`_
 as shown below:
 

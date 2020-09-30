@@ -6,12 +6,12 @@ What is ACRN
 Introduction to Project ACRN
 ****************************
 
-ACRN |trade| is a, flexible, lightweight reference hypervisor, built with
+ACRN |trade| is a flexible, lightweight reference hypervisor, built with
 real-time and safety-criticality in mind, and optimized to streamline
 embedded development through an open source platform. ACRN defines a
 device hypervisor reference stack and an architecture for running
 multiple software subsystems, managed securely, on a consolidated system
-by means of a virtual machine manager (VMM). It also defines a reference
+using a virtual machine manager (VMM). It also defines a reference
 framework implementation for virtual device emulation, called the "ACRN
 Device Model".
 
@@ -69,7 +69,7 @@ through the Device Model.  Currently, the service VM is based on Linux,
 but it can also use other operating systems as long as the ACRN Device
 Model is ported into it. A user VM can be Ubuntu*, Android*,
 Windows* or VxWorks*.  There is one special user VM, called a
-post-launched Real-Time VM (RTVM), designed to run a hard real-time OS,
+post-launched real-time VM (RTVM), designed to run a hard real-time OS,
 such as Zephyr*, VxWorks*, or Xenomai*. Because of its real-time capability, RTVM
 can be used for soft programmable logic controller (PLC), inter-process
 communication (IPC), or Robotics applications.
@@ -87,7 +87,7 @@ platform to run both safety-critical applications and non-safety
 applications, together with security functions that safeguard the
 system.
 
-There are a number of pre-defined scenarios included in ACRN's source code. They
+There are a number of predefined scenarios included in ACRN's source code. They
 all build upon the three fundamental modes of operation that have been explained
 above, i.e. the *logical partitioning*, *sharing*, and *hybrid* modes. They
 further specify the number of VMs that can be run, their attributes and the
@@ -130,7 +130,7 @@ In total, up to 7 post-launched User VMs can be started:
 - 5 regular User VMs,
 - One `Kata Containers <https://katacontainers.io>`_ User VM (see
   :ref:`run-kata-containers` for more details), and
-- One Real-Time VM (RTVM).
+- One real-time VM (RTVM).
 
 In this example, one post-launched User VM provides Human Machine Interface
 (HMI) capability, another provides Artificial Intelligence (AI) capability, some
@@ -157,15 +157,15 @@ Industrial usage scenario:
   with tools such as Kubernetes*.
 - The HMI Application OS can be Windows* or Linux*. Windows is dominant
   in Industrial HMI environments.
-- ACRN can support a soft Real-time OS such as preempt-rt Linux for
-  soft-PLC control, or a hard Real-time OS that offers less jitter.
+- ACRN can support a soft real-time OS such as preempt-rt Linux for
+  soft-PLC control, or a hard real-time OS that offers less jitter.
 
 Automotive Application Scenarios
 ================================
 
 As shown in :numref:`V2-SDC-scenario`, the ACRN hypervisor can be used
-for building Automotive Software Defined Cockpit (SDC) and In-Vehicle
-Experience (IVE) solutions.
+for building Automotive Software Defined Cockpit (SDC) and in-vehicle
+experience (IVE) solutions.
 
 .. figure:: images/ACRN-V2-SDC-scenario.png
    :width: 600px
@@ -177,12 +177,12 @@ Experience (IVE) solutions.
 As a reference implementation, ACRN provides the basis for embedded
 hypervisor vendors to build solutions with a reference I/O mediation
 solution.  In this scenario, an automotive SDC system consists of the
-Instrument Cluster (IC) system running in the Service VM and the In-Vehicle
-Infotainment (IVI) system is running the post-launched User VM. Additionally,
+instrument cluster (IC) system running in the Service VM and the in-vehicle
+infotainment (IVI) system is running the post-launched User VM. Additionally,
 one could modify the SDC scenario to add more post-launched User VMs that can
-host Rear Seat Entertainment (RSE) systems (not shown on the picture).
+host rear seat entertainment (RSE) systems (not shown on the picture).
 
-An **Instrument Cluster (IC)** system is used to show the driver operational
+An **instrument cluster (IC)** system is used to show the driver operational
 information about the vehicle, such as:
 
 - the speed, fuel level, trip mileage, and other driving information of
@@ -191,14 +191,14 @@ information about the vehicle, such as:
   fuel or tire pressure;
 - showing rear-view and surround-view cameras for parking assistance.
 
-An **In-Vehicle Infotainment (IVI)** system's capabilities can include:
+An **in-vehicle infotainment (IVI)** system's capabilities can include:
 
 - navigation systems, radios, and other entertainment systems;
 - connection to mobile devices for phone calls, music, and applications
   via voice recognition;
 - control interaction by gesture recognition or touch.
 
-A **Rear Seat Entertainment (RSE)** system could run:
+A **rear seat entertainment (RSE)** system could run:
 
 - entertainment system;
 - virtual office;
@@ -221,7 +221,7 @@ A block diagram of ACRN's SDC usage scenario is shown in
   capabilities.
 - Resources are partitioned to ensure safety-critical and
   non-safety-critical domains are able to coexist on one platform.
-- Rich I/O mediators allows sharing of various I/O devices across VMs,
+- Rich I/O mediators allow sharing of various I/O devices across VMs,
   delivering a comprehensive user experience.
 - Multiple operating systems are supported by one SoC through efficient
   virtualization.
@@ -229,15 +229,15 @@ A block diagram of ACRN's SDC usage scenario is shown in
 Best Known Configurations
 *************************
 
-The ACRN Github codebase defines five best known configurations (BKC)
+The ACRN GitHub codebase defines five best known configurations (BKC)
 targeting SDC and Industry usage scenarios. Developers can start with
-one of these pre-defined configurations and customize it to their own
+one of these predefined configurations and customize it to their own
 application scenario needs.
 
 .. list-table:: Scenario-based Best Known Configurations
    :header-rows: 1
 
-   * - Pre-defined BKC
+   * - Predefined BKC
      - Usage Scenario
      - VM0
      - VM1
@@ -256,7 +256,7 @@ application scenario needs.
      - Service VM
      - Up to 5 Post-launched VMs
      - One Kata Containers VM
-     - Post-launched RTVM (Soft or Hard realtime)
+     - Post-launched RTVM (Soft or Hard real-time)
 
    * - Hybrid Usage Config
      - Hybrid
@@ -265,9 +265,9 @@ application scenario needs.
      - Post-launched VM
      -
 
-   * - Hybrid Real-Time Usage Config
+   * - Hybrid real-time Usage Config
      - Hybrid RT
-     - Pre-launched VM (Real-Time VM)
+     - Pre-launched VM (real-time VM)
      - Service VM
      - Post-launched VM
      -
@@ -284,8 +284,8 @@ Here are block diagrams for each of these four scenarios.
 SDC scenario
 ============
 
-In this SDC scenario, an Instrument Cluster (IC) system runs with the
-Service VM and an In-Vehicle Infotainment (IVI) system runs in a user
+In this SDC scenario, an instrument cluster (IC) system runs with the
+Service VM and an in-vehicle infotainment (IVI) system runs in a user
 VM.
 
 .. figure:: images/ACRN-V2-SDC-scenario.png
@@ -300,10 +300,10 @@ Industry scenario
 
 In this Industry scenario, the Service VM provides device sharing capability for
 a Windows-based HMI User VM. One post-launched User VM can run a Kata Container
-application. Another User VM supports either hard or soft Real-time OS
+application. Another User VM supports either hard or soft real-time OS
 applications. Up to five additional post-launched User VMs support functions
-such as Human Machine Interface (HMI), Artificial Intelligence (AI), Computer
-Vision, etc.
+such as human/machine interface (HMI), artificial intelligence (AI), computer
+vision, etc.
 
 .. figure:: images/ACRN-Industry.png
    :width: 600px
@@ -326,10 +326,10 @@ non-real-time tasks.
 
    Hybrid scenario
 
-Hybrid Real-Time (RT) scenario
+Hybrid real-time (RT) scenario
 ==============================
 
-In this Hybrid Real-Time (RT) scenario, a pre-launched RTVM is started by the
+In this Hybrid real-time (RT) scenario, a pre-launched RTVM is started by the
 hypervisor. The Service VM runs a post-launched User VM that runs non-safety or
 non-real-time tasks.
 
@@ -401,7 +401,7 @@ The ACRN hypervisor can be booted from a third-party bootloader
 directly. A popular bootloader is `grub`_ and is
 also widely used by Linux distributions.
 
-:ref:`using_grub` has a introduction on how to boot ACRN hypervisor with GRUB.
+:ref:`using_grub` has an introduction on how to boot ACRN hypervisor with GRUB.
 
 In :numref:`boot-flow-2`, we show the boot sequence:
 
@@ -425,8 +425,8 @@ In this boot mode, the boot options of pre-launched VM and service VM are define
 in the variable of ``bootargs`` of struct ``vm_configs[vm id].os_config``
 in the source code ``misc/vm_configs/$(SCENARIO)/vm_configurations.c`` by default.
 Their boot options can be overridden by the GRUB menu. See :ref:`using_grub` for
-details. The boot options of post-launched VM is not covered by hypervisor
-source code or GRUB menu, it is defined in guest image file or specified by
+details. The boot options of a post-launched VM are not covered by hypervisor
+source code or a GRUB menu; they are defined in a guest image file or specified by
 launch scripts.
 
 .. note::
@@ -458,11 +458,11 @@ all types of Virtual Machines (VMs) represented:
 - Pre-launched Service VM
 - Post-launched User VM
 - Kata Container VM (post-launched)
-- Real-Time VM (RTVM)
+- real-time VM (RTVM)
 
 The Service VM owns most of the devices including the platform devices, and
 provides I/O mediation. The notable exceptions are the devices assigned to the
-pre-launched User VM. Some of the PCIe devices may be passed through
+pre-launched User VM. Some PCIe devices may be passed through
 to the post-launched User OSes via the VM configuration. The Service VM runs
 hypervisor-specific applications together, such as the ACRN device model, and
 ACRN VM manager.
@@ -500,10 +500,10 @@ usually not used by commercial OSes).
 As shown in :numref:`VMX-brief`, VMM mode and guest mode are switched
 through VM Exit and VM Entry. When the bootloader hands off control to
 the ACRN hypervisor, the processor hasn't enabled VMX operation yet. The
-ACRN hypervisor needs to enable VMX operation thru a VMXON instruction
+ACRN hypervisor needs to enable VMX operation through a VMXON instruction
 first. Initially, the processor stays in VMM mode when the VMX operation
-is enabled. It enters guest mode thru a VM resume instruction (or first
-time VM launch), and returns back to VMM mode thru a VM exit event. VM
+is enabled. It enters guest mode through a VM resume instruction (or
+first-time VM launch), and returns to VMM mode through a VM exit event. VM
 exit occurs in response to certain instructions and events.
 
 The behavior of processor execution in guest mode is controlled by a
@@ -522,7 +522,7 @@ reason (for example if a guest memory page is not mapped yet) and resume
 the guest to re-execute the instruction.
 
 Note that the address space used in VMM mode is different from that in
-guest mode. The guest mode and VMM mode use different memory mapping
+guest mode. The guest mode and VMM mode use different memory-mapping
 tables, and therefore the ACRN hypervisor is protected from guest
 access. The ACRN hypervisor uses EPT to map the guest address, using the
 guest page table to map from guest linear address to guest physical
@@ -537,7 +537,7 @@ used to give VM applications (and OSes) access to these shared devices.
 Traditionally there are three architectural approaches to device
 emulation:
 
-* The first architecture is **device emulation within the hypervisor** which
+* The first architecture is **device emulation within the hypervisor**, which
   is a common method implemented within the VMware\* workstation product
   (an operating system-based hypervisor). In this method, the hypervisor
   includes emulations of common devices that the various guest operating
@@ -548,7 +548,7 @@ emulation:
   name implies, rather than the device emulation being embedded within
   the hypervisor, it is instead implemented in a separate user space
   application. QEMU, for example, provides this kind of device emulation
-  also used by a large number of independent hypervisors. This model is
+  also used by many independent hypervisors. This model is
   advantageous, because the device emulation is independent of the
   hypervisor and can therefore be shared for other hypervisors. It also
   permits arbitrary device emulation without having to burden the
@@ -557,11 +557,11 @@ emulation:
 
 * The third variation on hypervisor-based device emulation is
   **paravirtualized (PV) drivers**. In this model introduced by the `XEN
-  project`_ the hypervisor includes the physical drivers, and each guest
+  Project`_, the hypervisor includes the physical drivers, and each guest
   operating system includes a hypervisor-aware driver that works in
   concert with the hypervisor drivers.
 
-.. _XEN project:
+.. _XEN Project:
    https://wiki.xenproject.org/wiki/Understanding_the_Virtualization_Spectrum
 
 In the device emulation models discussed above, there's a price to pay
@@ -600,14 +600,14 @@ ACRN Device model incorporates these three aspects:
 **VHM**:
   The Virtio and Hypervisor Service Module is a kernel module in the
   Service VM acting as a middle layer to support the device model. The VHM
-  and its client handling flow is described below:
+  client handling flow is described below:
 
   #. ACRN hypervisor IOREQ is forwarded to the VHM by an upcall
      notification to the Service VM.
   #. VHM will mark the IOREQ as "in process" so that the same IOREQ will
      not pick up again. The IOREQ will be sent to the client for handling.
      Meanwhile, the VHM is ready for another IOREQ.
-  #. IOREQ clients are either an Service VM Userland application or a Service VM
+  #. IOREQ clients are either a Service VM Userland application or a Service VM
      Kernel space module. Once the IOREQ is processed and completed, the
      Client will issue an IOCTL call to the VHM to notify an IOREQ state
      change. The VHM then checks and hypercalls to ACRN hypervisor
@@ -646,7 +646,7 @@ Finally, there may be specialized PCI devices that only one guest domain
 uses, so they should be passed through to the guest. Individual USB
 ports could be isolated to a given domain too, or a serial port (which
 is itself not shareable) could be isolated to a particular guest. In
-ACRN hypervisor, we support USB controller passthrough only and we
+ACRN hypervisor, we support USB controller passthrough only, and we
 don't support passthrough for a legacy serial port, (for example
 0x3f8).
 
@@ -701,8 +701,8 @@ ACRN I/O mediator
 
 Following along with the numbered items in :numref:`io-emulation-path`:
 
-1. When a guest execute an I/O instruction (PIO or MMIO), a VM exit happens.
-   ACRN hypervisor takes control, and analyzes the the VM
+1. When a guest executes an I/O instruction (PIO or MMIO), a VM exit happens.
+   ACRN hypervisor takes control, and analyzes the VM
    exit reason, which is a VMX_EXIT_REASON_IO_INSTRUCTION for PIO access.
 2. ACRN hypervisor fetches and analyzes the guest instruction, and
    notices it is a PIO instruction (``in AL, 20h`` in this example), and put
@@ -717,7 +717,7 @@ Following along with the numbered items in :numref:`io-emulation-path`:
    module is activated to execute its processing APIs. Otherwise, the VHM
    module leaves the IO request in the shared page and wakes up the
    device model thread to process.
-5. The ACRN device model follow the same mechanism as the VHM. The I/O
+5. The ACRN device model follows the same mechanism as the VHM. The I/O
    processing thread of device model queries the IO request ring to get the
    PIO instruction details and checks to see if any (guest) device emulation
    module claims ownership of the IO port: if a module claimed it,
@@ -726,14 +726,14 @@ Following along with the numbered items in :numref:`io-emulation-path`:
    in this example), (say uDev1 here), uDev1 puts the result into the
    shared page (in register AL in this example).
 7. ACRN device model then returns control to ACRN hypervisor to indicate the
-   completion of an IO instruction emulation, typically thru VHM/hypercall.
+   completion of an IO instruction emulation, typically through VHM/hypercall.
 8. The ACRN hypervisor then knows IO emulation is complete, and copies
    the result to the guest register context.
 9. The ACRN hypervisor finally advances the guest IP to
    indicate completion of instruction execution, and resumes the guest.
 
 The MMIO path is very similar, except the VM exit reason is different. MMIO
-access usually is trapped thru VMX_EXIT_REASON_EPT_VIOLATION in
+access is usually trapped through a VMX_EXIT_REASON_EPT_VIOLATION in
 the hypervisor.
 
 Virtio framework architecture
@@ -750,7 +750,7 @@ should have a straightforward, efficient, standard and extensible
 mechanism for virtual devices, rather than boutique per-environment or
 per-OS mechanisms.
 
-Virtio provides a common frontend driver framework which not only
+Virtio provides a common frontend driver framework that not only
 standardizes device interfaces, but also increases code reuse across
 different virtualization platforms.
 
@@ -786,16 +786,16 @@ here:
   and BE drivers to interact with each other. For example, FE driver could
   read/write registers of the device, and the virtual device could
   interrupt FE driver, on behalf of the BE driver, in case of something is
-  happening.  Currently Virtio supports PCI/PCIe bus and MMIO bus. In
+  happening.  Currently, Virtio supports PCI/PCIe bus and MMIO bus. In
   ACRN project, only PCI/PCIe bus is supported, and all the Virtio devices
   share the same vendor ID 0x1AF4.
 
 **Efficient**: batching operation is encouraged
   Batching operation and deferred notification are important to achieve
   high-performance I/O, since notification between FE and BE driver
-  usually involves an expensive exit of the guest. Therefore batching
+  usually involves an expensive exit of the guest. Therefore, batching
   operating and notification suppression are highly encouraged if
-  possible. This will give an efficient implementation for the performance
+  possible. This will give an efficient implementation for performance
   critical devices.
 
 **Standard: virtqueue**
@@ -811,9 +811,10 @@ here:
 
   The virtqueues are created in guest physical memory by the FE drivers.
   The BE drivers only need to parse the virtqueue structures to obtain
-  the requests and get the requests done. How virtqueue is organized is
+  the requests and get the requests done. Virtqueue organization is
   specific to the User OS. In the implementation of Virtio in Linux, the
-  virtqueue is implemented as a ring buffer structure called vring.
+  virtqueue is implemented as a ring buffer structure called
+  ``vring``.
 
   In ACRN, the virtqueue APIs can be leveraged
   directly so users don't need to worry about the details of the
@@ -823,7 +824,7 @@ here:
 **Extensible: feature bits**
   A simple extensible feature negotiation mechanism exists for each virtual
   device and its driver. Each virtual device could claim its
-  device specific features while the corresponding driver could respond to
+  device-specific features while the corresponding driver could respond to
   the device with the subset of features the driver understands. The
   feature mechanism enables forward and backward compatibility for the
   virtual device and driver.
@@ -839,11 +840,11 @@ space as shown in :numref:`virtio-framework-userland`:
    Virtio Framework - User Land
 
 In the Virtio user-land framework, the implementation is compatible with
-Virtio Spec 0.9/1.0. The VBS-U is statically linked with Device Model,
-and communicates with Device Model through the PCIe interface: PIO/MMIO
-or MSI/MSIx. VBS-U accesses Virtio APIs through user space vring service
-API helpers. User space vring service API helpers access shared ring
-through remote memory map (mmap). VHM maps User VM memory with the help of
+Virtio Spec 0.9/1.0. The VBS-U is statically linked with the Device Model,
+and communicates with the Device Model through the PCIe interface: PIO/MMIO
+or MSI/MSIx. VBS-U accesses Virtio APIs through the user space ``vring`` service
+API helpers. User space ``vring`` service API helpers access shared ring
+through a remote memory map (mmap). VHM maps User VM memory with the help of
 ACRN Hypervisor.
 
 .. figure:: images/virtio-framework-kernel.png
@@ -856,10 +857,10 @@ ACRN Hypervisor.
 VBS-U offloads data plane processing to VBS-K. VBS-U initializes VBS-K
 at the right timings, for example. The FE driver sets
 VIRTIO_CONFIG_S_DRIVER_OK to avoid unnecessary device configuration
-changes while running. VBS-K can access shared rings through VBS-K
+changes while running. VBS-K can access shared rings through the VBS-K
 virtqueue APIs. VBS-K virtqueue APIs are similar to VBS-U virtqueue
-APIs. VBS-K registers as VHM client(s) to handle a continuous range of
-registers
+APIs. VBS-K registers as a VHM client to handle a continuous range of
+registers.
 
 There may be one or more VHM-clients for each VBS-K, and there can be a
 single VHM-client for all VBS-Ks as well. VBS-K notifies FE through VHM

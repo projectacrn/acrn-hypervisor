@@ -1016,7 +1016,7 @@ access is like this:
 #. If the verification is successful in eMMC RPMB controller, then the
    data will be written into storage device.
 
-This work flow of authenticated data read is very similar to this flow
+This workflow of authenticated data read is very similar to this flow
 above, but in reverse order.
 
 Note that there are some security considerations in this design:

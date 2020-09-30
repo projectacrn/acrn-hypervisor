@@ -77,7 +77,7 @@ PTEs (with present bit cleared, or reserved bit set) pointing to valid
 host PFNs, a malicious guest may use those EPT PTEs to construct an attack.
 
 A special aspect of L1TF in the context of virtualization is symmetric
-multi threading (SMT), e.g. Intel |reg| Hyper-Threading Technology.
+multi threading (SMT), e.g. Intel |reg| Hyper-threading Technology.
 Logical processors on the affected physical cores share the L1 Data Cache
 (L1D). This fact could make more variants of L1TF-based attack, e.g.
 a malicious guest running on one logical processor can attack the data which
@@ -88,11 +88,11 @@ Guest -> guest Attack
 =====================
 
 The possibility of guest -> guest attack varies on specific configuration,
-e.g. whether CPU partitioning is used, whether Hyper-Threading is on, etc.
+e.g. whether CPU partitioning is used, whether Hyper-threading is on, etc.
 
 If CPU partitioning is enabled (default policy in ACRN), there is
 1:1 mapping between vCPUs and pCPUs i.e. no sharing of pCPU. There
-may be an attack possibility when Hyper-Threading is on, where
+may be an attack possibility when Hyper-threading is on, where
 logical processors of same physical core may be allocated to two
 different guests. Then one guest may be able to attack the other guest
 on sibling thread due to shared L1D.
@@ -221,7 +221,7 @@ This mitigation is always enabled.
 Core-based scheduling
 =====================
 
-If Hyper-Threading is enabled, it's important to avoid running
+If Hyper-threading is enabled, it's important to avoid running
 sensitive context (if containing security data which a given VM
 has no permission to access) on the same physical core that runs
 said VM. It requires scheduler enhancement to enable core-based
@@ -265,9 +265,9 @@ requirements:
    - Doing 5) is not feasible, or
    - CPU sharing is enabled (in the future)
 
-If Hyper-Threading is enabled, there is no available mitigation
+If Hyper-threading is enabled, there is no available mitigation
 option before core scheduling is planned. User should understand
-the security implication and only turn on Hyper-Threading
+the security implication and only turn on Hyper-threading
 when the potential risk is acceptable to their usage.
 
 Mitigation Status

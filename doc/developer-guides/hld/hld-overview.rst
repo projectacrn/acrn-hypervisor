@@ -5,7 +5,7 @@ ACRN high-level design overview
 
 ACRN is an open source reference hypervisor (HV) that runs on top of Intel
 platforms (APL, KBL, etc) for heterogeneous scenarios such as the Software Defined
-Cockpit (SDC), or the In-Vehicle Experience (IVE) for automotive, or HMI & Real-Time OS for industry. ACRN provides embedded hypervisor vendors with a reference
+Cockpit (SDC), or the In-Vehicle Experience (IVE) for automotive, or HMI & real-time OS for industry. ACRN provides embedded hypervisor vendors with a reference
 I/O mediation solution with a permissive license and provides auto makers and
 industry users a reference software stack for corresponding use.
 
@@ -124,7 +124,7 @@ ACRN 2.0
 ========
 
 ACRN 2.0 is extending ACRN to support pre-launched VM (mainly for safety VM)
-and Real-Time (RT) VM.
+and real-time (RT) VM.
 
 :numref:`overview-arch2.0` shows the architecture of ACRN 2.0; the main difference
 compared to ACRN 1.0 is that:

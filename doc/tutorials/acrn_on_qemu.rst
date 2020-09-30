@@ -18,8 +18,8 @@ This setup was tested with the following configuration,
 - Platforms Tested: ApolloLake, KabyLake, CoffeeLake
 
 
-Pre-Requisites
-**************
+Prerequisites
+*************
 1. Make sure the platform supports Intel VMX as well as VT-d technologies. On ubuntu18.04, this
    can be checked by installing ``cpu-checker`` tool. If the output displays **KVM acceleration can be used**
    the platform supports it.

@@ -81,7 +81,7 @@ Other properties
 
 - ``inherit``:
   Specify a parent for a certain crash.
-  The child crash will inherit all configurations from the specified (by id)
+  The child crash will inherit all configurations from the specified (by ID)
   crash. These inherited configurations could be overwritten by new ones.
   Also, this property helps build the crash tree in ``acrnprobe``.
 - ``expression``:
@@ -90,7 +90,7 @@ Other properties
 Crash tree in acrnprobe
 ***********************
 
-There could be a parent-child relationship between crashes. Refer to the
+There could be a parent/child relationship between crashes. Refer to the
 diagrams below, crash B and D are the children of crash A, because crash B and
 D inherit from crash A, and crash C is the child of crash B.
 
@@ -260,10 +260,10 @@ Example:
 * ``channel``:
   The ``channel`` name to get the virtual machine events.
 * ``interval``:
-  Time interval in seconds of polling vm's image.
+  Time interval in seconds of polling VM's image.
 * ``syncevent``:
   Event type ``acrnprobe`` will synchronize from virtual machine's ``crashlog``.
-  User could specify different types by id. The event type can also be
+  User could specify different types by ID. The event type can also be
   indicated by ``type/subtype``.
 
 Log
@@ -369,6 +369,6 @@ Example:
   The name of channel info use.
 * ``log``:
   The log to be collected. The value is the configured name in log module. User
-  could specify different logs by id.
+  could specify different logs by ID.
 
 .. _`XML standard`: http://www.w3.org/TR/REC-xml

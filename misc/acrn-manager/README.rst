@@ -8,7 +8,7 @@ Description
 ***********
 
 The ``acrnctl`` tool helps users create, delete, launch, and stop a User
-OS (UOS).  The tool runs under the Service OS, and UOSs should be based
+VM (aka UOS).  The tool runs under the Service VM, and User VMs should be based
 on ``acrn-dm``. The daemon for acrn-manager is `acrnd`_.
 
 
@@ -42,7 +42,7 @@ Add a VM
 ========
 
 The ``add`` command lets you add a VM by specifying a
-script that will launch a UOS, for example ``launch_uos.sh``:
+script that will launch a User VM, for example ``launch_uos.sh``:
 
 .. code-block:: none
 
@@ -58,7 +58,7 @@ container::
    <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/devicemodel/samples/nuc/launch_uos.sh>`_
    that supports the ``-C``  (``run_container`` function) option. 
 
-Note that the launch script must only launch one UOS instance.
+Note that the launch script must only launch one User VM instance.
 The VM name is important. ``acrnctl`` searches VMs by their
 names so duplicate VM names are not allowed. If the
 launch script changes the VM name at launch time, ``acrnctl``
@@ -113,7 +113,7 @@ gracefully by itself.
 
    # acrnctl stop -f vm-ubuntu
 
-RESCAN BLOCK DEVICE
+Rescan Block Device
 ===================
 
 Use the ``blkrescan`` command to trigger a rescan of
@@ -139,10 +139,10 @@ update the backend file.
 acrnd
 *****
 
-The ``acrnd`` daemon process provides a way for launching or resuming a UOS
-should the UOS shut down, either planned or unexpected. A UOS can ask ``acrnd``
-to set up a timer to make sure the UOS is running, even if the SOS is
-suspended or stopped.
+The ``acrnd`` daemon process provides a way for launching or resuming a User VM
+should the User VM shut down, either in a planned manner or unexpectedly. A User
+VM can ask ``acrnd`` to set up a timer to make sure the User VM is running, even
+if the Service VM is suspended or stopped.
 
 Usage
 =====
@@ -163,13 +163,13 @@ Normally, ``acrnd`` runs silently (messages are directed to
 ``/dev/null``).  Use the ``-t`` option to direct messages to ``stdout``,
 useful for debugging.
 
-The ``acrnd`` daemon stores pending UOS work to ``/usr/share/acrn/conf/timer_list``
-and sets an RTC timer to wake up the SOS or bring the SOS back up again.
+The ``acrnd`` daemon stores pending User VM work to ``/usr/share/acrn/conf/timer_list``
+and sets an RTC timer to wake up the Service VM or bring the Service VM back up again.
 When ``acrnd`` daemon is restarted, it restores the previously saved timer
-list and launches the UOSs at the right time.
+list and launches the User VMs at the right time.
 
 A ``systemd`` service file (``acrnd.service``) is installed by default that will
-start the ``acrnd`` daemon when the Service OS comes up.
+start the ``acrnd`` daemon when the Service VM (Linux-based) comes up.
 You can restart/stop acrnd service using ``systemctl``
 
 .. note::
@@ -178,10 +178,10 @@ You can restart/stop acrnd service using ``systemctl``
 Build and Install
 *****************
 
-Source code for both ``acrnctl`` and ``acrnd`` is in the ``tools/acrn-manager`` folder.
+Source code for both ``acrnctl`` and ``acrnd`` is in the ``misc/acrn-manager`` folder.
 Change to that folder and run:
 
 .. code-block:: none
 
-   # make
-   # make install
+   $ make
+   $ sudo make install

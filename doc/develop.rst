@@ -33,6 +33,7 @@ Service VM Tutorials
    :maxdepth: 1
 
    tutorials/running_deb_as_serv_vm
+   tutorials/using_yp
 
 User VM Tutorials
 *****************
@@ -72,6 +73,7 @@ Enable ACRN Features
    tutorials/acrn_on_qemu
    tutorials/using_grub
    tutorials/pre-launched-rt
+   tutorials/enable_ivshmem
 
 Debug
 *****

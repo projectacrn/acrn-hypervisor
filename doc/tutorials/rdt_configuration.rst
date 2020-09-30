@@ -144,9 +144,9 @@ Configure RDT for VM using VM Configuration
 
 #. RDT hardware feature is enabled by default on supported platforms. This
    information can be found using an offline tool that generates a
-   platform-specific xml file that helps ACRN identify RDT-supported
+   platform-specific XML file that helps ACRN identify RDT-supported
    platforms. RDT on ACRN is enabled by configuring the ``FEATURES``
-   sub-section of the scenario xml file as in the below example. For
+   sub-section of the scenario XML file as in the below example. For
    details on building ACRN with scenario refer  to :ref:`build-with-acrn-scenario`.
 
    .. code-block:: none
@@ -163,7 +163,7 @@ Configure RDT for VM using VM Configuration
             <MBA_DELAY desc="Memory Bandwidth Allocation delay value"></MBA_DELAY>
          </RDT>
 
-#. Once RDT is enabled in the scenario xml file, the next step is to program
+#. Once RDT is enabled in the scenario XML file, the next step is to program
    the desired cache mask or/and the MBA delay value as needed in the 
    scenario file. Each cache mask or MBA delay configuration corresponds 
    to a CLOS ID. For example, if the maximum supported CLOS ID is 4, then 4 

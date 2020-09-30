@@ -86,7 +86,7 @@ I/O ports definition::
 RTC emulation
 =============
 
-ACRN supports RTC (Real-Time Clock) that can only be accessed through
+ACRN supports RTC (real-time clock) that can only be accessed through
 I/O ports (0x70 and 0x71).
 
 0x70 is used to access CMOS address register and 0x71 is used to access

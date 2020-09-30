@@ -104,9 +104,9 @@ pre-launched VMs (the SOS_VM is also a kind of pre-launched VM):
       ``kernel_mod_tag`` of VM1 in the
       ``misc/vm_configs/scenarios/$(SCENARIO)/vm_configurations.c`` file.
 
-      The guest kernel command line arguments is configured in the
+      The guest kernel command-line arguments is configured in the
       hypervisor source code by default if no ``$(VMx bootargs)`` is present.
-      If ``$(VMx bootargs)`` is present, the default command line arguments
+      If ``$(VMx bootargs)`` is present, the default command-line arguments
       are overridden by the ``$(VMx bootargs)`` parameters.
 
       The ``$(Service VM bootargs)`` parameter in the multiboot command

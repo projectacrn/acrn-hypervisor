@@ -57,8 +57,8 @@ configuration and copies them to the corresponding guest memory.
 .. figure:: images/partition-image18.png
    :align: center
 
-ACRN set-up for guests
-**********************
+ACRN setup for guests
+*********************
 
 Cores
 =====
