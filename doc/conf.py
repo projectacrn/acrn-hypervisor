@@ -76,7 +76,7 @@ master_doc = 'index'
 # General information about the project.
 project = u'Project ACRN™'
 copyright = u'2020, Project ACRN'
-author = u'Project ARCN developers'
+author = u'Project ACRN developers'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -109,7 +109,7 @@ try:
               break
 finally:
     if version_major and version_minor :
-        version = release = "v " + str(version_major) + '.' + str(version_minor)
+        version = release = str(version_major) + '.' + str(version_minor)
         if version_rc :
           version = release = version + version_rc
     else:
@@ -177,17 +177,25 @@ else:
 # Here's where we (manually) list the document versions maintained on
 # the published doc website.  On a daily basis we publish to the
 # /latest folder but when releases are made, we publish to a /<relnum>
-# folder (specified via RELEASE=name on the make command).
+# folder (specified via the VERSION file as processed earlier or
+# overridden on the make command line with RELEASE=name.
 
 if tags.has('release'):
+   is_release = True
+   docs_title = '%s' %(version)
    current_version = version
    if RELEASE:
-      version = current_version = RELEASE
+      version = release = current_version = RELEASE
+      docs_title = '%s' %(version)
 else:
    version = current_version = "latest"
+   is_release = False
+   docs_title = 'Latest'
 
 html_context = {
    'current_version': current_version,
+   'docs_title': docs_title,
+   'is_release': is_release,
    'versions': ( ("latest", "/latest/"),
                  ("2.2", "/2.2/"),
                  ("2.1", "/2.1/"),
