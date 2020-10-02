@@ -14,10 +14,10 @@ Refer to `Intel Analysis of L1TF`_ and `Linux L1TF document`_ for details.
 .. _Linux L1TF document:
    https://www.kernel.org/doc/html/latest/admin-guide/hw-vuln/l1tf.html
 
-L1 Terminal Fault is a speculative side channel which allows unprivileged
-speculative access to data which is available in the Level 1 Data Cache
-when the page table entry controlling the virtual address, which is used
-for the access, has the Present bit cleared or reserved bits set.
+L1 Terminal Fault is a speculative side channel that allows unprivileged
+speculative access to data that is available in the Level 1 Data Cache
+when the page table entry controlling the virtual address, used
+for the access, has the present bit cleared or reserved bits set.
 
 When the processor accesses a linear address, it first looks for a
 translation to a physical address in the translation lookaside buffer (TLB).
@@ -77,7 +77,7 @@ PTEs (with present bit cleared, or reserved bit set) pointing to valid
 host PFNs, a malicious guest may use those EPT PTEs to construct an attack.
 
 A special aspect of L1TF in the context of virtualization is symmetric
-multi threading (SMT), e.g. Intel |reg| Hyper-threading Technology.
+multithreading (SMT), e.g. Intel |reg| Hyper-threading Technology.
 Logical processors on the affected physical cores share the L1 Data Cache
 (L1D). This fact could make more variants of L1TF-based attack, e.g.
 a malicious guest running on one logical processor can attack the data which
@@ -93,7 +93,7 @@ e.g. whether CPU partitioning is used, whether Hyper-threading is on, etc.
 If CPU partitioning is enabled (default policy in ACRN), there is
 1:1 mapping between vCPUs and pCPUs i.e. no sharing of pCPU. There
 may be an attack possibility when Hyper-threading is on, where
-logical processors of same physical core may be allocated to two
+logical processors of the same physical core may be allocated to two
 different guests. Then one guest may be able to attack the other guest
 on sibling thread due to shared L1D.
 
@@ -167,7 +167,7 @@ EPT Sanitization
 EPT is sanitized to avoid pointing to valid host memory in PTEs
 which has present bit cleared or reserved bits set.
 
-For non-present PTEs, ACRN currently set pfn bits to ZERO, which
+For non-present PTEs, ACRN currently set PFN bits to ZERO, which
 means page ZERO might fall into risk if containing security info.
 ACRN reserves page ZERO (0~4K) from page allocator thus page ZERO
 won't be used by anybody for valid usage. This sanitization logic
@@ -189,7 +189,7 @@ other security usage, e.g. disk encryption, secure storage.
 
 If the critical secret data in ACRN is identified, then such
 data can be put into un-cached memory. As the content will
-never go to L1D, it is immune to L1TF attack
+never go to L1D, it is immune to L1TF attack.
 
 For example, after getting the physical seed from CSME, before any guest
 starts, ACRN can pre-derive all the virtual seeds for all the
@@ -242,7 +242,7 @@ There is no mitigation required on Apollo Lake based platforms.
 The majority use case for ACRN is in pre-configured environment,
 where the whole software stack (from ACRN hypervisor to guest
 kernel to Service VM root) is tightly controlled by solution provider
-and not allowed for run-time change after sale (guest kernel is
+and not allowed for run time change after sale (guest kernel is
 trusted). In that case solution provider will make sure that guest
 kernel is up-to-date including necessary page table sanitization,
 thus there is no attack interface exposed within guest. Then a

@@ -3,11 +3,13 @@
 ACRN high-level design overview
 ###############################
 
-ACRN is an open source reference hypervisor (HV) that runs on top of Intel
-platforms (APL, KBL, etc) for heterogeneous scenarios such as the Software Defined
-Cockpit (SDC), or the In-Vehicle Experience (IVE) for automotive, or HMI & real-time OS for industry. ACRN provides embedded hypervisor vendors with a reference
-I/O mediation solution with a permissive license and provides auto makers and
-industry users a reference software stack for corresponding use.
+ACRN is an open source reference hypervisor (HV) that runs on top of
+Intel platforms (APL, KBL, etc.) for heterogeneous scenarios such as the
+Software-defined Cockpit (SDC), or the In-vehicle Experience (IVE) for
+automotive, or HMI & real-time OS for industry. ACRN provides embedded
+hypervisor vendors with a reference I/O mediation solution with a
+permissive license and provides auto makers and industry users a
+reference software stack for corresponding use.
 
 ACRN Supported Use Cases
 ************************
@@ -20,16 +22,16 @@ system, the In-vehicle Infotainment (IVI) system, and one or more rear
 seat entertainment (RSE) systems.  Each system runs as a VM for better
 isolation.
 
-The Instrument Control (IC) system manages graphic displays of
+The Instrument Control (IC) system manages graphic displays of:
 
 - driving speed, engine RPM, temperature, fuel level, odometer, trip mile, etc.
 - alerts of low fuel or tire pressure
 - rear-view camera (RVC) and surround-camera view for driving assistance
 
-In-Vehicle Infotainment
+In-vehicle Infotainment
 =======================
 
-A typical In-Vehicle Infotainment (IVI) system supports:
+A typical In-vehicle Infotainment (IVI) system supports:
 
 - Navigation systems
 - Radios, audio and video playback
@@ -49,11 +51,11 @@ VMs for a customized IC/IVI/RSE.
 Industry Usage
 ==============
 
-A typical industry usage would include one windows HMI + one RT VM:
+A typical industry usage would include one Windows HMI + one RT VM:
 
-- windows HMI as a guest OS with display to provide Human Machine Interface
-- RT VM which running specific RTOS on it to provide capability of handling
-  real-time workloads like PLC control
+- Windows HMI as a guest OS with display to provide Human Machine Interface
+- RT VM that runs a specific RTOS on it to handle
+  real-time workloads such as PLC control
 
 ACRN supports guest OS of Windows; ACRN has also added/is adding a
 series features to enhance its real-time performance then meet hard-RT KPI
@@ -76,7 +78,7 @@ Mandatory IA CPU features are support for:
 - MTRR
 - TSC deadline timer
 - NX, SMAP, SMEP
-- Intel-VT including VMX, EPT, VT-d, APICv, VPID, invept and invvpid
+- Intel-VT including VMX, EPT, VT-d, APICv, VPID, INVEPT and INVVPID
 
 Recommended Memory: 4GB, 8GB preferred.
 
@@ -102,7 +104,7 @@ in the future. Running the IC system in a separate VM can isolate it from
 other VMs and their applications, thereby reducing the attack surface
 and minimizing potential interference. However, running the IC system in
 a separate VM introduces additional latency for the IC applications.
-Some country regulations requires an IVE system to show a rear-view
+Some country regulations require an IVE system to show a rear-view
 camera (RVC) within 2 seconds, which is difficult to achieve if a
 separate instrument cluster VM is started after the User VM is booted.
 
@@ -111,7 +113,7 @@ the IC VM and Service VM. As shown, the Service VM owns most of platform devices
 provides I/O mediation to VMs. Some of the PCIe devices function as a
 passthrough mode to User VMs according to VM configuration. In addition,
 the Service VM could run the IC applications and HV helper applications such
-as the Device Model, VM manager, etc. where the VM manager is responsible
+as the Device Model, VM manager, etc., where the VM manager is responsible
 for VM start/stop/pause, virtual CPU pause/resume, etc.
 
 .. figure:: images/over-image34.png
@@ -130,7 +132,7 @@ and real-time (RT) VM.
 compared to ACRN 1.0 is that:
 
 -  a pre-launched VM is supported in ACRN 2.0, with isolated resources, including
-   CPU, memory, and HW devices, etc
+   CPU, memory, and HW devices, etc.
 
 -  ACRN 2.0 adds a few necessary device emulations in hypervisor like vPCI and vUART to avoid
    interference between different VMs
@@ -190,7 +192,7 @@ I/O read from the User VM.
    I/O (PIO/MMIO) Emulation Path
 
 :numref:`overview-io-emu-path` shows an example I/O emulation flow path.
-When a guest executes an I/O instruction (port I/O or MMIO), an VM exit
+When a guest executes an I/O instruction (port I/O or MMIO), a VM exit
 happens. The HV takes control and executes the request based on the VM exit
 reason ``VMX_EXIT_REASON_IO_INSTRUCTION`` for port I/O access, for
 example. The HV will then fetch the additional guest instructions, if any,
@@ -349,7 +351,7 @@ Kernel Mediators
 ================
 
 Kernel mediators are kernel modules providing a para-virtualization method
-for the User VMs, for example, an i915 gvt driver.
+for the User VMs, for example, an i915 GVT driver.
 
 Log/Trace Tools
 ===============
@@ -478,7 +480,7 @@ the following mechanisms:
    scheduling latency and vCPU priority, exposing more opportunities
    for one VM to interfere another.
 
-   To prevent such interference, ACRN hypervisor could adopts static
+   To prevent such interference, ACRN hypervisor could adopt static
    core partitioning by dedicating each physical CPU to one vCPU. The
    physical CPU loops in idle when the vCPU is paused by I/O
    emulation. This makes the vCPU scheduling deterministic and physical
@@ -497,7 +499,7 @@ the following mechanisms:
 
    3. The hypervisor does not unintendedly access the memory of the Service or User VM.
 
--  Destination of external interrupts are set to be the physical core
+-  The destination of external interrupts is set to be the physical core
    where the VM that handles them is running.
 
    External interrupts are always handled by the hypervisor in ACRN.
@@ -564,7 +566,7 @@ System power state
 ==================
 
 ACRN supports ACPI standard defined power state: S3 and S5 in system
-level. For each guest, ACRN assume guest implements OSPM and controls its
+level. For each guest, ACRN assumes guest implements OSPM and controls its
 own power state accordingly. ACRN doesn't involve guest OSPM. Instead,
 it traps the power state transition request from guest and emulates it.
 
@@ -582,8 +584,8 @@ transition of the User VM (Linux VM or Android VM in
 notifies the OSPM of the Service VM (Service OS in :numref:`overview-pm-block`) once
 active the User VM is in the required power state.
 
-Then the OSPM of the Service VM starts the power state transition of the Service VM which is
-trapped to "Sx Agency" in ACRN, and it will start the power state
+Then the OSPM of the Service VM starts the power state transition of the Service VM
+trapped to "Sx Agency" in ACRN, and it starts the power state
 transition.
 
 Some details about the ACPI table for the User and Service VMs:
@@ -594,4 +596,4 @@ Some details about the ACPI table for the User and Service VMs:
 
 -  The ACPI table in the Service VM is passthrough. There is no ACPI parser
    in ACRN HV. The power management related ACPI table is
-   generated offline and hardcoded in ACRN HV.
+   generated offline and hard-coded in ACRN HV.

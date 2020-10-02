@@ -94,7 +94,7 @@ call these two OS systems "secure world" and
 "non-secure world", and they are isolated from each other by the
 hypervisor. Secure world has a higher "privilege level" than non-secure
 world; for example, the secure world can access the non-secure world's
-physical memory but not vice-versa. This document discusses how this
+physical memory but not vice versa. This document discusses how this
 security works and why it is required.
 
 Careful consideration should be made when evaluating using the Service
@@ -150,7 +150,7 @@ before launching.
 
 2) Verified Boot Sequence with UEFI
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-As shown in :numref:`security-bootflow-uefi`, in this boot sequence,UEFI
+As shown in :numref:`security-bootflow-uefi`, in this boot sequence, UEFI
 authenticates and starts the ACRN hypervisor firstly,and hypervisor will return
 to UEFI environment to authenticate and load Service VM kernel bootloader.
 
@@ -184,7 +184,7 @@ The 2018 minimal requirements for cryptographic strength currently are:
 #. RSA2048 for cryptographic digital signature signing and verification.
 
 We strongly recommend that SHA512 and RSA3072+ be used for a product shipped
-in 2018, especially for a product which has a long production life such as
+in 2018, especially for a product that has a long production life such as
 an automotive vehicle.
 
 The CSE FW image is signed with an Intel RSA private key. All other
@@ -216,9 +216,9 @@ UEFI Secure Boot is already supported by OVMF.
 
    UEFI Secure Boot Overview
 
-UEFI Secure Boot is controlled by a set of UEFI Authenticated Variables which specify
-the UEFI Secure Boot Policy; the platform manufacturer or the platform owner enroll the
-policy objects, which includes the n-tuple of keys {PK, KEK, db,dbx} as step 1.
+UEFI Secure Boot is controlled by a set of UEFI Authenticated Variables that specify
+the UEFI Secure Boot Policy; the platform manufacturer or the platform owner enrolls the
+policy objects, which include the n-tuple of keys {PK, KEK, db,dbx} as step 1.
 During each successive boot, the UEFI secure boot implementation will assess the
 policy in order to verify the signed images that are discovered in a host-bus adapter
 or on a disk. If the images pass policy, then they are invoked.
@@ -230,7 +230,7 @@ UEFI Secure Boot implementations use these keys:
 #. Key Exchange Key (KEK) is used to sign Signature and Forbidden Signature Database updates.
 #. Signature Database (db) contains keys and/or hashes of allowed EFI binaries.
 
-And keys and certificates are in multiple format:
+And keys and certificates are in multiple formats:
 
 #. `.key`  PEM format private keys for EFI binary and EFI signature list signing.
 #. `.crt`  PEM format certificates for sbsign.
@@ -272,7 +272,7 @@ In practice, the Service VM  designer and implementer should obey at least the
 following rules:
 
 #. Verify that the Service VM is a closed system and doesn't allow the user to
-   install any unauthorized 3rd-party software or components.
+   install any unauthorized third-party software or components.
 #. Verify that external peripherals are constrained.
 #. Enable kernel-based hardening techniques, for example dm-verity (to
    ensure integrity of the DM and vBIOS/vOSloaders), and kernel module
@@ -283,7 +283,7 @@ Detailed configurations and policies are out of scope for this document.
 For good references on OS system security hardening and enhancement,
 see `AGL security
 <https://docs.automotivelinux.org/docs/en/master/architecture/reference/security/part-2/0_Abstract.html>`_
-and `Android security <https://source.android.com/security/>`_
+and `Android security <https://source.android.com/security/>`_.
 
 Hypervisor Security Enhancement
 ===============================
@@ -355,7 +355,7 @@ CR3 MMU paging tables, such as splitting hypervisor code and data
 (stack/heap) sections, and then applying W |oplus| X policy, which means if memory
 is Writable, then the hypervisor must make it non-eXecutable. The
 hypervisor must configure its code as read-only and executable, and
-configure its data as read-write. Optionally, if there are read-only
+configure its data as read/write. Optionally, if there are read-only
 data sections, it would be best if the hypervisor configures them as
 read-only.
 
@@ -421,7 +421,7 @@ three typical solutions exist:
    behavior can be thwarted with a page fault (#PF) by the processor in the
    hypervisor. Whenever the hypervisor has a valid reason to have a write
    access to user-accessible read-only memory (guest memory), it can
-   disable CR0.WP (clear CR0.WP) before writing, and afterwards set CR0.WP
+   disable CR0.WP (clear CR0.WP) before writing, and then set CR0.WP
    back to 1.
 
    This solution is better than the 1st solution above because it doesn't
@@ -451,7 +451,7 @@ mitigate many vulnerability exploits.
 Guest Memory Execution Prevention
 +++++++++++++++++++++++++++++++++
 
-SMEP is designed to prevent user memory malicious code (typically
+SMEP is designed to prevent user memory malware (typically
 attacker-supplied) from being executed in the kernel (Ring 0) privilege
 level.  As long as the CR4.SMEP = 1, software operating in supervisor
 mode cannot fetch instructions from linear addresses that are accessible
@@ -466,7 +466,7 @@ In order to activate SMEP protection, the ACRN hypervisor must:
 #. Configure all the guest memory as user-accessible memory (U/S = 1).
    No matter what settings for NX bit and R/W bit in corresponding host
    CR3 paging tables.
-#. Set CR4.SMEP bit. In the entire lifecycle of the hypervisor, this bit
+#. Set CR4.SMEP bit. In the entire life cycle of the hypervisor, this bit
    value always remains one.
 
 As an alternative, NX feature is used for this purpose by setting the
@@ -481,7 +481,7 @@ Guest Memory Access Prevention
 ++++++++++++++++++++++++++++++
 
 Supervisor Mode Access Prevention (SMAP) is yet another powerful
-processor feature which makes it harder for malicious programs to
+processor feature that makes it harder for malware to
 "trick" the kernel into using instructions or data from a user-space
 application program.
 
@@ -505,7 +505,7 @@ To activate SMAP protection in the ACRN hypervisor:
 #. Configure all the guest memory as user-writable memory (U/S bit = 1,
    and R/W bit = 1) in corresponding host CR3 paging table entries, as
    shown in :numref:`security-smap` below.
-#. Set CR4.SMAP bit. In the entire lifecycle of the hypervisor, this bit
+#. Set CR4.SMAP bit. In the entire life cycle of the hypervisor, this bit
    value always remains one.
 #. When needed, use STAC instruction to suppress SMAP protection, and
    use CLAC instruction to restore SMAP protection.
@@ -548,8 +548,8 @@ an arbitrary amount of data to or from VM memory area.
 
 Whenever the hypervisor needs to perform legitimate read/write access to
 guest memory pages, one of functions above must be used. Otherwise, the
-#PF will be triggered by the processor to prevent malicious or
-unintended access from/to the guest memory pages.
+#PF will be triggered by the processor to prevent malware or
+unintended access from or to the guest memory pages.
 
 These functions must also internally check the address availabilities,
 for example, ensuring the input address accessed by the hypervisor must have
@@ -574,7 +574,7 @@ Memory content from one guest VM might be leaked to another guest VM. So
 in ACRN and Device Model design, when one guest VM is destroyed or
 crashes, its memory content should be scrubbed either by the hypervisor
 or the Service VM device model process, in case its memory content is
-re-allocated to another guest VM which could otherwise leave the
+re-allocated to another guest VM that could otherwise leave the
 previous guest VM secrets in memory.
 
 .. _secure-hypervisor-interface:
@@ -639,12 +639,12 @@ guest VM. The hypervisor then emulates the MMIO instructions with design
 behaviors.
 
 As done for I/O emulation, this interface could also be manipulated by
-malicious software in guest VM to compromise system security.
+malware in guest VM to compromise system security.
 
 Other VMEXIT Handlers
 ~~~~~~~~~~~~~~~~~~~~~
 
-There are some other VMEXIT handlers in the hypervisor which might take
+There are some other VMEXIT handlers in the hypervisor that might take
 untrusted parameters and registers from guest VM, for example, MSR write
 VMEXIT, APIC VMEXIT.
 
@@ -682,7 +682,7 @@ User VM Power On and Shutdown
 
 The memory of the User VM is allocated dynamically by the DM
 process in the Service VM before the User VM is launched. When the User VM
-is shutdown (or crashed), its memory will be freed to Service VM memory space.
+is shut down (or crashed), its memory will be freed to Service VM memory space.
 Later on, if there is a new User VM launch event occurring, DM may potentially allocate
 the same memory content (or some overlaps) for this new User VM.
 
@@ -696,12 +696,12 @@ access the previous User VM's secrets by scanning the memory regions
 allocated for the new User VM.
 
 In ACRN, the memory content is scrubbed in Device Model after the guest
-VM is shutdown.
+VM is shut down.
 
 User VM Reboot
 ~~~~~~~~~~~~~~
 
-The behaviors of **cold** boot of virtual User VM reboot is the same as that of
+The behaviors of **cold** boot of virtual User VM reboot are the same as that of
 previous virtual power-on and shutdown events. There is a special case:
 virtual **warm** reboot.
 
@@ -730,7 +730,7 @@ enabling the configuration.
 User VM Suspend/Resume
 ~~~~~~~~~~~~~~~~~~~~~~
 
-There is no special design considerations for normal User VM without secure
+There are no special design considerations for normal User VM without secure
 world supported, as long as the EPT/VT-d memory protection/isolation is
 active during the entire suspended time.
 
@@ -740,7 +740,7 @@ Service VM, the memory content of secure world of User VM must not be visible to
 Service VM. This is designed for security with defense in depth.
 
 During the entire process of User VM sleep/suspend, the memory protection
-for secure-world is preserved too.The physical memory region of
+for secure-world is preserved too. The physical memory region of
 secure world is removed from EPT paging tables of any guest VM,
 even including the Service VM.
 
@@ -791,9 +791,9 @@ The parameters of HDKF derivation in the hypervisor are:
 #. OutSeedLen = 64 in bytes
 #. Guest Dev and User SEED (dvSEED/uvSEED)
 
-   dvSEED = HKDF(theHash, nil, dSEEd, VMInfo\|"devseed", OutSeedLen)
+   ``dvSEED = HKDF(theHash, nil, dSEEd, VMInfo\|"devseed", OutSeedLen)``
 
-   uvSEED = HKDF(theHash, nil, uSEEd, VMInfo\|"userseed", OutSeedLen
+   ``uvSEED = HKDF(theHash, nil, uSEEd, VMInfo\|"userseed", OutSeedLen)``
 
 .. _secure_trusty:
 
@@ -805,7 +805,7 @@ guest VM such as the Android User VM. (See :ref:`trusty_tee` for more
 information.)
 
 On the APL platform, the secure world is used to run a
-virtualization-based Trusty TEE in an isolated world which serves
+virtualization-based Trusty TEE in an isolated world that serves
 Android as a guest (AaaG,) to get Google's Android relevant certificates
 by fulfilling Android CDD requirements. Also as a plan, Trusty will be
 supported to provide security services for LaaG User VM as well.
@@ -868,7 +868,7 @@ configuration.
 
 To save page tables and share the mappings for non-secure world address
 space, the hypervisor relocates the Secure World's GPA to a very high
-position: 511G-512G. Hence, the PML4 for Trusty World are separated from
+position: 511G-512G. Hence, the PML4 for Trusty World is separated from
 non-secure World. PDPT/PD/PT for low memory (<511G) are shared in both
 Trusty World's EPT and non-secure World's EPT. PDPT/PD/PT for high
 memory (>=511G) are valid for Trusty World's EPT only.
@@ -892,7 +892,7 @@ Hypercall - Trusty Initialization
 When a User VM is created by the DM in the Service VM, if this User VM
 supports a secure isolated world, then this hypercall will be invoked
 by OSLoader(it could be Android OS loader in :numref:`security-bootflow-sbl` and
-:numref:`security-bootflow-uefi` above) to create / initialize the
+:numref:`security-bootflow-uefi` above) to create or initialize the
 secure world (Trusty/TEE).
 
 .. figure:: images/security-image9.png
@@ -905,18 +905,18 @@ secure world (Trusty/TEE).
 In :numref:`security-start-flow` above, the OSLoader is responsible for
 loading TEE/Trusty image to a dedicated and reserved memory region, and
 locating its entry point of TEE/Trusty executable, then executes a
-hypercall which exits to the hypervisor handler.
+hypercall that exits to the hypervisor handler.
 
 In the hypervisor, from a security perspective, it removes GPA->HPA
 mapping of secure world from EPT paging tables of both User VM non-secure
 world and even Service VM. This is intended to disallow non-secure world and
 Service VM to access the memory region of secure world for security reasons as
-previously mentioned
+previously mentioned.
 
 After all is set up by the hypervisor, including vCPU context
 initialization, the hypervisor eventually does vmresume (step 4 in
 :numref:`security-start-flow` above) to the entry point of secure world
-TEE/Trusty, then Trusty OS gets started in vmx non-root mode to
+TEE/Trusty, then Trusty OS gets started in VMX non-root mode to
 initialize itself, and loads its TAs (Trusted Applications) so that the
 security services can be ready right before non-secure OS gets started.
 

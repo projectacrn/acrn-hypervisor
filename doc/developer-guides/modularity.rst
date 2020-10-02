@@ -51,7 +51,7 @@ be resolved by design.
   `acrn-dev mailing list <https://lists.projectacrn.org/g/acrn-dev>`_ for
   discussing if specific callbacks are appropriate.
 * **Making the cyclic dependency an exception** A specific cyclic dependency can
-  be regarded as an exception if it is well justified and a work around is
+  be regarded as an exception if it is well justified and a workaround is
   available to break the cyclic dependency for integration testing.
 
 Measuring Complexity
@@ -81,8 +81,8 @@ The components are listed as follows.
   initialization. Examples include standard memory and string manipulation
   functions like strncpy, atomic operations and bitmap operations. This
   component is independent from and widely used in the other components.
-* **Hardware Management and Utilities** This component abstract hardware
-  resources and provide services like timers and physical interrupt handler
+* **Hardware Management and Utilities** This component abstracts hardware
+  resources and provide services such as timers and physical interrupt handler
   registration to the upper layers.
 * **Virtual CPU** This component implements CPU, memory and interrupt
   virtualization. The vCPU loop module in this component handles VM exit events
@@ -95,14 +95,14 @@ The components are listed as follows.
 * **Passthrough Management** This component manages devices that are passed-through
   to specific VMs.
 * **Extended Device Emulation** This component implements an I/O request
-  mechanism that allow the hypervisor to forward I/O accesses from a User
+  mechanism that allows the hypervisor to forward I/O accesses from a User
   VM to the Service VM.
   for emulation.
 * **VM Management** This component manages the creation, deletion and other
   lifecycle operations of VMs.
 * **Hypervisor Initialization** This component invokes the initialization
-  subroutines in the other components to bring up the hypervisor and start up
-  Service VM in sharing mode or all the VMs in partitioning mode.
+  subroutines in the other components to bring up the hypervisor and
+  start the Service VM in sharing mode or all the VMs in partitioning mode.
 
 ACRN hypervisor adopts a layered design where higher layers can invoke the
 interfaces of lower layers but not vice versa. The only exception is the

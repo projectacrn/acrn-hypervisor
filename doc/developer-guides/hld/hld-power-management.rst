@@ -74,7 +74,7 @@ The build flow is:
 
 1) Use an offline tool (e.g. **iasl**) to parse the Px/Cx data and hard-code to
    a CPU state table in the Hypervisor. The Hypervisor loads the data after
-   system boots up.
+   the system boots.
 2) Before User VM launching, the Device mode queries the Px/Cx data from the Service
    VM VHM via ioctl interface.
 3) VHM transmits the query request to the Hypervisor by hypercall.
@@ -94,10 +94,10 @@ table) should be rejected.
 It is better not to intercept C-state request because the trap would
 impact both power and performance.
 
-.. note:: For P-state control you should pay attention to SoC core
+.. note:: For P-state control, you should pay attention to SoC core
    voltage domain design when doing P-state measurement. The highest
    P-state would win if different P-state requests on the cores shared
-   same voltage domain. In this case APERF/MPERF must be used to see
+   same voltage domain. In this case, APERF/MPERF must be used to see
    what P-state was granted on that core.
 
 S3/S5
@@ -111,14 +111,14 @@ assumptions:
 4) Highest severity guest's power state is promoted to system power state.
 5) Guest has lifecycle manager running to handle power state transaction
    requirement and initialize guest power state transaction.
-6) S3 is only available on configurations which has no DM launched RTVM.
+6) S3 is only available on configurations that have no DM launched RTVM.
 7) S3 is only supported at platform level - not VM level.
 
 ACRN has a common implementation for notification between lifecycle manager
 in different guest. Which is vUART based cross-vm notification. But user
 could customize it according to their hardware/software requirements.
 
-:numref:`systempmdiag` shows the basic system level S3/S5 diagram
+:numref:`systempmdiag` shows the basic system level S3/S5 diagram.
 
 .. figure:: images/hld-pm-image62.png
    :align: center
@@ -127,7 +127,7 @@ could customize it according to their hardware/software requirements.
    ACRN System S3/S5 diagram
 
 
-System low power state enter process
+System low power state entry process
 ====================================
 
 Each time, when lifecycle manager of User VM starts power state transition,
@@ -156,19 +156,19 @@ with typical ISD configuration(S3 follows very similar process)
    :align: center
    :name: pmworkflow
 
-   ACRN system S5 enter workflow
+   ACRN system S5 entry workflow
 
 For system power state entry:
 
 1. Service VM received S5 request.
-2. Lifecycle manager in Service VM notify User VM1 and RTVM through
+2. Lifecycle manager in Service VM notifies User VM1 and RTVM through
    vUART for S5 request.
-3. Guest lifecycle manager initialize S5 action. And guest enter S5.
-4. RTOS cleanup rt task, send response of S5 request back to Service
+3. Guest lifecycle manager initializes S5 action and guest enters S5.
+4. RTOS cleanup RT task, send response of S5 request back to Service
    VM and RTVM enter S5.
 5. After get response from RTVM and all User VM are shutdown, Service VM
    enter S5.
-6. OSPM in ACRN hypervisor check all guest in S5 state and shutdown
+6. OSPM in ACRN hypervisor checks all guests are in S5 state and shuts down
    whole system.
 
 System low power state exit process

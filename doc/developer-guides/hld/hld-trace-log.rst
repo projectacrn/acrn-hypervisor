@@ -22,10 +22,10 @@ are two use scenarios of Sbuf:
 Both ACRNTrace and ACRNLog use sbuf as a lockless ring buffer.  The Sbuf
 is allocated by Service VM and assigned to HV via a hypercall. To hold pointers
 to sbuf passed down via hypercall, an array ``sbuf[ACRN_SBUF_ID_MAX]``
-is defined in per_cpu region of HV, with predefined sbuf id to identify
+is defined in per_cpu region of HV, with predefined sbuf ID to identify
 the usage, such as ACRNTrace, ACRNLog, etc.
 
-For each physical CPU there is a dedicated Sbuf. Only a single producer
+For each physical CPU, there is a dedicated Sbuf. Only a single producer
 is allowed to put data into that Sbuf in HV, and a single consumer is
 allowed to get data from Sbuf in Service VM. Therefore, no lock is required to
 synchronize access by the producer and consumer.
@@ -33,7 +33,7 @@ synchronize access by the producer and consumer.
 sbuf APIs
 =========
 
-The sbuf APIs are defined in ``hypervisor/include/debug/sbuf.h``
+The sbuf APIs are defined in ``hypervisor/include/debug/sbuf.h``.
 
 
 ACRN Trace
@@ -77,7 +77,7 @@ Service VM Trace Module
 The Service VM trace module is responsible for:
 
 - allocating sbuf in Service VM memory range for each physical CPU, and assign
-  the gpa of Sbuf to ``per_cpu sbuf[ACRN_TRACE]``
+  the GPA of Sbuf to ``per_cpu sbuf[ACRN_TRACE]``
 - create a misc device for each physical CPU
 - provide mmap operation to map entire Sbuf to userspace for high
   flexible and efficient access.
@@ -104,7 +104,7 @@ Once ACRNTrace is launched, for each physical CPU a consumer thread is
 created to periodically read RAW trace data from sbuf and write to a
 file.
 
-.. note:: figure is missing
+.. note:: TODO figure is missing
    Figure 2.2 Sequence of trace init and trace data collection
 
 These are the Python scripts provided:
@@ -113,7 +113,7 @@ These are the Python scripts provided:
   text offline according to given format;
 
 - **acrnalyze.py** analyzes trace data (as output by acrntrace)
-  based on given analyzer filters, such as vm_exit or irq, and generates a
+  based on given analyzer filters, such as vm_exit or IRQ, and generates a
   report.
 
 See :ref:`acrntrace` for details and usage.
@@ -122,7 +122,7 @@ ACRN Log
 ********
 
 acrnlog is a tool used to capture ACRN hypervisor log to files on
-Service VM filesystem. It can run as an Service VM service at boot, capturing two
+Service VM filesystem. It can run as a Service VM service at boot, capturing two
 kinds of logs:
 
 -  Current runtime logs;
@@ -179,7 +179,7 @@ at runtime via hypervisor shell command "loglevel".
 The element size of sbuf for logs is fixed at 80 bytes, and the max size
 of a single log message is 320 bytes. Log messages with a length between
 80 and 320 bytes will be separated into multiple sbuf elements. Log
-messages with length larger then 320 will be truncated.
+messages with length larger than 320 will be truncated.
 
 For security, Service VM allocates sbuf in its memory range and assigns it to
 the hypervisor.
@@ -200,7 +200,7 @@ On Service VM boot, Service VM acrnlog module is responsible to:
   these last logs
 
 - construct sbuf in the usable buf range for each physical CPU,
-  assign the gpa of Sbuf to ``per_cpu sbuf[ACRN_LOG]`` and create a misc
+  assign the GPA of Sbuf to ``per_cpu sbuf[ACRN_LOG]`` and create a misc
   device for each physical CPU
 
 - the misc devices implement read() file operation to allow

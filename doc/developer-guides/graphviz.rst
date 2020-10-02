@@ -39,7 +39,7 @@ Simple directed graph
 *********************
 
 For simple drawings with shapes and lines, you can put the graphviz
-commands in the content block for the directive. For example for a
+commands in the content block for the directive. For example, for a
 simple directed graph (digraph) with two nodes connected by an arrow,
 you can write:
 

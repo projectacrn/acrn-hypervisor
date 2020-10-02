@@ -28,7 +28,7 @@ framework. There are 3 major subsystems in Service VM:
    -  HV initializes an I/O request and notifies VHM driver in Service VM
       through upcall.
    -  VHM driver dispatches I/O requests to I/O clients and notifies the
-      clients (in this case the client is the DM which is notified
+      clients (in this case the client is the DM, which is notified
       through char device)
    -  DM I/O dispatcher calls corresponding I/O handlers
    -  I/O dispatcher notifies VHM driver the I/O request is completed
@@ -160,8 +160,8 @@ DM Initialization
    mapping, and maps the memory segments into user space.
 
 -  **PIO/MMIO Handler Init**: PIO/MMIO handlers provide callbacks for
-   trapped PIO/MMIO request which are triggered from I/O request
-   server in HV for DM owned device emulation. This is the endpoint
+   trapped PIO/MMIO requests that are triggered from I/O request
+   server in HV for DM-owned device emulation. This is the endpoint
    of I/O path in DM. After this initialization, device emulation
    driver in DM could register its MMIO handler by *register_mem()*
    API and PIO handler by *register_inout()* API or INOUT_PORT()
@@ -283,7 +283,7 @@ VHM overview
 ============
 
 Device Model manages User VM by accessing interfaces exported from VHM
-module. VHM module is an Service VM kernel driver. The ``/dev/acrn_vhm`` node is
+module. VHM module is a Service VM kernel driver. The ``/dev/acrn_vhm`` node is
 created when VHM module is initialized. Device Model follows the standard
 Linux char device API (ioctl) to access the functionality of VHM.
 
@@ -305,7 +305,7 @@ hypercall to the hypervisor. There are two exceptions:
 VHM ioctl interfaces
 ====================
 
-.. note:: Reference API docs for General interface, VM Management,
+.. note:: Reference API documents for General interface, VM Management,
    IRQ and Interrupts, Device Model management, Guest Memory management,
    PCI assignment, and Power management
 
@@ -338,10 +338,10 @@ I/O Clients
 An I/O client is either a Service VM userland application or a Service VM kernel space
 module responsible for handling I/O access whose address
 falls in a certain range. Each VM has an array of registered I/O
-clients which are initialized with a fixed I/O address range, plus a PCI
+clients that are initialized with a fixed I/O address range, plus a PCI
 BDF on VM creation. There is a special client in each VM, called the
 fallback client, that handles all I/O requests that do not fit into
-the range of any other client. In the current design the device model
+the range of any other client. In the current design, the device model
 acts as the fallback client for any VM.
 
 Each I/O client can be configured to handle the I/O requests in the
@@ -358,8 +358,8 @@ specifically created for this purpose.
 
 -  On registration, the client requests a fresh ID, registers a
    handler, adds the I/O range (or PCI BDF) to be emulated by this
-   client, and finally attaches it to VHM which creates the kicks off
-   for a new kernel thread.
+   client, and finally attaches it to VHM that kicks off
+   a new kernel thread.
 
 -  The kernel thread waits for any I/O request to be handled. When a
    pending I/O request is assigned to the client by VHM, the kernel
@@ -414,9 +414,9 @@ are as follows:
    all clients that have I/O requests to be processed. The flow is
    illustrated in more detail in :numref:`io-dispatcher-flow`.
 
-4. The waked client (the DM in :numref:`io-sequence-sos` above) handles the
+4. The woken client (the DM in :numref:`io-sequence-sos` above) handles the
    assigned I/O requests, updates their state to COMPLETE, and notifies
-   the VHM of the completion via ioctl. :numref:`dm-io-flow` show this
+   the VHM of the completion via ioctl. :numref:`dm-io-flow` shows this
    flow.
 
 5. The VHM device notifies the hypervisor of the completion via
@@ -499,10 +499,10 @@ from different devices including PIO, MMIO, and PCI CFG
 SPACE access. For example, a CMOS RTC device may access 0x70/0x71 PIO to
 get CMOS time, a GPU PCI device may access its MMIO or PIO bar space to
 complete its framebuffer rendering, or the bootloader may access a PCI
-devices' CFG SPACE for BAR reprogramming.
+device's CFG SPACE for BAR reprogramming.
 
 The DM needs to inject interrupts/MSIs to its frontend devices whenever
-necessary. For example, a RTC device needs get its ALARM interrupt, or a
+necessary. For example, an RTC device needs get its ALARM interrupt, or a
 PCI device with MSI capability needs to get its MSI.
 
 DM also provides a PIRQ routing mechanism for platform devices.
@@ -543,7 +543,7 @@ A PIO emulation handler is defined as:
 
 
 The DM pre-registers the PIO emulation handlers through MACRO
-INOUT_PORT, or registers the PIO emulation handers through
+INOUT_PORT, or registers the PIO emulation handlers through
 register_inout() function after init_inout():
 
 .. code-block:: c
@@ -565,7 +565,7 @@ register_inout() function after init_inout():
 MMIO Handler Register
 ---------------------
 
-A MMIO range structure is defined below. As with PIO, it's the
+An MMIO range structure is defined below. As with PIO, it's the
 parameter needed to register MMIO handler for special MMIO range:
 
 .. code-block:: c
@@ -580,7 +580,7 @@ parameter needed to register MMIO handler for special MMIO range:
            uint64_t        size;
    };
 
-A MMIO emulation handler is defined as:
+An MMIO emulation handler is defined as:
 
 .. code-block:: c
 
@@ -694,17 +694,17 @@ DM calls pci_lintr_route() to emulate this PIRQ routing:
 
 The PIRQ routing for IOAPIC and PIC is dealt with differently.
 
-* For IOAPIC, the irq pin is allocated in a round-robin fashion within the
-  pins permitted for PCI devices. The irq information will be built
+* For IOAPIC, the IRQ pin is allocated in a round-robin fashion within the
+  pins permitted for PCI devices. The IRQ information will be built
   into ACPI DSDT table then passed to guest VM.
 
 * For PIC, the pin2irq information is maintained in a pirqs[] array (the array size is 8
   representing 8 shared PIRQs). When a PCI device tries to allocate a
   pirq pin, it will do a balancing calculation to figure out a best pin
-  vs. irq pair. The irq# will be programed into PCI INTLINE config space
+  vs. IRQ pair. The irq# will be programed into PCI INTLINE config space
   and the pin# will be built into ACPI DSDT table then passed to guest VM.
 
-.. note:: "irq" here is also called as "gsi" in ACPI terminology .
+.. note:: "IRQ" here is also called as "GSI" in ACPI terminology.
 
 Regarding to INT A/B/C/D for PCI devices, DM just allocates them evenly
 prior to PIRQ routing and then programs into PCI INTPIN config space.
@@ -742,9 +742,9 @@ During PCI initialization, ACRN DM will scan each PCI bus, slot and
 function and identify the PCI devices configured by acrn-dm command
 line. The corresponding PCI device's initialization function will
 be called to initialize its config space, allocate its BAR resource, its
-irq, and do its irq routing.
+irq, and do its IRQ routing.
 
-.. note:: reference API doc for pci_vdev, pci_vdef_ops
+.. note:: reference API documentation for pci_vdev, pci_vdef_ops
 
 The pci_vdev_ops of the pci_vdev structure could be installed by
 customized handlers for cfgwrite/cfgread and barwrite/barread.
@@ -797,7 +797,7 @@ Introduction
 
 Advanced Configuration and Power Interface (ACPI) provides an open
 standard that operating systems can use to discover and configure
-computer hardware components to perform power management for example, by
+computer hardware components to perform power management, for example, by
 monitoring status and putting unused components to sleep.
 
 Functions implemented by ACPI include:
@@ -1176,7 +1176,7 @@ Bluetooth UART enumeration.
 PM in Device Model
 ******************
 
-PM module in Device Model emulate the User VM low power state transition.
+PM module in Device Model emulates the User VM low power state transition.
 
 Each time User VM writes an ACPI control register to initialize low power
 state transition, the writing operation is trapped to DM as an I/O
@@ -1196,4 +1196,4 @@ Passthrough in Device Model
 
 You may refer to :ref:`hv-device-passthrough` for passthrough realization
 in device model and :ref:`mmio-device-passthrough` for MMIO passthrough realization
-in device model and ACRN Hypervisor..
+in device model and ACRN Hypervisor.
