@@ -34,7 +34,7 @@ developers  porting GVT-g to work on other hypervisors.
 This document describes:
 
 -  the overall components of GVT-g
--  interaction interface of each components
+-  interaction interface of each component
 -  core interaction scenarios
 
 APIs of each component interface can be found in the :ref:`GVT-g_api`
@@ -118,7 +118,7 @@ In this scenario, AcrnGT receives a destroy request from ACRN-DM. It
 calls GVT's :ref:`intel_gvt_ops_interface` to inform GVT of the vGPU destroy
 request, and cleans up all vGPU resources.
 
-vGPU pci configure space write scenario
+vGPU PCI configure space write scenario
 =======================================
 
 ACRN traps the vGPU's PCI config space write, notifies AcrnGT's
@@ -127,13 +127,13 @@ handle all I/O trap notifications. This routine calls the GVT's
 :ref:`intel_gvt_ops_interface` ``emulate_cfg_write`` to emulate the vGPU PCI
 config space write:
 
-#. If it's BAR0 (GTTMMIO) write, turn on/off GTTMMIO trap, according to
+#. If it is BAR0 (GTTMMIO) write, turn on/off GTTMMIO trap, according to
    the write value.
-#. If it's BAR1 (Aperture) write, maps/unmaps vGPU's aperture to its
+#. If it is BAR1 (Aperture) write, maps/unmaps vGPU's aperture to its
    corresponding part in the host's aperture.
 #. Otherwise, write to the virtual PCI configuration space of the vGPU.
 
-pci configure space read scenario
+PCI configure space read scenario
 =================================
 
 Call sequence is almost the same as the write scenario above,
@@ -143,25 +143,25 @@ but instead it calls the GVT's :ref:`intel_gvt_ops_interface`
 GGTT read/write scenario
 ========================
 
-GGTT's trap is set up in the pci configure space write
+GGTT's trap is set up in the PCI configure space write
 scenario above.
 
 MMIO read/write scenario
 ========================
 
-MMIO's trap is set up in the pci configure space write
+MMIO's trap is set up in the PCI configure space write
 scenario above.
 
-PPGTT write protection page set/unset scenario
+PPGTT write-protection page set/unset scenario
 ==============================================
 
-PPGTT write protection page is set by calling ``acrn_ioreq_add_iorange``
+PPGTT write-protection page is set by calling ``acrn_ioreq_add_iorange``
 with range type as ``REQ_WP``, and trap its write to device model while
 allowing read without trap.
 
-PPGTT write protection page is unset by calling ``acrn_ioreq_del_range``.
+PPGTT write-protection page is unset by calling ``acrn_ioreq_del_range``.
 
-PPGTT write protection page write
+PPGTT write-protection page write
 =================================
 
 In the VHM module, ioreq for PPGTT WP and MMIO trap is the same. It will

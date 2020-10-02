@@ -3,10 +3,10 @@
 High-Level Design Guides
 ########################
 
-The ACRN Hypervisor acts as a host with full control of the processor(s)
-and the hardware (physical memory, interrupt management and I/O). It
+The ACRN Hypervisor acts as a host with full control of the processors
+and the hardware (physical memory, interrupt management, and I/O). It
 provides the User OS with an abstraction of a virtual platform, allowing
-the guest to behave as if were executing directly on a logical
+the guest to behave as if it were executing directly on a physical
 processor.
 
 These chapters describe the ACRN architecture, high-level design,

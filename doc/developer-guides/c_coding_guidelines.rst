@@ -13,17 +13,17 @@ Preprocessor
 C-PP-01: ## or # operators shall be used with restrictions
 ==========================================================
 
-## or # operators shall only be used alone. The following cases shall not be
+``##`` or ``#`` operators shall only be used alone. The following cases shall not be
 allowed:
 
-a) The result getting from ## or # operation shall not be used as the operands
-   of another ## or # operation;
-b) Mixed-use of ## or # operators shall not be allowed.
+a) The result getting from ``##`` or ``#`` operation shall not be used as the operands
+   of another ``##`` or ``#`` operation;
+b) Mixed-use of ``##`` or ``#`` operators shall not be allowed.
 
 Compliant example::
 
     #define CONCAT(x, y) x ## y
-    
+
     uint32_t ab = 32U;
     printf("%d \n", CONCAT(a, b));
 
@@ -32,7 +32,7 @@ Compliant example::
    Non-compliant example::
 
        #define CONCAT(x, y, z) x ## y ## z
-       
+
        uint32_t abc = 32U;
        printf("%d \n", CONCAT(a, b, c));
 
@@ -59,17 +59,18 @@ Compliant example::
 C-PP-03: Header file shall not be included multiple times
 =========================================================
 
-The content inside shall be protected with #ifndef, #if !defined, or #ifdef.
+The content inside shall be protected with ``#ifndef``, ``#if
+!defined``, or ``#ifdef``.
 
 Compliant example::
 
     /* In `showcase.h`: */
     #ifndef SHOWCASE_H
     #define SHOWCASE_H
-    
+
     /* header contents */
     uint32_t func_showcase(uint32_t param);
-    
+
     #endif /* SHOWCASE_H */
 
 .. rst-class:: non-compliant-code
@@ -77,7 +78,7 @@ Compliant example::
    Non-compliant example::
 
        /* In `showcase.h`: */
-       
+
        /* header contents without any protection */
        uint32_t func_showcase(uint32_t param);
 
@@ -128,14 +129,14 @@ Compliant example::
     int32_t foo(char *ptr)
     {
             int32_t ret;
-    
+
             if (ptr == NULL) {
                     ret = -1;
             } else {
                     ...
                     ret = 0;
             }
-    
+
             return ret;
     }
 
@@ -160,7 +161,7 @@ Compliant example::
     uint32_t func_showcase(void)
     {
             uint32_t showcase = 32U;
-    
+
             printf("showcase: %d \n", showcase);
             return showcase;
     }
@@ -172,7 +173,7 @@ Compliant example::
        uint32_t func_showcase(void)
        {
                uint32_t showcase = 32U;
-       
+
                return showcase;
                printf("showcase: %d \n", showcase);
        }
@@ -189,18 +190,18 @@ Compliant example::
     bool is_even_number(uint32_t param)
     {
             bool even = false;
-    
+
             if ((param & 0x1U) == 0U) {
                     even = true;
             }
-    
+
             return even;
     }
-    
+
     uint32_t func_showcase(uint32_t param)
     {
             uint32_t ret;
-    
+
             if (param >= 20U) {
                     ret = 20U;
             } else if (is_even_number(param)) {
@@ -208,7 +209,7 @@ Compliant example::
             } else {
                     ret = 0U;
             }
-    
+
             return ret;
     }
 
@@ -219,23 +220,23 @@ Compliant example::
        uint32_t func_showcase(uint32_t param)
        {
                uint32_t ret;
-       
+
                if (param >= 20U) {
                        ret = 20U;
                }
-       
+
                if ((param == 0U) || (param == 2U) || (param == 4U) || (param == 6U) ||
                        (param == 8U) || (param == 10U) || (param == 12U) || (param == 14U) ||
                        (param == 16U) || (param == 18U)) {
                        ret = 10U;
                }
-       
+
                if ((param == 1U) || (param == 3U) || (param == 5U) || (param == 7U) ||
                        (param == 9U) || (param == 11U) || (param == 13U) || (param == 15U) ||
                        (param == 17U) || (param == 19U)) {
                        ret = 0U;
                }
-       
+
                return ret;
        }
 
@@ -250,7 +251,7 @@ C-DI-01: Variable shall be used after its initialization
 Compliant example::
 
     uint32_t a, b;
-    
+
     a = 0U;
     b = a;
 
@@ -259,7 +260,7 @@ Compliant example::
    Non-compliant example::
 
        uint32_t a, b;
-       
+
        b = a;
 
 
@@ -272,7 +273,7 @@ Compliant example::
     {
             /* main body */
     }
-    
+
     static void showcase_1(void)
     {
             showcase_2(void);
@@ -286,7 +287,7 @@ Compliant example::
        {
                showcase_2(void);
        }
-       
+
        static void showcase_2(void)
        {
                /* main body */
@@ -299,11 +300,11 @@ C-DI-03: The initialization statement shall not be skipped
 Compliant example::
 
             uint32_t showcase;
-    
+
             showcase = 0U;
             goto increment_ten;
             showcase += 20U;
-    
+
     increment_ten:
             showcase += 10U;
 
@@ -312,11 +313,11 @@ Compliant example::
    Non-compliant example::
 
                uint32_t showcase;
-       
+
                goto increment_ten;
                showcase = 0U;
                showcase += 20U;
-       
+
        increment_ten:
                showcase += 10U;
 
@@ -331,13 +332,13 @@ Compliant example::
             uint32_t temp_1;
             uint32_t temp_2;
     };
-    
+
     struct struct_showcase
     {
             uint32_t temp_3;
             struct struct_showcase_sub temp_struct;
     };
-    
+
     struct struct_showcase showcase = {32U, {32U, 32U}};
 
 .. rst-class:: non-compliant-code
@@ -349,13 +350,13 @@ Compliant example::
                uint32_t temp_1;
                uint32_t temp_2;
        };
-       
+
        struct struct_showcase
        {
                uint32_t temp_3;
                struct struct_showcase_sub temp_struct;
        };
-       
+
        struct struct_showcase showcase = {32U, 32U, 32U};
 
 
@@ -385,11 +386,11 @@ Compliant example::
 
     /* In `showcase.h` */
     extern uint32_t showcase;
-    
+
     /* In `showcase.c`: */
     /* global variable */
     uint32_t showcase = 32U;
-    
+
     void func_showcase(void)
     {
             showcase++;
@@ -403,7 +404,7 @@ Compliant example::
        /* global variable */
        uint32_t showcase;
        uint32_t showcase = 32U;
-       
+
        void func_showcase(void)
        {
                showcase++;
@@ -523,11 +524,11 @@ Compliant example::
     {
             printf("param: %d\n", param);
     }
-    
+
     void showcase_2(void)
     {
             uint32_t a;
-    
+
             showcase_1(0U);
             a = 0U;
     }
@@ -540,11 +541,11 @@ Compliant example::
        {
                printf("param: %d\n", param);
        }
-       
+
        void showcase_2(void)
        {
                uint32_t a;
-       
+
                a = showcase_1(0U);
        }
 
@@ -557,7 +558,7 @@ Compliant example::
     void func_showcase(uint32_t *param_ptr)
     {
             uint32_t *local_ptr = param_ptr;
-    
+
             local_ptr++;
             printf("%d \n", *local_ptr);
     }
@@ -581,7 +582,7 @@ Compliant example::
     void func_showcase(uint32_t param)
     {
             uint32_t local = param;
-    
+
             local++;
             printf("%d \n", local);
     }
@@ -604,10 +605,10 @@ Compliant example::
 
     /* In `showcase.h`: */
     uint32_t func_showcase(uint32_t param);
-    
+
     /* In `showcase.c`: */
     #include "showcase.h"
-    
+
     uint32_t func_showcase(uint32_t param)
     {
             return param;
@@ -618,7 +619,7 @@ Compliant example::
    Non-compliant example::
 
        /* There is no `showcase.h`. */
-       
+
        /* In `showcase.c`: */
        uint32_t func_showcase(uint32_t param)
        {
@@ -640,7 +641,7 @@ Compliant example::
     {
             printf("param %d \n", param);
     }
-    
+
     void main(void)
     {
             func_showcase(10U);
@@ -667,10 +668,10 @@ Compliant example::
 
     /* In `showcase.h`: */
     uint32_t func_showcase(uint32_t param);
-    
+
     /* In `showcase.c`: */
     #include "showcase.h"
-    
+
     uint32_t func_showcase(uint32_t param)
     {
             return param;
@@ -682,10 +683,10 @@ Compliant example::
 
        /* In `showcase.h`: */
        uint32_t func_showcase(uint32_t param);
-       
+
        /* In `showcase.c`: */
        #include "showcase.h"
-       
+
        uint32_t func_showcase(uint32_t param_1)
        {
                return param_1;
@@ -702,10 +703,10 @@ Compliant example::
 
     /* In `showcase.h`: */
     uint32_t func_showcase(uint32_t param);
-    
+
     /* In `showcase.c`: */
     #include "showcase.h"
-    
+
     uint32_t func_showcase(uint32_t param)
     {
             return param;
@@ -717,10 +718,10 @@ Compliant example::
 
        /* In `showcase.h`: */
        uint32_t func_showcase(uint64_t param);
-       
+
        /* In `showcase.c`: */
        #include "showcase.h"
-       
+
        uint32_t func_showcase(uint32_t param)
        {
                return param;
@@ -737,10 +738,10 @@ Compliant example::
 
     /* In `showcase.h`: */
     uint32_t func_showcase(uint32_t param);
-    
+
     /* In `showcase.c`: */
     #include "showcase.h"
-    
+
     uint32_t func_showcase(uint32_t param)
     {
             return param;
@@ -752,10 +753,10 @@ Compliant example::
 
        /* In `showcase.h`: */
        uint64_t func_showcase(uint64_t param);
-       
+
        /* In `showcase.c`: */
        #include "showcase.h"
-       
+
        uint32_t func_showcase(uint32_t param)
        {
                return param;
@@ -793,10 +794,10 @@ Compliant example::
     /* In `showcase.h`: */
     /* declaration */
     uint32_t func_showcase(uint32_t param);
-    
+
     /* In `showcase.c`: */
     #include "showcase.h"
-    
+
     /* definition */
     uint32_t func_showcase(uint32_t param)
     {
@@ -810,7 +811,7 @@ Compliant example::
        /* In `showcase.h`: */
        /* declaration */
        uint32_t func_showcase(uint32_t param);
-       
+
        /* There is no definition of `func_showcase` anywhere in all source files */
 
 
@@ -828,22 +829,22 @@ Compliant example::
 
     /* In `showcase.h`: */
     uint32_t func_showcase(uint32_t param);
-    
+
     /* In `showcase.c`: */
     #include "showcase.h"
-    
+
     uint32_t func_showcase(uint32_t param)
     {
             return param;
     }
-    
+
     /* In `main.c`: */
     #include "showcase.h"
-    
+
     void main(void)
     {
             uint32_t showcase;
-    
+
             showcase = func_showcase(32U);
     }
 
@@ -853,10 +854,10 @@ Compliant example::
 
        /* In `showcase.h`: */
        uint32_t func_showcase(uint32_t param);
-       
+
        /* In `showcase.c`: */
        #include "showcase.h"
-       
+
        /* There is no usage of `func_showcase` anywhere in all source files */
        uint32_t func_showcase(uint32_t param)
        {
@@ -877,16 +878,16 @@ Compliant example::
             uint32_t temp_32;
             uint64_t temp_64;
     };
-    
+
     struct struct_showcase func_showcase(void)
     {
             struct struct_showcase showcase;
             uint32_t showcase_u32 = 32U;
             uint64_t showcase_u64 = 64UL;
-    
+
             showcase.temp_32 = showcase_u32;
             showcase.temp_64 = showcase_u64;
-    
+
             return showcase;
     }
 
@@ -899,19 +900,19 @@ Compliant example::
                uint32_t *temp_32;
                uint64_t *temp_64;
        };
-       
+
        struct struct_showcase func_showcase(void)
        {
                struct struct_showcase showcase;
                uint32_t showcase_u32 = 32U;
                uint64_t showcase_u64 = 64UL;
-       
+
                showcase.temp_32 = &showcase_u32;
                showcase.temp_64 = &showcase_u64;
-       
+
                return showcase;
        }
-       
+
 
 
 C-FN-16: Mixed-use of C code and assembly code in a single function shall not be allowed
@@ -926,11 +927,11 @@ Compliant example::
     {
             asm volatile ("hlt");
     }
-    
+
     void func_showcase(void)
     {
             bool showcase_flag = true;
-    
+
             if (showcase_flag) {
                     asm_hlt();
             }
@@ -943,7 +944,7 @@ Compliant example::
        void func_showcase(void)
        {
                bool showcase_flag = true;
-       
+
                if (showcase_flag) {
                        asm volatile ("hlt");
                }
@@ -961,28 +962,28 @@ Compliant example::
 
     /** Indicates that argument is not valid. */
     #define EINVAL                22
-    
+
     int32_t func_showcase(uint32_t param)
     {
             int32_t error;
-    
+
             if (param < 32U) {
                     error = 0;
             } else {
                     error = -EINVAL;
             }
-    
+
             return error;
     }
-    
+
     void main(uint32_t index)
     {
             int32_t error;
             uint32_t test;
             uint32_t array_showcase[32];
-    
+
             error = func_showcase(index);
-    
+
             if (error == 0) {
                     test = array_showcase[index];
             }
@@ -994,28 +995,28 @@ Compliant example::
 
        /** Indicates that argument is not valid. */
        #define EINVAL                22
-       
+
        int32_t func_showcase(uint32_t param)
        {
                int32_t error;
-       
+
                if (param < 32U) {
                        error = 0;
                } else {
                        error = -EINVAL;
                }
-       
+
                return error;
        }
-       
+
        void main(uint32_t index)
        {
                int32_t error;
                uint32_t test;
                uint32_t array_showcase[32];
-       
+
                error = func_showcase(index);
-       
+
                test = array_showcase[index];
        }
 
@@ -1031,7 +1032,7 @@ Compliant example::
     void showcase(uint32_t array_source[16])
     {
             uint32_t array_destination[16];
-    
+
             (void)memcpy(array_destination, array_source, 16U);
     }
 
@@ -1042,7 +1043,7 @@ Compliant example::
        void showcase(uint32_t array_source[32])
        {
                uint32_t array_destination[16];
-       
+
                (void)memcpy(array_destination, array_source, 32U);
        }
 
@@ -1055,11 +1056,11 @@ Compliant example::
     uint32_t func_showcase(uint32_t param) {
             uint32_t mult = 1;
             uint32_t i;
-    
+
             for (i = param; i > 0U; i--) {
                     mult = mult * i;
             }
-            
+
             return mult;
     }
 
@@ -1069,11 +1070,11 @@ Compliant example::
 
        uint32_t func_showcase(uint32_t param) {
                uint32_t mult = 1;
-       
+
                if (param > 0U) {
                        mult = param * func_showcase(param - 1);
                }
-               
+
                return mult;
        }
 
@@ -1116,7 +1117,7 @@ C-ST-02: The loop body shall be enclosed with brackets
 Compliant example::
 
     uint32_t i;
-    
+
     for (i = 0U; i < 5U; i++) {
             printf("count: %d \n", i);
     }
@@ -1126,7 +1127,7 @@ Compliant example::
    Non-compliant example::
 
        uint32_t i;
-       
+
        for (i = 0U; i < 5U; i++)
                printf("count: %d \n", i);
 
@@ -1140,7 +1141,7 @@ Compliant example::
 
     uint32_t count = 10U;
     bool showcase_flag = false;
-    
+
     while (count > 5U)
     {
             if (showcase_flag) {
@@ -1156,7 +1157,7 @@ Compliant example::
 
        uint32_t count = 10U;
        bool showcase_flag = false;
-       
+
        while (count > 5U)
        {
                if (showcase_flag) {
@@ -1175,7 +1176,7 @@ possible cases.
 Compliant example::
 
     uint32_t param, showcase;
-    
+
     if (param < 10U) {
             showcase = 10U;
     } else if (param < 20U) {
@@ -1189,7 +1190,7 @@ Compliant example::
    Non-compliant example::
 
        uint32_t param, showcase;
-       
+
        if (param < 10U) {
                showcase = 10U;
        } else if (param < 20U) {
@@ -1207,7 +1208,7 @@ cases.
 Compliant example::
 
     char showcase;
-    
+
     switch (showcase) {
     case 'a':
             /* do something */
@@ -1225,7 +1226,7 @@ Compliant example::
    Non-compliant example::
 
        char showcase;
-       
+
        switch (showcase) {
        case 'a':
                /* do something */
@@ -1244,7 +1245,7 @@ Falling through a case shall not be allowed.
 Compliant example::
 
     char showcase;
-    
+
     switch (showcase) {
     case 'a':
             /* do something */
@@ -1262,7 +1263,7 @@ Compliant example::
    Non-compliant example::
 
        char showcase;
-       
+
        switch (showcase) {
        case 'a':
                /* do something */
@@ -1280,7 +1281,7 @@ C-ST-07: The for loop counter shall not be changed inside the loop body
 Compliant example::
 
     uint32_t i;
-    
+
     for (i = 0U; i < 5U; i++) {
             printf("count: %d \n", i);
     }
@@ -1290,29 +1291,29 @@ Compliant example::
    Non-compliant example::
 
        uint32_t i;
-       
+
        for (i = 0U; i < 5U; i++) {
                printf("count: %d \n", i);
                i++;
        }
 
 
-C-ST-08:  'goto' statement shall not be used
-============================================
+C-ST-08:  ``goto`` statement shall not be used
+==============================================
 
 Compliant example::
 
     uint32_t showcase(uint32_t param)
     {
             uint32_t ret;
-    
+
             if (param < 10U) {
                     ret = 10U;
             } else {
                     ret = param;
                     /* do something */
             }
-    
+
             return ret;
     }
 
@@ -1323,16 +1324,16 @@ Compliant example::
        uint32_t showcase(uint32_t param)
        {
                uint32_t ret;
-       
+
                if (param < 10U) {
                        ret = 10U;
                        goto done;
                } else {
                        ret = param;
                }
-       
+
                /* do something */
-       
+
        done:
                return ret;
        }
@@ -1351,7 +1352,7 @@ loop counter. All other operations shall not be allowed.
 Compliant example::
 
     uint32_t i;
-    
+
     for (i = 0U; i < 5U; i++) {
             printf("count: %d \n", i);
     }
@@ -1362,7 +1363,7 @@ Compliant example::
 
        uint32_t i;
        uint32_t showcase = 0U;
-       
+
        for (i = 0U, showcase = 10U; i < 5U; i++) {
                printf("count: %d \n", i);
        }
@@ -1374,7 +1375,7 @@ C-EP-02: The controlling expression of a for loop shall not be empty
 Compliant example::
 
     uint32_t i;
-    
+
     for (i = 0U; i < 5U; i++) {
             printf("count: %d \n", i);
     }
@@ -1384,7 +1385,7 @@ Compliant example::
    Non-compliant example::
 
        uint32_t i;
-       
+
        for (i = 0U; ; i++) {
                printf("count: %d \n", i);
                if (i > 4U) {
@@ -1403,7 +1404,7 @@ operations shall not be allowed.
 Compliant example::
 
     uint32_t i;
-    
+
     for (i = 0U; i < 5U; i++) {
             printf("count: %d \n", i);
     }
@@ -1414,7 +1415,7 @@ Compliant example::
 
        uint32_t i;
        uint32_t showcase = 0U;
-       
+
        for (i = 0U; i < 5U; i++, showcase++) {
                printf("count: %d \n", i);
        }
@@ -1427,7 +1428,7 @@ Compliant example::
 
     uint32_t showcase = 0U;
     uint32_t showcase_test = 10U;
-    
+
     showcase++;
     showcase_test = showcase_test + showcase;
 
@@ -1437,7 +1438,7 @@ Compliant example::
 
        uint32_t showcase = 0U;
        uint32_t showcase_test = 10U;
-       
+
        showcase_test = showcase_test + ++showcase;
 
 
@@ -1449,7 +1450,7 @@ Compliant example::
     uint32_t showcase_u32_1 = 0U;
     uint32_t showcase_u32_2 = 0xFFU;
     uint32_t showcase_u32_3;
-    
+
     showcase_u32_3 = showcase_u32_1 * (showcase_u32_2 >> 4U);
 
 .. rst-class:: non-compliant-code
@@ -1459,7 +1460,7 @@ Compliant example::
        uint32_t showcase_u32_1 = 0U;
        uint32_t showcase_u32_2 = 0xFU;
        uint32_t showcase_u32_3;
-       
+
        showcase_u32_3 = showcase_u32_1 * showcase_u32_2 >> 4U;
 
 
@@ -1500,7 +1501,7 @@ Compliant example::
     {
             uint32_t showcase_local = 32U;
             uint32_t *showcase_ptr_local;
-    
+
             showcase_ptr_local = &showcase_local;
             printf("*showcase_ptr_local %d \n", *showcase_ptr_local);
     }
@@ -1510,16 +1511,16 @@ Compliant example::
    Non-compliant example::
 
        uint32_t *showcase_ptr_global;
-       
+
        void func_showcase(void)
        {
                uint32_t showcase_local = 32U;
                uint32_t *showcase_ptr_local;
-       
+
                showcase_ptr_local = &showcase_local;
                showcase_ptr_global = showcase_ptr_local;
        }
-       
+
        void main(void)
        {
                func_showcase();
@@ -1537,11 +1538,11 @@ the array size.
 Compliant example::
 
     #define SHOWCASE_SIZE 32U
-    
+
     void showcase(uint32_t array_source[SHOWCASE_SIZE])
     {
             uint32_t num_bytes = SHOWCASE_SIZE * sizeof(uint32_t);
-    
+
             printf("num_bytes %d \n", num_bytes);
     }
 
@@ -1550,11 +1551,11 @@ Compliant example::
    Non-compliant example::
 
        #define SHOWCASE_SIZE 32U
-       
+
        void showcase(uint32_t array_source[SHOWCASE_SIZE])
        {
                uint32_t num_bytes = sizeof(array_source);
-       
+
                printf("num_bytes %d \n", num_bytes);
        }
 
@@ -1566,7 +1567,7 @@ Compliant example::
 
     uint32_t size;
     char showcase[3] = {'0', '1', '\0'};
-    
+
     size = strlen(showcase);
 
 .. rst-class:: non-compliant-code
@@ -1575,7 +1576,7 @@ Compliant example::
 
        uint32_t size;
        char showcase[2] = {'0', '1'};
-       
+
        size = strlen(showcase);
 
 
@@ -1586,7 +1587,7 @@ Compliant example::
 
     char *str_source = "showcase";
     char str_destination[32];
-    
+
     (void)strncpy(str_destination, str_source, 8U);
 
 .. rst-class:: non-compliant-code
@@ -1595,7 +1596,7 @@ Compliant example::
 
        char *str_source = "showcase";
        char *str_destination = &str_source[1];
-       
+
        (void)strncpy(str_destination, str_source, 8U);
 
 
@@ -1606,7 +1607,7 @@ Compliant example::
 
     char *str_source = "showcase";
     char str_destination[32];
-    
+
     (void)memcpy(str_destination, str_source, 8U);
 
 .. rst-class:: non-compliant-code
@@ -1615,7 +1616,7 @@ Compliant example::
 
        char str_source[32];
        char *str_destination = &str_source[1];
-       
+
        (void)memcpy(str_destination, str_source, 8U);
 
 
@@ -1629,9 +1630,9 @@ Compliant example::
             uint8_t data_8[4];
             uint16_t data_16[2];
     };
-    
+
     union union_showcase showcase;
-    
+
     showcase.data_16[0] = 0U;
     showcase.data_8[3] = (uint8_t)showcase.data_16[0];
 
@@ -1644,9 +1645,9 @@ Compliant example::
                uint8_t data_8[4];
                uint16_t data_16[2];
        };
-       
+
        union union_showcase showcase;
-       
+
        showcase.data_16[0] = 0U;
        showcase.data_8[0] = (uint8_t)showcase.data_16[0];
 
@@ -1661,7 +1662,7 @@ Compliant example::
 
     uint32_t array_source[32];
     uint32_t array_destination[32];
-    
+
     (void)memcpy(array_destination, array_source, 32U);
 
 .. rst-class:: non-compliant-code
@@ -1670,7 +1671,7 @@ Compliant example::
 
        uint32_t array_source[32];
        uint32_t array_destination[16];
-       
+
        (void)memcpy(array_destination, array_source, 32U);
 
 
@@ -1683,9 +1684,9 @@ size. Otherwise, data corruption may occur.
 Compliant example::
 
     #define SHOWCASE_BYTES (32U * sizeof(uint32_t))
-    
+
     uint32_t array_source[32];
-    
+
     (void)memset(array_source, 0U, SHOWCASE_BYTES);
 
 .. rst-class:: non-compliant-code
@@ -1693,9 +1694,9 @@ Compliant example::
    Non-compliant example::
 
        #define SHOWCASE_BYTES (32U * sizeof(uint32_t))
-       
+
        uint32_t array_source[32];
-       
+
        (void)memset(array_source, 0U, 2U * SHOWCASE_BYTES);
 
 
@@ -1708,7 +1709,7 @@ Compliant example::
 
     uint32_t numerator = 32U;
     uint32_t denominator = 0U;
-    
+
     if (denominator != 0U) {
             uint32_t quotient = numerator / denominator;
     }
@@ -1719,7 +1720,7 @@ Compliant example::
 
        uint32_t numerator = 32U;
        uint32_t denominator = 0U;
-       
+
        uint32_t quotient = numerator / denominator;
 
 
@@ -1731,7 +1732,7 @@ A pointer shall be checked before use.
 Compliant example::
 
     uint32_t *showcase_ptr = NULL;
-    
+
     if (showcase_ptr != NULL) {
             uint32_t showcase = *showcase_ptr;
     }
@@ -1741,7 +1742,7 @@ Compliant example::
    Non-compliant example::
 
        uint32_t *showcase_ptr = NULL;
-       
+
        uint32_t showcase = *showcase_ptr;
 
 
@@ -1751,7 +1752,7 @@ C-EP-18: A string literal shall not be modified
 Compliant example::
 
     const char *showcase = "showcase";
-    
+
     printf("%s \n", showcase);
 
 .. rst-class:: non-compliant-code
@@ -1759,7 +1760,7 @@ Compliant example::
    Non-compliant example::
 
        char *showcase = "showcase";
-       
+
        showcase[0] = 'S';
        printf("%s \n", showcase);
 
@@ -1776,7 +1777,7 @@ b) ++ or -- operation shall be allowed if it is used as the third expression of
 Compliant example::
 
     uint32_t showcase = 0U;
-    
+
     showcase++;
 
 .. rst-class:: non-compliant-code
@@ -1785,7 +1786,7 @@ Compliant example::
 
        uint32_t showcase = 0U;
        uint32_t showcase_test;
-       
+
        showcase_test = showcase++;
 
 
@@ -1799,7 +1800,7 @@ undefined behavior and shall be avoided.
 Compliant example::
 
     char showcase_array[4] = {'s', 'h', 'o', 'w'};
-    
+
     char showcase = showcase_array[0];
 
 .. rst-class:: non-compliant-code
@@ -1807,7 +1808,7 @@ Compliant example::
    Non-compliant example::
 
        char showcase_array[4] = {'s', 'h', 'o', 'w'};
-       
+
        char showcase = showcase_array[10];
 
 
@@ -1818,7 +1819,7 @@ Compliant example::
 
     uint32_t showcase_a = 10U;
     uint32_t showcase_b = 20U;
-    
+
     showcase_a++;
     showcase_b++;
 
@@ -1828,7 +1829,7 @@ Compliant example::
 
        uint32_t showcase_a = 10U;
        uint32_t showcase_b = 20U;
-       
+
        showcase_a++, showcase_b++;
 
 
@@ -1846,7 +1847,7 @@ c) The meaning of the magic number is straightforward in the specific context.
 Compliant example::
 
     #define APIC_ID_MASK 0xff000000U
-    
+
     uint32_t showcase = APIC_ID_MASK;
 
 .. rst-class:: non-compliant-code
@@ -1866,10 +1867,10 @@ ensure that the pointer reference is within the correct address space.
 Compliant example::
 
     #define SHOWCASE_SIZE 32U
-    
+
     uint32_t showcase_arr[SHOWCASE_SIZE];
     uint32_t i;
-    
+
     for (i = 0U; i < SHOWCASE_SIZE; i++) {
             showcase_arr[i] = i;
     }
@@ -1879,10 +1880,10 @@ Compliant example::
    Non-compliant example::
 
        #define SHOWCASE_SIZE 32U
-       
+
        uint32_t *showcase_ptr;
        uint32_t i;
-       
+
        for (i = 0U; i < SHOWCASE_SIZE; i++) {
                *showcase_ptr = i;
                showcase_ptr = showcase_ptr + 1U;
@@ -1928,7 +1929,7 @@ Compliant example::
 
     uint32_t showcase = 32U;
     uint32_t mask = 0xFU;
-    
+
     showcase = showcase & mask;
 
 .. rst-class:: non-compliant-code
@@ -1937,7 +1938,7 @@ Compliant example::
 
        uint32_t showcase = 32U;
        int32_t mask = -1;
-       
+
        showcase = showcase & mask;
 
 
@@ -1957,7 +1958,7 @@ Compliant example::
     bool showcase_flag = true;
     uint32_t exp = 32U;
     uint32_t cond_exp = 64U;
-    
+
     uint32_t showcase = showcase_flag ? exp : cond_exp;
 
 .. rst-class:: non-compliant-code
@@ -1967,7 +1968,7 @@ Compliant example::
        uint32_t showcase_flag = 1U;
        uint32_t exp = 32U;
        uint32_t cond_exp = 64U;
-       
+
        uint32_t showcase = showcase_flag ? exp : cond_exp;
 
 
@@ -1987,7 +1988,7 @@ Compliant example::
             ENUM_SHOWCASE_0,
             ENUM_SHOWCASE_1
     };
-    
+
     enum enum_showcase showcase_0 = ENUM_SHOWCASE_0;
     enum enum_showcase showcase_1 = showcase_0;
 
@@ -1999,7 +2000,7 @@ Compliant example::
                ENUM_SHOWCASE_0,
                ENUM_SHOWCASE_1
        };
-       
+
        enum enum_showcase showcase_0 = ENUM_SHOWCASE_0;
        enum enum_showcase showcase_1 = showcase_0 + 1U;
 
@@ -2011,7 +2012,7 @@ Compliant example::
 
     char showcase[2] = {'0', '1'};
     char chr;
-    
+
     chr = showcase[1];
 
 .. rst-class:: non-compliant-code
@@ -2020,7 +2021,7 @@ Compliant example::
 
        char showcase[2] = {'0', '1'};
        char chr;
-       
+
        chr = showcase[static 1];
 
 
@@ -2052,7 +2053,7 @@ Compliant example::
     bool showcase_flag = true;
     uint32_t exp = 32U;
     uint32_t cond_exp = 64U;
-    
+
     uint32_t showcase = showcase_flag ? exp : cond_exp;
 
 .. rst-class:: non-compliant-code
@@ -2062,7 +2063,7 @@ Compliant example::
        bool showcase_flag = true;
        int32_t exp = -1;
        uint32_t cond_exp = 64U;
-       
+
        uint32_t showcase = showcase_flag ? exp : cond_exp;
 
 
@@ -2079,7 +2080,7 @@ Compliant example::
             uint32_t temp_32;
             uint64_t temp_64;
     };
-    
+
     struct struct_showcase showcase = {32U, 64UL};
 
 .. rst-class:: non-compliant-code
@@ -2091,7 +2092,7 @@ Compliant example::
                uint32_t temp_32;
                uint64_t temp_64;
        };
-       
+
        struct struct_showcase showcase = {32U, -1};
 
 
@@ -2108,9 +2109,9 @@ Compliant example::
             ENUM_SHOWCASE_1,
             ENUM_SHOWCASE_2
     };
-    
+
     enum enum_showcase showcase;
-    
+
     switch (showcase) {
     case ENUM_SHOWCASE_0:
             /* showcase */
@@ -2132,9 +2133,9 @@ Compliant example::
                ENUM_SHOWCASE_1,
                ENUM_SHOWCASE_2
        };
-       
+
        enum enum_showcase showcase;
-       
+
        switch (showcase) {
        case ENUM_SHOWCASE_0:
                /* showcase */
@@ -2191,7 +2192,7 @@ Compliant example::
 
     uint32_t showcase_u32;
     uint64_t showcase_u64 = 64UL;
-    
+
     showcase_u32 = (uint32_t)showcase_u64;
 
 .. rst-class:: non-compliant-code
@@ -2200,7 +2201,7 @@ Compliant example::
 
        uint32_t showcase_u32;
        uint64_t showcase_u64 = 64UL;
-       
+
        showcase_u32 = showcase_u64;
 
 
@@ -2212,7 +2213,7 @@ Compliant example::
     uint32_t showcase_u32_1 = 10U;
     uint32_t showcase_u32_2 = 10U;
     uint64_t showcase_u64;
-    
+
     showcase_u64 = (uint64_t)showcase_u32_1 + (uint64_t)showcase_u32_2;
 
 .. rst-class:: non-compliant-code
@@ -2222,7 +2223,7 @@ Compliant example::
        uint32_t showcase_u32_1 = 10U;
        uint32_t showcase_u32_2 = 10U;
        uint64_t showcase_u64;
-       
+
        showcase_u64 = (uint64_t)(showcase_u32_1 + showcase_u32_2);
 
 
@@ -2234,7 +2235,7 @@ Compliant example::
     /* 0x61 is 'a' in ASCII Table */
     uint32_t showcase_u32;
     char showcase_char;
-    
+
     showcase_u32 = 0x61U + 1U;
     showcase_char = (char)showcase_u32;
 
@@ -2245,7 +2246,7 @@ Compliant example::
        /* 0x61 is 'a' in ASCII Table */
        uint32_t showcase_u32;
        char showcase_char;
-       
+
        showcase_u32 = 0x61U;
        showcase_char = (char)(showcase_u32 + 1U);
 
@@ -2256,7 +2257,7 @@ C-TY-15: Integer shall not be used when a character is expected
 Compliant example::
 
     char showcase;
-    
+
     switch (showcase) {
     case 'a':
             /* do something */
@@ -2273,7 +2274,7 @@ Compliant example::
    Non-compliant example::
 
        char showcase;
-       
+
        switch (showcase) {
        /* 0x61 is 'a' in ASCII Table */
        case 0x61:
@@ -2293,7 +2294,7 @@ C-TY-16: A pointer shall not be cast to any other types
 Compliant example::
 
     uint64_t *showcase_ptr;
-    
+
     uint64_t showcase = *showcase_ptr;
 
 .. rst-class:: non-compliant-code
@@ -2301,7 +2302,7 @@ Compliant example::
    Non-compliant example::
 
        uint64_t *showcase_ptr;
-       
+
        uint64_t showcase = (uint64_t)showcase_ptr;
 
 
@@ -2317,7 +2318,7 @@ b) Assignment shall be allowed if the objects pointed to by the two pointers are
 Compliant example::
 
     uint64_t showcase = 10UL;
-    
+
     uint64_t *showcase_ptr = &showcase;
 
 .. rst-class:: non-compliant-code
@@ -2325,7 +2326,7 @@ Compliant example::
    Non-compliant example::
 
        uint64_t showcase = 10UL;
-       
+
        uint64_t *showcase_ptr = (uint64_t *)showcase;
 
 
@@ -2337,7 +2338,7 @@ Typedefs that are not used shall be deleted.
 Compliant example::
 
     typedef unsigned int uint32_t;
-    
+
     uint32_t showcase;
 
 .. rst-class:: non-compliant-code
@@ -2347,7 +2348,7 @@ Compliant example::
        typedef unsigned int uint32_t;
        /* uint32_t_backup is not being used anywhere */
        typedef unsigned int uint32_t_backup;
-       
+
        uint32_t showcase;
 
 
@@ -2357,7 +2358,7 @@ C-TY-19: Array indexing shall only be performed on array type
 Compliant example::
 
     char showcase[4] = {'s', 'h', 'o', 'w'};
-    
+
     char chr = showcase[1];
 
 .. rst-class:: non-compliant-code
@@ -2365,7 +2366,7 @@ Compliant example::
    Non-compliant example::
 
        char *showcase = "show";
-       
+
        char chr = showcase[1];
 
 
@@ -2378,11 +2379,11 @@ Compliant example::
     {
             printf("formal_param: %d \n", formal_param);
     }
-    
+
     void main(void)
     {
             uint32_t actual_param = 32U;
-    
+
             func_showcase(actual_param);
     }
 
@@ -2394,11 +2395,11 @@ Compliant example::
        {
                printf("formal_param: %d \n", formal_param);
        }
-       
+
        void main(void)
        {
                uint64_t actual_param = 32UL;
-       
+
                func_showcase(actual_param);
        }
 
@@ -2439,10 +2440,10 @@ Compliant example::
             uint32_t *temp_32;
             uint64_t *temp_64;
     };
-    
+
     uint32_t *showcase_ptr_u32;
     struct struct_showcase *showcase_ptr_struct;
-    
+
     showcase_ptr_u32 = showcase_ptr_struct->temp_32;
 
 .. rst-class:: non-compliant-code
@@ -2454,10 +2455,10 @@ Compliant example::
                uint32_t *temp_32;
                uint64_t *temp_64;
        };
-       
+
        uint32_t *showcase_ptr_u32;
        struct struct_showcase *showcase_ptr_struct;
-       
+
        showcase_ptr_u32 = (uint32_t *)showcase_ptr_struct;
 
 
@@ -2467,10 +2468,10 @@ C-TY-23: Assignment on function pointers shall be performed with same type
 Compliant example::
 
     typedef void (*func_ptr_t)(void);
-    
+
     func_ptr_t func_ptr_a;
     func_ptr_t func_ptr_b;
-    
+
     func_ptr_a = func_ptr_b;
 
 .. rst-class:: non-compliant-code
@@ -2479,10 +2480,10 @@ Compliant example::
 
        typedef void (*func_ptr_a_t)(void);
        typedef uint32_t (*func_ptr_b_t)(uint32_t param);
-       
+
        func_ptr_a_t func_ptr_a;
        func_ptr_b_t func_ptr_b;
-       
+
        func_ptr_a = func_ptr_b;
 
 
@@ -2492,12 +2493,12 @@ C-TY-24: Cast shall not be performed on function pointer
 Compliant example::
 
     typedef uint32_t (*func_ptr_t)(uint32_t param);
-    
+
     uint32_t func_showcase(uint32_t param)
     {
             return param;
     }
-    
+
     func_ptr_t func_ptr_showcase;
     func_ptr_showcase = func_showcase;
 
@@ -2506,12 +2507,12 @@ Compliant example::
    Non-compliant example::
 
        typedef uint32_t (*func_ptr_t)(uint32_t param);
-       
+
        void func_showcase(uint32_t param)
        {
                printf("param: %d \n", param);
        }
-       
+
        func_ptr_t func_ptr_showcase;
        func_ptr_showcase = (func_ptr_t)func_showcase;
 
@@ -2548,7 +2549,7 @@ is to guarantee the code portability between different compilers and platforms.
 Compliant example::
 
     typedef unsigned int uint32_t;
-    
+
     uint32_t showcase = 32U;
 
 .. rst-class:: non-compliant-code
@@ -2580,7 +2581,7 @@ Compliant example::
     uint16_t showcase_u16 = 16U;
     uint32_t showcase_u32 = 32U;
     uint64_t showcase_u64 = 64UL;
-    
+
     uint32_t test = (uint32_t)showcase_u16 + showcase_u32 + (uint32_t)showcase_u64;
 
 .. rst-class:: non-compliant-code
@@ -2590,7 +2591,7 @@ Compliant example::
        uint16_t showcase_u16 = 16U;
        uint32_t showcase_u32 = 32U;
        uint64_t showcase_u64 = 64UL;
-       
+
        uint32_t test = showcase_u16 + showcase_u32 + showcase_u64;
 
 
@@ -2608,7 +2609,7 @@ Compliant example::
             char *str_source;
             char *str_destination;
     };
-    
+
     void func_showcase(uint32_t showcase)
     {
             /* main body */
@@ -2623,7 +2624,7 @@ Compliant example::
                char *str_source;
                char *str_destination;
        };
-       
+
        void func_showcase(uint32_t showcase)
        {
                /* main body */
@@ -2640,7 +2641,7 @@ Compliant example::
             char *str_source;
             char *str_destination;
     };
-    
+
     struct struct_showcase_2
     {
             uint32_t showcase_1;
@@ -2656,7 +2657,7 @@ Compliant example::
                char *str_source;
                char *str_destination;
        };
-       
+
        struct showcase_2
        {
                uint32_t showcase_1;
@@ -2678,10 +2679,10 @@ Compliant example::
             char *str_source;
             char *str_destination;
     };
-    
+
     /* global variable */
     uint32_t showcase;
-    
+
     void func_showcase(void)
     {
             showcase++;
@@ -2696,10 +2697,10 @@ Compliant example::
                char *str_source;
                char *str_destination;
        };
-       
+
        /* global variable */
        uint32_t showcase;
-       
+
        void func_showcase(void)
        {
                showcase++;
@@ -2713,11 +2714,11 @@ Compliant example::
 
     /* global variable */
     uint32_t showcase;
-    
+
     void func_showcase(void)
     {
             uint32_t showcase_local;
-    
+
             showcase_local = 32U;
     }
 
@@ -2727,11 +2728,11 @@ Compliant example::
 
        /* global variable */
        uint32_t showcase;
-       
+
        void func_showcase(void)
        {
                uint32_t showcase;
-       
+
                showcase = 32U;
        }
 
@@ -2747,7 +2748,7 @@ Compliant example::
 
     /* global variable */
     uint32_t showcase;
-    
+
     void func_showcase(void)
     {
             /* main body */
@@ -2759,7 +2760,7 @@ Compliant example::
 
        /* global variable */
        uint32_t showcase;
-       
+
        void showcase(void)
        {
                /* main body */
@@ -2774,7 +2775,7 @@ The typedef name shall be unique and not be used for any other purpose.
 Compliant example::
 
     typedef unsigned int uint32_t;
-    
+
     uint32_t showcase;
 
 .. rst-class:: non-compliant-code
@@ -2782,7 +2783,7 @@ Compliant example::
    Non-compliant example::
 
        typedef unsigned int uint32_t;
-       
+
        uint32_t uint32_t;
 
 
@@ -2814,7 +2815,7 @@ Compliant example::
             char *str_source;
             char *str_destination;
     };
-    
+
     uint32_t showcase;
 
 .. rst-class:: non-compliant-code
@@ -2826,7 +2827,7 @@ Compliant example::
                char *str_source;
                char *str_destination;
        };
-       
+
        uint32_t showcase;
 
 
@@ -2962,12 +2963,12 @@ C-CS-06: A single space shall exist between non-function-like keywords and openi
 
 A single space shall exist between a non-function-like keyword and the opening
 bracket (either a brace or a parenthesis) that follows. This rule applies to the
-keywords 'if', 'else', 'for', 'do', 'while', 'switch' and 'return'.
+keywords ``if``, ``else``, ``for``, ``do``, ``while``, ``switch`` and ``return``.
 
 Compliant example::
 
     uint32_t showcase;
-    
+
     if (showcase == 0U) {
             showcase = 32U;
     }
@@ -2977,7 +2978,7 @@ Compliant example::
    Non-compliant example::
 
        uint32_t showcase;
-       
+
        if(showcase == 0U){
                showcase = 32U;
        }
@@ -3013,14 +3014,14 @@ Compliant example::
        size_t entry_size = sizeof( struct vcpuid_entry );
 
 
-C-CS-09: The '*' characters used for pointers shall be right before the function or variable identifiers
-========================================================================================================
+C-CS-09: The ``*`` characters used for pointers shall be right before the function or variable identifiers
+==========================================================================================================
 
 The following cases shall be covered:
 
-a) For declaration of variables of a pointer type, the '*' character shall be
+a) For declaration of variables of a pointer type, the ``*`` character shall be
    right before the variable identifier with no space in between.
-b) For functions whose return value is of a pointer type, the '*' character
+b) For functions whose return value is of a pointer type, the ``*`` character
    shall be right before the function identifier with no spaces in between in the
    function prototype.
 
@@ -3046,7 +3047,7 @@ equality and assignment operators, as well as the ternary conditional operator.
 Compliant example::
 
     uint32_t showcase = 32U;
-    
+
     showcase = showcase * 2U;
 
 .. rst-class:: non-compliant-code
@@ -3054,7 +3055,7 @@ Compliant example::
    Non-compliant example::
 
        uint32_t showcase=32U;
-       
+
        showcase=showcase*2U;
 
 
@@ -3089,7 +3090,7 @@ expressions in for-loop headers.
 Compliant example::
 
     uint32_t i;
-    
+
     for (i = 0U; i < 5U; i++) {
             printf("count: %d \n", i);
     }
@@ -3099,7 +3100,7 @@ Compliant example::
    Non-compliant example::
 
        uint32_t i;
-       
+
        for (i = 0U;i < 5U;i++) {
                printf("count: %d \n", i);
        }
@@ -3116,7 +3117,7 @@ Compliant example::
     uint32_t numerator = 32U;
     uint32_t denominator = 0U;
     uint32_t quotient;
-    
+
     if (denominator != 0U) {
             quotient = numerator / denominator;
     }
@@ -3128,7 +3129,7 @@ Compliant example::
        uint32_t numerator = 32U;
        uint32_t denominator = 0U;
        uint32_t quotient;
-       
+
        if (denominator != 0U)
        {
                quotient = numerator / denominator;
@@ -3154,8 +3155,8 @@ Compliant example::
        }
 
 
-C-CS-15: A 'switch' statement and its subordinate 'case' shall be aligned
-=========================================================================
+C-CS-15: A ``switch`` statement and its subordinate ``case`` shall be aligned
+=============================================================================
 
 Compliant example::
 
@@ -3193,7 +3194,7 @@ shall be the same for one case.
 Compliant example::
 
     uint32_t showcase;
-    
+
     showcase = func(param_1,
                     param_2,
                     param_3);
@@ -3203,16 +3204,16 @@ Compliant example::
    Non-compliant example::
 
        uint32_t showcase;
-       
+
        showcase = func(param_1,
                   param_2,
                      param_3);
 
 
-C-CS-17:  '//' shall not be used for single-line comments
-=========================================================
+C-CS-17:  ``//`` shall not be used for single-line comments
+===========================================================
 
-'/\*  \*/' shall be used to replace '//' for single-line comments.
+``/*  */`` shall be used to replace ``//`` for single-line comments.
 
 Compliant example::
 
@@ -3231,12 +3232,12 @@ C-CS-18: Function information shall be documented with doxygen-style comments
 Some detailed rules are listed below to illustrate the comments format for each
 function:
 
-1) The comments block shall start with '/\*\*' (slash-asterisk-asterisk) in a
+1) The comments block shall start with ``/**`` (slash-asterisk-asterisk) in a
    single line.
-2) The comments block shall end with ' \*/' (space-asterisk-slash) in a single
+2) The comments block shall end with :literal:`\ */` (space-asterisk-slash) in a single
    line.
 3) Other than the first line and the last line, every line inside the comments
-   block shall start with ' \*' (space-asterisk). It also applies to the line which
+   block shall start with :literal:`\ *` (space-asterisk). It also applies to the line which
    is used to separate different paragraphs. We'll call it a blank line for
    simplicity.
 4) For each function, the information shall be documented with the following
@@ -3251,20 +3252,20 @@ function:
 6) A blank line shall separate different paragraphs. Inside each paragraph, a
    blank line is not required to separate each element.
 7) The brief description of the function shall be documented with the format
-   '\@brief <brief description>'.
+   ``@brief <brief description>``.
 8) No specific format is required for the detailed description of the function.
 9) The description of the function parameter shall be documented with the format
-   '\@param <parameter name> <parameter description>'.
-10) The pre-condition of the function shall be documented with the format '\@pre
-    <pre-condition description>'.
+   ``@param <parameter name> <parameter description>``.
+10) The pre-condition of the function shall be documented with the format
+    ``@pre <pre-condition description>``.
 11) The post-condition of the function shall be documented with the format
-    '\@post <post-condition description>'.
+    ``@post <post-condition description>``.
 12) The brief description of the function return value shall be documented with
-    the format '\@return <brief description of return value>'.
-13) A void-returning function shall be documented with the format '\@return
-    None'.
+    the format ``@return <brief description of return value>``.
+13) A void-returning function shall be documented with the format
+    ``@return None``.
 14) The comments explaining the actual return values shall be documented with
-    the format '\@retval <return value> <return value explanation>'.
+    the format ``@retval <return value> <return value explanation>``.
 15) If the description of one element needs to span multiple lines, each line
     shall be aligned to the start of the description in the first line for that
     element.
@@ -3307,15 +3308,15 @@ Compliant example::
        /* Brief description of the function.
        Detailed description of the function. Detailed description of the function. Detailed description of the
        function. Detailed description of the function.
-       
+
        @param param_1 Parameter description for param_1. @param param_2 Parameter description for param_2.
        @param param_3 Parameter description for param_3. Parameter description for param_3. Parameter description
        for param_3. Parameter description for param_3. Parameter description for param_3. Parameter
        description for param_3.
-       
+
        pre-conditions: param_1 != NULL, param_2 <= 255U
        post-conditions: retval <= 0
-       
+
        Brief description of the return value. */
        int32_t func_showcase(uint32_t *param_1, uint32_t param_2, uint32_t param_3);
 
@@ -3334,13 +3335,13 @@ Compliant example::
 
     /* Legal entity shall be placed at the start of the file. */
     -------------File Contents Start After This Line------------
-    
+
     /*
      * Copyright (C) 2019 Intel Corporation.
      *
      * SPDX-License-Identifier: BSD-3-Clause
      */
-    
+
     /* Coding or implementation related comments start after the legal entity. */
     #include <types.h>
 
@@ -3350,7 +3351,7 @@ Compliant example::
 
        /* Neither copyright nor license information is included in the file. */
        -------------------File Contents Start After This Line------------------
-       
+
        /* Coding or implementation related comments start directly. */
        #include <types.h>
 
@@ -3390,8 +3391,8 @@ Compliant example::
        #define Max(x, y)        ((x) < (y)) ? (y) : (x)
 
 
-C-NC-03: Data structures exposed to external components shall be named with prefix 'acrn\_'
-===========================================================================================
+C-NC-03: Data structures exposed to external components shall be named with prefix ``acrn_``
+============================================================================================
 
 The data structure types include struct, union, and enum.
 This rule applies to the data structure with all the following properties:
@@ -3416,8 +3417,8 @@ Compliant example::
        };
 
 
-C-NC-04: Data structures only used by hypervisor shall be named with prefix 'hv\_'
-==================================================================================
+C-NC-04: Data structures only used by hypervisor shall be named with prefix ``hv_``
+===================================================================================
 
 The data structure types include struct, union, and enum.
 This rule applies to the data structure with all the following properties:
@@ -3471,9 +3472,9 @@ C-NC-06: Data structures related to hardware resource shall be named with the re
 The data structure types include struct, union, and enum.
 For example:
 
-a) The data structure related to register shall be named with suffix 'reg';
+a) The data structure related to register shall be named with suffix ``reg``;
 b) The data structure related to segment selector shall be named with suffix
-   'sel'.
+   ``sel``.
 
 Compliant example::
 
@@ -3490,8 +3491,8 @@ Compliant example::
        };
 
 
-C-NC-07: Function pointer shall be named with suffix 'fn'
-=========================================================
+C-NC-07: Function pointer shall be named with suffix ``fn``
+===========================================================
 
 Compliant example::
 
@@ -3519,48 +3520,48 @@ function. Some detailed rules are listed below:
 1) If the function is doing actions, it shall be named with one of the following
    formats:
 
-   a) <verb>_<nouns>, such as 'init_vmcs'.
-   b) <verb>_<adjective>_<nouns>, such as 'init_primary_pcpu'.
+   a) ``<verb>_<nouns>``, such as ``init_vmcs``.
+   b) ``<verb>_<adjective>_<nouns>``, such as ``init_primary_pcpu``.
 2) If the function is doing checks, it shall be named with one of the following
    formats:
 
-   a) is_<nouns>, such as 'is_space'.
-   b) is_<nouns>_<adjective>, such as 'is_pcpu_active'.
+   a) ``is_<nouns>``, such as ``is_space``.
+   b) ``is_<nouns>_<adjective>``, such as ``is_pcpu_active``.
 3) If the function is doing conversions, it shall be named with one of the
    following formats:
 
-   a) <nouns>_to_<nouns>, such as 'irq_to_vector'.
-   b) <nouns>2<nouns>, such as 'gva2gpa'.
+   a) ``<nouns>_to_<nouns>``, such as ``irq_to_vector``.
+   b) ``<nouns>2<nouns>``, such as ``gva2gpa``.
 4) If the function is specific for one module and the name is not descriptive
    enough with prior rules, it shall be named with the module name as prefix, such
-   as 'vie_read_mmio'.
+   as ``vie_read_mmio``.
 5) If the function is a wrapper of inline Assembly codes, it shall be named with
    one of the following formats:
 
-   a) asm_<Assembly instruction mnemonic>, such as 'asm_pause'.
+   a) ``asm_<Assembly instruction mnemonic>``, such as ``asm_pause``.
    b) If the Assembly instruction mnemonic does not clearly indicate the
       purpose of the function or the function includes multiple Assembly
-      instruction statements, the function shall be named with 'asm\_' as
+      instruction statements, the function shall be named with ``asm_`` as
       prefix and apply the other non-assembly function naming rules.
-6) <nouns> mentioned in prior rules may either be one noun or multiple nouns, as
+6) ``<nouns>`` mentioned in prior rules may either be one noun or multiple nouns, as
    long as it could clearly illustrate the object.
 
 Compliant example::
 
     uint32_t init_vmcs(uint32_t param);
-    
+
     uint32_t init_primary_pcpu(uint32_t param);
-    
+
     bool is_space(uint32_t param);
-    
+
     bool is_pcpu_active(uint32_t param);
-    
+
     uint32_t vie_read_mmio(uint32_t param);
-    
+
     uint32_t irq_to_vector(uint32_t param);
-    
+
     uint32_t gva2gpa(uint32_t param);
-    
+
     uint32_t asm_pause(uint32_t param);
 
 .. rst-class:: non-compliant-code
@@ -3568,19 +3569,19 @@ Compliant example::
    Non-compliant example::
 
        uint32_t vmcs_init(uint32_t param);
-       
+
        uint32_t primary_pcpu_init(uint32_t param);
-       
+
        bool space(uint32_t param);
-       
+
        bool pcpu_active(uint32_t param);
-       
+
        uint32_t vie_mmio_read(uint32_t param);
-       
+
        uint32_t from_irq_to_vector(uint32_t param);
-       
+
        uint32_t get_gpa_based_on_gva(uint32_t param);
-       
+
        uint32_t pause(uint32_t param);
 
 
@@ -3610,12 +3611,12 @@ characters are encoded in ASCII. This rule applies to the source code that is
 being compiled. Non-ASCII characters are allowed in comments, such as the author
 name.
 
-C-IB-04:  'plain' char is equivalent to signed char
-===================================================
+C-IB-04: ``plain char`` is equivalent to ``signed char``
+========================================================
 
-The underlying type of 'plain' char is implementation-defined, according to
-J.3.4 item 5 in C99. For ACRN hypervisor, 'plain' char is equivalent to signed
-char.
+The underlying type of ``plain char`` is implementation-defined, according to
+J.3.4 item 5 in C99. For ACRN hypervisor, ``plain char`` is equivalent to
+``signed char``.
 
 C-IB-05: Signed integers are represented in two's complement
 ============================================================
@@ -3650,8 +3651,8 @@ C-LE-01: Use of inline Assembly language in C Code is allowed
 
 This feature refers to section 6.45 in GCC 8.3 Manual.
 
-C-LE-02: Use of builtin-type '__builtin_va_list' is allowed
-===========================================================
+C-LE-02: Use of builtin-type ``__builtin_va_list`` is allowed
+=============================================================
 
 This feature refers to section 6.20 in GCC 8.3 Manual.
 
@@ -3660,26 +3661,24 @@ C-LE-03: Use of extended type attribute is allowed
 
 This rule applies to the following type attributes:
 
-a) 'aligned', refers to section 6.33.1 in GCC 8.3 Manual.
-b) 'packed', refers to section 6.33.1 in GCC 8.3 Manual.
-c) 'unused', refers to section 6.33.1 in GCC 8.3 Manual.
-d) 'section', refers to section 6.32.1 in GCC 8.3 Manual.
+a) ``aligned``, refers to section 6.33.1 in GCC 8.3 Manual.
+b) ``packed``, refers to section 6.33.1 in GCC 8.3 Manual.
+c) ``unused``, refers to section 6.33.1 in GCC 8.3 Manual.
+d) ``section``, refers to section 6.32.1 in GCC 8.3 Manual.
 
 C-LE-04: Use of extended builtin-function is allowed
 ====================================================
 
 This rule applies to the following builtin-functions:
 
-a) '__builtin_va_arg', refers to section 6.20 in GCC 8.3 Manual.
-b) '__builtin_va_start', refers to section 6.20 in GCC 8.3 Manual.
-c) '__builtin_va_end', refers to section 6.20 in GCC 8.3 Manual.
-d) '__builtin_offsetof', refers to section 6.51 in GCC 8.3 Manual.
+a) ``__builtin_va_arg``, refers to section 6.20 in GCC 8.3 Manual.
+b) ``__builtin_va_start``, refers to section 6.20 in GCC 8.3 Manual.
+c) ``__builtin_va_end``, refers to section 6.20 in GCC 8.3 Manual.
+d) ``__builtin_offsetof``, refers to section 6.51 in GCC 8.3 Manual.
 
 C-LE-05: Use of extended designated initializers is allowed
 ===========================================================
 
-This rule applies to the following designated initializer: writing '[first ...
-last] = value' to initialize a range of elements to the same value, refers to
-section 6.27 in GCC 8.3 Manual.
-
-
+This rule applies to the following designated initializer: writing
+``[first ...  last] = value`` to initialize a range of elements
+to the same value, refers to section 6.27 in GCC 8.3 Manual.

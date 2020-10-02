@@ -5,7 +5,7 @@ Documentation Guidelines
 
 Project ACRN content is written using the `reStructuredText`_ markup
 language (``.rst`` file extension) with Sphinx extensions, and processed
-using Sphinx to create a formatted standalone website.  Developers can
+using Sphinx to create a formatted stand-alone website.  Developers can
 view this content either in its raw form as ``.rst`` markup files, or (with
 Sphinx installed) they can build the documentation using the Makefile
 (on Linux systems) to
@@ -32,7 +32,7 @@ Document sections are identified through their heading titles,
 indicated with an underline below the title text.  (While reST allows
 use of both and overline and matching underline to indicate a heading,
 we only use an underline indicator for headings.)  For consistency in
-our documentation, we define the order of characters used to indicated
+our documentation, we define the order of characters used to indicate
 the nested table of contents levels:
 
 * Use ``#`` for the Document title underline character
@@ -52,11 +52,11 @@ underlines to use:
    Document Title heading
    ######################
 
-   Section 1.0 heading
-   *******************
+   Section 1 heading
+   *****************
 
-   Section 2.0 heading
-   *******************
+   Section 2 heading
+   *****************
 
    Section 2.1 heading
    ===================
@@ -67,8 +67,8 @@ underlines to use:
    Section 2.2 heading
    ===================
 
-   Section 3.0 heading
-   *******************
+   Section 3 heading
+   *****************
 
 
 
@@ -79,17 +79,17 @@ Some common reST inline markup samples:
 
 * one asterisk: ``*text*`` for emphasis (*italics*),
 * two asterisks: ``**text**`` for strong emphasis (**boldface**), and
-* two backquotes: ````text```` for ``inline code`` samples.
+* two back quotes: ````text```` for ``inline code`` samples.
 
 ReST rules for inline markup try to be forgiving to account for common
-cases of using these marks.  For example using an asterisk to indicate
+cases of using these marks.  For example, using an asterisk to indicate
 multiplication, such as ``2 * (x + y)`` will not be interpreted as an
 unterminated italics section. For inline markup, the characters between
 the beginning and ending characters must not start or end with a space,
 so ``*this is italics*`` ( *this is italics*) while ``* this isn't*``
 (* this isn't*).
 
-If asterisks or backquotes appear in running text and could be confused with
+If asterisks or back quotes appear in running text and could be confused with
 inline markup delimiters, you can eliminate the confusion by adding a
 backslash (``\``) before it.
 
@@ -137,17 +137,17 @@ list item:
       needed, but it wouldn't hurt for readability.
 
 Definition lists (with a term and its definition) are a convenient way
-to document a word or phrase with an explanation.  For example this reST
+to document a word or phrase with an explanation.  For example, this reST
 content:
 
 .. code-block:: rest
 
    The Makefile has targets that include:
 
-   html
+   ``html``
       Build the HTML output for the project
 
-   clean
+   ``clean``
       Remove all generated output, restoring the folders to a
       clean state.
 
@@ -198,7 +198,8 @@ would be rendered as:
    * the page
 
 A maximum of three columns will be displayed if you use ``rst-columns``
-or ``rst-columns3`` (and two columns for ``rst-columns2``), and change
+(or ``rst-columns3``), and two columns for ``rst-columns2``. The number
+of columns displayed can be reduced
 based on the available width of the display window, reducing to one
 column on narrow (phone) screens if necessary.  We've deprecated use of
 the ``hlist`` directive because it misbehaves on smaller screens.
@@ -361,8 +362,8 @@ it will show up as :ref:`doc_guidelines`.  This type of internal cross reference
 multiple files, and the link text is obtained from the document source so if the title changes,
 the link text will update as well.
 
-There may be times where you'd like to change the link text that's shown
-in the generated document.  In this case, you can add specify alternate
+There may be times when you'd like to change the link text that's shown
+in the generated document.  In this case, you can specify alternate
 text using ``:ref:`alternate text <doc_guidelines>``` (renders as
 :ref:`alternate text <doc_guidelines>`).
 
@@ -614,7 +615,7 @@ sphinx-tabs from the link above.
 Instruction Steps
 *****************
 
-Numbered instruction steps is a style that makes it
+A numbered instruction steps style makes it
 easy to create tutorial guides with clearly identified steps. Add
 the ``.. rst-class:: numbered-step`` directive immediately before a
 second-level heading (by project convention, a heading underlined with

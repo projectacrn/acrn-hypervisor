@@ -42,13 +42,13 @@ model (DM), and  is registered as a PCI virtio device to the guest OS
    User VM starts. Second, it copies the received data from the RXQ to TXQ
    and sends them to the backend. After receiving the message that the
    transmission is completed, it starts again another round of reception
-   and transmission, and keeps running until a specified number of cycle
+   and transmission, and keeps running until a specified number of cycles
    is reached.
 -  **virtio-echo Driver in DM**: This driver is used for initialization
    configuration. It simulates a virtual PCI device for the frontend
    driver use, and sets necessary information such as the device
    configuration and virtqueue information to the VBS-K. After
-   initialization, all data exchange are taken over by the VBS-K
+   initialization, all data exchange is taken over by the VBS-K
    vbs-echo driver.
 -  **vbs-echo Backend Driver**: This driver sets all frontend RX buffers to
    be a specific value and sends the data to the frontend driver. After
@@ -85,7 +85,7 @@ parts: kick overhead and notify overhead.
    forwarded to the VHM module by the hypervisor. The VHM notifies its
    client for this IOREQ, in this case, the client is the vbs-echo
    backend driver. Kick overhead is defined as the interval from the
-   beginning of User VM trap to a specific VBS-K driver e.g. when
+   beginning of User VM trap to a specific VBS-K driver, e.g. when
    virtio-echo gets notified.
 -  **Notify Overhead**: After the data in virtqueue being processed by the
    backend driver, vbs-echo calls the VHM module to inject an interrupt
@@ -113,7 +113,7 @@ Overhead of steps marked as blue depend on specific frontend and backend
 virtual device drivers. For virtio-echo, the whole end-to-end process
 (from step1 to step 9) costs about 4 dozens of microsecond. That's
 because virtio-echo does little things in its frontend and backend
-driver which is just for testing and there is very little process
+driver that is just for testing and there is very little process
 overhead.
 
 .. figure:: images/vbsk-image1.png
@@ -126,7 +126,7 @@ overhead.
 :numref:`vbsk-virtio-echo-path` details the path of kick and notify
 operation shown in :numref:`vbsk-virtio-echo-e2e`. The VBS-K framework
 overhead is caused by operations through these paths. As we can see, all
-these operations are processed in kernel mode which avoids extra
+these operations are processed in kernel mode and avoids extra
 overhead of passing IOREQ to userspace processing.
 
 .. figure:: images/vbsk-image3.png
@@ -143,5 +143,5 @@ Unlike VBS-U processing in user mode, VBS-K moves things into the kernel
 mode and can be used to accelerate processing. A virtual device
 virtio-echo based on VBS-K framework is used to evaluate the VBS-K
 framework overhead. In our test, the VBS-K framework overhead (one kick
-operation and one notify operation) is on the microsecond level which
+operation and one notify operation) is on the microsecond level, which
 can meet the needs of most applications.

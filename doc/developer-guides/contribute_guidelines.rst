@@ -117,8 +117,8 @@ on https://github.com and have Git tools available on your development system.
 Repository layout
 *****************
 
-To clone the ACRN hypervisor repository (including the hypervisor,
-devicemodel, and doc folders) use::
+To clone the ACRN hypervisor repository (including the ``hypervisor``,
+``devicemodel``, and ``doc`` folders) use::
 
    $ git clone https://github.com/projectacrn/acrn-hypervisor
 

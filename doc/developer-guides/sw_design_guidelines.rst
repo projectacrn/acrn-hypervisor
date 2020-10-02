@@ -29,7 +29,7 @@ below:
   Pre-conditions shall be defined right before the definition/declaration of
   the corresponding function in the C source file or header file.
   All pre-conditions shall be guaranteed by the caller of the function.
-  Error checking of the pre-conditions are not needed in release version of the
+  Error checking of the pre-conditions is not needed in release version of the
   function. Developers could use ASSERT to catch design errors in a debug
   version for some cases. Verification of the hypervisor shall check whether
   each caller guarantees all pre-conditions of the callee (or not).
@@ -44,7 +44,7 @@ below:
   the corresponding function in the C source file or header file.
   All post-conditions shall be guaranteed by the function. All callers of the
   function should trust these post-conditions are met.
-  Error checking of the post-conditions are not needed in release version of
+  Error checking of the post-conditions is not needed in release version of
   each caller. Developers could use ASSERT to catch design errors in a debug
   version for some cases. Verification of the hypervisor shall check whether the
   function guarantees all post-conditions (or not).
@@ -73,7 +73,7 @@ below:
   - Configuration data defined by external safety application, such as physical
     PCI device information specific for each board design.
 
-  - Input data which is only specified by external safety application.
+  - Input data that is only specified by external safety application.
 
 .. note:: If input data can be specified by both a non-safety VM and a safety VM,
    the application constraint isn't applicable to these data. Related error checking
@@ -89,7 +89,7 @@ Functional Safety Consideration
 -------------------------------
 
 The hypervisor will do range check in hypercalls and HW capability checks
-according to Table A.2 of FuSa Standards [IEC_61508-3_2010]_ .
+according to Table A.2 of FuSA Standards [IEC_61508-3_2010]_.
 
 Error Handling Methods
 ----------------------
@@ -162,7 +162,7 @@ shown in :numref:`rules_arch_level` below.
    +====================+=========================+==============+===========================+=========================+
    | External resource  | Invalid register/memory | Yes          | Follow SDM strictly, or   | Unsupported MSR         |
    | provided by VM     | state on VM exit        |              | state any deviation to the| or invalid CPU ID       |
-   |                    |                         |              | document explicitly       |                         |
+   |                    |                         |              | document explicitly.      |                         |
    |                    +-------------------------+--------------+---------------------------+-------------------------+
    |                    | Invalid hypercall       | Yes          | The hypervisor shall      | Invalid hypercall       |
    |                    | parameter               |              | return related error code | parameter provided by   |
@@ -176,12 +176,12 @@ shown in :numref:`rules_arch_level` below.
    +--------------------+-------------------------+--------------+---------------------------+-------------------------+
    | External resource  | Invalid E820 table or   | Yes          | The hypervisor shall      | Invalid E820 table or   |
    | provided by        | invalid boot information|              | panic during platform     | invalid boot information|
-   | bootloader         |                         |              | initialization            |                         |
+   | bootloader         |                         |              | initialization.           |                         |
    | (GRUB or SBL)      |                         |              |                           |                         |
    +--------------------+-------------------------+--------------+---------------------------+-------------------------+
    | Physical resource  | 1GB page is not         | Yes          | The hypervisor shall      | 1GB page is not         |
    | used by the        | available on the        |              | panic during platform     | available on the        |
-   | hypervisor         | platform or invalid     |              | initialization            | platform or invalid     |
+   | hypervisor         | platform or invalid     |              | initialization.           | platform or invalid     |
    |                    | physical CPU ID         |              |                           | physical CPU ID         |
    +--------------------+-------------------------+--------------+---------------------------+-------------------------+
 
@@ -212,7 +212,7 @@ VM. In this case, we shall add the error checking codes before calling
 ``vcpu_from_vid`` to make sure that the passed parameters are valid and the
 pre-conditions are guaranteed.
 
-Here is the sample codes for error checking before calling ``vcpu_from_vid``:
+Here is the sample code for error checking before calling ``vcpu_from_vid``:
 
 .. code-block:: c
 
@@ -240,7 +240,7 @@ Functional Safety Consideration
 
 Data verification, and explicit specification of pre-conditions and post-conditions
 are applied for internal functions of the hypervisor according to Table A.4 of
-FuSa Standards [IEC_61508-3_2010]_ .
+FuSA Standards [IEC_61508-3_2010]_ .
 
 Error Handling Methods
 ----------------------
@@ -275,12 +275,13 @@ The rules of error detection and error handling on a module level are shown in
    +====================+===========+============================+===========================+=========================+
    | Internal data of   | N/A       | Partial.                   | The hypervisor shall use  | virtual PCI device      |
    | the hypervisor     |           | The related pre-conditions | the internal resource/data| information, defined    |
-   |                    |           | are required.              | directly.                 | with array 'pci_vdevs[]'|
+   |                    |           | are required.              | directly.                 | with array              |
+   |                    |           |                            |                           | ``pci_vdevs[]``         |
    |                    |           | The design will guarantee  |                           | through static          |
    |                    |           | the correctness and the    |                           | allocation.             |
    |                    |           | test cases will verify the |                           |                         |
    |                    |           | related pre-conditions.    |                           |                         |
-   |                    |           | If the design can not      |                           |                         |
+   |                    |           | If the design cannot       |                           |                         |
    |                    |           | guarantee the correctness, |                           |                         |
    |                    |           | the related error handling |                           |                         |
    |                    |           | codes need to be added.    |                           |                         |
@@ -290,7 +291,7 @@ The rules of error detection and error handling on a module level are shown in
    |                    |           | array size and non-null    |                           |                         |
    |                    |           | pointer.                   |                           |                         |
    +--------------------+-----------+----------------------------+---------------------------+-------------------------+
-   | Configuration data | Corrupted | No.                        | The bootloader initializes| 'vm_config->pci_devs'   |
+   | Configuration data | Corrupted | No.                        | The bootloader initializes| ``vm_config->pci_devs`` |
    | of the VM          | VM config | The related pre-conditions | hypervisor (including     | is configured           |
    |                    |           | are required.              | code, data, and bss) and  | statically.             |
    |                    |           | Note: VM configuration data| verifies the integrity of |                         |
@@ -315,7 +316,7 @@ Examples
 Here are some examples to illustrate when error handling codes are required on
 a module level.
 
-**Example_1: Analyze the function 'partition_mode_vpci_init'**
+**Example_1: Analyze the function ``partition_mode_vpci_init``**
 
 .. code-block:: c
 
@@ -374,53 +375,53 @@ pre-conditions and ``get_vm_config`` itself shall guarantee the post-condition.
           return &vm_configs[vm_id];
   }
 
-**Question_1: Is error checking required for 'vm_config'?**
+**Question_1: Is error checking required for ``vm_config``?**
 
-No. Because 'vm_config' is getting data from ``get_vm_config`` and the
+No. Because ``vm_config`` is getting data from ``get_vm_config`` and the
 post-condition of ``get_vm_config`` guarantees that the return value is not NULL.
 
 
-**Question_2: Is error checking required for 'vdev'?**
+**Question_2: Is error checking required for ``vdev``?**
 
 No. Here are the reasons:
 
-a) The pre-condition of ``partition_mode_vpci_init`` guarantees that 'vm' is not
-   NULL. It indicates that 'vpci' is not NULL. Since 'vdev' is getting data from
-   the array 'pci_vdevs[]' via indexing, 'vdev' is not NULL as long as the index
+a) The pre-condition of ``partition_mode_vpci_init`` guarantees that ``vm`` is not
+   NULL. It indicates that ``vpci`` is not NULL. Since ``vdev`` is getting data from
+   the array ``pci_vdevs[]`` via indexing, ``vdev`` is not NULL as long as the index
    is valid.
 
-b) The post-condition of ``get_vm_config`` guarantees that 'vpci->pci_vdev_cnt'
-   is less than or equal to 'CONFIG_MAX_PCI_DEV_NUM', which is the array size of
-   'pci_vdevs[]'. It indicates that the index used to get 'vdev' is always
+b) The post-condition of ``get_vm_config`` guarantees that ``vpci->pci_vdev_cnt``
+   is less than or equal to ``CONFIG_MAX_PCI_DEV_NUM``, which is the array size of
+   ``pci_vdevs[]``. It indicates that the index used to get ``vdev`` is always
    valid.
 
-Given the two reasons above, 'vdev' is always not NULL. So, the error checking
-codes are not required for 'vdev'.
+Given the two reasons above, ``vdev`` is always not NULL. So, the error checking
+codes are not required for ``vdev``.
 
 
-**Question_3: Is error checking required for 'pci_dev_config'?**
+**Question_3: Is error checking required for ``pci_dev_config``?**
 
-No. 'pci_dev_config' is getting data from the array 'pci_vdevs[]', which is the
+No. ``pci_dev_config`` is getting data from the array ``pci_vdevs[]``, which is the
 physical PCI device information coming from Board Support Package and firmware.
 For physical PCI device information, the related application constraints
 shall be defined in the design document or safety manual. For debug purpose,
 developers could use ASSERT here to catch the Board Support Package or firmware
-failures, which does not guarantee these application constraints.
+failures, which do not guarantee these application constraints.
 
 
-**Question_4: Is error checking required for 'vdev->ops->init'?**
+**Question_4: Is error checking required for ``vdev->ops->init``?**
 
 No. Here are the reasons:
 
-a) Question_2 proves that 'vdev' is always not NULL.
+a) Question_2 proves that ``vdev`` is always not NULL.
 
-b) 'vdev->ops' is fully initialized before 'vdev->ops->init' is called.
+b) ``vdev->ops`` is fully initialized before ``vdev->ops->init`` is called.
 
-Given the two reasons above, 'vdev->ops->init' is always not NULL. So, the error
-checking codes are not required for 'vdev->ops->init'.
+Given the two reasons above, ``vdev->ops->init`` is always not NULL. So, the error
+checking codes are not required for ``vdev->ops->init``.
 
 
-**Question_5: How to handle the case when 'vdev->ops->init(vdev)' returns non-zero?**
+**Question_5: How to handle the case when ``vdev->ops->init(vdev)`` returns non-zero?**
 
 This case indicates that the initialization of specific virtual device fails.
 Investigation has to be done to figure out the root-cause. Default fatal error
@@ -428,7 +429,7 @@ handler shall be invoked here if it is caused by a hardware failure or invalid
 boot information.
 
 
-**Example_2: Analyze the function 'partition_mode_vpci_deinit'**
+**Example_2: Analyze the function ``partition_mode_vpci_deinit``**
 
 .. code-block:: c
 
@@ -453,9 +454,9 @@ boot information.
   }
 
 
-**Question_6: Is error checking required for 'vdev->ops' and 'vdev->ops->init'?**
+**Question_6: Is error checking required for ``vdev->ops`` and ``vdev->ops->init``?**
 
-Yes. Because 'vdev->ops' and 'vdev->ops->init' can not be guaranteed to be
+Yes. Because ``vdev->ops`` and ``vdev->ops->init`` cannot be guaranteed to be
 not NULL. If the VM called ``partition_mode_vpci_deinit`` twice, it may be NULL.
 
 
@@ -528,7 +529,7 @@ The module level configuration design rules are shown below:
 
 1. The platform configurations shall be detectable by hypervisor in DETECT mode;
 
-2. Configurable module APIs shall be abstracted as operations which are
+2. Configurable module APIs shall be abstracted as operations that are
    implemented through a set of function pointers in the operations data
    structure;
 
@@ -544,7 +545,7 @@ The module level configuration design rules are shown below:
 
 6. In order to guarantee that the function pointer in the operations data
    structure is dereferenced after it has been instantiated, the pre-condition
-   shall be added for the function which dereferences the function pointer,
+   shall be added for the function that dereferences the function pointer,
    instead of checking the pointer for NULL.
 
 .. note:: The third rule shall be double checked during code review.

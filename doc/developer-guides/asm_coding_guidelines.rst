@@ -37,10 +37,10 @@ Compliant example::
 
     asm_showcase_1:
             movl    $0x1, %eax
-    
+
     asm_showcase_2:
             movl    $0x2, %eax
-    
+
     asm_showcase_3:
             movl    $0x3, %eax
 
@@ -50,10 +50,10 @@ Compliant example::
 
        text:
                movl    $0x1, %eax
-       
+
        mov:
                movl    $0x2, %eax
-       
+
        eax:
                movl    $0x3, %eax
 
@@ -68,9 +68,9 @@ Compliant example::
     asm_showcase_1:
             movl    $0x1, %eax
             jmp     asm_showcase_2
-    
+
     /* do something */
-    
+
     asm_showcase_2:
             movl    $0x2, %eax
 
@@ -80,7 +80,7 @@ Compliant example::
 
        asm_showcase_1:
                movl    $0x1, %eax
-       
+
        /*
         * 'asm_showcase_2' is not used anywhere, including
         *  all C source/header files and Assembly files.
@@ -139,19 +139,20 @@ Compliant example::
 ASM-GN-06: .end directive statement shall be the last statement in an Assembly file
 ===================================================================================
 
-This rule only applies to the Assembly file which uses .end directive. .end
-directive shall be the last statement in this case. All the statements past .end
-directive will not be processed by the assembler.
+This rule only applies to the Assembly file that uses ``.end``
+directive. ``.end`` directive shall be the last statement in this case.
+All the statements past ``.end`` directive will not be processed by the
+assembler.
 
 Compliant example::
 
     #include <types.h>
     #include <spinlock.h>
-    
+
     .macro asm_showcase_mov
             movl    $0x1, %eax
     .endm
-    
+
     .end
 
 .. rst-class:: non-compliant-code
@@ -159,11 +160,11 @@ Compliant example::
    Non-compliant example::
 
        #include <types.h>
-       
+
        .end
-       
+
        #include <spinlock.h>
-       
+
        .macro asm_showcase_mov
                movl    $0x1, %eax
        .endm
@@ -177,9 +178,9 @@ Compliant example::
     asm_showcase_1:
             movl    $0x1, %eax
             jmp     asm_showcase_2
-    
+
     /* do something */
-    
+
     asm_showcase_2:
             movl    $0x2, %eax
 
@@ -203,7 +204,7 @@ Compliant example::
             jne     asm_test
             movl    $0x2, %eax
             movl    $0x3, %eax
-    
+
     asm_test:
             movl    $0x6, %eax
 
@@ -217,7 +218,7 @@ Compliant example::
                /* the following two lines have no chance to be executed */
                movl    $0x2, %eax
                movl    $0x3, %eax
-       
+
        asm_test:
                movl    $0x6, %eax
 
@@ -242,11 +243,11 @@ Compliant example::
              * perform a far jump to start executing in 64-bit mode
              */
             ljmp    $0x0008, $execution_64_2
-    
+
     .code64
     execution_64_1:
             /* do something in 64-bit mode */
-    
+
     execution_64_2:
             /* do something in 64-bit mode */
 
@@ -257,7 +258,7 @@ Compliant example::
        .data
        asm_showcase_data:
                .word   0x0008
-       
+
        .code32
        execution_32:
                /* do something in 32-bit mode */
@@ -270,17 +271,17 @@ ASM-GN-10: Assembler directives shall be used with restrictions
 Usage of the assembler directive refers to GNU assembler 'as' user manual. Only
 the following assembler directives may be used:
 
-1) .align
-2) .end
-3) .extern
-4) repeat related directives, including .rept and .endr
-5) global related directives, including .global and .globl
-6) macro related directives, including .altmacro, .macro, and .endm
-7) code bit related directives, including .code16, .code32, and .code64
-8) section related directives, including .section, .data, and .text
-9) number emission related directives, including .byte, .word, .short, .long,
-   and .quad
-10) .org, which shall be used with restrictions. It shall only be used to
+1) ``.align``
+2) ``.end``
+3) ``.extern``
+4) repeat related directives, including ``.rept`` and ``.endr``
+5) global related directives, including ``.global`` and ``.globl``
+6) macro related directives, including ``.altmacro``, ``.macro``, and ``.endm``
+7) code bit related directives, including ``.code16``, ``.code32``, and ``.code64``
+8) section related directives, including ``.section``, ``.data``, and ``.text``
+9) number emission related directives, including ``.byte``, ``.word``,
+   ``.short``, ``.long``, and ``.quad``
+10) ``.org`` shall be used with restrictions. It shall only be used to
     advance the location counter due to code bit changes, such as change from 32-bit
     mode to 64-bit mode.
 
@@ -297,7 +298,7 @@ Compliant example::
     asm_func_showcase:
             movl    $0x2, %eax
             ret
-    
+
     asm_showcase:
             movl    $0x1, %eax
             call    asm_func_showcase
@@ -308,7 +309,7 @@ Compliant example::
 
        asm_func_showcase:
                movl    $0x2, %eax
-       
+
        asm_showcase:
                movl    $0x1, %eax
                call    asm_func_showcase
@@ -330,7 +331,7 @@ Compliant example::
     tmp:
             movl    $0x2, %eax
             ret
-    
+
     asm_showcase:
             movl    $0x1, %eax
             call    asm_func_showcase
@@ -344,7 +345,7 @@ Compliant example::
        tmp:
                movl    $0x2, %eax
                ret
-       
+
        asm_showcase:
                movl    $0x1, %eax
                call    asm_func_showcase
@@ -390,7 +391,7 @@ Compliant example::
     asm_func_showcase:
             movl    $0x2, %eax
             ret
-    
+
     asm_showcase:
             movl    $0x1, %eax
             call    asm_func_showcase
@@ -401,7 +402,7 @@ Compliant example::
 
        asm_showcase:
                movl    $0x1, %eax
-       
+
        asm_func_showcase:
                movl    $0x2, %eax
                ret
@@ -417,7 +418,7 @@ Compliant example::
     asm_func_showcase:
             movl    $0x2, %eax
             ret
-    
+
     asm_showcase:
             movl    $0x1, %eax
             call    asm_func_showcase
@@ -430,11 +431,11 @@ Compliant example::
                movl    $0x2, %eax
                jmp     asm_test
                ret
-       
+
        asm_showcase:
                movl    $0x1, %ebx
                call    asm_func_showcase
-       
+
        asm_test:
                cli
 
@@ -447,7 +448,7 @@ Compliant example::
     asm_func_showcase:
             movl    $0x2, %eax
             ret
-    
+
     asm_showcase:
             movl    $0x1, %eax
             call    asm_func_showcase
@@ -460,7 +461,7 @@ Compliant example::
                movl    $0x2, %eax
                call    asm_func_showcase
                ret
-       
+
        asm_showcase:
                movl    $0x1, %eax
                call    asm_func_showcase
@@ -568,12 +569,12 @@ Compliant example::
 
     .extern         cpu_primary_save32
     .extern         cpu_primary_save64
-    
+
     .section        multiboot_header, "a"
     .align          4
     .long           0x0008
     .long           0x0018
-    
+
     .section        entry, "ax"
     .align          8
     .code32
@@ -584,12 +585,12 @@ Compliant example::
 
           .extern      cpu_primary_save32
           .extern   cpu_primary_save64
-       
+
        .section     multiboot_header, "a"
        .align  4
        .long     0x0008
        .long   0x0018
-       
+
           .section   entry, "ax"
           .align   8
          .code32
@@ -602,7 +603,7 @@ Compliant example::
 
     asm_showcase_1:
             movl    $0x1, %eax
-    
+
     asm_showcase_2:
             movl    $0x2, %eax
 
@@ -612,7 +613,7 @@ Compliant example::
 
          asm_showcase_1:
             movl    $0x1, %eax
-       
+
           asm_showcase_2:
             movl    $0x2, %eax
 
@@ -643,7 +644,7 @@ Compliant example::
     asm_showcase_1:
             movl            $0x1, %eax
             lock and        %rcx, (%rdx)
-    
+
     asm_showcase_2:
             movl            $0x3, %eax
 
@@ -654,7 +655,7 @@ Compliant example::
        asm_showcase_1:
        movl   $0x1, %eax
          lock    and        %rcx, (%rdx)
-       
+
        asm_showcase_2:
            movl     $0x2, %eax
 
@@ -718,13 +719,13 @@ Compliant example::
 
     /* Legal entity shall be placed at the start of the file. */
     -------------File Contents Start After This Line------------
-    
+
     /*
      * Copyright (C) 2019 Intel Corporation.
      *
      * SPDX-License-Identifier: BSD-3-Clause
      */
-    
+
     /* Coding or implementation related comments start after the legal entity. */
     .code64
 
@@ -734,7 +735,7 @@ Compliant example::
 
        /* Neither copyright nor license information is included in the file. */
        -------------------File Contents Start After This Line------------------
-       
+
        /* Coding or implementation related comments start directly. */
        .code64
 
@@ -786,15 +787,15 @@ ASM-NC-03: Label name shall be unique
 =====================================
 
 Label name shall be unique with the following exception. Usage of local labels
-is allowed. Local label is defined with the format 'N:', where N represents any
-non-negative integer. Using 'Nb' to refer to the most recent previous definition
-of that label. Using 'Nf' to refer to the next definition of a local label.
+is allowed. Local label is defined with the format ``N:``, where N represents any
+non-negative integer. Using ``Nb`` to refer to the most recent previous definition
+of that label. Using ``Nf`` to refer to the next definition of a local label.
 
 Compliant example::
 
     asm_showcase_1:
             movl    $0x1, %eax
-    
+
     asm_showcase_2:
             movl    $0x2, %eax
 
@@ -804,13 +805,13 @@ Compliant example::
 
        asm_showcase:
                movl    $0x1, %eax
-       
+
        asm_showcase:
                movl    $0x2, %eax
 
 
-ASM-NC-04: Names defined by developers shall be less than 31 characters
-=======================================================================
+ASM-NC-04: Names defined by developers shall be fewer than 31 characters
+========================================================================
 
 Compliant example::
 
