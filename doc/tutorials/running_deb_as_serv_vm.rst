@@ -68,7 +68,7 @@ Install ACRN on the Debian VM
 
 #. Install the hypervisor.
    The ACRN Device Model and tools were installed as part of a previous
-   step. However, make install does not install the hypervisor (acrn.efi)
+   step. However, ``make install`` does not install the hypervisor (acrn.efi)
    on your EFI System Partition (ESP), nor does it configure your EFI
    firmware to boot it automatically. Follow the steps below to perform
    these operations and complete the ACRN installation. Note that we are

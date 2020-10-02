@@ -20,7 +20,7 @@ between the platform owner and the platform firmware. According to
 section 1.5, the PK is a self-signed certificate owned by the OEM, and
 the OEM can generate their own PK.
 
-Here we show two ways to generate a PK: openssl and Microsoft tools.
+Here we show two ways to generate a PK: ``openssl`` and Microsoft tools.
 
 Generate PK Using openssl
 =========================
@@ -184,7 +184,7 @@ which we'll summarize below.
       Provider Name: Microsoft Smart Card Key Storage Provider
       CertUtil: -csplist command completed successfully.
 
-- Create request inf file, for example::
+- Create request ``inf`` file, for example::
 
     [Version]
     Signature= "$Windows NT$"
@@ -429,7 +429,7 @@ DB (Allowed Signature database):
 
   `Microsoft Corporation UEFI CA 2011
   <https://go.microsoft.com/fwlink/p/?LinkID=321194>`_:
-  Microsoft signer for 3rd party UEFI binaries via DevCenter program.
+  Microsoft signer for third party UEFI binaries via DevCenter program.
 
 Compile OVMF with secure boot support
 *************************************
@@ -461,7 +461,7 @@ Notes:
    -  ``source edksetup.sh``, this step is needed for compilation every time
       a shell is created.
 
-   -  This will generate the fw section at
+   -  This will generate the ``fw`` section at
       ``Build/OvmfX64/DEBUG_GCC5/FV/OVMF_CODE.fd`` or
       ``Build/OvmfX64/RELEASE_GCC5/FV/OVMF_CODE.fd``
 
@@ -476,7 +476,7 @@ Notes:
 Use QEMU to inject secure boot keys into OVMF
 *********************************************
 
-We follow the `OpenSUSE: UEFI Secure boot using qemu-kvm document
+We follow the `openSUSE: UEFI Secure boot using qemu-kvm document
 <https://en.opensuse.org/openSUSE:UEFI_Secure_boot_using_qemu-kvm>`_
 to import PK, KEK, and DB into OVMF, Ubuntu 16.04 used.
 

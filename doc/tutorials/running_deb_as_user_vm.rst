@@ -107,7 +107,8 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
 
          Create a New Virtual Machine
 
-   #. Choose **Use ISO image** and click **Browse** - **Browse Local**. Select the ISO which you get from Step 1 above.
+   #. Choose **Use ISO image** and click **Browse** - **Browse Local**.
+      Select the ISO image you get from Step 1 above.
 
    #. Choose the **OS type:** Linux, **Version:** Debian Stretch and then click **Forward**.
 
@@ -119,7 +120,7 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
    #. Rename the image if you desire. You must check the **customize
       configuration before install** option before you finish all stages.
 
-#. Verify that you can see the Overview screen as set up, shown in :numref:`debian10-setup` below:
+#. Verify that you can see the Overview screen has been set up, shown in :numref:`debian10-setup` below:
 
     .. figure:: images/debian-uservm-3.png
        :align: center
@@ -127,8 +128,8 @@ steps will detail how to use the Debian CD-ROM (ISO) image to install Debian
 
        Debian Setup Overview
 
-#. Complete the Debian installation. Verify that you have set up a VDA
-   disk partition, as shown in :numref:`partition-vda` below:
+#. Complete the Debian installation. Verify that you have set up a
+   Virtual Disk (VDA) partition, as shown in :numref:`partition-vda` below:
 
     .. figure:: images/debian-uservm-4.png
        :align: center
@@ -250,7 +251,7 @@ console so you can make command-line entries directly from it.
       $ sudo update-initramfs -u
       $ sudo poweroff
 
-#. Log in to the Service VM and the modify the launch script to add the
+#. Log in to the Service VM and modify the launch script to add the
    `virtio-console` parameter to the Device Model for the Debian VM:
 
    .. code-block:: none

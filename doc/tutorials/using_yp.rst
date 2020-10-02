@@ -13,7 +13,7 @@ needed.
 
 Yocto Project layers support the inclusion of technologies, hardware
 components, and software components.  Layers are repositories containing
-related sets of instructions which tell the Yocto Project build system
+related sets of instructions that tell the Yocto Project build system
 what to do.
 
 The meta-acrn layer

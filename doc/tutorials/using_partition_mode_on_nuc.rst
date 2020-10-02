@@ -4,7 +4,7 @@ Getting Started Guide for ACRN logical partition mode
 #####################################################
 
 The ACRN hypervisor supports a logical partition scenario in which the User
-OS (such as Ubuntu OS) running in a pre-launched VM can bypass the ACRN
+OS, running in a pre-launched VM, can bypass the ACRN
 hypervisor and directly access isolated PCI devices. The following
 guidelines provide step-by-step instructions on how to set up the ACRN
 hypervisor logical partition scenario on Intel NUC while running two
@@ -63,9 +63,9 @@ Update kernel image and modules of pre-launched VM
 #. The current ACRN logical partition scenario implementation requires a
    multi-boot capable bootloader to boot both the ACRN hypervisor and the
    bootable kernel image built from the previous step. Install the Ubuntu OS
-   on the on-board NVMe SSD by following the `Ubuntu desktop installation
+   on the onboard NVMe SSD by following the `Ubuntu desktop installation
    instructions <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop>`_ The
-   Ubuntu installer creates 3 disk partitions on the on-board NVMe SSD. By
+   Ubuntu installer creates 3 disk partitions on the onboard NVMe SSD. By
    default, the GRUB bootloader is installed on the EFI System Partition
    (ESP) that's used to bootstrap the ACRN hypervisor.
 
@@ -101,7 +101,7 @@ Update ACRN hypervisor image
 ****************************
 
 #. Before building the ACRN hypervisor, find the I/O address of the serial
-   port and the PCI BDF addresses of the SATA controller nd the USB
+   port and the PCI BDF addresses of the SATA controller and the USB
    controllers on the Intel NUC. Enter the following command to get the
    I/O addresses of the serial port. The Intel NUC supports one serial port, **ttyS0**.
    Connect the serial port to the development workstation in order to access
@@ -155,11 +155,11 @@ Update ACRN hypervisor image
       The ``acrn.bin`` will be generated to ``./build/hypervisor/acrn.bin``.
       The ``ACPI_VM0.bin`` and ``ACPI_VM1.bin`` will be generated to ``./build/hypervisor/acpi/``.
 
-#. Check the Ubuntu boot loader name.
+#. Check the Ubuntu bootloader name.
 
    In the current design, the logical partition depends on the GRUB boot
    loader; otherwise, the hypervisor will fail to boot. Verify that the
-   default boot loader is GRUB:
+   default bootloader is GRUB:
 
    .. code-block:: none
 
@@ -207,7 +207,7 @@ Update Ubuntu GRUB to boot hypervisor and load kernel image
       (or use the device node directly) of the root partition (e.g.``/dev/nvme0n1p2). Hint: use ``sudo blkid``.
       The kernel command-line arguments used to boot the pre-launched VMs is
       located in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.h`` header file
-      and is configured by ``VMx_CONFIG_OS_BOOTARG_*`` MACROs (where x is the VM id number and ``*`` are arguments).
+      and is configured by ``VMx_CONFIG_OS_BOOTARG_*`` MACROs (where x is the VM ID number and ``*`` are arguments).
       The multiboot2 module param ``XXXXXX`` is the bzImage tag and must exactly match the ``kernel_mod_tag``
       configured in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.c`` file.
       The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0, the parameter ``ACPI_VM0`` is

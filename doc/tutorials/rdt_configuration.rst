@@ -14,8 +14,8 @@ Using RDT includes three steps:
 
 1. Detect and enumerate RDT allocation capabilities on supported
    resources such as cache and memory bandwidth.
-#. Set up resource mask array MSRs (Model-Specific Registers) for each
-   CLOS (Class of Service, which is a resource allocation), basically to
+#. Set up resource mask array MSRs (model-specific registers) for each
+   CLOS (class of service, which is a resource allocation), basically to
    limit or allow access to resource usage.
 #. Select the CLOS for the CPU associated with the VM that will apply
    the resource mask on the CP.
@@ -40,12 +40,14 @@ RDT detection and resource capabilities
 From the ACRN HV debug shell, use ``cpuid`` to detect and identify the
 resource capabilities. Use the platform's serial port for the HV shell.
 
-Check if the platform supports RDT with ``cpuid``. First, run ``cpuid 0x7 0x0``; the return value ebx [bit 15] is set to 1 if the platform supports
-RDT. Next, run ``cpuid 0x10 0x0`` and check the EBX [3-1] bits. EBX [bit 1]
-indicates that L3 CAT is supported. EBX [bit 2] indicates that L2 CAT is
-supported. EBX [bit 3] indicates that MBA is supported. To query the
-capabilities of the supported resources, use the bit position as a subleaf
-index. For example, run ``cpuid 0x10 0x2`` to query the L2 CAT capability.
+Check if the platform supports RDT with ``cpuid``. First, run
+``cpuid 0x7 0x0``; the return value EBX [bit 15] is set to 1 if the
+platform supports RDT. Next, run ``cpuid 0x10 0x0`` and check the EBX
+[3-1] bits.  EBX [bit 1] indicates that L3 CAT is supported. EBX [bit 2]
+indicates that L2 CAT is supported. EBX [bit 3] indicates that MBA is
+supported. To query the capabilities of the supported resources, use the
+bit position as a subleaf index. For example, run ``cpuid 0x10 0x2`` to
+query the L2 CAT capability.
 
 .. code-block:: none
 
@@ -101,14 +103,14 @@ Tuning RDT resources in HV debug shell
 This section explains how to configure the RDT resources from the HV debug
 shell.
 
-#. Check the PCPU IDs of each VM; the ``vcpu_list`` below shows that VM0 is
-   running on PCPU0, and VM1 is running on PCPU1:
+#. Check the pCPU IDs of each VM; the ``vcpu_list`` below shows that VM0 is
+   running on pCPU0, and VM1 is running on pCPU1:
 
    .. code-block:: none
 
       ACRN:\>vcpu_list
 
-      VM ID    PCPU ID    VCPU ID    VCPU ROLE    VCPU STATE
+      VM ID    pCPU ID    VCPU ID    VCPU ROLE    VCPU STATE
       =====    =======    =======    =========    ==========
         0         0          0        PRIMARY       Running
         1         1          0        PRIMARY       Running
@@ -127,8 +129,8 @@ shell.
       ACRN:\>wrmsr  -p1 0xc90  0x7f0
       ACRN:\>wrmsr  -p1 0xc91  0xf
 
-#. Assign CLOS1 to PCPU1 by programming the MSR IA32_PQR_ASSOC [bit 63:32]
-   (0xc8f) to 0x100000000 to use CLOS1 and assign CLOS0 to PCPU 0 by
+#. Assign CLOS1 to pCPU1 by programming the MSR IA32_PQR_ASSOC [bit 63:32]
+   (0xc8f) to 0x100000000 to use CLOS1 and assign CLOS0 to pCPU 0 by
    programming MSR IA32_PQR_ASSOC [bit 63:32] to 0x0. Note that
    IA32_PQR_ASSOC is per LP MSR and CLOS must be programmed on each LP.
 
@@ -190,7 +192,7 @@ Configure RDT for VM using VM Configuration
 
    .. note::
       Users can change the mask values, but the cache mask must have
-      **continuous bits** or a #GP fault can be triggered. Similary, when
+      **continuous bits** or a #GP fault can be triggered. Similarly, when
       programming an MBA delay value, be sure to set the value to less than or
       equal to the MAX delay value.
 
@@ -214,7 +216,7 @@ Configure RDT for VM using VM Configuration
       </vm>
 
    .. note::
-      In ACRN, Lower CLOS always means higher priority (clos 0 > clos 1 > clos 2> ...clos n).
+      In ACRN, Lower CLOS always means higher priority (CLOS 0 > CLOS 1 > CLOS 2 > ... CLOS n).
       So, carefully program each VM's CLOS accordingly.
 
 #. Careful consideration should be made when assigning vCPU affinity. In
@@ -249,7 +251,7 @@ Configure RDT for VM using VM Configuration
 
 #. Based on our scenario, build the ACRN hypervisor and copy the
    artifact ``acrn.efi`` to the
-   ``/boot/EFI/acrn`` directory. If needed, update the devicemodel
+   ``/boot/EFI/acrn`` directory. If needed, update the device model
    ``acrn-dm`` as well in ``/usr/bin`` directory. see
    :ref:`getting-started-building` for building instructions.
 

@@ -323,11 +323,11 @@ Remapping of (virtual) PIC interrupts are set up in a similar sequence:
 
    Initialization of remapping of virtual MSI for Service VM
 
-This figure illustrates how mappings of MSI or MSIX are set up for
+This figure illustrates how mappings of MSI or MSI-X are set up for
 Service VM. Service VM is responsible for issuing a hypercall to notify the
 hypervisor before it configures the PCI configuration space to enable an
 MSI. The hypervisor takes this opportunity to set up a remapping for the
-given MSI or MSIX before it is actually enabled by Service VM.
+given MSI or MSI-X before it is actually enabled by Service VM.
 
 When the User VM needs to access the physical device by passthrough, it uses
 the following steps:

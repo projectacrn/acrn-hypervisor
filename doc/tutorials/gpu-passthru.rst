@@ -6,8 +6,7 @@ Enable GVT-d in ACRN
 This tutorial describes how to enable GVT-d in ACRN.
 
 .. note:: After GVT-d is enabled, have either a serial port
-   or SSH session open in the Service VM to be able to
-   continue interact with it.
+   or SSH session open in the Service VM to interact with it.
 
 Introduction
 ************
@@ -99,7 +98,7 @@ Enable the GVT-d GOP driver
 
 When enabling GVT-d, the Guest OS cannot light up the physical screen
 before the OS driver loads. As a result, the Guest BIOS and the Grub UI
-is not visible on the physical screen. The occurs because the physical
+are not visible on the physical screen. This occurs because the physical
 display is initialized by the GOP driver or VBIOS before the OS driver
 loads, and the Guest BIOS doesn't have them.
 
@@ -131,7 +130,7 @@ Steps
 
    Confirm that these binaries names match the board manufacturer names.
 
-#. Git apply the following two patches:
+#. Use ``git apply`` to add the following two patches:
 
    * `Use-the-default-vbt-released-with-GOP-driver.patch <../_static/downloads/Use-the-default-vbt-released-with-GOP-driver.patch>`_
 

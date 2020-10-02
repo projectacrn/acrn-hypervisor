@@ -19,7 +19,7 @@ Install ACRN
 
 #. Install ACRN using Ubuntu 16.04 or 18.04 as its Service VM.
 
-   .. important:: Need instructions from deleted document (using ubuntu
+   .. important:: Need instructions from deleted document (using Ubuntu
       as SOS)
 
 #. Make the acrn-kernel using the `kernel_config_uefi_sos
@@ -42,7 +42,7 @@ Install ACRN
 #. Make sure the networking bridge ``acrn-br0`` is created. If not,
    create it using the instructions in XXX.
 
-   .. important:: need instructions from deleted document (using ubuntu
+   .. important:: need instructions from deleted document (using Ubuntu
       as SOS)
 
 Set up and launch LXC/LXD
@@ -62,14 +62,14 @@ Set up and launch LXC/LXD
    - Before launching a container, make sure ``lxc-checkconfig | grep missing`` does not show any missing
      kernel features.
 
-2. Create an Ubuntu 18.04 container named **openstack**::
+2. Create an Ubuntu 18.04 container named ``openstack``::
 
      $ lxc init ubuntu:18.04 openstack
 
 3. Export the kernel interfaces necessary to launch a Service VM in the
-   **openstack** container:
+   ``openstack`` container:
 
-   a. Edit the **openstack** config file using the command::
+   a. Edit the ``openstack`` config file using the command::
 
         $ lxc config edit openstack
 
@@ -89,18 +89,18 @@ Set up and launch LXC/LXD
 
       Save and exit the editor.
 
-   b. Run the following commands to configure OpenStack::
+   b. Run the following commands to configure ``openstack``::
 
          $ lxc config device add openstack eth1 nic name=eth1 nictype=bridged parent=acrn-br0
          $ lxc config device add openstack acrn_vhm unix-char path=/dev/acrn_vhm
          $ lxc config device add openstack loop-control unix-char path=/dev/loop-control
          $ for n in {0..15}; do lxc config device add openstack loop$n unix-block path=/dev/loop$n; done;
 
-4. Launch the **openstack** container::
+4. Launch the ``openstack`` container::
 
      $ lxc start openstack
 
-5. Log in to the **openstack** container::
+5. Log in to the ``openstack`` container::
 
      $ lxc exec openstack -- su -l
 
@@ -122,15 +122,15 @@ Set up and launch LXC/LXD
                       route-metric: 200
 
 
-7. Log out and restart the **openstack** container::
+7. Log out and restart the ``openstack`` container::
 
      $ lxc restart openstack
 
-8. Log in to the **openstack** container again::
+8. Log in to the ``openstack`` container again::
 
      $ xc exec openstack -- su -l
 
-9. If needed, set up the proxy inside the **openstack** container via
+9. If needed, set up the proxy inside the ``openstack`` container via
    ``/etc/environment`` and make sure ``no_proxy`` is properly set up.
    Both IP addresses assigned to **eth0** and
    **eth1** and their subnets must be included. For example::
@@ -142,18 +142,18 @@ Set up and launch LXC/LXD
        $ sudo useradd -s /bin/bash -d /opt/stack -m stack
        $ echo "stack ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-11. Log out and restart the **openstack** container::
+11. Log out and restart the ``openstack`` container::
 
       $ lxc restart openstack
 
-The **openstack** container is now properly configured for OpenStack.
+The ``openstack`` container is now properly configured for OpenStack.
 Use the ``lxc list`` command to verify that both **eth0** and **eth1**
 appear in the container.
 
 Set up ACRN prerequisites inside the container
 **********************************************
 
-1. Log in to the **openstack** container as the **stack** user::
+1. Log in to the ``openstack`` container as the **stack** user::
 
      $ lxc exec openstack -- su -l stack
 
@@ -174,7 +174,7 @@ Set up ACRN prerequisites inside the container
 
 3. Download, compile, and install ``iasl``. Refer to XXX.
 
-   .. important:: need instructions from deleted document (using ubuntu
+   .. important:: need instructions from deleted document (using Ubuntu
       as SOS)
 
 Set up libvirt
@@ -409,7 +409,7 @@ instance.
       :name: os-06b-create-image
 
    Give the image a name (**acrnImage**), select the **QCOW2 - QEMU
-   Emulator** format, and click on **Create Image** :
+   Emulator** format, and click on **Create Image**:
 
    .. figure:: images/OpenStack-06e-create-image.png
       :align: center
@@ -541,7 +541,7 @@ instance.
 
    Click on the **Security Groups** tab and select
    the **acrnSecuGroup**  security group you created earlier. Remove the
-   **default** security group if its in the "Allocated" list:
+   **default** security group if it's in the "Allocated" list:
 
    .. figure:: images/OpenStack-10d-only-acrn-security-group.png
       :align: center
@@ -614,7 +614,7 @@ Hypervisors**:
 
 .. note::
    OpenStack logs to the systemd journal and libvirt logs to
-   ``/var/log/libvirt/libvirtd.log``
+   ``/var/log/libvirt/libvirtd.log``.
 
 Here are some other tasks you can try when the instance is created and
 running:

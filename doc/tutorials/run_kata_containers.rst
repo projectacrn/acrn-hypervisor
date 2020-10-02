@@ -6,18 +6,17 @@ Run Kata Containers on a Service VM
 This tutorial describes how to install, configure, and run `Kata Containers
 <https://katacontainers.io/>`_ on the Ubuntu based Service VM with the ACRN
 hypervisor. In this configuration,
-Kata Containers leverage the ACRN hypervisor instead of QEMU which is used by
-default. Refer to the `Kata Containers with ACRN
+Kata Containers leverage the ACRN hypervisor instead of QEMU, which is used by
+default. Refer to the `Kata Containers with ACRN presentation
 <https://www.slideshare.net/ProjectACRN/acrn-kata-container-on-acrn>`_
-presentation from a previous ACRN Project Technical Community Meeting for
-more details on Kata Containers and how the integration with ACRN has been
-done.
+for more details on Kata Containers and how the integration with ACRN
+has been done.
 
 Prerequisites
 **************
 
 #. Refer to the :ref:`ACRN supported hardware <hardware>`.
-#. For a default prebuilt ACRN binary in the E2E package, you must have 4
+#. For a default prebuilt ACRN binary in the end-to-end (E2E) package, you must have 4
    CPU cores or enable "CPU Hyper-threading" in order to have 4 CPU threads for 2 CPU cores.
 #. Follow the :ref:`rt_industry_ubuntu_setup` to set up the ACRN Service VM
    based on Ubuntu.
@@ -184,7 +183,7 @@ Run a Kata Container with ACRN
 The system is now ready to run a Kata Container on ACRN. Note that a reboot
 is recommended after the installation.
 
-Before running a Kata Container on ACRN, you must offline at least one CPU:
+Before running a Kata Container on ACRN, you must take at least one CPU offline:
 
 .. code-block:: none
 

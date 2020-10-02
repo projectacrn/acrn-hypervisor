@@ -62,9 +62,9 @@ Download Win10 ISO and drivers
    - Check **I accept the terms in the license agreement**. Click **Continue**.
    - From the list, right check the item labeled **Oracle VirtIO Drivers
      Version for Microsoft Windows 1.x.x, yy MB**, and then **Save link as
-     ...**.  Currently, it is named **V982789-01.zip**.
+     ...**.  Currently, it is named ``V982789-01.zip``.
    - Click **Download**. When the download is complete, unzip the file. You
-     will see an ISO named **winvirtio.iso**.
+     will see an ISO named ``winvirtio.iso``.
 
 Create a raw disk
 -----------------
@@ -230,21 +230,22 @@ Explanation for acrn-dm popular command lines
 .. note:: Use these acrn-dm command line entries according to your
    real requirements.
 
-* **-s 2,passthru,0/2/0,gpu**:
+* ``-s 2,passthru,0/2/0,gpu``:
   This is GVT-d to passthrough the VGA controller to Windows.
   You may need to change 0/2/0 to match the bdf of the VGA controller on your platform.
 
-* **-s 3,ahci,hd:/root/img/win10.img**:
+* ``-s 3,ahci,hd:/root/img/win10.img``:
   This is the hard disk where Windows 10 should be installed..
   Make sure that the slot ID **3** points to your win10 img path.
 
-* **-s 4,virtio-net,tap0**:
+* ``-s 4,virtio-net,tap0``:
   This is for the network virtualization.
 
-* **-s 5,fbuf,tcp=0.0.0.0:5900,w=800,h=600**:
-  This opens port 5900 on the Service VM which can be connected to via vncviewer.
+* ``-s 5,fbuf,tcp=0.0.0.0:5900,w=800,h=600``:
+  This opens port 5900 on the Service VM, which can be connected to via
+  ``vncviewer``.
 
-* **-s 6,virtio-input,/dev/input/event4**:
+* ``-s 6,virtio-input,/dev/input/event4``:
   This is to passthrough the mouse/keyboard to Windows via virtio.
   Change ``event4`` accordingly. Use the following command to check
   the event node on your Service VM::
@@ -252,19 +253,19 @@ Explanation for acrn-dm popular command lines
    <To get the input event of mouse>
    # cat /proc/bus/input/devices | grep mouse
 
-* **-s 7,ahci,cd:/root/img/Windows10.iso**:
+* ``-s 7,ahci,cd:/root/img/Windows10.iso``:
   This is the IOS image used to install Windows 10. It appears as a CD-ROM
   device. Make sure that the slot ID **7** points to your win10 ISO path.
 
-* **-s 8,ahci,cd:/root/img/winvirtio.iso**:
+* ``-s 8,ahci,cd:/root/img/winvirtio.iso``:
   This is CD-ROM device to install the virtio Windows driver. Make sure it points to your VirtIO ISO path.
 
-* **-s 9,passthru,0/14/0**:
+* ``-s 9,passthru,0/14/0``:
   This is to passthrough the USB controller to Windows.
-  You may need to change 0/14/0 to match the bdf of the USB controller on
+  You may need to change ``0/14/0`` to match the BDF of the USB controller on
   your platform.
 
-* **--ovmf /usr/share/acrn/bios/OVMF.fd**:
+* ``--ovmf /usr/share/acrn/bios/OVMF.fd``:
   Make sure it points to your OVMF binary path.
 
 Secure boot enabling
@@ -281,5 +282,3 @@ obtain a licensed version of Windows.
 
 For Windows 10 activation steps, refer to
 `Activate Windows 10 <https://support.microsoft.com/en-us/help/12440/windows-10-activate>`__.
-
-.. comment Reviewed for grammatical content on 20 May 2020.

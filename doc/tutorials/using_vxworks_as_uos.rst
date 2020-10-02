@@ -94,7 +94,7 @@ Steps for Using VxWorks as User VM
 
 #. Follow XXX to boot the ACRN Service VM.
 
-   .. important:: need instructions from deleted document (using sdc
+   .. important:: need instructions from deleted document (using SDC
       mode on the Intel NUC)
 
 #. Boot VxWorks as User VM.

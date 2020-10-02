@@ -64,7 +64,7 @@ Launch the RTVM
 
       $ wget https://github.com/projectacrn/acrn-hypervisor/releases/download/acrn-2020w01.1-140000p/preempt-rt-32030.img.xz
 
-   #. Decompress the xz image::
+   #. Decompress the ``image.xz`` image::
 
       $ xz -d preempt-rt-32030.img.xz
 
