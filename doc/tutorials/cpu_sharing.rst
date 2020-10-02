@@ -45,7 +45,7 @@ pCPU is fixed at the time the VM is launched. The statically configured
 cpu_affinity in the VM configuration defines a superset of pCPUs that
 the VM is allowed to run on. One bit in this bitmap indicates that one pCPU
 could be assigned to this VM, and the bit number is the pCPU ID. A pre-launched
-VM is supposed to be launched on exact number of pCPUs that are assigned in
+VM is launched on exactly the number of pCPUs assigned in
 this bitmap. The vCPU to pCPU mapping is implicitly indicated: vCPU0 maps
 to the pCPU with lowest pCPU ID, vCPU1 maps to the second lowest pCPU ID, and
 so on.
@@ -96,13 +96,13 @@ and BVT (Borrowed Virtual Time) scheduler.
   1-1 mapping previously used; every pCPU can run only two thread objects:
   one is the idle thread, and another is the thread of the assigned vCPU.
   With this scheduler, vCPU works in Work-Conserving mode, which always
-  try to keep resource busy, and will run once it is ready. Idle thread
+  tries to keep resources busy, and will run once it is ready. The idle thread
   can run when the vCPU thread is blocked.
 
 - **Borrowed Virtual Time scheduler**:
 
   BVT (Borrowed Virtual time) is a virtual time based scheduling
-  algorithm, it dispatching the runnable thread with the earliest
+  algorithm, it dispatches the runnable thread with the earliest
   effective virtual time.
 
   TODO: BVT scheduler will be built on top of prioritized scheduling
@@ -173,7 +173,7 @@ Use the following settings to support this configuration in the industry scenari
 +---------+--------+-------+-------+
 |pCPU0    |pCPU1   |pCPU2  |pCPU3  |
 +=========+========+=======+=======+
-|Service VM + Waag |RT Linux       |
+|Service VM + WaaG |RT Linux       |
 +------------------+---------------+
 
 - offline pcpu2-3 in Service VM.

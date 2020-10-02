@@ -50,7 +50,7 @@ interrupt vector to find the interrupt number (909) on CPU3.
 ACRN Log
 ********
 
-ACRN log provides console log and mem log for a user to analyze.
+ACRN log provides a console log and a mem log for a user to analyze.
 We can use console log to debug directly, while mem log is a userland tool
 used to capture an ACRN hypervisor log.
 
@@ -68,7 +68,7 @@ To enable and start the mem log::
 Set and grab log
 ================
 
-We have 1-6 log levels for console log and mem log. The following
+We have six (1-6) log levels for console log and mem log. The following
 functions print different levels of console log and mem log::
 
       pr_dbg("debug...level %d", LOG_DEBUG);       //level 6
@@ -127,9 +127,9 @@ ACRN Trace
 
 ACRN trace is a tool running on the Service VM to capture trace
 data. We can use the existing trace information to analyze, and we can
-add self-defined tracing to analyze code which we care about.
+add self-defined tracing to analyze code that we care about.
 
-Using Existing trace event id to analyze trace
+Using Existing trace event ID to analyze trace
 ==============================================
 
 As an example, we can use the existing vm_exit trace to analyze the
@@ -159,19 +159,19 @@ reason and times of each vm_exit after we have done some operations.
 
       vmexit summary information
 
-Using Self-defined trace event id to analyze trace
+Using Self-defined trace event ID to analyze trace
 ==================================================
 
-For some undefined trace event id, we can define it by ourselves as
+For some undefined trace event ID, we can define it by ourselves as
 shown in the following example:
 
-1. Add the following new event id into
+1. Add the following new event ID into
    ``acrn-hypervisor/hypervisor/include/debug/trace.h``:
 
    .. figure:: images/debug_image25.png
       :align: center
 
-      trace event id
+      trace event ID
 
 2. Add the following format to
    ``misc/tools/acrntrace/scripts/formats``:
@@ -184,18 +184,18 @@ shown in the following example:
    .. note::
 
       Formats:
-        0x00000005: event id for trace test
+        ``0x00000005``: event ID for trace test
 
-        %(cpu)d: corresponding CPU index with 'decimal' format
+        ``%(cpu)d``: corresponding CPU index with decimal format
 
-        %(event)016x: corresponding event id with 'hex' format
+        ``%(event)016x``: corresponding event id with hex format
 
-        %(tsc)d: corresponding event time stamp with 'decimal' format
+        ``%(tsc)d``: corresponding event time stamp with decimal format
 
-        %(1)08x: corresponding first 'Long' data in TRACE_2L
+        ``%(1)08x``: corresponding first Long data in TRACE_2L
 
 3. Add trace into function ``emulate_io`` in
-   ``acrn-hypervisor/hypervisor/arch/x86/guest/io_emul.c`` which we want to
+   ``acrn-hypervisor/hypervisor/arch/x86/guest/io_emul.c`` that we want to
    trace for the calling times of function ``emulate_io``:
 
    .. figure:: images/debug_image2.png

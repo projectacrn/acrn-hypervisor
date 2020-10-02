@@ -212,7 +212,7 @@ Additional scenario XML elements:
   Specify the maximum number of Interrupt Remapping Entries.
 
 ``MAX_IOAPIC_NUM`` (a child node of ``CAPACITIES``):
-  Specify the maximum number of IO-APICs.
+  Specify the maximum number of IOAPICs.
 
 ``MAX_PCI_DEV_NUM`` (a child node of ``CAPACITIES``):
   Specify the maximum number of PCI devices.
@@ -221,7 +221,7 @@ Additional scenario XML elements:
   Specify the maximum number of interrupt lines per IOAPIC.
 
 ``MAX_PT_IRQ_ENTRIES`` (a child node of ``CAPACITIES``):
-  Specify the maximum number of interrupt source for PT devices.
+  Specify the maximum number of interrupt sources for PT devices.
 
 ``MAX_MSIX_TABLE_NUM`` (a child node of ``CAPACITIES``):
   Specify the maximum number of MSI-X tables per device.
@@ -233,7 +233,7 @@ Additional scenario XML elements:
   Specify the Segment, Bus, Device, and function of the GPU.
 
 ``vm``:
-  Specify the VM with VMID by its "id" attribute.
+  Specify the VM with VMID by its ``id`` attribute.
 
 ``vm_type``:
   Current supported VM types are:
@@ -263,10 +263,10 @@ Additional scenario XML elements:
   List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.
 
 ``base`` (a child node of ``epc_section``):
-  SGX EPC section base; must be page aligned.
+  SGX Enclave Page Cache section base; must be page aligned.
 
 ``size`` (a child node of ``epc_section``):
-  SGX EPC section size in bytes; must be page aligned.
+  SGX Enclave Page Cache section size in bytes; must be page aligned.
 
 ``clos``:
   Class of Service for Cache Allocation Technology settings. Refer to :ref:`hv_rdt` for details.
@@ -293,7 +293,7 @@ Additional scenario XML elements:
   must exactly match the module tag in the GRUB multiboot cmdline.
 
 ``bootargs`` (a child node of ``os_config``):
-  For internal use and is not configurable. Specify the kernel boot arguments
+  For internal use only and is not configurable. Specify the kernel boot arguments
   in bootargs under the parent of board_private.
 
 ``kern_load_addr`` (a child node of ``os_config``):
@@ -303,7 +303,7 @@ Additional scenario XML elements:
   The entry address in host memory for the VM kernel.
 
 ``vuart``:
-  Specify the vuart (aka COM) with the vUART ID by its "id" attribute.
+  Specify the vUART (aka COM) with the vUART ID by its ``id`` attribute.
   Refer to :ref:`vuart_config` for detailed vUART settings.
 
 ``type`` (a child node of ``vuart``):
@@ -367,7 +367,7 @@ Attributes of the ``uos_launcher`` specify the number of User VMs that the
 current scenario has:
 
 ``uos``:
-  Specify the User VM with its relative ID to Service VM by the "id" attribute.
+  Specify the User VM with its relative ID to Service VM by the ``id`` attribute.
 
 ``uos_type``:
   Specify the User VM type, such as ``CLEARLINUX``, ``ANDROID``, ``ALIOS``,
@@ -378,11 +378,11 @@ current scenario has:
   Specify the User VM Real-time capability: Soft RT, Hard RT, or none of them.
 
 ``mem_size``:
-  Specify the User VM memory size in Mbyte.
+  Specify the User VM memory size in megabytes.
 
 ``gvt_args``:
-  GVT arguments for the VM. Set it to ``gvtd`` for GVTd, otherwise stand
-  for GVTg arguments.  The GVTg Input format: ``low_gm_size high_gm_size fence_sz``,
+  GVT arguments for the VM. Set it to ``gvtd`` for GVT-d, otherwise it's
+  for GVT-g arguments.  The GVT-g input format: ``low_gm_size high_gm_size fence_sz``,
   The recommendation is ``64 448 8``.  Leave it blank to disable the GVT.
 
 ``vbootloader``:
@@ -396,7 +396,7 @@ current scenario has:
 
 ``poweroff_channel``:
   Specify whether the User VM power off channel is through the IOC,
-  Powerbutton, or vUART.
+  power button, or vUART.
 
 ``usb_xhci``:
   USB xHCI mediator configuration. Input format:
@@ -407,13 +407,14 @@ current scenario has:
   List of shared memory regions for inter-VM communication.
 
 ``shm_region`` (a child node of ``shm_regions``):
-  configure the shm regions for current VM, input format: hv:/<;shm name>;,
-  <;shm size in MB>;. Refer to :ref:`ivshmem-hld` for details.
+  configure the shared memory regions for current VM, input format:
+  ``hv:/<;shm name>;, <;shm size in MB>;``. Refer to :ref:`ivshmem-hld` for details.
 
 ``passthrough_devices``:
   Select the passthrough device from the lspci list. Currently we support:
-  usb_xdci, audio, audio_codec, ipu, ipu_i2c, cse, wifi, Bluetooth, sd_card,
-  Ethernet, wifi, sata, and nvme.
+  ``usb_xdci``, ``audio``, ``audio_codec``, ``ipu``, ``ipu_i2c``,
+  ``cse``, ``wifi``, ``bluetooth``, ``sd_card``,
+  ``ethernet``, ``sata``, and ``nvme``.
 
 ``network`` (a child node of ``virtio_devices``):
   The virtio network device setting.
@@ -445,8 +446,8 @@ Hypervisor configuration workflow
 The hypervisor configuration is based on the ``Kconfig``
 mechanism. Begin by creating a board-specific ``defconfig`` file to
 set up the default ``Kconfig`` values for the specified board.
-Next, configure the hypervisor build options using the ``make
-menuconfig`` graphical interface or ``make defconfig`` to generate
+Next, configure the hypervisor build options using the ``make menuconfig``
+graphical interface or ``make defconfig`` to generate
 a ``.config`` file. The resulting ``.config`` file is
 used by the ACRN build process to create a configured scenario- and
 board-specific hypervisor image.
@@ -459,7 +460,7 @@ board-specific hypervisor image.
 .. figure:: images/GUI_of_menuconfig.png
    :align: center
 
-   menuconfig interface sample
+   ``menuconfig`` interface sample
 
 Refer to :ref:`getting-started-hypervisor-configuration` for detailed
 configuration steps.
@@ -634,7 +635,7 @@ Instructions
      menu, and then select one default scenario setting to load a default
      scenario setting for the current board.
 
-   The default scenario configuration xmls are located at
+   The default scenario configuration XMLs are located at
    ``misc/vm_configs/xmls/config-xmls/[board]/``.
    We can edit the scenario name when creating or loading a scenario. If the
    current scenario name is duplicated with an existing scenario setting
@@ -648,8 +649,8 @@ Instructions
    XML**. The configuration app automatically directs to the new scenario
    XML once the import is complete.
 
-#. The configurable items display after one scenario is created/loaded/
-   selected. Following is an industry scenario:
+#. The configurable items display after one scenario is created, loaded,
+   or selected. Following is an industry scenario:
 
    .. figure:: images/configure_scenario.png
       :align: center
@@ -659,9 +660,9 @@ Instructions
 
    - Read-only items are marked as gray.
 
-   - Hover the mouse pointer over the item to display the description.
+   - Hover the mouse cursor over the item to display the description.
 
-#. To dynamically add or delete VMs:
+#. Dynamically add or delete VMs:
 
    - Click **Add a VM below** in one VM setting, and then select one VM type
      to add a new VM under the current VM.
@@ -675,14 +676,14 @@ Instructions
    .. figure:: images/configure_vm_add.png
       :align: center
 
-#. Click **Export XML** to save the scenario xml; you can rename it in the
+#. Click **Export XML** to save the scenario XML; you can rename it in the
    pop-up model.
 
    .. note::
-      All customized scenario xmls will be in user-defined groups, which are
+      All customized scenario XMLs will be in user-defined groups, which are
       located in ``misc/vm_configs/xmls/config-xmls/[board]/user_defined/``.
 
-   Before saving the scenario xml, the configuration app validates the
+   Before saving the scenario XML, the configuration app validates the
    configurable items. If errors exist, the configuration app lists all
    incorrect configurable items and shows the errors as below:
 
@@ -690,7 +691,7 @@ Instructions
       :align: center
 
    After the scenario is saved, the page automatically directs to the saved
-   scenario xmls. Delete the configured scenario by clicking **Export XML** -> **Remove**.
+   scenario XMLs. Delete the configured scenario by clicking **Export XML** -> **Remove**.
 
 #. Click **Generate configuration files** to save the current scenario
    setting and then generate files for the board-related configuration

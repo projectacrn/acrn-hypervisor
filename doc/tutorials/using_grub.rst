@@ -3,7 +3,7 @@
 Using GRUB to boot ACRN
 #######################
 
-`GRUB <http://www.gnu.org/software/grub/>`_ is a multiboot boot loader
+`GRUB <http://www.gnu.org/software/grub/>`_ is a multiboot bootloader
 used by many popular Linux distributions. It also supports booting the
 ACRN hypervisor.  See
 `<http://www.gnu.org/software/grub/grub-download.html>`_ to get the
@@ -47,9 +47,9 @@ ELF format when ``CONFIG_RELOC`` is not set, or RAW format when
 Using pre-installed GRUB
 ************************
 
-Most Linux distributions use GRUB version 2 by default. We can re-use
-pre-installed GRUB to load ACRN hypervisor if its version 2.02 or
-higher.
+Most Linux distributions use GRUB version 2 by default. If its version
+2.02 or higher, we can re-use the pre-installed GRUB to load the ACRN
+hypervisor.
 
 Here's an example using Ubuntu to load ACRN on a scenario with two
 pre-launched VMs (the SOS_VM is also a kind of pre-launched VM):
@@ -104,7 +104,7 @@ pre-launched VMs (the SOS_VM is also a kind of pre-launched VM):
       ``kernel_mod_tag`` of VM1 in the
       ``misc/vm_configs/scenarios/$(SCENARIO)/vm_configurations.c`` file.
 
-      The guest kernel command-line arguments is configured in the
+      The guest kernel command-line arguments are configured in the
       hypervisor source code by default if no ``$(VMx bootargs)`` is present.
       If ``$(VMx bootargs)`` is present, the default command-line arguments
       are overridden by the ``$(VMx bootargs)`` parameters.
@@ -112,12 +112,12 @@ pre-launched VMs (the SOS_VM is also a kind of pre-launched VM):
       The ``$(Service VM bootargs)`` parameter in the multiboot command
       is appended to the end of the Service VM kernel command line. This is
       useful to override some Service VM kernel cmdline parameters because the
-      later one would win if the same parameters were configured in the Linux
+      later one would be used if the same parameters were configured in the Linux
       kernel cmdline. For example, adding ``root=/dev/sda3`` will override the
       original root device to ``/dev/sda3`` for the Service VM kernel.
 
       All parameters after a ``#`` character are ignored since GRUB
-      treat them as comments.
+      treats them as comments.
 
       ``\``, ``$``, ``#`` are special characters in GRUB. An escape
       character ``\`` must be added before these special characters if they
@@ -147,7 +147,7 @@ to build and install your own GRUB, and then follow the steps described
 earlier in `pre-installed-grub`_.
 
 
-Here we provide another simple method to build GRUB in efi application format:
+Here we provide another simple method to build GRUB in EFI application format:
 
 #. Make GRUB efi application:
 

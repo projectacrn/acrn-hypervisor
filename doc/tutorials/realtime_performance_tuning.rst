@@ -49,9 +49,9 @@ Here is example pseudocode of a cyclictest implementation.
 Time point ``now`` is the actual point at which the cyclictest app is woken up
 and scheduled. Time point ``next`` is the expected point at which we want
 the cyclictest to be awakened and scheduled. Here we can get the latency by
-``now - next``. We don't want to see any ``vmexit`` in between ``next`` and ``now``.
-So, we define the start point of the critical section as ``next`` and the end
-point as ``now``.
+``now - next``. We don't want to see a ``vmexit`` in between ``next`` and ``now``.
+So, we define the starting point of the critical section as ``next`` and
+the ending point as ``now``.
 
 Log and trace data collection
 =============================
@@ -153,15 +153,15 @@ Perf/PMU tools in performance analysis
 ======================================
 
 After exposing PMU-related CPUID/MSRs to the VM, performance analysis tools
-such as **perf** and **pmu** can be used inside the VM to locate
+such as ``perf`` and ``PMU`` can be used inside the VM to locate
 the bottleneck of the application.
 
-**Perf** is a profiler tool for Linux 2.6+ based systems that abstracts away
+``Perf`` is a profiler tool for Linux 2.6+ based systems that abstracts away
 CPU hardware differences in Linux performance measurements and presents a
 simple command line interface. Perf is based on the ``perf_events`` interface
 exported by recent versions of the Linux kernel.
 
-**PMU** tools is a collection of tools for profile collection and
+``PMU tools`` is a collection of tools for profile collection and
 performance analysis on Intel CPUs on top of Linux Perf. Refer to the
 following links for perf usage:
 
@@ -170,11 +170,11 @@ following links for perf usage:
 
 Refer to https://github.com/andikleen/pmu-tools for pmu usage.
 
-Top-down Micro-Architecture Analysis Method (TMAM)
+Top-down Microarchitecture Analysis Method (TMAM)
 ==================================================
 
-The Top-down Micro-Architecture Analysis Method (TMAM), based on Top-Down
-Characterization methodology, aims to provide an insight into whether you
+The top-down microarchitecture analysis method (TMAM), based on top-down
+characterization methodology, aims to provide an insight into whether you
 have made wise choices with your algorithms and data structures. See the
 Intel |reg| 64 and IA-32 `Architectures Optimization Reference Manual
 <http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf>`_,
@@ -182,10 +182,10 @@ Appendix B.1 for more details on TMAM. Refer to this `technical paper
 <https://fd.io/docs/whitepapers/performance_analysis_sw_data_planes_dec21_2017.pdf>`_
 which adopts TMAM for systematic performance benchmarking and analysis
 of compute-native Network Function data planes that are executed on
-Commercial-Off-The-Shelf (COTS) servers using available open-source
+commercial-off-the-shelf (COTS) servers using available open-source
 measurement tools.
 
-Example: Using Perf to analyze TMAM level 1 on CPU core 1
+Example: Using Perf to analyze TMAM level 1 on CPU core 1:
 
    .. code-block:: console
 

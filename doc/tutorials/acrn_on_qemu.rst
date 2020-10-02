@@ -6,8 +6,8 @@ Enable ACRN over QEMU/KVM
 Goal of this document is to bring-up ACRN as a nested Hypervisor on top of QEMU/KVM
 with basic functionality such as running Service VM (SOS) and User VM (UOS) for primarily 2 reasons,
 
-1. In order for the users to evaluate ACRN.
-2. Make ACRN platform agnostic and remove per hardware platform configurations setup overhead.
+1. Allow users to evaluate ACRN.
+2. Make ACRN platform agnostic and remove hardware-specific platform configurations setup overhead.
 
 This setup was tested with the following configuration,
 
@@ -15,12 +15,13 @@ This setup was tested with the following configuration,
 - ACRN Kernel: 5.4.28 (Commit ID: a8cd22f49f0b2b56e526150fe0aaa9118edfcede)
 - QEMU emulator version 4.2.0
 - Service VM/User VM is ubuntu18.04
-- Platforms Tested: ApolloLake, KabyLake, CoffeeLake
+- Platforms Tested: Apollo Lake, Kaby Lake, Coffee Lake
 
 
 Prerequisites
 *************
-1. Make sure the platform supports Intel VMX as well as VT-d technologies. On ubuntu18.04, this
+1. Make sure the platform supports Intel VMX as well as VT-d
+   technologies. On Ubuntu 18.04, this
    can be checked by installing ``cpu-checker`` tool. If the output displays **KVM acceleration can be used**
    the platform supports it.
 
@@ -174,8 +175,10 @@ Install ACRN Hypervisor
 
 6. Update GRUB ``sudo update-grub``.
 
-7. Shutdown the guest and relaunch using, ``virsh start ACRNSOS --console`` and select ACRN hypervisor from GRUB menu to launch Service VM running on top of ACRN.
-   This can be verified from ``dmesg`` as shown below,
+7. Shut down the guest and relaunch using, ``virsh start ACRNSOS --console``
+   and select ACRN hypervisor from GRUB menu to launch Service
+   VM running on top of ACRN.
+   This can be verified using ``dmesg``, as shown below,
 
    .. code-block:: console
 

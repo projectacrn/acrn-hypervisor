@@ -117,7 +117,7 @@ Linux-based post-launched VMs (VM1 and VM2).
    -  For VM2, it shows ``00:05.0 RAM memory: Red Hat, Inc. Inter-VM shared memory (rev 01)``
 
 3. As recorded in the `PCI ID Repository <https://pci-ids.ucw.cz/read/PC/1af4>`_,
-   the ``ivshmem`` device vendor ID is ``1af4`` (RedHat) and device ID is ``1110``
+   the ``ivshmem`` device vendor ID is ``1af4`` (Red Hat) and device ID is ``1110``
    (Inter-VM shared memory).  Use these commands to probe the device::
 
      $ sudo modprobe uio

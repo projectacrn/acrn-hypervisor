@@ -29,7 +29,7 @@ The project's documentation contains the following items:
   folders (such as ``misc/``) by the build scripts.
 
 * Doxygen-generated material used to create all API-specific documents
-  found at http://projectacrn.github.io/latest/api/.  The doc build
+  found at http://projectacrn.github.io/latest/api/.  The documentation build
   process uses doxygen to scan source files in the hypervisor and
   device-model folders, and from sources in the acrn-kernel repo (as
   explained later).
@@ -71,13 +71,13 @@ folder setup for documentation contributions and generation:
       acrn-kernel/
 
 The parent projectacrn folder is there because we'll also be creating a
-publishing area later in these steps.  For API doc generation, we'll also
+publishing area later in these steps.  For API documentation generation, we'll also
 need the acrn-kernel repo contents in a sibling folder to the
 acrn-hypervisor repo contents.
 
 It's best if the acrn-hypervisor
 folder is an ssh clone of your personal fork of the upstream project
-repos (though https clones work too):
+repos (though ``https`` clones work too):
 
 #. Use your browser to visit https://github.com/projectacrn and do a
    fork of the **acrn-hypervisor** repo to your personal GitHub account.)
@@ -103,7 +103,7 @@ repos (though https clones work too):
       cd acrn-hypervisor
       git remote add upstream git@github.com:projectacrn/acrn-hypervisor.git
 
-#. For API doc generation we'll also need the acrn-kernel repo available
+#. For API documentation generation we'll also need the acrn-kernel repo available
    locally:
 
    .. code-block:: bash
@@ -111,7 +111,7 @@ repos (though https clones work too):
       cd ..
       git clone git@github.com:projectacrn/acrn-kernel.git
 
-   .. note:: We assume for doc generation that ``origin`` is pointed to
+   .. note:: We assume for documentation generation that ``origin`` is pointed to
       the upstream repo.  If you're a developer and have the acrn-kernel
       repo already set up as a sibling folder to the acrn-hypervisor,
       you can skip this clone step.
@@ -177,7 +177,7 @@ And with that you're ready to generate the documentation.
 .. note::
 
    We've provided a script you can run to show what versions of the
-   doc building tools you have installed ::
+   documentation building tools you have installed ::
 
       doc/scripts/show-versions.py
 
@@ -188,7 +188,7 @@ Sphinx supports easy customization of the generated documentation
 appearance through the use of themes.  Replace the theme files and do
 another ``make html`` and the output layout and style is changed. The
 sphinx build system creates document cache information that attempts to
-expedite doc rebuilds, but occasionally can cause an unexpected error or
+expedite documentation rebuilds, but occasionally can cause an unexpected error or
 warning to be generated.  Doing a ``make clean`` to create a clean doc
 generation and a ``make html`` again generally cleans this up.
 
@@ -201,8 +201,8 @@ theme template overrides found in ``doc/_templates``.
 Running the documentation processors
 ************************************
 
-The acrn-hypervisor/doc directory has all the .rst source files, extra
-tools, and Makefile for generating a local copy of the ACRN technical
+The ``acrn-hypervisor/doc`` directory has all the ``.rst`` source files, extra
+tools, and ``Makefile`` for generating a local copy of the ACRN technical
 documentation.  For generating all the API documentation, there is a
 dependency on having the ``acrn-kernel`` repo's contents available too
 (as described previously).  You'll get a sphinx warning if that repo is
@@ -253,7 +253,7 @@ This will delete everything in the publishing repo's **latest** folder
 (in case the new version has deleted files) and push a copy of the
 newly-generated HTML content directly to the GitHub pages publishing
 repo.  The public site at https://projectacrn.github.io will be updated
-(nearly) immediately so it's best to verify the locally generated html
+(nearly) immediately so it's best to verify the locally generated HTML
 before publishing.
 
 Document Versioning
@@ -279,7 +279,7 @@ list should be updated to include the version number and publishing
 folder.  Note that there's no direct selection to go to a newer version
 from an older one, without going to ``latest`` first.
 
-By default, doc build and publishing assumes we're generating
+By default, documentation build and publishing assumes we're generating
 documentation for the main branch and publishing to the ``/latest/``
 area on https://projectacrn.github.io. When we're generating the
 documentation for a tagged version (e.g., 0.2), check out that version

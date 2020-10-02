@@ -15,7 +15,7 @@ Other :ref:`ACRN supported platforms <hardware>` should work as well.
 Introduction to Zephyr
 **********************
 
-The Zephyr RTOS is a scalable real-time operating-system supporting multiple hardware architectures,
+The Zephyr RTOS is a scalable real-time operating system supporting multiple hardware architectures,
 optimized for resource constrained devices, and built with safety and security in mind.
 
 Steps for Using Zephyr as User VM
@@ -38,7 +38,7 @@ Steps for Using Zephyr as User VM
 
    This will build the application ELF binary in ``samples/hello_world/build/zephyr/zephyr.elf``.
 
-#. Build grub2 boot loader image
+#. Build grub2 bootloader image
 
    We can build the grub2 bootloader for Zephyr using ``boards/x86/common/scripts/build_grub.sh``
    found in the `Zephyr source code <https://github.com/zephyrproject-rtos/zephyr>`_.
@@ -90,7 +90,7 @@ Steps for Using Zephyr as User VM
 
    You now have a virtual disk image with a bootable Zephyr in ``zephyr.img``. If the Zephyr build system is not
    the ACRN Service VM, then you will need to transfer this image to the
-   ACRN Service VM (via, e.g, a USB drive or network )
+   ACRN Service VM (via, e.g, a USB drive or network)
 
 #. Follow XXX to boot "The ACRN Service OS" based on Clear Linux OS 28620
    (ACRN tag: acrn-2019w14.3-140000p)

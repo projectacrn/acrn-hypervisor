@@ -6,7 +6,7 @@ Enable vUART Configurations
 Introduction
 ============
 
-The virtual universal asynchronous receiver-transmitter (vUART) supports
+The virtual universal asynchronous receiver/transmitter (vUART) supports
 two functions: one is the console, the other is communication. vUART
 only works on a single function.
 
@@ -36,16 +36,16 @@ Console enable list
 | Scenarios       | vm0                   | vm1                | vm2            | vm3            |
 +=================+=======================+====================+================+================+
 | SDC             | Service VM            | Post-launched      | Post-launched  |                |
-|                 | (vuart enable)        |                    |                |                |
+|                 | (vUART enable)        |                    |                |                |
 +-----------------+-----------------------+--------------------+----------------+----------------+
 | Hybrid          | Pre-launched (Zephyr) | Service VM         | Post-launched  |                |
-|                 | (vuart enable)        | (vuart enable)     |                |                |
+|                 | (vUART enable)        | (vUART enable)     |                |                |
 +-----------------+-----------------------+--------------------+----------------+----------------+
 | Industry        | Service VM            | Post-launched      | Post-launched  | Post-launched  |
-|                 | (vuart enable)        |                    | (vuart enable) |                |
+|                 | (vUART enable)        |                    | (vUART enable) |                |
 +-----------------+-----------------------+--------------------+----------------+----------------+
 | Logic_partition | Pre-launched          | Pre-launched RTVM  | Post-launched  |                |
-|                 | (vuart enable)        | (vuart enable)     | RTVM           |                |
+|                 | (vUART enable)        | (vUART enable)     | RTVM           |                |
 +-----------------+-----------------------+--------------------+----------------+----------------+
 
 How to configure a console port
@@ -78,10 +78,10 @@ To enable the communication port, configure ``vuart[1]`` in the two VMs that wan
 
 The port_base and IRQ should differ from the ``vuart[0]`` in the same VM.
 
-**t_vuart.vm_id** is the target VM's vm_id, start from 0. (0 means VM0)
+``t_vuart.vm_id`` is the target VM's vm_id, start from 0. (0 means VM0)
 
-**t_vuart.vuart_id** is the target vuart index in the target VM. start
-from 1. (1 means ``vuart[1]``)
+``t_vuart.vuart_id`` is the target vuart index in the target VM. Start
+from ``1``. (``1`` means ``vuart[1]``)
 
 Example:
 
@@ -116,10 +116,10 @@ Communication vUART enable list
 | SDC             | Service VM            | Post-launched      | Post-launched       |                |
 +-----------------+-----------------------+--------------------+---------------------+----------------+
 | Hybrid          | Pre-launched (Zephyr) | Service VM         | Post-launched       |                |
-|                 | (vuart enable COM2)   | (vuart enable COM2)|                     |                |
+|                 | (vUART enable COM2)   | (vUART enable COM2)|                     |                |
 +-----------------+-----------------------+--------------------+---------------------+----------------+
 | Industry        | Service VM            | Post-launched      | Post-launched RTVM  | Post-launched  |
-|                 | (vuart enable COM2)   |                    | (vuart enable COM2) |                |
+|                 | (vUART enable COM2)   |                    | (vUART enable COM2) |                |
 +-----------------+-----------------------+--------------------+---------------------+----------------+
 | Logic_partition | Pre-launched          | Pre-launched RTVM  |                     |                |
 +-----------------+-----------------------+--------------------+---------------------+----------------+
@@ -149,17 +149,17 @@ access the corresponding port. For example, in Clear Linux:
 
    You can find the message from VM1 ``/dev/ttyS1``.
 
-   If you are not sure which port is the communication port, you can run
+   If you are not sure which one is the communication port, you can run
    ``dmesg | grep ttyS`` under the Linux shell to check the base address.
    If it matches what you have set in the ``vm_configuration.c`` file, it
    is the correct port.
 
 
-#. With minicom
+#. With Minicom
 
    Run ``minicom -D /dev/ttyS1`` on both VM1 and VM2 and enter ``test``
-   in VM1's minicom. The message should appear in VM2's minicom. Disable
-   flow control in minicom.
+   in VM1's Minicom. The message should appear in VM2's Minicom. Disable
+   flow control in Minicom.
 
 
 #. Limitations
@@ -210,7 +210,7 @@ started, as shown in the diagram below:
 
 .. note::
    For operating systems such as VxWorks and Windows that depend on the
-   ACPI table to probe the uart driver, adding the vUART configuration in
+   ACPI table to probe the UART driver, adding the vUART configuration in
    the hypervisor is not sufficient. Currently, we recommend that you use
    the configuration in the figure 3 data flow. This may be refined in the
    future.

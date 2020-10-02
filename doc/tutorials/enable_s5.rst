@@ -54,15 +54,15 @@ On the Service VM side, it uses the ``acrnctl`` tool to trigger the User VM's S5
 ``acrnctl stop user-vm-name``. Then, the Device Model sends a ``shutdown`` command
 to the User VM through a channel. If the User VM receives the command, it will send an "ACK"
 to the Device Model. It is the Service VM's responsibility to check if the User VMs
-shutdown successfully or not, and decides when to power off itself.
+shut down successfully or not, and decides when to power off itself.
 
-User VM "life-cycle manager"
-============================
+User VM "lifecycle manager"
+===========================
 
-As part of the current S5 reference design, a life-cycle manager daemon (life_mngr) runs in the
+As part of the current S5 reference design, a lifecycle manager daemon (life_mngr) runs in the
 User VM to implement S5. It waits for the command from the Service VM on the
 paired serial port. The simple protocol between the Service VM and User VM is as follows:
-When the daemon receives ``shutdown``, it sends "acked" to the Service VM;
+When the daemon receives ``shutdown``, it sends "ACKed" to the Service VM;
 then it can power off the User VM. If the User VM is not ready to power off,
 it can ignore the ``shutdown`` command.
 
@@ -96,9 +96,9 @@ The procedure for enabling S5 is specific to the particular OS:
 
   .. note:: For RT-Linux, the vUART is emulated in the hypervisor; expose the node as ``/dev/ttySn``.
 
-#. For LaaG and RT-Linux VMs, run the life-cycle manager daemon:
+#. For LaaG and RT-Linux VMs, run the lifecycle manager daemon:
 
-   a. Use these commands to build the life-cycle manager daemon, ``life_mngr``.
+   a. Use these commands to build the lifecycle manager daemon, ``life_mngr``.
 
       .. code-block:: none
 
@@ -120,7 +120,7 @@ The procedure for enabling S5 is specific to the particular OS:
          # systemctl enable life_mngr.service
          # reboot
 
-#. For the WaaG VM, run the life-cycle manager daemon:
+#. For the WaaG VM, run the lifecycle manager daemon:
 
    a) Build the ``life_mngr_win.exe`` application::
 
@@ -140,7 +140,8 @@ The procedure for enabling S5 is specific to the particular OS:
 
          .. figure:: images/Microsoft-Visual-C-install-option-2.png
 
-      #) In WaaG, use the :kbd:`WIN + R` shortcut key, input "shell:startup", click :kbd:`OK`
+      #) In WaaG, use the :kbd:`Windows + R` shortcut key, input
+         ``shell:startup``, click :kbd:`OK`
          and then copy the ``life_mngr_win.exe`` application into this directory.
 
          .. figure:: images/run-shell-startup.png

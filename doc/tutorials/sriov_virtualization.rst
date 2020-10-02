@@ -11,7 +11,7 @@ Function), a "lightweight" PCIe function which is a passthrough device for
 VMs.
 
 For details, refer to Chapter 9 of PCI-SIG's
-`PCI Express Base SpecificationRevision 4.0, Version 1.0
+`PCI Express Base Specification Revision 4.0, Version 1.0
 <https://pcisig.com/pci-express-architecture-configuration-space-test-specification-revision-40-version-10>`_.
 
 SR-IOV Architectural Overview
@@ -42,7 +42,7 @@ SR-IOV Extended Capability
 The SR-IOV Extended Capability defined here is a PCIe extended
 capability that must be implemented in each PF device that supports the
 SR-IOV feature. This capability is used to describe and control a PF's
-SR-IOV Capabilities.
+SR-IOV capabilities.
 
 .. figure:: images/sriov-image2.png
    :align: center
@@ -114,18 +114,18 @@ SR-IOV Architecture in ACRN
    device enumeration phase.
 
 2. The hypervisor intercepts the PF's SR-IOV capability and accesses whether
-   to enable/disable VF devices based on the *VF\_ENABLE* state. All
+   to enable/disable VF devices based on the ``VF_ENABLE`` state. All
    read/write requests for a PF device passthrough to the PF physical
    device.
 
-3. The hypervisor waits for 100ms after *VF\_ENABLE* is set and initializes
+3. The hypervisor waits for 100ms after ``VF_ENABLE`` is set and initializes
    VF devices. The differences between a normal passthrough device and
-   SR-IOV VF device are physical device detection, BARs, and MSIx
-   initialization. The hypervisor uses *Subsystem Vendor ID* to detect the
-   SR-IOV VF physical device instead of *Vendor ID* since no valid
-   *Vendor ID* exists for the SR-IOV VF physical device. The VF BARs are
+   SR-IOV VF device are physical device detection, BARs, and MSI-X
+   initialization. The hypervisor uses ``Subsystem Vendor ID`` to detect the
+   SR-IOV VF physical device instead of ``Vendor ID`` since no valid
+   ``Vendor ID`` exists for the SR-IOV VF physical device. The VF BARs are
    initialized by its associated PF's SR-IOV capabilities, not PCI
-   standard BAR registers. The MSIx mapping base address is also from the
+   standard BAR registers. The MSI-X mapping base address is also from the
    PF's SR-IOV capabilities, not PCI standard BAR registers.
 
 SR-IOV Passthrough VF Architecture In ACRN
@@ -144,11 +144,11 @@ SR-IOV Passthrough VF Architecture In ACRN
    SR-IOV VF device. When the User VM starts, ``acrn-dm`` invokes a
    hypercall to set the *vdev-VF0* device in the User VM.
 
-3. The hypervisor emulates *Device ID/Vendor ID* and *Memory Space Enable
-   (MSE)* in the configuration space for an assigned SR-IOV VF device. The
-   assigned VF *Device ID* comes from its associated PF's capability. The
-   *Vendor ID* is the same as the PF's *Vendor ID* and the *MSE* is always
-   set when reading the SR-IOV VF device's *CONTROL* register.
+3. The hypervisor emulates ``Device ID/Vendor ID`` and ``Memory Space Enable
+   (MSE)`` in the configuration space for an assigned SR-IOV VF device. The
+   assigned VF ``Device ID`` comes from its associated PF's capability. The
+   ``Vendor ID`` is the same as the PF's ``Vendor ID`` and the ``MSE`` is always
+   set when reading the SR-IOV VF device's control register.
 
 4. The vendor-specific VF driver in the target VM probes the assigned SR-IOV
    VF device.
@@ -177,13 +177,13 @@ SR-IOV VF Enable Flow
 
    SR-IOV VF Enable Flow
 
-The application enables n VF devices via a SR-IOV PF device *sysfs* node.
+The application enables n VF devices via a SR-IOV PF device ``sysfs`` node.
 The hypervisor intercepts all SR-IOV capability access and checks the
-*VF\_ENABLE* state. If *VF\_ENABLE* is set, the hypervisor creates n
+``VF_ENABLE`` state. If ``VF_ENABLE`` is set, the hypervisor creates n
 virtual devices after 100ms so that VF physical devices have enough time to
 be created. The Service VM waits 100ms and then only accesses the first VF
-device's configuration space including *Class Code, Reversion ID, Subsystem
-Vendor ID, Subsystem ID*. The Service VM uses the first VF device
+device's configuration space including Class Code, Reversion ID, Subsystem
+Vendor ID, Subsystem ID. The Service VM uses the first VF device
 information to initialize subsequent VF devices.
 
 SR-IOV VF Disable Flow
@@ -196,11 +196,11 @@ SR-IOV VF Disable Flow
    SR-IOV VF Disable Flow
 
 The application disables SR-IOV VF devices by writing zero to the SR-IOV PF
-device *sysfs* node. The hypervisor intercepts all SR-IOV capability
-accesses and checks the *VF\_ENABLE* state. If *VF\_ENABLE* is clear, the
+device ``sysfs`` node. The hypervisor intercepts all SR-IOV capability
+accesses and checks the ``VF_ENABLE`` state. If ``VF_ENABLE`` is clear, the
 hypervisor makes VF virtual devices invisible from the Service VM so that all
-access to VF devices will return 0xFFFFFFFF as an error. The VF physical
-devices are removed within 1s of when *VF\_ENABLE* is clear.
+access to VF devices will return ``0xFFFFFFFF`` as an error. The VF physical
+devices are removed within 1s of when ``VF_ENABLE`` is clear.
 
 SR-IOV VF Assignment Policy
 ---------------------------
@@ -226,9 +226,9 @@ We use the Intel 82576 NIC as an example in the following instructions. We
 only support LaaG (Linux as a Guest).
 
 1. Ensure that the 82576 VF driver is compiled into the User VM Kernel
-   (set *CONFIG\_IGBVF=y* in the Kernel Config).
+   (set ``CONFIG_IGBVF=y`` in the Kernel Config).
 
-#. When the Service VM boots up, the ``\ *lspci -v*\`` command indicates
+#. When the Service VM boots, the ``lspci -v`` command indicates
    that the Intel 82576 NIC devices have SR-IOV capability and their PF
    drivers are ``igb``.
 
@@ -238,7 +238,7 @@ only support LaaG (Linux as a Guest).
 
       82576 SR-IOV PF devices
 
-#. Input the ``\ *echo n > /sys/class/net/enp109s0f0/device/sriov\_numvfs*\``
+#. Input the ``echo n > /sys/class/net/enp109s0f0/device/sriov\_numvfs``
    command in the Service VM to enable n VF devices for the first PF
    device (\ *enp109s0f0)*. The number *n* can't be more than *TotalVFs*
    which comes from the return value of command
@@ -261,17 +261,15 @@ only support LaaG (Linux as a Guest).
 
    a. Unbind the igbvf driver in the Service VM.
 
-      i.   *modprobe pci\_stub*
+      i.   ``modprobe pci\_stub``
 
-      ii.  *echo "8086 10ca" > /sys/bus/pci/drivers/pci-stub/new\_id*
+      ii.  ``echo "8086 10ca" > /sys/bus/pci/drivers/pci-stub/new\_id``
 
-      iii. *echo "0000:6d:10.0" >
-           /sys/bus/pci/devices/0000:6d:10.0/driver/unbind*
+      iii. ``echo "0000:6d:10.0" > /sys/bus/pci/devices/0000:6d:10.0/driver/unbind``
 
-      iv.  *echo "0000:6d:10.0" >
-           /sys/bus/pci/drivers/pci-stub/bind*
+      iv.  ``echo "0000:6d:10.0" > /sys/bus/pci/drivers/pci-stub/bind``
 
-   b. Add the SR-IOV VF device parameter ("*-s X, passthru,6d/10/0*\ ") in
+   b. Add the SR-IOV VF device parameter (``-s X, passthru,6d/10/0``) in
       the launch User VM script
 
       .. figure:: images/sriov-image12.png
@@ -287,9 +285,9 @@ SR-IOV Limitations In ACRN
 
 1. The SR-IOV migration feature is not supported.
 
-2. If one SR-IOV PF device is detected during the enumeration phase, but
+2. If an SR-IOV PF device is detected during the enumeration phase, but
    not enough room exists for its total VF devices, the PF device will be
-   dropped. The platform uses the *MAX_PCI_DEV_NUM* ACRN configuration to
-   support the maximum number of PCI devices. Make sure *MAX_PCI_DEV_NUM* is
+   dropped. The platform uses the ``MAX_PCI_DEV_NUM`` ACRN configuration to
+   support the maximum number of PCI devices. Make sure ``MAX_PCI_DEV_NUM`` is
    more than the number of all PCI devices, including the total SR-IOV VF
    devices.

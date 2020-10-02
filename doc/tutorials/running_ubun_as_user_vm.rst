@@ -93,7 +93,7 @@ This tutorial uses the Ubuntu 18.04 desktop ISO as the base image.
 
 #. Right-click **QEMU/KVM** and select **New**.
 
-   a. Choose **Local install media (ISO image or CDROM)** and then click
+   a. Choose **Local install media (ISO image or CD-ROM)** and then click
       **Forward**. A **Create a new virtual machine** box displays, as shown
       in :numref:`newVM-ubun` below.
 

@@ -842,7 +842,7 @@ space as shown in :numref:`virtio-framework-userland`:
 In the Virtio user-land framework, the implementation is compatible with
 Virtio Spec 0.9/1.0. The VBS-U is statically linked with the Device Model,
 and communicates with the Device Model through the PCIe interface: PIO/MMIO
-or MSI/MSIx. VBS-U accesses Virtio APIs through the user space ``vring`` service
+or MSI/MSI-X. VBS-U accesses Virtio APIs through the user space ``vring`` service
 API helpers. User space ``vring`` service API helpers access shared ring
 through a remote memory map (mmap). VHM maps User VM memory with the help of
 ACRN Hypervisor.

@@ -112,7 +112,7 @@ enable SGX support in the BIOS and in ACRN:
 SGX Capability Exposure
 ***********************
 ACRN exposes SGX capability and EPC resource to a guest VM via CPUIDs and
-Processor Model-Specific Registers (MSRs), as explained in the following
+Processor model-specific registers (MSRs), as explained in the following
 sections.
 
 CPUID Virtualization
@@ -140,7 +140,7 @@ CPUID Leaf 12H
 * CPUID_12H.0.EAX[1] SGX2: If 1, indicates that Intel SGX supports the
   collection of SGX2 leaf functions. If hardware supports it and SGX enabled
   for the VM, this bit will be set.
-* Other fields of CPUID_12H.0.EAX aligns with the physical CPUID.
+* Other fields of CPUID_12H.0.EAX align with the physical CPUID.
 
 **Intel SGX Attributes Enumeration**
 
@@ -163,7 +163,7 @@ MSR Virtualization
 IA32_FEATURE_CONTROL
 --------------------
 
-The hypervisor will opt-in to SGX for VM if SGX is enabled for VM.
+The hypervisor will opt in to SGX for VM if SGX is enabled for VM.
 
 * MSR_IA32_FEATURE_CONTROL_LOCK is set
 * MSR_IA32_FEATURE_CONTROL_SGX_GE is set

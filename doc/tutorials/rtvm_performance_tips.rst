@@ -59,7 +59,7 @@ Avoid VM-exit latency
 *********************
 
 VM-exit has a significant negative impact on virtualization performance.
-A single VM-exit causes a several micro-second or longer latency,
+A single VM-exit causes several micro-seconds or longer latency,
 depending on what's done in VMX-root mode. VM-exit is classified into two
 types: triggered by external CPU events or triggered by operations initiated
 by the vCPU.
@@ -90,7 +90,7 @@ Tip: Do not use CPUID in a real-time critical section.
    subsequent instructions after the RDTSCP normally have data dependency
    on it, so they must wait until the RDTSCP has been executed.
 
-   RDMSR or WRMSR are instructions that cause VM-exits conditionally. On the
+   RDMSR and WRMSR are instructions that cause VM-exits conditionally. On the
    ACRN RTVM, most MSRs are not intercepted by the HV, so they won't cause a
    VM-exit. But there are exceptions for security consideration:
 
@@ -114,7 +114,7 @@ Tip: Utilize Preempt-RT Linux mechanisms to reduce the access of ICR from the RT
    #. Add ``domain`` to ``isolcpus`` ( ``isolcpus=nohz,domain,1`` ) to the kernel parameters.
    #. Add ``idle=poll`` to the kernel parameters.
    #. Add ``rcu_nocb_poll`` along with ``rcu_nocbs=1`` to the kernel parameters.
-   #. Disable the logging service like journald, syslogd if possible.
+   #. Disable the logging service isuch as ``journald`` or ``syslogd`` if possible.
 
    The parameters shown above are recommended for the guest Preempt-RT
    Linux. For an UP RTVM, ICR interception is not a problem. But for an SMP
@@ -173,9 +173,9 @@ Tip: Disable timer migration on Preempt-RT Linux.
 Tip: Add ``mce=off`` to RT VM kernel parameters.
    This parameter disables the mce periodic timer and avoids a VM-exit.
 
-Tip: Disable the Intel processor C-State and P-State of the RTVM.
+Tip: Disable the Intel processor C-state and P-state of the RTVM.
    Power management of a processor could save power, but it could also impact
-   the RT performance because the power state is changing. C-State and P-State
+   the RT performance because the power state is changing. C-state and P-state
    PM mechanism can be disabled by adding ``processor.max_cstate=0
    intel_idle.max_cstate=0  intel_pstate=disable`` to the kernel parameters.
 
@@ -193,4 +193,4 @@ Tip: Disable the software workaround for Machine Check Error on Page Size Change
    :option:`CONFIG_MCE_ON_PSC_WORKAROUND_DISABLED` option could be set for performance.
 
 .. note::
-   The tips for preempt-RT Linux are mostly applicable to the Linux-based RT OS as well, such as Xenomai.
+   The tips for preempt-RT Linux are mostly applicable to the Linux-based RTOS as well, such as Xenomai.
