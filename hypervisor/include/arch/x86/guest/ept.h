@@ -160,7 +160,4 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb);
  */
 int32_t ept_misconfig_vmexit_handler(__unused struct acrn_vcpu *vcpu);
 
-/**
- * @}
- */
 #endif /* EPT_H */
