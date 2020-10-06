@@ -169,8 +169,8 @@ extern spinlock_t ptdev_lock;
  * param[in] sid source id of the ptirq entry
  * param[in] vm vm pointer of the ptirq entry if find the ptdev entry by virtual sid
  *
- * @retval NULL when \p when no ptirq entry match the sid
- * @retval ptirq entry when \p there is available ptirq entry match the sid
+ * @retval NULL when no ptirq entry match the sid
+ * @retval ptirq entry when there is available ptirq entry match the sid
  *
  * @pre: vm must be NULL when lookup by physical sid, otherwise,
  * vm must not be NULL when lookup by virtual sid.
@@ -222,8 +222,8 @@ void ptdev_release_all_entries(const struct acrn_vm *vm);
  *
  * @param[in]    pcpu_id physical cpu id
  *
- * @retval NULL when \p when the queue is empty
- * @retval !NULL when \p there is available ptirq_remapping_info entry in the queue
+ * @retval NULL when the queue is empty
+ * @retval !NULL when there is available ptirq_remapping_info entry in the queue
  *
  */
 struct ptirq_remapping_info *ptirq_dequeue_softirq(uint16_t pcpu_id);
@@ -237,8 +237,8 @@ struct ptirq_remapping_info *ptirq_dequeue_softirq(uint16_t pcpu_id);
  * @param[in]    vm acrn_vm that the entry allocated for.
  * @param[in]    intr_type interrupt type: PTDEV_INTR_MSI or PTDEV_INTR_INTX
  *
- * @retval NULL when \p the number of entries allocated is CONFIG_MAX_PT_IRQ_ENTRIES
- * @retval !NULL when \p the number of entries allocated is less than CONFIG_MAX_PT_IRQ_ENTRIES
+ * @retval NULL when the number of entries allocated is CONFIG_MAX_PT_IRQ_ENTRIES
+ * @retval !NULL when the number of entries allocated is less than CONFIG_MAX_PT_IRQ_ENTRIES
  *
  */
 struct ptirq_remapping_info *ptirq_alloc_entry(struct acrn_vm *vm, uint32_t intr_type);
@@ -258,8 +258,8 @@ void ptirq_release_entry(struct ptirq_remapping_info *entry);
  * @param[in]    entry the ptirq_remapping_info entry that will be associated with the physical irq.
  * @param[in]    phys_irq physical interrupt irq for the entry
  *
- * @retval success when \p return value >=0
- * @retval success when \p return <0
+ * @retval success when return value >=0
+ * @retval failure when return value < 0
  *
  */
 int32_t ptirq_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_irq);
@@ -274,7 +274,7 @@ void ptirq_deactivate_entry(struct ptirq_remapping_info *entry);
  * @brief Get the interrupt information and store to the buffer provided.
  *
  * @param[in]    target_vm the VM to get the interrupt information.
- * @param[out]    buffer the buffer to interrupt information stored to.
+ * @param[out]   buffer where interrupt information is stored.
  * @param[in]    buffer_cnt the size of the buffer.
  *
  * @retval the actual size the buffer filled with the interrupt information
