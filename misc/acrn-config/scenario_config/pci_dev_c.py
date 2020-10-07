@@ -20,6 +20,7 @@ def add_instance_to_name(i_cnt, bdf, bar_attr):
 
     board_cfg_lib.PCI_DEV_BAR_DESC.pci_dev_dic[bdf].name_w_i_cnt = tmp_sub_name
 
+
 def generate_file(vm_info, config):
     """
     Generate pci_dev.c for Pre-Launched VMs in a scenario.
