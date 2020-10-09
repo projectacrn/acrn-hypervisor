@@ -362,6 +362,30 @@ static void write_reg(struct acrn_vuart *vu, uint16_t reg, uint8_t value_u8)
 	release_vuart_lock(vu, rflags);
 }
 
+/*
+ * @pre: vu != NULL
+ */
+void vuart_write_reg(struct acrn_vuart *vu, uint16_t offset, uint8_t value_u8)
+{
+	struct acrn_vuart *target_vu = NULL;
+	uint64_t rflags;
+
+	target_vu = vu->target_vu;
+
+	if (((vu->mcr & MCR_LOOPBACK) == 0U) && ((vu->lcr & LCR_DLAB) == 0U)
+		&& (offset == UART16550_THR) && (target_vu != NULL)) {
+		if (!send_to_target(target_vu, value_u8)) {
+			/* FIFO is not full, raise THRE interrupt */
+			obtain_vuart_lock(vu, rflags);
+			vu->thre_int_pending = true;
+			vuart_toggle_intr(vu);
+			release_vuart_lock(vu, rflags);
+		}
+	} else {
+		write_reg(vu, offset, value_u8);
+	}
+}
+
 /**
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
@@ -372,25 +396,10 @@ static bool vuart_write(struct acrn_vcpu *vcpu, uint16_t offset_arg,
 	uint16_t offset = offset_arg;
 	struct acrn_vuart *vu = find_vuart_by_port(vcpu->vm, offset);
 	uint8_t value_u8 = (uint8_t)value;
-	struct acrn_vuart *target_vu = NULL;
-	uint64_t rflags;
 
 	if (vu != NULL) {
 		offset -= vu->port_base;
-		target_vu = vu->target_vu;
-
-		if (((vu->mcr & MCR_LOOPBACK) == 0U) && ((vu->lcr & LCR_DLAB) == 0U)
-			&& (offset == UART16550_THR) && (target_vu != NULL)) {
-			if (!send_to_target(target_vu, value_u8)) {
-				/* FIFO is not full, raise THRE interrupt */
-				obtain_vuart_lock(vu, rflags);
-				vu->thre_int_pending = true;
-				vuart_toggle_intr(vu);
-				release_vuart_lock(vu, rflags);
-			}
-		} else {
-			write_reg(vu, offset, value_u8);
-		}
+		vuart_write_reg(vu, offset, value_u8);
 	}
 	return true;
 }
@@ -412,103 +421,112 @@ static void notify_target(const struct acrn_vuart *vu)
 }
 
 /**
+ * @pre vu != NULL
+ */
+uint8_t vuart_read_reg(struct acrn_vuart *vu, uint16_t offset)
+{
+	struct acrn_vuart *t_vu;
+	uint8_t iir, reg = 0U, intr_reason;
+	uint64_t rflags;
+
+	t_vu = vu->target_vu;
+	obtain_vuart_lock(vu, rflags);
+	/*
+	 * Take care of the special case DLAB accesses first
+	 */
+	if ((vu->lcr & LCR_DLAB) != 0U) {
+		if (offset == UART16550_DLL) {
+			reg = vu->dll;
+		} else if (offset == UART16550_DLM) {
+			reg = vu->dlh;
+		} else {
+			reg = 0U;
+		}
+	} else {
+		switch (offset) {
+		case UART16550_RBR:
+			vu->lsr &= ~LSR_OE;
+			reg = (uint8_t)fifo_getchar(&vu->rxfifo);
+			break;
+		case UART16550_IER:
+			reg = vu->ier;
+			break;
+		case UART16550_IIR:
+			iir = ((vu->fcr & FCR_FIFOE) != 0U) ? IIR_FIFO_MASK : 0U;
+			intr_reason = vuart_intr_reason(vu);
+			/*
+			 * Deal with side effects of reading the IIR register
+			 */
+			if (intr_reason == IIR_TXRDY) {
+				vu->thre_int_pending = false;
+			}
+			iir |= intr_reason;
+			reg = iir;
+			break;
+		case UART16550_LCR:
+			reg = vu->lcr;
+			break;
+		case UART16550_MCR:
+			reg = vu->mcr;
+			break;
+		case UART16550_LSR:
+			if (t_vu != NULL) {
+				if (!fifo_isfull(&t_vu->rxfifo)) {
+					vu->lsr |= LSR_TEMT | LSR_THRE;
+				}
+			} else {
+				vu->lsr |= LSR_TEMT | LSR_THRE;
+			}
+			/* Check for new receive data */
+			if (fifo_numchars(&vu->rxfifo) > 0U) {
+				vu->lsr |= LSR_DR;
+			} else {
+				vu->lsr &= ~LSR_DR;
+			}
+			reg = vu->lsr;
+			/* The LSR_OE bit is cleared on LSR read */
+			vu->lsr &= ~LSR_OE;
+			break;
+		case UART16550_MSR:
+			/*
+			 * MSR delta bits are cleared on read
+			 */
+			reg = vu->msr;
+			vu->msr &= ~MSR_DELTA_MASK;
+			break;
+		case UART16550_SCR:
+			reg = vu->scr;
+			break;
+		default:
+			reg = 0xFFU;
+			break;
+		}
+	}
+	vuart_toggle_intr(vu);
+	release_vuart_lock(vu, rflags);
+
+	/* For commnunication vuart, when the data in FIFO is read out, should
+	 * notify the target vuart to send more data. */
+	if (offset == UART16550_RBR) {
+		notify_target(vu);
+	}
+
+	return reg;
+}
+
+/**
  * @pre vcpu != NULL
  * @pre vcpu->vm != NULL
  */
 static bool vuart_read(struct acrn_vcpu *vcpu, uint16_t offset_arg, __unused size_t width)
 {
 	uint16_t offset = offset_arg;
-	uint8_t iir, reg, intr_reason;
 	struct acrn_vuart *vu = find_vuart_by_port(vcpu->vm, offset);
-	struct acrn_vuart *t_vu;
 	struct pio_request *pio_req = &vcpu->req.reqs.pio;
-	uint64_t rflags;
 
 	if (vu != NULL) {
-		t_vu = vu->target_vu;
 		offset -= vu->port_base;
-		obtain_vuart_lock(vu, rflags);
-		/*
-		 * Take care of the special case DLAB accesses first
-		 */
-		if ((vu->lcr & LCR_DLAB) != 0U) {
-			if (offset == UART16550_DLL) {
-				reg = vu->dll;
-			} else if (offset == UART16550_DLM) {
-				reg = vu->dlh;
-			} else {
-				reg = 0U;
-			}
-		} else {
-			switch (offset) {
-			case UART16550_RBR:
-				vu->lsr &= ~LSR_OE;
-				reg = (uint8_t)fifo_getchar(&vu->rxfifo);
-				break;
-			case UART16550_IER:
-				reg = vu->ier;
-				break;
-			case UART16550_IIR:
-				iir = ((vu->fcr & FCR_FIFOE) != 0U) ? IIR_FIFO_MASK : 0U;
-				intr_reason = vuart_intr_reason(vu);
-				/*
-				 * Deal with side effects of reading the IIR register
-				 */
-				if (intr_reason == IIR_TXRDY) {
-					vu->thre_int_pending = false;
-				}
-				iir |= intr_reason;
-				reg = iir;
-				break;
-			case UART16550_LCR:
-				reg = vu->lcr;
-				break;
-			case UART16550_MCR:
-				reg = vu->mcr;
-				break;
-			case UART16550_LSR:
-				if (t_vu != NULL) {
-					if (!fifo_isfull(&t_vu->rxfifo)) {
-						vu->lsr |= LSR_TEMT | LSR_THRE;
-					}
-				} else {
-					vu->lsr |= LSR_TEMT | LSR_THRE;
-				}
-				/* Check for new receive data */
-				if (fifo_numchars(&vu->rxfifo) > 0U) {
-					vu->lsr |= LSR_DR;
-				} else {
-					vu->lsr &= ~LSR_DR;
-				}
-				reg = vu->lsr;
-				/* The LSR_OE bit is cleared on LSR read */
-				vu->lsr &= ~LSR_OE;
-				break;
-			case UART16550_MSR:
-				/*
-				 * MSR delta bits are cleared on read
-				 */
-				reg = vu->msr;
-				vu->msr &= ~MSR_DELTA_MASK;
-				break;
-			case UART16550_SCR:
-				reg = vu->scr;
-				break;
-			default:
-				reg = 0xFFU;
-				break;
-			}
-		}
-		vuart_toggle_intr(vu);
-		pio_req->value = (uint32_t)reg;
-		release_vuart_lock(vu, rflags);
-
-	}
-
-	/* For commnunication vuart, when the data in FIFO is read out, should
-	 * notify the target vuart to send more data. */
-	if (offset == UART16550_RBR) {
-		notify_target(vu);
+		pio_req->value = (uint32_t)vuart_read_reg(vu, offset);
 	}
 
 	return true;
