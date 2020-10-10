@@ -64,6 +64,14 @@ static inline bool msixcap_access(const struct pci_vdev *vdev, uint32_t offset)
 	return (has_msix_cap(vdev) && in_range(offset, vdev->msix.capoff, vdev->msix.caplen));
 }
 
+/**
+ * @pre vdev != NULL
+ */
+static inline bool msixtable_access(const struct pci_vdev *vdev, uint32_t offset)
+{
+	return in_range(offset, vdev->msix.table_offset, vdev->msix.table_count * MSIX_TABLE_ENTRY_SIZE);
+}
+
 /*
  * @pre vdev != NULL
  */
@@ -137,7 +145,6 @@ void write_vmsi_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, 
 void deinit_vmsi(const struct pci_vdev *vdev);
 
 void init_vmsix(struct pci_vdev *vdev);
-int32_t vmsix_handle_table_mmio_access(struct io_request *io_req, void *handler_private_data);
 void read_vmsix_cap_reg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val);
 void write_vmsix_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 void deinit_vmsix(struct pci_vdev *vdev);
