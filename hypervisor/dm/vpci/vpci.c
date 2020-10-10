@@ -360,12 +360,12 @@ static void vpci_init_pt_dev(struct pci_vdev *vdev)
 	vdev->user = vdev;
 
 	/*
-	 * Here init_vdev_pt() needs to be called after init_vmsix() for the following reason:
+	 * Here init_vdev_pt() needs to be called after init_vmsix_pt() for the following reason:
 	 * init_vdev_pt() will indirectly call has_msix_cap(), which
-	 * requires init_vmsix() to be called first.
+	 * requires init_vmsix_pt() to be called first.
 	 */
 	init_vmsi(vdev);
-	init_vmsix(vdev);
+	init_vmsix_pt(vdev);
 	init_vsriov(vdev);
 	init_vdev_pt(vdev, false);
 
@@ -376,7 +376,7 @@ static void vpci_deinit_pt_dev(struct pci_vdev *vdev)
 {
 	deinit_vdev_pt(vdev);
 	remove_vdev_pt_iommu_domain(vdev);
-	deinit_vmsix(vdev);
+	deinit_vmsix_pt(vdev);
 	deinit_vmsi(vdev);
 
 	vdev->user = NULL;
@@ -486,7 +486,7 @@ static int32_t write_pt_dev_cfg(struct pci_vdev *vdev, uint32_t offset,
 		if (vdev->msix.is_vmsix_on_msi) {
 			write_vmsix_cap_reg_on_msi(vdev, offset, bytes, val);
 		} else {
-			write_vmsix_cap_reg(vdev, offset, bytes, val);
+			write_pt_vmsix_cap_reg(vdev, offset, bytes, val);
 		}
 	} else if (sriovcap_access(vdev, offset)) {
 		write_sriov_cap_reg(vdev, offset, bytes, val);
@@ -511,10 +511,8 @@ static int32_t read_pt_dev_cfg(const struct pci_vdev *vdev, uint32_t offset,
 
 	if (cfg_header_access(offset)) {
 		read_cfg_header(vdev, offset, bytes, val);
-	} else if (msicap_access(vdev, offset)) {
-		read_vmsi_cap_reg(vdev, offset, bytes, val);
-	} else if (msixcap_access(vdev, offset)) {
-		read_vmsix_cap_reg(vdev, offset, bytes, val);
+	} else if (msicap_access(vdev, offset) || msixcap_access(vdev, offset)) {
+		*val = pci_vdev_read_vcfg(vdev, offset, bytes);
 	} else if (sriovcap_access(vdev, offset)) {
 		read_sriov_cap_reg(vdev, offset, bytes, val);
 	} else {
