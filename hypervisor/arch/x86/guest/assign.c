@@ -512,7 +512,7 @@ void ptirq_softirq(uint16_t pcpu_id)
 		} else {
 			if (vmsi != NULL) {
 				/* TODO: vmsi destmode check required */
-				(void)vlapic_intr_msi(entry->vm, vmsi->addr.full, vmsi->data.full);
+				(void)vlapic_inject_msi(entry->vm, vmsi->addr.full, vmsi->data.full);
 				dev_dbg(DBG_LEVEL_PTIRQ, "dev-assign: irq=0x%x MSI VR: 0x%x-0x%x",
 					entry->allocated_pirq, vmsi->data.bits.vector,
 					irq_to_vector(entry->allocated_pirq));

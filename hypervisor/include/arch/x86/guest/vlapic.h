@@ -152,15 +152,15 @@ int32_t vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t
  *
  * @param[in] vm   Pointer to VM data structure
  * @param[in] addr MSI address.
- * @param[in] msg  MSI data.
+ * @param[in] data MSI data.
  *
  * @retval 0 on success.
  * @retval -1 on error that addr is invalid.
  *
  * @pre vm != NULL
  */
-int32_t vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg);
-void inject_msi_lapic_pt(struct acrn_vm *vm, const struct acrn_msi_entry *vmsi);
+int32_t vlapic_inject_msi(struct acrn_vm *vm, uint64_t addr, uint64_t data);
+
 
 void vlapic_receive_intr(struct acrn_vm *vm, bool level, uint32_t dest,
 		bool phys, uint32_t delmode, uint32_t vec, bool rh);
