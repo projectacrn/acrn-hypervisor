@@ -438,32 +438,7 @@ int32_t hcall_inject_msi(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused
 		struct acrn_msi_entry msi;
 
 		if (copy_from_gpa(vm, &msi, param2, sizeof(msi)) == 0) {
-			/* For target cpu with lapic pt, send ipi instead of injection via vlapic */
-			if (is_lapic_pt_configured(target_vm)) {
-				enum vm_vlapic_mode vlapic_mode = check_vm_vlapic_mode(target_vm);
-
-				if (vlapic_mode == VM_VLAPIC_X2APIC) {
-					/*
-					 * All the vCPUs of VM are in x2APIC mode and LAPIC is PT
-					 * Inject the vMSI as an IPI directly to VM
-					 */
-					inject_msi_lapic_pt(target_vm, &msi);
-					ret = 0;
-				} else if (vlapic_mode == VM_VLAPIC_XAPIC) {
-					/*
-					 * All the vCPUs of VM are in xAPIC and use vLAPIC
-					 * Inject using vLAPIC
-					 */
-					ret = vlapic_intr_msi(target_vm, msi.msi_addr, msi.msi_data);
-				} else {
-					/*
-					 * For cases VM_VLAPIC_DISABLED and VM_VLAPIC_TRANSITION
-					 * Silently drop interrupt
-					 */
-				}
-			} else {
-				ret = vlapic_intr_msi(target_vm, msi.msi_addr, msi.msi_data);
-			}
+			ret = vlapic_inject_msi(target_vm, msi.msi_addr, msi.msi_data);
 		}
 	}
 
