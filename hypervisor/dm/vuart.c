@@ -33,6 +33,7 @@
 #include <uart16550.h>
 #include <console.h>
 #include <vuart.h>
+#include <vmcs9900.h>
 #include <vm.h>
 #include <logmsg.h>
 
@@ -165,17 +166,11 @@ static struct acrn_vuart *find_vuart_by_port(struct acrn_vm *vm, uint16_t offset
 	return ret_vu;
 }
 
-/*
- * Toggle the COM port's intr pin depending on whether or not we have an
- * interrupt condition to report to the processor.
- */
-void vuart_toggle_intr(const struct acrn_vuart *vu)
+static void vuart_trigger_level_intr(const struct acrn_vuart *vu, bool assert)
 {
-	uint8_t intr_reason;
 	union ioapic_rte rte;
 	uint32_t operation;
 
-	intr_reason = vuart_intr_reason(vu);
 	vioapic_get_rte(vu->vm, vu->irq, &rte);
 
 	/* TODO:
@@ -187,13 +182,33 @@ void vuart_toggle_intr(const struct acrn_vuart *vu)
 	 * we want to make it as an known issue.
 	 */
 	if (rte.bits.intr_polarity == IOAPIC_RTE_INTPOL_ALO) {
-		operation = (intr_reason != IIR_NOPEND) ? GSI_SET_LOW : GSI_SET_HIGH;
+		operation = assert ? GSI_SET_LOW : GSI_SET_HIGH;
 	} else {
-		operation = (intr_reason != IIR_NOPEND) ? GSI_SET_HIGH : GSI_SET_LOW;
+		operation = assert ? GSI_SET_HIGH : GSI_SET_LOW;
 	}
 
 	vpic_set_irqline(vm_pic(vu->vm), vu->irq, operation);
 	vioapic_set_irqline_lock(vu->vm, vu->irq, operation);
+}
+
+/*
+ * Toggle the COM port's intr pin depending on whether or not we have an
+ * interrupt condition to report to the processor.
+ */
+void vuart_toggle_intr(const struct acrn_vuart *vu)
+{
+	uint8_t intr_reason;
+
+	intr_reason = vuart_intr_reason(vu);
+
+	if ((vu->vdev != NULL) && (intr_reason != IIR_NOPEND)) {
+		/* FIXME: Toggle is for level trigger interrupt, for edge trigger need refine the logic later. */
+		trigger_vmcs9900_msix(vu->vdev);
+	} else if (intr_reason != IIR_NOPEND) {
+		vuart_trigger_level_intr(vu, true);
+	} else {
+		vuart_trigger_level_intr(vu, false);
+	}
 }
 
 static bool send_to_target(struct acrn_vuart *vu, uint8_t value_u8)
