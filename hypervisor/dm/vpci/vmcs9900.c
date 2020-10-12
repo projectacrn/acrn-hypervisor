@@ -14,6 +14,23 @@
 #define MCS9900_MMIO_BAR        0U
 #define MCS9900_MSIX_BAR        1U
 
+/*
+ * @pre vdev != NULL
+ */
+void trigger_vmcs9900_msix(struct pci_vdev *vdev)
+{
+	struct acrn_vm *vm = vpci2vm(vdev->vpci);
+	int32_t ret = -1;
+	struct msix_table_entry *entry = &vdev->msix.table_entries[0];
+
+	ret = vlapic_inject_msi(vm, entry->addr, entry->data);
+
+	if (ret != 0) {
+		pr_warn("%2x:%2x.%dfaild injecting msi msi_addr:0x%lx msi_data:0x%x",
+				vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, entry->addr, entry->data);
+	}
+}
+
 static int32_t read_vmcs9900_cfg(const struct pci_vdev *vdev,
 				       uint32_t offset, uint32_t bytes,
 				       uint32_t * val)

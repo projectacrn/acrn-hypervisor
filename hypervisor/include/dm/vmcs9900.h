@@ -11,5 +11,6 @@
 #define MCS9900_DEV		0x9900U
 
 extern const struct pci_vdev_ops vmcs9900_ops;
+void trigger_vmcs9900_msix(struct pci_vdev *vdev);
 
 #endif
