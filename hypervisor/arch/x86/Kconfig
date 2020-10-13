@@ -10,8 +10,8 @@ config SCENARIO
 	    and up to five post-launched Standard VMs;
 	  - hybrid: Typical scenario for hybrid usage with 3 VMs: one pre-launched Safety VM,
 	    one pre-launched Service VM and one post-launched Standard VM;
-	  - hybrid_rt: Typical scenario for hybrid real-time usage with 3 VMs: one
-	    pre-launched RTVM, one pre-launched Service VM and one post-launched Standard VM;
+	  - hybrid_rt: Typical scenario for hybrid real-time usage with 4 VMs: one
+	    pre-launched RTVM, one pre-launched Service VM and two post-launched Standard VMs;
 	  - logical_partition: Typical scenario that run two isolated pre-launched VMs
 
 	  Other values are possible if a corresponding scenario has been created
