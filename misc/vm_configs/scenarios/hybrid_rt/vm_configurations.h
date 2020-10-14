@@ -15,7 +15,7 @@
  */
 #define PRE_VM_NUM			1U
 #define SOS_VM_NUM			1U
-#define MAX_POST_VM_NUM			1U
+#define MAX_POST_VM_NUM			2U
 #define CONFIG_MAX_KATA_VM_NUM		0U
 
 /* Bits mask of guest flags that can be programmed by device model. Other bits are set by hypervisor only */

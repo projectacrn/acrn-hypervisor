@@ -121,4 +121,20 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.addr.port_base = INVALID_COM_BASE,
 		},
 	},
+	{	/* VM3 */
+		CONFIG_POST_STD_VM(2),
+#ifdef CONFIG_RDT_ENABLED
+		.clos = VM3_VCPU_CLOS,
+#endif
+		.cpu_affinity = VM3_CONFIG_CPU_AFFINITY,
+		.vuart[0] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = COM1_BASE,
+			.irq = COM1_IRQ,
+		},
+		.vuart[1] = {
+			.type = VUART_LEGACY_PIO,
+			.addr.port_base = INVALID_COM_BASE,
+		},
+	},
 };
