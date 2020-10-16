@@ -373,6 +373,7 @@ virtio_vq_enable(struct virtio_base *base)
 	/* Mark queue as allocated after initialization is complete. */
 	mb();
 	vq->flags = VQ_ALLOC;
+	return;
  error:
 	vq->flags = 0;
 	pr_err("%s: vq enable failed\n", __func__);
