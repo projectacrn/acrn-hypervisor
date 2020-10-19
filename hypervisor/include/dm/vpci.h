@@ -60,6 +60,14 @@ struct pci_msi {
 };
 
 /* MSI-X capability structure */
+struct msixcap {
+	uint8_t		capid;
+	uint8_t		nextptr;
+	uint16_t	msgctrl;
+	uint32_t	table_info;	/* bar index and offset */
+	uint32_t	pba_info;	/* bar index and offset */
+} __packed;
+
 struct pci_msix {
 	struct msix_table_entry table_entries[CONFIG_MAX_MSIX_TABLE_NUM];
 	uint64_t  mmio_gpa;
@@ -114,6 +122,9 @@ struct pci_vdev {
 	/* The bar info of the virtual PCI device. */
 	uint32_t nr_bars; /* 6 for normal device, 2 for bridge, 1 for cardbus */
 	struct pci_vbar vbars[PCI_BAR_COUNT];
+
+	uint8_t	prev_capoff; /* Offset of previous vPCI capability */
+	uint8_t	free_capoff; /* Next free offset to add vPCI capability */
 
 	struct pci_msi msi;
 	struct pci_msix msix;

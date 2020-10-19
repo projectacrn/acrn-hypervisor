@@ -109,3 +109,43 @@ int32_t vmsix_handle_table_mmio_access(struct io_request *io_req, void *priv_dat
 	(void)rw_vmsix_table((struct pci_vdev *)priv_data, io_req);
 	return 0;
 }
+
+/**
+ * @pre vdev != NULL
+ */
+int32_t add_vmsix_capability(struct pci_vdev *vdev, uint32_t entry_num, uint8_t bar_num)
+{
+	uint32_t table_size, i;
+	struct msixcap msixcap;
+	int32_t ret = -1;
+
+	if ((bar_num < PCI_BAR_COUNT) &&
+		(entry_num <= min(CONFIG_MAX_MSIX_TABLE_NUM, VMSIX_MAX_TABLE_ENTRY_NUM))) {
+
+		table_size = VMSIX_MAX_ENTRY_TABLE_SIZE;
+
+		vdev->msix.caplen = MSIX_CAPLEN;
+		vdev->msix.table_bar = bar_num;
+		vdev->msix.table_offset = 0U;
+		vdev->msix.table_count = entry_num;
+
+		/* set mask bit of vector control register */
+		for (i = 0; i < entry_num; i++)
+			vdev->msix.table_entries[i].vector_control |= PCIM_MSIX_VCTRL_MASK;
+
+		(void)memset(&msixcap, 0U, sizeof(struct msixcap));
+
+		msixcap.capid = PCIY_MSIX;
+		msixcap.msgctrl = entry_num - 1U;
+
+		/* - MSI-X table start at offset 0 */
+		msixcap.table_info = bar_num;
+		msixcap.pba_info = table_size | bar_num;
+
+		vdev->msix.capoff = vpci_add_capability(vdev, (uint8_t *)(&msixcap), sizeof(struct msixcap));
+		if (vdev->msix.capoff != 0U) {
+			ret = 0;
+		}
+	}
+	return ret;
+}
