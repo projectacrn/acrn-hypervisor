@@ -791,3 +791,56 @@ void vpci_update_one_vbar(struct pci_vdev *vdev, uint32_t bar_idx, uint32_t val,
 		vdev->vbars[update_idx].base_gpa = 0UL;
 	}
 }
+
+/*
+ * @brief Add emulated legacy PCI capability support for virtual PCI device
+ *
+ * @param vdev     Pointer to vdev data structure
+ * @param capdata  Pointer to buffer that holds the capability data to be added.
+ * @param caplen   Length of buffer that holds the capability data to be added.
+ *
+ * @pre vdev != NULL
+ * @pre vdev->vpci != NULL
+ *
+ * @return None
+ */
+uint32_t vpci_add_capability(struct pci_vdev *vdev, uint8_t *capdata, uint8_t caplen)
+{
+#define CAP_START_OFFSET PCI_CFG_HEADER_LENGTH
+
+	uint8_t capoff, reallen;
+	uint16_t sts;
+	uint32_t ret = 0U;
+
+	reallen = roundup(caplen, 4U); /* dword aligned */
+
+	sts = pci_vdev_read_vcfg(vdev, PCIR_STATUS, 2U);
+	if ((sts & PCIM_STATUS_CAPPRESENT) == 0U) {
+		capoff = CAP_START_OFFSET;
+	} else {
+		capoff = vdev->free_capoff;
+	}
+
+	/* Check if we have enough space */
+	if (((uint16_t)capoff + reallen) <= PCI_CONFIG_SPACE_SIZE) {
+		/* Set the previous capability pointer */
+		if ((sts & PCIM_STATUS_CAPPRESENT) == 0U) {
+			pci_vdev_write_vcfg(vdev, PCIR_CAP_PTR, 1U, capoff);
+			pci_vdev_write_vcfg(vdev, PCIR_STATUS, 2U, sts|PCIM_STATUS_CAPPRESENT);
+		} else {
+			pci_vdev_write_vcfg(vdev, vdev->prev_capoff + 1U, 1U, capoff);
+		}
+
+		/* Copy the capability */
+		(void)memcpy_s((void *)&vdev->cfgdata.data_8[capoff], caplen, (void *)capdata, caplen);
+
+		/* Set the next capability pointer */
+		pci_vdev_write_vcfg(vdev, capoff + 1U, 1U, 0U);
+
+		vdev->prev_capoff = capoff;
+		vdev->free_capoff = capoff + reallen;
+		ret = capoff;
+	}
+
+	return ret;
+}

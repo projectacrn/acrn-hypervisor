@@ -15,6 +15,9 @@
 /** Roundup (x/y) to ( x/y + (x%y) ? 1 : 0) **/
 #define INT_DIV_ROUNDUP(x, y)	((((x)+(y))-1)/(y))
 
+/** Roundup (x) to (y) aligned **/
+#define roundup(x, y)  (((x) + ((y) - 1UL)) & (~((y) - 1UL)))
+
 #define min(x, y)	((x) < (y)) ? (x) : (y)
 
 #define max(x, y)	((x) < (y)) ? (y) : (x)
