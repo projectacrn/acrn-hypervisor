@@ -785,7 +785,7 @@ static struct option long_options[] = {
 	{"mac_seed",		required_argument,	0, CMD_OPT_MAC_SEED},
 	{"debugexit",		no_argument,		0, CMD_OPT_DEBUGEXIT},
 	{"intr_monitor",	required_argument,	0, CMD_OPT_INTR_MONITOR},
-	{"apcidev_pt",		required_argument,	0, CMD_OPT_ACPIDEV_PT},
+	{"acpidev_pt",		required_argument,	0, CMD_OPT_ACPIDEV_PT},
 	{"mmiodev_pt",		required_argument,	0, CMD_OPT_MMIODEV_PT},
 	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
 	{"lapic_pt",		no_argument,		0, CMD_OPT_LAPIC_PT},
