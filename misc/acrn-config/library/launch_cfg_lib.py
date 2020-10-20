@@ -599,6 +599,30 @@ def set_shm_regions(launch_item_values, scenario_info):
                         print(e)
 
 
+def set_pci_vuarts(launch_item_values, scenario_info):
+    try:
+        launch_item_values['uos,console_vuart'] = DM_VUART0
+        vm_types = common.get_leaf_tag_map(scenario_info, 'vm_type')
+        sos_vm_id = 0
+        for vm_id, vm_type in vm_types.items():
+            if vm_type in ['SOS_VM']:
+                sos_vm_id = vm_id
+        for vm in common.get_config_root(scenario_info).getchildren():
+            if vm.tag == 'vm' and scenario_cfg_lib.VM_DB[vm_types[int(vm.attrib['id'])]]['load_type'] == 'POST_LAUNCHED_VM':
+                uos_id = int(vm.attrib['id']) - sos_vm_id
+                pci_vuart_key = 'uos:id={},communication_vuarts,communication_vuart'.format(uos_id)
+                for elem in vm.getchildren():
+                    if elem.tag == 'communication_vuart':
+                        for sub_elem in elem.getchildren():
+                            if sub_elem.tag == 'base' and sub_elem.text == 'PCI_VUART':
+                                if pci_vuart_key not in launch_item_values.keys():
+                                    launch_item_values[pci_vuart_key] = ['', elem.attrib['id']]
+                                else:
+                                    launch_item_values[pci_vuart_key].append(elem.attrib['id'])
+    except:
+        return
+
+
 def check_shm_regions(launch_shm_regions, scenario_info):
     launch_item_values = {}
     set_shm_regions(launch_item_values, scenario_info)

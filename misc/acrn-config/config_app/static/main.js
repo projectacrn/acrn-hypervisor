@@ -1003,7 +1003,8 @@ function save_launch(generator=null) {
     $("select").each(function(){
         var id = $(this).attr('id');
         var value = $(this).val();
-        if(id.indexOf('pcpu_id')>=0 || id.indexOf('shm_region')>=0 || id.indexOf('pci_dev')>=0) {
+        if(id.indexOf('pcpu_id')>=0 || id.indexOf('shm_region')>=0
+            || id.indexOf('communication_vuart')>=0 || id.indexOf('pci_dev')>=0) {
             if(id in launch_config) {
                 launch_config[id].push(value);
             } else {
