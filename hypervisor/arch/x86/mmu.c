@@ -159,14 +159,6 @@ void enable_paging(void)
 {
 	uint64_t tmp64 = 0UL;
 
-	/*
-	 * Enable MSR IA32_EFER.NXE bit,to prevent
-	 * instruction fetching from pages with XD bit set.
-	 */
-	tmp64 = msr_read(MSR_IA32_EFER);
-	tmp64 |= MSR_IA32_EFER_NXE_BIT;
-	msr_write(MSR_IA32_EFER, tmp64);
-
 	/* Enable Write Protect, inhibiting writing to read-only pages */
 	CPU_CR_READ(cr0, &tmp64);
 	CPU_CR_WRITE(cr0, tmp64 | CR0_WP);
