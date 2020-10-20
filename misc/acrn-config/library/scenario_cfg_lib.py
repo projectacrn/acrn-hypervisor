@@ -55,6 +55,7 @@ UUID_DB = {
 VM_DB = {
     'SOS_VM':{'load_type':'SOS_VM', 'severity':'SEVERITY_SOS', 'uuid':UUID_DB['SOS_VM']},
     'SAFETY_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_SAFETY_VM', 'uuid':UUID_DB['SAFETY_VM']},
+    'PRE_RT_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_RTVM', 'uuid':UUID_DB['PRE_RT_VM']},
     'PRE_STD_VM':{'load_type':'PRE_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM', 'uuid':UUID_DB['PRE_STD_VM']},
     'POST_STD_VM':{'load_type':'POST_LAUNCHED_VM', 'severity':'SEVERITY_STANDARD_VM', 'uuid':UUID_DB['POST_STD_VM']},
     'POST_RT_VM':{'load_type':'POST_LAUNCHED_VM', 'severity':'SEVERITY_RTVM', 'uuid':UUID_DB['POST_RT_VM']},
