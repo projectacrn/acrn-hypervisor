@@ -15,7 +15,7 @@ TEMPLATE_ACPI_PATH = os.path.join(VM_CONFIGS_PATH, 'acpi', 'template')
 
 ACPI_TABLE_LIST = [('rsdp.asl', 'rsdp.aml'), ('xsdt.asl', 'xsdt.aml'), ('facp.asl', 'facp.aml'),
                    ('mcfg.asl', 'mcfg.aml'), ('apic.asl', 'apic.aml'), ('tpm2.asl', 'tpm2.aml'),
-                   ('dsdt.asl', 'dsdt.aml')]
+                   ('dsdt.asl', 'dsdt.aml'), ('PTCT', 'ptct.aml')]
 
 ACPI_BASE = 0x7ff00000
 
@@ -25,6 +25,7 @@ ACPI_FADT_ADDR_OFFSET = 0x100       # (244 bytes)
 ACPI_DSDT_ADDR_OFFSET = 0x200       # (variable)
 ACPI_MCFG_ADDR_OFFSET = 0x400       # (60 bytes)
 ACPI_MADT_ADDR_OFFSET = 0x440       # (depends on #CPUs)
+ACPI_PTCT_ADDR_OFFSET = 0xF00
 ACPI_TPM2_ADDR_OFFSET = 0x1100      # (52 bytes)
 
 ACPI_RSDP_ADDR = (ACPI_BASE + ACPI_RSDP_ADDR_OFFSET)
@@ -34,6 +35,7 @@ ACPI_MCFG_ADDR = (ACPI_BASE + ACPI_MCFG_ADDR_OFFSET)
 ACPI_MADT_ADDR = (ACPI_BASE + ACPI_MADT_ADDR_OFFSET)
 ACPI_TPM2_ADDR = (ACPI_BASE + ACPI_TPM2_ADDR_OFFSET)
 ACPI_DSDT_ADDR = (ACPI_BASE + ACPI_DSDT_ADDR_OFFSET)
+ACPI_PTCT_ADDR = (ACPI_BASE + ACPI_PTCT_ADDR_OFFSET)
 ACPI_FACS_ADDR = 0x0
 
 PM1A_EVN_LEN = 0x4
@@ -51,3 +53,5 @@ ACPI_MADT_TYPE_LOCAL_APIC_NMI = 4
 TSN_DEVICE_LIST = ['8086:4ba0',
                    '8086:4bb0',
                    '8086:4b32']
+
+PTCT = 'PTCT'

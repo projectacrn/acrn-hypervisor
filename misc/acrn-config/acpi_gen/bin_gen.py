@@ -33,6 +33,10 @@ def asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path):
                         os.remove(os.path.join(dest_vm_acpi_path, acpi_table[1]))
                     rmsg = 'failed to compile {}'.format(acpi_table[0])
                     break
+        elif acpi_table[0] == PTCT:
+            if PTCT in os.listdir(dest_vm_acpi_path):
+                shutil.copyfile(os.path.join(dest_vm_acpi_path, acpi_table[0]),
+                                os.path.join(dest_vm_acpi_bin_path, acpi_table[1]))
         else:
             rc = exec_command('iasl {}'.format(acpi_table[0]))
             if rc == 0 and os.path.isfile(os.path.join(dest_vm_acpi_path, acpi_table[1])):
@@ -91,6 +95,11 @@ def aml_to_bin(dest_vm_acpi_path, dest_vm_acpi_bin_path, acpi_bin_name):
         acpi_bin.seek(ACPI_DSDT_ADDR_OFFSET)
         with open(os.path.join(dest_vm_acpi_bin_path, ACPI_TABLE_LIST[6][1]), 'rb') as asl:
             acpi_bin.write(asl.read())
+
+        if PTCT in os.listdir(dest_vm_acpi_path):
+            acpi_bin.seek(ACPI_PTCT_ADDR_OFFSET)
+            with open(os.path.join(dest_vm_acpi_bin_path, ACPI_TABLE_LIST[7][1]), 'rb') as asl:
+                acpi_bin.write(asl.read())
 
         acpi_bin.seek(0xfffff)
         acpi_bin.write(b'\0')
