@@ -22,3 +22,4 @@
 [0008]       ACPI Table Address   1 : 00000000000F2640
 [0008]       ACPI Table Address   2 : 00000000000F2680
 [0008]       ACPI Table Address   3 : 00000000000F2800
+[0008]       ACPI Table Address   4 : 00000000000F3300
