@@ -24,10 +24,10 @@ Use the following instructions to install Debian.
   the bottom of the page).
 - Follow the `Debian installation guide
   <https://www.debian.org/releases/stable/amd64/index.en.html>`_ to
-  install it on your Intel NUC; we are using a Kaby Lake Intel NUC (NUC7i7DNHE)
+  install it on your board; we are using a Kaby Lake Intel NUC (NUC7i7DNHE)
   in this tutorial.
 - :ref:`install-build-tools-dependencies` for ACRN.
-- Update to the latest iASL (required by the ACRN Device Model):
+- Update to the newer iASL:
 
   .. code-block:: bash
 
@@ -43,89 +43,94 @@ Use the following instructions to install Debian.
 Validated Versions
 ******************
 
-- **Debian version:** 10.0 (buster)
-- **ACRN hypervisor tag:** acrn-2019w35.1-140000p
-- **Debian Service VM Kernel version:** 4.19.68-84.iot-lts2018-sos
+- **Debian version:** 10.1 (buster)
+- **ACRN hypervisor tag:** acrn-2020w40.1-180000p
+- **Debian Service VM Kernel version:** release_2.2
 
 Install ACRN on the Debian VM
 *****************************
 
-1. Clone the `Project ACRN <https://github.com/projectacrn/acrn-hypervisor>`_ code repository:
+#. Clone the `Project ACRN <https://github.com/projectacrn/acrn-hypervisor>`_ code repository:
 
    .. code-block:: bash
 
       $ cd ~
       $ git clone https://github.com/projectacrn/acrn-hypervisor
       $ cd acrn-hypervisor
-      $ git checkout acrn-2019w35.1-140000p
+      $ git checkout acrn-2020w40.1-180000p
 
 #. Build and install ACRN:
 
    .. code-block:: bash
 
-      $ make BOARD=nuc7i7dnb FIRMWARE=uefi
+      $ make all BOARD_FILE=misc/vm_configs/xmls/board-xmls/nuc7i7dnb.xml SCENARIO_FILE=misc/vm_configs/xmls/config-xmls/nuc7i7dnb/industry.xml RELEASE=0
       $ sudo make install
+      $ sudo mkdir /boot/acrn/
+      $ sudo cp ~/acrn-hypervisor/build/hypervisor/acrn.bin /boot/acrn/
 
-#. Install the hypervisor.
-   The ACRN Device Model and tools were installed as part of a previous
-   step. However, ``make install`` does not install the hypervisor (acrn.efi)
-   on your EFI System Partition (ESP), nor does it configure your EFI
-   firmware to boot it automatically. Follow the steps below to perform
-   these operations and complete the ACRN installation. Note that we are
-   using a SATA disk in this section.
-
-   a. Add the ACRN hypervisor (as the root user):
-
-      .. code-block:: bash
-
-         $ sudo mkdir /boot/efi/EFI/acrn/
-         $ sudo cp ~/acrn-hypervisor/build/hypervisor/acrn.efi /boot/efi/EFI/acrn/
-         $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN Hypervisor" -u "bootloader=\EFI\debian\grubx64.efi "
-         $ sudo efibootmgr -v     # shows output as below
-         Timeout: 1 seconds
-         BootOrder: 0009,0003,0004,0007,0005,0006,0001,0008,0002,0000
-         Boot0000* ACRN  VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)
-         Boot0001* ACRN  VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)
-         Boot0002* debian VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)
-         Boot0003* UEFI : INTEL SSDPEKKW256G8 : PART 0 : OS Bootloader PciRoot(0x0)/Pci(0x1d,0x0)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(1,GPT,89d38801-d55b-4bf6-be05-79a5a7b87e66,0x800,0x47000)..BO
-         Boot0004* UEFI : INTEL SSDPEKKW256G8 : PART 3 : OS Bootloader PciRoot(0x0)/Pci(0x1d,0x0)/Pci(0x0,0x0)/NVMe(0x1,00-00-00-00-00-00-00-00)/HD(4,GPT,550e1da5-6533-4e64-8d3f-0beadfb20d33,0x1c6da800,0x47000)..BO
-         Boot0005* UEFI : LAN : PXE IP4 Intel(R) Ethernet Connection I219-LM  PciRoot(0x0)/Pci(0x1f,0x6)/MAC(54b2030f4b84,0)/IPv4(0.0.0.00.0.0.0,0,0)..BO
-         Boot0006* UEFI : LAN : PXE IP6 Intel(R) Ethernet Connection I219-LM  PciRoot(0x0)/Pci(0x1f,0x6)/MAC(54b2030f4b84,0)/IPv6([::]:<->[::]:,0,0)..BO
-         Boot0007* UEFI : Built-in EFI Shell     VenMedia(5023b95c-db26-429b-a648-bd47664c8012)..BO
-         Boot0008* Linux bootloader VenHw(99e275e7-75a0-4b37-a2e6-c5385e6c00cb)
-         Boot0009* ACRN Hypervisor HD(1,GPT,94597852-7166-4216-b0f1-cef5fd1f2349,0x800,0x100000)/File(\EFI\acrn\acrn.efi)b.o.o.t.l.o.a.d.e.r.=.\.E.F.I.\.d.e.b.i.a.n.\.g.r.u.b.x.6.4...e.f.i.
-
-   #. Install the Service VM kernel and reboot:
+#. Build and Install the Service VM kernel:
 
       .. code-block:: bash
 
          $ mkdir ~/sos-kernel && cd ~/sos-kernel
-         $ wget https://download.clearlinux.org/releases/30930/clear/x86_64/os/Packages/linux-iot-lts2018-sos-4.19.68-84.x86_64.rpm
-         $ sudo apt install rpm2cpio
-         $ rpm2cpio linux-iot-lts2018-sos-4.19.68-84.x86_64.rpm | cpio -idmv
-         $ sudo cp -r ~/sos-kernel/usr/lib/modules/4.19.68-84.iot-lts2018-sos /lib/modules/
-         $ sudo mkdir /boot/acrn/
-         $ sudo cp ~/sos-kernel/usr/lib/kernel/org.clearlinux.iot-lts2018-sos.4.19.68-84 /boot/acrn/
-         $ sudo vi /etc/grub.d/40_custom
-         <To add below>
-         menuentry 'ACRN Debian Service VM' {
-                 recordfail
-                 load_video
-                 insmod gzio
-                 insmod part_gpt
-                 insmod ext2
+         $ git clone https://github.com/projectacrn/acrn-kernel
+         $ cd acrn-kernel
+         $ git checkout release_2.2
+         $ cp kernel_config_uefi_sos .config
+         $ make olddefconfig
+         $ make all
+         $ sudo make modules_install
+         $ sudo cp arch/x86/boot/bzImage /boot/bzImage
 
-         linux  /boot/acrn/org.clearlinux.iot-lts2018-sos.4.19.68-84 console=tty0 console=ttyS0 root=/dev/sda2 rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.nuclear_pageflip=1 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_gvt=1 i915.enable_guc=0 hvlog=2M@0x1FE00000 memmap=2M\$0x1FE00000
-         }
-         $ sudo vi /etc/default/grub
-         <Specify the default grub to the ACRN Debian Service VM entry>
-         GRUB_DEFAULT=5
-         $ sudo update-grub
-         $ sudo reboot
+#. Update Grub for the Debian Service VM
 
-      You should see the Grub menu with the new "ACRN Debian Service VM"
-      entry. Select it and proceed to booting the platform. The system will
-      start the Debian Desktop and you can now log in (as before).
+      Update the ``/etc/grub.d/40_custom`` file as shown below.
+
+   .. note::
+      Enter the command line for the kernel in ``/etc/grub.d/40_custom`` as
+      a single line and not as multiple lines. Otherwise, the kernel will
+      fail to boot.
+
+   .. code-block:: none
+
+      menuentry "ACRN Multiboot Debian Service VM" --id debian-service-vm {
+        recordfail
+        load_video
+        insmod gzio
+        insmod part_gpt
+        insmod ext2
+
+        search --no-floppy --fs-uuid --set 9bd58889-add7-410c-bdb7-1fbc2af9b0e1
+        echo 'loading ACRN...'
+        multiboot2 /boot/acrn/acrn.bin  root=PARTUUID="e515916d-aac4-4439-aaa0-33231a9f4d83"
+        module2 /boot/bzImage Linux_bzImage
+      }
+
+   .. note::
+      Update this to use the UUID (``--set``) and PARTUUID (``root=`` parameter)
+      (or use the device node directly) of the root partition (e.g.
+      ``/dev/nvme0n1p2``). Hint: use ``sudo blkid <device node>``.
+
+      Update the kernel name if you used a different name as the source
+      for your Service VM kernel.
+
+#. Modify the ``/etc/default/grub`` file to make the Grub menu visible when
+   booting and make it load the Service VM kernel by default. Modify the
+   lines shown below:
+
+   .. code-block:: none
+
+      GRUB_DEFAULT=debian-service-vm
+      #GRUB_TIMEOUT_STYLE=hidden
+      GRUB_TIMEOUT=5
+      GRUB_CMDLINE_LINUX="text"
+
+#. Update Grub on your system:
+
+   .. code-block:: none
+
+      $ sudo update-grub
+      $ sudo reboot
 
 #. Log in to the Debian Service VM and check the ACRN status:
 
@@ -137,16 +142,10 @@ Install ACRN on the Debian VM
       [    0.982837] ACRN HVLog: Failed to init last hvlog devs, errno -19
       [    0.983023] ACRN HVLog: Initialized hvlog module with 4 cp
 
-      $ uname -a
-      Linux debian 4.19.68-84.iot-lts2018-sos #1 SMP Debian 4.19.37-5+deb10u2 (2019-08-08) x86_64 GNU/Linux
-
-#. Enable the network sharing to give network access to User VM:
-
+Enable the network sharing to give network access to User VM
+************************************************************
    .. code-block:: bash
 
       $ sudo systemctl enable systemd-networkd
       $ sudo systemctl start systemd-networkd
 
-#. Prepare and Start a User VM.
-
-   .. important:: Need instructions for this.
