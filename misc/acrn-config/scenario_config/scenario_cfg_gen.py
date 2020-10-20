@@ -58,6 +58,8 @@ def get_scenario_item_values(board_info, scenario_info):
     scenario_item_values["vm,mmio_resources,p2sb"] = hv_cfg_lib.N_Y
     scenario_item_values["vm,mmio_resources,TPM2"] = hv_cfg_lib.N_Y
     scenario_item_values.update(scenario_cfg_lib.avl_vuart_ui_select(scenario_info))
+    scenario_item_values["vm,console_vuart,base"] = ['INVALID_PCI_BASE', 'PCI_VUART']
+    scenario_item_values["vm,communication_vuart,base"] = ['INVALID_PCI_BASE', 'PCI_VUART']
 
     # board
     (scenario_item_values["vm,board_private,rootfs"], num) = board_cfg_lib.get_rootfs(board_info)
