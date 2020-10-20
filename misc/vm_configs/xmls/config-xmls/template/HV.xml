@@ -29,6 +29,10 @@
             <IVSHMEM_ENABLED desc="Enable Share Memory between VMs by IVSHMEM.">n</IVSHMEM_ENABLED>
             <IVSHMEM_REGION desc="the shared memory region name (starting with hv:/, size (in MB), and IDs of all VMs (separated by a colon) sharing this region, for example hv:/sharename,2,0:2"></IVSHMEM_REGION>
         </IVSHMEM>
+        <PSRAM desc="Pseudo SRAM configuration.">
+            <PSRAM_ENABLED desc="Enable PTCM (Platform Tuning Configuration Manager).">n</PSRAM_ENABLED>
+            <PSRAM_PASSTHROUGH_PRE_RTVM desc="Pass through PSRAM to Pre-launched RTVM.">n</PSRAM_PASSTHROUGH_PRE_RTVM>
+        </PSRAM>
     </FEATURES>
 
     <MEMORY>
