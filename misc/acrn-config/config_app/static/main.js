@@ -401,6 +401,18 @@ $().ready(function(){
         show_com_target(id, value);
     });
 
+    $(document).on('change', "select[ID*='communication_vuart'][ID$='base']", function() {
+        var id = $(this).attr('id');
+        var value = $(this).val();
+        show_com_target(id, value);
+    });
+
+    $("select[ID*='communication_vuart'][ID$='base']").each(function(index, item) {
+        var id = $(item).attr('id');
+        var value = $(item).val();
+        show_com_target(id, value);
+    });
+
     $("select[ID$='FEATURES,RDT,CDP_ENABLED']").change(function(){
         var id = $(this).attr('id');
         var value = $(this).val();
@@ -424,30 +436,70 @@ $().ready(function(){
         var config_item_added = config_item.clone();
         var config_vm = config_item.parent();
         var vcpu_index_list = [];
+        var vuart_index_list = [];
         config_vm.children().each(function(){
             if($(this).find("button:contains('+')").size() > 0) {
                 var btn_add_vm_id = $(this).find("button:contains('+')").attr('id');
-                vcpu_index_list.push(parseInt(btn_add_vm_id.substr(btn_add_vm_id.lastIndexOf('_')+1)));
+                if(btn_add_vm_id.indexOf('add_communication_vuart')>=0) {
+                    vuart_index_list.push(parseInt(btn_add_vm_id.substr(btn_add_vm_id.lastIndexOf('_')+1)));
+                } else {
+                    vcpu_index_list.push(parseInt(btn_add_vm_id.substr(btn_add_vm_id.lastIndexOf('_')+1)));
+                }
             }
         });
-        var id_added = 0;
-        for (i=0; i<100; i++) {
-            if (!vcpu_index_list.includes(i)) {
-                id_added = i;
-                break
+        var id_added = -1;
+        if(curr_item_id.indexOf('add_communication_vuart')>=0) {
+            for (i=1; i<100; i++) {
+                if (!vuart_index_list.includes(i)) {
+                    id_added = i;
+                    break
+                }
+            }
+        } else {
+            for (i=0; i<100; i++) {
+                if (!vcpu_index_list.includes(i)) {
+                    id_added = i;
+                    break
+                }
             }
         }
+
         var id_pre_added = curr_item_id.substr(0, curr_item_id.lastIndexOf('_'));
         config_item_added.find("button:contains('+')").attr('id', id_pre_added+'_'+id_added);
         config_item_added.find("button:contains('-')").attr('id', id_pre_added.replace('add_', 'remove_')+'_'+id_added);
         var curr_err_id = config_item_added.find("p").attr('id');
         config_item_added.find("p").attr('id', curr_err_id.replace(','+curr_id+'_', ','+id_added+'_'));
         config_item_added.find("button:contains('-')").prop("disabled", false);
-        config_item_added.find("label:first").text("");
         config_item_added.find('.bootstrap-select').replaceWith(function() { return $('select', this); });
         config_item_added.find('.selectpicker').val('default').selectpicker('deselectAll');;
         config_item_added.find('.selectpicker').selectpicker('render');
-        config_item_added.insertAfter(config_item);
+        if(curr_item_id.indexOf('add_communication_vuart')>=0) {
+            var config_item_target_vm = config_item.next().clone();
+            var config_item_target_vuart = config_item.next().next().clone();
+            var curr_vuart_id = parseInt(curr_id);
+            config_item_added.find("label:first").text(config_item_added.find("label:first").html().replace(curr_vuart_id, id_added));
+            var orig_id_list = ['base_label1', 'base_label2', 'base', 'base_err',
+                                'target_vm_id_label1', 'target_vm_id_label2', 'target_vm_id_config', 'target_vm_id', 'target_vm_id_err',
+                                'target_uart_id_label1', 'target_uart_id_label2', 'target_uart_id_config', 'target_uart_id', 'target_uart_id_err']
+            for(var i = 0, len = 4; i < len; i++){
+                var orig_base_item = config_item_added.find('[id$='+orig_id_list[i]+']')
+                orig_base_item.attr('id', orig_base_item.attr('id').replace(curr_vuart_id+','+orig_id_list[i], id_added+','+orig_id_list[i]))
+            }
+            for(var i = 4, len = 9; i < len; i++){
+                var orig_target_vm_item = config_item_target_vm.find('[id$='+orig_id_list[i]+']')
+                orig_target_vm_item.attr('id', orig_target_vm_item.attr('id').replace(curr_vuart_id+','+orig_id_list[i], id_added+','+orig_id_list[i]))
+            }
+            for(var i = 9, len = orig_id_list.length; i < len; i++){
+                var orig_target_vuart_item = config_item_target_vuart.find('[id$='+orig_id_list[i]+']')
+                orig_target_vuart_item.attr('id', orig_target_vuart_item.attr('id').replace(curr_vuart_id+','+orig_id_list[i], id_added+','+orig_id_list[i]))
+            }
+            config_item_added.insertAfter(config_item.next().next());
+            config_item_target_vm.insertAfter(config_item_added);
+            config_item_target_vuart.insertAfter(config_item_target_vm);
+        } else {
+            config_item_added.find("label:first").text("");
+            config_item_added.insertAfter(config_item);
+        }
 
         if(curr_item_id.indexOf('add_vcpu')>=0) {
             var config_vm = config_item.parent();
@@ -492,6 +544,10 @@ $().ready(function(){
             }
             vcpu_clos_item.remove();
         }
+        else if(curr_item_id.indexOf('remove_communication_vuart')>=0) {
+            config_item.next().next().remove();
+            config_item.next().remove();
+        }
         config_item.remove();
     });
 
@@ -520,10 +576,13 @@ function show_com_target(id, value) {
         return
     }
     var id2 = id.replace('base', 'target_vm_id');
+    var id3 = id.replace('base', 'target_uart_id');
     var jquerySpecialChars = ["~", "`", "@", "#", "%", "&", "=", "'", "\"",
         ":", ";", "<", ">", ",", "/"];
     for (var i = 0; i < jquerySpecialChars.length; i++) {
         id2 = id2.replace(new RegExp(jquerySpecialChars[i],
+            "g"), "\\" + jquerySpecialChars[i]);
+        id3 = id3.replace(new RegExp(jquerySpecialChars[i],
             "g"), "\\" + jquerySpecialChars[i]);
     }
     if (value == 'INVALID_COM_BASE') {
@@ -531,6 +590,26 @@ function show_com_target(id, value) {
         $('#'+id2+'_label2').hide();
         $('#'+id2+'_config').hide();
         $('#'+id2+'_err').hide();
+    }
+    else if(value == 'INVALID_PCI_BASE') {
+        $('#'+id2+'_label1').hide();
+        $('#'+id2+'_label2').hide();
+        $('#'+id2+'_config').hide();
+        $('#'+id2+'_err').hide();
+        $('#'+id3+'_label1').hide();
+        $('#'+id3+'_label2').hide();
+        $('#'+id3+'_config').hide();
+        $('#'+id3+'_err').hide();
+    }
+    else if(value == 'PCI_VUART') {
+        $('#'+id2+'_label1').show();
+        $('#'+id2+'_label2').show();
+        $('#'+id2+'_config').show();
+        $('#'+id2+'_err').show();
+        $('#'+id3+'_label1').show();
+        $('#'+id3+'_label2').show();
+        $('#'+id3+'_config').show();
+        $('#'+id3+'_err').show();
     }
     else {
         $('#'+id2+'_label1').show();

@@ -130,6 +130,7 @@ the source files will be generated into default path and overwirte the previous 
             {% if 'desc' in vm.attrib and vm.attrib['desc'] == 'specific for Kata'  %}
                 {% do vm_kata.append(1) %}
             {% endif %}
+            {% set first_multi_child = {'IVSHMEM_REGION': 0, 'communication_vuart': 1} %}
             {% if 'configurable' not in vm.attrib or vm.attrib['configurable'] != '0'%}
             <tr>
                 <td>
@@ -209,7 +210,6 @@ the source files will be generated into default path and overwirte the previous 
                     != '0')%}
                         {% if 'multiselect' not in elem.attrib or elem.attrib['multiselect'] != 'true' %}
                             {% set first_child = [] %}
-                            {% set first_multi_child = {'IVSHMEM_REGION': 0} %}
                             {% for sub_elem in elem.getchildren() %}
                                 {% set sub_elem_text = sub_elem.text if sub_elem.text != None else '' %}
 
@@ -392,7 +392,7 @@ the source files will be generated into default path and overwirte the previous 
                                                title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
                                             {{sub_elem.tag}}</label>
                                         {% if (','.join([vm.tag, elem.tag, sub_elem.tag]) not in scenario_item_values) and
-                                        (elem.tag!='vuart' or sub_elem.tag!='base') %}
+                                        ((elem.tag!='vuart' and elem.tag!='legacy_vuart') or sub_elem.tag!='base') %}
                                             <div class="col-sm-6"
                                                  id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_config">
                                                 {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
@@ -406,7 +406,9 @@ the source files will be generated into default path and overwirte the previous 
                                                 {% endif %}
                                             </div>
                                         {% else %}
+
                                             <div class="dropdown col-sm-6">
+
                                                 {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
                                                 <select class="selectpicker" data-width="auto" disabled
                                                         id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}">
@@ -415,7 +417,7 @@ the source files will be generated into default path and overwirte the previous 
                                                         id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}">
                                                 {% endif %}
                                                 {% set key = ('vm='+vm.attrib['id']+','+elem.tag+'='+elem.attrib['id']+','+sub_elem.tag)
-                                                if (elem.tag=='vuart' and sub_elem.tag=='base')
+                                                if (elem.tag in ['vuart', 'legacy_vuart'] and sub_elem.tag=='base')
                                                 else ','.join([vm.tag, elem.tag, sub_elem.tag]) %}
                                                 <option disabled selected value> -- Select an option -- </option>
                                                 {% for item_value in scenario_item_values[key] %}
@@ -426,6 +428,15 @@ the source files will be generated into default path and overwirte the previous 
                                                     {% endif %}
                                                 {% endfor %}
                                                 </select>
+                                                {% if elem.tag in ['communication_vuart'] and sub_elem.tag in ['base'] %}
+                                                        <button type="button" class="btn" id="add_{{elem.tag}}_{{first_multi_child[elem.tag]}}">+</button>
+                                                        {% if first_multi_child[elem.tag] == 1 %}
+                                                        <button type="button" disabled class="btn" id="remove_{{elem.tag}}_{{first_multi_child[elem.tag]}}">-</button>
+                                                        {% else %}
+                                                        <button type="button" class="btn" id="remove_{{elem.tag}}_{{first_multi_child[elem.tag]}}">-</button>
+                                                        {% endif %}
+                                                    {% do first_multi_child.update({elem.tag: first_multi_child[elem.tag]+1}) %}
+                                                {% endif%}
                                             </div>
                                         {% endif %}
                                         <p id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_err"

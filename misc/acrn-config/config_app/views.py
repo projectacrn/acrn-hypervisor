@@ -5,7 +5,7 @@
 
 """
 
-import os
+import os, copy
 from datetime import datetime
 from shutil import copyfile
 
@@ -169,14 +169,50 @@ def save_scenario():
     scenario_path = os.path.join(current_app.config.get('CONFIG_PATH'), board_type)
     old_scenario_name = scenario_config_data['old_scenario_name']
     scenario_config.set_curr(old_scenario_name)
+
+    for vm in scenario_config.get_curr_root().getchildren():
+        if vm.tag == 'vm':
+            for elem in vm.getchildren():
+                if elem.tag in ['communication_vuart', 'console_vuart']:
+                    vuart_key = vm.tag+':id='+vm.attrib['id']+','+elem.tag + ':id='+elem.attrib['id']
+                    delete_flag = True
+                    for key in scenario_config_data:
+                        if key.find(vuart_key) >= 0:
+                            delete_flag = False
+                            break
+                    if delete_flag:
+                        scenario_config.delete_curr_elem(*tuple(vuart_key.split(',')))
+
     for key in scenario_config_data:
         if scenario_config_data[key] in [None, 'None']:
             scenario_config_data[key] = ''
+
         if key not in ['old_scenario_name', 'new_scenario_name', 'generator', 'add_vm_type']:
             if isinstance(scenario_config_data[key], list):
                 scenario_config.set_curr_list(scenario_config_data[key], *tuple(key.split(',')))
+            elif key.find('communication_vuart') >= 0:
+                try:
+                    scenario_config.get_curr_elem(*tuple(key.split(',')))
+                except:
+                    communication_vuart_id = key.split(',')[1].split('=')[1].strip()
+                    communication_vuart_1_item = scenario_config.get_curr_elem(
+                        *tuple([key.split(',')[0], 'communication_vuart:id=1']))
+                    communication_vuart_i_item = copy.deepcopy(communication_vuart_1_item)
+                    communication_vuart_i_item.attrib['id'] = communication_vuart_id
+                    curr_index = 0
+                    elem_list = scenario_config.get_curr_elem(key.split(',')[0]).getchildren()
+                    for elem in reversed(elem_list):
+                        curr_index += 1
+                        if elem.tag in ['communication_vuart', 'console_vuart']:
+                            break
+                    scenario_config.insert_curr_elem(len(elem_list)-curr_index+1, communication_vuart_i_item, key.split(',')[0])
+                finally:
+                    scenario_config.set_curr_value(scenario_config_data[key], *tuple(key.split(',')))
             else:
                 scenario_config.set_curr_value(scenario_config_data[key], *tuple(key.split(',')))
+
+            # how to put added vuart under vuart!!!
+            # delete vuart without key!!!
 
     generator = scenario_config_data['generator']
     if generator is not None:
@@ -1127,3 +1163,10 @@ def assign_vm_id(scenario_config):
                     elif item.text in ['POST_STD_VM', 'POST_RT_VM', 'KATA_VM']:
                         vm.attrib['id'] = str(post_launched_vm_index)
                         post_launched_vm_index += 1
+
+@CONFIG_APP.context_processor
+def utility_functions():
+    def print_in_console(message):
+        print(str(message))
+
+    return dict(mdebug=print_in_console)
