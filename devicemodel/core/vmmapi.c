@@ -223,7 +223,7 @@ vm_create(const char *name, uint64_t req_buf, int *vcpu_num)
 
 	ctx->gvt_enabled = false;
 	ctx->fd = devfd;
-	ctx->lowmem_limit = 2 * GB;
+	ctx->lowmem_limit = PCI_EMUL_MEMBASE32;
 	ctx->highmem_gpa_base = PCI_EMUL_MEMLIMIT64;
 	ctx->name = (char *)(ctx + 1);
 	strncpy(ctx->name, name, strnlen(name, PATH_MAX) + 1);

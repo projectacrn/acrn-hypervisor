@@ -52,27 +52,18 @@ static char bootargs[BOOT_ARG_LEN];
  *
  *             Begin    Limit       Type            Length
  * 0:              0 -  0xA0000     RAM             0xA0000
- * 1:        0xA0000 -  0x100000    (reserved)      0x60000
- * 2:       0x100000 -  lowmem      RAM             lowmem - 1MB
- * 3:         lowmem -  0x80000000  (reserved)      2GB - lowmem
- * 4:	  0x80000000 -  0x88000000  (reserved)	    128MB
- * 5:     0xDB000000 -  0xDF000000  (reserved)      64MB
- * 6:     0xDF000000 -  0xE0000000  (reserved)      16MB
- * 7:     0xE0000000 -  0x100000000 MCFG, MMIO      512MB
- * 8:    0x100000000 -  0x140000000 64-bit PCI hole 1GB
- * 9:    0x140000000 -  highmem     RAM             highmem - 5GB
+ * 1:       0x100000 -  lowmem      RAM             lowmem - 1MB
+ * 2:         lowmem -  0x80000000  (reserved)      2GB - lowmem
+ * 3:     0xE0000000 -  0x100000000 MCFG, MMIO      512MB
+ * 4:    0x140000000 -  highmem     RAM             highmem - 5GB
+ *
+ * FIXME: Do we need to reserve DSM and OPREGION for GVTD here.
  */
 const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 	{	/* 0 to video memory */
 		.baseaddr = 0x00000000,
 		.length   = 0xA0000,
 		.type     = E820_TYPE_RAM
-	},
-
-	{	/* video memory, ROM (used for e820/mptable/smbios/acpi) */
-		.baseaddr = 0xA0000,
-		.length   = 0x60000,
-		.type     = E820_TYPE_RESERVED
 	},
 
 	{	/* 1MB to lowmem */
@@ -87,45 +78,9 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 		.type     = E820_TYPE_RESERVED
 	},
 
-	{
-		/* reserve for PRM resource */
-		.baseaddr = 0x80000000,
-		.length	  = 0x8000000,
-		.type     = E820_TYPE_RESERVED
-	},
-
-	{
-		/* reserve for GVT-d graphics stolen memory.
-		 * The native BIOS allocates the stolen memory by itself,
-		 * and size can be configured by user itself through BIOS GUI.
-		 * For ACRN, we simply hard code to 64MB and static
-		 * reserved the memory region to avoid more efforts in OVMF,
-		 * and user *must* align the native BIOS setting to 64MB.
-		 *
-		 * GPU_GSM_GPA micro in passthrough.c should
-+		 * align with this address here.
-		 */
-		.baseaddr = 0xDB000000,
-		.length	  = 0x4000000,
-		.type     = E820_TYPE_RESERVED
-	},
-
-	{
-		/* reserve for GVT */
-		.baseaddr = 0xDF000000,
-		.length	  = 0x1000000,
-		.type     = E820_TYPE_RESERVED
-	},
-
 	{	/* ECFG_BASE to 4GB */
 		.baseaddr = PCI_EMUL_ECFG_BASE,
 		.length   = (4 * GB) - PCI_EMUL_ECFG_BASE,
-		.type     = E820_TYPE_RESERVED
-	},
-
-	{	/* 4GB to 5GB */
-		.baseaddr = PCI_EMUL_MEMBASE64,
-		.length   = PCI_EMUL_MEMLIMIT64 - PCI_EMUL_MEMBASE64,
 		.type     = E820_TYPE_RESERVED
 	},
 
