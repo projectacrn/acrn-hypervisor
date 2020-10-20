@@ -99,8 +99,6 @@ struct mmio_rsvd_rgn reserved_bar_regions[REGION_NUMS];
 #define	PCI_EMUL_ECFG_SIZE	(MAXBUSES * 1024 * 1024)    /* 1MB per bus */
 SYSRES_MEM(PCI_EMUL_ECFG_BASE, PCI_EMUL_ECFG_SIZE);
 
-#define	PCI_EMUL_MEMLIMIT32	PCI_EMUL_ECFG_BASE
-
 static struct pci_vdev_ops *pci_emul_finddev(char *name);
 static void pci_lintr_route(struct pci_vdev *dev);
 static void pci_lintr_update(struct pci_vdev *dev);
@@ -1375,7 +1373,6 @@ init_pci(struct vmctx *ctx)
 	struct businfo *bi;
 	struct slotinfo *si;
 	struct funcinfo *fi;
-	size_t lowmem;
 	int bus, slot, func, i;
 	int success_cnt = 0;
 	int error;
@@ -1503,12 +1500,11 @@ init_pci(struct vmctx *ctx)
 	 * Accesses to memory addresses that are not allocated to system
 	 * memory or PCI devices return 0xff's.
 	 */
-	lowmem = vm_get_lowmem_size(ctx);
 	bzero(&mr, sizeof(struct mem_range));
 	mr.name = "PCI hole (32-bit)";
 	mr.flags = MEM_F_RW;
-	mr.base = lowmem;
-	mr.size = (4ULL * 1024 * 1024 * 1024) - lowmem;
+	mr.base = PCI_EMUL_MEMBASE32;
+	mr.size = PCI_EMUL_MEMLIMIT32 - PCI_EMUL_MEMBASE32;
 	mr.handler = pci_emul_fallback_handler;
 	error = register_mem_fallback(&mr);
 	if (error != 0)
@@ -1573,7 +1569,6 @@ deinit_pci(struct vmctx *ctx)
 	struct slotinfo *si;
 	struct funcinfo *fi;
 	int bus, slot, func;
-	size_t lowmem;
 	struct mem_range mr;
 
 	/* Release PCI extended config space */
@@ -1584,11 +1579,10 @@ deinit_pci(struct vmctx *ctx)
 	unregister_mem(&mr);
 
 	/* Release PCI hole space */
-	lowmem = vm_get_lowmem_size(ctx);
 	bzero(&mr, sizeof(struct mem_range));
 	mr.name = "PCI hole (32-bit)";
-	mr.base = lowmem;
-	mr.size = (4ULL * 1024 * 1024 * 1024) - lowmem;
+	mr.base = PCI_EMUL_MEMBASE32;
+	mr.size = PCI_EMUL_MEMLIMIT32 - PCI_EMUL_MEMBASE32;
 	unregister_mem_fallback(&mr);
 
 	/* ditto for the 64-bit PCI host aperture */
@@ -1747,24 +1741,24 @@ pci_bus_write_dsdt(int bus)
 	dsdt_line("      DWordMemory (ResourceProducer, PosDecode, "
 	    "MinFixed, MaxFixed, NonCacheable, ReadWrite,");
 	dsdt_line("        0x00000000,         // Granularity");
-	dsdt_line("        0x%08X,         // Range Minimum\n", bi->membase32);
+	dsdt_line("        0x%08X,         // Range Minimum\n", PCI_EMUL_MEMBASE32);
 	dsdt_line("        0x%08X,         // Range Maximum\n",
-	    bi->memlimit32 - 1);
+	    PCI_EMUL_MEMLIMIT32 - 1);
 	dsdt_line("        0x00000000,         // Translation Offset");
 	dsdt_line("        0x%08X,         // Length\n",
-	    bi->memlimit32 - bi->membase32);
+	    PCI_EMUL_MEMLIMIT32 - PCI_EMUL_MEMBASE32);
 	dsdt_line("        ,, , AddressRangeMemory, TypeStatic)");
 
 	/* mmio window (64-bit) */
 	dsdt_line("      QWordMemory (ResourceProducer, PosDecode, "
 	    "MinFixed, MaxFixed, NonCacheable, ReadWrite,");
 	dsdt_line("        0x0000000000000000, // Granularity");
-	dsdt_line("        0x%016lX, // Range Minimum\n", bi->membase64);
+	dsdt_line("        0x%016lX, // Range Minimum\n", PCI_EMUL_MEMBASE64);
 	dsdt_line("        0x%016lX, // Range Maximum\n",
-	    bi->memlimit64 - 1);
+	    PCI_EMUL_MEMLIMIT64 - 1);
 	dsdt_line("        0x0000000000000000, // Translation Offset");
 	dsdt_line("        0x%016lX, // Length\n",
-	    bi->memlimit64 - bi->membase64);
+	    PCI_EMUL_MEMLIMIT64 - PCI_EMUL_MEMBASE64);
 	dsdt_line("        ,, , AddressRangeMemory, TypeStatic)");
 	dsdt_line("    })");
 

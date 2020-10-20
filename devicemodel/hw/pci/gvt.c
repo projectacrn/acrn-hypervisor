@@ -197,10 +197,10 @@ gvt_init_config(struct pci_gvt *gvt)
 	bar2_end_addr = strtoull(next, &next, 16);
 
 	ctx = gvt->gvt_pi->vmctx;
-	if(bar0_start_addr < ctx->lowmem_limit
-		|| bar2_start_addr < ctx->lowmem_limit
-		|| bar0_end_addr > PCI_EMUL_ECFG_BASE
-		|| bar2_end_addr > PCI_EMUL_ECFG_BASE){
+	if(bar0_start_addr < PCI_EMUL_MEMBASE32
+		|| bar2_start_addr < PCI_EMUL_MEMBASE32
+		|| bar0_end_addr > PCI_EMUL_MEMLIMIT32
+		|| bar2_end_addr > PCI_EMUL_MEMLIMIT32){
 		pr_err("gvt pci bases are out of range\n");
 		return -1;
 	}
