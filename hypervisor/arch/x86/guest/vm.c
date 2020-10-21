@@ -478,7 +478,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		enable_iommu();
 
 		/* Create virtual uart;*/
-		init_vuart(vm, vm_config->vuart);
+		init_legacy_vuarts(vm, vm_config->vuart);
 
 		register_reset_port_handler(vm);
 
@@ -622,7 +622,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 
 	ptirq_remove_configured_intx_remappings(vm);
 
-	deinit_vuart(vm);
+	deinit_legacy_vuarts(vm);
 
 	deinit_vpci(vm);
 
