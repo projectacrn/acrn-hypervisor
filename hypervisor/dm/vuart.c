@@ -561,8 +561,7 @@ static bool vuart_register_io_handler(struct acrn_vm *vm, uint16_t port_base, ui
 	return ret;
 }
 
-static void setup_vuart(struct acrn_vm *vm,
-		const struct vuart_config *vu_config, uint16_t vuart_idx)
+static void setup_vuart(struct acrn_vm *vm, uint16_t vuart_idx)
 {
 	uint32_t divisor;
 	struct acrn_vuart *vu = &vm->vuart[vuart_idx];
@@ -578,16 +577,6 @@ static void setup_vuart(struct acrn_vm *vm,
 	vu->ier = 0U;
 	vuart_toggle_intr(vu);
 	vu->target_vu = NULL;
-	if (vu_config->type == VUART_LEGACY_PIO) {
-		vu->port_base = vu_config->addr.port_base;
-		vu->irq = vu_config->irq;
-		if (vuart_register_io_handler(vm, vu->port_base, vuart_idx) != 0U) {
-			vu->active = true;
-		}
-	} else {
-		/*TODO: add pci vuart support here*/
-		printf("PCI vuart is not support\n");
-	}
 }
 
 static struct acrn_vuart *find_active_target_vuart(const struct vuart_config *vu_config)
@@ -647,36 +636,73 @@ bool is_vuart_intx(const struct acrn_vm *vm, uint32_t intx_gsi)
 	return ret;
 }
 
-void init_vuart(struct acrn_vm *vm, const struct vuart_config *vu_config)
+void init_legacy_vuarts(struct acrn_vm *vm, const struct vuart_config *vu_config)
 {
 	uint8_t i;
+	struct acrn_vuart *vu;
 
 	for (i = 0U; i < MAX_VUART_NUM_PER_VM; i++) {
-		vm->vuart[i].active = false;
-		/* This vuart is not exist */
 		if ((vu_config[i].type == VUART_LEGACY_PIO) &&
-				(vu_config[i].addr.port_base == INVALID_COM_BASE)) {
-			continue;
-		}
-		setup_vuart(vm, &vu_config[i], i);
-		/*
-		 * The first vuart is used for VM console.
-		 * The rest of vuarts are used for connection.
-		 */
-		if (i != 0U) {
-			vuart_setup_connection(vm, &vu_config[i], i);
+				(vu_config[i].addr.port_base != INVALID_COM_BASE)) {
+			vu = &vm->vuart[i];
+			setup_vuart(vm, i);
+			vu->port_base = vu_config[i].addr.port_base;
+			vu->irq = vu_config[i].irq;
+			if (vuart_register_io_handler(vm, vu->port_base, i) != 0U) {
+				vu->active = true;
+			}
+			/*
+			 * The first vuart is used for VM console.
+			 * The rest of vuarts are used for connection.
+			 */
+			if (i != 0U) {
+				vuart_setup_connection(vm, &vu_config[i], i);
+			}
 		}
 	}
 }
 
-void deinit_vuart(struct acrn_vm *vm)
+void deinit_legacy_vuarts(struct acrn_vm *vm)
 {
 	uint8_t i;
 
 	for (i = 0U; i < MAX_VUART_NUM_PER_VM; i++) {
-		vm->vuart[i].active = false;
-		if (vm->vuart[i].target_vu != NULL) {
-			vuart_deinit_connection(&vm->vuart[i]);
+		if (vm->vuart[i].port_base != INVALID_COM_BASE) {
+			vm->vuart[i].active = false;
+			if (vm->vuart[i].target_vu != NULL) {
+				vuart_deinit_connection(&vm->vuart[i]);
+			}
 		}
+	}
+}
+
+void init_pci_vuart(struct pci_vdev *vdev)
+{
+	struct acrn_vuart *vu = vdev->priv_data;
+	struct acrn_vm_pci_dev_config *pci_cfg = vdev->pci_dev_config;
+	uint16_t idx = pci_cfg->vuart_idx;
+	struct acrn_vm *vm = container_of(vdev->vpci, struct acrn_vm, vpci);
+	struct acrn_vm_config *vm_cfg = get_vm_config(vm->vm_id);
+
+	setup_vuart(vm, idx);
+	vu->vdev = vdev;
+	vm_cfg->vuart[idx].type = VUART_PCI;
+	vm_cfg->vuart[idx].t_vuart.vm_id = pci_cfg->t_vuart.vm_id;
+	vm_cfg->vuart[idx].t_vuart.vuart_id = pci_cfg->t_vuart.vuart_id;
+
+	vu->active = true;
+	if (pci_cfg->vuart_idx != 0U) {
+		vuart_setup_connection(vm, &vm_cfg->vuart[idx], idx);
+	}
+
+}
+
+void deinit_pci_vuart(struct pci_vdev *vdev)
+{
+	struct acrn_vuart *vu = vdev->priv_data;
+
+	vu->active = false;
+	if (vu->target_vu != NULL) {
+		vuart_deinit_connection(vu);
 	}
 }

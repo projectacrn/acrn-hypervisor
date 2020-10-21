@@ -21,7 +21,7 @@
 
 #define AFFINITY_CPU(n)		(1UL << (n))
 #define MAX_VCPUS_PER_VM	MAX_PCPU_NUM
-#define MAX_VUART_NUM_PER_VM	2U
+#define MAX_VUART_NUM_PER_VM	8U
 #define MAX_VM_OS_NAME_LEN	32U
 #define MAX_MOD_TAG_LEN		32U
 
@@ -150,6 +150,9 @@ struct acrn_vm_pci_dev_config {
 	union pci_bdf vbdf;				/* virtual BDF of PCI device */
 	union pci_bdf pbdf;				/* physical BDF of PCI device */
 	char shm_region_name[32];			/* TODO: combine pbdf and shm_region_name into a union member */
+	/* TODO: All device specific attributions need move to other place */
+	struct target_vuart t_vuart;
+	uint16_t vuart_idx;
 	uint64_t vbar_base[PCI_BAR_COUNT];		/* vbar base address of PCI device, which is power-on default value */
 	struct pci_pdev *pdev;				/* the physical PCI device if it's a PT device */
 	const struct pci_vdev_ops *vdev_ops;		/* operations for PCI CFG read/write */
