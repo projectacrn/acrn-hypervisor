@@ -21,7 +21,7 @@ PY_CACHES = ["__pycache__", "../board_config/__pycache__", "../scenario_config/_
 GUEST_FLAG = ["0UL", "GUEST_FLAG_SECURE_WORLD_ENABLED", "GUEST_FLAG_LAPIC_PASSTHROUGH",
               "GUEST_FLAG_IO_COMPLETION_POLLING", "GUEST_FLAG_HIDE_MTRR", "GUEST_FLAG_RT"]
 
-MULTI_ITEM = ["guest_flag", "pcpu_id", "vcpu_clos", "input", "block", "network", "pci_dev", "shm_region"]
+MULTI_ITEM = ["guest_flag", "pcpu_id", "vcpu_clos", "input", "block", "network", "pci_dev", "shm_region", "communication_vuart"]
 
 SIZE_K = 1024
 SIZE_M = SIZE_K * 1024
@@ -48,6 +48,7 @@ class MultiItem():
         self.vir_network = []
         self.pci_dev = []
         self.shm_region = []
+        self.communication_vuart = []
 
 class TmpItem():
 
@@ -289,6 +290,10 @@ def get_leaf_value(tmp, tag_str, leaf):
     if leaf.tag == "shm_region" and tag_str == "shm_region":
         tmp.multi.shm_region.append(leaf.text)
 
+    # get communication_vuart for vm
+    if leaf.tag == "communication_vuart" and tag_str == "communication_vuart":
+        tmp.multi.communication_vuart.append(leaf.text)
+
 
 def get_sub_value(tmp, tag_str, vm_id):
 
@@ -323,6 +328,10 @@ def get_sub_value(tmp, tag_str, vm_id):
     # append shm_region for vm
     if tmp.multi.shm_region and tag_str == "shm_region":
         tmp.tag[vm_id] = tmp.multi.shm_region
+
+    # append communication_vuart for vm
+    if tmp.multi.communication_vuart and tag_str == "communication_vuart":
+        tmp.tag[vm_id] = tmp.multi.communication_vuart
 
 
 def get_leaf_tag_map(config_file, branch_tag, tag_str=''):

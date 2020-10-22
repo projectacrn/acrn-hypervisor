@@ -34,6 +34,8 @@ class AcrnDmArgs:
             else:
                 self.args["shm_regions"][vmid] = []
         self.args["xhci"] = common.get_leaf_tag_map(self.launch_info, "usb_xhci")
+        self.args["communication_vuarts"] = common.get_leaf_tag_map(self.launch_info, "communication_vuarts", "communication_vuart")
+        self.args["console_vuart"] = common.get_leaf_tag_map(self.launch_info, "console_vuart")
 
     def check_item(self):
         (rootfs, num) = board_cfg_lib.get_rootfs(self.board_info)
@@ -46,6 +48,8 @@ class AcrnDmArgs:
         err_dic = scenario_cfg_lib.vm_cpu_affinity_check(self.launch_info, cpu_affinity, "pcpu_id")
         launch_cfg_lib.ERR_LIST.update(err_dic)
         launch_cfg_lib.check_shm_regions(self.args["shm_regions"], self.scenario_info)
+        launch_cfg_lib.check_console_vuart(self.args["console_vuart"],self.args["vuart0"], self.scenario_info)
+        launch_cfg_lib.check_communication_vuart(self.args["communication_vuarts"], self.scenario_info)
 
 
 class AvailablePthru():
