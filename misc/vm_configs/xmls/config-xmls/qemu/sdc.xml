@@ -75,18 +75,18 @@
         <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline."></ramdisk_mod>
         <bootargs configurable="0" desc="Specify kernel boot arguments">SOS_VM_BOOTARGS</bootargs>
     </os_config>
-    <vuart id="0">
+    <legacy_vuart id="0">
         <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
         <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address." readonly="true">SOS_COM1_BASE</base>
         <irq configurable="0" desc="vCOM1 irq">SOS_COM1_IRQ</irq>
-    </vuart>
-    <vuart id="1">
+    </legacy_vuart>
+    <legacy_vuart id="1">
         <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
         <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
         <irq configurable="0" desc="vCOM2 irq">SOS_COM2_IRQ</irq>
         <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">1</target_vm_id>
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
-    </vuart>
+    </legacy_vuart>
     <pci_devs configurable="0" desc="pci devices list">
         <pci_dev desc="pci device"></pci_dev>
     </pci_devs>
@@ -113,17 +113,17 @@
         <base desc="SGX EPC section base, must be page aligned">0</base>
         <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
     </epc_section>
-    <vuart id="0">
+    <legacy_vuart id="0">
         <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
         <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
         <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
-    </vuart>
-    <vuart id="1">
+    </legacy_vuart>
+    <legacy_vuart id="1">
         <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
         <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_COM_BASE</base>
         <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
         <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
-    </vuart>
+    </legacy_vuart>
   </vm>
 </acrn-config>
