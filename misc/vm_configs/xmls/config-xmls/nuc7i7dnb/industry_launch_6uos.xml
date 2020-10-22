@@ -14,6 +14,10 @@
 	<shm_regions desc="List of shared memory regions for inter-VM communication.">
 		<shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
 	</shm_regions>
+	<console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
+	<communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
+		<communication_vuart></communication_vuart>
+	</communication_vuarts>
 	<passthrough_devices>
 		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
 		<audio desc="vm audio device">00:1f.3 Audio device: Intel Corporation Sunrise Point-LP HD Audio (rev 21)</audio>
@@ -52,6 +56,10 @@
 	<shm_regions desc="List of shared memory regions for inter-VM communication.">
 		<shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
 	</shm_regions>
+	<console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
+	<communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
+		<communication_vuart></communication_vuart>
+	</communication_vuarts>
 	<passthrough_devices>
 		<usb_xdci desc="vm usb_xdci device"></usb_xdci>
 		<audio desc="vm audio device"></audio>
@@ -89,6 +97,10 @@
         <shm_regions desc="List of shared memory regions for inter-VM communication.">
             <shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
         </shm_regions>
+        <console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
+        <communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
+            <communication_vuart></communication_vuart>
+        </communication_vuarts>
         <passthrough_devices>
             <usb_xdci desc="vm usb_xdci device" />
             <audio desc="vm audio device" />
@@ -125,6 +137,10 @@
         <shm_regions desc="List of shared memory regions for inter-VM communication.">
             <shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
         </shm_regions>
+        <console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
+        <communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
+            <communication_vuart></communication_vuart>
+        </communication_vuarts>
         <passthrough_devices>
             <usb_xdci desc="vm usb_xdci device" />
             <audio desc="vm audio device" />
@@ -161,6 +177,10 @@
         <shm_regions desc="List of shared memory regions for inter-VM communication.">
             <shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
         </shm_regions>
+        <console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
+        <communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
+            <communication_vuart></communication_vuart>
+        </communication_vuarts>
         <passthrough_devices>
             <usb_xdci desc="vm usb_xdci device" />
             <audio desc="vm audio device" />
@@ -197,6 +217,10 @@
         <shm_regions desc="List of shared memory regions for inter-VM communication.">
             <shm_region desc="configure the shm regions for current VM, for example hv:/sharename,2"></shm_region>
         </shm_regions>
+        <console_vuart desc="A PCI based console vuart which is emulated by device model">Disable</console_vuart>
+        <communication_vuarts desc="List of PCI based communication vuarts which are emulated by device model">
+            <communication_vuart></communication_vuart>
+        </communication_vuarts>
         <passthrough_devices>
             <usb_xdci desc="vm usb_xdci device" />
             <audio desc="vm audio device" />
