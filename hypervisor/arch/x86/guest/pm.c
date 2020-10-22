@@ -150,20 +150,25 @@ static bool pm1ab_io_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t width)
 	return true;
 }
 
-static inline void enter_s5(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
+static inline void enter_s5(struct acrn_vcpu *vcpu, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
+	struct acrn_vm *vm = vcpu->vm;
+	uint16_t pcpu_id = pcpuid_from_vcpu(vcpu);
+
 	get_vm_lock(vm);
 	/*
-	 * It's possible that ACRN come here from SOS and pre-launched VM. Currently, we
-	 * assume SOS has full ACPI power management stack. That means the value from SOS
-	 * should be saved and used to shutdown the system.
+	 * Currently, we assume SOS has full ACPI power management stack.
+	 * That means the value from SOS should be saved and used to shut
+	 * down the system.
 	 */
 	if (is_sos_vm(vm)) {
 		save_s5_reg_val(pm1a_cnt_val, pm1b_cnt_val);
 	}
 	pause_vm(vm);
-	(void)shutdown_vm(vm);
 	put_vm_lock(vm);
+
+	bitmap_set_nolock(vm->vm_id, &per_cpu(shutdown_vm_bitmap, pcpu_id));
+	make_shutdown_vm_request(pcpu_id);
 }
 
 static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
@@ -206,7 +211,7 @@ static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, 
 				if (vm->pm.sx_state_data->s3_pkg.val_pm1a == val) {
 					enter_s3(vm, v, 0U);
 				} else if (vm->pm.sx_state_data->s5_pkg.val_pm1a == val) {
-					enter_s5(vm, v, 0U);
+					enter_s5(vcpu, v, 0U);
 				}
 			}
 
@@ -220,7 +225,7 @@ static bool pm1ab_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t width, 
 				if (vm->pm.sx_state_data->s3_pkg.val_pm1b == val) {
 					enter_s3(vm, pm1a_cnt_val, v);
 				} else if (vm->pm.sx_state_data->s5_pkg.val_pm1b == val) {
-					enter_s5(vm, pm1a_cnt_val, v);
+					enter_s5(vcpu, pm1a_cnt_val, v);
 				}
 			} else {
 				/* the case broke ACPI spec */

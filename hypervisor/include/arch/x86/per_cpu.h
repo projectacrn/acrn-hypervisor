@@ -57,7 +57,7 @@ struct per_cpu_region {
 #ifdef PROFILING_ON
 	struct profiling_info_wrapper profiling_info;
 #endif
-	uint16_t shutdown_vm_id;
+	uint64_t shutdown_vm_bitmap;
 	uint64_t tsc_suspend;
 	/*
 	 * We maintain a per-pCPU array of vCPUs. vCPUs of a VM won't
