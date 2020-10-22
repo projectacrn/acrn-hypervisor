@@ -256,10 +256,13 @@ int32_t hcall_destroy_vm(__unused struct acrn_vm *vm, struct acrn_vm *target_vm,
 {
 	int32_t ret = -1;
 
+	get_vm_lock(target_vm);
 	if (is_paused_vm(target_vm)) {
 		/* TODO: check target_vm guest_flags */
 		ret = shutdown_vm(target_vm);
 	}
+	put_vm_lock(target_vm);
+
 	return ret;
 }
 
