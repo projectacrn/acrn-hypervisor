@@ -195,7 +195,7 @@ def get_pci_dev_num_per_vm():
                 # there is only vhostbridge but no passthrough device
                 # remove the count of vhostbridge, check get_pci_num definition
                 pci_dev_num[vm_i] -= 1
-            pci_dev_num_per_vm[vm_i] = pci_dev_num[vm_i] + shmem_num_i+ vuarts_num[vm_i]
+            pci_dev_num_per_vm[vm_i] = pci_dev_num[vm_i] + shmem_num_i + vuarts_num[vm_i]
         elif "SOS_VM" == VM_DB[vm_type]['load_type']:
             shmem_num_i = 0
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
