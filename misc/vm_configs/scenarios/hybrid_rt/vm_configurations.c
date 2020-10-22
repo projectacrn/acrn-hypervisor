@@ -8,6 +8,7 @@
 #include <pci_dev.h>
 
 extern struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM];
+extern struct acrn_vm_pci_dev_config sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM];
 extern struct acrn_vm_pci_dev_config vm2_pci_devs[VM2_CONFIG_PCI_DEV_NUM];
 
 extern struct pt_intx_config vm0_pt_intx[1U];
@@ -101,6 +102,8 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			.t_vuart.vm_id = 0U,
 			.t_vuart.vuart_id = 1U,
 		},
+		.pci_dev_num = 0U,
+		.pci_devs = sos_pci_devs,
 	},
 	{	/* VM2 */
 		CONFIG_POST_STD_VM(1),
