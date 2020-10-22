@@ -46,6 +46,7 @@
 #include "log.h"
 
 #define	IVSHMEM_MMIO_BAR	0
+#define	IVSHMEM_MSIX_BAR	1
 #define	IVSHMEM_MEM_BAR		2
 
 #define	IVSHMEM_VENDOR_ID	0x1af4
@@ -61,6 +62,9 @@
 #define	IVSHMEM_IV_POS_REG	0x08
 #define	IVSHMEM_DOORBELL_REG	0x0c
 #define	IVSHMEM_RESERVED_REG	0x0f
+
+/*Size of MSIX BAR of ivshmem device  should be 4KB-aligned.*/
+#define	IVSHMEM_MSIX_PBA_SIZE	0x1000
 
 #define hv_land_prefix	"hv:/"
 #define dm_land_prefix	"dm:/"
@@ -151,6 +155,11 @@ create_ivshmem_from_hv(struct vmctx *ctx, struct pci_vdev *vdev,
 	dev.slot = PCI_BDF(vdev->bus, vdev->slot, vdev->func);
 	dev.io_addr[IVSHMEM_MMIO_BAR] = pci_get_cfgdata32(vdev,
 			PCIR_BAR(IVSHMEM_MMIO_BAR));
+
+	/*MSI-x entry table BAR(BAR1)*/
+	addr = pci_get_cfgdata32(vdev, PCIR_BAR(IVSHMEM_MSIX_BAR));
+	dev.io_addr[IVSHMEM_MSIX_BAR] = addr;
+
 	addr = pci_get_cfgdata32(vdev, PCIR_BAR(IVSHMEM_MEM_BAR));
 	addr |= 0x0c; /* 64bit, prefetchable */
 	dev.io_addr[IVSHMEM_MEM_BAR] = addr;
@@ -297,6 +306,7 @@ pci_ivshmem_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata8(dev, PCIR_CLASS, IVSHMEM_CLASS);
 
 	pci_emul_alloc_bar(dev, IVSHMEM_MMIO_BAR, PCIBAR_MEM32, IVSHMEM_REG_SIZE);
+	pci_emul_alloc_bar(dev, IVSHMEM_MSIX_BAR, PCIBAR_MEM32, IVSHMEM_MSIX_PBA_SIZE);
 	pci_emul_alloc_bar(dev, IVSHMEM_MEM_BAR, PCIBAR_MEM64, size);
 
 	if (is_hv_land) {
