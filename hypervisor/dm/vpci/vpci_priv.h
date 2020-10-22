@@ -158,6 +158,7 @@ bool write_vmsix_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 void write_pt_vmsix_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 uint32_t rw_vmsix_table(struct pci_vdev *vdev, struct io_request *io_req);
 int32_t vmsix_handle_table_mmio_access(struct io_request *io_req, void *priv_data);
+bool vpci_vmsix_enabled(const struct pci_vdev *vdev);
 void deinit_vmsix_pt(struct pci_vdev *vdev);
 
 void init_vmsix_on_msi(struct pci_vdev *vdev);

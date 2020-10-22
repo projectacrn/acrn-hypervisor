@@ -844,3 +844,18 @@ uint32_t vpci_add_capability(struct pci_vdev *vdev, uint8_t *capdata, uint8_t ca
 
 	return ret;
 }
+
+bool vpci_vmsix_enabled(const struct pci_vdev *vdev)
+{
+	uint32_t msgctrl;
+	bool ret = false;
+
+	if (vdev->msix.capoff != 0U) {
+		msgctrl = pci_vdev_read_vcfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
+		if (((msgctrl & PCIM_MSIXCTRL_MSIX_ENABLE) != 0U) &&
+			((msgctrl & PCIM_MSIXCTRL_FUNCTION_MASK) == 0U)) {
+			ret = true;
+		}
+	}
+	return ret;
+}

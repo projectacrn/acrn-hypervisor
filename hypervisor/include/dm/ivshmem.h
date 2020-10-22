@@ -23,6 +23,7 @@ struct ivshmem_shm_region {
 	char name[32];
 	uint64_t hpa;
 	uint64_t size;
+	struct ivshmem_device *doorbell_peers[MAX_IVSHMEM_PEER_NUM];
 };
 
 extern const struct pci_vdev_ops vpci_ivshmem_ops;

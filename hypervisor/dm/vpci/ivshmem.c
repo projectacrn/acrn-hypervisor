@@ -23,6 +23,8 @@
 #define IVSHMEM_MSIX_BAR	1U
 #define IVSHMEM_SHM_BAR	2U
 
+#define IVSHMEM_MMIO_BAR_SIZE 4096UL
+
 /* The device-specific registers of ivshmem device */
 #define	IVSHMEM_IRQ_MASK_REG	0x0U
 #define	IVSHMEM_IRQ_STA_REG	0x4U
@@ -33,6 +35,14 @@ static struct ivshmem_shm_region mem_regions[8] = {
 	IVSHMEM_SHM_REGIONS
 };
 
+union ivshmem_doorbell {
+	uint32_t val;
+	struct {
+		uint16_t vector_index;
+		uint16_t peer_id;
+	} reg;
+};
+
 struct ivshmem_device {
 	struct pci_vdev* pcidev;
 	union {
@@ -40,10 +50,17 @@ struct ivshmem_device {
 		struct {
 			uint32_t irq_mask;
 			uint32_t irq_state;
+			/*
+			 * If the device is not configured for interrupts,
+			 * this is zero. Else, ivpos is the device's ID.
+			 */
 			uint32_t ivpos;
-			uint32_t doorbell;
+
+			/* Writing doorbell register requests to interrupt a peer */
+			union ivshmem_doorbell doorbell;
 		} regs;
 	} mmio;
+	struct ivshmem_shm_region *region;
 };
 
 /* IVSHMEM_SHM_SIZE is provided by offline tool */
@@ -78,6 +95,72 @@ static struct ivshmem_shm_region *find_shm_region(const char *name)
 }
 
 /*
+ * @brief There are two ivshmem server implementation in HV-land and
+ *	  DM-land, they're used for briding the notification channel
+ *	  between ivshmem devices acrossed VMs.
+ *
+ * @pre vdev != NULL
+ * @pre region->doorbell_peers[vm_id] = NULL
+ */
+static void ivshmem_server_bind_peer(struct pci_vdev *vdev)
+{
+	uint16_t vm_id;
+	struct acrn_vm_pci_dev_config *dev_config = vdev->pci_dev_config;
+	struct ivshmem_device *ivs_dev = (struct ivshmem_device *)vdev->priv_data;
+	struct ivshmem_shm_region *region = find_shm_region(dev_config->shm_region_name);
+
+	if (region != NULL) {
+		vm_id = vpci2vm(vdev->vpci)->vm_id;
+		/* Device ID equals to VM ID*/
+		ivs_dev->mmio.regs.ivpos = vm_id;
+		ivs_dev->region = region;
+		region->doorbell_peers[vm_id] = ivs_dev;
+	}
+}
+
+/*
+ * @pre vdev != NULL
+ */
+static void ivshmem_server_unbind_peer(struct pci_vdev *vdev)
+{
+	struct ivshmem_shm_region *region = ((struct ivshmem_device *)vdev->priv_data)->region;
+
+	region->doorbell_peers[vpci2vm(vdev->vpci)->vm_id] = NULL;
+}
+
+/*
+ * @pre src_ivs_dev != NULL
+ */
+static void ivshmem_server_notify_peer(struct ivshmem_device *src_ivs_dev, uint16_t dest_peer_id, uint16_t vector_index)
+{
+	struct acrn_vm *dest_vm;
+	struct ivshmem_device *dest_ivs_dev;
+	struct msix_table_entry *entry;
+	struct ivshmem_shm_region *region = src_ivs_dev->region;
+
+	if (dest_peer_id < MAX_IVSHMEM_PEER_NUM) {
+
+		dest_ivs_dev = region->doorbell_peers[dest_peer_id];
+		if ((dest_ivs_dev != NULL) && vpci_vmsix_enabled(dest_ivs_dev->pcidev)
+			&& (vector_index < dest_ivs_dev->pcidev->msix.table_count)) {
+
+			entry = &(dest_ivs_dev->pcidev->msix.table_entries[vector_index]);
+			if ((entry->vector_control & PCIM_MSIX_VCTRL_MASK) == 0U) {
+
+				dest_vm = vpci2vm(dest_ivs_dev->pcidev->vpci);
+				vlapic_inject_msi(dest_vm, entry->addr, entry->data);
+			} else {
+				pr_err("%s,target msix entry [%d] is masked.\n",
+					__func__, vector_index);
+			}
+		} else {
+			pr_err("%s,Invalid peer, ID = %d, vector index [%d] or MSI-X is disabled.\n",
+				__func__, dest_peer_id, vector_index);
+		}
+	}
+}
+
+/*
  * @post vdev->priv_data != NULL
  */
 static void create_ivshmem_device(struct pci_vdev *vdev)
@@ -101,6 +184,7 @@ static void create_ivshmem_device(struct pci_vdev *vdev)
  */
 static int32_t ivshmem_mmio_handler(struct io_request *io_req, void *data)
 {
+	union ivshmem_doorbell doorbell;
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	struct pci_vdev *vdev = (struct pci_vdev *) data;
 	struct ivshmem_device *ivs_dev = (struct ivshmem_device *) vdev->priv_data;
@@ -121,7 +205,13 @@ static int32_t ivshmem_mmio_handler(struct io_request *io_req, void *data)
 			}
 		} else {
 			if (offset != IVSHMEM_IV_POS_REG) {
-				ivs_dev->mmio.data[offset >> 2U] = mmio->value;
+				if (offset == IVSHMEM_DOORBELL_REG) {
+					doorbell.val = mmio->value;
+					ivshmem_server_notify_peer(ivs_dev, doorbell.reg.peer_id,
+						doorbell.reg.vector_index);
+				} else {
+					ivs_dev->mmio.data[offset >> 2U] = mmio->value;
+				}
 			}
 		}
 	}
@@ -168,10 +258,11 @@ static void ivshmem_vbar_map(struct pci_vdev *vdev, uint32_t idx)
 		(void)memset(&ivs_dev->mmio, 0U, sizeof(ivs_dev->mmio));
 		register_mmio_emulation_handler(vm, ivshmem_mmio_handler, vbar->base_gpa,
 				(vbar->base_gpa + vbar->size), vdev, false);
+		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, vbar->size);
 	} else if ((idx == IVSHMEM_MSIX_BAR) && (vbar->base_gpa != 0UL)) {
 		register_mmio_emulation_handler(vm, vmsix_handle_table_mmio_access, vbar->base_gpa,
 			(vbar->base_gpa + vbar->size), vdev, false);
-		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, VMSIX_ENTRY_TABLE_PBA_BAR_SIZE);
+		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, vbar->size);
 		vdev->msix.mmio_gpa = vbar->base_gpa;
 	}
 }
@@ -218,7 +309,7 @@ static void init_ivshmem_bar(struct pci_vdev *vdev, uint32_t bar_idx)
 	} else if (bar_idx == IVSHMEM_MSIX_BAR) {
 		size = VMSIX_ENTRY_TABLE_PBA_BAR_SIZE;
 	} else if (bar_idx == IVSHMEM_MMIO_BAR) {
-		size = 0x100UL;
+		size = IVSHMEM_MMIO_BAR_SIZE;
 	}
 	if (size != 0UL) {
 		vbar->size = size;
@@ -250,6 +341,7 @@ static void init_ivshmem_vdev(struct pci_vdev *vdev)
 	init_ivshmem_bar(vdev, IVSHMEM_MMIO_BAR);
 	init_ivshmem_bar(vdev, IVSHMEM_MSIX_BAR);
 	init_ivshmem_bar(vdev, IVSHMEM_SHM_BAR);
+	ivshmem_server_bind_peer(vdev);
 
 	vdev->user = vdev;
 }
@@ -261,6 +353,7 @@ static void deinit_ivshmem_vdev(struct pci_vdev *vdev)
 {
 	struct ivshmem_device *ivs_dev = (struct ivshmem_device *) vdev->priv_data;
 
+	ivshmem_server_unbind_peer(vdev);
 	ivs_dev->pcidev = NULL;
 	vdev->priv_data = NULL;
 	vdev->user = NULL;
