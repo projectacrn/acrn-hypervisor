@@ -636,6 +636,16 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
             print("   -s {},wdt-i6300esb \\".format(launch_cfg_lib.virtual_dev_slot("wdt-i6300esb")), file=config)
 
     set_dm_pt(names, sel, vmid, config)
+
+    if dm['console_vuart'][vmid] == "Enable":
+        print("   -s {},uart,vuart_idx:0 \\".format(launch_cfg_lib.virtual_dev_slot("console_vuart")), file=config)
+    for vuart_id in dm["communication_vuarts"][vmid]:
+        if not vuart_id:
+            break
+        print("   -s {},uart,vuart_idx:{} \\".format(
+            launch_cfg_lib.virtual_dev_slot("communication_vuart_{}".format(vuart_id)), vuart_id), file=config)
+
+
     print("   $vm_name", file=config)
     print("}", file=config)
 

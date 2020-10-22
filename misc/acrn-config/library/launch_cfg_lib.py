@@ -634,3 +634,38 @@ def check_shm_regions(launch_shm_regions, scenario_info):
                 ERR_LIST[shm_region_key] = "shm {} should be configured in scenario setting and the size should be decimal" \
                                            "in MB and spaces should not exist.".format(shm_region)
                 return
+
+
+def check_console_vuart(launch_console_vuart, vuart0, scenario_info):
+    vuarts = common.get_vuart_info(scenario_info)
+
+    for uos_id, console_vuart_enable in launch_console_vuart.items():
+        key = 'uos:id={},console_vuart'.format(uos_id)
+        if console_vuart_enable == "Enable" and vuart0[uos_id] == "Enable":
+            ERR_LIST[key] = "vuart0 and console_vuart of uos {} should not be enabled " \
+                 "at the same time".format(uos_id)
+            return
+        if console_vuart_enable == "Enable" and int(uos_id) in vuarts.keys() \
+             and 0 in vuarts[uos_id] and vuarts[uos_id][0]['base'] == "INVALID_PCI_BASE":
+            ERR_LIST[key] = "console_vuart of uos {} should be enabled in scenario setting".format(uos_id)
+            return
+
+
+def check_communication_vuart(launch_communication_vuarts, scenario_info):
+    vuarts = common.get_vuart_info(scenario_info)
+    vuart1_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
+
+    for uos_id, vuart_list in launch_communication_vuarts.items():
+        vuart_key = 'uos:id={},communication_vuarts,communication_vuart'.format(uos_id)
+        for vuart_id in vuart_list:
+            if not vuart_id:
+                return
+            if int(vuart_id) not in vuarts[uos_id].keys():
+                ERR_LIST[vuart_key] = "communication_vuart {} of uos {} should be configured" \
+                     "in scenario setting.".format(vuart_id, uos_id)
+                return
+            if int(vuart_id) == 1 and vuarts[uos_id][1]['base'] != "INVALID_PCI_BASE":
+                if uos_id in vuart1_setting.keys() and vuart1_setting[uos_id]['base'] != "INVALID_COM_BASE":
+                    ERR_LIST[vuart_key] = "uos {}'s communication_vuart 1 and legacy_vuart 1 should " \
+                        "not be configured at the same time.".format(uos_id)
+                return
