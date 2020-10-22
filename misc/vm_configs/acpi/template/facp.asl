@@ -61,18 +61,18 @@
            PCIe ASPM Not Supported (V4) : 0
               CMOS RTC Not Present (V5) : 0
 [0001]                         Reserved : 00
-[0004]            Flags (decoded below) : 00001125
+[0004]            Flags (decoded below) : 00000000
  WBINVD instruction is operational (V1) : 1
          WBINVD flushes all caches (V1) : 0
                All CPUs support C1 (V1) : 1
              C2 works on MP system (V1) : 0
        Control Method Power Button (V1) : 0
-       Control Method Sleep Button (V1) : 1
+       Control Method Sleep Button (V1) : 0
     RTC wake not in fixed reg space (V1) : 0
        RTC can wake system from S4 (V1) : 0
                    32-bit PM Timer (V1) : 1
                  Docking Supported (V1) : 0
-          Reset Register Supported (V2) : 0
+          Reset Register Supported (V2) : 1
                        Sealed Case (V3) : 0
                Headless - No Video (V3) : 1
    Use native instr after SLP_TYPx (V3) : 0
@@ -86,13 +86,13 @@ Use APIC Physical Destination Mode (V4) : 0
                  Low Power S0 Idle (V5) : 0
 
 [0012]                   Reset Register : [Generic Address Structure]
-[0001]                         Space ID : 00 [SystemMemory]
-[0001]                        Bit Width : 00
+[0001]                         Space ID : 01 [SystemIO]
+[0001]                        Bit Width : 08
 [0001]                       Bit Offset : 00
-[0001]             Encoded Access Width : 00 [Undefined/Legacy]
-[0008]                          Address : 0000000000000000
+[0001]             Encoded Access Width : 01 [Byte Access:8]
+[0008]                          Address : 0000000000000CF9
 
-[0001]             Value to cause reset : 00
+[0001]             Value to cause reset : 0E
 [0002]        ARM Flags (decoded below) : 0000
                          PSCI Compliant : 0
                   Must use HVC for PSCI : 0
