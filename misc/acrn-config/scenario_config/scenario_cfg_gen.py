@@ -215,7 +215,8 @@ def main(args):
 
 
     # generate ASL code of ACPI tables for Pre-launched VMs
-    asl_gen.main(args)
+    if not err_dic:
+        err_dic = asl_gen.main(args)
 
     if not err_dic:
         print("Scenario configuration files were created successfully.")
