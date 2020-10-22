@@ -352,7 +352,7 @@ def get_leaf_tag_map(config_file, branch_tag, tag_str=''):
 
                 # for each 3rd level item
                 for leaf in sub:
-                    if leaf.tag == tag_str and tag_str not in MULTI_ITEM and sub.tag != "vuart":
+                    if leaf.tag == tag_str and tag_str not in MULTI_ITEM and sub.tag not in ["legacy_vuart","vuart"]:
                         if leaf.text == None or not leaf.text:
                             tmp.tag[vm_id] = ''
                         else:
@@ -406,11 +406,11 @@ def get_vuart_info_id(config_file, idx):
         for sub in item:
             tmp_vuart = {}
             for leaf in sub:
-                if sub.tag == "vuart" and int(sub.attrib['id']) == idx:
+                if sub.tag in ["legacy_vuart","vuart"] and int(sub.attrib['id']) == idx:
                     tmp_vuart = get_vuart_id(tmp_vuart, leaf.tag, leaf.text)
 
             # append vuart for each vm
-            if tmp_vuart and sub.tag == "vuart":
+            if tmp_vuart and sub.tag in ["legacy_vuart","vuart"]:
                 tmp_tag[vm_id] = tmp_vuart
 
     return tmp_tag
