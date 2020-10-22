@@ -10,6 +10,15 @@
 #define	IVSHMEM_VENDOR_ID	0x1af4U
 #define	IVSHMEM_DEVICE_ID	0x1110U
 #ifdef CONFIG_IVSHMEM_ENABLED
+
+/*
+ * Max number of peers for each ivshmem region, and
+ * VM ID is used as peer IDs of this VM's ivshmem devices.
+ */
+#define MAX_IVSHMEM_PEER_NUM (CONFIG_MAX_VM_NUM)
+
+/* Max number of MSIX table entries of shmem device. */
+#define MAX_IVSHMEM_MSIX_TBL_ENTRY_NUM 8U
 struct ivshmem_shm_region {
 	char name[32];
 	uint64_t hpa;

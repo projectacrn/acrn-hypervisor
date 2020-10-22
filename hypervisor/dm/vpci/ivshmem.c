@@ -18,8 +18,9 @@
 #define	IVSHMEM_CLASS		0x05U
 #define	IVSHMEM_REV		0x01U
 
-/* ivshmem device only supports bar0 and bar2 */
+/* ivshmem device supports bar0, bar1 and bar2 */
 #define IVSHMEM_MMIO_BAR	0U
+#define IVSHMEM_MSIX_BAR	1U
 #define IVSHMEM_SHM_BAR	2U
 
 /* The device-specific registers of ivshmem device */
@@ -129,12 +130,10 @@ static int32_t ivshmem_mmio_handler(struct io_request *io_req, void *data)
 
 static int32_t read_ivshmem_vdev_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
-	if (cfg_header_access(offset)) {
-		if (vbar_access(vdev, offset)) {
-			*val = pci_vdev_read_vbar(vdev, pci_bar_index(offset));
-		} else {
-			*val = pci_vdev_read_vcfg(vdev, offset, bytes);
-		}
+	if (vbar_access(vdev, offset)) {
+		*val = pci_vdev_read_vbar(vdev, pci_bar_index(offset));
+	} else {
+		*val = pci_vdev_read_vcfg(vdev, offset, bytes);
 	}
 
 	return 0;
@@ -147,13 +146,14 @@ static void ivshmem_vbar_unmap(struct pci_vdev *vdev, uint32_t idx)
 
 	if ((idx == IVSHMEM_SHM_BAR) && (vbar->base_gpa != 0UL)) {
 		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, vbar->size);
-	} else if ((idx == IVSHMEM_MMIO_BAR) && (vbar->base_gpa != 0UL)) {
+	} else if (((idx == IVSHMEM_MMIO_BAR) || (idx == IVSHMEM_MSIX_BAR)) && (vbar->base_gpa != 0UL)) {
 		unregister_mmio_emulation_handler(vm, vbar->base_gpa, (vbar->base_gpa + vbar->size));
 	}
 }
 
 /*
  * @pre vdev->priv_data != NULL
+ * @pre msix->table_offset == 0U
  */
 static void ivshmem_vbar_map(struct pci_vdev *vdev, uint32_t idx)
 {
@@ -168,18 +168,23 @@ static void ivshmem_vbar_map(struct pci_vdev *vdev, uint32_t idx)
 		(void)memset(&ivs_dev->mmio, 0U, sizeof(ivs_dev->mmio));
 		register_mmio_emulation_handler(vm, ivshmem_mmio_handler, vbar->base_gpa,
 				(vbar->base_gpa + vbar->size), vdev, false);
+	} else if ((idx == IVSHMEM_MSIX_BAR) && (vbar->base_gpa != 0UL)) {
+		register_mmio_emulation_handler(vm, vmsix_handle_table_mmio_access, vbar->base_gpa,
+			(vbar->base_gpa + vbar->size), vdev, false);
+		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, VMSIX_ENTRY_TABLE_PBA_BAR_SIZE);
+		vdev->msix.mmio_gpa = vbar->base_gpa;
 	}
 }
 
 static int32_t write_ivshmem_vdev_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
-	if (cfg_header_access(offset)) {
-		if (vbar_access(vdev, offset)) {
-			vpci_update_one_vbar(vdev, pci_bar_index(offset), val,
-					ivshmem_vbar_map, ivshmem_vbar_unmap);
-		} else {
-			pci_vdev_write_vcfg(vdev, offset, bytes, val);
-		}
+	if (vbar_access(vdev, offset)) {
+		vpci_update_one_vbar(vdev, pci_bar_index(offset), val,
+			ivshmem_vbar_map, ivshmem_vbar_unmap);
+	} else if (msixcap_access(vdev, offset)) {
+		write_vmsix_cap_reg(vdev, offset, bytes, val);
+	} else {
+		pci_vdev_write_vcfg(vdev, offset, bytes, val);
 	}
 
 	return 0;
@@ -210,6 +215,8 @@ static void init_ivshmem_bar(struct pci_vdev *vdev, uint32_t bar_idx)
 			pr_err("%s ivshmem device %x:%x.%x has no memory region\n",
 				__func__, vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f);
 		}
+	} else if (bar_idx == IVSHMEM_MSIX_BAR) {
+		size = VMSIX_ENTRY_TABLE_PBA_BAR_SIZE;
 	} else if (bar_idx == IVSHMEM_MMIO_BAR) {
 		size = 0x100UL;
 	}
@@ -236,10 +243,12 @@ static void init_ivshmem_vdev(struct pci_vdev *vdev)
 	pci_vdev_write_vcfg(vdev, PCIR_DEVICE, 2U, IVSHMEM_DEVICE_ID);
 	pci_vdev_write_vcfg(vdev, PCIR_REVID, 1U, IVSHMEM_REV);
 	pci_vdev_write_vcfg(vdev, PCIR_CLASS, 1U, IVSHMEM_CLASS);
+	add_vmsix_capability(vdev, MAX_IVSHMEM_MSIX_TBL_ENTRY_NUM, IVSHMEM_MSIX_BAR);
 
 	/* initialize ivshmem bars */
 	vdev->nr_bars = PCI_BAR_COUNT;
 	init_ivshmem_bar(vdev, IVSHMEM_MMIO_BAR);
+	init_ivshmem_bar(vdev, IVSHMEM_MSIX_BAR);
 	init_ivshmem_bar(vdev, IVSHMEM_SHM_BAR);
 
 	vdev->user = vdev;
@@ -276,6 +285,7 @@ int32_t create_ivshmem_vdev(struct acrn_vm *vm, struct acrn_emul_dev *dev)
 				spinlock_obtain(&vm->vpci.lock);
 				dev_config->vbdf.value = (uint16_t) dev->slot;
 				dev_config->vbar_base[IVSHMEM_MMIO_BAR] = (uint64_t) dev->io_addr[IVSHMEM_MMIO_BAR];
+				dev_config->vbar_base[IVSHMEM_MSIX_BAR] = (uint64_t) dev->io_addr[IVSHMEM_MSIX_BAR];
 				dev_config->vbar_base[IVSHMEM_SHM_BAR] = (uint64_t) dev->io_addr[IVSHMEM_SHM_BAR];
 				dev_config->vbar_base[IVSHMEM_SHM_BAR] |= ((uint64_t) dev->io_addr[IVSHMEM_SHM_BAR + 1U]) << 32U;
 				(void) vpci_init_vdev(&vm->vpci, dev_config, NULL);
