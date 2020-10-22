@@ -9,8 +9,6 @@
 #include <pci_dev.h>
 #include <vpci.h>
 
-struct acrn_vm_pci_dev_config sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM];
-
 /*
  * @pre pdev != NULL;
  */
