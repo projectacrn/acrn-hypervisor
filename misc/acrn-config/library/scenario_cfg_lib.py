@@ -131,6 +131,43 @@ def get_shmem_num(shmem_regions):
     return shmem_num
 
 
+def get_pci_dev_num_per_vm():
+    pci_dev_num_per_vm = {}
+
+    pci_items = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "pci_devs", "pci_dev")
+    pci_devs = get_pci_devs(pci_items)
+    pci_dev_num = get_pci_num(pci_devs)
+
+    ivshmem_region = common.get_hv_item_tag(common.SCENARIO_INFO_FILE,
+        "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
+
+    shmem_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE,
+        "FEATURES", "IVSHMEM", "IVSHMEM_ENABLED")
+
+    shmem_regions = get_shmem_regions(ivshmem_region)
+    shmem_num = get_shmem_num(shmem_regions)
+
+    for vm_i,vm_type in common.VM_TYPES.items():
+        if "POST_LAUNCHED_VM" == VM_DB[vm_type]['load_type']:
+            shmem_num_i = 0
+            if shmem_enabled == 'y' and vm_i in shmem_num.keys():
+                shmem_num_i = shmem_num[vm_i]
+            pci_dev_num_per_vm[vm_i] = shmem_num_i
+        elif "PRE_LAUNCHED_VM" == VM_DB[vm_type]['load_type']:
+            shmem_num_i = 0
+            if shmem_enabled == 'y' and vm_i in shmem_num.keys():
+                shmem_num_i = shmem_num[vm_i]
+            if pci_dev_num[vm_i] == 1:
+                # there is only vhostbridge but no passthrough device
+                # remove the count of vhostbridge, check get_pci_num definition
+                pci_dev_num[vm_i] -= 1
+            pci_dev_num_per_vm[vm_i] = pci_dev_num[vm_i] + shmem_num_i
+        elif "SOS_VM" == VM_DB[vm_type]['load_type']:
+            continue
+
+    return pci_dev_num_per_vm
+
+
 def check_board_private_info():
 
     if 'SOS_VM' not in common.VM_TYPES.values():
