@@ -110,14 +110,25 @@ def pci_dev_num_per_vm_gen(config):
     shmem_num = scenario_cfg_lib.get_shmem_num(shmem_regions)
 
     for vm_i,vm_type in common.VM_TYPES.items():
+        num = 0
         if "POST_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
-           if shmem_enabled == 'y' and vm_i in shmem_num.keys():
-                print("#define VM{}_CONFIG_PCI_DEV_NUM\t{}U".format(vm_i, shmem_num[vm_i]), file=config)
+            shmem_num_i = 0
+            if shmem_enabled == 'y' and vm_i in shmem_num.keys():
+                shmem_num_i = shmem_num[vm_i]
+            num = shmem_num_i
         elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             shmem_num_i = 0
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
-            print("#define VM{}_CONFIG_PCI_DEV_NUM\t{}U".format(vm_i, pci_dev_num[vm_i] + shmem_num_i), file=config)
+            if pci_dev_num[vm_i] == 1:
+                # there is only vhostbridge but no passthrough device
+                # remove the count of vhostbridge, check get_pci_num definition
+                pci_dev_num[vm_i] -= 1
+            num = pci_dev_num[vm_i] + shmem_num_i
+        elif "SOS_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
+            continue
+        if num > 0:
+            print("#define VM{}_CONFIG_PCI_DEV_NUM\t{}U".format(vm_i, num), file=config)
 
     print("", file=config)
 
