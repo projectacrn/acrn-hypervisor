@@ -52,7 +52,8 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 		pause_vm(vm);
 		put_vm_lock(vm);
 
-		per_cpu(shutdown_vm_id, pcpuid_from_vcpu(vcpu)) = vm->vm_id;
+		bitmap_set_nolock(vm->vm_id,
+				&per_cpu(shutdown_vm_bitmap, pcpuid_from_vcpu(vcpu)));
 		make_shutdown_vm_request(pcpuid_from_vcpu(vcpu));
 	}
 }
@@ -83,8 +84,9 @@ static bool handle_reset_reg_read(struct acrn_vcpu *vcpu, __unused uint16_t addr
 /**
  * @pre vm != NULL
  */
-static bool handle_common_reset_reg_write(struct acrn_vm *vm, bool reset)
+static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset)
 {
+	struct acrn_vm *vm = vcpu->vm;
 	bool ret = true;
 
 	get_vm_lock(vm);
@@ -104,11 +106,10 @@ static bool handle_common_reset_reg_write(struct acrn_vm *vm, bool reset)
 			 *    or pre-launched VM reset,
 			 * ACRN doesn't support re-launch, just shutdown the guest.
 			 */
-			const struct acrn_vcpu *bsp = vcpu_from_vid(vm, BSP_CPU_ID);
-
 			pause_vm(vm);
-			per_cpu(shutdown_vm_id, pcpuid_from_vcpu(bsp)) = vm->vm_id;
-			make_shutdown_vm_request(pcpuid_from_vcpu(bsp));
+			bitmap_set_nolock(vm->vm_id,
+					&per_cpu(shutdown_vm_bitmap, pcpuid_from_vcpu(vcpu)));
+			make_shutdown_vm_request(pcpuid_from_vcpu(vcpu));
 		}
 	} else {
 		if (is_postlaunched_vm(vm)) {
@@ -132,7 +133,7 @@ static bool handle_common_reset_reg_write(struct acrn_vm *vm, bool reset)
 static bool handle_kb_write(struct acrn_vcpu *vcpu, __unused uint16_t addr, size_t bytes, uint32_t val)
 {
 	/* ignore commands other than system reset */
-	return handle_common_reset_reg_write(vcpu->vm, ((bytes == 1U) && (val == 0xfeU)));
+	return handle_common_reset_reg_write(vcpu, ((bytes == 1U) && (val == 0xfeU)));
 }
 
 static bool handle_kb_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
@@ -163,7 +164,7 @@ static bool handle_kb_read(struct acrn_vcpu *vcpu, uint16_t addr, size_t bytes)
 static bool handle_cf9_write(struct acrn_vcpu *vcpu, __unused uint16_t addr, size_t bytes, uint32_t val)
 {
 	/* We don't differentiate among hard/soft/warm/cold reset */
-	return handle_common_reset_reg_write(vcpu->vm,
+	return handle_common_reset_reg_write(vcpu,
 			((bytes == 1U) && ((val & 0x4U) == 0x4U) && ((val & 0xaU) != 0U)));
 }
 
@@ -179,7 +180,7 @@ static bool handle_reset_reg_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t
 		struct acpi_reset_reg *reset_reg = get_host_reset_reg_data();
 
 		if (val == reset_reg->val) {
-			ret = handle_common_reset_reg_write(vcpu->vm, true);
+			ret = handle_common_reset_reg_write(vcpu, true);
 		} else {
 			/*
 			 * ACPI defines the reset value but doesn't specify the meaning of other values.
@@ -234,7 +235,17 @@ void register_reset_port_handler(struct acrn_vm *vm)
 
 void shutdown_vm_from_idle(uint16_t pcpu_id)
 {
-	struct acrn_vm *vm = get_vm_from_vmid(per_cpu(shutdown_vm_id, pcpu_id));
+	uint16_t vm_id;
+	uint64_t *vms = &per_cpu(shutdown_vm_bitmap, pcpu_id);
+	struct acrn_vm *vm;
 
-	(void)shutdown_vm(vm);
+	for (vm_id = fls64(*vms); vm_id < CONFIG_MAX_VM_NUM; vm_id = fls64(*vms)) {
+		vm = get_vm_from_vmid(vm_id);
+		get_vm_lock(vm);
+		if (is_paused_vm(vm)) {
+			(void)shutdown_vm(vm);
+		}
+		put_vm_lock(vm);
+		bitmap_clear_nolock(vm_id, vms);
+	}
 }
