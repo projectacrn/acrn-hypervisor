@@ -107,6 +107,14 @@ def generate_file(vm_info, config):
         sos_used_bdf.append(bdf_tuple)
 
     vuarts = common.get_vuart_info(common.SCENARIO_INFO_FILE)
+    vuarts_num = scenario_cfg_lib.get_vuart_num(vuarts)
+    pci_vuart_enabled = False
+    for vm_i in common.VM_TYPES:
+        if vuarts_num[vm_i] > 0:
+            pci_vuart_enabled = True
+            break
+
+
 
     print("{}".format(scenario_cfg_lib.HEADER_LICENSE), file=config)
     print("", file=config)
@@ -116,6 +124,8 @@ def generate_file(vm_info, config):
     print("#include <vbar_base.h>", file=config)
     print("#include <mmu.h>", file=config)
     print("#include <page.h>", file=config)
+    if pci_vuart_enabled:
+        print("#include <vmcs9900.h>", file=config)
     # Insert header for share memory
     if vm_info.shmem.shmem_enabled == 'y':
         print("#include <ivshmem_cfg.h>", file=config)
@@ -133,6 +143,8 @@ def generate_file(vm_info, config):
         print(" * TODO: add DEV_PCICOMMON macro to initialize emu_type, vbdf and vdev_ops", file=config)
         print(" * to simplify the code.", file=config)
         print(" */", file=config)
+    if pci_vuart_enabled:
+        print("#define INVALID_PCI_BASE\t0U",file=config)
 
     for vm_i, vm_type in common.VM_TYPES.items():
         vm_used_bdf = []
@@ -233,6 +245,49 @@ def generate_file(vm_info, config):
                         else:
                             print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{}".format(index), file=config)
                             break
+                pci_cnt += 1
+                print("\t},", file=config)
+
+        if vm_i in vuarts.keys():
+            # get legacy vuart information
+            vuart0_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 0)
+            vuart1_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
+
+            for vuart_id in vuarts[vm_i].keys():
+                if vuarts[vm_i][vuart_id]['base'] == "INVALID_PCI_BASE":
+                    continue
+                # skip pci vuart 0 for post-launched vm
+                if vuart_id == 0 and scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "POST_LAUNCHED_VM":
+                    continue
+                # Skip pci vuart 0 if the legacy vuart 0 is enabled
+                if vuart_id == 0 and vm_i in vuart0_setting and vuart0_setting[vm_i]['base'] != "INVALID_COM_BASE":
+                    continue
+                # Skip pci vuart 1 if the legacy vuart 1 is enabled
+                if vuart_id == 1 and vm_i in vuart1_setting and vuart1_setting[vm_i]['base'] != "INVALID_COM_BASE":
+                    continue
+
+                print("\t{", file=config)
+                print("\t\t.vuart_idx = {:1d},".format(vuart_id), file=config)
+                print("\t\t.emu_type = {},".format(PCI_DEV_TYPE[0]), file=config)
+                print("\t\t.vdev_ops = &vmcs9900_ops,", file=config)
+
+                if vuart_id != 0 and scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "POST_LAUNCHED_VM":
+                    print("\t\t.vbar_base[0] = INVALID_PCI_BASE,", file=config)
+                    print("\t\t.vbdf.value = UNASSIGNED_VBDF,", file=config)
+
+                if scenario_cfg_lib.VM_DB[vm_type]['load_type'] != "POST_LAUNCHED_VM":
+                    print("\t\tVM{:1d}_VUART_{:1d}_VBAR,".format(vm_i, vuart_id), file=config)
+                    if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
+                        free_bdf = find_unused_bdf(vm_used_bdf, "vuart")
+                        vm_used_bdf.append(free_bdf)
+                    elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+                        free_bdf = find_unused_bdf(sos_used_bdf, "vuart")
+                        sos_used_bdf.append(free_bdf)
+                    print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{:02d}U, .f = 0x{:02d}U}},".format(free_bdf.dev,free_bdf.func), file=config)
+
+                if vuart_id != 0:
+                    print("\t\t.t_vuart.vm_id = {},".format(vuarts[vm_i][vuart_id]['target_vm_id']), file=config)
+                    print("\t\t.t_vuart.vuart_id = {},".format(vuarts[vm_i][vuart_id]['target_uart_id']), file=config)
                 pci_cnt += 1
                 print("\t},", file=config)
 
