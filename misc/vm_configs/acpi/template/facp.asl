@@ -9,9 +9,9 @@
  */
 
 [0004]                        Signature : "FACP"    [Fixed ACPI Description Table (FADT)]
-[0004]                     Table Length : 000000F4
-[0001]                         Revision : 03
-[0001]                         Checksum : 28
+[0004]                     Table Length : 0000010C
+[0001]                         Revision : 05
+[0001]                         Checksum : 00
 [0006]                           Oem ID : "ACRN  "
 [0008]                     Oem Table ID : "ACRNFADT"
 [0004]                     Oem Revision : 00000001
@@ -28,16 +28,16 @@
 [0001]               ACPI Disable Value : 00
 [0001]                   S4BIOS Command : 00
 [0001]                  P-State Control : 00
-[0004]         PM1A Event Block Address : 00001800
+[0004]         PM1A Event Block Address : 00000000
 [0004]         PM1B Event Block Address : 00000000
-[0004]       PM1A Control Block Address : 00001804
+[0004]       PM1A Control Block Address : 00000000
 [0004]       PM1B Control Block Address : 00000000
 [0004]        PM2 Control Block Address : 00000000
 [0004]           PM Timer Block Address : 00000000
 [0004]               GPE0 Block Address : 00000000
 [0004]               GPE1 Block Address : 00000000
-[0001]           PM1 Event Block Length : 04
-[0001]         PM1 Control Block Length : 02
+[0001]           PM1 Event Block Length : 00
+[0001]         PM1 Control Block Length : 00
 [0001]         PM2 Control Block Length : 00
 [0001]            PM Timer Block Length : 00
 [0001]                GPE0 Block Length : 00
@@ -82,7 +82,7 @@
            Remote Power-on capable (V4) : 0
             Use APIC Cluster Model (V4) : 0
 Use APIC Physical Destination Mode (V4) : 0
-                  Hardware Reduced (V5) : 0
+                  Hardware Reduced (V5) : 1
                  Low Power S0 Idle (V5) : 0
 
 [0012]                   Reset Register : [Generic Address Structure]
@@ -155,3 +155,16 @@ Use APIC Physical Destination Mode (V4) : 0
 [0001]                       Bit Offset : 00
 [0001]             Encoded Access Width : 00 [Undefined/Legacy]
 [0008]                          Address : 0000000000000000
+[0012]           Sleep Control Register : [Generic Address Structure]
+[0001]                         Space ID : 01 [SystemIO]
+[0001]                        Bit Width : 08
+[0001]                       Bit Offset : 00
+[0001]             Encoded Access Width : 01 [Byte Access:8]
+[0008]                          Address : 0000000000000400
+
+[0012]            Sleep Status Register : [Generic Address Structure]
+[0001]                         Space ID : 01 [SystemIO]
+[0001]                        Bit Width : 08
+[0001]                       Bit Offset : 00
+[0001]             Encoded Access Width : 01 [Byte Access:8]
+[0008]                          Address : 0000000000000401

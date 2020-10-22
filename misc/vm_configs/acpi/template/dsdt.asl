@@ -16,6 +16,10 @@
  */
 DefinitionBlock ("", "DSDT", 3, "ACRN  ", "ACRNDSDT", 0x00000001)
 {
-
+  Name (_S5, Package ()
+  {
+      0x05,
+      Zero,
+  })
 }
 
