@@ -117,9 +117,9 @@ static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset)
 			ret = false;
 		}
 		/*
-                 * ignore writes from SOS and pre-launched VM.
-                 * equivalent to hide this port from guests.
-                 */
+		 * ignore writes from SOS and pre-launched VM.
+		 * equivalent to hide this port from guests.
+		 */
 	}
 	put_vm_lock(vm);
 
@@ -211,12 +211,11 @@ void register_reset_port_handler(struct acrn_vm *vm)
 		io_range.base = 0x64U;
 		register_pio_emulation_handler(vm, KB_PIO_IDX, &io_range, handle_kb_read, handle_kb_write);
 
+		/* ACPI reset register is fixed at 0xcf9 for post-launched and pre-launched VMs */
 		io_range.base = 0xcf9U;
 		register_pio_emulation_handler(vm, CF9_PIO_IDX, &io_range, handle_reset_reg_read, handle_cf9_write);
 
 		/*
-		 * - pre-launched VMs don't support ACPI;
-		 * - ACPI reset register is fixed at 0xcf9 for post-launched VMs;
 		 * - here is taking care of SOS only:
 		 *   Don't support MMIO or PCI based reset register for now.
 		 *   ACPI Spec: Register_Bit_Width must be 8 and Register_Bit_Offset must be 0.
