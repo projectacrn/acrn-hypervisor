@@ -413,6 +413,55 @@ $().ready(function(){
         show_com_target(id, value);
     });
 
+    $(document).on('change', "select[ID$='vuart:id=0,base']", function() {
+        var id = $(this).attr('id');
+        var value = $(this).val();
+        if(value == 'COM1_BASE') {
+            id = id.replace('legacy_vuart', 'console_vuart');
+            id = escape_str(id);
+            $('#'+id).val('INVALID_PCI_BASE').trigger('change');
+        } else if(value == 'PCI_VUART') {
+            id = id.replace('console_vuart', 'legacy_vuart');
+            id = escape_str(id);
+            $('#'+id).val('INVALID_COM_BASE').trigger('change');
+        }
+    });
+
+    $(document).on('change', "select[ID$='vuart:id=1,base']", function() {
+        var id = $(this).attr('id');
+        var value = $(this).val();
+
+        if(value == 'COM2_BASE') {
+            id = id.replace('legacy_vuart', 'communication_vuart');
+            id = escape_str(id);
+            $('#'+id).val('INVALID_PCI_BASE').trigger('change');
+        } else if(value == 'PCI_VUART') {
+            id = id.replace('communication_vuart', 'legacy_vuart');
+            id = escape_str(id);
+            $('#'+id).val('INVALID_COM_BASE').trigger('change');
+        }
+    });
+
+    $(document).on('change', "select[ID^='uos'][ID$='vuart0']", function() {
+        var id = $(this).attr('id');
+        var value = $(this).val();
+        if(value == 'Enable') {
+            id = id.replace('vuart0', 'console_vuart');
+            id = escape_str(id);
+            $('#'+id).val('Disable').trigger('change');
+        }
+    });
+
+    $(document).on('change', "select[ID^='uos'][ID$='console_vuart']", function() {
+        var id = $(this).attr('id');
+        var value = $(this).val();
+        if(value == 'Enable') {
+            id = id.replace('console_vuart', 'vuart0');
+            id = escape_str(id);
+            $('#'+id).val('Disable').trigger('change');
+        }
+    });
+
     $("select[ID$='FEATURES,RDT,CDP_ENABLED']").change(function(){
         var id = $(this).attr('id');
         var value = $(this).val();
@@ -570,6 +619,17 @@ $(window).load(function () {
 });
 
 
+function escape_str(str) {
+    var jquerySpecialChars = ["~", "`", "@", "#", "%", "&", "=", "'", "\"",
+        ":", ";", "<", ">", ",", "/"];
+    for (var i = 0; i < jquerySpecialChars.length; i++) {
+        str = str.replace(new RegExp(jquerySpecialChars[i],
+            "g"), "\\" + jquerySpecialChars[i]);
+    }
+    return str;
+}
+
+
 function show_com_target(id, value) {
 
     if(id==null || id=='undefined') {
@@ -577,14 +637,8 @@ function show_com_target(id, value) {
     }
     var id2 = id.replace('base', 'target_vm_id');
     var id3 = id.replace('base', 'target_uart_id');
-    var jquerySpecialChars = ["~", "`", "@", "#", "%", "&", "=", "'", "\"",
-        ":", ";", "<", ">", ",", "/"];
-    for (var i = 0; i < jquerySpecialChars.length; i++) {
-        id2 = id2.replace(new RegExp(jquerySpecialChars[i],
-            "g"), "\\" + jquerySpecialChars[i]);
-        id3 = id3.replace(new RegExp(jquerySpecialChars[i],
-            "g"), "\\" + jquerySpecialChars[i]);
-    }
+    id2 = escape_str(id2);
+    id3 = escape_str(id3);
     if (value == 'INVALID_COM_BASE') {
         $('#'+id2+'_label1').hide();
         $('#'+id2+'_label2').hide();
@@ -870,12 +924,7 @@ function save_scenario(generator=null){
                         var no_err = true;
                         $.each(error_list, function(index,item){
                             no_err = false;
-                            var jquerySpecialChars = ["~", "`", "@", "#", "%", "&", "=", "'", "\"",
-                                ":", ";", "<", ">", ",", "/"];
-                            for (var i = 0; i < jquerySpecialChars.length; i++) {
-                                index = index.replace(new RegExp(jquerySpecialChars[i],
-                                    "g"), "\\" + jquerySpecialChars[i]);
-                            }
+                            index = escape_str(index)
                             $("#"+index+"_err").parents(".form-group").addClass("has-error");
                             $("#"+index+"_err").text(item);
                         })
@@ -1051,12 +1100,7 @@ function save_launch(generator=null) {
                         var no_err = true;
                         $.each(error_list, function(index,item){
                                 no_err = false;
-                                var jquerySpecialChars = ["~", "`", "@", "#", "%", "&", "=", "'", "\"",
-                                    ":", ";", "<", ">", ",", "/"];
-                                for (var i = 0; i < jquerySpecialChars.length; i++) {
-                                    index = index.replace(new RegExp(jquerySpecialChars[i],
-                                        "g"), "\\" + jquerySpecialChars[i]);
-                                }
+                                index = escape_str(index);
                                 $("#"+index).parents(".form-group").addClass("has-error");
                                 $("#"+index+"_err").text(item);
                         })
