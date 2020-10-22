@@ -267,6 +267,9 @@ def gen_sos_vm(vm_type, vm_i, scenario_items, config):
     err_dic = vuart_output(vm_type, vm_i, vm_info, config)
     if err_dic:
         return err_dic
+    sos_dev_num = scenario_cfg_lib.get_pci_dev_num_per_vm()[vm_i]
+    print("\t\t.pci_dev_num = {}U,".format(sos_dev_num), file=config)
+    print("\t\t.pci_devs = sos_pci_devs,", file=config)
 
     print("\t},", file=config)
 
@@ -321,9 +324,7 @@ def gen_pre_launch_vm(vm_type, vm_i, scenario_items, config):
     if err_dic:
         return err_dic
 
-    if (vm_i in vm_info.cfg_pci.pci_devs.keys() and vm_info.cfg_pci.pci_devs[vm_i]) or \
-        (vm_info.shmem.shmem_enabled == 'y' and vm_i in vm_info.shmem.shmem_regions.keys() \
-                 and vm_info.shmem.shmem_regions[vm_i]):
+    if scenario_cfg_lib.get_pci_dev_num_per_vm()[vm_i]:
         print("\t\t.pci_dev_num = VM{}_CONFIG_PCI_DEV_NUM,".format(vm_i), file=config)
         print("\t\t.pci_devs = vm{}_pci_devs,".format(vm_i), file=config)
 
@@ -361,8 +362,7 @@ def gen_post_launch_vm(vm_type, vm_i, scenario_items, config):
     print("\t{{\t/* VM{} */".format(vm_i), file=config)
     print("\t\t{},".format(post_vm_type), file=config)
     clos_output(scenario_items, vm_i, config)
-    if vm_info.shmem.shmem_enabled == 'y' and vm_i in vm_info.shmem.shmem_regions.keys() \
-            and vm_info.shmem.shmem_regions[vm_i]:
+    if scenario_cfg_lib.get_pci_dev_num_per_vm()[vm_i]:
         print("\t\t/* The PCI device configuration is only for in-hypervisor vPCI devices. */", file=config)
         print("\t\t.pci_dev_num = VM{}_CONFIG_PCI_DEV_NUM,".format(vm_i), file=config)
         print("\t\t.pci_devs = vm{}_pci_devs,".format(vm_i), file=config)
@@ -375,15 +375,14 @@ def gen_post_launch_vm(vm_type, vm_i, scenario_items, config):
 
     print("\t},", file=config)
 
-
 def declare_pci_devs(vm_info, config):
 
     for vm_i,vm_type in common.VM_TYPES.items():
-        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] not in ["PRE_LAUNCHED_VM", "POST_LAUNCHED_VM"]:
+        if vm_type == "SOS_VM":
+            print("extern struct acrn_vm_pci_dev_config " +
+                "sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM];", file=config)
             continue
-        if (vm_i in vm_info.cfg_pci.pci_devs.keys() and vm_info.cfg_pci.pci_devs[vm_i]) \
-                or (vm_info.shmem.shmem_enabled == 'y' and vm_i in vm_info.shmem.shmem_regions.keys() \
-                    and vm_info.shmem.shmem_regions[vm_i]):
+        if scenario_cfg_lib.get_pci_dev_num_per_vm()[vm_i]:
             print("extern struct acrn_vm_pci_dev_config " +
                 "vm{}_pci_devs[VM{}_CONFIG_PCI_DEV_NUM];".format(vm_i, vm_i), file=config)
     print("", file=config)
