@@ -27,8 +27,8 @@
 #define KB_PIO_IDX			(VIRTUAL_PM1A_CNT_PIO_IDX + 1U)
 #define CF9_PIO_IDX			(KB_PIO_IDX + 1U)
 #define PIO_RESET_REG_IDX		(CF9_PIO_IDX + 1U)
-#define EMUL_PIO_IDX_MAX		(PIO_RESET_REG_IDX + 1U)
-
+#define SLEEP_CTL_PIO_IDX		(PIO_RESET_REG_IDX + 1U)
+#define EMUL_PIO_IDX_MAX		(SLEEP_CTL_PIO_IDX + 1U)
 /**
  * @brief The handler of VM exits on I/O instructions
  *
