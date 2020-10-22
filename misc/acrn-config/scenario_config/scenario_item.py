@@ -117,6 +117,7 @@ class VuartInfo:
     """ This is Abstract of class of vm vuart setting """
     v0_vuart = {}
     v1_vuart = {}
+    pci_vuarts = {}
 
     def __init__(self, scenario_file):
         self.scenario_info = scenario_file
@@ -132,6 +133,7 @@ class VuartInfo:
         """
         self.v0_vuart = common.get_vuart_info_id(self.scenario_info, 0)
         self.v1_vuart = common.get_vuart_info_id(self.scenario_info, 1)
+        self.pci_vuarts = common.get_vuart_info(self.scenario_info)
 
     def check_item(self):
         """
@@ -140,6 +142,7 @@ class VuartInfo:
         """
         scenario_cfg_lib.check_board_private_info()
         scenario_cfg_lib.check_vuart(self.v0_vuart, self.v1_vuart)
+        scenario_cfg_lib.check_pci_vuart(self.pci_vuarts, self.v0_vuart, self.v1_vuart)
 
 class MemInfo:
     """ This is Abstract of class of memory setting information """
