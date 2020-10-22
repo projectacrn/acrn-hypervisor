@@ -372,7 +372,7 @@
 	</IOMEM_INFO>
 
 	<BLOCK_DEVICE_INFO>
-	/dev/nvme0n1p2: TYPE="ext4"
+	/dev/nvme0n1p3: TYPE="ext4"
 	/dev/nvme1n1p3: TYPE="ext4"
 	</BLOCK_DEVICE_INFO>
 
