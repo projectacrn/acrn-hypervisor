@@ -88,7 +88,8 @@
         <kern_type desc="Specify the kernel image type so that hypervisor could load it correctly. Currently support KERNEL_BZIMAGE and KERNEL_ZEPHYR.">KERNEL_BZIMAGE</kern_type>
         <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline.">RT_bzImage</kern_mod>
         <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline."></ramdisk_mod>
-        <bootargs desc="Specify kernel boot arguments">rw rootwait root=/dev/sda3 earlyprintk=serial,ttyS0,115200 console=ttyS0,115200n8 log_buf_len=2M ignore_loglevel noxsave nohpet no_timer_check tsc=reliable</bootargs>
+        <bootargs desc="Specify kernel boot arguments">rw rootwait root=/dev/sda3 earlyprintk=serial,ttyS0,115200 console=ttyS0,115200n8 log_buf_len=2M
+        ignore_loglevel noxsave nohpet no_timer_check tsc=reliable reboot=acpi</bootargs>
     </os_config>
     <legacy_vuart id="0">
         <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>

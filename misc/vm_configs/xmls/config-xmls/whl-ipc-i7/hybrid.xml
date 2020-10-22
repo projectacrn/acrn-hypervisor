@@ -82,7 +82,7 @@
         <kern_type desc="Specify the kernel image type so that hypervisor could load it correctly. Currently support KERNEL_BZIMAGE and KERNEL_ZEPHYR.">KERNEL_ZEPHYR</kern_type>
         <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline.">Zephyr_RawImage</kern_mod>
         <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline."></ramdisk_mod>
-        <bootargs desc="Specify kernel boot arguments"></bootargs>
+        <bootargs desc="Specify kernel boot arguments">reboot=acpi</bootargs>
         <kern_load_addr desc="The loading address in host memory for the VM kernel">0x8000</kern_load_addr>
         <kern_entry_addr desc="The entry address in host memory for the VM kernel">0x8000</kern_entry_addr>
     </os_config>
