@@ -91,18 +91,18 @@
         rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable
         </bootargs>
     </os_config>
-    <vuart id="0">
+    <legacy_vuart id="0">
         <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
         <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address." readonly="true">COM1_BASE</base>
         <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
-    </vuart>
-    <vuart id="1">
+    </legacy_vuart>
+    <legacy_vuart id="1">
         <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
         <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">COM2_BASE</base>
         <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
         <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">1</target_vm_id>
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
-    </vuart>
+    </legacy_vuart>
     <pci_devs desc="pci devices list">
         <pci_dev desc="pci device"></pci_dev>
         <pci_dev desc="pci device"></pci_dev>
@@ -145,18 +145,18 @@
         consoleblank=0 tsc=reliable
         </bootargs>
     </os_config>
-    <vuart id="0">
+    <legacy_vuart id="0">
         <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
         <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address." readonly="true">COM1_BASE</base>
         <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
-    </vuart>
-    <vuart id="1">
+    </legacy_vuart>
+    <legacy_vuart id="1">
         <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
         <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">COM2_BASE</base>
         <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
         <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
-    </vuart>
+    </legacy_vuart>
     <pci_devs desc="pci devices list">
         <pci_dev desc="pci device"></pci_dev>
         <pci_dev desc="pci device"></pci_dev>
