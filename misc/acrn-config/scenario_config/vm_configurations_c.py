@@ -396,18 +396,7 @@ def generate_file(scenario_items, config):
     vm_info = scenario_items['vm']
     gen_source_header(config)
 
-    pci_dev_config_flag = False
-    for vm_i,pci_dev_num in vm_info.cfg_pci.pci_dev_num.items():
-        if pci_dev_num >= 2:
-            pci_dev_config_flag = True
-            break
-    if vm_info.shmem.shmem_enabled == 'y':
-        for vm_id, shm_num in vm_info.shmem.shmem_num.items():
-            if shm_num > 0:
-                pci_dev_config_flag = True
-                break
-    if pci_dev_config_flag:
-        declare_pci_devs(vm_info, config)
+    declare_pci_devs(vm_info, config)
 
     if (board_cfg_lib.is_matched_board(("ehl-crb-b"))
         and vm_info.pt_intx_info.phys_gsi.get(0) is not None
