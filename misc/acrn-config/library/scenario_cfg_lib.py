@@ -130,6 +130,37 @@ def get_shmem_num(shmem_regions):
     return shmem_num
 
 
+def get_vuart_num(vuarts):
+
+    vuarts_num = {}
+    # get legacy vuart information
+    vuart0_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 0)
+    vuart1_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
+    for vm_i,vuart_list in vuarts.items():
+        vuarts_num[vm_i] = 0
+        for vuart_id in vuart_list:
+            if vuarts[vm_i][vuart_id]['base'] != "INVALID_PCI_BASE":
+                vuarts_num[vm_i] += 1
+
+    for vm_i in vuart0_setting:
+        vm_type = common.VM_TYPES[vm_i]
+        # Skip post-launched vm's pci base vuart0
+        if "POST_LAUNCHED_VM" == VM_DB[vm_type]['load_type'] and 0 in vuarts[vm_i].keys() \
+             and vuarts[vm_i][0]['base'] != "INVALID_PCI_BASE":
+            vuarts_num[vm_i] -= 1
+            continue
+        # Skip pci vuart 0 if the legacy vuart 0 is enabled
+        if vuart0_setting[vm_i]['base'] != "INVALID_COM_BASE" and 0 in vuarts[vm_i].keys() \
+             and vuarts[vm_i][0]['base'] != "INVALID_PCI_BASE":
+            vuarts_num[vm_i] -= 1
+    for vm_i in vuart1_setting:
+        # Skip pci vuart 1 if the legacy vuart 1 is enabled
+        if vuart1_setting[vm_i]['base'] != "INVALID_COM_BASE" and 1 in vuarts[vm_i].keys() \
+             and vuarts[vm_i][1]['base'] != "INVALID_PCI_BASE":
+            vuarts_num[vm_i] -= 1
+    return vuarts_num
+
+
 def get_pci_dev_num_per_vm():
     pci_dev_num_per_vm = {}
 
@@ -146,12 +177,16 @@ def get_pci_dev_num_per_vm():
     shmem_regions = get_shmem_regions(ivshmem_region)
     shmem_num = get_shmem_num(shmem_regions)
 
+    vuarts = common.get_vuart_info(common.SCENARIO_INFO_FILE)
+    vuarts_num = get_vuart_num(vuarts)
+
     for vm_i,vm_type in common.VM_TYPES.items():
         if "POST_LAUNCHED_VM" == VM_DB[vm_type]['load_type']:
             shmem_num_i = 0
+            vuart_num = vuarts_num[vm_i]
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
-            pci_dev_num_per_vm[vm_i] = shmem_num_i
+            pci_dev_num_per_vm[vm_i] = shmem_num_i + vuart_num
         elif "PRE_LAUNCHED_VM" == VM_DB[vm_type]['load_type']:
             shmem_num_i = 0
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
@@ -160,12 +195,12 @@ def get_pci_dev_num_per_vm():
                 # there is only vhostbridge but no passthrough device
                 # remove the count of vhostbridge, check get_pci_num definition
                 pci_dev_num[vm_i] -= 1
-            pci_dev_num_per_vm[vm_i] = pci_dev_num[vm_i] + shmem_num_i
+            pci_dev_num_per_vm[vm_i] = pci_dev_num[vm_i] + shmem_num_i+ vuarts_num[vm_i]
         elif "SOS_VM" == VM_DB[vm_type]['load_type']:
             shmem_num_i = 0
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
-            pci_dev_num_per_vm[vm_i] = shmem_num_i
+            pci_dev_num_per_vm[vm_i] = shmem_num_i + vuarts_num[vm_i]
 
     return pci_dev_num_per_vm
 
