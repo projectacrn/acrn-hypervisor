@@ -87,6 +87,7 @@
         <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline."></ramdisk_mod>
         <bootargs desc="Specify kernel boot arguments">
         rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M consoleblank=0 tsc=reliable
+        reboot=acpi
         </bootargs>
     </os_config>
     <legacy_vuart id="0">
@@ -149,7 +150,7 @@
         <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline."></ramdisk_mod>
         <bootargs desc="Specify kernel boot arguments">
         rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
-        consoleblank=0 tsc=reliable
+        consoleblank=0 tsc=reliable reboot=acpi
         </bootargs>
     </os_config>
     <legacy_vuart id="0">
