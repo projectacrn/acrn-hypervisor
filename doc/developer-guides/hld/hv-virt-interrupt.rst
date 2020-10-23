@@ -107,7 +107,7 @@ These APIs will finish by making a vCPU request.
 .. doxygenfunction:: vlapic_set_local_intr
   :project: Project ACRN
 
-.. doxygenfunction:: vlapic_intr_msi
+.. doxygenfunction:: vlapic_inject_msi
   :project: Project ACRN
 
 .. doxygenfunction:: vlapic_receive_intr
