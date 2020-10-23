@@ -179,10 +179,10 @@ void *sos_socket_thread(void *arg)
 	}
 
 	while (1) {
-		memset(buf, 0, BUFF_SIZE);
+		memset(buf, 0, sizeof(buf));
 
 		/* Here assume the socket communication is reliable, no need to try */
-		num = read(connect_fd, buf, sizeof(SHUTDOWN_CMD));
+		num = read(connect_fd, buf, sizeof(buf));
 		if (num == -1) {
 			LOG_PRINTF("read error on a socket(fd = 0x%x)\n", connect_fd);
 			close(connect_fd);
