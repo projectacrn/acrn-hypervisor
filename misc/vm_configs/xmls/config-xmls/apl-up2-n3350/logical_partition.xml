@@ -93,7 +93,7 @@
     </os_config>
     <legacy_vuart id="0">
         <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
-        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address." readonly="true">COM1_BASE</base>
+        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">COM1_BASE</base>
         <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
     </legacy_vuart>
     <legacy_vuart id="1">
@@ -153,7 +153,7 @@
     </os_config>
     <legacy_vuart id="0">
         <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
-        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address." readonly="true">COM1_BASE</base>
+        <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">COM1_BASE</base>
         <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
     </legacy_vuart>
     <legacy_vuart id="1">
