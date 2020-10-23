@@ -12,5 +12,6 @@
 
 extern const struct pci_vdev_ops vmcs9900_ops;
 void trigger_vmcs9900_msix(struct pci_vdev *vdev);
+int32_t create_vmcs9900_vdev(struct acrn_vm *vm, struct acrn_emul_dev *dev);
 
 #endif
