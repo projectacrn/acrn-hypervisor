@@ -105,6 +105,14 @@
         <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">1</target_vm_id>
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
     </legacy_vuart>
+    <console_vuart id="0">
+        <base desc="Console vuart (PCI based) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_PCI_BASE</base>
+    </console_vuart>
+    <communication_vuart id="1">
+        <base desc="Communicatin vuart (PCI based) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_PCI_BASE</base>
+        <target_vm_id desc="This vuart is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">1</target_vm_id>
+        <target_uart_id desc="target vUART ID that this vuart connects to">1</target_uart_id>
+    </communication_vuart>
     <pci_devs desc="pci devices list">
         <pci_dev desc="pci device">00:12.0 SATA controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series SATA AHCI Controller (rev 0b)</pci_dev>
         <pci_dev desc="pci device">03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 15)</pci_dev>
@@ -159,6 +167,14 @@
         <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
         <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
     </legacy_vuart>
+    <console_vuart id="0">
+        <base desc="Console vuart (PCI based) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_PCI_BASE</base>
+    </console_vuart>
+    <communication_vuart id="1">
+        <base desc="Communicatin vuart (PCI based) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_PCI_BASE</base>
+        <target_vm_id desc="This vuart is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">1</target_vm_id>
+        <target_uart_id desc="target vUART ID that this vuart connects to">1</target_uart_id>
+    </communication_vuart>
     <pci_devs desc="pci devices list">
         <pci_dev desc="pci device">00:15.0 USB controller: Intel Corporation Celeron N3350/Pentium N4200/Atom E3900 Series USB xHCI (rev 0b)</pci_dev>
         <pci_dev desc="pci device">02:00.0 Network controller: Intel Corporation Device 24fb (rev 10)</pci_dev>
