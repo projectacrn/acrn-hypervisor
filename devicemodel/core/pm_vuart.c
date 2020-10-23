@@ -56,23 +56,31 @@ static int vm_stop_handler(void *arg);
 static struct monitor_vm_ops vm_ops = {
 	.stop = vm_stop_handler,
 };
+
 /* it read from vuart, and if end is '\0' or '\n' or len = buff-len it will return */
-static int read_bytes(int fd, uint8_t *buffer, int buf_len)
+static bool read_bytes(int fd, uint8_t *buffer, int buf_len, int *count)
 {
-	int rc = 0, count = 0;
+	bool ready = false;
+	int rc;
+
+	if (buf_len <= (*count)) {
+		*count = buf_len;
+		ready = true;
+		goto out;
+	}
 
 	do {
-		rc = read(fd, buffer + count, buf_len - count);
+		rc = read(fd, buffer + (*count), buf_len - (*count));
 		if (rc > 0) {
-			count += rc;
-			if ((buffer[count - 1] == '\0') || (buffer[count - 1] == '\n') ||
-					(count == buf_len)) {
-				break;
-			}
+			*count += rc;
+			if ((buffer[*count - 1] == '\0') || (buffer[*count - 1] == '\n') ||
+					(*count == buf_len))
+				ready = true;
 		}
-	} while (rc > 0);
+	} while (rc > 0 && !ready);
 
-	return count;
+out:
+	return ready;
 }
 
 int pm_setup_socket(void)
@@ -102,8 +110,8 @@ int pm_setup_socket(void)
 static void *pm_monitor_loop(void *arg)
 {
 	int rc;
-	char buf[CMD_LEN];
-	int max_fd;
+	char buf_node[CMD_LEN+1], buf_socket[CMD_LEN+1];
+	int max_fd, count_node = 0, count_socket = 0;
 	fd_set read_fd;
 
 	if (pm_setup_socket() == -1) {
@@ -111,10 +119,10 @@ static void *pm_monitor_loop(void *arg)
 		return NULL;
 	}
 
+	buf_node[CMD_LEN] = buf_socket[CMD_LEN] = '\0';
 	max_fd = (socket_fd > node_fd) ? (socket_fd + 1) : (node_fd + 1);
 
 	while (1) {
-		memset(buf, 0, CMD_LEN);
 		FD_ZERO(&read_fd);
 		FD_SET(socket_fd, &read_fd);
 		FD_SET(node_fd, &read_fd);
@@ -122,19 +130,32 @@ static void *pm_monitor_loop(void *arg)
 		rc = select(max_fd, &read_fd, NULL, NULL, NULL);
 		if (rc > 0) {
 			if (FD_ISSET(node_fd, &read_fd)) {
-				rc = read_bytes(node_fd, (uint8_t *)buf, CMD_LEN);
-				pr_info("Received msg[%s] from UOS, rc=%d\r\n", buf, rc);
-				rc = write(socket_fd, buf, CMD_LEN);
-			} else if (FD_ISSET(socket_fd, &read_fd)) {
-				rc = read_bytes(socket_fd, (uint8_t *)buf, CMD_LEN);
-				pr_info("Received msg[%s] from life_mngr on SOS,  rc=%d\r\n", buf, rc);
-				pthread_mutex_lock(&pm_vuart_lock);
-				rc = write(node_fd, buf, CMD_LEN);
-				pthread_mutex_unlock(&pm_vuart_lock);
-			}
+				if (read_bytes(node_fd, (uint8_t *)buf_node, CMD_LEN, &count_node)) {
+					pr_info("Received msg[%s] from UOS, count=%d\r\n",
+						buf_node, count_node);
+					rc = write(socket_fd, buf_node, count_node);
 
-			if (rc != CMD_LEN) {
-				pr_err("%s: write error ret_val = 0x%x\r\n", rc);
+					if (rc != count_node) {
+						pr_err("%s:%u: write error ret_val = %d\r\n",
+							__func__, __LINE__, rc);
+					}
+					count_node = 0;
+				}
+			}
+			if (FD_ISSET(socket_fd, &read_fd)) {
+				if (read_bytes(socket_fd, (uint8_t *)buf_socket, CMD_LEN, &count_socket)) {
+					pr_info("Received msg[%s] from life_mngr on SOS, count=%d\r\n",
+						buf_socket, count_socket);
+					pthread_mutex_lock(&pm_vuart_lock);
+					rc = write(node_fd, buf_socket, count_socket);
+					pthread_mutex_unlock(&pm_vuart_lock);
+
+					if (rc != count_socket) {
+						pr_err("%s:%u: write error ret_val = %d\r\n",
+							__func__, __LINE__, rc);
+					}
+					count_socket = 0;
+				}
 			}
 		}
 	}
