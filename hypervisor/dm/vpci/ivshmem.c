@@ -394,27 +394,15 @@ int32_t create_ivshmem_vdev(struct acrn_vm *vm, struct acrn_emul_dev *dev)
 	return ret;
 }
 
-/**
- * @pre vm != NULL
- * @pre dev != NULL
- */
-int32_t destroy_ivshmem_vdev(struct acrn_vm *vm, struct acrn_emul_dev *dev)
+int32_t destroy_ivshmem_vdev(struct pci_vdev *vdev)
 {
-	struct pci_vdev *vdev;
-	union pci_bdf bdf;
-	int32_t ret = 0;
+	uint32_t i;
 
-	bdf.value = (uint16_t) dev->slot;
-	vdev = pci_find_vdev(&vm->vpci, bdf);
-	if (vdev != NULL) {
-		vdev->pci_dev_config->vbdf.value = UNASSIGNED_VBDF;
-		(void)memset(vdev->pci_dev_config->vbar_base, 0U, sizeof(vdev->pci_dev_config->vbar_base));
-	} else {
-		pr_warn("%s, failed to destroy ivshmem device %x:%x.%x\n",
-			__func__, bdf.bits.b, bdf.bits.d, bdf.bits.f);
-		ret = -EINVAL;
+	for (i = 0U; i < vdev->nr_bars; i++) {
+		vpci_update_one_vbar(vdev, i, 0U, NULL, ivshmem_vbar_unmap);
 	}
-	return ret;
+
+	return 0;
 }
 
 const struct pci_vdev_ops vpci_ivshmem_ops = {

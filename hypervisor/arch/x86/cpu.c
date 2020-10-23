@@ -26,6 +26,7 @@
 #include <rdt.h>
 #include <sgx.h>
 #include <uart16550.h>
+#include <vpci.h>
 #include <ivshmem.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
