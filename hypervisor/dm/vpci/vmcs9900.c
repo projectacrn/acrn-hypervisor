@@ -10,6 +10,7 @@
 #include <logmsg.h>
 #include <vmcs9900.h>
 #include "vpci_priv.h"
+#include <errno.h>
 
 #define MCS9900_MMIO_BAR        0U
 #define MCS9900_MSIX_BAR        1U
@@ -167,3 +168,43 @@ const struct pci_vdev_ops vmcs9900_ops = {
 	.write_vdev_cfg = write_vmcs9900_cfg,
 	.read_vdev_cfg = read_vmcs9900_cfg,
 };
+
+int32_t create_vmcs9900_vdev(struct acrn_vm *vm, struct acrn_emul_dev *dev)
+{
+	uint32_t i;
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+	struct acrn_vm_pci_dev_config *dev_config = NULL;
+	int32_t ret = -EINVAL;
+	uint16_t vuart_idx = *((uint16_t*)(dev->args));
+
+	for (i = 0U; i < vm_config->pci_dev_num; i++) {
+		dev_config = &vm_config->pci_devs[i];
+		if (dev_config->vuart_idx == vuart_idx) {
+			dev_config->vbdf.value = (uint16_t) dev->slot;
+			dev_config->vbar_base[0] = (uint64_t) dev->io_addr[0];
+			dev_config->vbar_base[1] = (uint64_t) dev->io_addr[1];
+			(void) vpci_init_vdev(&vm->vpci, dev_config, NULL);
+			ret = 0;
+			break;
+		}
+	}
+
+	if (ret != 0) {
+		pr_err("Unsupport: create VM%d vuart_idx=%d", vm->vm_id, vuart_idx);
+	}
+
+	return ret;
+}
+
+int32_t destroy_vmcs9900_vdev(struct pci_vdev *vdev)
+{
+	uint32_t i;
+
+	for (i = 0U; i < vdev->nr_bars; i++) {
+		vpci_update_one_vbar(vdev, i, 0U, NULL, unmap_vmcs9900_vbar);
+	}
+
+	deinit_pci_vuart(vdev);
+
+	return 0;
+}
