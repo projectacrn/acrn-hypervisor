@@ -415,6 +415,27 @@ def get_vuart_info_id(config_file, idx):
 
     return tmp_tag
 
+def get_vuart_info(config_file):
+    tmp_tag = {}
+    vm_id = 0
+    root = get_config_root(config_file)
+    for item in root:
+        if item.tag == "vm":
+            vm_id = int(item.attrib['id'])
+            tmp_tag[vm_id] = {}
+
+        for sub in item:
+            tmp_vuart = {}
+            for leaf in sub:
+                if sub.tag == "console_vuart" or sub.tag == "communication_vuart":
+                    vuart_id = int(sub.attrib['id'])
+                    tmp_vuart = get_vuart_id(tmp_vuart, leaf.tag, leaf.text)
+
+                    if tmp_vuart:
+                        tmp_tag[vm_id][vuart_id] = tmp_vuart
+
+    return tmp_tag
+
 
 def get_hv_item_tag(config_file, branch_tag, tag_str='', leaf_str=''):
 
