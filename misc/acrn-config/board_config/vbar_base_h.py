@@ -301,6 +301,35 @@ def generate_file(config):
                             mmiolist_per_vm[vm_id].append(MmioWindow(start = bar_2, end = bar_2 + int_size - 1))
                             mmiolist_per_vm[vm_id].sort()
                     print("", file=config)
+            elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+                ivshmem_region = common.get_hv_item_tag(common.SCENARIO_INFO_FILE,
+                        "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
+                shmem_regions = scenario_cfg_lib.get_shmem_regions(ivshmem_region)
+                if vm_id not in shmem_regions.keys():
+                    continue
+                idx = 0
+                for shm in ivshmem_region:
+                    if shm is None or shm.strip() == '':
+                        continue
+                    shm_splited = shm.split(',')
+                    name = shm_splited[0].strip()
+                    size = shm_splited[1].strip()
+                    try:
+                        int_size = int(size) * 0x100000
+                    except:
+                        int_size = 0
+                    # vbar[0] for shared memory is 0x200100
+                    free_bar = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], 0x200100)
+                    mmiolist_per_vm[vm_id].append(free_bar)
+                    mmiolist_per_vm[vm_id].sort()
+                    print("#define SOS_IVSHMEM_DEVICE_%-19s" % (str(idx) + "_VBAR"),
+                         "       .vbar_base[0] = {:#x}UL, \\".format(free_bar.start), file=config)
+                    free_bar = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], int_size + 0x200000)
+                    mmiolist_per_vm[vm_id].append(free_bar)
+                    mmiolist_per_vm[vm_id].sort()
+                    print("{}.vbar_base[2] = {:#x}UL".format(' ' * 54, free_bar.start), file=config)
+                    print("", file=config)
+                    idx += 1
 
     compared_bdf = []
     for cnt_sub_name in board_cfg_lib.SUB_NAME_COUNT.keys():

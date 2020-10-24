@@ -95,7 +95,6 @@ def get_pci_num(pci_devs):
 
     return pci_devs_num
 
-
 def get_shmem_regions(raw_shmem_regions):
     shmem_regions = {'err': []}
     for raw_shmem_region in raw_shmem_regions:
@@ -163,7 +162,10 @@ def get_pci_dev_num_per_vm():
                 pci_dev_num[vm_i] -= 1
             pci_dev_num_per_vm[vm_i] = pci_dev_num[vm_i] + shmem_num_i
         elif "SOS_VM" == VM_DB[vm_type]['load_type']:
-            continue
+            shmem_num_i = 0
+            if shmem_enabled == 'y' and vm_i in shmem_num.keys():
+                shmem_num_i = shmem_num[vm_i]
+            pci_dev_num_per_vm[vm_i] = shmem_num_i
 
     return pci_dev_num_per_vm
 
@@ -793,9 +795,8 @@ def share_mem_check(shmem_regions, raw_shmem_regions, vm_type_info, prime_item, 
                 ERR_LIST[key] = "The communication VM IDs of the share memory should not be duplicated."
                 return
             for target_vm_id in int_vmid_list:
-                if curr_vm_id not in vm_type_info.keys() or target_vm_id not in vm_type_info.keys() \
-                        or vm_type_info[curr_vm_id] in ['SOS_VM'] or vm_type_info[target_vm_id] in ['SOS_VM']:
-                    ERR_LIST[key] = "Shared Memory can be only configured for existed Pre-launched VMs and Post-launched VMs."
+                if curr_vm_id not in vm_type_info.keys() or target_vm_id not in vm_type_info.keys():
+                    ERR_LIST[key] = "Shared Memory can be only configured for existed VMs."
                     return
 
             if name =='' or size == '':
