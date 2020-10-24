@@ -212,15 +212,23 @@ def generate_file(config):
         if all((d not in pci_devs_per_vm[i] for i in pci_devs_per_vm))
         ]
 
-    mmiolist_per_vm = {}
     for vm_i in pci_devs_per_vm:
         vm_type = common.VM_TYPES[vm_i]
         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
             pci_devs_per_vm[vm_i] = sos_bdf_list
+
+
+    mmiolist_per_vm = {}
+    for vm_i,vm_type in common.VM_TYPES.items():
+        if vm_i not in mmiolist_per_vm.keys():
+            mmiolist_per_vm[vm_i] = []
+        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+        #    pci_devs_per_vm[vm_i] = sos_bdf_list
             mmiolist_per_vm[vm_i] = non_matching_mmios
         else:
-            match, _ = get_mmio_windows_with_key(pci_devs[vm_i])
-            mmiolist_per_vm[vm_i] = match
+            if vm_i in pci_devs.keys():
+                match, _ = get_mmio_windows_with_key(pci_devs[vm_i])
+                mmiolist_per_vm[vm_i] = match
             if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
                 if vm_i not in mmiolist_per_vm.keys():
                     mmiolist_per_vm[vm_i] = []
@@ -240,11 +248,14 @@ def generate_file(config):
     print(VBAR_INFO_DEFINE, file=config)
     common.get_vm_types()
     pre_vm = False
+    sos_vm = False
     for vm_type in common.VM_TYPES.values():
         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
             pre_vm = True
+        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+            sos_vm = True
 
-    if not pre_vm:
+    if not pre_vm and not sos_vm:
         print(VBAR_INFO_ENDIF, file=config)
         return
 
@@ -266,7 +277,7 @@ def generate_file(config):
                             else:
                                 print("#define IVSHMEM_DEVICE_%-23s" % (str(index) + "_VBAR"),
                                     "       .vbar_base[{}] = {}UL, \\".format(bar_i, bar_attr.addr), file=config)
-                            bar_0 = MmioWindow(start = int(bar_attr.addr, 16), end = int(bar_attr.addr, 16) + 0x200100)
+                            bar_0 = MmioWindow(start = int(bar_attr.addr, 16), end = int(bar_attr.addr, 16) + 0x100 - 1)
                             mmiolist_per_vm[vm_id].append(bar_0)
                             mmiolist_per_vm[vm_id].sort()
                         elif i_cnt == len(bar_attr_dic.keys()):
@@ -287,7 +298,7 @@ def generate_file(config):
                                 except:
                                     int_size = 0
                             bar_2 = int(bar_attr.addr, 16)
-                            mmiolist_per_vm[vm_id].append(MmioWindow(start = bar_2, end = bar_2 + int_size + 0x200000))
+                            mmiolist_per_vm[vm_id].append(MmioWindow(start = bar_2, end = bar_2 + int_size - 1))
                             mmiolist_per_vm[vm_id].sort()
                     print("", file=config)
 
