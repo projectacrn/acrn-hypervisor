@@ -280,6 +280,12 @@ def generate_file(config):
                             bar_0 = MmioWindow(start = int(bar_attr.addr, 16), end = int(bar_attr.addr, 16) + 0x100 - 1)
                             mmiolist_per_vm[vm_id].append(bar_0)
                             mmiolist_per_vm[vm_id].sort()
+                            # vbar[1] for share memory is fix to 4K
+                            free_bar = get_free_mmio([MmioWindow(start=common.SIZE_2G, end=common.SIZE_4G-1)], \
+                                            mmiolist_per_vm[vm_id], 4 * common.SIZE_K)
+                            mmiolist_per_vm[vm_id].append(free_bar)
+                            mmiolist_per_vm[vm_id].sort()
+                            print("{}.vbar_base[1] = {:#x}UL, \\".format(' ' * 54, free_bar.start), file=config)
                         elif i_cnt == len(bar_attr_dic.keys()):
                             print("{}.vbar_base[{}] = {}UL".format(' ' * 54, bar_i, bar_attr.addr), file=config)
                         else:
@@ -324,6 +330,12 @@ def generate_file(config):
                     mmiolist_per_vm[vm_id].sort()
                     print("#define SOS_IVSHMEM_DEVICE_%-19s" % (str(idx) + "_VBAR"),
                          "       .vbar_base[0] = {:#x}UL, \\".format(free_bar.start), file=config)
+                    # vbar[1] for shared memory is 4K
+                    free_bar = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], 4 * common.SIZE_K)
+                    mmiolist_per_vm[vm_id].append(free_bar)
+                    mmiolist_per_vm[vm_id].sort()
+                    print("{}.vbar_base[1] = {:#x}UL, \\".format(' ' * 54, free_bar.start), file=config)
+                    # vbar[2] for shared memory is specified size in MB plus 0x200000
                     free_bar = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], int_size + 0x200000)
                     mmiolist_per_vm[vm_id].append(free_bar)
                     mmiolist_per_vm[vm_id].sort()
