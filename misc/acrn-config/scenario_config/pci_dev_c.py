@@ -199,16 +199,23 @@ def generate_file(vm_info, config):
                 print("\t{", file=config)
                 print("\t\t.emu_type = {},".format(PCI_DEV_TYPE[0]), file=config)
                 if vm_i in vm_info.cfg_pci.pci_devs.keys():
-                    print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{0:02d}U, .f = 0x00U}},".format(pci_cnt), file=config)
-                    print("\t\t.vdev_ops = &vpci_ivshmem_ops,", file=config)
-                    bdf_tuple = BusDevFunc(0,pci_cnt,0)
-                    vm_used_bdf.append(bdf_tuple)
+                    if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+                        free_bdf = find_unused_bdf(sos_used_bdf, "ivshmem")
+                        print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{:02d}U, .f = 0x{:02d}U}}," \
+                             .format(free_bdf.dev,free_bdf.func), file=config)
+                        print("\t\t.vdev_ops = &vpci_ivshmem_ops,", file=config)
+                        sos_used_bdf.append(free_bdf)
+                    else:
+                        print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{0:02d}U, .f = 0x00U}},".format(pci_cnt), file=config)
+                        print("\t\t.vdev_ops = &vpci_ivshmem_ops,", file=config)
+                        bdf_tuple = BusDevFunc(0,pci_cnt,0)
+                        vm_used_bdf.append(bdf_tuple)
                 elif vm_i not in vm_info.cfg_pci.pci_devs.keys():
                     if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
                         print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{0:02d}U, .f = 0x00U}},".format(pci_cnt), file=config)
                         bdf_tuple = BusDevFunc(0,pci_cnt,0)
                         vm_used_bdf.append(bdf_tuple)
-                    else:
+                    elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "POST_LAUNCHED_VM":
                         print("\t\t.vbdf.value = UNASSIGNED_VBDF,", file=config)
                     print("\t\t.vdev_ops = &vpci_ivshmem_ops,", file=config)
                 for shm_name, bar_attr in board_cfg_lib.PCI_DEV_BAR_DESC.shm_bar_dic.items():
@@ -218,6 +225,10 @@ def generate_file(vm_info, config):
                         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
                             print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{},".format(index), file=config)
                             print("\t\tIVSHMEM_DEVICE_{}_VBAR".format(index), file=config)
+                            break
+                        elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+                            print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{},".format(index), file=config)
+                            print("\t\tSOS_IVSHMEM_DEVICE_{}_VBAR".format(index), file=config)
                             break
                         else:
                             print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{}".format(index), file=config)
