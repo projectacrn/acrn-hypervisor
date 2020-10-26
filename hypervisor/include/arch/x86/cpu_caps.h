@@ -53,6 +53,7 @@ bool pcpu_has_vmx_ept_cap(uint32_t bit_mask);
 bool pcpu_has_vmx_vpid_cap(uint32_t bit_mask);
 bool is_apl_platform(void);
 bool has_core_cap(uint32_t bit_mask);
+bool is_ac_enabled(void);
 void init_pcpu_capabilities(void);
 void init_pcpu_model_name(void);
 int32_t detect_hardware_support(void);

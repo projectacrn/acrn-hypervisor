@@ -378,6 +378,10 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 			wait_event(&vcpu->events[VCPU_EVENT_SYNC_WBINVD]);
 		}
 
+		if (bitmap_test_and_clear_lock(ACRN_REQUEST_SPLIT_LOCK, pending_req_bits)) {
+			wait_event(&vcpu->events[VCPU_EVENT_SPLIT_LOCK]);
+		}
+
 		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EPT_FLUSH, pending_req_bits)) {
 			invept(vcpu->vm->arch_vm.nworld_eptp);
 			if (vcpu->vm->sworld_control.flag.active != 0UL) {
@@ -480,6 +484,143 @@ static inline void acrn_inject_pending_intr(struct acrn_vcpu *vcpu,
 	}
 }
 
+static void vcpu_kick_splitlock_emulation(struct acrn_vcpu *cur_vcpu)
+{
+	struct acrn_vcpu *other;
+	uint16_t i;
+
+	if (cur_vcpu->vm->hw.created_vcpus > 1U) {
+		foreach_vcpu(i, cur_vcpu->vm, other) {
+			if (other != cur_vcpu) {
+				vcpu_make_request(other, ACRN_REQUEST_SPLIT_LOCK);
+			}
+		}
+	}
+}
+
+static void vcpu_complete_splitlock_emulation(struct acrn_vcpu *cur_vcpu)
+{
+	struct acrn_vcpu *other;
+	uint16_t i;
+
+	if (cur_vcpu->vm->hw.created_vcpus > 1U) {
+		foreach_vcpu(i, cur_vcpu->vm, other) {
+			if (other != cur_vcpu) {
+				signal_event(&other->events[VCPU_EVENT_SPLIT_LOCK]);
+			}
+		}
+	}
+}
+
+static bool is_guest_ac_enabled(struct acrn_vcpu *vcpu)
+{
+	bool ret = false;
+
+	if ((vcpu_get_guest_msr(vcpu, MSR_TEST_CTL) & (1UL << 29UL)) != 0UL) {
+		ret = true;
+	}
+
+	return ret;
+}
+
+static int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vector, bool *queue_exception)
+{
+	int32_t status = 0;
+	uint8_t inst[1];
+	uint32_t err_code = 0U;
+	uint64_t fault_addr;
+
+	/* Queue the exception by default if the exception cannot be handled. */
+	*queue_exception = true;
+
+	/*
+	 * The split-lock detection is enabled by default if the platform supports it.
+	 * Here, we check if the split-lock detection is really enabled or not. If the
+	 * split-lock detection is enabled in the platform but not enabled in the guest
+	 * then we try to emulate it, otherwise, inject the exception back.
+	 */
+	if (is_ac_enabled() && !is_guest_ac_enabled(vcpu)) {
+		switch (exception_vector) {
+		case IDT_AC:
+			status = copy_from_gva(vcpu, inst, vcpu_get_rip(vcpu), 1U, &err_code, &fault_addr);
+			if (status < 0) {
+				pr_err("Error copy instruction from Guest!");
+				if (status == -EFAULT) {
+					vcpu_inject_pf(vcpu, fault_addr, err_code);
+					status = 0;
+					/* For this case, inject #PF, not to queue #AC */
+					*queue_exception = false;
+				}
+			} else {
+				/*
+				 * If #AC is caused by instruction with LOCK prefix, then emulate it,
+				 * otherwise, inject it back.
+				 */
+				if (inst[0] == 0xf0U) {  /* This is LOCK prefix */
+					/*
+					 * Kick other vcpus of the guest to stop execution
+					 * until the split-lock emulation being completed.
+					 */
+					vcpu_kick_splitlock_emulation(vcpu);
+
+					/*
+					 * Skip the LOCK prefix and re-execute the instruction.
+					 */
+					vcpu->arch.inst_len = 1U;
+					if (vcpu->vm->hw.created_vcpus > 1U) {
+						/*
+						 * Set the TF to have a #DB after running the split-lock
+						 * instruction and tag the emulating_lock to be true.
+						 */
+						vcpu_set_rflags(vcpu, vcpu_get_rflags(vcpu) | HV_ARCH_VCPU_RFLAGS_TF);
+						vcpu->arch.emulating_lock = true;
+					}
+
+					/* Skip the #AC, we have emulated it. */
+					*queue_exception = false;
+				} else {
+					/*
+					 * TODO:
+					 * The xchg may also cause #AC for split-lock check.
+					 * Do xchg emulation here.
+					 */
+				}
+			}
+
+			break;
+		case IDT_DB:
+			/*
+			 * We only handle #DB caused by split-lock emulation,
+			 * otherwise, inject it back.
+			 */
+			if (vcpu->arch.emulating_lock) {
+				/*
+				 * The split-lock emulation has been completed, tag the emulating_lock
+				 * to be false, and clear the TF flag.
+				 */
+				vcpu->arch.emulating_lock = false;
+				vcpu_set_rflags(vcpu, vcpu_get_rflags(vcpu) & (~HV_ARCH_VCPU_RFLAGS_TF));
+				/*
+				 * Notify other vcpus of the guest to restart execution.
+				 */
+				vcpu_complete_splitlock_emulation(vcpu);
+
+				/* This #DB is for split-lock emulation, do not inject it */
+				*queue_exception = false;
+
+				/* This case we should not skip the instruction */
+				vcpu->arch.inst_len = 0U;
+			}
+
+			break;
+		default:
+			break;
+		}
+	}
+
+	return status;
+}
+
 /*
  * @pre vcpu != NULL
  */
@@ -489,6 +630,7 @@ int32_t exception_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint32_t exception_vector = VECTOR_INVALID;
 	uint32_t cpl;
 	int32_t status = 0;
+	bool queue_exception;
 
 	pr_dbg(" Handling guest exception");
 
@@ -515,10 +657,11 @@ int32_t exception_vmexit_handler(struct acrn_vcpu *vcpu)
 		}
 	}
 
-	/* Handle all other exceptions */
-	vcpu_retain_rip(vcpu);
-
-	status = vcpu_queue_exception(vcpu, exception_vector, int_err_code);
+	status = emulate_splitlock(vcpu, exception_vector, &queue_exception);
+	if ((status == 0) && queue_exception) {
+		vcpu_retain_rip(vcpu);
+		status = vcpu_queue_exception(vcpu, exception_vector, int_err_code);
+	}
 
 	if (exception_vector == IDT_MC) {
 		/* just print error message for #MC, it then will be injected

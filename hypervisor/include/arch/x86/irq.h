@@ -130,6 +130,7 @@ uint32_t alloc_irq_num(uint32_t req_irq);
 uint32_t alloc_irq_vector(uint32_t irq);
 
 /* RFLAGS */
+#define HV_ARCH_VCPU_RFLAGS_TF              (1UL<<8U)
 #define HV_ARCH_VCPU_RFLAGS_IF              (1UL<<9U)
 #define HV_ARCH_VCPU_RFLAGS_RF              (1UL<<16U)
 
