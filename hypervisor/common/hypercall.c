@@ -21,6 +21,7 @@
 #include <ioapic.h>
 #include <mmio_dev.h>
 #include <ivshmem.h>
+#include <ptcm.h>
 
 #define DBG_LEVEL_HYCALL	6U
 
@@ -648,6 +649,13 @@ static int32_t add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_v
 				prot |= EPT_WP;
 			} else {
 				prot |= EPT_UNCACHED;
+			}
+			/*
+				If pSRAM is initialized, and HV received a request to map pSRAM area to guest,
+				we should add EPT_WB flag to make pSRAM effective
+			*/
+			if (hpa == PSRAM_BASE_HPA && is_psram_initialized == true) {
+				prot |= EPT_WB;
 			}
 			/* create gpa to hpa EPT mapping */
 			ept_add_mr(target_vm, pml4_page, hpa,
