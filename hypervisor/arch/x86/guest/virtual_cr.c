@@ -215,7 +215,6 @@ static void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 						 * disabled behavior
 						 */
 						exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, PAT_ALL_UC_VALUE);
-						cache_flush_invalidate_all();
 					} else {
 						/* Restore IA32_PAT to enable cache again */
 						exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL,
