@@ -12,6 +12,9 @@
 uint64_t psram_area_bottom;
 uint64_t psram_area_top;
 
+/* is_psram_initialized is used to tell whether psram is successfully initialized for all cores */
+volatile bool is_psram_initialized = false;
+
 #ifdef CONFIG_PTCM_ENABLED
 struct ptcm_mem_region ptcm_mem_regions[MAX_PCPU_NUM];
 struct ptct_entry_data_ptcm_binary ptcm_binary;
@@ -105,5 +108,83 @@ static void parse_ptct(void)
 		psram_area_top = round_page_up(psram_area_top);
 		psram_area_bottom = round_page_down(psram_area_bottom);
 	}
+}
+
+static volatile uint64_t ptcm_command_interface_offset;
+static volatile struct ptct_entry* ptct_base_entry;
+static volatile ptcm_command_abi ptcm_command_interface = NULL;
+/*
+	Function to initialize pSRAM. Both AP and BSP shall call this function to make sure pSRAM is initialized,
+	which is required by PTCM.
+	BSP:
+		To parse PTCT and find the entry of PTCM command interface
+	AP:
+		Wait until BSP has done the parsing work, then call the PTCM ABI.
+
+	Synchronization of AP and BSP is ensured, both inside and outside PTCM.
+	BSP shall be the last to finish the call.
+*/
+int32_t init_psram(bool is_bsp)
+{
+	uint32_t magic,version;
+	int32_t ptcm_ret_code;
+	int ret = 0;
+	/*
+		When we shut down an RTVM, its pCPUs will be re-initialized
+		we must ensure init_psram() will only be executed at the first time when a pcpu is booted
+		That's why we add "is_psram_initialized == false" as an condition.
+	*/
+	if (get_acpi_tbl(ACPI_SIG_PTCT) != NULL && is_psram_initialized == false) {
+		if (is_bsp) {
+			parse_ptct();
+			pr_info("PTCT is parsed by BSP");
+			ptct_base_entry = (struct ptct_entry*)((uint64_t)get_acpi_tbl(ACPI_SIG_PTCT) + 0x24);
+			pr_info("ptct_base_entry is found by BSP at %llx", ptct_base_entry);
+			magic = ((uint32_t *)ptcm_binary.address)[0];
+			version = ((uint32_t *)ptcm_binary.address)[1];
+			ptcm_command_interface_offset = *(uint64_t *)(ptcm_binary.address + 0x8);
+			pr_info("ptcm_bin_address:%llx", ptcm_binary.address);
+			pr_info("ptcm magic:%x", magic);
+			pr_info("ptcm version:%x", version);
+
+			if (magic != PTCM_MAGIC) {
+				pr_err("Incorrect PTCM magic! Please turn on 'Above 4G MMIO Assignment' option in BIOS");
+				psram_area_bottom = psram_area_top = 0;
+				ptcm_command_interface = (ptcm_command_abi)(-1);
+			} else {
+				ptcm_command_interface = (ptcm_command_abi)(ptcm_binary.address + ptcm_command_interface_offset);
+				pr_info("ptcm command interface is found at %llx",ptcm_command_interface);
+			}
+		} else {
+			/*all AP should wait until BSP finishes parsing PTCT and finding the command interface.*/
+			while (!ptcm_command_interface) {
+				continue;
+			}
+		}
+
+		if ((int64_t)ptcm_command_interface != -1) { /* ptcm_command_interface is found */
+			ptcm_ret_code = ptcm_command_interface(PTCM_CMD_INIT_PSRAM, (void *)ptct_base_entry);
+			pr_info("ptcm initialization for core %d with return code %d", get_pcpu_id(), ptcm_ret_code);
+			ASSERT(ptcm_ret_code == PTCM_STATUS_SUCCESS);
+
+			if (is_bsp) {
+				is_psram_initialized = true;
+				pr_info("BSP pSRAM has been initialized\n");
+			} else {
+				/* all AP should wait until BSP finishes the call*/
+				while (!is_psram_initialized) {
+					continue;
+				}
+			}
+		} else { /* ptcm_command_interface is NOT found */
+			ret = -1;
+		}
+	}
+	return ret;
+}
+#else
+int32_t init_psram(__unused bool is_bsp)
+{
+	return -1;
 }
 #endif

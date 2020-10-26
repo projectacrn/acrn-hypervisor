@@ -26,4 +26,6 @@ typedef int32_t MSABI (*ptcm_command_abi)(uint32_t command, void *command_struct
 #define PTCM_STATUS_SUCCESS 0
 #define PTCM_STATUS_FAILURE -1
 
+extern volatile bool is_psram_initialized;
+int32_t init_psram(bool is_bsp);
 #endif /* PTCM_H */
