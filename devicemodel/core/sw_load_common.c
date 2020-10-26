@@ -34,6 +34,7 @@
 #include "sw_load.h"
 #include "dm.h"
 #include "pci_core.h"
+#include "ptct.h"
 
 int with_bootargs;
 static char bootargs[BOOT_ARG_LEN];
@@ -77,13 +78,34 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 
 	{	/* 1MB to lowmem */
 		.baseaddr = 0x100000,
-		.length   = 0x48f00000,
+		.length   = PSRAM_BASE_GPA - 0x100000,
+		.type     = E820_TYPE_RAM
+	},
+
+	{	/* pSRAM area */
+		.baseaddr = PSRAM_BASE_GPA,
+		.length   = PSRAM_MAX_SIZE,
+		.type     = E820_TYPE_RESERVED
+	},
+
+	{	/*
+			This is the dynamic extra segment. When pSRAM exists, this part may be as either the head part of reserved (ummapped) lowmem or the tail part of usable lowmem.
+			When lowmem > PSRAM_BASE_GPA + PSRAM_MAX_SIZE:
+				This region is the tail part of usable lowmem, and the length is lowmem -  (PSRAM_BASE_GPA + PSRAM_MAX_SIZE)
+			When lowmem < PSRAM_BASE_GPA:
+				This region is the head part of reserved (ummapped) lowmem, and the length is PSRAM_BASE_GPA - lowmem.
+				Also, it should swap the position with pSRAM part, and set to be reserved.
+			Otherwise:
+				This region will be removed since its length is 0.
+		 */
+		.baseaddr = PSRAM_BASE_GPA + PSRAM_MAX_SIZE,
+		.length   = 0,
 		.type     = E820_TYPE_RAM
 	},
 
 	{	/* lowmem to lowmem_limit */
-		.baseaddr = 0x49000000,
-		.length   = 0x37000000,
+		.baseaddr = PSRAM_BASE_GPA + PSRAM_MAX_SIZE,
+		.length   = 2*GB - (PSRAM_BASE_GPA + PSRAM_MAX_SIZE),
 		.type     = E820_TYPE_RESERVED
 	},
 
@@ -242,43 +264,91 @@ add_e820_entry(struct e820_entry *e820, int len, uint64_t start,
 uint32_t
 acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 {
-	uint32_t removed = 0, k;
+	uint32_t e820_entries_num = NUM_E820_ENTRIES, k;
+	uint32_t lowmem_ram_seg_idx = LOWRAM_E820_ENTRY;
+	uint32_t psram_seg_idx = LOWRAM_E820_ENTRY+1;
+	uint32_t dynamic_seg_idx = LOWRAM_E820_ENTRY+2;
+	uint32_t lowmem_reserved_seg_idx = LOWRAM_E820_ENTRY+3;
+	uint32_t highmem_seg_idx = HIGHRAM_E820_ENTRY;
+	struct e820_entry tmp_entry;
 
 	memcpy(e820, e820_default_entries, sizeof(e820_default_entries));
-	e820[LOWRAM_E820_ENTRY].length = ctx->lowmem -
-			e820[LOWRAM_E820_ENTRY].baseaddr;
+	if (!pt_ptct) {
+		/* When there is no pSRAM for this VM, we should firstly remove the pSRAM segment and dynamic extra part from guest E820 */
+		memmove(&e820[psram_seg_idx], &e820[lowmem_reserved_seg_idx],
+					sizeof(struct e820_entry) *
+					(e820_entries_num - lowmem_reserved_seg_idx));
+		e820_entries_num-=2;
+		lowmem_reserved_seg_idx-=2;
 
-	/* remove [lowmem, lowmem_limit) if it's empty */
-	if (ctx->lowmem_limit > ctx->lowmem) {
-		e820[LOWRAM_E820_ENTRY+1].baseaddr = ctx->lowmem;
-		e820[LOWRAM_E820_ENTRY+1].length =
-			ctx->lowmem_limit - ctx->lowmem;
+		e820[lowmem_ram_seg_idx].length = ctx->lowmem -
+				e820[lowmem_ram_seg_idx].baseaddr;
+
+		/* remove [lowmem, lowmem_limit) if it's empty */
+		if (ctx->lowmem_limit > ctx->lowmem) {
+			e820[lowmem_reserved_seg_idx].baseaddr = ctx->lowmem;
+			e820[lowmem_reserved_seg_idx].length =
+				ctx->lowmem_limit - ctx->lowmem;
+		} else {
+			memmove(&e820[lowmem_reserved_seg_idx], &e820[lowmem_reserved_seg_idx+1],
+					sizeof(struct e820_entry) *
+					(e820_entries_num - (lowmem_reserved_seg_idx+1)));
+			e820_entries_num--;
+		}
 	} else {
-		memmove(&e820[LOWRAM_E820_ENTRY+1], &e820[LOWRAM_E820_ENTRY+2],
-				sizeof(e820[LOWRAM_E820_ENTRY+2]) *
-				(NUM_E820_ENTRIES - (LOWRAM_E820_ENTRY+2)));
-		removed++;
+		/* Fix-Me: Currently, when memory size < 1GB and --psram is added to DM cmdline, the boot may fail. Needs further debug & refine*/
+		if (ctx->lowmem < PSRAM_BASE_GPA) {
+		/* In this case, dynamic extra segment is the head part of reserved lowmem. We should swap its position with pSRAM area */
+			tmp_entry = e820[psram_seg_idx];
+			psram_seg_idx = lowmem_ram_seg_idx + 2;
+			dynamic_seg_idx = lowmem_ram_seg_idx + 1;
+			e820[psram_seg_idx] = tmp_entry;
+			e820[dynamic_seg_idx].baseaddr = ctx->lowmem;
+			e820[dynamic_seg_idx].length = PSRAM_BASE_GPA - ctx->lowmem;
+			e820[dynamic_seg_idx].type = E820_TYPE_RESERVED;
+		} else if (ctx->lowmem > PSRAM_BASE_GPA + PSRAM_MAX_SIZE) {
+		/* In this case, dynamic extra segment is the tail part of usable lowmem. */
+			if (ctx->lowmem_limit > ctx->lowmem) {
+				e820[dynamic_seg_idx].length = ctx->lowmem - (PSRAM_BASE_GPA + PSRAM_MAX_SIZE);
+				e820[lowmem_reserved_seg_idx].baseaddr = ctx->lowmem;
+				e820[lowmem_reserved_seg_idx].length = ctx->lowmem_limit - ctx->lowmem;
+			} else {
+				e820[dynamic_seg_idx].length = ctx->lowmem_limit - (PSRAM_BASE_GPA + PSRAM_MAX_SIZE);
+				/* When lowmem > lowmem_limit, all lowmem is usable, so we will remove the reserved lowmem segment */
+				memmove(&e820[lowmem_reserved_seg_idx], &e820[lowmem_reserved_seg_idx+1],
+					sizeof(struct e820_entry) *
+					(e820_entries_num - (lowmem_reserved_seg_idx+1)));
+				e820_entries_num--;
+			}
+		} else {
+			/* When PSRAM_BASE_GPA <= lowmem <= PSRAM_BASE_GPA + PSRAM_MAX_SIZE, we just remove the dynamic extra segment */
+			memmove(&e820[dynamic_seg_idx], &e820[dynamic_seg_idx+1],
+					sizeof(struct e820_entry) *
+					(e820_entries_num - (dynamic_seg_idx+1)));
+			e820_entries_num--;
+		}
 	}
 
 	/* remove [5GB, highmem) if it's empty */
+	highmem_seg_idx -= (NUM_E820_ENTRIES - e820_entries_num);
 	if (ctx->highmem > 0) {
-		e820[HIGHRAM_E820_ENTRY - removed].type = E820_TYPE_RAM;
-		e820[HIGHRAM_E820_ENTRY - removed].length = ctx->highmem;
+		e820[highmem_seg_idx].type = E820_TYPE_RAM;
+		e820[highmem_seg_idx].length = ctx->highmem;
 	} else {
-		removed++;
+		e820_entries_num--;
 	}
 
 	pr_info("SW_LOAD: build e820 %d entries to addr: %p\r\n",
-			NUM_E820_ENTRIES - removed, (void *)e820);
+			e820_entries_num, (void *)e820);
 
-	for (k = 0; k < NUM_E820_ENTRIES - removed; k++)
+	for (k = 0; k < e820_entries_num; k++)
 		pr_info("SW_LOAD: entry[%d]: addr 0x%016lx, size 0x%016lx, "
 				" type 0x%x\r\n",
 				k, e820[k].baseaddr,
 				e820[k].length,
 				e820[k].type);
 
-	return (NUM_E820_ENTRIES - removed);
+	return e820_entries_num;
 }
 
 int
