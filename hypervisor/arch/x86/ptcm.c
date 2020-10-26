@@ -120,7 +120,6 @@ static volatile ptcm_command_abi ptcm_command_interface = NULL;
 		To parse PTCT and find the entry of PTCM command interface
 	AP:
 		Wait until BSP has done the parsing work, then call the PTCM ABI.
-
 	Synchronization of AP and BSP is ensured, both inside and outside PTCM.
 	BSP shall be the last to finish the call.
 */
@@ -152,6 +151,9 @@ int32_t init_psram(bool is_bsp)
 				psram_area_bottom = psram_area_top = 0;
 				ptcm_command_interface = (ptcm_command_abi)(-1);
 			} else {
+				/* Clear the NX bit of PTCM area, so that we can execute the PTCM ABI */
+				hv_update_memory_region_nx(ptcm_binary.address + ptcm_command_interface_offset, PDE_SIZE, false);
+				native_flush_tlb(ptcm_binary.address + ptcm_command_interface_offset);
 				ptcm_command_interface = (ptcm_command_abi)(ptcm_binary.address + ptcm_command_interface_offset);
 				pr_info("ptcm command interface is found at %llx",ptcm_command_interface);
 			}
@@ -160,6 +162,7 @@ int32_t init_psram(bool is_bsp)
 			while (!ptcm_command_interface) {
 				continue;
 			}
+			native_flush_tlb(ptcm_binary.address + ptcm_command_interface_offset);
 		}
 
 		if ((int64_t)ptcm_command_interface != -1) { /* ptcm_command_interface is found */
@@ -168,6 +171,8 @@ int32_t init_psram(bool is_bsp)
 			ASSERT(ptcm_ret_code == PTCM_STATUS_SUCCESS);
 
 			if (is_bsp) {
+				/* Restore the NX bit of PTCM area after pSRAM is initialized */
+				hv_update_memory_region_nx(ptcm_binary.address + ptcm_command_interface_offset, PDE_SIZE, true);
 				is_psram_initialized = true;
 				pr_info("BSP pSRAM has been initialized\n");
 			} else {
@@ -176,6 +181,7 @@ int32_t init_psram(bool is_bsp)
 					continue;
 				}
 			}
+			native_flush_tlb((ptcm_binary.address + ptcm_command_interface_offset));
 		} else { /* ptcm_command_interface is NOT found */
 			ret = -1;
 		}

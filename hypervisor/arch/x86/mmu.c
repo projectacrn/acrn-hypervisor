@@ -210,6 +210,20 @@ void hv_access_memory_region_update(uint64_t base, uint64_t size)
 		round_pde_up(size_aligned), 0UL, PAGE_USER, &ppt_mem_ops, MR_MODIFY);
 }
 
+/*
+ * @pre: The size must be 2MBytes aligned
+ */
+void hv_update_memory_region_nx(uint64_t base, uint64_t size, bool add)
+{
+	if (!add) {
+		mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr,
+			round_pde_down(base), size, 0UL, PAGE_NX, &ppt_mem_ops, MR_MODIFY);
+	} else {
+		mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr,
+			round_pde_down(base), size, PAGE_NX, 0UL, &ppt_mem_ops, MR_MODIFY);
+	}
+}
+
 void init_paging(void)
 {
 	uint64_t hv_hva;
