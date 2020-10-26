@@ -89,6 +89,7 @@ bool stdio_in_use;
 bool lapic_pt;
 bool is_rtvm;
 bool pt_tpm2;
+bool pt_ptct;
 bool is_winvm;
 bool skip_pci_mem64bar_workaround = false;
 
