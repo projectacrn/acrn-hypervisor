@@ -50,6 +50,8 @@
  *         DSDT  ->   0xf2800 (variable - can go up to 0x100000)
  */
 
+#include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -69,6 +71,9 @@
 #include "vmmapi.h"
 #include "hpet.h"
 #include "log.h"
+#include "ptct.h"
+#include "vhm_ioctl_defs.h"
+#include "vmmapi.h"
 
 /*
  * Define the base address of the ACPI tables, and the offsets to
@@ -85,7 +90,8 @@
 #define FACS_OFFSET		0x3C0
 #define NHLT_OFFSET		0x400
 #define TPM2_OFFSET		0xC00
-#define DSDT_OFFSET		0xE40
+#define PTCT_OFFSET		0xF00
+#define DSDT_OFFSET		0x1100
 
 #define	ASL_TEMPLATE	"dm.XXXXXXX"
 #define ASL_SUFFIX	".aml"
@@ -186,6 +192,11 @@ basl_fwrite_rsdt(FILE *fp, struct vmctx *ctx)
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
 		    basl_acpi_base + TPM2_OFFSET);
 
+	if (pt_ptct) {
+		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
+			    basl_acpi_base + PTCT_OFFSET);
+	}
+
 	EFFLUSH(fp);
 
 	return 0;
@@ -227,6 +238,11 @@ basl_fwrite_xsdt(FILE *fp, struct vmctx *ctx)
 	if (ctx->tpm_dev || pt_tpm2)
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
 		    basl_acpi_base + TPM2_OFFSET);
+
+	if (pt_ptct) {
+		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
+			    basl_acpi_base + PTCT_OFFSET);
+	}
 
 	EFFLUSH(fp);
 
@@ -1064,6 +1080,54 @@ static struct {
 	{ basl_fwrite_dsdt, DSDT_OFFSET, true  }
 };
 
+/*
+ * So far, only support passthrough native pSRAM to single post-launched VM.
+ */
+int create_and_inject_vptct(struct vmctx *ctx)
+{
+#define PTCT_NATIVE_FILE_PATH_IN_SOS "/sys/firmware/acpi/tables/PTCT"
+#define PTCT_BUF_LEN	0x200	/* Otherwise, need to modify DSDT_OFFSET corresponding */
+	int native_ptct_fd;
+	int rc;
+	size_t native_ptct_len;
+	size_t vptct_len;
+	uint8_t buf[PTCT_BUF_LEN] = {0};
+	struct vm_memmap memmap = {
+		.type = VM_MMIO,
+		.gpa = PSRAM_BASE_GPA,
+		.hpa = PSRAM_BASE_HPA,
+		/* TODO: .len should be psram_size+32kb (32kb is for PTCM binary). We also need to modify guest E820 to adapt to real config */
+		.len = PSRAM_MAX_SIZE,
+		.prot = PROT_ALL
+	};
+
+	native_ptct_fd = open(PTCT_NATIVE_FILE_PATH_IN_SOS, O_RDONLY);
+	if (native_ptct_fd < 0){
+		pr_err("failed to open /sys/firmware/acpi/tables/PTCT !!!!! errno:%d\n", errno);
+		return -1;
+	}
+	native_ptct_len = lseek(native_ptct_fd, 0, SEEK_END);
+	if (native_ptct_len > PTCT_BUF_LEN) {
+		pr_err("%s native_ptct_len = %d large than PTCT_BUF_LEN\n", __func__, native_ptct_len);
+		return -1;
+	}
+
+	(void)lseek(native_ptct_fd, 0, SEEK_SET);
+	rc = read(native_ptct_fd, buf, native_ptct_len);
+	if (rc < native_ptct_len ){
+		pr_err("Native PTCT is not fully read into buf!!!");
+		return -1;
+	}
+	close(native_ptct_fd);
+
+	vptct_len = native_ptct_len;
+
+	memcpy(vm_map_gpa(ctx, ACPI_BASE + PTCT_OFFSET, vptct_len), buf, vptct_len);
+
+	ioctl(ctx->fd, IC_UNSET_MEMSEG, &memmap);
+	return ioctl(ctx->fd, IC_SET_MEMSEG, &memmap);
+};
+
 void
 acpi_table_enable(int num)
 {
@@ -1132,6 +1196,10 @@ acpi_build(struct vmctx *ctx, int ncpu)
 			err = basl_compile(ctx, basl_ftables[i].wsect,
 					basl_ftables[i].offset);
 		i++;
+	}
+
+	if (pt_ptct) {
+		create_and_inject_vptct(ctx);
 	}
 
 	return err;
