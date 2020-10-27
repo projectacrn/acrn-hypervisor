@@ -35,6 +35,7 @@
 #include <trampoline.h>
 #include <assign.h>
 #include <vgpio.h>
+#include <ptcm.h>
 
 /* Local variables */
 
@@ -228,7 +229,16 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 		const struct e820_entry *entry = &(vm->e820_entries[i]);
 
 		if (entry->length == 0UL) {
-			break;
+			continue;
+		} else {
+			if (is_psram_initialized && (entry->baseaddr == PSRAM_BASE_GPA) &&
+				((vm_config->guest_flags & GUEST_FLAG_RT) != 0U)){
+				/* pass through pSRAM to pre-RTVM */
+				pr_fatal("%s, %d___", __func__, __LINE__);
+				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+					PSRAM_BASE_HPA, PSRAM_BASE_GPA, PSRAM_MAX_SIZE, EPT_RWX | EPT_WB);
+				continue;
+			}
 		}
 
 		if (remaining_hpa_size >= entry->length) {
