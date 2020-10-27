@@ -18,6 +18,7 @@
 #include <vtd.h>
 #include <vcpuid.h>
 #include <trace.h>
+#include <ptcm.h>
 
 /*
  * According to "SDM APPENDIX C VMX BASIC EXIT REASONS",
@@ -382,7 +383,8 @@ static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint16_t i;
 	struct acrn_vcpu *other;
 
-	if (has_rt_vm() == false) {
+	/* GUEST_FLAG_RT has not set in post-launched RTVM before it has been created */
+	if ((is_psram_initialized) || (has_rt_vm() == false)) {
 		cache_flush_invalidate_all();
 	} else {
 		if (is_rt_vm(vcpu->vm)) {

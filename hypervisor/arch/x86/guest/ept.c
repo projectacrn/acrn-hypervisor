@@ -15,6 +15,7 @@
 #include <vtd.h>
 #include <logmsg.h>
 #include <trace.h>
+#include <ptct.h>
 
 #define DBG_LEVEL_EPT	6U
 
@@ -170,14 +171,52 @@ void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t 
  */
 void ept_flush_leaf_page(uint64_t *pge, uint64_t size)
 {
-	uint64_t hpa = INVALID_HPA;
+	uint64_t flush_base_hpa = INVALID_HPA, flush_end_hpa;
 	void *hva = NULL;
+	uint64_t flush_size = size;
 
 	if ((*pge & EPT_MT_MASK) != EPT_UNCACHED) {
-		hpa = (*pge & (~(size - 1UL)));
-		hva = hpa2hva(hpa);
+		flush_base_hpa = (*pge & (~(size - 1UL)));
+		flush_end_hpa = flush_base_hpa + size;
+
+		/* When pSRAM is not intialized, both psram_area_bottom and psram_area_top is 0,
+		 * so the below if/else will have no use
+		 */
+		if (flush_base_hpa < psram_area_bottom) {
+			/* Only flush [flush_base_hpa, psram_area_bottom) and [psram_area_top, flush_base_hpa),
+			 * ignore [psram_area_bottom, psram_area_top)
+			 */
+			if (flush_end_hpa > psram_area_top) {
+				/* Only flush [flush_base_hpa, psram_area_bottom) and [psram_area_top, flush_base_hpa),
+				 * ignore [psram_area_bottom, psram_area_top)
+				 */
+				flush_size = psram_area_bottom - flush_base_hpa;
+				hva = hpa2hva(flush_base_hpa);
+				stac();
+				flush_address_space(hva, flush_size);
+				clac();
+
+				flush_size = flush_end_hpa - psram_area_top;
+				flush_base_hpa = psram_area_top;
+			} else if (flush_end_hpa > psram_area_bottom) {
+				/* Only flush [flush_base_hpa, psram_area_bottom) and
+				 * ignore [psram_area_bottom, flush_end_hpa)
+				 */
+				flush_size = psram_area_bottom - flush_base_hpa;
+			}
+		} else if (flush_base_hpa < psram_area_top) {
+			if (flush_end_hpa <= psram_area_top) {
+				flush_size = 0UL;
+			} else {
+				/* Only flush [psram_area_top, flush_end_hpa) and ignore [flush_base_hpa, psram_area_top) */
+				flush_base_hpa = psram_area_top;
+				flush_size = flush_end_hpa - psram_area_top;
+			}
+		}
+
+		hva = hpa2hva(flush_base_hpa);
 		stac();
-		flush_address_space(hva, size);
+		flush_address_space(hva, flush_size);
 		clac();
 	}
 }
