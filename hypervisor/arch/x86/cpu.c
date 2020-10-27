@@ -445,6 +445,7 @@ void cpu_dead(void)
 	if (bitmap_test(pcpu_id, &pcpu_active_bitmap)) {
 		/* clean up native stuff */
 		vmx_off();
+		/* TODO: a cpu dead can't effect the RTVM which use pSRAM */
 		cache_flush_invalidate_all();
 
 		/* Set state to show CPU is dead */
