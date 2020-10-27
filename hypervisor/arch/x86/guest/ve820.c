@@ -10,9 +10,12 @@
 #include <reloc.h>
 #include <vacpi.h>
 #include <logmsg.h>
+#include <ptcm.h>
 
-#define ENTRY_HPA1		2U
-#define ENTRY_HPA1_HI		6U
+#define ENTRY_HPA1_LOW_PART1	2U
+#define ENTRY_HPA1_LOW_PART2	4U
+#define ENTRY_PSRAM		3U
+#define ENTRY_HPA1_HI		8U
 
 static struct e820_entry sos_vm_e820[E820_MAX_ENTRIES];
 static struct e820_entry pre_vm_e820[PRE_VM_NUM][E820_MAX_ENTRIES];
@@ -130,9 +133,20 @@ static const struct e820_entry pre_ve820_template[E820_MAX_ENTRIES] = {
 		.length   = 0x10000UL,		/* 64KB */
 		.type     = E820_TYPE_RESERVED
 	},
-	{	/* hpa1 */
-		.baseaddr = 0x100000UL,		/* 1MB */
-		.length   = (MEM_2G - MEM_2M),
+	/* pSRAM segment splits the lowmem into two parts */
+	{	/* part1 of lowmem of hpa1*/
+		.baseaddr = MEM_1M,		/* 1MB */
+		.length   = PSRAM_BASE_GPA - MEM_1M,
+		.type     = E820_TYPE_RAM
+	},
+	{	/* pSRAM */
+		.baseaddr = PSRAM_BASE_GPA,
+		.length   = PSRAM_MAX_SIZE,
+		.type     = E820_TYPE_RESERVED
+	},
+	{	/* part2 of lowmem of hpa1*/
+		.baseaddr = PSRAM_BASE_GPA + PSRAM_MAX_SIZE,
+		.length   = MEM_2G - MEM_1M - (PSRAM_BASE_GPA + PSRAM_MAX_SIZE),
 		.type     = E820_TYPE_RAM
 	},
 	{	/* ACPI Reclaim */
@@ -170,23 +184,37 @@ static inline uint64_t add_ram_entry(struct e820_entry *entry, uint64_t gpa, uin
  *
  *	 entry0: usable under 1MB
  *	 entry1: reserved for MP Table/ACPI RSDP from 0xf0000 to 0xfffff
- *	 entry2: usable for hpa1 or hpa1_lo from 0x100000
- *	 entry3: ACPI Reclaim from 0x7ff00000 to 0x7ffeffff
- *	 entry4: ACPI NVS from 0x7fff0000 to 0x7fffffff
- *	 entry5: reserved for 32bit PCI hole from 0x80000000 to 0xffffffff
- *	 (entry6): usable for
- *                                         a) hpa1_hi, if hpa1 > 2GB
- *                                         b) hpa2, if (hpa1 + hpa2) < 2GB
- *                                         c) hpa2_lo, if hpa1 < 2GB and (hpa1 + hpa2) > 2GB
- *	 (entry7): usable for
- *                                         a) hpa2, if hpa1 > 2GB
- *                                         b) hpa2_hi, if hpa1 < 2GB and (hpa1 + hpa2) > 2GB
+ *	 entry2: usable, the part1 of hpa1 in lowmem, from 0x100000, and up to the bottom of pSRAM area.
+ *	 entry3: reserved, pSRAM segment, which will be identically mapped to physical pSRAM segment rather than hpa1.
+ *	 entry4: usable, the part2 of hpa1 in lowmem, from the ceil of pSRAM segment, and up to 2G-1M.
+ *	 entry5: ACPI Reclaim from 0x7ff00000 to 0x7ffeffff
+ *	 entry6: ACPI NVS from 0x7fff0000 to 0x7fffffff
+ *	 entry7: reserved for 32bit PCI hole from 0x80000000 to 0xffffffff
+ *	 (entry8): usable for
+ *                                         a) hpa1_hi, if hpa1 > 2GB - PSRAM_MAX_SIZE
+ *                                         b) hpa2, if (hpa1 + hpa2) < 2GB - PSRAM_MAX_SIZE
+ *                                         c) hpa2_lo, if hpa1 < 2GB - PSRAM_MAX_SIZE and (hpa1 + hpa2) > 2GB - PSRAM_MAX_SIZE
+ *	 (entry9): usable for
+ *                                         a) hpa2, if hpa1 > 2GB - PSRAM_MAX_SIZE
+ *                                         b) hpa2_hi, if hpa1 < 2GB - PSRAM_MAX_SIZE and (hpa1 + hpa2) > 2GB - PSRAM_MAX_SIZE
  */
+
+/*
+	The actual memory mapping under 2G looks like below:
+	|<--1M-->|
+	|<-----hpa1_low_part1--->|
+	|<---pSRAM--->|
+	|<-----hpa1_low_part2--->|
+	|<---Non-mapped hole (if there is)-->|
+	|<---1M ACPI NVS/DATA--->|
+*/
 void create_prelaunched_vm_e820(struct acrn_vm *vm)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	uint64_t gpa_start = 0x100000000UL;
 	uint64_t hpa1_hi_size, hpa2_lo_size;
+	uint64_t lowmem_max_length = MEM_2G - PSRAM_MAX_SIZE;
+	uint64_t hpa1_part1_max_length = PSRAM_BASE_GPA - MEM_1M;
 	uint64_t remaining_hpa2_size = vm_config->memory.size_hpa2;
 	uint32_t entry_idx = ENTRY_HPA1_HI;
 
@@ -195,24 +223,36 @@ void create_prelaunched_vm_e820(struct acrn_vm *vm)
 		(const void *)pre_ve820_template, E820_MAX_ENTRIES * sizeof(struct e820_entry));
 
 	/* sanitize entry for hpa1 */
-	if (vm_config->memory.size > MEM_2G) {
+	if (vm_config->memory.size > lowmem_max_length) {
 		/* need to split hpa1 and add an entry for hpa1_hi */
-		hpa1_hi_size = vm_config->memory.size - MEM_2G;
+		hpa1_hi_size = vm_config->memory.size - lowmem_max_length;
 		gpa_start = add_ram_entry((vm->e820_entries + entry_idx), gpa_start, hpa1_hi_size);
 		entry_idx++;
+	} else if (vm_config->memory.size <= MEM_1M + hpa1_part1_max_length + MEM_1M) {
+		/* in this case, hpa1 is only enough for the first 1M + part1 + last 1M (ACPI NVS/DATA), so part2 will be empty */
+		vm->e820_entries[ENTRY_HPA1_LOW_PART1].length = vm_config->memory.size - MEM_2M; /* 2M includes the first and last 1M */
+		vm->e820_entries[ENTRY_HPA1_LOW_PART2].length = 0;
 	} else {
-		/* need to revise length of hpa1 entry to its actual size, excluding size of low 1MB and ACPI space */
-		vm->e820_entries[ENTRY_HPA1].length = vm_config->memory.size - MEM_2M;
+		/* Otherwise, part2 is not empty. */
+		vm->e820_entries[ENTRY_HPA1_LOW_PART2].length = vm_config->memory.size - PSRAM_BASE_GPA - MEM_1M;
 		/* need to set gpa_start for hpa2 */
-		gpa_start = vm->e820_entries[ENTRY_HPA1].baseaddr + vm->e820_entries[ENTRY_HPA1].length;
-		if ((vm_config->memory.size < MEM_2G)
-				&& (remaining_hpa2_size > (MEM_2G - vm_config->memory.size))) {
-			/* need to split hpa2 and add an entry for hpa2_lo */
-			hpa2_lo_size = remaining_hpa2_size - (MEM_2G - vm_config->memory.size);
-			gpa_start = add_ram_entry((vm->e820_entries + entry_idx), gpa_start, hpa2_lo_size);
+	}
+
+	hpa2_lo_size = (lowmem_max_length - vm_config->memory.size);
+	gpa_start = vm->e820_entries[ENTRY_HPA1_LOW_PART2].baseaddr + vm->e820_entries[ENTRY_HPA1_LOW_PART2].length;
+
+	if (hpa2_lo_size > 0 && remaining_hpa2_size > 0) {
+		/* In this case, hpa2 may have some parts to be mapped to lowmem, so we add an entry for hpa2_lo */
+		if (remaining_hpa2_size > hpa2_lo_size) {
 			remaining_hpa2_size -= hpa2_lo_size;
-			entry_idx++;
+			gpa_start = 0x100000000U;
 		}
+		else {
+			hpa2_lo_size = remaining_hpa2_size;
+			remaining_hpa2_size = 0;
+		}
+		(void)add_ram_entry((vm->e820_entries + entry_idx), gpa_start, hpa2_lo_size);
+		entry_idx++;
 	}
 
 	/* check whether need an entry for remaining hpa2 */
