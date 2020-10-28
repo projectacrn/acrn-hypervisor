@@ -139,7 +139,7 @@ void uart16550_init(bool early_boot)
 			mmio_base_va = hpa2hva(hva2hpa_early(uart.mmio.pci.cached_mmio_base_va));
 		}
 		if (mmio_base_va != NULL) {
-			hv_access_memory_region_update((uint64_t)mmio_base_va, PDE_SIZE);
+			ppt_clear_user_bit((uint64_t)mmio_base_va, PDE_SIZE);
 		}
 		return;
 	}

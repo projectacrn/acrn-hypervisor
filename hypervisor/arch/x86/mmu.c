@@ -194,9 +194,9 @@ void enable_smap(void)
 }
 
 /*
- * Update memory pages to be owned by hypervisor.
+ * Clean USER bit in page table to update memory pages to be owned by hypervisor.
  */
-void hv_access_memory_region_update(uint64_t base, uint64_t size)
+void ppt_clear_user_bit(uint64_t base, uint64_t size)
 {
 	uint64_t base_aligned;
 	uint64_t size_aligned;

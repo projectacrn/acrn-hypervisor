@@ -104,7 +104,7 @@ void npk_log_setup(struct hv_npk_log_param *param)
 				for (i = 0U; i < pcpu_nums; i++) {
 					per_cpu(npk_log_ref, i) = 0U;
 				}
-				hv_access_memory_region_update(base,
+				ppt_clear_user_bit(base,
 					pcpu_nums * (HV_NPK_LOG_REF_MASK + 1U)
 					* sizeof(struct npk_chan));
 			}
