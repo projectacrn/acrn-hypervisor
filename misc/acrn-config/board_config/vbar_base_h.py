@@ -324,22 +324,25 @@ def generate_file(config):
                         int_size = int(size) * 0x100000
                     except:
                         int_size = 0
-                    # vbar[0] for shared memory is 0x200100
-                    free_bar = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], 0x200100)
-                    mmiolist_per_vm[vm_id].append(free_bar)
+                    # vbar[2] for shared memory is specified size in MB
+                    free_bar2 = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], int_size + 0x200000)
+                    free_bar2_start_addr = common.round_up(free_bar2.start, 0x200000) + 0xC
+                    free_bar2_end_addr = free_bar2_start_addr + int_size - 1
+                    free_bar2 = MmioWindow(free_bar2_start_addr, free_bar2_end_addr)
+                    mmiolist_per_vm[vm_id].append(free_bar2)
+                    mmiolist_per_vm[vm_id].sort()
+                    # vbar[0] for shared memory is 0x100
+                    free_bar0 = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], 0x100)
+                    mmiolist_per_vm[vm_id].append(free_bar0)
+                    mmiolist_per_vm[vm_id].sort()
+                    # vbar[1] for shared memory is 4K
+                    free_bar1 = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], 4*common.SIZE_K)
+                    mmiolist_per_vm[vm_id].append(free_bar1)
                     mmiolist_per_vm[vm_id].sort()
                     print("#define SOS_IVSHMEM_DEVICE_%-19s" % (str(idx) + "_VBAR"),
-                         "       .vbar_base[0] = {:#x}UL, \\".format(free_bar.start), file=config)
-                    # vbar[1] for shared memory is 4K
-                    free_bar = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], 4 * common.SIZE_K)
-                    mmiolist_per_vm[vm_id].append(free_bar)
-                    mmiolist_per_vm[vm_id].sort()
-                    print("{}.vbar_base[1] = {:#x}UL, \\".format(' ' * 54, free_bar.start), file=config)
-                    # vbar[2] for shared memory is specified size in MB plus 0x200000
-                    free_bar = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], int_size + 0x200000)
-                    mmiolist_per_vm[vm_id].append(free_bar)
-                    mmiolist_per_vm[vm_id].sort()
-                    print("{}.vbar_base[2] = {:#x}UL".format(' ' * 54, free_bar.start), file=config)
+                         "       .vbar_base[0] = {:#x}UL, \\".format(free_bar0.start), file=config)
+                    print("{}.vbar_base[1] = {:#x}UL, \\".format(' ' * 54, free_bar1.start), file=config)
+                    print("{}.vbar_base[2] = {:#x}UL".format(' ' * 54, free_bar2.start), file=config)
                     print("", file=config)
                     idx += 1
 
