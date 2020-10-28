@@ -136,7 +136,7 @@ void reserve_buffer_for_ept_pages(void)
 	struct acrn_vm_config *vm_config;
 
 	pt_base = e820_alloc_memory(TOTAL_EPT_4K_PAGES_SIZE, ~0UL);
-	hv_access_memory_region_update(pt_base, TOTAL_EPT_4K_PAGES_SIZE);
+	ppt_clear_user_bit(pt_base, TOTAL_EPT_4K_PAGES_SIZE);
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
 		vm_config = get_vm_config(vm_id);
 		ept_pages_info[vm_id].ept.nworld_pt_base = (struct page *)(void *)(pt_base + offset);

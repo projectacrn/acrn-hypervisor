@@ -113,7 +113,7 @@ void mmu_add(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base,
 		uint64_t size, uint64_t prot, const struct memory_ops *mem_ops);
 void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr, const struct memory_ops *mem_ops, uint32_t type);
-void hv_access_memory_region_update(uint64_t base, uint64_t size);
+void ppt_clear_user_bit(uint64_t base, uint64_t size);
 void ppt_set_nx_bit(uint64_t base, uint64_t size, bool add);
 
 /**
