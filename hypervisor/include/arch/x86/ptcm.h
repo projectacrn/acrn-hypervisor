@@ -28,4 +28,5 @@ struct ptcm_header {
 
 extern volatile bool is_psram_initialized;
 void init_psram(bool is_bsp);
+void set_ptct_tbl(void *ptct_tbl_addr);
 #endif /* PTCM_H */

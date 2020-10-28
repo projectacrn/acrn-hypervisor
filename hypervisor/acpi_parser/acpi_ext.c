@@ -35,6 +35,7 @@
 #include <host_pm.h>
 #include <pci.h>
 #include <acrn_common.h>
+#include <ptcm.h>
 
 /* Per ACPI spec:
  * There are two fundamental types of ACPI tables:
@@ -129,7 +130,7 @@ static struct acpi_mcfg_allocation *parse_mcfg_allocation_tables(const uint8_t *
 /* put all ACPI fix up code here */
 int32_t acpi_fixup(void)
 {
-	uint8_t *facp_addr = NULL, *facs_addr = NULL, *mcfg_addr = NULL;
+	uint8_t *facp_addr = NULL, *facs_addr = NULL, *mcfg_addr = NULL, *ptct_tbl_addr = NULL;
 	struct acpi_mcfg_allocation *mcfg_table = NULL;
 	int32_t ret = 0;
 	struct acpi_generic_address pm1a_cnt, pm1a_evt;
@@ -166,6 +167,11 @@ int32_t acpi_fixup(void)
 		if (mcfg_table != NULL) {
 			set_mmcfg_region((struct pci_mmcfg_region*)mcfg_table);
 		}
+	}
+
+	ptct_tbl_addr = (uint8_t *)get_acpi_tbl(ACPI_SIG_PTCT);
+	if (ptct_tbl_addr != NULL) {
+		set_ptct_tbl((void *)ptct_tbl_addr);
 	}
 
 	if ((facp_addr == NULL) || (facs_addr == NULL)

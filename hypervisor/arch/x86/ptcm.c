@@ -11,6 +11,9 @@
 #include <ptcm.h>
 
 
+uint64_t psram_area_bottom;
+uint64_t psram_area_top;
+
 /* is_psram_initialized is used to tell whether psram is successfully initialized for all cores */
 volatile bool is_psram_initialized = false;
 
@@ -25,9 +28,51 @@ static inline void *get_ptct_address()
 	return (void *)acpi_ptct_tbl + sizeof(*acpi_ptct_tbl);
 }
 
+void set_ptct_tbl(void *ptct_tbl_addr)
+{
+	acpi_ptct_tbl = ptct_tbl_addr;
+}
+
 static void parse_ptct(void)
 {
-	/* TODO: Will add in the next patch */
+	struct ptct_entry *entry;
+	struct ptct_entry_data_psram *psram_entry;
+
+	if (acpi_ptct_tbl != NULL) {
+		pr_info("found PTCT subtable in HPA %llx, length: %d", acpi_ptct_tbl, acpi_ptct_tbl->length);
+
+		entry = get_ptct_address();
+		psram_area_bottom = PSRAM_BASE_HPA;
+
+		while (((uint64_t)entry - (uint64_t)acpi_ptct_tbl) < acpi_ptct_tbl->length) {
+			switch (entry->type) {
+			case PTCT_ENTRY_TYPE_PTCM_BINARY:
+				ptcm_binary = (struct ptct_entry_data_ptcm_binary *)entry->data;
+				if (psram_area_top < ptcm_binary->address + ptcm_binary->size) {
+					psram_area_top = ptcm_binary->address + ptcm_binary->size;
+				}
+				pr_info("found PTCM bin, in HPA %llx, size %llx", ptcm_binary->address, ptcm_binary->size);
+				break;
+
+			case PTCT_ENTRY_TYPE_PSRAM:
+				psram_entry = (struct ptct_entry_data_psram *)entry->data;
+				if (psram_area_top < psram_entry->base + psram_entry->size) {
+					psram_area_top = psram_entry->base + psram_entry->size;
+				}
+				pr_info("found L%d psram, at HPA %llx, size %x", psram_entry->cache_level,
+					psram_entry->base, psram_entry->size);
+				break;
+			/* In current phase, we ignore other entries like gt_clos and wrc_close */
+			default:
+				break;
+			}
+			/* point to next ptct entry */
+			entry = (struct ptct_entry *)((uint64_t)entry + entry->size);
+		}
+		psram_area_top = round_page_up(psram_area_top);
+	} else {
+		pr_fatal("Cannot find PTCT pointer!!!!");
+	}
 }
 
 /*
@@ -83,6 +128,10 @@ void init_psram(bool is_bsp)
 	}
 }
 #else
+void set_ptct_tbl(__unused void *ptct_tbl_addr)
+{
+}
+
 void init_psram(__unused bool is_bsp)
 {
 }
