@@ -212,6 +212,7 @@ ifeq ($(CONFIG_MULTIBOOT2),y)
 BOOT_C_SRCS += boot/multiboot2.c
 endif
 BOOT_C_SRCS += boot/reloc.c
+BOOT_C_SRCS += arch/x86/ptcm.c
 
 # hardware management component
 HW_S_SRCS += arch/x86/idt.S

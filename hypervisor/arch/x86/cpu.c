@@ -28,6 +28,7 @@
 #include <uart16550.h>
 #include <vpci.h>
 #include <ivshmem.h>
+#include <ptcm.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */
@@ -266,10 +267,14 @@ void init_pcpu_post(uint16_t pcpu_id)
 		}
 
 		ASSERT(get_pcpu_id() == BSP_CPU_ID, "");
+
+		init_psram(true);
 	} else {
 		pr_dbg("Core %hu is up", pcpu_id);
 
 		pr_warn("Skipping VM configuration check which should be done before building HV binary.");
+
+		init_psram(false);
 
 		/* Initialize secondary processor interrupts. */
 		init_interrupt(pcpu_id);
