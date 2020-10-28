@@ -88,7 +88,7 @@
         </epc_section>
         <memory>
             <start_hpa desc="The start physical address in host for the VM">0x100000000</start_hpa>
-            <size desc="The memory size in Bytes for the VM">0xC0000000</size>
+            <size desc="The memory size in Bytes for the VM">0x40000000</size>
             <start_hpa2 configurable="0" desc="Start of second HPA for non-contiguous allocations in host for the VM">0x0</start_hpa2>
             <size_hpa2 configurable="0" desc="Memory size of second HPA for non-contiguous allocations in Bytes for the VM">0x0</size_hpa2>
         </memory>
@@ -97,7 +97,7 @@
             <kern_type desc="Specify the kernel image type so that hypervisor could load it correctly. Currently support KERNEL_BZIMAGE and KERNEL_ZEPHYR.">KERNEL_BZIMAGE</kern_type>
             <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline.">RT_bzImage</kern_mod>
             <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline." />
-            <bootargs desc="Specify kernel boot arguments">rw rootwait root=/dev/sda2 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel consoleblank=0 tsc=reliable</bootargs>
+            <bootargs desc="Specify kernel boot arguments">rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel consoleblank=0 tsc=reliable</bootargs>
         </os_config>
         <vuart id="0">
             <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
@@ -159,7 +159,7 @@
             <pci_dev desc="pci device" />
         </pci_devs>
         <board_private>
-            <rootfs desc="rootfs for Linux kernel">/dev/mmcblk0p2</rootfs>
+            <rootfs desc="rootfs for Linux kernel">/dev/nvme0n1p3</rootfs>
             <bootargs desc="Specify kernel boot arguments">
             rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3
             i915.nuclear_pageflip=1 swiotlb=131072
