@@ -236,6 +236,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        uses ``/usr/share/acrn/bios/VSBL.bin`` as the vSBL image
 
    * - :kbd:`--ovmf [w,]<ovmf_file_path>`
+       :kbd:`--ovmf [w,]code=<ovmf_code_file>,vars=<ovmf_vars_file>`
      - Open Virtual Machine Firmware (OVMF) is an EDK II based project to enable
        UEFI support for Virtual Machines.
 
@@ -249,14 +250,24 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
        uses ``/usr/share/acrn/bios/OVMF.fd`` as the OVMF image
 
-       ACRN supports option "w" of OVMF. To preserve any change of OVMF NV data
-       store section, using this option to enable NV data store section writeback.
+       ACRN also supports using OVMF split images; ``OVMF_CODE.fd`` that contains
+       the OVMF firmware executable and ``OVMF_VARS.fd`` that contains the NV
+       data store.
+
+       usage::
+
+          --ovmf code=/usr/share/acrn/bios/OVMF_CODE.fd,vars=/usr/share/acrn/bios/OVMF_VARS.fd
+
+       ACRN supports the option "w" for OVMF. To preserve all changes in OVMF's
+       NV data store section, use this option to enable writeback mode.
+
+       Writeback mode is only enabled for the ``OVMF_VARS.fd`` file in case of
+       OVMF split images, the firmware executable (``OVMF_CODE.fd``) remains
+       read-only.
 
        usage::
 
           --ovmf w,/usr/share/acrn/bios/OVMF.fd
-
-
 
    * - :kbd:`--cpu_affinity <list of pCPUs>`
      - list of pCPUs assigned to this VM.
