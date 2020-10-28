@@ -81,6 +81,8 @@ char *vmname;
 char *guest_uuid_str;
 char *vsbl_file_name;
 char *ovmf_file_name;
+char *ovmf_code_file_name;
+char *ovmf_vars_file_name;
 char *kernel_file_name;
 char *elf_file_name;
 uint8_t trusty_enabled;
@@ -230,10 +232,7 @@ virtio_uses_msix(void)
 size_t
 high_bios_size(void)
 {
-	size_t size = 0;
-
-	if (ovmf_file_name)
-		size = ovmf_image_size();
+	size_t size = ovmf_image_size();
 
 	return roundup2(size, 2 * MB);
 }
