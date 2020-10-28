@@ -55,7 +55,6 @@ struct e820_entry {
 
 extern const struct e820_entry e820_default_entries[NUM_E820_ENTRIES];
 extern int with_bootargs;
-extern bool writeback_nv_storage;
 
 size_t ovmf_image_size(void);
 
