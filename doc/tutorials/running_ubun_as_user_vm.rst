@@ -103,7 +103,8 @@ This tutorial uses the Ubuntu 18.04 desktop ISO as the base image.
 
          Create a New Virtual Machine
 
-   #. Choose **Use ISO image** and click **Browse** - **Browse Local**. Select the ISO which you get from Step 2 above.
+   #. Choose **Use ISO image** and click **Browse** - **Browse Local**.
+      Select the ISO that you get from Step 2 above.
 
    #. Choose the **OS type:** Linux, **Version:** Ubuntu 18.04 LTS and then click **Forward**.
 

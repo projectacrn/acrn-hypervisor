@@ -314,7 +314,7 @@ Additional scenario XML elements:
   (SOS_COM_BASE for Service VM); disable by returning INVALID_COM_BASE.
 
 ``irq`` (a child node of ``vuart``):
-  vCOM irq.
+  vCOM IRQ.
 
 ``target_vm_id`` (a child node of ``vuart1``):
   COM2 is used for VM communications. When it is enabled, specify which

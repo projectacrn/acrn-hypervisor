@@ -56,15 +56,15 @@ the ending point as ``now``.
 Log and trace data collection
 =============================
 
-#. Add timestamps (in TSC) at ``next`` and ``now``.
-#. Capture the log with the above timestamps in the RTVM.
+#. Add time stamps (in TSC) at ``next`` and ``now``.
+#. Capture the log with the above time stamps in the RTVM.
 #. Capture the ``acrntrace`` log in the Service VM at the same time.
 
 Offline analysis
 ================
 
 #. Convert the raw trace data to human readable format.
-#. Merge the logs in the RTVM and the ACRN hypervisor trace based on timestamps (in TSC).
+#. Merge the logs in the RTVM and the ACRN hypervisor trace based on time stamps (in TSC).
 #. Check to see if any ``vmexit`` occurred within the critical sections. The pattern is as follows:
 
    .. figure:: images/vm_exits_log.png
@@ -158,7 +158,7 @@ the bottleneck of the application.
 
 ``Perf`` is a profiler tool for Linux 2.6+ based systems that abstracts away
 CPU hardware differences in Linux performance measurements and presents a
-simple command line interface. Perf is based on the ``perf_events`` interface
+simple command-line interface. Perf is based on the ``perf_events`` interface
 exported by recent versions of the Linux kernel.
 
 ``PMU tools`` is a collection of tools for profile collection and
@@ -168,7 +168,7 @@ following links for perf usage:
   - https://perf.wiki.kernel.org/index.php/Main_Page
   - https://perf.wiki.kernel.org/index.php/Tutorial
 
-Refer to https://github.com/andikleen/pmu-tools for pmu usage.
+Refer to https://github.com/andikleen/pmu-tools for PMU usage.
 
 Top-down Microarchitecture Analysis Method (TMAM)
 ==================================================
@@ -180,7 +180,7 @@ Intel |reg| 64 and IA-32 `Architectures Optimization Reference Manual
 <http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf>`_,
 Appendix B.1 for more details on TMAM. Refer to this `technical paper
 <https://fd.io/docs/whitepapers/performance_analysis_sw_data_planes_dec21_2017.pdf>`_
-which adopts TMAM for systematic performance benchmarking and analysis
+that adopts TMAM for systematic performance benchmarking and analysis
 of compute-native Network Function data planes that are executed on
 commercial-off-the-shelf (COTS) servers using available open-source
 measurement tools.

@@ -114,7 +114,7 @@ Tip: Utilize Preempt-RT Linux mechanisms to reduce the access of ICR from the RT
    #. Add ``domain`` to ``isolcpus`` ( ``isolcpus=nohz,domain,1`` ) to the kernel parameters.
    #. Add ``idle=poll`` to the kernel parameters.
    #. Add ``rcu_nocb_poll`` along with ``rcu_nocbs=1`` to the kernel parameters.
-   #. Disable the logging service isuch as ``journald`` or ``syslogd`` if possible.
+   #. Disable the logging service such as ``journald`` or ``syslogd`` if possible.
 
    The parameters shown above are recommended for the guest Preempt-RT
    Linux. For an UP RTVM, ICR interception is not a problem. But for an SMP
@@ -171,7 +171,7 @@ Tip: Disable timer migration on Preempt-RT Linux.
      echo 0 > /proc/kernel/timer_migration
 
 Tip: Add ``mce=off`` to RT VM kernel parameters.
-   This parameter disables the mce periodic timer and avoids a VM-exit.
+   This parameter disables the MCE periodic timer and avoids a VM-exit.
 
 Tip: Disable the Intel processor C-state and P-state of the RTVM.
    Power management of a processor could save power, but it could also impact

@@ -56,7 +56,7 @@ You'll need git installed to get the working folders set up:
 
      sudo dnf install git
 
-We use the source header files to generate API docs and we use github.io
+We use the source header files to generate API documentation and we use github.io
 for publishing the generated documentation.  Here's the recommended
 folder setup for documentation contributions and generation:
 
@@ -88,7 +88,7 @@ repos (though ``https`` clones work too):
 #. At a command prompt, create the working folder and clone the acrn-hypervisor
    repository to your local computer (and if you have publishing rights, the
    projectacrn.github.io repo).  If you don't have publishing rights
-   you'll still be able to generate the docs locally, but not publish them:
+   you'll still be able to generate the documentation files locally, but not publish them:
 
    .. code-block:: bash
 
@@ -194,7 +194,7 @@ generation and a ``make html`` again generally cleans this up.
 
 The ``read-the-docs`` theme is installed as part of the
 ``requirements.txt`` list above.  Tweaks to the standard
-``read-the-docs`` look and feel are added by using CSS
+``read-the-docs`` appearance are added by using CSS
 and JavaScript customization found in ``doc/static``, and
 theme template overrides found in ``doc/_templates``.
 

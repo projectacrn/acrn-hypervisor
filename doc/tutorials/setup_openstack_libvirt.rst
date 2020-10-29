@@ -26,7 +26,7 @@ Install ACRN
    <https://raw.githubusercontent.com/projectacrn/acrn-kernel/master/kernel_config_uefi_sos>`_
    configuration file (from the ``acrn-kernel`` repo).
 
-#. Add the following kernel bootarg to give the Service VM  more loop
+#. Add the following kernel boot arg to give the Service VM  more loop
    devices. Refer to `Kernel Boot Parameters
    <https://wiki.ubuntu.com/Kernel/KernelBootParameters>`_ documentation::
 
@@ -122,7 +122,7 @@ Set up and launch LXC/LXD
                       route-metric: 200
 
 
-7. Log out and restart the ``openstack`` container::
+7. Log off and restart the ``openstack`` container::
 
      $ lxc restart openstack
 
@@ -142,7 +142,7 @@ Set up and launch LXC/LXD
        $ sudo useradd -s /bin/bash -d /opt/stack -m stack
        $ echo "stack ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-11. Log out and restart the ``openstack`` container::
+11. Log off and restart the ``openstack`` container::
 
       $ lxc restart openstack
 
@@ -170,7 +170,8 @@ Set up ACRN prerequisites inside the container
       $ make
       $ cd misc/acrn-manager/; make
 
-   Install only the user-space components: acrn-dm, acrnctl, and acrnd
+   Install only the user-space components: ``acrn-dm``, ``acrnctl``, and
+   ``acrnd``
 
 3. Download, compile, and install ``iasl``. Refer to XXX.
 
@@ -286,8 +287,8 @@ Use DevStack to install OpenStack. Refer to the `DevStack instructions <https://
 
    a. Inside the container, use the command ``ip a`` to identify the ``br-ex`` bridge
       interface. ``br-ex`` should have two IPs. One should be visible to
-      the native Ubuntu's ``acrn-br0`` interface (e.g. inet 192.168.1.104/24).
-      The other one is internal to OpenStack (e.g. inet 172.24.4.1/24). The
+      the native Ubuntu's ``acrn-br0`` interface (e.g. iNet 192.168.1.104/24).
+      The other one is internal to OpenStack (e.g. iNet 172.24.4.1/24). The
       latter corresponds to the public network in OpenStack.
 
    b. Set up SNAT to establish a link between ``acrn-br0`` and OpenStack.
@@ -479,9 +480,9 @@ instance.
       :width: 1200px
       :name: os-08d-security-group
 
-#. Create a public/private key pair used to access the created instance.
+#. Create a public/private keypair used to access the created instance.
    Go to **Project / Compute / Key Pairs** and click on **+Create Key
-   Pair**, give the key pair a name (**acrnKeyPair**) and Key Type
+   Pair**, give the keypair a name (**acrnKeyPair**) and Key Type
    (**SSH Key**) and click on **Create Key Pair**:
 
    .. figure:: images/OpenStack-09a-create-key-pair.png
@@ -489,7 +490,7 @@ instance.
       :width: 1200px
       :name: os-09a-key-pair
 
-   You should save the **private** key pair file safely,
+   You should save the **private** keypair file safely,
    for future use:
 
    .. figure:: images/OpenStack-09c-key-pair-private-key.png
@@ -613,7 +614,7 @@ Hypervisors**:
    :name: os-12d-running
 
 .. note::
-   OpenStack logs to the systemd journal and libvirt logs to
+   OpenStack logs to the ``systemd`` journal and ``libvirt`` logs to
    ``/var/log/libvirt/libvirtd.log``.
 
 Here are some other tasks you can try when the instance is created and
