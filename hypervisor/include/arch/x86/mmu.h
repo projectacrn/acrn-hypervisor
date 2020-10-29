@@ -114,6 +114,7 @@ void mmu_add(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base,
 void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr, const struct memory_ops *mem_ops, uint32_t type);
 void hv_access_memory_region_update(uint64_t base, uint64_t size);
+void ppt_set_nx_bit(uint64_t base, uint64_t size, bool add);
 
 /**
  * @brief Specified signle VPID flush
@@ -149,6 +150,11 @@ void flush_address_space(void *addr, uint64_t size);
  * @return None
  */
 void invept(const void *eptp);
+
+static inline void invlpg(unsigned long addr)
+{
+	asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
+}
 
 static inline void cache_flush_invalidate_all(void)
 {
