@@ -364,6 +364,11 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	/* unmap PCIe MMCONFIG region since it's owned by hypervisor */
 	pci_mmcfg = get_mmcfg_region();
 	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, pci_mmcfg->address, get_pci_mmcfg_size(pci_mmcfg));
+
+	/* TODO: remove pSRAM from SOS prevent SOS to use clflush to flush the pSRAM cache.
+	 * If we remove this EPT mapping from the SOS, the ACRN-DM can't do pSRAM EPT mapping
+	 * because the SOS can't get the HPA of this memory region.
+	 */
 }
 
 /* Add EPT mapping of EPC reource for the VM */
