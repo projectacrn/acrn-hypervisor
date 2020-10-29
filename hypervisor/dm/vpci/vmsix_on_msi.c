@@ -115,14 +115,11 @@ void init_vmsix_on_msi(struct pci_vdev *vdev)
 
 			/* About MSI-x bar GPA:
 			 * - For Service VM: when first time init, it is programmed as 0, then OS will program
-			 * the value later and the value is stored in  vdev->vbars[MSI-X_BAR_ID].base_gpa.
-			 * When the device is assigned to UOS and then assgined back to SOS, the stored base
-			 * GPA will be used.
+			 *   the value later.
 			 * - For Post-launched VM: The GPA is assigned by device model.
 			 * - For Pre-launched VM: Not supported yet.
 			 */
-			vdev->msix.mmio_gpa = vdev->vbars[i].base_gpa;
-			vdev_pt_write_vbar(vdev, i, (uint32_t)(vdev->vbars[i].base_gpa & 0xFFFFFFFFUL));
+			pci_vdev_write_vbar(vdev, i, (uint32_t)vdev->vbars[i].base_gpa);
 		}
 	}
 }
