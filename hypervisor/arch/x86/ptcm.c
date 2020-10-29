@@ -23,6 +23,23 @@ static struct ptct_entry_data_ptcm_binary *ptcm_binary = NULL;
 
 static struct acpi_table_header *acpi_ptct_tbl = NULL;
 
+static inline void ptcm_set_nx(bool add)
+{
+	ppt_set_nx_bit((uint64_t)hpa2hva(ptcm_binary->address), ptcm_binary->size, add);
+}
+
+static inline void ptcm_flush_binary_tlb(void)
+{
+	uint64_t linear_addr, start_addr = (uint64_t)hpa2hva(ptcm_binary->address);
+	uint64_t end_addr = start_addr + ptcm_binary->size;
+
+	for (linear_addr = start_addr; linear_addr < end_addr; linear_addr += PAGE_SIZE) {
+		invlpg(linear_addr);
+	}
+
+}
+
+
 static inline void *get_ptct_address()
 {
 	return (void *)acpi_ptct_tbl + sizeof(*acpi_ptct_tbl);
@@ -99,8 +116,11 @@ void init_psram(bool is_bsp)
 	 * That's why we add "!is_psram_initialized" as an condition.
 	 */
 	if (!is_psram_initialized && (acpi_ptct_tbl != NULL)) {
+		/* TODO: We may use SMP call to flush TLB and do pSRAM initilization on APs */
 		if (is_bsp) {
 			parse_ptct();
+			/* Clear the NX bit of PTCM area */
+			ptcm_set_nx(false);
 			bitmap_clear_lock(get_pcpu_id(), &init_psram_cpus_mask);
 		}
 
@@ -111,6 +131,8 @@ void init_psram(bool is_bsp)
 			ptcm_binary->address, header->magic, header->version);
 		ASSERT(header->magic == PTCM_MAGIC, "Incorrect PTCM magic!");
 
+		/* Flush the TLB, so that BSP/AP can execute the PTCM ABI */
+		ptcm_flush_binary_tlb();
 		ptcm_command_func = (ptcm_abi_func)(hpa2hva(ptcm_binary->address) + header->command_offset);
 		pr_info("ptcm command function is found at %llx",ptcm_command_func);
 		ptcm_ret_code = ptcm_command_func(PTCM_CMD_INIT_PSRAM, get_ptct_address());
@@ -118,8 +140,15 @@ void init_psram(bool is_bsp)
 		/* return 0 for success, -1 for failure */
 		ASSERT(ptcm_ret_code == 0);
 
+		if (is_bsp) {
+			/* Restore the NX bit of PTCM area in page table */
+			ptcm_set_nx(true);
+		}
+
 		bitmap_set_lock(get_pcpu_id(), &init_psram_cpus_mask);
 		wait_sync_change(&init_psram_cpus_mask, ALL_CPUS_MASK);
+		/* Flush the TLB on BSP and all APs to restore the NX for pSRAM area */
+		ptcm_flush_binary_tlb();
 
 		if (is_bsp) {
 			is_psram_initialized = true;
