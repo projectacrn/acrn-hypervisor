@@ -6,9 +6,9 @@ Enable RDT Configuration
 On x86 platforms that support Intel Resource Director Technology (RDT)
 allocation features such as Cache Allocation Technology (CAT) and Memory
 Bandwidth Allocation (MBA), the ACRN hypervisor can be used to limit regular
-VMs which may be over-utilizing common resources such as cache and memory
+VMs that may be over-utilizing common resources such as cache and memory
 bandwidth relative to their priorities so that the performance of other
-higher priorities VMs (such as RTVMs) are not impacted.
+higher priority VMs (such as RTVMs) is not impacted.
 
 Using RDT includes three steps:
 
@@ -22,7 +22,7 @@ Using RDT includes three steps:
 
 Steps #2 and #3 configure RDT resources for a VM and can be done in two ways:
 
-* Using a HV debug shell (See `Tuning RDT resources in HV debug shell`_)
+* Using an HV debug shell (See `Tuning RDT resources in HV debug shell`_)
 * Using a VM configuration (See `Configure RDT for VM using VM Configuration`_)
 
 The following sections discuss how to detect, enumerate capabilities, and
@@ -94,7 +94,7 @@ MBA bit encoding:
    ACRN takes the lowest common CLOS max value between the supported
    resources as maximum supported CLOS ID. For example, if max CLOS
    supported by L3 is 16 and MBA is 8, ACRN programs MAX_PLATFORM_CLOS_NUM
-   to 8. ACRN recommends to have consistent capabilities across all RDT
+   to 8. ACRN recommends having consistent capabilities across all RDT
    resources by using a common subset CLOS. This is done in order to minimize
    misconfiguration errors.
 
@@ -149,7 +149,7 @@ Configure RDT for VM using VM Configuration
    platform-specific XML file that helps ACRN identify RDT-supported
    platforms. RDT on ACRN is enabled by configuring the ``FEATURES``
    sub-section of the scenario XML file as in the below example. For
-   details on building ACRN with scenario refer  to :ref:`build-with-acrn-scenario`.
+   details on building ACRN with a scenario, refer  to :ref:`build-with-acrn-scenario`.
 
    .. code-block:: none
       :emphasize-lines: 6
@@ -198,7 +198,7 @@ Configure RDT for VM using VM Configuration
 
 #. Configure each CPU in VMs to a desired CLOS ID in the ``VM`` section of the
    scenario file. Follow `RDT detection and resource capabilities`_
-   to identify the maximum supported CLOS ID that can be used. ACRN uses the
+   to identify the maximum supported CLOS ID that can be used. ACRN uses
    **the lowest common MAX CLOS** value among all RDT resources to avoid
    resource misconfigurations.
 

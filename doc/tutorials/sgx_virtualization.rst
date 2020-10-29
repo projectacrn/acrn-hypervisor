@@ -41,8 +41,8 @@ No Enclave in a Hypervisor
 
 ACRN does not support running an enclave in a hypervisor since the whole
 hypervisor is currently running in VMX root mode, ring 0, and an enclave must
-run in ring 3. ACRN SGX virtualization in provides the capability to (non-SOS)
-VMs.
+run in ring 3. ACRN SGX virtualization provides the capability to
+non-Service VMs.
 
 Enable SGX on Host
 ------------------

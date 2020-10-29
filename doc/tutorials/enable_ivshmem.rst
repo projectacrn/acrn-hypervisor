@@ -7,7 +7,7 @@ You can use inter-VM communication based on the ``ivshmem`` dm-land
 solution or hv-land solution, according to the usage scenario needs.
 (See :ref:`ivshmem-hld` for a high-level description of these solutions.)
 While both solutions can be used at the same time, VMs using different
-solutions can not communicate with each other.
+solutions cannot communicate with each other.
 
 ivshmem dm-land usage
 *********************
@@ -75,7 +75,8 @@ dm-land example
 This example uses dm-land inter-VM communication between two
 Linux-based post-launched VMs (VM1 and VM2).
 
-.. note:: An ``ivshmem`` Windows driver exists and can be found `here <https://github.com/virtio-win/kvm-guest-drivers-windows/tree/master/ivshmem>`_
+.. note:: An ``ivshmem`` Windows driver exists and can be found
+   `here <https://github.com/virtio-win/kvm-guest-drivers-windows/tree/master/ivshmem>`_.
 
 1. Add a new virtual PCI device for both VMs: the device type is
    ``ivshmem``, shared memory name is ``dm:/test``, and shared memory

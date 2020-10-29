@@ -7,7 +7,7 @@ SR-IOV (Single Root Input/Output Virtualization) can isolate PCIe devices
 to improve performance that is similar to bare-metal levels. SR-IOV consists
 of two basic units: PF (Physical Function), which supports SR-IOV PCIe
 extended capability and manages entire physical devices; and VF (Virtual
-Function), a "lightweight" PCIe function which is a passthrough device for
+Function), a "lightweight" PCIe function that is a passthrough device for
 VMs.
 
 For details, refer to Chapter 9 of PCI-SIG's
@@ -58,14 +58,14 @@ SR-IOV capabilities.
 
 -  **SR-IOV Status** - VF Migration Status.
 
--  **InitialVFs** - Indicates to the SR-PCIM the number of VFs that are
+-  **Initial VFs** - Indicates to the SR-PCIM the number of VFs that are
    initially associated with the PF.
 
--  **TotalVFs** - Indicates the maximum number of VFs that can be
+-  **Total VFs** - Indicates the maximum number of VFs that can be
    associated with the PF.
 
--  **NumVFs** - Controls the number of VFs that are visible. *NumVFs* <=
-   *InitialVFs* = *TotalVFs*.
+-  **Num VFs** - Controls the number of VFs that are visible. *Num VFs* <=
+   *Initial VFs* = *Total VFs*.
 
 -  **Function Link Dependency** - The field used to describe
    dependencies between PFs. VF dependencies are the same as the
@@ -110,7 +110,7 @@ SR-IOV Architecture in ACRN
 
    SR-IOV Architectural in ACRN
 
-1. A hypervisor detects a SR-IOV capable PCIe device in the physical PCI
+1. A hypervisor detects an SR-IOV capable PCIe device in the physical PCI
    device enumeration phase.
 
 2. The hypervisor intercepts the PF's SR-IOV capability and accesses whether
@@ -162,10 +162,10 @@ SR-IOV Initialization Flow
 
    SR-IOV Initialization Flow
 
-When a SR-IOV capable device is initialized, all access to the
+When an SR-IOV capable device is initialized, all access to the
 configuration space will passthrough to the physical device directly.
 The Service VM can identify all capabilities of the device from the SR-IOV
-extended capability and then create an *sysfs* node for SR-IOV management.
+extended capability and then create a *sysfs* node for SR-IOV management.
 
 SR-IOV VF Enable Flow
 ---------------------
@@ -177,7 +177,7 @@ SR-IOV VF Enable Flow
 
    SR-IOV VF Enable Flow
 
-The application enables n VF devices via a SR-IOV PF device ``sysfs`` node.
+The application enables ``n`` VF devices via an SR-IOV PF device ``sysfs`` node.
 The hypervisor intercepts all SR-IOV capability access and checks the
 ``VF_ENABLE`` state. If ``VF_ENABLE`` is set, the hypervisor creates n
 virtual devices after 100ms so that VF physical devices have enough time to
@@ -241,7 +241,7 @@ only support LaaG (Linux as a Guest).
 #. Input the ``echo n > /sys/class/net/enp109s0f0/device/sriov\_numvfs``
    command in the Service VM to enable n VF devices for the first PF
    device (\ *enp109s0f0)*. The number *n* can't be more than *TotalVFs*
-   which comes from the return value of command
+   coming from the return value of command
    ``cat /sys/class/net/enp109s0f0/device/sriov\_totalvfs``. Here we
    use *n = 2* as an example.
 
@@ -257,7 +257,7 @@ only support LaaG (Linux as a Guest).
 
       82576 SR-IOV VF NIC
 
-#. Passthrough a SR-IOV VF device to guest.
+#. Passthrough an SR-IOV VF device to guest.
 
    a. Unbind the igbvf driver in the Service VM.
 
