@@ -16,6 +16,13 @@ VBAR_INFO_DEFINE="""#ifndef VBAR_BASE_H_
 
 VBAR_INFO_ENDIF="""#endif /* VBAR_BASE_H_ */"""
 
+# Constants for ivshmem
+BAR0_SHEMEM_SIZE = 4*common.SIZE_K
+BAR1_SHEMEM_SIZE = 4*common.SIZE_K
+BAR0_SHEMEM_ALIGNMENT = 4*common.SIZE_K
+BAR1_SHEMEM_ALIGNMENT = 4*common.SIZE_K
+BAR2_SHEMEM_ALIGNMENT = 0x200000
+
 class MmioWindow(namedtuple(
         "MmioWindow", [
             "start",
@@ -181,10 +188,10 @@ def merged_windows(windowslist):
 
 def get_free_mmio(windowslist, used, size):
     for w in windowslist:
-        window = MmioWindow(start=w.end-size+1, end=w.end)
-        for u in used[::-1]:
+        window = MmioWindow(start=w.start, end=w.start+size-1)
+        for u in used:
             if window.overlaps(u):
-                window = MmioWindow(start=u.start-size, end=u.start-1)
+                window = MmioWindow(start=u.end+1, end=u.end+size)
                 continue
         if window.overlaps(w):
             return window
@@ -282,7 +289,10 @@ def generate_file(config):
                             mmiolist_per_vm[vm_id].sort()
                             # vbar[1] for share memory is fix to 4K
                             free_bar = get_free_mmio([MmioWindow(start=common.SIZE_2G, end=common.SIZE_4G-1)], \
-                                            mmiolist_per_vm[vm_id], 4 * common.SIZE_K)
+                                            mmiolist_per_vm[vm_id], BAR1_SHEMEM_ALIGNMENT + BAR1_SHEMEM_SIZE)
+                            free_bar_start_addr = common.round_up(free_bar.start, BAR1_SHEMEM_ALIGNMENT)
+                            free_bar_end_addr = free_bar_start_addr + BAR1_SHEMEM_SIZE - 1
+                            free_bar = MmioWindow(free_bar_start_addr, free_bar_end_addr)
                             mmiolist_per_vm[vm_id].append(free_bar)
                             mmiolist_per_vm[vm_id].sort()
                             print("{}.vbar_base[1] = {:#x}UL, \\".format(' ' * 54, free_bar.start), file=config)
@@ -324,20 +334,26 @@ def generate_file(config):
                         int_size = int(size) * 0x100000
                     except:
                         int_size = 0
-                    # vbar[2] for shared memory is specified size in MB
-                    free_bar2 = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], int_size + 0x200000)
-                    free_bar2_start_addr = common.round_up(free_bar2.start, 0x200000) + 0xC
-                    free_bar2_end_addr = free_bar2_start_addr + int_size - 1
-                    free_bar2 = MmioWindow(free_bar2_start_addr, free_bar2_end_addr)
-                    mmiolist_per_vm[vm_id].append(free_bar2)
-                    mmiolist_per_vm[vm_id].sort()
                     # vbar[0] for shared memory is 0x100
-                    free_bar0 = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], 0x100)
+                    free_bar0 = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], BAR0_SHEMEM_ALIGNMENT + BAR0_SHEMEM_SIZE)
+                    free_bar0_start_addr = common.round_up(free_bar0.start, BAR0_SHEMEM_ALIGNMENT)
+                    free_bar0_end_addr = free_bar0_start_addr + BAR0_SHEMEM_SIZE - 1
+                    free_bar0 = MmioWindow(free_bar0_start_addr, free_bar0_end_addr)
                     mmiolist_per_vm[vm_id].append(free_bar0)
                     mmiolist_per_vm[vm_id].sort()
                     # vbar[1] for shared memory is 4K
-                    free_bar1 = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], 4*common.SIZE_K)
+                    free_bar1 = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], BAR1_SHEMEM_ALIGNMENT + BAR1_SHEMEM_SIZE)
+                    free_bar1_start_addr = common.round_up(free_bar1.start, BAR1_SHEMEM_ALIGNMENT)
+                    free_bar1_end_addr = free_bar1_start_addr + BAR1_SHEMEM_SIZE - 1
+                    free_bar1 = MmioWindow(free_bar1_start_addr, free_bar1_end_addr)
                     mmiolist_per_vm[vm_id].append(free_bar1)
+                    mmiolist_per_vm[vm_id].sort()
+                    # vbar[2] for shared memory is specified size in MB
+                    free_bar2 = get_free_mmio(matching_mmios, mmiolist_per_vm[vm_id], BAR2_SHEMEM_ALIGNMENT + int_size)
+                    free_bar2_start_addr = common.round_up(free_bar2.start, BAR2_SHEMEM_ALIGNMENT) + 0xC
+                    free_bar2_end_addr = free_bar2_start_addr + int_size - 1
+                    free_bar2 = MmioWindow(free_bar2_start_addr, free_bar2_end_addr)
+                    mmiolist_per_vm[vm_id].append(free_bar2)
                     mmiolist_per_vm[vm_id].sort()
                     print("#define SOS_IVSHMEM_DEVICE_%-19s" % (str(idx) + "_VBAR"),
                          "       .vbar_base[0] = {:#x}UL, \\".format(free_bar0.start), file=config)
