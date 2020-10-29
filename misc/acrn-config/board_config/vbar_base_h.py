@@ -165,6 +165,8 @@ def removed_nested(list1, list2):
     for w1 in resolvedList:
         for w2 in list2:
             if w2.start <= w1.start <= w2.end and w2.start <= w1.end <= w2.end:
+                if w1 not in resolvedList:
+                    continue
                 resolvedList.remove(w1)
     return sorted(resolvedList)
 
