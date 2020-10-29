@@ -117,9 +117,12 @@ void init_vmsix_on_msi(struct pci_vdev *vdev)
 			 * - For Service VM: when first time init, it is programmed as 0, then OS will program
 			 *   the value later.
 			 * - For Post-launched VM: The GPA is assigned by device model.
-			 * - For Pre-launched VM: Not supported yet.
+			 * - For Pre-launched VM: The GPA is assigned by acrn-config tool.
 			 */
-			pci_vdev_write_vbar(vdev, i, (uint32_t)vdev->vbars[i].base_gpa);
+			if (is_prelaunched_vm(vpci2vm(vdev->vpci))) {
+				vdev->vbars[i].base_gpa = vdev->pci_dev_config->vbar_base[i];
+				pci_vdev_write_vbar(vdev, i, (uint32_t)vdev->vbars[i].base_gpa);
+			}
 		}
 	}
 }
