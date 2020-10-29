@@ -276,6 +276,15 @@ config CDP_ENABLED
 	  prioritization of code and data fetches to the L2 or L3 cache in a
 	  software configurable manner, depending on hardware support.
 
+config PSRAM_ENABLED
+	bool "Enable pseudo-SRAM (pSRAM) support"
+	depends on !CDP_ENABLED
+	default n
+	help
+	  This will enable RTVM to make use of pSRAM to improve the performance
+	  of Real-Time applications. pSRAM essentially a block of cache, and is separated via
+	  CAT and protected by some methods.  pSRAM support and CDP support cannot co-exist.
+
 config GPU_SBDF
 	hex "Segment, Bus, Device, and function of the GPU"
 	depends on ACPI_PARSE_ENABLED
