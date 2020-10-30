@@ -144,7 +144,7 @@ Glossary of Terms
       Pre-launched VMs are started by the ACRN hypervisor before the
       Service VM is launched. (See :term:`Post-launched VM`)
 
-   Post-Launched VM
+   Post-launched VM
       Post-Launched VMs are launched and configured by the Service VM.
       (See :term:`Pre-launched VM`)
 
@@ -176,9 +176,9 @@ Glossary of Terms
       soft real-time workloads (or applications) much more efficiently
       than the typical User VM through the use of a passthrough interrupt
       controller, polling-mode Virtio, Intel RDT allocation features (CAT,
-      MBA), and I/O prioritization.  RTVMs are typically a :term:`pre-launched VM`.
-      A non-:term:`safety VM` with real-time requirements is a
-      :term:`post-launched VM`.
+      MBA), and I/O prioritization.  RTVMs are typically a :term:`Pre-launched VM`.
+      A non-:term:`Safety VM` with real-time requirements is a
+      :term:`Post-launched VM`.
 
    Safety VM
       A special VM with dedicated hardware resources, running in
