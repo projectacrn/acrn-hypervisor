@@ -34,6 +34,7 @@
 #include "sw_load.h"
 #include "dm.h"
 #include "pci_core.h"
+#include "ptct.h"
 
 int with_bootargs;
 static char bootargs[BOOT_ARG_LEN];
@@ -50,12 +51,13 @@ static char bootargs[BOOT_ARG_LEN];
  *   map[0]:0~ctx->lowmem_limit & map[2]:4G~ctx->highmem for RAM
  *   ctx->highmem = request_memory_size - ctx->lowmem_limit
  *
- *             Begin    Limit       Type            Length
- * 0:              0 -  0xA0000     RAM             0xA0000
- * 1:       0x100000 -  lowmem      RAM             lowmem - 1MB
- * 2:         lowmem -  0x80000000  (reserved)      2GB - lowmem
- * 3:     0xE0000000 -  0x100000000 MCFG, MMIO      512MB
- * 4:    0x140000000 -  highmem     RAM             highmem - 5GB
+ *             Begin    Limit        Type            Length
+ * 0:              0 -  0xA0000      RAM             0xA0000
+ * 1:       0x100000 -  lowmem part1 RAM             0x0
+ * 2:   pSRAM_bottom -  pSRAM_top    (reserved)      pSRAM_MAX_SIZE
+ * 3:   lowmem part2 -  0x80000000   (reserved)      0x0
+ * 4:     0xE0000000 -  0x100000000  MCFG, MMIO      512MB
+ * 5:    0x140000000 -  highmem      RAM             highmem - 5GB
  *
  * FIXME: Do we need to reserve DSM and OPREGION for GVTD here.
  */
@@ -66,15 +68,21 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 		.type     = E820_TYPE_RAM
 	},
 
-	{	/* 1MB to lowmem */
-		.baseaddr = 0x100000,
-		.length   = 0x48f00000,
+	{	/* 1MB to lowmem part1 */
+		.baseaddr = 1 * MB,
+		.length   = 0x0,
 		.type     = E820_TYPE_RAM
 	},
 
-	{	/* lowmem to lowmem_limit */
-		.baseaddr = 0x49000000,
-		.length   = 0x37000000,
+	{	/* pSRAM area */
+		.baseaddr = PSRAM_BASE_GPA,
+		.length   = PSRAM_MAX_SIZE,
+		.type     = E820_TYPE_RESERVED
+	},
+
+	{	/* lowmem part2 to lowmem_limit */
+		.baseaddr = PSRAM_BASE_GPA + PSRAM_MAX_SIZE,
+		.length   = 0x0,
 		.type     = E820_TYPE_RESERVED
 	},
 
@@ -86,7 +94,7 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 
 	{	/* 5GB to highmem */
 		.baseaddr = PCI_EMUL_MEMLIMIT64,
-		.length   = 0x000100000,
+		.length   = 0x0,
 		.type     = E820_TYPE_RESERVED
 	},
 };
@@ -200,19 +208,21 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 	uint32_t removed = 0, k;
 
 	memcpy(e820, e820_default_entries, sizeof(e820_default_entries));
-	e820[LOWRAM_E820_ENTRY].length = ctx->lowmem -
-			e820[LOWRAM_E820_ENTRY].baseaddr;
+	if (ctx->lowmem <= e820[LOWRAM_E820_ENTRY+2].baseaddr) {
+		e820[LOWRAM_E820_ENTRY].length =
+			(ctx->lowmem < e820[LOWRAM_E820_ENTRY+1].baseaddr ? ctx->lowmem :
+			e820[LOWRAM_E820_ENTRY+1].baseaddr) - e820[LOWRAM_E820_ENTRY].baseaddr;
 
-	/* remove [lowmem, lowmem_limit) if it's empty */
-	if (ctx->lowmem_limit > ctx->lowmem) {
-		e820[LOWRAM_E820_ENTRY+1].baseaddr = ctx->lowmem;
-		e820[LOWRAM_E820_ENTRY+1].length =
-			ctx->lowmem_limit - ctx->lowmem;
-	} else {
-		memmove(&e820[LOWRAM_E820_ENTRY+1], &e820[LOWRAM_E820_ENTRY+2],
-				sizeof(e820[LOWRAM_E820_ENTRY+2]) *
-				(NUM_E820_ENTRIES - (LOWRAM_E820_ENTRY+2)));
+		memmove(&e820[LOWRAM_E820_ENTRY+2], &e820[LOWRAM_E820_ENTRY+3],
+				sizeof(struct e820_entry) *
+				(NUM_E820_ENTRIES - (LOWRAM_E820_ENTRY+3)));
 		removed++;
+	} else {
+		e820[LOWRAM_E820_ENTRY].length = e820[LOWRAM_E820_ENTRY+1].baseaddr -
+			e820[LOWRAM_E820_ENTRY].baseaddr;
+		e820[LOWRAM_E820_ENTRY+2].length =
+			(ctx->lowmem < ctx->lowmem_limit ? ctx->lowmem : ctx->lowmem_limit) -
+			e820[LOWRAM_E820_ENTRY+2].baseaddr;
 	}
 
 	/* remove [5GB, highmem) if it's empty */
