@@ -84,6 +84,7 @@ struct instr_emul_vie {
 	struct instr_emul_vie_op	op;			/* opcode description */
 
 	uint64_t	dst_gpa;	/* saved dst operand gpa. Only for movs */
+	uint64_t	gva;		/* saved gva for instruction emulation */
 };
 
 struct instr_emul_ctxt {
@@ -92,5 +93,6 @@ struct instr_emul_ctxt {
 
 int32_t emulate_instruction(struct acrn_vcpu *vcpu);
 int32_t decode_instruction(struct acrn_vcpu *vcpu);
+bool is_current_opcode_xchg(struct acrn_vcpu *vcpu);
 
 #endif

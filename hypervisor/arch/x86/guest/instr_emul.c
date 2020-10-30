@@ -82,6 +82,7 @@
 #define VIE_OP_TYPE_STOS	13U
 #define VIE_OP_TYPE_BITTEST	14U
 #define VIE_OP_TYPE_TEST	15U
+#define VIE_OP_TYPE_XCHG	16U
 
 /* struct vie_op.op_flags */
 #define VIE_OP_F_IMM		(1U << 0U)  /* 16/32-bit immediate operand */
@@ -201,6 +202,12 @@ static const struct instr_emul_vie_op one_byte_opcodes[256] = {
 	},
 	[0x85] = {
 		.op_type = VIE_OP_TYPE_TEST,
+	},
+	[0x86] = {
+		.op_type = VIE_OP_TYPE_XCHG,
+	},
+	[0x87] = {
+		.op_type = VIE_OP_TYPE_XCHG,
 	},
 	[0x08] = {
 		.op_type = VIE_OP_TYPE_OR,
@@ -1640,6 +1647,37 @@ static int32_t emulate_bittest(struct acrn_vcpu *vcpu, const struct instr_emul_v
 	return ret;
 }
 
+static __attribute__((noinline)) int32_t emulate_xchg_for_splitlock(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
+{
+	enum cpu_reg_name reg;
+	uint64_t reg_val, data = 0UL;
+	uint8_t opsize = vie->opsize;
+	int32_t ret = 0;
+	uint32_t err_code = 0U;
+	uint64_t fault_addr;
+
+	reg = (enum cpu_reg_name)(vie->reg);
+	reg_val = vm_get_register(vcpu, reg);
+
+	ret = copy_from_gva(vcpu, &data, vie->gva, opsize, &err_code, &fault_addr);
+	if (ret == 0) {
+		err_code = PAGE_FAULT_WR_FLAG;
+		ret = copy_to_gva(vcpu, &reg_val, vie->gva, opsize, &err_code, &fault_addr);
+		if (ret == 0) {
+			vie_update_register(vcpu, reg, data, opsize);
+		}
+	}
+
+	if (ret < 0) {
+		pr_err("Error copy xchg data!");
+		if (ret == -EFAULT) {
+			vcpu_inject_pf(vcpu, fault_addr, err_code);
+		}
+	}
+
+	return ret;
+}
+
 static int32_t vie_init(struct instr_emul_vie *vie, struct acrn_vcpu *vcpu)
 {
 	uint32_t inst_len = vcpu->arch.inst_len;
@@ -2276,6 +2314,7 @@ static int32_t instr_check_gva(struct acrn_vcpu *vcpu, enum vm_cpu_mode cpu_mode
 	}
 
 	gva = segbase + base + (uint64_t)vie->scale * idx + (uint64_t)vie->displacement;
+	vie->gva = gva;
 
 	if (vie_canonical_check(cpu_mode, gva) != 0) {
 		if (seg == CPU_REG_SS) {
@@ -2399,6 +2438,13 @@ int32_t emulate_instruction(struct acrn_vcpu *vcpu)
 		case VIE_OP_TYPE_BITTEST:
 			error = emulate_bittest(vcpu, vie);
 			break;
+		case VIE_OP_TYPE_XCHG:
+			if (vcpu->arch.emulating_lock) {
+				error = emulate_xchg_for_splitlock(vcpu, vie);
+			} else {
+				error = -EINVAL;
+			}
+			break;
 		default:
 			error = -EINVAL;
 			break;
@@ -2409,3 +2455,9 @@ int32_t emulate_instruction(struct acrn_vcpu *vcpu)
 
 	return error;
 }
+
+bool is_current_opcode_xchg(struct acrn_vcpu *vcpu)
+{
+	return (vcpu->inst_ctxt.vie.op.op_type == VIE_OP_TYPE_XCHG);
+}
+
