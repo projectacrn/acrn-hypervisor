@@ -553,7 +553,7 @@ static int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vect
 				}
 			} else {
 				/*
-				 * If #AC is caused by instruction with LOCK prefix, then emulate it,
+				 * If AC is caused by instruction with LOCK prefix or xchg, then emulate it,
 				 * otherwise, inject it back.
 				 */
 				if (inst[0] == 0xf0U) {  /* This is LOCK prefix */
@@ -579,11 +579,49 @@ static int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vect
 					/* Skip the #AC, we have emulated it. */
 					*queue_exception = false;
 				} else {
-					/*
-					 * TODO:
-					 * The xchg may also cause #AC for split-lock check.
-					 * Do xchg emulation here.
-					 */
+					status = decode_instruction(vcpu);
+					if (status >= 0) {
+						/*
+						 * If this is the xchg, then emulate it, otherwise,
+						 * inject it back.
+						 */
+						if (is_current_opcode_xchg(vcpu)) {
+							/*
+							 * Kick other vcpus of the guest to stop execution
+							 * until the split-lock emulation being completed.
+							 */
+							vcpu_kick_splitlock_emulation(vcpu);
+
+							/*
+							 * Using emulating_lock to make sure xchg emulation
+							 * is only called by split-lock emulation.
+							 */
+							vcpu->arch.emulating_lock = true;
+							status = emulate_instruction(vcpu);
+							vcpu->arch.emulating_lock = false;
+							if (status < 0) {
+								if (status == -EFAULT) {
+									pr_info("page fault happen during emulate_instruction");
+									status = 0;
+								}
+							}
+
+							/*
+							 * Notify other vcpus of the guest to restart execution.
+							 */
+							vcpu_complete_splitlock_emulation(vcpu);
+
+							/* Do not inject #AC, we have emulated it */
+							*queue_exception = false;
+						}
+					} else {
+						if (status == -EFAULT) {
+							pr_info("page fault happen during decode_instruction");
+							status = 0;
+							/* For this case, Inject #PF, not to queue #AC */
+							*queue_exception = false;
+						}
+					}
 				}
 			}
 
