@@ -889,7 +889,7 @@ done:
 }
 
 static void
-clear_uas_desc(struct usb_dev *udev, uint8_t *data, uint32_t len)
+clear_uas_desc(struct usb_dev *udev, uint8_t *data, int len)
 {
 	struct usb_devpath *path;
 	int32_t i;
@@ -1013,6 +1013,10 @@ usb_dev_request(void *pdata, struct usb_xfer *xfer)
 	rc = libusb_control_transfer(udev->handle, request_type, request,
 			value, index, data, len, 300);
 
+	if (rc < 0) {
+		xfer->status = usb_dev_err_convert(rc);
+		goto out;
+	}
 	/* TODO: Currently, the USB Attached SCSI (UAS) protocol is not
 	 * supported and the following code is used as a workaround now.
 	 * UAS will be implemented in future.
@@ -1020,15 +1024,14 @@ usb_dev_request(void *pdata, struct usb_xfer *xfer)
 	if (need_chk_uas && data)
 		clear_uas_desc(udev, data, rc);
 
-	if (rc >= 0 && blk) {
+	if (blk) {
 		blk->blen = len - rc;
 		blk->bdone += rc;
 		xfer->status = blk->blen > 0 ? USB_ERR_SHORT_XFER :
 			USB_ERR_NORMAL_COMPLETION;
-	} else if (rc >= 0)
+	} else
 		xfer->status = USB_ERR_NORMAL_COMPLETION;
-	else
-		xfer->status = usb_dev_err_convert(rc);
+
 
 	UPRINTF(LDBG, "%d-%s: usb rc %d, blk %p, blen %u bdon %u\n",
 			udev->info.path.bus, usb_dev_path(&udev->info.path),
