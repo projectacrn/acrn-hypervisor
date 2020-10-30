@@ -1079,6 +1079,26 @@ Compliant example::
        }
 
 
+C-FN-20: Each function shall have at most 6 parameters
+======================================================
+
+Compliant example::
+
+    void func_showcase(uint32_t param_1, uint32_t param_2, uint32_t param_3,
+            uint32_t param_4, uint32_t param_5, uint32_t param_6) {
+            ...
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       void func_showcase(uint32_t param_1, uint32_t param_2, uint32_t param_3,
+               uint32_t param_4, uint32_t param_5, uint32_t param_6,
+               uint32_t param_7) {
+               ...
+       }
+
 
 Statements
 **********
