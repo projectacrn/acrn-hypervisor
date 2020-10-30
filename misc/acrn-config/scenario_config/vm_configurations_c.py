@@ -45,6 +45,8 @@ def get_post_vm_type(vm_type, vm_i):
 
 
 def vuart0_output(i, vm_type, vm_info, config):
+    if vm_info.vuart.v0_vuart[i]['base'] == "INVALID_COM_BASE":
+        return
     """
     This is generate vuart 0 setting
     :param i: vm id number
@@ -100,6 +102,8 @@ def vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config):
     :return: None
     """
     vuart_enable = vuart_map_enable(vm_info)
+    if vm_info.vuart.v1_vuart[i]['base'] == "INVALID_COM_BASE":
+        return
     # vuart1:   {vmid:target_vmid}
     print("\t\t.vuart[1] = {", file=config)
     print("\t\t\t.type = {0},".format(vm_info.vuart.v1_vuart[i]['type']), file=config)
@@ -122,6 +126,7 @@ def vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config):
                 vm_info.vuart.v1_vuart[i]['target_vm_id']), file=config)
             print("\t\t\t.t_vuart.vuart_id = {0}U,".format(
                 vm_info.vuart.v1_vuart[i]['target_uart_id']), file=config)
+    print("\t\t},", file=config)
 
 def vuart_output(vm_type, i, vm_info, config):
     """
@@ -136,7 +141,6 @@ def vuart_output(vm_type, i, vm_info, config):
 
     vuart0_output(i, vm_type, vm_info, config)
     vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config)
-    print("\t\t},", file=config)
 
 
 def is_need_epc(epc_section, i, config):
