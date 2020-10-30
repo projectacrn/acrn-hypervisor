@@ -1,5 +1,11 @@
+OVMF release v2.3
+
+- Explicitly reserve memory regions based on the input E820 map
+- Revert "ovmf: reserve e820 table for PTCM"
+
 OVMF release v2.2
 
+- ovmf: reserve e820 table for PTCM
 - GvtGopDxe: Adjust the offset of gop in pvinfo page
 
 OVMF release v2.1
