@@ -39,9 +39,9 @@
 #define E820_TYPE_ACPI_NVS      4U   /* EFI 10 */
 #define E820_TYPE_UNUSABLE      5U   /* EFI 8 */
 
-#define NUM_E820_ENTRIES        5
+#define NUM_E820_ENTRIES        6
 #define LOWRAM_E820_ENTRY       1
-#define HIGHRAM_E820_ENTRY      4
+#define HIGHRAM_E820_ENTRY      5
 
 /* Defines a single entry in an E820 memory map. */
 struct e820_entry {
