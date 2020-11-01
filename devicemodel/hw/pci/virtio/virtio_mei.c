@@ -1149,78 +1149,84 @@ vmei_hbm_version(struct virtio_mei *vmei,
 	return vmei_hbm_response(vmei, &ver_res, sizeof(ver_res));
 }
 
-static void
-vmei_hbm_handler(struct virtio_mei *vmei, const void *data)
+static int
+vmei_hbm_handler(struct virtio_mei *vmei, const void *data, size_t len)
 {
-	struct mei_hbm_cmd *hbm_cmd = (struct mei_hbm_cmd *)data;
+	struct mei_hbm_cmd *hbm_cmd = NULL;
 	struct vmei_me_client *mclient = NULL;
 	struct vmei_host_client *hclient = NULL;
-
 	uint8_t status;
 
-	struct mei_hbm_host_enum_req *enum_req;
-	struct mei_hbm_host_enum_res enum_res;
-	struct mei_hbm_host_client_prop_req *client_prop_req;
-	struct mei_hbm_host_client_prop_res client_prop_res;
-	struct mei_hbm_client_connect_req *connect_req;
-	struct mei_hbm_client_connect_res connect_res;
-	struct mei_hbm_client_disconnect_req *disconnect_req;
-	struct mei_hbm_client_disconnect_res disconnect_res;
-	struct mei_hbm_flow_ctl *flow_ctl_req;
-	struct mei_hbm_power_gate pgi_res;
-	struct mei_hbm_notification_req *notif_req;
-	struct mei_hbm_notification_res notif_res;
+	if (len < sizeof(*hbm_cmd)) {
+		return -EINVAL;
+	}
 
+	hbm_cmd = (struct mei_hbm_cmd *)data;
 	DPRINTF("HBM cmd[0x%X] is handling\n", hbm_cmd->cmd);
 
 	switch (hbm_cmd->cmd) {
-	case MEI_HBM_HOST_START:
-		vmei_hbm_version(vmei, data);
-		break;
+	case MEI_HBM_HOST_START: {
+		const struct mei_hbm_host_ver_req *req = data;
 
-	case MEI_HBM_HOST_ENUM:
-		enum_req = (struct mei_hbm_host_enum_req *)data;
+		if (sizeof(*req) < len) {
+			return -EINVAL;
+		}
+		vmei_hbm_version(vmei, req);
+	}
+	break;
+	case MEI_HBM_HOST_ENUM: {
+		const struct mei_hbm_host_enum_req *req = data;
+		struct mei_hbm_host_enum_res res = {};
 
-		enum_res.hbm_cmd = enum_req->hbm_cmd;
-		enum_res.hbm_cmd.is_response = 1;
-		/* copy valid_addresses for hbm enum request */
-		memcpy(enum_res.valid_addresses, &vmei->me_clients_map,
-		       sizeof(enum_res.valid_addresses));
-		vmei_hbm_response(vmei, &enum_res, sizeof(enum_res));
-
-		break;
-
-	case MEI_HBM_HOST_CLIENT_PROP:
-		client_prop_req = (struct mei_hbm_host_client_prop_req *)data;
-
-		client_prop_res.hbm_cmd = client_prop_req->hbm_cmd;
-		client_prop_res.hbm_cmd.is_response = 1;
-		client_prop_res.address = client_prop_req->address;
-
-		mclient = vmei_find_me_client(vmei, client_prop_req->address);
-		if (mclient) {
-			memcpy(&client_prop_res.props, &mclient->props,
-			       sizeof(client_prop_res.props));
-			client_prop_res.status = MEI_HBM_SUCCESS;
-		} else {
-			client_prop_res.status = MEI_HBM_CLIENT_NOT_FOUND;
+		if (sizeof(*req) < len) {
+			return -EINVAL;
 		}
 
-		vmei_dbg_client_properties(&client_prop_res.props);
+		res.hbm_cmd = req->hbm_cmd;
+		res.hbm_cmd.is_response = 1;
+		/* copy valid_addresses for hbm enum request */
+		memcpy(res.valid_addresses, &vmei->me_clients_map,
+		       sizeof(res.valid_addresses));
+		vmei_hbm_response(vmei, &res, sizeof(res));
+	}
+	break;
 
-		vmei_hbm_response(vmei,
-				  &client_prop_res,
-				  sizeof(client_prop_res));
-		break;
+	case MEI_HBM_HOST_CLIENT_PROP: {
+		const struct mei_hbm_host_client_prop_req *req = data;
+		struct mei_hbm_host_client_prop_res res;
 
-	case MEI_HBM_FLOW_CONTROL:
+		if (sizeof(*req) < len) {
+			return -EINVAL;
+		}
+
+		res.hbm_cmd = req->hbm_cmd;
+		res.hbm_cmd.is_response = 1;
+		res.address = req->address;
+
+		mclient = vmei_find_me_client(vmei, req->address);
+		if (mclient) {
+			memcpy(&res.props, &mclient->props, sizeof(res.props));
+			res.status = MEI_HBM_SUCCESS;
+		} else {
+			res.status = MEI_HBM_CLIENT_NOT_FOUND;
+		}
+
+		vmei_dbg_client_properties(&res.props);
+
+		vmei_hbm_response(vmei, &res, sizeof(res));
+	}
+	break;
+
+	case MEI_HBM_FLOW_CONTROL: {
 		/*
 		 * FE client is ready, we can send message
 		 */
-		flow_ctl_req = (struct mei_hbm_flow_ctl *)data;
-		hclient = vmei_find_host_client(vmei,
-						flow_ctl_req->me_addr,
-						flow_ctl_req->host_addr);
+		const struct mei_hbm_flow_ctl *req = data;
+		if (sizeof(*req) < len) {
+			return -EINVAL;
+		}
+
+		hclient = vmei_find_host_client(vmei, req->me_addr, req->host_addr);
 		if (hclient) {
 			hclient->recv_creds++;
 			mevent_enable(hclient->rx_mevp);
@@ -1233,51 +1239,53 @@ vmei_hbm_handler(struct virtio_mei *vmei, const void *data)
 		} else {
 			DPRINTF("client has been released.\n");
 		}
-		break;
+	}
+	break;
 
-	case MEI_HBM_CLIENT_CONNECT:
+	case MEI_HBM_CLIENT_CONNECT: {
 
-		connect_req = (struct mei_hbm_client_connect_req *)data;
+		const struct mei_hbm_client_connect_req *req = data;
+		struct mei_hbm_client_connect_res res;
 
-		connect_res = *(struct mei_hbm_client_connect_res *)connect_req;
-		connect_res.hbm_cmd.is_response = 1;
+		if (sizeof(*req) < len) {
+			return -EINVAL;
+		}
 
-		mclient = vmei_find_me_client(vmei, connect_req->me_addr);
+		res = *(struct mei_hbm_client_connect_res *)req;
+		res.hbm_cmd.is_response = 1;
+
+		mclient = vmei_find_me_client(vmei, req->me_addr);
 		if (!mclient) {
 			/* NOT FOUND */
 			DPRINTF("client with me address %d was not found\n",
-				connect_req->me_addr);
-			connect_res.status = MEI_HBM_CLIENT_NOT_FOUND;
-			vmei_hbm_response(vmei, &connect_res,
-					  sizeof(connect_res));
+				req->me_addr);
+			res.status = MEI_HBM_CLIENT_NOT_FOUND;
+			vmei_hbm_response(vmei, &res, sizeof(res));
 			break;
 		}
 
 		hclient = vmei_me_client_get_host_client(mclient,
-							 connect_req->host_addr);
+							 req->host_addr);
 		if (hclient) {
 			DPRINTF("client alread exists return BUSY!\n");
-			connect_res.status = MEI_HBM_ALREADY_EXISTS;
+			res.status = MEI_HBM_ALREADY_EXISTS;
 			vmei_host_client_put(hclient);
 			hclient = NULL;
-			vmei_hbm_response(vmei, &connect_res,
-					  sizeof(connect_res));
+			vmei_hbm_response(vmei, &res, sizeof(res));
 			break;
 		}
 
 		/* create a new host client and add ito the list */
-		hclient = vmei_host_client_create(mclient,
-						  connect_req->host_addr);
+		hclient = vmei_host_client_create(mclient, req->host_addr);
 		if (!hclient) {
-			connect_res.status = MEI_HBM_REJECTED;
-			vmei_hbm_response(vmei, &connect_res,
-					  sizeof(connect_res));
+			res.status = MEI_HBM_REJECTED;
+			vmei_hbm_response(vmei, &res, sizeof(res));
 			break;
 		}
 
 		status = vmei_host_client_native_connect(hclient);
-		connect_res.status = status;
-		vmei_hbm_response(vmei, &connect_res, sizeof(connect_res));
+		res.status = status;
+		vmei_hbm_response(vmei, &res, sizeof(res));
 
 		if (status) {
 			vmei_host_client_put(hclient);
@@ -1286,14 +1294,19 @@ vmei_hbm_handler(struct virtio_mei *vmei, const void *data)
 		}
 
 		vmei_hbm_flow_ctl_req(hclient);
+	}
+	break;
 
-		break;
+	case MEI_HBM_CLIENT_DISCONNECT: {
 
-	case MEI_HBM_CLIENT_DISCONNECT:
+		const struct mei_hbm_client_disconnect_req *req = data;
+		struct mei_hbm_client_disconnect_res res;
 
-		disconnect_req = (struct mei_hbm_client_disconnect_req *)data;
-		hclient = vmei_find_host_client(vmei, disconnect_req->me_addr,
-						disconnect_req->host_addr);
+		if (sizeof(*req) < len) {
+			return -EINVAL;
+		}
+
+		hclient = vmei_find_host_client(vmei, req->me_addr, req->host_addr);
 		if (hclient) {
 			vmei_host_client_put(hclient);
 			vmei_host_client_put(hclient);
@@ -1306,46 +1319,53 @@ vmei_hbm_handler(struct virtio_mei *vmei, const void *data)
 		if (hbm_cmd->is_response)
 			break;
 
-		memset(&disconnect_res, 0, sizeof(disconnect_res));
-		disconnect_res.hbm_cmd.cmd = MEI_HBM_CLIENT_DISCONNECT;
-		disconnect_res.hbm_cmd.is_response = 1;
-		disconnect_res.me_addr = disconnect_req->me_addr;
-		disconnect_res.host_addr = disconnect_req->host_addr;
-		disconnect_res.status = status;
-		vmei_hbm_response(vmei, &disconnect_res,
-				  sizeof(disconnect_res));
+		memset(&res, 0, sizeof(res));
+		res.hbm_cmd.cmd = MEI_HBM_CLIENT_DISCONNECT;
+		res.hbm_cmd.is_response = 1;
+		res.me_addr = req->me_addr;
+		res.host_addr = req->host_addr;
+		res.status = status;
+		vmei_hbm_response(vmei, &res, sizeof(res));
+	}
+	break;
 
-		break;
+	case MEI_HBM_PG_ISOLATION_ENTRY: {
 
-	case MEI_HBM_PG_ISOLATION_ENTRY:
+		struct mei_hbm_power_gate res;
 
-		memset(&pgi_res, 0, sizeof(pgi_res));
-		pgi_res.hbm_cmd.cmd = MEI_HBM_PG_ISOLATION_ENTRY;
-		pgi_res.hbm_cmd.is_response = 1;
-		vmei_hbm_response(vmei, &pgi_res, sizeof(pgi_res));
+		memset(&res, 0, sizeof(res));
+		res.hbm_cmd.cmd = MEI_HBM_PG_ISOLATION_ENTRY;
+		res.hbm_cmd.is_response = 1;
+		vmei_hbm_response(vmei, &res, sizeof(res));
+	}
+	break;
 
-		break;
+	case MEI_HBM_NOTIFY: {
 
-	case MEI_HBM_NOTIFY:
+		const struct mei_hbm_notification_req *req = data;
+		struct mei_hbm_notification_res res;
 
-		notif_req = (struct mei_hbm_notification_req *)data;
-		memset(&notif_res, 0, sizeof(notif_res));
-		notif_res.hbm_cmd.cmd = MEI_HBM_NOTIFY;
-		notif_res.hbm_cmd.is_response = 1;
-		notif_res.start = notif_req->start;
+		if (sizeof(*req) < len) {
+			return -EINVAL;
+		}
 
-		hclient = vmei_find_host_client(vmei, notif_req->me_addr,
-						notif_req->host_addr);
+		memset(&res, 0, sizeof(res));
+		res.hbm_cmd.cmd = MEI_HBM_NOTIFY;
+		res.hbm_cmd.is_response = 1;
+		res.start = req->start;
+
+		hclient = vmei_find_host_client(vmei, req->me_addr,
+						req->host_addr);
 		if (hclient) {
 			/* The notify is not supported now */
-			notif_res.status = MEI_HBM_REJECTED;
+			res.status = MEI_HBM_REJECTED;
 			vmei_host_client_put(hclient);
 		} else {
-			notif_res.status = MEI_HBM_INVALID_PARAMETER;
+			res.status = MEI_HBM_INVALID_PARAMETER;
 		}
-		vmei_hbm_response(vmei, &notif_res, sizeof(notif_res));
-
-		break;
+		vmei_hbm_response(vmei, &res, sizeof(res));
+	}
+	break;
 
 	case MEI_HBM_HOST_STOP:
 		DPRINTF("HBM cmd[%d] not supported\n", hbm_cmd->cmd);
@@ -1358,6 +1378,8 @@ vmei_hbm_handler(struct virtio_mei *vmei, const void *data)
 	default:
 		DPRINTF("HBM cmd[0x%X] unhandled\n", hbm_cmd->cmd);
 	}
+
+	return 0;
 }
 
 int vmei_fixed_client_connect(struct vmei_me_client *mclient)
@@ -1480,6 +1502,7 @@ vmei_proc_tx(struct virtio_mei *vmei, struct virtio_vq_info *vq)
 
 	struct mei_msg_hdr *hdr;
 	uint8_t *data;
+	size_t data_len;
 	uint8_t i_idx;
 	struct vmei_circular_iobufs *bufs;
 
@@ -1500,19 +1523,34 @@ vmei_proc_tx(struct virtio_mei *vmei, struct virtio_vq_info *vq)
 		return;
 	}
 
+	tlen = iov[0].iov_len + iov[1].iov_len;
+
+	if (iov[0].iov_len < sizeof(*hdr)) {
+		pr_err("%s: supplied buffer has invalid size");
+		goto failed;
+	}
 	hdr = (struct mei_msg_hdr *)iov[0].iov_base;
 	data = (uint8_t *)iov[1].iov_base;
+	data_len = iov[1].iov_len;
 
-	tlen = iov[0].iov_len + iov[1].iov_len;
 
 	DPRINTF("TX: UOS->DM, hdr[h=%02d me=%02d comp=%1d] length[%d]\n",
 		hdr->host_addr, hdr->me_addr, hdr->msg_complete, hdr->length);
-	vmei_dbg_print_hex("TX: UOS->DM", iov[1].iov_base, iov[1].iov_len);
+	vmei_dbg_print_hex("TX: UOS->DM", data, data_len);
+
+	if (hdr->length < data_len) {
+		pr_err("%s: supplied buffer has invalid size");
+		goto failed;
+	}
 
 	if (hdr_is_hbm(hdr)) {
-		vmei_hbm_handler(vmei, data);
+		if (vmei_hbm_handler(vmei, data, data_len)) {
+			pr_err("%s: supplied buffer has invalid size");
+			goto failed;
+		}
 		goto out;
 	}
+
 	/* general client client
 	 * must be in active_clients list.
 	 */
