@@ -235,7 +235,7 @@ def get_mmio_windows_with_key(keywords):
 
 def removed_nested(list1, list2):
     if not list1 or not list2:
-        raise ValueError("Invalid inputs: None, list1 is {}, \list2 is {}".format (list1, list2))
+        return list1
 
     resolvedList = list1[:]
     for w1 in resolvedList:
@@ -265,6 +265,10 @@ def merged_windows(windowslist):
 
 
 def get_free_mmio(windowslist, used, size):
+    if not size:
+        raise ValueError("allocate size cannot be {}".format(size))
+    if not windowslist:
+        raise ValueError("No mmio range is specified:{}".format(windowslist))
     for w in windowslist:
         window = MmioWindow(start=w.start, end=w.start+size-1)
         for u in used:
