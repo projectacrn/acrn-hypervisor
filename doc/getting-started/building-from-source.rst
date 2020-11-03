@@ -3,9 +3,6 @@
 Build ACRN from Source
 ######################
 
-Introduction
-************
-
 Following a general embedded-system programming model, the ACRN
 hypervisor is designed to be customized at build time per hardware
 platform and per usage scenario, rather than one binary for all
@@ -39,6 +36,10 @@ the ACRN hypervisor for the following reasons:
 
 Build the ACRN hypervisor, device model, and tools from source by following
 these steps.
+
+.. contents::
+   :local:
+   :depth: 1
 
 .. _install-build-tools-dependencies:
 
