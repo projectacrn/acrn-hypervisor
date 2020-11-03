@@ -31,7 +31,6 @@
         </IVSHMEM>
         <PSRAM desc="Pseudo SRAM configuration.">
             <PSRAM_ENABLED desc="Enable PTCM (Platform Tuning Configuration Manager).">n</PSRAM_ENABLED>
-            <PSRAM_PASSTHROUGH_PRE_RTVM desc="Pass through PSRAM to Pre-launched RTVM.">n</PSRAM_PASSTHROUGH_PRE_RTVM>
         </PSRAM>
     </FEATURES>
 
