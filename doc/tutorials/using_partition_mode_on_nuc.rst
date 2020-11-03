@@ -10,6 +10,10 @@ guidelines provide step-by-step instructions on how to set up the ACRN
 hypervisor logical partition scenario on Intel NUC while running two
 pre-launched VMs.
 
+.. contents::
+   :local:
+   :depth: 1
+
 Validated Versions
 ******************
 
@@ -34,6 +38,8 @@ Prerequisites
   first on a SATA disk and then again on a storage device with a USB interface.
   The two pre-launched VMs will mount the root file systems via the SATA controller and
   the USB controller respectively.
+
+.. rst-class:: numbered-step
 
 Update kernel image and modules of pre-launched VM
 **************************************************
@@ -96,6 +102,8 @@ Update kernel image and modules of pre-launched VM
    .. code-block:: none
 
       $ sudo cp <path-to-kernel-image-built-in-step1>/bzImage /boot/
+
+.. rst-class:: numbered-step
 
 Update ACRN hypervisor image
 ****************************
@@ -179,6 +187,8 @@ Update ACRN hypervisor image
    #. Copy the ``acrn.bin``, ``ACPI_VM0.bin``, and ``ACPI_VM1.bin`` from the removable disk to ``/boot``
       directory.
 
+.. rst-class:: numbered-step
+
 Update Ubuntu GRUB to boot hypervisor and load kernel image
 ***********************************************************
 
@@ -237,8 +247,10 @@ Update Ubuntu GRUB to boot hypervisor and load kernel image
    the Intel NUC's display. The GRUB loader will boot the hypervisor, and the
    hypervisor will automatically start the two pre-launched VMs.
 
-Logical partition scenario startup checking
-*******************************************
+.. rst-class:: numbered-step
+
+Logical partition scenario startup check
+****************************************
 
 #. Use these steps to verify that the hypervisor is properly running:
 

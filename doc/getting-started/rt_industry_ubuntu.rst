@@ -3,6 +3,10 @@
 Getting Started Guide for ACRN Industry Scenario with Ubuntu Service VM
 #######################################################################
 
+.. contents::
+   :local:
+   :depth: 1
+
 Verified version
 ****************
 
@@ -23,13 +27,13 @@ Prerequisites
 - Ethernet cables
 - A grub-2.04-7 bootloader with the following patch:
 
-  http://git.savannah.gnu.org/cgit/grub.git/commit/?id=0f3f5b7c13fa9b677a64cf11f20eca0f850a2b20: multiboot2: Set min address for mbi allocation to 0x1000
+  http://git.savannah.gnu.org/cgit/grub.git/commit/?id=0f3f5b7c13fa9b677a64cf11f20eca0f850a2b20:
+  multiboot2: Set min address for mbi allocation to 0x1000
 
-Install Ubuntu for the Service and User VMs
-*******************************************
+.. rst-class:: numbered-step
 
 Hardware Connection
-===================
+*******************
 
 Connect the WHL Maxtang with the appropriate external devices.
 
@@ -42,11 +46,10 @@ Connect the WHL Maxtang with the appropriate external devices.
 
    .. figure:: images/rt-ind-ubun-hw-2.png
 
-Install the Ubuntu User VM (RTVM) on the SATA disk
-==================================================
+.. rst-class:: numbered-step
 
-Install Ubuntu on the SATA disk
--------------------------------
+Install the Ubuntu User VM (RTVM) on the SATA disk
+**************************************************
 
 .. note:: The WHL Maxtang machine contains both an NVMe and SATA disk.
    Before you install the Ubuntu User VM on the SATA disk, either
@@ -74,11 +77,10 @@ Install Ubuntu on the SATA disk
 This Ubuntu installation will be modified later (see `Build and Install the RT kernel for the Ubuntu User VM`_)
 to turn it into a real-time User VM (RTVM).
 
-Install the Ubuntu Service VM on the NVMe disk
-==============================================
+.. rst-class:: numbered-step
 
-Install Ubuntu on the NVMe disk
--------------------------------
+Install the Ubuntu Service VM on the NVMe disk
+**********************************************
 
 .. note:: Before you install the Ubuntu Service VM on the NVMe disk, either
    remove the SATA disk or disable it in the BIOS. Disable it by going to:
@@ -105,6 +107,8 @@ Install Ubuntu on the NVMe disk
 
    .. note:: Set ``acrn`` as the username for the Ubuntu Service VM.
 
+
+.. rst-class:: numbered-step
 
 Build and Install ACRN on Ubuntu
 ********************************
@@ -402,6 +406,8 @@ Follow these instructions to build the RT kernel.
       $ sudo cp -r /mnt/lib/modules/lib/modules/4.19.72-rt25 /mnt/lib/modules/
       $ sudo cd ~ && sudo umount /mnt && sync
 
+.. rst-class:: numbered-step
+
 Launch the RTVM
 ***************
 
@@ -600,6 +606,8 @@ Run cyclictest
     :-D 1h:                          to run for 1 hour, you can change it to other values
     :-q:                             quiet mode; print a summary only on exit
     :-H 30000 --histfile=test.log:   dump the latency histogram to a local file
+
+.. rst-class:: numbered-step
 
 Launch the Windows VM
 *********************
