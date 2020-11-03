@@ -59,16 +59,18 @@
 
 #define PCI_BDF_GPU			0x00000010	/* 00:02.0 */
 
-/* Reserved [0x DF000000, 0x E0000000] 16M in e820 table for GVT
- * [0xDB000000, 0xDF000000) 64M, DSM, used by native GOP and gfx driver
+/* Reserved region in e820 table for GVT
  * for GVT-g use:
- * [0xDF000000, 0xDF800000)  8M, GOP FB, used OvmfPkg/GvtGopDxe for 1080p@30
- * [0xDFFFD000, 0xDFFFF000)  8K, OpRegion, used by GvtGopDxe and GVT-g
- * [0xDFFFF000, 0XE0000000)  4K, Reserved, not used
- * for GVT-d use:
- * [0xDFFFC000, 0xDFFFE000)  8K, OpRegion, used by native GOP and gfx driver
- * [0xDFFFE000, 0XE0000000]  8K, Extended OpRegion, store raw VBT
- * 
+ * [0xDF000000, 0xDF800000) 8M, GOP FB, used OvmfPkg/GvtGopDxe for 1080p@30
+ * [0xDFFFD000, 0xDFFFF000) 8K, OpRegion, used by GvtGopDxe and GVT-g
+ * [0xDFFFF000, 0XE0000000) 4K, Reserved, not used
+ * for TGL GVT-d use:
+ * [0x3B800000, 0x3F800000) 64M, Date Stolen Memory
+ * [0x3F800000, 0X3F804000] 16K, OpRegion and Extended OpRegion
+ * for EHL/WHL/KBL GVT-d use:
+ * [0xDB000000, 0xDF000000) 64M, DSM, used by native GOP and gfx driver
+ * [0xDFFFC000, 0xDFFFE000) 8K, OpRegion, used by native GOP and gfx driver
+ * [0xDFFFE000, 0XE0000000] 8K, Extended OpRegion, store raw VBT
  * OpRegion: 8KB(0x2000)
  * [ OpRegion Header      ] Offset: 0x0
  * [ Mailbox #1: ACPI     ] Offset: 0x100
@@ -84,10 +86,18 @@
  * For OpRegion 2.1+: ASLE.rvda = offset to OpRegion base address
  * For OpRegion 2.0:  ASLE.rvda = physical address, not support currently
  */
-#define GPU_DSM_GPA  			0xDB000000
+#define GPU_DSM_GPA				0xDB000000
 #define GPU_DSM_SIZE			0x4000000
-#define GPU_OPREGION_GPA  		0xDFFFC000
+#define GPU_OPREGION_GPA		0xDFFFC000
 #define GPU_OPREGION_SIZE		0x4000
+/*
+ * TODO: Forced DSM/OPREGION size requires native BIOS configuration.
+ * This limitation need remove in future
+ */
+uint32_t gpu_dsm_hpa = 0;
+uint32_t gpu_dsm_gpa = 0;
+uint32_t gpu_opregion_hpa = 0;
+uint32_t gpu_opregion_gpa = 0;
 
 extern uint64_t audio_nhlt_len;
 
@@ -95,8 +105,6 @@ extern uint64_t audio_nhlt_len;
 static int pciaccess_ref_cnt;
 static pthread_mutex_t ref_cnt_mtx = PTHREAD_MUTEX_INITIALIZER;
 
-uint32_t dsm_start_hpa = 0;
-uint32_t opregion_start_hpa = 0;
 
 struct passthru_dev {
 	struct pci_vdev *dev;
@@ -473,46 +481,77 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 {
 	uint32_t opregion_phys, dsm_mask_val;
 
+	/* get opregion hpa */
+	opregion_phys = read_config(ptdev->phys_dev, PCIR_ASLS_CTL, 4);
+	gpu_opregion_hpa = opregion_phys & PCIM_ASLS_OPREGION_MASK;
+
 	switch (device) {
 	case INTEL_ELKHARTLAKE:
+		/* BDSM register has 64 bits.
+		 * bits 63:20 contains the base address of stolen memory
+		 */
+		gpu_dsm_hpa = read_config(ptdev->phys_dev, PCIR_GEN11_BDSM_DW0, 4);
+		dsm_mask_val = gpu_dsm_hpa & ~PCIM_BDSM_MASK;
+		gpu_dsm_hpa &= PCIM_BDSM_MASK;
+		gpu_dsm_hpa |= (uint64_t)read_config(ptdev->phys_dev, PCIR_GEN11_BDSM_DW1, 4) << 32;
+		gpu_dsm_gpa = GPU_DSM_GPA;
+
+		pci_set_cfgdata32(ptdev->dev, PCIR_GEN11_BDSM_DW0, gpu_dsm_gpa | dsm_mask_val);
+		/* write 0 to high 32-bits of BDSM on EHL platform */
+		pci_set_cfgdata32(ptdev->dev, PCIR_GEN11_BDSM_DW1, 0);
+
+		gpu_opregion_gpa = GPU_OPREGION_GPA;
+
+		ptdev->has_virt_pcicfg_regs = &has_virt_pcicfg_regs_on_ehl_gpu;
+		break;
+
 	case INTEL_TIGERLAKE:
 		/* BDSM register has 64 bits.
 		 * bits 63:20 contains the base address of stolen memory
 		 */
-		dsm_start_hpa = read_config(ptdev->phys_dev, PCIR_GEN11_BDSM_DW0, 4);
-		dsm_mask_val = dsm_start_hpa & ~PCIM_BDSM_MASK;
-		dsm_start_hpa &= PCIM_BDSM_MASK;
-		dsm_start_hpa |= (uint64_t)read_config(ptdev->phys_dev, PCIR_GEN11_BDSM_DW1, 4) << 32;
+		gpu_dsm_hpa = read_config(ptdev->phys_dev, PCIR_GEN11_BDSM_DW0, 4);
+		dsm_mask_val = gpu_dsm_hpa & ~PCIM_BDSM_MASK;
+		gpu_dsm_hpa &= PCIM_BDSM_MASK;
+		gpu_dsm_hpa |= (uint64_t)read_config(ptdev->phys_dev, PCIR_GEN11_BDSM_DW1, 4) << 32;
+		/* Keep identical mapping for DSM region on TGL platform due to windows
+		* graphic driver obtain the DSM address from one mmio register locate
+		* in BAR instead of pci config space.
+		*/
+		gpu_dsm_gpa = gpu_dsm_hpa;
 
-		pci_set_cfgdata32(ptdev->dev, PCIR_GEN11_BDSM_DW0, GPU_DSM_GPA | dsm_mask_val);
+		pci_set_cfgdata32(ptdev->dev, PCIR_GEN11_BDSM_DW0, gpu_dsm_gpa | dsm_mask_val);
 		/* write 0 to high 32-bits of BDSM on EHL platform */
 		pci_set_cfgdata32(ptdev->dev, PCIR_GEN11_BDSM_DW1, 0);
+
+		gpu_opregion_gpa = gpu_dsm_gpa + GPU_DSM_SIZE;
 
 		ptdev->has_virt_pcicfg_regs = &has_virt_pcicfg_regs_on_ehl_gpu;
 		break;
 	/* If on default platforms, such as KBL,WHL  */
 	default:
 		/* bits 31:20 contains the base address of stolen memory */
-		dsm_start_hpa = read_config(ptdev->phys_dev, PCIR_BDSM, 4);
-		dsm_mask_val = dsm_start_hpa & ~PCIM_BDSM_MASK;
-		dsm_start_hpa &= PCIM_BDSM_MASK;
+		gpu_dsm_hpa = read_config(ptdev->phys_dev, PCIR_BDSM, 4);
+		dsm_mask_val = gpu_dsm_hpa & ~PCIM_BDSM_MASK;
+		gpu_dsm_hpa &= PCIM_BDSM_MASK;
+		gpu_dsm_gpa = GPU_DSM_GPA;
 
-		pci_set_cfgdata32(ptdev->dev, PCIR_BDSM, GPU_DSM_GPA | dsm_mask_val);
+		pci_set_cfgdata32(ptdev->dev, PCIR_BDSM, gpu_dsm_gpa | dsm_mask_val);
+
+		gpu_opregion_gpa = GPU_OPREGION_GPA;
 
 		ptdev->has_virt_pcicfg_regs = &has_virt_pcicfg_regs_on_def_gpu;
 		break;
 	}
 
+	pci_set_cfgdata32(ptdev->dev, PCIR_ASLS_CTL, gpu_opregion_gpa | (opregion_phys & ~PCIM_ASLS_OPREGION_MASK));
+
 	/* initialize the EPT mapping for passthrough GPU dsm region */
-	vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_DSM_GPA, GPU_DSM_SIZE, dsm_start_hpa);
+	vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_dsm_gpa, GPU_DSM_SIZE, gpu_dsm_hpa);
+	vm_map_ptdev_mmio(ctx, 0, 2, 0, gpu_dsm_gpa, GPU_DSM_SIZE, gpu_dsm_hpa);
 
-	/* get opregion hpa */
-	opregion_phys = read_config(ptdev->phys_dev, PCIR_ASLS_CTL, 4);
-	opregion_start_hpa = opregion_phys & PCIM_ASLS_OPREGION_MASK;
 	/* initialize the EPT mapping for passthrough GPU opregion */
-	vm_map_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
-
-	pci_set_cfgdata32(ptdev->dev, PCIR_ASLS_CTL, GPU_OPREGION_GPA | (opregion_phys & ~PCIM_ASLS_OPREGION_MASK));
+	vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_opregion_gpa, GPU_OPREGION_SIZE, gpu_opregion_hpa);
+	vm_map_ptdev_mmio(ctx, 0, 2, 0, gpu_opregion_gpa, GPU_OPREGION_SIZE, gpu_opregion_hpa);
 
 	pcidev->type = QUIRK_PTDEV;
 }
@@ -748,8 +787,8 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		phys_bdf = ptdev->phys_bdf;
 
 	if (ptdev->phys_bdf == PCI_BDF_GPU) {
-		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, GPU_DSM_GPA, GPU_DSM_SIZE, dsm_start_hpa);
-		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, GPU_OPREGION_GPA, GPU_OPREGION_SIZE, opregion_start_hpa);
+		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_dsm_gpa, GPU_DSM_SIZE, gpu_dsm_hpa);
+		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, gpu_opregion_gpa, GPU_OPREGION_SIZE, gpu_opregion_hpa);
 	}
 
 	pcidev.virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
