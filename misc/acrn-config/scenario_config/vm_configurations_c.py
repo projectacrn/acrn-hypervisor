@@ -45,8 +45,6 @@ def get_post_vm_type(vm_type, vm_i):
 
 
 def vuart0_output(i, vm_type, vm_info, config):
-    if vm_info.vuart.v0_vuart[i]['base'] == "INVALID_COM_BASE":
-        return
     """
     This is generate vuart 0 setting
     :param i: vm id number
@@ -58,16 +56,25 @@ def vuart0_output(i, vm_type, vm_info, config):
     # SOS_VM vuart[0]
     print("\t\t.vuart[0] = {", file=config)
     print("\t\t\t.type = {0},".format(vm_info.vuart.v0_vuart[i]['type']), file=config)
-    if "SOS_" in vm_type:
-        print("\t\t\t.addr.port_base = SOS_COM1_BASE,", file=config)
-        print("\t\t\t.irq = SOS_COM1_IRQ,", file=config)
-    elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
-        print("\t\t\t.addr.port_base = COM1_BASE,", file=config)
-        print("\t\t\t.irq = COM1_IRQ,", file=config)
-    elif "POST_LAUNCHED_VM" in scenario_cfg_lib.VM_DB[vm_type]['load_type']:
-        print("\t\t\t.addr.port_base = {0},".format(
-            vm_info.vuart.v0_vuart[i]['base']), file=config)
-        if vm_info.vuart.v0_vuart[i]['base'] != "INVALID_COM_BASE":
+    if vm_info.vuart.v0_vuart[i]['base'] == "INVALID_COM_BASE":
+        print("\t\t\t.addr.port_base = INVALID_COM_BASE,", file=config)
+        if "SOS_" in vm_type:
+            print("\t\t\t.irq = SOS_COM1_IRQ,", file=config)
+        elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
+            print("\t\t\t.irq = COM1_IRQ,", file=config)
+        elif "POST_LAUNCHED_VM" in scenario_cfg_lib.VM_DB[vm_type]['load_type']:
+            print("\t\t\t.irq = {0},".format(
+                    vm_info.vuart.v0_vuart[i]['irq']), file=config)
+    else:
+        if "SOS_" in vm_type:
+            print("\t\t\t.addr.port_base = SOS_COM1_BASE,", file=config)
+            print("\t\t\t.irq = SOS_COM1_IRQ,", file=config)
+        elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
+            print("\t\t\t.addr.port_base = COM1_BASE,", file=config)
+            print("\t\t\t.irq = COM1_IRQ,", file=config)
+        elif "POST_LAUNCHED_VM" in scenario_cfg_lib.VM_DB[vm_type]['load_type']:
+            print("\t\t\t.addr.port_base = {0},".format(
+                vm_info.vuart.v0_vuart[i]['base']), file=config)
             print("\t\t\t.irq = {0},".format(
                 vm_info.vuart.v0_vuart[i]['irq']), file=config)
     print("\t\t},", file=config)
@@ -102,8 +109,6 @@ def vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config):
     :return: None
     """
     vuart_enable = vuart_map_enable(vm_info)
-    if vm_info.vuart.v1_vuart[i]['base'] == "INVALID_COM_BASE":
-        return
     # vuart1:   {vmid:target_vmid}
     print("\t\t.vuart[1] = {", file=config)
     print("\t\t\t.type = {0},".format(vm_info.vuart.v1_vuart[i]['type']), file=config)
@@ -126,7 +131,6 @@ def vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config):
                 vm_info.vuart.v1_vuart[i]['target_vm_id']), file=config)
             print("\t\t\t.t_vuart.vuart_id = {0}U,".format(
                 vm_info.vuart.v1_vuart[i]['target_uart_id']), file=config)
-    print("\t\t},", file=config)
 
 def vuart_output(vm_type, i, vm_info, config):
     """
@@ -141,6 +145,7 @@ def vuart_output(vm_type, i, vm_info, config):
 
     vuart0_output(i, vm_type, vm_info, config)
     vuart1_output(i, vm_type, vuart1_vmid_dic, vm_info, config)
+    print("\t\t},", file=config)
 
 
 def is_need_epc(epc_section, i, config):
