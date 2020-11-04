@@ -37,7 +37,7 @@ if "RELEASE" in os.environ:
 sys.path.insert(0, os.path.join(os.path.abspath('.'), 'extensions'))
 extensions = [
    'breathe', 'sphinx.ext.graphviz', 'sphinx.ext.extlinks',
-   'kerneldoc', 'eager_only', 'html_redirects',
+   'kerneldoc', 'eager_only', 'html_redirects', 'link_roles',
    'sphinx_tabs.tabs'
 ]
 
