@@ -297,6 +297,17 @@ markup (double backticks) to indicate a ``filename``.
 
 Don't use items within a single backtick, for example ```word```.
 
+For references to files that are in the ACRN Hypervisor GitHub tree, a special
+role can be used that creates a hyperlink to that file. For example a
+GitHub link to the reST file used to create this document can be generated
+using ``:acrn_file:`doc/developer-guides/doc_guidelines.rst``` that will show
+up as :acrn_file:`doc/developer-guides/doc_guidelines.rst`, a link to
+the “blob” file in the GitHub repo as displayed by GitHub. There’s also an
+``:acrn_raw:`doc/developer-guides/doc_guidelines.rst``` role that will link
+to the “raw” uninterpreted file,
+:acrn_raw:`doc/developer-guides/doc_guidelines.rst` file. (Click
+on these links to see the difference.)
+
 .. _internal-linking:
 
 Internal Cross-Reference Linking

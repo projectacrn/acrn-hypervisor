@@ -54,8 +54,8 @@ container::
 
    # acrnctl add launch_uos.sh -C
 
-.. note:: You can download an `example launch_uos.sh script
-   <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/devicemodel/samples/nuc/launch_uos.sh>`_
+.. note:: You can download an :acrn_raw:`example launch_uos.sh script
+   <devicemodel/samples/nuc/launch_uos.sh>`
    that supports the ``-C``  (``run_container`` function) option. 
 
 Note that the launch script must only launch one User VM instance.

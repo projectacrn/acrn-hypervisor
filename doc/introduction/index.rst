@@ -93,10 +93,10 @@ above, i.e. the *logical partitioning*, *sharing*, and *hybrid* modes. They
 further specify the number of VMs that can be run, their attributes and the
 resources they have access to, either shared with other VMs or exclusively.
 
-The predefined scenarios are in the `misc/vm_configs/scenarios
-<https://github.com/projectacrn/acrn-hypervisor/tree/master/misc/vm_configs/scenarios>`_
-folder in the source code. XML examples for some platforms can also be found under
-`misc/vm_configs/xmls/config-xmls <https://github.com/projectacrn/acrn-hypervisor/tree/master/misc/vm_configs/xmls/config-xmls/>`_.
+The predefined scenarios are in the
+:acrn_file:`misc/vm_configs/scenarios` folder
+in the source code. XML examples for some platforms can also be found under
+:acrn_file:`misc/vm_configs/xmls/config-xmls`.
 
 The :ref:`acrn_configuration_tool` tutorial explains how to use the ACRN
 Configuration tool to create your own scenario or modify an existing one.

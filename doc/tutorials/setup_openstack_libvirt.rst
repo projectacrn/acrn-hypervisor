@@ -223,11 +223,12 @@ Use DevStack to install OpenStack. Refer to the `DevStack instructions <https://
 
      $ git clone https://opendev.org/openstack/devstack.git -b stable/train
 
-2. Go into the ``devstack`` directory and apply an ACRN patch::
+2. Go into the ``devstack`` directory, download an ACRN patch from
+   :acrn_raw:`doc/tutorials/0001-devstack-installation-for-acrn.patch`,
+   and apply it ::
 
       $ cd devstack
-      $ curl https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/0001-devstack-installation-for-acrn.patch \
-        | git apply
+      $ git apply 0001-devstack-installation-for-acrn.patch
 
 3. Edit ``lib/nova_plugins/hypervisor-libvirt``:
 
