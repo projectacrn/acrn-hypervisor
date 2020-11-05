@@ -318,7 +318,21 @@ breathe_projects = {
 	"Project ACRN" : "doxygen/xml",
 }
 breathe_default_project = "Project ACRN"
-breathe_default_members = ('members', 'undoc-members', 'content-only')
+# breathe_default_members = ('members', 'undoc-members', 'content-only')
+breathe_domain_by_extension = {
+   "h": "c",
+   "c": "c",
+}
+
+cpp_id_attributes = [
+    '__syscall', '__deprecated', '__may_alias',
+    '__used', '__unused', '__weak',
+    '__DEPRECATED_MACRO', 'FUNC_NORETURN',
+    '__subsystem',
+]
+c_id_attributes = cpp_id_attributes
+
+
 
 
 # Custom added feature to allow redirecting old URLs (caused by
