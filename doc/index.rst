@@ -84,6 +84,7 @@ license.
    asa
    FAQ <faq>
    glossary
+   genindex
 
 .. _BSD 3-clause license:
    https://github.com/projectacrn/acrn-hypervisor/blob/master/LICENSE
