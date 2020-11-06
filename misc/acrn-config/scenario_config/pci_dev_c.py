@@ -206,49 +206,42 @@ def generate_file(vm_info, config):
                     pci_cnt += 1
 
         # Insert ivshmem information
-        if vm_info.shmem.shmem_enabled == 'y' and vm_i in vm_info.shmem.shmem_regions.keys() \
+        if vm_info.shmem.shmem_enabled == 'y' and vm_i in vm_info.shmem.shmem_regions \
              and len(vm_info.shmem.shmem_regions[vm_i]) > 0:
             raw_shm_list = vm_info.shmem.shmem_regions[vm_i]
+            index = 0
             for shm in raw_shm_list:
                 shm_splited = shm.split(',')
                 print("\t{", file=config)
                 print("\t\t.emu_type = {},".format(PCI_DEV_TYPE[0]), file=config)
-                if vm_i in vm_info.cfg_pci.pci_devs.keys():
-                    if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
-                        free_bdf = find_unused_bdf(sos_used_bdf, "ivshmem")
-                        print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{:02x}U, .f = 0x{:02x}U}}," \
-                             .format(free_bdf.dev,free_bdf.func), file=config)
-                        print("\t\t.vdev_ops = &vpci_ivshmem_ops,", file=config)
-                        sos_used_bdf.append(free_bdf)
-                    else:
-                        print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{0:02x}U, .f = 0x00U}},".format(pci_cnt), file=config)
-                        print("\t\t.vdev_ops = &vpci_ivshmem_ops,", file=config)
-                        bdf_tuple = BusDevFunc(0,pci_cnt,0)
-                        vm_used_bdf.append(bdf_tuple)
-                elif vm_i not in vm_info.cfg_pci.pci_devs.keys():
-                    if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
-                        print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{0:02x}U, .f = 0x00U}},".format(pci_cnt), file=config)
-                        bdf_tuple = BusDevFunc(0,pci_cnt,0)
-                        vm_used_bdf.append(bdf_tuple)
-                    elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "POST_LAUNCHED_VM":
-                        print("\t\t.vbdf.value = UNASSIGNED_VBDF,", file=config)
-                    print("\t\t.vdev_ops = &vpci_ivshmem_ops,", file=config)
-                for shm_name, bar_attr in board_cfg_lib.PCI_DEV_BAR_DESC.shm_bar_dic.items():
-                    index = shm_name[:shm_name.find('_')]
+
+                if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
+                    free_bdf = find_unused_bdf(sos_used_bdf, "ivshmem")
+                    print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{:02x}U, .f = 0x{:02x}U}}," \
+                            .format(free_bdf.dev,free_bdf.func), file=config)
+                    sos_used_bdf.append(free_bdf)
+                elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
+                    print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{0:02x}U, .f = 0x00U}},".format(pci_cnt), file=config)
+                    bdf_tuple = BusDevFunc(0,pci_cnt,0)
+                    vm_used_bdf.append(bdf_tuple)
+                elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "POST_LAUNCHED_VM":
+                    print("\t\t.vbdf.value = UNASSIGNED_VBDF,", file=config)
+                print("\t\t.vdev_ops = &vpci_ivshmem_ops,", file=config)
+
+                for shm_name,_ in board_cfg_lib.PCI_DEV_BAR_DESC.shm_bar_dic.items():
+                    region = shm_name[:shm_name.find('_')]
                     shm_name = shm_name[shm_name.find('_') + 1:]
                     if shm_name == shm_splited[0].strip():
                         if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
-                            print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{},".format(index), file=config)
+                            print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{},".format(region), file=config)
                             print("\t\tIVSHMEM_DEVICE_{}_VBAR".format(index), file=config)
-                            break
                         elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
-                            print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{},".format(index), file=config)
+                            print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{},".format(region), file=config)
                             print("\t\tSOS_IVSHMEM_DEVICE_{}_VBAR".format(index), file=config)
-                            break
                         else:
-                            print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{}".format(index), file=config)
-                            break
+                            print("\t\t.shm_region_name = IVSHMEM_SHM_REGION_{}".format(region), file=config)
                 pci_cnt += 1
+                index += 1
                 print("\t},", file=config)
 
         if vm_i in vuarts.keys():
