@@ -291,7 +291,7 @@ static bool rt_vm_pm1a_io_write(struct acrn_vcpu *vcpu, uint16_t addr, size_t wi
 		pr_dbg("Invalid address (0x%x) or width (0x%x)", addr, width);
 	} else {
 		if ((((v & VIRTUAL_PM1A_SLP_EN) != 0U) && (((v & VIRTUAL_PM1A_SLP_TYP) >> 10U) == 5U)) != 0U) {
-			vcpu->vm->state = VM_READY_TO_POWEROFF;
+			poweroff_if_rt_vm(vcpu->vm);
 		}
 	}
 
@@ -346,9 +346,7 @@ static bool prelaunched_vm_sleep_io_write(struct acrn_vcpu *vcpu, uint16_t addr,
 
 		if (slp_en && (slp_type == 5U)) {
 			get_vm_lock(vm);
-			if (is_rt_vm(vm)) {
-				vm->state = VM_READY_TO_POWEROFF;
-			}
+			poweroff_if_rt_vm(vm);
 			pause_vm(vm);
 			put_vm_lock(vm);
 
