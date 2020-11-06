@@ -49,6 +49,7 @@ void triple_fault_shutdown_vm(struct acrn_vcpu *vcpu)
 
 		/* Either SOS or pre-launched VMs */
 		get_vm_lock(vm);
+		poweroff_if_rt_vm(vm);
 		pause_vm(vm);
 		put_vm_lock(vm);
 
@@ -91,15 +92,13 @@ static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset)
 
 	get_vm_lock(vm);
 	if (reset) {
+		poweroff_if_rt_vm(vm);
+
 		if (get_highest_severity_vm(true) == vm) {
 			reset_host();
 		} else if (is_postlaunched_vm(vm)) {
 			/* re-inject to DM */
 			ret = false;
-
-			if (is_rt_vm(vm)) {
-				vm->state = VM_READY_TO_POWEROFF;
-			}
 		} else {
 			/*
 			 * If it's SOS reset while RTVM is still alive
@@ -117,8 +116,8 @@ static bool handle_common_reset_reg_write(struct acrn_vcpu *vcpu, bool reset)
 			ret = false;
 		}
 		/*
-		 * ignore writes from SOS and pre-launched VM.
-		 * equivalent to hide this port from guests.
+		 * Ignore writes from SOS and pre-launched VM.
+		 * Equivalent to hiding this port from the guest.
 		 */
 	}
 	put_vm_lock(vm);

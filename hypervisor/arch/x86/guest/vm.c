@@ -725,6 +725,16 @@ int32_t reset_vm(struct acrn_vm *vm)
 /**
  * @pre vm != NULL
  */
+void poweroff_if_rt_vm(struct acrn_vm *vm)
+{
+	if (is_rt_vm(vm) && !is_paused_vm(vm) && !is_poweroff_vm(vm)) {
+		vm->state = VM_READY_TO_POWEROFF;
+	}
+}
+
+/**
+ * @pre vm != NULL
+ */
 void pause_vm(struct acrn_vm *vm)
 {
 	uint16_t i;
