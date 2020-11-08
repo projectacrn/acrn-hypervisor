@@ -1241,7 +1241,7 @@ int32_t hcall_destroy_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unus
 			op = find_emul_dev_ops(&dev);
 			if (op != NULL) {
 				bdf.value = (uint16_t) dev.slot;
-				vdev = pci_find_vdev(&vm->vpci, bdf);
+				vdev = pci_find_vdev(&target_vm->vpci, bdf);
 				if (vdev != NULL) {
 					vdev->pci_dev_config->vbdf.value = UNASSIGNED_VBDF;
 					if (op->destroy != NULL) {
