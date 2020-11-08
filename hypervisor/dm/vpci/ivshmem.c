@@ -18,7 +18,10 @@
 #define	IVSHMEM_CLASS		0x05U
 #define	IVSHMEM_REV		0x01U
 
-/* ivshmem device supports bar0, bar1 and bar2 */
+/*
+ * ivshmem device supports bar0, bar1 and bar2,
+ * indexes of them shall begin with 0 and be continuous.
+ */
 #define IVSHMEM_MMIO_BAR	0U
 #define IVSHMEM_MSIX_BAR	1U
 #define IVSHMEM_SHM_BAR	2U
@@ -337,7 +340,7 @@ static void init_ivshmem_vdev(struct pci_vdev *vdev)
 	add_vmsix_capability(vdev, MAX_IVSHMEM_MSIX_TBL_ENTRY_NUM, IVSHMEM_MSIX_BAR);
 
 	/* initialize ivshmem bars */
-	vdev->nr_bars = PCI_BAR_COUNT;
+	vdev->nr_bars = 3U;
 	init_ivshmem_bar(vdev, IVSHMEM_MMIO_BAR);
 	init_ivshmem_bar(vdev, IVSHMEM_MSIX_BAR);
 	init_ivshmem_bar(vdev, IVSHMEM_SHM_BAR);
