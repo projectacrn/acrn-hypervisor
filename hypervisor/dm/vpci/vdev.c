@@ -101,7 +101,7 @@ uint32_t pci_vdev_read_vbar(const struct pci_vdev *vdev, uint32_t idx)
 	bar = pci_vdev_read_vcfg(vdev, offset, 4U);
 	/* Sizing BAR */
 	if (bar == ~0U) {
-		bar = vdev->vbars[idx].mask | vdev->vbars[idx].fixed;
+		bar = vdev->vbars[idx].mask | vdev->vbars[idx].bar_type.bits;
 	}
 	return bar;
 }
@@ -109,18 +109,16 @@ uint32_t pci_vdev_read_vbar(const struct pci_vdev *vdev, uint32_t idx)
 static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 {
 	struct pci_vbar *vbar;
-	enum pci_bar_type type;
 	uint64_t base = 0UL;
 	uint32_t lo, hi, offset;
 
 	vbar = &vdev->vbars[idx];
 	offset = pci_bar_offset(idx);
 	lo = pci_vdev_read_vcfg(vdev, offset, 4U);
-	if ((vbar->type != PCIBAR_NONE) && (lo != ~0U)) {
-		type = vbar->type;
+	if (((is_pci_io_bar(vbar->bar_type.bits) || is_pci_mem32_bar(vbar->bar_type.bits) || is_pci_mem64_bar(vbar->bar_type.bits) || vbar->is_mem64hi)) && (lo != ~0U)) {
 		base = lo & vbar->mask;
 
-		if (vbar->type == PCIBAR_MEM64) {
+		if (is_pci_mem64_bar(vbar->bar_type.bits)) {
 			vbar = &vdev->vbars[idx + 1U];
 			hi = pci_vdev_read_vcfg(vdev, (offset + 4U), 4U);
 			if (hi != ~0U) {
@@ -130,7 +128,7 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 				base = 0UL;
 			}
 		}
-		if (type == PCIBAR_IO_SPACE) {
+		if (is_pci_io_bar(vbar->bar_type.bits)) {
 			base &= 0xffffUL;
 		}
 	}
@@ -152,11 +150,11 @@ void pci_vdev_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 
 	vbar = &vdev->vbars[idx];
 	bar = val & vbar->mask;
-	bar |= vbar->fixed;
+	bar |= vbar->bar_type.bits;
 	offset = pci_bar_offset(idx);
 	pci_vdev_write_vcfg(vdev, offset, 4U, bar);
 
-	if (vbar->type == PCIBAR_MEM64HI) {
+	if (vbar->is_mem64hi) {
 		update_idx -= 1U;
 	}
 

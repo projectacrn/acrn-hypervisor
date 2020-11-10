@@ -203,12 +203,17 @@ union pci_bdf {
 	} fields;
 };
 
-enum pci_bar_type {
-	PCIBAR_NONE = 0,
-	PCIBAR_IO_SPACE,
-	PCIBAR_MEM32,
-	PCIBAR_MEM64,
-	PCIBAR_MEM64HI,
+union pci_bar_type {
+	uint32_t bits;
+	struct {
+		uint8_t indicator :1;   /* BITs[0], mapped to I/O space if read as 1 */
+		uint8_t reserved :1;    /* BITs[1], reserved */
+	} io_space;
+	struct {
+		uint8_t indicator :1;   /* BITs[0], mapped to memory space if read as 0 */
+		uint8_t mem_type :2;    /* BITs[1:2], 32-bit address if read as 00b, 64-bit address as 01b */
+		uint8_t prefetchable :1;        /* BITs[3], set to 1b if the data is prefetchable and set to 0b otherwise */
+	} mem_space;
 };
 
 struct pci_mmcfg_region {
@@ -304,29 +309,32 @@ static inline bool is_bar_offset(uint32_t nr_bars, uint32_t offset)
 	return ret;
 }
 
-static inline enum pci_bar_type pci_get_bar_type(uint32_t val)
+static inline bool is_pci_io_bar(uint32_t val)
 {
-	enum pci_bar_type type = PCIBAR_NONE;
+	union pci_bar_type bar_type = {.bits = val};
 
-	if ((val & PCIM_BAR_SPACE) == PCIM_BAR_IO_SPACE) {
-		type = PCIBAR_IO_SPACE;
-	} else {
-		switch (val & PCIM_BAR_MEM_TYPE) {
-		case PCIM_BAR_MEM_32:
-			type = PCIBAR_MEM32;
-			break;
+	return (bar_type.io_space.indicator == 1U);
+}
 
-		case PCIM_BAR_MEM_64:
-			type = PCIBAR_MEM64;
-			break;
+static inline bool is_pci_mem_bar(uint32_t val)
+{
+	union pci_bar_type bar_type = {.bits = val};
 
-		default:
-			/*no actions are required for other cases.*/
-			break;
-		}
-	}
+	return ((bar_type.mem_space.indicator == 0U));
+}
 
-	return type;
+static inline bool is_pci_mem32_bar(uint32_t val)
+{
+	union pci_bar_type bar_type = {.bits = val};
+
+	return (is_pci_mem_bar(val) && (bar_type.mem_space.mem_type == 0U));
+}
+
+static inline bool is_pci_mem64_bar(uint32_t val)
+{
+	union pci_bar_type bar_type = {.bits = val};
+
+	return (is_pci_mem_bar(val) && (bar_type.mem_space.mem_type == 2U));
 }
 
 static inline bool bdf_is_equal(union pci_bdf a, union pci_bdf b)

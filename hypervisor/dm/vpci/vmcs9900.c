@@ -130,18 +130,16 @@ static void init_vmcs9900(struct pci_vdev *vdev)
 	add_vmsix_capability(vdev, 1, MCS9900_MSIX_BAR);
 
 	/* initialize vuart-pci mem bar */
-	mmio_vbar->type = PCIBAR_MEM32;
 	mmio_vbar->size = 0x1000U;
 	mmio_vbar->base_gpa = pci_cfg->vbar_base[MCS9900_MMIO_BAR];
 	mmio_vbar->mask = (uint32_t) (~(mmio_vbar->size - 1UL));
-	mmio_vbar->fixed = (uint32_t) (mmio_vbar->base_gpa & PCI_BASE_ADDRESS_MEM_MASK);
+	mmio_vbar->bar_type.bits = PCIM_BAR_MEM_32;
 
 	/* initialize vuart-pci msix bar */
-	msix_vbar->type = PCIBAR_MEM32;
 	msix_vbar->size = 0x1000U;
 	msix_vbar->base_gpa = pci_cfg->vbar_base[MCS9900_MSIX_BAR];
 	msix_vbar->mask = (uint32_t) (~(msix_vbar->size - 1UL));
-	msix_vbar->fixed = (uint32_t) (msix_vbar->base_gpa & PCI_BASE_ADDRESS_MEM_MASK);
+	msix_vbar->bar_type.bits = PCIM_BAR_MEM_32;
 
 	vdev->nr_bars = 2;
 

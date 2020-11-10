@@ -83,7 +83,7 @@ void init_vmsix_on_msi(struct pci_vdev *vdev)
 			if (vdev->vbars[i].base_hpa == 0UL){
 				break;
 			}
-			if (vdev->vbars[i].type == PCIBAR_MEM64) {
+			if (is_pci_mem64_bar(vdev->vbars[i].bar_type.bits)) {
 				i++;
 			}
 		}
@@ -106,12 +106,11 @@ void init_vmsix_on_msi(struct pci_vdev *vdev)
 			/* Init PBA table vBAR, offset is 2048 */
 			pci_vdev_write_vcfg(vdev, vdev->msix.capoff + 8U, 4U, 2048U + i);
 
-			vdev->vbars[i].type = PCIBAR_MEM32;
 			vdev->vbars[i].size = 4096U;
 			vdev->vbars[i].base_hpa = 0x0UL;
 			vdev->vbars[i].mask = 0xFFFFF000U & PCI_BASE_ADDRESS_MEM_MASK;
 			/* fixed for memory, 32bit, non-prefetchable */
-			vdev->vbars[i].fixed = 0U;
+			vdev->vbars[i].bar_type.bits = PCIM_BAR_MEM_32;
 
 			/* About MSI-x bar GPA:
 			 * - For Service VM: when first time init, it is programmed as 0, then OS will program
