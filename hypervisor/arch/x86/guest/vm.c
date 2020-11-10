@@ -420,6 +420,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	struct acrn_vm *vm = NULL;
 	int32_t status = 0;
 	uint16_t pcpu_id;
+	struct vm_io_range vu_range = {};
 
 	/* Allocate memory for virtual machine */
 	vm = &vm_array[vm_id];
@@ -493,6 +494,16 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		enable_iommu();
 
 		/* Create virtual uart;*/
+		if (is_sos_vm(vm)) {
+			/* Legacy vuart[0] will take CONFIG_SERIAL_PIO_BASE, as SOS_COM1_BASE
+			 * If has no legacy vuart[0], SOS will access to CONFIG_SERIAL_PIO_BASE,
+			 * SOS need to trap for CONFIG_SERIAL_PIO_BASE too, without legacy vuart[0].
+			 * If has legacy vuart[0], it will override this emulated IO handler, after
+			 * init_legacy_vuarts() is called */
+			vu_range.base = CONFIG_SERIAL_PIO_BASE;
+			vu_range.len = 8U;
+			register_pio_emulation_handler(vm, UART_PIO_IDX0, &vu_range, NULL, NULL);
+		}
 		init_legacy_vuarts(vm, vm_config->vuart);
 
 		register_reset_port_handler(vm);
