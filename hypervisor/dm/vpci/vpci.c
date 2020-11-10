@@ -783,7 +783,7 @@ void vpci_update_one_vbar(struct pci_vdev *vdev, uint32_t bar_idx, uint32_t val,
 	uint32_t offset = pci_bar_offset(bar_idx);
 	uint32_t update_idx = bar_idx;
 
-	if (vbar->type == PCIBAR_MEM64HI) {
+	if (vbar->is_mem64hi) {
 		update_idx -= 1U;
 	}
 	unmap_cb(vdev, update_idx);

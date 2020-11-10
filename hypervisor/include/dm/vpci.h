@@ -38,11 +38,11 @@
 #define VDEV_LIST_HASHSIZE (1U << VDEV_LIST_HASHBITS)
 
 struct pci_vbar {
-	enum pci_bar_type type;
+	bool is_mem64hi;;
 	uint64_t size;		/* BAR size */
 	uint64_t base_gpa;	/* BAR guest physical address */
 	uint64_t base_hpa;	/* BAR host physical address */
-	uint32_t fixed;		/* BAR fix memory type encoding */
+	union pci_bar_type bar_type;
 	uint32_t mask;		/* BAR size mask */
 };
 
