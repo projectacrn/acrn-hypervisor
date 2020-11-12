@@ -27,6 +27,7 @@ The diagram below shows the overall architecture:
 
 .. figure:: images/s5_overall_architecture.png
    :align: center
+   :name: s5-architecture
 
    S5 overall architecture
 
@@ -160,22 +161,20 @@ The procedure for enabling S5 is specific to the particular OS:
 
 How to test
 ***********
+   As described in :ref:`vuart_config`, two vUARTs are defined in
+   pre-defined ACRN scenarios: vUART0/ttyS0 for the console and
+   vUART1/ttyS1 for S5-related communication (as shown in :ref:`s5-architecture`).
 
-.. note:: The :ref:`CBC <IOC_virtualization_hld>` tools and service installed by
-   the `software-defined-cockpit
-   <https://github.com/clearlinux/clr-bundles/blob/master/bundles/software-defined-cockpit>`_ bundle
-   will conflict with the vUART and hence need to be masked.
+   For Yocto Project (Poky) or Ubuntu rootfs, the ``serial-getty``
+   service for ``ttyS1`` conflicts with the S5-related communication
+   use of ``vUART1``. We can eliminate the conflict by preventing
+   that service from being started
+   either automatically or manually, by masking the service
+   using this command
 
    ::
 
-      systemctl mask cbc_attach
-      systemctl mask cbc_thermal_fuse
-      systemctl mask cbc_thermald
-      systemctl mask cbc_lifecycle.service
-
-   Or::
-
-      ps -ef|grep cbc; kill -9 cbc_pid
+     systemctl mask serial-getty@ttyS1.service
 
 #. Refer to the :ref:`enable_s5` section to set up the S5 environment for the User VMs.
 

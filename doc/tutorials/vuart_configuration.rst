@@ -139,7 +139,7 @@ Test the communication port
 ===========================
 
 After you have configured the communication port in hypervisor, you can
-access the corresponding port. For example, in Clear Linux:
+access the corresponding port. For example, in Linux OS:
 
 1. With ``echo`` and ``cat``
 

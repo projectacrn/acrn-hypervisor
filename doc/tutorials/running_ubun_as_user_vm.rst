@@ -9,14 +9,11 @@ Prerequisites
 This tutorial assumes you have already set up the ACRN Service VM on an
 Intel NUC Kit. If you have not, refer to the following instructions:
 
-- Install a `Clear Linux OS
-  <https://docs.01.org/clearlinux/latest/get-started/bare-metal-install-server.html>`_
-  on your Intel NUC kit.
-- Follow the instructions at XXX to set up the
-  Service VM automatically on your Intel NUC kit. Follow steps 1 - 4.
+- Install a `Ubuntu 18.04 desktop ISO
+  <http://releases.ubuntu.com/18.04.3/ubuntu-18.04.3-desktop-amd64.iso?_ga=2.160010942.221344839.1566963570-491064742.1554370503>`_
+  on your board.
+- Follow the instructions :ref:`install-ubuntu-Service VM-NVMe` to set up the Service VM.
 
-  .. important:: need updated instructions that aren't Clear Linux
-     dependent
 
 Before you start this tutorial, make sure the KVM tools are installed on the
 development machine and set **IGD Aperture Size to 512** in the BIOS
@@ -62,9 +59,9 @@ Hardware Configurations
 Validated Versions
 ==================
 
--  **Clear Linux version:** 30920
--  **ACRN hypervisor tag:** acrn-2019w36.2-140000p
--  **Service VM Kernel version:** 4.19.68-84.iot-lts2018-sos
+-  **Ubuntuversion:** 18.04
+-  **ACRN hypervisor tag:** v2.2
+-  **Service VM Kernel version:** v2.2
 
 .. _build-the-ubuntu-kvm-image:
 

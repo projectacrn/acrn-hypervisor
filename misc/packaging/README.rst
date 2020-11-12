@@ -179,7 +179,6 @@ This time when you boot your target system you'll see some new options:
     Advanced options for Ubuntu
     System setup
    *ACRN multiboot2
-    ACRN efi
 
 If your target system has a serial port active, you can simply hit
 :kbd:`return` (or wait for the timeout) to boot with this
