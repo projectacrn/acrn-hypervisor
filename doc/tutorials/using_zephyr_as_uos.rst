@@ -92,11 +92,9 @@ Steps for Using Zephyr as User VM
    the ACRN Service VM, then you will need to transfer this image to the
    ACRN Service VM (via, e.g, a USB drive or network)
 
-#. Follow XXX to boot "The ACRN Service OS" based on Clear Linux OS 28620
-   (ACRN tag: acrn-2019w14.3-140000p)
+#. Follow :ref:`install-ubuntu-Service VM-NVMe`
+   to boot "The ACRN Service OS" based on Ubnuntu OS (ACRN tag: v2.2)
 
-   .. important:: need to remove reference to Clear Linux and reference
-      to deleted document (use SDC mode on the Intel NUC)
 
 #. Boot Zephyr as User VM
 

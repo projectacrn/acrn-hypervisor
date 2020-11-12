@@ -50,8 +50,7 @@ install Ubuntu on the NVMe drive, and use grub to launch the Service VM.
 Install Pre-Launched RT Filesystem on SATA and Kernel Image on NVMe
 ===================================================================
 
-.. important:: Need to add instructions to download the RTVM image and burn it to the
-   SATA drive.
+Follow the :ref:`install-ubuntu-rtvm-sata` guide to install RT rootfs on SATA drive.
 
 The Kernel should
 be on the NVMe drive along with GRUB. You'll need to copy the RT kernel
@@ -94,6 +93,7 @@ like this:
        multiboot2 /EFI/BOOT/acrn.bin
        module2 /EFI/BOOT/bzImage_RT RT_bzImage
        module2 /EFI/BOOT/bzImage Linux_bzImage
+       module2 /boot/ACPI_VM0.bin ACPI_VM0
    }
 
 Reboot the system, and it will boot into Pre-Launched RT Mode

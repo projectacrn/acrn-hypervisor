@@ -48,6 +48,9 @@ Connect the WHL Maxtang with the appropriate external devices.
 
 .. rst-class:: numbered-step
 
+
+.. _install-ubuntu-rtvm-sata:
+
 Install the Ubuntu User VM (RTVM) on the SATA disk
 **************************************************
 
@@ -78,6 +81,8 @@ This Ubuntu installation will be modified later (see `Build and Install the RT k
 to turn it into a real-time User VM (RTVM).
 
 .. rst-class:: numbered-step
+
+.. _install-ubuntu-Service VM-NVMe:
 
 Install the Ubuntu Service VM on the NVMe disk
 **********************************************
