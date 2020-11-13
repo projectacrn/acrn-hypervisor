@@ -7,7 +7,7 @@
 #ifndef MISC_CFG_H
 #define MISC_CFG_H
 
-#define SOS_ROOTFS		"root=/dev/mmcblk0p2 "
+#define SOS_ROOTFS		"root=/dev/nvme0n1p3 "
 #define SOS_CONSOLE		"console=ttyS0 "
 #define SOS_COM1_BASE		0x3F8U
 #define SOS_COM1_IRQ		4U
@@ -76,12 +76,17 @@
 #define VM3_VCPU_CLOS			{0U}
 #endif
 
+#define VM0_PASSTHROUGH_TPM
+#define VM0_TPM_BUFFER_BASE_ADDR   0xFED40000UL
+#define VM0_TPM_BUFFER_BASE_ADDR_GPA   0xFED40000UL
+#define VM0_TPM_BUFFER_SIZE        0x5000UL
+
 #define VM0_CONFIG_PCI_DEV_NUM	4U
 #define VM2_CONFIG_PCI_DEV_NUM	1U
 
-#define VM0_BOOT_ARGS	"rw rootwait root=/dev/sda2 console=ttyS0 \
+#define VM0_BOOT_ARGS	"rw rootwait root=/dev/sda3 console=ttyS0 \
 noxsave nohpet no_timer_check ignore_loglevel \
-consoleblank=0 tsc=reliable"
+consoleblank=0 tsc=reliable reboot=acpi"
 
 
 #define VM0_PT_INTX_NUM	0U

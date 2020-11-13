@@ -100,73 +100,7 @@ struct dmar_info plat_dmar_info = {
 };
 
 #ifdef CONFIG_RDT_ENABLED
-struct platform_clos_info platform_l2_clos_array[MAX_CACHE_CLOS_NUM_ENTRIES] = {
-	{
-		.value.clos_mask = CLOS_MASK_0,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 0,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_1,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 1,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_2,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 2,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_3,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 3,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_4,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 4,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_5,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 5,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_6,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 6,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_7,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 7,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_8,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 8,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_9,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 9,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_10,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 10,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_11,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 11,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_12,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 12,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_13,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 13,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_14,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 14,
-	},
-	{
-		.value.clos_mask = CLOS_MASK_15,
-		.msr_index = MSR_IA32_L2_MASK_BASE + 15,
-	},
-};
-
+struct platform_clos_info platform_l2_clos_array[MAX_CACHE_CLOS_NUM_ENTRIES];
 struct platform_clos_info platform_l3_clos_array[MAX_CACHE_CLOS_NUM_ENTRIES];
 struct platform_clos_info platform_mba_clos_array[MAX_MBA_CLOS_NUM_ENTRIES];
 #endif
