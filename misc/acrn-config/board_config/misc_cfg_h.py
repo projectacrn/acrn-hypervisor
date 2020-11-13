@@ -374,12 +374,14 @@ def generate_file(config):
             vm0_pre_launch = True
 
     if vm0_pre_launch and board_cfg_lib.is_tpm_passthru():
-        print("#define VM0_PASSTHROUGH_TPM", file=config)
-        print("#define VM0_TPM_BUFFER_BASE_ADDR   0xFED40000UL", file=config)
-        gpa = common.hpa2gpa(0, 0xFED40000, 0x5000)
-        print("#define VM0_TPM_BUFFER_BASE_ADDR_GPA   0x{:X}UL".format(gpa), file=config)
-        print("#define VM0_TPM_BUFFER_SIZE        0x5000UL", file=config)
-        print("", file=config)
+        tpm2_passthru_enabled = common.get_leaf_tag_map_bool(common.SCENARIO_INFO_FILE, "mmio_resources", "TPM2")
+        if 0 in tpm2_passthru_enabled and tpm2_passthru_enabled[0]:
+            print("#define VM0_PASSTHROUGH_TPM", file=config)
+            print("#define VM0_TPM_BUFFER_BASE_ADDR   0xFED40000UL", file=config)
+            gpa = common.hpa2gpa(0, 0xFED40000, 0x5000)
+            print("#define VM0_TPM_BUFFER_BASE_ADDR_GPA   0x{:X}UL".format(gpa), file=config)
+            print("#define VM0_TPM_BUFFER_SIZE        0x5000UL", file=config)
+            print("", file=config)
 
     pci_dev_num_per_vm_gen(config)
 
