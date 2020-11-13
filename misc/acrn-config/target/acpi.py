@@ -598,7 +598,7 @@ def read_tpm_data(config):
     :return:
     '''
     try:
-        acpi_table_output = subprocess.check_output(['ls -l /sys/firmware/acpi/tables/']).decode('utf8')
+        acpi_table_output = subprocess.check_output('ls -l /sys/firmware/acpi/tables/'.split()).decode('utf8')
     except:
         acpi_table_output = ''
     if 'TPM2' in acpi_table_output:
