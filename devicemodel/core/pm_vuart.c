@@ -188,6 +188,10 @@ int parse_pm_by_vuart(const char *opts)
 	char *str, *cpy, *type;
 
 	str = cpy = strdup(opts);
+	if (!str) {
+		pr_err("function strdup return Null!\n", __func__, __LINE__);
+		return error;
+	}
 	type = strsep(&str, ",");
 
 	if (type != NULL) {

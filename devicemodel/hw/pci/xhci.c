@@ -84,6 +84,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <errno.h>
 #include <semaphore.h>
 #include "usb.h"
 #include "usbdi.h"
@@ -1281,7 +1282,7 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 {
 	struct xhci_trb		evtrb;
 	struct pci_xhci_portregs *p;
-	int port;
+	int port, error;
 	uint32_t oldpls, newpls;
 
 	if (xdev->portregs == NULL)
@@ -1371,7 +1372,9 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 					pci_xhci_set_evtrb(&evtrb, port,
 					    XHCI_TRB_ERROR_SUCCESS,
 					    XHCI_TRB_EVENT_PORT_STS_CHANGE);
-					pci_xhci_insert_event(xdev, &evtrb, 1);
+					error = pci_xhci_insert_event(xdev, &evtrb, 1);
+					if (error != XHCI_TRB_ERROR_SUCCESS)
+						UPRINTF(LWRN, "fail to report port change\r\n");
 				}
 			}
 			break;
@@ -1831,6 +1834,11 @@ pci_xhci_insert_event(struct pci_xhci_vdev *xdev,
 
 	erst = &rts->erstba_p[rts->er_enq_seg];
 	evts = XHCI_GADDR(xdev, erst->qwRingSegBase);
+	if (!evts) {
+		UPRINTF(LFTL, "Invalid gpa 0x%x in insert event\n",
+				erst->qwRingSegBase);
+		return -EINVAL;
+	}
 	memcpy(&evts[rts->er_enq_idx], evtrb, sizeof(struct xhci_trb));
 
 	if (rts->er_enq_idx == erst->dwRingSegSize - 1) {
@@ -2027,6 +2035,12 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 	uint8_t rh_port;
 
 	input_ctx = XHCI_GADDR(xdev, trb->qwTrb0 & ~0xFUL);
+	if (!input_ctx) {
+		UPRINTF(LFTL, "invalid gpa 0x%x in address device!\n",
+				trb->qwTrb0 & ~0xFUL);
+		cmderr = XHCI_TRB_ERROR_TRB;
+		goto done;
+	}
 	islot_ctx = &input_ctx->ctx_slot;
 	ep0_ctx = &input_ctx->ctx_ep[1];
 
@@ -2215,6 +2229,12 @@ pci_xhci_cmd_config_ep(struct pci_xhci_vdev *xdev,
 	 */
 
 	input_ctx = XHCI_GADDR(xdev, trb->qwTrb0 & ~0xFUL);
+	if (!input_ctx) {
+		UPRINTF(LDBG, "%s,invalid gpa 0x%x when get input context!\n",
+				trb->qwTrb0 & ~0xFUL);
+		cmderr = XHCI_TRB_ERROR_TRB;
+		goto done;
+	}
 	dev_ctx = dev->dev_ctx;
 	UPRINTF(LDBG, "config_ep inputctx: D:x%08x A:x%08x 7:x%08x\r\n",
 		input_ctx->ctx_input.dwInCtx0, input_ctx->ctx_input.dwInCtx1,
@@ -2400,6 +2420,11 @@ pci_xhci_find_stream(struct pci_xhci_vdev *xdev,
 		return XHCI_TRB_ERROR_STREAM_TYPE;
 
 	sctx = XHCI_GADDR(xdev, ep->qwEpCtx2 & ~0xFUL) + streamid;
+	if (!sctx) {
+		UPRINTF(LWRN, "Invalid gpa 0x%x when get the stream context!\n",
+				ep->qwEpCtx2 & ~0xFUL);
+		return XHCI_TRB_ERROR_TRB;
+	}
 	if (!XHCI_SCTX_0_SCT_GET(sctx->qwSctx0))
 		return XHCI_TRB_ERROR_STREAM_TYPE;
 
@@ -2502,6 +2527,11 @@ pci_xhci_cmd_eval_ctx(struct pci_xhci_vdev *xdev,
 	uint32_t cmderr;
 
 	input_ctx = XHCI_GADDR(xdev, trb->qwTrb0 & ~0xFUL);
+	if (!input_ctx) {
+		UPRINTF(LFTL, "invalid gpa 0x%x!\n", trb->qwTrb0 & ~0xFUL);
+		cmderr = XHCI_TRB_ERROR_TRB;
+		goto done;
+	}
 	islot_ctx = &input_ctx->ctx_slot;
 	ep0_ctx = &input_ctx->ctx_ep[1];
 
@@ -2715,10 +2745,16 @@ pci_xhci_complete_commands(struct pci_xhci_vdev *xdev)
 			evtrb.dwTrb3 |= XHCI_TRB_3_SLOT_SET(slot);
 			UPRINTF(LDBG, "command 0x%x result: 0x%x\r\n",
 				type, cmderr);
-			pci_xhci_insert_event(xdev, &evtrb, 1);
+			error = pci_xhci_insert_event(xdev, &evtrb, 1);
+			if (error != XHCI_TRB_ERROR_SUCCESS)
+				UPRINTF(LWRN, "fail to insert command completion event!\r\n");
 		}
 
 		trb = pci_xhci_trb_next(xdev, trb, &crcr);
+		if (!trb) {
+			UPRINTF(LDBG, "Get the invalid trb!\r\n");
+			break;
+		}
 	}
 
 	xdev->opregs.crcr = crcr | (xdev->opregs.crcr & XHCI_CRCR_LO_CA) | ccs;
@@ -2814,6 +2850,10 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
 		hcb = xfer->data[i].hcb;
 		evtrb.qwTrb0 = hcb->trb_addr;
 		trb = XHCI_GADDR(xdev, evtrb.qwTrb0);
+		if (!trb) {
+			UPRINTF(LFTL, "Invalid gpa 0x%x when get the trb!\n", evtrb.qwTrb0);
+			continue;
+		}
 		trbflags = trb->dwTrb3;
 
 		UPRINTF(LDBG, "xfer[%d] done?%u:%d trb %x %016lx %x "
@@ -2879,7 +2919,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
 
 		*do_intr = 1;
 
-		pci_xhci_insert_event(xdev, &evtrb, *do_intr);
+		err = pci_xhci_insert_event(xdev, &evtrb, 1);
 		/* The xHC stop on the TRB in error.*/
 		if (err != XHCI_TRB_ERROR_SUCCESS &&
 			err != XHCI_TRB_ERROR_SHORT_PKT)
@@ -3170,6 +3210,11 @@ retry:
 		}
 
 		trb = pci_xhci_trb_next(xdev, trb, &addr);
+		if (!trb) {
+			UPRINTF(LDBG, "the trb is invalid!\n");
+			err = XHCI_TRB_ERROR_TRB;
+			goto errout;
+		}
 
 		UPRINTF(LDBG, "next trb: 0x%lx\r\n", (uint64_t)trb);
 
@@ -3299,6 +3344,10 @@ pci_xhci_device_doorbell(struct pci_xhci_vdev *xdev,
 		ringaddr = sctx_tr->ringaddr;
 		ccs = sctx_tr->ccs;
 		trb = XHCI_GADDR(xdev, sctx_tr->ringaddr & ~0xFUL);
+		if (!trb) {
+			UPRINTF(LDBG, "Invalid gpa 0x%x!\n", sctx_tr->ringaddr & ~0xFUL);
+			return;
+		}
 		UPRINTF(LDBG, "doorbell, stream %u, ccs %lx, trb ccs %x\r\n",
 			streamid, ep_ctx->qwEpCtx2 & XHCI_TRB_3_CYCLE_BIT,
 			trb->dwTrb3 & XHCI_TRB_3_CYCLE_BIT);
@@ -3399,10 +3448,14 @@ pci_xhci_rtsregs_write(struct pci_xhci_vdev *xdev,
 
 		rts->erstba_p = XHCI_GADDR(xdev, xdev->rtsregs.intrreg.erstba
 				& ~0x3FUL);
-		UPRINTF(LDBG, "wr erstba erst (%p) ptr 0x%lx, sz %u\r\n",
-				rts->erstba_p,
-				rts->erstba_p->qwRingSegBase,
-				rts->erstba_p->dwRingSegSize);
+		if (rts->erstba_p)
+			UPRINTF(LDBG, "wr erstba erst (%p) ptr 0x%lx, sz %u\r\n",
+					rts->erstba_p,
+					rts->erstba_p->qwRingSegBase,
+					rts->erstba_p->dwRingSegSize);
+		else
+			UPRINTF(LFTL, "wr erstba invalid gpa 0x%x!\n",
+					xdev->rtsregs.intrreg.erstba & ~0x3FUL);
 		break;
 
 	case 0x18:
@@ -3533,8 +3586,12 @@ pci_xhci_hostop_write(struct pci_xhci_vdev *xdev,
 		xdev->opregs.dcbaa_p = XHCI_GADDR(xdev, xdev->opregs.dcbaap
 				& ~0x3FUL);
 
-		UPRINTF(LDBG, "opregs dcbaap = 0x%lx (vaddr 0x%lx)\r\n",
-		    xdev->opregs.dcbaap, (uint64_t)xdev->opregs.dcbaa_p);
+		if (xdev->opregs.dcbaa_p)
+			UPRINTF(LDBG, "opregs dcbaap = 0x%lx (vaddr 0x%lx)\r\n",
+		    		xdev->opregs.dcbaap, (uint64_t)xdev->opregs.dcbaa_p);
+		else
+			UPRINTF(LFTL, "Invalid gpa 0x%x when get XHCI_DCBAAP_HI\n",
+					xdev->opregs.dcbaap & ~0x3FUL);
 		break;
 
 	case XHCI_CONFIG:
@@ -4275,6 +4332,7 @@ pci_xhci_isoc_handler(void *arg, uint64_t param)
 		.dwTrb2 = XHCI_TRB_2_ERROR_SET(XHCI_TRB_ERROR_RING_OVERRUN),
 		.dwTrb3 = XHCI_TRB_3_TYPE_SET(XHCI_TRB_EVENT_TRANSFER)
 	};
+	int error;
 
 	pdata = arg;
 	if (pdata == NULL) {
@@ -4297,7 +4355,9 @@ pci_xhci_isoc_handler(void *arg, uint64_t param)
 		return;
 	}
 
-	pci_xhci_insert_event(pdata->dev->xdev, &trb, 1);
+	error = pci_xhci_insert_event(pdata->dev->xdev, &trb, 1);
+	if (error != XHCI_TRB_ERROR_SUCCESS)
+		UPRINTF(LWRN, "fail to insert event when handle isoc!\r\n");
 	UPRINTF(LINF, "send %srun to slot %d ep %d\r\n", pdata->dir == TOKEN_IN
 			? "under" : "over", pdata->slot, pdata->epnum);
 }
