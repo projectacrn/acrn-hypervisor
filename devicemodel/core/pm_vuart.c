@@ -23,6 +23,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <termios.h>
+#include <errno.h>
 
 #include "vmmapi.h"
 #include "monitor.h"
@@ -188,6 +189,10 @@ int parse_pm_by_vuart(const char *opts)
 	char *str, *cpy, *type;
 
 	str = cpy = strdup(opts);
+	if (!str) {
+		pr_err("Function strdup return %d in %s line %d!\n", errno, __func__, __LINE__);
+		return error;
+	}
 	type = strsep(&str, ",");
 
 	if (type != NULL) {
