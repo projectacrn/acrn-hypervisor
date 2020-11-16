@@ -340,7 +340,7 @@ static void init_ivshmem_vdev(struct pci_vdev *vdev)
 	add_vmsix_capability(vdev, MAX_IVSHMEM_MSIX_TBL_ENTRY_NUM, IVSHMEM_MSIX_BAR);
 
 	/* initialize ivshmem bars */
-	vdev->nr_bars = 3U;
+	vdev->nr_bars = 4U;
 	init_ivshmem_bar(vdev, IVSHMEM_MMIO_BAR);
 	init_ivshmem_bar(vdev, IVSHMEM_MSIX_BAR);
 	init_ivshmem_bar(vdev, IVSHMEM_SHM_BAR);
