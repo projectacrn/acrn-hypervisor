@@ -786,6 +786,10 @@ read_prdt(struct ahci_port *p, int slot, uint8_t *cfis,
 
 		dbcsz = (prdt->dbc & DBCMASK) + 1;
 		ptr = paddr_guest2host(ahci_ctx(p->ahci_dev), prdt->dba, dbcsz);
+		if (!ptr) {
+			WPRINTF("%s:%d invalid gpa 0x%x!\n", __func__, __LINE__, prdt->dba);
+			continue;
+		}
 		sublen = MIN(len, dbcsz);
 		memcpy(to, ptr, sublen);
 		len -= sublen;
@@ -905,6 +909,10 @@ write_prdt(struct ahci_port *p, int slot, uint8_t *cfis,
 
 		dbcsz = (prdt->dbc & DBCMASK) + 1;
 		ptr = paddr_guest2host(ahci_ctx(p->ahci_dev), prdt->dba, dbcsz);
+		if (!ptr) {
+			WPRINTF("%s:%d invalid gpa 0x%x!\n", __func__, __LINE__, prdt->dba);
+			continue;
+		}
 		sublen = MIN(len, dbcsz);
 		memcpy(ptr, from, sublen);
 		len -= sublen;
@@ -1812,6 +1820,10 @@ ahci_handle_slot(struct ahci_port *p, int slot)
 #endif
 	cfis = paddr_guest2host(ahci_ctx(ahci_dev), hdr->ctba,
 			0x80 + hdr->prdtl * sizeof(struct ahci_prdt_entry));
+	if (!cfis) {
+		WPRINTF("%s:%d invalid gpa 0x%x!\n", __func__, __LINE__, hdr->ctba);
+		return;
+	}
 #ifdef AHCI_DEBUG
 	prdt = (struct ahci_prdt_entry *)(cfis + 0x80);
 
