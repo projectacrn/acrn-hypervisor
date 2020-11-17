@@ -22,6 +22,7 @@
  * TODO: add DEV_PCICOMMON macro to initialize emu_type, vbdf and vdev_ops
  * to simplify the code.
  */
+
 struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM] = {
 	{
 		.emu_type = PCI_DEV_TYPE_HVEMUL,
@@ -36,7 +37,7 @@ struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM] = {
 	{
 		.emu_type = PCI_DEV_TYPE_PTDEV,
 		.vbdf.bits = {.b = 0x00U, .d = 0x02U, .f = 0x00U},
-		PTDEV(NON_VOLATILE_MEMORY_CONTROLLER_0),
+		PTDEV(NON_VOLATILE_MEMORY_CONTROLLER_1),
 	},
 	{
 		.emu_type = PCI_DEV_TYPE_HVEMUL,
@@ -46,6 +47,8 @@ struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM] = {
 		IVSHMEM_DEVICE_0_VBAR
 	},
 };
+
+struct acrn_vm_pci_dev_config sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM];
 
 struct acrn_vm_pci_dev_config vm2_pci_devs[VM2_CONFIG_PCI_DEV_NUM] = {
 	{

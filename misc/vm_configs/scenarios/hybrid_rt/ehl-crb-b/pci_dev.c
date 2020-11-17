@@ -47,6 +47,8 @@ struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM] = {
 	},
 };
 
+struct acrn_vm_pci_dev_config sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM];
+
 struct acrn_vm_pci_dev_config vm2_pci_devs[VM2_CONFIG_PCI_DEV_NUM] = {
 	{
 		.emu_type = PCI_DEV_TYPE_HVEMUL,
