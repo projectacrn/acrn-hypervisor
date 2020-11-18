@@ -169,5 +169,22 @@ Linux-based VMs (VM0 is a pre-launched VM and VM2 is a post-launched VM).
 	make BOARD_FILE=acrn-hypervisor/misc/vm_configs/xmls/board-xmls/whl-ipc-i5.xml \
 	SCENARIO_FILE=acrn-hypervisor/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml TARGET_DIR=xxx
 
-3. Continue following the dm-land steps 2-4 and the ``ivshmem`` device BDF may be different
+3. Add a new virtual PCI device for VM2 (post-launched VM): the device type is
+   ``ivshmem``, shared memory name is ``hv:/shm_region_0``, and shared memory
+   size is 2MB.
+
+   - VM2 Launch Script Sample
+
+     .. code-block:: none
+        :emphasize-lines: 5
+
+        acrn-dm -A -m $mem_size -s 0:0,hostbridge \
+         -s 2,pci-gvt -G "$2" \
+         -s 3,virtio-blk,/home/acrn/uos2.img \
+         -s 4,virtio-net,tap0 \
+         -s 5,ivshmem,hv:/shm_region_0,2 \
+         --ovmf /usr/share/acrn/bios/OVMF.fd \
+         $vm_name
+
+4. Continue following the dm-land steps 2-4 and the ``ivshmem`` device BDF may be different
    depending on the configuration.
