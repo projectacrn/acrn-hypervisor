@@ -110,6 +110,9 @@ Additional scenario XML elements:
 
 ``SERIAL_CONSOLE`` (a child node of ``DEBUG_OPTIONS``):
   Specify the host serial device is used for hypervisor debugging.
+  This configuration is valid only if Service VM ``legacy_vuart0``
+  is enabled. Leave this field empty if Service VM ``console_vuart``
+  is enabled. Using ``bootargs`` for ``console_vuart`` configuration.
 
 ``MEM_LOGLEVEL`` (a child node of ``DEBUG_OPTIONS``):
   Specify the default log level in memory.
@@ -294,7 +297,7 @@ Additional scenario XML elements:
 
 ``bootargs`` (a child node of ``os_config``):
   For internal use only and is not configurable. Specify the kernel boot arguments
-  in bootargs under the parent of board_private.
+  in ``bootargs`` under the parent of ``board_private``.
 
 ``kern_load_addr`` (a child node of ``os_config``):
   The loading address in host memory for the VM kernel.
@@ -302,26 +305,44 @@ Additional scenario XML elements:
 ``kern_entry_addr`` (a child node of ``os_config``):
   The entry address in host memory for the VM kernel.
 
-``vuart``:
+``legacy_vuart``:
   Specify the vUART (aka COM) with the vUART ID by its ``id`` attribute.
   Refer to :ref:`vuart_config` for detailed vUART settings.
 
-``type`` (a child node of ``vuart``):
+``console_vuart``:
+  Specify the console vUART (aka PCI based vUART) with the vUART ID by
+  its ``id`` attribute.
+  Refer to :ref:`vuart_config` for detailed vUART settings.
+
+``communication_vuart``:
+  Specify the communication vUART (aka PCI based vUART) with the vUART ID by
+  its ``id`` attribute.
+  Refer to :ref:`vuart_config` for detailed vUART settings.
+
+``type`` (a child node of ``legacy_vuart``):
   vUART (aka COM) type; currently only supports the legacy PIO mode.
 
-``base`` (a child node of ``vuart``):
+``base`` (a child node of ``legacy_vuart``, ``console_vuart``, and ``communication_vuart``):
   vUART (A.K.A COM) enabling switch. Enable by exposing its COM_BASE
   (SOS_COM_BASE for Service VM); disable by returning INVALID_COM_BASE.
 
-``irq`` (a child node of ``vuart``):
+  console and communication vUART (A.K.A PCI based vUART) enabling switch.
+  Enable by specifying PCI_VUART; disable by returning INVALID_PCI_BASE.
+
+``irq`` (a child node of ``legacy_vuart``):
   vCOM IRQ.
 
-``target_vm_id`` (a child node of ``vuart1``):
+``target_vm_id`` (a child node of ``legacy_vuart1``, ``communication_vuart``):
   COM2 is used for VM communications. When it is enabled, specify which
   target VM the current VM connects to.
 
-``target_uart_id`` (a child node of ``vuart1``):
+  ``communication_vuart`` is used for VM communications. When it is enabled, specify
+  which target VM the current VM connects to.
+
+``target_uart_id`` (a child node of ``legacy_vuart1`` and ``communication_vuart``):
   Target vUART ID to which the vCOM2 connects.
+
+  Target vUART ID to which the ``communication_vuart`` connects.
 
 ``pci_dev_num``:
   PCI devices number of the VM; it is hard-coded for each scenario so it
