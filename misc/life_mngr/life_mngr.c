@@ -183,11 +183,13 @@ void *sos_socket_thread(void *arg)
 
 		/* Here assume the socket communication is reliable, no need to try */
 		num = read(connect_fd, buf, sizeof(buf));
+
 		if (num == -1) {
 			LOG_PRINTF("read error on a socket(fd = 0x%x)\n", connect_fd);
-			close(connect_fd);
-			close(listen_fd);
-			exit(1);
+			break;
+		} else if (num == 0) {
+			LOG_PRINTF("socket(fd = 0x%x) closed\n", connect_fd);
+			break;
 		}
 
 		LOG_PRINTF("received msg [%s]\r\n", buf);
@@ -222,8 +224,8 @@ void *listener_fn_to_sos(void *arg)
 
 	/* UOS-server wait for message from SOS */
 	do {
-		memset(buf, 0, BUFF_SIZE);
-		ret = receive_message(tty_dev_fd, buf, BUFF_SIZE);
+		memset(buf, 0, sizeof(buf));
+		ret = receive_message(tty_dev_fd, buf, sizeof(buf));
 		if (ret > 0) {
 			LOG_PRINTF("receive buf :%s ret=0x%x shutdown_state=0x%x\r\n", buf, ret, shutdown_state);
 		}
