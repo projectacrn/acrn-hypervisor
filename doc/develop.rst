@@ -72,6 +72,7 @@ Enable ACRN Features
    tutorials/setup_openstack_libvirt
    tutorials/acrn_on_qemu
    tutorials/using_grub
+   tutorials/acrn-secure-boot-with-grub
    tutorials/pre-launched-rt
    tutorials/enable_ivshmem
 

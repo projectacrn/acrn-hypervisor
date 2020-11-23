@@ -473,6 +473,8 @@ Notes:
 
    -  Make sure your GCC is 5.X. GCC 6 and above is NOT supported.
 
+.. _qemu_inject_boot_keys:
+
 Use QEMU to inject secure boot keys into OVMF
 *********************************************
 
