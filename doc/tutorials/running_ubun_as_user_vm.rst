@@ -59,7 +59,7 @@ Hardware Configurations
 Validated Versions
 ==================
 
--  **Ubuntuversion:** 18.04
+-  **Ubuntu version:** 18.04
 -  **ACRN hypervisor tag:** v2.2
 -  **Service VM Kernel version:** v2.2
 
