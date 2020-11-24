@@ -193,7 +193,7 @@ How to test
    .. note:: For WaaG, we need to close ``windbg`` by using the ``bcdedit /set debug off`` command
       IF you executed the ``bcdedit /set debug on`` when you set up the WaaG, because it occupies the ``COM2``.
 
-#. Use the``acrnctl stop`` command on the Service VM to trigger S5 to the User VMs:
+#. Use the ``acrnctl stop`` command on the Service VM to trigger S5 to the User VMs:
 
    .. code-block:: console
 
@@ -205,3 +205,45 @@ How to test
 
       # acrnctl list
       vm1		stopped
+
+System Shutdown
+***************
+
+Using a coordinating script, ``misc/life_mngr/s5_trigger.sh``, in conjunction with
+the lifecycle manager in each VM, graceful system shutdown can be performed.
+
+.. note:: Please install ``s5_trigger.sh`` manually to root's home directory.
+
+   .. code-block:: none
+
+      $ sudo install -p -m 0755 -t ~root misc/life_mngr/s5_trigger.sh
+
+In the ``hybrid_rt`` scenario, the script can send a shutdown command via ``ttyS1``
+in the Service VM, which is connected to ``ttyS1`` in the pre-launched VM. The
+lifecycle manager in the pre-launched VM receives the shutdown command, sends an
+ack message, and proceeds to shut itself down accordingly.
+
+.. figure:: images/system_shutdown.png
+   :align: center
+
+   Graceful system shutdown flow
+
+#. The HMI Windows Guest uses the lifecycle manager to send a shutdown request to
+   the Service VM
+#. The lifecycle manager in the Service VM responds with an ack message and
+   executes ``s5_trigger.sh``
+#. After receiving the ack message, the lifecycle manager in the HMI Windows Guest
+   shuts down the guest
+#. The ``s5_trigger.sh`` script in the Service VM shuts down the Linux Guest by
+   using ``acrnctl`` to send a shutdown request
+#. After receiving the shutdown request, the lifecycle manager in the Linux Guest
+   responds with an ack message and shuts down the guest
+#. The ``s5_trigger.sh`` script in the Service VM shuts down the Pre-launched RTVM
+   by sending a shutdown request to its ``ttyS1``
+#. After receiving the shutdown request, the lifecycle manager in the Pre-launched
+   RTVM responds with an ack message
+#. The lifecycle manager in the Pre-launched RTVM shuts down the guest using
+   standard PM registers
+#. After receiving the ack message, the ``s5_trigger.sh`` script in the Service VM
+   shuts down the Service VM
+#. The hypervisor shuts down the system after all of its guests have shut down
