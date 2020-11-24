@@ -322,6 +322,13 @@ int32_t cpuid_vmexit_handler(struct acrn_vcpu *vcpu)
  * virtual-8086 mode previleged instructions are not recognized) have higher
  * priority than VM exit.
  *
+ * According to SDM vol2 - XSETBV instruction description:
+ * If CR4.OSXSAVE[bit 18] = 0,
+ * execute "XSETBV" instruction will generate #UD exception.
+ * So VM exit won't happen with VMX_GUEST_CR4.CR4_OSXSAVE = 0.
+ * CR4_OSXSAVE bit is controlled by guest (CR4_OSXSAVE bit
+ * is set as guest expect to see).
+ *
  * We don't need to handle those case here because we depends on VMX to handle
  * them.
  */
@@ -331,44 +338,39 @@ static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint64_t val64;
 	int32_t ret = 0;
 
-	val64 = exec_vmread(VMX_GUEST_CR4);
-	if ((val64 & CR4_OSXSAVE) == 0UL) {
-		vcpu_inject_gp(vcpu, 0U);
+	idx = vcpu->arch.cur_context;
+	if (idx >= NR_WORLD) {
+		ret = -1;
 	} else {
-		idx = vcpu->arch.cur_context;
-		if (idx >= NR_WORLD) {
-			ret = -1;
+		/* to access XCR0,'ecx' should be 0 */
+		if ((vcpu_get_gpreg(vcpu, CPU_REG_RCX) & 0xffffffffUL) != 0UL) {
+			vcpu_inject_gp(vcpu, 0U);
 		} else {
-			/* to access XCR0,'ecx' should be 0 */
-			if ((vcpu_get_gpreg(vcpu, CPU_REG_RCX) & 0xffffffffUL) != 0UL) {
+			val64 = (vcpu_get_gpreg(vcpu, CPU_REG_RAX) & 0xffffffffUL) |
+					(vcpu_get_gpreg(vcpu, CPU_REG_RDX) << 32U);
+
+			/* bit 0(x87 state) of XCR0 can't be cleared */
+			if ((val64 & 0x01UL) == 0UL) {
+				vcpu_inject_gp(vcpu, 0U);
+			} else if ((val64 & XCR0_RESERVED_BITS) != 0UL) {
 				vcpu_inject_gp(vcpu, 0U);
 			} else {
-				val64 = (vcpu_get_gpreg(vcpu, CPU_REG_RAX) & 0xffffffffUL) |
-						(vcpu_get_gpreg(vcpu, CPU_REG_RDX) << 32U);
-
-				/* bit 0(x87 state) of XCR0 can't be cleared */
-				if ((val64 & 0x01UL) == 0UL) {
-					vcpu_inject_gp(vcpu, 0U);
-				} else if ((val64 & XCR0_RESERVED_BITS) != 0UL) {
+				/*
+				 * XCR0[2:1] (SSE state & AVX state) can't not be
+				 * set to 10b as it is necessary to set both bits
+				 * to use AVX instructions.
+				 */
+				if ((val64 & (XCR0_SSE | XCR0_AVX)) == XCR0_AVX) {
 					vcpu_inject_gp(vcpu, 0U);
 				} else {
 					/*
-					 * XCR0[2:1] (SSE state & AVX state) can't not be
-					 * set to 10b as it is necessary to set both bits
-					 * to use AVX instructions.
+					 * SDM Vol.1 13-4, XCR0[4:3] are associated with MPX state,
+					 * Guest should not set these two bits without MPX support.
 					 */
-					if ((val64 & (XCR0_SSE | XCR0_AVX)) == XCR0_AVX) {
+					if ((val64 & (XCR0_BNDREGS | XCR0_BNDCSR)) != 0UL) {
 						vcpu_inject_gp(vcpu, 0U);
 					} else {
-						/*
-						 * SDM Vol.1 13-4, XCR0[4:3] are associated with MPX state,
-						 * Guest should not set these two bits without MPX support.
-						 */
-						if ((val64 & (XCR0_BNDREGS | XCR0_BNDCSR)) != 0UL) {
-							vcpu_inject_gp(vcpu, 0U);
-						} else {
-							write_xcr(0, val64);
-						}
+						write_xcr(0, val64);
 					}
 				}
 			}
