@@ -439,7 +439,7 @@ virtio_console_backend_read(int fd __attribute__((unused)),
 	port = be->port;
 	vq = virtio_console_port_to_vq(port, true);
 
-	if (!be->open || !port->rx_ready) {
+	if (!be->open || !port->rx_ready || !vq_ring_ready(vq)) {
 		len = read(be->fd, dummybuf, sizeof(dummybuf));
 		if (len == 0)
 			goto close;
