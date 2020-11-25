@@ -730,7 +730,7 @@ vlapic_write_lvt(struct acrn_vlapic *vlapic, uint32_t offset)
 		/* No action required. */
 	}
 
-	if (error == false) {
+	if (!error) {
 		*lvtptr = val;
 		idx = lvt_off_to_idx(offset);
 		vlapic->lvt_last[idx] = val;
@@ -883,7 +883,7 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t lvt_index)
 	uint32_t lvt;
 	int32_t ret = 0;
 
-	if (vlapic_enabled(vlapic) == false) {
+	if (!vlapic_enabled(vlapic)) {
 		struct acrn_vcpu *vcpu = vlapic2vcpu(vlapic);
 		/*
 		 * When the local APIC is global/hardware disabled,
@@ -2095,7 +2095,7 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 	phys = ((icr_low & APIC_DESTMODE_LOG) == 0UL);
 	shorthand = icr_low & APIC_DEST_MASK;
 
-	if ((phys == false) || (shorthand  != APIC_DEST_DESTFLD)) {
+	if (!phys || (shorthand  != APIC_DEST_DESTFLD)) {
 		pr_err("Logical destination mode or shorthands \
 				not supported in ICR forpartition mode\n");
 		/*
@@ -2280,7 +2280,7 @@ apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
 	pid = get_pi_desc(vlapic2vcpu(vlapic));
 	idx = vector >> 6U;
 	if (!bitmap_test_and_set_lock((uint16_t)(vector & 0x3fU), &pid->pir[idx])) {
-		notify = (bitmap_test_and_set_lock(POSTED_INTR_ON, &pid->control.value) == false);
+		notify = !bitmap_test_and_set_lock(POSTED_INTR_ON, &pid->control.value);
 	}
 	return notify;
 }

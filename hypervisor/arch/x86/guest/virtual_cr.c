@@ -202,7 +202,7 @@ static void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 			/* do nothing */
 		}
 
-		if (err_found == false) {
+		if (!err_found) {
 			/* If CR0.CD or CR0.NW get cr0_changed_bits */
 			if ((cr0_changed_bits & (CR0_CD | CR0_NW)) != 0UL) {
 				/* No action if only CR0.NW is cr0_changed_bits */
@@ -295,7 +295,7 @@ static bool is_cr4_write_valid(struct acrn_vcpu *vcpu, uint64_t cr4)
  *   - OSXMMEXCPT (10) Flexible to guest
  *   - VMXE (13) Trapped to hide from guest
  *   - SMXE (14) must always be 0 => must lead to a VM exit
- *   - PCIDE (17) Flexible tol guest
+ *   - PCIDE (17) Flexible to guest
  *   - OSXSAVE (18) Flexible to guest
  *   - XSAVE (19) Flexible to guest
  *         We always keep align with physical cpu. So it's flexible to
@@ -323,12 +323,12 @@ static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 					vcpu_inject_gp(vcpu, 0U);
 				}
 			}
-			if (err_found == false) {
+			if (!err_found) {
 				vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 			}
 		}
 
-		if ((err_found == false) && (((cr4 ^ old_cr4) & CR4_PCIDE) != 0UL)) {
+		if (!err_found && (((cr4 ^ old_cr4) & CR4_PCIDE) != 0UL)) {
 			/* MOV to CR4 causes a general-protection exception (#GP) if it would change
 			 * CR4.PCIDE from 0 to 1 and either IA32_EFER.LMA = 0 or CR3[11:0] != 000H
 			 */
@@ -352,7 +352,7 @@ static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 			}
 		}
 
-		if (err_found == false) {
+		if (!err_found) {
 			/* Clear forced off bits */
 			cr4_shadow = cr4 & ~CR4_MCE;
 
