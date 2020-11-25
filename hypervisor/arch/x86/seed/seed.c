@@ -239,7 +239,7 @@ void init_seed(void)
 	}
 
 	/* Failed to parse seed from Bootloader, using dummy seed */
-	if (status == false) {
+	if (!status) {
 		g_phy_seed.num_seeds = 1U;
 		(void)memset(&g_phy_seed.seed_list[0], 0xA5U, sizeof(g_phy_seed.seed_list));
 	}
