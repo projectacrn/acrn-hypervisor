@@ -9,6 +9,7 @@ INCLUDE		+= -I $(CURDIR)/include -I $(SYSROOT)/usr/include/libxml2
 INCLUDE		+= -I $(BUILDDIR)/include/acrnprobe
 CFLAGS 		+= $(INCLUDE)
 CFLAGS 		+= -fdata-sections
+CFLAGS 		+= -fcommon
 
 LDFLAGS 	+= $(LIBS) -Wl,--gc-sections
 
