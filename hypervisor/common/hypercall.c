@@ -847,6 +847,25 @@ int32_t hcall_deassign_pcidev(struct acrn_vm *vm, struct acrn_vm *target_vm, __u
 	return ret;
 }
 
+static bool is_mmiodev_valid(struct acrn_mmiodev *mmiodev)
+{
+	bool ret = true;
+
+	/* TODO: we should define the mmiodev which we could pt in the vmconfig,
+	 *       then check the mmiodev whether the address and size are valid
+	 *       according the vmconfig. Now we only could pt the TPM acpi device.
+	 */
+	if ((mmiodev->base_gpa != 0xFED40000UL) ||
+		(mmiodev->base_hpa != 0xFED40000UL) ||
+		(mmiodev->size != 0x00005000UL)) {
+		ret = false;
+		pr_fatal("%s, invalid mmiodev gpa: 0x%lx, hpa: 0x%lx, size: 0x%lx",
+			__func__, mmiodev->base_gpa, mmiodev->base_hpa, mmiodev->size);
+	}
+
+	return ret;
+}
+
 /**
  * @brief Assign one MMIO dev to a VM.
  *
@@ -866,9 +885,11 @@ int32_t hcall_assign_mmiodev(struct acrn_vm *vm, struct acrn_vm *target_vm, __un
 	/* We should only assign a device to a post-launched VM at creating time for safety, not runtime or other cases*/
 	if (is_created_vm(target_vm)) {
 		if (copy_from_gpa(vm, &mmiodev, param2, sizeof(mmiodev)) == 0) {
-			ret = deassign_mmio_dev(vm, &mmiodev);
-			if (ret == 0) {
-				ret = assign_mmio_dev(target_vm, &mmiodev);
+			if (is_mmiodev_valid(&mmiodev)) {
+				ret = deassign_mmio_dev(vm, &mmiodev);
+				if (ret == 0) {
+					ret = assign_mmio_dev(target_vm, &mmiodev);
+				}
 			}
 		}
 	} else {
@@ -897,9 +918,11 @@ int32_t hcall_deassign_mmiodev(struct acrn_vm *vm, struct acrn_vm *target_vm, __
 	/* We should only de-assign a device from a post-launched VM at creating/shutdown/reset time */
 	if ((is_paused_vm(target_vm) || is_created_vm(target_vm))) {
 		if (copy_from_gpa(vm, &mmiodev, param2, sizeof(mmiodev)) == 0) {
-			ret = deassign_mmio_dev(target_vm, &mmiodev);
-			if (ret == 0) {
-				ret = assign_mmio_dev(vm, &mmiodev);
+			if (is_mmiodev_valid(&mmiodev)) {
+				ret = deassign_mmio_dev(target_vm, &mmiodev);
+				if (ret == 0) {
+					ret = assign_mmio_dev(vm, &mmiodev);
+				}
 			}
 		}
 	} else {
