@@ -18,8 +18,8 @@ Validated Versions
 ******************
 
 - Ubuntu version: **18.04**
-- ACRN hypervisor tag: **v2.1**
-- ACRN kernel tag: **v2.1**
+- ACRN hypervisor tag: **v2.3**
+- ACRN kernel tag: **v2.3**
 
 Prerequisites
 *************
@@ -145,13 +145,13 @@ Update ACRN hypervisor image
    Refer to :ref:`getting-started-building` to set up the ACRN build
    environment on your development workstation.
 
-   Clone the ACRN source code and check out to the tag v2.1:
+   Clone the ACRN source code and check out to the tag v2.3:
 
    .. code-block:: none
 
       $ git clone https://github.com/projectacrn/acrn-hypervisor.git
       $ cd acrn-hypervisor
-      $ git checkout v2.1
+      $ git checkout v2.3
 
    Build the ACRN hypervisor and ACPI binaries for pre-launched VMs with default xmls:
 
