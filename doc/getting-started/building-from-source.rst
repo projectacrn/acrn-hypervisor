@@ -67,7 +67,6 @@ Install the necessary tools for the following systems:
      $ sudo apt install gcc \
           git \
           make \
-          gnu-efi \
           libssl-dev \
           libpciaccess-dev \
           uuid-dev \
@@ -107,7 +106,6 @@ The `acrn-hypervisor <https://github.com/projectacrn/acrn-hypervisor/>`_
 repository contains four main components:
 
 1. The ACRN hypervisor code, located in the ``hypervisor`` directory.
-#. The EFI stub code, located in the ``misc/efi-stub`` directory.
 #. The ACRN device model code, located in the ``devicemodel`` directory.
 #. The ACRN tools source code, located in the ``misc/tools`` directory.
 
@@ -252,28 +250,17 @@ Now you can build all these components at once as follows:
 
 The build results are found in the ``build`` directory. You can specify
 a different Output folder by setting the ``O`` ``make`` parameter,
-for example: ``make O=build-nuc BOARD=nuc7i7dnb``.
+for example: ``make O=build-nuc``.
 
-If you only need the hypervisor, use this command:
-
-.. code-block:: none
-
-   $ make clean                       # Remove files previously built
-   $ make -C hypervisor
-   $ make -C misc/efi-stub HV_OBJDIR=$PWD/hypervisor/build EFI_OBJDIR=$PWD/hypervisor/build
-
-The ``acrn.efi`` will be generated in the ``./hypervisor/build/acrn.efi`` directory hypervisor.
-
-As mentioned in :ref:`ACRN Configuration Tool <vm_config_workflow>`, the
-Board configuration and VM configuration can be imported from XML files.
-If you want to build the hypervisor with XML configuration files,
-specify the file location as follows (assuming you're at the top level
-of the acrn-hypervisor directory):
 
 .. code-block:: none
 
-   $ make BOARD_FILE=$PWD/misc/vm_configs/xmls/board-xmls/nuc7i7dnb.xml \
+   $ make all BOARD_FILE=$PWD/misc/vm_configs/xmls/board-xmls/nuc7i7dnb.xml \
    SCENARIO_FILE=$PWD/misc/vm_configs/xmls/config-xmls/nuc7i7dnb/industry.xml TARGET_DIR=xxx
+
+The build results are found in the ``build`` directory. You can specify
+a different build folder by setting the ``O`` ``make`` parameter,
+for example: ``make O=build-nuc``.
 
 
 .. note::
