@@ -21,7 +21,6 @@ static uint8_t rtvm_uuids[][16] = {
 static uint8_t safety_vm_uuid1[16] = SAFETY_VM_UUID1;
 
 /* sanity check for below structs is not needed, so use a empty struct instead */
-struct acrn_vm_pci_dev_config sos_pci_devs[CONFIG_MAX_PCI_DEV_NUM];
 const struct pci_vdev_ops vhostbridge_ops;
 const struct pci_vdev_ops vpci_ivshmem_ops;
 const struct pci_vdev_ops vmcs9900_ops;
