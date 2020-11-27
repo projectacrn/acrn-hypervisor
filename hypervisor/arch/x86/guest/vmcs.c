@@ -368,11 +368,11 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	/* Set up guest exception mask bitmap setting a bit * causes a VM exit
 	 * on corresponding guest * exception - pg 2902 24.6.3
 	 * enable VM exit on MC always
-	 * enable AC and DB for split lock emulation when split lock detection is enabled on physical platform.
+	 * enable AC for split-lock emulation when split-lock detection is enabled on physical platform.
 	 */
 	value32 = (1U << IDT_MC);
 	if (is_ac_enabled()) {
-		value32 = (value32 | (1U << IDT_AC) | (1U << IDT_DB));
+		value32 = (value32 | (1U << IDT_AC));
 	}
 	exec_vmwrite32(VMX_EXCEPTION_BITMAP, value32);
 
