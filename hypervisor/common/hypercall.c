@@ -586,7 +586,7 @@ static int32_t add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_v
 			 * TODO: We can enforce WB for any region has overlap with pSRAM, for simplicity,
 			 * and leave it to SOS to make sure it won't violate.
 			 */
-			if (hpa == PSRAM_BASE_HPA && is_psram_initialized == true) {
+			if ((hpa == PSRAM_BASE_HPA) && is_psram_initialized) {
 				prot |= EPT_WB;
 			}
 			/* create gpa to hpa EPT mapping */

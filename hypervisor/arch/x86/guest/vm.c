@@ -931,7 +931,7 @@ bool has_rt_vm(void)
 		}
 	}
 
-	return ((vm_id == CONFIG_MAX_VM_NUM) ? false : true);
+	return (vm_id != CONFIG_MAX_VM_NUM);
 }
 
 void make_shutdown_vm_request(uint16_t pcpu_id)
