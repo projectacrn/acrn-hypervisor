@@ -102,7 +102,7 @@ static void init_mba_capability(int res)
 	 */
 	cpuid_subleaf(CPUID_RDT_ALLOCATION, res_cap_info[res].res_id, &eax, &ebx, &ecx, &edx);
 	res_cap_info[res].res.membw.mba_max = (uint16_t)((eax & 0xfffU) + 1U);
-	res_cap_info[res].res.membw.delay_linear = ((ecx & 0x4U) != 0U) ? true : false;
+	res_cap_info[res].res.membw.delay_linear = ((ecx & 0x4U) != 0U);
 	res_cap_info[res].clos_max = (uint16_t)(edx & 0xffffU) + 1U;
 }
 

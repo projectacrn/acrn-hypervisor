@@ -295,7 +295,7 @@ void write_sriov_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 		if (reg == PCIR_SRIOV_CONTROL) {
 			bool enable;
 
-			enable = (((val & PCIM_SRIOV_VF_ENABLE) != 0U) ? true : false);
+			enable = ((val & PCIM_SRIOV_VF_ENABLE) != 0U);
 			if (enable != is_vf_enabled(vdev)) {
 				if (enable) {
 					/*

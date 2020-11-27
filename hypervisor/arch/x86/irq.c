@@ -261,7 +261,7 @@ void set_irq_trigger_mode(uint32_t irq, bool is_level_triggered)
 	if (irq < NR_IRQS) {
 		desc = &irq_desc_array[irq];
 		spinlock_irqsave_obtain(&desc->lock, &rflags);
-		if (is_level_triggered == true) {
+		if (is_level_triggered) {
 			desc->flags |= IRQF_LEVEL;
 		} else {
 			desc->flags &= ~IRQF_LEVEL;

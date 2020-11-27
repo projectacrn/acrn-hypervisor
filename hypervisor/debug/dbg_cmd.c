@@ -58,5 +58,5 @@ bool handle_dbg_cmd(const char *cmd, int32_t len)
 		}
 	}
 
-	return i < ARRAY_SIZE(cmd_list)? true : false;
+	return (i < ARRAY_SIZE(cmd_list));
 }
