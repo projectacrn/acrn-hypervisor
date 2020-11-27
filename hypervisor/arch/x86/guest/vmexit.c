@@ -33,6 +33,7 @@ static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t undefined_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t pause_vmexit_handler(__unused struct acrn_vcpu *vcpu);
 static int32_t hlt_vmexit_handler(struct acrn_vcpu *vcpu);
+static int32_t mtf_vmexit_handler(struct acrn_vcpu *vcpu);
 
 /* VM Dispatch table for Exit condition handling */
 static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
@@ -112,7 +113,7 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_MWAIT] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_MONITOR_TRAP] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = mtf_vmexit_handler},
 	[VMX_EXIT_REASON_MONITOR] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_PAUSE] = {
@@ -267,6 +268,42 @@ static int32_t unhandled_vmexit_handler(struct acrn_vcpu *vcpu)
 			exec_vmread(VMX_EXIT_QUALIFICATION));
 
 	TRACE_2L(TRACE_VMEXIT_UNHANDLED, vcpu->arch.exit_reason, 0UL);
+
+	return 0;
+}
+
+static void vcpu_complete_split_lock_emulation(struct acrn_vcpu *cur_vcpu)
+{
+	struct acrn_vcpu *other;
+	uint16_t i;
+
+	if (cur_vcpu->vm->hw.created_vcpus > 1U) {
+		foreach_vcpu(i, cur_vcpu->vm, other) {
+			if (other != cur_vcpu) {
+				bitmap_clear_lock(ACRN_REQUEST_SPLIT_LOCK, &other->arch.pending_req);
+				signal_event(&other->events[VCPU_EVENT_SPLIT_LOCK]);
+			}
+		}
+
+		put_vm_lock(cur_vcpu->vm);
+	}
+}
+
+/* MTF is currently only used for split-lock emulation */
+static int32_t mtf_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	uint32_t value32;
+
+	value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
+	value32 &= ~(VMX_PROCBASED_CTLS_MON_TRAP);
+	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
+
+	vcpu_retain_rip(vcpu);
+
+	if (vcpu->arch.emulating_lock) {
+		vcpu->arch.emulating_lock = false;
+		vcpu_complete_split_lock_emulation(vcpu);
+	}
 
 	return 0;
 }

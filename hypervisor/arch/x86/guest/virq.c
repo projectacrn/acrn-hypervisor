@@ -432,7 +432,13 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 			}
 		}
 
-		acrn_inject_pending_intr(vcpu, pending_req_bits, injected);
+		/*
+		 * Defer injection of interrupt to be after MTF VM exit,
+		 * when emulating the split-lock.
+		 */
+		if (!vcpu->arch.emulating_lock) {
+			acrn_inject_pending_intr(vcpu, pending_req_bits, injected);
+		}
 
 		/*
 		 * If "virtual-interrupt delivered" is enabled, CPU will evaluate
@@ -548,6 +554,7 @@ static int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vect
 	uint8_t inst[1];
 	uint32_t err_code = 0U;
 	uint64_t fault_addr;
+	uint32_t value32;
 
 	/* Queue the exception by default if the exception cannot be handled. */
 	*queue_exception = true;
@@ -587,11 +594,11 @@ static int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vect
 					 */
 					vcpu->arch.inst_len = 1U;
 					if (vcpu->vm->hw.created_vcpus > 1U) {
-						/*
-						 * Set the TF to have a #DB after running the split-lock
-						 * instruction and tag the emulating_lock to be true.
-						 */
-						vcpu_set_rflags(vcpu, vcpu_get_rflags(vcpu) | HV_ARCH_VCPU_RFLAGS_TF);
+						/* Enable MTF to start single-stepping execution */
+						value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
+						value32 |= VMX_PROCBASED_CTLS_MON_TRAP;
+						exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
+
 						vcpu->arch.emulating_lock = true;
 					}
 
@@ -642,31 +649,6 @@ static int32_t emulate_splitlock(struct acrn_vcpu *vcpu, uint32_t exception_vect
 						}
 					}
 				}
-			}
-
-			break;
-		case IDT_DB:
-			/*
-			 * We only handle #DB caused by split-lock emulation,
-			 * otherwise, inject it back.
-			 */
-			if (vcpu->arch.emulating_lock) {
-				/*
-				 * The split-lock emulation has been completed, tag the emulating_lock
-				 * to be false, and clear the TF flag.
-				 */
-				vcpu->arch.emulating_lock = false;
-				vcpu_set_rflags(vcpu, vcpu_get_rflags(vcpu) & (~HV_ARCH_VCPU_RFLAGS_TF));
-				/*
-				 * Notify other vcpus of the guest to restart execution.
-				 */
-				vcpu_complete_splitlock_emulation(vcpu);
-
-				/* This #DB is for split-lock emulation, do not inject it */
-				*queue_exception = false;
-
-				/* This case we should not skip the instruction */
-				vcpu->arch.inst_len = 0U;
 			}
 
 			break;
