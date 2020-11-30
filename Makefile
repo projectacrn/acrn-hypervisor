@@ -148,28 +148,28 @@ hypervisor:
 	$(MAKE) -C $(T)/hypervisor BOARD=$(BOARD) HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(TARGET_DIR) defconfig;
 	$(MAKE) -C $(T)/hypervisor BOARD=$(BOARD) HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(TARGET_DIR) oldconfig;
 	$(MAKE) -C $(T)/hypervisor BOARD=$(BOARD) HV_OBJDIR=$(HV_OUT) BOARD_FILE=$(BOARD_FILE) SCENARIO_FILE=$(SCENARIO_FILE) TARGET_DIR=$(TARGET_DIR)
-	@echo -e "\n\033[47;30mACRN Configuration Summary:\033[0m \nBOARD = $(BOARD)\t SCENARIO = $(SCENARIO)" > $(HV_CFG_LOG); \
-	echo -e "BUILD type = \c" >> $(HV_CFG_LOG); \
-	if [ "$(RELEASE)" = "0" ]; then echo -e "DEBUG" >> $(HV_CFG_LOG); else echo -e "RELEASE" >> $(HV_CFG_LOG); fi; \
+	@echo "\n\033[47;30mACRN Configuration Summary:\033[0m \nBOARD = $(BOARD)\t SCENARIO = $(SCENARIO)" > $(HV_CFG_LOG); \
+	echo "BUILD type = \c" >> $(HV_CFG_LOG); \
+	if [ "$(RELEASE)" = "0" ]; then echo "DEBUG" >> $(HV_CFG_LOG); else echo "RELEASE" >> $(HV_CFG_LOG); fi; \
 	if [ -f $(KCONFIG_FILE) ]; then \
-		echo -e "Hypervisor configuration is based on:\n\tKconfig file:\t$(KCONFIG_FILE);" >> $(HV_CFG_LOG); \
+		echo "Hypervisor configuration is based on:\n\tKconfig file:\t$(KCONFIG_FILE);" >> $(HV_CFG_LOG); \
 	fi; \
-	echo -e "Hypervisor configuration is based on:" >> $(HV_CFG_LOG); \
+	echo "Hypervisor configuration is based on:" >> $(HV_CFG_LOG); \
 	if [ "$(TARGET_DIR)" = "" ]; then \
 		if [ ! -f $(KCONFIG_FILE) ]; then \
-			echo -e "\tdefconfig file:\t\t\t$(VM_CONFIGS_DIR)/$(DEFCONFIG_FILE);" >> $(HV_CFG_LOG); \
+			echo "\tdefconfig file:\t\t\t$(VM_CONFIGS_DIR)/$(DEFCONFIG_FILE);" >> $(HV_CFG_LOG); \
 		fi; \
 	elif [ ! -f $(KCONFIG_FILE) ]; then \
-		echo -e "\tdefconfig file:\t\t\t$(TARGET_DIR)/$(DEFCONFIG_FILE);" >> $(HV_CFG_LOG); \
+		echo "\tdefconfig file:\t\t\t$(TARGET_DIR)/$(DEFCONFIG_FILE);" >> $(HV_CFG_LOG); \
 	fi; \
-	echo -e "\tOthers are set by default in:\t$(T)/hypervisor/arch/x86/Kconfig;" >> $(HV_CFG_LOG); \
-	echo -e "VM configuration is based on:" >> $(HV_CFG_LOG); \
+	echo "\tOthers are set by default in:\t$(T)/hypervisor/arch/x86/Kconfig;" >> $(HV_CFG_LOG); \
+	echo "VM configuration is based on:" >> $(HV_CFG_LOG); \
 	if [ "$(CONFIG_XML_ENABLED)" = "true" ]; then \
-		echo -e "\tBOARD File:\t\t$(BOARD_FILE);\n\t\tSCENARIO File:\t$(SCENARIO_FILE);" >> $(HV_CFG_LOG); \
+		echo "\tBOARD File:\t\t$(BOARD_FILE);\n\t\tSCENARIO File:\t$(SCENARIO_FILE);" >> $(HV_CFG_LOG); \
 	elif [ "$(TARGET_DIR)" = "" ]; then \
-		echo -e "\tSource code at:\t\t\t$(VM_CONFIGS_DIR)" >> $(HV_CFG_LOG); \
+		echo "\tSource code at:\t\t\t$(VM_CONFIGS_DIR)" >> $(HV_CFG_LOG); \
 	else \
-		echo -e "\tSource code at:\t\t\t$(TARGET_DIR)" >> $(HV_CFG_LOG); \
+		echo "\tSource code at:\t\t\t$(TARGET_DIR)" >> $(HV_CFG_LOG); \
 	fi;
 	@cat $(HV_CFG_LOG)
 
