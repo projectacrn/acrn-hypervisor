@@ -115,6 +115,8 @@ Install the Ubuntu Service VM on the NVMe disk
 
 .. rst-class:: numbered-step
 
+.. _build-and-install-acrn-on-ubuntu:
+
 Build and Install ACRN on Ubuntu
 ********************************
 

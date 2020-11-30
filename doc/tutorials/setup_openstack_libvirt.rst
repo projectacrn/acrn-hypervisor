@@ -12,25 +12,23 @@ to avoid crashing your system and to take advantage of easy
 snapshots/restores so that you can quickly roll back your system in the
 event of setup failure. (You should only install OpenStack directly on Ubuntu if
 you have a dedicated testing machine.) This setup utilizes LXC/LXD on
-Ubuntu 16.04 or 18.04.
+Ubuntu 18.04.
 
 Install ACRN
 ************
 
-#. Install ACRN using Ubuntu 16.04 or 18.04 as its Service VM.
-
-   .. important:: Need instructions from deleted document (using Ubuntu
-      as SOS)
+#. Install ACRN using Ubuntu 18.04 as its Service VM. Refer to
+   :ref:`Build and Install ACRN on Ubuntu <build-and-install-acrn-on-ubuntu>`.
 
 #. Make the acrn-kernel using the `kernel_config_uefi_sos
    <https://raw.githubusercontent.com/projectacrn/acrn-kernel/master/kernel_config_uefi_sos>`_
    configuration file (from the ``acrn-kernel`` repo).
 
-#. Add the following kernel boot arg to give the Service VM  more loop
-   devices. Refer to `Kernel Boot Parameters
+#. Add the following kernel boot arg to give the Service VM  more memory
+   and more loop devices. Refer to `Kernel Boot Parameters
    <https://wiki.ubuntu.com/Kernel/KernelBootParameters>`_ documentation::
 
-      max_loop=16
+      hugepagesz=1G hugepages=10 max_loop=16
 
 #. Boot the Service VM with this new ``acrn-kernel`` using the ACRN
    hypervisor.
@@ -40,17 +38,15 @@ Install ACRN
    <https://maslosoft.com/kb/how-to-clean-old-snaps/>`_ to clean up old
    snap revisions if you're running out of loop devices.
 #. Make sure the networking bridge ``acrn-br0`` is created. If not,
-   create it using the instructions in XXX.
-
-   .. important:: need instructions from deleted document (using Ubuntu
-      as SOS)
+   create it using the instructions in
+   :ref:`Build and Install ACRN on Ubuntu <build-and-install-acrn-on-ubuntu>`.
 
 Set up and launch LXC/LXD
 *************************
 
 1. Set up the LXC/LXD Linux container engine using these `instructions
    <https://ubuntu.com/tutorials/tutorial-setting-up-lxd-1604>`_ provided
-   by Ubuntu (for release 16.04).
+   by Ubuntu.
 
    Refer to the following additional information for the setup
    procedure:
@@ -59,8 +55,10 @@ Set up and launch LXC/LXD
      backend).
    - Answer ``dir`` (and not ``zfs``) when prompted for the name of the storage backend to use.
    - Set up ``lxdbr0`` as instructed.
-   - Before launching a container, make sure ``lxc-checkconfig | grep missing`` does not show any missing
-     kernel features.
+   - Before launching a container, install lxc-utils by ``apt-get install lxc-utils``,
+     make sure ``lxc-checkconfig | grep missing`` does not show any missing kernel features
+     except ``CONFIG_NF_NAT_IPV4`` and ``CONFIG_NF_NAT_IPV6``, which
+     were renamed in recent kernels.
 
 2. Create an Ubuntu 18.04 container named ``openstack``::
 
@@ -128,7 +126,7 @@ Set up and launch LXC/LXD
 
 8. Log in to the ``openstack`` container again::
 
-     $ xc exec openstack -- su -l
+     $ lxc exec openstack -- su -l
 
 9. If needed, set up the proxy inside the ``openstack`` container via
    ``/etc/environment`` and make sure ``no_proxy`` is properly set up.
@@ -139,7 +137,7 @@ Set up and launch LXC/LXD
 
 10. Add a new user named **stack** and set permissions::
 
-       $ sudo useradd -s /bin/bash -d /opt/stack -m stack
+       $ useradd -s /bin/bash -d /opt/stack -m stack
        $ echo "stack ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 11. Log off and restart the ``openstack`` container::
@@ -166,17 +164,15 @@ Set up ACRN prerequisites inside the container
 
       $ git clone https://github.com/projectacrn/acrn-hypervisor
       $ cd acrn-hypervisor
-      $ git checkout v1.6.1
+      $ git checkout v2.3
       $ make
       $ cd misc/acrn-manager/; make
 
    Install only the user-space components: ``acrn-dm``, ``acrnctl``, and
    ``acrnd``
 
-3. Download, compile, and install ``iasl``. Refer to XXX.
-
-   .. important:: need instructions from deleted document (using Ubuntu
-      as SOS)
+3. Download, compile, and install ``iasl``. Refer to
+   :ref:`Build and Install ACRN on Ubuntu <build-and-install-acrn-on-ubuntu>`.
 
 Set up libvirt
 **************
@@ -185,7 +181,7 @@ Set up libvirt
 
      $ sudo apt install libdevmapper-dev libnl-route-3-dev libnl-3-dev python \
        automake autoconf autopoint libtool xsltproc libxml2-utils gettext \
-       libxml2-dev libpciaccess-dev
+       libxml2-dev libpciaccess-dev gnutls-dev python3-docutils
 
 
 2. Download libvirt/ACRN::
@@ -195,7 +191,9 @@ Set up libvirt
 3. Build and install libvirt::
 
      $ cd acrn-libvirt
-     $ ./autogen.sh --prefix=/usr --disable-werror --with-test-suite=no \
+     $ mkdir build
+     $ cd build
+     $ ../autogen.sh --prefix=/usr --disable-werror --with-test-suite=no \
        --with-qemu=no --with-openvz=no --with-vmware=no --with-phyp=no \
        --with-vbox=no --with-lxc=no --with-uml=no --with-esx=no
 
