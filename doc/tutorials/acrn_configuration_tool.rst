@@ -507,7 +507,7 @@ Here is the offline configuration tool workflow:
       specified board name.
 
       | **Native Linux requirement:**
-      | **Release:** Ubuntu 18.04+ or Clear Linux 30210+
+      | **Release:** Ubuntu 18.04+
       | **Tools:** cpuid, rdmsr, lspci, dmidecode (optional)
       | **Kernel cmdline:** "idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable"
 
