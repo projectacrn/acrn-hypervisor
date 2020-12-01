@@ -3,6 +3,22 @@
 Security Advisory
 #################
 
+Addressed in ACRN v2.3
+************************
+
+We recommend that all developers upgrade to this v2.3 release (or later), which
+addresses the following security issue that was discovered in previous releases:
+
+------
+
+- NULL Pointer Dereference in ``devicemodel\hw\pci\virtio\virtio_mei.c``
+   ``vmei_proc_tx()`` function tries to find the ``iov_base`` by calling
+   function ``paddr_guest2host()``, which may return NULL (the ``vd``
+   struct control by the User VM OS).  There is a use of ``iov_base``
+   afterward that can cause a NULL pointer dereference (CVE-2020-28346).
+
+   **Affected Release:** v2.2 and earlier.
+
 Addressed in ACRN v2.1
 ************************
 
