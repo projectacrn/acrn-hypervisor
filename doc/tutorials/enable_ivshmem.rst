@@ -50,21 +50,47 @@ enable it using the  :ref:`acrn_configuration_tool` with these steps:
      communication VMs in ACRN scenario XML configuration. The ``IVSHMEM_REGION``
      format is ``shm_name,shm_size,VM IDs``:
 
-	-  ``shm_name`` - Specify a shared memory name. The name needs to start
-	   with the ``hv:/`` prefix. For example, ``hv:/shm_region_0``
+     -  ``shm_name`` - Specify a shared memory name. The name needs to start
+        with the ``hv:/`` prefix. For example, ``hv:/shm_region_0``
 
-	-  ``shm_size`` - Specify a shared memory size. The unit is megabyte. The
-	   size ranges from 2 megabytes to 512 megabytes and must be a power of 2 megabytes.
-	   For example, to set up a shared memory of 2 megabytes, use ``2``
-	   instead of ``shm_size``.
+     -  ``shm_size`` - Specify a shared memory size. The unit is megabyte. The
+        size ranges from 2 megabytes to 512 megabytes and must be a power of 2 megabytes.
+        For example, to set up a shared memory of 2 megabytes, use ``2``
+        instead of ``shm_size``.
 
-	-  ``VM IDs``   - Specify the VM IDs to use the same shared memory
-	   communication and separate it with ``:``. For example, the
-	   communication between VM0 and VM2, it can be written as ``0:2``
+     -  ``VM IDs``   - Specify the VM IDs to use the same shared memory
+        communication and separate it with ``:``. For example, the
+        communication between VM0 and VM2, it can be written as ``0:2``
 
    .. note:: You can define up to eight ``ivshmem`` hv-land shared regions.
 
 - Build the XML configuration, refer to :ref:`getting-started-building`
+
+ivshmem notification mechanism
+******************************
+
+Notification (doorbell) of ivshmem device allows VMs with ivshmem
+devices enabled to notify (interrupt) each other following this flow:
+
+Notification Sender (VM):
+   VM triggers the notification to target VM by writing target Peer ID
+   (Equals to VM ID of target VM) and vector index to doorbell register of
+   ivshmem device, the layout of doorbell register is described in
+   :ref:`ivshmem-hld`.
+
+Hypervisor:
+   When doorbell register is programmed, hypervisor will search the
+   target VM by target Peer ID and inject MSI interrupt to the target VM.
+
+Notification Receiver (VM):
+   VM receives MSI interrupt and forward it to related application.
+
+ACRN supports up to 8 (MSI-X) interrupt vectors for ivshmem device.
+Guest VMs shall implement their own mechanism to forward MSI interrupts
+to applications.
+
+.. note:: Notification is supported only for HV-land ivshmem devices. (Future
+   support may include notification for DM-land ivshmem devices.)
 
 Inter-VM Communication Examples
 *******************************
