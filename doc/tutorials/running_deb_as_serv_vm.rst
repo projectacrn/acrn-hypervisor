@@ -1,4 +1,4 @@
- .. _running_deb_as_serv_vm:
+.. _running_deb_as_serv_vm:
 
 Run Debian as the Service VM
 ############################
@@ -9,9 +9,8 @@ individuals who have made common cause to create a `free
 stable Debian release <https://www.debian.org/releases/stable/>`_ is
 10.0.
 
-This tutorial describes how to use Debian 10.0 instead of `Clear Linux
-OS <https://clearlinux.org>`_ as the Service VM with the ACRN
-hypervisor.
+This tutorial describes how to use Debian 10.0 as the Service VM OS with
+the ACRN hypervisor.
 
 Prerequisites
 *************
