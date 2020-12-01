@@ -626,8 +626,6 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
         print("   -l com1,stdio \\", file=config)
 
     if launch_cfg_lib.is_linux_like(uos_type) or uos_type in ("ANDROID", "ALIOS"):
-        if uos_type != "PREEMPT-RT LINUX":
-            print("   -s {},virtio-hyper_dmabuf \\".format(launch_cfg_lib.virtual_dev_slot("virtio-hyper_dmabuf")), file=config)
         if board_name == "apl-mrb":
             print("   -i /run/acrn/ioc_$vm_name,0x20 \\", file=config)
             print("   -l com2,/run/acrn/ioc_$vm_name \\", file=config)
