@@ -43,12 +43,12 @@ Shared memory based inter-VM communication (ivshmem) is extended
   ivshmem now supports interrupts (See :ref:`ivshmem-hld`).
 
 Enhanced vUART support
-  Added console support using legacy vUART (0x3F8-like) and
-  added PCI vUART (up to 8) for VM-to-VM communication.
+  Added PCI vUART (up to 8) for VM-to-VM communication.  Legacy vUART
+  (0x3F8-like) is available for console (debugging) support.
 
 End-to-end secure boot improvement
   OVMF can be loaded now as two blobs, one for code and the other for data.
-  The code blob can be verified by the Service VM's ``dm-verify`` as
+  The code blob can be verified by the Service VM's ``dm-verity`` as
   a step in the end-to-end secure boot.
 
 Enhanced system shutdown
@@ -72,6 +72,7 @@ New and updated reference documents are available, including:
 
 .. rst-class:: rst-columns2
 
+* :ref:`asa`
 * :ref:`GVT-g-porting`
 * :ref:`vbsk-overhead`
 * :ref:`asm_coding_guidelines`
@@ -90,7 +91,7 @@ New and updated reference documents are available, including:
 * :ref:`sw_design_guidelines`
 * :ref:`rt_industry_ubuntu_setup`
 * :ref:`introduction`
-* :ref:`release_notes_2.2`
+* :ref:`release_notes_2.3`
 * :ref:`acrn_configuration_tool`
 * :ref:`acrn_on_qemu`
 * :ref:`acrn-debug`
@@ -101,6 +102,7 @@ New and updated reference documents are available, including:
 * :ref:`rt_performance_tuning`
 * :ref:`rt_perf_tips_rtvm`
 * :ref:`run-kata-containers`
+* :ref:`running_deb_as_serv_vm`
 * :ref:`running_deb_as_user_vm`
 * :ref:`running_ubun_as_user_vm`
 * :ref:`setup_openstack_libvirt`
@@ -115,10 +117,9 @@ New and updated reference documents are available, including:
 * :ref:`how-to-enable-secure-boot-for-windows`
 * :ref:`acrn-dm_parameters`
 
-Because we're dropped deprivileged boot mode support,
-we're also switching our Service VM of choice away from Clear
-Linux and have removed
-Clear Linux-specific tutorials.  Deleted documents are still
+Because we're dropped deprivileged boot mode support, we're also
+switching our Service VM of choice away from Clear Linux and have
+removed Clear Linux-specific tutorials.  Deleted documents are still
 available in the `version-specific v2.1 documentation
 <https://projectacrn.github.io/v2.1/>`_.
 
