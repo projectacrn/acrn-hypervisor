@@ -7,6 +7,10 @@
 #ifndef VBAR_BASE_H_
 #define VBAR_BASE_H_
 
+#define IVSHMEM_DEVICE_0_VBAR                         .vbar_base[0] = 0x80000000UL, \
+                                                      .vbar_base[1] = 0x80001000UL, \
+                                                      .vbar_base[2] = 0x8020000cUL
+
 #define VGA_COMPATIBLE_CONTROLLER_0_VBAR              .vbar_base[0] = 0x82000000UL, \
                                                       .vbar_base[2] = PTDEV_HI_MMIO_START + 0x0UL
 
@@ -66,7 +70,8 @@
 
 #define ETHERNET_CONTROLLER_0_VBAR                    .vbar_base[0] = 0x83500000UL
 
-#define ETHERNET_CONTROLLER_1_VBAR                    .vbar_base[0] = 0x83480000UL
+#define ETHERNET_CONTROLLER_1_VBAR                    .vbar_base[0] = 0x83480000UL, \
+                                                      .vbar_base[2] = 0x80002000UL
 
 #define ETHERNET_CONTROLLER_2_VBAR                    .vbar_base[0] = 0x83442000UL, \
                                                       .vbar_base[2] = 0x834f2000UL
@@ -77,8 +82,5 @@
 #define SMBUS_0_VBAR                                  .vbar_base[0] = 0x834f3000UL
 
 #define NON_VOLATILE_MEMORY_CONTROLLER_0_VBAR         .vbar_base[0] = 0x83300000UL
-
-#define IVSHMEM_DEVICE_0_VBAR                         .vbar_base[0] = 0x100000000UL, \
-                                                      .vbar_base[2] = 0x10020000cUL
 
 #endif /* VBAR_BASE_H_ */

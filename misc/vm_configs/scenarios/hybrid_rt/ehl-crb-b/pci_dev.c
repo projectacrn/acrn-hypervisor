@@ -22,6 +22,7 @@
  * TODO: add DEV_PCICOMMON macro to initialize emu_type, vbdf and vdev_ops
  * to simplify the code.
  */
+
 struct acrn_vm_pci_dev_config vm0_pci_devs[VM0_CONFIG_PCI_DEV_NUM] = {
 	{
 		.emu_type = PCI_DEV_TYPE_HVEMUL,
