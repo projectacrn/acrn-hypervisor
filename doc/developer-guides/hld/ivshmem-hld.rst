@@ -37,7 +37,7 @@ may only be done between VMs using the same solution.
 ivshmem hv:
    The **ivshmem hv** implements register virtualization
    and shared memory mapping in the ACRN hypervisor.
-   It will support notification/interrupt mechanism in the future.
+   Notification/interrupt mechanism is supported.
 
 ivshmem dm:
    The **ivshmem dm** implements register virtualization
@@ -45,16 +45,32 @@ ivshmem dm:
    It will support notification/interrupt mechanism in the future.
 
 ivshmem server:
-   A daemon for inter-VM notification capability that will work with **ivshmem
-   dm**. This is currently **not implemented**, so the inter-VM communication
-   doesn't support a notification mechanism.
+   With **ivshmem server** support, VMs with ivshmem devices enabled can send
+   notification (interrupt) to each other by writing the target peer ID (VM ID)
+   and vector index to the doorbell register of ivshmem device, **ivshmem server**
+   forwards this notification event to target VM.
+
+   Two types of **ivshmem server** are defined in ACRN:
+
+   User land **ivshmem server** is a daemon in user space to forward notifications
+   for **dm-land** ivshmem devices only, by co-working with **ivshmem dm**.
+   User land **ivshmem server** is not implemented.
+
+   HV-land **ivshmem server** plays similar role with user land **ivshmem server**,
+   but it is a hypervisor module and forwards notification (virtual interrupt) to
+   target VM with  **hv-land** ivshmem devices enabled.
 
 Ivshmem Device Introduction
 ***************************
 
-The ``ivshmem`` device is a virtual standard PCI device consisting of
-two Base Address Registers (BARs): BAR0 is used for emulating interrupt
-related registers, and BAR2 is used for exposing shared memory region. The ``ivshmem`` device doesn't support any extra capabilities.
+   The ``ivshmem`` device is a virtual standard PCI device consisting of
+   three Base Address Registers (BARs):
+
+   * BAR0 is used for emulating interrupt related registers,
+   * BAR1 is used for emulating MSIX entry table, and
+   * BAR2 is used for exposing a shared memory region.
+
+  The ``ivshmem`` device supports no extra capabilities.
 
 Configuration Space Definition
 

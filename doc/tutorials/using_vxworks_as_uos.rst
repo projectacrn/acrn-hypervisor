@@ -5,7 +5,7 @@ Run VxWorks as the User VM
 
 `VxWorks`_\* is a real-time proprietary OS designed for use in embedded systems requiring real-time, deterministic
 performance. This tutorial describes how to run VxWorks as the User VM on the ACRN hypervisor
-based on Clear Linux 29970 (ACRN tag v1.1).
+based on Ubuntu Service VM (ACRN tag v2.0).
 
 .. note:: You'll need to be a Wind River* customer and have purchased VxWorks to follow this tutorial.
 
@@ -92,10 +92,8 @@ Steps for Using VxWorks as User VM
 
    You now have a virtual disk image with bootable VxWorks in ``VxWorks.img``.
 
-#. Follow XXX to boot the ACRN Service VM.
+#. Follow :ref:`install-ubuntu-Service VM-NVMe` to boot the ACRN Service VM.
 
-   .. important:: need instructions from deleted document (using SDC
-      mode on the Intel NUC)
 
 #. Boot VxWorks as User VM.
 

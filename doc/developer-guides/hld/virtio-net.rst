@@ -426,10 +426,11 @@ our case, we use systemd to automatically create the network by default.
 You can check the files with prefix 50- in the Service VM
 ``/usr/lib/systemd/network/``:
 
-- `50-acrn.netdev <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/misc/acrnbridge/acrn.netdev>`__
-- `50-acrn.network <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/misc/acrnbridge/acrn.network>`__
-- `50-tap0.netdev <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/misc/acrnbridge/tap0.netdev>`__
-- `50-eth.network <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/misc/acrnbridge/eth.network>`__
+- :acrn_raw:`50-acrn.netdev <misc/acrnbridge/acrn.netdev>`
+- :acrn_raw:`50-acrn.netdev <misc/acrnbridge/acrn.netdev>`
+- :acrn_raw:`50-acrn.network <misc/acrnbridge/acrn.network>`
+- :acrn_raw:`50-tap0.netdev <misc/acrnbridge/tap0.netdev>`
+- :acrn_raw:`50-eth.network <misc/acrnbridge/eth.network>`
 
 When the Service VM is started, run ``ifconfig`` to show the devices created by
 this systemd configuration:

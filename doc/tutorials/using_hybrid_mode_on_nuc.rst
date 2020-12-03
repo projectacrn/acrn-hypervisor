@@ -2,11 +2,10 @@
 
 Getting Started Guide for ACRN hybrid mode
 ##########################################
+
 ACRN hypervisor supports a hybrid scenario where the User VM (such as Zephyr
 or Ubuntu) runs in a pre-launched VM or in a post-launched VM that is
-launched by a Device model in the Service VM. The following guidelines
-describe how to set up the ACRN hypervisor hybrid scenario on the Intel NUC,
-as shown in :numref:`hybrid_scenario_on_nuc`.
+launched by a Device model in the Service VM.
 
 .. figure:: images/hybrid_scenario_on_nuc.png
    :align: center
@@ -15,12 +14,22 @@ as shown in :numref:`hybrid_scenario_on_nuc`.
 
    The Hybrid scenario on the Intel NUC
 
+The following guidelines
+describe how to set up the ACRN hypervisor hybrid scenario on the Intel NUC,
+as shown in :numref:`hybrid_scenario_on_nuc`.
+
+.. contents::
+   :local:
+   :depth: 1
+
 Prerequisites
 *************
 - Use the `Intel NUC Kit NUC7i7DNHE <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_.
 - Connect to the serial port as described in :ref:`Connecting to the serial port <connect_serial_port>`.
 - Install Ubuntu 18.04 on your SATA device or on the NVME disk of your
   Intel NUC.
+
+.. rst-class:: numbered-step
 
 Update Ubuntu GRUB
 ******************
@@ -78,8 +87,10 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
    the ACRN hypervisor on the Intel NUC's display. The GRUB loader will boot the
    hypervisor, and the hypervisor will start the VMs automatically.
 
-Hybrid Scenario Startup Checking
-********************************
+.. rst-class:: numbered-step
+
+Hybrid Scenario Startup Check
+*****************************
 #. Use these steps to verify that the hypervisor is properly running:
 
    a. Log in to the ACRN hypervisor shell from the serial console.
