@@ -197,6 +197,7 @@ html_context = {
    'docs_title': docs_title,
    'is_release': is_release,
    'versions': ( ("latest", "/latest/"),
+                 ("2.3", "/2.3/"),
                  ("2.2", "/2.2/"),
                  ("2.1", "/2.1/"),
                  ("2.0", "/2.0/"),
