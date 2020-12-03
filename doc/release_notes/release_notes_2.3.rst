@@ -126,9 +126,24 @@ available in the `version-specific v2.1 documentation
 
 Fixed Issues Details
 ********************
-
-.. comment list items look like this (not indented)
-   - :acrn-issue:`5008` -  Slowdown in UOS (Zephyr)
+- :acrn-issue:`4958` - cleannup spin lock for hypervisor 
+- :acrn-issue:`5316` - add default BAR GPA for vmsi over msi 
+- :acrn-issue:`5346` - Hide PCI bridge 00:1c.0 from SOS
+- :acrn-issue:`5411` - Supporting power off for pre-launched VMs
+- :acrn-issue:`5461` - DM: gvt: Identical mapping for GPU DSM
+- :acrn-issue:`5463` - WaaG hang in boot loading screen in cold boot test.
+- :acrn-issue:`5482` - acrn-config: insert vbdf in hex format and vuart vbdf logic
+- :acrn-issue:`5490` - Unhandled Exception happened in HV console when shutdown YaaG with shm device enabled
+- :acrn-issue:`5491` - TGL can't setup 6 pci-vuarts
+- :acrn-issue:`5498` - Hide IO 0x3f8 for SOS
+- :acrn-issue:`5501` - [WHL][Yocto][Hybrid] in hybrid mode ACRN HV env, can not shutdown pre-lanuched RTVM
+- :acrn-issue:`5506` - [EHL][SBL][hybrid_rt] in hybrid_rt, TPM can not work in pre-lanuched RTVM
+- :acrn-issue:`5508` - hv-bugfix-for-hv-emulated-device-de-init_v2.3
+- :acrn-issue:`5514` - Coding style issue for xhci.c
 
 Known Issues
 ************
+- :acrn-issue:`5151` - [WHL][VxWorks] Launch VxWorks fails due to no suitable video mode found
+- :acrn-issue:`5369` - [TGL][qemu] Cannot launch qemu on TGL
+- :acrn-issue:`5572` - [WHL][Hybrid_rt] build hybrid_rt hv from source, boot RTVM fail
+- :acrn-issue:`5573` - [EHL][logical_partition] build EHL logical_partition hv from source Fail 
