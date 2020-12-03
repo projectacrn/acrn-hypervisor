@@ -27,6 +27,7 @@ The diagram below shows the overall architecture:
 
 .. figure:: images/s5_overall_architecture.png
    :align: center
+   :name: s5-architecture
 
    S5 overall architecture
 
@@ -160,22 +161,20 @@ The procedure for enabling S5 is specific to the particular OS:
 
 How to test
 ***********
+   As described in :ref:`vuart_config`, two vUARTs are defined in
+   pre-defined ACRN scenarios: vUART0/ttyS0 for the console and
+   vUART1/ttyS1 for S5-related communication (as shown in :ref:`s5-architecture`).
 
-.. note:: The :ref:`CBC <IOC_virtualization_hld>` tools and service installed by
-   the `software-defined-cockpit
-   <https://github.com/clearlinux/clr-bundles/blob/master/bundles/software-defined-cockpit>`_ bundle
-   will conflict with the vUART and hence need to be masked.
+   For Yocto Project (Poky) or Ubuntu rootfs, the ``serial-getty``
+   service for ``ttyS1`` conflicts with the S5-related communication
+   use of ``vUART1``. We can eliminate the conflict by preventing
+   that service from being started
+   either automatically or manually, by masking the service
+   using this command
 
    ::
 
-      systemctl mask cbc_attach
-      systemctl mask cbc_thermal_fuse
-      systemctl mask cbc_thermald
-      systemctl mask cbc_lifecycle.service
-
-   Or::
-
-      ps -ef|grep cbc; kill -9 cbc_pid
+     systemctl mask serial-getty@ttyS1.service
 
 #. Refer to the :ref:`enable_s5` section to set up the S5 environment for the User VMs.
 
@@ -194,7 +193,7 @@ How to test
    .. note:: For WaaG, we need to close ``windbg`` by using the ``bcdedit /set debug off`` command
       IF you executed the ``bcdedit /set debug on`` when you set up the WaaG, because it occupies the ``COM2``.
 
-#. Use the``acrnctl stop`` command on the Service VM to trigger S5 to the User VMs:
+#. Use the ``acrnctl stop`` command on the Service VM to trigger S5 to the User VMs:
 
    .. code-block:: console
 
@@ -206,3 +205,45 @@ How to test
 
       # acrnctl list
       vm1		stopped
+
+System Shutdown
+***************
+
+Using a coordinating script, ``misc/life_mngr/s5_trigger.sh``, in conjunction with
+the lifecycle manager in each VM, graceful system shutdown can be performed.
+
+.. note:: Please install ``s5_trigger.sh`` manually to root's home directory.
+
+   .. code-block:: none
+
+      $ sudo install -p -m 0755 -t ~root misc/life_mngr/s5_trigger.sh
+
+In the ``hybrid_rt`` scenario, the script can send a shutdown command via ``ttyS1``
+in the Service VM, which is connected to ``ttyS1`` in the pre-launched VM. The
+lifecycle manager in the pre-launched VM receives the shutdown command, sends an
+ack message, and proceeds to shut itself down accordingly.
+
+.. figure:: images/system_shutdown.png
+   :align: center
+
+   Graceful system shutdown flow
+
+#. The HMI Windows Guest uses the lifecycle manager to send a shutdown request to
+   the Service VM
+#. The lifecycle manager in the Service VM responds with an ack message and
+   executes ``s5_trigger.sh``
+#. After receiving the ack message, the lifecycle manager in the HMI Windows Guest
+   shuts down the guest
+#. The ``s5_trigger.sh`` script in the Service VM shuts down the Linux Guest by
+   using ``acrnctl`` to send a shutdown request
+#. After receiving the shutdown request, the lifecycle manager in the Linux Guest
+   responds with an ack message and shuts down the guest
+#. The ``s5_trigger.sh`` script in the Service VM shuts down the Pre-launched RTVM
+   by sending a shutdown request to its ``ttyS1``
+#. After receiving the shutdown request, the lifecycle manager in the Pre-launched
+   RTVM responds with an ack message
+#. The lifecycle manager in the Pre-launched RTVM shuts down the guest using
+   standard PM registers
+#. After receiving the ack message, the ``s5_trigger.sh`` script in the Service VM
+   shuts down the Service VM
+#. The hypervisor shuts down the system after all of its guests have shut down

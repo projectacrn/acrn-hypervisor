@@ -37,7 +37,7 @@ if "RELEASE" in os.environ:
 sys.path.insert(0, os.path.join(os.path.abspath('.'), 'extensions'))
 extensions = [
    'breathe', 'sphinx.ext.graphviz', 'sphinx.ext.extlinks',
-   'kerneldoc', 'eager_only', 'html_redirects',
+   'kerneldoc', 'eager_only', 'html_redirects', 'link_roles',
    'sphinx_tabs.tabs'
 ]
 
@@ -166,7 +166,7 @@ else:
         'analytics_id': '',
         'logo_only': False,
         'display_version': True,
-        'prev_next_buttons_location': 'None',
+        #'prev_next_buttons_location': 'None',
         # Toc options
         'collapse_navigation': False,
         'sticky_navigation': True,
@@ -318,7 +318,21 @@ breathe_projects = {
 	"Project ACRN" : "doxygen/xml",
 }
 breathe_default_project = "Project ACRN"
-breathe_default_members = ('members', 'undoc-members', 'content-only')
+# breathe_default_members = ('members', 'undoc-members', 'content-only')
+breathe_domain_by_extension = {
+   "h": "c",
+   "c": "c",
+}
+
+cpp_id_attributes = [
+    '__syscall', '__deprecated', '__may_alias',
+    '__used', '__unused', '__weak',
+    '__DEPRECATED_MACRO', 'FUNC_NORETURN',
+    '__subsystem',
+]
+c_id_attributes = cpp_id_attributes
+
+
 
 
 # Custom added feature to allow redirecting old URLs (caused by

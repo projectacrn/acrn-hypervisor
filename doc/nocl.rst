@@ -1,5 +1,7 @@
 :orphan:
 
+.. _nocl:
+
 .. comment This page is a common place holder for references to /latest/
    documentation that was removed from the 2.2 release but there are
    lingering references to these docs out in the wild and in the Google

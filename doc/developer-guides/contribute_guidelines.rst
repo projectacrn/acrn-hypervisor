@@ -20,7 +20,7 @@ software continues to be available under the terms that the author
 desired.
 
 Project ACRN uses a BSD-3-Clause license, as found in the
-`LICENSE <https://github.com/projectacrn/acrn-hypervisor/blob/master/LICENSE>`__
+:acrn_file:`LICENSE <LICENSE>`
 in the project's GitHub repo.
 
 A license tells you what rights you have as a developer, as provided by
@@ -221,13 +221,11 @@ following exceptions:
   8-column wide.
 
 You can use *checkpatch* from Linux kernel to check the compliance. ACRN
-maintains a `checkpatch conf`_ which customizes the script to stop warning on
+maintains a :acrn_file:`.checkpatch.conf <.checkpatch.conf>` file
+that customizes the script to stop warnings on
 the exceptions above. Invoke *checkpatch* with the root of ``acrn-hypervisor``
 repository as the current working directory to make the configurations
 effective.
-
-.. _checkpatch conf:
-   https://github.com/projectacrn/acrn-hypervisor/blob/master/.checkpatch.conf
 
 .. _Contribution workflow:
 

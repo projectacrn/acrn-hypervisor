@@ -10,12 +10,16 @@ guidelines provide step-by-step instructions on how to set up the ACRN
 hypervisor logical partition scenario on Intel NUC while running two
 pre-launched VMs.
 
+.. contents::
+   :local:
+   :depth: 1
+
 Validated Versions
 ******************
 
 - Ubuntu version: **18.04**
-- ACRN hypervisor tag: **v2.1**
-- ACRN kernel tag: **v2.1**
+- ACRN hypervisor tag: **v2.3**
+- ACRN kernel tag: **v2.3**
 
 Prerequisites
 *************
@@ -34,6 +38,8 @@ Prerequisites
   first on a SATA disk and then again on a storage device with a USB interface.
   The two pre-launched VMs will mount the root file systems via the SATA controller and
   the USB controller respectively.
+
+.. rst-class:: numbered-step
 
 Update kernel image and modules of pre-launched VM
 **************************************************
@@ -97,6 +103,8 @@ Update kernel image and modules of pre-launched VM
 
       $ sudo cp <path-to-kernel-image-built-in-step1>/bzImage /boot/
 
+.. rst-class:: numbered-step
+
 Update ACRN hypervisor image
 ****************************
 
@@ -137,13 +145,13 @@ Update ACRN hypervisor image
    Refer to :ref:`getting-started-building` to set up the ACRN build
    environment on your development workstation.
 
-   Clone the ACRN source code and check out to the tag v2.1:
+   Clone the ACRN source code and check out to the tag v2.3:
 
    .. code-block:: none
 
       $ git clone https://github.com/projectacrn/acrn-hypervisor.git
       $ cd acrn-hypervisor
-      $ git checkout v2.1
+      $ git checkout v2.3
 
    Build the ACRN hypervisor and ACPI binaries for pre-launched VMs with default xmls:
 
@@ -178,6 +186,8 @@ Update ACRN hypervisor image
 
    #. Copy the ``acrn.bin``, ``ACPI_VM0.bin``, and ``ACPI_VM1.bin`` from the removable disk to ``/boot``
       directory.
+
+.. rst-class:: numbered-step
 
 Update Ubuntu GRUB to boot hypervisor and load kernel image
 ***********************************************************
@@ -237,8 +247,10 @@ Update Ubuntu GRUB to boot hypervisor and load kernel image
    the Intel NUC's display. The GRUB loader will boot the hypervisor, and the
    hypervisor will automatically start the two pre-launched VMs.
 
-Logical partition scenario startup checking
-*******************************************
+.. rst-class:: numbered-step
+
+Logical partition scenario startup check
+****************************************
 
 #. Use these steps to verify that the hypervisor is properly running:
 
