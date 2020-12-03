@@ -35,8 +35,8 @@ ACRN v2.3 requires Ubuntu 18.04.  Follow the instructions in the
 What's New in v2.3
 ******************
 
-Enhanced GPU passthru (GVT-d)
-  GPU passthru (GVT-d) to Windows as a guest is now enabled for 11th Gen
+Enhanced GPU passthrough (GVT-d)
+  GPU passthrough (GVT-d) to Windows as a guest is now enabled for 11th Gen
   Intel® Core™ processors (codenamed Tiger Lake-UP3).
 
 Shared memory based inter-VM communication (ivshmem) is extended
@@ -89,9 +89,11 @@ New and updated reference documents are available, including:
 * :ref:`l1tf`
 * :ref:`modularity`
 * :ref:`sw_design_guidelines`
+* :ref:`getting-started-building`
 * :ref:`rt_industry_ubuntu_setup`
 * :ref:`introduction`
 * :ref:`release_notes_2.3`
+* :ref:`how-to-enable-acrn-secure-boot-with-grub`
 * :ref:`acrn_configuration_tool`
 * :ref:`acrn_on_qemu`
 * :ref:`acrn-debug`
