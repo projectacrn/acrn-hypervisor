@@ -60,6 +60,12 @@ ivshmem server:
    but it is a hypervisor module and forwards notification (virtual interrupt) to
    target VM with  **hv-land** ivshmem devices enabled.
 
+.. figure:: images/ivshmem-hv-land-doorbell.png
+   :align: center
+   :name: ivshmem-hv-land-doorbell-overview
+
+   ACRN Ivshmem HV-Land Doorbell Overview
+
 Ivshmem Device Introduction
 ***************************
 
