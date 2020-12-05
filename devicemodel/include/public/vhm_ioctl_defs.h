@@ -109,8 +109,8 @@
 #define IC_DEASSIGN_PCIDEV             _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x06)
 #define IC_ASSIGN_MMIODEV              _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x07)
 #define IC_DEASSIGN_MMIODEV            _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x08)
-#define IC_CREATE_HV_VDEV              _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x09)
-#define IC_DESTROY_HV_VDEV             _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x0A)
+#define IC_ADD_HV_VDEV                 _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x09)
+#define IC_REMOVE_HV_VDEV              _IC_ID(IC_ID, IC_ID_PCI_BASE + 0x0A)
 
 /* Power management */
 #define IC_ID_PM_BASE                   0x60UL

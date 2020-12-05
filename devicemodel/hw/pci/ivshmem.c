@@ -167,7 +167,7 @@ create_ivshmem_from_hv(struct vmctx *ctx, struct pci_vdev *vdev,
 	dev.io_addr[IVSHMEM_MEM_BAR + 1] = addr;
 	dev.io_size[IVSHMEM_MEM_BAR] = shm_size;
 	strncpy((char*)dev.args, shm_name, 32);
-	return vm_create_hv_vdev(ctx, &dev);
+	return vm_add_hv_vdev(ctx, &dev);
 }
 
 static void
@@ -352,7 +352,7 @@ destroy_ivshmem_from_hv(struct vmctx *ctx, struct pci_vdev *vdev)
 	emul_dev.dev_id.fields.vendor_id = IVSHMEM_VENDOR_ID;
 	emul_dev.dev_id.fields.device_id = IVSHMEM_DEVICE_ID;
 	emul_dev.slot = PCI_BDF(vdev->bus, vdev->slot, vdev->func);
-	vm_destroy_hv_vdev(ctx, &emul_dev);
+	vm_remove_hv_vdev(ctx, &emul_dev);
 }
 
 static void
