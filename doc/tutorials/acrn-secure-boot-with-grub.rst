@@ -161,10 +161,8 @@ Here's an example sequence to do this build::
     sudo cp ./grubx64.efi "$TARGET_EFI"
 
 
-.. rst-class:: numbered-step
-
 Prepare grub.cfg
-****************
+================
 
 Define the menu entry for your system in a new GRUB configuration :file:`grub.cfg`.
 For example::
@@ -192,10 +190,8 @@ partition (e.g. `/dev/nvme0n1p2`) according to your your hardware.
 Copy this new :file:`grub.cfg` to your ESP (e.g. `/boot/efi/EFI/`).
 
 
-.. rst-class:: numbered-step
-
 Sign grub.cfg and ACRN Binaries
-*******************************
+===============================
 
 The :file:`grub.cfg` and all ACRN binaries that will be loaded by GRUB
 **must** be signed with the same GPG key.
@@ -236,6 +232,13 @@ Creating UEFI Secure Boot Key
     sign-efi-sig-list -k PK.key -c PK.crt PK PK.esl PK.auth
     sign-efi-sig-list -k PK.key -c PK.crt KEK KEK.esl KEK.auth
     sign-efi-sig-list -k KEK.key -c KEK.crt db db.esl db.auth
+
+-Convert to DER format::
+
+    openssl x509 -outform DER -in PK.crt -out PK.der
+    openssl x509 -outform DER -in KEK.crt -out KEK.der
+    openssl x509 -outform DER -in db.crt -out db.der
+
 
 The keys to be enrolled in UEFI firmware: :file:`PK.der`, :file:`KEK.der`, :file:`db.der`.
 The keys to sign bootloader image: :file:`grubx64.efi`, :file:`db.key` , :file:`db.crt`.
