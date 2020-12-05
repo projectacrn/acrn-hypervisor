@@ -122,7 +122,7 @@ pci_uart_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		vdev.io_addr[0] = pci_get_cfgdata32(dev, PCIR_BAR(0));
 		vdev.io_addr[1] = pci_get_cfgdata32(dev, PCIR_BAR(1));
 		*((uint32_t *)vdev.args) = vuart_idx;
-		err = vm_create_hv_vdev(ctx, &vdev);
+		err = vm_add_hv_vdev(ctx, &vdev);
 		if (err) {
 			pr_err("HV can't create vuart with vuart_idx=%d\n", vuart_idx);
 		}
@@ -156,7 +156,7 @@ pci_uart_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		emul_dev.dev_id.fields.vendor_id = COM_VENDOR;
 		emul_dev.dev_id.fields.device_id = COM_DEV;
 		emul_dev.slot = PCI_BDF(dev->bus, dev->slot, dev->func);
-		vm_destroy_hv_vdev(ctx, &emul_dev);
+		vm_remove_hv_vdev(ctx, &emul_dev);
 		return;
 	}
 
