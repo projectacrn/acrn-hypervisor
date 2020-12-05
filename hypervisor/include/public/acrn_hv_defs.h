@@ -69,8 +69,8 @@
 #define HC_DEASSIGN_PCIDEV          BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x06UL)
 #define HC_ASSIGN_MMIODEV           BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x07UL)
 #define HC_DEASSIGN_MMIODEV         BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x08UL)
-#define HC_CREATE_VDEV              BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x09UL)
-#define HC_DESTROY_VDEV             BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x0AUL)
+#define HC_ADD_VDEV                 BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x09UL)
+#define HC_REMOVE_VDEV              BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x0AUL)
 
 /* DEBUG */
 #define HC_ID_DBG_BASE              0x60UL
@@ -328,7 +328,7 @@ struct acrn_mmiodev {
 /**
  * @brief Info to create or destroy a virtual PCI or legacy device for a VM
  *
- * the parameter for HC_CREATE_VDEV or HC_DESTROY_VDEV hypercall
+ * the parameter for HC_ADD_VDEV or HC_REMOVE_VDEV hypercall
  */
 struct acrn_emul_dev {
 	/*
