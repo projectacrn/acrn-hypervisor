@@ -334,7 +334,7 @@ int32_t hcall_assign_mmiodev(struct acrn_vm *vm, struct acrn_vm *target_vm, uint
 int32_t hcall_deassign_mmiodev(struct acrn_vm *vm, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
 
 /**
- * @brief Create an emulated device in hypervisor.
+ * @brief Add an emulated device in hypervisor.
  *
  * @param vm Pointer to VM data structure
  * @param target_vm Pointer to target VM data structure
@@ -345,10 +345,10 @@ int32_t hcall_deassign_mmiodev(struct acrn_vm *vm, struct acrn_vm *target_vm, ui
  * @pre Pointer vm shall point to SOS_VM
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_create_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
+int32_t hcall_add_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
 
 /**
- * @brief Destroy an emulated device in hypervisor.
+ * @brief Remove an emulated device in hypervisor.
  *
  * @param vm Pointer to VM data structure
  * @param target_vm Pointer to target VM data structure
@@ -359,7 +359,7 @@ int32_t hcall_create_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, uint64_
  * @pre Pointer vm shall point to SOS_VM
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_destroy_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
+int32_t hcall_remove_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, uint64_t param1, uint64_t param2);
 
 /**
  * @brief Set interrupt mapping info of ptdev.

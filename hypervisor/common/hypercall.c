@@ -1186,7 +1186,7 @@ static struct emul_dev_ops *find_emul_dev_ops(struct acrn_emul_dev *dev)
 }
 
 /**
- * @brief Create an emulated device in hypervisor.
+ * @brief Add an emulated device in hypervisor.
  *
  * @param vm pointer to VM data structure
  * @param vmid ID of the VM
@@ -1196,7 +1196,7 @@ static struct emul_dev_ops *find_emul_dev_ops(struct acrn_emul_dev *dev)
  * @pre Pointer vm shall point to SOS_VM
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_create_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_add_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
 {
 	int32_t ret = -EINVAL;
 	struct acrn_emul_dev dev;
@@ -1217,7 +1217,7 @@ int32_t hcall_create_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unuse
 }
 
 /**
- * @brief Destroy an emulated device in hypervisor.
+ * @brief Remove an emulated device in hypervisor.
  *
  * @param vm pointer to VM data structure
  * @param vmid ID of the VM
@@ -1227,7 +1227,7 @@ int32_t hcall_create_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unuse
  * @pre Pointer vm shall point to SOS_VM
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_destroy_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
+int32_t hcall_remove_vdev(struct acrn_vm *vm, struct acrn_vm *target_vm, __unused uint64_t param1, uint64_t param2)
 {
 	int32_t ret = -EINVAL;
 	struct acrn_emul_dev dev;
