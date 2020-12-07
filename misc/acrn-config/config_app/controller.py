@@ -164,7 +164,7 @@ class XmlConfig:
         args = args[:-1]
         dest_node = self._get_dest_node(*args)
         new_node_desc = None
-        for node in dest_node.getchildren():
+        for node in list(dest_node):
             if node.tag == tag:
                 if 'desc' in node.attrib:
                     new_node_desc = node.attrib['desc']

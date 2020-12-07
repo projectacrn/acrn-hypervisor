@@ -132,7 +132,7 @@ the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[boa
 
     {% if board_info != None and root != None %}
     <table class="table table-hover" id="tab">
-        {% for vm in root.getchildren() %}
+        {% for vm in root|list %}
         <tr>
             <td>
                 <div class="form-group">
@@ -154,8 +154,8 @@ the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[boa
                 </div>
             </td>
             <td>
-            {% for elem in vm.getchildren() %}
-                {% if elem.getchildren() == [] and ('configurable' not in elem.attrib or elem.attrib['configurable'] !=
+            {% for elem in vm|list %}
+                {% if elem|list == [] and ('configurable' not in elem.attrib or elem.attrib['configurable'] !=
                 '0') %}
                 <div class="form-group">
                     <label class="col-sm-1 control-label" data-toggle="tooltip"
@@ -204,11 +204,11 @@ the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[boa
                     {% endif %}
                     <p id="{{'uos:id='+vm.attrib['id']+','+elem.tag}}_err" class="col-sm-3"></p>
                 </div>
-                {% elif elem.getchildren() != [] %}
+                {% elif elem|list != [] %}
                     {% if 'multiselect' not in elem.attrib or elem.attrib['multiselect'] != 'true' %}
                         {% set first_multi_child = {'block': 0, 'network': 0, 'input': 0, 'pcpu_id': 0, 'shm_region': 0,
                         'passthrough_devices': 0, 'virtio_devices': 0, 'communication_vuart': 0} %}
-                        {% for sub_elem in elem.getchildren() %}
+                        {% for sub_elem in elem|list %}
                             {% set sub_elem_text = '' if sub_elem.text == None else sub_elem.text %}
                             {% if 'configurable' not in sub_elem.attrib or sub_elem.attrib['configurable'] != '0' %}
                             <div class="form-group">
@@ -366,12 +366,12 @@ the launch scripts will be generated into misc/acrn-config/xmls/config-xmls/[boa
                             {% endif %}
                             {% if ','.join(['uos', elem.tag]) not in launch_item_values %}
                                 {% set x=1 %}
-                                {% for sub_elem in elem.getchildren() %}
+                                {% for sub_elem in elem|list %}
                                     <option value="{{sub_elem.text}}" selected="selected">{{sub_elem.text}}</option>
                                 {% endfor %}
                             {% else %}
                                 {% set selected_list = [] %}
-                                {% for sub_elem in elem.getchildren() %}
+                                {% for sub_elem in elem|list %}
                                     {% do selected_list.append(sub_elem.text) %}
                                 {% endfor %}
                                 {% for item_value in launch_item_values[','.join(['uos', elem.tag])] %}
