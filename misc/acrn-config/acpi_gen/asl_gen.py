@@ -423,7 +423,7 @@ def main(args):
                     dict_passthru_devices[vm_id].append(pci_dev_node.text)
             mmio_dev_nodes = vm.find('mmio_resources')
             if mmio_dev_nodes is not None:
-                for mmio_dev_node in mmio_dev_nodes.getchildren():
+                for mmio_dev_node in list(mmio_dev_nodes):
                     if mmio_dev_node is not None and mmio_dev_node.text.strip() == 'y':
                         dict_passthru_devices[vm_id].append(mmio_dev_node.tag)
             dict_vcpu_list[vm_id] = []
