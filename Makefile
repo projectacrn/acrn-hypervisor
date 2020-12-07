@@ -1,5 +1,8 @@
 # acrn-hypervisor/Makefile
 
+# Explicitly set the shell to be used
+SHELL := /bin/bash
+
 # global helper variables
 T := $(CURDIR)
 
