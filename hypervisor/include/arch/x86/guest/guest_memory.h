@@ -17,21 +17,11 @@
 
 struct acrn_vcpu;
 struct acrn_vm;
-/* Use # of paging level to identify paging mode */
-enum vm_paging_mode {
-	PAGING_MODE_0_LEVEL = 0U,	/* Flat */
-	PAGING_MODE_2_LEVEL = 2U,	/* 32bit paging, 2-level */
-	PAGING_MODE_3_LEVEL = 3U,	/* PAE paging, 3-level */
-	PAGING_MODE_4_LEVEL = 4U,	/* 64bit paging, 4-level */
-	PAGING_MODE_NUM,
-};
 
 /*
  * VM related APIs
  */
 int32_t gva2gpa(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa, uint32_t *err_code);
-
-enum vm_paging_mode get_vcpu_paging_mode(struct acrn_vcpu *vcpu);
 
 /* gpa --> hpa -->hva */
 void *gpa2hva(struct acrn_vm *vm, uint64_t x);

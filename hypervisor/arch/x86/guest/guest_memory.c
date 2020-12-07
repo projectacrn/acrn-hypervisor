@@ -15,6 +15,15 @@
 #include <ept.h>
 #include <logmsg.h>
 
+/* Use # of paging level to identify paging mode */
+enum vm_paging_mode {
+	PAGING_MODE_0_LEVEL = 0U,	/* Flat */
+	PAGING_MODE_2_LEVEL = 2U,	/* 32bit paging, 2-level */
+	PAGING_MODE_3_LEVEL = 3U,	/* PAE paging, 3-level */
+	PAGING_MODE_4_LEVEL = 4U,	/* 64bit paging, 4-level */
+	PAGING_MODE_NUM,
+};
+
 struct page_walk_info {
 	uint64_t top_entry;	/* Top level paging structure entry */
 	uint32_t level;
@@ -31,7 +40,7 @@ struct page_walk_info {
 	bool is_smep_on;
 };
 
-enum vm_paging_mode get_vcpu_paging_mode(struct acrn_vcpu *vcpu)
+static enum vm_paging_mode get_vcpu_paging_mode(struct acrn_vcpu *vcpu)
 {
 	enum vm_paging_mode ret = PAGING_MODE_0_LEVEL;	/* non-paging */
 
