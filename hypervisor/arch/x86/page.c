@@ -29,19 +29,16 @@ static union pgtable_pages_info ppt_pages_info = {
 	}
 };
 
-/* @pre: The PPT and EPT have same page granularity */
-static inline bool large_page_support(enum _page_table_level level)
+static inline bool ppt_large_page_support(enum _page_table_level level)
 {
 	bool support;
-
 	if (level == IA32E_PD) {
 		support = true;
 	} else if (level == IA32E_PDPT) {
-		support = pcpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE);
+		support = pcpu_has_cap(X86_FEATURE_PAGE1GB);
 	} else {
 		support = false;
 	}
-
 	return support;
 }
 
@@ -85,7 +82,7 @@ static inline void nop_recover_exe_right(uint64_t *entry __attribute__((unused))
 
 const struct memory_ops ppt_mem_ops = {
 	.info = &ppt_pages_info,
-	.large_page_support = large_page_support,
+	.large_page_support = ppt_large_page_support,
 	.get_default_access_right = ppt_get_default_access_right,
 	.pgentry_present = ppt_pgentry_present,
 	.get_pml4_page = ppt_get_pml4_page,
@@ -152,6 +149,19 @@ static struct page post_uos_nworld_pt_pages[MAX_POST_VM_NUM][PT_PAGE_NUM(EPT_ADD
 void *get_reserve_sworld_memory_base(void)
 {
 	return post_uos_sworld_memory;
+}
+
+static inline bool ept_large_page_support(enum _page_table_level level)
+{
+	bool support;
+	if (level == IA32E_PD) {
+		support = pcpu_has_vmx_ept_cap(VMX_EPT_2MB_PAGE);
+	} else if (level == IA32E_PDPT) {
+		support = pcpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE);
+	} else {
+		support = false;
+	}
+	return support;
 }
 
 static inline bool large_page_not_support(__unused enum _page_table_level level)
@@ -277,7 +287,7 @@ void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
 	mem_ops->get_pd_page = ept_get_pd_page;
 	mem_ops->get_pt_page = ept_get_pt_page;
 	mem_ops->clflush_pagewalk = ept_clflush_pagewalk;
-	mem_ops->large_page_support = large_page_support;
+	mem_ops->large_page_support = ept_large_page_support;
 
 	/* Mitigation for issue "Machine Check Error on Page Size Change" */
 	if (is_ept_force_4k_ipage()) {
