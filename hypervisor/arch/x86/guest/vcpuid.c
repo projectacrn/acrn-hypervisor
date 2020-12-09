@@ -431,6 +431,9 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 
 	/* set Hypervisor Present Bit */
 	*ecx |= CPUID_ECX_HV;
+	if ((get_cr4_reserved_bits() & CR4_PCIDE) != 0UL) {
+		*ecx &= ~CPUID_ECX_PCID;
+	}
 
 	/* if guest disabed monitor/mwait, clear cpuid.01h[3] */
 	if ((guest_ia32_misc_enable & MSR_IA32_MISC_ENABLE_MONITOR_ENA) == 0UL) {
@@ -441,7 +444,7 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 	if ((*ecx & CPUID_ECX_XSAVE) != 0U) {
 		uint64_t cr4;
 		/*read guest CR4*/
-		cr4 = exec_vmread(VMX_GUEST_CR4);
+		cr4 = vcpu_get_cr4(vcpu);
 		if ((cr4 & CR4_OSXSAVE) != 0UL) {
 			*ecx |= CPUID_ECX_OSXSAVE;
 		}
@@ -449,6 +452,7 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 
 	/* mask Debug Store feature */
 	*edx &= ~CPUID_EDX_DTES;
+	*edx &= ~CPUID_EDX_MCE;
 }
 
 static void guest_cpuid_0bh(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)

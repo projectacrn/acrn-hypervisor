@@ -393,6 +393,20 @@ static struct acrn_vcpu_regs protect_mode_init_vregs = {
 	.es_sel = 0x18U,
 };
 
+bool sanitize_cr0_cr4_pattern(void)
+{
+	bool ret = false;
+
+	if (is_valid_cr0_cr4(realmode_init_vregs.cr0, realmode_init_vregs.cr4) &&
+			is_valid_cr0_cr4(protect_mode_init_vregs.cr0, protect_mode_init_vregs.cr4)) {
+		ret = true;
+	} else {
+		pr_err("Wrong CR0/CR4 pattern: real %lx %lx; protected %lx %lx\n", realmode_init_vregs.cr0,
+			realmode_init_vregs.cr4, protect_mode_init_vregs.cr0, protect_mode_init_vregs.cr4);
+	}
+	return ret;
+}
+
 void reset_vcpu_regs(struct acrn_vcpu *vcpu)
 {
 	set_vcpu_regs(vcpu, &realmode_init_vregs);

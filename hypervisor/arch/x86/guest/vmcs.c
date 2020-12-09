@@ -26,6 +26,8 @@ static void init_guest_vmx(struct acrn_vcpu *vcpu, uint64_t cr0, uint64_t cr3,
 	struct guest_cpu_context *ctx = &vcpu->arch.contexts[vcpu->arch.cur_context];
 	struct ext_context *ectx = &ctx->ext_ctx;
 
+	pr_dbg("%s,cr0:0x%lx, cr4:0x%lx.", __func__, cr0, cr4);
+
 	vcpu_set_cr4(vcpu, cr4);
 	vcpu_set_cr0(vcpu, cr0);
 	exec_vmwrite(VMX_GUEST_CR3, cr3);
@@ -70,6 +72,9 @@ static void init_guest_vmx(struct acrn_vcpu *vcpu, uint64_t cr0, uint64_t cr3,
 static void init_guest_state(struct acrn_vcpu *vcpu)
 {
 	struct guest_cpu_context *ctx = &vcpu->arch.contexts[vcpu->arch.cur_context];
+
+	pr_dbg("%s, cr0:0x%lx, cr4:0x%lx.\n", __func__,
+	ctx->run_ctx.cr0, ctx->run_ctx.cr4);
 
 	init_guest_vmx(vcpu, ctx->run_ctx.cr0, ctx->ext_ctx.cr3,
 			ctx->run_ctx.cr4 & ~(CR4_VMXE | CR4_SMXE | CR4_MCE));
@@ -411,7 +416,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	/* Natural-width */
 	pr_dbg("Natural-width*********");
 
-	init_cr0_cr4_host_mask();
+	init_cr0_cr4_host_guest_mask();
 
 	/* The CR3 target registers work in concert with VMX_CR3_TARGET_COUNT
 	 * field. Using these registers guest CR3 access can be managed. i.e.,

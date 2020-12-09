@@ -12,8 +12,8 @@
  *
  * @brief public APIs for vCR operations
  */
-
-void init_cr0_cr4_host_mask(void);
+uint64_t get_cr4_reserved_bits(void);
+void init_cr0_cr4_host_guest_mask(void);
 
 /**
  * @brief vCR from vcpu
