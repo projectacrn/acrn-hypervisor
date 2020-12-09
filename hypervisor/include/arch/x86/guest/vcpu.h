@@ -536,6 +536,8 @@ void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
  */
 void reset_vcpu_regs(struct acrn_vcpu *vcpu);
 
+bool sanitize_cr0_cr4_pattern(void);
+
 /**
  * @brief Initialize the protect mode vcpu registers
  *

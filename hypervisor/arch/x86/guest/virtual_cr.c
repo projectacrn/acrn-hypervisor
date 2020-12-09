@@ -21,27 +21,88 @@
 #include <trace.h>
 #include <logmsg.h>
 
-/* CR0 bits hv want to trap to track status change */
-#define CR0_TRAP_MASK (CR0_PE | CR0_PG | CR0_WP | CR0_CD | CR0_NW)
-#define CR0_RESERVED_MASK ~(CR0_PG | CR0_CD | CR0_NW | CR0_AM | CR0_WP | \
-			   CR0_NE |  CR0_ET | CR0_TS | CR0_EM | CR0_MP | CR0_PE)
+/*
+ * Physical CR4 bits in VMX operation may be either flexible or fixed.
+ * Guest CR4 bits may be operatable or reserved.
+ *
+ * All the guest reserved bits should be TRAPed and EMULATed by HV
+ * (inject #GP).
+ *
+ * For guest operatable bits, it may be:
+ * CR4_PASSTHRU_BITS:
+ *	Bits that may be passed through to guest. The actual passthru bits
+ *	should be masked by flexible bits.
+ *
+ * CR4_TRAP_AND_PASSTHRU_BITS:
+ *	The bits are trapped by HV and HV emulation will eventually write
+ *	the guest value to physical CR4 (GUEST_CR4) too. The actual bits
+ *	should be masked by flexible bits.
+ *
+ * CR4_TRAP_AND_EMULATE_BITS:
+ *	The bits are trapped by HV and emulated, but HV updates vCR4 only
+ *	(no update to physical CR4), i.e. pure software emulation.
+ *
+ * CR4_EMULATED_RESERVE_BITS:
+ *	The bits are trapped, but are emulated by injecting a #GP.
+ *
+ * NOTE: Above bits should not overlap.
+ *
+ */
+#define CR4_PASSTHRU_BITS	(CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | \
+				CR4_PGE | CR4_PCE | CR4_OSFXSR | CR4_PCIDE | \
+				CR4_OSXSAVE | CR4_FSGSBASE | CR4_OSXMMEXCPT | \
+				CR4_UMIP)
+static uint64_t cr4_passthru_mask = CR4_PASSTHRU_BITS;	/* bound to flexible bits */
 
-/* CR4 bits hv want to trap to track status change */
-#define CR4_TRAP_MASK (CR4_PSE | CR4_PAE | CR4_VMXE | CR4_SMEP | CR4_SMAP | CR4_PKE | CR4_CET)
-#define	CR4_RESERVED_MASK ~(CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_PSE | \
-				CR4_PAE | CR4_MCE | CR4_PGE | CR4_PCE |     \
-				CR4_OSFXSR | CR4_PCIDE | CR4_OSXSAVE |       \
-				CR4_SMEP | CR4_FSGSBASE | CR4_VMXE |         \
-				CR4_OSXMMEXCPT | CR4_SMAP | CR4_PKE |        \
-				CR4_SMXE | CR4_UMIP | CR4_CET)
+#define CR4_TRAP_AND_PASSTHRU_BITS	(CR4_PSE | CR4_PAE | CR4_SMEP | CR4_SMAP | CR4_PKE)
+static uint64_t	cr4_trap_and_passthru_mask = CR4_TRAP_AND_PASSTHRU_BITS; /* bound to flexible bits */
+
+#define CR4_TRAP_AND_EMULATE_BITS	0UL /* software emulated bits even if host is fixed */
+
+/* Change of these bits should change vcpuid too */
+#define CR4_EMULATED_RESERVE_BITS	(CR4_VMXE | CR4_MCE | CR4_CET | CR4_SMXE)
+
+/* The physical CR4 value for bits of CR4_EMULATED_RESERVE_BITS */
+#define CR4_EMRSV_BITS_PHYS_VALUE	(CR4_VMXE | CR4_MCE)
+
+/* The CR4 value guest expected to see for bits of CR4_EMULATED_RESERVE_BITS */
+#define CR4_EMRSV_BITS_VIRT_VALUE	0
+static uint64_t cr4_rsv_bits_guest_value;
+
+/*
+ * Initial value or reset value of GUEST_CR4, i.e. physical value.
+ * They are likely zeros, but some reserved bits may be not.
+ */
+static uint64_t initial_guest_cr4;
+
+/*
+ * Bits not in cr4_passthru_mask/cr4_trap_and_passthru_mask/cr4_trap_and_emulate_mask
+ * are reserved bits, includes at least CR4_EMULATED_RESERVE_BITS
+ */
+static uint64_t cr4_reserved_bits_mask;
+
+/*
+ * CR0 follows the same rule of CR4, except it won't inject #GP for reserved bits violation.
+ * Instead, it ignores the software write to those reserved bits.
+ */
+#define CR0_PASSTHRU_BITS	(CR0_MP | CR0_EM | CR0_TS | CR0_ET | CR0_NE | CR0_AM)
+static uint64_t cr0_passthru_mask = CR0_PASSTHRU_BITS;	/* bound to flexible bits */
+
+#define CR0_TRAP_AND_PASSTHRU_BITS	(CR0_PE | CR0_PG | CR0_WP)
+static uint64_t	cr0_trap_and_passthru_mask = CR0_TRAP_AND_PASSTHRU_BITS;/* bound to flexible bits */
+/* software emulated bits even if host is fixed */
+#define CR0_TRAP_AND_EMULATE_BITS	(CR0_CD | CR0_NW)
+
+/* These bits may be part of flexible bits but reserved to guest */
+#define CR0_EMULATED_RESERVE_BITS	0UL
+#define	CR0_EMRSV_BITS_PHYS_VALUE	0UL
+#define	CR0_EMRSV_BITS_VIRT_VALUE	0UL
+static uint64_t cr0_rsv_bits_guest_value;
+static uint64_t initial_guest_cr0;		/* Initial value of GUEST_CR0 */
+static uint64_t cr0_reserved_bits_mask;
 
 /* PAE PDPTE bits 1 ~ 2, 5 ~ 8 are always reserved */
 #define PAE_PDPTE_FIXED_RESVD_BITS	0x00000000000001E6UL
-
-static uint64_t cr0_always_on_mask;
-static uint64_t cr0_always_off_mask;
-static uint64_t cr4_always_on_mask;
-static uint64_t cr4_always_off_mask;
 
 static int32_t load_pdptrs(const struct acrn_vcpu *vcpu)
 {
@@ -84,12 +145,25 @@ static int32_t load_pdptrs(const struct acrn_vcpu *vcpu)
 	return ret;
 }
 
+/*
+ * Whether the value changes the reserved bits.
+ */
+static inline bool is_valid_cr0(uint64_t cr0)
+{
+	return (cr0 & cr0_reserved_bits_mask) == cr0_rsv_bits_guest_value;
+}
+
+/*
+ * Certain combination of CR0 write may lead to #GP.
+ */
 static bool is_cr0_write_valid(struct acrn_vcpu *vcpu, uint64_t cr0)
 {
 	bool ret = true;
 
-	/* Shouldn't set always off bit */
-	if ((cr0 & cr0_always_off_mask) != 0UL) {
+	/*
+	 * Set 1 in high 32 bits (part of reserved bits) leads to #GP.
+	 */
+	if ((cr0 >> 32UL) != 0UL) {
 		ret = false;
 	} else {
 		/* SDM 25.3 "Changes to instruction behavior in VMX non-root"
@@ -150,64 +224,66 @@ static bool is_cr0_write_valid(struct acrn_vcpu *vcpu, uint64_t cr0)
  *   - PG (31) Trapped to track cpu/paging mode.
  *             Set the value according to the value from guest.
  */
-static void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
+static void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t value)
 {
 	bool err_found = false;
+	/*
+	 * For reserved bits of CR0, SDM states:
+	 *	attempts to set them have no impact, while set to high 32 bits lead to #GP.
+	 */
 
-	if (!is_cr0_write_valid(vcpu, cr0)) {
-		pr_dbg("Invalid cr0 write operation from guest");
+	if (!is_cr0_write_valid(vcpu, value)) {
+		pr_err("Invalid cr0 write operation from guest");
 		vcpu_inject_gp(vcpu, 0U);
 	} else {
-		uint64_t cr0_vmx;
+		uint64_t effective_cr0 = (value & ~cr0_reserved_bits_mask) | cr0_rsv_bits_guest_value;
+		uint64_t mask, tmp;
 		uint32_t entry_ctrls;
-		bool old_paging_enabled = is_paging_enabled(vcpu);
-		uint64_t cr0_changed_bits = vcpu_get_cr0(vcpu) ^ cr0;
-		uint64_t cr0_mask = cr0;
+		uint64_t cr0_changed_bits = vcpu_get_cr0(vcpu) ^ effective_cr0;
 
-		/* SDM 2.5
-		 * When loading a control register, reserved bit should always set
-		 * to the value previously read.
-		 */
-		cr0_mask &= ~CR0_RESERVED_MASK;
+		if ((cr0_changed_bits & CR0_PG) != 0UL) {
+			/* PG bit changes */
+			if ((effective_cr0 & CR0_PG) != 0UL) {
+				/* Enable paging */
+				if ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL) {
+					/* Enable long mode */
+					pr_dbg("VMM: Enable long mode");
+					entry_ctrls = exec_vmread32(VMX_ENTRY_CONTROLS);
+					entry_ctrls |= VMX_ENTRY_CTLS_IA32E_MODE;
+					exec_vmwrite32(VMX_ENTRY_CONTROLS, entry_ctrls);
 
-		if (!old_paging_enabled && ((cr0_mask & CR0_PG) != 0UL)) {
-			if ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL) {
-				/* Enable long mode */
-				pr_dbg("VMM: Enable long mode");
-				entry_ctrls = exec_vmread32(VMX_ENTRY_CONTROLS);
-				entry_ctrls |= VMX_ENTRY_CTLS_IA32E_MODE;
-				exec_vmwrite32(VMX_ENTRY_CONTROLS, entry_ctrls);
-
-				vcpu_set_efer(vcpu, vcpu_get_efer(vcpu) | MSR_IA32_EFER_LMA_BIT);
-			} else if (is_pae(vcpu)) {
-				/* enabled PAE from paging disabled */
-				if (load_pdptrs(vcpu) != 0) {
-					err_found = true;
-					vcpu_inject_gp(vcpu, 0U);
+					vcpu_set_efer(vcpu, vcpu_get_efer(vcpu) | MSR_IA32_EFER_LMA_BIT);
+				} else {
+					pr_dbg("VMM: NOT Enable long mode");
+					if (is_pae(vcpu)) {
+						/* enabled PAE from paging disabled */
+						if (load_pdptrs(vcpu) != 0) {
+							err_found = true;
+							vcpu_inject_gp(vcpu, 0U);
+						}
+					}
 				}
-			} else {
-				/* do nothing */
-			}
-		} else if (old_paging_enabled && ((cr0_mask & CR0_PG) == 0UL)) {
-			if ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL) {
-				/* Disable long mode */
-				pr_dbg("VMM: Disable long mode");
-				entry_ctrls = exec_vmread32(VMX_ENTRY_CONTROLS);
-				entry_ctrls &= ~VMX_ENTRY_CTLS_IA32E_MODE;
-				exec_vmwrite32(VMX_ENTRY_CONTROLS, entry_ctrls);
+			} else  {
+				/* Disable paging */
+				pr_dbg("disable paginge");
+				if ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL) {
+					/* Disable long mode */
+					pr_dbg("VMM: Disable long mode");
+					entry_ctrls = exec_vmread32(VMX_ENTRY_CONTROLS);
+					entry_ctrls &= ~VMX_ENTRY_CTLS_IA32E_MODE;
+					exec_vmwrite32(VMX_ENTRY_CONTROLS, entry_ctrls);
 
-				vcpu_set_efer(vcpu, vcpu_get_efer(vcpu) & ~MSR_IA32_EFER_LMA_BIT);
+					vcpu_set_efer(vcpu, vcpu_get_efer(vcpu) & ~MSR_IA32_EFER_LMA_BIT);
+				}
 			}
-		} else {
-			/* do nothing */
 		}
 
 		if (!err_found) {
 			/* If CR0.CD or CR0.NW get cr0_changed_bits */
-			if ((cr0_changed_bits & (CR0_CD | CR0_NW)) != 0UL) {
-				/* No action if only CR0.NW is cr0_changed_bits */
+			if ((cr0_changed_bits & CR0_TRAP_AND_EMULATE_BITS) != 0UL) {
+				/* No action if only CR0.NW is changed */
 				if ((cr0_changed_bits & CR0_CD) != 0UL) {
-					if ((cr0_mask & CR0_CD) != 0UL) {
+					if ((effective_cr0 & CR0_CD) != 0UL) {
 						/*
 						 * When the guest requests to set CR0.CD, we don't allow
 						 * guest's CR0.CD to be actually set, instead, we write guest
@@ -220,50 +296,46 @@ static void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 						exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL,
 							vcpu_get_guest_msr(vcpu, MSR_IA32_PAT));
 					}
-					vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 				}
 			}
 
-			if ((cr0_changed_bits & (CR0_PG | CR0_WP)) != 0UL) {
+			if ((cr0_changed_bits & (CR0_PG | CR0_WP | CR0_CD)) != 0UL) {
 				vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 			}
 
-			/* CR0 has no always off bits, except the always on bits, and reserved
-			 * bits, allow to set according to guest.
-			 */
-			cr0_vmx = cr0_always_on_mask | cr0_mask;
+			mask = cr0_trap_and_passthru_mask | cr0_passthru_mask;
+			tmp = (initial_guest_cr0 & ~mask) | (effective_cr0 & mask);
 
-			/* Don't set CD or NW bit to guest */
-			cr0_vmx &= ~(CR0_CD | CR0_NW);
-			exec_vmwrite(VMX_GUEST_CR0, cr0_vmx & 0xFFFFFFFFUL);
-			exec_vmwrite(VMX_CR0_READ_SHADOW, cr0_mask & 0xFFFFFFFFUL);
+			exec_vmwrite(VMX_GUEST_CR0, tmp);
+			exec_vmwrite(VMX_CR0_READ_SHADOW, effective_cr0);
 
 			/* clear read cache, next time read should from VMCS */
 			bitmap_clear_lock(CPU_REG_CR0, &vcpu->reg_cached);
 
-			pr_dbg("VMM: Try to write %016lx, allow to write 0x%016lx to CR0", cr0_mask, cr0_vmx);
+			pr_dbg("VMM: Try to write %016lx, allow to write 0x%016lx to CR0", effective_cr0, tmp);
 		}
 	}
+}
+
+static inline bool is_valid_cr4(uint64_t cr4)
+{
+	return (cr4 & cr4_reserved_bits_mask) == cr4_rsv_bits_guest_value;
+}
+
+/*
+ * TODO: Implement more comprhensive check here.
+ */
+bool is_valid_cr0_cr4(uint64_t cr0, uint64_t cr4)
+{
+	return is_valid_cr4(cr4) & is_valid_cr0(cr0);
 }
 
 static bool is_cr4_write_valid(struct acrn_vcpu *vcpu, uint64_t cr4)
 {
 	bool ret = true;
 
-	/* Check if guest try to set fixed to 0 bits or reserved bits */
-	if ((cr4 & cr4_always_off_mask) != 0U) {
+	if (!is_valid_cr4(cr4) || (is_long_mode(vcpu) && ((cr4 & CR4_PAE) == 0UL))) {
 		ret = false;
-	} else {
-		/* Do NOT support nested guest, nor SMX */
-		if (((cr4 & CR4_VMXE) != 0UL) || ((cr4 & CR4_SMXE) != 0UL) || ((cr4 & CR4_CET) != 0UL)) {
-			ret = false;
-		} else {
-			if (is_long_mode(vcpu)) {
-				if ((cr4 & CR4_PAE) == 0UL) {
-					ret = false;
-				}
-			}
-		}
 	}
 
 	return ret;
@@ -273,37 +345,9 @@ static bool is_cr4_write_valid(struct acrn_vcpu *vcpu, uint64_t cr4)
  * Handling of CR4:
  * Assume "unrestricted guest" feature is supported by vmx.
  *
- * For CR4, if some feature is not supported by hardware, the corresponding bit
- * will be set in cr4_always_off_mask. If guest try to set these bits after
- * vmexit, will inject a #GP.
- * If a bit for a feature not supported by hardware, which is flexible to guest,
- * and write to it do not lead to a VM exit, a #GP should be generated inside
- * guest.
- *
- *   - VME (0) Flexible to guest
- *   - PVI (1) Flexible to guest
- *   - TSD (2) Flexible to guest
- *   - DE  (3) Flexible to guest
- *   - PSE (4) Trapped to track paging mode.
- *             Set the value according to the value from guest.
- *   - PAE (5) Trapped to track paging mode.
- *             Set the value according to the value from guest.
- *   - MCE (6) Trapped to hide from guest
- *   - PGE (7) Flexible to guest
- *   - PCE (8) Flexible to guest
- *   - OSFXSR (9) Flexible to guest
- *   - OSXMMEXCPT (10) Flexible to guest
- *   - VMXE (13) Trapped to hide from guest
- *   - SMXE (14) must always be 0 => must lead to a VM exit
- *   - PCIDE (17) Flexible to guest
- *   - OSXSAVE (18) Flexible to guest
- *   - XSAVE (19) Flexible to guest
- *         We always keep align with physical cpu. So it's flexible to
- *         guest
- *   - SMEP (20) Flexible to guest
- *   - SMAP (21) Flexible to guest
- *   - PKE (22) Flexible to guest
- *   - CET (23) Trapped to hide from guest
+ * For CR4, if a guest attempts to change the reserved bits, a #GP fault is injected.
+ * This includes hardware reserved bits in VMX operation (not flexible bits),
+ * and CR4_EMULATED_RESERVE_BITS, or check with cr4_reserved_bits_mask.
  */
 static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 {
@@ -313,130 +357,159 @@ static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 		pr_dbg("Invalid cr4 write operation from guest");
 		vcpu_inject_gp(vcpu, 0U);
 	} else {
-		uint64_t cr4_vmx, cr4_shadow;
-		uint64_t old_cr4 = vcpu_get_cr4(vcpu);
+		uint64_t mask, tmp;
+		uint64_t cr4_changed_bits = vcpu_get_cr4(vcpu) ^ cr4;
 
-		if (((cr4 ^ old_cr4) & (CR4_PGE | CR4_PSE | CR4_PAE | CR4_SMEP | CR4_SMAP | CR4_PKE)) != 0UL) {
+		if ((cr4_changed_bits & CR4_TRAP_AND_PASSTHRU_BITS) != 0UL) {
 			if (((cr4 & CR4_PAE) != 0UL) && (is_paging_enabled(vcpu)) && (!is_long_mode(vcpu))) {
 				if (load_pdptrs(vcpu) != 0) {
 					err_found = true;
+					pr_dbg("Err found,cr4:0xlx,cr0:0x%lx ", cr4, vcpu_get_cr0(vcpu));
 					vcpu_inject_gp(vcpu, 0U);
 				}
 			}
-			if (!err_found) {
-				vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
-			}
+			vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 		}
 
-		if (!err_found && (((cr4 ^ old_cr4) & CR4_PCIDE) != 0UL)) {
+		if (!err_found && ((cr4_changed_bits & CR4_PCIDE) != 0UL)) {
 			/* MOV to CR4 causes a general-protection exception (#GP) if it would change
 			 * CR4.PCIDE from 0 to 1 and either IA32_EFER.LMA = 0 or CR3[11:0] != 000H
 			 */
 			if ((cr4 & CR4_PCIDE) != 0UL) {
 				uint64_t guest_cr3 = exec_vmread(VMX_GUEST_CR3);
-				/* For now, HV passes-through PCID capability to guest, check X86_FEATURE_PCID of
-				 * pcpu capabilities directly.
-				 */
-				if ((!pcpu_has_cap(X86_FEATURE_PCID)) || (!is_long_mode(vcpu)) ||
-				   ((guest_cr3 & 0xFFFUL) != 0UL)) {
-					pr_dbg("Failed to enable CR4.PCIE");
+
+				if ((!is_long_mode(vcpu)) || ((guest_cr3 & 0xFFFUL) != 0UL)) {
+					pr_dbg("Failed to enable CR4.PCID, cr4:0x%lx, cr4_changed_bits:0x%lx,vcpu_cr4:0x%lx cr3:0x%lx",
+						cr4, cr4_changed_bits, vcpu_get_cr4(vcpu), guest_cr3);
+
 					err_found = true;
 					vcpu_inject_gp(vcpu, 0U);
 				}
-			} else {
-				/* The instruction invalidates all TLB entries (including global entries) and
-				 * all entries in all paging-structure caches (for all PCIDs) if it changes the
-				 * value of the CR4.PCIDE from 1 to 0
-				 */
-				vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 			}
 		}
 
 		if (!err_found) {
-			/* Clear forced off bits */
-			cr4_shadow = cr4 & ~CR4_MCE;
+			/*
+			 * Update the passthru bits.
+			 */
+			mask = cr4_trap_and_passthru_mask | cr4_passthru_mask;
+			tmp = (initial_guest_cr4 & ~mask) | (cr4 & mask);
 
-			cr4_vmx = cr4_always_on_mask | cr4_shadow;
-			exec_vmwrite(VMX_GUEST_CR4, cr4_vmx & 0xFFFFFFFFUL);
-			exec_vmwrite(VMX_CR4_READ_SHADOW, cr4_shadow & 0xFFFFFFFFUL);
+			/*
+			 * For all reserved bits (including CR4_EMULATED_RESERVE_BITS), we came here because
+			 * the guest is not changing them.
+			 */
+			exec_vmwrite(VMX_GUEST_CR4, tmp);
+			exec_vmwrite(VMX_CR4_READ_SHADOW, cr4);
 
 			/* clear read cache, next time read should from VMCS */
 			bitmap_clear_lock(CPU_REG_CR4, &vcpu->reg_cached);
 
-			pr_dbg("VMM: Try to write %016lx, allow to write 0x%016lx to CR4", cr4, cr4_vmx);
+			pr_dbg("VMM: Try to write %016lx, allow to write 0x%016lx to CR4", cr4, tmp);
 		}
 	}
 }
 
-void init_cr0_cr4_host_mask(void)
+void init_cr0_cr4_flexible_bits(void)
 {
-	static bool inited = false;
-	static uint64_t cr0_host_owned_bits, cr4_host_owned_bits;
+	uint64_t cr0_flexible_bits;
+	uint64_t cr4_flexible_bits;
 	uint64_t fixed0, fixed1;
 
-	if (!inited) {
-		/* Read the CR0 fixed0 / fixed1 MSR registers */
-		fixed0 = msr_read(MSR_IA32_VMX_CR0_FIXED0);
-		fixed1 = msr_read(MSR_IA32_VMX_CR0_FIXED1);
+	/* make sure following MACROs don't have any overlapped set bit.
+	 */
+	ASSERT(((CR0_PASSTHRU_BITS ^ CR0_TRAP_AND_PASSTHRU_BITS) ^ CR0_TRAP_AND_EMULATE_BITS) ==
+			(CR0_PASSTHRU_BITS | CR0_TRAP_AND_PASSTHRU_BITS | CR0_TRAP_AND_EMULATE_BITS));
 
-		cr0_host_owned_bits = ~(fixed0 ^ fixed1);
-		/* Add the bit hv wants to trap */
-		cr0_host_owned_bits |= CR0_TRAP_MASK;
-		cr0_host_owned_bits &= ~CR0_RESERVED_MASK;
-		/* CR0 clear PE/PG from always on bits due to "unrestructed guest" feature */
-		cr0_always_on_mask = fixed0 & (~(CR0_PE | CR0_PG));
-		cr0_always_off_mask = ~fixed1;
-		/* SDM 2.5
-		 * bit 63:32 of CR0 and CR4 ar reserved and must be written
-		 * zero. We could merge it with always off mask.
-		 */
-		cr0_always_off_mask |= 0xFFFFFFFF00000000UL;
+	ASSERT(((CR4_PASSTHRU_BITS ^ CR4_TRAP_AND_PASSTHRU_BITS) ^ CR4_TRAP_AND_EMULATE_BITS) ==
+			(CR4_PASSTHRU_BITS | CR4_TRAP_AND_PASSTHRU_BITS | CR4_TRAP_AND_EMULATE_BITS));
 
-		/* Read the CR4 fixed0 / fixed1 MSR registers */
-		fixed0 = msr_read(MSR_IA32_VMX_CR4_FIXED0);
-		fixed1 = msr_read(MSR_IA32_VMX_CR4_FIXED1);
+	/* Read the CR0 fixed0 / fixed1 MSR registers */
+	fixed0 = msr_read(MSR_IA32_VMX_CR0_FIXED0);
+	fixed1 = msr_read(MSR_IA32_VMX_CR0_FIXED1);
 
-		cr4_host_owned_bits = ~(fixed0 ^ fixed1);
-		/* Add the bit hv wants to trap */
-		cr4_host_owned_bits |= CR4_TRAP_MASK;
-		cr4_host_owned_bits &= ~CR4_RESERVED_MASK;
-		cr4_always_on_mask = fixed0;
-		/* Record the bit fixed to 0 for CR4, including reserved bits */
-		cr4_always_off_mask = ~fixed1;
-		/* SDM 2.5
-		 * bit 63:32 of CR0 and CR4 ar reserved and must be written
-		 * zero. We could merge it with always off mask.
-		 */
-		cr4_always_off_mask |= 0xFFFFFFFF00000000UL;
-		cr4_always_off_mask |= CR4_RESERVED_MASK;
-		inited = true;
-	}
+	pr_dbg("%s:cr0 fixed0 = 0x%016lx, fixed1 = 0x%016lx", __func__, fixed0, fixed1);
+	cr0_flexible_bits = (fixed0 ^ fixed1);
+	/*
+	 * HW reports fixed bits for CR0_PG & CR0_PE, but do not check the violation.
+	 * ACRN needs to set them for (unrestricted) guest, and therefore view them as
+	 * flexible bits.
+	 */
+	cr0_flexible_bits |= (CR0_PE | CR0_PG);
+	cr0_passthru_mask &= cr0_flexible_bits;
+	cr0_trap_and_passthru_mask &= cr0_flexible_bits;
+	cr0_reserved_bits_mask = ~(cr0_passthru_mask | cr0_trap_and_passthru_mask | CR0_TRAP_AND_EMULATE_BITS);
 
-	exec_vmwrite(VMX_CR0_GUEST_HOST_MASK, cr0_host_owned_bits);
-	/* Output CR0 mask value */
-	pr_dbg("CR0 guest-host mask value: 0x%016lx", cr0_host_owned_bits);
+	/*
+	 * cr0_rsv_bits_guest_value should be sync with always ON bits (1 in both FIXED0/FIXED1 MSRs).
+	 * Refer SDM Appendix A.7
+	 */
+	cr0_rsv_bits_guest_value = (fixed0 & ~cr0_flexible_bits);
+	initial_guest_cr0 = (cr0_rsv_bits_guest_value & ~CR0_EMULATED_RESERVE_BITS) | CR0_EMRSV_BITS_PHYS_VALUE;
+	cr0_rsv_bits_guest_value = (cr0_rsv_bits_guest_value & ~CR0_EMULATED_RESERVE_BITS) | CR0_EMRSV_BITS_VIRT_VALUE;
 
+	pr_dbg("cr0_flexible_bits:0x%lx, cr0_passthru_mask:%lx, cr0_trap_and_passthru_mask:%lx.\n",
+		cr0_flexible_bits, cr0_passthru_mask, cr0_trap_and_passthru_mask);
+	pr_dbg("cr0_reserved_bits_mask:%lx, cr0_rsv_bits_guest_value:%lx, initial_guest_cr0:%lx.\n",
+		cr0_reserved_bits_mask, cr0_rsv_bits_guest_value, initial_guest_cr0);
 
-	exec_vmwrite(VMX_CR4_GUEST_HOST_MASK, cr4_host_owned_bits);
-	/* Output CR4 mask value */
-	pr_dbg("CR4 guest-host mask value: 0x%016lx", cr4_host_owned_bits);
+	/* Read the CR4 fixed0 / fixed1 MSR registers */
+	fixed0 = msr_read(MSR_IA32_VMX_CR4_FIXED0);
+	fixed1 = msr_read(MSR_IA32_VMX_CR4_FIXED1);
+
+	pr_dbg("%s:cr4 fixed0 = 0x%016lx, fixed1 = 0x%016lx", __func__, fixed0, fixed1);
+	cr4_flexible_bits = (fixed0 ^ fixed1);
+	cr4_passthru_mask &= cr4_flexible_bits;
+	cr4_trap_and_passthru_mask &= cr4_flexible_bits;
+
+	/*
+	 * vcpuid should always consult cr4_reserved_bits_mask when reporting capability.
+	 *
+	 * The guest value of reserved bits are likely identical to fixed bits, but certains
+	 * exceptions may be applied, i.e. for CR4_EMULATED_RESERVE_BITS.
+	 */
+	cr4_reserved_bits_mask = ~(cr4_passthru_mask | cr4_trap_and_passthru_mask | CR4_TRAP_AND_EMULATE_BITS);
+
+	/*
+	 * cr4_reserved_bits_value should be sync with always ON bits (1 in both FIXED0/FIXED1 MSRs).
+	 * Refer SDM Appendix A.8
+	 */
+	cr4_rsv_bits_guest_value = (fixed0 & ~cr4_flexible_bits);
+	initial_guest_cr4 = (cr4_rsv_bits_guest_value & ~CR4_EMULATED_RESERVE_BITS) | CR4_EMRSV_BITS_PHYS_VALUE;
+	cr4_rsv_bits_guest_value = (cr4_rsv_bits_guest_value & ~CR4_EMULATED_RESERVE_BITS) | CR4_EMRSV_BITS_VIRT_VALUE;
+
+	pr_dbg("cr4_flexible_bits:0x%lx, cr4_passthru_mask:0x%lx, cr4_trap_and_passthru_mask:0x%lx.",
+		cr4_flexible_bits, cr4_passthru_mask, cr4_trap_and_passthru_mask);
+	pr_dbg("cr4_reserved_bits_mask:%lx, cr4_rsv_bits_guest_value:%lx, initial_guest_cr4:%lx.\n",
+		cr4_reserved_bits_mask, cr4_rsv_bits_guest_value, initial_guest_cr4);
+}
+
+void init_cr0_cr4_host_guest_mask(void)
+{
+	/*
+	 * "1" means the bit is trapped by host, and "0" means passthru to guest..
+	 */
+	exec_vmwrite(VMX_CR0_GUEST_HOST_MASK, ~cr0_passthru_mask); /* all bits except passthrubits are trapped */
+	pr_dbg("CR0 guest-host mask value: 0x%016lx", ~cr0_passthru_mask);
+
+	exec_vmwrite(VMX_CR4_GUEST_HOST_MASK, ~cr4_passthru_mask); /* all bits except passthru bits are trapped */
+	pr_dbg("CR4 guest-host mask value: 0x%016lx", ~cr4_passthru_mask);
 }
 
 uint64_t vcpu_get_cr0(struct acrn_vcpu *vcpu)
 {
-	uint64_t mask;
 	struct run_context *ctx = &vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
 	if (bitmap_test_and_set_lock(CPU_REG_CR0, &vcpu->reg_cached) == 0) {
-		mask = exec_vmread(VMX_CR0_GUEST_HOST_MASK);
-		ctx->cr0 = (exec_vmread(VMX_CR0_READ_SHADOW) & mask) |
-			(exec_vmread(VMX_GUEST_CR0) & (~mask));
+		ctx->cr0 = (exec_vmread(VMX_CR0_READ_SHADOW) & ~cr0_passthru_mask) |
+			(exec_vmread(VMX_GUEST_CR0) & cr0_passthru_mask);
 	}
 	return ctx->cr0;
 }
 
 void vcpu_set_cr0(struct acrn_vcpu *vcpu, uint64_t val)
 {
+	pr_dbg("%s, value: 0x%016lx rip:%016lx", __func__, val, vcpu_get_rip(vcpu));
 	vmx_write_cr0(vcpu, val);
 }
 
@@ -450,21 +523,21 @@ void vcpu_set_cr2(struct acrn_vcpu *vcpu, uint64_t val)
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.cr2 = val;
 }
 
+/* This API shall be called after vCPU is created. */
 uint64_t vcpu_get_cr4(struct acrn_vcpu *vcpu)
 {
-	uint64_t mask;
 	struct run_context *ctx = &vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
 	if (bitmap_test_and_set_lock(CPU_REG_CR4, &vcpu->reg_cached) == 0) {
-		mask = exec_vmread(VMX_CR4_GUEST_HOST_MASK);
-		ctx->cr4 = (exec_vmread(VMX_CR4_READ_SHADOW) & mask) |
-			(exec_vmread(VMX_GUEST_CR4) & (~mask));
+		ctx->cr4 = (exec_vmread(VMX_CR4_READ_SHADOW) & ~cr4_passthru_mask) |
+			(exec_vmread(VMX_GUEST_CR4) & cr4_passthru_mask);
 	}
 	return ctx->cr4;
 }
 
 void vcpu_set_cr4(struct acrn_vcpu *vcpu, uint64_t val)
 {
+	pr_dbg("%s, value: 0x%016lx rip: %016lx", __func__, val, vcpu_get_rip(vcpu));
 	vmx_write_cr4(vcpu, val);
 }
 
@@ -486,6 +559,7 @@ int32_t cr_access_vmexit_handler(struct acrn_vcpu *vcpu)
 		/* mov to cr0 */
 		vcpu_set_cr0(vcpu, reg);
 		break;
+
 	case 0x04UL:
 		/* mov to cr4 */
 		vcpu_set_cr4(vcpu, reg);
@@ -500,4 +574,9 @@ int32_t cr_access_vmexit_handler(struct acrn_vcpu *vcpu)
 			vm_exit_cr_access_cr_num(exit_qual));
 
 	return ret;
+}
+
+uint64_t get_cr4_reserved_bits(void)
+{
+	return cr4_reserved_bits_mask;
 }

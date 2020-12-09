@@ -431,5 +431,8 @@ void exec_vmwrite64(uint32_t field_full, uint64_t value);
 void exec_vmclear(void *addr);
 void exec_vmptrld(void *addr);
 
+void init_cr0_cr4_flexible_bits(void);
+bool is_valid_cr0_cr4(uint64_t cr0, uint64_t cr4);
+
 #define POSTED_INTR_ON  0U
 #endif /* VMX_H_ */

@@ -68,6 +68,14 @@ static void init_pcpu_comm_post(void)
 	run_idle_thread();
 }
 
+static void init_misc(void)
+{
+	init_cr0_cr4_flexible_bits();
+	if (!sanitize_cr0_cr4_pattern()) {
+		panic("%s Sanitize pattern of CR0 or CR4 failed.\n", __func__);
+	}
+}
+
 /* NOTE: this function is using temp stack, and after SWITCH_TO(runtime_sp, to)
  * it will switch to runtime stack.
  */
@@ -87,6 +95,7 @@ void init_primary_pcpu(void)
 	init_pcpu_pre(true);
 
 	init_seed();
+	init_misc();
 
 	/* Switch to run-time stack */
 	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
