@@ -206,6 +206,7 @@ Build the ACRN Hypervisor on Ubuntu
 
       $ make all BOARD_FILE=misc/vm_configs/xmls/board-xmls/whl-ipc-i7.xml SCENARIO_FILE=misc/vm_configs/xmls/config-xmls/whl-ipc-i7/industry.xml RELEASE=0
       $ sudo make install
+      $ sudo mkdir -p /boot/acrn
       $ sudo cp build/hypervisor/acrn.bin /boot/acrn/
 
 Build and install the ACRN kernel
@@ -263,10 +264,13 @@ Update Grub for the Ubuntu Service VM
    .. note::
       Update this to use the UUID (``--set``) and PARTUUID (``root=`` parameter)
       (or use the device node directly) of the root partition (e.g.
-      ``/dev/nvme0n1p2). Hint: use ``sudo blkid /dev/sda*``.
+      ``/dev/nvme0n1p2``). Hint: use ``sudo blkid <device node>``.
 
       Update the kernel name if you used a different name as the source
       for your Service VM kernel.
+
+      Add the ``menuentry`` at the bottom of :file:`40_custom`, keep the
+      ``exec tail`` line at the top intact.
 
 #. Modify the ``/etc/default/grub`` file to make the Grub menu visible when
    booting and make it load the Service VM kernel by default. Modify the
@@ -427,6 +431,9 @@ Update the Grub file
 
       Update the kernel name if you used a different name as the source
       for your Service VM kernel.
+
+      Add the ``menuentry`` at the bottom of :file:`40_custom`, keep the
+      ``exec tail`` line at the top intact.
 
 #. Modify the ``/etc/default/grub`` file to make the grub menu visible when
    booting and make it load the RT kernel by default. Modify the
