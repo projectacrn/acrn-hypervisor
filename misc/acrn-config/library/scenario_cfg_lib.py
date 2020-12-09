@@ -576,22 +576,21 @@ def get_vuart1_vmid(vm_vuart1):
     :return: dictionary of vmid:vuart1
     """
     vm_id_dic = {}
+    new_vm_id_dic = {}
     for i in list(common.VM_TYPES.keys()):
         for key in vm_vuart1[i].keys():
             if key == "target_vm_id":
                 vm_id_dic[i] = vm_vuart1[i][key]
 
-    # remove the unavailable vimid:target_vmid from dictonary
+    # remove the unavailable vmid:target_vmid from dictionary
     vmid_list = list(vm_id_dic.keys())
 
     for vmid in vmid_list:
-        new_vmid = vm_id_dic[vmid]
-        if int(new_vmid) in vmid_list and vmid == int(vm_id_dic[int(new_vmid)]):
-            continue
-        else:
-            vm_id_dic.pop(vmid)
+        target_vmid = vm_id_dic[vmid]
+        if int(target_vmid) in vmid_list and vmid == int(vm_id_dic[int(target_vmid)]):
+            new_vm_id_dic[vmid] = target_vmid
 
-    return vm_id_dic
+    return new_vm_id_dic
 
 
 def cpus_assignment(cpus_per_vm, index):
