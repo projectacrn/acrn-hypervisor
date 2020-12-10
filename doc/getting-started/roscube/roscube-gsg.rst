@@ -313,7 +313,8 @@ Before create User VM
    .. code-block:: bash
 
      sudo apt install qemu-kvm libvirt-clients libvirt-daemon-system \
-       bridge-utils virt-manager ovmf sudo reboot
+       bridge-utils virt-manager ovmf
+     sudo reboot
 
 Create User VM image
 ====================
@@ -435,6 +436,7 @@ the User VM.
    .. code-block:: bash
 
      mkdir -p ~/acrn/tools/
+     cd ~/acrn/tools
      wget https://raw.githubusercontent.com/Adlink-ROS/ROScube_ACRN_guide/v2.1/scripts/acrn_bridge.sh
      chmod +x ./acrn_bridge.sh
      ./acrn_bridge.sh
