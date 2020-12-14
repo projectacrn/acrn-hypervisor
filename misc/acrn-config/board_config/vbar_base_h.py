@@ -373,7 +373,7 @@ def generate_file(config):
     bdf_list = board_cfg_lib.get_known_caps_pci_devs().get('VMSIX', [])
     # list of all PRE_LAUNCHED_VMs' vmsix supported passthrough devices in bdf format
     pci_items = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "pci_devs", "pci_dev")
-    pci_devs = scenario_cfg_lib.get_pci_devs(pci_items)
+    pci_devs = scenario_cfg_lib.get_pt_pci_devs(pci_items)
     pci_devs_per_vm = get_devs_per_vm_with_key(pci_devs, bdf_list)
     # list SOS vmsix supported devices without other PRE_LAUNCHED_VMs' in bdf format
     sos_bdf_list = [

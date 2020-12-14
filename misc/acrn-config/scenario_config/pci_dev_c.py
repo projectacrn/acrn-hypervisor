@@ -106,14 +106,16 @@ def generate_file(vm_info, config):
     for bdf in compared_bdf:
         bdf_tuple = BusDevFunc.from_str(bdf)
         sos_used_bdf.append(bdf_tuple)
+
+    # BDF 00:01.0 cannot be used in tgl
     bdf_tuple = BusDevFunc(bus=0,dev=1,func=0)
     sos_used_bdf.append(bdf_tuple)
 
     vuarts = common.get_vuart_info(common.SCENARIO_INFO_FILE)
-    vuarts_num = scenario_cfg_lib.get_vuart_num(vuarts)
+    pci_vuarts_num = scenario_cfg_lib.get_pci_vuart_num(vuarts)
     pci_vuart_enabled = False
     for vm_i in common.VM_TYPES:
-        if vuarts_num[vm_i] > 0:
+        if pci_vuarts_num[vm_i] > 0:
             pci_vuart_enabled = True
             break
 
@@ -151,6 +153,10 @@ def generate_file(vm_info, config):
 
     for vm_i, vm_type in common.VM_TYPES.items():
         vm_used_bdf = []
+        # bdf 00:00.0 is reserved for pci host bridge of any type of VM
+        bdf_tuple = BusDevFunc.from_str("00:00.0")
+        vm_used_bdf.append(bdf_tuple)
+
         # Skip this vm if there is no any pci device and virtual device
         if not scenario_cfg_lib.get_pci_dev_num_per_vm()[vm_i] and \
              scenario_cfg_lib.VM_DB[vm_type]['load_type'] != "SOS_VM":
@@ -172,20 +178,31 @@ def generate_file(vm_info, config):
             print("struct acrn_vm_pci_dev_config " +
                   "vm{}_pci_devs[VM{}_CONFIG_PCI_DEV_NUM] = {{".format(vm_i, vm_i), file=config)
 
+        # If a pre-launched vm has either passthrough pci devices or ivshmem devices, hostbridge is needed
+        if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
+            pciHostbridge = False
+            # Check if there is a passtrhough pci devices
+            pci_bdf_devs_list = vm_info.cfg_pci.pci_devs[vm_i]
+            if pci_bdf_devs_list:
+                pciHostbridge = True
+            # Check if the ivshmem is enabled
+            if vm_info.shmem.shmem_enabled == 'y' and vm_i in vm_info.shmem.shmem_regions \
+             and len(vm_info.shmem.shmem_regions[vm_i]) > 0:
+                pciHostbridge = True
+            # Check if there is pci vuart is enabled
+            if pci_vuarts_num[vm_i] > 0:
+                pciHostbridge = True
+            if pciHostbridge:
+                print("\t{", file=config)
+                print("\t\t.emu_type = {},".format(PCI_DEV_TYPE[0]), file=config)
+                print("\t\t.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},", file=config)
+                print("\t\t.vdev_ops = &vhostbridge_ops,", file=config)
+                print("\t},", file=config)
+
         # Insert passtrough devices data
         if vm_i in vm_info.cfg_pci.pci_devs.keys():
             pci_bdf_devs_list = vm_info.cfg_pci.pci_devs[vm_i]
             if pci_bdf_devs_list:
-                # Insert pci hostbridge for passtrough devices:
-                if pci_cnt == 1:
-                    print("\t{", file=config)
-                    print("\t\t.emu_type = {},".format(PCI_DEV_TYPE[0]), file=config)
-                    print("\t\t.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},", file=config)
-                    print("\t\t.vdev_ops = &vhostbridge_ops,", file=config)
-                    print("\t},", file=config)
-                    bdf_tuple = BusDevFunc.from_str("00:00.0")
-                    vm_used_bdf.append(bdf_tuple)
-
                 for pci_bdf_dev in pci_bdf_devs_list:
                     if not pci_bdf_dev:
                         continue
@@ -210,6 +227,7 @@ def generate_file(vm_info, config):
              and len(vm_info.shmem.shmem_regions[vm_i]) > 0:
             raw_shm_list = vm_info.shmem.shmem_regions[vm_i]
             index = 0
+
             for shm in raw_shm_list:
                 shm_splited = shm.split(',')
                 print("\t{", file=config)
