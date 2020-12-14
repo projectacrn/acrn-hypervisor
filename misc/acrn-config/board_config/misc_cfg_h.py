@@ -97,8 +97,8 @@ def cpu_affinity_per_vm_gen(config):
 def pci_dev_num_per_vm_gen(config):
 
     pci_items = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "pci_devs", "pci_dev")
-    pci_devs = scenario_cfg_lib.get_pci_devs(pci_items)
-    pci_dev_num = scenario_cfg_lib.get_pci_num(pci_devs)
+    pci_devs = scenario_cfg_lib.get_pt_pci_devs(pci_items)
+    pt_pci_num = scenario_cfg_lib.get_pt_pci_num(pci_devs)
 
     ivshmem_region = common.get_hv_item_tag(common.SCENARIO_INFO_FILE,
         "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
@@ -110,25 +110,24 @@ def pci_dev_num_per_vm_gen(config):
     shmem_num = scenario_cfg_lib.get_shmem_num(shmem_regions)
 
     vuarts = common.get_vuart_info(common.SCENARIO_INFO_FILE)
-    vuarts_num = scenario_cfg_lib.get_vuart_num(vuarts)
+    pci_vuarts_num = scenario_cfg_lib.get_pci_vuart_num(vuarts)
 
     for vm_i,vm_type in common.VM_TYPES.items():
         num = 0
         if "POST_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             shmem_num_i = 0
-            vuart_num = vuarts_num[vm_i]
+            pci_vuart_num = pci_vuarts_num[vm_i]
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
-            num = shmem_num_i + vuart_num
+            num = shmem_num_i + pci_vuart_num
         elif "PRE_LAUNCHED_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             shmem_num_i = 0
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
-            if pci_dev_num[vm_i] == 1:
-                # there is only vhostbridge but no passthrough device
-                # remove the count of vhostbridge, check get_pci_num definition
-                pci_dev_num[vm_i] -= 1
-            num = pci_dev_num[vm_i] + shmem_num_i + vuarts_num[vm_i]
+            num = pt_pci_num[vm_i] + shmem_num_i + pci_vuarts_num[vm_i]
+            if pt_pci_num[vm_i] > 0 or shmem_num_i > 0 or pci_vuarts_num[vm_i] > 0:
+                # if there is passthrough device or ivshmem, vhostbridge is needed
+                num += 1
         elif "SOS_VM" == scenario_cfg_lib.VM_DB[vm_type]['load_type']:
             continue
         if num > 0:

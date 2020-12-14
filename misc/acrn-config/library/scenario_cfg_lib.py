@@ -73,7 +73,7 @@ F_TARGET_VM_ID = 'target_vm_id'
 F_TARGET_UART_ID = 'target_uart_id'
 
 
-def get_pci_devs(pci_items):
+def get_pt_pci_devs(pci_items):
 
     pci_devs = {}
     for vm_i,pci_descs in pci_items.items():
@@ -89,12 +89,11 @@ def get_pci_devs(pci_items):
     return pci_devs
 
 
-def get_pci_num(pci_devs):
+def get_pt_pci_num(pci_devs):
 
     pci_devs_num = {}
     for vm_i,pci_devs_list in pci_devs.items():
-        # vhostbridge
-        cnt_dev = 1
+        cnt_dev = 0
         for pci_dev in pci_devs_list:
             if not pci_dev:
                 continue
@@ -139,7 +138,7 @@ def get_shmem_num(shmem_regions):
     return shmem_num
 
 
-def get_vuart_num(vuarts):
+def get_pci_vuart_num(vuarts):
 
     vuarts_num = {}
     # get legacy vuart information
@@ -174,8 +173,8 @@ def get_pci_dev_num_per_vm():
     pci_dev_num_per_vm = {}
 
     pci_items = common.get_leaf_tag_map(common.SCENARIO_INFO_FILE, "pci_devs", "pci_dev")
-    pci_devs = get_pci_devs(pci_items)
-    pci_dev_num = get_pci_num(pci_devs)
+    pci_devs = get_pt_pci_devs(pci_items)
+    pt_pci_num = get_pt_pci_num(pci_devs)
 
     ivshmem_region = common.get_hv_item_tag(common.SCENARIO_INFO_FILE,
         "FEATURES", "IVSHMEM", "IVSHMEM_REGION")
@@ -187,7 +186,7 @@ def get_pci_dev_num_per_vm():
     shmem_num = get_shmem_num(shmem_regions)
 
     vuarts = common.get_vuart_info(common.SCENARIO_INFO_FILE)
-    vuarts_num = get_vuart_num(vuarts)
+    vuarts_num = get_pci_vuart_num(vuarts)
 
     for vm_i,vm_type in common.VM_TYPES.items():
         if "POST_LAUNCHED_VM" == VM_DB[vm_type]['load_type']:
@@ -200,11 +199,7 @@ def get_pci_dev_num_per_vm():
             shmem_num_i = 0
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
                 shmem_num_i = shmem_num[vm_i]
-            if pci_dev_num[vm_i] == 1:
-                # there is only vhostbridge but no passthrough device
-                # remove the count of vhostbridge, check get_pci_num definition
-                pci_dev_num[vm_i] -= 1
-            pci_dev_num_per_vm[vm_i] = pci_dev_num[vm_i] + shmem_num_i + vuarts_num[vm_i]
+            pci_dev_num_per_vm[vm_i] = pt_pci_num[vm_i] + shmem_num_i + vuarts_num[vm_i]
         elif "SOS_VM" == VM_DB[vm_type]['load_type']:
             shmem_num_i = 0
             if shmem_enabled == 'y' and vm_i in shmem_num.keys():
