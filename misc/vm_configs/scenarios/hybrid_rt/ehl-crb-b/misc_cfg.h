@@ -84,9 +84,13 @@
 #define VM0_CONFIG_PCI_DEV_NUM	4U
 #define VM2_CONFIG_PCI_DEV_NUM	1U
 
-#define VM0_BOOT_ARGS	"rw rootwait root=/dev/sda3 console=ttyS0 \
-noxsave nohpet no_timer_check ignore_loglevel \
-consoleblank=0 tsc=reliable reboot=acpi"
+#define VM0_BOOT_ARGS	"rw rootwait root=/dev/sda3 no_ipi_broadcast=1 \
+console=ttyS0 noxsave nohpet no_timer_check \
+ignore_loglevel consoleblank=0 tsc=reliable clocksource=tsc \
+x2apic_phys processor.max_cstate=0 intel_idle.max_cstate=0 intel_pstate=disable \
+mce=ignore_ce audit=0 isolcpus=nohz,domain,1 nohz_full=1 \
+rcu_nocbs=1 nosoftlockup idle=poll irqaffinity=0 \
+reboot=acpi"
 
 
 #define VM0_PT_INTX_NUM	0U
