@@ -181,26 +181,26 @@ class MemInfo:
 
 class CfgPci:
     """ This is Abstract of class of PCi devices setting information """
-    pci_dev_num = {}
+    pt_pci_num = {}
     pci_devs = {}
 
     def __init__(self, scenario_file):
         self.scenario_info = scenario_file
 
-    def get_pci_dev_num(self):
+    def get_pt_pci_dev_num(self):
         """
         Get pci device number items
         :return: None
         """
-        self.pci_dev_num = scenario_cfg_lib.get_pci_num(self.pci_devs)
+        self.pt_pci_num = scenario_cfg_lib.get_pt_pci_num(self.pci_devs)
 
-    def get_pci_devs(self):
+    def get_pt_pci_devs(self):
         """
         Get pci devices items
         :return: None
         """
         pci_items = common.get_leaf_tag_map(self.scenario_info, "pci_devs", "pci_dev")
-        self.pci_devs = scenario_cfg_lib.get_pci_devs(pci_items)
+        self.pci_devs = scenario_cfg_lib.get_pt_pci_devs(pci_items)
 
 
     def get_info(self):
@@ -208,8 +208,8 @@ class CfgPci:
         Get all items which belong to this class
         :return: None
         """
-        self.get_pci_devs()
-        self.get_pci_dev_num()
+        self.get_pt_pci_devs()
+        self.get_pt_pci_dev_num()
 
     def check_item(self):
         """ Check all items in this class
