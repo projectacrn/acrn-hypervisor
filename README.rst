@@ -2,6 +2,11 @@ Project ACRN Embedded Hypervisor
 ################################
 
 
+.. raw:: html
+
+   <img src="doc/images/ACRN_Logo_PrimaryLockup_COLOR-300x300-1.png"
+   height="175px" align="right">
+
 The open source project ACRN defines a device hypervisor reference stack
 and an architecture for running multiple software subsystems, managed
 securely, on a consolidated system by means of a virtual machine
