@@ -75,6 +75,7 @@
 #define CR4_OSXMMEXCPT          (1UL<<10U)
 /* OS support for unmasked SIMD floating point exceptions */
 #define CR4_UMIP                (1UL<<11U)	/* User-Mode Inst prevention */
+#define CR4_LA57                (1UL<<12U)	/* 57-bit linear address */
 #define CR4_VMXE                (1UL<<13U)	/* VMX enable */
 #define CR4_SMXE                (1UL<<14U)	/* SMX enable */
 #define CR4_FSGSBASE            (1UL<<16U)	/* RD(FS|GS|FS)BASE inst */
@@ -85,6 +86,7 @@
 #define CR4_SMAP                (1UL<<21U)
 #define CR4_PKE                 (1UL<<22U)	/* Protect-key-enable */
 #define CR4_CET                 (1UL<<23U)	/* Control-flow Enforcement Technology enable */
+#define CR4_PKS                 (1UL<<24U)	/* Enable protection keys for supervisor-mode pages */
 
 /* XCR0_SSE */
 #define XCR0_SSE		(1UL<<1U)

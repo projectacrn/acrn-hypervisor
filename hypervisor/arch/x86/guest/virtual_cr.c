@@ -51,10 +51,10 @@
 #define CR4_PASSTHRU_BITS	(CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | \
 				CR4_PGE | CR4_PCE | CR4_OSFXSR | CR4_PCIDE | \
 				CR4_OSXSAVE | CR4_FSGSBASE | CR4_OSXMMEXCPT | \
-				CR4_UMIP)
+				CR4_UMIP | CR4_LA57)
 static uint64_t cr4_passthru_mask = CR4_PASSTHRU_BITS;	/* bound to flexible bits */
 
-#define CR4_TRAP_AND_PASSTHRU_BITS	(CR4_PSE | CR4_PAE | CR4_SMEP | CR4_SMAP | CR4_PKE)
+#define CR4_TRAP_AND_PASSTHRU_BITS	(CR4_PSE | CR4_PAE | CR4_SMEP | CR4_SMAP | CR4_PKE | CR4_PKS)
 static uint64_t	cr4_trap_and_passthru_mask = CR4_TRAP_AND_PASSTHRU_BITS; /* bound to flexible bits */
 
 #define CR4_TRAP_AND_EMULATE_BITS	0UL /* software emulated bits even if host is fixed */
