@@ -76,9 +76,6 @@
         <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
             <pcpu_id>3</pcpu_id>
         </cpu_affinity>
-        <mmio_resources desc="MMIO resources.">
-            <p2sb>n</p2sb>
-        </mmio_resources>
         <pt_intx desc="pt intx mapping.">
         </pt_intx>
         <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
@@ -128,6 +125,7 @@
         </pci_devs>
         <mmio_resources desc="mmio devices list to passthrough">
             <TPM2 desc="TPM2 device">n</TPM2>
+            <p2sb>n</p2sb>
         </mmio_resources>
     </vm>
     <vm id="1">
@@ -141,7 +139,9 @@
             <pcpu_id>1</pcpu_id>
             <pcpu_id>2</pcpu_id>
         </cpu_affinity>
-        <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+        <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+            <vcpu_clos>0</vcpu_clos>
+            <vcpu_clos>0</vcpu_clos>
             <vcpu_clos>0</vcpu_clos>
         </clos>
         <memory>

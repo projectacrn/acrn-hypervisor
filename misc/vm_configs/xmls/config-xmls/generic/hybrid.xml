@@ -126,7 +126,9 @@
         <pcpu_id>1</pcpu_id>
         <pcpu_id>2</pcpu_id>
     </cpu_affinity>
-    <clos configurable="0" desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+    <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+        <vcpu_clos>0</vcpu_clos>
+        <vcpu_clos>0</vcpu_clos>
         <vcpu_clos>0</vcpu_clos>
     </clos>
     <memory>
