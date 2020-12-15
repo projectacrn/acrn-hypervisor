@@ -115,6 +115,8 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 	switch (leaf) {
 	case 0x07U:
 		if (subleaf == 0U) {
+			uint64_t cr4_reserved_mask = get_cr4_reserved_bits();
+
 			cpuid_subleaf(leaf, subleaf, &entry->eax, &entry->ebx, &entry->ecx, &entry->edx);
 
 			entry->ebx &= ~(CPUID_EBX_PQM | CPUID_EBX_PQE);
@@ -132,6 +134,34 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 			/* mask CET shadow stack and indirect branch tracking */
 			entry->ecx &= ~CPUID_ECX_CET_SS;
 			entry->edx &= ~CPUID_EDX_CET_IBT;
+
+			if ((cr4_reserved_mask & CR4_FSGSBASE) != 0UL) {
+				entry->ebx &= ~CPUID_EBX_FSGSBASE;
+			}
+
+			if ((cr4_reserved_mask & CR4_SMEP) != 0UL) {
+				entry->ebx &= ~CPUID_EBX_SMEP;
+			}
+
+			if ((cr4_reserved_mask & CR4_SMAP) != 0UL) {
+				entry->ebx &= ~CPUID_EBX_SMAP;
+			}
+
+			if ((cr4_reserved_mask & CR4_UMIP) != 0UL) {
+				entry->ecx &= ~CPUID_ECX_UMIP;
+			}
+
+			if ((cr4_reserved_mask & CR4_PKE) != 0UL) {
+				entry->ecx &= ~CPUID_ECX_PKE;
+			}
+
+			if ((cr4_reserved_mask & CR4_LA57) != 0UL) {
+				entry->ecx &= ~CPUID_ECX_LA57;
+			}
+
+			if ((cr4_reserved_mask & CR4_PKS) != 0UL) {
+				entry->ecx &= ~CPUID_ECX_PKS;
+			}
 		} else {
 			entry->eax = 0U;
 			entry->ebx = 0U;
@@ -403,6 +433,7 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 {
 	uint32_t apicid = vlapic_get_apicid(vcpu_vlapic(vcpu));
 	uint64_t guest_ia32_misc_enable = vcpu_get_guest_msr(vcpu, MSR_IA32_MISC_ENABLE);
+	uint64_t cr4_reserved_mask = get_cr4_reserved_bits();
 
 	cpuid_subleaf(0x1U, 0x0U, eax, ebx, ecx, edx);
 	/* Patching initial APIC ID */
@@ -431,7 +462,8 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 
 	/* set Hypervisor Present Bit */
 	*ecx |= CPUID_ECX_HV;
-	if ((get_cr4_reserved_bits() & CR4_PCIDE) != 0UL) {
+
+	if ((cr4_reserved_mask & CR4_PCIDE) != 0UL) {
 		*ecx &= ~CPUID_ECX_PCID;
 	}
 
@@ -448,6 +480,30 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 		if ((cr4 & CR4_OSXSAVE) != 0UL) {
 			*ecx |= CPUID_ECX_OSXSAVE;
 		}
+	}
+
+	if ((cr4_reserved_mask & CR4_VME) != 0UL) {
+		*edx &= ~CPUID_EDX_VME;
+	}
+
+	if ((cr4_reserved_mask & CR4_DE) != 0UL) {
+		*edx &= ~CPUID_EDX_DE;
+	}
+
+	if ((cr4_reserved_mask & CR4_PSE) != 0UL) {
+		*edx &= ~CPUID_EDX_PSE;
+	}
+
+	if ((cr4_reserved_mask & CR4_PAE) != 0UL) {
+		*edx &= ~CPUID_EDX_PAE;
+	}
+
+	if ((cr4_reserved_mask & CR4_PGE) != 0UL) {
+		*edx &= ~CPUID_EDX_PGE;
+	}
+
+	if ((cr4_reserved_mask & CR4_OSFXSR) != 0UL) {
+		*edx &= ~CPUID_EDX_FXSR;
 	}
 
 	/* mask Debug Store feature */
