@@ -18,6 +18,8 @@
 #
 import os
 import sys
+from datetime import datetime
+
 sys.path.insert(0, os.path.abspath('.'))
 
 RELEASE = ""
@@ -75,7 +77,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Project ACRN™'
-copyright = u'2020, Project ACRN'
+copyright = u'2018-' + str(datetime.now().year) + u', Project ACRN'
 author = u'Project ACRN developers'
 
 # The version info for the project you're documenting, acts as replacement for
