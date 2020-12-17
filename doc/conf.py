@@ -77,7 +77,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Project ACRN™'
-copyright = u'2018-' + str(datetime.now().year) + u', Project ACRN'
+copyright = u'2018-' + str(datetime.now().year) + u', ' + project
 author = u'Project ACRN developers'
 
 # The version info for the project you're documenting, acts as replacement for
