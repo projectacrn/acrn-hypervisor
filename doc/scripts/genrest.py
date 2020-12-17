@@ -23,7 +23,7 @@ def rst_link(sc):
         if sc.nodes:
             # The "\ " avoids RST issues for !CONFIG_FOO -- see
             # http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#character-level-inline-markup
-            return r"\ :option:`{0} <CONFIG_{0}>`".format(sc.name)
+            return r"\ :option:`{0} <Kconfig CONFIG_{0}>`".format(sc.name)
 
     elif isinstance(sc, kconfiglib.Choice):
         # Choices appear as dependencies of choice symbols.
@@ -50,8 +50,8 @@ def expr_str(expr):
 
 INDEX_RST_HEADER = """.. _configuration:
 
-Configuration Symbol Reference
-##############################
+Kconfig Configuration Symbol Reference
+######################################
 
 Introduction
 ************
@@ -100,7 +100,8 @@ def write_kconfig_rst():
         # Add an index entry for the symbol that links to its RST file. Also
         # list its prompt(s), if any. (A symbol can have multiple prompts if it
         # has multiple definitions.)
-        index_rst += "   * - :option:`CONFIG_{}`\n     - {}\n".format(
+        index_rst += "   * - :option:`CONFIG_{} <Kconfig CONFIG_{}>`\n     - {}\n".format(
+            sym.name,
             sym.name,
             " / ".join(node.prompt[0]
                        for node in sym.nodes if node.prompt))
@@ -149,6 +150,7 @@ def sym_header_rst(sym):
     #   to be poorly documented at the moment.
     return ":orphan:\n\n" \
            ".. title:: {0}\n\n" \
+           ".. program:: Kconfig\n\n" \
            ".. option:: CONFIG_{0}\n\n" \
            "{1}\n\n" \
            "Type: ``{2}``\n\n" \

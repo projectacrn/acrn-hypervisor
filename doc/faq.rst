@@ -26,10 +26,10 @@ It's important that the ACRN Kconfig settings are aligned with the physical memo
 on your platform. Check the documentation for these option settings for
 details:
 
-* :option:`CONFIG_PLATFORM_RAM_SIZE`
-* :option:`CONFIG_SOS_RAM_SIZE`
-* :option:`CONFIG_UOS_RAM_SIZE`
-* :option:`CONFIG_HV_RAM_SIZE`
+* :option:`CONFIG_PLATFORM_RAM_SIZE <Kconfig CONFIG_PLATFORM_RAM_SIZE>`
+* :option:`CONFIG_SOS_RAM_SIZE <Kconfig CONFIG_SOS_RAM_SIZE>`
+* :option:`CONFIG_UOS_RAM_SIZE <Kconfig CONFIG_UOS_RAM_SIZE>`
+* :option:`CONFIG_HV_RAM_SIZE <Kconfig CONFIG_HV_RAM_SIZE>`
 
 For example, if the Intel NUC's physical memory size is 32G, you may follow these steps
 to make the new UEFI ACRN hypervisor, and then deploy it onto the Intel NUC to boot
