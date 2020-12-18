@@ -26,30 +26,30 @@ Verified version
 
 * Windows 10 Version:
 
-  - Microsoft Windows 10 Enterprise, 10.0.17134 Build 17134
-  - Microsoft Windows 10 Enterprise LTSC Evaluation, 10.0.17763 Build 17763
+  - Microsoft Windows 10 Enterprise LTSC Evaluation
 
 * Windows graphics driver:
 
-  - igfx_win10_100.7212.zip
+  - igfx_win10_100.9030.zip
 
+   .. note::
+
+      WHL needs following setting in BOIS:
+      set **DVMT Pre-Allocated** to **64MB** and set **PM Support**
+      to **Enabled**.
 
 Create a Windows 10 image in the Service VM
 ===========================================
 
 Create a Windows 10 image to install Windows 10 onto a virtual disk.
 
-Download Win10 ISO and drivers
-------------------------------
+Download Win10 image and drivers
+--------------------------------
 
-#. Download `Windows 10 LTSC ISO <https://www.microsoft.com/en-us/evalcenter/evaluate-windows-10-enterprise>`_.
+#. Download `MediaCreationTool20H2.exe <https://www.microsoft.com/software-download/windows10>`_.
 
-   - Select **ISO-LTSC** and click **Continue**.
-   - Complete the required info. Click **Continue**.
-   - Select the language and **x86 64-bit**. Click **Download ISO** and save as ``windows10-LTSC-17763.iso``.
-
-#. Download the `Intel DCH Graphics Driver
-   <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`__.
+   - Run this file and select **Create installation media(USB flash drive,DVD, or ISO file) for another PC**;
+     Then click **ISO file** to create ``windows10.iso``.
 
 #. Download the `Oracle Windows driver <https://edelivery.oracle.com/osdc/faces/SoftwareDelivery>`_.
 
@@ -61,7 +61,7 @@ Download Win10 ISO and drivers
    - Under **Platforms/Language**, select **x86 64-bit**. Click **Continue**.
    - Check **I accept the terms in the license agreement**. Click **Continue**.
    - From the list, right check the item labeled **Oracle VirtIO Drivers
-     Version for Microsoft Windows 1.x.x, yy MB**, and then **Save link as
+     Version for Microsoft Windows 1.1.x, yy MB**, and then **Save link as
      ...**.  Currently, it is named ``V982789-01.zip``.
    - Click **Download**. When the download is complete, unzip the file. You
      will see an ISO named ``winvirtio.iso``.
@@ -72,43 +72,78 @@ Create a raw disk
 Run these commands on the Service VM::
 
    $ sudo apt-get install qemu-utils
-   $ mkdir /home/acrn/img
-   $ cd /home/acrn/img
+   $ mkdir /home/acrn/work
+   $ cd /home/acrn/work
    $ qemu-img create -f raw win10-ltsc.img 30G
 
 Prepare the script to create an image
 -------------------------------------
 
-#. Copy ``/usr/share/acrn/samples/nuc/launch_win.sh`` to ``install_win.sh``::
+#. Refer :ref:`gpu-passthrough` to enable GVT-d GOP feature; then copy above .iso files and  the built OVMF.fd to /home/acrn/work
+#. Prepare WaaG install script, a **/home/acrn/work/install_win.sh** file should be created with the following content.
 
-   $ cp /usr/share/acrn/samples/nuc/launch_win.sh /home/acrn/img/install_win.sh
+.. code-block:: bash
 
+   #!/bin/bash
+   function launch_win()
+   {
+   vm_name=win_vm$1
+   #check if the vm is running or not
+   vm_ps=$(pgrep -a -f acrn-dm)
+   result=$(echo $vm_ps | grep "${vm_name}")
+   if [[ "$result" != "" ]]; then
+     echo "$vm_name is running, can't create twice!"
+     exit
+   fi
+   echo "8086 9ded" > /sys/bus/pci/drivers/pci-stub/new_id
+   echo "0000:00:14.0" > /sys/bus/pci/devices/0000:00:14.0/driver/unbind
+   echo "0000:00:14.0" > /sys/bus/pci/drivers/pci-stub/bind
+   echo "8086 3ea0" > /sys/bus/pci/drivers/pci-stub/new_id
+   echo "0000:00:02.0" > /sys/bus/pci/devices/0000:00:02.0/driver/unbind
+   echo "0000:00:02.0" > /sys/bus/pci/drivers/pci-stub/bind
+   #for memsize setting
+   mem_size=4096M
+   acrn-dm -A -m $mem_size -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
+     -s 2,passthru,0/2/0,gpu \
+     -s 8,virtio-net,tap0 \
+     -s 4,virtio-blk,/home/acrn/work/win10-ltsc.img
+     -s 5,ahci,cd:/home/acrn/work/windows.iso \
+     -s 6,ahci,cd:/home/acrn/work/winvirtio.iso \
+     -s 7,passthru,0/14/0,d3hot_reset \
+     --ovmf /home/acrn/work/OVMF.fd \
+     --windows \
+     $vm_name
+   }
+   # offline SOS CPUs except BSP before launch UOS
+   for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
+           online=`cat $i/online`
+           idx=`echo $i | tr -cd "[1-99]"`
+           echo cpu$idx online=$online
+           if [ "$online" = "1" ]; then
+                   echo 0 > $i/online
+                   # during boot time, cpu hotplug may be disabled by pci_device_probe during a pci module insmod
+                  while [ "$online" = "1" ]; do
+                           sleep 1
+                           echo 0 > $i/online
+                           online=`cat $i/online`
+                   done
+                   echo $idx > /sys/class/vhm/acrn_vhm/offline_cpu
+           fi
+   done
+   launch_win 1 "64 448 8"
 
-#. Edit the ``acrn-dm`` command line in ``install_win.sh`` as follows:
-
-   .. note:: Make sure you use GVT-g ``-s 2,pci-gvt -G "$2"`` in the
-      ``acrn-dm`` command line. Currently, we do not support creating a
-      windows image by GVT-d.
-
-   - Change ``-s 3,virtio-blk,./win10-ltsc.img`` to your path to the Windows
-     10 image.
-
-   - Add ``-s 6,xhci,1-5:1-9``. You may need to change 1-5:1-9 to match the
-     ports of the USB keyboard/mouse and flash on your platform.
-
-   - Add ``-s 8,ahci,cd:./windows10-LTSC-17763.iso`` to point to the Win10
-     ISO.
-
-   - Add ``-s 9,ahci,cd:./winvirtio.iso`` to point to your path to the
-     winvirtio iso.
-
-Install Windows 10 by GVT-g
+Install Windows 10 by GVT-d
 ---------------------------
 
-.. note:: Make sure you have configured your monitor and display according
-   to **3** of :ref:`Boot Windows with GVT-g on ACRN <waag_display_conf_lable>`.
+#. Run **install_win.sh**
 
-#. Run ``install_win.sh``. When you see the UEFI shell, input **exit**.
+   .. code-block:: bash
+
+   cd /home/acrn/work/
+   sudo chmod +x install_win.sh
+   sudo ./install_win.sh
+
+When you see the UEFI shell, input **exit**.
 
 #. Select **Boot Manager** and boot from Win10 ISO.
 
@@ -172,26 +207,33 @@ Install Windows 10 by GVT-g
    .. figure:: images/windows_install_10.png
       :align: center
 
-#. Copy the `Intel DCH Graphics Driver
-   <https://downloadmirror.intel.com/29074/a08/igfx_win10_100.7212.zip>`__ into
-   Windows and install in safe mode. The display driver is updated to 7212.
-
-.. _waag_display_conf_lable:
+#. Download the `Intel DCH Graphics Driver
+   <https://downloadcenter.intel.com/download/30066?v=t>`__.in
+   Windows and install in safe mode.
+   The latest version(27.20.100.9030) was verified on WHL.You’d better use the same version as the one in native Windows 10 on your board.
 
 Boot Windows on ACRN with a default configuration
 =================================================
 
-#. Modify the ``/usr/share/acrn/samples/nuc/launch_win.sh`` script to
-   specify the Windows image that is generated above.
+#. Prepare WaaG lauch script
 
-#. Run ``launch_win.sh``. The WaaG desktop displays on the HDMI monitor.
+   cp /home/acrn/work/install_win.sh  /home/acrn/work/launch_win.sh
 
-   .. note::
-      We support GVT-g and GVT-d while launching Windows guest. If you use GVT-g, you can set up Weston in the Service VM, and set up
-      Weston as the desktop environment in the Service VM in order to
-      experience Windows with the AcrnGT local display feature. If you use
-      GVT-d, set **DVMT Pre-Allocated** to **64MB** and set **PM Support**
-      to **Enabled** in the BIOS. Then, only Windows displays.
+   Remove following lines in launch_win.sh
+
+   .. code-block:: bash
+
+   -s 5,ahci,cd:./windows.iso \
+   -s 6,ahci,cd:./winvirtio.iso \
+
+#. Lauch WaaG
+
+   .. code-block:: bash
+
+   cd /home/acrn/work/
+   sudo ./launch_win.sh
+
+The WaaG desktop displays on the monitor.
 
 ACRN Windows verified feature list
 **********************************
@@ -205,9 +247,6 @@ ACRN Windows verified feature list
                 , "Virtio network",                  "Working"
                 , "Virtio input - mouse",            "Working"
                 , "Virtio input - keyboard",         "Working"
-                , "GVT-g GOP & VNC remote display",  "Working"
-    "GVT-g",      "GVT-g without local display",     "Working with 3D benchmark"
-           ,      "GVT-g with local display",        "Working with 3D benchmark"
     "GVT-d",      "GVT-d with local display",        "Working"
     "Tools",      "WinDbg",                          "Working"
     "Test cases", "Install Windows 10 from scratch", "OK"
@@ -218,12 +257,6 @@ ACRN Windows verified feature list
                    , "Microsoft Store",              "OK"
                    , "3D Viewer",                    "OK"
 
-
-Known limitations
-*****************
-
-* The cursor is not visible with the GVT-g local display.
-
 Explanation for acrn-dm popular command lines
 *********************************************
 
@@ -233,10 +266,6 @@ Explanation for acrn-dm popular command lines
 * ``-s 2,passthru,0/2/0,gpu``:
   This is GVT-d to passthrough the VGA controller to Windows.
   You may need to change 0/2/0 to match the bdf of the VGA controller on your platform.
-
-* ``-s 3,ahci,hd:/root/img/win10.img``:
-  This is the hard disk where Windows 10 should be installed..
-  Make sure that the slot ID **3** points to your win10 img path.
 
 * ``-s 4,virtio-net,tap0``:
   This is for the network virtualization.
@@ -253,11 +282,11 @@ Explanation for acrn-dm popular command lines
    <To get the input event of mouse>
    # cat /proc/bus/input/devices | grep mouse
 
-* ``-s 7,ahci,cd:/root/img/Windows10.iso``:
+* ``-s 7,ahci,cd:/home/acrn/work/Windows10.iso``:
   This is the IOS image used to install Windows 10. It appears as a CD-ROM
   device. Make sure that the slot ID **7** points to your win10 ISO path.
 
-* ``-s 8,ahci,cd:/root/img/winvirtio.iso``:
+* ``-s 8,ahci,cd:/home/acrn/work/winvirtio.iso``:
   This is CD-ROM device to install the virtio Windows driver. Make sure it points to your VirtIO ISO path.
 
 * ``-s 9,passthru,0/14/0``:
@@ -265,7 +294,7 @@ Explanation for acrn-dm popular command lines
   You may need to change ``0/14/0`` to match the BDF of the USB controller on
   your platform.
 
-* ``--ovmf /usr/share/acrn/bios/OVMF.fd``:
+* ``--ovmf /home/acrn/work/OVMF.fd``:
   Make sure it points to your OVMF binary path.
 
 Secure boot enabling
