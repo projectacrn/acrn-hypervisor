@@ -140,7 +140,7 @@ Install ACRN Hypervisor
 
       $ git clone https://github.com/projectacrn/acrn-kernel
       $ cd acrn-kernel
-      $ cp kernel_config_uefi_sos to .config
+      $ cp kernel_config_uefi_sos .config
       $ make olddefconfig
       $ make menuconfig
       $ make
@@ -254,7 +254,7 @@ Bring-up User VM (L2 Guest)
 
       $ git clone https://github.com/projectacrn/acrn-kernel
       $ cd acrn-kernel
-      $ cp kernel_config_uos to .config
+      $ cp kernel_config_uos .config
       $ make
 
    Once the User VM kernel is built successfully, copy ``arch/x86/boot/bzImage`` to  ACRNSOS (L1 guest) and rename this to ``bzImage_uos``. Need this to launch the User VM (L2 guest)
