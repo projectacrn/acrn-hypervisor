@@ -34,7 +34,7 @@ KNOWN_HIDDEN_PDEVS_BOARD_DB = {
 TSN_DEVS = ["8086:4b30", "8086:4b31", "8086:4b32", "8086:4ba0", "8086:4ba1", "8086:4ba2",
             "8086:4bb0", "8086:4bb1", "8086:4bb2", "8086:a0ac", "8086:43ac", "8086:43a2"]
 GPIO_DEVS = ["8086:4b88", "8086:4b89"]
-TPM_PASSTHRU_BOARD = ['whl-ipc-i5', 'whl-ipc-i7', 'tgl-rvp', 'ehl-crb-b']
+TPM_PASSTHRU_BOARD = ['whl-ipc-i5', 'whl-ipc-i7', 'tgl-rvp', 'ehl-crb-b', 'cfl-k700-i7']
 
 KNOWN_CAPS_PCI_DEVS_DB = {
     "VMSIX":TSN_DEVS + GPIO_DEVS,
