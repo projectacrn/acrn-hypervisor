@@ -144,7 +144,7 @@ Here's an example sequence to do this build::
     # effect, therefore pre-load the required modules.
 
     MODULES="all_video archelp boot bufio configfile crypto echo efi_gop efi_uga ext2 extcmd  \
-     fat font fshelp gcry_dsa gcry_rsa gcry_sha1 gcry_sha512 gettext gfxterm linux linuxefi ls \
+     fat font fshelp gcry_dsa gcry_rsa gcry_sha1 gcry_sha512 gettext gfxterm linux ls \
      memdisk minicmd mmap mpi normal part_gpt part_msdos password_pbkdf2 pbkdf2 reboot relocator \
      search search_fs_file search_fs_uuid search_label sleep tar terminal verifiers video_fb"
 
