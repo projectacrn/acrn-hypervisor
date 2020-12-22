@@ -176,16 +176,6 @@ Modify the ``launch_win.sh`` script in order to launch Ubuntu as the User VM.
 
       Refer to :ref:`acrn-dm_parameters` for ACRN for more information.
 
-#. Modify ``acrn.conf`` and reboot the Service VM:
-
-   .. code-block:: none
-
-      $ sudo mount /dev/sda1 /mnt
-      $ sudo sed -i "s/0x01010F/0x010101/" /mnt/loader/entries/acrn.conf
-      $ sudo sed -i "s/0x011111110000/0x011100001111/" /mnt/loader/entries/acrn.conf
-      $ sed -i 3"s/$/ i915.enable_conformance_check=0/" /mnt/loader/entries/acrn.conf
-      $ sudo sync && sudo umount /mnt && reboot
-
 #. Launch the Ubuntu VM after logging in to the Service VM:
 
    .. code-block:: none
