@@ -139,9 +139,9 @@ Install Windows 10 by GVT-d
 
    .. code-block:: bash
 
-   cd /home/acrn/work/
-   sudo chmod +x install_win.sh
-   sudo ./install_win.sh
+      cd /home/acrn/work/
+      sudo chmod +x install_win.sh
+      sudo ./install_win.sh
 
 When you see the UEFI shell, input **exit**.
 
@@ -223,15 +223,15 @@ Boot Windows on ACRN with a default configuration
 
    .. code-block:: bash
 
-   -s 5,ahci,cd:./windows.iso \
-   -s 6,ahci,cd:./winvirtio.iso \
+      -s 5,ahci,cd:./windows.iso \
+      -s 6,ahci,cd:./winvirtio.iso \
 
 #. Lauch WaaG
 
    .. code-block:: bash
 
-   cd /home/acrn/work/
-   sudo ./launch_win.sh
+      cd /home/acrn/work/
+      sudo ./launch_win.sh
 
 The WaaG desktop displays on the monitor.
 
