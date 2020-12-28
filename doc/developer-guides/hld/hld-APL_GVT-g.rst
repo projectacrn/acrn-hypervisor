@@ -839,7 +839,7 @@ In the system, there are three different schedulers for the GPU:
 -  i915 Service VM scheduler
 
 Since User VM always uses the host-based command submission (ELSP) model,
-and it never accesses the GPU or the Graphic Micro Controller (GuC)
+and it never accesses the GPU or the Graphic Micro Controller (:term:`GuC`)
 directly, its scheduler cannot do any preemption by itself.
 The i915 scheduler does ensure batch buffers are
 submitted in dependency order, that is, if a compositor had to wait for
@@ -867,12 +867,12 @@ also implies that this scheduler does not do any preemption of
 workloads.
 
 Finally, there is the i915 scheduler in the Service VM. This scheduler uses the
-GuC or ELSP to do command submission of Service VM local content as well as any
+:term:`GuC` or ELSP to do command submission of Service VM local content as well as any
 content that GVT is submitting to it on behalf of the User VMs. This
-scheduler uses GuC or ELSP to preempt workloads. GuC has four different
+scheduler uses :term:`GuC` or ELSP to preempt workloads. :term:`GuC` has four different
 priority queues, but the Service VM i915 driver uses only two of them. One of
 them is considered high priority and the other is normal priority with a
-GuC rule being that any command submitted on the high priority queue
+:term:`GuC` rule being that any command submitted on the high priority queue
 would immediately try to preempt any workload submitted on the normal
 priority queue. For ELSP submission, the i915 will submit a preempt
 context to preempt the current running context and then wait for the GPU
@@ -881,14 +881,14 @@ engine to be idle.
 While the identification of workloads to be preempted is decided by
 customizable scheduling policies, once a candidate for preemption is
 identified, the i915 scheduler simply submits a preemption request to
-the GuC high-priority queue. Based on the HW's ability to preempt (on an
+the :term:`GuC` high-priority queue. Based on the HW's ability to preempt (on an
 Apollo Lake SoC, 3D workload is preemptible on a 3D primitive level with
 some exceptions), the currently executing workload is saved and
-preempted. The GuC informs the driver using an interrupt of a preemption
+preempted. The :term:`GuC` informs the driver using an interrupt of a preemption
 event occurring. After handling the interrupt, the driver submits the
-high-priority workload through the normal priority GuC queue. As such,
-the normal priority GuC queue is used for actual execbuf submission most
-of the time with the high-priority GuC queue only being used for the
+high-priority workload through the normal priority :term:`GuC` queue. As such,
+the normal priority :term:`GuC` queue is used for actual execbuf submission most
+of the time with the high-priority :term:`GuC` queue only being used for the
 preemption of lower-priority workload.
 
 Scheduling policies are customizable and left to customers to change if

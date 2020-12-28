@@ -397,7 +397,7 @@ that will trigger an error message and return without handling:
    * - VMX_EXIT_REASON_IO_INSTRUCTION
      - pio_instr_vmexit_handler
      - Emulate I/O access with range in IO_BITMAP,
-       which may have a handler in hypervisor (such as vuart or vpic),
+       which may have a handler in hypervisor (such as vUART or vPIC),
        or need to create an I/O request to DM
 
    * - VMX_EXIT_REASON_RDMSR
@@ -511,7 +511,7 @@ request as shown below.
 
    * - ACRN_REQUEST_EXTINT
      - Request for extint vector injection
-     - vcpu_inject_extint, triggered by vpic
+     - vcpu_inject_extint, triggered by vPIC
      - vcpu_do_pending_extint
 
    * - ACRN_REQUEST_NMI

@@ -390,8 +390,8 @@ The workflow can be summarized as:
 1. vhost device init. Vhost proxy creates two eventfd for ioeventfd and
    irqfd.
 2. pass irqfd to vhost kernel driver.
-3. pass irq fd to vhm driver
-4. vhost device driver triggers irq eventfd signal once related native
+3. pass IRQ fd to vhm driver
+4. vhost device driver triggers IRQ eventfd signal once related native
    transfer is completed.
 5. irqfd related logic traverses the irqfd list to retrieve related irq
    information.

@@ -4,13 +4,13 @@ Tracing and Logging high-level design
 #####################################
 
 Both Trace and Log are built on top of a mechanism named shared
-buffer (Sbuf).
+buffer (sbuf).
 
 Shared Buffer
 *************
 
 Shared Buffer is a ring buffer divided into predetermined-size slots. There
-are two use scenarios of Sbuf:
+are two use scenarios of sbuf:
 
 - sbuf can serve as a lockless ring buffer to share data from ACRN HV to
   Service VM in non-overwritten mode. (Writing will fail if an overrun
@@ -19,15 +19,15 @@ are two use scenarios of Sbuf:
   over-written mode. A lock is required to synchronize access by the
   producer and consumer.
 
-Both ACRNTrace and ACRNLog use sbuf as a lockless ring buffer.  The Sbuf
+Both ACRNTrace and ACRNLog use sbuf as a lockless ring buffer.  The sbuf
 is allocated by Service VM and assigned to HV via a hypercall. To hold pointers
 to sbuf passed down via hypercall, an array ``sbuf[ACRN_SBUF_ID_MAX]``
 is defined in per_cpu region of HV, with predefined sbuf ID to identify
 the usage, such as ACRNTrace, ACRNLog, etc.
 
-For each physical CPU, there is a dedicated Sbuf. Only a single producer
-is allowed to put data into that Sbuf in HV, and a single consumer is
-allowed to get data from Sbuf in Service VM. Therefore, no lock is required to
+For each physical CPU, there is a dedicated sbuf. Only a single producer
+is allowed to put data into that sbuf in HV, and a single consumer is
+allowed to get data from sbuf in Service VM. Therefore, no lock is required to
 synchronize access by the producer and consumer.
 
 sbuf APIs
@@ -46,17 +46,17 @@ hypervisor.  Scripts to analyze the collected trace data are also
 provided.
 
 As shown in :numref:`acrntrace-arch`, ACRNTrace is built using
-Shared Buffers (Sbuf), and consists of three parts from bottom layer
+Shared Buffers (sbuf), and consists of three parts from bottom layer
 up:
 
 - **ACRNTrace userland app**: Userland application collecting trace data to
   files (Per Physical CPU)
 
-- **Service VM Trace Module**: allocates/frees SBufs, creates device for each
-  SBuf, sets up sbuf shared between Service VM and HV, and provides a dev node for the
-  userland app to retrieve trace data from Sbuf
+- **Service VM Trace Module**: allocates/frees sbufs, creates device for each
+  sbuf, sets up sbuf shared between Service VM and HV, and provides a dev node for the
+  userland app to retrieve trace data from sbuf
 
-- **Trace APIs**: provide APIs to generate trace event and insert to Sbuf.
+- **Trace APIs**: provide APIs to generate trace event and insert to sbuf.
 
 .. figure:: images/log-image50.png
    :align: center
@@ -77,19 +77,19 @@ Service VM Trace Module
 The Service VM trace module is responsible for:
 
 - allocating sbuf in Service VM memory range for each physical CPU, and assign
-  the GPA of Sbuf to ``per_cpu sbuf[ACRN_TRACE]``
+  the GPA of sbuf to ``per_cpu sbuf[ACRN_TRACE]``
 - create a misc device for each physical CPU
-- provide mmap operation to map entire Sbuf to userspace for high
+- provide mmap operation to map entire sbuf to userspace for high
   flexible and efficient access.
 
 On Service VM shutdown, the trace module is responsible to remove misc devices, free
-SBufs, and set ``per_cpu sbuf[ACRN_TRACE]`` to null.
+sbufs, and set ``per_cpu sbuf[ACRN_TRACE]`` to null.
 
 ACRNTrace Application
 =====================
 
 ACRNTrace application includes a binary to retrieve trace data from
-Sbuf, and Python scripts to convert trace data from raw format into
+sbuf, and Python scripts to convert trace data from raw format into
 readable text, and do analysis.
 
 .. note:: There was no Figure showing the sequence of trace
@@ -98,7 +98,7 @@ readable text, and do analysis.
 With a debug build, trace components are initialized at boot
 time. After initialization, HV writes trace event date into sbuf
 until sbuf is full, which can happen easily if the ACRNTrace app is not
-consuming trace data from Sbuf on Service VM user space.
+consuming trace data from sbuf on Service VM user space.
 
 Once ACRNTrace is launched, for each physical CPU a consumer thread is
 created to periodically read RAW trace data from sbuf and write to a
@@ -121,27 +121,27 @@ See :ref:`acrntrace` for details and usage.
 ACRN Log
 ********
 
-acrnlog is a tool used to capture ACRN hypervisor log to files on
+``acrnlog`` is a tool used to capture ACRN hypervisor log to files on
 Service VM filesystem. It can run as a Service VM service at boot, capturing two
 kinds of logs:
 
 -  Current runtime logs;
--  Logs remaining in the buffer, from last crashed running.
+-  Logs remaining in the buffer, from the last crashed run.
 
 Architectural diagram
 =====================
 
-Similar to the design of ACRN Trace, ACRN Log is built on the top of
-Shared Buffer (Sbuf), and consists of three parts from bottom layer
+Similar to the design of ACRN Trace, ACRN Log is built on top of
+Shared Buffer (sbuf), and consists of three parts from bottom layer
 up:
 
 - **ACRN Log app**: Userland application collecting hypervisor log to
   files;
-- **Service VM ACRN Log Module**: constructs/frees SBufs at reserved memory
+- **Service VM ACRN Log Module**: constructs/frees sbufs at reserved memory
   area, creates dev for current/last logs, sets up sbuf shared between
   Service VM and HV, and provides a dev node for the userland app to
   retrieve logs
-- **ACRN log support in HV**: put logs at specified loglevel to Sbuf.
+- **ACRN log support in HV**: put logs at specified loglevel to sbuf.
 
 .. figure:: images/log-image73.png
    :align: center
@@ -152,11 +152,11 @@ up:
 ACRN log support in Hypervisor
 ==============================
 
-To support acrn log, the following adaption was made to hypervisor log
+To support ``acrnlog``, the following adaption was made to hypervisor log
 system:
 
 - log messages with severity level higher than a specified value will
-  be put into Sbuf when calling logmsg in hypervisor
+  be put into sbuf when calling ``logmsg`` in hypervisor
 - allocate sbuf to accommodate early hypervisor logs before Service VM
   can allocate and set up sbuf
 
@@ -164,7 +164,7 @@ There are 6 different loglevels, as shown below. The specified
 severity loglevel is stored in ``mem_loglevel``, initialized
 by :option:`CONFIG_MEM_LOGLEVEL_DEFAULT`. The loglevel can
 be set to a new value
-at runtime via hypervisor shell command "loglevel".
+at runtime via hypervisor shell command ``loglevel``.
 
 .. code-block:: c
 
@@ -200,11 +200,11 @@ On Service VM boot, Service VM acrnlog module is responsible to:
   these last logs
 
 - construct sbuf in the usable buf range for each physical CPU,
-  assign the GPA of Sbuf to ``per_cpu sbuf[ACRN_LOG]`` and create a misc
+  assign the GPA of sbuf to ``per_cpu sbuf[ACRN_LOG]`` and create a misc
   device for each physical CPU
 
 - the misc devices implement read() file operation to allow
-  userspace app to read one Sbuf element.
+  userspace app to read one sbuf element.
 
 When checking the validity of sbuf for last logs examination, it sets the
 current sbuf with magic number ``0x5aa57aa71aa13aa3``, and changes the
@@ -212,7 +212,7 @@ magic number of last sbuf to ``0x5aa57aa71aa13aa2``, to distinguish which is
 the current/last.
 
 On Service VM shutdown, the module is responsible to remove misc devices,
-free SBufs, and set ``per_cpu sbuf[ACRN_TRACE]`` to null.
+free sbufs, and set ``per_cpu sbuf[ACRN_TRACE]`` to null.
 
 ACRN Log Application
 ====================

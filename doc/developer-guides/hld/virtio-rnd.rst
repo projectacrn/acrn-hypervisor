@@ -31,7 +31,7 @@ them to the frontend.
 How to Use
 **********
 
-Add a pci slot to the device model acrn-dm command line; for example::
+Add a PCI slot to the device model acrn-dm command line; for example::
 
    -s <slot_number>,virtio-rnd
 

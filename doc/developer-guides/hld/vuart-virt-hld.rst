@@ -99,7 +99,7 @@ Usage
    port_base and IRQ in ``misc/vm_configs/scenarios/<scenario
    name>/vm_configurations.c``. If the IRQ number has been used in your
    system ( ``cat /proc/interrupt``), you can choose other IRQ number. Set
-   the .irq =0, the vUART will work in polling mode.
+   the ``.irq =0``, the vUART will work in polling mode.
 
    -  COM1_BASE (0x3F8) + COM1_IRQ(4)
 
