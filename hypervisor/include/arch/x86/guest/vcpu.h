@@ -244,6 +244,7 @@ struct acrn_vcpu_arch {
 	uint32_t exit_reason;
 	uint32_t idt_vectoring_info;
 	uint64_t exit_qualification;
+	uint32_t proc_vm_exec_ctrls;
 	uint32_t inst_len;
 
 	/* Information related to secondary / AP VCPU start-up */
