@@ -231,7 +231,7 @@ delivered to a specific Guest's CPU. Timer interrupts are an exception -
 these are always delivered to the CPU which programs the LAPIC timer.
 
 x86-64 supports per CPU IDTs, but ACRN uses a global shared IDT,
-with which the interrupt/irq to vector mapping is the same on all CPUs. Vector
+with which the interrupt/IRQ to vector mapping is the same on all CPUs. Vector
 allocation for CPUs is shown here:
 
 .. figure:: images/interrupt-image89.png
@@ -251,7 +251,7 @@ all CPUs.
 
 The *irq_desc[]* array's index represents IRQ number. A *handle_irq*
 will be called from *interrupt_dispatch* to commonly handle edge/level
-triggered irq and call the registered *action_fn*.
+triggered IRQ and call the registered *action_fn*.
 
 Another reverse mapping from vector to IRQ is used in addition to the
 IRQ descriptor table which maintains the mapping from IRQ to vector.

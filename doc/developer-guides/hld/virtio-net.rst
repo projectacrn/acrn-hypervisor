@@ -115,7 +115,7 @@ Initialization in virtio-net Frontend Driver
 
 **virtio_pci_probe**
 
-- Construct virtio device using virtual pci device and register it to
+- Construct virtio device using virtual PCI device and register it to
   virtio bus
 
 **virtio_dev_probe --> virtnet_probe --> init_vqs**
@@ -480,7 +480,7 @@ Run ``brctl show`` to see the bridge ``acrn-br0`` and attached devices:
    acrn-br0      8000.b25041fef7a3   no        tap0
                                                enp3s0
 
-Add a pci slot to the device model acrn-dm command line (mac address is
+Add a PCI slot to the device model acrn-dm command line (mac address is
 optional):
 
 .. code-block:: none

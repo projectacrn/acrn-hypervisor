@@ -115,7 +115,7 @@ assumptions:
 7) S3 is only supported at platform level - not VM level.
 
 ACRN has a common implementation for notification between lifecycle manager
-in different guest. Which is vUART based cross-vm notification. But user
+in different guest. Which is vUART based cross-VM notification. But user
 could customize it according to their hardware/software requirements.
 
 :numref:`systempmdiag` shows the basic system level S3/S5 diagram.
@@ -165,7 +165,7 @@ For system power state entry:
    vUART for S5 request.
 3. Guest lifecycle manager initializes S5 action and guest enters S5.
 4. RTOS cleanup RT task, send response of S5 request back to Service
-   VM and RTVM enter S5.
+   VM and RTVM enters S5.
 5. After get response from RTVM and all User VM are shutdown, Service VM
    enter S5.
 6. OSPM in ACRN hypervisor checks all guests are in S5 state and shuts down

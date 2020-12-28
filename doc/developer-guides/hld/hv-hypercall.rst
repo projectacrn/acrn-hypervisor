@@ -24,8 +24,8 @@ There are some restrictions for hypercall and upcall:
 HV and Service VM both use the same vector (0xF3) reserved as x86 platform
 IPI vector for HV notification to the Service VM. This upcall is necessary whenever
 there is device emulation requirement to the Service VM. The upcall vector (0xF3) is
-injected to Service VM vCPU0. The Service VM will register the irq handler for vector (0xF3) and notify the I/O emulation
-module in the Service VM once the irq is triggered.
+injected to Service VM vCPU0. The Service VM will register the IRQ handler for vector (0xF3) and notify the I/O emulation
+module in the Service VM once the IRQ is triggered.
 View the detailed upcall process at :ref:`ipi-management`
 
 Hypercall APIs reference:

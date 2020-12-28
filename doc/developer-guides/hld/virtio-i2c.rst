@@ -6,7 +6,7 @@ Virtio-i2c
 Virtio-i2c provides a virtual I2C adapter that supports mapping multiple
 client devices under multiple native I2C adapters to one virtio I2C
 adapter. The address for the client device is not changed. Virtio-i2c
-also provides an interface to add an acpi node for client devices so that
+also provides an interface to add an ACPI node for client devices so that
 the client device driver in the guest OS does not need to change.
 
 :numref:`virtio-i2c-1` below shows the virtio-i2c architecture.
@@ -19,14 +19,15 @@ the client device driver in the guest OS does not need to change.
 
 Virtio-i2c is implemented as a virtio legacy device in the ACRN device
 model (DM) and is registered as a PCI virtio device to the guest OS. The
-Device ID of virtio-i2c is 0x860A and the Sub Device ID is 0xFFF6.
+Device ID of virtio-i2c is ``0x860A`` and the Sub Device ID is
+``0xFFF6``.
 
 Virtio-i2c uses one **virtqueue** to transfer the I2C msg that is
 received from the I2C core layer. Each I2C msg is translated into three
 parts:
 
-- Header: includes addr, flags, and len.
-- Data buffer: includes the pointer to msg data.
+- Header: includes ``addr``, ``flags``, and ``len``.
+- Data buffer: includes the pointer to ``msg`` data.
 - Status: includes the process results at the backend.
 
 In the backend kick handler, data is obtained from the virtqueue, which
@@ -46,39 +47,47 @@ notifies the frontend. The msg process flow is shown in
    Message Process Flow
 
 **Usage:**
--s <slot>,virtio-i2c,<bus>[:<client_addr>[@<node>]][:<client_addr>[@<node>]][,<bus>[:<client_addr>[@<node>]][:<client_addr>][@<node>]]
 
-   bus:
+.. code-block:: none
+
+   -s <slot>,virtio-i2c,<bus>[:<client_addr>[@<node>]][:<client_addr>[@<node>]][,<bus>[:<client_addr>[@<node>]][:<client_addr>][@<node>]]
+
+``bus``:
    The bus number for the native I2C adapter; ``2`` means ``/dev/i2c-2``.
 
-   client_addr:
+``client_addr``:
    The address for the native client devices such as ``1C``, ``2F`` ...
 
-   @:
-   The prefix for the acpi node.
+``@``:
+   The prefix for the ACPI node.
 
-   node:
-   The acpi node name supported in the current code. You can find the
-   supported name in the acpi_node_table[] from the source code. Currently,
+``node``:
+   The ACPI node name supported in the current code. You can find the
+   supported name in the ``acpi_node_table[]`` from the source code. Currently,
    only ``cam1``, ``cam2``, and ``hdac`` are supported for MRB. These nodes are
    platform-specific.
 
 
 **Example:**
 
-  -s 19,virtio-i2c,0:70@cam1:2F,4:1C
+.. code-block:: none
 
-This adds client devices 0x70 and 0x2F under the native adapter
-/dev/i2c-0, and 0x1C under /dev/i2c-6 to the virtio-i2c adapter. Since
-0x70 includes '@cam1', acpi info is also added to it. Since 0x2F and
-0x1C have '@<node>', no acpi info is added to them.
+   -s 19,virtio-i2c,0:70@cam1:2F,4:1C
+
+This adds client devices ``0x70`` and ``0x2F`` under the native adapter
+``/dev/i2c-0``, and ``0x1C`` under ``/dev/i2c-6`` to the virtio-i2c
+adapter. Since ``0x70`` includes ``@cam1``, ACPI info is also added to
+it. Since ``0x2F`` and ``0x1C`` have ``@<node>``, no ACPI info is added
+to them.
 
 
 **Simple use case:**
 
 When launched with this cmdline:
 
-  -s 19,virtio-i2c,4:1C
+.. code-block:: none
+
+   -s 19,virtio-i2c,4:1C
 
 a virtual I2C adapter will appear in the guest OS:
 
@@ -93,7 +102,8 @@ a virtual I2C adapter will appear in the guest OS:
    i2c-0   i2c            i915 gmbus dpb                I2C adapter
    i2c-5   i2c            DPDDC-C                       I2C adapter
 
-You can find the client device 0x1C under the virtio I2C adapter i2c-6:
+You can find the client device 0x1C under the virtio I2C adapter
+``i2c-6``:
 
 .. code-block:: none
 
@@ -108,7 +118,7 @@ You can find the client device 0x1C under the virtio I2C adapter i2c-6:
    60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
    70: -- -- -- -- -- -- -- --
 
-You can dump the i2c device if it is supported:
+You can dump the I2C device if it is supported:
 
 .. code-block:: none
 

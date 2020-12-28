@@ -87,7 +87,7 @@ options:
        --intr_monitor: enable interrupt storm monitor
             its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms),
        --virtio_poll: enable virtio poll mode with poll interval with ns
-       --acpidev_pt: acpi device ID args: HID in ACPI Table
+       --acpidev_pt: ACPI device ID args: HID in ACPI Table
        --mmiodev_pt: MMIO resources args: physical MMIO regions
        --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET
        --lapic_pt: enable local apic passthrough
@@ -698,16 +698,16 @@ The PIRQ routing for IOAPIC and PIC is dealt with differently.
   pins permitted for PCI devices. The IRQ information will be built
   into ACPI DSDT table then passed to guest VM.
 
-* For PIC, the pin2irq information is maintained in a pirqs[] array (the array size is 8
+* For PIC, the ``pin2irq`` information is maintained in a ``pirqs[]`` array (the array size is 8
   representing 8 shared PIRQs). When a PCI device tries to allocate a
-  pirq pin, it will do a balancing calculation to figure out a best pin
-  vs. IRQ pair. The irq# will be programed into PCI INTLINE config space
-  and the pin# will be built into ACPI DSDT table then passed to guest VM.
+  pIRQ pin, it will do a balancing calculation to figure out a best pin
+  vs. IRQ pair. The IRQ number will be programed into PCI INTLINE config space
+  and the pin number will be built into ACPI DSDT table then passed to guest VM.
 
 .. note:: "IRQ" here is also called as "GSI" in ACPI terminology.
 
 Regarding to INT A/B/C/D for PCI devices, DM just allocates them evenly
-prior to PIRQ routing and then programs into PCI INTPIN config space.
+prior to pIRQ routing and then programs into PCI INTPIN config space.
 
 ISA and PCI Emulation
 *********************
@@ -969,7 +969,7 @@ each of them, as shown here:
    :align: center
 
 
-For each VM, its ACPI tables are a standalone copy, not related to the
+For each VM, its ACPI tables are a stand-alone copy, not related to the
 tables for other VMs. Opregion also must be copied for different VMs.
 
 For each table, we make modifications, based on the physical table, to
@@ -1041,13 +1041,13 @@ including following elements:
        { basl_fwrite_dsdt, DSDT_OFFSET, true  }
    };
 
-The main function to create virtual ACPI tables is acpi_build that calls
-basl_compile for each table. basl_compile does the following:
+The main function to create virtual ACPI tables is ``acpi_build`` that calls
+``basl_compile`` for each table. ``basl_compile`` does the following:
 
-1. create two temp files: infile and outfile
-2. with output handler, write table contents stream to infile
-3. use iasl tool to assemble infile into outfile
-4. load outfile contents to the required memory offset
+1. create two temp files: ``infile`` and ``outfile``
+2. with output handler, write table contents stream to ``infile``
+3. use ``iasl`` tool to assemble ``infile`` into ``outfile``
+4. load ``outfile`` contents to the required memory offset
 
 .. code-block:: c
 

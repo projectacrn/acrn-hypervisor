@@ -17,7 +17,7 @@ control virtqueues are used to communicate information between the
 device and the driver, including: ports being opened and closed on
 either side of the connection, indication from the host about whether a
 particular port is a console port, adding new ports, port
-hot-plug/unplug, indication from the guest about whether a port or a
+hot-plug or unplug, indication from the guest about whether a port or a
 device was successfully added, or a port opened or closed.
 
 The virtio-console architecture diagram in ACRN is shown below.
@@ -36,7 +36,7 @@ OS. No changes are required in the frontend Linux virtio-console except
 that the guest (User VM) kernel should be built with
 ``CONFIG_VIRTIO_CONSOLE=y``.
 
-The virtio console FE driver registers a HVC console to the kernel if
+The virtio console FE driver registers an HVC console to the kernel if
 the port is configured as console. Otherwise it registers a char device
 named ``/dev/vportXpY`` to the kernel, and can be read and written from
 the user space. There are two virtqueues for a port, one is for
@@ -75,21 +75,21 @@ The device model configuration command syntax for virtio-console is::
       [,[@]stdio|tty|pty|file:portname[=portpath][:socket_type]]
 
 -  Preceding with ``@`` marks the port as a console port, otherwise it is a
-   normal virtio serial port
+   normal virtio-serial port
 
--  The ``portpath`` can be omitted when backend is stdio or pty
+-  The ``portpath`` can be omitted when backend is ``stdio`` or ``pty``
 
--  The ``stdio/tty/pty`` is tty capable, which means :kbd:`TAB` and
+-  The ``stdio/tty/pty`` is TTY capable, which means :kbd:`TAB` and
    :kbd:`BACKSPACE` are supported, as on a regular terminal
 
--  When tty is used, please make sure the redirected tty is sleeping,
+-  When TTY is used, please make sure the redirected TTY is sleeping,
    (e.g., by ``sleep 2d`` command), and will not read input from stdin before it
    is used by virtio-console to redirect guest output.
 
 -  When virtio-console socket_type is appointed to client, please make sure
    server VM(socket_type is appointed to server) has started.
 
--  Claiming multiple virtio serial ports as consoles is supported,
+-  Claiming multiple virtio-serial ports as consoles is supported,
    however the guest Linux OS will only use one of them, through the
    ``console=hvcN`` kernel parameter. For example, the following command
    defines two backend ports, which are both console ports, but the frontend
@@ -109,7 +109,7 @@ The following sections elaborate on each backend.
 STDIO
 =====
 
-1. Add a pci slot to the device model (``acrn-dm``) command line::
+1. Add a PCI slot to the device model (``acrn-dm``) command line::
 
         -s n,virtio-console,@stdio:stdio_port
 
@@ -120,11 +120,11 @@ STDIO
 PTY
 ===
 
-1. Add a pci slot to the device model (``acrn-dm``) command line::
+1. Add a PCI slot to the device model (``acrn-dm``) command line::
 
         -s n,virtio-console,@pty:pty_port
 
-#. Add the ``console`` parameter to the guest os kernel command line::
+#. Add the ``console`` parameter to the guest OS kernel command line::
 
         console=hvc0
 
@@ -136,14 +136,14 @@ PTY
 
         virt-console backend redirected to /dev/pts/0
 
-#. Use a terminal emulator, such as minicom or screen, to connect to the
-   tty node:
+#. Use a terminal emulator, such as ``minicom`` or ``screen``, to connect to the
+   TTY node:
 
    .. code-block:: console
 
         # minicom -D /dev/pts/0
  
-   or :
+   or:
 
    .. code-block:: console
 
@@ -152,10 +152,10 @@ PTY
 TTY
 ===
 
-1. Identify your tty that will be used as the User VM console:
+1. Identify your TTY that will be used as the User VM console:
 
-   - If you're connected to your device over the network via ssh, use
-     the linux ``tty`` command, and it will report the node (may be
+   - If you're connected to your device over the network via ``ssh``, use
+     the Linux ``tty`` command, and it will report the node (may be
      different in your use case):
 
      .. code-block:: console
@@ -164,7 +164,7 @@ TTY
          # sleep 2d
  
    - If you do not have network access to your device, use screen
-     to create a new tty:
+     to create a new TTY:
 
      .. code-block:: console
 
@@ -177,15 +177,15 @@ TTY
 
          /dev/pts/0
 
-     Prevent the tty from responding by sleeping:
+     Prevent the TTY from responding by sleeping:
 
      .. code-block:: console
 
          # sleep 2d
 
-     and detach the tty by pressing :kbd:`CTRL-A` :kbd:`d`.
+     and detach the TTY by pressing :kbd:`CTRL-A` :kbd:`d`.
 
-#. Add a pci slot to the device model (``acrn-dm``)  command line
+#. Add a PCI slot to the device model (``acrn-dm``)  command line
    (changing the ``dev/pts/X`` to match your use case)::
 
         -s n,virtio-console,@tty:tty_port=/dev/pts/X
@@ -194,7 +194,7 @@ TTY
 
         console=hvc0
 
-#. Go back to the previous tty.  For example, if you're using
+#. Go back to the previous TTY.  For example, if you're using
    ``screen``, use:
 
    .. code-block:: console
@@ -207,7 +207,7 @@ FILE
 
 The File backend only supports console output to a file (no input).
 
-1. Add a pci slot to the device model (``acrn-dm``) command line,
+1. Add a PCI slot to the device model (``acrn-dm``) command line,
    adjusting the ``</path/to/file>`` to your use case::
 
         -s n,virtio-console,@file:file_port=</path/to/file>
@@ -220,16 +220,16 @@ SOCKET
 ======
 
 The virtio-console socket-type can be set as socket server or client. Device model will
-create an unix domain socket if appointed the socket_type as server, then server VM or
+create a Unix domain socket if appointed the socket_type as server, then server VM or
 another user VM can bind and listen for communication requirement. If appointed to
 client, please make sure the socket server is ready prior to launch device model.
 
-1. Add a pci slot to the device model (``acrn-dm``) command line, adjusting
+1. Add a PCI slot to the device model (``acrn-dm``) command line, adjusting
    the ``</path/to/file.sock>`` to your use case in the VM1 configuration::
 
         -s n,virtio-console,socket:socket_file_name=</path/to/file.sock>:server
 
-#. Add a pci slot to the device model (``acrn-dm``) command line, adjusting
+#. Add a PCI slot to the device model (``acrn-dm``) command line, adjusting
    the ``</path/to/file.sock>`` to your use case in the VM2 configuration::
 
         -s n,virtio-console,socket:socket_file_name=</path/to/file.sock>:client
@@ -248,6 +248,6 @@ client, please make sure the socket server is ready prior to launch device model
 
         # minicom -D /dev/vport3p0
 
-#. Input into minicom window of VM1 or VM2, the minicom window of VM1
-   will indicate the input from VM2, the minicom window of VM2 will
+#. Input into ``minicom`` window of VM1 or VM2, the ``minicom`` window of VM1
+   will indicate the input from VM2, the ``minicom`` window of VM2 will
    indicate the input from VM1.

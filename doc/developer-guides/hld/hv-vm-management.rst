@@ -12,23 +12,24 @@ VM structure
 ************
 
 The ``acrn_vm`` structure is defined to manage a VM instance, this structure
-maintained a VM's HW resources like vcpu, vpic, vioapic, vuart, vpci. And at
-the same time ``acrn_vm`` structure also recorded a bunch of SW information
-related with corresponding VM, like info for VM identifier, info for SW
-loader, info for memory e820 entries, info for IO/MMIO handlers, info for
-platform level cpuid entries, and so on.
+maintained a VM's HW resources such as vCPU, vPIC, vIOAPIC, vUART, and vPCI.
+At
+the same time ``acrn_vm`` structure also records SW information
+related with corresponding VM, such as info for VM identifier, info for SW
+loader, info for memory e820 entries, info for IO/MMIO handlers, and info for
+platform level cpuid entries.
 
-The ``acrn_vm`` structure instance will be created by create_vm API, and then
+The ``acrn_vm`` structure instance will be created by ``create_vm`` API, and then
 work as the first parameter for other VM APIs.
 
 VM state
 ********
 
 Generally, a VM is not running at the beginning: it is in a 'powered off'
-state. After it got created successfully, the VM enter a 'created' state.
-Then the VM could be kick to run, and enter a 'started' state. When the
+state. After it is created successfully, the VM enters a 'created' state.
+Then the VM could be kicked to run, and enter a 'started' state. When the
 VM powers off, the VM returns to a 'powered off' state again.
-A VM can be paused to wait some operation when it is running, so there is
+A VM can be paused to wait for some operation when it is running, so there is
 also a 'paused' state.
 
 :numref:`hvvm-state` illustrates the state-machine of a VM state transition,
@@ -47,7 +48,7 @@ Pre-launched and Service VM
 ===========================
 
 The hypervisor is the owner to control pre-launched and Service VM's state
-by calling VM APIs directly, and it follows the design of system power
+by calling VM APIs directly, following the design of system power
 management. Please refer to ACRN power management design for more details.
 
 
