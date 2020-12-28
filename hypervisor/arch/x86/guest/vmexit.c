@@ -292,11 +292,8 @@ static void vcpu_complete_split_lock_emulation(struct acrn_vcpu *cur_vcpu)
 /* MTF is currently only used for split-lock emulation */
 static int32_t mtf_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	uint32_t value32;
-
-	value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
-	value32 &= ~(VMX_PROCBASED_CTLS_MON_TRAP);
-	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
+	vcpu->arch.proc_vm_exec_ctrls &= ~(VMX_PROCBASED_CTLS_MON_TRAP);
+	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, vcpu->arch.proc_vm_exec_ctrls);
 
 	vcpu_retain_rip(vcpu);
 
