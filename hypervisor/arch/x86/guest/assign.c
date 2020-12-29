@@ -715,14 +715,23 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_gsi, enum intx_ct
 
 					entry = find_ptirq_entry(PTDEV_INTR_INTX, &alt_virt_sid, vm);
 					if (entry != NULL) {
-						entry->virt_sid.value = virt_sid.value;
-						dev_dbg(DBG_LEVEL_IRQ,
-								"IOAPIC gsi=%hhu pirq=%u vgsi=%d switch from %s to %s for vm%d",
+						uint32_t phys_gsi = virt_gsi;
+
+						remove_intx_remapping(vm, alt_virt_sid.intx_id.gsi,
+							alt_virt_sid.intx_id.ctlr);
+						entry = add_intx_remapping(vm, virt_gsi, phys_gsi, vgsi_ctlr);
+						if (entry == NULL) {
+							pr_err("%s, add intx remapping failed", __func__);
+							status = -ENODEV;
+						} else {
+							dev_dbg(DBG_LEVEL_IRQ,
+								"IOAPIC gsi=%hhu pirq=%u vgsi=%d from %s to %s for vm%d",
 								entry->phys_sid.intx_id.gsi,
 								entry->allocated_pirq, entry->virt_sid.intx_id.gsi,
 								(vgsi_ctlr == INTX_CTLR_IOAPIC) ? "vPIC" : "vIOAPIC",
 								(vgsi_ctlr == INTX_CTLR_IOAPIC) ? "vIOPIC" : "vPIC",
 								entry->vm->vm_id);
+						}
 					}
 				}
 
