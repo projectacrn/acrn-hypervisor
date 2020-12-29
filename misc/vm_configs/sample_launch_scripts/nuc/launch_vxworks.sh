@@ -18,17 +18,21 @@ fi
 mem_size=2048M
 
 # Note:
-#      For RTVM with lapic_pt, we only support virtio devices with polling mode enabled for both
-#      front-end and back-end. The virtio devices with polling mode are not supported by VxWorks
-#      offically now and we are working on upstream the front-end drivers.
-#      OVMF console is not available with default parameters.
-
+#      Here we just launch VxWorks as a normal vm without lapic pt. If you want try it
+#      with lapic pt, you should add the following options and make sure the front-end virtio-console
+#      driver use polling mode (This feature is not supported by VxWorks offically now and should
+#      be implemented it by youself).
+#
+#      --lapic_pt \
+#      --virtio_poll 1000000 \
+#      -U $rtvm_uuid \
+#
+#      Once the front-end polling mode virtio-console get supported by VxWorks offically, we will
+#      set the lapic_pt option as default.
 acrn-dm -A -m $mem_size -s 0:0,hostbridge \
   -s 5,virtio-console,@stdio:stdio_port \
   -s 3,virtio-blk,./VxWorks.img \
-  --virtio_poll 1000000 \
   --ovmf /usr/share/acrn/bios/OVMF.fd \
-  --lapic_pt \
   $vm_name
 }
 
