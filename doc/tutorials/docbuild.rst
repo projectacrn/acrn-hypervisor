@@ -179,7 +179,7 @@ another ``make html`` and the output layout and style is changed. The
 sphinx build system creates document cache information that attempts to
 expedite documentation rebuilds, but occasionally can cause an unexpected error or
 warning to be generated.  Doing a ``make clean`` to create a clean
-generation environent and a ``make html`` again generally cleans this up.
+generation environment and a ``make html`` again generally cleans this up.
 
 The ``read-the-docs`` theme is installed as part of the
 ``requirements.txt`` list above.  Tweaks to the standard
