@@ -508,7 +508,6 @@ static void guest_cpuid_01h(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx
 
 	/* mask Debug Store feature */
 	*edx &= ~CPUID_EDX_DTES;
-	*edx &= ~CPUID_EDX_MCE;
 }
 
 static void guest_cpuid_0bh(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
