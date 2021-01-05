@@ -57,13 +57,13 @@ static uint64_t cr4_passthru_mask = CR4_PASSTHRU_BITS;	/* bound to flexible bits
 #define CR4_TRAP_AND_PASSTHRU_BITS	(CR4_PSE | CR4_PAE | CR4_SMEP | CR4_SMAP | CR4_PKE | CR4_PKS)
 static uint64_t	cr4_trap_and_passthru_mask = CR4_TRAP_AND_PASSTHRU_BITS; /* bound to flexible bits */
 
-#define CR4_TRAP_AND_EMULATE_BITS	0UL /* software emulated bits even if host is fixed */
+#define CR4_TRAP_AND_EMULATE_BITS	CR4_MCE /* software emulated bits even if host is fixed */
 
 /* Change of these bits should change vcpuid too */
-#define CR4_EMULATED_RESERVE_BITS	(CR4_VMXE | CR4_MCE | CR4_CET | CR4_SMXE)
+#define CR4_EMULATED_RESERVE_BITS	(CR4_VMXE | CR4_CET | CR4_SMXE)
 
 /* The physical CR4 value for bits of CR4_EMULATED_RESERVE_BITS */
-#define CR4_EMRSV_BITS_PHYS_VALUE	(CR4_VMXE | CR4_MCE)
+#define CR4_EMRSV_BITS_PHYS_VALUE	CR4_VMXE
 
 /* The CR4 value guest expected to see for bits of CR4_EMULATED_RESERVE_BITS */
 #define CR4_EMRSV_BITS_VIRT_VALUE	0
@@ -82,8 +82,8 @@ static uint64_t initial_guest_cr4;
 static uint64_t cr4_reserved_bits_mask;
 
 /*
- * CR0 follows the same rule of CR4, except it won't inject #GP for reserved bits violation.
- * Instead, it ignores the software write to those reserved bits.
+ * CR0 follows the same rule of CR4, except it won't inject #GP for reserved bits violation
+ * for the low 32 bits. Instead, it ignores the software write to those reserved bits.
  */
 #define CR0_PASSTHRU_BITS	(CR0_MP | CR0_EM | CR0_TS | CR0_ET | CR0_NE | CR0_AM)
 static uint64_t cr0_passthru_mask = CR0_PASSTHRU_BITS;	/* bound to flexible bits */
@@ -229,7 +229,7 @@ static void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t value)
 	bool err_found = false;
 	/*
 	 * For reserved bits of CR0, SDM states:
-	 *	attempts to set them have no impact, while set to high 32 bits lead to #GP.
+	 * attempts to set them have no impact, while set to high 32 bits lead to #GP.
 	 */
 
 	if (!is_cr0_write_valid(vcpu, value)) {
@@ -354,7 +354,7 @@ static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 	bool err_found = false;
 
 	if (!is_cr4_write_valid(vcpu, cr4)) {
-		pr_dbg("Invalid cr4 write operation from guest");
+		pr_err("Invalid cr4 write operation from guest");
 		vcpu_inject_gp(vcpu, 0U);
 	} else {
 		uint64_t mask, tmp;
@@ -509,7 +509,7 @@ uint64_t vcpu_get_cr0(struct acrn_vcpu *vcpu)
 
 void vcpu_set_cr0(struct acrn_vcpu *vcpu, uint64_t val)
 {
-	pr_dbg("%s, value: 0x%016lx rip:%016lx", __func__, val, vcpu_get_rip(vcpu));
+	pr_dbg("%s, value: 0x%016lx rip: %016lx", __func__, val, vcpu_get_rip(vcpu));
 	vmx_write_cr0(vcpu, val);
 }
 
