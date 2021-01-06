@@ -19,10 +19,6 @@ HV_OBJDIR ?= $(CURDIR)/build
 HV_MODDIR ?= $(HV_OBJDIR)/modules
 HV_FILE := acrn
 
-ifeq ($(TARGET_DIR),)
-  override TARGET_DIR := $(realpath ../misc/vm_configs)
-endif
-
 LIB_MOD = $(HV_MODDIR)/lib_mod.a
 BOOT_MOD = $(HV_MODDIR)/boot_mod.a
 HW_MOD = $(HV_MODDIR)/hw_mod.a
@@ -47,20 +43,10 @@ ARCH_LDFLAGS :=
 .PHONY: default
 default: all
 
-include scripts/makefile/cfg_update.mk
+include scripts/makefile/config.mk
 
-include scripts/makefile/deps.mk
-
-include scripts/makefile/kconfig.mk
-
-#override BOARD from CONFIG_BOARD, which is specified in kconfig.mk
-override BOARD := $(shell echo $(CONFIG_BOARD) |sed 's/"//g')
-
-#override SCENARIO from CONFIG_SCENARIO, which is specified in kconfig.mk
-override SCENARIO := $(shell echo $(CONFIG_SCENARIO) |sed 's/"//g')
-
-BOARD_INFO_DIR := $(TARGET_DIR)/boards/$(BOARD)
-SCENARIO_CFG_DIR := $(TARGET_DIR)/scenarios/$(SCENARIO)
+BOARD_INFO_DIR := $(HV_CONFIG_DIR)/boards/$(BOARD)
+SCENARIO_CFG_DIR := $(HV_CONFIG_DIR)/scenarios/$(SCENARIO)
 BOARD_CFG_DIR := $(SCENARIO_CFG_DIR)/$(BOARD)
 
 include ../paths.make
@@ -147,26 +133,26 @@ ARCH_LDFLAGS +=
 ARCH_LDSCRIPT = $(HV_OBJDIR)/link_ram.ld
 ARCH_LDSCRIPT_IN = bsp/ld/link_ram.ld.in
 
-INCLUDE_PATH += include
-INCLUDE_PATH += include/lib
-INCLUDE_PATH += include/lib/crypto
-INCLUDE_PATH += include/common
-INCLUDE_PATH += include/arch/x86
-INCLUDE_PATH += include/arch/x86/boot
-INCLUDE_PATH += include/arch/x86/guest
-INCLUDE_PATH += include/arch/x86/lib
-INCLUDE_PATH += include/debug
-INCLUDE_PATH += include/public
-INCLUDE_PATH += include/dm
-INCLUDE_PATH += include/hw
-INCLUDE_PATH += boot/include
-INCLUDE_PATH += boot/include/guest
+REL_INCLUDE_PATH += include
+REL_INCLUDE_PATH += include/lib
+REL_INCLUDE_PATH += include/lib/crypto
+REL_INCLUDE_PATH += include/common
+REL_INCLUDE_PATH += include/arch/x86
+REL_INCLUDE_PATH += include/arch/x86/boot
+REL_INCLUDE_PATH += include/arch/x86/guest
+REL_INCLUDE_PATH += include/arch/x86/lib
+REL_INCLUDE_PATH += include/debug
+REL_INCLUDE_PATH += include/public
+REL_INCLUDE_PATH += include/dm
+REL_INCLUDE_PATH += include/hw
+REL_INCLUDE_PATH += boot/include
+REL_INCLUDE_PATH += boot/include/guest
+
+INCLUDE_PATH := $(realpath $(REL_INCLUDE_PATH))
 INCLUDE_PATH += $(HV_OBJDIR)/include
 INCLUDE_PATH += $(BOARD_INFO_DIR)
 INCLUDE_PATH += $(BOARD_CFG_DIR)
 INCLUDE_PATH += $(SCENARIO_CFG_DIR)
-
-override INCLUDE_PATH := $(realpath $(INCLUDE_PATH))
 
 CC ?= gcc
 AS ?= as
@@ -266,9 +252,7 @@ endif
 VM_CFG_C_SRCS += $(BOARD_INFO_DIR)/board.c
 VM_CFG_C_SRCS += $(SCENARIO_CFG_DIR)/vm_configurations.c
 VM_CFG_C_SRCS += $(BOARD_CFG_DIR)/pt_intx.c
-ifneq (,$(wildcard $(BOARD_CFG_DIR)/pci_dev.c))
 VM_CFG_C_SRCS += $(BOARD_CFG_DIR)/pci_dev.c
-endif
 
 # virtual platform base component
 VP_BASE_C_SRCS += arch/x86/guest/vcpuid.c
@@ -342,7 +326,7 @@ BOOT_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(BOOT_C_SRCS))
 BOOT_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(BOOT_S_SRCS))
 HW_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(HW_C_SRCS))
 HW_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(HW_S_SRCS))
-VM_CFG_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(realpath $(VM_CFG_C_SRCS)))
+VM_CFG_C_OBJS := $(patsubst %.c,%.o,$(VM_CFG_C_SRCS))
 VP_BASE_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_BASE_C_SRCS))
 VP_BASE_S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(VP_BASE_S_SRCS))
 VP_DM_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(VP_DM_C_SRCS))
@@ -393,15 +377,15 @@ install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
 	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)$(libdir)/acrn/$(HV_FILE).$(BOARD).$(SCENARIO).map
 
 .PHONY: pre_build
-pre_build: $(HV_OBJDIR)/$(HV_CONFIG_H)
+pre_build: $(HV_CONFIG_H) $(HV_CONFIG_TIMESTAMP)
 	@echo "Start pre-build static check ..."
-	$(MAKE) -C $(PRE_BUILD_DIR) BOARD=$(BOARD) SCENARIO=$(SCENARIO) TARGET_DIR=$(TARGET_DIR)
+	$(MAKE) -C $(PRE_BUILD_DIR) BOARD=$(BOARD) SCENARIO=$(SCENARIO) TARGET_DIR=$(HV_CONFIG_DIR)
 	@$(HV_OBJDIR)/hv_prebuild_check.out
 	@echo "generate the binary of ACPI tables for pre-launched VMs ..."
-	python3 ../misc/acrn-config/acpi_gen/bin_gen.py --board $(BOARD) --scenario $(SCENARIO) --asl $(TARGET_DIR) --out $(HV_OBJDIR)/acpi
+	python3 ../misc/acrn-config/acpi_gen/bin_gen.py --board $(BOARD) --scenario $(SCENARIO) --asl $(HV_CONFIG_DIR) --out $(HV_OBJDIR)/acpi
 
 .PHONY: header
-header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H)
+header: $(VERSION) $(HV_CONFIG_H)
 
 .PHONY: lib-mod boot-mod hw-mod vp-base-mod vp-dm-mod vp-trusty-mod vp-hcall-mod sys-init-mod
 $(LIB_MOD): $(LIB_C_OBJS) $(LIB_S_OBJS)
@@ -459,7 +443,7 @@ $(HV_OBJDIR)/$(HV_FILE).bin: $(HV_OBJDIR)/$(HV_FILE).out
 	rm -f $(UPDATE_RESULT)
 
 $(HV_OBJDIR)/$(HV_FILE).out: $(MODULES)
-	${BASH} ${LD_IN_TOOL} $(ARCH_LDSCRIPT_IN) $(ARCH_LDSCRIPT) ${HV_OBJDIR}/.config
+	${BASH} ${LD_IN_TOOL} $(ARCH_LDSCRIPT_IN) $(ARCH_LDSCRIPT) ${HV_CONFIG_MK}
 	$(CC) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) \
 		-Wl,--start-group $^ -Wl,--end-group
 
@@ -476,7 +460,7 @@ distclean:
 	rm -f tags TAGS cscope.files cscope.in.out cscope.out cscope.po.out GTAGS GPATH GRTAGS GSYMS
 
 PHONY: (VERSION)
-$(VERSION): $(HV_OBJDIR)/$(HV_CONFIG_H)
+$(VERSION): $(HV_CONFIG_H)
 	touch $(VERSION)
 	@COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
 	DIRTY=`git diff-index --name-only HEAD`;\
@@ -511,10 +495,14 @@ $(VERSION): $(HV_OBJDIR)/$(HV_CONFIG_H)
 -include $(C_OBJS:.o=.d)
 -include $(S_OBJS:.o=.d)
 
-$(HV_OBJDIR)/%.o: %.c $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H)
+$(HV_OBJDIR)/%.o: %.c $(VERSION) $(HV_CONFIG_H)
 	[ ! -e $@ ] && mkdir -p $(dir $@) && mkdir -p $(HV_MODDIR); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@ -MMD -MT $@
 
-$(HV_OBJDIR)/%.o: %.S $(HV_OBJDIR)/$(HV_CONFIG_H)
+$(VM_CFG_C_OBJS): %.o: %.c $(VERSION) $(HV_CONFIG_H)
+	[ ! -e $@ ] && mkdir -p $(dir $@) && mkdir -p $(HV_MODDIR); \
+	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@ -MMD -MT $@
+
+$(HV_OBJDIR)/%.o: %.S $(HV_CONFIG_H)
 	[ ! -e $@ ] && mkdir -p $(dir $@) && mkdir -p $(HV_MODDIR); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. $(ASFLAGS) $(ARCH_ASFLAGS) -c $< -o $@ -MMD -MT $@

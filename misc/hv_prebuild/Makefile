@@ -18,8 +18,8 @@ ifeq ($(TARGET_DIR),)
     $(error please specify VM configs directory! )
 endif
 
-BOARD_INFO_DIR := $(TARGET_DIR)/boards/$(BOARD)
-SCENARIO_CFG_DIR := $(TARGET_DIR)/scenarios/$(SCENARIO)
+BOARD_INFO_DIR := $(HV_OBJDIR)/configs/boards/$(BOARD)
+SCENARIO_CFG_DIR := $(HV_OBJDIR)/configs/scenarios/$(SCENARIO)
 BOARD_CFG_DIR := $(SCENARIO_CFG_DIR)/$(BOARD)
 
 PRE_BUILD_SRCS += main.c
