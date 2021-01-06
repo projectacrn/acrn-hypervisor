@@ -49,6 +49,7 @@ User VM Tutorials
    tutorials/using_xenomai_as_uos
    tutorials/using_vxworks_as_uos
    tutorials/using_zephyr_as_uos
+   tutorials/using_qemu_create_windows_image
 
 Enable ACRN Features
 ********************
