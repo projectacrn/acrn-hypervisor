@@ -125,6 +125,11 @@ HV_UNIFIED_XML := $(HV_CONFIG_DIR)/unified.xml
 HV_CONFIG_H := $(HV_OBJDIR)/include/config.h
 HV_CONFIG_MK := $(HV_CONFIG_DIR)/config.mk
 HV_CONFIG_TIMESTAMP := $(HV_CONFIG_DIR)/.timestamp
+HV_DIFFCONFIG_LIST := $(HV_CONFIG_DIR)/.diffconfig
+
+HV_CONFIG_A_DIR := $(HV_OBJDIR)/a            # Directory containing generated configuration sources for diffconfig
+HV_CONFIG_B_DIR := $(HV_OBJDIR)/b            # Directory containing edited configuration sources for diffconfig
+HV_CONFIG_DIFF := $(HV_OBJDIR)/config.patch  # Patch encoding differences between generated and edited config. sources
 
 # Backward-compatibility for RELEASE=(0|1)
 ifdef RELEASE
@@ -226,7 +231,7 @@ $(HV_CONFIG_H): $(HV_UNIFIED_XML)
 	@xsltproc -o $@ --xinclude --xincludestyle $(HV_CONFIG_XFORM_DIR)/config.h.xsl $<
 	@echo "$@ generated"
 
-$(HV_CONFIG_TIMESTAMP): $(HV_UNIFIED_XML) | $(HV_CONFIG_DIR)
+$(HV_CONFIG_TIMESTAMP): $(HV_UNIFIED_XML) ${HV_DIFFCONFIG_LIST} | $(HV_CONFIG_DIR)
 	@sh $(BASEDIR)/scripts/genconf.sh $(BASEDIR) $(HV_BOARD_XML) $(HV_SCENARIO_XML) $(HV_CONFIG_DIR)
 	@touch $@
 
@@ -239,6 +244,38 @@ showconfig:
 	@echo "- BOARD = $(BOARD)"
 	@echo "- SCENARIO = $(SCENARIO)"
 	@echo "- RELEASE = $(RELEASE)"
+
+diffconfig:
+	@rm -rf $(HV_CONFIG_A_DIR) $(HV_CONFIG_B_DIR)
+	@sh $(BASEDIR)/scripts/genconf.sh $(BASEDIR) $(BOARD_FILE) $(HV_CONFIG_XML) $(HV_CONFIG_A_DIR)
+	@cd $(HV_CONFIG_DIR) && find . -name '*.c' -or -name '*.h' -or -name '*.config' | while read f; do \
+	  nf=$(HV_CONFIG_B_DIR)/$${f}; mkdir -p `dirname $${nf}` && cp $${f} $${nf}; \
+	done
+	@cd $(HV_OBJDIR) && git diff --no-index --no-prefix a/ b/ > $(HV_CONFIG_DIFF) || true
+	@echo "Diff on generated configuration files is available at $(HV_CONFIG_DIFF)."
+	@echo "To make a patch effective, use `applydiffconfig PATCH=/path/to/patch` to register it to a build."
+
+applydiffconfig:
+ifdef PATCH
+  ifneq ($(realpath $(PATCH)),)
+	@echo $(realpath $(PATCH)) >> ${HV_DIFFCONFIG_LIST}
+	@echo "${PATCH} is registered for build directory ${HV_OBJDIR}."
+	@echo "Registered patches will be applied the next time 'make' is invoked."
+	@echo "To unregister a patch, remove it from ${HV_DIFFCONFIG_LIST}."
+  else
+	@echo "${PATCH}: No such file or directory"
+  endif
+else
+	@echo "No patch file or directory is specified"
+	@echo "Try 'make applydiffconfig PATCH=/path/to/patch' to register patches for generated configuration files."
+  ifneq ($(realpath $(HV_DIFFCONFIG_LIST)),)
+	@echo "Registers patches:"
+	@cat $(HV_DIFFCONFIG_LIST)
+  endif
+endif
+
+$(HV_DIFFCONFIG_LIST):
+	@touch $@
 
 menuconfig:
 	@echo "To tweak the configurations, run $(HV_CONFIG_TOOL_DIR)/config_app/app.py using python3 and load $(HV_SCENARIO_XML) in the web browser."
