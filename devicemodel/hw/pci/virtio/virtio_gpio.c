@@ -1221,7 +1221,7 @@ static void
 virtio_irq_evt_notify(void *vdev, struct virtio_vq_info *vq)
 {
 	/* The front-end driver does not make a kick, just avoid warning */
-	WPRINTF(("%s", "virtio gpio irq_evt_notify\n"));
+	DPRINTF(("%s", "virtio gpio irq_evt_notify\n"));
 }
 
 static void
