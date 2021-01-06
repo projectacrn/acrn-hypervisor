@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import xml.etree.ElementTree as ET
 import re
+import lxml
 
 
 ACRN_CONFIG_TARGET = ''
@@ -183,6 +184,39 @@ def get_xml_attrib(config_file, attrib):
 
     return (err_dic, value)
 
+def count_nodes(xpath, etree):
+    return int(etree.xpath(f"count({xpath})"))
+
+def get_text(xpath, etree):
+    result = etree.xpath(f"{xpath}/text()")
+    assert len(result) == 1, "Internal error: cannot get texts from multiple nodes at a time"
+    return result[0]
+
+def update_text(xpath, value, etree, overwrite=False):
+    result = etree.xpath(f"{xpath}")
+    assert len(result) == 1, "Internal error: cannot set text to multiple nodes at a time"
+    if overwrite or not result[0].text:
+        result[0].text = str(value)
+
+def append_node(xpath, value, etree):
+    # Look for an existing ancestor node
+    parts = xpath.split("/")
+    ancestor_level = 1
+    ancestor = None
+    while ancestor_level < len(parts):
+        result = etree.xpath("/".join(parts[:-ancestor_level]))
+        assert len(result) <= 1, "Internal error: cannot append element nodes to multiple ancestors"
+        if len(result) == 1:
+            ancestor = result[0]
+            break
+        ancestor_level += 1
+
+    assert ancestor is not None, f"Internal error: cannot find an existing ancestor for {xpath}"
+    for tag in parts[-ancestor_level:]:
+        child = lxml.etree.Element(tag)
+        ancestor.append(child)
+        ancestor = child
+    child.text = str(value)
 
 def get_board_name():
     """
