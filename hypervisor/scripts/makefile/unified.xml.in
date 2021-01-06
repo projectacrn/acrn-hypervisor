@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+
+<!-- Copyright (C) 2021 Intel Corporation. All rights reserved. -->
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+
+<acrn-offline-data
+    xmlns:xi="http://www.w3.org/2003/XInclude">
+  <board-data>
+    <xi:include href="{BOARD_FILE}" parse="xml" />
+  </board-data>
+  <config-data>
+    <xi:include href="{SCENARIO_FILE}" parse="xml" />
+  </config-data>
+  <allocation-data>
+    <xi:include href="{ALLOCATION_FILE}" parse="xml" />
+  </allocation-data>
+</acrn-offline-data>
