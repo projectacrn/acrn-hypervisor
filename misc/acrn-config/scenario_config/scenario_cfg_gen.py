@@ -245,4 +245,4 @@ if __name__ == '__main__':
     if err_dic:
         for err_k, err_v in err_dic.items():
             common.print_red("{}: {}".format(err_k, err_v), err=True)
-
+    sys.exit(1 if err_dic else 0)
