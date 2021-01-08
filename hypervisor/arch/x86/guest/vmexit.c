@@ -14,6 +14,7 @@
 #include <vmexit.h>
 #include <vm_reset.h>
 #include <vmx_io.h>
+#include <splitlock.h>
 #include <ept.h>
 #include <vtd.h>
 #include <vcpuid.h>
@@ -272,23 +273,6 @@ static int32_t unhandled_vmexit_handler(struct acrn_vcpu *vcpu)
 	return 0;
 }
 
-static void vcpu_complete_split_lock_emulation(struct acrn_vcpu *cur_vcpu)
-{
-	struct acrn_vcpu *other;
-	uint16_t i;
-
-	if (cur_vcpu->vm->hw.created_vcpus > 1U) {
-		foreach_vcpu(i, cur_vcpu->vm, other) {
-			if (other != cur_vcpu) {
-				bitmap_clear_lock(ACRN_REQUEST_SPLIT_LOCK, &other->arch.pending_req);
-				signal_event(&other->events[VCPU_EVENT_SPLIT_LOCK]);
-			}
-		}
-
-		put_vm_lock(cur_vcpu->vm);
-	}
-}
-
 /* MTF is currently only used for split-lock emulation */
 static int32_t mtf_vmexit_handler(struct acrn_vcpu *vcpu)
 {
@@ -299,7 +283,7 @@ static int32_t mtf_vmexit_handler(struct acrn_vcpu *vcpu)
 
 	if (vcpu->arch.emulating_lock) {
 		vcpu->arch.emulating_lock = false;
-		vcpu_complete_split_lock_emulation(vcpu);
+		vcpu_complete_splitlock_emulation(vcpu);
 	}
 
 	return 0;
