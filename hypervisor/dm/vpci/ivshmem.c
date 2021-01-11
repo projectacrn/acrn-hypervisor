@@ -295,8 +295,11 @@ static void init_ivshmem_bar(struct pci_vdev *vdev, uint32_t bar_idx)
 	struct acrn_vm_pci_dev_config *dev_config = vdev->pci_dev_config;
 
 	addr = dev_config->vbar_base[bar_idx];
-	mask = (is_pci_io_bar((uint32_t)addr)) ? PCI_BASE_ADDRESS_IO_MASK : PCI_BASE_ADDRESS_MEM_MASK;
 	vbar = &vdev->vbars[bar_idx];
+	vbar->bar_type.bits = addr;
+	mask = is_pci_io_bar(vbar) ? PCI_BASE_ADDRESS_IO_MASK : PCI_BASE_ADDRESS_MEM_MASK;
+	vbar->bar_type.bits &= (~mask);
+
 	if (bar_idx == IVSHMEM_SHM_BAR) {
 		struct ivshmem_shm_region *region = find_shm_region(dev_config->shm_region_name);
 		if (region != NULL) {
@@ -314,9 +317,8 @@ static void init_ivshmem_bar(struct pci_vdev *vdev, uint32_t bar_idx)
 	if (size != 0UL) {
 		vbar->size = size;
 		vbar->mask = (uint32_t) (~(size - 1UL));
-		vbar->bar_type.bits = (uint32_t) (addr & (~mask));
-		pci_vdev_write_vbar(vdev, bar_idx, (uint32_t) addr);
-		if (is_pci_mem64_bar((uint32_t)addr)) {
+		pci_vdev_write_vbar(vdev, bar_idx, (uint32_t)addr);
+		if (is_pci_mem64lo_bar(vbar)) {
 			vbar = &vdev->vbars[bar_idx + 1U];
 			vbar->is_mem64hi = true;
 			vbar->mask = (uint32_t) ((~(size - 1UL)) >> 32U);

@@ -203,16 +203,22 @@ union pci_bdf {
 	} fields;
 };
 
+/*
+ * The next data structure is to reflect the format of PCI BAR base on the PCI sepc.
+ */
+
 union pci_bar_type {
 	uint32_t bits;
 	struct {
-		uint8_t indicator :1;   /* BITs[0], mapped to I/O space if read as 1 */
-		uint8_t reserved :1;    /* BITs[1], reserved */
+		uint32_t indicator :1;               /* BITs[0], mapped to I/O space if read as 1 */
+		uint32_t reserved :1;               /* BITs[1], reserved and must be "0" per spec. */
+		uint32_t reserved2 : 30;
 	} io_space;
 	struct {
-		uint8_t indicator :1;   /* BITs[0], mapped to memory space if read as 0 */
-		uint8_t mem_type :2;    /* BITs[1:2], 32-bit address if read as 00b, 64-bit address as 01b */
-		uint8_t prefetchable :1;        /* BITs[3], set to 1b if the data is prefetchable and set to 0b otherwise */
+		uint32_t indicator :1;               /* BITs[0], mapped to memory space if read as 0 */
+		uint32_t mem_type :2;            /* BITs[1:2], 32-bit address if read as 00b, 64-bit address as 01b */
+		uint32_t prefetchable :1;        /* BITs[3], set to 1b if the data is prefetchable and set to 0b otherwise */
+		uint32_t reserved2 : 28;
 	} mem_space;
 };
 
@@ -307,34 +313,6 @@ static inline bool is_bar_offset(uint32_t nr_bars, uint32_t offset)
 	}
 
 	return ret;
-}
-
-static inline bool is_pci_io_bar(uint32_t val)
-{
-	union pci_bar_type bar_type = {.bits = val};
-
-	return (bar_type.io_space.indicator == 1U);
-}
-
-static inline bool is_pci_mem_bar(uint32_t val)
-{
-	union pci_bar_type bar_type = {.bits = val};
-
-	return ((bar_type.mem_space.indicator == 0U));
-}
-
-static inline bool is_pci_mem32_bar(uint32_t val)
-{
-	union pci_bar_type bar_type = {.bits = val};
-
-	return (is_pci_mem_bar(val) && (bar_type.mem_space.mem_type == 0U));
-}
-
-static inline bool is_pci_mem64_bar(uint32_t val)
-{
-	union pci_bar_type bar_type = {.bits = val};
-
-	return (is_pci_mem_bar(val) && (bar_type.mem_space.mem_type == 2U));
 }
 
 static inline bool bdf_is_equal(union pci_bdf a, union pci_bdf b)

@@ -83,7 +83,7 @@ void init_vmsix_on_msi(struct pci_vdev *vdev)
 			if (vdev->vbars[i].base_hpa == 0UL){
 				break;
 			}
-			if (is_pci_mem64_bar(vdev->vbars[i].bar_type.bits)) {
+			if (is_pci_mem64lo_bar(&vdev->vbars[i])) {
 				i++;
 			}
 		}
