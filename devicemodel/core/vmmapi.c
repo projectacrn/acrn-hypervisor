@@ -704,3 +704,48 @@ vm_irqfd(struct vmctx *ctx, struct acrn_irqfd *args)
 {
 	return ioctl(ctx->fd, IC_EVENT_IRQFD, args);
 }
+
+int
+vm_get_config(struct vmctx *ctx, struct acrn_vm_config *vm_cfg)
+{
+#define VM_CFG_BUFF_SIZE 0x4000
+	int i, err = 0;
+	uint8_t *configs_buff;
+	struct acrn_vm_config *pcfg;
+	struct platform_info platform_info;
+
+	if ((ctx == NULL) || (vm_cfg == NULL))
+		return -1;
+
+	configs_buff = calloc(1, VM_CFG_BUFF_SIZE);
+	if (configs_buff == NULL) {
+		pr_err("%s, Allocate memory fail.\n", __func__);
+		return -1;
+	}
+
+	bzero(&platform_info, sizeof(platform_info));
+	platform_info.vm_configs_addr = (uint64_t)configs_buff;
+	err = ioctl(ctx->fd, IC_GET_PLATFORM_INFO, &platform_info);
+	if (err) {
+		pr_err("%s, failed: get platform info.\n", __func__);
+		goto exit;
+	}
+
+	for (i = 0; i < platform_info.max_vms; i++) {
+		pcfg = (struct acrn_vm_config *)(configs_buff + (i * platform_info.vm_config_entry_size));
+		if (!uuid_compare(ctx->vm_uuid, pcfg->uuid))
+			break;
+	}
+
+	if (i == platform_info.max_vms) {
+		pr_err("%s, Not found target VM.\n", __func__);
+		err = -1;
+		goto exit;
+	}
+
+	memcpy((void *)vm_cfg, (void *)pcfg, sizeof(struct acrn_vm_config));
+
+exit:
+	free(configs_buff);
+	return err;
+}
