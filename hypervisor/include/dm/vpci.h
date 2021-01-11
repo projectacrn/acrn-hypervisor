@@ -38,11 +38,11 @@
 #define VDEV_LIST_HASHSIZE (1U << VDEV_LIST_HASHBITS)
 
 struct pci_vbar {
-	bool is_mem64hi;;
+	bool is_mem64hi;	/* this is to indicate the high part of 64 bits MMIO bar */
 	uint64_t size;		/* BAR size */
 	uint64_t base_gpa;	/* BAR guest physical address */
 	uint64_t base_hpa;	/* BAR host physical address */
-	union pci_bar_type bar_type;
+	union pci_bar_type bar_type; /* the low 2(PIO)/4(MMIO) bits of BAR */
 	uint32_t mask;		/* BAR size mask */
 };
 
@@ -184,4 +184,30 @@ int32_t vpci_assign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pc
 int32_t vpci_deassign_pcidev(struct acrn_vm *tgt_vm, struct acrn_assign_pcidev *pcidev);
 struct pci_vdev *vpci_init_vdev(struct acrn_vpci *vpci, struct acrn_vm_pci_dev_config *dev_config, struct pci_vdev *parent_pf_vdev);
 
+static inline bool is_pci_io_bar(struct pci_vbar *vbar)
+{
+        return ((vbar->bar_type.io_space.indicator == 1U) && (!vbar->is_mem64hi));
+}
+
+static inline bool is_pci_mem_bar(struct pci_vbar *vbar)
+{
+        return ((vbar->is_mem64hi) || ((vbar->bar_type.mem_space.indicator == 0U)));
+}
+
+/* Reserved PCI BAR type: 1.Memory bar with reserved memory type; 2.IO bar reserved bit is set */
+static inline bool is_pci_reserved_bar(struct pci_vbar *vbar)
+{
+        return (((vbar->bar_type.mem_space.indicator == 0U) && ((vbar->bar_type.mem_space.mem_type & 0x1U) == 0x1U) && (!vbar->is_mem64hi)) ||
+		((vbar->bar_type.io_space.indicator == 1U) && (vbar->bar_type.io_space.reserved == 1U)));
+}
+
+static inline bool is_pci_mem32_bar(struct pci_vbar *vbar)
+{
+        return ((vbar->bar_type.mem_space.indicator == 0U) && (vbar->bar_type.mem_space.mem_type == 0U) && (!vbar->is_mem64hi));
+}
+
+static inline bool is_pci_mem64lo_bar(struct pci_vbar *vbar)
+{
+        return ((vbar->bar_type.mem_space.indicator == 0U) && (vbar->bar_type.mem_space.mem_type == 2U) && (!vbar->is_mem64hi));
+}
 #endif /* VPCI_H_ */

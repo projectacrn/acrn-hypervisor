@@ -115,10 +115,10 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 	vbar = &vdev->vbars[idx];
 	offset = pci_bar_offset(idx);
 	lo = pci_vdev_read_vcfg(vdev, offset, 4U);
-	if (((is_pci_io_bar(vbar->bar_type.bits) || is_pci_mem32_bar(vbar->bar_type.bits) || is_pci_mem64_bar(vbar->bar_type.bits) || vbar->is_mem64hi)) && (lo != ~0U)) {
+	if ((!is_pci_reserved_bar(vbar)) && (lo != ~0U)) {
 		base = lo & vbar->mask;
 
-		if (is_pci_mem64_bar(vbar->bar_type.bits)) {
+		if (is_pci_mem64lo_bar(vbar)) {
 			vbar = &vdev->vbars[idx + 1U];
 			hi = pci_vdev_read_vcfg(vdev, (offset + 4U), 4U);
 			if (hi != ~0U) {
@@ -128,12 +128,14 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 				base = 0UL;
 			}
 		}
-		if (is_pci_io_bar(vbar->bar_type.bits)) {
-			base &= 0xffffUL;
-		}
+	} else if (is_pci_io_bar(vbar)) {
+		/* Because guest driver may write to upper 16-bits of PIO BAR and expect that should have no effect,
+		 * SO PIO BAR base may bigger than 0xffff after calculation, should mask the upper 16-bits.
+		 */
+		base &= 0xffffUL;
 	}
 
-	if ((base != 0UL) && !ept_is_mr_valid(vpci2vm(vdev->vpci), base, vdev->vbars[idx].size)) {
+	if (is_pci_mem_bar(vbar) && (base != 0UL) && !ept_is_mr_valid(vpci2vm(vdev->vpci), base, vdev->vbars[idx].size)) {
 		pr_warn("%s, %x:%x.%x set invalid bar[%d] base: 0x%lx, size: 0x%lx\n", __func__,
 			vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, base, vdev->vbars[idx].size);
 		base = 0UL;	/* 0UL means invalid GPA, so that EPT won't map */
@@ -150,13 +152,17 @@ void pci_vdev_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 
 	vbar = &vdev->vbars[idx];
 	bar = val & vbar->mask;
-	bar |= vbar->bar_type.bits;
-	offset = pci_bar_offset(idx);
-	pci_vdev_write_vcfg(vdev, offset, 4U, bar);
-
 	if (vbar->is_mem64hi) {
 		update_idx -= 1U;
+	} else {
+		if (is_pci_io_bar(vbar)) {
+			bar |= (vbar->bar_type.bits & (~PCI_BASE_ADDRESS_IO_MASK));
+		} else {
+			bar |= (vbar->bar_type.bits & (~PCI_BASE_ADDRESS_MEM_MASK));
+		}
 	}
+	offset = pci_bar_offset(idx);
+	pci_vdev_write_vcfg(vdev, offset, 4U, bar);
 
 	pci_vdev_update_vbar_base(vdev, update_idx);
 }

@@ -292,11 +292,9 @@ void vdev_pt_write_vbar(struct pci_vdev *vdev, uint32_t idx, uint32_t val)
 {
 	struct pci_vbar *vbar = &vdev->vbars[idx];
 
-	if (is_pci_io_bar(vbar->bar_type.bits)) {
+	if (is_pci_io_bar(vbar)) {
 		vpci_update_one_vbar(vdev, idx, val, vdev_pt_allow_io_vbar, vdev_pt_deny_io_vbar);
-	}
-
-	if (is_pci_mem32_bar(vbar->bar_type.bits) || is_pci_mem64_bar(vbar->bar_type.bits) || vbar->is_mem64hi) {
+	} else if (is_pci_mem_bar(vbar)) {
 		vpci_update_one_vbar(vdev, idx, val, vdev_pt_map_mem_vbar, vdev_pt_unmap_mem_vbar);
 	}
 }
@@ -360,14 +358,15 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 			offset = pci_bar_offset(idx);
 		}
 		lo = pci_pdev_read_cfg(pbdf, offset, 4U);
+		vbar->bar_type.bits = lo;
 
-		if (!(is_pci_io_bar(lo) || is_pci_mem32_bar(lo) || is_pci_mem64_bar(lo))) {
+		if (is_pci_reserved_bar(vbar)) {
 			continue;
 		}
-		mask = (is_pci_io_bar(lo)) ? PCI_BASE_ADDRESS_IO_MASK : PCI_BASE_ADDRESS_MEM_MASK;
+		mask = (is_pci_io_bar(vbar)) ? PCI_BASE_ADDRESS_IO_MASK : PCI_BASE_ADDRESS_MEM_MASK;
 		vbar->base_hpa = (uint64_t)lo & mask;
 
-		if (is_pci_mem64_bar(lo)) {
+		if (is_pci_mem64lo_bar(vbar)) {
 			hi = pci_pdev_read_cfg(pbdf, offset + 4U, 4U);
 			vbar->base_hpa |= ((uint64_t)hi << 32U);
 		}
@@ -378,14 +377,14 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 			pci_pdev_write_cfg(pbdf, offset, 4U, lo);
 
 			vbar->mask = size32 & mask;
-			vbar->bar_type.bits = lo & (~mask);
+			vbar->bar_type.bits &= (~mask);
 			vbar->size = (uint64_t)size32 & mask;
 
 			if (is_prelaunched_vm(vpci2vm(vdev->vpci))) {
 				lo = (uint32_t)vdev->pci_dev_config->vbar_base[idx];
 			}
 
-			if (is_pci_mem64_bar(lo)) {
+			if (is_pci_mem64lo_bar(vbar)) {
 				idx++;
 				if (is_sriov_bar) {
 					offset = sriov_bar_offset(vdev, idx);
@@ -419,7 +418,7 @@ static void init_bars(struct pci_vdev *vdev, bool is_sriov_bar)
 				}
 			} else {
 				vbar->size = vbar->size & ~(vbar->size - 1UL);
-				if (is_pci_mem32_bar(lo)) {
+				if (is_pci_mem32_bar(vbar)) {
 					vbar->size = round_page_up(vbar->size);
 				}
 
