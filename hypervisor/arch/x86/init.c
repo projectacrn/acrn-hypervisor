@@ -90,6 +90,10 @@ void init_primary_pcpu(void)
 
 	init_debug_pre();
 
+	if (sanitize_multiboot_info() != 0) {
+		panic("Multiboot info error!");
+	}
+
 	init_pcpu_pre(true);
 
 	init_seed();
