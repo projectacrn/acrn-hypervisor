@@ -14,6 +14,8 @@
 #include <acrn_hv_defs.h>
 #include <vm.h>
 #include <console.h>
+#include <multiboot.h>
+#include <dbg_cmd.h>
 
 struct hv_timer console_timer;
 
@@ -22,8 +24,38 @@ struct hv_timer console_timer;
 #define GUEST_CONSOLE_TO_HV_SWITCH_KEY      0       /* CTRL + SPACE */
 uint16_t console_vmid = ACRN_INVALID_VMID;
 
+static void parse_hvdbg_cmdline(void)
+{
+	const char *start = NULL;
+	const char *end = NULL;
+	struct acrn_multiboot_info *mbi = get_multiboot_info();
+
+	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
+		start = mbi->mi_cmdline;
+	}
+
+	while ((start != NULL) && ((*start) != '\0')) {
+		while ((*start) == ' ')
+			start++;
+		if ((*start) != '\0') {
+			end = start + 1;
+			while ((*end != ' ') && ((*end) != '\0'))
+				end++;
+
+			if (!handle_dbg_cmd(start, (int32_t)(end - start))) {
+				/* if not handled by handle_dbg_cmd, it can be handled further */
+			}
+			start = end;
+		}
+	}
+
+}
+
 void console_init(void)
 {
+	/*Parse cmdline to get UART setting*/
+	parse_hvdbg_cmdline();
+
 	/*
 	 * Enable UART as early as possible.
 	 * Then we could use printf for debugging on early boot stage.

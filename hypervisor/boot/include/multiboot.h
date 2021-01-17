@@ -76,17 +76,9 @@ struct acrn_multiboot_info {
 	struct efi_info		mi_efi_info;
 };
 
-/*
- * The extern declaration for acrn_mbi is for cmdline.c use only, other functions should use
- * get_multiboot_info() API to access struct acrn_mbi because it has explict @post condition
- */
-extern struct acrn_multiboot_info acrn_mbi;
-
 void init_acrn_multiboot_info(void);
 struct acrn_multiboot_info *get_multiboot_info(void);
 int32_t sanitize_multiboot_info(void);
-
-void parse_hv_cmdline(void);
 
 #endif	/* ASSEMBLER */
 
