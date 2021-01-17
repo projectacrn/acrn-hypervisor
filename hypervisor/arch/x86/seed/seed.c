@@ -11,7 +11,7 @@
 #include <sprintf.h>
 #include <ept.h>
 #include <logmsg.h>
-#include <boot.h>
+#include <multiboot.h>
 #include <crypto_api.h>
 #include <seed.h>
 #include "seed_abl.h"
