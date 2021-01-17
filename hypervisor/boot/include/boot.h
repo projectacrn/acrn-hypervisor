@@ -52,32 +52,6 @@ extern uint32_t boot_regs[2];
 
 extern char *efiloader_sig;
 
-static inline bool boot_from_multiboot1(void)
-{
-	return ((boot_regs[0] == MULTIBOOT_INFO_MAGIC) && (boot_regs[1] != 0U));
-}
-
-#ifdef CONFIG_MULTIBOOT2
-/*
- * @post boot_regs[1] stores the address pointer that point to a valid multiboot2 info
- */
-static inline bool boot_from_multiboot2(void)
-{
-	/*
-	 * Multiboot spec states that the Multiboot information structure may be placed
-	 * anywhere in memory by the boot loader.
-	 *
-	 * Seems both SBL and GRUB won't place multiboot1 MBI structure at 0 address,
-	 * but GRUB could place Multiboot2 MBI structure at 0 address until commit
-	 * 0f3f5b7c13fa9b67 ("multiboot2: Set min address for mbi allocation to 0x1000")
-	 * which dates on Dec 26 2019.
-	 */
-	return (boot_regs[0] == MULTIBOOT2_INFO_MAGIC);
-}
-
-int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info);
-#endif
-
 /*
  * The extern declaration for acrn_mbi is for cmdline.c use only, other functions should use
  * get_multiboot_info() API to access struct acrn_mbi because it has explict @post condition

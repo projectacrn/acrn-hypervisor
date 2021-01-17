@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <boot.h>
 #include <pgtable.h>
+#include "multiboot_priv.h"
 
 /**
  * @pre mbi != NULL && mb2_tag_mmap != NULL
