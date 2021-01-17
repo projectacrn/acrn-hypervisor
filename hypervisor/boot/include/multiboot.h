@@ -87,7 +87,6 @@ struct acrn_multiboot_info *get_multiboot_info(void);
 int32_t sanitize_multiboot_info(void);
 
 void parse_hv_cmdline(void);
-const void* get_rsdp_ptr(void);
 
 #endif	/* ASSEMBLER */
 
