@@ -88,8 +88,6 @@ void init_primary_pcpu(void)
 
 	init_acrn_multiboot_info();
 
-	parse_hv_cmdline();
-
 	init_debug_pre();
 
 	init_pcpu_pre(true);

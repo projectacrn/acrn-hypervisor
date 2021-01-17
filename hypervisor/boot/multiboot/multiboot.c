@@ -64,7 +64,7 @@ struct multiboot_info {
 	uint32_t	       unused_mi_vbe_interface_len;
 };
 
-struct acrn_multiboot_info acrn_mbi = { 0U };
+static struct acrn_multiboot_info acrn_mbi = { 0U };
 
 static int32_t mbi_status;
 
