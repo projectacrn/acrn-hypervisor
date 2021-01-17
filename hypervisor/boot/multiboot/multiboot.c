@@ -10,6 +10,7 @@
 #include <boot.h>
 #include <rtl.h>
 #include <logmsg.h>
+#include "multiboot_priv.h"
 
 struct acrn_multiboot_info acrn_mbi = { 0U };
 
