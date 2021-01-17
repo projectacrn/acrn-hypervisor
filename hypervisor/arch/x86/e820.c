@@ -127,7 +127,7 @@ void init_e820(void)
 	uint32_t i;
 	uint64_t top_addr_space = CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE;
 
-	struct acrn_multiboot_info *mbi = get_multiboot_info();
+	struct acrn_multiboot_info *mbi = get_acrn_multiboot_info();
 	struct multiboot_mmap *mmap = mbi->mi_mmap_entry;
 
 	hv_e820_entries_nr = mbi->mi_mmap_entries;

@@ -41,7 +41,7 @@ static uint32_t parse_seed_arg(void)
 {
 	const char *cmd_src = NULL;
 	char *arg, *arg_end;
-	struct acrn_multiboot_info *mbi = get_multiboot_info();
+	struct acrn_multiboot_info *mbi = get_acrn_multiboot_info();
 	uint32_t i = SEED_ARG_NUM - 1U;
 	uint32_t len;
 

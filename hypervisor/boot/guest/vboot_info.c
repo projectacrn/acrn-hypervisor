@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <per_cpu.h>
 #include <irq.h>
-#include <boot.h>
+#include <multiboot.h>
 #include <pgtable.h>
 #include <zeropage.h>
 #include <seed.h>
@@ -257,7 +257,7 @@ static int32_t init_vm_sw_load(struct acrn_vm *vm, const struct acrn_multiboot_i
  */
 int32_t init_vm_boot_info(struct acrn_vm *vm)
 {
-	struct acrn_multiboot_info *mbi = get_multiboot_info();
+	struct acrn_multiboot_info *mbi = get_acrn_multiboot_info();
 	int32_t ret = -EINVAL;
 
 	stac();

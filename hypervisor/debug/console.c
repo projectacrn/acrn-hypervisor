@@ -28,7 +28,7 @@ static void parse_hvdbg_cmdline(void)
 {
 	const char *start = NULL;
 	const char *end = NULL;
-	struct acrn_multiboot_info *mbi = get_multiboot_info();
+	struct acrn_multiboot_info *mbi = get_acrn_multiboot_info();
 
 	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
 		start = mbi->mi_cmdline;
