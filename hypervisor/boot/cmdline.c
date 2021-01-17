@@ -6,7 +6,7 @@
 
 #include <types.h>
 #include <errno.h>
-#include <boot.h>
+#include <multiboot.h>
 #include <pgtable.h>
 #include <dbg_cmd.h>
 
