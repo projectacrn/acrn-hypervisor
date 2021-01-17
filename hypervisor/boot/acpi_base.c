@@ -70,7 +70,7 @@ static struct acpi_table_rsdp *get_rsdp(void)
 	if (acpi_rsdp != NULL) {
 		rsdp = acpi_rsdp;
 	} else {
-		rsdp = (struct acpi_table_rsdp *)(get_multiboot_info()->mi_acpi_rsdp_va);
+		rsdp = (struct acpi_table_rsdp *)(get_acrn_multiboot_info()->mi_acpi_rsdp_va);
 		if (rsdp == NULL) {
 			uint16_t *addr;
 
