@@ -41,7 +41,7 @@
 
 #ifndef ASSEMBLER
 
-#include <zeropage.h>
+#include <efi.h>
 #include <vm_configurations.h>
 
 struct multiboot_mmap {

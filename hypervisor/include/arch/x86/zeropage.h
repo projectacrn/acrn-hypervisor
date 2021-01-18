@@ -7,17 +7,7 @@
 #ifndef ZEROPAGE_H
 #define ZEROPAGE_H
 #include <e820.h>
-
-struct efi_info {
-	uint32_t efi_loader_signature;	/* 0x1d0 */
-	uint32_t efi_systab;		/* 0x1c4 */
-	uint32_t efi_memdesc_size;	/* 0x1c8 */
-	uint32_t efi_memdesc_version;	/* 0x1cc */
-	uint32_t efi_memmap;		/* 0x1d0 */
-	uint32_t efi_memmap_size;	/* 0x1d4 */
-	uint32_t efi_systab_hi;		/* 0x1d8 */
-	uint32_t efi_memmap_hi;		/* 0x1dc */
-} __packed;
+#include <efi.h>
 
 struct zero_page {
 	uint8_t pad0[0x1c0];	/* 0x000 */
