@@ -14,8 +14,12 @@
 #include <logmsg.h>
 #include <seed.h>
 #include <ld_sym.h>
-#include <boot.h>
 #include <multiboot.h>
+
+/* The following are assembly varaibles defined in arch/x86/boot/cpu_primary.S */
+/* boot_regs store the multiboot info magic and address */
+extern uint32_t boot_regs[2];
+extern char *efiloader_sig;
 
 /* Push sp magic to top of stack for call trace */
 #define SWITCH_TO(rsp, to)                                              \
