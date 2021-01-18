@@ -28,7 +28,11 @@
 #define	MULTIBOOT_INFO_HAS_EFI_MMAP	0x00010000U
 #define	MULTIBOOT_INFO_HAS_EFI64	0x00020000U
 
+/* TODO: MAX_MMAP_ENTRIES shall be config by config tool, and same as E820_MAX_ENTRIES */
+#define MAX_MMAP_ENTRIES		32U
+
 #define MAX_BOOTARGS_SIZE		2048U
+
 /* The modules in multiboot are: Pre-launched VM: kernel/ramdisk/acpi; SOS VM: kernel/ramdisk */
 #define MAX_MODULE_NUM			(3U * PRE_VM_NUM + 2U * SOS_VM_NUM)
 
@@ -37,7 +41,6 @@
 
 #ifndef ASSEMBLER
 
-#include <e820.h>
 #include <zeropage.h>
 #include <vm_configurations.h>
 
@@ -70,7 +73,7 @@ struct acrn_multiboot_info {
 
 	uint32_t		mi_mmap_entries;
 	const void		*mi_mmap_va;
-	struct multiboot_mmap	mi_mmap_entry[E820_MAX_ENTRIES];
+	struct multiboot_mmap	mi_mmap_entry[MAX_MMAP_ENTRIES];
 
 	const void		*mi_acpi_rsdp_va;
 	struct efi_info		mi_efi_info;
