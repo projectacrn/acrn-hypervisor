@@ -94,9 +94,9 @@ void init_acrn_multiboot_info(uint32_t magic, uint32_t info, char *sig)
 int32_t sanitize_acrn_multiboot_info(uint32_t magic, uint32_t info)
 {
 	if ((acrn_mbi.mi_mmap_entries != 0U) && (acrn_mbi.mi_mmap_va != NULL)) {
-		if (acrn_mbi.mi_mmap_entries > E820_MAX_ENTRIES) {
+		if (acrn_mbi.mi_mmap_entries > MAX_MMAP_ENTRIES) {
 			pr_err("Too many E820 entries %d\n", acrn_mbi.mi_mmap_entries);
-			acrn_mbi.mi_mmap_entries = E820_MAX_ENTRIES;
+			acrn_mbi.mi_mmap_entries = MAX_MMAP_ENTRIES;
 		}
 		if (boot_from_multiboot1(magic, info)) {
 			uint32_t mmap_entry_size = sizeof(struct multiboot_mmap);
@@ -171,7 +171,7 @@ int32_t sanitize_acrn_multiboot_info(uint32_t magic, uint32_t info)
 /*
  * @post retval != NULL
  * @post retval->mi_flags & MULTIBOOT_INFO_HAS_MMAP != 0U
- * @post (retval->mi_mmap_entries > 0U) && (retval->mi_mmap_entries <= E820_MAX_ENTRIES)
+ * @post (retval->mi_mmap_entries > 0U) && (retval->mi_mmap_entries <= MAX_MMAP_ENTRIES)
  */
 struct acrn_multiboot_info *get_acrn_multiboot_info(void)
 {
