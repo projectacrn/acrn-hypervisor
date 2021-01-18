@@ -10,6 +10,7 @@
 #include <trampoline.h>
 #include <reloc.h>
 #include <ld_sym.h>
+#include <e820.h>
 
 static uint64_t trampoline_start16_paddr;
 
