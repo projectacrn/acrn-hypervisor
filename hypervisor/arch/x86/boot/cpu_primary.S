@@ -23,9 +23,6 @@
 
 #include <config.h>
 #include <multiboot.h>
-#ifdef CONFIG_MULTIBOOT2
-#include <multiboot2.h>
-#endif
 
 /* MULTIBOOT HEADER */
 #define MULTIBOOT_HEADER_FLAGS	MULTIBOOT_HEADER_NEED_MEMINFO
