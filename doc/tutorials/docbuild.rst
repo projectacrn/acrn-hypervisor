@@ -124,22 +124,21 @@ Installing the documentation tools
 Our documentation processing has been tested to run with Python 3.6.3
 and these other tools:
 
-* breathe                   version: 4.9.1
-* sphinx                    version: 1.7.7
-* docutils                  version: 0.14
-* sphinx-rtd-theme          version: 0.4.0
-* kconfiglib                version: 10.9.1
-* sphinx-tabs               version: 1.1.13
+* breathe                   version: 4.23.0
+* sphinx                    version: 3.2.1
+* docutils                  version: 0.16
+* sphinx-rtd-theme          version: 0.5.0
+* kconfiglib                version: 14.1.0
+* sphinx-tabs               version: 1.3.0
 * doxygen                   version: 1.8.13
 
-Depending on your Linux version, install the needed tools:
-
-* For Ubuntu use:
+Depending on your Linux version, install the needed tools.
+For Ubuntu use:
 
   .. code-block:: bash
 
      sudo apt-get install doxygen python3-pip \
-       python3-wheel make graphviz
+       python3-wheel make graphviz xsltproc
 
 Then use ``pip3`` to install the remaining Python-based tools:
 
@@ -149,7 +148,7 @@ Then use ``pip3`` to install the remaining Python-based tools:
    pip3 install --user -r scripts/requirements.txt
 
 Add ``$HOME/.local/bin`` to the front of your ``PATH`` so the system will
-find expected versions of Python utilities such as ``sphinx-build`` and
+find expected versions of these Python utilities such as ``sphinx-build`` and
 ``breathe``:
 
 .. code-block:: bash
@@ -166,7 +165,8 @@ And with that you're ready to generate the documentation.
 .. note::
 
    We've provided a script you can run to show what versions of the
-   documentation building tools are installed.::
+   documentation building tools are installed and compare with the
+   tool versions shown above.::
 
       doc/scripts/show-versions.py
 
