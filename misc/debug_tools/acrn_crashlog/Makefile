@@ -71,13 +71,6 @@ ifeq ($(strip $(LIB_EXIST)),lsystemd)
 	EXTRA_LIBS := -lsystemd
 endif
 
-PKG_CONFIG := $(shell export PKG_CONFIG_PATH=$(PKG_CONFIG_PATH); \
-	pkg-config --libs libtelemetry)
-LIB_EXIST := $(findstring ltelemetry, $(PKG_CONFIG))
-ifeq ($(strip $(LIB_EXIST)),ltelemetry)
-        CFLAGS  += -DHAVE_TELEMETRICS_CLIENT
-        EXTRA_LIBS += -ltelemetry
-endif
 export CFLAGS
 export LDFLAGS
 export EXTRA_LIBS
@@ -109,13 +102,9 @@ install:
 	@install -d $(DESTDIR)$(datadir)/acrn/crashlog
 	@install -p -D -m 0644 data/40-watchdog.conf $(DESTDIR)$(datadir)/acrn/crashlog
 	@install -p -D -m 0644 data/80-coredump.conf $(DESTDIR)$(datadir)/acrn/crashlog
-	@install -d $(DESTDIR)$(datadir)/defaults/telemetrics/
-	@install -p -D -m 0644 data/acrnprobe.xml $(DESTDIR)$(datadir)/defaults/telemetrics/
 	@install -d $(DESTDIR)$(systemd_unitdir)/system/
 	@install -p -D -m 0644 data/acrnprobe.service $(DESTDIR)$(systemd_unitdir)/system/
 	@install -p -D -m 0644 data/usercrash.service $(DESTDIR)$(systemd_unitdir)/system/
-	@install -d $(DESTDIR)$(libdir)/tmpfiles.d
-	@install -p -D -m 0644 data/acrn-crashlog-dirs.conf $(DESTDIR)$(libdir)/tmpfiles.d/
 
 .PHONY:uninstall
 uninstall:
@@ -144,15 +133,9 @@ uninstall:
 	@if [ -e "$(DESTDIR)$(datadir)/acrn/crashlog/80-coredump.conf" ];then \
 		$(RM) $(DESTDIR)$(datadir)/acrn/crashlog/80-coredump.conf; \
 	fi
-	@if [ -e "$(DESTDIR)$(datadir)/defaults/telemetrics/acrnprobe.xml" ];then \
-		$(RM) $(DESTDIR)$(datadir)/defaults/telemetrics/acrnprobe.xml; \
-	fi
 	@if [ -e "$(DESTDIR)$(systemd_unitdir)/system/acrnprobe.service" ];then \
 		$(RM) $(DESTDIR)$(systemd_unitdir)/system/acrnprobe.service; \
 	fi
 	@if [ -e "$(DESTDIR)$(systemd_unitdir)/system/usercrash.service" ];then \
 		$(RM) $(DESTDIR)$(systemd_unitdir)/system/usercrash.service; \
-	fi
-	@if [ -e "$(DESTDIR)$(libdir)/tmpfiles.d/acrn-crashlog-dirs.conf" ];then \
-		$(RM) $(DESTDIR)$(libdir)/tmpfiles.d/acrn-crashlog-dirs.conf; \
 	fi
