@@ -79,7 +79,7 @@ struct acrn_multiboot_info {
 	struct efi_info		mi_efi_info;
 };
 
-void init_acrn_multiboot_info(uint32_t magic, uint32_t info, char *sig);
+void init_acrn_multiboot_info(uint32_t magic, uint32_t info);
 int32_t sanitize_acrn_multiboot_info(uint32_t magic, uint32_t info);
 struct acrn_multiboot_info *get_acrn_multiboot_info(void);
 

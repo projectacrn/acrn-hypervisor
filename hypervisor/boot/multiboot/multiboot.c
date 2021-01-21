@@ -67,7 +67,7 @@ static struct acrn_multiboot_info acrn_mbi = { 0U };
 
 static int32_t mbi_status;
 
-void init_acrn_multiboot_info(uint32_t magic, uint32_t info, char *sig)
+void init_acrn_multiboot_info(uint32_t magic, uint32_t info)
 {
 	if (boot_from_multiboot1(magic, info)) {
 		struct multiboot_info *mbi = (struct multiboot_info *)(hpa2hva_early((uint64_t)info));
@@ -84,7 +84,7 @@ void init_acrn_multiboot_info(uint32_t magic, uint32_t info, char *sig)
 		mbi_status = 0;
 #ifdef CONFIG_MULTIBOOT2
 	} else if (boot_from_multiboot2(magic)) {
-		mbi_status = multiboot2_to_acrn_mbi(&acrn_mbi, hpa2hva_early((uint64_t)info), sig);
+		mbi_status = multiboot2_to_acrn_mbi(&acrn_mbi, hpa2hva_early((uint64_t)info));
 #endif
 	} else {
 		mbi_status = -ENODEV;

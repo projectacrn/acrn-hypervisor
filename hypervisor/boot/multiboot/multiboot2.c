@@ -36,11 +36,11 @@ static void mb2_mods_to_mbi(struct acrn_multiboot_info *mbi,
 /**
  * @pre mbi != NULL && mb2_tag_efi64 != 0
  */
-static void mb2_efi64_to_mbi(struct acrn_multiboot_info *mbi, const struct multiboot2_tag_efi64 *mb2_tag_efi64,
-		char *sig)
+static void mb2_efi64_to_mbi(struct acrn_multiboot_info *mbi, const struct multiboot2_tag_efi64 *mb2_tag_efi64)
 {
+	const uint32_t efiloader_sig = 0x34364c45; /* "EL64" */
 	mbi->mi_efi_info.efi_systab = (uint32_t)(uint64_t)mb2_tag_efi64->pointer;
-	mbi->mi_efi_info.efi_loader_signature = (uint32_t)(uint64_t)sig;
+	mbi->mi_efi_info.efi_loader_signature = efiloader_sig;
 	mbi->mi_flags |= MULTIBOOT_INFO_HAS_EFI64;
 }
 
@@ -61,7 +61,7 @@ static void mb2_efimmap_to_mbi(struct acrn_multiboot_info *mbi,
 /**
  * @pre mbi != NULL
  */
-int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info, char *sig)
+int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
 {
 	int32_t ret = 0;
 	struct multiboot2_tag *mb2_tag, *mb2_tag_end;
@@ -92,7 +92,7 @@ int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info, 
 			mbi->mi_acpi_rsdp_va = ((struct multiboot2_tag_new_acpi *)mb2_tag)->rsdp;
 			break;
 		case MULTIBOOT2_TAG_TYPE_EFI64:
-			mb2_efi64_to_mbi(mbi, (const struct multiboot2_tag_efi64 *)mb2_tag, sig);
+			mb2_efi64_to_mbi(mbi, (const struct multiboot2_tag_efi64 *)mb2_tag);
 			break;
 		case MULTIBOOT2_TAG_TYPE_EFI_MMAP:
 			mb2_efimmap_to_mbi(mbi, (const struct multiboot2_tag_efi_mmap *)mb2_tag);

@@ -314,9 +314,3 @@ cpu_primary32_pdt_addr:
     .quad  address + 0x83
     address = address + 0x200000
     .endr
-
-#ifdef CONFIG_MULTIBOOT2
-    .global efiloader_sig
-efiloader_sig:
-    .asciz    "EL64"
-#endif
