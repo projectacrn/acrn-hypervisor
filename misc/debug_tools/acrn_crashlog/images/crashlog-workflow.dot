@@ -1,8 +1,0 @@
-digraph {
-   bgcolor=transparent; rankdir=LR;
-   node [shape="rectangle" style="filled" color="lightblue"]
-   edge [fontsize="12" fontcolor="blue"]
-
-   "acrnprobe" -> "telemetrics-client" [label="crashlog\npath"]
-   "telemetrics-client" -> "backend"   [label="log\ncontent"]
-}
