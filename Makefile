@@ -68,12 +68,12 @@ O ?= build
 ROOT_OUT := $(shell mkdir -p $(O);cd $(O);pwd)
 HV_OUT := $(ROOT_OUT)/hypervisor
 DM_OUT := $(ROOT_OUT)/devicemodel
-TOOLS_OUT := $(ROOT_OUT)/misc/tools
+TOOLS_OUT := $(ROOT_OUT)/misc/debug_tools
 DOC_OUT := $(ROOT_OUT)/doc
 BUILD_VERSION ?=
 BUILD_TAG ?=
 HV_CFG_LOG = $(HV_OUT)/cfg.log
-VM_CONFIGS_DIR = $(T)/misc/vm_configs
+VM_CONFIGS_DIR = $(T)/misc/config_tools
 
 export TOOLS_OUT BOARD SCENARIO RELEASE
 

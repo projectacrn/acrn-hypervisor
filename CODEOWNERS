@@ -16,13 +16,12 @@ Makefile                                 @terryzouhao
 /hypervisor/                             @anthonyzxu @dongyaozu
 /devicemodel/                            @anthonyzxu @ywan170
 /doc/                                    @dbkinder @deb-intel @NanlinXie
-/misc/tools/acrn-crashlog/               @chengangc @dizhang417 
-/misc/tools/acrnlog/                     @ywan170 @liuyuan-GitHub
-/misc/tools/acrntrace/                   @ywan170 @liuyuan-GitHub
-/misc/acrn-manager/                      @ywan170 @liuyuan-GitHub
-/misc/acrnbridge/                        @ywan170 @liuyuan-GitHub
-/misc/acrn-config/                       @terryzouhao
+/misc/debug_tools/acrn_crashlog/         @chengangc @dizhang417
+/misc/debug_tools/acrn_log/              @ywan170 @shuox
+/misc/debug_tools/acrn_trace/            @ywan170 @shuox
+/misc/services/acrn_manager/             @ywan170 @shuox
+/misc/services/acrn_bridge/              @ywan170 @shuox
+/misc/config_tools/                      @terryzouhao
 /misc/Makefile                           @terryzouhao
-/misc/efi-stub/                          @terryzouhao
 
 *.rst                                    @dbkinder @deb-intel @NanlinXie
