@@ -1,4 +1,4 @@
-include ../../paths.make
+include ../../../paths.make
 
 OUT_DIR ?= .
 
