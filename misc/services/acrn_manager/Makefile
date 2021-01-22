@@ -1,4 +1,4 @@
-include ../../paths.make
+include ../../../paths.make
 
 T := $(CURDIR)
 OUT_DIR ?= $(shell mkdir -p $(T)/build;cd $(T)/build;pwd)
@@ -20,17 +20,17 @@ MANAGER_CFLAGS += -Wno-format-truncation -Wno-unused-result
 MANAGER_CFLAGS += -Wno-stringop-truncation
 MANAGER_CFLAGS += $(CFLAGS)
 
-MANAGER_CFLAGS += -I../../devicemodel/include
-MANAGER_CFLAGS += -I../../devicemodel/include/public
-MANAGER_CFLAGS += -I../../hypervisor/include
+MANAGER_CFLAGS += -I../../../devicemodel/include
+MANAGER_CFLAGS += -I../../../devicemodel/include/public
+MANAGER_CFLAGS += -I../../../hypervisor/include
 
-MANAGER_HEADERS := ../../devicemodel/include/dm.h
-MANAGER_HEADERS += ../../devicemodel/include/types.h
-MANAGER_HEADERS += ../../devicemodel/include/vmm.h
-MANAGER_HEADERS += ../../devicemodel/include/dm_string.h
-MANAGER_HEADERS += ../../devicemodel/include/macros.h
-MANAGER_HEADERS += ../../devicemodel/include/public/vhm_ioctl_defs.h
-MANAGER_HEADERS += ../../devicemodel/include/public/acrn_common.h
+MANAGER_HEADERS := ../../../devicemodel/include/dm.h
+MANAGER_HEADERS += ../../../devicemodel/include/types.h
+MANAGER_HEADERS += ../../../devicemodel/include/vmm.h
+MANAGER_HEADERS += ../../../devicemodel/include/dm_string.h
+MANAGER_HEADERS += ../../../devicemodel/include/macros.h
+MANAGER_HEADERS += ../../../devicemodel/include/public/vhm_ioctl_defs.h
+MANAGER_HEADERS += ../../../devicemodel/include/public/acrn_common.h
 
 GCC_MAJOR=$(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
 GCC_MINOR=$(shell echo __GNUC_MINOR__ | $(CC) -E -x c - | tail -n 1)
