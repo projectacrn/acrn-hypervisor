@@ -16,7 +16,7 @@ apply_patch () {
     fi
 }
 
-tool_dir=${base_dir}/../misc/acrn-config
+tool_dir=${base_dir}/../misc/config_tools
 diffconfig_list=${out}/.diffconfig
 
 python3 ${tool_dir}/board_config/board_cfg_gen.py --board ${board_xml} --scenario ${scenario_xml} --out ${out} &&

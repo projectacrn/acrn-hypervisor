@@ -50,13 +50,13 @@ endef
 #
 #   * The <symbol>_FILE (i.e. either BOARD_FILE or SCENARIO_FILE) will always hold the path to an existing XML file that
 #     defines the effective board/scenario. If only a BOARD/SCENARIO name is given, a predefined configuration under
-#     misc/acrn-config/xmls will be used.
+#     misc/config_tools/data/$BOARD will be used.
 #
 define determine_config =
 ifneq ($($(1)),)
   ifneq ($(realpath $($(1))),)
     override $(1)_FILE := $($(1))
-    override $(1) := $$(shell xmllint --xpath 'string(/acrn-config/@$(shell echo $(1) | tr A-Z a-z))' $$($(1)_FILE))
+    override $(1) := $$(shell xmllint --xpath 'string(/config_tools/@$(shell echo $(1) | tr A-Z a-z))' $$($(1)_FILE))
   else
     override $(1)_FILE := $(HV_PREDEFINED_$(1)_DIR)/$$($(1)).xml
     ifeq ($$(realpath $$($(1)_FILE)),)
@@ -113,9 +113,9 @@ endef
 HV_BOARD_XML := $(HV_OBJDIR)/.board.xml
 HV_SCENARIO_XML := $(HV_OBJDIR)/.scenario.xml
 HV_UNIFIED_XML_IN := $(BASEDIR)/scripts/makefile/unified.xml.in
-HV_PREDEFINED_BOARD_DIR := $(realpath $(BASEDIR)/../misc/acrn-config/xmls/board-xmls)
-HV_PREDEFINED_SCENARIO_DIR = $(realpath $(BASEDIR)/../misc/acrn-config/xmls/config-xmls)/$(BOARD)
-HV_CONFIG_TOOL_DIR := $(realpath $(BASEDIR)/../misc/acrn-config)
+HV_PREDEFINED_BOARD_DIR := $(realpath $(BASEDIR)/../misc/config_tools/data)/$(BOARD)
+HV_PREDEFINED_SCENARIO_DIR = $(realpath $(BASEDIR)/../misc/config_tools/data)/$(BOARD)
+HV_CONFIG_TOOL_DIR := $(realpath $(BASEDIR)/../misc/config_tools)
 HV_CONFIG_XFORM_DIR := $(HV_CONFIG_TOOL_DIR)/xforms
 
 # Paths to the outputs:
