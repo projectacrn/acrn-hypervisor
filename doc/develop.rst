@@ -19,10 +19,10 @@ Configuration and Tools
    user-guides/kernel-parameters
    user-guides/acrn-shell
    user-guides/acrn-dm-parameters
-   misc/tools/acrn-crashlog/README
+   misc/debug_tools/acrn_crashlog/README
    misc/packaging/README
-   misc/tools/**
-   misc/acrn-manager/**
+   misc/debug_tools/**
+   misc/services/acrn_manager/**
 
 Service VM Tutorials
 ********************
