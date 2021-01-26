@@ -174,48 +174,46 @@ void ept_flush_leaf_page(uint64_t *pge, uint64_t size)
 	uint64_t flush_base_hpa = INVALID_HPA, flush_end_hpa;
 	void *hva = NULL;
 	uint64_t flush_size = size;
+	uint64_t sw_sram_bottom, sw_sram_top;
 
 	if ((*pge & EPT_MT_MASK) != EPT_UNCACHED) {
 		flush_base_hpa = (*pge & (~(size - 1UL)));
 		flush_end_hpa = flush_base_hpa + size;
 
-		/* When Software SRAM is not initialized, both software_sram_area_bottom
-		 * and software_sram_area_top is 0,
+		 sw_sram_bottom = get_software_sram_base();
+		 sw_sram_top = sw_sram_bottom + get_software_sram_size();
+		/* When Software SRAM is not initialized, both sw_sram_bottom and sw_sram_top is 0,
 		 * so the below if/else will have no use
 		 */
-		if (flush_base_hpa < software_sram_area_bottom) {
-			/* Only flush [flush_base_hpa, software_sram_area_bottom)
-			 * and [software_sram_area_top, flush_base_hpa),
-			 * ignore [software_sram_area_bottom, software_sram_area_top)
+		if (flush_base_hpa < sw_sram_bottom) {
+			/* Only flush [flush_base_hpa, sw_sram_bottom) and [sw_sram_top, flush_base_hpa),
+			 * ignore [sw_sram_bottom, sw_sram_top)
 			 */
-			if (flush_end_hpa > software_sram_area_top) {
-				/* Only flush [flush_base_hpa, software_sram_area_bottom)
-				 * and [software_sram_area_top, flush_base_hpa),
-				 * ignore [software_sram_area_bottom, software_sram_area_top)
+			if (flush_end_hpa > sw_sram_top) {
+				/* Only flush [flush_base_hpa, sw_sram_bottom) and [sw_sram_top, flush_base_hpa),
+				 * ignore [sw_sram_bottom, sw_sram_top)
 				 */
-				flush_size = software_sram_area_bottom - flush_base_hpa;
+				flush_size = sw_sram_bottom - flush_base_hpa;
 				hva = hpa2hva(flush_base_hpa);
 				stac();
 				flush_address_space(hva, flush_size);
 				clac();
 
-				flush_size = flush_end_hpa - software_sram_area_top;
-				flush_base_hpa = software_sram_area_top;
-			} else if (flush_end_hpa > software_sram_area_bottom) {
-				/* Only flush [flush_base_hpa, software_sram_area_bottom) and
-				 * ignore [software_sram_area_bottom, flush_end_hpa)
+				flush_size = flush_end_hpa - sw_sram_top;
+				flush_base_hpa = sw_sram_top;
+			} else if (flush_end_hpa > sw_sram_bottom) {
+				/* Only flush [flush_base_hpa, sw_sram_bottom)
+				 * and ignore [sw_sram_bottom, flush_end_hpa)
 				 */
-				flush_size = software_sram_area_bottom - flush_base_hpa;
+				flush_size = sw_sram_bottom - flush_base_hpa;
 			}
-		} else if (flush_base_hpa < software_sram_area_top) {
-			if (flush_end_hpa <= software_sram_area_top) {
+		} else if (flush_base_hpa < sw_sram_top) {
+			if (flush_end_hpa <= sw_sram_top) {
 				flush_size = 0UL;
 			} else {
-				/* Only flush [software_sram_area_top, flush_end_hpa)
-				 * and ignore [flush_base_hpa, software_sram_area_top)
-				 */
-				flush_base_hpa = software_sram_area_top;
-				flush_size = flush_end_hpa - software_sram_area_top;
+				/* Only flush [sw_sram_top, flush_end_hpa) and ignore [flush_base_hpa, sw_sram_top) */
+				flush_base_hpa = sw_sram_top;
+				flush_size = flush_end_hpa - sw_sram_top;
 			}
 		}
 
