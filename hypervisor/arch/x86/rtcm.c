@@ -5,14 +5,15 @@
  */
 #include <types.h>
 #include <bits.h>
+#include <rtl.h>
 #include <logmsg.h>
 #include <misc_cfg.h>
 #include <mmu.h>
 #include <rtcm.h>
 
 
-uint64_t software_sram_area_bottom;
-uint64_t software_sram_area_top;
+static uint64_t software_sram_bottom_hpa;
+static uint64_t software_sram_top_hpa;
 
 /* is_sw_sram_initialized is used to tell whether Software SRAM is successfully initialized for all cores */
 volatile bool is_sw_sram_initialized = false;
@@ -39,7 +40,6 @@ static inline void rtcm_flush_binary_tlb(void)
 
 }
 
-
 static inline void *get_rtct_address()
 {
 	return (void *)acpi_rtct_tbl + sizeof(*acpi_rtct_tbl);
@@ -59,14 +59,14 @@ static void parse_rtct(void)
 		pr_info("found RTCT subtable in HPA %llx, length: %d", acpi_rtct_tbl, acpi_rtct_tbl->length);
 
 		entry = get_rtct_address();
-		software_sram_area_bottom = SOFTWARE_SRAM_BASE_HPA;
+		software_sram_bottom_hpa = ULONG_MAX;
 
 		while (((uint64_t)entry - (uint64_t)acpi_rtct_tbl) < acpi_rtct_tbl->length) {
 			switch (entry->type) {
 			case RTCT_ENTRY_TYPE_RTCM_BINARY:
 				rtcm_binary = (struct rtct_entry_data_rtcm_binary *)entry->data;
-				if (software_sram_area_top < rtcm_binary->address + rtcm_binary->size) {
-					software_sram_area_top = rtcm_binary->address + rtcm_binary->size;
+				if (software_sram_top_hpa < rtcm_binary->address + rtcm_binary->size) {
+					software_sram_top_hpa = rtcm_binary->address + rtcm_binary->size;
 				}
 				pr_info("found RTCM bin, in HPA %llx, size %llx",
 					rtcm_binary->address, rtcm_binary->size);
@@ -74,8 +74,11 @@ static void parse_rtct(void)
 
 			case RTCT_ENTRY_TYPE_SOFTWARE_SRAM:
 				sw_sram_entry = (struct rtct_entry_data_software_sram *)entry->data;
-				if (software_sram_area_top < sw_sram_entry->base + sw_sram_entry->size) {
-					software_sram_area_top = sw_sram_entry->base + sw_sram_entry->size;
+				if (software_sram_top_hpa < sw_sram_entry->base + sw_sram_entry->size) {
+					software_sram_top_hpa = sw_sram_entry->base + sw_sram_entry->size;
+				}
+				if (software_sram_bottom_hpa > sw_sram_entry->base) {
+					software_sram_bottom_hpa = sw_sram_entry->base;
 				}
 				pr_info("found L%d Software SRAM, at HPA %llx, size %x", sw_sram_entry->cache_level,
 					sw_sram_entry->base, sw_sram_entry->size);
@@ -87,7 +90,7 @@ static void parse_rtct(void)
 			/* point to next rtct entry */
 			entry = (struct rtct_entry *)((uint64_t)entry + entry->size);
 		}
-		software_sram_area_top = round_page_up(software_sram_area_top);
+		software_sram_top_hpa = round_page_up(software_sram_top_hpa);
 	} else {
 		pr_fatal("Cannot find RTCT pointer!!!!");
 	}
@@ -153,7 +156,8 @@ void init_software_sram(bool is_bsp)
 
 		if (is_bsp) {
 			is_sw_sram_initialized = true;
-			pr_info("BSP Software SRAM has been initialized\n");
+			pr_info("BSP Software SRAM has been initialized, base_hpa:0x%lx, top_hpa:0x%lx.\n",
+				software_sram_bottom_hpa, software_sram_top_hpa);
 		}
 	}
 }
@@ -166,3 +170,13 @@ void init_software_sram(__unused bool is_bsp)
 {
 }
 #endif
+
+uint64_t get_software_sram_base(void)
+{
+	return software_sram_bottom_hpa;
+}
+
+uint64_t get_software_sram_size(void)
+{
+	return (software_sram_top_hpa - software_sram_bottom_hpa);
+}

@@ -583,13 +583,15 @@ static int32_t add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_v
 			}
 			/* If Software SRAM is initialized, and HV received a request to map Software SRAM
 			 * area to guest, we should add EPT_WB flag to make Software SRAM effective.
-			 * Assumption: SOS must assign the Software SRAM area as a whole and as a separate memory
-			 * region whose base address is SOFTWARE_SRAM_BASE_HPA
 			 * TODO: We can enforce WB for any region has overlap with Software SRAM, for simplicity,
 			 * and leave it to SOS to make sure it won't violate.
 			 */
-			if ((hpa == SOFTWARE_SRAM_BASE_HPA) && is_sw_sram_initialized) {
-				prot |= EPT_WB;
+			if (is_sw_sram_initialized) {
+				base_paddr = get_software_sram_base();
+				if ((hpa >= base_paddr) &&
+					((hpa + region->size) <= (base_paddr + get_software_sram_size()))) {
+					prot |= EPT_WB;
+				}
 			}
 			/* create gpa to hpa EPT mapping */
 			ept_add_mr(target_vm, pml4_page, hpa,

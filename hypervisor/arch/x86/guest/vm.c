@@ -235,8 +235,8 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 				((vm_config->guest_flags & GUEST_FLAG_RT) != 0U)){
 				/* pass through Software SRAM to pre-RTVM */
 				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-					SOFTWARE_SRAM_BASE_HPA, SOFTWARE_SRAM_BASE_GPA,
-					SOFTWARE_SRAM_MAX_SIZE, EPT_RWX | EPT_WB);
+					get_software_sram_base(), SOFTWARE_SRAM_BASE_GPA,
+					get_software_sram_size(), EPT_RWX | EPT_WB);
 				continue;
 			}
 		}

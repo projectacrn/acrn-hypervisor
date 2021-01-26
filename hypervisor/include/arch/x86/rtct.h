@@ -20,7 +20,6 @@
 #define RTCT_ENTRY_TYPE_RT_IOMMU		8U
 #define RTCT_ENTRY_TYPE_MEM_HIERARCHY_LATENCY	9U
 
-#define SOFTWARE_SRAM_BASE_HPA 0x40080000U
 #define SOFTWARE_SRAM_BASE_GPA 0x40080000U
 #define SOFTWARE_SRAM_MAX_SIZE 0x00800000U
 
@@ -46,8 +45,6 @@ struct rtct_entry_data_software_sram
 	uint32_t apic_id_0; /*only the first core is responsible for initialization of L3 mem region*/
 } __packed;
 
-
-extern uint64_t software_sram_area_bottom;
-extern uint64_t software_sram_area_top;
-
+uint64_t get_software_sram_base(void);
+uint64_t get_software_sram_size(void);
 #endif /* RTCT_H */
