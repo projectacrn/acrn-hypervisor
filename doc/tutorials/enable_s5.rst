@@ -128,8 +128,8 @@ The procedure for enabling S5 is specific to the particular OS:
         $ cd acrn-hypervisor/misc
         $ make life_mngr
 
-      .. note:: If there is no ``x86_64-w64-mingw32-gcc`` compiler, you must run ``swupd bundle-add c-basic-mingw``
-         to install it.
+      .. note:: If there is no ``x86_64-w64-mingw32-gcc`` compiler, you can run ``sudo apt install gcc-mingw-w64-x86-64``
+         on Ubuntu to install it.
 
    #) Set up a Windows environment:
 
