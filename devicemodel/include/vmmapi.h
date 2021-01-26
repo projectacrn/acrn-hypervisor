@@ -140,6 +140,7 @@ int	vm_add_hv_vdev(struct vmctx *ctx, struct acrn_emul_dev *dev);
 int	vm_remove_hv_vdev(struct vmctx *ctx, struct acrn_emul_dev *dev);
 
 int	acrn_parse_cpu_affinity(char *arg);
+uint64_t vm_get_cpu_affinity_dm(void);
 int	vm_create_vcpu(struct vmctx *ctx, uint16_t vcpu_id);
 int	vm_set_vcpu_regs(struct vmctx *ctx, struct acrn_set_vcpu_regs *cpu_regs);
 

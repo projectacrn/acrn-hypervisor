@@ -179,6 +179,11 @@ int acrn_parse_cpu_affinity(char *opt)
 	return 0;
 }
 
+uint64_t vm_get_cpu_affinity_dm(void)
+{
+	return cpu_affinity_bitmap;
+}
+
 struct vmctx *
 vm_create(const char *name, uint64_t req_buf, int *vcpu_num)
 {
