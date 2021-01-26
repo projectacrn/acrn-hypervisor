@@ -71,7 +71,7 @@
 #include "vmmapi.h"
 #include "hpet.h"
 #include "log.h"
-#include "ptct.h"
+#include "rtct.h"
 #include "vhm_ioctl_defs.h"
 #include "vmmapi.h"
 
@@ -90,7 +90,7 @@
 #define FACS_OFFSET		0x3C0
 #define NHLT_OFFSET		0x400
 #define TPM2_OFFSET		0xC00
-#define PTCT_OFFSET		0xF00
+#define RTCT_OFFSET		0xF00
 #define DSDT_OFFSET		0x1100
 
 #define	ASL_TEMPLATE	"dm.XXXXXXX"
@@ -194,7 +194,7 @@ basl_fwrite_rsdt(FILE *fp, struct vmctx *ctx)
 
 	if (pt_ptct) {
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
-			    basl_acpi_base + PTCT_OFFSET);
+			    basl_acpi_base + RTCT_OFFSET);
 	}
 
 	EFFLUSH(fp);
@@ -241,7 +241,7 @@ basl_fwrite_xsdt(FILE *fp, struct vmctx *ctx)
 
 	if (pt_ptct) {
 		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
-			    basl_acpi_base + PTCT_OFFSET);
+			    basl_acpi_base + RTCT_OFFSET);
 	}
 
 	EFFLUSH(fp);
@@ -1081,48 +1081,50 @@ static struct {
 };
 
 /*
- * So far, only support passthrough native pSRAM to single post-launched VM.
+ * So far, only support passthrough native Software SRAM to single post-launched VM.
  */
-int create_and_inject_vptct(struct vmctx *ctx)
+int create_and_inject_vrtct(struct vmctx *ctx)
 {
-#define PTCT_NATIVE_FILE_PATH_IN_SOS "/sys/firmware/acpi/tables/PTCT"
-#define PTCT_BUF_LEN	0x200	/* Otherwise, need to modify DSDT_OFFSET corresponding */
-	int native_ptct_fd;
+#define RTCT_NATIVE_FILE_PATH_IN_SOS "/sys/firmware/acpi/tables/PTCT"
+#define RTCT_BUF_LEN	0x200	/* Otherwise, need to modify DSDT_OFFSET corresponding */
+	int native_rtct_fd;
 	int rc;
-	size_t native_ptct_len;
-	size_t vptct_len;
-	uint8_t buf[PTCT_BUF_LEN] = {0};
+	size_t native_rtct_len;
+	size_t vrtct_len;
+	uint8_t buf[RTCT_BUF_LEN] = {0};
 	struct vm_memmap memmap = {
 		.type = VM_MMIO,
-		.gpa = PSRAM_BASE_GPA,
-		.hpa = PSRAM_BASE_HPA,
-		/* TODO: .len should be psram_size+32kb (32kb is for PTCM binary). We also need to modify guest E820 to adapt to real config */
-		.len = PSRAM_MAX_SIZE,
+		.gpa = SOFTWARE_SRAM_BASE_GPA,
+		.hpa = SOFTWARE_SRAM_BASE_HPA,
+		/* TODO: .len should be software ram_size+32kb (32kb is for CRL binary).
+		 *We also need to modify guest E820 to adapt to real config
+		 */
+		.len = SOFTWARE_SRAM_MAX_SIZE,
 		.prot = PROT_ALL
 	};
 
-	native_ptct_fd = open(PTCT_NATIVE_FILE_PATH_IN_SOS, O_RDONLY);
-	if (native_ptct_fd < 0){
+	native_rtct_fd = open(RTCT_NATIVE_FILE_PATH_IN_SOS, O_RDONLY);
+	if (native_rtct_fd < 0) {
 		pr_err("failed to open /sys/firmware/acpi/tables/PTCT !!!!! errno:%d\n", errno);
 		return -1;
 	}
-	native_ptct_len = lseek(native_ptct_fd, 0, SEEK_END);
-	if (native_ptct_len > PTCT_BUF_LEN) {
-		pr_err("%s native_ptct_len = %d large than PTCT_BUF_LEN\n", __func__, native_ptct_len);
+	native_rtct_len = lseek(native_rtct_fd, 0, SEEK_END);
+	if (native_rtct_len > RTCT_BUF_LEN) {
+		pr_err("%s native_rtct_len = %d large than RTCT_BUF_LEN\n", __func__, native_rtct_len);
 		return -1;
 	}
 
-	(void)lseek(native_ptct_fd, 0, SEEK_SET);
-	rc = read(native_ptct_fd, buf, native_ptct_len);
-	if (rc < native_ptct_len ){
-		pr_err("Native PTCT is not fully read into buf!!!");
+	(void)lseek(native_rtct_fd, 0, SEEK_SET);
+	rc = read(native_rtct_fd, buf, native_rtct_len);
+	if (rc < native_rtct_len) {
+		pr_err("Native RTCT is not fully read into buf!!!");
 		return -1;
 	}
-	close(native_ptct_fd);
+	close(native_rtct_fd);
 
-	vptct_len = native_ptct_len;
+	vrtct_len = native_rtct_len;
 
-	memcpy(vm_map_gpa(ctx, ACPI_BASE + PTCT_OFFSET, vptct_len), buf, vptct_len);
+	memcpy(vm_map_gpa(ctx, ACPI_BASE + RTCT_OFFSET, vrtct_len), buf, vrtct_len);
 
 	ioctl(ctx->fd, IC_UNSET_MEMSEG, &memmap);
 	return ioctl(ctx->fd, IC_SET_MEMSEG, &memmap);
@@ -1199,7 +1201,7 @@ acpi_build(struct vmctx *ctx, int ncpu)
 	}
 
 	if (pt_ptct) {
-		create_and_inject_vptct(ctx);
+		create_and_inject_vrtct(ctx);
 	}
 
 	return err;

@@ -34,7 +34,7 @@
 #include "sw_load.h"
 #include "dm.h"
 #include "pci_core.h"
-#include "ptct.h"
+#include "rtct.h"
 
 int with_bootargs;
 static char bootargs[BOOT_ARG_LEN];
@@ -55,7 +55,7 @@ static char bootargs[BOOT_ARG_LEN];
  * 0:              0 -  0xA0000      RAM             0xA0000
  * 1:       0x100000 -  lowmem part1 RAM             0x0
  * 2:   gpu_rsvd_bot -  gpu_rsvd_top (reserved)      0x4004000
- * 3:   pSRAM_bottom -  pSRAM_top    (reserved)      pSRAM_MAX_SIZE
+ * 3:   SW SRAM_bot  -  SW SRAM_top  (reserved)      SOFTWARE_SRAM_MAX_SIZE
  * 4:   lowmem part2 -  0x80000000   (reserved)      0x0
  * 5:     0xDB000000 -  0xDF000000   (reserved)      64MB
  * 6:     0xDF000000 -  0xE0000000   (reserved)      16MB
@@ -83,14 +83,14 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 		.type     = E820_TYPE_RESERVED
 	},
 
-	{	/* pSRAM area */
-		.baseaddr = PSRAM_BASE_GPA,
-		.length   = PSRAM_MAX_SIZE,
+	{	/* Software SRAM area */
+		.baseaddr = SOFTWARE_SRAM_BASE_GPA,
+		.length   = SOFTWARE_SRAM_MAX_SIZE,
 		.type     = E820_TYPE_RESERVED
 	},
 
 	{	/* lowmem part2 to lowmem_limit */
-		.baseaddr = PSRAM_BASE_GPA + PSRAM_MAX_SIZE,
+		.baseaddr = SOFTWARE_SRAM_BASE_GPA + SOFTWARE_SRAM_MAX_SIZE,
 		.length   = 0x0,
 		.type     = E820_TYPE_RESERVED
 	},
