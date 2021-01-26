@@ -17,11 +17,6 @@
 #define RTCT_ENTRY_TYPE_RT_IOMMU		8U
 #define RTCT_ENTRY_TYPE_MEM_HIERARCHY_LATENCY	9U
 
-/* TODO: Move to high-memory region. */
-#define SOFTWARE_SRAM_BASE_HPA	0x40080000UL
-#define SOFTWARE_SRAM_BASE_GPA	0x40080000UL
-#define SOFTWARE_SRAM_MAX_SIZE	0x00800000UL
-
 struct rtct_entry {
 	uint16_t size;
 	uint16_t format;
