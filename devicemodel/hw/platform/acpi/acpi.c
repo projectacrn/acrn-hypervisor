@@ -1092,14 +1092,13 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 	size_t native_rtct_len;
 	size_t vrtct_len;
 	uint8_t buf[RTCT_BUF_LEN] = {0};
+	uint8_t *vrtct;
 	struct vm_memmap memmap = {
 		.type = VM_MMIO,
 		.gpa = SOFTWARE_SRAM_BASE_GPA,
-		.hpa = SOFTWARE_SRAM_BASE_HPA,
-		/* TODO: .len should be software ram_size+32kb (32kb is for CRL binary).
-		 *We also need to modify guest E820 to adapt to real config
-		 */
-		.len = SOFTWARE_SRAM_MAX_SIZE,
+		/* HPA base and size of Software SRAM shall be parsed from vRTCT. */
+		.hpa = 0,
+		.len = 0,
 		.prot = PROT_ALL
 	};
 
@@ -1122,10 +1121,19 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 	}
 	close(native_rtct_fd);
 
-	vrtct_len = native_rtct_len;
+	vrtct = build_vrtct(ctx, (void *)buf);
+	if (vrtct == NULL)
+		return -1;
 
-	memcpy(vm_map_gpa(ctx, ACPI_BASE + RTCT_OFFSET, vrtct_len), buf, vrtct_len);
+	vrtct_len = ((struct acpi_table_hdr *)vrtct)->length;
+	if (vrtct_len > RTCT_BUF_LEN) {
+		pr_err("Warning: Size of vRTCT (%d bytes) overflows, pls update DSDT_OFFSET.\n", vrtct_len);
+	}
+	memcpy(vm_map_gpa(ctx, ACPI_BASE + RTCT_OFFSET, vrtct_len), vrtct, vrtct_len);
+	free(vrtct);
 
+	memmap.hpa = get_software_sram_base_hpa();
+	memmap.len = get_software_sram_size();
 	ioctl(ctx->fd, IC_UNSET_MEMSEG, &memmap);
 	return ioctl(ctx->fd, IC_SET_MEMSEG, &memmap);
 };

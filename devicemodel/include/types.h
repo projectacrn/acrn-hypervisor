@@ -89,6 +89,14 @@ flsl(uint64_t mask)
 	return mask ? 64 - __builtin_clzl(mask) : 0;
 }
 
+/* Returns the number of 1-bits in bits. */
+static inline int
+bitmap_weight(uint64_t bits)
+{
+	return __builtin_popcountl(bits);
+
+}
+
 /* memory barrier */
 #define mb()    ({ asm volatile("mfence" ::: "memory"); (void)0; })
 
