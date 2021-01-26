@@ -24,7 +24,6 @@ struct rtct_entry {
 	uint32_t data[64];
 } __packed;
 
-
 struct rtct_entry_data_psram {
 	uint32_t cache_level;
 	uint64_t base;
@@ -32,7 +31,6 @@ struct rtct_entry_data_psram {
 	uint32_t size;
 	uint32_t apic_id_tbl[64];
 } __packed;
-
 
 struct rtct_entry_data_mem_hi_latency {
 	uint32_t hierarchy;

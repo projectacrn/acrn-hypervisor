@@ -130,7 +130,7 @@ static struct acpi_mcfg_allocation *parse_mcfg_allocation_tables(const uint8_t *
 /* put all ACPI fix up code here */
 int32_t acpi_fixup(void)
 {
-	uint8_t *facp_addr = NULL, *facs_addr = NULL, *mcfg_addr = NULL, *ptct_tbl_addr = NULL;
+	uint8_t *facp_addr = NULL, *facs_addr = NULL, *mcfg_addr = NULL, *rtct_tbl_addr = NULL;
 	struct acpi_mcfg_allocation *mcfg_table = NULL;
 	int32_t ret = 0;
 	struct acpi_generic_address pm1a_cnt, pm1a_evt;
@@ -169,9 +169,9 @@ int32_t acpi_fixup(void)
 		}
 	}
 
-	ptct_tbl_addr = (uint8_t *)get_acpi_tbl(ACPI_SIG_PTCT);
-	if (ptct_tbl_addr != NULL) {
-		set_ptct_tbl((void *)ptct_tbl_addr);
+	rtct_tbl_addr = (uint8_t *)get_acpi_tbl(ACPI_SIG_RTCT);
+	if (rtct_tbl_addr != NULL) {
+		set_rtct_tbl((void *)rtct_tbl_addr);
 	}
 
 	if ((facp_addr == NULL) || (facs_addr == NULL)

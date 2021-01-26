@@ -57,7 +57,7 @@
 #define ACPI_SIG_MCFG            "MCFG" /* Memory Mapped Configuration table */
 #define ACPI_SIG_DSDT            "DSDT" /* Differentiated System Description Table */
 #define ACPI_SIG_TPM2            "TPM2" /* Trusted Platform Module hardware interface table */
-#define ACPI_SIG_PTCT            "PTCT" /* Platform Tuning Configuration Table (Real-Time Configuration Table) */
+#define ACPI_SIG_RTCT            "PTCT" /* Platform Tuning Configuration Table (Real-Time Configuration Table) */
 
 struct packed_gas {
 	uint8_t 	space_id;
