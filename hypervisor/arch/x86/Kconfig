@@ -277,13 +277,13 @@ config CDP_ENABLED
 	  software configurable manner, depending on hardware support.
 
 config PSRAM_ENABLED
-	bool "Enable pseudo-SRAM (pSRAM) support"
+	bool "Enable Software SRAM support"
 	depends on !CDP_ENABLED
 	default n
 	help
-	  This will enable RTVM to make use of pSRAM to improve the performance
-	  of Real-Time applications. pSRAM essentially a block of cache, and is separated via
-	  CAT and protected by some methods.  pSRAM support and CDP support cannot co-exist.
+	  This will enable RTVM to make use of Software SRAM to improve the performance
+	  of Real-Time applications. Software SRAM essentially a block of cache, and is separated via
+	  CAT and protected by some methods.  Software SRAM support and CDP support cannot co-exist.
 
 config GPU_SBDF
 	hex "Segment, Bus, Device, and function of the GPU"
