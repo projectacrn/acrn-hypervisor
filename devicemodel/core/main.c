@@ -166,7 +166,7 @@ usage(int code)
 		"       -Y: disable MPtable generation\n"
 		"       --mac_seed: set a platform unique string as a seed for generate mac address\n"
 		"       --vsbl: vsbl file path\n"
-		"       --psram: Enable pSRAM passthrough\n"
+		"       --psram: Enable Software SRAM passthrough\n"
 		"       --ovmf: ovmf file path\n"
 		"       --cpu_affinity: list of pCPUs assigned to this VM\n"
 		"       --part_info: guest partition info file path\n"
@@ -747,7 +747,7 @@ enum {
 	CMD_OPT_VTPM2,
 	CMD_OPT_LAPIC_PT,
 	CMD_OPT_RTVM,
-	CMD_OPT_PSRAM,
+	CMD_OPT_SOFTWARE_SRAM,
 	CMD_OPT_LOGGER_SETTING,
 	CMD_OPT_PM_NOTIFY_CHANNEL,
 	CMD_OPT_PM_BY_VUART,
@@ -789,7 +789,7 @@ static struct option long_options[] = {
 	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
 	{"lapic_pt",		no_argument,		0, CMD_OPT_LAPIC_PT},
 	{"rtvm",		no_argument,		0, CMD_OPT_RTVM},
-	{"psram",		no_argument,		0, CMD_OPT_PSRAM},
+	{"psram",		no_argument,		0, CMD_OPT_SOFTWARE_SRAM},
 	{"logger_setting",	required_argument,	0, CMD_OPT_LOGGER_SETTING},
 	{"pm_notify_channel",	required_argument,	0, CMD_OPT_PM_NOTIFY_CHANNEL},
 	{"pm_by_vuart",	required_argument,	0, CMD_OPT_PM_BY_VUART},
@@ -933,8 +933,8 @@ main(int argc, char *argv[])
 		case CMD_OPT_RTVM:
 			is_rtvm = true;
 			break;
-		case CMD_OPT_PSRAM:
-			/* TODO: we need to support parameter to specify pSRAM size in the future */
+		case CMD_OPT_SOFTWARE_SRAM:
+			/* TODO: we need to support parameter to specify Software SRAM size in the future */
 			pt_ptct = true;
 			break;
 		case CMD_OPT_ACPIDEV_PT:
