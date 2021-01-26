@@ -231,12 +231,12 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 		if (entry->length == 0UL) {
 			continue;
 		} else {
-			if (is_psram_initialized && (entry->baseaddr == PSRAM_BASE_GPA) &&
+			if (is_sw_sram_initialized && (entry->baseaddr == SOFTWARE_SRAM_BASE_GPA) &&
 				((vm_config->guest_flags & GUEST_FLAG_RT) != 0U)){
-				/* pass through pSRAM to pre-RTVM */
-				pr_fatal("%s, %d___", __func__, __LINE__);
+				/* pass through Software SRAM to pre-RTVM */
 				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-					PSRAM_BASE_HPA, PSRAM_BASE_GPA, PSRAM_MAX_SIZE, EPT_RWX | EPT_WB);
+					SOFTWARE_SRAM_BASE_HPA, SOFTWARE_SRAM_BASE_GPA,
+					SOFTWARE_SRAM_MAX_SIZE, EPT_RWX | EPT_WB);
 				continue;
 			}
 		}
@@ -365,8 +365,8 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	pci_mmcfg = get_mmcfg_region();
 	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, pci_mmcfg->address, get_pci_mmcfg_size(pci_mmcfg));
 
-	/* TODO: remove pSRAM from SOS prevent SOS to use clflush to flush the pSRAM cache.
-	 * If we remove this EPT mapping from the SOS, the ACRN-DM can't do pSRAM EPT mapping
+	/* TODO: remove Software SRAM from SOS prevent SOS to use clflush to flush the Software SRAM cache.
+	 * If we remove this EPT mapping from the SOS, the ACRN-DM can't do Software SRAM EPT mapping
 	 * because the SOS can't get the HPA of this memory region.
 	 */
 }

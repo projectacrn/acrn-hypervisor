@@ -264,13 +264,13 @@ void init_pcpu_post(uint16_t pcpu_id)
 
 		ASSERT(get_pcpu_id() == BSP_CPU_ID, "");
 
-		init_psram(true);
+		init_software_sram(true);
 	} else {
 		pr_dbg("Core %hu is up", pcpu_id);
 
 		pr_warn("Skipping VM configuration check which should be done before building HV binary.");
 
-		init_psram(false);
+		init_software_sram(false);
 
 		/* Initialize secondary processor interrupts. */
 		init_interrupt(pcpu_id);
@@ -441,7 +441,7 @@ void cpu_dead(void)
 	if (bitmap_test(pcpu_id, &pcpu_active_bitmap)) {
 		/* clean up native stuff */
 		vmx_off();
-		/* TODO: a cpu dead can't effect the RTVM which use pSRAM */
+		/* TODO: a cpu dead can't effect the RTVM which use Software SRAM */
 		cache_flush_invalidate_all();
 
 		/* Set state to show CPU is dead */
