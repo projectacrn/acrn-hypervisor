@@ -55,8 +55,8 @@ static char bootargs[BOOT_ARG_LEN];
  * 0:              0 -  0xA0000      RAM             0xA0000
  * 1:       0x100000 -  lowmem part1 RAM             0x0
  * 2:   gpu_rsvd_bot -  gpu_rsvd_top (reserved)      0x4004000
- * 3:   SW SRAM_bot  -  SW SRAM_top  (reserved)      SOFTWARE_SRAM_MAX_SIZE
- * 4:   lowmem part2 -  0x80000000   (reserved)      0x0
+ * 3:   lowmem part2 -  0x7f800000   (reserved)      0x0
+ * 4:   SW SRAM_bot  -  0x80000000   (reserved)      SOFTWARE_SRAM_MAX_SIZE
  * 5:     0xDB000000 -  0xDF000000   (reserved)      64MB
  * 6:     0xDF000000 -  0xE0000000   (reserved)      16MB
  * 7:     0xE0000000 -  0x100000000  MCFG, MMIO      512MB
@@ -64,6 +64,10 @@ static char bootargs[BOOT_ARG_LEN];
  *
  * FIXME: Do we need to reserve DSM and OPREGION for GVTD here.
  */
+
+#define GPU_DSM_OPREGION_BASE_GPA 0x3B800000
+#define GPU_DSM_OPREGION_SIZE  0x4004000
+
 const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 	{	/* 0 to video memory */
 		.baseaddr = 0x00000000,
@@ -78,21 +82,27 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 	},
 
 	{	/* TGL GPU DSM & OpRegion area */
-		.baseaddr = 0x3B800000,
-		.length   = 0x4004000,
-		.type     = E820_TYPE_RESERVED
-	},
-
-	{	/* Software SRAM area */
-		.baseaddr = SOFTWARE_SRAM_BASE_GPA,
-		.length   = SOFTWARE_SRAM_MAX_SIZE,
+		.baseaddr = GPU_DSM_OPREGION_BASE_GPA,
+		.length   = GPU_DSM_OPREGION_SIZE,
 		.type     = E820_TYPE_RESERVED
 	},
 
 	{	/* lowmem part2 to lowmem_limit */
-		.baseaddr = SOFTWARE_SRAM_BASE_GPA + SOFTWARE_SRAM_MAX_SIZE,
+		.baseaddr = GPU_DSM_OPREGION_BASE_GPA + GPU_DSM_OPREGION_SIZE,
 		.length   = 0x0,
 		.type     = E820_TYPE_RESERVED
+	},
+
+	/*
+	 * Software SRAM area: base: 0x7f800000, size: 0x800000
+	 * In native, the Software SRAM region should be part of DRAM memory.
+	 * But one fixed Software SRAM gpa is friendly for virtualization due
+	 * to decoupled with various guest memory size.
+	 */
+	{
+		.baseaddr = SOFTWARE_SRAM_BASE_GPA,
+		.length   = SOFTWARE_SRAM_MAX_SIZE,
+		.type	  = E820_TYPE_RESERVED
 	},
 
 	{	/* ECFG_BASE to 4GB */
@@ -217,21 +227,22 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 	uint32_t removed = 0, k;
 
 	memcpy(e820, e820_default_entries, sizeof(e820_default_entries));
-	if (ctx->lowmem <= e820[LOWRAM_E820_ENTRY+3].baseaddr) {
+	if (ctx->lowmem <= e820[LOWRAM_E820_ENTRY + 2].baseaddr) {
 		e820[LOWRAM_E820_ENTRY].length =
 			(ctx->lowmem < e820[LOWRAM_E820_ENTRY+1].baseaddr ? ctx->lowmem :
 			e820[LOWRAM_E820_ENTRY+1].baseaddr) - e820[LOWRAM_E820_ENTRY].baseaddr;
 
-		memmove(&e820[LOWRAM_E820_ENTRY+3], &e820[LOWRAM_E820_ENTRY+4],
+		memmove(&e820[LOWRAM_E820_ENTRY + 2], &e820[LOWRAM_E820_ENTRY + 3],
 				sizeof(struct e820_entry) *
-				(NUM_E820_ENTRIES - (LOWRAM_E820_ENTRY+4)));
+				(NUM_E820_ENTRIES - (LOWRAM_E820_ENTRY + 3)));
 		removed++;
 	} else {
 		e820[LOWRAM_E820_ENTRY].length = e820[LOWRAM_E820_ENTRY+1].baseaddr -
 			e820[LOWRAM_E820_ENTRY].baseaddr;
-		e820[LOWRAM_E820_ENTRY+3].length =
-			(ctx->lowmem < ctx->lowmem_limit ? ctx->lowmem : ctx->lowmem_limit) -
-			e820[LOWRAM_E820_ENTRY+3].baseaddr;
+
+		e820[LOWRAM_E820_ENTRY + 2].length =
+			((ctx->lowmem < e820[LOWRAM_E820_ENTRY + 3].baseaddr) ? ctx->lowmem :
+			e820[LOWRAM_E820_ENTRY + 3].baseaddr) - e820[LOWRAM_E820_ENTRY + 2].baseaddr;
 	}
 
 	/* remove [5GB, highmem) if it's empty */
