@@ -446,8 +446,9 @@ def main(args):
         PASSTHROUGH_PTCT = False
 
     kern_args = common.get_leaf_tag_map(scenario, "os_config", "bootargs")
+    vm_type = common.get_leaf_tag_map(scenario, "vm_type")
     for vm_id, passthru_devices in dict_passthru_devices.items():
-        if kern_args[int(vm_id)].find('reboot=acpi') == -1:
+        if kern_args[int(vm_id)].find('reboot=acpi') == -1 and vm_type[int(vm_id)] not in ['SAFETY_VM']:
             emsg = "you need to specify 'reboot=acpi' in scenario file's bootargs for VM{}".format(vm_id)
             print(emsg)
             err_dic['vm,bootargs'] = emsg
