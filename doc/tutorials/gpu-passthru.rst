@@ -165,3 +165,11 @@ Keep in mind the following:
       ``Build/OvmfX64/DEBUG_GCC5/FV/OVMF.fd``. Transfer the binary to
       your target machine.
    -  Modify the launch script to specify the OVMF you built just now.
+
+Script
+======
+
+Once you've installed the Docker environment, you can use this
+`script <../_static/downloads/build_acrn_ovmf.sh>`_ to build ACRN OVMF
+with the GOP driver enabled. For more details about the script usage,
+run ``build_acrn_ovmf.sh -h``.
