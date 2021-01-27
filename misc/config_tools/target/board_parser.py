@@ -14,6 +14,7 @@ import acpi
 import clos
 import misc
 import parser_lib
+import rtct
 
 OUTPUT = "./out/"
 PY_CACHE = "__pycache__"
@@ -133,6 +134,9 @@ if __name__ == '__main__':
 
     # Generate misc info
     misc.generate_info(BOARD_INFO)
+
+    # Generate pseudo RAM info
+    rtct.generate_info(BOARD_INFO)
 
     with open(BOARD_INFO, 'a+') as f:
         print("</acrn-config>", file=f)
