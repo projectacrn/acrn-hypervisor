@@ -475,4 +475,31 @@
 	16
 	</MAX_MSIX_TABLE_NUM>
 
+	<RTCT>
+		<SoftwareSRAM>
+			<cache_level>2</cache_level>
+			<base>0x40080000</base>
+			<ways>0xf0000</ways>
+			<size>0x40000</size>
+			<apic_id>0x4</apic_id>
+		</SoftwareSRAM>
+		<SoftwareSRAM>
+			<cache_level>2</cache_level>
+			<base>0x400c0000</base>
+			<ways>0xf0000</ways>
+			<size>0x40000</size>
+			<apic_id>0x6</apic_id>
+		</SoftwareSRAM>
+		<SoftwareSRAM>
+			<cache_level>3</cache_level>
+			<base>0x40080000</base>
+			<ways>0x800</ways>
+			<size>0x100000</size>
+			<apic_id>0x0</apic_id>
+			<apic_id>0x2</apic_id>
+			<apic_id>0x4</apic_id>
+			<apic_id>0x6</apic_id>
+		</SoftwareSRAM>
+	</RTCT>
+
 </acrn-config>

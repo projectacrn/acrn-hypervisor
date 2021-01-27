@@ -4,6 +4,7 @@
 #
 
 import common
+import lxml.etree
 import board_cfg_lib
 import scenario_cfg_lib
 
@@ -179,6 +180,15 @@ def pt_intx_num_vm0_gen(config):
         print("#define VM0_PT_INTX_NUM\t0U", file=config)
 
     print("", file=config)
+
+
+def swsram_base_gpa_gen(config):
+    board_etree = lxml.etree.parse(common.BOARD_INFO_FILE)
+    bases = board_etree.xpath("//RTCT/SoftwareSRAM/base")
+    if bases:
+        min_base = min(map(lambda x: int(x.text, 16), bases))
+        print("#define PRE_RTVM_SW_SRAM_BASE_GPA\t{}UL".format(hex(min_base)), file=config)
+        print("", file=config)
 
 
 def generate_file(config):
@@ -387,6 +397,8 @@ def generate_file(config):
     boot_args_per_vm_gen(config)
 
     pt_intx_num_vm0_gen(config)
+
+    swsram_base_gpa_gen(config)
 
     print("{}".format(MISC_CFG_END), file=config)
 
