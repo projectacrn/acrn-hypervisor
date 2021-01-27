@@ -1,0 +1,188 @@
+<?xml version='1.0' encoding='utf-8'?>
+<acrn-config board="ehl-crb-b" scenario="fusa_partition">
+    <hv>
+        <DEBUG_OPTIONS desc="Debug options for ACRN hypervisor, only valid on debug version">
+            <RELEASE desc="Release build. 'y' for Release, 'n' for Debug.">n</RELEASE>
+            <SERIAL_CONSOLE desc="The serial device which is used for hypervisor debug, only valid on Debug version.">/dev/ttyS0</SERIAL_CONSOLE>
+            <MEM_LOGLEVEL desc="Default loglevel in memory">5</MEM_LOGLEVEL>
+            <NPK_LOGLEVEL desc="Default loglevel for the hypervisor NPK log">5</NPK_LOGLEVEL>
+            <CONSOLE_LOGLEVEL desc="Default loglevel on the serial console">3</CONSOLE_LOGLEVEL>
+            <LOG_DESTINATION desc="Bitmap of consoles where logs are printed.">7</LOG_DESTINATION>
+            <LOG_BUF_SIZE desc="Capacity of logbuf for each physical cpu.">0x40000</LOG_BUF_SIZE>
+        </DEBUG_OPTIONS>
+        <FEATURES>
+            <RELOC desc="Enable hypervisor relocation">y</RELOC>
+            <SCHEDULER desc="The CPU scheduler to be used by the hypervisor.">SCHED_BVT</SCHEDULER>
+            <MULTIBOOT2 desc="Support boot ACRN from multiboot2 protocol.">y</MULTIBOOT2>
+            <RDT desc="Intel RDT (Resource Director Technology).">
+                <RDT_ENABLED desc="Enable RDT">n</RDT_ENABLED>
+                <CDP_ENABLED desc="CDP (Code and Data Prioritization). CDP is an extension of CAT.">n</CDP_ENABLED>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+                <CLOS_MASK desc="Cache Capacity Bitmask">0xfff</CLOS_MASK>
+            </RDT>
+            <HYPERV_ENABLED desc="Enable Hyper-V enlightenment">y</HYPERV_ENABLED>
+            <IOMMU_ENFORCE_SNP desc="IOMMU enforce snoop behavior of DMA operation.">n</IOMMU_ENFORCE_SNP>
+            <ACPI_PARSE_ENABLED desc="Enable ACPI runtime parsing.">y</ACPI_PARSE_ENABLED>
+            <L1D_VMENTRY_ENABLED desc="Enable L1 cache flush before VM entry.">n</L1D_VMENTRY_ENABLED>
+            <MCE_ON_PSC_DISABLED desc="Force to disable software workaround for Machine Check Error on Page Size Change.">n</MCE_ON_PSC_DISABLED>
+            <IVSHMEM desc="IVSHMEM configuration">
+                <IVSHMEM_ENABLED desc="Enable Share Memory between VMs by IVSHMEM.">y</IVSHMEM_ENABLED>
+                <IVSHMEM_REGION desc="the shared memory region name (starting with hv:/, size (in MB), and IDs of all VMs (separated by a colon) sharing this region, for example hv:/sharename,2,0:2">hv:/shm_region_0, 2, 0:1</IVSHMEM_REGION>
+            </IVSHMEM>
+        </FEATURES>
+        <MEMORY>
+            <STACK_SIZE desc="Capacity of one stack, in bytes.">0x2000</STACK_SIZE>
+            <HV_RAM_SIZE desc="Size of the RAM region used by the hypervisor" />
+            <HV_RAM_START desc="2M-aligned Start physical address of the RAM region used by the hypervisor." />
+            <LOW_RAM_SIZE desc="Size of the low RAM region">0x00010000</LOW_RAM_SIZE>
+            <UOS_RAM_SIZE desc="Size of the User OS (UOS) RAM.">0x200000000</UOS_RAM_SIZE>
+            <SOS_RAM_SIZE desc="Size of the Service OS (SOS) RAM.">0x400000000</SOS_RAM_SIZE>
+            <PLATFORM_RAM_SIZE desc="Size of the physical platform RAM">0x400000000</PLATFORM_RAM_SIZE>
+        </MEMORY>
+        <CAPACITIES desc="Capacity limits for static assigned data struct or maximum supported resouce">
+            <IOMMU_BUS_NUM desc="Highest PCI bus ID used during IOMMU initialization.">0x100</IOMMU_BUS_NUM>
+            <MAX_IR_ENTRIES desc="Maximum number of Interrupt Remapping Entries.">256</MAX_IR_ENTRIES>
+            <MAX_IOAPIC_NUM desc="Maximum number of IO-APICs.">1</MAX_IOAPIC_NUM>
+            <MAX_PCI_DEV_NUM desc="Maximum number of PCI devices.">96</MAX_PCI_DEV_NUM>
+            <MAX_IOAPIC_LINES desc="Maximum number of interrupt lines per IOAPIC.">120</MAX_IOAPIC_LINES>
+            <MAX_PT_IRQ_ENTRIES desc="Maximum number of interrupt source for PT devices.">64</MAX_PT_IRQ_ENTRIES>
+            <MAX_MSIX_TABLE_NUM desc="Maximum number of MSI-X tables per device. Please leave it blank if not sure.">64</MAX_MSIX_TABLE_NUM>
+            <MAX_EMULATED_MMIO desc="Maximum number of emulated MMIO regions.">16</MAX_EMULATED_MMIO>
+        </CAPACITIES>
+        <MISC_CFG>
+            <GPU_SBDF desc="Segment, Bus, Device, and function of the GPU.">0x00000010</GPU_SBDF>
+        </MISC_CFG>
+    </hv>
+    <vm id="0">
+        <vm_type desc="Specify the VM type" readonly="true">SAFETY_VM</vm_type>
+        <name desc="Specify the VM name which will be shown in hypervisor console command: vm_list.">ACRN PRE-LAUNCHED VM0</name>
+        <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
+            <guest_flag />
+        </guest_flags>
+        <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
+            <pcpu_id>0</pcpu_id>
+        </cpu_affinity>
+        <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+            <vcpu_clos>0</vcpu_clos>
+        </clos>
+        <epc_section configurable="0" desc="epc section">
+            <base desc="SGX EPC section base, must be page aligned">0</base>
+            <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
+        </epc_section>
+        <memory>
+            <start_hpa desc="The start physical address in host for the VM">0x100000000</start_hpa>
+            <size desc="The memory size in Bytes for the VM">0x20000000</size>
+            <start_hpa2 desc="Start of second HPA for non-contiguous allocations in host for the VM">0x0</start_hpa2>
+            <size_hpa2 desc="Memory size of second HPA for non-contiguous allocations in Bytes for the VM">0x0</size_hpa2>
+        </memory>
+        <os_config>
+            <name desc="Specify the OS name of VM, currently it is not referenced by hypervisor code.">Zephyr</name>
+            <kern_type desc="Specify the kernel image type so that hypervisor could load it correctly. Currently support KERNEL_BZIMAGE and KERNEL_ZEPHYR.">KERNEL_ZEPHYR</kern_type>
+            <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline.">Zephyr_RawImage</kern_mod>
+            <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline." />
+            <bootargs desc="Specify kernel boot arguments"></bootargs>
+            <kern_load_addr desc="The loading address in host memory for the VM kernel">0x8000</kern_load_addr>
+            <kern_entry_addr desc="The entry address in host memory for the VM kernel">0x8000</kern_entry_addr>
+        </os_config>
+        <legacy_vuart id="0">
+            <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
+            <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">COM1_BASE</base>
+            <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
+        </legacy_vuart>
+        <legacy_vuart id="1">
+            <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
+            <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">COM2_BASE</base>
+            <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
+            <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">1</target_vm_id>
+            <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
+        </legacy_vuart>
+        <console_vuart id="0">
+            <base desc="Console vuart (PCI based) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_PCI_BASE</base>
+        </console_vuart>
+        <communication_vuart id="1">
+            <base desc="Communicatin vuart (PCI based) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_PCI_BASE</base>
+            <target_vm_id desc="This vuart is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">1</target_vm_id>
+            <target_uart_id desc="target vUART ID that this vuart connects to">1</target_uart_id>
+        </communication_vuart>
+        <pci_devs desc="pci devices list">
+            <pci_dev desc="pci device" />
+            <pci_dev desc="pci device" />
+        </pci_devs>
+        <mmio_resources desc="mmio devices list to passthrough">
+            <TPM2 desc="TPM2 device">n</TPM2>
+        </mmio_resources>
+    </vm>
+    <vm id="1">
+        <vm_type desc="Specify the VM type" readonly="true">PRE_RT_VM</vm_type>
+        <name desc="vm_name">ACRN PRE-LAUNCHED VM1</name>
+        <guest_flags desc="Select all applicable flags for the VM" multiselect="true">
+            <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
+            <guest_flag>GUEST_FLAG_RT</guest_flag>
+        </guest_flags>
+        <cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
+            <pcpu_id>1</pcpu_id>
+            <pcpu_id>3</pcpu_id>
+        </cpu_affinity>
+        <clos desc="Class of Service for Cache Allocation Technology. Please refer SDM 17.19.2 for details and use with caution.">
+            <vcpu_clos>0</vcpu_clos>
+            <vcpu_clos>0</vcpu_clos>
+        </clos>
+        <epc_section configurable="0" desc="epc section">
+            <base desc="SGX EPC section base, must be page aligned">0</base>
+            <size desc="SGX EPC section size in Bytes, must be page aligned">0</size>
+        </epc_section>
+        <memory>
+            <start_hpa desc="The start physical address in host for the VM">0x120000000</start_hpa>
+            <size desc="The memory size in Bytes for the VM">0x20000000</size>
+            <start_hpa2 desc="Start of second HPA for non-contiguous allocations in host for the VM">0x0</start_hpa2>
+            <size_hpa2 desc="Memory size of second HPA for non-contiguous allocations in Bytes for the VM">0x0</size_hpa2>
+        </memory>
+        <os_config>
+            <name desc="Specify the OS name of VM, currently it is not referenced by hypervisor code.">PREEMPT-RT</name>
+            <kern_type desc="kernel name">KERNEL_BZIMAGE</kern_type>
+            <kern_mod desc="The tag for kernel image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline.">RT_bzImage</kern_mod>
+            <ramdisk_mod desc="The tag for ramdisk image which act as multiboot module, it must exactly match the module tag in GRUB multiboot cmdline." />
+            <bootargs desc="Specify kernel boot arguments">rw rootwait root=/dev/sda3 no_ipi_broadcast=1 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel consoleblank=0 tsc=reliable clocksource=tsc x2apic_phys processor.max_cstate=0 intel_idle.max_cstate=0 intel_pstate=disable mce=ignore_ce audit=0 isolcpus=nohz,domain,1 nohz_full=1 rcu_nocbs=1 nosoftlockup idle=poll irqaffinity=0 reboot=acpi </bootargs>
+        </os_config>
+        <legacy_vuart id="0">
+            <type configurable="0" desc="vCOM1 type">VUART_LEGACY_PIO</type>
+            <base desc="vUART0 (A.K.A COM1) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">COM1_BASE</base>
+            <irq configurable="0" desc="vCOM1 irq">COM1_IRQ</irq>
+        </legacy_vuart>
+        <legacy_vuart id="1">
+            <type configurable="0" desc="vCOM2 type">VUART_LEGACY_PIO</type>
+            <base desc="vUART1 (A.K.A COM2) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">COM2_BASE</base>
+            <irq configurable="0" desc="vCOM2 irq">COM2_IRQ</irq>
+            <target_vm_id desc="COM2 is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">0</target_vm_id>
+            <target_uart_id configurable="0" desc="target vUART ID that vCOM2 connect to">1</target_uart_id>
+        </legacy_vuart>
+        <console_vuart id="0">
+            <base desc="Console vuart (PCI based) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_PCI_BASE</base>
+        </console_vuart>
+        <communication_vuart id="1">
+            <base desc="Communicatin vuart (PCI based) enabling switch. Enable by exposing its base address, disable by returning invalid base address.">INVALID_PCI_BASE</base>
+            <target_vm_id desc="This vuart is used for VM communications. When it is enabled, please specify which target VM that current VM connect to.">1</target_vm_id>
+            <target_uart_id desc="target vUART ID that this vuart connects to">1</target_uart_id>
+        </communication_vuart>
+        <pci_devs desc="pci devices list">
+            <pci_dev desc="pci device">00:17.0 SATA controller: Intel Corporation Device 4b63</pci_dev>
+        </pci_devs>
+        <mmio_resources desc="mmio devices list to passthrough">
+            <TPM2 desc="TPM2 device">n</TPM2>
+        </mmio_resources>
+    </vm>
+</acrn-config>
