@@ -40,7 +40,7 @@ static inline void rtcm_flush_binary_tlb(void)
 
 }
 
-static inline void *get_rtct_address()
+static inline void *get_rtct_entry_base()
 {
 	return (void *)acpi_rtct_tbl + sizeof(*acpi_rtct_tbl);
 }
@@ -50,49 +50,47 @@ void set_rtct_tbl(void *rtct_tbl_addr)
 	acpi_rtct_tbl = rtct_tbl_addr;
 }
 
+/*
+ *@pre acpi_rtct_tbl != NULL
+ */
 static void parse_rtct(void)
 {
+	uint64_t bottom_hpa = ULONG_MAX;
 	struct rtct_entry *entry;
 	struct rtct_entry_data_software_sram *sw_sram_entry;
 
-	if (acpi_rtct_tbl != NULL) {
-		pr_info("found RTCT subtable in HPA %llx, length: %d", acpi_rtct_tbl, acpi_rtct_tbl->length);
+	entry = get_rtct_entry_base();
+	while (((uint64_t)entry - (uint64_t)acpi_rtct_tbl) < acpi_rtct_tbl->length) {
+		switch (entry->type) {
+		case RTCT_ENTRY_TYPE_RTCM_BINARY:
+			rtcm_binary = (struct rtct_entry_data_rtcm_binary *)entry->data;
+			ASSERT((rtcm_binary->address != 0UL && rtcm_binary->size != 0U), "Invalid PTCM binary.");
+			pr_info("found RTCM bin, in HPA %llx, size %llx", rtcm_binary->address, rtcm_binary->size);
+			break;
 
-		entry = get_rtct_address();
-		software_sram_bottom_hpa = ULONG_MAX;
-
-		while (((uint64_t)entry - (uint64_t)acpi_rtct_tbl) < acpi_rtct_tbl->length) {
-			switch (entry->type) {
-			case RTCT_ENTRY_TYPE_RTCM_BINARY:
-				rtcm_binary = (struct rtct_entry_data_rtcm_binary *)entry->data;
-				if (software_sram_top_hpa < rtcm_binary->address + rtcm_binary->size) {
-					software_sram_top_hpa = rtcm_binary->address + rtcm_binary->size;
-				}
-				pr_info("found RTCM bin, in HPA %llx, size %llx",
-					rtcm_binary->address, rtcm_binary->size);
-				break;
-
-			case RTCT_ENTRY_TYPE_SOFTWARE_SRAM:
-				sw_sram_entry = (struct rtct_entry_data_software_sram *)entry->data;
-				if (software_sram_top_hpa < sw_sram_entry->base + sw_sram_entry->size) {
-					software_sram_top_hpa = sw_sram_entry->base + sw_sram_entry->size;
-				}
-				if (software_sram_bottom_hpa > sw_sram_entry->base) {
-					software_sram_bottom_hpa = sw_sram_entry->base;
-				}
-				pr_info("found L%d Software SRAM, at HPA %llx, size %x", sw_sram_entry->cache_level,
-					sw_sram_entry->base, sw_sram_entry->size);
-				break;
-			/* In current phase, we ignore other entries like gt_clos and wrc_close */
-			default:
-				break;
+		case RTCT_ENTRY_TYPE_SOFTWARE_SRAM:
+			sw_sram_entry = (struct rtct_entry_data_software_sram *)entry->data;
+			if (software_sram_top_hpa < sw_sram_entry->base + sw_sram_entry->size) {
+				software_sram_top_hpa = sw_sram_entry->base + sw_sram_entry->size;
 			}
-			/* point to next rtct entry */
-			entry = (struct rtct_entry *)((uint64_t)entry + entry->size);
+			if (bottom_hpa > sw_sram_entry->base) {
+				bottom_hpa = sw_sram_entry->base;
+			}
+			pr_info("found L%d Software SRAM, at HPA %llx, size %x", sw_sram_entry->cache_level,
+				sw_sram_entry->base, sw_sram_entry->size);
+			break;
+		/* In current phase, we ignore other entries like gt_clos and wrc_close */
+		default:
+			break;
 		}
+		/* point to next rtct entry */
+		entry = (struct rtct_entry *)((uint64_t)entry + entry->size);
+	}
+
+	if (bottom_hpa != ULONG_MAX) {
+		/* Software SRAM regions are detected. */
+		software_sram_bottom_hpa = bottom_hpa;
 		software_sram_top_hpa = round_page_up(software_sram_top_hpa);
-	} else {
-		pr_fatal("Cannot find RTCT pointer!!!!");
 	}
 }
 
@@ -123,41 +121,44 @@ void init_software_sram(bool is_bsp)
 		/* TODO: We may use SMP call to flush TLB and do Software SRAM initialization on APs */
 		if (is_bsp) {
 			parse_rtct();
-			/* Clear the NX bit of RTCM area */
-			rtcm_set_nx(false);
+			if (rtcm_binary != NULL) {
+				/* Clear the NX bit of PTCM area */
+				rtcm_set_nx(false);
+			}
 			bitmap_clear_lock(get_pcpu_id(), &init_sw_sram_cpus_mask);
 		}
 
 		wait_sync_change(&init_sw_sram_cpus_mask, 0UL);
-		pr_info("RTCT is parsed by BSP");
-		header = hpa2hva(rtcm_binary->address);
-		pr_info("rtcm_bin_address:%llx, rtcm magic:%x, rtcm version:%x",
-			rtcm_binary->address, header->magic, header->version);
-		ASSERT(header->magic == RTCM_MAGIC, "Incorrect RTCM magic!");
+		if (rtcm_binary != NULL) {
+			header = hpa2hva(rtcm_binary->address);
+			pr_info("rtcm_bin_address:%llx, rtcm magic:%x, rtcm version:%x",
+				rtcm_binary->address, header->magic, header->version);
+			ASSERT(header->magic == RTCM_MAGIC, "Incorrect RTCM magic!");
 
-		/* Flush the TLB, so that BSP/AP can execute the RTCM ABI */
-		rtcm_flush_binary_tlb();
-		rtcm_command_func = (rtcm_abi_func)(hpa2hva(rtcm_binary->address) + header->command_offset);
-		pr_info("rtcm command function is found at %llx", rtcm_command_func);
-		rtcm_ret_code = rtcm_command_func(RTCM_CMD_INIT_SOFTWARE_SRAM, get_rtct_address());
-		pr_info("rtcm initialization return %d", rtcm_ret_code);
-		/* return 0 for success, -1 for failure */
-		ASSERT(rtcm_ret_code == 0);
+			/* Flush the TLB, so that BSP/AP can execute the RTCM ABI */
+			rtcm_flush_binary_tlb();
+			rtcm_command_func = (rtcm_abi_func)(hpa2hva(rtcm_binary->address) + header->command_offset);
+			pr_info("rtcm command function is found at %llx", rtcm_command_func);
+			rtcm_ret_code = rtcm_command_func(RTCM_CMD_INIT_SOFTWARE_SRAM, get_rtct_entry_base());
+			pr_info("rtcm initialization return %d", rtcm_ret_code);
+			/* return 0 for success, -1 for failure */
+			ASSERT(rtcm_ret_code == 0);
 
-		if (is_bsp) {
-			/* Restore the NX bit of RTCM area in page table */
-			rtcm_set_nx(true);
-		}
+			if (is_bsp) {
+				/* Restore the NX bit of RTCM area in page table */
+				rtcm_set_nx(true);
+			}
 
-		bitmap_set_lock(get_pcpu_id(), &init_sw_sram_cpus_mask);
-		wait_sync_change(&init_sw_sram_cpus_mask, ALL_CPUS_MASK);
-		/* Flush the TLB on BSP and all APs to restore the NX for Software SRAM area */
-		rtcm_flush_binary_tlb();
+			bitmap_set_lock(get_pcpu_id(), &init_sw_sram_cpus_mask);
+			wait_sync_change(&init_sw_sram_cpus_mask, ALL_CPUS_MASK);
+			/* Flush the TLB on BSP and all APs to restore the NX for Software SRAM area */
+			rtcm_flush_binary_tlb();
 
-		if (is_bsp) {
-			is_sw_sram_initialized = true;
-			pr_info("BSP Software SRAM has been initialized, base_hpa:0x%lx, top_hpa:0x%lx.\n",
-				software_sram_bottom_hpa, software_sram_top_hpa);
+			if (is_bsp) {
+				is_sw_sram_initialized = true;
+				pr_info("BSP Software SRAM has been initialized, base_hpa:0x%lx, top_hpa:0x%lx.\n",
+					software_sram_bottom_hpa, software_sram_top_hpa);
+			}
 		}
 	}
 }
