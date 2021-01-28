@@ -10,7 +10,7 @@
 #include <reloc.h>
 #include <vacpi.h>
 #include <logmsg.h>
-#include <ptcm.h>
+#include <rtcm.h>
 
 #define ENTRY_HPA1_LOW_PART1	2U
 #define ENTRY_HPA1_LOW_PART2	4U

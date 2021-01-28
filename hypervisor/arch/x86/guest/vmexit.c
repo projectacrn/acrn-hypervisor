@@ -19,7 +19,7 @@
 #include <vtd.h>
 #include <vcpuid.h>
 #include <trace.h>
-#include <ptcm.h>
+#include <rtcm.h>
 
 /*
  * According to "SDM APPENDIX C VMX BASIC EXIT REASONS",

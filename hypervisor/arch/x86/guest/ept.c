@@ -15,7 +15,7 @@
 #include <vtd.h>
 #include <logmsg.h>
 #include <trace.h>
-#include <ptct.h>
+#include <rtct.h>
 
 #define DBG_LEVEL_EPT	6U
 

@@ -35,7 +35,7 @@
 #include <host_pm.h>
 #include <pci.h>
 #include <acrn_common.h>
-#include <ptcm.h>
+#include <rtcm.h>
 
 /* Per ACPI spec:
  * There are two fundamental types of ACPI tables:
