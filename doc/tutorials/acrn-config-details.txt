@@ -1,0 +1,271 @@
+``hv``:
+  Specify the global attributes for all VMs.
+
+``RELEASE`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the final build is for Release or Debug.
+
+``SERIAL_CONSOLE`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the host serial device is used for hypervisor debugging.
+  This configuration is valid only if Service VM ``legacy_vuart0``
+  is enabled. Leave this field empty if Service VM ``console_vuart``
+  is enabled. Using ``bootargs`` for ``console_vuart`` configuration.
+
+``MEM_LOGLEVEL`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the default log level in memory.
+
+``NPK_LOGLEVEL`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the default log level for the hypervisor NPK log.
+
+``CONSOLE_LOGLEVEL`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the default log level on the serial console.
+
+``LOG_DESTINATION`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the bitmap of consoles where logs are printed.
+
+``LOG_BUF_SIZE`` (a child node of ``DEBUG_OPTIONS``):
+  Specify the capacity of the log buffer for each physical CPU.
+
+``RELOC`` (a child node of ``FEATURES``):
+  Specify whether the hypervisor image relocation is enabled on booting.
+
+``SCHEDULER`` (a child node of ``FEATURES``):
+  Specify the CPU scheduler used by the hypervisor.
+  Supported schedulers are: ``SCHED_NOOP``, ``SCHED_BVT`` and ``SCHED_IORR``.
+
+``MULTIBOOT2`` (a child node of ``FEATURES``):
+  Specify whether the ACRN hypervisor image can be booted using the
+  multiboot2 protocol. If not set, GRUB's multiboot2 is not available as a
+  boot option.
+
+``RDT_ENABLED`` (a child node of ``FEATURES/RDT``):
+  Specify whether to enable the Resource Director Technology (RDT)
+  allocation feature. Set to 'y' to enable the feature or 'n' to disable it.
+  The 'y' will be ignored when hardware does not support RDT.
+
+``CDP_ENABLED`` (a child node of ``FEATURES/RDT``):
+  Specify whether to enable Code and Data Prioritization (CDP). CDP is an
+  extension of CAT. Set to 'y' to enable the feature or 'n' to disable it.
+  The 'y' will be ignored when hardware does not support CDP.
+
+``CLOS_MASK`` (a child node of ``FEATURES/RDT``):
+  Specify the cache capacity bitmask for the CLOS; only continuous '1' bits
+  are allowed. The value will be ignored when hardware does not support RDT.
+
+``HYPERV_ENABLED`` (a child node of ``FEATURES``):
+  Specify whether Hyper-V is enabled.
+
+``IOMMU_ENFORCE_SNP`` (a child node of ``FEATURES``):
+  Specify whether IOMMU enforces snoop behavior of the DMA operation.
+
+``ACPI_PARSE_ENABLED`` (a child node of ``FEATURES``):
+  Specify whether ACPI runtime parsing is enabled.
+
+``L1D_VMENTRY_ENABLED`` (a child node of ``FEATURES``):
+  Specify whether the L1 cache flush before VM entry is enabled.
+
+``MCE_ON_PSC_DISABLED`` (a child node of ``FEATURE``):
+  Specify whether force to disable software workaround for Machine Check
+  Error on Page Size Change is enabled.
+
+``IVSHMEM`` (a child node of ``FEATURE``):
+  Specify the inter-VM shared memory configuration
+
+``IVSHMEM_ENABLED`` (a child node of ``FEATURE/IVSHMEM``):
+  Specify if the inter-VM shared memory feature is enabled.
+
+``IVSHMEM_REGION`` (a child node of ``FEATURE/IVSHMEM``):
+  Specify a comma-separated list of the inter-VM shared memory region name,
+  size, and VM IDs that may communicate using this shared region.
+
+  * Prefix the region ``name`` with ``hv:/`` (for an hv-land solution).
+    (See :ref:`ivshmem-hld` for details.)
+  * Specify the region ``size`` in MB, and a power of 2 (e.g., 2, 4, 8, 16)
+    up to 512.
+  * Specify all VM IDs that may use this shared memory area,
+    separated by a ``:``, for example, ``0:2`` (to share this area between
+    VMs 0 and 2), or ``0:1:2`` (to let VMs 0, 1, and 2 share this area).
+
+``STACK_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of stacks used by physical cores. Each core uses one stack
+  for normal operations and another three for specific exceptions.
+
+``HV_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of the RAM region used by the hypervisor.
+
+``LOW_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of the RAM region below address 0x10000, starting from address 0x0.
+
+``SOS_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of the Service OS VM RAM region.
+
+``UOS_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of the User OS VM RAM region.
+
+``PLATFORM_RAM_SIZE`` (a child node of ``MEMORY``):
+  Specify the size of the physical platform RAM region.
+
+``IOMMU_BUS_NUM`` (a child node of ``CAPACITIES``):
+  Specify the highest PCI bus ID used during IOMMU initialization.
+
+``MAX_IR_ENTRIES`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of Interrupt Remapping Entries.
+
+``MAX_IOAPIC_NUM`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of IOAPICs.
+
+``MAX_PCI_DEV_NUM`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of PCI devices.
+
+``MAX_IOAPIC_LINES`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of interrupt lines per IOAPIC.
+
+``MAX_PT_IRQ_ENTRIES`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of interrupt sources for PT devices.
+
+``MAX_MSIX_TABLE_NUM`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of MSI-X tables per device.
+
+``MAX_EMULATED_MMIO`` (a child node of ``CAPACITIES``):
+  Specify the maximum number of emulated MMIO regions.
+
+``GPU_SBDF`` (a child node of ``MISC_CFG``):
+  Specify the Segment, Bus, Device, and function of the GPU.
+
+``vm``:
+  Specify the VM with VMID by its ``id`` attribute.
+
+``vm_type``:
+  Current supported VM types are:
+
+  - ``SAFETY_VM`` pre-launched Safety VM
+  - ``PRE_STD_VM`` pre-launched Standard VM
+  - ``SOS_VM`` pre-launched Service VM
+  - ``POST_STD_VM`` post-launched Standard VM
+  - ``POST_RT_VM`` post-launched real-time capable VM
+  - ``KATA_VM`` post-launched Kata Container VM
+
+``name`` (a child node of ``vm``):
+  Specify the VM name shown in the hypervisor console command: vm_list.
+
+``guest_flags``:
+  Select all applicable flags for the VM:
+
+  - ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify whether the secure world is
+    enabled
+  - ``GUEST_FLAG_LAPIC_PASSTHROUGH`` specify whether LAPIC is passed through
+  - ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify whether the hypervisor needs
+    IO polling to completion
+  - ``GUEST_FLAG_HIDE_MTRR`` specify whether to hide MTRR from the VM
+  - ``GUEST_FLAG_RT`` specify whether the VM is RT-VM (real-time)
+
+``cpu_affinity``:
+  List of pCPU: the guest VM is allowed to create vCPU from all or a subset of this list.
+
+``base`` (a child node of ``epc_section``):
+  SGX Enclave Page Cache section base; must be page aligned.
+
+``size`` (a child node of ``epc_section``):
+  SGX Enclave Page Cache section size in bytes; must be page aligned.
+
+``clos``:
+  Class of Service for Cache Allocation Technology settings. Refer to :ref:`hv_rdt` for details.
+
+``start_hpa`` (a child node of ``memory``):
+  The start physical address in host for the VM.
+
+``size`` (a child node of ``memory``):
+  The memory size in bytes for the VM.
+
+``name`` (a child node of ``os_config``):
+  Specify the OS name of VM; currently, it is not referenced by the hypervisor code.
+
+``kern_type`` (a child node of ``os_config``):
+  Specify the kernel image type so that the hypervisor can load it correctly.
+  Currently supports ``KERNEL_BZIMAGE`` and ``KERNEL_ZEPHYR``.
+
+``kern_mod`` (a child node of ``os_config``):
+  The tag for the kernel image that acts as a multiboot module; it must
+  exactly match the module tag in the GRUB multiboot cmdline.
+
+``ramdisk_mod`` (a child node of ``os_config``):
+  The tag for the ramdisk image, which acts as a multiboot module; it
+  must exactly match the module tag in the GRUB multiboot cmdline.
+
+``bootargs`` (a child node of ``os_config``):
+  For internal use only and is not configurable. Specify the kernel boot arguments
+  in ``bootargs`` under the parent of ``board_private``.
+
+``kern_load_addr`` (a child node of ``os_config``):
+  The loading address in host memory for the VM kernel.
+
+``kern_entry_addr`` (a child node of ``os_config``):
+  The entry address in host memory for the VM kernel.
+
+``legacy_vuart``:
+  Specify the vUART (aka COM) with the vUART ID by its ``id`` attribute.
+  Refer to :ref:`vuart_config` for detailed vUART settings.
+
+``console_vuart``:
+  Specify the console vUART (aka PCI based vUART) with the vUART ID by
+  its ``id`` attribute.
+  Refer to :ref:`vuart_config` for detailed vUART settings.
+
+``communication_vuart``:
+  Specify the communication vUART (aka PCI based vUART) with the vUART ID by
+  its ``id`` attribute.
+  Refer to :ref:`vuart_config` for detailed vUART settings.
+
+``type`` (a child node of ``legacy_vuart``):
+  vUART (aka COM) type; currently only supports the legacy PIO mode.
+
+``base`` (a child node of ``legacy_vuart``, ``console_vuart``, and ``communication_vuart``):
+  vUART (A.K.A COM) enabling switch. Enable by exposing its COM_BASE
+  (SOS_COM_BASE for Service VM); disable by returning INVALID_COM_BASE.
+
+  console and communication vUART (A.K.A PCI based vUART) enabling switch.
+  Enable by specifying PCI_VUART; disable by returning INVALID_PCI_BASE.
+
+``irq`` (a child node of ``legacy_vuart``):
+  vCOM IRQ.
+
+``target_vm_id`` (a child node of ``legacy_vuart1``, ``communication_vuart``):
+  COM2 is used for VM communications. When it is enabled, specify which
+  target VM the current VM connects to.
+
+  ``communication_vuart`` is used for VM communications. When it is enabled, specify
+  which target VM the current VM connects to.
+
+``target_uart_id`` (a child node of ``legacy_vuart1`` and ``communication_vuart``):
+  Target vUART ID to which the vCOM2 connects.
+
+  Target vUART ID to which the ``communication_vuart`` connects.
+
+``pci_dev_num``:
+  PCI devices number of the VM; it is hard-coded for each scenario so it
+  is not configurable for now.
+
+``pci_devs``:
+  PCI devices list of the VM; it is hard-coded for each scenario so it
+  is not configurable for now.
+
+``mmio_resources``:
+  MMIO resources to passthrough.
+
+``TPM2`` (a child node of ``mmio_resources``):
+  TPM2 device to passthrough.
+
+``p2sb`` (a child node of ``mmio_resources``):
+  Exposing the P2SB (Primary-to-Sideband) bridge to the pre-launched VM.
+
+``pt_intx``:
+  Forward specific IOAPIC interrupts (with interrupt line remapping) to the pre-launched VM.
+
+``board_private``:
+  Stores scenario-relevant board configuration.
+
+``rootfs`` (a child node of ``board_private``):
+  rootfs for the Linux kernel.
+
+``bootargs`` (a child node of ``board_private``):
+  Specify kernel boot arguments.
+
