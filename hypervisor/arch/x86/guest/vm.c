@@ -231,11 +231,11 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 		if (entry->length == 0UL) {
 			continue;
 		} else {
-			if (is_sw_sram_initialized && (entry->baseaddr == SOFTWARE_SRAM_BASE_GPA) &&
+			if (is_sw_sram_initialized && (entry->baseaddr == PRE_RTVM_SW_SRAM_BASE_GPA) &&
 				((vm_config->guest_flags & GUEST_FLAG_RT) != 0U)){
 				/* pass through Software SRAM to pre-RTVM */
 				ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-					get_software_sram_base(), SOFTWARE_SRAM_BASE_GPA,
+					get_software_sram_base(), PRE_RTVM_SW_SRAM_BASE_GPA,
 					get_software_sram_size(), EPT_RWX | EPT_WB);
 				continue;
 			}

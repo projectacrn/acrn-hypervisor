@@ -9,6 +9,7 @@
 
 #include <acpi.h>
 
+#include "misc_cfg.h"
 
 #define RTCT_ENTRY_TYPE_RTCD_LIMIT		1U
 #define RTCT_ENTRY_TYPE_RTCM_BINARY		2U
@@ -20,8 +21,19 @@
 #define RTCT_ENTRY_TYPE_RT_IOMMU		8U
 #define RTCT_ENTRY_TYPE_MEM_HIERARCHY_LATENCY	9U
 
-#define SOFTWARE_SRAM_BASE_GPA 0x40080000U
-#define SOFTWARE_SRAM_MAX_SIZE 0x00800000U
+#if !defined(PRE_RTVM_SW_SRAM_BASE_GPA)
+/*
+ * PRE_RTVM_SW_SRAM_BASE_GPA is for Prelaunch VM only and
+ * is configured by config tool on platform that Software SRAM is detected.
+ *
+ * For cases that Software SRAM is not detected, we still hardcode a dummy
+ * placeholder entry in vE820 table of Prelaunch VM to unify the logic
+ * to initialize the vE820.
+ */
+#define PRE_RTVM_SW_SRAM_BASE_GPA 0x40080000U
+#endif
+
+#define PRE_RTVM_SW_SRAM_MAX_SIZE  0x00800000U
 
 struct rtct_entry {
 	 uint16_t size;
