@@ -22,7 +22,7 @@
 #include <mmio_dev.h>
 #include <ivshmem.h>
 #include <vmcs9900.h>
-#include <ptcm.h>
+#include <rtcm.h>
 
 #define DBG_LEVEL_HYCALL	6U
 

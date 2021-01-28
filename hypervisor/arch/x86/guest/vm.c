@@ -35,7 +35,7 @@
 #include <trampoline.h>
 #include <assign.h>
 #include <vgpio.h>
-#include <ptcm.h>
+#include <rtcm.h>
 
 /* Local variables */
 

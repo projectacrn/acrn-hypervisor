@@ -8,7 +8,7 @@
 #include <logmsg.h>
 #include <misc_cfg.h>
 #include <mmu.h>
-#include <ptcm.h>
+#include <rtcm.h>
 
 
 uint64_t psram_area_bottom;

@@ -28,7 +28,7 @@
 #include <uart16550.h>
 #include <vpci.h>
 #include <ivshmem.h>
-#include <ptcm.h>
+#include <rtcm.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */
