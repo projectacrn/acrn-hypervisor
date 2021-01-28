@@ -14,7 +14,6 @@
 
 #define ENTRY_HPA1_LOW_PART1	2U
 #define ENTRY_HPA1_LOW_PART2	4U
-#define ENTRY_SOFTWARE_SRAM	3U
 #define ENTRY_HPA1_HI		8U
 
 static struct e820_entry sos_vm_e820[E820_MAX_ENTRIES];
@@ -136,17 +135,17 @@ static const struct e820_entry pre_ve820_template[E820_MAX_ENTRIES] = {
 	/* Software SRAM segment splits the lowmem into two parts */
 	{	/* part1 of lowmem of hpa1*/
 		.baseaddr = MEM_1M,		/* 1MB */
-		.length   = SOFTWARE_SRAM_BASE_GPA - MEM_1M,
+		.length   = PRE_RTVM_SW_SRAM_BASE_GPA - MEM_1M,
 		.type     = E820_TYPE_RAM
 	},
 	{	/* Software SRAM */
-		.baseaddr = SOFTWARE_SRAM_BASE_GPA,
-		.length   = SOFTWARE_SRAM_MAX_SIZE,
+		.baseaddr = PRE_RTVM_SW_SRAM_BASE_GPA,
+		.length   = PRE_RTVM_SW_SRAM_MAX_SIZE,
 		.type     = E820_TYPE_RESERVED
 	},
 	{	/* part2 of lowmem of hpa1*/
-		.baseaddr = SOFTWARE_SRAM_BASE_GPA + SOFTWARE_SRAM_MAX_SIZE,
-		.length   = MEM_2G - MEM_1M - (SOFTWARE_SRAM_BASE_GPA + SOFTWARE_SRAM_MAX_SIZE),
+		.baseaddr = PRE_RTVM_SW_SRAM_BASE_GPA + PRE_RTVM_SW_SRAM_MAX_SIZE,
+		.length   = MEM_2G - MEM_1M - (PRE_RTVM_SW_SRAM_BASE_GPA + PRE_RTVM_SW_SRAM_MAX_SIZE),
 		.type     = E820_TYPE_RAM
 	},
 	{	/* ACPI Reclaim */
@@ -194,14 +193,14 @@ static inline uint64_t add_ram_entry(struct e820_entry *entry, uint64_t gpa, uin
  *   entry6: ACPI NVS from 0x7fff0000 to 0x7fffffff
  *   entry7: reserved for 32bit PCI hole from 0x80000000 to 0xffffffff
  *   (entry8): usable for
- *            a) hpa1_hi, if hpa1 > 2GB - SOFTWARE_SRAM_MAX_SIZE
- *            b) hpa2, if (hpa1 + hpa2) < 2GB - SOFTWARE_SRAM_MAX_SIZE
+ *            a) hpa1_hi, if hpa1 > 2GB - PRE_RTVM_SW_SRAM_MAX_SIZE
+ *            b) hpa2, if (hpa1 + hpa2) < 2GB - PRE_RTVM_SW_SRAM_MAX_SIZE
  *            c) hpa2_lo,
- *               if hpa1 < 2GB - SOFTWARE_SRAM_MAX_SIZE and (hpa1 + hpa2) > 2GB - SOFTWARE_SRAM_MAX_SIZE
+ *               if hpa1 < 2GB - PRE_RTVM_SW_SRAM_MAX_SIZE and (hpa1 + hpa2) > 2GB - PRE_RTVM_SW_SRAM_MAX_SIZE
  *   (entry9): usable for
- *            a) hpa2, if hpa1 > 2GB - SOFTWARE_SRAM_MAX_SIZE
+ *            a) hpa2, if hpa1 > 2GB - PRE_RTVM_SW_SRAM_MAX_SIZE
  *            b) hpa2_hi,
- *               if hpa1 < 2GB - SOFTWARE_SRAM_MAX_SIZE and (hpa1 + hpa2) > 2GB - SOFTWARE_SRAM_MAX_SIZE
+ *               if hpa1 < 2GB - PRE_RTVM_SW_SRAM_MAX_SIZE and (hpa1 + hpa2) > 2GB - PRE_RTVM_SW_SRAM_MAX_SIZE
  */
 
 /*
@@ -218,8 +217,8 @@ void create_prelaunched_vm_e820(struct acrn_vm *vm)
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	uint64_t gpa_start = 0x100000000UL;
 	uint64_t hpa1_hi_size, hpa2_lo_size;
-	uint64_t lowmem_max_length = MEM_2G - SOFTWARE_SRAM_MAX_SIZE;
-	uint64_t hpa1_part1_max_length = SOFTWARE_SRAM_BASE_GPA - MEM_1M;
+	uint64_t lowmem_max_length = MEM_2G - PRE_RTVM_SW_SRAM_MAX_SIZE;
+	uint64_t hpa1_part1_max_length = PRE_RTVM_SW_SRAM_BASE_GPA - MEM_1M;
 	uint64_t remaining_hpa2_size = vm_config->memory.size_hpa2;
 	uint32_t entry_idx = ENTRY_HPA1_HI;
 
@@ -244,7 +243,7 @@ void create_prelaunched_vm_e820(struct acrn_vm *vm)
 	} else {
 		/* Otherwise, part2 is not empty. */
 		vm->e820_entries[ENTRY_HPA1_LOW_PART2].length =
-			vm_config->memory.size - SOFTWARE_SRAM_BASE_GPA - MEM_1M;
+			vm_config->memory.size - PRE_RTVM_SW_SRAM_BASE_GPA - MEM_1M;
 		/* need to set gpa_start for hpa2 */
 	}
 
