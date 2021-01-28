@@ -14,6 +14,7 @@ Configuration and Tools
    :maxdepth: 1
 
    tutorials/acrn_configuration_tool
+   reference/config-options
    reference/kconfig/index
    user-guides/hv-parameters
    user-guides/kernel-parameters
