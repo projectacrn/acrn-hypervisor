@@ -121,7 +121,8 @@ the source files will be generated into default path and overwirte the previous 
                 {% do vm_kata.append(1) %}
             {% endif %}
             {% set first_multi_child = {'IVSHMEM_REGION': 0, 'communication_vuart': 1} %}
-            {% if 'configurable' not in vm.attrib or vm.attrib['configurable'] != '0'%}
+            {% if xpath_dict['/'.join(['/acrn-config', vm.tag])]['configurable'] == 'y' or
+                vm.xpath(xpath_dict['/'.join(['/acrn-config', vm.tag])]['configurable'])%}
             <tr>
                 <td>
                     {% if vm.tag != 'vm' %}
@@ -157,16 +158,16 @@ the source files will be generated into default path and overwirte the previous 
                 <td>
                 {% for elem in vm|list %}
                     {% set elem_text = elem.text if elem.text != None else '' %}
-                    {% if elem|list == [] and ('configurable' not in elem.attrib or elem.attrib['configurable']
-                    != '0')%}
+                    {% if elem|list == [] and (xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['configurable']
+                    == 'y' or elem.xpath(xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['configurable']))%}
                     <div class="form-group">
                         <label class="col-sm-1 control-label" data-toggle="tooltip"
-                               title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">{{elem.tag}}</label>
+                               title="{{xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['doc']}}">{{elem.tag}}</label>
                         <label class="col-sm-2 control-label"></label>
 
                         {% if ','.join([vm.tag, elem.tag]) not in scenario_item_values %}
                         <div class="col-sm-6">
-                            {% if 'readonly' in elem.attrib and elem.attrib['readonly'] == 'true' %}
+                            {% if xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['readonly'] == 'y' %}
                             <input type="text" class="form-control" id="{{vm_type+','+elem.tag}}"
                                    value="{{elem_text}}" readonly>
                             {% else %}
@@ -176,7 +177,7 @@ the source files will be generated into default path and overwirte the previous 
                         </div>
                         {% else %}
                         <div class="dropdown col-sm-6">
-                            {% if 'readonly' in elem.attrib and elem.attrib['readonly'] == 'true' %}
+                            {% if xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['readonly'] == 'y' %}
                             <select class="selectpicker" data-width="auto"
                                     id="{{vm_type+','+elem.tag}}" disabled>
                             {% else %}
@@ -196,9 +197,9 @@ the source files will be generated into default path and overwirte the previous 
                         {% endif %}
                         <p id="{{vm_type+','+elem.tag}}_err" class="col-sm-3"></p>
                     </div>
-                    {% elif elem|list != [] and ('configurable' not in elem.attrib or elem.attrib['configurable']
-                    != '0')%}
-                        {% if 'multiselect' not in elem.attrib or elem.attrib['multiselect'] != 'true' %}
+                    {% elif elem|list != [] and (xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['configurable']
+                    == 'y' or elem.xpath(xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['configurable']))%}
+                        {% if xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['multiselect'] != 'y' %}
                             {% set first_child = [] %}
                             {% for sub_elem in elem|list %}
                                 {% set sub_elem_text = sub_elem.text if sub_elem.text != None else '' %}
@@ -209,13 +210,13 @@ the source files will be generated into default path and overwirte the previous 
                                     {% if ','.join([vm.tag, elem.tag, sub_elem.tag, sub_elem_2.tag]) in scenario_item_values %}
                                     <div class="form-group">
                                         <label class="col-sm-1 control-label" data-toggle="tooltip"
-                                               title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
+                                               title="{{xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['doc']}}">
                                         </label>
                                         <label class="col-sm-2 control-label" data-toggle="tooltip"
-                                               title="{{sub_elem_2.attrib['desc'] if 'desc' in sub_elem_2.attrib else sub_elem.attrib['desc']}}">
+                                               title="{{xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag, sub_elem.tag, sub_elem_2.tag])]['doc']}}">
                                             {{sub_elem.tag}}&nbsp;&nbsp;&nbsp;&nbsp;{{sub_elem_2.tag}}</label>
                                         <div class="dropdown col-sm-6">
-                                        {% if 'readonly' in sub_elem_2.attrib and sub_elem_2.attrib['readonly'] == 'true' %}
+                                        {% if xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag, sub_elem.tag, sub_elem_2.tag])]['readonly'] == 'y' %}
                                         <select class="selectpicker" data-width="auto"
                                                 id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}" disabled>
                                         {% else %}
@@ -237,17 +238,17 @@ the source files will be generated into default path and overwirte the previous 
 				                    {% else %}
                                     <div class="form-group">
                                         <label class="col-sm-1 control-label" data-toggle="tooltip"
-                                               title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
+                                               title="{{xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['doc']}}">
                                         </label>
                                         <label class="col-sm-2 control-label" data-toggle="tooltip"
-                                               title="{{sub_elem_2.attrib['desc'] if 'desc' in sub_elem_2.attrib else sub_elem.attrib['desc']}}">
+                                               title="{{xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag, sub_elem.tag, sub_elem_2.tag])]['doc']}}">
                                         {{sub_elem.tag}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{sub_elem_2.tag}}</label>
                                         {% if sub_elem_2.tag in ['IVSHMEM_REGION'] %}
                                         <div class="col-sm-5">
                                         {% else %}
                                         <div class="col-sm-6">
                                         {% endif %}
-                                        {% if 'readonly' in sub_elem_2.attrib and sub_elem_2.attrib['readonly'] == 'true' %}
+                                        {% if xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag, sub_elem.tag, sub_elem_2.tag])]['readonly'] == 'y' %}
                                         <input type="text" class="form-control"
                                                id="{{vm_type+','+elem.tag+','+sub_elem.tag+','+sub_elem_2.tag}}"
                                                readonly vaule="{{sub_elem_2_text}}"></input>
@@ -278,28 +279,28 @@ the source files will be generated into default path and overwirte the previous 
 
                                 {% else %}
 
-                                {% if 'configurable' not in sub_elem.attrib or sub_elem.attrib['configurable'] != '0' %}
+                                {% if xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag, sub_elem.tag])]['configurable'] == 'y' or
+                                        sub_elem.xpath(xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag, sub_elem.tag])]['configurable'])%}
                                 <div class="form-group">
                                     {% if 'id' not in elem.attrib %}
                                         {% if not first_child %}
                                         <label class="col-sm-1 control-label" data-toggle="tooltip"
-                                               title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
+                                               title="{{xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['doc']}}">
                                             {{elem.tag}}</label>
                                         {% else %}
-                                        <label class="col-sm-1 control-label" data-toggle="tooltip"
-                                               title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">
+                                        <label class="col-sm-1 control-label" data-toggle="tooltip">
                                         </label>
                                         {% endif %}
 
                                         <label class="col-sm-2 control-label" data-toggle="tooltip"
-                                               title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
+                                               title="{{xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag, sub_elem.tag])]['doc']}}">
                                             {{sub_elem.tag}}</label>
 
                                         {% if ','.join([vm.tag, elem.tag, sub_elem.tag]) not in scenario_item_values
                                             and elem.tag != 'cpu_affinity' and elem.tag != 'pci_devs' %}
                                             {% if sub_elem.tag in ['bootargs', 'kern_args'] %}
                                                 <div class="col-sm-6">
-                                                {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
+                                                {% if xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag, sub_elem.tag])]['readonly'] == 'y' %}
                                                 <textarea type="text" class="form-control" style="height:120px"
                                                           id="{{vm_type+','+elem.tag+','+sub_elem.tag}}"
                                                           readonly>{{sub_elem_text}}</textarea>
@@ -310,7 +311,7 @@ the source files will be generated into default path and overwirte the previous 
                                                 </div>
                                             {% else %}
                                                 <div class="col-sm-6">
-                                                {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
+                                                {% if xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag, sub_elem.tag])]['readonly'] == 'y' %}
                                                 <input type="text" class="form-control"
                                                        id="{{vm_type+','+elem.tag+','+sub_elem.tag}}"
                                                        value="{{sub_elem_text}}" readonly>
@@ -326,7 +327,7 @@ the source files will be generated into default path and overwirte the previous 
                                             {% set item_key = ','.join([vm.tag, elem.tag, sub_elem.tag]) if elem.tag != 'cpu_affinity'
                                              and elem.tag != 'pci_devs' else ','.join([vm.tag, elem.tag]) %}
                                             <div class="dropdown col-sm-6">
-                                                {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
+                                                {% if xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag, sub_elem.tag])]['readonly'] == 'y' %}
                                                 <select class="selectpicker" data-width="auto"
                                                         id="{{vm_type+','+elem.tag+','+sub_elem.tag}}" disabled>
                                                 {% else %}
@@ -368,24 +369,23 @@ the source files will be generated into default path and overwirte the previous 
                                         {% do first_child.append(1) %}
                                         <label class="col-sm-1 control-label" data-toggle="tooltip"
                                                id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_label1"
-                                               title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
+                                               title="{{xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['doc']}}">
                                             {{elem.tag+' '+elem.attrib['id']}}</label>
                                         {% else %}
                                         <label class="col-sm-1 control-label" data-toggle="tooltip"
-                                               id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_label1"
-                                               title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
+                                               id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_label1">
                                         </label>
                                         {% endif %}
 
                                         <label class="col-sm-2 control-label" data-toggle="tooltip"
                                                id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_label2"
-                                               title="{{sub_elem.attrib['desc'] if 'desc' in sub_elem.attrib else sub_elem.tag}}">
+                                               title="{{xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag, sub_elem.tag])]['doc']}}">
                                             {{sub_elem.tag}}</label>
                                         {% if (','.join([vm.tag, elem.tag, sub_elem.tag]) not in scenario_item_values) and
                                         ((elem.tag!='vuart' and elem.tag!='legacy_vuart') or sub_elem.tag!='base') %}
                                             <div class="col-sm-6"
                                                  id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}_config">
-                                                {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
+                                                {% if xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag, sub_elem.tag])]['readonly'] == 'y' %}
                                                 <input type="text" class="form-control"
                                                        id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}"
                                                        value="{{sub_elem_text}}" readonly>
@@ -399,7 +399,7 @@ the source files will be generated into default path and overwirte the previous 
 
                                             <div class="dropdown col-sm-6">
 
-                                                {% if 'readonly' in sub_elem.attrib and sub_elem.attrib['readonly'] == 'true' %}
+                                                {% if xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag, sub_elem.tag])]['readonly'] == 'y' %}
                                                 <select class="selectpicker" data-width="auto" disabled
                                                         id="{{vm_type+','+elem.tag+':id='+elem.attrib['id']+','+sub_elem.tag}}">
                                                 {% else %}
@@ -436,14 +436,14 @@ the source files will be generated into default path and overwirte the previous 
                                 {% endif %}
                                 {% endif %}
                             {% endfor %}
-                        {% elif 'configurable' not in elem.attrib or elem.attrib['configurable'] != '0' %}
+                        {% elif xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['configurable'] == 'y' or
+                                        elem.xpath(xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['configurable'])%}
                             <div class="form-group">
                                 <label class="col-sm-1 control-label" data-toggle="tooltip"
-                                       title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}">{{elem.tag}}</label>
-                                <label class="col-sm-2 control-label" data-toggle="tooltip"
-                                       title="{{elem.attrib['desc'] if 'desc' in elem.attrib else elem.tag}}"></label>
+                                       title="{{xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['doc']}}">{{elem.tag}}</label>
+                                <label class="col-sm-2 control-label" data-toggle="tooltip"></label>
                                 <div class="dropdown col-sm-6">
-                                    {% if 'readonly' in elem.attrib and elem.attrib['readonly'] == 'true' %}
+                                    {% if xpath_dict['/'.join(['/acrn-config', vm.tag, elem.tag])]['readonly'] == 'y' %}
                                     <select class="selectpicker" data-width="auto" disabled
                                             id="{{vm_type+','+elem.tag+','+elem.tag[:-1]}}"
                                             multiple>
