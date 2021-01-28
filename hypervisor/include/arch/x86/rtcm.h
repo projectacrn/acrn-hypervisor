@@ -7,7 +7,7 @@
 #ifndef PTCM_H
 #define PTCM_H
 
-#include <ptct.h>
+#include <rtct.h>
 
 #define MSABI __attribute__((ms_abi))
 
