@@ -459,7 +459,7 @@ def main(args):
             os.makedirs(dest_vm_acpi_path)
         if PASSTHROUGH_PTCT is True and vm_id == PRELAUNCHED_RTVM_ID:
             passthru_devices.append(PTCT)
-            shutil.copy(os.path.join(VM_CONFIGS_PATH, 'acpi', board_type, PTCT), dest_vm_acpi_path)
+            shutil.copy(os.path.join(VM_CONFIGS_PATH, 'acpi_template', board_type, PTCT), dest_vm_acpi_path)
         gen_rsdp(dest_vm_acpi_path)
         gen_xsdt(dest_vm_acpi_path, passthru_devices)
         gen_fadt(dest_vm_acpi_path, board_root)
