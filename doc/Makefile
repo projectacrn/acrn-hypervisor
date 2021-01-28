@@ -68,7 +68,7 @@ singlehtml: doxy content kconfig
 
 clean:
 	rm -fr $(BUILDDIR)
-	# Keeping these temporarily, but no longer strictly needed.
+	@# Keeping these temporarily, but no longer strictly needed.
 	rm -fr doxygen
 	rm -fr misc
 	rm -fr reference/kconfig/*.rst
