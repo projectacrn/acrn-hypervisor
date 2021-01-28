@@ -48,7 +48,7 @@ You'll need ``git`` installed to get the working folders set up:
 
   .. code-block:: bash
 
-     sudo apt-get install git
+     sudo apt install git
 
 We use the source header files to generate API documentation and we use
 ``github.io`` for publishing the generated documentation.  Here's the
@@ -137,7 +137,7 @@ For Ubuntu use:
 
   .. code-block:: bash
 
-     sudo apt-get install doxygen python3-pip \
+     sudo apt install doxygen python3-pip \
        python3-wheel make graphviz xsltproc
 
 Then use ``pip3`` to install the remaining Python-based tools:

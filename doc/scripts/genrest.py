@@ -50,8 +50,8 @@ def expr_str(expr):
 
 INDEX_RST_HEADER = """.. _configuration:
 
-Configuration Symbol Reference
-##############################
+Kconfig Symbol Reference
+########################
 
 Introduction
 ************
