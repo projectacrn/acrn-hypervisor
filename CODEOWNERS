@@ -12,7 +12,7 @@
 # Default/global reviewers (if not overridden later)
 *                                        @anthonyzxu @dongyaozu
 
-Makefile                                 @terryzouhao
+Makefile                                 @terryzouhao @NanlinXie
 /hypervisor/                             @anthonyzxu @dongyaozu
 /devicemodel/                            @anthonyzxu @ywan170
 /doc/                                    @dbkinder @deb-intel @NanlinXie
@@ -21,7 +21,10 @@ Makefile                                 @terryzouhao
 /misc/debug_tools/acrn_trace/            @ywan170 @shuox
 /misc/services/acrn_manager/             @ywan170 @shuox
 /misc/services/acrn_bridge/              @ywan170 @shuox
-/misc/config_tools/                      @terryzouhao
-/misc/Makefile                           @terryzouhao
+/misc/services/life_mngr/                @ywan170 @shuox
+/misc/config_tools/                      @terryzouhao @NanlinXie
+/misc/Makefile                           @terryzouhao @NanlinXie
+/misc/packaging/                         @terryzouhao @NanlinXie
+/misc/hv_prebuild/                       @terryzouhao @NanlinXie
 
 *.rst                                    @dbkinder @deb-intel @NanlinXie
