@@ -6,7 +6,9 @@
 """
 
 import os
-import xml.etree.ElementTree as ElementTree
+from xmlschema import XMLSchema11
+from xmlschema.validators import Xsd11Element, XsdSimpleType, XsdAtomicBuiltin, Xsd11ComplexType, Xsd11Group, Xsd11Attribute
+import lxml.etree as etree
 
 
 class XmlConfig:
@@ -29,7 +31,7 @@ class XmlConfig:
         if os.path.splitext(xml_file)[1] != '.xml':
             return xml_type
         try:
-            tree = ElementTree.parse(xml_file)
+            tree = etree.parse(xml_file)
             root = tree.getroot()
             if 'uos_launcher' in root.attrib:
                 xml_type = 'uos_launcher'
@@ -93,7 +95,7 @@ class XmlConfig:
                 if self._default \
                 else os.path.join(self._xml_path, 'user_defined', self._curr_xml + '.xml')
 
-            tree = ElementTree.parse(xml_path)
+            tree = etree.parse(xml_path)
             self._curr_xml_tree = tree
         except ValueError:
             print('xml parse error: {}'.format(xml))
@@ -170,7 +172,7 @@ class XmlConfig:
                     new_node_desc = node.attrib['desc']
                 dest_node.remove(node)
         for value in values:
-            new_node = ElementTree.SubElement(dest_node, tag)
+            new_node = etree.SubElement(dest_node, tag)
             new_node.text = value
             if new_node_desc is not None:
                 new_node.attrib['desc'] = new_node_desc
@@ -203,9 +205,9 @@ class XmlConfig:
         dest_node = self._get_dest_node(*args)
 
         if key in ['vm']:
-            ElementTree.SubElement(dest_node, key, attrib={'id': value, 'desc': desc})
+            etree.SubElement(dest_node, key, attrib={'id': value, 'desc': desc})
         else:
-            new_node = ElementTree.SubElement(dest_node, key, attrib={'desc': desc})
+            new_node = etree.SubElement(dest_node, key, attrib={'desc': desc})
             new_node.text = value
 
     def get_curr_elem(self, *args):
@@ -346,3 +348,169 @@ class XmlConfig:
         else:
             if depth and (not element.tail or not element.tail.strip()):
                 element.tail = i
+
+
+def get_acrn_config_element(xsd_file):
+    """
+    return the root element for the xsd file
+    :param xsd_file: the input xsd schema file
+    :return: the root element of the xsd file
+    """
+    # schema = XMLSchema11(xsd_file)
+    xsd_doc = etree.parse(xsd_file)
+    xsd_doc.xinclude()
+    schema = XMLSchema11(etree.tostring(xsd_doc, encoding="unicode"))
+
+    xsd_element_root = schema.root_elements[0]
+    acrn_config_element_root = xsd_2_acrn_config_element(xsd_element_root)
+    # doc_dict = acrn_config_element_2_doc_dict(acrn_config_element_root, {})
+    # enum_dict = acrn_config_element_2_enum_dict(acrn_config_element_root, {})
+    # xpath_dict = acrn_config_element_2_xpath_dict(acrn_config_element_root, {})
+
+    # from pprint import pprint
+    # pprint(acrn_config_element_root)
+    # pprint(xpath_dict)
+
+    return acrn_config_element_root
+
+
+def xsd_2_acrn_config_element(xsd_element, layer=0, index=0, path=''):
+    """
+    translate XSD element to ACRN config element
+    :param xsd_element: the xsd element
+    :param layer: current layer
+    :param index: current index of current layer
+    :param path: path of current element
+    :return: ACRN config element
+    """
+    acrn_config_element = {
+        'name': xsd_element.name,
+        'type': None,
+        'path': path+'/'+xsd_element.name,
+        'layer': layer,
+        'index': index,
+        'doc': None,
+        'configurable': 'y',
+        'readonly': 'n',
+        'multiselect': 'n',
+        'default': xsd_element.default,
+        'attributes': None,
+        # 'minOccurs': None,
+        # 'maxOccurs': None,
+        'enumeration': None,
+        'sub_elements': None
+    }
+    if isinstance(xsd_element.type, Xsd11ComplexType):
+        acrn_config_element['type'] = xsd_element.type.name
+        for xsd_component in xsd_element.type.iter_components():
+            if isinstance(xsd_component, Xsd11Group):
+                if acrn_config_element['sub_elements'] is None:
+                    acrn_config_element['sub_elements'] = {'all':[], 'choice':[], 'sequence':[]}
+                index = 0
+                for sub_xsd_component in xsd_component.iter_components():
+                    if isinstance(sub_xsd_component, Xsd11Element):
+                        sub_acrn_config_element = xsd_2_acrn_config_element(sub_xsd_component, layer+1,
+                                                                            index, path+'/'+xsd_element.name)
+                        acrn_config_element['sub_elements'][xsd_component.model].append(sub_acrn_config_element)
+                        index += 1
+    else:
+        if isinstance(xsd_element.type, XsdAtomicBuiltin):
+            acrn_config_element['type'] = xsd_element.type.name
+        elif isinstance(xsd_element.type.base_type, XsdSimpleType):
+            acrn_config_element['type'] = xsd_element.type.base_type.name
+        else:
+            acrn_config_element['type'] = xsd_element.type.name
+        if xsd_element.type.enumeration:
+            acrn_config_element['enumeration'] = xsd_element.type.enumeration
+
+    annotation = None
+    if hasattr(xsd_element, 'annotation') and xsd_element.annotation:
+        annotation = xsd_element.annotation
+    elif hasattr(xsd_element.type, 'annotation') and xsd_element.type.annotation:
+        annotation = xsd_element.type.annotation
+    if annotation:
+        if annotation.documentation:
+            doc_list = [documentation.text for documentation in annotation.documentation]
+            acrn_config_element['doc'] = '\n'.join(doc_list)
+        for key in annotation.elem.keys():
+            if key.endswith('configurable'):
+                acrn_config_element['configurable'] = annotation.elem.get(key)
+            elif key.endswith('readonly'):
+                acrn_config_element['readonly'] = annotation.elem.get(key)
+            elif key.endswith('multiselect'):
+                acrn_config_element['multiselect'] = annotation.elem.get(key)
+
+    if xsd_element.attributes:
+        attrs = []
+        for attr in xsd_element.attributes.iter_components():
+            if isinstance(attr, Xsd11Attribute):
+                attrs.append({'name': attr.name, 'type': attr.type.name})
+        acrn_config_element['attributes'] = attrs
+
+    return acrn_config_element
+
+def acrn_config_element_2_doc_dict(acrn_config_element, doc_dict):
+    """
+    get the dictionary for documentation of all configurable elements by ACRN config element.
+    :param acrn_config_element: the ACRN config element
+    :param doc_dict: the dictionary to save documentation of all configurable elements
+    :return: the dictionary to save documentation of all configurable elements
+    """
+    if 'doc' in acrn_config_element and 'path' in acrn_config_element \
+        and acrn_config_element['path'] not in doc_dict:
+        if acrn_config_element['doc']:
+            doc_dict[acrn_config_element['path']] = acrn_config_element['doc']
+        else:
+            doc_dict[acrn_config_element['path']] = acrn_config_element['name']
+
+    if 'sub_elements' in acrn_config_element and acrn_config_element['sub_elements']:
+        for order_type in acrn_config_element['sub_elements']:
+            for element in acrn_config_element['sub_elements'][order_type]:
+                doc_dict = acrn_config_element_2_doc_dict(element, doc_dict)
+    return doc_dict
+
+def acrn_config_element_2_enum_dict(acrn_config_element, enum_dict):
+    """
+    get the dictionary for enumeration of all configurable elements by ACRN config element.
+    :param acrn_config_element: the ACRN config element
+    :param enum_dict: the dictionary to save enumeration of all configurable elements
+    :return: the dictionary to save enumeration of all configurable elements
+    """
+    if 'enumeration' in acrn_config_element and 'path' in acrn_config_element \
+        and acrn_config_element['path'] not in enum_dict \
+        and acrn_config_element['enumeration']:
+        enum_dict[acrn_config_element['path']] = acrn_config_element['enumeration']
+    if 'sub_elements' in acrn_config_element and acrn_config_element['sub_elements']:
+        for order_type in acrn_config_element['sub_elements']:
+            for element in acrn_config_element['sub_elements'][order_type]:
+                enum_dict = acrn_config_element_2_enum_dict(element, enum_dict)
+    return enum_dict
+
+def acrn_config_element_2_xpath_dict(acrn_config_element, xpath_dict):
+    """
+    get the dictionary for xpath of all configurable elements by ACRN config element.
+    :param acrn_config_element: the ACRN config element
+    :param xpath_dict: the dictionary to save xpath of all configurable elements
+    :return: the dictionary to save xpath of all configurable elements
+    """
+    if acrn_config_element['path'] not in xpath_dict.keys():
+        xpath_dict[acrn_config_element['path']] = {
+            'name': acrn_config_element['name'],
+            'type': acrn_config_element['type'],
+            'layer': acrn_config_element['layer'],
+            'index': acrn_config_element['index'],
+            'doc': acrn_config_element['doc'] if acrn_config_element['doc'] else acrn_config_element['name'],
+            'configurable': acrn_config_element['configurable'],
+            'readonly': acrn_config_element['readonly'],
+            'multiselect': acrn_config_element['multiselect'],
+            'default': acrn_config_element['default'],
+            'attributes': acrn_config_element['attributes'],
+            # 'minOccurs': None,
+            # 'maxOccurs': None,
+            'enumeration': acrn_config_element['enumeration']
+        }
+    if 'sub_elements' in acrn_config_element and acrn_config_element['sub_elements']:
+        for order_type in acrn_config_element['sub_elements']:
+            for element in acrn_config_element['sub_elements'][order_type]:
+                enum_dict = acrn_config_element_2_xpath_dict(element, xpath_dict)
+    return xpath_dict

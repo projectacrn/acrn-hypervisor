@@ -19,7 +19,7 @@ from flask import request, render_template, Blueprint, redirect, url_for, curren
 # Refer to https://github.com/pallets/werkzeug/blob/master/LICENSE.rst for the permission notice.
 from werkzeug.utils import secure_filename
 
-from controller import XmlConfig
+from controller import *
 from scenario_config.scenario_cfg_gen import get_scenario_item_values
 from scenario_config.scenario_cfg_gen import validate_scenario_setting
 from launch_config.launch_cfg_gen import get_launch_item_values
@@ -66,6 +66,9 @@ def scenario(scenario_name):
 
     board_info, board_type, scenario_config, launch_config = get_xml_configs()
     (bios_info, base_board_info) = get_board_info(board_info)
+    acrn_config_element_root = get_acrn_config_element(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'schema', 'config.xsd'))
+    xpath_dict = acrn_config_element_2_xpath_dict(acrn_config_element_root, {})
 
     current_app.config.update(SCENARIO=scenario_name)
 
@@ -79,6 +82,9 @@ def scenario(scenario_name):
             scenario_item_values = get_scenario_item_values(
                 os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res', board_info+'.xml'),
                 scenario_file_path)
+    for xpath in xpath_dict:
+        if xpath_dict[xpath]['enumeration'] and len(xpath.split('/')) > 2:
+            scenario_item_values[','.join(xpath.split('/')[2:])] = xpath_dict[xpath]['enumeration']
 
     return render_template('scenario.html', board_info_list=get_board_list(),
                            board_info=board_info, board_type=board_type,
@@ -86,7 +92,8 @@ def scenario(scenario_name):
                            scenarios=scenario_config.list_all(xml_type='scenario'),
                            launches=launch_config.list_all(xml_type='uos_launcher'),
                            scenario=scenario_name, root=scenario_config.get_curr_root(),
-                           scenario_item_values=scenario_item_values)
+                           scenario_item_values=scenario_item_values,
+                           xpath_dict=xpath_dict)
 
 
 @CONFIG_APP.route('/launch', methods=['GET'])
@@ -1009,7 +1016,7 @@ def get_board_type(board_info):
     board_type = None
     if board_config is not None:
         board_info_root = board_config.get_curr_root()
-        if board_info_root and 'board' in board_info_root.attrib:
+        if board_info_root is not None and 'board' in board_info_root.attrib:
             board_type = board_info_root.attrib['board']
 
     return board_type
@@ -1026,7 +1033,7 @@ def get_board_info(board_info):
     base_board_info = None
     if board_config is not None:
         board_info_root = board_config.get_curr_root()
-        if board_info_root:
+        if board_info_root is not None:
             for item in list(board_info_root):
                 if item.tag == 'BIOS_INFO':
                     for line in item.text.split('\n'):
@@ -1096,7 +1103,7 @@ def get_board_rdt_res_clos_max(board_file_name):
 
     if board_config is not None:
         board_info_root = board_config.get_curr_root()
-        if board_info_root:
+        if board_info_root is not None:
             for item in list(board_info_root):
                 if item.tag == 'CLOS_INFO':
                     for line in item.text.split('\n'):
