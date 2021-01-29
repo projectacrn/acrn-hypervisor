@@ -299,9 +299,11 @@ enum acrn_vm_load_order {
 	MAX_LOAD_ORDER
 };
 
-#define MAX_VM_OS_NAME_LEN      32U
-
+/**
+ * @brief data structure to parse configuration data of VM.
+ */
 struct acrn_vm_config {
+#define MAX_VM_OS_NAME_LEN      32U
 	enum acrn_vm_load_order load_order;
 	char name[MAX_VM_OS_NAME_LEN];
 	const uint8_t uuid[16];
@@ -310,8 +312,9 @@ struct acrn_vm_config {
 	uint64_t cpu_affinity;
 	uint64_t guest_flags;
 	/*
-	 * The following are hv-specific members and are thus opaque.
-	 * vm_config_entry_size determines the real size of this structure.
+	 * Ignore other members that are hypervisor specific, actual size
+	 * of current structure can be parsed by 'vm_config_entry_size' of
+	 * 'struct platform_info'.
 	 */
 } __aligned(8);
 
