@@ -408,7 +408,7 @@ def main(args):
 
     if os.path.isdir(DEST_ACPI_PATH):
         for config in os.listdir(DEST_ACPI_PATH):
-            if config.startswith('VM') and os.path.isdir(os.path.join(DEST_ACPI_PATH, config)):
+            if config.startswith('ACPI_VM') and os.path.isdir(os.path.join(DEST_ACPI_PATH, config)):
                 shutil.rmtree(os.path.join(DEST_ACPI_PATH, config))
 
     dict_passthru_devices = collections.OrderedDict()
@@ -455,12 +455,12 @@ def main(args):
             break
 
         print('start to generate ACPI ASL code for VM{}'.format(vm_id))
-        dest_vm_acpi_path = os.path.join(DEST_ACPI_PATH, 'VM'+vm_id)
+        dest_vm_acpi_path = os.path.join(DEST_ACPI_PATH, 'ACPI_VM'+vm_id)
         if not os.path.isdir(dest_vm_acpi_path):
             os.makedirs(dest_vm_acpi_path)
         if PASSTHROUGH_PTCT is True and vm_id == PRELAUNCHED_RTVM_ID:
             passthru_devices.append(PTCT)
-            shutil.copy(os.path.join(VM_CONFIGS_PATH, 'acpi', board_type, PTCT), dest_vm_acpi_path)
+            shutil.copy(os.path.join(VM_CONFIGS_PATH, 'acpi_template', board_type, PTCT), dest_vm_acpi_path)
         gen_rsdp(dest_vm_acpi_path)
         gen_xsdt(dest_vm_acpi_path, passthru_devices)
         gen_fadt(dest_vm_acpi_path, board_root)
