@@ -185,14 +185,14 @@ def main(args):
         return 1
 
     for config in os.listdir(DEST_ACPI_PATH):
-        if os.path.isdir(os.path.join(DEST_ACPI_PATH, config)) and config.startswith('VM'):
+        if os.path.isdir(os.path.join(DEST_ACPI_PATH, config)) and config.startswith('ACPI_VM'):
             print('start to generate ACPI binary for {}'.format(config))
             dest_vm_acpi_path = os.path.join(DEST_ACPI_PATH, config)
             dest_vm_acpi_bin_path = os.path.join(DEST_ACPI_BIN_PATH, config)
             os.makedirs(dest_vm_acpi_bin_path)
             if asl_to_aml(dest_vm_acpi_path, dest_vm_acpi_bin_path):
                 return 1
-            aml_to_bin(dest_vm_acpi_path, dest_vm_acpi_bin_path, 'ACPI_'+config+'.bin')
+            aml_to_bin(dest_vm_acpi_path, dest_vm_acpi_bin_path, config+'.bin')
 
     return 0
 
