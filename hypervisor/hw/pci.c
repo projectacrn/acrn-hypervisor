@@ -54,6 +54,20 @@ static uint32_t num_pci_pdev;
 static struct pci_pdev pci_pdevs[CONFIG_MAX_PCI_DEV_NUM];
 static struct hlist_head pdevs_hlist_heads[PDEV_HLIST_HASHSIZE];
 
+/* For HV owned pdev */
+static uint32_t num_hv_owned_pci_pdev;
+static struct pci_pdev *hv_owned_pci_pdevs[CONFIG_MAX_PCI_DEV_NUM];
+
+uint32_t get_hv_owned_pdev_num(void)
+{
+	return num_hv_owned_pci_pdev;
+}
+
+const struct pci_pdev **get_hv_owned_pdevs(void)
+{
+	return (const struct pci_pdev **)hv_owned_pci_pdevs;
+}
+
 static struct pci_mmcfg_region phys_pci_mmcfg = {
 	.address = DEFAULT_PCI_MMCFG_BASE,
 	.start_bus = DEFAULT_PCI_MMCFG_START_BUS,
@@ -352,25 +366,19 @@ bool is_plat_hidden_pdev(union pci_bdf bdf)
 	return hidden;
 }
 
-static bool is_hv_owned_pdev(union pci_bdf pbdf)
+bool is_hv_owned_pdev(union pci_bdf pbdf)
 {
-	bool hidden = false;
-	/* if it is debug uart, hide it*/
-	if (is_pci_dbg_uart(pbdf)) {
-		pr_info("hide pci uart dev: (%x:%x:%x)", pbdf.bits.b, pbdf.bits.d, pbdf.bits.f);
-		hidden = true;
-	}
+	bool ret = false;
+	uint32_t i;
 
-	return hidden;
-}
-
-static struct pci_pdev *pci_init_pdev(union pci_bdf pbdf, uint32_t drhd_index)
-{
-	struct pci_pdev *pdev = NULL;
-	if (!is_hv_owned_pdev(pbdf)) {
-		pdev = init_pdev(pbdf.value, drhd_index);
+	for (i = 0U; i < num_hv_owned_pci_pdev; i++) {
+		if (bdf_is_equal(pbdf, hv_owned_pci_pdevs[i]->bdf)) {
+			pr_info("hv owned dev: (%x:%x:%x)", pbdf.bits.b, pbdf.bits.d, pbdf.bits.f);
+			ret = true;
+			break;
+		}
 	}
-	return pdev;
+	return ret;
 }
 
 /*
@@ -779,20 +787,19 @@ static void pci_enumerate_cap(struct pci_pdev *pdev)
  *
  * @return If there's a successfully initialized pdev return it, otherwise return NULL;
  */
-struct pci_pdev *init_pdev(uint16_t pbdf, uint32_t drhd_index)
+struct pci_pdev *pci_init_pdev(union pci_bdf bdf, uint32_t drhd_index)
 {
 	uint8_t hdr_type, hdr_layout;
-	union pci_bdf bdf;
 	struct pci_pdev *pdev = NULL;
+	bool is_hv_owned = false;
 
 	if (num_pci_pdev < CONFIG_MAX_PCI_DEV_NUM) {
-		bdf.value = pbdf;
 		hdr_type = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_HDRTYPE, 1U);
 		hdr_layout = (hdr_type & PCIM_HDRTYPE);
 
 		if ((hdr_layout == PCIM_HDRTYPE_NORMAL) || (hdr_layout == PCIM_HDRTYPE_BRIDGE)) {
 			pdev = &pci_pdevs[num_pci_pdev];
-			pdev->bdf.value = pbdf;
+			pdev->bdf = bdf;
 			pdev->hdr_type = hdr_type;
 			pdev->base_class = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_CLASS, 1U);
 			pdev->sub_class = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_SUBCLASS, 1U);
@@ -803,7 +810,18 @@ struct pci_pdev *init_pdev(uint16_t pbdf, uint32_t drhd_index)
 				pci_enumerate_cap(pdev);
 			}
 
-			hlist_add_head(&pdev->link, &pdevs_hlist_heads[hash64(pbdf, PDEV_HLIST_HASHBITS)]);
+#if (PRE_VM_NUM != 0U)
+			/* HV owned pdev: 1.typ1 pdev if pre-launched VM exist; 2.pci debug uart */
+			is_hv_owned = (hdr_layout == PCIM_HDRTYPE_BRIDGE) || is_pci_dbg_uart(bdf);
+#else
+			/* HV owned pdev: 1.pci debug uart */
+			is_hv_owned = is_pci_dbg_uart(bdf);
+#endif
+			if (is_hv_owned) {
+				hv_owned_pci_pdevs[num_hv_owned_pci_pdev] = pdev;
+				num_hv_owned_pci_pdev++;
+			}
+			hlist_add_head(&pdev->link, &pdevs_hlist_heads[hash64(bdf.value, PDEV_HLIST_HASHBITS)]);
 			pdev->drhd_index = drhd_index;
 			num_pci_pdev++;
 			reserve_vmsix_on_msi_irtes(pdev);
