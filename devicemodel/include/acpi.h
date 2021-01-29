@@ -58,7 +58,7 @@ struct acpi_table_hdr {
 	char                    asl_compiler_id[4];
 	/* ASL compiler version */
 	uint32_t                asl_compiler_revision;
-} __packed;
+} __attribute__((packed));
 
 /* All dynamic table entry no. */
 #define NHLT_ENTRY_NO		8
