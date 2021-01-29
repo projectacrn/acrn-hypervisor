@@ -625,18 +625,7 @@ struct pci_vdev *vpci_init_vdev(struct acrn_vpci *vpci, struct acrn_vm_pci_dev_c
 	if (dev_config->vdev_ops != NULL) {
 		vdev->vdev_ops = dev_config->vdev_ops;
 	} else {
-		if (get_highest_severity_vm(false) == vpci2vm(vpci)) {
-			vdev->vdev_ops = &pci_pt_dev_ops;
-		} else {
-			if (is_bridge(vdev->pdev)) {
-				vdev->vdev_ops = &vpci_bridge_ops;
-			} else if (is_host_bridge(vdev->pdev)) {
-				vdev->vdev_ops = &vhostbridge_ops;
-			} else {
-				vdev->vdev_ops = &pci_pt_dev_ops;
-			}
-		}
-
+		vdev->vdev_ops = &pci_pt_dev_ops;
 		ASSERT(dev_config->emu_type == PCI_DEV_TYPE_PTDEV,
 			"Only PCI_DEV_TYPE_PTDEV could not configure vdev_ops");
 		ASSERT(dev_config->pdev != NULL, "PCI PTDev is not present on platform!");

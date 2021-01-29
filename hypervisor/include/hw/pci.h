@@ -338,11 +338,14 @@ void set_mmcfg_region(struct pci_mmcfg_region *region);
 #endif
 struct pci_mmcfg_region *get_mmcfg_region(void);
 
-struct pci_pdev *init_pdev(uint16_t pbdf, uint32_t drhd_index);
+struct pci_pdev *pci_init_pdev(union pci_bdf pbdf, uint32_t drhd_index);
 uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes);
 void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 void enable_disable_pci_intx(union pci_bdf bdf, bool enable);
 
+bool is_hv_owned_pdev(union pci_bdf pbdf);
+uint32_t get_hv_owned_pdev_num(void);
+const struct pci_pdev **get_hv_owned_pdevs(void);
 /*
  * @brief Walks the PCI heirarchy and initializes array of pci_pdev structs
  * Uses DRHD info from ACPI DMAR tables to cover the endpoints and
