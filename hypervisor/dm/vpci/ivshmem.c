@@ -26,7 +26,7 @@
 #define IVSHMEM_MSIX_BAR	1U
 #define IVSHMEM_SHM_BAR	2U
 
-#define IVSHMEM_MMIO_BAR_SIZE 4096UL
+#define IVSHMEM_MMIO_BAR_SIZE 256UL
 
 /* The device-specific registers of ivshmem device */
 #define	IVSHMEM_IRQ_MASK_REG	0x0U
@@ -261,7 +261,7 @@ static void ivshmem_vbar_map(struct pci_vdev *vdev, uint32_t idx)
 		(void)memset(&ivs_dev->mmio, 0U, sizeof(ivs_dev->mmio));
 		register_mmio_emulation_handler(vm, ivshmem_mmio_handler, vbar->base_gpa,
 				(vbar->base_gpa + vbar->size), vdev, false);
-		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, vbar->size);
+		ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, vbar->base_gpa, round_page_up(vbar->size));
 	} else if ((idx == IVSHMEM_MSIX_BAR) && (vbar->base_gpa != 0UL)) {
 		register_mmio_emulation_handler(vm, vmsix_handle_table_mmio_access, vbar->base_gpa,
 			(vbar->base_gpa + vbar->size), vdev, false);
