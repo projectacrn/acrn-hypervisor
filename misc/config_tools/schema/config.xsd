@@ -27,11 +27,9 @@ are **not** available:
     <xs:element name="SERIAL_CONSOLE" type="SerialConsoleOptions" default="/dev/ttyS0">
       <xs:annotation>
         <xs:documentation>Specify the host serial device used for hypervisor debugging.
-This option is only valid if the Service VM :ref:`vm.legacy_vuart` is
-enabled. Leave :option:`hv.DEBUG_OPTIONS.SERIAL_CONSOLE` empty if the
-Service VM :ref:`vm.console_vuart` is enabled. Uses
-:option:`vm.board_private.bootargs` for the :ref:`vm.console_vuart`
-configuration.</xs:documentation>
+This option is only valid if the Service VM 'legacy_vuart` is
+enabled. Leave this filed empty if the Service VM's 'console_vuart` is enabled. Uses
+`bootargs` for `console_vuart` configuration.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MEM_LOGLEVEL" type="LogLevelType" default="5">
@@ -107,8 +105,8 @@ boot option.</xs:documentation>
     <xs:element name="RDT" type="RDTType">
       <xs:annotation>
         <xs:documentation>Enable the Intel Resource Director Technology (RDT)
-allocation feature. If the board hardware does not support
-RDT, setting this option to ``y`` is ignored.</xs:documentation>
+allocation feature and Code and Data Prioritization (CDP). If the board hardware does not
+support RDT or CDP, setting this option to ``y`` is ignored.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="HYPERV_ENABLED" type="Boolean" default="y">
@@ -145,7 +143,7 @@ Machine Check Error on Page Size Change.</xs:documentation>
     </xs:element>
     <xs:element name="PSRAM" minOccurs="0" type="PSRAMInfo">
       <xs:annotation>
-        <xs:documentation>Description missing</xs:documentation>
+        <xs:documentation>Pseudo SRAM configuration.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
@@ -224,7 +222,7 @@ maximum supported resource.</xs:documentation>
     </xs:element>
     <xs:element name="MAX_KATA_VM_NUM" type="xs:integer" minOccurs="0" default="0">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>>Maximum number of KATA VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MAX_PCI_DEV_NUM" default="96">
@@ -289,7 +287,7 @@ Leave blank if not sure.Integer from 1 to 2048.</xs:documentation>
     </xs:element>
     <xs:element name="UEFI_OS_LOADER_NAME" type="xs:string" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Description missing</xs:documentation>
+        <xs:documentation>UEFI OS loader name.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
@@ -343,42 +341,65 @@ Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
     </xs:element>
     <xs:element name="epc_section" type="EPCSection" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Description missing</xs:documentation>
+        <xs:documentation>Specify SGX Enclave Page Cache section base and size in byte. It must be page aligned.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="memory" type="MemoryInfo" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Description missing</xs:documentation>
+        <xs:documentation>Specify memory information for hypervisor, Service OS and User OS:
+
+- ``STACK_SIZE``: Capacity of one stack, in bytes.
+- ``HV_RAM_SIZE``: Size of the RAM region used by the hypervisor.
+- ``HV_RAM_STAR``: 2M-aligned Start physical address of the RAM region used by the hypervisor.
+- ``LOW_RAM_SIZE``: Size of the low RAM region.
+- ``SOS_RAM_SIZE``: Size of the Service OS (SOS) RAM.
+- ``PLATFORM_RAM_SIZE``: Size of the physical platform RAM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="os_config" type="OSConfigurations" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Description missing</xs:documentation>
+        <xs:documentation>General information for host kernel, boot argument and memory,
+the following elements are configured in this section:
+
+- ``name``: Specify the OS name of VM; currently, it is not referenced by the hypervisor code.
+- ``kern_type``: Specify the kernel image type so that the hypervisor can load it correctly.
+  Currently supports ``KERNEL_BZIMAGE`` and ``KERNEL_ZEPHYR``.
+- ``kern_mod``: The tag for the kernel image that acts as a multiboot module; it must
+  exactly match the module tag in the GRUB multiboot cmdline.
+- ``ramdisk_mod``: The tag for the ramdisk image, which acts as a multiboot module; it
+  must exactly match the module tag in the GRUB multiboot cmdline.
+- ``bootargs``: For internal use only and is not configurable. Specify the kernel boot arguments
+  in ``bootargs`` under the parent of ``board_private``.
+- ``kern_load_addr``: The loading address in host memory for the VM kernel.
+- ``kern_entry_addr``: The entry address in host memory for the VM kernel.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="legacy_vuart" type="LegancyVuartConfiguration" minOccurs="2" maxOccurs="2">
       <xs:annotation>
-        <xs:documentation>Description missing</xs:documentation>
+        <xs:documentation>Specify the vUART (aka COM) with the vUART ID by its ``id`` attribute.
+Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="console_vuart" type="ConsoleVuartConfiguration">
       <xs:annotation>
-        <xs:documentation>Description missing</xs:documentation>
+        <xs:documentation>Specify the console vUART (aka PCI based vUART) with the vUART ID by
+its ``id`` attribute.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="communication_vuart" type="CommunicationVuartConfiguration" maxOccurs="unbounded">
       <xs:annotation>
-        <xs:documentation>Description missing</xs:documentation>
+        <xs:documentation>Specify the communication vUART (aka PCI based vUART) with the vUART ID by
+its ``id`` attribute. When it is enabled, specify which target VM's vuart the current VM connects to.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="mmio_resources" type="MMIOResourcesConfiguration" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Description missing</xs:documentation>
+        <xs:documentation>MMIO resources to passthrough.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="pci_dev_num" type="xs:string" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Description missing</xs:documentation>
+        <xs:documentation>PCI devices number of the VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="pt_intx" type="xs:string" minOccurs="0">

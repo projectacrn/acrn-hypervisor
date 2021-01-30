@@ -100,10 +100,10 @@ recorded.</xs:documentation>
 - ``SCHED_NOOP``: The NOOP (No-Operation) scheduler means there is a
   strict 1 to 1 mapping between vCPUs and pCPUs.
 - ``SCHED_IORR``: The IORR (IO sensitive Round Robin) scheduler supports
-  multipule vCPUs running on on one pCPU, scheduled by
+  multiple vCPUs running on one pCPU, scheduled by
   a IO sensitive round robin policy.
-- ``SCHED_BVT``: The BVT (Borrowed Virtual time) scheduler is a virtual time based
-  scheduling algorithm, it dispatchs the runnable thread with the
+- ``SCHED_BVT``: The BVT (Borrowed Virtual Time) scheduler is a virtual time based
+  scheduling algorithm, it dispatches the runnable thread with the
   earliest effective virtual time. *TODO: BVT scheduler will be built on
   top of a prioritized scheduling mechanism, i.e. higher priority threads
   get scheduled first, and same priority tasks are scheduled per BVT.*
@@ -172,22 +172,27 @@ size, and VM IDs that may communicate using this shared region:
   <xs:sequence>
     <xs:element name="RDT_ENABLED" type="Boolean" default="n">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>Enable the Intel Resource Director Technology (RDT)
+allocation feature. If the board hardware does not support
+RDT, setting this option to ``y`` is ignored.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="CDP_ENABLED" type="Boolean" default="n">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>Specify whether to enable Code and Data Prioritization (CDP).
+CDP is an extension of CAT. Set to 'y' to enable the feature or 'n' to disable it.
+The 'y' will be ignored when hardware does not support CDP.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="CLOS_MASK" type="xs:string"  minOccurs="0" maxOccurs="unbounded">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>Specify the cache capacity bitmask for the CLOS; only continuous '1' bits
+are allowed. The value will be ignored when hardware does not support RDT.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MBA_DELAY" type="xs:string" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>Memory Bandwidth Allocation delay value.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -195,7 +200,11 @@ size, and VM IDs that may communicate using this shared region:
 
 <xs:complexType name="PSRAMInfo">
   <xs:sequence>
-    <xs:element name="PSRAM_ENABLED" type="Boolean" default="n" />
+    <xs:element name="PSRAM_ENABLED" type="Boolean" default="n">
+      <xs:annotation>
+        <xs:documentation>Enable PTCM (Platform Tuning Configuration Manager).</xs:documentation>
+      </xs:annotation>
+    </xs:element>
   </xs:sequence>
 </xs:complexType>
 
