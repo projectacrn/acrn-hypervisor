@@ -252,7 +252,7 @@ bool pdev_need_bar_restore(const struct pci_pdev *pdev)
 
 	for (idx = 0U; idx < pdev->nr_bars; idx++) {
 		bar = pci_pdev_read_cfg(pdev->bdf, pci_bar_offset(idx), 4U);
-		if (bar != pdev->bars[idx]) {
+		if (bar != pdev->bars[idx].phy_bar) {
 			need_restore = true;
 			break;
 		}
@@ -261,12 +261,21 @@ bool pdev_need_bar_restore(const struct pci_pdev *pdev)
 	return need_restore;
 }
 
+static void get_pci_bar_resource(union pci_bdf bdf, uint32_t offset, struct pci_bar_resource *res)
+{
+       res->phy_bar = pci_pdev_read_cfg(bdf, offset, 4U);
+
+       pci_pdev_write_cfg(bdf, offset, 4U, ~0U);
+       res->size_mask = pci_pdev_read_cfg(bdf, offset, 4U);
+       pci_pdev_write_cfg(bdf, offset, 4U, res->phy_bar);
+}
+
 static inline void pdev_save_bar(struct pci_pdev *pdev)
 {
 	uint32_t idx;
 
 	for (idx = 0U; idx < pdev->nr_bars; idx++) {
-		pdev->bars[idx] = pci_pdev_read_cfg(pdev->bdf, pci_bar_offset(idx), 4U);
+		get_pci_bar_resource(pdev->bdf, pci_bar_offset(idx), &pdev->bars[idx]);
 	}
 }
 
@@ -275,7 +284,7 @@ void pdev_restore_bar(const struct pci_pdev *pdev)
 	uint32_t idx;
 
 	for (idx = 0U; idx < pdev->nr_bars; idx++) {
-		pci_pdev_write_cfg(pdev->bdf, pci_bar_offset(idx), 4U, pdev->bars[idx]);
+		pci_pdev_write_cfg(pdev->bdf, pci_bar_offset(idx), 4U, pdev->bars[idx].phy_bar);
 	}
 }
 
@@ -788,9 +797,7 @@ struct pci_pdev *init_pdev(uint16_t pbdf, uint32_t drhd_index)
 			pdev->base_class = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_CLASS, 1U);
 			pdev->sub_class = (uint8_t)pci_pdev_read_cfg(bdf, PCIR_SUBCLASS, 1U);
 			pdev->nr_bars = pci_pdev_get_nr_bars(hdr_type);
-			if (hdr_layout == PCIM_HDRTYPE_NORMAL) {
-				pdev_save_bar(pdev);
-			}
+			pdev_save_bar(pdev);
 
 			if ((pci_pdev_read_cfg(bdf, PCIR_STATUS, 2U) & PCIM_STATUS_CAPPRESENT) != 0U) {
 				pci_enumerate_cap(pdev);
