@@ -5,7 +5,15 @@
 
 <xs:simpleType name="VMOptionsType">
   <xs:annotation>
-    <xs:documentation>Description missing.</xs:documentation>
+    <xs:documentation>Current supported VM types are:
+
+- ``SAFETY_VM`` pre-launched Safety VM
+- ``PRE_STD_VM`` pre-launched Standard VM
+- ``PRE_RT_VM`` pre-launched real-time capable VM
+- ``SOS_VM`` pre-launched Service VM
+- ``POST_STD_VM`` post-launched Standard VM
+- ``POST_RT_VM`` post-launched real-time capable VM
+- ``KATA_VM`` post-launched Kata Container VM</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="SOS_VM" />
@@ -20,7 +28,15 @@
 
 <xs:simpleType name="GuestFlagsOptionsType">
   <xs:annotation>
-    <xs:documentation>Description missing.</xs:documentation>
+    <xs:documentation>
+- 0, 0UL and empty string means there is no guest flag is enabled.
+- ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify whether the secure world is
+  enabled
+- ``GUEST_FLAG_LAPIC_PASSTHROUGH`` specify whether LAPIC is passed through
+- ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify whether the hypervisor needs
+  IO polling to completion
+- ``GUEST_FLAG_HIDE_MTRR`` specify whether to hide MTRR from the VM
+- ``GUEST_FLAG_RT`` specify whether the VM is RT-VM (real-time)</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="" />
@@ -38,7 +54,7 @@
   <xs:sequence>
     <xs:element name="guest_flag" type="GuestFlagsOptionsType" maxOccurs="unbounded">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>Select all applicable flags for the VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -48,7 +64,7 @@
   <xs:sequence>
     <xs:element name="pcpu_id" type="xs:integer" default="2" maxOccurs="unbounded">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>A pCPU that this VM's vCPU is allowed to pin to.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -58,7 +74,9 @@
   <xs:sequence>
     <xs:element name="vcpu_clos" type="xs:integer" default="0" maxOccurs="unbounded">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>Configure each CPU in VMs to a desired CLOS ID in the ``VM`` section of the
+scenario file. Follow :ref:`rdt_detection_capabilities`
+to identify the maximum supported CLOS ID that can be used.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -71,12 +89,12 @@
   <xs:sequence>
     <xs:element name="base" type="HexFormat" default="0">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>SGX EPC section base, must be page aligned.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="size" type="HexFormat" default="0">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>SGX EPC section size in Bytes, must be page aligned.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -86,12 +104,12 @@
   <xs:sequence>
     <xs:element name="start_hpa" type="HexFormat" default="0x100000000">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>The start physical address in host for the VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="size" type="MemorySizeType" default="0x20000000">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>The memory size in bytes for the VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="start_hpa2" type="HexFormat" default="0x0" minOccurs="0">
@@ -123,17 +141,20 @@ characters long.</xs:documentation>
     </xs:element>
     <xs:element name="kern_type" type="VMKernelType">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>Specify the kernel image type so that the hypervisor can load it correctly.
+Currently supports ``KERNEL_BZIMAGE`` and ``KERNEL_ZEPHYR``.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="kern_mod" type="xs:string">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>The tag for the kernel image that acts as a multiboot module; it must
+exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="ramdisk_mod" type="xs:string">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>The tag for the ramdisk image, which acts as a multiboot module; it
+must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="bootargs" type="xs:string">
@@ -143,12 +164,12 @@ characters long.</xs:documentation>
     </xs:element>
     <xs:element name="kern_load_addr" type="HexFormat" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>The loading address in host memory for the VM kernel.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="kern_entry_addr" type="HexFormat" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>The entry address in host memory for the VM kernel.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -156,7 +177,8 @@ characters long.</xs:documentation>
 
 <xs:simpleType name="VMKernelType">
   <xs:annotation>
-    <xs:documentation>Description missing.</xs:documentation>
+    <xs:documentation>Specify the kernel image type so that the hypervisor can load it correctly.
+Currently supports ``KERNEL_BZIMAGE`` and ``KERNEL_ZEPHYR``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="KERNEL_BZIMAGE" />
@@ -212,27 +234,29 @@ characters long.</xs:documentation>
   <xs:sequence>
     <xs:element name="type" type="LegacyVuartType" default="VUART_LEGACY_PIO">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>vUART (aka COM) type; currently only supports the legacy PIO mode.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="base" type="LegacyVuartBase">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>vUART (A.K.A COM) enabling switch. Enable by exposing its COM_BASE
+(SOS_COM_BASE for Service VM); disable by returning INVALID_COM_BASE.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="irq" type="LegacyVuartIrq">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>vCOM IRQ.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="target_vm_id" type="xs:integer" default="1" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>COM2 is used for VM communications. When it is enabled, specify which
+target VM the current VM connects to.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="target_uart_id" type="xs:integer" default="1" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>Target vUART ID to which the vCOM2 connects.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -241,7 +265,8 @@ characters long.</xs:documentation>
 
 <xs:simpleType name="PCIVuartBase">
   <xs:annotation>
-    <xs:documentation>Description missing.</xs:documentation>
+    <xs:documentation>PCI based vUART enabling switch. Enable by specifying PCI_VUART;
+disable by returning INVALID_PCI_BASE.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="PCI_VUART" />
@@ -253,7 +278,8 @@ characters long.</xs:documentation>
   <xs:sequence>
     <xs:element name="base" type="PCIVuartBase" default="INVALID_PCI_BASE">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>Console vUART (A.K.A PCI based vUART) enabling switch.
+  Enable by specifying PCI_VUART; disable by returning INVALID_PCI_BASE.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -264,17 +290,18 @@ characters long.</xs:documentation>
   <xs:sequence>
     <xs:element name="base" type="PCIVuartBase" default="INVALID_PCI_BASE">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>Communication vUART (A.K.A PCI based vUART) enabling switch.
+Enable by specifying PCI_VUART; disable by returning INVALID_PCI_BASE.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="target_vm_id" type="xs:integer">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>specify which target VM the current VM connects to.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="target_uart_id" type="xs:integer">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>Target vUART ID to which the ``communication_vuart`` connects.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -285,12 +312,12 @@ characters long.</xs:documentation>
   <xs:sequence>
     <xs:element name="TPM2" type="Boolean" default="n" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>TPM2 device to passthrough.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="p2sb" type="Boolean" default="n" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>Exposing the P2SB (Primary-to-Sideband) bridge to the pre-launched VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -300,7 +327,7 @@ characters long.</xs:documentation>
   <xs:sequence>
     <xs:element name="pci_dev" type="xs:string" maxOccurs="unbounded">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>A passthrough pci device.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -310,12 +337,12 @@ characters long.</xs:documentation>
   <xs:sequence>
     <xs:element name="rootfs" type="xs:string" default="/dev/nvme0n1p3">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>rootfs for the Linux kernel.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="bootargs" type="xs:string">
       <xs:annotation>
-        <xs:documentation>Description missing.</xs:documentation>
+        <xs:documentation>Specify kernel boot arguments for Service OS.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
