@@ -246,6 +246,14 @@ struct pci_sriov_cap {
 	bool hide_sriov;
 };
 
+/* PCI BAR size is detected at run time. We don't want to re-detect it to avoid malfunction of
+ * the device. We have record physical bar values, we need to record size_mask.
+ */
+struct pci_bar_resource {
+	uint32_t phy_bar;	/* the origional raw data read from physical BAR */
+	uint32_t size_mask;	/* read value of physical BAR after write 0xffffffff */
+};
+
 struct pci_pdev {
 	uint8_t hdr_type;
 	uint8_t base_class;
@@ -259,7 +267,7 @@ struct pci_pdev {
 
 	/* The bar info of the physical PCI device. */
 	uint32_t nr_bars; /* 6 for normal device, 2 for bridge, 1 for cardbus */
-	uint32_t bars[PCI_STD_NUM_BARS];
+	struct pci_bar_resource bars[PCI_STD_NUM_BARS];	/* For common bar resource recording */
 
 	/* The bus/device/function triple of the physical PCI device. */
 	union pci_bdf bdf;
@@ -384,4 +392,5 @@ bool pdev_need_bar_restore(const struct pci_pdev *pdev);
 void pdev_restore_bar(const struct pci_pdev *pdev);
 void pci_switch_to_mmio_cfg_ops(void);
 void reserve_vmsix_on_msi_irtes(struct pci_pdev *pdev);
+
 #endif /* PCI_H_ */

@@ -280,6 +280,58 @@ static void prepare_prelaunched_vm_memmap(struct acrn_vm *vm, const struct acrn_
 	}
 }
 
+static void deny_pci_bar_access(struct acrn_vm *sos, const struct pci_pdev *pdev)
+{
+	uint32_t idx, mask;
+	struct pci_vbar vbar = {};
+	uint64_t base = 0UL, size = 0UL;
+	uint64_t *pml4_page;
+
+	pml4_page = (uint64_t *)sos->arch_vm.nworld_eptp;
+
+	for ( idx= 0; idx < pdev->nr_bars; idx++) {
+		vbar.bar_type.bits = pdev->bars[idx].phy_bar;
+		if (!is_pci_reserved_bar(&vbar)) {
+			base = pdev->bars[idx].phy_bar;
+			size = pdev->bars[idx].size_mask;
+			if (is_pci_mem64lo_bar(&vbar)) {
+				idx++;
+				base |= (((uint64_t)pdev->bars[idx].phy_bar) << 32UL);
+				size |= (((uint64_t)pdev->bars[idx].size_mask) << 32UL);
+			}
+
+			mask = (is_pci_io_bar(&vbar)) ? PCI_BASE_ADDRESS_IO_MASK : PCI_BASE_ADDRESS_MEM_MASK;
+			base &= mask;
+			size &= mask;
+			size = size & ~(size - 1UL);
+
+			if ((base != 0UL)) {
+				if (is_pci_io_bar(&vbar)) {
+					base &= 0xffffU;
+					deny_guest_pio_access(sos, base, size);
+				} else {
+					/*for passthru device MMIO BAR base must be 4K aligned. This is the requirement of passthru devices.*/
+					ASSERT((base & PAGE_MASK) != 0U, "%02x:%02x.%d bar[%d] 0x%lx, is not 4K aligned!",
+						pdev->bdf.bits.b, pdev->bdf.bits.d, pdev->bdf.bits.f, idx, base);
+					size =  round_page_up(size);
+					ept_del_mr(sos, pml4_page, base, size);
+				}
+			}
+		}
+	}
+}
+
+static void deny_pdevs(struct acrn_vm *sos, struct acrn_vm_pci_dev_config *pci_devs, uint16_t pci_dev_num)
+{
+	uint16_t i;
+
+	for (i = 0; i < pci_dev_num; i++) {
+		if ( pci_devs[i].pdev != NULL) {
+			deny_pci_bar_access(sos, pci_devs[i].pdev);
+		}
+	}
+}
+
 /**
  * @param[inout] vm pointer to a vm descriptor
  *
@@ -349,6 +401,8 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 		vm_config = get_vm_config(vm_id);
 		if (vm_config->load_order == PRE_LAUNCHED_VM) {
 			ept_del_mr(vm, pml4_page, vm_config->memory.start_hpa, vm_config->memory.size);
+			/* Remove MMIO/IO bars of pre-launched VM's ptdev */
+			deny_pdevs(vm, vm_config->pci_devs, vm_config->pci_dev_num);
 		}
 
 		for (i = 0U; i < MAX_MMIO_DEV_NUM; i++) {
