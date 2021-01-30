@@ -316,7 +316,7 @@ Table Entry (or RTE). The hypervisor then invokes the IOAPIC emulation
 handler (refer to :ref:`hld-io-emulation` for details on I/O emulation) which
 calls APIs to set up a remapping for the to-be-unmasked interrupt.
 
-Remapping of (virtual) PIC interrupts are set up in a similar sequence:
+Remapping of (virtual) MSI interrupts are set up in a similar sequence:
 
 .. figure:: images/passthru-image98.png
    :align: center
