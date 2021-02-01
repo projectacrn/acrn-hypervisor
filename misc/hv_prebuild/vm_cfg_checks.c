@@ -130,7 +130,13 @@ bool sanitize_vm_config(void)
 			} else if (is_safety_vm_uuid(vm_config->uuid) && (vm_config->severity != (uint8_t)SEVERITY_SAFETY_VM)) {
 				ret = false;
 			} else {
-				/* nothing to do here */
+#if (SOS_VM_NUM == 1U)
+				if (vm_config->severity <= SEVERITY_SOS) {
+				/* If there are both SOS and Pre-launched VM, make sure pre-launched VM has higher severity than SOS */
+					printf("%s: pre-launched vm doesn't has higher severity than SOS \n", __func__);
+					ret = false;
+				}
+#endif
 			}
 			break;
 		case SOS_VM:
