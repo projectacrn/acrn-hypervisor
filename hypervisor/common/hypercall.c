@@ -538,69 +538,53 @@ int32_t hcall_notify_ioreq_finish(__unused struct acrn_vm *vm, struct acrn_vm *t
 
 /**
  *@pre Pointer vm shall point to SOS_VM
+ *@pre gpa2hpa(vm, region->sos_vm_gpa) != INVALID_HPA
  */
-static int32_t add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_vm,
+static void add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_vm,
 				const struct vm_memory_region *region,uint64_t *pml4_page)
 {
-	int32_t ret;
-	uint64_t prot;
-	uint64_t hpa, base_paddr;
+	uint64_t prot = 0UL, base_paddr;
+	uint64_t hpa = gpa2hpa(vm, region->sos_vm_gpa);
 
-	hpa = gpa2hpa(vm, region->sos_vm_gpa);
-	if (hpa == INVALID_HPA) {
-		pr_err("%s,vm[%hu] gpa 0x%lx,GPA is unmapping.",
-			__func__, vm->vm_id, region->sos_vm_gpa);
-		ret = -EINVAL;
+	/* access right */
+	if ((region->prot & MEM_ACCESS_READ) != 0U) {
+		prot |= EPT_RD;
+	}
+	if ((region->prot & MEM_ACCESS_WRITE) != 0U) {
+		prot |= EPT_WR;
+	}
+	if ((region->prot & MEM_ACCESS_EXEC) != 0U) {
+		prot |= EPT_EXE;
+	}
+
+	/* memory type */
+	if ((region->prot & MEM_TYPE_WB) != 0U) {
+		prot |= EPT_WB;
+	} else if ((region->prot & MEM_TYPE_WT) != 0U) {
+		prot |= EPT_WT;
+	} else if ((region->prot & MEM_TYPE_WC) != 0U) {
+		prot |= EPT_WC;
+	} else if ((region->prot & MEM_TYPE_WP) != 0U) {
+		prot |= EPT_WP;
 	} else {
-		base_paddr = hva2hpa((void *)(get_hv_image_base()));
-		if (((hpa <= base_paddr) && ((hpa + region->size) > base_paddr)) ||
-				((hpa >= base_paddr) && (hpa < (base_paddr + CONFIG_HV_RAM_SIZE)))) {
-			pr_err("%s: overlap the HV memory region.", __func__);
-			ret = -EFAULT;
-		} else {
-			prot = 0UL;
-			/* access right */
-			if ((region->prot & MEM_ACCESS_READ) != 0U) {
-				prot |= EPT_RD;
-			}
-			if ((region->prot & MEM_ACCESS_WRITE) != 0U) {
-				prot |= EPT_WR;
-			}
-			if ((region->prot & MEM_ACCESS_EXEC) != 0U) {
-				prot |= EPT_EXE;
-			}
-			/* memory type */
-			if ((region->prot & MEM_TYPE_WB) != 0U) {
-				prot |= EPT_WB;
-			} else if ((region->prot & MEM_TYPE_WT) != 0U) {
-				prot |= EPT_WT;
-			} else if ((region->prot & MEM_TYPE_WC) != 0U) {
-				prot |= EPT_WC;
-			} else if ((region->prot & MEM_TYPE_WP) != 0U) {
-				prot |= EPT_WP;
-			} else {
-				prot |= EPT_UNCACHED;
-			}
-			/* If Software SRAM is initialized, and HV received a request to map Software SRAM
-			 * area to guest, we should add EPT_WB flag to make Software SRAM effective.
-			 * TODO: We can enforce WB for any region has overlap with Software SRAM, for simplicity,
-			 * and leave it to SOS to make sure it won't violate.
-			 */
-			if (is_sw_sram_initialized) {
-				base_paddr = get_software_sram_base();
-				if ((hpa >= base_paddr) &&
-					((hpa + region->size) <= (base_paddr + get_software_sram_size()))) {
-					prot |= EPT_WB;
-				}
-			}
-			/* create gpa to hpa EPT mapping */
-			ept_add_mr(target_vm, pml4_page, hpa,
-					region->gpa, region->size, prot);
-			ret = 0;
+		prot |= EPT_UNCACHED;
+	}
+
+	/* If Software SRAM is initialized, and HV received a request to map Software SRAM
+	 * area to guest, we should add EPT_WB flag to make Software SRAM effective.
+	 * TODO: We can enforce WB for any region has overlap with Software SRAM, for simplicity,
+	 * and leave it to SOS to make sure it won't violate.
+	 */
+	if (is_sw_sram_initialized) {
+		base_paddr = get_software_sram_base();
+		if ((hpa >= base_paddr) &&
+			((hpa + region->size) <= (base_paddr + get_software_sram_size()))) {
+			prot |= EPT_WB;
 		}
 	}
 
-	return ret;
+	/* create gpa to hpa EPT mapping */
+	ept_add_mr(target_vm, pml4_page, hpa, region->gpa, region->size, prot);
 }
 
 /**
@@ -610,35 +594,32 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	struct acrn_vm *target_vm, const struct vm_memory_region *region)
 {
 	uint64_t *pml4_page;
-	int32_t ret;
+	int32_t ret = -EINVAL;
 
-	if ((region->size & (PAGE_SIZE - 1UL)) != 0UL) {
-		pr_err("%s: [vm%d] map size 0x%x is not page aligned",
-			__func__, target_vm->vm_id, region->size);
-		ret = -EINVAL;
-	} else {
-		if (!ept_is_mr_valid(target_vm, region->gpa, region->size)) {
-			pr_err("%s, invalid gpa: 0x%lx, size: 0x%lx, top_address_space: 0x%lx", __func__,
-				region->gpa, region->size,
-				target_vm->arch_vm.ept_mem_ops.info->ept.top_address_space);
-			ret = 0;
+	if ((region->size & (PAGE_SIZE - 1UL)) == 0UL) {
+		pml4_page = (uint64_t *)target_vm->arch_vm.nworld_eptp;
+		if (region->type == MR_ADD) {
+			/* if the GPA range is SOS valid GPA or not */
+			if (ept_is_valid_mr(vm, region->sos_vm_gpa, region->size)) {
+				/* if pagetable pages is reserved enougn for the GPA range */
+				if (ept_is_mr_valid(target_vm, region->gpa, region->size)) {
+					add_vm_memory_region(vm, target_vm, region, pml4_page);
+					ret = 0;
+				}
+			}
 		} else {
-			dev_dbg(DBG_LEVEL_HYCALL,
-				"[vm%d] type=%d gpa=0x%x sos_vm_gpa=0x%x size=0x%x",
-				target_vm->vm_id, region->type, region->gpa,
-				region->sos_vm_gpa, region->size);
-
-			pml4_page = (uint64_t *)target_vm->arch_vm.nworld_eptp;
-			if (region->type != MR_DEL) {
-				ret = add_vm_memory_region(vm, target_vm, region, pml4_page);
-			} else {
-				ept_del_mr(target_vm, pml4_page,
-						region->gpa, region->size);
+			if (ept_is_valid_mr(target_vm, region->gpa, region->size)) {
+				ept_del_mr(target_vm, pml4_page, region->gpa, region->size);
 				ret = 0;
 			}
 		}
 	}
 
+	dev_dbg((ret == 0) ? DBG_LEVEL_HYCALL : LOG_ERROR,
+			"[vm%d] type=%d gpa=0x%x sos_gpa=0x%x sz=0x%x, top_addr:0x%lx",
+			target_vm->vm_id, region->type, region->gpa,
+			region->sos_vm_gpa, region->size,
+			target_vm->arch_vm.ept_mem_ops.info->ept.top_address_space);
 	return ret;
 }
 
@@ -698,7 +679,7 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 
 	if (is_severity_pass(vm->vm_id)) {
 		if ((!mem_aligned_check(wp->gpa, PAGE_SIZE)) ||
-				(!ept_is_mr_valid(vm, wp->gpa, PAGE_SIZE))) {
+				(!ept_is_valid_mr(vm, wp->gpa, PAGE_SIZE))) {
 			pr_err("%s,vm[%hu] gpa 0x%lx,GPA is invalid or not page size aligned.",
 					__func__, vm->vm_id, wp->gpa);
 		} else {
@@ -870,9 +851,11 @@ int32_t hcall_assign_mmiodev(struct acrn_vm *vm, struct acrn_vm *target_vm, __un
 	/* We should only assign a device to a post-launched VM at creating time for safety, not runtime or other cases*/
 	if (is_created_vm(target_vm)) {
 		if (copy_from_gpa(vm, &mmiodev, param2, sizeof(mmiodev)) == 0) {
-			ret = deassign_mmio_dev(vm, &mmiodev);
-			if (ret == 0) {
-				ret = assign_mmio_dev(target_vm, &mmiodev);
+			if (ept_is_valid_mr(vm, mmiodev.base_hpa, mmiodev.size)) {
+				ret = deassign_mmio_dev(vm, &mmiodev);
+				if (ret == 0) {
+					ret = assign_mmio_dev(target_vm, &mmiodev);
+				}
 			}
 		}
 	} else {
@@ -901,9 +884,11 @@ int32_t hcall_deassign_mmiodev(struct acrn_vm *vm, struct acrn_vm *target_vm, __
 	/* We should only de-assign a device from a post-launched VM at creating/shutdown/reset time */
 	if ((is_paused_vm(target_vm) || is_created_vm(target_vm))) {
 		if (copy_from_gpa(vm, &mmiodev, param2, sizeof(mmiodev)) == 0) {
-			ret = deassign_mmio_dev(target_vm, &mmiodev);
-			if (ret == 0) {
-				ret = assign_mmio_dev(vm, &mmiodev);
+			if (ept_is_valid_mr(target_vm, mmiodev.base_gpa, mmiodev.size)) {
+				ret = deassign_mmio_dev(target_vm, &mmiodev);
+				if (ret == 0) {
+					ret = assign_mmio_dev(vm, &mmiodev);
+				}
 			}
 		}
 	} else {
