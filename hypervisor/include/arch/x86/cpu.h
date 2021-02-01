@@ -659,7 +659,7 @@ static inline void xrstors(const struct xsave_area *region_addr, uint64_t mask)
 			"memory");
 }
 
-static inline void loadiwkey(uint32_t eax)
+static inline void asm_loadiwkey(uint32_t eax)
 {
 	asm volatile(".byte 0xf3, 0x0f, 0x38, 0xdc, 0xd1;": : "a" (eax));
 }

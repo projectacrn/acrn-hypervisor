@@ -453,7 +453,8 @@ static int32_t loadiwkey_vmexit_handler(struct acrn_vcpu *vcpu)
 		vcpu->arch.IWKey.integrity_key[0] = xmm[0];
 		vcpu->arch.IWKey.integrity_key[1] = xmm[1];
 
-		loadiwkey(0);
+		asm_loadiwkey(0);
+		get_cpu_var(whose_iwkey) = vcpu;
 	}
 
 	return 0;

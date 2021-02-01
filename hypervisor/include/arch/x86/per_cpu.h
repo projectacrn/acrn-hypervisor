@@ -59,6 +59,7 @@ struct per_cpu_region {
 #endif
 	uint64_t shutdown_vm_bitmap;
 	uint64_t tsc_suspend;
+	struct acrn_vcpu *whose_iwkey;
 	/*
 	 * We maintain a per-pCPU array of vCPUs. vCPUs of a VM won't
 	 * share same pCPU. So the maximum possible # of vCPUs that can
