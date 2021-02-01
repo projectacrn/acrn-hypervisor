@@ -100,7 +100,7 @@
         <target_vm_id>1</target_vm_id>
         <target_uart_id>1</target_uart_id>
     </communication_vuart>
-    <pci_devs>s
+    <pci_devs>
         <pci_dev/>
     </pci_devs>
     <board_private>
