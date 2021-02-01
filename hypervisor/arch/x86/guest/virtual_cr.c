@@ -391,6 +391,7 @@ static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 		if (!err_found && ((cr4_changed_bits & CR4_KL) != 0UL)) {
 			if ((cr4 & CR4_KL) != 0UL) {
 				vcpu->arch.cr4_kl_enabled = true;
+				load_iwkey(vcpu);
 			} else {
 				vcpu->arch.cr4_kl_enabled = false;
 			}
