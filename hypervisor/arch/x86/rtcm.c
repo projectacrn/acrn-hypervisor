@@ -51,6 +51,7 @@ void set_rtct_tbl(void *rtct_tbl_addr)
 }
 
 /*
+ *@pre the PSRAM region is separate and never mixed with normal DRAM
  *@pre acpi_rtct_tbl != NULL
  */
 static void parse_rtct(void)
