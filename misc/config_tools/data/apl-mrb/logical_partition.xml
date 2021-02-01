@@ -70,7 +70,7 @@
         <pcpu_id>0</pcpu_id>
         <pcpu_id>2</pcpu_id>
     </cpu_affinity>
-    <clos>&gt;
+    <clos>
         <vcpu_clos>0</vcpu_clos>
         <vcpu_clos>0</vcpu_clos>
     </clos>

@@ -125,7 +125,7 @@
         </pci_devs>
         <mmio_resources>
             <TPM2>n</TPM2>
-            <p2sb>true</p2sb>
+            <p2sb>y</p2sb>
         </mmio_resources>
         <pt_intx>
             (14, 0)
