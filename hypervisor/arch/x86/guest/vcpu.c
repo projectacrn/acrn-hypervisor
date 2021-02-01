@@ -205,6 +205,35 @@ static void init_iwkey(struct acrn_vcpu *vcpu)
 		vcpu->arch.IWKey.encryption_key[1] = get_random_value();
 		vcpu->arch.IWKey.encryption_key[2] = get_random_value();
 		vcpu->arch.IWKey.encryption_key[3] = get_random_value();
+		/* It's always safe to clear whose_iwkey */
+		per_cpu(whose_iwkey, pcpuid_from_vcpu(vcpu)) = NULL;
+	}
+}
+
+void load_iwkey(struct acrn_vcpu *vcpu)
+{
+	uint64_t xmm_save[6];
+
+	/* Only load IWKey with vCPU CR4 keylocker bit enabled */
+	if (pcpu_has_cap(X86_FEATURE_KEYLOCKER) && vcpu->arch.cr4_kl_enabled &&
+	    (get_cpu_var(whose_iwkey) != vcpu)) {
+		/* Save/restore xmm0/xmm1/xmm2 during the process */
+		asm volatile (	"movdqu %%xmm0, %0\n"
+				"movdqu %%xmm1, %1\n"
+				"movdqu %%xmm2, %2\n"
+				"movdqu %3, %%xmm0\n"
+				"movdqu %4, %%xmm1\n"
+				"movdqu %5, %%xmm2\n"
+				: "=m"(xmm_save[0]), "=m"(xmm_save[2]), "=m"(xmm_save[4])
+				: "m"(vcpu->arch.IWKey.integrity_key[0]),
+				"m"(vcpu->arch.IWKey.encryption_key[0]),
+				"m"(vcpu->arch.IWKey.encryption_key[2]));
+		asm_loadiwkey(0);
+		asm volatile (	"movdqu %2, %%xmm2\n"
+				"movdqu %1, %%xmm1\n"
+				"movdqu %0, %%xmm0\n"
+				: : "m"(xmm_save[0]), "m"(xmm_save[2]), "m"(xmm_save[4]));
+		get_cpu_var(whose_iwkey) = vcpu;
 	}
 }
 
@@ -825,6 +854,8 @@ static void context_switch_in(struct thread_object *next)
 	msr_write(MSR_IA32_LSTAR, ectx->ia32_lstar);
 	msr_write(MSR_IA32_FMASK, ectx->ia32_fmask);
 	msr_write(MSR_IA32_KERNEL_GS_BASE, ectx->ia32_kernel_gs_base);
+
+	load_iwkey(vcpu);
 
 	rstore_xsave_area(vcpu, ectx);
 }
