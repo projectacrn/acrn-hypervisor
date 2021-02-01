@@ -19,16 +19,29 @@ typedef void (*pge_handler)(uint64_t *pgentry, uint64_t size);
 #define INVALID_GPA	(0x1UL << 52U)
 /* External Interfaces */
 /**
- * @brief Check guest-physical memory region mapping valid
+ * @brief Check whether pagetable pages is reserved enough for the GPA range or not
  *
  * @param[in] vm the pointer that points to VM data structure
  * @param[in] base The specified start guest physical address of guest
  *                physical memory region
  * @param[in] size The size of guest physical memory region
  *
- * @retval true if the guest-physical memory region mapping valid, false otherwise.
+ * @retval true if pagetable pages is reserved enough for the GPA range, false otherwise.
  */
 bool ept_is_mr_valid(const struct acrn_vm *vm, uint64_t base, uint64_t size);
+
+/**
+ * @brief Check if the GPA range is guest valid GPA or not
+ *
+ * @param[in] vm the pointer that points to VM data structure
+ * @param[in] base The specified start guest physical address of guest
+ *                physical memory region
+ * @param[in] size The size of guest physical memory region
+ *
+ * @retval true if the GPA range is guest valid GPA, false otherwise.
+ */
+bool ept_is_valid_mr(struct acrn_vm *vm, uint64_t base, uint64_t size);
+
 /**
  * @brief EPT page tables destroy
  *
