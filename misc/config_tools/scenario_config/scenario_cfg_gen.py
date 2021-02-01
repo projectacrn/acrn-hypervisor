@@ -6,6 +6,7 @@
 import os
 import sys
 import copy
+import lxml.etree as etree
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'hv_config'))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'acpi_gen'))
@@ -91,6 +92,26 @@ def get_scenario_item_values(board_info, scenario_info):
 
 
 def validate_scenario_setting(board_info, scenario_info):
+    """
+    Validate settings in scenario xml if there is scenario schema
+    :param xsd_doc: scenario schema
+    :param scenario_info: scenario file
+    """
+    try:
+        import xmlschema
+
+        # XMLSchema does not process XInclude. Use lxml to expand the schema which is feed to XMLSchema as a string.
+        xsd_doc = SCENARIO_SCHEMA_FILE
+        xsd_doc.xinclude()
+        my_schema = xmlschema.XMLSchema11(etree.tostring(xsd_doc, encoding="unicode"))
+
+        it = my_schema.iter_errors(scenario_info)
+        for idx, validation_error in enumerate(it, start=1):
+            print(f'[{idx}] path: {validation_error.path} | reason: {validation_error.reason}')
+            print(validation_error)
+    except:
+        pass
+
     """
     Validate settings in scenario xml
     :param board_info: board file
