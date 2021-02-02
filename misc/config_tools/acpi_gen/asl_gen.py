@@ -402,9 +402,9 @@ def main(args):
     if isinstance(pcpu_list, list):
         pcpu_list = [x.strip() for x in pcpu_list]
     if out is None or out == '':
-        DEST_ACPI_PATH = os.path.join(VM_CONFIGS_PATH, 'scenarios', scenario_name, board_type)
+        DEST_ACPI_PATH = os.path.join(VM_CONFIGS_PATH, 'scenarios', scenario_name)
     else:
-        DEST_ACPI_PATH = os.path.join(common.SOURCE_ROOT_DIR, out, 'scenarios', scenario_name, board_type)
+        DEST_ACPI_PATH = os.path.join(common.SOURCE_ROOT_DIR, out, 'scenarios', scenario_name)
 
     if os.path.isdir(DEST_ACPI_PATH):
         for config in os.listdir(DEST_ACPI_PATH):

@@ -45,9 +45,9 @@ default: all
 
 include scripts/makefile/config.mk
 
-BOARD_INFO_DIR := $(HV_CONFIG_DIR)/boards/$(BOARD)
+BOARD_INFO_DIR := $(HV_CONFIG_DIR)/boards
 SCENARIO_CFG_DIR := $(HV_CONFIG_DIR)/scenarios/$(SCENARIO)
-BOARD_CFG_DIR := $(SCENARIO_CFG_DIR)/$(BOARD)
+BOARD_CFG_DIR := $(SCENARIO_CFG_DIR)
 
 include ../paths.make
 
