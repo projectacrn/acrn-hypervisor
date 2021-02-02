@@ -162,7 +162,7 @@ system:
 
 There are 6 different loglevels, as shown below. The specified
 severity loglevel is stored in ``mem_loglevel``, initialized
-by :option:`CONFIG_MEM_LOGLEVEL_DEFAULT`. The loglevel can
+by :option:`hv.DEBUG_OPTIONS.MEM_LOGLEVEL`. The loglevel can
 be set to a new value
 at runtime via hypervisor shell command ``loglevel``.
 

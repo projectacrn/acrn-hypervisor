@@ -22,14 +22,14 @@ our :ref:`hardware` documentation.
 How do I configure ACRN's memory size?
 **************************************
 
-It's important that the ACRN Kconfig settings are aligned with the physical memory
-on your platform. Check the documentation for these option settings for
-details:
+It's important that the ACRN configuration settings are aligned with the
+physical memory on your platform. Check the documentation for these
+option settings for details:
 
-* :option:`CONFIG_PLATFORM_RAM_SIZE`
-* :option:`CONFIG_SOS_RAM_SIZE`
-* :option:`CONFIG_UOS_RAM_SIZE`
-* :option:`CONFIG_HV_RAM_SIZE`
+* :option:`hv.MEMORY.PLATFORM_RAM_SIZE`
+* :option:`hv.MEMORY.SOS_RAM_SIZE`
+* :option:`hv.MEMORY.UOS_RAM_SIZE`
+* :option:`hv.MEMORY.HV_RAM_SIZE`
 
 For example, if the Intel NUC's physical memory size is 32G, you may follow these steps
 to make the new UEFI ACRN hypervisor, and then deploy it onto the Intel NUC to boot

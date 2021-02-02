@@ -19,8 +19,8 @@ Comparing with multiboot protocol, the multiboot2 protocol adds UEFI
 support.
 
 The multiboot protocol is supported by the ACRN hypervisor natively.
-The multiboot2 protocol is supported when ``CONFIG_MULTIBOOT2`` is
-enabled in Kconfig. The ``CONFIG_MULTIBOOT2`` is enabled by default.
+The multiboot2 protocol is supported when :option:`hv.FEATURES.MULTIBOOT2` is
+enabled in configuration. The :option:`hv.FEATURES.MULTIBOOT2` is enabled by default.
 Which boot protocol is used depends on the hypervisor is loaded by
 GRUB's ``multiboot`` command or ``multiboot2`` command. The guest kernel
 or ramdisk must be loaded by the GRUB ``module`` command or ``module2``
@@ -29,12 +29,13 @@ command accordingly when different boot protocol is used.
 The ACRN hypervisor binary is built with two formats: ``acrn.32.out`` in
 ELF format and ``acrn.bin`` in RAW format. The GRUB ``multiboot``
 command support ELF format only and does not support binary relocation,
-even if ``CONFIG_RELOC`` is set. The GRUB ``multiboot2`` command support
-ELF format when ``CONFIG_RELOC`` is not set, or RAW format when
-``CONFIG_RELOC`` is set.
+even if :option:`hv.FEATURES.RELOC` is set. The GRUB ``multiboot2``
+command supports
+ELF format when :option:`hv.FEATURES.RELOC` is not set, or RAW format when
+:option:`hv.FEATURES.RELOC` is set.
 
 .. note::
-   * ``CONFIG_RELOC`` is set by default, so use ``acrn.32.out`` in multiboot
+   * :option:`hv.FEATURES.RELOC` is set by default, so use ``acrn.32.out`` in multiboot
      protocol and ``acrn.bin`` in multiboot2 protocol.
 
    * Per ACPI specification, the RSDP pointer is described in the EFI System
