@@ -187,56 +187,41 @@ void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t 
  */
 void ept_flush_leaf_page(uint64_t *pge, uint64_t size)
 {
-	uint64_t flush_base_hpa = INVALID_HPA, flush_end_hpa;
-	void *hva = NULL;
-	uint64_t flush_size = size;
+	uint64_t base_hpa, end_hpa;
 	uint64_t sw_sram_bottom, sw_sram_top;
 
 	if ((*pge & EPT_MT_MASK) != EPT_UNCACHED) {
-		flush_base_hpa = (*pge & (~(size - 1UL)));
-		flush_end_hpa = flush_base_hpa + size;
+		base_hpa = (*pge & (~(size - 1UL)));
+		end_hpa = base_hpa + size;
 
 		 sw_sram_bottom = get_software_sram_base();
 		 sw_sram_top = sw_sram_bottom + get_software_sram_size();
 		/* When Software SRAM is not initialized, both sw_sram_bottom and sw_sram_top is 0,
-		 * so the below if/else will have no use
+		 * so the first if below will have no use.
 		 */
-		if (flush_base_hpa < sw_sram_bottom) {
-			/* Only flush [flush_base_hpa, sw_sram_bottom) and [sw_sram_top, flush_base_hpa),
-			 * ignore [sw_sram_bottom, sw_sram_top)
+		if (base_hpa < sw_sram_bottom) {
+			/*
+			 * For end_hpa < sw_sram_bottom, flush [base_hpa, end_hpa);
+			 * For end_hpa >= sw_sram_bottom && end_hpa < sw_sram_top, flush [base_hpa, sw_sram_bottom);
+			 * For end_hpa > sw_sram_top, flush [base_hpa, sw_sram_bottom) first,
+			 *                            flush [sw_sram_top, end_hpa) in the next if condition
 			 */
-			if (flush_end_hpa > sw_sram_top) {
-				/* Only flush [flush_base_hpa, sw_sram_bottom) and [sw_sram_top, flush_base_hpa),
-				 * ignore [sw_sram_bottom, sw_sram_top)
-				 */
-				flush_size = sw_sram_bottom - flush_base_hpa;
-				hva = hpa2hva(flush_base_hpa);
-				stac();
-				flush_address_space(hva, flush_size);
-				clac();
-
-				flush_size = flush_end_hpa - sw_sram_top;
-				flush_base_hpa = sw_sram_top;
-			} else if (flush_end_hpa > sw_sram_bottom) {
-				/* Only flush [flush_base_hpa, sw_sram_bottom)
-				 * and ignore [sw_sram_bottom, flush_end_hpa)
-				 */
-				flush_size = sw_sram_bottom - flush_base_hpa;
-			}
-		} else if (flush_base_hpa < sw_sram_top) {
-			if (flush_end_hpa <= sw_sram_top) {
-				flush_size = 0UL;
-			} else {
-				/* Only flush [sw_sram_top, flush_end_hpa) and ignore [flush_base_hpa, sw_sram_top) */
-				flush_base_hpa = sw_sram_top;
-				flush_size = flush_end_hpa - sw_sram_top;
-			}
+			stac();
+			flush_address_space(hpa2hva(base_hpa), min(end_hpa, sw_sram_bottom) - base_hpa);
+			clac();
 		}
 
-		hva = hpa2hva(flush_base_hpa);
-		stac();
-		flush_address_space(hva, flush_size);
-		clac();
+		if (end_hpa > sw_sram_top) {
+			/*
+			 * For base_hpa > sw_sram_top, flush [base_hpa, end_hpa);
+			 * For base_hpa >= sw_sram_bottom && base_hpa < sw_sram_top, flush [sw_sram_top, end_hpa);
+			 * For base_hpa < sw_sram_bottom, flush [sw_sram_top, end_hpa) here,
+			 *                            flush [base_hpa, sw_sram_bottom) in the below if condition
+			 */
+			stac();
+			flush_address_space(hpa2hva(max(base_hpa, sw_sram_top)), end_hpa - max(base_hpa, sw_sram_top));
+			clac();
+		}
 	}
 }
 
