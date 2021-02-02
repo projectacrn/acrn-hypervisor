@@ -95,20 +95,21 @@ def write_vbar(i_cnt, bdf, pci_bar_dic, bar_attr, \
         free = MmioWindow(0, 0)
         is_vmsix = False
         # If the device is vmsix device, find a free mmio window up to 4k size
-        for vm_i in pci_devs_per_vm:
-            if bdf in pci_devs_per_vm[vm_i]:
-                if scenario_cfg_lib.VM_DB[common.VM_TYPES[vm_i]]['load_type'] == "PRE_LAUNCHED_VM":
-                    is_vmsix = True
-                    bar_len += 1
-                    # For pre-launched VM, the windows range is form 2G to 4G
-                    free = get_free_mmio([MmioWindow(start=common.SIZE_2G, end=common.SIZE_4G-1)], \
-                        mmiolist_per_vm[vm_i], VMSIX_VBAR_ALIGNMENT + VMSIX_VBAR_SIZE)
-                    free_vbar_start_addr = common.round_up(free.start, VMSIX_VBAR_ALIGNMENT)
-                    free_vbar_end_addr = free_vbar_start_addr + VMSIX_VBAR_SIZE - 1
-                    free = MmioWindow(free_vbar_start_addr, free_vbar_end_addr)
-                    mmiolist_per_vm[vm_i].append(free)
-                    mmiolist_per_vm[vm_i].sort()
-                    break
+        if board_cfg_lib.is_matched_board(('ehl-crb-b')):
+            for vm_i in pci_devs_per_vm:
+                if bdf in pci_devs_per_vm[vm_i]:
+                    if scenario_cfg_lib.VM_DB[common.VM_TYPES[vm_i]]['load_type'] == "PRE_LAUNCHED_VM":
+                        is_vmsix = True
+                        bar_len += 1
+                        # For pre-launched VM, the windows range is form 2G to 4G
+                        free = get_free_mmio([MmioWindow(start=common.SIZE_2G, end=common.SIZE_4G-1)], \
+                            mmiolist_per_vm[vm_i], VMSIX_VBAR_ALIGNMENT + VMSIX_VBAR_SIZE)
+                        free_vbar_start_addr = common.round_up(free.start, VMSIX_VBAR_ALIGNMENT)
+                        free_vbar_end_addr = free_vbar_start_addr + VMSIX_VBAR_SIZE - 1
+                        free = MmioWindow(free_vbar_start_addr, free_vbar_end_addr)
+                        mmiolist_per_vm[vm_i].append(free)
+                        mmiolist_per_vm[vm_i].sort()
+                        break
         for bar_i in bar_list:
             if not bar_attr.remappable:
                 print("/* TODO: add {} 64bit BAR support */".format(tmp_sub_name), file=config)
