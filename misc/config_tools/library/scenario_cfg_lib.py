@@ -1215,8 +1215,8 @@ def check_pt_intx(phys_gsi, virt_gsi):
     if not phys_gsi and not virt_gsi:
         return
 
-    if not board_cfg_lib.is_matched_board(('ehl-crb-b')):
-        ERR_LIST["pt_intx"] = "only board ehl-crb-b is supported"
+    if not board_cfg_lib.is_matched_board(('ehl-crb-b','generic_board')):
+        ERR_LIST["pt_intx"] = "only board ehl-crb-b/generic_board is supported"
         return
 
     if not VM_DB[common.VM_TYPES[0]]['load_type'] == "PRE_LAUNCHED_VM":

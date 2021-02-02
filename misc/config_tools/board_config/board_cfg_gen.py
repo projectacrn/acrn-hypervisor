@@ -75,8 +75,8 @@ def main(args):
     else:
         output = ACRN_CONFIG_DEF
 
-    board_fix_dir = os.path.join(output, "boards/" + board + '/')
-    scen_board_dir = os.path.join(output, "scenarios/" + scenario + "/" + board + '/')
+    board_fix_dir = os.path.join(output, "boards/")
+    scen_board_dir = os.path.join(output, "scenarios/" + scenario + "/")
     common.mkdir(board_fix_dir)
     common.mkdir(scen_board_dir)
 

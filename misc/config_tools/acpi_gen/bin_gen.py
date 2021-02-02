@@ -169,9 +169,9 @@ def main(args):
     board_type = args.board
     scenario_name = args.scenario
     if args.asl is None:
-        DEST_ACPI_PATH = os.path.join(VM_CONFIGS_PATH, 'scenarios', scenario_name, board_type)
+        DEST_ACPI_PATH = os.path.join(VM_CONFIGS_PATH, 'scenarios', scenario_name)
     else:
-        DEST_ACPI_PATH = os.path.join(common.SOURCE_ROOT_DIR, args.asl, 'scenarios', scenario_name, board_type)
+        DEST_ACPI_PATH = os.path.join(common.SOURCE_ROOT_DIR, args.asl, 'scenarios', scenario_name)
     if args.out is None:
         DEST_ACPI_BIN_PATH = os.path.join(common.SOURCE_ROOT_DIR, 'build', 'hypervisor', 'acpi')
     else:
