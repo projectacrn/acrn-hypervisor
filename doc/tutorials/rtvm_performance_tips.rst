@@ -190,7 +190,7 @@ Tip: Disable the software workaround for Machine Check Error on Page Size Change
    Change is conditionally applied to the models that may be affected by the
    issue. However, the software workaround has a negative impact on
    performance. If all guest OS kernels are trusted, the
-   :option:`CONFIG_MCE_ON_PSC_WORKAROUND_DISABLED` option could be set for performance.
+   :option:`hv.FEATURES.MCE_ON_PSC_DISABLED` option could be set for performance.
 
 .. note::
    The tips for preempt-RT Linux are mostly applicable to the Linux-based RTOS as well, such as Xenomai.

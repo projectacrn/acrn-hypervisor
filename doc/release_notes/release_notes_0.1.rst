@@ -58,7 +58,7 @@ Hypervisor configuration
 ========================
 
 Developers can configure hypervisor via Kconfig parameters. (See
-:ref:`configuration` for configuration options.)
+documentation for configuration options.)
 
 New ACRN tools
 ==============

@@ -3,6 +3,12 @@
 Compile-time Configuration
 ##########################
 
+.. note:: With ACRN release 2.4, ACRN configuration has changed
+   significantly and no longer uses Kconfig. The following information is
+   obsolete and will be updated to reflect the new ACRN configuration
+   architecture and tools.
+   Refer to :ref:`scenario-config-options` for a complete list of configuration symbols.
+
 The hypervisor provides a kconfig-like way for manipulating compile-time
 configurations. Basically the hypervisor defines a set of configuration
 symbols and declare their default value. A configuration file is
@@ -48,4 +54,3 @@ hypervisor:
 3. The other two files for makefiles and C sources are regenerated after
    .config changes.
 
-Refer to :ref:`configuration` for a complete list of configuration symbols.

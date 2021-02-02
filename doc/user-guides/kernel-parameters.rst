@@ -207,7 +207,7 @@ relevant for configuring or debugging ACRN-based systems.
        from the guest VM.
 
        If hypervisor relocation is disabled, verify that
-       :option:`CONFIG_HV_RAM_START` and :option:`CONFIG_HV_RAM_SIZE`
+       :option:`hv.MEMORY.HV_RAM_START` and :option:`hv.MEMORY.HV_RAM_SIZE`
        does not overlap with the hypervisor's reserved buffer space allocated
        in the Service VM. Service VM GPA and HPA are a 1:1 mapping.
 
