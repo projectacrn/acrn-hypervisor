@@ -1,4 +1,4 @@
-<acrn-config board="ehl-crb-b">
+<acrn-config board="generic_board">
 	<BIOS_INFO>
 	BIOS Information
 	Vendor: Intel Corporation

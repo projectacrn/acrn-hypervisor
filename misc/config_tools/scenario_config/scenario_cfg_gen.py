@@ -187,7 +187,7 @@ def main(args):
     else:
         scen_output = ACRN_CONFIG_DEF + "/" + scenario + "/"
 
-    scen_board = scen_output + board_name + "/"
+    scen_board = scen_output + "/"
     common.mkdir(scen_board)
     common.mkdir(scen_output)
 

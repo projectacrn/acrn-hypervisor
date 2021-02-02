@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<acrn-config board="generic" scenario="hybrid">
+<acrn-config board="generic_board" scenario="hybrid_rt">
     <hv>
         <DEBUG_OPTIONS>
             <RELEASE>n</RELEASE>
@@ -40,8 +40,8 @@
             <L1D_VMENTRY_ENABLED>n</L1D_VMENTRY_ENABLED>
             <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
             <IVSHMEM>
-                <IVSHMEM_ENABLED>n</IVSHMEM_ENABLED>
-                <IVSHMEM_REGION/>
+                <IVSHMEM_ENABLED>y</IVSHMEM_ENABLED>
+                <IVSHMEM_REGION>hv:/shm_region_0, 2, 0:2</IVSHMEM_REGION>
             </IVSHMEM>
         </FEATURES>
         <MEMORY>
@@ -65,20 +65,22 @@
         </CAPACITIES>
         <MISC_CFG>
             <GPU_SBDF>0x00000010</GPU_SBDF>
+            <UEFI_OS_LOADER_NAME/>
         </MISC_CFG>
     </hv>
     <vm id="0">
-        <vm_type>SAFETY_VM</vm_type>
+        <vm_type>PRE_RT_VM</vm_type>
         <name>ACRN PRE-LAUNCHED VM0</name>
         <guest_flags>
-            <guest_flag>0</guest_flag>
+            <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
+            <guest_flag>GUEST_FLAG_RT</guest_flag>
         </guest_flags>
         <cpu_affinity>
+            <pcpu_id>2</pcpu_id>
             <pcpu_id>3</pcpu_id>
         </cpu_affinity>
-        <pt_intx>
-        </pt_intx>
         <clos>
+            <vcpu_clos>0</vcpu_clos>
             <vcpu_clos>0</vcpu_clos>
         </clos>
         <epc_section>
@@ -87,18 +89,16 @@
         </epc_section>
         <memory>
             <start_hpa>0x100000000</start_hpa>
-            <size>0x20000000</size>
+            <size>0x40000000</size>
             <start_hpa2>0x0</start_hpa2>
             <size_hpa2>0x0</size_hpa2>
         </memory>
         <os_config>
-            <name>Zephyr</name>
-            <kern_type>KERNEL_ZEPHYR</kern_type>
-            <kern_mod>Zephyr_RawImage</kern_mod>
+            <name>PREEMPT-RT</name>
+            <kern_type>KERNEL_BZIMAGE</kern_type>
+            <kern_mod>RT_bzImage</kern_mod>
             <ramdisk_mod/>
-            <bootargs>reboot=acpi</bootargs>
-            <kern_load_addr>0x8000</kern_load_addr>
-            <kern_entry_addr>0x8000</kern_entry_addr>
+            <bootargs>rw rootwait root=/dev/sda3 no_ipi_broadcast=1 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel consoleblank=0 tsc=reliable clocksource=tsc x2apic_phys processor.max_cstate=0 intel_idle.max_cstate=0 intel_pstate=disable mce=ignore_ce audit=0 isolcpus=nohz,domain,1 nohz_full=1 rcu_nocbs=1 nosoftlockup idle=poll irqaffinity=0 reboot=acpi </bootargs>
         </os_config>
         <legacy_vuart id="0">
             <type>VUART_LEGACY_PIO</type>
@@ -121,11 +121,11 @@
             <target_uart_id>1</target_uart_id>
         </communication_vuart>
         <pci_devs>
-            <pci_dev/>
+            <pci_dev>00:17.0 SATA controller: Intel Corporation Device 4b63</pci_dev>
+            <pci_dev>00:1d.2 Ethernet controller: Intel Corporation Device 4bb0</pci_dev>
         </pci_devs>
         <mmio_resources>
-            <TPM2>n</TPM2>
-            <p2sb>n</p2sb>
+            <TPM2>y</TPM2>
         </mmio_resources>
     </vm>
     <vm id="1">
@@ -137,10 +137,8 @@
         <cpu_affinity>
             <pcpu_id>0</pcpu_id>
             <pcpu_id>1</pcpu_id>
-            <pcpu_id>2</pcpu_id>
         </cpu_affinity>
         <clos>
-            <vcpu_clos>0</vcpu_clos>
             <vcpu_clos>0</vcpu_clos>
             <vcpu_clos>0</vcpu_clos>
         </clos>
@@ -172,18 +170,18 @@
         </console_vuart>
         <communication_vuart id="1">
             <base>INVALID_PCI_BASE</base>
-            <target_vm_id>1</target_vm_id>
+            <target_vm_id>0</target_vm_id>
             <target_uart_id>1</target_uart_id>
         </communication_vuart>
         <pci_devs>
             <pci_dev/>
         </pci_devs>
         <board_private>
-            <rootfs>/dev/sda3</rootfs>
+            <rootfs>/dev/nvme0n1p3</rootfs>
             <bootargs>
-        rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3
-        i915.nuclear_pageflip=1 swiotlb=131072
-        </bootargs>
+            rw rootwait console=tty0 consoleblank=0 no_timer_check quiet loglevel=3
+            i915.nuclear_pageflip=1 swiotlb=131072
+            </bootargs>
         </board_private>
     </vm>
     <vm id="2">
@@ -192,7 +190,45 @@
             <guest_flag>0</guest_flag>
         </guest_flags>
         <cpu_affinity>
-            <pcpu_id>2</pcpu_id>
+            <pcpu_id>0</pcpu_id>
+            <pcpu_id>1</pcpu_id>
+        </cpu_affinity>
+        <clos>
+            <vcpu_clos>0</vcpu_clos>
+            <vcpu_clos>0</vcpu_clos>
+        </clos>
+        <epc_section>
+            <base>0</base>
+            <size>0</size>
+        </epc_section>
+        <legacy_vuart id="0">
+            <type>VUART_LEGACY_PIO</type>
+            <base>COM1_BASE</base>
+            <irq>COM1_IRQ</irq>
+        </legacy_vuart>
+        <legacy_vuart id="1">
+            <type>VUART_LEGACY_PIO</type>
+            <base>INVALID_COM_BASE</base>
+            <irq>COM2_IRQ</irq>
+            <target_vm_id>0</target_vm_id>
+            <target_uart_id>0</target_uart_id>
+        </legacy_vuart>
+        <console_vuart id="0">
+            <base>INVALID_PCI_BASE</base>
+        </console_vuart>
+        <communication_vuart id="1">
+            <base>INVALID_PCI_BASE</base>
+            <target_vm_id>0</target_vm_id>
+            <target_uart_id>1</target_uart_id>
+        </communication_vuart>
+    </vm>
+    <vm id="3">
+        <vm_type>POST_STD_VM</vm_type>
+        <guest_flags>
+            <guest_flag>0</guest_flag>
+        </guest_flags>
+        <cpu_affinity>
+            <pcpu_id>1</pcpu_id>
         </cpu_affinity>
         <clos>
             <vcpu_clos>0</vcpu_clos>
