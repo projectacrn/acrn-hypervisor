@@ -7,6 +7,8 @@ As explained in :ref:`acrn_configuration_tool`, ACRN scenarios define
 the hypervisor (hv) and VM settings for the execution environment of an
 ACRN-based application.  This document describes these option settings.
 
+.. rst-class:: rst-columns3
+
 .. contents::
    :local:
    :depth: 2

@@ -29,14 +29,14 @@
 <xs:simpleType name="GuestFlagsOptionsType">
   <xs:annotation>
     <xs:documentation>
-- 0, 0UL and empty string means there is no guest flag is enabled.
-- ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify whether the secure world is
+- ``0``, ``0UL``, or an empty string means no guest flags are enabled.
+- ``GUEST_FLAG_SECURE_WORLD_ENABLED`` specify that the secure world is
   enabled
-- ``GUEST_FLAG_LAPIC_PASSTHROUGH`` specify whether LAPIC is passed through
-- ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify whether the hypervisor needs
+- ``GUEST_FLAG_LAPIC_PASSTHROUGH`` specify that LAPIC is passed through
+- ``GUEST_FLAG_IO_COMPLETION_POLLING`` specify that the hypervisor needs
   IO polling to completion
-- ``GUEST_FLAG_HIDE_MTRR`` specify whether to hide MTRR from the VM
-- ``GUEST_FLAG_RT`` specify whether the VM is RT-VM (real-time)</xs:documentation>
+- ``GUEST_FLAG_HIDE_MTRR`` specify that MTRR is hidden from the VM
+- ``GUEST_FLAG_RT`` specify that the VM is an RT-VM (real-time)</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="" />
@@ -64,7 +64,8 @@
   <xs:sequence>
     <xs:element name="pcpu_id" type="xs:integer" default="2" maxOccurs="unbounded">
       <xs:annotation>
-        <xs:documentation>A pCPU that this VM's vCPU is allowed to pin to.</xs:documentation>
+        <xs:documentation>A pCPU that this VM's vCPU is allowed to pin
+to.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -76,7 +77,8 @@
       <xs:annotation>
         <xs:documentation>Configure each CPU in VMs to a desired CLOS ID in the ``VM`` section of the
 scenario file. Follow :ref:`rdt_detection_capabilities`
-to identify the maximum supported CLOS ID that can be used.</xs:documentation>
+to identify the maximum supported CLOS ID that can be used. Default
+value ``0``.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -94,7 +96,8 @@ to identify the maximum supported CLOS ID that can be used.</xs:documentation>
     </xs:element>
     <xs:element name="size" type="HexFormat" default="0">
       <xs:annotation>
-        <xs:documentation>SGX EPC section size in Bytes, must be page aligned.</xs:documentation>
+        <xs:documentation>SGX EPC section size in Bytes, must be page
+aligned.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -104,22 +107,26 @@ to identify the maximum supported CLOS ID that can be used.</xs:documentation>
   <xs:sequence>
     <xs:element name="start_hpa" type="HexFormat" default="0x100000000">
       <xs:annotation>
-        <xs:documentation>The start physical address in host for the VM.</xs:documentation>
+        <xs:documentation>The starting physical address in host for the
+VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="size" type="MemorySizeType" default="0x20000000">
       <xs:annotation>
-        <xs:documentation>The memory size in bytes for the VM.</xs:documentation>
+        <xs:documentation>The memory size in bytes for the VM. Default
+value is ``0x200000000``.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="start_hpa2" type="HexFormat" default="0x0" minOccurs="0">
       <xs:annotation acrn:configurable="n">
-        <xs:documentation>Start of second HPA for non-contiguous allocations in host for the VM.</xs:documentation>
+        <xs:documentation>Start of second HPA for non-contiguous
+allocations in host for the VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="size_hpa2" type="MemorySizeType" default="0x0" minOccurs="0">
       <xs:annotation acrn:configurable="n">
-        <xs:documentation>Memory size of second HPA for non-contiguous allocations in Bytes for the VM.</xs:documentation>
+        <xs:documentation>Memory size of second HPA for non-contiguous
+allocations in Bytes for the VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -128,10 +135,13 @@ to identify the maximum supported CLOS ID that can be used.</xs:documentation>
 <xs:complexType name="OSConfigurations">
   <xs:sequence>
     <xs:element name="name">
-      <xs:simpleType>
         <xs:annotation>
-          <xs:documentation>Specify the OS name of VM; currently, it is not referenced by the hypervisor code.String from 1 to 32
-characters long.</xs:documentation>
+          <xs:documentation>Specify the OS name of VM.
+Is not referenced by the hypervisor code. </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+        <xs:annotation>
+          <xs:documentation>A string with 1 to 32 characters.</xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:string">
           <xs:minLength value="1" />
@@ -141,8 +151,7 @@ characters long.</xs:documentation>
     </xs:element>
     <xs:element name="kern_type" type="VMKernelType">
       <xs:annotation>
-        <xs:documentation>Specify the kernel image type so that the hypervisor can load it correctly.
-Currently supports ``KERNEL_BZIMAGE`` and ``KERNEL_ZEPHYR``.</xs:documentation>
+        <xs:documentation>Specify the kernel image type so the hypervisor can load it correctly.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="kern_mod" type="xs:string">
@@ -177,8 +186,8 @@ must exactly match the module tag in the GRUB multiboot cmdline.</xs:documentati
 
 <xs:simpleType name="VMKernelType">
   <xs:annotation>
-    <xs:documentation>Specify the kernel image type so that the hypervisor can load it correctly.
-Currently supports ``KERNEL_BZIMAGE`` and ``KERNEL_ZEPHYR``.</xs:documentation>
+    <xs:documentation>A string with either ``KERNEL_BZIMAGE`` or
+``KERNEL_ZEPHYR``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="KERNEL_BZIMAGE" />
@@ -198,7 +207,9 @@ Currently supports ``KERNEL_BZIMAGE`` and ``KERNEL_ZEPHYR``.</xs:documentation>
 
 <xs:simpleType name="LegacyVuartBase">
   <xs:annotation>
-    <xs:documentation>vUART (A.K.A COM) enabling switch. Enable by exposing its base address, disable by returning INVALID_COM_BASE.</xs:documentation>
+    <xs:documentation>A string with either ``SOS_COM1_BASE``,
+``SOS_COM2_BASE``, ``COM1_BASE``, ``COM2_BASE``, ``COM3_BASE``,
+``COM4_BASE``, or indicating it's disabled with ``INVALID_COM_BASE``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="SOS_COM1_BASE" />
@@ -213,7 +224,9 @@ Currently supports ``KERNEL_BZIMAGE`` and ``KERNEL_ZEPHYR``.</xs:documentation>
 
 <xs:simpleType name="LegacyVuartIrq">
   <xs:annotation acrn:configurable="n">
-    <xs:documentation>vCOM irq</xs:documentation>
+    <xs:documentation>A string with either ``SOS_COM1_IRQ``,
+``SOS_COM2_IRQ``, ``COM1_IRQ``, ``COM2_IRQ``, ``COM3_IRQ``,
+``COM4_IRQ``, ``CONFIG_COM_IRQ``, ``3``, ``4``, ``6``, or ``7``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="SOS_COM1_IRQ" />
@@ -230,17 +243,19 @@ Currently supports ``KERNEL_BZIMAGE`` and ``KERNEL_ZEPHYR``.</xs:documentation>
   </xs:restriction>
 </xs:simpleType>
 
-<xs:complexType name="LegancyVuartConfiguration">
+<xs:complexType name="LegacyVuartConfiguration">
   <xs:sequence>
     <xs:element name="type" type="LegacyVuartType" default="VUART_LEGACY_PIO">
       <xs:annotation>
-        <xs:documentation>vUART (aka COM) type; currently only supports the legacy PIO mode.</xs:documentation>
+        <xs:documentation>vUART (COM) type; only legacy PIO mode is
+supported.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="base" type="LegacyVuartBase">
       <xs:annotation>
-        <xs:documentation>vUART (A.K.A COM) enabling switch. Enable by exposing its COM_BASE
-(SOS_COM_BASE for Service VM); disable by returning INVALID_COM_BASE.</xs:documentation>
+        <xs:documentation>vUART (COM) enabling switch. Enable by exposing its COM_BASE
+(e.b., ``SOS_COM1_BASE`` for Service VM); disable by returning
+``INVALID_COM_BASE``.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="irq" type="LegacyVuartIrq">
@@ -265,8 +280,8 @@ target VM the current VM connects to.</xs:documentation>
 
 <xs:simpleType name="PCIVuartBase">
   <xs:annotation>
-    <xs:documentation>PCI based vUART enabling switch. Enable by specifying PCI_VUART;
-disable by returning INVALID_PCI_BASE.</xs:documentation>
+    <xs:documentation>A string with ``PCI_VUART`` or indicating its
+disabled using ``INVALID_PCI_BASE``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="PCI_VUART" />
@@ -279,7 +294,8 @@ disable by returning INVALID_PCI_BASE.</xs:documentation>
     <xs:element name="base" type="PCIVuartBase" default="INVALID_PCI_BASE">
       <xs:annotation>
         <xs:documentation>Console vUART (A.K.A PCI based vUART) enabling switch.
-  Enable by specifying PCI_VUART; disable by returning INVALID_PCI_BASE.</xs:documentation>
+Enable by specifying PCI_VUART; disable by specifying
+``INVALID_PCI_BASE``.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -291,7 +307,8 @@ disable by returning INVALID_PCI_BASE.</xs:documentation>
     <xs:element name="base" type="PCIVuartBase" default="INVALID_PCI_BASE">
       <xs:annotation>
         <xs:documentation>Communication vUART (A.K.A PCI based vUART) enabling switch.
-Enable by specifying PCI_VUART; disable by returning INVALID_PCI_BASE.</xs:documentation>
+Enable by specifying PCI_VUART; disable by specifying
+``INVALID_PCI_BASE``.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="target_vm_id" type="xs:integer">
@@ -312,12 +329,13 @@ Enable by specifying PCI_VUART; disable by returning INVALID_PCI_BASE.</xs:docum
   <xs:sequence>
     <xs:element name="TPM2" type="Boolean" default="n" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>TPM2 device to passthrough.</xs:documentation>
+        <xs:documentation>Specify TPM2 device to passthrough.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="p2sb" type="Boolean" default="n" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Exposing the P2SB (Primary-to-Sideband) bridge to the pre-launched VM.</xs:documentation>
+        <xs:documentation>Expose the P2SB (Primary-to-Sideband) bridge
+to the pre-launched VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>

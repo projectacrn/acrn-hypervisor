@@ -28,21 +28,21 @@
 
 <xs:simpleType name="HVRamSizeType">
   <xs:annotation>
-    <xs:documentation>Either empty, or a hexadecimal value.</xs:documentation>
+    <xs:documentation>Either empty, or an integer value in hexadecimal format.</xs:documentation>
   </xs:annotation>
   <xs:union memberTypes="None HexFormat" />
 </xs:simpleType>
 
 <xs:simpleType name="HVRamStartType">
   <xs:annotation>
-    <xs:documentation>Either empty, or a hexadecimal value.</xs:documentation>
+    <xs:documentation>Either empty, or an integer value in hexadecimal format.</xs:documentation>
   </xs:annotation>
   <xs:union memberTypes="None HexFormat" />
 </xs:simpleType>
 
 <xs:simpleType name="MaxMsixTableNumType">
   <xs:annotation>
-    <xs:documentation>Integer from 1 to 2048.</xs:documentation>
+    <xs:documentation>integer from 1 to 2048.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:integer">
     <xs:minInclusive value="1" />
@@ -65,8 +65,7 @@
 
 <xs:simpleType name="MemorySizeType">
   <xs:annotation>
-    <xs:documentation>Either a hexadecimal value or the string
-``CONFIG_SOS_RAM_SIZE``.</xs:documentation>
+    <xs:documentation>An integer value in hexadecimal format.</xs:documentation>
   </xs:annotation>
   <xs:union memberTypes="SOSRamSize HexFormat" />
 </xs:simpleType>
@@ -83,9 +82,8 @@ severity and intent:
 - 5 (LOG_INFO) informational
 - 6 (LOG_DEBUG) debug-level messages
 
-Note that lower values have a higher severity. Only log messages with a
-severity level higher (lower value) than a specified value will be
-recorded.</xs:documentation>
+A lower value has a higher severity. Log messages with a
+higher value (lower severity) are discarded.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:integer">
     <xs:minInclusive value="0" />
@@ -125,7 +123,7 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 
 <xs:simpleType name="SerialConsoleOptions">
   <xs:annotation>
-    <xs:documentation>Either empty or a string.</xs:documentation>
+    <xs:documentation>Either empty or a string, such as ``/dev/ttyS0``.</xs:documentation>
   </xs:annotation>
   <xs:union memberTypes="None SerialConsoleType" />
 </xs:simpleType>
@@ -138,7 +136,9 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 
 <xs:simpleType name="IVSHMEMRegionType">
   <xs:annotation>
-    <xs:documentation>Either empty or a string.</xs:documentation>
+    <xs:documentation>Either empty or a string naming the shared region,
+its size, and the VM IDs that can access it, such as ``hv:/shm_region_0, 2, 0:2``.
+See :ref:`ivshmem-hv` for more information.</xs:documentation>
   </xs:annotation>
   <xs:union memberTypes="None IVSHMEMRegionPattern" />
 
@@ -148,7 +148,8 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
   <xs:sequence>
    <xs:element name="IVSHMEM_ENABLED" type="Boolean" default="n">
      <xs:annotation>
-       <xs:documentation>Enable inter-VM shared memory (IVSHMEM) feature.</xs:documentation>
+       <xs:documentation>Enable inter-VM shared memory (IVSHMEM)
+feature.</xs:documentation>
      </xs:annotation>
    </xs:element>
    <xs:element name="IVSHMEM_REGION" type="IVSHMEMRegionType">
@@ -181,7 +182,8 @@ RDT, setting this option to ``y`` is ignored.</xs:documentation>
       <xs:annotation>
         <xs:documentation>Specify whether to enable Code and Data Prioritization (CDP).
 CDP is an extension of CAT. Set to 'y' to enable the feature or 'n' to disable it.
-The 'y' will be ignored when hardware does not support CDP.</xs:documentation>
+The 'y' will be ignored when hardware does not support CDP. Default
+value ``n``.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="CLOS_MASK" type="xs:string"  minOccurs="0" maxOccurs="unbounded">
@@ -202,7 +204,8 @@ are allowed. The value will be ignored when hardware does not support RDT.</xs:d
   <xs:sequence>
     <xs:element name="PSRAM_ENABLED" type="Boolean" default="n">
       <xs:annotation>
-        <xs:documentation>Enable PTCM (Platform Tuning Configuration Manager).</xs:documentation>
+        <xs:documentation>Enable PTCM (Platform Tuning Configuration
+Manager).</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>

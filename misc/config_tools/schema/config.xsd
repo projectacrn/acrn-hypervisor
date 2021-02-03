@@ -16,53 +16,54 @@
     <xs:element name="RELEASE" type="Boolean" default="n">
       <xs:annotation>
         <xs:documentation>Build an image for release (``y``) or debug (``n``).
-In a **release** image, assertions are not enforced and these features
-are **not** available:
-
-- logs
-- serial console
-- hypervisor shell</xs:documentation>
+In a **release** image, assertions are not enforced and debugging
+features are disabled, including logs, serial console, and the
+hypervisor shell.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="SERIAL_CONSOLE" type="SerialConsoleOptions" default="/dev/ttyS0">
       <xs:annotation>
         <xs:documentation>Specify the host serial device used for hypervisor debugging.
-This option is only valid if the Service VM 'legacy_vuart` is
-enabled. Leave this filed empty if the Service VM's 'console_vuart` is enabled. Uses
-`bootargs` for `console_vuart` configuration.</xs:documentation>
+This option is only valid if the Service VM :ref:`vm.legacy_vuart` is
+enabled. Leave this field empty if the Service VM's :ref:`vm.console_vuart` is enabled. Uses
+:option:`vm.os_config.bootargs` for :ref:`vm.console_vuart`
+configuration.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MEM_LOGLEVEL" type="LogLevelType" default="5">
       <xs:annotation>
-        <xs:documentation>Default loglevel for log messages stored in memory.
-Messages with a lower severity (higher value) are discarded.</xs:documentation>
+        <xs:documentation>Default loglevel for log messages stored in
+memory. Value can be changed at runtime.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="NPK_LOGLEVEL" type="LogLevelType" default="5">
       <xs:annotation>
-        <xs:documentation>Default loglevel for the hypervisor NPK log.</xs:documentation>
+        <xs:documentation>Default loglevel for the hypervisor North Peak
+(NPK) log. Value can be changed at runtime.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="CONSOLE_LOGLEVEL" type="LogLevelType" default="3">
       <xs:annotation>
         <xs:documentation>Default loglevel for log messages
-written to the serial console. Messages with lower severity (higher
-value) are not displayed.</xs:documentation>
+written to the serial console.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="LOG_DESTINATION" default="7">
-    <xs:simpleType>
       <xs:annotation>
         <xs:documentation>Bitmap indicating the destination of log messages.
-Currently there are three log destinations available:
+There are three log destinations available:
 
-- bit 0 for the serial console (``0x1``),
-- bit 1 for the Service VM log (``0x2``), and
-- bit 2 for the NPK log (``0x4``).
+- bit 0 enables the serial console (``0x1``),
+- bit 1 enables the Service VM log (``0x2``), and
+- bit 2 enables the NPK log (``0x4``).
 
 For example, a value of ``3`` enables only the
 serial console and Service VM logs. Effective only in debug builds (when
 :option:`hv.DEBUG_OPTIONS.RELEASE` is ``n``).</xs:documentation>
+      </xs:annotation>
+    <xs:simpleType>
+      <xs:annotation>
+        <xs:documentation>integer value from 0 to 7.</xs:documentation>
       </xs:annotation>
       <xs:restriction base="xs:integer">
         <xs:minInclusive value="0" />
@@ -81,13 +82,14 @@ physical cpu, for example, ``0x40000``.</xs:documentation>
 
 <xs:complexType name="FeatureOptionsType">
   <xs:annotation>
-    <xs:documentation>Options for hypervisor feature enablement.</xs:documentation>
+    <xs:documentation>Options for enabling hypervisor features.</xs:documentation>
   </xs:annotation>
 
   <xs:all>
     <xs:element name="RELOC" type="Boolean" default="y">
       <xs:annotation>
-        <xs:documentation>Specify if hypervisor relocation is enabled on booting.</xs:documentation>
+        <xs:documentation>Specify if hypervisor relocation is enabled on
+booting.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="SCHEDULER" type="SchedulerType" default="SCHED_BVT">
@@ -127,7 +129,8 @@ of DMA operations.</xs:documentation>
     </xs:element>
     <xs:element name="L1D_VMENTRY_ENABLED" type="Boolean" default="n">
       <xs:annotation>
-        <xs:documentation>Enable L1 cache flush before VM entry.</xs:documentation>
+        <xs:documentation>Enable L1 cache flush before VM entry. Default
+value ``n``.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MCE_ON_PSC_DISABLED" type="Boolean" default="n">
@@ -172,22 +175,25 @@ the RAM region used by the hypervisor.</xs:documentation>
     <xs:element name="LOW_RAM_SIZE" type="HexFormat" default="0x00010000">
       <xs:annotation>
         <xs:documentation>Size of the low RAM region below address
-``0x10000``, starting from address ``0x0``..</xs:documentation>
+``0x10000``, starting from address ``0x0``.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="UOS_RAM_SIZE" type="HexFormat" default="0x200000000">
       <xs:annotation>
-        <xs:documentation>Size of the User VM OS RAM region.</xs:documentation>
+        <xs:documentation>Size of the User VM OS RAM region. Default
+value ``0x200000000``.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="SOS_RAM_SIZE" type="HexFormat" default="0x400000000">
       <xs:annotation>
-        <xs:documentation>Size of the Service VM OS RAM region.</xs:documentation>
+        <xs:documentation>Size of the Service VM OS RAM region. Default
+value ``0x400000000``.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="PLATFORM_RAM_SIZE" type="HexFormat" default="0x400000000">
       <xs:annotation>
-        <xs:documentation>Size of the physical platform RAM.</xs:documentation>
+        <xs:documentation>Size of the physical platform RAM. Default
+value ``0x400000000``.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
@@ -201,7 +207,8 @@ maximum supported resource.</xs:documentation>
   <xs:all>
     <xs:element name="IOMMU_BUS_NUM" type="HexFormat" default="0x100">
       <xs:annotation>
-        <xs:documentation>Highest PCI bus ID used during IOMMU initialization.</xs:documentation>
+        <xs:documentation>Highest PCI bus ID used during IOMMU
+initialization.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MAX_IR_ENTRIES" type="xs:integer" default="256">
@@ -210,10 +217,13 @@ maximum supported resource.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MAX_IOAPIC_NUM" default="1">
+      <xs:annotation>
+        <xs:documentation>Maximum number of IOAPICs.</xs:documentation>
+      </xs:annotation>
       <xs:simpleType>
-        <xs:annotation>
-          <xs:documentation>Maximum number of IO-APICs. Integer from 1 to 10.</xs:documentation>
-        </xs:annotation>
+         <xs:annotation>
+           <xs:documentation>integer from 1 to 10.</xs:documentation>
+         </xs:annotation>
         <xs:restriction base="xs:integer">
           <xs:minInclusive value="1" />
           <xs:maxInclusive value="10" />
@@ -222,14 +232,17 @@ maximum supported resource.</xs:documentation>
     </xs:element>
     <xs:element name="MAX_KATA_VM_NUM" type="xs:integer" minOccurs="0" default="0">
       <xs:annotation>
-        <xs:documentation>>Maximum number of KATA VM.</xs:documentation>
+        <xs:documentation>Maximum number of KATA VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MAX_PCI_DEV_NUM" default="96">
+      <xs:annotation>
+        <xs:documentation>Maximum number of PCI devices.</xs:documentation>
+      </xs:annotation>
       <xs:simpleType>
-        <xs:annotation>
-          <xs:documentation>Maximum number of PCI devices.Integer from 1 to 1024.</xs:documentation>
-        </xs:annotation>
+         <xs:annotation>
+           <xs:documentation>integer from 1 to 1024.</xs:documentation>
+         </xs:annotation>
         <xs:restriction base="xs:integer">
           <xs:minInclusive value="1" />
           <xs:maxInclusive value="1024" />
@@ -237,10 +250,13 @@ maximum supported resource.</xs:documentation>
       </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_IOAPIC_LINES" default="120">
+      <xs:annotation>
+        <xs:documentation>Maximum number of interrupt lines per IOAPIC.</xs:documentation>
+      </xs:annotation>
       <xs:simpleType>
-        <xs:annotation>
-          <xs:documentation>Maximum number of interrupt lines per IOAPIC.Integer from 1 to 120.</xs:documentation>
-        </xs:annotation>
+         <xs:annotation>
+           <xs:documentation>integer from 1 to 120.</xs:documentation>
+         </xs:annotation>
         <xs:restriction base="xs:integer">
           <xs:minInclusive value="1" />
           <xs:maxInclusive value="120" />
@@ -249,14 +265,17 @@ maximum supported resource.</xs:documentation>
     </xs:element>
     <xs:element name="MAX_PT_IRQ_ENTRIES" type="xs:integer" default="256">
       <xs:annotation>
-        <xs:documentation>Maximum number of interrupt source for PT devices.</xs:documentation>
+        <xs:documentation>Maximum number of interrupt source for PT
+devices.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="MAX_MSIX_TABLE_NUM" default="64">
+        <xs:annotation>
+          <xs:documentation>Maximum number of MSI-X tables per device.</xs:documentation>
+        </xs:annotation>
       <xs:simpleType>
         <xs:annotation>
-          <xs:documentation>Maximum number of MSI-X tables per device.
-Leave blank if not sure.Integer from 1 to 2048.</xs:documentation>
+          <xs:documentation>integer value from 1 to 2048.</xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:integer">
           <xs:minInclusive value="1" />
@@ -265,9 +284,12 @@ Leave blank if not sure.Integer from 1 to 2048.</xs:documentation>
       </xs:simpleType>
     </xs:element>
     <xs:element name="MAX_EMULATED_MMIO" default="16">
+        <xs:annotation>
+          <xs:documentation>Maximum number of emulated MMIO regions.</xs:documentation>
+        </xs:annotation>
       <xs:simpleType>
         <xs:annotation>
-          <xs:documentation>Maximum number of emulated MMIO regions.Integer from 1 to 128.</xs:documentation>
+          <xs:documentation>integer value from 1 to 128.</xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:integer">
           <xs:minInclusive value="1" />
@@ -311,11 +333,13 @@ Leave blank if not sure.Integer from 1 to 2048.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="name" minOccurs="0">
-      <xs:simpleType>
         <xs:annotation>
           <xs:documentation>Specify the VM name shown in the
-  hypervisor console ``vm_lists`` command. String from 1 to 32
-  characters long.</xs:documentation>
+hypervisor console ``vm_lists`` command.</xs:documentation>
+        </xs:annotation>
+      <xs:simpleType>
+        <xs:annotation>
+          <xs:documentation>string from 1 to 32 characters long.</xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:string">
           <xs:minLength value="1" />
@@ -346,35 +370,16 @@ Refer SDM 17.19.2 for details, and use with caution.</xs:documentation>
     </xs:element>
     <xs:element name="memory" type="MemoryInfo" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>Specify memory information for hypervisor, Service OS and User OS:
-
-- ``STACK_SIZE``: Capacity of one stack, in bytes.
-- ``HV_RAM_SIZE``: Size of the RAM region used by the hypervisor.
-- ``HV_RAM_STAR``: 2M-aligned Start physical address of the RAM region used by the hypervisor.
-- ``LOW_RAM_SIZE``: Size of the low RAM region.
-- ``SOS_RAM_SIZE``: Size of the Service OS (SOS) RAM.
-- ``PLATFORM_RAM_SIZE``: Size of the physical platform RAM.</xs:documentation>
+        <xs:documentation>Specify memory information for Service and User VMs.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="os_config" type="OSConfigurations" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>General information for host kernel, boot argument and memory,
-the following elements are configured in this section:
-
-- ``name``: Specify the OS name of VM; currently, it is not referenced by the hypervisor code.
-- ``kern_type``: Specify the kernel image type so that the hypervisor can load it correctly.
-  Currently supports ``KERNEL_BZIMAGE`` and ``KERNEL_ZEPHYR``.
-- ``kern_mod``: The tag for the kernel image that acts as a multiboot module; it must
-  exactly match the module tag in the GRUB multiboot cmdline.
-- ``ramdisk_mod``: The tag for the ramdisk image, which acts as a multiboot module; it
-  must exactly match the module tag in the GRUB multiboot cmdline.
-- ``bootargs``: For internal use only and is not configurable. Specify the kernel boot arguments
-  in ``bootargs`` under the parent of ``board_private``.
-- ``kern_load_addr``: The loading address in host memory for the VM kernel.
-- ``kern_entry_addr``: The entry address in host memory for the VM kernel.</xs:documentation>
+        <xs:documentation>General information for host kernel, boot
+argument and memory.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="legacy_vuart" type="LegancyVuartConfiguration" minOccurs="2" maxOccurs="2">
+    <xs:element name="legacy_vuart" type="LegacyVuartConfiguration" minOccurs="2" maxOccurs="2">
       <xs:annotation>
         <xs:documentation>Specify the vUART (aka COM) with the vUART ID by its ``id`` attribute.
 Refer to :ref:`vuart_config` for detailed vUART settings.</xs:documentation>
@@ -389,7 +394,7 @@ its ``id`` attribute.</xs:documentation>
     <xs:element name="communication_vuart" type="CommunicationVuartConfiguration" maxOccurs="unbounded">
       <xs:annotation>
         <xs:documentation>Specify the communication vUART (aka PCI based vUART) with the vUART ID by
-its ``id`` attribute. When it is enabled, specify which target VM's vuart the current VM connects to.</xs:documentation>
+its ``id`` attribute. When it is enabled, specify which target VM's vUART the current VM connects to.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="mmio_resources" type="MMIOResourcesConfiguration" minOccurs="0">
@@ -409,7 +414,7 @@ its ``id`` attribute. When it is enabled, specify which target VM's vuart the cu
     </xs:element>
     <xs:element name="pci_devs" type="PCIDevsConfiguration" minOccurs="0">
       <xs:annotation>
-        <xs:documentation>pci devices list.</xs:documentation>
+        <xs:documentation>PCI devices list.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="board_private" type="BoardPrivateConfiguration" minOccurs="0" />
