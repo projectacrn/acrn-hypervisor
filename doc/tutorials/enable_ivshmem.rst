@@ -33,6 +33,8 @@ where
 
 .. note:: This device can be used with real-time VM (RTVM) as well.
 
+.. _ivshmem-hv:
+
 ivshmem hv-land usage
 *********************
 
