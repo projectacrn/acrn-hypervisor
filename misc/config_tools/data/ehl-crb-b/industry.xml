@@ -43,6 +43,9 @@
                 <IVSHMEM_ENABLED>n</IVSHMEM_ENABLED>
                 <IVSHMEM_REGION/>
             </IVSHMEM>
+            <PSRAM>
+                <PSRAM_ENABLED>n</PSRAM_ENABLED>
+            </PSRAM>
         </FEATURES>
         <MEMORY>
             <STACK_SIZE>0x2000</STACK_SIZE>
