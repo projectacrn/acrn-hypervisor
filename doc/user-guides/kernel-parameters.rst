@@ -342,35 +342,12 @@ section below has more details on a few select parameters.
 
          i915.enable_gvt=1
 
-   * - i915.gvt_workload_priority
-     - Service VM
-     - Define the priority level of User VM graphics workloads
-     - ::
-
-         i915.gvt_workload_priority=1
-
-   * - i915.enable_initial_modeset
-     - Service VM
-     - On MRB, value must be ``1``.  On Intel NUC or UP2 boards, value must be
-       ``0``. See :ref:`i915-enable-initial-modeset`.
-     - ::
-
-         i915.enable_initial_modeset=1
-         i915.enable_initial_modeset=0
-
    * - i915.nuclear_pageflip
      - Service VM,User VM
      - Force enable atomic functionality on platforms that don't have full support yet.
      - ::
 
          i915.nuclear_pageflip=1
-
-   * - i915.domain_scaler_owner
-     - Service VM
-     - See `i915.domain_scaler_owner`_
-     - ::
-
-         i915.domain_scaler_owner=0x021100
 
    * - i915.enable_guc
      - Service VM
@@ -415,76 +392,6 @@ This option enables support for Intel GVT-g graphics virtualization
 support in the host. By default, it's not enabled, so we need to add
 ``i915.enable_gvt=1`` in the Service VM kernel command line.  This is a Service
 OS only parameter, and cannot be enabled in the User VM.
-
-i915.gvt_workload_priority
---------------------------
-
-AcrnGT supports **Prioritized Rendering** as described in the
-:ref:`GVT-g-prioritized-rendering` high-level design.  This
-configuration option controls the priority level of GVT-g guests.
-Priority levels range from -1023 to 1023.
-
-The default priority is zero, the same priority as the Service VM. If
-the level is less than zero, the guest's priority will be lower than the
-Service VM, so graphics preemption will work and the prioritized
-rendering feature will be enabled.  If the level is greater than zero,
-User VM graphics workloads will preempt most of the Service VM graphics workloads,
-except for display updating related workloads that use a default highest
-priority (1023).
-
-Currently, all User VMs share the same priority.
-This is a Service VM only parameters, and does
-not work in the User VM.
-
-.. _i915-enable-initial-modeset:
-
-i915.enable_initial_modeset
----------------------------
-
-At time, kernel graphics must be initialized with a valid display
-configuration with full display pipeline programming in place before the
-user space is initialized and without a fbdev & fb console.
-
-When ``i915.enable_initial_modeset=1``, the FBDEV of i915 will not be
-initialized, so users would not be able to see the fb console on screen.
-If there is no graphics UI running by default, users will see black
-screens displayed.
-
-When ``i915.enable_initial_modeset=0`` in Service VM, the plane restriction
-(also known as plane-based domain ownership) feature will be disabled.
-(See the next section and :ref:`plane_restriction` in the ACRN GVT-g
-High Level Design for more information about this feature.)
-
-In the current configuration, we will set
-``i915.enable_initial_modeset=1`` in Service VM and
-``i915.enable_initial_modeset=0`` in User VM.
-
-i915.domain_scaler_owner
-========================
-
-On each Intel GPU display pipeline, there are several plane scalers
-to zoom in/out the planes. For example, if a 720p video is played
-full-screen on a 1080p display monitor, the kernel driver will use a
-scaler to zoom in the video plane to a 1080p image and present it onto a
-display pipeline. (Refer to "Intel Open Source Graphics PRM Vol 7:
-display" for the details.)
-
-On Broxton platforms, Pipe A and Pipe B each
-have two plane scalers, and Pipe C has one plane scaler. To support the
-plane scaling in AcrnGT guest OS, we introduced the parameter
-``i915.domain_scaler_owner``, to assign a specific scaler to the target
-guest OS.
-
-As with the parameter ``i915.domain_plane_owners``, each nibble of
-``i915.domain_scaler_owner`` represents the domain id that owns the scaler;
-every nibble (4 bits) represents a scaler and every group of 2 nibbles
-represents a pipe. This is a Service VM only configuration and cannot be
-modified at runtime. Domain ID 0x0 is for the Service VM, the User VM
-use domain IDs from 0x1 to 0xF.
-
-For example, if we set ``i915.domain_scaler_owner=0x021100``, the Service VM
-owns scaler 1A, 2A; User VM #1 owns scaler 1B, 2B; and User VM #2 owns scaler
-1C.
 
 i915.enable_hangcheck
 =====================
