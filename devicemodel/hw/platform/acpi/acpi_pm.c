@@ -324,8 +324,11 @@ void pm_write_dsdt(struct vmctx *ctx, int ncpu)
 	dsdt_line("  Scope (_PR)");
 	dsdt_line("  {");
 	for (i = 0; i < ncpu; i++) {
-		dsdt_line("    Processor (CPU%d, 0x%02X, 0x00000000, 0x00) {}",
-					i, i);
+		dsdt_line("    Device (CPU%d)", i);
+		dsdt_line("    {");
+		dsdt_line("        Name (_HID, \"ACPI0007\")");
+		dsdt_line("        Name (_UID, 0x%02X)", i);
+		dsdt_line("    }");
 	}
 	dsdt_line("  }");
 	dsdt_line("");
