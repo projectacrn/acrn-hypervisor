@@ -91,7 +91,7 @@ def get_scenario_item_values(board_info, scenario_info):
     return scenario_item_values
 
 
-def validate_scenario_setting(board_info, scenario_info):
+def validate_scenario_schema(scenario_info):
     """
     Validate settings in scenario xml if there is scenario schema
     :param xsd_doc: scenario schema
@@ -99,18 +99,43 @@ def validate_scenario_setting(board_info, scenario_info):
     """
     try:
         import xmlschema
+    except ImportError:
+        return
 
-        # XMLSchema does not process XInclude. Use lxml to expand the schema which is feed to XMLSchema as a string.
-        xsd_doc = SCENARIO_SCHEMA_FILE
-        xsd_doc.xinclude()
-        my_schema = xmlschema.XMLSchema11(etree.tostring(xsd_doc, encoding="unicode"))
+    """
+    XMLSchema does not process XInclude.
+    Use lxml to expand the schema which is feed to XMLSchema as a string.
+    """
+    xsd_doc = etree.parse(common.SCENARIO_SCHEMA_FILE)
+    xsd_doc.xinclude()
+    my_schema = xmlschema.XMLSchema11(etree.tostring(xsd_doc, encoding="unicode"))
 
-        it = my_schema.iter_errors(scenario_info)
-        for idx, validation_error in enumerate(it, start=1):
-            print(f'[{idx}] path: {validation_error.path} | reason: {validation_error.reason}')
-            print(validation_error)
-    except:
-        pass
+    it = my_schema.iter_errors(scenario_info)
+    for idx, validation_error in enumerate(it, start=1):
+        key = ""
+        if not validation_error:
+            continue
+        else:
+            path = str(validation_error.path).split("/")
+            cnt = 0
+            for p in path:
+                if '[' in p:
+                    idx = int(p.split("[")[1].split("]")[0]) - 1
+                    p = p.split("[")[0] + ":id=" + str(idx)
+                    path[cnt] = p
+                cnt = cnt + 1
+            key =','.join(path[2:])
+            element = "'" + path[-1] + "' "
+            reason = validation_error.reason + ": last call: " + str(validation_error.obj)
+            scenario_cfg_lib.ERR_LIST[key] = element + reason
+
+
+
+def validate_scenario_setting(board_info, scenario_info):
+    hv_cfg_lib.ERR_LIST = {}
+    scenario_cfg_lib.ERR_LIST = {}
+
+    validate_scenario_schema(scenario_info)
 
     """
     Validate settings in scenario xml
@@ -118,8 +143,6 @@ def validate_scenario_setting(board_info, scenario_info):
     :param scenario_info: scenario file
     :return: return a dictionary that contains errors
     """
-    hv_cfg_lib.ERR_LIST = {}
-    scenario_cfg_lib.ERR_LIST = {}
     common.BOARD_INFO_FILE = board_info
     common.SCENARIO_INFO_FILE = scenario_info
 
