@@ -1685,7 +1685,6 @@ pci_bus_write_dsdt(int bus)
 	dsdt_line("  Device (PCI%01X)", bus);
 	dsdt_line("  {");
 	dsdt_line("    Name (_HID, EisaId (\"PNP0A03\"))");
-	dsdt_line("    Name (_ADR, Zero)");
 
 	dsdt_line("    Method (_BBN, 0, NotSerialized)");
 	dsdt_line("    {");
