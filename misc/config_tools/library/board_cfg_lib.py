@@ -612,7 +612,8 @@ def is_tpm_passthru():
 
     tpm_passthru = False
     (_, board) = common.get_board_name()
-    if board in TPM_PASSTHRU_BOARD:
+    tpm2_passthru_enabled = common.get_leaf_tag_map_bool(common.SCENARIO_INFO_FILE, "mmio_resources", "TPM2")
+    if board in TPM_PASSTHRU_BOARD and tpm2_passthru_enabled and tpm2_passthru_enabled == 'y':
         tpm_passthru = True
 
     return tpm_passthru
