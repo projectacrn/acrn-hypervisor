@@ -713,7 +713,7 @@ vm_irqfd(struct vmctx *ctx, struct acrn_irqfd *args)
 int
 vm_get_config(struct vmctx *ctx, struct acrn_vm_config *vm_cfg)
 {
-#define VM_CFG_BUFF_SIZE 0x4000
+#define VM_CFG_BUFF_SIZE 0x8000
 	int i, err = 0;
 	uint8_t *configs_buff;
 	struct acrn_vm_config *pcfg;
@@ -735,6 +735,7 @@ vm_get_config(struct vmctx *ctx, struct acrn_vm_config *vm_cfg)
 		pr_err("%s, failed: get platform info.\n", __func__);
 		goto exit;
 	}
+	assert(VM_CFG_BUFF_SIZE > (platform_info.max_vms * platform_info.vm_config_entry_size));
 
 	for (i = 0; i < platform_info.max_vms; i++) {
 		pcfg = (struct acrn_vm_config *)(configs_buff + (i * platform_info.vm_config_entry_size));
