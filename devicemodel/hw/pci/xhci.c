@@ -2088,6 +2088,7 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 			UPRINTF(LFTL, "fail to create device for %d-%s\r\n",
 					di->path.bus,
 					usb_dev_path(&di->path));
+			cmderr = XHCI_TRB_ERROR_XACT;
 			goto done;
 		}
 
