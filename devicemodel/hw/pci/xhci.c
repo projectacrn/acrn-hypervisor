@@ -1135,6 +1135,11 @@ pci_xhci_change_port(struct pci_xhci_vdev *xdev, int port, int usb_speed,
 		speed = pci_xhci_convert_speed(usb_speed);
 		reg->portsc = XHCI_PS_CCS | XHCI_PS_PP | XHCI_PS_CSC;
 		reg->portsc |= XHCI_PS_SPEED_SET(speed);
+		if (speed == USB_SPEED_SUPER) {
+			reg->portsc |= XHCI_PS_PED;
+			reg->portsc |= XHCI_PS_PLS_SET(UPS_PORT_LS_U0);
+		} else
+			reg->portsc |= XHCI_PS_PLS_SET(UPS_PORT_LS_POLL);
 	}
 
 	if (!need_intr)
@@ -1831,7 +1836,7 @@ pci_xhci_insert_event(struct pci_xhci_vdev *xdev,
 
 	evts = XHCI_GADDR(xdev, erst->qwRingSegBase);
 	if (!evts) {
-		UPRINTF(LFTL, "Invalid gpa 0x%x in insert event!\r\n",
+		UPRINTF(LFTL, "Invalid gpa 0x%lx in insert event!\r\n",
 			erst->qwRingSegBase);
 		return -EINVAL;
 	}
@@ -2032,7 +2037,7 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 
 	input_ctx = XHCI_GADDR(xdev, trb->qwTrb0 & ~0xFUL);
 	if (!input_ctx) {
-		UPRINTF(LFTL, "Invalid gpa 0x%x in address device!\r\n",
+		UPRINTF(LFTL, "Invalid gpa 0x%lx in address device!\r\n",
 			trb->qwTrb0 & ~0xFUL);
 		cmderr = XHCI_TRB_ERROR_TRB;
 		goto done;
@@ -2227,7 +2232,7 @@ pci_xhci_cmd_config_ep(struct pci_xhci_vdev *xdev,
 
 	input_ctx = XHCI_GADDR(xdev, trb->qwTrb0 & ~0xFUL);
 	if (!input_ctx) {
-		UPRINTF(LFTL, "Invalid gpa 0x%x in configure endpoint!\r\n",
+		UPRINTF(LFTL, "Invalid gpa 0x%lx in configure endpoint!\r\n",
 			trb->qwTrb0 & ~0xFUL);
 		cmderr = XHCI_TRB_ERROR_TRB;
 		goto done;
@@ -2418,7 +2423,7 @@ pci_xhci_find_stream(struct pci_xhci_vdev *xdev,
 
 	sctx = XHCI_GADDR(xdev, ep->qwEpCtx2 & ~0xFUL) + streamid;
 	if (!sctx) {
-		UPRINTF(LFTL, "Invalid gpa 0x%x in find stream!\r\n",
+		UPRINTF(LFTL, "Invalid gpa 0x%lx in find stream!\r\n",
 			ep->qwEpCtx2 & ~0xFUL);
 		return XHCI_TRB_ERROR_TRB;
 	}
@@ -2525,7 +2530,7 @@ pci_xhci_cmd_eval_ctx(struct pci_xhci_vdev *xdev,
 
 	input_ctx = XHCI_GADDR(xdev, trb->qwTrb0 & ~0xFUL);
 	if (!input_ctx) {
-		UPRINTF(LFTL, "Invalid gpa 0x%x in eval context!\r\n",
+		UPRINTF(LFTL, "Invalid gpa 0x%lx in eval context!\r\n",
 			trb->qwTrb0 & ~0xFUL);
 		cmderr = XHCI_TRB_ERROR_TRB;
 		goto done;
@@ -2848,7 +2853,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev, struct usb_xfer *xfer,
 		evtrb.qwTrb0 = hcb->trb_addr;
 		trb = XHCI_GADDR(xdev, evtrb.qwTrb0);
 		if (!trb) {
-			UPRINTF(LFTL, "Invalid gpa 0x%x when get the trb!\r\n",
+			UPRINTF(LFTL, "Invalid gpa 0x%lx when get the trb!\r\n",
 				evtrb.qwTrb0);
 			continue;
 		}
@@ -3345,7 +3350,7 @@ pci_xhci_device_doorbell(struct pci_xhci_vdev *xdev,
 		ccs = sctx_tr->ccs;
 		trb = XHCI_GADDR(xdev, sctx_tr->ringaddr & ~0xFUL);
 		if (!trb) {
-			UPRINTF(LDBG, "Invalid gpa 0x%x in write device doorbell!\r\n",
+			UPRINTF(LDBG, "Invalid gpa 0x%lx in write device doorbell!\r\n",
 				sctx_tr->ringaddr & ~0xFUL);
 			return;
 		}
@@ -3455,7 +3460,7 @@ pci_xhci_rtsregs_write(struct pci_xhci_vdev *xdev,
 				rts->erstba_p->qwRingSegBase,
 				rts->erstba_p->dwRingSegSize);
 		else
-			UPRINTF(LFTL, "Invalid gpa 0x%x in write runtime register!\r\n",
+			UPRINTF(LFTL, "Invalid gpa 0x%lx in write runtime register!\r\n",
 				xdev->rtsregs.intrreg.erstba & ~0x3FUL);
 		break;
 
@@ -3591,7 +3596,7 @@ pci_xhci_hostop_write(struct pci_xhci_vdev *xdev,
 			UPRINTF(LDBG, "opregs dcbaap = 0x%lx (vaddr 0x%lx)\r\n",
 		    		xdev->opregs.dcbaap, (uint64_t)xdev->opregs.dcbaa_p);
 		else
-			UPRINTF(LFTL, "Invalid gpa 0x%x when get XHCI_DCBAAP_HI\n",
+			UPRINTF(LFTL, "Invalid gpa 0x%lx when get XHCI_DCBAAP_HI\n",
 				xdev->opregs.dcbaap & ~0x3FUL);
 		break;
 
@@ -3903,8 +3908,10 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 	struct pci_xhci_portregs *port;
 	struct xhci_trb evtrb;
 	struct usb_native_devinfo *di;
+	struct pci_xhci_dev_emu  *dev;
 	int speed;
 	int index;
+	int rc = 0;
 
 	UPRINTF(LINF, "reset port %d\r\n", portn);
 
@@ -3915,11 +3922,24 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 		return;
 	}
 	di = &xdev->native_ports[index].info;
+	dev = xdev->devices[portn];
+	if (dev && dev->dev_ue->ue_reset != NULL)
+		rc = dev->dev_ue->ue_reset(dev->dev_instance);
 
-	speed = pci_xhci_convert_speed(di->speed);
-	port->portsc &= ~(XHCI_PS_PLS_MASK | XHCI_PS_PR | XHCI_PS_PRC);
-	port->portsc |= XHCI_PS_PED | XHCI_PS_SPEED_SET(speed);
-
+	port->portsc &= ~(XHCI_PS_PR | XHCI_PS_PLS_MASK);
+	/*
+	 * From xHCI spec 4.19.5 USB2 protocol ports never fail the bus
+	 * reset seqence.
+	 */
+	if (rc != 0 && di->bcd >= 0x300) {
+		port->portsc |= XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET)
+				| XHCI_PS_SPEED_SET(USB_SPEED_VARIABLE);
+		port->portsc &= ~XHCI_PS_CCS;
+	} else {
+		speed = pci_xhci_convert_speed(di->speed);
+		port->portsc |= XHCI_PS_PED | XHCI_PS_SPEED_SET(speed)
+				| XHCI_PS_PLS_SET(UPS_PORT_LS_U0);
+	}
 	if (warm && di->bcd >= 0x300)
 		port->portsc |= XHCI_PS_WRC;
 
@@ -3927,10 +3947,10 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 		port->portsc |= XHCI_PS_PRC;
 
 		pci_xhci_set_evtrb(&evtrb, portn,
-		     XHCI_TRB_ERROR_SUCCESS,
-		     XHCI_TRB_EVENT_PORT_STS_CHANGE);
-		if (pci_xhci_insert_event(xdev, &evtrb, 1) != 0)
-			UPRINTF(LFTL, "Failed to inject reset port event!\n");
+			XHCI_TRB_ERROR_SUCCESS,
+			XHCI_TRB_EVENT_PORT_STS_CHANGE);
+	if (pci_xhci_insert_event(xdev, &evtrb, 1) != 0)
+		UPRINTF(LFTL, "Failed to inject reset port event!\n");
 	}
 }
 
