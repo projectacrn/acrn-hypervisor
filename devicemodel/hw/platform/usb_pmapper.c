@@ -1067,6 +1067,7 @@ usb_dev_init(void *pdata, char *opt)
 		goto errout;
 
 	switch (desc.bcdUSB) {
+	case 0x320:
 	case 0x310:
 	case 0x300:
 		ver = 3; break;
