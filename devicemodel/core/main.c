@@ -418,9 +418,11 @@ handle_vmexit(struct vmctx *ctx, struct vhm_request *vhm_req, int vcpu)
 	vm_notify_request_done(ctx, vcpu);
 }
 
-static void
+static int
 guest_pm_notify_init(struct vmctx *ctx)
 {
+	int ret = 0;
+
 	/*
 	 * We don't care ioc_init return value so far.
 	 * Will add return value check once ioc is full function.
@@ -430,9 +432,11 @@ guest_pm_notify_init(struct vmctx *ctx)
 	else if (PWR_EVENT_NOTIFY_PWR_BT == pm_notify_channel)
 		power_button_init(ctx);
 	else if (PWR_EVENT_NOTIFY_UART == pm_notify_channel)
-		pm_by_vuart_init(ctx);
+		ret = pm_by_vuart_init(ctx);
 	else
-		pr_err("No correct pm notify channel given\n");
+		pr_info("No pm notify channel given\n");
+
+	return ret;
 }
 
 static void
@@ -459,7 +463,9 @@ vm_init_vdevs(struct vmctx *ctx)
 	atkbdc_init(ctx);
 	ioapic_init(ctx);
 
-	guest_pm_notify_init(ctx);
+	ret = guest_pm_notify_init(ctx);
+	if (ret < 0)
+		goto pm_notify_fail;
 
 	ret = vrtc_init(ctx);
 	if (ret < 0)
@@ -510,6 +516,7 @@ vpit_fail:
 	vrtc_deinit(ctx);
 vrtc_fail:
 	guest_pm_notify_deinit(ctx);
+pm_notify_fail:
 	atkbdc_deinit(ctx);
 	pci_irq_deinit(ctx);
 	ioapic_deinit();
