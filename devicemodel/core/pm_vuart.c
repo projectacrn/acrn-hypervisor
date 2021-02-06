@@ -59,10 +59,10 @@ static struct monitor_vm_ops vm_ops = {
 };
 
 /* it read from vuart, and if end is '\0' or '\n' or len = buff-len it will return */
-static bool read_bytes(int fd, uint8_t *buffer, int buf_len, int *count)
+static bool read_bytes(int fd, uint8_t *buffer, int buf_len, int *count, bool *eof)
 {
 	bool ready = false;
-	int rc;
+	int rc = -1;
 
 	if (buf_len <= (*count)) {
 		*count = buf_len;
@@ -81,15 +81,16 @@ static bool read_bytes(int fd, uint8_t *buffer, int buf_len, int *count)
 	} while (rc > 0 && !ready);
 
 out:
+	*eof = (rc == 0);
 	return ready;
 }
 
-int pm_setup_socket(void)
+static int pm_setup_socket(void)
 {
 	struct sockaddr_in socket_addr;
 
 	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (socket_fd  == -1) {
+	if (socket_fd == -1) {
 		pr_err("create a socket endpoint error\n");
 		return -1;
 	}
@@ -102,6 +103,7 @@ int pm_setup_socket(void)
 	if (connect(socket_fd, (struct sockaddr *)&socket_addr, sizeof(socket_addr)) == -1) {
 		pr_err("initiate a connection on a socket error\n");
 		close(socket_fd);
+		socket_fd = -1;
 		return -1;
 	}
 
@@ -111,14 +113,10 @@ int pm_setup_socket(void)
 static void *pm_monitor_loop(void *arg)
 {
 	int rc;
+	bool eof;
 	char buf_node[CMD_LEN+1], buf_socket[CMD_LEN+1];
 	int max_fd, count_node = 0, count_socket = 0;
 	fd_set read_fd;
-
-	if (pm_setup_socket() == -1) {
-		pr_err("create socket to connect life-cycle manager failed\n");
-		return NULL;
-	}
 
 	buf_node[CMD_LEN] = buf_socket[CMD_LEN] = '\0';
 	max_fd = (socket_fd > node_fd) ? (socket_fd + 1) : (node_fd + 1);
@@ -131,7 +129,8 @@ static void *pm_monitor_loop(void *arg)
 		rc = select(max_fd, &read_fd, NULL, NULL, NULL);
 		if (rc > 0) {
 			if (FD_ISSET(node_fd, &read_fd)) {
-				if (read_bytes(node_fd, (uint8_t *)buf_node, CMD_LEN, &count_node)) {
+				if (read_bytes(node_fd, (uint8_t *)buf_node, CMD_LEN,
+						&count_node, &eof)) {
 					pr_info("Received msg[%s] from UOS, count=%d\r\n",
 						buf_node, count_node);
 					rc = write(socket_fd, buf_node, count_node);
@@ -139,12 +138,14 @@ static void *pm_monitor_loop(void *arg)
 					if (rc != count_node) {
 						pr_err("%s:%u: write error ret_val = %d\r\n",
 							__func__, __LINE__, rc);
+						break;
 					}
 					count_node = 0;
 				}
 			}
 			if (FD_ISSET(socket_fd, &read_fd)) {
-				if (read_bytes(socket_fd, (uint8_t *)buf_socket, CMD_LEN, &count_socket)) {
+				if (read_bytes(socket_fd, (uint8_t *)buf_socket, CMD_LEN,
+						&count_socket, &eof)) {
 					pr_info("Received msg[%s] from life_mngr on SOS, count=%d\r\n",
 						buf_socket, count_socket);
 					pthread_mutex_lock(&pm_vuart_lock);
@@ -154,12 +155,20 @@ static void *pm_monitor_loop(void *arg)
 					if (rc != count_socket) {
 						pr_err("%s:%u: write error ret_val = %d\r\n",
 							__func__, __LINE__, rc);
+						break;
 					}
 					count_socket = 0;
+				} else if (eof) {
+					pr_err("socket connection to life-cycle manager closed\n");
+					break;
 				}
 			}
 		}
 	}
+
+	/* power off this VM if we get here */
+	raise(SIGHUP);
+	/* cleanup will be done in pm_by_vuart_deinit() */
 	return NULL;
 }
 
@@ -167,9 +176,15 @@ static int start_pm_monitor_thread(void)
 {
 	int ret;
 
-	ret = pthread_create(&pm_monitor_thread, NULL, pm_monitor_loop, NULL);
-	if (ret) {
-		pr_err("failed %s %d\n", __func__, __LINE__);
+	if (pm_setup_socket()) {
+		pr_err("create socket to connect life-cycle manager failed\n");
+		return -1;
+	}
+
+	if ((ret = pthread_create(&pm_monitor_thread, NULL, pm_monitor_loop, NULL))) {
+		pr_err("%s: pthread_create error: %s\n", __func__, strerror(ret));
+		close(socket_fd);
+		socket_fd = -1;
 		return -1;
 	}
 
@@ -250,30 +265,38 @@ static int set_tty_attr(int fd, int speed)
 	return 0;
 }
 
-void pm_by_vuart_init(struct vmctx *ctx)
+int pm_by_vuart_init(struct vmctx *ctx)
 {
 	assert(node_index < MAX_NODE_CNT);
 
 	pr_info("%s idx: %d, path: %s\r\n", __func__, node_index, node_path);
 
-	if (node_index == PTY_NODE) {
+	if (node_index == PTY_NODE)
 		node_fd = pty_open_virtual_uart(node_path);
-	} else if (node_index == TTY_NODE) {
+	else if (node_index == TTY_NODE)
 		node_fd = open(node_path, O_RDWR | O_NOCTTY | O_NONBLOCK);
-		set_tty_attr(node_fd, B115200);
-	}
 
-	if (node_fd > 0) {
+	if (node_fd >= 0) {
+		if (node_index == TTY_NODE)
+			set_tty_attr(node_fd, B115200);
 		if (monitor_register_vm_ops(&vm_ops, ctx, "pm-vuart") < 0) {
 			pr_err("%s: pm-vuart register to VM monitor failed\n", node_path);
 			close(node_fd);
 			node_fd = -1;
+			return -1;
 		}
 	} else {
 		pr_err("%s open failed, fd=%d\n", node_path, node_fd);
+		return -1;
 	}
 
-	start_pm_monitor_thread();
+	if (start_pm_monitor_thread()) {
+		close(node_fd);
+		node_fd = -1;
+		return -1;
+	}
+
+	return 0;
 }
 
 void pm_by_vuart_deinit(struct vmctx *ctx)
