@@ -44,10 +44,10 @@ enum shutdown_state {
 };
 
 /* the file description for dev/ttyS1 */
-int tty_dev_fd = 0;
-enum shutdown_state shutdown_state = SHUTDOWN_REQ_WAITING;
-
+static int tty_dev_fd = 0;
+static enum shutdown_state shutdown_state = SHUTDOWN_REQ_WAITING;
 static FILE *log_fd;
+
 #define LOG_PRINTF(format, args...) \
 do { fprintf(log_fd, format, args); \
 		fflush(log_fd); } while (0)
@@ -57,7 +57,7 @@ do { fwrite(args, 1, sizeof(args), log_fd); \
 		fflush(log_fd); } while (0)
 
 /* it read from vuart, and if end is '\0' or '\n' or len = buff-len it will return */
-int receive_message(int fd, uint8_t *buffer, int buf_len)
+static int receive_message(int fd, uint8_t *buffer, int buf_len)
 {
 	int rc = 0, count = 0;
 
@@ -75,7 +75,7 @@ int receive_message(int fd, uint8_t *buffer, int buf_len)
 	return count;
 }
 
-int send_message(int fd, char *buf, int len)
+static int send_message(int fd, char *buf, int len)
 {
 	int ret = 0;
 
@@ -84,7 +84,7 @@ int send_message(int fd, char *buf, int len)
 	return (ret == len) ? (0) : (-1);
 }
 
-int set_tty_attr(int fd, int speed)
+static int set_tty_attr(int fd, int speed)
 {
 	struct termios tty;
 
@@ -123,7 +123,7 @@ int set_tty_attr(int fd, int speed)
 	return 0;
 }
 
-int setup_socket_listen(unsigned short port)
+static int setup_socket_listen(unsigned short port)
 {
 	int listen_fd;
 	struct sockaddr_in socket_addr;
@@ -160,12 +160,13 @@ int setup_socket_listen(unsigned short port)
 /* this thread runs on Service VM:
  * communiate between lifecycle-mngr and acrn-dm process in Service VM side
  */
-void *sos_socket_thread(void *arg)
+static void *sos_socket_thread(void *arg)
 {
-	int listen_fd, connect_fd;
+	int listen_fd, connect_fd, connect_fd2;
 	struct sockaddr_in client;
 	socklen_t len = sizeof(struct sockaddr_in);
-	int num, ret;
+	fd_set fds;
+	int flags, nfds, num, ret;
 	char buf[BUFF_SIZE];
 
 	listen_fd = setup_socket_listen(SOS_SOCKET_PORT);
@@ -173,48 +174,84 @@ void *sos_socket_thread(void *arg)
 
 	connect_fd = accept(listen_fd, (struct sockaddr *)&client, &len);
 	if (connect_fd == -1) {
-		LOG_WRITE("accept a connection error on a socket\n");
+		LOG_PRINTF("%s: accept error: %s\r\n", __func__, strerror(errno));
 		close(listen_fd);
-		exit(1);
+		return NULL;
 	}
+
+	LOG_WRITE("socket connection accepted\n");
+
+	/* make the socket non-blocking for compatibility with select */
+	if ((flags = fcntl(listen_fd, F_GETFL, 0)) == -1 ||
+		fcntl(listen_fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+		LOG_PRINTF("%s: fcntl error: %s\r\n", __func__, strerror(errno));
+		goto out;
+	}
+
+	nfds = (connect_fd > listen_fd) ? (connect_fd + 1) : (listen_fd + 1);
 
 	while (1) {
-		memset(buf, 0, sizeof(buf));
+		FD_ZERO(&fds);
+		FD_SET(listen_fd, &fds);
+		FD_SET(connect_fd, &fds);
 
-		/* Here assume the socket communication is reliable, no need to try */
-		num = read(connect_fd, buf, sizeof(buf));
+		ret = select(nfds, &fds, NULL, NULL, NULL);
 
-		if (num == -1) {
-			LOG_PRINTF("read error on a socket(fd = 0x%x)\n", connect_fd);
-			break;
-		} else if (num == 0) {
-			LOG_PRINTF("socket(fd = 0x%x) closed\n", connect_fd);
+		if (ret < 0) {
+			LOG_PRINTF("%s: select error: %s\r\n", __func__, strerror(errno));
 			break;
 		}
 
-		LOG_PRINTF("received msg [%s]\r\n", buf);
-		if (strncmp(SHUTDOWN_CMD, (const char *)buf, strlen(SHUTDOWN_CMD)) == 0) {
-			ret = send_message(connect_fd, ACK_CMD, sizeof(ACK_CMD));
-			if (ret != 0) {
-				LOG_WRITE("Send acked message to acrn-dm VM fail\n");
+		if (FD_ISSET(connect_fd, &fds)) {
+			memset(buf, 0, sizeof(buf));
+
+			/* Here assume the socket communication is reliable, no need to try */
+			num = read(connect_fd, buf, sizeof(buf));
+
+			if (num == -1) {
+				LOG_PRINTF("read error on a socket(fd = 0x%x)\n", connect_fd);
+				break;
+			} else if (num == 0) {
+				LOG_PRINTF("socket(fd = 0x%x) closed\n", connect_fd);
+				break;
 			}
-			LOG_WRITE("Receive shutdown command from User VM\r\n");
-			ret = system("~/s5_trigger.sh sos");
-			LOG_PRINTF("call s5_trigger.sh ret=0x%x\r\n", ret);
-			break;
+
+			LOG_PRINTF("received msg [%s]\r\n", buf);
+			if (strncmp(SHUTDOWN_CMD, (const char *)buf, strlen(SHUTDOWN_CMD)) == 0) {
+				ret = send_message(connect_fd, ACK_CMD, sizeof(ACK_CMD));
+				if (ret != 0) {
+					LOG_WRITE("Send acked message to acrn-dm VM fail\n");
+				}
+				LOG_WRITE("Receive shutdown command from User VM\r\n");
+				ret = system("~/s5_trigger.sh sos");
+				LOG_PRINTF("call s5_trigger.sh ret=0x%x\r\n", ret);
+				break;
+			}
+		}
+		if (FD_ISSET(listen_fd, &fds)) {
+			connect_fd2 = accept(listen_fd, (struct sockaddr *)&client, &len);
+
+			if (connect_fd2 == -1) {
+				LOG_PRINTF("%s: accept for second socket connection error: %s\r\n",
+						__func__, strerror(errno));
+			} else {
+				close(connect_fd2);
+				LOG_WRITE("second socket connection detected - closing\n");
+			}
 		}
 
 	}
 
-	close(connect_fd);
+out:
 	close(listen_fd);
+	close(connect_fd);
 	return NULL;
 }
 
 /* this thread runs on User VM:
  * User VM wait for message from Service VM
  */
-void *listener_fn_to_sos(void *arg)
+static void *listener_fn_to_sos(void *arg)
 {
 
 	int ret;
@@ -282,14 +319,13 @@ void *listener_fn_to_sos(void *arg)
 	} while (1);
 
 	ret = system("poweroff");
-
 	return NULL;
 }
 
 /* this thread runs on User VM:
  * User VM wait for shutdown from other process (e.g. s5_trigger.sh)
  */
-void *listener_fn_to_operator(void *arg)
+static void *listener_fn_to_operator(void *arg)
 {
 	int listen_fd, connect_fd;
 	struct sockaddr_in client;
@@ -359,7 +395,7 @@ int main(int argc, char *argv[])
 
 	int ret = 0;
 	char *devname_uos = "";
-	enum process_env  env = PROCESS_UNKNOWN;
+	enum process_env env = PROCESS_UNKNOWN;
 	pthread_t sos_socket_pid;
 	/* User VM wait for shutdown from Service VM */
 	pthread_t uos_thread_pid_1;
@@ -405,13 +441,10 @@ int main(int argc, char *argv[])
 
 	if (env == PROCESS_RUN_IN_SOS) {
 		pthread_join(sos_socket_pid, NULL);
-
 	} else if (env == PROCESS_RUN_IN_UOS) {
 		pthread_join(uos_thread_pid_1, NULL);
 		pthread_join(uos_thread_pid_2, NULL);
 		close(tty_dev_fd);
-	} else {
-
 	}
 	fclose(log_fd);
 
