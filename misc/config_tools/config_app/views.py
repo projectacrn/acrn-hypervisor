@@ -264,7 +264,7 @@ def save_scenario():
                     if curr_vm_id == vm_list[i]:
                         curr_vm_index = i + 2
                         break
-            if add_scenario_config and add_scenario_config.tag == 'vm':
+            if add_scenario_config is not None and add_scenario_config.tag == 'vm':
                 for i in range(0, MAX_VM_NUM):
                     if str(i) not in vm_list:
                         break
@@ -498,7 +498,7 @@ def create_setting():
 
         if mode == 'create':
             template_file_name = 'industry_launch_2uos'
-            src_file_name = os.path.join(current_app.config.get('CONFIG_PATH'), 'generic', template_file_name + '.xml')
+            src_file_name = os.path.join(current_app.config.get('CONFIG_PATH'), 'generic_board', template_file_name + '.xml')
         else:
             src_file_name = os.path.join(current_app.config.get('CONFIG_PATH'), board_type, default_name + '.xml')
         copyfile(src_file_name,
@@ -518,7 +518,7 @@ def create_setting():
 
         if mode == 'create':
             template_file_name = 'industry'
-            src_file_name = os.path.join(current_app.config.get('CONFIG_PATH'), 'generic', template_file_name + '.xml')
+            src_file_name = os.path.join(current_app.config.get('CONFIG_PATH'), 'generic_board', template_file_name + '.xml')
         else:
             src_file_name = os.path.join(current_app.config.get('CONFIG_PATH'), board_type, default_name + '.xml')
         copyfile(src_file_name,
@@ -613,11 +613,10 @@ def generate_src():
         scenario_setting_xml = os.path.join(current_app.config.get('CONFIG_PATH'), board_type,
                                             'user_defined', scenario_setting + '.xml')
 
-        # try:
-        if True:
+        try:
             from launch_config.launch_cfg_gen import ui_entry_api
             error_list = ui_entry_api(board_info_xml, scenario_setting_xml, launch_setting_xml, src_path)
-        # except Exception as error:
+        except Exception as error:
             status = 'fail'
             error_list = {'launch setting error': str(error)}
     else:
@@ -649,7 +648,7 @@ def upload_board_info():
             config_path = current_app.config.get('CONFIG_PATH')
             for config_name in os.listdir(config_path):
                 if os.path.isdir(os.path.join(config_path, config_name)) \
-                        and config_name != 'generic':
+                        and config_name not in ['generic_board', 'sample_launch_scripts']:
                     board_type_list.append(config_name)
 
             res_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res')
@@ -677,8 +676,8 @@ def upload_board_info():
             if board_type not in board_type_list:
                 info = board_type
                 os.makedirs(os.path.join(config_path, board_type))
-                for generic_name in os.listdir(os.path.join(config_path, 'generic')):
-                    generic_file = os.path.join(config_path, 'generic', generic_name)
+                for generic_name in os.listdir(os.path.join(config_path, 'generic_board')):
+                    generic_file = os.path.join(config_path, 'generic_board', generic_name)
                     if os.path.isfile(generic_file):
                         new_file = os.path.join(config_path, board_type, generic_name)
                         copyfile(generic_file, new_file)
@@ -978,7 +977,7 @@ def get_generic_scenario_config(scenario_config, add_vm_type=None):
             'LAUNCH_POST_STD_VM': ('industry_launch_2uos', 'uos:id=1'),
             'LAUNCH_POST_RT_VM': ('industry_launch_2uos', 'uos:id=2')
         }
-        config_path = os.path.join(current_app.config.get('CONFIG_PATH'), 'generic')
+        config_path = os.path.join(current_app.config.get('CONFIG_PATH'), 'generic_board')
         generic_scenario_config = XmlConfig(config_path)
         if os.path.isfile(os.path.join(config_path, vm_dict[add_vm_type][0] + '.xml')):
             generic_scenario_config.set_curr(vm_dict[add_vm_type][0])
@@ -986,7 +985,7 @@ def get_generic_scenario_config(scenario_config, add_vm_type=None):
             return generic_scenario_config.get_curr_elem(vm_dict[add_vm_type][1])
         else:
             return None
-    config_path = os.path.join(current_app.config.get('CONFIG_PATH'), 'generic')
+    config_path = os.path.join(current_app.config.get('CONFIG_PATH'), 'generic_board')
     generic_scenario_config = XmlConfig(config_path)
     for file in os.listdir(config_path):
         if os.path.isfile(os.path.join(config_path, file)) and \
