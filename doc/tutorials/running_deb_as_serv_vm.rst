@@ -21,6 +21,11 @@ Use the following instructions to install Debian.
   <https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/>`_.
   Select and download **debian-10.1.0-amd64-netinst.iso** (scroll down to
   the bottom of the page).
+
+  .. note::  These instructions were validated with the
+     debian_10.1.0 ISO image. A newer Debian 10 version
+     should still work as expected.
+
 - Follow the `Debian installation guide
   <https://www.debian.org/releases/stable/amd64/index.en.html>`_ to
   install it on your board; we are using a Kaby Lake Intel NUC (NUC7i7DNHE)
