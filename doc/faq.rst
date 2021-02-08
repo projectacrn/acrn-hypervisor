@@ -27,8 +27,6 @@ on your platform. Check the documentation for these option settings for
 details:
 
 * :option:`CONFIG_PLATFORM_RAM_SIZE`
-* :option:`CONFIG_SOS_RAM_SIZE`
-* :option:`CONFIG_UOS_RAM_SIZE`
 * :option:`CONFIG_HV_RAM_SIZE`
 
 For example, if the Intel NUC's physical memory size is 32G, you may follow these steps
@@ -44,7 +42,6 @@ the ACRN Service VM with the 32G memory size.
 
    (0x0f000000) Size of the RAM region used by the hypervisor
    (0x800000000) Size of the physical platform RAM
-   (0x800000000) Size of the Service OS (SOS) RAM
 
 #. Press :kbd:`S` and then :kbd:`Enter` to save the ``.config`` to the default directory:
    ``acrn-hypervisor/hypervisor/build/.config``
