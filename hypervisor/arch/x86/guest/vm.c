@@ -432,10 +432,13 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	pci_mmcfg = get_mmcfg_region();
 	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, pci_mmcfg->address, get_pci_mmcfg_size(pci_mmcfg));
 
-	/* TODO: remove Software SRAM from SOS prevent SOS to use clflush to flush the Software SRAM cache.
-	 * If we remove this EPT mapping from the SOS, the ACRN-DM can't do Software SRAM EPT mapping
-	 * because the SOS can't get the HPA of this memory region.
+#if defined(PRE_RTVM_SW_SRAM_ENABLED)
+	/* remove Software SRAM region from Service VM EPT, to prevent Service VM from using clflush to
+	 * flush the Software SRAM cache.
+	 * This is applicable to prelaunch RTVM case only, for post-launch RTVM, Service VM is trusted.
 	 */
+	ept_del_mr(vm, pml4_page, PRE_RTVM_SW_SRAM_BASE_GPA, PRE_RTVM_SW_SRAM_END_GPA - PRE_RTVM_SW_SRAM_BASE_GPA);
+#endif
 }
 
 /* Add EPT mapping of EPC reource for the VM */

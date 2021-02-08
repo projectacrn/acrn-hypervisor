@@ -21,7 +21,7 @@
 #define RTCT_ENTRY_TYPE_RT_IOMMU		8U
 #define RTCT_ENTRY_TYPE_MEM_HIERARCHY_LATENCY	9U
 
-#if !defined(PRE_RTVM_SW_SRAM_BASE_GPA)
+#if !defined(PRE_RTVM_SW_SRAM_ENABLED)
 /*
  * PRE_RTVM_SW_SRAM_BASE_GPA is for Prelaunch VM only and
  * is configured by config tool on platform that Software SRAM is detected.
