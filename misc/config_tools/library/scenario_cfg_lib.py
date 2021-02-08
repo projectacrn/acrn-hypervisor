@@ -755,8 +755,8 @@ def get_legacy_vuart1_target_dict(legacy_vuart1):
 
         try:
             key = "vm:id={},legacy_vuart:id=1,target_vm_id".format(vm_i)
-            target_vm_id = get_target_vm_id(vuart_dict, vm_i)
             err_key = "vm:id={},legacy_vuart:id=1,target_uart_id".format(vm_i)
+            target_vm_id = get_target_vm_id(vuart_dict, vm_i)
             target_uart_id = get_target_uart_id(vuart_dict)
         except XmlError as exc:
             ERR_LIST[err_key] = str(exc)

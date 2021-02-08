@@ -95,7 +95,8 @@ class XmlConfig:
                 if self._default \
                 else os.path.join(self._xml_path, 'user_defined', self._curr_xml + '.xml')
 
-            tree = etree.parse(xml_path)
+            parser = etree.XMLParser(remove_blank_text=True)
+            tree = etree.parse(xml_path, parser)
             self._curr_xml_tree = tree
         except ValueError:
             print('xml parse error: {}'.format(xml))
@@ -330,9 +331,7 @@ class XmlConfig:
         if not os.path.isdir(xml_path):
             os.makedirs(xml_path)
 
-        self._format_xml(self._curr_xml_tree.getroot())
-        self._curr_xml_tree.write(os.path.join(xml_path, xml+'.xml'), encoding='utf-8',
-                                  xml_declaration=True, method='xml')
+        self._curr_xml_tree.write(os.path.join(xml_path, xml+'.xml'), encoding='utf-8', pretty_print=True)
 
     def _format_xml(self, element, depth=0):
         i = "\n" + depth * "    "
