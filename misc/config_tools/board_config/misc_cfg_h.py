@@ -183,13 +183,27 @@ def pt_intx_num_vm0_gen(config):
 
 
 def swsram_base_gpa_gen(config):
-    board_etree = lxml.etree.parse(common.BOARD_INFO_FILE)
-    bases = board_etree.xpath("//RTCT/SoftwareSRAM/base")
-    if bases:
-        min_base = min(map(lambda x: int(x.text, 16), bases))
-        print("#define PRE_RTVM_SW_SRAM_BASE_GPA\t{}UL".format(hex(min_base)), file=config)
-        print("", file=config)
+    """Generate SW SRAM related macros
 
+    Generate the availability and guest physical address of the SW SRAM allocated to a pre-launched VM as object-like
+    macros. The macros is generated only when HW has SW SRAM, SW SRAM is enabled for the hypervisor and a pre-launched
+    RTVM exists.
+
+    """
+    scenario_etree = lxml.etree.parse(common.SCENARIO_INFO_FILE)
+    enabled = scenario_etree.xpath("//PSRAM_ENABLED")
+    if enabled and enabled[0].text == "y":
+        pre_rt_vms = scenario_etree.xpath("//vm/vm_type[text() ='PRE_RT_VM']")
+        if pre_rt_vms:
+            board_etree = lxml.etree.parse(common.BOARD_INFO_FILE)
+            l3_sw_sram = board_etree.xpath("//RTCT/SoftwareSRAM[cache_level=3]")
+            if l3_sw_sram:
+                base = min(map(lambda x: int(x.find("base").text, 16), l3_sw_sram))
+                end = max(map(lambda x: int(x.find("base").text, 16) + int(x.find("size").text, 16), l3_sw_sram))
+                print("#define PRE_RTVM_SW_SRAM_ENABLED\t1", file=config)
+                print("#define PRE_RTVM_SW_SRAM_BASE_GPA\t{}UL".format(hex(base)), file=config)
+                print("#define PRE_RTVM_SW_SRAM_END_GPA\t{}UL".format(hex(end)), file=config)
+                print("", file=config)
 
 def generate_file(config):
     """
