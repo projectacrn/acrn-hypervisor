@@ -95,12 +95,6 @@
 ``LOW_RAM_SIZE`` (a child node of ``MEMORY``):
   Specify the size of the RAM region below address 0x10000, starting from address 0x0.
 
-``SOS_RAM_SIZE`` (a child node of ``MEMORY``):
-  Specify the size of the Service OS VM RAM region.
-
-``UOS_RAM_SIZE`` (a child node of ``MEMORY``):
-  Specify the size of the User OS VM RAM region.
-
 ``PLATFORM_RAM_SIZE`` (a child node of ``MEMORY``):
   Specify the size of the physical platform RAM region.
 
