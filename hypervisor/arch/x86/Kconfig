@@ -212,8 +212,8 @@ config HV_RAM_START
 
 config HV_RAM_SIZE
 	hex "Size of the RAM region used by the hypervisor"
-	range 0x1000000 0x20000000
-	default 0x14000000
+	range 0x800000 0x4000000
+	default 0x800000
 	help
 	  A 64-bit integer indicating the size of RAM used by the hypervisor.
 	  It is ensured at link time that the footprint of the hypervisor
@@ -226,22 +226,6 @@ config PLATFORM_RAM_SIZE
 	help
 	  A 64-bit integer indicating the size of the physical platform RAM
 	  (MMIO not included).
-
-config SOS_RAM_SIZE
-	hex "Size of the Service OS (SOS) RAM"
-	range 0x100000000 0x4000000000
-	default 0x400000000
-	help
-	  A 64-bit integer indicating the size of the Service OS RAM (MMIO not
-	  included).
-
- config UOS_RAM_SIZE
-	hex "Size of the User OS (UOS) RAM"
-	range 0 0x2000000000
-	default 0x200000000
-	help
-	  A 64-bit integer indicating the size of the User OS RAM (MMIO not
-	  included). Now we assume each UOS uses same amount of RAM size.
 
 config ACPI_PARSE_ENABLED
 	bool "Enable ACPI runtime parsing"
