@@ -7,71 +7,11 @@
 #ifndef MULTIBOOT_PRIV_H
 #define MULTIBOOT_PRIV_H
 
+/* extended flags for acrn multiboot info from multiboot2  */
+#define	MULTIBOOT_INFO_HAS_EFI_MMAP	0x00010000U
+#define	MULTIBOOT_INFO_HAS_EFI64	0x00020000U
+
 #ifdef CONFIG_MULTIBOOT2
-#include <multiboot2.h>
-
-struct multiboot2_mmap_entry
-{
-	uint64_t addr;
-	uint64_t len;
-	uint32_t type;
-	uint32_t zero;
-};
-
-struct multiboot2_tag
-{
-	uint32_t type;
-	uint32_t size;
-};
-
-struct multiboot2_tag_string
-{
-	uint32_t type;
-	uint32_t size;
-	char string[0];
-};
-
-struct multiboot2_tag_module
-{
-	uint32_t type;
-	uint32_t size;
-	uint32_t mod_start;
-	uint32_t mod_end;
-	char cmdline[0];
-};
-
-struct multiboot2_tag_mmap
-{
-	uint32_t type;
-	uint32_t size;
-	uint32_t entry_size;
-	uint32_t entry_version;
-	struct multiboot2_mmap_entry entries[0];
-};
-
-struct multiboot2_tag_new_acpi
-{
-	uint32_t type;
-	uint32_t size;
-	uint8_t rsdp[0];
-};
-
-struct multiboot2_tag_efi64
-{
-	uint32_t type;
-	uint32_t size;
-	uint64_t pointer;
-};
-
-struct multiboot2_tag_efi_mmap
-{
-	uint32_t type;
-	uint32_t size;
-	uint32_t descr_size;
-	uint32_t descr_vers;
-	uint8_t efi_mmap[0];
-};
-
 /*
  * @post boot_regs[1] stores the address pointer that point to a valid multiboot2 info
  */
