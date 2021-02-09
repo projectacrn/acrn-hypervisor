@@ -34,31 +34,6 @@ static void mb2_mods_to_mbi(struct acrn_multiboot_info *mbi,
 }
 
 /**
- * @pre mbi != NULL && mb2_tag_efi64 != 0
- */
-static void mb2_efi64_to_mbi(struct acrn_multiboot_info *mbi, const struct multiboot2_tag_efi64 *mb2_tag_efi64)
-{
-	const uint32_t efiloader_sig = 0x34364c45; /* "EL64" */
-	mbi->mi_efi_info.efi_systab = (uint32_t)(uint64_t)mb2_tag_efi64->pointer;
-	mbi->mi_efi_info.efi_loader_signature = efiloader_sig;
-	mbi->mi_flags |= MULTIBOOT_INFO_HAS_EFI64;
-}
-
-/**
- * @pre mbi != NULL && mb2_tag_efimmap != 0
- */
-static void mb2_efimmap_to_mbi(struct acrn_multiboot_info *mbi,
-			const struct multiboot2_tag_efi_mmap *mb2_tag_efimmap)
-{
-	mbi->mi_efi_info.efi_memdesc_size = mb2_tag_efimmap->descr_size;
-	mbi->mi_efi_info.efi_memdesc_version = mb2_tag_efimmap->descr_vers;
-	mbi->mi_efi_info.efi_memmap = (uint32_t)(uint64_t)mb2_tag_efimmap->efi_mmap;
-	mbi->mi_efi_info.efi_memmap_size = mb2_tag_efimmap->size - 16U;
-	mbi->mi_efi_info.efi_memmap_hi = (uint32_t)(((uint64_t)mb2_tag_efimmap->efi_mmap) >> 32U);
-	mbi->mi_flags |= MULTIBOOT_INFO_HAS_EFI_MMAP;
-}
-
-/**
  * @pre mbi != NULL
  */
 int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
@@ -90,12 +65,6 @@ int32_t multiboot2_to_acrn_mbi(struct acrn_multiboot_info *mbi, void *mb2_info)
 			break;
 		case MULTIBOOT2_TAG_TYPE_ACPI_NEW:
 			mbi->mi_acpi_rsdp_va = ((struct multiboot2_tag_new_acpi *)mb2_tag)->rsdp;
-			break;
-		case MULTIBOOT2_TAG_TYPE_EFI64:
-			mb2_efi64_to_mbi(mbi, (const struct multiboot2_tag_efi64 *)mb2_tag);
-			break;
-		case MULTIBOOT2_TAG_TYPE_EFI_MMAP:
-			mb2_efimmap_to_mbi(mbi, (const struct multiboot2_tag_efi_mmap *)mb2_tag);
 			break;
 		default:
 			if (mb2_tag->type > MULTIBOOT2_TAG_TYPE_LOAD_BASE_ADDR) {

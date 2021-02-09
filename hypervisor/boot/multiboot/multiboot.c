@@ -93,20 +93,6 @@ int32_t sanitize_acrn_multiboot_info(uint32_t magic, uint32_t info)
 		mbi_status = -EINVAL;
 	}
 
-#ifdef CONFIG_MULTIBOOT2
-	if (boot_from_multiboot2(magic)) {
-		if (acrn_mbi.mi_efi_info.efi_memmap_hi != 0U) {
-			pr_err("the EFI mmap address should be less than 4G!");
-			acrn_mbi.mi_flags &= ~MULTIBOOT_INFO_HAS_EFI_MMAP;
-			mbi_status = -EINVAL;
-		}
-
-		if ((acrn_mbi.mi_flags & (MULTIBOOT_INFO_HAS_EFI64 | MULTIBOOT_INFO_HAS_EFI_MMAP)) == 0U) {
-			pr_err("no multiboot2 uefi info found!");
-		}
-	}
-#endif
-
 	if (acrn_mbi.mi_loader_name[0] == '\0') {
 		pr_err("no bootloader name found!");
 		mbi_status = -EINVAL;

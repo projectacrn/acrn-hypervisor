@@ -502,6 +502,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 
 	if (is_sos_vm(vm)) {
 		/* Only for SOS_VM */
+		build_vrsdp(vm);
 		create_sos_vm_e820(vm);
 		prepare_sos_vm_memmap(vm);
 
@@ -526,6 +527,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 		 if (vm_config->load_order == PRE_LAUNCHED_VM) {
 			create_prelaunched_vm_e820(vm);
 			prepare_prelaunched_vm_memmap(vm, vm_config);
+			build_vrsdp(vm);
 			status = init_vm_boot_info(vm);
 		 }
 	}
@@ -866,10 +868,6 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 	err = create_vm(vm_id, vm_config->cpu_affinity, vm_config, &vm);
 
 	if (err == 0) {
-		if (is_prelaunched_vm(vm)) {
-			build_vrsdp(vm);
-		}
-
 		(void)vm_sw_loader(vm);
 
 		/* start vm BSP automatically */

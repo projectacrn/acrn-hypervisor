@@ -7,14 +7,13 @@
 #ifndef ZEROPAGE_H
 #define ZEROPAGE_H
 #include <e820.h>
-#include <efi.h>
 
 struct zero_page {
-	uint8_t pad0[0x1c0];	/* 0x000 */
+	uint8_t pad0[0x70];	/* 0x000 */
 
-	struct efi_info boot_efi_info;
+	uint64_t acpi_rsdp_addr;	/* 0x070 */
 
-	uint8_t pad1[0x8];	/* 0x1e0 */
+	uint8_t pad1[0x170];	/* 0x78 */
 	uint8_t e820_nentries;	/* 0x1e8 */
 	uint8_t pad2[0x8];	/* 0x1e9 */
 
