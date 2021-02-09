@@ -76,7 +76,7 @@
 severity and intent:
 
 - 1 (LOG_FATAL) system is unusable
-- 2 (LOG_ACRN)
+- 2 (LOG_ACRN) hypervisor failure
 - 3 (LOG_ERROR) error conditions
 - 4 (LOG_WARNING) warning conditions
 - 5 (LOG_INFO) informational
