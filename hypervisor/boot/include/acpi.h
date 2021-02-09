@@ -237,6 +237,7 @@ struct acpi_table_tpm2 {
 } __packed;
 
 void init_acpi(void);
+struct acpi_table_rsdp *get_rsdp(void);
 void *get_acpi_tbl(const char *signature);
 
 struct ioapic_info;
