@@ -7,26 +7,7 @@
 #ifndef MULTIBOOT_H
 #define MULTIBOOT_H
 
-#ifdef CONFIG_MULTIBOOT2
-#include <multiboot2.h>
-#endif
-
-#define	MULTIBOOT_HEADER_MAGIC		0x1BADB002
-#define	MULTIBOOT_INFO_MAGIC		0x2BADB002U
-
-/* MULTIBOOT HEADER FLAGS */
-#define	MULTIBOOT_HEADER_NEED_MEMINFO	0x00000002
-
-/* MULTIBOOT INFO FLAGS */
-#define	MULTIBOOT_INFO_HAS_CMDLINE	0x00000004U
-#define	MULTIBOOT_INFO_HAS_MODS		0x00000008U
-#define	MULTIBOOT_INFO_HAS_MMAP		0x00000040U
-#define	MULTIBOOT_INFO_HAS_DRIVES	0x00000080U
-#define	MULTIBOOT_INFO_HAS_LOADER_NAME	0x00000200U
-
-/* extended flags for acrn multiboot info from multiboot2  */
-#define	MULTIBOOT_INFO_HAS_EFI_MMAP	0x00010000U
-#define	MULTIBOOT_INFO_HAS_EFI64	0x00020000U
+#include <multiboot_std.h>
 
 /* TODO: MAX_MMAP_ENTRIES shall be config by config tool, and same as E820_MAX_ENTRIES */
 #define MAX_MMAP_ENTRIES		32U
@@ -43,20 +24,6 @@
 
 #include <efi.h>
 #include <vm_configurations.h>
-
-struct multiboot_mmap {
-	uint32_t size;
-	uint64_t baseaddr;
-	uint64_t length;
-	uint32_t type;
-} __packed;
-
-struct multiboot_module {
-	uint32_t	mm_mod_start;
-	uint32_t	mm_mod_end;
-	uint32_t	mm_string;
-	uint32_t	mm_reserved;
-};
 
 struct acrn_multiboot_info {
 	uint32_t		mi_flags;	/* the flags is back-compatible with multiboot1 */
