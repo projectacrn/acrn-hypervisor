@@ -11,22 +11,22 @@ ACRN. We use OpenStack to use libvirt and we'll install OpenStack in a container
 to avoid crashing your system and to take advantage of easy
 snapshots/restores so that you can quickly roll back your system in the
 event of setup failure. (You should only install OpenStack directly on Ubuntu if
-you have a dedicated testing machine.) This setup utilizes LXC/LXD on
-Ubuntu 18.04.
+you have a dedicated testing machine). This setup utilizes LXC/LXD on
+Ubuntu 20.04.
 
 Install ACRN
 ************
 
-#. Install ACRN using Ubuntu 18.04 as its Service VM. Refer to
+#. Install ACRN using Ubuntu 20.04 as its Service VM. Refer to
    :ref:`Build and Install ACRN on Ubuntu <build-and-install-acrn-on-ubuntu>`.
 
 #. Make the acrn-kernel using the `kernel_config_uefi_sos
    <https://raw.githubusercontent.com/projectacrn/acrn-kernel/master/kernel_config_uefi_sos>`_
    configuration file (from the ``acrn-kernel`` repo).
 
-#. Add the following kernel boot arg to give the Service VM  more memory
-   and more loop devices. Refer to `Kernel Boot Parameters
-   <https://wiki.ubuntu.com/Kernel/KernelBootParameters>`_ documentation::
+#. Append the following kernel boot arguments to the ``multiboot2`` line in
+   :file:`/etc/grub.d/40_custom` and run ``sudo update-grub`` before rebooting the system.
+   It will give the Service VM  more memory and more loop devices::
 
       hugepagesz=1G hugepages=10 max_loop=16
 
@@ -44,34 +44,25 @@ Install ACRN
 Set up and launch LXC/LXD
 *************************
 
-1. Set up the LXC/LXD Linux container engine using these `instructions
-   <https://ubuntu.com/tutorials/tutorial-setting-up-lxd-1604>`_ provided
-   by Ubuntu.
+1. Set up the LXC/LXD Linux container engine::
 
-   Refer to the following additional information for the setup
-   procedure:
+      $ sudo snap install lxd
+      $ lxd init --auto
 
-   - Disregard ZFS utils (we're not going to use the ZFS storage
-     backend).
-   - Answer ``dir`` (and not ``zfs``) when prompted for the name of the storage backend to use.
-   - Set up ``lxdbr0`` as instructed.
-   - Before launching a container, install lxc-utils by ``apt-get install lxc-utils``,
-     make sure ``lxc-checkconfig | grep missing`` does not show any missing kernel features
-     except ``CONFIG_NF_NAT_IPV4`` and ``CONFIG_NF_NAT_IPV6``, which
-     were renamed in recent kernels.
+   Use all default values if running ``lxd init`` in interactive mode.
 
 2. Create an Ubuntu 18.04 container named ``openstack``::
 
-     $ lxc init ubuntu:18.04 openstack
+      $ lxc init ubuntu:18.04 openstack
 
 3. Export the kernel interfaces necessary to launch a Service VM in the
    ``openstack`` container:
 
    a. Edit the ``openstack`` config file using the command::
 
-        $ lxc config edit openstack
+      $ lxc config edit openstack
 
-      In the editor, add the following lines under **config**:
+      In the editor, add the following lines in the **config** section:
 
       .. code-block:: none
 
@@ -82,10 +73,17 @@ Set up and launch LXC/LXD
            lxc.cgroup.devices.allow = c 243:0 rwm
            lxc.mount.entry = /dev/net/tun dev/net/tun none bind,create=file 0 0
            lxc.mount.auto=proc:rw sys:rw cgroup:rw
+           lxc.apparmor.profile=unconfined
          security.nesting: "true"
          security.privileged: "true"
 
       Save and exit the editor.
+
+      .. note::
+
+         Make sure to respect the indentation as to keep these options within
+         the **config** section. It is a good idea after saving your changes
+         to check that they have been correctly recorded (``lxc config show openstack``).
 
    b. Run the following commands to configure ``openstack``::
 
@@ -135,14 +133,16 @@ Set up and launch LXC/LXD
 
      no_proxy=xcompany.com,.xcompany.com,10.0.0.0/8,192.168.0.0/16,localhost,.local,127.0.0.0/8,134.134.0.0/16
 
-10. Add a new user named **stack** and set permissions::
+10. Add a new user named **stack** and set permissions
 
-       $ useradd -s /bin/bash -d /opt/stack -m stack
-       $ echo "stack ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+    .. code-block:: none
+
+       # useradd -s /bin/bash -d /opt/stack -m stack
+       # echo "stack ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 11. Log off and restart the ``openstack`` container::
 
-      $ lxc restart openstack
+     $ lxc restart openstack
 
 The ``openstack`` container is now properly configured for OpenStack.
 Use the ``lxc list`` command to verify that both **eth0** and **eth1**
@@ -162,17 +162,20 @@ Set up ACRN prerequisites inside the container
 
    .. code-block:: none
 
+      $ cd ~
       $ git clone https://github.com/projectacrn/acrn-hypervisor
       $ cd acrn-hypervisor
-      $ git checkout v2.3
+      $ git checkout v2.4
       $ make
-      $ cd misc/acrn-manager/; make
+      $ sudo make devicemodel-install
+      $ sudo cp build/misc/debug_tools/acrnd /usr/bin/
+      $ sudo cp build/misc/debug_tools/acrnctl /usr/bin/
 
    Install only the user-space components: ``acrn-dm``, ``acrnctl``, and
-   ``acrnd``
+   ``acrnd`` as shown above.
 
-3. Download, compile, and install ``iasl``. Refer to
-   :ref:`Build and Install ACRN on Ubuntu <build-and-install-acrn-on-ubuntu>`.
+   .. note:: Use the tag that matches the version of the ACRN hypervisor (``acrn.bin``)
+      that runs on your system.
 
 Set up libvirt
 **************
@@ -186,6 +189,7 @@ Set up libvirt
 
 2. Download libvirt/ACRN::
 
+     $ cd ~
      $ git clone https://github.com/projectacrn/acrn-libvirt.git
 
 3. Build and install libvirt::
@@ -199,6 +203,9 @@ Set up libvirt
 
      $ make
      $ sudo make install
+
+   .. note:: The ``dev-acrn-v6.1.0`` branch is used in this tutorial. It is
+      the default branch.
 
 4. Edit and enable these options in ``/etc/libvirt/libvirtd.conf``::
 
@@ -219,20 +226,20 @@ Use DevStack to install OpenStack. Refer to the `DevStack instructions <https://
 1. Use the latest maintenance branch **stable/train** to ensure OpenStack
    stability::
 
-     $ git clone https://opendev.org/openstack/devstack.git -b stable/train
+      $ cd ~
+      $ git clone https://opendev.org/openstack/devstack.git -b stable/train
 
-2. Go into the ``devstack`` directory, download an ACRN patch from
-   :acrn_raw:`doc/tutorials/0001-devstack-installation-for-acrn.patch`,
-   and apply it ::
+2. Go into the ``devstack`` directory, and apply the
+   :file:`doc/tutorials/0001-devstack-installation-for-acrn.patch`::
 
       $ cd devstack
-      $ git apply 0001-devstack-installation-for-acrn.patch
+      $ git apply ~/acrn-hypervisor/doc/tutorials/0001-devstack-installation-for-acrn.patch
 
 3. Edit ``lib/nova_plugins/hypervisor-libvirt``:
 
    Change ``xen_hvmloader_path`` to the location of your OVMF image
-   file. A stock image is included in the ACRN source tree
-   (``devicemodel/bios/OVMF.fd``).
+   file: ``/usr/share/acrn/bios/OVMF.fd``. Or use the stock image that is included
+   in the ACRN source tree (``devicemodel/bios/OVMF.fd``).
 
 4. Create a ``devstack/local.conf`` file as shown below (setting the
    passwords as appropriate):
@@ -256,6 +263,7 @@ Use DevStack to install OpenStack. Refer to the `DevStack instructions <https://
       USE_PYTHON3=True
 
    .. note::
+
       Now is a great time to take a snapshot of the container using ``lxc
       snapshot``. If the OpenStack installation fails, manually rolling back
       to the previous state can be difficult. Currently, no step exists to
@@ -263,7 +271,7 @@ Use DevStack to install OpenStack. Refer to the `DevStack instructions <https://
 
 5. Install OpenStack::
 
-     execute ./stack.sh in devstack/
+      $ ./stack.sh
 
    The installation should take about 20-30 minutes. Upon successful
    installation, the installer reports the URL of OpenStack's management
@@ -298,15 +306,11 @@ Use DevStack to install OpenStack. Refer to the `DevStack instructions <https://
 Configure and create OpenStack Instance
 ***************************************
 
-We'll be using the Clear Linux Cloud Guest as the OS image (qcow2
-format). Download the Cloud Guest image from
-https://clearlinux.org/downloads and uncompress it, for example::
+We'll be using the Ubuntu 20.04 (Focal) Cloud image as the OS image (qcow2
+format). Download the Cloud image from https://cloud-images.ubuntu.com/releases/focal,
+for example::
 
-   $ wget https://cdn.download.clearlinux.org/releases/33110/clear/clear-33110-cloudguest.img.xz
-   $ unxz clear-33110-cloudguest.img.xz
-
-This will leave you with the uncompressed OS image
-``clear-33110-cloudguest.img`` we'll use later.
+   $ wget https://cloud-images.ubuntu.com/releases/focal/release-20210201/ubuntu-20.04-server-cloudimg-amd64.img
 
 Use the OpenStack management interface URL reported in a previous step
 to finish setting up the network and configure and create an OpenStack
@@ -395,7 +399,7 @@ instance.
       :width: 1200px
       :name: os-06-create-image
 
-   Browse for and select the Clear Linux Cloud Guest image file we
+   Browse for and select the Ubuntu Cloud image file we
    downloaded earlier:
 
    .. figure:: images/OpenStack-06a-create-image-browse.png
@@ -405,31 +409,30 @@ instance.
 
    .. figure:: images/OpenStack-06b-create-image-select.png
       :align: center
-      :width: 1200px
       :name: os-06b-create-image
 
-   Give the image a name (**acrnImage**), select the **QCOW2 - QEMU
+   Give the image a name (**Ubuntu20.04**), select the **QCOW2 - QEMU
    Emulator** format, and click on **Create Image**:
 
    .. figure:: images/OpenStack-06e-create-image.png
       :align: center
-      :width: 1200px
+      :width: 900px
       :name: os-063-create-image
 
    This will take a few minutes to complete.
 
 #. Next, click on the **Admin / Computer / Flavors** tabs and then the
    **+Create Flavor** button.  This is where you'll define a machine flavor name
-   (**acrn4vcpu**), and specify its resource requirements: the number of vCPUs (**4**), RAM size
-   (**256MB**), and root disk size (**2GB**):
+   (**UbuntuCloud**), and specify its resource requirements: the number of vCPUs (**2**), RAM size
+   (**512MB**), and root disk size (**4GB**):
 
    .. figure:: images/OpenStack-07a-create-flavor.png
       :align: center
-      :width: 1200px
+      :width: 700px
       :name: os-07a-create-flavor
 
    Click on **Create Flavor** and you'll return to see a list of
-   available flavors plus the new one you created (**acrn4vcpu**):
+   available flavors plus the new one you created (**UbuntuCloud**):
 
    .. figure:: images/OpenStack-07b-flavor-created.png
       :align: center
@@ -499,36 +502,36 @@ instance.
 
 #. Now we're ready to launch an instance.  Go to **Project / Compute /
    Instance**, click on the **Launch Instance** button, give it a name
-   (**acrn4vcpuVM**) and click **Next**:
+   (**UbuntuOnACRN**) and click **Next**:
 
    .. figure:: images/OpenStack-10a-launch-instance-name.png
       :align: center
-      :width: 1200px
+      :width: 900px
       :name: os-10a-launch
 
    Select **No** for "Create New Volume", and click the up-arrow button
-   for uploaded (**acrnImage**) image as the "Available source" for this
+   for uploaded (**Ubuntu20.04**) image as the "Available source" for this
    instance:
 
    .. figure:: images/OpenStack-10b-no-new-vol-select-allocated.png
       :align: center
-      :width: 1200px
+      :width: 900px
       :name: os-10b-launch
 
    Click **Next**, and select the machine flavor you created earlier
-   (**acrn4vcpu**):
+   (**UbuntuCloud**):
 
    .. figure:: images/OpenStack-10c-select-flavor.png
       :align: center
-      :width: 1200px
+      :width: 900px
       :name: os-10c-launch
 
-   Click on **>** next to the Allocated **acrn4vcpu** flavor and see
+   Click on **>** next to the Allocated **UbuntuCloud** flavor and see
    details about your choice:
 
    .. figure:: images/OpenStack-10d-flavor-selected.png
       :align: center
-      :width: 1200px
+      :width: 900px
       :name: os-10d-launch
 
    Click on the **Networks** tab, and select the internal **shared**
@@ -574,7 +577,7 @@ instance.
 
    .. figure:: images/OpenStack-11a-manage-floating-ip.png
       :align: center
-      :width: 1200px
+      :width: 700px
       :name: os-11a-running
 
    Select **public** pool, and click on **Allocate IP**:
@@ -624,27 +627,6 @@ running:
 
 * Ping the instance inside the container using the instance's floating IP
   address.
-
-* Clear Linux prohibits root SSH login by default. Use libvirt's ``virsh``
-  console to configure the instance. Inside the container, using::
-
-     $ sudo virsh -c acrn:///system
-     list   #you should see the instance listed as running
-     console <instance_name>
-
-  Log in to the Clear Linux instance and set up the root SSH. Refer to
-  the Clear Linux instructions on `enabling root login
-  <https://docs.01.org/clearlinux/latest/guides/network/openssh-server.html#enable-root-login>`_.
-
-  - If needed, set up the proxy inside the instance.
-  - Configure ``systemd-resolved`` to use the correct DNS server.
-  - Install ping: ``swupd bundle-add clr-network-troubleshooter``.
-
-   The ACRN instance should now be able to ping ``acrn-br0`` and another
-   ACRN instance. It should also be accessible inside the container via SSH
-   and its floating IP address.
-
-The ACRN instance can be deleted via the OpenStack management interface.
 
 For more advanced CLI usage, refer to this `OpenStack cheat sheet
 <https://docs.openstack.org/ocata/user-guide/cli-cheat-sheet.html>`_.
