@@ -3,7 +3,7 @@
 
 <xs:simpleType name="Boolean">
   <xs:annotation>
-    <xs:documentation>A boolean value, written as ``y`` or ``n``.</xs:documentation>
+    <xs:documentation>A Boolean value, written as ``y`` or ``n``.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:enumeration value="y" />
@@ -13,7 +13,7 @@
 
 <xs:simpleType name="HexFormat">
   <xs:annotation>
-    <xs:documentation>An integer value in hexadecimal format.</xs:documentation>
+    <xs:documentation>An Integer value in hexadecimal format.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:string">
     <xs:pattern value="0[Xx][0-9A-Fa-f]+|0" />
@@ -28,21 +28,21 @@
 
 <xs:simpleType name="HVRamSizeType">
   <xs:annotation>
-    <xs:documentation>Either empty, or an integer value in hexadecimal format.</xs:documentation>
+    <xs:documentation>Either empty, or an Integer value in hexadecimal format.</xs:documentation>
   </xs:annotation>
   <xs:union memberTypes="None HexFormat" />
 </xs:simpleType>
 
 <xs:simpleType name="HVRamStartType">
   <xs:annotation>
-    <xs:documentation>Either empty, or an integer value in hexadecimal format.</xs:documentation>
+    <xs:documentation>Either empty, or an Integer value in hexadecimal format.</xs:documentation>
   </xs:annotation>
   <xs:union memberTypes="None HexFormat" />
 </xs:simpleType>
 
 <xs:simpleType name="MaxMsixTableNumType">
   <xs:annotation>
-    <xs:documentation>integer from 1 to 2048.</xs:documentation>
+    <xs:documentation>Integer from 1 to 2048.</xs:documentation>
   </xs:annotation>
   <xs:restriction base="xs:integer">
     <xs:minInclusive value="1" />
@@ -52,7 +52,7 @@
 
 <xs:simpleType name="MaxMsixTableSizeType">
   <xs:annotation>
-    <xs:documentation>Either empty, or an integer value between 1 and 2048.</xs:documentation>
+    <xs:documentation>Either empty, or an Integer value between 1 and 2048.</xs:documentation>
   </xs:annotation>
   <xs:union memberTypes="None MaxMsixTableNumType" />
 </xs:simpleType>
@@ -65,14 +65,14 @@
 
 <xs:simpleType name="MemorySizeType">
   <xs:annotation>
-    <xs:documentation>An integer value in hexadecimal format.</xs:documentation>
+    <xs:documentation>An Integer value in hexadecimal format.</xs:documentation>
   </xs:annotation>
   <xs:union memberTypes="SOSRamSize HexFormat" />
 </xs:simpleType>
 
 <xs:simpleType name="LogLevelType">
   <xs:annotation>
-    <xs:documentation>An integer from 0 to 7 representing log message
+    <xs:documentation>An Integer from 0 to 7 representing log message
 severity and intent:
 
 - 1 (LOG_FATAL) system is unusable

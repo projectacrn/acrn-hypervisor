@@ -345,7 +345,7 @@ to the pre-launched VM.</xs:documentation>
   <xs:sequence>
     <xs:element name="pci_dev" type="xs:string" maxOccurs="unbounded">
       <xs:annotation>
-        <xs:documentation>A passthrough pci device.</xs:documentation>
+        <xs:documentation>A passthrough PCI device.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:sequence>
@@ -355,7 +355,7 @@ to the pre-launched VM.</xs:documentation>
   <xs:sequence>
     <xs:element name="rootfs" type="xs:string" default="/dev/nvme0n1p3">
       <xs:annotation>
-        <xs:documentation>rootfs for the Linux kernel.</xs:documentation>
+        <xs:documentation>Rootfs for the Linux kernel.</xs:documentation>
       </xs:annotation>
     </xs:element>
     <xs:element name="bootargs" type="xs:string">

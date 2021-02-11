@@ -9,6 +9,9 @@
   <xsl:variable name="newline" select="'&#xa;'"/>
   <xsl:variable name="section_adornment" select="'#*=-%+@`'"/>
 
+  <xsl:variable name="vLower" select= "'abcdefghijklmnopqrstuvwxyz'"/>
+  <xsl:variable name="vUpper" select= "'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"/>
+
   <!--
       Visitors of XSD elements
   -->
@@ -96,7 +99,7 @@
          </xsl:when>
          <xsl:when test="starts-with($ty, 'xs:')">
            <xsl:text>   - </xsl:text>
-           <xsl:value-of select="substring($ty, 4)"/>
+           <xsl:value-of select="concat(translate(substring($ty, 4,1), $vLower, $vUpper), substring($ty,5))"/>
            <xsl:value-of select="$newline"/>
          </xsl:when>
          <xsl:otherwise>
