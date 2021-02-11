@@ -53,9 +53,9 @@ written to the serial console.</xs:documentation>
         <xs:documentation>Bitmap indicating the destination of log messages.
 There are three log destinations available:
 
-- bit 0 enables the serial console (``0x1``),
-- bit 1 enables the Service VM log (``0x2``), and
-- bit 2 enables the NPK log (``0x4``).
+- Bit 0 enables the serial console (``0x1``),
+- Bit 1 enables the Service VM log (``0x2``), and
+- Bit 2 enables the NPK log (``0x4``).
 
 For example, a value of ``3`` enables only the
 serial console and Service VM logs. Effective only in debug builds (when
@@ -63,7 +63,7 @@ serial console and Service VM logs. Effective only in debug builds (when
       </xs:annotation>
     <xs:simpleType>
       <xs:annotation>
-        <xs:documentation>integer value from 0 to 7.</xs:documentation>
+        <xs:documentation>Integer value from 0 to 7.</xs:documentation>
       </xs:annotation>
       <xs:restriction base="xs:integer">
         <xs:minInclusive value="0" />
@@ -74,7 +74,7 @@ serial console and Service VM logs. Effective only in debug builds (when
     <xs:element name="LOG_BUF_SIZE" type="HexFormat" default="0x40000">
       <xs:annotation>
         <xs:documentation>Capacity (in bytes) of logbuf for each
-physical cpu, for example, ``0x40000``.</xs:documentation>
+physical CPU, for example, ``0x40000``.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
@@ -222,7 +222,7 @@ initialization.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
          <xs:annotation>
-           <xs:documentation>integer from 1 to 10.</xs:documentation>
+           <xs:documentation>Integer from 1 to 10.</xs:documentation>
          </xs:annotation>
         <xs:restriction base="xs:integer">
           <xs:minInclusive value="1" />
@@ -241,7 +241,7 @@ initialization.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
          <xs:annotation>
-           <xs:documentation>integer from 1 to 1024.</xs:documentation>
+           <xs:documentation>Integer from 1 to 1024.</xs:documentation>
          </xs:annotation>
         <xs:restriction base="xs:integer">
           <xs:minInclusive value="1" />
@@ -255,7 +255,7 @@ initialization.</xs:documentation>
       </xs:annotation>
       <xs:simpleType>
          <xs:annotation>
-           <xs:documentation>integer from 1 to 120.</xs:documentation>
+           <xs:documentation>Integer from 1 to 120.</xs:documentation>
          </xs:annotation>
         <xs:restriction base="xs:integer">
           <xs:minInclusive value="1" />
@@ -275,7 +275,7 @@ devices.</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
         <xs:annotation>
-          <xs:documentation>integer value from 1 to 2048.</xs:documentation>
+          <xs:documentation>Integer value from 1 to 2048.</xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:integer">
           <xs:minInclusive value="1" />
@@ -289,7 +289,7 @@ devices.</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
         <xs:annotation>
-          <xs:documentation>integer value from 1 to 128.</xs:documentation>
+          <xs:documentation>Integer value from 1 to 128.</xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:integer">
           <xs:minInclusive value="1" />
