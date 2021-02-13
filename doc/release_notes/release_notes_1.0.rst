@@ -390,6 +390,7 @@ Known Issues
 
    **Workaround:** Unplug and plug-in the unrecognized device after booting.
 
+-----
 
 :acrn-issue:`1991` - Input not accepted in UART Console for corner case
    Input is useless in UART Console for a corner case, demonstrated with these steps:
@@ -404,6 +405,7 @@ Known Issues
 
    **Workaround:** Enter other keys before typing :kbd:`Enter`.
 
+-----
 
 :acrn-issue:`2267` - [APLUP2][LaaG] LaaG can't detect 4k monitor
    After launching UOS on APL UP2 , 4k monitor cannot be detected.
@@ -412,6 +414,7 @@ Known Issues
 
    **Workaround:** Use a monitor with less than 4k resolution.
 
+-----
 
 :acrn-issue:`2278` - [KBLNUC] Cx/Px is not supported on KBLNUC
    C states and P states are not supported on KBL NUC.
@@ -421,6 +424,7 @@ Known Issues
 
    **Workaround:** None
 
+-----
 
 :acrn-issue:`2279` - [APLNUC] After exiting UOS, SOS can't use USB keyboard and mouse
    After exiting UOS with mediator
@@ -441,6 +445,7 @@ Known Issues
 
    **Workaround:** Unplug and plug-in the USB keyboard and mouse after exiting UOS.
 
+-----
 
 :acrn-issue:`2527` - System will crash after a few minutes running stress test ``crashme`` tool in SOS/UOS.
    System stress test may cause a system crash.
@@ -449,6 +454,7 @@ Known Issues
 
    **Workaround:** None
 
+-----
 
 :acrn-issue:`2526` - Hypervisor crash when booting UOS with acrnlog running with mem loglevel=6
    If we use ``loglevel 3 6`` to change the mem loglevel to 6, we may hit a page fault in HV.
@@ -457,6 +463,7 @@ Known Issues
 
    **Workaround:** None
 
+-----
 
 :acrn-issue:`2753` - UOS cannot resume after suspend by pressing power key
    UOS cannot resume after suspend by pressing power key
@@ -465,6 +472,7 @@ Known Issues
 
    **Workaround:** None
 
+-----
 
 :acrn-issue:`2974` - Launching Zephyr RTOS as a real-time UOS takes too long
     Launching Zephyr RTOS as a real-time UOS takes too long
@@ -480,6 +488,7 @@ Known Issues
 
     **Workaround:** None
 
+-----
 
 Change Log
 **********

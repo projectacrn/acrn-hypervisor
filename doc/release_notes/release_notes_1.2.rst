@@ -105,6 +105,7 @@ Known Issues
 
    **Workaround:** Issue resolved on ACRN tag: ``acrn-2019w33.1-140000p``
 
+-----
 
 :acrn-issue:`3520` - bundle of "VGPU unconformance guest" messages observed for "gvt" in SOS console while using UOS
    After the need_force_wake is not removed in course of submitting VGPU workload,
@@ -117,6 +118,7 @@ Known Issues
 
    **Workaround:** Need to rebuild and apply the latest Service VM kernel from the ``acrn-kernel`` source code.
 
+-----
 
 :acrn-issue:`3533` - NUC hang while repeating the cold boot
    NUC will hang while repeating cold boot operation.
@@ -132,6 +134,7 @@ Known Issues
 
    **Workaround:** Need to rebuild and apply the latest Service VM kernel from the ``acrn-kernel`` source code.
 
+-----
 
 :acrn-issue:`3576` - Expand default memory from 2G to 4G for WaaG
 
@@ -139,21 +142,25 @@ Known Issues
 
    **Workaround:** Issue resolved on ACRN tag: ``acrn-2019w33.1-140000p``
 
+-----
 
 :acrn-issue:`3609` - Sometimes fail to boot os while repeating the cold boot operation
 
    **Workaround:** Please refer the PR information in this git issue
 
+-----
 
 :acrn-issue:`3610` - LaaG hang while run some workloads loop with zephyr idle
 
    **Workaround:** Revert commit ``bbb891728d82834ec450f6a61792f715f4ec3013`` from the kernel
 
+-----
 
 :acrn-issue:`3611` - OVMF launch UOS fail for Hybrid and industry scenario
 
    **Workaround:** Please refer the PR information in this git issue
 
+-----
 
 
 Change Log
