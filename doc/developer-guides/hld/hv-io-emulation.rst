@@ -1,6 +1,6 @@
 .. _hld-io-emulation:
 
-I/O Emulation high-level design
+I/O Emulation High-Level Design
 ###############################
 
 As discussed in :ref:`intro-io-emulation`, there are multiple ways and
@@ -215,7 +215,7 @@ Note that there is no state to represent a 'failed' I/O request. Service VM
 should return all 1's for reads and ignore writes whenever it cannot
 handle the I/O request, and change the state of the request to COMPLETE.
 
-Post-work
+Post-Work
 =========
 
 After an I/O request is completed, some more work needs to be done for

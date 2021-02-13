@@ -29,7 +29,7 @@ change the value in it.
 
 ``vuart[1]`` is initiated as a **communication** port.
 
-Console enable list
+Console Enable List
 ===================
 
 +-----------------+-----------------------+--------------------+----------------+----------------+
@@ -50,7 +50,7 @@ Console enable list
 
 .. _how-to-configure-a-console-port:
 
-How to configure a console port
+How to Configure a Console Port
 ===============================
 
 To enable the console port for a VM, change only the ``port_base`` and
@@ -75,7 +75,7 @@ Example:
 
 .. _how-to-configure-a-communication-port:
 
-How to configure a communication port
+How to Configure a Communication Port
 =====================================
 
 To enable the communication port, configure ``vuart[1]`` in the two VMs that want to communicate.
@@ -111,7 +111,7 @@ Example:
                         .t_vuart.vuart_id = 1U,
                 },
 
-Communication vUART enable list
+Communication vUART Enable List
 ===============================
 
 +-----------------+-----------------------+--------------------+---------------------+----------------+
@@ -128,7 +128,7 @@ Communication vUART enable list
 | Logic_partition | Pre-launched          | Pre-launched RTVM  |                     |                |
 +-----------------+-----------------------+--------------------+---------------------+----------------+
 
-Launch script
+Launch Script
 =============
 
 -  ``-s 1:0,lpc -l com1,stdio``
@@ -139,7 +139,7 @@ Launch script
 -  ``-B " ....,console=ttyS0, ..."``
    Add this to the kernel-based system.
 
-Test the communication port
+Test the Communication Port
 ===========================
 
 After you have configured the communication port in hypervisor, you can
@@ -172,7 +172,7 @@ access the corresponding port. For example, in Linux OS:
    -  This cannot be used to transfer files because flow control is
        not supported so data may be lost.
 
-vUART design
+vUART Design
 ============
 
 **Console vUART**
@@ -187,7 +187,7 @@ vUART design
    :align: center
    :name: communication-vuart
 
-COM port configurations for Post-Launched VMs
+COM Port Configurations for Post-Launched VMs
 =============================================
 
 For a post-launched VM, the ``acrn-dm`` cmdline also provides a COM port configuration:
@@ -365,7 +365,7 @@ VM0's PCI-vUART1. Usually, legacy ``vuart[0]`` is ``ttyS0`` in VM, and
 ``vuart[1]`` is ``ttyS1``. So we hope PCI-vUART0 is ``ttyS0``,
 PCI-VUART1 is ``ttyS1`` and so on through
 PCI-vUART7 is ``ttyS7``, but that is not true. We can use BDF to identify
-PCI-vUART in VM. 
+PCI-vUART in VM.
 
 If you run ``dmesg | grep tty`` at a VM shell, you may see:
 
@@ -398,7 +398,7 @@ symbols set:
    CONFIG_SERIAL_8250_EXTENDED=y
    CONFIG_SERIAL_8250_DETECT_IRQ=y
 
-Kernel Cmdline for PCI-vUART console
+Kernel Cmdline for PCI-vUART Console
 ====================================
 
 When an ACRN VM does not have a legacy ``vuart[0]`` but has a

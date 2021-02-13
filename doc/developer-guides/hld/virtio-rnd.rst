@@ -1,6 +1,6 @@
 .. _virtio-rnd:
 
-Virtio-rnd
+Virtio-RND
 ##########
 
 Virtio-rnd provides a virtual hardware random source for the User VM. It simulates a PCI device

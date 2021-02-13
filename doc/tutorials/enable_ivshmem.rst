@@ -1,7 +1,7 @@
 .. _enable_ivshmem:
 
-Enable Inter-VM Communication Based on ``ivshmem``
-##################################################
+Enable Inter-Vm Communication Based on Ivshmem
+##############################################
 
 You can use inter-VM communication based on the ``ivshmem`` dm-land
 solution or hv-land solution, according to the usage scenario needs.
@@ -9,7 +9,7 @@ solution or hv-land solution, according to the usage scenario needs.
 While both solutions can be used at the same time, VMs using different
 solutions cannot communicate with each other.
 
-ivshmem dm-land usage
+Ivshmem Dm-Land Usage
 *********************
 
 Add this line as an ``acrn-dm`` boot parameter::
@@ -35,7 +35,7 @@ where
 
 .. _ivshmem-hv:
 
-ivshmem hv-land usage
+Ivshmem Hv-Land Usage
 *********************
 
 The ``ivshmem`` hv-land solution is disabled by default in ACRN. You
@@ -68,7 +68,7 @@ enable it using the  :ref:`acrn_configuration_tool` with these steps:
 
 - Build the XML configuration, refer to :ref:`getting-started-building`
 
-ivshmem notification mechanism
+Ivshmem Notification Mechanism
 ******************************
 
 Notification (doorbell) of ivshmem device allows VMs with ivshmem
@@ -94,10 +94,10 @@ to applications.
 .. note:: Notification is supported only for HV-land ivshmem devices. (Future
    support may include notification for DM-land ivshmem devices.)
 
-Inter-VM Communication Examples
+Inter-Vm Communication Examples
 *******************************
 
-dm-land example
+Dm-Land Example
 ===============
 
 This example uses dm-land inter-VM communication between two
@@ -167,7 +167,7 @@ Linux-based post-launched VMs (VM1 and VM2).
    - For VM1 use ``ls -lh /sys/bus/pci/devices/0000:00:06.0/uio``
    - For VM2 use ``ls -lh /sys/bus/pci/devices/0000:00:05.0/uio``
 
-hv-land example
+Hv-Land Example
 ===============
 
 This example uses hv-land inter-VM communication between two

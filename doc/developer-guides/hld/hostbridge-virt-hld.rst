@@ -1,6 +1,6 @@
 .. _hostbridge_virt_hld:
 
-Hostbridge emulation
+Hostbridge Emulation
 ####################
 
 Overview
@@ -8,7 +8,7 @@ Overview
 
 Hostbridge emulation is based on PCI emulation; however, the hostbridge emulation only sets the PCI configuration space. The device model sets the PCI configuration space for hostbridge in the Service VM and then exposes it to the User VM to detect the PCI hostbridge.
 
-PCI Host Bridge and hierarchy
+PCI Host Bridge and Hierarchy
 *****************************
 
 There is PCI host bridge emulation in DM. The bus hierarchy is determined by ``acrn-dm`` command line input. Using this command line, as an example::

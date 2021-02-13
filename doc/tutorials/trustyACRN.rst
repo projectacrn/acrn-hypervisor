@@ -256,7 +256,7 @@ section, we'll focus on two major components:
 See :ref:`trusty_tee` for additional details of Trusty implementation in
 ACRN.
 
-One-VM, Two-Worlds
+One-Vm, Two-Worlds
 ==================
 
 As previously mentioned, Trusty Secure Monitor could be any

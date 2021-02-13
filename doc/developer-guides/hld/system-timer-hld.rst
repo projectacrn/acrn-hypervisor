@@ -1,6 +1,6 @@
 .. _system-timer-hld:
 
-System timer virtualization
+System Timer Virtualization
 ###########################
 
 ACRN supports RTC (Real-time clock), HPET (High Precision Event Timer),
@@ -20,7 +20,7 @@ System timer virtualization architecture
    timerfd\_create interfaces to set up native timers for the trigger timeout
    mechanism.
 
-System Timer initialization
+System Timer Initialization
 ===========================
 
 The device model initializes vRTC, vHEPT, and vPIT devices automatically when
@@ -48,7 +48,7 @@ below code snippets.::
 		...
 	}
 
-PIT emulation
+PIT Emulation
 =============
 
 The ACRN emulated Intel 8253 Programmable Interval Timer includes a chip
@@ -83,7 +83,7 @@ I/O ports definition::
 	#define TIMER_CNTR2 (IO_TIMER1_PORT + TIMER_REG_CNTR2)
 	#define TIMER_MODE (IO_TIMER1_PORT + TIMER_REG_MODE)
 
-RTC emulation
+RTC Emulation
 =============
 
 ACRN supports RTC (real-time clock) that can only be accessed through
@@ -114,7 +114,7 @@ The RTC ACPI description as below::
 		dsdt_line("}");
 	}
 
-HPET emulation
+HPET Emulation
 ==============
 
 ACRN supports HPET (High Precision Event Timer) which is a higher resolution

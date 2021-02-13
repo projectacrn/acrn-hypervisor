@@ -57,7 +57,7 @@ to the User VM through a channel. If the User VM receives the command, it will s
 to the Device Model. It is the Service VM's responsibility to check if the User VMs
 shut down successfully or not, and decides when to power off itself.
 
-User VM "lifecycle manager"
+User VM "Lifecycle Manager"
 ===========================
 
 As part of the current S5 reference design, a lifecycle manager daemon (life_mngr) runs in the
@@ -159,7 +159,7 @@ The procedure for enabling S5 is specific to the particular OS:
    .. note:: S5 state is not automatically triggered by a Service VM shutdown; this needs
       to be run before powering off the Service VM.
 
-How to test
+How to Test
 ***********
    As described in :ref:`vuart_config`, two vUARTs are defined in
    pre-defined ACRN scenarios: vUART0/ttyS0 for the console and

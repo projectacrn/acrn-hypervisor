@@ -113,7 +113,7 @@ These APIs will finish by making a vCPU request.
 .. doxygenfunction:: vlapic_receive_intr
   :project: Project ACRN
 
-EOI processing
+EOI Processing
 ==============
 
 EOI virtualization is enabled if APICv virtual interrupt delivery is
@@ -129,7 +129,7 @@ indicate that is a level triggered interrupt.
 
 .. _lapic_passthru:
 
-LAPIC passthrough based on vLAPIC
+LAPIC Passthrough Based on vLAPIC
 =================================
 
 LAPIC passthrough is supported based on vLAPIC, the guest OS first boots with
@@ -280,7 +280,7 @@ window is not present, HV would enable
 VM Enter directly. The injection will be done on next VM Exit once Guest
 issues ``STI (GuestRFLAG.IF=1)``.
 
-Data structures and interfaces
+Data Structures and Interfaces
 ******************************
 
 There is no data structure exported to the other components in the

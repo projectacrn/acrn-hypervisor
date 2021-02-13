@@ -53,7 +53,7 @@ for post-launched VM:
 
    Passthrough devices initialization control flow
 
-Passthrough Device status
+Passthrough Device Status
 *************************
 
 Most common devices on supported platforms are enabled for
@@ -129,7 +129,7 @@ a passthrough device to/from a post-launched VM is shown in the following figure
 .. _vtd-posted-interrupt:
 
 
-VT-d Interrupt-remapping
+VT-d Interrupt-Remapping
 ************************
 
 The VT-d interrupt-remapping architecture enables system software to
@@ -252,7 +252,7 @@ There is one exception, MSI-X table is also in a MMIO BAR. Hypervisor needs to t
 accesses to MSI-X table. So the page(s) having MSI-X table should not be accessed by guest
 directly. EPT mapping is not built for these pages having MSI-X table.
 
-Device configuration emulation
+Device Configuration Emulation
 ******************************
 
 The PCI configuration space can be accessed by a PCI-compatible
@@ -260,7 +260,7 @@ Configuration Mechanism (IO port 0xCF8/CFC) and the PCI Express Enhanced
 Configuration Access Mechanism (PCI MMCONFIG). The ACRN hypervisor traps
 this PCI configuration space access and emulate it. Refer to :ref:`split-device-model` for details.
 
-MSI-X table emulation
+MSI-X Table Emulation
 *********************
 
 VM accesses to MSI-X table should be trapped so that hypervisor has the
@@ -386,7 +386,7 @@ The platform GSI information is in devicemodel/hw/pci/platform_gsi_info.c
 for limited platform (currently, only APL MRB). For other platforms, the platform
 specific GSI information should be added to activate the checking of GSI sharing violation.
 
-Data structures and interfaces
+Data Structures and Interfaces
 ******************************
 
 The following APIs are common APIs provided to initialize interrupt remapping for

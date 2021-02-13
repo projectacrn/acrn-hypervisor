@@ -7,7 +7,7 @@
    lingering references to these docs out in the wild and in the Google
    index. Give the reader a reference to the /2.1/ document instead.
 
-This document was removed
+This Document Was Removed
 #########################
 
 .. raw:: html

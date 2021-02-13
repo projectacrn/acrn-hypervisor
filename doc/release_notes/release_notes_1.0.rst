@@ -1,6 +1,6 @@
 .. _release_notes_1.0:
 
-ACRN v1.0 (May 2019)
+ACRN V1.0 (May 2019)
 ####################
 
 We are pleased to announce the release of ACRN version 1.0, a key
@@ -33,7 +33,7 @@ with a specific release: generated v1.0 documents can be found at https://projec
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
 ACRN v1.0 requires Clear Linux* OS version 29070.
 
-Version 1.0 major features
+Version 1.0 Major Features
 **************************
 
 Hardware Support
@@ -42,7 +42,7 @@ ACRN supports multiple x86 platforms and has been tested with Apollo
 Lake and Kaby Lake NUCs, and the UP Squared board.
 (See :ref:`hardware` for supported platform details.)
 
-APL UP2 board with SBL firmware
+APL UP2 Board With SBL Firmware
 ===============================
 ACRN supports APL UP2 board with Slim Bootloader (SBL) firmware.
 Slim Bootloader is a modern, flexible, light-weight,
@@ -51,13 +51,13 @@ customizable, and secure. An end-to-end reference build has been verified
 on UP2/SBL board using ACRN hypervisor, Clear Linux OS as SOS, and Clear
 Linux OS as UOS.
 
-Enable post-launched RTVM support for real-time UOS in ACRN
+Enable Post-Launched RTVM Support for Real-Time UOS in ACRN
 ===========================================================
 This release provides initial patches enabling a User OS (UOS) running as a
 virtual machine (VM) with real-time characteristics,
 also called a "post-launched RTVM". More patches for ACRN real time support will continue.
 
-Enable cache QOS with CAT
+Enable Cache QOS With CAT
 =========================
 Cache Allocation Technology (CAT) is available on Apollo Lake (APL) platforms,
 providing cache isolation between VMs mainly for real-time performance quality
@@ -66,27 +66,27 @@ the VM configuration determined at build time. For debugging and performance
 tuning, the CAT can also be enabled and configured at runtime by writing proper
 values to certain MSRs using the ``wrmsr`` command on ACRN shell.
 
-Enable QoS based on runC container
+Enable QoS Based on runC Container
 ==================================
 ACRN supports Device-Model QoS based on runC container to control
 the SOS resources (CPU, Storage, MEM, NET) by modifying the runC configuration file,
 configuration guide will be published in next release.
 
-S5 support for RTVM
+S5 Support for RTVM
 ===================
 ACRN supports a Real-time VM (RTVM) shutting itself down. A RTVM is a kind
 of VM that the SOS can't interfere with at runtime, and as such, only the
 RTVM can power itself off internally. All power-off requests external to the
 RTVM will be rejected to avoid any interference.
 
-OVMF support initial patches merged in ACRN
+OVMF Support Initial Patches Merged in ACRN
 ===========================================
 To support booting Windows as a Guest OS, we are using
 Open source Virtual Machine Firmware (OVMF). Initial
 patches to support OVMF have been merged in ACRN hypervisor. More patches for
 ACRN and patches upstreaming to OVMF work will be continuing.
 
-Support ACPI power key mediator
+Support ACPI Power Key Mediator
 ===============================
 ACRN supports ACPI power/sleep key on the APL and KBL NUC platforms, triggering
 S3/S5 flow, following the ACPI spec.
@@ -135,7 +135,7 @@ a Guest VM (UOS), enables control of the Wi-Fi as an in-vehicle hotspot for thir
 devices, provides third-party device applications access to the vehicle, and
 provides access of third-party devices to the TCU (if applicable) provided connectivity.
 
-IPU (MIPI CSI-2, HDMI-in)
+IPU (MIPI CSI-2, HDMI-In)
 =========================
 ACRN hypervisor provide an IPU mediator to share with Guest OS. Alternatively, IPU
 can also be configured as pass-through to Guest OS without sharing.
@@ -161,7 +161,7 @@ to ensure performance of the most critical workload can be achieved. Three
 different schedulers for the GPU are involved: i915 UOS scheduler, Mediator
 GVT scheduler, and i915 SOS scheduler.
 
-GPU - display surface sharing via Hyper DMA
+GPU - Display Surface Sharing via Hyper DMA
 ===========================================
 Surface sharing is one typical automotive use case which requires that the
 SOS accesses an individual surface or a set of surfaces from the UOS without
@@ -169,7 +169,7 @@ having to access the entire frame buffer of the UOS. It leverages hyper_DMABUF,
 a Linux kernel driver running on multiple VMs and expands DMA-BUFFER sharing
 capability to inter-VM.
 
-Virtio standard is supported
+Virtio Standard Is Supported
 ============================
 Virtio framework is widely used in ACRN, allowing devices beyond network and
 storage to be shared to UOS in a standard way. Many mediators in ACRN follow
@@ -179,11 +179,11 @@ the guest's device driver "knows" it is running in a virtual environment, and
 cooperates with the hypervisor. The SOS and UOS can share physical LAN network
 and physical eMMC storage device. (See :ref:`virtio-hld` for more information.)
 
-Device pass-through support
+Device Pass-Through Support
 ===========================
 Device pass-through to UOS supported with help of VT-d.
 
-GPIO virtualization
+GPIO Virtualization
 ===================
 GPIO virtualization is supported as para-virtualization based on the Virtual
 I/O Device (VIRTIO) specification. The GPIO consumers of the Front-end are able
@@ -191,12 +191,12 @@ to set or get GPIO values, directions, and configuration via one virtual GPIO
 controller. In the Back-end, the GPIO command line in the launch script can be
 modified to map native GPIO to UOS. (See :ref:`virtio-hld` for more information.)
 
-New ACRN tools
+New ACRN Tools
 ==============
 We've added a collection of support tools including ``acrnctl``, ``acrntrace``, ``acrnlog``,
 ``acrn-crashlog``, ``acrnprobe``. (See the `Tools` section under **User Guides** for details.)
 
-Document updates
+Document Updates
 ================
 We have many reference documents `available
 <https://projectacrn.github.io>`_, including:
@@ -390,7 +390,6 @@ Known Issues
 
    **Workaround:** Unplug and plug-in the unrecognized device after booting.
 
------
 
 :acrn-issue:`1991` - Input not accepted in UART Console for corner case
    Input is useless in UART Console for a corner case, demonstrated with these steps:
@@ -405,7 +404,6 @@ Known Issues
 
    **Workaround:** Enter other keys before typing :kbd:`Enter`.
 
------
 
 :acrn-issue:`2267` - [APLUP2][LaaG] LaaG can't detect 4k monitor
    After launching UOS on APL UP2 , 4k monitor cannot be detected.
@@ -414,7 +412,6 @@ Known Issues
 
    **Workaround:** Use a monitor with less than 4k resolution.
 
------
 
 :acrn-issue:`2278` - [KBLNUC] Cx/Px is not supported on KBLNUC
    C states and P states are not supported on KBL NUC.
@@ -424,7 +421,6 @@ Known Issues
 
    **Workaround:** None
 
------
 
 :acrn-issue:`2279` - [APLNUC] After exiting UOS, SOS can't use USB keyboard and mouse
    After exiting UOS with mediator
@@ -445,7 +441,6 @@ Known Issues
 
    **Workaround:** Unplug and plug-in the USB keyboard and mouse after exiting UOS.
 
------
 
 :acrn-issue:`2527` - System will crash after a few minutes running stress test ``crashme`` tool in SOS/UOS.
    System stress test may cause a system crash.
@@ -454,7 +449,6 @@ Known Issues
 
    **Workaround:** None
 
------
 
 :acrn-issue:`2526` - Hypervisor crash when booting UOS with acrnlog running with mem loglevel=6
    If we use ``loglevel 3 6`` to change the mem loglevel to 6, we may hit a page fault in HV.
@@ -463,7 +457,6 @@ Known Issues
 
    **Workaround:** None
 
------
 
 :acrn-issue:`2753` - UOS cannot resume after suspend by pressing power key
    UOS cannot resume after suspend by pressing power key
@@ -472,7 +465,6 @@ Known Issues
 
    **Workaround:** None
 
------
 
 :acrn-issue:`2974` - Launching Zephyr RTOS as a real-time UOS takes too long
     Launching Zephyr RTOS as a real-time UOS takes too long
@@ -488,7 +480,6 @@ Known Issues
 
     **Workaround:** None
 
------
 
 Change Log
 **********

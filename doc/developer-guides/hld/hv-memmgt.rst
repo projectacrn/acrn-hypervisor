@@ -1,6 +1,6 @@
 .. _memmgt-hld:
 
-Memory Management high-level design
+Memory Management High-Level Design
 ###################################
 
 This document describes memory management for the ACRN hypervisor.
@@ -233,7 +233,7 @@ checking service and an EPT hugepage supporting checking service. Before the HV
 enables memory virtualization and uses the EPT hugepage, these services need
 to be invoked by other units.
 
-Data Transfer between Different Address Spaces
+Data Transfer Between Different Address Spaces
 ==============================================
 
 In ACRN, different memory space management is used in the hypervisor,
@@ -244,7 +244,7 @@ transferring, or when the hypervisor does instruction emulation: the HV
 needs to access the guest instruction pointer register to fetch guest
 instruction data.
 
-Access GPA from Hypervisor
+Access GPA From Hypervisor
 --------------------------
 
 When the hypervisor needs to access the GPA for data transfer, the caller from guest
@@ -255,7 +255,7 @@ different 2M huge host-physical pages. The ACRN hypervisor must take
 care of this kind of data transfer by doing EPT page walking based on
 its HPA.
 
-Access GVA from Hypervisor
+Access GVA From Hypervisor
 --------------------------
 
 When the hypervisor needs to access GVA for data transfer, it's likely both
@@ -312,7 +312,7 @@ PAT entry in the PAT MSR (which is determined by PAT, PCD, and PWT bits
 from the guest paging structures) to determine the effective memory
 type.
 
-VPID operations
+VPID Operations
 ===============
 
 Virtual-processor identifier (VPID) is a hardware feature to optimize
@@ -376,7 +376,7 @@ Interfaces Design
 The memory virtualization unit interacts with external units through VM
 exit and APIs.
 
-VM Exit about EPT
+VM Exit About EPT
 =================
 
 There are two VM exit handlers for EPT violation and EPT
@@ -395,7 +395,7 @@ Here is a list of major memory related APIs in the HV:
 EPT/VPID Capability Checking
 ----------------------------
 
-Data Transferring between hypervisor and VM
+Data Transferring Between Hypervisor and VM
 -------------------------------------------
 
 .. doxygenfunction:: copy_from_gpa

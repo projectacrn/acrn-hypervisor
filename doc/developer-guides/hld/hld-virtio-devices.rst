@@ -1,7 +1,7 @@
 .. _hld-virtio-devices:
 .. _virtio-hld:
 
-Virtio devices high-level design
+Virtio Devices High-Level Design
 ################################
 
 The ACRN Hypervisor follows the `Virtual I/O Device (virtio)
@@ -47,7 +47,7 @@ ACRN's virtio architectures, and elaborates on ACRN virtio APIs. Finally
 this section will introduce all the virtio devices currently supported
 by ACRN.
 
-Virtio introduction
+Virtio Introduction
 *******************
 
 Virtio is an abstraction layer over devices in a para-virtualized
@@ -268,7 +268,7 @@ Kernel-Land Virtio Framework
 ACRN supports two kernel-land virtio frameworks: VBS-K, designed from
 scratch for ACRN, the other called Vhost, compatible with Linux Vhost.
 
-VBS-K framework
+VBS-K Framework
 ---------------
 
 The architecture of ACRN VBS-K is shown in
@@ -301,7 +301,7 @@ driver development.
 
    ACRN Kernel Land Virtio Framework
 
-Vhost framework
+Vhost Framework
 ---------------
 
 Vhost is similar to VBS-K. Vhost is a common solution upstreamed in the
@@ -346,7 +346,7 @@ can be described as:
    virtqueue, which results a event_signal on kick fd by VHM ioeventfd.
 5. vhost device in kernel signals on the irqfd to notify the guest.
 
-Ioeventfd implementation
+Ioeventfd Implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Ioeventfd module is implemented in VHM, and can enhance a registered
@@ -372,7 +372,7 @@ The workflow can be summarized as:
    corresponding eventfd.
 7. trigger the signal to related eventfd.
 
-Irqfd implementation
+Irqfd Implementation
 ~~~~~~~~~~~~~~~~~~~~
 
 The irqfd module is implemented in VHM, and can enhance a registered
@@ -584,7 +584,7 @@ VBS-K APIs
 The VBS-K APIs are exported by VBS-K related modules. Users could use
 the following APIs to implement their VBS-K modules.
 
-APIs provided by DM
+APIs Provided by DM
 ~~~~~~~~~~~~~~~~~~~
 
 .. doxygenfunction:: vbs_kernel_reset
@@ -596,7 +596,7 @@ APIs provided by DM
 .. doxygenfunction:: vbs_kernel_stop
    :project: Project ACRN
 
-APIs provided by VBS-K modules in service OS
+APIs Provided by VBS-K Modules in Service OS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. kernel-doc:: include/linux/vbs/vbs.h
@@ -611,7 +611,7 @@ APIs provided by VBS-K modules in service OS
 VHOST APIS
 ==========
 
-APIs provided by DM
+APIs Provided by DM
 -------------------
 
 .. doxygenfunction:: vhost_dev_init
@@ -626,7 +626,7 @@ APIs provided by DM
 .. doxygenfunction:: vhost_dev_stop
    :project: Project ACRN
 
-Linux vhost IOCTLs
+Linux Vhost IOCTLs
 ------------------
 
 ``#define VHOST_GET_FEATURES      _IOR(VHOST_VIRTIO, 0x00, __u64)``
@@ -658,7 +658,7 @@ Linux vhost IOCTLs
   This IOCTL is used to set the eventfd which is used by vhost do inject
   virtual interrupt.
 
-VHM eventfd IOCTLs
+VHM Eventfd IOCTLs
 ------------------
 
 .. doxygenstruct:: acrn_ioeventfd

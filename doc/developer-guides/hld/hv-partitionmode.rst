@@ -1,6 +1,6 @@
 .. _partition-mode-hld:
 
-Partition mode
+Partition Mode
 ##############
 
 ACRN is a type-1 hypervisor that supports running multiple guest operating
@@ -44,7 +44,7 @@ example of two VMs with exclusive access to physical resources.
 
    Partition Mode example with two VMs
 
-Guest info
+Guest Info
 **********
 
 ACRN uses multi-boot info passed from the platform bootloader to know
@@ -57,7 +57,7 @@ configuration and copies them to the corresponding guest memory.
 .. figure:: images/partition-image18.png
    :align: center
 
-ACRN setup for guests
+ACRN Setup for Guests
 *********************
 
 Cores
@@ -96,7 +96,7 @@ for assigning host memory to the guests:
 ACRN creates EPT mapping for the guest between GPA (0, memory size) and
 HPA (starting address in guest configuration, memory size).
 
-E820 and zero page info
+E820 and Zero Page Info
 =======================
 
 A default E820 is used for all the guests in partition mode. This table
@@ -123,7 +123,7 @@ e820 info for all the guests.
 | RESERVED               |
 +------------------------+
 
-Platform info - mptable
+Platform Info - Mptable
 =======================
 
 ACRN, in partition mode, uses mptable to convey platform info to each
@@ -132,7 +132,7 @@ guest, and whether the guest needs devices with INTX, ACRN builds
 mptable and copies it to the guest memory. In partition mode, ACRN uses
 physical APIC IDs to pass to the guests.
 
-I/O - Virtual devices
+I/O - Virtual Devices
 =====================
 
 Port I/O is supported for PCI device config space 0xcfc and 0xcf8, vUART
@@ -141,7 +141,7 @@ Port I/O is supported for PCI device config space 0xcfc and 0xcf8, vUART
 host-bridge at BDF (Bus Device Function) 0.0:0 to each guest. Access to
 256 bytes of config space for virtual host bridge is emulated.
 
-I/O - Passthrough devices
+I/O - Passthrough Devices
 =========================
 
 ACRN, in partition mode, supports passing thru PCI devices on the
@@ -153,7 +153,7 @@ expects the developer to provide the virtual BDF to BDF of the
 physical device mapping for all the passthrough devices as part of each guest
 configuration.
 
-Runtime ACRN support for guests
+Runtime ACRN Support for Guests
 *******************************
 
 ACRN, in partition mode, supports an option to passthrough LAPIC of the
@@ -170,7 +170,7 @@ will be discussed in detail in the corresponding sections.
    :align: center
 
 
-Guest SMP boot flow
+Guest SMP Boot Flow
 ===================
 
 The core APIC IDs are reported to the guest using mptable info. SMP boot
@@ -178,17 +178,17 @@ flow is similar to sharing mode. Refer to :ref:`vm-startup`
 for guest SMP boot flow in ACRN. Partition mode guests startup is same as
 the Service VM startup in sharing mode.
 
-Inter-processor Interrupt (IPI) Handling
+Inter-Processor Interrupt (IPI) Handling
 ========================================
 
-Guests w/o LAPIC passthrough
+Guests W/O LAPIC Passthrough
 ----------------------------
 
 For guests without LAPIC passthrough, IPIs between guest CPUs are handled in
 the same way as sharing mode in ACRN. Refer to :ref:`virtual-interrupt-hld`
 for more details.
 
-Guests w/ LAPIC passthrough
+Guests W/ LAPIC Passthrough
 ---------------------------
 
 ACRN supports passthrough if and only if the guest is using x2APIC mode
@@ -204,10 +204,10 @@ corresponding to the destination processor info in the ICR.
    :align: center
 
 
-Passthrough device support
+Passthrough Device Support
 ==========================
 
-Configuration space access
+Configuration Space Access
 --------------------------
 
 ACRN emulates Configuration Space Address (0xcf8) I/O port and
@@ -258,7 +258,7 @@ Interrupt Configuration
 ACRN supports both legacy (INTx) and MSI interrupts for passthrough
 devices.
 
-INTx support
+INTx Support
 ~~~~~~~~~~~~
 
 ACRN expects developers to identify the interrupt line info (0x3CH) from
@@ -271,7 +271,7 @@ IOAPIC. When guest masks the RTE in vIOAPIC, ACRN masks the interrupt
 RTE in the physical IOAPIC. Level triggered interrupts are not
 supported.
 
-MSI support
+MSI Support
 ~~~~~~~~~~~
 
 Guest reads/writes to PCI configuration space for configuring MSI
@@ -279,7 +279,7 @@ interrupts using an address. Data and control registers are passthrough to
 the physical BAR of the passthrough device. Refer to `Configuration
 space access`_ for details on how the PCI configuration space is emulated.
 
-Virtual device support
+Virtual Device Support
 ======================
 
 ACRN provides read-only vRTC support for partition mode guests. Writes
@@ -288,10 +288,10 @@ to the data port are discarded.
 For port I/O to ports other than vPIC, vRTC, or vUART, reads return 0xFF and
 writes are discarded.
 
-Interrupt delivery
+Interrupt Delivery
 ==================
 
-Guests w/o LAPIC passthrough
+Guests W/O LAPIC Passthrough
 ----------------------------
 
 In partition mode of ACRN, interrupts stay disabled after a vmexit.  The
@@ -307,25 +307,25 @@ for device interrupts.
    :align: center
 
 
-Guests w/ LAPIC passthrough
+Guests W/ LAPIC Passthrough
 ---------------------------
 
 For guests with LAPIC passthrough, ACRN does not configure vmexit upon
 external interrupts. There is no vmexit upon device interrupts and they are
 handled by the guest IDT.
 
-Hypervisor IPI service
+Hypervisor IPI Service
 ======================
 
 ACRN needs IPIs for events such as flushing TLBs across CPUs, sending virtual
 device interrupts (e.g. vUART to vCPUs), and others.
 
-Guests w/o LAPIC passthrough
+Guests W/O LAPIC Passthrough
 ----------------------------
 
 Hypervisor IPIs work the same way as in sharing mode.
 
-Guests w/ LAPIC passthrough
+Guests W/ LAPIC Passthrough
 ---------------------------
 
 Since external interrupts are passthrough to the guest IDT, IPIs do not
@@ -344,7 +344,7 @@ For a guest console in partition mode, ACRN provides an option to pass
 ``vmid`` as an argument to ``vm_console``. vmid is the same as the one
 developers use in the guest configuration.
 
-Guests w/o LAPIC passthrough
+Guests W/O LAPIC Passthrough
 ----------------------------
 
 Works the same way as sharing mode.

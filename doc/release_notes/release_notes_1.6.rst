@@ -1,6 +1,6 @@
 .. _release_notes_1.6:
 
-ACRN v1.6 (Mar 2020)
+ACRN V1.6 (Mar 2020)
 ####################
 
 We are pleased to announce the release of ACRN version 1.6.
@@ -24,10 +24,10 @@ with a specific release: generated v1.6 documents can be found at https://projec
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
 ACRN v1.6 requires Clear Linux OS version 32680.
 
-Version 1.6 major features
+Version 1.6 Major Features
 **************************
 
-What's New in v1.6
+What's New in V1.6
 ==================
 * Graphics passthrough support
 
@@ -51,7 +51,7 @@ What's New in v1.6
 
 * PCI bridge emulation in hypervisor
 
-Document updates
+Document Updates
 ================
 Many new and updated `reference documents <https://projectacrn.github.io>`_ are available, including:
 

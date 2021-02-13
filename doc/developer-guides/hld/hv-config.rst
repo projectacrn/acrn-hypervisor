@@ -1,6 +1,6 @@
 .. _hv-config:
 
-Compile-time Configuration
+Compile-Time Configuration
 ##########################
 
 .. note:: With ACRN release 2.4, ACRN configuration has changed

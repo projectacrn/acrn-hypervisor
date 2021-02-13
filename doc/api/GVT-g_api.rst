@@ -28,8 +28,8 @@ and the `Graphics Execution Manager(GEM)`_ parts of `i915 driver`_.
 
 .. _i915 driver: https://01.org/linuxgraphics/gfx-docs/drm/gpu/i915.html
 
-Intel GVT-g Guest Support(vGPU)
-===============================
+Intel GVT-g Guest Support (vGPU)
+================================
 
 .. kernel-doc:: drivers/gpu/drm/i915/i915_vgpu.c
    :doc: Intel GVT-g guest support
@@ -37,8 +37,8 @@ Intel GVT-g Guest Support(vGPU)
 .. kernel-doc:: drivers/gpu/drm/i915/i915_vgpu.c
    :internal:
 
-Intel GVT-g Host Support(vGPU device model)
-===========================================
+Intel GVT-g Host Support (vGPU Device Model)
+============================================
 
 .. kernel-doc:: drivers/gpu/drm/i915/intel_gvt.c
    :doc: Intel GVT-g host support
@@ -47,7 +47,7 @@ Intel GVT-g Host Support(vGPU device model)
    :internal:
 
 
-VHM APIs called from AcrnGT
+VHM APIs Called From AcrnGT
 ****************************
 
 The Virtio and Hypervisor Service Module (VHM) is a kernel module in the
@@ -83,7 +83,7 @@ responses to user space modules, notified by vIRQ injections.
 
 .. _MPT_interface:
 
-AcrnGT mediated passthrough (MPT) interface
+AcrnGT Mediated Passthrough (MPT) Interface
 *******************************************
 
 AcrnGT receives request from GVT module through MPT interface. Refer to the
@@ -145,7 +145,7 @@ This section describes the wrap functions:
 
 .. _intel_gvt_ops_interface:
 
-GVT-g intel_gvt_ops interface
+GVT-g Intel_gvt_ops Interface
 *****************************
 
 This section contains APIs for GVT-g intel_gvt_ops interface. Sources are found
@@ -186,23 +186,23 @@ in the `ACRN kernel GitHub repo`_
 
 .. _sysfs_interface:
 
-AcrnGT sysfs interface
+AcrnGT Sysfs Interface
 ***********************
 
 This section contains APIs for the AcrnGT sysfs interface. Sources are found
 in the `ACRN kernel GitHub repo`_
 
 
-sysfs nodes
+Sysfs Nodes
 ===========
 
-In below examples all accesses to these interfaces are via bash command
-``echo`` or ``cat``. This is a quick and easy way to get/control things. But
-when these operations fails, it is impossible to get respective error code by
+In the following examples, all accesses to these interfaces are via bash command
+``echo`` or ``cat``. This is a quick and easy way to get or control things. But
+when these operations fail, it is impossible to get respective error code by
 this way.
 
-When accessing sysfs entries, people should use library functions such as
-``read()`` or ``write()``.
+When accessing sysfs entries, use library functions such as
+``read()`` or ``write()`` instead.
 
 On **success**, the returned value of ``read()`` or ``write()`` indicates how
 many bytes have been transferred.  On **error**, the returned value is ``-1``
@@ -210,33 +210,17 @@ and the global ``errno`` will be set appropriately. This is the only way to
 figure out what kind of error occurs.
 
 
-/sys/kernel/gvt/
-----------------
+- The ``/sys/kernel/gvt/`` class sub-directory belongs to AcrnGT and provides a
+  centralized sysfs interface for configuring vGPU properties.
 
-The ``/sys/kernel/gvt/`` class sub-directory belongs to AcrnGT and provides a
-centralized sysfs interface for configuring vGPU properties.
+- The ``/sys/kernel/gvt/control/`` sub-directory contains all the necessary
+  switches for different purposes.
 
+- The ``/sys/kernel/gvt/control/create_gvt_instance`` node is used by ACRN-DM to
+  create/destroy a vGPU instance.
 
-/sys/kernel/gvt/control/
-------------------------
+- After a VM is created, a new sub-directory ``/sys/kernel/GVT/vmN`` ("N" is the VM id) will be
+  created.
 
-The ``/sys/kernel/gvt/control/`` sub-directory contains all the necessary
-switches for different purposes.
-
-/sys/kernel/gvt/control/create_gvt_instance
--------------------------------------------
-
-The ``/sys/kernel/gvt/control/create_gvt_instance`` node is used by ACRN-DM to
-create/destroy a vGPU instance.
-
-/sys/kernel/gvt/vmN/
---------------------
-
-After a VM is created, a new sub-directory ``vmN`` ("N" is the VM id) will be
-created.
-
-/sys/kernel/gvt/vmN/vgpu_id
----------------------------
-
-The ``/sys/kernel/gvt/vmN/vgpu_id`` node is to get vGPU id from VM which id is
-N.
+- The ``/sys/kernel/gvt/vmN/vgpu_id`` node is to get vGPU id from VM which id is
+  N.

@@ -1,6 +1,6 @@
 .. _hld-trace-log:
 
-Tracing and Logging high-level design
+Tracing and Logging High-Level Design
 #####################################
 
 Both Trace and Log are built on top of a mechanism named shared
@@ -30,7 +30,7 @@ is allowed to put data into that sbuf in HV, and a single consumer is
 allowed to get data from sbuf in Service VM. Therefore, no lock is required to
 synchronize access by the producer and consumer.
 
-sbuf APIs
+Sbuf APIs
 =========
 
 The sbuf APIs are defined in ``hypervisor/include/debug/sbuf.h``.
@@ -128,7 +128,7 @@ kinds of logs:
 -  Current runtime logs;
 -  Logs remaining in the buffer, from the last crashed run.
 
-Architectural diagram
+Architectural Diagram
 =====================
 
 Similar to the design of ACRN Trace, ACRN Log is built on top of
@@ -149,7 +149,7 @@ up:
    Architectural diagram of ACRN Log
 
 
-ACRN log support in Hypervisor
+ACRN Log Support in Hypervisor
 ==============================
 
 To support ``acrnlog``, the following adaption was made to hypervisor log

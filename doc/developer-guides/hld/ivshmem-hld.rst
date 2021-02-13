@@ -1,6 +1,6 @@
 .. _ivshmem-hld:
 
-ACRN Shared Memory Based Inter-VM Communication
+ACRN Shared Memory Based Inter-Vm Communication
 ###############################################
 
 ACRN supports inter-virtual machine communication based on a shared
@@ -8,7 +8,7 @@ memory mechanism. The ACRN device model or hypervisor emulates a virtual
 PCI device (called an ``ivshmem`` device) to expose the base address and
 size of this shared memory.
 
-Inter-VM Communication Overview
+Inter-Vm Communication Overview
 *******************************
 
 .. figure:: images/ivshmem-architecture.png
@@ -129,7 +129,7 @@ Usage
 
 For usage information, see :ref:`enable_ivshmem`
 
-Inter-VM Communication Security hardening (BKMs)
+Inter-Vm Communication Security Hardening (BKMs)
 ************************************************
 
 As previously highlighted, ACRN 2.0 provides the capability to create shared

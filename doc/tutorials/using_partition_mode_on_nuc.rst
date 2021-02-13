@@ -1,6 +1,6 @@
 .. _using_partition_mode_on_nuc:
 
-Getting Started Guide for ACRN logical partition mode
+Getting Started Guide for ACRN Logical Partition Mode
 #####################################################
 
 The ACRN hypervisor supports a logical partition scenario in which the User
@@ -41,7 +41,7 @@ Prerequisites
 
 .. rst-class:: numbered-step
 
-Update kernel image and modules of pre-launched VM
+Update Kernel Image and Modules of Pre-Launched VM
 **************************************************
 #. On your development workstation, clone the ACRN kernel source tree, and
    build the Linux kernel image that will be used to boot the pre-launched VMs:
@@ -105,7 +105,7 @@ Update kernel image and modules of pre-launched VM
 
 .. rst-class:: numbered-step
 
-Update ACRN hypervisor image
+Update ACRN Hypervisor Image
 ****************************
 
 #. Before building the ACRN hypervisor, find the I/O address of the serial
@@ -189,7 +189,7 @@ Update ACRN hypervisor image
 
 .. rst-class:: numbered-step
 
-Update Ubuntu GRUB to boot hypervisor and load kernel image
+Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
 ***********************************************************
 
 #. Append the following configuration to the ``/etc/grub.d/40_custom`` file:
@@ -249,7 +249,7 @@ Update Ubuntu GRUB to boot hypervisor and load kernel image
 
 .. rst-class:: numbered-step
 
-Logical partition scenario startup check
+Logical Partition Scenario Startup Check
 ****************************************
 
 #. Use these steps to verify that the hypervisor is properly running:

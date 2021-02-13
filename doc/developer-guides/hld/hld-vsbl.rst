@@ -1,4 +1,4 @@
 .. _hld-vsbl:
 
-Virtual Slim-Bootloader high-level design
+Virtual Slim-Bootloader High-Level Design
 #########################################

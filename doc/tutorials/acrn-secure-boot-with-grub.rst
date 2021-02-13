@@ -1,6 +1,6 @@
 .. _how-to-enable-acrn-secure-boot-with-grub:
 
-Enable ACRN Secure Boot with GRUB
+Enable ACRN Secure Boot With GRUB
 #################################
 
 This document shows how to enable ACRN secure boot with GRUB including:
@@ -243,14 +243,14 @@ Creating UEFI Secure Boot Key
 The keys to be enrolled in UEFI firmware: :file:`PK.der`, :file:`KEK.der`, :file:`db.der`.
 The keys to sign bootloader image: :file:`grubx64.efi`, :file:`db.key` , :file:`db.crt`.
 
-Sign GRUB Image With ``db`` Key
-================================
+Sign GRUB Image With Db Key
+===========================
 
     sbsign --key db.key --cert db.crt path/to/grubx64.efi
 
 :file:`grubx64.efi.signed` will be created, it will be your bootloader.
 
-Enroll UEFI Keys To UEFI Firmware
+Enroll UEFI Keys to UEFI Firmware
 =================================
 
 Enroll ``PK`` (:file:`PK.der`), ``KEK`` (:file:`KEK.der`) and ``db``

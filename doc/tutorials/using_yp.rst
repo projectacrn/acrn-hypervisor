@@ -1,6 +1,6 @@
 .. _using_yp:
 
-Using Yocto Project with ACRN
+Using Yocto Project With ACRN
 #############################
 
 The `Yocto Project <https://yoctoproject.org>`_ (YP) is an open source
@@ -16,7 +16,7 @@ components, and software components.  Layers are repositories containing
 related sets of instructions that tell the Yocto Project build system
 what to do.
 
-The meta-acrn layer
+The Meta-Acrn Layer
 *******************
 
 The meta-acrn layer integrates the ACRN hypervisor with OpenEmbedded,

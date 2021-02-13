@@ -15,7 +15,7 @@ Introduction
 ACRN includes three types of configurations: Hypervisor, Board, and VM. Each
 is discussed in the following sections.
 
-Hypervisor configuration
+Hypervisor Configuration
 ========================
 
 The hypervisor configuration defines a working scenario and target
@@ -29,7 +29,7 @@ A board-specific ``defconfig`` file, for example
 ``misc/vm_configs/scenarios/$(SCENARIO)/$(BOARD)/$(BOARD).config``
 is loaded first; it is the default ``Kconfig`` for the specified board.
 
-Board configuration
+Board Configuration
 ===================
 
 The board configuration stores board-specific settings referenced by the
@@ -40,7 +40,7 @@ and BDF information. The reference board configuration is organized as
 ``*.c/*.h`` files located in the
 ``misc/vm_configs/boards/$(BOARD)/`` folder.
 
-VM configuration
+VM Configuration
 =================
 
 VM configuration includes **scenario-based** VM configuration
@@ -58,7 +58,7 @@ The board-specific configurations on this scenario are stored in the
 User VM launch script samples are located in the
 ``misc/vm_configs/sample_launch_scripts/`` folder.
 
-ACRN configuration XMLs
+ACRN Configuration XMLs
 ***********************
 
 The ACRN configuration includes three kinds of XML files for acrn-config
@@ -75,7 +75,7 @@ configurations by importing customized XMLs or by saving the
 configurations by exporting XMLs.
 
 
-Board XML format
+Board XML Format
 ================
 
 The board XMLs are located in the
@@ -89,7 +89,7 @@ The board XML has an ``acrn-config`` root element and a ``board`` attribute:
 As an input for the ``acrn-config`` tool, end users do not need to care
 about the format of board XML and should not modify it.
 
-Scenario XML format
+Scenario XML Format
 ===================
 The scenario XMLs are located in the
 ``misc/vm_configs/xmls/config-xmls/`` folder.  The
@@ -103,7 +103,7 @@ and ``scenario`` attributes:
 See :ref:`scenario-config-options` for a full explanation of available scenario XML elements.
 
 
-Launch XML format
+Launch XML Format
 =================
 The launch XMLs are located in the
 ``misc/vm_configs/xmls/config-xmls/`` folder.
@@ -188,10 +188,10 @@ current scenario has:
    interface. When ``configurable="0"``, the item does not appear on the
    interface.
 
-Configuration tool workflow
+Configuration Tool Workflow
 ***************************
 
-Hypervisor configuration workflow
+Hypervisor Configuration Workflow
 ==================================
 
 The hypervisor configuration is based on the ``Kconfig``
@@ -219,7 +219,7 @@ configuration steps.
 
 .. _vm_config_workflow:
 
-Board and VM configuration workflow
+Board and VM Configuration Workflow
 ===================================
 
 Python offline tools are provided to configure Board and VM configurations.
@@ -300,7 +300,7 @@ Here is the offline configuration tool workflow:
 
 .. _acrn_config_tool_ui:
 
-Use the ACRN configuration app
+Use the ACRN Configuration App
 ******************************
 
 The ACRN configuration app is a web user interface application that performs the following:

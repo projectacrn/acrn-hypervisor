@@ -15,7 +15,7 @@ full list of commands, or see a summary of available commands by using
 the ``help`` command within the ACRN shell.
 
 
-An example
+An Example
 **********
 
 As an example, we'll show how to obtain the interrupts of a passthrough USB device.
@@ -54,7 +54,7 @@ ACRN log provides a console log and a mem log for a user to analyze.
 We can use console log to debug directly, while mem log is a userland tool
 used to capture an ACRN hypervisor log.
 
-Turn on the logging info
+Turn on the Logging Info
 ========================
 
 ACRN enables a console log by default.
@@ -65,7 +65,7 @@ To enable and start the mem log::
    $ systemctl start acrnlog
 
 
-Set and grab log
+Set and Grab Log
 ================
 
 We have six (1-6) log levels for console log and mem log. The following
@@ -129,7 +129,7 @@ ACRN trace is a tool running on the Service VM to capture trace
 data. We can use the existing trace information to analyze, and we can
 add self-defined tracing to analyze code that we care about.
 
-Using Existing trace event ID to analyze trace
+Using Existing Trace Event ID to Analyze Trace
 ==============================================
 
 As an example, we can use the existing vm_exit trace to analyze the
@@ -159,7 +159,7 @@ reason and times of each vm_exit after we have done some operations.
 
       vmexit summary information
 
-Using Self-defined trace event ID to analyze trace
+Using Self-Defined Trace Event ID to Analyze Trace
 ==================================================
 
 For some undefined trace event ID, we can define it by ourselves as
