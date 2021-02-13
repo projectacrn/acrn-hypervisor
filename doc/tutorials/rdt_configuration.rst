@@ -35,7 +35,7 @@ Manual, (Section 17.19 Intel Resource Director Technology Allocation Features)
 
 .. _rdt_detection_capabilities:
 
-RDT detection and resource capabilities
+RDT Detection and Resource Capabilities
 ***************************************
 From the ACRN HV debug shell, use ``cpuid`` to detect and identify the
 resource capabilities. Use the platform's serial port for the HV shell.
@@ -98,7 +98,7 @@ MBA bit encoding:
    resources by using a common subset CLOS. This is done in order to minimize
    misconfiguration errors.
 
-Tuning RDT resources in HV debug shell
+Tuning RDT Resources in HV Debug Shell
 **************************************
 This section explains how to configure the RDT resources from the HV debug
 shell.
@@ -141,7 +141,7 @@ shell.
 
 .. _rdt_vm_configuration:
 
-Configure RDT for VM using VM Configuration
+Configure RDT for VM Using VM Configuration
 *******************************************
 
 #. RDT hardware feature is enabled by default on supported platforms. This
@@ -166,11 +166,11 @@ Configure RDT for VM using VM Configuration
          </RDT>
 
 #. Once RDT is enabled in the scenario XML file, the next step is to program
-   the desired cache mask or/and the MBA delay value as needed in the 
-   scenario file. Each cache mask or MBA delay configuration corresponds 
-   to a CLOS ID. For example, if the maximum supported CLOS ID is 4, then 4 
+   the desired cache mask or/and the MBA delay value as needed in the
+   scenario file. Each cache mask or MBA delay configuration corresponds
+   to a CLOS ID. For example, if the maximum supported CLOS ID is 4, then 4
    cache mask settings needs to be in place where each setting corresponds
-   to a CLOS ID starting from 0. To set the cache masks for 4 CLOS ID and 
+   to a CLOS ID starting from 0. To set the cache masks for 4 CLOS ID and
    use default delay value for MBA, it can be done as shown in the example below.
 
    .. code-block:: none

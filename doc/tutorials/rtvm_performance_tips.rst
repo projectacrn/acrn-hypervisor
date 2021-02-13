@@ -1,6 +1,6 @@
 .. _rt_perf_tips_rtvm:
 
-ACRN Real-time VM Performance Tips
+ACRN Real-Time VM Performance Tips
 ##################################
 
 Background
@@ -34,7 +34,7 @@ RTVM performance:
 This document summarizes tips from issues encountered and
 resolved during real-time development and performance tuning.
 
-Mandatory options for an RTVM
+Mandatory Options for an RTVM
 *****************************
 
 An RTVM is a post-launched VM with LAPIC passthrough. Pay attention to
@@ -55,7 +55,7 @@ Tip: Use virtio polling mode
    and enables polling mode to avoid a VM-exit at the frontend. Enable
    virtio polling mode via the option ``--virtio_poll [polling interval]``.
 
-Avoid VM-exit latency
+Avoid VM-exit Latency
 *********************
 
 VM-exit has a significant negative impact on virtualization performance.
@@ -137,7 +137,7 @@ Tip: Create and initialize the RT tasks at the beginning to avoid runtime access
    to CR3 and CR8 does not cause a VM-exit. However, writes to CR0 and CR4 may cause a
    VM-exit, which would happen at the spawning and initialization of a new task.
 
-Isolating the impact of neighbor VMs
+Isolating the Impact of Neighbor VMs
 ************************************
 
 ACRN makes use of several technologies and hardware features to avoid

@@ -67,7 +67,7 @@ to protect itself from malicious user space attack.
 Intel SGX/SMM related attacks are mitigated by using latest microcode.
 There is no additional action in ACRN hypervisor.
 
-Guest -> hypervisor Attack
+Guest -> Hypervisor Attack
 ==========================
 
 ACRN always enables EPT for all guests (Service VM and User VM), thus a malicious
@@ -84,7 +84,7 @@ a malicious guest running on one logical processor can attack the data which
 is brought into L1D by the context which runs on the sibling thread of
 the same physical core. This context can be any code in hypervisor.
 
-Guest -> guest Attack
+Guest -> Guest Attack
 =====================
 
 The possibility of guest -> guest attack varies on specific configuration,
@@ -144,7 +144,7 @@ not all of them apply to a specific ACRN deployment. Check the
 'Mitigation Status'_ and 'Mitigation Recommendations'_ sections
 for guidance.
 
-L1D flush on VMENTRY
+L1D Flush on VMENTRY
 ====================
 
 ACRN may optionally flush L1D at VMENTRY, which ensures no
@@ -175,7 +175,7 @@ is always enabled on all platforms.
 
 ACRN hypervisor doesn't set reserved bits in any EPT entry.
 
-Put Secret Data into Uncached Memory
+Put Secret Data Into Uncached Memory
 ====================================
 
 It is hard to decide which data in ACRN hypervisor is secret or valuable
@@ -204,7 +204,7 @@ useful to be attacked.
 However if such 100% identification is not possible, user should
 consider other mitigation options to protect hypervisor.
 
-L1D flush on World Switch
+L1D Flush on World Switch
 =========================
 
 For L1D-affected platforms, ACRN writes to aforementioned MSR
@@ -218,7 +218,7 @@ normal world is less privileged entity to secure world.
 
 This mitigation is always enabled.
 
-Core-based scheduling
+Core-Based Scheduling
 =====================
 
 If Hyper-threading is enabled, it's important to avoid running

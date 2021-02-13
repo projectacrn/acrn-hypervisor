@@ -18,7 +18,7 @@ It allows for direct assignment of an entire GPU's prowess to a single
 user, passing the native driver capabilities through to the hypervisor
 without any limitations.
 
-Verified version
+Verified Version
 *****************
 
 - ACRN-hypervisor tag: **acrn-2020w17.4-140000p**
@@ -31,7 +31,7 @@ Prerequisites
 Follow :ref:`these instructions <rt_industry_ubuntu_setup>` to set up
 Ubuntu as the ACRN Service VM.
 
-Supported hardware platform
+Supported Hardware Platform
 ***************************
 
 Currently, ACRN has enabled GVT-d on the following platforms:
@@ -40,16 +40,16 @@ Currently, ACRN has enabled GVT-d on the following platforms:
 * Whiskey Lake
 * Elkhart Lake
 
-BIOS settings
+BIOS Settings
 *************
 
-Kaby Lake platform
+Kaby Lake Platform
 ==================
 
 * Set **IGD Minimum Memory** to **64MB** in **Devices** &rarr;
   **Video** &rarr; **IGD Minimum Memory**.
 
-Whiskey Lake platform
+Whiskey Lake Platform
 =====================
 
 * Set **PM Support**  to **Enabled** in **Chipset** &rarr; **System
@@ -59,7 +59,7 @@ Whiskey Lake platform
   **System Agent (SA) Configuration**
   &rarr; **Graphics Configuration** &rarr; **DVMT Pre-Allocated**.
 
-Elkhart Lake platform
+Elkhart Lake Platform
 =====================
 
 * Set **DMVT Pre-Allocated** to **64MB** in **Intel Advanced Menu**
@@ -93,7 +93,7 @@ Passthrough the GPU to Guest
 
 4. Run ``launch_win.sh``.
 
-Enable the GVT-d GOP driver
+Enable the GVT-d GOP Driver
 ***************************
 
 When enabling GVT-d, the Guest OS cannot light up the physical screen

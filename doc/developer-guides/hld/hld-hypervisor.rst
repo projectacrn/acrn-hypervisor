@@ -1,6 +1,6 @@
 .. _hld-hypervisor:
 
-Hypervisor high-level design
+Hypervisor High-Level Design
 ############################
 
 

@@ -11,7 +11,7 @@ limited timer management services:
 - A timer can only be added on the logical CPU for a process or thread. Timer
   scheduling or timer migrating is not supported.
 
-How it works
+How It Works
 ************
 
 When the system boots, we check that the hardware supports lapic

@@ -35,7 +35,7 @@ Trusty Architecture
 
 .. _trusty-hypercalls:
 
-Trusty specific Hypercalls
+Trusty Specific Hypercalls
 **************************
 
 There are a few :ref:`hypercall_apis` that are related to Trusty.
@@ -44,7 +44,7 @@ There are a few :ref:`hypercall_apis` that are related to Trusty.
    :project: Project ACRN
    :content-only:
 
-Trusty Boot flow
+Trusty Boot Flow
 ****************
 
 By design, the User OS bootloader (``UOS_Loader``) will trigger the Trusty boot process. The complete boot flow is illustrated below.

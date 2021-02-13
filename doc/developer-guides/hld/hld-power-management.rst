@@ -1,12 +1,12 @@
 .. _hld-power-management:
 
-Power Management high-level design
+Power Management High-Level Design
 ##################################
 
-P-state/C-state management
+P-State/C-State Management
 **************************
 
-ACPI Px/Cx data
+ACPI Px/Cx Data
 ===============
 
 CPU P-state/C-state are controlled by the guest OS. The ACPI
@@ -54,7 +54,7 @@ Hypervisor module named CPU state table:
 With these Px/Cx data, the Hypervisor is able to intercept the guest's
 P/C-state requests with desired restrictions.
 
-Virtual ACPI table build flow
+Virtual ACPI Table Build Flow
 =============================
 
 :numref:`vACPItable` shows how to build the virtual ACPI table with the
@@ -127,7 +127,7 @@ could customize it according to their hardware/software requirements.
    ACRN System S3/S5 diagram
 
 
-System low power state entry process
+System Low Power State Entry Process
 ====================================
 
 Each time, when lifecycle manager of User VM starts power state transition,
@@ -171,7 +171,7 @@ For system power state entry:
 6. OSPM in ACRN hypervisor checks all guests are in S5 state and shuts down
    whole system.
 
-System low power state exit process
+System Low Power State Exit Process
 ===================================
 
 The low power state exit process is in reverse order. The ACRN

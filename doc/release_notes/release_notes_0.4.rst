@@ -1,6 +1,6 @@
 .. _release_notes_0.4:
 
-ACRN v0.4 (Dec 2018)
+ACRN V0.4 (Dec 2018)
 ####################
 
 We are pleased to announce the release of Project ACRN version 0.4.
@@ -31,7 +31,7 @@ https://projectacrn.github.io/0.4/.  Documentation for the latest
 (master) branch is found at https://projectacrn.github.io/latest/.
 
 
-Version 0.4 new features
+Version 0.4 New Features
 ************************
 
 - :acrn-issue:`1824` - implement "wbinvd" emulation

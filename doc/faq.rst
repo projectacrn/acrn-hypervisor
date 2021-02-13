@@ -9,9 +9,8 @@ Here are some frequently asked questions about the ACRN project.
    :local:
    :backlinks: entry
 
-------
 
-What hardware does ACRN support?
+What Hardware Does ACRN Support?
 ********************************
 
 ACRN runs on Intel boards, as documented in
@@ -19,7 +18,7 @@ our :ref:`hardware` documentation.
 
 .. _config_32GB_memory:
 
-How do I configure ACRN's memory size?
+How Do I Configure ACRN's Memory Size?
 **************************************
 
 It's important that the ACRN configuration settings are aligned with the
@@ -53,7 +52,7 @@ the ACRN Service VM with the 32G memory size.
 
 #. Then continue building the ACRN Service VM as usual.
 
-How to modify the default display output for a User VM?
+How to Modify the Default Display Output for a User VM?
 *******************************************************
 
 Apollo Lake HW has three pipes and each pipe can have three or four planes which
@@ -98,7 +97,7 @@ these parameters:
    intentional, and the driver will enforce this if the parameters do not
    do this.
 
-Why does ACRN need to know how much RAM the system has?
+Why Does ACRN Need to Know How Much RAM the System Has?
 *******************************************************
 
 Configuring ACRN at compile time with the system RAM size is a tradeoff between

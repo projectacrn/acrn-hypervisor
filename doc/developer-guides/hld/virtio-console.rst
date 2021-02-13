@@ -1,6 +1,6 @@
 .. _virtio-console:
 
-Virtio-console
+Virtio-Console
 ##############
 
 The Virtio-console is a simple device for data input and output.  The
@@ -142,7 +142,7 @@ PTY
    .. code-block:: console
 
         # minicom -D /dev/pts/0
- 
+
    or:
 
    .. code-block:: console
@@ -162,7 +162,7 @@ TTY
 
          /dev/pts/0
          # sleep 2d
- 
+
    - If you do not have network access to your device, use screen
      to create a new TTY:
 

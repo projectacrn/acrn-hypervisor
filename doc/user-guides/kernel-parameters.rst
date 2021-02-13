@@ -3,7 +3,7 @@
 ACRN Kernel Parameters
 ######################
 
-Generic kernel parameters
+Generic Kernel Parameters
 *************************
 
 A number of kernel parameters control the behavior of ACRN-based systems. Some
@@ -379,13 +379,13 @@ section below has more details on a few select parameters.
 
 .. _GVT-g-kernel-options:
 
-GVT-g (AcrnGT) Kernel Options details
+GVT-g (AcrnGT) Kernel Options Details
 =====================================
 
 This section provides additional information and details on the kernel command
 line options that are related to AcrnGT.
 
-i915.enable_gvt
+I915.enable_gvt
 ---------------
 
 This option enables support for Intel GVT-g graphics virtualization
@@ -393,7 +393,7 @@ support in the host. By default, it's not enabled, so we need to add
 ``i915.enable_gvt=1`` in the Service VM kernel command line.  This is a Service
 OS only parameter, and cannot be enabled in the User VM.
 
-i915.enable_hangcheck
+I915.enable_hangcheck
 =====================
 
 This parameter enable detection of a GPU hang. When enabled, the i915

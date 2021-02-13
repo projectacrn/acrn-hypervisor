@@ -21,7 +21,7 @@ In the following steps, you'll first create a Windows image
 in the Service VM, and then launch that image as a Guest VM.
 
 
-Verified version
+Verified Version
 ================
 
 * Windows 10 Version:
@@ -38,12 +38,12 @@ Verified version
       set **DVMT Pre-Allocated** to **64MB** and set **PM Support**
       to **Enabled**.
 
-Create a Windows 10 image in the Service VM
+Create a Windows 10 Image in the Service VM
 ===========================================
 
 Create a Windows 10 image to install Windows 10 onto a virtual disk.
 
-Download Win10 image and drivers
+Download Win10 Image and Drivers
 --------------------------------
 
 #. Download `MediaCreationTool20H2.exe <https://www.microsoft.com/software-download/windows10>`_.
@@ -66,7 +66,7 @@ Download Win10 image and drivers
    - Click **Download**. When the download is complete, unzip the file. You
      will see an ISO named ``winvirtio.iso``.
 
-Create a raw disk
+Create a Raw Disk
 -----------------
 
 Run these commands on the Service VM::
@@ -76,7 +76,7 @@ Run these commands on the Service VM::
    $ cd /home/acrn/work
    $ qemu-img create -f raw win10-ltsc.img 30G
 
-Prepare the script to create an image
+Prepare the Script to Create an Image
 -------------------------------------
 
 #. Refer :ref:`gpu-passthrough` to enable GVT-d GOP feature; then copy above .iso files and  the built OVMF.fd to /home/acrn/work
@@ -212,7 +212,7 @@ When you see the UEFI shell, input **exit**.
    Windows and install in safe mode.
    The latest version(27.20.100.9030) was verified on WHL.You’d better use the same version as the one in native Windows 10 on your board.
 
-Boot Windows on ACRN with a default configuration
+Boot Windows on ACRN With a Default Configuration
 =================================================
 
 #. Prepare WaaG lauch script
@@ -235,7 +235,7 @@ Boot Windows on ACRN with a default configuration
 
 The WaaG desktop displays on the monitor.
 
-ACRN Windows verified feature list
+ACRN Windows Verified Feature List
 **********************************
 
 .. csv-table::
@@ -257,7 +257,7 @@ ACRN Windows verified feature list
                    , "Microsoft Store",              "OK"
                    , "3D Viewer",                    "OK"
 
-Explanation for acrn-dm popular command lines
+Explanation for Acrn-Dm Popular Command Lines
 *********************************************
 
 .. note:: Use these acrn-dm command line entries according to your
@@ -297,7 +297,7 @@ Explanation for acrn-dm popular command lines
 * ``--ovmf /home/acrn/work/OVMF.fd``:
   Make sure it points to your OVMF binary path.
 
-Secure boot enabling
+Secure Boot Enabling
 ********************
 Refer to the steps in :ref:`How-to-enable-secure-boot-for-windows` for
 secure boot enabling.

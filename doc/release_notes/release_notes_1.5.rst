@@ -1,6 +1,6 @@
 .. _release_notes_1.5:
 
-ACRN v1.5 (Jan 2020)
+ACRN V1.5 (Jan 2020)
 ####################
 
 We are pleased to announce the release of ACRN version 1.5.
@@ -24,17 +24,17 @@ with a specific release: generated v1.5 documents can be found at https://projec
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
 ACRN v1.5 requires Clear Linux* OS version 32030.
 
-Version 1.5 major features
+Version 1.5 Major Features
 **************************
 
-What's New in v1.5
+What's New in V1.5
 ==================
 * Basic CPU sharing: Fairness Round-Robin CPU Scheduling has been added to support basic CPU sharing (the Service VM and WaaG share one CPU core).
 * 8th Gen Intel® Core™ Processors (code name Whiskey Lake) are now supported and validated.
 * Overall stability and performance has been improved.
 * An offline configuration tool has been created to help developers port ACRN to different hardware boards.
 
-Document updates
+Document Updates
 ================
 Many new `reference documents <https://projectacrn.github.io>`_ are available, including:
 

@@ -1,6 +1,6 @@
 .. _release_notes_0.5:
 
-ACRN v0.5 (Jan 2019)
+ACRN V0.5 (Jan 2019)
 ####################
 
 We are pleased to announce the release of Project ACRN version 0.5.
@@ -31,7 +31,7 @@ https://projectacrn.github.io/0.5/.  Documentation for the latest
 (master) branch is found at https://projectacrn.github.io/latest/.
 
 
-Version 0.5 new features
+Version 0.5 New Features
 ************************
 
 **OVMF support initial patches merged in ACRN**:

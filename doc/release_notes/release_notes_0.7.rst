@@ -1,6 +1,6 @@
 .. _release_notes_0.7:
 
-ACRN v0.7 (Mar 2019)
+ACRN V0.7 (Mar 2019)
 ####################
 
 We are pleased to announce the release of Project ACRN version 0.7.
@@ -32,10 +32,10 @@ https://projectacrn.github.io/0.7/.  Documentation for the latest
 
 ACRN v0.7 requires Clear Linux OS version 28260.
 
-Version 0.7 new features
+Version 0.7 New Features
 ************************
 
-Enable cache QOS with CAT
+Enable Cache QOS With CAT
 =========================
 
 Cache Allocation Technology (CAT) is enabled on Apollo Lake (APL)
@@ -46,12 +46,12 @@ build time. For debugging and performance tuning, the CAT can also be
 enabled and configured at runtime by writing proper values to certain
 MSRs using the ``wrmsr`` command on ACRN shell.
 
-Support ACPI power key mediator
+Support ACPI Power Key Mediator
 ===============================
 ACRN supports ACPI power/sleep key on the APL and KBL NUC platforms,
 triggering S3/S5 flow, following the ACPI spec.
 
-Document updates
+Document Updates
 ================
 Several new documents have been added in this release, including:
 
@@ -121,7 +121,6 @@ Known Issues
 
    **Workaround:** Unplug and plug-in the unrecognized device after booting.
 
------
 
 :acrn-issue:`1991` - Input not accepted in UART Console for corner case
    Input is useless in UART Console for a corner case, demonstrated with these steps:
@@ -136,7 +135,6 @@ Known Issues
 
    **Workaround:** Enter other keys before typing :kbd:`Enter`.
 
------
 
 :acrn-issue:`1996` - There is an error log when using ``acrnd&`` to boot UOS
    An error log is printed when starting ``acrnd`` as a background job
@@ -150,7 +148,6 @@ Known Issues
 
    **Workaround:** None.
 
------
 
 :acrn-issue:`2267` - [APLUP2][LaaG] LaaG can't detect 4k monitor
    After launching UOS on APL UP2 , 4k monitor cannot be detected.
@@ -159,7 +156,6 @@ Known Issues
 
    **Workaround:** Use a monitor with less than 4k resolution.
 
------
 
 :acrn-issue:`2278` - [KBLNUC] Cx/Px is not supported on KBLNUC
    C states and P states are not supported on KBL NUC.
@@ -169,7 +165,6 @@ Known Issues
 
    **Workaround:** None
 
------
 
 :acrn-issue:`2279` - [APLNUC] After exiting UOS with mediator
    Usb_KeyBoard and Mouse, SOS cannot use the USB keyboard and mouse.
@@ -189,7 +184,6 @@ Known Issues
 
    **Workaround:** Unplug and plug-in the USB keyboard and mouse after exiting UOS.
 
------
 
 :acrn-issue:`2522` - [NUC7i7BNH] After starting IAS in SOS, there is no display
    On NUC7i7BNH, after starting IAS in SOS, there is no display if the monitor is
@@ -199,7 +193,6 @@ Known Issues
 
    **Workaround:** None.
 
------
 
 :acrn-issue:`2523` - UOS monitor does not display when using IAS
    There is no UOS display after starting IAS weston.
@@ -220,7 +213,6 @@ Known Issues
 
    The issue will be fixed in the next release.
 
------
 
 :acrn-issue:`2524` - [UP2][SBL] Launching UOS hangs while weston is running in SOS
    When using weston in SOS, it will hang during the UOS launch.
@@ -239,7 +231,6 @@ Known Issues
 
    The issue will be fixed in the next release.
 
------
 
 :acrn-issue:`2527` - [KBLNUC][HV]System will crash when run ``crashme`` (SOS/UOS)
    System will crash after a few minutes running stress test ``crashme`` tool in SOS/UOS.
@@ -248,7 +239,6 @@ Known Issues
 
    **Workaround:** None
 
------
 
 :acrn-issue:`2526` - Hypervisor crash when booting UOS with acrnlog running with mem loglevel=6
    If we use ``loglevel 3 6`` to change the mem loglevel to 6, we may hit a page fault in HV.
@@ -257,7 +247,6 @@ Known Issues
 
    **Workaround:** None
 
------
 
 :acrn-issue:`2753` - UOS cannot resume after suspend by pressing power key
    UOS cannot resume after suspend by pressing power key

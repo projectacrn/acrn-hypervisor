@@ -1,6 +1,6 @@
 .. _release_notes_0.1:
 
-ACRN v0.1 (July 2018)
+ACRN V0.1 (July 2018)
 #####################
 
 We are pleased to announce the release of Project ACRN version 0.1.
@@ -14,7 +14,7 @@ The project ACRN reference code can be found on GitHub in
 https://github.com/projectacrn.  It includes the ACRN hypervisor, the
 ACRN device model, and documentation.
 
-Version 0.1 new features
+Version 0.1 New Features
 ************************
 
 Hardware Support
@@ -35,7 +35,7 @@ Virtual Graphics support added:
   assigned to different display. The display ports supports eDP and HDMI.
 - See :ref:`APL_GVT-G-hld` documentation for more information.
 
-Virtio standard is supported
+Virtio Standard Is Supported
 ============================
 
 Virtio is a virtualization standard for
@@ -45,7 +45,7 @@ the hypervisor. The SOS and UOS can share physical LAN network
 and physical eMMC storage device.  (See :ref:`virtio-hld` for more
 information.)
 
-Device pass-through support
+Device Pass-Through Support
 ===========================
 
 Device pass-through to UOS support for:
@@ -54,13 +54,13 @@ Device pass-through to UOS support for:
 - SD card (mount, read, and write directly in the UOS)
 - Converged Security Engine (CSE)
 
-Hypervisor configuration
+Hypervisor Configuration
 ========================
 
 Developers can configure hypervisor via Kconfig parameters. (See
 documentation for configuration options.)
 
-New ACRN tools
+New ACRN Tools
 ==============
 
 We've added a collection of support tools including acrnctl, acrntrace,

@@ -1,6 +1,6 @@
 .. _acrnctl:
 
-acrnctl and acrnd
+Acrnctl and Acrnd
 #################
 
 
@@ -56,7 +56,7 @@ container::
 
 .. note:: You can download an :acrn_raw:`example launch_uos.sh script
    <devicemodel/samples/nuc/launch_uos.sh>`
-   that supports the ``-C``  (``run_container`` function) option. 
+   that supports the ``-C``  (``run_container`` function) option.
 
 Note that the launch script must only launch one User VM instance.
 The VM name is important. ``acrnctl`` searches VMs by their
@@ -136,7 +136,7 @@ update the backend file.
 
 .. _acrnd:
 
-acrnd
+Acrnd
 *****
 
 The ``acrnd`` daemon process provides a way for launching or resuming a User VM

@@ -1,6 +1,6 @@
 .. _release_notes_2.3:
 
-ACRN v2.3 (Dec 2020)
+ACRN V2.3 (Dec 2020)
 ####################
 
 We are pleased to announce the release of the Project ACRN
@@ -32,7 +32,7 @@ ACRN v2.3 requires Ubuntu 18.04.  Follow the instructions in the
 :ref:`rt_industry_ubuntu_setup` to get started with ACRN.
 
 
-What's New in v2.3
+What's New in V2.3
 ******************
 
 Enhanced GPU passthrough (GVT-d)
@@ -65,7 +65,7 @@ Removed deprivileged boot mode support
   Clear Linux so we have chosen Ubuntu (and Yocto Project) as the
   preferred Service VM OSs moving forward.
 
-Document updates
+Document Updates
 ****************
 
 New and updated reference documents are available, including:

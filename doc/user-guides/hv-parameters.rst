@@ -3,7 +3,7 @@
 ACRN Hypervisor Parameters
 ##########################
 
-Generic hypervisor parameters
+Generic Hypervisor Parameters
 *****************************
 
 The ACRN hypervisor supports the following parameter:

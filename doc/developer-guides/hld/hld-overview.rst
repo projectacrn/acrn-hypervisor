@@ -1,6 +1,6 @@
 .. _hld-overview:
 
-ACRN high-level design overview
+ACRN High-Level Design Overview
 ###############################
 
 ACRN is an open source reference hypervisor (HV) that runs on top of
@@ -28,7 +28,7 @@ The Instrument Control (IC) system manages graphic displays of:
 - alerts of low fuel or tire pressure
 - rear-view camera (RVC) and surround-camera view for driving assistance
 
-In-vehicle Infotainment
+In-Vehicle Infotainment
 =======================
 
 A typical In-vehicle Infotainment (IVI) system supports:
@@ -419,7 +419,7 @@ to complete the User VM's host-to-guest mapping using this pseudo code:
       host2guest_map_for_uos(x.hpa, x.uos_gpa, x.size)
    end
 
-Virtual Slim bootloader
+Virtual Slim Bootloader
 =======================
 
 The Virtual Slim bootloader (vSBL) is the virtual bootloader that supports
@@ -451,7 +451,7 @@ For an Android VM, the vSBL will load and verify trusty OS first, and
 trusty OS will then load and verify Android OS according to the Android
 OS verification mechanism.
 
-OVMF bootloader
+OVMF Bootloader
 =======================
 
 Open Virtual Machine Firmware (OVMF) is the virtual bootloader that supports
@@ -536,7 +536,7 @@ Boot Flow
 Power Management
 ****************
 
-CPU P-state & C-state
+CPU P-State & C-State
 =====================
 
 In ACRN, CPU P-state and C-state (Px/Cx) are controlled by the guest OS.
@@ -562,7 +562,7 @@ This diagram shows CPU P/C-state management blocks:
 
    CPU P/C-state management block diagram
 
-System power state
+System Power State
 ==================
 
 ACRN supports ACPI standard defined power state: S3 and S5 in system

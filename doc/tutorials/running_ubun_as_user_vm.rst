@@ -190,7 +190,7 @@ Modify the ``launch_win.sh`` script in order to launch Ubuntu as the User VM.
 
        The Ubuntu desktop on the secondary monitor
 
-Enable the Ubuntu Console instead of the User Interface
+Enable the Ubuntu Console Instead of the User Interface
 *******************************************************
 
 After the Ubuntu VM reboots, follow the steps below to enable the Ubuntu

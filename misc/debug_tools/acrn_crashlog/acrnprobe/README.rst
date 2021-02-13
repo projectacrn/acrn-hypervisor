@@ -1,6 +1,6 @@
 .. _acrnprobe_doc:
 
-acrnprobe
+Acrnprobe
 #########
 
 Description
@@ -143,7 +143,7 @@ Diagram
  +-----------------------------------------------------------------------------+
 
 
-Source files
+Source Files
 ************
 
 - main.c
@@ -176,7 +176,7 @@ Source files
 - loop.c
   This file provides interfaces to read from image.
 
-Configuration files
+Configuration Files
 *******************
 
 * ``/usr/share/defaults/telemetrics/acrnprobe.xml``

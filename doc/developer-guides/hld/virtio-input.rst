@@ -1,6 +1,6 @@
 .. _virtio-input:
 
-Virtio-input
+Virtio-Input
 ############
 
 The virtio input device can be used to create virtual human interface

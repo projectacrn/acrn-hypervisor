@@ -1,6 +1,6 @@
 .. _introduction:
 
-What is ACRN
+What Is ACRN
 ############
 
 Introduction to Project ACRN
@@ -281,7 +281,7 @@ application scenario needs.
 
 Here are block diagrams for each of these four scenarios.
 
-SDC scenario
+SDC Scenario
 ============
 
 In this SDC scenario, an instrument cluster (IC) system runs with the
@@ -295,7 +295,7 @@ VM.
 
    SDC scenario with two VMs
 
-Industry scenario
+Industry Scenario
 =================
 
 In this Industry scenario, the Service VM provides device sharing capability for
@@ -312,7 +312,7 @@ vision, etc.
 
    Industry scenario
 
-Hybrid scenario
+Hybrid Scenario
 ===============
 
 In this Hybrid scenario, a pre-launched Safety/RTVM is started by the
@@ -326,7 +326,7 @@ non-real-time tasks.
 
    Hybrid scenario
 
-Hybrid real-time (RT) scenario
+Hybrid Real-Time (RT) Scenario
 ==============================
 
 In this Hybrid real-time (RT) scenario, a pre-launched RTVM is started by the
@@ -340,7 +340,7 @@ non-real-time tasks.
 
    Hybrid RT scenario
 
-Logical Partition scenario
+Logical Partition Scenario
 ==========================
 
 This scenario is a simplified VM configuration for VM logical
@@ -619,7 +619,7 @@ ACRN Device model incorporates these three aspects:
 
 .. _pass-through:
 
-Device passthrough
+Device Passthrough
 ******************
 
 At the highest level, device passthrough is about providing isolation
@@ -651,7 +651,7 @@ don't support passthrough for a legacy serial port, (for example
 0x3f8).
 
 
-Hardware support for device passthrough
+Hardware Support for Device Passthrough
 =======================================
 
 Intel's current processor architectures provides support for device
@@ -673,7 +673,7 @@ fabrics to scale to many devices. MSI is ideal for I/O virtualization,
 as it allows isolation of interrupt sources (as opposed to physical pins
 that must be multiplexed or routed through software).
 
-Hypervisor support for device passthrough
+Hypervisor Support for Device Passthrough
 =========================================
 
 By using the latest virtualization-enhanced processor architectures,
@@ -688,7 +688,7 @@ assigned to the same guest OS. PCIe does not have this restriction.
 
 .. _ACRN-io-mediator:
 
-ACRN I/O mediator
+ACRN I/O Mediator
 *****************
 
 :numref:`io-emulation-path` shows the flow of an example I/O emulation path.
@@ -736,7 +736,7 @@ The MMIO path is very similar, except the VM exit reason is different. MMIO
 access is usually trapped through a VMX_EXIT_REASON_EPT_VIOLATION in
 the hypervisor.
 
-Virtio framework architecture
+Virtio Framework Architecture
 *****************************
 
 .. _Virtio spec:

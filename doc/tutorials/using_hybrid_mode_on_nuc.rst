@@ -1,6 +1,6 @@
 .. _using_hybrid_mode_on_nuc:
 
-Getting Started Guide for ACRN hybrid mode
+Getting Started Guide for ACRN Hybrid Mode
 ##########################################
 
 ACRN hypervisor supports a hybrid scenario where the User VM (such as Zephyr

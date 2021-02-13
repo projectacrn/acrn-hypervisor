@@ -128,7 +128,7 @@ SR-IOV Architecture in ACRN
    standard BAR registers. The MSI-X mapping base address is also from the
    PF's SR-IOV capabilities, not PCI standard BAR registers.
 
-SR-IOV Passthrough VF Architecture In ACRN
+SR-IOV Passthrough VF Architecture in ACRN
 ------------------------------------------
 
 .. figure:: images/sriov-image4.png
@@ -219,7 +219,7 @@ SR-IOV VF Assignment Policy
    a passthrough to high privilege VMs because the PF device may impact
    the assigned VFs' functionality and stability.
 
-SR-IOV Usage Guide In ACRN
+SR-IOV Usage Guide in ACRN
 --------------------------
 
 We use the Intel 82576 NIC as an example in the following instructions. We
@@ -280,7 +280,7 @@ only support LaaG (Linux as a Guest).
 
    c. Boot the User VM
 
-SR-IOV Limitations In ACRN
+SR-IOV Limitations in ACRN
 --------------------------
 
 1. The SR-IOV migration feature is not supported.
