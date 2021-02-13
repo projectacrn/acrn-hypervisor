@@ -1,6 +1,6 @@
 .. _using_grub:
 
-Using GRUB to boot ACRN
+Using GRUB to Boot ACRN
 #######################
 
 `GRUB <http://www.gnu.org/software/grub/>`_ is a multiboot bootloader
@@ -45,7 +45,7 @@ ELF format when :option:`hv.FEATURES.RELOC` is not set, or RAW format when
 
 .. _pre-installed-grub:
 
-Using pre-installed GRUB
+Using Pre-Installed GRUB
 ************************
 
 Most Linux distributions use GRUB version 2 by default. If its version
@@ -137,7 +137,7 @@ pre-launched VMs (the SOS_VM is also a kind of pre-launched VM):
    start the VMs automatically.
 
 
-Installing self-built GRUB
+Installing Self-Built GRUB
 **************************
 
 If the GRUB version on your platform is outdated or has issues booting

@@ -1,6 +1,6 @@
 .. _acrn_home:
 
-Project ACRN documentation
+Project ACRN Documentation
 ##########################
 
 Welcome to the Project ACRN (version |version|) documentation.  ACRN is

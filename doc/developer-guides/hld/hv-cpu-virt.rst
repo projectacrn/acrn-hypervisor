@@ -31,7 +31,7 @@ Based on Intel VT-x virtualization technology, ACRN emulates a virtual CPU
 -  **simple schedule**: a well-designed scheduler framework that allows ACRN
    to adopt different scheduling policies, such as the **noop** and **round-robin**:
 
-   - **noop scheduler**: only two thread loops are maintained for a CPU: a 
+   - **noop scheduler**: only two thread loops are maintained for a CPU: a
      vCPU thread and a default idle thread. A CPU runs most of the time in
      the vCPU thread for emulating a guest CPU, switching between VMX root
      mode and non-root mode. A CPU schedules out to default idle when an
@@ -45,7 +45,7 @@ Based on Intel VT-x virtualization technology, ACRN emulates a virtual CPU
      itself as well, such as when it executes "PAUSE" instruction.
 
 
-Static CPU partitioning
+Static CPU Partitioning
 ***********************
 
 CPU partitioning is a policy for mapping a virtual
@@ -75,7 +75,7 @@ VM.
 
 See :ref:`cpu_sharing` for more information.
 
-CPU management in the Service VM under static CPU partitioning
+CPU Management in the Service VM Under Static CPU Partitioning
 ==============================================================
 
 With ACRN, all ACPI table entries are passthrough to the Service VM, including
@@ -96,7 +96,7 @@ Here is an example flow of CPU allocation on a multi-core platform.
 
    CPU allocation on a multi-core platform
 
-CPU management in the Service VM under flexible CPU sharing
+CPU Management in the Service VM Under Flexible CPU Sharing
 ===========================================================
 
 As all Service VM CPUs could share with different User VMs, ACRN can still passthrough
@@ -105,7 +105,7 @@ MADT to Service VM, and the Service VM is still able to see all physical CPUs.
 But as under CPU sharing, the Service VM does not need offline/release the physical
 CPUs intended for User VM use.
 
-CPU management in the User VM
+CPU Management in the User VM
 =============================
 
 ``cpu_affinity`` in ``vm config`` defines a set of pCPUs that a User VM
@@ -113,7 +113,7 @@ is allowed to run on. acrn-dm could choose to launch on only a subset of the pCP
 or on all pCPUs listed in cpu_affinity, but it can't assign
 any pCPU that is not included in it.
 
-CPU assignment management in HV
+CPU Assignment Management in HV
 ===============================
 
 The physical CPU assignment is pre-defined by ``cpu_affinity`` in
@@ -169,7 +169,7 @@ lifecycle:
    :project: Project ACRN
 
 
-vCPU Scheduling under static CPU partitioning
+vCPU Scheduling Under Static CPU Partitioning
 *********************************************
 
 .. figure:: images/hld-image35.png
@@ -225,7 +225,7 @@ Some example scenario flows are shown here:
    *hcall_notify_ioreq_finish->resume_vcpu* and makes the vCPU
    schedule back to *vcpu_thread* to continue its guest execution.
 
-vCPU Scheduling under flexible CPU sharing
+vCPU Scheduling Under Flexible CPU Sharing
 ******************************************
 
 To be added.

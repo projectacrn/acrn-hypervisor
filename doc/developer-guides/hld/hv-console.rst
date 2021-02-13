@@ -1,11 +1,11 @@
 .. _hv-console-shell-uart:
 
-Hypervisor console, hypervisor shell, and virtual UART
+Hypervisor Console, Hypervisor Shell, and Virtual UART
 ######################################################
 
 .. _hv-console:
 
-Hypervisor console
+Hypervisor Console
 ******************
 
 The hypervisor console is a text-based terminal accessible from UART.
@@ -32,7 +32,7 @@ is active:
    configured at compile time. In the release version, the console is
    disabled and the physical UART is not used by the hypervisor or Service VM.
 
-Hypervisor shell
+Hypervisor Shell
 ****************
 
 For debugging, the hypervisor shell provides commands to list some

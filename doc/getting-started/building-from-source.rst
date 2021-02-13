@@ -1,6 +1,6 @@
 .. _getting-started-building:
 
-Build ACRN from Source
+Build ACRN From Source
 ######################
 
 Following a general embedded-system programming model, the ACRN
@@ -45,7 +45,7 @@ these steps.
 
 .. rst-class:: numbered-step
 
-Install build tools and dependencies
+Install Build Tools and Dependencies
 ************************************
 
 ACRN development is supported on popular Linux distributions, each with
@@ -99,7 +99,7 @@ Install the necessary tools for the following systems:
 
 .. rst-class:: numbered-step
 
-Get the ACRN hypervisor source code
+Get the ACRN Hypervisor Source Code
 ***********************************
 
 The `acrn-hypervisor <https://github.com/projectacrn/acrn-hypervisor/>`_
@@ -120,7 +120,7 @@ Enter the following to get the acrn-hypervisor source code:
 
 .. rst-class:: numbered-step
 
-Build with the ACRN scenario
+Build With the ACRN Scenario
 ****************************
 
 Currently, the ACRN hypervisor defines these typical usage scenarios:
@@ -187,10 +187,10 @@ for each scenario.
 
 .. rst-class:: numbered-step
 
-Build the hypervisor configuration
+Build the Hypervisor Configuration
 **********************************
 
-Modify the hypervisor configuration
+Modify the Hypervisor Configuration
 ===================================
 
 The ACRN hypervisor leverages Kconfig to manage configurations; it is
@@ -239,7 +239,7 @@ Refer to the help on menuconfig for a detailed guide on the interface:
 
 .. rst-class:: numbered-step
 
-Build the hypervisor, device model, and tools
+Build the Hypervisor, Device Model, and Tools
 *********************************************
 
 Now you can build all these components at once as follows:

@@ -1,6 +1,6 @@
 .. _hld-devicemodel:
 
-Device Model high-level design
+Device Model High-Level Design
 ##############################
 
 Hypervisor Device Model (DM) is a QEMU-like application in Service VM
@@ -279,7 +279,7 @@ DM Initialization
 VHM
 ***
 
-VHM overview
+VHM Overview
 ============
 
 Device Model manages User VM by accessing interfaces exported from VHM
@@ -302,7 +302,7 @@ hypercall to the hypervisor. There are two exceptions:
 
    Architecture of ACRN VHM
 
-VHM ioctl interfaces
+VHM Ioctl Interfaces
 ====================
 
 .. note:: Reference API documents for General interface, VM Management,
@@ -756,7 +756,7 @@ called from the PIO/MMIO handler.
 The PCI emulation device will make use of interrupt APIs as well for
 its interrupt injection.
 
-PCI Host Bridge and hierarchy
+PCI Host Bridge and Hierarchy
 =============================
 
 There is PCI host bridge emulation in DM. The bus hierarchy is
@@ -892,7 +892,7 @@ shows a typical ACPI table layout in an Intel APL platform:
 
    Typical ACPI table layout on Intel APL platform
 
-ACPI virtualization
+ACPI Virtualization
 ===================
 
 Most modern OSes requires ACPI, so we need ACPI virtualization to

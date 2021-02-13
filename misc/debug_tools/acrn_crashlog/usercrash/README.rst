@@ -1,6 +1,6 @@
 .. _usercrash_doc:
 
-usercrash
+Usercrash
 #########
 
 Description

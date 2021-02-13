@@ -1,6 +1,6 @@
 .. _rt_performance_tuning:
 
-ACRN Real-time (RT) Performance Analysis
+ACRN Real-Time (RT) Performance Analysis
 ########################################
 
 The document describes the methods to collect trace/data for ACRN real-time VM (RTVM)
@@ -9,8 +9,8 @@ real-time performance analysis. Two parts are included:
 - Method to trace ``vmexit`` occurrences for analysis.
 - Method to collect Performance Monitoring Counters information for tuning based on Performance Monitoring Unit, or PMU.
 
-``vmexit`` analysis for ACRN RT performance
-*******************************************
+Vmexit Analysis for ACRN RT Performance
+***************************************
 
 ``vmexit`` are triggered in response to certain instructions and events and are
 a key source of performance degradation in virtual machines. During the runtime
@@ -30,7 +30,7 @@ the duration of time where we do not want to see any ``vmexit`` occur.
 Different RT tasks use different critical sections. This document uses
 the cyclictest benchmark as an example of how to do ``vmexit`` analysis.
 
-The critical sections
+The Critical Sections
 =====================
 
 Here is example pseudocode of a cyclictest implementation.
@@ -53,14 +53,14 @@ the cyclictest to be awakened and scheduled. Here we can get the latency by
 So, we define the starting point of the critical section as ``next`` and
 the ending point as ``now``.
 
-Log and trace data collection
+Log and Trace Data Collection
 =============================
 
 #. Add time stamps (in TSC) at ``next`` and ``now``.
 #. Capture the log with the above time stamps in the RTVM.
 #. Capture the ``acrntrace`` log in the Service VM at the same time.
 
-Offline analysis
+Offline Analysis
 ================
 
 #. Convert the raw trace data to human readable format.
@@ -71,10 +71,10 @@ Offline analysis
       :align: center
       :name: vm_exits_log
 
-Collecting Performance Monitoring Counters data
+Collecting Performance Monitoring Counters Data
 ***********************************************
 
-Enable Performance Monitoring Unit (PMU) support in VM
+Enable Performance Monitoring Unit (PMU) Support in VM
 ======================================================
 
 By default, the ACRN hypervisor doesn't expose the PMU-related CPUID and
@@ -149,7 +149,7 @@ Note that Precise Event Based Sampling (PEBS) is not yet enabled in the VM.
       value64 = hva2hpa(vcpu->arch.msr_bitmap);
       exec_vmwrite64(VMX_MSR_BITMAP_FULL, value64);
 
-Perf/PMU tools in performance analysis
+Perf/Pmu Tools in Performance Analysis
 ======================================
 
 After exposing PMU-related CPUID/MSRs to the VM, performance analysis tools
@@ -170,7 +170,7 @@ following links for perf usage:
 
 Refer to https://github.com/andikleen/pmu-tools for PMU usage.
 
-Top-down Microarchitecture Analysis Method (TMAM)
+Top-Down Microarchitecture Analysis Method (TMAM)
 ==================================================
 
 The top-down microarchitecture analysis method (TMAM), based on top-down

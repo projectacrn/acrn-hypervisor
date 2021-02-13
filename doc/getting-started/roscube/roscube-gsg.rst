@@ -1,11 +1,11 @@
-Getting Started Guide for ACRN Industry Scenario with ROScube-I
+Getting Started Guide for ACRN Industry Scenario With ROScube-I
 ###############################################################
 
 .. contents::
    :local:
    :depth: 1
 
-Verified version
+Verified Version
 ****************
 
 - Ubuntu version: **18.04**
@@ -68,10 +68,10 @@ Prerequisites
 
 .. rst-class:: numbered-step
 
-Install ACRN hypervisor
+Install ACRN Hypervisor
 ***********************
 
-Set up Environment
+Set Up Environment
 ==================
 
 #. Open ``/etc/default/grub/`` and add ``idle=nomwait intel_pstate=disable``
@@ -203,10 +203,10 @@ Configure Hypervisor
 
 .. rst-class:: numbered-step
 
-Install Service VM kernel
+Install Service VM Kernel
 *************************
 
-Build Service VM kernel
+Build Service VM Kernel
 =======================
 
 #. Get code from GitHub
@@ -302,7 +302,7 @@ Update Grub
 Install User VM
 ***************
 
-Before create User VM
+Before Create User VM
 =====================
 
 #. Download Ubuntu image (Here we use `Ubuntu 18.04 LTS
@@ -316,7 +316,7 @@ Before create User VM
        bridge-utils virt-manager ovmf
      sudo reboot
 
-Create User VM image
+Create User VM Image
 ====================
 
 .. note:: Reboot into the **native Linux kernel** (not the ACRN kernel)
@@ -451,10 +451,10 @@ the User VM.
 
 .. rst-class:: numbered-step
 
-Install real-time VM
+Install Real-Time VM
 ********************
 
-Copy real-time VM image
+Copy Real-Time VM Image
 =======================
 
 .. note:: Reboot into the **native Linux kernel** (not the ACRN kernel)
@@ -468,7 +468,7 @@ Copy real-time VM image
 
    .. figure:: images/rqi-acrn-rtos-ready.png
 
-Set up real-time VM
+Set Up Real-Time VM
 ===================
 
 .. note:: The section will show you how to install Xenomai on ROScube-I.
@@ -548,7 +548,7 @@ Set up real-time VM
 
      sudo poweroff
 
-Run real-time VM
+Run Real-Time VM
 ================
 
 Now back to the native machine and we'll set up the environment for
@@ -582,7 +582,7 @@ launching the real-time VM.
    In ACRN design, rebooting the real-time VM will also reboot the whole
    system.
 
-Customizing the launch file
+Customizing the Launch File
 ***************************
 
 The launch file in this tutorial has the following hardware resource allocation.

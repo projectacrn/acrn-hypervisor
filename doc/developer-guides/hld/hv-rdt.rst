@@ -38,7 +38,7 @@ IA32_PQR_ASSOC MSR to CLOS 0. (Note that CLOS, or Class of Service, is a
 resource allocator.) The user can check the cache capabilities such as cache
 mask and max supported CLOS as described in :ref:`rdt_detection_capabilities`
 and then program the IA32_type_MASK_n and IA32_PQR_ASSOC MSR with a
-CLOS ID, to select a cache mask to take effect. These configurations can be 
+CLOS ID, to select a cache mask to take effect. These configurations can be
 done in scenario XML file under ``FEATURES`` section as shown in the below example.
 ACRN uses VMCS MSR loads on every VM Entry/VM Exit for non-root and root modes
 to enforce the settings.
@@ -137,17 +137,17 @@ needs to be set in the scenario XML file under ``VM`` section.
    misconfiguration errors.
 
 
-CAT and MBA high-level design in ACRN
+CAT and MBA High-Level Design in ACRN
 *************************************
 
-Data structures
+Data Structures
 ===============
 The below figure shows the RDT data structure to store enumerated resources.
 
    .. figure:: images/mba_data_structures.png
       :align: center
 
-Enabling CAT, MBA software flow
+Enabling CAT, MBA Software Flow
 ===============================
 
 The hypervisor enumerates RDT capabilities and sets up mask arrays; it also

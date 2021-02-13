@@ -146,7 +146,7 @@ Install ACRN on the Debian VM
       [    0.982837] ACRN HVLog: Failed to init last hvlog devs, errno -19
       [    0.983023] ACRN HVLog: Initialized hvlog module with 4 cp
 
-Enable the network sharing to give network access to User VM
+Enable the Network Sharing to Give Network Access to User VM
 ************************************************************
    .. code-block:: bash
 

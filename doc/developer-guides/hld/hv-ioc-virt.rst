@@ -1,6 +1,6 @@
 .. _IOC_virtualization_hld:
 
-IOC Virtualization high-level design
+IOC Virtualization High-Level Design
 ####################################
 
 
@@ -31,7 +31,7 @@ IOC Mediator Design
 Architecture Diagrams
 =====================
 
-IOC introduction
+IOC Introduction
 ----------------
 
 .. figure:: images/ioc-image12.png
@@ -57,7 +57,7 @@ IOC introduction
    IOC for storing persistent data. The IOC is in charge of accessing NVM
    following the SoC's requirements.
 
-CBC protocol introduction
+CBC Protocol Introduction
 -------------------------
 
 The Carrier Board Communication (CBC) protocol multiplexes and
@@ -85,7 +85,7 @@ The CBC protocol is based on a four-layer system:
    and contains Multiplexer (MUX) and Priority fields.
 -  The **Service Layer** contains the payload data.
 
-Native architecture
+Native Architecture
 -------------------
 
 In the native architecture, the IOC controller connects to UART
@@ -102,7 +102,7 @@ devices.
 
    IOC Native - Software architecture
 
-Virtualization architecture
+Virtualization Architecture
 ---------------------------
 
 In the virtualization architecture, the IOC Device Model (DM) is
@@ -163,7 +163,7 @@ char devices and UART DM immediately.
 -  Currently, IOC mediator only cares about lifecycle, signal, and raw data.
    Others, e.g. diagnosis, are not used by the IOC mediator.
 
-State transfer
+State Transfer
 --------------
 
 IOC mediator has four states and five events for state transfer.
@@ -190,7 +190,7 @@ IOC mediator has four states and five events for state transfer.
    sleep until a RESUME event is triggered to re-open the closed native
    CBC char devices and transition to the INIT state.
 
-CBC protocol
+CBC Protocol
 ------------
 
 IOC mediator needs to pack/unpack the CBC link frame for IOC
@@ -221,7 +221,7 @@ priority. Currently, priority is not supported by IOC firmware; the
 priority setting by the IOC mediator is based on the priority setting of
 the CBC driver. The Service VM and User VM use the same CBC driver.
 
-Power management virtualization
+Power Management Virtualization
 -------------------------------
 
 In acrn-dm, the IOC power management architecture involves PM DM, IOC
@@ -232,7 +232,7 @@ and wakeup reason flow is used to indicate IOC power state to the OS.
 UART DM transfers all IOC data between the Service VM and User VM. These modules
 complete boot/suspend/resume/shutdown functions.
 
-Boot flow
+Boot Flow
 +++++++++
 
 .. figure:: images/ioc-image19.png
@@ -251,7 +251,7 @@ Boot flow
 #. PM DM starts User VM.
 #. User VM lifecycle gets a "booting" wakeup reason.
 
-Suspend & Shutdown flow
+Suspend & Shutdown Flow
 +++++++++++++++++++++++
 
 .. figure:: images/ioc-image21.png
@@ -281,7 +281,7 @@ Suspend & Shutdown flow
    suspend/shutdown SUS_STAT, based on the Service VM's own lifecycle service
    policy.
 
-Resume flow
+Resume Flow
 +++++++++++
 
 .. figure:: images/ioc-image22.png
@@ -326,7 +326,7 @@ For RTC resume flow
    initial or active heartbeat. The User VM gets wakeup reason 0x800200
    after resuming..
 
-System control data
+System Control Data
 -------------------
 
 IOC mediator has several emulated CBC commands, including wakeup reason,
@@ -385,7 +385,7 @@ table:
    disable any watchdog on the CBC heartbeat messages during this period
    of time.
 
-Wakeup reason
+Wakeup Reason
 +++++++++++++
 
 The wakeup reasons command contains a bit mask of all reasons, which is
@@ -532,7 +532,7 @@ definition is as below.
 
    IOC Mediator - RTC flow
 
-Signal data
+Signal Data
 -----------
 
 Signal channel is an API between the SOC and IOC for
@@ -579,7 +579,7 @@ new multi signal, which contains the signals in the passlist.
 
    IOC Mediator - Multi-Signal passlist
 
-Raw data
+Raw Data
 --------
 
 OEM raw channel only assigns to a specific User VM following that OEM
@@ -613,7 +613,7 @@ for TTY line discipline in User VM::
    -l com2,/run/acrn/ioc_$vm_name
 
 
-Porting and adaptation to different platforms
+Porting and Adaptation to Different Platforms
 *********************************************
 
 TBD

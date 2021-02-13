@@ -1,6 +1,6 @@
 .. _setup_openstack_libvirt:
 
-Configure ACRN using OpenStack and libvirt
+Configure ACRN Using OpenStack and Libvirt
 ##########################################
 
 Introduction
@@ -41,7 +41,7 @@ Install ACRN
    create it using the instructions in
    :ref:`Build and Install ACRN on Ubuntu <build-and-install-acrn-on-ubuntu>`.
 
-Set up and launch LXC/LXD
+Set Up and Launch LXC/LXD
 *************************
 
 1. Set up the LXC/LXD Linux container engine::
@@ -148,7 +148,7 @@ The ``openstack`` container is now properly configured for OpenStack.
 Use the ``lxc list`` command to verify that both **eth0** and **eth1**
 appear in the container.
 
-Set up ACRN prerequisites inside the container
+Set Up ACRN Prerequisites Inside the Container
 **********************************************
 
 1. Log in to the ``openstack`` container as the **stack** user::
@@ -177,7 +177,7 @@ Set up ACRN prerequisites inside the container
    .. note:: Use the tag that matches the version of the ACRN hypervisor (``acrn.bin``)
       that runs on your system.
 
-Set up libvirt
+Set Up Libvirt
 **************
 
 1. Install the required packages::
@@ -218,7 +218,7 @@ Set up libvirt
      $ sudo systemctl daemon-reload
 
 
-Set up OpenStack
+Set Up OpenStack
 ****************
 
 Use DevStack to install OpenStack. Refer to the `DevStack instructions <https://docs.openstack.org/devstack/>`_.
@@ -303,7 +303,7 @@ Use DevStack to install OpenStack. Refer to the `DevStack instructions <https://
 
         $ sudo iptables -t nat -A POSTROUTING -s 172.24.4.1/24 -o br-ex -j SNAT --to-source 192.168.1.104
 
-Configure and create OpenStack Instance
+Configure and Create OpenStack Instance
 ***************************************
 
 We'll be using the Ubuntu 20.04 (Focal) Cloud image as the OS image (qcow2

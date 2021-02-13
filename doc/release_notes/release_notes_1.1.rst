@@ -1,6 +1,6 @@
 .. _release_notes_1.1:
 
-ACRN v1.1 (Jun 2019)
+ACRN V1.1 (Jun 2019)
 ####################
 
 We are pleased to announce the release of ACRN version 1.1.
@@ -24,7 +24,7 @@ with a specific release: generated v1.1 documents can be found at https://projec
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
 ACRN v1.1 requires Clear Linux* OS version 29970.
 
-Version 1.1 major features
+Version 1.1 Major Features
 **************************
 
 Hybrid Mode Introduced
@@ -33,14 +33,14 @@ In hybrid mode, a Zephyr OS is launched by the hypervisor even before the Servic
 launched (pre-launched), with dedicated resources to achieve highest level of isolation.
 This is designed to meet the needs of a FuSa certifiable safety OS.
 
-Support for new guest Operating Systems
+Support for New Guest Operating Systems
 =======================================
 * The `Zephyr RTOS <https://zephyrproject.org>`_ can be a pre-launched Safety OS in hybrid mode.
   It can also be a post-launched (launched by Service OS, not the hypervisor) as a guest OS.
 * VxWorks as a post-launched RTOS for industrial usages.
 * Windows as a post-launched OS
 
-Document updates
+Document Updates
 ================
 We have many `reference documents available <https://projectacrn.github.io>`_, including:
 
@@ -132,7 +132,6 @@ Known Issues
 
    **Workaround:** Unplug and plug-in the unrecognized device after booting.
 
------
 
 :acrn-issue:`1991` - Input not accepted in UART Console for corner case
    Input is useless in UART Console for a corner case, demonstrated with these steps:
@@ -147,7 +146,6 @@ Known Issues
 
    **Workaround:** Enter other keys before typing :kbd:`Enter`.
 
------
 
 :acrn-issue:`2267` - [APLUP2][LaaG] LaaG can't detect 4k monitor
    After launching UOS on APL UP2 , 4k monitor cannot be detected.
@@ -156,7 +154,6 @@ Known Issues
 
    **Workaround:** Use a monitor with less than 4k resolution.
 
------
 
 :acrn-issue:`2279` - [APLNUC] After exiting UOS, SOS can't use USB keyboard and mouse
    After exiting UOS with mediator Usb_KeyBoard and Mouse, SOS cannot use the USB keyboard and mouse.
@@ -176,7 +173,6 @@ Known Issues
 
    **Workaround:** Unplug and plug-in the USB keyboard and mouse after exiting UOS.
 
------
 
 :acrn-issue:`2753` - UOS cannot resume after suspend by pressing power key
    UOS cannot resume after suspend by pressing power key
@@ -185,7 +181,6 @@ Known Issues
 
    **Workaround:** None
 
------
 
 :acrn-issue:`2974` - Launching Zephyr RTOS as a real-time UOS takes too long
    Launching Zephyr RTOS as a real-time UOS takes too long
@@ -204,7 +199,6 @@ Known Issues
 
    **Workaround:** A different version of Grub is known to work correctly
 
------
 
 :acrn-issue:`3268` - dm: add virtio-rnd device to command line
    LaaG's network is unreachable with UOS kernel
@@ -222,7 +216,6 @@ Known Issues
 
    **Workaround:** Add ``-s 7,virtio-rnd \`` to the launch_uos.sh script
 
------
 
 :acrn-issue:`3280` - AcrnGT holding forcewake lock causes high CPU usage in gvt workload thread.
    The i915 forcewake mechanism is to keep the GPU from its low power state, in
@@ -233,7 +226,6 @@ Known Issues
 
    **Workaround:** None
 
------
 
 :acrn-issue:`3279` - AcrnGT causes display flicker in some situations.
    In current scaler ownership assignment logic, there's an issue that when SOS disables a plane,
@@ -244,7 +236,6 @@ Known Issues
 
    **Workaround:** None
 
------
 
 Change Log
 **********

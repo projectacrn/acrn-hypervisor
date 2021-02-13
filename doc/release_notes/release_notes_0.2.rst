@@ -1,6 +1,6 @@
 .. _release_notes_0.2:
 
-ACRN v0.2 (Sep 2018)
+ACRN V0.2 (Sep 2018)
 ####################
 
 We are pleased to announce the release of Project ACRN version 0.2.
@@ -31,7 +31,7 @@ https://projectacrn.github.io/0.2/.  Documentation for the latest
 (master) branch is found at https://projectacrn.github.io/latest/.
 
 
-Version 0.2 new features
+Version 0.2 New Features
 ************************
 
 VT-x, VT-d
@@ -86,7 +86,7 @@ hotspot for 3rd party devices, provides 3rd party device applications
 access to the vehicle, and provides access of 3rd party devices to the
 TCU provided connectivity.
 
-IPU (MIPI-CS2, HDMI-in)
+IPU (MIPI-CS2, HDMI-In)
 ========================
 ACRN hypervisor supports passthrough IPU assignment to Service OS or
 guest OS, without sharing.
@@ -104,7 +104,7 @@ This is done to ensure performance of the most critical workload can be
 achieved. Three different schedulers for the GPU are involved: i915 UOS
 scheduler, Mediator GVT scheduler, and i915 SOS scheduler.
 
-GPU - display surface sharing via Hyper DMA
+GPU - Display Surface Sharing via Hyper DMA
 ============================================
 Surface sharing is one typical automotive use case which requires
 that the SOS accesses an individual surface or a set of surfaces

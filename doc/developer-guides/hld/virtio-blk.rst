@@ -1,6 +1,6 @@
 .. _virtio-blk:
 
-Virtio-blk
+Virtio-BLK
 ##########
 
 The virtio-blk device is a simple virtual block device. The FE driver
@@ -35,7 +35,7 @@ The feature bits supported by the BE device are shown as follows:
   Device can toggle its cache between writeback and writethrough modes.
 
 
-Virtio-blk-BE design
+Virtio-BLK-Be Design
 ********************
 
 .. figure:: images/virtio-blk-image02.png

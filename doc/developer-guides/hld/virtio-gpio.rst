@@ -1,6 +1,6 @@
  .. _virtio-gpio:
 
-Virtio-gpio
+Virtio-Gpio
 ###########
 
 virtio-gpio provides a virtual GPIO controller, which will map part of
@@ -33,7 +33,7 @@ irq_set_type of irqchip) will trigger a virtqueue_kick on its own
 virtqueue. If some gpio has been set to interrupt mode, the interrupt
 events will be handled within the IRQ virtqueue callback.
 
-GPIO mapping
+GPIO Mapping
 ************
 
 .. figure:: images/virtio-gpio-2.png

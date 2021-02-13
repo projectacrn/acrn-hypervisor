@@ -1,6 +1,6 @@
 .. _release_notes_2.1:
 
-ACRN v2.1 (Aug 2020)
+ACRN V2.1 (Aug 2020)
 ####################
 
 We are pleased to announce the release of the Project ACRN
@@ -33,7 +33,7 @@ ACRN v2.1 requires Ubuntu 18.04.  Follow the instructions in the
 
 We recommend that all developers upgrade to ACRN release v2.1.
 
-What's new in v2.1
+What's New in V2.1
 ******************
 
 * Preempt-RT Linux has been validated as a pre-launched realtime VM. See

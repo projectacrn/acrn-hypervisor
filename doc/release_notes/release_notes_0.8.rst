@@ -1,6 +1,6 @@
 .. _release_notes_0.8:
 
-ACRN v0.8 (Apr 2019)
+ACRN V0.8 (Apr 2019)
 ####################
 
 We are pleased to announce the release of Project ACRN version 0.8.
@@ -32,10 +32,10 @@ https://projectacrn.github.io/0.8/.  Documentation for the latest
 
 ACRN v0.8 requires Clear Linux OS version 28600.
 
-Version 0.8 new features
+Version 0.8 New Features
 ************************
 
-GPIO virtualization
+GPIO Virtualization
 =========================
 
 GPIO virtualization is supported as para-virtualization based on the
@@ -45,19 +45,19 @@ configuration via one virtual GPIO controller. In the Back-end, the GPIO
 command line in the launch script can be modified to map native GPIO to
 UOS.
 
-Enable QoS based on runC container
+Enable QoS Based on runC Container
 ==================================
 ACRN supports Device-Model QoS based on runC container to control the SOS
 resources (CPU, Storage, MEM, NET) by modifying the runC configuration file.
 
-S5 support for RTVM
+S5 Support for RTVM
 ===============================
 ACRN supports a Real-time VM (RTVM) shutting itself down. A RTVM is a
 kind of VM that the SOS can't interfere at runtime, and as such, can
 only power itself off internally. All poweroff requests external to the
 RTVM will be rejected to avoid any interference.
 
-Document updates
+Document Updates
 ================
 Several new documents have been added in this release, including:
 
@@ -114,7 +114,6 @@ Known Issues
 
    **Workaround:** Unplug and plug-in the unrecognized device after booting.
 
------
 
 :acrn-issue:`1991` - Input not accepted in UART Console for corner case
    Input is useless in UART Console for a corner case, demonstrated with these steps:
@@ -129,7 +128,6 @@ Known Issues
 
    **Workaround:** Enter other keys before typing :kbd:`Enter`.
 
------
 
 :acrn-issue:`2267` - [APLUP2][LaaG] LaaG can't detect 4k monitor
    After launching UOS on APL UP2 , 4k monitor cannot be detected.
@@ -138,7 +136,6 @@ Known Issues
 
    **Workaround:** Use a monitor with less than 4k resolution.
 
------
 
 :acrn-issue:`2278` - [KBLNUC] Cx/Px is not supported on KBLNUC
    C states and P states are not supported on KBL NUC.
@@ -148,7 +145,6 @@ Known Issues
 
    **Workaround:** None
 
------
 
 :acrn-issue:`2279` - [APLNUC] After exiting UOS, SOS can't use USB keyboard and mouse
    After exiting UOS with mediator
@@ -169,7 +165,6 @@ Known Issues
 
    **Workaround:** Unplug and plug-in the USB keyboard and mouse after exiting UOS.
 
------
 
 :acrn-issue:`2527` - System will crash after a few minutes running stress test ``crashme`` tool in SOS/UOS.
    System stress test may cause a system crash.
@@ -178,7 +173,6 @@ Known Issues
 
    **Workaround:** None
 
------
 
 :acrn-issue:`2526` - Hypervisor crash when booting UOS with acrnlog running with mem loglevel=6
    If we use ``loglevel 3 6`` to change the mem loglevel to 6, we may hit a page fault in HV.
@@ -187,7 +181,6 @@ Known Issues
 
    **Workaround:** None
 
------
 
 :acrn-issue:`2753` - UOS cannot resume after suspend by pressing power key
    UOS cannot resume after suspend by pressing power key

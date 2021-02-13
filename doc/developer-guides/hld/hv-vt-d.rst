@@ -28,7 +28,7 @@ First-level/nested translation.
 DMAR Engines Discovery
 **********************
 
-DMA Remapping Report ACPI table
+DMA Remapping Report ACPI Table
 ===============================
 
 For generic platforms, the ACRN hypervisor retrieves DMAR information from
@@ -43,13 +43,13 @@ the devices under the scope of a remapping hardware unit, as shown in
 
    DMA Remapping Reporting Structure
 
-Pre-parsed DMAR information
+Pre-Parsed DMAR Information
 ===========================
 
 For specific platforms, the ACRN hypervisor uses pre-parsed DMA remapping
 reporting information directly to save hypervisor bootup time.
 
-DMA remapping unit for integrated graphics device
+DMA Remapping Unit for Integrated Graphics Device
 =================================================
 
 Generally, there is a dedicated remapping hardware unit for the Intel
@@ -167,7 +167,7 @@ Other domains
    EPT table of the VM only allows devices to access the memory
    allocated for the Normal world of the VM.
 
-Page-walk coherency
+Page-Walk Coherency
 ===================
 
 For the VT-d hardware, which doesn't support page-walk coherency, the
@@ -182,14 +182,14 @@ memory:
 ACRN flushes the related cache line after these structures are updated
 if the VT-d hardware doesn't support page-walk coherency.
 
-Super-page support
+Super-Page Support
 ==================
 
 The ACRN VT-d reuses the EPT table as the address translation table. VT-d
 capability or super-page support should be identical with the usage of the
 EPT table.
 
-Snoop control
+Snoop Control
 =============
 
 If VT-d hardware supports snoop control, iVT-d can control the
@@ -272,7 +272,7 @@ translation for DMAR unit(s) if they are not marked as ignored.
 
 .. _device-assignment:
 
-Device assignment
+Device Assignment
 *****************
 
 All devices are initially added to the SOS_VM domain. To assign a device
@@ -286,7 +286,7 @@ device is removed from the VM domain related to the User OS and then added
 back to the SOS_VM domain; this changes the address translation table from
 the EPT of the User OS to the EPT of the SOS_VM for the device.
 
-Power Management support for S3
+Power Management Support for S3
 *******************************
 
 During platform S3 suspend and resume, the VT-d register values are
@@ -309,10 +309,10 @@ registered for the IRQ. DMAR unit supports report fault event via MSI.
 When a fault event occurs, a MSI is generated, so that the DMAR fault
 handler will be called to report the error event.
 
-Data structures and interfaces
+Data Structures and Interfaces
 ******************************
 
-initialization and deinitialization
+Initialization and Deinitialization
 ===================================
 
 The following APIs are provided during initialization and
@@ -321,7 +321,7 @@ deinitialization:
 .. doxygenfunction:: init_iommu
    :project: Project ACRN
 
-runtime
+Runtime
 =======
 
 The following API are provided during runtime:

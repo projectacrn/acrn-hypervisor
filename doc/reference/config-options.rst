@@ -13,7 +13,7 @@ ACRN-based application.  This document describes these option settings.
    :local:
    :depth: 2
 
-Common option value types
+Common Option Value Types
 *************************
 
 Within this option documentation, we refer to some common type

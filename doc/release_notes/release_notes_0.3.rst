@@ -1,6 +1,6 @@
 .. _release_notes_0.3:
 
-ACRN v0.3 (Nov 2018)
+ACRN V0.3 (Nov 2018)
 ####################
 
 We are pleased to announce the release of Project ACRN version 0.3.
@@ -31,7 +31,7 @@ https://projectacrn.github.io/0.3/.  Documentation for the latest
 (master) branch is found at https://projectacrn.github.io/latest/.
 
 
-Version 0.3 new features
+Version 0.3 New Features
 ************************
 
 

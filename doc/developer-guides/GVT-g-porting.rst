@@ -24,7 +24,7 @@ For simplicity, in the rest of this document, the term GVT is used to
 refer to the core device model component of GVT-g, specifically
 corresponding to ``gvt.ko`` when build as a module.
 
-Purpose of this document
+Purpose of This Document
 ************************
 
 This document explains the relationship between components of GVT-g in
@@ -94,11 +94,11 @@ VHM module
 
    GVT-g components and interfaces
 
-Core scenario interaction sequences
+Core Scenario Interaction Sequences
 ***********************************
 
 
-vGPU creation scenario
+vGPU Creation Scenario
 ======================
 
 In this scenario, AcrnGT receives a create request from ACRN-DM. It
@@ -111,14 +111,14 @@ configure space of the vGPU (virtual device 0:2:0) via VHM's APIs.
 Finally, the AcrnGT module launches an AcrnGT emulation thread to
 listen to I/O trap notifications from HVM and ACRN hypervisor.
 
-vGPU destroy scenario
+vGPU Destroy Scenario
 =====================
 
 In this scenario, AcrnGT receives a destroy request from ACRN-DM. It
 calls GVT's :ref:`intel_gvt_ops_interface` to inform GVT of the vGPU destroy
 request, and cleans up all vGPU resources.
 
-vGPU PCI configure space write scenario
+vGPU PCI Configure Space Write Scenario
 =======================================
 
 ACRN traps the vGPU's PCI config space write, notifies AcrnGT's
@@ -133,26 +133,26 @@ config space write:
    corresponding part in the host's aperture.
 #. Otherwise, write to the virtual PCI configuration space of the vGPU.
 
-PCI configure space read scenario
+PCI Configure Space Read Scenario
 =================================
 
 Call sequence is almost the same as the write scenario above,
 but instead it calls the GVT's :ref:`intel_gvt_ops_interface`
 ``emulate_cfg_read`` to emulate the vGPU PCI config space read.
 
-GGTT read/write scenario
+GGTT Read/Write Scenario
 ========================
 
 GGTT's trap is set up in the PCI configure space write
 scenario above.
 
-MMIO read/write scenario
+MMIO Read/Write Scenario
 ========================
 
 MMIO's trap is set up in the PCI configure space write
 scenario above.
 
-PPGTT write-protection page set/unset scenario
+PPGTT Write-Protection Page Set/Unset Scenario
 ==============================================
 
 PPGTT write-protection page is set by calling ``acrn_ioreq_add_iorange``
@@ -161,13 +161,13 @@ allowing read without trap.
 
 PPGTT write-protection page is unset by calling ``acrn_ioreq_del_range``.
 
-PPGTT write-protection page write
+PPGTT Write-Protection Page Write
 =================================
 
 In the VHM module, ioreq for PPGTT WP and MMIO trap is the same. It will
 also be trapped into the routine ``intel_vgpu_emulate_mmio_write()``.
 
-API details
+API Details
 ***********
 
 APIs of each component interface can be found in the :ref:`GVT-g_api`

@@ -8,7 +8,7 @@ running VM, and a series VM APIs like create_vm, start_vm, reset_vm, shutdown_vm
 etc are used to switch a VM to the right state, according to the requirements of
 applications or system power operations.
 
-VM structure
+VM Structure
 ************
 
 The ``acrn_vm`` structure is defined to manage a VM instance, this structure
@@ -22,7 +22,7 @@ platform level cpuid entries.
 The ``acrn_vm`` structure instance will be created by ``create_vm`` API, and then
 work as the first parameter for other VM APIs.
 
-VM state
+VM State
 ********
 
 Generally, a VM is not running at the beginning: it is in a 'powered off'
@@ -44,7 +44,7 @@ please refer to :ref:`hv-cpu-virt` for related VCPU state.
 VM State Management
 *******************
 
-Pre-launched and Service VM
+Pre-Launched and Service VM
 ===========================
 
 The hypervisor is the owner to control pre-launched and Service VM's state
@@ -52,7 +52,7 @@ by calling VM APIs directly, following the design of system power
 management. Please refer to ACRN power management design for more details.
 
 
-Post-launched User VMs
+Post-Launched User VMs
 ======================
 
 DM takes control of post-launched User VMs' state transition after the Service VM

@@ -1,6 +1,6 @@
 .. _hld-security:
 
-Security high-level design
+Security High-Level Design
 ##########################
 
 .. primary author: Bing Zhu
@@ -131,7 +131,7 @@ Boot Flow
 ---------
 ACRN supports two verified boot sequences.
 
-1) Verified Boot Sequence with SBL
+1) Verified Boot Sequence With SBL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 As shown in :numref:`security-bootflow-sbl`, the Converged Security Engine
 Firmware (CSE FW) behaves as the root of trust in this platform boot
@@ -148,7 +148,7 @@ before launching.
 
    ACRN Boot Flow with SBL
 
-2) Verified Boot Sequence with UEFI
+2) Verified Boot Sequence With UEFI
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 As shown in :numref:`security-bootflow-uefi`, in this boot sequence, UEFI
 authenticates and starts the ACRN hypervisor firstly,and hypervisor will return
@@ -193,7 +193,7 @@ partners are responsible for image signing, ensuring the key strength
 meets security requirements, and storing the secret RSA private key
 securely.
 
-Guest Secure Boot with OVMF
+Guest Secure Boot With OVMF
 ---------------------------
 Open Virtual Machine Firmware (OVMF) is an EDK II based project to enable UEFI
 support for virtual machines in a virtualized environment. In ACRN, OVMF is
@@ -677,7 +677,7 @@ virtual power life cycle management is out of scope in this document.
 This subsection is intended to describe the security issues for those
 power cycles.
 
-User VM Power On and Shutdown
+User VM Power on and Shutdown
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The memory of the User VM is allocated dynamically by the DM
@@ -744,7 +744,7 @@ for secure-world is preserved too. The physical memory region of
 secure world is removed from EPT paging tables of any guest VM,
 even including the Service VM.
 
-Third-party libraries
+Third-Party Libraries
 ---------------------
 
 All the third-party libraries must be examined before use to verify
@@ -754,7 +754,7 @@ can be used to search for known vulnerabilities.
 
 .. _platform_root_of_trust:
 
-Platform Root of Trust Key/SEED Derivation
+Platform Root of Trust Key/Seed Derivation
 ==========================================
 
 For security reason, each guest VM requires a root key, which is used to
@@ -880,7 +880,7 @@ memory (>=511G) are valid for Trusty World's EPT only.
 
    Memory View for User VM non-secure World and Secure World
 
-Trusty/TEE Hypercalls
+Trusty/Tee Hypercalls
 ---------------------
 
 Two hypercalls are introduced to assist in secure world (Trusty/TEE)
@@ -1039,7 +1039,7 @@ SEED Derivation
 
 Refer to the previous section: :ref:`platform_root_of_trust`.
 
-Trusty/TEE S3 (Suspend To RAM)
+Trusty/Tee S3 (Suspend to RAM)
 ------------------------------
 
 Secure world S3 design is not yet finalized. However, there is a

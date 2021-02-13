@@ -22,7 +22,7 @@ the OEM can generate their own PK.
 
 Here we show two ways to generate a PK: ``openssl`` and Microsoft tools.
 
-Generate PK Using openssl
+Generate PK Using Openssl
 =========================
 
 - Generate a Self-Signed Certificate as PK from a new key using the
@@ -128,7 +128,7 @@ Generate PK Using openssl
 
      openssl x509 -in PK.crt -outform der -out PK.der
 
-Using Microsoft tools
+Using Microsoft Tools
 =====================
 
 Microsoft documents explain `how to use Microsoft tools to generate a secure boot key
@@ -414,7 +414,7 @@ which we'll summarize below.
   Conventions. CRT and CER file extensions can be interchanged as
   the encoding type is identical.
 
-Download KEK and DB from Microsoft
+Download KEK and DB From Microsoft
 **********************************
 
 KEK (Key Exchange Key):
@@ -431,10 +431,9 @@ DB (Allowed Signature database):
   <https://go.microsoft.com/fwlink/p/?LinkID=321194>`_:
   Microsoft signer for third party UEFI binaries via DevCenter program.
 
-Compile OVMF with secure boot support
+Compile OVMF With Secure Boot Support
 *************************************
 
-::
 
     git clone https://github.com/projectacrn/acrn-edk2.git
 
@@ -475,7 +474,7 @@ Notes:
 
 .. _qemu_inject_boot_keys:
 
-Use QEMU to inject secure boot keys into OVMF
+Use QEMU to Inject Secure Boot Keys Into OVMF
 *********************************************
 
 We follow the `openSUSE: UEFI Secure boot using qemu-kvm document

@@ -1,6 +1,6 @@
 .. _using_xenomai_as_uos:
 
-Run Xenomai as the User VM OS (Real-time VM)
+Run Xenomai as the User VM OS (Real-Time VM)
 ############################################
 
 `Xenomai`_ is a versatile real-time framework that provides support to user space applications that are seamlessly integrated into Linux environments.
@@ -9,7 +9,7 @@ This tutorial describes how to run Xenomai as the User VM OS (real-time VM) on t
 
 .. _Xenomai: https://gitlab.denx.de/Xenomai/xenomai/-/wikis/home
 
-Build the Xenomai kernel
+Build the Xenomai Kernel
 ************************
 
 Follow these instructions to build the Xenomai kernel:
@@ -92,7 +92,7 @@ Launch the RTVM
     clr-c1ff5bba8c3145ac8478e8e1f96e1087 login:
 
 
-Install the Xenomai libraries and tools
+Install the Xenomai Libraries and Tools
 ***************************************
 
 To build and install Xenomai tools or its libraries in the RVTM, refer to the official

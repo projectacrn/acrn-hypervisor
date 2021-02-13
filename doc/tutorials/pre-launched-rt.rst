@@ -1,6 +1,6 @@
 .. _pre_launched_rt:
 
-Pre-Launched Preempt-RT Linux Mode in ACRN
+Pre-Launched Preempt-Rt Linux Mode in ACRN
 ##########################################
 
 The Pre-Launched Preempt-RT Linux Mode of ACRN, abbreviated as
@@ -34,7 +34,7 @@ two Ethernet ports. We will passthrough the SATA and Ethernet 03:00.0
 devices into the Pre-Launched RT VM, and give the rest of the devices to
 the Service VM.
 
-Install SOS with Grub on NVMe
+Install SOS With Grub on NVMe
 =============================
 
 As with the Hybrid and Logical Partition scenarios, the Pre-Launched RT
@@ -64,7 +64,7 @@ the SATA to the NVMe drive:
    # mount /dev/sda1 /mnt
    # cp /mnt/bzImage /boot/EFI/BOOT/bzImage_RT
 
-Build ACRN with Pre-Launched RT Mode
+Build ACRN With Pre-Launched RT Mode
 ====================================
 
 The ACRN VM configuration framework can easily configure resources for

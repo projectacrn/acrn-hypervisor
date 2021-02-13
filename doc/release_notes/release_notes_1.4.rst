@@ -1,6 +1,6 @@
 .. _release_notes_1.4:
 
-ACRN v1.4 (Oct 2019)
+ACRN V1.4 (Oct 2019)
 ####################
 
 We are pleased to announce the release of ACRN version 1.4.
@@ -24,17 +24,17 @@ with a specific release: generated v1.4 documents can be found at https://projec
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
 ACRN v1.4 requires Clear Linux* OS version 31670.
 
-Version 1.4 major features
+Version 1.4 Major Features
 **************************
 
-What's New in v1.4
+What's New in V1.4
 ==================
 * ACRN now conforms to the Microsoft* Hypervisor Top-Level Functional Specification (TLFS).
 * ACRN scheduler framework re-architected capabilities have been added.
 * WaaG (Windows as a guest) stability and performance has been improved.
 * Realtime performance of the RTVM (preempt-RT kernel-based) has been improved.
 
-Document updates
+Document Updates
 ================
 Many new `reference documents <https://projectacrn.github.io>`_ are available, including:
 

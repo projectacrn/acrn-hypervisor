@@ -54,12 +54,12 @@ The ACRN hypervisor shell supports the following commands:
      - Write ``value`` (in hexadecimal) to the Model-Specific Register (MSR) at
        index ``msr_index`` (in hexadecimal) for CPU ID ``pcpu_id``
 
-Command examples
+Command Examples
 ****************
 
 The following sections provide further details and examples for some of these commands.
 
-vm_list
+Vm_list
 =======
 
 ``vm_list`` provides the name of each virtual machine and its corresponding ID and
@@ -70,7 +70,7 @@ state.
 
    vm_list information
 
-vcpu_list
+Vcpu_list
 =========
 
 ``vcpu_list`` provides information about virtual CPUs (vCPU), including
@@ -82,7 +82,7 @@ STATE (init, paused, running, zombie or unknown).
 
    vcpu_list information
 
-vcpu_dumpreg
+Vcpu_dumpreg
 ============
 
 ``vcpu_dumpreg vmid cpuid`` provides vCPU related information such as
@@ -107,7 +107,7 @@ function ``acpi_idle_do_entry``.
 
    system map information
 
-dump_host_mem
+Dump_host_mem
 =============
 
 ``dump_host_mem hva length`` provides the specified memory target data such as
@@ -132,7 +132,7 @@ pCPU number is 0x0000000000000004.
 
    acrn map information
 
-dump_guest_mem
+Dump_guest_mem
 ==============
 
 The ``dump_guest_mem`` command can dump guest memory according to the given
@@ -152,13 +152,13 @@ in guest console or through the ``system.map`` (Note that the path for
 
    guest memory information
 
-vm_console
+Vm_console
 ===========
 
 The ``vm_console`` command switches the ACRN's console to become the VM's console.
 Press :kbd:`Ctrl` + :kbd:`Space` to return to the ACRN shell console.
 
-vioapic
+Vioapic
 =======
 
 ``vioapic <vm_id>`` shows the virtual IOAPIC information for a specific
@@ -170,7 +170,7 @@ VM1:
 
    vioapic information
 
-dump_ioapic
+Dump_ioapic
 ===========
 
 ``dump_ioapic`` provides IOAPIC information and we can get IRQ number,
@@ -181,7 +181,7 @@ IRQ vector number, etc.
 
    dump_ioapic information
 
-pt
+Pt
 ==
 
 ``pt`` provides passthrough detailed information, such as the virtual
@@ -193,7 +193,7 @@ trigger mode, etc.
 
    pt information
 
-int
+Int
 ===
 
 ``int`` provides interrupt information on all CPUs and their corresponding
@@ -204,7 +204,7 @@ interrupt vector.
 
    int information
 
-cpuid
+Cpuid
 =====
 
 ``cpuid <leaf> [subleaf]`` provides the CPUID leaf [subleaf] in
@@ -215,7 +215,7 @@ hexadecimal.
 
    cpuid information
 
-rdmsr
+RDMSR
 =====
 
 We can read model specific register (MSR) to get register
@@ -238,7 +238,7 @@ and see that 1B (Hexadecimal) is the IA32_APIC_BASE MSR address.
 
    rdmsr information
 
-wrmsr
+WRMSR
 =====
 
 We can write model specific register (MSR) to set register

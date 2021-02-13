@@ -1,6 +1,6 @@
 .. _release_notes_2.0:
 
-ACRN v2.0 (Jun 2020)
+ACRN V2.0 (Jun 2020)
 ####################
 
 We are pleased to announce the second major release of the Project ACRN
@@ -55,7 +55,7 @@ started with ACRN.
 
 We recommend that all developers upgrade to ACRN release v2.0.
 
-Version 2.0 Key Features (comparing with v1.0)
+Version 2.0 Key Features (Comparing With V1.0)
 **********************************************
 
 .. contents::
@@ -101,7 +101,7 @@ New Hardware Platform Support
 This release adds support for 8th Gen Intel® Core™ Processors (code
 name: Whiskey Lake). (See :ref:`hardware` for platform details.)
 
-Pre-launched Safety VM Support
+Pre-Launched Safety VM Support
 ==============================
 
 ACRN supports a pre-launched partitioned safety VM, isolated from the
@@ -111,21 +111,21 @@ For example, in the hybrid mode, a real-time Zephyr RTOS VM can be
 and with its own dedicated resources to achieve a high level of
 isolation. This is designed to meet the needs of a Functional Safety OS.
 
-Post-launched VM support via OVMF
+Post-Launched VM Support via OVMF
 =================================
 
 ACRN supports Open Virtual Machine Firmware (OVMF) as a virtual boot
 loader for the Service VM to launch post-launched VMs such as Windows,
 Linux, VxWorks, or Zephyr RTOS. Secure boot is also supported.
 
-Post-launched real-time VM Support
+Post-Launched Real-Time VM Support
 ==================================
 
 ACRN supports a post-launched RTVM, which also uses partitioned hardware
 resources to ensure adequate real-time performance, as required for
 industrial use cases.
 
-Real-time VM Performance Optimizations
+Real-Time VM Performance Optimizations
 ======================================
 
 ACRN 2.0 improves RTVM performance with these optimizations:
@@ -161,7 +161,7 @@ scheduler in the hypervisor to make sure the physical CPU can be shared
 between VMs and support for yielding an idle vCPU when it's running a
 'HLT' or 'PAUSE' instruction.
 
-Large selection of OSs for User VMs
+Large Selection of OSs for User VMs
 ===================================
 
 ACRN now supports Windows* 10, Android*, Ubuntu*, Xenomai, VxWorks*,
@@ -170,7 +170,7 @@ to the Microsoft* Hypervisor Top-Level Functional Specification (TLFS).
 ACRN 2.0 also improves overall Windows as a Guest (WaaG) stability and
 performance.
 
-GRUB bootloader
+GRUB Bootloader
 ===============
 
 The ACRN hypervisor can boot from the popular GRUB bootloader using
@@ -189,14 +189,14 @@ In this example, the ACRN Service VM supports a SR-IOV ethernet device
 through the Physical Function (PF) driver, and ensures that the SR-IOV
 Virtual Function (VF) device can passthrough to a post-launched VM.
 
-Graphics passthrough support
+Graphics Passthrough Support
 ============================
 
 ACRN supports GPU passthrough to dedicated User VM based on Intel GVT-d
 technology used to virtualize the GPU for multiple guest VMs,
 effectively providing near-native graphics performance in the VM.
 
-Shared memory based Inter-VM communication
+Shared Memory Based Inter-Vm Communication
 ==========================================
 
 ACRN supports Inter-VM communication based on shared memory for
@@ -213,7 +213,7 @@ Kata Containers Support
 
 ACRN can launch a Kata container, a secure container runtime,  as a User VM.
 
-VM orchestration
+VM Orchestration
 ================
 
 Libvirt is an open-source API, daemon, and management tool as a layer to
@@ -221,7 +221,7 @@ decouple orchestrators and hypervisors. By adding a "ACRN driver", ACRN
 supports libvirt-based tools and orchestrators to configure a User VM's CPU
 configuration during VM creation.
 
-Document updates
+Document Updates
 ================
 Many new and updated `reference documents <https://projectacrn.github.io>`_ are available, including:
 

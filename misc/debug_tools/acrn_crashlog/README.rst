@@ -15,7 +15,7 @@ of interest, by using an XML configuration file.
 Building
 ********
 
-Build dependencies
+Build Dependencies
 ==================
 
 The ``ACRN-Crashlog`` tool depends on the following libraries
@@ -171,7 +171,7 @@ The source code structure:
 - ``usercrash``: to implement the tool which get the crash information for the
   crashing process in userspace.
 
-acrnprobe
+Acrnprobe
 =========
 
 The ``acrnprobe`` detects all critical events on the platform and collects
@@ -180,7 +180,7 @@ logs, and the log path would be delivered to telemetrics-client as a record if
 the telemetrics-client existed on the system.
 For more detail on acrnprobe, please refer :ref:`acrnprobe_doc`.
 
-usercrash
+Usercrash
 =========
 
 The ``usercrash`` is a tool to get the crash info of the crashing process in
