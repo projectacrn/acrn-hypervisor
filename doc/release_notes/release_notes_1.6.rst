@@ -1,6 +1,6 @@
 .. _release_notes_1.6:
 
-ACRN V1.6 (Mar 2020)
+ACRN v1.6 (Mar 2020)
 ####################
 
 We are pleased to announce the release of ACRN version 1.6.
@@ -27,7 +27,7 @@ ACRN v1.6 requires Clear Linux OS version 32680.
 Version 1.6 Major Features
 **************************
 
-What's New in V1.6
+What's New in v1.6
 ==================
 * Graphics passthrough support
 

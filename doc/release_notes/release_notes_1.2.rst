@@ -1,6 +1,6 @@
 .. _release_notes_1.2:
 
-ACRN V1.2 (Aug 2019)
+ACRN v1.2 (Aug 2019)
 ####################
 
 We are pleased to announce the release of ACRN version 1.2.
@@ -27,7 +27,7 @@ ACRN v1.2 requires Clear Linux* OS version 30690.
 Version 1.2 Major Features
 **************************
 
-What's New in V1.2
+What's New in v1.2
 ==================
 * Support OVMF as virtual boot loader for Service VM to launch Clearlinux, VxWorks
   or Windows, Secure boot is supported

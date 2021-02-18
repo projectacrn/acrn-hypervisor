@@ -1,6 +1,6 @@
 .. _release_notes_1.3:
 
-ACRN V1.3 (Sep 2019)
+ACRN v1.3 (Sep 2019)
 ####################
 
 We are pleased to announce the release of ACRN version 1.3.
@@ -27,7 +27,7 @@ ACRN v1.3 requires Clear Linux* OS version 31080.
 Version 1.3 Major Features
 **************************
 
-What's New in V1.3
+What's New in v1.3
 ==================
 * OVMF supports Graphics Output Protocol (GOP), allowing Windows logo at guest
   VM boot time.

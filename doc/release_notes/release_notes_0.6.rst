@@ -1,6 +1,6 @@
 .. _release_notes_0.6:
 
-ACRN V0.6 (Feb 2019)
+ACRN v0.6 (Feb 2019)
 ####################
 
 We are pleased to announce the release of Project ACRN version 0.6.
