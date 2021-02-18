@@ -1,6 +1,6 @@
 .. _release_notes_1.4:
 
-ACRN V1.4 (Oct 2019)
+ACRN v1.4 (Oct 2019)
 ####################
 
 We are pleased to announce the release of ACRN version 1.4.
@@ -27,7 +27,7 @@ ACRN v1.4 requires Clear Linux* OS version 31670.
 Version 1.4 Major Features
 **************************
 
-What's New in V1.4
+What's New in v1.4
 ==================
 * ACRN now conforms to the Microsoft* Hypervisor Top-Level Functional Specification (TLFS).
 * ACRN scheduler framework re-architected capabilities have been added.

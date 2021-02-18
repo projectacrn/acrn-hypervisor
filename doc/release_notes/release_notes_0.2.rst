@@ -1,6 +1,6 @@
 .. _release_notes_0.2:
 
-ACRN V0.2 (Sep 2018)
+ACRN v0.2 (Sep 2018)
 ####################
 
 We are pleased to announce the release of Project ACRN version 0.2.

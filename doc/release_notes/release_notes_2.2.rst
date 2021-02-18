@@ -1,6 +1,6 @@
 .. _release_notes_2.2:
 
-ACRN V2.2 (Sep 2020)
+ACRN v2.2 (Sep 2020)
 ####################
 
 We are pleased to announce the release of the Project ACRN
@@ -32,7 +32,7 @@ ACRN v2.2 requires Ubuntu 18.04.  Follow the instructions in the
 :ref:`rt_industry_ubuntu_setup` to get started with ACRN.
 
 
-What's New in V2.2
+What's New in v2.2
 ******************
 
 Elkhart Lake and Tiger Lake processor support.

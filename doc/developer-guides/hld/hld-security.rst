@@ -677,7 +677,7 @@ virtual power life cycle management is out of scope in this document.
 This subsection is intended to describe the security issues for those
 power cycles.
 
-User VM Power on and Shutdown
+User VM Power On and Shutdown
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The memory of the User VM is allocated dynamically by the DM
