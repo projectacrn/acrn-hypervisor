@@ -34,6 +34,9 @@ The project's documentation contains the following items:
   device-model folders, and from sources in the acrn-kernel repo (as
   explained later).
 
+.. image:: images/doc-gen-flow.png
+   :align: center
+
 The reStructuredText files are processed by the Sphinx documentation system
 and use the breathe extension for including the doxygen-generated API
 material.
@@ -239,12 +242,14 @@ good, you can push directly to the publishing site with:
 
    make publish
 
-This will delete everything in the publishing repo's **latest** folder
-(in case the new version has deleted files) and push a copy of the
-newly-generated HTML content directly to the GitHub pages publishing
-repo.  The public site at https://projectacrn.github.io will be updated
-typically within a few minutes, so it's best to verify the locally
-generated HTML before publishing.
+This uses git commands to synchronize the new content with what's
+already published and will delete files in the publishing repo's
+**latest** folder that are no longer needed. New or changed files from
+the newly-generated HTML content are added to the GitHub pages
+publishing repo.  The public site at https://projectacrn.github.io will
+be updated by the `GitHub pages system
+<https://guides.github.com/features/pages/>`_, typically within a few
+minutes.
 
 Document Versioning
 *******************
