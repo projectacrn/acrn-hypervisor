@@ -1,6 +1,6 @@
 .. _release_notes_2.0:
 
-ACRN V2.0 (Jun 2020)
+ACRN v2.0 (Jun 2020)
 ####################
 
 We are pleased to announce the second major release of the Project ACRN
@@ -55,7 +55,7 @@ started with ACRN.
 
 We recommend that all developers upgrade to ACRN release v2.0.
 
-Version 2.0 Key Features (Comparing With V1.0)
+Version 2.0 Key Features (Comparing With v1.0)
 **********************************************
 
 .. contents::

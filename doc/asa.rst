@@ -3,7 +3,7 @@
 Security Advisory
 #################
 
-Addressed in ACRN V2.3
+Addressed in ACRN v2.3
 ************************
 
 We recommend that all developers upgrade to this v2.3 release (or later), which
@@ -19,7 +19,7 @@ addresses the following security issue that was discovered in previous releases:
 
    **Affected Release:** v2.2 and earlier.
 
-Addressed in ACRN V2.1
+Addressed in ACRN v2.1
 ************************
 
 We recommend that all developers upgrade to this v2.1 release (or later), which
@@ -36,7 +36,7 @@ addresses the following security issue that was discovered in previous releases:
 
    **Affected Release:** v2.0 and v1.6.1.
 
-Addressed in ACRN V1.6.1
+Addressed in ACRN v1.6.1
 ************************
 
 We recommend that all developers upgrade to this v1.6.1 release (or later), which
@@ -52,7 +52,7 @@ addresses the following security issue that was discovered in previous releases:
    **Affected Release:** v1.6.
 
 
-Addressed in ACRN V1.6
+Addressed in ACRN v1.6
 **********************
 
 We recommend that all developers upgrade to this v1.6 release (or later), which
@@ -84,7 +84,7 @@ addresses the following security issues that were discovered in previous release
    **Affected Release:** v1.4 and earlier.
 
 
-Addressed in ACRN V1.4
+Addressed in ACRN v1.4
 **********************
 
 We recommend that all developers upgrade to this v1.4 release (or later), which
