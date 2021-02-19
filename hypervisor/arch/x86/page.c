@@ -215,11 +215,6 @@ static inline struct page *ept_get_pt_page(const union pgtable_pages_info *info,
 	return pt_page;
 }
 
-static inline void *ept_get_sworld_memory_base(const union pgtable_pages_info *info)
-{
-	return info->ept.sworld_memory_base;
-}
-
 /* The function is used to disable execute right for (2MB / 1GB)large pages in EPT */
 static inline void ept_tweak_exe_right(uint64_t *entry)
 {
@@ -266,8 +261,7 @@ void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
 		ept_pages_info[vm_id].ept.nworld_pt_base = post_uos_nworld_pt_pages[page_idx];
 #endif
 		ept_pages_info[vm_id].ept.sworld_pgtable_base = post_uos_sworld_pgtable_pages[page_idx];
-		ept_pages_info[vm_id].ept.sworld_memory_base = post_uos_sworld_memory[page_idx];
-		mem_ops->get_sworld_memory_base = ept_get_sworld_memory_base;
+		vm->arch_vm.sworld_memory_base_hva = post_uos_sworld_memory[page_idx];
 	}
 	mem_ops->info = &ept_pages_info[vm_id];
 	mem_ops->get_default_access_right = ept_get_default_access_right;

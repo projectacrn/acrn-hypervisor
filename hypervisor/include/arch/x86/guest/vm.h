@@ -107,6 +107,7 @@ struct vm_arch {
 	 * but Normal World can not access Secure World's memory.
 	 */
 	void *sworld_eptp;
+	void *sworld_memory_base_hva;
 	struct memory_ops ept_mem_ops;
 
 	struct acrn_vioapics vioapics;	/* Virtual IOAPIC/s */
