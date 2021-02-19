@@ -601,11 +601,9 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 		if (region->type == MR_ADD) {
 			/* if the GPA range is SOS valid GPA or not */
 			if (ept_is_valid_mr(vm, region->sos_vm_gpa, region->size)) {
-				/* if pagetable pages is reserved enougn for the GPA range */
-				if (ept_is_mr_valid(target_vm, region->gpa, region->size)) {
-					add_vm_memory_region(vm, target_vm, region, pml4_page);
-					ret = 0;
-				}
+				/* FIXME: how to filter the alias mapping ? */
+				add_vm_memory_region(vm, target_vm, region, pml4_page);
+				ret = 0;
 			}
 		} else {
 			if (ept_is_valid_mr(target_vm, region->gpa, region->size)) {
@@ -616,10 +614,9 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	}
 
 	dev_dbg((ret == 0) ? DBG_LEVEL_HYCALL : LOG_ERROR,
-			"[vm%d] type=%d gpa=0x%x sos_gpa=0x%x sz=0x%x, top_addr:0x%lx",
+			"[vm%d] type=%d gpa=0x%x sos_gpa=0x%x sz=0x%x",
 			target_vm->vm_id, region->type, region->gpa,
-			region->sos_vm_gpa, region->size,
-			target_vm->arch_vm.ept_mem_ops.info->ept.top_address_space);
+			region->sos_vm_gpa, region->size);
 	return ret;
 }
 
