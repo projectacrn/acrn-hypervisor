@@ -13,6 +13,27 @@
 
 #define DBG_LEVEL_MMU	6U
 
+
+static void try_to_free_pgtable_page(const struct memory_ops *mem_ops,
+			uint64_t *pde, uint64_t *pt_page, uint32_t type)
+{
+	if (type == MR_DEL) {
+		uint64_t index;
+
+		for (index = 0UL; index < PTRS_PER_PTE; index++) {
+			uint64_t *pte = pt_page + index;
+			if ((mem_ops->pgentry_present(*pte) != 0UL)) {
+				break;
+			}
+		}
+
+		if (index == PTRS_PER_PTE) {
+			free_page(mem_ops->pool, (void *)pt_page);
+			sanitize_pte_entry(pde, mem_ops);
+		}
+	}
+}
+
 /*
  * Split a large page table into next level page table.
  *
@@ -85,7 +106,7 @@ static inline void construct_pgentry(uint64_t *pde, void *pd_page, uint64_t prot
  * type: MR_DEL
  * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static void modify_or_del_pte(const uint64_t *pde, uint64_t vaddr_start, uint64_t vaddr_end,
+static void modify_or_del_pte(uint64_t *pde, uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr, const struct memory_ops *mem_ops, uint32_t type)
 {
 	uint64_t *pt_page = pde_page_vaddr(*pde);
@@ -113,6 +134,8 @@ static void modify_or_del_pte(const uint64_t *pde, uint64_t vaddr_start, uint64_
 			break;
 		}
 	}
+
+	try_to_free_pgtable_page(mem_ops, pde, pt_page, type);
 }
 
 /*
@@ -122,7 +145,7 @@ static void modify_or_del_pte(const uint64_t *pde, uint64_t vaddr_start, uint64_
  * type: MR_DEL
  * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static void modify_or_del_pde(const uint64_t *pdpte, uint64_t vaddr_start, uint64_t vaddr_end,
+static void modify_or_del_pde(uint64_t *pdpte, uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr, const struct memory_ops *mem_ops, uint32_t type)
 {
 	uint64_t *pd_page = pdpte_page_vaddr(*pdpte);
@@ -158,6 +181,8 @@ static void modify_or_del_pde(const uint64_t *pdpte, uint64_t vaddr_start, uint6
 		}
 		vaddr = vaddr_next;
 	}
+
+	try_to_free_pgtable_page(mem_ops, pdpte, pd_page, type);
 }
 
 /*

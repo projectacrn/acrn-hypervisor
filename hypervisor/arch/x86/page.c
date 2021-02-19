@@ -73,6 +73,20 @@ struct page *alloc_page(struct page_pool *pool)
 	return page;
 }
 
+/*
+ *@pre: ((page - pool->start_page) >> 6U) < pool->bitmap_size
+ */
+void free_page(struct page_pool *pool, struct page *page)
+{
+	uint64_t idx, bit;
+
+	spinlock_obtain(&pool->lock);
+	idx = (page - pool->start_page) >> 6U;
+	bit = (page - pool->start_page) & 0x3fUL;
+	bitmap_clear_nolock(bit, pool->bitmap + idx);
+	spinlock_release(&pool->lock);
+}
+
 /* @pre: The PPT and EPT have same page granularity */
 static inline bool large_page_support(enum _page_table_level level)
 {
