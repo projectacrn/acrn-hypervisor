@@ -79,6 +79,7 @@ struct memory_ops {
 extern const struct memory_ops ppt_mem_ops;
 void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id);
 struct page *alloc_page(struct page_pool *pool);
+void free_page(struct page_pool *pool, struct page *page);
 void *get_reserve_sworld_memory_base(void);
 void reserve_buffer_for_ept_pages(void);
 #endif /* PAGE_H */
