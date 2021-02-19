@@ -370,10 +370,6 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	pr_dbg("sos_vm: bottom memory - 0x%lx, top memory - 0x%lx\n",
 		p_mem_range_info->mem_bottom, p_mem_range_info->mem_top);
 
-	if (p_mem_range_info->mem_top > EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE)) {
-		panic("Please configure SOS_VM_ADDRESS_SPACE correctly!\n");
-	}
-
 	/* create real ept map for all ranges with UC */
 	ept_add_mr(vm, pml4_page, p_mem_range_info->mem_bottom, p_mem_range_info->mem_bottom,
 			(p_mem_range_info->mem_top - p_mem_range_info->mem_bottom), attr_uc);
@@ -497,7 +493,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	vm->hw.created_vcpus = 0U;
 
 	init_ept_mem_ops(&vm->arch_vm.ept_mem_ops, vm->vm_id);
-	vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info);
+	vm->arch_vm.nworld_eptp = alloc_ept_page(vm);
 	sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp, &vm->arch_vm.ept_mem_ops);
 
 	(void)memcpy_s(&vm->uuid[0], sizeof(vm->uuid),

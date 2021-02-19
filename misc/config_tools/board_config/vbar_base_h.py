@@ -117,7 +117,7 @@ def write_vbar(i_cnt, bdf, pci_bar_dic, bar_attr, \
             bar_num += 1
             bar_val = pci_bar_dic[bdf][bar_i].addr
             if pci_bar_dic[bdf][bar_i].remapped:
-                ptdev_mmio_str = 'PTDEV_HI_MMIO_START + '
+                ptdev_mmio_str = 'HI_MMIO_START + '
 
             if bar_num == bar_len:
                 if bar_len == 1:
