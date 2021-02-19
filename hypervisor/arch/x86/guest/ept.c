@@ -20,22 +20,6 @@
 #define DBG_LEVEL_EPT	6U
 
 /*
- * to be deprecated, don't use
- * Check whether pagetable pages is reserved enough for the GPA range or not.
- */
-bool ept_is_mr_valid(const struct acrn_vm *vm, uint64_t base, uint64_t size)
-{
-	bool valid = true;
-	uint64_t end = base + size;
-	uint64_t top_address_space = vm->arch_vm.ept_mem_ops.info->ept.top_address_space;
-	if ((end <= base) || (end > top_address_space)) {
-		valid = false;
-	}
-
-	return valid;
-}
-
-/*
  * To enable the identical map and support of legacy devices/ACPI method in SOS,
  * ACRN presents the entire host 0-4GB memory region to SOS, except the memory
  * regions explicitly assigned to pre-launched VMs or HV (DRAM and MMIO). However,
@@ -325,4 +309,9 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 			}
 		}
 	}
+}
+
+struct page *alloc_ept_page(struct acrn_vm *vm)
+{
+	return alloc_page(vm->arch_vm.ept_mem_ops.pool);
 }

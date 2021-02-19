@@ -255,9 +255,8 @@ void init_pcpu_post(uint16_t pcpu_id)
 		/*
 		 * Reserve memory from platform E820 for EPT 4K pages for all VMs
 		 */
-#ifdef CONFIG_LAST_LEVEL_EPT_AT_BOOT
 		reserve_buffer_for_ept_pages();
-#endif
+
 		/* Start all secondary cores */
 		startup_paddr = prepare_trampoline();
 		if (!start_pcpus(AP_MASK)) {
