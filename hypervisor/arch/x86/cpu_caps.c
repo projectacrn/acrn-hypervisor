@@ -427,6 +427,10 @@ int32_t detect_hardware_support(void)
 		(boot_cpu_data.virt_bits == 0U)) {
 		printf("%s, can't detect Linear/Physical Address size\n", __func__);
 		ret = -ENODEV;
+	} else if (boot_cpu_data.phys_bits > MAXIMUM_PA_WIDTH) {
+		printf("%s, physical-address width (%d) over maximum physical-address width (%d)\n",
+			__func__, boot_cpu_data.phys_bits, MAXIMUM_PA_WIDTH);
+		ret = -ENODEV;
 	} else if (!pcpu_has_cap(X86_FEATURE_INVA_TSC)) {
 		/* check invariant TSC */
 		printf("%s, invariant TSC not supported\n", __func__);

@@ -336,7 +336,6 @@ SYS_INIT_C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(SYS_INIT_C_SRCS))
 ifneq ($(CONFIG_RELEASE),y)
 CFLAGS += -DHV_DEBUG -DPROFILING_ON -fno-omit-frame-pointer
 endif
-CFLAGS += -DCONFIG_LAST_LEVEL_EPT_AT_BOOT
 
 MODULES += $(LIB_MOD)
 MODULES += $(BOOT_MOD)
