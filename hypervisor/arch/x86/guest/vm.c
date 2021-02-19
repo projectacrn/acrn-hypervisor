@@ -515,10 +515,8 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 			vm->sworld_control.flag.supported = 1U;
 		}
 		if (vm->sworld_control.flag.supported != 0UL) {
-			struct memory_ops *ept_mem_ops = &vm->arch_vm.ept_mem_ops;
-
 			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-				hva2hpa(ept_mem_ops->get_sworld_memory_base(ept_mem_ops->info)),
+				hva2hpa(vm->arch_vm.sworld_memory_base_hva),
 				TRUSTY_EPT_REBASE_GPA, TRUSTY_RAM_SIZE, EPT_WB | EPT_RWX);
 		}
 		if (vm_config->name[0] == '\0') {
