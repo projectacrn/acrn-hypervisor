@@ -178,7 +178,7 @@ Linux-based VMs (VM0 is a pre-launched VM and VM2 is a post-launched VM).
    and shared memory size is 2M bytes:
 
    - Edit XML configuration file for hybrid_rt scenario on whl-ipc-i5 board
-     ``acrn-hypervisor/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml``
+     ``acrn-hypervisor/misc/config_tools/data/whl-ipc-i5/hybrid_rt.xml``
      to enable ``ivshmem`` and configure the shared memory region using the format
      ``shm_name, shm_size, VM IDs`` (as described above in the ACRN dm boot parameters).
      The region name must start with ``hv:/`` for an hv-land shared region, and we'll allocate 2MB
@@ -194,8 +194,7 @@ Linux-based VMs (VM0 is a pre-launched VM and VM2 is a post-launched VM).
 
 2. Build ACRN based on the XML configuration for hybrid_rt scenario on whl-ipc-i5 board::
 
-	make BOARD_FILE=acrn-hypervisor/misc/vm_configs/xmls/board-xmls/whl-ipc-i5.xml \
-	SCENARIO_FILE=acrn-hypervisor/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml TARGET_DIR=xxx
+	make BOARD=whl-ipc-i5 SCENARIO=hybrid_rt TARGET_DIR=xxx
 
 3. Add a new virtual PCI device for VM2 (post-launched VM): the device type is
    ``ivshmem``, shared memory name is ``hv:/shm_region_0``, and shared memory

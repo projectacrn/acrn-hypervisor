@@ -191,32 +191,6 @@ current scenario has:
 Configuration Tool Workflow
 ***************************
 
-Hypervisor Configuration Workflow
-==================================
-
-The hypervisor configuration is based on the ``Kconfig``
-mechanism. Begin by creating a board-specific ``defconfig`` file to
-set up the default ``Kconfig`` values for the specified board.
-Next, configure the hypervisor build options using the ``make menuconfig``
-graphical interface or ``make defconfig`` to generate
-a ``.config`` file. The resulting ``.config`` file is
-used by the ACRN build process to create a configured scenario- and
-board-specific hypervisor image.
-
-.. figure:: images/sample_of_defconfig.png
-   :align: center
-
-   defconfig file sample
-
-.. figure:: images/GUI_of_menuconfig.png
-   :align: center
-
-   ``menuconfig`` interface sample
-
-Refer to :ref:`getting-started-hypervisor-configuration` for detailed
-configuration steps.
-
-
 .. _vm_config_workflow:
 
 Board and VM Configuration Workflow
@@ -258,37 +232,8 @@ Here is the offline configuration tool workflow:
    .. note:: Refer to :ref:`acrn_config_tool_ui` for more details on
       the configuration tool UI.
 
-#. Auto generate the code.
-
-   Python tools are used to generate configurations in patch format.
-   The patches are applied to your local ``acrn-hypervisor`` git tree
-   automatically.
-
-   a. Generate a patch for the board-related configuration::
-
-         cd misc/acrn-config/board_config
-         python3 board_cfg_gen.py --board $(BOARD).xml --scenario $(SCENARIO).xml
-
-      Note that this can also be done by clicking **Generate Board SRC** in the acrn-config UI.
-
-
-   #. Generate a patch for scenario-based VM configuration::
-
-         cd misc/acrn-config/scenario_config
-         python3 scenario_cfg_gen.py --board $(BOARD).xml --scenario $(SCENARIO).xml
-
-      Note that this can also be done by clicking **Generate Scenario SRC** in the acrn-config UI.
-
-   #. Generate the launch script for the specified
-      post-launched User VM::
-
-         cd misc/acrn-config/launch_config
-         python3 launch_cfg_gen.py --board $(BOARD).xml --scenario $(SCENARIO).xml --launch $(LAUNCH).xml --uosid xx
-
-      Note that this can also be done by clicking **Generate Launch Script** in the acrn-config UI.
-
-#. Re-build the ACRN hypervisor. Refer to
-   :ref:`getting-started-building` to re-build the ACRN hypervisor on the host machine.
+#. Build with your XML files. Refer to :ref:`getting-started-building` to build
+   the ACRN hypervisor with your XML files on the host machine.
 
 #. Deploy VMs and run ACRN hypervisor on the target board.
 
