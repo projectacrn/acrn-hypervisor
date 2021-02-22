@@ -267,7 +267,7 @@ and :ref:`How to Configure a Communication Port
 <how-to-configure-a-communication-port>`.
 
 You can configure both Legacy vUART and PCI-vUART in
-``./misc/vm_configs/xmls/config-xmls/<board>/<scenario>.xml``. For
+``./misc/config_tools/data/<board>/<scenario>.xml``. For
 example, if VM0 has a legacy vUART0 and a PCI-vUART1, VM1 has no legacy
 vUART but has a PCI-vUART0 and a PCI-vUART1, VM0's PCI-vUART1 and VM1's
 PCI-vUART1 are connected to each other. You  should configure then like this:
@@ -334,13 +334,12 @@ The ACRN vUART related XML fields:
 
 Run the command to build ACRN with this XML configuration file::
 
-  make BOARD_FILE=$PWD/misc/acrn-config/xmls/board-xmls/<board>.xml \
-     SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/<board>/<scenario>.xml
+  make BOARD=<board> SCENARIO=<scenario>
 
 The configuration tools will test your settings, and check :ref:`vUART
 Rules <index-of-vuart>` for compilation issue. After compiling, you can find
-``./misc/vm_configs/scenarios/<scenario>/<board>/pci_dev.c`` has been
-changed by the configuration tools based on the XML settings, something like:
+the generated sources under ``build/configs/scenarios/<scenario>/pci_dev.c``
+which is based on the XML settings, something like:
 
 .. code-block:: none
 
