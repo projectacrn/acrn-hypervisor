@@ -16,7 +16,7 @@ components, and software components.  Layers are repositories containing
 related sets of instructions that tell the Yocto Project build system
 what to do.
 
-The Meta-Acrn Layer
+The meta-acrn Layer
 *******************
 
 The meta-acrn layer integrates the ACRN hypervisor with OpenEmbedded,

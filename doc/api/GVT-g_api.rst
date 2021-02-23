@@ -145,7 +145,7 @@ This section describes the wrap functions:
 
 .. _intel_gvt_ops_interface:
 
-GVT-g Intel_gvt_ops Interface
+GVT-g intel_gvt_ops Interface
 *****************************
 
 This section contains APIs for GVT-g intel_gvt_ops interface. Sources are found
@@ -186,14 +186,14 @@ in the `ACRN kernel GitHub repo`_
 
 .. _sysfs_interface:
 
-AcrnGT Sysfs Interface
-***********************
+AcrnGT sysfs Interface
+**********************
 
 This section contains APIs for the AcrnGT sysfs interface. Sources are found
 in the `ACRN kernel GitHub repo`_
 
 
-Sysfs Nodes
+sysfs Nodes
 ===========
 
 In the following examples, all accesses to these interfaces are via bash command

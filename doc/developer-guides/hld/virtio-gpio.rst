@@ -1,6 +1,6 @@
  .. _virtio-gpio:
 
-Virtio-Gpio
+Virtio-GPIO
 ###########
 
 virtio-gpio provides a virtual GPIO controller, which will map part of

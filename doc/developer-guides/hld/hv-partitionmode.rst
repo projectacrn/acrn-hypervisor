@@ -123,7 +123,7 @@ e820 info for all the guests.
 | RESERVED               |
 +------------------------+
 
-Platform Info - Mptable
+Platform Info - mptable
 =======================
 
 ACRN, in partition mode, uses mptable to convey platform info to each
@@ -181,15 +181,15 @@ the Service VM startup in sharing mode.
 Inter-Processor Interrupt (IPI) Handling
 ========================================
 
-Guests W/O LAPIC Passthrough
-----------------------------
+Guests Without LAPIC Passthrough
+--------------------------------
 
 For guests without LAPIC passthrough, IPIs between guest CPUs are handled in
 the same way as sharing mode in ACRN. Refer to :ref:`virtual-interrupt-hld`
 for more details.
 
-Guests W/ LAPIC Passthrough
----------------------------
+Guests With LAPIC Passthrough
+-----------------------------
 
 ACRN supports passthrough if and only if the guest is using x2APIC mode
 for the vLAPIC. In LAPIC passthrough mode, writes to the Interrupt Command
@@ -291,8 +291,8 @@ writes are discarded.
 Interrupt Delivery
 ==================
 
-Guests W/O LAPIC Passthrough
-----------------------------
+Guests Without LAPIC Passthrough
+--------------------------------
 
 In partition mode of ACRN, interrupts stay disabled after a vmexit.  The
 processor does not take interrupts when it is executing in VMX root
@@ -307,8 +307,8 @@ for device interrupts.
    :align: center
 
 
-Guests W/ LAPIC Passthrough
----------------------------
+Guests With LAPIC Passthrough
+-----------------------------
 
 For guests with LAPIC passthrough, ACRN does not configure vmexit upon
 external interrupts. There is no vmexit upon device interrupts and they are
@@ -320,13 +320,13 @@ Hypervisor IPI Service
 ACRN needs IPIs for events such as flushing TLBs across CPUs, sending virtual
 device interrupts (e.g. vUART to vCPUs), and others.
 
-Guests W/O LAPIC Passthrough
-----------------------------
+Guests Without LAPIC Passthrough
+--------------------------------
 
 Hypervisor IPIs work the same way as in sharing mode.
 
-Guests W/ LAPIC Passthrough
----------------------------
+Guests With LAPIC Passthrough
+-----------------------------
 
 Since external interrupts are passthrough to the guest IDT, IPIs do not
 trigger vmexit. ACRN uses NMI delivery mode and the NMI exiting is
@@ -344,8 +344,8 @@ For a guest console in partition mode, ACRN provides an option to pass
 ``vmid`` as an argument to ``vm_console``. vmid is the same as the one
 developers use in the guest configuration.
 
-Guests W/O LAPIC Passthrough
-----------------------------
+Guests Without LAPIC Passthrough
+--------------------------------
 
 Works the same way as sharing mode.
 
