@@ -302,7 +302,7 @@ hypercall to the hypervisor. There are two exceptions:
 
    Architecture of ACRN VHM
 
-VHM Ioctl Interfaces
+VHM ioctl Interfaces
 ====================
 
 .. note:: Reference API documents for General interface, VM Management,

@@ -243,7 +243,7 @@ Creating UEFI Secure Boot Key
 The keys to be enrolled in UEFI firmware: :file:`PK.der`, :file:`KEK.der`, :file:`db.der`.
 The keys to sign bootloader image: :file:`grubx64.efi`, :file:`db.key` , :file:`db.crt`.
 
-Sign GRUB Image With Db Key
+Sign GRUB Image With db Key
 ===========================
 
     sbsign --key db.key --cert db.crt path/to/grubx64.efi

@@ -35,7 +35,7 @@ The feature bits supported by the BE device are shown as follows:
   Device can toggle its cache between writeback and writethrough modes.
 
 
-Virtio-BLK-Be Design
+Virtio-BLK BE Design
 ********************
 
 .. figure:: images/virtio-blk-image02.png

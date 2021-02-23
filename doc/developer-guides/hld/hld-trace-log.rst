@@ -30,7 +30,7 @@ is allowed to put data into that sbuf in HV, and a single consumer is
 allowed to get data from sbuf in Service VM. Therefore, no lock is required to
 synchronize access by the producer and consumer.
 
-Sbuf APIs
+sbuf APIs
 =========
 
 The sbuf APIs are defined in ``hypervisor/include/debug/sbuf.h``.

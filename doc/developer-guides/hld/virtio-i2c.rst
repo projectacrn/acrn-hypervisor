@@ -1,6 +1,6 @@
 .. _virtio-i2c:
 
-Virtio-I2c
+Virtio-I2C
 ##########
 
 Virtio-i2c provides a virtual I2C adapter that supports mapping multiple

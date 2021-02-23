@@ -608,7 +608,7 @@ APIs Provided by VBS-K Modules in Service OS
                virtio_vqs_index_get
                virtio_dev_reset
 
-VHOST APIS
+VHOST APIs
 ==========
 
 APIs Provided by DM

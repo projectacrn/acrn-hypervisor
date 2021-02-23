@@ -257,7 +257,7 @@ ACRN Windows Verified Feature List
                    , "Microsoft Store",              "OK"
                    , "3D Viewer",                    "OK"
 
-Explanation for Acrn-Dm Popular Command Lines
+Explanation for acrn-dm Popular Command Lines
 *********************************************
 
 .. note:: Use these acrn-dm command line entries according to your

@@ -9,7 +9,7 @@ real-time performance analysis. Two parts are included:
 - Method to trace ``vmexit`` occurrences for analysis.
 - Method to collect Performance Monitoring Counters information for tuning based on Performance Monitoring Unit, or PMU.
 
-Vmexit Analysis for ACRN RT Performance
+vmexit Analysis for ACRN RT Performance
 ***************************************
 
 ``vmexit`` are triggered in response to certain instructions and events and are
@@ -149,7 +149,7 @@ Note that Precise Event Based Sampling (PEBS) is not yet enabled in the VM.
       value64 = hva2hpa(vcpu->arch.msr_bitmap);
       exec_vmwrite64(VMX_MSR_BITMAP_FULL, value64);
 
-Perf/Pmu Tools in Performance Analysis
+Perf/PMU Tools in Performance Analysis
 ======================================
 
 After exposing PMU-related CPUID/MSRs to the VM, performance analysis tools
