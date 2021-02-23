@@ -130,7 +130,7 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
 
 <xs:simpleType name="IVSHMEMRegionPattern">
   <xs:restriction base="xs:string">
-    <xs:pattern value="hv:/\w+,\s?\d+\s?,\s?\d\s?:\s?\d\s?" />
+    <xs:pattern value="hv:/\w+,\s?\d+\s?,\s?\d\s?(:\s?\d\s?)+" />
   </xs:restriction>
 </xs:simpleType>
 
