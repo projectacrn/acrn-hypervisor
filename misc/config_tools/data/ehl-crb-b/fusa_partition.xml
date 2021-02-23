@@ -1,9 +1,9 @@
-<?xml version="1.0"?>
+<?xml version='1.0' encoding='utf-8'?>
 <acrn-config board="ehl-crb-b" scenario="fusa_partition">
     <hv>
         <DEBUG_OPTIONS>
             <RELEASE>n</RELEASE>
-            <SERIAL_CONSOLE>/dev/ttyS3</SERIAL_CONSOLE>
+            <SERIAL_CONSOLE>/dev/ttyS0</SERIAL_CONSOLE>
             <MEM_LOGLEVEL>5</MEM_LOGLEVEL>
             <NPK_LOGLEVEL>5</NPK_LOGLEVEL>
             <CONSOLE_LOGLEVEL>3</CONSOLE_LOGLEVEL>
@@ -41,7 +41,7 @@
             <MCE_ON_PSC_DISABLED>n</MCE_ON_PSC_DISABLED>
             <IVSHMEM>
                 <IVSHMEM_ENABLED>y</IVSHMEM_ENABLED>
-                <IVSHMEM_REGION>hv:/shm_region_0, 2, 0:1</IVSHMEM_REGION>
+                <IVSHMEM_REGION>hv:/shmem,2,0:1</IVSHMEM_REGION>
             </IVSHMEM>
         </FEATURES>
         <MEMORY>
@@ -68,15 +68,17 @@
         </MISC_CFG>
     </hv>
     <vm id="0">
-        <vm_type>SAFETY_VM</vm_type>
+        <vm_type>PRE_STD_VM</vm_type>
         <name>ACRN PRE-LAUNCHED VM0</name>
         <guest_flags>
             <guest_flag/>
         </guest_flags>
         <cpu_affinity>
             <pcpu_id>0</pcpu_id>
+            <pcpu_id>2</pcpu_id>
         </cpu_affinity>
         <clos>
+            <vcpu_clos>0</vcpu_clos>
             <vcpu_clos>0</vcpu_clos>
         </clos>
         <epc_section>
@@ -119,8 +121,9 @@
             <target_uart_id>1</target_uart_id>
         </communication_vuart>
         <pci_devs>
-            <pci_dev/>
-            <pci_dev/>
+            <pci_dev>00:14.0 USB controller: Intel Corporation Device 4b7d</pci_dev>
+            <pci_dev>00:1a.3 Non-VGA unclassified device [0000]: Intel Corporation Device 4b4a</pci_dev>
+            <pci_dev>00:1d.1 Ethernet controller: Intel Corporation Device 4ba0</pci_dev>
         </pci_devs>
         <mmio_resources>
             <TPM2>n</TPM2>
@@ -128,7 +131,7 @@
     </vm>
     <vm id="1">
         <vm_type>PRE_RT_VM</vm_type>
-        <name>ACRN PRE-LAUNCHED VM1</name>
+        <name>ACRN PRE-LAUNCHED RT VM1</name>
         <guest_flags>
             <guest_flag>GUEST_FLAG_LAPIC_PASSTHROUGH</guest_flag>
             <guest_flag>GUEST_FLAG_RT</guest_flag>
@@ -147,16 +150,19 @@
         </epc_section>
         <memory>
             <start_hpa>0x120000000</start_hpa>
-            <size>0x20000000</size>
+            <size>0x100000000</size>
             <start_hpa2>0x0</start_hpa2>
             <size_hpa2>0x0</size_hpa2>
         </memory>
         <os_config>
-            <name>PREEMPT-RT</name>
+            <name>YOCTO</name>
             <kern_type>KERNEL_BZIMAGE</kern_type>
             <kern_mod>RT_bzImage</kern_mod>
             <ramdisk_mod/>
-            <bootargs>rw rootwait root=/dev/sda3 no_ipi_broadcast=1 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel consoleblank=0 tsc=reliable clocksource=tsc x2apic_phys processor.max_cstate=0 intel_idle.max_cstate=0 intel_pstate=disable mce=ignore_ce audit=0 isolcpus=nohz,domain,1 nohz_full=1 rcu_nocbs=1 nosoftlockup idle=poll irqaffinity=0 reboot=acpi </bootargs>
+            <bootargs>
+            rw rootwait root=/dev/sda3 console=ttyS0 noxsave nohpet no_timer_check ignore_loglevel log_buf_len=16M
+            consoleblank=0 tsc=reliable reboot=acpi
+            </bootargs>
         </os_config>
         <legacy_vuart id="0">
             <type>VUART_LEGACY_PIO</type>
@@ -179,7 +185,9 @@
             <target_uart_id>1</target_uart_id>
         </communication_vuart>
         <pci_devs>
+            <pci_dev>00:08.0 System peripheral: Intel Corporation Device 4511</pci_dev>
             <pci_dev>00:17.0 SATA controller: Intel Corporation Device 4b63</pci_dev>
+            <pci_dev>00:1d.2 Ethernet controller: Intel Corporation Device 4bb0</pci_dev>
         </pci_devs>
         <mmio_resources>
             <TPM2>n</TPM2>
