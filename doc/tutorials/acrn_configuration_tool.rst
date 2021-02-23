@@ -1,114 +1,205 @@
 .. _acrn_configuration_tool:
 
-ACRN Configuration Tool
-#######################
+Introduction to ACRN Configuration
+##################################
 
-The ACRN configuration tool is designed for System Integrators / Tier 1s to
-customize ACRN to meet their own needs. It consists of two tools, the
-``Kconfig`` tool and the ``acrn-config`` tool. The latter allows users to
-provision VMs via a web interface and configure the hypervisor from XML
-files at build time.
+ACRN configuration is designed for System Integrators / Tier 1s to customize
+ACRN to meet their own needs. It allows users to adapt ACRN to target boards as
+well as configure hypervisor capabilities and provision VMs.
 
-Introduction
-************
+ACRN configuration consists of the following key components.
 
-ACRN includes three types of configurations: Hypervisor, Board, and VM. Each
-is discussed in the following sections.
+ - Configuration data which are saved as XML files.
+ - A configuration toolset that helps users to generate and edit configuration
+   data. The toolset includes:
 
-Hypervisor Configuration
-========================
+   - A **board inspector** which collects board-specific information on target
+     machines.
+   - A **configuration editor** which edits configuration data via web-based UI.
 
-The hypervisor configuration defines a working scenario and target
-board by configuring the hypervisor image features and capabilities such as
-setting up the log and the serial port.
+The following sections introduce the concepts and tools of ACRN configuration
+from the aspects below.
 
-The hypervisor configuration uses the ``Kconfig`` mechanism.  The configuration
-file is located at ``acrn-hypervisor/hypervisor/arch/x86/Kconfig``.
+ - :ref:`acrn_config_types` introduces the objectives and main contents of
+   different types of configuration data.
+ - :ref:`acrn_config_workflow` overviews the steps to customize ACRN
+   configuration using the configuration toolset.
+ - :ref:`acrn_config_data` explains the location and format of configuration
+   data which are saved as XML files.
+ - :ref:`acrn_config_tool_ui` gives detailed instructions on using the
+   configuration editor.
 
-A board-specific ``defconfig`` file, for example
-``misc/vm_configs/scenarios/$(SCENARIO)/$(BOARD)/$(BOARD).config``
-is loaded first; it is the default ``Kconfig`` for the specified board.
+.. _acrn_config_types:
+
+Types of Configurations
+***********************
+
+ACRN includes three types of configurations: board, scenario and launch. The
+following sections briefly describe the objectives and main contents of each
+type.
 
 Board Configuration
 ===================
 
-The board configuration stores board-specific settings referenced by the
-ACRN hypervisor. This includes **scenario-relevant** information such as
-board settings, root device selection, and the kernel cmdline. It also includes
-**scenario-irrelevant** hardware-specific information such as ACPI/PCI
-and BDF information. The reference board configuration is organized as
-``*.c/*.h`` files located in the
-``misc/vm_configs/boards/$(BOARD)/`` folder.
+The board configuration stores hardware-specific information extracted on the
+target platform. It describes the capacity of hardware resources (such as
+processors and memory), platform power states, available devices and BIOS
+versions. This information is used by ACRN configuration tool to check feature
+availability and allocate resources among VMs, as well as by ACRN hypervisor to
+initialize and manage the platform at runtime.
 
-VM Configuration
-=================
+The board configuration is scenario-neutral by nature. Thus, multiple scenario
+configurations can be based on the same board configuration.
 
-VM configuration includes **scenario-based** VM configuration
-information that is used to describe the characteristics and attributes for
-VMs on each user scenario. It also includes **launch script-based** VM
-configuration information, where parameters are passed to the device model
-to launch post-launched User VMs.
+Scenario Configuration
+======================
 
-Scenario based VM configurations are organized as ``*.c/*.h`` files. The
-reference scenarios are located in the
-``misc/vm_configs/scenarios/$(SCENARIO)/`` folder.
-The board-specific configurations on this scenario are stored in the
-``misc/vm_configs/scenarios/$(SCENARIO)/$(BOARD)/`` folder.
+The scenario configuration defines a working scenario by configuring hypervisor
+capabilities and defining VM attributes and resources. You can specify the
+following in scenario configuration.
 
-User VM launch script samples are located in the
-``misc/vm_configs/sample_launch_scripts/`` folder.
+ - Hypervisor capabilities
 
-ACRN Configuration XMLs
+   - Availability and settings of hypervisor features, such as debugging
+     facilities, scheduling algorithm, ivshmem and security features.
+   - Hardware management capacity of the hypervisor, such as maximum PCI devices
+     and maximum interrupt lines supported.
+   - Memory consumption of the hypervisor, such as the entry point and stack
+     size.
+
+ - VM attributes and resources
+
+   - VM attributes, such as VM names.
+   - Maximum number of VMs supported.
+   - Resources allocated to each VM, such as number of vCPUs, amount of guest
+     memory and pass-through devices.
+   - Guest OS settings, such as boot protocol and guest kernel parameters.
+   - Settings of virtual devices, such as virtual UARTs.
+
+For pre-launched VMs, the VM attributes and resources are exactly the amount of
+resource allocated to them. For post-launched VMs, the number of vCPUs define
+the upper limit the Service VM can allocate to them and settings of virtual
+devices still apply. Other resources are under the control of the Service VM and
+can be dynamically allocated to post-launched VMs.
+
+The scenario configuration is used by ACRN configuration tool to reserve
+sufficient memory for the hypervisor to manage the VMs at build time, as well as
+by ACRN hypervisor to initialize its capabilities and set up the VMs at runtime.
+
+Launch Configuration
+====================
+
+The launch configuration defines the attributes and resources of a
+post-launched VM. The main contents are similar to the VM attributes and
+resources in scenario configuration. It is used to generate shell scripts that
+invoke ``acrn-dm`` to create post-launched VMs. Unlike board and scenario
+configurations which are used at build time or by ACRN hypervisor, launch
+configuration are used dynamically in the Service VM.
+
+.. _acrn_config_workflow:
+
+Using ACRN Configuration Toolset
+********************************
+
+ACRN configuration toolset is provided to create and edit configuration
+data. The toolset can be found in ``misc/config_tools``.
+
+Here is the workflow to customize ACRN configurations using the configuration
+toolset.
+
+#. Get the board info.
+
+   a. Set up a native Linux environment on the target board. Make sure the
+      following tools are installed and the kernel boots with the following
+      command line options.
+
+      | **Native Linux requirement:**
+      | **Release:** Ubuntu 18.04+
+      | **Tools:** cpuid, rdmsr, lspci, dmidecode (optional)
+      | **Kernel cmdline:** "idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable"
+
+   #. Copy the ``target`` directory into the target file system and then run the
+      ``sudo python3 board_parser.py $(BOARD)`` command.
+   #. A ``$(BOARD).xml`` that includes all needed hardware-specific information
+      is generated in the ``./out/`` directory. Here, ``$(BOARD)`` is the
+      specified board name.
+
+#. Customize your needs.
+
+   a. Copy ``$(BOARD).xml`` to the host development machine.
+   #. Run the ACRN configuration editor (available at
+      ``misc/config_tools/config_app/app.py``) on the host machine and import
+      the ``$(BOARD).xml``. Select your working scenario under **Scenario Setting**
+      and input the desired scenario settings. The tool will do a sanity check
+      on the input based on the ``$(BOARD).xml``. The customized settings can be
+      exported to your own ``$(SCENARIO).xml``. If you have a customized scenario
+      XML file, you can also import it to the editor for modification.
+   #. In ACRN configuration editor, input the launch script parameters for the
+      post-launched User VM under **Launch Setting**. The editor will sanity check
+      the input based on both the ``$(BOARD).xml`` and ``$(SCENARIO).xml`` and then
+      export settings to your ``$(LAUNCH).xml``.
+
+   .. note:: Refer to :ref:`acrn_config_tool_ui` for more details on
+      the configuration editor.
+
+#. Build with your XML files. Refer to :ref:`getting-started-building` to build
+   the ACRN hypervisor with your XML files on the host machine.
+
+#. Deploy VMs and run ACRN hypervisor on the target board.
+
+.. figure:: images/offline_tools_workflow.png
+   :align: center
+
+   Configuration Workflow
+
+.. _acrn_config_data:
+
+ACRN Configuration Data
 ***********************
 
-The ACRN configuration includes three kinds of XML files for acrn-config
-usage: ``board``, ``scenario``, and ``launch`` XML. All
-scenario-irrelevant hardware-specific information for the board
-configuration is stored in the ``board`` XML. The XML is generated by
-``misc/acrn-config/target/board_parser.py``, which runs on the target
-board. The scenario-relevant board and scenario-based VM configurations
-are stored in the ``scenario`` XML. The launch script-based VM
-configuration is stored in the ``launch`` XML. These two XMLs can be
-customized by using the web interface tool at
-``misc/acrn-config/config_app/app.py``. End users can load their own
-configurations by importing customized XMLs or by saving the
-configurations by exporting XMLs.
+ACRN configuration data are saved in three XML files: ``board``, ``scenario``,
+and ``launch`` XML. The ``board`` XML contains board configuration and is
+generated by the board inspector on the target machine. The ``scenario`` and
+``launch`` XMLs, containing scenario and launch configurations respectively, can
+be customized by using the configuration editor. End users can load their own
+configurations by importing customized XMLs or by saving the configurations by
+exporting XMLs.
 
+The predefined XMLs provided by ACRN are located in the ``misc/config_tools/data/``
+directory of the ``acrn-hypervisor`` repo.
 
 Board XML Format
 ================
 
-The board XMLs are located in the
-``misc/vm_configs/xmls/board-xmls/`` folder.
 The board XML has an ``acrn-config`` root element and a ``board`` attribute:
 
 .. code-block:: xml
 
    <acrn-config board="BOARD">
 
-As an input for the ``acrn-config`` tool, end users do not need to care
-about the format of board XML and should not modify it.
+As an input to the configuration editor and the build system, board XMLs are not
+intended for end users to modify.
 
 Scenario XML Format
 ===================
-The scenario XMLs are located in the
-``misc/vm_configs/xmls/config-xmls/`` folder.  The
-scenario XML has an ``acrn-config`` root element as well as ``board``
-and ``scenario`` attributes:
+
+The scenario XML has an ``acrn-config`` root element as well as ``board`` and
+``scenario`` attributes:
 
 .. code-block:: xml
 
    <acrn-config board="BOARD" scenario="SCENARIO">
 
-See :ref:`scenario-config-options` for a full explanation of available scenario XML elements.
+See :ref:`scenario-config-options` for a full explanation of available scenario
+XML elements. Users are recommended to tweak the configuration data by using
+ACRN configuration editor.
 
 
 Launch XML Format
 =================
-The launch XMLs are located in the
-``misc/vm_configs/xmls/config-xmls/`` folder.
-The launch XML has an ``acrn-config`` root element as well as
-``board``, ``scenario`` and ``uos_launcher`` attributes:
+
+The launch XML has an ``acrn-config`` root element as well as ``board``,
+``scenario`` and ``uos_launcher`` attributes:
 
 .. code-block:: xml
 
@@ -188,78 +279,20 @@ current scenario has:
    interface. When ``configurable="0"``, the item does not appear on the
    interface.
 
-Configuration Tool Workflow
-***************************
-
-.. _vm_config_workflow:
-
-Board and VM Configuration Workflow
-===================================
-
-Python offline tools are provided to configure Board and VM configurations.
-The tool source folder is ``misc/acrn-config/``.
-
-Here is the offline configuration tool workflow:
-
-#. Get the board info.
-
-   a. Set up a native Linux environment on the target board.
-   #. Copy the ``target`` folder into the target file system and then run the
-      ``sudo python3 board_parser.py $(BOARD)`` command.
-   #. A $(BOARD).xml that includes all needed hardware-specific information
-      is generated in the ``./out/`` folder. Here, ``$(BOARD)`` is the
-      specified board name.
-
-      | **Native Linux requirement:**
-      | **Release:** Ubuntu 18.04+
-      | **Tools:** cpuid, rdmsr, lspci, dmidecode (optional)
-      | **Kernel cmdline:** "idle=nomwait intel_idle.max_cstate=0 intel_pstate=disable"
-
-#. Customize your needs.
-
-   a. Copy ``$(BOARD).xml`` to the host development machine.
-   #. Run the ``misc/acrn-config/config_app/app.py`` tool on the host
-      machine and import the $(BOARD).xml. Select your working scenario under
-      **Scenario Setting** and input the desired scenario settings. The tool
-      will do a sanity check on the input based on the $(BOARD).xml. The
-      customized settings can be exported to your own $(SCENARIO).xml.
-   #. In the configuration tool UI, input the launch script parameters
-      for the post-launched User VM under **Launch Setting**. The tool will
-      sanity check the input based on both the $(BOARD).xml and
-      $(SCENARIO).xml and then export settings to your $(LAUNCH).xml.
-   #. The user defined XMLs can be imported by acrn-config for modification.
-
-   .. note:: Refer to :ref:`acrn_config_tool_ui` for more details on
-      the configuration tool UI.
-
-#. Build with your XML files. Refer to :ref:`getting-started-building` to build
-   the ACRN hypervisor with your XML files on the host machine.
-
-#. Deploy VMs and run ACRN hypervisor on the target board.
-
-.. figure:: images/offline_tools_workflow.png
-   :align: center
-
-   Offline tool workflow
-
-
 .. _acrn_config_tool_ui:
 
-Use the ACRN Configuration App
-******************************
+Use the ACRN Configuration Editor
+*********************************
 
-The ACRN configuration app is a web user interface application that performs the following:
+The ACRN configuration editor provides a web-based user interface for the following:
 
 - reads board info
-- configures and validates scenario settings
-- automatically generates source code for board-related configurations and
-  scenario-based VM configurations
-- configures and validates launch settings
+- configures and validates scenario and launch configurationss
 - generates launch scripts for the specified post-launched User VMs.
-- dynamically creates a new scenario setting and adds or deletes VM settings
-  in scenario settings
-- dynamically creates a new launch setting and adds or deletes User VM
-  settings in launch settings
+- dynamically creates a new scenario configuration and adds or deletes VM
+  settings in it
+- dynamically creates a new launch configuration and adds or deletes User VM
+  settings in it
 
 Prerequisites
 =============
@@ -271,9 +304,9 @@ Prerequisites
 
   .. code-block:: none
 
-     $git clone https://github.com/projectacrn/acrn-hypervisor
+     $ git clone https://github.com/projectacrn/acrn-hypervisor
 
-- Install ACRN configuration app dependencies:
+- Install ACRN configuration editor dependencies:
 
   .. code-block:: none
 
@@ -284,7 +317,7 @@ Prerequisites
 Instructions
 ============
 
-#. Launch the ACRN configuration app:
+#. Launch the ACRN configuration editor:
 
    .. code-block:: none
 
@@ -293,9 +326,9 @@ Instructions
 #. Open a browser and navigate to the website
    `<http://127.0.0.1:5001/>`_ automatically, or you may need to visit this
    website manually. Make sure you can connect to open network from browser
-   because the app needs to download some JavaScript files.
+   because the editor needs to download some JavaScript files.
 
-   .. note:: The ACRN configuration app is supported on Chrome, Firefox,
+   .. note:: The ACRN configuration editor is supported on Chrome, Firefox,
       and Microsoft Edge. Do not use Internet Explorer.
 
    The website is shown below:
@@ -311,38 +344,37 @@ Instructions
       .. figure:: images/click_import_board_info_button.png
          :align: center
 
-   #. Upload the board info you have generated from the ACRN config tool.
+   #. Upload the board XML you have generated from the ACRN board inspector.
 
-   #. After board info is uploaded, you will see the board name from the
+   #. After board XML is uploaded, you will see the board name from the
       Board info list. Select the board name to be configured.
 
       .. figure:: images/select_board_info.png
          :align: center
 
-#. Load or create the scenario setting by selecting among the following:
+#. Load or create the scenario configuration by selecting among the following:
 
    - Choose a scenario from the **Scenario Setting** menu that lists all
      user-defined scenarios for the board you selected in the previous step.
 
-   - Click the **Create a new scenario** from the **Scenario Setting**
-     menu to dynamically create a new scenario setting for the current board.
+   - Click the **Create a new scenario** from the **Scenario Setting** menu to
+     dynamically create a new scenario configuration for the current board.
 
-   - Click the **Load a default scenario** from the **Scenario Setting**
-     menu, and then select one default scenario setting to load a default
-     scenario setting for the current board.
+   - Click the **Load a default scenario** from the **Scenario Setting** menu,
+     and then select one default scenario configuration to load a predefined
+     scenario XML for the current board.
 
-   The default scenario configuration XMLs are located at
-   ``misc/vm_configs/xmls/config-xmls/[board]/``.
-   We can edit the scenario name when creating or loading a scenario. If the
-   current scenario name is duplicated with an existing scenario setting
-   name, rename the current scenario name or overwrite the existing one
-   after the confirmation message.
+   The default scenario XMLs are located at
+   ``misc/config_tools/data/[board]/``. You can edit the scenario name when
+   creating or loading a scenario. If the current scenario name is duplicated
+   with an existing scenario setting name, rename the current scenario name or
+   overwrite the existing one after the confirmation message.
 
    .. figure:: images/choose_scenario.png
       :align: center
 
    Note that you can also use a customized scenario XML by clicking **Import
-   XML**. The configuration app automatically directs to the new scenario
+   XML**. The configuration editor automatically directs to the new scenario
    XML once the import is complete.
 
 #. The configurable items display after one scenario is created, loaded,
@@ -366,8 +398,9 @@ Instructions
    - Click **Remove this VM** in one VM setting to remove the current VM for
      the scenario setting.
 
-   When one VM is added or removed in the scenario setting, the
-   configuration app reassigns the VM IDs for the remaining VMs by the order of Pre-launched VMs, Service VMs, and Post-launched VMs.
+   When one VM is added or removed in the scenario, the configuration editor
+   reassigns the VM IDs for the remaining VMs by the order of Pre-launched VMs,
+   Service VMs, and Post-launched VMs.
 
    .. figure:: images/configure_vm_add.png
       :align: center
@@ -377,11 +410,11 @@ Instructions
 
    .. note::
       All customized scenario XMLs will be in user-defined groups, which are
-      located in ``misc/vm_configs/xmls/config-xmls/[board]/user_defined/``.
+      located in ``misc/config_tools/data/[board]/user_defined/``.
 
-   Before saving the scenario XML, the configuration app validates the
-   configurable items. If errors exist, the configuration app lists all
-   incorrect configurable items and shows the errors as below:
+   Before saving the scenario XML, the configuration editor validates the
+   configurable items. If errors exist, the configuration editor lists all
+   incorrectly configured items and shows the errors as below:
 
    .. figure:: images/err_acrn_configuration.png
       :align: center
@@ -389,50 +422,38 @@ Instructions
    After the scenario is saved, the page automatically directs to the saved
    scenario XMLs. Delete the configured scenario by clicking **Export XML** -> **Remove**.
 
-#. Click **Generate configuration files** to save the current scenario
-   setting and then generate files for the board-related configuration
-   source code and the scenario-based VM configuration source code.
-
-   If **Source Path** in the pop-up model is edited, the source code is
-   generated into the edited Source Path relative to ``acrn-hypervisor``;
-   otherwise, source code is generated into default folders and
-   overwrites the old ones. The board-related configuration source
-   code is located at
-   ``misc/vm_configs/boards/[board]/`` and the
-   scenario-based VM configuration source code is located at
-   ``misc/vm_configs/scenarios/[scenario]/``.
-
 The **Launch Setting** is quite similar to the **Scenario Setting**:
 
-#. Upload board info or select one board as the current board.
+#. Upload board XML or select one board as the current board.
 
-#. Load or create one launch setting by selecting among the following:
+#. Load or create one launch configuration by selecting among the following:
 
    - Click **Create a new launch script** from the **Launch Setting** menu.
 
    - Click **Load a default launch script** from the **Launch Setting** menu.
 
-   - Select one launch setting XML file from the menu.
+   - Select one launch XML from the menu.
 
-   - Import the local launch setting XML file by clicking **Import XML**.
+   - Import a local launch XML by clicking **Import XML**.
 
-#. Select one scenario for the current launch setting from the **Select Scenario** drop-down box.
+#. Select one scenario for the current launch configuration from the **Select
+   Scenario** drop-down box.
 
-#. Configure the items for the current launch setting.
+#. Configure the items for the current launch configuration.
 
 #. To dynamically add or remove User VM (UOS) launch scripts:
 
    - Add a UOS launch script by clicking **Configure an UOS below** for the
-     current launch setting.
+     current launch configuration.
 
    - Remove a UOS launch script by clicking **Remove this VM** for the
-     current launch setting.
+     current launch configuration.
 
-#. Save the current launch setting to the user-defined XML files by
-   clicking **Export XML**. The configuration app validates the current
-   configuration and lists all incorrect configurable items and shows errors.
+#. Save the current launch configuration to the user-defined XML files by
+   clicking **Export XML**. The configuration editor validates the current
+   configuration and lists all incorrectly configured items.
 
-#. Click **Generate Launch Script** to save the current launch setting and
+#. Click **Generate Launch Script** to save the current launch configuration and
    then generate the launch script.
 
    .. figure:: images/generate_launch_script.png
