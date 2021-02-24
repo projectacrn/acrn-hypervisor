@@ -20,3 +20,4 @@
 .. |check|  unicode:: U+02714 .. HEAVY CHECK MARK
    :rtrim:
 .. |oplus|  unicode:: U+02295 .. CIRCLED PLUS SIGN
+.. |rarr|   unicode:: U+02192 .. RIGHTWARDS ARROW

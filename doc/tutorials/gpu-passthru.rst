@@ -46,25 +46,25 @@ BIOS Settings
 Kaby Lake Platform
 ==================
 
-* Set **IGD Minimum Memory** to **64MB** in **Devices** &rarr;
-  **Video** &rarr; **IGD Minimum Memory**.
+* Set **IGD Minimum Memory** to **64MB** in **Devices** |rarr|
+  **Video** |rarr| **IGD Minimum Memory**.
 
 Whiskey Lake Platform
 =====================
 
-* Set **PM Support**  to **Enabled** in **Chipset** &rarr; **System
-  Agent (SA) Configuration** &rarr; **Graphics Configuration** &rarr;
+* Set **PM Support**  to **Enabled** in **Chipset** |rarr| **System
+  Agent (SA) Configuration** |rarr| **Graphics Configuration** |rarr|
   **PM support**.
-* Set **DVMT Pre-Allocated** to **64MB** in **Chipset** &rarr;
+* Set **DVMT Pre-Allocated** to **64MB** in **Chipset** |rarr|
   **System Agent (SA) Configuration**
-  &rarr; **Graphics Configuration** &rarr; **DVMT Pre-Allocated**.
+  |rarr| **Graphics Configuration** |rarr| **DVMT Pre-Allocated**.
 
 Elkhart Lake Platform
 =====================
 
 * Set **DMVT Pre-Allocated** to **64MB** in **Intel Advanced Menu**
-  &rarr; **System Agent(SA) Configuration** &rarr;
-  **Graphics Configuration** &rarr; **DMVT Pre-Allocated**.
+  |rarr| **System Agent(SA) Configuration** |rarr|
+  **Graphics Configuration** |rarr| **DMVT Pre-Allocated**.
 
 Passthrough the GPU to Guest
 ****************************
