@@ -148,6 +148,7 @@ void init_pcpu_pre(bool is_bsp)
 
 		early_init_lapic();
 
+		init_acpi();
 #ifdef CONFIG_ACPI_PARSE_ENABLED
 		ret = acpi_fixup();
 		if (ret != 0) {
