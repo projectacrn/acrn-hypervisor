@@ -115,7 +115,13 @@ uint64_t e820_alloc_memory(uint32_t size_arg, uint64_t max_addr)
 		}
 	}
 
-	if (ret == INVALID_HPA) {
+	if ((ret == INVALID_HPA) || (ret == 0UL)) {
+		/* current memory allocation algorithm is to find the available address from the highest
+		 * possible address below max_addr. if ret == 0, means all memory is used up and we have to
+		 * put the resource at address 0, this is dangerous.
+		 * Also ret == 0 would make code logic very complicated, since memcpy_s() doesn't support
+		 * address 0 copy.
+		 */
 		panic("Requested memory from E820 cannot be reserved!!");
 	}
 
