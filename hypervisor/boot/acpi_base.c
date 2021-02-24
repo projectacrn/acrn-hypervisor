@@ -64,52 +64,49 @@ static struct acpi_table_rsdp *found_rsdp(char *base, uint64_t length)
  */
 static struct acpi_table_rsdp *get_rsdp(void)
 {
+	return acpi_rsdp;
+}
+
+void init_acpi(void)
+{
 	struct acpi_table_rsdp *rsdp = NULL;
 
-	/* If acpi_rsdp is already parsed, it will be returned directly */
-	if (acpi_rsdp != NULL) {
-		rsdp = acpi_rsdp;
-	} else {
-		rsdp = (struct acpi_table_rsdp *)(get_acrn_multiboot_info()->mi_acpi_rsdp_va);
-		if (rsdp == NULL) {
-			uint16_t *addr;
+	rsdp = (struct acpi_table_rsdp *)(get_acrn_multiboot_info()->mi_acpi_rsdp_va);
+	if (rsdp == NULL) {
+		uint16_t *addr;
 
-			/* EBDA is addressed by the 16 bit pointer at 0x40E */
-			addr = (uint16_t *)hpa2hva(0x40eUL);
+		/* EBDA is addressed by the 16 bit pointer at 0x40E */
+		addr = (uint16_t *)hpa2hva(0x40eUL);
 
-			rsdp = found_rsdp((char *)hpa2hva((uint64_t)(*addr) << 4U), 0x400UL);
-		}
-		if (rsdp == NULL) {
-			/* Check the upper memory BIOS space, 0xe0000 - 0xfffff. */
-			rsdp = found_rsdp((char *)hpa2hva(0xe0000UL), 0x20000UL);
-		}
+		rsdp = found_rsdp((char *)hpa2hva((uint64_t)(*addr) << 4U), 0x400UL);
+	}
+	if (rsdp == NULL) {
+		/* Check the upper memory BIOS space, 0xe0000 - 0xfffff. */
+		rsdp = found_rsdp((char *)hpa2hva(0xe0000UL), 0x20000UL);
+	}
 
-		if (rsdp == NULL) {
-			/* Check ACPI RECLAIM region, there might be multiple ACPI reclaimable regions. */
-			uint32_t i;
-			const struct e820_entry *entry = get_e820_entry();
-			uint32_t entries_count = get_e820_entries_count();
+	if (rsdp == NULL) {
+		/* Check ACPI RECLAIM region, there might be multiple ACPI reclaimable regions. */
+		uint32_t i;
+		const struct e820_entry *entry = get_e820_entry();
+		uint32_t entries_count = get_e820_entries_count();
 
-			for (i = 0U; i < entries_count; i++) {
-				if (entry[i].type == E820_TYPE_ACPI_RECLAIM) {
-					rsdp = found_rsdp((char *)hpa2hva(entry[i].baseaddr), entry[i].length);
-					if (rsdp != NULL) {
-						break;
-					}
+		for (i = 0U; i < entries_count; i++) {
+			if (entry[i].type == E820_TYPE_ACPI_RECLAIM) {
+				rsdp = found_rsdp((char *)hpa2hva(entry[i].baseaddr), entry[i].length);
+				if (rsdp != NULL) {
+					break;
 				}
 			}
 		}
-
-		if (rsdp == NULL) {
-			panic("No RSDP is found");
-		}
-
-		/* After RSDP is parsed, it will be assigned to acpi_rsdp */
-		acpi_rsdp = rsdp;
 	}
 
+	if (rsdp == NULL) {
+		panic("No RSDP is found");
+	}
 
-	return rsdp;
+	/* After RSDP is parsed, it will be assigned to acpi_rsdp */
+	acpi_rsdp = rsdp;
 }
 
 static bool probe_table(uint64_t address, const char *signature)
@@ -213,15 +210,10 @@ local_parse_madt(struct acpi_table_madt *madt, uint32_t lapic_id_array[MAX_PCPU_
 uint16_t parse_madt(uint32_t lapic_id_array[MAX_PCPU_NUM])
 {
 	uint16_t ret = 0U;
-	struct acpi_table_rsdp *rsdp = NULL;
+	struct acpi_table_madt *madt = (struct acpi_table_madt *)get_acpi_tbl(ACPI_SIG_MADT);
 
-	rsdp = get_rsdp();
-	if (rsdp != NULL) {
-		struct acpi_table_madt *madt = (struct acpi_table_madt *)get_acpi_tbl(ACPI_SIG_MADT);
-
-		if (madt != NULL) {
-			ret = local_parse_madt(madt, lapic_id_array);
-		}
+	if (madt != NULL) {
+		ret = local_parse_madt(madt, lapic_id_array);
 	}
 
 	return ret;
@@ -232,25 +224,21 @@ uint8_t parse_madt_ioapic(struct ioapic_info *ioapic_id_array)
 	uint8_t ioapic_idx = 0U;
 	uint64_t entry, end;
 	const struct acpi_madt_ioapic *ioapic;
-	const struct acpi_table_madt *madt;
+	const struct acpi_table_madt *madt = (const struct acpi_table_madt *)get_acpi_tbl(ACPI_SIG_MADT);
 
-	if (get_rsdp() != NULL) {
-		madt = (const struct acpi_table_madt *)get_acpi_tbl(ACPI_SIG_MADT);
+	if (madt != NULL) {
+		end = (uint64_t)madt + madt->header.length;
 
-		if (madt != NULL) {
-			end = (uint64_t)madt + madt->header.length;
+		for (entry = (uint64_t)(madt + 1); entry < end; entry += ioapic->header.length) {
+			ioapic = (const struct acpi_madt_ioapic *)entry;
 
-			for (entry = (uint64_t)(madt + 1); entry < end; entry += ioapic->header.length) {
-				ioapic = (const struct acpi_madt_ioapic *)entry;
-
-				if (ioapic->header.type == ACPI_MADT_TYPE_IOAPIC) {
-					if (ioapic_idx < CONFIG_MAX_IOAPIC_NUM) {
-						ioapic_id_array[ioapic_idx].id = ioapic->id;
-						ioapic_id_array[ioapic_idx].addr = ioapic->addr;
-						ioapic_id_array[ioapic_idx].gsi_base = ioapic->gsi_base;
-					}
-					ioapic_idx++;
+			if (ioapic->header.type == ACPI_MADT_TYPE_IOAPIC) {
+				if (ioapic_idx < CONFIG_MAX_IOAPIC_NUM) {
+					ioapic_id_array[ioapic_idx].id = ioapic->id;
+					ioapic_id_array[ioapic_idx].addr = ioapic->addr;
+					ioapic_id_array[ioapic_idx].gsi_base = ioapic->gsi_base;
 				}
+				ioapic_idx++;
 			}
 		}
 	}
