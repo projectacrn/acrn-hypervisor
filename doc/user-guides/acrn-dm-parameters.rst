@@ -399,3 +399,10 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        usage::
 
           --windows
+
+   * - ``--psram``
+     - This option enables Pseudo (Software) SRAM passthrough to the VM.
+
+       usage::
+
+          --psram
