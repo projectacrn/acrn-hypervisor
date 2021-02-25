@@ -51,18 +51,18 @@ options:
 
 .. code-block:: none
 
-  acrn-dm [-hAWYv] [-B bootargs] [-c vcpus] [-E elf_image_path]
+  acrn-dm [-hAWYv] [-B bootargs] [-E elf_image_path]
                [-G GVT_args] [-i ioc_mediator_parameters] [-k kernel_image_path]
-               [-l lpc] [-m mem] [-p vcpu:hostcpu] [-r ramdisk_image_path]
+               [-l lpc] [-m mem] [-r ramdisk_image_path]
                [-s pci] [-U uuid] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]
                [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]
                [--acpidev_pt HID] [--mmiodev_pt MMIO_regions]
                [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]
-               [--ptdev_no_reset] [--debugexit]
-               [--lapic_pt] <vm>
+               [--cpu_affinity pCPUs] [--lapic_pt] [--rtvm] [--windows]
+               [--debugexit] [--logger-setting param_setting] [--pm_notify_channel]
+               [--pm_by_vuart vuart_node] [--psram] <vm>
        -A: create ACPI tables
        -B: bootargs for kernel
-       -c: # cpus (default 1)
        -E: elf image path
        -G: GVT args: low_gm_size, high_gm_size, fence_sz
        -h: help
@@ -70,7 +70,6 @@ options:
        -k: kernel image path
        -l: LPC device configuration
        -m: memory size in MB
-       -p: pin 'vcpu' to 'hostcpu'
        -r: ramdisk image path
        -s: <slot,driver,configinfo> PCI slot config
        -U: uuid
@@ -80,9 +79,10 @@ options:
        --mac_seed: set a platform unique string as a seed for generate mac address
        --vsbl: vsbl file path
        --ovmf: ovmf file path
+       --psram: Enable Pseudo (Software) SRAM passthrough
+       --cpu_affinity: list of pCPUs assigned to this VM
        --part_info: guest partition info file path
        --enable_trusty: enable trusty for guest
-       --ptdev_no_reset: disable reset check for ptdev
        --debugexit: enable debug exit function
        --intr_monitor: enable interrupt storm monitor
             its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms),
@@ -95,6 +95,8 @@ options:
        --logger_setting: params like console,level=4;kmsg,level=3
        --pm_notify_channel: define the channel used to notify guest about power event
        --pm_by_vuart:pty,/run/acrn/vuart_vmname or tty,/dev/ttySn
+       --windows: support Oracle virtio-blk, virtio-net, and virtio-input devices
+            for windows guest with secure boot
 
 See :ref:`acrn-dm_parameters` for more detailed descriptions of these
 configuration options.
@@ -111,7 +113,7 @@ Here's an example showing how to run a VM with:
 
 .. code-block:: bash
 
-   acrn-dm -A -m 2048M -c 3 \
+   acrn-dm -A -m 2048M \
      -s 0:0,hostbridge \
      -s 1:0,lpc -l com1,stdio \
      -s 5,virtio-console,@pty:pty_port \
@@ -121,10 +123,9 @@ Here's an example showing how to run a VM with:
      --intr_monitor 10000,10,1,100 \
      -B "root=/dev/vda2 rw rootwait maxcpus=3 nohpet console=hvc0 \
      console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
-     consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=0x070F00 \
-     i915.enable_guc_loading=0 \
+     consoleblank=0 tsc=reliable \
      i915.enable_hangcheck=0 i915.nuclear_pageflip=1 \
-     i915.enable_guc_submission=0 i915.enable_guc=0" vm1
+     i915.enable_guc=0" vm1
 
 DM Initialization
 *****************
@@ -765,7 +766,7 @@ example:
 
 .. code-block:: bash
 
-   acrn-dm -A -m 2048M -c 3 \
+   acrn-dm -A -m 2048M \
      -s 0:0,hostbridge \
      -s 1:0,lpc -l com1,stdio \
      -s 5,virtio-console,@pty:pty_port \
@@ -773,10 +774,9 @@ example:
      -s 4,virtio-net,tap_LaaG --vsbl /usr/share/acrn/bios/VSBL.bin \
      -B "root=/dev/vda2 rw rootwait maxcpus=3 nohpet console=hvc0 \
      console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
-     consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=0x070F00 \
-     i915.enable_guc_loading=0 \
+     consoleblank=0 tsc=reliable \
      i915.enable_hangcheck=0 i915.nuclear_pageflip=1 \
-     i915.enable_guc_submission=0 i915.enable_guc=0" vm1
+     i915.enable_guc=0" vm1
 
 the bus hierarchy would be:
 
