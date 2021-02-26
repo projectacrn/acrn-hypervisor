@@ -49,7 +49,7 @@
 	<gvt_args configurable="0" desc="GVT arguments. Recommendation is 64 448 8. Leave it blank to disable GVT."></gvt_args>
 	<vbootloader desc="virtual bootloader method" readonly="true">ovmf</vbootloader>
 	<vuart0 desc="vUART0 which emulated by device model">Disable</vuart0>
-	<poweroff_channel desc="the method of power off uos">vuart1(tty)</poweroff_channel>
+	<poweroff_channel desc="the method of power off uos"></poweroff_channel>
 	<usb_xhci desc="USB xHCI mediator configuration. input format: bus#-port#[:bus#-port#: ...]. e.g.: 1-2:2-4"></usb_xhci>
 	<cpu_affinity desc="List of pCPU that this VM's vCPUs are pinned to.">
 		<pcpu_id></pcpu_id>
