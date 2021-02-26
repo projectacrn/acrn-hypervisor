@@ -150,6 +150,7 @@ Machine Check Error on Page Size Change.</xs:documentation>
       </xs:annotation>
     </xs:element>
   </xs:all>
+  <xs:assert test="not (RDT/RDT_ENABLED = 'y' and PSRAM/PSRAM_ENABLED = 'y')"/>
 </xs:complexType>
 
 <xs:complexType name="MemoryOptionsType">
