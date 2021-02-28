@@ -123,9 +123,12 @@ HV_CONFIG_MK := $(HV_CONFIG_DIR)/config.mk
 HV_CONFIG_TIMESTAMP := $(HV_CONFIG_DIR)/.timestamp
 HV_DIFFCONFIG_LIST := $(HV_CONFIG_DIR)/.diffconfig
 
-HV_CONFIG_A_DIR := $(HV_OBJDIR)/a            # Directory containing generated configuration sources for diffconfig
-HV_CONFIG_B_DIR := $(HV_OBJDIR)/b            # Directory containing edited configuration sources for diffconfig
-HV_CONFIG_DIFF := $(HV_OBJDIR)/config.patch  # Patch encoding differences between generated and edited config. sources
+# Directory containing generated configuration sources for diffconfig
+HV_CONFIG_A_DIR := $(HV_OBJDIR)/a
+# Directory containing edited configuration sources for diffconfig
+HV_CONFIG_B_DIR := $(HV_OBJDIR)/b
+# Patch encoding differences between generated and edited config. sources
+HV_CONFIG_DIFF := $(HV_OBJDIR)/config.patch
 
 # Backward-compatibility for RELEASE=(0|1)
 ifdef RELEASE
@@ -243,21 +246,26 @@ showconfig:
 
 diffconfig:
 	@rm -rf $(HV_CONFIG_A_DIR) $(HV_CONFIG_B_DIR)
-	@sh $(BASEDIR)/scripts/genconf.sh $(BASEDIR) $(BOARD_FILE) $(HV_CONFIG_XML) $(HV_CONFIG_A_DIR)
-	@cd $(HV_CONFIG_DIR) && find . -name '*.c' -or -name '*.h' -or -name '*.config' | while read f; do \
+	@sh $(BASEDIR)/scripts/genconf.sh $(BASEDIR) $(BOARD_FILE) $(HV_SCENARIO_XML) $(HV_CONFIG_A_DIR)
+	@cd $(HV_CONFIG_DIR) && find . -name '*.c' -or -name '*.h' -or -name '*.config' -or -name '*.asl' | while read f; do \
 	  nf=$(HV_CONFIG_B_DIR)/$${f}; mkdir -p `dirname $${nf}` && cp $${f} $${nf}; \
 	done
 	@cd $(HV_OBJDIR) && git diff --no-index --no-prefix a/ b/ > $(HV_CONFIG_DIFF) || true
 	@echo "Diff on generated configuration files is available at $(HV_CONFIG_DIFF)."
-	@echo "To make a patch effective, use `applydiffconfig PATCH=/path/to/patch` to register it to a build."
+	@echo "To make a patch effective, use 'applydiffconfig PATCH=/path/to/patch' to register it to a build."
 
 applydiffconfig:
 ifdef PATCH
   ifneq ($(realpath $(PATCH)),)
+    ifeq ($(shell grep '^$(realpath ${PATCH})$$' ${HV_DIFFCONFIG_LIST}),)
 	@echo $(realpath $(PATCH)) >> ${HV_DIFFCONFIG_LIST}
 	@echo "${PATCH} is registered for build directory ${HV_OBJDIR}."
 	@echo "Registered patches will be applied the next time 'make' is invoked."
 	@echo "To unregister a patch, remove it from ${HV_DIFFCONFIG_LIST}."
+    else
+	@echo "${PATCH} is already registered for build directory ${HV_OBJDIR}."
+	@echo "To unregister a patch, remove it from ${HV_DIFFCONFIG_LIST}."
+    endif
   else
 	@echo "${PATCH}: No such file or directory"
   endif
