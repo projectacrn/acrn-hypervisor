@@ -63,16 +63,6 @@ else
   endif
 endif
 
-BOARD ?= kbl-nuc-i7
-
-ifeq ($(BOARD), apl-nuc)
-  override BOARD := nuc6cayh
-else ifeq ($(BOARD), kbl-nuc-i7)
-  override BOARD := nuc7i7dnb
-endif
-
-SCENARIO ?= industry
-
 O ?= build
 ROOT_OUT := $(shell mkdir -p $(O);cd $(O);pwd)
 HV_OUT := $(ROOT_OUT)/hypervisor
