@@ -99,9 +99,9 @@ ifdef RELEASE
   endif
 else
   ifdef CONFIG_RELEASE
-    RELEASE := $(CONFIG_RELEASE)
+    override RELEASE := $(CONFIG_RELEASE)
   else
-    RELEASE := $(1)
+    override RELEASE := $(1)
   endif
 endif
 endef

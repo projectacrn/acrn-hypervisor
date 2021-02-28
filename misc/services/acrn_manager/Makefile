@@ -3,7 +3,19 @@ include ../../../paths.make
 T := $(CURDIR)
 OUT_DIR ?= $(shell mkdir -p $(T)/build;cd $(T)/build;pwd)
 CC ?= gcc
-RELEASE ?= 0
+
+ifndef RELEASE
+  override RELEASE := n
+else
+  # Backward-compatibility for RELEASE=(0|1)
+  ifeq ($(RELEASE),1)
+    override RELEASE := y
+  else
+    ifeq ($(RELEASE),0)
+      override RELEASE := n
+    endif
+  endif
+endif
 
 MANAGER_CFLAGS := -g -O0 -std=gnu11
 MANAGER_CFLAGS += -D_GNU_SOURCE
@@ -50,7 +62,7 @@ endif
 endif
 endif
 
-ifeq ($(RELEASE),0)
+ifeq ($(RELEASE),n)
 MANAGER_CFLAGS += -g -DMNGR_DEBUG
 else
 MANAGER_LDFLAGS += -s

@@ -9,9 +9,21 @@ OUT_DIR 	?= $(BASEDIR)
 BUILDDIR	:= $(OUT_DIR)/acrn-crashlog
 CC		?= gcc
 RM		= rm
-RELEASE 	?= 0
 
-ifeq ($(RELEASE),0)
+ifndef RELEASE
+  override RELEASE := n
+else
+  # Backward-compatibility for RELEASE=(0|1)
+  ifeq ($(RELEASE),1)
+    override RELEASE := y
+  else
+    ifeq ($(RELEASE),0)
+      override RELEASE := n
+    endif
+  endif
+endif
+
+ifeq ($(RELEASE),n)
 CFLAGS	+= -DDEBUG_ACRN_CRASHLOG
 endif
 
