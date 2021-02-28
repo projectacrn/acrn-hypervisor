@@ -1,9 +1,21 @@
 T := $(CURDIR)
 OUT_DIR ?= $(shell mkdir -p $(T)/build;cd $(T)/build;pwd)
-RELEASE ?= 0
+
+ifndef RELEASE
+  override RELEASE := n
+else
+  # Backward-compatibility for RELEASE=(0|1)
+  ifeq ($(RELEASE),1)
+    override RELEASE := y
+  else
+    ifeq ($(RELEASE),0)
+      override RELEASE := n
+    endif
+  endif
+endif
 
 .PHONY: all acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge life_mngr
-ifeq ($(RELEASE),0)
+ifeq ($(RELEASE),n)
 all: acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge life_mngr
 else
 all: acrn-manager acrnbridge life_mngr
@@ -37,7 +49,7 @@ clean:
 	rm -rf $(OUT_DIR)
 
 .PHONY: install
-ifeq ($(RELEASE),0)
+ifeq ($(RELEASE),n)
 install: acrn-crashlog-install acrnlog-install acrn-manager-install acrntrace-install acrnbridge-install \
 	acrn-life-mngr-install
 else
