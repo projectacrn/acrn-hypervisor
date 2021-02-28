@@ -75,8 +75,6 @@ BUILD_TAG ?=
 HV_CFG_LOG = $(HV_OUT)/cfg.log
 VM_CONFIGS_DIR = $(T)/misc/config_tools
 
-export TOOLS_OUT BOARD SCENARIO RELEASE
-
 .PHONY: all hypervisor devicemodel tools doc
 all: hypervisor devicemodel tools
 	@cat $(HV_CFG_LOG)
@@ -105,7 +103,7 @@ hypervisor:
 	@cat $(HV_CFG_LOG)
 
 devicemodel: tools
-	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) DM_BUILD_VERSION=$(BUILD_VERSION) DM_BUILD_TAG=$(BUILD_TAG) DM_ASL_COMPILER=$(ASL_COMPILER) RELEASE=$(RELEASE)
+	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) DM_BUILD_VERSION=$(BUILD_VERSION) DM_BUILD_TAG=$(BUILD_TAG) DM_ASL_COMPILER=$(ASL_COMPILER) TOOLS_OUT=$(TOOLS_OUT) RELEASE=$(RELEASE)
 
 tools:
 	mkdir -p $(TOOLS_OUT)
