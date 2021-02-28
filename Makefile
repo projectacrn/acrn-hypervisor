@@ -54,6 +54,15 @@ else
   endif
 endif
 
+# Backward-compatibility for RELEASE=(0|1)
+ifeq ($(RELEASE),1)
+  override RELEASE := y
+else
+  ifeq ($(RELEASE),0)
+    override RELEASE := n
+  endif
+endif
+
 BOARD ?= kbl-nuc-i7
 
 ifeq ($(BOARD), apl-nuc)
