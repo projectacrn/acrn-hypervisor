@@ -14,62 +14,67 @@ else
   endif
 endif
 
-.PHONY: all acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge life_mngr
+SERVICES_OUT ?= $(shell mkdir -p $(OUT_DIR)/services;cd $(OUT_DIR)/services;pwd)
 ifeq ($(RELEASE),n)
-all: acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge life_mngr
+  DEBUG_OUT ?= $(shell mkdir -p $(OUT_DIR)/debug_tools;cd $(OUT_DIR)/debug_tools;pwd)
+endif
+
+.PHONY: all acrn-manager acrnbridge life_mngr acrn-crashlog acrnlog acrntrace
+ifeq ($(RELEASE),n)
+all: acrn-manager acrnbridge life_mngr acrn-crashlog acrnlog acrntrace
 else
 all: acrn-manager acrnbridge life_mngr
 endif
 
-acrn-crashlog:
-	$(MAKE) -C $(T)/debug_tools/acrn_crashlog OUT_DIR=$(OUT_DIR) RELEASE=$(RELEASE)
-
-acrnlog:
-	$(MAKE) -C $(T)/debug_tools/acrn_log OUT_DIR=$(OUT_DIR)
-
 acrn-manager:
-	$(MAKE) -C $(T)/services/acrn_manager OUT_DIR=$(OUT_DIR) RELEASE=$(RELEASE)
-
-acrntrace:
-	$(MAKE) -C $(T)/debug_tools/acrn_trace OUT_DIR=$(OUT_DIR)
+	$(MAKE) -C $(T)/services/acrn_manager OUT_DIR=$(SERVICES_OUT) RELEASE=$(RELEASE)
 
 acrnbridge:
-	$(MAKE) -C $(T)/services/acrn_bridge OUT_DIR=$(OUT_DIR)
+	$(MAKE) -C $(T)/services/acrn_bridge OUT_DIR=$(SERVICES_OUT)
 
 life_mngr:
-	$(MAKE) -C $(T)/services/life_mngr OUT_DIR=$(OUT_DIR)
+	$(MAKE) -C $(T)/services/life_mngr OUT_DIR=$(SERVICES_OUT)
+
+acrn-crashlog:
+	$(MAKE) -C $(T)/debug_tools/acrn_crashlog OUT_DIR=$(DEBUG_OUT) RELEASE=$(RELEASE)
+
+acrnlog:
+	$(MAKE) -C $(T)/debug_tools/acrn_log OUT_DIR=$(DEBUG_OUT)
+
+acrntrace:
+	$(MAKE) -C $(T)/debug_tools/acrn_trace OUT_DIR=$(DEBUG_OUT)
 
 .PHONY: clean
 clean:
-	$(MAKE) -C $(T)/debug_tools/acrn_crashlog OUT_DIR=$(OUT_DIR) clean
-	$(MAKE) -C $(T)/services/acrn_manager OUT_DIR=$(OUT_DIR) clean
-	$(MAKE) -C $(T)/debug_tools/acrn_trace OUT_DIR=$(OUT_DIR) clean
-	$(MAKE) -C $(T)/debug_tools/acrn_log OUT_DIR=$(OUT_DIR) clean
-	$(MAKE) -C $(T)/services/life_mngr OUT_DIR=$(OUT_DIR) clean
+	$(MAKE) -C $(T)/services/acrn_manager OUT_DIR=$(SERVICES_OUT) clean
+	$(MAKE) -C $(T)/services/life_mngr OUT_DIR=$(SERVICES_OUT) clean
+	$(MAKE) -C $(T)/debug_tools/acrn_crashlog OUT_DIR=$(DEBUG_OUT) clean
+	$(MAKE) -C $(T)/debug_tools/acrn_trace OUT_DIR=$(DEBUG_OUT) clean
+	$(MAKE) -C $(T)/debug_tools/acrn_log OUT_DIR=$(DEBUG_OUT) clean
 	rm -rf $(OUT_DIR)
 
 .PHONY: install
 ifeq ($(RELEASE),n)
-install: acrn-crashlog-install acrnlog-install acrn-manager-install acrntrace-install acrnbridge-install \
-	acrn-life-mngr-install
+install: acrn-manager-install acrnbridge-install acrn-life-mngr-install acrn-crashlog-install \
+	acrnlog-install acrntrace-install
 else
 install: acrn-manager-install acrnbridge-install acrn-life-mngr-install
 endif
 
-acrn-crashlog-install:
-	$(MAKE) -C $(T)/debug_tools/acrn_crashlog OUT_DIR=$(OUT_DIR) install
-
-acrnlog-install:
-	$(MAKE) -C $(T)/debug_tools/acrn_log OUT_DIR=$(OUT_DIR) install
-
 acrn-manager-install:
-	$(MAKE) -C $(T)/services/acrn_manager OUT_DIR=$(OUT_DIR) install
-
-acrntrace-install:
-	$(MAKE) -C $(T)/debug_tools/acrn_trace OUT_DIR=$(OUT_DIR) install
+	$(MAKE) -C $(T)/services/acrn_manager OUT_DIR=$(SERVICES_OUT) install
 
 acrnbridge-install:
-	$(MAKE) -C $(T)/services/acrn_bridge OUT_DIR=$(OUT_DIR) install
+	$(MAKE) -C $(T)/services/acrn_bridge OUT_DIR=$(SERVICES_OUT) install
 
 acrn-life-mngr-install:
-	$(MAKE) -C $(T)/services/life_mngr OUT_DIR=$(OUT_DIR) install
+	$(MAKE) -C $(T)/services/life_mngr OUT_DIR=$(SERVICES_OUT) install
+
+acrn-crashlog-install:
+	$(MAKE) -C $(T)/debug_tools/acrn_crashlog OUT_DIR=$(DEBUG_OUT) install
+
+acrnlog-install:
+	$(MAKE) -C $(T)/debug_tools/acrn_log OUT_DIR=$(DEBUG_OUT) install
+
+acrntrace-install:
+	$(MAKE) -C $(T)/debug_tools/acrn_trace OUT_DIR=$(DEBUG_OUT) install
