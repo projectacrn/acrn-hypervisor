@@ -309,6 +309,7 @@ static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_
 	uint64_t vaddr = vaddr_start;
 	uint64_t paddr = paddr_start;
 	uint64_t index = pde_index(vaddr);
+	uint64_t local_prot = prot;
 
 	dev_dbg(DBG_LEVEL_MMU, "%s, paddr: 0x%lx, vaddr: [0x%lx - 0x%lx]\n",
 		__func__, paddr, vaddr, vaddr_end);
@@ -324,8 +325,8 @@ static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_
 					mem_aligned_check(paddr, PDE_SIZE) &&
 					mem_aligned_check(vaddr, PDE_SIZE) &&
 					(vaddr_next <= vaddr_end)) {
-					mem_ops->tweak_exe_right(&prot);
-					set_pgentry(pde, paddr | (prot | PAGE_PSE), mem_ops);
+					mem_ops->tweak_exe_right(&local_prot);
+					set_pgentry(pde, paddr | (local_prot | PAGE_PSE), mem_ops);
 					if (vaddr_next < vaddr_end) {
 						paddr += (vaddr_next - vaddr);
 						vaddr = vaddr_next;
@@ -358,6 +359,7 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
 	uint64_t vaddr = vaddr_start;
 	uint64_t paddr = paddr_start;
 	uint64_t index = pdpte_index(vaddr);
+	uint64_t local_prot = prot;
 
 	dev_dbg(DBG_LEVEL_MMU, "%s, paddr: 0x%lx, vaddr: [0x%lx - 0x%lx]\n", __func__, paddr, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PDPTE; index++) {
@@ -372,8 +374,8 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
 					mem_aligned_check(paddr, PDPTE_SIZE) &&
 					mem_aligned_check(vaddr, PDPTE_SIZE) &&
 					(vaddr_next <= vaddr_end)) {
-					mem_ops->tweak_exe_right(&prot);
-					set_pgentry(pdpte, paddr | (prot | PAGE_PSE), mem_ops);
+					mem_ops->tweak_exe_right(&local_prot);
+					set_pgentry(pdpte, paddr | (local_prot | PAGE_PSE), mem_ops);
 					if (vaddr_next < vaddr_end) {
 						paddr += (vaddr_next - vaddr);
 						vaddr = vaddr_next;
