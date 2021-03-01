@@ -40,7 +40,7 @@ CFLAGS += -Wno-stringop-truncation -Wno-address-of-packed-member
 CFLAGS += -I$(BASEDIR)/include
 CFLAGS += -I$(BASEDIR)/include/public
 CFLAGS += -I$(DM_OBJDIR)/include
-CFLAGS += -I$(TOOLS_OUT)
+CFLAGS += -I$(TOOLS_OUT)/services
 
 ifneq (, $(DM_ASL_COMPILER))
 CFLAGS += -DASL_COMPILER=\"$(DM_ASL_COMPILER)\"
@@ -74,7 +74,7 @@ endif
 LDFLAGS += -Wl,-z,noexecstack
 LDFLAGS += -Wl,-z,relro,-z,now
 LDFLAGS += -pie
-LDFLAGS += -L$(TOOLS_OUT)
+LDFLAGS += -L$(TOOLS_OUT)/services
 
 LIBS = -lrt
 LIBS += -lpthread
