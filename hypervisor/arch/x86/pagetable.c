@@ -321,7 +321,7 @@ static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_
 			pr_fatal("%s, pde 0x%lx is already present!\n", __func__, vaddr);
 		} else {
 			if (mem_ops->pgentry_present(*pde) == 0UL) {
-				if (mem_ops->large_page_support(IA32E_PD) &&
+				if (mem_ops->large_page_support(IA32E_PD, prot) &&
 					mem_aligned_check(paddr, PDE_SIZE) &&
 					mem_aligned_check(vaddr, PDE_SIZE) &&
 					(vaddr_next <= vaddr_end)) {
@@ -370,7 +370,7 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
 			pr_fatal("%s, pdpte 0x%lx is already present!\n", __func__, vaddr);
 		} else {
 			if (mem_ops->pgentry_present(*pdpte) == 0UL) {
-				if (mem_ops->large_page_support(IA32E_PDPT) &&
+				if (mem_ops->large_page_support(IA32E_PDPT, prot) &&
 					mem_aligned_check(paddr, PDPTE_SIZE) &&
 					mem_aligned_check(vaddr, PDPTE_SIZE) &&
 					(vaddr_next <= vaddr_end)) {
