@@ -96,7 +96,6 @@ struct x86_irq_data {
 
 struct intr_excp_ctx;
 
-struct acrn_vcpu;
 struct acrn_vm;
 
 typedef void (*smp_call_func_t)(void *data);
@@ -110,120 +109,6 @@ bool is_notification_nmi(const struct acrn_vm *vm);
 
 void setup_notification(void);
 void setup_pi_notification(void);
-
-/* RFLAGS */
-#define HV_ARCH_VCPU_RFLAGS_TF              (1UL<<8U)
-#define HV_ARCH_VCPU_RFLAGS_IF              (1UL<<9U)
-#define HV_ARCH_VCPU_RFLAGS_RF              (1UL<<16U)
-
-/* Interruptability State info */
-
-#define HV_ARCH_VCPU_BLOCKED_BY_NMI         (1UL<<3U)
-#define HV_ARCH_VCPU_BLOCKED_BY_MOVSS       (1UL<<1U)
-#define HV_ARCH_VCPU_BLOCKED_BY_STI         (1UL<<0U)
-
-/**
- * @brief virtual IRQ
- *
- * @addtogroup acrn_virq ACRN vIRQ
- * @{
- */
-
-/**
- * @brief Queue exception to guest.
- *
- * This exception may be injected immediately or later,
- * depends on the exeception class.
- *
- * @param[in] vcpu     Pointer to vCPU.
- * @param[in] vector_arg   Vector of the exeception.
- * @param[in] err_code_arg Error Code to be injected.
- *
- * @retval 0 on success
- * @retval -EINVAL on error that vector is invalid.
- *
- * @pre vcpu != NULL
- */
-int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector_arg, uint32_t err_code_arg);
-
-/**
- * @brief Inject external interrupt to guest.
- *
- * @param[in] vcpu Pointer to vCPU.
- *
- * @return None
- *
- * @pre vcpu != NULL
- */
-void vcpu_inject_extint(struct acrn_vcpu *vcpu);
-
-/**
- * @brief Inject NMI to guest.
- *
- * @param[in] vcpu Pointer to vCPU.
- *
- * @return None
- *
- * @pre vcpu != NULL
- */
-void vcpu_inject_nmi(struct acrn_vcpu *vcpu);
-
-/**
- * @brief Inject general protection exeception(GP) to guest.
- *
- * @param[in] vcpu     Pointer to vCPU.
- * @param[in] err_code Error Code to be injected.
- *
- * @return None
- *
- * @pre vcpu != NULL
- */
-void vcpu_inject_gp(struct acrn_vcpu *vcpu, uint32_t err_code);
-
-/**
- * @brief Inject page fault exeception(PF) to guest.
- *
- * @param[in] vcpu     Pointer to vCPU.
- * @param[in] addr     Address that result in PF.
- * @param[in] err_code Error Code to be injected.
- *
- * @return None
- *
- * @pre vcpu != NULL
- */
-void vcpu_inject_pf(struct acrn_vcpu *vcpu, uint64_t addr, uint32_t err_code);
-
-/**
- * @brief Inject invalid opcode exeception(UD) to guest.
- *
- * @param[in] vcpu Pointer to vCPU.
- *
- * @return None
- *
- * @pre vcpu != NULL
- */
-void vcpu_inject_ud(struct acrn_vcpu *vcpu);
-
-/**
- * @brief Inject stack fault exeception(SS) to guest.
- *
- * @param[in] vcpu Pointer to vCPU.
- *
- * @return None
- *
- * @pre vcpu != NULL
- */
-void vcpu_inject_ss(struct acrn_vcpu *vcpu);
-void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid);
-
-/*
- * @pre vcpu != NULL
- */
-int32_t exception_vmexit_handler(struct acrn_vcpu *vcpu);
-int32_t nmi_window_vmexit_handler(struct acrn_vcpu *vcpu);
-int32_t interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu);
-int32_t external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu);
-int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu);
 
 /**
  * @brief Allocate a vectror and bind it to irq
@@ -254,11 +139,6 @@ uint32_t irq_to_vector(uint32_t irq);
  * @param ctx Pointer to interrupt exception context
  */
 void dispatch_interrupt(const struct intr_excp_ctx *ctx);
-
-/**
- * @}
- */
-/* End of acrn_virq */
 
 /* Arch specific routines called from generic IRQ handling */
 

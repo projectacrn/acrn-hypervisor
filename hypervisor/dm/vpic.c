@@ -28,6 +28,7 @@
 #define pr_prefix	"vpic: "
 
 #include <vm.h>
+#include <virq.h>
 #include <irq.h>
 #include <assign.h>
 #include <spinlock.h>

@@ -38,6 +38,7 @@
 #include <lapic.h>
 #include <vmcs.h>
 #include <vlapic.h>
+#include <virq.h>
 #include <ptdev.h>
 #include <vmx.h>
 #include <vm.h>

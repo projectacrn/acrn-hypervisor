@@ -7,6 +7,7 @@
 #include <types.h>
 #include <errno.h>
 #include <vcpu.h>
+#include <virq.h>
 #include <bits.h>
 #include <vmx.h>
 #include <logmsg.h>

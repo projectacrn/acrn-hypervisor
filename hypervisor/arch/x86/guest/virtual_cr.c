@@ -9,7 +9,7 @@
 #include <types.h>
 #include <errno.h>
 #include <bits.h>
-#include <irq.h>
+#include <virq.h>
 #include <mmu.h>
 #include <vcpu.h>
 #include <vm.h>

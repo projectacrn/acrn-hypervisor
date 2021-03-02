@@ -11,6 +11,7 @@
 #include <lapic.h>
 #include <vm.h>
 #include <vm_reset.h>
+#include <virq.h>
 #include <bits.h>
 #include <e820.h>
 #include <multiboot.h>
