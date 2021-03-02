@@ -679,6 +679,7 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 
 	if (is_severity_pass(vm->vm_id)) {
 		if ((!mem_aligned_check(wp->gpa, PAGE_SIZE)) ||
+				(!ept_is_mr_valid(vm, wp->gpa, PAGE_SIZE)) ||
 				(!ept_is_valid_mr(vm, wp->gpa, PAGE_SIZE))) {
 			pr_err("%s,vm[%hu] gpa 0x%lx,GPA is invalid or not page size aligned.",
 					__func__, vm->vm_id, wp->gpa);
