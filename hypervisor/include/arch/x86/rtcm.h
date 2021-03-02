@@ -26,7 +26,7 @@ struct rtcm_header {
 	uint64_t command_offset;
 } __packed;
 
-extern volatile bool is_sw_sram_initialized;
 void init_software_sram(bool is_bsp);
 void set_rtct_tbl(void *rtct_tbl_addr);
+bool is_software_sram_enabled(void);
 #endif /* RTCM_H */
