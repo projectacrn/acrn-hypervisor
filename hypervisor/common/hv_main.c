@@ -8,7 +8,7 @@
 #include <vm_reset.h>
 #include <vmcs.h>
 #include <vmexit.h>
-#include <irq.h>
+#include <virq.h>
 #include <schedule.h>
 #include <profiling.h>
 #include <sprintf.h>

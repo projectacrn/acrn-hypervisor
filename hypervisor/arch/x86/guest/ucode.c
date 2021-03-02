@@ -12,7 +12,7 @@
 #include <cpuid.h>
 #include <ucode.h>
 #include <guest_memory.h>
-#include <irq.h>
+#include <virq.h>
 #include <logmsg.h>
 
 #define MICRO_CODE_SIZE_MAX    0x40000U

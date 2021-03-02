@@ -10,6 +10,7 @@
 #include <msr.h>
 #include <cpuid.h>
 #include <vcpu.h>
+#include <virq.h>
 #include <vm.h>
 #include <vmx.h>
 #include <sgx.h>
