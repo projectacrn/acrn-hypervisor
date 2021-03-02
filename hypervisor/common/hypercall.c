@@ -575,7 +575,7 @@ static void add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_vm,
 	 * TODO: We can enforce WB for any region has overlap with Software SRAM, for simplicity,
 	 * and leave it to SOS to make sure it won't violate.
 	 */
-	if (is_sw_sram_initialized) {
+	if (is_software_sram_enabled()) {
 		base_paddr = get_software_sram_base();
 		if ((hpa >= base_paddr) &&
 			((hpa + region->size) <= (base_paddr + get_software_sram_size()))) {
