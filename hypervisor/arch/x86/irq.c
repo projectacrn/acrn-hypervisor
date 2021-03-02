@@ -212,51 +212,9 @@ void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 	}
 }
 
-void dispatch_exception(struct intr_excp_ctx *ctx)
-{
-	uint16_t pcpu_id = get_pcpu_id();
-
-	/* Dump exception context */
-	dump_exception(ctx, pcpu_id);
-
-	/* Halt the CPU */
-	cpu_dead();
-}
-
-void handle_nmi(__unused struct intr_excp_ctx *ctx)
-{
-	uint32_t value32;
-
-	/*
-	 * There is a window where we may miss the current request in this
-	 * notification period when the work flow is as the following:
-	 *
-	 *       CPUx +                   + CPUr
-	 *            |                   |
-	 *            |                   +--+
-	 *            |                   |  | Handle pending req
-	 *            |                   <--+
-	 *            +--+                |
-	 *            |  | Set req flag   |
-	 *            <--+                |
-	 *            +------------------>---+
-	 *            |     Send NMI      |  | Handle NMI
-	 *            |                   <--+
-	 *            |                   |
-	 *            |                   |
-	 *            |                   +--> vCPU enter
-	 *            |                   |
-	 *            +                   +
-	 *
-	 * So, here we enable the NMI-window exiting to trigger the next vmexit
-	 * once there is no "virtual-NMI blocking" after vCPU enter into VMX non-root
-	 * mode. Then we can process the pending request on time.
-	 */
-	value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
-	value32 |= VMX_PROCBASED_CTLS_NMI_WINEXIT;
-	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
-}
-
+/*
+ * descs[] must have NR_IRQS entries
+ */
 void init_irq_descs_arch(struct irq_desc descs[])
 {
 	uint32_t i;
