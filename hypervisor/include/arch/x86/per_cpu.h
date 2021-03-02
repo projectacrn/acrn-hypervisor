@@ -10,6 +10,7 @@
 #include <types.h>
 #include <sbuf.h>
 #include <irq.h>
+#include <notify.h>
 #include <page.h>
 #include <timer.h>
 #include <profiling.h>
