@@ -16,7 +16,7 @@ static uint64_t software_sram_bottom_hpa;
 static uint64_t software_sram_top_hpa;
 
 /* is_sw_sram_initialized is used to tell whether Software SRAM is successfully initialized for all cores */
-volatile bool is_sw_sram_initialized = false;
+static volatile bool is_sw_sram_initialized = false;
 
 #ifdef CONFIG_PSRAM_ENABLED
 
@@ -172,6 +172,12 @@ void init_software_sram(__unused bool is_bsp)
 {
 }
 #endif
+
+/* @pre called after 'init_software_sram()' done. */
+bool is_software_sram_enabled(void)
+{
+	return is_sw_sram_initialized;
+}
 
 uint64_t get_software_sram_base(void)
 {
