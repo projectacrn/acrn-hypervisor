@@ -104,6 +104,13 @@ multiboot2 protocol. If set to ``n``, GRUB's multiboot2 is not available as a
 boot option.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="ENFORCE_TURNOFF_AC" type="Boolean" default="n">
+      <xs:annotation>
+        <xs:documentation>Force to disable #AC for Split-locked Access. If CPU has #AC for
+split-locked access, HV enables it and VMs can't disable. Set this to enforce turning off that
+#AC, for debugging purposes only.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="RDT" type="RDTType">
       <xs:annotation>
         <xs:documentation>Enable the Intel Resource Director Technology (RDT)
