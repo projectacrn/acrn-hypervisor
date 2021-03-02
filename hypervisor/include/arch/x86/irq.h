@@ -96,20 +96,6 @@ struct x86_irq_data {
 
 struct intr_excp_ctx;
 
-struct acrn_vm;
-
-typedef void (*smp_call_func_t)(void *data);
-struct smp_call_info_data {
-	smp_call_func_t func;
-	void *data;
-};
-
-void smp_call_function(uint64_t mask, smp_call_func_t func, void *data);
-bool is_notification_nmi(const struct acrn_vm *vm);
-
-void setup_notification(void);
-void setup_pi_notification(void);
-
 /**
  * @brief Allocate a vectror and bind it to irq
  *
