@@ -88,7 +88,7 @@ void free_page(struct page_pool *pool, struct page *page)
 }
 
 /* @pre: The PPT and EPT have same page granularity */
-static inline bool large_page_support(enum _page_table_level level)
+static inline bool large_page_support(enum _page_table_level level, __unused uint64_t prot)
 {
 	bool support;
 
@@ -199,9 +199,20 @@ void *get_reserve_sworld_memory_base(void)
 	return post_uos_sworld_memory;
 }
 
-static inline bool large_page_not_support(__unused enum _page_table_level level)
+/*
+ * Pages without execution right, such as MMIO, can always use large page
+ * base on hardware capability, even if the VM is an RTVM. This can save
+ * page table page # and improve TLB hit rate.
+ */
+static inline bool use_large_page(enum _page_table_level level, uint64_t prot)
 {
-	return false;
+	bool ret = false;	/* for code page */
+
+	if ((prot & EPT_EXE) == 0UL) {
+		ret = large_page_support(level, prot);
+	}
+
+	return ret;
 }
 
 static inline uint64_t ept_get_default_access_right(void)
@@ -263,9 +274,9 @@ void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
 	if (is_ept_force_4k_ipage()) {
 		mem_ops->tweak_exe_right = ept_tweak_exe_right;
 		mem_ops->recover_exe_right = ept_recover_exe_right;
-		/* For RTVM, build 4KB page mapping in EPT */
+		/* For RTVM, build 4KB page mapping in EPT for code pages */
 		if (is_rt_vm(vm)) {
-			mem_ops->large_page_support = large_page_not_support;
+			mem_ops->large_page_support = use_large_page;
 		}
 	} else {
 		mem_ops->tweak_exe_right = nop_tweak_exe_right;
