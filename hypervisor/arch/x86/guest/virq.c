@@ -7,7 +7,7 @@
 #include <types.h>
 #include <errno.h>
 #include <bits.h>
-#include <irq.h>
+#include <virq.h>
 #include <lapic.h>
 #include <mmu.h>
 #include <vmx.h>
@@ -31,6 +31,17 @@
 #define EXCEPTION_TRAP		1U
 #define EXCEPTION_ABORT		2U
 #define EXCEPTION_INTERRUPT	3U
+
+/* RFLAGS */
+#define HV_ARCH_VCPU_RFLAGS_TF              (1UL<<8U)
+#define HV_ARCH_VCPU_RFLAGS_IF              (1UL<<9U)
+#define HV_ARCH_VCPU_RFLAGS_RF              (1UL<<16U)
+
+/* Interruptability State info */
+
+#define HV_ARCH_VCPU_BLOCKED_BY_NMI         (1UL<<3U)
+#define HV_ARCH_VCPU_BLOCKED_BY_MOVSS       (1UL<<1U)
+#define HV_ARCH_VCPU_BLOCKED_BY_STI         (1UL<<0U)
 
 static const uint16_t exception_type[32] = {
 	[0] = VMX_INT_TYPE_HW_EXP,

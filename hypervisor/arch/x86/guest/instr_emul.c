@@ -36,6 +36,7 @@
 #include <mmu.h>
 #include <per_cpu.h>
 #include <logmsg.h>
+#include <virq.h>
 
 #define CPU_REG_FIRST			CPU_REG_RAX
 #define CPU_REG_LAST			CPU_REG_GDTR

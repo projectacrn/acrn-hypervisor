@@ -7,7 +7,7 @@
 #include <types.h>
 #include <vcpu.h>
 #include <vm.h>
-#include <irq.h>
+#include <virq.h>
 #include <event.h>
 #include <cpu_caps.h>
 #include <logmsg.h>
