@@ -74,7 +74,7 @@ BUILD_TAG ?=
 HV_CFG_LOG = $(HV_OUT)/cfg.log
 VM_CONFIGS_DIR = $(T)/misc/config_tools
 
-.PHONY: all hypervisor devicemodel tools doc
+.PHONY: all hypervisor devicemodel tools life_mngr doc
 all: hypervisor devicemodel tools
 	@cat $(HV_CFG_LOG)
 
@@ -120,6 +120,10 @@ tools:
 	mkdir -p $(TOOLS_OUT)
 	$(MAKE) -C $(T)/misc OUT_DIR=$(TOOLS_OUT) RELEASE=$(RELEASE)
 
+life_mngr:
+	mkdir -p $(TOOLS_OUT)
+	$(MAKE) -C $(T)/misc OUT_DIR=$(TOOLS_OUT) RELEASE=$(RELEASE) life_mngr
+
 doc:
 	$(MAKE) -C $(T)/doc html BUILDDIR=$(DOC_OUT)
 
@@ -129,7 +133,7 @@ clean:
 	$(MAKE) -C $(T)/doc BUILDDIR=$(DOC_OUT) clean
 	rm -rf $(ROOT_OUT)
 
-.PHONY: install
+.PHONY: install life_mngr-install
 install: hypervisor-install devicemodel-install tools-install
 
 hypervisor-install:
@@ -167,3 +171,6 @@ devicemodel-install:
 
 tools-install:
 	$(MAKE) -C $(T)/misc OUT_DIR=$(TOOLS_OUT) RELEASE=$(RELEASE) install
+
+life_mngr-install:
+	$(MAKE) -C $(T)/misc OUT_DIR=$(TOOLS_OUT) RELEASE=$(RELEASE) acrn-life-mngr-install
