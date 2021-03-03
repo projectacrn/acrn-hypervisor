@@ -707,7 +707,7 @@ static void set_guest_ia32_misc_enalbe(struct acrn_vcpu *vcpu, uint64_t v)
 {
 	uint32_t eax, ebx = 0U, ecx = 0U, edx = 0U;
 	bool update_vmsr = true;
-	uint64_t msr_value;
+
 	/* According to SDM Vol4 2.1 & Vol 3A 4.1.4,
 	 * EFER.NXE should be cleared if guest disable XD in IA32_MISC_ENABLE
 	 */
@@ -716,13 +716,9 @@ static void set_guest_ia32_misc_enalbe(struct acrn_vcpu *vcpu, uint64_t v)
 	}
 
 	/* Handle MISC_ENABLE_MONITOR_ENA
-	 * If has_monitor_cap() retrn true, this means the feature is enabed on host.
-	 * HV will use monitor/mwait.
-	 * - if guest try to set this bit, do nothing since it is already enabled
-	 * - if guest try to clear this bit, not allow to disable in physcial MSR,
-	 *   just clear the corresponding bit in vcpuid.
-	 * If has_monitor_cap() retrn false, this means the feature is not enabled on host.
-	 * HV will not use monitor/mwait. Allow guest to change the bit to physcial MSR
+	 * - if guest try to set this bit, do nothing.
+	 * - if guest try to clear this bit, MISC_ENABLE_MONITOR_ENA bit of guest MSR_IA32_MISC_ENABLE
+	 *   shall be cleared.
 	 */
 	if (((v ^ vcpu_get_guest_msr(vcpu, MSR_IA32_MISC_ENABLE)) & MSR_IA32_MISC_ENABLE_MONITOR_ENA) != 0UL) {
 		eax = 1U;
@@ -733,15 +729,11 @@ static void set_guest_ia32_misc_enalbe(struct acrn_vcpu *vcpu, uint64_t v)
 		if ((ecx & CPUID_ECX_SSE3) == 0U) {
 			vcpu_inject_gp(vcpu, 0U);
 			update_vmsr = false;
-		} else if ((!has_monitor_cap()) && (!is_apl_platform())) {
-			msr_value = msr_read(MSR_IA32_MISC_ENABLE) & ~MSR_IA32_MISC_ENABLE_MONITOR_ENA;
-			msr_value |= v & MSR_IA32_MISC_ENABLE_MONITOR_ENA;
-			/* This will not change the return value of has_monitor_cap() since the feature values
-			 * are cached when platform init.
-			 */
-			msr_write(MSR_IA32_MISC_ENABLE, msr_value);
+		} else if (vcpu->vm->arch_vm.vm_mwait_cap) {
+			/* guest cpuid.01H will be updated when guest executes 'cpuid' with leaf 01H */
+			v &= ~MSR_IA32_MISC_ENABLE_MONITOR_ENA;
 		} else {
-			/* Not allow to change MISC_ENABLE_MONITOR_ENA in MSR */
+			update_vmsr = false;
 		}
 	}
 

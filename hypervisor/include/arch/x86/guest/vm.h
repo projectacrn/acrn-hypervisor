@@ -129,6 +129,7 @@ struct vm_arch {
 	struct iwkey iwkey_backup;
 
 	/* reference to virtual platform to come here (as needed) */
+	bool vm_mwait_cap;
 } __aligned(PAGE_SIZE);
 
 struct acrn_vm {
