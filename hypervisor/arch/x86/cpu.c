@@ -445,8 +445,8 @@ void cpu_dead(void)
 	if (bitmap_test(pcpu_id, &pcpu_active_bitmap)) {
 		/* clean up native stuff */
 		vmx_off();
-		/* TODO: a cpu dead can't effect the RTVM which use Software SRAM */
-		cache_flush_invalidate_all();
+
+		/* TODO: flush the data segment to the memory when we want to enter S3 */
 
 		/* Set state to show CPU is dead */
 		pcpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
