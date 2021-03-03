@@ -11,6 +11,33 @@
 #include <per_cpu.h>
 #include <cpu_caps.h>
 #include <lapic.h>
+#include <apicreg.h>
+
+/* intr_lapic_icr_delivery_mode */
+#define INTR_LAPIC_ICR_FIXED           0x0U
+#define INTR_LAPIC_ICR_LP              0x1U
+#define INTR_LAPIC_ICR_SMI             0x2U
+#define INTR_LAPIC_ICR_NMI             0x4U
+#define INTR_LAPIC_ICR_INIT            0x5U
+#define INTR_LAPIC_ICR_STARTUP         0x6U
+
+/* intr_lapic_icr_dest_mode */
+#define INTR_LAPIC_ICR_PHYSICAL        0x0U
+#define INTR_LAPIC_ICR_LOGICAL         0x1U
+
+/* intr_lapic_icr_level */
+#define INTR_LAPIC_ICR_DEASSERT        0x0U
+#define INTR_LAPIC_ICR_ASSERT          0x1U
+
+/* intr_lapic_icr_trigger */
+#define INTR_LAPIC_ICR_EDGE            0x0U
+#define INTR_LAPIC_ICR_LEVEL           0x1U
+
+/* intr_lapic_icr_shorthand */
+#define INTR_LAPIC_ICR_USE_DEST_ARRAY  0x0U
+#define INTR_LAPIC_ICR_SELF            0x1U
+#define INTR_LAPIC_ICR_ALL_INC_SELF    0x2U
+#define INTR_LAPIC_ICR_ALL_EX_SELF     0x3U
 
 union lapic_base_msr {
 	uint64_t value;
@@ -87,7 +114,7 @@ void init_lapic(uint16_t pcpu_id)
 	clear_lapic_isr();
 }
 
-void save_lapic(struct lapic_regs *regs)
+static void save_lapic(struct lapic_regs *regs)
 {
 	regs->tpr.v = (uint32_t) msr_read(MSR_IA32_EXT_APIC_TPR);
 	regs->ppr.v = (uint32_t) msr_read(MSR_IA32_EXT_APIC_PPR);

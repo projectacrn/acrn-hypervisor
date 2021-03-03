@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef IOAPIC_H
-#define IOAPIC_H
+#ifndef ARCH_X86_IOAPIC_H
+#define ARCH_X86_IOAPIC_H
 
 #include <apicreg.h>
 
@@ -90,27 +90,10 @@ void ioapic_gsi_unmask_irq(uint32_t irq);
 
 void ioapic_get_rte_entry(void *ioapic_base, uint32_t pin, union ioapic_rte *rte);
 
-/*
- * is_valid is by default false when all the
- * static variables, part of .bss, are initialized to 0s
- * It is set to true, if the corresponding
- * gsi falls in ranges identified by IOAPIC data
- * in ACPI MADT in ioapic_setup_irqs.
- */
-
-struct gsi_table {
-	bool is_valid;
-	struct {
-		uint8_t acpi_id;
-		uint8_t index;
-		uint32_t pin;
-		void  *base_addr;
-	} ioapic_info;
-};
-
 void *gsi_to_ioapic_base(uint32_t gsi);
 uint32_t get_max_nr_gsi(void);
 uint8_t get_gsi_to_ioapic_index(uint32_t gsi);
 uint32_t get_pic_pin_from_ioapic_pin(uint32_t pin_index);
 bool is_gsi_valid(uint32_t gsi);
-#endif /* IOAPIC_H */
+
+#endif /* ARCH_X86_IOAPIC_H */
