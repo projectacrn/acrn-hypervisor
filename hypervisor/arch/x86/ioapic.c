@@ -17,6 +17,27 @@
 
 #define NR_MAX_GSI		(CONFIG_MAX_IOAPIC_NUM * CONFIG_MAX_IOAPIC_LINES)
 
+#define DEFAULT_DEST_MODE	IOAPIC_RTE_DESTMODE_LOGICAL
+#define DEFAULT_DELIVERY_MODE	IOAPIC_RTE_DELMODE_LOPRI
+
+/*
+ * is_valid is by default false when all the
+ * static variables, part of .bss, are initialized to 0s
+ * It is set to true, if the corresponding
+ * gsi falls in ranges identified by IOAPIC data
+ * in ACPI MADT in ioapic_setup_irqs.
+ */
+
+struct gsi_table {
+	bool is_valid;
+	struct {
+		uint8_t acpi_id;
+		uint8_t index;
+		uint32_t pin;
+		void  *base_addr;
+	} ioapic_info;
+};
+
 static struct gsi_table gsi_table_data[NR_MAX_GSI];
 static uint32_t ioapic_max_nr_gsi;
 static spinlock_t ioapic_lock = { .head = 0U, .tail = 0U, };
