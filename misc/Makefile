@@ -21,9 +21,9 @@ endif
 
 .PHONY: all acrn-manager acrnbridge life_mngr acrn-crashlog acrnlog acrntrace
 ifeq ($(RELEASE),n)
-all: acrn-manager acrnbridge life_mngr acrn-crashlog acrnlog acrntrace
+all: acrn-manager acrnbridge acrn-crashlog acrnlog acrntrace
 else
-all: acrn-manager acrnbridge life_mngr
+all: acrn-manager acrnbridge
 endif
 
 acrn-manager:
@@ -55,10 +55,10 @@ clean:
 
 .PHONY: install
 ifeq ($(RELEASE),n)
-install: acrn-manager-install acrnbridge-install acrn-life-mngr-install acrn-crashlog-install \
+install: acrn-manager-install acrnbridge-install acrn-crashlog-install \
 	acrnlog-install acrntrace-install
 else
-install: acrn-manager-install acrnbridge-install acrn-life-mngr-install
+install: acrn-manager-install acrnbridge-install
 endif
 
 acrn-manager-install:
