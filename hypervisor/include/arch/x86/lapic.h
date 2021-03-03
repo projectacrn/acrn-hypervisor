@@ -4,43 +4,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef INTR_LAPIC_H
-#define INTR_LAPIC_H
+#ifndef ARCH_X86_LAPIC_H
+#define ARCH_X86_LAPIC_H
 
 #include <types.h>
-#include <apicreg.h>
-
-/* intr_lapic_icr_delivery_mode */
-#define INTR_LAPIC_ICR_FIXED    0x0U
-#define INTR_LAPIC_ICR_LP          0x1U
-#define INTR_LAPIC_ICR_SMI        0x2U
-#define INTR_LAPIC_ICR_NMI       0x4U
-#define INTR_LAPIC_ICR_INIT       0x5U
-#define INTR_LAPIC_ICR_STARTUP  0x6U
-
-/* intr_lapic_icr_dest_mode */
-#define INTR_LAPIC_ICR_PHYSICAL 0x0U
-#define INTR_LAPIC_ICR_LOGICAL  0x1U
-
-/* intr_lapic_icr_level */
-#define INTR_LAPIC_ICR_DEASSERT  0x0U
-#define INTR_LAPIC_ICR_ASSERT       0x1U
-
-/* intr_lapic_icr_trigger */
-#define INTR_LAPIC_ICR_EDGE         0x0U
-#define INTR_LAPIC_ICR_LEVEL        0x1U
-
-/* intr_lapic_icr_shorthand */
-#define INTR_LAPIC_ICR_USE_DEST_ARRAY    0x0U
-#define INTR_LAPIC_ICR_SELF                          0x1U
-#define INTR_LAPIC_ICR_ALL_INC_SELF         0x2U
-#define INTR_LAPIC_ICR_ALL_EX_SELF            0x3U
-
-enum intr_cpu_startup_shorthand {
-	INTR_CPU_STARTUP_USE_DEST,
-	INTR_CPU_STARTUP_ALL_EX_SELF,
-	INTR_CPU_STARTUP_UNKNOWN,
-};
 
 /* x2APIC Interrupt Command Register (ICR) structure */
 union apic_icr {
@@ -70,14 +37,6 @@ union apic_icr {
  *
  * @{
  */
-
-/**
- * @brief Save context of LAPIC
- *
- * @param[inout]	regs	Pointer to struct lapic_regs to hold the
- *				context of current LAPIC
- */
-void save_lapic(struct lapic_regs *regs);
 
 /**
  * @brief Enable LAPIC in x2APIC mode
@@ -167,4 +126,4 @@ void send_single_ipi(uint16_t pcpu_id, uint32_t vector);
  */
 void send_single_nmi(uint16_t pcpu_id);
 
-#endif /* INTR_LAPIC_H */
+#endif /* ARCH_X86_LAPIC_H */
