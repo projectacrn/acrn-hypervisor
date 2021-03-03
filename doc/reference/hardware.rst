@@ -166,7 +166,7 @@ Verified Hardware Specifications Detail
 |                                |                        |                        | -  One SATA3 port for connection to 2.5" HDD or SSD       |
 |                                |                        |                        |    (up to 9.5 mm thickness)                               |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Serial Port            | -  Yes                                                    |
+|                                |                        | Serial Port            | -  No                                                     |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
 | | **Kaby Lake**                | | NUC7i7BNH            | Processor              | -  Intel® Core™ i7-7567U CPU @ 3.50GHz (2C4T)             |
 | | (Code name: Baby Canyon)     | | (Board: NUC7i7BNB)   |                        |                                                           |
@@ -199,7 +199,7 @@ Verified Hardware Specifications Detail
 |                                |                        |                        | -  One SATA3 port for connection to 2.5" HDD or SSD       |
 |                                |                        |                        |    (up to 9.5 mm thickness) (NUC7i5DNHE only)             |
 |                                |                        +------------------------+-----------------------------------------------------------+
-|                                |                        | Serial Port            | -  No                                                     |
+|                                |                        | Serial Port            | -  Yes                                                    |
 +--------------------------------+------------------------+------------------------+-----------------------------------------------------------+
 | | **Whiskey Lake**             | | WHL-IPC-I5           | Processor              | -  Intel® Core™ i5-8265U CPU @ 1.60GHz (4C8T)             |
 | |                              | | (Board: WHL-IPC-I5)  |                        |                                                           |
