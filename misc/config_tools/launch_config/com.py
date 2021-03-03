@@ -613,6 +613,15 @@ def dm_arg_set(names, sel, virt_io, dm, vmid, config):
     # shm regions args set
     shm_arg_set(dm, vmid, config)
 
+    # psram set
+    psram_enabled = 'n'
+    try:
+        psram_enabled = common.get_hv_item_tag(common.SCENARIO_INFO_FILE, "FEATURES", "PSRAM", "PSRAM_ENABLED")
+    except:
+        pass
+    if uos_type == "PREEMPT-RT LINUX" and psram_enabled == 'y':
+        print("   --psram \\", file=config)
+
     for value in sel.bdf.values():
         if value[vmid]:
             print("   $intr_storm_monitor \\", file=config)
