@@ -10,24 +10,9 @@ The virtual universal asynchronous receiver/transmitter (vUART) supports
 two functions: one is the console, the other is communication. vUART
 only works on a single function.
 
-Currently, only two vUART configurations are added to the
-``misc/vm_configs/scenarios/<xxx>/vm_configuration.c`` file, but you can
-change the value in it.
-
-.. code-block:: none
-
-                .vuart[0] = {
-                        .type = VUART_LEGACY_PIO,
-                        .addr.port_base = INVALID_COM_BASE,
-                },
-                .vuart[1] = {
-                        .type = VUART_LEGACY_PIO,
-                        .addr.port_base = INVALID_COM_BASE,
-                }
-
-``vuart[0]`` is initiated as the **console** port.
-
-``vuart[1]`` is initiated as a **communication** port.
+Currently, only two vUART configurations are added to the predefined scenarios,
+but you can customize the scenarios to enable more using the :ref:`ACRN
+configuration toolset <acrn_config_workflow>`
 
 Console Enable List
 ===================
@@ -266,8 +251,8 @@ vUART settings.  Configuration tools will override your settings in
 and :ref:`How to Configure a Communication Port
 <how-to-configure-a-communication-port>`.
 
-You can configure both Legacy vUART and PCI-vUART in
-``./misc/config_tools/data/<board>/<scenario>.xml``. For
+You can configure both Legacy vUART and PCI-vUART in :ref:`scenario
+configurations <acrn_config_types>`. For
 example, if VM0 has a legacy vUART0 and a PCI-vUART1, VM1 has no legacy
 vUART but has a PCI-vUART0 and a PCI-vUART1, VM0's PCI-vUART1 and VM1's
 PCI-vUART1 are connected to each other. You  should configure then like this:
@@ -338,7 +323,8 @@ Run the command to build ACRN with this XML configuration file::
 
 The configuration tools will test your settings, and check :ref:`vUART
 Rules <index-of-vuart>` for compilation issue. After compiling, you can find
-the generated sources under ``build/configs/scenarios/<scenario>/pci_dev.c``
+the generated sources under
+``build/hypervisor/configs/scenarios/<scenario>/pci_dev.c``
 which is based on the XML settings, something like:
 
 .. code-block:: none
