@@ -29,12 +29,12 @@
 #include <types.h>
 #include <rtl.h>
 #include "acpi.h"
-#include <pgtable.h>
-#include <ioapic.h>
+#include <x86/pgtable.h>
+#include <x86/ioapic.h>
 #include <logmsg.h>
 #include <acrn_common.h>
 #include <util.h>
-#include <e820.h>
+#include <x86/e820.h>
 #include <multiboot.h>
 
 static struct acpi_table_rsdp *acpi_rsdp;

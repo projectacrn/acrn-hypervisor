@@ -5,14 +5,14 @@
  */
 #include <types.h>
 #include <rtl.h>
-#include <cpufeatures.h>
-#include <pgtable.h>
-#include <page.h>
-#include <mmu.h>
-#include <trusty.h>
-#include <vtd.h>
-#include <security.h>
-#include <vm.h>
+#include <x86/cpufeatures.h>
+#include <x86/pgtable.h>
+#include <x86/page.h>
+#include <x86/mmu.h>
+#include <x86/guest/trusty.h>
+#include <x86/vtd.h>
+#include <x86/security.h>
+#include <x86/guest/vm.h>
 
 #define LINEAR_ADDRESS_SPACE_48_BIT	(1UL << 48U)
 

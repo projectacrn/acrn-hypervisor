@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <vm.h>
-#include <arch/x86/irq.h>
+#include <x86/guest/vm.h>
+#include <x86/irq.h>
 #include <errno.h>
 #include <logmsg.h>
 

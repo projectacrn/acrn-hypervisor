@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <vm.h>
-#include <io.h>
+#include <x86/guest/vm.h>
+#include <x86/io.h>
 
 #define CMOS_ADDR_PORT		0x70U
 #define CMOS_DATA_PORT		0x71U

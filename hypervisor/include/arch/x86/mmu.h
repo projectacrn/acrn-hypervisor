@@ -44,10 +44,10 @@
 
 #ifndef ASSEMBLER
 
-#include <cpu.h>
-#include <page.h>
-#include <pgtable.h>
-#include <cpu_caps.h>
+#include <x86/cpu.h>
+#include <x86/page.h>
+#include <x86/pgtable.h>
+#include <x86/cpu_caps.h>
 
 /* Define cache line size (in bytes) */
 #define CACHE_LINE_SIZE		64U

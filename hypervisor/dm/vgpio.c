@@ -38,11 +38,11 @@
 
 #include <types.h>
 #include <errno.h>
-#include <vm.h>
-#include <ept.h>
-#include <assign.h>
-#include <io.h>
-#include <mmu.h>
+#include <x86/guest/vm.h>
+#include <x86/guest/ept.h>
+#include <x86/guest/assign.h>
+#include <x86/io.h>
+#include <x86/mmu.h>
 
 #ifdef P2SB_VGPIO_DM_ENABLED
 

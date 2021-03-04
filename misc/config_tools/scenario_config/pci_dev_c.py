@@ -123,12 +123,12 @@ def generate_file(vm_info, config):
 
     print("{}".format(scenario_cfg_lib.HEADER_LICENSE), file=config)
     print("", file=config)
-    print("#include <vm_config.h>", file=config)
+    print("#include <x86/vm_config.h>", file=config)
     print("#include <pci_devices.h>", file=config)
     print("#include <vpci.h>", file=config)
     print("#include <vbar_base.h>", file=config)
-    print("#include <mmu.h>", file=config)
-    print("#include <page.h>", file=config)
+    print("#include <x86/mmu.h>", file=config)
+    print("#include <x86/page.h>", file=config)
     if pci_vuart_enabled:
         print("#include <vmcs9900.h>", file=config)
     # Insert header for share memory

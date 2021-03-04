@@ -6,9 +6,9 @@
 
 #ifndef SCHEDULE_H
 #define SCHEDULE_H
-#include <spinlock.h>
-#include <list.h>
-#include <timer.h>
+#include <x86/lib/spinlock.h>
+#include <lib/list.h>
+#include <x86/timer.h>
 
 #define	NEED_RESCHEDULE		(1U)
 

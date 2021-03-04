@@ -6,12 +6,12 @@
 
 #include <types.h>
 #include <logmsg.h>
-#include <io.h>
-#include <spinlock.h>
-#include <cpu_caps.h>
-#include "pci.h"
-#include "vtd.h"
-#include "acpi.h"
+#include <x86/io.h>
+#include <x86/lib/spinlock.h>
+#include <x86/cpu_caps.h>
+#include <pci.h>
+#include <x86/vtd.h>
+#include <acpi.h>
 
 static uint32_t dmar_unit_cnt;
 static struct dmar_drhd drhd_info_array[MAX_DRHDS];

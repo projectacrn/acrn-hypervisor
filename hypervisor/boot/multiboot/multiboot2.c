@@ -7,7 +7,7 @@
 #include <types.h>
 #include <errno.h>
 #include <multiboot.h>
-#include <pgtable.h>
+#include <x86/pgtable.h>
 #include "multiboot_priv.h"
 
 /**

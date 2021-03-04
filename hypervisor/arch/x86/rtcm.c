@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <types.h>
-#include <bits.h>
+#include <x86/lib/bits.h>
 #include <rtl.h>
 #include <logmsg.h>
 #include <misc_cfg.h>
-#include <mmu.h>
-#include <rtcm.h>
+#include <x86/mmu.h>
+#include <x86/rtcm.h>
 
 
 static uint64_t software_sram_bottom_hpa;

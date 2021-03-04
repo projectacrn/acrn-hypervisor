@@ -34,7 +34,7 @@
 #include <console.h>
 #include <vuart.h>
 #include <vmcs9900.h>
-#include <vm.h>
+#include <x86/guest/vm.h>
 #include <logmsg.h>
 
 #define init_vuart_lock(vu)	spinlock_init(&((vu)->lock))

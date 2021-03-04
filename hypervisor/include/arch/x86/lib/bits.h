@@ -29,7 +29,7 @@
 
 #ifndef BITS_H
 #define BITS_H
-#include <atomic.h>
+#include <x86/lib/atomic.h>
 
 /**
  *

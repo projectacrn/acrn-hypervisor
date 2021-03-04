@@ -12,7 +12,7 @@
 
 #ifndef ASSEMBLER
 #include <types.h>
-#include <vcpu.h>
+#include <x86/guest/vcpu.h>
 
 #define VMX_VMENTRY_FAIL                0x80000000U
 

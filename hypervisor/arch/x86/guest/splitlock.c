@@ -5,14 +5,14 @@
  */
 
 #include <types.h>
-#include <vcpu.h>
-#include <vm.h>
-#include <virq.h>
+#include <x86/guest/vcpu.h>
+#include <x86/guest/vm.h>
+#include <x86/guest/virq.h>
 #include <event.h>
-#include <cpu_caps.h>
+#include <x86/cpu_caps.h>
 #include <logmsg.h>
 #include <errno.h>
-#include <splitlock.h>
+#include <x86/guest/splitlock.h>
 
 static bool is_guest_ac_enabled(struct acrn_vcpu *vcpu)
 {

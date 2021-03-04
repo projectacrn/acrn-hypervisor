@@ -30,13 +30,13 @@
 
 #include <types.h>
 #include <errno.h>
-#include <instr_emul.h>
-#include <vmx.h>
-#include <vmcs.h>
-#include <mmu.h>
-#include <per_cpu.h>
+#include <x86/guest/instr_emul.h>
+#include <x86/vmx.h>
+#include <x86/guest/vmcs.h>
+#include <x86/mmu.h>
+#include <x86/per_cpu.h>
 #include <logmsg.h>
-#include <virq.h>
+#include <x86/guest/virq.h>
 
 #define CPU_REG_FIRST			CPU_REG_RAX
 #define CPU_REG_LAST			CPU_REG_GDTR

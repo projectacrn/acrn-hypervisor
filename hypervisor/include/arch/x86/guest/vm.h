@@ -13,21 +13,21 @@
 
 #ifndef ASSEMBLER
 
-#include <bits.h>
-#include <spinlock.h>
-#include <vcpu.h>
+#include <x86/lib/bits.h>
+#include <x86/lib/spinlock.h>
+#include <x86/guest/vcpu.h>
 #include <vioapic.h>
 #include <vpic.h>
-#include <vmx_io.h>
+#include <x86/guest/vmx_io.h>
 #include <vuart.h>
-#include <trusty.h>
-#include <vcpuid.h>
+#include <x86/guest/trusty.h>
+#include <x86/guest/vcpuid.h>
 #include <vpci.h>
-#include <cpu_caps.h>
-#include <e820.h>
-#include <vm_config.h>
+#include <x86/cpu_caps.h>
+#include <x86/e820.h>
+#include <x86/vm_config.h>
 #ifdef CONFIG_HYPERV_ENABLED
-#include <hyperv.h>
+#include <x86/guest/hyperv.h>
 #endif
 
 enum reset_mode {

@@ -29,14 +29,14 @@
 
 #include <errno.h>
 #include <ptdev.h>
-#include <vm.h>
-#include <vtd.h>
-#include <io.h>
-#include <mmu.h>
+#include <x86/guest/vm.h>
+#include <x86/vtd.h>
+#include <x86/io.h>
+#include <x86/mmu.h>
 #include <vacpi.h>
 #include <logmsg.h>
 #include "vpci_priv.h"
-#include "pci_dev.h"
+#include <x86/pci_dev.h>
 #include <hash.h>
 
 static void vpci_init_vdevs(struct acrn_vm *vm);

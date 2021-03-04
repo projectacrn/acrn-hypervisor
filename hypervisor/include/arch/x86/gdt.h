@@ -69,7 +69,7 @@
 #ifndef ASSEMBLER
 
 #include <types.h>
-#include <cpu.h>
+#include <x86/cpu.h>
 
 #define TSS_AVAIL  (9U)
 

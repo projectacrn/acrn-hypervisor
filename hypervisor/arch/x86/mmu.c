@@ -28,15 +28,15 @@
  */
 
 #include <types.h>
-#include <atomic.h>
-#include <page.h>
-#include <pgtable.h>
-#include <cpu_caps.h>
-#include <mmu.h>
-#include <vmx.h>
+#include <x86/lib/atomic.h>
+#include <x86/page.h>
+#include <x86/pgtable.h>
+#include <x86/cpu_caps.h>
+#include <x86/mmu.h>
+#include <x86/vmx.h>
 #include <reloc.h>
-#include <vm.h>
-#include <ld_sym.h>
+#include <x86/guest/vm.h>
+#include <x86/boot/ld_sym.h>
 #include <logmsg.h>
 #include <misc_cfg.h>
 

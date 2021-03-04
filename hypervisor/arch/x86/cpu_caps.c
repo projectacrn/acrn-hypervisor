@@ -5,17 +5,17 @@
  */
 
 #include <types.h>
-#include <msr.h>
-#include <page.h>
-#include <cpufeatures.h>
-#include <cpuid.h>
-#include <cpu.h>
-#include <per_cpu.h>
-#include <vmx.h>
-#include <cpu_caps.h>
+#include <x86/msr.h>
+#include <x86/page.h>
+#include <x86/cpufeatures.h>
+#include <x86/cpuid.h>
+#include <x86/cpu.h>
+#include <x86/per_cpu.h>
+#include <x86/vmx.h>
+#include <x86/cpu_caps.h>
 #include <errno.h>
 #include <logmsg.h>
-#include <vmcs.h>
+#include <x86/guest/vmcs.h>
 
 /* TODO: add more capability per requirement */
 /* APICv features */

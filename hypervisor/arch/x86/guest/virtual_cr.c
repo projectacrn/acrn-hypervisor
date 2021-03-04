@@ -8,16 +8,16 @@
 
 #include <types.h>
 #include <errno.h>
-#include <bits.h>
-#include <virq.h>
-#include <mmu.h>
-#include <vcpu.h>
-#include <vm.h>
-#include <vmx.h>
-#include <vtd.h>
-#include <vmexit.h>
-#include <pgtable.h>
-#include <cpufeatures.h>
+#include <x86/lib/bits.h>
+#include <x86/guest/virq.h>
+#include <x86/mmu.h>
+#include <x86/guest/vcpu.h>
+#include <x86/guest/vm.h>
+#include <x86/vmx.h>
+#include <x86/vtd.h>
+#include <x86/guest/vmexit.h>
+#include <x86/pgtable.h>
+#include <x86/cpufeatures.h>
 #include <trace.h>
 #include <logmsg.h>
 
