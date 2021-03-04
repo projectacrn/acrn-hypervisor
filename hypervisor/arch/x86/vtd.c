@@ -13,6 +13,7 @@
 #include <page.h>
 #include <pgtable.h>
 #include <irq.h>
+#include <arch/x86/irq.h>
 #include <io.h>
 #include <mmu.h>
 #include <lapic.h>

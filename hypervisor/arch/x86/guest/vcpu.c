@@ -20,6 +20,7 @@
 #include <mmu.h>
 #include <sprintf.h>
 #include <lapic.h>
+#include <arch/x86/irq.h>
 
 /* stack_frame is linked with the sequence of stack operation in arch_switch_to() */
 struct stack_frame {

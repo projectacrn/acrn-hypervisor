@@ -9,6 +9,7 @@
 #include <spinlock.h>
 #include <ioapic.h>
 #include <irq.h>
+#include <arch/x86/irq.h>
 #include <pgtable.h>
 #include <io.h>
 #include <mmu.h>

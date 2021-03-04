@@ -34,6 +34,7 @@
 #include <spinlock.h>
 #include <logmsg.h>
 #include <ioapic.h>
+#include <arch/x86/irq.h>
 
 #define DBG_LEVEL_PIC	6U
 

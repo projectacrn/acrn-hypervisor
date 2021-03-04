@@ -12,6 +12,7 @@
 #include <lapic.h>
 #include <schedule.h>
 #include <sprintf.h>
+#include <arch/x86/irq.h>
 
 bool is_idle_thread(const struct thread_object *obj)
 {
