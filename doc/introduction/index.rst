@@ -93,13 +93,11 @@ above, i.e. the *logical partitioning*, *sharing*, and *hybrid* modes. They
 further specify the number of VMs that can be run, their attributes and the
 resources they have access to, either shared with other VMs or exclusively.
 
-The predefined scenarios are in the
-:acrn_file:`misc/vm_configs/scenarios` folder
-in the source code. XML examples for some platforms can also be found under
-:acrn_file:`misc/vm_configs/xmls/config-xmls`.
+The predefined scenarios are in the :acrn_file:`misc/config_tools/data` folder
+in the source code.
 
 The :ref:`acrn_configuration_tool` tutorial explains how to use the ACRN
-Configuration tool to create your own scenario or modify an existing one.
+configuration toolset to create your own scenario or modify an existing one.
 
 Industrial Workload Consolidation
 =================================
@@ -423,7 +421,8 @@ The Boot process proceeds as follows:
 
 In this boot mode, the boot options of pre-launched VM and service VM are defined
 in the variable of ``bootargs`` of struct ``vm_configs[vm id].os_config``
-in the source code ``misc/vm_configs/$(SCENARIO)/vm_configurations.c`` by default.
+in the source code ``configs/scenarios/$(SCENARIO)/vm_configurations.c`` (which
+resides under the hypervisor build directory) by default.
 Their boot options can be overridden by the GRUB menu. See :ref:`using_grub` for
 details. The boot options of a post-launched VM are not covered by hypervisor
 source code or a GRUB menu; they are defined in a guest image file or specified by
