@@ -11,6 +11,7 @@
 #include <mmu.h>
 #include <vtd.h>
 #include <lapic.h>
+#include <arch/x86/irq.h>
 #include <per_cpu.h>
 #include <cpufeatures.h>
 #include <cpu_caps.h>

@@ -37,6 +37,7 @@
 #include <assign.h>
 #include <vgpio.h>
 #include <rtcm.h>
+#include <arch/x86/irq.h>
 
 /* Local variables */
 

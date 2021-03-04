@@ -7,7 +7,7 @@
 
 #include <types.h>
 #include <errno.h>
-#include <irq.h>
+#include <arch/x86/irq.h>
 #include <per_cpu.h>
 #include <pgtable.h>
 #include <vmx.h>

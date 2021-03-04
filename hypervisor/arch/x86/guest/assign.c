@@ -13,6 +13,7 @@
 #include <per_cpu.h>
 #include <ioapic.h>
 #include <pgtable.h>
+#include <arch/x86/irq.h>
 
 /*
  * Check if the IRQ is single-destination and return the destination vCPU if so.

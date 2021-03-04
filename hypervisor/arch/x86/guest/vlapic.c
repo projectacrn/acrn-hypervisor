@@ -45,6 +45,7 @@
 #include <ept.h>
 #include <trace.h>
 #include <logmsg.h>
+#include <arch/x86/irq.h>
 #include "vlapic_priv.h"
 
 #define VLAPIC_VERBOS 0

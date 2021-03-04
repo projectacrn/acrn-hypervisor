@@ -17,6 +17,7 @@
 #include <splitlock.h>
 #include <trace.h>
 #include <logmsg.h>
+#include <arch/x86/irq.h>
 
 #define EXCEPTION_ERROR_CODE_VALID  8U
 
