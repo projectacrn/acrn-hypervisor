@@ -6,21 +6,21 @@
 
 #include <types.h>
 #include <errno.h>
-#include <vmx.h>
-#include <virq.h>
-#include <mmu.h>
-#include <vcpu.h>
-#include <vm.h>
-#include <vmexit.h>
-#include <vm_reset.h>
-#include <vmx_io.h>
-#include <splitlock.h>
-#include <ept.h>
-#include <vtd.h>
-#include <cpuid.h>
-#include <vcpuid.h>
+#include <x86/vmx.h>
+#include <x86/guest/virq.h>
+#include <x86/mmu.h>
+#include <x86/guest/vcpu.h>
+#include <x86/guest/vm.h>
+#include <x86/guest/vmexit.h>
+#include <x86/guest/vm_reset.h>
+#include <x86/guest/vmx_io.h>
+#include <x86/guest/splitlock.h>
+#include <x86/guest/ept.h>
+#include <x86/vtd.h>
+#include <x86/cpuid.h>
+#include <x86/guest/vcpuid.h>
 #include <trace.h>
-#include <rtcm.h>
+#include <x86/rtcm.h>
 
 /*
  * According to "SDM APPENDIX C VMX BASIC EXIT REASONS",

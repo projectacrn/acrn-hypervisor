@@ -6,10 +6,10 @@
 
 #include <types.h>
 #include <errno.h>
-#include <spinlock.h>
-#include <vcpu.h>
-#include <vm.h>
-#include <virq.h>
+#include <x86/lib/spinlock.h>
+#include <x86/guest/vcpu.h>
+#include <x86/guest/vm.h>
+#include <x86/guest/virq.h>
 #include <acrn_hv_defs.h>
 #include <hypercall.h>
 #include <trace.h>

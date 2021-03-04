@@ -6,11 +6,11 @@
 
 #include <types.h>
 #include <errno.h>
-#include <cpufeatures.h>
-#include <cpu_caps.h>
-#include <sgx.h>
-#include <cpuid.h>
-#include <vm.h>
+#include <x86/cpufeatures.h>
+#include <x86/cpu_caps.h>
+#include <x86/sgx.h>
+#include <x86/cpuid.h>
+#include <x86/guest/vm.h>
 #include <logmsg.h>
 
 #define SGX_OPTED_IN (MSR_IA32_FEATURE_CONTROL_SGX_GE | MSR_IA32_FEATURE_CONTROL_LOCK)

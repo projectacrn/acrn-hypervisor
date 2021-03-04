@@ -5,9 +5,9 @@
  */
 
 #ifdef CONFIG_IVSHMEM_ENABLED
-#include <vm.h>
-#include <mmu.h>
-#include <ept.h>
+#include <x86/guest/vm.h>
+#include <x86/mmu.h>
+#include <x86/guest/ept.h>
 #include <logmsg.h>
 #include <errno.h>
 #include <ivshmem.h>

@@ -7,8 +7,8 @@
 #include <types.h>
 #include <util.h>
 #include <acrn_hv_defs.h>
-#include <page.h>
-#include <mmu.h>
+#include <x86/page.h>
+#include <x86/mmu.h>
 #include <logmsg.h>
 
 #define DBG_LEVEL_MMU	6U

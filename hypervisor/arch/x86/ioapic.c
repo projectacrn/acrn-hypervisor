@@ -6,13 +6,13 @@
 
 #include <types.h>
 #include <errno.h>
-#include <spinlock.h>
-#include <ioapic.h>
 #include <irq.h>
-#include <arch/x86/irq.h>
-#include <pgtable.h>
-#include <io.h>
-#include <mmu.h>
+#include <x86/lib/spinlock.h>
+#include <x86/ioapic.h>
+#include <x86/irq.h>
+#include <x86/pgtable.h>
+#include <x86/io.h>
+#include <x86/mmu.h>
 #include <acpi.h>
 #include <logmsg.h>
 

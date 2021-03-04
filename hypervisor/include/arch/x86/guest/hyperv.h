@@ -7,7 +7,7 @@
 #ifndef HYPERV_H
 #define HYPERV_H
 
-#include <vcpuid.h>
+#include <x86/guest/vcpuid.h>
 
 /* Hyper-V MSR numbers */
 #define HV_X64_MSR_GUEST_OS_ID		0x40000000U

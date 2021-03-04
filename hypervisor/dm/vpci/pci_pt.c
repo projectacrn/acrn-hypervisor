@@ -26,14 +26,14 @@
 *
 * $FreeBSD$
 */
-#include <vm.h>
+#include <x86/guest/vm.h>
 #include <errno.h>
 #include <ptdev.h>
-#include <assign.h>
-#include <vtd.h>
-#include <ept.h>
-#include <mmu.h>
-#include <io.h>
+#include <x86/guest/assign.h>
+#include <x86/vtd.h>
+#include <x86/guest/ept.h>
+#include <x86/mmu.h>
+#include <x86/io.h>
 #include <logmsg.h>
 #include "vpci_priv.h"
 

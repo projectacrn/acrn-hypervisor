@@ -37,8 +37,8 @@
  * @brief public APIs for virtual I/O APIC
  */
 
-#include <apicreg.h>
-#include <ioapic.h>
+#include <x86/apicreg.h>
+#include <x86/ioapic.h>
 #include <util.h>
 
 #define	VIOAPIC_BASE	0xFEC00000UL

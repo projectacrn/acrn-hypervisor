@@ -17,7 +17,7 @@ def generate_file(vm_info, config):
 
     print("{}".format(scenario_cfg_lib.HEADER_LICENSE), file=config)
     print("", file=config)
-    print("#include <vm_config.h>", file=config)
+    print("#include <x86/vm_config.h>", file=config)
     print("", file=config)
 
     if (board_cfg_lib.is_matched_board(("ehl-crb-b"))

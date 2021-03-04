@@ -5,18 +5,18 @@
  */
 
 #include <types.h>
-#include <bits.h>
+#include <x86/lib/bits.h>
 #include <crypto_api.h>
-#include <trusty.h>
-#include <page.h>
-#include <pgtable.h>
-#include <mmu.h>
-#include <ept.h>
-#include <vm.h>
-#include <vmx.h>
-#include <security.h>
+#include <x86/guest/trusty.h>
+#include <x86/page.h>
+#include <x86/pgtable.h>
+#include <x86/mmu.h>
+#include <x86/guest/ept.h>
+#include <x86/guest/vm.h>
+#include <x86/vmx.h>
+#include <x86/security.h>
 #include <logmsg.h>
-#include <seed.h>
+#include <x86/seed.h>
 
 #define TRUSTY_VERSION   1U
 #define TRUSTY_VERSION_2 2U

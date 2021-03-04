@@ -45,7 +45,7 @@
  *   1. SOS how to reset PCI devices under the PCI bridge
  */
 
-#include <vm.h>
+#include <x86/guest/vm.h>
 #include <errno.h>
 #include <logmsg.h>
 #include <pci.h>

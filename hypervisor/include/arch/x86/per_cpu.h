@@ -10,15 +10,15 @@
 #include <types.h>
 #include <sbuf.h>
 #include <irq.h>
-#include <notify.h>
-#include <page.h>
-#include <timer.h>
+#include <x86/notify.h>
+#include <x86/page.h>
+#include <x86/timer.h>
 #include <profiling.h>
 #include <logmsg.h>
-#include <gdt.h>
+#include <x86/gdt.h>
 #include <schedule.h>
-#include <security.h>
-#include <vm_config.h>
+#include <x86/security.h>
+#include <x86/vm_config.h>
 
 struct per_cpu_region {
 	/* vmxon_region MUST be 4KB-aligned */

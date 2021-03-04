@@ -7,7 +7,7 @@
 #ifndef TRUSTY_H_
 #define TRUSTY_H_
 #include <acrn_hv_defs.h>
-#include <seed.h>
+#include <x86/seed.h>
 
 #define RPMB_MAX_PARTITION_NUMBER       6U
 #define MMC_PROD_NAME_WITH_PSN_LEN      15U

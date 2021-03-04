@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <bits.h>
-#include <page.h>
-#include <vm_config.h>
-#include <rdt.h>
+#include <x86/lib/bits.h>
+#include <x86/page.h>
+#include <x86/vm_config.h>
+#include <x86/rdt.h>
 #include <vuart.h>
 #include <ivshmem.h>
 #include <vmcs9900.h>

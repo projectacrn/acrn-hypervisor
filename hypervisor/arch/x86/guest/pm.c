@@ -5,13 +5,13 @@
  */
 
 #include <types.h>
-#include <host_pm.h>
-#include <vm.h>
-#include <io.h>
+#include <x86/host_pm.h>
+#include <x86/guest/vm.h>
+#include <x86/io.h>
 #include <logmsg.h>
 #include <platform_acpi_info.h>
-#include <guest_pm.h>
-#include <per_cpu.h>
+#include <x86/guest/guest_pm.h>
+#include <x86/per_cpu.h>
 
 int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 {

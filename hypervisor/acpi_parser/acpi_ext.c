@@ -28,14 +28,14 @@
  */
 #include <types.h>
 #include <rtl.h>
-#include "acpi.h"
-#include <pgtable.h>
-#include <ioapic.h>
+#include <acpi.h>
+#include <x86/pgtable.h>
+#include <x86/ioapic.h>
 #include <logmsg.h>
-#include <host_pm.h>
+#include <x86/host_pm.h>
 #include <pci.h>
 #include <acrn_common.h>
-#include <rtcm.h>
+#include <x86/rtcm.h>
 
 /* Per ACPI spec:
  * There are two fundamental types of ACPI tables:

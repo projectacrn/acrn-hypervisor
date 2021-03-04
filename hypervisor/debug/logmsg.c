@@ -5,10 +5,10 @@
  */
 
 #include <types.h>
-#include <atomic.h>
+#include <x86/lib/atomic.h>
 #include <sprintf.h>
-#include <spinlock.h>
-#include <per_cpu.h>
+#include <x86/lib/spinlock.h>
+#include <x86/per_cpu.h>
 #include <npk_log.h>
 #include <logmsg.h>
 
