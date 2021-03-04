@@ -23,6 +23,7 @@
 #include <ivshmem.h>
 #include <vmcs9900.h>
 #include <rtcm.h>
+#include <arch/x86/irq.h>
 
 #define DBG_LEVEL_HYCALL	6U
 

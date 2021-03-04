@@ -7,9 +7,7 @@
 #ifndef ARCH_X86_IRQ_H
 #define ARCH_X86_IRQ_H
 
-#include <acrn_common.h>
-#include <util.h>
-#include <spinlock.h>
+#include <types.h>
 
 /**
  * @file arch/x86/irq.h

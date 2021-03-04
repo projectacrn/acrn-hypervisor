@@ -10,11 +10,10 @@
 #include <spinlock.h>
 #include <per_cpu.h>
 #include <io.h>
-#include <irq.h>
-#include <idt.h>
-#include <ioapic.h>
-#include <lapic.h>
-#include <softirq.h>
+#include <arch/x86/irq.h>
+#include <arch/x86/idt.h>
+#include <arch/x86/ioapic.h>
+#include <arch/x86/lapic.h>
 #include <dump.h>
 #include <logmsg.h>
 #include <vmx.h>

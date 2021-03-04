@@ -13,6 +13,7 @@
 #include <cpu_caps.h>
 #include <softirq.h>
 #include <trace.h>
+#include <arch/x86/irq.h>
 
 #define MAX_TIMER_ACTIONS	32U
 #define CAL_MS			10U
