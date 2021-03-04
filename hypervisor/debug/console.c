@@ -8,11 +8,11 @@
 #include <pci.h>
 #include <uart16550.h>
 #include <shell.h>
-#include <timer.h>
+#include <x86/timer.h>
 #include <vuart.h>
 #include <logmsg.h>
 #include <acrn_hv_defs.h>
-#include <vm.h>
+#include <x86/guest/vm.h>
 #include <console.h>
 #include <multiboot.h>
 #include <dbg_cmd.h>

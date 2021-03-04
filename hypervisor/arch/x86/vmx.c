@@ -7,10 +7,10 @@
  */
 
 #include <types.h>
-#include <msr.h>
-#include <per_cpu.h>
-#include <pgtable.h>
-#include <vmx.h>
+#include <x86/msr.h>
+#include <x86/per_cpu.h>
+#include <x86/pgtable.h>
+#include <x86/vmx.h>
 
 /**
  * @pre addr != NULL && addr is 4KB-aligned

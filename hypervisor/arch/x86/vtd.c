@@ -7,23 +7,23 @@
 #define pr_prefix		"iommu: "
 
 #include <types.h>
-#include <bits.h>
 #include <errno.h>
-#include <spinlock.h>
-#include <page.h>
-#include <pgtable.h>
+#include <x86/lib/bits.h>
+#include <x86/lib/spinlock.h>
+#include <x86/page.h>
+#include <x86/pgtable.h>
 #include <irq.h>
-#include <arch/x86/irq.h>
-#include <io.h>
-#include <mmu.h>
-#include <lapic.h>
-#include <vtd.h>
-#include <timer.h>
+#include <x86/irq.h>
+#include <x86/io.h>
+#include <x86/mmu.h>
+#include <x86/lapic.h>
+#include <x86/vtd.h>
+#include <x86/timer.h>
 #include <logmsg.h>
-#include <board.h>
-#include <vm_config.h>
+#include <x86/board.h>
+#include <x86/vm_config.h>
 #include <pci.h>
-#include <platform_caps.h>
+#include <x86/platform_caps.h>
 
 #define DBG_IOMMU 0
 

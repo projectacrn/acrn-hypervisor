@@ -5,13 +5,13 @@
  */
 
 #include <hash.h>
-#include <per_cpu.h>
-#include <vm.h>
+#include <x86/per_cpu.h>
+#include <x86/guest/vm.h>
 #include <softirq.h>
 #include <ptdev.h>
 #include <irq.h>
 #include <logmsg.h>
-#include <vtd.h>
+#include <x86/vtd.h>
 
 #define PTIRQ_ENTRY_HASHBITS	9U
 #define PTIRQ_ENTRY_HASHSIZE	(1U << PTIRQ_ENTRY_HASHBITS)

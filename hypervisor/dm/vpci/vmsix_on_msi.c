@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <vm.h>
+#include <x86/guest/vm.h>
 #include <ptdev.h>
-#include <assign.h>
+#include <x86/guest/assign.h>
 #include <vpci.h>
-#include <vtd.h>
-#include <board.h>
+#include <x86/vtd.h>
+#include <x86/board.h>
 #include "vpci_priv.h"
 
 #define PER_VECTOR_MASK_CAP 0x0100U

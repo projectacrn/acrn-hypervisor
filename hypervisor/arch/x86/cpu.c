@@ -5,32 +5,32 @@
  */
 
 #include <types.h>
-#include <bits.h>
-#include <page.h>
-#include <e820.h>
-#include <mmu.h>
-#include <ept.h>
-#include <vtd.h>
-#include <lapic.h>
-#include <arch/x86/irq.h>
-#include <per_cpu.h>
-#include <cpufeatures.h>
-#include <cpu_caps.h>
+#include <x86/lib/bits.h>
+#include <x86/page.h>
+#include <x86/e820.h>
+#include <x86/mmu.h>
+#include <x86/guest/ept.h>
+#include <x86/vtd.h>
+#include <x86/lapic.h>
+#include <x86/irq.h>
+#include <x86/per_cpu.h>
+#include <x86/cpufeatures.h>
+#include <x86/cpu_caps.h>
 #include <acpi.h>
-#include <ioapic.h>
-#include <trampoline.h>
-#include <cpuid.h>
+#include <x86/ioapic.h>
+#include <x86/trampoline.h>
+#include <x86/cpuid.h>
 #include <version.h>
-#include <vmx.h>
-#include <msr.h>
+#include <x86/vmx.h>
+#include <x86/msr.h>
 #include <ptdev.h>
 #include <logmsg.h>
-#include <rdt.h>
-#include <sgx.h>
+#include <x86/rdt.h>
+#include <x86/sgx.h>
 #include <uart16550.h>
 #include <vpci.h>
 #include <ivshmem.h>
-#include <rtcm.h>
+#include <x86/rtcm.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */

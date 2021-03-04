@@ -10,7 +10,7 @@
 #include <sbuf.h>
 #include <hypercall.h>
 #include <npk_log.h>
-#include <vm.h>
+#include <x86/guest/vm.h>
 #include <logmsg.h>
 
 #ifdef PROFILING_ON

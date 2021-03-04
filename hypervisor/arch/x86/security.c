@@ -5,12 +5,12 @@
  */
 
 #include <types.h>
-#include <msr.h>
-#include <cpufeatures.h>
-#include <cpu.h>
-#include <per_cpu.h>
-#include <cpu_caps.h>
-#include <security.h>
+#include <x86/msr.h>
+#include <x86/cpufeatures.h>
+#include <x86/cpu.h>
+#include <x86/per_cpu.h>
+#include <x86/cpu_caps.h>
+#include <x86/security.h>
 #include <logmsg.h>
 
 static bool skip_l1dfl_vmentry;

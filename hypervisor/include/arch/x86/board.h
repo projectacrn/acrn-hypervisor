@@ -8,7 +8,7 @@
 
 #include <types.h>
 #include <board_info.h>
-#include <host_pm.h>
+#include <x86/host_pm.h>
 #include <pci.h>
 #include <misc_cfg.h>
 

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <vm_config.h>
+#include <x86/vm_config.h>
 #include <pci.h>
-#include <pci_dev.h>
+#include <x86/pci_dev.h>
 #include <vpci.h>
 
 /*

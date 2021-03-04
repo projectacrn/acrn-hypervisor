@@ -6,7 +6,7 @@
 
 #include <types.h>
 #include <reloc.h>
-#include <ld_sym.h>
+#include <x86/boot/ld_sym.h>
 
 #ifdef CONFIG_RELOC
 #define DT_NULL		0U	/* end of .dynamic section */

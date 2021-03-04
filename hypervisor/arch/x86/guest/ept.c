@@ -6,16 +6,16 @@
 
 #include <types.h>
 #include <errno.h>
-#include <vm.h>
-#include <virq.h>
-#include <pgtable.h>
-#include <mmu.h>
-#include <ept.h>
-#include <vmx.h>
-#include <vtd.h>
+#include <x86/guest/vm.h>
+#include <x86/guest/virq.h>
+#include <x86/pgtable.h>
+#include <x86/mmu.h>
+#include <x86/guest/ept.h>
+#include <x86/vmx.h>
+#include <x86/vtd.h>
 #include <logmsg.h>
 #include <trace.h>
-#include <rtct.h>
+#include <x86/rtct.h>
 
 #define DBG_LEVEL_EPT	6U
 

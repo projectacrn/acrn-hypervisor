@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <vm.h>
+#include <x86/guest/vm.h>
 #include <hypercall.h>
 #include <errno.h>
 #include <logmsg.h>

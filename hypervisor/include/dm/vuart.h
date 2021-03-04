@@ -30,8 +30,8 @@
 #ifndef VUART_H
 #define VUART_H
 #include <types.h>
-#include <spinlock.h>
-#include <vm_config.h>
+#include <x86/lib/spinlock.h>
+#include <x86/vm_config.h>
 
 #define RX_BUF_SIZE		256U
 #define TX_BUF_SIZE		8192U

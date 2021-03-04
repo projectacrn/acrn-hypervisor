@@ -5,8 +5,8 @@
  */
 
 #include <types.h>
-#include <gdt.h>
-#include <per_cpu.h>
+#include <x86/gdt.h>
+#include <x86/per_cpu.h>
 
 static void set_tss_desc(struct tss_64_descriptor *desc,
 		uint64_t tss, size_t tss_limit, uint32_t type)

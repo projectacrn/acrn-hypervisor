@@ -8,10 +8,10 @@
  */
 
 #include <types.h>
-#include <vm.h>
+#include <x86/guest/vm.h>
 #include <logmsg.h>
-#include <vmx.h>
-#include <hyperv.h>
+#include <x86/vmx.h>
+#include <x86/guest/hyperv.h>
 
 #define DBG_LEVEL_HYPERV		6U
 

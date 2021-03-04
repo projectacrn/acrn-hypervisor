@@ -30,13 +30,13 @@
 
 #define pr_prefix	"vioapic: "
 
-#include <vm.h>
+#include <x86/guest/vm.h>
 #include <errno.h>
-#include <arch/x86/irq.h>
-#include <ept.h>
-#include <assign.h>
+#include <x86/irq.h>
+#include <x86/guest/ept.h>
+#include <x86/guest/assign.h>
 #include <logmsg.h>
-#include <ioapic.h>
+#include <x86/ioapic.h>
 
 #define	RTBL_RO_BITS	((uint32_t)0x00004000U | (uint32_t)0x00001000U) /*Remote IRR and Delivery Status bits*/
 

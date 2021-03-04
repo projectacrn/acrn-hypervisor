@@ -95,7 +95,7 @@ def generate_file(scenario_items, config):
 
     if vm_info.shmem.shmem_enabled == 'y':
         print("#include <ivshmem.h>", file=config)
-        print("#include <pgtable.h>", file=config)
+        print("#include <x86/pgtable.h>", file=config)
         write_shmem_regions(config)
 
     print("{0}".format(IVSHMEM_END_DEFINE), file=config)

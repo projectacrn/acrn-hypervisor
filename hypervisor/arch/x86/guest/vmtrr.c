@@ -4,12 +4,12 @@
  */
 
 #include <types.h>
-#include <vmtrr.h>
-#include <msr.h>
-#include <pgtable.h>
-#include <ept.h>
-#include <vcpu.h>
-#include <vm.h>
+#include <x86/guest/vmtrr.h>
+#include <x86/msr.h>
+#include <x86/pgtable.h>
+#include <x86/guest/ept.h>
+#include <x86/guest/vcpu.h>
+#include <x86/guest/vm.h>
 #include <logmsg.h>
 
 #define MTRR_FIXED_RANGE_ALL_WB (MTRR_MEM_TYPE_WB \

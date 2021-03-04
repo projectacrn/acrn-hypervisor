@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include <cpu.h>
+#include <x86/cpu.h>
 #include <schedule.h>
 #include <event.h>
 #include <logmsg.h>

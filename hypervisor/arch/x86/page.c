@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <types.h>
-#include <bits.h>
-#include <page.h>
+#include <x86/lib/bits.h>
+#include <x86/page.h>
 #include <logmsg.h>
 
 

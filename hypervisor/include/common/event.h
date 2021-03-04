@@ -1,6 +1,6 @@
 #ifndef EVENT_H
 #define EVENT_H
-#include <spinlock.h>
+#include <x86/lib/spinlock.h>
 
 struct sched_event {
 	spinlock_t lock;

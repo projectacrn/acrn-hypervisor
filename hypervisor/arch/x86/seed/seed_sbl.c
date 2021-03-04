@@ -5,11 +5,11 @@
  */
 
 #include <types.h>
-#include <cpu.h>
-#include <pgtable.h>
+#include <x86/cpu.h>
+#include <x86/pgtable.h>
 #include <rtl.h>
 #include <logmsg.h>
-#include <seed.h>
+#include <x86/seed.h>
 #include "seed_sbl.h"
 
 #define SEED_ENTRY_TYPE_SVNSEED         0x1U

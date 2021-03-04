@@ -9,9 +9,9 @@ import board_cfg_lib
 import scenario_cfg_lib
 
 C_HEADER = scenario_cfg_lib.HEADER_LICENSE + r"""
-#include <vm_config.h>
+#include <x86/vm_config.h>
 #include <vuart.h>
-#include <pci_dev.h>
+#include <x86/pci_dev.h>
 """
 
 def get_pre_vm_type(vm_type, vm_i):

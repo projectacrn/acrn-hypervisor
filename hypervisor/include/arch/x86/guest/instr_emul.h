@@ -31,8 +31,8 @@
 #define INSTR_EMUL_H
 
 #include <types.h>
-#include <cpu.h>
-#include <guest_memory.h>
+#include <x86/cpu.h>
+#include <x86/guest/guest_memory.h>
 
 struct acrn_vcpu;
 struct instr_emul_vie_op {

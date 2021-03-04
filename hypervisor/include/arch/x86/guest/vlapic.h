@@ -30,9 +30,9 @@
 #ifndef VLAPIC_H
 #define VLAPIC_H
 
-#include <page.h>
-#include <timer.h>
-#include <apicreg.h>
+#include <x86/page.h>
+#include <x86/timer.h>
+#include <x86/apicreg.h>
 
 /**
  * @file vlapic.h
