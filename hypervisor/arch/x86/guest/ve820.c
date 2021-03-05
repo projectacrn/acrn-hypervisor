@@ -86,11 +86,10 @@ static void filter_mem_from_sos_e820(struct acrn_vm *vm, uint64_t start_pa, uint
  */
 void create_sos_vm_e820(struct acrn_vm *vm)
 {
-	uint16_t vm_id;
+	uint16_t vm_id, i;
 	uint64_t hv_start_pa = hva2hpa((void *)(get_hv_image_base()));
 	uint64_t hv_end_pa  = hv_start_pa + CONFIG_HV_RAM_SIZE;
 	uint32_t entries_count = get_e820_entries_count();
-	const struct mem_range *p_mem_range_info = get_mem_range_info();
 	struct acrn_vm_config *sos_vm_config = get_vm_config(vm->vm_id);
 
 	(void)memcpy_s((void *)sos_vm_e820, entries_count * sizeof(struct e820_entry),
@@ -100,7 +99,6 @@ void create_sos_vm_e820(struct acrn_vm *vm)
 	vm->e820_entries = sos_vm_e820;
 	/* filter out hv memory from e820 table */
 	filter_mem_from_sos_e820(vm, hv_start_pa, hv_end_pa);
-	sos_vm_config->memory.size = p_mem_range_info->total_mem_size - CONFIG_HV_RAM_SIZE;
 
 	/* filter out prelaunched vm memory from e820 table */
 	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
@@ -109,14 +107,19 @@ void create_sos_vm_e820(struct acrn_vm *vm)
 		if (vm_config->load_order == PRE_LAUNCHED_VM) {
 			filter_mem_from_sos_e820(vm, vm_config->memory.start_hpa,
 					vm_config->memory.start_hpa + vm_config->memory.size);
-			sos_vm_config->memory.size -= vm_config->memory.size;
 
 			/* if HPA2 is available, filter it out as well*/
 			if (vm_config->memory.size_hpa2 != 0UL) {
 				filter_mem_from_sos_e820(vm, vm_config->memory.start_hpa2,
 					vm_config->memory.start_hpa2 + vm_config->memory.size_hpa2);
-				sos_vm_config->memory.size -= vm_config->memory.size_hpa2;
 			}
+		}
+	}
+
+	for (i = 0U; i < vm->e820_entry_num; i++) {
+		struct e820_entry *entry = &sos_vm_e820[i];
+		if ((entry->type == E820_TYPE_RAM)) {
+			sos_vm_config->memory.size += entry->length;
 		}
 	}
 }
