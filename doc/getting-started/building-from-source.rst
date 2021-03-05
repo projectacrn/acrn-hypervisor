@@ -12,9 +12,9 @@ The hypervisor binary is generated based on configuration settings in XML
 files. Instructions about customizing these settings can be found in
 :ref:`getting-started-hypervisor-configuration`.
 
-One binary for all platforms and all usage scenarios is currently not
-supported, primarily because dynamic configuration parsing is restricted in
-the ACRN hypervisor for the following reasons:
+One binary for all platforms and all usage scenarios is not
+supported. Dynamic configuration parsing is not used in
+the ACRN hypervisor for these reasons:
 
 - **Maintain functional safety requirements.** Implementing dynamic parsing
   introduces dynamic objects, which violate functional safety requirements.
@@ -90,15 +90,15 @@ ACRN.
 Get the ACRN Hypervisor Source Code
 ***********************************
 
-The `acrn-hypervisor <https://github.com/projectacrn/acrn-hypervisor/>`_
+The `ACRN hypervisor <https://github.com/projectacrn/acrn-hypervisor/>`_
 repository contains four main components:
 
-1. The ACRN hypervisor code, located in the ``hypervisor`` directory.
-#. The ACRN device model code, located in the ``devicemodel`` directory.
-#. The ACRN debug tools source code, located in the ``misc/debug_tools`` directory.
-#. The ACRN online services source code, located in the ``misc/services`` directory.
+1. The ACRN hypervisor code is in the ``hypervisor`` directory.
+#. The ACRN device model code is in the ``devicemodel`` directory.
+#. The ACRN debug tools source code is in the ``misc/debug_tools`` directory.
+#. The ACRN online services source code is in the ``misc/services`` directory.
 
-Enter the following to get the acrn-hypervisor source code:
+Enter the following to get the ACRN hypervisor source code:
 
 .. code-block:: none
 
@@ -123,10 +123,10 @@ LOGICAL_PARTITION:
     This scenario defines two pre-launched VMs.
 
 INDUSTRY:
-   This is a typical scenario for industrial usage with up to eight VMs:
+   This scenario is an example for industrial usage with up to eight VMs:
    one pre-launched Service VM, five post-launched Standard VMs (for Human
    interaction etc.), one post-launched RT VMs (for real-time control),
-   and one Kata container VM.
+   and one Kata Container VM.
 
 HYBRID:
    This scenario defines a hybrid use case with three VMs: one
@@ -138,15 +138,15 @@ HYBRID_RT:
    pre-launched RTVM, one pre-launched Service VM, and one post-launched
    Standard VM.
 
-XML configuration files for those scenarios on supported boards are available
+XML configuration files for these scenarios on supported boards are available
 under the ``misc/config_tools/data`` directory.
 
 Assuming that you are at the top level of the ``acrn-hypervisor`` directory, perform
-the following to build the hypervisor, device model and tools:
+the following to build the hypervisor, device model, and tools:
 
 .. note::
-   The debug version is built by default. To build a release version, a user
-   must builds with ``RELEASE=y`` explicitly, regardless of whether a previous
+   The debug version is built by default. To build a release version,
+   build with ``RELEASE=y`` explicitly, regardless of whether a previous
    build exists.
 
 * Build the debug version of ``INDUSTRY`` scenario on the ``nuc7i7dnb``:
@@ -209,7 +209,7 @@ The build results are found in the ``build`` directory. You can specify
 a different build directory by setting the ``O`` ``make`` parameter,
 for example: ``make O=build-nuc``.
 
-To query the board, scenario and build type of an existing build, the
+To query the board, scenario, and build type of an existing build, the
 ``hvshowconfig`` target will help.
 
   .. code-block:: none
@@ -239,7 +239,8 @@ scenario XML.
 
 The following commands show how to customize manually the scenario XML based on
 the predefined ``INDUSTRY`` scenario for ``nuc7i7dnb`` and rebuild the
-hypervisor.
+hypervisor. The ``hvdefconfig`` target generates the configuration files without
+building the hypervisor, allowing users to tweak the configurations.
 
 .. code-block:: none
 
@@ -249,12 +250,12 @@ hypervisor.
    $ make
 
 .. note::
-   A hypervisor build memorizes the board and scenario previously
+   A hypervisor build remembers the board and scenario previously
    configured. Thus, there is no need to duplicate BOARD and SCENARIO in the
    second ``make`` above.
 
-While the scenario XML files can be changed manually, we recommend to use the
-ACRN web-based configuration app which provides valid options and descriptions
+While the scenario XML files can be changed manually, we recommend you use the
+ACRN web-based configuration app that provides valid options and descriptions
 of the configuration entries. Refer to :ref:`acrn_config_tool_ui` for more
 instructions.
 
