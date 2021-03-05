@@ -3,54 +3,44 @@
 Compile-Time Configuration
 ##########################
 
-.. note:: With ACRN release 2.4, ACRN configuration has changed
-   significantly and no longer uses Kconfig. The following information is
-   obsolete and will be updated to reflect the new ACRN configuration
-   architecture and tools.
-   Refer to :ref:`scenario-config-options` for a complete list of configuration symbols.
+As described in :ref:`acrn_configuration_tool`, ACRN hypervisor configurations
+are saved as XML files and used for compilation. At compile-time, configuration
+data in the board and scenario XMLs are converted to C header and source files
+that define macros, variables, and data structures to which the hypervisor can
+refer. This conversion has two main steps:
 
-The hypervisor provides a kconfig-like way for manipulating compile-time
-configurations. Basically the hypervisor defines a set of configuration
-symbols and declare their default value. A configuration file is
-created, containing the values of each symbol, before building the
-sources.
+1. **Static allocation of resources**, which statically reserves resources for
+   the VMs if only high-level requirements are given in the scenario
+   configurations. Examples include the runtime base address of the hypervisor
+   image and PCI BDF addresses of ivshmem virtual devices.
 
-Similar to Linux kconfig, there are three files involved:
+#. **Generation of C files**, which places the configuration data in the data
+   types and structures defined by the hypervisor.
 
--  **.config** This files stores the values of all configuration
-   symbols.
+Some key files, which can be found under the build directory of the hypervisor,
+are as follows.
 
--  **config.mk** This file is a conversion of .config in Makefile
-   syntax, and can be included in makefiles so that the build
-   process can rely on the configurations.
+- **.board.xml** and **.scenario.xml** These files contain the configuration
+  data used by that build.
 
--  **config.h** This file is a conversion of .config in C syntax, and is
-   automatically included in every source file so that the values of
-   the configuration symbols are available in the sources.
+- **configs/allocation.xml** contains the results of the static allocation.
 
-.. figure:: images/config-image103.png
-   :align: center
-   :name: config-build-workflow
+- **configs/config.mk** This file is a conversion of the hypervisor feature
+  configurations (specified in the scenario XML) in Makefile syntax, and can be
+  included in makefiles so that the build process can rely on the
+  configurations.
 
-   Hypervisor configuration and build workflow
+- **include/config.h** This file is a conversion of the hypervisor feature
+  configurations in C header syntax, and is automatically included in every
+  source file so that the values of the configuration symbols are available in
+  the sources.
 
-:numref:`config-build-workflow` shows the workflow of building the
-hypervisor:
+- **configs/boards** and **configs/scenarios** contain all the other generated C
+  headers and sources that encode the configuration data in the XML files.
 
-1. Three targets are introduced for manipulating the configurations.
+Whenever ``.board.xml`` or ``.scenario.xml`` is modified, the hypervisor will be
+rebuilt upon the next invocation of ``make``.
 
-   a. **defconfig** creates a .config based on a predefined
-      configuration file.
-
-   b. **oldconfig** updates an existing .config after creating one if it
-      does not exist.
-
-   c. **menuconfig** presents a terminal UI to navigate and modify the
-      configurations in an interactive manner.
-
-2. The target oldconfig is also used to create a .config if a .config
-   file does not exist when building the source directly.
-
-3. The other two files for makefiles and C sources are regenerated after
-   .config changes.
-
+For the concept and usage of the configuration toolset, refer to
+:ref:`acrn_configuration_tool`. For a complete list of configuration symbols,
+refer to :ref:`scenario-config-options`.
