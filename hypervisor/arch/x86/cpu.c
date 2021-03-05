@@ -113,12 +113,25 @@ static void enable_ac_for_splitlock(void)
 #ifndef CONFIG_ENFORCE_TURNOFF_AC
 	uint64_t test_ctl;
 
-	if (has_core_cap(1U << 5U)) {
+	if (has_core_cap(CORE_CAP_SPLIT_LOCK)) {
 		test_ctl = msr_read(MSR_TEST_CTL);
-		test_ctl |= (1U << 29U);
+		test_ctl |= MSR_TEST_CTL_AC_SPLITLOCK;
 		msr_write(MSR_TEST_CTL, test_ctl);
 	}
 #endif /*CONFIG_ENFORCE_TURNOFF_AC*/
+}
+
+static void enable_gp_for_uclock(void)
+{
+#ifndef CONFIG_ENFORCE_TURNOFF_GP
+	uint64_t test_ctl;
+
+	if (has_core_cap(CORE_CAP_UC_LOCK)) {
+		test_ctl = msr_read(MSR_TEST_CTL);
+		test_ctl |= MSR_TEST_CTL_GP_UCLOCK;
+		msr_write(MSR_TEST_CTL, test_ctl);
+	}
+#endif /*CONFIG_ENFORCE_TURNOFF_GP*/
 }
 
 void init_pcpu_pre(bool is_bsp)
@@ -210,6 +223,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 	load_gdtr_and_tr();
 
 	enable_ac_for_splitlock();
+	enable_gp_for_uclock();
 
 	init_pcpu_xsave();
 

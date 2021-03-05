@@ -589,7 +589,7 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		/* If has MSR_TEST_CTL, give emulated value
 		 * If don't have MSR_TEST_CTL, trigger #GP
 		 */
-		if (has_core_cap(1U << 5U)) {
+		if (has_core_cap(CORE_CAP_SPLIT_LOCK) || has_core_cap(CORE_CAP_UC_LOCK)) {
 			v = vcpu_get_guest_msr(vcpu, MSR_TEST_CTL);
 		} else {
 			vcpu_inject_gp(vcpu, 0U);
@@ -959,7 +959,7 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		/* If VM has MSR_TEST_CTL, ignore write operation
 		 * If don't have MSR_TEST_CTL, trigger #GP
 		 */
-		if (has_core_cap(1U << 5U)) {
+		if (has_core_cap(CORE_CAP_SPLIT_LOCK) || has_core_cap(CORE_CAP_UC_LOCK)) {
 			vcpu_set_guest_msr(vcpu, MSR_TEST_CTL, v);
 			pr_warn("Ignore writting 0x%llx to MSR_TEST_CTL from VM%d", v, vcpu->vm->vm_id);
 		} else {
