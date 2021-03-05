@@ -44,7 +44,4 @@ uint32_t get_e820_entries_count(void);
 /* get the e802 entiries */
 const struct e820_entry *get_e820_entry(void);
 
-/* get the e820 total memory info */
-const struct mem_range *get_mem_range_info(void);
-
 #endif
