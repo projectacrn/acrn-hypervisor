@@ -102,7 +102,7 @@ multiboot2 protocol. If set to ``n``, GRUB's multiboot2 is not available as a
 boot option.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="ENFORCE_TURNOFF_AC" type="Boolean" default="n">
+    <xs:element name="ENFORCE_TURNOFF_AC" type="Boolean" default="y">
       <xs:annotation>
         <xs:documentation>Force to disable #AC for Split-locked Access.If CPU has #AC for
 split-locked access, HV enable it and VMs can't disable. Set this to enforce turn off that
