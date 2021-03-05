@@ -21,36 +21,8 @@
 static uint32_t hv_e820_entries_nr;
 /* Describe the memory layout the hypervisor uses */
 static struct e820_entry hv_e820[E820_MAX_ENTRIES];
-/* Describe the top/bottom/size of the physical memory the hypervisor manages */
-static struct mem_range hv_mem_range;
 
 #define DBG_LEVEL_E820	6U
-
-static void obtain_mem_range_info(void)
-{
-	uint32_t i;
-	struct e820_entry *entry;
-
-	hv_mem_range.mem_bottom = UINT64_MAX;
-	hv_mem_range.mem_top = 0x0UL;
-	hv_mem_range.total_mem_size = 0UL;
-
-	for (i = 0U; i < hv_e820_entries_nr; i++) {
-		entry = &hv_e820[i];
-
-		if (hv_mem_range.mem_bottom > entry->baseaddr) {
-			hv_mem_range.mem_bottom = entry->baseaddr;
-		}
-
-		if ((entry->baseaddr + entry->length) > hv_mem_range.mem_top) {
-			hv_mem_range.mem_top = entry->baseaddr + entry->length;
-		}
-
-		if (entry->type == E820_TYPE_RAM) {
-			hv_mem_range.total_mem_size += entry->length;
-		}
-	}
-}
 
 /*
  * @brief reserve some RAM, hide it from sos_vm, return its start address
@@ -82,7 +54,6 @@ uint64_t e820_alloc_memory(uint32_t size_arg, uint64_t max_addr)
 			/* found exact size of e820 entry */
 			if (length == size) {
 				entry->type = E820_TYPE_RESERVED;
-				hv_mem_range.total_mem_size -= size;
 				ret = start;
 			} else {
 
@@ -102,7 +73,6 @@ uint64_t e820_alloc_memory(uint32_t size_arg, uint64_t max_addr)
 					new_entry->length = (entry->baseaddr + entry->length) - new_entry->baseaddr;
 					/* Shrink the existing entry and total available memory */
 					entry->length -= new_entry->length;
-					hv_mem_range.total_mem_size -= new_entry->length;
 					hv_e820_entries_nr++;
 
 				        ret = new_entry->baseaddr;
@@ -159,8 +129,6 @@ void init_e820(void)
 		dev_dbg(DBG_LEVEL_E820, "Base: 0x%016lx length: 0x%016lx\n",
 			mmap[i].baseaddr, mmap[i].length);
 	}
-
-	obtain_mem_range_info();
 }
 
 uint32_t get_e820_entries_count(void)
@@ -171,9 +139,4 @@ uint32_t get_e820_entries_count(void)
 const struct e820_entry *get_e820_entry(void)
 {
 	return hv_e820;
-}
-
-const struct mem_range *get_mem_range_info(void)
-{
-	return &hv_mem_range;
 }
