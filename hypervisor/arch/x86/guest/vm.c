@@ -365,8 +365,8 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 {
 	uint16_t vm_id;
 	uint32_t i;
-	uint64_t attr_uc = (EPT_RWX | EPT_UNCACHED);
 	uint64_t hv_hpa;
+	uint64_t sos_high64_max_ram = MEM_4G;
 	struct acrn_vm_config *vm_config;
 	uint64_t *pml4_page = (uint64_t *)vm->arch_vm.nworld_eptp;
 	struct epc_section* epc_secs;
@@ -374,15 +374,20 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	const struct e820_entry *entry;
 	uint32_t entries_count = vm->e820_entry_num;
 	const struct e820_entry *p_e820 = vm->e820_entries;
-	const struct mem_range *p_mem_range_info = get_mem_range_info();
 	struct pci_mmcfg_region *pci_mmcfg;
 
-	pr_dbg("sos_vm: bottom memory - 0x%lx, top memory - 0x%lx\n",
-		p_mem_range_info->mem_bottom, p_mem_range_info->mem_top);
+	pr_dbg("SOS_VM e820 layout:\n");
+	for (i = 0U; i < entries_count; i++) {
+		entry = p_e820 + i;
+		pr_dbg("e820 table: %d type: 0x%x", i, entry->type);
+		pr_dbg("BaseAddress: 0x%016lx length: 0x%016lx\n", entry->baseaddr, entry->length);
+		if (entry->type == E820_TYPE_RAM) {
+			sos_high64_max_ram = max((entry->baseaddr + entry->length), sos_high64_max_ram);
+		}
+	}
 
-	/* create real ept map for all ranges with UC */
-	ept_add_mr(vm, pml4_page, p_mem_range_info->mem_bottom, p_mem_range_info->mem_bottom,
-			(p_mem_range_info->mem_top - p_mem_range_info->mem_bottom), attr_uc);
+	/* create real ept map for [0, sos_high64_max_ram) with UC */
+	ept_add_mr(vm, pml4_page, 0UL, 0UL, sos_high64_max_ram, EPT_RWX | EPT_UNCACHED);
 
 	/* update ram entries to WB attr */
 	for (i = 0U; i < entries_count; i++) {
@@ -390,13 +395,6 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 		if (entry->type == E820_TYPE_RAM) {
 			ept_modify_mr(vm, pml4_page, entry->baseaddr, entry->length, EPT_WB, EPT_MT_MASK);
 		}
-	}
-
-	pr_dbg("SOS_VM e820 layout:\n");
-	for (i = 0U; i < entries_count; i++) {
-		entry = p_e820 + i;
-		pr_dbg("e820 table: %d type: 0x%x", i, entry->type);
-		pr_dbg("BaseAddress: 0x%016lx length: 0x%016lx\n", entry->baseaddr, entry->length);
 	}
 
 	/* Unmap all platform EPC resource from SOS.
