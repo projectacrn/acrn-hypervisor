@@ -9,13 +9,13 @@ well as configure hypervisor capabilities and provision VMs.
 
 ACRN configuration consists of the following key components.
 
- - Configuration data which are saved as XML files.
+ - Configuration data saved as XML files.
  - A configuration toolset that helps users to generate and edit configuration
    data. The toolset includes:
 
-   - A **board inspector** which collects board-specific information on target
+   - A **board inspector** that collects board-specific information on target
      machines.
-   - A **configuration editor** which edits configuration data via web-based UI.
+   - A **configuration editor** that lets you edit configuration data via a web-based UI.
 
 The following sections introduce the concepts and tools of ACRN configuration
 from the aspects below.
@@ -25,7 +25,7 @@ from the aspects below.
  - :ref:`acrn_config_workflow` overviews the steps to customize ACRN
    configuration using the configuration toolset.
  - :ref:`acrn_config_data` explains the location and format of configuration
-   data which are saved as XML files.
+   data saved as XML files.
  - :ref:`acrn_config_tool_ui` gives detailed instructions on using the
    configuration editor.
 
@@ -34,7 +34,7 @@ from the aspects below.
 Types of Configurations
 ***********************
 
-ACRN includes three types of configurations: board, scenario and launch. The
+ACRN includes three types of configurations: board, scenario, and launch. The
 following sections briefly describe the objectives and main contents of each
 type.
 
@@ -43,7 +43,7 @@ Board Configuration
 
 The board configuration stores hardware-specific information extracted on the
 target platform. It describes the capacity of hardware resources (such as
-processors and memory), platform power states, available devices and BIOS
+processors and memory), platform power states, available devices, and BIOS
 versions. This information is used by ACRN configuration tool to check feature
 availability and allocate resources among VMs, as well as by ACRN hypervisor to
 initialize and manage the platform at runtime.
@@ -61,7 +61,7 @@ following in scenario configuration.
  - Hypervisor capabilities
 
    - Availability and settings of hypervisor features, such as debugging
-     facilities, scheduling algorithm, ivshmem and security features.
+     facilities, scheduling algorithm, ivshmem, and security features.
    - Hardware management capacity of the hypervisor, such as maximum PCI devices
      and maximum interrupt lines supported.
    - Memory consumption of the hypervisor, such as the entry point and stack
@@ -72,7 +72,7 @@ following in scenario configuration.
    - VM attributes, such as VM names.
    - Maximum number of VMs supported.
    - Resources allocated to each VM, such as number of vCPUs, amount of guest
-     memory and pass-through devices.
+     memory, and pass-through devices.
    - Guest OS settings, such as boot protocol and guest kernel parameters.
    - Settings of virtual devices, such as virtual UARTs.
 
@@ -91,9 +91,9 @@ Launch Configuration
 
 The launch configuration defines the attributes and resources of a
 post-launched VM. The main contents are similar to the VM attributes and
-resources in scenario configuration. It is used to generate shell scripts that
+resources in scenario configuration. The launch configuration is used to generate shell scripts that
 invoke ``acrn-dm`` to create post-launched VMs. Unlike board and scenario
-configurations which are used at build time or by ACRN hypervisor, launch
+configurations used at build time or by ACRN hypervisor, launch
 configuration are used dynamically in the Service VM.
 
 .. _acrn_config_workflow:
@@ -130,12 +130,12 @@ toolset.
    #. Run the ACRN configuration editor (available at
       ``misc/config_tools/config_app/app.py``) on the host machine and import
       the ``$(BOARD).xml``. Select your working scenario under **Scenario Setting**
-      and input the desired scenario settings. The tool will do a sanity check
+      and input the desired scenario settings. The tool will do validation checks
       on the input based on the ``$(BOARD).xml``. The customized settings can be
       exported to your own ``$(SCENARIO).xml``. If you have a customized scenario
       XML file, you can also import it to the editor for modification.
    #. In ACRN configuration editor, input the launch script parameters for the
-      post-launched User VM under **Launch Setting**. The editor will sanity check
+      post-launched User VM under **Launch Setting**. The editor will validate
       the input based on both the ``$(BOARD).xml`` and ``$(SCENARIO).xml`` and then
       export settings to your ``$(LAUNCH).xml``.
 
@@ -151,6 +151,86 @@ toolset.
    :align: center
 
    Configuration Workflow
+
+Makefile Targets for Configuration
+==================================
+
+In addition to the ``BOARD`` and ``SCENARIO`` variables, ACRN source also
+includes the following makefile targets to aid customization.
+
+.. list-table::
+   :widths: 20 50
+   :header-rows: 1
+
+   * - Target
+     - Description
+
+   * - ``hvdefconfig``
+     - Generate configuration files (a bunch of C source files) in the
+       build directory without building the hypervisor. This target can be used
+       when you want to customize the configurations based on a predefined
+       scenario.
+
+   * - ``hvshowconfig``
+     - Print the target ``BOARD``, ``SCENARIO`` and build type (debug or
+       release) of a build.
+
+   * - ``hvdiffconfig``
+     - After modifying the generated configuration files, you can use this
+       target to generate a patch that shows the differences made.
+
+   * - ``hvapplydiffconfig PATCH=/path/to/patch``
+     - Register a patch to be applied on the generated configuration files
+       every time they are regenerated. The ``PATCH`` variable specifies the path
+       (absolute or relative to current working directory) of the
+       patch. Multiple patches can be registered by invoking this target
+       multiple times.
+
+The targets ``hvdiffconfig`` and ``hvapplydiffconfig``
+are provided for users who already have offline patches to the generated
+configuration files. Prior to v2.4, the generated configuration files are also
+in the repository. Some users may already have chosen to modify these files
+directly to customize the configurations.
+
+.. note::
+   We highly recommend new users save and maintain customized configurations
+   in XML, not in patches to generated configuration files.
+
+Here is an example how to use the ``hvdiffconfig`` to generate a patch and save
+it to ``config.patch``.
+
+.. code-block:: console
+
+   acrn-hypervisor$ make BOARD=ehl-crb-b SCENARIO=hybrid_rt hvdefconfig
+   ...
+   acrn-hypervisor$ vim build/hypervisor/configs/scenarios/hybrid_rt/pci_dev.c
+   (edit the file manually)
+   acrn-hypervisor$ make hvdiffconfig
+   ...
+   Diff on generated configuration files is available at /path/to/acrn-hypervisor/build/hypervisor/config.patch.
+   To make a patch effective, use 'applydiffconfig PATCH=/path/to/patch' to register it to a build.
+   ...
+   acrn-hypervisor$ cp build/hypervisor/config.patch config.patch
+
+The example below shows how to use ``hvapplydiffconfig`` to apply
+``config.patch`` to a new build.
+
+.. code-block:: console
+
+   acrn-hypervisor$ make clean
+   acrn-hypervisor$ make BOARD=ehl-crb-b SCENARIO=hybrid_rt hvdefconfig
+   ...
+   acrn-hypervisor$ make hvapplydiffconfig PATCH=config.patch
+   ...
+   /path/to/acrn-hypervisor/config.patch is registered for build directory /path/to/acrn-hypervisor/build/hypervisor.
+   Registered patches will be applied the next time 'make' is invoked.
+   To unregister a patch, remove it from /path/to/acrn-hypervisor/build/hypervisor/configs/.diffconfig.
+   ...
+   acrn-hypervisor$ make hypervisor
+   ...
+   Applying patch /path/to/acrn-hypervisor/config.patch:
+   patching file scenarios/hybrid_rt/pci_dev.c
+   ...
 
 .. _acrn_config_data:
 
@@ -177,7 +257,7 @@ The board XML has an ``acrn-config`` root element and a ``board`` attribute:
 
    <acrn-config board="BOARD">
 
-As an input to the configuration editor and the build system, board XMLs are not
+Board XML files are input to the configuration editor and the build system, and are not
 intended for end users to modify.
 
 Scenario XML Format
@@ -287,7 +367,7 @@ Use the ACRN Configuration Editor
 The ACRN configuration editor provides a web-based user interface for the following:
 
 - reads board info
-- configures and validates scenario and launch configurationss
+- configures and validates scenario and launch configurations
 - generates launch scripts for the specified post-launched User VMs.
 - dynamically creates a new scenario configuration and adds or deletes VM
   settings in it
@@ -300,7 +380,7 @@ Prerequisites
 .. _get acrn repo guide:
    https://projectacrn.github.io/latest/getting-started/building-from-source.html#get-the-acrn-hypervisor-source-code
 
-- Clone acrn-hypervisor:
+- Clone the ACRN hypervisor repo::
 
   .. code-block:: none
 
@@ -409,7 +489,7 @@ Instructions
    pop-up model.
 
    .. note::
-      All customized scenario XMLs will be in user-defined groups, which are
+      All customized scenario XMLs will be in user-defined groups
       located in ``misc/config_tools/data/[board]/user_defined/``.
 
    Before saving the scenario XML, the configuration editor validates the
@@ -441,7 +521,7 @@ The **Launch Setting** is quite similar to the **Scenario Setting**:
 
 #. Configure the items for the current launch configuration.
 
-#. To dynamically add or remove User VM (UOS) launch scripts:
+#. Add or remove User VM (UOS) launch scripts:
 
    - Add a UOS launch script by clicking **Configure an UOS below** for the
      current launch configuration.

@@ -10,9 +10,9 @@ The virtual universal asynchronous receiver/transmitter (vUART) supports
 two functions: one is the console, the other is communication. vUART
 only works on a single function.
 
-Currently, only two vUART configurations are added to the predefined scenarios,
+Only two vUART configurations are added to the predefined scenarios,
 but you can customize the scenarios to enable more using the :ref:`ACRN
-configuration toolset <acrn_config_workflow>`
+configuration toolset <acrn_config_workflow>`.
 
 Console Enable List
 ===================
@@ -69,7 +69,7 @@ The port_base and IRQ should differ from the ``vuart[0]`` in the same VM.
 
 ``t_vuart.vm_id`` is the target VM's vm_id, start from 0. (0 means VM0)
 
-``t_vuart.vuart_id`` is the target vuart index in the target VM. Start
+``t_vuart.vuart_id`` is the target vUART index in the target VM. Start
 from ``1``. (``1`` means ``vuart[1]``)
 
 Example:
@@ -200,7 +200,7 @@ started, as shown in the diagram below:
 .. note::
    For operating systems such as VxWorks and Windows that depend on the
    ACPI table to probe the UART driver, adding the vUART configuration in
-   the hypervisor is not sufficient. Currently, we recommend that you use
+   the hypervisor is not sufficient. We recommend that you use
    the configuration in the figure 3 data flow. This may be refined in the
    future.
 
@@ -229,7 +229,7 @@ to 8 vUART for each VM, from ``vuart_idx=0`` to ``vuart_idx=7``.
 Suppose we use vUART0 for a port with ``vuart_idx=0``, vUART1 for
 ``vuart_idx=1``, and so on.
 
-Please pay attention to these points:
+Pay attention to these points:
 
 * vUART0 is the console port, vUART1-vUART7 are inter-VM communication ports.
 * Each communication port must set the connection to another communication vUART port of another VM.
@@ -304,7 +304,7 @@ The ACRN vUART related XML fields:
    legacy ``vuart[0]`` configuration, ``id=1`` is for ``vuart[1]``.
  - ``type`` in ``<legacy_vuart>``, type is always ``VUART_LEGACY_PIO``
    for legacy vUART.
- - ``base`` in ``<legacy_vuart>``, if use the legacy vUART port, set
+ - ``base`` in ``<legacy_vuart>``, if using the legacy vUART port, set
    COM1_BASE for ``vuart[0]``, set ``COM2_BASE`` for ``vuart[1]``.
    ``INVALID_COM_BASE`` means do not use the legacy vUART port.
  - ``irq`` in ``<legacy_vuart>``, if you use the legacy vUART port, set
@@ -324,8 +324,8 @@ Run the command to build ACRN with this XML configuration file::
 The configuration tools will test your settings, and check :ref:`vUART
 Rules <index-of-vuart>` for compilation issue. After compiling, you can find
 the generated sources under
-``build/hypervisor/configs/scenarios/<scenario>/pci_dev.c``
-which is based on the XML settings, something like:
+``build/hypervisor/configs/scenarios/<scenario>/pci_dev.c``,
+based on the XML settings, something like:
 
 .. code-block:: none
 
@@ -342,7 +342,7 @@ which is based on the XML settings, something like:
        },
     }
 
-This struct shows a PCI-vUART with ``vuart_idx=1``, ``BDF 00:05.0``, its
+This struct shows a PCI-vUART with ``vuart_idx=1``, ``BDF 00:05.0``, it's
 a PCI-vUART1 of
 VM0, and it is connected to VM1's vUART1 port. When VM0 wants to communicate
 with VM1, it can use ``/dev/ttyS*``, the character device file of
@@ -388,6 +388,6 @@ Kernel Cmdline for PCI-vUART Console
 
 When an ACRN VM does not have a legacy ``vuart[0]`` but has a
 PCI-vUART0, you can use PCI-vUART0 for VM serial input/output.  Check
-which tty has the BDF of PCI-vUART0; usually it is not ``/dev/ttyS0``.
+which TTY has the BDF of PCI-vUART0; usually it is not ``/dev/ttyS0``.
 For example, if ``/dev/ttyS4`` is PCI-vUART0, you must set
 ``console=/dev/ttyS4`` in the kernel cmdline.
