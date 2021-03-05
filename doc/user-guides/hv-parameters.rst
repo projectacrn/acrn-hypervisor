@@ -13,9 +13,11 @@ The ACRN hypervisor supports the following parameter:
 +=================+=============================+========================================================================================+
 |                 | disabled                    | This disables the serial port completely.                                              |
 |                 +-----------------------------+----------------------------------------------------------------------------------------+
-| ``uart=``       | bdf@<BDF value>             | This sets the PCI serial port based on its BDF. e.g. ``bdf@0:18.1``                    |
+| ``uart=``       | bdf@<BDF value>             | This sets the serial port PCI BDF, e.g. ``bdf@0:18.1``                                 |
 |                 +-----------------------------+----------------------------------------------------------------------------------------+
-|                 | port@<port address>         | This sets the serial port address.                                                     |
+|                 | port@<port address>         | This sets the serial port PIO address, e.g. ``uart=port@0x3F8``                        |
+|                 +-----------------------------+----------------------------------------------------------------------------------------+
+|                 | mmio@<MMIO address>         | This sets the serial port MMIO address, e.g. ``uart=mmio@0xfe040000``                  |
 +-----------------+-----------------------------+----------------------------------------------------------------------------------------+
 
 The Generic hypervisor parameters are specified in the GRUB multiboot/multiboot2 command.
