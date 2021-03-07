@@ -88,6 +88,11 @@ int32_t sanitize_acrn_multiboot_info(uint32_t magic, uint32_t info)
 		acrn_mbi.mi_flags &= ~MULTIBOOT_INFO_HAS_MODS;
 	}
 
+	if ((acrn_mbi.mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
+		pr_err("no multiboot module info found");
+		mbi_status = -EINVAL;
+	}
+
 	if ((acrn_mbi.mi_flags & MULTIBOOT_INFO_HAS_MMAP) == 0U) {
 		pr_err("wrong multiboot flags: 0x%08x", acrn_mbi.mi_flags);
 		mbi_status = -EINVAL;
