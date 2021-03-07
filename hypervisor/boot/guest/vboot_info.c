@@ -263,11 +263,7 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 	int32_t ret = -EINVAL;
 
 	stac();
-	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
-		panic("no multiboot module info found");
-	} else {
-		ret = init_vm_sw_load(vm, mbi);
-	}
+	ret = init_vm_sw_load(vm, mbi);
 	clac();
 
 	return ret;
