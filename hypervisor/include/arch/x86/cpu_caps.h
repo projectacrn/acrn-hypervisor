@@ -46,6 +46,7 @@ struct cpuinfo_x86 {
 };
 
 bool has_monitor_cap(void);
+bool disable_host_monitor_wait(void);
 bool is_apl_platform(void);
 bool is_apicv_advanced_feature_supported(void);
 bool pcpu_has_cap(uint32_t bit);
