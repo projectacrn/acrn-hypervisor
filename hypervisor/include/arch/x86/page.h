@@ -67,9 +67,9 @@ struct page_pool {
 };
 
 struct memory_ops {
+	uint64_t default_access_right;
 	struct page_pool *pool;
 	bool (*large_page_support)(enum _page_table_level level, uint64_t prot);
-	uint64_t (*get_default_access_right)(void);
 	uint64_t (*pgentry_present)(uint64_t pte);
 	void (*clflush_pagewalk)(const void *p);
 	void (*tweak_exe_right)(uint64_t *entry);
