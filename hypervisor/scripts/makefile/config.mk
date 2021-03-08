@@ -238,7 +238,7 @@ $(HV_CONFIG_H): $(HV_UNIFIED_XML)
 	@echo "$@ generated"
 
 $(HV_CONFIG_TIMESTAMP): $(HV_UNIFIED_XML) ${HV_DIFFCONFIG_LIST} | $(HV_CONFIG_DIR)
-	@sh $(BASEDIR)/scripts/genconf.sh $(BASEDIR) $(HV_BOARD_XML) $(HV_SCENARIO_XML) $(HV_CONFIG_DIR)
+	@sh $(BASEDIR)/scripts/genconf.sh $(BASEDIR) $(HV_BOARD_XML) $(HV_SCENARIO_XML) $(HV_CONFIG_DIR) $(HV_UNIFIED_XML)
 	@touch $@
 
 .PHONY: defconfig
@@ -253,7 +253,7 @@ showconfig:
 
 diffconfig:
 	@rm -rf $(HV_CONFIG_A_DIR) $(HV_CONFIG_B_DIR)
-	@sh $(BASEDIR)/scripts/genconf.sh $(BASEDIR) $(BOARD_FILE) $(HV_SCENARIO_XML) $(HV_CONFIG_A_DIR)
+	@sh $(BASEDIR)/scripts/genconf.sh $(BASEDIR) $(BOARD_FILE) $(HV_SCENARIO_XML) $(HV_CONFIG_A_DIR) $(HV_UNIFIED_XML)
 	@cd $(HV_CONFIG_DIR) && find . -name '*.c' -or -name '*.h' -or -name '*.config' -or -name '*.asl' | while read f; do \
 	  nf=$(HV_CONFIG_B_DIR)/$${f}; mkdir -p `dirname $${nf}` && cp $${f} $${nf}; \
 	done
