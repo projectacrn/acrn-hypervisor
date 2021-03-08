@@ -109,10 +109,6 @@ void enable_smap(void);
  * @return None
  */
 void init_paging(void);
-void mmu_add(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base,
-		uint64_t size, uint64_t prot, const struct pgtable *table);
-void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
-		uint64_t prot_set, uint64_t prot_clr, const struct pgtable *table, uint32_t type);
 void ppt_clear_user_bit(uint64_t base, uint64_t size);
 void ppt_set_nx_bit(uint64_t base, uint64_t size, bool add);
 

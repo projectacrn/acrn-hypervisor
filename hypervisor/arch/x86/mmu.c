@@ -263,7 +263,7 @@ void ppt_clear_user_bit(uint64_t base, uint64_t size)
 	base_aligned = round_pde_down(base);
 	size_aligned = region_end - base_aligned;
 
-	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, base_aligned,
+	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, base_aligned,
 		round_pde_up(size_aligned), 0UL, PAGE_USER, &ppt_pgtable, MR_MODIFY);
 }
 
@@ -274,10 +274,10 @@ void ppt_set_nx_bit(uint64_t base, uint64_t size, bool add)
 	uint64_t size_aligned = round_pde_up(region_end - base_aligned);
 
 	if (add) {
-		mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr,
+		pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr,
 			base_aligned, size_aligned, PAGE_NX, 0UL, &ppt_pgtable, MR_MODIFY);
 	} else {
-		mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr,
+		pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr,
 			base_aligned, size_aligned, 0UL, PAGE_NX, &ppt_pgtable, MR_MODIFY);
 	}
 }
@@ -310,7 +310,7 @@ void init_paging(void)
 	ppt_mmu_pml4_addr = alloc_page(ppt_pgtable.pool);
 
 	/* Map all memory regions to UC attribute */
-	mmu_add((uint64_t *)ppt_mmu_pml4_addr, 0UL, 0UL, high64_max_ram - 0UL, attr_uc, &ppt_pgtable);
+	pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, 0UL, 0UL, high64_max_ram - 0UL, attr_uc, &ppt_pgtable);
 
 	/* Modify WB attribute for E820_TYPE_RAM */
 	for (i = 0U; i < entries_count; i++) {
@@ -325,10 +325,10 @@ void init_paging(void)
 		}
 	}
 
-	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, 0UL, round_pde_up(low32_max_ram),
+	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, 0UL, round_pde_up(low32_max_ram),
 			PAGE_CACHE_WB, PAGE_CACHE_MASK, &ppt_pgtable, MR_MODIFY);
 
-	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (1UL << 32U), high64_max_ram - (1UL << 32U),
+	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, (1UL << 32U), high64_max_ram - (1UL << 32U),
 			PAGE_CACHE_WB, PAGE_CACHE_MASK, &ppt_pgtable, MR_MODIFY);
 
 	/*
@@ -339,7 +339,7 @@ void init_paging(void)
 	 * simply treat the return value of get_hv_image_base() as HPA.
 	 */
 	hv_hva = get_hv_image_base();
-	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, hv_hva & PDE_MASK,
+	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, hv_hva & PDE_MASK,
 			CONFIG_HV_RAM_SIZE + (((hv_hva & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL),
 			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER, &ppt_pgtable, MR_MODIFY);
 
@@ -347,11 +347,11 @@ void init_paging(void)
 	 * remove 'NX' bit for pages that contain hv code section, as by default XD bit is set for
 	 * all pages, including pages for guests.
 	 */
-	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, round_pde_down(hv_hva),
+	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, round_pde_down(hv_hva),
 			round_pde_up((uint64_t)&ld_text_end) - round_pde_down(hv_hva), 0UL,
 			PAGE_NX, &ppt_pgtable, MR_MODIFY);
 #if (SOS_VM_NUM == 1)
-	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_sworld_memory_base(),
+	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_sworld_memory_base(),
 			TRUSTY_RAM_SIZE * MAX_POST_VM_NUM, PAGE_USER, 0UL, &ppt_pgtable, MR_MODIFY);
 #endif
 
@@ -360,7 +360,7 @@ void init_paging(void)
 	 */
 
 	if ((HI_MMIO_START != ~0UL) && (HI_MMIO_END != 0UL)) {
-		mmu_add((uint64_t *)ppt_mmu_pml4_addr, HI_MMIO_START, HI_MMIO_START,
+		pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, HI_MMIO_START, HI_MMIO_START,
 			(HI_MMIO_END - HI_MMIO_START), attr_uc, &ppt_pgtable);
 	}
 
