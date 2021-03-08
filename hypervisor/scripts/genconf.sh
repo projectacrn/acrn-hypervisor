@@ -6,6 +6,9 @@ base_dir=$1
 board_xml=$2
 scenario_xml=$3
 out=$4
+unified_xml=$5
+scenario=$(xmllint --xpath "string(//@scenario)" --xinclude $unified_xml)
+year=$(date +'%Y')
 
 apply_patch () {
     echo "Applying patch ${1}:"
@@ -24,6 +27,37 @@ python3 ${tool_dir}/scenario_config/scenario_cfg_gen.py --board ${board_xml} --s
 
 if [ $? -ne 0 ]; then
     exit $?
+fi
+
+if ! which xsltproc ; then
+    echo "xsltproc cannot be found, please install it and make sure it is in your PATH."
+    exit 1
+fi
+
+transform() {
+    echo "Generating ${1}:"
+    xsltproc -o ${out}/scenarios/${scenario}/${1} --xinclude --xincludestyle ${tool_dir}/xforms/${1}.xsl ${unified_xml}
+    if [ $? -ne 0 ]; then
+        echo "Failed to generate ${1} with xsltproc!"
+        exit 1
+    fi
+    sed -i -e "s/YEAR/$year/" ${out}/scenarios/${scenario}/${1}
+    echo "${1} was generated using xsltproc succesfully."
+}
+
+transform vm_configurations.c
+transform vm_configurations.h
+transform pt_intx.c
+transform ivshmem_cfg.h
+transform misc_cfg.h
+
+if which clang-format ; then
+    find ${out}/scenarios/${scenario} -iname *.h -o -iname *.c \
+    | xargs clang-format --style=file -i --fallback-style=none
+else
+    echo "clang-format cannot be found. The generated files under ${out}/scenarios/${scenario} are not formatted."
+    echo "clang-format is a tool to format the C code automatically and improve the code readibility."
+    echo "Please install clang-format and format the generated files if those need to be included and reviewed."
 fi
 
 if [ -f ${diffconfig_list} ]; then
