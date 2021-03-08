@@ -70,7 +70,7 @@ static void split_large_page(uint64_t *pte, enum _page_table_level level,
 		paddr += paddrinc;
 	}
 
-	ref_prot = mem_ops->get_default_access_right();
+	ref_prot = mem_ops->default_access_right;
 	set_pgentry(pte, hva2hpa((void *)pbase) | ref_prot, mem_ops);
 
 	/* TODO: flush the TLB */
@@ -335,7 +335,7 @@ static void add_pde(const uint64_t *pdpte, uint64_t paddr_start, uint64_t vaddr_
 					break;	/* done */
 				} else {
 					void *pt_page = alloc_page(mem_ops->pool);
-					construct_pgentry(pde, pt_page, mem_ops->get_default_access_right(), mem_ops);
+					construct_pgentry(pde, pt_page, mem_ops->default_access_right, mem_ops);
 				}
 			}
 			add_pte(pde, paddr, vaddr, vaddr_end, prot, mem_ops);
@@ -384,7 +384,7 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
 					break;	/* done */
 				} else {
 					void *pd_page = alloc_page(mem_ops->pool);
-					construct_pgentry(pdpte, pd_page, mem_ops->get_default_access_right(), mem_ops);
+					construct_pgentry(pdpte, pd_page, mem_ops->default_access_right, mem_ops);
 				}
 			}
 			add_pde(pdpte, paddr, vaddr, vaddr_end, prot, mem_ops);
@@ -421,7 +421,7 @@ void mmu_add(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base, uint
 		pml4e = pml4e_offset(pml4_page, vaddr);
 		if (mem_ops->pgentry_present(*pml4e) == 0UL) {
 			void *pdpt_page = alloc_page(mem_ops->pool);
-			construct_pgentry(pml4e, pdpt_page, mem_ops->get_default_access_right(), mem_ops);
+			construct_pgentry(pml4e, pdpt_page, mem_ops->default_access_right, mem_ops);
 		}
 		add_pdpte(pml4e, paddr, vaddr, vaddr_end, prot, mem_ops);
 

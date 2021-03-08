@@ -103,11 +103,6 @@ static inline bool large_page_support(enum _page_table_level level, __unused uin
 	return support;
 }
 
-static inline uint64_t ppt_get_default_access_right(void)
-{
-	return (PAGE_PRESENT | PAGE_RW | PAGE_USER);
-}
-
 static inline void ppt_clflush_pagewalk(const void* entry __attribute__((unused)))
 {
 }
@@ -121,9 +116,9 @@ static inline void nop_tweak_exe_right(uint64_t *entry __attribute__((unused))) 
 static inline void nop_recover_exe_right(uint64_t *entry __attribute__((unused))) {}
 
 const struct memory_ops ppt_mem_ops = {
+	.default_access_right = (PAGE_PRESENT | PAGE_RW | PAGE_USER),
 	.pool = &ppt_page_pool,
 	.large_page_support = large_page_support,
-	.get_default_access_right = ppt_get_default_access_right,
 	.pgentry_present = ppt_pgentry_present,
 	.clflush_pagewalk = ppt_clflush_pagewalk,
 	.tweak_exe_right = nop_tweak_exe_right,
@@ -215,11 +210,6 @@ static inline bool use_large_page(enum _page_table_level level, uint64_t prot)
 	return ret;
 }
 
-static inline uint64_t ept_get_default_access_right(void)
-{
-	return EPT_RWX;
-}
-
 static inline uint64_t ept_pgentry_present(uint64_t pte)
 {
 	return pte & EPT_RWX;
@@ -265,7 +255,7 @@ void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
 	}
 
 	mem_ops->pool = &ept_page_pool[vm_id];
-	mem_ops->get_default_access_right = ept_get_default_access_right;
+	mem_ops->default_access_right = EPT_RWX;
 	mem_ops->pgentry_present = ept_pgentry_present;
 	mem_ops->clflush_pagewalk = ept_clflush_pagewalk;
 	mem_ops->large_page_support = large_page_support;
