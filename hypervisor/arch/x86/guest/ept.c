@@ -71,7 +71,7 @@ uint64_t local_gpa2hpa(struct acrn_vm *vm, uint64_t gpa, uint32_t *size)
 	void *eptp;
 
 	eptp = get_ept_entry(vm);
-	pgentry = lookup_address((uint64_t *)eptp, gpa, &pg_size, &vm->arch_vm.ept_mem_ops);
+	pgentry = lookup_address((uint64_t *)eptp, gpa, &pg_size, &vm->arch_vm.ept_pgtable);
 	if (pgentry != NULL) {
 		hpa = (((*pgentry & (~EPT_PFN_HIGH_MASK)) & (~(pg_size - 1UL)))
 				| (gpa & (pg_size - 1UL)));
@@ -143,7 +143,7 @@ void ept_add_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 
 	spinlock_obtain(&vm->ept_lock);
 
-	mmu_add(pml4_page, hpa, gpa, size, prot, &vm->arch_vm.ept_mem_ops);
+	mmu_add(pml4_page, hpa, gpa, size, prot, &vm->arch_vm.ept_pgtable);
 
 	spinlock_release(&vm->ept_lock);
 
@@ -160,7 +160,7 @@ void ept_modify_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 
 	spinlock_obtain(&vm->ept_lock);
 
-	mmu_modify_or_del(pml4_page, gpa, size, local_prot, prot_clr, &(vm->arch_vm.ept_mem_ops), MR_MODIFY);
+	mmu_modify_or_del(pml4_page, gpa, size, local_prot, prot_clr, &(vm->arch_vm.ept_pgtable), MR_MODIFY);
 
 	spinlock_release(&vm->ept_lock);
 
@@ -175,7 +175,7 @@ void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t 
 
 	spinlock_obtain(&vm->ept_lock);
 
-	mmu_modify_or_del(pml4_page, gpa, size, 0UL, 0UL, &vm->arch_vm.ept_mem_ops, MR_DEL);
+	mmu_modify_or_del(pml4_page, gpa, size, 0UL, 0UL, &vm->arch_vm.ept_pgtable, MR_DEL);
 
 	spinlock_release(&vm->ept_lock);
 
@@ -247,18 +247,18 @@ void *get_ept_entry(struct acrn_vm *vm)
  */
 void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 {
-	const struct memory_ops *mem_ops = &vm->arch_vm.ept_mem_ops;
+	const struct pgtable *table = &vm->arch_vm.ept_pgtable;
 	uint64_t *pml4e, *pdpte, *pde, *pte;
 	uint64_t i, j, k, m;
 
 	for (i = 0UL; i < PTRS_PER_PML4E; i++) {
 		pml4e = pml4e_offset((uint64_t *)get_ept_entry(vm), i << PML4E_SHIFT);
-		if (mem_ops->pgentry_present(*pml4e) == 0UL) {
+		if (table->pgentry_present(*pml4e) == 0UL) {
 			continue;
 		}
 		for (j = 0UL; j < PTRS_PER_PDPTE; j++) {
 			pdpte = pdpte_offset(pml4e, j << PDPTE_SHIFT);
-			if (mem_ops->pgentry_present(*pdpte) == 0UL) {
+			if (table->pgentry_present(*pdpte) == 0UL) {
 				continue;
 			}
 			if (pdpte_large(*pdpte) != 0UL) {
@@ -267,7 +267,7 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 			}
 			for (k = 0UL; k < PTRS_PER_PDE; k++) {
 				pde = pde_offset(pdpte, k << PDE_SHIFT);
-				if (mem_ops->pgentry_present(*pde) == 0UL) {
+				if (table->pgentry_present(*pde) == 0UL) {
 					continue;
 				}
 				if (pde_large(*pde) != 0UL) {
@@ -276,7 +276,7 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 				}
 				for (m = 0UL; m < PTRS_PER_PTE; m++) {
 					pte = pte_offset(pde, m << PTE_SHIFT);
-					if (mem_ops->pgentry_present(*pte) != 0UL) {
+					if (table->pgentry_present(*pte) != 0UL) {
 						cb(pte, PTE_SIZE);
 					}
 				}
@@ -298,5 +298,5 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 
 struct page *alloc_ept_page(struct acrn_vm *vm)
 {
-	return alloc_page(vm->arch_vm.ept_mem_ops.pool);
+	return alloc_page(vm->arch_vm.ept_pgtable.pool);
 }

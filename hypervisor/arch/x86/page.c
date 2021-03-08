@@ -115,7 +115,7 @@ static inline uint64_t ppt_pgentry_present(uint64_t pte)
 static inline void nop_tweak_exe_right(uint64_t *entry __attribute__((unused))) {}
 static inline void nop_recover_exe_right(uint64_t *entry __attribute__((unused))) {}
 
-const struct memory_ops ppt_mem_ops = {
+const struct pgtable ppt_pgtable = {
 	.default_access_right = (PAGE_PRESENT | PAGE_RW | PAGE_USER),
 	.pool = &ppt_page_pool,
 	.large_page_support = large_page_support,
@@ -234,7 +234,7 @@ static inline void ept_recover_exe_right(uint64_t *entry)
 	*entry |= EPT_EXE;
 }
 
-void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
+void init_ept_pgtable(struct pgtable *table, uint16_t vm_id)
 {
 	struct acrn_vm *vm = get_vm_from_vmid(vm_id);
 
@@ -254,22 +254,22 @@ void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id)
 		vm->arch_vm.sworld_memory_base_hva = post_uos_sworld_memory[page_idx];
 	}
 
-	mem_ops->pool = &ept_page_pool[vm_id];
-	mem_ops->default_access_right = EPT_RWX;
-	mem_ops->pgentry_present = ept_pgentry_present;
-	mem_ops->clflush_pagewalk = ept_clflush_pagewalk;
-	mem_ops->large_page_support = large_page_support;
+	table->pool = &ept_page_pool[vm_id];
+	table->default_access_right = EPT_RWX;
+	table->pgentry_present = ept_pgentry_present;
+	table->clflush_pagewalk = ept_clflush_pagewalk;
+	table->large_page_support = large_page_support;
 
 	/* Mitigation for issue "Machine Check Error on Page Size Change" */
 	if (is_ept_force_4k_ipage()) {
-		mem_ops->tweak_exe_right = ept_tweak_exe_right;
-		mem_ops->recover_exe_right = ept_recover_exe_right;
+		table->tweak_exe_right = ept_tweak_exe_right;
+		table->recover_exe_right = ept_recover_exe_right;
 		/* For RTVM, build 4KB page mapping in EPT for code pages */
 		if (is_rt_vm(vm)) {
-			mem_ops->large_page_support = use_large_page;
+			table->large_page_support = use_large_page;
 		}
 	} else {
-		mem_ops->tweak_exe_right = nop_tweak_exe_right;
-		mem_ops->recover_exe_right = nop_recover_exe_right;
+		table->tweak_exe_right = nop_tweak_exe_right;
+		table->recover_exe_right = nop_recover_exe_right;
 	}
 }

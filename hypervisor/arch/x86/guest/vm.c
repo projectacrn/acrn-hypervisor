@@ -492,9 +492,9 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	vm->vm_id = vm_id;
 	vm->hw.created_vcpus = 0U;
 
-	init_ept_mem_ops(&vm->arch_vm.ept_mem_ops, vm->vm_id);
+	init_ept_pgtable(&vm->arch_vm.ept_pgtable, vm->vm_id);
 	vm->arch_vm.nworld_eptp = alloc_ept_page(vm);
-	sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp, &vm->arch_vm.ept_mem_ops);
+	sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp, &vm->arch_vm.ept_pgtable);
 
 	(void)memcpy_s(&vm->uuid[0], sizeof(vm->uuid),
 		&vm_config->uuid[0], sizeof(vm_config->uuid));

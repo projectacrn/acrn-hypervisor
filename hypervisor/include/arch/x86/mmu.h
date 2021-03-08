@@ -81,8 +81,8 @@ static inline uint64_t round_pde_down(uint64_t val)
 #define PAGE_SIZE_2M	MEM_2M
 #define PAGE_SIZE_1G	MEM_1G
 
-void sanitize_pte_entry(uint64_t *ptep, const struct memory_ops *mem_ops);
-void sanitize_pte(uint64_t *pt_page, const struct memory_ops *mem_ops);
+void sanitize_pte_entry(uint64_t *ptep, const struct pgtable *table);
+void sanitize_pte(uint64_t *pt_page, const struct pgtable *table);
 /**
  * @brief MMU paging enable
  *
@@ -110,9 +110,9 @@ void enable_smap(void);
  */
 void init_paging(void);
 void mmu_add(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base,
-		uint64_t size, uint64_t prot, const struct memory_ops *mem_ops);
+		uint64_t size, uint64_t prot, const struct pgtable *table);
 void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
-		uint64_t prot_set, uint64_t prot_clr, const struct memory_ops *mem_ops, uint32_t type);
+		uint64_t prot_set, uint64_t prot_clr, const struct pgtable *table, uint32_t type);
 void ppt_clear_user_bit(uint64_t base, uint64_t size);
 void ppt_set_nx_bit(uint64_t base, uint64_t size, bool add);
 
