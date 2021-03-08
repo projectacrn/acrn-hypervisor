@@ -310,6 +310,12 @@ static inline uint64_t pdpte_large(uint64_t pdpte)
 const uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr,
 		uint64_t *pg_size, const struct pgtable *table);
 
+void pgtable_add_map(uint64_t *pml4_page, uint64_t paddr_base,
+		uint64_t vaddr_base, uint64_t size,
+		uint64_t prot, const struct pgtable *table);
+void pgtable_modify_or_del_map(uint64_t *pml4_page, uint64_t vaddr_base,
+		uint64_t size, uint64_t prot_set, uint64_t prot_clr,
+		const struct pgtable *table, uint32_t type);
 /**
  * @}
  */

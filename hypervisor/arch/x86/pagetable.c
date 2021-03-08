@@ -244,7 +244,7 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
  * type: MR_DEL
  * delete [vaddr_base, vaddr_base + size ) memory region page table mapping.
  */
-void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
+void pgtable_modify_or_del_map(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr, const struct pgtable *table, uint32_t type)
 {
 	uint64_t vaddr = round_page_up(vaddr_base);
@@ -402,8 +402,8 @@ static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start, uint64_t vadd
  * add [vaddr_base, vaddr_base + size ) memory region page table mapping.
  * @pre: the prot should set before call this function.
  */
-void mmu_add(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base, uint64_t size, uint64_t prot,
-		const struct pgtable *table)
+void pgtable_add_map(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base,
+		uint64_t size, uint64_t prot, const struct pgtable *table)
 {
 	uint64_t vaddr, vaddr_next, vaddr_end;
 	uint64_t paddr;

@@ -294,7 +294,7 @@ void ept_add_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 
 	spinlock_obtain(&vm->ept_lock);
 
-	mmu_add(pml4_page, hpa, gpa, size, prot, &vm->arch_vm.ept_pgtable);
+	pgtable_add_map(pml4_page, hpa, gpa, size, prot, &vm->arch_vm.ept_pgtable);
 
 	spinlock_release(&vm->ept_lock);
 
@@ -311,7 +311,7 @@ void ept_modify_mr(struct acrn_vm *vm, uint64_t *pml4_page,
 
 	spinlock_obtain(&vm->ept_lock);
 
-	mmu_modify_or_del(pml4_page, gpa, size, local_prot, prot_clr, &(vm->arch_vm.ept_pgtable), MR_MODIFY);
+	pgtable_modify_or_del_map(pml4_page, gpa, size, local_prot, prot_clr, &(vm->arch_vm.ept_pgtable), MR_MODIFY);
 
 	spinlock_release(&vm->ept_lock);
 
@@ -326,7 +326,7 @@ void ept_del_mr(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t 
 
 	spinlock_obtain(&vm->ept_lock);
 
-	mmu_modify_or_del(pml4_page, gpa, size, 0UL, 0UL, &vm->arch_vm.ept_pgtable, MR_DEL);
+	pgtable_modify_or_del_map(pml4_page, gpa, size, 0UL, 0UL, &(vm->arch_vm.ept_pgtable), MR_DEL);
 
 	spinlock_release(&vm->ept_lock);
 
