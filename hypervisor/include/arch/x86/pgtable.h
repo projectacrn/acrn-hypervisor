@@ -255,10 +255,10 @@ static inline uint64_t get_pgentry(const uint64_t *pte)
 /*
  * pgentry may means pml4e/pdpte/pde/pte
  */
-static inline void set_pgentry(uint64_t *ptep, uint64_t pte, const struct memory_ops *mem_ops)
+static inline void set_pgentry(uint64_t *ptep, uint64_t pte, const struct pgtable *table)
 {
 	*ptep = pte;
-	mem_ops->clflush_pagewalk(ptep);
+	table->clflush_pagewalk(ptep);
 }
 
 static inline uint64_t pde_large(uint64_t pde)
@@ -275,7 +275,7 @@ static inline uint64_t pdpte_large(uint64_t pdpte)
  *@pre (pml4_page != NULL) && (pg_size != NULL)
  */
 const uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr,
-		uint64_t *pg_size, const struct memory_ops *mem_ops);
+		uint64_t *pg_size, const struct pgtable *table);
 
 /**
  * @}

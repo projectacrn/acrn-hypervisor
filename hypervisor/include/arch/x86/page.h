@@ -66,7 +66,7 @@ struct page_pool {
 	struct page *dummy_page;
 };
 
-struct memory_ops {
+struct pgtable {
 	uint64_t default_access_right;
 	struct page_pool *pool;
 	bool (*large_page_support)(enum _page_table_level level, uint64_t prot);
@@ -76,8 +76,8 @@ struct memory_ops {
 	void (*recover_exe_right)(uint64_t *entry);
 };
 
-extern const struct memory_ops ppt_mem_ops;
-void init_ept_mem_ops(struct memory_ops *mem_ops, uint16_t vm_id);
+extern const struct pgtable ppt_pgtable;
+void init_ept_pgtable(struct pgtable *table, uint16_t vm_id);
 struct page *alloc_page(struct page_pool *pool);
 void free_page(struct page_pool *pool, struct page *page);
 void *get_reserve_sworld_memory_base(void);

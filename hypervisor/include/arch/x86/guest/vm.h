@@ -108,7 +108,7 @@ struct vm_arch {
 	 */
 	void *sworld_eptp;
 	void *sworld_memory_base_hva;
-	struct memory_ops ept_mem_ops;
+	struct pgtable ept_pgtable;
 
 	struct acrn_vioapics vioapics;	/* Virtual IOAPIC/s */
 	struct acrn_vpic vpic;      /* Virtual PIC */
