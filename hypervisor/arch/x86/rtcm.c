@@ -106,7 +106,7 @@ static void parse_rtct(void)
  * Synchronization of AP and BSP is ensured, both inside and outside RTCM.
  * BSP shall be the last to finish the call.
  */
-void init_software_sram(bool is_bsp)
+bool init_software_sram(bool is_bsp)
 {
 	int32_t rtcm_ret_code;
 	struct rtcm_header *header;
@@ -162,14 +162,23 @@ void init_software_sram(bool is_bsp)
 			}
 		}
 	}
+
+	if (acpi_rtct_tbl == NULL) {
+		is_sw_sram_initialized = true;
+	} else {
+		is_sw_sram_initialized = disable_host_monitor_wait();
+	}
+
+	return is_sw_sram_initialized;
 }
 #else
 void set_rtct_tbl(__unused void *rtct_tbl_addr)
 {
 }
 
-void init_software_sram(__unused bool is_bsp)
+bool init_software_sram(__unused bool is_bsp)
 {
+	return true;
 }
 #endif
 
