@@ -430,6 +430,11 @@ void pgtable_add_map(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_ba
 	}
 }
 
+void *pgtable_create_root(const struct pgtable *table)
+{
+	return (uint64_t *)alloc_page(table->pool);
+}
+
 /**
  * @pre (pml4_page != NULL) && (pg_size != NULL)
  */

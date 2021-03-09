@@ -307,7 +307,7 @@ void init_paging(void)
 	}
 
 	/* Allocate memory for Hypervisor PML4 table */
-	ppt_mmu_pml4_addr = alloc_page(ppt_pgtable.pool);
+	ppt_mmu_pml4_addr = pgtable_create_root(&ppt_pgtable);
 
 	/* Map all memory regions to UC attribute */
 	pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, 0UL, 0UL, high64_max_ram - 0UL, attr_uc, &ppt_pgtable);

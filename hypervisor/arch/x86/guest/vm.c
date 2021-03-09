@@ -503,7 +503,7 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 	vm->hw.created_vcpus = 0U;
 
 	init_ept_pgtable(&vm->arch_vm.ept_pgtable, vm->vm_id);
-	vm->arch_vm.nworld_eptp = alloc_ept_page(vm);
+	vm->arch_vm.nworld_eptp = pgtable_create_root(&vm->arch_vm.ept_pgtable);
 	sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp, &vm->arch_vm.ept_pgtable);
 
 	(void)memcpy_s(&vm->uuid[0], sizeof(vm->uuid),
