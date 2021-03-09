@@ -55,55 +55,16 @@ struct trusty_mem {
 static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 		uint64_t size, uint64_t gpa_rebased)
 {
-	uint64_t nworld_pml4e;
-	uint64_t sworld_pml4e;
 	/* Check the HPA of parameter gpa_orig when invoking check_continuos_hpa */
 	uint64_t hpa;
-	uint64_t table_present = EPT_RWX;
-	uint64_t pdpte, *dest_pdpte_p, *src_pdpte_p;
-	void *sub_table_addr, *pml4_base;
-	uint16_t i;
 
 	hpa = gpa2hpa(vm, gpa_orig);
 
 	/* Unmap gpa_orig~gpa_orig+size from guest normal world ept mapping */
 	ept_del_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp, gpa_orig, size);
 
-	/* Copy PDPT entries from Normal world to Secure world
-	 * Secure world can access Normal World's memory,
-	 * but Normal World can not access Secure World's memory.
-	 * The PML4/PDPT for Secure world are separated from
-	 * Normal World.PD/PT are shared in both Secure world's EPT
-	 * and Normal World's EPT
-	 */
-	pml4_base = alloc_ept_page(vm);
-	vm->arch_vm.sworld_eptp = pml4_base;
-	sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp, &vm->arch_vm.ept_pgtable);
-
-	/* The trusty memory is remapped to guest physical address
-	 * of gpa_rebased to gpa_rebased + size
-	 */
-	sub_table_addr = alloc_ept_page(vm);
-	sworld_pml4e = hva2hpa(sub_table_addr) | table_present;
-	set_pgentry((uint64_t *)pml4_base, sworld_pml4e, &vm->arch_vm.ept_pgtable);
-
-	nworld_pml4e = get_pgentry((uint64_t *)vm->arch_vm.nworld_eptp);
-
-	/*
-	 * copy PTPDEs from normal world EPT to secure world EPT,
-	 * and remove execute access attribute in these entries
-	 */
-	dest_pdpte_p = pml4e_page_vaddr(sworld_pml4e);
-	src_pdpte_p = pml4e_page_vaddr(nworld_pml4e);
-	for (i = 0U; i < (uint16_t)(PTRS_PER_PDPTE - 1UL); i++) {
-		pdpte = get_pgentry(src_pdpte_p);
-		if ((pdpte & table_present) != 0UL) {
-			pdpte &= ~EPT_EXE;
-			set_pgentry(dest_pdpte_p, pdpte, &vm->arch_vm.ept_pgtable);
-		}
-		src_pdpte_p++;
-		dest_pdpte_p++;
-	}
+	vm->arch_vm.sworld_eptp = pgtable_create_trusty_root(&vm->arch_vm.ept_pgtable,
+					vm->arch_vm.nworld_eptp, EPT_RWX, EPT_EXE);
 
 	/* Map [gpa_rebased, gpa_rebased + size) to secure ept mapping */
 	ept_add_mr(vm, (uint64_t *)vm->arch_vm.sworld_eptp, hpa, gpa_rebased, size, EPT_RWX | EPT_WB);
