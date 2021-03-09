@@ -164,16 +164,6 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb);
  */
 int32_t ept_misconfig_vmexit_handler(__unused struct acrn_vcpu *vcpu);
 
-/**
- * @brief allocate a page from the VM's EPT pagetable page pool
- *
- * @param[in] vm the pointer that points to VM data structure
- *
- * @retval a page pointer if there's available used pages in the VM's EPT
- *         pagetable page pool, null otherwise.
- */
-struct page *alloc_ept_page(struct acrn_vm *vm);
-
 void init_ept_pgtable(struct pgtable *table, uint16_t vm_id);
 void reserve_buffer_for_ept_pages(void);
 #endif /* EPT_H */
