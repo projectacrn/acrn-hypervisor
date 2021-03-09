@@ -304,6 +304,7 @@ static inline uint64_t pdpte_large(uint64_t pdpte)
 	return pdpte & PAGE_PSE;
 }
 
+void *pgtable_create_root(const struct pgtable *table);
 /**
  *@pre (pml4_page != NULL) && (pg_size != NULL)
  */
