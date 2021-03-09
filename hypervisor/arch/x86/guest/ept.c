@@ -446,8 +446,3 @@ void walk_ept_table(struct acrn_vm *vm, pge_handler cb)
 		}
 	}
 }
-
-struct page *alloc_ept_page(struct acrn_vm *vm)
-{
-	return alloc_page(vm->arch_vm.ept_pgtable.pool);
-}
