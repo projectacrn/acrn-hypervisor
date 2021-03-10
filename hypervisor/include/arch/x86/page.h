@@ -77,7 +77,6 @@ struct pgtable {
 	void (*recover_exe_right)(uint64_t *entry);
 };
 
-extern const struct pgtable ppt_pgtable;
 void init_ept_pgtable(struct pgtable *table, uint16_t vm_id);
 struct page *alloc_page(struct page_pool *pool);
 void free_page(struct page_pool *pool, struct page *page);

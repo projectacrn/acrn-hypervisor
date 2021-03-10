@@ -43,6 +43,64 @@
 static void *ppt_mmu_pml4_addr;
 static uint8_t sanitized_page[PAGE_SIZE] __aligned(PAGE_SIZE);
 
+/* PPT VA and PA are identical mapping */
+#define PPT_PML4_PAGE_NUM	PML4_PAGE_NUM(MAX_PHY_ADDRESS_SPACE)
+#define PPT_PDPT_PAGE_NUM	PDPT_PAGE_NUM(MAX_PHY_ADDRESS_SPACE)
+#define PPT_PD_PAGE_NUM	PD_PAGE_NUM(MAX_PHY_ADDRESS_SPACE)
+#define PPT_PT_PAGE_NUM	0UL	/* not support 4K granularity page mapping */
+/* must be a multiple of 64 */
+#define PPT_PAGE_NUM	(roundup((PPT_PML4_PAGE_NUM + PPT_PDPT_PAGE_NUM + \
+			PPT_PD_PAGE_NUM + PPT_PT_PAGE_NUM), 64U))
+static struct page ppt_pages[PPT_PAGE_NUM];
+static uint64_t ppt_page_bitmap[PPT_PAGE_NUM / 64];
+
+/* ppt: pripary page pool */
+static struct page_pool ppt_page_pool = {
+	.start_page = ppt_pages,
+	.bitmap_size = PPT_PAGE_NUM / 64,
+	.bitmap = ppt_page_bitmap,
+	.last_hint_id = 0UL,
+	.dummy_page = NULL,
+};
+
+/* @pre: The PPT and EPT have same page granularity */
+static inline bool ppt_large_page_support(enum _page_table_level level, __unused uint64_t prot)
+{
+	bool support;
+
+	if (level == IA32E_PD) {
+		support = true;
+	} else if (level == IA32E_PDPT) {
+		support = pcpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE);
+	} else {
+		support = false;
+	}
+
+	return support;
+}
+
+static inline void ppt_clflush_pagewalk(const void* entry __attribute__((unused)))
+{
+}
+
+static inline uint64_t ppt_pgentry_present(uint64_t pte)
+{
+	return pte & PAGE_PRESENT;
+}
+
+static inline void ppt_nop_tweak_exe_right(uint64_t *entry __attribute__((unused))) {}
+static inline void ppt_nop_recover_exe_right(uint64_t *entry __attribute__((unused))) {}
+
+static const struct pgtable ppt_pgtable = {
+	.default_access_right = (PAGE_PRESENT | PAGE_RW | PAGE_USER),
+	.pool = &ppt_page_pool,
+	.large_page_support = ppt_large_page_support,
+	.pgentry_present = ppt_pgentry_present,
+	.clflush_pagewalk = ppt_clflush_pagewalk,
+	.tweak_exe_right = ppt_nop_tweak_exe_right,
+	.recover_exe_right = ppt_nop_recover_exe_right,
+};
+
 #define INVEPT_TYPE_SINGLE_CONTEXT      1UL
 #define INVEPT_TYPE_ALL_CONTEXTS        2UL
 #define VMFAIL_INVALID_EPT_VPID				\
