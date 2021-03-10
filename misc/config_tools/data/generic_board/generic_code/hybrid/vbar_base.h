@@ -8,7 +8,7 @@
 #define VBAR_BASE_H_
 
 #define VGA_COMPATIBLE_CONTROLLER_0_VBAR              .vbar_base[0] = 0x82000000UL, \
-                                                      .vbar_base[2] = PTDEV_HI_MMIO_START + 0x0UL
+                                                      .vbar_base[2] = HI_MMIO_START + 0x0UL
 
 #define SYSTEM_PERIPHERAL_0_VBAR                      .vbar_base[0] = 0x834e4000UL
 
