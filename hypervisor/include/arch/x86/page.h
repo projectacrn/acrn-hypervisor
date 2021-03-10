@@ -80,6 +80,5 @@ extern const struct pgtable ppt_pgtable;
 void init_ept_pgtable(struct pgtable *table, uint16_t vm_id);
 struct page *alloc_page(struct page_pool *pool);
 void free_page(struct page_pool *pool, struct page *page);
-void *get_reserve_sworld_memory_base(void);
 void reserve_buffer_for_ept_pages(void);
 #endif /* PAGE_H */

@@ -39,9 +39,17 @@
 
 /* Local variables */
 
+/* pre-assumption: TRUSTY_RAM_SIZE is 2M aligned */
+static struct page post_uos_sworld_memory[MAX_POST_VM_NUM][TRUSTY_RAM_SIZE >> PAGE_SHIFT] __aligned(MEM_2M);
+
 static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE);
 
 static struct acrn_vm *sos_vm_ptr = NULL;
+
+void *get_sworld_memory_base(void)
+{
+	return post_uos_sworld_memory;
+}
 
 uint16_t get_vmid_by_uuid(const uint8_t *uuid)
 {
@@ -511,8 +519,11 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 			vm->sworld_control.flag.supported = 1U;
 		}
 		if (vm->sworld_control.flag.supported != 0UL) {
+			uint16_t sos_vm_id = (get_sos_vm())->vm_id;
+			uint16_t page_idx = vmid_2_rel_vmid(sos_vm_id, vm_id) - 1U;
+
 			ept_add_mr(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-				hva2hpa(vm->arch_vm.sworld_memory_base_hva),
+				hva2hpa(post_uos_sworld_memory[page_idx]),
 				TRUSTY_EPT_REBASE_GPA, TRUSTY_RAM_SIZE, EPT_WB | EPT_RWX);
 		}
 		if (vm_config->name[0] == '\0') {
@@ -520,11 +531,11 @@ int32_t create_vm(uint16_t vm_id, uint64_t pcpu_bitmap, struct acrn_vm_config *v
 			snprintf(vm_config->name, 16, "ACRN VM_%d", vm_id);
 		}
 
-		 if (vm_config->load_order == PRE_LAUNCHED_VM) {
+		if (vm_config->load_order == PRE_LAUNCHED_VM) {
 			create_prelaunched_vm_e820(vm);
 			prepare_prelaunched_vm_memmap(vm, vm_config);
 			status = init_vm_boot_info(vm);
-		 }
+		}
 	}
 
 	if (status == 0) {
