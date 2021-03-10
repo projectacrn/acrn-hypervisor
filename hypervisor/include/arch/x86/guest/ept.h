@@ -170,4 +170,7 @@ int32_t ept_misconfig_vmexit_handler(__unused struct acrn_vcpu *vcpu);
  *         pagetable page pool, null otherwise.
  */
 struct page *alloc_ept_page(struct acrn_vm *vm);
+
+void init_ept_pgtable(struct pgtable *table, uint16_t vm_id);
+void reserve_buffer_for_ept_pages(void);
 #endif /* EPT_H */
