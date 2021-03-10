@@ -9,6 +9,7 @@
 #include <page.h>
 #include <e820.h>
 #include <mmu.h>
+#include <ept.h>
 #include <vtd.h>
 #include <lapic.h>
 #include <per_cpu.h>
