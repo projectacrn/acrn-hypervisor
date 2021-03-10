@@ -74,6 +74,37 @@ bool has_monitor_cap(void)
 	return ret;
 }
 
+bool disable_host_monitor_wait(void)
+{
+	bool ret = true;
+	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
+
+	cpuid_subleaf(0x1U, 0x0U, &eax, &ebx, &ecx, &edx);
+	if ((ecx & CPUID_ECX_MONITOR) != 0U) {
+		/* According to SDM Vol4 2.1 Table 2-2,
+		 * update on 'MSR_IA32_MISC_ENABLE_MONITOR_ENA' bit
+		 * is not allowed if the SSE3 feature flag is set to 0.
+		 */
+		if ((ecx & CPUID_ECX_SSE3) != 0U) {
+			msr_write(MSR_IA32_MISC_ENABLE, (msr_read(MSR_IA32_MISC_ENABLE) &
+				~MSR_IA32_MISC_ENABLE_MONITOR_ENA));
+
+			/* Update cpuid_leaves of boot_cpu_data to
+			 * refresh 'has_monitor_cap' state.
+			 */
+			if (has_monitor_cap()) {
+				cpuid_subleaf(CPUID_FEATURES, 0x0U, &eax, &ebx,
+					&boot_cpu_data.cpuid_leaves[FEAT_1_ECX],
+					&boot_cpu_data.cpuid_leaves[FEAT_1_EDX]);
+			}
+
+		} else {
+			ret = false;
+		}
+	}
+	return ret;
+}
+
 static inline bool is_fast_string_erms_supported_and_enabled(void)
 {
 	bool ret = false;
