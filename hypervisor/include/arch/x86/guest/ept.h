@@ -17,6 +17,9 @@ typedef void (*pge_handler)(uint64_t *pgentry, uint64_t size);
  */
 #define INVALID_HPA	(0x1UL << 52U)
 #define INVALID_GPA	(0x1UL << 52U)
+
+struct acrn_vm;
+
 /* External Interfaces */
 /**
  * @brief Check if the GPA range is guest valid GPA or not

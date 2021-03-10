@@ -4,15 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <types.h>
-#include <rtl.h>
-#include <cpufeatures.h>
-#include <pgtable.h>
+#include <bits.h>
 #include <page.h>
-#include <mmu.h>
-#include <trusty.h>
-#include <vtd.h>
-#include <security.h>
-#include <vm.h>
 #include <logmsg.h>
 
 
