@@ -1387,7 +1387,7 @@ init_pci(struct vmctx *ctx)
 	uint64_t bus0_memlimit;
 
 	pci_emul_iobase = PCI_EMUL_IOBASE;
-	pci_emul_membase32 = vm_get_lowmem_limit(ctx);
+	pci_emul_membase32 = PCI_EMUL_MEMBASE32;
 	pci_emul_membase64 = PCI_EMUL_MEMBASE64;
 
 	create_gsi_sharing_groups();

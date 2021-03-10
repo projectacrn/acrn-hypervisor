@@ -64,10 +64,10 @@
  * [0xDF000000, 0xDF800000) 8M, GOP FB, used OvmfPkg/GvtGopDxe for 1080p@30
  * [0xDFFFD000, 0xDFFFF000) 8K, OpRegion, used by GvtGopDxe and GVT-g
  * [0xDFFFF000, 0XE0000000) 4K, Reserved, not used
- * for TGL GVT-d use:
- * [0x3B800000, 0x3F800000) 64M, Date Stolen Memory
- * [0x3F800000, 0X3F804000] 16K, OpRegion and Extended OpRegion
- * for EHL/WHL/KBL GVT-d use:
+ * for TGL/EHL GVT-d use: identical mapping, same with host layout
+ * [gpu_opregion_hpa, gpu_opregion_hpa+size) 16K, OpRegion and Extended OpRegion
+ * [gpu_dsm_hpa, gpu_dsm_hpa+size] 64M, Date Stolen Memory
+ * for WHL/KBL GVT-d use:
  * [0xDB000000, 0xDF000000) 64M, DSM, used by native GOP and gfx driver
  * [0xDFFFC000, 0xDFFFE000) 8K, OpRegion, used by native GOP and gfx driver
  * [0xDFFFE000, 0XE0000000] 8K, Extended OpRegion, store raw VBT
@@ -86,9 +86,9 @@
  * For OpRegion 2.1+: ASLE.rvda = offset to OpRegion base address
  * For OpRegion 2.0:  ASLE.rvda = physical address, not support currently
  */
-#define GPU_DSM_GPA				0xDB000000
-#define GPU_DSM_SIZE			0x4000000
+#define GPU_DSM_GPA			0xDB000000
 #define GPU_OPREGION_GPA		0xDFFFC000
+#define GPU_DSM_SIZE			0x4000000
 #define GPU_OPREGION_SIZE		0x4000
 /*
  * TODO: Forced DSM/OPREGION size requires native BIOS configuration.
@@ -487,24 +487,6 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 
 	switch (device) {
 	case INTEL_ELKHARTLAKE:
-		/* BDSM register has 64 bits.
-		 * bits 63:20 contains the base address of stolen memory
-		 */
-		gpu_dsm_hpa = read_config(ptdev->phys_dev, PCIR_GEN11_BDSM_DW0, 4);
-		dsm_mask_val = gpu_dsm_hpa & ~PCIM_BDSM_MASK;
-		gpu_dsm_hpa &= PCIM_BDSM_MASK;
-		gpu_dsm_hpa |= (uint64_t)read_config(ptdev->phys_dev, PCIR_GEN11_BDSM_DW1, 4) << 32;
-		gpu_dsm_gpa = GPU_DSM_GPA;
-
-		pci_set_cfgdata32(ptdev->dev, PCIR_GEN11_BDSM_DW0, gpu_dsm_gpa | dsm_mask_val);
-		/* write 0 to high 32-bits of BDSM on EHL platform */
-		pci_set_cfgdata32(ptdev->dev, PCIR_GEN11_BDSM_DW1, 0);
-
-		gpu_opregion_gpa = GPU_OPREGION_GPA;
-
-		ptdev->has_virt_pcicfg_regs = &has_virt_pcicfg_regs_on_ehl_gpu;
-		break;
-
 	case INTEL_TIGERLAKE:
 		/* BDSM register has 64 bits.
 		 * bits 63:20 contains the base address of stolen memory
@@ -523,7 +505,7 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 		/* write 0 to high 32-bits of BDSM on EHL platform */
 		pci_set_cfgdata32(ptdev->dev, PCIR_GEN11_BDSM_DW1, 0);
 
-		gpu_opregion_gpa = gpu_dsm_gpa + GPU_DSM_SIZE;
+		gpu_opregion_gpa = gpu_dsm_gpa - GPU_OPREGION_SIZE;
 
 		ptdev->has_virt_pcicfg_regs = &has_virt_pcicfg_regs_on_ehl_gpu;
 		break;

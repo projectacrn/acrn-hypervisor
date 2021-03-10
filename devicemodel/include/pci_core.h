@@ -49,7 +49,7 @@
 #define	PCI_EMUL_MEMLIMIT64	0x140000000UL	/* 5GB */
 
 #define SOFTWARE_SRAM_MAX_SIZE	0x00800000UL
-#define SOFTWARE_SRAM_BASE_GPA	(PCI_EMUL_MEMBASE32 - SOFTWARE_SRAM_MAX_SIZE)
+#define SOFTWARE_SRAM_BASE_GPA	0x50000000UL
 
 /* Currently,only gvt need reserved bar regions,
  * so just hardcode REGION_NUMS=5 here

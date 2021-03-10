@@ -39,9 +39,12 @@
 int with_bootargs;
 static char bootargs[BOOT_ARG_LEN];
 
+extern uint32_t gpu_opregion_gpa;
+
 /*
  * Default e820 mem map:
  *
+ * there is reserved memory hole for device memory
  * there is reserved memory hole for PCI hole and APIC etc
  * so the memory layout could be separated into lowmem & highmem.
  * - if request memory size <= ctx->lowmem_limit, then there is only
@@ -53,21 +56,15 @@ static char bootargs[BOOT_ARG_LEN];
  *
  *             Begin    Limit        Type            Length
  * 0:              0 -  0xA0000      RAM             0xA0000
- * 1:       0x100000 -  lowmem part1 RAM             0x0
- * 2:   gpu_rsvd_bot -  gpu_rsvd_top (reserved)      0x4004000
- * 3:   lowmem part2 -  0x7f800000   (reserved)      0x0
- * 4:   SW SRAM_bot  -  0x80000000   (reserved)      SOFTWARE_SRAM_MAX_SIZE
+ * 1:       0x100000 -  lowmem       RAM             0x0
+ * 2:         lowmem -  0x80000000   DEVICE MEM      0x0
+ * 3:     0xE0000000 -  0x100000000  MCFG, MMIO      512MB
+ * 4:    0x140000000 -  highmem      RAM             highmem - 5GB
  * 5:     0xDB000000 -  0xDF000000   (reserved)      64MB
  * 6:     0xDF000000 -  0xE0000000   (reserved)      16MB
- * 7:     0xE0000000 -  0x100000000  MCFG, MMIO      512MB
- * 8:    0x140000000 -  highmem      RAM             highmem - 5GB
  *
  * FIXME: Do we need to reserve DSM and OPREGION for GVTD here.
  */
-
-#define GPU_DSM_OPREGION_BASE_GPA 0x3B800000
-#define GPU_DSM_OPREGION_SIZE  0x4004000
-
 const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 	{	/* 0 to video memory */
 		.baseaddr = 0x00000000,
@@ -75,34 +72,16 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 		.type     = E820_TYPE_RAM
 	},
 
-	{	/* 1MB to lowmem part1 */
+	{	/* 1MB to lowmem */
 		.baseaddr = 1 * MB,
 		.length   = 0x0,
 		.type     = E820_TYPE_RAM
 	},
 
-	{	/* TGL GPU DSM & OpRegion area */
-		.baseaddr = GPU_DSM_OPREGION_BASE_GPA,
-		.length   = GPU_DSM_OPREGION_SIZE,
-		.type     = E820_TYPE_RESERVED
-	},
-
-	{	/* lowmem part2 to lowmem_limit */
-		.baseaddr = GPU_DSM_OPREGION_BASE_GPA + GPU_DSM_OPREGION_SIZE,
+	{	/* lowmem to lowlimit */
+		.baseaddr = 0x0,
 		.length   = 0x0,
 		.type     = E820_TYPE_RESERVED
-	},
-
-	/*
-	 * Software SRAM area: base: 0x7f800000, size: 0x800000
-	 * In native, the Software SRAM region should be part of DRAM memory.
-	 * But one fixed Software SRAM gpa is friendly for virtualization due
-	 * to decoupled with various guest memory size.
-	 */
-	{
-		.baseaddr = SOFTWARE_SRAM_BASE_GPA,
-		.length   = SOFTWARE_SRAM_MAX_SIZE,
-		.type	  = E820_TYPE_RESERVED
 	},
 
 	{	/* ECFG_BASE to 4GB */
@@ -227,23 +206,18 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 	uint32_t removed = 0, k;
 
 	memcpy(e820, e820_default_entries, sizeof(e820_default_entries));
-	if (ctx->lowmem <= e820[LOWRAM_E820_ENTRY + 2].baseaddr) {
-		e820[LOWRAM_E820_ENTRY].length =
-			(ctx->lowmem < e820[LOWRAM_E820_ENTRY+1].baseaddr ? ctx->lowmem :
-			e820[LOWRAM_E820_ENTRY+1].baseaddr) - e820[LOWRAM_E820_ENTRY].baseaddr;
 
-		memmove(&e820[LOWRAM_E820_ENTRY + 2], &e820[LOWRAM_E820_ENTRY + 3],
-				sizeof(struct e820_entry) *
-				(NUM_E820_ENTRIES - (LOWRAM_E820_ENTRY + 3)));
-		removed++;
+	/* reserve device memory hole for gpu(dsm/opregion) etc */
+	if (gpu_opregion_gpa) {
+		ctx->lowmem_limit = (gpu_opregion_gpa > SOFTWARE_SRAM_BASE_GPA) ?
+			SOFTWARE_SRAM_BASE_GPA : gpu_opregion_gpa;
 	} else {
-		e820[LOWRAM_E820_ENTRY].length = e820[LOWRAM_E820_ENTRY+1].baseaddr -
-			e820[LOWRAM_E820_ENTRY].baseaddr;
-
-		e820[LOWRAM_E820_ENTRY + 2].length =
-			((ctx->lowmem < e820[LOWRAM_E820_ENTRY + 3].baseaddr) ? ctx->lowmem :
-			e820[LOWRAM_E820_ENTRY + 3].baseaddr) - e820[LOWRAM_E820_ENTRY + 2].baseaddr;
+		ctx->lowmem_limit = SOFTWARE_SRAM_BASE_GPA;
 	}
+	e820[LOWRAM_E820_ENTRY].length = ctx->lowmem_limit -
+		e820[LOWRAM_E820_ENTRY].baseaddr;
+	e820[LOWRAM_E820_ENTRY+1].baseaddr = ctx->lowmem_limit;
+	e820[LOWRAM_E820_ENTRY+1].length = PCI_EMUL_MEMBASE32 - ctx->lowmem_limit;
 
 	/* remove [5GB, highmem) if it's empty */
 	if (ctx->highmem > 0) {
