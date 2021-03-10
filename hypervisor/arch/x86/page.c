@@ -166,9 +166,6 @@ static struct page ept_dummy_pages[CONFIG_MAX_VM_NUM];
 /* ept: extended page pool*/
 static struct page_pool ept_page_pool[CONFIG_MAX_VM_NUM];
 
-/* pre-assumption: TRUSTY_RAM_SIZE is 2M aligned */
-static struct page post_uos_sworld_memory[MAX_POST_VM_NUM][TRUSTY_RAM_SIZE >> PAGE_SHIFT] __aligned(MEM_2M);
-
 
 
 /*
@@ -187,11 +184,6 @@ void reserve_buffer_for_ept_pages(void)
 		/* assume each VM has same amount of EPT pages */
 		offset += EPT_PAGE_NUM * PAGE_SIZE;
 	}
-}
-
-void *get_reserve_sworld_memory_base(void)
-{
-	return post_uos_sworld_memory;
 }
 
 /*
@@ -246,13 +238,6 @@ void init_ept_pgtable(struct pgtable *table, uint16_t vm_id)
 	spinlock_init(&ept_page_pool[vm_id].lock);
 	memset((void *)ept_page_pool[vm_id].bitmap, 0, ept_page_pool[vm_id].bitmap_size * sizeof(uint64_t));
 	ept_page_pool[vm_id].last_hint_id = 0UL;
-
-	if (is_postlaunched_vm(vm)) {
-		uint16_t sos_vm_id = (get_sos_vm())->vm_id;
-		uint16_t page_idx = vmid_2_rel_vmid(sos_vm_id, vm_id) - 1U;
-
-		vm->arch_vm.sworld_memory_base_hva = post_uos_sworld_memory[page_idx];
-	}
 
 	table->pool = &ept_page_pool[vm_id];
 	table->default_access_right = EPT_RWX;
