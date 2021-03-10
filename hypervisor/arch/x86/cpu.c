@@ -264,14 +264,10 @@ void init_pcpu_post(uint16_t pcpu_id)
 		}
 
 		ASSERT(get_pcpu_id() == BSP_CPU_ID, "");
-
-		init_software_sram(true);
 	} else {
 		pr_dbg("Core %hu is up", pcpu_id);
 
 		pr_warn("Skipping VM configuration check which should be done before building HV binary.");
-
-		init_software_sram(false);
 
 		/* Initialize secondary processor interrupts. */
 		init_interrupt(pcpu_id);
@@ -281,6 +277,10 @@ void init_pcpu_post(uint16_t pcpu_id)
 
 		/* Wait for boot processor to signal all secondary cores to continue */
 		wait_sync_change(&pcpu_sync, 0UL);
+	}
+
+	if (!init_software_sram(pcpu_id == BSP_CPU_ID)) {
+		panic("failed to initialize software SRAM!");
 	}
 
 	init_sched(pcpu_id);
