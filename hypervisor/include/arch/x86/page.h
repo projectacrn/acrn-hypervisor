@@ -15,6 +15,7 @@
 #define PAGE_MASK	0xFFFFFFFFFFFFF000UL
 
 #define MAXIMUM_PA_WIDTH	39U	/* maximum physical-address width */
+#define MAX_PHY_ADDRESS_SPACE	(1UL << MAXIMUM_PA_WIDTH)
 
 /* size of the low MMIO address space: 2GB */
 #define PLATFORM_LO_MMIO_SIZE	0x80000000UL
