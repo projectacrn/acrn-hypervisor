@@ -15,6 +15,7 @@
 
 #include <bits.h>
 #include <spinlock.h>
+#include <pgtable.h>
 #include <vcpu.h>
 #include <vioapic.h>
 #include <vpic.h>

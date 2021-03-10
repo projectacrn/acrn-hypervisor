@@ -29,7 +29,6 @@
 
 #include <types.h>
 #include <atomic.h>
-#include <page.h>
 #include <pgtable.h>
 #include <cpu_caps.h>
 #include <mmu.h>

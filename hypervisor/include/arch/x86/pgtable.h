@@ -136,6 +136,39 @@
 #define PML4E_PFN_MASK		0x0000FFFFFFFFF000UL
 #define PDPTE_PFN_MASK		0x0000FFFFFFFFF000UL
 #define PDE_PFN_MASK		0x0000FFFFFFFFF000UL
+
+/**
+ * @brief Page tables level in IA32 paging mode
+ */
+enum _page_table_level {
+        /**
+         * @brief The PML4 level in the page tables
+         */
+	IA32E_PML4 = 0,
+        /**
+         * @brief The Page-Directory-Pointer-Table level in the page tables
+         */
+	IA32E_PDPT = 1,
+        /**
+         * @brief The Page-Directory level in the page tables
+         */
+	IA32E_PD = 2,
+        /**
+         * @brief The Page-Table level in the page tables
+         */
+	IA32E_PT = 3,
+};
+
+struct pgtable {
+	uint64_t default_access_right;
+	struct page_pool *pool;
+	bool (*large_page_support)(enum _page_table_level level, uint64_t prot);
+	uint64_t (*pgentry_present)(uint64_t pte);
+	void (*clflush_pagewalk)(const void *p);
+	void (*tweak_exe_right)(uint64_t *entry);
+	void (*recover_exe_right)(uint64_t *entry);
+};
+
 /**
  * @brief Address space translation
  *
