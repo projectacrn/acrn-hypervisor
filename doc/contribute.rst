@@ -19,6 +19,7 @@ also find details about specific architecture topics.
 
 .. toctree::
    :maxdepth: 1
+   :color: green
 
    developer-guides/modularity
    developer-guides/hld/index
@@ -32,11 +33,10 @@ also find details about specific architecture topics.
 Contribute Guides
 *****************
 
-As an open-source project, we welcome and encourage the community to
-submit patches for code, documentation, tests, and more, directly to the
-project. Here's where you'll find how the development team works and the
-guidelines they (and you) use to contribute code (and documentation) to
-the project.
+As an open-source project, we welcome and encourage the community to submit
+patches for code, documentation, tests, and more, directly to the project.
+Here's where you'll find how the development team works and the guidelines
+they (and you) use to contribute code (and documentation) to the project.
 
 .. rst-class:: rst-columns2
 
