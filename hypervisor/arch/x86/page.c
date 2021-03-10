@@ -16,8 +16,6 @@
 #include <logmsg.h>
 
 
-#define MAX_PHY_ADDRESS_SPACE	(1UL << MAXIMUM_PA_WIDTH)
-
 /* PPT VA and PA are identical mapping */
 #define PPT_PML4_PAGE_NUM	PML4_PAGE_NUM(MAX_PHY_ADDRESS_SPACE)
 #define PPT_PDPT_PAGE_NUM	PDPT_PAGE_NUM(MAX_PHY_ADDRESS_SPACE)
@@ -88,7 +86,7 @@ void free_page(struct page_pool *pool, struct page *page)
 }
 
 /* @pre: The PPT and EPT have same page granularity */
-static inline bool large_page_support(enum _page_table_level level, __unused uint64_t prot)
+static inline bool ppt_large_page_support(enum _page_table_level level, __unused uint64_t prot)
 {
 	bool support;
 
@@ -112,17 +110,17 @@ static inline uint64_t ppt_pgentry_present(uint64_t pte)
 	return pte & PAGE_PRESENT;
 }
 
-static inline void nop_tweak_exe_right(uint64_t *entry __attribute__((unused))) {}
-static inline void nop_recover_exe_right(uint64_t *entry __attribute__((unused))) {}
+static inline void ppt_nop_tweak_exe_right(uint64_t *entry __attribute__((unused))) {}
+static inline void ppt_nop_recover_exe_right(uint64_t *entry __attribute__((unused))) {}
 
 const struct pgtable ppt_pgtable = {
 	.default_access_right = (PAGE_PRESENT | PAGE_RW | PAGE_USER),
 	.pool = &ppt_page_pool,
-	.large_page_support = large_page_support,
+	.large_page_support = ppt_large_page_support,
 	.pgentry_present = ppt_pgentry_present,
 	.clflush_pagewalk = ppt_clflush_pagewalk,
-	.tweak_exe_right = nop_tweak_exe_right,
-	.recover_exe_right = nop_recover_exe_right,
+	.tweak_exe_right = ppt_nop_tweak_exe_right,
+	.recover_exe_right = ppt_nop_recover_exe_right,
 };
 
 /* EPT address space will not beyond the platform physical address space */
@@ -186,6 +184,22 @@ void reserve_buffer_for_ept_pages(void)
 	}
 }
 
+/* @pre: The PPT and EPT have same page granularity */
+static inline bool ept_large_page_support(enum _page_table_level level, __unused uint64_t prot)
+{
+	bool support;
+
+	if (level == IA32E_PD) {
+		support = true;
+	} else if (level == IA32E_PDPT) {
+		support = pcpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE);
+	} else {
+		support = false;
+	}
+
+	return support;
+}
+
 /*
  * Pages without execution right, such as MMIO, can always use large page
  * base on hardware capability, even if the VM is an RTVM. This can save
@@ -196,7 +210,7 @@ static inline bool use_large_page(enum _page_table_level level, uint64_t prot)
 	bool ret = false;	/* for code page */
 
 	if ((prot & EPT_EXE) == 0UL) {
-		ret = large_page_support(level, prot);
+		ret = ept_large_page_support(level, prot);
 	}
 
 	return ret;
@@ -211,6 +225,9 @@ static inline void ept_clflush_pagewalk(const void* etry)
 {
 	iommu_flush_cache(etry, sizeof(uint64_t));
 }
+
+static inline void ept_nop_tweak_exe_right(uint64_t *entry __attribute__((unused))) {}
+static inline void ept_nop_recover_exe_right(uint64_t *entry __attribute__((unused))) {}
 
 /* The function is used to disable execute right for (2MB / 1GB)large pages in EPT */
 static inline void ept_tweak_exe_right(uint64_t *entry)
@@ -243,7 +260,7 @@ void init_ept_pgtable(struct pgtable *table, uint16_t vm_id)
 	table->default_access_right = EPT_RWX;
 	table->pgentry_present = ept_pgentry_present;
 	table->clflush_pagewalk = ept_clflush_pagewalk;
-	table->large_page_support = large_page_support;
+	table->large_page_support = ept_large_page_support;
 
 	/* Mitigation for issue "Machine Check Error on Page Size Change" */
 	if (is_ept_force_4k_ipage()) {
@@ -254,7 +271,7 @@ void init_ept_pgtable(struct pgtable *table, uint16_t vm_id)
 			table->large_page_support = use_large_page;
 		}
 	} else {
-		table->tweak_exe_right = nop_tweak_exe_right;
-		table->recover_exe_right = nop_recover_exe_right;
+		table->tweak_exe_right = ept_nop_tweak_exe_right;
+		table->recover_exe_right = ept_nop_recover_exe_right;
 	}
 }
