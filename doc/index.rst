@@ -67,6 +67,8 @@ through an open source platform.
    </ul>
 
 
+This will cause a :ref:`broken reference` error.
+
 Source code for Project ACRN is maintained in the
 `Project ACRN GitHub repo`_, and is provided under the BSD 3-clause
 license.
