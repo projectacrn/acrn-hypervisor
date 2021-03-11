@@ -31,7 +31,7 @@ void vcpu_kick_splitlock_emulation(struct acrn_vcpu *cur_vcpu)
 	uint16_t i;
 
 	if (cur_vcpu->vm->hw.created_vcpus > 1U) {
-		get_vm_lock(cur_vcpu->vm);
+		get_split_lock(cur_vcpu->vm);
 
 		foreach_vcpu(i, cur_vcpu->vm, other) {
 			if (other != cur_vcpu) {
@@ -53,7 +53,7 @@ void vcpu_complete_splitlock_emulation(struct acrn_vcpu *cur_vcpu)
 			}
 		}
 
-		put_vm_lock(cur_vcpu->vm);
+		put_split_lock(cur_vcpu->vm);
 	}
 }
 

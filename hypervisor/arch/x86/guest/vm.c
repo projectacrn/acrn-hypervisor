@@ -1088,3 +1088,13 @@ void put_vm_lock(struct acrn_vm *vm)
 {
 	spinlock_release(&vm->vm_state_lock);
 }
+
+void get_split_lock(struct acrn_vm *vm)
+{
+	spinlock_obtain(&vm->split_lock);
+}
+
+void put_split_lock(struct acrn_vm *vm)
+{
+	spinlock_release(&vm->split_lock);
+}
