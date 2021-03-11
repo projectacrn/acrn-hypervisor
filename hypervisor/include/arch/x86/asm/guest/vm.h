@@ -149,6 +149,7 @@ struct acrn_vm {
 	 * the initialization depends on the clear BSS section
 	 */
 	spinlock_t vm_state_lock;
+	spinlock_t split_lock;
 	spinlock_t vlapic_mode_lock;	/* Spin-lock used to protect vlapic_mode modifications for a VM */
 	spinlock_t ept_lock;	/* Spin-lock used to protect ept add/modify/remove for a VM */
 	spinlock_t emul_mmio_lock;	/* Used to protect emulation mmio_node concurrent access for a VM */
@@ -274,6 +275,10 @@ void get_vm_lock(struct acrn_vm *vm);
 void put_vm_lock(struct acrn_vm *vm);
 
 void *get_sworld_memory_base(void);
+
+void get_split_lock(struct acrn_vm *vm);
+void put_split_lock(struct acrn_vm *vm);
+
 #endif /* !ASSEMBLER */
 
 #endif /* VM_H_ */
