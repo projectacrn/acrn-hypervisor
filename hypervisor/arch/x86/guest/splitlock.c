@@ -49,6 +49,19 @@ void vcpu_complete_splitlock_emulation(struct acrn_vcpu *cur_vcpu)
 	if (cur_vcpu->vm->hw.created_vcpus > 1U) {
 		foreach_vcpu(i, cur_vcpu->vm, other) {
 			if (other != cur_vcpu) {
+				/*
+				 * Suppose the current vcpu is 0, the other vcpus (1, 2, 3) may wait on the
+				 * "get_vm_lock", the current vcpu need clear the ACRN_REQUEST_SPLIT_LOCK
+				 * explicitly here after finishing the emulation. Otherwise, it make cause
+				 * dead lock. for example:
+				 * 	1. Once vcpu 0 "put_vm_lock", let's say vcpu 1 will "get_vm_lock".
+				 *	2. vcpu 1 call "vcpu_make_request" to pause vcpu 0, 2, 3.
+				 *	3. vcpu 1's VCPU_EVENT_SPLIT_LOCK is still not cleared because
+				 *	   the vcpu 0 called "vcpu_make_request" ever.
+				 *	4. All vcpus will wait for VCPU_EVENT_SPLIT_LOCK in acrn_handle_pending_request.
+				 * We should avoid this dead lock case.
+				 */
+				bitmap_clear_lock(ACRN_REQUEST_SPLIT_LOCK, &other->arch.pending_req);
 				signal_event(&other->events[VCPU_EVENT_SPLIT_LOCK]);
 			}
 		}
