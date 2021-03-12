@@ -29,18 +29,16 @@ static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
 
 spurious_handler_t spurious_handler;
 
-struct static_mapping_table {
+static struct {
 	uint32_t irq;
 	uint32_t vector;
-};
-
-static struct static_mapping_table irq_static_mappings[NR_STATIC_MAPPINGS] = {
+} irq_static_mappings[NR_STATIC_MAPPINGS] = {
 	{TIMER_IRQ, TIMER_VECTOR},
 	{NOTIFY_VCPU_IRQ, NOTIFY_VCPU_VECTOR},
 	{PMI_IRQ, PMI_VECTOR},
 
 	/* To be initialized at runtime in init_irq_descs() */
-	[NR_STATIC_MAPPINGS_1 ... (NR_STATIC_MAPPINGS_1 + CONFIG_MAX_VM_NUM - 1U)] = {},
+	[NR_STATIC_MAPPINGS_1 ... (NR_STATIC_MAPPINGS - 1U)] = {},
 };
 
 /*
@@ -413,7 +411,12 @@ void handle_nmi(__unused struct intr_excp_ctx *ctx)
 	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
 }
 
-static void init_irq_descs(void)
+static void prealloc_irq_num(uint32_t irq)
+{
+	bitmap_set_nolock((uint16_t)(irq & 0x3FU), irq_alloc_bitmap + (irq >> 6U));
+}
+
+static void init_irq_data_arch(struct irq_desc descs[])
 {
 	uint32_t i;
 
@@ -433,9 +436,7 @@ static void init_irq_descs(void)
 
 	for (i = 0U; i < NR_IRQS; i++) {
 		irq_data[i].vector = VECTOR_INVALID;
-		irq_desc_array[i].irq = i;
-		irq_desc_array[i].arch_data = &irq_data[i];
-		spinlock_init(&irq_desc_array[i].lock);
+		descs[i].arch_data = &irq_data[i];
 	}
 
 	for (i = 0U; i <= NR_MAX_VECTOR; i++) {
@@ -449,27 +450,33 @@ static void init_irq_descs(void)
 
 		irq_data[irq].vector = vr;
 		vector_to_irq[vr] = irq;
-		bitmap_set_nolock((uint16_t)(irq & 0x3FU),
-			      irq_alloc_bitmap + (irq >> 6U));
+		prealloc_irq_num(irq);
 	}
+}
+
+static void init_irq_descs(void)
+{
+	uint32_t i;
+
+	for (i = 0U; i < NR_IRQS; i++) {
+		struct irq_desc *desc = &irq_desc_array[i];
+		desc->irq = i;
+		spinlock_init(&desc->lock);
+	}
+
+	init_irq_data_arch(irq_desc_array);
+}
+
+/* must be called after IRQ setup */
+static void setup_irqs_arch(void)
+{
+	ioapic_setup_irqs();
 }
 
 static void disable_pic_irqs(void)
 {
 	pio_write8(0xffU, 0xA1U);
 	pio_write8(0xffU, 0x21U);
-}
-
-void init_default_irqs(uint16_t cpu_id)
-{
-	if (cpu_id == BSP_CPU_ID) {
-		init_irq_descs();
-
-		/* we use ioapic only, disable legacy PIC */
-		disable_pic_irqs();
-		ioapic_setup_irqs();
-		init_softirq();
-	}
 }
 
 static inline void fixup_idt(const struct host_idt_descriptor *idtd)
@@ -495,7 +502,7 @@ static inline void set_idt(struct host_idt_descriptor *idtd)
 		      [idtd] "m"(*idtd));
 }
 
-void init_interrupt(uint16_t pcpu_id)
+static void init_interrupt_arch(uint16_t pcpu_id)
 {
 	struct host_idt_descriptor *idtd = &HOST_IDTR;
 
@@ -504,7 +511,22 @@ void init_interrupt(uint16_t pcpu_id)
 	}
 	set_idt(idtd);
 	init_lapic(pcpu_id);
-	init_default_irqs(pcpu_id);
+
+	if (pcpu_id == BSP_CPU_ID) {
+		/* we use ioapic only, disable legacy PIC */
+		disable_pic_irqs();
+	}
+}
+
+void init_interrupt(uint16_t pcpu_id)
+{
+	init_interrupt_arch(pcpu_id);
+
+	if (pcpu_id == BSP_CPU_ID) {
+		init_irq_descs();
+		setup_irqs_arch();
+		init_softirq();
+	}
 
 	CPU_IRQ_ENABLE();
 }
