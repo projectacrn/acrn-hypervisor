@@ -247,6 +247,18 @@ extern uint64_t irq_alloc_bitmap[IRQ_ALLOC_BITMAP_SIZE];
 
 typedef void (*irq_action_t)(uint32_t irq, void *priv_data);
 
+/*
+ * x86 irq data
+ */
+struct x86_irq_data {
+	uint32_t vector;	/**< assigned vector */
+#ifdef PROFILING_ON
+	uint64_t ctx_rip;
+	uint64_t ctx_rflags;
+	uint64_t ctx_cs;
+#endif
+};
+
 /**
  * @brief Interrupt descriptor
  *
@@ -254,18 +266,14 @@ typedef void (*irq_action_t)(uint32_t irq, void *priv_data);
  */
 struct irq_desc {
 	uint32_t irq;		/**< index to irq_desc_base */
-	uint32_t vector;	/**< assigned vector */
+
+	void *arch_data;	/**< arch-specific data */
 
 	irq_action_t action;	/**< callback registered from component */
 	void *priv_data;	/**< irq_action private data */
 	uint32_t flags;		/**< flags for trigger mode/ptdev */
 
 	spinlock_t lock;
-#ifdef PROFILING_ON
-	uint64_t ctx_rip;
-	uint64_t ctx_rflags;
-	uint64_t ctx_cs;
-#endif
 };
 
 /**
