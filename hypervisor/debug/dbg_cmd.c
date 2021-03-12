@@ -20,7 +20,7 @@ static struct uart_cmd {
 	int type;
 } cmd_list[] = {
 	{ "uart=port@",	PIO },	/* uart=port@0x3F8 */
-	{ "uart=bdf@",	PCI },	/* uart=bdf@0:18.2 */
+	{ "uart=bdf@",	PCI },	/* uart=bdf@0xc1 */
 	{ "uart=mmio@",	MMIO },	/* uart=mmio@0xfe040000 */
 	{ "uart=disabled", INVALID }
 };
