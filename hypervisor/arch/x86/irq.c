@@ -23,6 +23,8 @@ static spinlock_t irq_alloc_spinlock = { .head = 0U, .tail = 0U, };
 
 uint64_t irq_alloc_bitmap[IRQ_ALLOC_BITMAP_SIZE];
 struct irq_desc irq_desc_array[NR_IRQS];
+static struct x86_irq_data irq_data[NR_IRQS];
+
 static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
 
 spurious_handler_t spurious_handler;
@@ -100,20 +102,20 @@ static void free_irq_num(uint32_t irq)
 uint32_t alloc_irq_vector(uint32_t irq)
 {
 	uint32_t vr;
-	struct irq_desc *desc;
+	struct x86_irq_data *irqd;
 	uint64_t rflags;
 	uint32_t ret;
 
 	if (irq < NR_IRQS) {
-		desc = &irq_desc_array[irq];
+		irqd = &irq_data[irq];
 
-		if (desc->vector != VECTOR_INVALID) {
-			if (vector_to_irq[desc->vector] == irq) {
+		if (irqd->vector != VECTOR_INVALID) {
+			if (vector_to_irq[irqd->vector] == irq) {
 				/* statically binded */
-				vr = desc->vector;
+				vr = irqd->vector;
 			} else {
 				pr_err("[%s] irq[%u]:vector[%u] mismatch",
-					__func__, irq, desc->vector);
+					__func__, irq, irqd->vector);
 				vr = VECTOR_INVALID;
 			}
 		} else {
@@ -125,7 +127,7 @@ uint32_t alloc_irq_vector(uint32_t irq)
 			for (vr = VECTOR_DYNAMIC_START;
 				vr <= VECTOR_DYNAMIC_END; vr++) {
 				if (vector_to_irq[vr] == IRQ_INVALID) {
-					desc->vector = vr;
+					irqd->vector = vr;
 					vector_to_irq[vr] = irq;
 					break;
 				}
@@ -145,19 +147,19 @@ uint32_t alloc_irq_vector(uint32_t irq)
 /* free the vector allocated via alloc_irq_vector() */
 static void free_irq_vector(uint32_t irq)
 {
-	struct irq_desc *desc;
+	struct x86_irq_data *irqd;
 	uint32_t vr;
 	uint64_t rflags;
 
 	if (irq < NR_IRQS) {
-		desc = &irq_desc_array[irq];
+		irqd = &irq_data[irq];
 
-		if ((irq >= NR_LEGACY_IRQ) && (desc->vector < VECTOR_FIXED_START)) {
+		if ((irq >= NR_LEGACY_IRQ) && (irqd->vector < VECTOR_FIXED_START)) {
 			/* do nothing for LEGACY_IRQ and static allocated ones */
 
 			spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
-			vr = desc->vector;
-			desc->vector = VECTOR_INVALID;
+			vr = irqd->vector;
+			irqd->vector = VECTOR_INVALID;
 
 			vr &= NR_MAX_VECTOR;
 			if (vector_to_irq[vr] == irq) {
@@ -220,7 +222,7 @@ int32_t request_irq(uint32_t req_irq, irq_action_t action_fn, void *priv_data,
 				spinlock_irqrestore_release(&desc->lock, rflags);
 
 				ret = (int32_t)irq;
-				dev_dbg(DBG_LEVEL_IRQ, "[%s] irq%d vr:0x%x", __func__, irq, desc->vector);
+				dev_dbg(DBG_LEVEL_IRQ, "[%s] irq%d vr:0x%x", __func__, irq, vector);
 			} else {
 				ret = -EBUSY;
 				pr_err("%s: request irq(%u) vr(%u) failed, already requested", __func__,
@@ -274,9 +276,9 @@ uint32_t irq_to_vector(uint32_t irq)
 {
 	uint32_t ret;
 	if (irq < NR_IRQS) {
-		ret = irq_desc_array[irq].vector;
+		ret = irq_data[irq].vector;
 	} else {
-	        ret = VECTOR_INVALID;
+		ret = VECTOR_INVALID;
 	}
 
 	return ret;
@@ -336,6 +338,7 @@ void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 	uint32_t vr = ctx->vector;
 	uint32_t irq = vector_to_irq[vr];
 	struct irq_desc *desc;
+	struct x86_irq_data *irqd;
 
 	/* The value from vector_to_irq[] must be:
 	 * IRQ_INVALID, which means the vector is not allocated;
@@ -345,15 +348,16 @@ void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 	 */
 	if (irq < NR_IRQS) {
 		desc = &irq_desc_array[irq];
+		irqd = desc->arch_data;
 		per_cpu(irq_count, get_pcpu_id())[irq]++;
 
-		if ((vr == desc->vector) &&
+		if ((vr == irqd->vector) &&
 			bitmap_test((uint16_t)(irq & 0x3FU), irq_alloc_bitmap + (irq >> 6U))) {
 #ifdef PROFILING_ON
 			/* Saves ctx info into irq_desc */
-			desc->ctx_rip = ctx->rip;
-			desc->ctx_rflags = ctx->rflags;
-			desc->ctx_cs = ctx->cs;
+			irqd->ctx_rip = ctx->rip;
+			irqd->ctx_rflags = ctx->rflags;
+			irqd->ctx_cs = ctx->cs;
 #endif
 			handle_irq(desc);
 		}
@@ -428,8 +432,9 @@ static void init_irq_descs(void)
 	}
 
 	for (i = 0U; i < NR_IRQS; i++) {
+		irq_data[i].vector = VECTOR_INVALID;
 		irq_desc_array[i].irq = i;
-		irq_desc_array[i].vector = VECTOR_INVALID;
+		irq_desc_array[i].arch_data = &irq_data[i];
 		spinlock_init(&irq_desc_array[i].lock);
 	}
 
@@ -442,7 +447,7 @@ static void init_irq_descs(void)
 		uint32_t irq = irq_static_mappings[i].irq;
 		uint32_t vr = irq_static_mappings[i].vector;
 
-		irq_desc_array[irq].vector = vr;
+		irq_data[irq].vector = vr;
 		vector_to_irq[vr] = irq;
 		bitmap_set_nolock((uint16_t)(irq & 0x3FU),
 			      irq_alloc_bitmap + (irq >> 6U));

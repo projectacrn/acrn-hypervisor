@@ -637,16 +637,16 @@ static void profiling_pmi_handler(uint32_t irq, __unused void *data)
 		get_cpu_var(profiling_info.vm_info).external_vector = -1;
 	/* Attribute PMI to hypervisor context */
 	} else {
+		const struct x86_irq_data *irqd = irq_desc_array[irq].arch_data;
 		psample->csample.os_id = 0xFFFFU;
 		(void)memcpy_s(psample->csample.task, 16, "VMM\0", 4);
 		psample->csample.cpu_id = get_pcpu_id();
 		psample->csample.process_id = 0U;
 		psample->csample.task_id = 0U;
 		psample->csample.overflow_status = perf_ovf_status;
-		psample->csample.rip = irq_desc_array[irq].ctx_rip;
-		psample->csample.rflags
-			= (uint32_t)irq_desc_array[irq].ctx_rflags;
-		psample->csample.cs = (uint32_t)irq_desc_array[irq].ctx_cs;
+		psample->csample.rip = irqd->ctx_rip;
+		psample->csample.rflags = (uint32_t)irqd->ctx_rflags;
+		psample->csample.cs = (uint32_t)irqd->ctx_cs;
 	}
 
 	if ((sep_collection_switch &
