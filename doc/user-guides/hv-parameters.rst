@@ -13,7 +13,11 @@ The ACRN hypervisor supports the following parameter:
 +=================+=============================+========================================================================================+
 |                 | disabled                    | This disables the serial port completely.                                              |
 |                 +-----------------------------+----------------------------------------------------------------------------------------+
-| ``uart=``       | bdf@<BDF value>             | This sets the serial port PCI BDF, e.g. ``bdf@0:18.1``                                 |
+| ``uart=``       | bdf@<BDF value>             | This sets the serial port PCI BDF (in HEX), e.g. ``bdf@0xc1``                          |
+|                 |                             |                                                                                        |
+|                 |                             | BDF: Bus, Device, and Function (in HEX) of the serial PCI device. The BDF is packed    |
+|                 |                             | into a 16-bit WORD with format (B:8, D:5, F:3). For example, PCI device ``0:18.1``     |
+|                 |                             | becomes ``0xc1``                                                                       |
 |                 +-----------------------------+----------------------------------------------------------------------------------------+
 |                 | port@<port address>         | This sets the serial port PIO address, e.g. ``uart=port@0x3F8``                        |
 |                 +-----------------------------+----------------------------------------------------------------------------------------+
@@ -30,7 +34,7 @@ For example:
       insmod part_gpt
       insmod ext2
       echo 'Loading ACRN hypervisor ...'
-      multiboot --quirk-modules-after-kernel /boot/acrn.32.out uart=bdf@0:18.1
+      multiboot --quirk-modules-after-kernel /boot/acrn.32.out uart=bdf@0xc1
       module /boot/bzImage Linux_bzImage
       module /boot/bzImage2 Linux_bzImage2
    }
