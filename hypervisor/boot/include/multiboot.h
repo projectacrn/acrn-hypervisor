@@ -22,6 +22,7 @@
 
 #ifndef ASSEMBLER
 
+#include <efi.h>
 #include <vm_configurations.h>
 
 struct acrn_multiboot_info {
@@ -42,6 +43,7 @@ struct acrn_multiboot_info {
 	struct multiboot_mmap	mi_mmap_entry[MAX_MMAP_ENTRIES];
 
 	const void		*mi_acpi_rsdp_va;
+	struct efi_info		mi_efi_info;
 };
 
 void init_acrn_multiboot_info(uint32_t magic, uint32_t info);

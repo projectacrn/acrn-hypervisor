@@ -62,7 +62,7 @@ static struct acpi_table_rsdp *found_rsdp(char *base, uint64_t length)
 /* RSDP parsed from BIOS region should exist.
  * If it is NULL, the hypervisor can't be booted
  */
-struct acpi_table_rsdp *get_rsdp(void)
+static struct acpi_table_rsdp *get_rsdp(void)
 {
 	return acpi_rsdp;
 }

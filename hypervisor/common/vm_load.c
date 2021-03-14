@@ -10,7 +10,6 @@
 #include <ept.h>
 #include <mmu.h>
 #include <multiboot.h>
-#include <vacpi.h>
 #include <errno.h>
 #include <sprintf.h>
 #include <logmsg.h>
@@ -75,8 +74,14 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 	/* clear the zeropage */
 	(void)memset(zeropage, 0U, MEM_2K);
 
-	zeropage->acpi_rsdp_addr = get_vrsdp_gpa(vm);
+#ifdef CONFIG_MULTIBOOT2
+	if (is_sos_vm(vm)) {
+		struct acrn_multiboot_info *mbi = get_acrn_multiboot_info();
 
+		(void)memcpy_s(&(zeropage->boot_efi_info), sizeof(zeropage->boot_efi_info),
+				&(mbi->mi_efi_info), sizeof(mbi->mi_efi_info));
+	}
+#endif
 	/* copy part of the header into the zero page */
 	hva = (struct zero_page *)gpa2hva(vm, (uint64_t)sw_kernel->kernel_load_addr);
 	(void)memcpy_s(&(zeropage->hdr), sizeof(zeropage->hdr),
