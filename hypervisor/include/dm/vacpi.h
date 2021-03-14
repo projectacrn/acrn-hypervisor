@@ -27,7 +27,6 @@
 #define UOS_VIRT_PCI_MMCFG_START_BUS	0x0U
 #define UOS_VIRT_PCI_MMCFG_END_BUS	0xFFU
 
-uint64_t get_vrsdp_gpa(struct acrn_vm *vm);
 void build_vrsdp(struct acrn_vm *vm);
 
 #endif /* VACPI_H */

@@ -65,6 +65,8 @@ info_req_tag_start:
     .long   MULTIBOOT2_TAG_TYPE_MMAP        /* memory map */
     .long   MULTIBOOT2_TAG_TYPE_MODULE      /* boot modules infomation */
     .long   MULTIBOOT2_TAG_TYPE_ACPI_NEW    /* a copy of RSDP as defined per ACPI 2.0 or later specification */
+    .long   MULTIBOOT2_TAG_TYPE_EFI64       /* EFI system table, to be passed to guest Linux  */
+    .long   MULTIBOOT2_TAG_TYPE_EFI_MMAP    /* EFI memory map, to be passed to guest Linux */
 info_req_tag_end:
 
 #ifdef CONFIG_RELOC
