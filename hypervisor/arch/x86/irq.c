@@ -310,32 +310,57 @@ static inline bool irq_need_unmask(const struct irq_desc *desc)
 		&& is_ioapic_irq(desc->irq));
 }
 
-static inline void handle_irq(const struct irq_desc *desc)
+static void pre_irq_arch(const struct irq_desc *desc)
 {
-	irq_action_t action = desc->action;
-
 	if (irq_need_mask(desc))  {
 		ioapic_gsi_mask_irq(desc->irq);
 	}
 
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
+}
 
-	if (action != NULL) {
-		action(desc->irq, desc->priv_data);
-	}
-
+static void post_irq_arch(const struct irq_desc *desc)
+{
 	if (irq_need_unmask(desc)) {
 		ioapic_gsi_unmask_irq(desc->irq);
 	}
 }
 
-/* do_IRQ() */
+static inline void handle_irq(const struct irq_desc *desc)
+{
+	irq_action_t action = desc->action;
+
+	pre_irq_arch(desc);
+
+	if (action != NULL) {
+		action(desc->irq, desc->priv_data);
+	}
+
+	post_irq_arch(desc);
+}
+
+void do_irq(const uint32_t irq)
+{
+	struct irq_desc *desc;
+
+	if (irq < NR_IRQS) {
+		desc = &irq_desc_array[irq];
+		per_cpu(irq_count, get_pcpu_id())[irq]++;
+
+		/* XXX irq_alloc_bitmap is used lockless here */
+		if (bitmap_test((uint16_t)(irq & 0x3FU), irq_alloc_bitmap + (irq >> 6U))) {
+			handle_irq(desc);
+		}
+	}
+
+	do_softirq();
+}
+
 void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 {
 	uint32_t vr = ctx->vector;
 	uint32_t irq = vector_to_irq[vr];
-	struct irq_desc *desc;
 	struct x86_irq_data *irqd;
 
 	/* The value from vector_to_irq[] must be:
@@ -345,25 +370,21 @@ void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 	 * Any other value means there is something wrong.
 	 */
 	if (irq < NR_IRQS) {
-		desc = &irq_desc_array[irq];
-		irqd = desc->arch_data;
-		per_cpu(irq_count, get_pcpu_id())[irq]++;
+		irqd = &irq_data[irq];
 
-		if ((vr == irqd->vector) &&
-			bitmap_test((uint16_t)(irq & 0x3FU), irq_alloc_bitmap + (irq >> 6U))) {
+		if (vr == irqd->vector) {
 #ifdef PROFILING_ON
 			/* Saves ctx info into irq_desc */
 			irqd->ctx_rip = ctx->rip;
 			irqd->ctx_rflags = ctx->rflags;
 			irqd->ctx_cs = ctx->cs;
 #endif
-			handle_irq(desc);
+			/* Call the generic IRQ handling routine */
+			do_irq(irq);
 		}
 	} else {
 		handle_spurious_interrupt(vr);
 	}
-
-	do_softirq();
 }
 
 void dispatch_exception(struct intr_excp_ctx *ctx)
