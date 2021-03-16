@@ -442,7 +442,7 @@ void ioapic_setup_irqs(void)
 			gsi_table_data[gsi].ioapic_info.index = ioapic_id;
 
 			/* pinned irq before use it */
-			if (alloc_irq_num(gsi) == IRQ_INVALID) {
+			if (reserve_irq_num(gsi) == IRQ_INVALID) {
 				pr_err("failed to alloc IRQ[%d]", gsi);
 				gsi++;
 				continue;

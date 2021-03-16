@@ -126,7 +126,6 @@ void setup_pi_notification(void);
 typedef void (*spurious_handler_t)(uint32_t vector);
 extern spurious_handler_t spurious_handler;
 
-uint32_t alloc_irq_num(uint32_t req_irq);
 uint32_t alloc_irq_vector(uint32_t irq);
 
 /* RFLAGS */
@@ -283,6 +282,19 @@ struct irq_desc {
  *
  * @{
  */
+
+/**
+ * @brief Reserve an interrupt num
+ *
+ * Reserved interrupt num will not be available for dynamic IRQ allocations.
+ * This is normally used by the hypervisor for static IRQ mappings and/or
+ * arch specific, e.g. IOAPIC, interrupts during initialization.
+ *
+ * @param[in]	req_irq	irq_num to be reserved
+ *
+ * @retval >=0 on success, IRQ_INVALID on failure
+ */
+uint32_t reserve_irq_num(uint32_t req_irq);
 
 /**
  * @brief Request an interrupt
