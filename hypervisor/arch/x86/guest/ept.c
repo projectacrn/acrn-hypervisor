@@ -22,16 +22,29 @@
 /* EPT address space will not beyond the platform physical address space */
 #define EPT_PML4_PAGE_NUM	PML4_PAGE_NUM(MAX_PHY_ADDRESS_SPACE)
 #define EPT_PDPT_PAGE_NUM	PDPT_PAGE_NUM(MAX_PHY_ADDRESS_SPACE)
-#define EPT_PD_PAGE_NUM	PD_PAGE_NUM(MAX_PHY_ADDRESS_SPACE)
+/* EPT_PD_PAGE_NUM consists of three parts:
+ * 1) DRAM - and low MMIO are contiguous (we could assume this because ve820 was build by us),
+ *            CONFIG_MAX_VM_NUM at most
+ * 2) low MMIO - and DRAM are contiguous, MEM_4G at most
+ * 3) high MMIO - Only PCI BARs're high MMIO (we didn't build the high MMIO EPT mapping
+ *                except writing PCI 64 bits BARs)
+ *
+ * The first two parts may use PD_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + MEM_4G) PD pages
+ * to build EPT mapping at most;
+ * The high MMIO may use (CONFIG_MAX_PCI_DEV_NUM * 6U) PD pages (may plus some PDPT entries
+ * if the high MMIO BAR size is larger than 1GB) to build EPT mapping at most
+ */
+#define EPT_PD_PAGE_NUM	(PD_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + MEM_4G) + \
+			CONFIG_MAX_PCI_DEV_NUM * 6U)
 
 /* EPT_PT_PAGE_NUM consists of three parts:
  * 1) DRAM - and low MMIO are contiguous (we could assume this because ve820 was build by us),
  *            CONFIG_MAX_VM_NUM at most
- * 2) low MMIO - and DRAM are contiguous, (MEM_1G << 2U) at most
+ * 2) low MMIO - and DRAM are contiguous, MEM_4G at most
  * 3) high MMIO - Only PCI BARs're high MMIO (we didn't build the high MMIO EPT mapping
  *                except writing PCI 64 bits BARs)
  *
- * The first two parts may use PT_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + (MEM_1G << 2U)) PT pages
+ * The first two parts may use PT_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + MEM_4G) PT pages
  * to build EPT mapping at most;
  * The high MMIO may use (CONFIG_MAX_PCI_DEV_NUM * 6U) PT pages to build EPT mapping at most:
  * this is because: (a) each 64 bits MMIO BAR may spend one PT page at most to build EPT mapping,
@@ -45,7 +58,7 @@
  *                  (c) The Maximum number of PCI devices for ACRN and the Maximum number of virtual PCI devices
  *                      for VM both are CONFIG_PLATFORM_RAM_SIZE
  */
-#define EPT_PT_PAGE_NUM	(PT_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + (MEM_1G << 2U)) + \
+#define EPT_PT_PAGE_NUM	(PT_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + MEM_4G) + \
 			CONFIG_MAX_PCI_DEV_NUM * 6U)
 
 /* must be a multiple of 64 */
