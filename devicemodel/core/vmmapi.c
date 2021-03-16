@@ -46,6 +46,7 @@
 #include "dm.h"
 #include "pci_core.h"
 #include "log.h"
+#include "sw_load.h"
 
 #define MAP_NOCORE 0
 #define MAP_ALIGNED_SUPER 0
@@ -229,7 +230,7 @@ vm_create(const char *name, uint64_t req_buf, int *vcpu_num)
 	ctx->gvt_enabled = false;
 	ctx->fd = devfd;
 	ctx->lowmem_limit = PCI_EMUL_MEMBASE32;
-	ctx->highmem_gpa_base = PCI_EMUL_MEMLIMIT64;
+	ctx->highmem_gpa_base = HIGHRAM_START_ADDR;
 	ctx->name = (char *)(ctx + 1);
 	strncpy(ctx->name, name, strnlen(name, PATH_MAX) + 1);
 

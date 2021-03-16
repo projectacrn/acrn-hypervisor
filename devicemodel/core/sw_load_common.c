@@ -58,7 +58,7 @@ static char bootargs[BOOT_ARG_LEN];
  * 3:   gpu_rsvd_bot -  gpu_rsvd_top (reserved)      0x4004000
  * 4:   lowmem part2 -  0x80000000   (reserved)      0x0
  * 5:     0xE0000000 -  0x100000000  MCFG, MMIO      512MB
- * 6:    0x140000000 -  highmem      RAM             highmem - 5GB
+ * 6:  HIGHRAM_START_ADDR -  mmio64 start  RAM       ctx->highmem
  *
  * FIXME: Do we need to reserve DSM and OPREGION for GVTD here.
  */
@@ -106,7 +106,7 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 	},
 
 	{	/* 5GB to highmem */
-		.baseaddr = PCI_EMUL_MEMLIMIT64,
+		.baseaddr = HIGHRAM_START_ADDR,
 		.length   = 0x0,
 		.type     = E820_TYPE_RESERVED
 	},

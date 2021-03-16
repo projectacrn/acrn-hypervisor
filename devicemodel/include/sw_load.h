@@ -43,6 +43,8 @@
 #define LOWRAM_E820_ENTRY	1
 #define HIGHRAM_E820_ENTRY	6
 
+#define HIGHRAM_START_ADDR	 0x100000000UL /* 4GB */
+
 /* Defines a single entry in an E820 memory map. */
 struct e820_entry {
 	/** The base address of the memory range. */
