@@ -94,22 +94,10 @@ struct x86_irq_data {
 #endif
 };
 
+struct intr_excp_ctx;
+
 struct acrn_vcpu;
 struct acrn_vm;
-
-/*
- * Definition of the stack frame layout
- */
-struct intr_excp_ctx {
-	struct acrn_gp_regs gp_regs;
-	uint64_t vector;
-	uint64_t error_code;
-	uint64_t rip;
-	uint64_t cs;
-	uint64_t rflags;
-	uint64_t rsp;
-	uint64_t ss;
-};
 
 typedef void (*smp_call_func_t)(void *data);
 struct smp_call_info_data {
@@ -119,8 +107,6 @@ struct smp_call_info_data {
 
 void smp_call_function(uint64_t mask, smp_call_func_t func, void *data);
 bool is_notification_nmi(const struct acrn_vm *vm);
-
-void dispatch_exception(struct intr_excp_ctx *ctx);
 
 void setup_notification(void);
 void setup_pi_notification(void);
@@ -268,15 +254,6 @@ uint32_t irq_to_vector(uint32_t irq);
  * @param ctx Pointer to interrupt exception context
  */
 void dispatch_interrupt(const struct intr_excp_ctx *ctx);
-
-/**
- * @brief Handle NMI
- *
- * To handle an NMI
- *
- * @param ctx Pointer to interrupt exception context
- */
-void handle_nmi(__unused struct intr_excp_ctx *ctx);
 
 /**
  * @}

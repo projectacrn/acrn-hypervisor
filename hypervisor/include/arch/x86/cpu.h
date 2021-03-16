@@ -414,6 +414,31 @@ struct cpu_context {
 	struct ext_context ext_ctx;
 };
 
+/*
+ * Definition of the stack frame layout
+ */
+struct intr_excp_ctx {
+	struct acrn_gp_regs gp_regs;
+	uint64_t vector;
+	uint64_t error_code;
+	uint64_t rip;
+	uint64_t cs;
+	uint64_t rflags;
+	uint64_t rsp;
+	uint64_t ss;
+};
+
+void dispatch_exception(struct intr_excp_ctx *ctx);
+
+/**
+ * @brief Handle NMI
+ *
+ * To handle an NMI
+ *
+ * @param ctx Pointer to interrupt exception context
+ */
+void handle_nmi(__unused struct intr_excp_ctx *ctx);
+
 /* Function prototypes */
 void cpu_do_idle(void);
 void cpu_dead(void);
