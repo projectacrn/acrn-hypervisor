@@ -45,7 +45,9 @@ static uint8_t sanitized_page[PAGE_SIZE] __aligned(PAGE_SIZE);
 /* PPT VA and PA are identical mapping */
 #define PPT_PML4_PAGE_NUM	PML4_PAGE_NUM(MAX_PHY_ADDRESS_SPACE)
 #define PPT_PDPT_PAGE_NUM	PDPT_PAGE_NUM(MAX_PHY_ADDRESS_SPACE)
-#define PPT_PD_PAGE_NUM	PD_PAGE_NUM(MAX_PHY_ADDRESS_SPACE)
+/* Please refer to how the EPT_PD_PAGE_NUM was calculated */
+#define PPT_PD_PAGE_NUM	(PD_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + (MEM_4G)) + \
+			CONFIG_MAX_PCI_DEV_NUM * 6U)
 #define PPT_PT_PAGE_NUM	0UL	/* not support 4K granularity page mapping */
 /* must be a multiple of 64 */
 #define PPT_PAGE_NUM	(roundup((PPT_PML4_PAGE_NUM + PPT_PDPT_PAGE_NUM + \
