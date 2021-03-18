@@ -177,15 +177,11 @@ Build the ACRN Hypervisor on Ubuntu
    .. code-block:: none
 
       $ cd /home/acrn/work
-      $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
-      $ tar zxvf acpica-unix-20191018.tar.gz
-      $ cd acpica-unix-20191018
+      $ wget https://acpica.org/sites/acpica/files/acpica-unix-20210105.tar.gz
+      $ tar zxvf acpica-unix-20210105.tar.gz
+      $ cd acpica-unix-20210105
       $ make clean && make iasl
       $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
-
-   .. note:: While there are newer versions of software available from
-      the `ACPICA downloads site <https://acpica.org/downloads>`_, this
-      20191018 version has been verified to work.
 
 #. Get the ACRN source code:
 

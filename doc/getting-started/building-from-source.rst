@@ -80,9 +80,9 @@ ACRN.
           xsltproc
 
      $ sudo pip3 install lxml xmlschema
-     $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
-     $ tar zxvf acpica-unix-20191018.tar.gz
-     $ cd acpica-unix-20191018
+     $ wget https://acpica.org/sites/acpica/files/acpica-unix-20210105.tar.gz
+     $ tar zxvf acpica-unix-20210105.tar.gz
+     $ cd acpica-unix-20210105
      $ make clean && make iasl
      $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
 
