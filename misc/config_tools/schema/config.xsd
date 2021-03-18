@@ -343,7 +343,7 @@ devices.</xs:documentation>
     <xs:element name="name" minOccurs="0">
         <xs:annotation>
           <xs:documentation>Specify the VM name shown in the
-hypervisor console ``vm_lists`` command.</xs:documentation>
+hypervisor console ``vm_list`` command.</xs:documentation>
         </xs:annotation>
       <xs:simpleType>
         <xs:annotation>

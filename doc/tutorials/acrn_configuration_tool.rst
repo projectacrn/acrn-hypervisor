@@ -390,7 +390,7 @@ Prerequisites
 
   .. code-block:: none
 
-     $ cd ~/acrn-hypervisor/misc/acrn-config/config_app
+     $ cd ~/acrn-hypervisor/misc/config_tools/config_app
      $ sudo pip3 install -r requirements
 
 
