@@ -107,10 +107,10 @@ void write_vmsi_cap_reg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, 
 	static const uint8_t msi_ro_mask[0xEU] = { 0xffU, 0xffU, 0x8eU, 0xffU };
 	uint32_t msgctrl, old, ro_mask = ~0U;
 
-	enable_disable_msi(vdev, false);
-
 	(void)memcpy_s((void *)&ro_mask, bytes, (void *)&msi_ro_mask[offset - vdev->msi.capoff], bytes);
 	if (ro_mask != ~0U) {
+		enable_disable_msi(vdev, false);
+
 		old = pci_vdev_read_vcfg(vdev, offset, bytes);
 		pci_vdev_write_vcfg(vdev, offset, bytes, (old & ro_mask) | (val & ~ro_mask));
 
