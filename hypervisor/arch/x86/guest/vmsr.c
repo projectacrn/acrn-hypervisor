@@ -89,7 +89,7 @@ static const uint32_t mtrr_msrs[NUM_MTRR_MSRS] = {
 };
 
 /* Following MSRs are intercepted, but it throws GPs for any guest accesses */
-#define NUM_UNSUPPORTED_MSRS	111U
+#define NUM_UNSUPPORTED_MSRS	112U
 static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	/* Variable MTRRs are not supported */
 	MSR_IA32_MTRR_PHYSBASE_0,
@@ -135,6 +135,7 @@ static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	MSR_IA32_VMX_TRUE_EXIT_CTLS,
 	MSR_IA32_VMX_TRUE_ENTRY_CTLS,
 	MSR_IA32_VMX_VMFUNC,
+	MSR_IA32_VMX_PROCBASED_CTLS3,
 
 	/* MPX disabled: CPUID.07H.EBX[14] */
 	MSR_IA32_BNDCFGS,
