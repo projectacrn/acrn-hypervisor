@@ -114,33 +114,32 @@ static char mod_cmdline[PRE_VM_NUM + SOS_VM_NUM][MAX_BOOTARGS_SIZE] = { '\0' };
 static void init_vm_bootargs_info(struct acrn_vm *vm, const struct acrn_multiboot_info *mbi)
 {
 	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
-	char *bootargs = vm_config->os_config.bootargs;
 
-	if ((vm_config->load_order == PRE_LAUNCHED_VM) || (vm_config->load_order == SOS_VM)) {
-		if (mod_cmdline[vm->vm_id][0] == '\0') {
-			vm->sw.bootargs_info.src_addr = bootargs;
-		} else {
-			/* override build-in bootargs with multiboot module string which is configurable
-			 * at bootloader boot time. e.g. GRUB menu
-			 */
-			vm->sw.bootargs_info.src_addr = &mod_cmdline[vm->vm_id][0];
-		}
+	vm->sw.bootargs_info.src_addr = vm_config->os_config.bootargs;
+	/* If multiboot string of the kernel module exists, it would OVERRIDE the pre-configured build-in VM bootargs,
+	 * which means we give user a chance to re-configure VM bootargs at bootloader runtime. e.g. GRUB menu
+	 */
+	if (mod_cmdline[vm->vm_id][0] != '\0') {
+		vm->sw.bootargs_info.src_addr = &mod_cmdline[vm->vm_id][0];
 	}
 
 	if (vm_config->load_order == SOS_VM) {
 		if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE, " ", 1U) == 0) {
 			char seed_args[MAX_SEED_ARG_SIZE] = "";
 
-			fill_seed_arg(seed_args, true);
+			fill_seed_arg(seed_args, MAX_SEED_ARG_SIZE);
 			/* Fill seed argument for SOS
-			 * seed_args string ends with a white space and '\0', so no aditional delimiter is needed
+			 * seed_args string ends with a white space and '\0', so no additional delimiter is needed
 			 */
 			if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE,
 					seed_args, (MAX_BOOTARGS_SIZE - 1U)) != 0) {
 				pr_err("failed to fill seed arg to SOS bootargs!");
 			}
 
-			/* If there is cmdline from mbi->mi_cmdline, merge it with configured SOS bootargs. */
+			/* If there is cmdline from mbi->mi_cmdline, merge it with configured SOS bootargs.
+			 * This is very helpful when one of configured bootargs need to be revised at GRUB runtime
+			 * (e.g. "root="), since the later one would override the previous one if multiple bootargs exist.
+			 */
 			if (((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) && (*(mbi->mi_cmdline) != '\0')) {
 				if (strncat_s((char *)vm->sw.bootargs_info.src_addr, MAX_BOOTARGS_SIZE,
 						mbi->mi_cmdline, (MAX_BOOTARGS_SIZE - 1U)) != 0) {
