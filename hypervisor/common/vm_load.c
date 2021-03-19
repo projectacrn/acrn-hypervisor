@@ -11,10 +11,7 @@
 #include <asm/mmu.h>
 #include <multiboot.h>
 #include <errno.h>
-#include <sprintf.h>
 #include <logmsg.h>
-
-#define NUM_REMAIN_1G_PAGES	3UL
 
 /*
  * We put the guest init gdt after kernel/bootarg/ramdisk images. Suppose this is a
@@ -118,12 +115,9 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu)
 {
 	uint32_t i;
-	char  dyn_bootargs[100] = {0};
 	uint32_t kernel_entry_offset;
 	struct zero_page *zeropage;
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
-	struct sw_module_info *bootargs_info = &(vm->sw.bootargs_info);
-	const struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 
 	/* calculate the kernel entry point */
 	zeropage = (struct zero_page *)sw_kernel->kernel_src_addr;
@@ -142,21 +136,6 @@ static void prepare_loading_bzimage(struct acrn_vm *vm, struct acrn_vcpu *vcpu)
 	 */
 	for (i = 0U; i < NUM_GPRS; i++) {
 		vcpu_set_gpreg(vcpu, i, 0UL);
-	}
-
-	/* add "hugepagesz=1G hugepages=x" to cmdline for 1G hugepage
-	 * reserving. Current strategy is "total_mem_size in Giga -
-	 * remained 1G pages" for reserving.
-	 */
-	if (is_sos_vm(vm) && (bootargs_info->load_addr != NULL)) {
-		int64_t reserving_1g_pages;
-
-		reserving_1g_pages = (vm_config->memory.size >> 30U) - NUM_REMAIN_1G_PAGES;
-		if (reserving_1g_pages > 0) {
-			snprintf(dyn_bootargs, 100U, " hugepagesz=1G hugepages=%ld", reserving_1g_pages);
-			(void)copy_to_gpa(vm, dyn_bootargs, ((uint64_t)bootargs_info->load_addr
-				+ bootargs_info->size), (strnlen_s(dyn_bootargs, 99U) + 1U));
-		}
 	}
 
 	/* Create Zeropage and copy Physical Base Address of Zeropage
