@@ -346,14 +346,6 @@ static int acrnctl_do_add(int argc, char *argv[])
 		goto get_vmname;
 	}
 
-	if (snprintf(cmd, sizeof(cmd), "mkdir -p %s", ACRN_CONF_PATH_ADD)
-			>= sizeof(cmd)) {
-		printf("ERROR: cmd is truncated\n");
-		ret = -1;
-		goto get_vmname;
-	}
-	system(cmd);
-
 	s = vmmngr_find(vmname);
 	if (s) {
 		printf("%s(%s) already exist, can't add %s%s\n",
@@ -765,6 +757,7 @@ static void usage(void)
 int main(int argc, char *argv[])
 {
 	int i, err;
+	char cmd[PATH_LEN];
 
 	if (argc == 1 || !strcmp(argv[1], "help")) {
 		usage();
@@ -777,6 +770,14 @@ int main(int argc, char *argv[])
 	}
 
 	acrnctl_bin_path = argv[0];
+
+	/* Create the acrnctl conf folder if it does not exist yet */
+	if (snprintf(cmd, sizeof(cmd), "mkdir -p %s", ACRN_CONF_PATH_ADD)
+			>= sizeof(cmd)) {
+		printf("ERROR: cmd is truncated\n");
+		return -1;
+	}
+	system(cmd);
 
 	/* first check acrnctl reserved operations */
 	if (!strcmp(argv[1], "gentmpfile")) {
