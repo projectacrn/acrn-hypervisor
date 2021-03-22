@@ -81,8 +81,6 @@ static inline uint64_t round_pde_down(uint64_t val)
 #define PAGE_SIZE_2M	MEM_2M
 #define PAGE_SIZE_1G	MEM_1G
 
-void sanitize_pte_entry(uint64_t *ptep, const struct pgtable *table);
-void sanitize_pte(uint64_t *pt_page, const struct pgtable *table);
 /**
  * @brief MMU paging enable
  *

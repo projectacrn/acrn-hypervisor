@@ -13,6 +13,31 @@
 
 #define DBG_LEVEL_MMU	6U
 
+static uint64_t sanitized_page_hpa;
+
+static void sanitize_pte_entry(uint64_t *ptep, const struct pgtable *table)
+{
+	set_pgentry(ptep, sanitized_page_hpa, table);
+}
+
+static void sanitize_pte(uint64_t *pt_page, const struct pgtable *table)
+{
+	uint64_t i;
+	for (i = 0UL; i < PTRS_PER_PTE; i++) {
+		sanitize_pte_entry(pt_page + i, table);
+	}
+}
+
+void init_sanitized_page(uint64_t *sanitized_page, uint64_t hpa)
+{
+	uint64_t i;
+
+	sanitized_page_hpa = hpa;
+	/* set ptep in sanitized_page point to itself */
+	for (i = 0UL; i < PTRS_PER_PTE; i++) {
+		*(sanitized_page + i) = sanitized_page_hpa;
+	}
+}
 
 static void try_to_free_pgtable_page(const struct pgtable *table,
 			uint64_t *pde, uint64_t *pt_page, uint32_t type)
@@ -432,7 +457,9 @@ void pgtable_add_map(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_ba
 
 void *pgtable_create_root(const struct pgtable *table)
 {
-	return (uint64_t *)alloc_page(table->pool);
+	uint64_t *page = (uint64_t *)alloc_page(table->pool);
+	sanitize_pte(page, table);
+	return page;
 }
 
 void *pgtable_create_trusty_root(const struct pgtable *table,
@@ -450,8 +477,7 @@ void *pgtable_create_trusty_root(const struct pgtable *table,
 	 * Normal World.PD/PT are shared in both Secure world's EPT
 	 * and Normal World's EPT
 	 */
-	pml4_base = alloc_page(table->pool);
-	sanitize_pte((uint64_t *)pml4_base, table);
+	pml4_base = pgtable_create_root(table);
 
 	/* The trusty memory is remapped to guest physical address
 	 * of gpa_rebased to gpa_rebased + size
