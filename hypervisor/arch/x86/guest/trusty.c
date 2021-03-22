@@ -90,8 +90,6 @@ void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 		}
 
 		ept_del_mr(vm, vm->arch_vm.sworld_eptp, gpa_uos, size);
-		/* sanitize trusty ept page-structures */
-		sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp, &vm->arch_vm.ept_pgtable);
 		vm->arch_vm.sworld_eptp = NULL;
 
 		/* Restore memory to guest normal world */

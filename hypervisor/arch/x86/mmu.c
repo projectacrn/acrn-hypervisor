@@ -194,24 +194,6 @@ void invept(const void *eptp)
 	}
 }
 
-static inline uint64_t get_sanitized_page(void)
-{
-	return hva2hpa(sanitized_page);
-}
-
-void sanitize_pte_entry(uint64_t *ptep, const struct pgtable *table)
-{
-	set_pgentry(ptep, get_sanitized_page(), table);
-}
-
-void sanitize_pte(uint64_t *pt_page, const struct pgtable *table)
-{
-	uint64_t i;
-	for (i = 0UL; i < PTRS_PER_PTE; i++) {
-		sanitize_pte_entry(pt_page + i, table);
-	}
-}
-
 void enable_paging(void)
 {
 	uint64_t tmp64 = 0UL;
@@ -306,6 +288,8 @@ void init_paging(void)
 		panic("Please configure HV_ADDRESS_SPACE correctly!\n");
 	}
 
+	init_sanitized_page((uint64_t *)sanitized_page, hva2hpa_early(sanitized_page));
+
 	/* Allocate memory for Hypervisor PML4 table */
 	ppt_mmu_pml4_addr = pgtable_create_root(&ppt_pgtable);
 
@@ -366,9 +350,6 @@ void init_paging(void)
 
 	/* Enable paging */
 	enable_paging();
-
-	/* set ptep in sanitized_page point to itself */
-	sanitize_pte((uint64_t *)sanitized_page, &ppt_pgtable);
 }
 
 /*

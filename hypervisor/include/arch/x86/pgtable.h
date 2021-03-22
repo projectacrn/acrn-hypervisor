@@ -304,6 +304,8 @@ static inline uint64_t pdpte_large(uint64_t pdpte)
 	return pdpte & PAGE_PSE;
 }
 
+void init_sanitized_page(uint64_t *sanitized_page, uint64_t hpa);
+
 void *pgtable_create_root(const struct pgtable *table);
 void *pgtable_create_trusty_root(const struct pgtable *table,
 	void *nworld_pml4_page, uint64_t prot_table_present, uint64_t prot_clr);
