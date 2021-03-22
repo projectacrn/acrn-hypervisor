@@ -73,6 +73,7 @@ BUILD_VERSION ?=
 BUILD_TAG ?=
 HV_CFG_LOG = $(HV_OUT)/cfg.log
 VM_CONFIGS_DIR = $(T)/misc/config_tools
+ASL_COMPILER ?= $(shell which iasl)
 
 .PHONY: all hypervisor devicemodel tools doc
 all: hypervisor devicemodel tools
