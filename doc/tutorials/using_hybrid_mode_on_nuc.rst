@@ -59,13 +59,12 @@ Perform the following to update Ubuntu GRUB so it can boot the hypervisor and lo
 
    .. note:: The module ``/boot/zephyr.bin`` is the VM0 (Zephyr) kernel file.
       The param ``xxxxxx`` is VM0's kernel file tag and must exactly match the
-      ``kernel_mod_tag`` of VM0, which is configured in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.c``
+      ``kern_mod`` of VM0, which is configured in the ``misc/config_tools/data/nuc7i7dnb/hybrid.xml``
       file. The multiboot module ``/boot/bzImage`` is the Service VM kernel
       file. The param ``yyyyyy`` is the bzImage tag and must exactly match the
-      ``kernel_mod_tag`` of VM1 in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.c``
+      ``kern_mod`` of VM1 in the ``misc/config_tools/data/nuc7i7dnb/hybrid.xml``
       file. The kernel command-line arguments used to boot the Service VM are
-      located in the header file ``misc/vm_configs/scenarios/hybrid/vm_configurations.h``
-      and are configured by the `SOS_VM_BOOTARGS` macro.
+      ``bootargs`` of VM1 in the ``misc/config_tools/data/nuc7i7dnb/hybrid.xml``.
       The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0 (Zephyr).
       The parameter ``ACPI_VM0`` is VM0's ACPI tag and should not be modified.
 
