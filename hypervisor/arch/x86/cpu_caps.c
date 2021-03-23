@@ -357,7 +357,10 @@ static inline bool is_apicv_basic_feature_supported(void)
 
 bool is_apicv_advanced_feature_supported(void)
 {
-	return ((cpu_caps.apicv_features & APICV_ADVANCED_FEATURE) == APICV_ADVANCED_FEATURE);
+	/*
+	 * To WA ACRN-6886 issue, force to disable apicv advanced feature.
+	 */
+	return false;
 }
 
 bool pcpu_has_vmx_ept_cap(uint32_t bit_mask)

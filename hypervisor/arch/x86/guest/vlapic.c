@@ -2644,8 +2644,10 @@ static const struct acrn_apicv_ops apicv_advanced_ops = {
 void vlapic_set_apicv_ops(void)
 {
 	if (is_apicv_advanced_feature_supported()) {
+		pr_err("Advanced apicv ops is used!");
 		apicv_ops = &apicv_advanced_ops;
 	} else {
+		pr_err("Basic apicv ops is used!");
 		apicv_ops = &apicv_basic_ops;
 	}
 }
