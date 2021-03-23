@@ -66,6 +66,7 @@ ACRN.
           libsystemd-dev \
           libevent-dev \
           libxml2-dev \
+          libxml2-utils \
           libusb-1.0-0-dev \
           python3 \
           python3-pip \
