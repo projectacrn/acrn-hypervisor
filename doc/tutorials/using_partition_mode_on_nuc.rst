@@ -18,8 +18,8 @@ Validated Versions
 ******************
 
 - Ubuntu version: **18.04**
-- ACRN hypervisor tag: **v2.3**
-- ACRN kernel tag: **v2.3**
+- ACRN hypervisor tag: **v2.4**
+- ACRN kernel tag: **v2.4**
 
 Prerequisites
 *************
@@ -128,16 +128,20 @@ Update ACRN Hypervisor Image
    .. code-block:: none
 
       $ sudo lspci -vv
-      00:14.0 USB controller: Intel Corporation Sunrise Point-LP USB 3.0 xHCI Controller (rev 21) (prog-if 30 [XHCI])
-              Subsystem: Intel Corporation Sunrise Point-LP USB 3.0 xHCI Controller
-      00:17.0 SATA controller: Intel Corporation Sunrise Point-LP SATA Controller [AHCI mode] (rev 21) (prog-if 01 [AHCI 1.0])
-              Subsystem: Intel Corporation Sunrise Point-LP SATA Controller [AHCI mode]
-      00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection I219-LM (rev 21)
-              Subsystem: Intel Corporation Ethernet Connection I219-LM
+      00:14.0 USB controller: Intel Corporation Device 9ded (rev 30) (prog-if 30 [XHCI])
+              Subsystem: Intel Corporation Device 7270
+      00:17.0 SATA controller: Intel Corporation Device 9dd3 (rev 30) (prog-if 01 [AHCI 1.0])
+              Subsystem: Intel Corporation Device 7270
+      02:00.0 Non-Volatile memory controller: Intel Corporation Device f1a8 (rev 03) (prog-if 02 [NVM Express])
+              Subsystem: Intel Corporation Device 390d
+      03:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
+              Subsystem: Intel Corporation I210 Gigabit Network Connection
+      04:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
+              Subsystem: Intel Corporation I210 Gigabit Network Connection
 
    .. note::
-      Verify the PCI devices BDF defined in the
-      ``hypervisor/arch/x86/configs/whl-ipc-i5/pci_devices.h``
+      Verify the ``pci_devs`` defined for VM0 and VM1 in the
+      ``misc/config_tools/data/whl-ipc-i7/logical_partition.xml``
       with the information reported by the ``lspci -vv`` command.
 
 #. Clone the ACRN source code and configure the build options.
@@ -145,19 +149,19 @@ Update ACRN Hypervisor Image
    Refer to :ref:`getting-started-building` to set up the ACRN build
    environment on your development workstation.
 
-   Clone the ACRN source code and check out to the tag v2.3:
+   Clone the ACRN source code and check out to the tag v2.4:
 
    .. code-block:: none
 
       $ git clone https://github.com/projectacrn/acrn-hypervisor.git
       $ cd acrn-hypervisor
-      $ git checkout v2.3
+      $ git checkout v2.4
 
    Build the ACRN hypervisor and ACPI binaries for pre-launched VMs with default xmls:
 
    .. code-block:: none
 
-      $ make hypervisor BOARD_FILE=$PWD/misc/acrn-config/xmls/board-xmls/whl-ipc-i5.xml SCENARIO_FILE=$PWD/misc/acrn-config/xmls/config-xmls/whl-ipc-i5/logical_partition.xml RELEASE=0
+      $ make hypervisor BOARD_FILE=whl-ipc-i7 SCENARIO_FILE=logical_partition RELEASE=0
 
    .. note::
       The ``acrn.bin`` will be generated to ``./build/hypervisor/acrn.bin``.
@@ -176,9 +180,9 @@ Update ACRN Hypervisor Image
    The above command output should contain the ``GRUB`` keyword.
 
 #. Check or update the BDF information of the PCI devices for each
-   pre-launched VM; check it in the ``hypervisor/arch/x86/configs/whl-ipc-i5/pci_devices.h``.
+   pre-launched VM; check it in the ``misc/config_tools/data/whl-ipc-i7/logical_partition.xml``.
 
-#. Copy the artifact ``acrn.bin``, ``ACPI_VM0.bin``, and ``ACPI_VM1.bin`` to the ``/boot`` directory:
+#. Copy the artifact ``acrn.bin``, ``ACPI_VM0.bin``, and ``ACPI_VM1.bin`` to the ``/boot`` directory on NVME:
 
    #. Copy ``acrn.bin``, ``ACPI_VM1.bin`` and ``ACPI_VM0.bin`` to a removable disk.
 
@@ -213,13 +217,12 @@ Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
       }
 
    .. note::
-      Update this to use the UUID (``--set``) and PARTUUID (``root=`` parameter)
+      Update the UUID (``--set``) and PARTUUID (``root=`` parameter)
       (or use the device node directly) of the root partition (e.g.``/dev/nvme0n1p2). Hint: use ``sudo blkid``.
-      The kernel command-line arguments used to boot the pre-launched VMs is
-      located in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.h`` header file
-      and is configured by ``VMx_CONFIG_OS_BOOTARG_*`` MACROs (where x is the VM ID number and ``*`` are arguments).
-      The multiboot2 module param ``XXXXXX`` is the bzImage tag and must exactly match the ``kernel_mod_tag``
-      configured in the ``misc/vm_configs/scenarios/hybrid/vm_configurations.c`` file.
+      The kernel command-line arguments used to boot the pre-launched VMs is ``bootargs``
+      in the ``misc/config_tools/data/whl-ipc-i7/logical_partition.xml``
+      The ``module2 /boot/bzImage`` param ``XXXXXX`` is the bzImage tag and must exactly match the ``kern_mod``
+      in the ``misc/config_tools/data/whl-ipc-i7/logical_partition.xml`` file.
       The module ``/boot/ACPI_VM0.bin`` is the binary of ACPI tables for pre-launched VM0, the parameter ``ACPI_VM0`` is
       VM0's ACPI tag and should not be modified.
       The module ``/boot/ACPI_VM1.bin`` is the binary of ACPI tables for pre-launched VM1 the parameter ``ACPI_VM1`` is
@@ -231,6 +234,8 @@ Update Ubuntu GRUB to Boot Hypervisor and Load Kernel Image
    .. code-block:: none
 
       GRUB_DEFAULT=ACRN_Logical_Partition
+      #GRUB_HIDDEN_TIMEOUT=0
+      #GRUB_HIDDEN_TIMEOUT_QUIET=true
       GRUB_TIMEOUT=10
       GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
       GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
