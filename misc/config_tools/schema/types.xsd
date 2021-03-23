@@ -128,20 +128,15 @@ Read more about the available scheduling options in :ref:`cpu_sharing`.</xs:docu
   <xs:union memberTypes="None SerialConsoleType" />
 </xs:simpleType>
 
-<xs:simpleType name="IVSHMEMRegionPattern">
-  <xs:restriction base="xs:string">
-    <xs:pattern value="hv:/\w+,\s?\d+\s?,\s?\d\s?(:\s?\d\s?)+" />
-  </xs:restriction>
-</xs:simpleType>
-
 <xs:simpleType name="IVSHMEMRegionType">
   <xs:annotation>
     <xs:documentation>Either empty or a string naming the shared region,
 its size, and the VM IDs that can access it, such as ``hv:/shm_region_0, 2, 0:2``.
 See :ref:`ivshmem-hv` for more information.</xs:documentation>
   </xs:annotation>
-  <xs:union memberTypes="None IVSHMEMRegionPattern" />
-
+  <xs:restriction base="xs:string">
+    <xs:pattern value="|hv:/\w+,\s?\d+\s?,\s?\d\s?(:\s?\d\s?)+" />
+  </xs:restriction>
 </xs:simpleType>
 
 <xs:complexType name="IVSHMEMInfo">
@@ -152,7 +147,7 @@ See :ref:`ivshmem-hv` for more information.</xs:documentation>
 feature.</xs:documentation>
      </xs:annotation>
    </xs:element>
-   <xs:element name="IVSHMEM_REGION" type="IVSHMEMRegionType">
+   <xs:element name="IVSHMEM_REGION" type="IVSHMEMRegionType" maxOccurs="unbounded">
      <xs:annotation>
        <xs:documentation>A comma-separated list with the inter-VM shared memory region name,
 size, and VM IDs that may communicate using this shared region:
