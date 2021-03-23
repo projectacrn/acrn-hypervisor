@@ -92,7 +92,7 @@ Set Up Environment
 
      sudo apt update
      sudo apt install -y gcc git make gnu-efi libssl-dev libpciaccess-dev \
-       uuid-dev libsystemd-dev libevent-dev libxml2-dev \
+       uuid-dev libsystemd-dev libevent-dev libxml2-dev libxml2-utils \
        libusb-1.0-0-dev python3 python3-pip libblkid-dev \
        e2fslibs-dev pkg-config libnuma-dev liblz4-tool flex bison
      sudo pip3 install kconfiglib
