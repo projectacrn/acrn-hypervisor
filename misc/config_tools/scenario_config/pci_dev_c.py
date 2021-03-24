@@ -50,7 +50,7 @@ class BusDevFunc(namedtuple(
         return "BusDevFunc.from_str({!r})".format(str(self))
 
 
-def find_unused_bdf(used_bdf, case):
+def find_unused_bdf(used_bdf, case, last_bdf):
     if case == "vuart":
         # vuart device cannot detect function difference, find vbdf based on dev increment
         for dev in range(0x20):
@@ -59,9 +59,17 @@ def find_unused_bdf(used_bdf, case):
             if all((bdf.dev != in_use_bdf.dev for in_use_bdf in used_bdf)):
                 return bdf
     else:
-        for dev in range(0x20):
+        if last_bdf == BusDevFunc(bus=0x00, dev=0x00, func=0x0) or last_bdf.func == 0x7:
+            for dev in range(0x20):
+                bdf = BusDevFunc(bus=0x00, dev=dev, func=0x0)
+                #if bdf not in used_bdf:
+                if all((bdf.dev != in_use_bdf.dev for in_use_bdf in used_bdf)):
+                    return bdf
+        else:
+            bdf = last_bdf
             for func in range(0x8):
-                bdf = BusDevFunc(bus=0x00, dev=dev, func=func)
+                bdf = BusDevFunc(bdf.bus, bdf.dev, func)
+                #if bdf not in used_bdf:
                 if bdf not in used_bdf:
                     return bdf
     raise ValueError("Cannot find free bdf")
@@ -228,13 +236,15 @@ def generate_file(vm_info, config):
             raw_shm_list = vm_info.shmem.shmem_regions[vm_i]
             index = 0
 
+            last_bdf = BusDevFunc(bus=0x00, dev=0x00, func=0x0)
             for shm in raw_shm_list:
                 shm_splited = shm.split(',')
                 print("\t{", file=config)
                 print("\t\t.emu_type = {},".format(PCI_DEV_TYPE[0]), file=config)
 
                 if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
-                    free_bdf = find_unused_bdf(sos_used_bdf, "ivshmem")
+                    free_bdf = find_unused_bdf(sos_used_bdf, "ivshmem", last_bdf)
+                    last_bdf = free_bdf
                     print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{:02x}U, .f = 0x{:02x}U}}," \
                             .format(free_bdf.dev,free_bdf.func), file=config)
                     sos_used_bdf.append(free_bdf)
@@ -267,6 +277,7 @@ def generate_file(vm_info, config):
             vuart0_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 0)
             vuart1_setting = common.get_vuart_info_id(common.SCENARIO_INFO_FILE, 1)
 
+            last_bdf = BusDevFunc(bus=0x00, dev=0x00, func=0x0)
             for vuart_id in vuarts[vm_i].keys():
                 if vuarts[vm_i][vuart_id]['base'] == "INVALID_PCI_BASE":
                     continue
@@ -292,10 +303,10 @@ def generate_file(vm_info, config):
                 if scenario_cfg_lib.VM_DB[vm_type]['load_type'] != "POST_LAUNCHED_VM":
                     print("\t\tVM{:1d}_VUART_{:1d}_VBAR,".format(vm_i, vuart_id), file=config)
                     if scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "PRE_LAUNCHED_VM":
-                        free_bdf = find_unused_bdf(vm_used_bdf, "vuart")
+                        free_bdf = find_unused_bdf(vm_used_bdf, "vuart", last_bdf)
                         vm_used_bdf.append(free_bdf)
                     elif scenario_cfg_lib.VM_DB[vm_type]['load_type'] == "SOS_VM":
-                        free_bdf = find_unused_bdf(sos_used_bdf, "vuart")
+                        free_bdf = find_unused_bdf(sos_used_bdf, "vuart", last_bdf)
                         sos_used_bdf.append(free_bdf)
                     print("\t\t.vbdf.bits = {{.b = 0x00U, .d = 0x{:02x}U, .f = 0x00U}},".format(free_bdf.dev,free_bdf.func), file=config)
 
