@@ -182,7 +182,7 @@ You can also build ACRN with your customized scenario:
 
   .. code-block:: none
 
-    $ make BOARD=$PWD/misc/config_tools/data/nuc6cayh/nuc6cayh.xml SCENARIO=/path/to/scenario.xml
+    $ make BOARD=nuc6cayh SCENARIO=/path/to/scenario.xml
 
 * Build with your own board and scenario configuration, assuming the board and
   scenario XML files are ``/path/to/board.xml`` and ``/path/to/scenario.xml``:
