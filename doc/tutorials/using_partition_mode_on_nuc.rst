@@ -161,7 +161,7 @@ Update ACRN Hypervisor Image
 
    .. code-block:: none
 
-      $ make hypervisor BOARD_FILE=whl-ipc-i7 SCENARIO_FILE=logical_partition RELEASE=0
+      $ make hypervisor BOARD=whl-ipc-i7 SCENARIO=logical_partition RELEASE=0
 
    .. note::
       The ``acrn.bin`` will be generated to ``./build/hypervisor/acrn.bin``.
