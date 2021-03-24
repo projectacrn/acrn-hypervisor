@@ -139,11 +139,6 @@ Update ACRN Hypervisor Image
       04:00.0 Ethernet controller: Intel Corporation I210 Gigabit Network Connection (rev 03)
               Subsystem: Intel Corporation I210 Gigabit Network Connection
 
-   .. note::
-      Verify the ``pci_devs`` defined for VM0 and VM1 in the
-      ``misc/config_tools/data/whl-ipc-i7/logical_partition.xml``
-      with the information reported by the ``lspci -vv`` command.
-
 #. Clone the ACRN source code and configure the build options.
 
    Refer to :ref:`getting-started-building` to set up the ACRN build
@@ -157,7 +152,12 @@ Update ACRN Hypervisor Image
       $ cd acrn-hypervisor
       $ git checkout v2.4
 
-   Build the ACRN hypervisor and ACPI binaries for pre-launched VMs with default xmls:
+#. Check the ``pci_devs`` sections in ``misc/config_tools/data/whl-ipc-i7/logical_partition.xml``
+   for each pre-launched VM to ensure you are using the right PCI device BDF information (as
+   reported by ``lspci -vv``). If you need to make changes to this file, create a copy of it and
+   use it subsequently when building ACRN (``SCENARIO=/path/to/newfile.xml``).
+
+#. Build the ACRN hypervisor and ACPI binaries for pre-launched VMs with default xmls:
 
    .. code-block:: none
 
@@ -178,9 +178,6 @@ Update ACRN Hypervisor Image
       $ sudo update-grub -V
 
    The above command output should contain the ``GRUB`` keyword.
-
-#. Check or update the BDF information of the PCI devices for each
-   pre-launched VM; check it in the ``misc/config_tools/data/whl-ipc-i7/logical_partition.xml``.
 
 #. Copy the artifact ``acrn.bin``, ``ACPI_VM0.bin``, and ``ACPI_VM1.bin`` to the ``/boot`` directory on NVME:
 
