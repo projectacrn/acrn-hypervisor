@@ -95,7 +95,7 @@ endef
 
 HV_MAKEOPTS := -C $(T)/hypervisor BOARD=$(BOARD) SCENARIO=$(SCENARIO) HV_OBJDIR=$(HV_OUT) RELEASE=$(RELEASE)
 
-hypervisor:
+hypervisor: hvdefconfig
 	$(MAKE) $(HV_MAKEOPTS)
 	@echo -e "ACRN Configuration Summary:" > $(HV_CFG_LOG)
 	@$(MAKE) showconfig $(HV_MAKEOPTS) -s >> $(HV_CFG_LOG)
