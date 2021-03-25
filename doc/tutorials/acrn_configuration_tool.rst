@@ -152,6 +152,8 @@ toolset.
 
    Configuration Workflow
 
+.. _acrn_makefile_targets:
+
 Makefile Targets for Configuration
 ==================================
 
