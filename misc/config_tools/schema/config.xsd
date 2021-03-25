@@ -123,6 +123,11 @@ support RDT or CDP, setting this option to ``y`` is ignored.</xs:documentation>
         <xs:documentation>Enable Hyper-V.</xs:documentation>
       </xs:annotation>
     </xs:element>
+    <xs:element name="NVMX_ENABLED" type="Boolean" default="n">
+      <xs:annotation>
+        <xs:documentation>Enable nested virtualization.</xs:documentation>
+      </xs:annotation>
+    </xs:element>
     <xs:element name="IOMMU_ENFORCE_SNP" type="Boolean" default="n">
       <xs:annotation>
         <xs:documentation>Specify if the IOMMU enforces snoop behavior
@@ -158,6 +163,7 @@ Machine Check Error on Page Size Change.</xs:documentation>
     </xs:element>
   </xs:all>
   <xs:assert test="not (RDT/RDT_ENABLED = 'y' and PSRAM/PSRAM_ENABLED = 'y')"/>
+  <xs:assert test="not (NVMX_ENABLED = 'y' and not (SCHEDULER = 'SCHED_NOOP'))"/>
 </xs:complexType>
 
 <xs:complexType name="MemoryOptionsType">
