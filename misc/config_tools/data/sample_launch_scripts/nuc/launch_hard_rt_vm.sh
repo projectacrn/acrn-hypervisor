@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright (C) 2019 Intel Corporation.
 # SPDX-License-Identifier: BSD-3-Clause
-# This is an example of launch script for KBL NUC7i7DNH, may need to revise for other platform.
+# This is an example, if use different HW,the script must be adapted to match the BDF on the actual HW platform
 
 # pci devices for passthru
 declare -A passthru_vpid
@@ -39,10 +39,6 @@ echo ${passthru_vpid["nvme"]} > /sys/bus/pci/drivers/pci-stub/new_id
 echo ${passthru_bdf["nvme"]} > /sys/bus/pci/devices/${passthru_bdf["nvme"]}/driver/unbind
 echo ${passthru_bdf["nvme"]} > /sys/bus/pci/drivers/pci-stub/bind
 
-# for pm setting
-pm_channel="--pm_notify_channel uart "
-pm_by_vuart="--pm_by_vuart tty,/dev/ttyS1"
-
 
 /usr/bin/acrn-dm -A -m $mem_size -s 0:0,hostbridge \
    --lapic_pt \
@@ -51,7 +47,6 @@ pm_by_vuart="--pm_by_vuart tty,/dev/ttyS1"
    -U 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 \
    -s 2,passthru,02/0/0 \
    -s 3,virtio-console,@stdio:stdio_port \
-   $pm_channel $pm_by_vuart \
    --ovmf /usr/share/acrn/bios/OVMF.fd \
    hard_rtvm
 

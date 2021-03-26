@@ -94,10 +94,6 @@ fi
 #logger_setting, format: logger_name,level; like following
 logger_setting="--logger_setting console,level=4;kmsg,level=3;disk,level=5"
 
-#for pm by vuart setting
-pm_channel="--pm_notify_channel uart "
-pm_by_vuart="--pm_by_vuart pty,/run/acrn/life_mngr_"$vm_name
-pm_vuart_node=" -s 1:0,lpc -l com2,/run/acrn/life_mngr_"$vm_name
 
 #for memsize setting
 mem_size=2048M
@@ -110,7 +106,6 @@ acrn-dm -A -m $mem_size -s 0:0,hostbridge \
   -s 4,virtio-net,tap0 \
   -s 7,virtio-rnd \
   --ovmf /usr/share/acrn/bios/OVMF.fd \
-  $pm_channel $pm_by_vuart $pm_vuart_node \
   $logger_setting \
   --mac_seed $mac_seed \
   $vm_name
