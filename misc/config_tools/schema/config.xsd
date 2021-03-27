@@ -422,6 +422,12 @@ its ``id`` attribute. When it is enabled, specify which target VM's vUART the cu
     <xs:element name="board_private" type="BoardPrivateConfiguration" minOccurs="0" />
   </xs:all>
   <xs:attribute name="id" type="xs:integer" />
+
+  <xs:assert test="vm_type != 'SOS_VM' or count(guest_flags[guest_flag = 'GUEST_FLAG_LAPIC_PASSTHROUGH']) = 0 or count(guest_flags[guest_flag = 'GUEST_FLAG_NVMX_ENABLED']) > 0">
+    <xs:annotation>
+      <xs:documentation>SOS cannot use LAPIC passthrough unless GUEST_FLAG_NVMX_ENABLED is set.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
 </xs:complexType>
 
 <xs:complexType name="ACRNConfigType">
@@ -445,6 +451,12 @@ to launch post-launched User VMs.</xs:documentation>
   </xs:all>
   <xs:attribute name="board" type="xs:string" use="required" />
   <xs:attribute name="scenario" type="xs:string" use="required" />
+
+  <xs:assert test="count(//guest_flag[text() = 'GUEST_FLAG_NVMX_ENABLED']) = 0 or //NVMX_ENABLED = 'y'">
+    <xs:annotation>
+      <xs:documentation>Per VM GUEST_FLAG_NVMX_ENABLED can be set only if CONFIG_NVMX_ENABLED is set.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
 </xs:complexType>
 
 <xs:element name="acrn-config" type="ACRNConfigType" />

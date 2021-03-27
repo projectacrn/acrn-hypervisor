@@ -140,9 +140,6 @@ bool sanitize_vm_config(void)
 			}
 			break;
 		case SOS_VM:
-			if ((vm_config->severity != (uint8_t)SEVERITY_SOS) || ((vm_config->guest_flags & GUEST_FLAG_LAPIC_PASSTHROUGH) != 0U)) {
-				ret = false;
-			}
 			break;
 		case POST_LAUNCHED_VM:
 			if ((vm_config->severity == (uint8_t)SEVERITY_SAFETY_VM) || (vm_config->severity == (uint8_t)SEVERITY_SOS)) {
