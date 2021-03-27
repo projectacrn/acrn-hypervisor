@@ -60,6 +60,11 @@
       </xs:annotation>
     </xs:element>
   </xs:sequence>
+  <xs:assert test="count(guest_flag[text() = 'GUEST_FLAG_NVMX_ENABLED']) = 0 or count(guest_flag[text() = 'GUEST_FLAG_LAPIC_PASSTHROUGH']) > 0">
+    <xs:annotation>
+      <xs:documentation>If the GUEST_FLAG_NVMX_ENABLED is set, GUEST_FLAG_LAPIC_PASSTHROUGH must be set as well.</xs:documentation>
+    </xs:annotation>
+  </xs:assert>
 </xs:complexType>
 
 <xs:complexType name="CPUAffinityConfiguration">
