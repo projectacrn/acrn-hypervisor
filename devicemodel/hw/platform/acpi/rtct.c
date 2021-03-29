@@ -35,6 +35,7 @@
 
 static uint64_t software_sram_base_hpa;
 static uint64_t software_sram_size;
+static uint64_t software_sram_base_gpa;
 
 static uint8_t vrtct_checksum(uint8_t *vrtct, uint32_t length)
 {
@@ -209,7 +210,7 @@ static void remap_software_sram_regions(struct acpi_table_hdr *vrtct)
 	foreach_rtct_entry(vrtct, entry) {
 		if (entry->type == RTCT_ENTRY_TYPE_PSRAM) {
 			sw_sram_region = (struct rtct_entry_data_psram *)entry->data;
-			sw_sram_region->base = SOFTWARE_SRAM_BASE_GPA + (sw_sram_region->base - hpa_bottom);
+			sw_sram_region->base = software_sram_base_gpa + (sw_sram_region->base - hpa_bottom);
 		}
 	}
 }
@@ -287,6 +288,11 @@ uint64_t get_software_sram_base_hpa(void)
 	return software_sram_base_hpa;
 }
 
+uint64_t get_software_sram_base_gpa(void)
+{
+	return software_sram_base_gpa;
+}
+
 uint64_t get_software_sram_size(void)
 {
 	return software_sram_size;
@@ -306,6 +312,7 @@ uint8_t *build_vrtct(struct vmctx *ctx, void *cfg)
 	struct acrn_vm_config vm_cfg;
 	struct acpi_table_hdr *rtct_cfg, *vrtct = NULL;
 	uint64_t dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask;
+	uint32_t gpu_rsvmem_base_gpa = 0;
 
 	if ((cfg == NULL) || (ctx == NULL))
 		return NULL;
@@ -350,6 +357,14 @@ uint8_t *build_vrtct(struct vmctx *ctx, void *cfg)
 
 	pr_info("%s, dm_cpu_bitmask:0x%x, hv_cpu_bitmask:0x%x, guest_cpu_bitmask: 0x%x\n",
 		__func__, dm_cpu_bitmask, hv_cpu_bitmask, guest_pcpu_bitmask);
+
+	gpu_rsvmem_base_gpa = get_gpu_rsvmem_base_gpa();
+	software_sram_size = SOFTWARE_SRAM_MAX_SIZE;
+	/* TODO: It is better to put one boundary between GPU region and SW SRAM
+	 * for protection.
+	 */
+	software_sram_base_gpa = ((gpu_rsvmem_base_gpa ? gpu_rsvmem_base_gpa : 0x80000000UL) -
+			software_sram_size) &  ~software_sram_size;
 
 	if (passthru_rtct_to_guest(vrtct, rtct_cfg, guest_pcpu_bitmask)) {
 		pr_err("%s, initialize vRTCT fail.", __func__);
