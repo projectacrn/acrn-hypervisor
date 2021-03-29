@@ -5,7 +5,7 @@
  */
 
 #include <list.h>
-#include <per_cpu.h>
+#include <x86/per_cpu.h>
 #include <schedule.h>
 
 #define CONFIG_SLICE_MS 10UL
