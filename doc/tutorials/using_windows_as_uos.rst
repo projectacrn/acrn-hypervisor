@@ -34,7 +34,7 @@ Verified Version
 
    .. note::
 
-      WHL needs following setting in BOIS:
+      WHL needs the following BIOS setting:
       set **DVMT Pre-Allocated** to **64MB** and set **PM Support**
       to **Enabled**.
 
@@ -48,8 +48,8 @@ Download Win10 Image and Drivers
 
 #. Download `MediaCreationTool20H2.exe <https://www.microsoft.com/software-download/windows10>`_.
 
-   - Run this file and select **Create installation media(USB flash drive,DVD, or ISO file) for another PC**;
-     Then click **ISO file** to create ``windows10.iso``.
+   - Run this file and select **Create installation media(USB flash drive, DVD, or ISO file) for another PC**;
+     Then click **ISO file** to create ``Windows10.iso``.
 
 #. Download the `Oracle Windows driver <https://edelivery.oracle.com/osdc/faces/SoftwareDelivery>`_.
 
@@ -107,7 +107,7 @@ Prepare the Script to Create an Image
      -s 2,passthru,0/2/0,gpu \
      -s 8,virtio-net,tap0 \
      -s 4,virtio-blk,/home/acrn/work/win10-ltsc.img
-     -s 5,ahci,cd:/home/acrn/work/windows.iso \
+     -s 5,ahci,cd:/home/acrn/work/Windows10.iso \
      -s 6,ahci,cd:/home/acrn/work/winvirtio.iso \
      -s 7,passthru,0/14/0,d3hot_reset \
      --ovmf /home/acrn/work/OVMF.fd \
@@ -130,7 +130,7 @@ Prepare the Script to Create an Image
                    echo $idx > /sys/class/vhm/acrn_vhm/offline_cpu
            fi
    done
-   launch_win 1 "64 448 8"
+   launch_win 1
 
 Install Windows 10 by GVT-d
 ---------------------------
@@ -208,14 +208,14 @@ When you see the UEFI shell, input **exit**.
       :align: center
 
 #. Download the `Intel DCH Graphics Driver
-   <https://downloadcenter.intel.com/download/30066?v=t>`__.in
+   <https://downloadcenter.intel.com/download/30066?v=t>`__ in
    Windows and install in safe mode.
-   The latest version(27.20.100.9030) was verified on WHL.You’d better use the same version as the one in native Windows 10 on your board.
+   Version 27.20.100.9030 was verified on WHL. You should use the same version as the one in native Windows 10 on your board.
 
 Boot Windows on ACRN With a Default Configuration
 =================================================
 
-#. Prepare WaaG lauch script
+#. Prepare WaaG launch script
 
    cp /home/acrn/work/install_win.sh  /home/acrn/work/launch_win.sh
 
@@ -223,10 +223,10 @@ Boot Windows on ACRN With a Default Configuration
 
    .. code-block:: bash
 
-      -s 5,ahci,cd:./windows.iso \
+      -s 5,ahci,cd:./Windows10.iso \
       -s 6,ahci,cd:./winvirtio.iso \
 
-#. Lauch WaaG
+#. Launch WaaG
 
    .. code-block:: bash
 
@@ -242,7 +242,6 @@ ACRN Windows Verified Feature List
    :header: "Items", "Details", "Status"
 
     "IO Devices", "Virtio block as the boot device", "Working"
-                , "AHCI as the boot device",         "Working"
                 , "AHCI CD-ROM",                     "Working"
                 , "Virtio network",                  "Working"
                 , "Virtio input - mouse",            "Working"
@@ -267,14 +266,10 @@ Explanation for acrn-dm Popular Command Lines
   This is GVT-d to passthrough the VGA controller to Windows.
   You may need to change 0/2/0 to match the bdf of the VGA controller on your platform.
 
-* ``-s 4,virtio-net,tap0``:
+* ``-s 8,virtio-net,tap0``:
   This is for the network virtualization.
 
-* ``-s 5,fbuf,tcp=0.0.0.0:5900,w=800,h=600``:
-  This opens port 5900 on the Service VM, which can be connected to via
-  ``vncviewer``.
-
-* ``-s 6,virtio-input,/dev/input/event4``:
+* ``-s 3,virtio-input,/dev/input/event4``:
   This is to passthrough the mouse/keyboard to Windows via virtio.
   Change ``event4`` accordingly. Use the following command to check
   the event node on your Service VM::
@@ -282,15 +277,15 @@ Explanation for acrn-dm Popular Command Lines
    <To get the input event of mouse>
    # cat /proc/bus/input/devices | grep mouse
 
-* ``-s 7,ahci,cd:/home/acrn/work/Windows10.iso``:
+* ``-s 5,ahci,cd:/home/acrn/work/Windows10.iso``:
   This is the IOS image used to install Windows 10. It appears as a CD-ROM
-  device. Make sure that the slot ID **7** points to your win10 ISO path.
+  device. Make sure that it points to your win10 ISO path.
 
-* ``-s 8,ahci,cd:/home/acrn/work/winvirtio.iso``:
+* ``-s 6,ahci,cd:/home/acrn/work/winvirtio.iso``:
   This is CD-ROM device to install the virtio Windows driver. Make sure it points to your VirtIO ISO path.
 
-* ``-s 9,passthru,0/14/0``:
-  This is to passthrough the USB controller to Windows.
+* ``-s 7,passthru,0/14/0,d3hot_reset``:
+  This is to passthrough the USB controller to Windows;d3hot_reset is needed for WaaG reboot when USB controller is passthroughed to Windows.
   You may need to change ``0/14/0`` to match the BDF of the USB controller on
   your platform.
 
