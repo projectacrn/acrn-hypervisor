@@ -54,20 +54,14 @@ static char bootargs[BOOT_ARG_LEN];
  *             Begin    Limit        Type            Length
  * 0:              0 -  0xA0000      RAM             0xA0000
  * 1:       0x100000 -  lowmem part1 RAM             0x0
- * 2:   gpu_rsvd_bot -  gpu_rsvd_top (reserved)      0x4004000
- * 3:   lowmem part2 -  0x7f800000   (reserved)      0x0
- * 4:   SW SRAM_bot  -  0x80000000   (reserved)      SOFTWARE_SRAM_MAX_SIZE
- * 5:     0xDB000000 -  0xDF000000   (reserved)      64MB
- * 6:     0xDF000000 -  0xE0000000   (reserved)      16MB
- * 7:     0xE0000000 -  0x100000000  MCFG, MMIO      512MB
- * 8:    0x140000000 -  highmem      RAM             highmem - 5GB
+ * 2:   SW SRAM_bot  -  SW SRAM_top  (reserved)      SOFTWARE_SRAM_MAX_SIZE
+ * 3:   gpu_rsvd_bot -  gpu_rsvd_top (reserved)      0x4004000
+ * 4:   lowmem part2 -  0x80000000   (reserved)      0x0
+ * 5:     0xE0000000 -  0x100000000  MCFG, MMIO      512MB
+ * 6:    0x140000000 -  highmem      RAM             highmem - 5GB
  *
  * FIXME: Do we need to reserve DSM and OPREGION for GVTD here.
  */
-
-#define GPU_DSM_OPREGION_BASE_GPA 0x3B800000
-#define GPU_DSM_OPREGION_SIZE  0x4004000
-
 const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 	{	/* 0 to video memory */
 		.baseaddr = 0x00000000,
@@ -81,28 +75,28 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 		.type     = E820_TYPE_RAM
 	},
 
-	{	/* TGL GPU DSM & OpRegion area */
-		.baseaddr = GPU_DSM_OPREGION_BASE_GPA,
-		.length   = GPU_DSM_OPREGION_SIZE,
-		.type     = E820_TYPE_RESERVED
-	},
-
-	{	/* lowmem part2 to lowmem_limit */
-		.baseaddr = GPU_DSM_OPREGION_BASE_GPA + GPU_DSM_OPREGION_SIZE,
-		.length   = 0x0,
-		.type     = E820_TYPE_RESERVED
-	},
-
 	/*
-	 * Software SRAM area: base: 0x7f800000, size: 0x800000
+	 * Software SRAM area: size: 0x800000
 	 * In native, the Software SRAM region should be part of DRAM memory.
 	 * But one fixed Software SRAM gpa is friendly for virtualization due
 	 * to decoupled with various guest memory size.
 	 */
 	{
-		.baseaddr = SOFTWARE_SRAM_BASE_GPA,
-		.length   = SOFTWARE_SRAM_MAX_SIZE,
+		.baseaddr = 0x0,
+		.length   = 0x0,
 		.type	  = E820_TYPE_RESERVED
+	},
+
+	{	/* GPU DSM & OpRegion reserved region */
+		.baseaddr = 0x0,
+		.length   = 0x0,
+		.type     = E820_TYPE_RESERVED
+	},
+
+	{	/* lowmem part2 to lowmem_limit */
+		.baseaddr = 0x0,
+		.length   = 0x0,
+		.type     = E820_TYPE_RESERVED
 	},
 
 	{	/* ECFG_BASE to 4GB */
@@ -225,32 +219,65 @@ uint32_t
 acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 {
 	uint32_t removed = 0, k;
+	uint32_t gpu_rsvmem_base_gpa = 0;
+	uint64_t software_sram_base_gpa = 0;
 
 	memcpy(e820, e820_default_entries, sizeof(e820_default_entries));
-	if (ctx->lowmem <= e820[LOWRAM_E820_ENTRY + 2].baseaddr) {
-		e820[LOWRAM_E820_ENTRY].length =
-			(ctx->lowmem < e820[LOWRAM_E820_ENTRY+1].baseaddr ? ctx->lowmem :
-			e820[LOWRAM_E820_ENTRY+1].baseaddr) - e820[LOWRAM_E820_ENTRY].baseaddr;
 
-		memmove(&e820[LOWRAM_E820_ENTRY + 2], &e820[LOWRAM_E820_ENTRY + 3],
-				sizeof(struct e820_entry) *
-				(NUM_E820_ENTRIES - (LOWRAM_E820_ENTRY + 3)));
-		removed++;
+	/* FIXME: Here wastes 8MB memory if pSRAM is enabled, and 64MB+16KB if
+	 * GPU reserved memory is exist.
+	 *
+	 * Determines the GPU region due to DSM identical mapping.
+	 */
+	gpu_rsvmem_base_gpa = get_gpu_rsvmem_base_gpa();
+	if (gpu_rsvmem_base_gpa) {
+		e820[LOWRAM_E820_ENTRY + 2].baseaddr = gpu_rsvmem_base_gpa;
+		e820[LOWRAM_E820_ENTRY + 2].length = get_gpu_rsvmem_size();
 	} else {
-		e820[LOWRAM_E820_ENTRY].length = e820[LOWRAM_E820_ENTRY+1].baseaddr -
-			e820[LOWRAM_E820_ENTRY].baseaddr;
-
-		e820[LOWRAM_E820_ENTRY + 2].length =
-			((ctx->lowmem < e820[LOWRAM_E820_ENTRY + 3].baseaddr) ? ctx->lowmem :
-			e820[LOWRAM_E820_ENTRY + 3].baseaddr) - e820[LOWRAM_E820_ENTRY + 2].baseaddr;
+		e820[LOWRAM_E820_ENTRY + 2].baseaddr = ctx->lowmem_limit;
 	}
 
-	/* remove [5GB, highmem) if it's empty */
-	if (ctx->highmem > 0) {
-		e820[HIGHRAM_E820_ENTRY - removed].type = E820_TYPE_RAM;
-		e820[HIGHRAM_E820_ENTRY - removed].length = ctx->highmem;
+	/* Always put SW SRAM before GPU region and keep 1MB boundary for protection. */
+	software_sram_base_gpa = get_software_sram_base_gpa();
+	if (software_sram_base_gpa) {
+		e820[LOWRAM_E820_ENTRY + 1].baseaddr = software_sram_base_gpa;
+		e820[LOWRAM_E820_ENTRY + 1].length = get_software_sram_size();
 	} else {
-		removed++;
+		e820[LOWRAM_E820_ENTRY + 1].baseaddr = e820[LOWRAM_E820_ENTRY + 2].baseaddr;
+	}
+
+	if (ctx->lowmem <= e820[LOWRAM_E820_ENTRY + 1].baseaddr) {
+		/* Caculation for lowmem part1 */
+		e820[LOWRAM_E820_ENTRY].length =
+			ctx->lowmem - e820[LOWRAM_E820_ENTRY].baseaddr;
+	} else {
+		/* Caculation for lowmem part1 */
+		e820[LOWRAM_E820_ENTRY].length =
+			e820[LOWRAM_E820_ENTRY + 1].baseaddr - e820[LOWRAM_E820_ENTRY].baseaddr;
+		/* Caculation for lowmem part2 */
+		e820[LOWRAM_E820_ENTRY + 3].baseaddr =
+			e820[LOWRAM_E820_ENTRY + 2].baseaddr + e820[LOWRAM_E820_ENTRY + 2].length;
+		if (ctx->lowmem > e820[LOWRAM_E820_ENTRY + 3].baseaddr) {
+			e820[LOWRAM_E820_ENTRY + 3].length =
+				ctx->lowmem - e820[LOWRAM_E820_ENTRY + 3].baseaddr;
+			e820[LOWRAM_E820_ENTRY + 3].type = E820_TYPE_RAM;
+		}
+	}
+
+	/* Caculation for highmem */
+	if (ctx->highmem > 0) {
+		e820[HIGHRAM_E820_ENTRY].type = E820_TYPE_RAM;
+		e820[HIGHRAM_E820_ENTRY].length = ctx->highmem;
+	}
+
+	/* Remove empty entries in e820 table */
+	for (k = 0; k < (NUM_E820_ENTRIES - 1 - removed); k++) {
+		if (e820[k].length == 0x0) {
+			memmove(&e820[k], &e820[k + 1], sizeof(struct e820_entry) *
+					(NUM_E820_ENTRIES - (k + 1)));
+			k--;
+			removed++;
+		}
 	}
 
 	pr_info("SW_LOAD: build e820 %d entries to addr: %p\r\n",

@@ -59,47 +59,12 @@
 
 #define PCI_BDF_GPU			0x00000010	/* 00:02.0 */
 
-/* Reserved region in e820 table for GVT
- * for GVT-g use:
- * [0xDF000000, 0xDF800000) 8M, GOP FB, used OvmfPkg/GvtGopDxe for 1080p@30
- * [0xDFFFD000, 0xDFFFF000) 8K, OpRegion, used by GvtGopDxe and GVT-g
- * [0xDFFFF000, 0XE0000000) 4K, Reserved, not used
- * for TGL GVT-d use:
- * [0x3B800000, 0x3F800000) 64M, Date Stolen Memory
- * [0x3F800000, 0X3F804000] 16K, OpRegion and Extended OpRegion
- * for EHL/WHL/KBL GVT-d use:
- * [0xDB000000, 0xDF000000) 64M, DSM, used by native GOP and gfx driver
- * [0xDFFFC000, 0xDFFFE000) 8K, OpRegion, used by native GOP and gfx driver
- * [0xDFFFE000, 0XE0000000] 8K, Extended OpRegion, store raw VBT
- * OpRegion: 8KB(0x2000)
- * [ OpRegion Header      ] Offset: 0x0
- * [ Mailbox #1: ACPI     ] Offset: 0x100
- * [ Mailbox #2: SWSCI    ] Offset: 0x200
- * [ Mailbox #3: ASLE     ] Offset: 0x300
- * [ Mailbox #4: VBT      ] Offset: 0x400
- * [ Mailbox #5: ASLE EXT ] Offset: 0x1C00
- * Extended OpRegion: 8KB(0x2000)
- * [ Raw VBT              ] Offset: 0x0
- * If VBT <= 6KB, stores in Mailbox #4
- * If VBT > 6KB, stores in Extended OpRegion
- * ASLE.rvda stores the location of VBT.
- * For OpRegion 2.1+: ASLE.rvda = offset to OpRegion base address
- * For OpRegion 2.0:  ASLE.rvda = physical address, not support currently
- */
-#define GPU_DSM_GPA				0xDB000000
-#define GPU_DSM_SIZE			0x4000000
-#define GPU_OPREGION_GPA		0xDFFFC000
-#define GPU_OPREGION_SIZE		0x4000
-/*
- * TODO: Forced DSM/OPREGION size requires native BIOS configuration.
- * This limitation need remove in future
- */
+extern uint64_t audio_nhlt_len;
+
 uint32_t gpu_dsm_hpa = 0;
 uint32_t gpu_dsm_gpa = 0;
 uint32_t gpu_opregion_hpa = 0;
 uint32_t gpu_opregion_gpa = 0;
-
-extern uint64_t audio_nhlt_len;
 
 /* reference count for libpciaccess init/deinit */
 static int pciaccess_ref_cnt;
@@ -472,6 +437,18 @@ has_virt_pcicfg_regs_on_def_gpu(int offset)
 	return ((offset == PCIR_BDSM) || (offset == PCIR_ASLS_CTL));
 }
 
+uint32_t
+get_gpu_rsvmem_base_gpa()
+{
+	return gpu_opregion_gpa;
+}
+
+uint32_t
+get_gpu_rsvmem_size()
+{
+	return GPU_OPREGION_SIZE + GPU_DSM_SIZE;
+}
+
 /*
  * passthrough GPU DSM(Data Stolen Memory) and Opregion to guest
  */
@@ -487,24 +464,6 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 
 	switch (device) {
 	case INTEL_ELKHARTLAKE:
-		/* BDSM register has 64 bits.
-		 * bits 63:20 contains the base address of stolen memory
-		 */
-		gpu_dsm_hpa = read_config(ptdev->phys_dev, PCIR_GEN11_BDSM_DW0, 4);
-		dsm_mask_val = gpu_dsm_hpa & ~PCIM_BDSM_MASK;
-		gpu_dsm_hpa &= PCIM_BDSM_MASK;
-		gpu_dsm_hpa |= (uint64_t)read_config(ptdev->phys_dev, PCIR_GEN11_BDSM_DW1, 4) << 32;
-		gpu_dsm_gpa = GPU_DSM_GPA;
-
-		pci_set_cfgdata32(ptdev->dev, PCIR_GEN11_BDSM_DW0, gpu_dsm_gpa | dsm_mask_val);
-		/* write 0 to high 32-bits of BDSM on EHL platform */
-		pci_set_cfgdata32(ptdev->dev, PCIR_GEN11_BDSM_DW1, 0);
-
-		gpu_opregion_gpa = GPU_OPREGION_GPA;
-
-		ptdev->has_virt_pcicfg_regs = &has_virt_pcicfg_regs_on_ehl_gpu;
-		break;
-
 	case INTEL_TIGERLAKE:
 		/* BDSM register has 64 bits.
 		 * bits 63:20 contains the base address of stolen memory
@@ -523,8 +482,6 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 		/* write 0 to high 32-bits of BDSM on EHL platform */
 		pci_set_cfgdata32(ptdev->dev, PCIR_GEN11_BDSM_DW1, 0);
 
-		gpu_opregion_gpa = gpu_dsm_gpa + GPU_DSM_SIZE;
-
 		ptdev->has_virt_pcicfg_regs = &has_virt_pcicfg_regs_on_ehl_gpu;
 		break;
 	/* If on default platforms, such as KBL,WHL  */
@@ -537,12 +494,11 @@ passthru_gpu_dsm_opregion(struct vmctx *ctx, struct passthru_dev *ptdev,
 
 		pci_set_cfgdata32(ptdev->dev, PCIR_BDSM, gpu_dsm_gpa | dsm_mask_val);
 
-		gpu_opregion_gpa = GPU_OPREGION_GPA;
-
 		ptdev->has_virt_pcicfg_regs = &has_virt_pcicfg_regs_on_def_gpu;
 		break;
 	}
 
+	gpu_opregion_gpa = gpu_dsm_gpa - GPU_OPREGION_SIZE;
 	pci_set_cfgdata32(ptdev->dev, PCIR_ASLS_CTL, gpu_opregion_gpa | (opregion_phys & ~PCIM_ASLS_OPREGION_MASK));
 
 	/* initialize the EPT mapping for passthrough GPU dsm region */
