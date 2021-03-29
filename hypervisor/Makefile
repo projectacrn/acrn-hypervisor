@@ -383,7 +383,7 @@ pre_build: $(HV_CONFIG_H) $(HV_CONFIG_TIMESTAMP)
 	python3 ../misc/config_tools/acpi_gen/bin_gen.py --board $(BOARD) --scenario $(SCENARIO) --asl $(HV_CONFIG_DIR) --out $(HV_OBJDIR)/acpi
 
 .PHONY: header
-header: $(VERSION) $(HV_CONFIG_H)
+header: $(VERSION) $(HV_CONFIG_H) $(HV_CONFIG_TIMESTAMP)
 
 .PHONY: lib-mod boot-mod hw-mod vp-base-mod vp-dm-mod vp-trusty-mod vp-hcall-mod sys-init-mod
 $(LIB_MOD): $(LIB_C_OBJS) $(LIB_S_OBJS)
@@ -493,14 +493,16 @@ $(VERSION): $(HV_CONFIG_H)
 -include $(C_OBJS:.o=.d)
 -include $(S_OBJS:.o=.d)
 
-$(HV_OBJDIR)/%.o: %.c $(VERSION) $(HV_CONFIG_H)
+$(HV_OBJDIR)/%.o: %.c header
 	[ ! -e $@ ] && mkdir -p $(dir $@) && mkdir -p $(HV_MODDIR); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@ -MMD -MT $@
 
-$(VM_CFG_C_OBJS): %.o: %.c $(VERSION) $(HV_CONFIG_H)
+$(VM_CFG_C_SRCS): %.c: $(HV_CONFIG_TIMESTAMP)
+
+$(VM_CFG_C_OBJS): %.o: %.c header
 	[ ! -e $@ ] && mkdir -p $(dir $@) && mkdir -p $(HV_MODDIR); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@ -MMD -MT $@
 
-$(HV_OBJDIR)/%.o: %.S $(HV_CONFIG_H)
+$(HV_OBJDIR)/%.o: %.S header
 	[ ! -e $@ ] && mkdir -p $(dir $@) && mkdir -p $(HV_MODDIR); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. $(ASFLAGS) $(ARCH_ASFLAGS) -c $< -o $@ -MMD -MT $@
