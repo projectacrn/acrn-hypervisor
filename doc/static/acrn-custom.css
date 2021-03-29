@@ -30,6 +30,11 @@
    font-weight: bold;
 }
 
+/* :option: link color */
+a code span.pre {
+   color: #2980b9;
+}
+
 /* tweak doc version selection */
 .rst-versions {
    position: static;

@@ -72,39 +72,39 @@ Additional Dependencies
 Python 3.6 or above is required to build ACRN v2.4. You can check the version of
 Python you are using by:
 
-  .. code-block:: bash
+.. code-block:: bash
 
-     $ python3 --version
-     Python 3.5.2
+   $ python3 --version
+   Python 3.5.2
 
 Only when the reported version < 3.6 (as is the case in the example above) do
 you need an upgrade. The first (and preferred) choice is to install the latest
 Python 3 from the official package repository:
 
-  .. code-block:: bash
+.. code-block:: bash
 
-     $ sudo apt install python3
-     ...
-     $ python --version
-     Python 3.8.8
+   $ sudo apt install python3
+   ...
+   $ python --version
+   Python 3.8.8
 
 If this does not help, you may use the deadsnakes PPA (see below) or build from
 source yourself.
 
-  .. code-block:: bash
+.. code-block:: bash
 
-     $ sudo add-apt-repository ppa:deadsnakes/ppa
-     $ sudo apt-get update
-     $ sudo apt install python3.9
-     $ python --version
-     Python 3.9.2
+   $ sudo add-apt-repository ppa:deadsnakes/ppa
+   $ sudo apt-get update
+   $ sudo apt install python3.9
+   $ python --version
+   Python 3.9.2
 
 In addition, the following new tools and packages are needed to build ACRN v2.4:
 
-  .. code-block:: bash
+.. code-block:: bash
 
-     $ sudo apt install libxml2-utils xsltproc
-     $ sudo pip3 install lxml xmlschema
+   $ sudo apt install libxml2-utils xsltproc
+   $ sudo pip3 install lxml xmlschema
 
 .. note::
    This is not the complete list of tools required to build ACRN. Refer to
@@ -114,7 +114,7 @@ In addition, the following new tools and packages are needed to build ACRN v2.4:
 Configuration File Format
 =========================
 
-Starting from v2.4, Kconfig is no longer used, and the contents of scenario
+Starting with release v2.4, Kconfig is no longer used, and the contents of scenario
 XMLs have been simplified. You need to upgrade your own Kconfig-format files
 or scenario XMLs if you maintain any.
 
@@ -126,35 +126,35 @@ scenario XMLs.
 For scenario XML, you need to remove the metadata in those files. You can use
 the following XML transformation (in XSLT) for this purpose:
 
-  .. code-block:: xml
+.. code-block:: xml
 
-     <?xml version="1.0" encoding="utf-8"?>
-     <xsl:stylesheet
-         version="1.0"
-         xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+   <?xml version="1.0" encoding="utf-8"?>
+   <xsl:stylesheet
+       version="1.0"
+       xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-       <xsl:template match="@desc" />
-       <xsl:template match="@configurable | @multiselect | @readonly" />
+     <xsl:template match="@desc" />
+     <xsl:template match="@configurable | @multiselect | @readonly" />
 
-       <!-- The identity template -->
-       <xsl:template match="@*|node()">
-         <xsl:copy>
-           <xsl:apply-templates select="@*|node()"/>
-         </xsl:copy>
-       </xsl:template>
-     </xsl:stylesheet>
+     <!-- The identity template -->
+     <xsl:template match="@*|node()">
+       <xsl:copy>
+         <xsl:apply-templates select="@*|node()"/>
+       </xsl:copy>
+     </xsl:template>
+   </xsl:stylesheet>
 
 After saving the snippet above to a file (e.g., ``remove_metadata.xsl``), you
 can use ``xsltproc`` to transform your own scenario XML:
 
-  .. code-block:: bash
+.. code-block:: bash
 
-     $ xsltproc -o <path/to/output> remove_metadata.xsl <path/to/your/XML>
+   $ xsltproc -o <path/to/output> remove_metadata.xsl <path/to/your/XML>
 
 New Configuration Options
 =========================
 
-The following element is added to scneario XML in v2.4.
+The following element is added to scenario XML in v2.4.
 
  - :option:`hv.FEATURES.ENFORCE_TURNOFF_AC`
 
@@ -162,37 +162,36 @@ To upgrade a v2.3-compliant scenario XML, you can use the following XML
 transformation. The indentation in this transformation are carefully tweaked for
 the best indentation in converted XML files.
 
-  .. code-block:: xml
+.. code-block:: xml
 
-     <?xml version="1.0" encoding="utf-8"?>
-     <xsl:stylesheet
-         version="1.0"
-         xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-       <xsl:template match="hv/FEATURES/MULTIBOOT2">
-         <xsl:copy>
-           <xsl:apply-templates select="@*|node()"/>
-         </xsl:copy>
-         <xsl:if test="not(../ENFORCE_TURNOFF_AC)">
-           <xsl:text>
-                 </xsl:text>
-           <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
-         </xsl:if>
-       </xsl:template>
+   <?xml version="1.0" encoding="utf-8"?>
+   <xsl:stylesheet
+       version="1.0"
+       xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+     <xsl:template match="hv/FEATURES/MULTIBOOT2">
+       <xsl:copy>
+         <xsl:apply-templates select="@*|node()"/>
+       </xsl:copy>
+       <xsl:if test="not(../ENFORCE_TURNOFF_AC)">
+         <xsl:text>
+               </xsl:text>
+         <ENFORCE_TURNOFF_AC>y</ENFORCE_TURNOFF_AC>
+       </xsl:if>
+     </xsl:template>
 
-       <!-- The identity template -->
-       <xsl:template match="@*|node()">
-         <xsl:copy>
-           <xsl:apply-templates select="@*|node()"/>
-         </xsl:copy>
-       </xsl:template>
-     </xsl:stylesheet>
+     <!-- The identity template -->
+     <xsl:template match="@*|node()">
+       <xsl:copy>
+         <xsl:apply-templates select="@*|node()"/>
+       </xsl:copy>
+     </xsl:template>
+   </xsl:stylesheet>
 
 Build Commands
 ==============
 
-While the ``make`` command-line variables are kept backward compatible, users
-are recommended to update the usage of variables ``BOARD_FILE``,
-``SCENARIO_FILE``, and ``RELEASE``.
+We recommend you update the usage of variables ``BOARD_FILE``,
+``SCENARIO_FILE``, and ``RELEASE``:
 
  - ``BOARD_FILE`` should be replaced with ``BOARD``. There is no need to specify
    ``BOARD`` and ``BOARD_FILE`` at the same time.
@@ -201,14 +200,14 @@ are recommended to update the usage of variables ``BOARD_FILE``,
    ``n`` (previously was ``0``).
 
 ``BOARD_FILE`` and ``SCENARIO_FILE`` can still be used but will take effect
-only when ``BOARD`` and ``SCENARIO`` are not defined. They will be removed in
+only if ``BOARD`` and ``SCENARIO`` are not defined. They will be removed in
 a future release.
 
 Patches on Generated Sources
 ============================
 
 The C files generated from board and scenario XMLs have been removed from the
-repository in v2.4. Instead they will be generated when building the
+repository in v2.4. Instead they will be generated in the build output when building the
 hypervisor.
 
 Typically you should be able to customize your scenario by modifying the
@@ -217,7 +216,7 @@ possible, you can still register one or more patches that will be applied to
 the generated files by following the instructions in
 :ref:`acrn_makefile_targets`.
 
-Note that modifying generated files is by no means a recommended practice.
+Note that modifying generated files is not a recommended practice.
 When you find any configuration that is not flexible enough to meet your
 needs, please do not hesitate to let us know by sending mail to `the mailing
 list <https://lists.projectacrn.org/g/acrn-dev>`_ or submitting issues on
@@ -226,11 +225,22 @@ list <https://lists.projectacrn.org/g/acrn-dev>`_ or submitting issues on
 Document Updates
 ****************
 
-New and updated reference documents are available, including:
+With the changes to ACRN configuration noted above, we made substantial updates
+to the ACRN documentation around configuration and options, as listed here:
 
 .. rst-class:: rst-columns2
 
-* :ref:`APL_GVT-g-hld`
+* :ref:`hv-config`
+* :ref:`scenario-config-options`
+* :ref:`acrn_configuration_tool`
+* :ref:`vuart_config`
+* :ref:`acrn-dm_parameters`
+* :ref:`kernel-parameters`
+
+Additional new or updated reference documents are also available, including:
+
+.. rst-class:: rst-columns2
+
 * :ref:`hld-devicemodel`
 * :ref:`hld-trace-log`
 * :ref:`hld-virtio-devices`
@@ -241,23 +251,20 @@ New and updated reference documents are available, including:
 * :ref:`vt-d-hld`
 * :ref:`virtio-console`
 * :ref:`virtio-i2c`
+* :ref:`getting-started-building`
+* :ref:`roscube-gsg`
 * :ref:`rt_industry_ubuntu_setup`
 * :ref:`introduction`
-* :ref:`scenario-config-options`
 * :ref:`how-to-enable-acrn-secure-boot-with-grub`
-* :ref:`acrn_configuration_tool`
 * :ref:`acrn_doc`
 * :ref:`gpu-passthrough`
 * :ref:`rt_performance_tuning`
 * :ref:`setup_openstack_libvirt`
 * :ref:`using_windows_as_uos`
-* :ref:`vuart_config`
-* :ref:`acrn-dm_parameters`
-* :ref:`kernel-parameters`
 
 Because we dropped deprivileged boot mode support (in v2.3), we also
 switched our Service VM of choice away from Clear Linux and have
-removed Clear Linux–specific tutorials.  Deleted documents are still
+removed Clear Linux-specific tutorials.  Deleted documents are still
 available in the `version-specific v2.1 documentation
 <https://projectacrn.github.io/v2.1/>`_.
 
