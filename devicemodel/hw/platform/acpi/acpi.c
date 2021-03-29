@@ -1095,13 +1095,13 @@ int create_and_inject_vrtct(struct vmctx *ctx)
 	uint8_t *vrtct;
 	struct vm_memmap memmap = {
 		.type = VM_MMIO,
-		.gpa = SOFTWARE_SRAM_BASE_GPA,
 		/* HPA base and size of Software SRAM shall be parsed from vRTCT. */
 		.hpa = 0,
 		.len = 0,
 		.prot = PROT_ALL
 	};
 
+	memmap.gpa = get_software_sram_base_gpa();
 	native_rtct_fd = open(RTCT_NATIVE_FILE_PATH_IN_SOS, O_RDONLY);
 	if (native_rtct_fd < 0) {
 		pr_err("failed to open /sys/firmware/acpi/tables/PTCT !!!!! errno:%d\n", errno);
