@@ -48,6 +48,22 @@ The diagram below shows the overall architecture:
     .. graphviz:: images/s5-scenario-2.dot
        :name: s5-scenario-2
 
+Initiate a system S5 from within a User VM (e.g. HMI)
+=====================================================
+
+As in Figure 56, a request to Service VM initiates the shutdown flow.
+This could come from a User VM, most likely the HMI (Windows or user-friendly Linux). 
+When a human operator click to initiate the flow, the lifecycle_mgr in it will send 
+the request via vUART to the lifecycle manager in the Service VM which in turn acknowledge 
+the request and trigger the following flow. 
+
+.. note:: The User VM need to be authorized to be able to request a Shutdown, this is achieved by adding 
+   "``--pm_notify_channel uart``" in the launch script of that VM.
+   And, there is only one VM in the system can be configured to request a shutdown. If there is a second User 
+   VM launched with "``--pm_notify_channel uart``", ACRN will stop launching it and throw out below error message:
+   ``initiate a connection on a socket error``
+   ``create socket to connect life-cycle manager failed``
+
 Trigger the User VM's S5
 ========================
 
