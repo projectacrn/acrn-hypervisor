@@ -198,22 +198,24 @@ which we'll summarize below.
     HashAlgorithm = SHA256
     KeyAlgorithm = RSA
     KeyLength = 2048
-    KeyContainer = "{EA75381E-6D9B-4BDC-B6C7-5144C96507DD}"
     ProviderName = "Microsoft Strong Cryptographic Provider"
     KeyUsage = 0xf0
 
 - Generate the Platform Key using ``certreq.exe``::
 
-    C:\\PKtest> certreq.exe -new request.inf PKtest.cer
-    Installed Certificate:
-    Serial Number: 3f675d4b64156f9c48ccf30793121147
-    Subject: CN=Intel Platform Key, O=Intel, L=Shanghai, S=Shanghai, C=CN
-    NotBefore: 6/26/2019 10:40 AM
-    NotAfter: 6/26/2025 10:50 AM
-    Thumbprint: ff2771bd5bd1f7086ab96fb9532b594ed8619c3b
-    Microsoft Strong Cryptographic Provider
-    3d40ebea7d109ee93b238b96721f0e6d_4be58f30-7127-42f5-9b76-f47187495247
-    CertReq: Certificate Created and Installed
+   C:\WINDOWS\system32>certreq.exe -v -new -binary request.inf PKtestDER.cer
+   Cert: 4 -> 4
+   Years: 6 -> 6
+   Installed Certificate:
+   Serial Number: 285c6f1ec39cc186495f8e55fa053593
+   Subject: CN=Intel Platform Key, O=Intel, L=Shanghai, S=Shanghai, C=CN
+   NotBefore: 3/30/2021 10:30 55.000s
+   NotAfter: 3/30/2027 10:40 55.000s
+   Thumbprint: 8d79139f90b9fa47200eedbc8c29039869cc4adc
+   Microsoft Strong Cryptographic Provider
+   c387aac7266d5db5d81da8a6aa21c703_163d773d-a567-4430-aabf-893dc207fa3d
+
+   CertReq: Certificate Created and Installed
 
 - Validate the Platform Key certificate has been generated correctly::
 
@@ -384,35 +386,6 @@ which we'll summarize below.
     Private key is NOT exportable
     Signature test passed
     CertUtil: -store command completed successfully.
-
-- Convert ``PKtest.cer`` from Base-64 to DER format.
-
-  OVMF secure boot key only supports DER encoded certificate.
-
-  1) open certificate by double clicking ``PKtest.cer`` and click "Copy to
-     File..."
-
-     .. image:: images/waag_secure_boot_image1.png
-        :align: center
-        :width: 600px
-
-  2) Follow the certificate export wizard and select the format as
-     "DER encoded binary X.509 (.CER)"
-
-     .. image:: images/waag_secure_boot_image2.png
-        :align: center
-        :width: 600px
-
-  3) Follow the wizard to save file and finish export
-
-     .. image:: images/waag_secure_boot_image3.png
-        :align: center
-        :width: 600px
-
-  You can rename ``PKtestDER.cer`` extension to ``PKtestDER.crt``.
-  A ``.cer`` file is an alternate form of ``.crt`` by Microsoft
-  Conventions. CRT and CER file extensions can be interchanged as
-  the encoding type is identical.
 
 Download KEK and DB From Microsoft
 **********************************
