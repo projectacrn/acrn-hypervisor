@@ -223,8 +223,8 @@ Boot Windows on ACRN With a Default Configuration
 
    .. code-block:: bash
 
-      -s 5,ahci,cd:./Windows10.iso \
-      -s 6,ahci,cd:./winvirtio.iso \
+      -s 5,ahci,cd:/home/acrn/work/Windows10.iso \
+      -s 6,ahci,cd:/home/acrn/work/winvirtio.iso \
 
 #. Launch WaaG
 
