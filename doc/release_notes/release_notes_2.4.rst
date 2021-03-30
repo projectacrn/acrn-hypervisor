@@ -262,7 +262,25 @@ available in the `version-specific v2.1 documentation
 Fixed Issues Details
 ********************
 
-.. example - :acrn-issue:`4958` - clean up spin lock for hypervisor
+- :acrn-issue:`5626` - [CFL][industry] Host Call Trace once detected
+- :acrn-issue:`5672` - [EHL][v2.4][config_tools]  Pop error message while config multi_ivshmem_device.
+- :acrn-issue:`5689` - [EHL][SBL] copy GPA error when booting zephyr as pre-launched VM
+- :acrn-issue:`5712` - [CFL][EHL][Hybrid-rt][WAAG]Post Launch WAAG with USB_Mediator-USB3.0 flash disk/SSD with USB3.0 port .waag cannot access USB mass storage
+- :acrn-issue:`5717` - [WaaG Ivshmem] windows ivshmem driver does not work with hv land ivshmem
+- :acrn-issue:`5719` - [EHL][[Hybrid RT]  it will pop some warning messages while launch vm
+- :acrn-issue:`5736` - Launch script: Remove --pm_notify_channel uart parameter in launch script
+- :acrn-issue:`5772` - The `RELEASE` variable is not correctly handled
+- :acrn-issue:`5778` - [EHL][v2.4] Failed to build hv with hypervisor_tools_default_setting _for newboard
+- :acrn-issue:`5798` - [EHL][V2.4][[Fusa Partition]  cannot disable AC  after  modify AC configuration in Kconfig
+- :acrn-issue:`5802` - [EHL][syzkaller]HV crash with info " rcu detected stall in corrupted" during fuzzing testing
+- :acrn-issue:`5806` - [TGL][PTCM]Cache was not locked after post-RTVM power off and restart
+- :acrn-issue:`5818` - [EHL][v2.4_rc1] Failed to boot up WAAG randomly
+- :acrn-issue:`5863` - config-tools: loosen IVSHMEM_REGION restriction in schema
 
 Known Issues
 ************
+
+- :acrn-issue:`5369` - [TGL][qemu] Cannot launch qemu on TGL
+- :acrn-issue:`5705` - [WindowsGuest] Less memory in the virtual machine than the initialization
+- :acrn-issue:`5879` - hybrid_rt scenario does not work with large initrd in pre-launched VM
+- :acrn-issue:`5888` - Unable to launch vm at the second time with pty,/run/acrn/life_mngr_$vm_name parameter added in the launch script
