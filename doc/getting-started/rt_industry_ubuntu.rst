@@ -12,8 +12,8 @@ Verified Version
 
 - Ubuntu version: **18.04**
 - GCC version: **7.5**
-- ACRN-hypervisor branch: **release_2.3 (v2.3)**
-- ACRN-Kernel (Service VM kernel): **release_2.3 (v2.3)**
+- ACRN-hypervisor branch: **release_2.4 (v2.4)**
+- ACRN-Kernel (Service VM kernel): **release_2.4 (v2.4)**
 - RT kernel for Ubuntu User OS: **4.19/preempt-rt (4.19.72-rt25)**
 - HW: Maxtang Intel WHL-U i7-8665U (`AX8665U-A2 <http://www.maxtangpc.com/fanlessembeddedcomputers/140.html>`_)
 
@@ -152,7 +152,6 @@ Build the ACRN Hypervisor on Ubuntu
         libsystemd-dev \
         libevent-dev \
         libxml2-dev \
-        libxml2-utils \
         libusb-1.0-0-dev \
         python3 \
         python3-pip \
@@ -162,9 +161,10 @@ Build the ACRN Hypervisor on Ubuntu
         libnuma-dev \
         liblz4-tool \
         flex \
-        bison
+        bison \
+        xsltproc
 
-      $ sudo pip3 install kconfiglib
+      $ sudo pip3 install lxml xmlschema
 
 #. Starting with the ACRN v2.2 release, we use the ``iasl`` tool to
    compile an offline ACPI binary for pre-launched VMs while building ACRN,
@@ -191,17 +191,17 @@ Build the ACRN Hypervisor on Ubuntu
       $ git clone https://github.com/projectacrn/acrn-hypervisor
       $ cd acrn-hypervisor
 
-#. Switch to the v2.3 version:
+#. Switch to the v2.4 version:
 
    .. code-block:: none
 
-      $ git checkout v2.3
+      $ git checkout v2.4
 
 #. Build ACRN:
 
    .. code-block:: none
 
-      $ make all BOARD_FILE=misc/vm_configs/xmls/board-xmls/whl-ipc-i7.xml SCENARIO_FILE=misc/vm_configs/xmls/config-xmls/whl-ipc-i7/industry.xml RELEASE=0
+      $ make BOARD=whl-ipc-i7 SCENARIO=industry
       $ sudo make install
       $ sudo mkdir -p /boot/acrn
       $ sudo cp build/hypervisor/acrn.bin /boot/acrn/
@@ -221,7 +221,7 @@ Build and Install the ACRN Kernel
 
    .. code-block:: none
 
-      $ git checkout v2.3
+      $ git checkout v2.4
       $ cp kernel_config_uefi_sos .config
       $ make olddefconfig
       $ make all
@@ -455,8 +455,11 @@ Launch the RTVM
 
   .. code-block:: none
 
-     $ sudo cp /home/acrn/work/acrn-hyperviso/misc/vm_configs/sample_launch_scripts/nuc/launch_hard_rt_vm.sh  /usr/share/acrn/
+     $ sudo cp /home/acrn/work/acrn-hyperviso/misc/config_tools/data/sample_launch_scripts/nuc/launch_hard_rt_vm.sh  /usr/share/acrn/
      $ sudo /usr/share/acrn/launch_hard_rt_vm.sh
+
+.. note::
+   If using a KBL NUC, the script must be adapted to match the BDF on the actual HW platform
 
 Recommended BIOS Settings for RTVM
 ----------------------------------
@@ -635,7 +638,6 @@ to the ``launch_hard_rt_vm.sh`` script before launching it:
       -s 2,passthru,02/0/0 \
       -s 3,virtio-console,@stdio:stdio_port \
       -s 8,virtio-net,tap0 \
-      $pm_channel $pm_by_vuart \
       --ovmf /usr/share/acrn/bios/OVMF.fd \
       hard_rtvm
 
@@ -689,7 +691,6 @@ Passthrough a Hard Disk to RTVM
          -s 2,passthru,00/17/0 \
          -s 3,virtio-console,@stdio:stdio_port \
          -s 8,virtio-net,tap0 \
-         $pm_channel $pm_by_vuart \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
          hard_rtvm
 
