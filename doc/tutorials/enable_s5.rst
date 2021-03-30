@@ -51,7 +51,7 @@ The diagram below shows the overall architecture:
 Initiate a system S5 from within a User VM (e.g. HMI)
 =====================================================
 
-As shown in the :ref:`s5-architecture`, a request to Service VM initiates the shutdown flow.
+As shown in the :numref:`s5-architecture`, a request to Service VM initiates the shutdown flow.
 This could come from a User VM, most likely the HMI (running Windows or Linux).
 When a human operator initiates the flow, the Lifecycle Manager (``life_mngr``) running in that
 User VM will send the request via the vUART to the Lifecycle Manager in the Service VM which in
