@@ -1,7 +1,7 @@
 .. _release_notes_2.4:
 
-ACRN v2.4 (Mar 2021) - DRAFT
-############################
+ACRN v2.4 (Mar 2021)
+####################
 
 We are pleased to announce the release of the Project ACRN hypervisor
 version 2.4.
@@ -52,7 +52,7 @@ integrated into v2.4:
  - The ``make`` command-line variables ``BOARD`` and ``BOARD_FILE`` have been
    unified. Users can now specify ``BOARD=xxx`` when invoking ``make`` with
    ``xxx`` being either a board name or a (relative or absolute) path to a
-   board XML. ``SCENARIO`` and ``SCENARIO_FILE`` have been unified in the same
+   board XML file. ``SCENARIO`` and ``SCENARIO_FILE`` have been unified in the same
    way.
 
 For complete instructions to get started with the new build system, refer to
@@ -63,13 +63,13 @@ workflow of the new configuration mechanism, refer to
 Upgrading to v2.4 From Previous Releases
 ****************************************
 
-Users are highly recommended to follow the instructions below in order to
+We highly recommended that you follow the instructions below to
 upgrade to v2.4 from previous ACRN releases.
 
 Additional Dependencies
 =======================
 
-Python 3.6 or above is required to build ACRN v2.4. You can check the version of
+Python version 3.6 or higher is required to build ACRN v2.4. You can check the version of
 Python you are using by:
 
 .. code-block:: bash
@@ -77,7 +77,7 @@ Python you are using by:
    $ python3 --version
    Python 3.5.2
 
-Only when the reported version < 3.6 (as is the case in the example above) do
+Only when the reported version is less than 3.6 (as is the case in the example above) do
 you need an upgrade. The first (and preferred) choice is to install the latest
 Python 3 from the official package repository:
 
@@ -88,8 +88,8 @@ Python 3 from the official package repository:
    $ python --version
    Python 3.8.8
 
-If this does not help, you may use the deadsnakes PPA (see below) or build from
-source yourself.
+If this does not get you an appropriate version, you may use the deadsnakes PPA
+(using the instructions below) or build from source yourself.
 
 .. code-block:: bash
 
@@ -115,15 +115,15 @@ Configuration File Format
 =========================
 
 Starting with release v2.4, Kconfig is no longer used, and the contents of scenario
-XMLs have been simplified. You need to upgrade your own Kconfig-format files
-or scenario XMLs if you maintain any.
+XML files have been simplified. You need to upgrade your own Kconfig-format files
+or scenario XML files if you maintain any.
 
 For Kconfig-format file, you must translate your configuration to a scenario
-XML where all previous Kconfig configuration entries are also available. Refer
+XML file where all previous Kconfig configuration entries are also available. Refer
 to :ref:`scenario-config-options` for the full list of settings available in
-scenario XMLs.
+scenario XML files.
 
-For scenario XML, you need to remove the metadata in those files. You can use
+For scenario XML files, you need to remove the obsolete metadata in those files. You can use
 the following XML transformation (in XSLT) for this purpose:
 
 .. code-block:: xml
@@ -145,7 +145,7 @@ the following XML transformation (in XSLT) for this purpose:
    </xsl:stylesheet>
 
 After saving the snippet above to a file (e.g., ``remove_metadata.xsl``), you
-can use ``xsltproc`` to transform your own scenario XML:
+can use ``xsltproc`` to clean and transform your own scenario XML file:
 
 .. code-block:: bash
 
@@ -154,11 +154,11 @@ can use ``xsltproc`` to transform your own scenario XML:
 New Configuration Options
 =========================
 
-The following element is added to scenario XML in v2.4.
+The following element is added to scenario XML files in v2.4:
 
  - :option:`hv.FEATURES.ENFORCE_TURNOFF_AC`
 
-To upgrade a v2.3-compliant scenario XML, you can use the following XML
+To upgrade a v2.3-compliant scenario XML file, you can use the following XML
 transformation. The indentation in this transformation are carefully tweaked for
 the best indentation in converted XML files.
 
@@ -190,37 +190,37 @@ the best indentation in converted XML files.
 Build Commands
 ==============
 
-We recommend you update the usage of variables ``BOARD_FILE``,
-``SCENARIO_FILE``, and ``RELEASE``:
+We recommend you update the usage of variables ``BOARD_FILE`` and
+``SCENARIO_FILE``, which are being deprecated,  and ``RELEASE``:
 
- - ``BOARD_FILE`` should be replaced with ``BOARD``. There is no need to specify
+ - ``BOARD_FILE`` should be replaced with ``BOARD``. You should not specify
    ``BOARD`` and ``BOARD_FILE`` at the same time.
  - Similarly, ``SCENARIO_FILE`` should be replaced with ``SCENARIO``.
  - The value of ``RELEASE`` should be either ``y`` (previously was ``1``) or
    ``n`` (previously was ``0``).
 
 ``BOARD_FILE`` and ``SCENARIO_FILE`` can still be used but will take effect
-only if ``BOARD`` and ``SCENARIO`` are not defined. They will be removed in
+only if ``BOARD`` and ``SCENARIO`` are not defined. They will be deprecated in
 a future release.
 
 Patches on Generated Sources
 ============================
 
-The C files generated from board and scenario XMLs have been removed from the
+The C files generated from board and scenario XML files have been removed from the
 repository in v2.4. Instead they will be generated in the build output when building the
 hypervisor.
 
 Typically you should be able to customize your scenario by modifying the
-scenario XML rather than the generated files directly. But in case it is not
+scenario XML file rather than the generated files directly. But if that is not
 possible, you can still register one or more patches that will be applied to
 the generated files by following the instructions in
 :ref:`acrn_makefile_targets`.
 
-Note that modifying generated files is not a recommended practice.
-When you find any configuration that is not flexible enough to meet your
-needs, please do not hesitate to let us know by sending mail to `the mailing
-list <https://lists.projectacrn.org/g/acrn-dev>`_ or submitting issues on
-`GitHub <https://github.com/projectacrn/acrn-hypervisor/issues>`_.
+Modifying generated files is not a recommended practice.
+If you find a configuration that is not flexible enough to meet your
+needs, please let us know by sending mail to `the acrn-dev mailing
+list <https://lists.projectacrn.org/g/acrn-dev>`_ or submitting a
+`GitHub issue <https://github.com/projectacrn/acrn-hypervisor/issues>`_.
 
 Document Updates
 ****************
@@ -234,6 +234,7 @@ to the ACRN documentation around configuration and options, as listed here:
 * :ref:`scenario-config-options`
 * :ref:`acrn_configuration_tool`
 * :ref:`vuart_config`
+* :ref:`getting-started-building`
 * :ref:`acrn-dm_parameters`
 * :ref:`kernel-parameters`
 
@@ -241,26 +242,15 @@ Additional new or updated reference documents are also available, including:
 
 .. rst-class:: rst-columns2
 
-* :ref:`hld-devicemodel`
-* :ref:`hld-trace-log`
-* :ref:`hld-virtio-devices`
-* :ref:`hv-cpu-virt`
-* :ref:`IOC_virtualization_hld`
-* :ref:`partition-mode-hld`
-* :ref:`hv-vm-management`
-* :ref:`vt-d-hld`
-* :ref:`virtio-console`
-* :ref:`virtio-i2c`
-* :ref:`getting-started-building`
-* :ref:`roscube-gsg`
 * :ref:`rt_industry_ubuntu_setup`
-* :ref:`introduction`
-* :ref:`how-to-enable-acrn-secure-boot-with-grub`
-* :ref:`acrn_doc`
-* :ref:`gpu-passthrough`
-* :ref:`rt_performance_tuning`
 * :ref:`setup_openstack_libvirt`
 * :ref:`using_windows_as_uos`
+
+We've also made edits throughout the documentation to improve clarity,
+formatting, and presentation throughout the ACRN documentation.
+
+Deprivileged Boot Mode Support
+==============================
 
 Because we dropped deprivileged boot mode support (in v2.3), we also
 switched our Service VM of choice away from Clear Linux and have
