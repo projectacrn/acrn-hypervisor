@@ -57,10 +57,18 @@ static uint64_t cr4_passthru_mask = CR4_PASSTHRU_BITS;	/* bound to flexible bits
 #define CR4_TRAP_AND_PASSTHRU_BITS	(CR4_PSE | CR4_PAE | CR4_SMEP | CR4_SMAP | CR4_PKE | CR4_PKS | CR4_KL)
 static uint64_t	cr4_trap_and_passthru_mask = CR4_TRAP_AND_PASSTHRU_BITS; /* bound to flexible bits */
 
+#ifdef CONFIG_NVMX_ENABLED
+#define CR4_TRAP_AND_EMULATE_BITS	(CR4_VMXE | CR4_MCE) /* software emulated bits even if host is fixed */
+#else
 #define CR4_TRAP_AND_EMULATE_BITS	CR4_MCE /* software emulated bits even if host is fixed */
+#endif
 
 /* Change of these bits should change vcpuid too */
+#ifdef CONFIG_NVMX_ENABLED
+#define CR4_EMULATED_RESERVE_BITS	(CR4_CET | CR4_SMXE)
+#else
 #define CR4_EMULATED_RESERVE_BITS	(CR4_VMXE | CR4_CET | CR4_SMXE)
+#endif
 
 /* The physical CR4 value for bits of CR4_EMULATED_RESERVE_BITS */
 #define CR4_EMRSV_BITS_PHYS_VALUE	CR4_VMXE
@@ -484,6 +492,10 @@ void init_cr0_cr4_flexible_bits(void)
 	 * Refer SDM Appendix A.8
 	 */
 	cr4_rsv_bits_guest_value = (fixed0 & ~cr4_flexible_bits);
+
+#ifdef CONFIG_NVMX_ENABLED
+	cr4_rsv_bits_guest_value &= ~CR4_VMXE;
+#endif
 	initial_guest_cr4 = (cr4_rsv_bits_guest_value & ~CR4_EMULATED_RESERVE_BITS) | CR4_EMRSV_BITS_PHYS_VALUE;
 	cr4_rsv_bits_guest_value = (cr4_rsv_bits_guest_value & ~CR4_EMULATED_RESERVE_BITS) | CR4_EMRSV_BITS_VIRT_VALUE;
 
