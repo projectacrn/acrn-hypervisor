@@ -139,10 +139,9 @@ Compliant example::
 ASM-GN-06: .end directive statement shall be the last statement in an Assembly file
 ===================================================================================
 
-This rule only applies to the Assembly file that uses ``.end``
-directive. ``.end`` directive shall be the last statement in this case.
-All the statements past ``.end`` directive will not be processed by the
-assembler.
+This rule applies only to the Assembly file that uses the ``.end`` directive.
+The ``.end`` directive shall be the last statement in this case. All
+statements past the ``.end`` directive will not be processed by the assembler.
 
 Compliant example::
 
@@ -226,8 +225,8 @@ Compliant example::
 ASM-GN-09: Far jump shall be used with restrictions
 ===================================================
 
-Jumping to an instruction located in a different segment shall only be used for
-the following two cases:
+Jumping to an instruction located in a different segment shall be used only
+for the following two cases:
 
 a) Code bit changes, such as change from 32-bit mode to 64-bit mode.
 b) System resumes from S3. In this case, Global Descriptor Table (GDT) is set by
@@ -268,8 +267,8 @@ Compliant example::
 ASM-GN-10: Assembler directives shall be used with restrictions
 ===============================================================
 
-Usage of the assembler directive refers to GNU assembler 'as' user manual. Only
-the following assembler directives may be used:
+Usage of the assembler directive refers to the GNU assembler ``as`` user
+manual. Only the following assembler directives may be used:
 
 1) ``.align``
 2) ``.end``
@@ -315,12 +314,12 @@ Compliant example::
                call    asm_func_showcase
 
 
-ASM-FN-02: A function shall only have one entry point
+ASM-FN-02: A function shall have only one entry point
 =====================================================
 
-The label in a function shall only be used inside. Jumping into the function
+The label in a function shall be used only inside. Jumping into the function
 from outside via this label shall not be allowed. This rule applies to both
-conditional jump and unconditional jump.
+conditional jumps and unconditional jumps.
 
 Compliant example::
 
@@ -352,7 +351,7 @@ Compliant example::
                jmp     tmp
 
 
-ASM-FN-03: A function shall only have one return statement
+ASM-FN-03: A function shall have only one return statement
 ==========================================================
 
 Compliant example::
@@ -381,10 +380,10 @@ Compliant example::
                ret
 
 
-ASM-FN-04: Function shall only be entered by explicit call
+ASM-FN-04: Function shall be entered only by explicit call
 ==========================================================
 
-Falling through from prior instruction shall not be allowed.
+Falling through from a prior instruction shall not be allowed.
 
 Compliant example::
 
@@ -411,7 +410,7 @@ Compliant example::
 ASM-FN-05: A jump instruction shall not be used to jump out of a function
 =========================================================================
 
-This rule applies to both conditional jump and unconditional jump.
+This rule applies to both conditional jumps and unconditional jumps.
 
 Compliant example::
 
@@ -786,10 +785,11 @@ Compliant example::
 ASM-NC-03: Label name shall be unique
 =====================================
 
-Label name shall be unique with the following exception. Usage of local labels
-is allowed. Local label is defined with the format ``N:``, where N represents any
-non-negative integer. Using ``Nb`` to refer to the most recent previous definition
-of that label. Using ``Nf`` to refer to the next definition of a local label.
+Label name shall be unique with the following exception: Use of local labels
+is allowed. A local label is defined with the format ``N:``, where N
+represents any non-negative integer. Use ``Nb`` to refer to the most recent
+previous definition of that label. Use ``Nf`` to refer to the next definition
+of a local label.
 
 Compliant example::
 

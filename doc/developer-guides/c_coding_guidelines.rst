@@ -13,12 +13,12 @@ Preprocessor
 C-PP-01: ## or # operators shall be used with restrictions
 ==========================================================
 
-``##`` or ``#`` operators shall only be used alone. The following cases shall not be
-allowed:
+``##`` or ``#`` operators shall only be used alone. The following cases shall
+not be allowed:
 
-a) The result getting from ``##`` or ``#`` operation shall not be used as the operands
-   of another ``##`` or ``#`` operation;
-b) Mixed-use of ``##`` or ``#`` operators shall not be allowed.
+a) The result from the ``##`` or ``#`` operation shall not be used as the
+   operands of another ``##`` or ``#`` operation.
+b) Mixed use of ``##`` or ``#`` operators shall not be allowed.
 
 Compliant example::
 
@@ -322,8 +322,8 @@ Compliant example::
                showcase += 10U;
 
 
-C-DI-04: The initialization of struct shall be enclosed with brackets
-=====================================================================
+C-DI-04: The initialization of a struct shall be enclosed with brackets
+=======================================================================
 
 Compliant example::
 
@@ -374,13 +374,13 @@ Compliant example::
        uint32_t showcase[] = {0U, 1U};
 
 
-C-DI-06: Global variables shall only be declared once
+C-DI-06: Global variables shall be declared only once
 =====================================================
 
-Global variables shall only be declared once with the following exception.
-A global variable may be declared twice, if one declaration is in a header file
-with extern specifier, and the other one is in a source file without extern
-specifier.
+Global variables shall be declared only once with the following exception:
+A global variable may be declared twice if one declaration is in a header file
+with the ``extern`` specifier and the other one is in a source file *without*
+the ``extern`` specifier.
 
 Compliant example::
 
@@ -444,8 +444,8 @@ Compliant example::
 Functions
 *********
 
-C-FN-01: A non-void function shall have return statement
-========================================================
+C-FN-01: A non-void function shall have a return statement
+==========================================================
 
 Compliant example::
 
@@ -465,8 +465,8 @@ Compliant example::
        }
 
 
-C-FN-02: A non-void function shall have return value rather than empty return
-=============================================================================
+C-FN-02: A non-void function shall have a return value rather than empty return
+===============================================================================
 
 Compliant example::
 
@@ -487,8 +487,8 @@ Compliant example::
        }
 
 
-C-FN-03: A non-void function shall return value on all paths
-============================================================
+C-FN-03: A non-void function shall return a value on all paths
+==============================================================
 
 Compliant example::
 
@@ -550,8 +550,8 @@ Compliant example::
        }
 
 
-C-FN-05: Parameter passed by pointer to a function shall not be reassigned
-==========================================================================
+C-FN-05: A parameter passed by pointer to a function shall not be reassigned
+============================================================================
 
 Compliant example::
 
@@ -574,8 +574,8 @@ Compliant example::
        }
 
 
-C-FN-06: Parameter passed by value to a function shall not be modified directly
-===============================================================================
+C-FN-06: A parameter passed by value to a function shall not be modified directly
+=================================================================================
 
 Compliant example::
 
@@ -598,8 +598,8 @@ Compliant example::
        }
 
 
-C-FN-07: Non-static function shall be declared in header file
-=============================================================
+C-FN-07: A non-static function shall be declared in a header file
+=================================================================
 
 Compliant example::
 
@@ -627,8 +627,8 @@ Compliant example::
        }
 
 
-C-FN-08: All static functions shall be used within the file they are declared
-=============================================================================
+C-FN-08: All static functions shall be used within the file in which they are declared
+======================================================================================
 
 Unlike global functions in C, access to a static function is restricted to the
 file where it is declared. Therefore, a static function shall be used in the
@@ -662,7 +662,7 @@ C-FN-09: The formal parameter name of a function shall be consistent
 ====================================================================
 
 The formal parameter name of a function shall be the same between its
-declaration and definition.
+declaration and its definition.
 
 Compliant example::
 
@@ -697,7 +697,7 @@ C-FN-10: The formal parameter type of a function shall be consistent
 ====================================================================
 
 The formal parameter type of a function shall be the same between its
-declaration and definition.
+declaration and its definition.
 
 Compliant example::
 
@@ -731,7 +731,7 @@ Compliant example::
 C-FN-11: The return type of a function shall be consistent
 ==========================================================
 
-The return type of a function shall be the same between its declaration and
+The return type of a function shall be the same between its declaration and its
 definition.
 
 Compliant example::
@@ -771,9 +771,9 @@ The following cases shall be covered:
 a) These dynamic memory allocation functions shall not be used: ``calloc``,
    ``malloc``, ``realloc``, and ``free``.  Dynamic memory allocation shall be
    replaced with static memory allocation.
-b) The functions ``va_arg``, ``va_start``, and ``va_end`` shall only be used
-   within variadic functions (functions taking a variable number of parameters)
-   such as ``printf``.
+b) The functions ``va_arg``, ``va_start``, and ``va_end`` shall be used only
+   within variadic functions (functions taking a variable number of
+   parameters) such as ``printf``.
 
 Compliant example::
 
@@ -812,18 +812,18 @@ Compliant example::
        /* declaration */
        uint32_t func_showcase(uint32_t param);
 
-       /* There is no definition of `func_showcase` anywhere in all source files */
+       /* There is no definition of `func_showcase` anywhere in the source files */
 
 
 C-FN-14: All defined functions shall be used
 ============================================
 
-All defined functions shall be used, either called explicitly or indirectly via
-its address. Otherwise, the function shall be removed. The following case is an
-exception. Some extra functions may be kept in order to provide a more complete
-library of APIs. These functions may have been implemented but not used
-currently. These functions will come in handy in the future. In this case, these
-functions may remain.
+All defined functions shall be used, either called explicitly or indirectly
+via the address. Otherwise, the function shall be removed. The following case
+is an exception: Some extra functions may be kept in order to provide a more
+complete library of APIs. These functions may be implemented but not used
+currently. These functions will come in handy in the future. In this case,
+these functions may remain.
 
 Compliant example::
 
@@ -951,12 +951,12 @@ Compliant example::
        }
 
 
-C-FN-17: The return value of a non-void function shall either be used or discarded
+C-FN-17: The return value of a non-void function shall be either used or discarded
 ==================================================================================
 
-The return value of a non-void function shall either be used or discarded
-explicitly via (void). If the return value contains the error code, this return
-value shall be checked in all possible paths.
+The return value of a non-void function shall be either used or discarded
+explicitly via ``(void)``. If the return value contains the error code, this
+return value shall be checked in all possible paths.
 
 Compliant example::
 
@@ -1021,11 +1021,11 @@ Compliant example::
        }
 
 
-C-FN-18: The array size shall be valid if the array is function input parameter
-===============================================================================
+C-FN-18: The array size shall be valid if the array is a function input parameter
+=================================================================================
 
 This is to guarantee that the destination array has sufficient space for the
-operation, such as copy, move, compare and concatenate.
+operation, such as copy, move, compare, and concatenate.
 
 Compliant example::
 
@@ -1107,8 +1107,8 @@ C-ST-01: The condition of a selection or iteration statement shall not be consta
 ==================================================================================
 
 The condition of a selection or iteration statement shall not be constant with
-the following exception, `do { ... } while (0)` shall be allowed if it is used
-in a MACRO.
+the following exception: ``do { ... } while (0)`` shall be allowed if it is
+used in a MACRO.
 
 Compliant example::
 
@@ -1189,7 +1189,7 @@ Compliant example::
 C-ST-04: The else statement shall not be empty if it is following an else if
 ============================================================================
 
-Either a non-null statement or a comment shall be included in the else
+Either a non-null statement or a comment shall be included in the ``else``
 statement. This is to guarantee that the developers have considered all of the
 possible cases.
 
@@ -1366,8 +1366,8 @@ Expressions
 C-EP-01: The initialization expression of a for loop shall be simple
 ====================================================================
 
-The initialization expression of a for loop shall only be used to initialize the
-loop counter. All other operations shall not be allowed.
+The initialization expression of a for loop shall be used only to initialize
+the loop counter. All other operations shall not be allowed.
 
 Compliant example::
 
@@ -1417,8 +1417,8 @@ Compliant example::
 C-EP-03: The third expression of a for loop shall be simple
 ===========================================================
 
-The third expression of a for loop shall only be used to increase or decrease
-the loop counter with the following operators, ++, --, +=, or -=. All other
+The third expression of a for loop shall be used only to increase or decrease
+the loop counter with the following operators: ++, --, +=, or -=. All other
 operations shall not be allowed.
 
 Compliant example::
@@ -1498,8 +1498,8 @@ Compliant example::
        uint8_t showcase = 255U + 1U;
 
 
-C-EP-07: Negation shall not be performed on unsigned expression
-===============================================================
+C-EP-07: Negation shall not be performed on an unsigned expression
+==================================================================
 
 Compliant example::
 
@@ -1512,8 +1512,8 @@ Compliant example::
        int32_t showcase = -10U;
 
 
-C-EP-08: The address of an object shall not be assigned to another object whose lifetime is longer
-==================================================================================================
+C-EP-08: The address of an object shall not be assigned to a different object with a longer lifetime
+====================================================================================================
 
 Compliant example::
 
@@ -1548,10 +1548,10 @@ Compliant example::
        }
 
 
-C-EP-09: sizeof operator shall not be performed on an array function parameter
-==============================================================================
+C-EP-09: The sizeof operator shall not be used on an array function parameter
+=============================================================================
 
-When an array is used as the function parameter, the array address is passed.
+When an array is used as a function parameter, the array address is passed.
 Thus, the return value of the sizeof operation is the pointer size rather than
 the array size.
 
@@ -1675,8 +1675,8 @@ Compliant example::
 C-EP-14: The destination object shall have sufficient space for operation
 =========================================================================
 
-The destination object shall have sufficient space for operation, such as copy,
-move, compare and concatenate. Otherwise, data corruption may occur.
+The destination object shall have sufficient space for operation, such as
+copy, move, compare, and concatenate. Otherwise, data corruption may occur.
 
 Compliant example::
 
@@ -1790,9 +1790,9 @@ C-EP-19:  ++ or -- operation shall be used with restrictions
 
 Only the following cases shall be allowed:
 
-a) ++ or -- operation shall be allowed if it is used alone in the expression;
-b) ++ or -- operation shall be allowed if it is used as the third expression of
-   a for loop.
+a) ++ or -- operation shall be allowed if it is used alone in the expression.
+b) ++ or -- operation shall be allowed if it is used as the third expression
+   of a for loop.
 
 Compliant example::
 
@@ -1813,9 +1813,9 @@ Compliant example::
 C-EP-20: Array indexing shall be in-bounds
 ==========================================
 
-An array index value shall be between zero (for the first element) and the array
-size minus one (for the last element). Out-of-bound array references are an
-undefined behavior and shall be avoided.
+An array index value shall be between zero (for the first element) and the
+array size minus one (for the last element). Out-of-bounds array references
+are an undefined behavior and shall be avoided.
 
 Compliant example::
 
@@ -1860,8 +1860,8 @@ Only the following cases shall be allowed:
 
 a) The magic number is defined as a MACRO with a name clearly indicating its
    meaning.
-b) The meaning of the magic number is clearly documented in the comments before
-   its usage.
+b) The meaning of the magic number is clearly documented in the comments
+   before its usage.
 c) The meaning of the magic number is straightforward in the specific context.
 
 Compliant example::
@@ -1880,9 +1880,10 @@ Compliant example::
 C-EP-23: Pointer arithmetic shall be used with restrictions
 ===========================================================
 
-Pointer arithmetic shall be performed on an array if it is possible. If not, the
-data type and the value range of this pointer shall be checked before access to
-ensure that the pointer reference is within the correct address space.
+Pointer arithmetic shall be performed on an array if it is possible. If not,
+the data type and the value range of this pointer shall be checked before
+access to ensure that the pointer reference is within the correct
+address space.
 
 Compliant example::
 
@@ -1962,15 +1963,15 @@ Compliant example::
        showcase = showcase & mask;
 
 
-C-TY-03: Mixed-use between Boolean values and integers shall not be allowed
-===========================================================================
+C-TY-03: Mixed-use of Boolean values and integers shall not be allowed
+======================================================================
 
 Some detailed rules are listed below:
 
-a) The operands of the arithmetic operation shall be integers;
-b) The operands of the logical operation shall be Boolean values;
+a) The operands of the arithmetic operation shall be integers.
+b) The operands of the logical operation shall be Boolean values.
 c) The controlling expression of a selection or iteration statement shall be
-   Boolean;
+   Boolean.
 d) A Boolean type expression shall be used where Boolean is expected.
 
 Compliant example::
@@ -1997,8 +1998,8 @@ C-TY-04: The enum shall not be used for arithmetic operations
 
 Only the following operations on enum shall be allowed:
 
-a) enum assignment shall be allowed if the operands of = operation have the same
-   enum type;
+a) enum assignment shall be allowed if the operands of = operation have the
+   same enum type.
 b) enum comparison shall be allowed, including the operators ==, !=, >, <, >=,
    and <=.
 
@@ -2045,8 +2046,8 @@ Compliant example::
        chr = showcase[static 1];
 
 
-C-TY-06: A pointer shall point to const object if the object is not modified
-============================================================================
+C-TY-06: A pointer shall point to a const object if the object is not modified
+==============================================================================
 
 Compliant example::
 
@@ -2065,8 +2066,8 @@ Compliant example::
        }
 
 
-C-TY-07: The expressions type of ternary operation shall be consistent
-======================================================================
+C-TY-07: The expressions type in a ternary operation shall be consistent
+========================================================================
 
 Compliant example::
 
@@ -2116,8 +2117,8 @@ Compliant example::
        struct struct_showcase showcase = {32U, -1};
 
 
-C-TY-09: The type used in switch statement shall be consistent
-==============================================================
+C-TY-09: The type used in a switch statement shall be consistent
+================================================================
 
 The type shall be consistent between the case expression and the controlling
 expression of switch statement.
@@ -2169,8 +2170,8 @@ Compliant example::
        }
 
 
-C-TY-10: const qualifier shall not be discarded in cast operation
-=================================================================
+C-TY-10: const qualifier shall not be discarded in a cast operation
+===================================================================
 
 Compliant example::
 
@@ -2185,7 +2186,7 @@ Compliant example::
        uint32_t *showcase = (uint32_t *)showcase_const;
 
 
-C-TY-11: A variable shall be declared as static if it is only used in the file where it is declared
+C-TY-11: A variable shall be declared as static if it is used only in the file where it is declared
 ===================================================================================================
 
 Compliant example::
@@ -2331,9 +2332,9 @@ C-TY-17: A pointer shall not be cast from any other types
 
 Only the following pointer assignment shall be allowed:
 
-a) Assignment shall be allowed via the address operator &;
-b) Assignment shall be allowed if the objects pointed to by the two pointers are
-   of the same type.
+a) Assignment shall be allowed via the address operator ``&``.
+b) Assignment shall be allowed if the objects pointed to by the two pointers
+   are of the same type.
 
 Compliant example::
 
@@ -2372,7 +2373,7 @@ Compliant example::
        uint32_t showcase;
 
 
-C-TY-19: Array indexing shall only be performed on array type
+C-TY-19: Array indexing shall be performed only on array type
 =============================================================
 
 Compliant example::
@@ -2450,8 +2451,8 @@ Compliant example::
        };
 
 
-C-TY-22: Cast shall not be performed on pointers with different object type
-===========================================================================
+C-TY-22: Cast shall not be performed on pointers with different object types
+============================================================================
 
 Compliant example::
 
@@ -2482,8 +2483,8 @@ Compliant example::
        showcase_ptr_u32 = (uint32_t *)showcase_ptr_struct;
 
 
-C-TY-23: Assignment on function pointers shall be performed with same type
-==========================================================================
+C-TY-23: Assignment on function pointers shall be performed with the same type
+==============================================================================
 
 Compliant example::
 
@@ -2507,8 +2508,8 @@ Compliant example::
        func_ptr_a = func_ptr_b;
 
 
-C-TY-24: Cast shall not be performed on function pointer
-========================================================
+C-TY-24: Cast shall not be performed on a function pointer
+==========================================================
 
 Compliant example::
 
@@ -2537,17 +2538,17 @@ Compliant example::
        func_ptr_showcase = (func_ptr_t)func_showcase;
 
 
-C-TY-25: A string literal shall only be used as const object
-============================================================
+C-TY-25: A string literal shall be used only as a const object
+==============================================================
 
 The following operations shall be covered:
 
 a) If a string literal is assigned to a variable, this variable shall be
-   declared with const qualifier;
+   declared with const qualifier.
 b) If a string literal is passed as a function parameter, this function
-   parameter shall be declared with const qualifier;
-c) If a string literal is used as the return value of a function, this function
-   return type shall be declared with const qualifier.
+   parameter shall be declared with the ``const`` qualifier.
+c) If a string literal is used as the return value of a function, this
+   function return type shall be declared with the ``const`` qualifier.
 
 Compliant example::
 
@@ -2563,8 +2564,9 @@ Compliant example::
 C-TY-26: The basic numerical types shall not be used other than in typedefs
 ===========================================================================
 
-Typedef-name shall be used to replace the usage of basic numerical types. This
-is to guarantee the code portability between different compilers and platforms.
+The typedef name shall be used to replace the usage of basic numerical types.
+This is to guarantee the code portability between different compilers and
+platforms.
 
 Compliant example::
 
@@ -2615,11 +2617,11 @@ Compliant example::
        uint32_t test = showcase_u16 + showcase_u32 + showcase_u64;
 
 
-C-TY-29: "U" suffix shall be used for unsigned integer constants
-================================================================
+C-TY-29: The "U" suffix shall be used for unsigned integer constants
+====================================================================
 
-For 8-bit, 16-bit, and 32-bit unsigned integer constants, "U" suffix shall be
-used. For 64-bit unsigned integer constants, "UL" suffix shall be used.
+For 8-bit, 16-bit, and 32-bit unsigned integer constants, the "U" suffix shall
+be used. For 64-bit unsigned integer constants, the "UL" suffix shall be used.
 
 Compliant example::
 
@@ -2713,9 +2715,9 @@ Compliant example::
 C-ID-03: A global variable name shall be unique
 ===============================================
 
-A global variable name shall not be the same as the name of struct, union, enum,
-typedef, function, function parameter, macro, member, enum constant, local
-variable, or other global variables.
+A global variable name shall not be the same as the name of struct, union,
+enum, typedef, function, function parameter, macro, member, enum constant,
+local variable, or other global variables.
 
 Compliant example::
 
@@ -2832,8 +2834,8 @@ Compliant example::
        uint32_t uint32_t;
 
 
-C-ID-07: Name defined by developers shall not start with underscore
-===================================================================
+C-ID-07: Names defined by developers shall not start with underscore
+====================================================================
 
 All names starting with one or two underscores are reserved for use by the
 compiler and standard libraries to eliminate potential conflicts with
@@ -2850,8 +2852,8 @@ Compliant example::
        uint32_t __showcase;
 
 
-C-ID-08: A variable name shall not be the same as struct, union or enum
-=======================================================================
+C-ID-08: A variable name shall not be the same as a struct, union, or enum
+==========================================================================
 
 Compliant example::
 
@@ -2929,7 +2931,7 @@ Compliant example::
        cpuid(CPUID_EXTEND_FEATURE, &unused, &boot_cpu_data.cpuid_leaves[FEAT_7_0_EBX], &boot_cpu_data.cpuid_leaves[FEAT_7_0_ECX], &boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX]);
 
 
-C-CS-02: Each line shall only contain one statement
+C-CS-02: Each line shall contain only one statement
 ===================================================
 
 Compliant example::
@@ -2950,8 +2952,8 @@ Compliant example::
 C-CS-03: Tabs shall be used for code indentation
 ================================================
 
-Spaces are allowed only for indenting comments or aligning statements that span
-multiple lines.
+Spaces are allowed only for indenting comments or aligning statements that
+span multiple lines.
 
 Compliant example::
 
@@ -3007,8 +3009,9 @@ C-CS-06: A single space shall exist between non-function-like keywords and openi
 ===========================================================================================
 
 A single space shall exist between a non-function-like keyword and the opening
-bracket (either a brace or a parenthesis) that follows. This rule applies to the
-keywords ``if``, ``else``, ``for``, ``do``, ``while``, ``switch`` and ``return``.
+bracket (either a brace or a parenthesis) that follows. This rule applies to
+the keywords ``if``, ``else``, ``for``, ``do``, ``while``, ``switch``, and
+``return``.
 
 Compliant example::
 
@@ -3029,8 +3032,8 @@ Compliant example::
        }
 
 
-C-CS-07: Space shall not exist between the function identifier and the following open-parenthesis
-=================================================================================================
+C-CS-07: A space shall not exist between the function identifier and the following open-parenthesis
+===================================================================================================
 
 Compliant example::
 
@@ -3043,10 +3046,10 @@ Compliant example::
        size_t entry_size = sizeof (struct vcpuid_entry);
 
 
-C-CS-08: Space shall not exist right after opening brackets and right before closing ones
-=========================================================================================
+C-CS-08: A space shall not exist right after opening brackets and right before closing ones
+===========================================================================================
 
-Brackets in this rule refer to parenthesis, braces and squared brackets.
+Brackets in this rule refer to parenthesis, braces, and square brackets.
 
 Compliant example::
 
@@ -3064,11 +3067,11 @@ C-CS-09: The ``*`` characters used for pointers shall be right before the functi
 
 The following cases shall be covered:
 
-a) For declaration of variables of a pointer type, the ``*`` character shall be
-   right before the variable identifier with no space in between.
+a) For declaration of variables of a pointer type, the ``*`` character shall
+   be right before the variable identifier with no space in between.
 b) For functions whose return value is of a pointer type, the ``*`` character
-   shall be right before the function identifier with no spaces in between in the
-   function prototype.
+   shall be right before the function identifier with no spaces in between in
+   the function prototype.
 
 Compliant example::
 
@@ -3087,7 +3090,8 @@ C-CS-10: A single space shall exist around binary and ternary operators
 =======================================================================
 
 This rule applies to all binary arithmetic, bit-wise, logical, relational,
-equality and assignment operators, as well as the ternary conditional operator.
+equality, and assignment operators, as well as the ternary conditional
+operator.
 
 Compliant example::
 
@@ -3108,8 +3112,8 @@ C-CS-11: Space shall not exist after unary operator
 ===================================================
 
 There shall be no space between a unary operator and its operand. This rule
-applies to member accesses, prefix or postfix increments and decrements, address
-and indirection operators.
+applies to member accesses, prefix or postfix increments and decrements,
+address and indirection operators.
 
 Compliant example::
 
@@ -3151,11 +3155,11 @@ Compliant example::
        }
 
 
-C-CS-13: Braces after if/switch/for/do/while shall be in the same line
+C-CS-13: Braces after if/switch/for/do/while shall be on the same line
 ======================================================================
 
-The statement after if/switch/for/do/while shall always be a compound statement
-with its opening brace in the same line as the keyword.
+The statement after if/switch/for/do/while shall always be a compound
+statement with its opening brace on the same line as the keyword.
 
 Compliant example::
 
@@ -3274,46 +3278,47 @@ Compliant example::
 C-CS-18: Function information shall be documented with doxygen-style comments
 =============================================================================
 
-Some detailed rules are listed below to illustrate the comments format for each
-function:
+Some detailed rules are listed below to illustrate the comments format for
+each function:
 
 1) The comments block shall start with ``/**`` (slash-asterisk-asterisk) in a
    single line.
-2) The comments block shall end with :literal:`\ */` (space-asterisk-slash) in a single
-   line.
+2) The comments block shall end with :literal:`\ */` (space-asterisk-slash) in
+   a single line.
 3) Other than the first line and the last line, every line inside the comments
-   block shall start with :literal:`\ *` (space-asterisk). It also applies to the line which
-   is used to separate different paragraphs. We'll call it a blank line for
-   simplicity.
+   block shall start with :literal:`\ *` (space-asterisk). It also applies to
+   the line which is used to separate different paragraphs. We'll call it a
+   blank line for simplicity.
 4) For each function, following information shall be documented:
    brief description, detailed description, parameters description,
    pre-conditions, post-conditions, return value description, and comments
-   explaining the actual return values. We'll call each block of information a
-   paragraph for simplicity. A paragraph may be removed from the list if it is not
-   applicable for that function.
+   explaining the actual return values. We'll call each block of information
+   a paragraph for simplicity. A paragraph may be removed from the list if it
+   is not applicable for that function.
 5) Each line shall only contain the description for one parameter, or one
-   pre-condition, or one post-condition, or one actual return value. We'll call
-   each of these an element for simplicity.
+   pre-condition, or one post-condition, or one actual return value. We'll
+   call each of these an element for simplicity.
 6) A blank line shall separate different paragraphs. Inside each paragraph, a
    blank line is not required to separate each element.
 7) The brief description of the function shall be documented with the format
    ``@brief <brief description>``.
-8) No specific format is required for the detailed description of the function.
-9) The description of the function parameter shall be documented with the format
-   ``@param <parameter name> <parameter description>``.
+8) No specific format is required for the detailed description of the
+   function.
+9) The description of the function parameter shall be documented with the
+   format ``@param <parameter name> <parameter description>``.
 10) The pre-condition of the function shall be documented with the format
     ``@pre <pre-condition description>``.
 11) The post-condition of the function shall be documented with the format
     ``@post <post-condition description>``.
-12) The brief description of the function return value shall be documented with
-    the format ``@return <brief description of return value>``.
+12) The brief description of the function return value shall be documented
+    with the format ``@return <brief description of return value>``.
 13) A void-returning function shall be documented with the format
     ``@return None``.
 14) The comments explaining the actual return values shall be documented with
     the format ``@retval <return value> <return value explanation>``.
 15) If the description of one element needs to span multiple lines, each line
-    shall be aligned to the start of the description in the first line for that
-    element.
+    shall be aligned to the start of the description in the first line for
+    that element.
 16) The comments block shall appear immediately before the function
     definition/declaration in the C source file or header file.
 
@@ -3370,8 +3375,7 @@ C-CS-19: Legal entity shall be documented in every file
 =======================================================
 
 Legal entity shall be documented in a separate comments block at the start of
-every file.
-The following information shall be included:
+every file. The following information shall be included:
 
 a) Copyright
 b) License (using an `SPDX-License-Identifier <https://spdx.org/licenses/>`_)
@@ -3439,12 +3443,12 @@ Compliant example::
 C-NC-03: Data structures exposed to external components shall be named with prefix ``acrn_``
 ============================================================================================
 
-The data structure types include struct, union, and enum.
-This rule applies to the data structure with all the following properties:
+The data structure types include struct, union, and enum. This rule applies to
+the data structure with all the following properties:
 
-a) The data structure is used by multiple modules;
+a) The data structure is used by multiple modules.
 b) The corresponding resource is exposed to external components, such as the
-   Service VM or a User VM;
+   Service VM or a User VM.
 c) The name meaning is simplistic or common, such as vcpu or vm.
 
 Compliant example::
@@ -3465,11 +3469,11 @@ Compliant example::
 C-NC-04: Data structures only used by hypervisor shall be named with prefix ``hv_``
 ===================================================================================
 
-The data structure types include struct, union, and enum.
-This rule applies to the data structure with all the following properties:
+The data structure types include struct, union, and enum. This rule applies to
+the data structure with all the following properties:
 
-a) The data structure is used by multiple modules;
-b) The corresponding resource is only used by hypervisor;
+a) The data structure is used by multiple modules.
+b) The corresponding resource is only used by hypervisor.
 c) The name meaning is simplistic or common, such as timer.
 
 Compliant example::
@@ -3490,10 +3494,10 @@ Compliant example::
 C-NC-05: Data structures only used by one module shall be named with the module name as prefix
 ==============================================================================================
 
-The data structure types include struct, union, and enum.
-This rule applies to the data structure with all the following properties:
+The data structure types include struct, union, and enum. This rule applies to
+the data structure with all the following properties:
 
-a) The data structure is only used by one module;
+a) The data structure is only used by one module.
 b) The name meaning is simplistic or common, such as context.
 
 Compliant example::
@@ -3514,10 +3518,9 @@ Compliant example::
 C-NC-06: Data structures related to hardware resource shall be named with the resource name as suffix
 =====================================================================================================
 
-The data structure types include struct, union, and enum.
-For example:
+The data structure types include struct, union, and enum. For example:
 
-a) The data structure related to register shall be named with suffix ``reg``;
+a) The data structure related to register shall be named with suffix ``reg``.
 b) The data structure related to segment selector shall be named with suffix
    ``sel``.
 
@@ -3562,13 +3565,13 @@ C-NC-08: Function name shall be descriptive
 Function name shall be descriptive and clearly indicate the purpose of the
 function. Some detailed rules are listed below:
 
-1) If the function is doing actions, it shall be named with one of the following
-   formats:
+1) If the function is performing actions, it shall be named with one of the
+   following formats:
 
    a) ``<verb>_<nouns>``, such as ``init_vmcs``.
    b) ``<verb>_<adjective>_<nouns>``, such as ``init_primary_pcpu``.
-2) If the function is doing checks, it shall be named with one of the following
-   formats:
+2) If the function is doing checks, it shall be named with one of the
+   following formats:
 
    a) ``is_<nouns>``, such as ``is_space``.
    b) ``is_<nouns>_<adjective>``, such as ``is_pcpu_active``.
@@ -3578,18 +3581,18 @@ function. Some detailed rules are listed below:
    a) ``<nouns>_to_<nouns>``, such as ``irq_to_vector``.
    b) ``<nouns>2<nouns>``, such as ``gva2gpa``.
 4) If the function is specific for one module and the name is not descriptive
-   enough with prior rules, it shall be named with the module name as prefix, such
-   as ``vie_read_mmio``.
-5) If the function is a wrapper of inline Assembly codes, it shall be named with
-   one of the following formats:
+   enough with prior rules, it shall be named with the module name as prefix,
+   such as ``vie_read_mmio``.
+5) If the function is a wrapper of inline Assembly codes, it shall be named
+   with one of the following formats:
 
    a) ``asm_<Assembly instruction mnemonic>``, such as ``asm_pause``.
    b) If the Assembly instruction mnemonic does not clearly indicate the
       purpose of the function or the function includes multiple Assembly
       instruction statements, the function shall be named with ``asm_`` as
       prefix and apply the other non-assembly function naming rules.
-6) ``<nouns>`` mentioned in prior rules may either be one noun or multiple nouns, as
-   long as it could clearly illustrate the object.
+6) ``<nouns>`` mentioned in prior rules may either be one noun or multiple
+   nouns, as long as it could clearly illustrate the object.
 
 Compliant example::
 
@@ -3630,7 +3633,7 @@ Compliant example::
        uint32_t pause(uint32_t param);
 
 
-Implementation-specific Behaviors
+Implementation-Specific Behaviors
 *********************************
 
 
@@ -3644,8 +3647,8 @@ all characters in an identifier are significant initial characters.
 C-IB-02: The number of bits in a byte is 8
 ==========================================
 
-The number of bits in a byte is implementation-defined, according to J.3.4 item
-1 in C99. For ACRN hypervisor, the number of bits in a byte is 8.
+The number of bits in a byte is implementation-defined, according to J.3.4
+item 1 in C99. For ACRN hypervisor, the number of bits in a byte is 8.
 
 C-IB-03: The values of the members of the execution character set depends on ASCII Table
 ========================================================================================
@@ -3653,8 +3656,8 @@ C-IB-03: The values of the members of the execution character set depends on ASC
 The values of the members of the execution character set is
 implementation-defined, according to J.3.4 item 2 in C99. For ACRN hypervisor,
 characters are encoded in ASCII. This rule applies to the source code that is
-being compiled. Non-ASCII characters are allowed in comments, such as the author
-name.
+being compiled. Non-ASCII characters are allowed in comments, such as the
+author name.
 
 C-IB-04: ``plain char`` is equivalent to ``signed char``
 ========================================================
@@ -3674,16 +3677,17 @@ complement.
 C-IB-06: The integer type compatible with each enumerated type is case by case
 ==============================================================================
 
-The integer type compatible with each enumerated type is implementation-defined,
-according to J.3.9 item 6 in C99. For ACRN hypervisor, if the enum has no
-negative underlying values, unsigned int is used; otherwise, int is used.
+The integer type compatible with each enumerated type is
+implementation-defined, according to J.3.9 item 6 in C99. For ACRN hypervisor,
+if the enum has no negative underlying values, unsigned int is used;
+otherwise, int is used.
 
 C-IB-07: The number of bytes in an object is specified
 ======================================================
 
-The number of bytes in an object is implementation-defined, according to J.3.13
-item 2 in C99. For ACRN hypervisor, char is 1 byte, short is 2 bytes, int is 4
-bytes, long is 8 bytes, and long long is not used.
+The number of bytes in an object is implementation-defined, according to
+J.3.13 item 2 in C99. For ACRN hypervisor, char is 1 byte, short is 2 bytes,
+int is 4 bytes, long is 8 bytes, and long long is not used.
 
 Language Extensions
 *******************
@@ -3691,7 +3695,7 @@ Language Extensions
 Refer to the `GCC 8.3 Manual, Section 6 Extensions to the C Language Family <https://gcc.gnu.org/onlinedocs/gcc-8.3.0/gcc/C-Extensions.html#C-Extensions/>`_.
 
 
-C-LE-01: Use of inline Assembly language in C Code is allowed
+C-LE-01: Use of inline Assembly language in C code is allowed
 =============================================================
 
 This feature refers to section 6.45 in GCC 8.3 Manual.
@@ -3701,8 +3705,8 @@ C-LE-02: Use of builtin-type ``__builtin_va_list`` is allowed
 
 This feature refers to section 6.20 in GCC 8.3 Manual.
 
-C-LE-03: Use of extended type attribute is allowed
-==================================================
+C-LE-03: Use of extended type attributes is allowed
+===================================================
 
 This rule applies to the following type attributes:
 
