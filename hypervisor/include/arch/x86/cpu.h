@@ -392,6 +392,7 @@ struct ext_context {
 	struct segment_sel gs;
 
 	uint64_t ia32_star;
+	uint64_t ia32_cstar;
 	uint64_t ia32_lstar;
 	uint64_t ia32_fmask;
 	uint64_t ia32_kernel_gs_base;
