@@ -46,38 +46,38 @@ below:
   function should trust these post-conditions are met.
   Error checking of the post-conditions is not needed in release version of
   each caller. Developers could use ASSERT to catch design errors in a debug
-  version for some cases. Verification of the hypervisor shall check whether the
-  function guarantees all post-conditions (or not).
+  version for some cases. Verification of the hypervisor shall check whether
+  the function guarantees all post-conditions (or not).
 
   This design assumption applies to the following case:
 
   - Return value of the function
 
-    It is used to guarantee that the return value is valid, such as the return
-    pointer is not NULL, the return value is within a valid range, or the
-    members of the return structure are valid.
+    It is used to guarantee that the return value is valid; for example, the
+    return pointer is not NULL, the return value is within a valid range, or
+    the  members of the return structure are valid.
 
 
 **Application Constraints**
-  Application constraints of the hypervisor shall be defined in design document
-  and safety manual.
-  All application constraints shall be guaranteed by external safety
-  applications, such as Board Support Package, firmware, safety VM, or Hardware.
-  The verification of application integration shall check whether the safety
-  application meets all application constraints. These constraints must be verified
-  during hypervisor validation test. It is optional to do error checking for
-  application constraints at hypervisor boot time.
+  Application constraints of the hypervisor shall be defined in design
+  document and safety manual. All application constraints shall be guaranteed
+  by external safety applications, such as Board Support Package, firmware,
+  safety VM, and Hardware. The verification of application integration shall
+  check whether the safety application meets all application constraints.
+  These constraints must be verified during hypervisor validation test. It is
+  optional to do error checking for application constraints at hypervisor
+  boot time.
 
   This design assumption applies to the following cases:
 
-  - Configuration data defined by external safety application, such as physical
-    PCI device information specific for each board design.
+  - Configuration data defined by external safety application, such as
+    physical PCI device information specific for each board design.
 
-  - Input data that is only specified by external safety application.
+  - Input data that is specified only by external safety application.
 
-.. note:: If input data can be specified by both a non-safety VM and a safety VM,
-   the application constraint isn't applicable to these data. Related error checking
-   and handling shall be done during hypervisor design.
+.. note:: If input data can be specified by both a non-safety VM and a
+   safety VM, the application constraint isn't applicable to these data.
+   Related error checking and handling shall be done during hypervisor design.
 
 Refer to the :ref:`C Programming Language Coding Guidelines <c_coding_guidelines>`
 to document these design assumptions with doxygen-style comments.
@@ -94,15 +94,15 @@ according to Table A.2 of FuSA Standards [IEC_61508-3_2010]_.
 Error Handling Methods
 ----------------------
 
-The error handling methods used in the ACRN hypervisor on an architecture level
-are shown below.
+The error handling methods used in the ACRN hypervisor on an architecture
+level are shown below.
 
 **Invoke default fatal error handler**
   The hypervisor shall invoke the default fatal error handler when the below
-  cases occur. Customers can define platform-specific handlers, allowing them to
-  implement additional error reporting (mostly to hardware) if required. The
-  default fatal error handler will invoke platform-specific handlers defined by
-  users at first, then it will panic the system.
+  cases occur. Customers can define platform-specific handlers, allowing them
+  to implement additional error reporting (mostly to hardware) if required.
+  The default fatal error handler will invoke platform-specific handlers
+  defined by users at first, then it will panic the system.
 
   This method applies to the following cases:
 
@@ -122,9 +122,9 @@ are shown below.
 
 **Inform the safety VM through specific register or memory area**
   The hypervisor shall inform the safety VM through a specific register or
-  memory area when the below cases occur. The VM will decide how to handle the
-  related error. This shall only be done after the VM (Safety OS or Service OS)
-  dedicated to error handling has started.
+  memory area when the below cases occur. The VM will decide how to handle
+  the related error. This shall be done only after the VM (Safety OS or
+  Service OS) dedicated to error handling has started.
 
   This method applies to the following cases:
 
@@ -207,8 +207,8 @@ it's the caller's responsibility to guarantee these pre-conditions.
   }
 
 ``vcpu_from_vid`` is called by ``hcall_set_vcpu_regs``, which is a hypercall.
-``hcall_set_vcpu_regs`` is an external interface and ``vcpu_id`` is provided by
-VM. In this case, we shall add the error checking codes before calling
+``hcall_set_vcpu_regs`` is an external interface and ``vcpu_id`` is provided
+by the VM. In this case, we shall add the error checking codes before calling
 ``vcpu_from_vid`` to make sure that the passed parameters are valid and the
 pre-conditions are guaranteed.
 
@@ -238,9 +238,9 @@ Module Level
 Functional Safety Consideration
 -------------------------------
 
-Data verification, and explicit specification of pre-conditions and post-conditions
-are applied for internal functions of the hypervisor according to Table A.4 of
-FuSA Standards [IEC_61508-3_2010]_ .
+Data verification, and explicit specification of pre-conditions and
+post-conditions are applied for internal functions of the hypervisor
+according to Table A.4 of FuSA Standards [IEC_61508-3_2010]_ .
 
 Error Handling Methods
 ----------------------
@@ -385,28 +385,29 @@ post-condition of ``get_vm_config`` guarantees that the return value is not NULL
 
 No. Here are the reasons:
 
-a) The pre-condition of ``partition_mode_vpci_init`` guarantees that ``vm`` is not
-   NULL. It indicates that ``vpci`` is not NULL. Since ``vdev`` is getting data from
-   the array ``pci_vdevs[]`` via indexing, ``vdev`` is not NULL as long as the index
-   is valid.
+a) The pre-condition of ``partition_mode_vpci_init`` guarantees that ``vm``
+   is not NULL. It indicates that ``vpci`` is not NULL. Since ``vdev`` is
+   getting data from the array ``pci_vdevs[]`` via indexing, ``vdev`` is not
+   NULL as long as the index is valid.
 
-b) The post-condition of ``get_vm_config`` guarantees that ``vpci->pci_vdev_cnt``
-   is less than or equal to ``CONFIG_MAX_PCI_DEV_NUM``, which is the array size of
-   ``pci_vdevs[]``. It indicates that the index used to get ``vdev`` is always
-   valid.
+b) The post-condition of ``get_vm_config`` guarantees that
+   ``vpci->pci_vdev_cnt`` is less than or equal to ``CONFIG_MAX_PCI_DEV_NUM``,
+   which is the array size of ``pci_vdevs[]``. It indicates that the index
+   used to get ``vdev`` is always valid.
 
-Given the two reasons above, ``vdev`` is always not NULL. So, the error checking
-codes are not required for ``vdev``.
+Given the two reasons above, ``vdev`` is always not NULL. So, the error
+checking codes are not required for ``vdev``.
 
 
 **Question_3: Is error checking required for ``pci_dev_config``?**
 
-No. ``pci_dev_config`` is getting data from the array ``pci_vdevs[]``, which is the
-physical PCI device information coming from Board Support Package and firmware.
-For physical PCI device information, the related application constraints
-shall be defined in the design document or safety manual. For debug purpose,
-developers could use ASSERT here to catch the Board Support Package or firmware
-failures, which do not guarantee these application constraints.
+No. ``pci_dev_config`` is getting data from the array ``pci_vdevs[]``, which
+is the physical PCI device information coming from Board Support Package and
+firmware. For physical PCI device information, the related application
+constraints shall be defined in the design document or safety manual. For
+debug purposes, developers could use ASSERT here to catch the Board Support
+Package or firmware failures, which do not guarantee these application
+constraints.
 
 
 **Question_4: Is error checking required for ``vdev->ops->init``?**
@@ -417,8 +418,8 @@ a) Question_2 proves that ``vdev`` is always not NULL.
 
 b) ``vdev->ops`` is fully initialized before ``vdev->ops->init`` is called.
 
-Given the two reasons above, ``vdev->ops->init`` is always not NULL. So, the error
-checking codes are not required for ``vdev->ops->init``.
+Given the two reasons above, ``vdev->ops->init`` is always not NULL. So, the
+error checking codes are not required for ``vdev->ops->init``.
 
 
 **Question_5: How to handle the case when ``vdev->ops->init(vdev)`` returns non-zero?**
@@ -457,7 +458,8 @@ boot information.
 **Question_6: Is error checking required for ``vdev->ops`` and ``vdev->ops->init``?**
 
 Yes. Because ``vdev->ops`` and ``vdev->ops->init`` cannot be guaranteed to be
-not NULL. If the VM called ``partition_mode_vpci_deinit`` twice, it may be NULL.
+not NULL. If the VM called ``partition_mode_vpci_deinit`` twice, it may be
+NULL.
 
 
 Module Level Configuration Design Guidelines
@@ -527,18 +529,19 @@ Design Rules
 
 The module level configuration design rules are shown below:
 
-1. The platform configurations shall be detectable by hypervisor in DETECT mode;
+1. The platform configurations shall be detectable by the hypervisor in
+   DETECT mode;
 
 2. Configurable module APIs shall be abstracted as operations that are
    implemented through a set of function pointers in the operations data
    structure;
 
-3. Every function pointer in the operations data structure shall be instantiated
-   as one module API in DETECT mode and the API is allowed to be implemented as
-   empty function for some specific configurations;
+3. Every function pointer in the operations data structure shall be
+   instantiated as one module API in DETECT mode and the API is allowed to be
+   implemented as empty function for some specific configurations;
 
-4. The operations data structure shall be read-only in STARTUP mode, OPERATIONAL
-   mode, and TERMINATION mode;
+4. The operations data structure shall be read-only in STARTUP mode,
+   OPERATIONAL mode, and TERMINATION mode;
 
 5. The configurable module shall only be accessed via APIs in the operations
    data structure in STARTUP mode or OPERATIONAL mode;
@@ -567,8 +570,8 @@ The following table shows some use cases of module level configuration design:
      - This module is used to virtualize part of LAPIC functionalities.
        It can be done via APICv or software emulation depending on CPU
        capabilities.
-       For example, KBL Intel NUC doesn't support virtual-interrupt delivery, while
-       other platforms support it.
+       For example, KBL Intel NUC doesn't support virtual-interrupt delivery,
+       while other platforms support it.
      - If a function pointer is used, the prerequisite is
        "hv_operation_mode == OPERATIONAL".
 

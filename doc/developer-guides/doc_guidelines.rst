@@ -8,13 +8,12 @@ language (``.rst`` file extension) with Sphinx extensions, and processed
 using Sphinx to create a formatted stand-alone website.  Developers can
 view this content either in its raw form as ``.rst`` markup files, or (with
 Sphinx installed) they can build the documentation using the Makefile
-(on Linux systems) to
-generate the HTML content. The HTML content can then be viewed using a
-web browser. This same ``.rst`` content is also fed into the
+(on Linux systems) to generate the HTML content. The HTML content can then be
+viewed using a web browser. This same ``.rst`` content is also fed into the
 `Project ACRN documentation`_ website.
 
-You can read details about `reStructuredText`_
-and about `Sphinx extensions`_ from their respective websites.
+You can read details about `reStructuredText`_ and about `Sphinx extensions`_
+from their respective websites.
 
 .. _Sphinx extensions: https://www.sphinx-doc.org/en/stable/contents.html
 .. _reStructuredText: http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
@@ -28,19 +27,19 @@ you're reading.
 Headings
 ********
 
-Document sections are identified through their heading titles,
-indicated with an underline below the title text.  (While reST allows
-use of both and overline and matching underline to indicate a heading,
-we only use an underline indicator for headings.)  For consistency in
-our documentation, we define the order of characters used to indicate
-the nested table of contents levels:
+Document sections are identified through their heading titles, indicated with
+an underline below the title text.  (While reST allows use of both and
+overline and matching underline to indicate a heading, we use only an
+underline indicator for headings.)  For consistency in our documentation, we
+define the order of characters used to indicate the nested levels in the
+table of contents:
 
 * Use ``#`` for the Document title underline character
 * Use ``*`` for the First sub-section heading level
 * Use ``=`` for the Second sub-section heading level
 * Use ``-`` for the Third sub-section heading level
 
-Additional heading level depth is discouraged.
+Additional heading-level depth is discouraged.
 
 The heading underline must be at least as long as the title it's under.
 
@@ -89,20 +88,19 @@ the beginning and ending characters must not start or end with a space,
 so ``*this is italics*`` ( *this is italics*) while ``* this isn't*``
 (* this isn't*).
 
-If asterisks or back quotes appear in running text and could be confused with
-inline markup delimiters, you can eliminate the confusion by adding a
+If an asterisk or back quote appears in running text and could be confused
+with inline markup delimiters, you can eliminate the confusion by adding a
 backslash (``\``) before it.
 
 Lists
 *****
 
-For bullet lists, place an asterisk (``*``) or hyphen (``-``) at
-the start of a paragraph and indent continuation lines with two
-spaces.
+For bullet lists, place an asterisk (``*``) or hyphen (``-``) at the start of
+a paragraph and indent continuation lines with two spaces.
 
-The first item in a list (or sublist) must have a blank line before it
-and should be indented at the same level as the preceding paragraph
-(and not indented itself).
+The first item in a list (or sublist) must have a blank line before it and
+should be indented at the same level as the preceding paragraph (and not
+indented itself).
 
 For numbered lists
 start with a ``1.`` or ``a)`` for example, and continue with autonumbering by
@@ -136,9 +134,9 @@ list item:
    #. And a second item back in the containing list.  No blank line
       needed, but it wouldn't hurt for readability.
 
-Definition lists (with a term and its definition) are a convenient way
-to document a word or phrase with an explanation.  For example, this reST
-content:
+Definition lists (with one or more terms and their definition) are a
+convenient way to document a word or phrase with an explanation.  For example,
+this reST content:
 
 .. code-block:: rest
 
@@ -165,11 +163,11 @@ Would be rendered as:
 Multi-Column Lists
 ******************
 
-If you have a long bullet list of items, where each item is short, you
-can indicate the list items should be rendered in multiple columns with
-a special ``.. rst-class:: rst-columns`` directive.  The directive will
-apply to the next non-comment element (e.g., paragraph), or to content
-indented under the directive. For example, this unordered list::
+If you have a long bullet list of items, where each item is short, you can
+indicate that the list items should be rendered in multiple columns with a
+special ``.. rst-class:: rst-columns`` directive.  The directive will apply to
+the next non-comment element (e.g., paragraph) or to content indented under
+the directive. For example, this unordered list::
 
    .. rst-class:: rst-columns
 
@@ -199,16 +197,17 @@ would be rendered as:
 
 A maximum of three columns will be displayed if you use ``rst-columns``
 (or ``rst-columns3``), and two columns for ``rst-columns2``. The number
-of columns displayed can be reduced
-based on the available width of the display window, reducing to one
-column on narrow (phone) screens if necessary.  We've deprecated use of
-the ``hlist`` directive because it misbehaves on smaller screens.
+of columns displayed can be reduced based on the available width of the
+display window, reducing to one column on narrow (phone) screens if necessary.
+
+.. note:: We've deprecated use of the ``hlist`` directive because it
+   misbehaves on smaller screens.
 
 Tables
 ******
 
-There are a few ways to create tables, each with their limitations or
-quirks.  `Grid tables
+There are a few ways to create tables, each with their limitations or quirks.
+`Grid tables
 <http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#grid-tables>`_
 offer the most capability for defining merged rows and columns, but are
 hard to maintain::
@@ -286,9 +285,9 @@ File Names and Commands
 ***********************
 
 Sphinx extends reST by supporting additional inline markup elements (called
-"roles") used to tag text with special
-meanings and allow style output formatting. (You can refer to the `Sphinx Inline Markup`_
-documentation for the full list).
+"roles") used to tag text with special meanings and enable output formatting.
+(You can refer to the `Sphinx Inline Markup`_ documentation for the full
+list).
 
 For example, there are roles for marking :file:`filenames`
 (``:file:`name```) and command names such as :command:`make`
@@ -297,23 +296,23 @@ markup (double backticks) to indicate a ``filename``.
 
 Don't use items within a single backtick, for example ```word```.
 
-For references to files that are in the ACRN Hypervisor GitHub tree, a special
-role can be used that creates a hyperlink to that file. For example a
+For references to files that are in the ACRN Hypervisor GitHub tree, you can
+use a special role that creates a hyperlink to that file. For example, a
 GitHub link to the reST file used to create this document can be generated
-using ``:acrn_file:`doc/developer-guides/doc_guidelines.rst``` that will show
-up as :acrn_file:`doc/developer-guides/doc_guidelines.rst`, a link to
+using ``:acrn_file:`doc/developer-guides/doc_guidelines.rst```, which will
+appear as :acrn_file:`doc/developer-guides/doc_guidelines.rst`, a link to
 the “blob” file in the GitHub repo as displayed by GitHub. There’s also an
 ``:acrn_raw:`doc/developer-guides/doc_guidelines.rst``` role that will link
 to the “raw” uninterpreted file,
-:acrn_raw:`doc/developer-guides/doc_guidelines.rst` file. (Click
-on these links to see the difference.)
+:acrn_raw:`doc/developer-guides/doc_guidelines.rst` file. (Click these links
+to see the difference.)
 
 .. _internal-linking:
 
 Internal Cross-Reference Linking
 ********************************
 
-Traditional ReST links are only supported within the current file using the
+Traditional ReST links are supported only within the current file using the
 notation:
 
 .. code-block:: rest
@@ -324,13 +323,12 @@ which renders as,
 
    refer to the `internal-linking`_ page
 
-Note the use of a trailing
-underscore to indicate an outbound link. In this example, the label was
-added immediately before a heading, so the text that's displayed is the
-heading text itself.
+Note the use of a trailing underscore to indicate an outbound link. In this
+example, the label was added immediately before a heading, so the text that's
+displayed is the heading text itself.
 
-With Sphinx however, we can create
-link-references to any tagged text within the project documentation.
+With Sphinx however, we can create link-references to any tagged text within
+the project documentation.
 
 Target locations within documents are defined with a label directive:
 
@@ -338,28 +336,24 @@ Target locations within documents are defined with a label directive:
 
       .. _my label name:
 
-Note the leading underscore indicating an inbound link.
-The content immediately following
-this label is the target for a ``:ref:`my label name```
-reference from anywhere within the documentation set.
-The label **must** be added immediately before a heading so there's a
-natural phrase to show when referencing this label (e.g., the heading
-text).
+Note the leading underscore indicating an inbound link. The content
+immediately following this label is the target for a ``:ref:`my label name```
+reference from anywhere within the documentation set. The label **must** be
+added immediately before a heading so that there's a natural phrase to show
+when referencing this label (e.g., the heading text).
 
-This is the same directive used to
-define a label that's a reference to a URL:
+This is the same directive used to define a label that's a reference to a URL:
 
 .. code-block:: rest
 
    .. _Hypervisor Wikipedia Page:
       https://en.wikipedia.org/wiki/Hypervisor
 
-To enable easy cross-page linking within the site, each file should have
-a reference label before its title so it can
-be referenced from another file. These reference labels must be unique
-across the whole site, so generic names such as "samples" should be
-avoided.  For example the top of this document's ``.rst`` file is:
-
+To enable easy cross-page linking within the site, each file should have a
+reference label before its title so that it can be referenced from another
+file. These reference labels must be unique across the whole site, so generic
+names such as "samples" should be avoided.  For example, the top of this
+document's ``.rst`` file is:
 
 .. code-block:: rst
 
@@ -368,33 +362,34 @@ avoided.  For example the top of this document's ``.rst`` file is:
    Documentation Guidelines
    ########################
 
-Other ``.rst`` documents can link to this document using the ``:ref:`doc_guidelines``` tag and
-it will show up as :ref:`doc_guidelines`.  This type of internal cross reference works across
-multiple files, and the link text is obtained from the document source so if the title changes,
-the link text will update as well.
+Other ``.rst`` documents can link to this document using the
+``:ref:`doc_guidelines``` tag, and it will appear as :ref:`doc_guidelines`.
+This type of internal cross-reference works across multiple files. The link
+text is obtained from the document source, so if the title changes, the link
+text will automatically update as well.
 
-There may be times when you'd like to change the link text that's shown
-in the generated document.  In this case, you can specify alternate
-text using ``:ref:`alternate text <doc_guidelines>``` (renders as
+There may be times when you'd like to change the link text that's shown in the
+generated document.  In this case, you can specify alternate text using
+``:ref:`alternate text <doc_guidelines>``` (renders as
 :ref:`alternate text <doc_guidelines>`).
 
 
 Non-ASCII Characters
 ********************
 
-You can insert non-ASCII characters such as a Trademark symbol (|trade|),
-by using the notation ``|trade|``.  (It's also allowed to use the UTF-8
-characters directly.)
-Available replacement names are defined in an include file used during the Sphinx processing
-of the reST files.  The names of these replacement characters are the same as used in HTML
-entities used to insert characters in HTML, e.g., \&trade; and are defined in the
-file ``sphinx_build/substitutions.txt`` as listed here:
+You can insert non-ASCII characters such as a Trademark symbol (|trade|) by
+using the notation ``|trade|``.  (It's also allowed to use the UTF-8
+characters directly.) Available replacement names are defined in an include
+file used during the Sphinx processing of the reST files.  The names of these
+replacement characters are the same as those used in HTML entities to insert
+special characters such as \&trade; and are defined in the file
+``sphinx_build/substitutions.txt`` as listed here:
 
 .. literalinclude:: ../substitutions.txt
    :language: rst
 
-We've kept the substitutions list small but others can be added as
-needed by submitting a change to the ``substitutions.txt`` file.
+We've kept the substitutions list small but you can add others as needed by
+submitting a change to the ``substitutions.txt`` file.
 
 Code and Command Examples
 *************************
@@ -417,8 +412,8 @@ For example:
          u32_t data;
       } __packed;
 
-Note the blank line between the ``code-block`` directive and the first
-line of the code-block body, and the body content is indented three
+Note that there is a blank line between the ``code-block`` directive and the
+first line of the code-block body, and the body content is indented three
 spaces (to the first non-blank space of the directive name).
 
 This would be rendered as:
@@ -434,10 +429,9 @@ This would be rendered as:
       } __packed;
 
 
-You can specify other languages for the ``code-block`` directive,
-including ``c``, ``python``, and ``rst``, and also ``console``,
-``bash``, or ``shell``. If you want no syntax highlighting, use the
-language ``none``,  for example:
+You can specify other languages for the ``code-block`` directive, including
+``c``, ``python``, and ``rst``, and also ``console``, ``bash``, or ``shell``.
+If you want no syntax highlighting, specify ``none``. For example:
 
 .. code-block:: rest
 
@@ -453,12 +447,13 @@ Would display as:
       This would be a block of text styled with a background
       and box, but with no syntax highlighting.
 
-There's a shorthand for writing code blocks too: end the introductory
+There's a shorthand for writing code blocks, too: end the introductory
 paragraph with a double colon (``::``) and indent the code block content
-by three spaces.  On output, only one colon will be shown.  The
-highlighting package makes a best guess at the type of content in the
-block and highlighting purposes.  This can lead to some odd
-highlighting in the generated output.
+by three spaces.  On output, only one colon will appear.
+
+.. note:: The highlighting package makes a best guess at the type of content
+   in the block for highlighting purposes.  This can lead to some odd 
+   highlighting in the generated output.
 
 Images
 ******
@@ -476,21 +471,20 @@ or if you'd like to add an image caption, use::
 
        Caption for the figure
 
-The file name specified is relative to the document source file,
-and we recommend putting images into an ``images`` folder where the document
-source is found.  The usual image formats handled by a web browser are
-supported: JPEG, PNG, GIF, and SVG.  Keep the image size only as large
-as needed, generally at least 500 px wide but no more than 1000 px, and
-no more than 250 KB unless a particularly large image is needed for
-clarity.
+The file name specified is relative to the document source file, and we
+recommend putting images into an ``images`` folder where the document source
+is found.  The usual image formats handled by a web browser are supported:
+JPEG, PNG, GIF, and SVG.  Keep the image size only as large as needed,
+generally at least 500 px wide but no more than 1000 px, and no more than
+250 KB unless a particularly large image is needed for clarity.
 
 Tabs, Spaces, and Indenting
 ***************************
 
-Indenting is significant in reST file content, and using spaces is
-preferred.  Extra indenting can (unintentionally) change the way content
-is rendered too.  For lists and directives, indent the content text to
-the first non-blank space in the preceding line.  For example:
+Indenting is significant in reST file content, and using spaces is preferred.
+Extra indenting can (unintentionally) change the way content is rendered, too.
+For lists and directives, indent the content text to the first non-blank space
+in the preceding line.  For example:
 
 .. code-block:: rest
 
@@ -505,14 +499,14 @@ the first non-blank space in the preceding line.  For example:
       The text within a directive block should align with the
       first character of the directive name.
 
-Keep the line length for documentation less than 80 characters to make
-it easier for reviewing in GitHub. Long lines because of URL references
-are an allowed exception.
+Keep the line length for documentation less than 80 characters to make it
+easier for reviewing in GitHub. Long lines due to URL references are an
+allowed exception.
 
 Drawings
 ********
 
-You can include a picture (.jpg, .png, .svg for example) by using the
+You can include a picture (.jpg, .png, or .svg for example) by using the
 ``.. image`` directive::
 
    .. image:: ../images/ACRNlogo.png
@@ -524,10 +518,9 @@ This results in the image being placed in the document:
    :align: center
 
 Alternatively, use the ``.. figure`` directive to include a picture with
-a caption and automatic figure numbering for
-your image, (so you can say see :numref:`acrn-logo-figure`, by using the
-notation ``:numref:`acrn-logo-figure``` and specifying the name of
-figure)::
+a caption and automatic figure numbering for your image, (so that you can say
+see :numref:`acrn-logo-figure`, by using the notation
+``:numref:`acrn-logo-figure``` and specifying the name of figure)::
 
    .. figure:: ../images/ACRNlogo.png
       :align: center
@@ -542,17 +535,17 @@ figure)::
    Caption for the figure
 
 
-We've also included the ``graphviz`` Sphinx extension to let you use a text
-description language to render drawings.  See :ref:`graphviz-examples` for more
-information.
+We've also included the ``graphviz`` Sphinx extension to enable you to use a
+text description language to render drawings.  For more information, see
+:ref:`graphviz-examples`.
 
 Alternative Tabbed Content
 **************************
 
-Instead of creating multiple documents with common material except for
-some specific sections, you can write one document and provide alternative
-content to the reader via a tabbed interface. When the reader clicks on
-a tab, the content for that tab is displayed, for example::
+Instead of creating multiple documents with common material except for some
+specific sections, you can write one document and provide alternative content
+to the reader via a tabbed interface. When the reader clicks on a tab, the
+content for that tab is displayed. For example::
 
    .. tabs::
 
@@ -584,7 +577,7 @@ will display as:
 
       Oranges are orange.
 
-Tabs can also be grouped, so that changing the current tab in one area
+Tabs can also be grouped so that changing the current tab in one area
 changes all tabs with the same name throughout the page.  For example:
 
 .. tabs::
@@ -620,19 +613,19 @@ a ``.. tab::`` directive.  Under the hood, we're using the `sphinx-tabs
 <https://github.com/djungelorm/sphinx-tabs>`_ extension that's included
 in the ACRN (requirements.txt)  setup.  Within a tab, you can have most
 any content *other than a heading* (code-blocks, ordered and unordered
-lists, pictures, paragraphs, and such).  You can read more about
-sphinx-tabs from the link above.
+lists, pictures, paragraphs, and such).  You can read more about sphinx-tabs
+from the link above.
 
 Instruction Steps
 *****************
 
-A numbered instruction steps style makes it
-easy to create tutorial guides with clearly identified steps. Add
-the ``.. rst-class:: numbered-step`` directive immediately before a
-second-level heading (by project convention, a heading underlined with
-asterisks ``******``, and it will be displayed as a numbered step,
-sequentially numbered within the document.  (Second-level headings
-without this ``rst-class`` directive will not be numbered.) For example::
+A numbered instruction steps style makes it easy to create tutorial guides
+with clearly identified steps. Add the ``.. rst-class:: numbered-step``
+directive immediately before a second-level heading (by project convention, a
+heading underlined with asterisks ``******``, and it will be displayed as a
+numbered step, sequentially numbered within the document.  (Second-level
+headings without this ``rst-class`` directive will not be numbered.)
+For example::
 
    .. rst-class:: numbered-step
 
@@ -644,10 +637,10 @@ without this ``rst-class`` directive will not be numbered.) For example::
 First Instruction Step
 **********************
 
-This is the first instruction step material.  You can do the usual paragraphs and
-pictures as you'd use in normal document writing. Write the heading to
-be a summary of what the step is (the step numbering is automated so you
-can move steps around easily if needed).
+This is the first instruction step material.  You can do the usual paragraph
+and pictures as you'd use in normal document writing. Write the heading to be
+a summary of what the step is (the step numbering is automated so you can move
+steps around easily if needed).
 
 .. rst-class:: numbered-step
 
