@@ -1,6 +1,6 @@
 .. _release_notes_2.4:
 
-ACRN v2.4 (Mar 2021)
+ACRN v2.4 (Apr 2021)
 ####################
 
 We are pleased to announce the release of the Project ACRN hypervisor
@@ -34,6 +34,16 @@ ACRN v2.4 requires Ubuntu 18.04.  Follow the instructions in the
 
 What's New in v2.4
 ******************
+
+Extensive work was done to redesign how ACRN
+configuration is handled, update the build process to use the new
+configuration system, and update the corresponding documentation. This is a
+significant change and improvement to how you configure ACRN but also impacts
+existing projects, as explained in the next section.
+
+We've also validated the hybrid_rt scenario on the next generation of Intel®
+Core™ processors (codenamed Elkhart Lake) and enabled software SRAM and cache
+locking for real time performance on Elkhart Lake.
 
 ACRN Configuration and Build
 ============================
