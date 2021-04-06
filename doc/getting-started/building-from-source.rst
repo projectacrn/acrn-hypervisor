@@ -1,6 +1,6 @@
 .. _getting-started-building:
 
-Build ACRN from Source
+Build ACRN From Source
 ######################
 
 Following a general embedded-system programming model, the ACRN
@@ -8,13 +8,13 @@ hypervisor is designed to be customized at build time per hardware
 platform and per usage scenario, rather than one binary for all
 scenarios.
 
-The hypervisor binary is generated based on Kconfig configuration
-settings. Instructions about these settings can be found in
+The hypervisor binary is generated based on configuration settings in XML
+files. Instructions about customizing these settings can be found in
 :ref:`getting-started-hypervisor-configuration`.
 
-One binary for all platforms and all usage scenarios is currently not
-supported, primarily because dynamic configuration parsing is restricted in
-the ACRN hypervisor for the following reasons:
+One binary for all platforms and all usage scenarios is not
+supported. Dynamic configuration parsing is not used in
+the ACRN hypervisor for these reasons:
 
 - **Maintain functional safety requirements.** Implementing dynamic parsing
   introduces dynamic objects, which violate functional safety requirements.
@@ -45,22 +45,15 @@ these steps.
 
 .. rst-class:: numbered-step
 
-Install build tools and dependencies
+Install Build Tools and Dependencies
 ************************************
 
-ACRN development is supported on popular Linux distributions, each with
-their own way to install development tools. This user guide covers the
-different steps to configure and build ACRN natively on your
-distribution.
+ACRN development is supported on popular Linux distributions, each with their
+own way to install development tools. This user guide covers the steps to
+configure and build ACRN natively on **Ubuntu 18.04 or newer**.
 
-.. note::
-   ACRN uses ``menuconfig``, a python3 text-based user interface (TUI)
-   for configuring hypervisor options and using Python's ``kconfiglib``
-   library.
-
-Install the necessary tools for the following systems:
-
-* Ubuntu development system:
+The following commands install the necessary tools for configuring and building
+ACRN.
 
   .. code-block:: none
 
@@ -73,6 +66,7 @@ Install the necessary tools for the following systems:
           libsystemd-dev \
           libevent-dev \
           libxml2-dev \
+          libxml2-utils \
           libusb-1.0-0-dev \
           python3 \
           python3-pip \
@@ -82,34 +76,30 @@ Install the necessary tools for the following systems:
           libnuma-dev \
           liblz4-tool \
           flex \
-          bison
+          bison \
+          xsltproc
 
-     $ sudo pip3 install kconfiglib
-     $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
-     $ tar zxvf acpica-unix-20191018.tar.gz
-     $ cd acpica-unix-20191018
+     $ sudo pip3 install lxml xmlschema
+     $ wget https://acpica.org/sites/acpica/files/acpica-unix-20210105.tar.gz
+     $ tar zxvf acpica-unix-20210105.tar.gz
+     $ cd acpica-unix-20210105
      $ make clean && make iasl
      $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
 
-  .. note::
-     ACRN requires ``gcc`` version 7.3.* (or higher) and ``binutils`` version
-     2.27 (or higher). Check your development environment to ensure you have
-     appropriate versions of these packages by using the commands: ``gcc -v``
-     and ``ld -v``.
-
 .. rst-class:: numbered-step
 
-Get the ACRN hypervisor source code
+Get the ACRN Hypervisor Source Code
 ***********************************
 
-The `acrn-hypervisor <https://github.com/projectacrn/acrn-hypervisor/>`_
+The `ACRN hypervisor <https://github.com/projectacrn/acrn-hypervisor/>`_
 repository contains four main components:
 
-1. The ACRN hypervisor code, located in the ``hypervisor`` directory.
-#. The ACRN device model code, located in the ``devicemodel`` directory.
-#. The ACRN tools source code, located in the ``misc/tools`` directory.
+1. The ACRN hypervisor code is in the ``hypervisor`` directory.
+#. The ACRN device model code is in the ``devicemodel`` directory.
+#. The ACRN debug tools source code is in the ``misc/debug_tools`` directory.
+#. The ACRN online services source code is in the ``misc/services`` directory.
 
-Enter the following to get the acrn-hypervisor source code:
+Enter the following to get the ACRN hypervisor source code:
 
 .. code-block:: none
 
@@ -120,7 +110,7 @@ Enter the following to get the acrn-hypervisor source code:
 
 .. rst-class:: numbered-step
 
-Build with the ACRN scenario
+Build With the ACRN Scenario
 ****************************
 
 Currently, the ACRN hypervisor defines these typical usage scenarios:
@@ -134,10 +124,10 @@ LOGICAL_PARTITION:
     This scenario defines two pre-launched VMs.
 
 INDUSTRY:
-   This is a typical scenario for industrial usage with up to eight VMs:
+   This scenario is an example for industrial usage with up to eight VMs:
    one pre-launched Service VM, five post-launched Standard VMs (for Human
    interaction etc.), one post-launched RT VMs (for real-time control),
-   and one Kata container VM.
+   and one Kata Container VM.
 
 HYBRID:
    This scenario defines a hybrid use case with three VMs: one
@@ -149,126 +139,126 @@ HYBRID_RT:
    pre-launched RTVM, one pre-launched Service VM, and one post-launched
    Standard VM.
 
-Assuming that you are at the top level of the acrn-hypervisor directory, perform the following:
+XML configuration files for these scenarios on supported boards are available
+under the ``misc/config_tools/data`` directory.
+
+Assuming that you are at the top level of the ``acrn-hypervisor`` directory, perform
+the following to build the hypervisor, device model, and tools:
 
 .. note::
-   The release version is built by default, ``RELEASE=0`` builds the debug version.
+   The debug version is built by default. To build a release version,
+   build with ``RELEASE=y`` explicitly, regardless of whether a previous
+   build exists.
 
-* Build the ``INDUSTRY`` scenario on the ``nuc7i7dnb``:
-
-  .. code-block:: none
-
-     $ make all BOARD=nuc7i7dnb SCENARIO=industry RELEASE=0
-
-* Build the ``HYBRID`` scenario on the ``whl-ipc-i5``:
+* Build the debug version of ``INDUSTRY`` scenario on the ``nuc7i7dnb``:
 
   .. code-block:: none
 
-     $ make all BOARD=whl-ipc-i5 SCENARIO=hybrid RELEASE=0
+     $ make BOARD=nuc7i7dnb SCENARIO=industry
 
-* Build the ``HYBRID_RT`` scenario on the ``whl-ipc-i7``:
-
-  .. code-block:: none
-
-     $ make all BOARD=whl-ipc-i7 SCENARIO=hybrid_rt RELEASE=0
-
-* Build the ``SDC`` scenario on the ``nuc6cayh``:
+* Build the release version of ``HYBRID`` scenario on the ``whl-ipc-i5``:
 
   .. code-block:: none
 
-    $ make all BOARD_FILE=$PWD/misc/vm_configs/xmls/board-xmls/nuc6cayh.xml \
-    SCENARIO_FILE=$PWD/misc/vm_configs/xmls/config-xmls/nuc6cayh/sdc.xml
+     $ make BOARD=whl-ipc-i5 SCENARIO=hybrid RELEASE=y
 
+* Build the release version of ``HYBRID_RT`` scenario on the ``whl-ipc-i7``
+  (hypervisor only):
 
-See the :ref:`hardware` document for information about platform needs
-for each scenario.
+  .. code-block:: none
+
+     $ make BOARD=whl-ipc-i7 SCENARIO=hybrid_rt RELEASE=y hypervisor
+
+* Build the release version of the device model and tools:
+
+  .. code-block:: none
+
+     $ make RELEASE=y devicemodel tools
+
+You can also build ACRN with your customized scenario:
+
+* Build with your own scenario configuration on the ``nuc6cayh``, assuming the
+  scenario is defined in ``/path/to/scenario.xml``:
+
+  .. code-block:: none
+
+    $ make BOARD=nuc6cayh SCENARIO=/path/to/scenario.xml
+
+* Build with your own board and scenario configuration, assuming the board and
+  scenario XML files are ``/path/to/board.xml`` and ``/path/to/scenario.xml``:
+
+  .. code-block:: none
+
+    $ make BOARD=/path/to/board.xml SCENARIO=/path/to/scenario.xml
+
+.. note::
+   ACRN uses XML files to summarize board characteristics and scenario
+   settings. The ``BOARD`` and ``SCENARIO`` variables accept board/scenario
+   names as well as paths to XML files. When board/scenario names are given, the
+   build system searches for XML files with the same names under
+   ``misc/config_tools/data/``. When paths (absolute or relative) to the XML
+   files are given, the build system uses the files pointed at. If relative
+   paths are used, they are considered relative to the current working
+   directory.
+
+See the :ref:`hardware` document for information about platform needs for each
+scenario. For more instructions to customize scenarios, see
+:ref:`getting-started-hypervisor-configuration` and
+:ref:`acrn_configuration_tool`.
+
+The build results are found in the ``build`` directory. You can specify
+a different build directory by setting the ``O`` ``make`` parameter,
+for example: ``make O=build-nuc``.
+
+To query the board, scenario, and build type of an existing build, the
+``hvshowconfig`` target will help.
+
+  .. code-block:: none
+
+    $ make BOARD=tgl-rvp SCENARIO=hybrid_rt hypervisor
+    ...
+    $ make hvshowconfig
+    Build directory: /path/to/acrn-hypervisor/build/hypervisor
+    This build directory is configured with the settings below.
+    - BOARD = tgl-rvp
+    - SCENARIO = hybrid_rt
+    - RELEASE = n
 
 .. _getting-started-hypervisor-configuration:
 
 .. rst-class:: numbered-step
 
-Build the hypervisor configuration
-**********************************
+Modify the Hypervisor Configuration
+***********************************
 
-Modify the hypervisor configuration
-===================================
+The ACRN hypervisor is built with scenario encoded in an XML file (referred to
+as the scenario XML hereinafter). The scenario XML of a build can be found at
+``<build>/hypervisor/.scenario.xml``, where ``<build>`` is the name of the build
+directory. You can make further changes to this file to adjust to your specific
+requirements. Another ``make`` will rebuild the hypervisor using the updated
+scenario XML.
 
-The ACRN hypervisor leverages Kconfig to manage configurations; it is
-powered by ``Kconfiglib``. A default configuration is generated based on the
-board you have selected via the ``BOARD=`` command line parameter. You can
-make further changes to that default configuration to adjust to your specific
-requirements.
-
-To generate hypervisor configurations, you must build the hypervisor
-individually. The following steps generate a default but complete
-configuration, based on the platform selected, assuming that you are at the
-top level of the acrn-hypervisor directory. The configuration file, named
-``.config``, can be found under the target folder of your build.
+The following commands show how to customize manually the scenario XML based on
+the predefined ``INDUSTRY`` scenario for ``nuc7i7dnb`` and rebuild the
+hypervisor. The ``hvdefconfig`` target generates the configuration files without
+building the hypervisor, allowing users to tweak the configurations.
 
 .. code-block:: none
 
-   $ cd hypervisor
-   $ make defconfig BOARD=nuc7i7dnb SCENARIO=industry
-
-The BOARD specified is used to select a ``defconfig`` under
-``misc/vm_configs/scenarios/``. The other command line-based options (e.g.
-``RELEASE``) take no effect when generating a defconfig.
-
-To modify the hypervisor configurations, you can either edit ``.config``
-manually, or you can invoke a TUI-based menuconfig (powered by kconfiglib) by
-executing ``make menuconfig``. As an example, the following commands
-(assuming that you are at the top level of the acrn-hypervisor directory)
-generate a default configuration file, allowing you to modify some
-configurations and build the hypervisor using the updated ``.config``:
-
-.. code-block:: none
-
-   # Modify the configurations per your needs
-   $ cd ../         # Enter top-level folder of acrn-hypervisor source
-   $ make menuconfig -C hypervisor
-   # modify your own "ACRN Scenario" and "Target board" that want to build
-   # in pop up menu
-
-Note that ``menuconfig`` is python3 only.
-
-Refer to the help on menuconfig for a detailed guide on the interface:
-
-.. code-block:: none
-
-   $ pydoc3 menuconfig
-
-.. rst-class:: numbered-step
-
-Build the hypervisor, device model, and tools
-*********************************************
-
-Now you can build all these components at once as follows:
-
-.. code-block:: none
-
-   $ make 	# Build hypervisor with the new .config
-
-The build results are found in the ``build`` directory. You can specify
-a different Output folder by setting the ``O`` ``make`` parameter,
-for example: ``make O=build-nuc``.
-
-
-.. code-block:: none
-
-   $ make all BOARD_FILE=$PWD/misc/vm_configs/xmls/board-xmls/nuc7i7dnb.xml \
-   SCENARIO_FILE=$PWD/misc/vm_configs/xmls/config-xmls/nuc7i7dnb/industry.xml TARGET_DIR=xxx
-
-The build results are found in the ``build`` directory. You can specify
-a different build folder by setting the ``O`` ``make`` parameter,
-for example: ``make O=build-nuc``.
-
+   $ make BOARD=nuc7i7dnb SCENARIO=industry hvdefconfig
+   $ vim build/hypervisor/.scenario.xml
+   (Modify the XML file per your needs)
+   $ make
 
 .. note::
-   The ``BOARD`` and ``SCENARIO`` parameters are not needed because the
-   information is retrieved from the corresponding ``BOARD_FILE`` and
-   ``SCENARIO_FILE`` XML configuration files.  The ``TARGET_DIR`` parameter
-   specifies what directory is used to  store configuration files imported
-   from XML files. If the ``TARGET_DIR`` is not specified, the original
-   configuration files of acrn-hypervisor would be overridden.
+   A hypervisor build remembers the board and scenario previously
+   configured. Thus, there is no need to duplicate BOARD and SCENARIO in the
+   second ``make`` above.
 
-Follow the same instructions to boot and test the images you created from your build.
+While the scenario XML files can be changed manually, we recommend you use the
+ACRN web-based configuration app that provides valid options and descriptions
+of the configuration entries. Refer to :ref:`acrn_config_tool_ui` for more
+instructions.
+
+Descriptions of each configuration entry in scenario XML files are also
+available at :ref:`scenario-config-options`.

@@ -15,7 +15,6 @@ Configuration and Tools
 
    tutorials/acrn_configuration_tool
    reference/config-options
-   reference/kconfig/index
    user-guides/hv-parameters
    user-guides/kernel-parameters
    user-guides/acrn-shell

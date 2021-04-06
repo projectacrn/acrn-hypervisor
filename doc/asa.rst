@@ -9,7 +9,7 @@ Addressed in ACRN v2.3
 We recommend that all developers upgrade to this v2.3 release (or later), which
 addresses the following security issue that was discovered in previous releases:
 
-------
+-----
 
 - NULL Pointer Dereference in ``devicemodel\hw\pci\virtio\virtio_mei.c``
    ``vmei_proc_tx()`` function tries to find the ``iov_base`` by calling
@@ -25,7 +25,7 @@ Addressed in ACRN v2.1
 We recommend that all developers upgrade to this v2.1 release (or later), which
 addresses the following security issue that was discovered in previous releases:
 
-------
+-----
 
 - Missing access control restrictions in the Hypervisor component
    A malicious entity with root access in the Service VM
@@ -42,7 +42,7 @@ Addressed in ACRN v1.6.1
 We recommend that all developers upgrade to this v1.6.1 release (or later), which
 addresses the following security issue that was discovered in previous releases:
 
-------
+-----
 
 - Service VM kernel Crashes When Fuzzing HC_ASSIGN_PCIDEV and HC_DEASSIGN_PCIDEV
    NULL pointer dereference due to invalid address of PCI device to be assigned or
@@ -58,7 +58,7 @@ Addressed in ACRN v1.6
 We recommend that all developers upgrade to this v1.6 release (or later), which
 addresses the following security issues that were discovered in previous releases:
 
-------
+-----
 
 - Hypervisor Crashes When Fuzzing HC_DESTROY_VM
    The input 'vdev->pdev' should be validated properly when handling
@@ -90,7 +90,7 @@ Addressed in ACRN v1.4
 We recommend that all developers upgrade to this v1.4 release (or later), which
 addresses the following security issues that were discovered in previous releases:
 
-------
+-----
 
 - Mitigation for Machine Check Error on Page Size Change
    Improper invalidation for page table updates by a virtual guest operating

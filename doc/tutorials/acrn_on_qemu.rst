@@ -1,6 +1,6 @@
 .. _acrn_on_qemu:
 
-Enable ACRN over QEMU/KVM
+Enable ACRN Over QEMU/KVM
 #########################
 
 Goal of this document is to bring-up ACRN as a nested Hypervisor on top of QEMU/KVM
@@ -195,7 +195,7 @@ Install ACRN Hypervisor
       $ virsh destroy ACRNSOS # where ACRNSOS is the virsh domain name.
 
 
-Service VM Networking updates for User VM
+Service VM Networking Updates for User VM
 *****************************************
 Follow these steps to enable networking for the User VM (L2 guest):
 
@@ -232,7 +232,7 @@ Follow these steps to enable networking for the User VM (L2 guest):
 4. Restart ACRNSOS guest (L1 guest) to complete the setup and start with bring-up of User VM
 
 
-Bring-up User VM (L2 Guest)
+Bring-Up User VM (L2 Guest)
 ***************************
 1. Build the device-model, using ``make devicemodel`` and copy acrn-dm to ACRNSOS guest (L1 guest) directory ``/usr/bin/acrn-dm``
 

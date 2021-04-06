@@ -114,7 +114,7 @@ platforms such as GitHub.
 If you haven't already done so, you'll need to create a (free) GitHub account
 on https://github.com and have Git tools available on your development system.
 
-Repository layout
+Repository Layout
 *****************
 
 To clone the ACRN hypervisor repository (including the ``hypervisor``,
@@ -166,7 +166,7 @@ Contribution Tools and Git Setup
 .. _Git send-email documentation:
    https://git-scm.com/docs/git-send-email
 
-git-send-email
+Git-Send-Email
 ==============
 
 If you'll be submitting code patches, you may need to install
@@ -178,7 +178,7 @@ for example use::
 and then configure Git` with your SMTP server information as
 described in the `Git send-email documentation`_.
 
-Signed-off-by
+Signed-Off-By
 =============
 
 The name in the commit message ``Signed-off-by:`` line and your email must

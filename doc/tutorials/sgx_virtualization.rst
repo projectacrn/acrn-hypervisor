@@ -30,7 +30,7 @@ The image below shows the high-level design of SGX virtualization in ACRN.
    SGX Virtualization in ACRN
 
 
-Enable SGX support for Guest
+Enable SGX Support for Guest
 ****************************
 
 Presumptions
@@ -232,13 +232,13 @@ ENCLS[ECREATE]
 Other VMExit Control
 ********************
 
-RDRAND exiting
+RDRAND Exiting
 ==============
 
 * ACRN allows Guest to use RDRAND/RDSEED instruction but does not set "RDRAND
   exiting" to 1.
 
-PAUSE exiting
+PAUSE Exiting
 =============
 
 * ACRN does not set "PAUSE exiting" to 1.
@@ -248,7 +248,7 @@ Future Development
 Following are some currently unplanned areas of interest for future
 ACRN development around SGX virtualization.
 
-Launch Configuration support
+Launch Configuration Support
 ============================
 
 When the following two conditions are both satisfied:

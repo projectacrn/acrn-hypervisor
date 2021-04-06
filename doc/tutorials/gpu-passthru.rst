@@ -18,7 +18,7 @@ It allows for direct assignment of an entire GPU's prowess to a single
 user, passing the native driver capabilities through to the hypervisor
 without any limitations.
 
-Verified version
+Verified Version
 *****************
 
 - ACRN-hypervisor tag: **acrn-2020w17.4-140000p**
@@ -31,7 +31,7 @@ Prerequisites
 Follow :ref:`these instructions <rt_industry_ubuntu_setup>` to set up
 Ubuntu as the ACRN Service VM.
 
-Supported hardware platform
+Supported Hardware Platform
 ***************************
 
 Currently, ACRN has enabled GVT-d on the following platforms:
@@ -40,31 +40,31 @@ Currently, ACRN has enabled GVT-d on the following platforms:
 * Whiskey Lake
 * Elkhart Lake
 
-BIOS settings
+BIOS Settings
 *************
 
-Kaby Lake platform
+Kaby Lake Platform
 ==================
 
-* Set **IGD Minimum Memory** to **64MB** in **Devices** &rarr;
-  **Video** &rarr; **IGD Minimum Memory**.
+* Set **IGD Minimum Memory** to **64MB** in **Devices** |rarr|
+  **Video** |rarr| **IGD Minimum Memory**.
 
-Whiskey Lake platform
+Whiskey Lake Platform
 =====================
 
-* Set **PM Support**  to **Enabled** in **Chipset** &rarr; **System
-  Agent (SA) Configuration** &rarr; **Graphics Configuration** &rarr;
+* Set **PM Support**  to **Enabled** in **Chipset** |rarr| **System
+  Agent (SA) Configuration** |rarr| **Graphics Configuration** |rarr|
   **PM support**.
-* Set **DVMT Pre-Allocated** to **64MB** in **Chipset** &rarr;
+* Set **DVMT Pre-Allocated** to **64MB** in **Chipset** |rarr|
   **System Agent (SA) Configuration**
-  &rarr; **Graphics Configuration** &rarr; **DVMT Pre-Allocated**.
+  |rarr| **Graphics Configuration** |rarr| **DVMT Pre-Allocated**.
 
-Elkhart Lake platform
+Elkhart Lake Platform
 =====================
 
 * Set **DMVT Pre-Allocated** to **64MB** in **Intel Advanced Menu**
-  &rarr; **System Agent(SA) Configuration** &rarr;
-  **Graphics Configuration** &rarr; **DMVT Pre-Allocated**.
+  |rarr| **System Agent(SA) Configuration** |rarr|
+  **Graphics Configuration** |rarr| **DMVT Pre-Allocated**.
 
 Passthrough the GPU to Guest
 ****************************
@@ -93,7 +93,7 @@ Passthrough the GPU to Guest
 
 4. Run ``launch_win.sh``.
 
-Enable the GVT-d GOP driver
+Enable the GVT-d GOP Driver
 ***************************
 
 When enabling GVT-d, the Guest OS cannot light up the physical screen
@@ -165,3 +165,11 @@ Keep in mind the following:
       ``Build/OvmfX64/DEBUG_GCC5/FV/OVMF.fd``. Transfer the binary to
       your target machine.
    -  Modify the launch script to specify the OVMF you built just now.
+
+Script
+======
+
+Once you've installed the Docker environment, you can use this
+`script <../_static/downloads/build_acrn_ovmf.sh>`_ to build ACRN OVMF
+with the GOP driver enabled. For more details about the script usage,
+run ``build_acrn_ovmf.sh -h``.

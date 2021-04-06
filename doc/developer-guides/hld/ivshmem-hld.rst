@@ -129,11 +129,11 @@ Usage
 
 For usage information, see :ref:`enable_ivshmem`
 
-Inter-VM Communication Security hardening (BKMs)
+Inter-VM Communication Security Hardening (BKMs)
 ************************************************
 
 As previously highlighted, ACRN 2.0 provides the capability to create shared
-memory regions between Post-Launch user VMs known as "Inter-VM Communication".
+memory regions between Post-Launched User VMs known as "Inter-VM Communication".
 This mechanism is based on ivshmem v1.0 exposing virtual PCI devices for the
 shared regions (in Service VM's memory for this release). This feature adopts a
 community-approved design for shared memory between VMs, following same

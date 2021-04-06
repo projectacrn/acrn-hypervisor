@@ -32,10 +32,10 @@ https://projectacrn.github.io/0.8/.  Documentation for the latest
 
 ACRN v0.8 requires Clear Linux OS version 28600.
 
-Version 0.8 new features
+Version 0.8 New Features
 ************************
 
-GPIO virtualization
+GPIO Virtualization
 =========================
 
 GPIO virtualization is supported as para-virtualization based on the
@@ -45,19 +45,19 @@ configuration via one virtual GPIO controller. In the Back-end, the GPIO
 command line in the launch script can be modified to map native GPIO to
 UOS.
 
-Enable QoS based on runC container
+Enable QoS Based on runC Container
 ==================================
 ACRN supports Device-Model QoS based on runC container to control the SOS
 resources (CPU, Storage, MEM, NET) by modifying the runC configuration file.
 
-S5 support for RTVM
+S5 Support for RTVM
 ===============================
 ACRN supports a Real-time VM (RTVM) shutting itself down. A RTVM is a
 kind of VM that the SOS can't interfere at runtime, and as such, can
 only power itself off internally. All poweroff requests external to the
 RTVM will be rejected to avoid any interference.
 
-Document updates
+Document Updates
 ================
 Several new documents have been added in this release, including:
 

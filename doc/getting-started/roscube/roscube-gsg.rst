@@ -1,11 +1,13 @@
-Getting Started Guide for ACRN Industry Scenario with ROScube-I
+.. _roscube-gsg:
+
+Getting Started Guide for ACRN Industry Scenario With ROScube-I
 ###############################################################
 
 .. contents::
    :local:
    :depth: 1
 
-Verified version
+Verified Version
 ****************
 
 - Ubuntu version: **18.04**
@@ -68,10 +70,10 @@ Prerequisites
 
 .. rst-class:: numbered-step
 
-Install ACRN hypervisor
+Install ACRN Hypervisor
 ***********************
 
-Set up Environment
+Set Up Environment
 ==================
 
 #. Open ``/etc/default/grub/`` and add ``idle=nomwait intel_pstate=disable``
@@ -92,7 +94,7 @@ Set up Environment
 
      sudo apt update
      sudo apt install -y gcc git make gnu-efi libssl-dev libpciaccess-dev \
-       uuid-dev libsystemd-dev libevent-dev libxml2-dev \
+       uuid-dev libsystemd-dev libevent-dev libxml2-dev libxml2-utils \
        libusb-1.0-0-dev python3 python3-pip libblkid-dev \
        e2fslibs-dev pkg-config libnuma-dev liblz4-tool flex bison
      sudo pip3 install kconfiglib
@@ -203,10 +205,10 @@ Configure Hypervisor
 
 .. rst-class:: numbered-step
 
-Install Service VM kernel
+Install Service VM Kernel
 *************************
 
-Build Service VM kernel
+Build Service VM Kernel
 =======================
 
 #. Get code from GitHub
@@ -302,7 +304,7 @@ Update Grub
 Install User VM
 ***************
 
-Before create User VM
+Before Create User VM
 =====================
 
 #. Download Ubuntu image (Here we use `Ubuntu 18.04 LTS
@@ -316,7 +318,7 @@ Before create User VM
        bridge-utils virt-manager ovmf
      sudo reboot
 
-Create User VM image
+Create User VM Image
 ====================
 
 .. note:: Reboot into the **native Linux kernel** (not the ACRN kernel)
@@ -410,9 +412,9 @@ the User VM.
    .. code-block:: bash
 
      cd /tmp
-     wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
-     tar zxvf acpica-unix-20191018.tar.gz
-     cd acpica-unix-20191018
+     wget https://acpica.org/sites/acpica/files/acpica-unix-20210105.tar.gz
+     tar zxvf acpica-unix-20210105.tar.gz
+     cd acpica-unix-20210105
      make clean && make iasl
      sudo cp ./generate/unix/bin/iasl /usr/sbin/
 
@@ -451,10 +453,10 @@ the User VM.
 
 .. rst-class:: numbered-step
 
-Install real-time VM
+Install Real-Time VM
 ********************
 
-Copy real-time VM image
+Copy Real-Time VM Image
 =======================
 
 .. note:: Reboot into the **native Linux kernel** (not the ACRN kernel)
@@ -468,7 +470,7 @@ Copy real-time VM image
 
    .. figure:: images/rqi-acrn-rtos-ready.png
 
-Set up real-time VM
+Set Up Real-Time VM
 ===================
 
 .. note:: The section will show you how to install Xenomai on ROScube-I.
@@ -548,7 +550,7 @@ Set up real-time VM
 
      sudo poweroff
 
-Run real-time VM
+Run Real-Time VM
 ================
 
 Now back to the native machine and we'll set up the environment for
@@ -582,7 +584,7 @@ launching the real-time VM.
    In ACRN design, rebooting the real-time VM will also reboot the whole
    system.
 
-Customizing the launch file
+Customizing the Launch File
 ***************************
 
 The launch file in this tutorial has the following hardware resource allocation.

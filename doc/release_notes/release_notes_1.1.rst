@@ -24,7 +24,7 @@ with a specific release: generated v1.1 documents can be found at https://projec
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
 ACRN v1.1 requires Clear Linux* OS version 29970.
 
-Version 1.1 major features
+Version 1.1 Major Features
 **************************
 
 Hybrid Mode Introduced
@@ -33,14 +33,14 @@ In hybrid mode, a Zephyr OS is launched by the hypervisor even before the Servic
 launched (pre-launched), with dedicated resources to achieve highest level of isolation.
 This is designed to meet the needs of a FuSa certifiable safety OS.
 
-Support for new guest Operating Systems
+Support for New Guest Operating Systems
 =======================================
 * The `Zephyr RTOS <https://zephyrproject.org>`_ can be a pre-launched Safety OS in hybrid mode.
   It can also be a post-launched (launched by Service OS, not the hypervisor) as a guest OS.
 * VxWorks as a post-launched RTOS for industrial usages.
 * Windows as a post-launched OS
 
-Document updates
+Document Updates
 ================
 We have many `reference documents available <https://projectacrn.github.io>`_, including:
 

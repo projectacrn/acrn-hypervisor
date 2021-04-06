@@ -33,7 +33,7 @@ ACRN v2.1 requires Ubuntu 18.04.  Follow the instructions in the
 
 We recommend that all developers upgrade to ACRN release v2.1.
 
-What's new in v2.1
+What's New in v2.1
 ******************
 
 * Preempt-RT Linux has been validated as a pre-launched realtime VM. See

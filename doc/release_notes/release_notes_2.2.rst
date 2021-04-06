@@ -73,7 +73,7 @@ Staged removal of deprivileged boot mode support.
   Clear Linux though, so we have chosen Ubuntu (and Yocto Project) as the
   preferred Service VM OSs moving forward.
 
-Document updates
+Document Updates
 ****************
 
 New and updated reference documents are available, including:

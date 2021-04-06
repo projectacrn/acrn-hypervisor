@@ -1,6 +1,6 @@
 .. _virtio-net:
 
-Virtio-net
+Virtio-Net
 ##########
 
 Virtio-net is the para-virtualization solution used in ACRN for
@@ -110,7 +110,7 @@ Initialization in Device Model
 - Setup data plan callbacks, including TX, RX
 - Setup TAP backend
 
-Initialization in virtio-net Frontend Driver
+Initialization in Virtio-Net Frontend Driver
 ============================================
 
 **virtio_pci_probe**

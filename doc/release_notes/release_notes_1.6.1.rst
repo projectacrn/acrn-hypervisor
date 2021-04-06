@@ -25,7 +25,7 @@ https://projectacrn.github.io/1.6.1/.
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
 ACRN v1.6.1 requires Clear Linux OS version 33050.
 
-Version 1.6.1 major features
+Version 1.6.1 Major Features
 ****************************
 
 What's New in v1.6.1
@@ -49,7 +49,7 @@ What's New in v1.6.1
 
 * Supported VT-d Posted Interrupts
 
-Document updates
+Document Updates
 ================
 Many new and updated `reference documents <https://projectacrn.github.io>`_ are available, including:
 

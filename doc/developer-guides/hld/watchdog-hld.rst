@@ -34,7 +34,7 @@ It receives read/write commands from the watchdog driver, does the
 actions, and returns.  In ACRN, the commands are from User VM
 watchdog driver.
 
-User VM watchdog workflow
+User VM Watchdog Workflow
 *************************
 
 When the User VM does a read or write operation on the watchdog device's
@@ -58,7 +58,7 @@ from a User VM to the Service VM and return back:
 
    Watchdog operation workflow
 
-Implementation in ACRN and how to use it
+Implementation in ACRN and How to Use It
 ****************************************
 
 In ACRN, the Intel 6300ESB watchdog device emulation is added into the

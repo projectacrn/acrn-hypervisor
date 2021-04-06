@@ -1,6 +1,6 @@
 .. _hld-emulated-devices:
 
-Emulated devices high-level design
+Emulated Devices High-Level Design
 ##################################
 
 Full virtualization device models can typically

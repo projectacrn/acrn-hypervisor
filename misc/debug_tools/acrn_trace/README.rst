@@ -1,6 +1,6 @@
 .. _acrntrace:
 
-acrntrace
+Acrntrace
 #########
 
 Description
@@ -12,7 +12,7 @@ A ``scripts`` directory includes scripts to analyze the trace data.
 Usage
 *****
 
-acrntrace
+Acrntrace
 =========
 
 The ``acrntrace`` tool runs on the Service OS (SOS) to capture trace data and
@@ -98,7 +98,7 @@ Options:
    doesn't support for an invariant TSC. The results may therefore not be
    completely accurate in that regard.
 
-Typical use example
+Typical Use Example
 ===================
 
 Here's a typical use of ``acrntrace`` to capture trace data from the SOS,

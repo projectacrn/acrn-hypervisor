@@ -32,10 +32,10 @@ https://projectacrn.github.io/0.7/.  Documentation for the latest
 
 ACRN v0.7 requires Clear Linux OS version 28260.
 
-Version 0.7 new features
+Version 0.7 New Features
 ************************
 
-Enable cache QOS with CAT
+Enable Cache QOS With CAT
 =========================
 
 Cache Allocation Technology (CAT) is enabled on Apollo Lake (APL)
@@ -46,12 +46,12 @@ build time. For debugging and performance tuning, the CAT can also be
 enabled and configured at runtime by writing proper values to certain
 MSRs using the ``wrmsr`` command on ACRN shell.
 
-Support ACPI power key mediator
+Support ACPI Power Key Mediator
 ===============================
 ACRN supports ACPI power/sleep key on the APL and KBL NUC platforms,
 triggering S3/S5 flow, following the ACPI spec.
 
-Document updates
+Document Updates
 ================
 Several new documents have been added in this release, including:
 

@@ -1,7 +1,7 @@
 .. _enable_ivshmem:
 
-Enable Inter-VM Communication Based on ``ivshmem``
-##################################################
+Enable Inter-VM Communication Based on Ivshmem
+##############################################
 
 You can use inter-VM communication based on the ``ivshmem`` dm-land
 solution or hv-land solution, according to the usage scenario needs.
@@ -9,7 +9,7 @@ solution or hv-land solution, according to the usage scenario needs.
 While both solutions can be used at the same time, VMs using different
 solutions cannot communicate with each other.
 
-ivshmem dm-land usage
+Ivshmem DM-Land Usage
 *********************
 
 Add this line as an ``acrn-dm`` boot parameter::
@@ -33,15 +33,16 @@ where
 
 .. note:: This device can be used with real-time VM (RTVM) as well.
 
-ivshmem hv-land usage
+.. _ivshmem-hv:
+
+Ivshmem HV-Land Usage
 *********************
 
-The ``ivshmem`` hv-land solution is disabled by default in ACRN. You
-enable it using the  :ref:`acrn_configuration_tool` with these steps:
+The ``ivshmem`` hv-land solution is disabled by default in ACRN. You can enable
+it using the :ref:`ACRN configuration toolset <acrn_config_workflow>` with these
+steps:
 
-- Enable ``ivshmem`` hv-land in ACRN XML configuration file. For example, the
-  XML configuration file for the hybrid_rt scenario on a whl-ipc-i5 board is found in
-  ``acrn-hypervisor/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml``
+- Enable ``ivshmem`` hv-land in ACRN XML configuration file.
 
    - Edit ``IVSHMEM_ENABLED`` to ``y`` in ACRN scenario XML configuration
      to enable ``ivshmem`` hv-land
@@ -64,9 +65,9 @@ enable it using the  :ref:`acrn_configuration_tool` with these steps:
 
    .. note:: You can define up to eight ``ivshmem`` hv-land shared regions.
 
-- Build the XML configuration, refer to :ref:`getting-started-building`
+- Build with the XML configuration, refer to :ref:`getting-started-building`.
 
-ivshmem notification mechanism
+Ivshmem Notification Mechanism
 ******************************
 
 Notification (doorbell) of ivshmem device allows VMs with ivshmem
@@ -95,7 +96,7 @@ to applications.
 Inter-VM Communication Examples
 *******************************
 
-dm-land example
+DM-Land Example
 ===============
 
 This example uses dm-land inter-VM communication between two
@@ -165,35 +166,29 @@ Linux-based post-launched VMs (VM1 and VM2).
    - For VM1 use ``ls -lh /sys/bus/pci/devices/0000:00:06.0/uio``
    - For VM2 use ``ls -lh /sys/bus/pci/devices/0000:00:05.0/uio``
 
-hv-land example
+HV-Land Example
 ===============
 
 This example uses hv-land inter-VM communication between two
 Linux-based VMs (VM0 is a pre-launched VM and VM2 is a post-launched VM).
 
-1. Configure shared memory for the communication between VM0 and VM2 for hybrid_rt
-   scenario on whl-ipc-i5 board, the shared memory name is ``hv:/shm_region_0``,
-   and shared memory size is 2M bytes:
+1. Make a copy of the predefined hybrid_rt scenario on whl-ipc-i5 (available at
+   ``acrn-hypervisor/misc/config_tools/data/whl-ipc-i5/hybrid_rt.xml``) and
+   configure shared memory for the communication between VM0 and VM2. The shared
+   memory name is ``hv:/shm_region_0``, and shared memory size is 2M bytes. The
+   resulting scenario XML should look like this:
 
-   - Edit XML configuration file for hybrid_rt scenario on whl-ipc-i5 board
-     ``acrn-hypervisor/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml``
-     to enable ``ivshmem`` and configure the shared memory region using the format
-     ``shm_name, shm_size, VM IDs`` (as described above in the ACRN dm boot parameters).
-     The region name must start with ``hv:/`` for an hv-land shared region, and we'll allocate 2MB
-     shared between VMs 0 and 2:
+   .. code-block:: none
+      :emphasize-lines: 2,3
 
-     .. code-block:: none
-        :emphasize-lines: 2,3
-
-        <IVSHMEM desc="IVSHMEM configuration">
-               <IVSHMEM_ENABLED>y</IVSHMEM_ENABLED>
-               <IVSHMEM_REGION>hv:/shm_region_0, 2, 0:2</IVSHMEM_REGION>
-        </IVSHMEM>
+      <IVSHMEM desc="IVSHMEM configuration">
+             <IVSHMEM_ENABLED>y</IVSHMEM_ENABLED>
+             <IVSHMEM_REGION>hv:/shm_region_0, 2, 0:2</IVSHMEM_REGION>
+      </IVSHMEM>
 
 2. Build ACRN based on the XML configuration for hybrid_rt scenario on whl-ipc-i5 board::
 
-	make BOARD_FILE=acrn-hypervisor/misc/vm_configs/xmls/board-xmls/whl-ipc-i5.xml \
-	SCENARIO_FILE=acrn-hypervisor/misc/vm_configs/xmls/config-xmls/whl-ipc-i5/hybrid_rt.xml TARGET_DIR=xxx
+	make BOARD=whl-ipc-i5 SCENARIO=<path/to/edited/scenario.xml> TARGET_DIR=xxx
 
 3. Add a new virtual PCI device for VM2 (post-launched VM): the device type is
    ``ivshmem``, shared memory name is ``hv:/shm_region_0``, and shared memory

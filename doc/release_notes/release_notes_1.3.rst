@@ -24,7 +24,7 @@ with a specific release: generated v1.3 documents can be found at https://projec
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
 ACRN v1.3 requires Clear Linux* OS version 31080.
 
-Version 1.3 major features
+Version 1.3 Major Features
 **************************
 
 What's New in v1.3
@@ -38,7 +38,7 @@ What's New in v1.3
 * Ethernet mediator now supports prioritization per VM.
 * Features for real-time determinism, e.g. Cache Allocation Technology (CAT, only supported on Apollo Lake).
 
-Document updates
+Document Updates
 ================
 We have many new `reference documents available <https://projectacrn.github.io>`_, including:
 

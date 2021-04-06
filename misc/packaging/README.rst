@@ -14,7 +14,7 @@ acrn-kernel, install them on your target system, and boot running ACRN.
 
 .. rst-class:: numbered-step
 
-Set up prerequisites
+Set Up Prerequisites
 ********************
 
 Your development system should be running Ubuntu
@@ -41,7 +41,7 @@ in the ``misc/packaging`` folder, so let's go there::
 
 .. rst-class:: numbered-step
 
-Configure Debian packaging details
+Configure Debian Packaging Details
 **********************************
 
 The build and packaging script ``install_uSoS.py`` does all the work to
@@ -63,7 +63,7 @@ Here's the default ``release.json`` configuration:
 
 .. rst-class:: numbered-step
 
-Run the package-building script
+Run the Package-Building Script
 *******************************
 
 The ``install_uSoS.py`` Python script does all the work to install
@@ -94,7 +94,7 @@ the network or simply by using a USB drive.
 
 .. rst-class:: numbered-step
 
-Prepare your target system with Ubuntu 18.04
+Prepare Your Target System With Ubuntu 18.04
 ********************************************
 
 Your target system must be one of the choices listed in the ``release.json``
@@ -108,7 +108,7 @@ Reboot your system to complete the installation.
 
 .. rst-class:: numbered-step
 
-Install Debian packages on your target system
+Install Debian Packages on Your Target System
 *********************************************
 
 Copy the Debian packages you created on your development system, for
@@ -156,7 +156,7 @@ installation on the NVMe drive (input is highlighted):
    Added boot menu entry for EFI firmware configuration
    done
 
-   
+
 
 
 Then install the ACRN-patched kernel package::
@@ -167,7 +167,7 @@ After that, you're ready to reboot.
 
 .. rst-class:: numbered-step
 
-Boot ACRN using the multiboot2 grub choice
+Boot ACRN Using the Multiboot2 Grub Choice
 ******************************************
 
 This time when you boot your target system you'll see some new options:
@@ -206,7 +206,7 @@ If your target system has a serial port active, you can simply hit
 
 .. rst-class:: numbered-step
 
-Verify ACRN is running
+Verify ACRN Is Running
 **********************
 
 After the system boots, you can verify ACRN was detected and is running
