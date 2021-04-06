@@ -1,4 +1,4 @@
-ACRN tools
+ACRN Tools
 ##########
 
 The open source `Project ACRN`_ defines a device hypervisor reference stack and

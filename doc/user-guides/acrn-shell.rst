@@ -54,7 +54,7 @@ The ACRN hypervisor shell supports the following commands:
      - Write ``value`` (in hexadecimal) to the Model-Specific Register (MSR) at
        index ``msr_index`` (in hexadecimal) for CPU ID ``pcpu_id``
 
-Command examples
+Command Examples
 ****************
 
 The following sections provide further details and examples for some of these commands.

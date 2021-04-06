@@ -1,6 +1,6 @@
 .. _acrnlog:
 
-acrnlog
+Acrnlog
 #######
 
 Description
@@ -32,7 +32,7 @@ Options:
   -s  limit the size of each log file, in KB. 0 means no limitation.
   -n  specify the number of log files to keep, old files would be deleted.
 
-Temporary log file changes
+Temporary Log File Changes
 ==========================
 
 You can temporarily change the log file setting by following these
@@ -68,7 +68,7 @@ can use these commands:
    console_loglevel: 2, mem_loglevel: 5, npk_loglevel: 5
 
 
-Permanent log file changes
+Permanent Log File Changes
 ==========================
 
 You can also permanently change the log file settings by

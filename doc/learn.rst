@@ -2,7 +2,7 @@
 
 .. _learn_acrn:
 
-What is ACRN
+What Is ACRN
 ############
 
 ACRN is supported on Apollo Lake and Kaby Lake Intel platforms,

@@ -1,6 +1,6 @@
 .. _acrnprobe-conf:
 
-acrnprobe Configuration
+Acrnprobe Configuration
 #######################
 
 Description
@@ -62,13 +62,13 @@ Layout
 As for the definition of ``sender``, ``trigger``, ``crash`` and ``info``
 please refer to :ref:`acrnprobe_doc`.
 
-Properties of group members
+Properties of Group Members
 ***************************
 
 ``acrnprobe`` defined different groups in configuration file, which are
 ``senders``, ``triggers``, ``crashes`` and ``infos``.
 
-Common properties
+Common Properties
 =================
 
 - ``id``:
@@ -76,7 +76,7 @@ Common properties
 - ``enable``:
   This group member will be ignored if the value is NOT ``true``.
 
-Other properties
+Other Properties
 ================
 
 - ``inherit``:
@@ -87,14 +87,14 @@ Other properties
 - ``expression``:
   See `Crash`_.
 
-Crash tree in acrnprobe
+Crash Tree in Acrnprobe
 ***********************
 
 There could be a parent/child relationship between crashes. Refer to the
 diagrams below, crash B and D are the children of crash A, because crash B and
 D inherit from crash A, and crash C is the child of crash B.
 
-Build crash tree in configuration
+Build Crash Tree in Configuration
 =================================
 
 .. graphviz:: images/crash-config.dot
@@ -102,7 +102,7 @@ Build crash tree in configuration
    :align: center
    :caption: Build crash tree in configuration
 
-Match crash at runtime
+Match Crash at Runtime
 ======================
 
 In order to find a more specific type, if one crash type matches

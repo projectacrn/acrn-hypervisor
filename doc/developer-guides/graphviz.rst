@@ -1,6 +1,6 @@
 .. _graphviz-examples:
 
-Drawings using graphviz
+Drawings Using Graphviz
 #######################
 
 We support using the Sphinx `graphviz extension`_ for creating simple
@@ -35,7 +35,7 @@ and the generated output would appear as this:
 Let's look at some more examples and then we'll get into more details
 about the dot language and drawing options.
 
-Simple directed graph
+Simple Directed Graph
 *********************
 
 For simple drawings with shapes and lines, you can put the graphviz
@@ -77,7 +77,7 @@ colors, as shown.
 .. _standard HTML color names:
    https://www.w3schools.com/colors/colors_hex.asp
 
-Adding edge labels
+Adding Edge Labels
 ******************
 
 Here's an example of a drawing with labels on the edges (arrows)

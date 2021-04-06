@@ -1,6 +1,6 @@
 .. _hld-trace-log:
 
-Tracing and Logging high-level design
+Tracing and Logging High-Level Design
 #####################################
 
 Both Trace and Log are built on top of a mechanism named shared
@@ -128,7 +128,7 @@ kinds of logs:
 -  Current runtime logs;
 -  Logs remaining in the buffer, from the last crashed run.
 
-Architectural diagram
+Architectural Diagram
 =====================
 
 Similar to the design of ACRN Trace, ACRN Log is built on top of
@@ -149,7 +149,7 @@ up:
    Architectural diagram of ACRN Log
 
 
-ACRN log support in Hypervisor
+ACRN Log Support in Hypervisor
 ==============================
 
 To support ``acrnlog``, the following adaption was made to hypervisor log
@@ -162,7 +162,7 @@ system:
 
 There are 6 different loglevels, as shown below. The specified
 severity loglevel is stored in ``mem_loglevel``, initialized
-by :option:`CONFIG_MEM_LOGLEVEL_DEFAULT`. The loglevel can
+by :option:`hv.DEBUG_OPTIONS.MEM_LOGLEVEL`. The loglevel can
 be set to a new value
 at runtime via hypervisor shell command ``loglevel``.
 

@@ -31,7 +31,7 @@ https://projectacrn.github.io/0.5/.  Documentation for the latest
 (master) branch is found at https://projectacrn.github.io/latest/.
 
 
-Version 0.5 new features
+Version 0.5 New Features
 ************************
 
 **OVMF support initial patches merged in ACRN**:

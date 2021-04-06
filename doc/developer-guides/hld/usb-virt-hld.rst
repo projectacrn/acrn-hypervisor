@@ -43,7 +43,7 @@ An xHCI register access from a User VM will induce EPT trap from the User VM to
 DM, and the xHCI DM or DRD DM will emulate hardware behaviors to make
 the subsystem run.
 
-USB devices supported by USB mediator
+USB Devices Supported by USB Mediator
 *************************************
 
 The following USB devices are supported for the WaaG and LaaG operating systems.
@@ -70,7 +70,7 @@ The following USB devices are supported for the WaaG and LaaG operating systems.
    The above information is current as of ACRN 1.4.
 
 
-USB host virtualization
+USB Host Virtualization
 ***********************
 
 USB host virtualization is implemented as shown in
@@ -116,7 +116,7 @@ This configuration means the virtual xHCI will appear in PCI slot 7
 in the User VM, and any physical USB device attached on 1-2 or 2-2 will be
 detected by a User VM and used as expected.
 
-USB DRD virtualization
+USB DRD Virtualization
 **********************
 
 USB DRD (Dual Role Device) emulation works as shown in this figure:

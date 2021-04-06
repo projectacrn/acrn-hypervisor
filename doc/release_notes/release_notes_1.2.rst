@@ -24,7 +24,7 @@ with a specific release: generated v1.2 documents can be found at https://projec
 Documentation for the latest (master) branch is found at https://projectacrn.github.io/latest/.
 ACRN v1.2 requires Clear Linux* OS version 30690.
 
-Version 1.2 major features
+Version 1.2 Major Features
 **************************
 
 What's New in v1.2
@@ -36,7 +36,7 @@ What's New in v1.2
 * Virtualization supports Always Running Timer (ART)
 * Various bug fixes and enhancements
 
-Document updates
+Document Updates
 ================
 We have many `reference documents available <https://projectacrn.github.io>`_, including:
 

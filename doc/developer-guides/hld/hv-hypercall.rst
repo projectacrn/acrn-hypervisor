@@ -1,6 +1,6 @@
 .. _hv-hypercall:
 
-Hypercall / VHM upcall
+Hypercall / VHM Upcall
 ######################
 
 The hypercall/upcall is used to request services between the Guest VM and the hypervisor.
@@ -28,7 +28,7 @@ injected to Service VM vCPU0. The Service VM will register the IRQ handler for v
 module in the Service VM once the IRQ is triggered.
 View the detailed upcall process at :ref:`ipi-management`
 
-Hypercall APIs reference:
+Hypercall APIs Reference:
 *************************
 
 :ref:`hypercall_apis` for the Service VM

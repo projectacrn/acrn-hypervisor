@@ -31,7 +31,7 @@ https://projectacrn.github.io/0.3/.  Documentation for the latest
 (master) branch is found at https://projectacrn.github.io/latest/.
 
 
-Version 0.3 new features
+Version 0.3 New Features
 ************************
 
 

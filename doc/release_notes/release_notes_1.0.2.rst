@@ -27,7 +27,7 @@ There were no documentation changes in this update, so you can still
 refer to the v1.0-specific documentation found at
 https://projectacrn.github.io/1.0/.
 
-Change Log in v1.0.2 since v1.0.1
+Change Log in v1.0.2 Since v1.0.1
 *********************************
 
 Primary changes are to fix several security and stability issues found

@@ -48,6 +48,22 @@ The diagram below shows the overall architecture:
     .. graphviz:: images/s5-scenario-2.dot
        :name: s5-scenario-2
 
+Initiate a system S5 from within a User VM (e.g. HMI)
+=====================================================
+
+As in Figure 56, a request to Service VM initiates the shutdown flow.
+This could come from a User VM, most likely the HMI (Windows or user-friendly Linux). 
+When a human operator click to initiate the flow, the lifecycle_mgr in it will send 
+the request via vUART to the lifecycle manager in the Service VM which in turn acknowledge 
+the request and trigger the following flow. 
+
+.. note:: The User VM need to be authorized to be able to request a Shutdown, this is achieved by adding 
+   "``--pm_notify_channel uart``" in the launch script of that VM.
+   And, there is only one VM in the system can be configured to request a shutdown. If there is a second User 
+   VM launched with "``--pm_notify_channel uart``", ACRN will stop launching it and throw out below error message:
+   ``initiate a connection on a socket error``
+   ``create socket to connect life-cycle manager failed``
+
 Trigger the User VM's S5
 ========================
 
@@ -57,7 +73,7 @@ to the User VM through a channel. If the User VM receives the command, it will s
 to the Device Model. It is the Service VM's responsibility to check if the User VMs
 shut down successfully or not, and decides when to power off itself.
 
-User VM "lifecycle manager"
+User VM "Lifecycle Manager"
 ===========================
 
 As part of the current S5 reference design, a lifecycle manager daemon (life_mngr) runs in the
@@ -159,7 +175,7 @@ The procedure for enabling S5 is specific to the particular OS:
    .. note:: S5 state is not automatically triggered by a Service VM shutdown; this needs
       to be run before powering off the Service VM.
 
-How to test
+How to Test
 ***********
    As described in :ref:`vuart_config`, two vUARTs are defined in
    pre-defined ACRN scenarios: vUART0/ttyS0 for the console and

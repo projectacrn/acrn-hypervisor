@@ -1,6 +1,6 @@
 .. _interrupt-hld:
 
-Physical Interrupt high-level design
+Physical Interrupt High-Level Design
 ####################################
 
 Overview
@@ -374,7 +374,7 @@ IPI vector 0xF3 upcall. The virtual interrupt injection uses IPI vector 0xF0.
 
 .. _hv_interrupt-data-api:
 
-Data structures and interfaces
+Data Structures and Interfaces
 ******************************
 
 IOAPIC

@@ -3,7 +3,7 @@
 Power Management
 ################
 
-System PM module
+System PM Module
 ****************
 
 The PM module in the hypervisor does three things:

@@ -162,7 +162,7 @@ Would be rendered as:
       Remove all generated output, restoring the folders to a
       clean state.
 
-Multi-column lists
+Multi-Column Lists
 ******************
 
 If you have a long bullet list of items, where each item is short, you
@@ -282,7 +282,7 @@ columns, you can specify ``:widths: 1 2 2``.  If you'd like the browser
 to set the column widths automatically based on the column contents, you
 can use ``:widths: auto``.
 
-File names and Commands
+File Names and Commands
 ***********************
 
 Sphinx extends reST by supporting additional inline markup elements (called
@@ -484,7 +484,7 @@ as needed, generally at least 500 px wide but no more than 1000 px, and
 no more than 250 KB unless a particularly large image is needed for
 clarity.
 
-Tabs, spaces, and indenting
+Tabs, Spaces, and Indenting
 ***************************
 
 Indenting is significant in reST file content, and using spaces is
@@ -641,7 +641,7 @@ without this ``rst-class`` directive will not be numbered.) For example::
 
 .. rst-class:: numbered-step
 
-First instruction step
+First Instruction Step
 **********************
 
 This is the first instruction step material.  You can do the usual paragraphs and
@@ -651,7 +651,7 @@ can move steps around easily if needed).
 
 .. rst-class:: numbered-step
 
-Second instruction step
+Second Instruction Step
 ***********************
 
 This is the second instruction step.

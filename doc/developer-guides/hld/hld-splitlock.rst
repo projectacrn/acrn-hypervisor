@@ -1,6 +1,6 @@
 .. _hld_splitlock:
 
-Handling Split-locked Access in ACRN
+Handling Split-Locked Access in ACRN
 ####################################
 
 A split lock is any atomic operation whose operand crosses two cache
@@ -12,7 +12,7 @@ system performance.
 This document explains Split-locked Access, how to detect it, and how
 ACRN handles it.
 
-Split-locked Access Introduction
+Split-Locked Access Introduction
 ********************************
 Intel-64 and IA32 multiple-processor systems support locked atomic
 operations on locations in system memory. For example, The LOCK instruction
@@ -38,7 +38,7 @@ Split-locked Access can cause unexpected long latency to ordinary memory
 operations by other CPUs while the bus is locked. This degraded system
 performance can be hard to investigate.
 
-Split-locked Access Detection
+Split-Locked Access Detection
 *****************************
 The `Intel Tremont Microarchitecture
 <https://newsroom.intel.com/news/intel-introduces-tremont-microarchitecture>`_
@@ -70,7 +70,7 @@ MSR registers.
 - The 29th bit of TEST_CTL MSR(0x33) controls enabling and disabling #AC for Split-locked
   Access.
 
-ACRN Handling Split-locked Access
+ACRN Handling Split-Locked Access
 *********************************
 Split-locked Access is not expected in the ACRN hypervisor itself, and
 should never happen. However, such access could happen inside a VM. ACRN
@@ -92,7 +92,7 @@ support for handling split-locked access follows these design principles:
   native OS). The real-time (RT) guest must avoid a Split-locked Access
   and consider it a software bug.
 
-Enable Split-Locked Access handling early
+Enable Split-Locked Access Handling Early
 ==========================================
 This feature is enumerated at the Physical CPU (pCPU) pre-initialization
 stage, where ACRN detects CPU capabilities. If the pCPU supports this
@@ -128,7 +128,7 @@ problem by reporting a warning message that the VM tried writing to
 TEST_CTRL MSR.
 
 
-Disable Split-locked Access Detection
+Disable Split-Locked Access Detection
 =====================================
 If the CPU supports Split-locked Access detection, the ACRN hypervisor
 uses it to prevent any VM running with potential system performance

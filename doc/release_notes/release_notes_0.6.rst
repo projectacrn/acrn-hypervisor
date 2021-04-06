@@ -32,7 +32,7 @@ https://projectacrn.github.io/0.6/.  Documentation for the latest
 
 ACRN v0.6 requires Clear Linux OS version 27600.
 
-Version 0.6 new features
+Version 0.6 New Features
 ************************
 
 **Enable Privileged VM support for real-time UOS in ACRN**:

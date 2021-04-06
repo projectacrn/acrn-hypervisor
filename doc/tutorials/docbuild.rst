@@ -1,6 +1,6 @@
 .. _acrn_doc:
 
-ACRN documentation generation
+ACRN Documentation Generation
 #############################
 
 These instructions will walk you through generating the Project ACRN's
@@ -8,7 +8,7 @@ documentation and publishing it to https://projectacrn.github.io.
 You can also use these instructions to generate the ACRN documentation
 on your local system.
 
-Documentation overview
+Documentation Overview
 **********************
 
 Project ACRN content is written using the reStructuredText markup
@@ -34,12 +34,15 @@ The project's documentation contains the following items:
   device-model folders, and from sources in the acrn-kernel repo (as
   explained later).
 
+.. image:: images/doc-gen-flow.png
+   :align: center
+
 The reStructuredText files are processed by the Sphinx documentation system
 and use the breathe extension for including the doxygen-generated API
 material.
 
 
-Set up the documentation working folders
+Set Up the Documentation Working Folders
 ****************************************
 
 You'll need ``git`` installed to get the working folders set up:
@@ -118,8 +121,8 @@ repos (though ``https`` clones work too):
       git config --global user.name "David Developer"
       git config --global user.email "david.developer@company.com"
 
-Installing the documentation tools
-**********************************
+Install the Documentation Tools
+*******************************
 
 Our documentation processing has been tested to run with Python 3.6.3
 and these other tools:
@@ -170,7 +173,7 @@ And with that you're ready to generate the documentation.
 
       doc/scripts/show-versions.py
 
-Documentation presentation theme
+Documentation Presentation Theme
 ********************************
 
 Sphinx supports easy customization of the generated documentation
@@ -187,8 +190,8 @@ The ``read-the-docs`` theme is installed as part of the
 and JavaScript customization found in ``doc/static``, and
 theme template overrides found in ``doc/_templates``.
 
-Running the documentation processors
-************************************
+Run the Documentation Processors
+********************************
 
 The ``acrn-hypervisor/doc`` directory has all the ``.rst`` source files, extra
 tools, and ``Makefile`` for generating a local copy of the ACRN technical
@@ -217,8 +220,8 @@ with the command:
 
 and use your web browser to open the URL:  ``http://localhost:8000``.
 
-Publishing content
-******************
+Publish Content
+***************
 
 If you have merge rights to the projectacrn repo called
 ``projectacrn.github.io``, you can update the public project documentation
@@ -239,12 +242,14 @@ good, you can push directly to the publishing site with:
 
    make publish
 
-This will delete everything in the publishing repo's **latest** folder
-(in case the new version has deleted files) and push a copy of the
-newly-generated HTML content directly to the GitHub pages publishing
-repo.  The public site at https://projectacrn.github.io will be updated
-typically within a few minutes, so it's best to verify the locally
-generated HTML before publishing.
+This uses git commands to synchronize the new content with what's
+already published and will delete files in the publishing repo's
+**latest** folder that are no longer needed. New or changed files from
+the newly-generated HTML content are added to the GitHub pages
+publishing repo.  The public site at https://projectacrn.github.io will
+be updated by the `GitHub pages system
+<https://guides.github.com/features/pages/>`_, typically within a few
+minutes.
 
 Document Versioning
 *******************
@@ -293,8 +298,8 @@ of the repo, and add some extra flags to the ``make`` commands:
    make DOC_TAG=release RELEASE=2.3 html
    make DOC_TAG=release RELEASE=2.3 publish
 
-Filtering expected warnings
-***************************
+Filter Expected Warnings
+************************
 
 Alas, there are some known issues with the doxygen/Sphinx/Breathe
 processing that generates warnings for some constructs, in particular

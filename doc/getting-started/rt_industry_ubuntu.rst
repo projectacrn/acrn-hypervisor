@@ -1,19 +1,19 @@
 .. _rt_industry_ubuntu_setup:
 
-Getting Started Guide for ACRN Industry Scenario with Ubuntu Service VM
+Getting Started Guide for ACRN Industry Scenario With Ubuntu Service VM
 #######################################################################
 
 .. contents::
    :local:
    :depth: 1
 
-Verified version
+Verified Version
 ****************
 
 - Ubuntu version: **18.04**
 - GCC version: **7.5**
-- ACRN-hypervisor branch: **release_2.3 (v2.3)**
-- ACRN-Kernel (Service VM kernel): **release_2.3 (v2.3)**
+- ACRN-hypervisor branch: **release_2.4 (v2.4)**
+- ACRN-Kernel (Service VM kernel): **release_2.4 (v2.4)**
 - RT kernel for Ubuntu User OS: **4.19/preempt-rt (4.19.72-rt25)**
 - HW: Maxtang Intel WHL-U i7-8665U (`AX8665U-A2 <http://www.maxtangpc.com/fanlessembeddedcomputers/140.html>`_)
 
@@ -51,7 +51,7 @@ Connect the WHL Maxtang with the appropriate external devices.
 
 .. _install-ubuntu-rtvm-sata:
 
-Install the Ubuntu User VM (RTVM) on the SATA disk
+Install the Ubuntu User VM (RTVM) on the SATA Disk
 **************************************************
 
 .. note:: The WHL Maxtang machine contains both an NVMe and SATA disk.
@@ -84,7 +84,7 @@ to turn it into a real-time User VM (RTVM).
 
 .. _install-ubuntu-Service VM-NVMe:
 
-Install the Ubuntu Service VM on the NVMe disk
+Install the Ubuntu Service VM on the NVMe Disk
 **********************************************
 
 .. note:: Before you install the Ubuntu Service VM on the NVMe disk, either
@@ -161,9 +161,10 @@ Build the ACRN Hypervisor on Ubuntu
         libnuma-dev \
         liblz4-tool \
         flex \
-        bison
+        bison \
+        xsltproc
 
-      $ sudo pip3 install kconfiglib
+      $ sudo pip3 install lxml xmlschema
 
 #. Starting with the ACRN v2.2 release, we use the ``iasl`` tool to
    compile an offline ACPI binary for pre-launched VMs while building ACRN,
@@ -176,15 +177,11 @@ Build the ACRN Hypervisor on Ubuntu
    .. code-block:: none
 
       $ cd /home/acrn/work
-      $ wget https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz
-      $ tar zxvf acpica-unix-20191018.tar.gz
-      $ cd acpica-unix-20191018
+      $ wget https://acpica.org/sites/acpica/files/acpica-unix-20210105.tar.gz
+      $ tar zxvf acpica-unix-20210105.tar.gz
+      $ cd acpica-unix-20210105
       $ make clean && make iasl
       $ sudo cp ./generate/unix/bin/iasl /usr/sbin/
-
-   .. note:: While there are newer versions of software available from
-      the `ACPICA downloads site <https://acpica.org/downloads>`_, this
-      20191018 version has been verified to work.
 
 #. Get the ACRN source code:
 
@@ -194,22 +191,22 @@ Build the ACRN Hypervisor on Ubuntu
       $ git clone https://github.com/projectacrn/acrn-hypervisor
       $ cd acrn-hypervisor
 
-#. Switch to the v2.3 version:
+#. Switch to the v2.4 version:
 
    .. code-block:: none
 
-      $ git checkout v2.3
+      $ git checkout v2.4
 
 #. Build ACRN:
 
    .. code-block:: none
 
-      $ make all BOARD_FILE=misc/vm_configs/xmls/board-xmls/whl-ipc-i7.xml SCENARIO_FILE=misc/vm_configs/xmls/config-xmls/whl-ipc-i7/industry.xml RELEASE=0
+      $ make BOARD=whl-ipc-i7 SCENARIO=industry
       $ sudo make install
       $ sudo mkdir -p /boot/acrn
       $ sudo cp build/hypervisor/acrn.bin /boot/acrn/
 
-Build and install the ACRN kernel
+Build and Install the ACRN Kernel
 =================================
 
 #. Build the Service VM kernel from the ACRN repo:
@@ -224,12 +221,12 @@ Build and install the ACRN kernel
 
    .. code-block:: none
 
-      $ git checkout v2.3 
+      $ git checkout v2.4
       $ cp kernel_config_uefi_sos .config
       $ make olddefconfig
       $ make all
 
-Install the Service VM kernel and modules
+Install the Service VM Kernel and Modules
 =========================================
 
 .. code-block:: none
@@ -289,7 +286,7 @@ Update Grub for the Ubuntu Service VM
 
       $ sudo update-grub
 
-Enable network sharing for the User VM
+Enable Network Sharing for the User VM
 ======================================
 
 In the Ubuntu Service VM, enable network sharing for the User VM:
@@ -300,7 +297,7 @@ In the Ubuntu Service VM, enable network sharing for the User VM:
    $ sudo systemctl start systemd-networkd
 
 
-Reboot the system
+Reboot the System
 =================
 
 Reboot the system. You should see the Grub menu with the new **ACRN
@@ -317,10 +314,10 @@ typical output of a successful installation resembles the following:
    [    0.862942] ACRN HVLog: acrn_hvlog_init
 
 
-Additional settings in the Service VM
+Additional Settings in the Service VM
 =====================================
 
-BIOS settings of GVT-d for WaaG
+BIOS Settings of GVT-d for WaaG
 -------------------------------
 
 .. note::
@@ -333,11 +330,11 @@ Set **DVMT Pre-Allocated** to **64MB**:
 
 .. figure:: images/DVMT-reallocated-64mb.png
 
-Set **PM Support** to **Enabled**: 
+Set **PM Support** to **Enabled**:
 
 .. figure:: images/PM-support-enabled.png
 
-Use OVMF to launch the User VM
+Use OVMF to Launch the User VM
 ------------------------------
 
 The User VM will be launched by OVMF, so copy it to the specific folder:
@@ -347,7 +344,7 @@ The User VM will be launched by OVMF, so copy it to the specific folder:
    $ sudo mkdir -p /usr/share/acrn/bios
    $ sudo cp /home/acrn/work/acrn-hypervisor/devicemodel/bios/OVMF.fd  /usr/share/acrn/bios
 
-Build and Install the RT kernel for the Ubuntu User VM
+Build and Install the RT Kernel for the Ubuntu User VM
 ------------------------------------------------------
 
 Follow these instructions to build the RT kernel.
@@ -398,7 +395,7 @@ Grub in the Ubuntu User VM (RTVM) needs to be configured to use the new RT
 kernel that was just built and installed on the rootfs. Follow these steps to
 perform this operation.
 
-Update the Grub file
+Update the Grub File
 ====================
 
 #. Reboot into the Ubuntu User VM located on the SATA drive and log on.
@@ -458,10 +455,13 @@ Launch the RTVM
 
   .. code-block:: none
 
-     $ sudo cp /home/acrn/work/acrn-hyperviso/misc/vm_configs/sample_launch_scripts/nuc/launch_hard_rt_vm.sh  /usr/share/acrn/
+     $ sudo cp /home/acrn/work/acrn-hyperviso/misc/config_tools/data/sample_launch_scripts/nuc/launch_hard_rt_vm.sh  /usr/share/acrn/
      $ sudo /usr/share/acrn/launch_hard_rt_vm.sh
 
-Recommended BIOS settings for RTVM
+.. note::
+   If using a KBL NUC, the script must be adapted to match the BDF on the actual HW platform
+
+Recommended BIOS Settings for RTVM
 ----------------------------------
 
 .. csv-table::
@@ -491,7 +491,7 @@ Recommended BIOS settings for RTVM
 .. note:: BIOS settings depend on the platform and BIOS version; some may
    not be applicable.
 
-Recommended kernel cmdline for RTVM
+Recommended Kernel Cmdline for RTVM
 -----------------------------------
 
 .. code-block:: none
@@ -513,7 +513,7 @@ automatically at the time of RTVM creation. Refer to :ref:`rdt_configuration`
 for details on RDT configuration and :ref:`hv_rdt` for details on RDT
 high-level design.
 
-Set up the core allocation for the RTVM
+Set Up the Core Allocation for the RTVM
 ---------------------------------------
 
 In our recommended configuration, two cores are allocated to the RTVM:
@@ -563,7 +563,7 @@ this, follow the below steps to allocate all housekeeping tasks to core 0:
    .. note:: Ignore the error messages that might appear while the script is
       running.
 
-Run cyclictest
+Run Cyclictest
 --------------
 
 #. Refer to the :ref:`troubleshooting section <enabling the network on the RTVM>`
@@ -621,7 +621,7 @@ Troubleshooting
 
 .. _enabling the network on the RTVM:
 
-Enabling the network on the RTVM
+Enabling the Network on the RTVM
 ================================
 
 If you need to access the internet, you must add the following command line
@@ -638,13 +638,12 @@ to the ``launch_hard_rt_vm.sh`` script before launching it:
       -s 2,passthru,02/0/0 \
       -s 3,virtio-console,@stdio:stdio_port \
       -s 8,virtio-net,tap0 \
-      $pm_channel $pm_by_vuart \
       --ovmf /usr/share/acrn/bios/OVMF.fd \
       hard_rtvm
 
 .. _passthru to rtvm:
 
-Passthrough a hard disk to RTVM
+Passthrough a Hard Disk to RTVM
 ===============================
 
 #. Use the ``lspci`` command to ensure that the correct SATA device IDs will
@@ -692,7 +691,6 @@ Passthrough a hard disk to RTVM
          -s 2,passthru,00/17/0 \
          -s 3,virtio-console,@stdio:stdio_port \
          -s 8,virtio-net,tap0 \
-         $pm_channel $pm_by_vuart \
          --ovmf /usr/share/acrn/bios/OVMF.fd \
          hard_rtvm
 

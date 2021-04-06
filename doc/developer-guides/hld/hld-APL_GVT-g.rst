@@ -1,12 +1,12 @@
 .. _APL_GVT-g-hld:
 
-GVT-g high-level design
+GVT-g High-Level Design
 #######################
 
 Introduction
 ************
 
-Purpose of this Document
+Purpose of This Document
 ========================
 
 This high-level design (HLD) document describes the usage requirements
@@ -919,7 +919,7 @@ OS and an Android Guest OS.
 
    Full picture of the AcrnGT
 
-AcrnGT in kernel
+AcrnGT in Kernel
 =================
 
 The AcrnGT module in the Service VM kernel acts as an adaption layer to connect

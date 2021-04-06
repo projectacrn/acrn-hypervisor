@@ -177,7 +177,7 @@ outputs:
      Debug = false
      UseVSock = false
 
-Run a Kata Container with ACRN
+Run a Kata Container With ACRN
 ******************************
 
 The system is now ready to run a Kata Container on ACRN. Note that a reboot

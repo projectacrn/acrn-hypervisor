@@ -37,7 +37,7 @@ Scheduling initialization is invoked in the hardware management layer.
 .. figure:: images/cpu_sharing_api.png
    :align: center
 
-CPU affinity
+CPU Affinity
 *************
 
 Currently, we do not support vCPU migration; the assignment of vCPU mapping to
@@ -64,7 +64,7 @@ Here is an example for affinity:
 .. figure:: images/cpu_sharing_affinity.png
    :align: center
 
-Thread object state
+Thread Object State
 *******************
 
 The thread object contains three states: RUNNING, RUNNABLE, and BLOCKED.
@@ -128,7 +128,6 @@ and BVT (Borrowed Virtual Time) scheduler.
 
 Scheduler configuration
 
-***********************
 
 * The option in Kconfig decides the only scheduler used in runtime.
   ``hypervisor/arch/x86/Kconfig``
@@ -159,7 +158,7 @@ The default scheduler is **SCHED_BVT**.
 
   - With ``cpu_affinity`` option in acrn-dm. This launches the user VM on
     a subset of the configured cpu_affinity pCPUs.
-    
+
   For example, assign physical CPUs 0 and 1 to this VM::
 
 	--cpu_affinity 0,1
