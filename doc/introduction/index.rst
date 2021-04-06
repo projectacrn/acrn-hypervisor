@@ -341,9 +341,10 @@ non-real-time tasks.
 Logical Partition Scenario
 ==========================
 
-This scenario is a simplified VM configuration for VM logical
-partitioning: one is the Safety VM and the other is a Linux-based User
-VM.
+This scenario is a simplified configuration for VM logical
+partitioning: both User VMs are independent and isolated, they do not share
+resources, and both are automatically launched at boot time by the hypervisor.
+The User VMs can be Real-Time VMs (RTVMs), Safety VMs, or standard User VMs.
 
 .. figure:: images/ACRN-Logical-Partition.png
    :width: 600px
