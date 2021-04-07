@@ -63,7 +63,6 @@
 
 /* General */
 #define IC_ID_GEN_BASE                  0x0UL
-#define IC_GET_API_VERSION             _IC_ID(IC_ID, IC_ID_GEN_BASE + 0x00)
 #define IC_GET_PLATFORM_INFO           _IC_ID(IC_ID, IC_ID_GEN_BASE + 0x03)
 
 /* VM management */
@@ -280,16 +279,6 @@ struct ioreq_notify {
 	int32_t client_id;
 	/** identify the ioreq submitter */
 	uint32_t vcpu;
-};
-
-/**
- * @brief data structure to track VHM API version
- */
-struct api_version {
-	/** major version of VHM API */
-	uint32_t major_version;
-	/** minor version of VHM API */
-	uint32_t minor_version;
 };
 
 enum acrn_vm_load_order {
