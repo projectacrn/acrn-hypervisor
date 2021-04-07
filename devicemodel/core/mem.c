@@ -38,7 +38,6 @@
 #include <string.h>
 #include <pthread.h>
 
-#include "vmm.h"
 #include "mem.h"
 #include "tree.h"
 

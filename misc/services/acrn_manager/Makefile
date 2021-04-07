@@ -38,7 +38,7 @@ MANAGER_CFLAGS += -I../../../hypervisor/include
 
 MANAGER_HEADERS := ../../../devicemodel/include/dm.h
 MANAGER_HEADERS += ../../../devicemodel/include/types.h
-MANAGER_HEADERS += ../../../devicemodel/include/vmm.h
+MANAGER_HEADERS += ../../../devicemodel/include/pm.h
 MANAGER_HEADERS += ../../../devicemodel/include/dm_string.h
 MANAGER_HEADERS += ../../../devicemodel/include/macros.h
 MANAGER_HEADERS += ../../../devicemodel/include/public/vhm_ioctl_defs.h

@@ -68,6 +68,8 @@
 #include "log.h"
 #include "pci_util.h"
 
+#define	VM_MAXCPU		16	/* maximum virtual cpus */
+
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
 
 /* Values returned for reads on invalid I/O requests. */
@@ -380,6 +382,13 @@ vmexit_pci_emul(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 #define	VMCS_IDENT(x)			((x) | 0x80000000)
 
 #endif	/* #ifdef DEBUG_EPT_MISCONFIG */
+
+enum vm_exitcode {
+	VM_EXITCODE_INOUT = 0,
+	VM_EXITCODE_MMIO_EMUL,
+	VM_EXITCODE_PCI_CFG,
+	VM_EXITCODE_MAX
+};
 
 static vmexit_handler_t handler[VM_EXITCODE_MAX] = {
 	[VM_EXITCODE_INOUT]  = vmexit_inout,

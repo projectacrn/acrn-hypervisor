@@ -16,7 +16,7 @@
 #include "acrnctl.h"
 #include "acrn_mngr.h"
 #include "mevent.h"
-#include "vmm.h"
+#include "pm.h"
 
 const char *state_str[] = {
 	[VM_STATE_UNKNOWN] = "unknown",
