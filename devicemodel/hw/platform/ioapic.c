@@ -27,8 +27,8 @@
 
 
 #include <stdio.h>
-#include "vmm.h"
 #include "pci_core.h"
+#include "acrn_common.h"
 
 /* 16 IRQs reserved for kdb/mouse, COM1/2, RTC... */
 #define LEGACY_IRQ_NUM	16
