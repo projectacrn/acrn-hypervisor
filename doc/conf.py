@@ -199,6 +199,7 @@ html_context = {
    'docs_title': docs_title,
    'is_release': is_release,
    'versions': ( ("latest", "/latest/"),
+                 ("2.4", "/2.4/"),
                  ("2.3", "/2.3/"),
                  ("2.2", "/2.2/"),
                  ("2.1", "/2.1/"),
@@ -315,7 +316,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'Project ACRN', u'Project ACRN Documentation',
-     author, 'Project ACRN', 
+     author, 'Project ACRN',
      'IoT-Optimized Hypervisor for Intel Architecture',
      'Miscellaneous'),
 ]
