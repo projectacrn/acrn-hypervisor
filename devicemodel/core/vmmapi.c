@@ -642,19 +642,6 @@ vm_reset_ptdev_intx_info(struct vmctx *ctx, uint16_t virt_bdf, uint16_t phys_bdf
 }
 
 int
-vm_create_vcpu(struct vmctx *ctx, uint16_t vcpu_id)
-{
-	struct acrn_create_vcpu cv;
-	int error;
-
-	bzero(&cv, sizeof(struct acrn_create_vcpu));
-	cv.vcpu_id = vcpu_id;
-	error = ioctl(ctx->fd, IC_CREATE_VCPU, &cv);
-
-	return error;
-}
-
-int
 vm_set_vcpu_regs(struct vmctx *ctx, struct acrn_set_vcpu_regs *vcpu_regs)
 {
 	return ioctl(ctx->fd, IC_SET_VCPU_REGS, vcpu_regs);
