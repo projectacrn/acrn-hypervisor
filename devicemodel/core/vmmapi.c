@@ -77,30 +77,6 @@ const char *vm_state_to_str(enum vm_suspend_how idx)
 	return (idx < VM_SUSPEND_LAST) ? vm_state_str[idx] : "UNKNOWN";
 }
 
-static int
-check_api(int fd)
-{
-	struct api_version api_version;
-	int error;
-
-	error = ioctl(fd, IC_GET_API_VERSION, &api_version);
-	if (error) {
-		pr_err("failed to get vhm api version\n");
-		return -1;
-	}
-
-	if (api_version.major_version != SUPPORT_VHM_API_VERSION_MAJOR ||
-		api_version.minor_version != SUPPORT_VHM_API_VERSION_MINOR) {
-		pr_err("not support vhm api version\n");
-		return -1;
-	}
-
-	pr_info("VHM api version %d.%d\n", api_version.major_version,
-			api_version.minor_version);
-
-	return 0;
-}
-
 static int devfd = -1;
 static uint64_t cpu_affinity_bitmap = 0UL;
 
@@ -210,9 +186,6 @@ vm_create(const char *name, uint64_t req_buf, int *vcpu_num)
 		pr_err("Could not open /dev/acrn_vhm\n");
 		goto err;
 	}
-
-	if (check_api(devfd) < 0)
-		goto err;
 
 	if (guest_uuid_str == NULL)
 		guest_uuid_str = "d2795438-25d6-11e8-864e-cb7a18b34643";
