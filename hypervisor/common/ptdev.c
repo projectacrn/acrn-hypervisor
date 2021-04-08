@@ -12,6 +12,7 @@
 #include <irq.h>
 #include <logmsg.h>
 #include <asm/vtd.h>
+#include <ticks.h>
 
 #define PTIRQ_ENTRY_HASHBITS	9U
 #define PTIRQ_ENTRY_HASHSIZE	(1U << PTIRQ_ENTRY_HASHBITS)
@@ -176,7 +177,8 @@ static void ptirq_interrupt_handler(__unused uint32_t irq, void *data)
 			if (timer_is_started(&entry->intr_delay_timer)) {
 				to_enqueue = false;
 			} else {
-				entry->intr_delay_timer.fire_tsc = rdtsc() + entry->vm->intr_inject_delay_delta;
+				entry->intr_delay_timer.fire_tsc =
+					cpu_ticks() + entry->vm->intr_inject_delay_delta;
 			}
 		} else {
 			entry->intr_delay_timer.fire_tsc = 0UL;

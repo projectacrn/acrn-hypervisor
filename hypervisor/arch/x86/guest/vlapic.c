@@ -46,6 +46,7 @@
 #include <trace.h>
 #include <logmsg.h>
 #include <asm/irq.h>
+#include <ticks.h>
 #include "vlapic_priv.h"
 
 #define VLAPIC_VERBOS 0
@@ -281,7 +282,7 @@ static void vlapic_reset_timer(struct acrn_vlapic *vlapic)
 static bool
 set_expiration(struct acrn_vlapic *vlapic)
 {
-	uint64_t now = rdtsc();
+	uint64_t now = cpu_ticks();
 	uint64_t delta;
 	struct vlapic_timer *vtimer;
 	struct hv_timer *timer;
@@ -332,7 +333,7 @@ static void vlapic_update_lvtt(struct acrn_vlapic *vlapic,
 
 static uint32_t vlapic_get_ccr(const struct acrn_vlapic *vlapic)
 {
-	uint64_t now = rdtsc();
+	uint64_t now = cpu_ticks();
 	uint32_t remain_count = 0U;
 	const struct vlapic_timer *vtimer;
 

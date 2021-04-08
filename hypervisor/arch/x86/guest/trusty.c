@@ -17,6 +17,7 @@
 #include <asm/security.h>
 #include <logmsg.h>
 #include <asm/seed.h>
+#include <asm/tsc.h>
 
 #define TRUSTY_VERSION   1U
 #define TRUSTY_VERSION_2 2U
@@ -282,7 +283,7 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu, uint32_t mem_size, uint64_
 			/* Prepare trusty startup param */
 			startup_param.size_of_this_struct = sizeof(struct trusty_startup_param);
 			startup_param.mem_size = mem_size;
-			startup_param.tsc_per_ms = CYCLES_PER_MS;
+			startup_param.tsc_per_ms = TSC_PER_MS;
 			startup_param.trusty_mem_base = TRUSTY_EPT_REBASE_GPA;
 
 			/* According to trusty boot protocol, it will use RDI as the

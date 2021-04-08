@@ -7,6 +7,7 @@
 #include <list.h>
 #include <asm/per_cpu.h>
 #include <schedule.h>
+#include <ticks.h>
 
 #define BVT_MCU_MS	1U
 /* context switch allowance */
@@ -148,7 +149,7 @@ static void sched_tick_handler(void *param)
 static int sched_bvt_init(struct sched_control *ctl)
 {
 	struct sched_bvt_control *bvt_ctl = &per_cpu(sched_bvt_ctl, ctl->pcpu_id);
-	uint64_t tick_period = BVT_MCU_MS * CYCLES_PER_MS;
+	uint64_t tick_period = BVT_MCU_MS * TICKS_PER_MS;
 	int ret = 0;
 
 	ASSERT(ctl->pcpu_id == get_pcpu_id(), "Init scheduler on wrong CPU!");
@@ -158,7 +159,7 @@ static int sched_bvt_init(struct sched_control *ctl)
 
 	/* The tick_timer is periodically */
 	initialize_timer(&bvt_ctl->tick_timer, sched_tick_handler, ctl,
-			rdtsc() + tick_period, TICK_MODE_PERIODIC, tick_period);
+			cpu_ticks() + tick_period, TICK_MODE_PERIODIC, tick_period);
 
 	if (add_timer(&bvt_ctl->tick_timer) < 0) {
 		pr_err("Failed to add schedule tick timer!");
@@ -180,7 +181,7 @@ static void sched_bvt_init_data(struct thread_object *obj)
 
 	data = (struct sched_bvt_data *)obj->data;
 	INIT_LIST_HEAD(&data->list);
-	data->mcu = BVT_MCU_MS * CYCLES_PER_MS;
+	data->mcu = BVT_MCU_MS * TICKS_PER_MS;
 	/* TODO: virtual time advance ratio should be proportional to weight. */
 	data->vt_ratio = 1U;
 	data->residual = 0U;
@@ -200,7 +201,7 @@ static uint64_t p2v(uint64_t phy_time, uint64_t ratio)
 static void update_vt(struct thread_object *obj)
 {
 	struct sched_bvt_data *data;
-	uint64_t now_tsc = rdtsc();
+	uint64_t now_tsc = cpu_ticks();
 	uint64_t v_delta, delta_mcu = 0U;
 
 	data = (struct sched_bvt_data *)obj->data;
@@ -229,7 +230,7 @@ static struct thread_object *sched_bvt_pick_next(struct sched_control *ctl)
 	struct list_head *first, *sec;
 	struct thread_object *next = NULL;
 	struct thread_object *current = ctl->curr_obj;
-	uint64_t now_tsc = rdtsc();
+	uint64_t now_tsc = cpu_ticks();
 	uint64_t delta_mcu = 0U;
 
 	if (!is_idle_thread(current)) {

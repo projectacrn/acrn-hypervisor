@@ -7,6 +7,7 @@
 #include <list.h>
 #include <asm/per_cpu.h>
 #include <schedule.h>
+#include <ticks.h>
 
 #define CONFIG_SLICE_MS 10UL
 struct sched_iorr_data {
@@ -77,7 +78,7 @@ static void sched_tick_handler(void *param)
 	struct sched_iorr_data *data;
 	struct thread_object *current;
 	uint16_t pcpu_id = get_pcpu_id();
-	uint64_t now = rdtsc();
+	uint64_t now = cpu_ticks();
 	uint64_t rflags;
 
 	obtain_schedule_lock(pcpu_id, &rflags);
@@ -106,7 +107,7 @@ static void sched_tick_handler(void *param)
 int sched_iorr_init(struct sched_control *ctl)
 {
 	struct sched_iorr_control *iorr_ctl = &per_cpu(sched_iorr_ctl, ctl->pcpu_id);
-	uint64_t tick_period = CYCLES_PER_MS;
+	uint64_t tick_period = TICKS_PER_MS;
 	int ret = 0;
 
 	ASSERT(get_pcpu_id() == ctl->pcpu_id, "Init scheduler on wrong CPU!");
@@ -116,7 +117,7 @@ int sched_iorr_init(struct sched_control *ctl)
 
 	/* The tick_timer is periodically */
 	initialize_timer(&iorr_ctl->tick_timer, sched_tick_handler, ctl,
-			rdtsc() + tick_period, TICK_MODE_PERIODIC, tick_period);
+			cpu_ticks() + tick_period, TICK_MODE_PERIODIC, tick_period);
 
 	if (add_timer(&iorr_ctl->tick_timer) < 0) {
 		pr_err("Failed to add schedule tick timer!");
@@ -137,7 +138,7 @@ void sched_iorr_init_data(struct thread_object *obj)
 
 	data = (struct sched_iorr_data *)obj->data;
 	INIT_LIST_HEAD(&data->list);
-	data->left_cycles = data->slice_cycles = CONFIG_SLICE_MS * CYCLES_PER_MS;
+	data->left_cycles = data->slice_cycles = CONFIG_SLICE_MS * TICKS_PER_MS;
 }
 
 static struct thread_object *sched_iorr_pick_next(struct sched_control *ctl)
@@ -146,7 +147,7 @@ static struct thread_object *sched_iorr_pick_next(struct sched_control *ctl)
 	struct thread_object *next = NULL;
 	struct thread_object *current = NULL;
 	struct sched_iorr_data *data;
-	uint64_t now = rdtsc();
+	uint64_t now = cpu_ticks();
 
 	current = ctl->curr_obj;
 	data = (struct sched_iorr_data *)current->data;

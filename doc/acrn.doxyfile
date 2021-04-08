@@ -808,6 +808,7 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/arch/x86/asm/guest/assign.h \
                           ../hypervisor/include/arch/x86/asm/guest/vcpu.h \
                           ../hypervisor/include/arch/x86/asm/guest/virtual_cr.h \
+                          ../hypervisor/include/arch/x86/asm/tsc.h \
                           ../hypervisor/include/arch/x86/asm/timer.h \
                           ../hypervisor/include/arch/x86/asm/ioapic.h \
                           ../hypervisor/include/arch/x86/asm/lapic.h \
@@ -817,6 +818,7 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/dm/io_req.h \
                           ../hypervisor/include/common/hypercall.h \
                           ../hypervisor/include/common/irq.h \
+                          ../hypervisor/include/common/ticks.h \
                           ../hypervisor/include/common/ptdev.h \
                           ../hypervisor/include/public/acrn_common.h \
                           ../hypervisor/include/public/acrn_hv_defs.h \
