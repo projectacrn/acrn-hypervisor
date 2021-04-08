@@ -191,10 +191,10 @@ def get_xml_attrib(config_file, attrib):
 def count_nodes(xpath, etree):
     return int(etree.xpath(f"count({xpath})"))
 
-def get_text(xpath, etree):
-    result = etree.xpath(f"{xpath}/text()")
-    assert len(result) == 1, "Internal error: cannot get texts from multiple nodes at a time"
-    return result[0]
+def get_node(xpath, etree):
+    result = etree.xpath(f"{xpath}")
+    assert len(result) <= 1, f"Internal error: multiple element nodes are found for {xpath}"
+    return result[0] if len(result) == 1 else None
 
 def update_text(xpath, value, etree, overwrite=False):
     result = etree.xpath(f"{xpath}")
@@ -202,7 +202,7 @@ def update_text(xpath, value, etree, overwrite=False):
     if overwrite or not result[0].text:
         result[0].text = str(value)
 
-def append_node(xpath, value, etree):
+def append_node(xpath, value, etree, **attribute):
     # Look for an existing ancestor node
     parts = xpath.split("/")
     ancestor_level = 1
@@ -220,7 +220,11 @@ def append_node(xpath, value, etree):
         child = lxml.etree.Element(tag)
         ancestor.append(child)
         ancestor = child
-    child.text = str(value)
+    if value:
+        child.text = str(value)
+    for key, value in attribute.items():
+        child.set(key, value)
+    return ancestor
 
 def get_board_name():
     """
