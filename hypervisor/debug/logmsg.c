@@ -11,6 +11,7 @@
 #include <asm/per_cpu.h>
 #include <npk_log.h>
 #include <logmsg.h>
+#include <ticks.h>
 
 /* buf size should be identical to the size in hvlog option, which is
  * transfered to SOS:
@@ -53,7 +54,7 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	}
 
 	/* Get time-stamp value */
-	timestamp = rdtsc();
+	timestamp = cpu_ticks();
 
 	/* Scale time-stamp appropriately */
 	timestamp = ticks_to_us(timestamp);

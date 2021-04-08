@@ -24,6 +24,7 @@
 #include <vmcs9900.h>
 #include <asm/rtcm.h>
 #include <asm/irq.h>
+#include <ticks.h>
 
 #define DBG_LEVEL_HYCALL	6U
 
@@ -1134,7 +1135,7 @@ int32_t hcall_vm_intr_monitor(struct acrn_vcpu *vcpu, struct acrn_vm *target_vm,
 				case INTR_CMD_DELAY_INT:
 					/* buffer[0] is the delay time (in MS), if 0 to cancel delay */
 					target_vm->intr_inject_delay_delta =
-						intr_hdr->buffer[0] * CYCLES_PER_MS;
+						intr_hdr->buffer[0] * TICKS_PER_MS;
 					break;
 
 				default:

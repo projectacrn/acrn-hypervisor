@@ -13,6 +13,7 @@
 #include <asm/cpufeatures.h>
 #include <asm/vmx.h>
 #include <asm/sgx.h>
+#include <asm/tsc.h>
 #include <logmsg.h>
 
 static inline const struct vcpuid_entry *local_find_vcpuid_entry(const struct acrn_vcpu *vcpu,

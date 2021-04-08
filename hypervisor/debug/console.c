@@ -9,6 +9,7 @@
 #include <uart16550.h>
 #include <shell.h>
 #include <asm/timer.h>
+#include <ticks.h>
 #include <vuart.h>
 #include <logmsg.h>
 #include <acrn_hv_defs.h>
@@ -161,8 +162,8 @@ void console_setup_timer(void)
 {
 	uint64_t period_in_cycle, fire_tsc;
 
-	period_in_cycle = CYCLES_PER_MS * CONSOLE_KICK_TIMER_TIMEOUT;
-	fire_tsc = rdtsc() + period_in_cycle;
+	period_in_cycle = TICKS_PER_MS * CONSOLE_KICK_TIMER_TIMEOUT;
+	fire_tsc = cpu_ticks() + period_in_cycle;
 	initialize_timer(&console_timer,
 			console_timer_callback, NULL,
 			fire_tsc, TICK_MODE_PERIODIC, period_in_cycle);

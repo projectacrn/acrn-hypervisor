@@ -12,6 +12,7 @@
 #include <logmsg.h>
 #include <asm/vmx.h>
 #include <asm/guest/hyperv.h>
+#include <asm/tsc.h>
 
 #define DBG_LEVEL_HYPERV		6U
 

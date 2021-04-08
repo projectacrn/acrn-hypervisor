@@ -17,7 +17,7 @@
 #include <asm/mmu.h>
 #include <asm/lapic.h>
 #include <asm/vtd.h>
-#include <asm/timer.h>
+#include <ticks.h>
 #include <logmsg.h>
 #include <asm/board.h>
 #include <asm/vm_config.h>
@@ -248,11 +248,11 @@ static inline void dmar_wait_completion(const struct dmar_drhd_rt *dmar_unit, ui
 	uint32_t mask, uint32_t pre_condition, uint32_t *status)
 {
 	/* variable start isn't used when built as release version */
-	__unused uint64_t start = rdtsc();
+	__unused uint64_t start = cpu_ticks();
 
 	do {
 		*status = iommu_read32(dmar_unit, offset);
-		ASSERT(((rdtsc() - start) < CYCLES_PER_MS),
+		ASSERT(((cpu_ticks() - start) < TICKS_PER_MS),
 			"DMAR OP Timeout!");
 		asm_pause();
 	} while( (*status & mask) == pre_condition);
@@ -564,9 +564,9 @@ static void dmar_issue_qi_request(struct dmar_drhd_rt *dmar_unit, struct dmar_en
 	qi_status = DMAR_INV_STATUS_INCOMPLETE;
 	iommu_write32(dmar_unit, DMAR_IQT_REG, dmar_unit->qi_tail);
 
-	start = rdtsc();
+	start = cpu_ticks();
 	while (qi_status != DMAR_INV_STATUS_COMPLETED) {
-		if ((rdtsc() - start) > CYCLES_PER_MS) {
+		if ((cpu_ticks() - start) > TICKS_PER_MS) {
 			pr_err("DMAR OP Timeout! @ %s", __func__);
 			break;
 		}

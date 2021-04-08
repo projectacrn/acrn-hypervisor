@@ -19,6 +19,7 @@
 #include <asm/guest/nested.h>
 #include <asm/cpufeatures.h>
 #include <asm/rdt.h>
+#include <asm/tsc.h>
 #include <trace.h>
 #include <logmsg.h>
 
