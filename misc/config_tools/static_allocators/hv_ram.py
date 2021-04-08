@@ -24,7 +24,7 @@ def fn(board_etree, scenario_etree, allocation_etree):
             post_launched_vm_num += 1
     hv_ram_size = common.HV_BASE_RAM_SIZE + common.POST_LAUNCHED_VM_RAM_SIZE * post_launched_vm_num
 
-    ivshmem_enabled = common.get_text("//IVSHMEM_ENABLED", scenario_etree)
+    ivshmem_enabled = common.get_node("//IVSHMEM_ENABLED/text()", scenario_etree)
     total_shm_size = 0
     if ivshmem_enabled == 'y':
         raw_shmem_regions = scenario_etree.xpath("//IVSHMEM_REGION/text()")
