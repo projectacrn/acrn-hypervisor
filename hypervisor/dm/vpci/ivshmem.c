@@ -223,11 +223,7 @@ static int32_t ivshmem_mmio_handler(struct io_request *io_req, void *data)
 
 static int32_t read_ivshmem_vdev_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
-	if (vbar_access(vdev, offset)) {
-		*val = pci_vdev_read_vbar(vdev, pci_bar_index(offset));
-	} else {
-		*val = pci_vdev_read_vcfg(vdev, offset, bytes);
-	}
+	*val = pci_vdev_read_vcfg(vdev, offset, bytes);
 
 	return 0;
 }

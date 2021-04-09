@@ -93,19 +93,6 @@ struct pci_vdev *pci_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf)
 	return vdev;
 }
 
-uint32_t pci_vdev_read_vbar(const struct pci_vdev *vdev, uint32_t idx)
-{
-	uint32_t bar, offset;
-
-	offset = pci_bar_offset(idx);
-	bar = pci_vdev_read_vcfg(vdev, offset, 4U);
-	/* Sizing BAR */
-	if (bar == ~0U) {
-		bar = vdev->vbars[idx].mask | vdev->vbars[idx].bar_type.bits;
-	}
-	return bar;
-}
-
 static bool is_pci_mem_bar_base_valid(struct acrn_vm *vm, uint64_t base)
 {
 	struct acrn_vpci *vpci = &vm->vpci;
@@ -124,14 +111,13 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 	vbar = &vdev->vbars[idx];
 	offset = pci_bar_offset(idx);
 	lo = pci_vdev_read_vcfg(vdev, offset, 4U);
-	if ((!is_pci_reserved_bar(vbar)) && (lo != ~0U)) {
+	if ((!is_pci_reserved_bar(vbar)) && (lo != (vbar->mask | vbar->bar_type.bits))) {
 		base = lo & vbar->mask;
 
 		if (is_pci_mem64lo_bar(vbar)) {
 			vbar = &vdev->vbars[idx + 1U];
 			hi = pci_vdev_read_vcfg(vdev, (offset + 4U), 4U);
-			if (hi != ~0U) {
-				hi &= vbar->mask;
+			if (hi != vbar->mask) {
 				base |= ((uint64_t)hi << 32U);
 			} else {
 				base = 0UL;
