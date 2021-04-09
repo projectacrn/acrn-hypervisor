@@ -431,7 +431,7 @@ static void read_cfg_header(const struct pci_vdev *vdev,
 	if (vbar_access(vdev, offset)) {
 		/* bar access must be 4 bytes and offset must also be 4 bytes aligned */
 		if ((bytes == 4U) && ((offset & 0x3U) == 0U)) {
-			*val = pci_vdev_read_vbar(vdev, pci_bar_index(offset));
+			*val = pci_vdev_read_vcfg(vdev, offset, bytes);
 		} else {
 			*val = ~0U;
 		}
@@ -780,21 +780,15 @@ void vpci_update_one_vbar(struct pci_vdev *vdev, uint32_t bar_idx, uint32_t val,
 		map_pcibar map_cb, unmap_pcibar unmap_cb)
 {
 	struct pci_vbar *vbar = &vdev->vbars[bar_idx];
-	uint32_t offset = pci_bar_offset(bar_idx);
 	uint32_t update_idx = bar_idx;
 
 	if (vbar->is_mem64hi) {
 		update_idx -= 1U;
 	}
 	unmap_cb(vdev, update_idx);
-	if (val != ~0U) {
-		pci_vdev_write_vbar(vdev, bar_idx, val);
-		if (map_cb != NULL) {
-			map_cb(vdev, update_idx);
-		}
-	} else {
-		pci_vdev_write_vcfg(vdev, offset, 4U, val);
-		vdev->vbars[update_idx].base_gpa = 0UL;
+	pci_vdev_write_vbar(vdev, bar_idx, val);
+	if ((map_cb != NULL) && (vdev->vbars[update_idx].base_gpa != 0UL)) {
+		map_cb(vdev, update_idx);
 	}
 }
 
