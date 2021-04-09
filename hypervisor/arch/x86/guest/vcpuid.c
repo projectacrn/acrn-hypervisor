@@ -402,6 +402,10 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 			case 0x10U:
 			/* Intel Processor Trace */
 			case 0x14U:
+			/* PCONFIG */
+			case 0x1bU:
+			/* V2 Extended Topology Enumeration Leaf */
+			case 0x1fU:
 				break;
 			default:
 				init_vcpuid_entry(i, 0U, 0U, &entry);
