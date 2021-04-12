@@ -31,6 +31,8 @@
 #define PAGE_CACHE_UC_MINUS	PAGE_PCD
 #define PAGE_CACHE_UC		(PAGE_PCD | PAGE_PWT)
 
+#define PAGE_ATTR_USER		(PAGE_PRESENT | PAGE_RW | PAGE_USER | PAGE_NX)
+
 /**
  * @defgroup ept_mem_access_right EPT Memory Access Right
  *
