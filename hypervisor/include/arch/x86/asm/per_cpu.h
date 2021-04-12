@@ -10,12 +10,12 @@
 #include <types.h>
 #include <sbuf.h>
 #include <irq.h>
+#include <timer.h>
 #include <profiling.h>
 #include <logmsg.h>
 #include <schedule.h>
 #include <asm/notify.h>
 #include <asm/page.h>
-#include <asm/timer.h>
 #include <asm/gdt.h>
 #include <asm/security.h>
 #include <asm/vm_config.h>

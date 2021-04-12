@@ -8,7 +8,7 @@
 #define SCHEDULE_H
 #include <asm/lib/spinlock.h>
 #include <lib/list.h>
-#include <asm/timer.h>
+#include <timer.h>
 
 #define	NEED_RESCHEDULE		(1U)
 

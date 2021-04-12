@@ -809,7 +809,6 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/arch/x86/asm/guest/vcpu.h \
                           ../hypervisor/include/arch/x86/asm/guest/virtual_cr.h \
                           ../hypervisor/include/arch/x86/asm/tsc.h \
-                          ../hypervisor/include/arch/x86/asm/timer.h \
                           ../hypervisor/include/arch/x86/asm/ioapic.h \
                           ../hypervisor/include/arch/x86/asm/lapic.h \
                           ../hypervisor/include/lib/crypto/crypto_api.h \
@@ -820,6 +819,7 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/common/irq.h \
                           ../hypervisor/include/common/ticks.h \
                           ../hypervisor/include/common/delay.h \
+                          ../hypervisor/include/common/timer.h \
                           ../hypervisor/include/common/ptdev.h \
                           ../hypervisor/include/public/acrn_common.h \
                           ../hypervisor/include/public/acrn_hv_defs.h \
