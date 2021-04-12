@@ -48,8 +48,6 @@ struct hv_timer {
 
 /* External Interfaces */
 
-void udelay(uint32_t us);
-
 /**
  * @brief Initialize a timer structure.
  *
