@@ -32,6 +32,7 @@
 #include <vpci.h>
 #include <asm/pci_dev.h>
 #include <logmsg.h>
+#include <delay.h>
 
 #include "vpci_priv.h"
 

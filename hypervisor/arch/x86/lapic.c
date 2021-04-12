@@ -12,6 +12,7 @@
 #include <asm/cpu_caps.h>
 #include <asm/lapic.h>
 #include <asm/apicreg.h>
+#include <delay.h>
 
 /* intr_lapic_icr_delivery_mode */
 #define INTR_LAPIC_ICR_FIXED           0x0U

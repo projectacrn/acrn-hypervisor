@@ -33,6 +33,7 @@
 #include <asm/rtcm.h>
 #include <reloc.h>
 #include <ticks.h>
+#include <delay.h>
 
 #define CPU_UP_TIMEOUT		100U /* millisecond */
 #define CPU_DOWN_TIMEOUT	100U /* millisecond */

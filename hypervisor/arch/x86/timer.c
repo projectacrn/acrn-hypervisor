@@ -200,16 +200,3 @@ void timer_init(void)
 		init_tsc_deadline_timer();
 	}
 }
-
-void udelay(uint32_t us)
-{
-	uint64_t dest_tsc, delta_tsc;
-
-	/* Calculate number of ticks to wait */
-	delta_tsc = us_to_ticks(us);
-	dest_tsc = rdtsc() + delta_tsc;
-
-	/* Loop until time expired */
-	while (rdtsc() < dest_tsc) {
-	}
-}

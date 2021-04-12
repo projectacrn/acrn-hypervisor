@@ -17,6 +17,7 @@
 #include <asm/ioapic.h>
 #include <asm/vtd.h>
 #include <asm/lapic.h>
+#include <delay.h>
 
 struct cpu_context cpu_ctx;
 

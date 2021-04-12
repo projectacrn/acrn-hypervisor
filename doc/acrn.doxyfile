@@ -819,6 +819,7 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/common/hypercall.h \
                           ../hypervisor/include/common/irq.h \
                           ../hypervisor/include/common/ticks.h \
+                          ../hypervisor/include/common/delay.h \
                           ../hypervisor/include/common/ptdev.h \
                           ../hypervisor/include/public/acrn_common.h \
                           ../hypervisor/include/public/acrn_hv_defs.h \
