@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef COMMON_TIMER_H
+#define COMMON_TIMER_H
 
 #include <list.h>
-#include <asm/tsc.h>
+#include <ticks.h>
 
 /**
  * @brief Timer
@@ -86,7 +86,7 @@ static inline void initialize_timer(struct hv_timer *timer,
  */
 static inline bool timer_expired(const struct hv_timer *timer)
 {
-	return ((timer->fire_tsc == 0UL) || (rdtsc() >= timer->fire_tsc));
+	return ((timer->fire_tsc == 0UL) || (cpu_ticks() >= timer->fire_tsc));
 }
 
 /**
@@ -135,4 +135,4 @@ void timer_init(void);
  * @}
  */
 
-#endif /* TIMER_H */
+#endif /* COMMON_TIMER_H */

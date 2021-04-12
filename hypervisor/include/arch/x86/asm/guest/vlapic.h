@@ -31,7 +31,7 @@
 #define VLAPIC_H
 
 #include <asm/page.h>
-#include <asm/timer.h>
+#include <timer.h>
 #include <asm/apicreg.h>
 
 /**

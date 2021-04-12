@@ -32,6 +32,7 @@
 #include <ivshmem.h>
 #include <asm/rtcm.h>
 #include <reloc.h>
+#include <asm/tsc.h>
 #include <ticks.h>
 #include <delay.h>
 

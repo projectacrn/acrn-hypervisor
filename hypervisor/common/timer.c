@@ -15,6 +15,7 @@
 #include <trace.h>
 #include <asm/irq.h>
 #include <ticks.h>
+#include <hw/hw_timer.h>
 
 #define MAX_TIMER_ACTIONS	32U
 #define MIN_TIMER_PERIOD_US	500U
@@ -27,12 +28,6 @@ static void run_timer(const struct hv_timer *timer)
 	}
 
 	TRACE_2L(TRACE_TIMER_ACTION_PCKUP, timer->fire_tsc, 0UL);
-}
-
-/* run in interrupt context */
-static void tsc_deadline_handler(__unused uint32_t irq, __unused void *data)
-{
-	fire_softirq(SOFTIRQ_TIMER);
 }
 
 static inline void update_physical_timer(struct per_cpu_timers *cpu_timer)
@@ -127,26 +122,13 @@ static void init_percpu_timer(uint16_t pcpu_id)
 	INIT_LIST_HEAD(&cpu_timer->timer_list);
 }
 
-static void init_tsc_deadline_timer(void)
-{
-	uint32_t val;
-
-	val = TIMER_VECTOR;
-	val |= APIC_LVTT_TM_TSCDLT; /* TSC deadline and unmask */
-	msr_write(MSR_IA32_EXT_APIC_LVT_TIMER, val);
-	cpu_memory_barrier();
-
-	/* disarm timer */
-	msr_write(MSR_IA32_TSC_DEADLINE, 0UL);
-}
-
 static void timer_softirq(uint16_t pcpu_id)
 {
 	struct per_cpu_timers *cpu_timer;
 	struct hv_timer *timer;
 	const struct list_head *pos, *n;
 	uint32_t tries = MAX_TIMER_ACTIONS;
-	uint64_t current_tsc = rdtsc();
+	uint64_t current_tsc = cpu_ticks();
 
 	/* handle passed timer */
 	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
@@ -183,20 +165,12 @@ static void timer_softirq(uint16_t pcpu_id)
 void timer_init(void)
 {
 	uint16_t pcpu_id = get_pcpu_id();
-	int32_t retval = 0;
 
 	init_percpu_timer(pcpu_id);
 
 	if (pcpu_id == BSP_CPU_ID) {
 		register_softirq(SOFTIRQ_TIMER, timer_softirq);
-
-		retval = request_irq(TIMER_IRQ, (irq_action_t)tsc_deadline_handler, NULL, IRQF_NONE);
-		if (retval < 0) {
-			pr_err("Timer setup failed");
-		}
 	}
 
-	if (retval >= 0) {
-		init_tsc_deadline_timer();
-	}
+	init_hw_timer();
 }

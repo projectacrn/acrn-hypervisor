@@ -8,7 +8,7 @@
 #include <pci.h>
 #include <uart16550.h>
 #include <shell.h>
-#include <asm/timer.h>
+#include <timer.h>
 #include <ticks.h>
 #include <vuart.h>
 #include <logmsg.h>
