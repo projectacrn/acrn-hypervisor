@@ -7,24 +7,7 @@
 
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'library'))
-import common, board_cfg_lib
-
-VM_NUM_MAP_TOTAL_HV_RAM_SIZE = {
-    # 120M
-    2:0x7800000,
-    # 150M
-    3:0x9600000,
-    # 190M
-    4:0xBE00000,
-    # 210M
-    5:0xD200000,
-    # 250M
-    6:0xFA00000,
-    # 300M
-    7:0x12C00000,
-    # 328M
-    8:0x14800000,
-}
+import common, board_cfg_lib, scenario_cfg_lib
 
 HV_RAM_SIZE_MAX = 0x40000000
 
@@ -34,8 +17,12 @@ def fn(board_etree, scenario_etree, allocation_etree):
     # this dictonary mapped with 'address start':'mem range'
     ram_range = {}
 
-    vm_count = common.count_nodes("//*[local-name() = 'vm']", scenario_etree)
-    hv_ram_size = VM_NUM_MAP_TOTAL_HV_RAM_SIZE[vm_count]
+    post_launched_vm_num = 0
+    for id in common.VM_TYPES:
+        if common.VM_TYPES[id] in scenario_cfg_lib.VM_DB and \
+                        scenario_cfg_lib.VM_DB[common.VM_TYPES[id]]["load_type"] == "POST_LAUNCHED_VM":
+            post_launched_vm_num += 1
+    hv_ram_size = common.HV_BASE_RAM_SIZE + common.POST_LAUNCHED_VM_RAM_SIZE * post_launched_vm_num
 
     ivshmem_enabled = common.get_text("//IVSHMEM_ENABLED", scenario_etree)
     total_shm_size = 0
