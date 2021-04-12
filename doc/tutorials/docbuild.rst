@@ -131,11 +131,12 @@ and these other tools:
 * sphinx                    version: 3.2.1
 * docutils                  version: 0.16
 * sphinx-rtd-theme          version: 0.5.0
-* kconfiglib                version: 14.1.0
 * sphinx-tabs               version: 1.3.0
 * doxygen                   version: 1.8.13
 
-Depending on your Linux version, install the needed tools.
+Depending on your Linux version, install the needed tools. You may get a
+different (newer) version of doxygen noted above that may also work.
+
 For Ubuntu use:
 
   .. code-block:: bash
