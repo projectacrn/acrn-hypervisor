@@ -269,51 +269,48 @@ void init_paging(void)
 	uint64_t hv_hva;
 	uint32_t i;
 	uint64_t low32_max_ram = 0UL;
-	uint64_t high64_max_ram;
-	uint64_t attr_uc = (PAGE_PRESENT | PAGE_RW | PAGE_USER | PAGE_CACHE_UC | PAGE_NX);
+	uint64_t high64_max_ram = MEM_4G;
 
 	const struct e820_entry *entry;
 	uint32_t entries_count = get_e820_entries_count();
 	const struct e820_entry *p_e820 = get_e820_entry();
-	const struct mem_range *p_mem_range_info = get_mem_range_info();
 
 	pr_dbg("HV MMU Initialization");
-
-	/* align to 2MB */
-	high64_max_ram = round_pde_up(p_mem_range_info->mem_top);
-	if ((high64_max_ram > (CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)) ||
-			(high64_max_ram < (1UL << 32U))) {
-		printf("ERROR!!! high64_max_ram: 0x%lx, top address space: 0x%lx\n",
-			high64_max_ram, CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE);
-		panic("Please configure HV_ADDRESS_SPACE correctly!\n");
-	}
 
 	init_sanitized_page((uint64_t *)sanitized_page, hva2hpa_early(sanitized_page));
 
 	/* Allocate memory for Hypervisor PML4 table */
 	ppt_mmu_pml4_addr = pgtable_create_root(&ppt_pgtable);
 
-	/* Map all memory regions to UC attribute */
-	pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, 0UL, 0UL, high64_max_ram - 0UL, attr_uc, &ppt_pgtable);
-
 	/* Modify WB attribute for E820_TYPE_RAM */
 	for (i = 0U; i < entries_count; i++) {
 		entry = p_e820 + i;
 		if (entry->type == E820_TYPE_RAM) {
-			if (entry->baseaddr < (1UL << 32U)) {
-				uint64_t end = entry->baseaddr + entry->length;
-				if ((end < (1UL << 32U)) && (end > low32_max_ram)) {
-					low32_max_ram = end;
-				}
+			uint64_t end = entry->baseaddr + entry->length;
+			if (end < MEM_4G) {
+				low32_max_ram = max(end, low32_max_ram);
+			} else {
+				high64_max_ram = max(end, high64_max_ram);
 			}
 		}
 	}
 
-	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, 0UL, round_pde_up(low32_max_ram),
-			PAGE_CACHE_WB, PAGE_CACHE_MASK, &ppt_pgtable, MR_MODIFY);
+	low32_max_ram = round_pde_up(low32_max_ram);
+	high64_max_ram = round_pde_down(high64_max_ram);
 
-	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, (1UL << 32U), high64_max_ram - (1UL << 32U),
-			PAGE_CACHE_WB, PAGE_CACHE_MASK, &ppt_pgtable, MR_MODIFY);
+	/* Map [0, low32_max_ram) and [4G, high64_max_ram) RAM regions as WB attribute */
+	pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, 0UL, 0UL,
+			low32_max_ram, PAGE_ATTR_USER | PAGE_CACHE_WB, &ppt_pgtable);
+	pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, MEM_4G, MEM_4G,
+			high64_max_ram - MEM_4G, PAGE_ATTR_USER | PAGE_CACHE_WB, &ppt_pgtable);
+
+	/* Map [low32_max_ram, 4G) and [HI_MMIO_START, HI_MMIO_END) MMIO regions as UC attribute */
+	pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, low32_max_ram, low32_max_ram, MEM_4G,
+				PAGE_ATTR_USER | PAGE_CACHE_UC, &ppt_pgtable);
+	if ((HI_MMIO_START != ~0UL) && (HI_MMIO_END != 0UL)) {
+		pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, HI_MMIO_START, HI_MMIO_START,
+			(HI_MMIO_END - HI_MMIO_START), PAGE_ATTR_USER | PAGE_CACHE_UC, &ppt_pgtable);
+	}
 
 	/*
 	 * set the paging-structure entries' U/S flag to supervisor-mode for hypervisor owned memroy.
@@ -338,15 +335,6 @@ void init_paging(void)
 	pgtable_modify_or_del_map((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_sworld_memory_base(),
 			TRUSTY_RAM_SIZE * MAX_POST_VM_NUM, PAGE_USER, 0UL, &ppt_pgtable, MR_MODIFY);
 #endif
-
-	/*
-	 * Users of this MMIO region needs to use access memory using stac/clac
-	 */
-
-	if ((HI_MMIO_START != ~0UL) && (HI_MMIO_END != 0UL)) {
-		pgtable_add_map((uint64_t *)ppt_mmu_pml4_addr, HI_MMIO_START, HI_MMIO_START,
-			(HI_MMIO_END - HI_MMIO_START), attr_uc, &ppt_pgtable);
-	}
 
 	/* Enable paging */
 	enable_paging();
