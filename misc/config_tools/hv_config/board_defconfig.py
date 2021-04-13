@@ -114,8 +114,6 @@ def get_memory(hv_info, config):
 
     print("CONFIG_PLATFORM_RAM_SIZE={}".format(hv_info.mem.platform_ram_size), file=config)
     print("CONFIG_LOW_RAM_SIZE={}".format(hv_info.mem.low_ram_size), file=config)
-    print("CONFIG_SOS_RAM_SIZE={}".format(hv_info.mem.sos_ram_size), file=config)
-    print("CONFIG_UOS_RAM_SIZE={}".format(hv_info.mem.uos_ram_size), file=config)
     print("CONFIG_STACK_SIZE={}".format(hv_info.mem.stack_size), file=config)
     print("CONFIG_IVSHMEM_ENABLED={}".format(hv_info.mem.ivshmem_enable), file=config)
 

@@ -36,8 +36,6 @@
         <HV_RAM_SIZE/>
         <HV_RAM_START/>
         <LOW_RAM_SIZE>0x00010000</LOW_RAM_SIZE>
-        <UOS_RAM_SIZE>0x200000000</UOS_RAM_SIZE>
-        <SOS_RAM_SIZE>0x400000000</SOS_RAM_SIZE>
         <PLATFORM_RAM_SIZE>0x400000000</PLATFORM_RAM_SIZE>
     </MEMORY>
 
@@ -68,7 +66,6 @@
     </clos>
     <memory>
         <start_hpa>0</start_hpa>
-        <size>CONFIG_SOS_RAM_SIZE</size>
     </memory>
     <os_config>
         <name>ACRN Service OS</name>

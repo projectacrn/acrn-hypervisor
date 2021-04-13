@@ -111,7 +111,7 @@ aligned.</xs:documentation>
 VM.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="size" type="MemorySizeType" default="0x20000000">
+    <xs:element name="size" type="MemorySizeType" default="0x20000000" minOccurs="0">
       <xs:annotation>
         <xs:documentation>The memory size in bytes for the VM. Default
 value is ``0x200000000``.</xs:documentation>

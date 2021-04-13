@@ -186,18 +186,6 @@ the RAM region used by the hypervisor.</xs:documentation>
 ``0x10000``, starting from address ``0x0``.</xs:documentation>
       </xs:annotation>
     </xs:element>
-    <xs:element name="UOS_RAM_SIZE" type="HexFormat" default="0x200000000">
-      <xs:annotation>
-        <xs:documentation>Size of the User VM OS RAM region. Default
-value ``0x200000000``.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    <xs:element name="SOS_RAM_SIZE" type="HexFormat" default="0x400000000">
-      <xs:annotation>
-        <xs:documentation>Size of the Service VM OS RAM region. Default
-value ``0x400000000``.</xs:documentation>
-      </xs:annotation>
-    </xs:element>
     <xs:element name="PLATFORM_RAM_SIZE" type="HexFormat" default="0x400000000">
       <xs:annotation>
         <xs:documentation>Size of the physical platform RAM. Default

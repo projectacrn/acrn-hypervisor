@@ -260,7 +260,6 @@ def gen_sos_vm(vm_type, vm_i, scenario_items, config):
     cpu_affinity_output(vm_info, vm_i, config)
     print("\t\t.memory = {", file=config)
     print("\t\t\t.start_hpa = {}UL,".format(vm_info.mem_info.mem_start_hpa[vm_i]), file=config)
-    print("\t\t\t.size = {0},".format("CONFIG_SOS_RAM_SIZE"), file=config)
     print("\t\t},", file=config)
     print("\t\t.os_config = {", file=config)
     print('\t\t\t.name = "{0}",'.format(vm_info.os_cfg.kern_name[vm_i]), file=config)

@@ -80,7 +80,6 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.cpu_affinity = SOS_VM_CONFIG_CPU_AFFINITY,
 		.memory = {
 			.start_hpa = 0UL,
-			.size = CONFIG_SOS_RAM_SIZE,
 		},
 		.os_config = {
 			.name = "ACRN Service OS",
