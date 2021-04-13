@@ -26,8 +26,6 @@ physical memory on your platform. Check the documentation for these
 option settings for details:
 
 * :option:`hv.MEMORY.PLATFORM_RAM_SIZE`
-* :option:`hv.MEMORY.SOS_RAM_SIZE`
-* :option:`hv.MEMORY.UOS_RAM_SIZE`
 * :option:`hv.MEMORY.HV_RAM_SIZE`
 
 Check the :ref:`acrn_configuration_tool` for more information on how

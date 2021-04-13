@@ -57,17 +57,11 @@
   <xs:union memberTypes="None MaxMsixTableNumType" />
 </xs:simpleType>
 
-<xs:simpleType name="SOSRamSize">
-  <xs:restriction base="xs:string">
-    <xs:enumeration value="CONFIG_SOS_RAM_SIZE" />
-  </xs:restriction>
-</xs:simpleType>
-
 <xs:simpleType name="MemorySizeType">
   <xs:annotation>
     <xs:documentation>An Integer value in hexadecimal format.</xs:documentation>
   </xs:annotation>
-  <xs:union memberTypes="SOSRamSize HexFormat" />
+  <xs:union memberTypes="HexFormat" />
 </xs:simpleType>
 
 <xs:simpleType name="LogLevelType">
