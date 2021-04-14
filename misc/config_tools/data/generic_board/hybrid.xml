@@ -96,7 +96,7 @@
             <kern_type>KERNEL_ZEPHYR</kern_type>
             <kern_mod>Zephyr_RawImage</kern_mod>
             <ramdisk_mod/>
-            <bootargs>reboot=acpi</bootargs>
+            <bootargs></bootargs>
             <kern_load_addr>0x8000</kern_load_addr>
             <kern_entry_addr>0x8000</kern_entry_addr>
         </os_config>
