@@ -163,11 +163,19 @@ union pci_cfg_addr_reg {
 	} bits;
 };
 
+/* start address & end address of MMIO BAR */
+struct pci_mmio_res {
+	uint64_t start;
+	uint64_t end;
+};
+
 struct acrn_vpci {
 	spinlock_t lock;
 	union pci_cfg_addr_reg addr;
 	struct pci_mmcfg_region pci_mmcfg;
 	uint32_t pci_vdev_cnt;
+	struct pci_mmio_res res32; 	/* 32-bit mmio start/end address */
+	struct pci_mmio_res res64; 	/* 64-bit mmio start/end address */
 	struct pci_vdev pci_vdevs[CONFIG_MAX_PCI_DEV_NUM];
 	struct hlist_head vdevs_hlist_heads [VDEV_LIST_HASHSIZE];
 };
