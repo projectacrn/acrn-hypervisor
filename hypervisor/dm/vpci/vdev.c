@@ -106,11 +106,20 @@ uint32_t pci_vdev_read_vbar(const struct pci_vdev *vdev, uint32_t idx)
 	return bar;
 }
 
+static bool is_pci_mem_bar_base_valid(struct acrn_vm *vm, uint64_t base)
+{
+	struct acrn_vpci *vpci = &vm->vpci;
+	struct pci_mmio_res *res = (base < (1UL << 32UL)) ? &(vpci->res32): &(vpci->res64);
+
+	return ((base >= res->start) &&  (base <= res->end));
+}
+
 static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 {
 	struct pci_vbar *vbar;
 	uint64_t base = 0UL;
 	uint32_t lo, hi, offset;
+	struct pci_mmio_res *res;
 
 	vbar = &vdev->vbars[idx];
 	offset = pci_bar_offset(idx);
@@ -137,7 +146,19 @@ static void pci_vdev_update_vbar_base(struct pci_vdev *vdev, uint32_t idx)
 		}
 	}
 
-	/* TODO: 1. check whether the address locate in the MMIO windows 2. base must aligned with size */
+	if ( (base != 0UL) && (!is_pci_io_bar(vbar))) {
+		if ((!is_pci_mem_bar_base_valid(vpci2vm(vdev->vpci), base)) || (!mem_aligned_check(base, vdev->vbars[idx].size))) {
+			res = (base < (1UL << 32UL)) ? &(vdev->vpci->res32): &(vdev->vpci->res64);
+			/* VM tries to reprogram vbar address out of pci mmio bar window, it can be caused by:
+			 * 1. For SOS, <board>.xml is misaligned with the actual native platform, and we get wrong mmio window.
+			 * 2. Malicious operation from VM, it tries to reprogram vbar address out of pci mmio bar window
+			 */
+			pr_err("%s reprogram PCI:%02x:%02x.%x BAR%d to addr:0x%lx,"
+				" which is out of mmio window[0x%lx - 0x%lx] or not aligned with size: 0x%lx",
+				__func__, vdev->bdf.bits.b, vdev->bdf.bits.d, vdev->bdf.bits.f, idx, base, res->start,
+				res->end, vdev->vbars[idx].size);
+		}
+	}
 
 	vdev->vbars[idx].base_gpa = base;
 }
