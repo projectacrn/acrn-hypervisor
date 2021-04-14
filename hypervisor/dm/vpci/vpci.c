@@ -38,6 +38,8 @@
 #include "vpci_priv.h"
 #include <asm/pci_dev.h>
 #include <hash.h>
+#include <board_info.h>
+
 
 static void vpci_init_vdevs(struct acrn_vm *vm);
 static int32_t vpci_read_cfg(struct acrn_vpci *vpci, union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t *val);
@@ -227,10 +229,18 @@ void init_vpci(struct acrn_vm *vm)
 	if (vm_config->load_order == SOS_VM) {
 		pci_mmcfg = get_mmcfg_region();
 		vm->vpci.pci_mmcfg = *pci_mmcfg;
+		vm->vpci.res32.start = MMIO32_START;
+		vm->vpci.res32.end = MMIO32_END;
+		vm->vpci.res64.start = MMIO64_START;
+		vm->vpci.res64.end = MMIO64_END;
 	} else {
 		vm->vpci.pci_mmcfg.address = UOS_VIRT_PCI_MMCFG_BASE;
 		vm->vpci.pci_mmcfg.start_bus = UOS_VIRT_PCI_MMCFG_START_BUS;
 		vm->vpci.pci_mmcfg.end_bus = UOS_VIRT_PCI_MMCFG_END_BUS;
+		vm->vpci.res32.start = UOS_VIRT_PCI_MEMBASE32;
+		vm->vpci.res32.end = UOS_VIRT_PCI_MEMLIMIT32;
+		vm->vpci.res64.start = UOS_VIRT_PCI_MEMBASE64;
+		vm->vpci.res64.end = UOS_VIRT_PCI_MEMLIMIT64;
 	}
 
 	register_mmio_emulation_handler(vm, vpci_mmio_cfg_access, vm->vpci.pci_mmcfg.address,
