@@ -973,7 +973,7 @@ def get_generic_scenario_config(scenario_config, add_vm_type=None):
             'SOS_VM': ('industry', 'vm:id=0'),
             'POST_STD_VM': ('industry', 'vm:id=1'),
             'POST_RT_VM': ('industry', 'vm:id=2'),
-            'KATA_VM': ('industry', 'vm:id=1'),
+            'KATA_VM': ('industry', 'vm:id=7'),
             'LAUNCH_POST_STD_VM': ('industry_launch_2uos', 'uos:id=1'),
             'LAUNCH_POST_RT_VM': ('industry_launch_2uos', 'uos:id=2')
         }
