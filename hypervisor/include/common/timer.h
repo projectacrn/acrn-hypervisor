@@ -40,8 +40,8 @@ struct per_cpu_timers {
 struct hv_timer {
 	struct list_head node;		/**< link all timers */
 	enum tick_mode mode;		/**< timer mode: one-shot or periodic */
-	uint64_t fire_tsc;		/**< tsc deadline to interrupt */
-	uint64_t period_in_cycle;	/**< period of the periodic timer in unit of TSC cycles */
+	uint64_t timeout;		/**< tsc deadline to interrupt */
+	uint64_t period_in_cycle;	/**< period of the periodic timer in CPU ticks */
 	timer_handle_t func;		/**< callback if time reached */
 	void *priv_data;		/**< func private data */
 };
@@ -55,7 +55,6 @@ struct hv_timer {
  * @param[in] func irq callback if time reached.
  * @param[in] priv_data func private data.
  * @param[in] fire_tsc tsc deadline to interrupt.
- * @param[in] mode timer mode.
  * @param[in] period_in_cycle period of the periodic timer in unit of TSC cycles.
  *
  * @remark Don't initialize a timer twice if it has been added to the timer list
@@ -63,43 +62,40 @@ struct hv_timer {
  *
  * @return None
  */
-static inline void initialize_timer(struct hv_timer *timer,
-				timer_handle_t func, void *priv_data,
-				uint64_t fire_tsc, int32_t mode, uint64_t period_in_cycle)
-{
-	if (timer != NULL) {
-		timer->func = func;
-		timer->priv_data = priv_data;
-		timer->fire_tsc = fire_tsc;
-		timer->mode = mode;
-		timer->period_in_cycle = period_in_cycle;
-		INIT_LIST_HEAD(&timer->node);
-	}
-}
+void initialize_timer(struct hv_timer *timer,
+		      timer_handle_t func, void *priv_data,
+		      uint64_t fire_tsc, uint64_t period_in_cycle);
 
 /**
  * @brief Check a timer whether expired.
  *
  * @param[in] timer Pointer to timer.
+ * @param[in] now to compare.
+ * @param[in] delta Pointer to return the delta (timeout - now) if timer is not expired.
  *
  * @retval true if the timer is expired, false otherwise.
  */
-static inline bool timer_expired(const struct hv_timer *timer)
-{
-	return ((timer->fire_tsc == 0UL) || (cpu_ticks() >= timer->fire_tsc));
-}
+bool timer_expired(const struct hv_timer *timer, uint64_t now, uint64_t *delta);
 
 /**
- * @brief Check a timer whether in timer list.
+ * @brief Check if a timer is active (in the timer list) or not.
  *
  * @param[in] timer Pointer to timer.
  *
  * @retval true if the timer is in timer list, false otherwise.
  */
-static inline bool timer_is_started(const struct hv_timer *timer)
-{
-	return (!list_empty(&timer->node));
-}
+bool timer_is_started(const struct hv_timer *timer);
+
+/**
+ * @brief Update a timer.
+ *
+ * @param[in] timer Pointer to timer.
+ * @param[in] timeout deadline to interrupt.
+ * @param[in] period period of the periodic timer in unit of CPU ticks.
+ *
+ * @return None
+ */
+void update_timer(struct hv_timer *timer, uint64_t timeout, uint64_t period);
 
 /**
  * @brief Add a timer.

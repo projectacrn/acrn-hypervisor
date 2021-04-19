@@ -20,14 +20,36 @@
 #define MAX_TIMER_ACTIONS	32U
 #define MIN_TIMER_PERIOD_US	500U
 
+bool timer_expired(const struct hv_timer *timer, uint64_t now, uint64_t *delta)
+{
+	bool ret = true;
+	uint64_t delt = 0UL;
+
+	if  ((timer->timeout != 0UL) && (now < timer->timeout)) {
+		ret = false;
+		delt = timer->timeout - now;
+	}
+
+	if (delta != NULL) {
+		*delta = delt;
+	}
+
+	return ret;
+}
+
+bool timer_is_started(const struct hv_timer *timer)
+{
+	return (!list_empty(&timer->node));
+}
+
 static void run_timer(const struct hv_timer *timer)
 {
 	/* deadline = 0 means stop timer, we should skip */
-	if ((timer->func != NULL) && (timer->fire_tsc != 0UL)) {
+	if ((timer->func != NULL) && (timer->timeout != 0UL)) {
 		timer->func(timer->priv_data);
 	}
 
-	TRACE_2L(TRACE_TIMER_ACTION_PCKUP, timer->fire_tsc, 0UL);
+	TRACE_2L(TRACE_TIMER_ACTION_PCKUP, timer->timeout, 0UL);
 }
 
 static inline void update_physical_timer(struct per_cpu_timers *cpu_timer)
@@ -40,7 +62,7 @@ static inline void update_physical_timer(struct per_cpu_timers *cpu_timer)
 			struct hv_timer, node);
 
 		/* it is okay to program a expired time */
-		msr_write(MSR_IA32_TSC_DEADLINE, timer->fire_tsc);
+		msr_write(MSR_IA32_TSC_DEADLINE, timer->timeout);
 	}
 }
 
@@ -52,12 +74,12 @@ static bool local_add_timer(struct per_cpu_timers *cpu_timer,
 {
 	struct list_head *pos, *prev;
 	struct hv_timer *tmp;
-	uint64_t tsc = timer->fire_tsc;
+	uint64_t tsc = timer->timeout;
 
 	prev = &cpu_timer->timer_list;
 	list_for_each(pos, &cpu_timer->timer_list) {
 		tmp = container_of(pos, struct hv_timer, node);
-		if (tmp->fire_tsc < tsc) {
+		if (tmp->timeout < tsc) {
 			prev = &tmp->node;
 		} else {
 			break;
@@ -76,7 +98,7 @@ int32_t add_timer(struct hv_timer *timer)
 	int32_t ret = 0;
 	uint64_t rflags;
 
-	if ((timer == NULL) || (timer->func == NULL) || (timer->fire_tsc == 0UL)) {
+	if ((timer == NULL) || (timer->func == NULL) || (timer->timeout == 0UL)) {
 		ret = -EINVAL;
 	} else {
 		ASSERT(list_empty(&timer->node), "add timer again!\n");
@@ -96,11 +118,44 @@ int32_t add_timer(struct hv_timer *timer)
 		}
 		CPU_INT_ALL_RESTORE(rflags);
 
-		TRACE_2L(TRACE_TIMER_ACTION_ADDED, timer->fire_tsc, 0UL);
+		TRACE_2L(TRACE_TIMER_ACTION_ADDED, timer->timeout, 0UL);
 	}
 
 	return ret;
 
+}
+
+void initialize_timer(struct hv_timer *timer,
+			timer_handle_t func, void *priv_data,
+			uint64_t timeout, uint64_t period_in_cycle)
+{
+	if (timer != NULL) {
+		timer->func = func;
+		timer->priv_data = priv_data;
+		timer->timeout = timeout;
+		if (period_in_cycle > 0UL) {
+			timer->mode = TICK_MODE_PERIODIC;
+			timer->period_in_cycle = period_in_cycle;
+		} else {
+			timer->mode = TICK_MODE_ONESHOT;
+			timer->period_in_cycle = 0UL;
+		}
+		INIT_LIST_HEAD(&timer->node);
+	}
+}
+
+void update_timer(struct hv_timer *timer, uint64_t timeout, uint64_t period)
+{
+	if (timer != NULL) {
+		timer->timeout = timeout;
+		if (period > 0UL) {
+			timer->mode = TICK_MODE_PERIODIC;
+			timer->period_in_cycle = period;
+		} else {
+			timer->mode = TICK_MODE_ONESHOT;
+			timer->period_in_cycle = 0UL;
+		}
+	}
 }
 
 void del_timer(struct hv_timer *timer)
@@ -143,15 +198,17 @@ static void timer_softirq(uint16_t pcpu_id)
 		timer = container_of(pos, struct hv_timer, node);
 		/* timer expried */
 		tries--;
-		if ((timer->fire_tsc <= current_tsc) && (tries != 0U)) {
+		if ((timer->timeout <= current_tsc) && (tries != 0U)) {
 			del_timer(timer);
 
 			run_timer(timer);
 
 			if (timer->mode == TICK_MODE_PERIODIC) {
 				/* update periodic timer fire tsc */
-				timer->fire_tsc += timer->period_in_cycle;
+				timer->timeout += timer->period_in_cycle;
 				(void)local_add_timer(cpu_timer, timer);
+			} else {
+				timer->timeout = 0UL;
 			}
 		} else {
 			break;

@@ -104,7 +104,7 @@ struct ptirq_remapping_info *ptirq_dequeue_softirq(uint16_t pcpu_id)
 		list_del_init(&entry->softirq_node);
 
 		/* if sos vm, just dequeue, if uos, check delay timer */
-		if (is_sos_vm(entry->vm) || timer_expired(&entry->intr_delay_timer)) {
+		if (is_sos_vm(entry->vm) || timer_expired(&entry->intr_delay_timer, cpu_ticks(), NULL)) {
 			break;
 		} else {
 			/* add it into timer list; dequeue next one */
@@ -133,7 +133,7 @@ struct ptirq_remapping_info *ptirq_alloc_entry(struct acrn_vm *vm, uint32_t intr
 
 		INIT_LIST_HEAD(&entry->softirq_node);
 
-		initialize_timer(&entry->intr_delay_timer, ptirq_intr_delay_callback, entry, 0UL, 0, 0UL);
+		initialize_timer(&entry->intr_delay_timer, ptirq_intr_delay_callback, entry, 0UL, 0UL);
 
 		entry->active = false;
 	} else {
@@ -177,11 +177,11 @@ static void ptirq_interrupt_handler(__unused uint32_t irq, void *data)
 			if (timer_is_started(&entry->intr_delay_timer)) {
 				to_enqueue = false;
 			} else {
-				entry->intr_delay_timer.fire_tsc =
-					cpu_ticks() + entry->vm->intr_inject_delay_delta;
+				update_timer(&entry->intr_delay_timer,
+					     cpu_ticks() + entry->vm->intr_inject_delay_delta, 0UL);
 			}
 		} else {
-			entry->intr_delay_timer.fire_tsc = 0UL;
+			update_timer(&entry->intr_delay_timer, 0UL, 0UL);
 		}
 	}
 
