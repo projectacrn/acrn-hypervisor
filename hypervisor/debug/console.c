@@ -166,7 +166,7 @@ void console_setup_timer(void)
 	fire_tsc = cpu_ticks() + period_in_cycle;
 	initialize_timer(&console_timer,
 			console_timer_callback, NULL,
-			fire_tsc, TICK_MODE_PERIODIC, period_in_cycle);
+			fire_tsc, period_in_cycle);
 
 	/* Start an periodic timer */
 	if (add_timer(&console_timer) != 0) {
