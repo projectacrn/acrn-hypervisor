@@ -322,6 +322,10 @@ static void start_pcpu(uint16_t pcpu_id)
 	write_trampoline_stack_sym(pcpu_id);
 	clac();
 
+	/* Using the MFENCE to make sure trampoline code
+	 * has been updated (clflush) into memory beforing start APs.
+	 */
+	cpu_memory_barrier();
 	send_startup_ipi(pcpu_id, startup_paddr);
 
 	/* Wait until the pcpu with pcpu_id is running and set the active bitmap or
