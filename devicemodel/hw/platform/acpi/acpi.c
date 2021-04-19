@@ -820,7 +820,8 @@ static void tpm2_crb_fwrite_dsdt(void)
 	dsdt_line("      Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings");
 	dsdt_line("      {");
 	dsdt_indent(4);
-	dsdt_fixed_mem32(TPM_CRB_MMIO_ADDR, TPM_CRB_MMIO_SIZE);
+	/* TODO: consider a better framework for mmio likes pci's vdev_write_dsdt. */
+	dsdt_fixed_mem32(get_tpm_crb_mmio_addr(), TPM_CRB_MMIO_SIZE);
 	dsdt_unindent(4);
 	dsdt_line("      })");
 	dsdt_line("      Method (_STA, 0, NotSerialized)  // _STA: Status");
