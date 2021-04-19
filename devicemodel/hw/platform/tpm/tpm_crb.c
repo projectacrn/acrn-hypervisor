@@ -206,11 +206,11 @@ static uint64_t crb_reg_read(struct tpm_crb_vdev *tpm_vdev, uint64_t addr, int s
 	uint32_t val;
 	uint64_t off;
 
-	off = (addr & ~3UL) - TPM_CRB_MMIO_ADDR;
+	off = (addr & ~3UL) - get_vtpm_crb_mmio_addr();
 
 	val = mmio_read(&tpm_vdev->crb_regs.regs.bytes[off], size);
 
-	if (addr == CRB_REGS_LOC_STATE) {
+	if (off == CRB_REGS_LOC_STATE) {
 		val |= !swtpm_get_tpm_established_flag();
 	}
 
@@ -291,8 +291,9 @@ static void crb_reg_write(struct tpm_crb_vdev *tpm_vdev, uint64_t addr, int size
 {
 	uint8_t target_loc = (addr >> 12) & 0b111; /* convert address to locality */
 	uint32_t cmd_size;
+	uint64_t off = addr - get_vtpm_crb_mmio_addr();
 
-	switch (addr) {
+	switch (off) {
 	case CRB_REGS_CTRL_REQ:
 		if (tpm_vdev->crb_regs.regs.ctrl_start == CRB_CTRL_START_CMD)
 			break;
@@ -388,7 +389,7 @@ static int tpm_crb_data_buffer_handler(struct vmctx *ctx, int vcpu, int dir, uin
 	if (tpm_vdev->crb_regs.regs.ctrl_sts.tpmIdle == 1)
 		return 0;
 
-	off = addr - CRB_DATA_BUFFER;
+	off = addr - get_vtpm_crb_mmio_addr() - CRB_DATA_BUFFER;
 
 	if (dir == MEM_F_READ) {
 		*val = mmio_read(&tpm_vdev->data_buffer[off], size);
@@ -457,7 +458,7 @@ int init_tpm_crb(struct vmctx *ctx)
 	ctx->tpm_dev = tpm_vdev;
 
 	mr_cmd.name = "tpm_crb_reg";
-	mr_cmd.base = TPM_CRB_MMIO_ADDR;
+	mr_cmd.base = get_vtpm_crb_mmio_addr();
 	mr_cmd.size = TPM_CRB_REG_SIZE;
 	mr_cmd.flags = MEM_F_RW;
 	mr_cmd.handler = tpm_crb_reg_handler;
@@ -471,7 +472,7 @@ int init_tpm_crb(struct vmctx *ctx)
 	}
 
 	mr_data.name = "tpm_crb_buffer";
-	mr_data.base = CRB_DATA_BUFFER;
+	mr_data.base = get_vtpm_crb_mmio_addr() + CRB_DATA_BUFFER;
 	mr_data.size = TPM_CRB_DATA_BUFFER_SIZE;
 	mr_data.flags = MEM_F_RW;
 	mr_data.handler = tpm_crb_data_buffer_handler;
@@ -538,12 +539,12 @@ void deinit_tpm_crb(struct vmctx *ctx)
 	void *status;
 
 	mr.name = "tpm_crb_reg";
-	mr.base = TPM_CRB_MMIO_ADDR;
+	mr.base = get_vtpm_crb_mmio_addr();
 	mr.size = TPM_CRB_REG_SIZE;
 	unregister_mem(&mr);
 
 	mr.name = "tpm_crb_buffer";
-	mr.base = CRB_DATA_BUFFER;
+	mr.base = get_vtpm_crb_mmio_addr() + CRB_DATA_BUFFER;
 	mr.size = TPM_CRB_DATA_BUFFER_SIZE;
 	unregister_mem(&mr);
 

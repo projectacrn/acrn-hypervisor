@@ -192,6 +192,11 @@ struct mmio_dev_ops tpm2 = {
 };
 DEFINE_MMIO_DEV(tpm2);
 
+uint64_t get_mmio_dev_tpm2_base_gpa(void)
+{
+	return tpm2.base_gpa;
+}
+
 struct mmio_dev_ops pt_mmiodev = {
 	.name		= "MMIODEV",
 	/* ToDo: we may allocate the gpa MMIO resource in a reserved MMIO region
