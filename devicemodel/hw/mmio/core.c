@@ -12,6 +12,7 @@
 #include <strings.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <sys/user.h>
 
 #include "dm.h"
 #include "vmmapi.h"
@@ -19,6 +20,7 @@
 #include "inout.h"
 #include "mem.h"
 #include "log.h"
+#include "mmio_dev.h"
 
 
 struct mmio_dev {
@@ -43,6 +45,23 @@ SET_DECLARE(mmio_dev_ops_set, struct mmio_dev_ops);
 #define DEFINE_MMIO_DEV(x)	DATA_SET(mmio_dev_ops_set, x)
 
 struct mmio_dev_ops pt_mmiodev;
+
+static uint32_t mmio_dev_base = MMIO_DEV_BASE;
+
+int mmio_dev_alloc_gpa_resource32(uint32_t *addr, uint32_t size_in)
+{
+	uint32_t base, size;
+
+	size = roundup2(size_in, PAGE_SIZE);
+	base = roundup2(mmio_dev_base, size);
+	if (base + size <= MMIO_DEV_LIMIT) {
+		*addr = base;
+		mmio_dev_base = base + size;
+		return 0;
+	} else {
+		return -1;
+	}
+}
 
 int parse_pt_acpidev(char *opt)
 {
