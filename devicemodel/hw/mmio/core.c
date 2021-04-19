@@ -110,12 +110,19 @@ static struct mmio_dev_ops *mmio_dev_finddev(char *name)
 
 int init_mmio_dev(struct vmctx *ctx, struct mmio_dev_ops *ops)
 {
+	int ret;
+	uint32_t base;
+
 	struct acrn_mmiodev mmiodev = {
-		.base_gpa = ops->base_gpa,
 		.base_hpa = ops->base_hpa,
 		.size = ops->size,
 	};
 
+	ret = mmio_dev_alloc_gpa_resource32(&base, ops->size);
+	if (ret < 0)
+		return ret;
+	mmiodev.base_gpa = base;
+	ops->base_gpa = base;
 	return ops->init(ctx, &mmiodev);
 }
 
@@ -184,7 +191,6 @@ struct mmio_dev_ops tpm2 = {
 	/* ToDo: we may allocate the gpa MMIO resource in a reserved MMIO region
 	 * rether than hard-coded here.
 	 */
-	.base_gpa	= 0xFED40000UL,
 	.base_hpa	= 0xFED40000UL,
 	.size		= 0x00005000UL,
 	.init		= init_pt_mmiodev,
@@ -202,7 +208,6 @@ struct mmio_dev_ops pt_mmiodev = {
 	/* ToDo: we may allocate the gpa MMIO resource in a reserved MMIO region
 	 * rether than hard-coded here.
 	 */
-	.base_gpa	= 0xF0000000UL,
 	.init		= init_pt_mmiodev,
 	.deinit		= deinit_pt_mmiodev,
 };
