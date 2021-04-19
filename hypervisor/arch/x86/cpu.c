@@ -259,6 +259,7 @@ void init_pcpu_post(uint16_t pcpu_id)
 		 */
 		reserve_buffer_for_ept_pages();
 
+		pcpu_sync = ALL_CPUS_MASK;
 		/* Start all secondary cores */
 		startup_paddr = prepare_trampoline();
 		if (!start_pcpus(AP_MASK)) {
@@ -276,9 +277,6 @@ void init_pcpu_post(uint16_t pcpu_id)
 
 		timer_init();
 		ptdev_init();
-
-		/* Wait for boot processor to signal all secondary cores to continue */
-		wait_sync_change(&pcpu_sync, 0UL);
 	}
 
 	if (!init_software_sram(pcpu_id == BSP_CPU_ID)) {
@@ -296,6 +294,10 @@ void init_pcpu_post(uint16_t pcpu_id)
 	enable_smap();
 
 	init_keylocker();
+
+	bitmap_clear_lock(pcpu_id, &pcpu_sync);
+	/* Waiting for each pCPU has done its initialization before to continue */
+	wait_sync_change(&pcpu_sync, 0UL);
 }
 
 static uint16_t get_pcpu_id_from_lapic_id(uint32_t lapic_id)
@@ -362,10 +364,6 @@ bool start_pcpus(uint64_t mask)
 	uint16_t pcpu_id = get_pcpu_id();
 	uint64_t expected_start_mask = mask;
 
-	/* secondary cpu start up will wait for pcpu_sync -> 0UL */
-	pcpu_sync = 1UL;
-	cpu_write_memory_barrier();
-
 	i = ffs64(expected_start_mask);
 	while (i != INVALID_BIT_INDEX) {
 		bitmap_clear_nolock(i, &expected_start_mask);
@@ -377,9 +375,6 @@ bool start_pcpus(uint64_t mask)
 		start_pcpu(i);
 		i = ffs64(expected_start_mask);
 	}
-
-	/* Trigger event to allow secondary CPUs to continue */
-	pcpu_sync = 0UL;
 
 	return ((pcpu_active_bitmap & mask) == mask);
 }
